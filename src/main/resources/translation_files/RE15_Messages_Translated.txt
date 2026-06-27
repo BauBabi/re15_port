@@ -1,0 +1,448 @@
+================================================================================
+RESIDENT EVIL 1.5 - MESSAGE TRANSLATIONS
+================================================================================
+Note: The original MSG files use a custom encoding. Some characters are
+incorrectly decoded due to differences between the RE1.5 and RE2 character
+tables. Readable portions have been translated below.
+
+Character Names (as they appear in RE1.5):
+- Elza (エルザ/エルャ) - Female protagonist (replaced by Claire in RE2)
+- Leon (レオン) - Male protagonist
+- Sherry (シェリー/シヴリ-) - Child character
+- Marvin (マービン/マ-ビン) - Police officer
+- Ada/Aida (エイダ) - Mysterious woman
+
+================================================================================
+STAGE 1 - POLICE STATION
+================================================================================
+
+--- room11B0/room11B1 (Sherry's Introduction Scene) ---
+
+main00: "You! What happened to you in a place like this?"
+        [あなた! こんな所でどうしたの]
+
+main01: "Are you trapped here? Come over here."
+        [ここに閉じ込められているのね? こっちへおいで]
+
+main02: "What's your name?"
+        [あなた なまえは]
+
+main03: "...Sherry"
+        [シェリー]
+
+main04: "Sherry? What a cute name! I'm Elza."
+        [シェリーっていうの? カワイイなまえね。私はエルザよ]
+
+main05: "Elza..."
+        [エルザ...]
+
+main06: "That's right! Okay, Sherry?"
+        [そう! いい? シェリー]
+
+main07: "Stay here. I'll definitely come back to help you."
+        [ここで待っていなさい。必ずきっと助けてあげるから]
+
+main08: "Wait quietly in the car, okay?"
+        [くるまの中でおとなしく待っているのよ、いいわね]
+
+main09: "H-hey!"
+        [お、おい!]
+
+main10: "Leon! Did you come? What happened to that woman?"
+        [レオン! 来たのか。あの女の人はなんだ]
+
+main11: "The shutter was closed. They're coming one after another."
+        [シャッターが閉められた。やつらつぎつぎとやってきやがる]
+
+main13: "I see... Damn!"
+        [そうか... チクショウ!]
+
+main15: "Marvin, hang in there!"
+        [マービン、待ってくれ!]
+
+main16: "There's a manhole in this room. How about escaping to the
+         underground through there?"
+        [この部屋にマンホールがあるんだ。そこから地下に逃げるってのはどうだ]
+
+main17: "Worth a try... Alright, let's move this thing."
+        [やってみる価値はあるな。よし、こいつを動かそう]
+
+main18: "Leon, be careful!"
+        [レオン、気をつけろ!]
+
+main20: "Marvin is about to fall. Hold onto him now!"
+        [マービンが落ちる。つかまえろ!]
+
+main21: "OK. Be careful!"
+        [OK。気をつけろよ!]
+
+--- room1170/room1171 ---
+
+main00: "Elza, hurry up!"
+        [エルザ、はやくしろ!]
+
+main01: "We need to drop this thing from here. Help me!"
+        [こいつをここから落とすんだ。手伝ってくれ!]
+
+main02: "Come on, help me!"
+        [さあ、手伝ってくれ!]
+
+main03: "Come on, let's get down from here!"
+        [さあ、ここを降りるんだ!]
+
+--- room1190/room1191 ---
+
+main00: "There's a switch here. Do you want to press it?"
+        [スイッチがある。押しますか?]
+
+main01: "There's something here. Do you want to take it?"
+        [何かがある。取りますか?]
+
+--- room1090/room1091 (Someone calling for help) ---
+
+main00: "Someone! Someone help me here!"
+        [誰か! 誰かここを開けてくれ!]
+
+main01: "Hey! Is anyone there?"
+        [おい! 誰かいるのか]
+
+main02: "Someone! Is no one there? If you're there, help me!"
+        [誰か! 誰かいないのか! いたら開けてくれ!]
+
+================================================================================
+STAGE 2 - OUTSIDE / CITY STREETS
+================================================================================
+
+--- room2070 (Shutter control) ---
+
+main00: "There's a shutter switch here. Do you want to operate it?"
+        [シャッターのスイッチがある。操作しますか?]
+
+================================================================================
+STAGE 3 - UNDERGROUND / SEWERS
+================================================================================
+
+--- room3000/room3001 (Meeting Marvin underground) ---
+
+main00: "There's a ladder extending down the manhole. Will you go down?"
+        [マンホールの下にハシゴがのびている。降りますか?]
+
+main02: "Marvin! This is... Raccoon Police Department officers!"
+        [マービン! これは... ラクーン警察の警官じゃないか!]
+
+main03: "Yeah, this is terrible... Everyone is Umbrella's experiment victims."
+        [ああ、こいつはひどい... みんなアンブレラ実験の犠牲者だ]
+
+main04: "This abandoned place... Something's here... Leon, be careful!"
+        [この廃墟に何かあるっ... レオン、気をつけろ!]
+
+main14: "Elza..."
+        [エルザ...]
+
+main15: "Don't worry, just hold on tight."
+        [大丈夫よ、しっかりくっついてなさい]
+
+--- room3060/room3061 (Sherry's secret passage) ---
+
+main01: "Wait, Sherry!"
+        [ちょっと、シェリー!]
+
+main02: "What's wrong? Running off suddenly like that..."
+        [どうしたの? 急に走り出したりして]
+
+main03: "Elza, I know a secret passage!"
+        [エルザ、私ヒミツの通り道を知ってるの]
+
+main04: "A secret passage?"
+        [ヒミツの通り道?]
+
+main05: "It's here. You can escape from here."
+        [ここよ。この中から逃れるの]
+
+main06: "Sherry! Wait!"
+        [シェリー! 待って!]
+
+--- room3070/room3071 (Lift escape scene) ---
+
+main00: "Get on this lift! There's no other choice!"
+        [このリフトに乗れ! もうそれしかない]
+
+main01: "This? Where does it go?"
+        [これに? 何処に向かっているんだ]
+
+main06: "OK Elza, leave the rear to me."
+        [OK、エルザ、後ろは俺に任せときな]
+
+main07: "We escaped from this lift."
+        [このリフトから逃れたのよ]
+
+--- room3090/room3091 (Reunion scene) ---
+
+main09: "*panting* That was close! I was almost caught!"
+        [はあ、はあ... 何てヤツだな! もう少しでケツに食いつかれてたぜっ]
+
+main10: "*panting* We made it! But I thought it was over!"
+        [はあ、はあ... 助かった! でも、もうダメかと思ったわ!]
+
+main11: "Hey, little one, you okay? Stay alive!"
+        [おい、おちびさん、助かった。生きるっ!]
+
+main12: "Really, thank you. I'm saved."
+        [ホントよ、ありがとう。助かったわ]
+
+main13: "Little one, what's your name?"
+        [おちびさん、名前なんていうんだ?]
+
+main14: "...Sherry"
+        [シェリー]
+
+main15: "Sherry! I'm Leon. From now on, whatever happens, I'll protect you!"
+        [シェリーか! 俺はレオンだ。これから俺が何があっても守ってやるから安心しな!]
+
+main17: "Of course, that's my job, right? Even with my life, I'll protect Sherry!"
+        [そりゃそうさ、警官の仕事だっ? 俺の命に代えてもシェリーは俺が守る!]
+
+main18: "That's great... But Sherry, why do you know such a secret passage?"
+        [頼もうね... それよりシェリー、あんたなんであんな通り道を知ってるの?]
+
+main19: "This is where my papa was working..."
+        [ここは私のパパが働いていた所なの...]
+
+main20: "Your papa...?"
+        [あなたのパパが...?]
+
+main21: "Hey, let's get moving. If we stay here, those things will come again."
+        [おい、そろそろ行こうっ。こんな所にいたら、奴らまたガロガロ来る]
+
+main23: "Right, don't push yourself too hard. Sherry, you stay with me!"
+        [そうだな、あまり無理するなよ。シェリー、お前は俺と来な!]
+
+================================================================================
+STAGE 4 - UMBRELLA LABORATORY
+================================================================================
+
+--- room4000/room4001 (Laboratory entrance) ---
+
+main00: "The door is locked. A panel is lit up: 'Emergency lock activated.
+         ID card required to unlock.'"
+        [ドアはロックされている。パネルに表示が出ている:
+         エマージェンシーロックにより閉鎖。ロック解除にはIDカードが必要です]
+
+main01: "Do you want to use the ID card?"
+        [IDカードを使いますか?]
+
+main02: "'ID confirmed. Lock released.'"
+        [IDかくにん。ロック解除します]
+
+main03: "Ada, where is this?"
+        [エイダ、ここは何?]
+
+main04: "Just follow me! This is my area!"
+        [いいから来い! こっちの方面だ!]
+
+main05: "Run ahead! I'll cover you!"
+        [先に行け! 俺がかたづける!]
+
+main06: "Leon...!"
+        [レオン...!]
+
+main07: "Just hurry!"
+        [いいからはやく!]
+
+main11: "Sherry, where is this place?"
+        [シェリー、ここはどこなの?]
+
+main12: "You know a place like this?"
+        [あなたこんな所まで知っているの?]
+
+main13: "This is papa's research facility. Papa should be somewhere here."
+        [ここはパパの研究所よ。どこかにパパがいるはずだわ]
+
+main14: "I'll go look for him!"
+        [私、探してくる!]
+
+main15: "Wait, Sherry!"
+        [ちょっとシェリー!]
+
+main16: "It's no use!"
+        [ダメよ、何してんの!]
+
+main17: "Sherry!"
+        [シェリー!]
+
+main18: "Elza, watch out!"
+        [エルザ、おうが!]
+
+--- room4010/room4011 (Ada's revelation scene) ---
+
+main00: "Leon, this wound..."
+        [レオン、この傷...]
+
+main01: "Ada... What exactly are you?"
+        [エイダ... 今は何者だ?]
+
+main02: "That's right. I'm an Umbrella researcher."
+        [そうだ。私はアンブレラの研究者だ]
+
+main03: "Leon... I don't have much time left."
+        [レオン... 残りは短くしている時間は長い]
+
+main04: "What should I do?"
+        [どうすればいいんだ?]
+
+main05: "Their condition is caused by the virus. With the vaccine, they
+         won't die."
+        [やつらの姿はウイルスによるものだ。ワクチンさえ打てば死にはしない]
+
+main06: "Where is that vaccine?"
+        [そのワクチンはどこに?]
+
+main07: "The vaccine isn't here, but you can make it from the 'virus base'."
+        [ワクチン自体はここにはないが、ウイルスかぜから作ることは出来る]
+
+main08: "What's wrong, Ada?"
+        [どうした? エイダ?]
+
+main09: "Leon, I can't go on anymore today."
+        [レオン、私はきょう持ち堪えない]
+
+main10: "What!?"
+        [何だって!?]
+
+main11: "There's something I have to do."
+        [やらなければならないことがある]
+
+main13: "Tell me! What should I do?"
+        [おしえてくれ! どうすればいい?]
+
+main14: "In the low-temperature storage of this research facility, the
+         virus base should be stored."
+        [この研究所の超低温貯蔵庫に、ウイルスかぜが保管されているはずだ]
+
+main15: "I have no choice but to do it."
+        [やるしかない]
+
+main16: "Leon, when you're done, go to the underground shelter!"
+        [レオン、終わったら、地下のシェルターに行け!]
+
+main17: "Hey, Ada!"
+        [おい、エイダ!]
+
+main18: "I have to get the vaccine quickly!"
+        [早いだワクチンを手に入れなければ!]
+
+main21: "Leon! What are you doing! This place will be overrun by the virus too!"
+        [レオン! 何をしている! ここもウイルスにやられるぞ!]
+
+main22: "Let's head to the shelter!"
+        [シェルターへ向かうぞ!]
+
+================================================================================
+STAGE 5 - SHELTER / ESCAPE
+================================================================================
+
+--- room5010/room5011 (Sherry's infection and vaccine scene) ---
+
+main00: "Sherry, hold on tight!"
+        [シヴリ- しっかりしな!]
+
+main03: "Leon, I found this in the files... It's terrible."
+        [レオン、このファイルを見て... おそろしいことが起きたの]
+
+main04: "This girl's body is being consumed by the virus."
+        [この子の体はウイルスに蝕まれているのよ]
+
+main05: "Elza, look at this."
+        [エルャ、こいつを見てみな]
+
+main07: "We have to give Sherry the vaccine or she'll..."
+        [ワクチンを打たねばとシヴリ-は...]
+
+main08: "I understand. I'll hurry."
+        [いいわ、急ぐ]
+
+main10: "Even as we speak, Sherry's body is being consumed by the virus."
+        [こうしている間にもシヴリ-の体は、ウイルスに蝕まれているわ]
+
+main15: "Hurry, Elza!"
+        [急ぐ、エルャ]
+
+main20: "Sherry! Open your eyes!"
+        [シヴリ-! 目を開けて!]
+
+main35: "We can escape through the shelter!"
+        [シェルターなら逃げられるわ]
+
+main43: "I have to get the vaccine quickly!"
+        [急いでワクチンを手に入れなければ!]
+
+--- room5040/room5041 (Computer room) ---
+
+main00: "E:P-4 Level... Access permitted. C: Computer Room"
+        [E:P-4レベル... アクセス許可。C:コンピュータールーム]
+
+--- room5060/room5061 (Laboratory examination room) ---
+
+main00: "The suit's locker in here appears to be broken and won't open."
+        [このスーツのスポットロッカーが、こわれてしまっているのか開かない]
+
+main01: "It looks like someone opened this in a hurry..."
+        [部屋には何も、ないのが、あわてて開け放しにしたように見える]
+
+--- room5120/room5121 (Locked door) ---
+
+main00: "The door is locked."
+        [ドアはロックされている]
+
+--- room5140/room5141 (Short messages) ---
+
+main01: "I found it! This is the..."
+        [見つけたわ この...]
+
+================================================================================
+RECURRING SYSTEM MESSAGES
+================================================================================
+
+"There's a button here. Do you want to press it?"
+[ボタンがある。押しますか?]
+
+"The door is locked."
+[ドアはロックされている]
+
+"You need a key to open this."
+[これを開けるにはカギが必要だ]
+
+"You picked up [item]."
+[〇〇を拾った]
+
+"You used [item] to open the door."
+[〇〇を使ってドアを開けた]
+
+================================================================================
+NOTES ON TRANSLATION
+================================================================================
+
+1. Many characters appear garbled due to character table differences between
+   RE1.5 and RE2. The character mapping needs refinement for perfect decoding.
+
+2. Some symbols like ╕, ►, ▼, etc. are likely control codes for:
+   - Text color changes
+   - Line breaks
+   - Menu options (Yes/No prompts)
+   - Speaker identification
+
+3. Character name variations:
+   - エルャ should be エルザ (Elza)
+   - シヴリ- should be シェリー (Sherry)
+   - マ-』[R2]ン should be マービン (Marvin)
+
+4. The dialogue reveals RE1.5's plot was similar to RE2 but with Elza Walker
+   instead of Claire Redfield as the female protagonist.
+
+5. STAGE 5 contains the climax of Elza's scenario where Sherry is infected
+   by the virus and needs the vaccine to survive. The shelter escape sequence
+   leads to the game's ending.
+
+================================================================================
+END OF TRANSLATION FILE
+================================================================================

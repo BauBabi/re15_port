@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  RE 1.5 Port — PSX ISO-Image Descriptor
+  ========================================
+  Konfiguration für mkpsxiso zur Erstellung eines bootfähigen PS1 CD-ROM Images.
+  
+  Verwendung:
+    mkpsxiso -y iso.xml -o RE15.bin -c RE15.cue
+    
+  Voraussetzungen:
+    - RE15.EXE muss im Build-Verzeichnis vorliegen (Post-Build von CMake)
+    - mkpsxiso muss installiert sein (https://github.com/Lameguy64/mkpsxiso)
+-->
+
+<iso_project
+    image_name="RE15"
+    cue_sheet="RE15.cue"
+    no_xa="0">
+
+    <track type="data">
+        <!-- Lizenz-Datei (PSX BIOS Bootscreen) -->
+        <license file="LICENSEA.DAT"/>
+
+        <directory_tree>
+            <!-- SYSTEM.CNF — Boot-Konfiguration (SCUS-Format) -->
+            <file name="SYSTEM.CNF" type="data" source="SYSTEM.CNF"/>
+
+            <!-- Haupt-Executable -->
+            <file name="RE15.EXE"   type="data" source="RE15.EXE"/>
+
+            <!-- 
+              TODO: Asset-Verzeichnisse hinzufügen wenn Assets integriert werden
+              <dir name="STAGE1">
+                <file name="ROOM1000.RDT" type="data" source="assets/STAGE1/ROOM1000.RDT"/>
+                ...
+              </dir>
+            -->
+        </directory_tree>
+    </track>
+
+</iso_project>
