@@ -1,0 +1,95 @@
+int DOOR0C02(void) {
+
+	Obj_model_move(0, 0, 0, 1, 0, 40970, 4096, -12281, -10226, -4083, 0, 0, 0);
+	Obj_model_move(1, 0, 0, 1, 0, 40962, 4096, -12281, -10226, -24335, 0, 8, 0);
+	Obj_model_move(2, 0, 0, 1, 1, 53248, 4096, -32256, 18676, 2291, 0, 0, 0);
+	Obj_model_move(3, 0, 0, 1, 1, 53504, 4096, 32511, 16628, 2291, 0, 0, 8);
+	Sce_fade_set(0, 2, 7, 0, 254);
+	Sce_fade_adjust(0, 0, 28);
+	Sleep(23040);
+	goto Sub06();
+	Se_on(0, 0, 0, 1, 0, 0, 0, 0);
+	Evt_exec(11, 0x1805);
+	Work_set(5, 0);
+	nop();
+	Speed_set(4, 1536);
+	Speed_set(10, -1);
+	for(n = 0; n < 1280; n++) {
+		Add_speed();
+		Evt_next();
+		Add_speed();
+		Evt_next();
+		Add_speed();
+		Evt_next();
+		Add_speed();
+		Evt_next();
+		Add_aspeed();
+		nop();
+	}
+	Sleep(4608);
+	Speed_set(0, 0);
+	Speed_set(10, 256);
+	Speed_set(4, 0);
+	for(n = 0; n < 1024; n++) {
+		Add_aspeed();
+		Add_speed();
+		Evt_next();
+		Add_speed();
+		Evt_next();
+		Add_speed();
+		Evt_next();
+		Evt_next();
+	}
+	for(n = 0; n < 3584; n++) {
+		Add_aspeed();
+		Add_speed();
+		Evt_next();
+		Add_speed();
+		Evt_next();
+		Add_speed();
+		Evt_next();
+		Add_speed();
+		Evt_next();
+		nop();
+	}
+	Speed_set(10, -257);
+	for(n = 0; n < 1280; n++) {
+		Add_aspeed();
+		Add_speed();
+		Evt_next();
+		Add_speed();
+		Evt_next();
+		Add_speed();
+		Evt_next();
+		Add_speed();
+		Evt_next();
+		nop();
+	}
+	for(n = 0; n < 1024; n++) {
+		Add_aspeed();
+		Add_speed();
+		Evt_next();
+		Add_speed();
+		Evt_next();
+		Add_speed();
+		Evt_next();
+		Evt_next();
+	}
+	Evt_exec(11, 0x1803);
+	Work_set(5, 0);
+	nop();
+	Speed_set(0, 0);
+	Speed_set(6, 512);
+	for(n = 0; n < 10240; n++) {
+		Add_speed();
+		Add_aspeed();
+		Evt_next();
+		nop();
+	}
+	Sce_fade_set(0, 2, 7, 0, 4);
+	for(n = 0; n < 7680; n++) {
+		Add_speed();
+		Evt_next();
+	}
+	return 0;
+}
