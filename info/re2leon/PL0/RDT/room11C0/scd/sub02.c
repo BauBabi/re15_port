@@ -1,0 +1,116 @@
+int sub02(void) {
+
+	Set(2, 7, 1);
+	Set(1, 27, 1);
+	Cut_chg(0x04);
+	Cut_auto(1);
+	Work_set(1, 0);
+	nop();
+	Pos_set(0, 32317, 0, 28966);
+	Member_set(15, -32759);
+	Evt_next();
+	Plc_motion(0, 16, 0);
+	nop();
+	Plc_neck(2, 0, 0, 254, 0, 17219);
+	Sleep(7680);
+	Plc_neck(2, 0, 0, 2, 0, 10280);
+	Sleep(10240);
+	Plc_neck(0, 0, 0, 2, 0, 14135);
+	Sleep(2560);
+	Plc_dest(0, 1312, -20943, 17724);
+	goto Sub13();
+	Plc_motion(1, 6, 0);
+	Sleep(6144);
+	Work_set(4, 3);
+	nop();
+	Member_copy(16, 1);
+	nop();
+	Calc(16 && 63487)
+	Member_set2(1, 16);
+	nop();
+	Work_set(1, 0);
+	nop();
+	Sleep(4608);
+	Se_on(2, 11, 1, 1, 0, 0, 0, 0);
+	Sleep(4608);
+	Plc_motion(1, 6, 128);
+	Sleep(6144);
+	Plc_dest(0, 1824, 30771, 31288);
+	goto Sub13();
+	Sleep(2560);
+	Work_set(4, 3);
+	nop();
+	Member_copy(16, 1);
+	nop();
+	Calc(16 || 2048)
+	Member_set2(1, 16);
+	nop();
+	Se_on(2, 10, 1, 1, 0, 0, 0, 0);
+	Sce_espr_on(0x00, 0x27, 17, 0, 0, 0x0A, 6704, -11010, -448, 0);
+	Work_set(1, 0);
+	Plc_motion(0, 16, 0);
+	nop();
+	Plc_neck(2, 0, 0, 254, 254, 16448);
+	Sleep(10240);
+	Plc_neck(2, 0, 0, 2, 254, 12336);
+	Sleep(10240);
+	Plc_neck(2, 0, 0, 254, 254, 9766);
+	Sleep(7680);
+	Sce_bgm_control(1, 1, 0, 0, 22);
+	Sleep(2560);
+	Plc_dest(0, 1312, -25810, -24254);
+	goto Sub13();
+	Plc_dest(0, 5408, 29446, 24576);
+	goto Sub13();
+	goto Sub03();
+	Cut_chg(0x0B);
+	Work_set(4, 0);
+	nop();
+	Member_set(12, -8015);
+	Work_set(1, 0);
+	nop();
+	Pos_set(0, 3377, 0, 23110);
+	Member_set(15, -12279);
+	Plc_motion(0, 15, 64);
+	Plc_cnt(1);
+	Sleep(24320);
+	Plc_stop();
+	Cut_chg(0x0A);
+	nop();
+	Evt_exec(255, 0x1806);
+	Sleep(30720);
+	Sce_bgm_control(1, 5, 0, 0, 22);
+	Sce_fade_set(0, 2, 7, 0, 2);
+	Sleep(15104);
+	for(n = 0; n < 2560; n++) {
+		Sce_fade_adjust(0, 255, 127);
+		Evt_next();
+		nop();
+	}
+	Work_set(1, 0);
+	nop();
+	Member_copy(16, 1);
+	nop();
+	Calc(16 || 2048)
+	Member_set2(1, 16);
+	nop();
+	Cut_chg(0x0C);
+	for(n = 0; n < 15360; n++) {
+		Sce_fade_adjust(0, 255, 127);
+		Evt_next();
+		nop();
+	}
+	Sce_fade_adjust(0, 0, 0);
+	Sce_fade_set(0, 2, 7, 1, 128);
+	Evt_exec(255, 0x1807);
+	Sleep(33280);
+	Sce_fade_set(0, 2, 7, 17, 1);
+	Sce_bgm_control(0, 5, 0, 91, 65);
+	Sleep(30464);
+	Set(0, 10, 1);
+	Sce_fade_adjust(0, 255, 127);
+	Evt_next();
+	nop();
+	goto(0x0000FAFF);
+	return 0;
+}

@@ -1,0 +1,160 @@
+int sub06(void) {
+
+	Work_set(1, 0);
+	nop();
+	Sleep(256);
+	Plc_dest(0, 1057, -23340, -32280);
+	Sleep(23040);
+	Plc_dest(0, 2337, 1221, 27116);
+	Sleep(6400);
+	Sleep(38400);
+	Plc_motion(0, 29, 0);
+	Sleep(2560);
+	Sleep(7680);
+	Plc_neck(0, 1, 0, 0, 0, 24576);
+	Sleep(1024);
+	Plc_dest(0, 1057, 27861, -32280);
+	goto Sub17();
+	Plc_neck(1, 168, 228, -28440, 31471, 8224);
+	goto Sub16();
+	Sleep(7680);
+	Plc_neck(5, 2, 0, 0, 0, 24672);
+	Sleep(1280);
+	Plc_dest(0, 2337, -560, -30225);
+	Plc_rot(1, 12);
+	Sleep(6400);
+	Xa_on(0, 15360);
+	Sleep(512);
+	Message_on(0, 512, 0x0000);
+	Work_set(2, 0);
+	nop();
+	Plc_neck(4, 3, 0, 0, 0, 24640);
+	Wsleep();
+	Wsleeping();
+	Plc_neck(5, 1, 0, 0, 0, 24672);
+	Work_set(1, 0);
+	nop();
+	Plc_neck(1, 168, 228, -28440, 31471, 12296);
+	Sleep(2816);
+	Plc_motion(2, 2, 1);
+	Sleep(10240);
+	Work_set(2, 0);
+	nop();
+	Plc_neck(1, 168, 228, -28440, 31471, 12336);
+	Sleep(10240);
+	Xa_on(0, 15616);
+	Sleep(512);
+	Message_on(0, 768, 0x0000);
+	Work_set(1, 0);
+	nop();
+	Plc_neck(5, 2, 0, 0, 0, 16448);
+	Sleep(1280);
+	Plc_motion(0, 29, 1);
+	Sleep(3840);
+	Plc_motion(0, 29, 1);
+	Sleep(2560);
+	Plc_motion(2, 2, 1);
+	Work_set(2, 0);
+	nop();
+	Plc_neck(5, 1, 0, 0, 0, 10272);
+	Plc_dest(0, 2336, -23340, -32280);
+	Sleep(2560);
+	Work_set(1, 0);
+	Plc_motion(0, 31, 1);
+	nop();
+	Sleep(6400);
+	Plc_motion(2, 2, 1);
+	Wsleep();
+	Wsleeping();
+	Work_set(2, 0);
+	nop();
+	Plc_neck(1, 168, 228, -28440, 31471, 12312);
+	Work_set(1, 0);
+	nop();
+	Plc_neck(5, 2, 0, 0, 0, 16448);
+	Sleep(1280);
+	Plc_motion(0, 29, 1);
+	Xa_on(0, 15872);
+	Sleep(512);
+	Message_on(0, 1024, 0x0000);
+	Sleep(1280);
+	Work_set(1, 0);
+	Plc_motion(0, 31, 1);
+	nop();
+	Sleep(3840);
+	Plc_motion(0, 28, 1);
+	Sleep(2048);
+	Work_set(2, 0);
+	nop();
+	Plc_dest(0, 2336, -23340, -32280);
+	Plc_neck(5, 1, 0, 0, 0, 10272);
+	Work_set(1, 0);
+	nop();
+	Sleep(5376);
+	Plc_motion(2, 2, 1);
+	Wsleep();
+	Wsleeping();
+	Work_set(2, 0);
+	nop();
+	Plc_neck(3, 1, 0, 0, 0, 48);
+	Sleep(7680);
+	Evt_exec(255, 0x1807);
+	Evt_exec(255, 0x1808);
+	do {
+		Evt_next();
+		nop();
+	} while(Ck(5, 0, 0));
+	Work_set(2, 0);
+	nop();
+	Pos_set(0, 0, 0, 0);
+	for(n = 0; n < 10240; n++) {
+		Sce_fade_adjust(2, 255, 127);
+		Evt_next();
+		nop();
+	}
+	Se_on(2, 11, 1, 4, 0, 0, 0, 0);
+	for(n = 0; n < 15360; n++) {
+		Sce_fade_adjust(2, 255, 127);
+		Evt_next();
+		nop();
+	}
+	Sce_fade_set(2, 2, 7, 0, 252);
+	Cut_chg(0x04);
+	Sleep(5120);
+	Work_set(1, 0);
+	nop();
+	Pos_set(0, -12570, 0, 30956);
+	Member_copy(16, 0);
+	nop();
+	Calc(16 && 63487)
+	Member_set2(0, 16);
+	nop();
+	Member_copy(16, 0);
+	nop();
+	Calc(16 && 65531)
+	Member_set2(0, 16);
+	nop();
+	Member_copy(16, 0);
+	nop();
+	Calc(16 && 65023)
+	Member_set2(0, 16);
+	nop();
+	Plc_motion(1, 6, 128);
+	Se_on(2, 10, 1, 4, 0, 0, 0, 0);
+	// unknown opcode (8A) found at 0x0000024A
+	// unknown opcode (8B) found at 0x00000250
+	Set(3, 129, 1);
+	Set(32, 4, 1);
+	if(Ck(1, 1, 1)) {
+		Evt_exec(255, 0x1809);
+		Evt_chain(0, 24, 10);
+		Sleep(5120);
+	}
+	Sleep(7680);
+	Work_set(1, 0);
+	Plc_ret();
+	Set(2, 7, 0);
+	Set(1, 27, 0);
+	Cut_auto(1);
+	return 0;
+}

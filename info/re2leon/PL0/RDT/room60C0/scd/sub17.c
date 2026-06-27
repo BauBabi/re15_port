@@ -1,0 +1,45 @@
+int sub17(void) {
+
+Cut_chg(0x06);
+Evt_next();
+nop();
+Xa_on(0, 1792);
+Sleep(512);
+Message_on(0, 4608, 0x0000);
+Work_set(3, 0);
+Plc_motion(0, 16, 0);
+nop();
+Plc_neck(2, 0, 0, 252, 0, 4104);
+Sleep(3840);
+Plc_neck(2, 0, 0, 4, 0, 4104);
+Sleep(7680);
+Plc_neck(5, 1, 0, 0, 0, 8224);
+Sleep(7680);
+Plc_motion(0, 18, 16);
+Plc_cnt(12);
+Sleep(6400);
+Plc_motion(0, 19, 0);
+Sleep(7680);
+Plc_motion(0, 19, 128);
+Sleep(2560);
+Plc_motion(0, 19, 16);
+Plc_cnt(20);
+Sleep(7680);
+Plc_motion(0, 16, 16);
+Plc_cnt(10);
+Sleep(10240);
+Plc_motion(0, 19, 16);
+Sleep(10240);
+Plc_neck(2, 0, 0, 4, 0, 4128);
+Sleep(5120);
+Plc_neck(2, 0, 0, 252, 0, 4128);
+Sleep(5120);
+Plc_motion(0, 16, 0);
+Sleep(6400);
+Plc_neck(2, 0, 0, 0, 4, 4104);
+Sleep(5120);
+Plc_neck(5, 1, 0, 0, 0, 8224);
+Wsleep();
+Wsleeping();
+return 0;
+}

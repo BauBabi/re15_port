@@ -1,0 +1,45 @@
+int sub10(void) {
+
+	Work_set(4, 1);
+	nop();
+	Member_set(14, -2305);
+	Evt_next();
+	nop();
+	Member_set(14, 0);
+	Evt_next();
+	nop();
+	Member_set(14, 2560);
+	Evt_next();
+	nop();
+	Member_set(14, -1025);
+	Evt_next();
+	nop();
+	Member_set(14, 0);
+	Evt_next();
+	nop();
+	Member_set(14, -1025);
+	Evt_next();
+	nop();
+	Member_set(14, -257);
+	Evt_next();
+	nop();
+	Member_set(14, 0);
+	Evt_next();
+	nop();
+	Member_set(14, 512);
+	Evt_next();
+	nop();
+	Member_set(14, -1);
+	Evt_next();
+	nop();
+	Member_set(14, 0);
+	Evt_next();
+	nop();
+	Member_set(14, 256);
+	Evt_next();
+	nop();
+	Member_set(14, 0);
+	Evt_next();
+	nop();
+	return 0;
+}

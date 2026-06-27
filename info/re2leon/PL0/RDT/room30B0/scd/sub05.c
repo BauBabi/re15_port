@@ -1,0 +1,48 @@
+int sub05(void) {
+
+	Work_set(2, 0);
+	nop();
+	Sleep(3840);
+	Plc_neck(5, 1, 0, 0, 0, -27442);
+	Sleep(6400);
+	Plc_dest(0, 2336, -2865, 12781);
+	goto Sub16();
+	Plc_neck(5, 1, 0, 0, 0, -27442);
+	Plc_motion(0, 15, 1);
+	Xa_on(0, 14848);
+	Sleep(512);
+	Message_on(0, 0, 0x0000);
+	Wsleep();
+	Wsleeping();
+	Sleep(1280);
+	Cut_chg(0x03);
+	Plc_dest(0, 1056, 6346, -27155);
+	goto Sub16();
+	Sleep(1280);
+	Xa_on(0, 15104);
+	Sleep(512);
+	Message_on(0, 256, 0x0000);
+	Sleep(1280);
+	Plc_motion(0, 19, 1);
+	Sleep(3840);
+	Plc_motion(0, 15, 1);
+	Sleep(6400);
+	Plc_motion(0, 22, 1);
+	Sleep(5120);
+	Plc_motion(0, 16, 1);
+	Sleep(2560);
+	Plc_motion(0, 18, 1);
+	Sleep(5120);
+	Plc_motion(0, 21, 1);
+	Wsleep();
+	Wsleeping();
+	Plc_motion(0, 23, 1);
+	Plc_dest(0, 2336, -23340, -32280);
+	Sleep(17920);
+	Plc_dest(0, 1056, -20270, -30225);
+	Plc_neck(1, 168, 228, -28440, 31471, 8224);
+	Sleep(1280);
+	goto Sub16();
+	Plc_motion(0, 23, 1);
+	return 0;
+}

@@ -1,0 +1,40 @@
+int sub21(void) {
+
+	Xa_on(0, 4608);
+	Evt_next();
+	Plc_motion(0, 16, 0);
+	nop();
+	Sleep(1280);
+	Plc_neck(2, 0, 0, 1, 1, 5140);
+	Sleep(5120);
+	Plc_neck(2, 0, 0, 255, 1, 5140);
+	Sleep(5120);
+	Plc_neck(2, 0, 0, 1, 1, 10280);
+	Sleep(2560);
+	Plc_neck(2, 0, 0, 255, 1, 10280);
+	Plc_motion(0, 18, 0);
+	Sleep(5120);
+	Work_set(3, 0);
+	nop();
+	Plc_neck(5, 1, 0, 0, 0, 8224);
+	Sleep(3840);
+	Work_set(3, 0);
+	Plc_motion(0, 16, 0);
+	Plc_cnt(5);
+	nop();
+	Sleep(2560);
+	Plc_neck(2, 0, 0, 0, -32768, 8224);
+	Sleep(1280);
+	Plc_neck(2, 0, 0, 0, 0, 8224);
+	Sleep(3840);
+	Plc_motion(0, 15, 0);
+	Sleep(5120);
+	Plc_motion(0, 16, 0);
+	Sleep(3840);
+	Plc_neck(2, 0, 0, 0, -32768, 8224);
+	Sleep(1280);
+	Plc_neck(2, 0, 0, 0, 0, 8224);
+	Wsleep();
+	Wsleeping();
+	return 0;
+}
