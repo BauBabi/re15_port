@@ -1,0 +1,89 @@
+INFO  Using log config file: jar:file:/C:/Users/mjoedicke/Downloads/ghidra_11.4.2_PUBLIC_20250826/ghidra_11.4.2_PUBLIC/Ghidra/Framework/Generic/lib/Generic.jar!/generic.log4j.xml (LoggingInitialization)  
+INFO  Using log file: C:\Users\mjoedicke\AppData\Roaming\ghidra\ghidra_11.4.2_PUBLIC\application.log (LoggingInitialization)  
+INFO  Loading user preferences: C:\Users\mjoedicke\AppData\Roaming\ghidra\ghidra_11.4.2_PUBLIC\preferences (Preferences)  
+INFO  Searching for classes... (ClassSearcher)  
+INFO  Ignoring class 'ghidra.app.plugin.core.analysis.MipsPreAnalyzer' from 'C:\Users\mjoedicke\AppData\Roaming\ghidra\ghidra_11.4.2_PUBLIC\Extensions\ghidra_psx_ldr\lib\ghidra_psx_ldr.jar'. Already found at 'C:\Users\mjoedicke\Downloads\ghidra_11.4.2_PUBLIC_20250826\ghidra_11.4.2_PUBLIC\Ghidra\Processors\MIPS\lib\MIPS.jar'. (ClassSearcher)  
+INFO  Class search complete (1738 ms) (ClassSearcher)  
+INFO  Initializing SSL Context (SSLContextInitializer)  
+INFO  Initializing Random Number Generator... (SecureRandomFactory)  
+INFO  Random Number Generator initialization complete: SHA1PRNG (SecureRandomFactory)  
+INFO  Trust manager disabled, cacerts have not been set (ApplicationTrustManagerFactory)  
+INFO  Starting cache cleanup: C:\Users\mjoedicke\AppData\Local\ghidra\fscache2 (FileCacheMaintenanceDaemon)  
+INFO  Finished cache cleanup, estimated storage used: 0 (FileCacheMaintenanceDaemon)  
+INFO  Headless startup complete (5280 ms) (AnalyzeHeadless)  
+INFO  Class searcher loaded 90 extension points (42 false positives) (ClassSearcher)  
+INFO  HEADLESS Script Paths:
+    C:\Users\mjoedicke\Downloads\ghidra_11.4.2_PUBLIC_20250826\ghidra_11.4.2_PUBLIC\Ghidra\Features\Decompiler\ghidra_scripts
+    C:\Users\mjoedicke\Downloads\ghidra_11.4.2_PUBLIC_20250826\ghidra_11.4.2_PUBLIC\Ghidra\Debug\Debugger\ghidra_scripts
+    C:\Users\mjoedicke\Downloads\ghidra_11.4.2_PUBLIC_20250826\ghidra_11.4.2_PUBLIC\Ghidra\Features\BytePatterns\ghidra_scripts
+    C:\Users\mjoedicke\Downloads\ghidra_11.4.2_PUBLIC_20250826\ghidra_11.4.2_PUBLIC\Ghidra\Features\VersionTracking\ghidra_scripts
+    C:\Users\mjoedicke\Downloads\ghidra_11.4.2_PUBLIC_20250826\ghidra_11.4.2_PUBLIC\Ghidra\Features\BSim\ghidra_scripts
+    C:\Users\mjoedicke\Downloads\ghidra_11.4.2_PUBLIC_20250826\ghidra_11.4.2_PUBLIC\Ghidra\Features\GnuDemangler\ghidra_scripts
+    C:\Users\mjoedicke\Downloads\ghidra_11.4.2_PUBLIC_20250826\ghidra_11.4.2_PUBLIC\Ghidra\Debug\Debugger-rmi-trace\ghidra_scripts
+    C:\Users\mjoedicke\Downloads\ghidra_11.4.2_PUBLIC_20250826\ghidra_11.4.2_PUBLIC\Ghidra\Features\PDB\ghidra_scripts
+    C:\Users\mjoedicke\Downloads\ghidra_11.4.2_PUBLIC_20250826\ghidra_11.4.2_PUBLIC\Ghidra\Features\WildcardAssembler\ghidra_scripts
+    C:\Users\mjoedicke\Downloads\ghidra_11.4.2_PUBLIC_20250826\ghidra_11.4.2_PUBLIC\Ghidra\Processors\8051\ghidra_scripts
+    C:\Users\mjoedicke\Downloads\ghidra_11.4.2_PUBLIC_20250826\ghidra_11.4.2_PUBLIC\Ghidra\Features\Base\ghidra_scripts
+    C:\Users\mjoedicke\Downloads\ghidra_11.4.2_PUBLIC_20250826\ghidra_11.4.2_PUBLIC\Ghidra\Processors\DATA\ghidra_scripts
+    C:\Users\mjoedicke\Downloads\ghidra_11.4.2_PUBLIC_20250826\ghidra_11.4.2_PUBLIC\Ghidra\Features\DecompilerDependent\ghidra_scripts
+    C:\Users\mjoedicke\Downloads\ghidra_11.4.2_PUBLIC_20250826\ghidra_11.4.2_PUBLIC\Ghidra\Features\FunctionID\ghidra_scripts
+    C:\workspace\git\reAi\scripts
+    C:\Users\mjoedicke\Downloads\ghidra_11.4.2_PUBLIC_20250826\ghidra_11.4.2_PUBLIC\Ghidra\Processors\Atmel\ghidra_scripts
+    C:\Users\mjoedicke\Downloads\ghidra_11.4.2_PUBLIC_20250826\ghidra_11.4.2_PUBLIC\Ghidra\Features\FileFormats\ghidra_scripts
+    C:\Users\mjoedicke\Downloads\ghidra_11.4.2_PUBLIC_20250826\ghidra_11.4.2_PUBLIC\Ghidra\Processors\JVM\ghidra_scripts
+    C:\Users\mjoedicke\Downloads\ghidra_11.4.2_PUBLIC_20250826\ghidra_11.4.2_PUBLIC\Ghidra\Features\MicrosoftCodeAnalyzer\ghidra_scripts
+    C:\Users\mjoedicke\Downloads\ghidra_11.4.2_PUBLIC_20250826\ghidra_11.4.2_PUBLIC\Ghidra\Features\Jython\ghidra_scripts
+    C:\Users\mjoedicke\Downloads\ghidra_11.4.2_PUBLIC_20250826\ghidra_11.4.2_PUBLIC\Ghidra\Features\SwiftDemangler\ghidra_scripts
+    C:\Users\mjoedicke\AppData\Roaming\ghidra\ghidra_11.4.2_PUBLIC\Extensions\ghidra_psx_ldr\ghidra_scripts
+    C:\Users\mjoedicke\Downloads\ghidra_11.4.2_PUBLIC_20250826\ghidra_11.4.2_PUBLIC\Ghidra\Features\SystemEmulation\ghidra_scripts
+    C:\Users\mjoedicke\Downloads\ghidra_11.4.2_PUBLIC_20250826\ghidra_11.4.2_PUBLIC\Ghidra\Features\PyGhidra\ghidra_scripts
+    C:\Users\mjoedicke\Downloads\ghidra_11.4.2_PUBLIC_20250826\ghidra_11.4.2_PUBLIC\Ghidra\Processors\PIC\ghidra_scripts (HeadlessAnalyzer)  
+INFO  HEADLESS: execution starts (HeadlessAnalyzer)  
+INFO  Creating temporary project: C:\workspace\git\reAi\.agent_refs\gh_proj\stage1 (HeadlessAnalyzer)  
+INFO  Creating project: C:\workspace\git\reAi\.agent_refs\gh_proj\stage1 (DefaultProject)  
+INFO  REPORT: Processing input files:  (HeadlessAnalyzer)  
+INFO       project: C:\workspace\git\reAi\.agent_refs\gh_proj\stage1 (HeadlessAnalyzer)  
+INFO  IMPORTING: file:///C:/workspace/git/reAi/.agent_refs/stage1_reloc.bin (HeadlessAnalyzer)  
+INFO  Successfully applied "-loader-baseAddr" to "Base Address" (old: "null", new: "0x80100000") (AutoImporter)  
+INFO  Using Loader: Raw Binary (AutoImporter)  
+INFO  Using Language/Compiler: MIPS:LE:32:default:default (AutoImporter)  
+INFO  Using Library Search Path: [., C:\WINDOWS\SysWOW64, C:\Program Files\Eclipse Adoptium\jdk-21.0.4.7-hotspot\bin, C:\WINDOWS\Sun\Java\bin, C:\WINDOWS\system32, C:\WINDOWS, C:\Program Files\Google\Chrome\Application, C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.0\bin\x64, C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.0\bin, C:\Python310\Scripts\, C:\Python310\, C:\Python39\Scripts\, C:\Python39\, C:\Program Files\Eclipse Adoptium\jdk-17.0.15.6-hotspot\bin, C:\WINDOWS\System32\Wbem, C:\WINDOWS\System32\WindowsPowerShell\v1.0\, C:\WINDOWS\System32\OpenSSH\, C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common, C:\Program Files\Git\cmd, C:\Program Files\nodejs\, C:\ProgramData\chocolatey\bin, C:\Program Files\Docker\Docker\resources\bin, C:\Program Files\PuTTY\, C:\Program Files\NVIDIA Corporation\Nsight Compute 2025.3.1\, C:\Program Files\Go\bin, C:\Program Files\WinMerge, C:\Program Files (x86)\Windows Kits\10\Windows Performance Toolkit\, C:\Program Files\NVIDIA Corporation\NVIDIA App\NvDLISR, C:\Program Files\CMake\bin, C:\Users\mjoedicke\AppData\Local\Microsoft\WindowsApps, C:\Users\mjoedicke\AppData\Local\Programs\Microsoft VS Code\bin, C:\Users\mjoedicke\AppData\Roaming\npm, C:\Program Files\JetBrains\PyCharm 2025.2.0.1\bin, C:\Program Files\hexdump-2.1.0, C:\Python310\Scripts, C:\Python310, C:\Users\mjoedicke\go\bin, C:\msys64\mingw64\bin, C:\Users\mjoedicke\.local\bin, C:\Program Files\JetBrains\IntelliJ IDEA 2026.1\bin] (AutoImporter)  
+INFO  IMPORTING: Loaded 0 additional files (HeadlessAnalyzer)  
+INFO  ANALYZING all memory and code: file:///C:/workspace/git/reAi/.agent_refs/stage1_reloc.bin (HeadlessAnalyzer)  
+INFO  Packed database cache: C:\Users\mjoedicke\AppData\Local\ghidra\packed-db-cache (PackedDatabaseCache)  
+INFO  Applied data type archive: generic_clib (ApplyDataArchiveAnalyzer)  
+INFO  -----------------------------------------------------
+    ASCII Strings                              0.343 secs
+    Apply Data Archives                        0.893 secs
+    Call-Fixup Installer                       0.007 secs
+    Create Address Tables                      0.016 secs
+    Create Address Tables - One Time           0.074 secs
+    Create Function                            0.267 secs
+    Data Reference                             0.025 secs
+    Decompiler Switch Analysis                 5.400 secs
+    Demangler GNU                              0.002 secs
+    Disassemble                                0.840 secs
+    Disassemble Entry Points                   0.001 secs
+    Embedded Media                             0.018 secs
+    External Entry References                  0.000 secs
+    Function Start Search                      0.074 secs
+    Function Start Search delayed - One Time   0.001 secs
+    MIPS Constant Reference Analyzer           1.498 secs
+    MIPS Symbol                                0.002 secs
+    MIPS UnAlligned Instruction Fix            0.040 secs
+    Non-Returning Functions - Discovered       0.060 secs
+    Reference                                  0.150 secs
+    Shared Return Calls                        0.033 secs
+    Stack                                      1.127 secs
+    Subroutine References                      0.098 secs
+-----------------------------------------------------
+     Total Time   10 secs
+-----------------------------------------------------
+ (AutoAnalysisManager)  
+INFO  REPORT: Analysis succeeded for file: file:///C:/workspace/git/reAi/.agent_refs/stage1_reloc.bin (HeadlessAnalyzer)  
+INFO  SCRIPT: C:\workspace\git\reAi\scripts\ghidra_decomp_dump.py (HeadlessAnalyzer)  
+GHIDRA_DECOMP_DUMP WROTE 294 functions -> C:\workspace\git\reAi\.agent_refs\stage1_decomp.c + per-func -> C:\workspace\git\reAi\.agent_refs\stage1_funcs
+INFO  ANALYZING changes made by post scripts: file:///C:/workspace/git/reAi/.agent_refs/stage1_reloc.bin (HeadlessAnalyzer)  
+INFO  REPORT: Post-analysis succeeded for file: file:///C:/workspace/git/reAi/.agent_refs/stage1_reloc.bin (HeadlessAnalyzer)  
+INFO  REPORT: Save succeeded for: /stage1_reloc.bin (stage1:/stage1_reloc.bin) (HeadlessAnalyzer)  
+INFO  REPORT: Import succeeded (HeadlessAnalyzer)  

@@ -24,9 +24,6 @@ out/
 .settings
 .springBeans
 .sts4-cache
-bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
 
 ### NetBeans ###
 /nbproject/private/
@@ -41,60 +38,33 @@ bin/
 ### Mac OS ###
 .DS_Store
 /extracted/
-/info/Re1.5_PATCHED/re15_save_final.bin
-/info/Re1.5_PATCHED/re15_save_final.cue
-/info/Re1.5/re15_save_final.bin
-/info/Re1.5/re15_save_final.cue
 
-### Large RE1.5 save-disc images — 206MB .bin exceeds GitHub's 100MB limit; never track.
-### Unanchored so EVERY copy (info/, info/.../re15/, extracted/, …) is ignored.
+### Große RE1.5 Save-Disc-Images (~206 MB .bin > GitHubs 100-MB-Grenze) — nie tracken.
+### Unanchored, damit JEDE Kopie ignoriert wird.
 re15_save_final.bin
 re15_save_final.cue
 
-### Generated shared asset tree (globalization Phase 1, 2026-06-13).
-### Fully regenerable from info/Re1.5 + psx_dev/re15_reborn/assets via
-### scripts/build_assets_shared.py — don't track the 3MB+ of binaries.
-/psx_dev/assets_shared/
-
-### chars/ = RE2RT reference extraction (7.3GB) — kept on disk, never tracked.
+### chars/ = RE2RT-Referenz-Extraktion (7.3 GB) — lokal, nie tracken.
 /chars/
 
-### C/C++ Build-Artefakte (re15_port). build/ ist bereits oben ignoriert;
-### diese Regeln fangen lose Objektdateien von Direkt-Compiler-Aufrufen ab.
-*.o
-*.obj
-*.a
-*.exe
-*.ilk
-*.pdb
+### C/C++ Build-Artefakte — NUR unter re15_port. Bewusst NICHT global, denn in den
+### Referenzdirs sind .EXE/.OBJ/.o echte Spieldaten (z.B. info/Re1.5/PSX.EXE,
+### info/re2leon/.../*.OBJ-Modelle). re15_port/build/ ist über 'build/' schon ignoriert.
+re15_port/**/*.o
+re15_port/**/*.obj
+re15_port/**/*.a
+re15_port/**/*.exe
+re15_port/**/*.ilk
+re15_port/**/*.pdb
 
-### =====================================================================
-### Große lokale RE-Referenz-/Binärdaten — NICHT ins Git-Repo.
-### Liegen lokal im Workspace (siehe CLAUDE.md); für den Port-Build nicht nötig.
-### Bei Bedarf einzelne Zeile entfernen, um etwas doch zu tracken.
-### =====================================================================
-/info/
-/voice/
-/synchro/
-/.agent_refs/
-/psx_dev/
-/RE_15_Quellcode_V2/
-/RE_15_Quellcode_Overlays/
-/RE2_Quellcode_V2/
-/RE2_Quellcode_Overlays/
+### Einzelne Dateien > 100 MB (GitHubs harte Grenze) — bleiben draußen.
+/.agent_refs/gh_STAGE2.log
 
-### Ghidra-Dumps (Disasm/Decompile, ~185 MB) — lokal halten
-ghidra1_V2.txt
-ghidra_re2_Leon.txt
-ghidra_re2_exe_V2.txt
-ghidra_source_original_V2.txt
-ghidra_source_re2_Leon.txt
+### Deaktivierte eingebettete Git-Repos in Referenzdirs (von .git umbenannt),
+### damit deren Arbeitsdateien normal getrackt werden statt als kaputtes Submodule.
+**/.gitdisabled/
 
-### Hinweis: Spiel-Assets WERDEN getrackt (Entscheidung 2026-06-27) —
-### re15_port/shared_assets/PSX bleibt im Repo. re15_port/build/ (inkl. der
-### dorthin verschobenen Extraktions-Intermediates) ist über 'build/' ignoriert.
-
-### .claude: Skills + curated settings bleiben getrackt; aber der alte
-### Agent-Worktree-Snapshot (~3.7 GB Vollkopie) und Runtime-Locks raus.
+### .claude: Skills + curated settings bleiben getrackt; alter Agent-Worktree-
+### Snapshot (~3.7 GB) und Runtime-Locks raus.
 /.claude/worktrees/
 /.claude/*.lock

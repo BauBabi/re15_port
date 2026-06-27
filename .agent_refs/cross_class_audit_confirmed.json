@@ -1,0 +1,326 @@
+[
+  {
+    "id": "ot-bucket-shift-3-vs-4",
+    "subsystem": "mesh / GTE pipeline / OT bucket",
+    "severity": "HIGH",
+    "category": "value",
+    "our_loc": "psx_dev/re15_reborn/src/mesh_psx.c:335",
+    "source_cite": "FUN_80022f0c.c:51 (uVar2>>4)*4; FUN_800254a0.c:64; FUN_800256b0.c:75; shadow FUN_8001b064.c:91 (uVar3>>4)",
+    "fix": "mesh_psx.c:335 change `int bucket = (int)(otz >> 3);` to `int bucket = (int)(otz >> 4);` (RE1.5 indexes the 1024-word per-actor OT by word index otz>>4). Update RE2 comment at :318-334."
+  },
+  {
+    "id": "near-plane-drop-8-vs-64",
+    "subsystem": "mesh / GTE pipeline / OT bucket",
+    "severity": "HIGH",
+    "category": "value",
+    "our_loc": "psx_dev/re15_reborn/src/mesh_psx.c:263 (used :496,:639)",
+    "source_cite": "FUN_80022f0c.c:50 (uVar2>>6 != 0); FUN_800254a0.c:63; FUN_800256b0.c:71",
+    "fix": "mesh_psx.c:263 change `#define OTZ_NEAR_PLANE_DROP 8` to `#define OTZ_NEAR_PLANE_DROP 0x40` (otz>>6 != 0 i.e. otz>=64). Update stale RE2/value-8 comment at :257-262."
+  },
+  {
+    "id": "extra-gte-flag-cull",
+    "subsystem": "mesh / GTE pipeline / OT bucket",
+    "severity": "MED",
+    "category": "behavior",
+    "our_loc": "psx_dev/re15_reborn/src/mesh_psx.c:469-473,:598-602,:629-633 (mask :287)",
+    "source_cite": "FUN_80022f0c.c / FUN_800254a0.c / FUN_800256b0.c: no gte_stflg/FLAG read anywhere; pipeline is rtpt->nclip->avsz->(otz>>6) gate only",
+    "fix": "Delete all three `gte_stflg(&gte_flag); if(flag & GTE_FLAG_ERROR_MASK) continue;` blocks (tri :469-473, quad v0/v1/v2 :598-602, quad v3 :629-633). Rely on otz near-gate + nclip backface only. GTE_FLAG_ERROR_MASK def :287 becomes unused."
+  },
+  {
+    "id": "coll-pair-inverted-mover",
+    "subsystem": "Collision (re15_collision.c)",
+    "severity": "HIGH",
+    "category": "behavior",
+    "our_loc": "psx_dev/re15_reborn/src/re15_collision.c:390-445 (actor_pair_push / re15_collision_actors)",
+    "source_cite": "FUN_8002b544 a0=self/enemy a1=DAT_800ac784=player; FUN_80031c44.c:6 sets DAT_800ac784=&DAT_800aca54(player); FUN_8002aec4.c:172-173 writes param_2 only (player moves, enemy fixed)",
+    "fix": "re15_collision.c:431 change `actor_pair_push(rdt, pl, e);` to `actor_pair_push(rdt, e, (re15_actor_t *)pl);` so the PLAYER yields (param_2=player=mover, enemy=self=fixed). Prefer dropping const on re15_collision_actors(pl)."
+  },
+  {
+    "id": "coll-pair-no-enemy-enemy",
+    "subsystem": "Collision (re15_collision.c)",
+    "severity": "HIGH",
+    "category": "behavior",
+    "our_loc": "psx_dev/re15_reborn/src/re15_collision.c:433-444",
+    "source_cite": "jal FUN_8002aec4 only @8002b598 (inside FUN_8002b544); jal FUN_8002b544 only @80031cbc (FUN_80031c44 player update) with DAT_800ac784=player; no enemy step calls it",
+    "fix": "Delete the O(n^2) enemy-vs-enemy double loop (re15_collision.c:433-444). The byte-true driver runs once/frame and only ever moves the player; there is NO enemy-vs-enemy collision."
+  },
+  {
+    "id": "coll-pair-extra-constrain",
+    "subsystem": "Collision (re15_collision.c)",
+    "severity": "LOW",
+    "category": "behavior",
+    "our_loc": "psx_dev/re15_reborn/src/re15_collision.c:410-416 (actor_pair_push)",
+    "source_cite": "FUN_8002aec4.c:172-181 writes param_2[0xd]/[0xf]+contact flags then returns; SCA constrain runs separately later (FUN_80031c44.c:21 FUN_8003b0a4)",
+    "fix": "In actor_pair_push remove the in-routine re15_collision_constrain block (:410-416): write `other->x += pushX; other->z += pushZ;` and return. No SCA pass here. (Secondary unported: contact flag +0x1c2 and push-source ptr [0x6b]; rdt/ox/oz can be dropped.)"
+  },
+  {
+    "id": "scd-dir_set-target-and-axes",
+    "subsystem": "SCD opcodes 0x20-0x3F (scd_vm.c)",
+    "severity": "HIGH",
+    "category": "behavior",
+    "our_loc": "psx_dev/re15_reborn/src/scd_vm.c:1328-1340 (op_dir_set)",
+    "source_cite": "ghidra1_V2.txt:151242-151256 LAB_80041080 (opcode 0x33): lhu pc[2]->+0x68 rot_x, pc[4]->+0x6a rot_y, pc[6]->+0x6c rot_z on WORK ENTITY (thread+0x154); pc[1] never read",
+    "fix": "Replace op_dir_set body: read rx=LE pc[2], ry=LE pc[4], rz=LE pc[6]; resolve work entity like op_pos_set (t->work_slot/g_scd.work_slot, else work_prop_idx); write rot_x/rot_y/rot_z to it; pc[1] NOT read, not hard-wired to player. pc+=8. Update header comment (drop the pc[1]=register line)."
+  },
+  {
+    "id": "scd-member_set2-value-source",
+    "subsystem": "SCD opcodes 0x20-0x3F (scd_vm.c)",
+    "severity": "HIGH",
+    "category": "value",
+    "our_loc": "psx_dev/re15_reborn/src/scd_vm.c:2630-2647 (op_member_set2)",
+    "source_cite": "ghidra1_V2.txt:151278-151303 LAB_80041108 (opcode 0x35): a2 = DAT_800b0fd0[pc[2]] (lh s16 work-var array), full-byte index pc[2]",
+    "fix": "op_member_set2: replace `int32_t value = (var_idx < 128) ? (int32_t)t->locals[var_idx] : 0;` with `int32_t value = (int32_t)g_scd.work_vars[var_idx];` (byte-true lh DAT_800b0fd0[pc[2]], full-byte index)."
+  },
+  {
+    "id": "scd-evtexec-slot-alloc",
+    "subsystem": "SCD interpreter opcodes 0x00-0x1F (scd_vm.c)",
+    "severity": "HIGH",
+    "category": "behavior",
+    "our_loc": "psx_dev/re15_reborn/src/scd_vm.c:744-757 (op_evt_exec); include/re15_scd.h SCD_THREAD_COUNT/SLOT defines",
+    "source_cite": "FUN_8003ee3c.c + dispatcher FUN_8003f0a0 loop uVar4<10; room-exec FUN_8003f038/FUN_8003ef6c set DAT_800b3f7a=0",
+    "fix": "re15_scd.h: SCD_THREAD_COUNT 24->10, SCD_EVENT_SLOT_FIRST 10->2, SCD_EVENT_SLOT_LAST 23->8. op_evt_exec (:745-755): if cond<SCD_THREAD_COUNT slot=cond; else slot=2, and if slot 2 active scan 2..8 for first free. RE-VALIDATE the room1170 helicopter regression (re15_scd.h:38-40) against a savestate (six sub02 Evt_exec land in slots 2..7) rather than reverting to the 24-slot pool."
+  },
+  {
+    "id": "loco-state1-slew-0x60",
+    "subsystem": "actor set_motion / locomotion walk-turn FSM",
+    "severity": "HIGH",
+    "category": "value",
+    "our_loc": "psx_dev/re15_reborn/src/actor_locomotion.c:94,105,227-256 (PLC_YAW_SLEW_INIT=0x15e as state-1 clamp)",
+    "source_cite": "ghidra1_V2.txt:125402-125417 (WALK) + :125560-125577 (RUN): FUN_8001ab9c a2=0x15e is the convergence TEST only; FUN_8001aac4 a2=0x60 is the actual heading SLEW",
+    "fix": "Add `#define PLC_YAW_SLEW_S1 0x60` (state-1 ALIGN slew). actor_locomotion.c:231-232 clamp state-1 step to +-PLC_YAW_SLEW_S1 instead of +-PLC_YAW_SLEW_INIT. Keep the convergence test (abs_delta<=0x15e) unchanged. Fix misattribution comment on PLC_YAW_SLEW_INIT (0x15e = FUN_8001ab9c test window, not the slew)."
+  },
+  {
+    "id": "setmotion-sameid-no-init-hold",
+    "subsystem": "actor set_motion / locomotion walk-turn FSM",
+    "severity": "MED",
+    "category": "behavior",
+    "our_loc": "psx_dev/re15_reborn/include/re15_actor.h:182-202; psx_dev/re15_reborn/src/scd_vm.c:1397,1419,1432 (op_plc_motion)",
+    "source_cite": "Plc_motion LAB_80041b90 ghidra1_V2.txt:152125-152146 unconditional sb zero,0x6(v0); player FSM FUN_80050cb8/FUN_80050ddc init block when +0x6==0 renders frame 0 once w/o advancing",
+    "fix": "scd_vm.c:1419 after `g_actors[slot].anim_frame = 0;` add `g_actors[slot].motion_init_delay = 1;` so a same-id Plc_motion re-arms the 1-tick state-0 init hold (Plc_motion writes +0x6=0 unconditionally)."
+  },
+  {
+    "id": "ple-bite-frontback-inverted",
+    "subsystem": "Player damage / hit-react / grab / eaten FSM (player_damage_common.c)",
+    "severity": "HIGH",
+    "category": "behavior",
+    "our_loc": "psx_dev/re15_reborn/src/player_damage_common.c:45-50,:90-91,:398-399",
+    "source_cite": "FUN_8001a7a8.c:6-8 returns 1 when attacker BEHIND; FUN_80012d60.c:48-49 aca59=flag+2; PTR_LAB_800741a8 idx2->0x08 (@80035e38), idx3->0x09 (@80035fbc). So clip 0x08=FRONT, 0x09=BACK",
+    "fix": "player_damage_common.c:90-91 swap the #define VALUES: PLY_CLIP_BITE_FRONT=0x08, PLY_CLIP_BITE_BACK=0x09. This makes :399 (front?FRONT:BACK) resolve FRONT->0x08 / BEHIND->0x09. Fix inverted comment block :87-89 and the trailing comment on :399."
+  },
+  {
+    "id": "ple-grab-hold-hp-drain-missing",
+    "subsystem": "Player damage / hit-react / grab / eaten FSM (player_damage_common.c)",
+    "severity": "MED",
+    "category": "value",
+    "our_loc": "psx_dev/re15_reborn/src/player_damage_common.c:459-484 (PLY_GRAB phase 1)",
+    "source_cite": "FUN_80103b94.c case3:55-58 + FUN_801035e8.c:17-20: each bite keyframe (func_0x8001f314!=0) drains HP `_DAT_800acaee += -1`; eaten on entity[0x9e]==0 OR acaee<0 (case3:73). acaee==player HP",
+    "fix": "PLY_GRAB phase 1 (:459-482): add per-frame HP drain `if (++s_grab_drain_t >= PLY_GRAB_DRAIN_PERIOD){ s_grab_drain_t=0; p->hp -= PLY_GRAB_DRAIN; }` (s_grab_drain_t/PLY_GRAB_DRAIN/PERIOD are currently dead), and change the eaten transition to `if (p->hp < 0 || s_timer >= PLY_GRAB_HOLD)`."
+  },
+  {
+    "id": "rotor-lr-pan-mirrored",
+    "subsystem": "helicopter rotor audio + camera-distance pan (rotor_common.c)",
+    "severity": "HIGH",
+    "category": "value",
+    "our_loc": "psx_dev/re15_reborn/src/rotor_common.c:133-134",
+    "source_cite": "FUN_80045a64.c:69-70 DAT_800b2824=voll(LEFT)=bVar2*0x89+..., DAT_800b2826=volr(RIGHT)=bVar2*tbl[pi]+...; FUN_80045024.c:90 SsUtKeyOnV(...,voll,volr); LIBSND.H:261-262. b2-case LEFT=0x89 full, RIGHT=tbl[pi] attenuated",
+    "fix": "rotor_common.c:133-134 swap: `panL = b2 ? 0x89 : (int)SE_PAN(pi);` and `panR = b2 ? (int)SE_PAN(pi) : 0x89;` (match voll=DAT_800b2824 / volr=DAT_800b2826). Affects every off-center positional SE (rotor, footstep pan, enemy-SE pan)."
+  },
+  {
+    "id": "scd_0x47-aoton-passive-not-fire",
+    "subsystem": "SCD opcodes 0x40-0x5F (scd_vm.c) + aot_common.c",
+    "severity": "MED",
+    "category": "behavior",
+    "our_loc": "psx_dev/re15_reborn/src/scd_vm.c:2595-2604 (op_aot_on)",
+    "source_cite": "ghidra1_V2.txt:150628 LAB_800407bc (opcode 0x47): looks up DAT_800ac9b0[pc[1]] and IMMEDIATELY invokes PTR_LAB_8007469c[type] (force-fires the effect), then pc+=2",
+    "fix": "Factor aot_common.c re15_aot_scan's per-slot `switch(a->type)` effect block (:423-572) into non-static `void re15_aot_fire_slot(int slot)` (use g_actors[PLAYER] x/z), declare in re15_aot.h. op_aot_on: keep `g_aot.slots[slot].active=1;` then call `re15_aot_fire_slot(slot);`. A bare scd_event_fire(slot) is WRONG for DOOR/ITEM/MESSAGE."
+  },
+  {
+    "id": "scd-keyck-inverted-polarity",
+    "subsystem": "SCD high-opcode handlers (scd_vm.c)",
+    "severity": "MED",
+    "category": "value",
+    "our_loc": "psx_dev/re15_reborn/src/scd_vm.c:2880-2890 (op_sce_key_ck, 0x51)",
+    "source_cite": "ghidra1_V2.txt:153516-153519 LAB_80042920: and v1,v1,v0; bne...; _move v0,a1; xori v0,a1,0x1 (no-key state returns param^1)",
+    "fix": "op_sce_key_ck (:2888-2890): return `(param ^ 1) ? SCD_R_CONTINUE : SCD_R_IF_FALSE;` (no-key/register-0 state executes xori v0,a1,0x1). Update comment :2884 to 'state 0 (no key) -> cond = param^1'."
+  },
+  {
+    "id": "scd-evtchain-03-noop",
+    "subsystem": "SCD interpreter opcodes 0x00-0x1F (scd_vm.c)",
+    "severity": "MED",
+    "category": "behavior",
+    "our_loc": "psx_dev/re15_reborn/src/scd_vm.c:2810-2816 (op_evt_chain)",
+    "source_cite": "0x03 LAB_8003f270 (ghidra1_V2.txt:149126-149139) -> FUN_8003edec(thread,pc[3]): active=1, +4=0xff, +8=0xff, +0x140=base, PC=sub_scd[pc[3]]",
+    "fix": "op_evt_chain (:2809-2816): re-initialize the CURRENT thread to restart as sub_scd[pc[3]]. target = s_current_rdt->sub_scd[pc[3]] (NULL-guard -> pc+=4); else reset active=1, kill_pending=0, call_depth=0, block_sp=0, do_depth=0, for_depth=0; t->pc=target."
+  },
+  {
+    "id": "scd-while-ewhile-0f10-unimplemented",
+    "subsystem": "SCD interpreter opcodes 0x00-0x1F (scd_vm.c)",
+    "severity": "MED",
+    "category": "behavior",
+    "our_loc": "psx_dev/re15_reborn/src/scd_vm.c (0x0F While, 0x10 Ewhile fall to op_unknown)",
+    "source_cite": "0x0F LAB_8003f6f4 (inline predicate-chain And/Or evaluator, ghidra1_V2.txt:149432+); 0x10 LAB_8003f878 (block-stack back-jump, :149535+)",
+    "fix": "Implement op_while (0x0F) and op_ewhile (0x10) mirroring LAB_8003f6f4/8003f878 and register them ([0x0F]=op_while,[0x10]=op_ewhile after :187). Add a while-block stack to scd_thread_t (re15_scd.h after for_depth): while_start[4]/while_end[4]/while_depth. Needs scd_eval_pred_chain() walking Ck/Cmp/Member_cmp predicates OR/AND-combined per the s0 separator byte (generalize op_edwhile's single-Ck eval). On FALSE jump to block_end (block_length-derived like op_for/op_do); Ewhile jumps back to while_start."
+  },
+  {
+    "id": "rvd-reverse-scan-order",
+    "subsystem": "Camera: RVD zone cut-scan",
+    "severity": "MED",
+    "category": "order",
+    "our_loc": "psx_dev/re15_reborn/src/rdt_common.c:398 vs aot_common.c:268,333",
+    "source_cite": "FUN_80014230.c:11-19 walks the active cut's zone sublist FORWARD (iVar3+=0x14), switches to the first zone the player is inside",
+    "fix": "rdt_common.c:375 reverse the zone install loop: `for (int i = rdt->zone_count - 1; i >= 0; i--)` so the descending-slot assignment puts the RDT-earliest non-anchor zone in the lowest slot (scanned first), restoring forward first-inside-wins. Anchor-skip :390 needs no change. Verify room1170 cuts unchanged."
+  },
+  {
+    "id": "room-crossroom-scenario-hardcoded-0",
+    "subsystem": "RDT / room transition / INIT script handlers",
+    "severity": "MED",
+    "category": "behavior",
+    "our_loc": "psx_dev/re15_reborn/src/room_common.c:102",
+    "source_cite": "scd_room_setup.c:151-158 work_vars[10]=entry_scenario drives sub00 switch; FUN_8001d600.c:42-45 DAT_800afbb5/DAT_800b0fe4 from door bytes +0x0a/+0x09",
+    "fix": "room_common.c:102 change `scd_room_reenter(c->rdt, g_room_change.x, g_room_change.z, 0);` to `scd_room_reenter(c->rdt, g_room_change.x, g_room_change.z, (uint8_t)g_room_change.target_cut);` (mirror same-room path game_step_common.c:165)."
+  },
+  {
+    "id": "room-sub01-once-slot2-not-perframe-slot1",
+    "subsystem": "RDT / room transition / INIT script handlers",
+    "severity": "MED",
+    "category": "behavior",
+    "our_loc": "psx_dev/re15_reborn/src/scd_room_setup.c:166-169",
+    "source_cite": "FUN_8003ef6c.c:9-11 (load starts only thread0=main00, thread1=sub00); FUN_8003f038.c:5-8 (EVERY gameplay frame re-points slot1 to sub01 and runs it)",
+    "fix": "Remove the once-only slot-2 sub01 block (scd_room_setup.c:166-169). In scd_vm.c at top of scd_vm_tick() (after tick_count++, gated off menus/cutscene player_mode!=2), re-point thread slot 1 to sub01 each gameplay frame: memset(t1,0), active=1, pc=s_current_rdt->sub_scd[1], work_slot=-1, work_prop_idx=-1. Adjust the gameplay-active guard to the engine's real predicate."
+  },
+  {
+    "id": "stair-finalize-forward-eject",
+    "subsystem": "AOT scan / stair traversal (stair_common.c)",
+    "severity": "MED",
+    "category": "behavior",
+    "our_loc": "psx_dev/re15_reborn/src/stair_common.c:121-169",
+    "source_cite": "LAB_80038e50 @0x80038e50-0x80038edc (ghidra1_V2.txt:136857-136893): only sets standby clip/control flags + DAT_800acad6=-DAT_800acc0e/0x708; does NOT touch player X/Z",
+    "fix": "In the `if (s_finalize)` block delete the 48-step forward-eject march and uncited +100u nudge (:127-169 inner block). Keep only: motion=IDLE, anim_frame=0, anim_flags=0, y=s_target_y, re15_collision_set_band(band_from_y(y)), s_finalize=0, s_active=0, return. X/Z untouched (next frame's FUN_8003b0a4 un-sticks)."
+  },
+  {
+    "id": "generic-aot-reach-fixed-900-box",
+    "subsystem": "AOT scan / forward-reach (aot_common.c)",
+    "severity": "MED",
+    "category": "value",
+    "our_loc": "psx_dev/re15_reborn/src/aot_common.c:378-388",
+    "source_cite": "FUN_80042bac.c:99,113 -> FUN_80042b64.c tests abs(probe-center) <= param_2[2]/param_2[3] = AOT's own half-extents (not fixed 900)",
+    "fix": "aot_common.c:387 change `gen_reach = (abs_i32(fx - a->x) <= 900) && (abs_i32(fz - a->z) <= 900);` to `gen_reach = (abs_i32(fx - a->x) <= a->half_w) && (abs_i32(fz - a->z) <= a->half_h);` (half_w/half_h already populated)."
+  },
+  {
+    "id": "action-fired-single-latch",
+    "subsystem": "AOT scan / action latch (aot_common.c)",
+    "severity": "MED",
+    "category": "behavior",
+    "our_loc": "psx_dev/re15_reborn/src/aot_common.c:235,419-420",
+    "source_cite": "FUN_80042bac.c:128-139 (param_3==0 action mode) does `goto LAB_80043018` and CONTINUES; fires EVERY matching AOT. Only QUERY mode (param_3!=0) returns on first match",
+    "fix": "Remove the one-per-frame action latch: delete `int action_fired=0;` (:235 + comment :227-234); drop `&& !action_fired` from the door (:407), counter==9 (:414) and generic (:417) gates; delete the `if (is_action) action_fired = 1;` (:420). Keep the DOOR-fire return; (:530) intact. Re-validate room1130 switch + room1150 examine overlap."
+  },
+  {
+    "id": "msg-yesno-pad-mask",
+    "subsystem": "message typewriter / YES-NO cursor (msg_common.c)",
+    "severity": "MED",
+    "category": "value",
+    "our_loc": "psx_dev/re15_reborn/src/msg_common.c:364,372,448",
+    "source_cite": "FUN_80028134.c:144-154 case4: if((DAT_800ac76c & 0x3000)!=0) toggle; logical 0x3000 at default config-0 remap DAT_80073dbc -> phys SQUARE(0x8000)|CIRCLE(0x2000)",
+    "fix": "msg_common.c:364 replace `PAD_LEFT/PAD_RIGHT` with `TOGGLE_MASK = RE15_PAD_BIT_SQUARE | RE15_PAD_BIT_CIRCLE;` and :372 `lr_edge = (g_scd_pad_edge & TOGGLE_MASK) != 0;`. Do NOT use TRIANGLE|CIRCLE. Confirm gameplay config index (DAT_800b0fcc default 0) before commit. :448 toggle already byte-true."
+  },
+  {
+    "id": "pad-action-button-triangle",
+    "subsystem": "pad mapping (game_step_common.c)",
+    "severity": "MED",
+    "category": "behavior",
+    "our_loc": "psx_dev/re15_reborn/src/game_step_common.c:28,33",
+    "source_cite": "FUN_8002bd44.c:57 (DAT_800ac768 & 1); FUN_80030444.c:13-18 remap; table @0x80073dbc default DAT_800b0fcc=0; logical bit0 <- raw 0x1000 = TRIANGLE",
+    "fix": "game_step_common.c:28 change action source `c->pad_pressed & RE15_PAD_BIT_SQUARE` to `& RE15_PAD_BIT_TRIANGLE`; :33 same for `c->pad_current`. (Cleaner long-term: implement the FUN_80030444 remap and drive action from logical bit 0.) Platform-shell main.c keys may stay."
+  },
+  {
+    "id": "n2p-se-shift-half",
+    "subsystem": "VAB / note2pitch / SE (vab_common.c, audio_psx.c)",
+    "severity": "MED",
+    "category": "value",
+    "our_loc": "psx_dev/re15_reborn/src/vab_common.c:213-215 via audio_psx.c:243,292",
+    "source_cite": "note2pitch2.c:10 uVar3=((param_2&0xffff)+*(byte*)(iVar1+5))>>3; caller FUN_80045024.c:90 passes fine=tone.shift, note2pitch2 ADDS tone.shift again -> (2*shift)>>3",
+    "fix": "At the two SE/footstep call sites only, double the tone shift: audio_psx.c:243 and :292 pass `tn->pitch_shift * 2` to re15_vab_note2pitch. Do NOT change the BGM site audio_psx.c:551 (BGM adds shift once). room1170 concrete footstep shift=0 -> unaffected."
+  },
+  {
+    "id": "zb-pursue-walk-reaim",
+    "subsystem": "enemy AI / zombie FSM (zombie_common.c)",
+    "severity": "MED",
+    "category": "behavior",
+    "our_loc": "psx_dev/re15_reborn/src/zombie_common.c:401-424 (PURSUE walk)",
+    "source_cite": "RE_15_Quellcode_Overlays/STAGE1_full/FUN_801033c8.c:16-40: state2 snaps heading once ([0x6a]=(entity[0x90]&0xf0)<<4), state3 only advances forward on clip-wrap, NO turn slew / NO re-quantize / no revert",
+    "fix": "Scope the turn-slew to phase 0 only. Phase 0: zb_turn_toward(coarse_yaw, ZB_TURN_RATE); on aligned snap `z->rot_y=(int16_t)(coarse_yaw & 0xFFF)` once then phase=1. Phase 1 (WALK): forward step only, NO zb_turn_toward, NO re-quantize, NO `delta>TURN_RATE -> phase=0` auto-revert. Re-aim only on fresh PURSUE re-entry (phase reset to 0)."
+  },
+  {
+    "id": "anim-frac-seed-hardcoded-7",
+    "subsystem": "Skeleton FK / clip crossfade (re15_actor.h, zombie_common.c)",
+    "severity": "MED",
+    "category": "value",
+    "our_loc": "psx_dev/re15_reborn/src/scd_vm.c:1432 (seed=7); weight skeleton_common.c:199",
+    "source_cite": "FUN_8001f3bc:23,81 weight=0x1000-0x200*entity[0x8f]; entity+0x8f seeded with 0xf/7/4/3/0 across STAGE*/V2 (enemy spawn-init handlers seed 0xf e.g. FUN_80101d08.c:14-16)",
+    "fix": "Player path is byte-true (do NOT touch scd_vm.c:1432, player_common.c:267/285/301, grab=0). Enemy-only: add re15_actor_set_motion_frac(a,m,frac) in re15_actor.h (~:202) carrying the crossfade seed into anim_frac. In zombie_common.c use the disasm-cited seed per clip-set: PROVEN site :359 IDLE-init -> seed 0xf (FUN_80101d08). Map RISE/ATTACK/WALK/framework sites to their owning overlay handler's +0x8f seed (0xf wake-init, 7 movement, 0 snap) BEFORE substituting; do not blindly set all to 0xf. 7-seed sites stay on re15_actor_set_motion."
+  },
+  {
+    "id": "plr-move-velocity-vs-rootmotion",
+    "subsystem": "player per-frame tick (player_common.c)",
+    "severity": "MED",
+    "category": "behavior",
+    "our_loc": "psx_dev/re15_reborn/src/player_common.c:245-253",
+    "source_cite": "FUN_80036718.c:27 -> FUN_800369f8(0,1) :19-24 advances actor +0x34(X)/+0x3c(Z) by the animated root-bone delta (clip +0x54/+0x5c); DAT_800acae0 speed byte is a clip-playback param, NOT a position delta",
+    "fix": "Replace the flat-velocity step (:245-253) with a root-motion port of FUN_800369f8(0,...): after the clip's bones are posed, advance p->x/p->z by the playing locomotion clip's root-bone world translation delta (RotMatrix of p->rot_y x per-frame root delta vs stored ref +0x54/+0x5c). Flat speed bytes 75/200/70 must NOT scale position. BLOCKING DEP: needs GTE/skeleton root-bone read-back (reuse the grab/enemy FUN_80022da0 pose-readback path); not a 2-line edit."
+  },
+  {
+    "id": "plr-back-clip-bank-wrong",
+    "subsystem": "player per-frame tick (player_common.c, anim_select_common.c)",
+    "severity": "MED",
+    "category": "render",
+    "our_loc": "psx_dev/re15_reborn/src/player_common.c:66,:190; anim_select_common.c:268-272",
+    "source_cite": "BACK LAB_80032d20 ghidra1_V2.txt:128263-128310 plays COMMON bank (DAT_800acad8/acbc0) clip 0 forward; forward WALK uses WEAPON bank (DAT_800acbc4/acbc8) clip 5 @:127697-127708",
+    "fix": "player_common.c:66 change `#define RE15_MOTION_BACK RE15_MOTION_WALK` to `#define RE15_MOTION_BACK 110` (free sentinel). anim_select_common.c before the `} else if (m == 200)` fallback (:305) add `} else if (banks->pl00_ok && m == 110) { out->skel=banks->pl00_skel; out->anim=banks->pl00_anim; out->clip_override=0; }` (COMMON bank clip 0 forward). Existing reverse-flag clear at player_common.c:259 stays."
+  },
+  {
+    "id": "zb-feed-chew-cadence",
+    "subsystem": "enemy AI / zombie FSM (zombie_common.c)",
+    "severity": "LOW",
+    "category": "behavior",
+    "our_loc": "psx_dev/re15_reborn/src/zombie_common.c:303",
+    "source_cite": "RE_15_Quellcode_Overlays/STAGE1_full/FUN_80102bd8.c:26-30: chew SE func_0x800453d0(3) fires only when clip sub-frame entity[0x95]==0x28 (keyframe-tied, not a timer)",
+    "fix": "zombie_common.c:303 change `if (((ai->timer++ + (unsigned)i*23u) % 69u) == 0x28u) zb_play_se(cam,z,-2);` to `if (((uint32_t)z->anim_frame % 69u) == 0x28u) zb_play_se(cam,z,-2);` (keys chew off the feed-clip sub-frame; cross-feeder stagger emerges from per-actor clip phase). Drop ai->timer if now unused for FEED."
+  },
+  {
+    "id": "stair-entry-probe-exact-yaw",
+    "subsystem": "stair traversal (stair_common.c)",
+    "severity": "LOW",
+    "category": "value",
+    "our_loc": "psx_dev/re15_reborn/src/stair_common.c:283-285",
+    "source_cite": "FUN_8002d474.c:26 -> FUN_8004f008((short)(DAT_800acabe + 0x200 & 0xfc00), &800,...): probe dir = facing coarsened to (facing+0x200)&0xfc00",
+    "fix": "stair_common.c:283 compute `int32_t probe_ang = (int16_t)(((int)p->rot_y + 0x200) & 0xfc00);` then `sn=re15_sin_q12(probe_ang), cs=re15_cos_q12(probe_ang);` instead of using raw rot_y (round-to-nearest coarse direction)."
+  },
+  {
+    "id": "pri-depth0-mask-otz-clamp",
+    "subsystem": "sprite.pri FG-occluder render (render.c)",
+    "severity": "LOW",
+    "category": "order",
+    "our_loc": "psx_dev/re15_reborn/src/render.c:454",
+    "source_cite": "FUN_80039590.c:19 AddPrim(...+ depth*4, p) with NO floor; depth 0 links at OT[0] (frontmost)",
+    "fix": "render.c: replace `if (z < 1) z = 1;` with `if (z < 0) z = 0;` for the PRI mask OT bucket (depth-0 mask links at OT[0] frontmost; no z>=1 floor). Keep the `z >= OT_LENGTH-1 -> OT_LENGTH-2` upper clamp."
+  },
+  {
+    "id": "msg-pagetimed-resume-timer",
+    "subsystem": "message typewriter (msg_common.c)",
+    "severity": "LOW",
+    "category": "value",
+    "our_loc": "psx_dev/re15_reborn/src/msg_common.c:441-445",
+    "source_cite": "FUN_80028134.c:134-142 case3: timed page advance resume timer = DAT_800b8524<<bVar2 = message_scroll (not 1)",
+    "fix": "msg_common.c case 2 (PAGE_TIMED): change the resume `g_scd.message_timer = 1;` to `g_scd.message_timer = g_scd.message_scroll;`. Do NOT touch case 1 (PAGE_WAIT), whose =1 is byte-true."
+  },
+  {
+    "id": "pad-no-logical-remap-layer",
+    "subsystem": "pad mapping (input.c, game_step_common.c)",
+    "severity": "MED",
+    "category": "behavior",
+    "our_loc": "psx_dev/re15_reborn/src/input.c:22-37; game_step_common.c:38-48",
+    "source_cite": "FUN_80030444.c:11-27 builds remapped LOGICAL mask DAT_800ac768 from a 16-entry config table (default @0x80073dbc), edge DAT_800ac76c on the logical mask; gameplay never sees raw bits",
+    "fix": "STRUCTURAL (verify per-bit vs a dialog-frame savestate of DAT_800ac768 first; current raw mapping is USER-validated). Add a per-frame logical-remap in input.c: 3 config tables ported from 0x80073dbc/ddc/dfc (default 0 = {0x1000,0x2000,0x4000,0x8000,0x1000,0x4000,0x0080,0x0080,0x0008,0x0040,0x0008,0x0004,0x8000,0x2000,0x0080,0x0040}); build pad_logical + its edges. Route DIALOG/MENU/door reads (g_aot_action_held :33, g_scd_action_held :48, msg/AOT/YES-NO) through pad_logical; keep player-locomotion on the RAW mask. This SUPERSEDES the two single-button swaps (pad-action-button-triangle, msg-yesno-pad-mask) if fully implemented."
+  }
+]

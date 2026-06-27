@@ -1,0 +1,57 @@
+em20 (type 0x20) byte-true RE references
+========================================
+EMD: extracted/PSX/EMD/CDEMD0/em20.emd (size 0x28c00). EDD anim header @ file off 0xc.
+  count0=49 offset0=0x70 -> 28 clips. Frame counts (idx:frames): 0:49 1:18 2:30 3:14 4:14
+  5:14 6:18 7:15 8:30 9:35 10:35 11:14 12:42 13:14 14:44 15:14 16:27 17:14 18:50 19:29
+  20:17 21:13 22:20 23:29 24:18 25:40 26:30 27:99. boneCount=15 (em20_animations.json).
+  Verified raw==json MATCH True.
+
+Overlay: STAGE1.BIN (0x800 hdr, base 0x80100000). RAM jump tables read from
+  HASH-881C08B8082E53B6_1.sav (room1140, STAGE1 overlay resident).
+
+INSTALL (FUN_8011e064 @0x8011e064): wires type table 0x80072be0+. The 6 STAGE1 enemy inits:
+  0x80072cac=0x8011c5a0  0x80072cb4=0x8011cb70  0x80072cc0=0x8011d140
+  0x80072cc8=0x8011d6d4  0x80072cd0=0x8011dc68  0x80072cd8=0x8011e22c
+  Also: DAT_800ac998=&LAB_8011efc4 (overlay enemy-sound situation handler).
+
+em20 has 4 near-identical AI VARIANTS (arg3 0/64/65 select). Each = {init, wrapper, state-table}:
+  v0 init FUN_8011c4ac, state-table @0x80121664, wrapper FUN_8011bda0 (state tbl @0x80121598)
+  v1 init FUN_8011cab8, state-table @0x80121734, wrapper FUN_8011d468 (state tbl @0x80121738)
+  v2 init FUN_8011d04c, state-table @0x8012179c
+  v3 init FUN_8011db70, state-table @0x801218d4 (wrapper using @0x80121808)
+  Active-AI family (decompiled): FUN_8011dd18(st0 pursue/detect), 8011de44/dec0/df3c/df84/dfcc
+  (substate dispatchers reading entity[5]/[6]), 8011db70(init), 8011e634(attack-trigger, data-tail).
+
+INIT (FUN_8011d598 / FUN_8011db70 etc., all identical):
+  entity[1]=1; status|=0x40000000; entity[0x1e]=variant-state-tbl; entity[0x6a]=&player(0x800aca54)
+  entity[0x9a]=0xffff; entity[0x9e]=0x78; entity[0x6e]=0; entity[0x1b9]=8
+  collision (work @entity[0x62]+0x5f8): w=0x40 h=0x30 d=0x2c8 ; +0x5f4=0 +0x5f6=0 +0x5fe=0x138
+  entity[0x25]=2; entity[0x94]=2 (INIT CLIP=clip2,30f); entity[0x95]=0; entity[0x8f]=0; entity[0x93]=0
+  anim load: func_0x8001f314(entity[0x21], entity[0x5b], 0, 0x200)
+  shadow: func_0x8001af5c(0,0,600,700, &entity[0x2c], 0x808080)
+  ARG3 branch: if (entity[9]&0x40) { entity[1]=4; entity[5]=6; }  (= arg3 0x40/0x41 fast-start)
+
+STATE dispatch (wrapper FUN_8011bda0 @0x80121598; entity[4]=state):
+  [0]=0x8011c6dc(idle/pursue) [1]=0x8011c884(sub-dispatch) [2]=0x8011ca48 [3]=0x8011ca90
+  [4]=0x80050be8(engine common) [5]=0x8011c950(approach, dist-recompute) [6]=0x8004f100 [7]=0x8004f3a4
+  v1 wrapper @0x80121738: [0]0x8011d2b8 [1]0x8011d460 [2]0x8011d5ac [3]0x8011d5f4 [4]0x80050be8 [5]0x8011d4b4 ...
+
+ANIM player: func_0x8001f314 @0x8001f314 reads entity[0x94]=clip, entity[0x95]=frame -> EDD table.
+  => clip identity = entity[0x94] (same mechanism as zombie).
+
+ACTIVE STATE0 pursue (FUN_8011dd18 @0x8011dd18):
+  func_0x800509e4(15000, &local, 0x514=1300, 0)  -> turn toward player, detect range 15000, turn-rate 1300
+  detect(ret!=0): dist=func_0x8005070c(0x578=1400, dx, -dx); entity[9]=1
+  free:           dist=func_0x8005070c(700, dx, -dx); entity[9]=0
+  ATTACK TRANSITION: if ((entity[0x1c2]&1) && DAT_800acae0 > 100) {
+      entity[4]=2; entity[5]=4; entity[6]=0; FUN_8011e634(); }   (contact-flag + global-timer gate)
+  else dispatch (entity[9]&0xf) -> table @-0x7fede714.
+
+GENERIC walker substates (shared w/ zombie, in PSX.EXE):
+  0x8004f100 substate[1]: dist gate 0x5dc=1500 (sltiu 0x5dd); aggro func_0x8001ab9c(...,0x4b0=1200)
+  0x8004f5e8 substate[2] walk: contact func_0x8001ab9c(...,0x40=64); dist gate 0x7d1=2001
+  these set entity[5]/entity[6] substate, NOT 0x94 directly.
+
+SOUND: em20 reuses the generic enemy-sound chain (DAT_800ac998=LAB_8011efc4 situation handler):
+  situation -> func_0x800453d0(ID) -> tone(ID+1) -> VagAtr -> em_NN (=VAG-1), per-room snd1 VAB
+  (rooms 1190/1230/3060). Exact ID->em_NN map needs an em20 savestate (none exists) to ear/matrix-confirm.

@@ -1,0 +1,95 @@
+[fps] target=30 FPS, frame_budget=33ms (RE15_FPS env to override)
+[asset] cannot open ../../assets_shared/BSS/room1170/BG00.BSS
+[asset] cannot open ../../assets_shared/RDT/ROOM1170.RDT
+[boot] room RDT: RDT/ROOM1170.RDT (303564 bytes)
+[rdt] nCut=13 nDoor=0 nItem=0 zones=28 main_scd=470B sub=16 props=6
+[asset] cannot open ../../re15_reborn/assets/test.vh
+[asset] cannot open ../../re15_reborn/assets/test.vb
+[asset] cannot open ../../assets_shared/PLD/PL00.TIM
+[tim] loaded test.tim: 384x256 bpp=8 clut=1
+[asset] cannot open ../../assets_shared/PLD/PL00.MD1
+[md1] loaded test.md1: 17 meshes
+[md1] heli body (RDT prop2): 1 meshes
+[tim] heli TIM (RDT prop2) in slot 2: 128x256
+[md1] pilot (RDT prop5): 1 meshes
+[tim] pilot TIM (RDT prop5) in slot 3: 128x256
+[asset] cannot open ../../assets_shared/PLD/ELLIOT.MD1
+[asset] cannot open ../../assets_shared/PLD/ELLIOT.EDD
+[asset] cannot open ../../assets_shared/PLD/ELLIOT.EMR
+[elliot] PL05 loaded: 15 meshes, 15 bones, 24 clips
+[asset] cannot open ../../assets_shared/PLD/PL00W01.EDD
+[asset] cannot open ../../assets_shared/PLD/PL00W01.EMR
+[w01] PL00W01 weapon-track: 15 bones, 14 clips, 222 kf
+[asset] cannot open ../../assets_shared/PLD/ELLIOT.TIM
+[tim] elliot TIM in slot 1: 256x256
+[md1] loaded elliot mesh: 15 meshes
+[asset] cannot open ../../assets_shared/PLD/PL00.EDD
+[asset] cannot open ../../assets_shared/PLD/PL00.EMR
+[skel] PL00: 15 bones, 24 clips, 712 keyframes
+[asset] cannot open ../../assets_shared/RBJ/ROOM1170.RBJ
+[rbj] loading cinematic bank: RBJ/ROOM1170.RBJ (55060 bytes)
+[w01-composite] PL00 bind + W01 keyframes: 15 bones, 222 kf
+[rbj] boot room 1170 cinematic overlay: 26 clips, 366 kf
+[light] RDT: 13 cuts, cut 0 tint=(128,128,128)
+[scd] thread start slot=0 first_op=0x06
+[scd] Obj_model_set[0] id=0x00 type=0 pos=(4990,-8300,-7350) rot=(0,0,0)
+[scd] Obj_model_set[1] id=0x01 type=0 pos=(4990,-10150,-7350) rot=(0,0,0)
+[scd] Evt_exec cond=255 sub_id=11 (raw 04 FF 18 0B)
+[scd] thread start slot=10 first_op=0x22
+[STAIRREG] slot=7 type=13 chain=0 event=1 centre=(-25670,-20645) half=(1250,445)
+[STAIRREG] slot=8 type=13 chain=2 event=1 centre=(-25640,-23425) half=(1130,705)
+[STAIRREG] slot=9 type=12 chain=2 event=0 centre=(-23295,-26155) half=(735,1255)
+[STAIRREG] slot=10 type=12 chain=4 event=0 centre=(-20690,-25595) half=(370,1095)
+[scd F0] Cut_chg(7)
+[asset] cannot open ../../assets_shared/BSS/room1170/BG07.BSS
+[light] cut 7 tint=(128,128,128)
+[asset] cannot open ../../assets_shared/BSS/ROOM1170/PRI07.TIM
+[asset] cannot open ../assets_shared/BSS/ROOM1170/PRI07.TIM
+[asset] cannot open ../../../assets_shared/BSS/ROOM1170/PRI07.TIM
+[asset] cannot open psx_dev/assets_shared/BSS/ROOM1170/PRI07.TIM
+[asset] cannot open assets_shared/BSS/ROOM1170/PRI07.TIM
+[asset] cannot open ../re15_reborn/BSS/ROOM1170/PRI07.TIM
+[asset] cannot open ../../re15_reborn/BSS/ROOM1170/PRI07.TIM
+[asset] cannot open ../../../re15_reborn/BSS/ROOM1170/PRI07.TIM
+[asset] cannot open ../re15_reborn/assets/BSS/ROOM1170/PRI07.TIM
+[asset] cannot open ../../re15_reborn/assets/BSS/ROOM1170/PRI07.TIM
+[asset] cannot open ../../../re15_reborn/assets/BSS/ROOM1170/PRI07.TIM
+[asset] cannot open psx_dev/re15_reborn/BSS/ROOM1170/PRI07.TIM
+[asset] cannot open psx_dev/re15_reborn/assets/BSS/ROOM1170/PRI07.TIM
+[asset] cannot open re15_reborn/BSS/ROOM1170/PRI07.TIM
+[asset] cannot open re15_reborn/assets/BSS/ROOM1170/PRI07.TIM
+[asset] cannot open ../../assets_shared/room1170_pri07.tim
+[asset] cannot open ../assets_shared/room1170_pri07.tim
+[asset] cannot open ../../../assets_shared/room1170_pri07.tim
+[asset] cannot open psx_dev/assets_shared/room1170_pri07.tim
+[asset] cannot open assets_shared/room1170_pri07.tim
+[asset] cannot open ../re15_reborn/room1170_pri07.tim
+[asset] cannot open ../../re15_reborn/room1170_pri07.tim
+[asset] cannot open ../../../re15_reborn/room1170_pri07.tim
+[asset] cannot open ../re15_reborn/assets/room1170_pri07.tim
+[asset] cannot open ../../re15_reborn/assets/room1170_pri07.tim
+[asset] cannot open ../../../re15_reborn/assets/room1170_pri07.tim
+[asset] cannot open psx_dev/re15_reborn/room1170_pri07.tim
+[asset] cannot open psx_dev/re15_reborn/assets/room1170_pri07.tim
+[asset] cannot open re15_reborn/room1170_pri07.tim
+[asset] cannot open re15_reborn/assets/room1170_pri07.tim
+[pri] cut=7 pri_offset=0xA30 masks=0 fg_atlas=0
+[walk] F0 cut=7 mo=200 | pl pos=(1272,-7200,10898) rot=0
+[asset] cannot open ../../../../synchro/STAGE1/room1170/main08.wav
+[asset] cannot open ../../../synchro/STAGE1/room1170/main08.wav
+[asset] cannot open ../../synchro/STAGE1/room1170/main08.wav
+[asset] cannot open synchro/STAGE1/room1170/main08.wav
+[asset] cannot open ../../../../extracted/PSX/DATA/TEX.TIM
+[asset] cannot open ../../../extracted/PSX/DATA/TEX.TIM
+[asset] cannot open extracted/PSX/DATA/TEX.TIM
+[asset] cannot open ../../re15_reborn/assets/TEX.TIM
+[asset] cannot open psx_dev/re15_reborn/assets/TEX.TIM
+[walk] F30 cut=7 mo=200 | pl pos=(1272,-7200,10898) rot=0
+[walk] F60 cut=7 mo=200 | pl pos=(1272,-7200,10898) rot=0
+[walk] F90 cut=7 mo=200 | pl pos=(1272,-7200,10898) rot=0
+[asset] cannot open ../../../../synchro/STAGE1/room1170/main09.wav
+[asset] cannot open ../../../synchro/STAGE1/room1170/main09.wav
+[asset] cannot open ../../synchro/STAGE1/room1170/main09.wav
+[asset] cannot open synchro/STAGE1/room1170/main09.wav
+[walk] F120 cut=7 mo=200 | pl pos=(1272,-7200,10898) rot=0
+[walk] F150 cut=7 mo=200 | pl pos=(1272,-7200,10898) rot=0

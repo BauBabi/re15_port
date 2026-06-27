@@ -1,0 +1,58 @@
+/* FUN_80116f50 @ 0x80116f50  (Ghidra headless, raw MIPS overlay) */
+
+/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+
+void FUN_80116f50(void)
+
+{
+  uint uVar1;
+  
+  _DAT_800ac784[1] = 1;
+  if ((*(byte *)((int)_DAT_800ac784 + 9) & 1) != 0) {
+    _DAT_800ac784[1] = 0x101;
+  }
+  *(undefined1 *)(_DAT_800ac784 + 0x25) = 0;
+  *(undefined1 *)((int)_DAT_800ac784 + 0x95) = 0;
+  *(undefined1 *)((int)_DAT_800ac784 + 0x8f) = 0;
+  *(undefined1 *)((int)_DAT_800ac784 + 0x93) = 0;
+  *(undefined2 *)(_DAT_800ac784 + 0x6f) = _DAT_800aca88;
+  *(undefined2 *)((int)_DAT_800ac784 + 0x1be) = _DAT_800aca90;
+  *(undefined1 *)(_DAT_800ac784 + 0x6e) = 0;
+  *(undefined1 *)((int)_DAT_800ac784 + 0x1b9) = 2;
+  *(undefined2 *)(_DAT_800ac784 + 0x27) = 0;
+  *(undefined1 *)((int)_DAT_800ac784 + 0x9e) = 0;
+  *(undefined1 *)((int)_DAT_800ac784 + 0x9f) = 0;
+  *(undefined2 *)(_DAT_800ac784 + 0x77) = 0;
+  *(undefined2 *)((int)_DAT_800ac784 + 0x1de) = 0;
+  *(undefined1 *)(_DAT_800ac784 + 0x78) = 0;
+  *(undefined1 *)((int)_DAT_800ac784 + 0x1e1) = 0;
+  *(undefined1 *)((int)_DAT_800ac784 + 0x1e2) = 4;
+  *(undefined1 *)((int)_DAT_800ac784 + 0x1e3) = 0;
+  func_0x8001f314(_DAT_800ac784[0x21],_DAT_800ac784[0x5b],0,0x200);
+  uVar1 = func_0x8001af20();
+  *(undefined2 *)((int)_DAT_800ac784 + 0x9a) =
+       *(undefined2 *)(&DAT_8011f034 + (uVar1 & 0xf) * 2 + (uint)(byte)_DAT_800ac784[2] * 0x20);
+  *_DAT_800ac784 = *_DAT_800ac784 & 0x1fffffff;
+  *_DAT_800ac784 = *_DAT_800ac784 | 0x800;
+  *(undefined2 *)((int)_DAT_800ac784 + 0x166) = 0x1b33;
+  if ((*(byte *)((int)_DAT_800ac784 + 9) & 0x40) != 0) {
+    *(short *)((int)_DAT_800ac784 + 0x166) =
+         (short)((((*(byte *)((int)_DAT_800ac784 + 9) & 0xf) + 10) * 0x1000) / 10);
+  }
+  _DAT_800ac784[0x1e] = (uint)(&PTR_DAT_80121368)[*(byte *)((int)_DAT_800ac784 + 0x1e2)];
+  func_0x8001af5c(0,0,*(ushort *)(_DAT_800ac784[0x1e] + 6) + 100,
+                  *(ushort *)(_DAT_800ac784[0x1e] + 6) + 200,_DAT_800ac784 + 0x2c,0x808080);
+  uVar1 = _DAT_800ac784[0x62];
+  *(uint *)(uVar1 + 0xc84) = uVar1 + 0xec;
+  *(uint *)(uVar1 + 0xca8) = uVar1 + 0xac;
+  *(undefined4 *)(uVar1 + 0xc44) = 0x66;
+  *(undefined4 *)(uVar1 + 0xc48) = 0xfffffcd6;
+  *(undefined4 *)(uVar1 + 0xc4c) = 0;
+  *(undefined2 *)(uVar1 + 0xc78) = 0;
+  *(undefined2 *)(uVar1 + 0xc7a) = 0;
+  *(undefined2 *)(uVar1 + 0xc7c) = 0;
+  func_0x80068098(uVar1 + 0xc78,uVar1 + 0xc30);
+  return;
+}
+
+
