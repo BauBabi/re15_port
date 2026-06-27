@@ -1,0 +1,77 @@
+site_name: PlayStation Specifications - psx-spx
+site_url: https://psx-spx.consoledev.net/
+repo_url: https://github.com/psx-spx/psx-spx.github.io/
+edit_uri: edit/master/docs/
+
+theme:
+  name: material
+  palette:
+    # Light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to dark mode
+
+    # Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to light mode
+  icon:
+    logo: material/sony-playstation
+
+plugins:
+  - search
+  - with-pdf:
+      output_path: psx-spx.pdf
+
+extra_css:
+  - css/extra.css
+
+markdown_extensions:
+  - pymdownx.caret
+  - pymdownx.critic
+  - pymdownx.highlight
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.superfences
+  - pymdownx.tasklist
+  - pymdownx.tilde
+
+nav:
+  - index.md
+  - memorymap.md
+  - iomap.md
+  - graphicsprocessingunitgpu.md
+  - geometrytransformationenginegte.md
+  - macroblockdecodermdec.md
+  - soundprocessingunitspu.md
+  - interrupts.md
+  - dmachannels.md
+  - timers.md
+  - cdromdrive.md
+  - cdromformat.md
+  - cdromfileformats.md
+  - controllersandmemorycards.md
+  - pocketstation.md
+  - serialinterfacessio.md
+  - expansionportpio.md
+  - memorycontrol.md
+  - unpredictablethings.md
+  - cpuspecifications.md
+  - kernelbios.md
+  - arcadecabinets.md
+  - konamisystem573.md
+  - cheatdevices.md
+  - psxdevboardchipsets.md
+  - hardwarenumbers.md
+  - pinouts.md
+  - aboutcredits.md
+  - cdromvideocdsvcd.md
+  - cdrominternalinfoonpsxcdromcontroller.md

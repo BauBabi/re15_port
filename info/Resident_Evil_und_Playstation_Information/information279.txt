@@ -1,0 +1,69 @@
+Tools and resources for PSX reverse-engineering
+; Exploring Tokimeki Memorial, a reverse-engineering project
+The following is a list of tools and documents useful for analyzing, modding or translating PlayStation games. Many of them are conveniently available in Linux by a package manager like apt.
+
+PSX file format conversion tools
+CD-ROM tools
+Disassemblers and decompilers
+Emulators and debuggers
+Documentation
+Development and miscellaneous
+PSX file format conversion tools
+jPSXdec
+Audio/video convertor which can extract PSX file formats from a disc image and build an index of file locations. Converts XA, STR, TIM.
+psxsdk
+Unofficial SDK for creating PlayStation games. Includes source for some conversion tools for PSX formats (ISO/BIN, WAV/VAG. TIM/BMP).
+CD-ROM tools
+PSXImager
+Three tools: psxrip (extract files and disc metadata from BIN/CUE), psxbuild (creates a disc image), and psxinject (modify a disc image). Unfortunately doesn’t provide a build, and has difficulty with some images.
+AcetoneISO
+Linux tool to mount, extract and burn single-track ISO and BIN.
+PowerISO
+Commercial Windows/Linux CD-ROM authoring tool.
+ccd2iso
+Linux tool to convert IMG to ISO.
+iat
+Linux tool to convert various formats to ISO.
+bchunk
+Linux tool to convert BIN/CUE to ISO and CD audio to WAV. Supports PSX 2336-byte chunk tracks.
+isoinfo
+Linux tool to list contents of ISO files.
+binmerge
+Python script to combine a multi-track BIN/CUE into one.
+Disassemblers and decompilers
+Ghidra
+NSA’s disassembler/decompiler, released to the public in 2019.
+Radare2
+Free and open-source disassembly tool.
+IDA Pro
+Commercial decompiler. There’s a free version but it only supports x86/64 and not MIPS (PSX). ghidra_psx_ldr
+PSX executable add-on for Ghidra.
+This Dust Remembers What It Once Was
+Tools for aiding PSX analysis with Ghidra. Convert PSX-EXE to ELF and parse PsyQ .SYM files.
+Emulators and debuggers
+Mednafen
+Emulator with a powerful debugger.
+No$psx
+PSX emulator and debugger.
+ePSXe
+PSX emulator.
+Documentation
+Nocash PSX Specifications
+Description of PSX systems from the author of an emulator.
+Everything You Have Always Wanted to Know about the Playstation But Were Afraid to Ask v1.1
+A collection of documentation about the PSX hardware and history from 2000 (originally here).
+Introduction to Hacking the Sony Playstation One
+RetroReversing’s articles on the PSX.
+Net Yaroze Startup Guide
+Documentation for the official Net Yaroze PSX devkit.
+Development and miscellaneous
+Romhacking.net PSX Utilities
+A list of PSX utilities for various platforms.
+psx.arthus.net
+A collection of PSX development resources.
+PSX Links
+Another collection of documentation and resources.
+loveemu labo’s PSX articles
+Some articles.
+« Back to index page
+Submit feedback • CC BY

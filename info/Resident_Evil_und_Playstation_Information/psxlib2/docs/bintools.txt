@@ -1,0 +1,56 @@
+How to use the binaries in /bin directory:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+MIPSGCC compiler:
+~~~~~~~~~~~~~~~~~
+
+mipsgcc <options> sourcefile
+
+[give info and examples here]
+
+
+
+MIPSAR archiver:
+~~~~~~~~~~~~~~~~
+
+mipsar <options> libraryfile [objfile1 objfile2 ... objfilen]
+
+Used to create library archive files (eg: libps.a), which are
+collections of object files, along with a "symbol table" which
+allows the linker mipsld to find functions in the archive.
+
+View a list of the object files in the archive:
+mipsar -tv libraryarchive
+
+Create a symbol table in the archive:
+mipsar -s libraryarchive
+
+Create an archive with symbol table from some object files:
+mipsar -qs libraryfile objfile1 objfile2 objfile3
+
+
+
+bin2src:
+~~~~~~~
+
+bin2src -Fi -Fo -C/-A -Llabel
+
+bin2src converts a binary file into a C or ASM source file.
+(use -C switch to generate a C source file).
+label is what we want to refer to object by.
+
+eg:
+bin2src -Fimoon1.vag -Fomoon1.c -C -Lmoon1
+
+converts the file moon1.vag into a C source file with label moon1.
+
+The C source file can then be converted into an object file to link
+into your proggie like so:
+
+mipsgcc -c moon1.c
+
+The output file will be the object file moon1.o
+
+
+
+

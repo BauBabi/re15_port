@@ -1,0 +1,12 @@
+
+CDROM File Audio Streaming XA-ADPCM	Contents
+Index	Prev
+Next
+
+Audio Streaming (XA-ADPCM)
+Audio streaming is usually done by interleaving the .STR or .BS file's Data sectors with XA-ADPCM audio sectors (the .STR/.BS headers don't contain any audio info; because XA-ADPCM sectors are automatically decoded by the CDROM controller).
+Raw XA-ADPCM files (without video) are usually have .XA file extension.
+
+
+I am homeless in Hamburg, please help me out!
+extracted from no$psx v2.2 - homepage - patreon - whole doc htm/txt - copyright 2022 martin korth (nocash)

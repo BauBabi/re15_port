@@ -1,0 +1,38 @@
+E3D Video Hacks			2:27 pm 25/2/2000
+~~~~~~~~~~~~~~~
+
+If E3D won't run on your PC, it's probably because the Allegro
+library can't set the 800x600x16 video mode on your video card.
+The error message from Allegro is displayed if this happens,
+and should tell you what the problem is.
+
+Here's what you can try:
+
+1. Try installing Scitech Display Doctor or S3VBE before
+   running E3D.
+
+3. Edit the allegro.cfg file in the E3D directory and change
+   the default graphics driver, eg:
+
+   gfx_card = VBE1
+
+
+If you still can't get it working, then get a real video card,
+or email me.
+
+Note that 800x600x16bit mode requires 960kb of memory, but Allegro
+will probably try to allocate a 1024x1024 virtual screen to fit it
+in, so it may not work on a video card with less then 2 Mb...
+
+
+Win2000/NT2000: I can't get E3D to work on this. If you know of a
+workaround, please contact me!
+
+Display messed up by strange text? Then run rede3d.bat, which will
+use the REDIR program to run E3D and redirect stderr text to a log
+file.
+
+Good luck...
+
+- James Higgs
+ 

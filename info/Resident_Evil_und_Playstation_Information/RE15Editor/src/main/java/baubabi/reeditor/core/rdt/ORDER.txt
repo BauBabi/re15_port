@@ -1,0 +1,62 @@
+00 - Sprite (Immer 00)
+01 - Cut - Amounts of cameras used in the Room
+02 - Amount of MD1 3D Models used in the Room
+03 - Items
+04 - Door
+05 - Room_at
+06 - Reverb_lv
+07 - Sprite_max - Total value of PRI cameras sprites (masks) that are used in the room
+
+08-11 Adresse von snd0.edt
+12-15 Adress von snd0.vh
+16-19 Adresse von snd0.vb
+20-23 Adresse von snd1.edt
+24-27 Adresse von snd1.vh
+28-31 Adresse von snd1.vb
+32-35 Adresse von collision.sca
+36-39 Adresse von camera.rid
+40-43 Adresse von zone.rvd
+44-47 Adresse von light.lit
+48-51 Adresse der Adressen der model.md1 und model.tim Daten
+52-55 Adresse von floor.flr
+56-59 Adresse von block.blk
+60-63 Adresse vom Offset der msg Daten
+64-67 Adresse vom Offset der main scd daten
+68-71 Adresse vom Offset der sub scd daten
+72-75 Adresse vom Offset der extra scd daten
+76-79 Adresse von effect.esp
+80-83 Adresse von noch Unbekannt (EFF?)
+84-87 Adresse von espXX.tim
+88-91 Adresse von modelXX.tim
+92-95 Adresse von animation.rbj
+
+camera.rid
+Adressen der tim und md1 daten
+zone.rvd
+light.lit
+sprite.pri (Am aller schwersten zu ermitteln, da kein pointer. Aber - light.lit hat immer 40 byte Blöcke und sprite.pri startet immer mit mehreren FF)
+collision.sca
+block.blk
+floor.flr
+Offsets der main00.scd daten
+main00.scd
+Offsets der subXX.scd daten
+subXX.scd
+Offsets der extraXX.scd daten
+extraXX.scd
+Offsets der mainXX.msg daten
+mainXX.msg
+animation.rbj
+modelXX.md1
+effect.esp
+snd0.edt
+snd0.vh
+snd1.edt
+snd1.vh
+snd0.vb
+snd1.vb
+snd0.snd (immer 12 byte, also geht man von den tim Daten aus (für die die Adresse existiert und rechnet 12 byte zurück (start snd1) und nochmal 12 (start snd0)
+snd1.snd
+espXX.tim
+Unbekannt - aber immer 32 byte lang, existiert nur wenn espXX.tim Daten existieren und startet mit vielen FFFFFFF
+modelXX.tim

@@ -1,0 +1,38 @@
+This doc by Jum Hig 12:08 pm 21/12/99
+
+To install the updated mipsgcc PSX library (which includes some added
+functionality, a little fix and sound support):
+
+1. Install MIPSGCC
+2. Install Rob Withey's PSX library
+3. Install this update
+
+
+
+Installing MIPSGCC
+~~~~~~~~~~~~~~~~~~
+
+Read the MIPSGCC docs.
+
+Unzip with -p option to preserve directories.
+
+Set environmental variables in AUTOEXEC.BAT, or create a batch file
+(eg: setenv.bat) to set the environmental variables.
+
+
+
+Installing PSX libs
+~~~~~~~~~~~~~~~~~~~
+
+Unzip into MIPSGCC base directory with -p option to preserve
+directories (or use Winzip).
+
+Basically, libps.a must be in your MIPSGCC lib path, and the header
+files must be in the MIPSGCC include path.
+
+
+
+Testing your installation:
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Run testinst.bat or try to compile something.

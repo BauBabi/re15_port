@@ -1,0 +1,55 @@
+DIRECTORY OVERVIEW: CONFERENCE PRESENTATIONS 9/3/98
+This directory contains presentations from SCEA's PlayStation Developers'
+Conference (March, 1996) and SCEE's Developers' Conferences (April, 1996, and
+July, 1998).
+SCEA, March 1996
+Advanced CD Adv_cd.pdf
+Advanced GPU Adv_gpu.pdf
+Advanced GTE Adv_gte.pdf
+Artist Tools ArtPath.pdf
+GS Library Gs.pdf
+Sound and Music in Video Games Sound.pdf
+SCEE, April 1996
+CD Mastering Cdmaster.pdf
+CD Overview (Part 1) Cd_ovw.pdf
+Introduction to PlayStation Development Intro.pdf
+Memory Cards and Controllers Memcard.pdf
+Optimization Optimize.pdf
+Sound and Music in Video Games Sound.pdf
+NEW!
+SCEE, July 1998
+PDA Preview 4_PDA.ppt
+Win'95/NT hosted CD-Emulator 7A_CD_Em.ppt
+Pro-DG 7B_Prodg.ppt
+Advanced PlayStation Audio 98 Audio98.ppt
+XM Player XMPlay.ppt
+H2700 Masterclass H2700.ppt
+HMD Overview HMD_jr.ppt
+Paper: Getting FMV Right Fmv_tips.pdf
+Paper: Using .XA xa_sound.pdf
+We have provided the 1996 presentations in Adobe Acrobat PDF format. The 1998
+presentations are in Microsoft PowerPoint, with supplemental papers in PDF
+format.
+=============================================================================
+Copyright (C) 1994 - 1998 Sony Computer Entertainment Inc.
+All Rights Reserved.
+PlayStation and PlayStation logos are trademarks of Sony Computer
+Entertainment Inc. All other trademarks are property of their respective
+owners and/or their licensors.
+SONY COMPUTER ENTERTAINMENT AMERICA
+919 East Hillsdale Blvd,
+Foster City CA 94404
+415-655-8000
+E-mail: DevTech_Support@playstation.sony.com
+Website: http://www.scea.sony.com/dev
+Developer Support Hotline: 415-655-8181
+ FAX: 415-655-5511
+SONY COMPUTER ENTERTAINMENT EUROPE
+Waverley House
+7-12 Noel Street
+London W1V 4HH
+E-mail: dev_support@playstation.co.uk
+Website: http://www.scee.sony.co.uk
+Developer Support Hotline: +44 (0) 171 447 1680
+ FAX: +44 (0) 171 390 4324
+=============================================================================

@@ -1,0 +1,68 @@
+
+CDROM File Video Streaming Mis-mastered files	Contents
+Index	Prev
+Next
+
+Mis-mastered streaming files
+There are several discs that have streaming data stored as partial CDROM images (instead of as real CDROM sectors).
+  Format        Content    Where
+  raw 920h-byte STR        K9.5 1 - Live in Airedale (ZZBUFFER.STR)  ;\
+  raw 920h-byte STR        Need for Speed 3 (MOVIES\ZZZZZZZ*.PAD)    ;
+  raw 920h-byte STR        3D Baseball (ZZZZZZZZ.ZZZ)                ; intended
+  raw 920h-byte STR        Wing Commander III (DUMMY.DAT)            ; padding
+  raw 920h-byte STR        R-Types (DMY\DUMMY.BIN)                   ;
+  raw 920h+junk STR+junk   Grand Slam (DUMMY.BIN)                    ;
+  raw 920h-byte XA-ADPCM   Spec Ops Airborne Commando (PADDING.NUL)  ;
+  raw 920h-byte SW-STR     Cyberia (ENDFILL\*.STR) (software render) ;
+  RIFFs/CDXAfmt STRs       Sonic Wings Special (SW00.DMY = two RIFFs);/
+  raw 920h-byte XA-ADPCM   Rugrats (MagDemo19: STREAMS\DB02.ISF)     ;\nonsense
+  raw 920h-byte Data BABEh Rugrats (MagDemo19: STREAMS\OPEN.BIN)     ; dupes
+  raw ???-byte  CDDA       Championship Surfer (MagDemo43: HWX\MUSIC);/
+  raw ???-byte  CDDA       Twisted Metal 2 (MagDemo50: TM2\FRWYSUB.DA) ;-?
+  raw 920h-byte STR        Sonic Wings Special (MOV\MQ*.STR)         ;-unused?
+  raw 920h-byte STR        Apocalypse (MagDemo16: APOC\*.STR)
+  raw 920h-byte XA-ADPCM   Apocalypse (MagDemo16: APOC\*.XA)
+  raw 920h-byte XA-ADPCM   NFL Xtreme (MagDemo13: NFLX\GAME\SOUND\2PLAYRNO.XA)
+  raw 920h-byte XA-ADPCM   Ace Combat 2 (MagDemo01: ACE2.STP)
+  raw 920h-byte XA-ADPCM   Colony Wars (MagDemo02: CWARS\DEMO.PAK)
+  raw 920h-byte XA-ADPCM   Best Sports demo (AH2\GAMEDATA\COM\MUSIC\MUSIC.IXA)
+  raw 920h-byte XA-ADPCM   Tomb Raider: Last Revelation (MagDemo29: TR4\XA1.XA)
+  raw 800h-byte XA-ADPCM   Croc 1 demo (MagDemo02: CROC\MAGMUS.STR) (FORM1)
+  RIFF/CDXAfmt  XA-ADPCM   Best Sports demo (LOMUDEMO\SFX\COMMENT.STR)
+  RIFF/CDXAfmt  ?+XA-ADPCM Ace Combat 3 Electrosphere (MagDemo30: AC3\*.SPB)
+  RIFF/CDXAfmt  XA-ADPCM   Colony Wars Venegance (MagDemo14: CWV\SONYDEMO.PAK)
+  RIFF/WAVEfmt  CDDA       T'ai Fu (MagDemo16: TAIFU\3_10.WAV, 2x16bit 44100Hz)
+  RIFF/WAVEfmt  CDDA       Psalm69 (beta) FRONT\FIRE.TRK
+The 920h-byte sectors exclude the leading Sync mark and MM:SS:FF:Mode2 value.
+ Data/movie sectors look as so:
+  000h 4    Sub-Header (File, Channel, Submode OR 20h, Codinginfo)
+  004h 4    Copy of Sub-Header
+  008h 800h Data (2048 bytes)           ;<-- contains STR movie sectors
+  808h 4    EDC (zerofilled)
+  80Ch 114h ECC (zerofilled)
+ And XA-ADPCM sectors look as so:
+  000h 4    Sub-Header (File, Channel, Submode OR 64h, Codinginfo)
+  004h 4    Copy of Sub-Header
+  008h 900h Data (18*128 bytes)         ;\contains XA-ADPCM audio sectors
+  908h 14h  Data (zerofilled)           ;/
+  91Ch 4    EDC (zerofilled)
+The RIFF/CDXAfmt has a standard RIFF header, followed by 930h-byte sectors (same format as when opening CDROM streaming files in Windows). The RIFF/WAVEfmt is just a standard .WAV file.
+In case of the ZZ*.* files on retail discs, the developers did intentionally append some non-functional dummy STR files (instead of appending zerofilled 30Mbyte at end of disc).
+CDROM File XYZ and Dummy/Null Files
+In case of the Demo Discs, the developers did probably have high hopes to release a demo version with working streaming data, just to find out that Sony had screwed up the data format (or maybe they had only accidentally included streaming data, without actually using it in demo version). Confusingly, the corrupted files were released on several discs (magazine demos, and other demo releases).
+The Rugrats demo has intact files in RUGRATS\CINEMAT and RUGRATS\XA folders, plus nonsense copies of that files in 920h-byte format in STREAMS folder.
+
+Partially mis-mastered files
+Legend of Dragoon (MagDemo34: LOD\XA\LODXA00.XA has FIRST SECTOR mis-mastered (it has TWO sub-headers (01,00,48,00,01,00,48,00,01,01,64,04,01,01,64,04), the remaining sectors are looking okay).
+
+Porsche Challenge (USA) (SRC\MENU\STREAM\*.STR)
+The subheader and data of the 1st sector are accidently overwritten by some ASCII string:
+  000h 4    Subheader       01 44 2D 52            ".D-R"    ;\distorted
+  004h 4    Subheader copy  01 4D 20 47            ".M G"    ;/"CD-ROM G"
+  008h 299h Data ASCII      65 6E 65 72 61 ...     "enerator for Windows"...
+  2A1h 567h Data BS bitstream (but lacks BS header and start of bitstream)
+The 2nd sector and up are containing intact STR headers (for the 2nd-Nth sector of 1st frame, but the whole 1st frame is unusable due to missing 1st sector; however, the following frames are intact).
+
+
+I am homeless in Hamburg, please help me out!
+extracted from no$psx v2.2 - homepage - patreon - whole doc htm/txt - copyright 2022 martin korth (nocash)

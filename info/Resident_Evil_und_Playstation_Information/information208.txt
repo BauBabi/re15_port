@@ -1,0 +1,31 @@
+PLAYSTATION TECHNICAL NOTE
+==================================================================
+Date: October, 1996
+Ref:
+Author: SCE, Inc. R&D/Business Affairs
+Subject: Bug notes: Sector Drop Out Problem during CD Read
+ABSTRACT
+--------
+We would like to inform you of special programming notes in regard to CD
+access.
+During CD data read by issuing CdRead(), CdRead2() of CdlReadN/CdlReadS
+commands, issuing the commands below may result in one sector of data
+dropping out:
+CdlNop
+CdlGetlocL
+CdlGetlocP
+CdlSetloc
+PROBLEM DETAILS
+---------------
+When the drop out occurs, the data that can be obtained by CdReady() or
+DataReady callback is that of the NEXT sector, not the one expected.
+The reason for this problem is that issuing other commands during CD
+read overloads the CD subsystem, which finishes reading the next sector
+before completion of the previous command process. This problem occurs
+more frequently when several other commands are issued during the read.
+To avoid the drop out problem, please make sure not to issue other
+commands during the data read.
+CdRead() from the Streaming Library (Library Version 3.5 or later)
+monitors sector continuity from sub-header location information. In case
+of drop out, CdReadSync is designed to return an error code of -1 (read
+failed).

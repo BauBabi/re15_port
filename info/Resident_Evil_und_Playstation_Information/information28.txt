@@ -1,0 +1,70 @@
+
+CDROM File Video Streaming Framerate	Contents
+Index	Prev
+Next
+
+According to Sony, BS encoded 320x240pix videos can be played at 30fps (with cdrom running at double speed).
+
+STR Frame Rate
+As a general rule, the frame rate is implied in CDROM rotation speed (150 or 75 sectors per second, minus the audio sectors, divided by the number of sectors per video frame).
+
+Fixed/Variable Framerates
+The frame can drop on video frames that contain more sectors than usually. Video frames that require fewer sectors than often padded with zerofilled sectors. However, some games don't have that padding, so they could end up reeceiving up to 150 single-sector frames per second; the actual framerate is supposedly slowed down to 60Hz or less via Vblank timer (and with the CDROM reading getting paused when the read-ahead buffer gets full).
+
+Audio Samplerate
+XA-ADPCM audio contains samplerate info (in the FORM2 subheader), the samplerate versus amount of audio sectors can be used to compute the CDROM rotation speed.
+There are two exceptions: Some movies don't have any audio at all, and some movies use SPU-ADPCM instead of XA-ADPCM. In the latter case, the SPU Pitch (samplerate) may (or may not) be found somewhere in the audio sector headers.
+
+CDROM Rotation speed
+As said above, the speed can be often detected via audio sample rate. Otherwise, the general rule is that most PSX games are used 2x speed (150 sectors/second). But, there are a few games with 1x speed (see below).
+
+CDROM Single speed (75 sectors/frame)
+Here are probably most of the USA games with videos at 1x speed.
+  007 - The World Is Not Enough
+  1Xtreme
+  Arcade Party Pak
+  Atari Anniversary Edition Redux
+  Blast Radius
+  Blue's Clues - Blue's Big Musical
+  Chessmaster II
+  Chronicles of the Sword
+  Civilization II
+  Colin McRae Rally
+  Creatures - Raised in Space
+  Cyberia
+  Demolition Racer
+  Dune 2000
+  ESPN Extreme Games
+  FIFA Soccer 97
+  Fade to Black
+  Family Connection - A Guide to Lightspan
+  Fear Effect
+  Fox Hunt
+  Interactive CD Sampler Volume 1
+  Jade Cocoon - Story of the Tamamayu
+  Jeopardy! 2nd Edition
+  Juggernaut
+  Krazy Ivan
+  MTV Sports - Skateboarding featuring Andy Macdonald
+  MTV Sports - T.J. Lavin's Ultimate BMX
+  Medal of Honor
+  Medal of Honor - Underground
+  Official U.S. PlayStation Magazine Demo Disc 23
+  Planet of the Apes
+  PlayStation Underground Number 2
+  Shockwave Assault
+  Starblade Alpha
+  Starwinder - The Ultimate Space Race
+  Str.at.e.s. 1 - Match-A-Batch
+  Str.at.e.s. 5 - Parallel Lives!
+  Str.at.e.s. 7 - Riddle Roundup!
+  The X-Files
+  Top Gun - Fire at Will!
+  Um Jammer Lammy
+  Uprising X
+  Wheel of Fortune - 2nd Edition
+  Williams Arcade's Greatest Hits
+
+
+I am homeless in Hamburg, please help me out!
+extracted from no$psx v2.2 - homepage - patreon - whole doc htm/txt - copyright 2022 martin korth (nocash)

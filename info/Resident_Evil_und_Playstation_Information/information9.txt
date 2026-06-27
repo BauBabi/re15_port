@@ -1,0 +1,144 @@
+EMD (Resident Evil 1997)
+File Format
+Name	EMD (Resident Evil 1997)
+Ontology	
+Electronic File Formats
+Game data files
+EMD (Resident Evil 1997)
+Extension(s)	.emd
+This content was first retrieved from the Internet Archive's Wayback Machine for the date 2016-08-09 from the following URL: https://web.archive.org/web/20160809012215/http://rewiki.regengedanken.de/wiki/.EMD_(Resident_Evil)
+
+The .EMD file format is used by Resident Evil. It contains the description of 3D models of the game (enemies, player, etc...).
+
+Contents [hide] 
+1 Structure
+1.1 Directory
+1.2 File/Section 0, skeleton
+1.3 File/Section 1, animation steps
+1.4 File/Section 2, meshes
+1.4.1 Header
+1.4.2 Objects
+1.4.3 Index arrays
+1.5 File/Section 3, texture
+Structure
+The values are stored in Little-Endian order.
+
+Directory
+There is a directory, which is stored at the end of the file, it contains 4 offsets. So its position is filesize-4*4 bytes.
+
+File/Section 0, skeleton
+This section starts with a header:
+
+typedef struct {
+	unsigned short relpos_offset;/* Relative offset to emd1_skel_relpos[] array */
+	unsigned short length; /* Relative offset to emd1_skel_data[] array, which is also length of relpos+armature+mesh numbers  */
+	unsigned short count; /* Number of objects in relpos,data2,mesh arrays? */
+	unsigned short size; /* Size of each element in emd1_skel_data[] array */
+} emd1_skel_header_t;
+If offset is more than 8, there are some extra stuff, namely data1,data2 and mesh arrays.
+
+typedef struct {
+	short x;
+	short y;
+	short z;
+} emd1_skel_relpos_t; /* Relative position of each mesh in the object */
+
+typedef struct {
+	unsigned short mesh_count; /* Number of meshes linked to this one */
+	unsigned short offset; /* Relative offset to mesh numbers (emd1_skel_mesh[] array) */
+} emd1_skel_armature_t;
+
+emd1_skel_relpos_t emd1_skel_relpos[count];
+emd1_skel_armature_t emd1_skel_armature[count];
+unsigned char emd1_skel_mesh[count]; /* Mesh number on which to apply relative position */
+Finally an array of elements which have a size of emd1_skel_header.size bytes each.
+
+typedef struct {
+	short x_offset;	/* distance from reference point */
+	short y_offset;
+	short z_offset;
+
+	short x_speed;	/* speed at which moving the model */
+	short y_speed;
+	short z_speed;
+
+	short angles[3*15];	/* angle for each bone/model around x,y,z axis */
+
+	short unknown;
+} emd1_skel_anim_t;
+
+emd1_skel_anim_t emd1_skel_anim[];
+File/Section 1, animation steps
+This section starts with this header, a certain number of records composed of count and offsets.
+
+typedef struct {
+    unsigned short count;  /* Count of indices to process from emd_sec1_data[] array */
+    unsigned short offset; /* Byte offset to first index in emd_sec1_data[] array */
+} emd_anim_header_t;
+
+emd_anim_header_t emd_anim_header[];
+Following this array, you'll find another array of unsigned long. Each value (animation frame number?) is an index in emd_sec2_data array in the skeleton section.
+
+unsigned long emd_anim_skel_t[];    /* Bits 31-16:   Bitmasks for flags */
+                                    /* Bits 15-0:    Number of frame to display ? */
+Then you'll finally find the 'unsigned long' byte length of the section.
+
+unsigned long length;
+File/Section 2, meshes
+The last object holds the 3D stuff. Maybe the rest of the file is use to store animations, and links between primitives.
+
+Header
+typedef struct {
+    unsigned long length; /* Section length in bytes */
+    unsigned long unknown;
+    unsigned long obj_count; /* Number of objects in model */
+} emd_model_header_t;
+Objects
+The model is separated in 'obj_count' objects. Following the header is the description of each object, in the form of an array of 'model_object'. Each offset is relative to the first emd_model_object_t.
+
+typedef struct {
+    emd_model_triangles_t triangles;
+} emd_model_object_t;
+
+typedef struct {
+    unsigned long vertex_offset; /* Offset to vertex data, array of emd_vertex_t */
+    unsigned long vertex_count;  /* Vertex count */
+    unsigned long normal_offset; /* Offset to normal data, array of emd_vertex_t */
+    unsigned long normal_count;  /* Normal count */
+    unsigned long tri_offset; /* Offset to triangle data, array of emd_triangle_t */
+    unsigned long tri_count;  /* Triangle count */
+    unsigned long dummy;
+} emd_model_triangles_t;
+Index arrays
+Normal and vertex coordinates are saved in same format:
+
+typedef struct {
+    signed short x; /* Coordinates */
+    signed short y;
+    signed short z;
+    signed short zero;    
+} emd_vertex_t; /* Normals have same format */
+A triangle is stored in this format:
+
+typedef struct {
+    unsigned long unknown; /* id 0x34000609 */
+
+    unsigned char tu0; /* u,v texture coordinates of vertex 0 */
+    unsigned char tv0;
+    unsigned short clutid; /* Texture clut id, bits 0-5 */
+    unsigned char tu1;
+    unsigned char tv1;
+    unsigned short page;  /* Texture page */
+    unsigned char tu2;
+    unsigned char tv2;
+    unsigned short dummy;
+
+    unsigned short n0; /* Index of normal data for vertex 0 */
+    unsigned short v0; /* Index of vertex data for vertex 0 */
+    unsigned short n1;
+    unsigned short v1;    
+    unsigned short n2;
+    unsigned short v2;    
+} emd_triangle_t; /* Triangle */
+File/Section 3, texture
+And finally, an embedded TIM image, which is the texture to apply to the model.

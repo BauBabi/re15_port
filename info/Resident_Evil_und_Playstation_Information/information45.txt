@@ -1,0 +1,498 @@
+
+CDROM File Archives with Offset and Size	Contents
+Index	Prev
+Next
+
+Crash Team Racing (retail: BIGFILE.BIG, and MagDemo30/42: KART\SAMPLER.BIG)
+  000h 4     Zero
+  004h 4     Number of Files (260h)
+  010h N*8   File entries
+  ...  ..    Zeropadding to 800h byte boundary
+  ...  ..    File Data
+File Entries:
+  000h 4   Fileoffset/800h (increasing)
+  004h 4   Filesize in bytes
+Filetypes in the archive include...
+  MDEC v2 STR's  (file 1E1h..1F8h,1FAh)
+  TIM textures  (file 01FBh..0200h and others)
+  empty files   (file 01F9h and others)
+  small archives with named entries (file B5h,124h,125h,126h and others)
+  stuff with date string and names (file 253h,256h)
+  there seem to be no nested BIG files inside of the main BIG file
+
+Black Matrix (*.DAT)
+  000h 4    Number of files (N) (eg. 196h)
+  004h 4    Unknown (always 0Bh) (maybe sector size shift?)
+  008h N*4  File List
+  ...  ..   Zeropadding to 800h-byte boudary
+  ...  ..   File Data
+File List entries:
+  000h 2    Offset/800h (increasing)
+  002h 2    Size/800h (can be zero)
+The "files" might actually contain small child folders? Or the whole stuff is just some kind of data structure, not an actual file system archive.
+
+Charumera (*.CVF)
+  000h N*4  File List
+  ...  ..   Zeropadding to 800h-byte boundary
+  ...  ..   File Data area
+ File List entries:
+  000h 1    Size/800h   (8bit)
+  001h 3    Offset/800h (24bit, increasing)
+
+Vs (MagDemo03: THQ\*) has .CDB archives
+  000h  N*8   File List
+  ...   ..    Zeropadding to 800h-byte boundary
+  ...   ..    File Data
+  ...   ..    Garbage padding (can be several megabytes tall)
+File List entries:
+  000h 2     Offset/800h (increasing)
+  002h 2     Size/800h (same as below, rounded up to sector units)
+  004h 4     Size in bytes
+Note: The files may consist of multiple smaller files badged together (eg. DISPLAY.CDB contains several TIMs per file).
+Some CDB archives have garbage padding at end of file: BIN.CDB (2Kbyte), CSEL.CDB (80K), DISPLAY.CDB (70K), MOT.CDB (10648Kbyte). Maybe that's related to deleted files in the Vs demo version and/or to updating the CDB archives with newer/smaller content, but without truncating the CDB filesize accordingly.
+
+Monster Rancher (MagDemo06: MR_DEMO\*.OBJ)
+Deception III Dark Delusion (MagDemo33: DECEPT3\K3_DAT.BIN)
+Star Trek Invasion (MagDemo34: STARTREK\STARTREK.RES)
+Similar as .CDB archives (but with 32bit offset, and without duplicated size).
+  000h  N*8   File List
+  ...   4     File List end marker (00000000h)
+  ...   ..    Garbage padding to 800h-byte boundary
+  ...   ..    File Data
+File List entries:
+  000h 4     Offset/800h (increasing)
+  004h 4     Size in bytes (often zero; for unused file numbers)
+Note: Files are usually padded with 0..7FFh bytes to 800h-byte boundary, but STARTREK.RES does append additional 800h-byte padding after each file (ie. 800h..FFFh padding bytes in total).
+
+Einhander (MagDemo08: BININDEX.BIN/BINPACK0.BIN/BINPACK1.BIN)
+  000h X*4  File List for BINPACK0.BIN                   ;\
+  ...  ..   Zeropadding                                  ; BINPACK0
+  410h ..   Unknown (some/all of it looks like garbage)  ;/
+  800h Y*4  File List for BINPACK1.BIN                   ;\
+  ...  ..   Zeropadding                                  ; BINPACK1
+  C10h ..   Unknown (some/all of it looks like garbage)  ;/
+File List entries:
+  000h 2    Offset/800h in BINPACK0.BIN or BINPACK1.BIN
+  002h 2    Size/800h
+
+SO98 Archives (NBA Shootout '98, MagDemo10: SO98\..*.MDL *.TEX *.ANI *.DAT)
+Resembles .BZE (in terms of duplicated size entry).
+  000h 4     Number of Files
+  004h 4     Size of File Data area (total filesize-N*0Ch-8)
+  008h N*0Ch File List
+  ...  ..    File Data area
+File List entries:
+  000h 4   Offset (zerobased, from begin of File Data area)
+  004h 4   Size in bytes
+  008h 4   Size rounded to mutiple of 4-bytes
+.DAT contains .TIM .SEQ .VB .VH and nested SO98 archives
+.MDL contains whatever (and empty 0-byte files)
+.TEX contains .TIM
+.ANI contains whatever
+
+Gran Turismo 1 (MagDemo10: GT\*.DAT) GT-ARC
+Gran Turismo 1 (MagDemo15: GT\*.DAT) GT-ARC
+Gran Turismo 2 (GT2.VOL\arcade\arc_fontinfo) GT-ARC
+  000h 0Ch   ID "@(#)GT-ARC",00h,00h
+  00Ch 2     Content Type (8001h=Compressed, 0001h=Uncompressed)
+  00Eh 2     Number of Files (eg. 0Fh)
+  010h N*0Ch File List
+  ...  ..    File Data area
+ File List entries:
+  000h 4     Offset in bytes (increasing, unaligned)
+  004h 4     Compressed File Size (can be odd)  ;\both same when uncompressed
+  008h 4     Decompressed File Size             ;/(ie. when [00Ch]=0001h)
+MESSAGES.DAT, SOUND.DAT, TITLE.DAT which are completely uncompressed GT-ARC's. Most other GT-ARC's contain LZ compressed files. In case of CARINF.DAT it's vice-versa, the files are uncompressed, but the GT-ARC itself is LZ compressed (the fileheader contains 00h,"@(#)GT-A",00h,"RC",00h,00h; it can be detected via those bytes, but lacks info about decompressed size).
+CDROM File Compression GT-ZIP (Gran Turismo 1 and 2)
+
+O.D.T. (MagDemo17: ODT\*.LNK and ODT\RSC\NTSC\ALLSOUND.SND and nested LNK's)
+Barbie Explorer (MagDemo50: BARBIEX\*.STR and nested therein)
+  000h 4     Number of Files (N)
+  004h N*8   File List
+  ...  ..    File Data area
+File List entries:
+  000h 4     Offset in bytes (increasing, 1/4-byte? aligned)
+  004h 4     File Size in bytes (usually N*4, TXT's in ODT are padded as so)
+Quirk: Instead of rounding only Offsets to N*4 byte boundary, all Sizes are rounded to N*4 bytes (eg. TXT files in ODT\RSC\NTSC\GFILES.LNK\01 with odd number of characters are are zeropadded to N*4 bytes).
+Note: The PADBUG archives in Final Fantasy VIII (FF8) are very similar (but have a different alignment quirk).
+
+Bust A Groove (MagDemo18: BUSTGR_A\*.DFS and BUSTGR_B\*.DFS) (DFS)
+Bust-A-Groove 2 (MagDemo37: BUSTAGR2\BUST2.BIN\*) (main=DF2 and child=DFS)
+Same as in O.D.T. with extra "DFS_" ID at start of file.
+  000h 4     ID "DFS_" (with align 4) or "DF2_" (with align 800h)
+  004h 4     Number of Files (N)
+  008h N*8   File List
+  ...  ..    File Data area
+ File List entries:
+  000h 4     Fileoffset in bytes (4-byte or 800h-byte aligned, increasing)
+  004h 4     Filesize in bytes (can be odd, eg. in BUSTGR_A\SELECT.BPE\*)
+The game does use uncompressed DFS archives (in .DFS files) and compressed DFS archives (in .BPE files):
+CDROM File Compression BPE (Byte Pair Encoding)
+The game does also use .DBI files (which contain filenames and other strings, whatever what for).
+
+Monaco Grand Prix Racing Simulation 2 (MagDemo24: EXE\*\*.SUN)
+Same as DFS, but with Total Filesize instead of "DFS_".
+  000h 4     Total used filesize (excluding zeropadding to 2EE000h)
+  004h 4     Number of Files (N)
+  008h N*8   File List
+  ...  ..    File Data area
+  ...  (..)  In some files: Zeropadding to 2EE000h (3072Kbytes)
+File Entries:
+  000h 4     Offset (increasing, 4-byte aligned, see note)
+  004h 4     Filesize in bytes (can be odd in Monaco)
+Note: The alignment in Monaco is a bit glitchy:
+  If (Size AND 3)=0 then NextOffset=Offset+Size             ;Align4
+  If (Size AND 3)>0 then NextOffset=Offset+Size+Align800h   ;Align800h
+  Namely, Monaco has files with Size=3BC5h.
+The first file starts with unknown 32bit value, followed by "pBAV".
+
+Rollcage (MagDemo19: ROLLCAGE\SPEED.IMG) (2Mbyte)
+Rollcage Stage II (MagDemo31: ROLLCAGE\SPEED.IDX+SPEED.IMG) (3Kbyte+9Mbyte)
+Sydney 2000 (MagDemo37: OLY2000\DEMO.IDX+DEMO.IMG) (1Kbyte+2Mbyte)
+ Rollcage 1 uses a single IMG file that contains both directory and data:
+  000h 4     Header offset (0)          ;\
+  004h 4     Header size (10h+N*10h)    ; this seems to be a File List entry
+  008h 4     Header size (10h+N*10h)    ; for the header itself
+  00Ch 4     Zero                       ;/
+  010h N*10h File List                  ;-File List for actual files
+  ...  ..    Zeropadding to 800h-byte boundary
+  ...  ..    File Data area
+  Number of files is "IMG[04h]/10h" (minus 1 for excluding the header itself)
+ The other titles have seaparate IDX and IMG files for directory and data:
+  SPEED.IDX = Directory (N*10h bytes File List with offsets into SPEED.IMG)
+  SPEED.IMG = File data
+  Number of files is "Filesize(SPEED.IDX)/10h"
+File List entries:
+  000h 4     Fileoffset in bytes (800h-byte aligned, increasing)
+  004h 4     Filesize in bytes
+  008h 4     When compressed:   GT20 Header [004h] (decompressed size)
+             When uncompressed: Same as filesize
+  00Ch 4     When compressed:   GT20 Header [008h] (overlap, usuallly 3, or 7)
+             When uncompressed: Zero
+The compression related entries allow to pre-allocated the decompression buffer (without needing to load the actual GT20 file header), and then load the comprssed file to the top of the decompression buffer.
+CDROM File Compression GT20 and PreGT20
+
+Ultimate 8 Ball (MagDemo23: POOL.DAT) (5.5Mbyte)
+  000h 4      Number of Entries
+  004h N*0Ch  File List
+  ...  ..     Zeropadding to 800h-byte boundary
+  ...  ..     File Data area
+ File List entries:
+  000h 4      Unknown (random/checksum?)
+  004h 4      File Offset (800h-byte aligned, increasing)
+  008h 4      File Size in bytes
+Notes: The LAST file isn't zeropadded to 800h-byte boundary. The File List includes some unused entries (all 0Ch-bytes zerofilled).
+
+BIGFOOL - 3D Baseball (BIGFILE.FOO)
+  000h N*0Ch  File List                                   (154h entries)
+  ...  N*4    Filename Checksums (?)                      (154h entries)
+  ...  ..     Zerofilled (padding to 800h-byte boundary)
+  ...  ..     File Data area
+The 1st list entry describes the current directory itself, as so:
+  000h 4      Number of entries (including the 1st entry itself)
+  004h 4      Offset/800h (always 0, relative from begin of directory)
+  008h 4      Type        (always 3=Directory)
+Further list entries are Files or Subdirectories, as so:
+  000h 4      For Files: Size in bytes, for Directories: Number of entries
+  004h 4      Offset/800h (from begin of current directory, increasing)
+  008h 4      Type        (0=File, 3=Directory)
+
+Spec Ops - Airborne Commando (BIGFILE.CAT and nested CAT files therein)
+  000h 4     File ID                                 (always 01h,02h,04h,08h)
+  004h 4     Maybe Version?                          (always 01h,00h,01h,00h)
+  008h 4     Header Size (18h+N*8+ArchiveNameLength)    ;eg. 4ECh
+  00Ch 4     Sector Alignment (can be 4 or 800h)
+  010h 4     Number of Files (N)                        ;eg. 99h
+  014h 4     Length of Archive Name (including ending 00h)
+  018h N*8   File entries (see below)
+  ...  ..    Archive Name, ASCII, terminated by 00h     ;eg. "bigfile.dir",00h
+  ...  ..    Zeropadding to Sector Alignment boundary
+  ...  ..    File Data
+File Entries:
+  000h 4   Fileoffset (with above Sector Alignment) (increasing)
+  004h 4   Filesize in bytes
+Filetypes in the archive include...
+  nested CAT archives (file 07h,0Ch,11h,16h,1Bh,20h,25h,etc)
+  empty files         (file 3Eh,5Ah-5Fh,62h-67h,etc)
+  MDEC v2 STR's       (file 95h-96h)
+  XA-ADPCM's          (inside of nested CAT, in file94h\file*)
+There are "strings" in some files, are those filenames, eg. Icon_xxx etc?
+
+Hot Shots Golf 2 (retail: DATA\F0000.BIN, MagDemo31/42: HSG2\MINGOL2.BIN)
+The DATA directory is 13800h bytes tall. But, the PSX kernel supports max 800h bytes per ISO directory (so the kernel can only see the first 33 files in that directory). The game isn't actually trying to parse the ISO directory entries, instead, it's using the 2800h-byte offset/size list in F0000.BIN to access the directory content:
+  0000h+N*4 1     Sector MM in BCD      ;\based at 00:06:00 for file 0
+  0001h+N*4 1     Sector SS in BCD      ; (unused files are set to 00:00:00)
+  0002h+N*4 1     Sector FF in BCD      ;/
+  0003h+N*4 1     Size MSB in hex (Size/800h/100h)
+  2000h+N   1     Size LSB in hex (Size/800h AND FFh)
+  2800h     (..)  Data area for file 001h..590h (demo version only)
+Retail Version disc layout:
+  Sector 000ADh  SCUS_944.76       ;exefile     ;\
+  Sector 00130h  SYSTEM.CNF                     ; iso root folder
+  Sector 00131h  DATA (sub-folder, 27h sectors) ;/
+  Sector 00158h  (padding)                      ;-padding to 00:06:00
+  Sector 001C2h  DATA\F0000.BIN    ;file 000h   ;\
+  Sector 001C7h  DATA\F0001.BIN    ;file 001h   ;
+  ...                                           ; iso data folder
+  Sector 00B54h  DATA\F0032.BIN    ;file 020h   ;
+  Sector 00B9Bh  DATA\F0033.BIN    ;file 021h   ;  ;\files exceeding the 800h
+  ...            ...                            ;  ; directory size limit, not
+  Sector 1A0C9h  DATA\F1907.BIN    ;file 773h   ;/ ;/accessible via PSX kernel
+  Sector 1AAF1h  DUMMY.BIN                      ;-iso root folder (padding)
+Demo version in Playstation Magazine is a bit different: It has only two large .BIN files (instead of hundreds of smaller .BIN files). The directory is stored in first 2800h bytes of MINGOL2.BIN. The MM:SS:FF offsets are numbered as if they were located on sector 00:06:00 and up (to get the actual location: subtract 00:06:00 and then add the starting sector number of MINGOL2.BIN).
+  Sector 07148h  HSG2\MINGOL2.BIN  ;file 000h..590h  ;demo binary files
+  Sector 0AC1Dh  HSG2\MINGOL2X.BIN ;file 76Ch        ;demo streaming file(s)
+  Sector 0B032h  HSG2\SCUS_944.95  ;exefile          ;demo exe file
+Note: File 000h is a dummy entry referring to the 2800h-byte list itself (retail file 000h has offset=00:06:00 but size=0, demo file 000h has offset and size set to zero). File 001h is the first actual file (at offset=00:06:05, ie. after the 2800h-byte list)
+
+Threads of Fate (MagDemo33: TOF\DEWPRISM.HED+.EXE+.IMG)
+The demo version uses "Virtual Sectors" in HED+EXE+IMG files. Apart from that, the format is same as for the "Hidden Sectors" in retail version:
+CDROM File Archives in Hidden Sectors
+
+WWF Smackdown (MagDemo33: TAI\*.PAC\*, and nested therein)
+These "PAC " files are found in the main archives (which use a separate archive format, with ID "DPAC").
+  000h 4     ID ("PAC ")                                        ;\
+  004h 4     Number of files (N)                                ; Header
+  008h N*8   File List                                          ;/
+  ...  ..    File Data area                                     ;-Data area
+File List entries:
+  000h 2     File ID (inreasing, but may skip numbers, ie. non-linear)
+  002h 3     File Offset (increasing, relative to begin of Data area)
+  005h 3     File Size
+Bug: TAI\C.PAC\EFFC\0001h has TWO entries with File ID=0002h.
+
+Tyco R/C Racing (MagDemo36: TYCO\MAINRSRC.BFF)
+  000h 4     Unknown (1)
+  004h 4     Filelist Offset          (800h)
+  008h 4     Filelist Size (N*8+4)    (7ACh)
+  ...  ..    Padding to 800h-byte boundary (see note)
+  800h 4     Number of files (N)      (F5h)
+  804h N*8   File List
+  ...  ..    Padding to 800h-byte boundary (see note)
+  ...  ..    File Data area
+File List entries:
+  000h 4     File Offset in bytes (increasing, 800h-byte aligned)
+  004h 4     File Size in bytes
+Padding Note: Padding after headers & files is weirdly done in two steps:
+  Step 1: Zeropadding to 200h-byte boundary    (first 0..1FFh bytes)
+  Step 2: Garbagepadding to 800h-byte boundary (last 0..600h bytes)
+
+Team Buddies (MagDemo37: BUDDIES\BUDDIES.DAT)
+  000h 2     ID ("BD")
+  002h 2     Number of files (N)
+  004h N*8   File List
+  ...  ..    Zeropadding to 3000h
+  3000h ..   File Data area
+File List entries:
+  000h 4     File Offset/800h (increasing)
+  004h 4     File Size in bytes
+
+Gundam Battle Assault 2 (DATA\*.PAC, and nested therein)
+  000h 4     ID ("add",00h)
+  004h 4     Fixed (4)
+  008h 4     Offset to File List (usually/always 20h)
+  00Ch 4     Number of Files (N)
+  010h 4     Fixed (10h)
+  014h 0Ch   Zerofilled
+  020h N*10h File List
+  ...  ..    File Data area
+File List entries:
+  000h 4     Offset (increasing, 4-byte aligned)  ;\or both zero
+  004h 4     Size (can be odd)                    ;/
+  008h 4     Unknown (0) (or 00h,10h,11h,20h,30h,40h when Offset/Size=0)
+  00Ch 4     Zero (0)
+
+Incredible Crisis (MagDemo38: IC\*.CDB)
+  000h 4     Number of files (N)
+  004h N*4   File List
+  ...  ..    Zeropadding to 800h-byte boundary
+File List entries:
+  000h 2     File Offset/800h (increasing)
+  002h 2     File Size/800h
+
+Ape Escape Sound Archive (MagDemo22:KIDZ\KKIIDDZZ.HED\DAT\1Bh-1Dh,49h-53h,..)
+Ape Escape Sound Archive (MagDemo44:KIDZ\KKIIDDZZ.HED\DAT\1Bh-1Dh,4Fh-59h,..)
+  000h 5*4   File Sizes   (can be odd) (can be 0 for 2nd and 5th file)
+  014h 5*4   File Offsets (28h and up, increasing by sizes rounded to N*10h)
+  028h ..    File Data area (first file usually/always contains "SShd")
+
+Ultimate Fighting Championship (MagDemo38: UFC\CU00.RBB)
+  0000h 4    ID "siff"                                  ;\Header
+  0004h 4    Total Filesize (DADB1Ch)                   ;/
+  0008h 4    ID "RSRC"                                  ;\
+  000Ch 4    String Size (70h)                          ; ASCII string
+  0010h 70h  String "RC ver1.0 Copyright",...,00h       ;/
+  0080h 4    ID "RIDX"                                  ;\
+  0084h 4    File List Size     (1F78h) (3EFh*8)        ; Directory
+  0088h N*8  File List (Offset, Size1)                  ;/
+  2000h 4    ID "EXIX"                                  ;\
+  2004h 4    Extended List Size (FBCh)  (3EFh*4)        ; Extended
+  2008h N*4  Extended List (Size2)                      ;/
+  2FC4h 4    ID "GAP0"                                  ;\Alignment Padding
+  2FC8h 4    Padding Size (2Ch)                         ; (so that next chunk
+  2FCCh 2Ch  Padding (1Ah-filled)                       ;/starts at boundary-8)
+  2FF8h 4    ID "RBB0"                                  ;\
+  2FFCh 4    File Data area Size (DAAB1Ch)              ; Data area
+  3000h ..   File Data area                             ;/
+File List entries (RIDX):
+  000h 4     File Offset (increasing, 4-byte aligned, from ID "RBB0" plus 8)
+  004h 4     File Size in bytes (can be odd)
+Extended List entries (EXIX):
+  000h 4     File Size in bytes (always the same size as in RIDX chunk)
+
+Ultimate Fighting Championship (MagDemo38: UFC\CU00.RBB\183h,37Bh..3EBh)
+  000h 4     ID "OIFF"                                  ;\Header
+  004h 4     Total Filesize                             ;/
+  008h 4     ID "TIMT" or "ANMT"                        ;\
+  00Ch 4     Size (N*4)                                 ; Directory Table
+  010h N*4   File List (offsets from begin of Data ID+8);/
+  ...  4     ID "TIMD" or "ANMD"                        ;\
+  ...  4     Data Area size (SIZ) (Filesize-18h-N*4)    ; Data area
+  ...  SIZ   Data Area                                  ;/
+
+E.T. Interplanetary Mission (MagDemo54: MEGA\MEGA.CSH+.BIN)
+ MEGA.CSH:
+  000h N*0Ch File List
+ MEGA.BIN:
+  000h ..    File Data area
+File List entries:
+  000h 4     Offset (in MEGA.BIN file, 800h-byte aligned, increasing)
+  004h 4     Unknown (32bit id/random/checksum/whatever)
+  008h 4     Filesize in bytes
+
+Driver 2 The Wheelman is Back (MagDemo40: DRIVER2\SOUND\*\*)
+  000h 4     Number of entries (1 or more)
+  004h N*10h File List
+  ...  ..    File Data area (.VB aka SPU-ADPCM)
+ File List entries:
+  000h 4     Offset from begin of Data area, increasing
+  004h 4     Filesize in bytes
+  008h 4     Unknown (0 or 1)
+  00Ch 4     Unknown (AC44h, 0FA0h, 2EE0h, 2710h, 2B11h, 3E80h, 1F40h, etc.)
+ Note: Above AC44h might 44100Hz, or just file number 44100 decimal?
+
+Thrasher: Skate and Destroy (MagDemo27: SKATE\ASSETS\*.ZAL) (Z-Axis)
+Dave Mirra Freestyle BMX (MagDemo36: BMX\ASSETS\*.ZAL) (Z-Axis)
+Dave Mirra Freestyle BMX (MagDemo46: BMX\ASSETS\*.ZAL) (Z-Axis)
+  000h 4     ID (always 2A81511Ch)
+  004h 0Ch   Zerofilled
+  010h 1     Unknown (1)
+  011h 1     Compression Flag for all files (00h=Uncompressed, 80h=Compressed)
+  012h 2     Number of files (bit0-13?=N, bit14=Unknown, can be set)
+  014h N*0Ch File List, 12 bytes/entry      ;<-- when [11h]=00h=uncompressed
+  014h N*10h File List, 16 bytes/entry      ;<-- when [11h]=80h=compressed
+  ...  ..    File Data area
+File List entries (0Ch or 10h bytes per entry, depending on compression):
+  000h 4     File ID (usually 0=first, increasing) (or 0001h,7531h,7532h,...)
+  004h 4     Offset-10h in bytes (increasing, 4h-byte aligned)
+  008h 4     Filesize, uncompressed (can be odd)
+  00Ch (4)   Filesize, compressed (can be odd)   ;<-- exists only if compressed
+For decompression, see:
+CDROM File Compression ZAL (Z-Axis)
+
+Speed Punks (MagDemo32: SPUNKS\*.GDF)
+  000h 4     ID "0FDG XSP" (aka PSX GDF0 backwards)
+  008h 4     Header Size (N*10h+10h)
+  00Ch 4     Number of files (N)
+  010h N*10h File List
+  ...  ..    Zeropadding to 800h-byte boundary
+  ...  ..    File Data area
+ File List entries:
+  000h 4     ID/Type ("MARV", "MARS", "MARD", "PMET", "COLR", "MROF")
+  004h 4     ID/Num  (usually 1 SHL N, or all zero)
+  008h 4     Offset (800h-byte aligned, increasing)
+  00Ch 4     Size in bytes
+
+Legend of Dragoon (MagDemo34: LOD\SECT\*.BIN, and nested therein)
+  000h 4     ID "MRG",1Ah
+  004h 4     Number of Files (eg. 0, 1, 2, 193h, 2E7h, or 1DBBh)
+  008h N*8   File List
+  ...  ..    Padding to 800h-byte boundary (8Ch-filled) (not in nested MRG's)
+  ...  ..    File Data area
+ File List entries:
+  000h 4     Offset/800h, or 4-byte aligned Offset/1 (increasing)
+  004h 4     Size (can be odd, and can be zero)
+ Size oddities:
+  Empty files in demo version have Size=0 and Offset=0.
+  Empty files in retail version have Size=0 and Offset=OffsetOfNextFile.
+  MRG archives can start or end with Empty files.
+  All files can be empty (eg. retail DRAGN0.BIN\1190h).
+  NumFiles can be zero (eg. retail DRAGN0.BIN\1111h, demo DRAGN0.BIN\10E2h).
+ Offset oddities:
+  SECT\*.BIN have Offset/800h
+  Nested MRGs have 4-byte aligned Offset/1
+  The two variants can be detected as:
+   if FirstOffset=(NumFiles*8+8) then NestedVariant
+   if FirstOffset=(NumFiles*8+8+7FFh) AND NOT 7FFh then RootVariant
+  Whereas, FirstOffset is the first NONZERO offset in file list (important
+  for demo version, which has archives that start with ZERO offsets).
+
+RC Revenge (MagDemo37: RV2\BB\3.BBK and Retail: BB\*\*.BBK)
+This does basically contain four large files (and four info blocks with info on the content of those files).
+  000h 4     Random/Checksum?
+  004h 4     Faded ID (FADED007h)
+  008h 4     Part 1 Offset (Sound)     (always E5Ch)
+  00Ch 4     Part 2 Offset (Texture)   (when Type=01h: Offset-E5Ch)
+  010h 4     Part 3 Offset (?)         (when Type=01h: Offset-E5Ch)
+  014h 4     Part 4 Offset (?)         (when Type=01h: Offset-E5Ch)
+  018h 4     Type (10h or 20h=Normal)  (or 01h=Special in BB\8\*.BBK)
+  01Ch B0Ch  Part 1 Info (Sound)       (when Type=01h: garbage-filled)
+  B28h 314h  Part 2 Info (Texture)
+  E3Ch 14h   Part 3 Info (?)
+  E50h 0Ch   Part 4 Info (?)
+  E5Ch ..    Part 1 Data (Sound, SPU-ADPCM data, if any)
+  ...  ..    Part 2 Data (Texture data) (starts with BDEF1222h or BDEF1111h)
+  ...  ..    Part 3 Data (?)   ;\maybe map, models, and/or whatever
+  ...  ..    Part 4 Data (?)   ;/
+Part 1 Info (Sound info) (if any):
+  01Ch 4     Random/Checksum?
+  020h 4     Faded ID (FADED007h)
+  024h 4     Part 1 Size              (eg.7C7F0h)
+  028h 4     SPU Start Addr           (1010h) (for data from file offset E5Ch)
+  02Ch 4     SPU Middle Addr          (eg. 58F70h)
+  030h 4     SPU End Addr             (eg. 7D800h) (start+size)
+  034h 2     Middle entry number      (often 3Ch)
+  036h 2     Number of used entries-1 (eg. 50h means that 51h entries are used)
+  038h AF0h  Sample List (100 entries, unused ones are zerofilled)
+  914h 214h  Zerofilled (unused 1Ch-byte entries) (total is 1Ch*64h)
+ Sample List entries:
+  000h 4     SPU Offset (1010h and up) (SpuOffset=1010h is FileOffset=E5Ch)
+  004h 4     Sample Size in bytes
+  008h 4     Unknown (0)
+  00Ch 4     Unknown (0)
+  010h 4     Pitch   (400h=11025Hz, 800h=22050Hz, 2E7h=8000Hz, 8B5h=24000Hz)
+  014h 4     Unknown (0 or 1)
+  018h 4     File ID (00001F08h and up)
+Part 2 Info (Texture info):
+  B28h 4     Random/Checksum?
+  B2Ch 4     Faded ID (FADED007h)
+  B30h 4     Part 2 Size      (N*16000h)  ;Width=2C0h halfwords, Height=N*64
+  B34h 4     Zero             (0h)
+  B38h 4     Some RAM Address (8010xxxxh)
+  B3Ch 4     Unknown          (eg. 195h or E3h) ;same as at [DA4h]
+  B40h 4+4   VRAM Address X,Y (140h,0)          ;maybe load target
+  B48h 4+4   VRAM Address X,Y (140h,0)          ;maybe palette base?
+  B50h 4+4   VRAM Address X,Y (xx0h,Height-40h) ;often at/near end of used area
+  B58h 4     Unknown          (eg. 1D0h or 1E0h)
+  B5Ch 4     Unknown          (eg. 1Ah or 0Dh)
+  B60h 200h  Some halfwords?  (most are FFFFh, some are 0000h)
+  D60h 40h   Zerofilled       (0)
+  DA0h 4     Unknown          (eg. 185h or E2h)
+  DA4h 4     Unknown          (eg. 195h or E3h) ;same as at [B3Ch]
+  DA8h 9x10h Special Texpages (VramX,Y, SizeX,Y, StepX,Y, Flag/Type/Num or so?)
+  E38h 4     Some RAM Address (800Axxxxh)
+Part 3 Info:
+  E3Ch 4     Random/Checksum?
+  E40h 4     Faded ID (FADED007h)
+  E44h 4     Part 3 Size                  (eg. A9728h or 51264h)
+  E48h 4     RAM End Address (start+size) (eg. 801Fxxxxh) (near memtop)
+  E4Ch 4     RAM Start Address (end-size) (eg. 801xxxxxh)
+Part 4 Info:
+  E50h 4     Random/Checksum?
+  E54h 4     Faded ID (FADED007h)
+  E58h 4     Part 4 Size (usually 10CCCh) (or 105E0h in demo version)
+Note: File CAT\RDS.CAT does also start with ID=FADED007h (but contains whatever different stuff).
+
+
+I am homeless in Hamburg, please help me out!
+extracted from no$psx v2.2 - homepage - patreon - whole doc htm/txt - copyright 2022 martin korth (nocash)

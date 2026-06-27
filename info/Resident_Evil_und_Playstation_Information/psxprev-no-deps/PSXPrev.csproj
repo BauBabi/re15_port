@@ -1,0 +1,282 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{FE8FC1C6-321C-4C5C-9861-3203B18C6E78}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>PSXPrev</RootNamespace>
+    <AssemblyName>PSXPrev</AssemblyName>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;ENABLE_CLIPBOARD</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>1</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Resources\Icons\PlayStation_DarkSquare.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="DiscUtils.Core, Version=0.14.0.0, Culture=neutral, PublicKeyToken=5fa5b410cc9c6289, processorArchitecture=MSIL">
+      <HintPath>packages\DiscUtils.Core.0.14.0-alpha234\lib\net45\DiscUtils.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="DiscUtils.Iso9660, Version=0.14.0.0, Culture=neutral, PublicKeyToken=5fa5b410cc9c6289, processorArchitecture=MSIL">
+      <HintPath>packages\DiscUtils.Iso9660.0.14.0-alpha234\lib\net45\DiscUtils.Iso9660.dll</HintPath>
+    </Reference>
+    <Reference Include="DiscUtils.Streams, Version=0.14.0.0, Culture=neutral, PublicKeyToken=5fa5b410cc9c6289, processorArchitecture=MSIL">
+      <HintPath>packages\DiscUtils.Streams.0.14.0-alpha234\lib\net45\DiscUtils.Streams.dll</HintPath>
+    </Reference>
+    <Reference Include="ImageListView, Version=13.8.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\ImageListView.13.8.2\lib\net35\ImageListView.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.WindowsAPICodePack, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\WindowsAPICodePack-Core.1.1.1\lib\Microsoft.WindowsAPICodePack.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.WindowsAPICodePack.Shell, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\WindowsAPICodePack-Shell.1.1.1\lib\Microsoft.WindowsAPICodePack.Shell.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenTK, Version=3.3.3.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <HintPath>packages\OpenTK.3.3.3\lib\net20\OpenTK.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenTK.GLControl, Version=3.3.3.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <HintPath>packages\OpenTK.GLControl.3.3.3\lib\net20\OpenTK.GLControl.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Windows.Forms" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Common\Animator\Animation.cs" />
+    <Compile Include="Common\Animator\AnimationBatch.cs" />
+    <Compile Include="Common\Animator\AnimationFrame.cs" />
+    <Compile Include="Common\Animator\AnimationLoopMode.cs" />
+    <Compile Include="Common\Animator\AnimationObject.cs" />
+    <Compile Include="Common\Animator\InterpolationType.cs" />
+    <Compile Include="Common\Exporters\collada_schema_1_4.cs" />
+    <Compile Include="Common\Exporters\DAEExporter.cs" />
+    <Compile Include="Common\Exporters\ExportModelOptions.cs" />
+    <Compile Include="Common\Exporters\glTF2Exporter.cs" />
+    <Compile Include="Common\Exporters\glTF2Exporter.Schema.cs" />
+    <Compile Include="Common\Exporters\ModelPreparerExporter.cs" />
+    <Compile Include="Common\Exporters\MTLExporter.cs" />
+    <Compile Include="Common\Exporters\OBJExporter.cs" />
+    <Compile Include="Common\Exporters\PLYExporter.cs" />
+    <Compile Include="Common\Exporters\PNGExporter.cs" />
+    <Compile Include="Common\Parsers\ANParser.cs" />
+    <Compile Include="Common\Parsers\BFFParser.cs" />
+    <Compile Include="Common\Parsers\BinCDStream.cs" />
+    <Compile Include="Common\Parsers\CLTParser.cs" />
+    <Compile Include="Common\Parsers\FileOffsetScanner.cs" />
+    <Compile Include="Common\Parsers\FileOffsetStream.cs" />
+    <Compile Include="Common\Parsers\HMDHelper.cs" />
+    <Compile Include="Common\Parsers\HMDParser.cs" />
+    <Compile Include="Common\Parsers\Limits.cs" />
+    <Compile Include="Common\Parsers\MODParser.cs" />
+    <Compile Include="Common\Parsers\PILParser.cs" />
+    <Compile Include="Common\Parsers\PMDParser.cs" />
+    <Compile Include="Common\Parsers\PrimitiveData.cs" />
+    <Compile Include="Common\Parsers\PrimitiveDataType.cs" />
+    <Compile Include="Common\Parsers\PrimitiveType.cs" />
+    <Compile Include="Common\Parsers\PSXParser.cs" />
+    <Compile Include="Common\Parsers\PXLParser.cs" />
+    <Compile Include="Common\Parsers\SPTParser.cs" />
+    <Compile Include="Common\Parsers\TIMParser.cs" />
+    <Compile Include="Common\Parsers\TMDHelper.cs" />
+    <Compile Include="Common\Parsers\TMDParser.cs" />
+    <Compile Include="Common\Parsers\TODParser.cs" />
+    <Compile Include="Common\Parsers\VDFParser.cs" />
+    <Compile Include="Common\Renderer\GizmoId.cs" />
+    <Compile Include="Common\Renderer\LineMeshBuilder.cs" />
+    <Compile Include="Common\Renderer\Mesh.cs" />
+    <Compile Include="Common\Renderer\MeshBatch.cs" />
+    <Compile Include="Common\Renderer\MeshRenderInfo.cs" />
+    <Compile Include="Common\Renderer\VertexArrayObject.cs" />
+    <Compile Include="Common\Renderer\Shader.cs" />
+    <Compile Include="Common\Renderer\Skin.cs" />
+    <Compile Include="Common\Renderer\TriangleMeshBuilder.cs" />
+    <Compile Include="Common\Renderer\Scene.cs" />
+    <Compile Include="Common\Renderer\TextureBinder.cs" />
+    <Compile Include="Common\Renderer\VRAM.cs" />
+    <Compile Include="Common\TexturePalette.cs" />
+    <Compile Include="Common\Utils\BinaryReaderExtensions.cs" />
+    <Compile Include="Common\Utils\CollectionExtensions.cs" />
+    <Compile Include="Common\Utils\DrawingExtensions.cs" />
+    <Compile Include="Common\Utils\FInt.cs" />
+    <Compile Include="Common\Utils\JsonStringColorConverter.cs" />
+    <Compile Include="Common\Utils\JsonStringEnumConverter.cs" />
+    <Compile Include="Common\Utils\Logger.cs" />
+    <Compile Include="Common\Utils\ManifestResourceLoader.cs" />
+    <Compile Include="Common\Utils\StringUtils.cs" />
+    <Compile Include="Common\Utils\WeakReferenceCollection.cs" />
+    <Compile Include="Common\BoundingBox.cs" />
+    <Compile Include="Common\Color3.cs" />
+    <Compile Include="Common\Coordinate.cs" />
+    <Compile Include="Common\EntityBase.cs" />
+    <Compile Include="Common\GeomMath.cs" />
+    <Compile Include="Common\Line.cs" />
+    <Compile Include="Common\ModelEntity.cs" />
+    <Compile Include="Common\RenderInfo.cs" />
+    <Compile Include="Common\RootEntity.cs" />
+    <Compile Include="Common\RotationOrder.cs" />
+    <Compile Include="Common\Texture.cs" />
+    <Compile Include="Common\TiledUV.cs" />
+    <Compile Include="Common\Triangle.cs" />
+    <Compile Include="Forms\AdvancedSettingsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\AdvancedSettingsForm.Designer.cs">
+      <DependentUpon>AdvancedSettingsForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Controls\ExtendedImageListView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Forms\Controls\ExtendedPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Forms\Controls\ExtendedTreeView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Forms\Controls\RootEntitySelectorEditor.cs" />
+    <Compile Include="Forms\Controls\ScenePreviewer.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Forms\Controls\ScenePreviewer.Designer.cs">
+      <DependentUpon>ScenePreviewer.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Controls\TexturePreviewer.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Forms\Controls\TexturePreviewer.Designer.cs">
+      <DependentUpon>TexturePreviewer.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Dialogs\InputDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Dialogs\InputDialog.Designer.cs">
+      <DependentUpon>InputDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Dialogs\SelectRootEntityDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Dialogs\SelectRootEntityDialog.Designer.cs">
+      <DependentUpon>SelectRootEntityDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\ExportModelsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\ExportModelsForm.Designer.cs">
+      <DependentUpon>ExportModelsForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Utils\ControlExtensions.cs" />
+    <Compile Include="Forms\Utils\DictionaryPropertyGridAdapter.cs" />
+    <Compile Include="Forms\Utils\ClipboardUtils.cs" />
+    <Compile Include="Forms\Utils\NativeMethods.cs" />
+    <Compile Include="Forms\Utils\RefreshDelayTimer.cs" />
+    <Compile Include="Forms\Utils\TreeViewExtensions.cs" />
+    <Compile Include="Forms\PreviewForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\PreviewForm.Designer.cs">
+      <DependentUpon>PreviewForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\ScannerForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\ScannerForm.Designer.cs">
+      <DependentUpon>ScannerForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\TMDBindingsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\TMDBindingsForm.Designer.cs">
+      <DependentUpon>TMDBindingsForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Program.cs" />
+    <Compile Include="ScanOptions.cs" />
+    <Compile Include="Settings.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <EmbeddedResource Include="Forms\AdvancedSettingsForm.resx">
+      <DependentUpon>AdvancedSettingsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Controls\ScenePreviewer.resx">
+      <DependentUpon>ScenePreviewer.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Controls\TexturePreviewer.resx">
+      <DependentUpon>TexturePreviewer.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Dialogs\InputDialog.resx">
+      <DependentUpon>InputDialog.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Dialogs\SelectRootEntityDialog.resx">
+      <DependentUpon>SelectRootEntityDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\ExportModelsForm.resx">
+      <DependentUpon>ExportModelsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\PreviewForm.resx">
+      <DependentUpon>PreviewForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\ScannerForm.resx">
+      <DependentUpon>ScannerForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\TMDBindingsForm.resx">
+      <DependentUpon>TMDBindingsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Shaders\Shader.frag">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Shaders\Shader.vert">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

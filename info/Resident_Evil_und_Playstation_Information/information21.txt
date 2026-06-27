@@ -1,0 +1,100 @@
+
+CDROM File Video Texture Image TIM/PXL/CLT (Sony)	Contents
+Index	Prev
+Next
+
+TIM/PXL/CLT are standard formats from Sony's devkit. TIM is used by many PSX games.
+  .TIM   contains Pixel data, and (optional) CLUT data  ;-all in one file
+  .PXL   contains Pixel data only                       ;\in two separate files
+  .CLT   contains CLUT data only (if any)               ;/
+
+TIM Format
+  000h 1  File ID  (always 10h=TIM)
+  001h 1  Version  (always 00h)
+  002h 2  Reserved (always 0000h) (or 1 or 2 for Compressed TIM, see below)
+  004h 4  Flags (bit0-2=Type; see below, bit3=HasCLUT, bit4-31=Reserved/zero)
+  ...  .. Data Section for CLUT (Palette), only exists if Flags.bit3=1, HasCLUT
+  ...  .. Data Section for Pixels (Bitmap/Texture)
+The Type in Flags.bit0-2 can be 0=4bpp, 1=8bpp, 2=16bpp, 3=24bpp, 4=Mixed.
+NFL Blitz 2000 (MagDemo26: B2000\DATA\ARTD_G.BIN) does additionally use Type 5=8bit.
+The Type value value is only a hint on how to view the Pixel data (the data is copied to VRAM regardless of the type; 4=Mixed is meant to indicate that the data contains different types, eg. both 4bpp & 8bpp textures).
+Type 3=24bpp is quite rare, but does exist (eg. Colony Wars (MagDemo02: CWARS\GAME.RSC\DEMO.TIM).
+
+The format of the CLUT and Pixel Data Section(s) is:
+  000h 4  Size of Data Section (Xsiz*2*Ysiz+0Ch)  ;maybe rounded to 4-byte?
+  004h 4  Destination Coord    (YyyyXxxxh)  ;Xpos counted in halfwords
+  008h 4  Width+Height         (YsizXsizh)  ;Xsiz counted in halfwords
+  00Ch .. VRAM Data (to be DMAed to frame buffer)
+Note: Above is usually a multiple of 4 bytes, but not always:
+Shadow Madness (MagDemo18: SHADOW\DATA\ANDY\LOADSAVE\*.TIM) contains TIM bitmaps with 27x27 or 39x51 halfwords; those files have odd section size & odd total filesize. Gran Turismo 2 (GT2.VOL\arcade\arc_other.tim\0000) also has odd size. Unknown if the CLUT can also have odd size (which would misalign the following Bitmap section).
+Bust A Groove (MagDemo18: BUSTGR_A\G_COMMON.DFS\0005) has 0x0 pixel Bitmaps (with CLUT data).
+
+PXL/CLT Format
+PXL/CLT is very rare. And oddly, with swapped ID values (official specs say 11h=PXL, 12h=CLT, but the existing games do use 11h=CLT, 12h=PXL).
+Used by Granstream Saga (MagDemo10 GS\*)
+Used by Bloody Roar 1 (MagDemo06: BL\*)
+Used by Bloody Roar 2 (MagDemo22: ASC,CMN,EFT,LON,SND,ST5,STU\*)
+
+CLT Format
+  000h 1  File ID  (always 11h=CLT) (although Sony's doc says 12h)
+  001h 1  Version  (always 00h)
+  002h 2  Reserved (always 0000h)
+  004h 4  Flags (bit0-1=Type=2; bit2-31=Reserved/zero)
+  ...  .. Data Section for CLUT (Palette)
+The .CLT Type should be always 2 (meant to indicate 16bit CLUT entries).
+
+PXL Format
+  000h 1  File ID  (always 12h=PXL) (although Sony's doc says 11h)
+  001h 1  Version  (always 00h)
+  002h 2  Reserved (always 0000h)
+  004h 4  Flags (bit0-?=Type; see below, bit?-31=Reserved/zero)
+  ...  .. Data Section for Pixels (Bitmap/Texture)
+This does probably support the same 5 types as in .TIMs (though official Sony docs claim the .PXL type to be only 1bit wide, but netherless claim that PXL can be 4bpp, 8bpp, or 16bpp).
+
+ _______________________________ Compressed TIM _______________________________
+
+Compressed TIMs
+Ape Escape (Sony 1999) is using a customized TIM format with 4bpp compression:
+CDROM File Compression TIM-RLE4/RLE8
+Other than that, TIMs can be compressed via generic compression functions (like LZSS, GZIP), or via bitmap dedicated compression formats (like BS, JPG, GIF).
+
+ ______________________________ Malformed Files _______________________________
+
+Malformed TIMs in BIGFILE.DAT
+  Used by Legacy of Kain: Soul Reaver (eg. BIGFILE.DAT\folder04h\file13h)
+  Used by Gex - Enter the Gecko (eg. BIGFILE.DAT\file0Fh\LZcompressed)
+Malformed TIMs contain texture data preceeded by a dummy 14h-byte TIM header with following constant values:
+  10 00 00 00  02 00 00 00  04 00 08 00  00 02 00 00  00 02 00 02  ;<-- this
+  10 00 00 00  02 00 00 00  04 00 08 00  00 00 00 00  00 02 00 02  ;<-- or this
+The malformed entries include:
+  [04h]=Type should indicated the color depth, but it's always 02h=16bpp.
+  [08h]=Width*2*Height+0Ch should be 8000Ch, but malformed is 80004h.
+  Total filesize should be 80014h, but Gecko files are often MUCH smaller.
+Also, destination yloc should be 0..1FFh, but PSX "Lemmings & Oh No! More Lemmings" (FILES\GFX\*.TIM) has yloc=200h (that game also has vandalized .BMP headers with 2-byte alignment padding after ID "BM", whilst pretending that those extra bytes aren't there in data offset and total size entries).
+
+Oversized TIMs
+  Used by Pong (MagDemo24: LES02020\*\*.TIM)
+Has 200x200h pix, but section size (and filesize) are +2 bigger than that:
+  10 00 00 00 02 00 00 00 0E 00 08 00 C0 01 00 00 00 02 00 02  ;Pong *.TIM
+  10 00 00 00 02 00 00 00 0E 00 07 00 00 02 00 00 C0 01 00 02  ;Pong WORLD.TIM
+  10 00 00 00 02 00 00 00 0E 80 03 00 00 02 00 01 C0 01 00 01  ;Pong ZONE*.TIM
+
+Miscomputed Section Size
+NBA Basketball 2000 (MagDemo28: FOXBB\TIM\*.TIM) has TIMs with section size "0Ch+Xsiz*Ysiz" instead of "0Ch+Xsiz*2*Ysiz".
+
+NonTIMs in Bloody Roar 1 and 2
+  Bloody Roar 1 (CMN\INIT.DAT\000Eh)
+  Bloody Roar 2 (CMN\SE00.DAT, CMD\SEL00.DAT\0030h and CMN\VS\VS.DAT\0000h)
+This looks somehow TIM-inspired, but has ID=13h.
+  13 00 00 00 02 00 00 00 0C 20 00 00 00 00 F8 01 00 01 10 00  ;Bloody Roar 1
+  13 00 00 00 02 00 00 00 0C 20 00 00 00 00 00 00 00 01 10 00  ;Bloody Roar 2
+
+Other uncommon/malformed TIM variants
+And, Heart of Darkness has a TIM with Size entry set to Xsiz*2*Ysiz+0Eh (instead of +0Ch) (that malformed TIM is found inside of the RNC compressed IMAGES\US.TIM file).
+Also, NFL Gameday '99 (MagDemo17: GAMEDAY\PHOTOS.FIL) contains a TIM cropped to 800h-byte size (containing only the upper quarter of the photo).
+Also, not directly malformed, but uncommon: Final Fantasy IX contains 14h-byte 0x0 pixel TIMs (eg. FF9.IMG\dir04\file0046\1B-0000\04-0001).
+Klonoa (MagDemo08: KLONOA\FILE.IDX\3\2\0..1) has 0x0pix TIM (plus palette).
+
+Malformed CLTs
+  Used by Secret of Mana, WM\WEFF\*.CLT
+ID is 10h=TIM, Flags=10101009h (should be ID=12h, Flags=02h).

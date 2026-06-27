@@ -1,0 +1,564 @@
+Hey guys,
+
+Ok, after I haven’t found so much help for my questions and the availability of tools for old Resident Evil games is now like the search of the needle in the haystack, I fighted my way through the files and the Internet to extract the most data from Resident Evil 1.5 and Resident Evil 2. Even with the available tools its not so easy because there are dozens and not all can do everything. With this topic I try to help others, who want to do the challenge, for example because they need something from the games.
+
+
+So lets get started.
+
+
+We start with Resident Evil 1.5
+In The PSX Folder we have the Folders:
+BIN
+DATA
+DOOR
+EMD
+ITEM
+MOVIE
+PLD
+SOUND
+STAGE1
+STAGE2
+STAGE3
+STAGE4
+STAGE5
+STAGE6
+
+
+BIN
+With the Files in the BIN folder I couldn’t do anything and didn’t found any tool yet to extract them. So they stay closed for now.
+
+
+DATA
+(All different Screens, Menu Icons for Items, Maps, Fonts, Effects, Title and Dead Screens)
+
+In the data folder we have TIM-Files, ESP-Files, PIX-Files and SCD-Files.
+Let’s get to everyone of those:
+
+
+The TIM-Files
+The Tim Files in this folder can be Converted to BMP via TIMViewer made by rveach. I use the Version 104b that still can be found here: http://rveach.romhack.org/TIMViewer/index2.php
+You go to convert – TIM to BMP – Navigate to the folder from the .TIM files and confirm the selection.
+Then the BMP Files are in the same folder as you .TIM files.
+
+
+The ESP-Files
+For those I have looked veeery long to be finally able to extract them.
+You can extract them via BioHerb by MarkGrass. Here I used Version 0001 which can be found here: https://www.dropbox.com/s/g0hq0396py2ta ... 1.rar?dl=0 and here https://www.romhacking.net/utilities/1042/ I also provided a batchfile to be able to extract those easily (Extract-ESP.bat). Extract bioherb, throw the Batchfile into the BioHerb folder (Not the BioScript Folder!) throw in your .ESP Files into the same folder, Execute the Batch and then you have your Extracted .eff Files. The command that it executes is: .\BioHerb.exe disesp <Filename> on every .ESP-File via CMD. How to go on with those unfortunately I also haven’t found out yet, but hey, one step closer… :-)
+
+
+The PIX-Files
+The PIX Files can be easily extracted by BioPIX from MarkGrass. I used the Version 1.1. It can be found here: https://www.dropbox.com/s/6w42yrq1c1eer ... X.rar?dl=0 and here: viewtopic.php?p=2522645#p2522645. To extract the files, take them, drag and drop and you are done. Alternatively you can use my batchfile (Extract-PIX.bat). Again, throw it into the BioPIX folder, throw the .PIX files behind and execute it. The command it execute is .\BioPIX.exe <Filename> on every .PIX file. As a result you get some .TIM files, which you then once again can extract via TIMViewer.
+
+
+The SCD-Files
+The SCD-Files are luckily an easy one. They can for example be extracted by BIOFAT from MarkGrass that can be found here: https://www.dropbox.com/s/c5atlq7hz56cc ... t.rar?dl=0 or here: https://www.dropbox.com/s/duo2x3r4xvtzu ... 1.rar?dl=0 or here: https://www.dropbox.com/s/ri8t9c2dn4d9l ... 9.rar?dl=0 or again by BioHerb, from MarkGrass again – See above at ESP-Files. Again I provided a Batch Script as well for the extraction. Just like before (Extract-SCD.bat). The command it executes is .\BioHerb.exe disscd <Filename> on every .SCD-File.
+
+
+That are all the files from the DATA folder of Resident Evil 1.5 and the start of the extraction Tutorial. Probably tomorrow when nothing come between it, I continue with the DOOR folder.
+
+
+Would be good when MarkGrass and rveach would be able to confirm if I’m allowed to upload their tools on this place, so that we have all together. I hope you like the tutorial series like this and can give me feedback. :-)
+
+Update: Ok, here we go to the next round:
+
+DOOR
+(Door Sounds, door Animations, Door Scripts)
+
+Next we come to the DOOR files.
+Resident Evil 1.5 actually only has one File in there – DOOR00.DO2.
+
+The DO2-Files
+The DO2 Files of Resident Evil 1.5 have to be extracted Version 0009 by MarkGrass (see above for link). This Version of Biofat has some Special Resident Evil 1.5 Extraction Menus that work for that. Go to Bio1.5 – DO2 – Disassemble and select the DOOR00.DO2 File:
+
+
+It is possible that it not work directly. I found this Version of biofat is a little bit ... rebellious ... from the restrictions. If you have problems extract it directly, try to put both files (biofat v0009 and DOOR00.DO2) somewhere where you definitely have complete Access rights, like in the TEMP directory.
+
+As the Result of the extraction you get some c-files, again some scd-files, and md1-file, an tim-file an vb-file and a vh-file.
+
+The c-files are C-Sources that you can look at. The scd-files you can again extract via BioHerb. Also again you can use the Batchfile Extract-SCD.bat to extract them all at once (See above: The SCD-Files). After extracting the scd files you get some cpp files. So some C++-Source Codes. So we are at the bone there as well.
+
+The MD1-Files
+Next we have the md1-File. For this we can use a great tool named RE2MVfrom Leo2236. You can find it here: https://www.mediafire.com/?j1ld795uju8jcqx and the publishing thread is here: http://re123.bplaced.net/board/viewtopic.php?f=14&t=99. Here you go to Export Model somewhere on the top right - See Screenshot:
+
+
+An here you can now finally Export it as an .Obj-File that you can use with your favorite 3D-Modeller.
+
+For the Tim-File you can once more use the TimViewer. See (The TIM-Files) on the top.
+
+Then we have the VH-File. The VH-File is a header file that describe the sound that is in the .VB-File. So the VH-File is not important. The VB-File can be opened by PSound. That can be found here: https://www.zophar.net/utilities/psxuti ... aver2.html
+
+Then you can choose the VB and make a scan:
+
+Afterwards you can convert the files to a .wav:
+
+
+Afterwards however the .wav-files are still 50% too fast. So you can use Audacity to slow them down. This can be found here: https://www.audacity.de/
+To change the speed, open your file in Audacity.
+Then select the track with ctrl + a.
+Then go to effect – Change speed:
+
+
+And change the speed multiplicator to 0.5:
+
+Then you can export your file as a new .wav:
+
+
+Ok, thats it with the DOOR Folder from Resident Evil 1.5.
+
+Next we have a look at the EMD-Folder.
+
+EMD
+(Enemy and Partner character Models and Animations)
+
+In the EMD-Folder we have CDEMD0.EMS, CDEMD1.EMS, SHITAI.TIM und SHITAI.TM2.
+So we have .EMS Files, again a TIM-File and a TM2 File.
+
+Let‘s start with the .TIM file first. It‘s the same as above. Take the TIMViewer, and you can convert it to .BMP.
+
+Then we have the TM2-File. This one I haven‘t found anything to extract it yet…
+
+Last we have the .EMS-Files. At those we look at the following:
+
+The EMS-Files
+For the extraction of the .EMS-Files we have to use biofat in version v0009 again. Remember from above, that this is a little restricted. You have to use it somewhere where you have full rights, for example the TEMP-Folder from Windows. To extract the EMS-Files go to Bio1.5 – EMS and select Disassemble[0] to extract the CDEMD0.EMS file and select Bio1.5 – EMS and select Disassemble[1] to extract the CDEMD1.EMS file:
+
+
+
+However, as far as I can say, the files in the CDEMD1.EMS File seem to be exactly the same as in the CDEMD0.EMS file…
+However, in the extracted .EMS-Files you have some EMD-files. Those .EMD-Files we have a look at next.
+
+The EMD-Files
+The EMD-Files in there can now be opened again with the great tool RE2MV. In this case with the Enemies you also have some animations. Lets have a look at the different areas.
+To export the models you go once more at the export button in the upper right area and select .obj as export format:
+
+Now you get a selection in the next screen. If you just want to have the 3D-Model, but you don‘t want to have the animations, keep „Keep Part Position“ selected. If you later also want to export the animations and want to make them usable with 3d Studio Max or Blender, unselect „Keep Part Position“:
+
+Ok, now we have the model exported. When you just want to have the model, you are done. The .obj file you can easily import in for example blender. When you also want to have the animations, read further.
+
+On the lower area we have the following symbols:
+
+
+Load animation - This one is for loading animations. We have a look at it, when we look at the Player Data.
+
+
+
+Export Animation Block – This one we will then use to export the animation.
+
+
+Import Animation Block – Is used to import an animation
+
+
+
+Play – This one is used to play an animation
+
+
+
+Pause – You probably guessed it, this one is to pause an animation.
+
+
+
+Stop – With this you stop the animation playback
+
+
+
+With those you can change to the last or the next frame of the current animation
+
+
+
+With this you can change to the next animation in the current EDD+EMR-Set
+
+
+
+Show the current selected animation in the current EDD+EMR-Set
+
+
+
+Change the EDD+EMR set. Its like a collection of animations. Different EDD+EMR sets also have different animations. So if you want to export all animations, you have to select all the sets as well one by one.
+
+
+
+And, at the end, we have the current frame of the animation, and how many frames the whole current animation has.
+
+Now, to export an animation you have to select the „export animation block“-Button:
+
+
+Then you see the question, if you want to export the current animation, or export all animations. When you export the current animation. You would export in this example – animation 0 with it‘s frames from 0 to 27. When you select Export all animations, you export all 23 Animations in this set with all its frames. They are then all hanging together. In this example I select Export current animation.
+
+And then its important that you save the animation as .ANI-file:
+
+
+So – lets summarize what is important in RE2MV. Save the Object as .obj WITHOUT having „Keep Part Position“ checked (Which also exports its texture) and then export the animation.
+
+Ok, next we need two things: 3D Studio Max and the Script which is in the RE2MV-Folder. You can apply for a free 30 days 3D Studio Max account and install it.
+
+The Script can be found in the RE2MV-Installation directory here:
+
+
+
+Next, after it is installed, open up 3D Studio Max and go to Scripting – Run Script:
+
+
+
+Then, navigate to the RE2MVAS Script, and select it:
+
+
+
+Then, make a right click on the free area in the upper border from 3D Studio Max and select customize:
+
+
+
+In the Window that opens up, search for RE2MV Animation Script and drag and drop it to the upper border:
+
+
+
+Next go to the import area, to import the .obj file:
+
+
+
+Very important – uncheck the Retriangulate Polygons option, because it messes up the UV-Mapping for the textures. Leave all other configurations as they are and click import:
+
+
+Next click the Material Editor button:
+
+Click Materials – get from selected, and make sure you selected all the parts before:
+
+Then in the Material Editor, make a right click to a free area, select Maps – General – Bitmap:
+
+
+
+Select the texture that had been exported along with the .obj-file:
+
+
+
+Draw a line from the left bubble from the bitmap to the „Base color Map“ bubble on the right:
+
+
+
+Click on the before added RE2MVAS Script, and there click the import ANI button:
+
+
+
+Select the before exported animation:
+
+
+
+Now you can have a look at it with the play button – down on the right:
+
+
+
+Next select export – export selected:
+
+
+
+Select Autodesk .fbx as the output format:
+
+
+
+Make sure the animations are baked:
+
+
+
+Open up blender, and select import – FBX:
+
+
+
+And at last you can have a look at the animation down in blender with the play button:
+
+
+And that is it. That you can do with all the .EMD-Files and all the animations to get the enemy character. Or the Partner Characters.
+
+Puuh, that was a big comic stripe today. Also had to change the pictures to come from externally because I really don't want to pay for writing an article for others.
+
+As before I hope you like the Tutorial. Next comes the ITEM Area.
+
+Update:
+Ok, let‘s go on with the tutorial. This time we have the ITEM Folder to have a look at:
+
+ITEM
+(Inventory Item Icons)
+This folder only contains one File – ITPS.ITP. Let‘s have a look how to handle this:
+
+The ITP-Files
+To extract the ITP-Files we use BioHerb again together with the Extract-ITP.bat Batchfile that I provide. Just throw in the ITPS.ITP file into the BioHerb folder, throw in the Extract-ITP.bat-file there as well and execute it. The command it executes via CMD is: .\BioHerb.exe disitp <Filename> for all .ITP-Files. Afterwards you get a folder there named ITPS. This one contains all the icons in .TIM-Format. To make bitmaps out of it, once more use the TimViewer (See above).
+
+Afterwards you have all the items Icons laying there as a .BMP-File.
+That's all that there is to say about the ITEM-Folder. Really Easy this time :-).
+
+Let‘s make one addional folder in the tutorial today because of that. Let‘s have a look at the MOVIE folder.
+
+MOVIE
+Oh, it‘s empty. Done – lets have a look at the PLD-Folder:
+
+PLD
+(Player 3D Models, including its animations and Weapons)
+
+In this folder we have files from the type .PLD (Which stands for Player Data) and we have files from type .PLW. Let‘s have a look at the .PLD-Files first:
+
+The PLD-Files
+The PLD-Files can be opened up with RE2MV again directly. Here you have now the models for the players. You can treat them just like the .EMD-Files above.
+Here additionally you have the .PLW-Files.
+
+The PLW-Files
+The PLW-Files you can extract again with biofat v0009. Remember to execute it again best in the TEMP-Directory of Windows to have full execution rights. There go to – Bio2 – PLW – Disassememble:
+
+Then you have again the following file formats in the folder:
+.edd-File, .emr-File, .md1-File and .tim file.
+
+The .edd and or the .emr file you can select via RE2MV load animation again. Its another animation set for this character. Let‘s say you opened PL00.PLD as the character Object, and disassembled PL00W00.PLW then the edd and emr file belong to the character PL00. As you see from the beginning of the file name. But of course you can also use the animations for other characters as well. It‘s just not meant to be for them.
+
+It also doesn‘t matter if you open up the .edd file or the .emr file. The animation set is the same. To open it up, make sure you opened up the .PLD file which it is meant for and then select „Load animation“ on the lower area of RE2MV and select either the .edd or .emr file:
+
+The animation can then be exported and converted again like usual, as explained in the .EMD-Area.
+Furthermore, in the extracted files we have the MD1-File again. This can be open with RE2MV again as well. And as you see, it contains the weapon for this animation set:
+
+
+
+
+
+
+This can finally then also be exported and converted like any other model explained in the .EMD-Section.
+And that‘s it so far with the .PLD-Folder. Now we only have the SOUND and the STAGE folders left for the next time.
+
+Update:
+
+Ok, let‘s go on:
+
+
+SOUND
+(The Game Musics and sounds)
+
+In the sound folder, we have .EDH files, .VB-Files and BGM-Files.
+The .EDH-Files I don‘t know what they are. But assuming they share the same name than the .VB-Files, I assume, they are not too important.
+The VB-Files we already had a look before when we looked at the DOOR files.
+They can be converted with PSound to wav-Files, and then reduced in speed by 50% by Audacity. Have a look above at „The VB-Files“.
+
+The BGM-Files
+The BGM-Files can be extracted once more via BioHerb. For extracting those, I also put a batchfile into the Topic (Extract-BGM.bat), as always, throw the .BGM files into the BioHerb folder, throw the batch file in there as well, execute it and done. The Command it Executes via CMD is: .\BioHerb.exe disbgm <Filename> for all .BGM-Files.
+
+As a result, you get a .psf file for everything in the same folder as the .BGM file. Also you get a folder for every .BGM file, containing - .VB and .VH files, .VAG-Files a .Mid file and a .seq file.
+
+The .PSF-File
+The .psf file can be played with „Highly Experimental“ – a .psf plugin for winamp that can be found here: http://www.vgmpf.com/Wiki/images/c/ca/H ... _v2.09.zip. Winamp can be found here: https://winamp-full.de.uptodown.com/windows
+
+The VAG-File
+The .Vag files I haven‘t found out what they shall be. They can be opened with PSound, but have no length.
+The Mid-File
+The .mid file can also be opened with winamp.
+
+VB-File Again.
+And then we have again the .vb file. That is mainly the important file with the background music. You can open it with Psound and convert it into .wav as explained above in the DOOR-chapter. According to, that the number of tracks in the .VB-File is always equal to the number of tracks in the .vag file, I assume that those are also the only files of relevance, that contain the actual background music.
+
+So, then the only thing left to explain for Resident Evil 1.5 are the Files in the STAGE-Folders.
+
+STAGE
+(Stage Sounds, Stage Backgrounds, Stage Objects, Stage Effects, Stage Messages/Texts, Camera Data etc.)
+In those folders we have two file formats – BSS and RDT-Files.
+
+For the .BSS we use BioHerb again. For the RDT we use a tool named RDTool from MarkGrass again. It can still be found here: https://www.dropbox.com/s/90u2wci8xn8tv ... l.rar?dl=0 and here: http://re123.bplaced.net/board/viewtopi ... =14&t=1135.
+
+The BSS-Files
+To extract the BSS-Files you can once more use the Batch File I provided. Throw in the BSS file into the bioherb folder, throw the Batchfile in there as well, and execute it. For the Extraction the Batch file uses the following command via CMD: .\BioHerb.exe disbss <Filename>.
+
+Inside the extracted Directories, we have one the one hand the backgrounds for the stages already as .BMP. Those are done. Also we have it extracted as .TIM. On the other hand we get some .asm and some .bs Files. The asm file is also already done. It‘s an assembler source file. You can watch it with every text editor. The .bs-files couldn‘t be extracted yet as far as I found. Those would contain masks.
+
+The .RDT-Files
+As mentioned before, for the .RDT files we use RDTool. You can again use my batch Extract-RDT.bat and extract all the files with it. As always copy all .RDT files into the RDTool folder, copy the Extract-RDT.bat file there as well and execute it. It executes the command: .\RDTool.EXE <Filename> -e for all the .RDT files.
+
+As a Result you get a lot of files with different file endings. In general we first get a folder structure like:
+CAMERA
+EFFECT
+OBJECT
+SCRIPT_01
+SCRIPT_02
+
+Also in the main folder for the room itself are files. Not all STAGE files have content in all directories.
+
+The CAMERA folder contains .bin-Files. Those I couldn‘t extract.
+The EFFECT folder contains .TIM-Files with the effects. Those can be once more extracted with the TIMViewer (See The Tim-Files above).
+The OBJECT Folder can contain TIM and TMD-Files.
+
+The TIM-Files once more can be extracted with the TIMViewer. Let‘s have a deeper look at the .TMD-Files
+
+The TMD-Files
+The TMD-Files in Resident Evil 1.5 don‘t seem to be .TMD-Files. The files that are bigger the 0kb you can easily rename to .md1. Afterwards you can view them with RE2MV, extract them and so on.
+
+Then we have the SCRIPT_01 and SCRIPT_02 folders.
+
+Those may have some .SCD-Files, which can be extracted again with BioHerb (See The SCD-Files area).
+
+Besides the folders in the same directory as the .RDT file is now an .RDR file. With this I didn‘t found anything to do.
+
+Then we have the main folder of the room. There are also a lot of unknown. Lets take one file ending after the next:
+
+The BLK-Files
+For those I found nothing to extract or work with them for Resident Evil 1.5
+
+The .CAM-Files
+Same as above, found nothing to work with them in Resident Evil 1.5
+
+The .ESD-Files
+Same as above, found nothing to work with them in Resident Evil 1.5
+
+The ESP-File I explained above, can be extracted via Bioherb (See The ESP-Files).
+
+The .ETM-Files
+Same as above, found nothing to work with them in Resident Evil 1.5
+
+The FLR-Files
+Same as above, found nothing to work with them in Resident Evil 1.5
+
+The LIT-Files
+Same as above, found nothing to work with them in Resident Evil 1.5
+
+The MSG_J and MSG_P files
+Can be converted to a text file with BioHerb. Again I Provided a script for the conversion. The command it executes is: .\BioHerb.exe dismsg <filename>. However, so far I only found weird string combinations in it.
+
+The PIX Files can be extracted again with the BioPIX. Afterwards you get some .TIM files, that can be converted again with the TIMViewer. However the BMPs just seem to contains nonsense.
+
+The RVD-Files
+Same as above, found nothing to work with them in Resident Evil 1.5
+
+The SCA-Files
+Same as above, found nothing to work with them in Resident Evil 1.5
+
+The SND-Files
+Same as above, found nothing to work with them in Resident Evil 1.5
+
+VB and VH-Files can be once more converted to .wav with Psound (See The VB and VH-Files above).
+
+As you can see there are lots of files that can‘t be properly opened in terms of Resident Evil 1.5.
+
+However, on the one hand I found this to explain what most of the data contains:
+
+0: Sound Effect Attributes (*.EDT – SOUND.INI)
+
+1: Sound Effect Header (*.VH)
+
+2: Sound Effect Data (*.VB - Final &#124;&#124; *.DAT - Trial Edition)
+
+3: Sound Effect Header (*.VH) - TRIAL EDITION ONLY
+
+3: Sound Effect Data (*.VB) - TRIAL EDITION ONLY
+
+5: ??? (*.OTA)
+
+6: Room Boundaries/Collisions (*.SCA)
+
+7: Camera Positions/Angles (*.RID - Contains pointers to corresponding Camera Mask (*.PRI)
+data)
+
+8: Camera Switches/Zones (*.RVD - Details where the player must be located to trigger a camera change)
+
+9: Object Lighting Attributes (*.LIT - Effects only 3D models)
+
+10: 3D Object Model Pointer Array (pointers to *.MD1 (BIO2) &#124;&#124; *.MD2 (BIO3) and *.TIM data)
+
+11: Floor Attributes (*.FLR - unknown, related to boundaries)
+
+12: Block Attributes (*.BLK - unknown, related to boundaries)
+
+13: Message Pointer(s) & Data [Japanese] (*.MSG - pointers come before data)
+
+14: Message Pointer(s) & Data [Other] (*.MSG - pointers come before data) - UNUSED BY BIO3
+
+15: Camera Scroll Texture (*.TIM - 320x240, 16bpp headerless) - UNUSED BY PC VERSIONS & BIO3
+
+16: Initialization Script Pointer(s) & Data (*.SCD - Loads when a room is entered; pointers come before data)
+
+17: Execution Script Pointer(s) & Data (*.SCD - Updates while you're in the room; pointers come before data) - UNUSED BY BIO3
+
+18: Effect Sprite ID(s) & Pointers (*.ESP - Universal IDs (BIO2 = 8 MAX &#124;&#124; BIO3 = 16 MAX), 0xFF = UNUSED; *.EFF data follows after)
+
+19: Pointers to *.EFF data (Subtract 0x20 (BIO2) &#124;&#124; 0x40 (BIO3) for real pointer to *.EFF Pointer Index; add 0x08 to each value for real pointer to *.EFF data; 0xFFFFFFFF = UNUSED)
+
+20: Effect Sprite Texture(s) & Pointer(s) (*.TIM - pointers follow after data)
+
+21: 3D Object Model Texture(s) (*.TIM)
+
+22: Player/Room-unique animations (*.RBJ - Archive file containng *.EDD and *.EMR data)
+
+Source: re2-definitive-rdt-information-t1328.html
+
+And that makes myself the shift to Resident Evil 2:
+
+Resident Evil 2
+Also Resident Evil 2 contains the same file Structure Like Resident Evil 1.5 for the .RDT-Files, only that the RDT Files there can be opened directly with BioHerb. There you can see camera positions with those files, the Messages, the Scripts and so on.
+
+Resident Evil 2 comes in 2 Leon and Clair disc. But the structure is more or less the same. For files that I already explained for Resident Evil 1.5 I will hint at that, other files I explain.
+
+Resident Evil 2 is structured in
+COMMON
+PL0 (Leon) / PL1 (Clair)
+ZMOVIE
+
+Let‘s have a look into COMMON first:
+COMMON contains:
+BIN
+BSS
+DATA
+DOOR
+SOUND
+
+BIN
+The BIN folder is the same as Resident Evil 1.5 BIN-Folder, I found nothing to open it.
+
+BSS
+In the BSS folder, are also only .BSS Files. They can be extracted as explained at (The BSS-Files)
+
+DATA
+The DATA directory contains:
+TIM files – Can be extracted with TIMViewer (See above)
+ESP files – Can be extracted with BioHerb (See above)
+
+PIX files – Can be extracted with BIOPix (See above)
+
+DIE files – Those are new. Let‘s have a look:
+
+The DIE-Files
+The DIE-Files can be extracted with Biofat v0009. If you haven‘t read before, it‘s a little bit of a blocker. You have to extract Biofat v0009 somewhere where you have full access rights. I recommend the TEMP-Directory of Windows.
+
+With Biofat v0009 you go to Bio2 – DIE – Disassemble and then you select your DIE-File:
+
+
+As a result in the extracted directory you get again:
+TIM-Files (TIMViewer – see above)
+VB/VH-Files (Psound – see above)
+EDT-Files – There I haven‘t found anything to open it yet.
+
+Next we have .CPT files, the TM2-Files and the TS-Files. However, there I also haven‘t found anything to open it yet.
+
+DOOR
+Contains the DO2 files. Those can be extracted as explained above.
+
+SOUND
+Those contain again .EDH, .VB, and .BGM files. As mentioned before, I don‘t know what to do with the .EDH files, but the VB- and BGM-Extraction is explained above.
+
+PL0 / PL1
+This directory contains the following folders:
+PLD
+RDT
+VOICE
+ZMOVIE
+
+PLD
+PLD contains again the Player Data. There you have the file endings .PLD and .PLW. Those had been explained before above.
+
+Then we have the .DAT file left. Unfortunately there I also haven‘t found a way to extract it.
+
+RDT
+The RDT-Files can be once more extracted via BioHerb (See above). However, for Resident Evil 2 you can also open up BioHerb as application and have a look at the rooms itself with his Data. There you just have to open up the .RDT directly.
+
+VOICE
+Empty
+
+ZMOVIE
+Empty
+
+The other ZMOVIE folder
+Also empty….
+
+Yeah, that was the remaining Tutorial part. In Resident Evil 2 many things repeat, so I could just reference to the Resident Evil 1.5 Area. Unfortunately as you can see there are still some gaps. If you know more for those Files that I still have left open, I would love to edit this tutorial.
+
+I hope you liked it. I attach the actual version of the tutorial as a PDF as well for the go.
+
+Now, I want to go on with my Resident Evil Restoration Project, which I consider this tutorial a result between. :-)

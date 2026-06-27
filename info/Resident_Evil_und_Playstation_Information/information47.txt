@@ -1,0 +1,185 @@
+
+CDROM File Archives with Size	Contents
+Index	Prev
+Next
+
+Disney-Pixar's Monsters, Inc. (MagDemo54: MINC\*.BZE)
+  000h 4     Zero (0)
+  004h 4     Type/ID (27100h=160000, 2BF20h=180000, 30D40h=200000 decimal)
+  008h 4     Number of files
+  00Ch N*0Ch File List
+  ...  ..    Zeropadding to 7FCh
+  7FCh 4     Checksum (32bit sum of SIGN-EXPANDED bytes at [000h..7FBh])
+  ...  ..    File Data
+File List entries:
+  000h 4     File Type/ID or so (roughly increasing, eg. 1,3,6,5,7,8,9,A,B)
+  004h 4     Filesize in bytes
+  008h 4     Filesize rounded up to multiple of 800h bytes
+
+Bugs Bunny: Lost in Time (MagDemo25: BBLIT\*.BZZ) (without extra entry)
+The Grinch (MagDemo40: GRINCH\*.BZZ) (with extra entry)
+Resembles .BZE, but without the Type entry in Header.
+  000h 4     Fixed 1 (maybe version, or compression flag)
+  004h (4)   Unknown (000xxxx0h)   ;<-- Extra in The Grinch only (not Bunny)
+  ...  4     Number of files
+  ...  N*0Ch File List
+  ...  ..    Zeropadding to 7FCh
+  7FCh 4     Checksum (32bit sum of SIGN-EXPANDED bytes at [000h..7FBh])
+  ...  ..    File Data
+File List entries:
+  000h 4     File Type/ID or so (roughly increasing, eg. 1,2,3,6,5,7,8,9,A)
+  004h 4     Filesize in bytes (rounded to N*4 even if compressed data is less)
+  008h 4     Filesize rounded up to multiple of 800h bytes
+Files are compressed, starting with 0Bh, same as in Jersey Devil...
+CDROM File Compression BZZ
+Note: The TIM files in Bugs Bunny and The Grinch BZZ archives consists of two TIMs badged together: A 4x4 pix dummy TIM, followed by the actual 512x125 pix TIM (in some cases followed some extra bytes at end of file?).
+
+Jersey Devil .BZZ (MagDemo10: JD\*.BZZ)
+Resembles .BZE, but without the Type entries in Header and File List, and without Header checksum.
+  000h 4     Fixed 1 (maybe version, or compression flag)
+  004h 4     Number of files (4)
+  008h N*8   File List
+  ...  ..    Zeropadding to 800h-byte boundary (without checksum, unlike .BZE)
+  ...  ..    File Data
+File List entries:
+  000h 4     Size in bytes
+  004h 4     Size rounded to multiple of 800h
+Files are compressed, starting with 0Bh, same as in Bugs Bunny...
+CDROM File Compression BZZ
+
+Jackie Chan Stuntmaster (RCHARS\*.RR)
+NBA Basketball 2000 (MagDemo28: FOXBB\*.RR)
+  000h 2     ID ("PX")
+  002h 2     Unknown (1 or 3)
+  004h 4     Header Size (eg. 80h, 7C0h, or 1730h) (N*8+8)
+  008h N*8   File List
+  ...  ..    Zeropadding to 800h-byte boundary
+  ...  ..    File Data area
+ File List entries:
+  000h 4     Offset (increasing, 800h-byte aligned)
+  004h 1     Zero
+  005h 3     Filesize in bytes (24bit) (can be odd)
+Jackie Chan Stuntmaster does always have headersize=1730h (with many unused entries with size=0, both in the middle & at the end of File List).
+
+Bomberman World (MagDemo15: BOMBER\*.RC)
+                XXX detect this WITH extension=".RC" check before OBJ
+                    (else type=1 could be mistaken as offs=1) (eg RC1\BP0*.RC)
+Resembles .OBJ but contains Filetype? instead of Offset.
+  000h N*8   File List
+  ...  8     File List end (zerofilled)
+  ...  ..    Garbage padding to 800h-byte boundary
+File List entries:
+  000h 4     Filetype (see below)
+  004h 4     Filesize in bytes
+There can be several files with same type in one .RC archive. Type values are:
+  00h = End of File List (at least so when Type and Size are both zero)
+  01h = .TIM
+  02h = Unknown
+  03h = Unknown
+  05h = .VH
+  06h = .VB
+  09h = Unknown
+  0Ah = .TIM (left half of a larger image) (right half has type 01h)
+  0Bh = Unknown
+  0Ch = Unknown
+
+Mat Hoffman's Pro BMX (new demo) (MagDemo48: MHPB\BMXCD.HED+WAD)
+This format is used by the NEW demo version on MagDemp48 (the OLD demo version on MagDemo39 did use Spider-Man-style HED/WAD format with filenames).
+ HED:
+  000h 2     Number of entries (N)
+  002h N*6   File List
+ WAD:
+  000h ...   File data (at 800h-byte aligned locations)
+File List entries:
+  000h 3     File ID (24bit)
+  003h 3     File Size in bytes (21bit, max 2Mbyte) (upper 3bit=unused?)
+Note: HED is processed at 80052AC0h in MagDemo48.
+
+Madden NFL 2000 (MagDemo27: MADN00\*.DAT and nested therein)
+Madden NFL 2001 (MagDemo39: MADN01\*.DAT and nested therein)
+  000h 4     Header Size (N*SectorSize) (xxh, 800h, 1000h, 4800h, or 920h)
+  004h 4     Sector Size (4=ChildArchive, 800h=MainArchive, 920h=FMV/MADN00)
+  008h 4     File List entrysize (0=32bit, 1=16bit/MADN00, 4=16bit/MADN01)
+  00Ch N*2/4 File List (16bit or 32bit filesizes in bytes)
+  ...  ..    Zeropadding to SectorSize boundary
+  ...  ..    Files (with above sizes, each zeropadded to SectorSize boundary)
+Dummy files have filesize=1 (but they do nethertheless occupy a whole data sector).
+Unknown why the FMV file in MADN00 is using SectorSize=920h (it appears to be FORM2 related, although the file seems to be stored in FORM1 sectors, but the STR movie appears to work okay despite of the odd size).
+
+Croc 2 (MagDemo22: CROC2\CROCII.DIR\FESOUND.WAD)
+Disney's The Emperor's New Groove (MagDemo39:ENG\KINGDOM.DIR\FESOUND.WAD)
+Disney's Aladdin in Nasira's Rev. (MagDemo46:ALADDIN\ALADDIN.DIR\FESOUND.WAD)
+  000h 4     Total Filesize-4
+  004h N*14h File List (2 entries in Croc2, 3 entries in Aladdin/Emperor)
+  ...  ..    File Data area (SPU-ADPCM( (.VB files with leading zeroes)
+ File List entries:               (Aladdin/Emperor) (Croc2)
+  000h 4     Sample Rate in Hertz (AC44h=44100Hz)   (5622h=22050Hz)
+  004h 2     Sample Rate Pitch    (1000h=44100Hz)   (0800h=22050Hz)
+  006h 2     Unknown              (7Fh)             (32h)
+  008h 4     Unknown              (1)               (8)
+  00Ch 4     Unknown              (1FC0001Fh)       (40008Fh)
+  010h 4     Filesize             (xxx0h)           (xxx0h)
+The number of files is implied in sum of filesizes versus total size.
+
+Dino Crisis 1 and 2 (PSX\DATA\*.DAT and *.DBS and *.TEX) ("dummy header")
+  000h 800h  File List (with 10h or 20h bytes per entry)
+  800h ..    File Data (each file is zeropadded to 800h-byte boundary)
+File List entrysize can be 10h or 20h bytes:
+  Dino Crisis 1 --> always size 10h
+  Dino Crisis 2 --> usually size 20h
+  Dino Crisis 2 --> sometimes size 10h (eg. SC24.DAT, SC48.DAT, WEP_*.DAT)
+File List entries:
+ File List entries, type 0 and 7:
+  000h 4     Type (0=Data (or .BS pictures), 7=CompressedData)
+  004h 4     Size
+  008h 4     RAM Addresss (80000000h..801FFFFFh)
+  00Ch 4     Zero
+  010h (10h) Zerofilled
+ File List entries, type 1 and 2 and 8:
+  000h 4     Type (1=Bitmap, 2=Palette, 8=CompressedBitmap)
+  004h 4     Size (see below Size Notes)
+  008h 2     VRAM Address X     (0..3FFh)
+  00Ah 2     VRAM Address Y     (0..1FFh) (or 280h in Dino 2 ST703.DAT)
+  00Ch 2     Width in halfwords (1..400h)
+  00Eh 2     Height             (1..200h)
+  010h (10h) Zerofilled
+ File List entries, type 3 and 4:
+  000h 4     Type (3=VoiceHeader("Gian"), 4=VoiceData(SPU-ADPCM))
+  004h 4     Size
+  008h 4     SPU Address (0..7FFF0h)
+  00Ch 2     Unknown (0..7)  ;\usually both same (or val1=0, val2>0)
+  00Eh 2     Unknown (0..7)  ;/
+  010h (10h) Zerofilled
+ File List entries, type 5 (eg. ME*.DAT):
+  000h 4     Type (5=Unknown... maybe Midi-style or so)
+  004h 4     Size
+  008h 4     Load Address (0, or on next 4-byte boundary after previous file)
+  00Ch 2     Unknown (0..2)  ;\always both same
+  00Eh 2     Unknown (0..2)  ;/
+  010h (10h) Zerofilled
+ File List entries, type 6 and 9:
+  The EXE code does also accept type 6 and 9 (type 6 is handled same as
+  type 0, and type 9 is ignored), but the actual archives don't seem to
+  contain any files with those types.
+ File List entries, padding for unused entries:
+  000h 10h   Type ("dummy header    ")
+  010h (10h) Zerofilled
+Size Notes:
+ Bitmaps and Palettes can have following sizes:
+  Width*Height*2                       ;normal case
+  Width*Height*2 + Align(1000h)        ;eg. Dino Crisis 1 DOOR*.DAT
+  Width*Height*2 + Align(800h)         ;eg. Dino Crisis 2 DOOR27.DAT
+ CompressedBitmaps can have following sizes in compressed form:
+  Less than Width*Height*2             ;normal case
+  Less than Width*Height*2 + 1000h     ;eg. Dino Crisis 2 M_RESULT,ST002.DAT
+ CompressedBitmaps can have following sizes after decompression:
+  Width*Height*2 + 8                   ;normal case
+  Width*Height*2 + Align(1000h?) + 8   ;eg. Dino Crisis 2 M_RESULT,ST002.DAT
+Note: Dino Crisis DEMO version (MagDemo28: DINO\TRIAL.DAT) does also contain "dummy header" DAT archives (but, unlike as in retail version, they are hidden somewhere inside of the headerless 14Mbyte TRIAL.DAT archive).
+Type 7 and 8 are using LZSS compression:
+CDROM File Compression LZSS (Dino Crisis 1 and 2)
+Apart from LZSS, Type 4 is using SPU-ADPCM compression, and some Type 0 files contain .BS compressed pictures (eg. Dino Crisis 2 PSX\DATA\ST*.DBS\*).
+
+
+I am homeless in Hamburg, please help me out!
+extracted from no$psx v2.2 - homepage - patreon - whole doc htm/txt - copyright 2022 martin korth (nocash)

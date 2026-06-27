@@ -1,0 +1,127 @@
+
+CDROM File Archive DRACULA.DAT (Dracula)	Contents
+Index	Prev
+Next
+
+Dracula - The Resurrection - DRACULA.DAT (180Mbyte)
+  000h 4     Zero
+  004h 4     Number of Entries (503h)
+  008h 4     Zero
+  00Ch 4     Random
+  010h 10h   Zero
+  020h N*10h File List
+  ...  ..    Zeropadding to 800h-byte boundary
+  ...  ..    Fild Data area
+File List entries:
+  000h 4     Offset/800h
+  004h 4     Type (see below for info on different file types)
+  008h 4     Filesize in bytes
+  00Ch 4     Random (or 0 when Filesize=0)
+Most of the .DAT file consists of groups of 3 files (with type 01h/40h, 20h and 400h; of which the files with type 20h and 400h may have Size=0=empty).
+  Type=00000001h Cubemap           ;\either one of these
+  Type=00000040h Cubemap.empty     ;/
+  Type=00000020h Cubemap.overlay?  ;\these have size=0 when unused
+  Type=00000400h Cubemap.sounds    ;/
+There are some general purpose files with other types at end of .DAT file:
+  Type=00000000h Archive with TIMs         (Size=AB74h)  (" RSC3.1V")
+  Type=00000004h Unknown                   (Size=16164h) (00000064h)
+  Type=00000008h Related to DRACULA1.STR   (Size=1000h)  (" RTS1.1V")
+  Type=00001000h Unknown                   (Size=2000h)  ("BXFS1.1V")
+  Type=00008000h Unknown                   (Size=71Dh)   ("  CM1.1V")
+  Type=00020000h Unknown                   (Size=3B9h)   (" GSM0.1V")
+  Type=02000000h Unknown                   (Size=0h)     (empty)
+  Type=00000100h Related to DRACULA1.XA    (Size=1000h)  ("RAAX1.1V")
+  Type=00000010h Unknown                   (Size=450h)   (" HYP0.1V")
+  Type=00100000h Unknown                   (Size=4014h)  (" xFS1.1V") (x=A1h)
+  Type=00000080h Unknown                   (Size=258F4h) (00000010h)
+  Type=00000200h TIM (gui charset)         (Size=6E9Eh)  (TIM)
+  Type=00010000h TIM (gui buttons)         (Size=10220h) (TIM)
+  Type=00040000h Unknown                   (Size=2C4h)   (" TES0.1V")
+  Type=00002000h TIM (gui book pages)      (Size=1040h)  (TIM)
+  Type=00000800h Cubemap ;\as Type 01h,    (Size=4092Ch) (" RIV3.1V")
+  Type=00004000h Cubemap ;/but [10h,14h]=0 (Size=4092Ch) (" RIV3.1V", too)
+Type 01h - Cubemap:
+  000h 8     Name, ASCII, padded with leading spaces (eg. " RIV3.1V")
+  008h 4     Something (0, 1 or 2) (unknown, this isn't number of list entries)
+  00Ch 4     Zero
+  010h 4     Offset to Ext data (ACh)                       ;\ext data
+  014h 4     Size of Ext data (eg. 0 or 84h)                ;/
+  018h 6*4   Offsets to Side 0-5                            ;\cubemap sides
+  030h 6*4   Sizes of Side 0-5 (0, 10220h, or 10820h)       ;/
+  048h 44h   Zerofilled
+  08Ch 20h   Name, ASCII (eg. "DEBUT0.VR", zeropadded)
+  0ACh ..    Ext Data (if any)
+  ...  ..    Cubemap TIM sides (if any)
+ Note: The cubemap TIMs have 100h or 400h colors (in the latter case: 100h  colors for each quarter of the 8bpp bitmap).
+ Note: The TIMs can be arranged as 3D-cubemap with six sides, or as hires
+ 2D-bitmap (composed of four TIMs, and 2 empty TIMs with size=0).
+Type 40h - Empty Cubemap:
+  Same as Type 01h, but size is always 0ACh (and all seven Size entries are 0)
+Type 400h - Sound VAG's:
+  000h 8     Name, ASCII, padded with leading spaces (eg. " XFS0.1V")
+  008h 4     Zero
+  00Ch 4     Number of Files (N) (max 10h)
+  010h N*10h File List (100h bytes, zeropadded when less than 10h files)
+  110h ..    File Data (VAG files)
+ File List entries:
+  000h 4     Unknown (55F0h, 255F0h or 20000h)
+  004h 4     File ID (01010000h, increasing, or other when above=2xxxxh)
+  008h 4     Offset in bytes                                ;\.VAG files
+  00Ch 4     Filesize in bytes                              ;/
+Type 20h - Cubemap overlays, polygons, effects or so?:
+  000h 8      Name, ASCII, padded with leading dot (eg. ".MNA4.1V")
+  008h 4      Zero
+  00Ch 4      Random
+  010h 4      Unknown 01h
+  014h 4      Total Number of 40h-byte blocks (01h..[018h]) (H)
+  018h 4      Total Number of 120h-byte blocks (eg. 1Fh,31h) (N)
+  01Ch 4      Total Number of 1Ch-byte blocks (eg. 1Eh, 50h, F7h) (M)
+  020h 4      Unknown 0 or 1 (in file 4EAh)
+  024h 4      Unknown 01h
+  028h 6*4    Offsets to Side 0-5 (at end of file and up) (or 0)  ;\cubemap
+  040h 6*4    Sizes of Side 0-5   (10220h, or 10820h)     (or 0)  ;/sides
+  058h H*40h  40h-byte blocks
+  ...  N*120h 120h-byte blocks (related to offsets in 40h-byte blocks)
+  ...  M*1Ch  1Ch-byte blocks  (related to offsets in 120h-byte blocks)
+  ...  ..     Unknown data     (related to offsets in 1Ch-byte blocks)
+  ...  ..     Ext data         (related to Ext offsets in 40h-byte blocks)
+  FILE DOES END HERE!
+  (below is allocated in above header, but not actually stored in the file)
+  (maybe allocated as rendering buffer?)
+  ...  -      Cubemap TIM sides
+ The 40h-byte blocks are:
+  000h 20h    Name (eg. "FLAMMES", zeropadded)
+  020h 4      Unknown 01h or 00h
+  024h 4      Offset to 120h-byte blocks (usually 98h, or higher)
+  028h 4      Unknown 00h
+  02Ch 4      Number of 120h-byte blocks (01h..[018h])
+  030h 4      Unknown 01h
+  034h 4      Ext Offset                ;\usually all zero
+  038h 4      Ext Size (3C000h)         ; (except, nonzero in file 4EAh)
+  03Ch 4      Ext Random (checksum?)    ;/
+ The 120h-byte blocks are:
+  000h 18h*4  List with Offsets to 1Ch-byte blocks (usually 4 entries nonzero)
+  060h 18h*4  List with Zeroes
+  0C0h 18h*4  List with Numbers of 1Ch-byte blocks (usually max 4 entries)
+ The 1Ch-byte blocks are:
+  000h 4      Unknown 04h
+  004h 4      Width   20h or 10h
+  008h 4      Height  20h or 10h or 30h
+  00Ch 4      Unknown 60h or 10h
+  010h 4      Unknown 00h or 30h
+  014h 4      Offset to Unknown Data
+  018h 4      Size of Unknown Data (Width*Height*1)
+Type 00h - TIMs:
+  000h 8      Name (" RSC3.1V")
+  008h 8      Zerofilled
+  010h 4      Number of used entries (1Fh) (max 80h)
+  014h 80h*4  Offset List    (offsets to files) (A14h and up)
+  214h 80h*4  Zero List      (zerofilled)
+  414h 80h*4  Size List      (filesizes)
+  614h 80h*4  Width List     (0Ch,18h,34h,2Ch) (in pixels)
+  814h 80h*4  Height List    (0Ch,24h,34h,2Ch)
+  A14h ..     Data (TIM files, with mouse pointers)
+
+
+I am homeless in Hamburg, please help me out!
+extracted from no$psx v2.2 - homepage - patreon - whole doc htm/txt - copyright 2022 martin korth (nocash)

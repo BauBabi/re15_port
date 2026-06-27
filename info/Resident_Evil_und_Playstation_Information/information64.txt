@@ -1,0 +1,26 @@
+
+CDROM File Compression LZSS (Dino Crisis 1 and 2)	Contents
+Index	Prev
+Next
+
+Dino Crisis 1 and 2 (PSX\DATA\*.DAT and *.DBS and *.TEX, File type 7,8)
+Dino Crisis LZSS Decompression for files with type 7 and 8:
+  @@collect_more:
+   flagbits=[src]+100h, src=src+1    ;8bit flags
+  @@decompress_lop:
+   flagbits=flagbits SHR 1
+   if zero then goto @@collect_more
+   if carry=1 then
+     [dst]=[src], dst=dst+1, src=src+1
+   else
+     disp=[src]+[src+1]*100h AND FFFh, len=[src+1]/10h+2, src=src+2
+     if disp=0 then error
+     for i=1 to len, [dst]=[dst-disp], dst=dst+1, next i
+   endif
+   if src<src_end then goto @@decompress_lop
+   ret
+The compressed file & archive header don't contain any info on the decompressed size (except, for compressed bitmaps, the archive header does contain width/height entries, nethertheless the decompressed file is usually BIGGER then width*height*2 (it can contain padding, plus 8 bytes).
+
+
+I am homeless in Hamburg, please help me out!
+extracted from no$psx v2.2 - homepage - patreon - whole doc htm/txt - copyright 2022 martin korth (nocash)

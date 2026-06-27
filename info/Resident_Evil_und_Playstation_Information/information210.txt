@@ -1,0 +1,111 @@
+Third Party Quality Assurance
+Guidelines Checklist
+(rev 2.0)
+Guidelines
+Startup Sequence
+[ ] Any introductory sequence is bypassable by the user at any time.
+[ ] The title screen contains all necessary legal information. A secondary screen may be used if the
+legal information will not fit on the title screen.
+[ ] Any intro sequence may consist of an FMV sequence or text scrolling over a slide show with an
+appropriate voiceover.
+[ ] From the title screen the user is given the choice of starting a game or choosing to set game
+options.
+[ ] The user is unable to bypass any screen containing copyright or other legal information at
+startup. (REQUIRED)
+[ ] Publisher legal/logo screens last no longer than 10 seconds and are bypassable after 5 seconds by
+pressing Start. If the publisher legal/logo screens repeat during demo mode, they are immediately
+bypassable by pressing any control button.
+[ ] If the game contains a commercial for the developer’s or publisher’s PlayStation titles, it is
+accessible only from the main options screen. Commercials for other platforms or references to a
+title’s availability on another platform are not acceptable. (REQUIRED)
+Loading
+[ ] During the initial and any following loads, the user is not presented any blank screens lasting
+more than 4 seconds. Any load that interrupts gameplay, or lasts longer than 4 seconds on a
+screen with graphics, uses a display to inform the user that a load is occurring.
+[ ] Loading screen messages are not simple “Now Loading” messages, but instead incorporate some
+sort of entertaining/informative display such as a counter.
+Demo Sequence
+[ ] A Demo mode is included in the game, which shows representative gameplay in rotation with the
+title screen.
+[ ] There is a clear indication that the game is in demo mode, such as the word “demo” blinking on
+the screen.
+[ ] Demo mode begins if there has been no user input for 30 seconds from the time the title screen
+appears. Pressing any control button ends the demo and returns the user to the title screen.
+Title Version No. Date
+Menus
+[ ] For any list of options or a menu of items, all movement of the cursor or highlight area is
+performed with the Directional Buttons.
+[ ] Left/Right Directional Buttons are used to change between various settings for a single menu item
+involving a range of settings.
+[ ] On screens where the selection of a single item takes the user to another screen, pressing the X
+button makes the choice and advances.
+[ ] Selection of any option or menu item is done by pressing the X button. Once user selections are
+complete, the user is able to proceed by pressing Start or by highlighting an EXIT option and
+pressing either the Start or X button.
+[ ] The triangle button is used to take the user to the previous menu.
+[ ] All rules for external menus apply to hidden menus.
+[ ] Activation of normally hidden menus is accomplished by pressing Select.
+Menus/Feedback
+[ ] All user menu selections have visual and audio feedback.
+[ ] Audio feedback occurs within 1/10 of a second of pressing an action button.
+[ ] Any option screen where the user is able to take an action contains on-screen button prompts,
+indicating which buttons perform which actions.
+Pausing Gameplay
+[ ] Pressing Start during gameplay pauses the gameplay, music and sound effects. Pressing Start a
+second time resumes gameplay at the same point. Music and sound effects resume as close to the
+pause point as possible.
+[ ] There is a clear visual indication of the paused state of the game, with the word PAUSED, or
+another appropriate phrase, word or graphic prominently displayed.
+[ ] Background animations are allowable during pause as long as they do not affect gameplay.
+[ ] In a multi-player game, only the player who pauses the game is able to unpause the game.
+Menus/Options
+[ ] Options available include controller setup, music and sound effect adjustment, and link option if
+applicable.
+[ ] Other settings may include difficulty settings, audio tests, etc. Memory Card utilities may also be
+accessible from the Options screen.
+[ ] All in game controls are remappable by the user. The user may choose from a limited selection
+(minimum of 3) configurations or may be allowed to map any button to any function. A
+representation of the controller, or a list of buttons and corresponding actions, is displayed for the
+user’s reference..
+[ ] Each player in a multi-player game is allowed to independently adjust controller settings.
+[ ] The user is able to remap the functions of the Directional Buttons.
+[ ] Music and sound effects volume are independently and incrementally adjustable. When set at
+“Zero” there should be no volume present.
+[ ] The user is able to reset to the title screen by pressing the Start button to pause the game, then
+pressing the Select button to bring up a menu with “Continue” and “Quit” options. “Continue”
+resumes the game; “Quit” brings up a menu with “Yes” and “No” options, “No” being the
+default. Selecting “Yes” resets the game to the title screen.
+[ ] Holding down the Select button and then holding down the Start button for two seconds returns
+the user to the title screen.
+[ ] Reset methods are described in the game manual.
+Game/Options Saves
+[ ] There is an option for the user to save and load preferred controller and game options.
+[ ] All game options are saved along with game data to the Memory Card.
+[ ] High scores are saved along with existing game/controller option save records.
+[ ] When the game is booted, it detects whether a Memory Card with saved game options is present
+and restores the first set of saved game options, including controller configurations.
+[ ] If the user cancels a Memory Card save, the password save is displayed.
+Cinematics
+[ ] The user is able to bypass cinematic sequences by pressing the Start or X button. In the case of
+multiple sequences, pressing the X button skips to the next sequence while pressing the Start
+button skips to the end of all of them.
+End Game
+[ ] There is a reward sequence for successfully completing a game, often a lengthy animated or FMV
+sequence.
+[ ] There are multiple levels of rewards based upon performance or game difficulty.
+[ ] If important information is presented at the end of a reward sequence, pressing Start only skips
+the reward sequence. Only Start is used to skip the reward sequence to prevent the user from
+skipping past the information. The information screen does not detect a button press for 5
+seconds, after which a prompt appears, instructing the user how to proceed.
+Text/Graphic Displays
+[ ] All critical text is in English and is spelled (American spelling) and punctuated correctly.
+[ ] All text is clear and legible.
+[ ] All text displays remain on screen long enough to allow the average user sufficient time to read
+them.
+[ ] All text and critical game objects are not cut off on the screen.
+Action Buttons
+[ ] The Select and Start buttons are not used as gameplay controls except as follows:
+- Start is used to pause and unpause the game.
+- Select is used to open hidden menus, switch to alternate screens, or cycle through inventory.
+Mouse
+[ ] If the game uses a mouse, the user is able to configure the buttons on the mouse.

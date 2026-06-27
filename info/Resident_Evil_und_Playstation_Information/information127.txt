@@ -1,0 +1,300 @@
+We've updated our Privacy Policy and by continuing you're agreeing to the updated terms.
+Tapatalk
+Resident Evil 1 2 3 - Modding Forum
+LoginJoin
+Resident Evil 1 2 3 - Modding Forum
+Your destination for all your Resident Evil Modding needs since June 23, 2008.
+
+FORUMSDISCUSSIONSGALLERYMESSAGESNOTIFICATIONS
+Resident Evil 1 2 3 - Modding Forum>Modifications>Miscellaneous>General Help>
+Models
+Switch to Print View - 11 posts
+Mordyga
+15
+ZombieZombie
+Mar 03, 2012#1
+
+Hi ;)
+I don`t know if I can post it in this section but I wanna know :huh:
+It`s possible to have a RE2,3 models in .obj format (or format that 3DstudioMax can open it) ?
+If not , is there a viewer or something , that allows me to look at the models or wire of models? :huh:
+QuoteShare
+Carl_Vercetti
+131
+1
+Thanatos
+Mar 03, 2012#2
+
+You can use Milkshape 3d. Extract all the files inside the PL archive (use Biofat), then import in Milkshape the file PLXX.TMD
+
+Notice that the TMD of RE2 will be show very confused, the Re3 TMD will be okay. Thanks Capcom for this.
+QuoteShare
+felixnew
+749
+Alexia Ashford
+Mar 03, 2012#3
+
+well the resident evil 2 is confuse, cuz the bodyparts are desorganized, and to organize it, u need extract every bodypart and re-orghanize it by youself, but on the resident evil 3 models, those are organized (almost all) the hands are missing, and u need to follow the same steps to organize them...
+if we're the future, then the future will be rainbowns and sun days? i don't think so, if we're the future, the world will be s**t! O.o
+QuoteShare
+Mordyga
+15
+ZombieZombie
+Mar 04, 2012#4
+
+Thank you for the informations , but I have problem.
+When I click Import and then Playstation TMD and oped the RE2 data folder there aren`t any files to import , where there are?
+QuoteShare
+felixnew
+749
+Alexia Ashford
+Mar 04, 2012#5
+
+Mordyga @ Mar 4 2012, 05:06 PM wrote:
+Thank you for the informations , but I have problem.
+When I click Import and then Playstation TMD and oped the RE2 data folder there aren`t any files to import , where there are?
+u need extract the md1 model data, just open the pld folder, choose the file to edit and then extract ir with biofat, automatically will be create a tmd model, when u make a tmd from the pld or plw file, use tmd tool and type:
+
+TMDtool tmdfilename.tmd -all
+
+and that function will separate the hiddens bodyparts, follow the same steps for the expelled clips of the h.gun, now,once u've got every bodyparts, export 1 by 1 to .obj file...
+if we're the future, then the future will be rainbowns and sun days? i don't think so, if we're the future, the world will be s**t! O.o
+QuoteShare
+Mordyga
+15
+ZombieZombie
+Mar 04, 2012#6
+
+I will try it , thanks ;)
+EDIT
+That worked , OMG I LUV U :D
+QuoteShare
+Mar 14, 2012#7
+
+Sorry for duble posting but can somebody tell the name of magnum model in the wardrobe in STARS room , please ?
+
+QuoteShare
+Ricardo
+165
+Hypnos T-Type
+Mar 14, 2012#8
+
+Mordyga @ Mar 14 2012, 11:12 AM wrote:
+Sorry for duble posting but can somebody tell the name of magnum model in the wardrobe in STARS room , please ?
+Smith & Wesson Model 629 Classic.
+
+http://residentevil.wikia.com/Smith_%26 ... 29_Classic
+QuoteShare
+Mordyga
+15
+ZombieZombie
+Mar 14, 2012#9
+
+Oh , I mean name of the model file , lol .
+But thank you for the info ;)
+QuoteShare
+mortician
+1,677
+12
+Nemesis T-Type III
+Mar 14, 2012#10
+
+the item model name would not get you anywhere if you plan to replace the gun with another item.
+
+Extract the stars room .RDT (room1150.rdt or room1151.rdt for claire) and find the extracted folders in the same folder where your selected .RDT is located
+
+"ROOM115&#092;PL00&#092;MODEL" or "ROOM115&#092;PL01&#092;MODEL"
+
+inside this folder you will find MD1 models that can be converted to .TMD if necessary, find and identify the model you want to replace by looking at the equally named .TIM texture that is also located in the MODEL folder of the extracted .RDT
+
+To swap models, find another model & it`s texture .TIM file you want to use by the same method (obviously search for models in other rooms) and just rename and replace them ;)
+
+After that recompile the room/RDT with biofat :)
+I left this place, find all of my new stuff or updates from me on http://re123.bplaced.net
+QuoteShare
+DarkSpyda04
+1,025
+1
+Nemesis T-Type III
+Mar 15, 2012#11
+
+I have an entire tutorial on this that i created just a few days ago. The tutorial primarily focuses on ripping models from RE2 and then importing to 3Ds Max for personal use. There's no way to edit models in 3Ds Max and then reimport them to the game, however. As I said, personal use. Rerig the models and have them slap eachother; record a video for youtube; have a blast. You just can't reimport them to RE2 afterwards or any other related game for that matter.
+
+The tutorial is in-depth and explains the various tools you'll need; how to texture the models after importing them to 3Ds Max; and a few other tips and tricks.
+
+http://z4.invisionfree.com/Resident_Evi ... topic=1659
+
+Here is the most recent model I've finished assembling:
+
+
+I love learning but I hate not knowing.
+QuoteShare
+Share this topic with:
+Display mode
+Font Size
+Back to top
+Interested in pre-owned items for sale?
+Powered by
+
+Sellwild
+Art
+Art
+
+$85
+
+Sarah P. | sellwild.com
+
+Theodore Alexander Leather Top Game Table
+Theodore Alexander Leather Top Game Table
+
+$499
+
+ANTONIO A. | sellwild.com
+
+Nike Men’s Shoes Size 11.5
+Nike Men’s Shoes Size 11.5
+
+$100
+
+Nicole G. | sellwild.com
+
+Nike Youth Sz 5 Speedsweep VII KIDS Wrestling Shoes Boxing B...
+Nike Youth Sz 5 Speedsweep VII KIDS Wrestling Shoes Boxing B...
+
+$40
+
+Eloise E. | sellwild.com
+
+Original Framed Mixed Media Abstract Art Painting 12.5x14.5 ...
+Original Framed Mixed Media Abstract Art Painting 12.5x14.5 ...
+
+$45
+
+Nicole L. | sellwild.com
+
+X Rocker Pro 2.1 Wireless Gaming Chair Pedestal Base Arm Res...
+X Rocker Pro 2.1 Wireless Gaming Chair Pedestal Base Arm Res...
+
+$99
+
+Manda N. | sellwild.com
+
+Original Abstract Art Painting 18x24 “A Ring of Invincibilit...
+Original Abstract Art Painting 18x24 “A Ring of Invincibilit...
+
+$125
+
+Nicole L. | sellwild.com
+
+2024 Maserati MC20 Cielo
+2024 Maserati MC20 Cielo
+
+$363.645
+
+Lotlinx A. | sellwild.com
+
+Size 11.5 Medium Brooks Trace 2 Shoes Mens Blue Sneakers
+Size 11.5 Medium Brooks Trace 2 Shoes Mens Blue Sneakers
+
+$39
+
+Libby B. | sellwild.com
+
+2023 Subaru Outback Wilderness
+2023 Subaru Outback Wilderness
+
+$30.699
+
+Lotlinx A. | sellwild.com
+
+The L Chat-WhiteChocolate #535
+Discover
+Roll To Dodge
+Discover
+Neuro Fachwelt
+Nerven-Durchbruch aus Deutschland polarisiert Experten
+Read More
+Skip
+ZEBRE FURLANE-UDINESE 2025/2026
+Discover
+In The Brown Stuff-The Massive super lovely huge top top top transfer thread for Summer 2025 - Might include a Striker, Soucek and Paqueta.
+Discover
+Nerven-Durchbruch aus Deutschland polarisiert Experten
+Eine neue deutsche Entwicklung bei Neuropathie sorgt für heftige Debatten unter Polyneuropathie-Fachleuten. Was steckt hinter der Kontroverse?
+Neuro Fachwelt
+|
+Sponsored
+Zitronen-Trick bei Bauchfett geht viral (30 Sekunden)
+Bauchfett Methode
+|
+Sponsored
+⁠So viel kostet eine Solaranlage inkl. Montage in 2025
+Solaranlage fürs Dach
+|
+Sponsored
+Chiasamen-Trick bei Bauchfett geht viral (30 Sekunden)
+Bauchfett Methode
+|
+Sponsored
+Brandenburg beschließt Wärmepumpen-Paket für Eigenheimbesitzer (Kaum zu glauben!)
+Checkfox | Wärmepumpen-News
+|
+Sponsored
+Die schönsten Sport-Moderatorinnen der Welt - freenet.de
+freenet.de
+|
+Sponsored
+Umstrittene Nervenschäden-Methode spaltet deutsche Fachkreise
+Eine neue deutsche Entwicklung bei Neuropathie sorgt für heftige Debatten unter Polyneuropathie-Fachleuten. Was steckt hinter der Kontroverse?
+Neuro Fachwelt
+|
+Sponsored
+Deutscher Wissenschaftler entdeckt: Dieses Küchengewürz repariert Venen
+Dieses gewöhnliche Küchengewürz bekämpft deine Krampfadern. Forscher sind verblüfft über die Wirkung.
+Venen Kompass
+|
+Sponsored
+Das aufregendste Spiel des Jahres 2025!
+RAID
+|
+Sponsored
+Blaue Pille war gestern: Diese Lösung sprengt alle Grenzen
+nutrition-science.de
+|
+Sponsored
+Get the Tapatalk app
+
+Apple Storee
+ 
+Google Store
+PRODUCTS
+Tapatalk Groups
+Tapatalk Mobile App
+SUPPORT
+Support Forum
+Submit Security Incident
+ABOUT US
+LinkedIn
+Crunchbase
+Privacy Policy
+ 
+Privacy Shield
+ 
+Terms of Use
+ 
+Code of Conduct
+ 
+End-User License Agreement
+ 
+Site Owner License Agreement
+ 
+Tapatalk API Terms of Service
+ 
+Manage Privacy Settings
+ 
+© 2025 Everforo, Inc
+Privacy Shield
+
+SQL time: 0.016s | PHP time: 0.200s | Total Time: 0.216s | SQL Queries: 19 | Cached: 3 | Peak Memory Usage: 4.37 MiB
+x
+x

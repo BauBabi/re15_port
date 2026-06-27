@@ -1,0 +1,21 @@
+
+
+------------------------------------------------------------------------
+SUPPORTED GAMES
+------------------------------------------------------------------------
+
+The app supports room data (*.RDT) from the following games:
+
+バイオハザード (August 1995 alpha)
+バイオハザード (October 1995 alpha)
+Resident Evil / バイオハザード (1996)
+Resident Evil 2 / バイオハザード2 (November 1996 prototype)
+Resident Evil 2 Demo / バイオハザード2 Trial Edition (1997)
+Resident Evil 2 / バイオハザード2 (1998)
+Resident Evil 3: Nemesis / バイオハザード3: LAST ESCAPE (1999)
+
+To change the game version:
+
+Using the app menu, go to "Game" and select a game/version.
+
+Please note that the game version cannot be changed while a RDT is open.

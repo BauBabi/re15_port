@@ -1,0 +1,209 @@
+Search
+Sign In
+Register
+Resident Evil Mods Wiki
+Explore
+Community
+Games
+Info
+Mods
+Search
+Sign In
+
+Menu
+
+Explore
+Explore
+Others Like You Viewed
+Top Pages this Week
+
+RDT2OBJ
+RDT2OBJ
+Dark Biohazard
+Dark Biohazard
+Resident Evil Wiki
+Resident Evil Wiki
+Resident Evil 4 (2005)
+Resident Evil 4 (2005)
+Resident Evil 3: Nemesis/gameplay
+Resident Evil 3: Nemesis/gameplay
+RE3MV
+RE3MV
+ESPedit
+ESPedit
+Eveline
+Eveline
+Strelok
+Strelok
+List of mutants
+List of mutants
+Miranda
+Miranda
+Alcina Dimitrescu
+Alcina Dimitrescu
+Alyssa Ashcroft
+Alyssa Ashcroft
+Ada Wong
+Ada Wong
+Haruka Sawamura
+Haruka Sawamura
+Tianyou Zhao
+Tianyou Zhao
+Monolith
+Monolith
+Chris Redfield
+Chris Redfield
+Goro Majima
+Goro Majima
+Common Consciousness
+Common Consciousness
+Isao Katsuragi
+Isao Katsuragi
+Kazuma Kiryu
+Kazuma Kiryu
+Takayuki Yagami
+Takayuki Yagami
+Leon Scott Kennedy
+Leon Scott Kennedy
+Grace Ashcroft
+Grace Ashcroft
+S.T.A.L.K.E.R. 2: Heart of Chornobyl
+S.T.A.L.K.E.R. 2: Heart of Chornobyl
+Daigo Dojima
+Daigo Dojima
+Freedom
+Freedom
+S.T.A.L.K.E.R. 2: Heart of Chornobyl armor
+S.T.A.L.K.E.R. 2: Heart of Chornobyl armor
+Albert Wesker
+Albert Wesker
+Baka Mitai (I've Been a Fool)
+Baka Mitai (I've Been a Fool)
+Exoskeleton
+Exoskeleton
+Duty
+Duty
+Ethan Winters
+Ethan Winters
+Factions
+Factions
+Ichiban Kasuga
+Ichiban Kasuga
+Rikiya Shimabukuro
+Rikiya Shimabukuro
+Recent
+RDT2OBJ
+PSX/TIM file
+Resident Evil 2/Files/Biohazard 2 Trial Edition
+Skip to content
+Resident Evil Mods Wiki
+Resident Evil Mods Wiki
+30
+pages
+Explore
+Community
+Games
+Info
+Mods
+
+
+in: Resident Evil 2 Tools, Graphic Tools
+RE2MV
+Sign in to edit
+RE2MV
+
+Creator
+
+Leo2236
+
+Games
+
+Resident Evil 2 (PC/PS1)
+
+3D Apps supported
+
+Autodesk Maya, Autodesk 3DS Max, Blender
+
+Current Version
+
+1.3.1b
+
+RE2MV is a Resident Evil 2 Model viewer and editor created by modder and developer Leo2236.
+
+Interface2
+A image showing RE2MV's interface.
+
+
+Contents
+1	Origins
+2	Development
+3	Features
+4	External Links
+Origins
+Originally when modders had to or wanted to create custom 3d models for Biohazard games, they had to use Jums e3d to do so. This was however tedious and hellish to work in mod wise, and as a result there wasn't many mods at the time that used custom created mesh data.
+
+What Leo's tools allows modders to do is export the mesh data into any 3d application of their choosing and do all their edits. They can then import this new data straight into RE2MV and save their changes this will then create a brand new from scratch set of model data.
+
+Development
+Leo first showed the tool on the 123 modding forums on June 25th 2012, it is now at Version 1.3.1b
+
+Features
+View all *.PLD, *.EMD, *.PLW, *.DO2, *.MD1, *.RDT, *.EMS files from the game...
+Play all animations (except those in special models)...
+Extract/Repack *.PLD, *.EMD, *.PLW, *.DO2, *.RDT(only extract MD1+TIM), *.EMS(only extract EMD+TIM) files...
+View texture(s)...
+Edit *.TIM with Tim Composer (it support 128x256 8, 16, 24, 32bpp bitmap)...
+View Model texture UV...
+Export/Replace texture *.TIM...
+Export/Replace whole model to/from *.MD1 or *.OBJ...
+Export/Replace model part to/from*.MD1 or *.OBJ...
+Export whole model to *.OBJ with part in the correct position...
+Move model part...
+Take screenshot as *.BMP...
+Scale parts of models...
+Edit model map UV with "UV editor"...
+View texture with transparent...
+Export/replace animation block...
+Allows the user to view Resident Evil 1.5 model data.
+External Links
+RE2MV: @ Old 123 modding forum
+RE2MV: Thread & Discussion @ RE123.Bplaced.net
+Categories
+Community content is available under CC-BY-SA unless otherwise noted.
+Fandom logo
+Explore properties
+Fandom
+Fanatical
+GameSpot
+Metacritic
+TV Guide
+Honest Entertainment
+Follow Us
+Overview
+What is Fandom?
+About
+Careers
+Press
+Contact
+Terms of Use
+Privacy Policy
+Digital Services Act
+Global Sitemap
+Local Sitemap
+Manage Preferences
+Community
+Community Central
+Support
+Help
+Advertise
+Media Kit
+Contact
+Fandom Apps
+Take your favorite fandoms with you and never miss a beat.
+Fandom App logo
+Store icon
+Store icon
+Resident Evil Mods Wiki is a FANDOM Games Community.
+View Mobile Site
+Search this wiki
+Search all wikis

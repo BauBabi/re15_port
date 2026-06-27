@@ -1,0 +1,52 @@
+11 - FLR (Floor/Footstep sound areas)
+
+FLR data handles areas that will define in which section of the room, which footstep sound will be used.
+The data is not required to be in a room to have a working RDT, however missing FLR data will lead to no footstep sounds being used in the room.
+
+In terms of how to represent them, it's very similar to the way boundaries are "drawn", FLR data also is a 2D plane placed on the floor of the room.
+
+Similar to the 12 - BLK data, the FLR data section will also start with
+a small "header" which again just offers the amount of FLR entries being in place.
+
+FLR Header Structure (2 Bytes)
+00&#124; Amount
+Amount (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Obviously defining the amount of FLR entries that will follow now.
+Followed by the "header" which as you can see, only give us the amount of objects to come, an array of 12 byte long FLR entries will start.
+
+FLR Entry Structure (12 Bytes)
+00&#124; X
+02&#124; Z
+04&#124; W
+06&#124; D
+08&#124; Sound ID
+10&#124; Dummy
+X (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the X value from where the floor area is "drawn".
+
+Z (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the Z value from where the floor area is "drawn".
+
+W (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the width of the floor area, starting from the X coordinate.
+
+D  (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the density of the floor area, starting from the Z coordinate.
+
+Sound ID (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+It refers to a .SAP soundfile that contains the footstep sounds to use. If it's value was 26 it would mean it uses FS26.SAP in the game's
+"...&#092;COMMON&#092;SOUND&#092;ROOM&#092;" folder.
+
+Dummy (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+It's usually just 0 and therefore is likely a dummy value.
+>>> The data is then followed by the 16 - SCD Main section.
+Note:
+FLR data seems to be "optional", it does not have to be in a room. Meaning missing FLR data won't lead to the room causing a crash. However, you would then have
+a room that has no footstep sounds in use.

@@ -1,0 +1,38 @@
+DOR (Resident Evil 1997)
+File Format
+Name	DOR (Resident Evil 1997)
+Ontology	
+Electronic File Formats
+DOR (Resident Evil 1997)
+Extension(s)	.dor
+This content was first retrieved from the Internet Archive's Wayback Machine for the date 2016-08-17 from the following URL: https://web.archive.org/web/20160817023457/http://rewiki.regengedanken.de/wiki/.DOR
+
+The .DOR file format is used by Resident Evil to store the animation of door, when the player changes room.
+
+Contents [hide] 
+1 Structure
+2 Header
+3 Offset 0
+4 Offset 1: embedded TMD file
+5 Offset 2: embedded TIM file
+Structure
+The values are stored in Little-Endian order.
+
+Header
+A DOR file starts with this header, to store offsets to different objects, embedded in the file.
+
+typedef struct {
+	unsigned long unknown0;	/* Offset to ? */
+	unsigned long tmd_offset;	/* Offset to embedded TMD file */
+	unsigned long tim_offset;	/* Offset to embedded TIM file */
+} dor_header_t;
+Offset 0
+Unknown.
+
+Offset 1: embedded TMD file
+See: TMD (PlayStation)
+
+Offset 2: embedded TIM file
+See: TIM (PlayStation graphics)
+
+Categories: File FormatsElectronic File FormatsFile formats with extension .dor

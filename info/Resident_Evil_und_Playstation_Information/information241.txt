@@ -1,0 +1,662 @@
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+Software Development Seminar
+Animation (Advanced)
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+New Features of the
+Material Editor
+Material Editor Ver2.0
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+ New features starting with Ver2.0 -
+- Selection of polygons in a region
+- Control of motion and rotation speeds
+ for objects
+- Quadrangulation
+- Material attenuation
+- Automatic placement of TIM
+- Specifying texture regions
+- Fine adjustment of UV
+- Compatible with Windows95
+Topics
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+1) Drag the mouse to define a rectangular region
+2) All polygons within the region will be selected
+Drag: select polygons in region (front)
+Ctrl + drag: deselect polygons in region (front)
+Shift + drag: select polygons in region (front and back)
+Ctrl + Shift + drag: deselect polygons in region (front and back)
+* The conventional method (selection by clicking) can also be used.
+Selection of polygons in a region
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+An object's speed of rotation and translation can be
+specified according to four levels:
+Shift + 1: Translation 1
+Shift + 2: Translation 4
+Shift + 3: Translation 32
+Shift + 4: Translation 100 (default)
+Ctrl + 1: Rotation speed 1
+Ctrl + 2: Rotation speed 4
+Ctrl + 3: Rotation speed 8
+Ctrl + 4: Rotation speed 16 (default)
+Control of motion and rotation speeds of objects
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+* Polygons cannot be combined unless they have identical materials (color, texture ID, UV).
+Material
+RSD File : 1 2 3 4
+Polygons :
+Polygon ID :
+Shading
+Textures
+Light Calc
+Display
+on off
+on off
+Texture Color
+Flat Gouraud
+50(B)+50(F) 100(B)+100(F)
+100(B)-100(F) 100(B)+25(F)
+0(B)+100(F) opaque
+Select
+Polygon
+Deselect
+Polygon
+copy delete
+Front/Back
+SaveRenderColor ClearRenderColor
+Quadrangulate
+Quadrangulate Angle
+Close
+Two three-sided polygons can be combined into one four-sided polygon
+1) Select polygons to be combined
+(two or more)
+2) Set a threshold angle (alpha)
+If (angle formed by the
+polygon vectors)
+< alpha then combine.
+Quadrangulation
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+A metallic feel can be represented by using a steep light
+attenuation curve.
+* Is not included in the current libgs, libgte
+* The load on the GTE is increased
+* A "writing of the drawing color" is possible.
+This does not increase the load on the GTE.
+Material attenuation
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+Automatic placement of TIM data
+* TIM data is placed automatically
+ in VRAM
+* Position info for the TIM file can
+ be saved using "Save TIM position"
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+1) Use "Specify texture region" to select a portion of the texture data
+2) Use "Automatic" to have the size and position of the region adjusted
+automatically.
+Fine adjustments
+to texture ^
+V
+< >
+ Specify region
+OK Cancel
+Continuous
+ Automatic
+Texture mapping
+Specifying texture regions
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+Fine UV adjustments
+1) Select the polygon to be adjusted
+2) Select the vertex to be adjusted (Alt + drag)
+3) Cancel select mode display
+4) Adjust UV value (Ctrl + Alt + arrow keys)
+Fine adjustments to the UV values for polygon
+vertices
+Fine adjustments to texture maps, animation of
+textures
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+Maximize the main window of
+the Material Editor
+Using Windows 95
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+Animation Tool
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+* The models need to be rearranged
+* The size of a character needs to be readjusted
+* A different character having the same motions needs
+ to be created
+* The character needs to be left handed
+The sequence is all done but ...
+Topics covered in this seminar
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+* What happens if an RSD filename is changed in
+ an HRC file?
+* What happens if a different file having the
+ same RSD filename is placed in the RSD directory?
+* What happens if the PLY filename in an RSD file
+ is renamed?
+Models are entered in HRC files by their
+RSD filenames
+In order to rearrange models ...
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+#Alias Block
+ObjectName RSDfileName
+* Use an editor to open the HRC file
+* Change the RSD filename in the Alias Block
+* What should be done if the size of a part changes?
+Export/Import the CAP file yourself
+Changing an RSD filename in an HRC file
+Problems and Solutions
+Rearranging models
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+* What happens when the top-level scale
+ of a character is changed?
+* Make an origin at the top level of the character
+ hierarchy
+* Put the origin at the origin of the world coordinate
+ system and do not move it
+* Do not make key frames
+The PlayStation scale is inherited
+Preparation: Make an anchor
+In order to adjust the size of a character...
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+# Override Parameters Block
+ObjectName JointCode Layer# ColorCode
+Rx Ry Rz Sx Sy Sz Tx Ty Tz
+* Use an editor to open the HRC file
+* Change the scale of the anchor
+* Open the HRC, sequence
+* Select the anchor and create key frame
+* Export to TOD
+Changing the Override Parameters Block
+Adjusting the size of a character
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+Step 1
+Step 2
+Step 3
+Duplicate
+Copy the character (HRC) and build
+it up as a new character
+Import CAP
+Creating a different character with the same motions
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+Parameter settings
+* Name of new object
+* Name of new sequence
+* Saved as a CAP file
+* If all the joints are set to the origin,
+eliminate the parameter by setting the Origin(s)
+Only check box
+* HRC filename
+Use the Check button to check for name conflicts
+Use the Duplicate button to execute
+The Duplicate command
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+Preparation: RSDFORM.EXE
+Since the model is to be left/right mirrored,
+RSDFORM.EXE needs to be in the
+C:\PSXGRAPH\BIN\ directory
+Step 1 Duplicate
+Step 2 Import CAP
+Making a character left handed
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+Turn the Mirroring switch On in the Duplicate dialog box
+To make a left/right mirror of a model,
+specify a new RSD filename
+Problems and solutions
+When a model is mirrored, its textures are reversed as well.
+If an RSD filename is not specified (left blank),
+the textures are not reversed. Do not reverse objects that
+are not on the plane of symmetry (e.g. the head, torso, hip).
+Making a character left handed
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+Characters can give and take sequences
+via CAP files
+Set Look Up OST check box to ON
+(Import CAP dialog box)
+If an OST file made during the Duplicate
+operation is present, the receiver can
+automatically convert the object name.
+Give and take of sequences after Duplicate operation
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+MIMe Animation
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+1. Principles of MIMe animation
+2. Procedure for creating MIMe
+animation data
+- Necessary tools and data format
+- Basic operation of the tools
+- Issues to note in creating data
+3. MIMe applications
+4. Conclusion
+Topics
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+1. Principles of MIMe animation
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+P(t) = (1-t)*P0 + t*P1 (0<t<1)
+P0
+t
+0.0 1.0
+P1
+Interpolation
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+P0 P1 P2 P3
+P(t) = É¥ Wi(t) * Pi (É¥ Wi(t) = 1.0)
+n
+i=0
+n
+i=0
++
+0.5 0.5 -1.0 1.0
+-1 0 1 -1 0 1 -1 0 1
+Multiple Inbetweening Method
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+basic model deformed model
+deformed model - basic model = difference vector
+changes in composite ratio of difference vectors
+waveform basic model + Sigma (difference x waveform) = MIMe animation
+-1 0 1 -1 0 1 -1 0 1
+-1 0 1
+-1 0 1 -1 0 1
+-1 0 1 -1 0 1
+-1 0 1
+MIMe Animation
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+• Main point is how the deformed
+model is selected
+• Motion is based on variations
+in waveforms
+Key frame animation and MIMe animation
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+2. Procedure for creating MIMe
+animation data
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+creating,
+editing models
+differences
+correspondence
+preview
+creating,
+editing waveforms
+Flowchart for creating MIMe animation
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+Data: DXF, RSD, TMD
+Tools: 3D modeler, dxf2rsd, dxf2rsdw, rsdlink
+• Vertices cannot be increased or decreased
+• The ordering of vertices cannot be changed
+• Use triangles
+Points
+(1) Creating, editing models
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+Data: TMD, VDF, NDF
+Tools: mimefilt, mimesort
+• Only vertices (and normal vectors) are needed
+• The texture is needed only for the basic model
+• Difference data formats (VDF, NDF)
+• Optimization of difference data (mimesort)
+Points
+(2) Creation of differences
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+header
+object
+table
+primitive
+vertices
+normal
+vectors
+basic
+model
+vertex
+differences
+normal
+differences
+deformed
+model
+block count
+object
+number
+first different
+vertex
+number
+difference
+vertex count
+difference
+file
+dx0 dy0
+dz0 (dummy)
+dx1 dy1
+object
+number
+•
+•
+•
+•
+•
+•
+header
+object
+table
+primitive
+vertices
+normal
+vectors
+•
+•
+•
+Format for difference data
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+Data: RSD or TMD , WVF , (MWD)
+Tool: mimewave
+• mimewave functions
+- editing waveforms
+- assigning correspondences between the deformed
+model and the waveform
+• creating a waveform
+• explanation of the screen
+• editing waveforms
+• saving waveform data
+• waveform data format
+- Bezier curves
+- continuation of waveforms
+- attribution transformations
+- insertion and deletion of control points
+(3) Creating waveforms
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+#
+MODELNAME= c:\psxgraph\data\boxer01.tmd /* full path name of model file */
+MIMEID= 0 /* position in differential file */
+WAVEID= 0 /* wave ID; common waves have the same ID */ OFFSET= 0
+/* starting wave frame */
+WAVELENGTH= 80 /* overall frame count */
+DATASIZE= 66 /* wave sample count */
+0 /* sample data */
+0
+0
+...
+MODELNAME= c:\psxgraph\data\boxer02.tmd
+MIMEID= 1
+WAVEID= 1
+OFFSET= 0
+WAVELENGTH= 80
+DATASIZE= 80
+10
+270
+933
+...
+Waveform data format (WVF)
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+Data: TMD, VDF, NDF, TIM, binary waveform data
+Tools: mimewave, wavelink, preview (mimewave.cpe)
+• preview with PlayStation board
+• batch file/make file
+• invalid model settings
+• changing basic models
+• entering commands
+• adjusting the preview
+- normal vector MIMe (preview substitution)
+- if texture is present (batch file editing)
+Confirmation by previewing
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+The batch file below is created using the Save batch file command in MIMeWave
+resetps
+@REM MIMeWave changes lines below here. -- DO NOT EDIT THIS LINE!
+set BASE=boxer00
+set WAVE=boxer
+mimefilt -n boxer00 boxer01 boxer02 boxer03 boxer04
+wavelink -o boxer.dat boxer.wvf
+@REM MIMeWave changes lines above here. -- DO NOT EDIT THIS LINE!
+call patch.bat
+pqbload %BASE%.tmd 80100000
+pqbload %BASE%.vdf 80180000
+pqbload %BASE%.ndf 80200000
+pqbload %WAVE%.dat 80400000
+@REM You need ONE concatenated texture file with an end mark ('0').
+@REM copy /b a.tim+b.tim+c.tim textures.tim
+del textures.tim
+echo 0 >> textures.tim
+pqbload textures.tim 80500000
+run c:\psxgraph\bin\mimewave.cpe
+The other sections are created
+ when the batch file is first
+created. Afterwards, they stay
+unchanged so necessary
+processing can be added.
+Please do not modify these
+two comment lines.
+Batch file
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+The make file below is created when the mak extension is chosen from the Save batch file
+command in MIMEWave
+MIMEFILT = mimefilt -n
+WAVELINK = wavelink
+RSDLINK = rsdlink
+LOADER = pqbload
+RESET = resetps
+PATCH = patch.dat
+RUN = run
+PROGRAM = c:\psxgraph\bin\mimewave.cpe
+WAVEDATA = boxer.dat
+# TEXTURES = a.tim+b.tim+c.tim
+TIMFILE = textures.tim
+TMDADDR = 80100000
+VDFADDR = 80180000
+NDFADDR = 80200000
+WAVADDR = 80400000
+TEXADDR = 80500000
+run : load
+ $(RUN) $(PROGRAM)
+# MIMeWave changes lines below here. --DO NOT EDIT THIS LINE!
+MAKEFILE = makefile.mak
+BASE = boxer00
+WAVE = boxer
+WVF = boxer.wvf
+boxer.dat : $(WVF)
+ $(WAVELINK) -o boxer.dat $(WVF)
+boxer00.vdf : boxer00.tmd boxer01.tmd ... boxer04.tmd $(MIMEDEPEND)
+ $(MIMEFILT) boxer00 boxer01 boxer02 boxer03 boxer04
+# MIMeWave changes lines above here. -- DO NOT EDIT THIS LINE!
+reset :
+ $(RESET)
+ $(PATCH)
+load : reset $(BASE).tmd $(BASE).vdf $(BASE).ndf $(WAVEDATA)
+$(TIMFILE)
+ $(LOADER) $(BASE).tmd $(TMDADDR)
+ $(LOADER) $(BASE).vdf $(VDFADDR)
+ $(LOADER) $(BASE).ndf $(NDFADDR)
+ $(LOADER) $(WAVEDATA) $(WAVEADDR)
+ $(LOADER) $(TIMFILE) $(TEXADDR)
+ del $(TIMFILE)
+textures.tim :
+# You need ONE concatenated texture file with an end mark('0').
+ echo 0 > $(TIMFILE)
+# copy /b $(TEXTURES) $(TIMFILE)
+# echo 0 >> $(TIMFILE)
+Make file
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+For textured models, it is necessary to modify the batch file or the make file.
+In either case, a temporary file (textures.tim) must be created that links all the
+necessary texture files. A mark ('0') is added to the end of the linked file so that
+the end can be detected when it is loaded.
+Change the batch file or the make file as shown below
+For batch files (where a.tim, b.tim, c.tim are the textures used)
+@REM You need ONE concatenated texture file with an end mark ('0').
+copy /b a.tim+b.tim+c.tim textures.tim
+echo 0>> textures.tim
+pqbload textures.tim 80500000
+For make files (where a.tim, b.tim, c.tim are the textures used)
+TEXTURES = a.tim+b.tim+c.tim
+TIMFILE = textures.tim
+...
+textures.tim :
+# You need ONE concatenated texture file with an end mark ('0').
+ copy /b $(TEXTURES) $(TIMFILE)
+ echo 0>> $(TIMFILE)
+Textured models
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+3. MIMe applications
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+Creating control waveforms
+Creating real-time waveforms with the pad
+Sample program (TMDVIEW$MIME$)
+MIMe with compression
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+Increase deformed models
+Interpolate with angles
+Spline interpolation
+Interpolation of matrices
+Rotation movements
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+Optimization using mimesort
+Compression of waveform data
+Model tricks
+Tuning up the data
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+Angle MIMe
+Two-dimensional MIMe
+Texture MIMe (UV MIMe)
+Color MIMe
+...
+...
+Various MIMes
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+4. Conclusion
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+MIMe is a real time image synthesis technology
+... by optimizing models and varying waveforms
+Conclusion
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+3D Studio TOD Plug-in
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+The TOD plug-in program is a 3D Studio R4 plug-in
+for the PlayStation.
+* Save object data (RSD)
+* Save animation data (TOD)
+* Preview TOD data using DTL-H2000
+Topics
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+* Save using local coordinates for each object
+* Automatic generation of object names
+* Three-sided polygons only (four-sided polygons
+ cannot be generated)
+* Conversion of 3DS smoothing info to RSD
+* Diffuse reflection lighting from 3DS is converted to
+ RSD polygon colors
+* Conversion of UV values for texture maps
+* No conversion of texture image data
+Save RSD data
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+Save TOD data
+* Save animation of objects (translations, rotations,
+scaling) and camera animation (translations, rotations)
+to TOD
+* Morphing cannot be converted
+* Light source info cannot be converted
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+scale, Frames from/to, TOD type
+scale scale (3DS coordinates) * (scale value) =
+(RSD, TMD coordinates)
+Frames
+from/to Specify the range of frames to be saved
+TOD type Matrix: Matrix type
+RST: RST type
+* Matrix type requires less processing but is not
+suited for interframe interpolation on the PS.
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+Hierarchy
+Hierarchy
+on: Saves coordinate system of hierarchy
+ structure to TOD
+off: Not saved
+* Not saving the hierarchy structure reduces the amount of
+calculations done on the PS, but this is not suited for cases
+where an object is being moved interactively.
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+Pivot
+on: Pivot info is reflected in
+ the TOD
+off: Pivot info is not reflected
+On (rotation around pivot is local)
+= (rotation around origin)
+Off (rotation around pivot is local)
+= (rotation around origin)
+ + (translation)
+Pivot:
+Hierarchy:
+TOD type:
+Preview Quick
+Preview
+Save Save
+RSD TOD
+on
+on off
+off
+Matrix RST
+Frames:
+PlayStation TOD Plug-in
+Scale:
+Frames from:
+to:
+All 1/2 1/3 1/4 1/5
+Pivot
+Sony Computer Entertainment Inc. CONFIDENTI
+AL
+Frames Frames can be skipped and saved.
+All: All frames are saved
+1/2: Every other frame is saved (0,2,4...)
+1/3: Every third frame is saved (0,3,6...)
+1/4: Every fourth frame is saved (0,4,8...)
+1/5: Every fifth frame is saved (0,5,10...)
+* Skipping frames can reduce the size of data but
+will require the PS to interpolate between frames.
+Frames

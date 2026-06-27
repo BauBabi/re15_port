@@ -1,0 +1,44 @@
+
+Thank You for testing this preliminary version of Bio Herb.
+
+This application allows one to modify a RDT in realtime and save the results. Please,
+make a backup copy of the RDT you wish to edit before saving!
+
+
+Currently, all versions of the following games are supported:
+
+Bio Hazard / Resident Evil
+Bio Hazard 1.5 / Resident Evil 1.5
+Bio Hazard 2 / Resident Evil 2
+
+
+This preliminary version allows for the following data to be modified:
+
+RID - Camera View/Position (Where the cam is located and directed)
+RVD - Camera Zone/Switch (3D area where player movement causes the camera to change)
+LIT - Object Light (position, color, etc of lighting for entities)
+SCA - Collision/Boundary (restriction where the player/enemies may roam)
+BLK - Block (area(s) where the enemies may roam, within collision)
+FLR - Floor (sounds produced from player footsteps)
+
+
+Some script data is viewable as well, however you must use 'BioScript' to edit (for now):
+
+Door - self explainatory
+Item - Location of an object
+Object - The actual placement of a 3D object
+AOT - variable; can be fire/damage, message, save spot, etc.
+
+
+Prerendered backgrounds are supported/viewable, however, they must be in BMP format
+and located in the same directory as the RDT. For example:
+
+ROOM10000.bmp represents camera 0 of ROOM1000.
+
+The filenaming of backgrounds are like so:
+
+ROOM[STAGE][ROOM][CAMERA].BMP
+Where STAGE=1, ROOM=00 and CAMERA=00 (ROOM10000.BMP)
+
+Please see 'example.png' for visual example.
+

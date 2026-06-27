@@ -1,0 +1,55 @@
+
+CDROM File Playstation EXE and SYSTEM.CNF	Contents
+Index	Prev
+Next
+
+SYSTEM.CNF
+Contains boot info in ASCII/TXT format, similar to the CONFIG.SYS or AUTOEXEC.BAT files for MSDOS. A typical SYSTEM.CNF would look like so:
+  BOOT = cdrom:\abcd_123.45;1 arg ;boot exe (drive:\path\name.ext;version)
+  TCB = 4                         ;HEX (=4 decimal)   ;max number of threads
+  EVENT = 10                      ;HEX (=16 decimal)  ;max number of events
+  STACK = 801FFF00                ;HEX (=memtop-256)
+The first line specifies the executable to load, from the "cdrom:" drive, "\" root directory, filename "abcd_123.45" (case-insensitive, the real name in the disk directory would be uppercase, ie. "ABCD_123.45"), and, finally ";1" is the file's version number (a rather strange ISO-filesystem specific feature) (the version number should be usually/always 1). Additionally, "arg" may contain an optional 128-byte command line argument string, which is copied to address 00000180h, where it may be interpreted by the executable (most or all games don't use that feature).
+Each line in the file should be terminated by 0Dh,0Ah characters... not sure if it's also working with only 0Dh, or only 0Ah...?
+
+ABCD_123.45
+This is a normal executable (exactly as for the .EXE files, described below), however, the filename/extension is taken from the game code (the "ABCD-12345" text that is printed on the CD cover), but, with the minus replaced by an underscore, and due to the 8-letter filename limit, the last two characters are stored in the extension region.
+That "XXXX_NNN.NN" naming convention seems to apply for all official licensed PSX games. Wild Arms does unconventionally have the file in a separate folder, "EXE\SCUS_946.06".
+
+PSX.EXE (Boot-Executable) (default filename when SYSTEM.CNF doesn't exist)
+XXXX_NNN.NN (Boot-Executable) (with filename as specified in SYSTEM.CNF)
+FILENAME.EXE (General-Purpose Executable)
+PSX executables are having an 800h-byte header, followed by the code/data.
+  000h-007h ASCII ID "PS-X EXE"
+  008h-00Fh Zerofilled
+  010h      Initial PC                   (usually 80010000h, or higher)
+  014h      Initial GP/R28               (usually 0)
+  018h      Destination Address in RAM   (usually 80010000h, or higher)
+  01Ch      Filesize (must be N*800h)    (excluding 800h-byte header)
+  020h      Unknown/Unused ;Addr         (usually 0)  ;\optional overlay?
+  024h      Unknown/Unused ;Size         (usually 0)  ;/(not auto-loaded)
+  028h      Memfill Start Address        (usually 0) (when below Size=None)
+  02Ch      Memfill Size in bytes        (usually 0) (0=None)
+  030h      Initial SP/R29 & FP/R30 Base (usually 801FFFF0h) (or 0=None)
+  034h      Initial SP/R29 & FP/R30 Offs (usually 0, added to above Base)
+  038h-04Bh Reserved for A(43h) Function (should be zerofilled in exefile)
+  04Ch-xxxh ASCII marker
+             "Sony Computer Entertainment Inc. for Japan area"         ;NTSC
+             "Sony Computer Entertainment Inc. for Europe area"        ;PAL
+             "Sony Computer Entertainment Inc. for North America area" ;NTSC
+             (or often zerofilled in some homebrew files)
+             (the BIOS doesn't verify this string, and boots fine without it)
+  xxxh-7FFh Zerofilled
+  800h...   Code/Data                  (loaded to entry[018h] and up)
+The code/data is simply loaded to the specified destination address, ie. unlike as in MSDOS .EXE files, there is no relocation info in the header.
+Note: In bootfiles, SP is usually 801FFFF0h (ie. not 801FFF00h as in system.cnf). When SP is 0, the unmodified caller's stack is used. In most cases (except when manually calling DoExecute), the stack values in the exeheader seem to be ignored though (eg. replaced by the SYSTEM.CNF value).
+The memfill region is zerofilled by a "relative" fast word-by-word fill (so address and size must be multiples of 4) (despite of the word-by-word filling, still it's SLOW because the memfill executes in uncached slow ROM).
+The reserved region at [038h-04Bh] is internally used by the BIOS to memorize the caller's RA,SP,R30,R28,R16 registers (for some bizarre reason, this information is saved in the exe header, rather than on the caller's stack).
+Additionally to the initial PC,R28,SP,R30 values that are contained in the header, two parameter values are passed to the executable (in R4 and R5 registers) (however, usually that values are simply R4=1 and R5=0).
+Like normal functions, the executable can return control to the caller by jumping to the incoming RA address (provided that it hasn't destroyed the stack or other important memory locations, and that it has pushed/popped all registers) (returning works only for non-boot executables; if the boot executable returns to the BIOS, then the BIOS will simply lockup itself by calling the "SystemErrorBootOrDiskFailure" function.
+
+Relocatable EXE
+Fade to Black (CINE.EXR) contains ID "PS-X EXR" (instead "PS-X EXE") and string "PSX Relocable File - Delphine Software Int.", this is supposedly some custom relocatable exe file (unsupported by the PSX kernel).
+
+MSDOS.EXE and WINDOWS.EXE Files
+Some PSX discs contain DOS or Windows .EXE files (with "MZ" headers), eg. devkit leftovers, or demos/gimmicks.

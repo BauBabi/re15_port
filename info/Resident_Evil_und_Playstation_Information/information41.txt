@@ -1,0 +1,184 @@
+
+CDROM File Audio Sample Sets VAB and VH/VB (Sony)	Contents
+Index	Prev
+Next
+
+VAB vs VH/VB
+  .VAB  contains VAB header, and ADPCM binaries   ;-all in one file
+  .VH   contains only the VAB header              ;\in two separate files
+  .VB   contains only the ADPCM binaries          ;/
+PSX Perfect Assassin has some v7 .VH/.VB's (in \DATA.JFS:\SND\*.*)
+PSX Resident Evil 2, COMMON\DATA\*.DIE (contains .TIM+.VAB badged together)
+PSX Spider-Man, CD.HED\l2a1.vab is VAB v5 (other VABs in that game are v7)
+PSX Tenchu 2 (MagDemo35: TENCHU2\VOLUME.DAT\5\* has VAB v20h, maybe a typo)
+
+VAB Header (VH)
+  0000h 4       File ID ("pBAV")
+  0004h 4       Version (usually 7) (reportedly 6 exists, too) (5, 20h exists)
+  0008h 4       VAB ID (usually 0)
+  000Ch 4       Total .VAB filesize in bytes (or sum of .VH and .VB filesizes)
+  0010h 2       Reserved (EEEEh)
+  0012h 2       Number of Programs, minus 1 (0000h..007Fh = 1..128 programs)
+  0014h 2       Number of Tones, minus? (max 0800h?) (aka max 10h per program)
+  0016h 2       Number of VAGs, minus? (max 00FEh)
+  0018h 1       Master Volume (usually 7Fh)
+  0019h 1       Master Pan    (usually 40h)
+  001Ah 1       Bank Attribute 1 (user defined) (usually 00h)
+  001Bh 1       Bank Attribute 2 (user defined) (usually 00h)
+  001Ch 4       Reserved (FFFFFFFFh)
+  0020h 800h    Program Attributes 10h-byte per Program 00h..7Fh   (fixed size)
+  0820h P*200h  Tone Attributes 200h-byte per Program 00h..P-1  (variable size)
+  xx20h 200h    16bit VAG Sizes (div8) for VAG 00h..FFh            (fixed size)
+  xx20h (...)   ADPCM data (only in .VAB files, otherwise in separate .VB file)
+Program Attributes (10h-byte per Program, max 80h programs)
+  000h 1      tones        Number of Tones in the Program (Yaroze: 4) (uh?)
+  001h 1      mvol         Master Volume   (Yaroze: 0..127)
+  002h 1      prior                        (Yaroze: N/A)
+  003h 1      mode                         (Yaroze: N/A)
+  004h 1      mpan         Master Panning  (Yaroze: 0..127)
+  005h 1      reserved0
+  006h 2      attr                         (Yaroze: N/A)
+  008h 4      reserved1
+  00Ch 4      reserved2
+Tone Attributes (20h-byte per Tone, max 10h tones per Program)
+  000h 1      prior        Tone Priority   (Yaroze: 0..127, 127=highest)
+  001h 1      mode         Mode            (Yaroze: 0=Normal, 4=Reverberation)
+  002h 1      vol          Tone Volume     (Yaroze: 0..127)
+  003h 1      pan          Tone Panning    (Yaroze: 0..127)
+  004h 1      center       Centre note (in semitone units) (Yaroze: 0..127)
+  005h 1      shift        Centre note fine tuning         (Yaroze: 0..127)
+  006h 1      min          Note limit minimum value     (Yaroze: 0..127)
+  007h 1      max          Note limit maximum value     (Yaroze: 0..127)
+  008h 1      vibW                                      (Yaroze: N/A)
+  009h 1      vibT                                      (Yaroze: N/A)
+  00Ah 1      porW                                      (Yaroze: N/A)
+  00Bh 1      porT                                      (Yaroze: N/A)
+  00Ch 1      pbmin        Max? value for downwards pitchbend  (Yaroze: 0..127)
+  00Dh 1      pbmax        Max value for upwards pitchbend     (Yaroze: 0..127)
+  00Eh 1      reserved1
+  00Fh 1      reserved2
+  010h 2      ADSR1        Attack,Decay    (Ya
+CDROM File Audio Sequences SEQ/SEP (Sony)	Contents
+Index	Prev
+Next
+
+SEQ - Single Sequence
+.SEQ contains MIDI-style sequences, the samples for the instruments can be stored in a separate .VAB file (or .VH and .VB files).
+Used by Perfect Assassin, DATA.JFS:\SND\*.SEQ (bundled with *.VH and *.VB)
+Used by Croc (MagDemo02: CROC\CROCFILE.DIR\AMBI*.BIN, MAP*.BIN, JRHYTHM.BIN)
+Used by many other games.
+  000h 4   File ID "pQES"
+  004h 4   Version (1)                    (big endian?)
+  008h 2   Resolution per quarter note      (01h,80h)
+  00Ah 3   Tempo 24bit (8bit:16bit maybe?)  (07h,27h,0Eh)
+  00Dh 2   Rhythm (NN/NN)                   (04h,02h)
+  00Fh ... Score data, uh?    (with many MIDI KeyOn's: xx,9x,xx,xx)
+  ...  3   End of SEQ (2Fh=End of Track)    (FFh,2Fh,00h)
+The "Score data" seems to be more or less same as in Standard Midi Format (.smf files), ie. containing timing values and MIDI commands/parameters.
+
+SEP - Multi-Track Sequences
+This is a simple "archive" with several SEQ-like sequences.
+  000h 4   File ID "pQES"  ;same ID as in .SEQ files (!)
+  004h 2   Version (0)     ;value 0, and only 16bit, unlike .SEQ files
+  006h ..  1st Sequence
+  ...  ..  2nd Sequence
+  ...  ..  etc.
+Sequences:
+  000h 2   Sequence ID (0000h and up)     (big endian)        ;-ID number
+  002h 2   Resolution per quarter note      (01h,80h)         ;\
+  004h 3   Tempo 24bi
+CDROM File Audio Other Formats	Contents
+Index	Prev
+Next
+
+ __________________________ .SQ .HD .HD (SSsq/SShd) ___________________________
+
+This is a newer Sony format from 1999 (resembling the older .SEQ .VH .VB format).
+Used by Alundra 2, Ape Escape, Arc the Lad 3, Koukidou Gensou - Gunparade March, Omega Boost, PoPoLoCrois Monogatari II, The Legend of Dragoon, Wild Arms 2.
+  .SQ Sequence Data (with ID "SSsq")
+  .HD Voice Header  (with ID "SShd")
+  .BD Voice Binary  (raw SPU-ADPCM, same as .VB)
+
+Sequence Data (*.SQ)
+  000h 2       Unknown (always 64h)
+  002h 2       Unknown (always 1E0h)
+  004h 1?      Unknown (varies)
+  005h 7       Zerofilled
+  00Ch 4       ID "SSsq"
+  010h 10h*10h Unknown Table
+  110h ..      Unknown Data
+
+Voice Header (*.HD)
+  000h 4     Size of the .HD file itself
+  004h 4     Size of the corresponding .BD file
+  008h 4     Zero
+  00Ch 4     ID "SShd"
+  010h 1Ch*4 Offsets to data (or FFFFFFFFh=None)
+  080h ..    Data
+
+Voice Bonary (*.BD) (same as .VB files)
+  000h ..    SPU-ADPCM data (usually starting with zerofilled 10h-byte block)
+
+ ____________________________ DNSa/PMSa/FNSa/FMSa _____________________________
+
+There are four four file types:
+  "DNSa"  (aka SouND backwards)         ;sequence data
+  "PMSa"  (aka SaMPles backwards)       ;samples with small header
+  "FMSa"  (aka SaMples-F... backwards)  ;samples with bigger header   ;\Legacy
+  "FNSa"  (aka SouNd-F... backwards)    ;whatever tiny file           ;/of Kain
+Used by several games (usually inside of BIGFILE.DAT):
+  Akuji (MagDemo18: AKUJI\BIGFILE.DAT\*) (DNSa,PMSa)
+  Gex 2 (MagDemo08: GEX3D\BIGFILE.DAT\*) (DNSa)
+  Gex 3: Deep Cover Gecko (MagDemo20: G3\BIGFILE.DAT\*) (DNSa,PMSa)
+  Legacy of Kain 2 (MagDemo13: KAIN2\BIGFILE.DAT\*) (DNSa)
+  Legacy of Kain 2 (MagDemo26: KAIN2\BIGFILE.DAT\*) (DNSa,PMSa,FNSa,FMSa)
+  Walt Disney World Racing Tour (MagDemo35: GK\BIGFILE.DAT\*) (DNSa,PMSa)
+Note: The exact file format does reportedly differ in each game.
+
+"PMSa" (aka SaMPles backwaords)
+  000h 4     ID "PMSa"
+  004h 4     Total Filesize
+  008h 8     Zerofilled
+  010h ..    SPU-ADPCM data (usually starting with zerofilled 10h-byte block)
+
+"DNSa" (aka SouND backwards)
+  000h 4      ID "DNSa"   ;aka SND backwards
+  004h 2      Offset from DNSa+4 to 8-byte entries (can be odd)
+  006h 1      Unknown (3)
+  007h 1      Number of 8-byte entries   (N1)
+  008h 1?     Number of 10h-byte entries (N2)
+  ...  ..     Unknown (..)
+  ...  N1*8   Whatever 8-byte entries
+  ...  N2*10h Whatever 10h-byte entries
+  ...  ..     ... circa 40h 4-byte entries...?
+  ...  ..     Unknown (..)
+  ...  ..     Several blocks with ID "QESa" or "QSMa"  ;supposedly MIDI-style?
+
+"FNSa" (aka SouNd-F... backwards)
+These are whatever tiny files (with filesize 1Ch or 2Ch).
+  000h 4     ID "FNSa"
+  ...  ..    Unknown
+
+"FMSa" (aka SaMples-F... backwards)
+  000h 4     ID "FMSa"
+  008h ..    Unknown..
+  ...  ..    SPU-ADPCM data (usually starting with zerofilled 10h-byte block)
+
+ ____________________________________ AKAO ____________________________________
+
+There a several games that have sound files with ID "AKAO".
+  XXX does that include different AKAO formats... for Samples and Midi?
+AKAO is also used in several streaming movies:
+CDROM File Video Streaming Audio
+
+ ___________________________________ Others ___________________________________
+
+Alone in the Dark IV has MIDB and DSND chunks (which contain sound files).
+
+See also
+The page below does mention several PSX sound formats, plus some open source & closed source tools for handling those files.
+github.com/loveemu/vgmdocs/blob/master/Conversion_Tools_for_Video_Game_Music.md
+
+
+I am homeless in Hamburg, please help me out!
+extracted from no$psx v2.2 - homepage - patreon - whole doc htm/txt - copyright 2022 martin korth (nocash)

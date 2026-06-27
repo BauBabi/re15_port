@@ -1,0 +1,155 @@
+on: [push]
+
+name: Create Release
+
+jobs:
+
+  build:
+
+    name: Create Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          token: ${{secrets.VERSIONTOKEN}}
+
+      - name: Change executables and permissions
+        run: |
+          chmod +x ./gradlew
+          chmod +x src/main/resources/PsxImager/psxbuild
+          chmod +x src/main/resources/PsxImager/psxinject
+          chmod +x src/main/resources/PsxImager/psxrip
+
+      - name: Build Project
+        run: ./gradlew build -i
+
+      - name: Test Project
+        run:  |
+          ./gradlew cleanTest test -i --stacktrace
+
+      - name: Update Version
+        run: |
+          git checkout ${{ github.head_ref }}
+          git config --global user.email "marcelmaxjoedicke@googlemail.com"
+          git config --global user.name "BauBabi"
+          
+          export commitName=$(git log --format=%B -n 1)
+          echo $commitName
+          
+          echo "Fetch Version number from build.gradle"
+          export version=$(cat build.gradle |  grep -F 'version = "' | cut -d \" -f2)
+          echo "Version before $version"
+          
+          export major=$(echo $version | cut -d \. -f1)
+          export minor=$(echo $version | cut -d \. -f2)
+          export patch=$(echo $version | cut -d \. -f3)
+          
+          export branchName=${GITHUB_REF##*/}
+          echo "branch name: $branchName"
+          if [[ $branchName == *"major"* ]]; then
+            echo "Create a major version"
+            major=$((major+1))
+            patch=0
+            newVersion="$major.$minor.$patch"
+            sed -i 's/version = \"'$version'\"/version = \"'$newVersion'\"/g' build.gradle
+            sed -i 's/'$version'/'$newVersion'/g' src/main/resources/Start.bat
+            sed -i 's/'$version'/'$newVersion'/g' src/main/resources/StartLocal.bat
+            echo "$newVersion" > src/main/resources/version.txt
+            git add src/main/resources/version.txt
+            git add build.gradle
+            git add src/main/resources/Start.bat
+            git add src/main/resources/StartLocal.bat
+            git commit -m "[skip ci]" -m "update version number"
+            git push
+          elif [[ $branchName == *"minor"* ]]; then
+            echo "Create a minor version"
+            minor=$((minor+1))
+            patch=0
+            newVersion="$major.$minor.$patch"
+            sed -i 's/version = \"'$version'\"/version = \"'$newVersion'\"/g' build.gradle
+            sed -i 's/'$version'/'$newVersion'/g' src/main/resources/Start.bat
+            sed -i 's/'$version'/'$newVersion'/g' src/main/resources/StartLocal.bat
+            echo "$newVersion" > src/main/resources/version.txt
+            git add src/main/resources/version.txt
+            git add build.gradle
+            git add src/main/resources/Start.bat
+            git add src/main/resources/StartLocal.bat
+            git commit -m "[skip ci]" -m "update version number"
+            git push   
+          elif [[ $branchName == *"patch"* ]]; then
+            echo "Create a patch version"
+            patch=$((patch+1))
+            newVersion="$major.$minor.$patch"
+            sed -i 's/version = \"'$version'\"/version = \"'$newVersion'\"/g' build.gradle
+            sed -i 's/'$version'/'$newVersion'/g' src/main/resources/Start.bat
+            sed -i 's/'$version'/'$newVersion'/g' src/main/resources/StartLocal.bat
+            echo "$newVersion" > src/main/resources/version.txt
+            git add src/main/resources/version.txt
+            git add build.gradle
+            git add src/main/resources/Start.bat
+            git add src/main/resources/StartLocal.bat
+            git commit -m "[skip ci]" -m "update version number"
+            git push
+          else
+            echo "Create a SNAPSHOT version"
+            export commit=$(git rev-parse HEAD)
+            newVersion="SNAPSHOT-$version-$commit"
+          
+            echo "Update Version for About Menu"
+            echo "$newVersion" > src/main/resources/version.txt
+            git add src/main/resources/version.txt
+            git commit -m "[skip ci]" -m "update version number"
+            git push
+          fi
+          
+          echo "new Version $newVersion"
+          echo "newVersion=$newVersion" >> $GITHUB_ENV
+          echo "commitName=$commitName" >> $GITHUB_ENV
+
+      # another build to fit to the new version
+      - name: Build Project
+        run: |
+          ./gradlew clean build
+          ./gradlew shadowJar
+
+      - name: Prepare zip package of release
+        run: ./gradlew checkZipping
+
+      # Remove older Releases
+      - uses: dev-drprasad/delete-older-releases@v0.2.0
+        with:
+          repo: BauBabi/RE15Editor
+          keep_latest: 4
+          delete_tag_pattern: SNAPSHOT
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token.
+        with:
+          tag_name: ${{ env.newVersion }}
+          release_name: Release ${{ env.newVersion }}
+          body: |
+            Changes in this Release
+            - ${{ env.commitName }}
+
+      - name: Upload release asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: release/Release.zip
+          asset_name: Release_${{ env.newVersion }}.zip
+          asset_content_type: application/zip
+      - name: Publish release
+        uses: StuYarrow/publish-release@v1.1.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          id: ${{ steps.create_release.outputs.id }}

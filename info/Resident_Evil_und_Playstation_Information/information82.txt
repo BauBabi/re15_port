@@ -1,0 +1,6 @@
+03 - VH (Trial) (VAB sound header file)
+
+It's the same as for Pointer 01 - VH,
+but this section is a leftover of the Trial version and it is unused by the final game.
+Note:
+The PC version doesn't require VH/VB files to be present in the RDT, you can change their pointers/offsets to 0 and remove or dummy the entire data section and you would still have a working room with sounds & bgm being played.

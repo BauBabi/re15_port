@@ -1,0 +1,12 @@
+
+CDROM File Audio CD-DA Tracks	Contents
+Index	Prev
+Next
+
+The eleven .SWP files in Wipeout 2097 seem to be CD-DA audio tracks.
+The one TRACK01.WAV in Alone in the Dark, too?
+Other than that, tracks can be accessed via TOC instead of filenames.
+
+
+I am homeless in Hamburg, please help me out!
+extracted from no$psx v2.2 - homepage - patreon - whole doc htm/txt - copyright 2022 martin korth (nocash)

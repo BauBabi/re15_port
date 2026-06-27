@@ -1,0 +1,37 @@
+Additional info
+
+First, you may ask what it is about those offsets. Well it's simple the first 8 bytes of the header are each 1 bytes values,
+the following values from offset 8 and onwards are 4 byte long values (always unsigned = positive) and they point to the
+individual data sections that are described below.
+
+If you look at the camera (RID) offset decimal 36 or hex: 24 and read 4 bytes from it e.g decimal "100" or in hex "64 00 00 00" it would mean that you will
+find the start of the RID camera data on decimal offset 100 / hex 64 00 00 00.
+
+You might think the order of offsets given is at the same time the order of the data in the file, this is wrong!
+Here is a list of the order data is actually stored in RDT files.
+
+RDT Data order
+RID
+MD1/TIM Table (Optional) (if the Model value in header is = 0 then no data)
+RVD
+LIT
+PRI00 - SND (Sound attribute table)
+
+Following the pointer to the SND section of an RDT will lead you to a table of sound attributes that are
+most probably affecting the sound files (VH/VB) of the file.
+
+The entire section always is 192 bytes in size and contains 48 elements that use the structure defined and explained below.
+
+SND Entry Structure (4 Bytes)
+00&#124; id_check
+01&#124; pan_prog
+02&#124; tone_pri
+03&#124; monopoly
+id_check (1 Byte)
+---------------------------------------------
+unknown use
+01 - VH (VAB header file)
+
+(pending...)
+Note:
+The PC version doesn't require VH/VB files to be present in the RDT, you can change their pointers/offsets to 0 and would still have a working room with sounds & bgm being played.

@@ -1,0 +1,23 @@
+#
+# https://help.github.com/articles/dealing-with-line-endings/
+#
+# Linux start script should use lf
+/gradlew        text eol=lf
+
+# These are Windows script files and should use crlf
+*.bat           text eol=crlf
+
+# prevent release of source code
+src export-ignore
+backup export-ignore
+build.gradle export-ignore
+settings.gradle export-ignore
+README.md export-ignore
+gradlew.bat export-ignore
+gradlew export-ignore
+.gitignore export-ignore
+.gitattributes export-ignore
+.github export-ignore
+.gradle export-ignore
+gradle export-ignore
+.idea export-ignore

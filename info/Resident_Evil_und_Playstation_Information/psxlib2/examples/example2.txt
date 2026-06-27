@@ -1,0 +1,11 @@
+SPU lib example 2
+
+Loads a looping VAG (sample) file, loads a reverb patch from the
+reverb bank, starts playing the sample, and goes into
+an endless loop.
+
+Compile and link by running example2.bat (you may have to edit this
+to put in the right include and library paths).
+
+Sample made with TS404 :)
+

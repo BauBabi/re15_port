@@ -1,0 +1,214 @@
+    
+PDA Preview PDA Preview
+ Thomas Daniel, Thomas Daniel,
+ SCEE Technology Group SCEE Technology Group
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Overview Overview
+ Introducing the PDA Introducing the PDA
+ Description and applications Description and applications
+ Technical description Technical description
+ CPU, memory, other features CPU, memory, other features
+ Software development Software development
+ Hardware and software tools Hardware and software tools
+ Miscellaneous details Miscellaneous details
+ Support, licensing and launch Support, licensing and launch
+  SCEE Technology SCEE Technology 
+Group Group
+  
+What is the PDA? What is the PDA?
+ A new platform, and a new peripheral A new platform, and a new peripheral
+ Software supplied as part of a PlayStation title Software supplied as part of a PlayStation title
+ Same size as a Memory card Same size as a Memory card
+ Backwards compatible with Memory cards Backwards compatible with Memory cards
+ Additional features Additional features
+ Programmable CPU Programmable CPU
+ LCD display LCD display
+ Infra-red communications Infra-red communications
+ Real-time clock Real-time clock
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Memory card Memory card
+ Virtual pet Virtual pet
+ Pet characters from games Pet characters from games
+ Possible PDA applications Possible PDA applications
+ Pocket watch / calendar / phone book Pocket watch / calendar / phone book
+ “Free” with games “Free” with games
+ Multi-purpose remote control unit Multi-purpose remote control unit
+ Edit game saves and exchange data Edit game saves and exchange data
+ Portable garage Portable garage
+ Player management Player management
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Hardware features (1) Hardware features (1)
+ LCD display LCD display
+ 32x32 pixels, monochrome 32x32 pixels, monochrome
+ Programmable refresh rate - 16/32/64Hz Programmable refresh rate - 16/32/64Hz
+ Buzzer Buzzer
+ 10-bit DAC 10-bit DAC
+ 5 buttons 5 buttons
+ 4 directional buttons + 1 “fire” button 4 directional buttons + 1 “fire” button
+ All buttons can interrupt the CPU All buttons can interrupt the CPU
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Hardware features (2) Hardware features (2)
+ Integral battery Integral battery
+ Disposable button cell Disposable button cell
+ Power saving must be done in software - be Power saving must be done in software - be 
+sensible sensible
+ Real-time clock Real-time clock
+ Can interrupt CPU once per second Can interrupt CPU once per second
+ 3 16-bit countdown timers can also interrupt 3 16-bit countdown timers can also interrupt
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Hardware features (3) Hardware features (3)
+ Infra-red communications Infra-red communications
+ Transceiver built in to every PDA Transceiver built in to every PDA
+ IrDA capable IrDA capable
+ Will possibly also produce a carrier-based signal Will possibly also produce a carrier-based signal 
+(TV remote etc) (TV remote etc)
+ Can be used when the PDA is a standalone device Can be used when the PDA is a standalone device 
+or when attached to a PlayStation or when attached to a PlayStation
+  SCEE Technology SCEE Technology 
+Group Group
+  
+PDA CPU PDA CPU
+ ARM7TDMI-based ARM7TDMI-based
+ 32-bit RISC CPU 32-bit RISC CPU
+ Clock speed programmable from 32KHz to 4MHz Clock speed programmable from 32KHz to 4MHz
+ 2 instruction sets, ARM and Thumb 2 instruction sets, ARM and Thumb
+ 128K Flash RAM, 2K SRAM, 16K ROM 128K Flash RAM, 2K SRAM, 16K ROM
+ Interruptible by button pushes or real-time clock Interruptible by button pushes or real-time clock
+ Memory Management Unit Memory Management Unit
+  SCEE Technology SCEE Technology 
+Group Group
+  
+ARM instruction set ARM instruction set
+ Full 32-bit mode Full 32-bit mode
+ 13 general purpose registers plus PC, LR and 13 general purpose registers plus PC, LR and 
+SP, second bank of 15 for privileged mode SP, second bank of 15 for privileged mode
+ Conditional execution on all instructions Conditional execution on all instructions
+ Optionally update condition flags Optionally update condition flags
+ Rich instruction set Rich instruction set
+ Multiplier with optional accumulate Multiplier with optional accumulate
+ Shifts free with many operations (MOV/ADD etc) Shifts free with many operations (MOV/ADD etc)
+ Multiple register load/store instructions Multiple register load/store instructions
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Thumb instruction set Thumb instruction set
+ 16-bit instruction word, 32-bit registers 16-bit instruction word, 32-bit registers
+ Code typically 35% smaller than ARM code Code typically 35% smaller than ARM code
+ 8 general-purpose registers + PC, LR and SP 8 general-purpose registers + PC, LR and SP
+ Map to ARM registers 0 to 7 Map to ARM registers 0 to 7
+ 8 “High” registers for MOV,ADD and CMP 8 “High” registers for MOV,ADD and CMP
+ Same basic instructions as ARM, but Same basic instructions as ARM, but
+ Separate shift instructions Separate shift instructions
+ Conditional execution only on branches Conditional execution only on branches
+ Condition flags always updated Condition flags always updated
+  SCEE Technology SCEE Technology 
+Group Group
+  
+PDA memory PDA memory
+ 16K ROM 16K ROM
+ Actually Flash, but not for general use Actually Flash, but not for general use
+ Contains kernel, boot code & OSD Contains kernel, boot code & OSD
+ Kernel controls memory card functionality Kernel controls memory card functionality
+ 128K Flash RAM 128K Flash RAM
+ Contains game saves and PDA executables Contains game saves and PDA executables
+ 8K blocks mapped to address space by MMU 8K blocks mapped to address space by MMU
+ 2K SRAM 2K SRAM
+ Usable by executing programs Usable by executing programs
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Developing PDA applications Developing PDA applications
+ Development hardware supplied by SCEE Development hardware supplied by SCEE
+ Tool chains already available Tool chains already available
+ ARM Software Development Toolkit ARM Software Development Toolkit
+ GNU tools - to be supported by SN Systems GNU tools - to be supported by SN Systems
+ Additional tools provided by SCEE Additional tools provided by SCEE
+ Specifications of low-level Memory card format Specifications of low-level Memory card format
+ Specifications of PDA hardware, but no libraries Specifications of PDA hardware, but no libraries
+ New Memory card library for PlayStation New Memory card library for PlayStation
+  SCEE Technology SCEE Technology 
+Group Group
+  
+PDA Hardware tools PDA Hardware tools
+ DEX-4000 DEX-4000
+ Standalone development box Standalone development box
+ Contains all PDA hardware Contains all PDA hardware
+ Multi-ICE Multi-ICE
+ Plugs in to PC and DEX-4000 Plugs in to PC and DEX-4000
+ Offers in-circuit debugging Offers in-circuit debugging 
+facilities facilities
+  SCEE Technology SCEE Technology 
+Group Group
+  
+SDevTC development 
+environment
+ SDevTC development 
+environment
+ Pro-DG IDE Pro-DG IDE
+ 32-bit GNU tools 32-bit GNU tools
+ Separate compilers for ARM and Thumb Separate compilers for ARM and Thumb
+ SDevTC Windows debugger SDevTC Windows debugger
+ To offer full PDA support To offer full PDA support
+ Real-time PDA emulation Real-time PDA emulation
+  SCEE Technology SCEE Technology 
+Group Group
+  
+ARM development environment ARM development environment
+ IDE IDE
+ Project manager Project manager
+ Editor Editor
+ C compiler and assembler C compiler and assembler
+ Can produce both ARM and Thumb code Can produce both ARM and Thumb code
+ Debugger Debugger
+ Powerful source and object-level debugger Powerful source and object-level debugger
+ ARMulator ARMulator
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Getting support Getting support
+ Supported the same way as PlayStation Supported the same way as PlayStation
+ Developer Support hotline and e-mail Developer Support hotline and e-mail
+ Developers’ web site Developers’ web site
+ PDA newsgroups PDA newsgroups
+ Recommended point of contact for developers Recommended point of contact for developers
+ Monitored by support engineers, other developers Monitored by support engineers, other developers 
+and SN Systems and SN Systems
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Software licensing Software licensing
+ All licensed PlayStation developers can All licensed PlayStation developers can 
+develop PDA applications develop PDA applications
+ SDevTC and ARM tools supplied by SCEE SDevTC and ARM tools supplied by SCEE
+ License fee for DEX-4000 and Multi-ICE to be License fee for DEX-4000 and Multi-ICE to be 
+confirmed confirmed
+ No additional software royalties No additional software royalties
+ Software will be seen as enhancements for Software will be seen as enhancements for 
+PlayStation titles rather than new products PlayStation titles rather than new products
+  SCEE Technology SCEE Technology 
+Group Group
+  
+PDA launch details PDA launch details
+ Retail price under £30 Retail price under £30
+ Launch in Japan for Christmas 1998 Launch in Japan for Christmas 1998
+ SCEE/SCEA territories’ dates to be confirmed SCEE/SCEA territories’ dates to be confirmed
+ Possible SCEE territories launch Q2 1999 Possible SCEE territories launch Q2 1999
+ First hardware tools available Q3 (or Q4) 1998 First hardware tools available Q3 (or Q4) 1998
+ Specification identical worldwide Specification identical worldwide
+  SCEE Technology SCEE Technology 
+Group Group
+  
+PDA Questions? PDA Questions?
+ scee.dev.programming.pda scee.dev.programming.pda 
+Dev_Support@Playstation.sony.com Dev_Support@Playstation.sony.com
+ Or ask me now Or ask me now

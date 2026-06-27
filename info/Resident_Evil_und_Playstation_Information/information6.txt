@@ -1,0 +1,553 @@
+RDT (Resident Evil 1997)
+File Format
+Name	RDT (Resident Evil 1997)
+Ontology	
+Electronic File Formats
+Game data files
+RDT (Resident Evil 1997)
+Extension(s)	.rdt
+This content was first retrieved from the Internet Archive's Wayback Machine for the date 2017-11-25 from the following URL: https://web.archive.org/web/20171125230810/http://rewiki.regengedanken.de/wiki/.RDT_(Resident_Evil)
+
+The .RDT file format is used to stored the description of a room in Resident Evil on Playstation or PC. It should contain the camera position (to correctly display 3D objects), the background images and sprites used to draw the scene, description of when to change camera, position of enemies when entering room, and so on...
+
+Contents [hide] 
+1 Structure
+2 Header
+3 Object list
+3.1 Camera positions (*.RID)
+3.1.1 Camera masks (*.PRI)
+3.2 Offset 0 (*.RVD) - Camera zones/switches
+3.3 Offset 1 (*.SCA) - Collision Boundaries for 3D Models
+3.4 Offset 2 (*.TMD/*.TIM) - Item 3D model & texture pointers
+3.5 Offset 3 (*.TMD/*.TIM) - Room 3D model & texture pointers
+3.6 Offset 4 (*.BLK) - Block data
+3.7 Offset 5 (*.FLR) - Floor/footstep sound areas
+3.8 Offset 6 (*.SCD) - Scenario data
+3.8.1 Objects for bit operations
+3.9 Offset 7 (*.SCD) - Execution script for room
+3.10 Offset 8, Script events ?
+3.11 Offset 9 (*.EMR) - Skeleton animation
+3.12 Offset 10 (*.EDD) - Skeleton animation steps
+3.13 Offset 11 (*.MSG) - Text messages
+Structure
+The values are stored in Little-Endian order.
+
+The file is always named roomSXX0.rdt (or roomSXX1.rdt). S is the game status/stage. XX is the location number.
+
+Header
+A RDT file starts with this header, to store count for different objects.
+
+typedef struct {
+  char unknown0;
+  char num_cameras; /* Number of cameras of the room */
+  char num_sound_banks; /* Number of sound banks, stored at offset 18 ? */
+  char unknown1[3];
+  unsigned short unknown2[3];
+
+  /* An array of 3 elements of unknown structure */
+  rdt_header_part_t unknown3[3];
+} rdt_header_t;
+
+<pre>
+typedef struct {
+  long unknown_pos_x; /* Unknown 3D position */
+  long unknown_pos_y;
+  long unknown_pos_z;
+  unsigned long unknown0[2];
+} rdt_header_part_t;
+Object list
+Following the header, we have an array of 19 absolute offsets to various objects in the file.
+
+Offset	Purpose
+0	Camera switches (*.RVD)
+1	Collision Boundaries for 3D Models (*.SCA)
+2	TMD/TIM; points to 2 offsets which are: offset to a TMD file, and offset to a TIM file (used for item models)
+3	TMD/TIM; points to 2 offsets which are: offset to a TMD file, and offset to a TIM file (used for obstacles & moveable objects)
+4	Block data (*.BLK)
+5	Footstep sound zones (*.FLR)
+6	Initialization Script(s) (*.SCD)
+7	Execution Script 0 (*.SCD)
+8	Execution Script 1 (*.SCD)
+9	Skeleton animation (*.EMR)
+10	Skeleton animation steps (*.EDD)
+11	Message text(s) (*.MSG)
+12	RAW image (*.RAW), points to several RAW images used for example by Offset 2 for item images
+13	Effect animation index (*.ESP)
+14	Effect animation data (*.EFF); points to a list of relative offsets to read the EFF/ESP data (read backwards!)
+15	Effect animation sprite image(s) (*.TIM); points to the last of those images used for effects
+16	Sound attribute table (*.SND); points to a table which is 192 bytes in size
+17	offset to a VAB header file (*.VH)
+18	offset to VAB sound file (*.VB)
+Camera positions (*.RID)
+At absolute offset 0x94 in a file, you'll find an array of 'num_cameras' items with this structure:
+
+typedef struct {
+	long masks_offset;	/* Offset to image mask definition */
+	long tim_masks_offset;	/* Offset to TIM file that contains image masks, if not zero */
+	long camera_from_x;	/* Position of the camera */
+	long camera_from_y;
+	long camera_from_z;
+	long camera_to_x;	/* Where the camera is looking to */
+	long camera_to_y;
+	long camera_to_z;
+	long unknown1[3];
+} rdt_camera_t;
+Camera masks (*.PRI)
+The masks_offset is an offset to an extra structure, which has following header:
+
+typedef struct {
+	unsigned short count_offsets;	/* Number of global offsets, or 0xffff for none */
+	unsigned short unknown;
+} rdt_masks_t;
+Then you have 'rdt_mask_offset_t' items, which have a 8-byte length. Summing all 'count' fields should equal the 'count_masks' of the rdt_masks_t structure.
+
+typedef struct {
+	unsigned short count;	/* Number of masks, with which to use this structure */
+	unsigned short unknown;
+	unsigned short dst_x;	/* Destination position on background image/screen, to be added */
+	unsigned short dst_y;
+} rdt_mask_offset_t;
+And then you have 'rdt_[rect|square]_mask_t' items, which have either 12-byte (rectangular mask) or 8-byte length (square mask). The length is 12 if byte 7 (rdt_square_mask_t.size field) is zero, and 8 otherwise. The 'depth' value is the Z distance of the mask from the camera (low value=near, high value=far).
+
+typedef struct {
+	unsigned char src_x;	/* Source position in horr/usa/objspr/ospSSRRC.pak image file */
+	unsigned char src_y;
+	unsigned char dst_x;	/* Destination position on background image/screen */
+	unsigned char dst_y;
+	unsigned short depth;	/* Distance/16 from camera */
+	unsigned char unknown;
+	unsigned char size;	/* Width and height of mask */
+} rdt_square_mask_t;
+typedef struct {
+	unsigned char src_x;	/* Source position in horr/usa/objspr/ospSSRRC.pak image file */
+	unsigned char src_y;
+	unsigned char dst_x;	/* Destination position on background image/screen */
+	unsigned char dst_y;
+	unsigned short depth;	/* Distance/16 from camera */
+	unsigned short zero;
+	unsigned short width, height;	/* Dimensions of mask */
+} rdt_rect_mask_t;
+Offset 0 (*.RVD) - Camera zones/switches
+At offset 0, you'll find the list of camera switches for the current room. The list end with the first 4 bytes are 0xffffffff (i.e for cam0 and cam1 values).
+
+typedef struct {
+  unsigned short to; /* Camera number to switch to */
+  unsigned short from; /* Camera number to switch from */
+  short x1,y1; /* Zone the player must enter to switch camera */
+  short x2,y2;
+  short x3,y3;
+  short x4,y4;
+} rdt_camera_switch_t;
+If the 'to' value = 9, then it is a zone, defining the area in which the switches will work and 3D objects will be visible while this camera is used, else it is a camera switch.
+
+Offset 1 (*.SCA) - Collision Boundaries for 3D Models
+At offset 1, you'll find the boundary collision data for the current room.
+
+The first 24 bytes are the header which is using the following structure:
+
+typedef struct {
+  unsigned short Cx; /* Ceiling x value */
+  unsigned short Cz; /* Ceiling z value */
+  unsigned long counts[5]; /* Number of objects = sum of these 5 long values */
+} rdt_sca_header_t;
+Followed by the header, the individual boundary entries start.
+
+typedef struct {
+  unsigned short x1; /* X of the top-left corner of the boundary plane/object */
+  unsigned short z1; /* Z of the top-left corner of the boundary plane/object */
+  unsigned short x2; /* X of the bottom-right corner of the boundary plane/object */
+  unsigned short z2; /* Z of the bottom-right corner of the boundary plane/object */
+  unsigned short type; /* type of the boundary plane/object (01=Standard; 03=Circle etc.) */
+  unsigned short floor; /* floor value/ 256 = floor value for use in the game as height definition */ 
+} rdt_sca_obj_t;
+After this the data block ends with a 4 byte unsigned long holding the total size of the SCA data block in bytes.
+
+Offset 2 (*.TMD/*.TIM) - Item 3D model & texture pointers
+This is an array of N structures of the following format, used by script instruction OM_SET (0x1f).
+
+typedef struct {
+	unsigned long tmd_offset;
+	unsigned long tim_offset;
+} rdt_offset2_t;
+Offset 3 (*.TMD/*.TIM) - Room 3D model & texture pointers
+This is an array of N structures of the following format, used by script instruction OM_SET (0x1f).
+
+typedef struct {
+	unsigned long tmd_offset;
+	unsigned long tim_offset;
+} rdt_offset3_t;
+Offset 4 (*.BLK) - Block data
+It's unknown what this data is used for. It defines plane based areas that look like "inversed" collision boundaries.
+
+unsigned short int Amount;	/* Amount of elements */
+
+typedef struct {
+        unsigned short x1;          /* X of the top-left corner of the object */
+        unsigned short z1;          /* Z of the top-left corner of the object */
+        unsigned short x2;          /* X of the bottom-right corner of the object */
+        unsigned short z2;          /* Z of the bottom-right corner of the object */
+	unsigned short int Dir_bit;
+	unsigned short int Abut;
+} rdt_blk_obj_t;
+
+unsigned short int unknown;	/* unknown; follows after last structure */
+
+rdt_blk_obj_t Block[Amount];
+Offset 5 (*.FLR) - Floor/footstep sound areas
+This data defines the footstep sound areas and which sound to use. It is also related to the script opcode, 'Flr_set'.
+
+unsigned short int Amount;	/* Amount of elements */
+typedef struct {
+	signed short int x;         /* x coordinate where the area is drawn from */
+        signed short int y;         /* y coordinate where the area is drawn from */
+	signed short int x_width;   /* x width of the area */
+        signed short int y_width;   /* y width of the area */
+	unsigned short int sound;   /* footstep ID sound to use */
+} rdt_flr_obj_t;
+
+rdt_flr_obj_t Floor[Amount];
+Offset 6 (*.SCD) - Scenario data
+This is the initialisation script for the room. It starts with an unsigned short giving the length of the script in bytes. Then follows the script, in bytecode-style.
+
+Byte	Instruction	Length	Description
+Byte	Instruction	Length	Description
+0x00	Nop	2	
+0x01	If	2	
+typedef struct {
+	unsigned char opcode; /* 0x01 */
+	unsigned char block_length;
+} script_if_t;
+This structure is followed by one or several conditions for the if (condition) instruction. Any condition evaluated to false will end the if () block.
+
+0x02	Else	2	Follows: byte with ELSE block length. Note: it's either If/Endif, or If/Else; there is no If/Else/Endif sequence.
+0x03	End If	2	
+0x04	BIT_TEST	4	Bit test
+typedef struct {
+	unsigned char opcode;	/* 0x04 */
+	unsigned char object;
+	unsigned char param;	/* Bits 7-5: Longword index in object, see array following */
+				/* Bits 4-0: Bit number to test */
+	unsigned char op;	/* Operation */
+				/* 0x00:test bit is 0 */
+				/* 0x01:test bit is 1 */
+} script_bit_test_t;
+0x05	BIT_OP	4	Bit operation
+typedef struct {
+	unsigned char opcode;	/* 0x05 */
+	unsigned char object;	/* Number of object to operate on, see array following */
+	unsigned char param;	/* Bits 7-5: Longword index in object */
+				/* Bits 4-0: Bit number to clear/set/change is (31-this field value) */
+	unsigned char op;	/* Operation */
+				/* 0x00:clear bit */
+				/* 0x01:set bit */
+				/* 0x02:change bit */
+} script_bit_op_t;
+0x06	OBJ06_TEST	4	Compare values
+typedef struct {
+	unsigned char opcode;	/* 0x06 */
+	unsigned char src;	/* Index in some object for source value */
+				/* 0x00:Current stage */
+				/* 0x01:Current room */
+				/* 0x02:Current camera */
+				/* 0x03:Stage and room */
+				/* 0x04:Previous/next camera */
+				/* 0x05:? */
+				/* 0x06:? */
+				/* 0x07:? Used in instruction 0x1a */
+				/* 0x08:? Used in instruction 0x1c */
+				/* 0x09:Flags for current camera */
+	unsigned char func;	/* Compare function */
+				/* 0x00:EQ */
+				/* 0x01:LT */
+				/* 0x02:LE */
+				/* 0x03:GT */
+				/* 0x04:GE */
+				/* 0x05:NE */
+	char param;		/* Raw value to compare against */
+} script_obj06_test_t;
+0x07	OBJ07_TEST	6	Compare values
+typedef struct {
+	unsigned char opcode;	/* 0x07 */
+	unsigned char dummy;
+	unsigned char src;	/* Word index in some object for source value */
+				/* (not the same object as instruction 0x06) */
+	unsigned char func;	/* Compare function */
+				/* 0x00:EQ */
+				/* 0x01:LT */
+				/* 0x02:LE */
+				/* 0x03:GT */
+				/* 0x04:GE */
+				/* 0x05:NE */
+	short param;		/* Raw value to compare against */
+} script_obj07_test_t;
+0x08	STAGEROOMCAM_SET	4	Set value for stage, room or camera
+typedef struct {
+	unsigned char opcode;	/* 0x08 */
+	unsigned char id;	/* 0: stage, 1: room, 2: camera */
+	unsigned short value;
+} script_stageroomcam_set_t;
+0x09	CUT_SET	2	Switch to prev/next camera, set it as current camera
+0x0a	CUT_SET	2	Switch to current camera, set it as prev/next camera
+0x0b	 ?	4	
+0x0c	DOOR_SET	26	TODO: find where next_camera is stored
+typedef struct {
+	unsigned char opcode;	/* 0x0c */
+	unsigned char id;
+	short x,y,w,h;
+	unsigned char unknown0[5];
+	unsigned char next_stage_and_room;	/* bits 7,6,5: stage, 4,3,2,1,0: room */
+	short next_x,next_y,next_z;
+	short next_dir;
+	unsigned short unknown1;
+} script_door_set_t;
+Note: if stage=0, we must keep current stage, else switch stage.
+
+0x0d	ITEM_SET	18	Pickable items, objects, obstacles
+typedef struct {
+	unsigned char opcode;	/* 0x0d */
+	unsigned char id;
+	short x,y,w,h;
+	unsigned char type;	/* 0x02: message, obstacle? */
+				/* 0x07: trigger,event,movable object? */
+				/* 0x08: box */
+				/* 0x09: pickable object, trigger? */
+				/* 0x10: typewriter */
+	unsigned char unknown[7];
+} script_item_set_t;
+0x0e	Nop	2	
+0x0f	 ?	8	
+typedef struct {
+	unsigned char opcode;	/* 0x0f */
+	unsigned char bitmask;
+	unsigned short unknown[3];
+} script_inst0f_t;
+0x10	OBJ10_TEST	2	Check if obj10 has value given as parameter
+typedef struct {
+	unsigned char opcode;	/* 0x10 */
+	char value;
+} script_obj10_test_t;
+0x11	OBJ11_TEST	2	Check if obj11 has value given as parameter
+typedef struct {
+	unsigned char opcode;	/* 0x11 */
+	char value;
+} script_obj11_test_t;
+0x12	Item 0x12	10	Typewriter? Stairs?
+typedef struct {
+	unsigned char opcode;	/* 0x12 */
+	unsigned char id;
+	unsigned char unknown0[2];
+	short unknown1[3];
+} script_inst12_t;
+0x13	Item 0x13	4	
+typedef struct {
+	unsigned char opcode;	/* 0x13 */
+	unsigned char id;
+	unsigned char unknown0[2];
+} script_inst13_t;
+0x14	 ?	4	
+typedef struct {
+	unsigned char opcode;	/* 0x14 */
+	unsigned char dummy;
+	unsigned char param1;
+	unsigned char param2;
+} script_inst14_t;
+0x15	 ?	2	
+0x16	 ?	2	Volume set?
+0x17	 ?	10	
+0x18	ITEM_MODEL_SET	26	
+typedef struct {
+	unsigned char opcode;	/* 0x18 */
+	unsigned char id;
+	unsigned char unknown[24];
+} script_item_model_set_t;
+0x19	OBJ19_SET	4	Set value in obj19
+typedef struct {
+	unsigned char opcode;	/* 0x09 */
+	unsigned char src;	/* Index in some object */
+	char value;		/* New value */
+	unsigned char dummy;
+} script_obj19_set_t;
+0x1a	 ?	2	
+0x1b	EM_SET	22	Entity (enemy, other character)
+typedef struct {
+	unsigned char opcode;	/* 0x1b */
+	unsigned char model;
+	unsigned char unknown0;
+	unsigned char killed;	/* 0xff for non enemy, else index in killed array to avoid respawn */
+	unsigned char unknown1[2];
+	unsigned short unknown1;
+	unsigned short a;
+	unsigned short unknown2;
+	unsigned short x;
+	unsigned short y;
+	unsigned short z;
+	unsigned char id;	/* ID of entity, used for example for EM_POS_SET */
+	unsigned char unknown3[3];
+} script_em_set_t;
+0x1c	 ?	6	
+typedef struct {
+	unsigned char opcode;	/* 0x1c */
+	unsigned char unknown0;
+	unsigned short unknown1[2];
+} script_inst1c_t;
+0x1d	 ?	2	
+0x1e	 ?	4	
+typedef struct {
+	unsigned char opcode;	/* 0x1e */
+	unsigned char unknown0;
+	unsigned short unknown1;
+} script_inst1e_t;
+0x1f	OM_SET	28	Movable (crate, statue) or animated (lid) objects?
+typedef struct {
+	unsigned char opcode;	/* 0x1f */
+	unsigned char id;	/* Bits 5-0: Index in array stored at offset 2 of RDT file */
+	unsigned char type;	/* 0x11: safe lid ? */
+	unsigned char unknown[25];
+} script_om_set_t;
+0x20	PLAYER_POS_SET	14	Change player position and direction
+typedef struct {
+	unsigned char opcode;	/* 0x20 */
+	unsigned char dummy;
+	unsigned short unknown0,angle,unknown1;
+	unsigned short x,y,z;
+} script_player_pos_set_t;
+0x21	EM_POS_SET	14	Change entity position and direction
+typedef struct {
+	unsigned char opcode;	/* 0x21 */
+	unsigned char id;
+	unsigned short dummy;
+	unsigned short angle;
+	unsigned short unknown;
+	unsigned short x,y,z;
+} script_em_pos_set_t;
+0x22	 ?	4	
+0x23	 ?	2	
+typedef struct {
+	unsigned char opcode;	/* 0x23 */
+	unsigned char flag;
+} script_inst23_t;
+0x24	 ?	4	
+0x25	 ?	4	
+0x27	 ?	2	
+0x28	 ?	4,6 or 8	
+0x29	 ?	2	Select sound bank?
+0x2a	 ?	12	
+0x2b	 ?	4	
+0x2c	 ?	2	
+0x2d	 ?	4	
+0x2f	 ?	4	
+0x30	 ?	12	
+0x31	 ?	4	
+0x32	 ?	4	
+0x33	 ?	2 or 4	
+0x34	 ?	8	
+0x35	 ?	4	
+0x36	 ?	4	
+0x37	 ?	4	Set value for internal array
+typedef struct {
+	unsigned char opcode;	/* 0x37 */
+	unsigned char row;	/* row (0-7) column (0-31) for internal byte array */
+	unsigned char col;
+	unsigned char value;
+} script_inst37_t;
+0x38	 ?	4	
+0x39	 ?	2	
+0x3a	 ?	4	
+0x3b	 ?	6	
+0x3c	 ?	6	
+0x3d	 ?	12	
+0x3e	 ?	2	
+0x3f	 ?	6	
+0x40	 ?	16	
+0x41	 ?	4	
+0x42	 ?	4	
+0x43	 ?	4	
+0x44	 ?	2	
+0x45	 ?	2	
+0x46	 ?	2+12*n+2*m (was 44)	
+0x47	 ?	14	
+0x48	 ?	2	
+0x49	 ?	2	
+0x4a	 ?	2	
+0x4b	 ?	2	
+0x4c	 ?	4	Set value in OBJ06 ?
+typedef struct {
+	unsigned char opcode;	/* 0x4c */
+	unsigned char unknown[3];
+} script_inst4c_t;
+0x4d	 ?	2	
+0x4e	 ?	4	
+0x4f	 ?	2	
+0x50	 ?	2	
+Objects for bit operations
+Object number	Description
+0	 ?
+1	 ?
+2	 ?
+3	 ?
+4	 ?
+5	Game status. Bit 23:Player character (0: Chris, 1: Jill, or vice versa).
+6	 ?
+7	 ?
+8	 ?
+9	 ?
+Offset 7 (*.SCD) - Execution script for room
+This script is run regularly to update stuff in current room. It follows same structure as the one at offset 6.
+
+Offset 8, Script events ?
+This structure starts with a NULL terminated list of unsigned long, which are offsets relative to start of this object. These offsets store also some bytecodes, different than those above.
+
+Byte	Instruction	Length	Description
+0xf6	 ?	1	Init some stuff related to instruction 0xf7
+0xf7	 ?	1	
+0xf8	 ?	1	Init some stuff related to instruction 0xf8
+0xf9	 ?	1 or 3	
+0xfa	For	4	Initialize a for loop.
+typedef struct {
+	unsigned char opcode; /* 0xfa */
+	unsigned char dummy;
+	unsigned short count;
+} event_for_t;
+0xfb	Next	1	
+0xfc	Set_Inst	variable	Initialize bytecode instruction to execute later.
+typedef struct {
+	unsigned char opcode; /* 0xfc */
+	unsigned char block_length;
+	unsigned char bytecode_inst[];
+} event_set_inst_t;
+0xfd	Exec_inst	1	Execute bytecode instruction previously set with 0xfc instruction.
+0xfe	Sleep, process next event	1	
+0xff	Disable event	1	
+Offset 9 (*.EMR) - Skeleton animation
+See File/Section 0 of EMD (Resident Evil 1997).
+
+Offset 10 (*.EDD) - Skeleton animation steps
+See File/Section 1 of EMD (Resident Evil 1997).
+
+Offset 11 (*.MSG) - Text messages
+First, you have an arrays of unsigned short, which are relative offsets to the beginning of this object. So the number of items is the first offset/2 (if we are lucky that the first offset always has the lowest value).
+
+It contains the texts for cutscenes, dialogs, examining objects.
+
+Conversion table, from byte to ASCII value:
+
+Offset	0	1	2	3	4	5	6	7	8	9	10	11	12	13	14	15
+0x00		.	?	?	?	(	)	?	?	?	?	?	0	1	2	3
+0x10	4	5	6	7	8	9	 :	?	,	"	 !	 ?	?	A	B	C
+0x20	D	E	F	G	H	I	J	K	L	M	N	O	P	Q	R	S
+0x30	T	U	V	W	X	Y	Z	[	/	]	'	-	?	a	b	c
+0x40	d	e	f	g	h	i	j	k	l	m	n	o	p	q	r	s
+0x50	t	u	v	w	x	y	z	?	?	?	?	?	?	?	?	?
+Codes above 0x57 may also be different given the language, for characters with trema, accents and the like. The complete character table to use resides in the image file horr/[country]/data/fontus.tim, in the second zone of the image.
+
+There are also some formatting codes:
+
+0x01	End of text
+0x02	Carriage return
+0x03	Pause
+0x08	Yes/No question
+0x74	"S." string
+0x75	"T." string
+0x76	"A." string
+0x77	"R." string
+0x79	". " string

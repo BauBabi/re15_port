@@ -1,0 +1,102 @@
+[submodule "third_party/zlib"]
+	path = third_party/zlib
+	url = https://github.com/madler/zlib.git
+[submodule "third_party/imgui"]
+	path = third_party/imgui
+	url = https://github.com/ocornut/imgui.git
+[submodule "third_party/libuv"]
+	path = third_party/libuv
+	url = https://github.com/libuv/libuv.git
+[submodule "third_party/uC-sdk"]
+	path = third_party/uC-sdk
+	url = https://github.com/grumpycoders/uC-sdk.git
+[submodule "third_party/googletest"]
+	path = third_party/googletest
+	url = https://github.com/google/googletest.git
+[submodule "third_party/fmt"]
+	path = third_party/fmt
+	url = https://github.com/fmtlib/fmt.git
+[submodule "third_party/ELFIO"]
+	path = third_party/ELFIO
+	url = https://github.com/serge1/ELFIO.git
+[submodule "third_party/libcester"]
+	path = third_party/libcester
+	url = https://github.com/exoticlibraries/libcester.git
+[submodule "third_party/luajit"]
+	path = third_party/luajit
+	url = https://github.com/grumpycoders/LuaJIT.git
+[submodule "third_party/luv"]
+	path = third_party/luv
+	url = https://github.com/luvit/luv.git
+[submodule "third_party/freetype"]
+	path = third_party/freetype
+	url = https://github.com/freetype/freetype.git
+[submodule "third_party/stb"]
+	path = third_party/stb
+	url = https://github.com/nothings/stb.git
+[submodule "third_party/tracy"]
+	path = third_party/tracy
+	url = https://github.com/wolfpld/tracy.git
+[submodule "third_party/magic_enum"]
+	path = third_party/magic_enum
+	url = https://github.com/Neargye/magic_enum.git
+[submodule "third_party/ucl"]
+	path = third_party/ucl
+	url = https://github.com/Distrotech/ucl.git
+[submodule "third_party/SDL_GameControllerDB"]
+	path = third_party/SDL_GameControllerDB
+	url = https://github.com/gabomdq/SDL_GameControllerDB
+[submodule "third_party/xbyak"]
+	path = third_party/xbyak
+	url = https://github.com/herumi/xbyak
+[submodule "third_party/zep"]
+	path = third_party/zep
+	url = https://github.com/grumpycoders/zep.git
+[submodule "third_party/miniaudio"]
+	path = third_party/miniaudio
+	url = https://github.com/mackron/miniaudio.git
+[submodule "third_party/capstone"]
+	path = third_party/capstone
+	url = https://github.com/capstone-engine/capstone.git
+[submodule "third_party/curl"]
+	path = third_party/curl
+	url = https://github.com/curl/curl
+[submodule "third_party/expected"]
+	path = third_party/expected
+	url = https://github.com/TartanLlama/expected.git
+[submodule "third_party/vixl"]
+	path = third_party/vixl
+	url = https://github.com/grumpycoders/vixl
+[submodule "third_party/md4c"]
+	path = third_party/md4c
+	url = https://github.com/mity/md4c.git
+[submodule "third_party/imgui_md"]
+	path = third_party/imgui_md
+	url = https://github.com/mekhontsev/imgui_md.git
+[submodule "third_party/multipart-parser-c"]
+	path = third_party/multipart-parser-c
+	url = https://github.com/iafonov/multipart-parser-c
+[submodule "third_party/nanovg"]
+	path = third_party/nanovg
+	url = https://github.com/grumpycoders/nanovg
+[submodule "third_party/nanosvg"]
+	path = third_party/nanosvg
+	url = https://github.com/grumpycoders/nanosvg
+[submodule "third_party/luafilesystem"]
+	path = third_party/luafilesystem
+	url = https://github.com/lunarmodules/luafilesystem.git
+[submodule "third_party/luacov"]
+	path = third_party/luacov
+	url = https://github.com/grumpycoders/luacov.git
+[submodule "third_party/luaunit"]
+	path = third_party/luaunit
+	url = https://github.com/bluebird75/luaunit.git
+[submodule "third_party/uriparser"]
+	path = third_party/uriparser
+	url = https://github.com/uriparser/uriparser.git
+[submodule "third_party/PEGTL"]
+	path = third_party/PEGTL
+	url = https://github.com/taocpp/PEGTL.git
+[submodule "third_party/psxlua"]
+	path = third_party/psxlua
+	url = https://github.com/grumpycoders/psxlua.git

@@ -1,0 +1,67 @@
+E3D's PSX TMD Handling Explained (E3D version 1.9b)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+(Turn on Word-Wrap in Notepad)
+
+
+How to create Playstation TMD models:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Import or create a model as usual.
+
+Set polygon properties "shade" (light-sourcing), "gouraud", and "filling" (solid or colour-gradated or textured), for each poly as `needed.
+
+Save model with extension .TMD
+
+
+TMD Support:
+~~~~~~~~~~~~
+
+Most types of TMD polygon (or primitive) are supported, but support for gouraud-shaded light-sourced polys is not complete. If you want to be safe, stick to non-gouraud polys.
+
+New to this version of E3D is preliminary support for polygon normals, which are required for flat-shaded light-sourced polys. Vertex normals (required for gouraud-shaded light-sourced polys) are not implemented, although they can be "passed through" when loading and saving a TMD model with vertex normals (by specifying "no thanks" when asked if you want to calculate and save poly normals when you save the model).
+
+Bios logo TMD and Hitmen "Dentro" TMD (and other TMD's) have been used to test the TMD/texture functionality of E3D. Psxbasic was also used to test light-sourced polys (See "torjum.tmd" example model).
+
+Polygon vertex order (which caused problems for some people) has been fixed.
+
+Notes:
+1. Due to the way PSX renders polys, you can usually get better results by creating the TMD's polys from the inside of the model outwards.
+2. Use only 3 or 4 vert polys when creating a TMD model, since conversion from 5/6 vert polys may not give the desired result.
+
+Textures:
+~~~~~~~~~
+
+Creating textured TMD models requires creating .TIM image files with the correct properties, creating TMD models with the Notes above in mind, and setting the textures properties for the TIM textures in E3D correctly.
+
+PSX uses "texture pages". There are 32 of these. They are arranged in the PSX VRAM like so:
+For pages 0->15:
+- page 0 is at 0,0
+- page 1 is at 64,0
+- page 2 is at 128,0
+- page n is at (n*64),0
+
+For pages 16->31:
+- page 16 is at 0,256
+- page 17 is at 64,256
+- page 18 is at 128,256
+- page (n+16) is at (n*64),256
+
+E3D only supports 16 textures. For TMD (PSX) textures, these are mapped by default to the first 16 texture pages.
+
+Since the PSX uses VRAM for textures AND the display buffer, we usually have to make sure that the textures are not located in the display buffer area of VRAM. For example, if the display buffer is located at 0,0 to 319,239 in the VRAM, we could only put our first texture at 320,0 (or texture page 5).
+
+Max texture size is 256x256. A 4-bit 256x256 texture will take up 64x256 pixels in VRAM (hence the 64-pixel spacing of texture pages). An 8-bit 256x256 texture will take up 128x256 pixels in VRAM, while a 15-bit 256x256 texture will take up 256x256 pixels. Check your TMD texture properties (see below) to make sure that your TMD textures don't overlap in VRAM! 
+
+It is possible to change the texture properties by clicking on the texture properties info displayed in the texture window.
+The texture properties dialog box for the current texture will pop up, allowing you to change the TMD texture properties such as image and CLUT co-ordinates in VRAM, semitransparency and bit-depth.
+Note: The button to save the texture as a TIM file with the current settings (convenient to synchronise your TIM files to the current TMD model), is not working yet (and may never be :).
+
+When the TMD model is saved, each polygon's texture info is saved using the texture properties set in the texture properties dialog box. That is, if you use a textured TMD in your PSX program, it will expect to find texture data (usually from a TIM image), loaded at the correct location in VRAM.
+
+Example:
+1. Load in dentro.TMD
+2. Go to texture view and load the TIM texture "dentim.tim"
+3. This will load the TIM textures to the correct texture pages.
+4. The textures will appear on the textured polys of the model in the preview window.
+
+

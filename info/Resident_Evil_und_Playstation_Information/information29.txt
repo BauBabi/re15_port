@@ -1,0 +1,111 @@
+
+CDROM File Video Streaming Audio	Contents
+Index	Prev
+Next
+
+Audio Stream
+STR movies are usually interleaved with XA-ADPCM sectors (the audio sectors are automatically decoded by the CDROM hardware and consist of raw ADPCM data without STR headers).
+CDROM File Audio Streaming XA-ADPCM
+However, there are also movies without audio. And a few movies with SPU-ADPCM audio.
+
+SPU-ADPCM in Chunk-based formats
+CDROM File Video Streaming Chunk-based formats
+
+SPU-ADPCM in Chrono Cross/Legend of Mana Audio Sector
+Chrono Cross Disc 1 (HiddenDirectory\1793h..17A6h)
+Chrono Cross Disc 2 (HiddenDirectory\1793h..179Dh)
+Legend of Mana (MOVIE\*.STR, except some movies without audio)
+  000h 2    STR ID   (0160h)
+  002h 2    STR Type (0000h, 0001h, 0100h, or 0101h)
+              0000h=Legend of Mana, Audio normal sectors
+              0001h=Legend of Mana, Audio sectors near end of movie
+              0000h=Chrono Cross Disc 1, Audio.left?
+              0001h=Chrono Cross Disc 1, Audio.right?
+              0100h=Chrono Cross Disc 2, Audio.left?
+              0101h=Chrono Cross Disc 2, Audio.right?
+  004h 2    Sector number in Frame (0=Audio.left?, 1=Audio.right?)
+  006h 2    Number of Audio sectors in this frame (always 2)
+  008h 4    Frame number (1=First)
+  00Ch 4    Unused (Chrono: FFh-filled or Mana: 00000FC0h=2x7E0h=Framesize?)
+  010h 10h  Unused (Chrono: FFh-filled or Mana: 00h-filled)
+  020h 60h  Unused (FFh-filled)
+  080h 4    ID "AKAO"
+  084h 4    Frame number (0=First)
+  088h 8    Unused (zerofilled)
+  090h 4    Remaining Time (step 690h) (can get stuck at 0340h or 0B20h at end)
+  094h 4    Zero
+  098h 4    Unknown (11h)
+  09Ch 4    Pitch (1000h=44100Hz)
+  0A0h 4    Number of bytes of audio data (always 690h)
+  0A4h 2Ch  Unused (zerofilled)
+  0D0h 690h Audio  (10h-byte SPU-ADPCM blocks) (1680 bytes)
+  760h A0h  Unused (10h-byte SPU-ADPCM blocks with flag=03h and other bytes=0)
+Note: The Chrono/Mana STR files start with Audio frames in first sector (except, some Legend of Mana movies don't have any Audio, and do start with Video frames).
+
+SPU-ADPCM in Final Fantasy VIII (FF8)
+  000h 4    ID "SMN",01h=Audio/left, "SMR",01h=Audio/right
+  004h 1    Sector number in Frame (0=Audio.left, 1=Audio.right)
+  005h 1    Total number of Audio+Video sectors in this frame, minus 1 (1 or 9)
+  006h 2    Frame number (0=First)
+  008h E8h  Unknown (camera data?) (232 bytes)
+  0F0h 6    Audio ID (usually "MORIYA", sometimes "SHUN.M")
+  0F6h 0Ah  Unknown (10 bytes) (reportedly 10 bytes at offset 250 = FAh ?????)
+  100h 4    ID "AKAO"
+  104h 4    Frame number (0=First)
+  108h 14h  Unknown (20 bytes)
+  11Ch 4    Pitch (1000h=44100Hz)
+  120h 4    Number of bytes of audio data (always 690h)
+  124h 2Ch  Unknown (44 bytes)
+  150h 20h  Unknown (32 bytes)
+  170h 690h SPU-ADPCM Audio data (690h bytes)
+There is one special case on disc 1: a movie with no video. Each 'frame' consists of two sectors: the first is the left audio channel, the second is the right audio channel.
+
+SPU-ADPCM in Final Fantasy IX (FF9) (*.STR and *.MBG)
+The FF9 audio sectors are normal MODE2/FORM1 sectors (unlike the FF9 video sectors, which are MODE2/FORM2).
+  000h 2    STR ID   (0160h)
+  002h 2    STR Type (0008h=FF9/Audio)
+  004h 2    Sector number in Frame (0=Audio.left, 1=Audio.right)
+  006h 2    Total number of Audio+Video sectors in this frame (always 0Ah)
+  008h 4    Frame number (1=First)
+  00Ch 4    Zero
+  010h 1    Audio flag? (00h=No Audio, 01h=Audio)
+  011h 4Fh  Zerofilled --- XXX or whatever (when above is 00h)
+  060h 4    Number of Frames in this STR file
+  064h 1Ch  EEh-filled
+ Below 780h bytes are all zerofilled when [10h]=00h (no audio)
+ Below 780h bytes are reportedly all ABh-filled "in the last frame of a movie
+ on Disc 4" (unknown which movie, and if that occurs in other movies, too)
+  080h 4    ID "AKAO"
+  084h 4    Frame number (0=First)
+  088h 14h  Unknown (20 bytes)
+  09Ch 4    Pitch (116Ah=48000Hz) (or 1000h=44100Hz in final movie)
+  0A0h 4    Number of bytes of audio data (0, 720h, 730h, or 690h=final movie)
+  0A4h 2Ch  Unknown (44 bytes)
+  0D0h 730h SPU-ADPCM audio (plus leftover/padding when less than 730h bytes)
+
+Dance series SPU-ADPCM streaming (bigben interactive, DATA.PAK\stream\*.str)
+This format is used for raw SPU-ADPCM streaming (without video).
+SLES-04121 Dance: UK
+SLES-04161 Dance: UK eXtra TraX
+SLES-04129 Dance Europe
+SLES-04162 All Music Dance! (Italy)
+  000h 2    STR ID   (0160h)
+  002h 2    STR Type (8001h, same as MDEC)
+  004h 2    Sector number within current Frame (0000h..num-1)
+  006h 2    Number of Sectors in this Frame (always 9)
+  008h 4    Frame number (0=First)
+  00Ch 4    Frame Size in bytes (always 4000h)
+  010h 4    Whatever (always 00A000A0h, would be width/height if it were video)
+  014h 8    Zerofilled
+  01Ch 4    Special ID (always DDCCBBAAh for Dance audio)
+  020h 7E0h Data (in SPU-ADPCM format, mono, 22200Hz aka Pitch=07F5h)
+Note: Sector 0..8 contain 9*7E0h=46E0h bytes data per frame, but only 4000h bytes are used (the last 6E0h bytes in sector 8 are same as in sector 7).
+
+Raw SPU-ADPCM Streaming
+Some games are using raw SPU-ADPCM for streaming. That is, the file is basically a normal .VB file, but it can be dozens of megabytes tall (ie. too large to be loaded into RAM all at once).
+  Disney's The Emperor's New Groove (MagDemo39: ENG\STREAM\*.CVS)
+  Disney's Aladdin in Nasira's Revenge (MagDemo46: ALADDIN\STREAM\*.CVS)
+
+
+I am homeless in Hamburg, please help me out!
+extracted from no$psx v2.2 - homepage - patreon - whole doc htm/txt - copyright 2022 martin korth (nocash)

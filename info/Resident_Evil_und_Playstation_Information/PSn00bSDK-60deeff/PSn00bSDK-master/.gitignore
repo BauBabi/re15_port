@@ -1,0 +1,13 @@
+.svn
+build
+bin
+old
+scrap
+*.a
+*.o
+*.elf
+*.exe
+*.lzp
+*.qlp
+*.iso
+*.rom

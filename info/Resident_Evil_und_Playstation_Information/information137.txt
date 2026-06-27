@@ -1,0 +1,234 @@
+Skip to content
+Navigation Menu
+sparkletron
+PSYQ_Examples
+
+Type / to search
+Code
+Issues
+Pull requests
+Actions
+Projects
+Security
+Insights
+Owner avatar
+PSYQ_Examples
+Public
+sparkletron/PSYQ_Examples
+Go to file
+t
+Name		
+sparkletron
+sparkletron
+wow those numbers were really off
+12c75a7
+ · 
+3 years ago
+CDaudio
+code cleanup, comments, and some test compiling.
+9 years ago
+PSYQ_MODS
+added PSYQ_MODS
+9 years ago
+YXML_PSYQ_PORT
+removed submodule, just left the library and header
+9 years ago
+engine
+fixed pal mode, never drink and code
+7 years ago
+libbmpm
+code cleanup, comments, and some test compiling.
+9 years ago
+libgetprim
+code cleanup, comments, and some test compiling.
+9 years ago
+memcardRead
+code cleanup, comments, and some test compiling.
+9 years ago
+memcardWrite
+code cleanup, comments, and some test compiling.
+9 years ago
+otMovSqr
+code cleanup, comments, and some test compiling.
+9 years ago
+otSelfMovSqr
+code cleanup, comments, and some test compiling.
+9 years ago
+otTail
+code cleanup, comments, and some test compiling.
+9 years ago
+sprite
+code cleanup, comments, and some test compiling.
+9 years ago
+textureTest
+code cleanup, comments, and some test compiling.
+9 years ago
+.gitignore
+added audio example, does not work at this point
+9 years ago
+.gitmodules
+removed submodule, just left the library and header
+9 years ago
+README.md
+wow those numbers were really off
+3 years ago
+psxBitmapManip.md
+CDaudio works, and sprite works as well, all examples have been ported
+9 years ago
+psxBuildTips.md
+updated documents and cleaned up before new split
+9 years ago
+psxCDaudio.md
+Fixed file
+9 years ago
+psxCDcreate.md
+updated documents and cleaned up before new split
+9 years ago
+psxCDread.md
+updated documents and cleaned up before new split
+9 years ago
+psxController.md
+updated documents and cleaned up before new split
+9 years ago
+psxEvent.md
+created events notes
+9 years ago
+psxGeometry.md
+scale matrix info added
+9 years ago
+psxGraphics.md
+Update psxGraphics.md
+7 years ago
+psxMemCard.md
+Added info about controller and memory card conflict
+9 years ago
+psxTextures.md
+textures are broken at this point, and I'm only doing a shallow copy …
+9 years ago
+psxXML.md
+Fixed texture issue, but image is upside down, all examples updated f…
+9 years ago
+Repository files navigation
+README
+README
+Toolkit: PSYQ
+This setup assumes Linux using WINE, this will also work with Windows XP setup per psxdev.net instructions.
+This directory contains example code for the PlayStation. Ordering tables are avoided in examples to keep them simple.
+
+Toolkit is PSYQ, available at psxdev.net.
+
+Files
+psxCDaudio.md = Play Audio Track (CDDA)
+psxCDcreate.md = Create a ISO image
+psxCDread.md = Read Data from a cd
+psxController.md = Access Controller
+psxGeometry.md = Depth sorting, Polygons
+psxGraphics.md = Graphics Info
+psxMemCard.md = Memory Card Usage
+psxTextures.md = Texture Loading
+psxBuildTips.md = Build Tips
+psxXML.md = YXML/LIBGETPRIM for the playstation
+psxBitmapManip = convert bitmaps to raw data and convert it from ARGB to ABGR or back again.
+psxEvent.md = usage of event handler in psyq
+Requirements
+PlayStation (WINDOWS XP SP3)
+
+Psy-Q SDK from psxdev.net
+Windows Reg File
+PSYLIB win version
+CPE2X win version
+mkpsxiso
+STDINT.h
+MinGW
+PlayStation (KUBUNTU 14.04 22.04)
+
+Psy-Q SDK from psxdev.net
+Windows Reg File
+PSYLIB win version
+CPE2X win version
+mkpsxiso
+STDINT.h
+WINE
+WINE-BINFMT
+BUILD_ESSENTIALS
+Library Install Directions
+DOWNLOAD LINKS
+PlayStation Dev Kit ... psxdev.net
+
+Windows Reg File for PlayStation Dev Kit ... psxdev.net/forum
+
+PSYLIB.EXE windows version ... psxdev.net/forum
+
+CPE2X.EXE windows version ... psxdev.net/forum
+
+mkpsxiso by Lameguy64 ... github.com
+
+STDINT.h by John Convertino ... github.com
+
+Linux using WINE
+
+1. Install WINE
+2. Install wine-binfmt
+3. Initialize WINE (winecfg works well for this)
+4. Copy psyq directory to wine drive_c directory
+5. Use the command "wine regedit" to import reg file
+6. Copy psylib into psyq/bin (overwrite the old one or rename the old one)
+7. Copy CPE2X.EXE into pysq/bin, rename it to CPE2XWIN.EXE
+8. Build mkpsxiso using cmake/make (follow the readme in the repo)
+9. Copy mkpsxiso into psyq/bin
+10. From the PSY_MODS folder in this repository, copy STDINT.h to psyq/include
+11. Add psyq paths to your .bashrc, paths are below.
+12. make will now build the executables.
+13. mkpsxiso will build the ISO image
+    * You will have to change the license path, since it is included in pysq under your user name.
+    * Edit with any normal text editior
+Basic Tool Setup
+.bashrc
+## Paths
+#psy-q psx compile tools
+export PATH=/home/$USER/.wine/drive_c/psyq/bin:$PATH
+export PATH=/home/$USER/.wine/drive_c/psyq/cdemu/BIN/:$PATH
+export PATH=/home/$USER/.wine/drive_c/psyq/bin/TIMTOOL:$PATH
+Notes
+Make sure to mark all PSYQ executables as executable (chmod +x *.EXE).
+About
+Example Programs for the PSYQ PlayStation development platform.
+
+Resources
+ Readme
+ Activity
+Stars
+ 69 stars
+Watchers
+ 5 watching
+Forks
+ 3 forks
+Report repository
+Releases
+ 2 tags
+Packages
+No packages published
+Contributors
+2
+@sparkletron
+sparkletron Jay Convertino
+@MrSapps
+MrSapps MrSapps
+Languages
+C
+91.6%
+ 
+Makefile
+8.4%
+Footer
+© 2025 GitHub, Inc.
+Footer navigation
+Terms
+Privacy
+Security
+Status
+GitHub Community
+Docs
+Contact
+Manage cookies
+Do not share my personal information

@@ -1,0 +1,213 @@
+    
+SN Systems Software Ltd SN Systems Software Ltd
+ “Maximum effects, no side-effects” “Maximum effects, no side-effects”
+ John Roberts John Roberts
+ Gil Jaysmith Gil Jaysmith
+  SN Systems SN Systems  
+Contents Contents
+ Aims Aims
+ Visual Technology Visual Technology
+ Build Manager Build Manager
+ Editor Editor
+ Shell Integration Shell Integration
+ Customisation Customisation
+ Extensibility Extensibility
+ How it fits with existing tools How it fits with existing tools
+  SN Systems SN Systems  
+Aims of Pro-DG Aims of Pro-DG
+ Simple to install Simple to install
+ Provide single environment for all our tools Provide single environment for all our tools
+ Enhance “View & Pane” to next generation Enhance “View & Pane” to next generation
+ Make game-building easier Make game-building easier
+ “Integrate with everything” “Integrate with everything”
+ Easy to maintain, configure, extend Easy to maintain, configure, extend
+ Shorten our time-to-release for new features Shorten our time-to-release for new features
+  SN Systems SN Systems  
+Visual Technology Visual Technology
+ “View and Pane” “View and Pane” - the sequel!- the sequel!
+ Style established Style established 
+in DOS and in DOS and 
+Windows Windows 
+debuggers debuggers
+ This is the next This is the next 
+generation generation
+  SN Systems SN Systems  
+Views and Panes Views and Panes
+ Each view is an MDI Each view is an MDI 
+child window child window
+ Each view can have Each view can have 
+one or more panes one or more panes
+ Any single pane can be Any single pane can be 
+zoomed to occupy its zoomed to occupy its 
+view view
+ Resize using T-Resize using T
+junctions and cross-junctions and cross
+junctions junctions
+  SN Systems SN Systems  
+Frame Panes Frame Panes
+ Like dockable Like dockable 
+toolbars toolbars
+ Client area Client area 
+reduced reduced
+ Always visible Always visible
+  SN Systems SN Systems  
+Pane Targeting Pane Targeting
+ Pane Targeting toolbar Pane Targeting toolbar
+ Pick a pane type, drop it Pick a pane type, drop it 
+where you want where you want
+ Create new View Create new View
+ Override existing pane Override existing pane
+ Split pane in two Split pane in two
+ Place in frame Place in frame
+ Output
+ Explorer
+ Editor
+ Source Manager
+ Project
+ Folders
+ Shell Tree
+ Shell Folder
+ HTML Help Contents
+ HTML Help Content
+  SN Systems SN Systems  
+Pane History Pane History
+ Each pane site remembers the types of Each pane site remembers the types of 
+panes you’ve had there panes you’ve had there
+ Switch back and forth between them Switch back and forth between them
+ History includes pane’s state, e.g. History includes pane’s state, e.g.
+ which file was being edited which file was being edited
+ which web page was being browsed which web page was being browsed
+  SN Systems SN Systems  
+Projects Projects
+ Visualise your files and build processes Visualise your files and build processes
+ Multiple configurations Multiple configurations
+ Configure settings all at once Configure settings all at once
+  SN Systems SN Systems  
+Build Manager Panes Build Manager Panes
+ Folder view... Folder view...
+ ... Or Graphical View ... Or Graphical View
+  SN Systems SN Systems  
+Source Control Source Control
+ First: add project to First: add project to 
+Source Control Source Control
+ Then: check files out Then: check files out 
+when you need to work when you need to work 
+with them with them
+  Works with Microsoft SourceSafe v5.0 Works with Microsoft SourceSafe v5.0
+  Other SCC systems to follow (e.g. PVCS) Other SCC systems to follow (e.g. PVCS)
+  SN Systems SN Systems  
+Editor Editor
+ It’s an editor! It’s an editor!
+ Language-aware - Language-aware - 
+C and C++ C and C++
+ Syntax colouring Syntax colouring
+ Indentation Indentation
+ Undo/Redo Undo/Redo
+ Knows about Knows about 
+Source Control Source Control
+ Necessary for the Necessary for the 
+future future
+  SN Systems SN Systems  
+Source Manager Source Manager
+ Buffers all the files Buffers all the files 
+you’ve edited you’ve edited
+ Reopen any recent file Reopen any recent file 
+from here from here
+  SN Systems SN Systems  
+Shell Integration Shell Integration
+ Two pane types: Two pane types: 
+Shell Tree and Shell Tree and 
+Shell Folder Shell Folder
+ Adjacent Tree and Adjacent Tree and 
+Folder panes tied Folder panes tied 
+to create Windows to create Windows 
+Explorer lookalike Explorer lookalike
+ Filter the folder Filter the folder 
+contents contents
+  SN Systems SN Systems  
+Explorer Pane Explorer Pane
+ Uses WebBrowser Uses WebBrowser 
+control to display control to display 
+HTML HTML
+ Can also display Can also display 
+Dynamic HTML Dynamic HTML
+ Hosts our help Hosts our help 
+system! system!
+  SN Systems SN Systems  
+Online Help Online Help
+ HTML Help HTML Help 
+system with system with 
+synchronised synchronised 
+Contents and Contents and 
+Content panes Content panes
+ To be updated To be updated 
+by SN with by SN with 
+each software each software 
+version version
+  SN Systems SN Systems  
+Customising Toolbars & Menus Customising Toolbars & Menus
+ All Pro-DG object All Pro-DG object 
+commands available to commands available to 
+place on toolbars and place on toolbars and 
+menus menus
+ Menus can dock or float Menus can dock or float
+ Your own script Your own script 
+commands are also commands are also 
+available available
+  SN Systems SN Systems  
+Customising The Keyboard Customising The Keyboard
+ Each IDE command can Each IDE command can 
+be bound to an be bound to an 
+accelerator accelerator
+ Accelerators can be Accelerators can be 
+sequences of several sequences of several 
+keys keys
+ Choose predefined maps Choose predefined maps 
+or create/modify others or create/modify others
+ BRIEF key map included! BRIEF key map included!
+  SN Systems SN Systems  
+Scripting Scripting
+ Write many macros in Write many macros in 
+a single script a single script
+ VBScript and JScript VBScript and JScript
+ Full access to Pro-DG Full access to Pro-DG 
+object model object model
+ Scripts will be able to Scripts will be able to 
+perform target comms perform target comms 
+in later versions in later versions
+  SN Systems SN Systems  
+The Power Of DHTML The Power Of DHTML
+ Dynamic HTML - Dynamic HTML - 
+create modal dialogs create modal dialogs 
+and write or modify and write or modify 
+HTML pages on the HTML pages on the 
+flyfly
+ Used within Pro-DG Used within Pro-DG 
+for version reports for version reports
+ Also to list all Also to list all 
+commands and commands and 
+accelerators accelerators
+  SN Systems SN Systems  
+Active Setup Active Setup
+ Install and upgrade over Install and upgrade over 
+HTTP or from CD HTTP or from CD
+ Upgrades only the Upgrades only the 
+changed components changed components
+  SN Systems SN Systems  
+Existing Build Tools Existing Build Tools
+ Build Manager components for compiler, Build Manager components for compiler, 
+assembler, linker assembler, linker
+ Others (librarian, symmunge, dmpsx etc) to follow Others (librarian, symmunge, dmpsx etc) to follow
+ Any component can be called from command line Any component can be called from command line
+  SN Systems SN Systems  
+What About The Debugger? What About The Debugger?
+ Currently must use existing Windows debugger Currently must use existing Windows debugger
+ Debugger and file serving to be rewritten into Debugger and file serving to be rewritten into 
+Pro-DG, starting asap Pro-DG, starting asap
+ Schedule: end of year :-) Schedule: end of year :-)
+  SN Systems SN Systems  
+Pick up your prescription now Pick up your prescription now
+ SN Systems Software Ltd
+ Windows Programming Team:
+ Jago Bidmead, Peter Britton, Andrew Callow, Peter Keating, 
+Duncan Lees, John Roberts (Lead), Tim Veal

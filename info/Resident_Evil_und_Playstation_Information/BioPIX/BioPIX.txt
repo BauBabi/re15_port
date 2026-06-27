@@ -1,0 +1,36 @@
+---------------------
+BioHazard
+
+PSone PIX Tool
+
+MarkGrass
+The-Horror.com
+---------------------
+
+Usage:
+	<EXE> <PIX>
+
+Example:
+	BioPIX 
+
+
+ - ver1.1 -
+Extracts and converts PIX to Sony TIM
+
+Files with the PIX extension found on various PSone versions
+of BioHazard 1, 2 and 3 are RAW Sony TIMs. This program simply
+extracts these RAW images and gives them a proper header.
+
+This program was made for these files:
+
+ITEMALL.PIX (Bio2)
+ITEMG.PIX (Bio3)
+ITEM_ALL.PIX (Bio1)
+ITEM_MIX.PIX (Bio1)
+MAP*.PIX (Bio2 Trial Edition)
+MAPS.PIX (Bio2 Beta, Final Edition(s))
+Any PIX file that is 150Kb in size
+
+WIP:
+
+FILE*_*.PIX - Bio1

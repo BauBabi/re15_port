@@ -1,0 +1,557 @@
+Header Data:
+HEADER
+OFFSET	NAME	DESCRIPTION
+Dec	Hex
+0	00	Sprite	Unknown, it's always 0
+1	01	Cut	Holds the amount of cameras used in the room
+2	02	Model	Holds the amount of MD1 3D models used in the room
+3	03	Item	Unknown
+4	04	Door	Unknown
+5	05	Room_at	Unknown
+6	06	Reverb_lv	Unknown
+7	07	Sprite_max	Holds the total value of PRI camera sprites (masks) that are used in the room
+
+
+
+
+8	08	SND	Pointer to sound attribute data
+12	0C	VH	Pointer to a .VH file which is a vab/vag header
+16	10	VB	Pointer to a .VB file which is a vab/vag sound container file
+20	14	VB (Trial)	Pointer to a .VH file which is a vab/vag header
+24	18	VH	Pointer to a .VB file which is a vab/vag sound container file
+28	1C	OTA	It's unused but usually points to the same offset as SND
+32	20	SCA	Pointer to the collision data/boundaries
+36	24	RID	Pointer to the RID camera data
+40	28	RVD	Pointer to the RVD camera switch/zone data
+44	2C	LIT	Pointer to the LIT lights data section of the file
+48	30	MD1/TIM Table	Pointer to a table which contains pointers to the MD1 3d objects and their textures
+52	34	FLR	Pointer to the FLR, footstep sound area definition section
+56	38	BLK	Pointer to BLK, block data
+60	3C	MSG Main	Pointer to the MSG, message text being used
+64	40	MSG Sub	Pointer to the MSG, message text being used
+68	44	TIM (Cam Scroll)	Pointer to a TIM file used by the camera in a „scrolling“ cutscene
+72	48	SCD Main	Pointer to the SCD Main section, which holds the basic room script
+76	4C	SCD Sub	Pointer to the SCD Sub section, which holds all other event scripts of the room
+80	50	ESP	Pointer to the ESP, effect sprite data being used in the room
+84	54	EFF	Pointer to a relative offset table that is needed to parse the ESP data/objects
+88	58	TIM (Effects)	Pointer to the first TIM image that holds effect sprite data
+92	5C	TIM (MD1 Textures)	Pointer to the first TIM image that holds a texture used by the MD1 models
+96	60	RBJ	Pointer to a set of EDD/EMR animation files that are used in the room
+
+
+
+
+
+
+
+Additional info
+
+First, you may ask what it is about those offsets. Well it's simple the first 8 bytes of the header are each 1 bytes values,
+the following values from offset 8 and onwards are 4 byte long values (always unsigned = positive) and they point to the
+individual data sections that are described below.
+
+If you look at the camera (RID) offset decimal 36 or hex: 24 and read 4 bytes from it e.g decimal "100" or in hex "64 00 00 00" it would mean that you will
+find the start of the RID camera data on decimal offset 100 / hex 64 00 00 00.
+
+You might think the order of offsets given is at the same time the order of the data in the file, this is wrong!
+Here is a list of the order data is actually stored in RDT files.
+
+RID
+MD1/TIM Table (Optional) (if the Model value in header is = 0 then no data)
+RVD
+LIT
+PRI
+SCA
+BLK (Optional)
+FLR (Optional)
+SCD_MAIN (Optional)
+SCD_SUB
+MSG_MAIN (Optional)
+MSG_SUB (Optional)
+TIM_CAM (Optional)
+MD1 (Optional) (if the Model value in header is = 0 then no data)
+ESP (Optional) (depends on if ESP offset > 0, if not then no data)
+EFF (Optional) (depends on if ESP offset > 0, if not then no data)
+RBJ (Optional)
+SND (Optional for PC)
+VH (Optional for PC)
+VB (Optional for PC)
+TIM_EFF (Optional) (depends on if ESP offset > 0, if not then no data)
+TIM_MD1 (Optional) (if the Model value in header is = 0 then no data)
+The optional means that this data is not required to have a basic room that will work without crashing.
+
+
+If the header's ESP offset is pointing to 0, then ESP, EFF and TIM_EFF section will not be in the RDT.
+
+00 - SND (Sound attribute table)
+
+Following the pointer to the SND section of an RDT will lead you to a table of sound attributes that are
+most probably affecting the sound files (VH/VB) of the file.
+
+The entire section always is 192 bytes in size and contains 48 elements that use the structure defined and explained below.
+
+SND Entry Structure (4 Bytes)
+00&#124; id_check
+01&#124; pan_prog
+02&#124; tone_pri
+03&#124; monopoly
+id_check (1 Byte)
+---------------------------------------------
+unknown use
+
+pan_prog (1 Byte)
+---------------------------------------------
+unknown use
+
+tone_pri (1 Byte)
+---------------------------------------------
+unknown use
+
+monopoly (1 Byte)
+---------------------------------------------
+unknown use
+>>> Right after this section, the VH file positioned at 01 - VH will follow.
+Note:
+The SND section isn't used by the PC version at all, you could set the pointer/offset in the header to 0 and also dummy all of the SND data in the RDT and you would still have sounds and music working.
+
+01 - VH (VAB header file)
+
+(pending...)
+Note:
+The PC version doesn't require VH/VB files to be present in the RDT, you can change their pointers/offsets to 0 and would still have a working room with sounds & bgm being played.
+
+02 - VB (VAB sound container file)
+
+(pending...)
+Note:
+The PC version doesn't require VH/VB files to be present in the RDT, you can change their pointers/offsets to 0 and remove or dummy the entire data section and you would still have a working room with sounds & bgm being played.
+
+03 - VH (Trial) (VAB sound header file)
+
+It's the same as for Pointer 01 - VH,
+but this section is a leftover of the Trial version and it is unused by the final game.
+Note:
+The PC version doesn't require VH/VB files to be present in the RDT, you can change their pointers/offsets to 0 and remove or dummy the entire data section and you would still have a working room with sounds & bgm being played.
+
+04 - VB (Trial) (VAB sound container file)
+
+It's the same as for Pointer 02 - VB, but this section is a leftover of the Trial version and it is unused by the final game.
+Note:
+The PC version doesn't require VH/VB files to be present in the RDT, you can change their pointers/offsets to 0 and remove or dummy the entire data section and you would still have a working room with sounds & bgm being played.
+
+
+Sep 21, 2013#8
+
+05 - OTA (Unused)
+
+This pointer always holds the same value as the one for 00 - SND. It is unused though, it's original role stays a mystery. I have the theory it might have been also related to the sounds though :P
+Note:
+As for the VH/VB and the SND sections, the OTA section also isn't used by the PC version at all, you could set the pointer/offset in the header to 0 and also dummy all of the SND data in the RDT and you would still have sounds and music working.
+
+06 - SCA (Boundaries/Collisions)
+
+This section contains the collision boundary data used by the room. So that is the data that will hinder you from walking into spots that you shouldn't reach.
+
+The data is an array of entries that all are 16 bytes in size each.
+Right at the offset it starts with a header, defined like this:
+
+SCA Header Structure (16 Bytes)
+00&#124; Cx
+02&#124; Cz
+04&#124; Amount
+08&#124; Ceiling
+12&#124; Dummy
+Cx (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the X value of the ceiling
+
+Cz (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the Z value of the ceiling
+
+Amount (4 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Is the amount of SCA/boundary entries that are contained, the header is counted into it too, meaning a value of 16 would mean Header + 15 SCA entries.
+
+Ceiling  (4 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+I'm not, sure but it might define the ceiling y (height) value, seems very likely.
+
+Dummy (4 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+That value is unused, editing it has no effect, probably was just added for padding matters.
+This header will be followed by an amount of boundary entries, which again are 16 bytes in length each. The amount of entries to follow are defined
+in the 4 byte Amount value found in the header above.
+
+SCA Entry Structure (16 Bytes)
+00&#124; X
+02&#124; Z
+04&#124; W
+08&#124; D
+10&#124; Type
+12&#124; Floor
+X (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the X value from where the boundary is "drawn".
+
+Z (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the Z value from where the boundary is "drawn".
+
+W (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the W value, which is the width of the boundary, starting from the X value that is used. Note that when trying to represent them, keep in mind, that
+the game doesn't use negative values for them. Those are unsigned 2 byte integer/short values.
+
+D  (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the D value, which is the density of the boundary, starting from the Z value that is used. Note that when trying to represent them, keep in mind, that
+the game doesn't use negative values for them. Those are unsigned 2 byte integer/short values.
+
+Type (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the type of the boundary, is it a circle shaped one? a rectangle? stairs? etc. Look on the list below to see the currently identified ones.
+Code: Alles auswählen
+
+0 = STANDARD
+1 = STANDARD
+5 = DIAGONAL <> &#40;DIAMOND SHAPED&#41;
+6 = CIRCLE
+7 = HORIZONTAL
+8 = VERTICAL
+9 = CLIMBABLE OBJ.
+10 = CLIMB EDGE
+11 = SLOPE, RAMP
+12 = STAIR
+128 = STANDARD
+129 = DIAGONAL /
+130 = DIAGONAL &#092;
+131 = DIAGONAL &#092;
+132 = DIAGONAL /
+133 = DIAGONAL <> &#40;DIAMOND SHAPED&#41;
+134 = CIRCLE #2
+135 = HORIZONTAL
+136 = VERTICAL
+140 = STAIRS #2, LONG
+Floor (4 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+That value defines the Floor level (height) it will work on.
+
+>>> The data is then followed by the BLK data found at the offset provided by the 12 - BLK pointer.
+
+07 - RID (Cameras)
+
+The RID data represent the cameras in a room. There can be a total of 16 cameras in a RE2 RDT file. The Cut @ offset 1 in the header of an RDT file
+holds the values of cameras used by the room.
+
+The whole section consists of X * 32 byte RID entries. X obviously meaning the amount of cameras the room uses... So you will find as much
+RID entries as you have cameras in the room. The section will directly start with the first entry.
+
+RID Entry Structure (32 Bytes)
+00&#124; End_flag
+02&#124; FOV
+04&#124; X
+08&#124; Y
+12&#124; Z
+16&#124; Target_X
+20&#124; Target_Y
+24&#124; Target_Z
+28&#124; PRI_Offset
+End_flag (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defines the last entry of the RID data, meaning the last camera. All entries before have a End_flag value of 0, the last camera will use 1 as a value.
+
+FOV (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the field of view range of the camera, some would call it the lens. There are several values used, the most common are 26684 or 29623, there are
+others though. See a list of all FOV values the entire game uses below.
+Code: Alles auswählen
+
+10862
+16853
+21575
+23746
+24129
+25151
+26684
+27195
+28345
+29623
+30901
+31540
+32307
+32946
+35375
+37165
+40106
+41129
+42280
+57374
+X (4 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the X coordinate where the camera is placed at.
+
+Y  (4 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the Y (height) coordinate where the camera is placed at. Note that the game uses negative (signed) values for elevated objects, non negative values
+mean that the height value would be below the player/floor.
+
+Z (4 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the Z coordinate where the camera is placed at.
+
+Target_X (4 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the X coordinate where the camera is looking/aiming to.
+
+Target_Y (4 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the Y coordinate where the camera is looking/aiming to. Again, keep in mind, it is the height value (see Y above...)
+
+Target_Z (4 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the Z coordinate where the camera is looking/aiming to.
+
+PRI_Offset (4 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+The last 4 bytes hold a long value that will give you the absolute offset in the RDT file where the PRI (camera sprite/mask) data for this camera/angle will
+begin at. PRI data will be explain below.
+>>> The data is then followed by the 10 - MD1/TIM Table section, however if there are no MD1 models in that room, the RID data will be followed directly by the 08 - RVD section.
+
+
+08 - RVD (Camera switch zones)
+
+The RVD data represent the switch triggers/zones the game uses to switch from one camera over to another one.
+Each camera can have a total of 4 (seems to be the limit) switch zones, making a total of 64 switch zones in a room
+that would have 16 cameras.
+
+The first zone defined is not a switch, it rather defines the area in which 3D objects/models are visible in the current angle/camera.
+Following that one a row of switches are placed. If a camera only has that first switch (maybe call it definition zone), then it is probably
+only used in cutscenes.
+
+The whole section consists of an array of 20 byte long RVD entries. Their structure looks like this:
+
+RVD Entry Structure (20 Bytes)
+00&#124; Be_flag
+01&#124; nFloor
+02&#124; Cam0
+03&#124; Cam1
+04&#124; X1
+06&#124; Z1
+08&#124; X2
+10&#124; Z2
+12&#124; X3
+14&#124; Z3
+16&#124; X4
+18&#124; Z4
+Be_flag (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+This should have the value 1, if you set it to 0 it will lead to the zone being non-active. So in short, it's a switch to (de-)activate the zone.
+
+nFloor (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+It most of the time is FF or 255 in decimal. By floor the heigth it will work on is meant. Setting it to 255 means it will work on all of the heights in the room
+setting it to a specific floor will mean that it only works there.
+
+X1 & Z1 (2 Bytes each)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the first "corner" of the 2D plane based zone that will define the area of the switch zone.
+
+X2 & Z2 (2 Bytes each)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the second "corner" of the 2D plane based zone that will define the area of the switch zone.
+
+X3 & Z3 (2 Bytes each)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the third "corner" of the 2D plane based zone that will define the area of the switch zone.
+
+X4 & Z4 (2 Bytes each)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the fourth "corner" of the 2D plane based zone that will define the area of the switch zone.
+>>> The data is then followed by the 09 - LIT section.
+
+
+
+Guides/Topics:
+A Guide to RVD's (DXP)
+Tools:
+BIOFAT (MarkGrass)
+Resident Evil 2: Camera and Boundary Editor (MonkeyMan2000)
+
+
+Sep 21, 2013#12
+
+09 - LIT (Lights)
+
+(pending...)
+LikeDislikeShare
+Sep 21, 2013#13
+
+10 - MD1/TIM Table (3D models & textures)
+
+(pending...)
+
+11 - FLR (Floor/Footstep sound areas)
+
+FLR data handles areas that will define in which section of the room, which footstep sound will be used.
+The data is not required to be in a room to have a working RDT, however missing FLR data will lead to no footstep sounds being used in the room.
+
+In terms of how to represent them, it's very similar to the way boundaries are "drawn", FLR data also is a 2D plane placed on the floor of the room.
+
+Similar to the 12 - BLK data, the FLR data section will also start with
+a small "header" which again just offers the amount of FLR entries being in place.
+
+FLR Header Structure (2 Bytes)
+00&#124; Amount
+Amount (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Obviously defining the amount of FLR entries that will follow now.
+Followed by the "header" which as you can see, only give us the amount of objects to come, an array of 12 byte long FLR entries will start.
+
+FLR Entry Structure (12 Bytes)
+00&#124; X
+02&#124; Z
+04&#124; W
+06&#124; D
+08&#124; Sound ID
+10&#124; Dummy
+X (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the X value from where the floor area is "drawn".
+
+Z (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the Z value from where the floor area is "drawn".
+
+W (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the width of the floor area, starting from the X coordinate.
+
+D  (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the density of the floor area, starting from the Z coordinate.
+
+Sound ID (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+It refers to a .SAP soundfile that contains the footstep sounds to use. If it's value was 26 it would mean it uses FS26.SAP in the game's
+"...&#092;COMMON&#092;SOUND&#092;ROOM&#092;" folder.
+
+Dummy (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+It's usually just 0 and therefore is likely a dummy value.
+>>> The data is then followed by the 16 - SCD Main section.
+Note:
+FLR data seems to be "optional", it does not have to be in a room. Meaning missing FLR data won't lead to the room causing a crash. However, you would then have
+a room that has no footstep sounds in use.
+
+
+Sep 21, 2013#15
+
+12 - BLK (Block/Unknown)
+
+It is currently unknown what BLK, Block data really does. The data is not required to be in a room, there are some rooms that don't have it at all and yet they work without issues.
+
+When representing them in gamespace, they look like inner boundaries and they might be a left over when the developers designed the rooms. This is a theory though, it's hard to say at this moment.
+
+But we know at least how the data is structured and also how it is represented.
+The first thing that comes is a 4 byte long value, which you could call a small header.
+
+BLK Header Structure (4 Bytes)
+00&#124; Amount
+Amount (4 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Obviously defining the amount of BLK entries that will follow now.
+Followed by the "header" which as you can see, only give us the amount of objects to come, an array of 12 byte long BLK entries will start.
+
+BLK Entry Structure (12 Bytes)
+00&#124; X1
+02&#124; Z1
+04&#124; X2
+06&#124; Z2
+08&#124; Dir_bit
+10&#124; Abut
+X1 (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+The first X coordinate, from which the game will start drawing a rectangle shaped "block".
+
+Z1 (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+The first Z coordinate, from which the game will start drawing a rectangle shaped "block".
+
+X2 (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+The second X coordinate, defining to which point the "block" will be drawn.
+
+Z2  (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+The second Z coordinate, defining to which point the "block" will be drawn.
+
+Dir_bit (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+It's currently unknown what this value's role is. Dir, in it's name could mean it has some role in setting something direction related?!?...
+
+Dir_bit (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+It's currently unknown what this value's role is. Abut, could mean "attribute", but what kind of attribute is it?
+>>> The data is then followed by the 11 - FLR section.
+Note:
+BLK data seems to be "optional, it does not have to be in a room, for the room to work. Since of it still unsolved role it is hard to say, what is effected by it after all.
+
+13 - MSG Main
+
+14 - MSG Sub
+
+15 - TIM (Cam Scroll)
+
+If the offset for this section is not 0 then there is a 153.600 bytes in size, headerless 16 BPP TIM file found here.
+That one is used for the camera scrolling effect that you can encounter in:
+
+Room200x.RDT (RPD Main Hall), when entering it for the first time.
+Room216x.RDT (Parking lot), when playing with Leon and meeting Ada.
+
+Those are the only two TIM files which make use of this, so normally the offset/pointer is just holding a value of 0.
+If there is a file though it will be placed between the following sections, depending on the following situations:
+
+If there are models in room, it will be positioned between the 14 - MSG Sub and the first MD1 model file in the RDT.
+
+Sep 21, 2013#19
+
+16 - SCD Main
+LikeDislikeShare
+Sep 21, 2013#20
+
+17 - SCD Sub
+LikeDislikeShare
+Sep 21, 2013#21
+
+18 - ESP
+LikeDislikeShare
+Sep 21, 2013#22
+
+19 - EFF
+
+20 - TIM (EFF/ESP Effects)
+
+If the pointer to 18 - ESP is not 0 (meaning the room uses effect sprites) then there will be TIM files found from this offset onwards.
+
+They will use the same order as is given in the header of the 18 - ESP section. There can be a maximum of 8 different effect sprites in a room, so the maximum TIM files you can find from here on is again 8
+
+After the last effect sprite containing TIM file, the section is usually followed by the first MD1 TIM texture if there are no models in the file, the last TIM files' end of file will also be the end of the RDT file.
+LikeDislikeShare
+
+
+Sep 21, 2013#24
+
+21 - TIM (MD1 textures)
+
+If the Model value in the RDT header is not 0 (meaning the room uses MD1 3d models) then there will be TIM files used by the models, found from this offset and onwards until the end of the RDT file is reached.
+
+They will use the same order as is given in the 10 - MD1/TIM Table section. There can be a maximum of 17 model entries in a room but the game never uses so much different objects. Instead the models often share textures.
+
+After the last TIM file the end of the RDT file is reached.
+
+
+Sep 21, 2013#25
+
+22 - RBJ
+I left this place, find all of my new stuff or updates from me on http://re123.bplaced.net

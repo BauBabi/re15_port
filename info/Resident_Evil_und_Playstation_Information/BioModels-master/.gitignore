@@ -1,0 +1,5 @@
+build/
+data/
+BioModels.vcxproj.user
+.vs/
+imgui.ini

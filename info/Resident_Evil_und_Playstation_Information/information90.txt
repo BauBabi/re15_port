@@ -1,0 +1,49 @@
+12 - BLK (Block/Unknown)
+
+It is currently unknown what BLK, Block data really does. The data is not required to be in a room, there are some rooms that don't have it at all and yet they work without issues.
+
+When representing them in gamespace, they look like inner boundaries and they might be a left over when the developers designed the rooms. This is a theory though, it's hard to say at this moment.
+
+But we know at least how the data is structured and also how it is represented.
+The first thing that comes is a 4 byte long value, which you could call a small header.
+
+BLK Header Structure (4 Bytes)
+00&#124; Amount
+Amount (4 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Obviously defining the amount of BLK entries that will follow now.
+Followed by the "header" which as you can see, only give us the amount of objects to come, an array of 12 byte long BLK entries will start.
+
+BLK Entry Structure (12 Bytes)
+00&#124; X1
+02&#124; Z1
+04&#124; X2
+06&#124; Z2
+08&#124; Dir_bit
+10&#124; Abut
+X1 (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+The first X coordinate, from which the game will start drawing a rectangle shaped "block".
+
+Z1 (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+The first Z coordinate, from which the game will start drawing a rectangle shaped "block".
+
+X2 (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+The second X coordinate, defining to which point the "block" will be drawn.
+
+Z2  (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+The second Z coordinate, defining to which point the "block" will be drawn.
+
+Dir_bit (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+It's currently unknown what this value's role is. Dir, in it's name could mean it has some role in setting something direction related?!?...
+
+Dir_bit (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+It's currently unknown what this value's role is. Abut, could mean "attribute", but what kind of attribute is it?
+>>> The data is then followed by the 11 - FLR section.
+Note:
+BLK data seems to be "optional, it does not have to be in a room, for the room to work. Since of it still unsolved role it is hard to say, what is effected by it after all.

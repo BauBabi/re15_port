@@ -1,0 +1,275 @@
+Rob Vawter SCEA Rob Vawter SCEA
+ Advanced PlayStation Audio ‘98 Advanced PlayStation Audio ‘98
+ Libspu optimizations Libspu optimizations
+ Introduction to libmidi Introduction to libmidi
+  SCEE Technology SCEE Technology 
+Group Group
+  
+libspu - Volume Modes libspu - Volume Modes
+ SPU master volume and voice volume SPU master volume and voice volume
+ Range -0x4000 to 0x3fff Range -0x4000 to 0x3fff
+ CD input CD input
+ Range -0x8000 to 0x7fff Range -0x8000 to 0x7fff
+ Direct volume mode Direct volume mode
+ Volume is set to input parameter Volume is set to input parameter
+ Negative volumes allow for 3D Sound Negative volumes allow for 3D Sound
+ X360 X360
+  SCEE Technology SCEE Technology 
+Group Group
+  
+libspu - Volume Modes libspu - Volume Modes
+ Exponential & linear volume modes Exponential & linear volume modes
+ Increase Increase
+ Decrease Decrease 
+Normal phase Normal phase
+ Reverse phase (for negative volumes) Reverse phase (for negative volumes)
+ Ramps from current level to 0 or maximum volume Ramps from current level to 0 or maximum volume 
+in in hardware hardware
+  SCEE Technology SCEE Technology 
+Group Group
+  
+libspu - Volume Modes libspu - Volume Modes
+ Exponential & linear volume modes Exponential & linear volume modes
+ Parameter determines ramp speed Parameter determines ramp speed
+ 0 is instantaneous (or nearly so) 0 is instantaneous (or nearly so)
+ Below ~0x28, an inverse value is added per tick Below ~0x28, an inverse value is added per tick
+ ~0x3f increases the volume 4-7 points per 16 ticks ~0x3f increases the volume 4-7 points per 16 ticks
+ >~0x3f, the same volume increase takes more ticks >~0x3f, the same volume increase takes more ticks
+ 0x7f is infinite (or nearly so) 0x7f is infinite (or nearly so)
+ Verify correct mode-sign combination Verify correct mode-sign combination 
+  SCEE Technology SCEE Technology 
+Group Group
+  
+libspu - Volume Modes libspu - Volume Modes
+ Exponential & linear volume modes Exponential & linear volume modes
+ SpuGetVoiceVolume() returns input parameters  SpuGetVoiceVolume() returns input parameters  
+SpuGetVoiceVolumeX() returns actual volume SpuGetVoiceVolumeX() returns actual volume 
+Scales volumes from -0x8000 to 0x7fff Scales volumes from -0x8000 to 0x7fff
+ Can stop an effect very near a desired point Can stop an effect very near a desired point
+ Set a timer Set a timer
+ SpuGetVoiceVolume(voice, &voll, &volr ) SpuGetVoiceVolume(voice, &voll, &volr )
+ SpuSetVoiceVolumeAttr(voice, voll>>1, volr>>1, SpuSetVoiceVolumeAttr(voice, voll>>1, volr>>1, 
+SPU_VOICE_DIRECT, SPU_VOICE_DIRECT) SPU_VOICE_DIRECT, SPU_VOICE_DIRECT)
+  SCEE Technology SCEE Technology 
+Group Group
+  
+libspu - Voice Allocation Tips libspu - Voice Allocation Tips
+ Methods of testing voice status Methods of testing voice status
+ SpuGetKeyStatus() SpuGetKeyStatus()
+ SpuGetAllKeysStatus() SpuGetAllKeysStatus()
+ SpuRGetAllKeysStatus() SpuRGetAllKeysStatus()
+ Components of voice status Components of voice status 
+Software key on/off Software key on/off
+ Envelope playback Envelope playback
+  SCEE Technology SCEE Technology 
+Group Group
+  
+libspu - Voice Allocation Tips libspu - Voice Allocation Tips 
+Voice status Voice status
+ SPU_ON SPU_ON
+ Keyed on, voice actively playing Keyed on, voice actively playing 
+SPU_OFF SPU_OFF
+ Keyed off in software, voice finished playing Keyed off in software, voice finished playing 
+SPU_ON_ENV_OFF SPU_ON_ENV_OFF
+ Keyed on, voice not yet playing OR Keyed on, voice not yet playing OR
+ Keyed on, one shot VAG expired Keyed on, one shot VAG expired
+ SPU_OFF_ENV_ON SPU_OFF_ENV_ON
+ Keyed off in software, release state entered Keyed off in software, release state entered
+  SCEE Technology SCEE Technology 
+Group Group
+  
+libspu - Voice Allocation Tips libspu - Voice Allocation Tips 
+Possible problems Possible problems
+ SPU_ON_ENV_OFF state ambiguous SPU_ON_ENV_OFF state ambiguous
+ SPU registers only flushed every 1/44,000 second SPU registers only flushed every 1/44,000 second
+ Wasted cycles occur if voice status checked every Wasted cycles occur if voice status checked every 
+allocation allocation 
+Solution - create a new voice status check Solution - create a new voice status check 
+and voice allocation scheme and voice allocation scheme
+  SCEE Technology SCEE Technology 
+Group Group
+  
+libspu - Voice Allocation Tips libspu - Voice Allocation Tips 
+Set in key on/off functions Set in key on/off functions
+ Voice on/off flag (vo_flag) Voice on/off flag (vo_flag)
+ Tracks software key on/off Tracks software key on/off 
+Newly keyed on flag (nko_flag) Newly keyed on flag (nko_flag)
+ Flags voice for first frame of key on Flags voice for first frame of key on
+ Looping voice flag (lp_flag) Looping voice flag (lp_flag)
+ Sound data structure must include loop info Sound data structure must include loop info
+  SCEE Technology SCEE Technology 
+Group Group
+  
+libspu - Voice Allocation Tips libspu - Voice Allocation Tips
+ Set once per frame (or less) Set once per frame (or less) 
+Voice free flag (vf_flag) Voice free flag (vf_flag)
+ Is the voice allocable? Is the voice allocable?
+ Envelope on/off flag (env_flag) Envelope on/off flag (env_flag)
+ Is the voice playing data? Is the voice playing data?
+ One-shot expiry flag (exp_flag) One-shot expiry flag (exp_flag)
+ Has one-shot voice naturally expired? Has one-shot voice naturally expired?
+ nko_flag and exp_flag combine to resolve nko_flag and exp_flag combine to resolve 
+SPU_ON_ENV_OFF ambiguity SPU_ON_ENV_OFF ambiguity
+  SCEE Technology SCEE Technology 
+Group Group
+  
+libspu - Voice Allocation Tips libspu - Voice Allocation Tips
+ Once per frame (or less often) Once per frame (or less often)
+ Push key on/off queue Push key on/off queue
+ Skip lp_flag low & nko_flag low voices Skip lp_flag low & nko_flag low voices 
+Check envelope state Check envelope state 
+Fill env_flag using SpuGetVoiceEnvelope() Fill env_flag using SpuGetVoiceEnvelope()
+ If env_flag low & vo_flag high If env_flag low & vo_flag high 
+Set exp_flag high OR Set exp_flag high OR 
+If exp_flag already high If exp_flag already high
+ Clear exp_flag & Clear vo_flag Clear exp_flag & Clear vo_flag
+ Determine vf_flag with env_flag & vo_flag Determine vf_flag with env_flag & vo_flag
+ Clear nko_flag & exp_flag Clear nko_flag & exp_flag
+  SCEE Technology SCEE Technology 
+Group Group
+  
+libspu - Keying Sounds On/Off libspu - Keying Sounds On/Off
+ Problems Problems
+ Key on/off commands may be missed Key on/off commands may be missed
+ Key on/off queue contains high bits for voices which Key on/off queue contains high bits for voices which 
+must be keyed on or off must be keyed on or off
+ Old queue is flushed out Old queue is flushed out 
+SPU registers only read every 1/44,000 second SPU registers only read every 1/44,000 second
+ Cycles wasted Cycles wasted 
+Voices reallocated before playback begins Voices reallocated before playback begins
+ Solution - queue ALL key on/off commands Solution - queue ALL key on/off commands
+  SCEE Technology SCEE Technology 
+Group Group
+  
+libspu - Keying Sounds On/Off libspu - Keying Sounds On/Off
+ Create two additional 24-bit variables Create two additional 24-bit variables
+ keyoff_flag& keyon_flag keyoff_flag& keyon_flag
+ In key on function In key on function
+ Bit OR keyon_flag & clear keyoff_flag bit Bit OR keyon_flag & clear keyoff_flag bit 
+Bit OR nko_flag Bit OR nko_flag 
+Bit OR lp_flag if looping sound Bit OR lp_flag if looping sound 
+Do NOT call SpuSetKey() Do NOT call SpuSetKey()
+  SCEE Technology SCEE Technology 
+Group Group
+  
+libspu - Keying Sounds On/Off libspu - Keying Sounds On/Off
+ In key off function In key off function
+ Bit OR keyoff_flag & clear keyon_flag bit Bit OR keyoff_flag & clear keyon_flag bit
+ Clear nko_flag bit for that voice Clear nko_flag bit for that voice
+ Clear lp_flag bit for that voice Clear lp_flag bit for that voice 
+Do NOT call SpuSetKey() Do NOT call SpuSetKey()
+ Once per frame, before voice status check Once per frame, before voice status check
+ SpuSetKey(SPU_ON, keyon_flag) SpuSetKey(SPU_ON, keyon_flag)
+ SpuSetKey(SPU_OFF, keyoff_flag) SpuSetKey(SPU_OFF, keyoff_flag)
+  SCEE Technology SCEE Technology 
+Group Group
+  
+libmidi - Increased Functionality libmidi - Increased Functionality
+ Channel-level pitch bend changes
+ Notes may be bent INTO
+ RPN data 
+RPN 0 (pitch bend max and min setting)
+ RPN 1 (tone shift changes) 
+RPN 2 (tone center changes)
+ Damper changes on a channel level, rather 
+than a global level
+ Reset all controllers supported
+  SCEE Technology SCEE Technology 
+Group Group
+  
+libmidi - Increased Functionality libmidi - Increased Functionality 
+Song level pan shift/time effect Song level pan shift/time effect  
+Similar to a crescendo/ decrescendo Similar to a crescendo/ decrescendo
+ Voice level note shift/time effect Voice level note shift/time effect 
+Doppler type effect Doppler type effect
+ Current tempo of songs retrievable Current tempo of songs retrievable
+ Cancellation of transfer to SPU RAM Cancellation of transfer to SPU RAM 
+SsVabTransBodyPartly() does not support this SsVabTransBodyPartly() does not support this
+ Vibrato Vibrato
+ Portamento Portamento
+  SCEE Technology SCEE Technology 
+Group Group
+  
+libmidi - Increased Functionality libmidi - Increased Functionality 
+Nested song loops Nested song loops 
+Current tempo retrievable Current tempo retrievable
+ Cancellation of time-based effects Cancellation of time-based effects
+ Reports back the amount of effect and time Reports back the amount of effect and time 
+remaining remaining
+ Volume, pan, tempo (song level only), pitch (voice Volume, pan, tempo (song level only), pitch (voice 
+level only) level only)
+  SCEE Technology SCEE Technology 
+Group Group
+  
+libmidi - New File Formats libmidi - New File Formats
+ MABMAB
+ Reduced structure sizes Reduced structure sizes 
+VabHdr level VabHdr level
+ ProgAtr level ProgAtr level
+ VagAtr level VagAtr level
+ Vag Offset Table Vag Offset Table
+ Unused tone slots not stored Unused tone slots not stored
+ MEQMEQ
+ Loop marker & callback marker messages reduced to Loop marker & callback marker messages reduced to 
+one message one message
+ File size reduced and MIDI time conserved File size reduced and MIDI time conserved
+  SCEE Technology SCEE Technology 
+Group Group
+  
+libmidi - Linkable Functions libmidi - Linkable Functions
+ SPU RAM management SPU RAM management 
+Use libspu standard SPU RAM management Use libspu standard SPU RAM management 
+functions OR functions OR
+ Create smaller or “best-fit” functions OR Create smaller or “best-fit” functions OR
+ Hardcode all transfers to minimize code size Hardcode all transfers to minimize code size
+ Pitch calculation Pitch calculation
+ Use library standard function OR Use library standard function OR
+ Create larger PLU table for more precision or Create larger PLU table for more precision or 
+smaller PLU table for less code size smaller PLU table for less code size
+  SCEE Technology SCEE Technology 
+Group Group
+  
+libmidi - Linkable Functions libmidi - Linkable Functions 
+Volume calculation Volume calculation
+ Least complex Least complex
+ Requested level volume and pan Requested level volume and pan
+ Medium complexity Medium complexity
+ Requested and tone level of volume and pan Requested and tone level of volume and pan 
+Exponential left/right separation of song voices  Exponential left/right separation of song voices  
+Most complex Most complex
+ Requested, tone, program, and bank levels of volume Requested, tone, program, and bank levels of volume 
+and pan and pan 
+Exponential left/right separation of song voices  Exponential left/right separation of song voices  
+  SCEE Technology SCEE Technology 
+Group Group
+  
+libmidi - Linkable Functions libmidi - Linkable Functions 
+Voice allocation Voice allocation 
+First available voice & priority-based system First available voice & priority-based system 
+Addition of envelope size & age Addition of envelope size & age 
+Low-level MIDI functions Low-level MIDI functions
+  SCEE Technology SCEE Technology 
+Group Group
+  
+More libmidi More libmidi
+ Reduced structure sizes Reduced structure sizes 
+Song management table Song management table 
+Voice management Voice management
+ Reduced tick callback cycle usage Reduced tick callback cycle usage 
+Not wrapped around libspu calls Not wrapped around libspu calls
+ Data transfer to SPU registers only if necessary Data transfer to SPU registers only if necessary
+ Fewer  I-cache misses at tick callback Fewer  I-cache misses at tick callback
+ Standardization Standardization
+ Key on commands take volume and pan  Key on commands take volume and pan  
+Easier to pan voices Easier to pan voices
+ Seq/Sep duality removed - extra wrapper Seq/Sep duality removed - extra wrapper
+  SCEE Technology SCEE Technology 
+Group Group
+  
+libmidi - Tools libmidi - Tools 
+Initially Initially
+ seq2meq seq2meq
+ VAB2MAB VAB2MAB
+ Coming Coming
+ smf2meq smf2meq
+ MABmaker MABmaker

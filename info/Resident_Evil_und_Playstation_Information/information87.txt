@@ -1,0 +1,58 @@
+08 - RVD (Camera switch zones)
+
+The RVD data represent the switch triggers/zones the game uses to switch from one camera over to another one.
+Each camera can have a total of 4 (seems to be the limit) switch zones, making a total of 64 switch zones in a room
+that would have 16 cameras.
+
+The first zone defined is not a switch, it rather defines the area in which 3D objects/models are visible in the current angle/camera.
+Following that one a row of switches are placed. If a camera only has that first switch (maybe call it definition zone), then it is probably
+only used in cutscenes.
+
+The whole section consists of an array of 20 byte long RVD entries. Their structure looks like this:
+
+RVD Entry Structure (20 Bytes)
+00&#124; Be_flag
+01&#124; nFloor
+02&#124; Cam0
+03&#124; Cam1
+04&#124; X1
+06&#124; Z1
+08&#124; X2
+10&#124; Z2
+12&#124; X3
+14&#124; Z3
+16&#124; X4
+18&#124; Z4
+Be_flag (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+This should have the value 1, if you set it to 0 it will lead to the zone being non-active. So in short, it's a switch to (de-)activate the zone.
+
+nFloor (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+It most of the time is FF or 255 in decimal. By floor the heigth it will work on is meant. Setting it to 255 means it will work on all of the heights in the room
+setting it to a specific floor will mean that it only works there.
+
+X1 & Z1 (2 Bytes each)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the first "corner" of the 2D plane based zone that will define the area of the switch zone.
+
+X2 & Z2 (2 Bytes each)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the second "corner" of the 2D plane based zone that will define the area of the switch zone.
+
+X3 & Z3 (2 Bytes each)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the third "corner" of the 2D plane based zone that will define the area of the switch zone.
+
+X4 & Z4 (2 Bytes each)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the fourth "corner" of the 2D plane based zone that will define the area of the switch zone.
+>>> The data is then followed by the 09 - LIT section.
+
+
+
+Guides/Topics:
+A Guide to RVD's (DXP)
+Tools:
+BIOFAT (MarkGrass)
+Resident Evil 2: Camera and Boundary Editor (MonkeyMan2000)

@@ -1,0 +1,201 @@
+    
+XM (Extended MOD) Player. XM (Extended MOD) Player.
+ Coding by Jason Page at Coding by Jason Page at 
+SCEE. SCEE.
+ Available to all licensed Available to all licensed 
+developers. developers.
+  SCEE Technology SCEE Technology 
+Group Group
+  
+What is the XM Player ?
+ A new music and sound effects player for the A new music and sound effects player for the 
+PlayStation. PlayStation.
+ Uses existing composition tools available on Uses existing composition tools available on 
+the PC (and Mac?). the PC (and Mac?).
+  SCEE Technology SCEE Technology 
+Group Group
+  
+So, Why bother?
+ More games using chip music. More games using chip music.
+ MOD’s make the most out of chip based MOD’s make the most out of chip based 
+music? music?
+ More detailed control over sound effects . More detailed control over sound effects .
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Overview:
+ Playback XM tracker modules. Playback XM tracker modules.
+ Play up to 24 channels. Play up to 24 channels.
+ 95% of commands functional. 95% of commands functional.
+ Many sample effects. Many sample effects.
+ Playing of sound effects. Playing of sound effects.
+ Independent volume control over individual Independent volume control over individual 
+channels. (Interactive!) channels. (Interactive!)
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Overview:
+ Sorry - you can work out how to write MOD Sorry - you can work out how to write MOD 
+files yourselves! files yourselves!
+ I use Fast Tracker 2. I use Fast Tracker 2.
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Sample Effects:
+ Volume. Volume.
+ Panning. Panning.
+ Pitch bend. Pitch bend.
+ Arpeggio. Arpeggio.
+ Portamento. Portamento.
+ Vibrato. Vibrato.
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Sample Effects:
+ Amplitude AND panning envelopes. Amplitude AND panning envelopes.
+ Modify sample start offset. Modify sample start offset.
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Sound Effects:
+ Plays selected channels of a single pattern. Plays selected channels of a single pattern.
+ Single or multi channel SFX with one call.. Single or multi channel SFX with one call..
+ Allows use all of the sample effects. Allows use all of the sample effects.
+ Allows more use of a single sample. Allows more use of a single sample.
+ (Explosion used for a laser etc.) (Explosion used for a laser etc.)
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Usage:
+ Uses the LibSPU library only. Uses the LibSPU library only.
+ Key On,Set Volume, Set Pitch, Get Key Status. Key On,Set Volume, Set Pitch, Get Key Status.
+  Initialising SPU is left up to the user. Initialising SPU is left up to the user.
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Usage:
+ Calls included: Calls included:
+ Initialise VAB and XM. Initialise VAB and XM.
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Usage:
+ Calls included: Calls included:
+ Initialise VAB and XM. Initialise VAB and XM.
+ Play, Stop, Pause, Restart XM. Play, Stop, Pause, Restart XM.
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Usage:
+ Calls included: Calls included:
+ Initialise VAB and XM. Initialise VAB and XM.
+ Play, Stop, Pause, Restart XM. Play, Stop, Pause, Restart XM.
+ Set individual channel volumes. Set individual channel volumes.
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Usage:
+ Calls included: Calls included:
+ Initialise VAB and XM. Initialise VAB and XM.
+ Play, Stop, Pause, Restart XM. Play, Stop, Pause, Restart XM.
+ Set individual channel volumes. Set individual channel volumes.
+ Get current song status. Get current song status.
+Interactive: Interactive:
+ Calls included: Calls included:
+ Song jump to user specified position Song jump to user specified position
+Interactive: Interactive:
+ Calls included: Calls included:
+ Song jump to user specified position Song jump to user specified position
+ Position picked up at end of current pattern Position picked up at end of current pattern
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Usage:
+ Not meant to replace LibSPU or LibSND. Not meant to replace LibSPU or LibSND.
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Usage:
+ Not meant to replace LibSPU or LibSND. Not meant to replace LibSPU or LibSND.
+ Main update routine called once every 50/60 Main update routine called once every 50/60 
+fps. fps.
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Usage:
+ Not meant to replace LibSPU or LibSND. Not meant to replace LibSPU or LibSND.
+ Main update routine called once every 50/60 Main update routine called once every 50/60 
+fps. fps.
+ No interrupt used: No interrupt used:
+ Set up your own interrupt. Set up your own interrupt.
+ VSyncCallback(XM_Update); VSyncCallback(XM_Update);
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Usage:
+ Maximum 8 XM files initialised at once. Maximum 8 XM files initialised at once.
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Usage:
+ Maximum 8 XM files initialised at once. Maximum 8 XM files initialised at once.
+ Fast(?) processing time. Fast(?) processing time.
+ Between 1 - 2 Scan lines per channel Between 1 - 2 Scan lines per channel
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Initialise the player:
+ XM_OnceOffInit XM_OnceOffInit(XM_NTSC); (XM_NTSC);
+ VABID=PSX_Init VABID=PSX_Init(VAB_Header,VAB_Body); (VAB_Header,VAB_Body);
+ InitXMData InitXMData(XM_Address, (XM_Address,
+ XM_ID, XM_ID,
+ XM_UseXMPanning); XM_UseXMPanning);
+ VSyncCallback VSyncCallback(XM_Update); (XM_Update);
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Playing Music or SFX
+ Song_ID=XM_Init Song_ID=XM_Init((
+                   VAB_ID,                   VAB_ID,
+  XM_ID, XM_ID,
+ First_SPU_Channel, First_SPU_Channel,
+ XM_Loop, XM_Loop,
+ Bit_Mask, Bit_Mask,
+ XM_Music, XM_Music,
+ SFX_Pattern / Song_Start_Offset); SFX_Pattern / Song_Start_Offset);
+  SCEE Technology SCEE Technology 
+Group Group
+  
+XM2PSX Conversion tool:
+ Windows based tool. Windows based tool.
+ Create VAB file. Create VAB file.
+ Recreate Single/Looping and/or Ping-Pong Recreate Single/Looping and/or Ping-Pong 
+samples. samples.
+ (Still need to VABSplit the file) (Still need to VABSplit the file)
+ Output samples as VAG’s. Output samples as VAG’s.
+  SCEE Technology SCEE Technology 
+Group Group
+  
+XM2PSX Conversion tool:
+ Create a new XM file. Create a new XM file.
+ 1) Original XM file without sample data. 1) Original XM file without sample data.
+ 2) Super compressed XM. 2) Super compressed XM.
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Future updates to include:
+ Reverb effects. Reverb effects.
+  Modify depth, turn reverb on/off for individual  Modify depth, turn reverb on/off for individual 
+channels. channels.
+  SCEE Technology SCEE Technology 
+Group Group
+  
+To Conclude:
+ Outstanding chip music. Outstanding chip music.
+ Original sound effects. Original sound effects.
+ Fast Processing. Fast Processing.
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Thankyou… 
+Any questions? Any questions?

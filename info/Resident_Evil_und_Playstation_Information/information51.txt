@@ -1,0 +1,29 @@
+
+CDROM File Archive HED/DAT/BNS/STR (Ape Escape)	Contents
+Index	Prev
+Next
+
+Ape Escape KKIIDDZZ.HED/.DAT/.BNS/.STR
+  000h 52Ch List for .DAT file    ;value 0000h..6FFFh = sector 0..6FFFh in DAT
+  52Ch D4h  Zerofilled
+  600h C4h  List for .BNS file    ;value 7000h..71AFh = sector 0..1AFh in BNS
+  6C4h 3Ch  Zerofilled
+  700h 50h  List for .STR file(s) ;raw CDROM sector numbers from 00:02:00
+  750h B0h  Zerofilled
+List entries, for all three lists (32bit values):
+  0-19   File Offset/800h (20bit)
+  20-31  File Size/800h   (12bit)
+The sector numbers in DAT and BNS are basically counted from begin of the .DAT file (which has 7000h sectors in retail version, and the .BNS file does follow right thereafter on the next sector) (the demo version (MagDemo22: KIDZ\*) has only 105Ah sectors in .DAT, and the BNS entries at offset 600h start with 105Ah accordingly).
+There are 29 STR files in DEMO\*.STR and STR\*.STR, and 20 of them (?) are referenced in HED ? There are also several .ALL files in above folders.
+Note: Most of the STR files in Ape Escape contain polygon animation streams rather than BS compressed bitmaps. Ape Escape is (c)1999 by Sony.
+  .HED is 2048 bytes
+  .DAT is 58720256 bytes = 3800000h bytes  ;div800h would be 7000h
+  .BNS is 884736 bytes = D8000h bytes      ;div800h would be 1B0h
+  .STR's: 7D3Bh+150 = 7DD1h = sector for STR\LAB.STR
+Some files contain RLE compressed TIMs:
+CDROM File Compression TIM-RLE4/RLE8
+Some files contain raw headerless SPU-ADPCM (eg. DAT file 00Ah).
+
+
+I am homeless in Hamburg, please help me out!
+extracted from no$psx v2.2 - homepage - patreon - whole doc htm/txt - copyright 2022 martin korth (nocash)

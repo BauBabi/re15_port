@@ -1,0 +1,47 @@
+
+CDROM File Video Streaming STR (Sony)	Contents
+Index	Prev
+Next
+
+.STR Sectors (with 20h-byte headers) (for MDEC Movies, or User data)
+  000h 2    StStatus (0160h) (RV6Rh; R=Reserved=0, V=Version=1, 6=Fixed ID)
+  002h 2    StType (0000h..7FFFh=User Defined, 8000h..FFFFh=System; 8001h=MDEC)
+  004h 2    StSectorOffset (Sector number in the frame, 0=First)
+  006h 2    StSectorSize   (Number of sectors in the frame) (eg. 4 or 5)
+  008h 4    StFrameNo      (Frame number, 1=First) (except Viewpoint=0)
+  00Ch 4    StFrameSize    (in bytes, in this frame, excluding headers/padding)
+ When StType=0000h..7FFFh:
+  010h 10h  StUser         (user defined data)
+  020h 7E0h User data      (more user defined data)
+ When StType=8001h=MDEC (the only system defined type) (with StStatus=0160h):
+  010h 2    StMovieWidth                  (eg. 0140h)
+  012h 2    StMovieHeight                 (eg. 00F0h)
+  014h 4    StHeadM (reserved for system) (eg. 38000720h) ;\same as [020h-027h]
+  018h 4    StHeadV (reserved for system) (eg. 00020001h) ;/from 1st STR sector
+  01Ch 4    Unspecified                   (eg. 00000000h) (except Viewpoint<>0)
+  020h 7E0h Data (in BS format) (or padding, when image is smaller than frame)
+The default file extension .STR is used by various games (though some games use other extensions, the .FMV files in Tomb Raider do also contain standard 20h-byte .STR sector headers).
+
+Video Frames
+The video frames consist of BS compressed images (that is, all sectors have STR headers at 000h..01Fh, and the first sector of each frame does additionally contain a standard BS fileheader at offset 020h..027h).
+  See "CDROM File Video BS Compression" chapters
+Less common, there is also a format for streaming polygon animations instead of BS compressed bitmaps:
+CDROM File Video Polygon Streaming
+
+STR Resolution
+The Width/Height entries are almost always multiples of 16 pixels. But there are a few exceptions:
+  Height=260 (104h) in Star Wars Rebel Assault II, NTSC (S1\L01_PLAY.STR)
+  Height=200 (0C8h) in Perfect Assassin (DATA.JFS\CDV\*.STR)
+  Height=40  (028h) in Gran Turismo 1 (TITLE.DAT\*, MagDemo10 and MagDemo15)
+  Width=232  (0E8h) in Gran Turismo 1 (TITLE.DAT\*, MagDemo10 only)
+For such videos, the width/height of MDEC decompression buffer in RAM must be rounded up to multiples of 16 pixels (and the decompressed picture should be cropped to the STR header width/height before forwarding it to VRAM).
+Note: The extra scanlines are usually padded with the bottom-most scanline (except, Gran Turismo 1 has gray-padding in lower/right pixels). Ideally, one would repeat the bottom-most pixels in zigzag order.
+
+Subtitles
+Metal Gear Solid MGS\ZMOVIE.STR contains subtitles as text strings: The first sector of the .STR file is something custom (without STR header), the remaining movie consists of STR sectors with StType=0001h for subtitles and StType=8001h for picture frames.
+Unknown if other games are using the same method, or other methods.
+Obviously, subtitles could be also displayed as part of the compressed image, but text strings are much smaller, have better quality, and would also allow to support multiple languages.
+
+
+I am homeless in Hamburg, please help me out!
+extracted from no$psx v2.2 - homepage - patreon - whole doc htm/txt - copyright 2022 martin korth (nocash)

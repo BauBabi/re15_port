@@ -1,0 +1,14 @@
+PTC (Resident Evil 1997)
+File Format
+Name	PTC (Resident Evil 1997)
+Ontology	
+Electronic File Formats
+Game data files
+PTC (Resident Evil 1997)
+Extension(s)	.ptc
+This content was first retrieved from the Internet Archive's Wayback Machine for the date 2016-08-17 from the following URL: https://web.archive.org/web/20160817025436/http://rewiki.regengedanken.de/wiki/.PTC
+
+The .PTC file format is used on the PC port of Resident Evil (1997) to store uncompressed images.
+
+Specification
+The format is R8G8B8 triplets stored sequentially. The dimensions of the picture have to be known in advance. The file has no header.

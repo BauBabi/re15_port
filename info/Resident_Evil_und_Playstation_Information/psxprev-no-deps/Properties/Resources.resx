@@ -1,0 +1,373 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="Models_Export_All" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Models_Export_All.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Models_Export" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Models_Export.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Textures_AutoDrawTextures" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Textures_AutoDrawTextures.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Help_CompatibilityList" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Help_CompatibilityList.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Animations_EditTMDBindings" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Animations_EditTMDBindings.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Animations_AutoPlayAnimation" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Animations_AutoPlayAnimation.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Start" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Start.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Pause" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Pause.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Stop" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Stop.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Cross" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Cross.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Exit" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Exit.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Settings_Defaults" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Settings_Defaults.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Logo_GitHub" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Other\Logo_GitHub.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Gizmo_Rotate" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Custom\Gizmo_Rotate.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Gizmo_Scale" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Custom\Gizmo_Scale.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Gizmo_Translate" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Custom\Gizmo_Translate.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Information" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Information.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Models_ForceDoubleSided" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Models_ForceDoubleSided.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Models_ShowBounds" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Models_ShowBounds.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Models_EnableSemiTransparency" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Models_EnableSemiTransparency.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Models_LineRenderer" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Models_LineRenderer.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="VRAM_ShowUVs" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\VRAM_ShowUVs.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Find" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Find.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="FindClear" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\FindClear.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Animations_AutoSelectModel" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Animations_AutoSelectModel.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Models_EnableTextures" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Models_EnableTextures.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Textures_Export_All" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Textures_Export_All.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Textures_Export" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Textures_Export.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Textures_Export_Selected" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Textures_Export_Selected.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Logo_YouTube" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Other\Logo_YouTube.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="VRAM_Export_All" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\VRAM_Export_All.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="VRAM_Clear_All" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\VRAM_Clear_All.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="VRAM_Export" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\VRAM_Export.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Textures_DrawToVRAM_All" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Textures_DrawToVRAM_All.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="VRAM_Export_DrawnTo" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\VRAM_Export_DrawnTo.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="VRAM_Export_Selected" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\VRAM_Export_Selected.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="VRAM_Clear_Selected" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\VRAM_Clear_Selected.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Textures_DrawToVRAM" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Textures_DrawToVRAM.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ColorBackground" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\ColorBackground.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="DrawMode_Faces" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Custom\DrawMode_Faces.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="DrawMode_SolidWireframeVertices" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\DrawMode_SolidWireframeVertices.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="DrawMode_Vertices" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Custom\DrawMode_Vertices.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="DrawMode_Wireframe" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Custom\DrawMode_Wireframe.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Models_AutoAttachLimbs" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Models_AutoAttachLimbs.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Models_DrawMode" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Models_DrawMode.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Models_EnableLight" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Models_EnableLight.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Models_GizmoTool" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Models_GizmoTool.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Models_ResetTransform" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Models_ResetTransform.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Models_ResetTransform_Selected" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Models_ResetTransform_Selected.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Models_ResetTransform_Whole" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Models_ResetTransform_Whole.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Settings_Reload" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Settings_Reload.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Settings_Save" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Settings_Save.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Help_Credits" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Help_Credits.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="File_FastWindowResize" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\File_FastWindowResize.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="File_ShowSideBar" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\File_ShowSideBar.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Textures_SetPaletteIndex" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Textures_SetPaletteIndex.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="CheckBoxes" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\CheckBoxes.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="CheckBox_Checked" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\CheckBox_Checked.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="CheckBox_Unchecked" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\CheckBox_Unchecked.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="File_ShowFPS" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\File_ShowFPS.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Models_EnableVertexColor" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Custom\Models_EnableVertexColor.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Models_Focus" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Models_Focus.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Models_Focus_AutoFocusOnRootModel" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Models_Focus_AutoFocusOnRootModel.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Models_Focus_AutoFocusOnSubModel" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Models_Focus_AutoFocusOnSubModel.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Models_Focus_IncludeCheckedModels" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Models_Focus_IncludeCheckedModels.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Models_Focus_IncludeWholeModel" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Models_Focus_IncludeWholeModel.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Models_SubModelVisibility" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Models_SubModelVisibility.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Models_SubModelVisibility_All" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Models_SubModelVisibility_All.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Models_SubModelVisibility_Selected" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Models_SubModelVisibility_Selected.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Models_SubModelVisibility_WithSameTMDID" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Models_SubModelVisibility_WithSameTMDID.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Textures_AutoPackTextures" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Textures_AutoPackTextures.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Textures_ShowMissingTextures" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Custom\Textures_ShowMissingTextures.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Models_Focus_ResetCameraRotation" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Models_Focus_ResetCameraRotation.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Models_SelectionMode" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Models_SelectionMode.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Models_SelectionMode_Bounds" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Custom\Models_SelectionMode_Bounds.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Models_SelectionMode_Triangle" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Custom\Models_SelectionMode_Triangle.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Models_ShowSkeleton" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Custom\Models_ShowSkeleton.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Textures_ShowPalette" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Textures_ShowPalette.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Textures_ShowSemiTransparency" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Textures_ShowSemiTransparency.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="File_ShowUI" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\File_ShowUI.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Settings_Advanced" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Settings_Advanced.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Textures_ShowUVs" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\Textures_ShowUVs.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="VRAM_ShowSemiTransparency" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\VRAM_ShowSemiTransparency.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="File_ShowStatusBar" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Icons\Fugue\File_ShowStatusBar.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+</root>

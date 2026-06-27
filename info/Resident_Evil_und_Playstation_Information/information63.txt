@@ -1,0 +1,66 @@
+
+CDROM File Compression	Contents
+Index	Prev
+Next
+
+Compressed Bitmaps
+  .BS used by several games (and also in most .STR videos)
+  .GIF used by Lightspan Online Connection CD
+  .JPG used by Lightspan Online Connection CD
+  .BMP with RLE4 used by Lightspan Online Connection CD (MONOFONT, PROPFONT)
+  .BMP with RLE8+Delta also used by Online Connection CD (PROPFONT\ARIA6.BMP)
+  .PCX with RLE used by Jampack Vol. 1 (MDK\CD.HED\*.pcx)
+  .PCX with RLE used by Hot Wheels Extreme Racing (MagDemo52: US_01293\MISC\*)
+  .PCX with RLE used by Metal Gear Solid (slightly corrupted PCX files)
+
+Compressed Audio
+  .XA uses XA-ADPCM (and also used in .STR videos)
+  .VAG .VB .VAB uses SPU-ADPCM
+
+Compressed Files
+CDROM File Compression LZSS (Moto Racer 1 and 2)
+CDROM File Compression LZSS (Dino Crisis 1 and 2)
+CDROM File Compression LZSS (Serial Experiments Lain)
+CDROM File Compression ZOO/LZSS
+CDROM File Compression Ulz/ULZ (Namco)
+CDROM File Compression SLZ/01Z (chunk-based compressed archive)
+CDROM File Compression LZ5 and LZ5-variants
+CDROM File Compression PCK (Destruction Derby Raw)
+CDROM File Compression GT-ZIP (Gran Turismo 1 and 2)
+CDROM File Compression GT20 and PreGT20
+CDROM File Compression HornedLZ
+CDROM File Compression LZS (Gundam Battle Assault 2)
+CDROM File Compression BZZ
+CDROM File Compression RESOURCE (Star Wars Rebel Assault 2)
+CDROM File Compression TIM-RLE4/RLE8
+CDROM File Compression RLE_16
+CDROM File Compression PIM/PRS (Legend of Mana)
+CDROM File Compression BPE (Byte Pair Encoding)
+CDROM File Compression RNC (Rob Northen Compression)
+CDROM File Compression Darkworks
+CDROM File Compression Blues
+CDROM File Compression Z (Running Wild)
+CDROM File Compression ZAL (Z-Axis)
+CDROM File Compression EA Methods
+CDROM File Compression ZIP/GZIP/ZLIB (Inflate/Deflate)
+CDROM File Compression LArc/LHarc/LHA (LZS/LZH)
+CDROM File Compression UPX
+CDROM File Compression LZMA
+CDROM File Compression FLAC audio
+Some other archvies that aren't used by any PSX games, but, anyways...
+CDROM File Compression ARJ
+CDROM File Compression ARC
+CDROM File Compression RAR
+CDROM File Compression ZOO
+CDROM File Compression nCompress.Z
+CDROM File Compression Octal Oddities (TAR, CPIO, RPM)
+CDROM File Compression MacBinary, BinHex, PackIt, StuffIt, Compact Pro
+
+Compressed Archives
+Some Archives have "built-in" compression.
+CDROM File Archive WAD (Doom)
+CDROM File Archive BIGFILE.DAT (Gex - Enter the Gecko)
+
+
+I am homeless in Hamburg, please help me out!
+extracted from no$psx v2.2 - homepage - patreon - whole doc htm/txt - copyright 2022 martin korth (nocash)

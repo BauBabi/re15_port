@@ -1,0 +1,18 @@
+These are the sizes of the fonts:
+
+
+term:		11x20 pts
+luci:		15x24 pts (?)
+apple40:	6x8 pts
+loderun:	8x8
+xevious:	8x8
+ninjakid:	8x8
+gng:		8x8
+elite:		8x8
+
+
+All fonts must be non-proportional and spaced horizontally and
+vertically on the font TIM according to their horizontal and
+vertical sizes.
+
+Fonts are 16-colour (4-bit).

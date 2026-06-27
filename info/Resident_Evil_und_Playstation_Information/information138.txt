@@ -1,0 +1,57 @@
+
+ 	
+WelcomeGetting startedResourcesCommercial Homebrew
+Getting Started
+Toolchains & SDKs
+There are many tutorials out there which gave well intended advice based on the best known practice and tools available at the time, without being aware of the issues that were to come (such as that most desktops would become 64 bit and that Windows 10+ 64bit would not support 16bit executables).
+
+
+In order to help installing, maintaining, and launching some of the tools presented here, a Visual Studio Code Extension has been created. You can find it in the marketplace and install it to quickly begin developing for the PlayStation 1. Check this video for an introduction on how to use it.
+
+
+To summarise, the following SDK / Libraries setups are possible (in chronological order of when they came into existence).
+
+psyq 
+The original official SDK, together with the compilers/linkers of the time. Most of them are built for 16 bit, so you will need old operating systems, virtual machines, are some other ways of getting them to run on modern hardware.
+
+
+Who wants to feel like they are in the 90s and authentic - should consider this option.
+
+The 32bit version of cpe2x is here on Orion’s page. The psyq 4.6 sdk (that is already modified to be easier to deploy) is provided here by arthus.
+
+psn00b 
+psn00b is one of the older and maintained SDKs with several contributors that aims to be a complete open source and freeware alternative implementation of psyq. 
+
+Available from Lameguy64’s psn00b git repository.
+
+psyq + nugget 
+While the original psyq isn't easy to use on modern operating systems because of the older binaries, it is possible to convert the original libraries to a format usable by a modern compiler.
+
+
+This method is a good bridge to being able to follow most old code/tutorials and psyq documentions, while working on modern machines and being cross platform.
+
+
+Using this together with PCSX-Redux’s built-in gdb-server allows for advanced debugging methods.
+
+
+Examples and instructions to use this are available through extensive examples.
+
+
+For the pure nugget toolchain (excluding the actual converted psyq library), it is available here.
+
+
+Alternatively you could manually download gcc here for Windows or follow the relevant instructions (Step 2) from here to set it up using WSL.
+
+The library itself can be found here on arthus’s page.
+
+PSYQo
+PSYQo is a new library that allows for OOP in C++ for the PSX. It is the newest and also incomplete and too young to tell how many will adopt it.
+
+
+You can find it and its documentation here.
+
+
+It will require similar steps and effort to set up as those followed for psyq+nugget method (since it makes use of the same compiler). A comprehensive example can be found through a Tetris implementation.
+
+Diese Website verwendet Cookies von Google, um ihre Dienste bereitzustellen und Zugriffe zu analysieren. Informationen darüber, wie Sie die Website verwenden, werden an Google weitergegeben. Durch die Nutzung dieser Website erklären Sie sich damit einverstanden, dass auf der Website Cookies verwendet werden.
+Weitere InformationenOk

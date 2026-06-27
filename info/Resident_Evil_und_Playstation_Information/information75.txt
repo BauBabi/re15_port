@@ -1,0 +1,154 @@
+Resident Evil 2 .RDT Information
+Mr_Scratch	Дата: Суббота, 15.09.2012, 17:39 | № 1
+Offline
+Andriy
+
+11414
+Ранг:D.S.O.
+Группа:Администратор
+Пол:Парень
+Сообщений:4141
+Награды:177
+
+
+
+
+DOOR CODE: 32 Bytes Long
+
+3B NN 01 31 ?? 00 XX XX YY YY ZZ ZZ RR RR NX NX NY NY NZ NZ NR NR ST RN CA ?? DR DO ?? LF KK ??
+
+ST = Stage (for example Kendo's shop is Stage 0 Room 1 so it would appear as 0001)
+RN = Room Number
+CA = Camera Angle of next room (I.E. Where the Camera is).
+NN = Door Number (Guess since my test room had 4 possible doors. Stairs are doors.)
+LF = Locked Flag (If I set another door to the same Hex as a locked door, it too becomes locked but if either door is opened the other becomes unlocked.)
+KK = Key Needed
+
+XX = X co-ords (Co-ords go Low High).
+YY = Y co-ords
+ZZ = Z co-ords
+RR = Rotation ?? (those two seemed to affect the Door position but not the NextRoom Position.
+
+NX = Next Room Start X co-ords (doors have an access width as to why each co-ord has 2, a beginning and an end).
+NY = Next Room Start Y co-ords (This is normally 0000)
+NZ = Next Room Start Z co-ords
+NR = Next Room Rotation
+
+DR = Door type. Wooden, metal, Stairs, lift. (Remember there is an UP/Down,In/Out version of Doors/Stairs/Lifts etc.)
+
+00 = Wooden 4 Rectangle Door (Handle Left) (Opens away from Player)
+01 = Wooden 3 rectangle door (Handle left) (Opens away from Player)
+02 = Wooden 4 rectangle door Blue (Handle left) (Opens away from Player)
+03 = Wooden Rectangle with Diamonds door (Handle left) (Opens away from Player)
+04 = Wooden 6 Rectangle Blue (Handle left) (Opens away from Player)
+05 = Wooden 3 Rectangle (Handle left) (Opens away from Player)
+06 = Metal Door X (Handle Left) (Opens away from Player)
+07 = Metal Door Plain with small grill at bottom.(Handle left) (Opens away from Player)
+08 = Metal Door 2 Rectangles (Handle left) (Opens away from Player)
+09 = Wooden Door 6 Rectangles (Handle left) (Opens away from Player)
+0a = Gate with Bars (Handle left) (Opens away from Player)
+0B = 2 Windows 4 Diamonds (Handle left) (Opens away from Player)
+0C = RPD Doors (open towards Player) (Opens away from Player)
+0D = Wooden 3 rectangle door (Silver Handle left) (Opens away from Player)
+0E = Metal Stairs Up
+0f = Wooden Stairs (1F West Stairs)
+10 = Lift Gate (Open Right to Left)
+11 = Double wooden door. Metal Grill at bottom, right door opens away from player.
+12 = Stone Basement Steps. Up
+13 = Grey Metal Door. Big window (with XXX)
+14 = Double Width Metal Door. Slides Right to Left (handle on Right)
+15 = Metal Door 2 X, 1 High, 1 Low, Black/Yellow /// in centre.
+16 = Metal Ladders
+17 = Old Ring Handle Door Left opens away from player
+18 = Green Wooden Door Gold Handle Left Opens away from player
+19 = Metal Circle Handle Left Lab Door. Slides Left to Right.
+1a = Metal Door 3 Rectangles Handle Left Opens away from player
+1b = Autopsy Double Doors, Opens towards player.
+1c = Metal Door. Knob (left). Grill at bottom. Barred Window
+1D = Metal Door Brown. Grill at top.
+1E = Air Vent
+1F = Metal Door Opens Up/Down by Splitting. Sewer X-DR
+20 = No Door Ada Scream.
+21 = No Door Birkin Sounds
+22 = Brown Rusty Metal Door Handle Left Opens away from player
+23 = Grey Metal Door with Border (sorta B ) Handle Left Opens away from player
+24 = Grey/Green Metal Door, Metal Foot Guard, Window Handle Left Opens away from player
+25 = Shaft Type L Automatic Door.
+26 = Brown Metal Doors with twist Handle Left. Left Door opens Away From Player
+27 = Double Teethed Metal Doors. Doors Slide apart.
+28 = Red Small Elevator Up
+29 = Shaft Type M metal Door, Handle Left Opens away From Player
+2A = Metal Slide Left to Right Door. Small Window Up, Small Grill Bottom.
+2b = Dumping Area B2 Shutter.
+2c = Black/Red Sliding Doors with small windows.
+2D = Scenario 1 End Lift Up
+2e = Metal Door Bars, Handle Left Opens AFP RED Green light Above handle
+2f = Turquoise Inverview Room Door. HL AFP
+30 = Bus Double Doors open AFP
+31 = Frozen Type-P Double Metal Door. Left Door opens AFP
+32 = Please Wait Clothes Change.
+33 = Vent
+34 = Side Pack is being equipped.
+35 = Vent
+36 = Black Screen. *Drip Drip*
+
+DO = Door Open.
+0 = Handle Left, open Away From Player Lifts/Stairs/Ladders Up
+1= Handle Right towards player. Lifts/Stairs/Ladders Down.
+Some rooms use above 1 for the Door open but most doors end up with a blank screen if you do.
+
+?? = Unknown at the moment
+
+ENEMY CODE: 22 Bytes
+
+44 00 NN EM PP @@ ** SN TX FL XX XX YY YY ZZ ZZ RR RR 00 00 00 00
+
+NN = Enemy number (room), starts at 00 for 1 (Ada and Sherry seem to use FF)
+EM = Enemy (take the last two characters from the EMD folder, 1f is the standard 3 Body Zombie)
+PP = Pose
+Zombie:
+00 Waiting
+01 Lyiny Down
+02 Walking
+03 Crawling
+04 Getting Up
+05 On back
+06 ?
+07 Face down no head
+08 Slow shuffle
+09 Crawl
+43 Crawling
+48 Eating
+86 Fine
+C2 On Fire Gets up from Face Down
+C3 Crawling on Fire
+C6 On Fire Gets up from Face UP
+
+@@ = Unknown (flag, extra animation info
+** =
+
+(Set @@ to 04 and ** to 01 if you are putting in a partner)
+
+SN = Sound Set
+TX = Texture (Zombie 1F has 3)
+FL = Enemy Flag (Each enemy has a different Value)
+
+XX = X co-ords (Co-ords go Low High).
+YY = Y co-ords
+ZZ = Z co-ords
+RR = Rotation (The way the enemy faces).
+
+ITEMS:
+
+examples:
+14 00 0f 00 00 00 01 00 02 31 00 00 04 BE 0B A1 94 07 66 08
+14 00 0F 00 01 00 02 00 2C 0D 04 31 00 00 68 B6 2F A9 86 06
+
+HH 00 VV 00 ?? 00 MA 00 ?? MB (never worked out the rest after this)
+
+HH = Items Hex Number
+VV = Quantity.
+
+
+Прикрепления:
+5522748.jpg (195.4 Kb)

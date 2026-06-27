@@ -1,0 +1,45 @@
+Kurzinfo zu meinem ersten TMD
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Testet mein erstes funktionstüchtiges Smiley "mAlaexyz'
+erstes Smiley.tmd"! Es ist zwar ein wenig schlicht,
+aber ich kann Euch versichern, daß es mit BootEdit
+funktioniert! Daß es ein wenig kantig wirkt, liegt an
+der Tatsache, daß man nicht zu viele Polygone für ein
+solches Bild verwenden darf, da ansonsten die Dateigröße
+zu groß für BootEdit wird. Man ist also folglich bei
+der Erstellung von Grafiken in dieser Hinsicht einge-
+schränkt.
+
+Danke an dieser Stelle an James Higgs, der sein Programm
+nach meinen Tips so umgeschrieben hat, daß die damit
+gespeicherten TMD's nun mit BootEdit angezeigt werden.
+Ich hoffe, ich kann Euch dann in naher Zukunft mit noch
+ein paar TMD's versorgen :o)
+
+Nur noch eine Bitte, fragt mich nicht, wie man ein BMP
+in ein TMD umwandeln kann, weil das nicht geht. Ein
+Bitmap (BMP, JPEG, TGA etc.) ist ein völlig anderes
+Dateiformat wie eine 3-D-Vektorgrafik. Auch das Smiley
+habe ich in einem speziellen 3-D-Programm erstellt
+(Rhino 3D), und nicht etwa von einem Bitmap umgewandelt.
+Wer allerdings mit solchen Programmen umgehen kann
+(AutoCAD, TrueSpace, 3D Studio etc.) kann gerne mit mir
+Kontakt aufnehmen.
+
+********************************************************
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+ Alles für Playstation-Freaks: ausführliche Patch- und
+ Brennanleitungen, Spielelisten und -Datenbanken, Links,
+ Patches, Cracks*, Tools und mehr... von mAlaexyz und
+ seinem loyalen, durchgeknallten Kumpel ZyXalam!
+
+          ;^-""-^;
+  /"""\_. |(o)(o)| ._/"""\  ****************************
+  \/\/\/ \ \ \/ / / \/\/\/
+    \/\/ .. ^--^ .. \/\/
+       \/ / <;;> \ \/             nfo mAlaexyz (c)04/00
+          \      /
+         ./_/^^\_\.   http://members.tripod.de/malaexyz
+        °vvv    vvv°    *Cracks: http://bite.to/zyxalam
+........................................................
+********************************************************

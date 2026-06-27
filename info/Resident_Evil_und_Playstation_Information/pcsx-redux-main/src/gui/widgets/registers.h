@@ -1,0 +1,53 @@
+/***************************************************************************
+ *   Copyright (C) 2019 PCSX-Redux authors                                 *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.           *
+ ***************************************************************************/
+
+#pragma once
+
+#include <cstdint>
+#include <string>
+
+namespace PCSX {
+struct psxRegisters;
+class Memory;
+class GUI;
+
+namespace Widgets {
+
+class Registers {
+  public:
+    Registers(bool& show) : m_show(show) {}
+    void draw(GUI* gui, psxRegisters* registers, Memory* memory, const char* title);
+
+    bool& m_show;
+
+  private:
+    void makeEditableRegister(const char* name, uint32_t reg);
+    template <size_t Fract = 12>
+    static float fixedToFloat(int32_t value) {
+        return static_cast<float>(value) / static_cast<float>(1 << Fract);
+    }
+
+    unsigned m_selected = 0;
+    bool m_showFixed = false;
+    char m_registerEditor[20];
+    std::string m_editorToOpen;
+};
+
+}  // namespace Widgets
+}  // namespace PCSX

@@ -1,0 +1,8 @@
+# Ignore Gradle project-specific cache directory
+.gradle
+
+# Ignore Gradle build output directory
+build
+/logs/
+/src/main/resources/ImageDirectory/Biohazard 1.5 (MZD Mod) Update 29-01-2022 (Fixed Version).bin
+/src/main/resources/ImageDirectory/Biohazard 1.5 (MZD Mod) Update 29-01-2022 (Fixed Version).cue

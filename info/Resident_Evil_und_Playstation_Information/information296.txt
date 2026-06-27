@@ -1,0 +1,22 @@
+BSS (Resident Evil 1997)
+File Format
+Name	BSS (Resident Evil 1997)
+Ontology	
+Electronic File Formats
+BSS (Resident Evil 1997)
+Extension(s)	.bss
+This content was first retrieved from the Internet Archive's Wayback Machine for the date 2017-11-08 from the following URL: https://web.archive.org/web/20171108145016/http://rewiki.regengedanken.de/wiki/.BSS
+
+The .BSS file format is used on Resident Evil game series on Playstation to store the 2D background images. A file holds all different views (camera angles) for the same room.
+
+Structure
+The file is an archive that contains several compressed images, aligned on 32KB boundaries (for Resident Evil) or 64KB boundaries (Resident Evil 2 and 3).
+
+Decompression
+Each image is compressed for use with Playstation MDEC decoder (the chip responsible for video decoding). An extra decompression step in software, to decode variable-length data (VLC), is performed before feeding the data through MDEC processing.
+
+The libbs library from psxdev-libs (psyq) package provides the two necessary routines/steps to fully depack the images. The MDEC decoding part in this library comes from the PCSX emulator.
+
+The resolution of the image must be known for correct depacking, and these images use standard 320x240 resolution.
+
+External links

@@ -1,0 +1,75 @@
+Aufbau RDT Format am Beispiel RDT 1000:
+0-210344 byte
+
+00 - Sprite (Immer 00)
+01 - Cut - Amounts of cameras used in the Room
+02 - Amount of MD1 3D Models used in the Room
+03 - Items
+04 - Door
+05 - Room_at
+06 - Reverb_lv
+07 - Sprite_max - Total value of PRI cameras sprites (masks) that are used in the room
+
+08-11 (4byte) - Adress of snd0.edt (Start from 8352-??? (??? byte))
+12-15 (4byte) - Adress of snd0.vh (Start from 8480-??? (??? byte))
+16-19 (4byte) - Adress of snd0.vb (Start from 15296-??? (??? byte))
+20-23 (4byte) - Adress of snd1.edt (Start from 11584-??? (??? byte))
+24-27 (4byte) - Adress of snd1.vh (Start from 11680-??? (??? byte))
+28-31 (4byte) - Adress of snd1.vb (Start from 20736-??? (??? byte))
+32-35 (4byte) - Adress of collision.sca (Start from 1300-??? (??? byte))
+36-39 (4byte) - Adress of camera.rid (Start from 96-??? (??? byte))
+40-43 (4byte) - Adress of zone.rvd (Start from 400-??? (344 byte))
+44-47 (4byte) - Adress of light.lit (Start from 864-??? (320 byte))
+48-51 (4byte) - Adress to an Adress/table that contains the MD1 3d Objects and their textures (Start from 384-??? ??? byte)
+52-55 (4byte) - Adress to floor.flr (Start from 2988-??? (??? byte))
+56-59 (4byte) - Adress to block.blk (Start from 2948-??? (??? byte))
+60-63 (4byte) - Start address of Offsets to message data (Start from 3360 ...)
+64-67 (4byte) - Start address of Offsets to main scd data (Start from 3004 ...)
+68-71 (4byte) - Start adress of Offsets to sub scd data (Start from 3104...)
+72-75 (4byte) - Start adress of Offsets extra scd data (Start from 3352...)
+76-79 (4byte) - Adress of effect.esp (Start from 7168...)
+80-83 (4byte) - Adress of something.... (EFF?) (Start from 8348...))
+84-87 (4byte) - Adress to espXX.tim (Start from 130248...)
+88-91 (4byte) - Adress of modelXX.tim (Start from 143720...)
+92-95 (4byte) - Adress of animation.rbj (Start from 0-0 (0 byte))
+
+96 - 383 - Adress of camera.rid
+384 - 399 - Adresses of tim and md1 data
+    143720 - ??? - model01.tim
+    3384 - ??? - model01.md1
+    177032 - ??? - model02.tim
+    5276 - ??? - model01.md1
+400 - 863 - zone.rvd
+864 -1223 - light.lit
+1224 - 1299 - sprite.pri (Am aller schwersten zu ermitteln, da kein pointer. Aber - light.lit hat immer 40 byte Blöcke und sprite.pri startet immer mit mehreren FF)
+1300 - 2947 - collision.sca
+2948 - 2987 - block.blk
+2988 - 3003 - floor.flr
+3004 - 3005 - Offset to main00 data
+3006 - 3103 - main00.scd
+3104 - 3105 - Offset to sub00.scd data
+3106 - 3107 - Offset to sub01.scd data
+3108 - 3323 - sub00.scd
+3324 - 3351 - sub01.scd
+3352 - 3353 - Offset to extra00.scd data
+3354 - 3355 - Offset to extra01.scd data
+3356 - 3357 - extra00.scd
+3358 - 3359 - extra01.scd
+3360 - 3361 - Offset to main00.msg
+3362 - 3383 - main00.msg
+3384 - 5275 - model01.md1
+5276 - 7167 - model02.md1
+7168 - 8351 - effect.esp
+8352 - 8479 - snd0.edt
+8480 - 11583 - snd0.vh
+11584 - 11679 - snd1.edt
+11680 - 15295 - snd1.vh
+15296 - 20735 - snd0.vb
+20736 - 130223 - snd1.vb
+130224 - 130235 - snd0.snd
+130236 - 130247 - snd1.snd
+130248 - 139527 - esp05.tim
+139528 - 143687 - esp07.tim
+143688 - 143719 - Keine Ahnung was das ist - aber es ist immer 32 byte lang, existiert nur wenn esp Daten existieren und Startet mit vielen FFFFFFF danach kommen die anderen TIM daten
+143720 - 177031 - model01.tim
+177032 - 210344 - model01.tim

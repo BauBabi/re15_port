@@ -1,0 +1,174 @@
+
+CDROM File Archives with Offset	Contents
+Index	Prev
+Next
+
+Below are archives that start with a simple Offset list. The DOT1 and DOTLESS types are "standard" archives used by many PSX games (although the "standard" was probably independently created by different developers).
+
+DOT1 Archives (named after the ".1" extension in R-Types)
+Used by various titles:
+  R-Types (CG.1, PR\PR.1, and nested inside CG.1)
+  Final Fantasy IX (nested inside FF9.IMG, FF9.IMG\DB, FF9.IMG\DB\DOT1)
+  Legend of Mana (*.EFF,*.SET,*.BTP(?) in folders SND*,SOUND,WM(?))
+  Witch of Salzburg (*.ANM/BIN/BSS/DAT/MDL/SCE)
+  Rayman (RAY\*.XXX, RAY\SND\*.ALL, and nested inside *.XXX)
+  Pandemonium II (JESTERS.PKG\0101\0008 and JESTERS.PKG\0101\000D)
+  Incredible Crisis (MagDemo38: IC\TAN_DAT.CDB\<DOTLESS>\<DOT1>\<SHIFTJIS>)
+  Various games on PlayStation Magazine Demo Discs (Disc 03-54)
+DOT1 (in lack of a better name) is a simple archive format that contains Number of Entries and List with Increasing Offsets to File data.
+  000h 4    Number of Files (N)                 (eg. 2..18)
+  004h N*4  File List (offsets to each file, increasing, aligned)
+  ...  (4)  Optional: Total filesize (aka end-offset for last list entry)
+  ...  ..   Optional: Zeropadding to alignment boundary (when alignment>4)
+  ...  ..   File Data
+There are four variants with different alignment (and in some cases, with an extra entry with end-offset for last file):
+  Align800h, no extra entry    R-Types (CG.1 and PR\PR.1)
+  Align4,    no extra entry    R-Types (nested in CG.1), FF9 (in IMG, IMG\DB)
+  Align2,    no extra entry    Incredible Crisis (IC\TAN_DAT.CDB\*\*)
+  Align800h, with extra entry  MLB 2000 (DATA.WAD)
+  Align10h,  with extra entry  Witch of Salzburg (*.ANM/BIN/BSS/DAT/MDL/SCE)
+  Align4,    with extra entry  Rayman (*.XXX, *.ALL)
+The files can be detected by checking [004h]=4+(N*4), 4+(N*4)+Align800h, 4+(N*4)+4, or 4+(N*4)+4+Align10h, and checking that the offsets are increasing with correct alignment (Rayman has some empty files with same offset), and don't exceed the total filesize. And that the alignment space is zeropadded (in case of R-Types, only the header is 00h-padded, but files are FFh-padded).
+The detection could go wrong, especially if the archive contains very few files, some of the nested DOT1's contain only one file (header "00000001h, 00000008h", without any further increasing offsets or padding). As workaround, accept such files only if they have a ".1" filename extension, or if they were found inside of a bigger DOT1, IMG, or DB archive.
+Final Fantasy IX contains some DOT1's with fewer than few entries (the file being only 4-bytes tall, containing value NumEntries=00000000h).
+
+NFL Gameday '98 (MagDemo04: GAMEDAY\*.FIL) (32bit) (with nested FIL's)
+NFL Gameday '99 (MagDemo17: GAMEDAY\*.FIL) (32bit)
+NFL Gameday 2000 (MagDemo27: GAMEDAY\*.FIL) (16bit and 32bit)
+NCAA Gamebreaker '98 (MagDemo05: GBREAKER\*.FIL,*.BIN) (16bit and 32bit)
+NCAA Gamebreaker 2000 (MagDemo27: GBREAKER\*.FIL) (16bit and 32bit)
+FIL/32bit (with [02h]=FFFFh):
+  000h 2    Number of Files (N)
+  002h 2    ID for 32bit version (FFFFh=32bit entries)
+  004h N*4  File List (offsets to each file, increasing, 4-byte aligned)
+  ...  ..   File Data
+FIL/16bit (with [02h]<>FFFFh, eg. FLAG*.FIL and VARS\STARTUP2.FIL\0\*):
+  000h 2    Number of Files (N)
+  002h N*2  File List (offsets to each file, increasing, 4-byte aligned)
+  ...  ..   Zeropadding to 4-byte boundary
+  ...  ..   File Data
+
+PreSizeDOT1 (Ace Combat 2) (retail and MagDemo01: ACE2.DAT\*)
+Like DOT1, but with Total Filesize being oddly stored at begin of file.
+  000h 4    Total Filesize (aka end-offset for last list entry)
+  004h 4    Number of Files (N)
+  008h N*4  File List (offsets to each file, increasing, 4-byte aligned)
+  ...  ..   File Data
+Note: Ace Combat 2 contains PreSizeDOT1 (ACE2.DAT\02h..1Dh,36h..B2h) and normal DOT1 archives (nested in PreSizeDOT1's and in ACE2.DAT\B3h..E1h).
+
+DOT-T (somewhat same as DOT1, but with 16bit entries)
+Armored Core (MagDemo02, AC10DEMP\*.T)
+  000h 2    Number of Files
+  002h N*2  File List (Offset/800h to file data, increasing)
+  ...  2    Total Size/800h (end-offset for last file)
+  ...  ..   Zeropadding to 800h-byte boundary
+  ...  ..   File Data
+This can contain many empty 0-byte files (aka unused file numbers; though maybe those files exist in the retail version, but not in the demo version).
+
+DOTLESS Archive
+Hot Shots Golf (MagDemo07: HSG\*.DAT)
+Hot Shots Golf 2 (retail: DATA\F0000.BIN\*, MagDemo31/42: HSG2\MINGOL2.BIN\*)
+Starblade Alpha (FLT\*.DAT, TEX\*.DAT)
+Incredible Crisis (MagDemo38: IC\TAN_DAT.CDB\<DOTLESS>)
+  000h N*4  Offsets to File data (increasing, usually 4-byte aligned)
+  ...  (4)  Filesize (end-offset for last file) (only in Ape Escape)
+  ...  ...  File Data
+Like DOT1, but without Number of Files entry (instead, the first offset does imply the end of file list). There's no extra entry for end of last file (instead, that's implied in the total filesize). Most files have at least 5 entries, but HSG\TITLE0.DAT seems to contain only one entry (ie. the whole header contains only one value, 00000004h, followed by something that looks like raw bitmap data).
+Also used by Ape Escape (MINIGAME\* included nested ones), the Ape Escape files do have an end-marker with last-offset (that will appear as an empty 0-byte file at end of list when not specifically handling it). MINIGAME\MINI2\BXTIM.BIN does also have several 0-byte files inside of the file list.
+
+Twisted Metal: Small Brawl (MagDemo54: TMSB\SHL\*.TMS)
+  000h 4     Size of Data Area (total filesize minus 0D0h)
+  004h 4     Number of files
+  008h N*4   File List (zerobased offsets from begin of Data Area)
+  ...  ..    Zeropadding to 0D0h
+  0D0h ..    File Data Area
+This resembles DOT1, with an extra size entry and padding to 0D0h.
+
+Ridge Racer Type 4 (MagDemo19: R4DEMO\R4.BIN, 39Mbyte)
+Ridge Racer Type 4 (MagDemo21: R4DEMO\R4.BIN, 39Mbyte)
+Basically, this is alike DOT1, but SECTOR numbers, and with extra entries...
+  000h 4     Number of Files (N) (3C9h)
+  004h N*4   File List (Offset/800h)
+  ...  4     Total Size/800h                  ;<-- last offset
+  ...  4     Unknown (00,E8,82,2E)            ;<-- ??? maybe chksum*800h or so?
+  ...  ..    Zeropadding to 800h-byte boundary
+  ...  ..    File Data area
+
+Legend of Legaia (MagDemo20: LEGAIA\PROT.DAT)
+  000h 4     Zero
+  004h 4     Number of Entries (4D3h)
+  008h N*4   File List (Offset/800h)
+  ...  4     Total Size/800h (aka end Offset/800h of last file)
+  ...  ..    Zeropadding to 800h-byte boundary
+  ...  ..    File Data area
+The PROT.DAT does not contain filenames, however, it's bundled with CDNAME.TXT, which appears to contain symbolic names for (some) indices:
+  #define init_data 0           ;for file 0000h
+  #define gameover_data 1       ;for file 0001h
+  #define town01 3              ;for file 0003h
+  #define town0b 12             ;for file 000Ch
+  ...                           ;...
+  #define other6 1222           ;for file 04C6h
+  #define other7 1228           ;for file 04CCh
+The DAT file contains many zerofilled "dummy" files with 800h-byte size.
+
+Bloody Roar 1 (MagDemo06: BL\*.DAT)
+Bloody Roar 2 (MagDemo22: ASC,CMN,EFT,LON,SND,ST5,STU\*.DAT)
+  000h 4     Number of Entries (N)
+  004h N*4   File List (Offset-(4+N*4), increasing) (or FFFFFFFFh=Unused entry)
+  ...  ..    File Data area
+Most or all files in DAT archives are PreGT20 compressed.
+CDROM File Compression GT20 and PreGT20
+Note: Unused entries can occur anywhere, eg. Bloody Roar 2 CMN\SEL01.DAT does have both first and LAST entry marked as unused (FFFFFFFFh). Also, there may be a lot of unused entries, eg. Bloady Roar 1 CMN\TITLE00.DAT uses only 5 of 41h entries).
+
+Klonoa (MagDemo08: KLONOA\FILE.IDX\*)
+  000h 4     ID "OA05"
+  004h N*4   Offset List (usually/always 5 used entries, plus zeropadding)
+  030h ..    File Data area (usually/always starting at offset 30h)
+
+C - The Contra Adventure (DATA\SND\*.SGG)
+  000h 4    ID "SEGG"
+  004h 4    Offset to .VH file
+  008h 4    Offset to .VB file
+  00Ch 4    Number of .SEQ files (N) (usually 6Eh, or 08h in MENU.SGG)
+  010h N*4  Offsets to .SEQ files (increasing, unaligned)
+  ...  ..   SEQ files
+  ...  ..   Padding to 4-byte boundary
+  ...  ..   VH file
+  ...  ..   VB file
+
+Ninja (MagDemo13: NINJA\VRW\*.VRW)
+  000h 8     ID "VRAM-WAD" (here as archive ID, although same as compress ID)
+  004h N*4   File List (offsets to Data)  ;NumFiles=(FirstOffset-8)/4
+  ...  ..    Data (compressed .PAK files, which do ALSO have ID="VRAM-WAD")
+The compressed .PAK files are using a LZ5-variant:
+CDROM File Compression LZ5 and LZ5-variants
+
+The Next Tetris (MagDemo22: TETRIS\*) has PSX.BSE (and nested therein)
+  000h 4     Unknown (3)
+  004h 4     Total Size
+  008h 4     Number of Files (N) (max 40h, for max 40h*4 bytes in file list)
+  00Ch N*4   File List (increasing offsets, 800h-byte aligned)
+  ...  ..    Unknown (looks like garbage padding for unused File List entries)
+  10Ch 6F4h  42h-filled padding to 800h-byte boundary
+  800h ..    File Data area
+
+Tactics Ogre (UBF*.BIN)
+  000h 8     Fixed (88h,0,0,0,0,0,0,0)
+  008h 4     Number of Files (eg. 1Dh or 585h, including last/end file)
+  00Ch N*4   File List (increasing offsets, 800h-byte aligned)
+  ...  ..    Zeropadding to 800h-byte boundary
+  ...  ..    File Data area
+Note: The last file is a TXT file containing "LINK-FILE END....",0Dh,0Ah,1Ah, plus zeropadding to 800h-byte boundary.
+
+Spyro the Dragon (MagDemo12: SPYRO\PETE.WAD)
+  000h 4     Total Filesize (3E800h in Spyro)
+  004h N*8   File List      (1B0h bytes in Spyro)
+  ...  ..    Zeropadding to 800h-byte boundary
+  ...  ..    File Data (4-byte aligned, despite of above 800h-byte hdr padding)
+File List entries:
+  000h 4     Fileoffset (increasing, 4-byte aligned)
+  004h 4     File ID? (unsorted, not increasing, used range is 000h..1FAh)
+
+
+I am homeless in Hamburg, please help me out!
+extracted from no$psx v2.2 - homepage - patreon - whole doc htm/txt - copyright 2022 martin korth (nocash)

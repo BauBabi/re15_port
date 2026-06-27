@@ -1,0 +1,89 @@
+06 - SCA (Boundaries/Collisions)
+
+This section contains the collision boundary data used by the room. So that is the data that will hinder you from walking into spots that you shouldn't reach.
+
+The data is an array of entries that all are 16 bytes in size each.
+Right at the offset it starts with a header, defined like this:
+
+SCA Header Structure (16 Bytes)
+00&#124; Cx
+02&#124; Cz
+04&#124; Amount
+08&#124; Ceiling
+12&#124; Dummy
+Cx (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the X value of the ceiling
+
+Cz (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the Z value of the ceiling
+
+Amount (4 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Is the amount of SCA/boundary entries that are contained, the header is counted into it too, meaning a value of 16 would mean Header + 15 SCA entries.
+
+Ceiling  (4 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+I'm not, sure but it might define the ceiling y (height) value, seems very likely.
+
+Dummy (4 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+That value is unused, editing it has no effect, probably was just added for padding matters.
+This header will be followed by an amount of boundary entries, which again are 16 bytes in length each. The amount of entries to follow are defined
+in the 4 byte Amount value found in the header above.
+
+SCA Entry Structure (16 Bytes)
+00&#124; X
+02&#124; Z
+04&#124; W
+08&#124; D
+10&#124; Type
+12&#124; Floor
+X (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the X value from where the boundary is "drawn".
+
+Z (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the Z value from where the boundary is "drawn".
+
+W (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the W value, which is the width of the boundary, starting from the X value that is used. Note that when trying to represent them, keep in mind, that
+the game doesn't use negative values for them. Those are unsigned 2 byte integer/short values.
+
+D  (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the D value, which is the density of the boundary, starting from the Z value that is used. Note that when trying to represent them, keep in mind, that
+the game doesn't use negative values for them. Those are unsigned 2 byte integer/short values.
+
+Type (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the type of the boundary, is it a circle shaped one? a rectangle? stairs? etc. Look on the list below to see the currently identified ones.
+Code: Select all
+
+0 = STANDARD
+1 = STANDARD
+5 = DIAGONAL <> &#40;DIAMOND SHAPED&#41;
+6 = CIRCLE
+7 = HORIZONTAL
+8 = VERTICAL
+9 = CLIMBABLE OBJ.
+10 = CLIMB EDGE
+11 = SLOPE, RAMP
+12 = STAIR
+128 = STANDARD
+129 = DIAGONAL /
+130 = DIAGONAL &#092;
+131 = DIAGONAL &#092;
+132 = DIAGONAL /
+133 = DIAGONAL <> &#40;DIAMOND SHAPED&#41;
+134 = CIRCLE #2
+135 = HORIZONTAL
+136 = VERTICAL
+140 = STAIRS #2, LONG
+Floor (4 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+That value defines the Floor level (height) it will work on.
+>>> The data is then followed by the BLK data found at the offset provided by the 12 - BLK pointer.

@@ -1,0 +1,209 @@
+
+CDROM File Video Streaming Chunk-based formats	Contents
+Index	Prev
+Next
+
+Newer Electronic Arts videos (EA)
+EA videos are chunk based (instead of using 20h-byte .STR headers). The next chunk starts right at the end of the previous chunk (without padding to sector boundaries).
+ STR Sector Header:
+  No STR Sector header (first sector starts directly with "VLC0" chunk)
+ VLC0 Chunk (at begin of movie file):
+  000h 4     Chunk ID "VLC0"
+  004h 4     Chunk Size (always 1C8h)     (big-endian)
+  008h 1C0h  16bit MDEC values for E0h huffman AC codes (little-endian)
+ MDEC Chunks (video frames):
+  000h 4     Chunk ID "MDEC"                           ;\
+  004h 4     Chunk Size (...)             (big-endian) ; custom chunk header,
+  008h 2     Bitmap Width in pixels       (big-endian) ; instead of STR header
+  00Ah 2     Bitmap Height in pixels      (big-endian) ;
+  00Ch 4     Frame Number (starting at 0) (big-endian) ;/
+  010h ..    Data (in BS v2 format, but using custom Huffman codes from VLC0)
+  ...  ..    Zeropadding to 4-byte boundary
+ Audio Chunks (au00/au01):
+  000h 4     Chunk ID ("au00"=normal, "au01"=last audio chunk)
+  004h 4     Chunk Size (...)                                   (big-endian)
+  008h 4     Total number of 2x4bit samples in previous chunks  (big-endian)
+  00Ch 2     Unknown (always 800h) (maybe Pitch: 800h=22050Hz)  (big-endian)
+  00Eh 2     Unknown (always 200h)                              (big-endian)
+  ...  ..    SPU-ADPCM audio data, left  (0Fh bytes per sample block)
+  ...  ..    SPU-ADPCM audio data, right (0Fh bytes per sample block)
+  ...  ..    Garbagepadding to 4-byte boundary
+  Note: SPU-ADPCM does normally have 10h-byte blocks, but in this case,
+  the 2nd byte (with loop flags) is omitted, hence only 0Fh-byte blocks.
+ Zero Chunk (zeropadding at end of file, exists only in some EA videos):
+  000h ..    Zeropadding
+
+Older Electronic Arts videos
+Crusader: No Remorse (1996 Origin Systems) (MOVIES\*.STR)
+Soviet Strike (1996 Electronic Arts)
+Battle Stations (1997 Electronic Arts)
+Andretti Racing (1996 Electronic Arts)
+ STR Sector Header:
+  000h 4    ID (DDCCBBAAh) (aka AABBCCDDh big-endian)
+  004h 4    Sector number within STR file (0=First, up to Filesize/800h-1)
+  008h 7F8h Data (video and audio chunks, see below) (first chunk is "ad20")
+ Video Chunks (MDEC):
+  000h 4    Chunk ID "MDEC"                           ;\
+  004h 4    Chunk Size (...)             (big-endian) ;
+  008h 2    Bitmap Width in pixels       (big-endian) ; custom chunk header
+  00Ah 2    Bitmap Height in pixels      (big-endian) ;
+  00Ch 4    Frame Number (starting at 0) (big-endian) ;/
+  010h ..   Data (in BS v2 format)                    ;-standard BS v2 data
+ Audio Chunks (ad20/ad21) (22050Hz stereo):
+  000h 4    Chunk ID ("ad20"=normal, "ad21"=last audio chunk)
+  004h 4    Chunk Size (1A50h or 1A70h)                        (big-endian)
+  008h 4    Total number of 2x4bit samples in previous chunks  (big-endian)
+  00Ch 2    Unknown (always 800h) (maybe Pitch: 800h=22050Hz)  (big-endian)
+  00Eh 2    Unknown (always 200h)                              (big-endian)
+  010h ..   SPU-ADPCM audio data, left  (10h bytes per sample block)
+  ...  ..   SPU-ADPCM audio data, right (10h bytes per sample block)
+ Last STR Sector:
+  000h 18h  FFh-filled (aka 8-byte STR header and 10h-byte Chunk header)
+  018h -    Nothing (total STR filesize is N*800h+18h bytes)
+
+Oldest Electronic Arts videos
+Wing Commander III: Heart of the Tiger (MOVIES1.LIB\*.wve) (1995, EA/Origin)
+ STR Sector Header:
+  No STR Sector header (first sector starts directly with "Ad10" chunk)
+ Video Chunks (MDEC):
+  000h 4    Chunk ID "MDEC"                           ;\
+  004h 4    Chunk Size (2xx0h)           (big-endian) ;
+  008h 2    Bitmap Width in pixels       (big-endian) ; custom chunk header
+  00Ah 2    Bitmap Height in pixels      (big-endian) ;
+  00Ch 2    Unknown (7FFFh)              (big-endian) ;
+  00Eh 2    Unknown (AD14h or AD24h)     (big-endian) ;/
+  010h ..   Data (in BS v2 format)                    ;-standard BS v2 data
+  ...  ..   Padding, up to circa 20h bytes, FFh-filled
+ Audio Chunks (Ad10/Ad11) (22050Hz stereo):
+  000h 4    Chunk ID ("ad20"=normal, "ad21"=last audio chunk)
+  004h 4    Chunk Size (D38h or D28h) (or less in last chunk)  (big-endian)
+  010h ..   SPU-ADPCM audio data, left  ? (10h bytes per sample block)
+  ...  ..   SPU-ADPCM audio data, right ? (10h bytes per sample block)
+Audio seems to be 22050Hz stereo, however, chunks with size=D38h have odd amounts of sampleblocks, so it isn't as simple as having left/right in first/second half.
+
+Policenauts (Japan, 1996 Konami) (NAUTS\MOVIE\*.MOV)
+ STR Sector Header:
+  No STR Sector header (first sector starts directly with "VMNK" chunk)
+ First chunk (800h bytes):
+  000h 4     ID "VMNK" (aka KNMV backwards, maybe for Konami Video/Movie)
+  004h 4     Unknown (01h)
+  008h 4     Unknown (01h)
+  00Ch 4     Unknown (F0h)
+  010h 4     Size of KLBS chunks?          (40000h)
+  014h 4     Bitmap X1 (aka left border)?  (16pix, 10h)
+  018h 4     Bitmap Y1 (aka upper border)? (16pix, 10h)
+  01Ch 4     Bitmap Width                  (288pix, 120h)
+  020h 4     Bitmap Height                 (144pix, 90h)
+  024h 7E4h  Zerofilled
+ Further chunks (40000h bytes, each):
+  000h 8     Zerofilled
+  008h 4     Chunk ID "KLBS" (aka SBLK backwards, maybe for Stream Block)
+  00Ch 4     Chunk Size (usually 40000h)
+  010h 4     Number of Name List entries
+  014h 4     Number of Name List entries (same as above)
+  018h 8     Zerofilled
+  020h N*30h Name List
+  ...  ..    Data (referenced from Name List)
+  ...  ..    Zeropadding (to end of 40000h-byte chunk)
+The Name List does resemble a file archive, however, the "filenames" are just Type IDs (eg. all picture frames do have the same name).
+ Name List entries:
+  000h 8     Zerofilled
+  008h 8     Data Type Name (eg. "SCIPPDTS")
+  010h 4     Time when to play/display the frame (0 and up)
+  014h 4     Time duration for that frame (usually 14h for Picture frames)
+  018h 4     Data Offset in bytes (from begin of chunk)
+  01Ch 4     Data Size in bytes
+  020h 10h   Zerofilled
+Data Formats for the different Data Types...
+ Type "SDNSHDTS" aka SNDS,STDH - SoundStdHeader (Size=800h, Duration=0)
+  000h 4     Maybe Pitch? (800h)                            (big-endian)
+  004h 4     Maybe Pitch? (800h)                            (big-endian)
+  008h 4     Total SPU-ADPCM size in bytes (for whole .MOV) (big-endian)
+  00Ch 4     Unknown (FFFFFFFFh)                            (whatever)
+  010h 4     Unknown (00007FFFh)                            (big-endian)
+  014h 7ECh  Zerofilled
+ Type "SDNSSDTS" aka SNDS,STDS - SoundStdStream (Size=10h..4000h, Duration=9Ch)
+  000h 4000h SPU-ADPCM data in 10h-byte blocks (last chunk is less than 4000h)
+ Type "SCIPPDTS" aka PICS,STDP - PictureStdPicture (Size=3xxxh, Duration=14h)
+  000h 3xxxh Picture Frame (in BS v1 format)
+ Type "SCTELLEC" aka ETCS,CELL - ExtraCells? (Size=0Ch, Duration=1)
+  000h ..    Maybe subtitle related...?
+ Type "SCTEGOLD" aka ETCS,DLOG - ExtraD-log? (Size=19h..31h, Duration=27h..44h)
+  000h ..    Maybe subtitle related...?
+Note: Total number of 10h-byte SPU-ADPCM blocks can be odd (so the audio seems to be mono).
+Apart from the .MOV files, there's also one standard .STR file for the Knnami Intro (with normal STR headers and BS v2 data).
+
+Best Sports Games Ever (DD\*.VLC and MOVIES\*.VLC) (Powerline Demo Disc menu)
+This format is used for still images with only frame, and for looping short animation sequences in the Demo Disc Menu. There's no audio.
+ Header Chunk:
+  000h 4    Fixed ID (74h,55h,89h,08h aka 08895574h)
+  004h 2    Bitmap Width           (140h)
+  006h 2    Bitmap Height          (100h)
+  008h 2    Video Frame Size/4     (17A0h or 13B0h)
+  00Ah 2    Number of Video Frames (01h or 32h)
+  00Ch 4    Frame End ID (eg. 62DCCACEh) (random?, but stays same within movie)
+ Video Frame Chunk(s):
+  ...  ..   Data (in BS v1/v2/v3 format)         ;\size = hdr[008h]*4
+  ...  ..   FFh-filled (padding to Frame Size)   ;/
+  ...  4    Frame End ID (eg. 62DCCACEh)         ;-same value as in hdr[00Ch]
+For random access, best is seeking "fpos=N*(Framesize+4)+10h", alternately one could search "fpos=LocationAfterFrameEndID".
+
+Sentient (FILMS\*.FXA)
+This is having neither per-sector STR headers nor Chunk headers, instead it's having raw data with fixed size of 10 sectors per frame.
+File Header (sector 0, 800h bytes):
+  000h 4    File ID (01h,"XSP") (aka PSX backwards)
+  004h 2    Unknown (0001h)
+  006h 2    Unknown (0040h) (this is used for something...)
+  008h 2    Bitmap Width  (0140h)
+  00Ah 2    Bitmap Height (00F0h)
+  00Ch 4    Total number of video frames
+  010h 4    Number of video sectors per frame (always 8)
+  014h 4    Total number of video sectors, excluding audio/dummy (=NumFrames*8)
+  018h 1    Zero
+  019h 1    Sector List size (28h) (ie. each 4 frames)  ;\or zerofilled when
+  01Ah 28h  Sector Types (2=Video, 1=Audio, 0=Dummy)    ;/not present
+  042h ..   Zerofilled
+  7xxh ..   Unknown, maybe just garbage ...?
+  ...  ..   Zerofilled
+The frame rate is 15fps with 10 sectors per frame (8xVideo and either 2xAudio or 1xAudio+1xDummy). The Video/Audio/Dummy sector arrangement does repeat each 40 sectors (aka each 4 frames):
+  vVvvvvv--vvVvvv--vvvvVv--vvvvvv-Vvvvvvv-  Video
+  -------A-------A-------A-------A-------A  Audio
+  --------D-------D-------D---------------  Dummy
+  V = 1st sector of video frame
+  v = 2nd..8th sector of video frame (or fileheader in case of sector 0)
+  A = Audio (each 8th sector, ie. sector 07h,0Fh,17h,1Fh,etc.)
+  D = Dummy (occurs after some (not all) audio sectors)
+ Some files have that sector arrangement stored in header[019h..041h], but
+ other files have that header entries zerofilled (despite of using the same
+ arrangement).
+Video frames are 8 sectors (4000h-byte), first and last 8 bytes are swapped:
+  0000h 8     Last 8 bytes of BS v1 bitstream   ;\or garbage padding
+  0008h 3FF0h First 3FF0h of BS v1 bitstream    ;/
+  3FF8h 8     Footer (64bit, with squeezed BS header and other info)
+ The footer bits are:
+  0-4    5bit   Quant (00h..1Fh) (only 5bit, not 6bit)
+  5-15   11bit  MDEC Size in 20h-word units (80h-byte units)
+  16-23  8bit   Unknown (lowbits are often same as bit48 and up?)
+  24-31  8bit   BS ID/100h (3800h/100h)
+  32-47  16bit  Frame Number (0=First)
+  48-63  16bit  Next Sector Number (start of next video frame)
+ To decrypt/convert the frame to standard BS v1 format:
+  x=[3FF8h]                      ;get footer
+  [3FF8h..3FFFh]=[0000h..0007h]  ;last 8 bytes of bitstream
+  [0000h]=(x AND FF00FFE0h)      ;size and ID=3800h
+  [0004h]=(x AND 1Fh)+10000h     ;quant and version=v1
+ The next_sector number is usually current_sector+1 (or +2 if that would be
+ audio), in last frame it does point to end of file.
+ Bitstreams smaller than 3FF8h are garbage padded (initially some 32bit garbage
+ values, and in later frames leftovers from previous bitstream sectors).
+Dummy sectors contain 800h bytes:
+  000h 4     Always FFFFFFFFh (unfortunately, this isn't a unique ID)
+  004h 7FCh  Garbage (zeroes, random, or even leaked ASM source code)
+ Dummy sectors have the same Subheader as video sectors, the leading FFFFFFFFh
+ could also occur in BS bitstreams or frames with garbage padding, so one must
+ use the sector arrangement pattern to identify dummy sectors.
+Audio sectors are XA-ADPCM and can be filtered via Subheader, or via sector arrangement pattern.
+
+
+I am homeless in Hamburg, please help me out!
+extracted from no$psx v2.2 - homepage - patreon - whole doc htm/txt - copyright 2022 martin korth (nocash)

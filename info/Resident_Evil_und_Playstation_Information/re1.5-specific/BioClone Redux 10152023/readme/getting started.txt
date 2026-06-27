@@ -1,0 +1,39 @@
+
+
+------------------------------------------------------------------------
+GETTING STARTED
+------------------------------------------------------------------------
+
+Place the app (*.exe) and "data" folder anywhere.
+
+The data folder must always be in the same folder as the app.
+
+BMP files included in the data folder must never be deleted or renamed;
+the app will not boot without them.
+
+
+------------------------------------------------------------------------
+CONFIGURATION
+------------------------------------------------------------------------
+
+Some basic settings are saved in a text file named "config.ini" within
+the data folder, after the app has been executed at least once.
+
+The configuration settings file is UTF-16 LE encoded. The app always
+expects this encoding when reading this file at boot.
+
+If at any time an error in configuration has occurred, simply modify
+or delete the config.ini file.
+
+
+------------------------------------------------------------------------
+WINDOW SIZE
+------------------------------------------------------------------------
+
+To resize the window:
+
+Using the app menu, go to "Utility" and select "Configuration."
+
+Accepted window sizes range from 320x240 to 7680x5760. Settings take
+effect only after app restart.
+

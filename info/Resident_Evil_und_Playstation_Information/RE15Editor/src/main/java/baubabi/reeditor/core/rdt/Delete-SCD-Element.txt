@@ -1,0 +1,129 @@
+SCD-Element löschen:
+
+Snd0EdtAddress08.snd0EdtAddress (08-11)
+Snd0VhAddress09.snd0VhAddress (12-15)
+Snd0VbAddress10.snd0VbAddress (16-19)
+Snd1EdtAddress11.snd1EdtAddress (20-23)
+Snd1VhAddress12.snd1VhAddress (24-27)
+Snd1VbAddress13.snd1VbAddress (28-31)
+MessageMsgAddress21.messageMsgAddress (60-63)
+MainScdOffsetAddress22.mainScdAddress (64-67) //0, wenn nichts mehr über
+SubScdOffsetAddress23.subScdAddress (68-71)  //0, wenn nichts mehr über
+ExtraScdOffsetAddress24.extraScdOffsetAddress (72-75) //0, wenn nichts mehr über
+EffectEspAddress25.espAddress
+SomethingEvtlEffAddress26.somethingEvtlEffAddress
+EspTimAddress27.espTimAddress
+ModelTimAddress28.modelTimAddress
+AnimationRbjAddress.animationRbjAddress
+
+(Loop):
+ModelTimElementAddress31.modelTimAddress
+ModelMd1ElementAddress32.modelMd1Address
+
+(Loop):
+MainScd40:
+- Ein Scd Element wird gelöscht
+- MainScd40.rdtOffsetPositionStart speichern
+- MainScdOffset39 dafür ermitteln:
+	--> MainScdOffset39 Werte durchgehen
+	--> Die Start Position des zugehörigen Scd Elements ermitteln mit:
+	Startposition = MainScdOffset39.rdtOffsetPositionStart + MainScdOffset39.mainScdOffset
+	--> Überprüfen ob die berechnete Startposition der Startposition des MainScd40 Elements entspricht:
+	if(Startposition == MainScd40.rdtOffsetPositionStart)
+	--> Wenn ja, Offset Element zum aktuellen ScdElement ermittelt.
+	
+- Scenario 1: Es ist eines von mehreren in der MainScd40.singleScdDataElements Liste
+	--> Die Nachfolger MainScdOffset39 Elemente in Schleife anpassen:
+	MainScdOffset39.mainScdOffset
+
+- Scenario 2: Es ist das letzte Element der MainScd40.singleScdDataElements Liste
+	- MainScdOffsetAddress22.mainScdAddress auf 0 setzen
+	- MainScd40 Element löschen
+	- MainScdOffset39 Element löschen
+
+(Loop):
+SubScd42:
+- Ein Scd Element wird gelöscht
+- SubScd42.rdtOffsetPositionStart speichern
+- SubScdOffset41 dafür ermitteln:
+	--> SubScdOffset41 Werte durchgehen
+	--> Die Start Position des zugehörigen Scd Elements ermitteln mit:
+	Startposition = SubScdOffset41.rdtOffsetPositionStart + SubScdOffset41.subScdOffset
+	--> Überprüfen ob die berechnete Startposition der Startposition des SubScd42 Elements entspricht:
+	if(Startposition == SubScd42.rdtOffsetPositionStart)
+	--> Wenn ja, Offset Element zum aktuellen ScdElement ermittelt.
+	
+- Scenario 1: Es ist eines von mehreren in der SubScd42.singleScdDataElements Liste
+	--> Die Nachfolger SubScdOffset41 Elemente in Schleife anpassen:
+	SubScdOffset41.subScdOffset
+
+- Scenario 2: Es ist das letzte Element der SubScd42.singleScdDataElements Liste
+	- SubScdOffsetAddress23.subScdAddress auf 0 setzen
+	- SubScd42 Element löschen
+	- SubScdOffset41 Element löschen
+
+(Loop):
+ExtraScd44:
+- Ein Scd Element wird gelöscht
+- ExtraScd44.rdtOffsetPositionStart speichern
+- ExtraScdOffset43 dafür ermitteln:
+	--> ExtraScdOffset43 Werte durchgehen
+	--> Die Start Position des zugehörigen Scd Elements ermitteln mit:
+	Startposition = ExtraScdOffset43.rdtOffsetPositionStart + ExtraScdOffset43.extraScdOffset
+	--> Überprüfen ob die berechnete Startposition der Startposition des ExtraScd44 Elements entspricht:
+	if(Startposition == ExtraScd44.rdtOffsetPositionStart)
+	--> Wenn ja, Offset Element zum aktuellen ScdElement ermittelt.
+	
+- Scenario 1: Es ist eines von mehreren in der ExtraScd44.singleScdDataElements Liste
+	--> Die Nachfolger ExtraScdOffset43 Elemente in Schleife anpassen:
+	ExtraScdOffset43.subScdOffset
+
+- Scenario 2: Es ist das letzte Element der ExtraScd44.singleScdDataElements Liste
+	- ExtraScdOffsetAddress24.extraScdAddress auf 0 setzen
+	- ExtraScd44 Element löschen
+	- ExtraScdOffset43 Element löschen
+
+(Loop):
+MainMsgOffset45.rdtOffsetPositionStart
+MainMsgOffset45.rdtOffsetPositionEnd
+
+(Loop):
+MainMsg46.rdtOffsetPositionStart
+MainMsg46.rdtOffsetPositionEnd
+
+AnimnationRbj47.rdtOffsetPositionStart
+AnimnationRbj47.rdtOffsetPositionEnd
+
+(Loop):
+ModelMd148.rdtOffsetPositionStart
+ModelMd148.rdtOffsetPositionEnd
+
+EffectEsp58.rdtOffsetPositionStart
+EffectEsp58.rdtOffsetPositionEnd
+Snd0Edt49.rdtOffsetPositionStart
+Snd0Edt49.rdtOffsetPositionEnd
+Snd0Vh50.rdtOffsetPositionStart
+Snd0Vh50.rdtOffsetPositionEnd
+Snd1Edt51.rdtOffsetPositionStart
+Snd1Edt51.rdtOffsetPositionEnd
+Snd1Vh52.rdtOffsetPositionStart
+Snd1Vh52.rdtOffsetPositionEnd
+Snd0Vb53.rdtOffsetPositionStart
+Snd0Vb53.rdtOffsetPositionEnd
+Snd1Vb54.rdtOffsetPositionStart
+Snd1Vb54.rdtOffsetPositionEnd
+Snd0Snd55.rdtOffsetPositionStart
+Snd0Snd55.rdtOffsetPositionEnd
+Snd1Snd56.rdtOffsetPositionStart
+Snd1Snd56.rdtOffsetPositionEnd
+
+(Loop):
+EspTim59.rdtOffsetPositionStart
+EspTim59.rdtOffsetPositionEnd
+
+UnknownData60.rdtOffsetPositionStart
+UnknownData60.rdtOffsetPositionEnd
+
+(Loop):
+ModelTim57.rdtOffsetPositionStart
+ModelTim57.rdtOffsetPositionEnd

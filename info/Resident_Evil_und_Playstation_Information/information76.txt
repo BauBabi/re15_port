@@ -1,0 +1,40 @@
+&#092;&#092;RDT File Format (BIOHAZARD 2&#092;RESIDENT EVIL 2)
+
+The information provided here was originally published by PmData on his REWiki,
+so kudos for the hard work and the comprehension :) This is an updated and general documentation of the
+RDT file format used in the game. For those who still don't know, RDT contain the data used by the rooms
+of the game.
+
+-WIP------------------------------------------------------------------------------------------------------------
+
+This topic will be a comprehensive documentation about the RDT File Format of RESIDENT EVIL 2
+Do not post/reply here !!!
+
+-WIP------------------------------------------------------------------------------------------------------------
+Index
+
+Header
+
+00 - SND (Sound attribute table)
+01 - VH (VAB header file)
+02 - VB (VAB sound container file)
+03 - VH (Trial) (VAB header file)
+04 - VB (Trial) (VAB sound container file)
+05 - OTA (Unused)
+06 - SCA (Boundaries/Collisions)
+07 - RID (Cameras)
+08 - RVD (Camera switch zones)
+09 - LIT (Lights)
+10 - MD1/TIM Table (3D models & textures)
+11 - FLR (Floor/Footstep sound areas)
+12 - BLK (Block/Unknown)
+13 - MSG Main (Event text)
+14 - MSG Sub (Event text)
+15 - TIM (Cam Scroll)
+16 - SCD Main (Initialization script)
+17 - SCD Sub (Event scripts)
+18 - ESP (Effect sprite data)
+19 - EFF (Effect sprite data table)
+20 - TIM (EFF/ESP Effects)
+21 - TIM (MD1 Textures)
+22 - RBJ (Room animations)

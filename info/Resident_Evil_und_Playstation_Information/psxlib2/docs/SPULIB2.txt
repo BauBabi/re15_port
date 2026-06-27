@@ -1,0 +1,74 @@
+James' PSX SPU lib for MIPSGCC (version 2)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+23 April 2000
+
+
+General:
+~~~~~~~
+This library is freeware. I take no responsibility for anything that
+may happen as a result of using this library.
+
+This library now has the following functionality:
+
+- Control SPU general parameters.
+- Control SPU voice parameters.
+- Upload and play samples.
+- Upload VAB and play VAB samples.
+- Set and read ADSR envelopes.
+- Noise and FM modes (not properly tested).
+- 4/6/8 track MOD player (plays HITMOD format MOD's)
+- Some other stuff.
+
+
+
+How to Use the Library:
+~~~~~~~~~~~~~~~~~~~~~~
+
+The library is for use with the mipsgcc compiler. If you're using
+another compiler, it probably has a nice comfy sound library already.
+
+To use the library, you will need these two files:
+
+spu.o OR libps.a
+libspu.h
+
+Add the line '#include <libspu.h>' to your proggie. When compiling,
+link spu.o or libps.a to your proggie (just put 'spu.o' on the
+end of your mipsgcc compile line). Check out the examples if you're
+confused.
+
+If that doesn't work, just hack it.
+
+Note: to use the MODplayer, you'll also have to #include <hitmud.h>. 
+
+
+Quick SPU Info:
+~~~~~~~~~~~~~~
+
+The PSX SPU is 24-voice multitimbral (can play 24 sounds
+simultaneously). Wavetable (sample) data is stored in the SPU's
+512kb "sound buffer", which is only accessible to the SPU. This means
+that all sample data has to be transferred to the sound buffer thru
+the SPU before it can be used.
+
+Each of the 24 voices has the following parameters:
+	left and right volume
+	pitch
+	a pointer to this voice's sample data in the sound buffer
+	an ADSR envelope
+	a switch for reverb
+	sample loop point setting
+
+Left and right volume and left and right reverb depth can be set for
+the whole SPU.
+
+The samples must be in .vag format (ie: PSX 16-bit packed sample
+format). Tools to convert 16-bit mono signed .wav files to .vag
+format are included.
+
+
+Library Reference:
+~~~~~~~~~~~~~~~~~
+
+See spulib2.html

@@ -1,0 +1,39 @@
+Additional info
+
+First, you may ask what it is about those offsets. Well it's simple the first 8 bytes of the header are each 1 bytes values,
+the following values from offset 8 and onwards are 4 byte long values (always unsigned = positive) and they point to the
+individual data sections that are described below.
+
+If you look at the camera (RID) offset decimal 36 or hex: 24 and read 4 bytes from it e.g decimal "100" or in hex "64 00 00 00" it would mean that you will
+find the start of the RID camera data on decimal offset 100 / hex 64 00 00 00.
+
+You might think the order of offsets given is at the same time the order of the data in the file, this is wrong!
+Here is a list of the order data is actually stored in RDT files.
+
+RDT Data order
+RID
+MD1/TIM Table (Optional) (if the Model value in header is = 0 then no data)
+RVD
+LIT
+PRI
+SCA
+BLK (Optional)
+FLR (Optional)
+SCD_MAIN (Optional)
+SCD_SUB
+MSG_MAIN (Optional)
+MSG_SUB (Optional)
+TIM_CAM (Optional)
+MD1 (Optional) (if the Model value in header is = 0 then no data)
+ESP (Optional) (depends on if ESP offset > 0, if not then no data)
+EFF (Optional) (depends on if ESP offset > 0, if not then no data)
+RBJ (Optional)
+SND (Optional for PC)
+VH (Optional for PC)
+VB (Optional for PC)
+TIM_EFF (Optional) (depends on if ESP offset > 0, if not then no data)
+TIM_MD1 (Optional) (if the Model value in header is = 0 then no data)
+The optional means that this data is not required to have a basic room that will work without crashing.
+
+
+If the header's ESP offset is pointing to 0, then ESP, EFF and TIM_EFF section will not be in the RDT.

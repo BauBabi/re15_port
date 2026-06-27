@@ -1,0 +1,600 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\bio-lib\Bio1\bio1.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio1\CLUT\bio1_dc_font_green.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio1\CLUT\bio1_dc_font_grey.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio1\CLUT\bio1_dc_font_normal.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio1\CLUT\bio1_dc_font_red.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio1\CLUT\bio1_status_clut02.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio1\CLUT\bio1_trial_font_normal.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio1\PAK\bio1_pak.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio2\ADT\bio2_adt.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio2\BGM\bio2_bgm.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio2\bio2.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio2\BLK\bio2_blk.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio2\CLUT\bio2_ds_cpt.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio2\CLUT\bio2_ds_st0.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio2\CPT\bio2_cpt.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio2\DIE\bio2_die.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio2\EDT\bio2_edt.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio2\ESP\bio2_esp.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio2\FLR\bio2_flr.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio2\LIT\bio2_lit.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio2\MD1\bio2_md1.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio2\MSG\bio2_ds_font_space.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio2\MSG\bio2_msg.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio2\PDEMO\bio2_pdemo.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio2\PRI\bio2_pri.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio2\RDT\bio2_rdt.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio2\RID\bio2_rid.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio2\RVD\bio2_rvd.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio2\SCA\bio2_sca.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio2\SCD\bio2_bytecode.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio2\SCD\bio2_bytecode_map.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio2\SLD\bio2_sld.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio2_Nov96\bio2_nov96.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio2_Nov96\CLUT\bio2_nov96_st_00.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio2_Nov96\CLUT\bio2_nov96_tex.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio3\bio3.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio3\MD2\bio3_md2.cpp" />
+    <ClCompile Include="..\..\bio-lib\Bio3\SLD\bio3_sld.cpp" />
+    <ClCompile Include="..\..\bio-lib\CDX\bio_cdx.cpp" />
+    <ClCompile Include="..\..\bio-lib\CDX\lzo.cpp" />
+    <ClCompile Include="..\..\bio-lib\Common\bio_camera.cpp" />
+    <ClCompile Include="..\..\bio-lib\Common\bio_common.cpp" />
+    <ClCompile Include="..\..\bio-lib\Common\bio_gamepad.cpp" />
+    <ClCompile Include="..\..\bio-lib\Common\bio_geometry.cpp" />
+    <ClCompile Include="..\..\bio-lib\Common\bio_animation.cpp" />
+    <ClCompile Include="..\..\bio-lib\Common\bio_model.cpp" />
+    <ClCompile Include="..\..\bio-lib\Common\bio_room.cpp" />
+    <ClCompile Include="..\..\bio-lib\Disc\bio_disk.cpp" />
+    <ClCompile Include="..\..\mstd-lib\DX9\std_dx9.cpp" />
+    <ClCompile Include="..\..\mstd-lib\Geometry\std_matrix.cpp" />
+    <ClCompile Include="..\..\mstd-lib\std_basic_fstream.cpp" />
+    <ClCompile Include="..\..\mstd-lib\std_crc32.cpp" />
+    <ClCompile Include="..\..\mstd-lib\std_debug.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\mstd-lib\std_exception.cpp" />
+    <ClCompile Include="..\..\mstd-lib\std_filesystem.cpp" />
+    <ClCompile Include="..\..\mstd-lib\std_image.cpp" />
+    <ClCompile Include="..\..\mstd-lib\std_string.cpp" />
+    <ClCompile Include="..\..\mstd-lib\std_text.cpp" />
+    <ClCompile Include="..\..\mstd-lib\std_thread_pool.cpp" />
+    <ClCompile Include="..\..\mstd-lib\Windows\std_common.cpp" />
+    <ClCompile Include="..\..\mstd-lib\Windows\std_device.cpp" />
+    <ClCompile Include="..\..\mstd-lib\Windows\std_display_enum.cpp" />
+    <ClCompile Include="..\..\mstd-lib\Windows\std_window.cpp" />
+    <ClCompile Include="..\..\mstd-lib\Windows\std_window_message.cpp" />
+    <ClCompile Include="..\..\mstd-lib\Windows\std_window_settings.cpp" />
+    <ClCompile Include="..\..\mstd-lib\XInput\std_xinput.cpp" />
+    <ClCompile Include="..\..\sdk\imgui\backends\imgui_impl_dx9.cpp" />
+    <ClCompile Include="..\..\sdk\imgui\backends\imgui_impl_win32.cpp" />
+    <ClCompile Include="..\..\sdk\imgui\imgui.cpp" />
+    <ClCompile Include="..\..\sdk\imgui\imgui_demo.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\sdk\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\..\sdk\imgui\imgui_tables.cpp" />
+    <ClCompile Include="..\..\sdk\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="..\..\sdk\imgui\misc\cpp\imgui_stdlib.cpp" />
+    <ClCompile Include="..\..\sdk\libpng\png.c" />
+    <ClCompile Include="..\..\sdk\libpng\pngerror.c" />
+    <ClCompile Include="..\..\sdk\libpng\pngget.c" />
+    <ClCompile Include="..\..\sdk\libpng\pngmem.c" />
+    <ClCompile Include="..\..\sdk\libpng\pngpread.c" />
+    <ClCompile Include="..\..\sdk\libpng\pngread.c" />
+    <ClCompile Include="..\..\sdk\libpng\pngrio.c" />
+    <ClCompile Include="..\..\sdk\libpng\pngrtran.c" />
+    <ClCompile Include="..\..\sdk\libpng\pngrutil.c" />
+    <ClCompile Include="..\..\sdk\libpng\pngset.c" />
+    <ClCompile Include="..\..\sdk\libpng\pngtest.c" />
+    <ClCompile Include="..\..\sdk\libpng\pngtrans.c" />
+    <ClCompile Include="..\..\sdk\libpng\pngwio.c" />
+    <ClCompile Include="..\..\sdk\libpng\pngwrite.c" />
+    <ClCompile Include="..\..\sdk\libpng\pngwtran.c" />
+    <ClCompile Include="..\..\sdk\libpng\pngwutil.c" />
+    <ClCompile Include="..\..\sdk\zlib\adler32.c" />
+    <ClCompile Include="..\..\sdk\zlib\compress.c" />
+    <ClCompile Include="..\..\sdk\zlib\crc32.c" />
+    <ClCompile Include="..\..\sdk\zlib\deflate.c" />
+    <ClCompile Include="..\..\sdk\zlib\gzclose.c" />
+    <ClCompile Include="..\..\sdk\zlib\gzlib.c" />
+    <ClCompile Include="..\..\sdk\zlib\gzread.c" />
+    <ClCompile Include="..\..\sdk\zlib\gzwrite.c" />
+    <ClCompile Include="..\..\sdk\zlib\infback.c" />
+    <ClCompile Include="..\..\sdk\zlib\inffast.c" />
+    <ClCompile Include="..\..\sdk\zlib\inflate.c" />
+    <ClCompile Include="..\..\sdk\zlib\inftrees.c" />
+    <ClCompile Include="..\..\sdk\zlib\trees.c" />
+    <ClCompile Include="..\..\sdk\zlib\uncompr.c" />
+    <ClCompile Include="..\..\sdk\zlib\zutil.c" />
+    <ClCompile Include="..\..\sony-lib\GTE\half_float.cpp" />
+    <ClCompile Include="..\..\sony-lib\GTE\lib_gte.cpp" />
+    <ClCompile Include="..\..\sony-lib\sony_bitstream.cpp" />
+    <ClCompile Include="..\..\sony-lib\sony_executable.cpp" />
+    <ClCompile Include="..\..\sony-lib\sony_model.cpp" />
+    <ClCompile Include="..\..\sony-lib\sony_sequence.cpp" />
+    <ClCompile Include="..\..\sony-lib\sony_soundbank.cpp" />
+    <ClCompile Include="..\..\sony-lib\sony_texture.cpp" />
+    <ClCompile Include="..\..\sony-lib\sony_texture_2.cpp" />
+    <ClCompile Include="..\..\sony-lib\sony_texture_2_str.cpp" />
+    <ClCompile Include="Source\app.cpp" />
+    <ClCompile Include="Source\app_config.cpp" />
+    <ClCompile Include="Source\app_controller_bio1.cpp" />
+    <ClCompile Include="Source\app_controller_bio2.cpp" />
+    <ClCompile Include="Source\app_controller_bio2nov96.cpp" />
+    <ClCompile Include="Source\app_draw.cpp" />
+    <ClCompile Include="Source\app_edit_collision.cpp" />
+    <ClCompile Include="Source\app_edit_model.cpp" />
+    <ClCompile Include="Source\app_file.cpp" />
+    <ClCompile Include="Source\app_imgui.cpp" />
+    <ClCompile Include="Source\app_roomcut.cpp" />
+    <ClCompile Include="Source\app_settings.cpp" />
+    <ClCompile Include="Source\main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\bio-lib\Bio1\bio1.h" />
+    <ClInclude Include="..\..\bio-lib\Bio1\BLK\bio1_blk.h" />
+    <ClInclude Include="..\..\bio-lib\Bio1\CLUT\bio1_clut.h" />
+    <ClInclude Include="..\..\bio-lib\Bio1\FLR\bio1_flr.h" />
+    <ClInclude Include="..\..\bio-lib\Bio1\LIT\bio1_lit.h" />
+    <ClInclude Include="..\..\bio-lib\Bio1\PAK\bio1_pak.h" />
+    <ClInclude Include="..\..\bio-lib\Bio1\RDT\bio1_rdt.h" />
+    <ClInclude Include="..\..\bio-lib\Bio1\RID\bio1_rid.h" />
+    <ClInclude Include="..\..\bio-lib\Bio1\RVD\bio1_rvd.h" />
+    <ClInclude Include="..\..\bio-lib\Bio1\SCA\bio1_sca.h" />
+    <ClInclude Include="..\..\bio-lib\Bio2\ADT\bio2_adt.h" />
+    <ClInclude Include="..\..\bio-lib\Bio2\BGM\bio2_bgm.h" />
+    <ClInclude Include="..\..\bio-lib\Bio2\bio2.h" />
+    <ClInclude Include="..\..\bio-lib\Bio2\bio2_global.h" />
+    <ClInclude Include="..\..\bio-lib\Bio2\BLK\bio2_blk.h" />
+    <ClInclude Include="..\..\bio-lib\Bio2\CLUT\bio2_clut.h" />
+    <ClInclude Include="..\..\bio-lib\Bio2\CPT\bio2_cpt.h" />
+    <ClInclude Include="..\..\bio-lib\Bio2\DIE\bio2_die.h" />
+    <ClInclude Include="..\..\bio-lib\Bio2\EDT\bio2_edt.h" />
+    <ClInclude Include="..\..\bio-lib\Bio2\EMS\cdemd_pos.h" />
+    <ClInclude Include="..\..\bio-lib\Bio2\ESP\bio2_esp.h" />
+    <ClInclude Include="..\..\bio-lib\Bio2\FLR\bio2_flr.h" />
+    <ClInclude Include="..\..\bio-lib\Bio2\LIT\bio2_lit.h" />
+    <ClInclude Include="..\..\bio-lib\Bio2\MD1\bio2_md1.h" />
+    <ClInclude Include="..\..\bio-lib\Bio2\MSG\bio2_msg.h" />
+    <ClInclude Include="..\..\bio-lib\Bio2\PDEMO\bio2_pdemo.h" />
+    <ClInclude Include="..\..\bio-lib\Bio2\PRI\bio2_pri.h" />
+    <ClInclude Include="..\..\bio-lib\Bio2\RDT\bio2_rdt.h" />
+    <ClInclude Include="..\..\bio-lib\Bio2\RID\bio2_rid.h" />
+    <ClInclude Include="..\..\bio-lib\Bio2\RVD\bio2_rvd.h" />
+    <ClInclude Include="..\..\bio-lib\Bio2\SCA\bio2_sca.h" />
+    <ClInclude Include="..\..\bio-lib\Bio2\SCD\bio2_bytecode.h" />
+    <ClInclude Include="..\..\bio-lib\Bio2\SCD\bio2_bytecode_map.h" />
+    <ClInclude Include="..\..\bio-lib\Bio2\SCD\bio2_defines.h" />
+    <ClInclude Include="..\..\bio-lib\Bio2\SLD\bio2_sld.h" />
+    <ClInclude Include="..\..\bio-lib\Bio2_Nov96\bio2_nov96.h" />
+    <ClInclude Include="..\..\bio-lib\Bio2_Nov96\CLUT\bio2_nov96_clut.h" />
+    <ClInclude Include="..\..\bio-lib\Bio2_Nov96\RDT\bio2_nov96_rdt.h" />
+    <ClInclude Include="..\..\bio-lib\Bio2_Nov96\SCA\bio2_nov96_sca.h" />
+    <ClInclude Include="..\..\bio-lib\Bio3\BGM\sound.h" />
+    <ClInclude Include="..\..\bio-lib\Bio3\bio3.h" />
+    <ClInclude Include="..\..\bio-lib\Bio3\MD2\bio3_md2.h" />
+    <ClInclude Include="..\..\bio-lib\Bio3\RDT\bio3_rdt.h" />
+    <ClInclude Include="..\..\bio-lib\Bio3\SLD\bio3_sld.h" />
+    <ClInclude Include="..\..\bio-lib\CDX\bio_cdx.h" />
+    <ClInclude Include="..\..\bio-lib\CDX\lzo.h" />
+    <ClInclude Include="..\..\bio-lib\Common\animation\bio1_anim_state.h" />
+    <ClInclude Include="..\..\bio-lib\Common\animation\bio2_anim_state.h" />
+    <ClInclude Include="..\..\bio-lib\Common\animation\bio2_anim_state_nov96.h" />
+    <ClInclude Include="..\..\bio-lib\Common\animation\bio3_anim_state.h" />
+    <ClInclude Include="..\..\bio-lib\Common\bio_camera.h" />
+    <ClInclude Include="..\..\bio-lib\Common\bio_common.h" />
+    <ClInclude Include="..\..\bio-lib\Common\bio_gamepad.h" />
+    <ClInclude Include="..\..\bio-lib\Common\bio_geometry.h" />
+    <ClInclude Include="..\..\bio-lib\Common\bio_animation.h" />
+    <ClInclude Include="..\..\bio-lib\Common\bio_model.h" />
+    <ClInclude Include="..\..\bio-lib\Common\bio_room.h" />
+    <ClInclude Include="..\..\bio-lib\Common\bio_state_machine.h" />
+    <ClInclude Include="..\..\bio-lib\Disc\bio_disk.h" />
+    <ClInclude Include="..\..\mstd-lib\DX9\std_dx9.h" />
+    <ClInclude Include="..\..\mstd-lib\Geometry\std_matrix.h" />
+    <ClInclude Include="..\..\mstd-lib\Geometry\vec2.h" />
+    <ClInclude Include="..\..\mstd-lib\Geometry\vec3.h" />
+    <ClInclude Include="..\..\mstd-lib\Geometry\vec4.h" />
+    <ClInclude Include="..\..\mstd-lib\Geometry\std_vertex.h" />
+    <ClInclude Include="..\..\mstd-lib\std_basic_fstream.h" />
+    <ClInclude Include="..\..\mstd-lib\std_crc32.h" />
+    <ClInclude Include="..\..\mstd-lib\std_cstyle.h" />
+    <ClInclude Include="..\..\mstd-lib\std_data_types.h" />
+    <ClInclude Include="..\..\mstd-lib\std_debug.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\mstd-lib\std_defines.h" />
+    <ClInclude Include="..\..\mstd-lib\std_exception.h" />
+    <ClInclude Include="..\..\mstd-lib\std_filesystem.h" />
+    <ClInclude Include="..\..\mstd-lib\std_image.h" />
+    <ClInclude Include="..\..\mstd-lib\std_string.h" />
+    <ClInclude Include="..\..\mstd-lib\std_text.h" />
+    <ClInclude Include="..\..\mstd-lib\std_thread_pool.h" />
+    <ClInclude Include="..\..\mstd-lib\Windows\std_common.h" />
+    <ClInclude Include="..\..\mstd-lib\Windows\std_device.h" />
+    <ClInclude Include="..\..\mstd-lib\Windows\std_window.h" />
+    <ClInclude Include="..\..\mstd-lib\XInput\std_xinput.h" />
+    <ClInclude Include="..\..\sdk\imgui\backends\imgui_impl_dx9.h" />
+    <ClInclude Include="..\..\sdk\imgui\backends\imgui_impl_win32.h" />
+    <ClInclude Include="..\..\sdk\imgui\imconfig.h" />
+    <ClInclude Include="..\..\sdk\imgui\imgui.h" />
+    <ClInclude Include="..\..\sdk\imgui\imgui_internal.h" />
+    <ClInclude Include="..\..\sdk\imgui\imstb_rectpack.h" />
+    <ClInclude Include="..\..\sdk\imgui\imstb_textedit.h" />
+    <ClInclude Include="..\..\sdk\imgui\imstb_truetype.h" />
+    <ClInclude Include="..\..\sdk\imgui\misc\cpp\imgui_stdlib.h" />
+    <ClInclude Include="..\..\sdk\libpng\png.h" />
+    <ClInclude Include="..\..\sdk\libpng\pngconf.h" />
+    <ClInclude Include="..\..\sdk\libpng\pngdebug.h" />
+    <ClInclude Include="..\..\sdk\libpng\pnginfo.h" />
+    <ClInclude Include="..\..\sdk\libpng\pnglibconf.h" />
+    <ClInclude Include="..\..\sdk\libpng\pngpriv.h" />
+    <ClInclude Include="..\..\sdk\libpng\pngstruct.h" />
+    <ClInclude Include="..\..\sdk\zlib\crc32.h" />
+    <ClInclude Include="..\..\sdk\zlib\deflate.h" />
+    <ClInclude Include="..\..\sdk\zlib\gzguts.h" />
+    <ClInclude Include="..\..\sdk\zlib\inffast.h" />
+    <ClInclude Include="..\..\sdk\zlib\inffixed.h" />
+    <ClInclude Include="..\..\sdk\zlib\inflate.h" />
+    <ClInclude Include="..\..\sdk\zlib\inftrees.h" />
+    <ClInclude Include="..\..\sdk\zlib\trees.h" />
+    <ClInclude Include="..\..\sdk\zlib\zconf.h" />
+    <ClInclude Include="..\..\sdk\zlib\zlib.h" />
+    <ClInclude Include="..\..\sdk\zlib\zutil.h" />
+    <ClInclude Include="..\..\sony-lib\GTE\half_float.h" />
+    <ClInclude Include="..\..\sony-lib\GTE\lib_gte.h" />
+    <ClInclude Include="..\..\sony-lib\GTE\PSYQ\GTEMAC.H" />
+    <ClInclude Include="..\..\sony-lib\GTE\PSYQ\INLINE_C.H" />
+    <ClInclude Include="..\..\sony-lib\GTE\PSYQ\LIBGPU.H" />
+    <ClInclude Include="..\..\sony-lib\GTE\PSYQ\LIBGS.H" />
+    <ClInclude Include="..\..\sony-lib\GTE\PSYQ\LIBGTE.H" />
+    <ClInclude Include="..\..\sony-lib\GTE\PSYQ\ratan_tbl.h" />
+    <ClInclude Include="..\..\sony-lib\GTE\PSYQ\rcossin_tbl.h" />
+    <ClInclude Include="..\..\sony-lib\GTE\PSYQ\rsin_tbl.h" />
+    <ClInclude Include="..\..\sony-lib\GTE\PSYQ\sqrt_inv_tbl.h" />
+    <ClInclude Include="..\..\sony-lib\GTE\PSYQ\sqrt_tbl.h" />
+    <ClInclude Include="..\..\sony-lib\sony_bitstream.h" />
+    <ClInclude Include="..\..\sony-lib\sony_bitstream_table.h" />
+    <ClInclude Include="..\..\sony-lib\sony_executable.h" />
+    <ClInclude Include="..\..\sony-lib\sony_model.h" />
+    <ClInclude Include="..\..\sony-lib\sony_sequence.h" />
+    <ClInclude Include="..\..\sony-lib\sony_soundbank.h" />
+    <ClInclude Include="..\..\sony-lib\sony_soundbank_table.h" />
+    <ClInclude Include="..\..\sony-lib\sony_texture.h" />
+    <ClInclude Include="..\..\sony-lib\sony_texture_2.h" />
+    <ClInclude Include="Source\app.h" />
+    <ClInclude Include="Windows\resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Windows\icon.ico" />
+    <Image Include="Windows\small.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Windows\resource.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="Windows\manifest.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\sdk\libpng\LICENSE" />
+    <None Include="..\..\sdk\libpng\README" />
+    <None Include="..\..\sdk\zlib\LICENSE" />
+    <None Include="..\..\sdk\zlib\README" />
+    <None Include="..\..\sony-lib\GTE\PsyCross.license" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\..\sdk\imgui\LICENSE.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="..\..\mstd-lib\DX9\shader\pixel_passthrough.hlsl">
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">3.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">3.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">3.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">3.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="..\..\mstd-lib\DX9\shader\pixel_playstation_dither.hlsl">
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">3.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">3.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">3.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">3.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="..\..\mstd-lib\DX9\shader\vertex.hlsl">
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">3.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">3.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">3.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">3.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+    </FxCompile>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{b5c74166-321a-42bc-8495-2d0d327a8616}</ProjectGuid>
+    <RootNamespace>bioclone-remake</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(SolutionDir)Build\$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>Build\Intermediate\$(Configuration)\$(Platform)\</IntDir>
+    <TargetName>bioclone-remake</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)Build\$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>Build\Intermediate\$(Configuration)\$(Platform)\</IntDir>
+    <TargetName>bioclone-remake</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(SolutionDir)Build\$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>Build\Intermediate\$(Configuration)\$(Platform)\</IntDir>
+    <TargetName>bioclone-remake</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)Build\$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>Build\Intermediate\$(Configuration)\$(Platform)\</IntDir>
+    <TargetName>bioclone-remake</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;MSTD_DEVICE;MSTD_XINPUT;MSTD_DX9;LIB_JPEG;LIB_PNG;IMGUI_IMPL_WIN32_DISABLE_GAMEPAD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <AdditionalIncludeDirectories>$(SolutionDir)Source;$(SolutionDir)Windows;../../mstd-lib;../../mstd-lib/Windows;../../mstd-lib/Geometry;../../mstd-lib/DX9;../../mstd-lib/XInput;../../sony-lib;../../sony-lib/GTE;../../bio-lib/Bio1;../../bio-lib/Bio2_Nov96;../../bio-lib/Bio2;../../bio-lib/Bio2/MD1;../../bio-lib/Bio2/RDT;../../bio-lib/Bio3;../../bio-lib/Bio3/MD2;../../bio-lib/Common;../../bio-lib/Common/Model;../../bio-lib/Disc;../../bio-lib/CDX;../../sdk/zlib;../../sdk/libjpeg-turbo/src;../../sdk/libjpeg-turbo/build;../../sdk/libpng;../../sdk/imgui;../../sdk/imgui/backends;../../sdk/imgui/misc/cpp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>mkpsxiso.lib;tinyxml2.lib;FLAC.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../../mkpsxiso/build/$(Configuration);../../mkpsxiso/build/flac/src/libFLAC/$(Configuration);../../sdk/libjpeg-turbo/build/$(Platform)/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+    <Manifest>
+      <AdditionalManifestFiles>".\\Windows\\manifest.xml" %(AdditionalManifestFiles)</AdditionalManifestFiles>
+    </Manifest>
+    <Manifest>
+      <OutputManifestFile />
+    </Manifest>
+    <ManifestResourceCompile>
+      <ResourceOutputFileName />
+    </ManifestResourceCompile>
+    <Manifest>
+      <EnableDpiAwareness>true</EnableDpiAwareness>
+    </Manifest>
+    <PreBuildEvent>
+      <Command>xcopy "..\..\mstd-lib\DX9\shader" "$(SolutionDir)shader" /E /I /Y
+xcopy "..\..\mstd-lib\DX9\shader" "$(SolutionDir)Build\$(Configuration)\$(Platform)\shader" /E /I /Y</Command>
+    </PreBuildEvent>
+    <FxCompile>
+      <ShaderModel>3.0</ShaderModel>
+    </FxCompile>
+    <PostBuildEvent>
+      <Command>xcopy "..\..\mstd-lib\DX9\shader" "$(SolutionDir)shader" /E /I /Y
+xcopy "..\..\mstd-lib\DX9\shader" "$(SolutionDir)Build\$(Configuration)\$(Platform)\shader" /E /I /Y</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;MSTD_DEVICE;MSTD_XINPUT;MSTD_DX9;LIB_JPEG;LIB_PNG;IMGUI_IMPL_WIN32_DISABLE_GAMEPAD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <AdditionalIncludeDirectories>$(SolutionDir)Source;$(SolutionDir)Windows;../../mstd-lib;../../mstd-lib/Windows;../../mstd-lib/Geometry;../../mstd-lib/DX9;../../mstd-lib/XInput;../../sony-lib;../../sony-lib/GTE;../../bio-lib/Bio1;../../bio-lib/Bio2_Nov96;../../bio-lib/Bio2;../../bio-lib/Bio2/MD1;../../bio-lib/Bio3;../../bio-lib/Bio3/MD2;../../bio-lib/Common;../../bio-lib/Common/Model;../../bio-lib/Disc;../../bio-lib/CDX;../../sdk/zlib;../../sdk/libjpeg-turbo/src;../../sdk/libjpeg-turbo/build;../../sdk/libpng;../../sdk/imgui;../../sdk/imgui/backends;../../sdk/imgui/misc/cpp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>dumpsxiso.lib;mkpsxiso.lib;tinyxml2.lib;FLAC.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../../mkpsxiso/build/$(Configuration);../../mkpsxiso/build/flac/src/libFLAC/$(Configuration);../../sdk/libjpeg-turbo/build/$(Platform)/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+    <Manifest>
+      <AdditionalManifestFiles>".\\Windows\\manifest.xml" %(AdditionalManifestFiles)</AdditionalManifestFiles>
+      <EnableDpiAwareness>true</EnableDpiAwareness>
+    </Manifest>
+    <PreBuildEvent>
+      <Command>xcopy "..\..\mstd-lib\DX9\shader" "$(SolutionDir)shader" /E /I /Y
+xcopy "..\..\mstd-lib\DX9\shader" "$(SolutionDir)Build\$(Configuration)\$(Platform)\shader" /E /I /Y</Command>
+    </PreBuildEvent>
+    <FxCompile>
+      <ShaderModel>3.0</ShaderModel>
+    </FxCompile>
+    <PostBuildEvent>
+      <Command>xcopy "..\..\mstd-lib\DX9\shader" "$(SolutionDir)shader" /E /I /Y
+xcopy "..\..\mstd-lib\DX9\shader" "$(SolutionDir)Build\$(Configuration)\$(Platform)\shader" /E /I /Y</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;MSTD_DEVICE;MSTD_XINPUT;MSTD_DX9;LIB_PNG;LIB_JPEG;IMGUI_IMPL_WIN32_DISABLE_GAMEPAD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <AdditionalIncludeDirectories>$(SolutionDir)Source;$(SolutionDir)Windows;../../mstd-lib;../../mstd-lib/Windows;../../mstd-lib/Geometry;../../mstd-lib/DX9;../../mstd-lib/XInput;../../sony-lib;../../sony-lib/GTE;../../bio-lib/Bio1;../../bio-lib/Bio2_Nov96;../../bio-lib/Bio2;../../bio-lib/Bio2/MD1;../../bio-lib/Bio2/RDT;../../bio-lib/Bio3;../../bio-lib/Bio3/MD2;../../bio-lib/Common;../../bio-lib/Common/Model;../../bio-lib/Disc;../../bio-lib/CDX;../../sdk/zlib;../../sdk/libjpeg-turbo/src;../../sdk/libjpeg-turbo/build;../../sdk/libpng;../../sdk/imgui;../../sdk/imgui/backends;../../sdk/imgui/misc/cpp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>mkpsxiso.lib;tinyxml2.lib;FLAC.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../../mkpsxiso/build/$(Configuration);../../mkpsxiso/build/flac/src/libFLAC/$(Configuration);../../sdk/libjpeg-turbo/build/$(Platform)/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+    <Manifest>
+      <AdditionalManifestFiles>".\\Windows\\manifest.xml" %(AdditionalManifestFiles)</AdditionalManifestFiles>
+      <OutputManifestFile />
+      <EnableDpiAwareness>true</EnableDpiAwareness>
+    </Manifest>
+    <ManifestResourceCompile>
+      <ResourceOutputFileName />
+    </ManifestResourceCompile>
+    <PreBuildEvent>
+      <Command>xcopy "..\..\mstd-lib\DX9\shader" "$(SolutionDir)shader" /E /I /Y
+xcopy "..\..\mstd-lib\DX9\shader" "$(SolutionDir)Build\$(Configuration)\$(Platform)\shader" /E /I /Y</Command>
+    </PreBuildEvent>
+    <FxCompile>
+      <ShaderModel>3.0</ShaderModel>
+    </FxCompile>
+    <PostBuildEvent>
+      <Command>xcopy "..\..\mstd-lib\DX9\shader" "$(SolutionDir)shader" /E /I /Y
+xcopy "..\..\mstd-lib\DX9\shader" "$(SolutionDir)Build\$(Configuration)\$(Platform)\shader" /E /I /Y</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;MSTD_DEVICE;MSTD_XINPUT;MSTD_DX9;LIB_JPEG;LIB_PNG;IMGUI_IMPL_WIN32_DISABLE_GAMEPAD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <AdditionalIncludeDirectories>$(SolutionDir)Source;$(SolutionDir)Windows;../../mstd-lib;../../mstd-lib/Windows;../../mstd-lib/Geometry;../../mstd-lib/DX9;../../mstd-lib/XInput;../../sony-lib;../../sony-lib/GTE;../../bio-lib/Bio1;../../bio-lib/Bio2_Nov96;../../bio-lib/Bio2;../../bio-lib/Bio2/MD1;../../bio-lib/Bio3;../../bio-lib/Bio3/MD2;../../bio-lib/Common;../../bio-lib/Common/Model;../../bio-lib/Disc;../../bio-lib/CDX;../../sdk/zlib;../../sdk/libjpeg-turbo/src;../../sdk/libjpeg-turbo/build;../../sdk/libpng;../../sdk/imgui;../../sdk/imgui/backends;../../sdk/imgui/misc/cpp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>dumpsxiso.lib;mkpsxiso.lib;tinyxml2.lib;FLAC.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../../mkpsxiso/build/$(Configuration);../../mkpsxiso/build/flac/src/libFLAC/$(Configuration);../../sdk/libjpeg-turbo/build/$(Platform)/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+    <Manifest>
+      <AdditionalManifestFiles>".\\Windows\\manifest.xml" %(AdditionalManifestFiles)</AdditionalManifestFiles>
+      <EnableDpiAwareness>true</EnableDpiAwareness>
+    </Manifest>
+    <PreBuildEvent>
+      <Command>xcopy "..\..\mstd-lib\DX9\shader" "$(SolutionDir)shader" /E /I /Y
+xcopy "..\..\mstd-lib\DX9\shader" "$(SolutionDir)Build\$(Configuration)\$(Platform)\shader" /E /I /Y</Command>
+    </PreBuildEvent>
+    <FxCompile>
+      <ShaderModel>3.0</ShaderModel>
+    </FxCompile>
+    <PostBuildEvent>
+      <Command>xcopy "..\..\mstd-lib\DX9\shader" "$(SolutionDir)shader" /E /I /Y
+xcopy "..\..\mstd-lib\DX9\shader" "$(SolutionDir)Build\$(Configuration)\$(Platform)\shader" /E /I /Y</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="packages\Microsoft.DXSDK.D3DX.9.29.952.8\build\native\Microsoft.DXSDK.D3DX.targets" Condition="Exists('packages\Microsoft.DXSDK.D3DX.9.29.952.8\build\native\Microsoft.DXSDK.D3DX.targets')" />
+  </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('packages\Microsoft.DXSDK.D3DX.9.29.952.8\build\native\Microsoft.DXSDK.D3DX.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.DXSDK.D3DX.9.29.952.8\build\native\Microsoft.DXSDK.D3DX.targets'))" />
+  </Target>
+</Project>

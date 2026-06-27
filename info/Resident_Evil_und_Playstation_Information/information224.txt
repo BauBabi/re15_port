@@ -1,0 +1,299 @@
+CDGen: Making It Work
+Overview
+This document is intended to address common setup problems associated with CDGen. It is not meant to
+replace or supersede the existing CDGen documentation, but rather to supplement the somewhat scanty
+(and out of date) troubleshooting portion of the manual, particularly where installation is concerned.
+Subjects covered will include dealing with operating systems, differences relating to the Sony-approved
+burners, and setup problems related to the SCSI host adapters that may be utilized with CDGen. Some of
+this material may seem elementary, for that I apologize. The simple fact is that disc burning is often
+regarded as a menial task, and as such may get passed to a new engineer, or even some non-technical
+member of the team.
+SCEA would like to encourage all developers, especially those with limited Playstation experience, to get
+as much practice with CDGen as possible. Burn the occasional data disc, and use that instead of the
+emulator or the PC file system. Not only will it make you more CDGen-friendly, but the more time you
+spend waiting for data to load from the CD, the more motivated you will be to write the fastest CD
+accessing code possible. Try to avoid falling into that “I’ve got to burn a disc for a meeting with my
+publisher tomorrow, and CDGen is wrecking my life!” mode that we see happen far too often. This guide
+could be regarded as a first line of defense against that happening.
+Much of the information listed here has come as a direct result of the author’s tech-support experience;
+most, if not all, of the CDGen problems handled by SCEA for the past year have crossed my desk. Having
+said that, allow me to make it clear that I make no claim to be “The CDGen Guru.” I have no real
+knowledge of the inner workings of this tool, nor access to it’s source code, nor insider info regarding
+future updates and/or replacements for it, nor anything else in that vein. While reading this document, if
+you see something you think is wrong, or that doesn’t fit in with your experience, please do not hesitate to
+let me hear about it.
+Windows 3.1 vs. Windows 95
+The choice of operating system is largely dependent on which burner you possess, although if you are just
+starting out, your preferred OS could instead determine the choice of burner. If you have the CDW-900E, it
+is officially supported only under Windows 3.1. (There is a workaround, described later, but it seems to not
+always work, and it is not “officially supported”) The next generation of burners, the CDU-920, CDU-921,
+and CDU-924, work equally well under either OS. More about the various burners to follow. The CDGen
+software will run correctly with either version of Windows. It should also be mentioned that Windows for
+Workgroups will also work, but Windows NT will not.
+Different versions of CDGen
+The latest (I’d hesitate to call it current, no updates in almost two years) version of CDGen is 1.30. There
+has been some demand recently for the previous version (1.10), in order to use the workaround method of
+getting Win95 and the 900 burner to work together. To the user, the two versions are largely identical.
+Version 1.30 “remembers” the contents of a field or two that the earlier version does not, so it follows that
+the format of the image files differs slightly between versions. The biggest difference is under the hood,
+1.10 uses a specific DOS ASPI manager while 1.30 uses the Windows ASPI manager.
+What’s ASPI? It stands for Advanced SCSI Programming Interface. Commonly referred to as an ASPI
+layer, it allows applications to communicate with a wide variety of SCSI devices in a standard way, rather
+than in some hardware-specific fashion based on the type of host adapter present. This will become more of
+an issue in the following section.
+Differences between burners
+We’ll take the CDW-900E first. It’s a bulky, expensive, high quality, professional caliber unit. Its main
+benefit is that multiple units can be daisy-chained (with expensive and exceedingly difficult-to-find cables)
+and the time spent burning is thereby reduced. Additionally, based upon my own non-scientific, seat-of-thepants observations, the MTBF (if there is such a thing for CD cutters) of the 900 exceeds that of the later
+burners by at least a factor of five.
+The main problem with the 900 is its age. The 900 preceded the ASPI standard. Although the 900 conforms
+to the standard somewhat, it is not fully compliant. It doesn’t recognize the full range of SCSI commands
+thrown at it. This is the root of its problems with Win95. Win95’s native ASPI layer is unable to
+communicate with the “stone age” 900 unit. This also hampers the burner’s versatility: good luck getting it
+to work with any other software packages. Other quibbles with the 900 are its lack of speed—although it is
+capable of double speed, the corresponding failure rate is very high—and its cost.
+The other supported burners (920,921,924) could easily be lumped together, they’re that close to being
+identical (a 921 is recognized as a 920 by Win95, a 924 may be as well, I don’t know). The advantages of
+these burners are that they are fully ASPI compliant (and so can be used with just about any software), they
+perform accurate double speed burns, and they are much less expensive than the 900. The downside is that
+they are much less robust than the 900, and they cannot be daisy-chained. Age is also a problem for these
+burners, in that none of them are currently in production. SCEA has recently stopped selling the 921 (the
+other models were not carried) because it cannot obtain any more.
+SCSI host adapters
+Basically, there are two flavors, both by Adaptec. As with operating systems, which one you use is sort of
+dependent on which burner you have. For a 900 burner, you will need a 1540 series ISA card. For the 921
+and its ilk, either a 1540 series or a 2940 series PCI card will work. For each of these cards, the drivers,
+version numbers, and SCSISelect settings will be listed.
+I have heard stories of other Adaptec cards working. I have personally talked to two developers who said
+that they had a 1520 working, but it suddenly stopped. I cannot confirm these stories. Only the two
+mentioned cards are officially supported. If you get some other card to work, more power to you. Send me
+some Email and tell me how you did it. But if it mysteriously quits working one day, and you call me for
+help, the first thing that I will tell you is to get an approved card. If you have a card you’d like me to check
+out, go ahead and send it in and I’ll have a look, but please understand that I probably will not spend two
+hours with you on the phone trying to fix things, at least not with my usual pleasant demeanor.
+A 1540 series card (1542CF and 1542CP are the models usually encountered) will need the DOS ASPI
+manager (aspi4dos.sys) loaded in the CONFIG.SYS file if it is being used with the 900 burner. The syntax
+is like so:
+DEVICE=C:\SCSI\ASPI4DOS.SYS /D /P330
+It should of course reflect any path differences in your setup. The /D switch will display status info,
+including the version number (which should be 3.34) as the ASPI layer loads. The /P is the port address of
+the card, which is configurable via a bank of dipswitches. Do not attempt to load this high.
+If the 900 burner is not used, this call is not necessary. The Windows ASPI manager, WINASPI.DLL, will
+handle SCSI device communications. Windows 3.1 will not ascribe a version to this file, but Win95 will
+(please note that this file is NOT interchangeable between 3.1 and 95). It should be 4.00 or greater.
+Additionally, a Win95 machine will load a miniport driver, AHA154X.MPD, for the card as well. It should
+be version 1.15 or later.
+The card will typically have the following settings in the SCSISelect utility. Most of them will have no
+effect on burning performance, with the exception of the DMA transfer rate, which could produce buffer
+overrun if was set to maximum, and Disconnection, which must be disabled for the CDU-924 to work
+properly.
+Configuration:
+IRQ <system specific>
+DMA <system specific>
+SCSI ID 7
+SCSI Parity Checking Enabled
+DMA Transfer Rate 5.0 MB/sec
+Host Adapter Termination Enabled
+---------------
+SCSI Device Configuration (for the burner ID)
+Enable Sync Negotiation no
+Enable Fast SCSI no
+Enable Disconnection yes
+Options Listed Below Have NO EFFECT if the BIOS is Disabled
+Send Start Unit Command no
+---------------
+Advanced Configuration Options
+Floppy Controller I/O Port (AHA-1542CF only) <system specific>
+Reset SCSI Bus At Power-On Enabled
+Options Listed Below Have NO EFFECT if the BIOS is Disabled
+Host Adapter BIOS (Configuration Utility Reserves BIOS Space) Enabled
+System Boot Controlled by Host Adapter BIOS Enabled
+Extended BIOS Translation for DOS Drives > 1 GByte Disabled
+Support Removable Drives Under BIOS as Fixed Disks Disabled
+Dynamically Scan SCSI Bus for BIOS Devices Disabled
+BIOS Support For More Than 2 Drives (MS-DOS(R) 5.0 and above) Disabled
+BIOS Support For INT 13h Extensions Disabled
+BIOS Support For Bootable CD-ROMs Disabled
+Immediate Return On Seek Command Enabled
+Display <Ctrl><A> Message During BIOS Initialization Enabled
+If you have a 2940 series card, it is assumed that you are using Win95, CDGen 1.30, and one of the later
+burners. If that is not the case, you’ve gone boldly where I have not gone before. That’s not to say that you
+will definitely have problems; if you do, however, I’ll need some time to duplicate your oddball system.
+As before, the version of WINASPI.DLL should be 4.00 or greater. The miniport driver for this card is
+called AIC78XX.MPD. Version 2.11 or better should work fine. The increased performance of this card,
+especially the ultra wide variant, increases the likelihood of buffer overrun. In the SCSISelect utility, the
+maximum sync transfer rate should be set as low as possible. If this doesn’t do the trick, it may be
+necessary to disable ultra SCSI speed. Here is what a burner-friendly setup might look like (different model
+cards will not have all of these fields):
+SCSI Bus Interface Definitions
+Host Adapter SCSI ID 7
+SCSI Parity Checking Enabled
+Host Adapter SCSI Termination Auto
+---------------
+SCSI Device Configuration: (for the recorder ID)
+Initiate Sync Negotiation No
+Maximum Sync Transfer Rate 20
+Enable Disconnection Yes
+Initiate Wide Negotiation No
+Options Listed Below Have NO EFFECT if the BIOS is Disabled
+Send Start Unit Command No
+Include in BIOS Scan Yes
+---------------
+Advanced Host Adapter Configuration:
+Plug and Play SCAM Support Disabled
+Reset SCSI Bus at IC Initialization Enabled
+Options Listed Below Have NO EFFECT if the BIOS is Disabled
+Host Adapter BIOS (Configuration Utility Reserves BIOS Space) Enabled
+Support Removable Drives Under BIOS as Fixed Disks Disabled
+Extended BIOS Translation for DOS Drives >1 Enabled
+Display <Ctrl><A> Message During BIOS Initialization Enabled
+Multiple LUN Support Disabled
+BIOS Support for Bootable CD-ROM Disabled
+BIOS Support for Int 13 Extensions Enabled
+Support for Ultra SCSI Speed Disabled
+If you use the UW controller, you CANNOT use all three ports at the same time.
+Also check the following in the system:
+In Device Manger, CD-Recordable/WORM, settings tab for recorder:
+Disable Sync Data Transfer
+Enable Disconnect
+Common Problems
+Condition: Error message “Cannot find the SCSI device driver”
+There are a couple of things that could cause this. If your setup is using a 900 burner, this means that
+ASPI4DOS.SYS is not loading properly. Be sure to use the /D switch, and watch your boot screen
+carefully. Some sort of message should appear giving clues to what is wrong.
+Another likely culprit is a corrupt/incorrect/missing miniport driver for the host adapter. Verify that your
+miniport driver exists—look in \windows\system\iosubsys\. If it’s there, right click on it, select properties,
+then click on the version tab. For the ISA card, it should be 1.15 or later. For the PCI card, it should be
+version 2.11 or later.
+Condition: Error messages “SCSI host adapter is incorrect”
+This is another message that applies to more than one problem. The most literal meaning is that there is no
+approved host adapter present in the machine. However, the most probable cause is that you’re using the
+original version of WINASPI.DLL on your Win95 machine. Installing EZ-SCSI 4.0, or visiting Adaptec’s
+web site for the latest file should get things back on track.
+Condition: CDGen locks up when the “REC” button is clicked
+Make sure your hard drive has enough free space to allow CDGen to make temporary files. The general
+rule of thumb is 1MB of space is needed for every 4000 files on the disc image.
+Check to see that your RECLOG.TXT has not become corrupted, and/or incredibly large. If Notepad won’t
+open it, chances are neither will CDGen. You can delete this file with impunity.
+One of the application files may be corrupted. Delete the folders associated with CDGen, and do a fresh
+install.
+Condition: “Verify” often fails
+If you are using a 900 burner, perform all crucial burns (and verifies) at single speed.
+Be sure to use a high quality media. Tiptoe around the burner when it is active. Place it on a heavy table or
+desk that is less susceptible to shaking.
+Check the RECLOG.TXT for any messages that indicate write errors. If present, it may be an indication
+that your burner is in need of calibration.
+Avoid switching applications while CDGen is running. Don’t do anything that requires accessing the
+source hard drive. Disable any screensaver, or set the activation time to something greater than the typical
+burn time.
+Condition: When cutting a disc, the burner hangs during/just after writing the lead-in
+This is been seen only on the 921, and has several possible causes. Here are the possible fixes, in ascending
+degrees of pain:
+Update the pertinent miniport driver to the version listed above. While you’re at it, update the Win95 ASPI
+manager as well.
+Check the SCSISelect settings for your host adapter. If the transfer rate is too high, a buffer overrun
+condition could occur, leading to just this sort of occurrence.
+Win95 sees the burner as a CD-ROM drive. This is probably the most common cause. Some versions of
+certain CD mastering packages (Easy CD Pro, CD Creator, possibly others) install drivers that treat the 921
+as a CD-ROM drive. This is generally bad news for CDGen, as Win95 regularly tries to update the status of
+its currently available drives. Perhaps the other applications trap this somehow, but CDGen does not. The
+end result is a wasted disc. I’ve talked to one person who said that simply disabling Auto Insert Notification
+fixed things, but that has yet to work for me. The way I’ve gone about fixing it is to delete the offending
+drivers, CDR4VSD.VXD and (if present) CDRASPI.VXD. It may also be necessary to remove the burner
+from the list of CD-ROM drives in Device Manager. After rebooting the system, CDGen should work fine.
+It may be that your burner is in need of repair or adjustment. Check your RECLOG.TXT for indications of
+this. If you have other mastering software, see if it can make the burner work. If you happen to have
+another burner in a working setup, try swapping them and see if the problem follows the burner.
+Avoiding More Trouble
+CDGen is sometimes difficult to get up and running. Once it is successfully installed, it performs
+consistently and reliably—in the absence outside stimuli. The proper care and feeding of CDGen is not
+meant to include a lot of drastic changes. Everyone reading this document should sincerely ask themselves
+the following questions: How much potential damage could be done to my project if this burner setup was
+to suddenly quit working? Does everyone who currently has access to this burner really need it? Piracy
+issues aside, should my colleagues and I pile up so many hours on this burner by pumping out copies of all
+the latest releases? Couldn’t I just as easily archive all of my junk on a couple of those nifty Jazz
+cartridges?
+When you get CDGen working properly, don’t mess with it! The best thing to do is to set it up on some old
+orphaned machine that you have no other use for. This will make the temptation to upgrade and/or tinker
+easier to resist. For example, here at SCEA Tech Support the general purpose burning station is an ancient
+486/66 with an extra hard drive. Nobody could possibly want it for anything else, and as a result it is almost
+never disturbed.
+In addition to curbing your own urges, you must attempt to deny your coworkers’ as well. This is easy if
+you have your own burner sitting on your desk, but if it’s out in some community area, it becomes more
+problematic. There’s always someone wanting save the various incarnations of ‘cha-cha baby’ for
+posterity, or assemble the cool collection of polka .WAV’s they downloaded at lunch into one easy-to-carry
+package. Do what you can to discourage these people—plead, threaten, whine to your boss, whatever it
+takes. Each non-essential person that uses the machine increases the chance of some wrench being dropped
+into the works.
+One way to keep the traffic down is to make the burner more difficult to use. To that end, if at all possible,
+do not put any other CD mastering software on the machine. CDGen is not the most user- friendly bit of
+software ever devised. If it takes more than a few mouse clicks to burn an original or make a copy, odds are
+that the casual user will be discouraged and give up. This also may serve to reduce your own frivolous
+“recreational” use of the burner.
+Additional Topics
+What’s the ideal burn setup?
+For the 900 burner, an Adaptec 1542CF, Windows 3.1, and CDGen 1.30. For the 921 burner, an Adaptec
+2940, Windows 95, and CDGen 1.30. These are the most solid setups in my opinion. As far as the PC end
+of it goes, any old box will do, as long as it has at least a 486, 16MB RAM, and a 1GB hard drive. Once
+again, I would recommend using some machine at or near its retirement. Ordering up a DellWay WhizBang
+6000 with all the trimmings may be more exciting, but it’s far more likely that some new cutting-edge
+“feature” will make life tough for CDGen.
+Using the 900 burner with Win95
+This has been posted a couple times already in the newsgroups. A couple of things to bear in mind before
+you proceed. You must have a 1540 series card for it to work. Most importantly, this method is not
+officially supported by SCEA. It is listed here as an interesting alternative to the standard techniques. If you
+choose to try it, and have trouble as a result, no heroic measures will be taken by Tech Support to drag you
+from the fire. It will be more along the lines of “try these three things, if that doesn’t work, go back to Win
+3.1.” Most of the people who have tried it have had good luck, but a couple have been unable to make it
+work. This may be related to differences in OSR 2 (a.k.a. Win95 B) which both of the unlucky souls
+happened to be using, but as I haven’t had the time to test it out I could not say for certain.
+Here are the easy to follow steps:
+1. Make sure the SCSI chain is in the following order: MACHINE-----SCSI HARD DRIVE-----900
+If it’s not a SCSI hard drive, make sure it's a fast IDE drive, since Win95 will slow it down a bit.
+2. Start Win95 and make sure that it can see the 900.
+3. Disable the WIN95 native SCSI device manager.
+ Open Control Panel
+ Open System
+ Open Device Manager Tab
+ Expand SCSI controller
+ Select SCSI host adapter
+ Uncheck the "Original Configuration" box in the Device usage box
+4. Go to DOS
+5. Add the following line to the CONFIG.SYS:
+ device=aspi4dos.sys
+Add the path and any command line switches if needed.
+6. Reboot Windows.
+7. Check the Win95 SCSI device manager again. A message should be displayed that says the SCSI devices
+are not running optimally. This is because it is running in 16-bit mode, and not 32-bit mode.
+8. Check to see that it still recognizes the 900 and the hard drive.
+9. Run CDGen
+Things to do before you call Tech Support
+Read this document. Ensure that your setup conforms in every possible way to the settings listed here.
+Do a fresh install of the CDGen software. This has solved more mysteries than I can count.
+Have the following information handy. You may have to reboot your machine a few times; some of the info
+is only visible during the startup screens. This is the first batch of questions I’ll ask:
+Win95 or 3.1
+If Win95, is it OSR 2 (Version 4.00.950 B shown in System Properties)
+What Adaptec card you have
+What burner are you using
+Which version of CDGen are you running
+Does your system boot from a SCSI or IDE drive
+If you have an IDE CD ROM drive in your system, does it emulate a SCSI drive?
+Are there multiple host adapters in your system (such as one on the motherboard and one or more cards)?
+If it is enabled, what version of EZ-BIOS (visible at boot) you have
+What version of EZ-SCSI tools you have
+What version of WINASPI.DLL you have
+What version of AIC78XX.MPD (2940 series card) or AHA154X.MPD (1540 series card) you have
+If Win95, how is 921 shown in device manager:
+CD-Recordable/WORM, Other Device, CD ROM, or not shown at all
+Does the device list shown by SCSI Explorer show everything as you think it should
+What is the exact error message you are seeing
+Have you attempted or completed a burn using another computer/software combination
+Contacting the author
+If you have any questions, comments, or corrections, or any suggestions for what you would like to see in
+possible future versions of this document, please feel free to contact me:
+frank_sheperson@playstation.sony.com
+(650) 655-6086
+If that fails to get a response, try the general Developer Support channels:
+devtech_support@playstation.sony.com
+(650) 655-8181

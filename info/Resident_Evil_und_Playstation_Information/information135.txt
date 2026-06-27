@@ -1,0 +1,217 @@
+Skip to content
+Navigation Menu
+rickomax
+psxprev
+
+Type / to search
+Code
+Issues
+28
+Pull requests
+Actions
+Projects
+Security
+Insights
+Owner avatar
+psxprev
+Public
+rickomax/psxprev
+Go to file
+t
+Name		
+trigger-segfault
+trigger-segfault
+WriteSettings before opening Scanner/ExportModelsForm (#203)
+6de12c3
+ · 
+2 years ago
+Common
+Prepare for 0.9.9.2 release (#201)
+2 years ago
+Forms
+WriteSettings before opening Scanner/ExportModelsForm (#203)
+2 years ago
+Properties
+Prepare for 0.9.9.2 release (#201)
+2 years ago
+Resources/Icons
+Texture/Scene previewer improvements, advanced settings (#193)
+2 years ago
+Shaders
+VAO, Texture, and Mesh batching optimizations (#192)
+2 years ago
+packages
+Read and write PSXPrev.settings.json file
+2 years ago
+.gitignore
+Revamp command line and add new options
+2 years ago
+App.config
+Prepare for 0.9.9.2 release (#201)
+2 years ago
+LICENSE
+Create LICENSE
+2 years ago
+PSXPrev.csproj
+Rename Common.Color to Color3 and change to struct (#195)
+2 years ago
+PSXPrev.sln
+Updated with working branch
+7 years ago
+Program.cs
+Settings catch-up and remove Old UV Alignment (#197)
+2 years ago
+README.md
+Update README preview image (#202)
+2 years ago
+ScanOptions.cs
+Settings catch-up and remove Old UV Alignment (#197)
+2 years ago
+Settings.cs
+Add HMD Extra Animations advanced setting (#200)
+2 years ago
+packages.config
+Read and write PSXPrev.settings.json file
+2 years ago
+Repository files navigation
+README
+BSD-2-Clause license
+PSXPrev
+PSXPREV - PlayStation (PSX) Files Previewer/Extractor
+
+Release Release Date Downloads Discord
+
+Program Preview
+
+(Models from Action Man 2: Destruction X)
+
+Old preview images
+Treat this as an experimental release and use this tool at your own risk. Warning: PSXPrev uses a lot of memory to scan files, so your system might run out of resources while scanning.
+
+Links: Video tutorial | Compatibility list
+
+Credits:
+
+3D rendering with OpenTK
+ISO reading with DiscUtils
+JSON reading/writing with Newtonsoft.Json
+Ozgur Ozcitak's ImageListView
+Daniele de Santis's Playstation Icons
+Yusuke Kamiyamane's Fugue Icons
+Runtime Requirements:
+
+An OpenGL 3.0 compatible video card
+.NET Framework 4.5.1
+Supported formats:
+
+Models: TMD, PMD, HMD, BFF (Blitz Games), PIL (Blitz Games), MOD (Croc), PSX (Neversoft)
+Textures: TIM, HMD, SPT (Blitz Games), PSX (Neversoft)
+Animations: AN, TOD, VDF, HMD, PIL (Blitz Games), PSX (Neversoft)
+Usage: A scanner window will be displayed when running the application without passing any command line arguments. When passing command line arguments, PSXPrev will start scanning for files using the given parameters. As the scan runs, a new window will be displayed, containing the following tabs:
+
+Models: Viewer for models found while scanning files.
+Textures: Viewer for textures found while scanning files.
+VRAM: Viewer for a replica of PSX Video RAM, which consists of 32 256x256 textures. (These pages are used to compose the final textures applied to models)
+Animations: Player for animations found while scanning files.
+To scan more files, you can select File > Start Scan to open the scanner window again.
+
+Known issues/limitations: PSXPrev only finds files conformant to the file formats it's scanning for. PSXPrev can't scan any compressed or proprietary formats.
+
+Command line usage:
+
+usage: PSXPrev <PATH> [FILTER="*"] [-help] [...options]
+
+arguments:
+  PATH   : folder or file path to scan
+  FILTER : wildcard filter for files to include (default: "*")
+
+scanner formats: (default: all formats except SPT)
+  -an        : scan for AN animations
+  -bff       : scan for BFF models and animations (Blitz Games)
+  -hmd       : scan for HMD models, textures, and animations
+  -mod/-croc : scan for MOD models (Croc)
+  -pil       : scan for PIL models and animations (Blitz Games)
+  -pmd       : scan for PMD models
+  -psx       : scan for PSX models, textures, and animations (Neversoft)
+  -spt       : scan for SPT textures (Blitz Games)
+  -tim       : scan for TIM textures
+  -tmd       : scan for TMD models
+  -tod       : scan for TOD animations
+  -vdf       : scan for VDF animations
+
+scanner options:
+  -ignorehmdversion     : less strict scanning of HMD models
+  -ignorepmdversion     : less strict scanning of PMD models
+  -ignoretimversion     : less strict scanning of TIM textures
+  -ignoretmdversion     : less strict scanning of TMD models
+  -align <ALIGN>        : scan offsets at specified increments
+  -start <OFFSET>       : scan files starting at offset (hex)
+  -stop  <OFFSET>       : scan files up to offset (hex, exclusive)
+  -range [START],[STOP] : shorthand for [-start <START>] [-stop <STOP>]
+  -startonly  : shorthand for -stop <START+1>
+  -nextoffset : continue scan at end of previous match
+  -regex      : treat FILTER as Regular Expression
+  -depthlast  : scan files at lower folder depths first
+  -syncscan   : disable multi-threaded scanning per format
+  -scaniso    : scan individual files inside .iso files
+  -scanbin    : scan individual files inside raw PS1 .bin files
+                not all files may be listed in a .bin file, use -databin as a fallback
+  -databin    : scan data contents of raw PS1 .bin files
+  -binsector <START>,<SIZE> : change sector reading of .bin files (default: 24,2048)
+                              combined values must not exceed 2352
+
+log options:
+  -log       : write output to log file
+  -debug     : output file format details and other information
+  -error     : show error (exception) messages when reading files
+  -noverbose/-quiet : don't write output to console
+
+program options:
+  -drawvram  : draw all loaded textures to VRAM (not advised when scanning many files)
+About
+PSXPREV - Playstation (PSX) Files Previewer/Extractor
+
+Resources
+ Readme
+License
+ BSD-2-Clause license
+ Activity
+Stars
+ 232 stars
+Watchers
+ 7 watching
+Forks
+ 10 forks
+Report repository
+Releases 17
+PSXPrev 0.9.9.2
+Latest
+on Nov 9, 2023
++ 16 releases
+Packages
+No packages published
+Contributors
+5
+@rickomax
+@trigger-segfault
+@kgib91
+@skyfloogle
+@LewisMCYoutube
+Languages
+C#
+99.6%
+ 
+GLSL
+0.4%
+Footer
+© 2025 GitHub, Inc.
+Footer navigation
+Terms
+Privacy
+Security
+Status
+GitHub Community
+Docs
+Contact
+Manage cookies
+Do not share my personal information

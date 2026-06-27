@@ -1,0 +1,1 @@
+mipsgcc -v -I..\include -c spulib.c -o spu.o

@@ -1,0 +1,48 @@
+This directory holds example source files for my PSX mipsgcc library
+update.
+
+The examples can be complied by running their respective batch files
+(eg: to compile example6, just run example6.bat).
+Note: the mipsgcc environment must be correct.
+
+Example 1 - "play sample"
+~~~~~~~~~
+Shows how to upload a VAG sample to SPU RAM and play it.
+
+
+Example 2 - "play sample with reverb"
+~~~~~~~~~
+Show how to upload sample and reverb data, and play a sample with
+reverb.
+
+
+Example 3 - "sample with reverb and ADSR envelope visualised"
+~~~~~~~~~
+The ADSR envelope for a voice is set, and a sample is played on that
+voice. The current envelope amplitude is read from the SPU and 
+graphed.
+
+
+Example 4 - "play a MOD"
+~~~~~~~~~
+A music MOD is initialised and then played using the 50/60Hz vertical
+blank sync.
+
+
+Example 5 - "play samples from a VAB bank"
+~~~~~~~~~
+A VAB bank (sample bank) is uploaded into SPU RAM and the samples
+therein are played.
+
+
+Example 6 - "noise"
+~~~~~~~~~
+Plays a sound voice with noise mode set.
+
+
+Example 7 - "PSX lib update test proggie"
+~~~~~~~~~
+Plays a MOD and dipslays text using the text-printing functions.
+
+
+7 May 2000

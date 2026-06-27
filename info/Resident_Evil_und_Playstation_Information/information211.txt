@@ -1,0 +1,44 @@
+PLAYSTATION TECHNICAL NOTE
+=======================================================================
+Date: January 25, 1996
+Ref:
+Author: S. Okamoto
+Subject: Speed of D-cache
+ABSTRACT
+--------
+This note describes the speed of the D-cache in relation to data
+reading and writing.
+DETAILS
+-------
+o What speed is the D-cache in comparison to main RAM at reading data?
+Five times faster. It takes one CPU cycle to read from D-cache, and it
+takes five CPU cycles to read from main RAM.
+o What speed is the D-cache in comparison to main RAM at writing data?
+It takes one CPU cycle to write to the D-cache from general registers.
+Writing to main RAM is the most complicated part of the R3000 CPU. I
+should say that only GOD knows the exact number of cycles for writing
+data to main RAM!
+The R3000 CPU has a "Write-buffer" between registers and main RAM. The
+W-buffer is four step 32bit length fifo. It takes one cycle to write to
+the W-buffer. But if there are no free registers on the W-buffer, the
+CPU must flush the W-buffer: write ALL the data on the W-buffer to main
+RAM.
+It takes one to four cycles to write the data on W-buffer to main RAM.
+If two or more write operations are done in a row, the first operation
+takes four cycles, but the second and subsequent operations take only
+one cycle each.
+And, main RAM has 1KByte "pages". Any write operation on a new page
+takes four cycles. And, the programmer cannot control or detect the Wbuffer flush timing, and cannot know the status of it. The R3000 has a
+Bus-Snoop-Mechanism and I-cache. You cannot predict the start of the
+flushing of the W-buffer, even if you know the complete assembler
+codes.
+So, if you have good luck, it takes only one cycle to finish one store
+instruction. For the worst case, I can say nothing.
+As a result, I can only say that writing to main RAM is VERY slow
+compared to writing to D-cache, and probably writing to main RAM is
+slower than reading from main RAM.
+Best Regards,
+Okamoto
+PS. Each segment of the W-buffer is assigned to one store instruction.
+So if four Store-Byte-Instructions are executed, the W-buffer becomes
+full.

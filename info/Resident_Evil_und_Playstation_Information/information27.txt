@@ -1,0 +1,422 @@
+
+CDROM File Video Streaming STR Variants	Contents
+Index	Prev
+Next
+
+STR ID Values
+  2-byte  0160h         ;Standard STR header
+  1-byte  01h           ;Ace Combat 3 Electrosphere
+  4-byte  "SMJ",01h     ;Final Fantasy 8, Video
+  4-byte  "SMN",01h     ;Final Fantasy 8, Audio/left
+  4-byte  "SMR",01h     ;Final Fantasy 8, Audio/righ
+  4-byte  0000000xh     ;Judge Dredd
+  4-byte  DDCCBBAAh     ;Crusader: No Remorse, older Electronic Arts
+  4-byte  08895574h     ;Chunk header in 1st sector only, Best Sports (demo)
+  4-byte  "VLC0"        ;Chunk header in 1st sector only, newer Electronic Arts
+  4-byte  "VMNK"        ;Chunk header in 1st sector only, Policenauts
+  4-byte  01h,"XSP"     ;Sentient header in 1st sector only
+  N-byre  zero(es)      ;Polygons? (in last 150Mbyte of PANEKIT.STR)
+
+STR Type values (for videos that do have STR ID=0160h):
+The official definition from Sony's File Formats document is as so;
+  0000h..7FFFh=User Defined
+  8000h..FFFFh=System (with 8001h=MDEC being the only officially defined type)
+In practice, the following values are used (of which, 8001h is most common).
+  0000h=Polygon Video, Wacwac as Polygon Stream
+  0000h=Polygon Video?, Army Men Air Attack 2 (MagDemo40: AMAA2\*.PMB)
+  0000h=MDEC Video, Alice in Cyberland
+  0001h=MDEC Video, Ridge Racer Type 4 (PAL version, 320x176 pix)
+  0001h=Whatever extra data for XA-ADPCM streams (Bits Laboratory games)
+  0001h=Whatever non-audio waverform? (3D Baseball)
+  0001h=Subtitles, Metal Gear Solid MGS\ZMOVIE.STR
+  0002h=Software-rendered video (without using MDEC/GTE) (Cyberia)
+  0002h=MDEC Video, Wacwac with IntroTableSet
+  0003h=MDEC Video, Wacwac with EndingTableSet
+  0004h=MDEC Video, Final Fantasy 9 (MODE2/FORM2)
+  0008h=SPU-ADPCM, AKAO audio (Final Fantasy 9)
+  0000h=SPU-ADPCM, AKAO audio (Chrono Cross Disc 1, Legend of Mana)
+  0001h=SPU-ADPCM, AKAO audio (Chrono Cross Disc 1, Legend of Mana)
+  0100h=SPU-ADPCM, AKAO audio (Chrono Cross Disc 2)
+  0101h=SPU-ADPCM, AKAO audio (Chrono Cross Disc 2)
+  0000h=Whatever special, channel 0 header (Nightmare Project: Yakata)
+  0400h=Whatever special, channel 1 header (Nightmare Project: Yakata)
+  0001h=Whatever special, channel 0 data   (Nightmare Project: Yakata)
+  0401h=Whatever special, channel 1 data   (Nightmare Project: Yakata)
+  5349h=MDEC Video, Gran Turismo 1 and 2 (with BS iki)
+  0078h=MDEC Ending Dummy  (Mat Hoffman's Pro BMX (MagDemo48: MHPB\SHORT.STR)
+  5673h=MDEC Leading Dummy (Mat Hoffman's Pro BMX (MagDemo48: MHPB\SHORT.STR)
+  8001h=MDEC Video, Standard MDEC (most common type value)
+  8001h=Polygon Video (Ape Escape) (same ID as standard MDEC)
+  8001h=Eagle One: Harrier Attack various types (MDEC and other data)
+  8001h=Dance series SPU-ADPCM streaming (with STR[1Ch]=DDCCBBAAh)
+  8101h=MDEC Video, Standard MDEC plus bit8=FlagDisc2 (Chrono Cross Disc 2)
+
+ ______________________________________________________________________________
+
+Leading XA-ADPCM
+Most movies start with STR video sectors. But a few games start with XA-ADPCM:
+  Ace Combat 3 Electrosphere (*.SPB)
+  Alice in Cyber Land (*.STR)
+  Judge Dredd (*.IXA) ;and very small 4-byte STR header
+  ReBoot (MOVIES\*.WXA)
+Also, Aconcagua (Wacwac) has XA-ADPCM before Video (but, yet before that, it has 150 leading zerofilled sectors).
+Also, Porsche Challenge (SRC\MENU\STREAM\*.STR) starts with corrupted Subheaders, which may appear as leading XA-ADPCM (depending on how to interprete the corrupted header bits).
+
+Leading SPU-ADPCM
+  EA videos     ;\
+  Crusader      ; chunks
+  Policenauts   ;/
+  AKAO videos
+
+Metal Gear Solid (MGS\ZMOVIE.STR, 47Mbyte)
+This is an archive dedicated to STR movies (with number of frames instead of filesize entries). Metal Gear Solid does also have cut-scenes with polygon animations (but those are supposedly stored elsewhere?).
+  000h 4    Number of entries (4)
+  004h N*8  File List
+  ...  ..   Zerofilled
+File List entries:
+  000h 2    Unknown... decreasing values?
+  002h 2    Number of Frames (same as last frame number in STR header)
+  004h 4    Offset/800h (to begin of STR movie, with subtiltes in 1st sector)
+Disc 1 has four movies: The first one has a bit more than 12.5 sectors/frame, the other three have a bit more than 10 sectors/frame (eg. detecting the archive format could be done checking for entries wirh 8..16 sectors/frame).
+Example, from Disc 1:
+  04 00 00 00
+  ED 97 9E 01  01 00 00 00 ;num sectors=1439h ;div19Eh=C.81h ;97EDh-6137h=36B6h
+  37 61 86 01  3A 14 00 00 ;num sectors=0F41h ;div186h=A.03h ;6137h-38D0h=2867h
+  D0 38 10 03  7B 23 00 00 ;num sectors=1EA1h ;div310h=A.00h ;38D0h-2302h=15CEh
+  02 23 73 02  1C 42 00 00 ;num sectors=1881h ;div273h=A.01h ;2302h-0000h=2302h
+The files in the ZMOVIE.STR archive start with subtitles in 1st sector (this is usually/always only one single sector for the whole movie):
+  000h 2    STR ID   (0160h)                                       ;\
+  002h 2    STR Type (0001h=Subtitles)                             ;
+  004h 2    Sector number within Subtitles (0)                     ; STR
+  006h 2    Number of Sectors with Subtitles (1)                   ; header
+  008h 4    Frame number (1)                                       ;
+  00Ch 4    Data size counted in 4-byte units (same as [02Ch]/4)   ;
+  010h 10h  Zerofilled                                             ;/
+  020h 4    Unknown (2)                                            ;\
+  024h 4    Unknown (1AAh, 141h, or 204h)                          ; Data
+  028h 4    Unknown (00100000h)                                    ; part
+  02Ch 4    Size of all Subtitle entries in bytes plus 10h         ;
+  030h ..   Subtitle entries                                       ;/
+  ...  ..   Zeropadding to 800h-byte boundary                      ;-padding
+Subtitle entries:
+  000h 4    Offset from current subtitle to next subtitle (or 0=Last subtitle)
+  004h 4    First Frame number when to display the subtitle?
+  008h 4    Number of frames when to display the subtitle?
+  00Ch 4    Zero
+  010h ..   Text string, terminated by 00h
+  ...  ..   Zeropadding to 4-byte boundary
+The text strings are ASCII, with special 2-byte codes (80h,7Bh=Linebreak, 1Fh,20h=u-Umlaut, etc).
+
+ ________________________ Customized STR Video Headers ________________________
+
+Viewpoint (with slightly modified STR header)
+  008h 4    Frame number (0=First)                      ;<-- instead of 1=First
+  01Ch 2    Unknown (always D351h)                      ;<-- instead of zero
+  01Eh 2    Number of Frames in this STR file           ;<-- instead of zero
+
+Capcom games
+Resident Evil 2 (ZMOVIE\*.STR, PL0\ZMOVIE\*.STR)
+Super Puzzle Fighter II Turbo (STR/CAPCOM15.STR)
+  01Ch 4    Sector number of 1st sector of current frame  ;<-- instead of zero
+
+Chrono Cross Disc 2 Video
+Chrono Cross Disc 1 does have normal STR headers, but Disc 2 has Type.bit8 toggled:
+  002h 2    STR Type (8101h=Disc 2)                       ;<-- instead of 8001h
+And, the Chrono Cross "final movie" does reportedly have "additional properties". Unknown, what that means, it does probably refer to the last movie on Chrono Cross Disc 2, which is quite huge (90Mbyte), and has lower resolution (160x112), and might have whatever "additional properties"?
+
+Need for Speed 3
+Need for Speed 3 Hot Pursuit (MOVIES\*.XA, contains videos, not raw XA-ADPCM)
+Jackie Chan Stuntmaster (FE\MOVIES\*.STR)
+With slightly modified STR headers:
+  014h 4    Number of Frames (..excluding last some frames?) ;-instead BS[0..3]
+  018h 4    Unlike the above modified entry, this is normal  ;-copy of BS[4..7]
+
+ReBoot (MOVIES\*.WXA)
+This has leading XA-ADPCM, and customized STR header:
+  014h 2    Type (0000h=Normal, 01FFh=Empty frames at end of video)
+  016h 2    Number of Frames (excluding empty ones at end of video)
+  018h 8    Zerofilled
+
+Gran Turismo 1 (230Mbyte STREAM.DAT) and Gran Turismo 2 (330Mbyte STREAM.DAT)
+These two games use BS iki format, and (unlike other iki videos) also special STR headers:
+  002h 2    STR Type (5349h) ("IS")         ;-special (instead 8001h)
+  010h 2    Total number of frames in video ;-special (instead width)
+  012h 2    Flags (bit15=1st, bit14=last)   ;-special (instead height)
+  014h 8    Zero                            ;-special (instead BS header copy)
+  020h 7E0h Data (in BS iki format)         ;-BS iki header (with width/height)
+Caution: The STR header values aren't constant throughout the frame:
+  Namely, flags in [012h] are toggled on first/last sector of each frame,
+  and of course [04h] does also increase per sector.
+
+PGA Tour 96, 97, 98 (VIDEO\..\*.XA and ZZBUFFER\*.STR)
+Used by all movies in PGA Tour 96, 97 (and for the ZZBUFFER\BIGSPY.STR dummy padding movie in PGA Tour 98).
+The videos have normal BS v2 data, but the Frame Size entry is 8 smaller than usually. As workaround, always load [0Ch]+8 for all movies with standard STR headers (unless that would exceed [06h]*7E0h).
+  00Ch 4    Frame Size-8 (ie. excluding 8-byte BS header)  ;instead of Size-0
+The padding videos in ZZBUFFER folder have additional oddities in STR header:
+  ZZBUFFER\SPY256.STR    [14h..1Fh]=normal copy of 8-byte BS v2 header and zero
+  ZZBUFFER\SPYGLASS.STR  [14h..1Fh]=zerofilled                          ;\BS v1
+  ZZBUFFER\SPYTEST.STR   [14h..1Fh]=00 00 10 00 00 00 00 09 00 00 07 EE ;/
+  ZZBUFFER\BIGSPY.STR    Used in PGA Tour 98 (instead of above three files)
+SPYTEST.STR has nonsense quant values exceeding the 0000h..003Fh range (first frame has quant=00B1h, and later frames go as high as quant=FFxxh, that kind of junk is probably unrelated to BS fraquant). The oddities for SPYTEST.STR do also occur in some frames in PGA Tour 98 BIGSPY.STR. Anyways, those ZZBUFFER files seem to be only unused padding files.
+
+Alice in Cyber Land (*.STR)
+Note: First sector contains XA-ADPCM audio (video starts in 2nd sector).
+ STR Sector Header:
+  002h 2    STR Type (0000h=Alice in Cyber Land video)            ;-special
+  008h 4    Frame number (1=First) (bit15 set in last frame, or FFFFh)
+  010h 10h  Zerofilled (instead width/height and BS header copy)  ;-special
+  020h 7E0h Data (in BS v2 format)
+Frames are always 320x240.
+The frame number of the last used frame of a movie has the bit15 set. After that last frame, there are some empty frame(s) with frame number FFFFh.
+For some reason there are "extra audio sectors in between movies" (uh?).
+Many of the movies have a variable frame rate. All movies contain frames sequences that match one of the following frame rates: 7.5 fps, 10 fps, 15 fps, 30 fps.
+
+Encrypted iki (Panekit - Infinitive Crafting Toy Case)
+  014h 8    Copy of decrypted BS header (instead of encrypted BS header)
+
+Princess Maker: Yumemiru Yousei (PM3.STR)
+Parappa (Japanese Demo version only) (S0/GUIDE.STR)
+These files do have BS ID=3000h (except, the first and last some frames have nromal ID=3800h). The STR header is quite normal (apart from reflecting the odd BS ID):
+  016h 2    Copy of BS ID, 3000h in most frames (instead of 3800h)
+  020h 7E0h Data (in BS format, also with BS ID 3000h, instead of 3800h)
+
+Starblade Alpha and Galaxian 3
+These movies have Extra stuff in the data section. The STR header is quite normal (apart from reflecting the Extra stuff):
+  00Ch 4    Frame Size in bytes (=size of ExtraHeader + BsData + ExtraData)
+  014h 4    Copy of Extra Header        ;instead of BS[0..3]
+  018h 4    Copy of BS[0..3]            ;instead of BS[4..7]
+  020h 7E0h Data (ExtraHeader + BsData + ExtraData)
+The data part looks as so:
+  000h 2    Size of BS Data area    (S1)        ;\Extra Header
+  002h 2    Size of Extra Data area (S2)        ;/
+  004h S1   BS Data (in BS v3 format)           ;-BS Data
+  ..   S2   Extra Data (unknown purpose)        ;-Extra Data
+Note: Starblade Alpha does use that format for GAMEn.STR and NAME.STR in FLT and TEX folders (the other movies in that game are in normal STR format).
+
+Largo Winch: Commando SAR (FMV\NSPIN_W.RNG)
+This is a somewhat "normal" movie, without audio, and with the STR headers moved to the begin of the file:
+  000h Nx20h   STR Headers  ;size = filesize/800h*20h
+  ...  Nx7E0h  Data         ;size = filesize/800h*7E0h
+Note: The movie contains the rotating "W" logo, which is looped in Start screen.
+
+Player Manager (1996, Anco Software) (FILMS\1..3\*.STR)
+  006h 2    Number of Sectors in this Frame-1 (8..9 = 9..10 sectors)
+  00Ch 4    Frame Size in bytes               (8..9*7E0h = 3F00h or 46E0h)
+  010h 2    Bitmap Width                      (always F0h)
+  012h 2    Bitmap Width                      (always 50h)
+  014h 0Ch  Zerofilled (instead copy of BS header or copy of Extra header)
+  020h 7E0h Data (Extra Stuff, BS v2 data, plus Unused stuff)
+The data part occupies 9-10 sectors, consisting of:
+  0000h Extra Stuff   (7E0h bytes, whatever, often starts with 00,FF,00,FF,..)
+  07E0h BS v2 data    (3720h or 3F00h bytes, including FFh-padding)
+  ...   Unused Sector (7E0h bytes, same as in previous frame or zerofilled)
+The compressor tries to match the picture quality to the number of sectors per frame, but it's accidentally leaving the last sector unused:
+  For 9 sectors:  Only 1..7 are used, sector 8 is same as in previous frame
+  For 10 sectors: Only 1..8 are used, sector 9 is zerofilled
+Apart from the odd format in FILMS\1..3\*.STR, the game does also have normal videos in FILMS\*.STR.
+
+Chiisana Kyojin Microman (DAT\STAGE*\*.MV)
+The .MV files have 5 sectors/frame: Either 5 video sectors without audio, or 4-5 video sectors plus XA-ADPCM audio (in the latter case, audio is in each 8th sector (07h,0Fh,17h,1Fh,etc), hence having filesize rounded up to N*8 sectors):
+  Filesize = 800h*((NumberOfFrames*5))             ;5 sectors, no xa-adpcm
+  Filesize = 800h*((NumberOfFrames*5+7) AND not 7) ;4-5 sectors, plus xa-adpcm
+Caution: The STR header values aren't constant throughout the frame:
+  Sector 0: [10h] = Number of Frames,   [12h]=Junk
+  Sector 1: [10h] = Junk,               [12h]=0
+  Sector 2: [10h] = Junk,               [12h]=Junk
+  Sector 3: [10h] = Junk,               [12h]=Same as below (Bitmap Height)
+ Below ONLY when having 5 sectors per frame:
+  Sector 4: [10h] = Bitmap Width (140h) [12h]=Bitmap Height (D0h)
+ That is, frames with 4 sectors do NOT have any Bitmap Width entry
+ (the duplicated Height entry in sector 3 exists, so one could compute
+ Width=NumMacroBlocks*100h/Height, or assume fixed Width=320, Height=208).
+The Junk values can be zero, or increase/decrease during the movie, some or all of them seem to be sign-expanded from 12bit (eg. increasing values can wrap from 07xxh to F8xxh).
+Apart from the odd DAT\STAGE*\*.MV files, the game does also have .STR files with normal STR headers and more sectors per frame (DAT\STAGE16,21,27\*.STR, DAT\OTHER\*.STR, DAT\OTHER\CM\*.STR, and MAT\DAT\*.STR).
+
+Black Silence padding
+Used by Bugriders: The Race of Kings (MOVIE\*XB.STR)
+Used by Rugrats Studio Tour (MagDemo32: RUGRATS\DATA\OPEN\*B.STR)
+  Each movie file is followed by dummy padding file. For example, in Bugriders:
+  MOVIE\*XA.STR  Movie clip             (with correct size, 320x192)
+  MOVIE\*XB.STR  Black Silence padding  (wrong size 640x192, should be 320x192)
+The names are sorted alphabetically and exist in pairs (eg. CHARMXA.STR and CHARMXB.STR), and the disc sectors are following the same sort order.
+The padding files contain only black pixels and silent XA-ADPCM sectors, with following unique STR header entries, notably with wrong Width entry (the MDEC data contains only 320x192 pixels).
+  00Ch 4    Frame Size    (087Ch)
+  010h 2    Bitmap Width  (wrongly set to 640, should be 320)
+  012h 2    Bitmap Height (192)
+  014h 2    MDEC Size     (05A0h)
+  016h 2    BS ID         (3800h)
+  018h 2    BS Quant      (0001h)
+  01Ah 2    BS Version    (0002h)
+  Filesize is always 44Fh sectors (about 2.2Mbyte per *XB.STR file)
+The huge 7 second padding is a very crude way to avoid the next movie to be played when not immediately pausing the CDROM at end of current movie.
+
+Ridge Racer Type 4 (only PAL version) (R4.STR)
+The 570Mbyte R4.STR file contains XA-ADPCM in first three quarters, and two STR movies in last quarter:
+  1st NTSC/US movie: 320x160 pix, 0F61h frames, 4-5 sectors/frame, normal STR
+  1st PAL/EUR movie: 320x176 pix, 0CD0h frames, 5-6 sectors/frame, special STR
+  2nd NTSC/US movie: 320x160 pix, 1D6Ah frames, 4-5 sectors/frame, normal STR
+  2nd PAL/EUR movie: 320x160 pix, 18B5h frames, 5-6 sectors/frame, normal STR
+As seen above, the PAL movies have lower framerate. And, the 1st PAL movie has higher resolution, plus some other customized STR header entries:
+  002h 2    STR Type (0001h=Custom, 176pix PAL video)         ;instead of 8001h
+  006h 2    Number of Sectors in this Frame (always 5..6)
+  00Ch 4    Frame Size (always 2760h or 2F40h, aka 7E0h*5..6)
+  012h 2    Bitmap Height (00B0h, aka 176 pixels)             ;instead of 00A0h
+  014h 8    Zerofilled                                        ;instead BS[0..7]
+  020h 7E0h Data (in BS v3 format, plus FFh-padding)
+That is, the special video is standard MDEC, the only problem is detecting it as such (despite of the custom STR Type entry).
+
+Mat Hoffman's Pro BMX (MagDemo48: MHPB\SHORT.STR)
+This contains a normal MDEC movie, but with distorted "garbage" in first and last some sectors.
+  1st sector          STR Type 5673h (Leading Dummy)                ;\
+  2nd sector          STR Type 8001h (distorted/empty MDEC)         ; junk
+  3rd..6th sector     STR Type 8001h (distorted/garbage MDEC)       ;/
+  7th sector and up   STR Type 8001h (normal MDEC, with odd [01Ch]) ;-movie
+  Last 96h sectors    STR Type 0078h (Ending Dummy)                 ;-junk
+1st Sector:
+  002h 2    STR Type (5673h=Leading Dummy)
+  004h 4    Whatever (0004000Ch)
+  008h 4    Whatever (0098967Fh)
+  00Ch 4    Frame Size (always 100h)
+  010h 7F0h EAh-filled
+2nd Sector:
+  002h 2    STR Type (8001h=Normal MDEC ID, but content is empty)
+  004h 4    Whatever (0004000Ch)        ;\
+  008h 4    Whatever (0098967Fh)        ; same as in 1st sector
+  00Ch 4    Frame Size (always 100h)    ; (but ID at [002h] differes)
+  010h 7F0h EAh-filled                  ;/
+3rd-6th Sector:
+  002h 2    STR Type (8001h=Normal MDEC ID, but content is distorted)
+  004h 2    Sector number within current Frame (always 0)
+  006h 2    Number of Sectors in this Frame (always 1)
+  008h 4    Frame number (increasing, 1..4 for 3rd..6th sector)
+  00Ch 4    Frame Size (always 7D0h)
+  010h 10h  EAh-filled
+  020h 7D0h Unknown (random/garbage?)
+  7F0h 10h  EAh-filled
+7th Sector and up (almost standard MDEC):
+ Caution: The STR header values aren't constant throughout the frame:
+ Entry entry [01Ch] is incremented per sector (or wraps to 0 in new section).
+  01Ch 4    Increasing sector number (within current movie section or so)
+Last 96h Sectors:
+  002h 2    STR Type (0078h=Ending Dummy)
+  004h 2    Sector number within current Frame (always 0)
+  006h 2    Number of Sectors in this Frame (always 1)
+  008h 4    Frame number (increasing, in last 96h sectors)
+  00Ch 4    Frame Size (always 20h)
+  010h 2    Bitmap Width  (always 40h)
+  012h 2    Bitmap Height (always 40h)
+  014h 7ECh Zerofilled
+
+Final Fantasy VII (FF7) (MOVIE\*.MOV and MOVIE\*.STR)
+These movies have Extra stuff in the data section. The STR header is quite normal (apart from reflecting the Extra stuff):
+  00Ch 4    Frame Size in bytes (including 28h-byte extra stuff)
+  014h 8    Copy of Extra data [0..7]           :-instead of BS header[0..7]
+  020h 7E0h Data (ExtraData + BsData)
+The data part looks as so:
+  000h 28h  Extra data (unknown purpose, reportedly "Camera data" ... whut?)
+  028h ..   BS Data (in BS v1 format)
+
+Final Fantasy IX (FF9) (*.STR and *.MBG)
+There are several customized STR header entries:
+  002h 2    STR Type (0004h=FF9/Video)                      ;instead of 8001h
+  004h 2    Sector number within current Frame (02h..num-1) (2..9 for video)
+  006h 2    Total number of Audio+Video sectors in this frame (always 0Ah)
+  00Ch 4    Frame Size/4 (of BS data, excluding MBG extra)  ;instead of Size/1
+  014h 8    Copy of BS[0..7] from 8th video sector          ;instead 1st sector
+  01Ch 2    Usually 0000h (or 0004h in some MBG sectors)    ;inszead of 0000h
+  01Eh 2    Usually 0000h (or 3xxxh in some MBG sectors)    ;inszead of 0000h
+  020h 8F4h Data (in BS v2 format, plus MBG extra data, if any)
+Caution: The STR header values aren't constant throughout the frame:
+  Namely, entry [1Ch..1Fh]=nonzero occurs only on the sector that does contain
+  the end of BS data (=and begin of MBG extra data), and of course [04h] does
+  also increase per sector.
+Sector ordering has BS data snippets arranged backwards, for example, if BS data does occupy 2.5 sectors:
+  [04h]=00h-01h 1st-2nd audio sector, SPU-ADPCM (see Audio streaming chapter)
+  [04h]=02h-06h 1st-5th video sector, unused, [020h..913h] is FFh-filled
+  [04h]=07h     6th video sector, contains end of BS data and MBG extra, if any
+  [04h]=08h     7th video sector, contains middle of BS data
+  [04h]=09h     8th video sector, contains begin of BS data
+Sector type/size, very unusually with FORM2 sectors:
+  Audio sectors are MODE2/FORM1 (800h bytes, with error correction)
+  Video sectors are MODE2/FORM2 (914h bytes, without error correction)
+Huffman codes are standard BS v2, with one odd exception: MDEC 001Eh/03E1h (run=0, level=+/-1Eh) should be usually encoded as 15bit Huffman codes, FF9 is doing that for 001Eh, but 03E1h is instead encoded as 22bit Escape code:
+  000000000100010         MDEC=001Eh (run=0, level=+1Eh) ;-normal (used)
+  000000000100011         MDEC=03E1h (run=0, level=-1Eh) ;-normal (not used)
+  0000010000001111100001  MDEC=03E1h (run=0, level=-1Eh) ;-escape (used)
+There are two movie variants: *.STR and *.MBG. Most MBG files (except SEQ02\MBG102.MBG) contain extra MBG info in [01Ch..01Fh] and extra MBG data appended after the BS data. If present, the appended MBG data is often/always(?) just these 28h-bytes:
+  FF FF FF FF FE FF FE 41 AD AD AD AD AD AD AD AD
+  AD AD AD AD AD AD AD AD AD AD AD AD AD AD AD AD
+  AD AD AD AD AD AD AD AD
+  (followed by FF's, which might be padding, or part of the extra data)
+Unknown if some sectors contain more/other MBG data, perhaps compressed BG pixel-depth values for drawing OBJs in front/behind BG pixels?
+
+ _______________________ Non-standard STR Video Headers _______________________
+
+Final Fantasy VIII (FF8)
+Video frames are always 320x224. The video frames are preceeded by two SPU-ADPCM audio sectors.
+  000h 4    ID "SMJ",01h=Video
+  004h 1    Sector number within current Frame (02h..num-1) (2..9 for video)
+  005h 1    Total number of Audio+Video sectors in this frame, minus 1 (9)
+  006h 2    Frame number (0=First)
+  008h 7F8h Data (in BS v2 format)
+
+Ace Combat 3 Electrosphere (in 520Mbyte ACE.SPH/SPB archive)
+The videos start with one XA-ADPCM sector, followed by the first Video sector.
+ STR Sector Header:
+  000h 1    Always 01h
+  001h 1    Sector number within current Frame (00h..num-1) (8bit)
+  002h 2    Number of Sectors in this Frame
+  004h 2    Unknown (1 or 3)
+  006h 2    Frame number (decreasing, 0=Last)
+  008h 2    Bitmap Width in pixels    ;\130hxE0h or 140hxB0h or 80hx60h
+  00Ah 2    Bitmap Height in pixels   ;/
+  00Ch 4    Zero
+  010h 2    Zero, or decreasing timer (decreases approx every 2 sectors)
+  012h 2    Zero, or decreasing timer (decreases approx every 1 sector)
+  014h 3    Zero
+  017h 1    Zero, or increases with step 2 every some hundred sectors
+  018h 2    Zero, or Timer (increments when [1Ah] wraps from 04h to 01h)
+  01Ah 1    Zero, or Timer (increments when [1Bh] wraps from 5Fh to 00h]
+  01Bh 1    Zero, or Timer (increments approx every 1 sector)
+  01Ch 2    Zero, or Whatever (changes to whatever every many hundred sectors)
+  01Eh 2    Zero, or 0204h
+  020h 7E0h Data (in BS v3 format)
+Caution: The STR header values aren't constant throughout the frame:
+  Namely, entry [10h..1Fh] can change within the frame (happens in japanese
+  version), and of course [01h] does also increase per sector.
+The Japanese version may be the only game that has two streaming videos running in parallel on different channels.
+That means, non-japanese version is different...?
+
+Judge Dredd (1998, Gremlin) (CUTS\*.IXA and LEVELS\*\*.IXA)
+This is a lightgun-game with "interactive movies". The gameplay consists of running on a fixed path through a scene with pre-recorded background graphics, the only player interaction is aiming the gun at other people that show up in that movie scene. There are two movie types:
+  LEVELS\*\*.IXA  - Interactive gameplay movies
+  CUTS\*.IXA      - Non-interactive cut-scene movies
+Both CUTS and LEVELS have unusually small 4-byte STR headers:
+  000h 4    Sector number within current Frame (LEVELS=0..8, or CUTS=0..9)
+  004h 7FCh Data (see below)
+Data for CUTS is 320x240pix (10 sectors per frame):
+  Note: CUTS videos have 2 leading XA-ADPCM sectors
+  000h ..   BS Data (in BS v2/v3 format)                        ;-BS picture
+Data for LEVELS is 320x352pix plus extra stuff (9 sectors per frame):
+  Note: LEVELS videos have 1 leading XA-ADPCM sector
+  000h 4    Offset to BS Data (always 28h)                      ;\
+  004h 4*6  Offsets to Extra Stuff 1..6                         ; extra header
+  01Ch 0Ch  Zerofilled                                          ;/
+  028h ..   BS Data (in BS v2/v3 format)                        ;-BS picture
+  ...  ..   Extra Stuff 1..6                                    ;-extra data
+The unusual 320x352pix resoltution contains a 320x240pix BG image, with additional 320x112pix texture data appended at the bottom.
+Extra Stuff 1..6 does supposedly contain info for animating enemies and/or backgrounds.
+
+______________________________________________________________________________
+
+iki
+The .iki video format (found in files with .IKI or .IK2 extension) is used in several games made by Sony. iki movie sectors have some different properties:
+  * There are only as many iki video sectors as needed to hold all the
+    frame's data. Remaining sectors are null.
+  * The first sector's Submode.Channel starts at zero, then increments for
+    each sector after that, and resets to zero after an audio sector.
+  * IK2 videos can also have variable frame rates that are very inconsistent.
+
+
+I am homeless in Hamburg, please help me out!
+extracted from no$psx v2.2 - homepage - patreon - whole doc htm/txt - copyright 2022 martin korth (nocash)

@@ -1,0 +1,166 @@
+    
+H2700 Masterclass H2700 Masterclass
+ Making the most of the Making the most of the 
+PlayStation PlayStation 
+(with a little help from the PA) (with a little help from the PA)
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Overview Overview
+ Basic H2700 Use Basic H2700 Use
+ CPU optimisations CPU optimisations
+ GPU optimisations GPU optimisations
+ Debugging using the PA Debugging using the PA
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Basic H2700 use Basic H2700 use
+ The H2700 consists of 2 parts The H2700 consists of 2 parts
+ A standard playstation devkit A standard playstation devkit
+ A logic analyser ( Performance Analyser ) A logic analyser ( Performance Analyser )
+ The PA part helps you to fine tune your The PA part helps you to fine tune your 
+games games
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Using the PA Using the PA 
+The PA monitors 3 buses The PA monitors 3 buses
+ Main Bus Main Bus
+ Sub Bus Sub Bus
+ Video Bus Video Bus
+ It only knows about bus activity It only knows about bus activity
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Using the PA Using the PA
+ The PA operates independantly of the devkit The PA operates independantly of the devkit
+ A snapshot of the bus activity is taken A snapshot of the bus activity is taken
+ The PA can hold approx 7 Vsyncs of data The PA can hold approx 7 Vsyncs of data
+ This data is then analysed by the PA software This data is then analysed by the PA software
+ PA software interprets raw data to show PS PA software interprets raw data to show PS 
+structures structures
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Using the PA Using the PA
+ Make a scan Make a scan
+ Use trigger function to isolate problems Use trigger function to isolate problems
+ Identify bottlenecks. Identify bottlenecks.
+ CPU or GPU speed problems CPU or GPU speed problems
+ Change code Change code
+ Repeat ad nauseum Repeat ad nauseum
+  SCEE Technology SCEE Technology 
+Group Group
+  
+CPU optimisation CPU optimisation
+ I-cache optimisation I-cache optimisation
+ Data optimisation Data optimisation
+  SCEE Technology SCEE Technology 
+Group Group
+  
+I-cache optimisation I-cache optimisation
+ Avoid cache thrashing between routines Avoid cache thrashing between routines
+ Reduce size of core loops Reduce size of core loops
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Data optimisation Data optimisation
+ Main memory is slow Main memory is slow
+ Use scratchpad ram for locals Use scratchpad ram for locals
+ Using stack on scratchpad is good Using stack on scratchpad is good
+ Always try to group memory accesses into Always try to group memory accesses into 
+longs longs
+ Quicker to pack / unpack in registers Quicker to pack / unpack in registers
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Slow code example Slow code example
+ loop: loop:
+       lb v0,(a0)      lb v0,(a0)
+       add a0,a0,1      add a0,a0,1
+       sb v0,(a1)      sb v0,(a1)
+       add a1,a1,1      add a1,a1,1
+       bne a0,a2,loop      bne a0,a2,loop
+       nop      nop
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Optimised code example Optimised code example
+       lw t0,(a0)      lw t0,(a0)
+       lw t1,4(a0)      lw t1,4(a0)
+       lw t2,8(a0)      lw t2,8(a0)
+       lw t3,12(a0      lw t3,12(a0
+       sw t0,(a1)      sw t0,(a1)
+       sw t1,4(a1)      sw t1,4(a1)
+       sw t2,8(a1)      sw t2,8(a1)
+       sw t3,12(a1)      sw t3,12(a1)
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Main bus reads Main bus reads
+ R3300 has load scheduling R3300 has load scheduling
+ CPU doesn’t stall while waiting for bus. CPU doesn’t stall while waiting for bus.
+ Only 1 read can be pending Only 1 read can be pending
+ You can only interleave 5 instructions You can only interleave 5 instructions
+ 2 cycles are eaten 2 cycles are eaten
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Bus writes Bus writes
+ PS has 4 write buffers PS has 4 write buffers
+ Up to 4 writes can occur before bus activity Up to 4 writes can occur before bus activity
+ Writes to same page are quicker Writes to same page are quicker
+ You can group more than 4 writes in one You can group more than 4 writes in one 
+burst burst
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Scratchpad Scratchpad
+ The scratchpad isn’t on the bus The scratchpad isn’t on the bus
+ However it is in memory However it is in memory
+ Scratchpad load will stall any uncompleted read Scratchpad load will stall any uncompleted read
+  SCEE Technology SCEE Technology 
+Group Group
+  
+GTEGTE
+ GTE memory accesses are same as R3300 GTE memory accesses are same as R3300
+ GTE register moves can be interleaved GTE register moves can be interleaved
+  SCEE Technology SCEE Technology 
+Group Group
+  
+DMA DMA
+ GPU dma is fast ( Single cycle ) GPU dma is fast ( Single cycle )
+ SPU dma is slower SPU dma is slower
+ CD dma is very slow CD dma is very slow
+ All dma operations reduce bus time available All dma operations reduce bus time available 
+to CPU to CPU
+ Bus is allocated on a round robin basis. Bus is allocated on a round robin basis.
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Common GPU optimisations. Common GPU optimisations.
+ Texture cache optimisations Texture cache optimisations
+ CLUT thrashing CLUT thrashing
+ Primitive combinations Primitive combinations
+ Clipping Clipping
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Debugging using the PA Debugging using the PA
+ GPU Timeouts GPU Timeouts
+ Catching strange problems Catching strange problems
+ Reflashing the H2700 rom Reflashing the H2700 rom
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Summary Summary
+ CPU efficiency is becoming more important CPU efficiency is becoming more important 
+for PS games for PS games
+ In most cases CPU time is greater than GPU In most cases CPU time is greater than GPU 
+time time
+ Speed can be increased by working with Speed can be increased by working with 
+rather than against the PS design rather than against the PS design
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Questions?? Questions??

@@ -1,0 +1,175 @@
+𑇢^^^°<
+Mastodon - RSS - PSX archive - Git - Itch - Index
+Programmer pour la Playstation sous Linux : PsyQ + Wine & Dosbox
+Logiciels nécessaires
+Une distribution de GNU/Linux (Ubuntu, Mint, Debian, Archlinux...)
+Wine
+dosbox
+git (optionnel)
+cmake
+build-essentials
+tinyxml2
+Kit PsyQ
+Une version du kit PsyQ optimisée et prête à être utilisée est disponible sur le site psxdev.net :
+
+Lien Google Docs
+
+Miroir http
+
+Une fois cette archive téléchargée, il faut l'installer sur le disque virtuel de Wine. Si ce n'est pas encore fait, initialisez votre installation de Wine avec la commande suivante :
+
+ winecfg 
+Un dossier ~/.wine/drive_c devrait avoir été créé dans votre dossier d'utilisateur.
+
+Placez-y le contenu de l'archive :
+
+unzip PSYQ_SDK.zip -d ~/.wine/drive_c 
+Vous pouvez trouver l'image du CD "Programmers Tools" dans sa dernière version dans la section téléchargement de psxdev.net. Vous pouvez également trouver le même contenu dans une archive à l'adresse suivante :
+
+https://psx.arthus.net/Docs/TECHNICAL_REFERENCE_CD_23_08-09-98-noiso.7z
+
+Intégration de Wine
+Avant de continuer, il existe quelques options pour améliorer l'intégration de Wine dans le flux de travail. Dans winecfg, onglet "Affichage", désactiver le bureau virtuel le cas échéant.
+
+Pour se débarrasser des messages d'avertissement lors de l'exécution de Wine :
+
+echo "export WINEDEBUG=-all" | tee -a ~/.bashrc 
+Clés de registre Windows dans Wine
+Téléchargez le fichier de registre pspath-w7.reg à l'adresse suivante : http://www.psxdev.net/forum/viewtopic.php?f=49&t=206 - Mirroir.
+
+Lancez regedit :
+
+wine regedit 
+puis dans le menu "Registre" > "Importer un fichier registre..." Sélectionner le fichier téléchargé ci-dessus et validez, puis fermez regedit.
+
+Versions moderne de PSYLIB.EXE, CPE2X.EXE
+Certaines applications du dossier ~/.wine/drive_c/psyq/bin sont des exécutables DOS 16-bit et ne peuvent donc être lancés à partir de Wine. Il existe néanmoins des versions 32-bits de PSYLIB.EXE et CPE2X.EXE que vous pouvez télécharger ici :
+
+PSYLIB.EXE de LameGuy64 : http://www.psxdev.net/forum/viewtopic.php?f=69&t=1137 - Mirroir
+CPE2X.EXE de Orion_ : http://onorisoft.free.fr/psx/cpe2x.zip - Mirroir
+Faites une copie de sauvegarde des fichiers qu'on s'apprête à remplacer
+```bash
+cp ~/.wine/drive_c/psyq/bin/PSYLIB.EXE ~/.wine/drive_c/psyq/bin/PSYLIB.EXE.BAK
+cp ~/.wine/drive_c/psyq/bin/CPE2X.EXE ~/.wine/drive_c/psyq/bin/CPE2X.EXE.BAK
+```
+Placez les fichiers "PSYLIB.EXE" et "CPE2X.EXE" (à renommer au passage CPE2XWIN.EXE ) de l'archive dans le dossier ~/.wine/drive_c/psyq/bin.
+mkpsxiso de LameGuy64
+Téléchargez la dernière version de mkpsxiso sur le git :
+
+https://github.com/Lameguy64/mkpsxiso/archive/master.zip
+
+Mirroir (2020-06-18)
+
+Version pré-compilée 64bits
+
+Décompressez l'archive et rendez-vous dans le dossier mkpsxiso-master pour compiler :
+
+ cmake . && make 
+Un dossier bin_nix devrait apparaitre qui contient le fichier mkpsxiso, à copier également dans ~/.wine/drive_c/psyq/bin.
+
+STDINT.h de John Convertino
+Téléchargez ou créez le fichier STDINT.h et placez le dans le dossier ~/.wine/drive_c/psyq/include.
+
+/*
+ * STDINT based on ansi c for PSYQ
+ * 
+ * John Convertino
+ * 
+ */
+
+#ifndef STDINT_H
+#define STDINT_H
+
+typedef char int8_t;
+
+typedef short int16_t;
+
+typedef int int32_t;
+
+typedef long long int64_t;
+
+typedef unsigned char uint8_t;
+
+typedef unsigned short uint16_t;
+
+typedef unsigned int uint32_t;
+
+typedef unsigned long long uint64_t; 
+
+#endif
+RSDTOOL.EXE à besoin de D3DRM.DLL
+Placez le fichier dll d3drm.dll disponible ici :
+
+https://community.pcgamingwiki.com/files/file/3-direct3d-retained-mode-dll-d3drmdll/
+
+Mirroir
+
+dans le dossier ~/.wine/drive_c/psyq/bin/BETA/RSDTOOL.
+
+(Valable également sous Windows)
+
+Ajout des éxécutables à votre PATH et permission d'éxécution
+Pour pouvoir éxécuter depuis n'importe quel dossier les binaires contenus dans le dossier ~/.wine/drive_c/psyq on ajoute à .bashrc :
+
+echo "## Paths
+#psy-q psx compile tools
+export PATH=/home/$USER/.wine/drive_c/psyq/bin:$PATH
+export PATH=/home/$USER/.wine/drive_c/psyq/cdemu/BIN/:$PATH
+export PATH=/home/$USER/.wine/drive_c/psyq/bin/TIMTOOL:$PATH
+"|tee -a ~/.bashrc
+On ajoute ensuite la permission d'éxécuter ceux-ci :
+
+ chmod +x ~/.wine/drive_c/psyq/bin/*.EXE 
+ chmod +x ~/.wine/drive_c/psyq/cdemu/*.EXE 
+ chmod +x ~/.wine/drive_c/psyq/bin/TIMTOOL/*.EXE 
+Configuration de DOSBOX
+Trouvez le fichier de configuration de dosbox dans le dossier ~/.dosbox. À la fin du fichier, dans la section Autoexec, ajoutez les lignes suivantes :
+
+# on monte le disque virtuel de wine comme C:
+MOUNT C ~/.wine/drive_c
+# on monte le dossier contenant les fichiers source des examples comme D:
+MOUNT D ~/PSYQ_Examples
+C:
+# on se rend dans le dossier des executables
+CD psyq\bin
+# on vide l'ecran
+CLS
+Compilation des examples de John Leventino
+Télécharger ici les différents programmes d'exemple :
+
+https://github.com/electrobs/PSYQ_Examples
+
+Décompressez l'archive et rendez-vous dans le dossier "sprite", puis ouvrez-y un terminal et utilisez la commande make:
+
+
+$make
+
+CCPSX.EXE -I ../engine main.c -O3 -Dpsx -c -o main.obj
+CCPSX.EXE main.obj -l libpad -l libmcrd -l libsio -l libds -l libeng -l libspu -l libyxml -l libgp -l libbmpm -L ../libbmpm -L ../libgetprim -L ../YXML_PSYQ_PORT -L ../engine -Xo0x80010000 -ospriteTest.cpe,spriteTest.sym,spriteTest.map
+CPE2XWIN.EXE spriteTest.cpe
+Program Counter = 0x80012c34
+rm -rf main.obj spriteTest.cpe spriteTest.sym spriteTest.map
+Un fichier spriteTest.exe est apparu. Ouvrez l'exécutable dans un émulateur comme ePSXe ou chargez le directement dans la mémoire de la PSX via un câble série/USB.
+
+Autres exemples à compiler
+Vous pouvez trouver de nombreux exemples à compiler ici : http://www.psxdev.net/forum/viewforum.php?f=64
+
+Notes & Sources
+Version originale : https://github.com/electrobs/PSYQ_Examples
+
+PsyQ environment : http://www.psxdev.net/downloads.html
+
+reg files by Shadow : http://www.psxdev.net/forum/viewtopic.php?f=49&t=206
+
+psylib 32-bits by LameGuy64 : http://www.psxdev.net/forum/viewtopic.php?f=69&t=1137
+
+cpe2x 32-bits by Orion_ : http://onorisoft.free.fr
+
+mkpsxiso by LameGuy64 : https://github.com/lameguy64/mkpsxiso
+
+STDINT.h by John Convertino : https://github.com/electrobs/PSYQ_Examples/tree/master/PSYQ_MODS
+
+PSXdev forums PsyQ examples : http://www.psxdev.net/forum/viewforum.php?f=64
+
+You can contact me via contact@ followed by the name of the domain you're currently visiting.
+Pico was made by Gilbert Pellegrom and is maintained by The Pico Community. Released under the MIT license.

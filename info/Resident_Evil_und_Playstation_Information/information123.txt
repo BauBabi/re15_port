@@ -1,0 +1,71 @@
+Skip to content
+PlayStation Specifications - psx-spx
+About & Credits
+
+
+Search
+
+ GitHub
+121
+45
+PlayStation Specifications - psx-spx
+Home
+Memory Map
+I/O Map
+Graphics Processing Unit (GPU)
+Geometry Transformation Engine (GTE)
+Macroblock Decoder (MDEC)
+Sound Processing Unit (SPU)
+Interrupts
+DMA Channels
+Timers
+CDROM Drive
+CDROM Format
+CDROM File Formats
+Controllers and Memory Cards
+Pocketstation
+Serial Interfaces (SIO)
+Expansion Port (PIO)
+Memory Control
+Unpredictable Things
+CPU Specifications
+Kernel (BIOS)
+Arcade Cabinets
+Konami System 573
+Cheat Devices
+PSX Dev-Board Chipsets
+Hardware Numbers
+Pinouts
+About & Credits
+CDROM Video CDs (VCD)
+CDROM Internal Info on PSX CDROM Controller
+Table of contents
+Credits
+PSXSPX homepage
+Contact
+About & Credits
+Credits
+Contributors to Martin Korth's original documentation:
+
+GPU.TXT by doomed/padua; based on info from K-communications & Nagra/Blackbag
+GTE.TXT by doomed@c64.org / psx.rules.org
+SPU.TXT by doomed@c64.org / psx.rules.org
+CDINFO.TXT by doomed with big thanks to Barubary, who rewrote a large part
+SYSTEM.TXT by doomed with thanx to Herozero for breakpoint info
+PS_ENG.TXT PlayStation PAD/Memory Interface Protocol by HFB03536
+IDT79R3041 Hardware User's Manual by Integrated Device Technology, Inc.
+IDTR3051, R3052 RISController User's Manual by Integrated Device Technology
+PSX.* by Joshua Walker (additional details in various distorted file formats)
+LIBMIRAGE by Rok; info/source code for various cdrom-image formats
+psxdev.ru; cdrom sub-cpu decapping
+All the contributors to the psx-spx.github.io repo who've helped update, correct and expand this information.
+
+PSXSPX homepage
+no$psx emulator/debugger
+psx specs in html format
+psx specs in text format
+Contact
+Martin Korth's email
+psx-spx issue tracker
+PSX.Dev Discord server
+Made with Material for MkDocs

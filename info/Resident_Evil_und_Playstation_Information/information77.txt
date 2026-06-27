@@ -1,0 +1,41 @@
+HEADER
+OFFSET	NAME	DESCRIPTION
+Dec	Hex
+0	00	Sprite	Unknown, it's always 0
+1	01	Cut	Holds the amount of cameras used in the room
+2	02	Model	Holds the amount of MD1 3D models used in the room
+3	03	Item	Unknown
+4	04	Door	Unknown
+5	05	Room_at	Unknown
+6	06	Reverb_lv	Unknown
+7	07	Sprite_max	Holds the total value of PRI camera sprites (masks) that are used in the room
+
+
+
+
+8	08	SND	Pointer to sound attribute data
+12	0C	VH	Pointer to a .VH file which is a vab/vag header
+16	10	VB	Pointer to a .VB file which is a vab/vag sound container file
+20	14	VB (Trial)	Pointer to a .VH file which is a vab/vag header
+24	18	VH	Pointer to a .VB file which is a vab/vag sound container file
+28	1C	OTA	It's unused but usually points to the same offset as SND
+32	20	SCA	Pointer to the collision data/boundaries
+36	24	RID	Pointer to the RID camera data
+40	28	RVD	Pointer to the RVD camera switch/zone data
+44	2C	LIT	Pointer to the LIT lights data section of the file
+48	30	MD1/TIM Table	Pointer to a table which contains pointers to the MD1 3d objects and their textures
+52	34	FLR	Pointer to the FLR, footstep sound area definition section
+56	38	BLK	Pointer to BLK, block data
+60	3C	MSG Main	Pointer to the MSG, message text being used
+64	40	MSG Sub	Pointer to the MSG, message text being used
+68	44	TIM (Cam Scroll)	Pointer to a TIM file used by the camera in a „scrolling“ cutscene
+72	48	SCD Main	Pointer to the SCD Main section, which holds the basic room script
+76	4C	SCD Sub	Pointer to the SCD Sub section, which holds all other event scripts of the room
+80	50	ESP	Pointer to the ESP, effect sprite data being used in the room
+84	54	EFF	Pointer to a relative offset table that is needed to parse the ESP data/objects
+88	58	TIM (Effects)	Pointer to the first TIM image that holds effect sprite data
+92	5C	TIM (MD1 Textures)	Pointer to the first TIM image that holds a texture used by the MD1 models
+96	60	RBJ	Pointer to a set of EDD/EMR animation files that are used in the room
+
+
+

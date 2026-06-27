@@ -1,0 +1,105 @@
+
+CDROM File Audio Sample Sets VAB and VH/VB (Sony)	Contents
+Index	Prev
+Next
+
+VAB vs VH/VB
+  .VAB  contains VAB header, and ADPCM binaries   ;-all in one file
+  .VH   contains only the VAB header              ;\in two separate files
+  .VB   contains only the ADPCM binaries          ;/
+PSX Perfect Assassin has some v7 .VH/.VB's (in \DATA.JFS:\SND\*.*)
+PSX Resident Evil 2, COMMON\DATA\*.DIE (contains .TIM+.VAB badged together)
+PSX Spider-Man, CD.HED\l2a1.vab is VAB v5 (other VABs in that game are v7)
+PSX Tenchu 2 (MagDemo35: TENCHU2\VOLUME.DAT\5\* has VAB v20h, maybe a typo)
+
+VAB Header (VH)
+  0000h 4       File ID ("pBAV")
+  0004h 4       Version (usually 7) (reportedly 6 exists, too) (5, 20h exists)
+  0008h 4       VAB ID (usually 0)
+  000Ch 4       Total .VAB filesize in bytes (or sum of .VH and .VB filesizes)
+  0010h 2       Reserved (EEEEh)
+  0012h 2       Number of Programs, minus 1 (0000h..007Fh = 1..128 programs)
+  0014h 2       Number of Tones, minus? (max 0800h?) (aka max 10h per program)
+  0016h 2       Number of VAGs, minus? (max 00FEh)
+  0018h 1       Master Volume (usually 7Fh)
+  0019h 1       Master Pan    (usually 40h)
+  001Ah 1       Bank Attribute 1 (user defined) (usually 00h)
+  001Bh 1       Bank Attribute 2 (user defined) (usually 00h)
+  001Ch 4       Reserved (FFFFFFFFh)
+  0020h 800h    Program Attributes 10h-byte per Program 00h..7Fh   (fixed size)
+  0820h P*200h  Tone Attributes 200h-byte per Program 00h..P-1  (variable size)
+  xx20h 200h    16bit VAG Sizes (div8) for VAG 00h..FFh            (fixed size)
+  xx20h (...)   ADPCM data (only in .VAB files, otherwise in separate .VB file)
+Program Attributes (10h-byte per Program, max 80h programs)
+  000h 1      tones        Number of Tones in the Program (Yaroze: 4) (uh?)
+  001h 1      mvol         Master Volume   (Yaroze: 0..127)
+  002h 1      prior                        (Yaroze: N/A)
+  003h 1      mode                         (Yaroze: N/A)
+  004h 1      mpan         Master Panning  (Yaroze: 0..127)
+  005h 1      reserved0
+  006h 2      attr                         (Yaroze: N/A)
+  008h 4      reserved1
+  00Ch 4      reserved2
+Tone Attributes (20h-byte per Tone, max 10h tones per Program)
+  000h 1      prior        Tone Priority   (Yaroze: 0..127, 127=highest)
+  001h 1      mode         Mode            (Yaroze: 0=Normal, 4=Reverberation)
+  002h 1      vol          Tone Volume     (Yaroze: 0..127)
+  003h 1      pan          Tone Panning    (Yaroze: 0..127)
+  004h 1      center       Centre note (in semitone units) (Yaroze: 0..127)
+  005h 1      shift        Centre note fine tuning         (Yaroze: 0..127)
+  006h 1      min          Note limit minimum value     (Yaroze: 0..127)
+  007h 1      max          Note limit maximum value     (Yaroze: 0..127)
+  008h 1      vibW                                      (Yaroze: N/A)
+  009h 1      vibT                                      (Yaroze: N/A)
+  00Ah 1      porW                                      (Yaroze: N/A)
+  00Bh 1      porT                                      (Yaroze: N/A)
+  00Ch 1      pbmin        Max? value for downwards pitchbend  (Yaroze: 0..127)
+  00Dh 1      pbmax        Max value for upwards pitchbend     (Yaroze: 0..127)
+  00Eh 1      reserved1
+  00Fh 1      reserved2
+  010h 2      ADSR1        Attack,Decay    (Ya
+CDROM File Audio Sequences SEQ/SEP (Sony)	Contents
+Index	Prev
+Next
+
+SEQ - Single Sequence
+.SEQ contains MIDI-style sequences, the samples for the instruments can be stored in a separate .VAB file (or .VH and .VB files).
+Used by Perfect Assassin, DATA.JFS:\SND\*.SEQ (bundled with *.VH and *.VB)
+Used by Croc (MagDemo02: CROC\CROCFILE.DIR\AMBI*.BIN, MAP*.BIN, JRHYTHM.BIN)
+Used by many other games.
+  000h 4   File ID "pQES"
+  004h 4   Version (1)                    (big endian?)
+  008h 2   Resolution per quarter note      (01h,80h)
+  00Ah 3   Tempo 24bit (8bit:16bit maybe?)  (07h,27h,0Eh)
+  00Dh 2   Rhythm (NN/NN)                   (04h,02h)
+  00Fh ... Score data, uh?    (with many MIDI KeyOn's: xx,9x,xx,xx)
+  ...  3   End of SEQ (2Fh=End of Track)    (FFh,2Fh,00h)
+The "Score data" seems to be more or less same as in Standard Midi Format (.smf files), ie. containing timing values and MIDI commands/parameters.
+
+SEP - Multi-Track Sequences
+This is a simple "archive" with several SEQ-like sequences.
+  000h 4   File ID "pQES"  ;same ID as in .SEQ files (!)
+  004h 2   Version (0)     ;value 0, and only 16bit, unlike .SEQ files
+  006h ..  1st Sequence
+  ...  ..  2nd Sequence
+  ...  ..  etc.
+Sequences:
+  000h 2   Sequence ID (0000h and up)     (big endian)        ;-ID number
+  002h 2   Resolution per quarter note      (01h,80h)         ;\
+  004h 3   Tempo 24bit                      (07h,27h,0Eh)     ; as in SEQ files
+  007h 2   Rhythm (NN/NN)                   (04h,02h)         ;/
+  009h 4   Data size (big endian, from 00Dh up to including End of SEQ(
+  00Dh ... Score data, uh?                  (...)             ;\as in SEQ files
+  ...  3   End of SEQ (2Fh=End of Track)    (FFh,2Fh,00h)     ;/
+Used by Hear It Now (Playstation Developer's Demo) (RCUBE\RCUBE.SEP)
+Used by Rayman (SND\BIGFIX.ALL\0002)
+Used by Monster Rancher (MagDemo06, MR_DEMO\DATA\MF_DATA.OBJ\025B)
+Used by Rugrats (MagDemo19: RUGRATS\DB02\*.SEP and MENU\SOUND\SEPS\*.SEP)
+Used by Rugrats Studio Tour (MagDemo32: RUGRATS\DATA\SEPS\*.SEP)
+Used by Monkey Hero (MagDemo17: MONKEY\BIGFILE.PSX}*.SEP)
+Used by Pitfall 3D
+Used by Blue's Clues: Blue's Big Musical (SEPD chunks in *.TXD)
+
+
+I am homeless in Hamburg, please help me out!
+extracted from no$psx v2.2 - homepage - patreon - whole doc htm/txt - copyright 2022 martin korth (nocash)

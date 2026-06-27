@@ -1,0 +1,204 @@
+Skip to content
+Navigation Menu
+pcsx-redux
+nugget
+
+Type / to search
+Code
+Pull requests
+Actions
+Security
+Insights
+Owner avatar
+nugget
+Public
+pcsx-redux/nugget
+Go to file
+t
+Name		
+nicolasnoble
+nicolasnoble
+Merge branch 'main' into tpageloc-fix
+5b4dbf8
+ · 
+2 weeks ago
+.github/workflows
+Auto-close PRs in nugget.
+4 years ago
+common
+Fixing accesses to the pcsx IO system.
+2 months ago
+crc32
+Adding scratchpad section example.
+3 years ago
+cube
+Fixing the cube compilation, *again*
+4 years ago
+cxxhello
+[Chores] Format code
+11 months ago
+doc
+Slightly better doc pages.
+3 years ago
+helloworld
+[Chores] Format code
+11 months ago
+lz4
+Adding lz4 decompressor, tuned for mips.
+6 months ago
+modplayer
+Removing syscall usage in modplayer.
+last year
+openbios
+Fixing OpenBIOS build under 15.2...
+2 weeks ago
+psyq
+Fix typo in inline_n.h
+6 months ago
+psyqo-lua
+Quotes for flags, add flag propogation to lua and paths
+5 months ago
+psyqo-paths
+Quotes for flags, add flag propogation to lua and paths
+5 months ago
+psyqo
+Merge branch 'main' into tpageloc-fix
+2 weeks ago
+scratchstack
+Adding example for switching stack on the fly to the scratchpad.
+last year
+shell
+Renaming readAligned to load32Aligned.
+6 months ago
+tests
+Adding more dma tests.
+7 months ago
+third_party
+Missed a float in there...
+4 months ago
+ucl-demo
+[Chores] Format code
+11 months ago
+.gitignore
+Makefile's library support.
+3 years ago
+.gitmodules
+Creating the psyqo-lua directory.
+5 months ago
+LICENSE
+Switching license.
+5 years ago
+README.md
+Initial code drop.
+7 years ago
+common.mk
+Various psyqo-lua fixes & improvements
+5 months ago
+cpe.ld
+Typo.
+2 years ago
+dockermake-cross.bat
+Switching from dockerhub to ghcr.
+2 years ago
+dockermake-cross.sh
+Switching to linuxdeploy.
+last month
+dockermake.bat
+Switching from dockerhub to ghcr.
+2 years ago
+dockermake.sh
+Switching to linuxdeploy.
+last month
+dockershell.bat
+Switching from dockerhub to ghcr.
+2 years ago
+dockershell.sh
+Switching to linuxdeploy.
+last month
+nooverlay.ld
+Adding scratchpad section example.
+3 years ago
+ps-exe.ld
+Add RAM_SIZE option to ps-exe.ld
+11 months ago
+Repository files navigation
+README
+MIT license
+PCSX-Redux's mips code
+This repository is a read-only mirror of PCSX-Redux's mips folder. Its purpose is to be used as a submodule for projects that want to use the various parts contained herein without bringing the whole of PCSX-Redux's codebase.
+
+Check the doc folder for more information.
+
+About
+No description, website, or topics provided.
+Resources
+ Readme
+License
+ MIT license
+ Activity
+ Custom properties
+Stars
+ 54 stars
+Watchers
+ 4 watching
+Forks
+ 8 forks
+Report repository
+Releases
+No releases published
+Packages
+No packages published
+Contributors
+28
+@nicolasnoble
+@johnbaumann
+@spicyjpeg
+@eliasdaler
+@caldog20
+@mina-skunk
+@JaCzekanski
+@NotExactlySiev
+@CloudMracek
+@wheremyfoodat
+@axetion
+@EngineersBox
+@JaberwockySeamonstah
+@cuckydev
++ 14 contributors
+Deployments
+93
+ github-pages 2 weeks ago
++ 92 deployments
+Languages
+C
+46.2%
+ 
+C++
+44.6%
+ 
+Assembly
+4.5%
+ 
+Lua
+1.7%
+ 
+Makefile
+1.5%
+ 
+Linker Script
+1.3%
+ 
+Other
+0.2%
+Footer
+© 2025 GitHub, Inc.
+Footer navigation
+Terms
+Privacy
+Security
+Status
+GitHub Community
+Docs
+Contact
+Manage cookies
+Do not share my personal information

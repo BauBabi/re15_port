@@ -1,0 +1,127 @@
+CONFIDENTIAL PlayStation Developer Seminar / Summer ‘97 / Passing QA …the first time
+Passing QA ...the first time
+CONFIDENTIAL PlayStation Developer Seminar / Summer ‘97/ Passing QA …the first time
+Submission Package
+• 9 Gold Master Discs
+• Symbol List File
+• Final Version of Game Manual
+• Game Text
+• ESRB Rating Form
+• Videotape of all gameplay, including endings
+• Guideline, Technical Requirement and SCEA
+Submission Forms
+• Memory Card with, or list of cheats/passwords
+• Assessment Report (if re-submission)
+CONFIDENTIAL PlayStation Developer Seminar / Summer ‘97/ Passing QA …the first time
+Technical Approval
+0
+10
+20
+30
+40
+50
+60
+70
+80
+90
+100
+E rro r Check
+M aster ID Check
+M emo ry C a rd
+Check
+S ymbo l List
+Check
+CopyR ight/
+L icen s ing Check
+Percentage of failed titles that fail each category
+25% of all titles fail Technical Approval on first submission.
+CONFIDENTIAL PlayStation Developer Seminar / Summer ‘97/ Passing QA …the first time
+Technical Approval
+• Error Check
+• 9 Gold PlayStation Master Discs
+• 4 Verified
+• Master ID Check
+• Disc Name
+• Producer Name
+• Copyright Holder
+• Creation Date
+• Licensing Area
+CONFIDENTIAL PlayStation Developer Seminar / Summer ‘97/ Passing QA …the first time
+Technical Approval
+• Memory Card Check
+• Format an unformatted Memory Card with a default of
+“NO”.
+• Save file name and format are correct.
+• Symbol List Check
+• Verify use of PlayStation Libraries
+• Copyright/Licensing
+• System.cnf file checked for correct boot path
+• Executable file name and License area checked.
+CONFIDENTIAL PlayStation Developer Seminar / Summer ‘97/ Passing QA …the first time
+General QA Report Delivery Times
+0 1 2 3 4 5 6 7
+Sports
+Action/Arcade
+Fighting
+Platform
+RPG
+Sim
+Racing
+Puzzle
+Strategy
+Days in Test
+CONFIDENTIAL PlayStation Developer Seminar / Summer ‘97/ Passing QA …the first time
+Lead Tester Responsibilities
+• Guideline, Technical Requirement Checklists
+• Lead Tester Checklist
+• Endurance Testing
+• Software Content
+• Manual
+• Representative sampling of gameplay including
+options and peripherals.
+CONFIDENTIAL PlayStation Developer Seminar / Summer ‘97/ Passing QA …the first time
+Average QA Hours (SCEA)
+0 50 100 150 200 250 300
+Sports
+Action/Arcade
+Fighting
+Platform
+RPG
+Sim
+Racing
+Puzzle
+Strategy
+QA hours by SCEA
+CONFIDENTIAL PlayStation Developer Seminar / Summer ‘97 / Passing QA …the first time
+29%
+41%
+15%
+10% 3% 2%
+1 Rev 2 Revs 3 Revs
+4 Revs 5 Revs 6 or more Revs
+Number of Revs submitted before release to SDM
+CONFIDENTIAL PlayStation Developer Seminar / Summer ‘97/ Passing QA …the first time
+Top 10 Common Bugs
+• One time only random game crash
+• Game crashes during endurance testing
+before 8 hours have passed.
+• Loading crashes
+• Graphic glitches (drop out, seaming)
+• Audio popping or cut off
+CONFIDENTIAL PlayStation Developer Seminar / Summer ‘97/ Passing QA …the first time
+Top 10 common Bugs
+• Collision
+• Various Memory Card related TRC’s
+• Spelling
+• Memory Card format defaults to “Yes”
+• Producer Name field not filled with a
+company name
+CONFIDENTIAL PlayStation Developer Seminar / Summer ‘97/ Passing QA …the first time
+How to “Blaze” through SCEA Third Party QA
+• Thoroughly test all aspects of the game.
+• Verify the Technical Approval checks.
+• Check all items on the TRC and Guideline
+checklists.
+• Submit a completed/accurate manual.
+• Use the SCEA Website for obtaining the latest
+files and up to date information.

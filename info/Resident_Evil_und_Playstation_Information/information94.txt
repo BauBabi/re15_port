@@ -1,0 +1,983 @@
+Resident Evil 3 file formats
+Patrice Mandin edited this page on Jun 27, 2020 · 3 revisions
+Category:Games
+
+Resident Evil 3 (PC version) always uses .DAT as file extension. The zmovie subdirectory contains MPEG audio-video files. The rest of game datas are stored as big file archives.
+
+The Playstation version does not use files for 3D models and their associated textures. Instead the game loads directly the needed data from CD-ROM sectors.
+
+Archive file formats
+.DAT (Resident Evil 3)	Game data
+File formats
+Here is the list of file formats that can be found in the .DAT archive files. Or in the Playstation version of the game, if said so.
+
+.ARD	Room description (Playstation)
+.BGM	Background music
+.BIN	Unknown (Playstation)
+.BSS	Background and masks images (Playstation version)
+.DAT	Unknown - can vary, sometimes this is movie data.
+.DO2	Door data
+.EMD	Monster and NPC data, 3D model
+.ESP	Unknown
+.JPG	JPEG image
+.MAP	Unknown
+.PIX	Raw image
+.PLD	Player data
+.PLW	Player weapon
+.RBJ	Player and NPC animations in Room
+.RDT	Room description
+.SLD	Scene layer data
+.SND	Unknown
+.STR	Movie (Playstation)
+.TIM	Texture image
+.VB	Sound data
+.VH	Sound header
+.WAV	WAV audio sample
+.XAS	Audio (Playstation)
+
+.ARD
+Patrice Mandin edited this page on Jan 21, 2019 · 4 revisions
+Table of Contents
+Games
+Structure
+Header
+Object list
+Object8
+Games
+The .ARD file format is used by Resident Evil 3 on Playstation. It contains the room description.
+
+Structure
+The values are stored in Little-Endian order. The files are named rSXX.ard. 'S' is the game status/stage. 'XX' is the location number.
+
+Header
+An ARD file starts with this structure:
+
+typedef struct {
+  unsigned long length; /* Total file length */
+  unsigned long count; /* Number of objects in file */
+} ard_header_t;
+The follows an array of 'count' items:
+
+typedef struct {
+  unsigned long length; /* Object length */
+  unsigned long unknown;
+} ard_object_t;
+This file is organized in 0x800 (2048) byte chunks. The first object start at offset 0x800 in the file. From there, to get to next object, you need to add its length. Then you must round this value to next multiple of 0x800 to get to it.
+
+Example, to get to proper offset of object 1, that follows object 0:
+
+object0 offset = 0x800 (always)
+object0 length = 0x12345
+ending offset of object0 = 0x800 + 0x12345 = 0x12b45
+next multiple of 0x800, from 0x12b45 = 0x13000 (0x12b45 or 0x7ff)+1
+object1 offset = 0x13000.
+Most files seem to have 10 objects stored.
+
+Object list
+object 0: ?
+object 1: ?
+object 2: ?
+object 3: ?
+object 4: ?
+object 5: ?
+object 6: ?
+object 7: ?
+object 8: Embedded RDT file
+object 9: ?
+Object8
+See .RDT for description of this file.
+
+.BSS
+Patrice Mandin edited this page on Aug 27, 2021 · 13 revisions
+Table of Contents
+Games
+Structure
+Playstation
+Saturn
+Decompression
+RE2 Decompression for TIM masks
+RE3 Decompression for TIM masks
+External links
+Games
+The .BSS file format is used on Resident Evil game series on Playstation to store the 2D background images. A file holds all different views (camera angles) for the same room.
+
+Structure
+Playstation
+The file is an archive that contains several compressed images, aligned on 32KB boundaries (for Resident Evil) or 64KB boundaries (Resident Evil 2 and 3).
+
+For Resident Evil 2 and 3, the video stream compressed image (see below) for the background image is followed most likely by a TIM file (lightly compressed, maybe some kind of RLE compression, see below), which should be the masks image for the background.
+
+After this file you'll find the offset in the 64KB block and a counter of extra files, mostly 1. It appears the game engine contains hardcoded offsets to this position to find the mask offset.
+
+Saturn
+The file starts with a list of unsigned long offsets, to a number of 512 bytes block.
+
+- TODO -
+
+Decompression
+Each image is compressed for use with Playstation MDEC decoder (the chip responsible for video decoding). An extra decompression step in software, to decode variable-length data (VLC), is performed before feeding the data through MDEC processing.
+
+The libbs library from psxdev-libs package provides the two necessary routines/steps to fully depack the images. The MDEC decoding part in this library comes from the PCSX emulator.
+
+The resolution of the image must be known for correct depacking, and these images use standard 320x240 resolution.
+
+RE2 Decompression for TIM masks
+The file starts with a LONG with is the uncompressed file length, then an unused WORD. The rest of the file are compressed blocks with an header byte beeing XXXYZZZZ. Bytes following this header are counter or offsets to source or already decompressed file.
+
+void memcpy_overlap(Uint8 *dest, Uint8 *src, int count) {
+	int i;
+
+	for (i=0; i<count; i++) {
+		dest[i] = src[i];
+	}
+}
+
+void bsssld_depack_re2(Uint8 *srcPtr, int srcLen, Uint8 **dstBufPtr, int *dstLength)
+{
+	Uint32 buflen;
+	Uint8 *dstPtr;
+	int srcPos, dstPos;
+	int count;
+
+	buflen = SDL_SwapLE32(*((Uint32 *)srcPtr));
+
+	dstPtr = *dstBufPtr = malloc(buflen);
+	memset(*dstBufPtr, 0, buflen);
+	*dstLength = buflen;
+
+	srcPos = 6;
+	dstPos = 0;
+	while ((srcPos<srcLen) && (dstPos<buflen)) {
+
+		while ((srcPtr[srcPos] & 0x10)==0) {
+			count = srcPtr[srcPos] & 0x0f;
+			int srcOffset = (-256 | (srcPtr[srcPos] & 0xe0))<<3;
+			srcOffset |= srcPtr[srcPos+1];
+			if (count == 0x0f) {
+				count += srcPtr[srcPos+2];
+				srcPos += 3;
+			} else {
+				srcPos += 2;
+			}
+			count += 3;
+
+			memcpy_overlap(&dstPtr[dstPos], &dstPtr[dstPos+srcOffset], count);
+			dstPos += count;
+		}
+
+		if (srcPtr[srcPos] == 0xff)
+			break;
+
+		count = ((srcPtr[srcPos++] | 0xffe0) ^ 0xffff)+1;
+		if (count == 0x10) {
+			count += srcPtr[srcPos++];
+		}
+
+		memcpy(&dstPtr[dstPos], &srcPtr[srcPos], count);
+		dstPos += count;
+		srcPos += count;
+	}
+}
+RE3 Decompression for TIM masks
+This routine is similar to the one for RE masks, but slightly different. The first LONG is a number of blocks to decompress. Each block has an header byte, with 1 or more following bytes depending on the header byte.
+
+void memcpy_overlap(Uint8 *dest, Uint8 *src, int count) {
+	int i;
+
+	for (i=0; i<count; i++) {
+		dest[i] = src[i];
+	}
+}
+
+void bsssld_depack_re3(Uint8 *srcPtr, int srcLen, Uint8 **dstBufPtr, int *dstLength)
+{
+	Uint8 *dstPtr;
+	int srcPos, dstPos, i, numBlocks;
+	int count, offset;
+
+	numBlocks = SDL_SwapLE32(*((Uint32 *)srcPtr));
+
+	*dstLength = 65536;
+	dstPtr = malloc(*dstLength);
+	memset(dstPtr, 0, *dstLength);
+
+	srcPos = 4;
+	dstPos = 0;
+	for(i=0; (i<numBlocks) && (srcPos<srcLen); i++) {
+		if ((srcPtr[srcPos] & 0x80) != 0) {
+			count = srcPtr[srcPos++] & 0x7f;
+
+			if (dstPos+count >= *dstLength) {
+				*dstLength += 65536;
+				dstPtr = (Uint8 *) realloc(dstPtr, *dstLength);
+			}
+
+			memcpy(&dstPtr[dstPos], &srcPtr[srcPos], count);
+			srcPos += count;
+			dstPos += count;
+		} else {
+			offset = srcPtr[srcPos++]<<8;
+			offset |= srcPtr[srcPos++];
+			count = (offset>>11)+2;
+			offset &= 0x7ff;
+
+			if (dstPos+count >= *dstLength) {
+				*dstLength += 65536;
+				dstPtr = (Uint8 *) realloc(dstPtr, *dstLength);
+			}
+
+			memcpy_overlap(&dstPtr[dstPos], &dstPtr[dstPos-(offset+4)], count);
+			dstPos += count;
+		}
+	}
+
+	*dstLength = dstPos;
+	*dstBufPtr = (Uint8 *) realloc(dstPtr, *dstLength);
+}
+
+.DO2
+Patrice Mandin edited this page on Jan 18, 2019 · 1 revision
+Games
+The .DO2 file format is used by Resident Evil 2 to store the animation of door, when the player changes room.
+
+Structure
+The values are stored in Little-Endian order.
+
+Header
+- TODO - File/section 0, embedded VAB file
+
+- TODO - File/section 1, 3D model for animation
+
+- TODO - File/section 2, embedded TIM file
+
+See .TIM for further information.
+
+.EMD (Resident Evil 3)
+Patrice Mandin edited this page on Aug 21, 2021 · 4 revisions
+Table of Contents
+Games
+Structure
+Directory
+File/section 0
+File/section 1
+File/section 2, animation steps
+File/section 3, skeleton
+File/section 4, animation steps
+File/section 5, skeleton
+File/section 6, animation steps
+File/section 7, skeleton
+File/section 8
+File/section 9
+File/section 10
+File/section 11
+File/section 12
+File/section 13, meshes
+File/section 14, meshes
+Header
+Objects
+Index arrays
+Games
+The .EMD file format is used by Resident Evil 3. It contains the description of 3D models of the game (enemies, player, etc...).
+
+Structure
+The values are stored in Little-Endian order.
+
+Directory
+The start of the file holds offset and count to a directory:
+
+typedef struct {
+    unsigned long dir_offset; /* Offset to directory */
+    unsigned long dir_count;  /* Number of objects in directory */
+} emd_header_t;
+The directory is an array of 'unsigned long' offsets to small parts (files), and often resides at the end of the EMD file. Each file in the directory seems to have a specific purpose.
+
+File/section 0
+Unknown data.
+
+File/section 1
+Unknown data.
+
+File/section 2, animation steps
+This section starts with this header, a certain number of records composed of count and offsets.
+
+emd3_anim_header_t emd3_anim_header[];
+Following this array, you'll find another array of unsigned short. Each value (animation frame number?) is an index in the skeleton section.
+
+unsigned short emd3_anim_skel[];	/* Bits 15-8: flags */
+					/* Bits 7-0: Number of frame to display */
+File/section 3, skeleton
+This section starts with a header:
+
+typedef struct {
+    unsigned short relpos_offset;/* Relative offset to emd_skel_relpos[] array */
+    unsigned short length; /* Relative offset to emd_skel_data[] array, which is also length of relpos+armature+mesh numbers  */
+    unsigned short count; /* Number of objects in relpos,data2,mesh arrays? */
+    unsigned short size; /* Size of each element in emd_skel_data[] array */
+} emd3_skel_header_t;
+If offset is more than 8, there are some extra stuff, namely data1,data2 and mesh arrays.
+
+typedef struct {
+    unsigned short mesh_count; /* Number of meshes linked to this one */
+    unsigned short offset; /* Relative offset to mesh numbers (emc_sec2_mesh[] array) */
+} emd3_skel_armature_t;
+
+emd3_skel_relpos_t emd3_skel_relpos[count];
+emd3_skel_armature_t emd3_skel_armature[count];
+unsigned char emd3_skel_mesh[count]; /* Mesh number on which to apply relative position */
+Finally an array of elements which have the size specified in the emd3_skel_header.size each.
+
+typedef struct {
+	short x_speed;  /* speed at which moving the model */
+	short y_speed;
+	short z_speed;
+
+	short y_offset;	/* distance from reference point */
+
+	unsigned short angles[];
+} emd3_skel_anim_data_t;
+
+emd3_skel_anim_t emd3_skel_data[];
+File/section 4, animation steps
+Same format as section 2.
+
+File/section 5, skeleton
+Same format as section 3.
+
+File/section 6, animation steps
+Same format as section 2.
+
+File/section 7, skeleton
+Same format as section 3.
+
+File/section 8
+Unknown data.
+
+File/section 9
+Unknown data.
+
+File/section 10
+Unknown data.
+
+File/section 11
+Unknown data.
+
+File/section 12
+Unknown data.
+
+File/section 13, meshes
+Same format as section 14.
+
+File/section 14, meshes
+The last object holds the 3D stuff. Maybe the rest of the file is use to store animations, and links between primitives.
+
+Header
+The header is different than for RE2.
+
+typedef struct {
+    unsigned long length; /* Section length in bytes */
+    unsigned long obj_count; /* Number of objects in model */
+} emd_model_header_t;
+Objects
+The model is separated in 'obj_count' objects. Following the header is the description of each object, in the form of an array of 'model_object'. Each offset is relative to the first emd_model_object_t.
+
+typedef struct {
+    unsigned short vtx_offset; /* Offset to vertex data */
+    unsigned short unknown0;  
+    unsigned short nor_offset; /* Offset to normal vertex data */
+    unsigned short unknown1;  
+    unsigned short vtx_count; /* Number of vertices */
+    unsigned short unknown2;  
+    unsigned short tri_offset; /* Offset to triangle data */
+    unsigned short unknown3;  
+    unsigned short quad_offset; /* Offset to quad data */
+    unsigned short unknown4;  
+    unsigned short tri_count; /* Number of triangles */
+    unsigned short quad_count; /* Number of quads */
+} emd_model_object_t;
+Beware, sometimes tri_count is set to tri_offset and quad_offset. Just assume tri_count = 0 in this case. Or in some models, you have quad_count > 256 (much higher than what is really present). Just assume quad_count = 0 in this case.
+
+Index arrays
+Normal and vertex coordinates are saved in same format:
+
+typedef struct {
+    signed short x; /* Coordinates */
+    signed short y;
+    signed short z;
+    signed short zero;    
+} emd_vertex_t; /* Normals have same format */
+A triangle is stored in this format:
+
+    unsigned char tu1,tv1; /* u,v texture coordinates of vertex 1 */
+    unsigned char dummy2,v0; /* v0: index for vertex and normal 0 */
+
+    unsigned char tu2,tv2; /* u,v texture coordinates of vertex 2 */
+    unsigned char v1,v2; /* v1,v2: index for vertex and normal 1,2 */
+} emd_triangle_t; /* Triangle */
+A quad is stored in this format:
+
+    unsigned char tu1,tv1; /* u,v texture coordinates of vertex 1 */
+    unsigned char dummy2,dummy3;
+
+    unsigned char tu2,tv2; /* u,v texture coordinates of vertex 2 */
+    unsigned char v0,v1; /* v0,v1: index for vertex and normal 0,1 */
+
+    unsigned char tu3,tv3; /* u,v texture coordinates of vertex 2 */
+    unsigned char v2,v3; /* v2,v3: index for vertex and normal 2,3 */
+} emd_quad_t; /* Quad */
+NOTE: For rendering, must be drawn in order v0,v1,v3,v2
+
+.RBJ
+Patrice Mandin edited this page on Jan 21, 2019 · 2 revisions
+Table of Contents
+Games
+Structure
+Directory
+File/section 0, animation steps
+File/section 1, skeleton
+Games
+The .RBJ file format is used by Resident Evil 3. It contains the description of animations of the game (enemies, player, etc...).
+
+Structure
+The values are stored in Little-Endian order.
+
+Directory
+The start of the file holds offset and count to a directory:
+
+typedef struct {
+    unsigned long dir_offset; /* Offset to directory */
+    unsigned long dir_count;  /* Half of number of objects in directory */
+} rbj_header_t;
+This file always have an even number of directory, at it is always come in pairs: an "animation steps block" followed by a "skeleton block", each pair of block stores animations for one NPC/character in the game.
+
+File/section 0, animation steps
+See .EMD file, section 1.
+
+File/section 1, skeleton
+See .EMD file, section 2.
+
+.RDT (Resident Evil 3)
+Patrice Mandin edited this page on May 7, 2020 · 13 revisions
+Table of Contents
+Games
+Structure
+Offset 6 (*.SCA)
+Offset 16, initialization script
+0x00-0x0f
+0x10-0x1f
+0x20-0x2f
+0x30-0x3f
+0x40-0x4f
+0x50-0x5f
+0x60-0x6f
+0x70-0x7f
+0x80-0x8f
+Offset 17, execution script
+Games
+The .RDT file format is used to stored the description of a room in Resident Evil 3. It should contain the camera position (to correctly display 3D objects), the background images and sprites used to draw the scene, description of when to change camera, position of enemies when entering room, and so on...
+
+Structure
+The structure is the same as the one for Resident Evil 2 .RDT. However there are some differences, listed below.
+
+Offset 6 (*.SCA)
+The header is 16 bytes.
+
+typedef struct {
+	unsigned long Amount;
+	unsigned long unknown0[3];
+} rdt_offset6_t;
+Immediately following is an array of elements which contain attributes for each collision. Subtract 1 from Amount for the real total.
+
+typedef struct {
+	signed short int X1;
+	signed short int Z1;
+	signed short int X2;
+	signed short int Z2;
+	unsigned short unknown[4];
+} rdt_offset6elt_t;
+rdt_offset6elt_t Collision[Amount-1];
+Offset 16, initialization script
+This is the initialization script for the room. It starts with an array of unsigned short, giving offset to each function of the script. Thus, the first offset listed / 2 gives you the number of functions in the script. Then follows the script, in bytecode-style.
+
+0x00-0x0f
+Byte	Instruction	Length	Description
+0x00	Nop	1	
+0x01	Return	2	Exit current function
+0x02	Sleep 1	1	Sleep for 1 game tick.
+0x03	EVT_CHAIN	2	
+0x04	EVT_EXEC	4	Execute an instruction when a precise event occurs.
+typedef struct {
+	unsigned char opcode; /* 0x04 */
+	unsigned char event;
+	unsigned short instruction;	/* Most likely a function call, 0x19xx */
+} script_evt_exec_t;
+0x05	EVT_KILL	2	
+typedef struct {
+	unsigned char opcode; /* 0x05 */
+	unsigned char event;
+} script_evt_kill_t;
+0x06	If	4	
+typedef struct {
+	unsigned char opcode; /* 0x06 */
+	unsigned char dummy;
+	unsigned short block_length;
+} script_if_t;
+This structure is followed by one or several conditions for the if (condition) instruction. Any condition evaluated to false will end the if () block.
+0x07	Else	4	
+typedef struct {
+	unsigned char opcode; /* 0x07 */
+	unsigned char dummy;
+	unsigned short block_length;
+} script_else_t;
+Note: it's either If/Endif, or If/Else; there is no If/Else/Endif sequence.
+0x08	EndIf	2	
+0x09	Sleep	1	
+0x0a	Sleeping	3	Sleep for N game ticks
+typedef struct {
+	unsigned char opcode; /* 0x0a */
+	unsigned char ticks; /* Number of game ticks to sleep */
+	unsigned char unknown;
+} script_sleep_t;
+0x0b	SleepW	1	
+0x0c	SleepingW	1	
+0x0d	For	6	
+typedef struct {
+	unsigned char opcode; /* 0x0d */
+	unsigned char dummy;
+	unsigned short block_length;
+	unsigned short count;	/* Number of times to execute the loop */
+} script_for_t;
+0x0e	?	5	
+0x0f	EndFor	2	
+0x10-0x1f
+Byte	Instruction	Length	Description
+0x10	While	4	
+typedef struct {
+	unsigned char opcode; /* 0x10 */
+	unsigned char dummy;
+	unsigned short block_length;
+} script_while_t;
+This structure is followed by one or several conditions for the while (condition) instruction. Any condition evaluated to false will end the while () block.
+0x11	EndWhile	2	
+0x12	Do	4	
+typedef struct {
+	unsigned char opcode; /* 0x12 */
+	unsigned char dummy;
+	unsigned short block_length;
+} script_do_t;
+0x13	EndDo	2	This structure is followed by one or several conditions for the do { } while (condition) instruction. Any condition evaluated to false will end the while () block.
+0x14	Switch	4	
+typedef struct {
+	unsigned char opcode; /* 0x14 */
+	unsigned char unknown0;
+	unsigned char unknown1;
+	unsigned char dummy;
+} script_switch_t;
+0x15	Case	2	
+typedef struct {
+	unsigned char opcode; /* 0x15 */
+	unsigned char dummy;
+} script_case_t;
+This structure is followed by the condition to evaluate (See instruction 0x4c or 0x4e for example).
+0x16	Default	2	
+0x17	EndSwitch	2	
+0x18	Goto	6	
+0x19	Call	2	
+typedef struct {
+	unsigned char opcode; /* 0x19 */
+	unsigned char func_number; /* Function number of the script to call */
+} script_call_t;
+0x1a	Return	4	
+0x1b	Break	2	
+0x1c	Breakpoint	1	
+0x1d	EVAL_CC	4	
+0x1e	Set	4	
+typedef struct {
+	unsigned char opcode; /* 0x1e */
+	unsigned char object;
+	unsigned short value;
+} script_set1e_t;
+0x1f	Set	4	
+0x20-0x2f
+Byte	Instruction	Length	Description
+0x20	CALC_OP	6	Math operation on accumulator
+typedef struct {
+	unsigned char opcode; /* 0x20 */
+	unsigned char dummy;
+	unsigned char op;	/* 0x00: ADD, 0x01: SUB, 0x04: MODULO, 0x05: OR, 0x06: AND, 0x07: XOR */
+	unsigned char accum_id;
+	short value;
+} script_calc_op_t;
+0x21	?	4	
+0x22	EVT_CUT	4	
+0x23	?	1	
+0x24	CHASER_EVT_CLR	2	
+0x25	MAP_OPEN	4	
+0x26	POINT_ADD	6	
+0x27	DOOR_CK	1	
+0x28	DIEDEMO_ON	1	
+0x29	DIR_CK	8	
+0x2a	PARTS_SET	6	
+0x2b	VLOOP_SET	2	
+0x2c	OTA_BE_SET	4	
+0x2d	LINE_BEGIN	4	
+0x2e	LINE_MAIN	6	
+0x2f	LINE_END	2	
+0x30-0x3f
+Byte	Instruction	Length	Description
+0x30	LIGHT_POS_SET	6	
+0x31	LIGHT_KIDO_SET	6	
+0x32	LIGHT_COLOR_SET	6	
+0x33	AHEAD_ROOM_SET	4	
+typedef struct {
+	unsigned char opcode; /* 0x33 */
+	unsigned char dummy;
+	unsigned short value;
+} script_ahead_room_set_t;
+0x34	ESPR_CTR	10	
+0x35	EVAL_BGM_TBL_CK	6	
+0x36	ITEM_GET_CK	3	
+0x37	OM_REV	2	
+0x38	CHASER_LIFE_INIT	2	
+0x39	PARTS_BOMB	16	
+0x3a	PARTS_DOWN	16	
+0x3b	CHASER_ITEM_SET	3	
+0x3c	WEAPON_CHG_OLD	1	
+0x3d	SEL_EVT_ON	2	
+0x3e	ITEM_LOST	2	
+0x3f	FLOOR_SET	3	
+typedef struct {
+	unsigned char opcode; /* 0x3f */
+	unsigned char id;	/* Number of floor */
+	unsigned char value;	/* 0x00: off, 0x01: on */
+} script_floor_set_t;
+0x40-0x4f
+Byte	Instruction	Length	Description
+0x40	MEMB_SET	4	
+0x41	MEMB_SET2	3	Save accumulator in variable
+typedef struct {
+	unsigned char opcode; /* 0x41 */
+	unsigned char num_variable;
+	unsigned char accum_id;
+} script_calc_save_t;
+0x42	MEMB_CPY	3	Load variable value into an accumulator
+typedef struct {
+	unsigned char opcode; /* 0x42 */
+	unsigned char accum_id;
+	unsigned char num_variable;
+} script_calc_load_t;
+0x43	MEMB_CMP	6	
+0x44	MEMB_CALC	6	
+0x45	MEMB_CALC2	4	
+0x46	FADE_SET	11	
+typedef struct {
+	unsigned char opcode; /* 0x46 */
+	unsigned char unknown[10];
+} script_fade_set_t;
+0x47	WORK_SET	3	
+typedef struct {
+	unsigned char opcode; /* 0x47 */
+	unsigned char unknown;
+	unsigned char object;
+} script_work_set_t;
+0x48	SPD_SET	4	
+0x49	ADD_SPD	1	
+0x4a	ADD_ASPD	1	
+0x4b	ADD_VSPD	1	
+0x4c	EVAL_CK	4	Check flag
+typedef struct {
+	unsigned char opcode; /* 0x4c */
+	unsigned char flag;	/* Flag to check */
+	unsigned char object;	/* Object in which to check flag */
+	unsigned char value;	/* 0x00: off, 0x01: on */
+} script_condition_ck_t;
+0x4d	SET	4	
+typedef struct {
+	unsigned char opcode; /* 0x4d */
+	unsigned char flag;	/* Flag */
+	unsigned char object;	/* Object */
+	unsigned char value;	/* 0x00: off, 0x01: on */
+} script_set_t;
+0x4e	EVAL_CMP	6	Evaluate a comparison.
+typedef struct {
+	unsigned char opcode; /* 0x4e */
+	unsigned char dummy;
+	unsigned char variable;	/* Variable to compare */
+	unsigned char func;	/* Comparison function */
+		/* 0x00: EQ, 0x02: GE, 0x05: NE */
+	unsigned short value;	/* Value to compare */
+} script_condition_cmp_t;
+0x4f	RND	1	
+0x50-0x5f
+Byte	Instruction	Length	Description
+0x50	CUT_CHG	2	In a cutscene, change camera angle.
+typedef struct {
+	unsigned char opcode; /* 0x50 */
+	unsigned char camera;	/* New camera angle to use */
+} script_cut_chg_t;
+0x51	CUT_OLD	1	
+0x52	CUT_AUTO	2	
+0x53	CUT_REPLACE	3	
+0x54	CUT_BE_SET	4	
+0x55	POS_SET	8	
+typedef struct {
+	unsigned char opcode; /* 0x55 */
+	unsigned char dummy;
+	short x,y,z;	/* Position */
+} script_pos_set_t;
+0x56	DIR_SET	8	
+typedef struct {
+	unsigned char opcode; /* 0x56 */
+	unsigned char dummy;
+	short x,y,z;	/* Direction */
+} script_dir_set_t;
+0x57	SET_VIB0	6	
+0x58	SET_VIB1	6	
+0x59	SET_VIB_FADE	8	
+0x5a	RBJ_SET	2	
+0x5b	MESSAGE_ON	6	
+typedef struct {
+	unsigned char opcode; /* 0x5b */
+	unsigned char id;	/* Message id */
+	unsigned short unknown[2];
+} script_message_on_t;
+0x5c	RAIN_SET	2	
+0x5d	MESSAGE_OFF	1	
+0x5e	SHAKE_ON	3	
+0x5f	WEAPON_CHG	2	
+0x60-0x6f
+Byte	Instruction	Length	Description
+0x60	?	22	
+0x61	DOOR_SET	32	
+0x62	DOOR_AOT_SET_4P	40	
+0x63	AOT_SET	20	Message ?
+typedef struct {
+	unsigned char opcode; /* 0x63 */
+	unsigned char event_type;
+	unsigned char event_flag;
+	unsigned char unknown0[3];
+	short x,y,w,h;
+	short unknown1[3];	/* unknown1[1] can be result of calling a function */
+} script_aot_set_t;
+0x64	AOT_SET_4P	28	
+0x65	AOT_RESET	10	
+typedef struct {
+	unsigned char opcode; /* 0x65 */
+	unsigned char event_type;
+	unsigned char event_flag;
+	unsigned char unknown[7];
+} script_aot_reset_t;
+0x66	AOT_ON	2	
+0x67	ITEM_AOT_SET	22	
+0x68	ITEM_AOT_SET_4P	30	
+0x69	KAGE_SET	14	
+0x6a	SUPER_SET	16	
+typedef struct {
+	unsigned char opcode; /* 0x6a */
+	unsigned char unknown[15];
+} script_super_set_t;
+0x6b	KEEP_ITEM_CK	2	
+0x6c	KEY_CK	4	
+0x6d	TRG_CK	4	
+0x6e	SCA_ID_SET	4	
+0x6f	OM_BOMB	2	
+0x70-0x7f
+Byte	Instruction	Length	Description
+0x70	ESPR_ON	16	
+typedef struct {
+	unsigned char opcode; /* 0x70 */
+	unsigned char unknown0[5];
+	short unknown1[5];
+} script_espr_on_t;
+0x71	ESPR_ON2	18	
+0x72	ESPR3D_ON	22	
+0x73	ESPR3D_ON2	24	
+typedef struct {
+	unsigned char opcode; /* 0x73 */
+	unsigned char unknown[23];
+} script_espr3d_on2_t;
+0x74	ESPR_KILL	5	
+0x75	ESPR_KILL2	2	
+typedef struct {
+	unsigned char opcode; /* 0x75 */
+	unsigned char unknown;
+} script_espr_kill2_t;
+0x76	ESPR_KILL_ALL	3	
+0x77	SE_ON	12	
+typedef struct {
+	unsigned char opcode; /* 0x77 */
+	unsigned char sound_type;
+	unsigned char unknown[10];
+} script_se_on_t;
+0x78	BGM_CTL	6	
+typedef struct {
+	unsigned char opcode; /* 0x78 */
+	unsigned char unknown[5];
+} script_bgm_ctl_t;
+0x79	XA_ON	4	
+0x7a	MOVIE_ON	2	
+0x7b	BGM_TBL_SET	6	
+0x7c	STATUS_ON	1	
+0x7d	EM_SET	24	Entity model (enemy, other character)
+typedef struct {
+	unsigned char opcode; /* 0x7d */
+	unsigned char unknown0[11];
+	short x,y,z, dir;
+	unsigned short unknown1[2];
+} script_em_set_t;
+0x7e	MIZU_DIV	2	
+0x7f	OM_SET	40	Object model (pickable item)
+typedef struct {
+	unsigned char opcode; /* 0x7f */
+	unsigned char unknown[39];
+} script_om_set_t;
+0x80-0x8f
+Byte	Instruction	Length	Description
+0x80	PLC_MOTION	4	
+0x81	PLC_DEST	8	
+typedef struct {
+	unsigned char opcode; /* 0x81 */
+	unsigned char dummy;
+	unsigned char unknown0[2];
+	unsigned short unknown1[2];
+} script_plc_dest_t;
+0x82	PLC_NECK	10	
+typedef struct {
+	unsigned char opcode; /* 0x82 */
+	unsigned char unknown0;
+	unsigned short unknown1[3];
+	unsigned char unknown2[2];
+} script_plc_neck_t;
+0x83	PLC_RET	1	
+0x84	PLC_FLG	4	
+0x85	PLC_GUN	2	
+0x86	PLC_GUN_EFF	1	
+0x87	PLC_STOP	1	
+0x88	PLC_ROT	4	
+0x89	PLC_CNT	2	
+typedef struct {
+	unsigned char opcode; /* 0x89 */
+	unsigned char unknown0;
+} script_plc_cnt_t;
+0x8a	SPLC_RET	1	
+0x8b	SPLC_SCE	1	
+0x8c	PLC_SCE	1	
+0x8d	SPL_WEAPON_CHG	1	
+0x8e	PLC_MOT_NUM	4	
+0x8f	EM_RESET	2	
+Offset 17, execution script
+This script is run regularly to update stuff in current room. It follows same structure as the one at offset 16.
+
+.SLD
+Patrice Mandin edited this page on Jan 21, 2019 · 4 revisions
+Table of Contents
+Games
+Structure
+Header
+Compressed file
+Games
+The .SLD file format is used by Resident Evil 3. It contains several TIM files, most likely the background image masks.
+
+Structure
+The values are stored in Little-Endian order.
+
+Header
+Each embedded file has this header:
+
+typedef struct {
+	unsigned long unknown0;  /* 1=Mask for this camera, 0=No mask for this camera */
+	unsigned long length;	/* File length or 0 if no mask */
+} sld_header_t;
+To reach next file:
+
+If unknown0=0, add 8 bytes to go to next file header. If unknown0=1, just add current offset and current file length.
+
+Compressed file
+Following the header of each file in SLD archive, you will find the compressed file. It starts with a LONG being the number of blocks to depack, and then the blocks to depack with the following routine:
+
+	for (i=0; i<numBlocks; i++) {
+		start = src[srcIndex++];
+
+		if (start & 0x80) {
+			count = start & 0x7f;
+
+			memcpy(&dst[dstIndex], &src[srcIndex], count);
+			srcIndex += count;
+			dstIndex += count;
+		} else {
+			int tmp = (start<<8) | src[srcIndex++];
+			offset = (tmp & 0x07ff)+4;
+			count = (tmp>>11)+2;
+
+			for (j=0; j<count; j++) {
+				dst[dstIndex+j] = dst[dstIndex+j-offset];
+			}
+			dstIndex += count;
+		}
+	}
+
+	*dstLength = dstIndex;
+}
+
+.TIM
+Patrice Mandin edited this page on Jan 18, 2019 · 2 revisions
+Table of Contents
+Games
+Structure
+Header
+Palettes
+Image header
+Image data
+4 bits images
+8 bits images
+16 bits images
+External links for format description
+Games
+The .TIM file format is the standard file format for images on Playstation. It is also used by many PC ports of Playstation games, like Resident Evil, Resident Evil 2, Resident Evil 3, or Wipeout.
+
+Structure
+The values are stored in Little-Endian order.
+
+Header
+A TIM file contains one uncompressed bitmap. It starts with this header:
+
+typedef struct {
+	unsigned long	magic;	/* Constant = 0x10 */
+	unsigned long	type;
+	unsigned long	offset; /* allways Size of Clut data + 12 */
+	unsigned short	Palette Org X;
+	unsigned short	Palette Org Y;
+	unsigned short	palette_colors;
+	unsigned short	nb_palettes;
+} tim_header_t;
+'type' can be: '0x08' for 4 bits paletted images, '0x09' for 8 bits paletted images, and '0x02' for 16 bits true-colour images. 'offset' is an offset to start of image data. 'nb_palettes' is the number of palettes stored in the file, each palette having 'palette_colors' colors.
+
+Palettes
+In the case of paletted images, palettes are following the header in the file. Each color is coded in a 16-bits RGB value, which format is A1B5G5R5. There are 'palette_colors'*'nb_palettes' values stored.
+
+Image header
+After the optionnal palettes, come the image header. The width is in 16bit words, it means the real width in pixel is width*4 for 4-bits paletted images, width*2 for 8-bits paletted images and width for 16-bits paletted images.
+
+typedef struct {
+	unsigned short	width;	/* Width of image in 16-bits words */
+	unsigned short	height; /* Height of image in pixels */
+} tim_size_t;
+Image data
+4 bits images
+Each pixel is stored in 4 bits (so 2 pixels per byte), bits 7-4 for first pixel, and bits 3-0 for second pixel. The value is an index in a palette stored in the beginning of the file.
+
+8 bits images
+Each pixel is stored in a byte, which is an index in a palette stored in the beginning of the file.
+
+16 bits images
+Each pixel is in A1B5G5R5 format.
+
+External links for format description
+Qhimm wiki
+
+.VB
+Patrice Mandin edited this page on Jan 13, 2019 · 1 revision
+VAG is the PlayStation single waveform data format for ADPCM-encoded data of sampled sounds, such as piano sounds, explosions, and music. The typical extension in DOS is “.VAG”.
+
+.VH
+Patrice Mandin edited this page on Jan 13, 2019 · 1 revision
+Vab header file, contains offsets of the wav files in to vab body? (.VB)? Check out psx sound files

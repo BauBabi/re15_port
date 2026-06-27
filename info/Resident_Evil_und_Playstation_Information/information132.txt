@@ -1,0 +1,171 @@
+Skip to content
+Navigation Menu
+MeganGrass
+bioclone-remake
+
+Type / to search
+Code
+Issues
+Pull requests
+Actions
+Projects
+Security
+Insights
+Owner avatar
+bioclone-remake
+Public
+MeganGrass/bioclone-remake
+Go to file
+t
+Name		
+MeganGrass
+MeganGrass
+More Room Types Supported
+f239a19
+ · 
+5 days ago
+.github
+FUNDING.YML
+last month
+Visual Studio 2022/bioclone-remake
+More Room Types Supported
+5 days ago
+bio-lib @ 36517d8
+More Room Types Supported
+5 days ago
+images
+Model Shadow, Lighting, Frustrum, Cam and Anim fixes
+3 weeks ago
+mstd-lib @ 965bbdf
+More Room Types Supported
+5 days ago
+sdk
+Initial Commit
+last month
+sony-lib @ 45baf0f
+More Room Types Supported
+5 days ago
+.gitmodules
+Initial Commit
+last month
+README.MD
+More Room Types Supported
+5 days ago
+Repository files navigation
+README
+BioClone Remake
+Multi-purpose utility application for classic Resident Evil video games for Sony PlayStation (PSX/PS1/PSone) and PC counterparts
+
+Model Viewer (Resident Evil, Resident Evil 2, Resident Evil 3)
+Room Testing (Resident Evil, Resident Evil 2 (Nov '96 Proto), Resident Evil 2)
+Gameplay Testing (via controller input)
+Notice
+This is an extremely early, open-source test version rewrite of "BioClone Redux"
+Do not expect modification abilities of "BioClone Redux," yet...
+Supported File Formats
+RDT (Resident Evil, Resident Evil 2 (Nov '96 Proto), Resident Evil 2)
+TMD, MD1, MD2, EMD, EMW, PLD and PLW model data
+TIM, BMP, PNG and JPG model texture
+Basics
+Prerendered Backgrounds
+Must be either TIM or PNG with naming convention: ROOMXYYZZ (example: ROOM20B10.PNG)
+Camera Sprite Masks
+Must be either TIM or PNG with naming convention: ROOM_XYY_ZZ_MASK (example: ROOM_20B_10_MASK.PNG)
+Background and Mask images must be located in same directory as RDT
+
+Keyboard/Mouse
+Option	Description
+CTRL+O	Open RDT
+LEFT/RIGHT	View previous/next camera
+CTRL+LEFT/RIGHT	View previous/next animation
+CTRL+MOUSEWHEEL	Adjust render zoom (when hovering render viewport)
+F11	Enter/Exit fullscreen mode
+CTRL+?	About this application
+ESC	Exit Application
+Controller
+Support provided via XInput
+Setup via main menu (View -> Controller Map)
+Gameplay testing for Resident Evil and Resident Evil 2 (final retail and Nov '96 prototype) models
+Character (PLD) and Weapon (PLW) both must be open
+Images
+Preliminary Test Preliminary Test
+
+TODO
+a lot :)
+Build
+Microsoft Visual Studio 2022+
+Microsoft Direct-X
+Clone the repo
+Install Microsoft.DXSDK.D3DX nuget package into the project
+Build/Link libjpeg-turbo libraries
+Compile
+git clone https://github.com/MeganGrass/bioclone-remake.git
+Acknowledgements
+Gemini
+
+pmandin
+
+XProger
+
+Dither Matrix
+
+PSX.dev (Discord)
+
+Copyrights
+Resident Evil is Copyright © CAPCOM CO., LTD.
+
+Sony PlayStation is Copyright (©) Sony Computer Entertainment Inc.
+
+ImGui is Copyright (©) 2014-2025 Omar Cornut
+
+Direct-X is Copyright (©) 1995-2021 Microsoft Corporation
+
+libjpeg-turbo
+
+libpng
+
+zlib
+
+About
+Classic Resident Evil Modification Utility for Sony PlayStation (1994) (PS1/PSX/PSone) and PC
+
+Topics
+ps1 playstation pc md2 emd rdt tmd pld emw resident-evil-2 resident-evil-3 resident-evil-1 plw md1 bioclone
+Resources
+ Readme
+ Activity
+Stars
+ 3 stars
+Watchers
+ 0 watching
+Forks
+ 0 forks
+Report repository
+Releases
+ 7 tags
+Sponsor this project
+@MeganGrass
+MeganGrass derp
+https://www.paypal.me/MeganGrass
+MeganGrass
+Learn more about GitHub Sponsors
+Packages
+No packages published
+Languages
+C++
+99.0%
+ 
+C
+1.0%
+Footer
+© 2025 GitHub, Inc.
+Footer navigation
+Terms
+Privacy
+Security
+Status
+GitHub Community
+Docs
+Contact
+Manage cookies
+Do not share my personal information

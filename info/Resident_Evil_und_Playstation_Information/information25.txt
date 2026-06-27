@@ -1,0 +1,38 @@
+
+CDROM File Video STR Streaming and BS Picture Compression (Sony)	Contents
+Index	Prev
+Next
+
+STR Files (movie streams)
+CDROM File Video Streaming STR (Sony)
+CDROM File Video Streaming STR Variants
+CDROM File Video Streaming Framerate
+CDROM File Video Streaming Audio
+CDROM File Video Streaming Chunk-based formats
+CDROM File Video Streaming Mis-mastered files
+Apart from the 20h-byte STR headers, movies basically consist of a series of BS files (see below).
+
+BS Files (Huffman compressed MDEC codes)
+BS stands for bitstream, which might refer to the use in STR files, or to the Huffman bitstreams.
+CDROM File Video BS Compression Versions
+CDROM File Video BS Compression Headers
+The header is followed by the bitstream...
+  v1/v2/v3/ea/iki --> first bit in bit15 of first halfword (good for psx)
+  v0              --> first bit in bit7 of first byte (not so good for psx)
+  (to use the same decoder for all version: swap each 2 bytes in v0)
+For each block, the bitstream contains one DC value, up to 63 AC values, terminated by EOB (end of block).
+CDROM File Video BS Compression DC Values
+CDROM File Video BS Compression AC Values
+Apart from being used in STR movies, BS can be also used to store single pictures:
+CDROM File Video BS Picture Files
+
+Wacwac (similar as BS, but with completely different Huffman codes)
+CDROM File Video Wacwac MDEC Streams
+
+Credits
+Thanks to Michael Sabin for info on various STR and BS variants:
+https://github.com/m35/jpsxdec/
+
+
+I am homeless in Hamburg, please help me out!
+extracted from no$psx v2.2 - homepage - patreon - whole doc htm/txt - copyright 2022 martin korth (nocash)

@@ -1,0 +1,196 @@
+PLAYSTATION TECHNICAL NOTE
+=======================================================================
+Date:
+Ref:
+Author:
+Subject: Passing the Third Party Technical Check (1.1)
+ABSTRACT
+--------
+This Technical Note tells what is required to pass the Third Party
+Technical Checks, providing details on the following tests:
+Memory Card Test
+Copyright / Piracy Protection
+Symbol List Check
+Master ID Check
+CD Error Check
+TEST DETAILS
+------------
+TEST ONE: Memory Card Test
+Part One: Save File Names
+The first section of the memory card test refers to the save file name.
+Each title receives a unique save file name that is determined by the
+region the game was developed for, mixed with the product code number
+assigned to the project when it was approved. The regional breakdown is
+as follows:
+"BASLUS-xxxxx" for licensed software for SCEA North America territory
+"BASCUS-xxxxx" for SCEA published software for SCEA North America
+territory
+"BISLPS-xxxxx" for licensed software for SCEI Japan territory
+"BISCPS-xxxxx" for SCEI published software for SCEI Japan territory
+"BESLPS-xxxxx" for licensed software for SCEE European territory
+"BESCPS-xxxxx" for SCEE published software for SCEE European territory
+Therefore if your product code is SLUS-12345, an example of a save file
+name is BASLUS-12345.
+Use only the bolded file name when submitting to Sony Computer
+Entertainment America.
+After a working disc has been made, the file names can be easily read
+and checked by using the Memory Card Manager 1.5, located on Sony
+Computer Entertainment America’s Developer’s Website. Use the File Name
+Slot One Option.
+Part Two: Save Title
+The second section of the memory card test is checking that the
+developer has written the save title in Shift-JIS and not in ASCII.
+ASCII has now been changed to an illegal text format for the save
+title. The justification for the change came from the existence of a
+bug in the PlayStation that will rearrange the displayed titles on the
+PlayStation’s Memory Card screen if even one save file name is written
+in ASCII.
+Instructions on how to change ASCII into Shift-JIS can be found on Sony
+Computer Entertainment America’s Developer’s Website.
+The save title’s name can be easily read and checked by using the
+Memory Card Manager 1.5 located on Sony Computer Entertainment
+America’s Developer’s Website. Use the Document Name Slot One Option.
+If name is displayed with white text and grey background, the file name
+is in Shift-JIS. A reversed color scheme indicates ASCII is being
+utilized.
+Part Three: Formatting
+The final technical memory card check performed on product submission
+is formatting. This check verifies that the program correctly performs
+the following save steps:
+Step 1: When the program encounters an unformatted memory card it
+should ask if the user wishes to format the memory card,
+with the default of “NO”.
+Step 2: Format the memory card.
+Step 3: Save the game to the card.
+Step 4: Notify the user the game has been successfully saved.
+Memory Card Manager 1.5, located on Sony Computer Entertainment
+America’s Developer’s Website, can also be used to unformat a memory
+card.
+TEST TWO: Copyright / Piracy Protection
+Several checks are in place to insure the developer and Sony Computer
+Entertainment America can protect their copyrights against piracy. If
+any part of the Copyright / Piracy Protection fails, the product must
+be resubmitted.
+Piracy Protection
+Part One: System.cnf File
+Several ways have been devised to try to swap finished discs and
+pirated discs during the load process to enable pirated media to run.
+To combat this problem, we have the system.cnf file which tells the
+PlayStation some simple information about the game. Below is an example
+of the System.cnf file.
+BOOT = cdrom:\XXXX_AAA.AA;1
+TCB = 4
+EVENT = 10
+STACK = 801fff00
+The boot line must reflect the executable location on the CD with the
+complete path. The executable can be located in a sub directory but is
+recommended to be in the root.
+Examples are: BOOT=cdrom:\SLUS_123.45;1 or
+BOOT=cdrom:\SUBDIR\SLUS_123.45;1
+Any text viewing program can be used to open and verify the system.cnf.
+Part Two: The executable name
+Coupled with the System.cnf file is the executable which must be named
+after the product code. The name must use an underscore in the name and
+a two digit extension, i.e., if the product code is SLUS-12345, the
+executable name must be SLUS_123.45
+Copyright
+The licensed area of the game is required to be displayed both in the
+executable’s header and upon the second screen displayed when a program
+is started.
+When building the executable file using CPE2X, be sure to include the
+/CA switch to include the “Sony Computer Entertainment North America
+Area” statement in the header. If the switch is left out, the
+executable will be built for the “Japan Area”.
+To get the correct logo to appear on start up, include the LICENSEA.DAT
+file with its complete path in the System Area File section of CD-ROM
+Generator when building master discs. If the disc is supposed to be
+built for a different region, use one of the following files:
+LICENSEA.DAT for US/Canadian market
+LICENSEJ.DAT for Japanese market
+LICENSEE.DAT for European market
+The LICENSEA.DAT file can be found on the Sony Computer Entertainment
+America’s Developer’s Website.
+TEST THREE: Symbol List Check
+When the developer signed his or her licensing agreement with Sony
+Computer Entertainment America, he or she agreed to use the
+PlayStation’s libraries. This check insures the developer did. If this
+check fails, the developer will be required to rewrite parts of the
+program’s code to insure the developer adheres to the legal agreement.
+In the submission package, the developer needs to send a *.SYM file
+along so the check can be performed. To output the SYM file, add
+“-omain.sym“ to your make file.
+Example: ccpsx -O -Xo$80040000 main.c -omain.cpe,main.sym
+Some pitfalls to watch out for are to insure the file is not completely
+in caps and to be careful the file is not truncated during transfer
+(Email).
+Please do not send a text version of the *.Sym file.
+TEST FOUR: Master ID Check
+The master ID information is required to protect the developer and Sony
+Computer Entertainment America against piracy. The following is the
+required information of each of the slots that reside in the Master ID:
+<Disc Name> Product number [“SLUS-xxxxx” in US]
+<Producer Name> The name of the licensee company
+<License Area> One character that signifies the license area [A in
+the US]
+<Creation Date> The time of master disc creation. It is necessary to
+identify the revision of a master disc at the remastering (automatically filled)
+<Copyright holder> Must be a company name
+The Master ID Information can be easily read and checked by using
+Mcheck.exe that is found on the Sony Computer Entertainment America’s
+Developer’s Website. To run Mcheck successfully you must place the
+Master disc in the CDR-Writer you used to create the disc.
+TEST FIVE: CD Error Check
+Disc types required
+Sony Computer Entertainment America requires that 4 masters and 5
+copies of a program are in the submission package. Sony CDR 71-PS must
+be the media that is used for the master discs. Sony CDR 71-P can be
+used for the duplicates, but is not highly recommended.
+Error Check
+All discs received are error checked. If a disc fails the error check,
+the developer must replace it with good media. It is highly suggested
+that eight master discs are submitted so that in case one of the discs
+fails, we can still have three good masters that can be sent to the
+manufacturing house.
+What CD Errors do we look for and what do the errors mean?
+C1
+A C1 error means that in a given second, the error checker was unable
+to correctly read a variable number of bytes in a sector so it looked
+in the ECC (error correction code - a table) and FOUND the information
+it was unable to read previously.
+C2
+A C2 error means that in a given second, the error checker was unable
+to correctly read a variable number of bytes in a given sector, so it
+looked in the ECC, and was still unable to read the information. It
+then looked at a second reference to the same byte, in the ECC, and
+then FOUND the information it was unable to read previously.
+IP
+An IP error means interpolation. The error checker looked on the disc
+and at the ECC, but never found the information it was looking for. It
+then made up information to put in its place by taking future and
+previous data and averaging them. This is acceptable for audio but not
+for games. This error means the disc is bad.
+TJ
+A TJ error is a track jump. This means the laser skipped while writing
+(possibly from the machine being bumped). This error can be falsely
+caused by the error checker being bumped while checking. This error
+means the disc is bad.
+The Reason for the Current Error Level Settings
+The manufacturing house used to create PlayStation discs requires media
+to have less than a 220 error rate average across the entire disc. The
+technicians at the mastering house will not run into any problems
+mastering discs if the C1 error rate is 50 for any given disc.
+Therefore, if a disc has a C1 at 50 or higher, a single IP error, or a
+single TJ error, it will be deemed a bad disc.
+It is a common misconception that if a disc seems to operate correctly,
+the error level is at an acceptable level. This is not true. A hardware
+CD error checker is the only true way to determine the error rates.
+Sony Computer Entertainment America uses an ES-70 Start Lab Error
+Checker. If you wish to obtain one, the contact is listed below. Any
+hardware error checker should be sufficent to review PlayStation discs.
+To get an ES-70 Start Lab Error Checker, contact:
+Takaharu Kitada
+(03)3288-4321
+Start Lab Inc.
+3-8-5(Chiyoda CB Building)
+Misaki-Cho, Chiyoda-ku
+Tokyo 101 Japan

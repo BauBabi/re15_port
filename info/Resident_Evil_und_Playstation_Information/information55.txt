@@ -1,0 +1,62 @@
+
+CDROM File Archive FF9 DB (Final Fantasy IX)	Contents
+Index	Prev
+Next
+
+DB Archive
+  000h 1   ID (DBh)
+  001h 1   Number of Types
+  002h 2   Zero (0)
+  004h N*4 Type List
+  ...  ..  File Lists & File Data for each Type
+Type List entries:
+  000h 3   Offset to File List (self-relative, from current entry in Type List)
+  003h 1   Data Type (00h..1Fh)
+File List:
+  000h 1   Data type (00h..1Fh) (same as in Type List)
+  001h 1   Number of Files
+  002h 2   Zero (0)
+  004h N*2 File ID List (unique ID per type) (different types may have same ID)
+  ...  ..  Zeropadding to 4-byte boundary
+  ...  N*4 Offset List (self-relative, from current entry in Offset List)
+  ...  4   End Offset  (first-relative, from first entry in Offset List)
+  ...  ..  File Data (referenced from above Offset List)
+
+Data Types
+  00h  Misc (DOT1 Archives, or other files)
+  01h  Unused?
+  02h  Reportedly 3D Model data (vertices,quads,triangles,texcoords)
+  03h  Reportedly 3D Animation sequences
+  04h  TIM Texture
+  05h  Reportedly Scripts (hdr="EV")              (eg. dir04\file32\1B-0001)
+  06h  ?                                          (eg. dir02\file*)
+  07h  Sound "Sequencer Data" (hdr="AKAO")        (eg. dir09\file*)
+  08h  Sound? tiny files (hdr="AKAO")             (eg. dir04\file32\1B-0001)
+  09h  Sound Samples (hdr="AKAO")                 (eg. dir0B\file*)
+  0Ah  Reportedly Field Tiles and Field Camera parameters
+  0Bh  Reportedly Field Walkmesh                  (eg. dir04\file32\1B-0001)
+  0Ch  Reportedly Battle Scene geometry           (eg. dir06\file*)
+  0Dh  ?                                          (eg. dir01\file01)
+  0Eh  Unused?
+  0Fh  Unused?
+  10h  ?                                          (eg. dir05\file*)
+  11h  ?                                          (eg. dir05\file*)
+  12h  Reportedly CLUT and TPage info for models  (eg. dir04\file32\1B-0001)
+  13h  Unused?
+  14h  ?                                          (eg. dir05\file*)
+  15h  Unused?
+  16h  ?  (eg. dir04\file32\1B-0001)
+  17h  ?  (eg. dir04\file32\1B-0000)
+  18h  Sound (hdr="AKAO")  (eg. dir04\file32\1B-0001)
+  19h  ?  (eg. dir04\file32\1B-0001)
+  1Ah  ?  (eg. dir06\file*)
+  1Bh  DB Archives (ie. further DB's nested inside of the parent DB archive)
+  1Ch  ?  (eg. dir04\file32\1B-0001)
+  1Dh  ?  (eg. dir03\file2328\1B-0001)
+  1Eh  ?  (eg. dir04\file32\1B-0001)
+  1Fh  ?  (eg. dir04\file32\1B-0001)
+  20h..FFh Unused?
+
+
+I am homeless in Hamburg, please help me out!
+extracted from no$psx v2.2 - homepage - patreon - whole doc htm/txt - copyright 2022 martin korth (nocash)

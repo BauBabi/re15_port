@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en-us">
+	<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>BioModels</title>
+    <style>
+		#canvas {
+			padding-right: 0;
+			margin-left: auto;
+			margin-right: auto;
+			display: block;
+			width: 100%;
+			height: 100%;
+			max-width: 1366px;
+			max-height: 768px;
+		}
+		#load_model_form {
+			text-align: center;
+		}
+		#input_file {
+			display: none;
+		}
+		.input_label {
+			display: inline-block;
+			padding: 8px 16px;
+			background-color: #007bff;
+			color: white;
+			border-radius: 4px;
+			cursor: pointer;
+		}
+    </style>
+	</head>
+	<body>
+		<canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
+		<hr>
+		
+		<div id="load_model_form">
+			<input id="input_file" type="file" multiple>
+			<input type="button" value="Upload Model" onclick="document.getElementById('input_file').click();">
+		</div>
+		
+		<p>
+			<a href="https://jigsaw.w3.org/css-validator/check/referer">
+				<img style="border:0;width:88px;height:31px"
+					src="https://www.w3.org/Icons/valid-html401-blue"
+					alt="Valid HTML!">
+			</a>
+			<a href="https://jigsaw.w3.org/css-validator/check/referer">
+				<img style="border:0;width:88px;height:31px"
+					src="https://www.w3.org/Icons/valid-css-blue"
+					alt="Valid CSS!">
+			</a>
+		</p>
+    <script>	
+		const canvasElement = document.getElementById('canvas');
+		const inputFile = document.getElementById('input_file');		
+		const supportedExtensions = [ "TIM", "EMD", "PLD" ];	
+		
+		async function loadFile(file) {
+			const filename = file.name;
+			const extension = filename.split(".")[1];
+			const upperExtension = extension.toLocaleUpperCase();
+			
+			if (!supportedExtensions.includes(upperExtension)) {
+				alert(`Unknown file extension '${extension}', please use: '${supportedExtensions}'`);
+				return;
+			}
+			
+			const fileBuffer = await new Promise((resolve, reject) => {
+				const reader = new FileReader();
+				reader.onload = function () { resolve(reader.result); }
+				reader.onerror = function() { reject(reader.error); }
+				reader.readAsArrayBuffer(file);
+			});
+
+			const fileContentStream = Module._malloc(fileBuffer.byteLength);
+			Module.writeArrayToMemory(new Uint8Array(fileBuffer), fileContentStream);
+			return fileContentStream;
+		}
+		
+		inputFile.addEventListener("change", async function() {
+			console.log(inputFile.files);
+			const fileCount = inputFile.files.length;
+			if (fileCount === 0) {
+				return;
+			}
+			
+			const file = inputFile.files[0];
+			const filename = file.name;
+			const extension = filename.split(".")[1];
+			const upperExtension = extension.toLocaleUpperCase();
+			
+			if (upperExtension === "PLD") {
+				if (fileCount > 1) {
+					alert("For loading 'PLD' files, upload only one please");
+					return;
+				}
+				
+				const pldStream = await loadFile(inputFile.files[0]);
+				Module.ccall('JSLoadModel', null, ['string', 'number', 'number'], [filename, pldStream, null]);
+				
+			} else if (upperExtension === "TIM" || upperExtension === "EMD") {
+				if (fileCount != 2) {
+					alert("File: 'EMD' requires to be load in pair of ('TIM' and 'EMD')");
+					return;
+				}
+			
+				let timIndex = -1;
+				let emdIndex = -1;
+				
+				for (let i = 0; i < fileCount; i++) {
+					const file = inputFile.files[i];
+					const filename = file.name;
+					const extension = filename.split(".")[1];
+					const upperExtension = extension.toLocaleUpperCase();
+				
+					if (upperExtension === "TIM") {
+						timIndex = i;
+					}
+					else if (upperExtension === "EMD") {
+						emdIndex = i;
+					}
+				}
+				
+				if (timIndex === -1) {
+					alert("Missing 'TIM' file");
+					return;
+				}
+				if (emdIndex === -1) {
+					alert("Missing 'EMD' file");
+					return;
+				}
+
+				const emdStream = await loadFile(inputFile.files[emdIndex]);
+				const timStream = await loadFile(inputFile.files[timIndex]);
+				
+				Module.ccall('JSLoadModel', null, ['string', 'number', 'number'], [filename, emdStream, timStream]);
+			} else {
+				alert(`Unknown file extension '${extension}'`);
+				return;
+			}
+		});
+
+		canvasElement.addEventListener("webglcontextlost", function(event) {
+			alert('WebGL context lost. You will need to reload the page.');
+			event.preventDefault();
+		}, false);
+
+		var Module = {
+			print(...args) { console.log(...args); },
+			canvas: canvasElement,
+		};
+
+		window.onerror = function() { alert('Exception thrown, see JavaScript console'); };
+	</script>
+    {{{ SCRIPT }}}
+	</body>
+</html>

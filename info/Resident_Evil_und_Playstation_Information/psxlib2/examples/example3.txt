@@ -1,0 +1,19 @@
+spulib example 3
+
+Upload sample, upload reverb, set ADSR, visualise ADSR.
+
+Loads a looping VAG (sample) file.
+Loads a reverb patch from the reverb patch bank.
+Sets the ADSR envelope parameters.
+Starts playing the sample.
+Tracks and visualises the current ADSR envelope value.
+
+Compile and link by running example3.bat (you may have to edit this
+to put in the right include and library paths).
+
+
+Note: Each voice has it's own volume envelope (ADSR envelope), which
+defines how the volume of the voice changes over time.
+
+Sample made with TS404 :)
+

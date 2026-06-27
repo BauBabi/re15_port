@@ -1,0 +1,294 @@
+Skip to content
+Navigation Menu
+ABelliqueux
+nolibgs_hello_worlds
+
+Type / to search
+Code
+Issues
+1
+Pull requests
+Actions
+Projects
+Wiki
+Security
+Insights
+Owner avatar
+nolibgs_hello_worlds
+Public
+ABelliqueux/nolibgs_hello_worlds
+Go to file
+t
+Name		
+ABelliqueux
+ABelliqueux
+Update Win MIPS toolchain instructions
+b9ee808
+ · 
+4 years ago
+.github/workflows
+Fix url
+4 years ago
+TIM
+Link to wiki
+4 years ago
+VAG
+Add vag sample files
+4 years ago
+hello_2pads
+Remove empty lines, useless global initialization
+4 years ago
+hello_bs
+Update credits
+4 years ago
+hello_cd
+Update credits
+4 years ago
+hello_cdda
+Get rid of libds
+4 years ago
+hello_cube
+Fix bad includes
+4 years ago
+hello_cubetex
+Use rounded values
+4 years ago
+hello_cubetex_stp
+Add missing cubetex
+4 years ago
+hello_font
+Add readme
+4 years ago
+hello_fx
+Add FXs example
+4 years ago
+hello_gte_opti
+Update credits
+4 years ago
+hello_light
+Fix bad includes
+4 years ago
+hello_mod
+Update readmes
+4 years ago
+hello_multi_vag
+Remove useless addition for spu_malloc_rec size
+4 years ago
+hello_multi_xa
+Correct ffmpeg cmd
+4 years ago
+hello_ovl_exec
+Update submodule, Makefile
+4 years ago
+hello_pad
+Remove empty lines, useless global initialization
+4 years ago
+hello_poly
+Remove empty lines, useless global initialization
+4 years ago
+hello_poly_ft
+Remove empty lines, useless global initialization
+4 years ago
+hello_poly_fun
+Remove ptr arithmetic
+4 years ago
+hello_poly_gt
+Remove empty lines, useless global initialization
+4 years ago
+hello_poly_gt_tw
+Remove empty lines, useless global initialization
+4 years ago
+hello_poly_inline
+Remove empty lines, useless global initialization
+4 years ago
+hello_poly_stp
+Links to wiki
+4 years ago
+hello_sio
+Remove empty lines, useless global initialization
+4 years ago
+hello_sprt
+Update url
+4 years ago
+hello_spu_readback
+Fix typos, colors, add redux notice
+4 years ago
+hello_str
+Add missing Drawsync()
+4 years ago
+hello_strplay
+Remove unused init stuff
+4 years ago
+hello_tile
+Correct line numbers, remove ptr arithmetic
+4 years ago
+hello_vag
+Derpy derp derp
+4 years ago
+hello_world
+Remove empty lines, useless global initialization
+4 years ago
+hello_xa
+New multi VAG example
+4 years ago
+includes
+Move to better file structure
+4 years ago
+thirdparty
+Update submodule, Makefile
+4 years ago
+.gitmodules
+Move to better file structure
+4 years ago
+LICENSE
+Initial commit
+5 years ago
+Makefile
+Fix Makefile
+4 years ago
+README.md
+Update Win MIPS toolchain instructions
+4 years ago
+common.mk
+Add Hello_mod example
+4 years ago
+Repository files navigation
+README
+GPL-3.0 license
+Nolibgs Hello Worlds !
+3D power !
+
+ 3D power ! 3D power !
+
+So you want to begin developping on the original PSX but don't know where to start ?
+
+This repo is destined to host a bunch of simple examples, each describing how to do one thing.
+
+The code here will be using Nugget + PsyQ, the "Official" Sony SDK but with a modern MIPS toolchain.
+
+We will not be using libGS, the Extended Graphics Library for the graphic stuff...
+
+Instead we'll try to devise methods to reproduce libgs functions. This will not necessarly be more efficient, but we'll learn a lot more stuff !
+
+Installation
+We'll keep things simple for now. If you want to read about more methods to get things up and running, see the wiki's Installation methods section.
+
+Windows
+MIPS toolchain setup
+You can setup a pre-built MIPS toolchain by copy-pasting the following into a command prompt:
+
+powershell -c "& { iwr https://raw.githubusercontent.com/grumpycoders/pcsx-redux/main/mips.ps1 | iex }"
+Then, open a new command prompt, and type the following:
+
+mips install 11.2.0
+Nugget + PsyQ setup
+Download the PsyQ converted libraries here : http://psx.arthus.net/sdk/Psy-Q/psyq-4.7-converted-full.7z
+Clone the 'nolibgs_hello_worlds' repo with
+git clone https://github.com/ABelliqueux/nolibgs_hello_worlds.git --recursive
+or download this repository's release and extract nolibgs_hello_worlds.zip's content to C:\no_libgs_hello_worlds\ .
+Extract the content of psyq-4.7-converted-full.7z in C:\no_libgs_hello_worlds\psyq. You should now have C:\no_libgs_hello_worlds\psyq\include and C:\no_libgs_hello_worlds\psyq\lib ;
+no_libgs_hello_worlds
+├── common.mk
+├── hello_world
+|       ├── hello_world.c
+|       ├── Makefile
+├── hello_...
+└── psyq
+    ├── lib
+    |    └── *.a 
+    └── include
+         └── *.h  
+Test everything is working by launching a command prompt, change to the C:\no_libgs_hello_worlds\ directory with the following command: cd C:\no_libgs_hello_worlds\, then type make and hit enter.
+By default, this should build the hello_world example, and you should now have a hello_world.ps-exe file in C:\no_libgs_hello_worlds\hello_world. This a PSX executable that can be run in an emulator like pcsx-redux.
+Linux
+Install your distribution's MIPS toolchain
+In a terminal :
+
+On Debian derivatives (Ubuntu, Mint...) :
+
+sudo apt-get install gcc-mipsel-linux-gnu g++-mipsel-linux-gnu binutils-mipsel-linux-gnu
+On Arch derivatives (Manjaro), the mipsel environment can be installed from AUR : cross-mipsel-linux-gnu-binutils and cross-mipsel-linux-gnu-gcc using your AURhelper of choice:
+
+trizen -S cross-mipsel-linux-gnu-binutils cross-mipsel-linux-gnu-gcc
+Nugget + PsyQ setup
+Let's do it all on the CLI !
+
+Install the git client :
+sudo apt-get install git
+Clone this repository :
+git clone https://github.com/ABelliqueux/nolibgs_hello_worlds.git --recursive
+Change to the repo's directory and get the PsyQ converted libraries:
+cd nolibgs_hello_worlds
+wget http://psx.arthus.net/sdk/Psy-Q/psyq-4.7-converted-full.7z
+7z x psyq-4.7-converted-full.7z -o./psyq
+Try your setup :
+make
+By default, this should build the hello_world example, and you should now have a hello_world.ps-exe file in ./hello_world/. This a PSX executable that can be run in an emulator like pcsx-redux.
+
+MacOS
+A brew installation script can be found here..
+
+Compilation
+In a terminal, cd to your psxdev setup directory and type make all to build all examples in their respective directories.
+
+Alternatively, you can use make example_name to only build that example, i.e : make hello_poly.
+
+If you want to remove all the files generated by the compilation process, type make clean.
+
+Upcoming examples
+hello_poly_subdiv (polygon subdivision)
+hello_rsd (rsd format)
+Links and Doc
+Getting started with PSX dev
+Ps1 dev ressource center
+PsyQ docs
+psxdev.net
+psxdev Discord
+Credits, thanks, hugs
+Everything here was learnt from some more talented persons, mainly but not excluding others that hang around on the psxdev discord Nicolas Noble, Lameguy64, NDR008, Jaby smoll seamonstah, danhans42, rama, sickle, paul, squaresoft74, and lot mores !
+
+About
+Collection of PsyQ basic examples NOT using libgs
+
+Topics
+homebrew ps1 psx psyq libgs
+Resources
+ Readme
+License
+ GPL-3.0 license
+ Activity
+Stars
+ 178 stars
+Watchers
+ 11 watching
+Forks
+ 13 forks
+Report repository
+Releases 1
+nolibgs_hello_worlds+nugget
+Latest
+on Jul 10, 2021
+Contributors
+2
+@ABelliqueux
+ABelliqueux Schnappy
+@nicolasnoble
+nicolasnoble Nicolas Noble
+Languages
+C
+96.9%
+ 
+Makefile
+3.1%
+Footer
+© 2025 GitHub, Inc.
+Footer navigation
+Terms
+Privacy
+Security
+Status
+GitHub Community
+Docs
+Contact
+Manage cookies
+Do not share my personal information

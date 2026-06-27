@@ -1,0 +1,137 @@
+
+CDROM File Archive FF9 DB (Final Fantasy IX)	Contents
+Index	Prev
+Next
+
+DB Archive
+  000h 1   ID (DBh)
+  001h 1   Number of Types
+  002h 2   Zero (0)
+  004h N*4 Type List
+  ...  ..  File Lists & File Data for each Type
+Type List entries:
+  000h 3   Offset to File List (self-relative, from current entry in Type List)
+  003h 1   Data Type (00h..1Fh)
+File List:
+  000h 1   Data type (00h..1Fh) (same as in Type List)
+  001h 1   Number of Files
+  002h 2   Zero (0)
+  004h N*2 File ID List (unique ID per type) (different types may have same ID)
+  ...  ..  Zeropadding to 4-byte boundary
+  ...  N*4 Offset List (self-relative, from current entry in Offset List)
+  ...  4   End Offset  (first-relative, from first entry in Offset List)
+  ...  ..  File Data (referenced from above Offset List)
+
+Data Types
+  00h  Misc (DOT1 Archives, or other files)
+  01h  Unused?
+  02h  Reportedly 3D Model data (vertices,quads,triangles,texcoords)
+  03h  Reportedly 3D Animation sequences
+  04h  TIM Texture
+  05h  Reportedly Scripts (hdr="EV")              (eg. dir04\file32\1B-0001)
+  06h  ?                                          (eg. dir02\file*)
+  07h  Sound "Sequencer Data" (hdr="AKAO")        (eg. dir09\file*)
+  08h  Sound? tiny files (hdr="AKAO")             (eg. dir04\file32\1B-0001)
+  09h  Sound Samples (hdr="AKAO")                 (eg. dir0B\file*)
+  0Ah  Reportedly Field Tiles and Field Camera parameters
+  0Bh  Reportedly Field Walkmesh                  (eg. dir04\file32\1B-0001)
+  0Ch  Reportedly Battle Scene geometry           (eg. dir06\file*)
+  0Dh  ?                                          (eg. dir01\file01)
+  0Eh  Unused?
+  0Fh  Unused?
+  10h  ?                                          (eg. dir05\file*)
+  11h  ?                                          (eg. dir05\file*)
+  12h  Reportedly CLUT and TPage info for models  (eg. dir04\file32\1B-0001)
+  13h  Unused?
+  14h  ?                                          (eg. dir05\file*)
+  15h  Unused?
+  16h  ?  (eg. dir04\file32\1B-0001)
+  17h  ?  (eg. dir04\file32\1B-0000)
+  18h  Sound (hdr="AKAO")  (eg. dir04\file32\1B-0001)
+  19h  ?  (eg. dir04\file32\1B-0001
+CDROM File Archive Ace Combat 2 and 3	Contents
+Index	Prev
+Next
+
+Ace Combat 2 (Namco 1997) (ACE2.DAT and ACE2.STH/STP)
+There are two archives, stored in three files:
+  ACE2.DAT Directory for Data in ACE2.DAT itself         ;normal binary data
+  ACE2.STH Directory for Data in separate ACE2.STP file  ;streaming data
+Directory Format:
+  000h 4    Unknown (1)
+  004h 4    Number of entries (N)
+  008h N*8  File List
+File List entries (64bit):
+  0-27   28bit Size/N (DAT=Size/4, STP=Size/800h)
+  28-31  4bit  Type or Channel Number (see below)
+  32-63  32bit Offset/800h in ACE2.STP or ACE2.DAT file
+The files are interleaved depending on the Type/Channel number:
+  File    Bit28-31 Channel Sector types...             Interleave Notes
+  DAT     0        ch=0    DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD 1:1   data (normal)
+  DAT     2        ch=0    DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD 1:1   data (exe)
+  STH     0-6      ch=0-6  S.......S.......S.......S....... 1:8   stereo
+  STH     8        ch=1    vvvvvvvSvvvvvvvSvvvvvvvSvvvvvvvS 1:1   video+stereo
+  Whereas D=data, S=Stereo/Audio, v=video, .=other channels
+Note: The DAT file does additionally contain PreSizeDOT1 and DOT1 child archives.
+Demo: The archives in demo version (MagDemo01: ACE2.*) contain only a handful of files; the two EXE files in demo DAT archive are only 800h-byte dummy files, and demo STP is corrupted: Recorded as CDROM image with 920h-byte sectors, instead of as actual CD-XA sectors).
+
+Ace Combat 3 Electrosphere (Namco 1999) (ACE.BPH/BPB and ACE.SPH/SPB)
+There are two archives, stored in four files:
+  ACE.BPH Directory for Data in separate ACE.BPB file  ;normal binary data
+  ACE.SPH Directory for Data in separate ACE.SPB file  ;streaming data
+Directory Format:
+  000h 4    ID "AC3E" (=Ace Combat 3 Electrosphere)
+  004h 4    Type (BPH=3=Data?, SPH=1=Streaming?)
+  008h 2    BCD Month/Day?     (Japan=0427h, US=1130h)
+  00Ah 2    BCD Year (or zero) (SPH=1999h, BPH=0)
+  00Ch 4    Unknown (SPH=0, BPH/US=16CFh or BPH/JP=1484h)
+  010h 4    Number of entries (N)
+  014h N*8  File List
+File List entries (64bit), when Bit31=1 (normal entries):
+  0-18   19bit Size/N           (BPH=Size/4, SPB=Size/800h)
+  19-23  5bit  Channel Number   (BPH=0, SPH=0..1Fh)
+  24-26  3bit  Channel Interval (BPH=0, SPH=1 SHL N, eg. 3=Interval 1:8)
+  27     1bit  Video Flag       (0=No, 1=Has Video sectors)
+  28     1bit  Audio Flag       (0=No, 1=Has Audio sectors)
+  29     1bit  Always 1 (except special entries with Bit31=0, see below)
+  30     1bit  Unknown (US: Always 1, Japan: 0 or 1)
+  31     1bit  Always 1 (except special entries with Bit31=0, see below)
+  32-63  32bit Offset/800h in ACE.BPB or ACE.SPB file   (or 0 when bit31=0 ?)
+File List entries (64bit), when Bit31=0:
+  For unknown purpose, the normal entries with Bit31=1 are occassionally   followed by one or more entries with Bit31=0.
+  Unknown if those entries do affect the actual storage (like switching to
+  different channel numbers, or jumping to non-continous sector numbers).
+  That unknown stuff exists in Japanese version only, not in US version.
+  0-18   19bit Unknown (maybe some snippet size value in whatever units?)
+  19-23  5bit  Always 0     (instead of Channel)
+  24-27  4bit  Same as in most recent entry with Bit31=1
+  28-31  4bit  Always 5     (instead of Flags)
+  32-63  32bit Always 0     (instead of Offset)
+The files are interleaved depending on the Channel Interval setting (and with types data/audio/video depending on Flags).
+  File    Bit24-31    Sector types...                  Interval  Content
+  BPH.US  E0h         DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD 1:1       data
+  SPH.US  F8h         SvvvvvvvSvvvvvvvSvvvvvvvSvvvvvvv 1:1       stereo+video
+  SPH.US  FBh         S.......v.......S.......v....... 1:8       stereo+video
+  SPH.US  F3h         S.......S.......S.......S....... 1:8       stereo
+  SPH.US  F4h         S...............S............... 1:16      stereo
+  SPH.US  F5h         M............................... 1:32      mono
+  BPH.JAP E0h         DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD 1:1       data
+  SPH.JAP B8h,F8h     SvvvvvvvSvvvvvvvSvvvvvvvSvvvvvvv 1:1       stereo+video
+  SPH.JAP B9h         Svvv....vvvv....Svvv....vvvv.... 1:2 (4:8) stereo+video
+  SPH.JAP BAh,FAh     Mv......vv......vv......vv...... 1:4 (2:8) mono+video
+  SPH.JAP BBh,FBh     S.......v.......S.......v....... 1:8       stereo+video
+  SPH.JAP B3h,F3h     S.......S.......S.......S....... 1:8       stereo
+  SPH.JAP B5h,F5h     M............................... 1:32      mono
+  Whereas D=data, S=Stereo/Audio, M=Mono/Audio, v=Video, .=Other channels
+As shown above, interval 1:2 and 1:4 are grouped as 4:8 and 2:8 (ie. 4 or 2 continous sectors per 8 sectors).
+The Subheader's Channel number is specified in the above directory entries, Subheader's File number is fixed (0 for BPB, and 1 for SPB).
+CDROM XA Subheader, File, Channel, Interleave
+The SPB file is about 520Mbyte in both US and Japan, however, the Japanese version does reportedly contain more movies and some storyline that is missing in US/EU versions.
+The BPB file contains DOT1 child archives, and Ulz compressed files.
+CDROM File Compression Ulz/ULZ (Namco)
+The SPB file contains movies with non-standard STR headers (and also uncommon: interleaved videos on different channels, at least so in the japanese version).
+Demo: The archives do also exist on the demo version (MagDemo30: AC3\*), but the .SPB file is corrupted: Recorded as a RIFF/CDXAfmt file, instead of as actual CD-XA sectors).
+
+
+I am homeless in Hamburg, please help me out!
+extracted from no$psx v2.2 - homepage - patreon - whole doc htm/txt - copyright 2022 martin korth (nocash)

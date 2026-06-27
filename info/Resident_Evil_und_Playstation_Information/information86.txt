@@ -1,0 +1,78 @@
+07 - RID (Cameras)
+
+The RID data represent the cameras in a room. There can be a total of 16 cameras in a RE2 RDT file. The Cut @ offset 1 in the header of an RDT file
+holds the values of cameras used by the room.
+
+The whole section consists of X * 32 byte RID entries. X obviously meaning the amount of cameras the room uses... So you will find as much
+RID entries as you have cameras in the room. The section will directly start with the first entry.
+
+RID Entry Structure (32 Bytes)
+00&#124; End_flag
+02&#124; FOV
+04&#124; X
+08&#124; Y
+12&#124; Z
+16&#124; Target_X
+20&#124; Target_Y
+24&#124; Target_Z
+28&#124; PRI_Offset
+End_flag (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defines the last entry of the RID data, meaning the last camera. All entries before have a End_flag value of 0, the last camera will use 1 as a value.
+
+FOV (2 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the field of view range of the camera, some would call it the lens. There are several values used, the most common are 26684 or 29623, there are
+others though. See a list of all FOV values the entire game uses below.
+Code: Select all
+
+10862
+16853
+21575
+23746
+24129
+25151
+26684
+27195
+28345
+29623
+30901
+31540
+32307
+32946
+35375
+37165
+40106
+41129
+42280
+57374
+X (4 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the X coordinate where the camera is placed at.
+
+Y  (4 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the Y (height) coordinate where the camera is placed at. Note that the game uses negative (signed) values for elevated objects, non negative values
+mean that the height value would be below the player/floor.
+
+Z (4 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the Z coordinate where the camera is placed at.
+
+Target_X (4 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the X coordinate where the camera is looking/aiming to.
+
+Target_Y (4 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the Y coordinate where the camera is looking/aiming to. Again, keep in mind, it is the height value (see Y above...)
+
+Target_Z (4 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Defining the Z coordinate where the camera is looking/aiming to.
+
+PRI_Offset (4 Bytes)
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+The last 4 bytes hold a long value that will give you the absolute offset in the RDT file where the PRI (camera sprite/mask) data for this camera/angle will
+begin at. PRI data will be explain below.
+>>> The data is then followed by the 10 - MD1/TIM Table section, however if there are no MD1 models in that room, the RID data will be followed directly by the 08 - RVD section.

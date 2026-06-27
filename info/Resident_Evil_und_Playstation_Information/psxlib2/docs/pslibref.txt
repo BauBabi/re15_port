@@ -1,0 +1,207 @@
+PS Library Reference
+~~~~~~~~~~~~~~~~~~~~
+
+When in doubt, read the header files in the include directory (read
+them anyway :).
+
+NB: For SPU functions, see spulib2.txt and spulib2.html.
+
+
+
+GPU Functions:
+~~~~~~~~~~~~~~
+
+1. Initialising the GPU
+
+int         GPU_PALorNTSC(void);
+
+returns 1 if PAL, else 0 if NTSC
+
+void        GPU_SetPAL(PsxInt32 palFlag);
+
+Use palFlag = MODE_PAL or 0 (for NTSC)
+
+
+PsxInt32    GPU_Reset(PsxInt32 mode);
+
+mode = ?
+
+
+PsxInt32    GPU_Init(PsxInt32 xRes, PsxInt32 yRes,
+                     PsxInt32 intl, PsxInt32 depth24);
+Resolutions: 320x240
+intl = GsNONINTER / GsINTER (0 or 1) + other stuff
+depth24 = 0 for 16-bit, 1 for 24-bit
+
+
+
+2. Buffer management
+
+Use can use 2 display buffers to implement double-buffering.
+
+void        GPU_DefDispBuff(PsxInt32 x0, PsxInt32 y0,
+                            PsxInt32 x1, PsxInt32 y1);
+x0, y0 = top left coord in VRAM of display buffer 0
+x1, y1 = top left coord in VRAM of display buffer 1
+
+
+PsxInt32    GPU_GetActiveBuff(void);
+
+Returns the active buffer (0 or 1)
+
+
+PsxInt32    GPU_VSync(void);
+
+Wait for vertical blank.
+
+
+void        GPU_EnableDisplay(PsxInt32 enable);
+
+enable = 1 to enable the GPU to display stuff.
+
+
+void        GPU_FlipDisplay(void);
+
+Swaps the visible and working buffers.
+
+
+3. Dealing with images
+
+TIMCLUT     *GPU_TIMGetClut(TIMHEADER *tim);
+TIMIMAGE    *GPU_TIMGetImage(TIMHEADER *tim);
+void        GPU_LoadImageData(RECT *area, PsxUInt16 *imageData);
+PsxUInt32   GPU_LoadImage(RECT *area, PsxUInt8 *data);
+PsxUInt32   GPU_ClearImage(RECT *area, PsxUInt32 rgb);
+(??? do the last 2 work ???)
+
+4. Preparing the Order Table
+void        GPU_SetCmdWorkSpace(PACKET *memoryBuffer);
+void        GPU_ClearOt(PsxUInt16 offset, PsxUInt16 point, GsOT *orderTable);
+
+
+5. Filling the order table with primitives
+
+void    GPU_SortBoxFill(GsOT *orderTable, PsxUInt16 pos,
+                            BOXFILL *boxFill);
+Inserts a monochrome filled rectangle into the OT.
+void    GPU_SortClear(PsxUInt32 bufferIndex, GsOT *orderTable, COLOR *color);
+Inserts a buffer clear command into the OT.
+
+void    GPU_SortDot(GsOT *orderTable, PsxUInt32 pos, DOT *dot);
+Inserts a 1x1 rectangle into the OT.
+void    GPU_SortRect8(GsOT *orderTable, PsxUInt32 pos, DOT *dot);
+Inserts an 8x8 rectangle into the OT.
+void    GPU_SortRect16(GsOT *orderTable, PsxUInt32 pos, DOT *dot);
+Inserts a 16x16 rectangle into the OT.
+void    GPU_SortSprite8(GsOT *orderTable, PsxUInt32 pos, SPRITE *sprite);
+Inserts an 8x8 sprite into the OT.
+void    GPU_SortSprite16(GsOT *orderTable, PsxUInt32 pos, SPRITE *sprite);
+Inserts a 16x16 sprite into the OT.
+
+void    GPU_SortLine(GsOT *orderTable, PsxUInt32 pos,
+                         LINE *line);
+Inserts a monochrome line into the OT.
+void    GPU_SortCiLine(GsOT *orderTable, PsxUInt32 pos,
+                           CILINE *ciLine);
+Inserts a colour-shaded line into the OT.
+
+void    GPU_SortTriangle(GsOT *orderTable, PsxUInt16 pos,
+                             TRI *tri);
+Inserts a monochrome triangle into the OT.
+void    GPU_SortCiTriangle(GsOT *orderTable, PsxUInt16 pos,
+                               CITRI *ciTri);
+Inserts a gouraud-shaded triangle into the OT.
+void    GPU_SortTexTriangle(GsOT *orderTable, PsxUInt16 pos,
+                                TEXTRI *texTri);
+Inserts a textured triangle into the OT.
+void    GPU_SortCiTexTriangle(GsOT *orderTable, PsxUInt16 pos,
+                                  CITEXTRI *ciTexTri);
+Inserts a gouraud-textured triangle into the OT.
+
+void    GPU_SortQuad(GsOT *orderTable, PsxUInt16 pos,
+                         QUAD *quad);
+Inserts a monochrome quad into the OT.
+void    GPU_SortCiQuad(GsOT *orderTable, PsxUInt16 pos,
+                           CIQUAD *ciQuad);
+Inserts a gouraud-shaded quad into the OT.
+void    GPU_SortTexQuad(GsOT *orderTable, PsxUInt32 pos,
+                            TEXQUAD *texQuad);
+Inserts a textured quad into the OT.
+void    GPU_SortCiTexQuad(GsOT *orderTable, PsxUInt32 pos,
+                              CITEXQUAD *ciTexQuad);
+Inserts a gouraud-textured quad into the OT.
+
+
+6. Helper functions for calculating primitives 
+
+PsxUInt16   GPU_CalcClutID(PsxUInt16 x, PsxUInt16 y);
+PsxUInt16   GPU_CalcTexturePage(PsxUInt16 x, PsxUInt16 y, PsxUInt32 clutMode);
+
+
+7. Drawing and making sure the order table is drawn
+
+void        GPU_DrawOt(GsOT *orderTable);
+Sends all the primitives in the OT to the GPU (via DMA?)
+PsxInt32    GPU_DrawSync(void);
+Waits until the GPU is finished using the bus?
+
+
+8. Text output
+
+Fonts are generated from a TIM file (see example fonts). Text output
+can be scaled and shaded. Each text character drawn uses one primitive
+in the primitive buffer (aka command buffer). See font.c for details.  
+
+void InitFont(TIMHEADER *fontTIM, int dx, int dy, int n);
+Prepares a font for use from a TIM. dx = width, dy = height of each
+character in the TIM font. n = number of characters per line in the
+TIM.
+ 
+void SetCharSize(PsxUInt8 width, PsxUInt8 height);
+This is used to set the output size of the font characters.
+
+
+void SetCharLight(PsxUInt8 r, PsxUInt8 g, PsxUInt8 b);
+This can be used to dim/fade a font.
+
+
+void PrintChar(GsOT *ot, PsxUInt16 pos, PsxUInt16 xPos, PsxUInt16 yPos, PsxUInt16 chr);
+
+void PrintString(GsOT *ot, PsxUInt16 pos, PsxUInt16 xPos, PsxUInt16 yPos, char *string);
+Send a string of "text character" primitives to order table ot, at
+order table depth pos. xPos & yPos are screen coordinates of starting
+point for the string. 
+
+
+GTE Functions:
+~~~~~~~~~~~~~~
+
+void        GTE_Init(PsxUInt32 screenWidth, PsxUInt32 screenHeight);
+void        GTE_SetOffset(PsxInt16 x, PsxInt16 y);
+Usually set to screenwidth/2, screenheight/2.
+void        GTE_SetFogColor(PsxUInt8 r, PsxUInt8 g, PsxUInt8 b);
+
+void        GTE_SV3Scale(SVECTOR3D *vectOut, SVECTOR3D *vectIn,
+                         PsxUInt16 scale, PsxUInt32 quantity);
+
+void        GTE_SV3XForm(SVECTOR3D *vectOut, SVECTOR3D *vectIn,
+                         MATRIX *mat, PsxUInt32 quantity);
+void        GTE_V3XForm(VECTOR3D *vectOut, VECTOR3D *vectIn,
+                        MATRIX *mat, PsxUInt32 quantity);
+
+void        GTE_MatMul(MATRIX *matOut, MATRIX *matIn1, MATRIX *matIn2);
+void        GTE_IsPolyFront(SVECTOR2D *vert0, SVECTOR2D *vert1, SVECTOR2D *vert2);
+PsxUInt32   GTE_AverageZ3(PsxInt32 z1, PsxInt32 z2, PsxInt32 z3);
+NB: Fixed. Returns correct values now.
+PsxUInt32   GTE_AverageZ4(PsxInt32 z1, PsxInt32 z2, PsxInt32 z3, PsxInt32 z4);
+NB: Fixed. Returns correct values now.
+
+void        GTE_ParallelProject(SVECTOR2D *vertOut, SVECTOR3D *vertIn, PsxUInt32 quantity);
+
+/* General matrix operations */
+void        GTE_MatrixSetIdentity(MATRIX *matrix);
+
+/* General maths operations */
+PsxInt16    GTE_Sin(PsxInt16 angle);
+PsxInt16    GTE_Cos(PsxInt16 angle);
+

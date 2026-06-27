@@ -1,0 +1,10 @@
+SPU lib example 4
+
+Play a MOD file.
+
+Compile and link by running example4.bat (you may have to edit this
+to put in the right include and library paths).
+
+Notes: MOD tools used are from HITMOD (thanks silpheed/hitmen :)
+
+

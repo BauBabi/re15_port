@@ -1,0 +1,184 @@
+
+CDROM File Archives with Folders	Contents
+Index	Prev
+Next
+
+There are several ways to implement folder-like directory trees:
+  - Using multiple archive files nested within each other
+  - Using filenames with path string (eg. "path\filename.ext")
+Other than that, below are special formats with dedicated folder structures.
+
+Archives with Folders
+CDROM File Archive HUG/IDX/BIZ (Power Spike)
+CDROM File Archive TOC/DAT/LAY
+CDROM File Archive WAD (Doom)
+CDROM File Archive WAD (Cardinal Syn/Fear Effect)
+CDROM File Archive DIR/DAT (One/Viewpoint)
+CDROM File Archive HED/CDF (Parasite Eve 2)
+CDROM File Archive IND/WAD (MTV Music Generator)
+CDROM File Archive GAME.RSC (Colonly Wars Red Sun)
+CDROM File Archive BIGFILE.DAT (Soul Reaver)
+CDROM File Archive FF8 IMG (Final Fantasy VIII)
+CDROM File Archive FF9 IMG (Final Fantasy IX)
+CDROM File Archive GTFS (Gran Turismo 2)
+CDROM File Archive Nightmare Project: Yakata
+CDROM File Archive FAdj0500 (Klonoa)
+See also: PKG (a WAD.WAD variant with folders)
+
+Perfect Assassin (*.JFS)
+ Overall File Structure
+  JFS for root                                   ;\
+  JFS for 1st folder   ;\these are dupicated,    ; header with complete list
+  JFS for 2nd folder   ; also stored in below    ; of all file/folder names
+  JFS for 3rd folder   ; data area               ;
+  etc.                 ;/                        ;/
+  JFS for 1st folder, plus data for files in that folder  ;\
+  JFS for 2nd folder, plus data for files in that folder  ; data area
+  JFS for 3rd folder, plus data for files in that folder  ;
+  etc.                                                    ;/
+JFS Headers (0Ch+N*14h bytes)
+  00h 4     ID "JFS",00h
+  04h 4     Size in bytes (for root: including nearby child JFS's)
+  08h 4     Number of file/folder entries in this folder (N)
+  0Ch N*14h File/Folder entries
+File Entries (with [10h].bit31=0):
+  00h 12  "FILENAME.EXT" (or zeropadded if shorter)
+  0Ch 4   Offset from begin of JFS in data area (without any alignment)
+  10h 4   Size in bytes, plus 00000000h=File
+Folder Entries (with [10h].bit31=1):
+  00h 12  "DIRNAME.EXT" (or zeropadded if shorter)
+  0Ch 4   Offset to child JFS in data area
+  10h 4   Offset to child JFS in header area, plus 80000000h=ChildFolder
+The JFS format is almost certainly unrelated to IBM's "Journaled File System".
+
+Alone in the Dark The New Nightmare (FAT.BIN=Directory, and DATA.BIN=Data)
+ FAT.BIN:
+  00h 2     Number of folders (X) (43h)
+  02h 2     Number of files   (Y) (8F0h)
+  04h 4     Unknown               (1000h)
+  08h X*10h Directory Entry 0000h..X-1 (entry 0000h is named "ROOT")
+  ..  Y*10h File Entry 0000h..Y-1
+ DATA.BIN:
+  00h ..    File Data area
+Directory Entries (10h bytes):
+  00h 8    Name (terminated by 00h if less than 8 chars)
+  08h 2    First Subdirectory number (0001h and up, 0000h would be root)
+  0Ah 2    Number of Subdirectories  (0000h=None, if so above is usually 00FFh)
+  0Ch 2    First File number         (0000h and up)
+  0Eh 2    Number of files           (0000h=None, if so above is usually 00FFh)
+File Entries (10h bytes):
+  00h 8    Name (terminated by 00h if less than 8 chars)
+  08h 4    Offset/800h to DATA.BIN
+  0Ch 4    Size in bytes (when compressed: decompressed size+02000000h)
+Compressed files (in LEVELS\*\* with Size.bit25=1) can be decompressed as so:
+CDROM File Compression Darkworks
+The files include some TIM images, WxH images, binary files, and chunks:
+CDROM File Archive Darkworks Chunks (Alone in the Dark)
+
+Interplay Sports Baseball 2000 (MagDemo22: BB2000\* HOG.DAT and HOG.TOC)
+ HOG.TOC:
+  000h N*14h Folder/File List (starting with root folder)
+ HOG.DAT:
+  000h ..    File Data (referenced from HOG.TOC)
+Folder entries:
+  000h 1     Type      ("D"=Directory)
+  001h 8     Name      ("FILENAME", zeropadded if shorter) (or "\" for root)
+  009h 3     Extension (usually zero for directories)
+  00Ch 4     Folder Offset/14h in .TOC file (aka 1st child file/folder index)
+  010h 4     Folder Size/14h                (aka number of child files/folders)
+File entries:
+  000h 1     Type      ("F"=File)
+  001h 8     Name      ("FILENAME", zeropadded if shorter)
+  009h 3     Extension ("EXT", zeropadded if shorter)
+  00Ch 4     File Offset/800h in .DAT file (increasing)
+  010h 4     File Size in bytes
+
+Tenchu 2 (MagDemo35: TENCHU2\VOLUME.DAT)
+  000h 4     Unknown (demo=A0409901h, us/retail=A0617023h)
+  004h 4     Unknown (0h)
+  008h 4     Number of files   (F) (demo=B7h, us/retail=1294h)
+  00Ch 4     Number of folders (D) (demo=0Fh, us/retail=3Eh)
+  010h D*8   Folder List
+  ...  ..    Zerofilled (padding to 800h-byte boundary)
+  800h F*10h File List
+  ...  ..    Zerofilled (padding to 800h-byte boundary)
+  ...  ..    File Data area
+Folder List entries:
+  000h 4     Folder ID (Random, maybe folder name checksum?)
+  004h 4     First file number in this folder (0=first, increasing)
+File List entries:
+  000h 4     File Offset/800h
+  004h 4     File Size in bytes
+  008h 4     Folder ID (same as Parent Folder ID in Folder List)
+  00Ch 4     File ID (Random, maybe file name checksum?)
+
+Blasto (MagDemo10: BLASTO\BLASTO.DAT and BLASTO\BLASTO.LFS)
+ LFS:
+  000h N*18h File/Folder List
+ DAT:
+  000h ..    File data
+File entries (with [10h]=Positive):
+  000h 10h   Filename ("FILENAME.EXT", zeropadded)
+  010h 4     Offset in bytes, in BLASTO.DAT
+  014h 4     Size in bytes
+Folder entries (with [10h]=Negative):
+  000h 10h   Foldername ("DIRNAME", zeropadded)
+  010h 4     Index to first child (at Offset=(-Index)*18h in BLASTO.LFS)
+  014h 4     Zero
+Folder end marker (with [00h]=00h or 80h):
+  000h 1     End marker, at end of root & child directories (00h or 80h)
+  001h 17h   Unknown
+
+Twisted Metal 4 (MagDemo30: TM4DATA\*.MR and *.IMG)
+These are relative small archives with hundreds of tiny chunks (with registry style Symbol=Value assignments), and a few bigger chunks (with .mod .vab .bit .clt files).
+  000h 4     Fixed ID (CCCC0067h)
+  004h ..    Root Folder (with Name="Root",00h,FDh,FDh,FDh)
+ Folder Chunk format:
+  000h 1     Length of Name (including 4-byte padding)
+  001h 1     Number of Child Folders
+  002h 2     Number of Child Files
+  004h ..    Name ("name",00h, CDh-padded to 4-byte boundary; Root=FDh-padded)
+  ...  ..    Child File(s)
+  ...  ..    Child Folder(s)
+ File Chunk format:
+  000h 1     Length of filename (including 4-byte padding)
+  001h 1     Filetype           (see below)
+  002h 2     Array Size         (or FFFFh for non-array filetypes)
+  004h 4     Filesize (SIZ)     (including 4-byte padding)
+  008h 4     Decompressed Size  (or 0=Uncompressed)
+  00Ch ..    Filename/Symbol    ("name.ext",00h, CDh-padded to 4-byte boundary)
+  ...  SIZ   Data/Value         (CDh-padded to 4-byte boundary)
+Some filenames have trailing non-ascii characters, for example:
+  "AXEL.MR\display\resolution\r3\Groups\Combined_Polyset",1Ah,01h,04h,00h
+  "CALYPSO.MR\display\resolution\r3\Groups\Combined_Polyset",A8h,00h, CDh,CDh
+Filetypes:
+  Typ Size  Expl.
+  02h var   Text String (terminated by 00h, garbage-or-00h-padded to 4-byte)
+  03h 8     Misc (*.IMG\textures\*)                          ;\
+  03h 20h   Misc (*.MR\display\resolution\r*\Groups\*)       ; these are all
+  03h var   Misc (*.MR\display\resolution\*List)             ; filetype=03h
+  03h file  Misc (*.MR\display\*.bit) (same as type=0Ch)     ;/
+  04h 4     Numeric 32bit
+  05h 8     Numeric 4x16bit point (X,Y,Z,CDCDh)
+  06h file  Model (*.mod) (DOTLESS archive with model data)
+  0Bh 4     Numeric 32bit repeat,light
+  0Ch file  XYWH Bitmap/Palette (*.bit, *.clt) (in GAME.IMG, MENU\menu)
+  0Dh 4     Numeric 32bit delay
+  0Eh 4     Numeric 32bit color (maybe 24bit RGB plus 00h-padding?)
+  0Fh 10h   Whatever 10h-byte "pos"
+  10h file  Sony .VAB file (*.vab)
+  12h N*1   Array? (with Arraysize=0014h)
+  16h N*??  Array Text Strings (with Arraysize=0001h) (in MAIN.MR\worlds)
+  1Ah N*10h Array Guns,startpoints (RCCAR.MR\*, NEON.MR\world)
+  1Bh 4     Numeric 2x16bit (X,Y) (in MENU.MR)
+  1Ch N*4   Array lloc (in MENU.MR\menu\screens) (with Arraysize=04h or 1Fh)
+  25h 8     Whatever 8-byte (in GAME.MR\dualShock)
+  26h N*8   Array CollideArray (in GAME.MR\dualShock) (with Arraysize=4 or 6)
+Compressed Data (when [008h]<>0):
+  000h ..    ZLIB compressed data (usually starting with big-endian 789Ch)
+  (compression is used for almost all files, except VERY small ones)
+CDROM File Compression ZIP/GZIP/ZLIB (Inflate/Deflate)
+
+
+I am homeless in Hamburg, please help me out!
+extracted from no$psx v2.2 - homepage - patreon - whole doc htm/txt - copyright 2022 martin korth (nocash)

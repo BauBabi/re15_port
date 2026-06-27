@@ -1,0 +1,5 @@
+05 - OTA (Unused)
+
+This pointer always holds the same value as the one for 00 - SND. It is unused though, it's original role stays a mystery. I have the theory it might have been also related to the sounds though :P
+Note:
+As for the VH/VB and the SND sections, the OTA section also isn't used by the PC version at all, you could set the pointer/offset in the header to 0 and also dummy all of the SND data in the RDT and you would still have sounds and music working.

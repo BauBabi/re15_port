@@ -1,0 +1,133 @@
+PLAYSTATION TECHNICAL NOTE
+=======================================================================
+Date:
+Ref:
+Author: Andy Beveridge
+Subject: Use of H2500BIOS
+ABSTRACT
+--------
+H25BIOS is a Psy-Q Driver for the H2500 PCI Playstation card.
+Files in this distribution:
+TESTMESS C Fileserver test program to run on Playstation
+TESTMESS CPE
+TESTMESS SYM
+SN BIN Debug stub image 7.04 - to be used with SCE's PFLASH
+H25BIOS COM Psy-Q Driver for H2500 PCI card
+MESS1 COM Message buffer TSR
+TESTMESS COM Simple message-stream terminal program
+RESETPS EXE v1.06 utility to reset the Playstation (H2000 or
+H2500)
+README TXT This file
+(See revision history at end of this file)
+You need to run H25BIOS.COM before you can run any of the Psy-Q tools.
+You should not install SCE's H25DRV.EXE if you intend to use Psy-Q as
+the two drivers are not compatible. When you first run H25BIOS it will
+locate the Playstation PCI card and report the address and interrupt
+allocated to the board.
+In addition to debugger access to the Playstation, H25BIOS will allow
+your program to access the PC filing system using the library calls in
+LIBSN.LIB (see include file LIBSN.H for details).
+To de-install the driver just run it again.
+If you have any problems with this driver please let us know.
+Andy Beveridge @ SNSystems
+(email: Andy@snsys.com)
+COMMAND LINE SYNTAX HELP
+------------------------
+Psy-Q BIOS for Sony DTL-H2500. Version 1.39
+Usage: h25bios <options>
+Options : /b <size> specify file transfer buffer size (in K bytes:
+2 to 32) (default of 2K is generally quite adequate)
+/p set PAL video mode (NTSC is default)
+MESSAGE OUTPUT & PRINTF() REDIRECTION
+-------------------------------------
+Fileserver writes that are made to handle -1 will be sent to the
+debugger message stream. Although H25BIOS will accept these messages,
+it will look for a message driver to pass them on to. If you wish to
+see these messages in the debugger (or in the TESTMESS DOS program)
+then you need to also install the tiny MESS1.COM driver. If this driver
+is not present, H25BIOS will just accept and then immediately discard
+any text messages from the Playstation.
+It does not matter whether MESS1.COM is installed before or after
+H25BIOS. MESS1 can be installed at any time, although messages
+transmitted before MESS1 is installed will not be buffered.
+Since there is no kernel from SCE with re-directed stdout, I have
+hooked putchar() myself. You need to be using the latest SN.BIN debug
+stub to have putchar() redirection. Just copy the SN.BIN from this ZIP
+into your PFLASH directory and execute PFLASH.BAT to install the new
+debug stub version 7.01 (RUN.EXE will thereafter report this version as
+part of the target ID string).
+All character output to putchar() or printf() will be redirected to the
+debugger message stream. If you are using replacement printf() or
+putchar() functions rather than kernel functions, these functions will
+not be redirected. For this reason, you should not use the character
+output functions in LIBC2, as these substitute functions do not use the
+Playstation kernel. Functions in LIBC.LIB are correct.
+Unlike the DEX2000 and Psy-Q Cart Plug-in, this redirection does not
+get installed until after the kernel is initialised, so you will not
+see kernel start-up messages.
+Fileserver response (including printf() ) is much faster if you make
+use of the H2500 interrupt. If the interrupt is not set-up correctly
+(e.g., if there were no spare PCI interrupts available), then character
+output will be very slow.
+SELECTING PAL or NTSC
+---------------------
+I have attached new versions of H25BIOS and RESETPS. You have two ways
+of setting the video mode
+1. You can specify /p on the H25BIOS command line to select PAL mode.
+If you don't then H25BIOS will default to NTSC.
+2. At any future time you can override the H25BIOS setting by
+specifying the mode as a command line switch to RESETPS (v1.04). If
+you don't specify the video mode in RESETPS command line, RESETPS
+will default to using the last mode you set (with either RESETPS or
+H25BIOS).
+SONY PLAYSTATION DTL-H2000 RESET UTILITY 1.04
+(Copyright (c) 1994-1996 S N Systems Ltd.)
+---------------------------------------------
+RESETPS <optional switches> <num> <optional switches>
+If DEXBIOS is *not* loaded then for DTL-H2000 (not PCI) you must
+specify the port address of the DTL-H2000 hardware:
+/a### where ### is hexadecimal base port address
+Switches for DTL-H2500 only:
+/n set NTSC video mode
+/p set PAL video mode
+If /n and /p are omitted, the video mode will default to the setting of
+H25BIOS
+Examples:
+RESETPS 0 will boot DTL-H from CD drive
+RESETPS 1 will reset DTL-H to debug stub
+RESETPS 2 will reset DTL-H to console device
+H25BIOS.COM REVISION HISTORY
+----------------------------
+1.31 1-Jul-96, Alpha - no timeouts, poor error handling.
+1.32 Beta - timeouts and error handling but no FS ints.
+1.33 Beta - FS ints supported for faster fileserver response (note
+debug stub 7.01 is required for printf() support).
+1.34 This version needs debug stub 7.03 or better. Has the option to
+generate PIO interrupts to the target. This is a really useful
+debugging option so you can break into runaway code or connect
+without pollhost in your code. See README.TXT with DBUGPSX ver
+4.94 or higher for details.
+1.35 This version fixes a fileserver bug where the length returned by
+read/write BREAK operations was sign extended (it should be
+unsigned). Therefore a read of 32K returned length=$FFFF8000!
+This caused any PCread() of a large file to fail!
+1.36 /p switch added to allow PAL mode (NTSC is default). (See also /n
+and /p over-ride switches in RESETPS)
+1.37 Added long filename support. Re-did PCI interrupt code.
+1.39 Long filename PCcreate() bug-fix and RESETPS 0 fixed.
+1.40 RESETPS really fixed this time. Previous version was thesubject
+of an accident with MS VSS.
+1.41 Another fix to RESETPS 0 (I'm not having a good week!).
+RESETPS.EXE
+-----------
+1.00 18/07/94
+1.01 25/07/94
+1.02 15/08/94 DTL-H2000 direct + DEXBIOS support
+1.03 20/02/95 if CDBIOS detected also resets CD emulator (by SCSI busreset)
+1.04 17/10/96 DTL-H2500 PAL/NTSC support
+1.05 06/11/96 moved CDBIOS bus-reset call to *before* PSX reset also
+made CDBIOS reset conditional on cmdline switch
+1.06 07/11/96 minor update: removed the message from /b switch
+--------------------------------------------------------------
+Any problems should be reported to SN Systems.
+Email to: Andy@snsys.com (Andy Beveridge)

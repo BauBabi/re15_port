@@ -1,0 +1,411 @@
+
+CDROM File Archives with Size	Contents
+Index	Prev
+Next
+
+Disney-Pixar's Monsters, Inc. (MagDemo54: MINC\*.BZE)
+  000h 4     Zero (0)
+  004h 4     Type/ID (27100h=160000, 2BF20h=180000, 30D40h=200000 decimal)
+  008h 4     Number of files
+  00Ch N*0Ch File List
+  ...  ..    Zeropadding to 7FCh
+  7FCh 4     Checksum (32bit sum of SIGN-EXPANDED bytes at [000h..7FBh])
+  ...  ..    File Data
+File List entries:
+  000h 4     File Type/ID or so (roughly increasing, eg. 1,3,6,5,7,8,9,A,B)
+  004h 4     Filesize in bytes
+  008h 4     Filesize rounded up to multiple of 800h bytes
+
+Bugs Bunny: Lost in Time (MagDemo25: BBLIT\*.BZZ) (without extra entry)
+The Grinch (MagDemo40: GRINCH\*.BZZ) (with extra entry)
+Resembles .BZE, but without the Type entry in Header.
+  000h 4     Fixed 1 (maybe version, or compression flag)
+  004h (4)   Unknown (000xxxx0h)   ;<-- Extra in The Grinch only (not Bunny)
+  ...  4     Number of files
+  ...  N*0Ch File List
+  ...  ..    Zeropadding to 7FCh
+  7FCh 4     Checksum (32bit sum of SIGN-EXPANDED bytes at [000h..7FBh])
+  ...  ..    File Data
+File List entries:
+  000h 4     File Type/ID or so (roughly increasing, eg. 1,2,3,6,5,7,8,9,A)
+  004h 4     Filesize in bytes (rounded to N*4 even if compressed data is less)
+  008h 4     Filesize rounded up to multiple of 800h bytes
+Files are compressed, starting with 0Bh, same as in Jersey Devil...
+CDROM File Compression BZZ
+Note: The TIM files in Bugs Bunny and The Grinch BZZ archives consists of two TIMs badged together: A 4x4 pix dummy TIM, followed by the actual 512x125 pix TIM (in some cases followed some extra bytes at end of file?).
+
+Jersey Devil .BZZ (MagDemo10: JD\*.BZZ)
+Resembles .BZE, but without the Type entries in Header and File List, and without Header checksum.
+  000h 4     Fixed 1 (maybe version, or compression flag)
+  004h 4     Number of files (4)
+  008h N*8   File List
+  ...  ..    Zeropadding to 800h-byte boundary (without checksum, unlike .BZE)
+  ...  ..    File Data
+File List entries:
+  000h 4     Size in bytes
+  004h 4     Size rounded to multiple of 800h
+Files are compressed, starting with 0Bh, same as in Bugs Bunny...
+CDROM File Compression BZZ
+
+Jackie Chan Stuntmaster (RCHARS\*.RR)
+NBA Basketball 2000 (MagDemo28: FOXBB\*.RR)
+  000h 2     ID ("PX")
+  002h 2     Unknown (1 or 3)
+  004h 4     Header Size (eg. 80h, 7C0h, or 1730h) (N*8+8)
+  008h N*8   File List
+  ...  ..    Zeropadding to 800h-byte boundary
+  ...  ..    File Data area
+ File List entries:
+  000h 4     Offset (increasing, 800h-byte aligned)
+  004h 1     Zero
+  005h 3     Filesize in bytes (24bit) (can be odd)
+Jackie Chan Stuntmaster does always have headersize=1730h (with many unused entries with size=0, both in the middle & at the end of File List).
+
+Bomberman World (MagDemo15: BOMBER\*.RC)
+                XXX detect this WITH extension=".RC" check before OBJ
+                    (else type=1 could be mistaken as offs=1) (eg RC1\BP0*.RC)
+Resembles .OBJ but contains Filetype? instead of Offset.
+  000h N*8   File List
+  ...  8     File List end (zerofilled)
+  ...  ..    Garbage padding to 800h-byte boundary
+File List entries:
+  000h 4     Filetype (see below)
+  004h 4     Filesize in bytes
+There can be several files with same type in one .RC archive. Type values are:
+  00h = End of File List (at least so when Type and Size are both zero)
+  01h = .TIM
+  02h = Unknown
+  03h = Unknown
+  05h = .VH
+  06h = .VB
+  09h = Unknown
+  0Ah = .TIM (left half of a larger image) (right half has type 01h)
+  0Bh = Unknown
+  0Ch = Unknown
+
+Mat Hoffman's Pro BMX (new demo) (MagDemo48: MHPB\BMXCD.HED+WAD)
+This format is used by the NEW demo version on MagDemp48 (the OLD demo version on MagDemo39 did use Spider-Man-style HED/WAD format with filenames).
+ HED:
+  000h 2     Number of entries (N)
+  002h N*6   File List
+ WAD:
+  000h ...   File data (at 800h-byte aligned locations)
+File List entries:
+  000h 3     File ID (24bit)
+  003h 3     File Size in bytes (21bit, max 2Mbyte) (upper 3bit=unused?)
+Note: HED is processed at 80052AC0h in MagDemo48.
+
+Madden NFL 2000 (MagDemo27: MADN00\*.DAT and nested therein)
+Madden NFL 2001 (MagDemo39: MADN01\*.DAT and nested therein)
+  000h 4     Header Size (N*SectorSize) (xxh, 800h, 1000h, 4800h, or 920h)
+  004h 4     Sector Size (4=ChildArchive, 800h=MainArchive, 920h=FMV/MADN00)
+  008h 4     File List entrysize (0=32bit, 1=16bit/MADN00, 4=16bit/MADN01)
+  00Ch N*2/4 File List (16bit or 32bit filesizes in bytes)
+  ...  ..    Zeropadding to SectorSize boundary
+  ...  ..    Files (with above sizes, each zeropadded to SectorSize boundary)
+Dummy files have filesize=1 (but they do nethertheless occupy a whole data sector).
+Unknown why the FMV file in MADN00 is using SectorSize=920h (it appears to be FORM2 related, although the file seems to be stored in FORM1 sectors, but the STR movie appears to work okay despite of the odd size).
+
+Croc 2 (MagDemo22: CROC2\CROCII.DIR\FESOUND.WAD)
+Disney's The Emperor's New Groove (MagDemo39:ENG\KINGDOM.DIR\FESOUND.WAD)
+Disney's Aladdin in Nasira's Rev. (MagDemo46:ALADDIN\ALADDIN.DIR\FESOUND.WAD)
+  000h 4     Total Filesize-4
+  004h N*14h File List (2 entries in Croc2, 3 entries in Aladdin/Emperor)
+  ...  ..    File Data area (SPU-ADPCM( (.VB files with leading zeroes)
+ File List entries:               (Aladdin/Emperor) (Croc2)
+  000h 4     Sample Rate in Hertz (AC44h=44100Hz)   (5622h=22050Hz)
+  004h 2     Sample Rate Pitch    (1000h=44100Hz)   (0800h=22050Hz)
+  006h 2     Unknown              (7Fh)             (32h)
+  008h 4     Unknown              (1)               (8)
+  00Ch 4     Unknown              (1FC0001Fh)       (40008Fh)
+  010h 4     Filesize             (xxx0h)           (xxx0h)
+The number of files is implied in sum of filesizes versus total size.
+
+Dino Crisis 1 and 2 (PSX\DATA\*.DAT and *.DBS and *.TEX) ("dummy header")
+  000h 800h  File List (with 10h or 20h bytes per entry)
+  800h ..    File Data (each file is zeropadded to 800h-byte boundary)
+File List entrysize can be 10h or 20h bytes:
+  Dino Crisis 1 --> always size 10h
+  Dino Crisis 2 --> usually size 20h
+  Dino Crisis 2 --> sometimes size 10h (eg. SC24.DAT, SC48.DAT, WEP_*.DAT)
+File List entries:
+ File List entries, type 0 and 7:
+  000h 4     Type (0=Data (or .BS pictures), 7=CompressedData)
+  004h 4     Size
+  008h 4     RAM Addresss (80000000h..801FFFFFh)
+  00Ch 4     Zero
+  010h (10h) Zerofilled
+ File List entries, type 1 and 2 and 8:
+  000h 4     Type (1=Bitmap, 2=Palette, 8=CompressedBitmap)
+  004h 4     Size (see below Size Notes)
+  008h 2     VRAM Address X     (0..3FFh)
+  00Ah 2     VRAM Address Y     (0..1FFh) (or 280h in Dino 2 ST703.DAT)
+  00Ch 2     Width in halfwords (1..400h)
+  00Eh 2     Height             (1..200h)
+  010h (10h) Zerofilled
+ File List entries, type 3 and 4:
+  000h 4     Type (3=VoiceHeader("Gian"), 4=VoiceData(SPU-ADPCM))
+  004h 4     Size
+  008h 4     SPU Address (0..7FFF0h)
+  00Ch 2     Unknown (0..7)  ;\usually both same (or val1=0, val2>0)
+  00Eh 2     Unknown (0..7)  ;/
+  010h (10h) Zerofilled
+ File List entries, type 5 (eg. ME*.DAT):
+  000h 4     Type (5=Unknown... maybe Midi-style or so)
+  004h 4     Size
+  008h 4     Load Address (0, or on next 4-byte boundary after previous file)
+  00Ch 2     Unknown (0..2)  ;\always both same
+  00Eh 2     Unknown (0..2)  ;/
+  010h (10h) Zerofilled
+ File List entries, type 6 and 9:
+  The EXE code does also accept type 6 and 9 (type 6 is handled same as
+  type 0, and type 9 is ignored), but the actual archives don't seem to
+  contain any files with those types.
+ File List entries, padding for unused entries:
+  000h 10h   Type ("dummy header    ")
+  010h (10h) Zerofilled
+Size Notes:
+ Bitmaps and Palettes can have following sizes:
+  Width*Height*2                       ;normal case
+  Width*Height*2 + Align(1000h)        ;eg. Dino Crisis 1 DOOR*.DAT
+  Width*Height*2 + Align(800h)         ;eg. Dino Crisis 2 DOOR27.DAT
+ CompressedBitmaps can have following sizes in compressed form:
+  Less than Width*Height*2             ;normal case
+  Less than Width*Height*2 + 1000h     ;eg. Dino Crisis 2 M_RESULT,ST002.DAT
+ CompressedBitmaps can have following sizes after decompression:
+  Width*Height*2 + 8                   ;normal case
+  Width*Height*2 + Align(1000h?) + 8   ;eg. Dino Crisis 2 M_RESULT,ST002.DAT
+Note: Dino Crisis DEMO version (MagDemo28: DINO\TRIAL.DAT) does also contain "dummy header" DAT archives (but, unlike as in retail version, they are hidden somewhere inside of the headerless 14Mbyte TRIAL.DAT archive).
+Type 7 and 8 are using LZSS compression:
+CDROM File Archives with Chunks	Contents
+Index	Prev
+Next
+
+Chunk-based archives have chunk headers for each file, but don't have a central directory. That's mainly useful when loading the whole archive to memory.
+
+Interchange File Format (IFF)
+IFF has been invented by Electronic Arts in 1985 on Amiga (hence using 2-byte alignment and big-endian size values).
+IFF does mainly define a standarized file structure for use with custom group/chunk types (it does also define some Amiga-specific standard audio/video types, but those are barely useful on PSX).
+The files are starting with a Group Header, followed by Chunks:
+ Group Header:
+  000h 4     Group ID ("FORM") (or "LIST" or "CAT " or "PROP")
+  004h 4     Group Size-08h (SIZ) (filesize-8) (big-endian)
+  008h 4     Group Type (4-character ASCII) (should be an unique identifier)
+  00Ch SIZ-4 Chunk(s), and/or nested Group(s)
+ Chunk Format:
+  000h 4     Chunk Type (4-character ASCII) (meaning depends on Group Type)
+  004h 4     Chunk Size (SIZ) (big-endian)
+  00Ch SIZ   Data (eg. .TIM, .VB, .VH or custom data)
+  ...  ..    Zeropadding to 2-byte boundary
+Used by Forsaken (MagDemo09: FORSAKEN\*\*.BND,MP,PCO)
+Used by Perfect Assassin (DATA.JFS\DATA\SCREEN1.LBM)
+Used by Star Wars Demolition (MagDemo39,41: STARWARS\*.EXP)
+Used by Turbo Prop Racing (MagDemo11: RRACER\*.IFF, except COURSE.IFF)
+Used by Viewpoint (VIEW.DIR\*.VCF,*.VCS,*.ST*) - some have wrong Size entry?
+Used by Vigilante 8 (MagDemo09: EXAMPLE\*.EXP)
+Used by Wing Commander III (*.LIB\*.IFF)
+Bugs in Viewpoint: fonts\*.vcf have correct Groupsize=Filesize-8, but screens\*.vcf have incorrect Groupsize=Filesize-4, and streams\*.vcf have weirdest random Groupsize=Filesize+(-04h,+08h,+14h,+5A0h).
+
+Z-Axis little-endian IFF variant
+Unlike real IFF, these are using little-endian, and don't have a Group Type entry. There seem to be no nested FORMs. Alignment is kept as 2-byte.
+ Group Header:
+  000h 4     Group ID ("FORM" or "BODY")
+  004h 4     Group Size-08h (SIZ) (little-endian)
+  008h SIZ   Chunk(s)
+ Chunk Format:
+  000h 4     Chunk Type (4-character ASCII)
+  004h 4     Chunk Size (SIZ) (little-endian)
+  00Ch SIZ   Data
+  ...  ..    Zeropadding to 2-byte boundary
+ID "FORM" used by Thrasher: Skate and Destroy (MagDemo27: SKATE\ASSETS\*.ZAL\*)
+ID "FORM" used by Dave Mirra Freestyle BMX (MagDemo36,46: BMX\ASSETS\*.ZAL\*)
+ID "BODY" used by Colony Wars (MagDemo02: CWARS\GAME.RSC\*.BND)
+ID "BODY" used by Colony Wars Venegance (MagDemo14: CWV\GAME.RSC\*.BND)
+
+Alice in Cyberland little-endian IFF variant (.TPK)
+Same as Z-Axis IFF variant, except Group IDs are different, and the Header sizes are included in the Group/Chunk sizes.
+ Group Header:
+  000h 4     Group ID ("hTIX","hFNT","hMBD","hHBS")
+  004h 4     Group Size (total filesize) (little-endian)
+  ...  (8)   Unknown extra (0,0,0,0,0Ch,0,0,0)   ;<-- only in "hHBS" files
+  ...  ..    Chunk(s)
+ Chunk Format:
+  000h 4     Chunk Type ("cCLT","cBIT","cSTR","cMAP","cIDX","cVAB","cSEQ")
+  004h 4     Chunk Size (SIZ) (little-endian)
+  00Ch SIZ-8 Data
+  ...  ..    Maybe Zeropadding to boundary? (Chunk Size is always N*4 anyways)
+ID "hTIX" used by Alice in Cyberland (ALICE.PAC\alice.tpk, csel.tpk, etc.)
+ID "hFNT" used by Alice in Cyberland (ALICE.PAC\alice.tpk, juri.tpk, etc.)
+ID "hMBD" used by Alice in Cyberland (ALICE.PAC\*.FA2\*.MBD)
+ID "hHBS" used by Alice in Cyberland (ALICE.PAC\0x_xx.HBS)
+
+Touring Car Championship (MagDemo09: TCAR\GAME\*\*.BFX)
+Jarret & LaBonte Stock Car Racing (MagDemo38: WTC\*\*.BFX)
+Contains several simple chunks:
+  000h 4     Chunksize in bytes (SIZ) (usually a multiple of 4)
+  004h SIZ   Chunkdata (eg. .TIM file or other stuff)
+There is no end-marker in last chunk (it simply ends at total filesize).
+
+Colony Wars Venegance (MagDemo14: CWV\GAME.RSC\VAG.WAD)
+Colony Wars Red Sun (MagDemo31: CWREDSUN\GAME.RSC\0002\VAG_WAD)
+Contains several simple chunks with filenames:
+  000h 0Ch   Chunk Filename ("filename.ext", zeropadded if shorter)
+  00Ch 4     Chunk Data Size in bytes (SIZ)
+  010h SIZ   Chunk Data (usually VAGp files, in VAG.WAD)
+There is no end-marker in last chunk (it simply ends at total filesize).
+Red Sun VAG_WAD is a bit odd: The "extension" is _WAD instead .WAD, the chunk names include prefix "RedSun\", which leaves only 5 chars for the actual name, causig duplicated names like "RedSun\laser" (which were supposedly meant to be named laser1, laser2, laser3 or the like), and many of the Red Dun VAG files contain damaged 30h-byte VAG header entries, eg. zero instead of ID "VAGp").
+
+Mat Hoffman's Pro BMX (new demo) (MagDemo48: MHPB\STILLS.BIN)
+Contains .BS files in several chunks:
+  000h ..    Chunk(s) (.BS files with extra header info)
+  ...  4     End Marker (00000000h)
+ Chunk format:
+  000h 4     Chunk size (including whole chunk header)
+  004h 2     Bitmap Width  (eg. F0h)
+  006h 2     Bitmap Height (eg. 80h)
+  008h 2     Data Size/4 (same as (Chunksize-0Ch-filenamelen)/4)
+  00Ah 2     MDEC Size/4 (same as at Data[0])
+  00Ch ..    Filename (eg. "lsFact",00h or "bsRooftop1",00h)  ;\filename field
+  ...  ..    Filename Zeropadding to 4-byte boundary          ;/
+  ...  ..    Data (in BS v2 format) (MDEC Size/4, BS ID 3800h, etc.)
+Note: STILLS.BIN exists in newer BMX demo in MagDemo48 only (not in MagDemo39).
+
+Ridge Racer (TEX*.TMS)
+Ridge Racer Revolution (BIG*.TMS)
+Ridge Racer Type 4 (MagDemo19+21: R4DEMO\R4.BIN\*\*)
+  000h 4     ID (100h)
+  004h ..    Chunk(s)
+  ...  4     Zero (Chunk Size=0=End)
+  ...  ..    Optional zeropadding to 800h-byte boundary (in R4.BIN\*)
+Chunk Format:
+  000h 4     Chunk Size (SIZ)
+  004h SIZ   Chunk Data (TIM file) (note: includes 0x0pix TIMs with palette)
+
+Jet Moto 2 (MagDemo03: JETMOTO2\*.TMS)
+Twisted Metal 2 (MagDemo50: TM2\*.TMS)
+Contains a fileheader and .TIM files in several chunks:
+  000h 8     ID "TXSPC",0,0,0 (aka CPSXT backwards)
+  008h 4     Timestamp? (32A5C8xxh)
+  00Ch 4     Number of Chunks (N) (can be 0=None, eg. TM2\SCREEN\ARROWS.TMS)
+  010h N*4   Unknown
+  ...  N*var Chunks
+ Chunk format:
+  000h 4     Chunk Size-4 (SIZ)
+  004h SIZ   Chunk Data (TIM file)
+
+Princess Maker - Yumemiru Yousei (BDY\*.BD and PM.*)
+The BDY\*.BD files do simply contain several chunks:
+  000h ..   Chunk(s)
+The PM.* files do contain several "folders" with fixed size:
+  000h ..   Chunk(s) for 1st folder              ;\Foldersizes are:
+  ...  ..   Zeropadding to Foldersize-boundary   ;  20000h (PM.DT0 and PM.PCC)
+  ...  ..   Chunk(s) for 2nd folder              ;  28000h (PM.MAP)
+  ...  ..   Zeropadding to Foldersize-boundary   ;  42000h (PM.SD0)
+  ...  ..   etc.                                 ;/
+Chunk Format:
+  000h 4    Chunk ID   (800000xxh)
+  004h 4    Chunk Size (size of Data part, excluding ID+Size)
+  008h ..   Data
+The Data for different Chunk IDs does usually have a small header (often with w,h,x,y entries, aka width/height, vram.x/y) followed by the actual data body:
+  80000004h  x(2),y(2),width(2),height(2)    Bitmap 8bpp          ;PM.PCC,MAP
+  80000005h  w(2),h(2),zero(4)               Array32bit(w,h)      ;PM.MAP
+  80000006h  x(2),width(2)                   Bitmap Palette       ;PM.*
+  80000007h  x(2),y(2),w(1),h(1),zero(2)     Array8bit(w,h)       ;PM.MAP
+  80000010h  width(2),height(2),x(2),y(2)    Bitmap 16bpp         ;*.BD
+  80000012h  zero(0)                         ?                    ;*.BD
+  80000014h  x(2),y(2),width(2),height(2)    Bitmap 4bpp          ;PM.DT0
+  80000016h  x(2),y(2),w(1),h(1),n(1),3Fh(1) BitmapArray4bpp(n*2) ;PM.DT0
+  80000018h  ...                             ?                    ;PM.PCC
+  8000001Ah  zero(8)                         ?                    ;PM.PCC
+  8000001Ch  x(2),y(2),width(2),height(2)    Bitmap 1bpp flags?   ;*.BD
+  80000020h  zero(8)                         Sound .SEQ file      ;PM.SD0
+  80000021h  zero(8)                         Sound .VH file       ;PM.SD0
+  80000022h  zero(8)                         Sound .VB file       ;PM.SD0
+  80000024h  x(2),zero(6)                    ?                    ;PM.DT0\4\0
+  00000000h  Zeropadding to next folder      Zeropadding          ;PM.*
+
+Project Horned Owl (COMDATA.BIN, DEMODATA.BIN, ROLL.BIN, ST*DATA.BIN)
+  000h ..    Chunks
+Chunk Format:
+  000h 1     Chunk Type (see below)
+  001h 3     Unknown (some flags or file ID, or zero in many files)
+  004h 4     Chunk Size (SIZ)
+  008h SIZ   Chunk Data (eg. SEQ file)
+Chunk Type values:
+  02h  unknown                      ST*.BIN
+  05h  .TXT                         ROLL.BIN
+  05h  LZ-compressed TIM            DEMODATA.BIN, ST*.BIN (except ST1*.BIN)
+  06h  DOT1 with stuff and TSQ??    ST*.BIN
+  07h  .TMD                         DEMODATA.BIN, ST*.BIN (except ST1*.BIN)
+  08h  unknown                      ST*.BIN
+  09h  "PRM:"                       ST*.BIN
+  0Ah  unknown                      ST*.BIN
+  0Bh  DOT1 with stuff              ST*.BIN (except ST1*.BIN) (odd: ST3*.BIN)
+  0Ch  .SEQ                         ROLL.BIN, ST*.BIN
+  0Dh  unknown                      COMDATA.BIN
+  0Eh  unknown                      ST*.BIN
+  0Fh  DOT1 with LZ-compressed TIMs ST*.BIN
+  10h  DEFLATE-compressed TIM       COMDATA.BIN, ROLL.BIN, ST*.BIN
+  11h  DOT1 with stuff              ST*.BIN
+  Note: Type=05h can be uncompressed TXT or compressed TIM.
+For detection, the existing .BIN files start with following values:
+  07 00 00 00 xx xx 00 00 41 00 00 00 ..   TMD Model ("A")
+  0C 00 00 00 xx xx 00 00 70 51 45 53 ..   SEQ Midi  ("pQES")
+  0E xx 00 00 08 00 00 00 xx xx xx xx ..   Whatever in ST7DATA.BIN (see note)
+  10 01 00 00 24 28 00 00 EC 9B 7F 70 ..   Deflated TIM in COMDATA.BIN
+  10 08 1A 00 30 0C 00 00 ED 58 4F 88 ..   Deflated TIM in ROLL.BIN
+  ST7DATA.BIN has 2 chunks with Type=0Eh, followed by SEQ chunk at offset=20h.
+TIMs are compressed via HornedLZ (Type=05h,0Fh) or Deflate (Type=10h).
+CDROM File Compression HornedLZ
+CDROM File Compression ZIP/GZIP/ZLIB (Inflate/Deflate)
+The game's Inflate function does ignore the 2bit blocktype: All blocks must have dynamic trees (fixed trees and uncompressed blocks aren't supported).
+
+Blaster Master (DATA\*.IDX, DATA\*.DAT)
+DATA\GRP.IDX, DATA\MAP.IDX, DATA\SEQ.IDX DATA\VAB.IDX:
+  000h N*2  Chunk List (16bit Offset/800h to Part-1-Chunks in .DAT files)
+  ...  ..   Zeropadding to 800h-byte boundary
+  Notes:
+  The Chunk List can contain zeroes (as first entry at offset 0, and as
+  unused entries; in VAB.IDX those can be followed by further USED entries).
+  For 2-part DAT files, the Chunk List contains offsets for Part 1 only.
+DATA\SEQ.DAT:
+  000h 4    Chunksize/800h                                           ;\
+  004h 4    Datasize in bytes                                        ; Single
+  008h 4    Always 015A5A01h or 015A5A00h                            ; Part
+  00Ch 4    Always 2803h                                             ; with
+  010h ..   Midi data .SEQ file                                      ; 1 file
+  ...  ..   Zeropadding to 800h-byte boundary                        ;/
+DATA\VAB.DAT:
+  000h 4    Chunksize/800h                                           ;\
+  004h 4    Size of .VH Voice Header in bytes                        ; Single
+  008h 4    Size of .VB Voice Binary in bytes                        ; Part
+  00Ch ..   Voice Header .VH file                                    ; with
+  ...  ..   Zeropadding to 800h-byte boundary                        ; 2 files
+  ...  ..   Voice Binary .VB file                                    ;
+  ...  ..   Zeropadding to 800h-byte boundary                        ;/
+DATA\GRP.DAT and DATA\MAP.DAT:
+  000h 4    Part 1 Chunksize/800h                                    ;\
+  004h 4    Size of all TIM files in bytes (can be 0=None)           ; Part 1
+  008h ..   Texture data (several TIMs appended after each other)    ;
+  ...  ..   Zeropadding to 800h-byte boundary                        ;/
+  ...  4    Number of Files (N)                                      ;\
+  ...  4    Part 2 Chunksize/800h                                    ;
+  ...  N*8  File List                                                ; Part 2
+  ...  ..   Garbage-padding to 800h-byte boundary?                   ;
+  ...  ..   File Data area (each file Garbage-padded to 800h-byte)   ;
+ File List entries:                                                  ;
+  000h 4    File Type/ID                                             ;
+  004h 4    Size in bytes                                            ;/
+The DAT files are chunk-based (unfortunately, each DAT file is using its own chunk format, some of them are using 2-part chunks).
+The DAT chunks can be parsed without using the IDX file (the IDX can be helpful for quick lookup, but even then, one will still need to parse the DAT chunk headers to find the actual contents like TIM, SEQ, VB, VH files).
+
+See also
+CDROM File Archive Darkworks Chunks (Alone in the Dark)
+CDROM File Archive Blue Chunks (Blue's Clues)
+CDROM File Archive HED/CDF (Parasite Eve 2)
+CDROM File Compression LZSS (Serial Experiments Lain)
+CDROM File Compression SLZ/01Z (chunk-based compressed archive)
+
+
+I am homeless in Hamburg, please help me out!
+extracted from no$psx v2.2 - homepage - patreon - whole doc htm/txt - copyright 2022 martin korth (nocash)

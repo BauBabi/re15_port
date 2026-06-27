@@ -1,0 +1,236 @@
+
+CDROM File Archive STAGE.DIR and *.DAT (Metal Gear Solid)	Contents
+Index	Prev
+Next
+
+Metal Gear Solid (MagDemo13: MGS\*)
+Metal Gear Solid (MagDemo25: MGS\*)
+Metal Gear Solid (MagDemo44: MGS\*) (looks same as in MagDemo13)
+Metal Gear Solid (Retail: MGS\*)
+
+Summary of ISO files in MGS folder (with filesizes for different releases)
+  File        MagDemo13/44 MagDemo25  Retail/PAL
+  .EXE        9C000h       9C800h     9D800h      ;-executable
+  STAGE.DIR   590800h      11A7800h   42AE000h    ;-main archive
+  FACE.DAT    2CA000h      3Dh (txt)  358800h     ;-face animation archive
+  ZMOVIE.STR  -            -          2D4E800h    ;-movie archive
+  DEMO.DAT    149B000h     3Dh (txt)  EC20000h    ;\DAT/SYM combos (the .SYM
+  DEMO.SYM    88h          -          -           ; files were leaked in
+  VOX.DAT     14F2000h     9F800h     B054800h    ; MagDemo13/MagDemo44 only)
+  VOX.SYM     988h         -          -           ;/
+  BRF.DAT     -            66800h     575800h     ;\whatever, unknown format(s)
+  RADIO.DAT   16CB8h       3Dh (txt)  1AA956h     ;/
+
+STAGE.DIR:
+  000h 4     Size of File List (N*0Ch)
+  004h N*0Ch Folder List
+  ...  ..    Zeropadding to 800h-byte boundary
+  ...  ..    Folder Data
+ Folder List entries:
+  000h 8     Foldername (zeropadded if less than 8 chars)  ;nickname=stg
+  008h 4     Offset/800h to File List
+ Folder Data (per folder):
+  000h 2     Unknown (always 1) (maybe File List size/800h?)
+  002h 2     Folder Size/800h (of whole folder, with file list plus file data)
+  004h N*8   File List
+  ...        Zeropadding to 800h-byte
+  800h       Data (for files in current folder)
+ File List entries:
+  000h 2     File ID (checksum on name)
+  002h 1     File Family (one of following chars: "cnrs")
+  003h 1     File Type   (one of following chars: "abcdeghiklmoprswz",FFh)
+  004h 4     File Size (or File Offset, when File Family="c")
+Combinations of Family/Type characters are:
+  .?a    ???? if any ???? (does NOT exist on PAL disc 1)    ;nickname=azm
+  .sb    MIPS binary code  (leading)                        ;nickname=bin
+  .cc    Whatever          (eg. vr10\*, s01a\*)             ;nickname=con
+  .nd    Texture Archive   (leading) (contains PCX files)   ;nickname=dar
+  .rd    Misc Archive      (leading) (eg. init\*)           ;nickname=dar
+  .se    Sound Effects?    (trailing)                       ;nickname=efx
+  .cg    Whatever, reportedly bytecode functions            ;nickname=gcx
+  .ch    Whatever                                           ;nickname=hzm
+  .ci    Whatever          (eg. ending\*, s01a\*)           ;nickname=img
+  .ck    Whatever, model? aka "pat_xxx" files               ;nickname=kmd
+  .cl    Lights, first word = size/10h                      ;nickname=lit
+  .sm    Sound Music? Nested DOT1+DOTLESS Archives          ;nickname=mt3
+  .co    Whatever "OARa"   (eg. d16e\*, s00a\*, s02c\*)     ;nickname=oar
+  .cp    PCX bitmap        (eg. init\*)                     ;nickname=pcc
+  .cr    Whatever "sNRJ1F" (eg. roll\*)                     ;nickname=rar
+  .cs    Whatever          (eg. d16e\*, s01a\*)             ;nickname=sgt
+  .sw    Wave Archive      (trailing)                       ;nickname=wvx
+  .cz    Whatever "KMDa"   (eg. s11a, a11c, s14e, s15a)     ;nickname=zmd
+  .c,FFh End of Family="c" area                             ;nickname=dar?
+Files are starting on 800h-byte boundaries. Files with Family="c" are special, they contain an Offset entries instead of a Size entries, that Offsets are 4-byte aligned (relative to the 800h-byte aligned offset of the first Family="c" entry), the list of Family="c" entries is terminated by an entry with Family="c" and Type=FFh (which contains the end-offset of the last c-Family entry, aka the size of all c-Family entries).
+Note: The above 3-letter nicknames are used on some webpages (unknown why, maybe they are derived from MGS filename extensions in the PC version).
+
+FACE.DAT (face animations for video calls):
+This contains several large blocks (supposedly one per stage, each block having its own file list). There is no directory to find the begin of the separate blocks, but one can slowly crawl through the file:
+  NextBlock = CurrBlock + 4 + Offset(lastfile)+Size(lastfile) + Align800h
+The content of each block is:
+  000h 4     Number of Files in this block (eg. 19h or 1Ch)
+  004h N*0Ch File List for this block
+  ...  ..    File Data for this block
+  ...  ..    Zeropadding to 800h-byte boundary (followed by next block, if any)
+ File List entries:
+  000h 2     File Type (0=Main/Eye/Mouth frames, 1=All frames are full size)
+  002h 2     File ID (name checksum?)
+  004h 4     Filesize in bytes
+  008h 4     Offset in bytes, minus 4
+Type 0 Files in FACE.DAT:
+ This type use a single palette for all frames, and only the first frame is
+ full 52x89pix, the other frames contain only the update sections (eg. eyes).
+  000h 4     Offset to 200h-byte palette       (usually 20h)    ;\Main
+  004h 4     Offset to Main Bitmap (52x89pix) (usually 220h)    ;/
+  008h 4     Offset to 4th Bitmap  (usually xxxxh or 0=None)    ;\Eyes
+  00Ch 4     Offset to 5th Bitmap  (usually xxxxh or 0=None)    ;/
+  010h 4     Zero
+  014h 4     Offset to 2nd Bitmap  (usually 143Ch or 0=None)    ;\Mouth
+  018h 4     Offset to 3rd Bitmap  (usually xxxxh or 0=None)    ;/
+  01Ch 4     Zero
+  020h 200h  Palette (256 colors) ;\Main
+  220h 1218h Main Bitmap          ;/
+  1438h 4    Zero
+  143Ch ..   2nd Bitmap (if any)  ;\Mouth
+  ...   ..   3rd Bitmap (if any)  ;/
+  ...   ..   4th Bitmap (if any)  ;\Eyes
+  ...   ..   5th Bitmap (if any)  ;/
+Type 1 Files in FACE.DAT:
+ This type use separate palettes for each frame, all frames are full 52x89pix.
+  000h 4     Number of frames
+  004h N*0Ch Frame List
+  ...  200h  1st Frame Palette
+  ...  1218h 1st Frame Bitmap (52x89pix)
+  ...  4     ?
+  ...  200h  2nd Frame Palette
+  ...  1218h 2nd Frame Bitmap (52x89pix)
+  ...  4     ?
+  ...  ..    3rd Frame ...
+ Frame List entries:
+  000h 4     Offset to Palette
+  004h 4     Offset to Bitmap (usually at Palette+200h)
+  008h 4     Unknown (often 000x000xh)
+Bitmap Format (for both Type 0 and Type 1):
+  000h 1     Offset X (always 00h in Main Bitmap)
+  001h 1     Offset Y (always 00h in Main Bitmap)
+  002h 1     Width    (always 34h in Main Bitmap, or less in 2nd-5th bitmap)
+  003h 1     Height   (always 59h in Main Bitmap, or less in 2nd-5th bitmap)
+  004h ..    Bitmap Pixels at 8bpp (Width*Height bytes)
+
+DEMO.DAT, DEMO.SYM
+VOX.DAT, VOX.SYM
+The .DAT files contain several huge blocks, found on 800h-boundaries starting with:
+  10 08 00 00 0x 00 00 00 ..
+The .SYM files (if present) contain Names and .DAT Offsets/800h for those huge blocks in text format:
+  "0xNNNNNNNN name",0Ah
+VOX.DAT does (among others) contain SPU-ADPCM chunks with 2004h bytes or less, that is, a 1+3 byte chunk header (01h=SPU-ADPCM, 002004h=Size), plus 2000h byte or less SPU-ADPCM data.
+
+RADIO.DAT:
+Whatever, contains chunks with text messages, chunks are about as so:
+  000h 4   Unknown    (eg. 36h,BFh,5Eh,00h)
+  004h 4   Unknown    (eg. 03h,13h,00h,00h)
+  008h 1   Unknown    (eg. 80h)
+  009h 2   Chunk Size (eg. 0xh,xxh)          ;big-endian
+  ..   ..  Chunk Data (Chunk Size-2 bytes) (binary stuff, and text strings)
+
+BRF.DAT:
+Contains several "folders" in this format:
+  000h 4   Number of files in this folder
+  004h ..  File(s)
+  ...  ..  01h-padding to 800h-byte boundary
+ Files have this format:
+  000h ..  Filename ("name.pll",00h)
+  ...  ..  Zeropadding to 4-byte boundary (aligned to begin of BRF.DAT)
+  ...  4   File data size (usually a multiple of 4)
+  ...  ..  File data
+  ...  1   Zero (00h)
+The above "folders" are then followed by several PCX files:
+  000h ..  PCX file (starting with 0A,05,01,01 or 0A,05,01,08)
+  ...  ..  01h-padding to 800h-byte boundary
+The first part with .pll files does contain some kind of chunk sizes that could be used to find the next entry (but that would be very slow).
+The second part with .PCX files doesn't have any chunk sizes at all (though one could decompress the .PCX file to find the end of each file) (also one could guess/find them by looking for 0A,05,01,01/08 on 800h-byte boundaries).
+
+ZMOVIE.STR (movie archive with several STR files with subtitles)
+CDROM File Video Streaming STR Variants
+
+STAGE.DIR\*\*.sb - stage binary/header
+This is the first file in most folders (except "init*" folders).
+The file contains MIPS binary program code. And, there are ascii strings near end of .sb files, which include filenames, alike:
+  "name.c",00h + garbage-padding to 4-byte boundary  ;<-- maybe source code?
+  "pat_lamp",00h + zero- padding to 4-byte boundary  ;<-- name for File ID !
+Those filenames do cover some (not all) of the name checksums in the STAGE.DIR folder.
+
+STAGE.DIR\*\*.cp, STAGE.DIR\*\*.nd\.p, BRF.DAT\* - PCX bitmap files
+MGS is using customized/corrupted PCX files as standard texture format (in STAGE.DIR\*\*.cp, STAGE.DIR\*\*.nd\*.p, and BRF.DAT\*).
+For details on PCX format (and MGS-specific customizations), see:
+CDROM File Video Texture/Bitmap (PCX)
+Apart from PCX, there's also custom texture format for animated bitmaps (in FACE.DAT), and a few TIM images (in STAGE.DIR\init*\*.rd\*.r)
+
+STAGE.DIR\*\*.nd - texture archive (with .PCX files)
+STAGE.DIR\init*\*.rd - misc archive (with misc files)
+These archives contain several chunks in following format:
+  000h 2     File ID (checksum on name?)
+  002h 1     File Type (one of following chars: "p" for .nd, or "kors" for .rd)
+  003h 1     Zero (00h)
+  004h 4     Chunk Size (rounded to 4-byte boundary)
+  008h ..    Chunk Data
+The File Type can be:
+  .p    PCX bitmap                      ;-in *\*.nd archives
+  .k    Whatever                        ;\
+  .o    Whatever "OARa"                 ; in init*\*.rd archives
+  .a    Whatever                        ;
+  .r    Misc (TIM and other stuff)      ;/
+There can be 1-2 texture archives per STAGE.DIR folder (both having File ID=0000h) (probably due to a memory size limit: the game does probably load one archive with max 300Kbytes, relocate its contents to VRAM, then load the next archive, if any).
+
+STAGE.DIR\*\*.sw - wave archive
+There can be one or more .sw files per stage folder (eg. two sw's in "vr*\*.sw").
+  000h 4     Unknown (800h or C00h)       ;big-endian
+  004h 4     Size of File List (N*10h)    ;big-endian
+  008h 8     Zerofilled
+  010h N*10h File List (xx,xx,xx,00,00,00,00,7F,00,00,00,0F,00,19,0A,00)
+  ...  4     Unknown (40000h or 60000h)   ;big-endian
+  ...  4     Size of SPU-ADPCM Data area  ;big-endian
+  ...  8     Zerofilled
+  ...  ..    SPU-ADPCM Data area (indexed from File List)
+ File List entries:
+  000h 4     Offset+Flags                 ;little-endian!
+               bit0-16  Offset (from begin of SPU-ADPCM Data area)
+               bit17    Unknown (0 or 1)
+               bit18    Unknown (1)
+               bit19-31 Unknown (0)
+  004h 12    Whatever (always 00,00,00,7F,00,00,00,0F,00,19,0A,00)
+The unknown fields might contain volume, ADSR, pitch or the like?
+
+STAGE.DIR\*\*.se - sound effects? maybe short midi-like sequences or so?
+  000h 80h*10h List (unused entries are 1x00000000h,3xFFFFFFFFh)
+  800h ..      Data (whatever, usually 14h or more bytes per list entry)
+ List entries:
+  000h 1       Unknown (eg. 01h,10h,20h,A0h,80h,FFh)    ;\
+  001h 1       Number of Voices? (1..3)                 ; all zero for
+  002h 1       Unknown (1 or 0)                         ; unused list entries
+  003h 1       Unknown (2 or 0 or 1)                    ;/
+  004h 4       Offset-800h for 1st Voice?               ;-FFFFFFFFh=Unused
+  008h 4       Offset-800h for 2nd Voice? (if any)      ;-FFFFFFFFh=Unused
+  00Ch 4       Offset-800h for 3rd Voice? (if any)      ;-FFFFFFFFh=Unused
+ Data:
+  Seems to contain 4-byte entries (last entry being 00,00,FE,FF).
+
+STAGE.DIR\*\*.sm - whatever nested archives - sound music? mide-like?
+This does resemble a DOT1 Parent archive with 1-4 DOTLESS Child archives. Except, the offsets in Child archives are counted from begin of Parent archive.
+ Data:
+  Seems to contain 4-byte entries (last entry being 00,00,FE,FF).
+
+File IDs
+File IDs in STAGE.DIR (and maybe elsewhere, too) are computed as so:
+  sum=0,
+  for i=0 to len(filename)-1
+    sum=sum*20h+filename[i]          ;\or so, 16bit overflows might be
+    sum=(sum+sum/10000h) AND FFFFh   ;/cropped slightly differently
+Examples: "abst"=1706h, "selectvr"=8167h.
+Some filenames are empty (name="", ID=0000h).
+Some filenames do match up with the STAGE.DIR foldername.
+Some filenames do match up with strings in .sb file of current folder.
+Other filenames are unknown.
+
+
+I am homeless in Hamburg, please help me out!
+extracted from no$psx v2.2 - homepage - patreon - whole doc htm/txt - copyright 2022 martin korth (nocash)

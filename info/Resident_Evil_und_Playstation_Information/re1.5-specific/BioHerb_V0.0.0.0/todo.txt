@@ -1,0 +1,27 @@
+
+A brief list of things I have yet to implement into the app:
+
+
+BSS and ADT (roomcut.bin) support, for prerendered background images
+
+Completion of the Camera Sprite/Mask editor
+
+Realtime editor for both Message and Script data
+
+Extension of support for Script data (other 3D-space stuff)
+
+Implementation and support of Effect Sprite data (*.EFF)
+
+True creation ability - as of now, the app is only a modifier of already-existing data,
+where I aim for the ability to create a RDT 'from scratch'. This concept also applies to
+all supported data types.
+
+Reverse-Engineer the various SCA/Collision geometry - currently, all collisions are
+represented as square/rects; the game engines support circles, triangles, etc.
+
+Real lighting - currently, light is represented as a colored circle object.
+
+Support for model types (TMD, MD1 and MD2) - no current support for this, but eventually
+item-objects and players/enemies can be represented in '3D view' mode.
+
+Proper 'readme.txt' and various docs.

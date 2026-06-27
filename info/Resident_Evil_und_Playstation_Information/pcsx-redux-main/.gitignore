@@ -1,0 +1,132 @@
+# Visual Studio files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+#Clion Files
+.idea/
+
+Debug/
+Release/
+ReleaseWithTracy/
+ReleaseWithClangCL/
+ReleaseCLI/
+Enabled/
+Disabled/
+
+.vs/
+.vscode/*.log
+
+ipch/
+*.aps
+*.ncb
+*.opendb
+*.opensdf
+*.sdf
+*.cachefile
+*.VC.db
+*.VC.VC.opendb
+
+vsprojects/packages
+
+.Trash-1000/
+
+# Linux files
+deps/
+objs/
+bins/
+/pcsx-redux
+/authoring
+/exe2elf
+/exe2iso
+/modconv
+/ps1-packer
+/psyq-obj-parser
+
+# Temporary files from pcsx itself
+pcsx.json
+pcsx.json.tmp
+*.mcd
+
+# FastBuild and msfastbuild stuff
+*.bff
+*.fdb
+fb.bat
+
+# macos files
+.DS_store
+PCSX-Redux.app
+
+# Savestate files
+*.sstate
+*.sstate0
+*.sstate1
+*.sstate2
+*.sstate3
+*.sstate4
+*.sstate5
+*.sstate6
+*.sstate7
+*.sstate8
+*.sstate9
+
+# GPU dump files
+*.dump
+
+# IDA database files
+*.id0
+*.id1
+*.nam
+*.til
+*.idb
+
+# Runtime files in ./resources
+16-to-24.frag
+16-to-24.lua
+16-to-24.vert
+offscreen.frag
+offscreen.lua
+offscreen.vert
+offscreen.json
+output.json
+output.frag
+output.lua
+output.vert
+hw-renderer.frag
+hw-renderer.lua
+hw-renderer.vert
+vram-viewer.frag
+vram-viewer.lua
+vram-viewer.vert
+pcsx.lua
+DynarecOutput.map
+DynarecProfileData.txt
+DynarecDisassembly.txt
+sstate.proto
+
+# Sentry Native files
+.sentry-native
+
+# NOPS leftovers
+comport.txt
+
+# NVIDIA Nsight
+GPUCache
+
+# Lua tests results
+luacov.stats.out
+
+# luarocks stuff
+/luarocks
+/lua
+/lua_modules
+/.luarocks
+
+# appimage build files
+/appimage-build
+/AppDir
+/*.AppImage
+/*.AppImage.zsync

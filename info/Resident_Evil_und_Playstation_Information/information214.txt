@@ -1,0 +1,85 @@
+PLAYSTATION TECHNICAL NOTE
+=======================================================================
+Date:
+Ref:
+Author:
+Subject: flash.bat
+ABSTRACT
+--------
+The utilities flash.bat and flashb8.bat are are tools for a PC to
+communicate with the EP-ROM on the DTL-H2500 board. Flashb8.bat is the
+later version (as of 11/20/96). These utilities are used to initialize
+the flash ROM, and they call the following:
+freset.exe
+fload.exe
+fquit.exe
+h2500.img
+h2500b8.img
+These files are used to reset the main board, load a file into the
+board, and quit the communication between PC and EP-ROM.
+DETAILS
+-------
+Name
+flash.bat initializes the flash ROM
+Description
+A batch file to write the OS binary image into the flash ROM.
+It uses the file 'h2500.img'.
+It is the same as shown below:
+freset -r 1
+fload h2500.img
+fquit
+freset 1
+-----------------------------------------------------------------------
+Name
+freset resets the main board
+Syntax
+freset [-r] [-p|-n] [switch(hex)]
+Description
+Resets the boot mode and the video mode for the main board.
+The following options apply to freset:
+-r The main board is booted by EPROM.
+( Default booted by flash ROM .)
+-n video mode is set to NTSC mode
+-p video mode is set to PAL mode
+If neither are specified, the previous mode is kept.
+The switch selects the following :
+0 boot PlayStation CD-ROM
+1 wait to load files
+If no switch is specified, the previous setting is kept.
+-----------------------------------------------------------------------
+Name
+fload load an image file
+Syntax
+fload [-l|-r|-b<address>] file_name
+Description
+Load a file to the main board and run that program.
+file name loaded file name
+The following options apply to fload:
+-l loads a file only
+-r runs without loading a file
+If neither are specified, load a file and run.
+-b<address> loads a binary file to the specified address
+Fload should be run after the main board is set to wait for
+loading.
+-----------------------------------------------------------------------
+Name
+fquit quit to wait loading
+Syntax
+fquit
+Description
+Causes the main board to exit from the waiting mode.
+-----------------------------------------------------------------------
+DC UPDATE 1/9/96
+****************
+This is a new version of these files. They have been updated to allow
+access to the PC file system, using the PCcreat, PCwrite, etc.,
+commands.
+This version has the files
+flashb8.bat
+h2500b8.img
+Flashb8.bat is used to upload the new ROM image 2500b8.img into the
+system’s flash ROM.
+DC UPDATE ENDS
+**************
+Copyright (C) 1996 by Sony Computer Entertainment Inc.
+All Rights Reserved.

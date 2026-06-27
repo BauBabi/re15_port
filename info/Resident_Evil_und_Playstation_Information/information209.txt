@@ -1,0 +1,42 @@
+PLAYSTATION TECHNICAL NOTE
+=======================================================================
+Date: August, 1996
+Ref:
+Author: SCEI R&D
+Subject: Bug Fix: Instructions when Switching CD Subsystem Motor
+Rotation Speed
+ABSTRACT
+--------
+It turns out that special instructions need to be followed upon
+switching PlayStation CD subsystem rotation speeds (standard/double).
+Please make sure to follow these instructions since this problem has a
+great possibility to become one of the worst field complaints.
+SYMPTOM AND REMEDY
+------------------
+Symptom: Issuing CD head move commands (CdlSeekL/P, CdlReadS/N)
+immediately after switching the CD transfer speed may result in head
+runaway and the production of strange noise.
+This symptom occurs because there is a brief time where the head cannot
+be controlled properly after switching the transfer speed during the CD
+subsystem operation.
+If a command related to CD head movement is issued during this time, at
+worst, the head goes into runaway and comes into collision with the
+mechanical stopper. When this symptom arises, the head control
+mechanism will be recovered by the CD subsystem and the program will
+not be terminated. When the head comes into collision with the stopper,
+the safety mechanism will be activated, and the parts will not be
+damaged. However, a strange noise will be produced upon starting the
+safety mechanism, and this may be reported as a field complaint.
+Currently available CD head move functions/commands are as follows:
+CdRead (int sectors, u_long *buf, int mode)
+CdRead2 (long mode)
+CdSearchFile (CdlFILE *fp, char *name)
+CdReadFile (char *file, u_long *addr, int nbyte)
+CdReadExec (char *file)
+CdPlay (int mode, int *tracks, int offset)
+CdlSeekP, CdlSeekL, CdlReadS, CdlReadN, CdlPlay
+When calling/issuing the above functions/commands after switching the
+rotation speed, make sure to follow the instructions below to avoid
+field complaints.
+Remedy: Allow more than 3 vsync spacings to occur before issuing a CD
+head movement command after switching the CD transfer speed.

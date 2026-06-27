@@ -1,0 +1,377 @@
+<HTML>
+<HEAD>
+<TITLE>Jum's PSX SPU Library (version 2)</TITLE>
+<HEAD>
+<BODY>
+<center>
+<h2>James' PSX SPU lib ver2</h2>
+
+
+This doc updated April 23 2000<br>
+</center>
+
+<ol>
+<li><a href="#intro">Intro</a>
+<li><a href="#overview">Overview of PSX SPU</a>
+<li><a href="#howtoSPU">How to Use the SPU</a>
+<li><a href="#howtoLibrary">How to Use the Library</a>
+<li><a href="#libref_control">Library reference - SPU Control</a>
+<ul>
+<li><a href="#spu_reset">SPU_Reset</a>
+<li><a href="#spu_init">SPU_Init</a>
+<li><a href="#spu_enable">SPU_Enable</a>
+<li><a href="#spu_quit">SPU_Quit</a>
+<li><a href="#spu_volume">SPU_Volume</a>
+<li><a href="#spu_reverbdepth">SPU_ReverbDepth</a>
+<li><a href="#spu_reverbon">SPU_ReverbOn</a>
+<li><a href="#spu_reverboff">SPU_ReverbOff</a>
+<li><a href="#spu_cdvol">SPU_CDVol</a>
+<li><a href="#spu_extvol">SPU_ExternVol</a>
+<li><a href="#spu_wait">SPU_Wait</a>
+<li><a href="#spu_noiserate">SPU_SetNoiseRate</a>
+</ul>
+<li><a href="#libref_voice">SPU Library reference - Voice Control</a>
+<ul>
+<li><a href="#spu_vcon">SPU_VoiceOn</a>
+<li><a href="#spu_vcoff">SPU_VoiceOff</a>
+<li><a href="#spu_vcmaskon">SPU_VoiceMaskOn</a>
+<li><a href="#spu_vcmaskoff">SPU_VoiceMaskOff</a>
+<li><a href="#spu_vcreverb">SPU_VoiceReverb</a>
+<li><a href="#spu_vcreverbmask">SPU_VoiceReverbMask</a>
+<li><a href="#spu_vcvol">SPU_VoiceVol</a>
+<li><a href="#spu_vcpitch">SPU_VoicePitch</a>
+<li><a href="#spu_vcadsr">SPU_VoiceADSR</a>
+<li><a href="#spu_vcadsrraw">SPU_VoiceADSRRaw</a>
+<li><a href="#spu_vcrepaddr">SPU_VoiceRepeatAddress</a>
+<li><a href="#spu_vcgetadsr">SPU_GetADSRVol</a>
+<li><a href="#spu_vcsetdata">SPU_VoiceSetData</a>
+<li><a href="#spu_vc2noiz">SPU_Voice2Noise</a>
+<li><a href="#spu_vc2noizmask">SPU_Voice2NoiseMask</a>
+<li><a href="#spu_vc2fm">SPU_Voice2FM</a>
+<li><a href="#spu_vc2fmmask">SPU_Voice2FMMask</a>
+</ul>
+<li><a href="#libref_xfer">SPU Library reference - Data Transfer Functions</a>
+<ul>
+<li><a href="#spu_uldata">SPU_UploadData</a>
+<li><a href="#spu_ulreverb">SPU_LoadReverb</a>
+</ul>
+<li><a href="#libref_mod">SPU Library reference - MOD Functions</a>
+<ul>
+<li><a href="#spu_initmod">InitMOD</a>
+<li><a href="#spu_pollmod">PollMOD</a>
+</ul>
+<li><a href="#history">Revision History</a>
+</ol>
+
+<a name="intro">
+<b>Intro:</b>
+<p>
+Version 1 of my PSX SPU library was complete crap. Sorry.
+<p>
+This version (version 2) has has much improved functionality and has
+actually been tested a bit. It may actually be useful (gasp!). This
+doesn't mean to say that there are no bugs or even incorrect parts.
+If you find a bug or something doesn't work (even after reading the
+doc's and trying to hack it), or if you fix or improve something yourself,
+please email it to me so that I can make improvements public.
+<p>
+You are free to modify or hack as you wish, but I absolve myself of
+all responsibility for any damage that may occur as a result of
+using the SPU library. If however you manage to produce something
+cool using the library, then you should be a nice global person and
+include me in your credits.
+<p>
+Talking about credits, these are due to doomed/padua (docs),
+ dodger/creature (docs + code) and silpheed/hitmen (asm MOD source
+code + modconv.exe). Their infos (derived from many many hours of PSX
+hacking no doubt) made my life much easier.
+<p>
+<a name="overview">
+<b>Overview of SPU:</b>
+<p>
+If you haven't got the following docs, then get at least one of
+them: doomed/padua's spu doc (1st choice) or dodger's spu doc,
+which are both available either from the Hitmen or Napalm sites.
+These will tell you very useful detail about the SPU.
+<p>
+Silpheed's "equates.inc" is also a great reference for low-level
+stuff.
+<p>
+But if you just want to use my SPU library functions without
+bothering too much about low-level stuff, you'll still need to know
+basic info about the SPU:
+<p>
+<ul>
+<li>24 voices, multitimbral
+<li>512 kb of sample (wavetable) data memory ("sound buffer")
+<li>User-programmable reverb (uses part of the sound buffer)
+<li>FM and Noise modes for each voice
+<li>44.1 kHz sample playback rate
+</ul>
+<p>
+The 512kb sound buffer is accessible only to the SPU, so all sample
+data must be transferred thru the SPU. Samples are stored in a
+special compressed format of 16-byte blocks.
+<p>
+The first 8208 bytes of the sound buffer are used for processing,
+so sample data cannot be stored there. Reverb data also uses some
+of the sound buffer memory (usually at the top of the memory).
+<p>
+Each voice has the following parameters:
+<ul>
+<li>left and right volume
+<li>pitch
+<li>address of sample in the sound buffer
+<li>ADSR envelope (Volume envelope)
+<li>Reverb On/Off
+<li>Noise Mode
+<li>FM Mode (uses previous voice as a modulator)
+</ul>
+<p>
+The SPU output can be adjusted for:
+<ul>
+<li>main volume left and right
+<li>reverb depth left and right
+<li>Reverb type (reverb data uploadable to sound buffer)
+<li>CD volume left and right
+<li>external input volume left and right 
+</ul>
+<p>
+<a name="howtoSPU">
+<b>How To Use the SPU (very basic):</b>
+<p>
+<ol>
+<li>Initialise SPU
+<li>Upload reverb data & set up reverb (not absolutely neccessary)
+<li>Upload sample data to sound buffer
+<li>Set SPU output parameters
+<li>Set voice parameters for the voices you want to use
+<li>Send the voices "note on" signals
+</ol>
+<p>
+See the examples. They might make things a little clearer (or
+maybe confuse you more :)
+<p>
+<a name="howtoLibrary">
+<b>How to Use the Library:</b>
+<p>
+This library is for use with mipsgcc (GCC for mips). I use Rob
+Withey's PSX library for PSX initialisation and graphics, so my
+examples work best with that.
+<p>
+To compile your proggie to use the library, you will need to
+#include "libspu.h" in your proggie, and tell the compiler to link
+in the library at "link time", ie: add "libspu.o" to the end of your
+compile line. See the example C source and .BAT files.
+<p>
+To use the MODplayer functions, #include "hitmud.h" as well.
+<p>
+Check out the code of the example programs for more detail on how
+to use the lib.
+<p>
+Some tools you may need are included in the "tools" directory:
+<ul>
+<li>VAGPACK - bitmasters' WAV to VAG converter
+<li>DEPACK  - bitmasters' VAG to PCM (raw 16-bit) converter
+<li>VABREAD - reads VAB files (redirect to text file)
+<li>READHIT - reads HIT MOD files (redirect to text file)
+<li>VAG2OBJ	- uses bin2src to convert VAG to object file
+<li>HIT2OBJ - uses bin2src to convert HIT file to object file 
+</ul>
+Another useful tool is Silpheed's MODCONV.EXE, which converts
+Protracker MOD files to HIT files.
+<p>-
+<p>
+<a name="libref_control">
+<h3>Jum's SPU Library Reference:</h3>
+(check against header file libspu.h if you have funnies)
+<p>
+<b>*** SPU Control Commands</b>
+<p>
+<a name="spu_reset">
+// Reset the SPU<br> 
+<code><b>void SPU_Reset(void);</b></code>
+<p>
+<a name="spu_init">
+// Initialise SPU to "sane" values - call this first<br>
+<code><b>void SPU_Init(void);</b></code>
+<p>
+<a name="spu_enable">
+// Enable the SPU (turn it on)<br>
+<code><b>void SPU_Enable(void);</b></code>
+<p>
+<a name="spu_quit">
+// Shut down the SPU (??? - what for?)<br>
+<code><b>void SPU_Quit(void);</b></code>
+<p>
+<a name="spu_volume">
+// set main SPU output volume (values: 0 -> 0x3fff)<br>
+<code><b>void SPU_Volume(PsxUInt16 vol_left, PsxUInt16 vol_right);</b></code>
+<p>
+<a name="spu_reverbdepth">
+// set SPU output reverb depth (values: 0 -> 0x7fff)<br>
+// (larger value = deeper, heavier reverb)<br>
+<code><b>void SPU_ReverbDepth(PsxUInt16 left, PsxUInt16 right);</b></code>
+<p>
+<a name="spu_reverbon">
+// Switch SPU output reverb on<br>
+<code><b>void SPU_ReverbOn(void);</b></code>
+<p>	
+<a name="spu_reverboff">
+// Switch SPU output reverb off<br>
+<code><b>void SPU_ReverbOff(void);</b></code>
+<p>
+<a name="spu_cdvol">
+// Set CD input Volume (values: 0 -> 0x7fff)<br>
+<code><b>void SPU_CDVol(PsxUInt16 vol_left, PsxUInt16 vol_right);</b></code>
+<p>	
+<a name="spu_extvol">	
+// Set external input Volume (values: 0 -> 0x7fff)<br>
+<code><b>void SPU_ExternVol(PsxUInt16 vol_left, PsxUInt16 vol_right);</b></code>
+<p>
+<a name="spu_wait">
+// Wait for SPU to become available (not busy)<br>
+<code><b>int SPU_Wait(void);</b></code>
+<p>
+<a name="spu_noiserate">
+// Set SPU Noise Rate (0->63)<br>
+// (frequency of noise when a channel is switched to noise)<br>
+<code><b>void SPU_SetNoiseRate(PsxUInt8 rate);</b></code>
+<p>-
+<p>
+<a name="libref_voice">
+<b>*** SPU Voice Control</b>
+<p>
+<a name="spu_vcon">
+// Switch a single voice on (trigger voice, "note on")<br>
+<code><b>void SPU_VoiceOn(PsxUInt8 voice);</b></code>
+<p>
+<a name="spu_vcoff">
+// Switch a single voice off ("note off")<br>
+<code><b>void SPU_VoiceOff(PsxUInt8 voice);</b></code>
+<p>
+<a name="spu_vcmaskon">	
+// Switch multiple voices ON<br>
+// (mask is a bitmask, lower 24 bits relevant, lowest bit = voice 0)<br>
+// (eg: to switch voices 0, 4 and 7 on, calculate mask = 000000000000000010010001 = 145)<br>
+<code><b>void SPU_VoiceMaskOn(PsxUInt32 mask);</b></code>
+<p>
+<a name="spu_vcmaskoff">	
+// Switch multiple voices OFF<br>
+// (using a mask same as above)<br>
+<code><b>void SPU_VoiceMaskOff(PsxUInt32 mask);</b></code>
+<p>
+<a name="spu_vcreverb">
+// Set a single voice reverb on (for next note on)<br>
+// (NB: reverb for this voice is turned off when<br>
+// the sample finishes playing)<br>
+<code><b>void SPU_VoiceReverb(PsxUInt8 voice);</b></code>
+<p>
+<a name="spu_vcreverbmask">	
+// Set multiple voices reverb on (for next note on)<br>
+// (using a mask as described above)<br>
+// NB: switches off after sample finished<br>
+<code><b>void SPU_VoiceReverbMask(PsxUInt32 mask);</b></code>
+<p>
+<a name="spu_vcvol">
+// Set Voice n Volume (values: 0 -> 0x3fff)<br>
+<code><b>void SPU_VoiceVol(PsxUInt8 voice, PsxUInt16 vol_left, PsxUInt16 vol_right);</b></code>
+<p>
+<a name="spu_vcpitch">	
+// Set Voice n Pitch<br>
+// (value 0x1000 corresponds to original sample frequency if sampled at 44.1 kHz)<br>
+// (value 0x400 corresponds to original sample frequency if sampled at 11.025 kHz)<br>
+<code><b>void SPU_VoicePitch(PsxUInt8 voice, PsxUInt16 pitch);</b></code>
+<p>
+
+<a name="spu_vcadsr">
+// Set Voice n ADSR<br>
+// NB: linear only at this stage<br>
+// (values: 0 < ar < 127 ; 0 < dr < 15 ; 0 < sl < 15 ; 0 < sr < 127 ; 0 < rr < 31 )<br>
+<code><b>void SPU_VoiceADSR(PsxUInt8 voice, PsxUInt8 ar, PsxUInt8 dr, PsxUInt8 sl,
+			PsxUInt16 sr, PsxUInt8 rr);</b></code>
+<p>
+
+<a name="spu_vcadsrraw">
+// Set Voice n ADSR (raw)<br>
+// (useful if you know how PSX SPU ADSR works,
+// or if you can get the ADSR values somewhere else :)
+<code><b>void SPU_VoiceADSRRaw(PsxUInt8 voice, PsxUInt16 adsr1, PsxUInt16 adsr2);</b></code>
+<p>
+
+<a name="spu_vcrepaddr">	
+// Set Voice n Repeat Addr<br>
+// (loop start address, set only after sample has started playing)<br>
+<code><b>void SPU_VoiceRepeatAddress(PsxUInt8 voice, PsxUInt16 rep_addr);</b></code>
+<p>
+
+<a name="spu_vcgetadsr">	
+// Get Voice n current ADSR Volume<br>
+// (returns values 0 -> 0xffff) (???)
+<code><b>PsxUInt16 SPU_GetADSRVol(PsxUInt8 voice);</b></code>
+<p>
+<a name="spu_vcsetdata">	
+// Set Voice n wave data offset<br>
+// Specify the start address of the sample for this voice in the SPU sound buffer<br>
+<code><b>void SPU_VoiceSetData(PsxUInt8 voice, PsxUInt32 sb_addr);</b></code>
+<p>
+<a name="spu_vc2noiz">
+// Switch a single voice to Noise mode<br>
+<code><b>void SPU_Voice2Noise(PsxUInt8 voice);</b></code>
+<p>
+<a name="spu_vc2noizmask">
+// Switch multiple voices to Noise mode<br>
+<code><b>void SPU_Voice2NoiseMask(PsxUInt32 mask);</b></code>
+<p>
+<a name="spu_vc2fm">
+// Switch a single voice to FM mode<br>
+// (the voice is FM modulated with the previous voice)<br>
+<code><b>void SPU_Voice2FM(PsxUInt8 voice);</b></code>
+<p>
+<a name="spu_vc2fmmask">
+// Switch multiple voices to FM<br>
+<code><b>void SPU_Voice2FMMask(PsxUInt32 mask);</b></code>
+<p>-
+<p>
+<a name="libref_xfer">
+<b>*** SPU Data Transfer Functions</b>
+<p>
+<a name="spu_uldata">
+// Transfer wavetable (sample) data from main memory to sound buffer<br>
+// (sample data must be in VAG-packed format)<br>
+// (sb_addr = destination address in SPU RAM for MOD samples) <br>
+<code><b>void SPU_UploadData(PsxUInt32 *src_addr, PsxUInt32 sb_addr, PsxUInt32 size);</b></code>
+<p>
+<a name="spu_ulreverb">
+// Load Reverb data (reverb "patch") into reverb area<br>
+// and set start addr of reverb process buffer in sound buffer<br>
+<code><b>void SPU_LoadReverb(PsxUInt16 *data, PsxUInt16 work_addr);</b></code>
+<p>-
+<p>
+<a name="libref_mod">		
+<b>*** MOD Functions</b>
+<p>
+<a name="spu_initmod">
+// initialise HITMOD structure<br>
+// (uploads MOD samples, sets up MOD for playing)<br>
+// (sb_addr = destination address in SPU RAM for MOD samples)<br>
+<code><b>void InitMOD(HITMUD *m, PsxUInt8 *modaddr, PsxUInt32 sb_addr);</b></code>
+<p>
+<a name="spu_pollmod">
+// Play next row of mod<br>
+// (call every vblank or via timer 50/60 fps)<br>
+<code><b>int PollMOD(HITMUD *m);</b></code>
+<p>
+In addition to these functions, the MOD struct can be accessed directly for various tasks.
+<p>-
+<p>
+<a name="history">
+<b>Revision History</b>
+<p>
+<ul>
+<li><i>23 April 2000 - version 2.0:</i> Muchos fix-ups. Added functionality. Fixed HITMOD player.
+<li><i>2 September 1999 - version 1.0:</i> Initial release. Basic SPU functions + basic beta MODplayer.
+</ul>
+<p>
+</BODY>
+</HTML>	

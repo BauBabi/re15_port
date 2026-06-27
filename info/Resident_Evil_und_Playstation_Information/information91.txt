@@ -1,0 +1,43 @@
+13 - MSG Main
+
+14 - MSG Sub
+
+15 - TIM (Cam Scroll)
+
+If the offset for this section is not 0 then there is a 153.600 bytes in size, headerless 16 BPP TIM file found here.
+That one is used for the camera scrolling effect that you can encounter in:
+
+Room200x.RDT (RPD Main Hall), when entering it for the first time.
+Room216x.RDT (Parking lot), when playing with Leon and meeting Ada.
+
+Those are the only two TIM files which make use of this, so normally the offset/pointer is just holding a value of 0.
+If there is a file though it will be placed between the following sections, depending on the following situations:
+
+If there are models in room, it will be positioned between the 14 - MSG Sub and the first MD1 model file in the RDT.
+
+16 - SCD Main
+
+17 - SCD Sub
+
+18 - ESP
+
+19 - EFF
+
+20 - TIM (EFF/ESP Effects)
+
+If the pointer to 18 - ESP is not 0 (meaning the room uses effect sprites) then there will be TIM files found from this offset onwards.
+
+They will use the same order as is given in the header of the 18 - ESP section. There can be a maximum of 8 different effect sprites in a room, so the maximum TIM files you can find from here on is again 8
+
+After the last effect sprite containing TIM file, the section is usually followed by the first MD1 TIM texture if there are no models in the file, the last TIM files' end of file will also be the end of the RDT file.
+
+21 - TIM (MD1 textures)
+
+If the Model value in the RDT header is not 0 (meaning the room uses MD1 3d models) then there will be TIM files used by the models, found from this offset and onwards until the end of the RDT file is reached.
+
+They will use the same order as is given in the 10 - MD1/TIM Table section. There can be a maximum of 17 model entries in a room but the game never uses so much different objects. Instead the models often share textures.
+
+After the last TIM file the end of the RDT file is reached.
+
+22 - RBJ
+

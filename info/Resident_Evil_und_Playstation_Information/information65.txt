@@ -1,0 +1,21 @@
+
+CDROM File XYZ and Dummy/Null Files	Contents
+Index	Prev
+Next
+
+Dummy/Null Files
+Most PSX discs have huge zerofilled dummy files with about 32Mbytes, using filenames like DUMMY, NUL, NULL, or ZNULL, this is probably done to tweak the disc to have valid sector numbers at the end of disc (to help the drive head to know which sector it is on).
+Of course, Sony could as well pad the discs with longer Lead-Out areas, but the dummy files may have been needed during development with CDRs (though burning such large files doesn't exactly speed up development).
+There are different ways to make sure that the file is at end of the disc:
+- Some CDROM burning tools may allow to specify which file is where
+- Some games have the file alphabetically sorted as last file in last folder
+- Some games have the file declared as audio track
+- Some games (additionally) have large zeropadding at end of their archive file
+
+XYZ Files
+To reduce seek times, it can make sense to have the boot files & small files at the begin of the disc.
+Some games seem to use alphabetically sorted file/folder names to tweak Movies and XA-audio to be located at the end of disc (eg. using ZMOVIE as folder name).
+
+
+I am homeless in Hamburg, please help me out!
+extracted from no$psx v2.2 - homepage - patreon - whole doc htm/txt - copyright 2022 martin korth (nocash)

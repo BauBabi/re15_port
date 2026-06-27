@@ -1,0 +1,202 @@
+PAK (Resident Evil 1997)
+(Redirected from .PAK (Resident Evil 1997))
+File Format
+Name	PAK (Resident Evil 1997)
+Ontology	
+Electronic File Formats
+PAK (Resident Evil 1997)
+Extension(s)	.pak
+This content was first retrieved from the Internet Archive's Wayback Machine for the date 2016-12-22 from the following URL: https://web.archive.org/web/20161222090005/http://rewiki.regengedanken.de/wiki/.PAK_(Resident_Evil)
+
+The .PAK file format is used by the PC version of Resident Evil (1997). It contains a compressed TIM image, using an algorithm similar to LZW.
+
+Structure
+The file is a bitstream, without any header.
+
+Example decompression routine
+This source is partly based on LZW decoder from scummvm engine.
+
+#include <stdio.h>
+#include <fcntl.h>
+
+unsigned char dstPointer[512<<10];
+int dstOffset;
+unsigned long dstLength;
+
+unsigned char *srcPointer;
+int srcOffset;
+unsigned char srcByte;
+int tmpMask;
+
+#define MAX_LENGTH 35024
+
+typedef struct {
+	long flag;
+	long index;
+	long value;	
+} re1_pack_t;
+
+re1_pack_t tmpArray2[MAX_LENGTH];
+unsigned char decodeStack[MAX_LENGTH];
+
+/* Load file in mem from filename, return buffer, update length */
+
+char *loadFile(char *filename, int *length)
+{
+	int handle;
+	char *buffer;
+
+	/* Load file */
+	handle = open(filename, O_RDONLY);
+	if (handle<0) {
+		fprintf(stderr, "Unable to open %s\n", filename);	
+		return NULL;
+	}
+
+	*length = lseek(handle, 0, SEEK_END);
+	lseek(handle, 0, SEEK_SET); 	
+
+	buffer = (char *)malloc(*length);
+	if (buffer==NULL) {
+		fprintf(stderr, "Unable to allocate %d bytes\n", length);
+		return NULL;
+	}
+
+	read(handle, buffer, *length);
+	close(handle);
+
+	return buffer;
+}
+
+int re1_read_bits(int num_bits)
+{
+	unsigned long value=0, mask;
+
+	mask = 1<<(--num_bits);
+
+	while (mask>0) {
+		if (tmpMask == 0x80) {
+			srcByte = srcPointer[srcOffset++];
+		}
+
+		if ((tmpMask & srcByte)!=0) {
+			value |= mask;
+		}
+
+		tmpMask >>= 1;
+		mask >>= 1;
+
+		if (tmpMask == 0) {
+			tmpMask = 0x80;
+		}
+	}
+
+	return value;
+}
+
+int decodeString(int decodeStackOffset, unsigned long code)
+{
+	int i;
+
+	for (i=0; code>255; ) {
+		decodeStack[decodeStackOffset++] = tmpArray2[code].value;
+		code = tmpArray2[code].index;
+		i++;
+	}
+	decodeStack[decodeStackOffset] = code;
+
+	return decodeStackOffset;
+}
+
+void re1_depack(unsigned char *src, int src_length)
+{
+	int num_bits_to_read, i;
+	int lzwnew, c, lzwold, lzwnext;
+
+	srcPointer = src;
+	srcOffset = 0;
+	tmpMask = 0x80;
+	srcByte = 0;	
+	dstOffset = 0;
+
+	memset(tmpArray2, 0, sizeof(tmpArray2));
+
+	for(;;) {
+		for (i=0; i<MAX_LENGTH; i++) {
+			tmpArray2[i].flag = 0xffffffff;
+		}
+		lzwnext = 0x103;
+		num_bits_to_read = 9;
+
+		c = lzwold = re1_read_bits(num_bits_to_read);
+
+		if (lzwold == 0x100) {
+			break;
+		}
+
+		dstPointer[dstOffset++] = c;
+
+		for(;;) {
+			lzwnew = re1_read_bits(num_bits_to_read);
+
+			if (lzwnew == 0x100) {
+				dstLength = dstOffset;
+				return;
+			}
+
+			if (lzwnew == 0x102) {
+				break;
+			}
+
+			if (lzwnew == 0x101) {
+				num_bits_to_read++;
+				continue;
+			}
+
+			if (lzwnew >= lzwnext) {
+				decodeStack[0] = c;
+				i = decodeString(1, lzwold);
+			} else {
+				i = decodeString(0, lzwnew);
+			}	
+
+			c = decodeStack[i];
+
+			while (i>=0) {
+				dstPointer[dstOffset++] = decodeStack[i--];
+			}
+
+			tmpArray2[lzwnext].index = lzwold;
+			tmpArray2[lzwnext].value = c;
+			lzwnext++;
+
+			lzwold = lzwnew;
+		}
+	}
+
+	dstLength = dstOffset;
+}
+
+int main(int argc, char **argv)
+{
+	int length;
+	unsigned char *fileInMem;
+
+	if (argc<2) {
+		return 1;
+	}
+
+	fileInMem = loadFile(argv[1], &length);
+	if (fileInMem==NULL) {
+		return 1;
+	}
+
+	re1_depack(fileInMem, length);
+
+	/* Now you have the decompressed file at dstPointer */
+	/*  and length is dstLength */
+
+	free(fileInMem);
+
+	return 0;
+}

@@ -1,0 +1,273 @@
+We've updated our Privacy Policy and by continuing you're agreeing to the updated terms.
+Tapatalk
+Resident Evil 1 2 3 - Modding Forum
+LoginJoin
+Resident Evil 1 2 3 - Modding Forum
+Your destination for all your Resident Evil Modding needs since June 23, 2008.
+
+FORUMSDISCUSSIONSGALLERYMESSAGESNOTIFICATIONS
+Resident Evil 1 2 3 - Modding Forum>Modifications>Miscellaneous>General Help>
+
+Explain the RE2 File Extensions.
+Switch to Print View - 7 posts
+Claire Fan
+24
+Crimson HeadCrimson Head
+Jun 08, 2010#1
+
+I'm new in RE modification, I wanted someone to explain to me each RE2 file format, .EDD .TIM .EMR .MD1 .EMD and others.
+
+anyone have any tools for editing 3D objects from resident evil 2?
+QuoteShare
+
+Angry_Nemesis
+101
+Tyrant C
+Jun 08, 2010#2
+
+Theirs probably a Guide or tutorial for that
+"You look like everything I ran from
+Oh, Oh, Oh
+I know your body like the back of my hand
+and now I'll never have a chance to be myself
+so you can skip me with your heart again "
+QuoteShare
+Enrico Marini
+847
+4
+Nemesis T-Type INemesis T-Type I
+Jun 08, 2010#3
+
+TIM -Texture file. A varient of Sony's standard PSX TIM, info in the information section.
+
+EMR - Animations. Don't know a lot
+
+EMD/PLD - Houses several file types
+
+TMD - Standard PSX model format
+
+can be edited using Jum's E3d.
+
+RE2 uses a varient of TMD and there is a tool to convert from a TMD to RE2's vairent.
+
+Other than Jum's E3d there isn't a publically available tool to convert to tmd.
+
+BA (Hons) First Class
+QuoteLikeDislikeShare
+
+
+Claire Fan
+24
+Crimson HeadCrimson Head
+Jun 08, 2010#4
+
+:cd
+QuoteShare
+Jun 09, 2010#5
+
+sorry for double posts, but as no one else is manifested in this topic, I don't know if you ever used a program called MilkShape 3D, he edits the playstation TMD and appears to be infinitely better than the jum's e3d, milkshape can import TMD files, but cant export TMD files.
+QuoteShare
+
+
+Enrico Marini
+847
+4
+Nemesis T-Type INemesis T-Type I
+Jun 10, 2010#6
+
+Yes I am aware of Milkshape. Thats how I used to Rip out the TMD models but unfortunately there never was a TMD exporter written for it. The TMD import option has
+been in milkshape since 2001/2, I even asked on their forums back in 2002 if it would have been possible for someone to create a exporter.
+
+Unfortunately that leaves only Jum's E3d.
+
+BA (Hons) First Class
+QuoteLikeDislikeShare
+
+MrWesker
+269
+Ivan
+Jun 10, 2010#7
+
+Principally,so far i know, .EMD files are basically for NPCs(Not Playable Characters,like zombies) and .PLD files are for playable characters...so if you want to play with another character,you have to replace .PLD file in the PLD folder of the game with the .PLD file of the character you'd like to play ;)
+You can find a lot of skins in the Safehouse Bundle Skins in a topic pinned here :)
+Just a little closer...You lose! (Mikhail's final words)
+QuoteLikeDislikeShare
+
+
+Share this topic with:
+
+Display mode
+Font Size
+
+Back to top
+
+
+Interested in pre-owned items for sale?
+Powered by
+
+Sellwild
+Art
+Art
+
+$85
+
+Sarah P. | sellwild.com
+
+Theodore Alexander Leather Top Game Table
+Theodore Alexander Leather Top Game Table
+
+$499
+
+ANTONIO A. | sellwild.com
+
+Nike Men’s Shoes Size 11.5
+Nike Men’s Shoes Size 11.5
+
+$100
+
+Nicole G. | sellwild.com
+
+Nike Youth Sz 5 Speedsweep VII KIDS Wrestling Shoes Boxing B...
+Nike Youth Sz 5 Speedsweep VII KIDS Wrestling Shoes Boxing B...
+
+$40
+
+Eloise E. | sellwild.com
+
+Original Framed Mixed Media Abstract Art Painting 12.5x14.5 ...
+Original Framed Mixed Media Abstract Art Painting 12.5x14.5 ...
+
+$45
+
+Nicole L. | sellwild.com
+
+X Rocker Pro 2.1 Wireless Gaming Chair Pedestal Base Arm Res...
+X Rocker Pro 2.1 Wireless Gaming Chair Pedestal Base Arm Res...
+
+$99
+
+Manda N. | sellwild.com
+
+Original Abstract Art Painting 18x24 “A Ring of Invincibilit...
+Original Abstract Art Painting 18x24 “A Ring of Invincibilit...
+
+$125
+
+Nicole L. | sellwild.com
+
+2024 Maserati MC20 Cielo
+2024 Maserati MC20 Cielo
+
+$363.645
+
+Lotlinx A. | sellwild.com
+
+Size 11.5 Medium Brooks Trace 2 Shoes Mens Blue Sneakers
+Size 11.5 Medium Brooks Trace 2 Shoes Mens Blue Sneakers
+
+$39
+
+Libby B. | sellwild.com
+
+2023 Subaru Outback Wilderness
+2023 Subaru Outback Wilderness
+
+$30.699
+
+Lotlinx A. | sellwild.com
+
+ZEBRE FURLANE-[UDINESE] Mercato In Uscita
+Discover
+Roll To Dodge
+Discover
+Checkfox | Wärmepumpen-News
+Brandenburg beschließt Wärmepumpen-Paket für Eigenheimbesitzer (Kaum zu glauben!)
+Read More
+Skip
+The L Chat-WhiteChocolate #535
+Discover
+Missing-Lynx-New Book “SEMOVENTI ITALIANI SU SCAFO "M" in "Mezzi Corazzati Storia e Modellismo" di Antonio e Andrea TALLILLO
+Discover
+#1 Hausmittel für eine saubere Leber und einen flachen Bauch
+Bauchfett Methode
+|
+Sponsored
+⁠So viel kostet eine Solaranlage inkl. Montage in 2025
+Solaranlage fürs Dach
+|
+Sponsored
+Brandenburg beschließt Wärmepumpen-Paket für Eigenheimbesitzer (Kaum zu glauben!)
+Checkfox | Wärmepumpen-News
+|
+Sponsored
+Deutscher Biologe erklärt: Die 3 Abnehmirrtümer, die für das Scheitern Ihrer Diät verantwotlich sind
+Bauchfett Methode
+|
+Sponsored
+Die schönsten Sport-Moderatorinnen der Welt - freenet.de
+freenet.de
+|
+Sponsored
+Umstrittene Nervenschäden-Methode spaltet deutsche Fachkreise
+Eine neue deutsche Entwicklung bei Neuropathie sorgt für heftige Debatten unter Polyneuropathie-Fachleuten. Was steckt hinter der Kontroverse?
+Neuro Fachwelt
+|
+Sponsored
+Das aufregendste Spiel des Jahres 2025!
+RAID
+|
+Sponsored
+Blaue Pille war gestern: Diese Lösung sprengt alle Grenzen
+nutrition-science.de
+|
+Sponsored
+Deutscher Wissenschaftler entdeckt: Dieses Küchengewürz repariert Venen
+Dieses gewöhnliche Küchengewürz bekämpft deine Krampfadern. Forscher sind verblüfft über die Wirkung.
+Venen Kompass
+|
+Sponsored
+Tausende Kunden schwören auf diese Abnehm-Schuhe
+Warum diese neuen ActiveCare Schuhe in Deutschland fast ausverkauft sind
+Gesundheitscheck Magazin
+|
+Sponsored
+Get the Tapatalk app
+
+Apple Storee
+ 
+Google Store
+PRODUCTS
+Tapatalk Groups
+Tapatalk Mobile App
+SUPPORT
+Support Forum
+Submit Security Incident
+ABOUT US
+LinkedIn
+Crunchbase
+Privacy Policy
+ 
+Privacy Shield
+ 
+Terms of Use
+ 
+Code of Conduct
+ 
+End-User License Agreement
+ 
+Site Owner License Agreement
+ 
+Tapatalk API Terms of Service
+ 
+Manage Privacy Settings
+ 
+© 2025 Everforo, Inc
+Privacy Shield
+
+SQL time: 0.023s | PHP time: 0.199s | Total Time: 0.222s | SQL Queries: 20 | Cached: 2 | Peak Memory Usage: 4.29 MiB
+x
+
+x
+
+
+

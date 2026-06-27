@@ -1,0 +1,52 @@
+PLAYSTATION TECHNICAL NOTE
+=======================================================================
+Date: 2/5/96
+Ref:
+Author:
+Subject: How to use Decicons
+ABSTRACT
+--------
+This note gives directions on how to set up and run decicons.
+DETAILS
+-------
+Before running decicons
+-----------------------
+Before running decicons, the DOS driver 'H25DRV' should be built in the
+PC. Add a line into the CONFIG.SYS file as below, and reboot the PC.
+DEVICE=C:\H2500\DOS\H25DRV.EXE /V /N
+The 'ADDDRV/DELDRV' command can also be used to add/delete the driver.
+C:\H2500\DOS> ADDDRV H25.INI
+C:\H2500\DOS> DELDRV
+How to run decicons
+-------------------
+C:\H2500\DOS> decicons
+Key commands
+------------
+[F1] displays help
+[F4] loads a program file
+[F3] runs loaded program
+[F7] sets switch
+0 boots PlayStation CD-ROM
+1 PSX> prompt mode
+2 boots PlayStation CD-ROM with tty out
+[F9][F7] sets video mode
+0 NTSC mode
+1 PAL mode
+[F9][F10] resets
+[F10][F2] quits decicons
+Decicons has been updated to make use of the pc file server functions
+as used by libsn. E.g., Decicons now supports PCcreat etc. As well as
+supporting the file server facilities, it now has a useful log feature.
+Hitting f5 prompts you for a file name. All message information (printf
+output) will now be sent to this file as well as to the screen. To stop
+out put to the file, hit f10 followed by f5.
+To use these functions, you must first update the flash ROM on your
+H2500 by running the flash2.bat file (found in the util directory of
+this update). You must also link with the file libdeci.lib, before
+libsn.lib, so the new functions link in and replace the old ones. Note
+that the functionality of some of the functions (noteably pccreate
+open) seems to have changed slightly. However, if you modify your code
+to work with these changes, our tests show it should work fine on an
+H2000 also.
+Copyright (C) 1996 by Sony Computer Entertainment Inc.
+All Rights Reserved.

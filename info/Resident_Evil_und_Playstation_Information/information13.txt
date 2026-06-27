@@ -1,0 +1,11 @@
+VB (Resident Evil 1997)
+File Format
+Name	VB (Resident Evil 1997)
+Ontology	
+Electronic File Formats
+Game data files
+VB (Resident Evil 1997)
+Extension(s)	.vb
+This content was first retrieved from the Internet Archive's Wayback Machine for the date 2017-09-10 from the following URL: https://web.archive.org/web/20170910150726/http://rewiki.regengedanken.de/wiki/.VB
+
+The .VB file format is used on the PC port of Resident Evil (1997) to store audio. These files are PlayStation's VAG format with a different extension.

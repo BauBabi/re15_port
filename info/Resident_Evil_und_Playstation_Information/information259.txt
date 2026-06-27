@@ -1,0 +1,68 @@
+CONFIDENTIAL PlayStation Developer Seminar / Summer ‘97/ PlayStation Audio
+PlayStation Audio -
+A Musician’s Perspective
+CONFIDENTIAL PlayStation Developer Seminar / Summer ‘97/ PlayStation Audio
+Presentation Overview
+Sound Tools
+A Sample Project
+MIDI Engineering with Buzz Burrowes
+Q&A
+CONFIDENTIAL PlayStation Developer Seminar / Summer ‘97/ PlayStation Audio
+Sound Tools
+CONFIDENTIAL PlayStation Developer Seminar / Summer ‘97/ PlayStation Audio
+AIFF2VAG
+Conversion
+Compression
+Modes
+CONFIDENTIAL PlayStation Developer Seminar / Summer ‘97/ PlayStation Audio
+SoundDelicatessen
+OMS and FreeMIDI Compatible
+Menu Items
+Import/Export vs. Mark Boxes
+Preferences
+Edit Functions
+DSP Effects
+Tone List Items
+SsVoKeyOn(multiple) Check Box
+Determining Center Note
+x - 60 + y = z
+ADSR Window
+CONFIDENTIAL PlayStation Developer Seminar / Summer ‘97/ PlayStation Audio
+SMF2SEQ
+Conversion
+Output Mode
+CONFIDENTIAL PlayStation Developer Seminar / Summer ‘97/ PlayStation Audio
+RAW2DA
+Output Mode
+CONFIDENTIAL PlayStation Developer Seminar / Summer ‘97/ PlayStation Audio
+RAW2XA
+Format
+CONFIDENTIAL PlayStation Developer Seminar / Summer ‘97/ PlayStation Audio
+A Sample Project
+CONFIDENTIAL PlayStation Developer Seminar / Summer ‘97/ PlayStation Audio
+Sequencing
+Callback Markers: the key to
+interactivity
+Control Changes and the PlayStation
+CONFIDENTIAL PlayStation Developer Seminar / Summer ‘97/ PlayStation Audio
+Instrument Creation
+Sampling
+Waveform Editing
+Conversion
+CONFIDENTIAL PlayStation Developer Seminar / Summer ‘97/ PlayStation Audio
+Sequence Adjustments and
+Final Mix
+Instrument Balance
+Velocity vs. Volume
+CONFIDENTIAL PlayStation Developer Seminar / Summer ‘97/ PlayStation Audio
+Post-Compilation
+Modifications
+Good Communication with Engineers
+Keep Notes
+CONFIDENTIAL PlayStation Developer Seminar / Summer ‘97/ PlayStation Audio
+MIDI Engineering with
+Buzz Burrowes
+MIDI Engine Demo
+Tips and Tricks
+CONFIDENTIAL PlayStation Developer Seminar / Summer ‘97/ PlayStation Audio
+Q & A

@@ -1,0 +1,41 @@
+PLAYSTATION TECHNICAL NOTE
+=======================================================================
+Date: 11/12/96
+Ref: Basenote Number: 31
+Author: SCE R&D/Operations Depts.
+Subject: Regarding problems with some memory cards
+ABSTRACT
+---------------
+The existence of some memory cards which did not operate normally in
+cases where the memory card was accessed when the controller was not in
+an operative state has been confirmed in the libraries prior to Ver.
+3.5. Please make sure when accessing the memory card that the
+controller is also in an operative state.
+Please pay particular attention when there are functions such as memory
+card data reading during game activation and auto-save/load.
+Since these problems have been corrected in the libraries from Ver. 3.6
+onwards please use those as much as possible.
+Furthermore, please note that handling methods, when using a multi-tap
+or gun, are slightly different.
+RECOMMENDED PROCEDURES
+--------------------------------------------
+Example 1
+PadInit(); /*Initialize before memory card */
+InitCARD(1); /*Argument is ‘1’*/
+StartCARD();
+Access to memory card /*Controller is not stopped */
+Example 2 When using libapi.lib
+InitPAD(...);
+StartPAD();
+InitCARD(1);
+Access to memory card /*Controller is not stopped*/
+When using a multi-tap or gun, the InitCARD() argument must always be
+set to ‘0’.
+Example 3
+InitTAP(...); /*Initialize before memory card*/
+(or InitGUN(...);)
+StartTAP();
+(or StartGUN(...);)
+InitCARD(0); /*Argument is ‘0’*/
+StartCARD();
+Access to memory card /*Multi-tap/gun is not stopped*/

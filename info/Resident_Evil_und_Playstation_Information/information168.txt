@@ -1,0 +1,134 @@
+    
+Win’95/NT hosted PlayStation CD Emulator Win’95/NT hosted PlayStation CD Emulator
+ Tom Charlesworth Tom Charlesworth 
+SN Systems Ltd SN Systems Ltd
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Contents Contents
+ CD Emulation history CD Emulation history
+ Overview of new CD emulator Overview of new CD emulator
+ CD Emulator hardware CD Emulator hardware
+ Windows CD tools Windows CD tools
+   - CD Controller   - CD Controller
+   - CD Explorer   - CD Explorer
+ Availability Availability
+  SCEE Technology SCEE Technology 
+Group Group
+  
+CD Emulation History CD Emulation History
+ Old emulator: 16-bit, DOS Old emulator: 16-bit, DOS
+ Script writing was a black art Script writing was a black art
+ Updating image was slow and problematic Updating image was slow and problematic
+ No NT support No NT support
+ Indecipherable feedback Indecipherable feedback
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Overview of new emulator Overview of new emulator
+ 2 models of emulator available: 2 models of emulator available:
+ DTL-S2900: External unit connected to PC DTL-S2900: External unit connected to PC 
+via PCI SCSI controller via PCI SCSI controller
+ DTL-S2910: Internal board is ISA PnP. DTL-S2910: Internal board is ISA PnP. 
+Designed to fit into the ISA slot of the old Designed to fit into the ISA slot of the old 
+emulator (DTL-S2020) emulator (DTL-S2020)
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Overview of new emulator Overview of new emulator
+ PnP installation - no jumpers PnP installation - no jumpers
+ Advanced Windows 95/NT-based CD Advanced Windows 95/NT-based CD 
+emulation system emulation system
+ Removal of all significant image build Removal of all significant image build 
+processing processing
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Overview of new emulator (2) Overview of new emulator (2)
+ Supports Win95/NT drag & drop Supports Win95/NT drag & drop
+ Background file-copy processing Background file-copy processing
+ Option to automatically cut a CDR disc Option to automatically cut a CDR disc
+  SCEE Technology SCEE Technology 
+Group Group
+  
+CD Emulation hardware CD Emulation hardware
+    External CD Emulation unit (DTL-S2900)    External CD Emulation unit (DTL-S2900)
+ At the top is the Emulation hardware At the top is the Emulation hardware
+    providing feedback via the LCD    providing feedback via the LCD
+ Below this is the removable drive Below this is the removable drive
+    bay    bay
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Hardware features Hardware features
+ Dedicated (Windows-independent) micro-Dedicated (Windows-independent) micro
+controller controller
+ 2 SCSI buses 2 SCSI buses
+ In addition, external unit (DTL-S2900) has: In addition, external unit (DTL-S2900) has:
+ LCD display LCD display
+ Control button to select new CD image Control button to select new CD image
+ Removable HDD bay Removable HDD bay
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Hardware features (2) Hardware features (2)
+ Targets: DTL-H2000/2500/2700 Targets: DTL-H2000/2500/2700
+ Support for SCSI HDD’s, removable drives Support for SCSI HDD’s, removable drives 
+(jaz) and approved Sony CDR’s (jaz) and approved Sony CDR’s
+ Internal unit (DTL-S2910) also provides Internal unit (DTL-S2910) also provides 
+support for IDE drives support for IDE drives
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Windows CD tools Windows CD tools
+ CD Controller for feedback, control & cutting CD Controller for feedback, control & cutting
+ CD Explorer for image creation & CD Explorer for image creation & 
+maintenance maintenance
+  SCEE Technology SCEE Technology 
+Group Group
+  
+CD Controller CD Controller
+ Provides real-time feedback when emulating Provides real-time feedback when emulating 
+or cutting or cutting
+ Ability to select alternative CD image Ability to select alternative CD image
+ Management of Management of -controller BIOS-controller BIOS
+  SCEE Technology SCEE Technology 
+Group Group
+  
+CD Controller: Cutting CD Controller: Cutting
+  SCEE Technology SCEE Technology 
+Group Group
+  
+CD Explorer CD Explorer
+ CD image management CD image management
+ Windows Explorer-style GUI Windows Explorer-style GUI
+ Full drag-and-drop support Full drag-and-drop support
+ Background file copying Background file copying
+  SCEE Technology SCEE Technology 
+Group Group
+  
+CD Explorer CD Explorer
+ Automatically refreshes image when source Automatically refreshes image when source 
+files are modified files are modified
+ Ghost hunt for lost files Ghost hunt for lost files
+ Support for ISO-9660 standard Support for ISO-9660 standard
+ Extended support specifically for PlayStation Extended support specifically for PlayStation
+  SCEE Technology SCEE Technology 
+Group Group
+  
+CD Explorer: Main View CD Explorer: Main View
+  SCEE Technology SCEE Technology 
+Group Group
+  
+CD Explorer: Primary Volume CD Explorer: Primary Volume
+  SCEE Technology SCEE Technology 
+Group Group
+  
+CD Explorer: File Properties CD Explorer: File Properties
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Availability Availability
+ For further information on pricing and For further information on pricing and
+ availability, please contact Tim Flett. availability, please contact Tim Flett.
+ (Tim_Flett@interactive.sony.com) (Tim_Flett@interactive.sony.com)

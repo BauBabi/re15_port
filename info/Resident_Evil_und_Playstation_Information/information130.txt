@@ -1,0 +1,82 @@
+logo
+Home Forum Sections Community Submissions Changes Search Help
+Sections
+Home
+Documents
+Utilities
+Translations
+ROM Hacks
+Games
+Homebrew
+Fonts
+Abandoned
+News Archive
+Community
+Forum
+Wiki
+History
+Community Database
+Links
+Submissions
+Submit Files
+Submit News
+Queue Status
+Public Maintenance
+The Scratchpad
+Online ROM Patcher
+Online ROM Hasher
+Help
+About this Site
+Getting Started
+RHDN Policy
+Dictionary
+FAQ
+Contact Staff
+E3D 3D Model Editor
+Miscellaneous Graphics Tools
+Utility Information
+Screenshot
+Author	Jum Hig
+Category	Miscellaneous Graphics Tools
+Platform	PlayStation
+Game	N/A
+OS	DOS
+Version	1.4
+Release Date	18 July 1999
+Downloads	258
+Last Modified	02 April 2021
+Description:
+(Jum Hig) This program assumes some knowledge of how 3D models are put together. The program was written specifically with 3D game development in mind, as a way of creating 3D objects/models that can easily be used by a 3D game engine.
+
+(master higgins disclaimer [EDIT]) THIS app made by Jum Hig can be used to CONVERT 3D Studio ASC (ASCII) models to TMDs which the PSX Games Boot use (change the 3D logo). For that it’ll be needed:
+
+1) A program to open a model of one’s choice that can export to 3D Studio ASC. Milkshape 3D is one of them.
+
+2) 90% of the time the colors of the polygons should be changed if the ASC file doesn’t define “materials”. A Plain text editor can be used. With MilkShape 3D it’s likely that each polygon would have lines containing “Smoothing #” with # being 1, 2 and so on. Those must be changed to Material:”rRRRgGGGbBBBa100″ where:
+
+RRR is the Red Color Component
+GGG is the Green Color Component
+BBB the Blue Color Component
+All of them integers between 0 and 255. Having the .ASC (or the Original 3D model) built with “Groups” will save a lot of time changing colors because all the polygons will be grouped by those “groups”
+
+3) Then the 3D Studio ASC file must be open with E3D and saved as a 3DO but before it’s likely that in E3D the polygons order have to be reversed by pushing the “Rev All” button so you don’t see the model “inside-out” in the lower right preview area.
+
+4) Next the 3DO should be open again with E3D and then saved as a TMD. But it’s somewhat trickier because it’d needed to close the program and then open the same tmd again and choose “Save” choosing the same filename and path.
+
+5) Now after those steps E3D should show a confirm dialog saying somewhat like “This model contains shaded polygons. Do you want to calculate and save polygon normals for this model?” and then you press “Yes Please”. At this point you should have a working TMD 3D model to use with Bootedit 2 to patch a PSX ISO Boot Logo.
+
+Of course as everything it’s likely to go on a few trial and error steps to set the size, orientation and position correctly so the logo doesn’t go out of bounds and be shown above the PSX Logo Boot Text. Not following those steps thoroughly could cause the model to be too far away, with far too dim colors or the model rendered inside-out.
+
+You’ll have to be aware of some restrictions:
+
+As the program run only on DOS, on your OS you’ll have to use a “DOS Emulator” (like DOSBox) to run it
+E3D support maximum of 512 polygons (usually triangles). Also, the TMDs cannot exceed 14336 Bytes
+(Jum Hig) The .3DO file format is used by my 3D game engine. (Details of this format can be found in “3do.txt”).
+
+Links:
+Download
+User Review Information
+No User Reviews!
+©2005-2025 All Rights Reserved.
+Execution time - 0.0037 sec. - Number of Queries: 2
+About Us | RHDN Policy | HTML5 | CSS

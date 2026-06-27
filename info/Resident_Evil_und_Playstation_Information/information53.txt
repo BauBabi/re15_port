@@ -1,0 +1,27 @@
+
+CDROM File Archive BIGFILE.BIG (Gex)	Contents
+Index	Prev
+Next
+
+Gex (GXDATA\BIGFILE.BIG and nested BIG files therein)
+  000h 4     Number of Files (eg. F4h)
+  004h 0Ch   Zero
+  010h N*10h File entries
+  ...  4     Archive ID (eg. 00000000h, FF53EC8Bh, or 83FFFFFFh)
+  ...  ..    Zeropadding to 800h byte boundary
+  ...  ..    File Data
+File Entries:
+  000h 4   Archive ID (same value as in above header)
+  004h 4   Filename checksum or so (randomly ordered, not increasing)
+  008h 4   Filesize in bytes
+  00Ch 4   Fileoffset (800h-byte aligned) (increasing)
+Filetypes in the archive include...
+  looks like a lot of raw data without meaningful file headers...
+  file C3h,ECh are raw SPU-ADPCM
+  file 08h,09h are nested BIG archives, but with FileEntry[00h]=FF53EC8Bh
+  file D9h,DAh are nested BIG archives, but with FileEntry[00h]=83FFFFFFh
+FileEntry[04h] sometimes has similar continous values (maybe caused by similar filenames, and using a simple checksum, not CRC32).
+
+
+I am homeless in Hamburg, please help me out!
+extracted from no$psx v2.2 - homepage - patreon - whole doc htm/txt - copyright 2022 martin korth (nocash)

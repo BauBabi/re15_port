@@ -1,0 +1,13 @@
+SPU lib example 1
+
+Loads a looping VAG (sample) file, starts playing it, and goes into
+an endless loop.
+
+The wav sample was converted to VAG using bitmasters' VAGPACK proggie.
+ 
+The VAG was hacked with hexedit to put looping markers in. It was
+then converted to object file using bin2src in batch file
+"vag2obj.bat".
+
+Compile and link by running example1.bat (you may have to edit this
+to put in the right include and library paths).

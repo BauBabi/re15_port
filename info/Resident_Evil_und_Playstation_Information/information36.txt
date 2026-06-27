@@ -1,0 +1,78 @@
+
+CDROM File Video BS Picture Files	Contents
+Index	Prev
+Next
+
+BS Picture Files
+A couple of games are storing single pictures in .BS files:
+  Alice in Cyberland (ALICE.PAC\*.BS)
+  BallBlazer Champions (BBX_EXTR.DAT\Pics\*) (SWAP-encrypted)
+  Bugriders: The Race of Kings (*\*.BS and STILLS\MENUS.BS\*)
+  Die Hard Trilogy 2 (DATA\*.DHB, DATA\DH*\L*\*.DHB, MOVIE\*.DHB)
+  Dino Crisis 2 (PSX\DATA\ST*.DBS\*)
+  Duke Nukem (MagDemo12: DN_TTK\*)
+  Final Fantasy VII (FF7) (MOVIE\FSHIP2*.BIN\*) (BS v1)
+  Gran Turismo 1 (retail TITLE.DAT\* and MagDemo10/15) (in BS iki format)
+  Jet Moto 2 (MagDemo03: JETMOTO2\*)
+  Mary-Kate and Ashley Crush Course (MagDemo52: CRUSH\SCRN\*.BS)
+  Mat Hoffman's Pro BMX (MagDemo48: MHPB\STILLS.BIN\*) (with width/height info)
+  NFL Gameday '99 (MagDemo17: GAMEDAY\FE\GD98DATA.DAT)
+  Official U.S. PlayStation Magazine Demo Disc 01-02 (MENU\DATA\*.BSS)
+  Official U.S. PlayStation Magazine Demo Disc 03-54 (MENU.FF\*)
+  Parasite Eve 2 (INIT.BS, and within .HED/.CDF archives)
+  Resident Evil 1 (PSX\STAGE*\*.BSS, headerless archive, 8000h-byte align)
+  Resident Evil 2 (COMMON\BSS\*.BSS, headerless archive, 10000h-byte align)
+  Rugrats (MagDemo19: RUGRATS\*)
+  Rugrats Studio Tour (MagDemo32: RUGRATS\DATA\RAW\*.BS)
+  Starwars Demolition (MagDemo39+MagDemo41: STARWARS\SHELL\.BS+.TBL\*)
+  Star Wars Rebel Assault 2 (RESOURCE.000\Stills\*) (SWAP-encrypted)
+  Ultimate Fighting Championship (MagDemo38: UFC\CU00.RBB\390h..3E2h)
+  Vigilante 8 (MagDemo09: EXAMPLE\*)
+  Witch of Salzburg (PICT\PIC*\*.BS and DOT1 archives *.BSS, *.DAT, *.BIN)
+  X-Files (LOGOS\*.BS and GRAPHICS\GRAPHICS.BIN and GRAPHICS\PACKEDBS.BIN\*)
+  You Don't Know Jack 2 (MagDemo41: YDKJV2\RES\UI\*.BS)
+Note: Those .BS files are usually hidden in custom file archives.
+
+BS Picture Resolution
+Movies have Width/Height entries (in the .STR header). Raw .BS picture files don't have any such information. However, there are ways to guess the correct resolution:
+  For BS iki format, use resolution from iki header (eg. Gran Turismo 1)
+  For MHPB\STILLS.BIN, there's width/height in chunk headers
+  Count the number of blocks (EOB codes) during Huffman decompression
+  Divide that number by 6 to get the number of Macroblocks
+  Search matches for Height=NumBlocks/Width with Width>=Height and Remainder=0
+  If Height=300..400, assume double H-resolution, repeat with Width/2>=Height
+  And/or use a list of known common resoltions (see below examples)
+  Search arrangements with many similar colors on adjacent macroblocks
+Common resolutions are:
+  Blocks Pixels   Example
+  F0h    256x240  any?
+  12Ch   320x240  Resident Evil 2 (COMMON\BSS\*.BSS)
+  1E0h   512x240  Demo Disc 03-54 (MENU.FF\*), Duke Nukem (MagDemo12)
+  1E0h   640x192  Less common than above (but used by Witch of Salzburg)
+  4B0h   640x480  Vigilante 8 (MagDemo09), Jet Moto 2 (MagDemo03)
+  var    random   Witch of Salzburg has various random resolutions
+  iki    ikihdr   Gran Turismo 1 has A0hxA0h and odd size (!) E8hx28h
+  ?      ?        Final Fantasy VII (FF7)
+  ?      ?        Ultimate Fighting Championship (UFC\CU00.RBB\3B7h..3E2h)
+  118h   320x224  Alice in Cyberland (most files; or two such as panorama)
+  230h   ?        Alice in Cyberland (AD_115.BS and AD_123A.BS)
+Some other possible, but rather unlikely results would be:
+  C8h    320x160  Unlikely for pictures (but used for STR videos, eg. Alone)
+  F0h    320x192  Unlikely for pictures (but used for STR videos, eg. Wipeout)
+  1E0h   384x320  Very unlikely to see that vertical resolution on PSX
+Witch of Salzburg has many small .BS files with various uncommon resolutions (most of them are bundled with 16-byte .TXT files with resolution info).
+
+Extended BS with Width/Height
+Starwars Demolition (MagDemo39: STARWARS\SHELL\DEMOLOGO.BS+RESOURCE.TBL\*)
+Starwars Demolition (MagDemo41: STARWARS\SHELL\DEMOLOGO.BS+RESOURCE.TBL\*)
+  000h 2    Width  (280h)       ;\extra header
+  002h 2    Height (1E0h)       ;/
+  004h 2    MDEC Size/4 (after huffman decompression) (rounded to 80h/4 bytes)
+  006h 2    File ID (3800h)
+  008h 2    Quantization step/factor (0000h..003Fh, for MDEC "DCT.bit10-15")
+  00Ah 2    Version (1, 2, or 3) (2 is most common)
+  00Ch ...  Huffman compressed data blocks (Cr,Cb,Y1,Y2,Y3,Y4, Cr,Cb,Y1,Y2..)
+
+
+I am homeless in Hamburg, please help me out!
+extracted from no$psx v2.2 - homepage - patreon - whole doc htm/txt - copyright 2022 martin korth (nocash)

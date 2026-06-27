@@ -1,0 +1,1234 @@
+Resident Evil 1 File Formats
+.BIN	Unknown
+.BGZ	Background images (Gamecube version)
+.BSS	Background and masks images (Playstation version)
+.CPK	Movies (Saturn version, all concatenated in a single file)
+.DAT	Unknown
+.DOR	Door animation
+.EMD	Enemy/player 3D model
+.EMW	Player 3D model with weapon?
+.ESP	Unknown
+.ETM	Texture IMage, see .TIM
+.HED	Unknown (Playstation version)
+.HSB	Unknown (Playstation version)
+.IVM	Texture IMage, see .TIM
+.PAK	Background images (PC version)
+.PIX	Raw 16 bits image
+.PTC	Raw 24-bit image
+.RDT	Room description
+.RGB	Raw 24-bit image (Playstation version)
+.STF	Unknown (Playstation version)
+.STR	Movies (Playstation version)
+.TIM	Texture IMage
+.VB	waveform data format for ADPCM (Playstation version)
+.TMD	3D model
+.XAS	CD-ROM XA audio stream (Playstation version)
+
+.BSS
+Patrice Mandin edited this page on Aug 27, 2021 · 13 revisions
+Table of Contents
+Games
+Structure
+Playstation
+Saturn
+Decompression
+RE2 Decompression for TIM masks
+RE3 Decompression for TIM masks
+External links
+Games
+The .BSS file format is used on Resident Evil game series on Playstation to store the 2D background images. A file holds all different views (camera angles) for the same room.
+
+Structure
+Playstation
+The file is an archive that contains several compressed images, aligned on 32KB boundaries (for Resident Evil) or 64KB boundaries (Resident Evil 2 and 3).
+
+For Resident Evil 2 and 3, the video stream compressed image (see below) for the background image is followed most likely by a TIM file (lightly compressed, maybe some kind of RLE compression, see below), which should be the masks image for the background.
+
+After this file you'll find the offset in the 64KB block and a counter of extra files, mostly 1. It appears the game engine contains hardcoded offsets to this position to find the mask offset.
+
+Saturn
+The file starts with a list of unsigned long offsets, to a number of 512 bytes block.
+
+- TODO -
+
+Decompression
+Each image is compressed for use with Playstation MDEC decoder (the chip responsible for video decoding). An extra decompression step in software, to decode variable-length data (VLC), is performed before feeding the data through MDEC processing.
+
+The libbs library from psxdev-libs package provides the two necessary routines/steps to fully depack the images. The MDEC decoding part in this library comes from the PCSX emulator.
+
+The resolution of the image must be known for correct depacking, and these images use standard 320x240 resolution.
+
+RE2 Decompression for TIM masks
+The file starts with a LONG with is the uncompressed file length, then an unused WORD. The rest of the file are compressed blocks with an header byte beeing XXXYZZZZ. Bytes following this header are counter or offsets to source or already decompressed file.
+
+void memcpy_overlap(Uint8 *dest, Uint8 *src, int count) {
+	int i;
+
+	for (i=0; i<count; i++) {
+		dest[i] = src[i];
+	}
+}
+
+void bsssld_depack_re2(Uint8 *srcPtr, int srcLen, Uint8 **dstBufPtr, int *dstLength)
+{
+	Uint32 buflen;
+	Uint8 *dstPtr;
+	int srcPos, dstPos;
+	int count;
+
+	buflen = SDL_SwapLE32(*((Uint32 *)srcPtr));
+
+	dstPtr = *dstBufPtr = malloc(buflen);
+	memset(*dstBufPtr, 0, buflen);
+	*dstLength = buflen;
+
+	srcPos = 6;
+	dstPos = 0;
+	while ((srcPos<srcLen) && (dstPos<buflen)) {
+
+		while ((srcPtr[srcPos] & 0x10)==0) {
+			count = srcPtr[srcPos] & 0x0f;
+			int srcOffset = (-256 | (srcPtr[srcPos] & 0xe0))<<3;
+			srcOffset |= srcPtr[srcPos+1];
+			if (count == 0x0f) {
+				count += srcPtr[srcPos+2];
+				srcPos += 3;
+			} else {
+				srcPos += 2;
+			}
+			count += 3;
+
+			memcpy_overlap(&dstPtr[dstPos], &dstPtr[dstPos+srcOffset], count);
+			dstPos += count;
+		}
+
+		if (srcPtr[srcPos] == 0xff)
+			break;
+
+		count = ((srcPtr[srcPos++] | 0xffe0) ^ 0xffff)+1;
+		if (count == 0x10) {
+			count += srcPtr[srcPos++];
+		}
+
+		memcpy(&dstPtr[dstPos], &srcPtr[srcPos], count);
+		dstPos += count;
+		srcPos += count;
+	}
+}
+RE3 Decompression for TIM masks
+This routine is similar to the one for RE masks, but slightly different. The first LONG is a number of blocks to decompress. Each block has an header byte, with 1 or more following bytes depending on the header byte.
+
+void memcpy_overlap(Uint8 *dest, Uint8 *src, int count) {
+	int i;
+
+	for (i=0; i<count; i++) {
+		dest[i] = src[i];
+	}
+}
+
+void bsssld_depack_re3(Uint8 *srcPtr, int srcLen, Uint8 **dstBufPtr, int *dstLength)
+{
+	Uint8 *dstPtr;
+	int srcPos, dstPos, i, numBlocks;
+	int count, offset;
+
+	numBlocks = SDL_SwapLE32(*((Uint32 *)srcPtr));
+
+	*dstLength = 65536;
+	dstPtr = malloc(*dstLength);
+	memset(dstPtr, 0, *dstLength);
+
+	srcPos = 4;
+	dstPos = 0;
+	for(i=0; (i<numBlocks) && (srcPos<srcLen); i++) {
+		if ((srcPtr[srcPos] & 0x80) != 0) {
+			count = srcPtr[srcPos++] & 0x7f;
+
+			if (dstPos+count >= *dstLength) {
+				*dstLength += 65536;
+				dstPtr = (Uint8 *) realloc(dstPtr, *dstLength);
+			}
+
+			memcpy(&dstPtr[dstPos], &srcPtr[srcPos], count);
+			srcPos += count;
+			dstPos += count;
+		} else {
+			offset = srcPtr[srcPos++]<<8;
+			offset |= srcPtr[srcPos++];
+			count = (offset>>11)+2;
+			offset &= 0x7ff;
+
+			if (dstPos+count >= *dstLength) {
+				*dstLength += 65536;
+				dstPtr = (Uint8 *) realloc(dstPtr, *dstLength);
+			}
+
+			memcpy_overlap(&dstPtr[dstPos], &dstPtr[dstPos-(offset+4)], count);
+			dstPos += count;
+		}
+	}
+
+	*dstLength = dstPos;
+	*dstBufPtr = (Uint8 *) realloc(dstPtr, *dstLength);
+}
+External links
+PSXdev
+PCSX emulator source files
+
+.DOR
+Patrice Mandin edited this page 27 days ago · 3 revisions
+Table of Contents
+Games
+Structure
+Header
+Offset 0
+Offset 1: embedded TMD file
+Offset 2: embedded TIM file
+Games
+The .DOR file format is used by Resident Evil to store the animation of door, when the player changes room.
+
+Structure
+The values are stored in Little-Endian order.
+
+Header
+A DOR file starts with this header, to store offsets to different objects, embedded in the file.
+
+typedef struct {
+	unsigned long obj0_offset;	/* Offset to ? */
+	unsigned long tmd_offset;	/* Offset to embedded TMD file */
+	unsigned long tim_offset;	/* Offset to embedded TIM file */
+} dor_header_t;
+Offset 0
+The structure starts with an array of relative offsets from the start of this structure. Thus, the number of items is rel_offset[0]/4.
+
+unsigned long rel_offset[]; 
+Offset 1: embedded TMD file
+See .TMD for further information.
+
+Offset 2: embedded TIM file
+See .TIM for further information.
+
+.EMD (Resident Evil)
+Patrice Mandin edited this page on Aug 20, 2021 · 4 revisions
+Table of Contents
+Games
+Structure
+Directory
+File/Section 0, skeleton
+File/Section 1, animation steps
+File/Section 2, meshes
+Header
+Objects
+Index arrays
+File/Section 3, texture
+Games
+The .EMD file format is used by Resident Evil. It contains the description of 3D models of the game (enemies, player, etc...).
+
+Structure
+The values are stored in Little-Endian order.
+
+Directory
+There is a directory, which is stored at the end of the file, it contains 4 offsets. So its position is filesize-4*4 bytes.
+
+File/Section 0, skeleton
+This section starts with a header:
+
+typedef struct {
+	unsigned short bone_offset;/* Relative offset to emd1_skel_armature_t[] array */
+	unsigned short length; /* Relative offset to emd1_skel_data[] array, which is also length of relpos+armature+mesh numbers  */
+	unsigned short count; /* Number of objects in relpos,data2,mesh arrays? */
+	unsigned short size; /* Size of each element in emd1_skel_data[] array */
+} emd1_skel_header_t;
+If offset is more than 8, there are some extra stuff, namely data1,data2 and mesh arrays.
+
+typedef struct {
+	unsigned short mesh_count; /* Number of meshes linked to this one */
+	unsigned short offset; /* Relative offset to mesh numbers (emd1_skel_mesh[] array) */
+} emd1_skel_armature_t;
+
+emd1_skel_relpos_t emd1_skel_relpos[count];
+emd1_skel_armature_t emd1_skel_armature[count];
+unsigned char emd1_skel_mesh[count]; /* Mesh number on which to apply relative position */
+Finally an array of elements which have a size of emd1_skel_header.size bytes each.
+
+typedef struct {
+	short x_offset;	/* distance from reference point */
+	short y_offset;
+	short z_offset;
+
+	short x_speed;	/* speed at which moving the model */
+	short y_speed;
+	short z_speed;
+
+	short angles[3*15];	/* angle for each bone/model around x,y,z axis */
+
+	short unknown;
+} emd1_skel_anim_t;
+
+emd1_skel_anim_t emd1_skel_anim[];
+File/Section 1, animation steps
+This section starts with this header, a certain number of records composed of count and offsets.
+
+emd_anim_header_t emd_anim_header[];
+Following this array, you'll find another array of unsigned long. Each value (animation frame number?) is an index in emd_sec2_data array in the skeleton section.
+
+unsigned long emd_anim_skel_t[];    /* Bits 31-16:   Bitmasks for flags */
+                                    /* Bits 15-0:    Number of frame to display ? */
+Then you'll finally find the 'unsigned long' byte length of the section.
+
+unsigned long length;
+File/Section 2, meshes
+The last object holds the 3D stuff. Maybe the rest of the file is use to store animations, and links between primitives.
+
+Header
+typedef struct {
+    unsigned long length; /* Section length in bytes */
+    unsigned long unknown;
+    unsigned long obj_count; /* Number of objects in model */
+} emd_model_header_t;
+Objects
+The model is separated in 'obj_count' objects. Following the header is the description of each object, in the form of an array of 'model_object'. Each offset is relative to the first emd_model_object_t.
+
+typedef struct {
+    unsigned long vertex_offset; /* Offset to vertex data, array of emd_vertex_t */
+    unsigned long vertex_count;  /* Vertex count */
+    unsigned long normal_offset; /* Offset to normal data, array of emd_vertex_t */
+    unsigned long normal_count;  /* Normal count */
+    unsigned long tri_offset; /* Offset to triangle data, array of emd_triangle_t */
+    unsigned long tri_count;  /* Triangle count */
+    unsigned long dummy;
+} emd_model_triangles_t;
+Index arrays
+Normal and vertex coordinates are saved in same format:
+
+typedef struct {
+    signed short x; /* Coordinates */
+    signed short y;
+    signed short z;
+    signed short zero;    
+} emd_vertex_t; /* Normals have same format */
+A triangle is stored in this format:
+
+typedef struct {
+    unsigned long unknown; /* id 0x34000609 */
+
+    unsigned char tu0; /* u,v texture coordinates of vertex 0 */
+    unsigned char tv0;
+    unsigned short clutid; /* Texture clut id, bits 0-5 */
+    unsigned char tu1;
+    unsigned char tv1;
+    unsigned short page;  /* Texture page */
+    unsigned char tu2;
+    unsigned char tv2;
+    unsigned short dummy;
+
+    unsigned short n0; /* Index of normal data for vertex 0 */
+    unsigned short v0; /* Index of vertex data for vertex 0 */
+    unsigned short n1;
+    unsigned short v1;    
+    unsigned short n2;
+    unsigned short v2;    
+} emd_triangle_t; /* Triangle */
+File/Section 3, texture
+And finally, an embedded .TIM image, which is the texture to apply to the model.
+
+.EMW
+Patrice Mandin edited this page on Jan 18, 2019 · 4 revisions
+Games
+The .EMW file format is used by Resident Evil. It contains data related to player model.
+
+Structure
+The values are stored in Little-Endian order.
+
+See .EMD file, section 2 for content.
+
+.PAK (Resident Evil)
+Patrice Mandin edited this page on Jan 18, 2019 · 2 revisions
+Games
+The .PAK file format is used by Resident Evil (PC Version). It contains a compressed TIM image, using an algorithm similar to LZW.
+
+Structure
+The file is a bitstream, without any header.
+
+Example decompression routine
+This source is partly based on LZW decoder from scummvm engine.
+
+unsigned char dstPointer[512<<10];
+int dstOffset;
+unsigned long dstLength;
+
+unsigned char *srcPointer;
+int srcOffset;
+unsigned char srcByte;
+int tmpMask;
+
+#define MAX_LENGTH 35024
+
+typedef struct {
+	long flag;
+	long index;
+	long value;	
+} re1_pack_t;
+
+re1_pack_t tmpArray2[MAX_LENGTH];
+unsigned char decodeStack[MAX_LENGTH];
+
+/* Load file in mem from filename, return buffer, update length */
+
+char *loadFile(char *filename, int *length)
+{
+	int handle;
+	char *buffer;
+
+	/* Load file */
+	handle = open(filename, O_RDONLY);
+	if (handle<0) {
+		fprintf(stderr, "Unable to open %s\n", filename);	
+		return NULL;
+	}
+
+	*length = lseek(handle, 0, SEEK_END);
+	lseek(handle, 0, SEEK_SET); 	
+
+	buffer = (char *)malloc(*length);
+	if (buffer==NULL) {
+		fprintf(stderr, "Unable to allocate %d bytes\n", length);
+		return NULL;
+	}
+
+	read(handle, buffer, *length);
+	close(handle);
+
+	return buffer;
+}
+
+int re1_read_bits(int num_bits)
+{
+	unsigned long value=0, mask;
+
+	mask = 1<<(--num_bits);
+
+	while (mask>0) {
+		if (tmpMask == 0x80) {
+			srcByte = srcPointer[srcOffset++];
+		}
+
+		if ((tmpMask & srcByte)!=0) {
+			value |= mask;
+		}
+
+		tmpMask >>= 1;
+		mask >>= 1;
+
+		if (tmpMask == 0) {
+			tmpMask = 0x80;
+		}
+	}
+
+	return value;
+}
+
+int decodeString(int decodeStackOffset, unsigned long code)
+{
+	int i;
+
+	for (i=0; code>255; ) {
+		decodeStack[decodeStackOffset++] = tmpArray2[code].value;
+		code = tmpArray2[code].index;
+		i++;
+	}
+	decodeStack[decodeStackOffset] = code;
+
+	return decodeStackOffset;
+}
+
+void re1_depack(unsigned char *src, int src_length)
+{
+	int num_bits_to_read, i;
+	int lzwnew, c, lzwold, lzwnext;
+
+	srcPointer = src;
+	srcOffset = 0;
+	tmpMask = 0x80;
+	srcByte = 0;	
+	dstOffset = 0;
+
+	memset(tmpArray2, 0, sizeof(tmpArray2));
+
+	for(;;) {
+		for (i=0; i<MAX_LENGTH; i++) {
+			tmpArray2[i].flag = 0xffffffff;
+		}
+		lzwnext = 0x103;
+		num_bits_to_read = 9;
+
+		c = lzwold = re1_read_bits(num_bits_to_read);
+
+		if (lzwold == 0x100) {
+			break;
+		}
+
+		dstPointer[dstOffset++] = c;
+
+		for(;;) {
+			lzwnew = re1_read_bits(num_bits_to_read);
+
+			if (lzwnew == 0x100) {
+				dstLength = dstOffset;
+				return;
+			}
+
+			if (lzwnew == 0x102) {
+				break;
+			}
+
+			if (lzwnew == 0x101) {
+				num_bits_to_read++;
+				continue;
+			}
+
+			if (lzwnew >= lzwnext) {
+				decodeStack[0] = c;
+				i = decodeString(1, lzwold);
+			} else {
+				i = decodeString(0, lzwnew);
+			}	
+
+			c = decodeStack[i];
+
+			while (i>=0) {
+				dstPointer[dstOffset++] = decodeStack[i--];
+			}
+
+			tmpArray2[lzwnext].index = lzwold;
+			tmpArray2[lzwnext].value = c;
+			lzwnext++;
+
+			lzwold = lzwnew;
+		}
+	}
+
+	dstLength = dstOffset;
+}
+
+int main(int argc, char **argv)
+{
+	int length;
+	unsigned char *fileInMem;
+
+	if (argc<2) {
+		return 1;
+	}
+
+	fileInMem = loadFile(argv[1], &length);
+	if (fileInMem==NULL) {
+		return 1;
+	}
+
+	re1_depack(fileInMem, length);
+
+	/* Now you have the decompressed file at dstPointer */
+	/*  and length is dstLength */
+
+	free(fileInMem);
+
+	return 0;
+}
+
+.PTC
+Patrice Mandin edited this page on Jan 18, 2019 · 2 revisions
+Games
+This file format is is nothing more than a raw, uncompressed pixmap in RGB format. It's been used at least by the PC version of Resident Evil.
+
+Structure
+Just a bunch of RGB triplets stored sequentially, the dimensions of the picture have to be known in advance in order for the decoding program to make proper sense of it.
+
+In the only occurrence of this file under Resident Evil's data directory, Data/CAPCOM.PTC is a 224x816 pixmap containing a series of the CAPCOM company logo, stacked vertically in what seems to be an animated sequence.
+
+Header
+This file is a raw pixmap, thus has no header.
+
+.RDT (Resident Evil)
+Patrice Mandin edited this page 3 weeks ago · 12 revisions
+Table of Contents
+Games
+Structure
+Header
+Object list
+Camera positions
+Image masks
+Offset 0, camera switches
+Offset 2, items? obstacles?
+Offset 6, initialization script for room
+Bytes 0x00 - 0x0f
+Bytes 0x10 - 0x1f
+Bytes 0x20 - 0x2f
+Bytes 0x30 - 0x3f
+Bytes 0x40 - 0x50
+Objects for bit operations
+Offset 7, execution script for room
+Offset 8, Script events ?
+Offset 9, skeleton
+Offset 10, skeleton animation steps
+Games
+The .RDT file format is used to stored the description of a room in Resident Evil on Playstation or PC. It should contain the camera position (to correctly display 3D objects), the background images and sprites used to draw the scene, description of when to change camera, position of enemies when entering room, and so on...
+
+On Sega Saturn version, this file is compressed.
+
+Structure
+The values are stored in Little-Endian order.
+
+The file is always named roomSXXC.rdt. 'S' is the game status/stage. 'XX' is the location number. 'C' is the character 0 for Chris, 1 for Jill.
+
+Header
+A RDT file starts with this header, to store count for different objects.
+
+typedef struct {
+  char unknown0;
+  char num_cameras; /* Number of cameras of the room */
+  char num_sound_banks; /* Number of sound banks, stored at offset 18 ? */
+  char unknown1[3];
+  unsigned short unknown2[3]; 
+
+  /* An array of 3 elements of unknown structure, defined below */
+  rdt_header_part_t unknown3[3];
+} rdt_header_t;
+  
+typedef struct {
+  long unknown_pos_x; /* Unknown 3D position */
+  long unknown_pos_y;
+  long unknown_pos_z;
+  unsigned long unknown0[2];
+} rdt_header_part_t;
+Object list
+Following the header, we have an array of 19 absolute offsets to various objects in the file.
+
+Offset 0: Camera switches
+Offset 1: Collision Boundaries for 3D Models (*.SCA)
+Offset 2: items? obstacles?
+Offset 3: TMD/TIM; points to 2 offsets which are: offset to a TMD file, and offset to a TIM file
+Offset 4: unknown
+Offset 5: unknown
+Offset 6: Initialization Script(s) (*.SCD)
+Offset 7: Execution Script(s) (*.SCD)
+Offset 8: Event scripts (*.EVT)
+Offset 9: skeleton
+Offset 10: skeleton animation steps
+Offset 11: unknown
+Offset 12: unknown
+Offset 13: animation for current room.
+Offset 14: points to an offset, to an unknown structure
+Offset 15: points to an offset, which holds an offset to a TIM file
+Offset 16: offset to a RAW image?
+Offset 17: offset to a VAB file
+Offset 18: offset to sound bank(s)
+Offset 19: unknown
+Camera positions
+At absolute offset 0x94 in a file, you'll find an array of 'num_cameras' items with this structure:
+
+typedef struct {
+	long masks_offset;	/* Offset to image mask definition */
+	long tim_masks_offset;	/* Offset to TIM file that contains image masks, if not zero */
+	long camera_from_x;	/* Position of the camera */
+	long camera_from_y;
+	long camera_from_z;
+	long camera_to_x;	/* Where the camera is looking to */
+	long camera_to_y;
+	long camera_to_z;
+	long unknown1[3];
+} rdt_camera_t;
+Image masks
+The masks_offset is an offset to an extra structure, which has following header:
+
+typedef struct {
+	unsigned short count_offsets;	/* Number of global offsets, or 0xffff for none */
+	unsigned short unknown;
+} rdt_masks_t;
+Then you have 'rdt_mask_offset_t' items, which have a 8-byte length. Summing all 'count' fields should equal the 'count_masks' of the rdt_masks_t structure.
+
+typedef struct {
+	unsigned short count;	/* Number of masks, with which to use this structure */
+	unsigned short unknown;
+	unsigned short dst_x;	/* Destination position on background image/screen, to be added */
+	unsigned short dst_y;
+} rdt_mask_offset_t;
+And then you have 'rdt_[rect|square]_mask_t' items, which have either 12-byte (rectangular mask) or 8-byte length (square mask). The length is 12 if byte 7 (rdt_square_mask_t.size field) is zero, and 8 otherwise. The 'depth' value is the Z distance of the mask from the camera (low value=near, high value=far).
+
+typedef struct {
+	unsigned char src_x;	/* Source position in horr/usa/objspr/ospSSRRC.pak image file */
+	unsigned char src_y;
+	unsigned char dst_x;	/* Destination position on background image/screen */
+	unsigned char dst_y;
+	unsigned short depth;	/* Distance/16 from camera */
+	unsigned short zero;
+	unsigned short width, height;	/* Dimensions of mask */
+} rdt_rect_mask_t;
+Offset 0, camera switches
+At offset 0, you'll find the list of camera switches for the current room. The list end with the first 4 bytes are 0xffffffff (i.e for cam0 and cam1 values).
+
+typedef struct {
+  unsigned short to; /* Camera number to switch to */
+  unsigned short from; /* Camera number to switch from */
+  short x1,y1; /* Zone the player must enter to switch camera */
+  short x2,y2;
+  short x3,y3;
+  short x4,y4;
+} rdt_camera_switch_t;
+If the 'to' value = 9, then it is a boundary, else it is a camera switch.
+
+Offset 2, items? obstacles?
+This is an array of N structures of the following format, used by script instruction OM_SET (0x1f).
+
+typedef struct {
+	unsigned long tmd_offset;
+	unsigned long tim_offset;
+} rdt_offset2_t;
+Offset 6, initialization script for room
+This is the initialization script for the room. It starts with an unsigned short giving the length of the script in bytes. Then follows the script, in bytecode-style.
+
+Bytes 0x00 - 0x0f
+Byte	Instruction	Length	Description
+0x00	Nop	2
+0x01	If	2	
+typedef struct {
+	unsigned char opcode; /* 0x01 */
+	unsigned char block_length;
+} script_if_t;
+This structure is followed by one or several conditions for the if (condition) instruction. Any condition evaluated to false will end the if () block.
+0x02	Else	2	Follows: byte with ELSE block length. Note: it's either If/Endif, or If/Else; there is no If/Else/Endif sequence.
+0x03	End If	2
+0x04	BIT_TEST	4	Bit test
+typedef struct {
+	unsigned char opcode;	/* 0x04 */
+	unsigned char object;
+	unsigned char param;	/* Bits 7-5: Longword index in object, see array following */
+				/* Bits 4-0: Bit number to test */
+	unsigned char op;	/* Operation */
+				/* 0x00:test bit is 0 */
+				/* 0x01:test bit is 1 */
+} script_bit_test_t;
+0x05	BIT_OP	4	Bit operation
+typedef struct {
+	unsigned char opcode;	/* 0x05 */
+	unsigned char object;	/* Number of object to operate on, see array following */
+	unsigned char param;	/* Bits 7-5: Longword index in object */
+				/* Bits 4-0: Bit number to clear/set/change is (31-this field value) */
+	unsigned char op;	/* Operation */
+				/* 0x00:clear bit */
+				/* 0x01:set bit */
+				/* 0x02:change bit */
+} script_bit_op_t;
+0x06	OBJ06_TEST	4	Compare values
+typedef struct {
+	unsigned char opcode;	/* 0x06 */
+	unsigned char src;	/* Index in some object for source value */
+				/* 0x00:Current stage */
+				/* 0x01:Current room */
+				/* 0x02:Current camera */
+				/* 0x03:Stage and room */
+				/* 0x04:Previous/next camera */
+				/* 0x05:? */
+				/* 0x06:? */
+				/* 0x07:? Used in instruction 0x1a */
+				/* 0x08:? Used in instruction 0x1c */
+				/* 0x09:Flags for current camera */
+	unsigned char func;	/* Compare function */
+				/* 0x00:EQ */
+				/* 0x01:LT */
+				/* 0x02:LE */
+				/* 0x03:GT */
+				/* 0x04:GE */
+				/* 0x05:NE */
+	char param;		/* Raw value to compare against */
+} script_obj06_test_t;
+0x07	OBJ07_TEST	6	Compare values
+typedef struct {
+	unsigned char opcode;	/* 0x07 */
+	unsigned char dummy;
+	unsigned char src;	/* Word index in some object for source value */
+				/* (not the same object as instruction 0x06) */
+	unsigned char func;	/* Compare function */
+				/* 0x00:EQ */
+				/* 0x01:LT */
+				/* 0x02:LE */
+				/* 0x03:GT */
+				/* 0x04:GE */
+				/* 0x05:NE */
+	short param;		/* Raw value to compare against */
+} script_obj07_test_t;
+0x08	OBJ06_SET	4	Set value in object used for instruction 0x06
+typedef struct {
+	unsigned char opcode;	/* 0x08 */
+	unsigned char src;	/* Index in some object, see instruction 0x06 */
+	char value;		/* New value */
+	unsigned char dummy;
+} script_obj06_set_t;
+0x09	CUT_SET	2	Switch to prev/next camera, set it as current camera
+0x0a	CUT_SET	2	Switch to current camera, set it as prev/next camera
+0x0b	?	4
+0x0c	DOOR_SET	26	TODO: find where next_camera is stored
+typedef struct {
+	unsigned char opcode;	/* 0x0c */
+	unsigned char id;
+	short x,y,w,h;
+	unsigned char anim;	/* Door animation, i.e. index in array of door filenames (see below) */
+	unsigned char unknown0[4];
+	unsigned char next_stage_and_room;	/* bits 7,6,5: stage, 4,3,2,1,0: room */
+	short next_x,next_y,next_z;
+	short next_dir;
+	unsigned char unknown2[2];
+} script_door_set_t;
+/* Files are located in item_m1 directory */
+const char *doorfiles[]={
+	"door00.dor",
+	"door01.dor",
+	"door02.dor",
+	"door03.dor",
+	"door04.dor",
+	"door05.dor",
+	"door06.dor",
+	"door07.dor",
+	"door08.dor",
+	"door09.dor",
+	"door10.dor",
+	"door11.dor",
+	"door12.dor",
+	"door13.dor",
+	"door14.dor",
+	"mon.dor",
+	"ele03.dor",
+	"ele01.dor",
+	"ele01a.dor",
+	"ele01b.dor",
+	"ele02.dor",
+	"ele04.dor",
+	"kai01.dor",
+	"kai03.dor",
+	"kai02.dor",
+	"kai04.dor",
+	"lad01.dor",
+	"lad02.dor",
+	"door00k.dor",
+	"door01k.dor",
+	"door03k.dor",
+	"door05k.dor",
+	"door06k.dor",
+	"door15.dor"
+};
+Note: if stage=0, we must keep current stage, else switch stage.
+0x0d	ITEM_SET	18	Pickable items, objects, obstacles
+typedef struct {
+	unsigned char opcode;	/* 0x0d */
+	unsigned char id;
+	short x,y,w,h;
+	unsigned char type;	/* 0x02: message, obstacle? */
+				/* 0x07: trigger,event,movable object? */
+				/* 0x08: box */
+				/* 0x09: pickable object, trigger? */
+				/* 0x10: typewriter */
+	unsigned char unknown[7];
+} script_item_set_t;
+0x0e	Nop	2
+0x0f	?	8	
+typedef struct {
+	unsigned char opcode;	/* 0x0f */
+	unsigned char bitmask;
+	unsigned short unknown[3];
+} script_inst0f_t;
+Bytes 0x10 - 0x1f
+Byte	Instruction	Length	Description
+0x10	OBJ10_TEST	2	Check if obj10 has value given as parameter
+typedef struct {
+	unsigned char opcode;	/* 0x10 */
+	char value;
+} script_obj10_test_t;
+0x11	OBJ11_TEST	2	Check if obj11 has value given as parameter
+typedef struct {
+	unsigned char opcode;	/* 0x11 */
+	char value;
+} script_obj11_test_t;
+0x12	Item 0x12	10	Typewriter? Stairs?
+typedef struct {
+	unsigned char opcode;	/* 0x12 */
+	unsigned char id;
+	unsigned char unknown0[2];
+	short unknown1[3];
+} script_inst12_t;
+0x13	Item 0x13	4	
+typedef struct {
+	unsigned char opcode;	/* 0x13 */
+	unsigned char id;
+	unsigned char unknown0[2];
+} script_inst13_t;
+0x14	?	4	
+typedef struct {
+	unsigned char opcode;	/* 0x14 */
+	unsigned char dummy;
+	unsigned char param1;
+	unsigned char param2;
+} script_inst14_t;
+0x15	?	2
+0x16	?	2	Volume set?
+0x17	?	10
+0x18	ITEM_MODEL_SET	26	
+typedef struct {
+	unsigned char opcode;	/* 0x18 */
+	unsigned char id;
+	unsigned char unknown[24];
+} script_item_model_set_t;
+0x19	OBJ19_SET	4	Set value in obj19
+typedef struct {
+	unsigned char opcode;	/* 0x09 */
+	unsigned char src;	/* Index in some object */
+	char value;		/* New value */
+	unsigned char dummy;
+} script_obj19_set_t;
+0x1a	?	2
+0x1b	EM_SET	22	Entity (enemy, other character)
+typedef struct {
+	unsigned char opcode;	/* 0x1b */
+	unsigned char model;
+	unsigned char unknown0[4]; /* unknown0[1]=0xff for other character, else enemy */
+	long x,y,z;
+	short dir;
+	unsigned short unknown1;
+} script_em_set_t;
+0x1c	?	6	
+typedef struct {
+	unsigned char opcode;	/* 0x1c */
+	unsigned char unknown0;
+	unsigned short unknown1[2];
+} script_inst1c_t;
+0x1d	?	2
+0x1e	?	4	
+typedef struct {
+	unsigned char opcode;	/* 0x1e */
+	unsigned char unknown0;
+	unsigned short unknown1;
+} script_inst1e_t;
+0x1f	OM_SET	28	Movable (crate, statue) or animated (lid) objects?
+typedef struct {
+	unsigned char opcode;	/* 0x1f */
+	unsigned char id;	/* Bits 5-0: Index in array stored at offset 2 of RDT file */
+	unsigned char type;	/* 0x11: safe lid ? */
+	unsigned char unknown[25];
+} script_om_set_t;
+Bytes 0x20 - 0x2f
+Byte	Instruction	Length	Description
+0x20	?	14	Change player position and direction?
+typedef struct {
+	unsigned char opcode;	/* 0x20 */
+	unsigned char dummy;
+	short dir_x,dir_y,dir_z;
+	short pos_x,pos_y,pos_z;
+} script_inst20_t;
+0x21	?	14
+0x22	?	4
+0x23	?	2	
+typedef struct {
+	unsigned char opcode;	/* 0x23 */
+	unsigned char flag;
+} script_inst23_t;
+0x24	?	4
+0x25	?	4
+0x27	?	2
+0x28	?	4,6 or 8
+0x29	?	2	Select sound bank?
+0x2a	?	12
+0x2b	?	4
+0x2c	?	2
+0x2d	?	4
+0x2f	?	4
+Bytes 0x30 - 0x3f
+Byte	Instruction	Length	Description
+0x30	?	12
+0x31	?	4
+0x32	?	4
+0x33	?	2 or 4
+0x34	?	8
+0x35	?	4
+0x36	?	4
+0x37	?	4
+0x38	?	4
+0x39	?	2
+0x3a	?	4
+0x3b	?	6
+0x3c	?	6
+0x3d	?	12
+0x3e	?	2
+0x3f	?	6
+Bytes 0x40 - 0x50
+Byte	Instruction	Length	Description
+0x40	?	16
+0x41	?	4
+0x42	?	4
+0x43	?	4
+0x44	?	2
+0x45	?	2
+0x46	?	2+12*n+2*m (was 44)
+0x47	?	14
+0x48	?	2
+0x49	?	2
+0x4a	?	2
+0x4b	?	2
+0x4c	?	4	Set value in OBJ06 ?
+typedef struct {
+	unsigned char opcode;	/* 0x4c */
+	unsigned char unknown[3];
+} script_inst4c_t;
+0x4d	?	2
+0x4e	?	4
+0x4f	?	2
+0x50	?	2
+Objects for bit operations
+Object number	Description
+0	?
+1	?
+2	?
+3	?
+4	?
+5	Game status Bit 23:Player character (0:Chris, 1:Jill, or vice versa).
+6	?
+7	?
+8	?
+9	?
+Offset 7, execution script for room
+This script is run regularly to update stuff in current room. It follows same structure as the one at offset 6.
+
+Offset 8, Script events ?
+This structure starts with a NULL terminated list of 'unsigned long', which are offsets relative to start of this object. These offsets store also some bytecodes, different than those above.
+
+Byte	Instruction	Length	Description
+0xf6	?	1	Init some stuff related to instruction 0xf7
+0xf7	?	1	
+0xf8	?	1	Init some stuff related to instruction 0xf8
+0xf9	?	1 or 3	
+0xfa	For	4	
+typedef struct {
+	unsigned char opcode; /* 0xfa */
+	unsigned char dummy;
+	unsigned short count;
+} event_for_t;
+Initialize a for loop.
+0xfb	Next	1	
+0xfc	Set_Inst	variable	
+typedef struct {
+	unsigned char opcode; /* 0xfc */
+	unsigned char block_length;
+	unsigned char bytecode_inst[];
+} event_set_inst_t;
+Initialize bytecode instruction to execute later.
+0xfd	Exec_inst	1	Execute bytecode instruction previously set with 0xfc instruction.
+0xfe	Sleep, process next event	1	
+0xff	Disable event	1	
+Offset 9, skeleton
+See File/Section 0 of .EMD
+
+Offset 10, skeleton animation steps
+See File/Section 1 of .EMD
+
+.TIM
+Patrice Mandin edited this page on Jan 18, 2019 · 2 revisions
+Table of Contents
+Games
+Structure
+Header
+Palettes
+Image header
+Image data
+4 bits images
+8 bits images
+16 bits images
+External links for format description
+Games
+The .TIM file format is the standard file format for images on Playstation. It is also used by many PC ports of Playstation games, like Resident Evil, Resident Evil 2, Resident Evil 3, or Wipeout.
+
+Structure
+The values are stored in Little-Endian order.
+
+Header
+A TIM file contains one uncompressed bitmap. It starts with this header:
+
+typedef struct {
+	unsigned long	magic;	/* Constant = 0x10 */
+	unsigned long	type;
+	unsigned long	offset; /* allways Size of Clut data + 12 */
+	unsigned short	Palette Org X;
+	unsigned short	Palette Org Y;
+	unsigned short	palette_colors;
+	unsigned short	nb_palettes;
+} tim_header_t;
+'type' can be: '0x08' for 4 bits paletted images, '0x09' for 8 bits paletted images, and '0x02' for 16 bits true-colour images. 'offset' is an offset to start of image data. 'nb_palettes' is the number of palettes stored in the file, each palette having 'palette_colors' colors.
+
+Palettes
+In the case of paletted images, palettes are following the header in the file. Each color is coded in a 16-bits RGB value, which format is A1B5G5R5. There are 'palette_colors'*'nb_palettes' values stored.
+
+Image header
+After the optionnal palettes, come the image header. The width is in 16bit words, it means the real width in pixel is width*4 for 4-bits paletted images, width*2 for 8-bits paletted images and width for 16-bits paletted images.
+
+typedef struct {
+	unsigned short	width;	/* Width of image in 16-bits words */
+	unsigned short	height; /* Height of image in pixels */
+} tim_size_t;
+Image data
+4 bits images
+Each pixel is stored in 4 bits (so 2 pixels per byte), bits 7-4 for first pixel, and bits 3-0 for second pixel. The value is an index in a palette stored in the beginning of the file.
+
+8 bits images
+Each pixel is stored in a byte, which is an index in a palette stored in the beginning of the file.
+
+16 bits images
+Each pixel is in A1B5G5R5 format.
+
+External links for format description
+Qhimm wiki
+
+.VB
+Patrice Mandin edited this page on Jan 13, 2019 · 1 revision
+VAG is the PlayStation single waveform data format for ADPCM-encoded data of sampled sounds, such as piano sounds, explosions, and music. The typical extension in DOS is “.VAG”.
+
+.TMD
+Patrice Mandin edited this page on Jan 18, 2019 · 2 revisions
+Table of Contents
+Games
+Structure
+Header
+Object
+Vertex, normal
+Primitives
+Single color triangle (type 0x20,0x22)
+Gouraud triangle (type 0x24)
+Single color quad (type 0x28)
+Gouraud quad (type 0x2c)
+Flat triangle with vertex normals (type 0x30)
+Textured triangle (type 0x34)
+Flat quad with vertex normals (type 0x38)
+Games
+The .TMD file format is the standard file format for 3D objects on Playstation. It is also used by many PC ports of Playstation games, like Resident Evil, Resident Evil 2, Resident Evil 3.
+
+Structure
+The values are stored in Little-Endian order.
+
+Header
+A TMD file can contain several 3D models. It starts with this header:
+
+typedef struct {
+    unsigned long id; /* Constant = 0x41 */
+    unsigned long unknown;
+    unsigned long num_objects; /* Number of objects in file */
+} tmd_header_t;
+Then are following the objects headers, as an array of tmd_object_t objects[num_objects].
+
+Object
+typedef struct {
+	unsigned long vertex_offset; /* Offset to vertex array coordinates */
+	unsigned long vertex_count; /* Number of vertices */
+	unsigned long normal_offset; /* Offset to normal array coordinates */
+	unsigned long normal_count; /* Number of normals */
+	unsigned long primitive_offset; /* Offsets to primitives */
+	unsigned long primitive_count; /* Number of primitives */
+	unsigned long unknown;
+} tmd_object_t;
+Vertex, normal
+Vertices and normals share the same format to holds the 3D coordinate:
+
+typedef struct {
+	short x;
+	short y;
+	short z;
+	short zero;
+} tmd_vertex_t;
+Primitives
+Each primitive starts with same header, and the rest depend on the primitive type:
+
+typedef struct {
+	unsigned char unknown0;
+	unsigned char length; /* Length of following primitive in 32bit words */
+	unsigned char unknown1;
+	unsigned char type;	/* primitive type */
+} tmd_prim_header_t;
+Single color triangle (type 0x20,0x22)
+	unsigned short n0; /* Normal index */
+
+	unsigned short v0; /* Vertex index */
+	unsigned short v1;
+	unsigned short v2;
+} tmd_flattriangle_t;
+Gouraud triangle (type 0x24)
+	unsigned short n0; /* Normal index */
+
+	unsigned short v0; /* Vertex index */
+	unsigned short v1;
+	unsigned short v2;
+} tmd_gouraudtriangle_t;
+Single color quad (type 0x28)
+	unsigned short n0; /* Normal index */
+
+	unsigned short v0; /* Vertex index */
+	unsigned short v1;
+	unsigned short v2;
+	unsigned short v3;
+} tmd_flatquad_t;
+Gouraud quad (type 0x2c)
+	unsigned short n0; /* Normal index */
+
+	unsigned short v0; /* Vertex index */
+	unsigned short v1;
+	unsigned short v2;
+	unsigned short v3;
+
+	unsigned short unk5;
+} tmd_gouraudquad_t;
+Flat triangle with vertex normals (type 0x30)
+	unsigned short n0; /* Normal index */
+	unsigned short v0; /* Vertex index */
+	unsigned short n1;
+	unsigned short v1;
+	unsigned short n2;
+	unsigned short v2;
+} tmd_flattriangle2_t;
+Textured triangle (type 0x34)
+	unsigned short v0; /* Vertex index */
+	unsigned short n0; /* Normal index */
+	unsigned short v1;
+	unsigned short n1;
+	unsigned short v2;
+	unsigned short n2;
+} tmd_txtriangle_t;
+Flat quad with vertex normals (type 0x38)
+	unsigned short n0; /* Normal index */
+	unsigned short v0; /* Vertex index */
+	unsigned short n1;
+	unsigned short v1;
+	unsigned short n2;
+	unsigned short v2;
+	unsigned short n3;
+	unsigned short v3;
+} tmd_flatquad2_t;
+
+Pages 27
+Find a page…
+Home
+.ADT (Resident Evil 2 PC)
+.ARD
+.BIN (Resident Evil 2)
+.BSS
+.DAT (Resident Evil 3)
+.DO2
+.DOR
+.EMD (Resident Evil 2 PC)
+.EMD (Resident Evil 3)
+.EMD (Resident Evil)
+.EMW
+.PAK (Resident Evil)
+.PLD (Resident Evil 3)
+.PTC
+Clone this wiki locally
+https://github.com/pmandin/reevengi-tools.wiki.git
+Footer
+© 2025 GitHub, Inc.
+Footer navigation
+Terms
+Privacy
+Sec
+

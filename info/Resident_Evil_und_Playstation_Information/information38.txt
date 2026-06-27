@@ -1,0 +1,113 @@
+
+CDROM File Audio Single Samples VAG (Sony)	Contents
+Index	Prev
+Next
+
+VAG audio samples
+PSX Lightspan Online Connection CD, cdrom:\CD.TOC:\UI*\*.VAG
+PSX Wipeout 2097, cdrom:\WIPEOUT2\SOUND\SAMPLES.WAD:\*.vag (version=02h)
+PSX Perfect Assassin, DATA.JFS:\AUDIO\*.VAG and DATA.JFS:\SND\*.VAG
+  000h 4    File ID (usually "VAGp")
+  004h 4    Version (usually 02h, or 20h)                       (big-endian)
+  008h 4    Reserved (0) (except when ID="VAGi")                (big-endian)
+  00Ch 4    Channel Size (data size... per channel?)            (big-endian)
+  010h 4    Sample Rate (in Hertz) (eg. 5622h=22050Hz)          (big-endian)
+  014h 0Ch  Reserved (0) (except when version=2)
+  020h 10h  Name (ASCII, zeropadded)
+  ... (..)  Optional ID string (eg. "STEREO" in upper/lowercase)
+  ... (..)  Optional Padding to Data start
+  ...  ..   ADPCM Data for channel(s) (usually at offset 030h)
+VAG files are used on PSX, PSP, PS2, PS3, PS4. The overall 1-channel mono format is same for consoles. But there are numerous different variants for interleaved 2-channel stereo data.
+
+VAG Filename Extensions
+  .vag      default (eg. many PSX games)
+  .vig      2-channel with interleave=10h (eg. PS2 MX vs ATV Untamed)
+  .vas      2-channel with interleave=10h (eg. PS2 Kingdom Hearts II)
+  .swag     2-channel with interleave=filesize/2 (eg. PSP Frantix)
+  .l and .r 2-channel in l/r files (eg. PS2 Gradius V, PS2 Crash Nitro Kart)
+  .str      whatever (eg. P?? Ben10 Galactic Racing)
+  .abc      whatever (eg. PSP F1 2009 (v6), according to wiki.xentax.com)
+
+VAG File IDs (header[000h])
+  "VAGp"  default (eg. many PSX games)
+  "VAG1"  1-channel (eg. PS2 Metal Gear Solid 3)
+  "VAG2"  2-channel (eg. PS2 Metal Gear Solid 3)
+  "VAGi"  2-channel interleaved (eg. ?)
+  "pGAV"  little endian with extended header (eg. PS2 Jak 3, PS2 Jak X)
+  "AAAp"  extra header, followed by "VAGp" header (eg. PS2 The Red Star)
+
+VAG Versions (header[004h])
+  00000000h   v1.8 PC
+  00000002h   v1.3 Mac (eg. PSX Wipeout 2097, in SAMPLES.WAD)
+  00000003h   v1.6+ Mac
+  00000020h   v2.0 PC (most common, eg. PSX Perfect Assassin)
+  00000004h   ? (later games, uh when/which?)
+  00000006h   ? (vagconf, uh when/which?)
+  00020001h   v2.1 (vagconf2)   ;\with HEVAG coding instead SPU-ADPCM
+  00030000h   v3.0 (vagconf2)   ;/(eg. PS4/Vita)
+  40000000h   ? (eg. PS2 Killzone) (1-channel, little endian header)
+
+Reserved Header entries for ID="VAGi"
+  008h 4  Interleave (little endian) (the other header entries are big endian)
+
+Reserved Header entries for Version=00000002h (eg. PSX Wipeout 2097)
+This does reportedly contain some default "base" settings for the PSX SPU:
+  014h 2  Volume left                    4Eh,82h  ;-Port 1F801C00h
+  016h 2  Volume right                   4Eh,82h  ;-Port 1F801C02h
+  018h 2  Pitch (includes fs modulation) A8h,88h  ;-Port 1F801C04h +extra bit?
+  01Ah 2  ADSR1                          00h,00h  ;-Port 1F801C08h
+  01Ch 2  ADSR2                          00h,E1h  ;-Port 1F801C0Ah
+  01Eh 2  ?                              A0h,23h  ;-Port 1F801C0xh maybe?
+
+Reserved Header entries for Version=00000003h (according to wiki.xentax.com)
+  01Eh 1  Number of channels (0 or 1=Mono, 2=Stereo)
+
+Reserved Header entries for Version=00020001h and Version=00030000h
+  01Ch 2  Zero                                      ;if non-zero: force Mono
+  01Eh 1  Number of channels (0 or 1=Mono, 2=Stereo ;if 10h..FFh: force Mono
+  01Fh 1  Zero                                      ;if non-zero: force Mono
+Unknown if the above "force Mono" stuff is really needed (maybe it was intended to avoid problems with Version=00000002h, and maybe never happens in Version=00000003h and up)?
+
+VAG ADPCM Data
+The ADPCM data uses PSX SPU-ADPCM encoding (even on PS2 and up, except PS4 with Version=0002001h or Version=00030000h, which do use HEVAG encoding).
+SPU ADPCM Samples
+The data does usually start at offset 0030h (except, some files have extra header data or padding at that location).
+The first 10h-byte ADPCM block is usually all zero (used to initialize the SPU).
+2-channel (stereo) files are usually interleaved in some way.
+
+VAG Endiannes
+The file header entries are almost always big-endian (even so when used on little endian consoles). There are a few exceptions:
+ID="VAG1" has little endian [008h]=Interleave (remaining header is big-endian).
+ID="pVAG" has (some?) header entries in little endian.
+Version=40000000h has most or all header entries in little endian (perhaps including the version being meant to be 00000040h).
+
+VAG Channels
+VAGs can be 1-channel (mono) or 2-channel (stereo). There is no standarized way to detect the number of channels (it can be implied in the Filename Extension, Header ID, in Reserved Header entries, in the Name string at [020h..02Fh], in optional stuff at [030h], or in a separate VAG Header in the middle of the file).
+
+VAG Interleave
+  None       default (for 1-channel mono) (and separate .l .r stereo files)
+  800h       when ID="VAG2"
+  [008h]     when ID="VAGi" (little-endian 32bit header[008h])
+  1000h      when ID="pGAV" and [020h]="Ster" and this or that
+  2000h      when ID="pGAV" and [020h]="Ster" and that or this
+  10h        when filename extension=".vig"
+  10h        when Version=0002001h or Version=00030000h (and channels=2)
+  filesize/2 when filename extension=".swag"
+  6000h      when [6000h]="VAGp" (eg. PSX The Simpsons Wrestling)
+  1000h      when [1000h]="VAGp" (eg. PS2 Sikigami no Shiro)
+  ...
+
+AAAp Header
+  000h 4     ID "AAAp"
+  004h 2     Interleave
+  006h 2     Number of Channels (can be 1 or 2?)
+  008h 30h*N VAGp header(s) for each channel, with Version=00000020h
+  ...  ..    ADPCM Data (interleaved when multiple channels)
+
+See also
+http://github.com/vgmstream/vgmstream/blob/master/src/meta/vag.c ;very detailed
+http://wiki.xentax.com/index.php/VAG_Audio ;rather incomplete and perhaps wrong
+
+
+I am homeless in Hamburg, please help me out!
+extracted from no$psx v2.2 - homepage - patreon - whole doc htm/txt - copyright 2022 martin korth (nocash)

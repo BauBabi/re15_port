@@ -1,0 +1,118 @@
+name: Report an issue with PCSX-Redux.
+description: Report an issue with PCSX-Redux.
+body:
+  - type: markdown
+    attributes:
+      value: |
+       This issue form is for reporting bugs only! If you have a feature or enhancement request, please make a proper feature request instead.
+  - type: textarea
+    validations:
+      required: true
+    attributes:
+      label: Describe the bug
+      description: >-
+        A clear and concise description of what the bug is.
+
+  - type: textarea
+    validations:
+      required: true
+    attributes:
+      label: Expected behavior
+      description: >-
+        How the program should actually behave.
+  
+  - type: textarea
+    validations:
+      required: true
+    attributes:
+      label: Steps to reproduce the bug
+      description: >-
+        Steps to reproduce the behavior
+      placeholder:
+        1. Go to '...'
+        
+        2. Click on '...'
+        
+        3. Press '...'
+
+  - type: input
+    validations:
+      required: true
+    attributes:
+      label: Operating System
+      placeholder: (eg Windows 10, MacOS Big Sur, Ubuntu 20.04 LTS ...)
+      description: >
+        The OS of the system you're running Redux on
+
+  - type: textarea
+    validations:
+      required: true
+    attributes:
+      label: PCSX-Redux version
+      placeholder: (go to Help -> About to get version information)
+      description: >
+        The version of PCSX-Redux you're currently running
+
+  - type: input
+    validations:
+      required: true
+    attributes:
+      label: CPU model
+      placeholder: (eg Intel Core i7-7700K)
+      description: >
+        The CPU model of the system you're running PCSX-Redux on
+
+  - type: input
+    validations:
+      required: true
+    attributes:
+      label: GPU model & Drivers
+      placeholder: Go to Help->About->OpenGL information
+      description: >
+        The GPU model and drivers version of the system you're running PCSX-Redux on
+        
+  - type: input
+    validations:
+      required: true
+    attributes:
+      label: BIOS version
+      placeholder: (eg OpenBIOS, SCPH1001, etc)
+      description: >
+        The BIOS you're using to play games.
+
+  - type: checkboxes
+    attributes:
+      label: Options
+      description: Check the same checkboxes that are also checked in the Configuration->Emulation window
+      options:
+        - label: Dynarec CPU
+        - label: 8MB
+        - label: OpenGL GPU
+        - label: Fastboot
+        - label: Debugger
+
+  - type: textarea
+    validations:
+      required: false
+    attributes:
+      label: Iso checks
+      description: >-
+        If possible, verify the integrity of your iso file by using the Debug->Iso browser window with its CRC32 feature. Compare and link the results with https://redump.org/
+
+  - type: textarea
+    validations:
+      required: false
+    attributes:
+      label: Logs
+      description: >-
+        If possible and relevant, go to the Debug->Show Logs window, and copy/paste its contents here.
+  
+  - type: textarea
+    validations:
+      required: false
+    attributes:
+      label: Additional information
+      description: >-
+        If you have any additional information for us, use the field below. Feel free to share your memory card if you think it'd help us reproduce and debug your problem.
+        
+        For bugs where a screenshot or video would be useful (eg rendering or audio bugs), please attach one as well.

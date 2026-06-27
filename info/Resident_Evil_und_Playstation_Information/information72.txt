@@ -1,0 +1,407 @@
+Please check the REwiki for a more technical documentation.
+PmData .RDT
+
+
+
+Geometry/Cameras
+
+
+Cameras: (Found at: CAMERA&#092;ROOMXXXX.RID) (32 Bytes)
+
+Firstly Cameras can either start with the 3C 68 constant or the B7 73 constant.
+
+3C 68 X1 X1 X1 X1 Y1 Y1 Y1 Y1 Z1 Z1 Z1 Z1 X2 X2 X2 X2 Y2 Y2 Y2 Y2 Z2 Z2 Z2 Z2 OF OF OF OF 00 00
+B7 73 X1 X1 X1 X1 Y1 Y1 Y1 Y1 Z1 Z1 Z1 Z1 X2 X2 X2 X2 Y2 Y2 Y2 Y2 Z2 Z2 Z2 Z2 OF OF OF OF 00 00
+------------------------------------------------------------------------------------------------------------------------------
+00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F 10 11 12 13 14 15 16 17 18 19 1A 1B 1C 1D 1E 1F
+
+X1 = 4 bytes and is in little-endian [So read it 05 04 03 02]. X1 is the X coordinate where the camera is originating from.
+Y1 = 4 bytes and is in little-endian [So read it 09 08 07 06]. Y1 is the Y coordinate where the camera is originating from.
+Z1 = 4 bytes and is in little-endian [So read it 0D 0C 0B 0A]. Z1 is the Z coordinate where the camera is originating from.
+X2 = 4 bytes and is in little-endian [So read it 11 10 0F 0E]. X2 is the X coordinate where the camera is directing to.
+Y2 = 4 bytes and is in little-endian [So read it 15 14 13 12]. Y2 is the Y coordinate where the camera is directing to.
+Z2 = 4 bytes and is in little-endian [So read it 19 18 17 16]. Z2 is the Z coordinate where the camera is directing to.
+OF = The 4 byte offset for the ADT image found in ROOMCUT.BIN. [Read as 1D 1C 1B 1A]
+
+
+Camera Trigger Zones: (Found at: CAMERA&#092;ROOMXXXX.RVD) (20 bytes)
+
+They mainly construct a two dimensional 4 sided shape.
+
+01 FF C0 C1 X1 X1 Y1 Y1 X2 X2 Y2 Y2 X3 X3 Y3 Y3 X4 X4 Y4 Y4
+-----------------------------------------------------------------------------
+00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F 10 11 12 13
+
+C0 = ID of the Camera
+C1 = ID of the Camera
+X1 = 2 Bytes [read as 05 04] is a X Coordinate for one point
+Y1 = 2 Bytes [read as 07 06] is a Y Coordinate for one point
+X2 = 2 Bytes [read as 09 08] is a X Coordinate for one point
+Y2 = 2 Bytes [read as 0B 0A] is a Y Coordinate for one point
+X3 = 2 Bytes [read as 0D 0C] is a X Coordinate for one point
+Y3 = 2 Bytes [read as 0F 0E] is a Y Coordinate for one point
+X4 = 2 Bytes [read as 11 10] is a X Coordinate for one point
+Y4 = 2 Bytes [read as 13 12] is a Y Coordinate for one point
+These 4 points are drawn together (X1, Y1) > (X2, Y2) > (X3, Y3) > (X4, Y4) >(X1, Y1)
+
+
+Room Boundaries: (Found at: CAMERA&#092;ROOMXXXX.SCA) (16 bytes)
+
+Each wall in this game is 16 bytes long
+
+
+XX XX YY YY XL XL YL YL GG GG ?? ?? T1 00 00 00
+-------------------------------------------------------------
+00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
+
+XX = Point on X plane to start. Be careful as the endian causes that bytes 01 and 00 be swapped. For example 40 9B would not be 409B it would be 9B40.
+YY = Point on Y plane to start. Same issue of endian!
+XL = This is the length to go in the X plane. This is not an end coord! Same issue of endian
+YL = This is the length to go in the Y plane. Same rules as XL
+GG = This is a gradient system for stuff like slopes etc. Endian issue applies. Notice that byte 09 is usually very High ~FC-FF
+?? = These are to be discovered, These surely contains properties like to do with slopes etc.
+T1 = There’s a bit more too this but Treat this as a set of bits, not bytes. The least significant bit signifies whether the wall is empty or full!
+
+
+
+
+.SCD - Most used codes
+
+All blue codes are just examples, most values of each code can be modified.
+
+
+Door Code: (32 Bytes)
+3B 00 01 31 00 00 F0 55 E9 B8 08 07 98 08 10 9B 00 00 20 FE 00 00 00 06 00 00 08 00 00 8A 58 00
+------------------------------------------------------------------------------------------------------------------------------
+01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32
+
+01: Opcode
+02: ID
+03-04: Usually Fixed
+05: ?
+06: ?
+07-08: X Position
+09-10: Y Position
+11-12: X Width
+13-14: Y Width
+15-16: X coordinates in Target Room
+17-18: Y coordinates in Target Room
+18-19: Z coordinates in Target Room
+20-21: Rotation in next room
+22: Target Stage (Example Kendo's shop is Stage 0 so it would appear as 00)
+23: Target Room Number (Example Kendo's shop is Room 1 so it would appear as 01)
+24: Target Initial Camera Angle
+25: ?
+26: Door Type (More than likely based off the .DO2 files)
+27: Door Flag (Ladder Direction, Door Open Direction [allways 00 or 01 for open for left, right, go up, go down])
+28: ?
+29: ?
+30: Lock Flag (For locking doors, start at 9B for new flags)
+31: Key Required (Spade Key etc, FF Lock from inside)
+32: ?
+
+
+Enemy/NPC Code: (22 Bytes)
+44 00 00 10 00 00 00 07 83 19 6E 41 00 00 26 B7 00 0C 00 00 00 00
+---------------------------------------------------------------------------------------
+01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22
+
+01: Opcode
+02: N/A
+03: ID
+04: .EMD to use (based on file-name e.g EM010.EMD)
+05: State/Pose/Animation
+06: ? (Partner AI related)
+07: ? (Partner AI related)
+08: Sound Set/Bank
+09: Texture Selector (Force one from the multi-skinned textures 0=Default, 1-3 Page number)
+10: Enemy kill flag (if you kill an enemy it won't appear (any code), it only will appear if you write FF (always appear and works with all enemies you want) )
+11-12: X Position (West to East)
+13-14: Y Position (Height, normally 00)
+15-16: Z Position (South to North)
+17-18: Rotation
+19-22: ?
+
+
+Item Code: (22 Bytes)
+4E 02 02 31 00 00 96 C9 8E C2 20 03 14 05 58 00 01 00 04 00 00 A0
+---------------------------------------------------------------------------------------
+01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22
+
+01: Opcode
+02: ID
+03-06: ? (03,04 Usually fixed)
+07-08: X Position (West to East)
+09-10: Z Position (South to North)
+11-12: X Width (of item trigger zone)
+13-14: Z Width (of item trigger zone)
+15: Item (Check quick reference values)
+16: ?
+17: Capacity/Amount
+18: ?
+19: ?
+20: Item Flag (like enemy's flag)
+21: Model ID (what model you want do disappear after take item)
+22: Animation (00 get the item normally, 01 you use the animation, A0 normally with shine, A1 you use the animation with shine) Types:
+--A0 = Gray Glimmer / A1 = Kneeling
+--B0 = Gray Glimmer (faster) / B1 = Kneeling
+--C0 = Blue Glimmer / C1 = Kneeling
+--D0 = Blue Glimmer (faster) / D1 = Kneeling
+--E0 = Red Glimmer / E1 = Kneeling
+--F0 = Red Glimmer (faster) / F1 = Kneeling
+
+
+
+Item Model & 3D object Code: (38 Bytes)
+2D 01 00 00 00 00 00 00 00 00 08 00 00 00 04 AC 00 00 F0 A6 00 00 00 0C 00 00 48 FE F8 F8 74 F5 BC 02 08 07 54 0B (moveable object)
+2D 01 00 00 00 00 00 00 00 00 0A 00 10 00 2E CA 91 F9 18 E0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 (non moveable object)
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38
+
+01= Opcode
+02= Model image and structure (a key, shotgun ammo...)
+11= Type (08= moveable; OA= Static)
+15-16= X coordinates
+17-18= Y coordinates
+19-20= Z coordinates
+21-22= R coordinates
+
+
+
+Message Code (Aot_Set): (20 Bytes)
+2C 04 04 31 00 00 20 9F 34 BD 08 07 08 07 04 00 00 00 FF FF
+------------------------------------------------------------------------------
+01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20
+
+01: Opcode
+02: Message Number (First message 00, Second 01 etc)
+03: Type (Normally 04)
+04: ?
+05: ?
+06: ?
+07-08: X Position of message
+09-10: Z Position of message
+11-12: X Width of trigger zone
+13-14: Z Width of trigger zone
+16: ? (Japanese letters. Game crashes sometimes)
+17: ?
+18: Special properties (For things like open locked desk with herbs(02))
+19-20: Form to read (0000: Can move; 0101: You can't move, but the body of character and enemies can; 1020/2010: Can move, after some seconds message disappears; FF FF: Original mode.
+
+
+Types, functions and more info about the Aot_Set code:
+http://z4.invisionfree.com/Resident_Evi ... topic=2908
+
+
+
+Effect code: (16 bytes)
+3A 00 0D 00 00 00 00 38 22 99 00 00 44 55 00 00
+---------------------------------------------------------------
+01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16
+
+01= Opcode
+02= Nothing
+03= Effect type
+04= Nothing
+05= Nothing
+06= Nothing
+07= Nothing
+08= ?
+09= X co-ords
+10= X co-ords
+11= Y co-ords
+12= Y co-ords
+13= Z co-ords
+14= Z co-ords
+15= ?
+16= ?
+
+
+
+How to add new effects?
+http://z4.invisionfree.com/Resident_Evi ... topic=1492
+
+How to clear a room of all object & scripted events?
+http://z4.invisionfree.com/Resident_Evi ... topic=1554
+
+
+///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+
+
+Other .RDT things:
+
+
+
+H0:?
+H1: This is the number of objects there are at offset 7. (Number of cameras)
+H2: This is the number of object there are at offset 10.
+H3: ?
+H4: ?
+H5: ?
+H6: ?
+H7: ?
+
+0: ?
+1: Embedded .VAB file
+2: ?
+3: ?
+4: ?
+5: ?
+6: Room Boundaries/Collisions
+7: Camera Positions/Angles
+8: Camera Switches/Zones
+9: Lights/Lighting
+10: Embedded .TIM info
+11: ?
+12: ?
+13: Encoded text for things you can examine in-game (Japanese)
+14: Encoded text for things you can examine in-game (English/Western)
+15: ?
+16: Room Initialization Script (Loads when a room is entered)
+17: Room Execution Script (Updates while you're in the room)
+18: Sprites description in embedded .TIM
+19: ?
+20: List of embedded .TIM files
+21: Another set of .TIM files
+22: ?
+
+
+Door Types:
+00 = Wooden 4 Rectangle Door (Handle Left) (Opens away from Player)
+01 = Wooden 3 rectangle door (Handle left) (Opens away from Player)
+02 = Wooden 4 rectangle door Blue (Handle left) (Opens away from Player)
+03 = Wooden Rectangle with Diamonds door (Handle left) (Opens away from Player)
+04 = Wooden 6 Rectangle Blue (Handle left) (Opens away from Player)
+05 = Wooden 3 Rectangle (Handle left) (Opens away from Player)
+06 = Metal Door X (Handle Left) (Opens away from Player)
+07 = Metal Door Plain with small grill at bottom.(Handle left) (Opens away from Player)
+08 = Metal Door 2 Rectangles (Handle left) (Opens away from Player)
+09 = Wooden Door 6 Rectangles (Handle left) (Opens away from Player)
+0a = Gate with Bars (Handle left) (Opens away from Player)
+0B = 2 Windows 4 Diamonds (Handle left) (Opens away from Player)
+0C = RPD Doors (open towards Player) (Opens away from Player)
+0D = Wooden 3 rectangle door (Silver Handle left) (Opens away from Player)
+0E = Metal Stairs Up
+0f = Wooden Stairs (1F West Stairs)
+10 = Lift Gate (Open Right to Left)
+11 = Double wooden door. Metal Grill at bottom, right door opens away from player.
+12 = Stone Basement Steps. Up
+13 = Grey Metal Door. Big window (with XXX)
+14 = Double Width Metal Door. Slides Right to Left (handle on Right)
+15 = Metal Door 2 X, 1 High, 1 Low, Black/Yellow /// in centre.
+16 = Metal Ladders
+17 = Old Ring Handle Door Left opens away from player
+18 = Green Wooden Door Gold Handle Left Opens away from player
+19 = Metal Circle Handle Left Lab Door. Slides Left to Right.
+1a = Metal Door 3 Rectangles Handle Left Opens away from player
+1b = Autopsy Double Doors, Opens towards player.
+1c = Metal Door. Knob (left). Grill at bottom. Barred Window
+1D = Metal Door Brown. Grill at top.
+1E = Air Vent
+1F = Metal Door Opens Up/Down by Splitting. Sewer X-DR
+20 = No Door Ada Scream.
+21 = No Door Birkin Sounds
+22 = Brown Rusty Metal Door Handle Left Opens away from player
+23 = Grey Metal Door with Border (sorta B ) Handle Left Opens away from player
+24 = Grey/Green Metal Door, Metal Foot Guard, Window Handle Left Opens away from player
+25 = Shaft Type L Automatic Door.
+26 = Brown Metal Doors with twist Handle Left. Left Door opens Away From Player
+27 = Double Teethed Metal Doors. Doors Slide apart.
+28 = Red Small Elevator Up
+29 = Shaft Type M metal Door, Handle Left Opens away From Player
+2A = Metal Slide Left to Right Door. Small Window Up, Small Grill Bottom.
+2b = Dumping Area B2 Shutter.
+2c = Black/Red Sliding Doors with small windows.
+2D = Scenario 1 End Lift Up
+2e = Metal Door Bars, Handle Left Opens AFP RED Green light Above handle
+2f = Turquoise Interview Room Door. HL AFP
+30 = Bus Double Doors open AFP
+31 = Frozen Type-P Double Metal Door. Left Door opens AFP
+32 = Please Wait Clothes Change.
+33 = Vent
+34 = Side Pack is being equipped.
+35 = Vent
+36 = Black Screen. *Drip Drip*
+
+
+Door Flag Examples:
+
+0 = Handle Left, open Away From Player Lifts/Stairs/Ladders Up
+1= Handle Right towards player. Lifts/Stairs/Ladders Down.
+Some rooms use above 1 for the Door open but most doors end up with a blank screen if you do.
+
+
+Enemy State/Pose Examples:
+
+Zombie:
+
+00 Waiting
+01 Lying Down
+02 Getting up (face up)
+03 Crawling
+04 Getting Up (face down)
+05 No head?
+06 Following you
+07 Face down no head
+08 Slow shuffle
+09 Crawl
+43 Crawling
+48 Eating
+86 On fire
+C2 On Fire Gets up from Face Down
+C3 Crawling on Fire
+C6 On Fire Gets up from Face UP
+
+(resevilnemesis30) Sorry I had some errors.
+A0: Head in fire
+AF: Death and fire
+B2: In the ground and the one leg in fire
+C0: Leg in fire
+C1: Crawling and fire
+C9: Crawling and fire
+60: Walking with the arms up (error)
+
+(Take note that poses may not have the same effect on all enemies(Including different zombies))
+
+
+Effect Types
+
+08 - Flying body tissue
+09 - Flying body tissue 2
+0A - Acid spit
+0B - ???
+0C - Crow feathers
+0D - Fire
+0E - Fire 2
+0F - Water drop
+10 - Glass shards
+11 - Glass shards 2
+12 - Glass shards 3
+13 - Glass shards 4
+14 - Glass shards 5
+15 - Monitor screen glow
+16 - Glowing red light (button)
+17 - Fire shotwound ?
+18 - Muzzle fire
+19 - ???
+1A - Smoke
+1C - Smoke 2
+1D - Smoke 3
+1E - Small flame
+1F - Blood
+20 - Smoke 4 ?
+21 - Smoke 5 ?
+22 - Smoke 5 ?
+23 - Running water
+24 - Running water 2
+26 - Blood 2
+27 - Shotgun shells
+28 - Running water 3
+29 - Rubble
+2A - Rubble 2
+2B - Smoke 6
+2C - Emergency elevator screen
+2D - Power grid ?
+2F - Rubble 3
+30 - Perceive moving object glowing

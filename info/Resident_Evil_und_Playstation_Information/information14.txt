@@ -1,0 +1,29 @@
+VAG (PlayStation)
+File Format
+Name	VAG (PlayStation)
+Ontology	
+Electronic File Formats
+Audio and Music
+VAG (PlayStation)
+Extension(s)	.vag
+VAG is the PlayStation single waveform data format for ADPCM-encoded data of sampled sounds.
+
+Contents [hide] 
+1 Specification
+2 Software
+3 Sample files
+4 Notes
+Specification
+Variable	Type
+Signature	VAGp
+Version	4 bytes
+Reserved	4 bytes
+Data size	4 bytes
+Sampling frequency	4 bytes
+Name	16 bytes
+Waveform data	(remainder of data)
+Software
+FFmpeg
+zxtune
+Sample files
+dexvert samples — audio/vag

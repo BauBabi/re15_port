@@ -1,0 +1,142 @@
+What you'll need-
+
+BIOFAT version 06.23.2011 (download link provided at the end of this tutorial)
+A Hex Editor (Such as Hex Workshop)
+AdtTools (download link provided at the end of this tutorial)
+
+Next we're going to look at NPCs- these are non-playable characters such as enemies and human characters during cutscenes. While PLDs are the file format for playable character models, TIM files are used for the cutscene versions. Enemies also use TIMs, all of which are located in PL0>EMD0 (Leon's Disc) and PL1>EMD1 (Claire's Disc) folders.
+
+Here's where the Dreamcast Port of Resident Evil 2 differs from the Playstation and PC versions. These platforms use an EMD & TIM file for each NPC. The EMD houses a character model while the TIM houses its textures. If you wanted to view the model outside of the game you could simply open the EMD in RE2MV, provided the TIM texture file is in the same folder.
+
+On the Dreamcast however, each NPC only has a single file- a TIM file, so by itself it won't open on RE2MV. This is deceptive however because on the Dreamcast those TIMs aren't actually texture files- they're ADT archives which, when decompressed into a RAW file, contain both the EMD and TIM data you'd normally find in the Playstation and PC versions.
+
+
+PART 1
+
+Because of this we need to decompress the Dreamcast TIMs before any editing can occur. In the following example, we'll use the Zombie Dog (file EM020 on Leon's Disc, file EM120 on Claire's).
+NPC image 1.jpg
+Change the file's extension from EM020.TIM to EM020.ADT. Open up BIOFAT version 06.23.2011 and in the menu, click on Bio2>ADT>Decompress
+NPC image 2.jpg
+Select EM020.ADT, resave it as EM020.RAW. We now have to hex edit the RAW file in order to separate both the EMD and TIM from it.
+
+Open Hex Workship and make sure the program is viewing offsets in decimal by clicking the glasses icon with the number 10 graphic. Drag EM020.RAW into the window. The first 4 bytes tell us the filesize of the TIM texture while the other 4 bytes tell us the filesize of the EMD. Highlight the first 4 bytes and note the values at unit32 to the right by the arrow- this is the filesize of the TIM texture, 66592.
+NPC image 3.jpg
+Highlight the next 4 bytes right after and you'll get the filesize of the EMD.
+NPC image 4.jpg
+Byte 9 is the start of the TIM file. At the 9th byte, hold down Shift and use the PgDn or down arrow key to highlight and select the bytes until you reach 66592. Copy and save this selection into a separate file, named EM020.TIM.
+
+In the screenshot above you'll see the EMD size is 121144. Immediately after the TIM's 66592 selection is the start of the EMD file, so hold down Shift at this point and the PgDn or down arrow key till you hit 121144. Copy that selection and save it as EM020.EMD.
+
+With your newly saved EM020.EMD and EM020.TIM, open it in RE2MV and you'll finally be able to view the Dreamcast model!
+NPC image 5.jpg
+Now you can edit it however you want using the suggestions found in my first tutorial- export/replace the texture, export parts to Blender to edit, etc. Once you're happy with how your edited dog looks, save in RE2MV (https://dreamcast-talk.com/forum/viewto ... 92#p165092).
+
+
+PART 2
+
+We now have to get the data from your newly saved EMD and TIM into the RAW file. Note that whatever changes you make, the filesize for your newly saved EMD or TIMs may have changed. For this example, I'm going to replace the default zombie dog with an alternate dog by Enrico Marini. Not only does it have different textures, it has a different model too.
+NPC image 6.jpg
+Use the Hex editor to open both the EMD and the TIM you intend on placing into the RAW file. Hit Ctrl+A then Ctrl+C to select and copy all the bytes in the TIM file. Pay attention to the selected bytesize at the bottom which is thankfully the same size as the TIM data in the RAW.
+NPC image 7.jpg
+Go back to your RAW file and select the original TIM bytesize area of 66592 . Overwrite it with the new data found in the EM020.TIM. The texture swap is now complete.
+
+Now do the same with the EM020.EMD (Ctrl+A then Ctrl+C to select and copy all the bytes). You'll notice however the EMD filesize differs from the EMD numbers found in the RAW file- 123528 vs the original 121144.
+NPC image 8.jpg
+Overwrite the original EMD data in the RAW file with the new EMD data. Because the EMD file sizes differ, we'll need to modify byte 5-8 to let the file know there's a difference, otherwise the game will crash while trying to read it. Since the new size is 123528, we have to convert it to hexadecimal. Use this site if necessary- https://cryptii.com/pipes/integer-encoder
+
+Once you've selected '32-bit unsigned integer' as the decimal format and the byte order as 'Little-endian', place the 123528 in the 'Text' column to the right. It'll convert it to the hexidecmial '88 e2 01 00'.
+NPC image 9.jpg
+In the RAW, replace byte 5-8's '38 D9 01 00' with '88 e2 01 00'. Now the file is aware the EMD's size has changed.
+
+Save the RAW. We're almost done.
+
+
+PART 3
+
+Now we have to recompress the RAW back into an ADT. For this we'll need AdtTools. Make sure you have the CMD command prompt application, the RAW file and AdtTools all in the same folder. Open CMD.exe then type this command to compress the RAW file back into a Dreamcast TIM-
+
+AdtTools e EM020.RAW EM020.TIM
+
+And you're good to go! Place it back in the EMD folder of the Leon or Claire disc (if Claire Disc, rename it from EM020 to EM120), recompile the game image and test it on your Dreamcast console or Dreamcast emulator. :)
+
+
+
+PART 4
+
+For a detailed list on what files correspond to the NPCs, see below. There are the same across all platforms- PC, Playstation and the Dreamcast. This list is provided by the RE Modification site- http://re123.bplaced.net/board/viewtopic.php?f=11&t=35
+
+**NOTE- For Leon's Disc his NPCs are all begin with 'EM0'- so the RPD zombie cop (shown as '10' below) in Leon's game would be EM010.TIM. Claire's Disc NPCs all begin with 'EM1' so her RPD zombie cop would be EM110.TIM.
+
+Entities
+10 - ZOMBIE - RPD COP
+11 - ZOMBIE - BRAD VICKERS
+12 - ZOMBIE - CIVILLIAN
+13 - ZOMBIE - PROSTITUTE
+14 - (unused - you can place a zombie here)
+15 - ZOMBIE - UMBRELLA TEST SUBJECT
+16 - ZOMBIE - UMBRELLA SCIENTIST
+17 - ZOMBIE - NAKED
+18 - ZOMBIE - CIVILLIAN
+19 - (unused - you can place a zombie here)
+1A - (unused - you can place a zombie here)
+1B - (unused - you can place a zombie here)
+1C - (unused - you can place a zombie here)
+1D - (unused - you can place a zombie here)
+1E - ZOMBIE
+1F - ZOMBIE - COMBO PACK
+20 - CEREBRUS - ZOMBIE DOG
+21 - CROW
+22 - LICKER - RED
+23 - ALLIGATOR
+24 - LICKER - GRAY
+25 - SPIDER
+26 - BABY SPIDER
+27 - BIRKIN MUTAGENIC GOO
+28 - BIRKIN OFFSPRING - CROTCH HUGGER
+29 - COCKROACH
+2A - TYRANT STAGE 1
+2B - TYRANT STAGE 2
+2C - TYRANT’S ARM
+2D - ZOMBIE ARMS
+2E - GREEN IVY
+2F - IVY TENTACLES
+30 - BIRKIN MUTATION - STAGE 1
+31 - BIRKIN MUTATION - STAGE 2
+33 - BIRKIN MUTATION - STAGE 3
+34 - BIRKIN MUTATION - STAGE 4
+36 - BIRKIN MUTATION - FINAL STAGE
+37 - BIRKIN STAGE 5 TENTACLE
+38 - BIRKIN STAGE 5 TENTACLE
+39 - IVY - PURPLE
+3A - GIANT MOTH
+3B - MAGGOTS
+3E - ROBOTIC ARM IN THE LAB - OBJECT
+3F - POWER GENERATOR - OBJECT
+40 - CHIEF IRONS I
+41 - ADA WONG I
+42 - CHIEF IRONS II
+43 - ADA WONG II
+44 - BEN BERTOLUCCI I
+45 - SHERRY BIRKIN - WITH PENDANT
+46 - BEN BERTOLUCCI II
+47 - ANNETTE BIRKIN I
+48 - ROBERT KENDO
+49 - ANNETTE BIRKIN II
+4A - MARVIN BRANAGH (it's a NPC, needs special codes to work as a zombie)
+4B - MAYOR’S DAUGHTER - OBJECT ONLY
+4C - (unused, you can place a NPC here, but doesn't have hitbox)
+4D - (unused, you can place a NPC here)
+4E - (unused, you can place a NPC here, but doesn't have hitbox)
+4F - SHERRY - WITH CLAIRE VEST
+50 - LEON S. KENNEDY - RPD ARMOR
+51 - CLAIRE REDFIELD - ORIG. OUTFIT
+52 - (unused Leon slot, you can place a NPC here) <----- *EDIT* - Avoid using this slot. Placing a NPC here could cause glitches/bugs.
+53 - (unused Claire slot, you can place a NPC here) <----- *EDIT* - Avoid using this slot. Placing a NPC here could cause glitches/bugs.
+54 - LEON S. KENNEDY - BANDAGED
+55 - CLAIRE REDFIELD - NO VEST
+56 - (unused Leon slot, you can place a NPC here) <----- *EDIT* - If using this slot, use it in Claire game only.
+57 - (unused Claire slot, you can place a NPC here) <----- *EDIT* - Avoid using this slot. Placing a NPC here could cause glitches/bugs.
+58 - LEON S. KENNEDY - CAP & TANK TOP
+59 - CLAIRE REDFIELD - COWGIRL OUTFIT
+5A - LEON S. KENNEDY - BLACK LEATHER
+5B - (unused Claire slot, you can place a NPC here) <----- *EDIT* - Avoid using this slot. Placing a NPC here could cause glitches/bugs.

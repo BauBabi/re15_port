@@ -1,0 +1,600 @@
+    
+HMD OVERVIEW HMD OVERVIEW
+ A general introduction to HMD A general introduction to HMD 
+Presenters:  Presenters:  
+Mark Breugelmans Mark Breugelmans
+ James Russell James Russell
+  SCEE Technology SCEE Technology 
+Group Group
+  
+HMD Topics HMD Topics
+ What is HMD? What is HMD?
+ What can it do? What can it do?
+ Demos Demos
+ Features Features
+ Basic Architecture Basic Architecture
+ Tools Tools 
+How fast is it? How fast is it?
+  SCEE Technology SCEE Technology 
+Group Group
+  
+What is HMD? What is HMD? 
+HMD - Hierarchical Modelling Data HMD - Hierarchical Modelling Data
+ The standard graphics format after TMD The standard graphics format after TMD
+ Available now in current libraries Available now in current libraries
+ Actively Developed by SCEI Actively Developed by SCEI
+  SCEE Technology SCEE Technology 
+Group Group
+  
+What can it do? (demos) What can it do? (demos)
+ Hierarchical models Hierarchical models
+ Shared Polygons Shared Polygons
+ Coord 
+System1
+ Shared
+ Polygon
+ Coord
+ System2
+ Key frame animation, motion switching
+ Equipment - cameras and lights
+ Reflection mapping
+ More to come (for example shadows)
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Features
+ 
+Features
+ 
+General features of the HMD format General features of the HMD format
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Co-ordinate system
+ Modelling data
+ Images
+ Animation
+ Cameras and Lights
+ Additional primitives Other Data files
+ TIM
+ TOD
+ TMD
+ Integrated file format Integrated file format
+ Before Before: Integrated into HMD: Integrated into HMD:
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Programming interface Programming interface 
+Loosely linked to LIBGS libraries (4.0) Loosely linked to LIBGS libraries (4.0)
+ Plug in functions to link what you need Plug in functions to link what you need
+ Add you own functionality Add you own functionality
+ More control at file level (authoring) More control at file level (authoring)
+ Example: Animation sequences Example: Animation sequences
+  SCEE Technology SCEE Technology 
+Group Group
+  
+ Key routines coded in assembly. Arguments passed using scratchpad Key routines coded in assembly. Arguments passed using scratchpad
+  Meshes reduce calculations and data size Meshes reduce calculations and data size
+ High performance High performance
+ 2                    4                   6
+ a         b         c         d         e         f
+ 1 3                    5                    7
+ 0
+  Or you can write your own drivers
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Basic Architecture Basic Architecture
+ HMD Primitives HMD Primitives
+ Non drawing primitives  (processing except Non drawing primitives  (processing except 
+generation of poly drawing instruction) generation of poly drawing instruction) 
+Drawing primitives (Poly drawing instruction Drawing primitives (Poly drawing instruction 
+generation) generation)
+ Each primitive uses its own driver in the code Each primitive uses its own driver in the code
+ Data Data
+ Everything defined with relative addresses Everything defined with relative addresses
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Basic Architecture - part 2 Basic Architecture - part 2
+ Primitive Sets ( List of primitives) Primitive Sets ( List of primitives)
+ Primitive type ID - To identify driver Primitive type ID - To identify driver
+ Pointer to primitive header Pointer to primitive header 
+Primitive data Primitive data
+ Mapping, Scanning and Drawing Mapping, Scanning and Drawing
+ GsScanUnit replaces TypeID with pointer to Driver GsScanUnit replaces TypeID with pointer to Driver
+ GsMapUnit transforms relative addresses  GsMapUnit transforms relative addresses  
+GsSortUnit allocates object to the ordering table GsSortUnit allocates object to the ordering table 
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Tools Tools
+ Converters from RSD Converters from RSD
+ Tool vendors support (Release/Coming soon) Tool vendors support (Release/Coming soon) 
+Lightwave Lightwave
+ 3d studio max 3d studio max
+ Softimage Softimage
+ PowerAnimator PowerAnimator
+ HMD assembler / disassembler HMD assembler / disassembler
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Extensibility Extensibility
+ Plug in driver architecture Plug in driver architecture 
+provides easy extension to the format provides easy extension to the format
+ Add your own features / improve existing Add your own features / improve existing
+ Possible extensions from 3rd parties Possible extensions from 3rd parties
+ Define unique data structures Define unique data structures
+ add application specific data: eg. bounding boxes add application specific data: eg. bounding boxes
+ Demo of added primitive driver Demo of added primitive driver
+  SCEE Technology SCEE Technology 
+Group Group
+  
+How fast is it How fast is it
+ Venus with 1d Environment mapping - 58,500 Venus with 1d Environment mapping - 58,500 
+polygons per second polygons per second
+ Venus with 2d Environment mapping - 48,000 Venus with 2d Environment mapping - 48,000 
+polygons per second polygons per second
+ Dinosaur with 1d Environment mapping and Dinosaur with 1d Environment mapping and 
+animation - 55,000 polygons per second animation - 55,000 polygons per second
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Summary Summary
+ Integrated file format Integrated file format
+ Many extra features Many extra features
+ High performance High performance
+ More authoring power More authoring power
+ Extendable Extendable
+    
+HMD internals HMD internals
+ How does HMD work? How does HMD work?
+  SCEE Technology SCEE Technology 
+Group Group
+  
+HMD philosophy HMD philosophy
+ Raw data is chunked into large sections Raw data is chunked into large sections
+ “Primitives” bind parts of that raw data “Primitives” bind parts of that raw data 
+together together
+ Divide & conquer with many small & simple Divide & conquer with many small & simple 
+drivers drivers
+Raw data is chunked into large 
+sections
+ Raw data is chunked into large 
+sections
+ Polygon
+ Driver
+ Coordinates
+ SCEE Technology 
+Group
+ Normals
+ Polygons
+ Polygon 123
+ Use pointers & 
+indices to refer to 
+data
+ Vertices
+  SCEE Technology SCEE Technology 
+Group Group
+  
+HMD file
+ Primitive Block
+ Right Arm
+ An HMD file contains Primitive 
+Blocks & raw data
+ An HMD file contains Primitive 
+Blocks & raw data
+ Primitive Block
+ Left Arm
+ Primitive Block
+ Head
+ Primitive Block
+ Torso
+ 3D Model 
+Data
+ Animation 
+Data
+ Texture 
+Data
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Primitive
+ Block
+ A Primitive
+ Block is an
+ object “part”,
+ and has its own
+ coordinate
+ system.
+ Primitive Blocks contain sets of 
+Primitives
+ Primitive Blocks contain sets of 
+Primitives
+ Primitive
+ Primitive
+ Primitive
+ Primitive
+ Triangles 
+for 
+shoulder
+ Quadrangle
+ s for 
+pincers
+ Triangle
+ s for arm
+ Triangles 
+for 
+pincers
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Primitives provide a context for 
+raw data
+ Primitives provide a context for 
+raw data
+ Primitive
+ Polygon index 0
+ Polygon index 1
+ Polygon index 2
+ ...
+ • ...are the units processed 
+by drivers.
+ Primitives...
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Primitives provide a context for 
+raw data
+ Primitives provide a context for 
+raw data
+ “Gouraud Triangles”
+ Polygon index 0
+ Polygon index 1
+ Polygon index 2
+ ...
+ • ...are the units processed 
+by drivers.
+ • …specify the type of driver 
+they’ll need.
+ Primitives...
+  SCEE Technology SCEE Technology 
+Group Group
+  
+A driver uses a primitive to 
+process raw data 
+A driver uses a primitive to 
+process raw data 
+Driver 1
+ •Drivers are small and simple.
+ •Drivers have well defined tasks.
+ •Swap and extend drivers to do what you want.
+ The Result!
+ Raw Data
+ Primitive
+  SCEE Technology SCEE Technology 
+Group Group
+  
+A driver uses a primitive to 
+process raw data 
+A driver uses a primitive to 
+process raw data 
+•Drivers are small and simple.
+ •Drivers have well defined tasks.
+ •Swap and extend drivers to do what you want.
+ The Result!
+ Raw Data
+ Primitive
+ Driver 2
+ Driver 1
+  SCEE Technology SCEE Technology 
+Group Group
+  
+A driver uses a primitive to 
+process raw data 
+A driver uses a primitive to 
+process raw data 
+•Drivers are small and simple.
+ •Drivers have well defined tasks.
+ •Swap and extend drivers to do what you want.
+ The Result!
+ Raw Data
+ Primitive
+ Driver 2
+  SCEE Technology SCEE Technology 
+Group Group
+  
+HMD file
+ The application uses many Drivers 
+to get the final result
+ The application uses many Drivers 
+to get the final result
+ Primitive Block
+ Left Arm
+ 3D Model Data
+ Animation Data
+ Coordinates
+ Frame 
+Update 
+Driver
+ Quadrangle 
+Rendering 
+Driver
+ Triangle 
+Rendering 
+Driver
+ OT
+ Screen
+The application uses many Drivers 
+to get the final result
+ The application uses many Drivers 
+to get the final result
+ Primitive Block
+ Left Arm
+ HMD file
+ Animation Data
+ Coordinates
+ SCEE Technology 
+Group
+ 3D Model Data
+ Screen
+ Frame 
+Update 
+Driver
+ Triangle 
+Rendering 
+Driver
+ OT
+ Quadrangle 
+Rendering 
+Driver
+  SCEE Technology SCEE Technology 
+Group Group
+  
+GsSortUnit() processes Primitive 
+Blocks
+ GsSortUnit() processes Primitive 
+Blocks
+ After initialisation, GsSortUnit() is the
+ ONLY
+ function you need to call to see your object on screen!
+ •Animation
+ •Polygons
+ •Shared Polygons
+ •MIMe
+ It’s all handled by the Drivers!
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Balloon.hmd example (1)
+ Types of primitives Balloon.hmd example (1)
+ Types of primitives
+ Gouraud Triangles
+ Gouraud Quads
+ Shared Polygons
+ Gouraud Triangles
+ Gouraud Quads
+ (and Animation Frames)
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Balloon.hmd example (2)
+ Coordinate Systems Balloon.hmd example (2)
+ Coordinate Systems
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Balloon.hmd example (2)
+ Coordinate Systems Balloon.hmd example (2)
+ Coordinate Systems
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Balloon.hmd example (2)
+ Coordinate Systems Balloon.hmd example (2)
+ Coordinate Systems
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Balloon.hmd example (2)
+ Coordinate Systems Balloon.hmd example (2)
+ Coordinate Systems
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Balloon.hmd example (2)
+ Coordinate Systems Balloon.hmd example (2)
+ Coordinate Systems
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Balloon.hmd example (5)
+ Data required for the model Balloon.hmd example (5)
+ Data required for the model
+ Polygons Polygons
+ Normals Normals
+ Vertices Vertices
+ Polygon connection information Polygon connection information
+ Shared polygon connection information Shared polygon connection information
+ Coordinate systems Coordinate systems
+ Animation Animation
+ Bezier and B-Spline parameters Bezier and B-Spline parameters
+ Sequence information Sequence information
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Putting it all together Putting it all together
+ Primitive Blocks order
+ Animatio
+ n
+ Balloon
+ Cabin
+ Wires
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Primitive 
+Block
+ Animation
+ Sequence 
+parameters
+ Interpolation 
+parameters
+ Coordinates
+ Frame 
+Update Driver
+ Interpolation 
+Drivers
+ Balloo
+ n
+ Cabin Wires Animatio
+ n
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Quadrangle 
+Rendering 
+Driver
+ Triangle 
+Rendering 
+Driver
+ Primitive 
+Block
+ Balloon
+ Normals
+ Vertices
+ Polygons
+ Coordinates
+ Shared 
+Polygons
+ OT
+ Balloo
+ n Animatio
+ n
+ Cabin Wires
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Quadrangle 
+Rendering 
+Driver
+ Triangle 
+Rendering 
+Driver
+ Primitive 
+Block
+ Balloon
+ Normals
+ Vertices
+ Polygons
+ Coordinates
+ Shared 
+Polygons
+ OT
+ Animatio
+ n
+ Balloo
+ n Cabin Wires
+ Shared Polygon
+ Pre-process 
+Driver
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Quadrangle 
+Rendering 
+Driver
+ Triangle 
+Rendering 
+Driver
+ Primitive 
+Block
+ Cabin
+ Normals
+ Vertices
+ Polygons
+ Coordinates
+ Shared 
+Polygons
+ OT
+ Animatio
+ n
+ Balloo
+ n
+ Cabin Wires
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Quadrangle 
+Rendering 
+Driver
+ Triangle 
+Rendering 
+Driver
+ Primitive 
+Block
+ Cabin
+ Normals
+ Vertices
+ Polygons
+ Coordinates
+ Shared 
+Polygons
+ OT
+ Shared Polygon
+ Pre-process 
+Driver
+ Animatio
+ n
+ Balloo
+ n
+ Cabin Wires
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Quadrangle 
+Rendering 
+Driver
+ Triangle 
+Rendering 
+Driver
+ Primitive 
+Block
+ Wires
+ Normals
+ Vertices
+ Shared 
+Polygons
+ OT
+ Shared Polygon
+ Post-process 
+Driver
+ Animatio
+ n
+ Balloo
+ n
+ Cabin Wires
+  SCEE Technology SCEE Technology 
+Group Group
+  
+What did we just do? What did we just do?
+ ANIMATION: ANIMATION:
+ Worked out the changes to coordinate systems Worked out the changes to coordinate systems
+ BALLOON & CABIN: BALLOON & CABIN:
+ Sent GPU primitives to OT Sent GPU primitives to OT
+ Performed shared polygon pre-process Performed shared polygon pre-process
+ WIRES: WIRES:
+ Created shared polygons and... Created shared polygons and...
+ …sent their primitives to the GPU …sent their primitives to the GPU
+  SCEE Technology SCEE Technology 
+Group Group
+  
+Summary Summary
+ Raw data is chunked into large sections. Raw data is chunked into large sections.
+ Primitives bind parts of that raw data Primitives bind parts of that raw data 
+together. together.
+ Small and simple drivers operate on those Small and simple drivers operate on those 
+primitives. primitives.
+ Together, the Drivers create the final result. Together, the Drivers create the final result.
+ Life is made easier for the programmer! (and Life is made easier for the programmer! (and 
+the artists, and the producer…) the artists, and the producer…)
