@@ -1,0 +1,18 @@
+/* FUN_8011bdd8 @ 0x8011bdd8  (Ghidra headless overlay RE) */
+
+/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+
+void FUN_8011bdd8(void)
+
+{
+  int unaff_s0;
+  
+  func_0x8002b544(unaff_s0 + 0x14);
+  func_0x8003b0a4(_DAT_800ac784 + 0x34,*(undefined2 *)(*(int *)(_DAT_800ac784 + 0x78) + 6),4);
+  func_0x80037358();
+  func_0x8001b38c();
+  func_0x8001b064(_DAT_800ac784 + 0xb0,(int)*(short *)(_DAT_800ac784 + 0x1ba));
+  return;
+}
+
+

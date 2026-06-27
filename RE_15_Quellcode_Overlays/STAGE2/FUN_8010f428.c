@@ -1,0 +1,44 @@
+/* FUN_8010f428 @ 0x8010f428  (Ghidra headless overlay RE) */
+
+/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+
+void FUN_8010f428(void)
+
+{
+  if (*(char *)(_DAT_800ac784 + 0x1d0) == '\0') {
+    FUN_801108cc(200,0x708,0x4b0);
+    FUN_80110988(0x2000,200,0);
+  }
+  if (*(char *)(_DAT_800ac784 + 0x1d0) == '\x03') {
+    FUN_801108cc(400,0x708,600);
+    FUN_80110988(0x2600,100,0);
+    FUN_801108cc(400,600,0x4b0);
+    FUN_80110988(0x2600,100,0);
+  }
+  if (*(char *)(_DAT_800ac784 + 0x1d0) == '\x06') {
+    FUN_801108cc(600,0x708,0);
+    FUN_80110988(0x2c00,0,0);
+    FUN_801108cc(600,0x960,600);
+    FUN_80110988(0x3000,0,0);
+    FUN_801108cc(600,3000,0x4b0);
+    FUN_80110988(0x2c00,0,0);
+  }
+  if (*(char *)(_DAT_800ac784 + 0x1d0) == '\t') {
+    FUN_801108cc(800,0x960,0);
+    FUN_80110988(0x3200,0,0);
+    FUN_801108cc(800,3000,600);
+    FUN_80110988(0x3200,0,0);
+  }
+  if (*(char *)(_DAT_800ac784 + 0x1d0) == '\f') {
+    FUN_801108cc(1000,3000,0);
+    FUN_80110988(0x3800,0,0);
+  }
+  *(char *)(_DAT_800ac784 + 0x1d0) = *(char *)(_DAT_800ac784 + 0x1d0) + '\x01';
+  if (0x19 < *(byte *)(_DAT_800ac784 + 0x1d0)) {
+    *(undefined1 *)(_DAT_800ac784 + 0x1d0) = 0;
+    *(undefined1 *)(_DAT_800ac784 + 6) = 0;
+  }
+  return;
+}
+
+

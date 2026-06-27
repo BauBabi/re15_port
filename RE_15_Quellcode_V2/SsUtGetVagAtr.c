@@ -1,0 +1,33 @@
+short SsUtGetVagAtr(short param_1,short param_2,short param_3,VagAtr *param_4)
+
+{
+  short sVar1;
+  int iVar2;
+  
+  if ((&DAT_800b5334)[param_1] != '\x01') {
+    sVar1 = UT_GVA_OBJ_224();
+    return sVar1;
+  }
+  SpuVmVSetUp((int)param_1,(int)param_2);
+  iVar2 = (int)(((uint)(ushort)param_3 + (uint)DAT_800b531b * 0x10) * 0x10000) >> 0xb;
+  param_4->prior = *(uchar *)(iVar2 + DAT_800b2b3c);
+  param_4->mode = *(uchar *)(iVar2 + DAT_800b2b3c + 1);
+  param_4->vol = *(uchar *)(iVar2 + DAT_800b2b3c + 2);
+  param_4->pan = *(uchar *)(iVar2 + DAT_800b2b3c + 3);
+  param_4->center = *(uchar *)(iVar2 + DAT_800b2b3c + 4);
+  param_4->shift = *(uchar *)(iVar2 + DAT_800b2b3c + 5);
+  param_4->max = *(uchar *)(iVar2 + DAT_800b2b3c + 7);
+  param_4->min = *(uchar *)(iVar2 + DAT_800b2b3c + 6);
+  param_4->vibW = *(uchar *)(iVar2 + DAT_800b2b3c + 8);
+  param_4->vibT = *(uchar *)(iVar2 + DAT_800b2b3c + 9);
+  param_4->porW = *(uchar *)(iVar2 + DAT_800b2b3c + 10);
+  param_4->porT = *(uchar *)(iVar2 + DAT_800b2b3c + 0xb);
+  param_4->pbmin = *(uchar *)(iVar2 + DAT_800b2b3c + 0xc);
+  param_4->pbmax = *(uchar *)(iVar2 + DAT_800b2b3c + 0xd);
+  iVar2 = iVar2 + DAT_800b2b3c;
+  param_4->adsr1 = *(ushort *)(iVar2 + 0x10);
+  param_4->adsr2 = *(ushort *)(iVar2 + 0x12);
+  param_4->prog = *(short *)(iVar2 + 0x14);
+  param_4->vag = *(short *)(iVar2 + 0x16);
+  return 0;
+}

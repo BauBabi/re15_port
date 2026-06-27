@@ -1,0 +1,62 @@
+/* FUN_801057bc @ 0x801057bc  (Ghidra headless, raw MIPS overlay) */
+
+/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+
+void FUN_801057bc(void)
+
+{
+  short sVar1;
+  byte bVar2;
+  char cVar3;
+  ushort uVar4;
+  uint uVar5;
+  undefined4 uVar6;
+  short sVar7;
+  
+  if (*(char *)(_DAT_800ac784 + 6) == '\0') {
+    *(undefined1 *)(_DAT_800ac784 + 6) = 1;
+    bVar2 = func_0x8001af20();
+    *(byte *)(_DAT_800ac784 + 0x9e) = (bVar2 & 7) + 8;
+    *(undefined1 *)(_DAT_800ac784 + 0x94) = 1;
+    bVar2 = func_0x8001af20();
+    *(byte *)(_DAT_800ac784 + 0x95) = bVar2 & 0x1f;
+    *(undefined1 *)(_DAT_800ac784 + 0x8f) = 0xf;
+    uVar5 = func_0x8001af20();
+    if ((uVar5 & 3) == 0) {
+      uVar5 = func_0x8001af20();
+      uVar6 = 5;
+      if ((uVar5 & 1) != 0) {
+        uVar6 = 4;
+      }
+      func_0x800453d0(uVar6);
+    }
+    bVar2 = func_0x8001af20();
+    *(byte *)(_DAT_800ac784 + 0x9f) = bVar2 & 0xf;
+    *(undefined2 *)(_DAT_800ac784 + 0x9c) =
+         *(undefined2 *)(&DAT_8011fb50 + *(char *)(_DAT_800ac784 + 0x9f) * 4);
+  }
+  sVar7 = (short)*(char *)(_DAT_800ac784 + 0x9e) *
+          *(short *)(&DAT_8011fb52 + *(char *)(_DAT_800ac784 + 0x9f) * 4);
+  func_0x8001aac4((int)*(short *)(_DAT_800ac784 + 0x1bc),(int)*(short *)(_DAT_800ac784 + 0x1be),
+                  (int)sVar7);
+  func_0x8001f314(*(undefined4 *)(_DAT_800ac784 + 0x84),*(undefined4 *)(_DAT_800ac784 + 0x16c),0,
+                  0x100);
+  sVar1 = *(short *)(_DAT_800ac784 + 0x9c);
+  *(short *)(_DAT_800ac784 + 0x9c) = sVar1 + -1;
+  if (sVar1 == 0) {
+    cVar3 = *(char *)(_DAT_800ac784 + 0x9f) + '\x01';
+    *(char *)(_DAT_800ac784 + 0x9f) = cVar3;
+    if ('\x0f' < cVar3) {
+      *(undefined1 *)(_DAT_800ac784 + 0x9f) = 0;
+    }
+    *(undefined2 *)(_DAT_800ac784 + 0x9c) =
+         *(undefined2 *)(&DAT_8011fb50 + *(char *)(_DAT_800ac784 + 0x9f) * 4);
+    uVar4 = func_0x8001af20();
+    *(ushort *)(_DAT_800ac784 + 0x6a) =
+         *(short *)(_DAT_800ac784 + 0x6a) + (sVar7 - (uVar4 & 1) * (short)((int)sVar7 << 1));
+  }
+  FUN_8010939c(0,(**(uint **)(_DAT_800ac784 + 0x168) & 0x2000) != 0);
+  return;
+}
+
+

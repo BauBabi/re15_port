@@ -1,0 +1,8 @@
+void FUN_8001613c(void)
+
+{
+  FUN_80013b60(0x24,&DAT_80198000,0,"YOUDIED.TIM");
+  _DAT_800aca4c = 0x1f15;
+  FUN_8004ee78(&DAT_80198000);
+  return;
+}

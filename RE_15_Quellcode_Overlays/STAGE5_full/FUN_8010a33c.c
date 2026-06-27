@@ -1,0 +1,12 @@
+/* FUN_8010a33c @ 0x8010a33c  (Ghidra headless, raw MIPS overlay) */
+
+void FUN_8010a33c(void)
+
+{
+  func_0x80037edc(0,10);
+  func_0x80037edc(4,0x32);
+  func_0x80037edc(7,0x32);
+  return;
+}
+
+

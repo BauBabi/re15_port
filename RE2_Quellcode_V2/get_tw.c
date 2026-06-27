@@ -1,0 +1,17 @@
+/* get_tw @ 0x800919e0  (Ghidra headless, raw MIPS overlay) */
+
+uint get_tw(byte *param_1)
+
+{
+  uint uVar1;
+  
+  if (param_1 == (byte *)0x0) {
+    uVar1 = SYS_OBJ_1B78();
+    return uVar1;
+  }
+  return (uint)(param_1[2] >> 3) << 0xf | (uint)(*param_1 >> 3) << 10 | 0xe2000000 |
+         ((int)(-(int)*(short *)(param_1 + 6) & 0xffU) >> 3) << 5 |
+         (int)(-(int)*(short *)(param_1 + 4) & 0xffU) >> 3;
+}
+
+
