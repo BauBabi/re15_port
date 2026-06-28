@@ -43,6 +43,13 @@ target_include_directories(test_room_load PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_room_load COMMAND test_room_load)
 set_tests_properties(unit_room_load PROPERTIES TIMEOUT 30)
 
+# --- Member_set/cmp Unit-Test (#11/#12 — byte-true RE1.5 id-Tabelle FUN_8004116c/FUN_80041358) ---
+add_executable(test_member test_member.c)
+target_link_libraries(test_member PRIVATE re15_engine re15_test_support)
+target_include_directories(test_member PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_member COMMAND test_member)
+set_tests_properties(unit_member PROPERTIES TIMEOUT 30)
+
 # --- Player-Damage Unit-Test (#13 — byte-true Player-Branch von FUN_80012d60) ---
 add_executable(test_damage test_damage.c)
 target_link_libraries(test_damage PRIVATE re15_engine re15_test_support)

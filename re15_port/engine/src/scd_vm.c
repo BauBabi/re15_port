@@ -2161,10 +2161,10 @@ static int op_member_set(scd_thread_t *t)
     /* I2-round (2026-05-24): per-thread work_slot. */
     int8_t ws = (t->work_slot >= 0) ? t->work_slot : g_scd.work_slot;
     if (ws >= 0) {
-        int re2_id = re15_to_re2_member_id((int)member_id);
-        if (re2_id >= 0) {
-            re15_actor_set_member((int)ws, (uint8_t)re2_id, (int32_t)value);
-        }
+        /* [#11] byte-true: the RE1.5 Member id goes STRAIGHT to the actor table
+         * (FUN_8004116c). The old RE1.5→RE2 translation wrote id12 → Leon.y
+         * ("player under the floor") and mis-mapped/dropped ids 6-19. */
+        re15_actor_set_member((int)ws, member_id, (int32_t)value);
     } else {
         /* I4-round (2026-05-25, post R2 finding): when work_slot is invalid
          * but work_prop_idx is set, write to the PROP's position. Sub02
@@ -2313,10 +2313,10 @@ static int op_member_cmp(scd_thread_t *t)
     /* byte-true: LAB_80041290 @0x800412ac `lh s1,0x4(v0)` = signed LITTLE-endian
      * (PSX lh), identisch zu Member_set @0x800410d4. War faelschlich BE. [#12] */
     int16_t  arg       = scd_read_le_s16(&t->pc[4]);
-    int re2_id = re15_to_re2_member_id((int)member_id);
     int8_t   ws        = (t->work_slot >= 0) ? t->work_slot : g_scd.work_slot;
-    int32_t  cur       = (ws >= 0 && re2_id >= 0)
-                       ? re15_actor_get_member((int)ws, (uint8_t)re2_id)
+    /* [#11] byte-true: RE1.5 Member id straight to the actor GET table (FUN_80041358). */
+    int32_t  cur       = (ws >= 0)
+                       ? re15_actor_get_member((int)ws, member_id)
                        : 0;
     int      result    = 0;
     switch (cmp_op) {                                    /* Operator-Tabelle LAB_80041290 @0x800412f8.. */
@@ -2765,10 +2765,7 @@ int op_member_set2(scd_thread_t *t)
      * Mirror op_member_set (per-thread primary). */
     int8_t ws = (t->work_slot >= 0) ? t->work_slot : g_scd.work_slot;
     if (ws >= 0) {
-        int re2_id = re15_to_re2_member_id((int)member_id);
-        if (re2_id >= 0) {
-            re15_actor_set_member((int)ws, (uint8_t)re2_id, value);
-        }
+        re15_actor_set_member((int)ws, member_id, value);   /* [#11] RE1.5 id direct */
     }
     t->pc += 3;
     return 1;

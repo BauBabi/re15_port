@@ -25,44 +25,13 @@
  * Member_set / Member_cmp ID translation
  *=========================================================================*/
 
-int re15_to_re2_member_id(int re15_id)
-{
-    /* RE1.5 BioClone-style → RE2 PTR_LAB_800a74c8 IDs.
-     *
-     * RE1.5 sub02 evidence:
-     *   Member_set(0, -6010) → player.x = -6010  → RE2 ID 0x0B
-     *   Member_set(2, 6265)  → player.z = 6265   → RE2 ID 0x0D
-     *   Member_set(4, 4)     → state byte         → RE2 ID 0x04
-     *
-     * RE2 actor struct (per F1 agent's audit of FUN_80055cb0):
-     *   +0x00 flags   +0x04 state   +0x06 sub_state_1  +0x07 sub_state_2
-     *   +0x0B x  +0x0C y  +0x0D z   +0x0E rot_x  +0x0F rot_y                */
-    switch (re15_id) {
-    case 0:  return 0x0B;   /* RE1.5 X → RE2 +0x0B */
-    case 1:  return 0x0C;   /* RE1.5 Y → RE2 +0x0C */
-    case 2:  return 0x0D;   /* RE1.5 Z → RE2 +0x0D */
-    /* G14 corrected per RE_15_modified_V2/entity_set_field.c:
-     * RE1.5 members 3/4/5 = rot_x/rot_y/rot_z (NOT yaw/state/state-byte).
-     * Previously case 4 silently routed yaw writes to sub_state_2,
-     * so Member_set(4, N) had no visible effect — Leon's facing during
-     * cinematic wasn't being set. */
-    case 3:  return 0x0E;   /* RE1.5 rot_x → RE2 rot_x */
-    case 4:  return 0x0F;   /* RE1.5 rot_y → RE2 rot_y */
-    case 5:  return 0x10;   /* RE1.5 rot_z → RE2 rot_z */
-    case 6:  return 0x06;
-    case 7:  return 0x07;
-    case 8:  return 0x08;   /* motion (same ID in both) */
-    case 9:  return 0x09;
-    case 10: return 0x0A;
-    /* RE1.5 ids 0x0B+ sind Sub-State-Bytes/Felder (FUN_8004116c: id12=+0x09 grid-id,
-     * NICHT Y), KEINE RE2-Koordinaten-IDs. Das alte Pass-Through schrieb z.B. id12 ->
-     * RE2 0x0C (=Leon.Y) -> Spieler unter den Boden. Bis eine vollstaendige RE1.5->RE2-
-     * Sub-State-Feldzuordnung portiert ist: no-op (-1). Belegt: FUN_8004116c.c case12 =
-     * *((int)p+9)=+0x09; RE15_FUN_CATALOG Obj_model_set grid-id->+0x09. [#11] */
-    default:
-        return -1;
-    }
-}
+/* re15_to_re2_member_id() was REMOVED [#11/#12]. The RE1.5→RE2 id translation
+ * was a fiction: RE1.5's Member cores FUN_8004116c (set) / FUN_80041358 (get)
+ * map ids 0..0x13 DIRECTLY to actor offsets, NOT to RE2 ids. The translation
+ * wrote Member id12 → Leon.y ("player under the floor") and mis-mapped/dropped
+ * ids 6-19 (e.g. id8 = state, NOT motion). The byte-true direct table now lives
+ * in actor_common.c (re15_actor_get_member/set_member); op_member_set/cmp/set2
+ * pass the raw RE1.5 id. ids 0-5 (coords/rot) are unchanged → ROOM1170 identical. */
 
 /*=========================================================================
  * Plc_dest mode → motion clip + speed

@@ -35,20 +35,28 @@ typedef struct {
      * Member ID → field mapping verified F1 agent 2026-05-21. RE1.5 SCD
      * scripts use the same Member IDs as RE2 because both engines share
      * lineage.                                                           */
-    uint8_t  state;        /* ID 2 → state_main (RE2 +0x04)               */
-    uint8_t  flags;        /* ID 0 → flags     (RE2 +0x00)                */
-    uint8_t  sub_state_1;  /* ID 3 → sub_state_1 (RE2 +0x05)              */
-    uint8_t  sub_state_2;  /* ID 4 → sub_state_2 (RE2 +0x06) — NOT rot_y! */
-    uint8_t  sub_state_3;  /* ID 5 → sub_state_3 (RE2 +0x07)              */
-    uint8_t  sub_state_4;  /* ID 6 → sub_state_4 (RE2 +0x08)              */
-    uint8_t  floor;        /* ID 0x11 → floor index (RE2 +0x106)          */
-    int32_t  x;            /* ID 11 (0xB) → world X (RE2 +0x38)           */
-    int32_t  y;            /* ID 12 (0xC) → world Y (RE2 +0x3C)           */
-    int32_t  z;            /* ID 13 (0xD) → world Z (RE2 +0x40)           */
-    int16_t  rot_x;        /* ID 14 (0xE) → rot_x   (RE2 +0x74)           */
-    int16_t  rot_y;        /* ID 15 (0xF) → rot_y   (RE2 +0x76, 4096=360°)*/
-    int16_t  rot_z;        /* ID 16 (0x10)→ rot_z   (RE2 +0x78)           */
-    int16_t  hp;            /* ID 19 (0x13)→ hp     (RE2 +0x1C2)          */
+    /* RE1.5 SCD Member fields — byte-true id→offset from the engine's own member
+     * cores FUN_8004116c (set) / FUN_80041358 (get); full table in actor_common.c.
+     * (The earlier "RE2 id" labels were the RE2-translation that wrote Member id12
+     * → Leon.y = "player under the floor"; corrected to the direct RE1.5 ids [#11].) */
+    uint8_t  state;        /* RE1.5 Member id 8  → +0x04 */
+    uint8_t  flags;        /* RE1.5 Member id 6  → +0x00 (subset: low byte of the word) */
+    uint8_t  sub_state_1;  /* RE1.5 Member id 9  → +0x05 */
+    uint8_t  sub_state_2;  /* RE1.5 Member id 10 → +0x06 */
+    uint8_t  sub_state_3;  /* RE1.5 Member id 11 → +0x07 */
+    uint8_t  sub_state_4;  /* RE1.5 Member id 13 → +0x08 */
+    int32_t  member_0c;    /* RE1.5 Member id 7  → +0x0c (word) — stored, no consumer yet */
+    uint8_t  grid_id;      /* RE1.5 Member id 12 → +0x09 — grid/cell id, the MOST frequent Member_set (117 sites) */
+    uint8_t  member_0a;    /* RE1.5 Member id 14 → +0x0a — stored, no consumer yet */
+    uint8_t  member_0b;    /* RE1.5 Member id 15 → +0x0b — stored, no consumer yet */
+    uint8_t  floor;        /* RE1.5 Member id 18 → +0x82 (floor band) */
+    int32_t  x;            /* RE1.5 Member id 0 → +0x34 (world X)          */
+    int32_t  y;            /* RE1.5 Member id 1 → +0x38 (world Y)          */
+    int32_t  z;            /* RE1.5 Member id 2 → +0x3c (world Z)          */
+    int16_t  rot_x;        /* RE1.5 Member id 3 → +0x68 (rot_x)           */
+    int16_t  rot_y;        /* RE1.5 Member id 4 → +0x6a (rot_y, 4096=360°)*/
+    int16_t  rot_z;        /* RE1.5 Member id 5 → +0x6c (rot_z)           */
+    int16_t  hp;            /* RE1.5 Member id 19 → +0x1ba (hp; lh signed)  */
     /* Combat hit-reaction state — byte-true player branch of the damage
      * resolver FUN_80012d60 (ghidra1_V2.txt:77656-77714). hit_react (RE2 +0x93):
      * bit0x1 = "already hit this attack" guard — SET @80012eec, CHECKED @80012e30
@@ -58,7 +66,7 @@ typedef struct {
      * (RE2 +0x98, DAT_800acaec, u16): bit0x2 = bleed/poison, rolled on a type<2 hit
      * via 2×RNG&1 @80012ea4. See re15_damage.c. */
     uint8_t  hit_react;    /* RE2 +0x93 — per-attack hit guard + enemy collision bits */
-    uint16_t status_flags; /* RE2 +0x98 — bit0x2 = bleed/poison                       */
+    uint16_t status_flags; /* RE2/RE1.5 +0x98 (Member id 17, lhu) — bit0x2 = bleed/poison */
     /* Phase 4.5.13-RE2 F1: speed was at ID 27 (wrong) — correct ID is
      * 0x16 (+0x1CC in RE2). Renamed for clarity; opcode 0x35 Speed_set
      * uses an indexed velocity vector (ID 0x17..0x1A), not this scalar. */
@@ -102,7 +110,7 @@ typedef struct {
      * Bit 0x40 = clear interp counter.
      * Bit 0x80 = REVERSE playback (Plc_flg(0,128,0) sets this).
      * Written by Plc_motion's pc[3] high byte + Plc_flg subop=OR/SET/XOR. */
-    uint16_t anim_flags;
+    uint16_t anim_flags;   /* also RE1.5 Member id 16 → +0x1c4 (lhu) */
     /* BD-round 2026-05-28: per-actor Plc_motion FSM-init delay. PSX
      * Plc_motion writes state=4 to actor+0x4; on NEXT tick FSM transitions
      * state=4→state=1 and zeros anim_frame (per T8 disasm). Set to 1 on

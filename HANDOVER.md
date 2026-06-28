@@ -9,15 +9,15 @@ Kanonisches „lies-mich-zuerst" für die nächste Session. Ergänzt `BYTE_TRUE_
 - **Git:** HEAD = `0aed072b` (master, sauber). Der **Code-Work** (alle u.g. Fixes) liegt in
   `3b4be5b8 "Many things finished"`; `0aed072b` legt Skills/Doku/Cleanup obendrauf.
 - **Build/Test:** `cmake --build re15_port/build` + `ctest --test-dir re15_port/build --timeout 30`
-  → **27/27 grün** (mingw64 GCC + Ninja, `PATH` muss `C:\msys64\mingw64\bin` enthalten).
-- **Nächster Schritt „der Reihe nach":** **#11 Member-id-Tabelle** (CRITICAL, scd-actor-model) — die
-  RE2-Heuristik schreibt id12→Leon.y (138) statt +0x09 → Spieler unter den Boden; 1:1-Tabelle aus
-  FUN_8004116c. Eng gekoppelt mit **#12** (Member_cmp Operator-Tabelle + BE→LE). (#9 Switch + #10
-  Evt_chain/Evt_exec + **#13 Player-Damage** sind ERLEDIGT — byte-true, build+ctest grün; siehe unten.)
+  → **28/28 grün** (mingw64 GCC + Ninja, `PATH` muss `C:\msys64\mingw64\bin` enthalten).
+- **Nächster Schritt „der Reihe nach":** **#14/#15 AOT-Runtime** (HIGH, aot-runtime — AOT-Scan-Refactor;
+  in der Memory als RISKANT/laufzeit-zu-verifizieren markiert → Savestate-Pipeline nutzen). (#9 Switch +
+  #10 Evt_chain/Evt_exec + **#13 Player-Damage** + **#11/#12 Member-id-Tabelle + Member_cmp** sind
+  ERLEDIGT — byte-true, build+ctest grün; siehe unten.)
 - **Arbeitsweise:** jeden Audit-Fix VOR Anwendung per Agent gegen die Disasm verifizieren
   (≈70 % der Audit-Werte waren ungenau), dann anwenden → build → ctest.
 
-## Diese Session geliefert (alles gebaut + 27/27 ctest grün)
+## Diese Session geliefert (alles gebaut + 28/28 ctest grün)
 
 ### Byte-true Fixes — Wave 2 (#28/#32/#34/#36)
 - **#28** Rotor-SE (rotor_common.c): Pan `& 0x7f` statt clamp (andi @0x80045d28/d3c); Distanz mit
@@ -107,6 +107,21 @@ Kanonisches „lies-mich-zuerst" für die nächste Session. Ergänzt `BYTE_TRUE_
 - **Verifikation:** eigener Disasm-Trace (LAB-für-LAB) + Damage-/Reaktions-Tabelle direkt aus den Daten-Bytes gelesen.
   Test `tests/unit/test_damage.c` (6 Tests: 10-dmg-Biss, Hit-Once-Sperre+Re-arm, HP<0→death, Instakill, Bleed-Gate
   507/2000≈1/4, Tabelle byte-true). **27/27 ctest grün; Headless-Boot ~10s ohne Crash.**
+
+### #11 + #12 — Member_set/cmp id-Tabelle (KOMPLETT, byte-true)
+- **Kern:** Der Port übersetzte RE1.5-Member-ids → RE2-ids (`re15_to_re2_member_id`) — eine **Fiktion**. RE1.5 nutzt
+  die DIREKTE Tabelle `FUN_8004116c` (set, ghidra:151322-151380) / `FUN_80041358` (get, :151486-151575): id 0..0x13
+  → Actor-Offset. Übersetzung GELÖSCHT; `re15_actor_get/set_member` (actor_common.c) nehmen jetzt die rohe RE1.5-id.
+- **Tabelle:** 0→x 1→y 2→z 3→rot_x 4→rot_y 5→rot_z 6→flags 7→+0x0c 8→**state** 9→sub_state_1 10→sub_state_2
+  11→sub_state_3 12→**+0x09 grid_id** 13→sub_state_4 14→+0x0a 15→+0x0b 16→anim_flags 17→status_flags 18→floor 19→hp.
+- **Bugs behoben:** id12 (häufigster Member_set!) schrieb via RE2-0x0C → **Leon.y = Spieler unter Boden**; jetzt grid_id.
+  id8 schrieb motion statt **state**; id6/9/10/11/13/16/17/18/19 falsch/gedroppt. 4 Orphan-Felder ergänzt → alle 20 ids
+  round-trippen. **ids 0–5 (Koords/Rot) byte-identisch zu vorher → ROOM1170 unverändert (keine Regression).**
+- **#12:** Operatoren `{0:== 1:> 2:>= 3:< 4:<= 5:!= 6:&}` + LE-Wert waren schon byte-true (frühere Welle); der
+  Restfehler war NUR die geteilte kaputte id-Quelle → mit #11 mitbehoben (cmp liest jetzt das richtige Feld).
+- **GET-Vorzeichen** exakt über Port-Feldtypen (lbu zero-extend, lh sign-extend, lhu, lw). **Verifikation:** eigener
+  Disasm-Read aller 20 Case-Bodies + Sprungtabellen. Test `tests/unit/test_member.c` (Direkt-Tabelle + VM-cmp, Feld-
+  Quelle/LE/Operatoren). **28/28 ctest grün; Headless-Boot ~9s ohne Crash.**
 
 ## Tote Themen (NICHT wieder aufmachen)
 - **„Pixel-Verschiebung"**: Der Nutzer hat bestätigt — es gibt KEINE sichtbare. Render-Math

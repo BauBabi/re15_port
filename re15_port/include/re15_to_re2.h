@@ -30,25 +30,11 @@
  * SCD OPCODE ARG TRANSLATORS
  *=========================================================================*/
 
-/* Member_set / Member_cmp (op 0x34 / 0x3E) member-id translation.
- *
- * RE1.5 SCD uses BioClone-style member IDs:
- *   0  = X        1  = Y        2  = Z        3  = yaw (rot_y)
- *   4  = state byte (sub_state_2)
- *   5  = sub_state_3
- *   ...
- *
- * RE2 uses a different table (per F1 agent's PTR_LAB_800a74c8 audit):
- *   0x00 = flags     0x0B = X      0x0E = rot_x
- *   0x02 = state     0x0C = Y      0x0F = rot_y
- *   0x03..6 = sub-states            0x10 = rot_z
- *   0x08 = motion   0x0D = Z       0x16 = speed_h
- *
- * Translation maps RE1.5 IDs to RE2 IDs. Sub02's `Member_set(0,-6010)`
- * (RE1.5 ID 0 = X) → RE2 ID 0x0B (X) → writes actor.x = -6010.
- *
- * Returns -1 for unknown IDs (treat as no-op). */
-int re15_to_re2_member_id(int re15_id);
+/* Member_set / Member_cmp (op 0x34 / 0x3E / 0x35) member-id handling: the SCD id
+ * is now a DIRECT RE1.5 actor-field index (FUN_8004116c / FUN_80041358) handled in
+ * actor_common.c (re15_actor_get_member / re15_actor_set_member). The former
+ * re15_to_re2_member_id() RE1.5→RE2 translation was REMOVED [#11/#12] — it wrote
+ * Member id12 → Leon.y and mis-mapped/dropped ids 6-19. No translator is needed. */
 
 /* Plc_dest mode → motion clip selection.
  *

@@ -43,7 +43,9 @@ address. All rows below were verified against the in-repo disasm 2026-05-29 unle
 | FUN_800245d8 | **Position-advance by yaw** (NOT walker): RotMatrixY(rot_y+arg), GTE rtv0 (speed,0,0), add X/Z to +0x34/+0x3c | ghidra1:125466 | high |
 | LAB_80040f14 (0x2F Speed_set) | axis@pc+1(lbu), value@pc+2(lhu LE), store thread+0x158+idx*2 (per-thread vel) | ghidra1:151147-151158 | high |
 | 0x80040f40 (0x30 Add_speed) | actor@thread+0x154, vel[axis]@+0x158, add to actor pos/rot | ghidra1:151160-151175 | high |
-| 0x80041358 | Member_get accessor: actor field by idx 0..0x13 (pos+0x34/+0x3c, rot+0x6a, motion+0x1ba). Used by Member_cmp 0x3E | FUN_80041358.c | high |
+| FUN_8004116c | **Member_SET core** (id a1, value a2, actor a0). RE1.5 DIRECT id→offset (NOT RE2 ids!): 0→+0x34/sw(x) 1→+0x38(y) 2→+0x3c(z) 3→+0x68/sh(rotx) 4→+0x6a(roty) 5→+0x6c(rotz) 6→+0x00/sw(flags) 7→+0x0c 8→+0x04/sb(state) 9→+0x05 10→+0x06 11→+0x07 12→**+0x09**(grid-id, NOT Y!) 13→+0x08 14→+0x0a 15→+0x0b 16→+0x1c4/sh(anim) 17→+0x98 18→+0x82(floor) 19→+0x1ba/sh(hp). **Ported** [#11]: actor_common.c | ghidra1:151322-151380 | high |
+| FUN_80041358 | **Member_GET core** (mirror of SET): same id→offset, signedness lbu(8-15,18)/lh(3-5,19)/lhu(16,17)/lw(0-2,6,7). idx 0..0x13, id≥0x14→default. Used by Member_cmp 0x3E | ghidra1:151486-151575 | high |
+| LAB_80041290 (0x3E Member_cmp) | id=lo-byte@pc+2, op=hi-byte, **value=lh@pc+4 (LE signed)**, pc+=6. FUN_80041358(id)→cur. switchD_800412f0 ops {0:== 1:> 2:>= 3:< 4:<= 5:!= 6:&(test)}, op≥7→false. **Ported** [#12]: scd_vm.c op_member_cmp | ghidra1:151416-151468 | high |
 
 ## Combat / player damage (verified 2026-06-28, ghidra1_V2.txt:77607-77814 + 223455-223490)
 | Addr | Purpose | Evidence | Conf |

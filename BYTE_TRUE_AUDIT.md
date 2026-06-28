@@ -95,6 +95,15 @@ Multi-Agent-Audit: 20 Subsysteme, 123 WRONG/MISSING-Verdachtsfälle, **104 adver
 ### #11 · CRITICAL · REPAIR · scd-actor-model
 **Member_set/cmp id-Tabelle: 1:1 RE1.5-FUN_8004116c statt RE2-Heuristik (id12->+0x09 nicht Y!)**
 
+> ✅ **ERLEDIGT 2026-06-28 (byte-true)** — `re15_actor_get_member`/`set_member` (actor_common.c) nutzen jetzt die
+> RE1.5-DIREKT-Tabelle aus `FUN_8004116c` (set, ghidra:151322-151380) / `FUN_80041358` (get, :151486-151575);
+> `re15_to_re2_member_id()` GELÖSCHT (war Fiktion). 3 Call-Sites (op_member_set/cmp/set2) übergeben die rohe RE1.5-id.
+> 4 Orphan-Felder ergänzt (member_0c@+0x0c, grid_id@+0x09, member_0a@+0x0a, member_0b@+0x0b) → alle 20 ids round-trippen.
+> **Bug behoben:** id12 (häufigster Member_set, +0x09 grid-id) schrieb via RE2-0x0C → Leon.y; jetzt grid_id. Auch
+> id6/8/9/10/11/13/16/17/18/19 waren falsch/gedroppt (z.B. id8 RE1.5=state, alt=motion). **ids 0–5 (Koords/Rot) sind
+> byte-identisch zu vorher → ROOM1170 unverändert, keine Regression.** GET-Vorzeichen via Port-Feldtypen exakt (lbu
+> zero-, lh sign-extend). Test `tests/unit/test_member.c`. 28/28 ctest grün, Headless ~9s ohne Crash.
+
 - **Ort:** `re15_port/engine/src/re15_to_re2.c:55-66, actor_common.c:94,131-159 (case 0x0C->a->y)`
 - **RE-Beleg:** FUN_8004116c (Member_set core, LAB_800410b8 @0x80074578): id12 sb +0x09 @0x800411f4; id1=Y sw +0x38; id8 sb +0x04 @0x800411d8; id6 sw +0x00; id9 sb +0x05; id10 sb +0x06; id18 sb +0x82; id19 sh +0x1ba. id0x0C = 117 Vorkommen (hÃ¤ufigster). Asset room1070/sub02 'Member_set(12,138)'.
 - **Fix:** re15_to_re2_member_id durch 1:1-Tabelle aus FUN_8004116c ersetzen: 0->X,1->Y,2->Z,3->rotx,4->roty,5->rotz,6->+0x00,7->+0x0c,8->+0x04,9->+0x05,10->+0x06,11->+0x07,12->+0x09,13->+0x08,14->+0x0a,15->+0x0b,16->+0x1c4,17->+0x98,18->+0x82,19->+0x1ba. Alle 20 ids explizit, keine RE2-Passthrough-Heuristik.
@@ -102,6 +111,12 @@ Multi-Agent-Audit: 20 Subsysteme, 123 WRONG/MISSING-Verdachtsfälle, **104 adver
 
 ### #12 · HIGH · REPAIR · scd-actor-model
 **Member_cmp: Operator-Tabelle korrigieren + Vergleichswert BE->LE**
+
+> ✅ **ERLEDIGT 2026-06-28 (byte-true)** — Operator-Tabelle + LE-Wert waren bereits in einer früheren Welle angewandt
+> (op_member_cmp: Wert `scd_read_le_s16(&pc[4])`, switch `{0:== 1:> 2:>= 3:< 4:<= 5:!= 6:&}`, op≥7→false — verifiziert
+> gegen `LAB_80041290`/`switchD_800412f0` ghidra:151416-151468). Der EINZIGE Restfehler war die geteilte kaputte
+> id-Übersetzung (Wert kam vom falschen Feld) → mit **#11** behoben (op_member_cmp ruft jetzt `re15_actor_get_member`
+> mit der rohen RE1.5-id). VM-Tests in `test_member.c` (Feld-Quelle id19=hp/id8=state, LE-Wert hp=300, Operatoren 0..6+op7).
 
 - **Ort:** `re15_port/engine/src/scd_vm.c:2112 (scd_read_be_s16), :2119-2125 (switch cmp_op)`
 - **RE-Beleg:** LAB_80041290 (@0x800745a0, Opcode 0x3E): lh s1,0x4(v0) @0x800412ac = LE-VALUE (gleicher lh wie Member_set, dort liest Port LE). switchD_800412f0: {0:==,1:>,2:>=,3:<,4:<=,5:!=,6:&}. Port: BE + {0:==,1:!=,2:<,3:>}.
