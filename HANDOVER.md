@@ -10,8 +10,8 @@ Kanonisches „lies-mich-zuerst" für die nächste Session. Ergänzt `BYTE_TRUE_
   `3b4be5b8 "Many things finished"`; `0aed072b` legt Skills/Doku/Cleanup obendrauf.
 - **Build/Test:** `cmake --build re15_port/build` + `ctest --test-dir re15_port/build --timeout 30`
   → **26/26 grün** (mingw64 GCC + Ninja, `PATH` muss `C:\msys64\mingw64\bin` enthalten).
-- **Nächster Schritt „der Reihe nach":** **#9 Case/Switch** (Opcodes 0x13–0x16) — schließt direkt
-  an den #8-Loop-Umbau an (siehe unten).
+- **Nächster Schritt „der Reihe nach":** **#10 Evt_chain/Evt_exec** (Thread-Reinit + Slot-Bereich).
+  (#9 Case/Switch ist ERLEDIGT — byte-true, build+ctest grün; siehe unten.)
 - **Arbeitsweise:** jeden Audit-Fix VOR Anwendung per Agent gegen die Disasm verifizieren
   (≈70 % der Audit-Werte waren ungenau), dann anwenden → build → ctest.
 
@@ -60,6 +60,18 @@ Kanonisches „lies-mich-zuerst" für die nächste Session. Ergänzt `BYTE_TRUE_
   `re15_port/cmake/build` mit 7888 Dateien, `psx_dev/.../build*`). `.gitignore` robust:
   `build/`, `.claude/worktrees/`, `debug.log`, `.idea/`. **NIE `build/`-Dateien committen.**
 
+### #9 — Switch/Case/Default/Eswitch (KOMPLETT, byte-true)
+- **op_switch (0x13, LAB_8003fa5c)** scannt jetzt die GANZE Case/Default-Tabelle inline und springt
+  direkt auf matched-case-body / default-body / past-eswitch (der Audit-Hinweis „Case off-by-2" war
+  zu klein gegriffen — der echte Mechanismus liegt im Switch-Handler). Pusht/poppt das unified
+  Loop-Modell (#8): Break (0x1A) verlässt den Switch über `loop_exit`, Eswitch (0x16) balanciert
+  `loop_count`. **op_case=+6 (reiner Fall-through), op_default=+2, op_end_switch=loop_count--/+2.**
+- **Index-Konvention belegt** gegen op_do (LAB_8003f8bc) + op_break (LAB_8003fca8): Push-am-neuen-Index,
+  Break-liest-aktuellen, Pop-dekrement (PSX 1-indexiert → Port konsistent 0-indexiert). `switch_val`-Feld
+  entfernt (kein Konsument mehr). Verifikation: eigener Disasm-Trace + Agent (alle 5 Claims CONFIRMED).
+- **Neuer Test:** `test_switch_case_break` (3 Pfade: Match-mid-table+Break, erstes-Case-Match, No-Match→Default;
+  loop_count balanciert je auf 0). **26/26 ctest grün.**
+
 ## Tote Themen (NICHT wieder aufmachen)
 - **„Pixel-Verschiebung"**: Der Nutzer hat bestätigt — es gibt KEINE sichtbare. Render-Math
   **#1–3** (RotMatrix/Trig-LUT/Kamera-Integer) sind reine byte-true-Korrektheit OHNE sichtbaren
@@ -80,22 +92,15 @@ Kanonisches „lies-mich-zuerst" für die nächste Session. Ergänzt `BYTE_TRUE_
 
 ## Nächste Schritte „der Reihe nach"
 
-### #9 Case/Switch (0x13 Switch / 0x14 Case / 0x15 Default / 0x16 Eswitch) — JETZT
-- **Warum jetzt:** schließt direkt an #8 an. Mein neuer `op_break` (0x1A) beendet bereits
-  Switch UND Loop über `loop_exit`/`loop_count` — die Switch-Familie sollte dasselbe unified
-  Modell nutzen.
-- **Port-Stand:** `op_switch`/`op_case`/`op_default`/`op_end_switch` sind registriert, aber das
-  Switch-Modell ist NICHT byte-true (Audit #9: Case No-Match-Advance off-by-2 `+4→+6`,
-  Default `+4→+2`; kanonisch = `op_switch` scannt die ganze Case/Default-Tabelle wie LAB_8003fa5c
-  und springt direkt).
-- **Disasm-Start:** Switch = LAB_8003fa5c (Dispatch 0x800744f4 = base+0x13*4). Case/Default/Eswitch-
-  LABs + die Tabellen-Scan-Mechanik (a3+=6 + block_length) ZUERST per Agent zeilengenau verifizieren
-  (die Indizes/LABs im #8-Agent-Output waren teils widersprüchlich → neu belegen, nicht übernehmen).
-- **Muster:** Agent-Verifikation → unified Switch ins Loop-Modell integrieren (Break nutzt schon
-  loop_exit) → `test_scd_opcodes.c` um einen Switch/Case/Break-Test erweitern → build + ctest.
+### #10 Evt_chain/Evt_exec (Thread-Reinit + Slot-Bereich) — JETZT
+- **Audit #10:** Evt_chain (0x03) ist im Port No-Op → muss In-place-Thread-Reinit machen
+  (LAB_8003f270 @0x800744b4: sub_id=pc[3] @0x8003f280, jal FUN_8003edec = Thread-Reset PC/+4/+8,
+  thread+0x140, PC=base+base[sub_id*2]). Evt_exec (LAB_8003f2a0): cond=pc[1], FUN_8003ee3c
+  Slot-Allocator (cond<10/<14 → Direkt-Slot; 0xFF Normalmodus Slot 2..9). Asset room1021/sub02
+  'Evt_exec(9,0)'. Ort: `scd_vm.c:2701-2707 (op_evt_chain No-Op), :736-743 (op_evt_exec), re15_scd.h:42-43`.
+- **Muster:** Agent gegen LAB_8003f270/LAB_8003f2a0 + FUN_8003edec/FUN_8003ee3c verifizieren → anwenden → build+ctest.
 
 ### Danach (Audit-Reihenfolge, je per Agent verifizieren)
-- **#10** Evt_chain/Evt_exec (Thread-Reinit + Slot-Bereich).
 - **#13** Player-Damage (FUN_80012d60, komplett fehlend) — CRITICAL; HP-Global `DAT_800acaee`
   jetzt per Savestate lesbar → ideal für Laufzeit-Verifikation. Braucht Enemy-Attack-Hitbox als Caller.
 - **#14/#15** AOT-Scan-Refactor (Edge→per-Frame + Multi-Entity + 9-Frame-Tür) — riskant, gegen

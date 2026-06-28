@@ -72,13 +72,16 @@ Multi-Agent-Audit: 20 Subsysteme, 123 WRONG/MISSING-Verdachtsfälle, **104 adver
 - **Fix:** op_while: block_length=lh@pc[2]; PrÃ¤dikatkette ab pc auswerten (AND default, OR per Flag); Loop-Back+Exit in per-Frame Loop-Slot; FALSE->Exit. op_ewhile: pc=Loop-Back. op_break: pc=Exit-PC der innersten Loop/Switch, Counter--. Erfordert per-Frame Loop-Stack (thread+0x8/+0x20/+0x60).
 - **Risiko:** Pre-getestete Schleifen laufen sonst nur 1x; Break fÃ¤llt durch alle Cases. Braucht das per-Frame Loop-Slot-Modell, das auch Do (Rank 12) und Edwhile (Rank 11) teilen.
 
-### #9 · HIGH · REPAIR · scd-control-flow
-**Case (0x14) No-Match-Advance off-by-2 (+4 -> +6) und Default (0x15) +4 -> +2**
+### #9 · HIGH · REPAIR · scd-control-flow ✅ ANGEWANDT 2026-06-28 (byte-true, build+ctest grün)
+**Switch/Case/Default/Eswitch komplett byte-true ins unified Loop-Modell (Audit-„off-by-2" war zu klein gegriffen)**
 
-- **Ort:** `re15_port/engine/src/scd_vm.c:1096-1106 (op_case +=skip+4), :1110-1114 (op_default +=4)`
-- **RE-Beleg:** Switch-Scan LAB_8003fa5c: No-Match a3+=6 @0x8003fb0c + a3+=block_length @0x8003fb14 -> case_pc+6+block_length. Standalone Case LAB_8003fb38 pc+=6. Default LAB_8003fb50 addiu+0x2 @0x8003fb58. Trace room1070/sub01: Port No-Match landet auf Evt_end -> Thread terminiert fÃ¤lschlich.
-- **Fix:** op_case No-Match: t->pc += skip + 6. op_default: t->pc += 2. Kanonisch besser: op_switch scannt die gesamte Case/Default-Tabelle wie LAB_8003fa5c und springt direkt.
-- **Risiko:** Off-by-2 verschiebt in RÃ¤umen mit block_length=0 mitten ins value-Feld. HÃ¤ngt mit Break (Rank 8) und op_switch-Scan zusammen.
+- **Ort:** `re15_port/engine/src/scd_vm.c` op_switch/op_case/op_default/op_end_switch; `re15_scd.h` (switch_val-Feld entfernt); Test `test_switch_case_break` in `tests/unit/test_scd_opcodes.c`.
+- **RE-Beleg (instruktionsgenau verifiziert, beide Wege + Agent):** Der echte Mechanismus ist NICHT „Case korrigiert sich selbst", sondern **op_switch (LAB_8003fa5c, dispatch 0x800744f4) scannt die GANZE Case/Default-Tabelle selbst** und springt direkt:
+  - Header 4B: var_index lbu@0x8003fa78, block_length lhu@0x8003fa74, table=pc+4 @0x8003fa7c. PUSH wie Do: loop_count++ @0x8003fa90/94, loop_exit[idx]=(pc+4)+block_length @0x8003faa8/ac. cmp_val=(s16)work_vars[var] lh@0x8003fad8.
+  - Scan LAB_8003fadc: **0x15 Default → pc=default+2 @0x8003faf0, loop_count BLEIBT gepusht**; **0x16 Eswitch (kein Match) → pc=eswitch+2 @0x8003fb20, loop_count-- @0x8003fb24/28**; **0x14 Case** (block_len lhu@+2, value lh@+4): Match → pc=case+6 @0x8003fb0c (loop_count bleibt); kein Match → a3+=6+block_len @0x8003fb0c/fb14.
+  - Standalone Case (LAB_8003fb38)=pc+6 (reiner Fall-through, KEIN Vergleich). Default (LAB_8003fb50)=pc+2. Eswitch (LAB_8003fb68)=loop_count-- + pc+2.
+- **Fix (angewandt):** op_switch macht den Tabellen-Scan inline und pusht/poppt das unified Loop-Modell — Break (0x1A) verlässt den Switch über loop_exit, Eswitch balanciert loop_count. op_case=+6, op_default=+2, op_end_switch=loop_count--/+2. `switch_val`-Feld entfernt (kein Konsument mehr). Test deckt Match-mid-table+Break, erstes-Case-Match und No-Match→Default ab (loop_count balanciert je auf 0).
+- **Index-Konsistenz belegt:** op_do (LAB_8003f8bc) und op_break (LAB_8003fca8) nutzen dieselbe Push-am-neuen-Index/Pop-Konvention (PSX 1-indexiert → Port konsistent 0-indexiert).
 
 ### #10 · HIGH · REPAIR · scd-message-event
 **Evt_chain (0x03) No-Op -> In-place-Thread-Reinit; Evt_exec Slot-Bereich + cond<10-Direktslot**

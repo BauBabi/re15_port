@@ -123,10 +123,12 @@ typedef struct {
      * See [[bugfix_BC_message_blocking_2026_05_28]]. */
     uint16_t message_wait;
 
-    /* 2026-06-09 byte-true Switch: the value snapshotted by Switch (0x13) for
-     * the following Case (0x14) comparisons. s16 to hold a full work-var
-     * (DAT_800b0fd0 is a 16-bit array). Was a u8 locals[127] snapshot. */
-    int16_t  switch_val;
+    /* [#9] Switch (0x13) no longer snapshots a value into the thread: the
+     * byte-true handler (LAB_8003fa5c) scans the whole Case/Default table inline
+     * and jumps to the matching body, comparing work_vars[var_index] on the spot.
+     * The former `switch_val` field was removed (no consumer remains). Switch
+     * pushes/pops the unified loop model (loop_count/loop_exit) so Break (0x1A)
+     * and Eswitch (0x16) exit it like a loop. */
 } scd_thread_t;
 
 /* Phase 4.4.3: Audio events emitted by SCD opcodes.

@@ -679,6 +679,74 @@ static int test_break_exits_loop(void)
     return 0;
 }
 
+/* =========================================================================
+ * Test [#9]: byte-true Switch/Case/Default/Break (LAB_8003fa5c).
+ *
+ * Switch (0x13) scans the Case/Default table INLINE and jumps straight to the
+ * matching body (the standalone Case handler is only hit on fall-through). It
+ * pushes the unified loop model (loop_count/loop_exit) so Break (0x1A) exits the
+ * switch via loop_exit and the trailing Eswitch (0x16) balances loop_count → 0.
+ *
+ *   switch(work_vars[5]) {
+ *     case 1: work_vars[0]=11; break;
+ *     case 2: work_vars[0]=22; break;   // selected when sel==2
+ *     case 3: work_vars[0]=33; break;
+ *     default: work_vars[0]=99; break;  // selected when no case matches
+ *   }
+ *
+ * Byte layout (Save 0x24 = [op][var][u16]; Case = [0x14][_][blocklen:u16][value:u16]):
+ *   off0  Save w5=sel            off4  Switch(var5, blocklen=46 -> loop_exit=off54)
+ *   off8  Case v=1   body off14: Save w0=11; off18 Break
+ *   off20 Case v=2   body off26: Save w0=22; off30 Break
+ *   off32 Case v=3   body off38: Save w0=33; off42 Break
+ *   off44 Default    body off46: Save w0=99; off50 Break
+ *   off52 Eswitch    off54 Evt_end
+ * blocklen=46: table(off8)+46 = off54 = Evt_end = eswitch(off52)+2. ✓
+ * ========================================================================= */
+static int run_switch_case(int16_t sel, int16_t expect_w0)
+{
+    uint8_t bc[55];
+    memset(bc, SCD_OP_NOP, sizeof(bc));
+    bc[0]=0x24; bc[1]=0x05; write_le16(bc+2, (uint16_t)sel);          /* Save w5 = sel  */
+    bc[4]=SCD_OP_SWITCH; bc[5]=0x05; write_le16(bc+6, 46);            /* Switch var5    */
+    bc[8]=SCD_OP_CASE;   write_le16(bc+10, 6); write_le16(bc+12, 1);  /* case 1         */
+    bc[14]=0x24; bc[15]=0x00; write_le16(bc+16, 11); bc[18]=0x1A;     /* w0=11; Break   */
+    bc[20]=SCD_OP_CASE;  write_le16(bc+22, 6); write_le16(bc+24, 2);  /* case 2         */
+    bc[26]=0x24; bc[27]=0x00; write_le16(bc+28, 22); bc[30]=0x1A;     /* w0=22; Break   */
+    bc[32]=SCD_OP_CASE;  write_le16(bc+34, 6); write_le16(bc+36, 3);  /* case 3         */
+    bc[38]=0x24; bc[39]=0x00; write_le16(bc+40, 33); bc[42]=0x1A;     /* w0=33; Break   */
+    bc[44]=SCD_OP_DEFAULT;                                            /* default        */
+    bc[46]=0x24; bc[47]=0x00; write_le16(bc+48, 99); bc[50]=0x1A;     /* w0=99; Break   */
+    bc[52]=SCD_OP_END_SWITCH;                                         /* Eswitch        */
+    bc[54]=SCD_OP_EVT_END;
+
+    scd_vm_init();
+    g_scd.work_vars[0] = -1;            /* sentinel: detect "no body ran" */
+    scd_thread_start(0, bc);
+    scd_vm_tick();
+
+    if (g_scd.threads[0].active != 0) {
+        fprintf(stderr, "FAIL: test_switch_case_break(sel=%d): Thread sollte beendet sein\n", sel);
+        return 1; }
+    if (g_scd.work_vars[0] != expect_w0) {
+        fprintf(stderr, "FAIL: test_switch_case_break(sel=%d): work_vars[0] sollte %d sein, ist %d\n",
+                sel, expect_w0, g_scd.work_vars[0]); return 1; }
+    if (g_scd.threads[0].loop_count != 0) {
+        fprintf(stderr, "FAIL: test_switch_case_break(sel=%d): loop_count sollte 0 sein, ist %d\n",
+                sel, g_scd.threads[0].loop_count); return 1; }
+    return 0;
+}
+
+static int test_switch_case_break(void)
+{
+    int rc = 0;
+    rc |= run_switch_case(2, 22);   /* match case 2: scan skips case 1, runs body, Break exits */
+    rc |= run_switch_case(1, 11);   /* match first case */
+    rc |= run_switch_case(7, 99);   /* no case matches -> Default body */
+    if (rc == 0) printf("PASS: test_switch_case_break\n");
+    return rc;
+}
+
 int main(void)
 {
     int failures = 0;
@@ -694,6 +762,7 @@ int main(void)
     failures += test_for_next_loop();
     failures += test_do_edwhile_loop();
     failures += test_break_exits_loop();
+    failures += test_switch_case_break();
     failures += test_ck_set_flags();
     failures += test_work_set();
     failures += test_speed_set();

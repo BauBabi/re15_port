@@ -1166,52 +1166,103 @@ static int op_message_on(scd_thread_t *t)
     return 1;
 }
 
-/* 0x13 — Switch: 4 bytes [op var_index skip_lo skip_hi].
- * Byte-true (LAB_8003fa5c): snapshots the GLOBAL 16-bit work-variable
- * DAT_800b0fd0[var_index] (= g_scd.work_vars[var_index], `lh` at var*2) for
- * the following Case (0x14) comparisons. NOT per-thread locals[] (a 2026-06-09
- * fix; the value is global, e.g. ROOM1170's entry scenario stamped at room
- * re-entry). If no Case matches, EndSwitch is at PC + skip. */
+/* 0x13 — Switch: 4-byte header [0x13][var_index][block_length:u16 LE].
+ *
+ * [#9] BYTE-TRUE (LAB_8003fa5c, dispatch 0x800744f4). Unlike the earlier port,
+ * the PSX Switch handler does the ENTIRE table scan itself and jumps straight to
+ * the matching Case body / Default body / past-Eswitch — the standalone Case
+ * (0x14) handler is reached only on C-style fall-through (see op_case).
+ *
+ * Sequence (all addresses in ghidra1_V2.txt, verified instruction-by-instruction):
+ *   - var_index = pc[1] (@0x8003fa78 lbu), block_length = u16 pc[2..3]
+ *     (@0x8003fa74 lhu), table = pc+4 (@0x8003fa7c addiu a3,a3,0x4).
+ *   - PUSH onto the unified loop model exactly like Do (LAB_8003f8bc): increment
+ *     loop_count (@0x8003fa90/94) and store loop_exit[idx] = (pc+4)+block_length
+ *     (@0x8003faa8/ac). This lets Break (0x1A) and the standalone Eswitch (0x16)
+ *     pop a switch the same way they pop a loop. (PSX also saves a break-flag byte
+ *     to thread+0x4 — no port consumer yet, omitted, same as op_do.)
+ *   - cmp_val = (s16) work_vars[var_index] via `lh` (@0x8003fad8, signed).
+ *   - Scan from `table` (LAB_8003fadc):
+ *       0x15 Default  → pc = default_pos+2  (@0x8003faf0), loop_count STAYS pushed.
+ *       0x16 Eswitch  → pc = eswitch_pos+2  (@0x8003fb20), loop_count POPPED
+ *                       (@0x8003fb24/28: no Case matched and no Default).
+ *       0x14 Case     → block_len=u16@+2 (@0x8003fafc lhu), value=s16@+4
+ *                       (@0x8003fb00 lh). Match (cmp==value): pc=case_pos+6
+ *                       (@0x8003fb0c), loop_count STAYS pushed. No match:
+ *                       a3 += 6 + block_len (@0x8003fb0c +6 then @0x8003fb14
+ *                       +block_len) → next entry, keep scanning. */
 static int op_switch(scd_thread_t *t)
 {
-    uint8_t var_index = t->pc[1];
-    t->switch_val = g_scd.work_vars[var_index];   /* var_index is u8 → in range */
-    /* skip target stored but not used yet — Cases handle their own skip */
-    t->pc += 4;
-    return 1;
+    uint8_t        var_index = t->pc[1];
+    uint16_t       block_len = (uint16_t)scd_read_le_s16(t->pc + 2);
+    int16_t        cmp_val   = g_scd.work_vars[var_index]; /* lh — signed, u8 idx in range */
+    const uint8_t *table     = t->pc + 4;
+
+    /* PUSH switch context (mirror op_do; loop_back/for_cnt unused for a switch). */
+    int pushed = 0;
+    if (t->loop_count < 4) {
+        int idx = t->loop_count++;
+        t->loop_exit[idx] = table + block_len;
+        pushed = 1;
+    }
+
+    /* Scan the Case/Default/Eswitch table (LAB_8003fadc). */
+    const uint8_t *a3 = table;
+    for (;;) {
+        uint8_t op = a3[0];
+        if (op == SCD_OP_DEFAULT) {            /* 0x15 → default body */
+            a3 += 2;
+            break;
+        }
+        if (op == SCD_OP_END_SWITCH) {         /* 0x16 → no match, no default */
+            a3 += 2;
+            if (pushed) t->loop_count--;       /* pop the just-pushed context */
+            break;
+        }
+        /* 0x14 Case: block_len u16 @+2 (lhu), value s16 @+4 (lh). */
+        uint16_t case_len = (uint16_t)scd_read_le_s16(a3 + 2);
+        int16_t  case_val = scd_read_le_s16(a3 + 4);
+        if (cmp_val == case_val) {             /* match → enter case body */
+            a3 += 6;
+            break;
+        }
+        a3 += 6 + case_len;                    /* skip header + body → next entry */
+    }
+    t->pc = a3;
+    return SCD_R_CONTINUE;
 }
 
-/* 0x14 — Case: 6 bytes [op, dummy, block_length:u16 LE, value:u16 LE].
- * Per Java SCDScriptDisassembler.java:868-872 — block_length is the
- * skip distance to the next Case/Default/EndSwitch. Both block_length
- * and value are little-endian at runtime (same as Ifel_ck).
- * If switched_value == value → fall through to case body (pc += 6).
- * Else → pc += block_length + 4 (same convention as Ifel_ck). */
+/* 0x14 — Case standalone: 6-byte header [0x14][_][block_length:u16][value:u16].
+ *
+ * [#9] BYTE-TRUE (LAB_8003fb38): PC += 6, NOTHING else — no compare, no
+ * loop_count change. Switch (0x13) already scans the table and jumps to the
+ * matching body, so this handler is only reached on C-style fall-through (a
+ * matched Case body runs off its end into the NEXT Case opcode); skipping the
+ * 6-byte header drops execution into that next body. */
 static int op_case(scd_thread_t *t)
 {
-    int16_t  skip  = (int16_t)((uint16_t)t->pc[2] | ((uint16_t)t->pc[3] << 8));
-    uint16_t value = (uint16_t)t->pc[4] | ((uint16_t)t->pc[5] << 8);
-    if ((uint16_t)t->switch_val == value) {
-        t->pc += 6;             /* match: enter case body */
-    } else {
-        t->pc += skip + 4;      /* skip to next Case / Default / EndSwitch */
-    }
-    return 1;
+    t->pc += 6;
+    return SCD_R_CONTINUE;
 }
 
-/* 0x15 — Default: 4 bytes [op, _reserved, block_length:u16 BE]. Unconditional
- * fall-through but consumes 4 bytes per the disassembler size table. */
+/* 0x15 — Default standalone: 2-byte header [0x15][_].
+ * [#9] BYTE-TRUE (LAB_8003fb50): PC += 2 (was +4). Reached only on fall-through
+ * into a Default body. */
 static int op_default(scd_thread_t *t)
 {
-    t->pc += 4;
-    return 1;
+    t->pc += 2;
+    return SCD_R_CONTINUE;
 }
 
-/* 0x16 — EndSwitch: 2 bytes. Marker, advance. */
+/* 0x16 — Eswitch: 2-byte marker [0x16][_].
+ * [#9] BYTE-TRUE (LAB_8003fb68): POP the switch context (loop_count--) then
+ * PC += 2 (was: advance only). Reached when a matched Case body runs to the end
+ * of the switch without a Break, balancing the Switch push. */
 static int op_end_switch(scd_thread_t *t)
 {
+    if (t->loop_count > 0) t->loop_count--;
     t->pc += 2;
-    return 1;
+    return SCD_R_CONTINUE;
 }
 
 /* ----- Phase 4.4.3 audio opcodes ----------------------------------------- */
