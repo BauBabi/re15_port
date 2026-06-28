@@ -71,3 +71,9 @@ re15_port/**/*.pdb
 ### Snapshot (~3.7 GB) und Runtime-Locks raus.
 /.claude/worktrees/
 /.claude/*.lock
+
+# Agent worktrees (transient)
+.claude/worktrees/
+
+# stray logs
+debug.log
