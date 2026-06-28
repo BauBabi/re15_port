@@ -182,22 +182,12 @@ int re15_emd_parse_skeleton(const uint8_t *emr_data, size_t emr_size,
                        emr_data + bones_table_offset, child_max_off,
                        child_offsets, out->bone_parent);
 
-    /* Bone-to-mesh map: at `bones_table_offset + bones_table[0].child_offset`
-     * lies a flat byte array of length bone_count, where entry [b] is the
-     * MD1 mesh index this bone deforms. Java's EmrMeshMapParser.java
-     * implements the same lookup. For PL00 this resolves the 17-mesh /
-     * 15-bone discrepancy by routing each bone to its specific mesh
-     * (some meshes are weapon slots / attachments that aren't directly
-     * deformed by a bone and stay un-rendered for now). */
-    for (int b = 0; b < bone_count; b++) out->bone_mesh_index[b] = -1;
-    if (bone_count > 0) {
-        int mesh_list_base = bones_table_offset + (int)child_offsets[0];
-        if (mesh_list_base + bone_count <= (int)emr_size) {
-            for (int b = 0; b < bone_count; b++) {
-                out->bone_mesh_index[b] = (int8_t)emr_data[mesh_list_base + b];
-            }
-        }
-    }
+    /* Es gibt KEINE Bone->Mesh-Permutationstabelle in der EMR. Beide Renderer
+     * (pc/main.c:1717 `mi=bi`, psx/mesh_psx.c:838 `mesh_idx=b`) nutzen 1:1
+     * mesh_idx == bone_idx. Das frühere bone_mesh_index[] re-las die EMR-Child-
+     * Traversal-Liste (bones_table[0].child_offset) und wurde NIE konsumiert
+     * (0 Leser im gesamten re15_port) — entfernt. [BYTE_TRUE_AUDIT #43] */
+    for (int b = 0; b < bone_count; b++) out->bone_mesh_index[b] = (int8_t)b;
 
     /* Keyframe block. */
     if (keyframes_offset > (int)emr_size) return -7;

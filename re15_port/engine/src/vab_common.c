@@ -166,13 +166,16 @@ int re15_footstep_vag(const uint8_t *edt, const re15_vab_t *vab, int sound_type)
     const uint8_t *e = edt + (size_t)sound_type * 4;
     if (e[2] == 0 && e[3] == 0) return -1;        /* empty EDT slot          */
 
-    int bank = e[1] & 0x7f;
-    if (bank != 0) return -1;                      /* only snd0 here          */
+    /* e[1]&0x7f ist ein PROGRAMM-Index in DEMSELBEN VAB, KEIN Bank-Selektor:
+     * FUN_80045630 @0x800457dc `sll v1,s5,0x9` = prog*0x200 (= 16 Tones*32B) +
+     * 0x820 Header in die Tone-Tabelle. [BYTE_TRUE_AUDIT #37] */
+    int prog = e[1] & 0x7f;
+    if (prog >= RE15_VAB_PROGRAM_COUNT) return -1;
 
     int tone = e[2] >> 4;
     if (tone < 0 || tone >= RE15_VAB_TONES_PER_PROGRAM) return -1;
 
-    int vag1 = vab->tones[tone].vag_index;         /* program 0, 1-based      */
+    int vag1 = vab->tones[prog * RE15_VAB_TONES_PER_PROGRAM + tone].vag_index;  /* program prog, 1-based */
     if (vag1 <= 0 || vag1 > vab->vag_count) return -1;
     return vag1 - 1;
 }
@@ -252,7 +255,7 @@ int re15_vag_adpcm_decode(const uint8_t *adpcm_data, size_t adpcm_size,
     for (size_t f = 0; f < frames; f++) {
         const uint8_t *frame = adpcm_data + f * 16;
         int header = frame[0];
-        int flags  = frame[1];
+        /* frame[1] (Flags) wird nicht mehr gelesen — Loop-Start-Bit ist kein Reset [#20] */
 
         int filter = (header >> 4) & 0x0F;
         int shift  = header & 0x0F;
@@ -284,14 +287,11 @@ int re15_vag_adpcm_decode(const uint8_t *adpcm_data, size_t adpcm_size,
             }
         }
 
-        /* Flag bit 2 (0x04) = "loop start / reset predictor". The Java
-         * port resets state1/state2 to zero here; matches Sony's docs:
-         * the SPU likewise treats the flag as a hint to clear ADPCM
-         * history before the next frame. */
-        if (flags & 0x04) {
-            state1 = 0;
-            state2 = 0;
-        }
+        /* byte-true: Flag-Bit 0x04 (Loop Start) ist NUR eine Adress-Kopie ins Repeat-
+         * Register (psx-spx soundprocessingunitspu: "Copy current address"; pcsx-redux
+         * spu.cc:618 setzt nur pLoop) — KEIN Predictor-Reset. state1/state2 laufen
+         * kontinuierlich ueber die Block-Grenze; der fruehere Reset erzeugte eine
+         * falsche ADPCM-Diskontinuitaet. [#20] */
     }
 
     return (int)pcm_pos;

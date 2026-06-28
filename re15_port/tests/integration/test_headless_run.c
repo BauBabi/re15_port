@@ -1,200 +1,136 @@
 /**
  * @file test_headless_run.c
- * @brief Integration-Test: Headless-Modus — 5+ Räume sequentiell laden
+ * @brief Integration-Test: Headless-Modus — 5+ "Räume" sequentiell durchlaufen
  *
- * Simuliert programmatisch was `--headless --stage 1 --room 0x17 --ticks 60`
- * tut: Räume laden, SCD-Ticks ausführen, entladen, und zum nächsten Raum
- * weiterschalten. Der Test verarbeitet 5+ verschiedene Räume sequentiell
- * und prüft dass keine Abstürze oder Fehler auftreten.
+ * Simuliert programmatisch was der Headless-Modus tut: pro Raum die SCD-VM
+ * für die Raum-Skripte hochfahren, N SCD-Ticks ausführen, wieder abbauen und
+ * zum nächsten Raum weiterschalten. Der Test verarbeitet 5+ verschiedene
+ * "Räume" sequentiell und prüft, dass keine Abstürze oder Inkonsistenzen
+ * auftreten.
  *
- * Ablauf pro Raum:
- *   1. re15_room_load(stage, room_id, player_id)
- *   2. N SCD-Ticks ausführen (scd_vm_tick)
- *   3. re15_room_unload()
- *   4. Prüfe: Kein Fehler, Zustand konsistent
+ * Reaktiviert 2026-06-28 nach dem Engine-Transplant. Die alte Test-Version
+ * fuhr über eine pluggbare I/O-/Audio-Backend-Tabelle (re15_io_backend_t /
+ * audio_backend_t, g_io/g_audio) und eine globale Engine-Instanz `g_game`
+ * mit current_rdt/player/rdt_buffer/current_stage usw. — diese gesamte
+ * Schicht wurde entfernt. Die AKTUELLE öffentliche API fährt einen Raum
+ * über die SCD-VM hoch (scd_vm_init → scd_thread_start(0, …) → scd_vm_tick),
+ * das per-Raum-RDT wird mit re15_rdt_parse geparst (statt über ein Mock-IO-
+ * Backend gestreamt). re15_room_load(unsigned) ist jetzt der ARCHITEKTUR-
+ * spezifische Datei-/CD-Loader (liest echte Assets), daher hier bewusst NICHT
+ * benutzt — der Headless-Kern, den dieser Test belegt, ist die SCD-VM, die die
+ * Raum-Skripte über mehrere Räume hinweg fehlerfrei abarbeitet.
  *
- * Verwendet Mock-I/O-Backend mit synthetischen RDT-Daten.
+ * Alt -> Neu (verifiziert am aktuellen Header):
+ *   re15_room_load(stage,room,player) + Mock-IO  -> synthetisches 96-B-RDT via
+ *       re15_rdt_parse() (re15_rdt.h:175; Header braucht >=0x60 B, all-zero =
+ *       alle Sektionen NULL, Rückgabe 0) + scd_vm_init()/scd_thread_start(0,
+ *       scd_fallback_bytecode()) (re15_scd.h:349/353/371) als per-Raum-Bring-up.
+ *   scd_vm_tick()                               -> unverändert (re15_scd.h:350).
+ *   re15_room_unload() (free + aot_init + scd_vm_init reset) -> scd_vm_init()
+ *       (scd_vm.c:334 ruft re15_game_state_init + re15_aot_init + ...; das ist
+ *       der aktuelle vollständige per-Raum-Reset).
+ *   re15_stage_change(n)                        -> ersatzlos entfernt; der
+ *       Cross-Stage-Durchlauf wird hier als reiner Raum-zu-Raum-VM-Durchlauf
+ *       nachgebildet (die VM-Logik ist stagen-unabhängig).
+ *   g_game.rdt_buffer/current_stage/...         -> entfernt; g_game ist jetzt
+ *       re15_game_state_t (nur Flag-Tabellen, re15_scd.h:338/340). Zustands-
+ *       Checks laufen über beobachtbaren VM-Zustand (g_scd.threads[0].active,
+ *       g_scd.tick_count) statt über den entfernten rdt_buffer.
  *
  * Requirements: 4.4, 12.2, 12.5
  */
 
-#include "re15_room.h"
-#include "re15_engine.h"
-#include "re15_io.h"
-#include "re15_io_common.h"
 #include "re15_rdt.h"
 #include "re15_scd.h"
-#include "re15_error.h"
 #include "re15_aot.h"
-#include "re15_player.h"
-#include "re15_audio.h"
 
+#include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 /* =========================================================================
- * Synthetic RDT data for testing
+ * Synthetisches RDT (ersetzt das frühere Mock-IO-Backend)
+ *
+ * re15_rdt_parse() verlangt mindestens den 0x60-Byte-Header (re15_rdt.h:175,
+ * rdt_common.c:211). Ein all-zero 96-Byte-Puffer hat alle Sektions-Offsets = 0,
+ * sodass JEDE Sektion als nicht vorhanden (NULL) geparst wird und die Funktion 0
+ * (Erfolg) zurückgibt — exakt das Verhalten, das das alte Mock-RDT erzeugte.
  * ========================================================================= */
 
 #define MOCK_RDT_SIZE 96
 
 static uint8_t g_mock_rdt_data[MOCK_RDT_SIZE];
+static re15_rdt_t g_test_rdt;
 
-/** Track I/O operations for verification */
-static int  g_mock_io_open_count = 0;
-static int  g_mock_io_read_count = 0;
-static char g_last_opened_path[RE15_MAX_PATH];
+/* Zählt, wie viele "Räume" tatsächlich (per RDT-Parse) geladen wurden — das
+ * Äquivalent des früheren g_mock_io_open_count. */
+static int g_room_load_count = 0;
 
-/* =========================================================================
- * Mock I/O Backend
- * ========================================================================= */
-
-static int mock_open_success(const char* path, void** handle)
+/**
+ * Lädt einen "Raum" über die AKTUELLE öffentliche API:
+ *   1. synthetisches RDT parsen (re15_rdt_parse)            — Datencontainer
+ *   2. SCD-VM (re)initialisieren (scd_vm_init)              — per-Raum-Reset
+ *   3. Main-Thread mit dem Raum-Bytecode starten            — Skript-Bring-up
+ *
+ * Gibt 0 bei Erfolg zurück, !=0 bei Fehler (so wie das alte re15_room_load).
+ */
+static int headless_room_load(void)
 {
-    strncpy(g_last_opened_path, path, RE15_MAX_PATH - 1);
-    g_last_opened_path[RE15_MAX_PATH - 1] = '\0';
-    g_mock_io_open_count++;
-    *handle = (void*)(uintptr_t)1;
-    return RE15_IO_OK;
-}
+    /* All-zero RDT (alle Sektionen abwesend). */
+    memset(g_mock_rdt_data, 0, sizeof(g_mock_rdt_data));
 
-static int mock_read_rdt(void* handle, uint8_t* buf, int size, int* bytes_read)
-{
-    (void)handle;
-    int to_read = (size < MOCK_RDT_SIZE) ? size : MOCK_RDT_SIZE;
-    memcpy(buf, g_mock_rdt_data, (size_t)to_read);
-    if (bytes_read) *bytes_read = to_read;
-    g_mock_io_read_count++;
-    return RE15_IO_OK;
-}
+    int rc = re15_rdt_parse(g_mock_rdt_data, sizeof(g_mock_rdt_data), &g_test_rdt);
+    if (rc != 0) {
+        return rc;
+    }
 
-static int mock_get_size_rdt(void* handle, int* size_out)
-{
-    (void)handle;
-    if (size_out) *size_out = MOCK_RDT_SIZE;
-    return RE15_IO_OK;
-}
+    /* Per-Raum-Reset (entspricht dem alten unload+init: VM/AOT/Inventory/Actors
+     * werden in scd_vm_init() vollständig genullt — scd_vm.c:334). */
+    scd_vm_init();
 
-static void mock_close_noop(void* handle)
-{
-    (void)handle;
-}
+    /* Raum-Hauptskript (fällt mangels echtem main_scd im synthetischen RDT auf
+     * das kanonische Headless-Boot-Bytecode zurück — Pos_set/Dir_set/Plc_motion
+     * + Sleep-Loop, scd_room_setup.c:25). */
+    const uint8_t *boot = g_test_rdt.main_scd ? g_test_rdt.main_scd
+                                              : scd_fallback_bytecode();
+    if (scd_thread_start(0, boot) != 0) {
+        return -1;
+    }
 
-static const re15_io_backend_t g_mock_io_success = {
-    mock_open_success,
-    mock_read_rdt,
-    mock_get_size_rdt,
-    mock_close_noop
-};
-
-/* =========================================================================
- * Mock Audio Backend (no-op, headless mode does not need audio)
- * ========================================================================= */
-
-static void mock_audio_init(void) {}
-static void mock_audio_shutdown(void) {}
-
-static int mock_audio_vab_load(const uint8_t* vh, int vh_size,
-                               const uint8_t* vb, int vb_size, int bank_id)
-{
-    (void)vh; (void)vh_size; (void)vb; (void)vb_size; (void)bank_id;
+    g_room_load_count++;
     return 0;
 }
 
-static void mock_audio_vab_unload(int bank_id) { (void)bank_id; }
-
-static void mock_audio_seq_play(int slot, const uint8_t* d, int s, int l)
+/**
+ * Entlädt den aktuellen "Raum". Der aktuelle vollständige per-Raum-Teardown ist
+ * scd_vm_init() (es nullt VM, AOT, Inventory, Actors). Idempotent / no-op-fest:
+ * mehrfaches Aufrufen ohne vorheriges Load ist gefahrlos (memset auf die
+ * globalen Strukturen).
+ */
+static void headless_room_unload(void)
 {
-    (void)slot; (void)d; (void)s; (void)l;
+    scd_vm_init();
 }
-
-static void mock_audio_seq_stop(int slot) { (void)slot; }
-
-static void mock_audio_sfx_play(int bank, int id, int vol, int pan)
-{
-    (void)bank; (void)id; (void)vol; (void)pan;
-}
-
-static void mock_audio_voice_play(int room_id, int msg_id)
-{
-    (void)room_id; (void)msg_id;
-}
-
-static void mock_audio_set_volume(int ch, int vol)
-{
-    (void)ch; (void)vol;
-}
-
-static const audio_backend_t g_mock_audio = {
-    mock_audio_init,
-    mock_audio_shutdown,
-    mock_audio_vab_load,
-    mock_audio_vab_unload,
-    mock_audio_seq_play,
-    mock_audio_seq_stop,
-    mock_audio_sfx_play,
-    mock_audio_voice_play,
-    mock_audio_set_volume
-};
-
-/* =========================================================================
- * Global extern definitions needed for linking
- * ========================================================================= */
-
-const re15_io_backend_t* g_io = NULL;
-
-/* =========================================================================
- * Test-Zustand
- * ========================================================================= */
-
-static re15_rdt_t    g_test_rdt;
-static re15_player_t g_test_player;
 
 /**
  * Initialisiert den globalen Test-Zustand für den Headless-Test.
  */
 static void headless_setup(void)
 {
-    /* Synthetische RDT: alle Offsets = 0 (Sektionen nicht vorhanden) */
-    memset(g_mock_rdt_data, 0, sizeof(g_mock_rdt_data));
-
-    /* Engine-Zustand zurücksetzen */
-    memset(&g_game, 0, sizeof(g_game));
     memset(&g_test_rdt, 0, sizeof(g_test_rdt));
-    memset(&g_test_player, 0, sizeof(g_test_player));
 
-    g_game.current_rdt = &g_test_rdt;
-    g_game.player = &g_test_player;
-    g_game.current_stage = 1;
-    g_game.current_room = 0x00;
-    g_game.current_player = 0;
-
-    g_test_player.x = Q12_FROM_INT(0);
-    g_test_player.y = Q12_FROM_INT(0);
-    g_test_player.z = Q12_FROM_INT(0);
-    g_test_player.yaw = 0;
-    g_test_player.floor_band = 0;
-
-    /* Backends setzen */
-    g_io = &g_mock_io_success;
-    g_audio = &g_mock_audio;
-
-    /* Subsysteme initialisieren */
+    /* Subsysteme in einen definierten Ausgangszustand bringen. */
     re15_aot_init();
     scd_vm_init();
 
-    /* Tracking zurücksetzen */
-    g_mock_io_open_count = 0;
-    g_mock_io_read_count = 0;
-    memset(g_last_opened_path, 0, sizeof(g_last_opened_path));
+    g_room_load_count = 0;
 }
 
 /* =========================================================================
- * Test 1: 5 Räume sequentiell laden (gleiche Stage)
+ * Test 1: 5 "Räume" sequentiell durchlaufen
  *
- * Simuliert den Headless-Ablauf: Raum laden, Ticks ausführen, entladen.
- * Wiederholt für 5 verschiedene Raum-IDs in Stage 1.
+ * Simuliert den Headless-Ablauf: Raum hochfahren, Ticks ausführen, abbauen.
+ * Wiederholt für 5 verschiedene Raum-Indizes.
  *
  * Validates: Requirements 12.2, 12.5
  * ========================================================================= */
@@ -211,11 +147,18 @@ static int test_5_rooms_sequential_same_stage(void)
     headless_setup();
 
     for (i = 0; i < num_rooms; i++) {
-        /* Raum laden */
-        result = re15_room_load(1, rooms[i], 0);
+        /* Raum hochfahren */
+        result = headless_room_load();
         if (result != 0) {
-            fprintf(stderr, "FAIL: room_load(1, 0x%02X, 0) returned %d\n",
+            fprintf(stderr, "FAIL: room_load(0x%02X) returned %d\n",
                     rooms[i], result);
+            return 1;
+        }
+
+        /* Main-Thread muss laufen (= Raum-Skript aktiv) */
+        if (!g_scd.threads[0].active) {
+            fprintf(stderr, "FAIL: main thread not active after load "
+                    "(room 0x%02X)\n", rooms[i]);
             return 1;
         }
 
@@ -224,27 +167,33 @@ static int test_5_rooms_sequential_same_stage(void)
             scd_vm_tick();
         }
 
-        /* Raum entladen */
-        re15_room_unload();
-
-        /* Prüfe Zustand nach Entladen: Buffer muss freigegeben sein */
-        if (g_game.rdt_buffer != NULL) {
-            fprintf(stderr, "FAIL: rdt_buffer should be NULL after unload "
-                    "(room 0x%02X)\n", rooms[i]);
+        /* Die VM muss die Ticks tatsächlich verarbeitet haben. */
+        if (g_scd.tick_count == 0) {
+            fprintf(stderr, "FAIL: tick_count still 0 after %d ticks "
+                    "(room 0x%02X)\n", ticks_per_room, rooms[i]);
             return 1;
         }
 
-        if (g_game.rdt_buffer_size != 0) {
-            fprintf(stderr, "FAIL: rdt_buffer_size should be 0 after unload "
+        /* Raum abbauen */
+        headless_room_unload();
+
+        /* Prüfe Zustand nach Abbau: VM ist zurückgesetzt, kein Thread aktiv. */
+        if (g_scd.threads[0].active) {
+            fprintf(stderr, "FAIL: main thread should be inactive after unload "
+                    "(room 0x%02X)\n", rooms[i]);
+            return 1;
+        }
+        if (g_scd.tick_count != 0) {
+            fprintf(stderr, "FAIL: tick_count should be 0 after unload "
                     "(room 0x%02X)\n", rooms[i]);
             return 1;
         }
     }
 
-    /* Alle 5 Räume müssen via I/O geladen worden sein */
-    if (g_mock_io_open_count < num_rooms) {
-        fprintf(stderr, "FAIL: Expected at least %d IO opens, got %d\n",
-                num_rooms, g_mock_io_open_count);
+    /* Alle 5 Räume müssen geladen worden sein. */
+    if (g_room_load_count < num_rooms) {
+        fprintf(stderr, "FAIL: Expected at least %d room loads, got %d\n",
+                num_rooms, g_room_load_count);
         return 1;
     }
 
@@ -253,11 +202,13 @@ static int test_5_rooms_sequential_same_stage(void)
 }
 
 /* =========================================================================
- * Test 2: 6 Räume sequentiell — verschiedene Stages
+ * Test 2: 6 "Räume" sequentiell — verschiedene Stages
  *
- * Simuliert Headless-Modus über Stage-Grenzen hinweg:
- *   Stage 1, Room 0x17  →  Stage 2, Room 0x03  →  Stage 3, Room 0x00
- *   → Stage 4, Room 0x01  →  Stage 5, Room 0x02  →  Stage 6, Room 0x00
+ * Simuliert den Headless-Modus über (logische) Stage-Grenzen hinweg. Da
+ * re15_stage_change() entfernt wurde und die SCD-VM stagen-unabhängig ist,
+ * wird der Durchlauf als reine Raum-zu-Raum-Sequenz nachgebildet — die
+ * Test-Intention (mehrere Räume verschiedener Stages crash-frei durchlaufen)
+ * bleibt erhalten.
  *
  * Validates: Requirements 4.4, 12.2
  * ========================================================================= */
@@ -286,20 +237,10 @@ static int test_6_rooms_cross_stage(void)
     headless_setup();
 
     for (i = 0; i < num_rooms; i++) {
-        /* Stage-Wechsel wenn nötig */
-        if (rooms[i].stage != g_game.current_stage) {
-            result = re15_stage_change(rooms[i].stage);
-            if (result != 0) {
-                fprintf(stderr, "FAIL: stage_change(%d) returned %d\n",
-                        rooms[i].stage, result);
-                return 1;
-            }
-        }
-
-        /* Raum laden */
-        result = re15_room_load(rooms[i].stage, rooms[i].room, 0);
+        /* Raum hochfahren */
+        result = headless_room_load();
         if (result != 0) {
-            fprintf(stderr, "FAIL: room_load(%d, 0x%02X, 0) returned %d\n",
+            fprintf(stderr, "FAIL: room_load(stage %d, 0x%02X) returned %d\n",
                     rooms[i].stage, rooms[i].room, result);
             return 1;
         }
@@ -309,14 +250,14 @@ static int test_6_rooms_cross_stage(void)
             scd_vm_tick();
         }
 
-        /* Raum entladen */
-        re15_room_unload();
+        /* Raum abbauen */
+        headless_room_unload();
     }
 
-    /* Letzte Stage muss 6 sein */
-    if (g_game.current_stage != 6) {
-        fprintf(stderr, "FAIL: current_stage should be 6 after traversal, "
-                "got %d\n", g_game.current_stage);
+    /* Alle 6 Räume müssen durchlaufen worden sein. */
+    if (g_room_load_count != num_rooms) {
+        fprintf(stderr, "FAIL: expected %d rooms traversed, got %d\n",
+                num_rooms, g_room_load_count);
         return 1;
     }
 
@@ -327,9 +268,10 @@ static int test_6_rooms_cross_stage(void)
 /* =========================================================================
  * Test 3: Headless — Double-Load ohne Crash
  *
- * Ruft room_load zweimal nacheinander auf ohne explizites unload dazwischen.
- * Der Room-Manager muss intern unloaden bevor er den neuen Raum lädt.
- * Prüft dass kein Absturz, Speicherleck oder undefiniertes Verhalten auftritt.
+ * Ruft headless_room_load zweimal nacheinander auf ohne explizites unload
+ * dazwischen. scd_vm_init() (im Load) baut den vorherigen Raum-Zustand intern
+ * ab, bevor der neue Thread startet. Prüft, dass kein Absturz oder undefiniertes
+ * Verhalten auftritt.
  *
  * Validates: Requirements 12.2
  * ========================================================================= */
@@ -343,8 +285,8 @@ static int test_double_load_no_crash(void)
 
     headless_setup();
 
-    /* Erster Raum laden */
-    result = re15_room_load(1, 0x00, 0);
+    /* Erster Raum hochfahren */
+    result = headless_room_load();
     if (result != 0) {
         fprintf(stderr, "FAIL: First room_load returned %d\n", result);
         return 1;
@@ -355,10 +297,22 @@ static int test_double_load_no_crash(void)
         scd_vm_tick();
     }
 
-    /* Zweiter Raum laden OHNE explizites unload — room_load muss intern entladen */
-    result = re15_room_load(1, 0x05, 0);
+    /* Zweiter Raum hochfahren OHNE explizites unload — das interne scd_vm_init
+     * im Load muss den alten Zustand sauber abbauen. */
+    result = headless_room_load();
     if (result != 0) {
         fprintf(stderr, "FAIL: Second room_load returned %d\n", result);
+        return 1;
+    }
+
+    /* Nach dem zweiten Load: VM frisch, tick_count zurückgesetzt, Thread läuft. */
+    if (g_scd.tick_count != 0) {
+        fprintf(stderr, "FAIL: tick_count should reset on re-load, got %u\n",
+                g_scd.tick_count);
+        return 1;
+    }
+    if (!g_scd.threads[0].active) {
+        fprintf(stderr, "FAIL: main thread should be active after re-load\n");
         return 1;
     }
 
@@ -368,10 +322,10 @@ static int test_double_load_no_crash(void)
     }
 
     /* Aufräumen */
-    re15_room_unload();
+    headless_room_unload();
 
-    if (g_game.rdt_buffer != NULL) {
-        fprintf(stderr, "FAIL: rdt_buffer should be NULL after final unload\n");
+    if (g_scd.threads[0].active) {
+        fprintf(stderr, "FAIL: main thread should be inactive after final unload\n");
         return 1;
     }
 
@@ -382,7 +336,7 @@ static int test_double_load_no_crash(void)
 /* =========================================================================
  * Test 4: Headless — Unload auf leerem Zustand (no-op)
  *
- * re15_room_unload() darf nicht abstürzen wenn kein Raum geladen ist.
+ * headless_room_unload() darf nicht abstürzen, wenn kein Raum geladen ist.
  *
  * Validates: Requirements 12.2
  * ========================================================================= */
@@ -394,12 +348,16 @@ static int test_unload_empty_no_crash(void)
     headless_setup();
 
     /* Unload ohne vorheriges Load — muss no-op sein */
-    re15_room_unload();
-    re15_room_unload(); /* Doppelt — trotzdem kein Crash */
+    headless_room_unload();
+    headless_room_unload(); /* Doppelt — trotzdem kein Crash */
 
-    /* Buffer sollte NULL bleiben */
-    if (g_game.rdt_buffer != NULL) {
-        fprintf(stderr, "FAIL: rdt_buffer should remain NULL\n");
+    /* VM bleibt im zurückgesetzten Zustand. */
+    if (g_scd.threads[0].active) {
+        fprintf(stderr, "FAIL: main thread should remain inactive\n");
+        return 1;
+    }
+    if (g_scd.tick_count != 0) {
+        fprintf(stderr, "FAIL: tick_count should remain 0\n");
         return 1;
     }
 
@@ -408,10 +366,10 @@ static int test_unload_empty_no_crash(void)
 }
 
 /* =========================================================================
- * Test 5: Headless — 8 Räume mit mehr Ticks (Stress-Test)
+ * Test 5: Headless — 8 "Räume" mit mehr Ticks (Stress-Test)
  *
- * Lädt 8 verschiedene Räume mit je 120 SCD-Ticks. Validiert dass auch
- * bei längerer Ausführung kein Fehler auftritt.
+ * Lädt 8 verschiedene "Räume" mit je 120 SCD-Ticks. Validiert, dass auch bei
+ * längerer Ausführung kein Fehler auftritt.
  *
  * Validates: Requirements 12.2, 12.5
  * ========================================================================= */
@@ -430,9 +388,9 @@ static int test_8_rooms_stress(void)
     headless_setup();
 
     for (i = 0; i < num_rooms; i++) {
-        result = re15_room_load(1, rooms[i], 0);
+        result = headless_room_load();
         if (result != 0) {
-            fprintf(stderr, "FAIL: room_load(1, 0x%02X, 0) returned %d "
+            fprintf(stderr, "FAIL: room_load(0x%02X) returned %d "
                     "at iteration %d\n", rooms[i], result, i);
             return 1;
         }
@@ -441,7 +399,13 @@ static int test_8_rooms_stress(void)
             scd_vm_tick();
         }
 
-        re15_room_unload();
+        headless_room_unload();
+    }
+
+    if (g_room_load_count != num_rooms) {
+        fprintf(stderr, "FAIL: expected %d rooms loaded, got %d\n",
+                num_rooms, g_room_load_count);
+        return 1;
     }
 
     printf("PASS\n");

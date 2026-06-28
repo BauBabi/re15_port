@@ -13,7 +13,13 @@
  * Requirements: 6.6, 12.1
  */
 
-#include "re15_types.h"
+/* Engine-Transplant 2026: re15_types.h wurde aus dem oeffentlichen Include
+ * entfernt (nur noch in _legacy_minimal/, NICHT im Build). Die aktuellen
+ * Engine-Header beziehen die Fixwidth-Integer direkt aus <stdint.h>
+ * (siehe re15_port/include/re15_engine.h:18, re15_vab.h:26). Dieser Test
+ * braucht von re15_types.h ausschliesslich uint8_t/uint16_t/uint32_t —
+ * daher <stdint.h> statt eines _legacy_minimal-Headers. */
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 

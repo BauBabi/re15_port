@@ -45,12 +45,12 @@
  *   R = Y                 + 1.402   * (Cr - 128)
  *   G = Y - 0.3437 * (Cb - 128) - 0.7143 * (Cr - 128)
  *   B = Y + 1.772   * (Cb - 128)
- * Java rounds the floats at build time to the same constants below. */
+ * Java TRUNCATES the floats ((int)-Cast) at build time to the constants below. */
 #define YUV_SHIFT         12
-#define MUL_R          5743      /* round( 1.402  * 4096) */
-#define MUL_G_CB      -1408      /* round(-0.3437 * 4096) */
-#define MUL_G_CR      -2925      /* round(-0.7143 * 4096) */
-#define MUL_B          7258      /* round( 1.772  * 4096) */
+#define MUL_R          5742      /* (int)( 1.402  * 4096)=5742 trunc == Java MdecDecoder [#44] */
+#define MUL_G_CB      -1407      /* (int)(-0.3437 * 4096)=-1407 trunc == Java MdecDecoder [#44] */
+#define MUL_G_CR      -2925      /* (int)(-0.7143 * 4096)=-2925 trunc == Java MdecDecoder */
+#define MUL_B          7258      /* (int)( 1.772  * 4096)=7258 trunc == Java MdecDecoder */
 
 #define CONST_BITS        8
 #define PASS1_BITS        2

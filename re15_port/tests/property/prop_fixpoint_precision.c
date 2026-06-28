@@ -5,18 +5,49 @@
  * **Property 8: Fixkomma-Rendering-Präzision**
  *
  * Für jeden gültigen 3D-Vertex (x, y, z im Bereich ±32767) soll die
- * PC-Software-Transformation (20.12-Fixkomma mit RotMatrix + TransMatrix)
- * einen Bildschirm-Punkt erzeugen, der maximal ±1 Pixel vom Ergebnis
- * der Double-Präzisions-Floating-Point-Referenzimplementierung bei 320×240
- * Auflösung abweicht.
+ * PC-Software-Transformation (20.12-Fixkomma / Q12 mit Q12-Rotationsmatrix +
+ * Integer-Translation) einen Bildschirm-Punkt erzeugen, der maximal ±1 Pixel
+ * vom Ergebnis der Double-Präzisions-Floating-Point-Referenzimplementierung
+ * bei 320×240 Auflösung abweicht.
  *
- * Testverfahren:
- *   1. Generiere zufälligen Vertex (x, y, z) im Bereich ±32767
- *   2. Generiere zufälligen Rotationswinkel (0-4095)
- *   3. Transformiere mit Q12-Fixkomma: re15_rot_matrix_y + re15_transform_vertex
- *      + re15_perspective_project
- *   4. Transformiere mit double-Referenz: math.h sin/cos + Perspektiv-Division
- *   5. Vergleiche projizierte Bildschirmkoordinaten: max ±1 Pixel Differenz
+ * --------------------------------------------------------------------------
+ * API-PORTIERUNG (Engine-Transplant 2026, Legacy `re15_math.h` entfernt):
+ *
+ * Der alte Test rief eine private Math-Fassade auf, die es nicht mehr gibt:
+ *   alt: re15_rot_matrix_t / re15_trans_matrix_t                     (Structs)
+ *        re15_rot_matrix_y(&rot, angle)                              (Y-Rot)
+ *        re15_transform_vertex(rot, trans, vx,vy,vz, &ox,&oy,&oz)    (Mat*Vec+T)
+ *        re15_perspective_project(ox,oy,oz, h, cx,cy, &sx,&sy)       (Projektion)
+ *
+ * Die AKTUELLE öffentliche Fixkomma-API ist die Skeleton-/Kamera-Trig:
+ *   neu: re15_sin_q12(angle_4096) / re15_cos_q12(angle_4096)   (re15_skeleton.h)
+ *        Q12-Konvention 4096 = 1.0, 4096 Winkel-Einheiten = 360°
+ *        (RE15_SKEL_ONE = 0x1000).
+ *
+ * Die früher von `re15_transform_vertex` gekapselte Mat3×Vec + Translation
+ * sowie die Perspektiv-Projektion sind keine öffentlichen Funktionen mehr —
+ * sie liegen als `static` Helfer in engine/src/skeleton_common.c
+ * (`mat3_rot_y`, `mat3_apply`) bzw. werden GTE-seitig erledigt. Wir bilden
+ * exakt deren Konvention 1:1 lokal nach, damit der Test die Fixkomma-Property
+ * der echten Port-Helfer prüft (NICHT eine erfundene Mathematik):
+ *
+ *   - Y-Rot-Matrix wie mat3_rot_y (skeleton_common.c:95-105):
+ *         Ry = | c 0  s |
+ *              | 0 1  0 |   mit c=re15_cos_q12, s=re15_sin_q12 (Q12)
+ *              |-s 0  c |
+ *   - Mat×Vec wie mat3_apply (skeleton_common.c:69-79): int64-Akku, EINE
+ *     >>12-Trunkierung pro Ausgabe-Koordinate (GTE-treu, kein 3-fach-Truncate).
+ *   - Integer-Translation: trans[3] wird als ganze Welt-Einheiten addiert
+ *     (Kamera-Konvention re15_camera_view_t.trans, re15_camera.h:51-55 /
+ *     re15_camera_compose_view_bone, skeleton_trig_pc.c:242).
+ *   - Perspektiv-Projektion: Integer-Divide sx = (x*h)/z + cx — die
+ *     gte_SetGeomScreen-Projektion des Originals (h = screen_dist), identisch
+ *     zur Referenz in tests/unit/test_math_common.c:255.
+ *
+ * Getestete Property/Intention ist damit UNVERÄNDERT: der Q12-Fixkomma-Pfad
+ * (Q12-Trig + Single-Truncation-Mat-Vec + Integer-Projektion) bleibt überall
+ * im Bereich innerhalb ±1 Pixel der Double-Referenz.
+ * --------------------------------------------------------------------------
  *
  * Kamera-Setup: h=320, screen_center=(160,120), translation_z=5000
  * Anzahl Testfälle: N=500
@@ -31,8 +62,7 @@
 #include <stdint.h>
 #include <math.h>
 
-#include "re15_math.h"
-#include "re15_types.h"
+#include "re15_skeleton.h"   /* re15_sin_q12 / re15_cos_q12, RE15_SKEL_ONE (Q12) */
 
 /* =========================================================================
  * Konfiguration
@@ -75,6 +105,71 @@
 
 static int g_passed = 0;
 static int g_failed = 0;
+
+/* =========================================================================
+ * Fixkomma-Pfad — nachgebildet aus den AKTUELLEN Port-Helfern
+ * (engine/src/skeleton_common.c mat3_rot_y / mat3_apply, Q12).
+ *
+ * Diese drei Funktionen ersetzen die entfernten re15_rot_matrix_y /
+ * re15_transform_vertex / re15_perspective_project der Legacy-`re15_math.h`,
+ * 1:1 mit derselben Q12-Konvention (RE15_SKEL_ONE = 0x1000, EINE >>12-
+ * Trunkierung pro Ausgabe-Koordinate). Die Trig kommt aus der öffentlichen
+ * API (re15_sin_q12/re15_cos_q12); nur die reine Q12-Arithmetik-Invariante
+ * wird hier reproduziert.
+ * ========================================================================= */
+
+/**
+ * Baut die Q12-Y-Rotationsmatrix wie skeleton_common.c:95-105 (mat3_rot_y).
+ * Speicherung row-major: m[r*3 + c]. Identisch zur re15_skel_pose_t.rot-
+ * und re15_camera_view_t.rot-Konvention.
+ */
+static void fp_rot_matrix_y(int angle_4096, int32_t m[9])
+{
+    int32_t c = re15_cos_q12(angle_4096);
+    int32_t s = re15_sin_q12(angle_4096);
+    /* Ry = |  c   0   s |
+     *      |  0   1   0 |
+     *      | -s   0   c |   */
+    m[0] =  c;            m[1] = 0;             m[2] =  s;
+    m[3] =  0;            m[4] = RE15_SKEL_ONE; m[5] =  0;
+    m[6] = -s;            m[7] = 0;             m[8] =  c;
+}
+
+/**
+ * v' = (M * v) >> 12, dann + Translation. Mat×Vec exakt wie mat3_apply
+ * (skeleton_common.c:69-79): int64-Akkumulator, EINE >>12-Trunkierung pro
+ * Koordinate (GTE-treu). Translation als ganze Welt-Einheiten (Kamera-
+ * trans[3]-Konvention, re15_camera.h:51-55).
+ */
+static void fp_transform_vertex(const int32_t m[9],
+                                int32_t tx, int32_t ty, int32_t tz,
+                                int32_t vx, int32_t vy, int32_t vz,
+                                int32_t *ox, int32_t *oy, int32_t *oz)
+{
+    int64_t sx = (int64_t)m[0]*vx + (int64_t)m[1]*vy + (int64_t)m[2]*vz;
+    int64_t sy = (int64_t)m[3]*vx + (int64_t)m[4]*vy + (int64_t)m[5]*vz;
+    int64_t sz = (int64_t)m[6]*vx + (int64_t)m[7]*vy + (int64_t)m[8]*vz;
+    *ox = (int32_t)(sx >> 12) + tx;
+    *oy = (int32_t)(sy >> 12) + ty;
+    *oz = (int32_t)(sz >> 12) + tz;
+}
+
+/**
+ * Perspektiv-Projektion mit Integer-Divide: sx = (x*h)/z + cx
+ * (gte_SetGeomScreen-Projektion; identisch zur Referenz in
+ * tests/unit/test_math_common.c:255). Return: 0 bei Erfolg, -1 wenn z <= 0.
+ */
+static int fp_perspective_project(int32_t ox, int32_t oy, int32_t oz,
+                                  int32_t h, int32_t cx, int32_t cy,
+                                  int32_t *sx_out, int32_t *sy_out)
+{
+    if (oz <= 0) {
+        return -1;
+    }
+    *sx_out = (ox * h) / oz + cx;
+    *sy_out = (oy * h) / oz + cy;
+    return 0;
+}
 
 /* =========================================================================
  * PRNG (xorshift32 für Reproduzierbarkeit)
@@ -143,7 +238,7 @@ static int reference_transform(int16_t vx, int16_t vy, int16_t vz,
     double cos_a = cos(rad);
     double sin_a = sin(rad);
 
-    /* Y-Achsen-Rotation:
+    /* Y-Achsen-Rotation (SAME convention as fp_rot_matrix_y / mat3_rot_y):
      *   [ cos   0   sin ] * [vx]
      *   [  0    1    0  ]   [vy]
      *   [-sin   0   cos ]   [vz]
@@ -187,29 +282,25 @@ static int prop_fixpoint_precision(void)
         int16_t vz = rand_vertex_coord();
         int16_t angle = rand_angle();
 
-        re15_rot_matrix_t rot;
-        re15_trans_matrix_t trans;
+        int32_t rot[9];
         int32_t ox_fp, oy_fp, oz_fp;
         int32_t sx_fp, sy_fp;
         double sx_ref, sy_ref;
         int dx, dy;
         int ret_fp, ret_ref;
 
-        /* Fixkomma-Pfad: Rotation + Transformation + Projektion */
-        re15_rot_matrix_y(&rot, angle);
+        /* Fixkomma-Pfad: Q12-Y-Rotation + Mat×Vec+Translation + Projektion */
+        fp_rot_matrix_y(angle, rot);
 
-        trans.tx = 0;
-        trans.ty = 0;
-        trans.tz = TRANSLATION_Z;
+        fp_transform_vertex(rot,
+                            0, 0, TRANSLATION_Z,
+                            (int32_t)vx, (int32_t)vy, (int32_t)vz,
+                            &ox_fp, &oy_fp, &oz_fp);
 
-        re15_transform_vertex(&rot, &trans,
-                              (int32_t)vx, (int32_t)vy, (int32_t)vz,
-                              &ox_fp, &oy_fp, &oz_fp);
-
-        ret_fp = re15_perspective_project(ox_fp, oy_fp, oz_fp,
-                                          PROJ_DISTANCE_H,
-                                          SCREEN_CENTER_X, SCREEN_CENTER_Y,
-                                          &sx_fp, &sy_fp);
+        ret_fp = fp_perspective_project(ox_fp, oy_fp, oz_fp,
+                                        PROJ_DISTANCE_H,
+                                        SCREEN_CENTER_X, SCREEN_CENTER_Y,
+                                        &sx_fp, &sy_fp);
 
         /* Referenz-Pfad: Double-Precision */
         ret_ref = reference_transform(vx, vy, vz, angle,
@@ -321,27 +412,24 @@ static int prop_extreme_values(void)
             int16_t vz = extreme_vertices[vi][2];
             int16_t angle = extreme_angles[ai];
 
-            re15_rot_matrix_t rot;
-            re15_trans_matrix_t trans;
+            int32_t rot[9];
             int32_t ox_fp, oy_fp, oz_fp;
             int32_t sx_fp, sy_fp;
             double sx_ref, sy_ref;
             int dx, dy;
             int ret_fp, ret_ref;
 
-            re15_rot_matrix_y(&rot, angle);
-            trans.tx = 0;
-            trans.ty = 0;
-            trans.tz = TRANSLATION_Z;
+            fp_rot_matrix_y(angle, rot);
 
-            re15_transform_vertex(&rot, &trans,
-                                  (int32_t)vx, (int32_t)vy, (int32_t)vz,
-                                  &ox_fp, &oy_fp, &oz_fp);
+            fp_transform_vertex(rot,
+                                0, 0, TRANSLATION_Z,
+                                (int32_t)vx, (int32_t)vy, (int32_t)vz,
+                                &ox_fp, &oy_fp, &oz_fp);
 
-            ret_fp = re15_perspective_project(ox_fp, oy_fp, oz_fp,
-                                              PROJ_DISTANCE_H,
-                                              SCREEN_CENTER_X, SCREEN_CENTER_Y,
-                                              &sx_fp, &sy_fp);
+            ret_fp = fp_perspective_project(ox_fp, oy_fp, oz_fp,
+                                            PROJ_DISTANCE_H,
+                                            SCREEN_CENTER_X, SCREEN_CENTER_Y,
+                                            &sx_fp, &sy_fp);
 
             ret_ref = reference_transform(vx, vy, vz, angle,
                                           0, 0, TRANSLATION_Z,

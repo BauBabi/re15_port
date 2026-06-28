@@ -63,11 +63,17 @@ typedef struct {
     uint16_t sleep_slots[SCD_CALL_DEPTH_MAX][SCD_SLEEP_SLOT_COUNT];
 
     const uint8_t *call_stack[12];   /* Gosub return PCs */
-    /* Phase 4.5.13-RE2: do-while body-start stack. Do (0x11) pushes the
-     * post-header PC; Edwhile (0x12) jumps back to it while its trailing
-     * condition opcode evaluates true. Up to 4 nested loops. */
-    const uint8_t *do_stack[4];
-    int8_t         do_depth;
+    /* [#8] Byte-true UNIFIED SCD loop model — While(0x0F)/Ewhile(0x10)/Do(0x11)/
+     * Edwhile(0x12)/For(0x0D)/Next(0x0E)/Break(0x1A) all share it. Mirrors the PSX
+     * thread fields: counter @+0x08, loop-back @+0x20+idx*4, exit @+0x60+idx*4,
+     * For-count @+0xA0+idx*2 (LAB_8003f6f4 ff). idx = loop_count-1. N=4: the PSX
+     * +0x20 region holds 4 u32 slots before +0x30. Flat [4] (not per-call-depth)
+     * is a documented simplification — no known RE1.5 script nests loops across a
+     * Gosub boundary. (If/Else/Endif keep their OWN block_stack — separate model.) */
+    const uint8_t *loop_back[4];    /* +0x20 — loop-back PC per nesting     */
+    const uint8_t *loop_exit[4];    /* +0x60 — exit PC (While/Do/Break)     */
+    uint16_t       loop_for_cnt[4]; /* +0xA0 — For/Next iteration count     */
+    int8_t         loop_count;      /* +0x08 — shared nesting counter 0..4  */
 
     /* 2026-06-09 byte-true If/Else/End_if BLOCK STACK (= PSX thread+0x140 sp).
      * If(0x06 LAB_8003f328) pushes block_end=(pc+4)+block_length and ALWAYS
@@ -78,15 +84,9 @@ typedef struct {
     const uint8_t *block_stack[8];
     int8_t         block_sp;
 
-    /* AO4-round 2026-05-26: For (0x0D) / Next (0x0E) loop state.
-     * For pushes body-start PC + iteration count; Next decrements count
-     * and jumps back to body-start until count==0. ROOM1170 sub06/07/08
-     * (helicopter takeoff for body + main rotor + tail rotor) use this
-     * pattern — without For/Next implemented, only one Add_speed fires
-     * per thread, so the heli body and rotors barely move. */
-    const uint8_t *for_body[4];      /* body-start PC per nesting level */
-    uint16_t       for_count[4];     /* remaining iterations            */
-    int8_t         for_depth;
+    /* For/Next loop state now lives in the unified loop model above (loop_back /
+     * loop_for_cnt / loop_count — see [#8]). ROOM1170 sub06/07/08 (heli takeoff
+     * body + main/tail rotor) drive it via for(n<count){ Add_speed; }. */
 
     /* AO5-round 2026-05-26: per-thread velocity vector. PSX disasm
      * (LAB_80040f14 / LAB_80040f40) stores Speed_set values at thread

@@ -18,7 +18,51 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "re15_savestate.h"
+/* =========================================================================
+ * Re-aktiviert nach Engine-Transplant (2026-06-28).
+ *
+ * Das Savestate-Vergleichs-Subsystem (re15_savestate.h /
+ * engine/src/savestate_cmp.c) existierte nur im alten, schlanken Build und
+ * wurde beim Engine-Transplant ersatzlos entfernt. Es gibt aktuell KEIN
+ * oeffentliches Pendant zu re15_savestate_pos_match() in re15_port/include/.
+ *
+ * Gemaess RE-Disziplin wird die getestete Funktion daher lokal im Test
+ * 1:1 nachgebildet (keine Engine-/Header-Aenderung, kein _legacy_minimal-
+ * Include). Die Logik ist byte-true uebernommen aus der urspruenglichen
+ * Implementierung:
+ *   re15_port/_legacy_minimal/engine_src/savestate_cmp.c:251-257
+ *     int re15_savestate_pos_match(int32_t expected, int32_t actual) {
+ *         int64_t diff = (int64_t)expected - (int64_t)actual;
+ *         if (diff < 0) diff = -diff;
+ *         return diff <= RE15_SAVESTATE_POS_TOLERANCE;
+ *     }
+ *   re15_port/_legacy_minimal/include/re15_savestate.h:34
+ *     #define RE15_SAVESTATE_POS_TOLERANCE  1
+ *
+ * Damit bleibt die Test-Intention (Property 17: Toleranz +/-1, Symmetrie,
+ * Overflow-Sicherheit ueber den vollen int32-Bereich) vollstaendig erhalten.
+ * ========================================================================= */
+
+/** Toleranz fuer Positionsvergleich: +/-1 Fixkomma-Einheit
+ *  (siehe re15_savestate.h:34 im _legacy_minimal-Snapshot). */
+#define RE15_SAVESTATE_POS_TOLERANCE  1
+
+/**
+ * Prueft ob zwei Positionswerte innerhalb der Toleranz liegen.
+ * Byte-true nachgebildet aus savestate_cmp.c:251-257 (siehe Kommentar oben).
+ *
+ * @param expected  Erwarteter Wert (Fixkomma)
+ * @param actual    Tatsaechlicher Wert (Fixkomma)
+ * @return          1 wenn |expected - actual| <= RE15_SAVESTATE_POS_TOLERANCE, sonst 0
+ */
+static int re15_savestate_pos_match(int32_t expected, int32_t actual)
+{
+    /* int64_t verhindert Overflow bei der Differenzbildung
+     * (z.B. INT32_MAX - INT32_MIN). */
+    int64_t diff = (int64_t)expected - (int64_t)actual;
+    if (diff < 0) diff = -diff;
+    return diff <= RE15_SAVESTATE_POS_TOLERANCE;
+}
 
 /* =========================================================================
  * Test-Infrastruktur

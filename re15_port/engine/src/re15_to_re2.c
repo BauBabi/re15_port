@@ -54,9 +54,12 @@ int re15_to_re2_member_id(int re15_id)
     case 8:  return 0x08;   /* motion (same ID in both) */
     case 9:  return 0x09;
     case 10: return 0x0A;
-    /* IDs 0x0B+ are typically pass-through if scripts ever use them. */
+    /* RE1.5 ids 0x0B+ sind Sub-State-Bytes/Felder (FUN_8004116c: id12=+0x09 grid-id,
+     * NICHT Y), KEINE RE2-Koordinaten-IDs. Das alte Pass-Through schrieb z.B. id12 ->
+     * RE2 0x0C (=Leon.Y) -> Spieler unter den Boden. Bis eine vollstaendige RE1.5->RE2-
+     * Sub-State-Feldzuordnung portiert ist: no-op (-1). Belegt: FUN_8004116c.c case12 =
+     * *((int)p+9)=+0x09; RE15_FUN_CATALOG Obj_model_set grid-id->+0x09. [#11] */
     default:
-        if (re15_id >= 0x0B && re15_id <= 0x25) return re15_id;
         return -1;
     }
 }
@@ -98,7 +101,11 @@ int re15_to_re2_plc_dest_clip(int mode, int with_rbj_overlay)
         return re15_to_re2_resolve_motion(RE15_MOTION_RUN, with_rbj_overlay);
     case 0x07:
     case 0x08:
-        return re15_to_re2_resolve_motion(RE15_MOTION_WALK, with_rbj_overlay);
+        /* BACK: Dispatch idx7/8 (LAB_80031080/800311f0) schreiben clip 0
+         * (`sb zero,...=>DAT_800acae8` @800310bc/@8003122c) + 180°-Translation
+         * (FUN_800245d8(0x800) @800310ec/@8003125c), KEIN reverse-playback.
+         * clip 0 = RE15_MOTION_RUN(->100), NICHT WALK(clip 5->105). [#23] */
+        return re15_to_re2_resolve_motion(RE15_MOTION_RUN, with_rbj_overlay);
     case 0x09:
         /* TURN — keep current clip while rotating in place. */
         return -1;

@@ -46,7 +46,9 @@ typedef struct {
     uint8_t  cam_to;       /* target cut id (0 → terminator-decorative) */
 } re15_rdt_zone_t;
 
-#define RE15_RDT_MAX_ZONES 32   /* per-room RVD entry cap for the demo */
+#define RE15_RDT_MAX_ZONES 64   /* [#32a] per-room RVD entry cap. FUN_80014230 @0x80014230
+                                 * has NO counter/0x20-cap — the scan is sentinel-bounded
+                                 * only; 32 truncated large rooms. 64 matches RE15_AOT_MAX. */
 
 /* SCA collision entry (BIO 1.5 / "BH2 prototype" layout, lib_sca v1.5 — 12 B,
  * naturally packed, no padding). The room's walkable/collision geometry: each

@@ -9,13 +9,55 @@
  * vorhanden behandeln (Pointer = NULL setzen) und alle übrigen Sektionen
  * korrekt parsen, ohne Absturz oder undefiniertes Verhalten.
  *
+ * ---------------------------------------------------------------------------
+ * API-MIGRATION (Engine-Transplant, re15_rdt.h / rdt_common.c, 2026-06):
+ * ---------------------------------------------------------------------------
+ * Der frühere Parser exportierte eine UNIFORME 21-Einträge-Adresstabelle, bei
+ * der jeder Offset 0x08..0x5C 1:1 auf ein flaches struct-Pointer-Feld abbildete
+ * (snd0_edt, snd0_vh, ..., collision, camera, zone, light, md1_ptr, floor,
+ * block, message, main_scd, sub_scd, extra_scd, effect, esp_tim, model_tim,
+ * animation) und die Konstante RE15_RDT_SECTION_COUNT (=21) definierte.
+ *
+ * Der AKTUELLE Parser (re15_rdt_parse @ rdt_common.c) hat KEINE uniforme
+ * 21:1-Tabelle mehr. Stattdessen:
+ *   - RE15_RDT_SECTION_COUNT ist ENTFERNT.
+ *   - Viele Sektionen werden mit sektions-SPEZIFISCHER Semantik geparst und
+ *     sind NICHT mehr (buffer + offset):
+ *       * camera  -> cuts (re15_camera_cut_t*, gated über header nCut*32)
+ *       * collision-> sca  (data + offset + 24-B-Header, gated über count[5])
+ *       * zone    -> zones[] (zur Parse-Zeit in AABB/Quad konvertiert)
+ *       * light   -> lights (data + offset, GRÖSSE = cut_count*40, gated)
+ *       * message -> messages (data + offset, sized bis nächste Boundary)
+ *       * main_scd-> main_scd = data + offset + first_off (POINTER-VERSCHOBEN)
+ *       * sub_scd -> sub_scd[] (pointer-table, NICHT buffer+offset)
+ *   - md1_ptr / extra_scd / effect / esp_tim / model_tim / animation sind
+ *     ERSATZLOS ENTFERNT (bzw. als prop_tim[]/prop_md1[] aus der 0x30-Tabelle
+ *     neu modelliert, ebenfalls keine 1:1-Offset-Abbildung).
+ *   - block -> blocks bleibt KANONISCH IMMER NULL (block.blk @0x38 wird vom
+ *     Original nie dereferenziert), taugt also NICHT als "valid offset"-Probe.
+ *
+ * Es gibt aber Sektionen, bei denen die GETESTETE PROPERTY exakt erhalten ist
+ * — Pointer == (buffer + offset) bei gültigem Offset, NULL bei Null-Offset:
+ *   - snd_edt[0/1], snd_vh[0/1], snd_vb[0/1]  (offsets 0x08..0x1c)
+ *       -> alt: snd0_edt/snd0_vh/snd0_vb + snd1_edt/snd1_vh/snd1_vb
+ *       Quelle: parse_audio() — `out->snd_*[b] = data + off` wenn off!=0 && off<size.
+ *   - flr  (offset 0x34)   -> alt: floor
+ *       Quelle: re15_rdt_parse — `out->flr = data + flr_start` wenn !=0 && +2<=size.
+ *
+ * Dieser Test prüft die ursprüngliche Property GENAU auf diesen 7 Pointern, die
+ * die "Null-Offset -> NULL, gültiger Offset -> buffer+offset"-Garantie 1:1
+ * erhalten haben, getrieben durch die ÖFFENTLICHE Funktion re15_rdt_parse().
+ * Damit bleibt die Test-INTENTION (Null-Offset-Robustheit + korrekte
+ * Pointer-Auflösung + kein Absturz bei beliebigen Null-Mustern) erhalten,
+ * ohne entfernte interne Felder zu referenzieren.
+ *
  * Teststrategie:
- * - Generiere synthetische RDT-Buffer (mindestens 0x60 + Padding für Daten)
- * - Für N Iterationen (200): setze zufällig einige der 21 Offsets auf 0x00000000,
- *   andere auf gültige Offsets innerhalb des Puffers
+ * - Generiere synthetische RDT-Buffer (0x60 Header + Datenbereich)
+ * - Für N Iterationen (200): setze zufällig einige der 7 geprobten Offsets auf
+ *   0x00000000, andere auf gültige Offsets innerhalb des Puffers
  * - Prüfe: Null-Offset → Pointer == NULL
  * - Prüfe: Gültiger Offset → Pointer == buffer + offset
- * - Prüfe: Kein Absturz bei beliebigen Null-Mustern
+ * - Prüfe: Kein Absturz / re15_rdt_parse == 0 bei beliebigen Null-Mustern
  */
 
 #include <stdio.h>
@@ -88,19 +130,59 @@ static void write_le32(uint8_t* p, uint32_t val)
 /** Anzahl der Property-Test-Iterationen */
 #define NUM_ITERATIONS    200
 
+/* -------------------------------------------------------------------------
+ * Die 7 geprobten Sektionen, deren "Null-Offset -> NULL / gültiger Offset ->
+ * buffer+offset"-Property im aktuellen Parser exakt erhalten ist.
+ *
+ * `rdt_off` = Byte-Offset des u32-Offsets in der RDT-Adresstabelle.
+ * Die Pointer werden zur Laufzeit aus dem geparsten re15_rdt_t gelesen (siehe
+ * collect_probes()), weil sie in Arrays (snd_*) bzw. einem Skalar (flr) liegen.
+ * ------------------------------------------------------------------------- */
+typedef struct {
+    const char *name;     /* Diagnose-Name                                    */
+    uint32_t    rdt_off;  /* Offset des u32 in der RDT-Header-Tabelle          */
+} probe_desc_t;
+
+/* Reihenfolge + RDT-Offsets exakt wie in parse_audio() / re15_rdt_parse():
+ *   snd0: EDT@0x08 VH@0x0c VB@0x10   snd1: EDT@0x14 VH@0x18 VB@0x1c   FLR@0x34 */
+static const probe_desc_t PROBES[] = {
+    { "snd_edt[0]", 0x08 },
+    { "snd_vh[0]",  0x0c },
+    { "snd_vb[0]",  0x10 },
+    { "snd_edt[1]", 0x14 },
+    { "snd_vh[1]",  0x18 },
+    { "snd_vb[1]",  0x1c },
+    { "flr",        0x34 },
+};
+
+#define NUM_PROBES ((int)(sizeof(PROBES) / sizeof(PROBES[0])))
+
+/* Liest die 7 geprobten Pointer aus dem geparsten rdt in ein flaches Array,
+ * in derselben Reihenfolge wie PROBES[]. */
+static void collect_probes(const re15_rdt_t *rdt, const uint8_t *ptrs_out[NUM_PROBES])
+{
+    ptrs_out[0] = rdt->snd_edt[0];
+    ptrs_out[1] = rdt->snd_vh[0];
+    ptrs_out[2] = rdt->snd_vb[0];
+    ptrs_out[3] = rdt->snd_edt[1];
+    ptrs_out[4] = rdt->snd_vh[1];
+    ptrs_out[5] = rdt->snd_vb[1];
+    ptrs_out[6] = rdt->flr;
+}
+
 /* =========================================================================
  * Property-Test: Eine Iteration mit zufälligem Null-Offset-Muster
  * ========================================================================= */
 
 /**
  * Führt eine Iteration durch:
- * 1. Erstellt einen synthetischen RDT-Buffer
- * 2. Setzt zufällig einige Offsets auf 0, andere auf gültige Werte
- * 3. Parst den Buffer
- * 4. Verifiziert alle 21 Sektions-Pointer
+ * 1. Erstellt einen synthetischen RDT-Buffer (gültiger 0x60-Header)
+ * 2. Setzt zufällig einige der geprobten Offsets auf 0, andere auf gültige Werte
+ * 3. Parst den Buffer mit re15_rdt_parse (öffentliche API)
+ * 4. Verifiziert die 7 geprobten Sektions-Pointer
  *
  * @param iteration  Aktuelle Iterationsnummer (für Fehlerausgabe)
- * @param null_mask  Bitmaske: Bit i gesetzt → Offset i wird auf 0 gesetzt
+ * @param null_mask  Bitmaske: Bit i gesetzt → Probe i wird auf 0 gesetzt
  * @return 0 bei Erfolg, 1 bei Fehler
  */
 static int test_iteration(int iteration, uint32_t null_mask)
@@ -109,81 +191,72 @@ static int test_iteration(int iteration, uint32_t null_mask)
     re15_rdt_t rdt;
     int result;
     int i;
-    uint32_t offsets[RE15_RDT_SECTION_COUNT];
-    uint8_t** rdt_sections[RE15_RDT_SECTION_COUNT];
+    uint32_t offsets[NUM_PROBES];
+    const uint8_t *ptrs[NUM_PROBES];
 
     /* Buffer mit nicht-null Wert füllen (erleichtert Debugging) */
     memset(buffer, 0xAB, TEST_BUFFER_SIZE);
 
-    /* Header-Bytes (0x00-0x07): beliebig, Parser liest sie nicht */
-    buffer[0] = 0x52; /* 'R' */
-    buffer[1] = 0x44; /* 'D' */
-    buffer[2] = 0x54; /* 'T' */
-    buffer[3] = 0x00;
-    buffer[4] = 0x00;
-    buffer[5] = 0x00;
-    buffer[6] = 0x00;
-    buffer[7] = 0x00;
+    /* Header-Bytes (0x00-0x06): die Zähler. Auf 0 setzen, damit count-gegatete
+     * Sektionen (cuts/light) garantiert deaktiviert sind und NICHT in den von
+     * uns belegten Datenbereich hineinparsen / Boundaries verschieben. Die hier
+     * geprobten Sektionen (Audio/FLR) sind von diesen Zählern unabhängig. */
+    buffer[0x00] = 0x00; /* nSprite */
+    buffer[0x01] = 0x00; /* nCut    */
+    buffer[0x02] = 0x00; /* nOmodel */
+    buffer[0x03] = 0x00; /* nItem   */
+    buffer[0x04] = 0x00; /* nDoor   */
+    buffer[0x05] = 0x00; /* nRoom_at*/
+    buffer[0x06] = 0x00; /* reverb  */
+    buffer[0x07] = 0x00;
 
-    /* 21 Offsets in der Adresstabelle setzen (0x08 bis 0x5C) */
-    for (i = 0; i < RE15_RDT_SECTION_COUNT; i++) {
+    /* GESAMTE Adresstabelle (0x08..0x5c) zunächst auf 0 → alle nicht-geprobten
+     * Sektionen sind "nicht vorhanden" und können den Test nicht stören. */
+    for (i = 0x08; i <= 0x5c; i += 4) {
+        write_le32(buffer + i, 0x00000000);
+    }
+
+    /* Die 7 geprobten Offsets setzen */
+    for (i = 0; i < NUM_PROBES; i++) {
         if (null_mask & (1u << i)) {
             /* Dieser Offset ist 0 → Sektion nicht vorhanden */
             offsets[i] = 0x00000000;
         } else {
-            /* Gültiger Offset: zeigt in den Datenbereich
-             * Verteile die Offsets über den Datenbereich */
+            /* Gültiger Offset: zeigt in den Datenbereich.
+             * Verteile die Offsets über den Datenbereich. Muss strikt < size
+             * sein (parse_audio: off<size; flr: off+2<=size) — bei i*12 max
+             * 0x60+72 < 0x160, passt. */
             offsets[i] = DATA_AREA_START + (uint32_t)(i * 12);
         }
-        write_le32(buffer + 0x08 + (i * 4), offsets[i]);
+        write_le32(buffer + PROBES[i].rdt_off, offsets[i]);
     }
 
-    /* Parser aufrufen */
+    /* Parser aufrufen (öffentliche API) */
     result = re15_rdt_parse(buffer, TEST_BUFFER_SIZE, &rdt);
 
     PROP_ASSERT(result == 0,
         "Iteration %d (mask=0x%08X): re15_rdt_parse returned %d (expected 0)",
         iteration, null_mask, result);
 
-    /* Pointer-Array auf die struct-Felder aufbauen (gleiche Reihenfolge wie Parser) */
-    rdt_sections[0]  = &rdt.snd0_edt;
-    rdt_sections[1]  = &rdt.snd0_vh;
-    rdt_sections[2]  = &rdt.snd0_vb;
-    rdt_sections[3]  = &rdt.snd1_edt;
-    rdt_sections[4]  = &rdt.snd1_vh;
-    rdt_sections[5]  = &rdt.snd1_vb;
-    rdt_sections[6]  = &rdt.collision;
-    rdt_sections[7]  = &rdt.camera;
-    rdt_sections[8]  = &rdt.zone;
-    rdt_sections[9]  = &rdt.light;
-    rdt_sections[10] = &rdt.md1_ptr;
-    rdt_sections[11] = &rdt.floor;
-    rdt_sections[12] = &rdt.block;
-    rdt_sections[13] = &rdt.message;
-    rdt_sections[14] = &rdt.main_scd;
-    rdt_sections[15] = &rdt.sub_scd;
-    rdt_sections[16] = &rdt.extra_scd;
-    rdt_sections[17] = &rdt.effect;
-    rdt_sections[18] = &rdt.esp_tim;
-    rdt_sections[19] = &rdt.model_tim;
-    rdt_sections[20] = &rdt.animation;
+    /* Geprobte Pointer einsammeln */
+    collect_probes(&rdt, ptrs);
 
-    /* Verifikation: Jede Sektion prüfen */
-    for (i = 0; i < RE15_RDT_SECTION_COUNT; i++) {
+    /* Verifikation: Jede geprobte Sektion prüfen */
+    for (i = 0; i < NUM_PROBES; i++) {
         if (null_mask & (1u << i)) {
             /* Null-Offset → Pointer muss NULL sein */
-            PROP_ASSERT(*rdt_sections[i] == NULL,
-                "Iteration %d (mask=0x%08X): Sektion %d hat Null-Offset "
+            PROP_ASSERT(ptrs[i] == NULL,
+                "Iteration %d (mask=0x%08X): Sektion %d (%s) hat Null-Offset "
                 "aber Pointer ist nicht NULL (ptr=%p)",
-                iteration, null_mask, i, (void*)*rdt_sections[i]);
+                iteration, null_mask, i, PROBES[i].name, (void*)ptrs[i]);
         } else {
             /* Gültiger Offset → Pointer muss buffer + offset sein */
-            uint8_t* expected = buffer + offsets[i];
-            PROP_ASSERT(*rdt_sections[i] == expected,
-                "Iteration %d (mask=0x%08X): Sektion %d hat Offset 0x%08X "
+            const uint8_t* expected = buffer + offsets[i];
+            PROP_ASSERT(ptrs[i] == expected,
+                "Iteration %d (mask=0x%08X): Sektion %d (%s) hat Offset 0x%08X "
                 "aber Pointer=%p (expected %p, buffer=%p)",
-                iteration, null_mask, i, offsets[i],
-                (void*)*rdt_sections[i], (void*)expected, (void*)buffer);
+                iteration, null_mask, i, PROBES[i].name, offsets[i],
+                (void*)ptrs[i], (void*)expected, (void*)buffer);
         }
     }
 
@@ -195,17 +268,19 @@ static int test_iteration(int iteration, uint32_t null_mask)
  * Property-Test: Spezialfälle (Extremwerte)
  * ========================================================================= */
 
+/** Bitmaske mit allen NUM_PROBES Bits gesetzt. */
+#define ALL_PROBES_MASK  ((1u << NUM_PROBES) - 1u)
+
 /**
- * Teste: Alle Offsets sind NULL → alle 21 Pointer müssen NULL sein.
+ * Teste: Alle geprobten Offsets sind NULL → alle Pointer müssen NULL sein.
  */
 static int test_all_null(void)
 {
-    uint32_t mask = 0x001FFFFF; /* Bits 0-20 gesetzt = alle 21 Sektionen */
-    return test_iteration(-1, mask);
+    return test_iteration(-1, ALL_PROBES_MASK);
 }
 
 /**
- * Teste: Kein Offset ist NULL → alle 21 Pointer müssen gültig sein.
+ * Teste: Kein Offset ist NULL → alle Pointer müssen gültig sein.
  */
 static int test_none_null(void)
 {
@@ -213,12 +288,12 @@ static int test_none_null(void)
 }
 
 /**
- * Teste: Nur jeweils ein einzelner Offset ist NULL (21 Tests).
+ * Teste: Nur jeweils ein einzelner Offset ist NULL (NUM_PROBES Tests).
  */
 static int test_single_null(void)
 {
     int i;
-    for (i = 0; i < RE15_RDT_SECTION_COUNT; i++) {
+    for (i = 0; i < NUM_PROBES; i++) {
         uint32_t mask = 1u << i;
         if (test_iteration(-100 - i, mask) != 0) {
             return 1;
@@ -238,7 +313,8 @@ int main(void)
     uint32_t null_mask;
 
     printf("=== Property-Test: RDT Null-Offset-Sektionsbehandlung ===\n");
-    printf("    Validates: Requirements 10.8\n\n");
+    printf("    Validates: Requirements 10.8\n");
+    printf("    Geprobte Sektionen (buffer+offset-erhaltend): %d\n\n", NUM_PROBES);
 
     /* Deterministischer Seed (reproduzierbar), kann via Env überschrieben werden */
     seed = (uint32_t)time(NULL);
@@ -265,13 +341,13 @@ int main(void)
         printf("    FEHLER!\n");
         goto done;
     }
-    printf("    OK (21 Einzeltests bestanden).\n\n");
+    printf("    OK (%d Einzeltests bestanden).\n\n", NUM_PROBES);
 
     /* --- Phase 2: Randomisierte Tests --- */
     printf("[4/4] Teste %d zufaellige Null-Offset-Kombinationen...\n", NUM_ITERATIONS);
     for (i = 0; i < NUM_ITERATIONS; i++) {
-        /* Generiere zufällige Bitmaske für 21 Bits */
-        null_mask = prng_next() & 0x001FFFFF;
+        /* Generiere zufällige Bitmaske für NUM_PROBES Bits */
+        null_mask = prng_next() & ALL_PROBES_MASK;
         if (test_iteration(i, null_mask) != 0) {
             printf("    FEHLER bei Iteration %d (mask=0x%08X)!\n", i, null_mask);
             goto done;

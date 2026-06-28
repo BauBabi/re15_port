@@ -140,28 +140,13 @@ static int ref_point_in_4p(int16_t px, int16_t pz,
 static int aot_check_point(int16_t px, int16_t pz,
                            const int16_t* poly_x, const int16_t* poly_z)
 {
-    re15_aot_slot_t slot;
-    int result;
-
-    /* Alle Slots zurücksetzen */
-    re15_aot_init();
-
-    /* Test-Slot konfigurieren */
-    memset(&slot, 0, sizeof(slot));
-    slot.active     = 1;
-    slot.type       = AOT_TYPE_DOOR;
-    slot.entered    = 0;
-    slot.floor_band = TEST_FLOOR_BAND;
-    memcpy(slot.trigger_x, poly_x, 4 * sizeof(int16_t));
-    memcpy(slot.trigger_z, poly_z, 4 * sizeof(int16_t));
-
-    re15_aot_set_slot(TEST_SLOT_IDX, &slot);
-
-    /* Prüfe Containment via re15_aot_check */
-    result = re15_aot_check(px, pz, TEST_FLOOR_BAND);
-
-    /* result == TEST_SLOT_IDX (0) wenn drin, -1 wenn nicht */
-    return (result == TEST_SLOT_IDX) ? 1 : 0;
+    /* Direkt die ÖFFENTLICHE Point-in-Quad-Funktion testen (aot_common.c,
+     * PSX FUN_80014368, int64-Kreuzprodukte). Die alte slot-basierte API
+     * (re15_aot_slot_t / re15_aot_set_slot / re15_aot_check) existiert nach
+     * dem Engine-Transplant nicht mehr — re15_aot_point_in_quad ist die
+     * exakt gleiche „consistent-sign, cross==0 = innen"-Logik wie die
+     * Referenz ref_point_in_4p, nur mit int64 statt int32. */
+    return re15_aot_point_in_quad((int32_t)px, (int32_t)pz, poly_x, poly_z);
 }
 
 /* =========================================================================

@@ -172,14 +172,22 @@ static void parse_main_scd(const uint8_t *data, size_t size,
     out->main_scd      = NULL;
     out->main_scd_size = 0;
     if (main_scd_start == 0 || main_scd_start >= size) return;
-    if (sub_scd_start <= main_scd_start || sub_scd_start > size) return;
+    /* main_scd wird UNABHAENGIG von sub_scd registriert (FUN_8003ef6c:8-11 -> zwei
+     * separate FUN_8003ee3c-Aufrufe auf RDT+0x40 / +0x44), daher KEINE
+     * sub_scd_start > main_scd_start-Bedingung. [BYTE_TRUE_AUDIT #39] */
 
     uint16_t first_off = (uint16_t)data[main_scd_start]
                        | ((uint16_t)data[main_scd_start + 1] << 8);
     if (first_off < 2 || (size_t)(main_scd_start + first_off) >= size) return;
 
-    out->main_scd      = data + main_scd_start + first_off;
-    out->main_scd_size = sub_scd_start - (main_scd_start + first_off);
+    uint32_t body = main_scd_start + first_off;
+    out->main_scd = data + body;
+    /* Das Original leitet KEINE main-SCD-Groesse ab (FUN_8003edec liefert nur einen
+     * Pointer); main_scd_size ist nur ein Port-Debug-Hilfswert. Bis zur naechsten
+     * hoeheren Boundary (sub_scd_start) wenn gueltig, sonst bis EOF. Unterlauf-sicher. */
+    out->main_scd_size = (sub_scd_start > body && sub_scd_start <= size)
+                       ? (size_t)(sub_scd_start - body)
+                       : (size_t)(size - body);
 }
 
 /* Phase 4.5.9-E: parse sub-SCD pointer table + populate per-entry script
@@ -355,12 +363,16 @@ int re15_rdt_floor_sound(const re15_rdt_t *rdt, int32_t px, int32_t pz)
     for (;;) {
         int16_t ex = (int16_t)(uint16_t)(e[0] | (e[1] << 8));
         if (ex == 0) return 0;                   /* x==0 terminator */
-        int16_t  ez = (int16_t)(uint16_t)(e[2] | (e[3] << 8));
-        uint16_t ew = (uint16_t)(e[4] | (e[5] << 8));
-        uint16_t ed = (uint16_t)(e[6] | (e[7] << 8));
-        if ((uint32_t)(spx - ex) < (uint32_t)ew &&
-            (uint32_t)(spz - ez) < (uint32_t)ed) {
-            return e[8];                         /* soundType byte */
+        int16_t ez = (int16_t)(uint16_t)(e[2] | (e[3] << 8));
+        /* [#32b] FUN_800437d4: width @0x800437fc and depth @0x80043814 are read with
+         * `lh` (SIGNED 16-bit), sign-extended to 32 bits, then used in an unsigned
+         * `sltu` compare. (#32c terminator-after-advance intentionally NOT applied:
+         * it only diverges for a degenerate empty FLR and risks an OOB/runaway read.) */
+        int16_t ew = (int16_t)(uint16_t)(e[4] | (e[5] << 8));   /* lh @0x800437fc */
+        int16_t ed = (int16_t)(uint16_t)(e[6] | (e[7] << 8));   /* lh @0x80043814 */
+        if ((uint32_t)(spx - ex) < (uint32_t)(int32_t)ew &&
+            (uint32_t)(spz - ez) < (uint32_t)(int32_t)ed) {
+            return e[8];                         /* soundType byte (lbu @0x80043828) */
         }
         e += 12;
     }

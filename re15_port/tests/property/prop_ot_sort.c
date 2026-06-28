@@ -24,7 +24,23 @@
 #include <string.h>
 #include <time.h>
 
-#include "re15_render.h"  /* RE15_OT_DEPTH */
+/* -------------------------------------------------------------------------
+ * Engine-Transplant 2026-06: der frühere Header re15_render.h (mit
+ * `#define RE15_OT_DEPTH 4096`, _legacy_minimal/include/re15_render.h:22)
+ * existiert in der aktuellen öffentlichen API nicht mehr. Die OT-Tiefe ist
+ * kein öffentliches Symbol; der PC-Renderer (platform/pc/src/render_pc.c:458)
+ * sortiert die Primitive heute per Insertion-Sort über einen Tiefen-Key statt
+ * über ein Array fester OT-Tiefe, der PSX-Renderer nutzt OT_LENGTH=1024
+ * (platform/psx/src/render.c:30).
+ *
+ * Dieser Property-Test prüft die *Painter's-Algorithm-Eigenschaft* einer
+ * Ordering-Table und baut dafür eine eigenständige OT-Datenstruktur
+ * (siehe unten). Die getestete Tiefe entspricht weiterhin dem ursprünglichen
+ * RE2-OT-Konzept mit 4096 Tiefenstufen (Z-Bereich [0, 4095]), das der Test
+ * dokumentiert. RE15_OT_DEPTH wird daher lokal als Test-Konstante definiert
+ * statt einen nicht mehr existierenden Header einzubinden.
+ * ------------------------------------------------------------------------- */
+#define RE15_OT_DEPTH 4096  /* Ordering-Table-Tiefe (RE2-Konzept; ehem. re15_render.h:22) */
 
 /* =========================================================================
  * Test-Infrastruktur

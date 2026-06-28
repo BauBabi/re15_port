@@ -364,6 +364,10 @@ static void re15_dialog_step(void)
     int act_edge = g_aot_action_pressed ? 1 : 0;
     int act_held = g_scd_action_held ? 1 : 0;
     int lr_edge  = (g_scd_pad_edge & (PAD_LEFT | PAD_RIGHT)) != 0;
+    /* [#36a] page-wait (andi 0xc000 @0x80028458) and end-wait (andi 0xc000
+     * @0x80028698) dismiss on EITHER action button, fresh press. g_scd_pad_edge is
+     * the standard PSX logical pad word (Cross=0x4000, Square=0x8000). */
+    int dismiss_edge = (g_scd_pad_edge & (0x4000u | 0x8000u)) != 0;
 
     switch (g_scd.message_fsm) {
     case 0: {  /* TYPING */
@@ -399,13 +403,13 @@ static void re15_dialog_step(void)
     }
     case 1:  /* PAGE_WAIT — down-arrow, advance on a fresh action press */
         g_scd.message_blink--;
-        if (act_edge) { g_scd.message_parse += 2; g_scd.message_page = g_scd.message_parse;
-                        g_scd.message_fsm = 0; g_scd.message_timer = 1; }
+        if (dismiss_edge) { g_scd.message_parse += 2; g_scd.message_page = g_scd.message_parse;
+                        g_scd.message_fsm = 0; g_scd.message_timer = g_scd.message_scroll; }  /* [#36a/e] */
         break;
     case 2:  /* PAGE_TIMED */
         if (g_scd.message_timer > 1) g_scd.message_timer--;
         else { g_scd.message_parse += 2; g_scd.message_page = g_scd.message_parse;
-               g_scd.message_fsm = 0; g_scd.message_timer = 1; }
+               g_scd.message_fsm = 0; g_scd.message_timer = g_scd.message_scroll; }  /* [#36e] DAT_800b8525=DAT_800b8524 @0x80028538 */
         break;
     case 3:  /* SELECT — YES/NO (left/right toggles, action confirms) */
         g_scd.message_blink--;
@@ -416,7 +420,7 @@ static void re15_dialog_step(void)
         }
         break;
     case 4:  /* END_WAIT — wait for a fresh action press to dismiss */
-        if (act_edge) g_scd.message_fsm = 6;
+        if (dismiss_edge) g_scd.message_fsm = 6;          /* [#36a] Cross|Square @0x80028698 */
         break;
     case 5:  /* END_TIMED — auto-dismiss when the hold expires */
         if (g_scd.message_timer > 1) g_scd.message_timer--;

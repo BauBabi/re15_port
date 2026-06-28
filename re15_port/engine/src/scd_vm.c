@@ -50,6 +50,10 @@ static int op_do       (scd_thread_t *t);   /* Phase 4.5.13-RE2 */
 static int op_edwhile  (scd_thread_t *t);   /* Phase 4.5.13-RE2 */
 static int op_for      (scd_thread_t *t);   /* AO4-round 2026-05-26 */
 static int op_next     (scd_thread_t *t);   /* AO4-round 2026-05-26 */
+static int op_while    (scd_thread_t *t);   /* [#8] 0x0F */
+static int op_ewhile   (scd_thread_t *t);   /* [#8] 0x10 */
+static int op_break    (scd_thread_t *t);   /* [#8] 0x1A */
+static int scd_eval_pred_chain(scd_thread_t *t, uint8_t chain_len);  /* [#8] While/Edwhile AND/OR predicate chain */
 static int op_goto     (scd_thread_t *t);
 static int op_gosub    (scd_thread_t *t);
 static int op_return   (scd_thread_t *t);
@@ -88,6 +92,10 @@ static int op_add_speed (scd_thread_t *t);   /* Phase 4.5.13-RE2 F6 */
 static int op_member_set(scd_thread_t *t);
 static int op_member_cmp(scd_thread_t *t);
 static int op_cmp       (scd_thread_t *t);   /* 0x23 — work-var compare predicate */
+static int op_save      (scd_thread_t *t);   /* 0x24 — work-var immediate store */
+static int op_copy      (scd_thread_t *t);   /* 0x25 — work-var copy */
+static int op_calc      (scd_thread_t *t);   /* 0x26 — work-var ALU w/ immediate */
+static int op_calc2     (scd_thread_t *t);   /* 0x27 — work-var ALU w/ work-var */
 static int op_sce_em_set(scd_thread_t *t);
 /* Phase 4.5.9-C */
 static int op_door_aot_set(scd_thread_t *t);
@@ -136,12 +144,12 @@ static const uint8_t s_opcode_sizes[256] = {
     [0x2E] = 3,  [0x2F] = 4,
     [0x30] = 1,  [0x31] = 1,  [0x32] = 8,  [0x33] = 8,
     [0x34] = 4,  [0x35] = 3,  [0x36] = 12, [0x37] = 4,
-    [0x38] = 3,  [0x39] = 4,  [0x3A] = 16, [0x3B] = 32,
+    [0x38] = 12, [0x39] = 4,  [0x3A] = 16, [0x3B] = 32,  /* 0x38: 3->12 byte-true (LAB_800417ac +0xc) */
     [0x3C] = 2,  [0x3D] = 4,  [0x3E] = 6,  [0x3F] = 4,
     [0x40] = 8,  [0x41] = 10, [0x42] = 1,  [0x43] = 4,
     [0x44] = 20, [0x45] = 3,  [0x46] = 10, [0x47] = 2,
     [0x48] = 16, [0x49] = 8,  [0x4A] = 2,  [0x4B] = 3,
-    [0x4C] = 5,  [0x4D] = 22, [0x4E] = 22, [0x4F] = 4,
+    [0x4C] = 18, [0x4D] = 10, [0x4E] = 5,  [0x4F] = 22,  /* byte-true (jump table 0x800744a8): 0x4C LAB_80040858 +0x12, 0x4D LAB_800408a8 +0xa, 0x4E LAB_80041980 +5, 0x4F LAB_80016f20 +0x16 */
     /* 0x52..0x5E: RE1.5 lengths (disasm-verified from jump table 0x800744a8,
      * 2026-05-31), NOT retail-RE2. RE1.5 differs here (BIO 1.5→2.0 shift):
      * 0x52=4 (was RE2 6), 0x53=3 (RE2 6), 0x56=6 (RE2 4), 0x57=4 (RE2 8),
@@ -150,19 +158,24 @@ static const uint8_t s_opcode_sizes[256] = {
     [0x50] = 22, [0x51] = 4,  [0x52] = 4,  [0x53] = 3,
     [0x54] = 6,  [0x55] = 6,  [0x56] = 6,  [0x57] = 4,
     [0x58] = 4,  [0x59] = 4,  [0x5A] = 6,  [0x5B] = 4,
-    [0x5C] = 4,  [0x5D] = 4,  [0x5E] = 4,  [0x5F] = 2,
-    [0x60] = 14, [0x61] = 4,  [0x62] = 2,  [0x63] = 1,
-    [0x64] = 16, [0x65] = 2,  [0x66] = 1,  [0x67] = 28,
-    [0x68] = 40, [0x69] = 30, [0x6A] = 6,  [0x6B] = 4,
-    [0x6C] = 1,  [0x6D] = 4,  [0x6E] = 6,  [0x6F] = 2,
-    [0x70] = 1,  [0x71] = 1,  [0x72] = 16, [0x73] = 8,
-    [0x74] = 4,  [0x75] = 22, [0x76] = 3,  [0x77] = 4,
-    [0x78] = 6,  [0x79] = 1,  [0x7A] = 16, [0x7B] = 16,
-    [0x7C] = 6,  [0x7D] = 6,  [0x7E] = 6,  [0x7F] = 6,
-    [0x80] = 2,  [0x81] = 3,  [0x82] = 3,  [0x83] = 1,
-    [0x84] = 2,  [0x85] = 6,  [0x86] = 1,  [0x87] = 1,
-    [0x88] = 3,  [0x89] = 1,  [0x8A] = 6,  [0x8B] = 6,
-    [0x8C] = 1,  [0x8D] = 24, [0x8E] = 2,
+    [0x5C] = 4,  [0x5D] = 4,  [0x5E] = 4,
+    /* [#34] 0x5F..0x8E: RE2 imports — NOT in RE1.5. Dispatch table PTR_LAB_800744a8
+     * ends at 0x5E (95 entries, last @0x80074620); dispatcher FUN_8003f0a0 has no
+     * bounds check → these would be OOB. No real RE1.5 opcode length → 1-byte
+     * defensive advance (= op_unknown / RE1.5 default LAB_8003f1d8 pc+=1, return 1). */
+    [0x5F] = 1,
+    [0x60] = 1,  [0x61] = 1,  [0x62] = 1,  [0x63] = 1,
+    [0x64] = 1,  [0x65] = 1,  [0x66] = 1,  [0x67] = 1,
+    [0x68] = 1,  [0x69] = 1,  [0x6A] = 1,  [0x6B] = 1,
+    [0x6C] = 1,  [0x6D] = 1,  [0x6E] = 1,  [0x6F] = 1,
+    [0x70] = 1,  [0x71] = 1,  [0x72] = 1,  [0x73] = 1,
+    [0x74] = 1,  [0x75] = 1,  [0x76] = 1,  [0x77] = 1,
+    [0x78] = 1,  [0x79] = 1,  [0x7A] = 1,  [0x7B] = 1,
+    [0x7C] = 1,  [0x7D] = 1,  [0x7E] = 1,  [0x7F] = 1,
+    [0x80] = 1,  [0x81] = 1,  [0x82] = 1,  [0x83] = 1,
+    [0x84] = 1,  [0x85] = 1,  [0x86] = 1,  [0x87] = 1,
+    [0x88] = 1,  [0x89] = 1,  [0x8A] = 1,  [0x8B] = 1,
+    [0x8C] = 1,  [0x8D] = 1,  [0x8E] = 1,
     /* 0x8F..0xFD = unregistered (0) — treat as unknown, advance 1B. */
     [0xFE] = 5,                              /* custom Dbg_text — Phase 4.4 */
 };
@@ -182,6 +195,9 @@ static void register_opcodes(void)
     s_op_table[0x12]              = op_edwhile;
     s_op_table[0x0D]              = op_for;
     s_op_table[0x0E]              = op_next;
+    s_op_table[0x0F]              = op_while;   /* [#8] */
+    s_op_table[0x10]              = op_ewhile;  /* [#8] */
+    s_op_table[0x1A]              = op_break;   /* [#8] */
     s_op_table[SCD_OP_EVT_EXEC]   = op_evt_exec;   /* Phase 4.5.11 */
     s_op_table[SCD_OP_SLEEP]      = op_sleep;
     s_op_table[SCD_OP_SLEEPING]   = op_sleeping;
@@ -226,11 +242,17 @@ static void register_opcodes(void)
     s_op_table[SCD_OP_MEMBER_SET]     = op_member_set;
     s_op_table[SCD_OP_MEMBER_CMP]     = op_member_cmp;
     s_op_table[0x23]                  = op_cmp;   /* Cmp predicate (work-var) */
+    s_op_table[0x24]                  = op_save;  /* [#7] work-var ops (LAB_80040018/4c/8c/dc) */
+    s_op_table[0x25]                  = op_copy;
+    s_op_table[0x26]                  = op_calc;
+    s_op_table[0x27]                  = op_calc2;
     s_op_table[SCD_OP_SCE_EM_SET]     = op_sce_em_set;
     /* Phase 4.5.9-C: Door / Item AOT opcodes (real RDT bytecode) */
     s_op_table[0x3B]                  = op_door_aot_set;
     s_op_table[0x50]                  = op_item_aot_set;
-    s_op_table[0x4E]                  = op_item_aot_set;   /* legacy alias */
+    /* 0x4E ist NICHT Item_aot_set (war falscher Alias) — Item_aot_set existiert nur an
+     * 0x50 (LAB_80040644). 0x4E (LAB_80041980, 5 Bytes, DAT_800b2368-Semantik) fällt auf
+     * op_unknown → korrekter 5-Byte-Skip bis die Handler-Semantik portiert ist. [BYTE_TRUE_AUDIT #4] */
     /* Phase 4.5.12: dynamic-size Obj_model_set */
     s_op_table[0x2D]                  = op_obj_model_set;
     /* Phase 4.5.13 base impls for opcodes used in ROOM1170 cinematic. */
@@ -291,13 +313,13 @@ static void register_opcodes(void)
     s_op_table[0x5B]                  = op_plc_cnt;
     s_op_table[0x55]                  = op_member_calc;
     s_op_table[0x56]                  = op_member_calc2;
-    s_op_table[0x60]                  = op_kage_set;
-    s_op_table[0x61]                  = op_cut_be_set;
-    s_op_table[0x5F]                  = op_xa_vol;
+    /* [#34] 0x5F/0x60/0x61/0x62/0x63: RE2 imports — do NOT exist in RE1.5.
+     * Dispatch table PTR_LAB_800744a8 ends at 0x5E; leaving them unregistered routes
+     * them to op_unknown (= RE1.5 default LAB_8003f1d8 pc+=1, return 1). The op_kage_set/
+     * op_cut_be_set/op_xa_vol/op_sce_item_lost/op_plc_gun_eff defs stay but are now unused.
+     * 0x51/0x5D/0x5E ARE valid RE1.5 opcodes (≤0x5E) — keep registered. */
     s_op_table[0x51]                  = op_sce_key_ck;
     s_op_table[0x5E]                  = op_keep_item_ck;
-    s_op_table[0x62]                  = op_sce_item_lost;
-    s_op_table[0x63]                  = op_plc_gun_eff;
     s_op_table[0x5D]                  = op_mizu_div_set;
 }
 
@@ -583,12 +605,19 @@ static int op_evt_next(scd_thread_t *t)
  * entire block in future revisions (e.g. break support). */
 static int op_do(scd_thread_t *t)
 {
-    if (t->do_depth < 4) {
-        t->do_stack[t->do_depth] = t->pc + 4;  /* body starts after header */
-        t->do_depth++;
+    /* [#8] Do (LAB_8003f8bc) — 4-byte header, NO predicate. Counter++, push
+     * loop-back = body (pc+4), exit = body + block_length (lh @pc+2). */
+    int16_t block_len = scd_read_le_s16(t->pc + 2);
+    if (t->loop_count < 4) {
+        int idx = t->loop_count++;
+        const uint8_t *body = t->pc + 4;
+        t->loop_back[idx] = body;
+        t->loop_exit[idx] = body + block_len;
+        /* PSX also writes a break-flag byte op[+4] → thread+depth*4+0xc+idx; no
+         * port opcode reads thread+0x4 yet — omitted (NOCH OFFEN). */
     }
     t->pc += 4;
-    return 1;
+    return SCD_R_CONTINUE;
 }
 
 /* 0x12 — Edwhile: end-of-body marker.
@@ -604,29 +633,19 @@ static int op_do(scd_thread_t *t)
  * common Ck case directly (most Sub-script wait loops poll a flag).    */
 static int op_edwhile(scd_thread_t *t)
 {
-    uint8_t cond_len = t->pc[1];
-    const uint8_t *cond = t->pc + 2;
-    int cond_true = 0;
-    if (cond_len == 4 && cond[0] == SCD_OP_CK) {
-        /* Ck(zone, idx, expected_value) — true if flag == expected */
-        uint8_t zone     = cond[1];
-        uint8_t idx      = cond[2];
-        uint8_t expected = cond[3];
-        cond_true = (re15_game_flag_get(zone, idx) == (int)expected) ? 1 : 0;
-    } else {
-        /* Unknown condition — treat as FALSE to exit loop (prevent hang).
-         * Visible misbehavior surfaces the gap; silent-skip would mask. */
-        cond_true = 0;
+    /* [#8] Edwhile (LAB_8003f930) — 2-byte header + AND/OR predicate chain.
+     * chain_len = pc[1]; each link runs via the real dispatcher. TRUE → jump to
+     * loop-back (+0x20); FALSE → Counter-- and fall through (PC sits at chain end).
+     * Replaces the old Ck-only special case (now byte-true for any predicate). */
+    uint8_t chain_len = t->pc[1];
+    t->pc += 2;
+    int loop = scd_eval_pred_chain(t, chain_len);
+    if (loop && t->loop_count > 0) {
+        t->pc = t->loop_back[t->loop_count - 1];
+    } else if (t->loop_count > 0) {
+        t->loop_count--;
     }
-    if (cond_true && t->do_depth > 0) {
-        /* Loop again — jump back to body start. */
-        t->pc = t->do_stack[t->do_depth - 1];
-    } else {
-        /* Exit loop — pop stack, advance past Edwhile + condition. */
-        if (t->do_depth > 0) t->do_depth--;
-        t->pc += 2 + cond_len;
-    }
-    return 1;
+    return SCD_R_CONTINUE;
 }
 
 /* 0x0D — For: begin a counted loop.
@@ -646,23 +665,26 @@ static int op_edwhile(scd_thread_t *t)
  * `0D 00 06 00 9C 00` decodes as block_length=6, count=156. */
 static int op_for(scd_thread_t *t)
 {
-    if (t->for_depth < 4) {
-        const uint8_t *body_pc = t->pc + 6;
-        uint16_t count = (uint16_t)t->pc[4] | ((uint16_t)t->pc[5] << 8);
-        if (count > 0) {
-            t->for_body[t->for_depth] = body_pc;
-            t->for_count[t->for_depth] = count;
-            t->for_depth++;
-        } else {
-            /* count=0 → skip the loop entirely. Use block_length to jump
-             * past the body + Next. */
-            uint16_t block_len = (uint16_t)t->pc[2] | ((uint16_t)t->pc[3] << 8);
-            t->pc += 6 + block_len;
-            return 1;
-        }
+    /* [#8] For (LAB_8003f540) — 6-byte header [0x0D][_][block_len LE][count LE].
+     * Counter++, loop-back = body (pc+6), exit = body + block_len, For-count = count.
+     * count==0 → skip the block via block_len (kept as a defensive port early-out;
+     * byte-true For would push count=0 → Next underflows to 0xFFFF = 65536 iters,
+     * which no known RE1.5 script relies on and the dispatcher safety-cap bounds). */
+    int16_t  block_len = scd_read_le_s16(t->pc + 2);
+    uint16_t count     = (uint16_t)scd_read_le_s16(t->pc + 4);
+    const uint8_t *body = t->pc + 6;
+    if (count == 0) {
+        t->pc = body + block_len;
+        return SCD_R_CONTINUE;
+    }
+    if (t->loop_count < 4) {
+        int idx = t->loop_count++;
+        t->loop_back[idx]    = body;
+        t->loop_exit[idx]    = body + block_len;
+        t->loop_for_cnt[idx] = count;
     }
     t->pc += 6;
-    return 1;
+    return SCD_R_CONTINUE;
 }
 
 /* 0x0E — Next: end of For block.
@@ -672,21 +694,89 @@ static int op_for(scd_thread_t *t)
  * else pop and fall through past the Next opcode. */
 static int op_next(scd_thread_t *t)
 {
-    if (t->for_depth > 0) {
-        int top = t->for_depth - 1;
-        if (t->for_count[top] > 0) {
-            t->for_count[top]--;
+    /* [#8] Next (LAB_8003f674) — 2 bytes. Decrement For-count; !=0 → jump to
+     * loop-back (+0x20); ==0 → Counter-- and PC += 2. */
+    if (t->loop_count > 0) {
+        int idx = t->loop_count - 1;
+        if (t->loop_for_cnt[idx] != 0) t->loop_for_cnt[idx]--;
+        if (t->loop_for_cnt[idx] != 0) {
+            t->pc = t->loop_back[idx];
+            return SCD_R_CONTINUE;
         }
-        if (t->for_count[top] > 0) {
-            /* Loop again. */
-            t->pc = t->for_body[top];
-            return 1;
-        }
-        /* Counter exhausted — pop and fall through. */
-        t->for_depth--;
+        t->loop_count--;
     }
     t->pc += 2;
-    return 1;
+    return SCD_R_CONTINUE;
+}
+
+/* [#8] Byte-true predicate chain (While LAB_8003f6f4 @0x8003f78c-810, Edwhile
+ * LAB_8003f930 @0x8003f964-9ec). Evaluates the opcode chain over `chain_len`
+ * bytes starting at t->pc. Each link runs via the REAL dispatcher s_op_table[op]
+ * (= PSX `jalr PTR_LAB_800744a8`) and advances t->pc itself; predicate handlers
+ * return SCD_R_CONTINUE(true)/SCD_R_IF_FALSE(false) → normalize to 0/1 BEFORE the
+ * bitwise AND/OR. Between links a u16 connector: ==0 → AND, !=0 → OR (PSX
+ * `and/or s2,s2,v0`). `<` guard (PSX uses `!=`) protects against a misaligned /
+ * op_unknown link overshooting chain_end. */
+static int scd_eval_pred_chain(scd_thread_t *t, uint8_t chain_len)
+{
+    const uint8_t *chain_end = t->pc + chain_len;
+    int acc = (s_op_table[*t->pc](t) == SCD_R_CONTINUE) ? 1 : 0;
+    while (t->pc < chain_end) {
+        uint16_t conn = (uint16_t)t->pc[0] | ((uint16_t)t->pc[1] << 8);
+        t->pc += 2;
+        if (t->pc >= chain_end) break;
+        int v = (s_op_table[*t->pc](t) == SCD_R_CONTINUE) ? 1 : 0;
+        acc = conn ? (acc | v) : (acc & v);
+    }
+    return acc;
+}
+
+/* [#8] While (LAB_8003f6f4) — 4-byte header + predicate chain. Counter++, loop-back
+ * = the While header (Ewhile jumps back here to re-test), exit = (pc+4)+block_len.
+ * Chain TRUE → fall into the body; FALSE → PC = exit, Counter--. */
+static int op_while(scd_thread_t *t)
+{
+    uint8_t chain_len = t->pc[1];
+    int16_t block_len = scd_read_le_s16(t->pc + 2);
+    int idx = -1;
+    if (t->loop_count < 4) {
+        idx = t->loop_count++;
+        t->loop_back[idx] = t->pc;                 /* re-enter While → re-test */
+        t->loop_exit[idx] = (t->pc + 4) + block_len;
+    }
+    t->pc += 4;
+    if (scd_eval_pred_chain(t, chain_len)) return SCD_R_CONTINUE;   /* TRUE → body */
+    if (idx >= 0) { t->pc = t->loop_exit[idx]; t->loop_count--; }   /* FALSE → exit */
+    return SCD_R_CONTINUE;
+}
+
+/* [#8] Ewhile (LAB_8003f878) — 2 bytes, UNCONDITIONAL loop-back to the While header
+ * (which re-tests), then Counter-- (balances While's re-entry ++). */
+static int op_ewhile(scd_thread_t *t)
+{
+    if (t->loop_count > 0) {
+        int idx = t->loop_count - 1;
+        t->pc = t->loop_back[idx];
+        t->loop_count--;
+        return SCD_R_CONTINUE;
+    }
+    t->pc += 2;
+    return SCD_R_CONTINUE;
+}
+
+/* [#8] Break (LAB_8003fca8) — 2 bytes. Jump to the innermost loop's exit (+0x60)
+ * and pop (Counter--). (PSX also restores a break-flag byte to thread+0x4 — no
+ * port consumer found yet, omitted.) */
+static int op_break(scd_thread_t *t)
+{
+    if (t->loop_count > 0) {
+        int idx = t->loop_count - 1;
+        t->pc = t->loop_exit[idx];
+        t->loop_count--;
+        return SCD_R_CONTINUE;
+    }
+    t->pc += 2;
+    return SCD_R_CONTINUE;
 }
 
 /* 0x04 — Evt_exec: spawn sub_scd[sub_id] in event slot (RE2 FUN_80053138).
@@ -946,6 +1036,10 @@ static int op_cut_chg(scd_thread_t *t)
     g_scd.cam_arg2          = 0;
     g_scd.cam_arg3          = 0;
     g_scd.cam_change_pending = 1;
+    /* byte-true LAB_800402a0 @0x800402d4 `ori DAT_800aca3c,0x100` -> Bit 0x100 SET =
+     * Auto-Cam-Scan AUS (Gate @0x8001cce0 `andi 0x100`->bne ueberspringt jal FUN_80014230).
+     * cut_auto_enabled ist die Port-Inverse des Bits. [#16] */
+    g_scd.cut_auto_enabled = 0;
 #ifdef RE15_PLATFORM_PC
     fprintf(stderr, "[scd F%d] Cut_chg(%u)\n",
             (int)g_engine.frame_count, (unsigned)t->pc[1]);
@@ -1218,7 +1312,10 @@ static int op_ck(scd_thread_t *t)
     uint8_t  idx   = t->pc[2];
     uint8_t  value = t->pc[3];
     int      got   = re15_game_flag_get(zone, idx);
-    int      cond  = (got == (int)value) ? 1 : 0;
+    /* byte-true LAB_8003fcf4: cond = (flag!=0) XOR (value==0)  (@0x8003fd48 `sltu`
+     * = flag-Bool, @0x8003fd50 `xor` mit a1=(value==0)@0x8003fd30). Korrigiert den
+     * value>=2-Fall; identisch zum alten (got==value) fuer value in {0,1}. [#19] */
+    int      cond  = ((got != 0) ^ (value == 0)) ? 1 : 0;
     t->locals[0]   = (uint8_t)cond;   /* vestigial; op_if no longer reads it */
     t->pc += 4;
     /* byte-true: Ck IS the predicate (LAB_8003fcf4 returns (flag!=0)^(expected==0)).
@@ -1767,7 +1864,10 @@ static int op_aot_set(scd_thread_t *t)
             re15_aot_set(slot, type, event_id, cx, cz, hw, hh);
         }
     }
-    t->pc += 20;
+    /* PC-Vorschub konditional pc[3]&0x80: 28 vs 20. Byte-true: LAB_80040534 @0x80040590
+     * `lbu v0,0x3(v1)`; @0x80040598 `andi 0x80`; @0x8004059c `beq` -> +0x1c(28)/+0x14(20)
+     * (ghidra1_V2.txt). [BYTE_TRUE_AUDIT #5] */
+    t->pc += (t->pc[3] & 0x80) ? 28 : 20;
     return 1;
 }
 
@@ -2071,34 +2171,91 @@ static int op_member_set(scd_thread_t *t)
  * dispatch code (FALSE pops the If block-stack). ROOM1170 uses no Cmp. */
 static int op_cmp(scd_thread_t *t)
 {
-    /* var index = pc[1]. (2026-06-17: a one-line trial change to pc[2] — citing engine
-     * LAB_8003ff68 var=pc[2] — was REVERTED: it altered ROOM1170's boot Cmp branches and
-     * crashed the PSX boot at first frame [psxspu timeout → PC=0], while the PC [SDL audio]
-     * tolerated it. The re-examine does NOT need it (ROOM1150 sub01 Cmp has pc[1]==pc[2]==0).
-     * If pc[2] is truly the engine's var, re-introduce it ONLY with a PSX-verified boot — the
-     * targetType/array-selector semantics of pc[1] vs pc[2] need RE before changing this.) */
-    /* var index = pc[1]. (The engine LAB_8003ff68 reads the var from pc[2]; pc[1] is the
-     * targetType/array-selector. Our pc[1] read = effectively always work_vars[0]. This is a
-     * latent gameplay-Cmp discrepancy — harmless for the ROOM1150 re-examine gate where
-     * pc[1]==pc[2]==0. NOT changed to pc[2] here: that alters every gameplay Cmp's var and
-     * needs interactive verification; defer to a dedicated gameplay-Cmp pass.) */
-    uint8_t var_idx = t->pc[1];
+    /* [#6] LAB_8003ff68 (Cmp 0x23): var index = pc[2] — `andi 0xff` @0x8003ff80 takes the
+     * LOW byte of the u16 LE @pc[2]. pc[1] is NOT read by this handler (the array/targetType
+     * selector belongs to the Ck family 0x1F/0x20/0x21, not to Cmp). The prior PSX-boot crash
+     * came from a HALF-fix (var moved to pc[2] but the operator table left wrong); var +
+     * operators are byte-true here TOGETHER. ROOM1170 (boot) has no Cmp → boot path unaffected;
+     * ROOM1150's gate has pc[1]==pc[2]==0. PSX-boot still worth a runtime re-check. */
+    uint8_t var_idx = t->pc[2];
     uint8_t op      = t->pc[3];
     int16_t imm     = scd_read_le_s16(&t->pc[4]);
     int16_t v       = g_scd.work_vars[var_idx];
     int cond;
-    switch (op) {
+    switch (op) {                                  /* switchD_8003ffc0 {0:==,1:>,2:>=,3:<,4:<=,5:!=,6:&} */
     case 0: cond = (v == imm); break;
     case 1: cond = (v >  imm); break;
-    case 2: cond = (v <  imm); break;
-    case 3: cond = (v <= imm); break;
-    case 4: cond = (v >= imm); break;
+    case 2: cond = (v >= imm); break;              /* slt v0,a0,a1;xori @0x8003ffdc */
+    case 3: cond = (v <  imm); break;              /* slt v0,a0,a1      @0x8003ffe8 */
+    case 4: cond = (v <= imm); break;              /* slt v0,a1,a0;xori @0x8003fff0 */
     case 5: cond = (v != imm); break;
     case 6: cond = ((v & imm) != 0); break;
     default: cond = 0; break;
     }
     t->pc += 6;
     return cond ? SCD_R_CONTINUE : SCD_R_IF_FALSE;
+}
+
+/* ===== [#7] SCD work-variable ops (DAT_800b0fd0 = g_scd.work_vars, s16[256]) ===== */
+
+/* ALU helper — byte-true to FUN_80040140 @0x80040140 (12-entry jump table @0x80010c5c,
+ * sltiu op,0xc → op>=12 = no-op). Operand load width is load-bearing: ops 0,1,5,6,7,8,9,0xA
+ * load *dst via `lhu` (unsigned), ops 2,3,4,0xB via `lh` (signed). Result stored back via
+ * `sh` (low 16). DIV/MOD by 0 raise break 0x1c00 on PSX → mirror as "no write". */
+static void scd_work_alu(uint8_t op, int16_t *dst, int16_t imm)
+{
+    uint16_t u = (uint16_t)*dst;                          /* lhu path */
+    int16_t  s = *dst;                                    /* lh  path */
+    unsigned shift = (unsigned)((uint16_t)imm & 0x1f);    /* sllv/srav use low 5 bits */
+    switch (op) {
+    case 0:  *dst = (int16_t)(u + (uint16_t)imm);                       break; /* ADD  addu  */
+    case 1:  *dst = (int16_t)(u - (uint16_t)imm);                       break; /* SUB  subu  */
+    case 2:  *dst = (int16_t)((int32_t)s * (int32_t)imm);               break; /* MUL  mult  */
+    case 3:  if (imm != 0) *dst = (int16_t)((int32_t)s / (int32_t)imm); break; /* DIV  (÷0→break) */
+    case 4:  if (imm != 0) *dst = (int16_t)((int32_t)s % (int32_t)imm); break; /* MOD  (÷0→break) */
+    case 5:  *dst = (int16_t)(u | (uint16_t)imm);                       break; /* OR   or    */
+    case 6:  *dst = (int16_t)(u & (uint16_t)imm);                       break; /* AND  and   */
+    case 7:  *dst = (int16_t)(u ^ (uint16_t)imm);                       break; /* XOR  xor   */
+    case 8:  *dst = (int16_t)(~u);                                      break; /* NOT  nor zero (imm ignored) */
+    case 9:  *dst = (int16_t)(u << shift);                              break; /* SHL  sllv  */
+    case 10: *dst = (int16_t)((uint16_t)((uint32_t)u >> shift));        break; /* SHR  lhu+srav (logical) */
+    case 11: *dst = (int16_t)((int32_t)s >> shift);                     break; /* SHR  lh +srav (arithmetic) */
+    default:                                                            break; /* op>=12 → no write */
+    }
+}
+
+/* 0x24 — Save: work_vars[pc[1]] = LE_s16(pc[2..3]); PC += 4. (LAB_80040018) */
+static int op_save(scd_thread_t *t)
+{
+    g_scd.work_vars[t->pc[1]] = scd_read_le_s16(&t->pc[2]);
+    t->pc += 4;
+    return SCD_R_CONTINUE;
+}
+
+/* 0x25 — Copy: work_vars[pc[1]] = work_vars[pc[2]]; PC += 3. (LAB_8004004c) */
+static int op_copy(scd_thread_t *t)
+{
+    g_scd.work_vars[t->pc[1]] = g_scd.work_vars[t->pc[2]];
+    t->pc += 3;
+    return SCD_R_CONTINUE;
+}
+
+/* 0x26 — Calc: op=pc[2], dst=pc[3], imm=LE_s16(pc[4..5]);
+ *   work_vars[dst] = ALU(op, work_vars[dst], imm); PC += 6. (LAB_8004008c) */
+static int op_calc(scd_thread_t *t)
+{
+    scd_work_alu(t->pc[2], &g_scd.work_vars[t->pc[3]], scd_read_le_s16(&t->pc[4]));
+    t->pc += 6;
+    return SCD_R_CONTINUE;
+}
+
+/* 0x27 — Calc2: op=pc[1], dst=pc[2], src=pc[3];
+ *   work_vars[dst] = ALU(op, work_vars[dst], work_vars[src]); PC += 4. (LAB_800400dc) */
+static int op_calc2(scd_thread_t *t)
+{
+    scd_work_alu(t->pc[1], &g_scd.work_vars[t->pc[2]], g_scd.work_vars[t->pc[3]]);
+    t->pc += 4;
+    return SCD_R_CONTINUE;
 }
 
 /* Member_cmp (0x3E) — 6 bytes.
@@ -2109,25 +2266,30 @@ static int op_member_cmp(scd_thread_t *t)
 {
     uint8_t  member_id = t->pc[2];
     uint8_t  cmp_op    = t->pc[3];
-    int16_t  arg       = scd_read_be_s16(&t->pc[4]);
+    /* byte-true: LAB_80041290 @0x800412ac `lh s1,0x4(v0)` = signed LITTLE-endian
+     * (PSX lh), identisch zu Member_set @0x800410d4. War faelschlich BE. [#12] */
+    int16_t  arg       = scd_read_le_s16(&t->pc[4]);
     int re2_id = re15_to_re2_member_id((int)member_id);
     int8_t   ws        = (t->work_slot >= 0) ? t->work_slot : g_scd.work_slot;
     int32_t  cur       = (ws >= 0 && re2_id >= 0)
                        ? re15_actor_get_member((int)ws, (uint8_t)re2_id)
                        : 0;
     int      result    = 0;
-    switch (cmp_op) {
-    case 0: result = (cur == (int32_t)arg); break;
-    case 1: result = (cur != (int32_t)arg); break;
-    case 2: result = (cur <  (int32_t)arg); break;
-    case 3: result = (cur >  (int32_t)arg); break;
-    default: result = 0; break;
+    switch (cmp_op) {                                    /* Operator-Tabelle LAB_80041290 @0x800412f8.. */
+    case 0: result = (cur == (int32_t)arg); break;       /* ==  (0x800412f8) */
+    case 1: result = (cur >  (int32_t)arg); break;       /* >   (0x80041308) */
+    case 2: result = (cur >= (int32_t)arg); break;       /* >=  (0x8004130c) */
+    case 3: result = (cur <  (int32_t)arg); break;       /* <   (0x8004131c) */
+    case 4: result = (cur <= (int32_t)arg); break;       /* <=  (0x80041320) */
+    case 5: result = (cur != (int32_t)arg); break;       /* !=  (0x8004132c) */
+    case 6: result = ((cur & (int32_t)arg) != 0); break; /* &   (0x80041338) */
+    default: result = 0; break;                          /* cmp_op>=7 -> false (sltiu<0x7) */
     }
     t->locals[0] = (uint8_t)(result ? 1 : 0);
     t->pc += 6;
     /* byte-true: Member_cmp IS the predicate → return its boolean (FALSE makes the
-     * dispatcher pop the If block-stack). Value path stays BIG-ENDIAN (genuinely
-     * mixed-endian per the catalog, not a blanket-LE operand). */
+     * dispatcher pop the If block-stack). Value path ist LITTLE-ENDIAN (lh @0x800412ac),
+     * Operatoren 0..6 per switchD @0x800412f8 (==,>,>=,<,<=,!=,&). [#12] */
     return result ? SCD_R_CONTINUE : SCD_R_IF_FALSE;
 }
 
@@ -2342,7 +2504,12 @@ static int op_door_aot_set(scd_thread_t *t)
          * interaction on player_band == obj[0x82] (FUN_8002bd44 @0x8002bf38). */
         g_aot.door_params[slot].band       = t->pc[4];
     }
-    t->pc += 32;
+    /* PC-Vorschub konditional pc[3]&0x80: 4P-Tür (40 B) vs Standard (32 B). Byte-true:
+     * LAB_800405bc @0x80040618 `lbu v0,0x3(v1)`; @0x80040620 `andi 0x80`; @0x80040624 `beq`
+     * -> @0x80040630 +0x28(40) wenn Bit gesetzt, sonst @0x80040634 +0x20(32) (ghidra1_V2.txt).
+     * STAGE1-Türen (z.B. 1240) haben pc[3]=0x31 (Bit clear) -> bleiben 32. 4P-Feld-Offsets
+     * (Rect-Punkte ab +0x20) = Folgearbeit; hier nur PC-Sync. [BYTE_TRUE_AUDIT #5] */
+    t->pc += (t->pc[3] & 0x80) ? 40 : 32;
     return 1;
 }
 
@@ -2379,7 +2546,10 @@ static int op_item_aot_set(scd_thread_t *t)
     int32_t hw = (int32_t)(rect_w < 0 ? -rect_w : rect_w) / 2;
     int32_t hh = (int32_t)(rect_d < 0 ? -rect_d : rect_d) / 2;
     re15_aot_set_item((int)slot, cx, cz, hw, hh, item_t, amount);
-    t->pc += 22;
+    /* PC-Vorschub konditional pc[3]&0x80: 30 vs 22. Byte-true: LAB_80040644 @0x8004065c
+     * `lbu v0,0x3(a2)`; @0x80040664 `andi 0x80`; @0x80040668 `beq` -> +0x1e(30)/+0x16(22)
+     * (ghidra1_V2.txt). [BYTE_TRUE_AUDIT #5] */
+    t->pc += (t->pc[3] & 0x80) ? 30 : 22;
     return 1;
 }
 
@@ -2584,10 +2754,13 @@ int op_sce_espr_on(scd_thread_t *t)
     return 1;
 }
 
-/* Sce_espr_kill (0x4C) — 5 bytes. Kill sprite by id. */
+/* Sce_espr_kill (0x4C) — 18 bytes (war fälschlich 5). Byte-true: dispatch table
+ * 0x800745d8→LAB_80040858, `addiu v1,v1,0x12` @0x80040890 = +18 (ghidra1_V2.txt;
+ * Store nach DAT_800b2360-Slot). Voll-Semantik (Slot-Tabelle) = 2. Runde; dieser
+ * Stub hält nur den PC byte-genau in Sync. [BYTE_TRUE_AUDIT #4] */
 int op_sce_espr_kill(scd_thread_t *t)
 {
-    t->pc += 5;
+    t->pc += 18;
     return 1;
 }
 
@@ -2631,14 +2804,20 @@ int op_cut_old(scd_thread_t *t)
 {
     g_scd.cam_id = g_scd.cam_id_prev;
     g_scd.cam_change_pending = 1;
+    /* byte-true FUN_8004032c @0x8004032c loescht DAT_800aca3c Bit 0x100 -> Auto-Cam-Scan
+     * AN. Port-Inverse: cut_auto_enabled = 1. [#16] */
+    g_scd.cut_auto_enabled = 1;
     t->pc += 1;
     return 1;
 }
 
-/* Flr_set (0x38) — 3 bytes [op, idx, value]. Update floor flag. */
+/* Flr_set (0x38) — 12 bytes (war fälschlich 3). Byte-true: dispatch table
+ * 0x80074588→LAB_800417ac, `addiu a1,a1,0xc` @0x800417f0 = +12 (ghidra1_V2.txt;
+ * Handler liest 4 Halbwörter Floor/SCA). Voll-Semantik = 2. Runde; dieser Stub
+ * hält nur den PC byte-genau in Sync. [BYTE_TRUE_AUDIT #4] */
 int op_flr_set(scd_thread_t *t)
 {
-    t->pc += 3;
+    t->pc += 12;
     return 1;
 }
 

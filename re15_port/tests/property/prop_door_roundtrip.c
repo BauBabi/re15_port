@@ -13,6 +13,44 @@
  * beim Vergleich ausgelassen.
  *
  * **Validates: Requirements 3.1, 3.2, 4.1**
+ *
+ * --------------------------------------------------------------------------
+ * API-MIGRATION (2026-06-28, Engine-Transplant):
+ *
+ * Der frühere Test manipulierte direkt einen internen `re15_aot_slot_t`, der
+ * im Zuge des Engine-Transplants ENTFERNT wurde. Die Test-INTENTION bleibt
+ * unverändert: für den SCD-Opcode `Door_aot_set_4p` (0x68, 40 Bytes) müssen
+ * alle bedeutsamen Tür-Felder einen Parse→Speichern→Serialize-Roundtrip
+ * unbeschadet überstehen.
+ *
+ * Statt des entfernten internen Structs nutzt der Test jetzt die ÖFFENTLICHE
+ * Setter-API `re15_aot_set_door(...)` (re15_aot.h) und liest danach den
+ * öffentlichen Laufzeit-Zustand `g_aot.slots[slot]` + `g_aot.door_params[slot]`
+ * zurück. Felder, die der Setter NICHT befüllt (Quad-Ecken, dest_stage,
+ * dest_room, floor-Band), werden über die öffentlichen Struct-Member von
+ * `g_aot` gesetzt — das sind keine entfernten Internals, sondern Teil der
+ * dokumentierten `re15_aot_state_t`.
+ *
+ * Alte API (entfernt)            ->  Neue öffentliche API (re15_aot.h)
+ * -----------------------------------------------------------------------
+ * re15_aot_slot_t                ->  re15_aot_t (g_aot.slots[]) +
+ *                                    re15_aot_door_params_t (g_aot.door_params[])
+ * AOT_TYPE_DOOR                  ->  RE15_AOT_TYPE_DOOR  (Wert weiterhin 1)
+ * slot.active / slot.type        ->  re15_aot_set_door() setzt active=1,
+ *                                    type=RE15_AOT_TYPE_DOOR (via re15_aot_set)
+ * slot.floor_band               ->  g_aot.door_params[].floor (Door_aot_set pc[3])
+ * slot.trigger_x[4]/trigger_z[4]->  g_aot.slots[].xs[4]/zs[4] (Quad-Ecken)
+ * slot.data.door.dest_stage      ->  g_aot.door_params[].dest_stage
+ * slot.data.door.dest_room       ->  g_aot.door_params[].dest_room
+ * slot.data.door.dest_cut        ->  g_aot.door_params[].target_cut
+ *                                    (kein eigenes dest_cut mehr; target_cut ist
+ *                                     das nächstliegende Pendant — Ziel-Cut)
+ * slot.data.door.spawn_x/y/z     ->  g_aot.door_params[].spawn_x/y/z (jetzt int32_t)
+ * slot.data.door.spawn_rot       ->  g_aot.door_params[].spawn_yaw_4096
+ *
+ * RE15_AOT_MAX ist von 32 auf 64 gewachsen; der Slot-Index-Generator wird
+ * unten passend angepasst.
+ * --------------------------------------------------------------------------
  */
 
 #include <stdio.h>
@@ -22,6 +60,10 @@
 #include <stdint.h>
 
 #include "re15_aot.h"
+
+/* g_aot ist in aot_common.c definiert; hier nur Deklaration aus re15_aot.h
+ * (extern re15_aot_state_t g_aot). Für reinen -fsyntax-only/Compile-Test
+ * reicht die Deklaration; beim vollen Build linkt aot_common.c die Definition. */
 
 /* =========================================================================
  * Konfiguration
@@ -75,83 +117,100 @@ static void test_write_le16s(uint8_t* p, int16_t val)
 }
 
 /* =========================================================================
- * Parse: Simuliert scd_op_door_aot_set_4p (ohne VM/Thread-Abhängigkeit)
+ * Parse: Simuliert scd_op_door_aot_set_4p über die ÖFFENTLICHE Setter-API.
  *
- * Liest 40 Bytes und füllt den AOT-Slot analog zum echten Handler.
+ * Liest 40 Bytes und installiert die Tür im AOT-Slot via re15_aot_set_door();
+ * Felder, die der Setter nicht abdeckt, werden über die öffentlichen
+ * g_aot-Struct-Member gesetzt.
  * ========================================================================= */
 
-static void door_parse(const uint8_t* p, re15_aot_slot_t* slot, int* out_slot_idx)
+static void door_parse(const uint8_t* p, int* out_slot_idx)
 {
     int i;
+    int slot = p[1];
 
-    memset(slot, 0, sizeof(re15_aot_slot_t));
+    *out_slot_idx = slot;
 
-    *out_slot_idx   = p[1];
-    slot->active     = 1;
-    slot->type       = AOT_TYPE_DOOR;
-    slot->floor_band = p[3];
+    /* Tür-spezifische Daten aus dem 40-Byte-Layout. spawn_* sind im Layout
+     * s16, passen daher problemlos in die (jetzt int32_t) Setter-Parameter. */
+    uint8_t dest_stage   = p[20];
+    uint8_t dest_room    = p[21];
+    uint8_t target_cut   = p[22];           /* alt: dest_cut -> jetzt target_cut */
+    int16_t spawn_x      = test_read_le16s(p + 24);
+    int16_t spawn_y      = test_read_le16s(p + 26);
+    int16_t spawn_z      = test_read_le16s(p + 28);
+    int16_t spawn_rot    = test_read_le16s(p + 30);
 
-    /* Trigger-Polygon: 4 X-Koordinaten (Offset 4..11) */
+    /* Öffentlicher Setter: setzt active=1, type=RE15_AOT_TYPE_DOOR, Rect
+     * (cx/cz/half_w/half_h), target_cut + spawn-Daten in door_params[slot].
+     * Das Rechteck (cx,cz,half_w,half_h) ist im 40-Byte-Layout nicht direkt
+     * kodiert (das Layout trägt nur die 4 Quad-Ecken); wir setzen es auf 0,
+     * die Quad-Ecken werden separat unten geschrieben. */
+    re15_aot_set_door(slot,
+                      /* cx */ 0, /* cz */ 0,
+                      /* half_w */ 0, /* half_h */ 0,
+                      target_cut,
+                      (int32_t)spawn_x, (int32_t)spawn_y, (int32_t)spawn_z,
+                      spawn_rot);
+
+    /* Felder außerhalb der Setter-Signatur über öffentliche Member setzen. */
+    re15_aot_door_params_t* d = &g_aot.door_params[slot];
+    d->dest_stage = dest_stage;
+    d->dest_room  = dest_room;
+    d->floor      = p[3];   /* alt: slot.floor_band -> door_params.floor (pc[3]) */
+
+    /* Trigger-Polygon: 4 X-Koordinaten (Offset 4..11) -> slots[].xs[4] */
+    re15_aot_t* a = &g_aot.slots[slot];
     for (i = 0; i < 4; i++) {
-        slot->trigger_x[i] = test_read_le16s(p + 4 + i * 2);
+        a->xs[i] = test_read_le16s(p + 4 + i * 2);
     }
-
-    /* Trigger-Polygon: 4 Z-Koordinaten (Offset 12..19) */
+    /* Trigger-Polygon: 4 Z-Koordinaten (Offset 12..19) -> slots[].zs[4] */
     for (i = 0; i < 4; i++) {
-        slot->trigger_z[i] = test_read_le16s(p + 12 + i * 2);
+        a->zs[i] = test_read_le16s(p + 12 + i * 2);
     }
-
-    /* Tür-spezifische Daten */
-    slot->data.door.dest_stage = p[20];
-    slot->data.door.dest_room  = p[21];
-    slot->data.door.dest_cut   = p[22];
-    /* p[23] = pad — wird NICHT im Slot gespeichert */
-
-    slot->data.door.spawn_x   = test_read_le16s(p + 24);
-    slot->data.door.spawn_y   = test_read_le16s(p + 26);
-    slot->data.door.spawn_z   = test_read_le16s(p + 28);
-    slot->data.door.spawn_rot = test_read_le16s(p + 30);
 }
 
 /* =========================================================================
- * Serialize: Schreibt den AOT-Slot zurück in 40 Bytes
+ * Serialize: Liest den AOT-Slot aus g_aot zurück in 40 Bytes.
  *
  * Felder, die beim Parsen verloren gehen (pad, reserved),
  * werden als 0 geschrieben.
  * ========================================================================= */
 
-static void door_serialize(const re15_aot_slot_t* slot, int slot_idx, uint8_t* out)
+static void door_serialize(int slot_idx, uint8_t* out)
 {
     int i;
+    const re15_aot_t* a            = &g_aot.slots[slot_idx];
+    const re15_aot_door_params_t* d = &g_aot.door_params[slot_idx];
 
     memset(out, 0, DOOR_AOT_SET_4P_SIZE);
 
     out[0] = DOOR_AOT_SET_4P_OPCODE;
     out[1] = (uint8_t)slot_idx;
-    out[2] = slot->type;         /* Wird als AOT_TYPE_DOOR gesetzt */
-    out[3] = slot->floor_band;
+    out[2] = a->type;          /* Wird vom Setter als RE15_AOT_TYPE_DOOR gesetzt */
+    out[3] = d->floor;
 
-    /* Trigger-Polygon X (Offset 4..11) */
+    /* Trigger-Polygon X (Offset 4..11) <- slots[].xs[4] */
     for (i = 0; i < 4; i++) {
-        test_write_le16s(out + 4 + i * 2, slot->trigger_x[i]);
+        test_write_le16s(out + 4 + i * 2, a->xs[i]);
     }
 
-    /* Trigger-Polygon Z (Offset 12..19) */
+    /* Trigger-Polygon Z (Offset 12..19) <- slots[].zs[4] */
     for (i = 0; i < 4; i++) {
-        test_write_le16s(out + 12 + i * 2, slot->trigger_z[i]);
+        test_write_le16s(out + 12 + i * 2, a->zs[i]);
     }
 
     /* Door-Daten */
-    out[20] = slot->data.door.dest_stage;
-    out[21] = slot->data.door.dest_room;
-    out[22] = slot->data.door.dest_cut;
+    out[20] = d->dest_stage;
+    out[21] = d->dest_room;
+    out[22] = d->target_cut;   /* alt: dest_cut */
     /* out[23] = pad — nicht im Slot, bleibt 0 */
 
-    /* Spawn-Position */
-    test_write_le16s(out + 24, slot->data.door.spawn_x);
-    test_write_le16s(out + 26, slot->data.door.spawn_y);
-    test_write_le16s(out + 28, slot->data.door.spawn_z);
-    test_write_le16s(out + 30, slot->data.door.spawn_rot);
+    /* Spawn-Position (int32_t -> s16, Werte stammen aus s16 und passen exakt) */
+    test_write_le16s(out + 24, (int16_t)d->spawn_x);
+    test_write_le16s(out + 26, (int16_t)d->spawn_y);
+    test_write_le16s(out + 28, (int16_t)d->spawn_z);
+    test_write_le16s(out + 30, d->spawn_yaw_4096);
 
     /* out[32..39] = reserved — bleibt 0 */
 }
@@ -182,15 +241,16 @@ static uint8_t rand_byte(void)
 
 /**
  * Generiert eine zufällige 40-Byte-Sequenz mit korrektem Opcode.
- * byte[0] = 0x68, byte[1] wird auf [0..31] begrenzt (gültiger Slot-Index).
- * Alle anderen Bytes sind zufällig.
+ * byte[0] = 0x68, byte[1] wird auf [0..RE15_AOT_MAX-1] begrenzt (gültiger
+ * Slot-Index). Alle anderen Bytes sind zufällig.
  */
 static void generate_random_door_bytes(uint8_t* buf)
 {
     int i;
 
     buf[0] = DOOR_AOT_SET_4P_OPCODE;
-    buf[1] = rand_byte() & 0x1F;  /* Slot-Index 0..31 (RE15_AOT_MAX_SLOTS - 1) */
+    /* Slot-Index 0..RE15_AOT_MAX-1 (RE15_AOT_MAX ist 64 = Zweierpotenz). */
+    buf[1] = (uint8_t)(rand_byte() % RE15_AOT_MAX);
 
     for (i = 2; i < DOOR_AOT_SET_4P_SIZE; i++) {
         buf[i] = rand_byte();
@@ -201,7 +261,7 @@ static void generate_random_door_bytes(uint8_t* buf)
  * Vergleichs-Hilfsfunktion: Nur bedeutsame Felder vergleichen
  *
  * Ignoriert:
- *   - Offset 2  (type): beim Parsen wird immer AOT_TYPE_DOOR gesetzt,
+ *   - Offset 2  (type): beim Parsen wird immer RE15_AOT_TYPE_DOOR gesetzt,
  *     unabhängig vom Eingabe-Byte. Wir vergleichen NICHT den type-Byte
  *     aus der Random-Eingabe, sondern prüfen nur die Roundtrip-Logik.
  *   - Offset 23 (pad): wird NICHT im Slot gespeichert
@@ -223,19 +283,19 @@ static int compare_meaningful_bytes(const uint8_t* input, const uint8_t* output,
     /* Byte 1: Slot-Index */
     if (input[1] != output[1]) { *mismatch_offset = 1; return 1; }
 
-    /* Byte 2: Type — Parser setzt immer AOT_TYPE_DOOR, daher prüfen wir
-     * dass die Ausgabe AOT_TYPE_DOOR (1) enthält (unabhängig von der Eingabe) */
-    if (output[2] != AOT_TYPE_DOOR) { *mismatch_offset = 2; return 1; }
+    /* Byte 2: Type — Parser setzt immer RE15_AOT_TYPE_DOOR, daher prüfen wir
+     * dass die Ausgabe RE15_AOT_TYPE_DOOR (1) enthält (unabhängig von der Eingabe) */
+    if (output[2] != RE15_AOT_TYPE_DOOR) { *mismatch_offset = 2; return 1; }
 
     /* Byte 3: Floor-Band */
     if (input[3] != output[3]) { *mismatch_offset = 3; return 1; }
 
-    /* Bytes 4..11: trigger_x[4] (4 × s16 LE) */
+    /* Bytes 4..11: xs[4] (Quad-X, 4 × s16 LE) */
     for (i = 4; i < 12; i++) {
         if (input[i] != output[i]) { *mismatch_offset = i; return 1; }
     }
 
-    /* Bytes 12..19: trigger_z[4] (4 × s16 LE) */
+    /* Bytes 12..19: zs[4] (Quad-Z, 4 × s16 LE) */
     for (i = 12; i < 20; i++) {
         if (input[i] != output[i]) { *mismatch_offset = i; return 1; }
     }
@@ -244,7 +304,7 @@ static int compare_meaningful_bytes(const uint8_t* input, const uint8_t* output,
     if (input[20] != output[20]) { *mismatch_offset = 20; return 1; }
     if (input[21] != output[21]) { *mismatch_offset = 21; return 1; }
 
-    /* Byte 22: dest_cut (now stored in slot) */
+    /* Byte 22: target_cut (vormals dest_cut, jetzt im door_params gespeichert) */
     if (input[22] != output[22]) { *mismatch_offset = 22; return 1; }
 
     /* Byte 23: pad — SKIP (nicht im Slot gespeichert) */
@@ -286,7 +346,6 @@ static int prop_door_roundtrip(void)
 {
     uint8_t input[DOOR_AOT_SET_4P_SIZE];
     uint8_t output[DOOR_AOT_SET_4P_SIZE];
-    re15_aot_slot_t slot;
     int slot_idx;
     int mismatch_offset;
     int i;
@@ -294,11 +353,11 @@ static int prop_door_roundtrip(void)
     for (i = 0; i < NUM_ITERATIONS; i++) {
         generate_random_door_bytes(input);
 
-        /* Parse */
-        door_parse(input, &slot, &slot_idx);
+        /* Parse → installiert die Tür im öffentlichen g_aot-Zustand */
+        door_parse(input, &slot_idx);
 
-        /* Serialize */
-        door_serialize(&slot, slot_idx, output);
+        /* Serialize → liest aus g_aot zurück */
+        door_serialize(slot_idx, output);
 
         /* Compare meaningful fields */
         if (compare_meaningful_bytes(input, output, i, &mismatch_offset) != 0) {
@@ -322,33 +381,32 @@ static int prop_door_roundtrip(void)
  *
  * Unabhängig von den Eingabedaten müssen folgende Invarianten gelten:
  * - Byte 0 = 0x68 (Opcode)
- * - Byte 2 = AOT_TYPE_DOOR (1)
- * - Bytes 22, 23, 32..39 = 0 (nicht gespeicherte Felder)
+ * - Byte 2 = RE15_AOT_TYPE_DOOR (1)
+ * - Bytes 23, 32..39 = 0 (nicht gespeicherte Felder)
  * ========================================================================= */
 
 static int prop_serialize_invariants(void)
 {
     uint8_t input[DOOR_AOT_SET_4P_SIZE];
     uint8_t output[DOOR_AOT_SET_4P_SIZE];
-    re15_aot_slot_t slot;
     int slot_idx;
     int i, j;
 
     for (i = 0; i < NUM_ITERATIONS; i++) {
         generate_random_door_bytes(input);
-        door_parse(input, &slot, &slot_idx);
-        door_serialize(&slot, slot_idx, output);
+        door_parse(input, &slot_idx);
+        door_serialize(slot_idx, output);
 
         PROP_ASSERT(output[0] == DOOR_AOT_SET_4P_OPCODE,
             "Iteration %d: output[0]=0x%02X (expected 0x68)", i, output[0]);
 
-        PROP_ASSERT(output[2] == AOT_TYPE_DOOR,
-            "Iteration %d: output[2]=0x%02X (expected AOT_TYPE_DOOR=%d)",
-            i, output[2], AOT_TYPE_DOOR);
+        PROP_ASSERT(output[2] == RE15_AOT_TYPE_DOOR,
+            "Iteration %d: output[2]=0x%02X (expected RE15_AOT_TYPE_DOOR=%d)",
+            i, output[2], RE15_AOT_TYPE_DOOR);
 
-        /* dest_cut wird jetzt im Slot gespeichert — Roundtrip prüfen */
+        /* target_cut (vormals dest_cut) wird im door_params gespeichert — Roundtrip prüfen */
         PROP_ASSERT(output[22] == input[22],
-            "Iteration %d: output[22]=0x%02X (expected 0x%02X, dest_cut roundtrip)",
+            "Iteration %d: output[22]=0x%02X (expected 0x%02X, target_cut roundtrip)",
             i, output[22], input[22]);
 
         /* pad muss 0 sein (nicht gespeichert) */
@@ -376,6 +434,9 @@ int main(int argc, char** argv)
 {
     (void)argc;
     (void)argv;
+
+    /* AOT-Subsystem in einen sauberen Anfangszustand bringen. */
+    re15_aot_init();
 
     /* Seed: Nutze Zeit für Varianz, drucke Seed für Reproduzierbarkeit */
     xorshift_state = (uint32_t)time(NULL);

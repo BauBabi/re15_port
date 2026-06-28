@@ -32,11 +32,91 @@
 #else
   #include <sys/stat.h>
   #include <unistd.h>
+  #include <dirent.h>
+  #include <strings.h>   /* strcasecmp (POSIX case-insensitive compare) */
   #define MKDIR(path) mkdir(path, 0755)
   #define RMDIR(path) rmdir(path)
 #endif
 
-#include "re15_io_common.h"
+/* ---------------------------------------------------------------------------
+ * Reaktivierung 2026-06-28: Die getestete Funktion re15_io_resolve_ci() und
+ * ihr Header re15_io_common.h existieren in der AKTUELLEN Engine NICHT mehr.
+ * Der Engine-Transplant ist auf das RE2-kanonische CD-Stream-Modell
+ * (re15_cdfs.h: re15_cd_load_file / re15_asset_read_file) umgestiegen; das
+ * frühere, plattformübergreifende I/O-Common-Modul (case-insensitive
+ * Pfadauflösung, Asset-Root, RDT-Pfadbau) wurde ersatzlos entfernt. Es liegt
+ * nur noch unter re15_port/_legacy_minimal/ (NICHT im Build).
+ *
+ * Es gibt KEIN aktuelles öffentliches Pendant für die case-insensitive
+ * Auflösung. Um die TEST-INTENTION (Property 2) zu erhalten, wird die exakte
+ * Auflösungs-Logik hier LOKAL nachgebildet — 1:1 übernommen aus dem Original
+ *   re15_port/_legacy_minimal/engine_src/io_common.c:30-83
+ * (Windows: FindFirstFileA; POSIX: opendir/readdir + strcasecmp). RE15_MAX_PATH
+ * = 260 stammt aus re15_io_common.h:15. KEIN _legacy_minimal-Header wird
+ * eingebunden.
+ * ------------------------------------------------------------------------- */
+
+/* Maximale Pfadlänge — zitiert aus _legacy_minimal/include/re15_io_common.h:15 */
+#define RE15_MAX_PATH 260
+
+/**
+ * Lokale Nachbildung von re15_io_resolve_ci().
+ *
+ * Verhalten 1:1 wie das Original io_common.c:30-83:
+ * Sucht im Verzeichnis `dir` nach einer Datei, deren Name case-insensitiv mit
+ * `filename` übereinstimmt, und kopiert den tatsächlichen Dateinamen (mit der
+ * Groß-/Kleinschreibung des Dateisystems) nach `out` (>= RE15_MAX_PATH).
+ *
+ * @return 0 bei Erfolg, -1 bei NULL-Argument oder nicht gefunden.
+ */
+static int test_resolve_ci(const char* dir, const char* filename, char* out)
+{
+    if (!dir || !filename || !out) {
+        return -1;
+    }
+
+#ifdef _WIN32
+    /* Windows: NTFS ist nativ case-insensitiv → FindFirstFileA liefert den
+     * tatsächlichen Dateinamen. (io_common.c:36-58) */
+    char search_path[RE15_MAX_PATH];
+    int written = snprintf(search_path, sizeof(search_path), "%s\\%s", dir, filename);
+    if (written < 0 || written >= (int)sizeof(search_path)) {
+        return -1;
+    }
+
+    WIN32_FIND_DATAA find_data;
+    HANDLE h = FindFirstFileA(search_path, &find_data);
+    if (h == INVALID_HANDLE_VALUE) {
+        return -1;
+    }
+
+    strncpy(out, find_data.cFileName, RE15_MAX_PATH - 1);
+    out[RE15_MAX_PATH - 1] = '\0';
+
+    FindClose(h);
+    return 0;
+#else
+    /* POSIX: case-sensitiv → Verzeichnis iterieren, strcasecmp-Match.
+     * (io_common.c:65-81) */
+    DIR* d = opendir(dir);
+    if (!d) {
+        return -1;
+    }
+
+    struct dirent* entry;
+    while ((entry = readdir(d)) != NULL) {
+        if (strcasecmp(entry->d_name, filename) == 0) {
+            strncpy(out, entry->d_name, RE15_MAX_PATH - 1);
+            out[RE15_MAX_PATH - 1] = '\0';
+            closedir(d);
+            return 0;
+        }
+    }
+
+    closedir(d);
+    return -1;
+#endif
+}
 
 /* =========================================================================
  * Test-Framework (minimale Inline-Version analog zu test_main.c)
@@ -199,7 +279,7 @@ static int prop_case_insensitive_resolve(void)
     TEST_ASSERT_MSG(result == 0, "Setup: Temporäres Verzeichnis konnte nicht erstellt werden");
 
     /* Referenz: Löse den originalen Dateinamen auf */
-    result = re15_io_resolve_ci(tmp_dir, KNOWN_FILENAME, reference_out);
+    result = test_resolve_ci(tmp_dir, KNOWN_FILENAME, reference_out);
     if (result != 0) {
         cleanup_temp_dir(tmp_dir, KNOWN_FILENAME);
         TEST_ASSERT_MSG(0, "Referenz-Auflösung mit Original-Dateinamen fehlgeschlagen");
@@ -210,7 +290,7 @@ static int prop_case_insensitive_resolve(void)
         random_case_permutation(KNOWN_FILENAME, permutation, sizeof(permutation));
 
         memset(resolved_out, 0, sizeof(resolved_out));
-        result = re15_io_resolve_ci(tmp_dir, permutation, resolved_out);
+        result = test_resolve_ci(tmp_dir, permutation, resolved_out);
 
         if (result != 0) {
             printf("  Iteration %d: Permutation '%s' konnte nicht aufgelöst werden\n",
@@ -248,15 +328,15 @@ static int prop_null_params_safe(void)
     int result;
 
     /* NULL dir */
-    result = re15_io_resolve_ci(NULL, "test.txt", out);
+    result = test_resolve_ci(NULL, "test.txt", out);
     TEST_ASSERT(result == -1);
 
     /* NULL filename */
-    result = re15_io_resolve_ci(".", NULL, out);
+    result = test_resolve_ci(".", NULL, out);
     TEST_ASSERT(result == -1);
 
     /* NULL out */
-    result = re15_io_resolve_ci(".", "test.txt", NULL);
+    result = test_resolve_ci(".", "test.txt", NULL);
     TEST_ASSERT(result == -1);
 
     return 0;
@@ -276,7 +356,7 @@ static int prop_nonexistent_file_returns_error(void)
     TEST_ASSERT_MSG(result == 0, "Setup fehlgeschlagen");
 
     /* Suche nach einer Datei die nicht existiert */
-    result = re15_io_resolve_ci(tmp_dir, "NONEXISTENT_FILE.XYZ", out);
+    result = test_resolve_ci(tmp_dir, "NONEXISTENT_FILE.XYZ", out);
     TEST_ASSERT(result == -1);
 
     /* Cleanup */

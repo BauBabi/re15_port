@@ -98,10 +98,17 @@ void re15_rotor_compute_pan(const int32_t cam_eye[3], const int32_t cam_tgt[3],
                             const int32_t heli_pos[3], int *out_volL, int *out_volR)
 {
     /* --- distance --- */
-    int64_t dx = (int64_t)cam_eye[0] - heli_pos[0];
-    int64_t dy = (int64_t)cam_eye[1] - heli_pos[1];
-    int64_t dz = (int64_t)cam_eye[2] - heli_pos[2];
-    uint32_t r  = rotor_isqrt((uint64_t)(dx*dx + dy*dy + dz*dz));
+    /* [#28] FUN_80045a64 @0x80045aa0..0x80045b38: byte-true distance is NOT a flat
+     * sqrt(dx²+dy²+dz²). The Y-term is cam.y - |cam.y - heli.y| (@0x80045af4 abs,
+     * @0x80045b20 subtract), and the radius is a NESTED SquareRoot0:
+     *   r = SquareRoot0( (cam.y-|cam.y-heli.y|)² + SquareRoot0(dx²+dz²)² ). */
+    int64_t dx = (int64_t)cam_eye[0] - heli_pos[0];          /* @0x80045aac */
+    int64_t dz = (int64_t)cam_eye[2] - heli_pos[2];          /* @0x80045acc */
+    int64_t ady = (int64_t)cam_eye[1] - heli_pos[1];         /* @0x80045af4 */
+    if (ady < 0) ady = -ady;                                 /* |cam.y-heli.y| @0x80045af8-b00 */
+    int64_t rxz = rotor_isqrt((uint64_t)(dx*dx + dz*dz));    /* SquareRoot0(dx²+dz²) @0x80045b04 */
+    int64_t dyt = (int64_t)cam_eye[1] - heli_pos[1] - ady;   /* cam.y-|cam.y-heli.y| @0x80045b20 */
+    uint32_t r  = rotor_isqrt((uint64_t)(dyt*dyt + rxz*rxz));/* SquareRoot0(dyt²+rxz²) @0x80045b34/b38 */
     int di = (int)(r / 250); if (di > 0x7f) di = 0x7f;
 
     /* --- azimuth pan: heli bearing minus camera-facing bearing (FUN_80045a64) --- */
@@ -127,8 +134,10 @@ void re15_rotor_compute_pan(const int32_t cam_eye[3], const int32_t cam_tgt[3],
         panL = b2 ? (int)SE_PAN(pi) : 0x89;
         panR = b2 ? 0x89 : (int)SE_PAN(pi);
     }
-    panL -= (int)SE_ATTEN(di); if (panL > 0x7f) panL = 0x7f; if (panL < 0) panL = 0;
-    panR -= (int)SE_ATTEN(di); if (panR > 0x7f) panR = 0x7f; if (panR < 0) panR = 0;
+    /* [#28] FUN_80045a64: final pan is MASKED with 0x7f (andi @0x80045d28 panL,
+     * @0x80045d3c panR), NOT clamped to [0,0x7f] — e.g. 0x89 & 0x7f = 0x09. */
+    panL = (panL - (int)SE_ATTEN(di)) & 0x7f;
+    panR = (panR - (int)SE_ATTEN(di)) & 0x7f;
 
     *out_volL = panL;
     *out_volR = panR;

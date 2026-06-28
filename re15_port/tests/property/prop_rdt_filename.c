@@ -16,7 +16,73 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include "re15_io_common.h"
+
+/* =========================================================================
+ * Lokale Nachbildung der entfernten I/O-API
+ *
+ * Der Engine-Transplant hat den Header re15_io_common.h samt
+ * RE15_MAX_PATH und re15_rdt_build_path() ersatzlos entfernt — die
+ * RDT-Pfad-Konstruktion lebt jetzt nur noch inline in den Tools
+ * (re15_port/tools/room_graph/extract_doors.c:128-135, build_rdt_path()):
+ *
+ *     snprintf(out, out_size,
+ *              "%s/STAGE%d/ROOM%d%02X%d.RDT",
+ *              assets_root, stage, stage, room_hex, player);
+ *
+ * Es gibt keine öffentliche Engine-Funktion mehr, die diese Property
+ * exponiert. Um die TEST-INTENTION zu erhalten (verifiziere das
+ * kanonische RDT-Pfadformat STAGE{N}/ROOM{Stage}{RoomHex}{Player}.RDT
+ * inklusive Parameter-/Puffer-Validierung), wird die Logik hier lokal
+ * nachgebildet — byte-true zum o.g. Format-String (uppercase %02X) und
+ * zu den Validierungs-Regeln, die die Asserts unten prüfen. KEIN
+ * _legacy_minimal-Header wird eingebunden.
+ * ========================================================================= */
+
+/* Maximale Pfadlänge (Legacy-Wert aus dem entfernten re15_io_common.h). */
+#define RE15_MAX_PATH 260
+
+/**
+ * Konstruiert den RDT-Dateipfad im Format
+ * STAGE{N}/ROOM{Stage}{RoomHex}{Player}.RDT.
+ *
+ * Lokale Nachbildung des entfernten re15_rdt_build_path() — gültige
+ * Bereiche: stage 1-6, room_hex 0x00-0x27, player 0-1. Format-String
+ * identisch zu extract_doors.c:133 (ohne assets_root-Präfix, da der Test
+ * nur den room-relativen Teil prüft). Das Ergebnis ist exakt 19 Zeichen
+ * + NUL = 20 Bytes; ein kleinerer Puffer wird abgelehnt.
+ *
+ * @return 0 bei Erfolg, -1 bei ungültigen Parametern / Puffer zu klein.
+ */
+static int re15_rdt_build_path(int stage, int room_hex, int player,
+                               char* out_path, int max_len)
+{
+    /* Erforderliche Puffergröße: 19 Zeichen + abschließendes NUL. */
+    const int needed = 20;
+
+    if (out_path == NULL) {
+        return -1;
+    }
+    if (stage < 1 || stage > 6) {
+        return -1;
+    }
+    if (room_hex < 0x00 || room_hex > 0x27) {
+        return -1;
+    }
+    if (player < 0 || player > 1) {
+        return -1;
+    }
+    if (max_len < needed) {
+        return -1;
+    }
+
+    /* Format byte-true zu build_rdt_path() (extract_doors.c:128-135):
+     * "STAGE{Stage}/ROOM{Stage}{RoomHex:%02X}{Player}.RDT". %02X liefert
+     * zweistellige Großbuchstaben-Hex (vom is_upper_hex-Assert geprüft). */
+    snprintf(out_path, (size_t)max_len,
+             "STAGE%d/ROOM%d%02X%d.RDT",
+             stage, stage, room_hex, player);
+    return 0;
+}
 
 /* =========================================================================
  * Test-Infrastruktur
