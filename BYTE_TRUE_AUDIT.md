@@ -111,6 +111,24 @@ Multi-Agent-Audit: 20 Subsysteme, 123 WRONG/MISSING-Verdachtsfälle, **104 adver
 ### #13 · CRITICAL · PORT · player-damage
 **Kompletter Player-Damage-Pfad FUN_80012d60 portieren (Handler + Damage-Tabelle + I-Frames + Death/Hit-State)**
 
+> ✅ **ERLEDIGT 2026-06-28 (Player-Branch, byte-true)** — `re15_port/engine/src/re15_damage.c` + `include/re15_damage.h`,
+> actor-Felder `hit_react`(+0x93)/`status_flags`(+0x98), Test `tests/unit/test_damage.c` (6 Tests, 27/27 ctest grün).
+> Verifiziert instruktionsgenau gegen `ghidra1_V2.txt:77607-77814` (Disasm == Decompile). `re15_player_take_damage()`:
+> Hit-Once-Gate (+0x93 bit0 @80012e30) → HP-=`re15_damage_table[type]` (@80012e44-64) → type<2 Bleed-Roll
+> (+0x98 bit0x2 via 2×RNG&1 @80012ea4) → state=2/sub_state_1=front-back/sub_state_2=0/+0x93|=1 → signed HP<0 → state=3.
+> **Audit-Korrektur:** Damage-Tabelle hat **11** Einträge, `DAT_8006f418[10]=0` (ghidra:223455-223478) — der Audit
+> listete nur 10 (`[10]=0` fehlte). Reaktions-Tabelle `DAT_8006f430` ebenfalls 11 (`[10]=0x14`).
+> **Caller verifiziert:** `FUN_80017fa4` (Gegner-Lunge, Dispatch-Tab @0x80071da4) ruft `FUN_80012d60(0x1f4, hitbox, 0)`
+> → `clear a2` @80018004 = **attack_type 0 = 10 dmg** (nicht "a2=2"; der `a2=2`-Audit-Wert gehört zum 2. Call-Site
+> @800185b8 = eine ANDERE Attack-Action, ungeprüft, deferred).
+> **DEFERRED (In-Game-Trigger):** Gegner-Attack-FSM (Dispatch @0x80071da4) + Actor-vs-Actor-Hitbox `FUN_8002b5d0`
+> sind NICHT portiert (Port hat keine Gegner-AI/Hitbox) → nichts ruft den Resolver in-game; er ist der getestete
+> byte-true Kern, den die Gegner-AI-Phase verdrahtet. Hit-Once-Clear-Trigger (`re15_player_clear_hit_guard`) gehört
+> zur selben deferred FSM. Front/Back-Hurt-Anim (sub_state_1) ist faithful aus der Disasm abgeleitet, aber
+> unbeobachtbar bis distinkte Hurt-Clips existieren. Bleed-RNG cycle-exakt unmöglich (leftover-Register), 1/4-Wkt
+> erhalten (Test: 507/2000). Verwandt: **#22** (Idle-FSM auf state==Idle gaten — Damage setzt state jetzt), **#41**
+> (Poison-Drain HP-=2; Bleed-Status `status_flags` wird jetzt gesetzt, der Drain selbst bleibt deferred).
+
 - **Ort:** `re15_port/engine/src/* (keine Implementierung, kein Aufrufer); player_common.c (nur Kommentare :69-74)`
 - **RE-Beleg:** FUN_80012d60 @0x80012d60: I-Frame-Gate DAT_800acae7&0x1 @0x80012e2c; HP-=dmg @0x80012e44-64 (HP=DAT_800acaee=player+0x9a); dmg-Tab DAT_8006f418 @0x8006f418 = {10,20,1000,1000,1000,50,100,200,300,1000}; Hit-State DAT_800aca58=2 @0x80012ebc; Death signed bgez @0x80012ee8 ->=3 @0x80012ef4; NPC-Clip-Tab DAT_8006f430={03,03,09,0A,0B,0E,0F,10,11,12,14}. Caller @0x80018008 (a2=0), @0x800185b8 (a2=2 Instakill).
 - **Fix:** re15_player_damage(type): I-Frame-Gate (player+0x93 bit0) prÃ¼fen; HP-=damage_table[type&0xff]; static const int16_t damage_table[10]={10,20,1000,1000,1000,50,100,200,300,1000}; type<2 Sonderfall (FUN_800453d0(10)+25%-Chance DAT_800acaec|=2); (int16_t)hp<0 -> Death-State=3 sonst Hit-State=2. DAT_800aca58-Ã„quivalent als Player-FSM-State. NPC-Damage generisch Ã¼ber actor+0x9a, DAT_8006f430 als Clip-LUT.

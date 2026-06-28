@@ -45,6 +45,19 @@ address. All rows below were verified against the in-repo disasm 2026-05-29 unle
 | 0x80040f40 (0x30 Add_speed) | actor@thread+0x154, vel[axis]@+0x158, add to actor pos/rot | ghidra1:151160-151175 | high |
 | 0x80041358 | Member_get accessor: actor field by idx 0..0x13 (pos+0x34/+0x3c, rot+0x6a, motion+0x1ba). Used by Member_cmp 0x3E | FUN_80041358.c | high |
 
+## Combat / player damage (verified 2026-06-28, ghidra1_V2.txt:77607-77814 + 223455-223490)
+| Addr | Purpose | Evidence | Conf |
+|------|---------|----------|------|
+| FUN_80012d60 | **Unified hit/damage resolver.** Tests one attack hitbox (param_2) via FUN_8002b5d0 against every active enemy (DAT_800acc2c, stride 0x1f4) AND the player block (DAT_800aca54), applies DAT_8006f418[param_3&0xff] damage. **Player branch** @80012e18-f04: hit-once gate +0x93 bit0 (@80012e30) → HP(s16@+0x9a)-=dmg (@80012e44-64) → type<2 bleed/poison +0x98 bit0x2 via 2×FUN_8001af20&1 (@80012ea4) → state+0x4=2(hurt)/+0x5=front-back+2/+0x6=0/+0x93\|=1 → signed HP<0 → state=3(death). **Ported** (player branch): re15_damage.c | ghidra1:77607-77814 | high |
+| DAT_8006f418 | Damage table (11×s16 LE) by attack_type: {10,20,1000,1000,1000,50,100,200,300,1000,**0**}. read @80012e54/80012ff4 | ghidra1:223455-223478 | high |
+| DAT_8006f430 | Hit-reaction code table (11 bytes) by attack_type: {03,03,09,0A,0B,0E,0F,10,11,12,14}. Written to enemy +0x5 @80012fe8 | ghidra1:223480-223490 | high |
+| FUN_80017fa4 | Enemy attack-action handler (dispatch table @0x80071da4). Builds hitbox @sp+0x10 from attacker(DAT_800b52c4) pos +0x28/+0x2a/+0x2c via FUN_8001c6e8, calls FUN_80012d60(0x1f4, hitbox, **0**) = attack_type 0 = 10 dmg (clear a2 @80018004). On hit → SE (FUN_800199d4/FUN_80045024) + reset attacker. 2nd call-site @800185b8 = other action (a2 unverified). **NOT ported** (no enemy AI) | ghidra1:84648-84717 | high |
+| FUN_8001a7a8 | Front/back hit selector: 1 if hit from player front hemisphere (±90°). ang=FUN_8001a6d4(hbX,hbZ,p+0x34,p+0x3c); ((ang-facing+0x400)&0xfff)<0x800. → hurt-anim sub-state (2=back,3=front) | ghidra1:87971-87992 | high |
+| FUN_8002b5d0 | Actor-vs-hitbox collision test (called per-target by FUN_80012d60). **NOT ported** — the deferred trigger for in-game player damage | ghidra1:118005 | med |
+| DAT_800acaee | **Player HP** (s16) = player block DAT_800aca54 + 0x9a. init 0x64=100 @0x80031718. Enemy HP at the same +0x9a offset | ghidra1:474973,77706 | high |
+| DAT_800acae7 | Player +0x93 hit-react byte: bit0x1 = "already hit this attack" guard (1 dmg/attack window) | ghidra1:474922,77705 | high |
+| DAT_800acaec | Player +0x98 status word: bit0x2 = bleed/poison (set on type<2 hit); bit0x4 gates the #41 poison-drain | ghidra1:77691-77695 | high |
+
 ## Stairs / floor-band traversal (verified 2026-06-10, ghidra1_V2.txt:136723-136901)
 Player-mode sub-states for the auto stair walk (outdoor ROOM1170 type-12/13 Aot zones).
 DAT_800aca5b = stair phase (0=idle, 1=stepping, 2=finalize). Per-band the body steps

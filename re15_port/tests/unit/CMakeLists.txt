@@ -43,6 +43,13 @@ target_include_directories(test_room_load PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_room_load COMMAND test_room_load)
 set_tests_properties(unit_room_load PROPERTIES TIMEOUT 30)
 
+# --- Player-Damage Unit-Test (#13 — byte-true Player-Branch von FUN_80012d60) ---
+add_executable(test_damage test_damage.c)
+target_link_libraries(test_damage PRIVATE re15_engine re15_test_support)
+target_include_directories(test_damage PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_damage COMMAND test_damage)
+set_tests_properties(unit_damage PROPERTIES TIMEOUT 30)
+
 # --- Audio VAB-Parsing Unit-Test (Requirement 6.6, 12.1) ---
 add_executable(test_audio_vab test_audio_vab.c)
 target_include_directories(test_audio_vab PRIVATE ${CMAKE_SOURCE_DIR}/include)

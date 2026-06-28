@@ -9,14 +9,15 @@ Kanonisches „lies-mich-zuerst" für die nächste Session. Ergänzt `BYTE_TRUE_
 - **Git:** HEAD = `0aed072b` (master, sauber). Der **Code-Work** (alle u.g. Fixes) liegt in
   `3b4be5b8 "Many things finished"`; `0aed072b` legt Skills/Doku/Cleanup obendrauf.
 - **Build/Test:** `cmake --build re15_port/build` + `ctest --test-dir re15_port/build --timeout 30`
-  → **26/26 grün** (mingw64 GCC + Ninja, `PATH` muss `C:\msys64\mingw64\bin` enthalten).
-- **Nächster Schritt „der Reihe nach":** **#13 Player-Damage** (FUN_80012d60, CRITICAL, komplett fehlend)
-  — HP-Global jetzt per Savestate laufzeit-verifizierbar. (#9 Switch + #10 Evt_chain/Evt_exec sind
-  ERLEDIGT — byte-true, build+ctest grün; siehe unten.)
+  → **27/27 grün** (mingw64 GCC + Ninja, `PATH` muss `C:\msys64\mingw64\bin` enthalten).
+- **Nächster Schritt „der Reihe nach":** **#11 Member-id-Tabelle** (CRITICAL, scd-actor-model) — die
+  RE2-Heuristik schreibt id12→Leon.y (138) statt +0x09 → Spieler unter den Boden; 1:1-Tabelle aus
+  FUN_8004116c. Eng gekoppelt mit **#12** (Member_cmp Operator-Tabelle + BE→LE). (#9 Switch + #10
+  Evt_chain/Evt_exec + **#13 Player-Damage** sind ERLEDIGT — byte-true, build+ctest grün; siehe unten.)
 - **Arbeitsweise:** jeden Audit-Fix VOR Anwendung per Agent gegen die Disasm verifizieren
   (≈70 % der Audit-Werte waren ungenau), dann anwenden → build → ctest.
 
-## Diese Session geliefert (alles gebaut + 26/26 ctest grün)
+## Diese Session geliefert (alles gebaut + 27/27 ctest grün)
 
 ### Byte-true Fixes — Wave 2 (#28/#32/#34/#36)
 - **#28** Rotor-SE (rotor_common.c): Pan `& 0x7f` statt clamp (andi @0x80045d28/d3c); Distanz mit
@@ -86,6 +87,26 @@ Kanonisches „lies-mich-zuerst" für die nächste Session. Ergänzt `BYTE_TRUE_
   unverändert → keine Regression.
 - **Verifikation:** eigener Disasm-Trace + Agent (4/4 Claims CONFIRMED inkl. FUN_8003edec-Felder + 5 DAT_800b3f7a-Writer).
   Neue Tests `test_evt_chain_reinit` + `test_evt_exec_direct_slot` (RDT-Mock). **26/26 ctest grün.**
+
+### #13 — Player-Damage (KOMPLETT für Player-Branch, byte-true)
+- **Neu:** `engine/src/re15_damage.c` + `include/re15_damage.h`; actor-Felder `hit_react`(+0x93)/`status_flags`(+0x98).
+  `re15_player_take_damage(p, attack_type, src_x, src_z)` = Player-Branch von **FUN_80012d60** (@80012e18-f04).
+- **Mechanik (instruktionsgenau, `ghidra1_V2.txt:77607-77814`, Disasm == Decompile):** Hit-Once-Gate
+  `+0x93 bit0` (@80012e30 → 1 Treffer/Attacke) → `HP -= re15_damage_table[type]` (HP=s16@+0x9a, @80012e44-64) →
+  `type<2`: Bleed/Gift-Roll `+0x98 bit0x2` via 2×RNG&1 (@80012ea4) + SE#10 (deferred) → state=2(hurt) /
+  sub_state_1=Front/Back+2 / sub_state_2=0 / `+0x93|=1` → **signed HP<0 → state=3(death)**, sub-states 0.
+- **Tabellen byte-true:** `DAT_8006f418` (dmg) = **{10,20,1000,1000,1000,50,100,200,300,1000,0}** — **11** Einträge
+  (`[10]=0`, ghidra:223455-223478; der Audit listete nur 10). `DAT_8006f430` (Reaktion) = {03,03,09,0A,0B,0E,0F,10,11,12,14}.
+- **Caller:** `FUN_80017fa4` (Gegner-Lunge, Dispatch-Tab @0x80071da4) → `FUN_80012d60(0x1f4, hitbox, 0)`,
+  `clear a2` @80018004 = **attack_type 0 = 10 dmg** (Zombie-Biss). Hitbox = Angreifer-Pos +0x28/+0x2a/+0x2c via FUN_8001c6e8.
+- **DEFERRED (ehrlich):** Gegner-Attack-FSM (@0x80071da4) + Actor-Hitbox `FUN_8002b5d0` sind NICHT portiert (Port hat
+  keine Gegner-AI/Hitbox) → nichts ruft den Resolver in-game; er ist der getestete byte-true Kern für die Gegner-AI-Phase.
+  Hit-Once-Clear (`re15_player_clear_hit_guard`) + 2. Call-Site @800185b8 (Audit „a2=2 Instakill", ungeprüft) = selbe FSM.
+  Front/Back-Anim faithful abgeleitet, unbeobachtbar bis Hurt-Clips. Bleed-RNG cycle-exakt unmöglich (leftover-Register),
+  1/4-Wkt erhalten. Verwandt: **#22** (Idle-FSM auf state==Idle gaten), **#41** (Poison-Drain HP-=2 — Status wird jetzt gesetzt).
+- **Verifikation:** eigener Disasm-Trace (LAB-für-LAB) + Damage-/Reaktions-Tabelle direkt aus den Daten-Bytes gelesen.
+  Test `tests/unit/test_damage.c` (6 Tests: 10-dmg-Biss, Hit-Once-Sperre+Re-arm, HP<0→death, Instakill, Bleed-Gate
+  507/2000≈1/4, Tabelle byte-true). **27/27 ctest grün; Headless-Boot ~10s ohne Crash.**
 
 ## Tote Themen (NICHT wieder aufmachen)
 - **„Pixel-Verschiebung"**: Der Nutzer hat bestätigt — es gibt KEINE sichtbare. Render-Math

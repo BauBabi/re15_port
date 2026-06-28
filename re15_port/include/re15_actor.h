@@ -49,6 +49,16 @@ typedef struct {
     int16_t  rot_y;        /* ID 15 (0xF) → rot_y   (RE2 +0x76, 4096=360°)*/
     int16_t  rot_z;        /* ID 16 (0x10)→ rot_z   (RE2 +0x78)           */
     int16_t  hp;            /* ID 19 (0x13)→ hp     (RE2 +0x1C2)          */
+    /* Combat hit-reaction state — byte-true player branch of the damage
+     * resolver FUN_80012d60 (ghidra1_V2.txt:77656-77714). hit_react (RE2 +0x93):
+     * bit0x1 = "already hit this attack" guard — SET @80012eec, CHECKED @80012e30
+     * → exactly one damage application per attack window (cleared between attacks
+     * by the deferred enemy-attack FSM, see re15_player_clear_hit_guard). bit0x2 /
+     * bit0x80 are the enemy-side collision flags (unused on the player). status_flags
+     * (RE2 +0x98, DAT_800acaec, u16): bit0x2 = bleed/poison, rolled on a type<2 hit
+     * via 2×RNG&1 @80012ea4. See re15_damage.c. */
+    uint8_t  hit_react;    /* RE2 +0x93 — per-attack hit guard + enemy collision bits */
+    uint16_t status_flags; /* RE2 +0x98 — bit0x2 = bleed/poison                       */
     /* Phase 4.5.13-RE2 F1: speed was at ID 27 (wrong) — correct ID is
      * 0x16 (+0x1CC in RE2). Renamed for clarity; opcode 0x35 Speed_set
      * uses an indexed velocity vector (ID 0x17..0x1A), not this scalar. */

@@ -1,0 +1,156 @@
+/**
+ * @file test_damage.c
+ * @brief Unit-Tests fuer den byte-true Player-Damage-Resolver (#13).
+ *
+ * Testet die portierte PLAYER-Branch von FUN_80012d60 (re15_damage.c) isoliert:
+ *   - Zombie-Biss (attack_type 0) zieht byte-true 10 HP ab (DAT_8006f418[0]).
+ *   - Hit-Once-Sperre (+0x93 bit0x1): genau 1 Treffer pro Attacke, bis re-armed.
+ *   - Tod: signed HP < 0 -> state 3 + sub-states geleert (@80012ee8-efc).
+ *   - Instakill-Klasse (type 2 = 1000 dmg) -> sofort state 3.
+ *   - Bleed/Poison-Gate: type<2 setzt +0x98 bit0x2 (~1/4), type>=2 NIE.
+ *   - Damage-Tabelle byte-true gegen ghidra1_V2.txt:223455-223478.
+ *
+ * Kein In-Game-Trigger noetig (Gegner-AI/Hitbox = deferred); der Resolver wird
+ * direkt mit (attack_type, hitbox-origin) aufgerufen — wie FUN_80017fa4 ihn ruft.
+ */
+#include "re15_damage.h"
+#include "re15_actor.h"   /* g_actors, re15_actor_init, RE15_ACTOR_SLOT_PLAYER */
+
+#include <stdint.h>
+#include <stdio.h>
+
+/* Frischer Spieler: Slot 0 aktiv, hp=100, alle Flags 0 (re15_actor_init memset). */
+static re15_actor_t *fresh_player(void)
+{
+    re15_actor_init();
+    return &g_actors[RE15_ACTOR_SLOT_PLAYER];
+}
+
+/* ----- Test 1: Zombie-Biss = 10 HP, hurt-state, Treffer-Rueckgabe ----- */
+static int test_bite_10_damage(void)
+{
+    re15_actor_t *p = fresh_player();
+    int landed = re15_player_take_damage(p, 0, 0, 0);   /* attack_type 0 = bite */
+
+    if (landed != 1)        { fprintf(stderr, "FAIL: bite sollte landen (1), war %d\n", landed); return 1; }
+    if (p->hp != 90)        { fprintf(stderr, "FAIL: HP sollte 100-10=90 sein, ist %d\n", p->hp); return 1; }
+    if (p->state != 2)      { fprintf(stderr, "FAIL: state sollte 2 (hurt) sein, ist %d\n", p->state); return 1; }
+    if ((p->hit_react & 1) == 0) { fprintf(stderr, "FAIL: hit-once guard (+0x93 bit0) muss gesetzt sein\n"); return 1; }
+    printf("PASS: test_bite_10_damage\n");
+    return 0;
+}
+
+/* ----- Test 2: Hit-Once-Sperre — zweiter Treffer wird gedroppt, bis re-armed ----- */
+static int test_hit_once_guard(void)
+{
+    re15_actor_t *p = fresh_player();
+    re15_player_take_damage(p, 0, 0, 0);                 /* 100 -> 90, guard set */
+
+    int landed2 = re15_player_take_damage(p, 0, 0, 0);   /* guard set -> no-op */
+    if (landed2 != 0)  { fprintf(stderr, "FAIL: zweiter Treffer muss 0 liefern (Sperre), war %d\n", landed2); return 1; }
+    if (p->hp != 90)   { fprintf(stderr, "FAIL: HP muss 90 bleiben (kein Doppelschaden), ist %d\n", p->hp); return 1; }
+
+    re15_player_clear_hit_guard(p);                      /* re-arm (Attacke endet) */
+    int landed3 = re15_player_take_damage(p, 0, 0, 0);   /* 90 -> 80 */
+    if (landed3 != 1)  { fprintf(stderr, "FAIL: nach clear muss Treffer wieder landen, war %d\n", landed3); return 1; }
+    if (p->hp != 80)   { fprintf(stderr, "FAIL: HP sollte 80 sein nach re-arm, ist %d\n", p->hp); return 1; }
+    printf("PASS: test_hit_once_guard\n");
+    return 0;
+}
+
+/* ----- Test 3: Tod bei signed HP < 0 -> state 3, sub-states geleert ----- */
+static int test_death_on_negative_hp(void)
+{
+    re15_actor_t *p = fresh_player();
+    p->hp = 5;                                           /* 5 - 10 = -5 < 0 */
+    p->sub_state_1 = 9; p->sub_state_2 = 9;              /* Vorbelegung -> muss 0 werden */
+    re15_player_take_damage(p, 0, 0, 0);
+
+    if (p->hp != -5)         { fprintf(stderr, "FAIL: HP sollte -5 sein, ist %d\n", p->hp); return 1; }
+    if (p->state != 3)       { fprintf(stderr, "FAIL: state sollte 3 (death) sein, ist %d\n", p->state); return 1; }
+    if (p->sub_state_1 != 0) { fprintf(stderr, "FAIL: sub_state_1 muss bei death 0 sein, ist %d\n", p->sub_state_1); return 1; }
+    if (p->sub_state_2 != 0) { fprintf(stderr, "FAIL: sub_state_2 muss bei death 0 sein, ist %d\n", p->sub_state_2); return 1; }
+    printf("PASS: test_death_on_negative_hp\n");
+    return 0;
+}
+
+/* ----- Test 4: Instakill-Klasse (type 2 = 1000) -> sofort Tod ----- */
+static int test_instakill_type2(void)
+{
+    re15_actor_t *p = fresh_player();
+    re15_player_take_damage(p, 2, 0, 0);                 /* 100 - 1000 = -900 */
+    if (p->hp != -900) { fprintf(stderr, "FAIL: HP sollte -900 sein, ist %d\n", p->hp); return 1; }
+    if (p->state != 3) { fprintf(stderr, "FAIL: state sollte 3 (death) sein, ist %d\n", p->state); return 1; }
+    printf("PASS: test_instakill_type2\n");
+    return 0;
+}
+
+/* ----- Test 5: Bleed/Poison-Gate — nur type<2 setzt +0x98 bit0x2 ----- */
+static int test_bleed_gate(void)
+{
+    re15_damage_seed_rng(0x13571357u);                   /* deterministisch */
+
+    /* type 5 (>=2): NIE Bleed, auch ueber viele Versuche. */
+    for (int i = 0; i < 2000; i++) {
+        re15_actor_t *p = fresh_player();
+        re15_player_take_damage(p, 5, 0, 0);             /* 50 dmg, kein Bleed-Pfad */
+        if (p->status_flags & 0x2) {
+            fprintf(stderr, "FAIL: type>=2 darf NIE bluten (iter %d)\n", i); return 1;
+        }
+        if (p->state != 2) { fprintf(stderr, "FAIL: type5 von 100 -> hurt(2), ist %d\n", p->state); return 1; }
+    }
+
+    /* type 0 (<2): blutet manchmal (~1/4). */
+    int bleeds = 0;
+    for (int i = 0; i < 2000; i++) {
+        re15_actor_t *p = fresh_player();
+        re15_player_take_damage(p, 0, 0, 0);
+        if (p->status_flags & 0x2) bleeds++;
+    }
+    if (bleeds == 0)    { fprintf(stderr, "FAIL: type<2 sollte manchmal bluten, war 0\n"); return 1; }
+    if (bleeds >= 2000) { fprintf(stderr, "FAIL: type<2 blutet immer? (%d/2000)\n", bleeds); return 1; }
+    /* ~1/4 erwartet; lockere Schranken gegen Brittleness. */
+    if (bleeds < 200 || bleeds > 800) {
+        fprintf(stderr, "FAIL: Bleed-Rate ~1/4 erwartet, war %d/2000\n", bleeds); return 1;
+    }
+    printf("PASS: test_bleed_gate (%d/2000 ~ 1/4)\n", bleeds);
+    return 0;
+}
+
+/* ----- Test 6: Damage-Tabelle byte-true (DAT_8006f418) ----- */
+static int test_damage_table_bytes(void)
+{
+    static const int16_t expect[11] = { 10,20,1000,1000,1000,50,100,200,300,1000,0 };
+    for (int i = 0; i < 11; i++) {
+        if (re15_damage_table[i] != expect[i]) {
+            fprintf(stderr, "FAIL: dmg_table[%d]=%d, erwartet %d\n", i, re15_damage_table[i], expect[i]);
+            return 1;
+        }
+    }
+    static const uint8_t rexpect[11] = { 0x03,0x03,0x09,0x0A,0x0B,0x0E,0x0F,0x10,0x11,0x12,0x14 };
+    for (int i = 0; i < 11; i++) {
+        if (re15_react_table[i] != rexpect[i]) {
+            fprintf(stderr, "FAIL: react_table[%d]=0x%02X, erwartet 0x%02X\n", i, re15_react_table[i], rexpect[i]);
+            return 1;
+        }
+    }
+    printf("PASS: test_damage_table_bytes\n");
+    return 0;
+}
+
+int main(void)
+{
+    int failures = 0;
+    printf("=== Player-Damage Unit Tests (#13, FUN_80012d60) ===\n\n");
+
+    failures += test_bite_10_damage();
+    failures += test_hit_once_guard();
+    failures += test_death_on_negative_hp();
+    failures += test_instakill_type2();
+    failures += test_bleed_gate();
+    failures += test_damage_table_bytes();
+
+    if (failures == 0) printf("\nALL PLAYER-DAMAGE TESTS PASSED\n");
+    else               fprintf(stderr, "\n%d TEST(S) FAILED\n", failures);
+    return failures;
+}
