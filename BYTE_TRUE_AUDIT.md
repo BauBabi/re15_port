@@ -83,13 +83,14 @@ Multi-Agent-Audit: 20 Subsysteme, 123 WRONG/MISSING-Verdachtsfälle, **104 adver
 - **Fix (angewandt):** op_switch macht den Tabellen-Scan inline und pusht/poppt das unified Loop-Modell — Break (0x1A) verlässt den Switch über loop_exit, Eswitch balanciert loop_count. op_case=+6, op_default=+2, op_end_switch=loop_count--/+2. `switch_val`-Feld entfernt (kein Konsument mehr). Test deckt Match-mid-table+Break, erstes-Case-Match und No-Match→Default ab (loop_count balanciert je auf 0).
 - **Index-Konsistenz belegt:** op_do (LAB_8003f8bc) und op_break (LAB_8003fca8) nutzen dieselbe Push-am-neuen-Index/Pop-Konvention (PSX 1-indexiert → Port konsistent 0-indexiert).
 
-### #10 · HIGH · REPAIR · scd-message-event
-**Evt_chain (0x03) No-Op -> In-place-Thread-Reinit; Evt_exec Slot-Bereich + cond<10-Direktslot**
+### #10 · HIGH · REPAIR · scd-message-event ✅ ANGEWANDT 2026-06-28 (byte-true, build+ctest grün)
+**Evt_chain (0x03) No-Op -> In-place-Thread-Reinit; Evt_exec cond<10-Direktslot**
 
-- **Ort:** `re15_port/engine/src/scd_vm.c:2701-2707 (op_evt_chain No-Op), :736-743 (op_evt_exec Slot-Wahl), re15_scd.h:42-43`
-- **RE-Beleg:** Evt_chain LAB_8003f270 (@0x800744b4): sub_id=pc[3] @0x8003f280, jal FUN_8003edec (Thread-Reset PC/+4/+8, thread+0x140, PC=base+base[sub_id*2]). Evt_exec LAB_8003f2a0: cond=pc[1], FUN_8003ee3c Slot-Allocator: cond<10/<14 -> Direkt-Slot; 0xFF Normalmodus Slot 2..9. Asset room1021/sub02 'Evt_exec(9,0)'.
-- **Fix:** op_evt_chain: sub_id=pc[3]; target=rdt->sub_scd[sub_id]; Reset call_depth/do_depth/for_depth/block_sp/sleep=0; pc=target; KEIN pc+=4. op_evt_exec: cond<SCD_THREAD_COUNT -> Direkt-Slot=cond (wenn frei); 0xFF Normalmodus 2..9 statt 10..23.
-- **Risiko:** Evt_chain-No-Op = Kontrollfluss-Korruption. Slot-Bereich hÃ¤ngt am Thread-Pool-Modell (Rank 24) â€” minimal-Fix (Start 2, Limit 9) reicht zunÃ¤chst.
+- **Ort:** `re15_port/engine/src/scd_vm.c` op_evt_chain + op_evt_exec; Tests `test_evt_chain_reinit` + `test_evt_exec_direct_slot`.
+- **RE-Beleg (instruktionsgenau, eigener Trace + Agent: 4/4 Claims CONFIRMED):** Evt_chain LAB_8003f270 (@0x800744b4): sub_id=(u8)pc[3] @0x8003f280, jal FUN_8003edec — **FUN_8003edec reinitialisiert den Thread IN-PLACE** (KEIN memset): active=1 @0x8003edf0, loop_count=-1 @0x8003ee04 (Port-empty=0), block_sp-Reset thread+0x140 @0x8003ee14, PC=sub_table_base+base[sub_id*2] @0x8003ee38; **call_depth/work/locals/sleep BLEIBEN** (Audit-„Reset call_depth/sleep" war FALSCH). Evt_exec LAB_8003f2a0: cond=(u8)pc[1], sub_id=(u8)pc[3], pc+=4, FUN_8003ee3c(cond,sub_id). FUN_8003ee3c (Mode DAT_800b3f7a, Normal=0 agent-belegt 5 Writer): cond<10 → Slot=cond DIREKT (unbedingter Reinit); cond>=10 → Scan [2..8]+Fallback 9 (Mode!=0: <14 direkt / Scan [10..12]+13). Asset room1021/sub02 'Evt_exec(9,0)' → Slot 9 (vorher GEDROPPT).
+- **Fix (angewandt):** op_evt_chain = in-place Reinit (pc=target, loop_count=0, block_sp=0, KEIN pc+=4, call_depth bewahrt). op_evt_exec = cond<10 → Direkt-Slot=cond (force-overwrite, byte-true); cond>=10 → Auto-Scan der Port-Event-Range [10..23]. Force-overwrite + cond<10-Direktslot fixen den room1021-Drop.
+- **#24-Kopplung (deferred-Rest):** Die exakte PSX-Auto-Scan-Range [2..9]/[10..13] + Mode-Flag DAT_800b3f7a hängt am Thread-Pool-Umbau (24→14, Rank 24). Der Port nutzt Slot 2 dediziert + Event-Range [10..23] → Auto-Scan bleibt [10..23] bis #24. ROOM1170 Evt_exec(255,11) (Intro) unverändert in [10..23] → keine Regression.
+- **Risiko:** Evt_chain-No-Op war Kontrollfluss-Korruption (chained Sub lief nie). Laufzeit: Headless-Boot 12s ohne Crash; 26/26 ctest grün.
 
 ### #11 · CRITICAL · REPAIR · scd-actor-model
 **Member_set/cmp id-Tabelle: 1:1 RE1.5-FUN_8004116c statt RE2-Heuristik (id12->+0x09 nicht Y!)**

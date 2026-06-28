@@ -779,58 +779,51 @@ static int op_break(scd_thread_t *t)
     return SCD_R_CONTINUE;
 }
 
-/* 0x04 — Evt_exec: spawn sub_scd[sub_id] in event slot (RE2 FUN_80053138).
- * Encoding: [op, cond u8, value BE u16]. cond=255 = pick first free event
- * slot (10..13); else slot index. sub_id = value & 0xFF.
+/* 0x04 — Evt_exec: spawn sub_scd[sub_id] in an event slot.
+ * Encoding: [op, cond, _, sub_id]. Byte-true (LAB_8003f2a0 → FUN_8003ee3c):
+ * cond = (u8)PC[1] (lbu @0x8003f2b0), sub_id = (u8)PC[3] (lbu @0x8003f2b4 — the
+ * SINGLE byte at pc[3]; pc[2] is unused, ROOM1170 has it 0x18). PC advances 4
+ * BEFORE the spawn (@0x8003f2b8/bc), then FUN_8003ee3c(cond, sub_id) picks the
+ * slot.
  *
- * RDT sub_scd[] pointer table is populated by re15_rdt_parse(). We look
- * up sub_scd[sub_id], allocate an event-VM slot, and start the thread.
+ * [#10] Slot selection = FUN_8003ee3c in normal mode (DAT_800b3f7a==0 — the
+ * agent-verified room-gameplay default; the !=0 alt mode is set only by special
+ * routines):
+ *   cond < 10  → use cond DIRECTLY as the slot (sltiu<0xa @0x8003ee54/58), reinit
+ *                it unconditionally (PSX overwrites a busy slot via FUN_8003edec).
+ *                Asset: ROOM1021 sub02 Evt_exec(9,0) → slot 9 (was DROPPED before
+ *                this fix — cond=9 was neither 0xFF nor in [10..23]).
+ *   cond >= 10 → auto-allocate the first free event slot. PSX normal mode scans
+ *                [2..9] (+fallback 9); the port reserves slot 2 and uses a wider
+ *                event range [SCD_EVENT_SLOT_FIRST..LAST] — the exact PSX range is
+ *                coupled to the deferred #24 thread-pool rework (24→14), so the
+ *                port scans its own event range here. ROOM1170's Evt_exec(255,11)
+ *                intro cinematic stays in this range (no regression).
  *
- * ROOM1170 main00 fires Evt_exec(255, 0x180B) — value=0x180B, sub_id=11
- * → sub_scd[11]. Per A5 audit + sub14.scd content, sub_scd[11] IS the
- * intro cinematic (the disassembler-numbered "sub14" file maps to script
- * table index 11 because disassembler names are linear-by-file while the
- * SCD table indexes by execution-order/event-id). */
+ * ROOM1170 main00 fires Evt_exec(255, sub11) — the intro cinematic (the
+ * disassembler-numbered "sub14" file maps to SCD table index 11). */
 static int op_evt_exec(scd_thread_t *t)
 {
-    uint8_t  cond     = t->pc[1];
-    /* Byte-true (FUN_8003f2a0 @0x8003f2a0): the handler does `lbu a1,0x3(v0)` —
-     * the sub-script id is the SINGLE BYTE at pc[3]. pc[2] is unused (in
-     * ROOM1170 it is a constant 0x18). Our prior BE u16 read `(pc[2]<<8)|pc[3]`
-     * masked to pc[3] = the same value by accident; read pc[3] directly to
-     * match the disasm. (An LE u16 read would have wrongly picked pc[2]=0x18.)
-     * Verified 2026-06-09 against ghidra1_V2.txt:8003f2b4. */
-    uint8_t  sub_id   = t->pc[3];
-    t->pc += 4;
+    uint8_t  cond   = t->pc[1];
+    uint8_t  sub_id = t->pc[3];
+    t->pc += 4;                 /* advance BEFORE spawn (byte-true @0x8003f2b8) */
 
-#ifdef RE15_PLATFORM_PC
-    fprintf(stderr, "[scd] Evt_exec cond=%u sub_id=%u (raw %02X %02X %02X %02X)\n",
-            cond, sub_id, t->pc[-4], t->pc[-3], t->pc[-2], t->pc[-1]);
-#endif
-
-    /* Look up sub_scd[sub_id] from the registered RDT.
-     * scd_register_room_events sets s_current_rdt below at boot. */
     if (!s_current_rdt) return 1;
     if (sub_id >= RE15_RDT_MAX_SUB_SCD) return 1;
     const uint8_t *target_pc = s_current_rdt->sub_scd[sub_id];
-    if (!target_pc) {
-#ifdef RE15_PLATFORM_PC
-        fprintf(stderr, "[EVT_EXEC] sub_scd[%u] = NULL — drop\n", sub_id);
-#endif
-        return 1;
-    }
+    if (!target_pc) return 1;   /* no such sub → drop */
 
-    /* Allocate an event-VM slot. cond=255 → scan SCD_EVENT_SLOT_FIRST..LAST
-     * for a free slot. Else use cond as slot hint (clamped to event range). */
-    int slot = -1;
-    if (cond == 0xFF) {
+    int slot;
+    if (cond < SCD_EVENT_SLOT_FIRST) {        /* cond < 10 → direct slot */
+        slot = cond;
+        g_scd.threads[slot].active = 0;       /* force overwrite (byte-true reinit) */
+    } else {                                   /* cond >= 10 → auto-allocate */
+        slot = -1;
         for (int s = SCD_EVENT_SLOT_FIRST; s <= SCD_EVENT_SLOT_LAST; s++) {
             if (!g_scd.threads[s].active) { slot = s; break; }
         }
-    } else if (cond >= SCD_EVENT_SLOT_FIRST && cond <= SCD_EVENT_SLOT_LAST) {
-        if (!g_scd.threads[cond].active) slot = cond;
+        if (slot < 0) return 1;               /* all event slots busy → drop */
     }
-    if (slot < 0) return 1;   /* all event slots busy → silent drop (RE2) */
 
     scd_thread_start(slot, target_pc);
     return 1;
@@ -2927,12 +2920,24 @@ int op_evt_kill(scd_thread_t *t)
     return 1;
 }
 
-/* Evt_chain (0x03) — 4 bytes. Reinitialize current script with new bytecode. */
+/* Evt_chain (0x03) — 4-byte [op, _, _, sub_id]. [#10] BYTE-TRUE (LAB_8003f270 →
+ * FUN_8003edec): reinitialize the CURRENT thread IN PLACE to run sub_scd[sub_id].
+ * sub_id = (u8)PC[3] (lbu @0x8003f280). FUN_8003edec does NOT advance PC and does
+ * NOT memset the whole thread — it only resets the control-flow state and repoints
+ * PC (locals/sleep/work + call depth survive):
+ *   active=1 (@0x8003edf0) · loop/nesting counter -1 (@0x8003ee04 → port empty=0)
+ *   block-stack ptr reset (@0x8003ee14) · PC = sub_table_base+base[sub_id*2]
+ *   (@0x8003ee38). Was a No-Op before this fix (the chained sub never ran). */
 int op_evt_chain(scd_thread_t *t)
 {
-    /* Full Evt_chain re-loads the script from RDT table at given index.
-     * For our use case (sub02 doesn't chain), just advance PC. */
-    t->pc += 4;
+    uint8_t sub_id = t->pc[3];
+    const uint8_t *target = (s_current_rdt && sub_id < RE15_RDT_MAX_SUB_SCD)
+                          ? s_current_rdt->sub_scd[sub_id] : NULL;
+    if (!target) { t->pc += 4; return 1; }   /* no such sub → advance (port guard) */
+    t->pc         = target;   /* thread[0x1c] */
+    t->loop_count = 0;        /* thread[0x8] (PSX -1 = port's empty sentinel 0) */
+    t->block_sp   = 0;        /* thread[0x140] block-stack reset */
+    /* active stays 1; call_depth/work_slot preserved (FUN_8003edec leaves them). */
     return 1;
 }
 

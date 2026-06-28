@@ -10,8 +10,9 @@ Kanonisches „lies-mich-zuerst" für die nächste Session. Ergänzt `BYTE_TRUE_
   `3b4be5b8 "Many things finished"`; `0aed072b` legt Skills/Doku/Cleanup obendrauf.
 - **Build/Test:** `cmake --build re15_port/build` + `ctest --test-dir re15_port/build --timeout 30`
   → **26/26 grün** (mingw64 GCC + Ninja, `PATH` muss `C:\msys64\mingw64\bin` enthalten).
-- **Nächster Schritt „der Reihe nach":** **#10 Evt_chain/Evt_exec** (Thread-Reinit + Slot-Bereich).
-  (#9 Case/Switch ist ERLEDIGT — byte-true, build+ctest grün; siehe unten.)
+- **Nächster Schritt „der Reihe nach":** **#13 Player-Damage** (FUN_80012d60, CRITICAL, komplett fehlend)
+  — HP-Global jetzt per Savestate laufzeit-verifizierbar. (#9 Switch + #10 Evt_chain/Evt_exec sind
+  ERLEDIGT — byte-true, build+ctest grün; siehe unten.)
 - **Arbeitsweise:** jeden Audit-Fix VOR Anwendung per Agent gegen die Disasm verifizieren
   (≈70 % der Audit-Werte waren ungenau), dann anwenden → build → ctest.
 
@@ -72,6 +73,20 @@ Kanonisches „lies-mich-zuerst" für die nächste Session. Ergänzt `BYTE_TRUE_
 - **Neuer Test:** `test_switch_case_break` (3 Pfade: Match-mid-table+Break, erstes-Case-Match, No-Match→Default;
   loop_count balanciert je auf 0). **26/26 ctest grün.**
 
+### #10 — Evt_chain (0x03) + Evt_exec (0x04) (KOMPLETT für Normal-Modus, byte-true)
+- **Evt_chain (0x03, LAB_8003f270 → FUN_8003edec)** war ein No-Op (chained Sub lief NIE). Jetzt
+  **in-place Thread-Reinit**: `pc=sub_scd[pc[3]]`, `loop_count=0`, `block_sp=0`, KEIN pc+=4;
+  call_depth/work/locals/sleep BLEIBEN (FUN_8003edec macht KEIN memset — der Audit-„Reset call_depth/sleep"
+  war falsch).
+- **Evt_exec (0x04, LAB_8003f2a0 → FUN_8003ee3c)**: `cond=pc[1]`, `sub_id=pc[3]`, pc+=4, dann Slot-Wahl.
+  Byte-true Normal-Modus (DAT_800b3f7a==0, agent-belegt): **`cond<10` → Slot=cond DIREKT** (force-overwrite) —
+  fixt den room1021 `Evt_exec(9,0)`-Drop. `cond>=10` → Auto-Scan.
+- **#24-Kopplung:** Die exakte PSX-Auto-Scan-Range [2..9]/[10..13] + Mode-Flag hängt am Thread-Pool-Umbau
+  (24→14, #24). Port-Auto-Scan bleibt [10..23] (Slot 2 dediziert) bis #24 — ROOM1170-Intro Evt_exec(255,11)
+  unverändert → keine Regression.
+- **Verifikation:** eigener Disasm-Trace + Agent (4/4 Claims CONFIRMED inkl. FUN_8003edec-Felder + 5 DAT_800b3f7a-Writer).
+  Neue Tests `test_evt_chain_reinit` + `test_evt_exec_direct_slot` (RDT-Mock). **26/26 ctest grün.**
+
 ## Tote Themen (NICHT wieder aufmachen)
 - **„Pixel-Verschiebung"**: Der Nutzer hat bestätigt — es gibt KEINE sichtbare. Render-Math
   **#1–3** (RotMatrix/Trig-LUT/Kamera-Integer) sind reine byte-true-Korrektheit OHNE sichtbaren
@@ -92,17 +107,15 @@ Kanonisches „lies-mich-zuerst" für die nächste Session. Ergänzt `BYTE_TRUE_
 
 ## Nächste Schritte „der Reihe nach"
 
-### #10 Evt_chain/Evt_exec (Thread-Reinit + Slot-Bereich) — JETZT
-- **Audit #10:** Evt_chain (0x03) ist im Port No-Op → muss In-place-Thread-Reinit machen
-  (LAB_8003f270 @0x800744b4: sub_id=pc[3] @0x8003f280, jal FUN_8003edec = Thread-Reset PC/+4/+8,
-  thread+0x140, PC=base+base[sub_id*2]). Evt_exec (LAB_8003f2a0): cond=pc[1], FUN_8003ee3c
-  Slot-Allocator (cond<10/<14 → Direkt-Slot; 0xFF Normalmodus Slot 2..9). Asset room1021/sub02
-  'Evt_exec(9,0)'. Ort: `scd_vm.c:2701-2707 (op_evt_chain No-Op), :736-743 (op_evt_exec), re15_scd.h:42-43`.
-- **Muster:** Agent gegen LAB_8003f270/LAB_8003f2a0 + FUN_8003edec/FUN_8003ee3c verifizieren → anwenden → build+ctest.
+### #13 Player-Damage (FUN_80012d60, komplett fehlend) — JETZT, CRITICAL
+- **Audit #13:** Der komplette Player-Damage-Pfad fehlt im Port (FUN_80012d60 = Damage-Entry,
+  Damage-Tabelle, Death/Hit-State, I-Frames). HP-Global `DAT_800acaee` jetzt per Savestate lesbar
+  (Skill `re15-savestate-ghidra`) → ideal für Laufzeit-Verifikation. Braucht Enemy-Attack-Hitbox als
+  Caller (wer ruft FUN_80012d60?). Vor RE: `RE15_FUN_CATALOG.md` + Skill `ghidra-mapping` prüfen.
+- **Muster:** Agent gegen FUN_80012d60 (+ Caller-Xrefs, Damage-Tabelle, I-Frame-Timer) verifizieren →
+  anwenden → build+ctest → zusätzlich per Savestate-Pipeline gegen echtes Spiel (HP-Wert) prüfen.
 
 ### Danach (Audit-Reihenfolge, je per Agent verifizieren)
-- **#13** Player-Damage (FUN_80012d60, komplett fehlend) — CRITICAL; HP-Global `DAT_800acaee`
-  jetzt per Savestate lesbar → ideal für Laufzeit-Verifikation. Braucht Enemy-Attack-Hitbox als Caller.
 - **#14/#15** AOT-Scan-Refactor (Edge→per-Frame + Multi-Entity + 9-Frame-Tür) — riskant, gegen
   Savestate verifizieren.
 - **#17/#18** Goto/Gosub-Unwind + Do-Exit-PC (jetzt mit dem unified Loop-Modell tractabler).

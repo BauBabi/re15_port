@@ -40,6 +40,7 @@
 
 #include "re15_scd.h"
 #include "re15_actor.h"   /* RE15_ACTOR_SLOT_PLAYER */
+#include "re15_rdt.h"     /* re15_rdt_t.sub_scd[] for Evt_chain/Evt_exec tests */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -747,6 +748,72 @@ static int test_switch_case_break(void)
     return rc;
 }
 
+/* =========================================================================
+ * Test [#10]: byte-true Evt_chain (0x03) + Evt_exec (0x04, cond<10 direct slot).
+ *
+ * Evt_chain reinitializes the CURRENT thread in place to run sub_scd[sub_id]
+ * (LAB_8003f270 -> FUN_8003edec) — was a No-Op, so the chained sub never ran.
+ * Evt_exec with cond<10 uses cond DIRECTLY as the target slot (FUN_8003ee3c
+ * normal mode) — cond=9 (ROOM1021 sub02 Evt_exec(9,0)) used to be dropped.
+ * Both need a registered RDT with sub_scd[] populated.
+ * ========================================================================= */
+extern void scd_register_current_rdt(const re15_rdt_t *rdt);
+
+static int test_evt_chain_reinit(void)
+{
+    uint8_t sub3[5];
+    sub3[0]=0x24; sub3[1]=0x07; write_le16(sub3+2, 55); sub3[4]=SCD_OP_EVT_END; /* Save w7=55 */
+
+    re15_rdt_t rdt;
+    memset(&rdt, 0, sizeof(rdt));
+    rdt.sub_scd[3] = sub3;
+
+    uint8_t mainbc[4] = { 0x03, 0x00, 0x00, 0x03 };   /* Evt_chain(sub_id=3) */
+
+    scd_vm_init();
+    scd_register_current_rdt(&rdt);
+    scd_thread_start(0, mainbc);
+    scd_vm_tick();
+    scd_register_current_rdt(NULL);
+
+    if (g_scd.threads[0].active != 0) {
+        fprintf(stderr, "FAIL: test_evt_chain_reinit: Thread sollte beendet sein\n"); return 1; }
+    if (g_scd.work_vars[7] != 55) {       /* old No-Op left this 0 */
+        fprintf(stderr, "FAIL: test_evt_chain_reinit: work_vars[7] sollte 55 sein (chained sub lief nicht), ist %d\n",
+                g_scd.work_vars[7]); return 1; }
+    if (g_scd.threads[0].loop_count != 0) {
+        fprintf(stderr, "FAIL: test_evt_chain_reinit: loop_count sollte 0 sein, ist %d\n",
+                g_scd.threads[0].loop_count); return 1; }
+    printf("PASS: test_evt_chain_reinit\n");
+    return 0;
+}
+
+static int test_evt_exec_direct_slot(void)
+{
+    uint8_t sub4[5];
+    sub4[0]=0x24; sub4[1]=0x08; write_le16(sub4+2, 66); sub4[4]=SCD_OP_EVT_END; /* Save w8=66 */
+
+    re15_rdt_t rdt;
+    memset(&rdt, 0, sizeof(rdt));
+    rdt.sub_scd[4] = sub4;
+
+    /* slot 0: Evt_exec(cond=9, sub_id=4) -> spawn sub4 in slot 9; then Evt_end. */
+    uint8_t mainbc[5] = { 0x04, 9, 0x00, 4, SCD_OP_EVT_END };
+
+    scd_vm_init();
+    scd_register_current_rdt(&rdt);
+    scd_thread_start(0, mainbc);
+    scd_vm_tick();    /* slot 0 spawns slot 9; slot 9 (>0) runs in the SAME tick */
+    scd_register_current_rdt(NULL);
+
+    /* cond=9 < 10 => direct slot 9. Old code DROPPED cond=9 -> work_vars[8] stayed 0. */
+    if (g_scd.work_vars[8] != 66) {
+        fprintf(stderr, "FAIL: test_evt_exec_direct_slot: work_vars[8] sollte 66 sein (Slot 9 lief nicht), ist %d\n",
+                g_scd.work_vars[8]); return 1; }
+    printf("PASS: test_evt_exec_direct_slot\n");
+    return 0;
+}
+
 int main(void)
 {
     int failures = 0;
@@ -763,6 +830,8 @@ int main(void)
     failures += test_do_edwhile_loop();
     failures += test_break_exits_loop();
     failures += test_switch_case_break();
+    failures += test_evt_chain_reinit();
+    failures += test_evt_exec_direct_slot();
     failures += test_ck_set_flags();
     failures += test_work_set();
     failures += test_speed_set();
