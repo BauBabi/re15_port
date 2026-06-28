@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.21)
 project(re15_port LANGUAGES C ASM)
 
+# C11 — entspricht der getesteten psx_dev-Engine-Config (GCC 15 defaultet sonst
+# auf C23, was den `bool`-Keyword-Konflikt der Alt-Engine ausgelöst hatte).
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_EXTENSIONS OFF)
+
 # =============================================================================
 # Build-Optionen
 # =============================================================================
@@ -86,14 +92,21 @@ endif()
 # =============================================================================
 # Asset-Pipeline Tools (nur PC)
 # =============================================================================
-if(RE15_BUILD_PC)
+# TEMPORÄR AUS (Engine-Transplantation Phase A): tools/ + tests/ hängen an der
+# alten re15_port-Minimal-Engine-API. Nach dem Re-pointen auf die psx_dev-Engine
+# wieder einschalten. Standalone-Tools (overlay_mapper/room_graph) sind von der
+# Engine unabhängig und können zuerst zurückkommen.
+option(RE15_BUILD_TOOLS "Build asset-pipeline tools (alte API)" OFF)
+option(RE15_BUILD_TESTS "Build ctest-Suite (alte API)"          OFF)
+
+if(RE15_BUILD_PC AND RE15_BUILD_TOOLS)
     add_subdirectory(tools)
 endif()
 
 # =============================================================================
 # Tests (nur PC, kein GPU/Devkit nötig)
 # =============================================================================
-if(RE15_BUILD_PC)
+if(RE15_BUILD_PC AND RE15_BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)
 endif()

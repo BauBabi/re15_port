@@ -1,762 +1,797 @@
-/* =============================================================================
- * RE 1.5 Port — PSX Audio-Backend (SPU/libsnd via PSn00bSDK)
- * =============================================================================
- * Implementiert die audio_backend_t Schnittstelle für die PSX-Plattform.
- * Verwendet die SPU-Hardware (Sound Processing Unit) über PSn00bSDK:
- *   - SpuSetVoiceAttr: Voice-Attribute konfigurieren (Pitch, Volume, ADSR)
- *   - SpuSetKey: Voices ein-/ausschalten (Key On/Off)
- *   - SpuSetTransferStartAddr + SpuWrite: ADPCM-Daten in SPU-RAM laden
+/*
+ * RE1.5 Rebuilt — Audio backend, PSX.
  *
- * SPU-Speicher: 512 KB, davon 0x1000 Bytes reserviert (Header).
- * Voices: 24 Hardware-Voices (0-23).
- * Format: PSX-ADPCM (4-bit, 28 Samples/Block + 16-Byte Header).
+ * RE2-architecture audio (Content = RE1.5). Two playback paths on the SPU:
  *
- * VAB-Format:
- *   - VH (VAB Header): Programm-/Tone-Definitionen (Instrument-Mapping)
- *   - VB (VAB Body): ADPCM-Sample-Daten (direkt SPU-kompatibel)
+ *   SFX  — Se_on (0x36) → one-shot SPU voice from the bundled DOOR00 VAB.
+ *   BGM  — RE2 SsSeq: a SEQ (pQES = PPQN + running-status MIDI) drives
+ *          note-on/off; each note plays a VAB tone's VAG on a HARDWARE SPU
+ *          voice (the SPU decodes ADPCM, runs the ADSR envelope and the
+ *          sustain loop itself — we only key voices + write FREQ/VOL/ADSR).
  *
- * SEQ-Format:
- *   - MIDI-ähnlicher Sequencer-Stream (PSX-proprietär)
- *   - Playback über PSn00bSDK-Sequencer-API (SsSeqOpen, SsSeqPlay)
+ * PSn00bSDK has NO libsnd/SsSeq, so the sequencer tick (the equivalent of
+ * SsSeqCalledTbyT) is hand-written here. It is driven from a 60 Hz vblank
+ * counter (VSyncCallback) — NOT the render frame rate — so BGM tempo stays
+ * stable when the intro fps dips. All control logic (SEQ/MIDI parse, the
+ * stage/room→track table, seq-slot control) is the integer port of the
+ * verified PC reference re15_ss (re15_reborn_pc/src/audio_pc.c); the
+ * software mixer/envelope/reverb of that reference is replaced by SPU
+ * hardware here.
  *
- * Anforderung: Requirements 6.1, 6.2, 6.4, 6.5
- * ========================================================================== */
-
+ * Refs: RE2_Quellcode/_SsInitSoundSeq.c, FUN_8007e474.c (MIDI parser),
+ * FUN_8005a97c.c (room-BGM play), vab_common.c (VAB soundfont + note2pitch).
+ */
 #include <stdint.h>
-#include <stddef.h>
 #include <string.h>
-
+#include <stdio.h>         /* sprintf — CD path building (codebase idiom) */
 #include <psxspu.h>
-#include <psxapi.h>
-
-#include "re15_types.h"
+#include <psxgpu.h>        /* VSyncCallback (60 Hz tick source) */
+#include <psxcd.h>         /* async voice CD read (CdSearchFile/CdRead/CdReadSync) */
+#include <hwregs_c.h>      /* SPU_CH_* register macros */
 #include "re15_audio.h"
-#include "re15_error.h"
+#include "re15_scd.h"
+#include "re15_vab.h"
+#include "re15_cdfs.h"
+#include "re15_room.h"     /* g_room_rdt — footstep snd0 VAB sliced from the room RDT */
 
-/* ============================================================================
- * Konstanten
- * ========================================================================= */
+re15_audio_state_t g_audio;
 
-/** SPU-RAM-Gesamtgröße (512 KB) */
-#define SPU_RAM_SIZE        (512 * 1024)
+/* Bundled SFX VAB (DOOR00.vh + DOOR00.vb via psn00bsdk_target_incbin). */
+extern const uint8_t  test_vh[];
+extern const uint32_t test_vh_size;
+extern const uint8_t  test_vb[];
+extern const uint32_t test_vb_size;
 
-/** Reservierter SPU-RAM-Bereich (System-Header, nicht benutzbar) */
-#define SPU_RAM_RESERVED    0x1000
+/* The room's footstep SE bank (snd0: VH header + VB samples + EDT table, the floor
+ * sound_type → VAB bank/tone map, FUN_80045630) is sliced out of the parsed RDT
+ * (re15_rdt_parse → snd_vh/vb/edt[0], header offsets 0x08-0x10). Phase 2 (2026-06-13):
+ * replaces the room1170_snd0_* incbin — pointers alias the resident RDT buffer,
+ * byte-true (verified == the old incbin bytes), and any room's snd0 now works. */
 
-/** Erster freier SPU-RAM-Offset für Sample-Upload */
-#define SPU_RAM_START       SPU_RAM_RESERVED
-
-/** Maximale Voices auf der SPU-Hardware */
-#define SPU_MAX_VOICES      24
-
-/** Voices reserviert für SEQ-Playback (0-15 typisch) */
-#define SPU_SEQ_VOICES      16
-
-/** Voices für SFX (16-23) */
-#define SPU_SFX_VOICE_START 16
-#define SPU_SFX_VOICE_COUNT (SPU_MAX_VOICES - SPU_SFX_VOICE_START)
-
-/** ADPCM-Block-Größe in Bytes */
-#define ADPCM_BLOCK_SIZE    16
-
-/** Default ADSR: Quick Attack, Sustain, Medium Release */
-#define DEFAULT_ADSR1       0x80FF
-#define DEFAULT_ADSR2       0x5FC0
-
-/* ============================================================================
- * VAB-Header-Strukturen (VH-Format)
- *
- * VH-Datei enthält:
- *   - VAB-Header (32 Bytes): Magic, Version, Bank-ID, Größe, etc.
- *   - 128 Programme à 16 Tones (Instrument-Definitionen)
- *   - Tone-Attribute: Sample-Offset, Pitch, Volume, ADSR
- * ========================================================================= */
-
-/** VAB-File-Header (erste 32 Bytes der VH-Datei) */
-typedef struct {
-    uint32_t magic;         /**< "VABp" (0x70424156)                */
-    uint32_t version;       /**< VAB-Version (typisch 6 oder 7)     */
-    uint32_t vab_id;        /**< Bank-Identifier                     */
-    uint32_t file_size;     /**< Gesamtgröße VH + VB                */
-    uint16_t reserved0;
-    uint16_t num_programs;  /**< Anzahl Programme (max 128)          */
-    uint16_t num_tones;     /**< Anzahl Tones total                  */
-    uint16_t num_vags;      /**< Anzahl VAG-Samples (Waveforms)      */
-    uint8_t  master_vol;    /**< Master-Volume (0-127)               */
-    uint8_t  master_pan;    /**< Master-Pan (0-127, 64=Mitte)        */
-    uint8_t  attr1;         /**< Bank-Attribute 1                    */
-    uint8_t  attr2;         /**< Bank-Attribute 2                    */
-    uint32_t reserved1;
-} vab_header_t;
-
-/** VAB Tone-Attribute (16 Bytes pro Tone) */
-typedef struct {
-    uint8_t  priority;      /**< Priorität (0-127)                   */
-    uint8_t  mode;          /**< Reverb-Modus                        */
-    uint8_t  volume;        /**< Tone-Volume (0-127)                 */
-    uint8_t  pan;           /**< Tone-Pan (0-127)                    */
-    uint8_t  center_note;   /**< Grundton (MIDI-Note, 60=C4)         */
-    uint8_t  center_fine;   /**< Feinstimmung                        */
-    uint8_t  note_min;      /**< Niedrigste spielbare Note           */
-    uint8_t  note_max;      /**< Höchste spielbare Note              */
-    uint8_t  vibrato_width; /**< Vibrato-Breite                      */
-    uint8_t  vibrato_time;  /**< Vibrato-Geschwindigkeit             */
-    uint8_t  portamento_w;  /**< Portamento-Breite                   */
-    uint8_t  portamento_t;  /**< Portamento-Zeit                     */
-    uint8_t  pitchbend_min; /**< Pitch-Bend Minimum                  */
-    uint8_t  pitchbend_max; /**< Pitch-Bend Maximum                  */
-    uint8_t  reserved1;
-    uint8_t  reserved2;
-    uint16_t adsr1;         /**< ADSR Attack/Decay/Sustain Level     */
-    uint16_t adsr2;         /**< ADSR Sustain Rate/Release Rate      */
-    int16_t  prog_num;      /**< Programm-Nummer (Parent)            */
-    int16_t  vag_id;        /**< VAG-Sample-Index (0-basiert)        */
-    int16_t  reserved3[4];
-} vab_tone_attr_t;
-
-/* ============================================================================
- * Interner Zustand
- * ========================================================================= */
-
-/** Bank-Informationen pro geladener VAB-Bank */
-typedef struct {
-    uint8_t  loaded;            /**< 1 = Bank geladen, 0 = frei          */
-    uint16_t num_programs;      /**< Anzahl Programme in dieser Bank      */
-    uint16_t num_tones;         /**< Anzahl Tones                         */
-    uint16_t num_vags;          /**< Anzahl VAG-Samples                   */
-    uint32_t spu_base_addr;     /**< Start-Adresse der Bank im SPU-RAM    */
-    uint32_t spu_size;          /**< Belegte Bytes im SPU-RAM             */
-    uint32_t vag_offsets[128];  /**< SPU-RAM-Offsets pro VAG-Sample       */
-} audio_psx_bank_t;
-
-/** SEQ-Playback-Slot */
-typedef struct {
-    uint8_t  active;            /**< 1 = aktiv, 0 = inaktiv              */
-    uint8_t  loop;              /**< 1 = Endlosschleife                  */
-    int      seq_handle;        /**< SEQ-Handle (von SsSeqOpen)          */
-} audio_psx_seq_slot_t;
-
-/** Gesamter Audio-Zustand */
-static struct {
-    audio_psx_bank_t banks[RE15_AUDIO_MAX_BANKS];
-    audio_psx_seq_slot_t seq_slots[RE15_AUDIO_MAX_SEQ_SLOTS];
-
-    /** Nächste freie SPU-RAM-Adresse für Uploads */
-    uint32_t spu_alloc_ptr;
-
-    /** Round-Robin Voice-Index für SFX */
-    uint8_t  sfx_voice_rr;
-
-    /** Initialisiert-Flag */
-    uint8_t  initialized;
-} s_apsx;
-
-/* ============================================================================
- * SPU-RAM-Allokation
- *
- * Einfacher linearer Allokator: Neue Banks werden hintereinander in den
- * SPU-RAM geladen. Bei vab_unload wird der Speicher nur freigegeben wenn
- * die Bank die "letzte" im SPU-RAM ist (Stack-Muster). Andernfalls wird
- * der Speicher als fragmentiert akzeptiert (RE2-Verhalten).
- * ========================================================================= */
-
-/**
- * Reserviert size Bytes im SPU-RAM.
- * @param size  Anzahl Bytes (muss auf ADPCM_BLOCK_SIZE aligned sein)
- * @return SPU-RAM-Adresse oder 0 bei Fehler (kein Platz).
- */
-static uint32_t spu_ram_alloc(uint32_t size)
-{
-    uint32_t addr;
-
-    /* Auf 16-Byte ADPCM-Block-Grenze aufrunden */
-    size = (size + (ADPCM_BLOCK_SIZE - 1)) & ~(ADPCM_BLOCK_SIZE - 1);
-
-    if (s_apsx.spu_alloc_ptr + size > SPU_RAM_SIZE) {
-        RE15_ERROR("AUDIO_PSX", "SPU-RAM voll: benötigt %u Bytes, "
-                   "verfügbar %u", size,
-                   SPU_RAM_SIZE - s_apsx.spu_alloc_ptr);
-        return 0;
-    }
-
-    addr = s_apsx.spu_alloc_ptr;
-    s_apsx.spu_alloc_ptr += size;
-
-    return addr;
+/* ── SPU RAM bump allocator ──────────────────────────────────────────────
+ * 512 KB total. 0x0000..0x100F reserved (BIOS / capture / dummy block); we
+ * hand out 8-byte-aligned regions above 0x1010 for each bank's VB body. */
+#define RE15_SPU_BASE  0x1010
+static uint32_t s_spu_top = RE15_SPU_BASE;
+static uint32_t spu_alloc(uint32_t bytes) {
+    uint32_t a = (s_spu_top + 7u) & ~7u;
+    s_spu_top = a + bytes;
+    return a;
 }
 
-/* ============================================================================
- * SPU Transfer-Hilfsfunktionen
- * ========================================================================= */
+/* Upload a VB body to SPU RAM at a freshly-allocated address; return the base. */
+static uint32_t spu_upload_vb(const uint8_t *vb, uint32_t vb_sz) {
+    uint32_t base = spu_alloc(vb_sz);
+    SpuSetTransferMode    (SPU_TRANSFER_BY_DMA);
+    SpuSetTransferStartAddr(base);
+    SpuWrite              ((const uint32_t *)vb, (size_t)vb_sz);
+    SpuIsTransferCompleted(1);
+    return base;
+}
 
-/**
- * Überträgt ADPCM-Daten in den SPU-RAM.
- *
- * Verwendet SpuSetTransferStartAddr + SpuWrite für den DMA-Transfer.
- * Wartet synchron auf Abschluss (SpuIsTransferCompleted).
- *
- * @param spu_addr  Ziel-Adresse im SPU-RAM
- * @param data      Quelldaten (ADPCM-Samples)
- * @param size      Größe in Bytes
- * @return 0 bei Erfolg, -1 bei Fehler.
- */
-static int spu_upload(uint32_t spu_addr, const uint8_t* data, uint32_t size)
+/* Stream a (possibly large) VB body from CD DIRECTLY to SPU RAM in staging-sized
+ * chunks. Room MAIN banks run to ~224KB — far over the 100KB shared staging — so
+ * a whole-file load won't fit. This reads N sectors at a time into staging and
+ * DMAs each chunk to consecutive SPU addresses (RAM-neutral, any bank size).
+ * Allocates the SPU region; returns its base, *out_size = the file byte size (for
+ * the VAB sample offsets). Returns 0 on failure. */
+static uint32_t ssx_stream_vb_to_spu(const char *path, uint32_t *out_size) {
+    re15_audio_voice_flush();
+    CdlFILE fp;
+    if (!CdSearchFile(&fp, (char *)path) || fp.size <= 0) { *out_size = 0; return 0; }
+    int total_sectors = (fp.size + 2047) >> 11;
+    int chunk_sectors = RE15_CD_STAGING_SIZE >> 11;          /* 50 sectors / 100KB */
+    int base_lba      = CdPosToInt(&fp.pos);
+    uint32_t spu_base = spu_alloc((uint32_t)fp.size);
+    uint32_t spu_off  = 0;
+    for (int done = 0; done < total_sectors; ) {
+        int n = total_sectors - done;
+        if (n > chunk_sectors) n = chunk_sectors;
+        CdlLOC loc;
+        CdIntToPos(base_lba + done, &loc);
+        CdControl(CdlSetloc, (const uint8_t *)&loc, 0);
+        if (!CdRead(n, (uint32_t *)re15_cd_staging, CdlModeSpeed)) { *out_size = 0; return 0; }
+        if (CdReadSync(0, 0) < 0)                                  { *out_size = 0; return 0; }
+        uint32_t bytes = (uint32_t)(n << 11);
+        SpuSetTransferMode    (SPU_TRANSFER_BY_DMA);
+        SpuSetTransferStartAddr(spu_base + spu_off);
+        SpuWrite              ((const uint32_t *)re15_cd_staging, bytes);
+        SpuIsTransferCompleted(1);
+        spu_off += bytes;
+        done    += n;
+    }
+    *out_size = (uint32_t)fp.size;
+    return spu_base;
+}
+
+/* ── SPU voice partition (24 voices; voice 0 left parked on the dummy block) ─
+ *   BGM MAIN : 1..12   (12-voice polyphony for the music track)
+ *   BGM SUB  : 13..17  (5-voice — the helicopter-rotor / ambience layer)
+ *   SFX      : 18..22  (5-voice round-robin)
+ *   VOICE    : 23      (1 reserved channel for CD-streamed dialogue) */
+#define BGM_MAIN_CH_BASE  1
+#define BGM_MAIN_CH_CNT   12
+#define BGM_SUB_CH_BASE   13
+#define BGM_SUB_CH_CNT    5
+#define SFX_CH_BASE       18
+#define SFX_CH_CNT        5
+#define VOICE_CH          23
+
+static inline void spu_settle(void) {
+    /* ~64 CPU cycles: lets the SPU register a KeyOff before we reprogram the
+     * voice (the KeyOff→config→KeyOn race wedged the command latch otherwise). */
+    for (volatile int i = 0; i < 64; i++) { /* spin */ }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+ *  SFX path (Se_on) — bundled DOOR00 VAB
+ * ════════════════════════════════════════════════════════════════════════ */
+static re15_vab_t s_sfx_vab;
+static int        s_sfx_loaded = 0;
+static uint32_t   s_sfx_spu_base = 0;
+static int        s_sfx_next = 0;     /* round-robin within SFX_CH range */
+
+/* Room footstep bank (snd0). Separate from the Se_on SFX VAB so it can't be
+ * disturbed by door-SFX round-robin; its EDT table maps floor sound_type→tone. */
+static re15_vab_t     s_foot_vab;
+static int            s_foot_loaded  = 0;
+static uint32_t       s_foot_spu_base = 0;
+static const uint8_t *s_foot_edt     = NULL;
+
+static void load_bundled_vab(void)
 {
-    if (!data || size == 0) return -1;
+    if (re15_vab_parse(test_vh, test_vh_size, &s_sfx_vab) != 0) return;
+    s_sfx_spu_base = spu_upload_vb(test_vb, (uint32_t)test_vb_size);
+    s_sfx_loaded = 1;
+}
 
-    /* Transfer-Modus: DMA */
-    SpuSetTransferMode(SPU_TRANSFER_BY_DMA);
+static void load_footstep_vab(void)
+{
+    s_foot_loaded = 0;
+    if (!g_room_rdt_ok) return;
+    const re15_rdt_t *rdt = &g_room_rdt;
+    if (!rdt->snd_vh[0] || !rdt->snd_vb[0] || !rdt->snd_edt[0]) return;   /* room has no snd0 bank */
+    if (re15_vab_parse(rdt->snd_vh[0], rdt->snd_vh_size[0], &s_foot_vab) != 0) return;
+    s_foot_spu_base = spu_upload_vb(rdt->snd_vb[0], (uint32_t)rdt->snd_vb_size[0]);
+    s_foot_edt      = rdt->snd_edt[0];
+    s_foot_loaded   = 1;
+}
 
-    /* Startadresse im SPU-RAM setzen */
-    SpuSetTransferStartAddr(spu_addr);
+/* Key on one SFX voice with `vag_index` (0-based) from an arbitrary bank
+ * (vab+spu_base). Pitch/ADSR come from the VAB tone that owns the VAG. */
+static void play_sample_from(const re15_vab_t *vab, uint32_t spu_base,
+                             int vag_index, int volume, int pitch_override)
+{
+    if (!vab || vag_index < 0 || vag_index >= vab->vag_count) return;
 
-    /* Daten übertragen */
-    SpuWrite((uint32_t*)data, size);
+    int ch = SFX_CH_BASE + s_sfx_next;
+    s_sfx_next = (s_sfx_next + 1) % SFX_CH_CNT;
 
-    /* Auf Abschluss warten (synchron) */
-    while (!SpuIsTransferCompleted(SPU_TRANSFER_WAIT))
-        ;
+    int spu_vol = (volume * 0x3FFF / 127);
+    if (spu_vol > 0x3FFF) spu_vol = 0x3FFF;
 
+    /* Source the SPU envelope from the VAB tone that owns this VAG. */
+    const re15_vab_tone_t *tn = NULL;
+    if (vab->tones_loaded) {
+        for (int p = 0; p < RE15_VAB_TOTAL_TONES; p++) {
+            if (vab->tones[p].vag_index == (uint16_t)(vag_index + 1)) {
+                tn = &vab->tones[p];
+                break;
+            }
+        }
+    }
+
+    SpuSetKey(0, 1u << ch);
+    spu_settle();
+    /* SFX have no incoming MIDI note → play at the tone's recorded pitch
+     * (center_note maps to 1.0× via note2pitch); fall back to 22050 Hz. A
+     * pitch_override (>0) forces a fixed SPU rate — the footstep uses 22050 to
+     * match the PC mixer (which plays SE at half the 44100 output via its 2×
+     * downsample); note2pitch's 0x1000 base = 44100 made it an octave too high. */
+    SPU_CH_FREQ (ch) = pitch_override ? pitch_override
+                     : tn ? re15_vab_note2pitch(tn->center_note, tn->center_note,
+                                                tn->pitch_shift)
+                          : getSPUSampleRate(22050);
+    SPU_CH_ADDR (ch) = getSPUAddr(spu_base + vab->samples[vag_index].offset);
+    SPU_CH_VOL_L(ch) = (int16_t)spu_vol;
+    SPU_CH_VOL_R(ch) = (int16_t)spu_vol;
+    SPU_CH_ADSR1(ch) = tn ? tn->adsr1 : 0x00FF;
+    SPU_CH_ADSR2(ch) = tn ? tn->adsr2 : 0x0000;
+    spu_settle();
+    SpuSetKey(1, 1u << ch);
+}
+
+static void play_sample(int vag_index, int volume)
+{
+    if (!s_sfx_loaded) return;
+    play_sample_from(&s_sfx_vab, s_sfx_spu_base, vag_index, volume, 0);
+}
+
+/* Player FOOTSTEP SE (byte-true FUN_80045630): floor sound_type → EDT → snd0
+ * tone → VAG → key a voice. `foot` (7=left/4=right) selects nothing for ROOM1170
+ * (both feet resolve to the same VAG; the original only differs the SE voice
+ * slot via param_2, which our round-robin already gives). The original scales by
+ * the per-tone vol × FUN_80045a64 camera-distance attenuation; the player is at
+ * the camera so attenuation≈max → play at the tone's recorded volume. */
+void re15_audio_footstep(int foot, int sound_type)
+{
+    (void)foot;
+    if (!s_foot_loaded || !s_foot_edt) return;
+    int vag = re15_footstep_vag(s_foot_edt, &s_foot_vab, sound_type);
+    if (vag < 0) return;
+    int vol = s_foot_vab.tones[s_foot_edt[sound_type * 4 + 2] >> 4].vol;
+    /* 22050 Hz = the PC mixer's effective SE rate (its 2× downsample of 44100) →
+     * matches the user-correct PC footstep pitch (note2pitch's 44100 base was 2× high). */
+    play_sample_from(&s_foot_vab, s_foot_spu_base, vag, vol ? vol : 100,
+                     getSPUSampleRate(22050));
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+ *  VOICE path (RE2 dialogue) — SCD Message_on (0x2B) → SCD_AUDIO_VOICE_ON.
+ *  RE2 streams dialogue as CD-XA mixed into the SPU; PSn00bSDK has no XA
+ *  encoder, so we mirror the same effect with a per-clip CD-load of a small
+ *  PSX-ADPCM (VAG) clip into a reserved SPU region, played on a reserved SPU
+ *  channel and mixed with the BGM in hardware. Clips are short (~23-49KB, ~2-4s).
+ *  The CD read is ASYNC (CdRead without sync) into a dedicated buffer, polled in
+ *  re15_audio_tick → no per-line main-loop hitch. (A coincident BG cut-load on the
+ *  shared CD drive can abort an in-flight voice read → that clip is just dropped,
+ *  no crash; voice lines and cut-changes rarely overlap.) */
+#define RE15_VOICE_SPU_SIZE  0xC800   /* reserved SPU region for the current voice clip (≥ largest VAG) */
+static uint32_t s_voice_spu_base = 0;
+static unsigned char s_voice_buf[RE15_VOICE_SPU_SIZE] __attribute__((aligned(4)));
+static int s_voice_loading = 0;       /* a CdRead is in flight */
+static int s_voice_bytes   = 0;       /* logical clip size of the in-flight read */
+
+/* Kick off an ASYNC CD read of the dialogue clip for message id `msg_id`
+ * (VOICE<NN>.VAG). Missing/oversized clips are silently skipped. The SPU upload
+ * + key-on happens in voice_poll() once the read completes. One clip at a time. */
+static void voice_play(int msg_id)
+{
+    if (s_voice_spu_base == 0 || s_voice_loading) return;
+    char path[32];
+    sprintf(path, "\\VOICE\\VOICE%02d.VAG;1", msg_id);   /* RE2: \PL0\VOICE\ */
+    CdlFILE fp;
+    if (!CdSearchFile(&fp, path)) return;
+    if (fp.size <= 0 || (uint32_t)fp.size > RE15_VOICE_SPU_SIZE) return;
+    int sectors = (fp.size + 2047) >> 11;
+    if ((sectors << 11) > (int)sizeof s_voice_buf) return;
+    CdControl(CdlSetloc, (const uint8_t *)&fp.pos, 0);
+    if (!CdRead(sectors, (uint32_t *)s_voice_buf, CdlModeSpeed)) return;  /* async start */
+    s_voice_bytes   = fp.size;
+    s_voice_loading = 1;
+}
+
+/* Poll the in-flight voice read; on completion, DMA to SPU + key the voice. */
+static void voice_poll(void)
+{
+    if (!s_voice_loading) return;
+    int rem = CdReadSync(1, 0);          /* non-blocking: >0 remaining, 0 done, <0 error */
+    if (rem > 0) return;                 /* still reading */
+    s_voice_loading = 0;
+    if (rem < 0) return;                 /* error / aborted (e.g. a BG load preempted) → drop */
+
+    SpuSetTransferMode    (SPU_TRANSFER_BY_DMA);
+    SpuSetTransferStartAddr(s_voice_spu_base);
+    SpuWrite              ((const uint32_t *)s_voice_buf, (size_t)s_voice_bytes);
+    SpuIsTransferCompleted(1);
+
+    /* Key the reserved voice channel (prominent, no envelope; 22050 Hz). */
+    SpuSetKey(0, 1u << VOICE_CH);
+    spu_settle();
+    SPU_CH_FREQ (VOICE_CH) = getSPUSampleRate(22050);
+    SPU_CH_ADDR (VOICE_CH) = getSPUAddr(s_voice_spu_base);
+    SPU_CH_VOL_L(VOICE_CH) = 0x3FFF;
+    SPU_CH_VOL_R(VOICE_CH) = 0x3FFF;
+    SPU_CH_ADSR1(VOICE_CH) = 0x00FF;
+    SPU_CH_ADSR2(VOICE_CH) = 0x0000;
+    spu_settle();
+    SpuSetKey(1, 1u << VOICE_CH);
+}
+
+/* CD serialization barrier (called from re15_cd_load_file before ANY other CD
+ * load): if a voice read is in flight, block until it finishes and upload it,
+ * so the new load can't collide with it on the single CD drive. This is what
+ * lets the async voice coexist with the cut-change BG streaming (re15_bg_load_*)
+ * — without it an in-flight voice read corrupts/aborts the cut's BG load and the
+ * camera cut appears not to change. No-op when no voice is loading. */
+void re15_audio_voice_flush(void)
+{
+    if (s_voice_loading) {
+        CdReadSync(0, 0);   /* block until the in-flight voice read completes */
+        voice_poll();       /* → upload + key (CdReadSync(1,0) now returns 0) */
+    }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+ *  BGM path — RE2 SsSeq on hardware SPU voices
+ * ════════════════════════════════════════════════════════════════════════ */
+#define SS_CHANNELS  16          /* MIDI channels */
+#define SS_SEQ_HDR   15          /* pQES header bytes before the event stream */
+#define SS_VOICE_MAX 12          /* >= max of the two layers' channel counts */
+
+typedef struct {
+    uint8_t active;
+    uint8_t chan, note;          /* MIDI channel + note owning this SPU voice */
+} ssx_voice_t;
+
+typedef struct {
+    /* soundfont */
+    re15_vab_t  vab;
+    int         vab_ok;
+    uint32_t    vag_spu_addr[RE15_VAB_MAX_SAMPLES];  /* per-VAG SPU RAM addr (0 = none) */
+    /* sequence (SEQ bytes live in a persistent buffer; see s_main_seq/s_sub_seq) */
+    const uint8_t *seq;
+    int         seq_len;
+    int         ppqn;
+    uint32_t    tempo_us;
+    int         cursor;
+    uint8_t     rstatus;
+    int         pending_dt;       /* MIDI ticks until the next event           */
+    uint32_t    accum_q16;        /* accumulated MIDI ticks, 16.16 fixed point */
+    int         playing;
+    int         loop;
+    /* MIDI channel state */
+    uint8_t     prog[SS_CHANNELS];
+    int         cvol[SS_CHANNELS]; /* CC7 channel volume 0..127 */
+    /* SPU voice pool for this layer */
+    int         ch_base, ch_count;
+    int         mvol_l, mvol_r;    /* per-layer master, 0..0x3FFF (full-scale ceiling) */
+    ssx_voice_t voice[SS_VOICE_MAX];
+} ssx_seq_t;
+
+static ssx_seq_t s_bgm_main;       /* MAIN<nn> music */
+static ssx_seq_t s_bgm_sub;        /* SUB_<nn> secondary / rotor-ambience layer */
+
+/* Persistent SEQ storage (the sequencer reads these continuously while playing). */
+static uint8_t s_main_seq[8192];   /* room MAIN SEQs run to ~5.9KB (MAIN16) */
+static uint8_t s_sub_seq [2048];
+
+/* ── per-layer voice management ── */
+static void ssx_all_keyoff(ssx_seq_t *s) {
+    for (int i = 0; i < s->ch_count; i++) {
+        if (s->voice[i].active) {
+            SpuSetKey(0, 1u << (s->ch_base + i));
+            s->voice[i].active = 0;
+        }
+    }
+}
+
+/* allocate a voice slot: first free, else steal the one with the lowest
+ * current SPU envelope level (quietest). */
+static int ssx_alloc_voice(ssx_seq_t *s) {
+    int best = 0, q = 0x7fffffff;
+    for (int i = 0; i < s->ch_count; i++) {
+        if (!s->voice[i].active) return i;
+        int env = (int)SPU_CH_ADSR_VOL(s->ch_base + i);
+        if (env < q) { q = env; best = i; }
+    }
+    return best;
+}
+
+static void ssx_note_on(ssx_seq_t *s, int chan, int note, int vel) {
+    const re15_vab_tone_t *t = re15_vab_find_tone(&s->vab, s->prog[chan], note);
+    if (!t) return;
+    int vi = (int)t->vag_index - 1;                  /* vag_index is 1-based */
+    if (vi < 0 || vi >= s->vab.vag_count || s->vag_spu_addr[vi] == 0) return;
+
+    /* volume cascade (7-bit): tone vol × velocity × channel volume, panned,
+     * then scaled into the layer's SPU full-scale ceiling. */
+    int vol = (int)t->vol * vel / 127;
+    vol = vol * s->cvol[chan] / 127;                 /* 0..127 */
+    int pan = t->pan; if (pan < 0 || pan > 127) pan = 64;
+    int vl, vr;
+    if (pan >= 56 && pan <= 72) { vl = vol; vr = vol; }
+    else { vl = vol * (127 - pan) / 127; vr = vol * pan / 127; }
+    int spu_l = vl * s->mvol_l / 127;                /* 0..mvol_l (<= 0x3FFF) */
+    int spu_r = vr * s->mvol_r / 127;
+
+    uint16_t pitch = re15_vab_note2pitch(note, t->center_note, t->pitch_shift);
+
+    int slot = ssx_alloc_voice(s);
+    int ch   = s->ch_base + slot;
+
+    SpuSetKey(0, 1u << ch);
+    spu_settle();
+    SPU_CH_FREQ (ch) = pitch;
+    SPU_CH_ADDR (ch) = getSPUAddr(s->vag_spu_addr[vi]);
+    SPU_CH_VOL_L(ch) = (int16_t)spu_l;
+    SPU_CH_VOL_R(ch) = (int16_t)spu_r;
+    SPU_CH_ADSR1(ch) = t->adsr1;                     /* SPU runs the ADSR + loop in HW */
+    SPU_CH_ADSR2(ch) = t->adsr2;
+    spu_settle();
+    SpuSetKey(1, 1u << ch);
+
+    s->voice[slot].active = 1;
+    s->voice[slot].chan   = (uint8_t)chan;
+    s->voice[slot].note   = (uint8_t)note;
+}
+
+static void ssx_note_off(ssx_seq_t *s, int chan, int note) {
+    for (int i = 0; i < s->ch_count; i++) {
+        if (s->voice[i].active && s->voice[i].chan == chan && s->voice[i].note == note) {
+            SpuSetKey(0, 1u << (s->ch_base + i));    /* enter the release phase */
+            s->voice[i].active = 0;
+        }
+    }
+}
+
+/* variable-length quantity (MIDI delta time). */
+static int ssx_vlq(ssx_seq_t *s) {
+    int v = 0;
+    while (s->cursor < s->seq_len) {
+        uint8_t b = s->seq[s->cursor++];
+        v = (v << 7) | (b & 0x7f);
+        if (!(b & 0x80)) break;
+    }
+    return v;
+}
+
+/* parse + dispatch one event at the cursor (standard MIDI w/ running status). */
+static void ssx_fire_event(ssx_seq_t *s) {
+    if (s->cursor >= s->seq_len) { s->playing = 0; return; }
+    uint8_t st = s->seq[s->cursor];
+    if (st & 0x80) { s->rstatus = st; s->cursor++; } else { st = s->rstatus; }
+    int typ = st & 0xf0, ch = st & 0x0f;
+    if (typ == 0x90) {                               /* note-on (vel 0 = note-off) */
+        int n = s->seq[s->cursor++];
+        int vel = s->seq[s->cursor++];
+        if (vel) ssx_note_on(s, ch, n, vel); else ssx_note_off(s, ch, n);
+    } else if (typ == 0x80) {                        /* note-off */
+        int n = s->seq[s->cursor++]; s->cursor++; ssx_note_off(s, ch, n);
+    } else if (typ == 0xC0) {                        /* program change */
+        s->prog[ch] = s->seq[s->cursor++];
+    } else if (typ == 0xD0) {                        /* channel pressure — ignore */
+        s->cursor++;
+    } else if (typ == 0xE0) {                        /* pitch bend — parsed, not applied (TODO) */
+        s->cursor += 2;
+    } else if (typ == 0xA0 || typ == 0xB0) {         /* aftertouch / control change */
+        int d1 = s->seq[s->cursor++];
+        int d2 = s->seq[s->cursor++];
+        if (typ == 0xB0 && d1 == 7) s->cvol[ch] = d2;   /* CC7 channel volume */
+    } else if (st == 0xFF) {                          /* meta */
+        int meta = s->seq[s->cursor++];
+        int len  = s->seq[s->cursor++];
+        if (meta == 0x51 && len == 3)                /* tempo (u24 BE µs/quarter) */
+            s->tempo_us = (uint32_t)((s->seq[s->cursor] << 16) |
+                          (s->seq[s->cursor+1] << 8) | s->seq[s->cursor+2]);
+        s->cursor += len;
+        if (meta == 0x2F) {                          /* end of track */
+            if (s->loop) { s->cursor = SS_SEQ_HDR; s->rstatus = 0; ssx_all_keyoff(s); }
+            else s->playing = 0;
+        }
+    } else if (st == 0xF0 || st == 0xF7) {           /* sysex — skip */
+        s->cursor += ssx_vlq(s);
+    } else { s->playing = 0; }                        /* unknown → stop */
+}
+
+/* advance the sequence by `vblanks` 60 Hz ticks of elapsed wall time. */
+static void ssx_advance(ssx_seq_t *s, uint32_t vblanks) {
+    if (!s->playing || !s->seq || s->tempo_us == 0) return;
+    /* MIDI ticks per vblank, 16.16:  ppqn * 1e6 / tempo_us / 60 . */
+    uint32_t inc = (uint32_t)(((uint64_t)s->ppqn * 1000000ULL * 65536ULL) /
+                              ((uint64_t)s->tempo_us * 60ULL));
+    s->accum_q16 += inc * vblanks;
+    int guard = 4096;
+    /* pending_dt is small for these tracks, so (dt << 16) never overflows. */
+    while (s->playing && (s->accum_q16 >> 16) >= (uint32_t)s->pending_dt && guard-- > 0) {
+        s->accum_q16 -= (uint32_t)s->pending_dt << 16;
+        ssx_fire_event(s);
+        s->pending_dt = ssx_vlq(s);
+    }
+}
+
+/* SsVabOpenHead + SsSeqOpen: bind a parsed VH + an already-SPU-uploaded VB
+ * (at `spu_base`) + a SEQ into an instance. SEQ is copied into `seq_store`. */
+static int ssx_load(ssx_seq_t *s, int ch_base, int ch_count,
+                    const uint8_t *vh, int vh_sz, uint32_t spu_base,
+                    const uint8_t *seq, int seq_sz,
+                    uint8_t *seq_store, int seq_store_cap)
+{
+    memset(s, 0, sizeof(*s));
+    s->ch_base = ch_base; s->ch_count = ch_count;
+    if (s->ch_count > SS_VOICE_MAX) s->ch_count = SS_VOICE_MAX;
+    if (re15_vab_parse(vh, (size_t)vh_sz, &s->vab) != 0) return -1;
+    for (int i = 0; i < s->vab.vag_count; i++)
+        s->vag_spu_addr[i] = spu_base + s->vab.samples[i].offset;
+    s->vab_ok = 1;
+
+    if (seq_sz <= SS_SEQ_HDR || seq_sz > seq_store_cap ||
+        seq[0] != 'p' || seq[1] != 'Q') return -2;
+    memcpy(seq_store, seq, (size_t)seq_sz);
+    s->seq = seq_store; s->seq_len = seq_sz;
+    s->ppqn     = (seq[8] << 8) | seq[9];
+    s->tempo_us = (uint32_t)((seq[10] << 16) | (seq[11] << 8) | seq[12]);
+    if (s->ppqn <= 0)     s->ppqn = 48;
+    if (s->tempo_us == 0) s->tempo_us = 500000;
     return 0;
 }
 
-/* ============================================================================
- * Backend-Implementierung: init / shutdown
- * ========================================================================= */
-
-/**
- * Initialisiert das SPU-Audio-Subsystem.
- *
- * Konfiguriert die SPU-Hardware:
- *   - SpuInit: SPU zurücksetzen und initialisieren
- *   - Master-Volume auf Maximum setzen
- *   - SPU-RAM-Allokator auf ersten freien Offset setzen
- *   - Alle Banks und SEQ-Slots als unbenutzt markieren
- */
-static void psx_audio_init(void)
-{
-    int i;
-
-    if (s_apsx.initialized) return;
-
-    /* SPU-Hardware initialisieren */
-    SpuInit();
-
-    /* Master-Volume auf Maximum setzen (links + rechts) */
-    SpuSetCommonAttr(SPU_COMMON_MVOLL | SPU_COMMON_MVOLR,
-                     0x3FFF, 0x3FFF, 0, 0, 0);
-
-    /* SPU-RAM-Allokator initialisieren */
-    s_apsx.spu_alloc_ptr = SPU_RAM_START;
-
-    /* Round-Robin Voice-Index für SFX */
-    s_apsx.sfx_voice_rr = SPU_SFX_VOICE_START;
-
-    /* Alle Banks zurücksetzen */
-    for (i = 0; i < RE15_AUDIO_MAX_BANKS; i++) {
-        memset(&s_apsx.banks[i], 0, sizeof(audio_psx_bank_t));
-    }
-
-    /* Alle SEQ-Slots zurücksetzen */
-    for (i = 0; i < RE15_AUDIO_MAX_SEQ_SLOTS; i++) {
-        s_apsx.seq_slots[i].active = 0;
-        s_apsx.seq_slots[i].loop = 0;
-        s_apsx.seq_slots[i].seq_handle = -1;
-    }
-
-    s_apsx.initialized = 1;
-
-    RE15_INFO("AUDIO_PSX", "SPU initialisiert (512KB RAM, 24 Voices)");
+/* SsSeqPlay(id, 0, loop): (re)start playback from the top. */
+static void ssx_start(ssx_seq_t *s, int loop) {
+    if (!s->vab_ok || !s->seq) { s->playing = 0; return; }
+    ssx_all_keyoff(s);
+    for (int i = 0; i < SS_CHANNELS; i++) { s->prog[i] = 0; s->cvol[i] = 100; }
+    s->cursor = SS_SEQ_HDR; s->rstatus = 0; s->accum_q16 = 0;
+    s->pending_dt = ssx_vlq(s);
+    s->loop = loop; s->playing = 1;
 }
 
-/**
- * Fährt das SPU-Audio-Subsystem herunter.
- *
- * Stoppt alle Voices und SEQ-Playback, gibt SPU-RAM-Tracking frei.
- */
-static void psx_audio_shutdown(void)
-{
-    int i;
-
-    if (!s_apsx.initialized) return;
-
-    /* Alle SEQ-Slots stoppen */
-    for (i = 0; i < RE15_AUDIO_MAX_SEQ_SLOTS; i++) {
-        if (s_apsx.seq_slots[i].active) {
-            SsSeqStop(s_apsx.seq_slots[i].seq_handle);
-            SsSeqClose(s_apsx.seq_slots[i].seq_handle);
-            s_apsx.seq_slots[i].active = 0;
-        }
-    }
-
-    /* Alle 24 Voices abschalten */
-    SpuSetKey(SPU_OFF, 0x00FFFFFF);
-
-    s_apsx.initialized = 0;
-    RE15_INFO("AUDIO_PSX", "SPU heruntergefahren");
+static void ssx_stop(ssx_seq_t *s) {
+    s->playing = 0;
+    ssx_all_keyoff(s);
 }
 
-/* ============================================================================
- * Backend-Implementierung: VAB Load / Unload
- * ========================================================================= */
-
-/**
- * Lädt eine VAB-Sound-Bank (VH-Header + VB-Body) in SPU-RAM.
- *
- * Ablauf:
- *   1. VH-Header parsen → Anzahl VAG-Samples und deren Größen ermitteln
- *   2. SPU-RAM für alle Samples reservieren (linearer Allokator)
- *   3. VB-Daten (ADPCM-Samples) via DMA in SPU-RAM hochladen
- *   4. Per-Sample SPU-RAM-Offsets in der Bank-Tabelle speichern
- *
- * PSX-ADPCM-Samples im VB-Body sind bereits im SPU-nativen Format
- * (4-bit ADPCM, 28 Samples/Block à 16 Bytes). Kein Transcoding nötig.
- *
- * @param vh        VH-Header-Daten
- * @param vh_size   Größe des VH-Headers
- * @param vb        VB-Body-Daten (ADPCM-Samples, konkateniert)
- * @param vb_size   Gesamtgröße des VB-Body
- * @param bank_id   Ziel-Bank-Slot (0-15)
- * @return 0 bei Erfolg, -1 bei Fehler.
- */
-static int psx_audio_vab_load(const uint8_t* vh, int vh_size,
-                               const uint8_t* vb, int vb_size,
-                               int bank_id)
-{
-    const vab_header_t* hdr;
-    audio_psx_bank_t* bank;
-    uint32_t spu_addr;
-    const uint16_t* vag_sizes;
-    uint32_t offset_in_vb;
-    int i;
-
-    /* Parameter-Validierung */
-    if (!vh || !vb || vh_size < (int)sizeof(vab_header_t)) {
-        RE15_ERROR("AUDIO_PSX", "vab_load: Ungültige Parameter");
-        return -1;
-    }
-
-    if (bank_id < 0 || bank_id >= RE15_AUDIO_MAX_BANKS) {
-        RE15_ERROR("AUDIO_PSX", "vab_load: Bank-ID %d außerhalb [0,%d)",
-                   bank_id, RE15_AUDIO_MAX_BANKS);
-        return -1;
-    }
-
-    bank = &s_apsx.banks[bank_id];
-
-    /* Falls Bank bereits belegt: erst entladen */
-    if (bank->loaded) {
-        RE15_WARN("AUDIO_PSX", "vab_load: Bank %d bereits geladen, "
-                  "wird überschrieben", bank_id);
-        /* Hinweis: SPU-RAM wird nicht freigegeben (Fragment akzeptiert) */
-        bank->loaded = 0;
-    }
-
-    /* VH-Header parsen */
-    hdr = (const vab_header_t*)vh;
-
-    /* Magic prüfen: "VABp" = 0x70424156 (Little-Endian) */
-    if (hdr->magic != 0x70424156) {
-        RE15_ERROR("AUDIO_PSX", "vab_load: Ungültiger VAB-Magic 0x%08X "
-                   "(erwartet 0x70424156)", hdr->magic);
-        return -1;
-    }
-
-    bank->num_programs = hdr->num_programs;
-    bank->num_tones    = hdr->num_tones;
-    bank->num_vags     = hdr->num_vags;
-
-    if (bank->num_vags == 0 || bank->num_vags > 128) {
-        RE15_WARN("AUDIO_PSX", "vab_load: Bank %d hat %d VAGs",
-                  bank_id, bank->num_vags);
-        if (bank->num_vags == 0) return -1;
-        if (bank->num_vags > 128) bank->num_vags = 128;
-    }
-
-    /*
-     * VAG-Größen-Tabelle: Im VH-Header nach dem Programm-/Tone-Block.
-     * Position: Offset 32 (Header) + 128*16 (Programs) + num_tones*32 (Tones)
-     * Jeder Eintrag: uint16_t, Größe in 8-Byte-Einheiten (×8 für Bytes)
-     *
-     * Vereinfachte Berechnung des Offsets zur VAG-Size-Tabelle:
-     * Standard PSX-VAB: Header(32) + Programs(128×4) + Tones(16×32) = 32+512+512 = 1056
-     * Für variables num_tones: 32 + 512 + num_tones*32
-     */
-    {
-        uint32_t vag_table_offset = 32 + (128 * 4) + (bank->num_tones * 32);
-
-        if ((int)(vag_table_offset + bank->num_vags * 2) > vh_size) {
-            RE15_ERROR("AUDIO_PSX", "vab_load: VH zu klein für VAG-Tabelle "
-                       "(offset=%u, vh_size=%d)", vag_table_offset, vh_size);
-            return -1;
-        }
-
-        vag_sizes = (const uint16_t*)(vh + vag_table_offset);
-    }
-
-    /* SPU-RAM für gesamten VB-Body reservieren */
-    spu_addr = spu_ram_alloc((uint32_t)vb_size);
-    if (spu_addr == 0) {
-        RE15_ERROR("AUDIO_PSX", "vab_load: Kein SPU-RAM für Bank %d "
-                   "(%d Bytes)", bank_id, vb_size);
-        return -1;
-    }
-
-    bank->spu_base_addr = spu_addr;
-    bank->spu_size = (uint32_t)vb_size;
-
-    /* VB-Body in SPU-RAM hochladen (ein zusammenhängender Block) */
-    if (spu_upload(spu_addr, vb, (uint32_t)vb_size) < 0) {
-        RE15_ERROR("AUDIO_PSX", "vab_load: SPU-Transfer fehlgeschlagen "
-                   "(Bank %d)", bank_id);
-        return -1;
-    }
-
-    /* Per-VAG-Offsets berechnen (relativ zum SPU-RAM-Basis) */
-    offset_in_vb = 0;
-    for (i = 0; i < (int)bank->num_vags; i++) {
-        /* VAG-Größe: Tabellenwert × 8 ergibt tatsächliche Byte-Größe */
-        uint32_t vag_byte_size = (uint32_t)vag_sizes[i] * 8;
-
-        bank->vag_offsets[i] = spu_addr + offset_in_vb;
-        offset_in_vb += vag_byte_size;
-
-        /* Sicherheits-Check: Nicht über VB-Grenzen hinaus */
-        if (offset_in_vb > (uint32_t)vb_size) {
-            RE15_WARN("AUDIO_PSX", "vab_load: VAG %d überschreitet VB "
-                      "(offset=%u, vb_size=%d)", i, offset_in_vb, vb_size);
-            bank->num_vags = (uint16_t)i;
-            break;
-        }
-    }
-
-    bank->loaded = 1;
-
-    RE15_INFO("AUDIO_PSX", "VAB-Bank %d geladen: %d Progs, %d Tones, "
-              "%d VAGs, SPU@0x%05X (%d Bytes)",
-              bank_id, bank->num_programs, bank->num_tones,
-              bank->num_vags, spu_addr, vb_size);
-
-    return 0;
-}
-
-/**
- * Entlädt eine VAB-Sound-Bank.
- *
- * Markiert die Bank als frei. SPU-RAM wird nur freigegeben wenn die
- * Bank die zuletzt allokierte war (Stack-Deallokation). Andernfalls
- * bleibt ein Fragment — dies ist akzeptiert (RE2-Verhalten: Banks
- * werden pro Stage geladen und gemeinsam freigegeben).
- *
- * @param bank_id  Bank-Slot (0-15)
- */
-static void psx_audio_vab_unload(int bank_id)
-{
-    audio_psx_bank_t* bank;
-
-    if (bank_id < 0 || bank_id >= RE15_AUDIO_MAX_BANKS) return;
-
-    bank = &s_apsx.banks[bank_id];
-
-    if (!bank->loaded) return;
-
-    /* Stack-Deallokation: Wenn diese Bank die letzte im SPU-RAM ist,
-     * Allokator zurücksetzen */
-    if (bank->spu_base_addr + bank->spu_size == s_apsx.spu_alloc_ptr) {
-        s_apsx.spu_alloc_ptr = bank->spu_base_addr;
-    }
-
-    bank->loaded = 0;
-    bank->num_programs = 0;
-    bank->num_tones = 0;
-    bank->num_vags = 0;
-    bank->spu_base_addr = 0;
-    bank->spu_size = 0;
-
-    RE15_INFO("AUDIO_PSX", "VAB-Bank %d entladen", bank_id);
-}
-
-/* ============================================================================
- * Backend-Implementierung: SEQ Playback
- * ========================================================================= */
-
-/**
- * Startet SEQ-Playback (BGM) in einem Slot.
- *
- * Verwendet PSn00bSDK Sequencer-API:
- *   - SsSeqOpen: SEQ-Daten registrieren, Handle erhalten
- *   - SsSeqPlay: Playback starten (mit Loop-Flag)
- *
- * Falls der Slot bereits aktiv ist, wird die laufende Sequenz gestoppt
- * und durch die neue ersetzt.
- *
- * @param slot      Playback-Slot (0-3)
- * @param seq_data  SEQ-Datenstrom
- * @param seq_size  Größe in Bytes
- * @param loop      0 = einmalig, != 0 = Endlosschleife
- */
-static void psx_audio_seq_play(int slot, const uint8_t* seq_data,
-                                int seq_size, int loop)
-{
-    audio_psx_seq_slot_t* ss;
-
-    if (slot < 0 || slot >= RE15_AUDIO_MAX_SEQ_SLOTS) {
-        RE15_WARN("AUDIO_PSX", "seq_play: Slot %d ungültig", slot);
-        return;
-    }
-
-    if (!seq_data || seq_size <= 0) {
-        RE15_WARN("AUDIO_PSX", "seq_play: Ungültige SEQ-Daten");
-        return;
-    }
-
-    ss = &s_apsx.seq_slots[slot];
-
-    /* Laufende Sequenz im Slot stoppen */
-    if (ss->active) {
-        SsSeqStop(ss->seq_handle);
-        SsSeqClose(ss->seq_handle);
-        ss->active = 0;
-    }
-
-    /* SEQ-Daten beim Sequencer registrieren */
-    ss->seq_handle = SsSeqOpen((uint32_t*)seq_data, 0);
-    if (ss->seq_handle < 0) {
-        RE15_ERROR("AUDIO_PSX", "seq_play: SsSeqOpen fehlgeschlagen "
-                   "(Slot %d)", slot);
-        return;
-    }
-
-    /* Playback starten */
-    ss->loop = (loop != 0) ? 1 : 0;
-    SsSeqPlay(ss->seq_handle, SSPLAY_PLAY, ss->loop ? SSPLAY_INFINITY : 1);
-    ss->active = 1;
-
-    RE15_INFO("AUDIO_PSX", "SEQ-Play Slot %d (handle=%d, loop=%d, %d Bytes)",
-              slot, ss->seq_handle, ss->loop, seq_size);
-}
-
-/**
- * Stoppt SEQ-Playback in einem Slot.
- *
- * @param slot  Playback-Slot (0-3)
- */
-static void psx_audio_seq_stop(int slot)
-{
-    audio_psx_seq_slot_t* ss;
-
-    if (slot < 0 || slot >= RE15_AUDIO_MAX_SEQ_SLOTS) return;
-
-    ss = &s_apsx.seq_slots[slot];
-
-    if (!ss->active) return;
-
-    SsSeqStop(ss->seq_handle);
-    SsSeqClose(ss->seq_handle);
-
-    ss->active = 0;
-    ss->seq_handle = -1;
-
-    RE15_INFO("AUDIO_PSX", "SEQ-Stop Slot %d", slot);
-}
-
-/* ============================================================================
- * Backend-Implementierung: SFX Playback
- * ========================================================================= */
-
-/**
- * Triggert einen Soundeffekt über die SPU.
- *
- * Verwendet eine der SFX-reservierten Voices (16-23) im Round-Robin-Verfahren.
- * Konfiguriert die Voice mit:
- *   - SPU-RAM-Adresse des Samples (aus VAB-Bank vag_offsets)
- *   - Lautstärke (Volume links/rechts berechnet aus volume + pan)
- *   - Standard-Pitch (44100 Hz = 0x1000 = Basis-Samplerate)
- *   - Standard-ADSR (Quick Attack, Sustain, Medium Release)
- *
- * Danach: SpuSetKey(SPU_ON) für die gewählte Voice.
- *
- * @param bank       VAB-Bank (0-15)
- * @param sample_id  Sample-Index innerhalb der Bank (0-127)
- * @param volume     Lautstärke (0-127)
- * @param pan        Stereo-Position (0=links, 64=Mitte, 127=rechts)
- */
-static void psx_audio_sfx_play(int bank, int sample_id,
-                                int volume, int pan)
-{
-    audio_psx_bank_t* b;
-    SpuVoiceAttr attr;
-    uint8_t voice;
-    int vol_left, vol_right;
-
-    /* Parameter-Validierung */
-    if (bank < 0 || bank >= RE15_AUDIO_MAX_BANKS) return;
-    if (sample_id < 0 || sample_id >= RE15_AUDIO_MAX_SAMPLES) return;
-
-    b = &s_apsx.banks[bank];
-    if (!b->loaded) {
-        RE15_WARN("AUDIO_PSX", "sfx_play: Bank %d nicht geladen", bank);
-        return;
-    }
-
-    if (sample_id >= (int)b->num_vags) {
-        RE15_WARN("AUDIO_PSX", "sfx_play: Sample %d nicht in Bank %d "
-                  "(max %d)", sample_id, bank, b->num_vags);
-        return;
-    }
-
-    /* Round-Robin Voice-Zuweisung (Voices 16-23 für SFX) */
-    voice = s_apsx.sfx_voice_rr;
-    s_apsx.sfx_voice_rr++;
-    if (s_apsx.sfx_voice_rr >= SPU_SFX_VOICE_START + SPU_SFX_VOICE_COUNT) {
-        s_apsx.sfx_voice_rr = SPU_SFX_VOICE_START;
-    }
-
-    /* Volume clamping */
-    if (volume < 0) volume = 0;
-    if (volume > RE15_AUDIO_VOLUME_MAX) volume = RE15_AUDIO_VOLUME_MAX;
-    if (pan < 0) pan = 0;
-    if (pan > 127) pan = 127;
-
-    /*
-     * Stereo-Volume aus pan berechnen:
-     *   pan=0   → links=max, rechts=0
-     *   pan=64  → links=max, rechts=max
-     *   pan=127 → links=0, rechts=max
-     *
-     * SPU-Volume-Range: 0x0000 - 0x3FFF
-     * Skalierung: (volume/127) × (pan_factor) × 0x3FFF
-     */
-    {
-        int vol_scale = (volume * 0x3FFF) / RE15_AUDIO_VOLUME_MAX;
-
-        if (pan <= 64) {
-            vol_left  = vol_scale;
-            vol_right = (vol_scale * pan) / 64;
-        } else {
-            vol_left  = (vol_scale * (127 - pan)) / 63;
-            vol_right = vol_scale;
-        }
-    }
-
-    /* Voice-Attribute konfigurieren */
-    memset(&attr, 0, sizeof(SpuVoiceAttr));
-
-    attr.voice       = (1 << voice);
-    attr.mask        = SPU_VOICE_VOLL | SPU_VOICE_VOLR |
-                       SPU_VOICE_PITCH | SPU_VOICE_ADDR |
-                       SPU_VOICE_ADSR1 | SPU_VOICE_ADSR2;
-    attr.volume.left  = (int16_t)vol_left;
-    attr.volume.right = (int16_t)vol_right;
-    attr.pitch        = 0x1000;  /* Basis-Samplerate (44100 Hz) */
-    attr.addr         = b->vag_offsets[sample_id];
-    attr.adsr1        = DEFAULT_ADSR1;
-    attr.adsr2        = DEFAULT_ADSR2;
-
-    SpuSetVoiceAttr(&attr);
-
-    /* Voice starten (Key On) */
-    SpuSetKey(SPU_ON, (1 << voice));
-}
-
-/* ============================================================================
- * Backend-Implementierung: Voice Playback
- * ========================================================================= */
-
-/**
- * Spielt eine Voice-Nachricht (Sprach-Clip) für einen bestimmten Raum ab.
- *
- * Voice-Clips werden auf der PSX als separate ADPCM-Samples in einer
- * dedizierten Voice-Bank geladen. Das Mapping room_id+msg_id → Sample-ID
- * erfolgt über eine Lookup-Tabelle (hier: direkte Berechnung).
- *
- * @param room_id  Raum-ID
- * @param msg_id   Nachrichten-Index
- */
-static void psx_audio_voice_play(int room_id, int msg_id)
-{
-    /*
-     * Voice-Playback: Auf der PSX werden Sprach-Clips typischerweise
-     * aus einer separaten Voice-Bank (Bank 15 per Konvention) abgespielt.
-     * Das Mapping ist raumspezifisch.
-     *
-     * Für den Moment: SFX-Play auf der dedizierten Voice-Bank verwenden.
-     * Die Voice-Bank muss vorher als Bank 15 geladen sein.
-     */
-    int voice_bank = RE15_AUDIO_MAX_BANKS - 1;  /* Bank 15 = Voice-Bank */
-    int voice_sample;
-
-    /* Einfaches Mapping: msg_id direkt als Sample-Index */
-    voice_sample = msg_id;
-
-    RE15_INFO("AUDIO_PSX", "Voice: Room %d, Msg %d → Bank %d, Sample %d",
-              room_id, msg_id, voice_bank, voice_sample);
-
-    /* Über reguläre SFX-Pipeline abspielen (zentriert, volle Lautstärke) */
-    psx_audio_sfx_play(voice_bank, voice_sample,
-                       RE15_AUDIO_VOLUME_MAX, RE15_AUDIO_PAN_CENTER);
-
-    (void)room_id;  /* Room-ID für zukünftiges erweitertes Mapping */
-}
-
-/* ============================================================================
- * Backend-Implementierung: Volume Control
- * ========================================================================= */
-
-/**
- * Setzt die Lautstärke für einen Audio-Kanal.
- *
- * Kanal 0 = Master-Volume (beeinflusst SPU-Master-Volume).
- * Kanal 1-23 = einzelne SPU-Voices.
- *
- * @param channel       Kanal (0=Master, 1-23=Voice)
- * @param volume_0_127  Lautstärke (0=stumm, 127=Maximum)
- */
-static void psx_audio_set_volume(int channel, int volume_0_127)
-{
-    int spu_vol;
-
-    /* Clamping */
-    if (volume_0_127 < 0) volume_0_127 = 0;
-    if (volume_0_127 > RE15_AUDIO_VOLUME_MAX) volume_0_127 = RE15_AUDIO_VOLUME_MAX;
-
-    /* Auf SPU-Range skalieren (0-0x3FFF) */
-    spu_vol = (volume_0_127 * 0x3FFF) / RE15_AUDIO_VOLUME_MAX;
-
-    if (channel == 0) {
-        /* Master-Volume (beide Kanäle) */
-        SpuSetCommonAttr(SPU_COMMON_MVOLL | SPU_COMMON_MVOLR,
-                         (int16_t)spu_vol, (int16_t)spu_vol, 0, 0, 0);
-    } else if (channel >= 1 && channel <= SPU_MAX_VOICES) {
-        /* Einzelne Voice-Lautstärke */
-        SpuVoiceAttr attr;
-        int voice_idx = channel - 1;
-
-        memset(&attr, 0, sizeof(SpuVoiceAttr));
-        attr.voice        = (1 << voice_idx);
-        attr.mask         = SPU_VOICE_VOLL | SPU_VOICE_VOLR;
-        attr.volume.left  = (int16_t)spu_vol;
-        attr.volume.right = (int16_t)spu_vol;
-
-        SpuSetVoiceAttr(&attr);
-    }
-}
-
-/* ============================================================================
- * Exportierte Backend-Instanz
- * ========================================================================= */
-
-static const audio_backend_t s_audio_psx_backend = {
-    .init       = psx_audio_init,
-    .shutdown   = psx_audio_shutdown,
-    .vab_load   = psx_audio_vab_load,
-    .vab_unload = psx_audio_vab_unload,
-    .seq_play   = psx_audio_seq_play,
-    .seq_stop   = psx_audio_seq_stop,
-    .sfx_play   = psx_audio_sfx_play,
-    .voice_play = psx_audio_voice_play,
-    .set_volume = psx_audio_set_volume,
+/* ── canonical RE1.5 stage/room → BGM mapping (ported from PSX.EXE static data;
+ * mirrors re15_reborn_pc audio_pc.c). entry = SS_BGMTBL[room + SS_STAGE_OFF[stage]];
+ * MAIN slot = entry & 0x3f; SUB slot = (entry>>8)&0x3f (0xff high byte = no sub).
+ * STAGE1/ROOM1170 (stage0,room0x17) → MAIN32 + SUB_15. */
+static const uint8_t  SS_STAGE_OFF[6] = {0x00, 0x26, 0x32, 0x41, 0x4d, 0x62};
+static const uint16_t SS_BGMTBL[106] = {
+    0xffff, 0xff1e, 0xff00, 0x4041, 0xff00, 0xff00, 0xffff, 0xff00,
+    0xffff, 0x0355, 0xffff, 0xff32, 0xff1f, 0xff1f, 0xff26, 0xff20,
+    0xff1f, 0xff1b, 0xff17, 0xff17, 0xff56, 0xff1e, 0xff1d, 0x5572,
+    0xff1d, 0xff1d, 0xff08, 0xff1d, 0xff56, 0xff7b, 0xff1d, 0xff78,
+    0x5a7a, 0xff1d, 0xff1d, 0xff1d, 0xff28, 0xff00, 0xff11, 0xff24,
+    0xff11, 0xff08, 0xff74, 0xff74, 0xff78, 0xff02, 0x042e, 0x042e,
+    0xff08, 0x4a51, 0x0c04, 0x0c04, 0x0c04, 0xff22, 0xff04, 0xff04,
+    0x4604, 0xff59, 0xffff, 0xff0f, 0xff24, 0xff24, 0xff04, 0x0c04,
+    0xff04, 0xff52, 0xff24, 0xffff, 0xff29, 0xff29, 0xff29, 0xffff,
+    0xffff, 0xff29, 0xff06, 0xff29, 0xff09, 0xff29, 0xff24, 0xff05,
+    0xff29, 0xff29, 0xff1c, 0xff09, 0xff29, 0x5979, 0x576a, 0xff29,
+    0xff27, 0xff23, 0xff23, 0xff5a, 0xff5a, 0xff23, 0xff07, 0xff07,
+    0xff07, 0xff07, 0xff65, 0xff65, 0xff24, 0x566a, 0xff41, 0xffff,
+    0xffff, 0xffff
 };
+static int ssx_bgm_entry(int stage, int room) {
+    if (stage < 0 || stage > 5) return -1;
+    int idx = room + SS_STAGE_OFF[stage];
+    if (idx < 0 || idx >= (int)(sizeof SS_BGMTBL / sizeof SS_BGMTBL[0])) return -1;
+    uint16_t e = SS_BGMTBL[idx];
+    return (e == 0xffff) ? -1 : (int)e;
+}
+static int ssx_main_slot(int stage, int room) {
+    int e = ssx_bgm_entry(stage, room);
+    return e < 0 ? -1 : (e & 0x3f);
+}
+static int ssx_sub_slot(int stage, int room) {
+    int e = ssx_bgm_entry(stage, room);
+    if (e < 0 || ((e >> 8) & 0xff) == 0xff) return -1;
+    return (e >> 8) & 0x3f;
+}
 
-/** Globaler Zeiger auf das PSX-Audio-Backend (extern deklariert in re15_audio.h) */
-const audio_backend_t* g_audio_psx = &s_audio_psx_backend;
+/* Load one bank (VH/VB/SEQ) from the CD. `name` = "MAIN" or "SUB". CD files are
+ * 8.3-uppercase, slot in hex: MAIN32.VH/.VB/.SEQ, SUB15.VH/.VB/.SEQ. Uses the
+ * shared CD staging buffer transiently: VH→copy, VB→SPU RAM (uploaded straight
+ * from staging), SEQ→persistent store. */
+static int ssx_load_track(ssx_seq_t *s, int ch_base, int ch_count,
+                          const char *name, int slot,
+                          uint8_t *seq_store, int seq_store_cap)
+{
+    if (slot < 0) return -1;
+    char path[32];
+    static uint8_t vh_copy[8192];   /* room VH headers run to ~6.7KB (MAIN16) */
+
+    /* VH → vh_copy (must survive the later staging reuse). RE2: \COMMON\SOUND\ */
+    sprintf(path, "\\SOUND\\%s%02X.VH;1", name, slot);
+    int vhs = re15_cd_load_file(path, re15_cd_staging, RE15_CD_STAGING_SIZE);
+    if (vhs <= 0 || vhs > (int)sizeof vh_copy) return -1;
+    memcpy(vh_copy, re15_cd_staging, (size_t)vhs);
+
+    /* VB → SPU RAM, streamed in staging-sized chunks (room banks can be ~224KB,
+     * over the 100KB staging — see ssx_stream_vb_to_spu). */
+    sprintf(path, "\\SOUND\\%s%02X.VB;1", name, slot);
+    uint32_t vbs32 = 0;
+    uint32_t spu_base = ssx_stream_vb_to_spu(path, &vbs32);
+    if (vbs32 == 0) return -1;
+    int vbs = (int)vbs32;
+
+    /* SEQ → staging (ssx_load copies it into seq_store). */
+    sprintf(path, "\\SOUND\\%s%02X.SEQ;1", name, slot);
+    int seqs = re15_cd_load_file(path, re15_cd_staging, RE15_CD_STAGING_SIZE);
+    if (seqs <= 0) return -1;
+
+    return ssx_load(s, ch_base, ch_count, vh_copy, vhs, spu_base,
+                    re15_cd_staging, seqs, seq_store, seq_store_cap);
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+ *  60 Hz tick source = the free-running vblank counter (VSync(-1)). No IRQ
+ *  callback needed; BGM tempo is independent of the render frame rate.
+ * ════════════════════════════════════════════════════════════════════════ */
+static uint32_t s_vbl_last = 0;            /* last VSync(-1) sample */
+
+/* Deferred room-BGM request. The CD load (banks → SPU RAM) is a blocking,
+ * ~125 KB read; running it in re15_audio_init would stall boot before the
+ * first frame is presented. We instead register the request here and perform
+ * the load a few ticks into the main loop, so the intro starts drawing first. */
+static int s_bgm_req   = 0;
+static int s_bgm_defer = 0;
+static int s_bgm_stage = 0, s_bgm_room = 0;
+
+/* ════════════════════════════════════════════════════════════════════════
+ *  Public API
+ * ════════════════════════════════════════════════════════════════════════ */
+void re15_audio_init(void)
+{
+    SpuInit();
+    SpuSetCommonMasterVolume(0x3FFF, 0x3FFF);
+    SpuSetCommonCDVolume    (0x3FFF, 0x3FFF);
+    SpuSetCommonCDReverb    (0);
+    SpuSetCommonExtVolume   (0, 0);
+    SpuSetCommonExtReverb   (0);
+
+    load_bundled_vab();
+    load_footstep_vab();      /* room snd0 → SPU + its EDT table (footstep SE) */
+
+    /* Reserve the dialogue-voice SPU region (one clip at a time, reused). */
+    s_voice_spu_base = spu_alloc(RE15_VOICE_SPU_SIZE);
+
+    s_vbl_last = (uint32_t)VSync(-1);
+
+    g_audio.initialized    = 1;
+    g_audio.backend_active = 1;
+}
+
+#define RE15_AUDIO_MAX_EVENTS_PER_TICK 2
+
+/* The actual room-BGM load (runs once, deferred from the main loop). */
+static void do_load_room_bgm(int stage, int room)
+{
+    /* SPU BGM-region rewind (multi-room): the bump allocator only grows, so
+     * reloading a room's banks would overflow SPU RAM. Mark the BGM region start
+     * on the FIRST load (it sits above the SFX VAB + the 50KB reserved voice
+     * region, both allocated in re15_audio_init) and rewind to it on every
+     * reload — the new room's MAIN/SUB banks reuse the previous room's SPU space.
+     * Voice + SFX live below the mark, untouched. */
+    static uint32_t s_bgm_spu_mark = 0;
+    if (s_bgm_spu_mark == 0) s_bgm_spu_mark = s_spu_top;
+    else                     s_spu_top = s_bgm_spu_mark;
+
+    /* MAIN: load + play looping. SUB: load but leave STOPPED — the SCD
+     * Sce_bgm_control (0x54) opcode keys the rotor layer on/off at cuts. */
+    if (ssx_load_track(&s_bgm_main, BGM_MAIN_CH_BASE, BGM_MAIN_CH_CNT,
+                       "MAIN", ssx_main_slot(stage, room),
+                       s_main_seq, (int)sizeof s_main_seq) == 0) {
+        /* per-layer master (0..0x3FFF). Tunable; conservative to leave SPU
+         * headroom for up to 12 simultaneous voices without hard clipping. */
+        s_bgm_main.mvol_l = s_bgm_main.mvol_r = 0x1400;
+        ssx_start(&s_bgm_main, 1);
+        g_audio.events_bgm++;
+    }
+    if (ssx_load_track(&s_bgm_sub, BGM_SUB_CH_BASE, BGM_SUB_CH_CNT,
+                       "SUB", ssx_sub_slot(stage, room),
+                       s_sub_seq, (int)sizeof s_sub_seq) == 0) {
+        s_bgm_sub.mvol_l = s_bgm_sub.mvol_r = 0x1400;
+        /* stays playing=0 until seq_ctl(slot 1, op 1). */
+    }
+    /* re-sample the vblank clock so the deferred-load gap isn't fast-forwarded. */
+    s_vbl_last = (uint32_t)VSync(-1);
+}
+
+/* DEBUG ISOLATION TOGGLE (2026-06-03): boot hang regression hunt. 0 = the room
+ * BGM is never loaded/played (pure isolation: does the rest boot?). Flip to 1
+ * once the hang is located. */
+#define RE15_BGM_ENABLE 1
+
+void re15_audio_start_room_bgm(int stage, int room)
+{
+#if RE15_BGM_ENABLE
+    /* Multi-room (2026-06-05): re-entrant per-room BGM. Track the resident
+     * (stage,room); on a CHANGE, STOP the old room's tracks and load the new
+     * room's (SS_BGMTBL → MAIN/SUB slot). If the new room's bank isn't on the
+     * disc, ssx_load_track fails gracefully → silence (better than the previous
+     * room's track wrongly continuing). Same room → no-op. */
+    static int cur_stage = -1, cur_room = -1;
+    if (!g_audio.initialized) return;
+    if (stage == cur_stage && room == cur_room) return;
+    cur_stage = stage; cur_room = room;
+    ssx_stop(&s_bgm_main);
+    ssx_stop(&s_bgm_sub);
+    /* Load NOW (called from main() before scd_vm_init + the loop, and from the
+     * room-change consume), so both layers are resident before the SCD can fire
+     * Sce_bgm_control (0x54). */
+    do_load_room_bgm(stage, room);
+    (void)s_bgm_req; (void)s_bgm_defer; (void)s_bgm_stage; (void)s_bgm_room;
+#else
+    (void)stage; (void)room; (void)s_bgm_defer; (void)s_bgm_stage; (void)s_bgm_room;
+#endif
+}
+
+/* SsSeq slot control (SCD Sce_bgm_control / 0x54). slot 0 = MAIN, slot 1 = SUB
+ * (rotor). op: 1=play/loop, 3=replay → start; 2=stop, 4=pause, 5=decrescendo →
+ * stop. The SUB layer is keyed on/off here at the helicopter cuts. */
+void re15_audio_seq_ctl(int slot, int op)
+{
+    if (!g_audio.initialized) return;
+    ssx_seq_t *s = (slot == 0) ? &s_bgm_main : (slot == 1) ? &s_bgm_sub : 0;
+    if (!s || !s->vab_ok) return;
+    switch (op) {
+        case 1: case 3: if (!s->playing) ssx_start(s, 1); break;
+        case 2: case 4: case 5: ssx_stop(s); break;
+        default: break;
+    }
+}
+
+/* Per-frame rotor (SUB layer) DISTANCE attenuation + STEREO PAN — the L/R volume is
+ * computed by the SHARED re15_rotor_compute_pan (rotor_common.c, byte-true
+ * FUN_80045a64 + FUN_80045d6c). This backend applies it to the SPU: sets the layer
+ * master + rescales the active SUB voices so it tracks continuously. */
+void re15_audio_rotor_update(const int32_t cam_eye[3], const int32_t cam_tgt[3],
+                             const int32_t heli_pos[3])
+{
+    if (!g_audio.initialized || !s_bgm_sub.vab_ok || !s_bgm_sub.playing) return;
+
+    int panL, panR;
+    re15_rotor_compute_pan(cam_eye, cam_tgt, heli_pos, &panL, &panR);
+
+    int gainL = (0x1400 * panL) / 0x7f;           /* SUB base master 0x1400, scaled */
+    int gainR = (0x1400 * panR) / 0x7f;
+    s_bgm_sub.mvol_l = gainL;                      /* future note-ons */
+    s_bgm_sub.mvol_r = gainR;
+    for (int i = 0; i < s_bgm_sub.ch_count; i++)
+        if (s_bgm_sub.voice[i].active) {
+            SPU_CH_VOL_L(s_bgm_sub.ch_base + i) = (int16_t)gainL;
+            SPU_CH_VOL_R(s_bgm_sub.ch_base + i) = (int16_t)gainR;
+        }
+}
+void re15_audio_rotor_silence(void) { if (g_audio.initialized) ssx_stop(&s_bgm_sub); }
+
+void re15_audio_tick(void)
+{
+    if (!g_audio.initialized) return;
+
+    voice_poll();   /* finish any in-flight async dialogue-clip read → SPU + key */
+
+    /* Perform the deferred room-BGM load once the intro has begun drawing. */
+    if (s_bgm_req && --s_bgm_defer <= 0) {
+        s_bgm_req = 0;
+        do_load_room_bgm(s_bgm_stage, s_bgm_room);
+    }
+
+    /* Drain (bounded) the SCD audio event queue. */
+    int budget = RE15_AUDIO_MAX_EVENTS_PER_TICK;
+    scd_audio_event_t evt;
+    while (budget-- > 0 && scd_audio_queue_pop(&evt)) {
+        g_audio.events_total++;
+        switch ((scd_audio_kind_t)evt.kind) {
+            case SCD_AUDIO_SE_ON:
+                g_audio.events_se_on++;
+                if (s_sfx_loaded && s_sfx_vab.vag_count > 0) {
+                    int idx = (evt.sample_id - 1);
+                    if (idx < 0) idx = 0;
+                    idx %= s_sfx_vab.vag_count;
+                    play_sample(idx, evt.volume ? evt.volume : 100);
+                }
+                break;
+            case SCD_AUDIO_SEQ_CTL:
+                re15_audio_seq_ctl(evt.bank, evt.volume);  /* bank=slot, volume=op */
+                break;
+            case SCD_AUDIO_VOICE_ON:
+                g_audio.events_xa_on++;          /* dialogue voice (Message_on) */
+                voice_play(evt.sample_id);       /* sample_id = message id → VOICE<NN>.VAG */
+                break;
+            case SCD_AUDIO_BGMTBL_SET: g_audio.events_bgm++;     break;
+            case SCD_AUDIO_XA_ON:      g_audio.events_xa_on++;   break;
+            case SCD_AUDIO_SE_VOL:     g_audio.events_se_vol++;  break;
+            case SCD_AUDIO_NONE:
+            default:                   g_audio.events_unknown++; break;
+        }
+    }
+
+    /* Advance the BGM sequencer(s) by the real elapsed 60 Hz vblanks. */
+    uint32_t now = (uint32_t)VSync(-1);
+    uint32_t dvb = now - s_vbl_last;
+    s_vbl_last = now;
+    if (dvb) {
+        if (dvb > 16) dvb = 16;          /* clamp a long stall (don't fast-forward the song) */
+        ssx_advance(&s_bgm_main, dvb);
+        ssx_advance(&s_bgm_sub,  dvb);
+    }
+}
+
+void re15_audio_shutdown(void)
+{
+    if (!g_audio.initialized) return;
+    SpuSetCommonMasterVolume(0, 0);
+    g_audio.backend_active = 0;
+}

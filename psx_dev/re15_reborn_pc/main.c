@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#include <SDL_timer.h>    /* SDL_GetTicks/SDL_Delay — Frame-Timing (ohne main-Umleitung) */
 #include "re15_engine.h"
 #include "re15_tim.h"
 #include "re15_scd.h"

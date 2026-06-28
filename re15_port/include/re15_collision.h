@@ -1,119 +1,76 @@
-/**
- * @file re15_collision.h
- * @brief SCA (Scalar Collision Area) Datenstrukturen und Parser-API
+/*
+ * RE1.5 Rebuilt — player vs room SCA collision (2026-06-04).
  *
- * Definiert die Strukturen für geparste SCA-Kollisionsdaten. Die SCA-Sektion
- * wird über rdt.collision referenziert und enthält Kollisionszellen für
- * Raum-Begrenzungen (Rechtecke, Kreise, Treppen).
- *
- * Format:
- *   Header: 4 Bytes — uint16_t count, uint16_t reserved
- *   Entries: count × 14 Bytes pro Eintrag
- *
- * Eintragstypen:
- *   Typ 1  — Rechteck (corner_x/z = Ecke, width/depth = Ausdehnung)
- *   Typ 3  — Kreis (corner_x/z = Mittelpunkt, width = Radius)
- *   Typ 12 — Treppe aufwärts
- *   Typ 13 — Treppe abwärts
- *
- * Parsing-Strategie: In-Place — der Parser liefert Pointer in den
- * geladenen Puffer (kein Kopieren). Der Puffer muss für die gesamte
- * Lebensdauer der re15_sca_data_t-Struktur gültig bleiben.
+ * The room's collision is the SCA block (re15_rdt_t.sca): shaped rectangles
+ * defining the walkable space. The player must stay within the union of the
+ * walkable entries — this stops the player from "flying" off the rooftop /
+ * through the boundary. Mirrors RE1.5 FUN_8003b0a4 / RE2 FUN_8004fba0 (per-
+ * shape test + position clamp); this first pass treats every entry as its
+ * bounding rectangle (covers type 1 rect; per-shape circle/diagonal/slope
+ * refinement is a follow-up) and slides along walls.
  */
 #ifndef RE15_COLLISION_H
 #define RE15_COLLISION_H
 
-#include "re15_types.h"
+#include <stdint.h>
+#include "re15_rdt.h"
 
-/* ============================================================================
- * SCA-Eintragstypen
- * ========================================================================= */
+/* 1 if (x,z) is inside the walkable SCA geometry (or no SCA data → 1). */
+int  re15_collision_on_floor(const re15_rdt_t *rdt, int32_t x, int32_t z);
 
-#define RE15_SCA_TYPE_RECTANGLE  1   /**< Rechteckige Kollisionszone     */
-#define RE15_SCA_TYPE_CIRCLE     3   /**< Kreisförmige Kollisionszone    */
-#define RE15_SCA_TYPE_STAIR_UP   12  /**< Treppe aufwärts                */
-#define RE15_SCA_TYPE_STAIR_DOWN 13  /**< Treppe abwärts                 */
+/* Constrain a move from (old_x,old_z) to (*x,*z): if the target leaves the
+ * walkable floor, slide along whichever axis stays on it; if neither does,
+ * keep the old position. */
+void re15_collision_constrain(const re15_rdt_t *rdt,
+                              int32_t old_x, int32_t old_z,
+                              int32_t *x, int32_t *z);
 
-/* Größe eines einzelnen SCA-Eintrags in Bytes */
-#define RE15_SCA_ENTRY_SIZE      14
+/* Object (Obj_model_set prop) push-out: keep the player out of every SOLID prop's
+ * authored collision box (FUN_8002cabc). Call AFTER re15_collision_constrain in the
+ * player-move pass (walls first, then objects). Reads g_scd.props directly. */
+void re15_collision_objects(int32_t *x, int32_t *z);
 
-/* Größe des SCA-Headers in Bytes */
-#define RE15_SCA_HEADER_SIZE     4
+/* Reset the tracked floor band (call on room change so the previous room's band
+ * doesn't leak into the new room). */
+void re15_collision_reset_band(void);
 
-/* ============================================================================
- * SCA-Eintrags-Struktur (14 Bytes im Binärformat)
- *
- * Wird vom Parser aus dem Roh-Puffer gelesen. Die Felder entsprechen
- * den originalen PSX-Kollisionsdaten (Little-Endian s16/u16).
- * ========================================================================= */
+/* Set the floor band explicitly (doors carry it in the spawn Y). */
+void re15_collision_set_band(int band);
+/* Convert a spawn Y to a floor band, as the original does: -(Y / 0x708). */
+int  re15_collision_band_from_y(int32_t y);
+/* Current tracked floor band (diagnostic). */
+int  re15_collision_debug_band(void);
+/* Set the band from the player Y only if it isn't set yet (initial spawn). */
+void re15_collision_ensure_band(int32_t y);
 
-typedef struct re15_sca_entry_s {
-    uint16_t type;       /**< Eintragstyp: 1=Rect, 3=Circle, 12/13=Stair */
-    int16_t  corner_x;   /**< X-Koordinate Ecke (oder Mittelpunkt bei Kreis) */
-    int16_t  corner_z;   /**< Z-Koordinate Ecke (oder Mittelpunkt bei Kreis) */
-    int16_t  width;      /**< Breite (oder Radius bei Kreis)                 */
-    int16_t  depth;      /**< Tiefe (Höhenausdehnung)                        */
-    uint16_t density;    /**< Boden-Dichte / Band-Wert                       */
-    uint16_t flags;      /**< Zusätzliche Flags (reserviert)                 */
-} re15_sca_entry_t;
+/* Report the lowest and highest floor bands (= floor>>4) present among the
+ * room's SCA cells. Used by the stair traversal to pick the descent/ascent
+ * target (the original walks bands down/up to the next populated floor —
+ * FUN_8001c2dc). Either out-pointer may be NULL. If there is no SCA data both
+ * are left untouched / set to the current band. */
+void re15_collision_band_range(const re15_rdt_t *rdt, int *min_band, int *max_band);
 
-/* ============================================================================
- * SCA-Datencontainer
- *
- * Enthält Header-Informationen und einen Pointer auf das Array der
- * geparsten Einträge. Die Einträge liegen in einem separat allokierten
- * Array (nicht in-place im Puffer, da Byte-Alignment-Konvertierung nötig).
- * ========================================================================= */
+/* The next SCA band strictly BELOW / ABOVE `cur` (the next floor down/up a stair
+ * leads to — the original descends ONE band-level per stair, data2=2). Returns
+ * `cur` unchanged when there is no lower/higher band. */
+int  re15_collision_next_band_below(const re15_rdt_t *rdt, int cur);
+int  re15_collision_next_band_above(const re15_rdt_t *rdt, int cur);
 
-typedef struct re15_sca_data_s {
-    uint16_t          count;    /**< Anzahl der Kollisionseinträge            */
-    uint16_t          reserved; /**< Reserviertes Header-Feld                 */
-    re15_sca_entry_t* entries;  /**< Pointer auf geparste Einträge (im Puffer)*/
-} re15_sca_data_t;
+/* Containment floor query (FUN_8003b7f0 / FUN_8001c6e8): the BAND of the SCA
+ * floor cell that CONTAINS (x,z), scanning DOWN from `start_band` to 0 (the
+ * original returns the first walkable band found below the player). Returns the
+ * band, or -1 if (x,z) is over no cell at any band <= start_band. The stair uses
+ * this on a forward probe point to detect ARRIVAL on the destination platform
+ * (the byte-true end condition: player.Y == floor-probe-ahead). */
+int  re15_collision_floor_band_at(const re15_rdt_t *rdt,
+                                  int32_t x, int32_t z, int start_band);
 
-/* ============================================================================
- * SCA-Parser API
- * ========================================================================= */
-
-/**
- * Parst SCA-Kollisionsdaten aus einem Roh-Puffer.
- *
- * Liest den 4-Byte-Header (count + reserved) und konvertiert die
- * nachfolgenden Einträge (je 14 Bytes) in re15_sca_entry_t-Strukturen.
- * Die Einträge werden in ein statisches internes Array geparst; der
- * entries-Pointer in out zeigt auf dieses Array.
- *
- * @param data      Pointer auf den Beginn der SCA-Sektion im RDT-Puffer
- * @param data_size Verfügbare Bytes ab data (für Bounds-Prüfung)
- * @param out       Ausgabe: Befüllte SCA-Datenstruktur
- * @return          0 (RE15_IO_OK) bei Erfolg, negativer Fehlercode bei Fehler
- *
- * @note Der data-Puffer muss für die Lebensdauer von out gültig bleiben.
- * @note Maximale Kapazität: 256 Einträge (typische RE1.5-Räume: 10-80).
- */
-int re15_sca_parse(const uint8_t* data, int data_size, re15_sca_data_t* out);
-
-/* ============================================================================
- * SCA-Kollisionsprüfung
- * ========================================================================= */
-
-/* Vorwärtsdeklaration (definiert in re15_player.h) */
-struct re15_player_s;
-
-/**
- * Prüft den Spieler-Kollisionskörper gegen alle SCA-Einträge.
- *
- * Iteriert über alle SCA-Einträge und führt typspezifische Prüfungen durch:
- *   - Typ 1 (Rechteck): Zylinder-vs-AABB, Push entlang nächster Kante
- *   - Typ 3 (Kreis): Zylinder-vs-Kreis, radialer Push
- *   - Typ 12/13 (Treppen): Y-Versatz ±0x708 pro Band-Übergang
- *
- * Bei Durchdringung wird die Spielerposition direkt korrigiert.
- * Verwendet ausschließlich Integer/Fixpoint-Arithmetik.
- *
- * @param player    Spieler-Entität (Position wird bei Kollision modifiziert)
- * @param sca       Geparste SCA-Kollisionsdaten des aktuellen Raums
- */
-void re15_collision_check(struct re15_player_s* player, const re15_sca_data_t* sca);
+/* The centroid (average cell-centre) of all SCA cells of `band` — used by the
+ * stair as the destination platform's walkable centre to auto-walk Leon to
+ * (mirrors the original deriving the descent target from the stair geometry).
+ * For a perimeter-ring platform this is the walkable interior. Returns 1 and
+ * fills *cx,*cz on success; 0 if the band has no cells. */
+int  re15_collision_band_centroid(const re15_rdt_t *rdt, int band,
+                                  int32_t *cx, int32_t *cz);
 
 #endif /* RE15_COLLISION_H */

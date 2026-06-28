@@ -1,158 +1,96 @@
-/**
- * @file re15_audio.h
- * @brief Audio-Abstraktionsschicht: Backend-Interface für VAB, SEQ, SFX und Voice
+/*
+ * RE1.5 Rebuilt — Audio subsystem (Phase 4.6, 2026-05-18).
  *
- * Definiert die plattformunabhängige Funktionszeiger-Tabelle (audio_backend_t),
- * über die beide Plattformen (PSX via SPU/libsnd, PC via SDL2-Audio) bedient
- * werden. Die Engine ruft ausschließlich über g_audio→xyz() auf — die
- * konkrete Implementierung wird beim Start eingehängt.
+ * RE2-architecture audio module. Two backends behind a single API:
  *
- * Anforderung: Requirement 6.1
+ *   PSX: SPU hardware (24 voices × ADPCM samples + CD-streamed XA audio)
+ *   PC:  SDL2 SDL_OpenAudioDevice + software mixer
+ *
+ * Both consume the same upstream signal — the scd_audio_event_t queue
+ * filled by the SCD VM's audio opcodes (Phase 4.4.3: Se_on, BGM, XA_on,
+ * etc.). The audio backend translates SCD events into voice activations
+ * or XA stream starts, exactly like RE2 does between the SCD VM and
+ * its libsnd/libsd layer.
+ *
+ * Phased build-up:
+ *   4.6.1 (this header)  — module foundation: init, tick, queue drain,
+ *                          diagnostic counters. No actual playback yet.
+ *   4.6.2                 — VAB sample loader + ADPCM decoder.
+ *   4.6.3                 — SFX playback via Se_on (SPU voices on PSX,
+ *                          SDL mixer on PC).
+ *   4.6.4                 — XA streaming for BGM.
  */
 #ifndef RE15_AUDIO_H
 #define RE15_AUDIO_H
 
-#include "re15_types.h"
+#include <stdint.h>
 
-/* ============================================================================
- * Konstanten
- * ========================================================================= */
-
-/** Maximale Anzahl gleichzeitig geladener VAB-Bänke (0-15) */
-#define RE15_AUDIO_MAX_BANKS    16
-
-/** Maximale Sample-ID pro Bank (0-127) */
-#define RE15_AUDIO_MAX_SAMPLES  128
-
-/** Maximale Lautstärke (linear, 0 = stumm, 127 = max) */
-#define RE15_AUDIO_VOLUME_MAX   127
-
-/** Pan-Mitte (0 = links, 64 = Mitte, 127 = rechts) */
-#define RE15_AUDIO_PAN_CENTER   64
-
-/** Maximale SEQ-Playback-Slots */
-#define RE15_AUDIO_MAX_SEQ_SLOTS 4
-
-/* ============================================================================
- * Audio-Backend Funktionszeiger-Tabelle
- *
- * Identische Signatur für PSX (SPU) und PC (SDL2-Audio).
- * Die Engine greift ausschließlich über dieses Interface auf Audio zu.
- * ========================================================================= */
-
-/**
- * Audio-Backend — Funktionszeiger-Tabelle.
- *
- * Jede Plattform stellt eine statische Instanz bereit und setzt g_audio
- * beim Start auf die eigene Tabelle.
- */
+/* Audio engine state — exposed for diagnostics (main.c shows event
+ * counts in the debug HUD). */
 typedef struct {
-    /**
-     * Initialisiert das Audio-Subsystem.
-     * Muss vor allen anderen Audio-Funktionen aufgerufen werden.
-     */
-    void (*init)(void);
+    uint32_t events_total;        /* lifetime SCD audio events drained  */
+    uint32_t events_se_on;        /* of those, kind=Se_on (SFX)         */
+    uint32_t events_bgm;          /* kind=BGMTBL_SET                    */
+    uint32_t events_xa_on;        /* kind=XA_ON                         */
+    uint32_t events_se_vol;       /* kind=SE_VOL                        */
+    uint32_t events_unknown;      /* kind not recognized — should be 0  */
+    uint8_t  initialized;         /* 1 after re15_audio_init() returned */
+    uint8_t  backend_active;      /* PSX: SPU on. PC: SDL audio device on */
+} re15_audio_state_t;
 
-    /**
-     * Fährt das Audio-Subsystem herunter und gibt Ressourcen frei.
-     */
-    void (*shutdown)(void);
+extern re15_audio_state_t g_audio;
 
-    /**
-     * Lädt eine VAB-Sound-Bank (VH-Header + VB-Body) in das Audio-System.
-     *
-     * @param vh        Zeiger auf den VH-Header-Puffer (VAB-Header)
-     * @param vh_size   Größe des VH-Puffers in Bytes
-     * @param vb        Zeiger auf den VB-Body-Puffer (ADPCM-Samples)
-     * @param vb_size   Größe des VB-Puffers in Bytes
-     * @param bank_id   Bank-Slot (0 bis RE15_AUDIO_MAX_BANKS-1)
-     * @return          0 bei Erfolg, negativer Fehlercode bei Fehlschlag
-     */
-    int (*vab_load)(const uint8_t* vh, int vh_size,
-                    const uint8_t* vb, int vb_size, int bank_id);
+/* One-time initialization. Call once at boot, AFTER re15_render_init()
+ * (some PSX systems share GPU+SPU DMA arbitration) but BEFORE the main
+ * loop. */
+void re15_audio_init(void);
 
-    /**
-     * Entlädt eine VAB-Sound-Bank und gibt deren Ressourcen frei.
-     *
-     * @param bank_id   Bank-Slot (0 bis RE15_AUDIO_MAX_BANKS-1)
-     */
-    void (*vab_unload)(int bank_id);
+/* Per-frame tick. Drains the SCD audio event queue and dispatches each
+ * event to the backend's playback path (or — in Phase 4.6.1 — just
+ * increments the per-kind counters in g_audio). Call once per frame
+ * after scd_vm_tick(). */
+void re15_audio_tick(void);
 
-    /**
-     * Startet SEQ-Playback (BGM) in einem Slot.
-     *
-     * SEQ-Daten werden als roher PSX-SEQ-Stream übergeben.
-     * Bei loop != 0 wird der Track endlos wiederholt bis explizit gestoppt
-     * oder durch einen neuen Track im selben Slot ersetzt.
-     *
-     * @param slot      Playback-Slot (0 bis RE15_AUDIO_MAX_SEQ_SLOTS-1)
-     * @param seq_data  Zeiger auf SEQ-Daten
-     * @param seq_size  Größe der SEQ-Daten in Bytes
-     * @param loop      0 = einmalig, != 0 = Loop
-     */
-    void (*seq_play)(int slot, const uint8_t* seq_data, int seq_size, int loop);
+/* Start the looping room BGM, resolved via the canonical RE1.5 stage/room→BGM
+ * table. Call once at the pre-intro→cinematic handoff (the original plays no
+ * BGM during the narrator pre-intro). Idempotent; no-op if not initialized.
+ * PSX is a no-op (the SPU/SsSeq path handles room BGM natively). */
+void re15_audio_start_room_bgm(int stage, int room);
 
-    /**
-     * Stoppt SEQ-Playback in einem Slot.
-     *
-     * @param slot      Playback-Slot (0 bis RE15_AUDIO_MAX_SEQ_SLOTS-1)
-     */
-    void (*seq_stop)(int slot);
+/* Per-frame: gate the helicopter-rotor (BGM SUB layer) volume by the current
+ * cut camera→heli distance, the RE1.5 way (FUN_80045a64 SE distance attenuation).
+ * cam_eye = active cut camera eye position, heli_pos = heli prop world pos.
+ * PSX backend = no-op. */
+void re15_audio_rotor_update(const int32_t cam_eye[3], const int32_t cam_tgt[3],
+                             const int32_t heli_pos[3]);
+/* Silence the rotor when the heli is gone (gameplay handoff). PSX = no-op. */
+void re15_audio_rotor_silence(void);
 
-    /**
-     * Triggert einen Soundeffekt (SFX) — wird vom SCD-Opcode Se_on (0x36) aufgerufen.
-     *
-     * @param bank      VAB-Bank (0 bis RE15_AUDIO_MAX_BANKS-1)
-     * @param sample_id Sample-Index innerhalb der Bank (0-127)
-     * @param volume    Lautstärke (0-127, linear)
-     * @param pan       Stereo-Position (0=links, 64=Mitte, 127=rechts)
-     */
-    void (*sfx_play)(int bank, int sample_id, int volume, int pan);
+/* SHARED rotor positional-SE math (rotor_common.c, byte-true FUN_80045a64): compute
+ * the rotor L/R volume (0..0x7f) from the camera eye/target + heli position
+ * (distance attenuation + stereo azimuth pan, integer ATAN256 LUT — no soft-float).
+ * Both ports' re15_audio_rotor_update() call this, then apply volL/volR to their SUB
+ * layer (SPU voice vol / SsSeq mvol). Unifies the previously-drifted per-port copies. */
+void re15_rotor_compute_pan(const int32_t cam_eye[3], const int32_t cam_tgt[3],
+                            const int32_t heli_pos[3], int *out_volL, int *out_volR);
 
-    /**
-     * Spielt eine Voice-Nachricht (Sprach-Clip) für einen bestimmten Raum ab.
-     *
-     * @param room_id   Raum-ID (bestimmt Voice-Datei-Lookup)
-     * @param msg_id    Nachrichten-Index innerhalb des Raums
-     */
-    void (*voice_play)(int room_id, int msg_id);
+/* SsSeq slot control — the SCD Sce_bgm_control (0x54) opcode (PSX FUN_80044da4).
+ * slot = sequence slot (0=MAIN room music, 1=SUB rotor layer), op = control
+ * (1=play/loop, 2=stop, 3=replay, 4=pause, 5=decrescendo). This is how ROOM1170's
+ * sub02 turns the helicopter rotor (SUB layer) on at the heli-arrival + sky-view
+ * cuts and off during Leon's dialogue close-ups — the canonical, 1:1 PSX mechanism.
+ * PSX backend = no-op (it drives SsSeqPlay/SsSeqStop natively). */
+void re15_audio_seq_ctl(int slot, int op);
 
-    /**
-     * Setzt die Lautstärke für einen Audio-Kanal.
-     *
-     * @param channel       Kanal-Nummer
-     * @param volume_0_127  Lautstärke (0 = stumm, 127 = Maximum, linear)
-     */
-    void (*set_volume)(int channel, int volume_0_127);
+/* Shutdown — PC closes SDL_OpenAudioDevice, PSX silences master volume.
+ * Safe to call on a never-initialized engine (no-op). */
+void re15_audio_shutdown(void);
 
-} audio_backend_t;
-
-/* ============================================================================
- * Globaler Audio-Backend-Zeiger
- *
- * Wird beim Plattform-Init auf das jeweilige Backend gesetzt:
- * - PSX: &g_audio_psx  (aus platform/psx/src/audio_psx.c)
- * - PC:  &g_audio_pc   (aus platform/pc/src/audio_pc.c)
- * ========================================================================= */
-
-/** Aktives Audio-Backend — zur Laufzeit gesetzt */
-extern const audio_backend_t* g_audio;
-
-/* ============================================================================
- * Plattform-Backend-Instanzen
- *
- * Jede Plattform definiert ihre eigene Backend-Instanz. Der Init-Code setzt
- * g_audio auf die passende Instanz.
- * ========================================================================= */
-
-#ifdef RE15_PLATFORM_PC
-/** PC Audio-Backend (SDL2 + ADPCM-Decoder, definiert in platform/pc/src/audio_pc.c) */
-extern const audio_backend_t audio_pc_backend;
-#endif
-
-#ifdef RE15_PLATFORM_PSX
-/** PSX Audio-Backend (SPU/libsnd, definiert in platform/psx/src/audio_psx.c) */
-extern const audio_backend_t* g_audio_psx;
-#endif
+/* Player FOOTSTEP SE (byte-true FUN_80045630). Called from re15_game_step on a
+ * foot-plant (re15_actor_footstep) during walk/run: `foot` = 7 (left) / 4 (right),
+ * `sound_type` = the floor.flr region material (re15_rdt_floor_sound). The backend
+ * maps sound_type → the snd0/snd1 VAB program and plays it. (STUB until snd0/snd1
+ * + the EDT table are loaded — see room1170_100pct_completion.) */
+void re15_audio_footstep(int foot, int sound_type);
 
 #endif /* RE15_AUDIO_H */

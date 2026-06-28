@@ -1,60 +1,113 @@
-/**
- * @file re15_bss.h
- * @brief BSS-Hintergrund-Laden: 64KB-Chunk-Selektion nach Kamera-ID
+/*
+ * RE1.5 Rebuilt — BSS background frame format (Phase 4.5.6, 2026-05-18).
  *
- * BSS-Dateien enthalten MDEC-kodierte Hintergründe, einen 64KB-Chunk pro
- * Kamera-Winkel. Der Chunk für Kamera-ID N beginnt bei Offset N*65536
- * in der BSS-Datei.
+ * BSS files contain MDEC-compressed static room-background frames. The
+ * file is split into 64 KB chunks; each chunk is a self-contained frame:
  *
- * Fehlerbehandlung: Wenn die BSS-Datei fehlt oder die Kamera-ID die
- * Anzahl verfügbarer Chunks überschreitet, wird eine Warnung ausgegeben
- * und der Aufrufer füllt den Ausgabepuffer mit Schwarz (0x00).
+ *   +0   u16  runLengthWords  — # of MDEC-coefficient words after VLC decode
+ *   +2   u16  id              — must be 0x3800 (VLC_ID) for compressed data;
+ *                               other values indicate non-video chunk
+ *                               (e.g. zeroed padding tail)
+ *   +4   u16  quant           — quantization scale (typ. 1..16)
+ *   +6   u16  version         — VLC encoding version (typ. 3 in RE1.5/RE2)
+ *   +8   ...  vlc_payload[]   — variable-length-coded MDEC bitstream
+ *
+ * After VLC decode → array of int16 MDEC coefficients (zigzag-ordered,
+ * quantized DCT). The PSX MDEC chip ingests these via DecDCTinRaw().
+ * Software IDCT (PC target) yields 320×240 YUV → RGB framebuffer.
+ *
+ * Reference: BioClone, lib_bio's depack_vlc.c, and the Java port at
+ * src/main/java/de/re15/extractors/bss/.
  */
 #ifndef RE15_BSS_H
 #define RE15_BSS_H
 
-#include "re15_types.h"
+#include <stdint.h>
+#include <stddef.h>
 
-/* ============================================================================
- * BSS-Lade-API
- * ========================================================================= */
+#define RE15_BSS_VLC_ID         0x3800
+#define RE15_BSS_FRAME_WIDTH    320
+#define RE15_BSS_FRAME_HEIGHT   240
+#define RE15_BSS_CHUNK_SIZE     0x10000     /* 64 KB per chunk */
+#define RE15_BSS_HEADER_SIZE    8
 
-/**
- * Lädt einen 64KB BSS-Chunk für die angegebene Kamera-ID.
- *
- * Sequenz:
- *   1. BSS-Dateipfad konstruieren: STAGE{N}/ROOM{Stage}{RoomHex}.BSS
- *   2. Datei via g_io öffnen und Größe ermitteln
- *   3. Validierung: camera_id * 65536 + 65536 <= file_size
- *   4. Gesamte Datei (oder relevanten Bereich) lesen
- *   5. 64KB-Chunk an Offset camera_id * 65536 nach out_chunk kopieren
- *   6. Handle schließen, Temp-Puffer freigeben
- *
- * Bei Erfolg enthält out_chunk den 64KB MDEC-Bitstream für die Kamera.
- * Bei Fehler bleibt out_chunk unverändert — der Aufrufer ist verantwortlich
- * für die Fallback-Behandlung (schwarzer Hintergrund).
- *
- * @param stage      Stage-Nummer (1-6)
- * @param room_id    Raum-ID als Hex-Wert (0x00-0x27)
- * @param camera_id  Kamera-Index (0-basiert)
- * @param out_chunk  Ausgabepuffer, mindestens RE15_BSS_CHUNK_SIZE (65536) Bytes
- * @return           0 (RE15_IO_OK) bei Erfolg, negativer Fehlercode bei Fehler
- */
-int re15_bss_load_chunk(uint8_t stage, uint8_t room_id, uint8_t camera_id,
-                        uint8_t* out_chunk);
+/* Parsed chunk header. Pointers reference the source buffer — caller
+ * must keep that buffer alive while using this struct. */
+typedef struct {
+    uint16_t        run_length_words;   /* coefficient count after VLC decode */
+    uint16_t        id;                 /* RE15_BSS_VLC_ID or non-video tag  */
+    uint16_t        quant;              /* quantization scale                */
+    uint16_t        version;            /* VLC encoding version              */
+    const uint8_t  *vlc_payload;        /* offset +8 from chunk start        */
+    size_t          vlc_payload_size;   /* chunk_size - 8                    */
+} re15_bss_chunk_t;
 
-/**
- * Konstruiert den BSS-Dateipfad im Format STAGE{N}/ROOM{Stage}{RoomHex}.BSS
+/* Parse a chunk header from a buffer of `size` bytes (typically a 64 KB
+ * BSS chunk). Returns 1 on success and populates *out_chunk. Returns 0
+ * if `size` < 8 (truncated). The id field is preserved verbatim so the
+ * caller can distinguish video chunks (id == VLC_ID) from padding. */
+int re15_bss_parse_chunk(const uint8_t *buf, size_t size,
+                         re15_bss_chunk_t *out_chunk);
+
+/* Convenience: true if the parsed chunk contains MDEC video data
+ * (id == RE15_BSS_VLC_ID). Non-video chunks at the file tail typically
+ * contain zeros or other game data and should be skipped. */
+int re15_bss_chunk_has_video(const re15_bss_chunk_t *chunk);
+
+/* ------------------------------------------------------------------ */
+/* Phase 4.5.6.2: VLC bitstream decoder
  *
- * Im Gegensatz zu RDT-Dateien enthalten BSS-Dateien keine Spieler-Unterscheidung,
- * da der Hintergrund für beide Spielercharaktere identisch ist.
+ * Decodes the variable-length-coded MDEC payload of a BSS chunk into a
+ * stream of int16 coefficients suitable for feeding to either:
+ *   - the PSX hardware MDEC chip via libpsxpress DecDCTinRaw()
+ *   - a software IDCT (PC target)
  *
- * @param stage     Stage-Nummer (1-6)
- * @param room_hex  Raum-Nummer als Hex-Wert (0x00-0x27)
- * @param out_path  Ausgabepuffer für den konstruierten Pfad
- * @param max_len   Maximale Länge des Ausgabepuffers
- * @return          0 bei Erfolg, -1 bei ungültigen Parametern oder Puffer zu klein
- */
-int re15_bss_build_path(int stage, int room_hex, char* out_path, int max_len);
+ * Output buffer sizing: the decoder may produce up to
+ *   (run_length_words + 2) * 4   16-bit coefficients
+ * in the worst case (includes two synthetic header words + 1 zero pad
+ * per block boundary). Caller must size `dst` accordingly.
+ *
+ * The two header coefficients written at the start of `dst` are:
+ *   dst[0] = run_length_words   (matches input chunk header field)
+ *   dst[1] = RE15_BSS_VLC_ID
+ * The MDEC chip expects these as a frame preamble.
+ *
+ * Returns the number of int16 coefficients actually written, or a
+ * negative value on error (corrupt bitstream / output overflow). */
+int re15_bss_vlc_decode(const uint8_t *src_payload, size_t src_size,
+                        int run_length_words, int quant, int version,
+                        int16_t *dst, size_t dst_capacity);
+
+/* ------------------------------------------------------------------ */
+/* Phase 4.5.6.4: software MDEC (IDCT + dequant + YUV→RGB) for PC.
+ *
+ * On PSX the hardware MDEC chip does this. PC has no such chip, so we
+ * port the algorithm. Pipeline per 16×16 macroblock:
+ *
+ *   1. rl2blk: read 6 blocks from coeff stream (Cr, Cb, Y0..Y3).
+ *      Each block = 64 DCT coefficients. Run-length-encoded entries:
+ *        bits 10..15 = run (zero coefficients to skip)
+ *        bits  0..9  = signed level
+ *      Dequantize per-coefficient using IQ_TABLE × AAN_SCALES.
+ *      Inverse-zigzag via ZSCAN[].
+ *      EOB sentinel terminates the block.
+ *   2. idct: 2D inverse DCT (8×8 → spatial pixels).
+ *   3. yuv2rgb: each macroblock has 4 Y blocks (full-res luma) and
+ *      1 Cr + 1 Cb (half-res chroma, upsampled 2×2 to match Y).
+ *
+ * Input: VLC-decoded coefficient stream (output of re15_bss_vlc_decode).
+ * Output: 24bpp R8G8B8 framebuffer, top-down row order.
+ *
+ * Note: the algorithm has a quirky Cr/Cb interpretation (matches the
+ * revengi reference C code that produced the existing BMPs the user
+ * has been working from). Block 0 is treated as Cb, Block 1 as Cr —
+ * different from the standard MDEC docs but byte-for-byte matches the
+ * Java extractor's output. Keeps PC visuals aligned with the
+ * already_extracted/ reference BMPs.
+ *
+ * Returns 0 on success, -1 on bad input. */
+int re15_bss_mdec_decode(const int16_t *coeffs, size_t coeff_count,
+                         int width, int height,
+                         uint8_t *rgb_out);
 
 #endif /* RE15_BSS_H */

@@ -1,273 +1,63 @@
-/**
- * @file input_pc.c
- * @brief PC Input-Backend: SDL2 Keyboard + Gamepad → PSX-Button-Layout
+/*
+ * RE1.5 Rebuilt — PC input backend (Phase 4.4.5, 2026-05-19).
  *
- * Implementiert das Input-Interface (re15_input.h) für die PC-Plattform.
- * Mappt SDL2-Keyboard-Scancodes und Gamepad-Buttons auf die 16-Bit
- * PSX-Button-Bitmaske. Berechnet pro Frame Edge-Detection
- * (pressed/released) aus dem Vergleich mit dem vorherigen Frame.
+ * Keyboard → PSX-style pad bits. The pad word in g_engine.pad_current
+ * mirrors the layout of PSn00bSDK's PAD_* constants so cross-target
+ * gameplay code can test the same bits on both platforms.
  *
- * Standard-Tastenbelegung:
- *   W / Up Arrow    → RE15_BTN_UP
- *   S / Down Arrow  → RE15_BTN_DOWN
- *   A / Left Arrow  → RE15_BTN_LEFT
- *   D / Right Arrow → RE15_BTN_RIGHT
- *   Enter/Return    → RE15_BTN_CROSS  (Aktion)
- *   Space           → RE15_BTN_CIRCLE
- *   Q               → RE15_BTN_SQUARE
- *   E               → RE15_BTN_TRIANGLE
- *   Left Shift      → RE15_BTN_R1 (Rennen)
- *   Tab             → RE15_BTN_L1
- *   Z               → RE15_BTN_L2
- *   X               → RE15_BTN_R2
- *   Escape          → RE15_BTN_START
- *   Backspace       → RE15_BTN_SELECT
+ * Mapping (Phase 4.4.5 minimum for walking demo):
+ *   Arrow Up / W    → PAD_UP    (0x0010)
+ *   Arrow Right / D → PAD_RIGHT (0x0020)
+ *   Arrow Down / S  → PAD_DOWN  (0x0040)
+ *   Arrow Left / A  → PAD_LEFT  (0x0080)
+ *
+ * (Action buttons Z/X/A/S/Enter/Shift to follow in Phase 4.4.6+.)
  */
-
 #include <SDL.h>
+#include "re15_engine.h"
 
-#include "re15_input.h"
-#include "re15_error.h"
+#define RE15_PAD_UP       0x0010
+#define RE15_PAD_RIGHT    0x0020
+#define RE15_PAD_DOWN     0x0040
+#define RE15_PAD_LEFT     0x0080
+#define RE15_PAD_L1       0x0400   /* Q  = "L1" — cycle cut backward */
+#define RE15_PAD_R1       0x0800   /* E  = "R1" — cycle cut forward */
+#define RE15_PAD_CROSS    0x4000   /* Shift = "X" — RUN modifier (held) */
+#define RE15_PAD_SQUARE   0x8000   /* Enter = "Square" — ACTION button */
+/* Phase 4.5.13-RE2 H5 (2026-05-21): motion-debug keys */
+#define RE15_PAD_SELECT   0x0001   /* Tab    = toggle motion-debug-lock */
+#define RE15_PAD_DBG_NEXT 0x1000   /* PageUp   = clip +1 */
+#define RE15_PAD_DBG_PREV 0x2000   /* PageDown = clip -1 */
 
-/* ============================================================================
- * Statische Variablen
- * ========================================================================= */
+void re15_input_init(void) { /* SDL init is global, nothing per-input */ }
 
-/** Aktueller Frame: Buttons die gerade gehalten werden */
-static uint16_t s_current = 0;
-
-/** Vorheriger Frame: Buttons die im letzten Frame gehalten wurden */
-static uint16_t s_previous = 0;
-
-/** Berechneter Input-Zustand (held/pressed/released) */
-static re15_input_state_t s_state = {0, 0, 0};
-
-/** SDL Gamepad-Handle (NULL wenn kein Gamepad angeschlossen) */
-static SDL_GameController* s_gamepad = NULL;
-
-/* ============================================================================
- * Hilfsfunktion: Gamepad erkennen und öffnen
- * ========================================================================= */
-
-/**
- * Sucht den ersten verfügbaren Game-Controller und öffnet ihn.
- * Wird bei Init und bei Hotplug-Events aufgerufen.
- */
-static void input_pc_open_gamepad(void)
-{
-    int i;
-    int num_joysticks;
-
-    if (s_gamepad != NULL) {
-        return; /* Bereits geöffnet */
-    }
-
-    num_joysticks = SDL_NumJoysticks();
-    for (i = 0; i < num_joysticks; i++) {
-        if (SDL_IsGameController(i)) {
-            s_gamepad = SDL_GameControllerOpen(i);
-            if (s_gamepad != NULL) {
-                RE15_INFO("INPUT", "Gamepad erkannt: %s",
-                          SDL_GameControllerName(s_gamepad));
-                return;
-            }
-        }
-    }
-}
-
-/* ============================================================================
- * Hilfsfunktion: Gamepad-Buttons auf PSX-Bitmaske mappen
- * ========================================================================= */
-
-/**
- * Liest den aktuellen Gamepad-Zustand und gibt die gemappte
- * 16-Bit PSX-Button-Bitmaske zurück.
- */
-static uint16_t input_pc_read_gamepad(void)
-{
-    uint16_t buttons = 0;
-
-    if (s_gamepad == NULL) {
-        return 0;
-    }
-
-    if (!SDL_GameControllerGetAttached(s_gamepad)) {
-        SDL_GameControllerClose(s_gamepad);
-        s_gamepad = NULL;
-        RE15_WARN("INPUT", "Gamepad getrennt");
-        return 0;
-    }
-
-    /* D-Pad */
-    if (SDL_GameControllerGetButton(s_gamepad, SDL_CONTROLLER_BUTTON_DPAD_UP))
-        buttons |= RE15_BTN_UP;
-    if (SDL_GameControllerGetButton(s_gamepad, SDL_CONTROLLER_BUTTON_DPAD_DOWN))
-        buttons |= RE15_BTN_DOWN;
-    if (SDL_GameControllerGetButton(s_gamepad, SDL_CONTROLLER_BUTTON_DPAD_LEFT))
-        buttons |= RE15_BTN_LEFT;
-    if (SDL_GameControllerGetButton(s_gamepad, SDL_CONTROLLER_BUTTON_DPAD_RIGHT))
-        buttons |= RE15_BTN_RIGHT;
-
-    /* Face Buttons (PSX-Layout) */
-    if (SDL_GameControllerGetButton(s_gamepad, SDL_CONTROLLER_BUTTON_A))
-        buttons |= RE15_BTN_CROSS;
-    if (SDL_GameControllerGetButton(s_gamepad, SDL_CONTROLLER_BUTTON_B))
-        buttons |= RE15_BTN_CIRCLE;
-    if (SDL_GameControllerGetButton(s_gamepad, SDL_CONTROLLER_BUTTON_X))
-        buttons |= RE15_BTN_SQUARE;
-    if (SDL_GameControllerGetButton(s_gamepad, SDL_CONTROLLER_BUTTON_Y))
-        buttons |= RE15_BTN_TRIANGLE;
-
-    /* Shoulder Buttons */
-    if (SDL_GameControllerGetButton(s_gamepad, SDL_CONTROLLER_BUTTON_LEFTSHOULDER))
-        buttons |= RE15_BTN_L1;
-    if (SDL_GameControllerGetButton(s_gamepad, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER))
-        buttons |= RE15_BTN_R1;
-
-    /* Triggers als digitale L2/R2 (Threshold > 50%) */
-    if (SDL_GameControllerGetAxis(s_gamepad, SDL_CONTROLLER_AXIS_TRIGGERLEFT) > 16384)
-        buttons |= RE15_BTN_L2;
-    if (SDL_GameControllerGetAxis(s_gamepad, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) > 16384)
-        buttons |= RE15_BTN_R2;
-
-    /* Start/Select (Back) */
-    if (SDL_GameControllerGetButton(s_gamepad, SDL_CONTROLLER_BUTTON_START))
-        buttons |= RE15_BTN_START;
-    if (SDL_GameControllerGetButton(s_gamepad, SDL_CONTROLLER_BUTTON_BACK))
-        buttons |= RE15_BTN_SELECT;
-
-    /* Left Stick als zusätzliches D-Pad (Deadzone: 8000 von 32767) */
-    {
-        int16_t lx = SDL_GameControllerGetAxis(s_gamepad, SDL_CONTROLLER_AXIS_LEFTX);
-        int16_t ly = SDL_GameControllerGetAxis(s_gamepad, SDL_CONTROLLER_AXIS_LEFTY);
-
-        if (lx < -8000) buttons |= RE15_BTN_LEFT;
-        if (lx >  8000) buttons |= RE15_BTN_RIGHT;
-        if (ly < -8000) buttons |= RE15_BTN_UP;
-        if (ly >  8000) buttons |= RE15_BTN_DOWN;
-    }
-
-    return buttons;
-}
-
-/* ============================================================================
- * Hilfsfunktion: Keyboard-Scancodes auf PSX-Bitmaske mappen
- * ========================================================================= */
-
-/**
- * Liest den aktuellen Keyboard-Zustand und gibt die gemappte
- * 16-Bit PSX-Button-Bitmaske zurück.
- */
-static uint16_t input_pc_read_keyboard(void)
-{
-    uint16_t buttons = 0;
-    const Uint8* keys = SDL_GetKeyboardState(NULL);
-
-    if (keys == NULL) {
-        return 0;
-    }
-
-    /* D-Pad: WASD + Pfeiltasten */
-    if (keys[SDL_SCANCODE_W] || keys[SDL_SCANCODE_UP])
-        buttons |= RE15_BTN_UP;
-    if (keys[SDL_SCANCODE_S] || keys[SDL_SCANCODE_DOWN])
-        buttons |= RE15_BTN_DOWN;
-    if (keys[SDL_SCANCODE_A] || keys[SDL_SCANCODE_LEFT])
-        buttons |= RE15_BTN_LEFT;
-    if (keys[SDL_SCANCODE_D] || keys[SDL_SCANCODE_RIGHT])
-        buttons |= RE15_BTN_RIGHT;
-
-    /* Face Buttons */
-    if (keys[SDL_SCANCODE_RETURN] || keys[SDL_SCANCODE_KP_ENTER])
-        buttons |= RE15_BTN_CROSS;
-    if (keys[SDL_SCANCODE_SPACE])
-        buttons |= RE15_BTN_CIRCLE;
-    if (keys[SDL_SCANCODE_Q])
-        buttons |= RE15_BTN_SQUARE;
-    if (keys[SDL_SCANCODE_E])
-        buttons |= RE15_BTN_TRIANGLE;
-
-    /* Shoulder Buttons */
-    if (keys[SDL_SCANCODE_TAB])
-        buttons |= RE15_BTN_L1;
-    if (keys[SDL_SCANCODE_LSHIFT] || keys[SDL_SCANCODE_RSHIFT])
-        buttons |= RE15_BTN_R1;
-
-    /* L2/R2 */
-    if (keys[SDL_SCANCODE_Z])
-        buttons |= RE15_BTN_L2;
-    if (keys[SDL_SCANCODE_X])
-        buttons |= RE15_BTN_R2;
-
-    /* Start/Select */
-    if (keys[SDL_SCANCODE_ESCAPE])
-        buttons |= RE15_BTN_START;
-    if (keys[SDL_SCANCODE_BACKSPACE])
-        buttons |= RE15_BTN_SELECT;
-
-    return buttons;
-}
-
-/* ============================================================================
- * Exportierte Funktionen (re15_input.h Interface)
- * ========================================================================= */
-
-/**
- * Initialisiert das Input-Subsystem.
- *
- * Setzt den internen Zustand zurück und versucht, einen Game-Controller
- * zu öffnen, falls einer angeschlossen ist. Setzt voraus, dass
- * SDL_Init(SDL_INIT_GAMECONTROLLER) bereits aufgerufen wurde.
- */
-void re15_input_init(void)
-{
-    s_current  = 0;
-    s_previous = 0;
-    s_state.held     = 0;
-    s_state.pressed  = 0;
-    s_state.released = 0;
-
-    /* Gamepad-Subsystem sollte bereits via SDL_Init initialisiert sein */
-    input_pc_open_gamepad();
-
-    RE15_INFO("INPUT", "PC Input-Backend initialisiert (Keyboard + Gamepad)");
-}
-
-/**
- * Aktualisiert den Input-Zustand. Einmal pro Frame aufrufen.
- *
- * Liest Keyboard- und Gamepad-Zustand, kombiniert beide per OR,
- * und berechnet Edge-Detection:
- *   pressed  = current & ~previous  (neu gedrückt)
- *   released = ~current & previous  (losgelassen)
- */
 void re15_input_tick(void)
 {
-    s_previous = s_current;
-    s_current  = 0;
+    g_engine.pad_previous = g_engine.pad_current;
 
-    /* Keyboard-Mapping lesen */
-    s_current |= input_pc_read_keyboard();
-
-    /* Gamepad-Mapping lesen (OR mit Keyboard) */
-    s_current |= input_pc_read_gamepad();
-
-    /* Versuche Gamepad bei Hotplug zu erkennen */
-    if (s_gamepad == NULL) {
-        input_pc_open_gamepad();
+    const Uint8 *keys = SDL_GetKeyboardState(NULL);
+    uint16_t bits = 0;
+    if (keys) {
+        if (keys[SDL_SCANCODE_UP]    || keys[SDL_SCANCODE_W]) bits |= RE15_PAD_UP;
+        if (keys[SDL_SCANCODE_RIGHT] || keys[SDL_SCANCODE_D]) bits |= RE15_PAD_RIGHT;
+        if (keys[SDL_SCANCODE_DOWN]  || keys[SDL_SCANCODE_S]) bits |= RE15_PAD_DOWN;
+        if (keys[SDL_SCANCODE_LEFT]  || keys[SDL_SCANCODE_A]) bits |= RE15_PAD_LEFT;
+        /* RUN = Shift held (mapped to the CROSS bit the shared player FSM reads). */
+        if (keys[SDL_SCANCODE_LSHIFT] || keys[SDL_SCANCODE_RSHIFT]) bits |= RE15_PAD_CROSS;
+        /* ACTION = Enter (mapped to the SQUARE bit the action gate reads). */
+        if (keys[SDL_SCANCODE_RETURN] || keys[SDL_SCANCODE_KP_ENTER]) bits |= RE15_PAD_SQUARE;
+        if (keys[SDL_SCANCODE_Q])         bits |= RE15_PAD_L1;
+        if (keys[SDL_SCANCODE_E])         bits |= RE15_PAD_R1;
+        /* DEV room-browser (globalization 2026-06-13): [ = prev room, ] = next room.
+         * Cycles through every room in the shared tree (re15_room_list.h). Uses the
+         * FREE L2/R2 bits (0x0100/0x0200) — NOT 0x4000/0x8000, which are CROSS (=RUN,
+         * the sprint key Shift) and SQUARE (=ACTION), so the old binding made sprinting
+         * change rooms. L2/R2 are unmapped/unused, so no collision. */
+        if (keys[SDL_SCANCODE_LEFTBRACKET])  bits |= 0x0100;   /* L2 = prev room */
+        if (keys[SDL_SCANCODE_RIGHTBRACKET]) bits |= 0x0200;   /* R2 = next room */
     }
+    g_engine.pad_current = bits;
 
-    /* Edge-Detection berechnen */
-    s_state.held     = s_current;
-    s_state.pressed  = s_current & ~s_previous;
-    s_state.released = (uint16_t)(~s_current & s_previous);
-}
-
-/**
- * Gibt den aktuellen Input-Zustand zurück.
- * Nur nach re15_input_tick() im selben Frame gültig.
- */
-re15_input_state_t re15_input_get(void)
-{
-    return s_state;
+    g_engine.pad_pressed  = g_engine.pad_current & ~g_engine.pad_previous;
+    g_engine.pad_released = ~g_engine.pad_current & g_engine.pad_previous;
 }

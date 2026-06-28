@@ -1,0 +1,235 @@
+/*
+ * RE1.5 Rebuilt — Actors (Phase 4.4.8, 2026-05-19).
+ *
+ * Per-actor state for NPCs / enemies (and eventually the player when
+ * we unify game_state into the actor pool). RE2 has a 0xAC-byte actor
+ * struct with 44 properties indexed by ID via PTR_LAB_800a4030 — see
+ * RE2_Quellcode/FUN_80055cb0.c (set), FUN_80055f50.c (get).
+ *
+ * We port a subset enough for SCD `Member_set` / `Member_cmp` /
+ * `Sce_em_set` to drive the spawn-and-position behavior used by most
+ * RE1.5 room scripts. The remaining ~36 properties can be added
+ * incrementally as scripts reference them.
+ *
+ * Member-id semantics match RE2 (see actor_common.c property table).
+ */
+
+#ifndef RE15_ACTOR_H
+#define RE15_ACTOR_H
+
+#include <stdint.h>
+
+#define RE15_ACTOR_MAX        16
+#define RE15_ACTOR_SLOT_PLAYER 0   /* Slot 0 is always the player (RE2-pure) */
+
+/* T-round (2026-05-25): RE2 actor flag bits at +0x1c4 — control anim FSM. */
+#define RE15_ANIM_FLAG_LOOP          0x04   /* loop on clip end (else freeze) */
+#define RE15_ANIM_FLAG_SECOND_PASS   0x08   /* enable second pass */
+#define RE15_ANIM_FLAG_CLEAR_INTERP  0x40   /* clear interp counter */
+#define RE15_ANIM_FLAG_REVERSE       0x80   /* reverse playback */
+
+typedef struct {
+    uint8_t  active;       /* 0 = slot free, 1 = active */
+    uint8_t  type;         /* enemy / NPC type (slot 0 = player, type=0) */
+    /* RE2 base fields (per FUN_80055cb0.c Member_set dispatch) ===========
+     * Member ID → field mapping verified F1 agent 2026-05-21. RE1.5 SCD
+     * scripts use the same Member IDs as RE2 because both engines share
+     * lineage.                                                           */
+    uint8_t  state;        /* ID 2 → state_main (RE2 +0x04)               */
+    uint8_t  flags;        /* ID 0 → flags     (RE2 +0x00)                */
+    uint8_t  sub_state_1;  /* ID 3 → sub_state_1 (RE2 +0x05)              */
+    uint8_t  sub_state_2;  /* ID 4 → sub_state_2 (RE2 +0x06) — NOT rot_y! */
+    uint8_t  sub_state_3;  /* ID 5 → sub_state_3 (RE2 +0x07)              */
+    uint8_t  sub_state_4;  /* ID 6 → sub_state_4 (RE2 +0x08)              */
+    uint8_t  floor;        /* ID 0x11 → floor index (RE2 +0x106)          */
+    int32_t  x;            /* ID 11 (0xB) → world X (RE2 +0x38)           */
+    int32_t  y;            /* ID 12 (0xC) → world Y (RE2 +0x3C)           */
+    int32_t  z;            /* ID 13 (0xD) → world Z (RE2 +0x40)           */
+    int16_t  rot_x;        /* ID 14 (0xE) → rot_x   (RE2 +0x74)           */
+    int16_t  rot_y;        /* ID 15 (0xF) → rot_y   (RE2 +0x76, 4096=360°)*/
+    int16_t  rot_z;        /* ID 16 (0x10)→ rot_z   (RE2 +0x78)           */
+    int16_t  hp;            /* ID 19 (0x13)→ hp     (RE2 +0x1C2)          */
+    /* Phase 4.5.13-RE2 F1: speed was at ID 27 (wrong) — correct ID is
+     * 0x16 (+0x1CC in RE2). Renamed for clarity; opcode 0x35 Speed_set
+     * uses an indexed velocity vector (ID 0x17..0x1A), not this scalar. */
+    int16_t  speed_h;      /* ID 0x16 → speed_h    (RE2 +0x1CC)           */
+    /* Velocity vector — written by Speed_set (0x35), integrated by
+     * Add_speed (0x36) each tick. RE2 uses IDs 0x17/0x18/0x19/0x1A for
+     * X/Y/Z/W. The W component is angular (rot_y) velocity. */
+    int16_t  vel_x;        /* ID 0x17 → velocity X (RE2 +0x1D4)           */
+    int16_t  vel_y;        /* ID 0x18 → velocity Y (RE2 +0x1D6)           */
+    int16_t  vel_z;        /* ID 0x19 → velocity Z (RE2 +0x1D8)           */
+    int16_t  vel_w;        /* ID 0x1A → angular Y  (RE2 +0x1DA)           */
+    /* Target/lookat (IDs 0x20..0x25, RE2 +0x94..+0x9E). Used by Plc_neck
+     * mode 4 ("look-at") and the F8 NCCT lighting target.               */
+    int16_t  target_x;     /* RE2 +0x94                                   */
+    int16_t  target_y;     /* RE2 +0x96                                   */
+    int16_t  target_z;     /* RE2 +0x98                                   */
+    int16_t  lookat_x;     /* head-look PITCH applied to bone 3 (set by neck FSM) */
+    int16_t  lookat_y;     /* head-look YAW   applied to bone 3 (set by neck FSM) */
+    int16_t  lookat_z;     /* RE2 +0x9E                                   */
+    /* Plc_neck head-look FSM (byte-true FUN_80024e40, 2026-06-16). The opcode stores a
+     * WORLD look-at TARGET (+0x160/162/164) + mode flags (+0x1b8); re15_neck_update slews
+     * the head yaw/pitch toward it each frame (damped) and publishes to lookat_x/y, which
+     * skeleton_common.c adds to bone 3 (PL00 head) — player only (enemies never Plc_neck). */
+    uint8_t  neck_flags;   /* +0x1b8: 0x80=enabled; 0x04/0x08=world look-at active; mode bits */
+    int16_t  neck_tx, neck_ty, neck_tz;  /* +0x160/162/164: world look-at target */
+    int16_t  neck_speed;   /* +0x9e: engage rate (reserved) */
+    int16_t  neck_yaw;     /* +0x94: current slewed head yaw   (signed) */
+    int16_t  neck_pitch;   /* +0x96: current slewed head pitch (signed) */
+    /* Animation =========================================================*/
+    int16_t  motion;       /* ID 8 (0x8) → motion_no/clip id (RE2 +0x0A)  */
+    int32_t  anim_frame;   /* per-clip frame counter (engine-side, RE2
+                            * stores this in a separate work-area)        */
+    uint8_t  anim_freeze;  /* 2026-06-17: set on a scripted Plc_dest walk/run ARRIVAL
+                            * (actor_locomotion.c) → re15_compute_actor_kf freezes the held
+                            * walk clip at frame 0 (byte-true FUN_8001f3bc end-of-clip wrap),
+                            * matching the original which holds the walk clip (no idle reset).
+                            * Cleared by re15_actor_set_motion on the next motion change.    */
+    /* T-round (2026-05-25): per-actor anim flag word (RE2 +0x1c4).
+     * Bit 0x04 = LOOP (else FREEZE on clip end — original engine default).
+     * Bit 0x08 = "second pass" enable.
+     * Bit 0x40 = clear interp counter.
+     * Bit 0x80 = REVERSE playback (Plc_flg(0,128,0) sets this).
+     * Written by Plc_motion's pc[3] high byte + Plc_flg subop=OR/SET/XOR. */
+    uint16_t anim_flags;
+    /* BD-round 2026-05-28: per-actor Plc_motion FSM-init delay. PSX
+     * Plc_motion writes state=4 to actor+0x4; on NEXT tick FSM transitions
+     * state=4→state=1 and zeros anim_frame (per T8 disasm). Set to 1 on
+     * motion change so first tick the animation is FROZEN (no anim_frame
+     * progression), matching PSX's 1-tick init delay between Plc_motion
+     * fire and visible animation start. */
+    uint8_t  motion_init_delay;
+    /* === Keyframe CROSSFADE (byte-true FUN_8001f3bc FRAC = entity+0x8f) =====
+     * On a motion change the original blends sub-frames from the PREVIOUS
+     * rendered pose into the new clip: root translation via GTE gpf12/gpl12 and
+     * EVERY bone angle via FUN_80020510 (shortest-arc 12-bit lerp), with weight
+     * 0x1000-0x200*frac. anim_frac counts down (one step per rendered frame); 0
+     * = no blend (steady playback). prev_angles/prev_root hold the last RENDERED
+     * pose, updated in re15_skel_compute_pose (which reads the actor via the
+     * global g_anim_pose_actor = the original's DAT_800ac784 current-actor).
+     * The [32] MUST match RE15_EMD_MAX_BONES (re15_emd.h, included below the
+     * struct so the literal is used here). Seeded to 7 on every motion change. */
+    uint8_t  anim_frac;
+    uint8_t  anim_prev_valid;
+    /* Player animation-bank select. 1 = PL00.EDD (the original's COMMON/char-keyed bank, holds
+     * the ROOM1150 kneel clip 11 = the real ~25-frame stand→kneel pelvis fold py -1810→-761);
+     * 0 = the room RBJ cinematic overlay (ROOM1170 wave + the clip-11 HOLD/settle, gesture clips
+     * absent from PL00.EDD). Set by op_plc_motion, honored in re15_actor_anim_select for the
+     * player. RESULT-CORRECT selector, validated on all shipped data. Full RE (2026-06-18,
+     * see memory anim_bank_selection_mechanism_2026_06_18): the Plc_motion entity operand (pc[1])
+     * only lands in actor+0x05 — it does NOT pick the bank in the original — but it co-varies
+     * faithfully with the bank everywhere checked. Incl. ROOM1150 sub08: clip 11 at entity 1 =
+     * kneel DOWN/UP (the PL00 fold), at entity 0 = HOLD the kneel during dialog (the RBJ settle).
+     * clip 11 is deliberately authored in BOTH banks (PL00.EDD=fold, RBJ=settle), so the entity
+     * byte IS the intended fold-vs-hold switch — matches original_kneeing/ (fold-then-hold).
+     * ⚠️ The original's COMMON-vs-RBJ pose selector itself is NOT fully RE'd (the RBJ-pose reader
+     * is unconfirmed; DAT_800aca5a switches WEAPON↔COMMON, not COMMON↔RBJ). The entity rule is the
+     * faithful, lower-risk expression; revisit only if a room breaks the entity↔bank co-variance. */
+    uint8_t  anim_use_pl00;
+    int16_t  prev_angles[32][3];
+    int32_t  prev_root[3];
+    /* Plc_dest walker state (Phase 4.5.13-RE2 F3 — port FUN_8001ed9c) ==
+     * When SCD fires Plc_dest, we stash dest+mode here and the per-frame
+     * integrator drains it: yaw lerp toward dest, position step, set
+     * arrival flag when Manhattan/Euclidean distance < step_size.       */
+    uint8_t  walk_active;     /* 1 = walking toward dest                  */
+    uint8_t  walk_mode;       /* hi-byte from Plc_dest: 0x05 RUN, 0x09 TURN */
+    uint8_t  walk_flag_bit;   /* arrival flag bit in zone 5 (lo byte)     */
+    uint8_t  walk_pad;        /* (legacy, unused since BO walker FSM)      */
+    uint8_t  walk_fsm;        /* BO Tier-3: PSX DAT_800aca5a 0=init 1=align 2=step */
+    int16_t  walk_dest_x;
+    int16_t  walk_dest_z;
+    /* AO6-round 2026-05-26: target yaw captured ONCE when Plc_dest fires,
+     * not recomputed each tick. Per [[walker_canonical_N4_2026_05_24]] the
+     * PSX walker (FUN_800245d8) doesn't do atan2 — target is set ONCE by
+     * the motion-mode handler via FUN_8001a6d4 atan2, then FUN_8001a8f8
+     * slews actor.rot_y toward it. Per-tick atan2 in our previous code
+     * caused overshoot oscillation: walker passes dest by step-size, new
+     * atan2 flips 180°, walker spins back, overshoots, repeats forever.
+     * User-visible: Leon spinning around Y-axis after spawn. */
+    int16_t  walk_target_yaw;
+
+    /* Root-motion integration cache (Phase 4.5.13-RE2 I-FINAL).
+     * Stores the previous tick's keyframe pos so we can compute the
+     * per-frame delta (current_kf_pos - prev_kf_pos) and apply it
+     * (yaw-rotated) to actor.pos. RE2-faithful: clip keyframes carry
+     * absolute root positions in clip-local coords; the engine moves
+     * the actor by their per-frame differential. */
+    int16_t  root_prev_kf;     /* last applied keyframe index (-1 = none) */
+    int16_t  root_prev_motion; /* motion when prev_kf was recorded        */
+    int16_t  root_prev_x;
+    int16_t  root_prev_y;
+    int16_t  root_prev_z;
+    int16_t  root_pad;
+} re15_actor_t;
+
+extern re15_actor_t g_actors[RE15_ACTOR_MAX];
+extern uint8_t      g_actor_count;   /* highest active slot + 1 — for HUD */
+
+/* Phase 4.5.13 O5 (2026-05-23): Plc_motion handler @ PSX.EXE 0x80041b90
+ * does NOT reset anim_frame (+0x95) — it only writes motion_no (+0x94)
+ * and clears state sub-flags (+0x06/+0x07/+0x1c8/+0x1ca). The anim_frame
+ * wraps via the keyframe processor's `if (frame_count <= bVar3) +0x95=0`
+ * at clip end. Phase-locked transitions are intentional. */
+static inline void re15_actor_set_motion(re15_actor_t *a, int16_t m)
+{
+    /* T-round: on every Plc_motion, original engine clears
+     * actor+0x06/0x07/0x95 (state + frame_index). Reset anim_frame to 0
+     * so the new clip starts from frame 0 (not at whatever residual count
+     * from the prior clip). Required for FREEZE-default renderer to
+     * correctly distinguish "currently playing" (cur < frame_count)
+     * vs "ended, freeze on last" (cur >= frame_count). */
+    if (a->motion != m) {
+        a->anim_freeze = 0;
+        a->anim_frame  = 0;
+        a->anim_flags  = 0;       /* clear sticky flags from prior clip */
+        a->motion_init_delay = 1; /* BD-round: PSX state=4→state=1 1-tick FSM */
+        a->anim_frac   = 7;       /* seed FRAC crossfade (FUN_8001f3bc +0x8f) — blend
+                                   * from the prior rendered pose into the new clip. NEEDED:
+                                   * cutscene clips (e.g. room1150 clip 10) have frame-0 =
+                                   * full kneel, so the kneel-DOWN is produced ENTIRELY by
+                                   * this blend (no in-clip bend). */
+    }
+    a->motion = m;
+}
+
+void re15_actor_init(void);
+
+/* Allocate a slot for a new actor of `type`. Returns slot index, -1
+ * if all slots busy. */
+int  re15_actor_alloc(uint8_t type);
+
+/* Reset slot. */
+void re15_actor_free(int slot);
+
+/* Member access — used by SCD Member_set / Member_cmp.
+ * Returns the property as s32 (sign-extending smaller types). Writes
+ * truncate to the property's native width. Unknown member_id → 0 / no-op. */
+int32_t re15_actor_get_member(int slot, uint8_t member_id);
+void    re15_actor_set_member(int slot, uint8_t member_id, int32_t value);
+
+/* Phase 4.5.13-RE2 F3: per-frame walker integrator (port of RE2 FUN_8001ed9c).
+ * `step_walk` advances ONE actor's locomotion; `step_all_walkers` drains
+ * every active walker. Call once per SCD tick from main.c after scd_vm_tick. */
+void re15_actor_step_walk(re15_actor_t *a);
+void re15_actor_step_all_walkers(void);
+
+/* Yaw (Q12, 0 = +Z) from a world XZ delta. `re15_atan2_q12(dz,dx) - 1024` gives
+ * the mesh rot_y (0 = +X) that faces direction (dx,dz). */
+int16_t re15_atan2_q12(int32_t dz, int32_t dx);
+
+/* Per-frame Plc_neck head-look FSM (byte-true FUN_80024e40 damped look-at) is computed
+ * inside re15_skel_compute_pose at the head bone (bone 8), where the root bone matrix is
+ * available so the look angle is taken in the correct root-local frame. No standalone
+ * call — the old body-relative re15_neck_update was retired to avoid double-slewing. */
+
+/* Phase 4.5.13-RE2 I5: keyframe-driven actor translation. Mirrors RE1.5
+ * engine's FUN_8001F3BC integrator that reads root delta from bytes 0..5
+ * of each keyframe and adds (yaw-rotated) to actor world pos. */
+#include "re15_emd.h"
+void re15_actor_apply_root_motion(re15_actor_t *a,
+                                  const re15_emd_skeleton_t *skel,
+                                  const re15_emd_animation_t *anim);
+
+#endif /* RE15_ACTOR_H */
