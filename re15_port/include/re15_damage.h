@@ -45,6 +45,13 @@ extern const uint8_t re15_react_table[11];
 int re15_player_take_damage(re15_actor_t *p, uint8_t attack_type,
                             int32_t src_x, int32_t src_z);
 
+/* Apply a resolved hit to an ENEMY actor = the enemy branch of FUN_80012d60
+ * (@80012f08-80013034). Same damage table; reaction sub-state = re15_react_table
+ * (the hit clip), no bleed roll (player-only). The resolver loop owns the per-frame
+ * collision-confirm / self-exclusion / state-mask bits around it. Returns 1 if the
+ * hit landed, 0 if the enemy was already hit this attack window. */
+int re15_enemy_take_damage(re15_actor_t *e, uint8_t attack_type);
+
 /* Clear the per-attack hit-once guard (+0x93 bit0x1). The original clears it when the
  * attacker's hitbox deactivates so the NEXT attack can land; that clear-trigger lives
  * in the deferred enemy-attack FSM. Exposed so the future wiring (and the unit test)

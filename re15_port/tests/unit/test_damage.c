@@ -138,6 +138,39 @@ static int test_damage_table_bytes(void)
     return 0;
 }
 
+/* ----- Enemy branch (re15_enemy_take_damage): hp/state/reaction-clip + hit-once ----- */
+static int test_enemy_take_damage(void)
+{
+    re15_actor_init();
+    re15_actor_t *e = &g_actors[1];          /* an enemy slot */
+    e->active = 1; e->hp = 100; e->hit_react = 0; e->state = 0;
+
+    /* attack_type 6 = dmg 100, react clip 0x0F: 100-100=0 (>=0 → hurt, not death). */
+    int landed = re15_enemy_take_damage(e, 6);
+    if (landed != 1)            { fprintf(stderr, "FAIL: enemy hit sollte landen, war %d\n", landed); return 1; }
+    if (e->hp != 0)             { fprintf(stderr, "FAIL: enemy hp 100-100=0, ist %d\n", e->hp); return 1; }
+    if (e->state != 2)          { fprintf(stderr, "FAIL: enemy state hurt(2), ist %d\n", e->state); return 1; }
+    if (e->sub_state_1 != 0x0F) { fprintf(stderr, "FAIL: react_table[6]=0x0F, ist 0x%02X\n", e->sub_state_1); return 1; }
+    if (e->sub_state_2 != 1)    { fprintf(stderr, "FAIL: enemy sub_state_2=1, ist %d\n", e->sub_state_2); return 1; }
+    if ((e->hit_react & 1) == 0){ fprintf(stderr, "FAIL: enemy hit-once guard +0x93 bit0\n"); return 1; }
+
+    /* hit-once: second hit dropped (returns 0, sets bit0x2, no re-damage). */
+    int landed2 = re15_enemy_take_damage(e, 6);
+    if (landed2 != 0)            { fprintf(stderr, "FAIL: 2. enemy hit muss 0 (Sperre), war %d\n", landed2); return 1; }
+    if (e->hp != 0)              { fprintf(stderr, "FAIL: enemy hp muss 0 bleiben, ist %d\n", e->hp); return 1; }
+    if ((e->hit_react & 0x2) == 0){ fprintf(stderr, "FAIL: re-hit muss bit0x2 setzen\n"); return 1; }
+
+    /* lethal → death: fresh enemy hp 50, type 7 (dmg 200) → -150 < 0 → state 3. */
+    re15_actor_t *e2 = &g_actors[2];
+    e2->active = 1; e2->hp = 50; e2->hit_react = 0; e2->state = 0;
+    re15_enemy_take_damage(e2, 7);
+    if (e2->hp != -150)         { fprintf(stderr, "FAIL: enemy hp 50-200=-150, ist %d\n", e2->hp); return 1; }
+    if (e2->state != 3)         { fprintf(stderr, "FAIL: enemy death state(3), ist %d\n", e2->state); return 1; }
+
+    printf("PASS: test_enemy_take_damage\n");
+    return 0;
+}
+
 int main(void)
 {
     int failures = 0;
@@ -149,6 +182,7 @@ int main(void)
     failures += test_instakill_type2();
     failures += test_bleed_gate();
     failures += test_damage_table_bytes();
+    failures += test_enemy_take_damage();
 
     if (failures == 0) printf("\nALL PLAYER-DAMAGE TESTS PASSED\n");
     else               fprintf(stderr, "\n%d TEST(S) FAILED\n", failures);

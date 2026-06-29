@@ -115,6 +115,35 @@ int re15_player_take_damage(re15_actor_t *p, uint8_t attack_type,
     return 1;
 }
 
+/* Enemy branch of FUN_80012d60 (@80012f08-80013034): apply a resolved hit to an
+ * ENEMY actor — the counterpart to the player branch. Same dmg table, but the
+ * reaction sub-state is the hit-clip from re15_react_table (not the front/back
+ * selector) and there is NO bleed roll (player-only). The resolver LOOP owns the
+ * per-frame bits the original sets around this: the +0x93 &= 1 clear (@80012f88),
+ * the FUN_8001a7a8 collision-confirm → +0x93 bit0x80 (@80012fa8), the self-exclusion
+ * vs the attacker +0x188 (@80012f40), and the +0x90 0x3000000 state-mask gate
+ * (@80012f54). This applies the per-enemy damage ONCE per attack window.
+ * Returns 1 if the hit landed, 0 if the enemy was already hit this attack. */
+int re15_enemy_take_damage(re15_actor_t *e, uint8_t attack_type)
+{
+    if (!e) return 0;
+    /* hit-once guard +0x93 bit0x1 (@80012fb4-c0): already hit → mark bit0x2, no re-damage. */
+    if (e->hit_react & 0x1) {
+        e->hit_react |= 0x2;                                       /* +0x93 |= 2 (@80012fcc) */
+        return 0;
+    }
+    uint8_t type = (uint8_t)(attack_type & 0xff);
+    int16_t dmg  = (type < 11) ? re15_damage_table[type] : 0;
+    e->sub_state_3 = 0;                                            /* +0x7 = 0 (@80012fd4) */
+    e->sub_state_2 = 1;                                            /* +0x6 = 1 (@80012fd8) */
+    e->sub_state_1 = (type < 11) ? re15_react_table[type] : 0;     /* +0x5 = reaction clip (@80012fe8) */
+    e->hp = (int16_t)(e->hp - dmg);                               /* +0x9a -= dmg (@80012ffc) */
+    e->hit_react |= 0x1;                                           /* +0x93 |= 1 (@8001300c) */
+    e->state = 2;                                                  /* +0x4 = 2 hurt (@80013018) */
+    if (e->hp < 0) e->state = 3;                                  /* signed HP<0 → death (@80013020) */
+    return 1;
+}
+
 void re15_player_clear_hit_guard(re15_actor_t *p)
 {
     if (p) p->hit_react &= (uint8_t)~0x1;
