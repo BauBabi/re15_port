@@ -359,6 +359,32 @@ static int test_zombie_ai_primitives(void)
     return 0;
 }
 
+/* ----- re15_enemy_should_attack (3-handler-confirmed: dist<2000 && arc(0x2c8)!=0) ----- */
+static int test_enemy_should_attack(void)
+{
+    re15_actor_t z = {0};
+    re15_actor_t p = {0};
+    z.rot_y = -1024;                               /* faces +Z; arc!=0 = player off-front */
+
+    /* nah (dist 1000<2000) + arc!=0 (Spieler rechts) → commit. */
+    p.x = 1000; p.z = 0;
+    if (re15_enemy_should_attack(&z, &p) != 1) {
+        fprintf(stderr, "FAIL: nah+arc!=0 muss attack(1) sein\n"); return 1; }
+
+    /* nah + arc==0 (Spieler vorne) → kein attack. */
+    p.x = 0; p.z = 1000;
+    if (re15_enemy_should_attack(&z, &p) != 0) {
+        fprintf(stderr, "FAIL: nah+arc==0 (vorne) darf nicht attacken\n"); return 1; }
+
+    /* fern (dist 3000>=2000) + arc!=0 → kein attack (Distanz-Gate). */
+    p.x = 3000; p.z = 0;
+    if (re15_enemy_should_attack(&z, &p) != 0) {
+        fprintf(stderr, "FAIL: fern muss Distanz-Gate ziehen (0)\n"); return 1; }
+
+    printf("PASS: test_enemy_should_attack\n");
+    return 0;
+}
+
 int main(void)
 {
     int failures = 0;
@@ -376,6 +402,7 @@ int main(void)
     failures += test_enemy_attack();
     failures += test_real_hitbox_values();
     failures += test_zombie_ai_primitives();
+    failures += test_enemy_should_attack();
 
     if (failures == 0) printf("\nALL PLAYER-DAMAGE TESTS PASSED\n");
     else               fprintf(stderr, "\n%d TEST(S) FAILED\n", failures);

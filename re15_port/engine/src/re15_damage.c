@@ -369,15 +369,17 @@ void re15_enemy_apply_hitbox(re15_actor_t *a, uint8_t type)
 }
 
 /* ====================================================================== *
- *  STAGE1 zombie AI primitives (type 0x47, AI handler FUN_8011d6d4) —     *
- *  the two byte-true, self-contained pieces. The full FSM that consumes   *
- *  them (which entity+0x4 state is the actual lunge; the GTE/model-pool    *
- *  attack-point FUN_80104178) is NOT yet mapped — see the foundation       *
- *  memory. NOTE: the agent-suggested "state 0x701 == attack" is UNCONFIRMED *
- *  and likely wrong — FUN_80101b64 enters 0x701 when the player is close   *
- *  AND OUTSIDE the front arc (re15_ai_arc_test != 0), which reads as a     *
- *  turn-to-face/reorient, not a lunge. So NO attack-decision is ported     *
- *  yet (no guessing); these are just the verified inputs it will use.     *
+ *  STAGE1 zombie AI (type 0x47, AI handler FUN_8011d6d4) — byte-true.      *
+ *  The AI is a 4-level nested FSM (main state +0x4 → PTR_FUN_801217a0;     *
+ *  sub-state → PTR_FUN_801217b4; etc.). The DECISION transitions below are *
+ *  confirmed (the SAME condition appears verbatim in FUN_80101b64 /        *
+ *  FUN_80101de4 / FUN_80102058): dist<2000 && arc!=0 → state word 0x701    *
+ *  (the attack-commit state), and dist<4000 && arc==0 → 0x201 (approach,   *
+ *  FUN_80101c7c). Open (next phases): the 0x701→FUN_80017fa4 lunge chain    *
+ *  (the action sequence + the attack-point), the movement AI, the tick.    *
+ *  Caveat: re15_ai_arc_test carries the documented +1024 angle-convention   *
+ *  note — the thresholds/structure are byte-true; the arc orientation wants *
+ *  a dynamic (mid-lunge) confirmation.                                     *
  * ====================================================================== */
 
 /* Player distance the zombie AI caches at entity+0x1d0 (FUN_8011d6d4 @8011d6e8-708):
@@ -407,4 +409,20 @@ int re15_ai_arc_test(const re15_actor_t *e, int32_t px, int32_t pz, int cone)
     int r = 0;
     if ((cone << 1) <= u) { r = cone; if (u > 0x800) r = -cone; }
     return r;
+}
+
+/* The zombie's byte-true ATTACK-COMMIT condition — the transition that sets the
+ * entity state word @+0x4 to 0x701 (the attack-commit state). Confirmed: the SAME
+ * test appears verbatim in three STAGE1 handlers (FUN_80101b64, FUN_80101de4,
+ * FUN_80102058):  (dist < 2000 (0x7d0)) && (re15_ai_arc_test(player,0x2c8) != 0).
+ * dist = re15_enemy_player_dist (the AI's cached +0x1d0). Returns 1 when the zombie
+ * commits the attack this frame. The companion approach transition (FUN_80101c7c) is
+ * dist<4000 && arc==0 → 0x201. NOTE: the 0x701→FUN_80017fa4 lunge chain (action
+ * sequence + attack-point) and the arc's +1024 convention are the open items — the
+ * threshold/structure here are byte-true (3-handler-confirmed). */
+int re15_enemy_should_attack(const re15_actor_t *e, const re15_actor_t *player)
+{
+    if (!e || !player) return 0;
+    if ((uint32_t)re15_enemy_player_dist(e, player) >= 2000) return 0;   /* dist < 0x7d0 */
+    return re15_ai_arc_test(e, player->x, player->z, 0x2c8) != 0;
 }

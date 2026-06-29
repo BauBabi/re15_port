@@ -121,6 +121,12 @@ void re15_enemy_apply_hitbox(re15_actor_t *a, uint8_t type);
 int32_t re15_enemy_player_dist(const re15_actor_t *e, const re15_actor_t *player);
 int     re15_ai_arc_test(const re15_actor_t *e, int32_t px, int32_t pz, int cone);
 
+/* The zombie's byte-true attack-commit condition (→ entity state 0x701), confirmed
+ * across FUN_80101b64/FUN_80101de4/FUN_80102058: dist<2000 && re15_ai_arc_test(0x2c8)!=0.
+ * Returns 1 when the zombie should commit the attack. The 0x701→FUN_80017fa4 lunge
+ * chain + the arc convention are still open (see re15_damage.c). */
+int     re15_enemy_should_attack(const re15_actor_t *e, const re15_actor_t *player);
+
 /* Seed the bleed/poison RNG (deterministic tests + reproducible future runs). The PSX
  * source (FUN_8001af20 over a leftover register) is non-reproducible by construction;
  * see re15_damage.c for how the EXACT hash + EXACT 1/4 probability are preserved. */
