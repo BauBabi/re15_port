@@ -409,6 +409,48 @@ static void re15_enemy_ai_live_feeding(re15_actor_t *e)
     }
 }
 
+/* Grab EXECUTION (@0x8011f890[3/4] = FUN_80102548, STAGE1.BIN) — the LIVE zombie's IN-GAME attack
+ * (NOT the dormant lunge). byte-true, disasm-verified 2026-06-29 (full 9-sub-step machine + the
+ * player-grabbed FSM RE'd; the f840[3/4] LOGIC half @0x80102540 is a `jr ra` no-op — all grab work
+ * is in this f890 ANIMATE half). The engage brain commits the grab (re15_ai_decide_engage -> state
+ * word 0x301/0x401, i.e. +0x5 = 3 face / 4 behind) when dist<0x4b0 && tight-arc && same-floor &&
+ * facing; that word also resets +0x6 (its high bytes are 0), so the grab's sub-step machine starts
+ * at 0. FUN_80102548 dispatches entity+0x6 (0..8) via the jump table @0x80100024; the byte-true
+ * damage is [2] IMPACT = player.hp -= 10 (@0x8010277c) and [3] BITE = player.hp -= 5 (@0x801027dc,
+ * which LOOPS on the +0x9c=0x6e window applying -5 each time the bite anim frame lands), and the
+ * machine exits at [8] with +0x4 word = 0x201 (back to the engage brain, +0x5=2; @0x80102b9c).
+ * FAITHFUL-LINE: the port has no zombie grab anim, so the anim-gated sub-step advances ([1]/[3]/[5]/
+ * [7]) and the bite LOOP COUNT (anim-gated) are stand-ins — the port applies one -5 bite per grab
+ * cycle (the engage re-commits the grab while the player stays in range, so the damage repeats over
+ * cycles). DEFERRED (cited): the player-grabbed pose/lock FSM (the player command register
+ * 0x800aca58 = cmd 5 -> LAB_80036834, which pins + animates the player) + the player+0x93|=1 grabbed
+ * flag (port-field-aliased to the hit-guard) + the grab motion +0x94 + the grab-link globals
+ * 0x800acbcc/d0 — those are the player subsystem + the anim layer. The byte-true -10/-5 HP damage +
+ * the sub-step structure + the exit ARE ported. Uses sub_state_2 (+0x6), ai_timer (+0x9c). */
+static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
+{
+    if (!player) return;
+    switch (e->sub_state_2) {                /* +0x6 sub-step (reset to 0 by the 0x301/0x401 commit) */
+        case 0: e->sub_state_2 = 1; break;   /* [0] init/latch (player register/flag + motion deferred) */
+        case 1: e->sub_state_2 = 2; break;   /* [1] pull-in (anim-gated -> faithful stand-in advance) */
+        case 2:                               /* [2] IMPACT — the byte-true -10 grab hit (0x801026f0) */
+            player->hp     = (int16_t)(player->hp - 10);
+            if (player->hp < 0) player->state = 3;   /* hp<0 -> death (FUN_80012d60 @0x80012ee8) */
+            e->ai_timer    = 0x6e;           /* +0x9c bite window (the loop count is anim-gated) */
+            e->sub_state_2 = 3;
+            break;
+        case 3:                               /* [3] BITE — the byte-true -5/bite (0x80102788, loops) */
+            player->hp     = (int16_t)(player->hp - 5);
+            if (player->hp < 0) player->state = 3;
+            e->sub_state_2 = 6;             /* one bite/cycle: the anim-gated bite LOOP is deferred */
+            break;
+        case 6: e->sub_state_2 = 8; break;   /* [6] release anim (player grabbed-flag clear deferred) */
+        default:                              /* [8] EXIT (0x80102b90) -> back to the engage brain */
+            re15_ai_set_state_word(e, 0x201);   /* +0x4 = state 1 / +0x5 = 2 (engage) */
+            break;
+    }
+}
+
 /* FUN_80101224 (@0x8011f7b4[1], STAGE1.BIN) — the LIVE zombie ACTIVE handler. The ATTACK-WINDUP
  * half (byte-true): when the attack-arm bit (+0x1d8 & 0x100) is set and the freeze bit (+0x0 &
  * 0x1000) clear, the windup timer +0x1da counts down each frame; at == 0x12c (300) the original
@@ -441,14 +483,22 @@ int re15_enemy_ai_live_active(int slot)
          * is never set, savestate-proven), so the in-game attack is the GRAB the engage brain commits
          * (8.8), not the lunge. */
         switch (e->grid_id & 0xf) {                       /* @0x8011f80c[+0x9 & 0xf] sub-mode */
-            case 0:   /* combat sub-mode 0 -> @0x8011f80c[0]=FUN_8010168c -> the decision brain */
-                re15_ai_dispatch_decision(e, &g_actors[RE15_ACTOR_SLOT_PLAYER]);
+            case 0: {  /* combat sub-mode 0 -> FUN_8010168c: the DECIDE (f840) then the ANIMATE (f890) */
+                re15_actor_t *player = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+                re15_ai_dispatch_decision(e, player);   /* f840[+0x5] decide brain */
                 /* Faithful-line: when the brain commits the lunge-attack (+0x5=7) it would arm
                  * (FUN_8010ab2c) — gated on DAT_800aca3c & 1, which is dormant here. Arm ONCE if the
                  * flag is ever set; otherwise this is inert (the engage commits the GRAB instead). */
                 if (e->sub_state_1 == 7 && !(e->ai_flags & 0x100))
                     re15_enemy_ai_live_arm(slot);
+                /* The f890 ANIMATE half: for the grab sub-modes (+0x5 = 3/4) that is FUN_80102548 =
+                 * the in-game attack (the other +0x5 animate handlers are the deferred anim layer).
+                 * Same frame as the decide (FUN_8010168c calls decide then animate), so the engage
+                 * committing +0x5=3 runs the grab init this very tick. */
+                if (e->sub_state_1 == 3 || e->sub_state_1 == 4)
+                    re15_enemy_ai_live_grab(e, player);
                 break;
+            }
             case 5: case 6:   /* feeding (@0x8011f80c[5]/[6]=0x801018f8) -> the dist-gated wake-up */
                 re15_enemy_ai_live_feeding(e);
                 break;

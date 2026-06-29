@@ -37,9 +37,19 @@ Ergänzt die Auto-Memory (v.a. `reai-v2-foundation-combat` = die laufende AI-RE,
     +0x6-State-Machine 0x80103a58) → bei `dist<4000` wacht der Zombie zu combat auf (+0x9=0, +0x4=0x201=state1/+0x5=2
     engage). Lying `[8]=0x80101974` = passiv (leeres `jr ra`). In `re15_enemy_ai_live_active` eingehängt; alles disasm-
     selbst-verifiziert. test_room1140_combat Part (5): feeding-Zombie nah → wacht zu engage auf, ferner bleibt schlafend.
-- **Nächster Schritt (8.8): die GRAB-Execution portieren** = der eigentliche In-Game-Angriff (FUN_80102548 @0x8011f890[3/4]:
-  −5 HP/Biss + Player-grabbed-State 0x800aca58) + die Bewegungs-Leaves (+0x5≥3 approach). Dann gegen ein mid-Combat
-  ROOM1140-Savestate (`re15-room-capture`) verifizieren. (Der Lunge-Arm bleibt dormant, bis ein Skript bank1/bit31 setzt.)
+- **PHASE 8.8 ERLEDIGT (dieser Commit): die GRAB-Execution portiert = der eigentliche In-Game-Angriff.** Volle 9-Sub-Step-
+  Machine `FUN_80102548` (@0x8011f890[3/4]) byte-true RE't (Agent + Selbst-Disasm-Verify); f840[3/4]-LOGIC = No-Op
+  (`jr ra`), alles in der f890-ANIMATE-Hälfte. Portiert (`re15_enemy_ai_live_grab`, in den Combat-Dispatch eingehängt):
+  die byte-true Damage **[2] IMPACT −10 HP** (0x801026f0) + **[3] BITE −5 HP** (0x80102788, loopt im Original via +0x9c) +
+  Sub-Step-Struktur + Exit **[8] +0x4=0x201** (zurück zum engage, 0x80102b90). HP<0 → Player-Death (state 3). Faithful-line:
+  Anim-gegatete Sub-Step-Advances + der Bite-LOOP-Count sind Stand-ins (Port = 1 Biss/Grab-Zyklus, der engage re-committet
+  während der Spieler in Range bleibt → Damage wiederholt sich). Test Part (6): Zombie im Grab-State → Player −15 HP →
+  Exit zu engage. 31/31 ctest, ROOM1140-Headless sauber.
+- **Nächster Schritt (8.9): die BEWEGUNG (approach) + der Player-grabbed-FSM.** (1) Die Movement-Leaves (+0x5≥3 approach,
+  FUN_80102540/2bd0/2d20 → Port-Walker) — damit der geweckte Zombie zum Spieler LÄUFT (sonst wacht er auf, bewegt sich
+  aber nicht in Grab-Range). (2) Der Player-grabbed-FSM (Register 0x800aca58 cmd 5 → LAB_80036834 pinnt+animiert den
+  Spieler; player+0x93|=1) — damit der Spieler beim Grab gehalten wird. (3) mid-Combat ROOM1140-Savestate-Vergleich
+  (`re15-room-capture`; der vorhandene ist post-death). (Der Lunge-Arm bleibt dormant, bis ein Skript bank1/bit31 setzt.)
 - **Neues Tooling:** Skill **`re15-room-probe`** (echten Raum laden + SCD/AI ticken + State lesen, kein DuckStation —
   genau für die 8.6-Verifikation) + `re15-psx-disasm` um „Decompile-Misstrauen" + Tabellen-Familien-Decode erweitert.
 - **Disziplin:** jede Konstante zitiert eine Disasm-Adresse/Datei-Offset; Overlay-`.c` vor dem Portieren disasm-
@@ -213,14 +223,32 @@ dort zum No-Op (Headless-Boot unverändert, kein Crash; ROOM1140-Headless tickt 
   Dauer ist die deferred Anim-Schicht (Port advanced 2→3 direkt); die Phase-0-Busy-Writes (+0x93|=1/+0x1b8=1) deferred
   (Port-Feld-Aliasing). test_room1140_combat Part (5): feeding-Zombie nah am Spieler → wacht zu engage auf, ferner schläft.
 
-### 8.8+ — was als Nächstes (die GRAB-Execution = der eigentliche In-Game-Angriff)
-1. **GRAB-Execution portieren** (`FUN_80102548` @0x8011f890[3/4], die f890-ANIMATE-Dispatch — der Port modelliert bisher
-   nur die f840-DECIDE-Hälfte): Sub-Step-Machine (entity+0x8f) → grab-init (Player-Register 0x800aca58 + player+0x93|=1) →
-   grab-bite (−5 HP/Frame wenn Bite-Anim landet) + den Player-grabbed-FSM (0x800aca58 treibt die Player-Reaktion → state 7).
-2. **Bewegungs-Leaves (+0x5≥3 approach/walk):** die deferred f840[3..]/f890-Movement (FUN_80102540/2bd0/2d20) auf den
-   Port-Walker mappen — damit der geweckte Zombie auch zum Spieler LÄUFT (sonst wacht er auf, bewegt sich aber nicht).
-3. **Savestate-Vergleich (`re15-room-capture`):** mid-Combat ROOM1140-Savestate ziehen (der vorhandene ist post-death),
-   die Grab-Sub-Steps + −5-HP-Timing + den Player-grabbed-State live gegen den Port prüfen.
+### 8.8 — die GRAB-Execution portiert (ERLEDIGT) → der eigentliche In-Game-Angriff landet
+**`FUN_80102548` (@0x8011f890[3/4]) vollständig byte-true RE't** (Agent + Selbst-Disasm-Verify): eine 9-Sub-Step-Machine,
+dispatched auf entity+0x6 (Jump-Table @0x80100024; das Grab-Commit-Word 0x301/0x401 resettet +0x6=0). Die f840[3/4]-LOGIC-
+Hälfte `0x80102540` ist ein **No-Op** (`jr ra`) — die ganze Grab-Arbeit ist in dieser f890-ANIMATE-Hälfte. Sub-Steps:
+[0] init/latch (Player-Register 0x800aca58=cmd5 + player+0x93|=1 + Motion +0x94) · [1] pull-in (anim-gated) · **[2] IMPACT
+`player.hp -= 10`** (0x8010277c) · **[3] BITE `player.hp -= 5`** (0x801027dc, LOOPT via +0x9c=0x6e-Fenster, −5/Bite-Anim-
+Frame) · [4] hold · [5] struggle (Alt-Exit 0xb01 wenn Spieler sich freikämpft) · [6] release (player+0x93&=~1) · [7] recover ·
+**[8] EXIT `+0x4=0x201`** (zurück zum engage, +0x0&=~0x1000; 0x80102b9c). Player-Seite: 0x800aca58 cmd 5 → LAB_80036834
+(pinnt+animiert den Spieler); HP<0 → Damage-Entry cmd 3 (death) → der äußere state 7.
+- **Portiert (`re15_enemy_ai_live_grab`, in den Combat-Dispatch grid 0 als f890-Hälfte eingehängt):** die byte-true Damage
+  (−10 IMPACT + −5 BITE) + die Sub-Step-Struktur + der Exit (+0x5=2) + HP<0→Player-Death(state 3). **Faithful-line:** die
+  anim-gegateten Sub-Step-Advances ([1]/[3]/[5]/[7]) + der Bite-LOOP-Count sind Stand-ins → Port = **1 Biss/Grab-Zyklus**;
+  der engage re-committet den Grab solange der Spieler in Range/facing bleibt → Damage wiederholt sich über Zyklen.
+  **DEFERRED (cited):** der Player-grabbed-Pose/Lock-FSM (0x800aca58 cmd5 → LAB_80036834) + das player+0x93|=1-grabbed-Flag
+  (Port-Feld-Aliasing zum Hit-Guard) + die Grab-Motion +0x94 + die Grab-Link-Globals 0x800acbcc/d0 — Player-Subsystem + Anim.
+- **Test Part (6):** Zombie direkt im Grab-State (grid 0, +0x5=3, +0x6=0) nah am Spieler → run_all durch die Sub-Steps →
+  Player HP 100→85 (−15 byte-true) → Exit zu engage (+0x5=2). 31/31 ctest, ROOM1140-Headless sauber.
+
+### 8.9+ — was als Nächstes (BEWEGUNG + Player-grabbed-FSM → das volle beobachtbare Combat)
+1. **Bewegungs-Leaves (+0x5≥3 approach):** die deferred f840[3..]/f890-Movement (FUN_80102540 ist No-Op für 3/4; die
+   approach-States 2bd0/2d20 + der Walker) auf den Port-Walker mappen — damit der geweckte Zombie zum Spieler LÄUFT
+   (heute wacht er auf + greift nur, wenn er schon in Range ist; ohne Movement schließt er die Lücke nicht).
+2. **Player-grabbed-FSM:** die Player-Seite (0x800aca58 cmd 5 → LAB_80036834 pinnt+animiert den Spieler) — damit der Spieler
+   beim Grab gehalten wird (sonst kann er weglaufen während −5/Biss); + der player+0x93-grabbed-Flag sauber.
+3. **mid-Combat ROOM1140-Savestate (`re15-room-capture`):** der vorhandene Save ist post-death — einen mid-Grab ziehen, die
+   Sub-Steps + Bite-Count + Player-grabbed-State live gegen den Port prüfen.
 - **Verbleibende byte-true Details:** Sub-States [2]/[3]/[4] (0x80105a8c/06ba4/0919c = hurt/death/idle), FUN_8001bc08-
   Sensor/+0x1d8-Update, AI-Pause-Gate (DAT_800aca40 & 0x20000000 → `re15_enemy_ai_set_paused`, noch nicht in game_step).
 - **WAS VOM 0x47-PORT BLEIBT:** der `@0x801217a0`-Code (Phase 2-7) ist echte byte-true RE eines

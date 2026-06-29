@@ -212,8 +212,37 @@ int main(void)
                    wake_slot, wz->grid_id, wz->state, wz->sub_state_1, far_slot, fz->grid_id);
     }
 
+    /* (6): the GRAB execution (Phase 8.8) — the actual in-game attack. Put a zombie directly in the
+     * committed grab state (combat sub 0, +0x5=3 = the face-to-face grab the engage commits, +0x6=0)
+     * and step run_all through the sub-step machine: [0] init -> [1] pull-in -> [2] IMPACT (player
+     * -10) -> [3] BITE (player -5) -> [6]/[8] EXIT back to the engage brain (+0x5=2). The byte-true
+     * per-hit damage (-10 then -5) lands on the player; one grab cycle = -15 HP. */
+    {
+        int gs = zslots[2];                 /* a spare briefing zombie slot */
+        re15_actor_t *gz = &g_actors[gs];
+        pl->x = 0; pl->z = 0; pl->hp = 100; pl->hit_react = 0; pl->state = 0;
+        gz->x = 500; gz->z = 0; gz->state = RE15_AI_STATE_ACTIVE;
+        gz->grid_id = 0; gz->sub_state_1 = 3; gz->sub_state_2 = 0; gz->ai_flags = 0;
+        int16_t ghp0 = pl->hp;
+        re15_enemy_ai_run_all(1);   /* [0] init  -> +0x6=1 */
+        re15_enemy_ai_run_all(1);   /* [1] pull  -> +0x6=2 */
+        re15_enemy_ai_run_all(1);   /* [2] IMPACT-> player -10, +0x6=3 */
+        if (pl->hp != (int16_t)(ghp0 - 10)) {
+            fprintf(stderr, "FAIL: grab IMPACT -10, HP %d->%d\n", ghp0, pl->hp); fail = 1; }
+        re15_enemy_ai_run_all(1);   /* [3] BITE  -> player -5, +0x6=6 */
+        if (pl->hp != (int16_t)(ghp0 - 15)) {
+            fprintf(stderr, "FAIL: grab BITE -5 (total -15), HP %d->%d\n", ghp0, pl->hp); fail = 1; }
+        re15_enemy_ai_run_all(1);   /* [6] release -> +0x6=8 */
+        re15_enemy_ai_run_all(1);   /* [8] EXIT  -> +0x5=2 (engage) */
+        if (gz->sub_state_1 != 2) {
+            fprintf(stderr, "FAIL: grab must exit to engage (+0x5=2), ist %d\n", gz->sub_state_1); fail = 1; }
+        if (!fail)
+            printf("  (6) grab zombie slot %d: IMPACT+BITE -> player HP %d->%d (-15 byte-true), exited to engage (+0x5=%d)\n",
+                   gs, ghp0, pl->hp, gz->sub_state_1);
+    }
+
     free(buf);
     if (fail) { fprintf(stderr, "\nROOM1140 COMBAT-WIRING TEST FAILED\n"); return 1; }
-    printf("\nPASS: ROOM1140 live-AI game_step wiring (spawn->tick; feeding zombie WAKES->engage; armed lunge->HP; type-gated)\n");
+    printf("\nPASS: ROOM1140 live-AI game_step wiring (spawn->tick; feeding WAKES->engage; GRAB -15 HP; type-gated)\n");
     return 0;
 }
