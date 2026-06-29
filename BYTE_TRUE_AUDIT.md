@@ -245,6 +245,17 @@ Multi-Agent-Audit: 20 Subsysteme, 123 WRONG/MISSING-Verdachtsfälle, **104 adver
 ### #22 · MEDIUM · REPAIR · player-damage
 **Player-State-Maschine DAT_800aca58 (11-case FSM, Hit/Death) statt 5 Idle-Phasen**
 
+> 🔶 **RE'T + DEFERRED (an deferred Infrastruktur gekoppelt, 2026-06-29):** State-Dispatcher **FUN_80031c44**
+> (ghidra1:127059-127096) liest JEDEN Frame `DAT_800aca58` (= player+0x4 = port `g_actors[0].state`, RE1.5 Member
+> id 8) << 2 → `PTR_LAB_80073f90[state]`: state0/1=Idle/Gameplay, **state2=Hit FUN_80035af0**, state3=Death FUN_800366bc.
+> Der State-**SET ist erledigt (#13** setzt state=2 hurt / 3 death). Der Hit-Handler **FUN_80035af0** (ghidra1:131869+)
+> ist ein Sub-FSM (sub-states `DAT_800aca59`/`DAT_800aca5a` = port sub_state_1/2) das die **Hurt-Animation clip 0xa via
+> FUN_8001f314** spielt, runterzählt und zu Idle zurückkehrt. **GEKOPPELT an deferred:** (1) Hurt/Death-Clips sind im
+> Port NICHT verdrahtet (#13-Notiz „unbeobachtbar bis Hurt-Clips"); (2) der Damage-TRIGGER (Gegner-AI/Hitbox) ist
+> deferred (#13) → state wird in-game NIE 2/3. ⚠️ Ein Idle-Gate OHNE Hit-Handler würde den Spieler nach einem Treffer
+> in „hit" STRANDEN (kein Return-to-Idle) → KEIN sicherer self-contained Teil. → DEFER bis Gegner-AI-Phase + Hurt-Clips.
+> Die HP→injured-Idle-Eskalation (clip 22/23 bei HP<50/30) ist dagegen schon erledigt (#13-HP-Set + bestehendes Idle-FSM).
+
 - **Ort:** `re15_port/engine/src/player_common.c:160,192-226 (s_idle_phase)`
 - **RE-Beleg:** FUN_80031c44 @0x80031c8c liest DAT_800aca58, Tabelle PTR_LAB_80073f90 (state2=Hit 0x80035af0, state3=Death 0x800366bc). Idle-FSM switchD_8003206c (11 cases, Jump-Tab 0x80010b38). Banks healthy @0x800320e8/injured @0x800322c0.
 - **Fix:** Player-State-Var analog DAT_800aca58 einfÃ¼hren, die der Damage-Pfad (Rank 13) auf 2/3 setzt; Idle-FSM nur laufen wenn state==Idle. Setup/play-Paarung + expliziter Bank-Wechsel (WEAPON/COMMON).

@@ -28,7 +28,8 @@ address. All rows below were verified against the in-repo disasm 2026-05-29 unle
 | Addr | Purpose | Evidence | Conf |
 |------|---------|----------|------|
 | DAT_800aca58 | Player-mode global (1 byte); index into PTR_LAB_80073f90 dispatch table (0–7) | ghidra1:474601,127085 | high |
-| FUN_80031c44 | Player-mode dispatcher: DAT_800ac784=player, reads DAT_800aca58, calls table[mode]. Once/frame @0x8001ce0c | ghidra1:127059-127095 | high |
+| FUN_80031c44 | Player-mode dispatcher: DAT_800ac784=player, reads DAT_800aca58 (player STATE, port g_actors[0].state), `<<2` → calls **PTR_LAB_80073f90[state]** once/frame @0x8001ce0c. state0/1=Idle/Gameplay, state2=Hit (FUN_80035af0), state3=Death (FUN_800366bc) [#22] | ghidra1:127059-127096 | high |
+| FUN_80035af0 (state2 Hit) | Hit-reaction sub-FSM: sub-states DAT_800aca59/DAT_800aca5a (port sub_state_1/2) via PTR_LAB_800741a8; plays hurt **clip 0xa** (DAT_800acae8=0xa) via FUN_8001f314, counts down, returns to Idle. State SET by #13 damage; ⚠️ DISPATCH (idle-gate + this handler) DEFERRED — needs hurt clips + the deferred enemy-AI damage trigger [#22] | ghidra1:131869-131960 | high |
 | LAB_80041b90 (0x3F Plc_motion) | motion_id @pc+1 → actor+0x94 (DIRECT clip idx), player_mode=4, flags@pc+2→+0x1c4, pc+4 | ghidra1:152125-152146 | high |
 | FUN_8001f314 | Keyframe anim advance: param_3 fwd/rev; bit0x8000→interp(FUN_8001f8b4) else FUN_8001f3bc; anim_flags 0x80=reverse | ghidra1:98294-98339 | high |
 | FUN_8001f664 | 12-bit packed bone-angle unpacker (ZYX, 2/uint32) EDD→bones. From FUN_8001f3bc | ghidra1:98547 | high |
