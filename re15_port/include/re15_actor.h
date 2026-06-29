@@ -67,6 +67,16 @@ typedef struct {
      * via 2×RNG&1 @80012ea4. See re15_damage.c. */
     uint8_t  hit_react;    /* RE2 +0x93 — per-attack hit guard + enemy collision bits */
     uint16_t status_flags; /* RE2/RE1.5 +0x98 (Member id 17, lhu) — bit0x2 = bleed/poison */
+    /* Attack-hitbox dimensions — FUN_8002b5d0 reads these via target+0x78 (the
+     * dim struct: radius_min@+6, height@+8, radius_max@+10) and target+0x7c (the
+     * local centre offset). radius_min==radius_max → circular hitbox; else angular
+     * sector (DEFERRED). hit_height = Y half-extent. SOURCE (RE'd 2026-06-29, values
+     * not yet extracted): enemies = a per-type table in the EXE (FUN_80019700
+     * @80019894 sets +0x78 = type_table+0x8, +0x7c @800198b0); player = a fixed EXE
+     * table. To be populated at model-load; 0 = no hitbox (default). The geometry +
+     * resolver (re15_damage.c) are byte-true regardless of where the values come from. */
+    uint16_t hit_radius_min, hit_radius_max, hit_height;
+    int16_t  hit_offset_x, hit_offset_y, hit_offset_z;
     /* Phase 4.5.13-RE2 F1: speed was at ID 27 (wrong) — correct ID is
      * 0x16 (+0x1CC in RE2). Renamed for clarity; opcode 0x35 Speed_set
      * uses an indexed velocity vector (ID 0x17..0x1A), not this scalar. */

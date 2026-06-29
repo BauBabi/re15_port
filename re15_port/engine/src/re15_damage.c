@@ -148,3 +148,154 @@ void re15_player_clear_hit_guard(re15_actor_t *p)
 {
     if (p) p->hit_react &= (uint8_t)~0x1;
 }
+
+/* ====================================================================== *
+ *  Attack-hitbox vs actor collision test — FUN_8002b5d0                   *
+ *  (ghidra1_V2.txt:118005-118130). The per-target geometry test the       *
+ *  resolver loop FUN_80012d60 runs against each enemy + the player.       *
+ * ====================================================================== */
+
+/* BIOS SquareRoot0 (floor sqrt) — the original calls it @8002b740. Bit-by-bit
+ * integer isqrt, identical to re15_collision.c's coll_isqrt: each combat /
+ * collision / light / camera module keeps its own private copy, the established
+ * port convention (the PSX inlines SquareRoot0 at every call site). */
+static int32_t dmg_isqrt(int64_t x)
+{
+    if (x <= 0) return 0;
+    uint64_t v = (uint64_t)x, res = 0, bit = (uint64_t)1 << 62;
+    while (bit > v) bit >>= 2;
+    while (bit) {
+        if (v >= res + bit) { v -= res + bit; res = (res >> 1) + bit; }
+        else res >>= 1;
+        bit >>= 2;
+    }
+    return (int32_t)res;
+}
+
+/* CIRCULAR path of FUN_8002b5d0 (radius_min == radius_max @ hbdata+6/+0xa). The
+ * angular-SECTOR path (radius interpolated over the target's facing via the BIOS
+ * ratan2 + rsin/rcos) is DEFERRED: the port has only the catan-based atan2
+ * (re15_atan2_q12 = FUN_8001a6d4), not the BIOS ratan2 the sector branch calls
+ * @8002b65c — porting that is a separate byte-true step. Symmetric hitboxes
+ * (the common case) take this circular branch directly @8002b6fc.
+ *
+ * (cx,cy,cz) = the target hitbox centre = target world pos (+0x34/+0x38/+0x3c)
+ * + the local offset (the short[3] at target+0x7c). radius/height = hbdata+6/+8.
+ * (atk_x,atk_y,atk_z) = attack origin (param_2[0..2]); atk_radius = param_1.
+ * Instruction map (ghidra1_V2.txt):
+ *   8002b6fc  R   = (radius&0xffff) + (atk_radius&0xffff)
+ *   8002b704  dx  = atk_x - cx;   8002b714  reject unless |dx| <= R (incl.)
+ *   8002b724  dz  = atk_z - cz;   8002b730  reject unless |dz| <= R (incl.)
+ *   8002b740  dist= SquareRoot0(dx*dx + dz*dz)
+ *   8002b75c  reject unless 0 < R - dist   (dist < R, strict)
+ *   8002b768  h   = (atk_radius&0xffff) + height
+ *   8002b76c  dy  = atk_y - cy;   8002b778  accept iff -h < dy && dy < h (strict) */
+int re15_hitbox_overlap(int32_t cx, int32_t cy, int32_t cz,
+                        int32_t radius, int32_t height,
+                        int32_t atk_x, int32_t atk_y, int32_t atk_z,
+                        int32_t atk_radius)
+{
+    int32_t R = (int32_t)((uint32_t)radius & 0xffff) + (int32_t)((uint32_t)atk_radius & 0xffff);
+
+    /* X/Z AABB broad-phase — the original's unsigned |d|<=R idiom: (u32)(d+R) <= (u32)(2R). */
+    int32_t dx = atk_x - cx;
+    if ((uint32_t)(dx + R) > (uint32_t)(R * 2)) return 0;
+    int32_t dz = atk_z - cz;
+    if ((uint32_t)(dz + R) > (uint32_t)(R * 2)) return 0;
+
+    /* Euclidean distance < R (strict, via 0 < R - dist). */
+    int32_t dist = dmg_isqrt((int64_t)dx * dx + (int64_t)dz * dz);
+    if (R - dist <= 0) return 0;
+
+    /* Y/height range: -h < dy < h, h = attack_radius + hitbox height. */
+    int32_t h  = (int32_t)((uint32_t)atk_radius & 0xffff) + (int32_t)((uint32_t)height & 0xffff);
+    int32_t dy = atk_y - cy;
+    return (-h < dy && dy < h) ? 1 : 0;
+}
+
+/* FUN_8002b5d0 wrapper over a port actor: read its hitbox dims (the +0x78 struct)
+ * + local offset (+0x7c) and run the overlap test. Circular path is byte-true; the
+ * angular-SECTOR case (hit_radius_min != hit_radius_max) needs the BIOS ratan2 +
+ * rsin/rcos directional-reach interpolation (@8002b65c) which the port hasn't yet
+ * ported — it is DEFERRED and routed through the circular path on radius_min as a
+ * documented placeholder (never reached in-game today: enemy hitbox values aren't
+ * wired yet and the AI attack trigger is deferred). */
+int re15_hitbox_test(const re15_actor_t *target, const re15_attack_box_t *atk)
+{
+    if (!target || !atk) return 0;
+    int32_t cx = target->x + target->hit_offset_x;          /* +0x34 + offset[0] */
+    int32_t cy = target->y + target->hit_offset_y;          /* +0x38 + offset[1] */
+    int32_t cz = target->z + target->hit_offset_z;          /* +0x3c + offset[2] */
+    int32_t radius = target->hit_radius_min;                /* == hit_radius_max (circular) */
+    return re15_hitbox_overlap(cx, cy, cz, radius, target->hit_height,
+                               atk->x, atk->y, atk->z, atk->radius);
+}
+
+/* ====================================================================== *
+ *  Damage-resolver LOOP — FUN_80012d60 (ghidra1_V2.txt:77607-77814).      *
+ *  Tests one attack hitbox against the player block + every active enemy  *
+ *  and applies the damage. The two branches (player/enemy take_damage)    *
+ *  are ported above; this is the iteration + gating around them.          *
+ * ====================================================================== */
+int re15_resolve_attack(const re15_attack_box_t *atk, uint8_t attack_type,
+                        int attacker_slot)
+{
+    if (!atk) return 0;
+
+    int collected[RE15_ACTOR_MAX];
+    int ncol = 0;
+    int hits = 0;
+
+    /* (1) Enemy pass — collect every active enemy the hitbox overlaps. The original
+     * scans DAT_800acc2c (stride 0x1f4) until DAT_800aca4e active entries are seen
+     * (@80012d7c-de4); the port iterates slots 1.. (slot 0 = the player block, tested
+     * separately @80012df0) and skips inactive slots — same active set. */
+    for (int i = RE15_ACTOR_SLOT_PLAYER + 1; i < RE15_ACTOR_MAX; i++) {
+        re15_actor_t *e = &g_actors[i];
+        if (!e->active) continue;                              /* (*puVar6 & 1) @80012d9c */
+        if (re15_hitbox_test(e, atk))                          /* FUN_8002b5d0 @80012db4 */
+            collected[ncol++] = i;                             /* local_78[] @80012dc8 */
+    }
+
+    /* (2) Player block — ALWAYS tested, regardless of the enemy pass (@80012df0).
+     * re15_player_take_damage is the player branch (guard + HP + bleed + hurt/death
+     * state @80012e18-f04); cVar9 is set on overlap even if the guard blocked re-damage. */
+    if (re15_hitbox_test(&g_actors[RE15_ACTOR_SLOT_PLAYER], atk)) {
+        re15_player_take_damage(&g_actors[RE15_ACTOR_SLOT_PLAYER], attack_type,
+                                atk->x, atk->z);
+        hits++;                                                /* cVar9 = 1 @80012efe */
+    }
+
+    /* (3) Enemy application — reverse collected order (the original do-while
+     * decrements bVar8 @80012f12-30). */
+    for (int k = ncol - 1; k >= 0; k--) {
+        int slot = collected[k];
+        re15_actor_t *e = &g_actors[slot];
+
+        /* GATE A — self-exclusion (@80012f40): the attacker never damages itself.
+         * Original: (e+0x188+0x40) == (attacker+0x74), i.e. the same model-pool
+         * pointer ↔ the same actor; the port maps that identity to slot equality. */
+        if (slot == attacker_slot) continue;
+
+        /* GATE B — terminal-state skip (@80012f54): the original skips when
+         * (e+0x90 & 0x3000000) == 0x3000000 (the enemy's death / despawn terminal
+         * flags). The bit WRITER is the enemy death/lifecycle FSM, which the port has
+         * not yet implemented, so no enemy can be in that state today → the gate is
+         * inert and is OMITTED here (behaviourally identical now, same documented-
+         * deferral stance as the hit-SE below). FUN_80011f50 reads the same gate. */
+
+        /* Per-attack collision bits (@80012f70-fac): clear all but the hit-once bit,
+         * then set bit0x80 when the hit came from the target's FRONT (FUN_8001a7a8). */
+        e->hit_react &= 1;
+        if (hit_from_front(e, atk->x, atk->z))
+            e->hit_react |= 0x80;
+
+        /* type<2 → hit SE FUN_800453d0(10) @80012f80 — DEFERRED (audio SE-id table). */
+
+        /* Enemy branch (@80012fb4-3034): applies the hit once per window (bit0 guard),
+         * else marks the re-hit bit0x2. */
+        re15_enemy_take_damage(e, attack_type);
+        hits++;                                                /* cVar9 += 1 @80012fec */
+    }
+    return hits;
+}

@@ -171,6 +171,105 @@ static int test_enemy_take_damage(void)
     return 0;
 }
 
+/* ----- Hitbox-Geometrie (re15_hitbox_overlap = FUN_8002b5d0 circular) ----- *
+ * Zentrum (1000,0,2000), Hitbox-Radius 100, Höhe 200; Attack-Radius 50 → R=150,
+ * h = 50+200 = 250. Belegt: direkter Treffer, AABB-Reject, strikte Kreis-Kante
+ * (dist<R), inklusive AABB-Kante (|d|<=R), Y-Range strikt (-h<dy<h). */
+static int test_hitbox_overlap_circular(void)
+{
+    const int32_t cx = 1000, cy = 0, cz = 2000, rad = 100, hgt = 200, ar = 50; /* R=150 */
+    int r;
+
+    /* A: direkter Treffer (Attack im Zentrum) → 1 */
+    r = re15_hitbox_overlap(cx,cy,cz, rad,hgt, 1000,0,2000, ar);
+    if (r != 1) { fprintf(stderr, "FAIL: hitbox A direkter Treffer, war %d\n", r); return 1; }
+
+    /* B: innerhalb Radius (dist=100 < 150) → 1 */
+    r = re15_hitbox_overlap(cx,cy,cz, rad,hgt, 1100,0,2000, ar);
+    if (r != 1) { fprintf(stderr, "FAIL: hitbox B innerhalb, war %d\n", r); return 1; }
+
+    /* C: in AABB aber außerhalb Kreis (dx=dz=140, dist≈197 > 150) → 0 */
+    r = re15_hitbox_overlap(cx,cy,cz, rad,hgt, 1140,0,2140, ar);
+    if (r != 0) { fprintf(stderr, "FAIL: hitbox C AABB-Ecke außerhalb Kreis, war %d\n", r); return 1; }
+
+    /* D: AABB-Reject auf X (dx=200 > R=150) → 0 */
+    r = re15_hitbox_overlap(cx,cy,cz, rad,hgt, 1200,0,2000, ar);
+    if (r != 0) { fprintf(stderr, "FAIL: hitbox D AABB-X-reject, war %d\n", r); return 1; }
+
+    /* E: Kreis-Kante strikt — dx=149 (dist 149 < 150) → 1; dx=150 (dist 150) → 0 */
+    r = re15_hitbox_overlap(cx,cy,cz, rad,hgt, 1149,0,2000, ar);
+    if (r != 1) { fprintf(stderr, "FAIL: hitbox E dist=149<150, war %d\n", r); return 1; }
+    r = re15_hitbox_overlap(cx,cy,cz, rad,hgt, 1150,0,2000, ar);
+    if (r != 0) { fprintf(stderr, "FAIL: hitbox E dist=150 (==R) muss strikt 0, war %d\n", r); return 1; }
+
+    /* F: Y-Range strikt — dy=249 (<250) → 1; dy=250 (==h) → 0 */
+    r = re15_hitbox_overlap(cx,cy,cz, rad,hgt, 1000,249,2000, ar);
+    if (r != 1) { fprintf(stderr, "FAIL: hitbox F dy=249<250, war %d\n", r); return 1; }
+    r = re15_hitbox_overlap(cx,cy,cz, rad,hgt, 1000,250,2000, ar);
+    if (r != 0) { fprintf(stderr, "FAIL: hitbox F dy=250 (==h) muss strikt 0, war %d\n", r); return 1; }
+    r = re15_hitbox_overlap(cx,cy,cz, rad,hgt, 1000,-250,2000, ar);
+    if (r != 0) { fprintf(stderr, "FAIL: hitbox F dy=-250 (==-h) muss strikt 0, war %d\n", r); return 1; }
+
+    printf("PASS: test_hitbox_overlap_circular\n");
+    return 0;
+}
+
+/* Hitbox-Helfer: einem Slot eine zirkuläre Hitbox + Position geben. */
+static void set_hitbox(re15_actor_t *a, int32_t x, int32_t z, uint16_t rad)
+{
+    a->x = x; a->y = 0; a->z = z;
+    a->hit_radius_min = a->hit_radius_max = rad;
+    a->hit_height = 200;
+    a->hit_offset_x = a->hit_offset_y = a->hit_offset_z = 0;
+}
+
+/* ----- resolve_attack (FUN_80012d60-Loop): Iteration + Gates + take_damage ----- *
+ * Szenario: Attack-Box @(1000,0,0) r=100. Player @(1000) getroffen; Angreifer
+ * (slot1) @(1000) IN Range aber self-excluded; Opfer (slot2) @(1050) getroffen;
+ * Ferner Gegner (slot3) @(50000) außerhalb. Dann Hit-Once über 2. Resolve. */
+static int test_resolve_attack(void)
+{
+    re15_actor_init();
+    re15_actor_t *pl  = &g_actors[0];          /* Player, hp 100 (init) */
+    set_hitbox(pl, 1000, 0, 100);
+
+    re15_actor_t *atk = &g_actors[1];          /* Angreifer (self-excluded) */
+    atk->active = 1; atk->type = 0x10; atk->hp = 100; atk->state = 0; atk->hit_react = 0;
+    set_hitbox(atk, 1000, 0, 100);
+
+    re15_actor_t *vic = &g_actors[2];          /* Opfer in Range */
+    vic->active = 1; vic->type = 0x10; vic->hp = 100; vic->state = 0; vic->hit_react = 0;
+    set_hitbox(vic, 1050, 0, 100);
+
+    re15_actor_t *far = &g_actors[3];          /* außerhalb */
+    far->active = 1; far->type = 0x10; far->hp = 100; far->state = 0; far->hit_react = 0;
+    set_hitbox(far, 50000, 0, 100);
+
+    re15_attack_box_t box = { 1000, 0, 0, 100 };   /* type 0 = 10 dmg, attacker slot 1 */
+    int n = re15_resolve_attack(&box, 0, 1);
+
+    /* Engagiert: Player (overlap) + Opfer = 2. Angreifer self-excluded, Ferner außerhalb. */
+    if (n != 2)            { fprintf(stderr, "FAIL: resolve n sollte 2 sein, war %d\n", n); return 1; }
+    if (pl->hp != 90)      { fprintf(stderr, "FAIL: Player hp 100-10=90, ist %d\n", pl->hp); return 1; }
+    if (pl->state != 2)    { fprintf(stderr, "FAIL: Player state hurt(2), ist %d\n", pl->state); return 1; }
+    if (atk->hp != 100)    { fprintf(stderr, "FAIL: Angreifer (self-excluded) muss 100 bleiben, ist %d\n", atk->hp); return 1; }
+    if (atk->state != 0)   { fprintf(stderr, "FAIL: Angreifer state muss 0 bleiben, ist %d\n", atk->state); return 1; }
+    if (vic->hp != 90)     { fprintf(stderr, "FAIL: Opfer hp 100-10=90, ist %d\n", vic->hp); return 1; }
+    if (vic->state != 2)   { fprintf(stderr, "FAIL: Opfer state hurt(2), ist %d\n", vic->state); return 1; }
+    if ((vic->hit_react & 1) == 0) { fprintf(stderr, "FAIL: Opfer hit-once guard +0x93 bit0\n"); return 1; }
+    if (far->hp != 100)    { fprintf(stderr, "FAIL: Ferner Gegner muss 100 bleiben, ist %d\n", far->hp); return 1; }
+
+    /* 2. Resolve im selben Attack-Window: Guards gesetzt → kein Re-Schaden. */
+    int n2 = re15_resolve_attack(&box, 0, 1);
+    if (n2 != 2)           { fprintf(stderr, "FAIL: 2. resolve n auch 2 (Engagement), war %d\n", n2); return 1; }
+    if (pl->hp != 90)      { fprintf(stderr, "FAIL: Player hp muss 90 bleiben (Sperre), ist %d\n", pl->hp); return 1; }
+    if (vic->hp != 90)     { fprintf(stderr, "FAIL: Opfer hp muss 90 bleiben (Sperre), ist %d\n", vic->hp); return 1; }
+    if ((vic->hit_react & 0x2) == 0) { fprintf(stderr, "FAIL: Opfer Re-Hit muss bit0x2 setzen\n"); return 1; }
+
+    printf("PASS: test_resolve_attack\n");
+    return 0;
+}
+
 int main(void)
 {
     int failures = 0;
@@ -183,6 +282,8 @@ int main(void)
     failures += test_bleed_gate();
     failures += test_damage_table_bytes();
     failures += test_enemy_take_damage();
+    failures += test_hitbox_overlap_circular();
+    failures += test_resolve_attack();
 
     if (failures == 0) printf("\nALL PLAYER-DAMAGE TESTS PASSED\n");
     else               fprintf(stderr, "\n%d TEST(S) FAILED\n", failures);
