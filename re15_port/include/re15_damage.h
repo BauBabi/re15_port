@@ -113,6 +113,14 @@ int re15_enemy_attack(int attacker_slot);
 void re15_player_apply_hitbox(re15_actor_t *p);
 void re15_enemy_apply_hitbox(re15_actor_t *a, uint8_t type);
 
+/* STAGE1 zombie AI byte-true primitives (handler FUN_8011d6d4). re15_enemy_player_dist
+ * = the cached distance SquareRoot0(DX²+DZ²) (16-bit-wrapped deltas). re15_ai_arc_test
+ * = FUN_8001a9cc: 0 if the player is inside the ±`cone` front arc of the zombie, else
+ * ±cone. The full attack FSM (which state is the lunge, the GTE attack-point) is NOT
+ * yet mapped — these are the verified inputs, see re15_damage.c / the memory. */
+int32_t re15_enemy_player_dist(const re15_actor_t *e, const re15_actor_t *player);
+int     re15_ai_arc_test(const re15_actor_t *e, int32_t px, int32_t pz, int cone);
+
 /* Seed the bleed/poison RNG (deterministic tests + reproducible future runs). The PSX
  * source (FUN_8001af20 over a leftover register) is non-reproducible by construction;
  * see re15_damage.c for how the EXACT hash + EXACT 1/4 probability are preserved. */

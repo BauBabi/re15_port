@@ -331,6 +331,34 @@ static int test_real_hitbox_values(void)
     return 0;
 }
 
+/* ----- Zombie-AI-Primitive (FUN_8011d6d4 Distanz + FUN_8001a9cc Arc) ----- *
+ * Zombie @(0,0,0), Blickrichtung +Z (rot_y = -1024 = atan2(+Z)-1024). Distanz
+ * byte-true; Arc: Spieler vorne → 0, seitlich/hinten → ±cone. */
+static int test_zombie_ai_primitives(void)
+{
+    re15_actor_t z = {0};
+    re15_actor_t p = {0};
+    z.rot_y = -1024;                               /* faces +Z */
+
+    /* Distanz: Spieler bei (1200,0,0) → dx=1200,dz=0 → 1200. */
+    p.x = 1200; p.z = 0;
+    int32_t d = re15_enemy_player_dist(&z, &p);
+    if (d != 1200) { fprintf(stderr, "FAIL: dist 1200, war %d\n", d); return 1; }
+
+    /* Arc cone 0x2c8: Spieler VORNE (+Z) → 0 (im Frontkegel). */
+    if (re15_ai_arc_test(&z, 0, 1000, 0x2c8) != 0) {
+        fprintf(stderr, "FAIL: arc Spieler vorne muss 0 sein\n"); return 1; }
+    /* Spieler RECHTS (+X, 90°) → außerhalb → != 0. */
+    if (re15_ai_arc_test(&z, 1000, 0, 0x2c8) == 0) {
+        fprintf(stderr, "FAIL: arc Spieler rechts muss != 0 sein\n"); return 1; }
+    /* Spieler HINTEN (-Z) → außerhalb → != 0. */
+    if (re15_ai_arc_test(&z, 0, -1000, 0x2c8) == 0) {
+        fprintf(stderr, "FAIL: arc Spieler hinten muss != 0 sein\n"); return 1; }
+
+    printf("PASS: test_zombie_ai_primitives\n");
+    return 0;
+}
+
 int main(void)
 {
     int failures = 0;
@@ -347,6 +375,7 @@ int main(void)
     failures += test_resolve_attack();
     failures += test_enemy_attack();
     failures += test_real_hitbox_values();
+    failures += test_zombie_ai_primitives();
 
     if (failures == 0) printf("\nALL PLAYER-DAMAGE TESTS PASSED\n");
     else               fprintf(stderr, "\n%d TEST(S) FAILED\n", failures);

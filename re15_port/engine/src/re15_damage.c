@@ -367,3 +367,44 @@ void re15_enemy_apply_hitbox(re15_actor_t *a, uint8_t type)
     a->hit_offset_y   = (int16_t)(-(int32_t)h);   /* +0x7c local offset = (0, -height, 0) */
     a->hit_offset_z   = 0;
 }
+
+/* ====================================================================== *
+ *  STAGE1 zombie AI primitives (type 0x47, AI handler FUN_8011d6d4) —     *
+ *  the two byte-true, self-contained pieces. The full FSM that consumes   *
+ *  them (which entity+0x4 state is the actual lunge; the GTE/model-pool    *
+ *  attack-point FUN_80104178) is NOT yet mapped — see the foundation       *
+ *  memory. NOTE: the agent-suggested "state 0x701 == attack" is UNCONFIRMED *
+ *  and likely wrong — FUN_80101b64 enters 0x701 when the player is close   *
+ *  AND OUTSIDE the front arc (re15_ai_arc_test != 0), which reads as a     *
+ *  turn-to-face/reorient, not a lunge. So NO attack-decision is ported     *
+ *  yet (no guessing); these are just the verified inputs it will use.     *
+ * ====================================================================== */
+
+/* Player distance the zombie AI caches at entity+0x1d0 (FUN_8011d6d4 @8011d6e8-708):
+ * SquareRoot0(DX² + DZ²) with DX/DZ = the 16-bit-wrapped (player - zombie) X/Z (the
+ * original reads each position through a 16-bit load). func_0x80065f60 = SquareRoot0. */
+int32_t re15_enemy_player_dist(const re15_actor_t *e, const re15_actor_t *player)
+{
+    if (!e || !player) return 0;
+    int32_t dx = (int16_t)((int32_t)player->x - (int32_t)e->x);
+    int32_t dz = (int16_t)((int32_t)player->z - (int32_t)e->z);
+    return dmg_isqrt((int64_t)dx * dx + (int64_t)dz * dz);
+}
+
+/* FUN_8001a9cc — the AI arc test (used by the approach-state handler FUN_80101b64).
+ * ang = FUN_8001a6d4(eX,eZ,pX,pZ) (= re15_atan2_q12, raw atan2, 0=+Z); the original
+ * subtracts the heading +0x6a — the port's mesh rot_y is that heading minus 1024 (the
+ * same +1024 convention re15_damage.c's hit_from_front uses), so the relative angle =
+ * ang - (rot_y + 1024). u = (cone + rel) & 0xfff. Returns 0 when the player is INSIDE
+ * the ±cone front arc, else ±cone (the turn direction: u>0x800 → -cone). Byte-true to
+ * @8001a9cc (verified: player ahead → 0, player to a side/behind → ±cone). */
+int re15_ai_arc_test(const re15_actor_t *e, int32_t px, int32_t pz, int cone)
+{
+    if (!e) return 0;
+    int32_t ang = re15_atan2_q12(pz - e->z, px - e->x);
+    int32_t rel = ang - ((int32_t)e->rot_y + 1024);
+    int32_t u   = (cone + rel) & 0xfff;
+    int r = 0;
+    if ((cone << 1) <= u) { r = cone; if (u > 0x800) r = -cone; }
+    return r;
+}
