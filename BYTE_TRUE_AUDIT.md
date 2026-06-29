@@ -338,6 +338,18 @@ Multi-Agent-Audit: 20 Subsysteme, 123 WRONG/MISSING-Verdachtsfälle, **104 adver
 > ROOM1170 hat keine Slope-Cells → kein Regress; aktuell laufen Spieler durch Schrägen). → **Eigener fokussierter Lauf
 > (worktree-isoliert) verdient** — NICHT am Sessionende rushen (Fixpunkt-Fehler wahrscheinlich + ohne Slope-Raum schwer
 > zu fangen). Handler-Adressen: t2 LAB_8003d00c / t4 LAB_8003beb0 / t5 LAB_8003c734 / t6 LAB_8003cb9c / t7 LAB_8003c2cc.
+>
+> **CONTINUATION-GROUNDWORK (startklar für den fokussierten Lauf):** Konvention etabliert vs `re15_collision.c`-Push-
+> Funktionen: handler-args `a0`=cell (= `re15_sca_entry_t`: +0 width/+2 density/+4 x/+6 z — MATCHT die Struct 1:1),
+> `a1`=&player[+0x34] (`[0]`=X, `[8]`=Z → port `*lx`/`*lz`), `a3`=r (Spieler-Radius PR=450), Quadrant via player+0x7c→
+> Room-Ceiling-Origin (= port `quadrant_of(px,pz,ceil_x,ceil_z)` mit FUN_8003b068). Handler-Struktur (type2 belegt):
+> berechnet Cell-Center (x+width/2, z+density/2) + Far-Edges (x+width, z+density), klassifiziert Quadrant (FUN_8003b068),
+> dann pro Quadrant-Sub-Case perpendikuläre **Linien-Projektion** des Spielers auf die Schräg-Kante: `t = ((px-ex)*dx +
+> (pz-ez)*dz) / (dx²+dz²)` Stil (mult/div mit MIPS-÷0/Overflow-Guards `break 0x1c00/0x1800`), geclampt auf Kanten-
+> Endpunkte, dann Push entlang der Kanten-Normale. Jeden `div` byte-true mit den Guards übernehmen. Integration: neue
+> `push_slope2..7` analog `push_rect`/`push_caps8`, dispatch in `re15_collision_constrain` (type==2/4/5/6/7). Mock-Test:
+> Slope-SCA-Cell + Spieler innen → Push-Out-Richtung gegen die transliterierte Logik. Slope-Raum-Savestate (ROOM1010/1050/
+> 10D0) für volle Konfidenz.
 - **Ort:** `re15_port/engine/src/re15_collision.c:304-307 (DEFERRED)`
 - **RE-Beleg:** Dispatch 0x800b2858 @0x8003b4a0; t2=LAB_8003d00c, t4=LAB_8003beb0, t5=LAB_8003c734, t6=LAB_8003cb9c, t7=LAB_8003c2cc. RDT: ROOM1010 t2, ROOM1050 t4/t5, ROOM10D0 t4-7.
 - **Fix:** 5 Handler @LAB_8003d00c/8003beb0/8003c734/8003cb9c/8003c2cc transliterieren (Fixpunkt-intensiv), an Origin=0-Konvention anpassen; in Slope-Raum (ROOM1050) gegen Savestate verifizieren.
