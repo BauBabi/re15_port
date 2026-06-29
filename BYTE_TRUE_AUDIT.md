@@ -237,6 +237,14 @@ Multi-Agent-Audit: 20 Subsysteme, 123 WRONG/MISSING-Verdachtsfälle, **104 adver
 ### #21 · HIGH · REPAIR · render-pc-parity
 **Letterbox-Balken halbtransparent counter-gerampt + Subtitle-Layer-Reihenfolge zuletzt**
 
+> 🔶 **RE'T + DEFERRED (Befund 2026-06-29, VISUELL):** Byte-true ist EIN Counter DAT_800b5568 (±0x10/Frame, 0x00-0xF0)
+> der via FUN_80021a0c sowohl die DrawEnv-BG als auch die PolyF4-Overlays (Letterbox + Fade) treibt, mit STP=1
+> (PSX-Semi-Transparenz). Der Port hat Fade (s_fade_alpha) + Letterbox (s_letterbox_h, OPAKE FillRect-Balken) GETRENNT
+> (render_pc.c:553-570). Fix bräuchte: Fade-Counter-FSM (ein DAT_800b5568-Modell) + PSX-DR_MODE/ABR-Blend-Nachbildung
+> in SDL (semi-transparente, counter-gerampte Balken). **Caveat:** (1) rein VISUELLE Render-Pipeline-Änderung →
+> autonom nicht zuverlässig verifizierbar (braucht Nutzer-Auge / Screenshot-Vergleich vs PSX); (2) die Subtitle-Order
+> ist im Port BEWUSST vor den Balken (Begründung render_pc.c:532-535) — Byte-true (Subtitle zuletzt/oben) revertiert
+> das. Riskiert den funktionierenden 1170-Look. → DEFER für eine dedizierte visuelle Render-Parity-Session mit Nutzer-Review.
 - **Ort:** `re15_port/platform/pc/src/render_pc.c:553-559 (opake Balken), :536-540/553-559/566-571 (Layer-Reihenfolge), psx/render.c:230-234`
 - **RE-Beleg:** FUN_80021a0c: Counter DAT_800b5568 +0x10..0xF0 @0x80021a40; RGB Top DAT_80072ed0 @0x80021ab4; SetSemiTrans STP=1 @0x80021284; Geometrie (0,0)-(320,24)/(0,216)-(320,240). main.c:68 Text-OT VOR Z.71 Fade/Z.73 Letterbox -> Subtitle oben.
 - **Fix:** Balken als halbtransparentes Grau (RGB=lvl,lvl,lvl, lvl=Fade-Counter, STP=1), gekoppelt an Fade-Counter; PC via SDL-Blend statt opakem FillRect. Subtitle-Overlay als LETZTE Schicht (nach Letterbox+Fade) blitten.
@@ -272,6 +280,15 @@ Multi-Agent-Audit: 20 Subsysteme, 123 WRONG/MISSING-Verdachtsfälle, **104 adver
 ### #24 · MEDIUM · REPAIR · scd-message-event
 **Thread-Pool-Modell: 24 uniform -> 14 in 2 Kontexten (0..9 Gameplay + 10..13 Event) + Slot-1-Repointing**
 
+> 🔶 **RE'T + DEFERRED (Befund 2026-06-29):** Byte-true Event-Slots = **[10..13]** (4, event-loop @0x80016520 `ori 0xa`
+> / @0x80016634 `sltiu 0xe`); Gameplay [0..9]. **ABER: das Narrowing ALLEIN würde ROOM1170 REGRESSIEREN.** Der Port hat
+> SCD_EVENT_SLOT_LAST bewusst 13→23 expandiert (re15_scd.h:35-40), weil ROOM1170 **8+ gleichzeitige Event-Subs** feuert
+> (sub04/05 Rotoren-Spinner ∞, sub06/07/08 Takeoff ~30s, sub11 Narrator ~60s, sub12/13 Fly-away) — mit nur 4 Event-Slots
+> wurden sub07/08/13 gedroppt → Rotoren blieben stehen. Das byte-true [10..13] funktioniert nur MIT dem vollen **2-Loop-
+> Modell** (Event-Threads laufen im Message/Event-Kontext FUN @0x80016520, gegated DAT_800aca40&0x200, nicht im
+> Haupt-Dispatcher) + Slot-1-Repoint (FUN_8003f038). Die [10..23]-Expansion ist der dokumentierte 1170-Workaround. →
+> **DEFER: nur der volle 2-Loop-Scheduler-Rewrite ist byte-true** (großer Umbau, hoch riskant, gegen Savestate verifizieren,
+> koppelt an #10 Evt_exec-Slot-Wahl + room-setup-Spawning). Der 24-Thread-Workaround macht 1170 funktional korrekt.
 - **Ort:** `re15_port/include/re15_scd.h:41 (SCD_THREAD_COUNT=24), scd_vm.c:466-512, scd_room_setup.c:145-165`
 - **RE-Beleg:** Haupt-Dispatcher Schranke sltiu 0xa @0x8003f180; Event-Loop ori 0xa @0x80016520, sltiu 0xe @0x80016634; Stride a2*0x170 @0x8003eef4. Slot-1-Repointing FUN_8003f038 jeden Frame auf sub_scd[1] (a1=1 @0x8003f084).
 - **Fix:** Thread-Pool auf 14, zwei Slot-Klassen (Gameplay 0..9, Event 10..13). Slot 1 jeden Gameplay-Frame auf sub_scd[1] reinit. Erfordert Active-Message-Gate DAT_800aca40&0x200.
