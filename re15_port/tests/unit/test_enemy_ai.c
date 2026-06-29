@@ -373,10 +373,114 @@ static int test_exe_assess(void)
     return 0;
 }
 
+/* ----- System A: +0x5=1 search leaf (FUN_8004f3a4) ----- */
+static int test_exe_search(void)
+{
+    re15_actor_t *e;
+    re15_enemy_ai_set_global_flag(0);
+
+    /* (a) very close (dist<0x1f4) → +0x5=3, +0x6=1. ai_target vorne (arc==0). */
+    e = fresh_enemy(0x10);
+    g_actors[0].hit_react = 0;
+    e->ai_dist = 400u; e->ai_target_x = 0; e->ai_target_z = 5000;   /* target vorne */
+    re15_ai_exe_search(e, &g_actors[0]);
+    if (e->sub_state_1 != 3 || e->sub_state_2 != 1) { fprintf(stderr, "FAIL: search close→3/1, ist %d/%d\n", e->sub_state_1, e->sub_state_2); return 1; }
+
+    /* (b) lost (dist>=0xbb9) → +0x5=5. */
+    e = fresh_enemy(0x10);
+    g_actors[0].hit_react = 0;
+    e->ai_dist = 4000u; e->ai_target_x = 0; e->ai_target_z = 5000;
+    re15_ai_exe_search(e, &g_actors[0]);
+    if (e->sub_state_1 != 5) { fprintf(stderr, "FAIL: search lost→5, ist %d\n", e->sub_state_1); return 1; }
+
+    /* (c) target außerhalb ±0x400-Arc → +0x5=3 (auch wenn dist mittel). */
+    e = fresh_enemy(0x10);
+    g_actors[0].hit_react = 0;
+    e->ai_dist = 1000u; e->ai_target_x = 0; e->ai_target_z = -5000;  /* target HINTEN → arc!=0 */
+    re15_ai_exe_search(e, &g_actors[0]);
+    if (e->sub_state_1 != 3) { fprintf(stderr, "FAIL: search target-off-arc→3, ist %d\n", e->sub_state_1); return 1; }
+
+    /* (d) player hit → +0x5=6 (überschreibt). */
+    e = fresh_enemy(0x10);
+    g_actors[0].hit_react = 1;
+    e->ai_dist = 4000u; e->ai_target_z = 5000;
+    re15_ai_exe_search(e, &g_actors[0]);
+    if (e->sub_state_1 != 6) { fprintf(stderr, "FAIL: search hit→6, ist %d\n", e->sub_state_1); return 1; }
+
+    printf("PASS: test_exe_search\n");
+    return 0;
+}
+
+/* ----- System A: +0x5=2 turn-to-face leaf (FUN_8004f5e8) ----- */
+static int test_exe_turn(void)
+{
+    re15_actor_t *e;
+    re15_enemy_ai_set_global_flag(0);
+
+    /* (a) player dead-ahead (±0x40) → +0x5=0 (zurück zu assess). */
+    e = fresh_enemy(0x10);
+    put_player(0, 5000);                          /* exakt vorne */
+    g_actors[0].hit_react = 0; e->ai_dist = 1000u;
+    re15_ai_exe_turn(e, &g_actors[0]);
+    if (e->sub_state_1 != 0) { fprintf(stderr, "FAIL: turn dead-ahead→0, ist %d\n", e->sub_state_1); return 1; }
+
+    /* (b) seitlich (arc!=0) + weit (dist>=0x7d1) → +0x5=1. */
+    e = fresh_enemy(0x10);
+    put_player(1000, 0);                          /* rechts → nicht dead-ahead */
+    g_actors[0].hit_react = 0; e->ai_dist = 3000u;
+    re15_ai_exe_turn(e, &g_actors[0]);
+    if (e->sub_state_1 != 1 || e->sub_state_2 != 1) { fprintf(stderr, "FAIL: turn far→1/1, ist %d/%d\n", e->sub_state_1, e->sub_state_2); return 1; }
+
+    /* (c) player hit → +0x5=6. */
+    e = fresh_enemy(0x10);
+    put_player(1000, 0);
+    g_actors[0].hit_react = 1; e->ai_dist = 1000u;
+    re15_ai_exe_turn(e, &g_actors[0]);
+    if (e->sub_state_1 != 6) { fprintf(stderr, "FAIL: turn hit→6, ist %d\n", e->sub_state_1); return 1; }
+
+    printf("PASS: test_exe_turn\n");
+    return 0;
+}
+
+/* ----- System A: live FUN_8011da48 logic dispatch + tick→active chain ----- */
+static int test_exe_dispatch_and_tick(void)
+{
+    re15_enemy_ai_set_global_flag(0);
+
+    /* dispatch +0x5=2 (turn) routes to turn leaf: player dead-ahead → +0x5=0. */
+    re15_actor_t *e = fresh_enemy(0x10);
+    put_player(0, 5000);
+    g_actors[0].hit_react = 0; e->ai_dist = 1000u; e->sub_state_1 = 2;
+    re15_ai_exe_dispatch(e, &g_actors[0]);
+    if (e->sub_state_1 != 0) { fprintf(stderr, "FAIL: dispatch[2]=turn→0, ist %d\n", e->sub_state_1); return 1; }
+
+    /* +0x5>=3 (deferred movement leaf) → kein Decision-Write (unverändert). */
+    e = fresh_enemy(0x10);
+    e->sub_state_1 = 4; e->ai_dist = 1000u;
+    re15_ai_exe_dispatch(e, &g_actors[0]);
+    if (e->sub_state_1 != 4) { fprintf(stderr, "FAIL: dispatch[>=3] deferred, sub geändert auf %d\n", e->sub_state_1); return 1; }
+
+    /* FULL LIVE CHAIN: tick → ACTIVE → exe_dispatch → assess. Gegner aktiv, sub(+0x9)=0,
+     * +0x5=0; Spieler fern+vorne → assess setzt +0x5=1. */
+    e = fresh_enemy(0x10);
+    e->state = RE15_AI_STATE_ACTIVE; e->grid_id = 0; e->sub_state_1 = 0;
+    e->x = 0; e->z = 0;
+    put_player(0, 2000);                          /* dist 2000 (>=1501), vorne (arc 0x4b0==0) */
+    g_actors[0].hit_react = 0;
+    re15_enemy_ai_set_paused(0);
+    int r = re15_enemy_ai_tick(1);
+    if (r != 1)            { fprintf(stderr, "FAIL: live tick dispatch (1), war %d\n", r); return 1; }
+    if (e->ai_dist != 2000){ fprintf(stderr, "FAIL: live tick dist=2000, ist %u\n", e->ai_dist); return 1; }
+    if (e->sub_state_1 != 1) { fprintf(stderr, "FAIL: live tick→assess→+0x5=1, ist %d\n", e->sub_state_1); return 1; }
+
+    printf("PASS: test_exe_dispatch_and_tick\n");
+    return 0;
+}
+
 int main(void)
 {
     int failures = 0;
-    printf("=== Enemy-AI FSM Unit Tests (Phase 2-4, dispatch + decision brain + live EXE leaf) ===\n\n");
+    printf("=== Enemy-AI FSM Unit Tests (Phase 2-5, dispatch + brain + live EXE leaves + chain) ===\n\n");
 
     failures += test_ai_init();
     failures += test_ai_init_stationary();
@@ -391,6 +495,9 @@ int main(void)
     failures += test_decide_engage();
     failures += test_dispatch_decision();
     failures += test_exe_assess();
+    failures += test_exe_search();
+    failures += test_exe_turn();
+    failures += test_exe_dispatch_and_tick();
 
     if (failures == 0) printf("\nALL ENEMY-AI TESTS PASSED\n");
     else               fprintf(stderr, "\n%d TEST(S) FAILED\n", failures);

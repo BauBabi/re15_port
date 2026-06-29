@@ -81,7 +81,15 @@ void re15_enemy_ai_init(int slot)
 int re15_enemy_ai_active(int slot)
 {
     if (slot < 0 || slot >= RE15_ACTOR_MAX) return -1;
-    return g_actors[slot].grid_id & RE15_AI_GRID_SUB_MASK;
+    re15_actor_t *e = &g_actors[slot];
+    int sub = e->grid_id & RE15_AI_GRID_SUB_MASK;
+    /* sub 0 = FUN_8011da48 (the live STAGE1 path): run its LOGIC dispatch on +0x5 (the
+     * ported assess/search/turn decisions; +0x5>=3 deferred). The companion anim dispatch
+     * SUB[4+(+0x5)] + the subs 1..15 generic leaves are deferred. The decision only mutates
+     * +0x5/+0x6 (no external side effects) so this is safe to run from the tick. */
+    if (sub == 0)
+        re15_ai_exe_dispatch(e, &g_actors[RE15_ACTOR_SLOT_PLAYER]);
+    return sub;
 }
 
 /* TICK — FUN_8011d6d4 entry. Honour the gate, cache the player distance @+0x1d0, then
@@ -146,6 +154,50 @@ void re15_ai_exe_assess(re15_actor_t *e, const re15_actor_t *player)
     if (s_ai_global_flag && e->type == 0x4b)
                                      { e->sub_state_1 = 6; e->sub_state_2 = 0; }
     if (player->hit_react != 0)      { e->sub_state_1 = 6; e->sub_state_2 = 0; }   /* react to hit */
+}
+
+/* FUN_8004f3a4 (PSX.EXE) — the +0x5=1 "search" leaf. Instruction map:
+ *   8004f3bc  sltiu dist<0x1f4 ; if dist<500: +0x5=3, +0x6=1   (very close -> close-in)
+ *   8004f3f0  jal arc_test(ai_target_x, ai_target_z, 0x400) ; if !=0: +0x5=3, +0x6=1
+ *   8004f434  sltiu dist<0xbb9 ; if dist>=3001: +0x5=5, +0x6=0  (lost the player)
+ *   8004f458  flag52&1 && type==0x4b -> +0x5=6 ; 8004f4a0 player.hit_react -> +0x5=6 */
+void re15_ai_exe_search(re15_actor_t *e, const re15_actor_t *player)
+{
+    if (!e || !player) return;
+    if (e->ai_dist < 0x1f4u)            { e->sub_state_1 = 3; e->sub_state_2 = 1; }
+    if (re15_ai_arc_test(e, e->ai_target_x, e->ai_target_z, 0x400) != 0)
+                                        { e->sub_state_1 = 3; e->sub_state_2 = 1; }
+    if (e->ai_dist >= 0xbb9u)           { e->sub_state_1 = 5; e->sub_state_2 = 0; }
+    if (s_ai_global_flag && e->type == 0x4b) { e->sub_state_1 = 6; e->sub_state_2 = 0; }
+    if (player->hit_react != 0)         { e->sub_state_1 = 6; e->sub_state_2 = 0; }
+}
+
+/* FUN_8004f5e8 (PSX.EXE) — the +0x5=2 "turn-to-face" leaf. Instruction map:
+ *   8004f600  jal arc_test(playerX, playerZ, 0x40) ; if ==0 (dead ahead): +0x5=0, +0x6=0
+ *   8004f644  sltiu dist<0x7d1 ; if dist>=2001: +0x5=1, +0x6=1
+ *   8004f668  flag52&1 && type==0x4b -> +0x5=6 ; 8004f6b0 player.hit_react -> +0x5=6 */
+void re15_ai_exe_turn(re15_actor_t *e, const re15_actor_t *player)
+{
+    if (!e || !player) return;
+    if (re15_ai_arc_test(e, player->x, player->z, 0x40) == 0)
+                                        { e->sub_state_1 = 0; e->sub_state_2 = 0; }
+    if (e->ai_dist >= 0x7d1u)           { e->sub_state_1 = 1; e->sub_state_2 = 1; }
+    if (s_ai_global_flag && e->type == 0x4b) { e->sub_state_1 = 6; e->sub_state_2 = 0; }
+    if (player->hit_react != 0)         { e->sub_state_1 = 6; e->sub_state_2 = 0; }
+}
+
+/* FUN_8011da48 logic dispatch (live System-A): +0x5 -> the EXE leaf. */
+void re15_ai_exe_dispatch(re15_actor_t *e, const re15_actor_t *player)
+{
+    if (!e || !player) return;
+    switch (e->sub_state_1) {                                    /* +0x5 */
+        case 0: re15_ai_exe_assess(e, player); break;            /* SUB[1]=0x8004f100 */
+        case 1: re15_ai_exe_search(e, player); break;            /* SUB[2]=0x8004f3a4 */
+        case 2: re15_ai_exe_turn(e, player);   break;            /* SUB[3]=0x8004f5e8 */
+        default:                                                 /* SUB[4+]=movement/anim */
+            /* +0x5>=3: anim_set/walker/model-pool leaves — DEFERRED (port-skeleton). */
+            break;
+    }
 }
 
 /* ================= System (B): parallel decision brain (per-mode vtable[0..1]) ======== *

@@ -106,6 +106,11 @@ typedef struct {
     int16_t  ai_p5f8;       /* +0x5f8 = 0x40                     */
     int16_t  ai_p5fa;       /* +0x5fa = 0x30                     */
     int16_t  ai_p5fe;       /* +0x5fe = 0x138                    */
+    /* AI target point (+0x1dc/+0x1de) — the XZ the search leaf (FUN_8004f3a4, +0x5=1)
+     * arc-tests against (a "where I'm heading / last seen the player" point). Written by
+     * a movement leaf (deferred, model-pool); read here as an input. 0 = origin. */
+    int16_t  ai_target_x;   /* +0x1dc */
+    int16_t  ai_target_z;   /* +0x1de */
     /* Phase 4.5.13-RE2 F1: speed was at ID 27 (wrong) — correct ID is
      * 0x16 (+0x1CC in RE2). Renamed for clarity; opcode 0x35 Speed_set
      * uses an indexed velocity vector (ID 0x17..0x1A), not this scalar. */

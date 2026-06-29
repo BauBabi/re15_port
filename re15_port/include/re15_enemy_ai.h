@@ -111,6 +111,30 @@ void re15_enemy_ai_set_global_flag(int v);
  * re15_ai_arc_test; verified identical incl. the 0x800 boundary.) */
 void re15_ai_exe_assess(re15_actor_t *e, const re15_actor_t *player);
 
+/* FUN_8004f3a4 — the +0x5=1 "search" leaf (PTR_FUN_801217b4[2]). Byte-true:
+ *   dist < 0x1f4 (very close)               -> +0x5=3, +0x6=1
+ *   player OUTSIDE the ±0x400 arc of ai_target (+0x1dc/+0x1de) -> +0x5=3, +0x6=1
+ *   dist >= 0xbb9 (lost him)                -> +0x5=5, +0x6=0
+ *   (global_flag & 1) && type==0x4b         -> +0x5=6, +0x6=0
+ *   player.hit_react != 0                   -> +0x5=6, +0x6=0 */
+void re15_ai_exe_search(re15_actor_t *e, const re15_actor_t *player);
+
+/* FUN_8004f5e8 — the +0x5=2 "turn-to-face" leaf (PTR_FUN_801217b4[3]). Byte-true:
+ *   player INSIDE the tight ±0x40 arc (now facing him) -> +0x5=0, +0x6=0 (back to assess)
+ *   dist >= 0x7d1 (got far)                 -> +0x5=1, +0x6=1 (search)
+ *   (global_flag & 1) && type==0x4b         -> +0x5=6, +0x6=0
+ *   player.hit_react != 0                   -> +0x5=6, +0x6=0 */
+void re15_ai_exe_turn(re15_actor_t *e, const re15_actor_t *player);
+
+/* FUN_8011da48 LOGIC dispatch (the live System-A half): routes the active sub-mode +0x5
+ * to its EXE leaf. +0x5=0/1/2 -> the ported assess/search/turn decisions; +0x5>=3 are the
+ * movement/anim-execution leaves (anim_set/walker/model-pool -> port-skeleton-mapped,
+ * DEFERRED). The companion anim dispatch (SUB[4+(+0x5)]) is deferred entirely. NOTE: no
+ * live leaf writes +0x5=7 — the lunge ATTACK is not a +0x5 decision; it emerges from the
+ * lunge animation + the model-instance action driver (FUN_80019e20 action 0x16-0x19 ->
+ * FUN_80017fa4 = re15_enemy_attack), the deferred execution layer. */
+void re15_ai_exe_dispatch(re15_actor_t *e, const re15_actor_t *player);
+
 /* ==== System (B): the parallel per-AI-mode decision brain (byte-true, not the live path) */
 /* ---- Decision brain (byte-true; the per-mode vtable[0..1] entries) ------------------ *
  * Each reads the cached ai_dist + the arc tests (re15_ai_arc_test) + ai_timer/ai_flags/
