@@ -115,6 +115,11 @@ typedef struct {
      * a movement leaf (deferred, model-pool); read here as an input. 0 = origin. */
     int16_t  ai_target_x;   /* +0x1dc */
     int16_t  ai_target_z;   /* +0x1de */
+    /* LIVE STAGE1 zombie (@0x8011f7b4 family, FUN_80100424/FUN_80101224) attack windup timer
+     * (entity +0x1da, s16). The active handler FUN_80101224 counts it down while the attack-arm
+     * bit (ai_flags & 0x100 = +0x1d8 & 0x100) is set; at == 0x12c (300) it fires the lunge, at
+     * == 0 it transitions to the post-attack recovery state. See re15_enemy_ai_live_active. */
+    int16_t  ai_attack_timer;   /* +0x1da */
     /* Phase 4.5.13-RE2 F1: speed was at ID 27 (wrong) — correct ID is
      * 0x16 (+0x1CC in RE2). Renamed for clarity; opcode 0x35 Speed_set
      * uses an indexed velocity vector (ID 0x17..0x1A), not this scalar. */

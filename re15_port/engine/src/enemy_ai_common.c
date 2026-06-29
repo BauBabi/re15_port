@@ -333,3 +333,61 @@ void re15_ai_dispatch_decision(re15_actor_t *e, const re15_actor_t *player)
             break;
     }
 }
+
+/* ============ System (C): the LIVE STAGE1 zombie AI (@0x8011f7b4 family) ============== *
+ * CORRECTION (2026-06-29, savestate-PROVEN): the active STAGE1 zombies (type 0x10/0x11/0x16)
+ * are NOT driven by the @0x801217a0 / FUN_8011d6d4 family ported above — that is the type-0x47
+ * family. The live per-frame loop FUN_8001a50c (@0x8001ce04) dispatches @0x80072bac[entity+0x8
+ * type] = FUN_80100424 (the per-frame tick: pause/skip gates, dist@+0x1d0, then dispatch
+ * @0x8011f7b4[entity+0x4]). The @0x8011f7b4 table: [0]=FUN_80100688 (INIT), [1]=FUN_80101224
+ * (active), [2]=0x80105a8c, [3]=0x80106ba4, [4]=0x8010919c. Decoded byte-true direct from
+ * STAGE1.BIN (the RE_15_Quellcode_Overlays/STAGE1/FUN_80100424.c decompile is MIS-ANALYZED — do
+ * NOT trust it). The lunge/hitbox/damage execution layer (re15_enemy_lunge_*, re15_enemy_attack)
+ * is SHARED + correct; this re-roots the AI decision/tick onto the right table. NOT wired into
+ * game_step yet (no 1170 risk). */
+
+/* FUN_80100688 (@0x8011f7b4[0], STAGE1.BIN) — the LIVE zombie INIT state. Byte-true core:
+ *   +0x4 = 1            -> state ACTIVE        (sb @0x80100704)
+ *   +0x1bc/+0x1be = player X/Z snapshot        (sh @0x8010071c/734 — a "last-seen" ref)
+ *   +0x0 |= 0x40000000  (lifecycle flag word — no port repr)   @0x80100750
+ *   +0x9c = 0x14 (20)   -> ai_timer            (sh @0x80100760)
+ * DEFERRED (cited): the player-pos snapshot (+0x1bc/+0x1be, consumed by the deferred movement
+ * decision), the RNG seed (FUN_8001af20 @0x80100774), and the two const GTE vectors copied from
+ * 0x80100004/0x80100014 (model-pool matrix setup). This is the LIVE analog of FUN_8011d84c. */
+void re15_enemy_ai_live_init(int slot)
+{
+    if (slot < 0 || slot >= RE15_ACTOR_MAX) return;
+    re15_actor_t *e = &g_actors[slot];
+    e->state    = (uint8_t)RE15_AI_STATE_ACTIVE;   /* +0x4 = 1 */
+    e->ai_timer = 0x14;                            /* +0x9c = 0x14 */
+}
+
+/* FUN_80101224 (@0x8011f7b4[1], STAGE1.BIN) — the LIVE zombie ACTIVE handler. The ATTACK-WINDUP
+ * half (byte-true): when the attack-arm bit (+0x1d8 & 0x100) is set and the freeze bit (+0x0 &
+ * 0x1000) clear, the windup timer +0x1da counts down each frame; at == 0x12c (300) the original
+ * injects action 0x16 into the 8 body-part model instances (8x FUN_80019d50(8,3,0x16,..) over the
+ * LUT @0x8011f7a4 @0x80101290-0x80101504) -> the port models that single lunge as
+ * re15_enemy_lunge_begin (the 0x20-frame action window, re15_damage.c); at == 0 it transitions to
+ * the post-attack recovery: +0x4 word = 0x1503 (state 3 / +0x5=0x15) + the recovery action
+ * +0x94 = 0xb (or 0x1f if +0x9 & 0x80) (@0x80101508-0x8010155c). Returns 1 on the frame the lunge
+ * fires. The DECISION that ARMS the attack (+0x1d8 |= 0x100 + seeds +0x1da) is the unarmed-path
+ * movement/decision tail (FUN_80101224 @0x80101560+, jal FUN_8001bc08) — DEFERRED; when not armed
+ * this returns 0 (no windup). The +0x0 & 0x1000 freeze bit has no port repr (omitted). */
+int re15_enemy_ai_live_active(int slot)
+{
+    if (slot < 0 || slot >= RE15_ACTOR_MAX) return 0;
+    re15_actor_t *e = &g_actors[slot];
+    if (!(e->ai_flags & 0x100)) return 0;          /* not attack-armed -> movement tail (deferred) */
+
+    int fired = 0;
+    e->ai_attack_timer = (int16_t)(e->ai_attack_timer - 1);   /* +0x1da -= 1 */
+    if (e->ai_attack_timer == 0x12c) {             /* == 300: fire the lunge (8x action-0x16 inject) */
+        re15_enemy_lunge_begin(slot);
+        fired = 1;
+    }
+    if (e->ai_attack_timer == 0) {                 /* windup done -> post-attack recovery state */
+        re15_ai_set_state_word(e, 0x1503);         /* +0x4 = state 3 / +0x5 = 0x15 */
+        e->motion = (e->grid_id & 0x80) ? 0x1f : 0x0b;   /* +0x94 recovery action */
+    }
+    return fired;
+}

@@ -195,4 +195,24 @@ void re15_ai_decide_engage(re15_actor_t *e, const re15_actor_t *player);
  * this models the decision LAYER byte-true and is exposed for testing + later wiring. */
 void re15_ai_dispatch_decision(re15_actor_t *e, const re15_actor_t *player);
 
+/* ==== System (C): the LIVE STAGE1 zombie AI (@0x8011f7b4 family) ===================== *
+ * The active type-0x10/0x11/0x16 STAGE1 zombies dispatch (per-frame loop FUN_8001a50c ->
+ * @0x80072bac[type] = FUN_80100424 -> @0x8011f7b4[entity+0x4]) — a DIFFERENT table from the
+ * type-0x47 @0x801217a0 family above (savestate-proven 2026-06-29; see enemy_ai_common.c +
+ * RE15_FUN_CATALOG corrections). These re-root the AI onto the correct live table; the lunge/
+ * hitbox/damage execution layer (re15_enemy_lunge_*, re15_damage.c) is shared. */
+
+/* FUN_80100688 (@0x8011f7b4[0]) — the LIVE zombie INIT state: state -> ACTIVE(1), ai_timer
+ * (+0x9c) = 0x14. (Player-pos snapshot +0x1bc/+0x1be, lifecycle flag, RNG seed, GTE vectors
+ * are deferred — cited in enemy_ai_common.c.) The live analog of re15_enemy_ai_init. */
+void re15_enemy_ai_live_init(int slot);
+
+/* FUN_80101224 (@0x8011f7b4[1]) — the LIVE zombie ACTIVE handler, attack-windup half (byte-true):
+ * while attack-armed (ai_flags & 0x100), the windup timer ai_attack_timer (+0x1da) counts down;
+ * at == 0x12c (300) it fires the lunge via re15_enemy_lunge_begin (the original's 8x action-0x16
+ * body-part inject); at == 0 it transitions to the post-attack recovery state (0x1503). Returns 1
+ * the frame the lunge fires. The decision that ARMS the attack + the unarmed movement tail are
+ * DEFERRED (see enemy_ai_common.c). */
+int re15_enemy_ai_live_active(int slot);
+
 #endif /* RE15_ENEMY_AI_H */

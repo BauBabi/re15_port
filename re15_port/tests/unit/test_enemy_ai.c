@@ -533,6 +533,55 @@ static int test_ai_step_chain(void)
     return 0;
 }
 
+/* ----- System (C): LIVE @0x8011f7b4 family — INIT (FUN_80100688) + active lunge-timer (FUN_80101224) ----- *
+ * Re-rooted live zombie AI (the savestate-proven correction). INIT: state->ACTIVE, ai_timer=0x14.
+ * Active: while attack-armed (ai_flags & 0x100) the windup timer ai_attack_timer counts down,
+ * fires the (shared) lunge at == 0x12c (300), and recovers to state 3 / +0x5=0x15 at == 0. */
+static int test_live_active_lunge(void)
+{
+    /* (a) INIT (FUN_80100688): state -> ACTIVE, ai_timer = 0x14. */
+    re15_actor_t *e = fresh_enemy(0x10);
+    e->state = RE15_AI_STATE_INIT;
+    re15_enemy_ai_live_init(1);
+    if (e->state != RE15_AI_STATE_ACTIVE) { fprintf(stderr, "FAIL: live init state->1, ist %d\n", e->state); return 1; }
+    if (e->ai_timer != 0x14)              { fprintf(stderr, "FAIL: live init ai_timer=0x14, ist 0x%x\n", e->ai_timer); return 1; }
+
+    /* (b) NOT armed (ai_flags & 0x100 == 0): no countdown, returns 0 (movement tail deferred). */
+    e = fresh_enemy(0x10);
+    e->ai_flags = 0; e->ai_attack_timer = 500;
+    if (re15_enemy_ai_live_active(1) != 0) { fprintf(stderr, "FAIL: unarmed active muss 0 liefern\n"); return 1; }
+    if (e->ai_attack_timer != 500)        { fprintf(stderr, "FAIL: unarmed darf timer nicht dekrementieren, ist %d\n", e->ai_attack_timer); return 1; }
+
+    /* (c) Armed: timer counts down; at == 0x12c (300) it fires the lunge (re15_enemy_lunge_begin
+     * -> lunge_frames = 0x20) and returns 1. */
+    e = fresh_enemy(0x10);
+    e->ai_flags = 0x100; e->ai_attack_timer = 0x12d; e->lunge_frames = 0;
+    int r = re15_enemy_ai_live_active(1);
+    if (r != 1)                       { fprintf(stderr, "FAIL: armed @300 muss Lunge feuern (1), war %d\n", r); return 1; }
+    if (e->ai_attack_timer != 0x12c)  { fprintf(stderr, "FAIL: timer 0x12d->0x12c, ist 0x%x\n", e->ai_attack_timer); return 1; }
+    if (e->lunge_frames != 0x20)      { fprintf(stderr, "FAIL: lunge_begin muss lunge_frames=0x20 setzen, ist %d\n", e->lunge_frames); return 1; }
+
+    /* A non-300 frame counts down without firing. */
+    e = fresh_enemy(0x10);
+    e->ai_flags = 0x100; e->ai_attack_timer = 0x200; e->lunge_frames = 0;
+    if (re15_enemy_ai_live_active(1) != 0) { fprintf(stderr, "FAIL: timer!=300 darf nicht feuern\n"); return 1; }
+    if (e->lunge_frames != 0)              { fprintf(stderr, "FAIL: kein Lunge ausserhalb 300\n"); return 1; }
+
+    /* (d) At == 0: post-attack recovery (state 3 / +0x5=0x15 / motion 0xb; 0x1f if grid&0x80). */
+    e = fresh_enemy(0x10);
+    e->ai_flags = 0x100; e->ai_attack_timer = 1; e->grid_id = 0;
+    re15_enemy_ai_live_active(1);
+    if (e->state != 3 || e->sub_state_1 != 0x15) { fprintf(stderr, "FAIL: timer0->recovery 0x1503, ist state %d sub %d\n", e->state, e->sub_state_1); return 1; }
+    if (e->motion != 0x0b)                       { fprintf(stderr, "FAIL: recovery motion 0xb, ist %d\n", e->motion); return 1; }
+    e = fresh_enemy(0x10);
+    e->ai_flags = 0x100; e->ai_attack_timer = 1; e->grid_id = 0x80;
+    re15_enemy_ai_live_active(1);
+    if (e->motion != 0x1f) { fprintf(stderr, "FAIL: grid&0x80 recovery motion 0x1f, ist %d\n", e->motion); return 1; }
+
+    printf("PASS: test_live_active_lunge\n");
+    return 0;
+}
+
 int main(void)
 {
     int failures = 0;
@@ -554,6 +603,7 @@ int main(void)
     failures += test_exe_search();
     failures += test_exe_turn();
     failures += test_exe_dispatch_and_tick();
+    failures += test_live_active_lunge();
     failures += test_ai_step_chain();
 
     if (failures == 0) printf("\nALL ENEMY-AI TESTS PASSED\n");
