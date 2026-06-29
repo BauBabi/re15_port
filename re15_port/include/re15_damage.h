@@ -94,15 +94,34 @@ int re15_hitbox_test(const re15_actor_t *target, const re15_attack_box_t *atk);
 int re15_resolve_attack(const re15_attack_box_t *atk, uint8_t attack_type,
                         int attacker_slot);
 
-/* FUN_80017fa4 (ghidra1_V2.txt:84648-84717) — the enemy attack-action's DAMAGE
- * trigger (dispatch @0x80071da4 index 12). Resolves a radius-500 (0x1f4),
- * attack_type-0 (= 10 dmg) hitbox at the attacker's forward attack-point (its
- * atk_pt_* fields = the original's attacker+0x28/+0x2a/+0x2c) via re15_resolve_attack;
- * attacker_slot is self-excluded. Returns the engagement count (>0 = lunge connected).
- * DEFERRED: the FUN_8001c6e8 room-collision secondary trigger, the on-hit SE +
- * attacker state-reset (+0x6e=0xd), and the AI DECISION that enters this action
- * (range/state — STAGE1 overlay, needs a savestate). See re15_damage.c. */
+/* FUN_80017fa4 (decompile RE_15_Quellcode_V2/FUN_80017fa4.c) — the enemy attack-action's
+ * DAMAGE trigger. Authoritative: it resolves FUN_80012d60(500, &point, 0) — radius 500
+ * (0x1f4), attack_type 0 (= 10 dmg) — at the lunge's forward attack-point. That point is
+ * the work-struct's GTE world position [0x14/0x15/0x16] (computed by the action driver
+ * FUN_80019e20 via RotMatrix/ApplyMatrix from the model-instance pose); the port maps it
+ * to atk_pt_* = the attack-bone world pos (faithful-line skeleton mapping). attacker_slot
+ * is self-excluded. Returns the engagement count (>0 = the bite connected).
+ * DEFERRED (model-pool / other subsystems): the FUN_8001c6e8 room-collision OR-branch, the
+ * on-hit SE (FUN_800199d4/FUN_80045024), and the GTE attack-point computation itself. The
+ * on-hit work-struct reset (+0x6e=0xd) is modelled by the lunge driver below. */
 int re15_enemy_attack(int attacker_slot);
+
+/* Enemy lunge attack-action driver = LAB_80017eb0 (setup) + LAB_80017f50 (per-frame tick),
+ * which the action driver FUN_80019e20 runs for the lunging enemy's model instance. The
+ * lunge has a 0x20-frame ACTIVE window (work-struct +0xe, set to 0x20 by LAB_80017eb0);
+ * each frame LAB_80017f50 decrements it and fires the hitbox FUN_80017fa4 (re15_enemy_attack)
+ * — so the bite can connect on any of the ~32 active frames, and on a connect FUN_80017fa4
+ * resets the action (+0x6e=0xd) so it bites at most once per lunge.
+ *   re15_enemy_lunge_begin  — start the active window (lunge_frames = 0x20).
+ *   re15_enemy_lunge_tick   — one frame: fire the hitbox while the window is open; returns
+ *                             the engagement count this frame (0 when not lunging). Ends the
+ *                             window on a connect (the +0x6e=0xd reset) or when it runs out.
+ * The lunge MOVEMENT (the work-struct velocity/pos advance + the GTE attack-point) is the
+ * port's skeleton job (faithful-line); the exact end-of-window keyframe transition
+ * (FUN_800174e4) is deferred. The byte-true core here is the active-frame window + the
+ * per-frame fire + the bite-once-per-lunge reset. */
+void re15_enemy_lunge_begin(int attacker_slot);
+int  re15_enemy_lunge_tick(int attacker_slot);
 
 /* Wire the byte-true hitbox dims (+0x78 struct radius_min/height/radius_max + the
  * +0x7c local offset) onto an actor. Player = the fixed EXE-static struct @0x80073e94

@@ -82,6 +82,10 @@ typedef struct {
      * which the attack trigger FUN_80017fa4 resolves a radius-500 hitbox. Precomputed
      * by the (deferred) lunge-movement AI; read by re15_enemy_attack. 0 until wired. */
     int16_t  atk_pt_x, atk_pt_y, atk_pt_z;
+    /* Lunge attack-action active-frame counter (the work-struct +0xe; LAB_80017eb0 sets
+     * it to 0x20 = 32). While > 0 the lunge action fires the hitbox each frame (re15_enemy_
+     * lunge_tick -> re15_enemy_attack). 0 = not lunging. See re15_damage.c. */
+    uint8_t  lunge_frames;
     /* ===== Enemy-AI state (byte-true, STAGE1 zombie handler FUN_8011d6d4) ==========
      * The AI is a nested FSM dispatched off three entity bytes the port maps onto the
      * existing actor fields (no new bytes for these — they ARE state/grid_id/sub_state_1):

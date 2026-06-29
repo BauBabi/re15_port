@@ -327,8 +327,32 @@ int re15_enemy_attack(int attacker_slot)
     box.x      = atk->atk_pt_x;     /* attacker+0x28 (s16) */
     box.y      = atk->atk_pt_y;     /* attacker+0x2a (s16) */
     box.z      = atk->atk_pt_z;     /* attacker+0x2c (s16) */
-    box.radius = 500;               /* 0x1f4 @80018008 */
+    box.radius = 500;               /* FUN_80012d60(500,...) — radius 500, confirmed in FUN_80017fa4.c */
     return re15_resolve_attack(&box, 0, attacker_slot);   /* attack_type 0 = 10 dmg */
+}
+
+/* Lunge attack-action driver — LAB_80017eb0 (setup) + LAB_80017f50 (per-frame tick).
+ * LAB_80017eb0:  work-struct +0xe (sh) = 0x20  -> 32 active frames; +0x0 = action 0x17.
+ * LAB_80017f50:  if (+0xe != 0) +0xe -= 1; else FUN_800174e4();  then FUN_80017fa4() each call.
+ * FUN_80017fa4:  on (FUN_80012d60 != 0 || room-wall) -> reset the action (+0x6e = 0xd) so the
+ *                lunge bites at most once. The port models the active window + the per-frame
+ *                fire + the bite-once reset; the GTE attack-point + movement + the end-of-window
+ *                keyframe transition (FUN_800174e4) are the deferred skeleton/model-pool parts. */
+void re15_enemy_lunge_begin(int attacker_slot)
+{
+    if (attacker_slot < 0 || attacker_slot >= RE15_ACTOR_MAX) return;
+    g_actors[attacker_slot].lunge_frames = 0x20;   /* +0xe = 0x20 active frames */
+}
+
+int re15_enemy_lunge_tick(int attacker_slot)
+{
+    if (attacker_slot < 0 || attacker_slot >= RE15_ACTOR_MAX) return 0;
+    re15_actor_t *a = &g_actors[attacker_slot];
+    if (a->lunge_frames == 0) return 0;             /* action not active */
+    a->lunge_frames--;                               /* +0xe -= 1 (LAB_80017f50) */
+    int hits = re15_enemy_attack(attacker_slot);     /* FUN_80017fa4 fires every active frame */
+    if (hits > 0) a->lunge_frames = 0;               /* connect -> reset (+0x6e=0xd): bite once */
+    return hits;
 }
 
 /* ====================================================================== *

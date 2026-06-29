@@ -385,6 +385,51 @@ static int test_enemy_should_attack(void)
     return 0;
 }
 
+/* ----- Lunge-Action-Driver (LAB_80017eb0 setup + LAB_80017f50 tick) ----- *
+ * 0x20-Frame-Window feuert die Hitbox jeden Frame; beißt genau 1× (Reset bei Connect);
+ * out-of-range zählt das Fenster runter ohne Treffer. */
+static int test_enemy_lunge(void)
+{
+    /* (a) In-range: erster Tick trifft (Player -10), Lunge endet (bite-once). */
+    re15_actor_init();
+    re15_actor_t *pl = &g_actors[0];
+    set_hitbox(pl, 1000, 0, 100);                       /* Player am Treffpunkt */
+    re15_actor_t *atk = &g_actors[1];
+    atk->active = 1; atk->type = 0x10; atk->hp = 100;
+    atk->atk_pt_x = 1000; atk->atk_pt_y = 0; atk->atk_pt_z = 0;   /* Attack-Point auf Player */
+
+    re15_enemy_lunge_begin(1);
+    if (atk->lunge_frames != 0x20) { fprintf(stderr, "FAIL: lunge_begin Fenster 0x20, ist %d\n", atk->lunge_frames); return 1; }
+
+    int h1 = re15_enemy_lunge_tick(1);                  /* erster aktiver Frame → Connect */
+    if (h1 < 1)            { fprintf(stderr, "FAIL: lunge tick1 connect (>=1), war %d\n", h1); return 1; }
+    if (pl->hp != 90)      { fprintf(stderr, "FAIL: lunge Player 100-10=90, ist %d\n", pl->hp); return 1; }
+    if (atk->lunge_frames != 0) { fprintf(stderr, "FAIL: lunge bei Connect beenden, frames=%d\n", atk->lunge_frames); return 1; }
+
+    int h2 = re15_enemy_lunge_tick(1);                  /* Lunge vorbei → inaktiv */
+    if (h2 != 0)           { fprintf(stderr, "FAIL: nach Connect inaktiv (0), war %d\n", h2); return 1; }
+
+    /* (b) Out-of-range: Fenster zählt 32 Frames runter, kein Treffer. */
+    re15_actor_init();
+    re15_actor_t *pl2 = &g_actors[0];
+    set_hitbox(pl2, 1000, 0, 100);
+    re15_actor_t *atk2 = &g_actors[1];
+    atk2->active = 1; atk2->type = 0x10; atk2->hp = 100;
+    atk2->atk_pt_x = 40000; atk2->atk_pt_y = 0; atk2->atk_pt_z = 0;   /* weit weg */
+    re15_enemy_lunge_begin(1);
+    int frames = 0, anyhit = 0;
+    while (re15_enemy_lunge_tick(1) >= 0 && atk2->lunge_frames > 0) {
+        frames++;
+        if (frames > 40) break;                         /* Sicherung */
+    }
+    if (pl2->hp != 100)    { fprintf(stderr, "FAIL: out-of-range darf nicht treffen, HP=%d\n", pl2->hp); return 1; }
+    if (frames != 31)      { fprintf(stderr, "FAIL: Fenster 0x20 → 31 weitere Ticks bis 0, war %d\n", frames); return 1; }
+    (void)anyhit;
+
+    printf("PASS: test_enemy_lunge\n");
+    return 0;
+}
+
 int main(void)
 {
     int failures = 0;
@@ -400,6 +445,7 @@ int main(void)
     failures += test_hitbox_overlap_circular();
     failures += test_resolve_attack();
     failures += test_enemy_attack();
+    failures += test_enemy_lunge();
     failures += test_real_hitbox_values();
     failures += test_zombie_ai_primitives();
     failures += test_enemy_should_attack();
