@@ -164,18 +164,49 @@ def cmd_bytes(a, n, binname):
         hexs = " ".join("%02x" % x for x in row)
         print(f"  {a+j:08x}: {hexs}")
 
+def cmd_read(addr, n, binname, w, signed, stride, rows, rowstride):
+    """Typed DATA-array / table read — the byte-true dumper for damage/reach/clip tables etc.
+    `n` elements of width `w` bytes (1/2/4) at byte `stride` (default = w), for `rows` rows
+    `rowstride` bytes apart (a 2D table indexed `base + type*rowstride + i*stride`). Resolves
+    the EXE t_addr / overlay file mapping correctly — the exact trap that made ad-hoc inline
+    dumps (and a workflow agent) read garbage from the BIOS-stub region (Phase 8.10, 2026-06-30:
+    the player-weapon damage table @0x8006e0d0 = u16[type*0x58 + weapon*4]).
+      read 0x8006e5a0 22 --w 4                          # the reach table (22 u32)
+      read 0x8006e0d0 22 --w 2 --stride 4 --rows 0x17 --rowstride 0x58   # the full 2D dmg table
+      read 0x8006e650 22 --w 2 --stride 4               # one row (the zombie damage)
+      read 0x8006f418 11 --w 2 --signed                 # the enemy-attack dmg table (s16[11])
+    """
+    data, fo, path = load(addr, binname)
+    if stride is None: stride = w
+    fmt = {1: ("b", "B"), 2: ("<h", "<H"), 4: ("<i", "<I")}[w][0 if signed else 1]
+    print("; %s  read %d x u%d%s @0x%08x stride %d%s" %
+          (path, n, w*8, "(s)" if signed else "", addr, stride,
+           ("  rows %d step 0x%x" % (rows, rowstride)) if rows > 1 else ""))
+    for r in range(rows):
+        base = addr + r * rowstride
+        off = fo(base)
+        vals = [struct.unpack_from(fmt, data, off + i*stride)[0] for i in range(n)]
+        tag = ("[%2d] " % r) if rows > 1 else ""
+        print("  0x%08x: %s%s" % (base, tag, vals))
+
 def main():
     ap = argparse.ArgumentParser(description="RE1.5 PSX.EXE/overlay disassembler (Weg C)")
-    ap.add_argument("cmd", choices=["dis","table","scan","bytes"])
+    ap.add_argument("cmd", choices=["dis","table","scan","bytes","read"])
     ap.add_argument("addr")
     ap.add_argument("n", nargs="?", type=lambda s:int(s,0), default=None)
     ap.add_argument("--bin", default=None, help="overlay BIN name (default STAGE1.BIN) for addr>=0x80100000")
+    ap.add_argument("--w", type=int, choices=[1,2,4], default=4, help="read: element width in bytes (default 4)")
+    ap.add_argument("--signed", action="store_true", help="read: signed elements (default unsigned)")
+    ap.add_argument("--stride", type=lambda s:int(s,0), default=None, help="read: byte stride between elements (default = --w)")
+    ap.add_argument("--rows", type=lambda s:int(s,0), default=1, help="read: number of rows (2D table)")
+    ap.add_argument("--rowstride", type=lambda s:int(s,0), default=0, help="read: bytes between rows (2D table)")
     a = ap.parse_args()
     addr = int(a.addr, 0)
     if a.cmd == "dis":   cmd_dis(addr, a.n or 48, a.bin)
     elif a.cmd == "table": cmd_table(addr, a.n or 16, a.bin)
     elif a.cmd == "scan":  cmd_scan(addr, a.bin)
     elif a.cmd == "bytes": cmd_bytes(addr, a.n or 64, a.bin)
+    elif a.cmd == "read":  cmd_read(addr, a.n or 16, a.bin, a.w, a.signed, a.stride, a.rows, a.rowstride)
 
 if __name__ == "__main__":
     main()

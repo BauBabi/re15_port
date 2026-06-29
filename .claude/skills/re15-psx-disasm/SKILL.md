@@ -24,12 +24,15 @@ python $S dis   0x8004f100 60         # n Instruktionen disassemblieren (Globals
 python $S table 0x801217a0 24         # n Words als Pointer-Tabelle (taggt EXE/overlay/data)
 python $S scan  0x8004f3a4            # Funktion zusammenfassen bis jr ra
 python $S bytes 0x80121790 12         # roher Hex-Dump
+python $S read  0x8006e5a0 22 --w 4   # TYPISIERTE Daten-Tabelle (22 u32 = Reach-Tabelle)
+python $S read  0x8006e0d0 22 --w 2 --stride 4 --rows 0x17 --rowstride 0x58  # 2D-Tabelle
 python $S dis   0x8011d6d4 30 --bin STAGE5.BIN
 ```
 
 - **`dis`** — vollständiger R3000-Disassembler (lui/lw/sb/sh/sltiu/beq/bne/jal/jr/…), annotiert bekannte Globals (`g_entity 0x800ac784`, `playerX/Z`, `player.hit_react 0x800acae7`, `attack_workstruct 0x800b52c4`, …) und Call-Ziele (`arc_test`, `atan2_q12`, `resolve_attack`, `anim_set`, …). Die Maps `GLOBALS`/`CALLS` im Script erweitern, wenn neue Adressen bestätigt sind.
 - **`table`** — liest Words als Funktionspointer; markiert `overlay` (`0x8010xxxx`) vs `EXE` (`0x800xxxxx`) vs `data/?`. Das Werkzeug für AI-Dispatch-/Action-Tabellen.
 - **`scan`** — symbolischer Schnell-Überblick einer Funktion: `sb`-Writes auf `+0x4/+0x5/+0x6/+0x7` (FSM-State-Transitions), `jal`-Ziele, `sltiu`-Schwellen (z.B. Distanz-Gates), bis `jr ra`. Ideal, um den Transition-Graph mehrerer Leaves zu kartieren, ohne jede Zeile zu lesen.
+- **`read`** — TYPISIERTES Daten-Array / Tabellen-Lesen (`--w 1|2|4`, `--signed`, `--stride N` = Byte-Schritt, `--rows R --rowstride S` = 2D-Tabelle `base + type*S + i*stride`). Der byte-true Dumper für **Daten-Tabellen** (Damage/Reach/Reaktions-Clip/Hitbox-Structs), wo `bytes` nur Roh-Hex gibt und `table` Pointer annimmt. **⚠️ WICHTIG (die Lehre, die das Tool erzwang, Phase 8.10): NIE Daten-Tabellen ad-hoc mit selbst-gerechnetem File-Offset dumpen** — die EXE-Abbildung ist `0x800 + addr − t_addr` (t_addr aus dem PS-X-EXE-Header @0x18, NICHT pauschal 0x80010000 annehmen). Ein falsches Mapping landet in der BIOS-Stub-Region und liefert **Garbage** (ein Workflow-Agent ist daran gescheitert + hat „Tabelle nicht lesbar" gemeldet, obwohl sie sauber da war). `read` nutzt denselben `load()`-Helfer wie `dis`/`table` → immer korrekt. Beispiele: `read 0x8006e0d0 22 --w 2 --stride 4 --rows 0x17 --rowstride 0x58` (Player-Waffen-Damage `u16[type*0x58 + weapon*4]`), `read 0x8006f418 11 --w 2 --signed` (Enemy-Attack-Damage `s16[11]`).
 
 ## ⚠️ DECOMPILE-MISSTRAUEN — die wichtigste Lehre (2026-06-29)
 
@@ -45,6 +48,10 @@ Die STAGE1-Zombie-AI ist ein Geflecht paralleler Tabellen — pro Gegner-Typ ein
 - **Typ 0x47** (anderer Gegner): `@0x80072bac[0x47]=FUN_8011d6d4` → `@0x801217a0[+0x4]` → `FUN_8011d9f4`/`da48`. **PARALLEL, NICHT der Live-Pfad** — leicht zu verwechseln (gleiche Struktur, andere Tabelle).
 
 Rezept: `table <base> 16` für jede vermutete Vtable; den Per-Frame-Caller über die XREFs der Tabelle im `ghidra1_V2.txt` finden (`grep 80072bac ghidra1_V2.txt` → `XREF` = die Loop); NIE annehmen, dass zwei Typen dieselbe Tabelle teilen, ohne das Savestate-`+0x8`-Typbyte + den `@0x80072bac[type]`-Eintrag zu lesen.
+
+## Großes interconnected Subsystem RE'en (Workflow-Fanout) — bewährt 8.10
+
+Für ein großes, verschachteltes Subsystem (z.B. die Player-Fire-Pipeline: Aim/Fire-FSM + Fire→Damage-Pfad + Port-Seite; oder die Forward-Walk-Kette) lohnt ein **Workflow mit parallelen RE-Agenten**, je ein Strang pro unabhängigem Teil (eine FSM / ein Daten-Pfad / die Port-Integrationsseite), die strukturierte Findings (cited address + confidence) zurückgeben. ABER (hart): **JEDEN Agenten-Befund selbst gegen die Bytes verifizieren** (`dis`/`read`/`table`) + gegen einen **Savestate** (`re15-savestate-ghidra`), bevor du portierst. Die Agenten dieser Session lagen oft richtig, aber: einer behauptete „Forward-Walk nur in Variante m1" (savestate-widerlegt: live=m0), einer scheiterte am EXE-File-Mapping und meldete eine Damage-Tabelle als „nicht lesbar" (sie war sauber — `read` löste es). → Workflow = schnelle Breite; die byte-true Verifikation ist NICHT optional. Siehe [[disasm-verify-decompiles]].
 
 ## Verifikation (so wurde es belegt)
 
