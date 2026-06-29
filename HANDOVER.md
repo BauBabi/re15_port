@@ -1,20 +1,77 @@
-# RE1.5 Port — Session-Handover (Stand 2026-06-28)
+# RE1.5 Port — Session-Handover (Stand 2026-06-29)
 
-Kanonisches „lies-mich-zuerst" für die nächste Session. Ergänzt `BYTE_TRUE_AUDIT.md`
-(44 priorisierte Fixes) und die Auto-Memory (`reai-v2-byte-true-audit`,
-`reai-v2-duckstation-dynamic-re`, `reai-v2-ghidra-pipeline`).
+Kanonisches „lies-mich-zuerst" für die nächste Session. Aktueller Fokus: **Gegner-/Zombie-AI**.
+Ergänzt die Auto-Memory (v.a. `reai-v2-foundation-combat` = die laufende AI-RE) +
+`reai-v2-duckstation-dynamic-re`, `reai-v2-ghidra-pipeline`, `reai-v2-byte-true-audit`.
 
-## TL;DR — Wo stehe ich
+## TL;DR — Wo stehe ich (2026-06-29)
 
-- **Git:** HEAD = `0aed072b` (master, sauber). Der **Code-Work** (alle u.g. Fixes) liegt in
-  `3b4be5b8 "Many things finished"`; `0aed072b` legt Skills/Doku/Cleanup obendrauf.
-- **Build/Test:** `cmake --build re15_port/build` + `ctest --test-dir re15_port/build --timeout 30`
-  → **28/28 grün** (mingw64 GCC + Ninja, `PATH` muss `C:\msys64\mingw64\bin` enthalten).
-- **Nächster Schritt „der Reihe nach":** **#14/#15 AOT-Runtime** (HIGH, aot-runtime — AOT-Scan-Refactor;
-  in der Memory als RISKANT/laufzeit-zu-verifizieren markiert → Savestate-Pipeline nutzen). (#9 Switch +
-  #10 Evt_chain/Evt_exec + **#13 Player-Damage** + **#11/#12 Member-id-Tabelle + Member_cmp** sind
-  ERLEDIGT — byte-true, build+ctest grün; siehe unten.)
-- **Arbeitsweise:** jeden Audit-Fix VOR Anwendung per Agent gegen die Disasm verifizieren
+- **Git:** HEAD = `c278b08e` (master, sauber). Diese Session = **6 AI-Commits**
+  (`bb942f38` Phase 2 → `8580df9c` 3 → `06c0c055` 4 → `9ae78de1` 5 → `9c86ae3c` 6 → `c278b08e` 7).
+- **Build/Test:** `export PATH="/c/msys64/mingw64/bin:$PATH"; cmake --build re15_port/build;
+  ctest --test-dir re15_port/build --timeout 30` → **29/29 grün** (mingw64 GCC + Ninja).
+  Neuer Test: `unit_enemy_ai` (17/17 Sub-Tests); `unit_damage` (17/17, inkl. Lunge).
+- **Die byte-true RE der STAGE1-Zombie-AI ist KOMPLETT** (Decision-FSM + Live-Decision-Graph +
+  Lunge-Attack-Sequenz + Hitbox + Damage; alles portiert + getestet, additiv, **NICHT** in
+  `game_step` verdrahtet = kein 1170-Risiko). Full-Chain bewiesen: spawn→tick→lunge→Spieler-HP fällt.
+- **Nächster Schritt = PHASE 8 (Integration, NICHT mehr reines byte-true):** siehe unten.
+- **Neues Tooling:** Skill **`re15-psx-disasm`** (MIPS-Direkt-Disasm der PSX.EXE/Overlays, „Weg C").
+- **Disziplin:** jede Konstante zitiert eine Disasm-Adresse/Datei-Offset; additiv + getestet;
+  kein `game_step`-Eingriff bis Phase 8 (vorsichtig, savestate-verifiziert).
+
+## Enemy-AI byte-true RE (Phase 2–7, diese Session) — Architektur-Karte
+
+Tick `FUN_8011d6d4` → Main-State `+0x4` (`PTR_FUN_801217a0[0..4]`: 0 init/1 active/2 hurt/3 death/4 idle)
+→ active `FUN_8011d9f4` → sub `+0x9 & 0xf` (`PTR_FUN_801217b4[0..15]`; **live = sub 0** = `FUN_8011da48`)
+→ `+0x5` logic `SUB[1+(+0x5)]` + anim `SUB[4+(+0x5)]`.
+
+**ZWEI parallele Decision-Systeme** (savestate-disambiguiert, Tabellen NICHT laufzeit-gepatcht):
+- **(A) LIVE** = die EXE-Generic-Leaves (`FUN_8004f100` assess `+0x5`=0 / `FUN_8004f3a4` search 1 /
+  `FUN_8004f5e8` turn 2; `+0x5`≥3 = Movement/Anim-Exec). **Kein Leaf setzt `+0x5`=7** — die Lunge
+  emergiert aus Anim + Action-Driver `FUN_80019e20` (action `0x16`/`0x17`/`0x18` → Hitbox `FUN_80017fa4`).
+- **(B) PARALLEL** (byte-true, aber NICHT live) = die Overlay-Handler `FUN_80101b64/c7c/de4/2058`
+  via `FUN_8010168c`-Familie → vtables `f840/…` auf `+0x5`.
+
+**Portierter Code** (alles additiv, getestet):
+- `re15_port/engine/src/enemy_ai_common.c` + `include/re15_enemy_ai.h`: `re15_enemy_ai_init`
+  (`FUN_8011d84c`), `re15_enemy_ai_tick` (`FUN_8011d6d4`), `re15_enemy_ai_active` (`FUN_8011d9f4`,
+  ruft live `re15_ai_exe_dispatch`), System-A-Leaves `re15_ai_exe_assess/search/turn`, System-B-Brain
+  `re15_ai_decide_search_timer/approach/search/engage` + `re15_ai_facing_aligned`, `re15_ai_set_state_word`,
+  und der Integrations-Entry **`re15_enemy_ai_step(slot)`** (FSM-Tick + Lunge-Slice — den ruft game_step).
+- `re15_port/engine/src/re15_damage.c`: Damage-Resolver + Hitbox (schon vorher) + **Lunge-Driver**
+  `re15_enemy_lunge_begin/tick` (`LAB_80017eb0`/`LAB_80017f50`: 0x20-Frame-Window, feuert `re15_enemy_attack`
+  jeden Frame, beißt 1×). Neue Actor-Felder: `ai_dist/ai_timer/ai_flags/ai_contact/ai_arc/…/ai_target_x/z/
+  lunge_frames` (`re15_actor.h`, alle offset-zitiert).
+
+## PHASE 8 — wo es weiter geht (Integration + dynamische Verifikation)
+
+Reihenfolge + Risiko:
+1. **Skeleton-Mapping (faithful-line, kein reines byte-true):** `atk_pt_*` pro Frame aus der
+   Attack-Bone-Weltpos (`re15_skel_compute_pose`) speisen — der GTE-Attack-Point `FUN_80019e20`
+   `[0x14/0x15/0x16]` / `FUN_80104178` wird bewusst NICHT als PSX-Model-Pool nachgebaut. Die
+   Movement/Anim-Exec-Leaves (`+0x5`≥3, rufen `anim_set`/walker) + das Anim-Keyframe-Lunge-Begin
+   auf Walker/Skeleton mappen.
+2. **room1140-Overlay-Spawn:** der bisher fehlende Spawn-Pfad — die Briefing-Zombies kommen NICHT
+   via `Sce_em_set`, sondern aus der Overlay-Entity-Liste. Ohne diesen Spawn gibt es keinen
+   aktiven Gegner zum Ticken.
+3. **`game_step`-Wiring:** `re15_enemy_ai_step` pro aktivem Gegner aufrufen. **1170-Risiko** →
+   vorsichtig additiv (inert solange kein Gegner spawnt) + savestate-verifizieren.
+4. **Dynamische Verifikation:** mit `re15-room-capture` (`re15_quickload.py`/`--provoke`) +
+   `re15-savestate-ghidra` (`re15_enemy_state.py`): Spieler in Range → Gegner-`+0x5`-Transition +
+   HP-Fall vergleichen Port vs. Original.
+
+Werkzeuge: **`re15-psx-disasm`** (EXE/Overlay-Disasm), **`re15-savestate-ghidra`** (Live-RAM +
+Tabellen-Patch-Check), **`re15-room-capture`** (Raum laden/provozieren). Memory `reai-v2-foundation-combat`
+hat die volle Detail-Karte (alle Adressen, FSM-Stufen, deferred-Teile).
+
+---
+*Historischer Handover (2026-06-28, der 44-Fix-Byte-true-Audit) — unten als Referenz erhalten.*
+
+## TL;DR (2026-06-28, historisch)
+
+- **Git:** HEAD war `0aed072b`; Code-Work in `3b4be5b8 "Many things finished"`.
+- **Build/Test:** damals 28/28 grün.
+- **Audit-Arbeitsweise:** jeden Audit-Fix VOR Anwendung gegen die Disasm verifizieren
   (≈70 % der Audit-Werte waren ungenau), dann anwenden → build → ctest.
 
 ## Diese Session geliefert (alles gebaut + 28/28 ctest grün)
