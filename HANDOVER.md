@@ -1,6 +1,6 @@
-# RE1.5 Port — Session-Handover (Stand 2026-06-29, Phase 8.5 abgeschlossen)
+# RE1.5 Port — Session-Handover (Stand 2026-06-29, Phase 8.6 game_step-Wiring abgeschlossen)
 
-Kanonisches „lies-mich-zuerst" für die nächste Session. Aktueller Fokus: **STAGE1-Zombie-AI → `game_step`-Integration**.
+Kanonisches „lies-mich-zuerst" für die nächste Session. Aktueller Fokus: **STAGE1-Zombie-AI ist in `game_step` integriert** → nächster Schritt = die Briefing-Zombies AUFWECKEN (feeding→combat Sub-Mode-Handler) + Savestate-Vergleich.
 Ergänzt die Auto-Memory (v.a. `reai-v2-foundation-combat` = die laufende AI-RE, `disasm-verify-decompiles`,
 `reai-v2-duckstation-dynamic-re`).
 
@@ -15,10 +15,20 @@ Ergänzt die Auto-Memory (v.a. `reai-v2-foundation-combat` = die laufende AI-RE,
   (`FUN_80100424`/`FUN_80101224`). Ursache: das Decompilat `STAGE1/FUN_80100424.c` ist FALSCH (→ Memory
   `disasm-verify-decompiles` + Katalog „HIGH-VALUE CORRECTIONS"). Phase 8.3 (darauf gebaut) → revertiert; die Live-AI
   auf der korrekten Familie re-rooted (8.5a–d).
-- **Die Live-Zombie-AI ist jetzt FUNKTIONAL KOMPLETT** (alles auf `@0x8011f7b4`, byte-true, additiv, **NICHT** in
-  `game_step` = kein 1170-Risiko): die volle Attack-Kette läuft aus einer ENTSCHEIDUNG —
-  **Tick → INIT → ACTIVE → Decision-Brain committet (+0x5=7) → Arm → Windup → Lunge@300 → geteilte Hitbox → HP fällt.**
-- **Nächster Schritt = PHASE 8.6:** das `game_step`-Wiring (1170-Risiko) + dynamische Verifikation — siehe §8.6 unten.
+- **Die Live-Zombie-AI ist jetzt FUNKTIONAL KOMPLETT** (alles auf `@0x8011f7b4`, byte-true): die volle Attack-Kette
+  läuft aus einer ENTSCHEIDUNG — **Tick → INIT → ACTIVE → Decision-Brain committet (+0x5=7) → Arm → Windup →
+  Lunge@300 → geteilte Hitbox → HP fällt.**
+- **PHASE 8.6 (game_step-Wiring) ERLEDIGT:** `re15_enemy_ai_run_all(g_scd.combat_active)` hängt jetzt am Ende von
+  `re15_game_step` (die TYP-gegatete Slice von `FUN_8001a50c` — tickt NUR 0x10/0x11/0x16 → Elliot/Krähen/Player
+  unberührt). **1170-sicher** verifiziert: ROOM1240-Boot + ROOM1170 spawnen keine Live-Zombies → No-Op (Headless-Boot
+  unverändert). combat_active = neues `g_scd.combat_active` = byte-true `DAT_800aca3c & 1` (gehaltener Latch, beim
+  Raum-Load gelöscht). Verifiziert port-seitig via neuem ctest **`test_room1140_combat`** (echte ROOM1140 laden →
+  sub00 spawnt 5 Zombies → run_all tickt sie INIT→ACTIVE + dist, sie feeden [Wake-up deferred], armed-Lunge durch
+  run_all → HP fällt, 0x47 typ-gegated unberührt) + Live-Headless-Boot ROOM1140 (Zombies ticken, kein Crash). 31/31 ctest.
+- **Nächster Schritt:** die Briefing-Zombies AUFWECKEN — die feeding/lying-Sub-Modes `@0x8011f80c[6]/[8]` portieren (sie
+  transitionieren `grid_id & 0xf` → 0 = Combat-Brain) + das `Set(bank1,bit31)`→`combat_active`-Coupling — DANN gegen ein
+  ROOM1140-Savestate (`re15-room-capture`) den echten Wert von `DAT_800aca3c & 1` prüfen (offen: ob der Prototyp das
+  Arm-Gate je aktiviert oder ob die Briefing-Zombies ein reines Feeding-Set-Piece sind). Siehe §8.6.
 - **Neues Tooling:** Skill **`re15-room-probe`** (echten Raum laden + SCD/AI ticken + State lesen, kein DuckStation —
   genau für die 8.6-Verifikation) + `re15-psx-disasm` um „Decompile-Misstrauen" + Tabellen-Familien-Decode erweitert.
 - **Disziplin:** jede Konstante zitiert eine Disasm-Adresse/Datei-Offset; Overlay-`.c` vor dem Portieren disasm-
@@ -149,15 +159,37 @@ Lunge@300. **Die volle byte-true Live-Attack-Kette läuft jetzt aus einer ENTSCH
 ACTIVE→Brain→arm→Windup→Lunge@300→geteilte Hitbox→HP fällt), alles auf der korrekten @0x8011f7b4-
 Familie. Tests `test_live_decision_arm` + `test_live_step_chain`. 30/30 grün.
 
-### 8.6+ — INTEGRATION (der eigentliche game_step-Schritt, 1170-Risiko)
-1. **`game_step`-Wiring:** `re15_enemy_ai_live_step` pro aktivem 0x10/0x11/0x16-Gegner aus
-   `FUN_8001a50c` rufen (TYP-gegated → Elliot 0x47/Krähen 0x21 unberührt → 1170 sicher) +
-   `re15_enemy_ai_set_combat_active(1)` an den echten DAT_800aca3c-Flag koppeln + atk_pt-Live aus
-   dem Render/Skeleton. **Savestate-verifizieren** (Spieler in Range → Lunge + HP-Fall vs. Original).
-2. **Verbleibende byte-true Details (optional, für volle Treue):** die non-0 Sub-Modes
-   (`@0x8011f80c[1..15]` = Briefing-Feeding/Lying 0x801018f8 etc.), die Sub-States [2]/[3]/[4]
-   (0x80105a8c/06ba4/0919c = hurt/death/idle), der FUN_8001bc08-Sensor/+0x1d8-Update, die
-   0x10/0x11-Hitbox-Dims (Savestate). Prüfen, ob die EXE-Leaves (FUN_8004f100, Phase 4-5) geteilt sind.
+### 8.6 — game_step-INTEGRATION (ERLEDIGT, Commit folgt) → die Live-AI läuft jetzt IM Spiel
+**`game_step`-Wiring gemacht + verifiziert.** Neue geteilte Funktion `re15_enemy_ai_run_all(combat_active)`
+(enemy_ai_common.c) = die TYP-gegatete Slice des Original-Per-Frame-Entity-Loops `FUN_8001a50c` (@0x8001ce04:
+iteriert die Entity-Liste, dispatcht `@0x80072bac[type]`): sie tickt NUR die Live-Zombie-Typen 0x10/0x11/0x16
+durch `re15_enemy_ai_live_step` (FUN_80100424-Tick + geteilte Lunge-Slice); Elliot 0x47 / Krähen 0x21 / Player /
+Props bleiben auf ihren bestehenden Pfaden. Eingehängt am ENDE von `re15_game_step` (nach Player-Move/Collision +
+AOT-Scan = Player-Pos settled; die Lunge-EXECUTION landet nach dem AOT-Scan = byte-true zu `FUN_80019e20`
+@0x8001ce2c). **1170-sicher:** der ROOM1240-Boot + ROOM1170 spawnen keine Live-Zombies → Typ-Gate macht run_all
+dort zum No-Op (Headless-Boot unverändert, kein Crash; ROOM1140-Headless tickt die 5 Zombies sauber durch).
+- **combat_active byte-true geklärt (3 Agenten trianguliert):** `DAT_800aca3c & 1` (der Gate, den der Arm
+  `FUN_8010ab2c` @0x8010a4f0 `andi v0,v0,0x1` liest) = Flag-Bank 1 (`PTR_DAT_80074664[1]`), gesetzt via SCD
+  `Set`(0x22) auf Bank 1 / Bit 31 (runtime-Maske `0x80000000>>31` → kein literaler `ori …,0x1` existiert), gehaltener
+  Latch, beim Raum-Load gelöscht (`FUN_800396fc &= 0xffff0000`). Im Port modelliert als neues **`g_scd.combat_active`**
+  (dediziertes Bool wie die Schwester-Bit 0x100 = `cut_auto_enabled`; der g_scd-memset beim Raum-Reenter/Init gibt
+  den byte-true Raum-Load-Clear gratis). **OFFEN (Savestate):** ob der Prototyp das Bit je SETZT — wenn nie, ist das
+  Arm-Gate dormant und die Briefing-Zombies sind ein Feeding-Set-Piece. Default 0 ist byte-true in beiden Fällen.
+- **Port-seitig verifiziert:** neuer ctest **`test_room1140_combat`** (Skill `re15-room-probe`): lädt die echte
+  ROOM1140, spawnt via sub00 die 5 Zombies, treibt `re15_enemy_ai_run_all` und prüft (1) alle 5 ticken INIT→ACTIVE +
+  dist gecacht, (2) sie greifen als gespawnt NICHT an (feeding/lying `grid_id & 0xf` = 6/8 ≠ 0 → Combat-Brain nicht
+  betreten, auch mit combat_active=1), (3) ein manuell armed Zombie feuert durch run_all die Lunge → Player −10 HP +
+  hurt(2), (4) ein 0x47-Actor bleibt typ-gegated unberührt. 31/31 ctest grün.
+
+### 8.7+ — was als Nächstes (die Briefing-Zombies AUFWECKEN + Savestate-Vergleich)
+1. **Wake-up:** die feeding/lying-Sub-Modes `@0x8011f80c[6]/[8]` (FUN_801018f8 etc.) portieren — sie transitionieren
+   `grid_id & 0xf` → 0 (Combat-Sub-Mode), erst dann läuft das Decision-Brain → arm → Lunge IM Spiel. + das
+   `Set(bank1,bit31)`→`g_scd.combat_active`-Coupling (welcher ROOM1140-SCD-`Set` das Bit setzt, falls überhaupt).
+2. **Savestate-Vergleich (`re15-room-capture`):** ROOM1140-Savestate ziehen, `DAT_800aca3c` lesen (ist `& 1` je 1?),
+   die echten 0x10/0x11-Hitbox-Dims auslesen (fehlen in `re15_enemy_apply_hitbox`), Lunge-Geometrie vs. Port.
+3. **Verbleibende byte-true Details:** die Sub-States [2]/[3]/[4] (0x80105a8c/06ba4/0919c = hurt/death/idle), der
+   FUN_8001bc08-Sensor/+0x1d8-Update, der AI-Pause-Gate (DAT_800aca40 & 0x20000000 → `re15_enemy_ai_set_paused`,
+   noch nicht in game_step gekoppelt — aktuell unpaused, ohne Effekt da Zombies feeden). atk_pt-Live aus dem Render.
 - **WAS VOM 0x47-PORT BLEIBT:** der `@0x801217a0`-Code (Phase 2-7) ist echte byte-true RE eines
   PARALLELEN Typs (0x47) — nicht wegwerfen, klar als 0x47 gelabelt; der Live-Pfad ist `@0x8011f7b4`.
 

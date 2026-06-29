@@ -73,6 +73,15 @@ target_compile_definitions(test_room1140_spawn PRIVATE
 add_test(NAME unit_room1140_spawn COMMAND test_room1140_spawn)
 set_tests_properties(unit_room1140_spawn PROPERTIES TIMEOUT 30)
 
+# --- ROOM1140 live-AI game_step wiring (Phase 8.6 — re15_enemy_ai_run_all type-gated, real RDT) ---
+add_executable(test_room1140_combat test_room1140_combat.c)
+target_link_libraries(test_room1140_combat PRIVATE re15_engine re15_test_support)
+target_include_directories(test_room1140_combat PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_room1140_combat PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_room1140_combat COMMAND test_room1140_combat)
+set_tests_properties(unit_room1140_combat PROPERTIES TIMEOUT 30)
+
 # --- Audio VAB-Parsing Unit-Test (Requirement 6.6, 12.1) ---
 add_executable(test_audio_vab test_audio_vab.c)
 target_include_directories(test_audio_vab PRIVATE ${CMAKE_SOURCE_DIR}/include)

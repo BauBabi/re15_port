@@ -235,4 +235,14 @@ void re15_enemy_ai_live_arm(int slot);
  * 0 by default; game_step wires the real flag. */
 void re15_enemy_ai_set_combat_active(int v);
 
+/* Phase 8.6 — the per-frame LIVE-zombie AI pass, the port's faithful slice of the original's
+ * entity-update loop FUN_8001a50c (@0x8001ce04: iterate the entity array, dispatch
+ * @0x80072bac[type] per active entity). The port runs ONLY the live-zombie types (0x10/0x11/0x16)
+ * through re15_enemy_ai_live_step; every other type (Elliot 0x47, crows 0x21, props) keeps its
+ * existing path. That type-gate is what makes the game_step wiring 1170-SAFE: ROOM1170 spawns no
+ * 0x10/0x11/0x16 actor, so this is a no-op there. `combat_active` = the DAT_800aca3c & 1 arm gate
+ * (FUN_8010ab2c); game_step passes the live flag, the room-probe test drives it explicitly.
+ * This is the single entry game_step calls — the integration point Phase 8.6 wires. */
+void re15_enemy_ai_run_all(int combat_active);
+
 #endif /* RE15_ENEMY_AI_H */

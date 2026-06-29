@@ -15,6 +15,7 @@
 #include "re15_anim_select.h"   /* re15_actor_footstep (foot-plant query) */
 #include "re15_audio.h"         /* re15_audio_footstep */
 #include "re15_rdt.h"           /* re15_rdt_floor_sound */
+#include "re15_enemy_ai.h"      /* re15_enemy_ai_run_all — the LIVE-zombie per-frame pass (8.6) */
 
 void re15_game_step(const re15_game_ctx_t *c)
 {
@@ -140,6 +141,29 @@ void re15_game_step(const re15_game_ctx_t *c)
     if (g_aot.fired_event_id_this_frame != 0) {
         scd_event_fire(g_aot.fired_event_id_this_frame);
     }
+
+    /* ===== Phase 8.6 — the LIVE STAGE1 zombie AI pass ==================================
+     * Byte-true to the original per-frame entity-update loop FUN_8001a50c (@0x8001ce04 in the
+     * main update): it walks the entity array and dispatches @0x80072bac[type] per active entity.
+     * re15_enemy_ai_run_all is the port's TYPE-GATED slice of that loop — it ticks ONLY the live
+     * zombie types (0x10/0x11/0x16) through their handler (FUN_80100424 tick + the shared lunge
+     * slice); every other type (Elliot 0x47, crows 0x21, the player, props) keeps its existing
+     * path. That gate is what makes this 1170-SAFE: the ROOM1170 helipad + the ROOM1240 boot room
+     * spawn no live zombie, so this is a verified no-op there (no intro/cinematic regression).
+     *
+     * Placement: at the END of the step, AFTER the player move/collision + AOT scan have settled
+     * the frame. The original runs the AI-tick half (FUN_8001a50c) just BEFORE the AOT scan and
+     * the lunge-EXECUTION half (the action driver FUN_80019e20 @0x8001ce2c) just AFTER it; the
+     * port folds tick+execution into run_all, and placing it here lands the lunge hitbox after the
+     * AOT scan (faithful to FUN_80019e20's slot) against the player's final XZ this frame.
+     *
+     * combat_active = g_scd.combat_active = the byte-true DAT_800aca3c & 1 latch the attack-arm
+     * (FUN_8010ab2c) gates on; held, cleared on room load (see re15_scd.h). The briefing zombies
+     * spawn in the feeding/lying sub-modes (grid_id & 0xf != 0), so the combat decision brain is
+     * not even entered yet — they tick (INIT->ACTIVE) but do not attack until the deferred
+     * feeding->combat wake-up handler runs. Verified in a real room by test_room1140_combat. */
+    if (c->rdt_ok)
+        re15_enemy_ai_run_all(g_scd.combat_active);
 }
 
 /* SHARED helicopter-rotor spatialization driver — see re15_game_step.h. Was inline

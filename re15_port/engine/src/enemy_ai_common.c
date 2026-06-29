@@ -486,3 +486,24 @@ int re15_enemy_ai_live_step(int slot)
     re15_enemy_lunge_tick(slot);             /* shared lunge slice — hitbox per active frame */
     return r;
 }
+
+/* Phase 8.6 — the per-frame LIVE-zombie AI pass. The port's faithful, TYPE-GATED slice of the
+ * original entity-update loop FUN_8001a50c (@0x8001ce04): the original walks the entity array
+ * (DAT_800acc2c, stride 0x1f4) and, for every active entity (+0x0 & 1), dispatches its per-type
+ * tick @0x80072bac[entity+0x8 type]. The port has the player on its own path (re15_player_tick)
+ * and only the LIVE STAGE1 zombie types (0x10/0x11/0x16) ported here, so this runs JUST those
+ * through re15_enemy_ai_live_step (FUN_80100424 tick + the shared lunge slice). Every other type
+ * (Elliot 0x47, crows 0x21, room props) is left to its existing handling. Because of the type
+ * gate, a room with no live zombie (e.g. the ROOM1170 boot/helipad) makes this a pure no-op =
+ * no 1170 regression. `combat_active` is forwarded to the arm gate (DAT_800aca3c & 1). */
+void re15_enemy_ai_run_all(int combat_active)
+{
+    re15_enemy_ai_set_combat_active(combat_active);
+    for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) {
+        re15_actor_t *e = &g_actors[s];
+        if (!e->active) continue;
+        uint8_t t = e->type;
+        if (t == 0x10 || t == 0x11 || t == 0x16)   /* the live STAGE1 zombie types only */
+            re15_enemy_ai_live_step(s);
+    }
+}

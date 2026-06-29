@@ -185,6 +185,24 @@ typedef struct {
     uint8_t  cam_arg3;
     uint8_t  cam_id_prev;          /* for Cut_old (0x2A)                  */
     uint8_t  cut_auto_enabled;     /* set by Cut_auto (0x3C)              */
+    /* Phase 8.6 — the port repr of DAT_800aca3c & 1 ("combat active"), the gate the LIVE
+     * STAGE1 zombie attack-ARM (overlay FUN_8010ab2c @0x8010a4f0 `andi v0,v0,0x1`) checks
+     * before committing a lunge. Byte-true semantics (RE'd 2026-06-29, two agents + raw
+     * STAGE1.BIN/EXE traces): DAT_800aca3c is flag-bank 1 (PTR_DAT_80074664[1]); bit 0x1 is
+     * a HELD script latch set by the SCD `Set` (0x22) opcode at bank 1 / bit 31 (mask
+     * 0x80000000>>31), routed through FUN_80042bac/LAB_80043120 — that runtime-COMPUTED mask is
+     * why no literal `ori …,0x1` exists anywhere in the EXE or the 6 overlays (3-agent byte-true
+     * sweep). It is NOT engine/per-frame driven, and is CLEARED on room (re)load (FUN_800396fc
+     * `DAT_800aca3c &= 0xffff0000` — the ONLY thing that ever touches bit 0). OPEN (savestate, skill
+     * re15-room-capture): whether any RE1.5 room script actually issues that Set(1,31) — if it never
+     * does, the arm gate is DORMANT in this prototype build and the briefing zombies are a scripted
+     * feeding set-piece (they never arm). Default 0 is byte-true either way. Modeled as a dedicated boolean exactly like
+     * the sibling bit 0x100 (cut_auto_enabled) above; the g_scd memset on room re-enter / init
+     * gives the byte-true room-load clear for free. game_step forwards it to re15_enemy_ai_run_all.
+     * DEFERRED (cited): wiring the SCD `Set(bank1,bit31)` event to write this + the feeding->combat
+     * WAKE-UP sub-mode handlers (@0x8011f80c[6]/[8]); until both land it stays 0 = the briefing
+     * zombies keep feeding (the faithful current behaviour — they never reach the arm). */
+    uint8_t  combat_active;
     /* BL-round 2026-05-29: CANONICAL player-mode FSM (PSX DAT_800aca58, read each
      * frame by FUN_80031c44 @0x80031c44, dispatch table 0x80073f90). We reduce
      * the 4 PSX modes to: 0/1 = GAMEPLAY (free, PAD honored — LAB_800318f8 /
