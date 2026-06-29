@@ -120,16 +120,24 @@ Portiert byte-true aus STAGE1.BIN (`re15-psx-disasm`), additiv + getestet (`test
 (Tick + geteilte Lunge-Slice = der game_step-Entry). Full-Chain-Test `test_live_step_chain`
 (live spawn→tick INIT→ACTIVE→arm→Lunge@300→geteilte Hitbox→HP 100→90). 30/30 grün.
 
-### 8.5c+ — Rest der Live-AI + Integration
-1. **Die Decision/Arm-Hälfte** (`FUN_80101224` @0x80101560+, `jal FUN_8001bc08`): wo `+0x1d8|=0x100`
-   gesetzt + `+0x1da` geseedet wird (= wann der Zombie zum Angriff committet — aktuell im Test manuell
-   gearmt). + die Sub-States [2]/[3]/[4] (0x80105a8c/06ba4/0919c). Prüfen, ob die EXE-Leaves
-   (FUN_8004f100, Phase 4-5) geteilt sind. **Direkt aus STAGE1.BIN disasm (NICHT .c trauen).**
-2. **`game_step`-Wiring:** `re15_enemy_ai_live_step` pro aktivem 0x10/0x11/0x16-Gegner aus
-   `FUN_8001a50c` rufen (typ-gegated → Elliot 0x47/Krähen 0x21 unberührt → 1170 sicher),
-   savestate-verifiziert. Hier wird auch das atk_pt-Live-Wiring verifizierbar.
-3. **Dynamische Verifikation:** `re15-room-capture` + `re15-savestate-ghidra` (Spieler in Range → Lunge
-   + HP-Fall Port vs. Original; 0x10/0x11-Hitbox-Dims aus dem Savestate).
+### 8.5c — Decision-Brain an den Live-Active gekoppelt + Fehllabel korrigiert (Commit e6df8260)
+Der un-armed Tail von `FUN_80101224` (@0x80101560+) dispatcht `@0x8011f80c[+0x9 & 0xf]` (Sub-Mode-
+Tabelle). **SCHLÜSSEL-BEFUND:** `@0x8011f840 == &@0x8011f80c[13]` — d.h. das Phase-3-„Decision-Brain"
+(`FUN_80101b64/de4/2058` @0x8011f840) ist ein SUB-VIEW dieser Live-Tabelle, erreicht via
+`@0x8011f80c[0]=FUN_8010168c → @0x8011f840[+0x5]`. Die Combat-Zombies (`+0x9=0`, sub 0) routen dahin.
+→ **Phase-3s Brain IST der Live-Decision-Graph, KEIN paralleles System** (Fehllabel „System B =
+parallel" korrigiert). Portiert: `re15_enemy_ai_live_active` un-armed (sub 0) → `re15_ai_dispatch_
+decision` (committet 0x701→+0x5=7 bei Spieler-in-Range). Test angepasst.
+
+### 8.5d+ — Rest der Live-AI + Integration
+1. **Der ATTACK-ARM** (das eigentlich fehlende Stück): wo `+0x1d8 |= 0x100` + der `+0x1da`-Windup
+   geseedet werden = wann der Zombie WIRKLICH zum Angriff committet (aktuell im Test manuell gearmt).
+   Liegt in einem +0x5=7-Sub-Handler — die `+0x1da`-Writer **FUN_8010ab2c/b274/cb34/d7f8/dbcc/e6d4**
+   (STAGE1_full). Einen davon disasm/decompile, den finden, der `+0x1d8|0x100` + `+0x1da`(>300) setzt.
+2. Die **non-0 Sub-Modes** (`@0x8011f80c[1..15]` = Briefing-Feeding/Lying-Handler 0x801018f8 etc.) +
+   die Sub-States [2]/[3]/[4] (0x80105a8c/06ba4/0919c) + der FUN_8001bc08-Sensor/+0x1d8-Update.
+3. **`game_step`-Wiring:** `re15_enemy_ai_live_step` pro aktivem 0x10/0x11/0x16-Gegner aus
+   `FUN_8001a50c` (typ-gegated → 1170 sicher), savestate-verifiziert (auch atk_pt-Live + Hitbox-Dims).
 - **WAS VOM 0x47-PORT BLEIBT:** der `@0x801217a0`-Code (Phase 2-7) ist echte byte-true RE eines
   PARALLELEN Typs (0x47) — nicht wegwerfen, klar als 0x47 gelabelt; der Live-Pfad ist `@0x8011f7b4`.
 
