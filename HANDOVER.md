@@ -114,15 +114,21 @@ Portiert byte-true aus STAGE1.BIN (`re15-psx-disasm`), additiv + getestet (`test
   Recovery-State (`+0x4`=0x1503=state3/+0x5=0x15, motion 0xb bzw. 0x1f wenn grid&0x80). **Der byte-true
   Lunge-Begin kommt jetzt aus dem RICHTIGEN Handler** (ersetzt den Platzhalter).
 
-### 8.5b+ — Rest der Live-AI + Integration
-1. **Den Live-Tick + Dispatch** `FUN_80100424` (gates + dist@+0x1d0 + `@0x8011f7b4[+0x4]`-Dispatch +
-   attack-point/collision-Helfer) als Port-Dispatcher (state 0→live_init, 1→live_active, 2/3/4→…).
-2. **Die Decision/Arm-Hälfte** (`FUN_80101224` @0x80101560+, `jal FUN_8001bc08`): wo `+0x1d8|=0x100`
-   gesetzt + `+0x1da` geseedet wird (= wann der Zombie zum Angriff committet). + die Sub-States
-   [2]/[3]/[4] (0x80105a8c/06ba4/0919c). Prüfen, ob die EXE-Leaves (FUN_8004f100, Phase 4-5) geteilt sind.
-3. **`game_step`-Wiring:** den Live-Tick pro aktivem 0x10/0x11/0x16-Gegner aus `FUN_8001a50c` rufen
-   (typ-gegated → Elliot 0x47/Krähen 0x21 unberührt → 1170 sicher), savestate-verifiziert.
-4. **Dynamische Verifikation:** `re15-room-capture` + `re15-savestate-ghidra` (Spieler in Range → Lunge
+### 8.5b — Live-Tick + Integrations-Entry (ERLEDIGT, Commit a8880747)
+`re15_enemy_ai_live_tick` (`FUN_80100424`: pause/skip-Gates + dist@+0x1d0 + Dispatch
+`@0x8011f7b4[+0x4]` → 0=live_init/1=live_active/[2-4] deferred) + `re15_enemy_ai_live_step`
+(Tick + geteilte Lunge-Slice = der game_step-Entry). Full-Chain-Test `test_live_step_chain`
+(live spawn→tick INIT→ACTIVE→arm→Lunge@300→geteilte Hitbox→HP 100→90). 30/30 grün.
+
+### 8.5c+ — Rest der Live-AI + Integration
+1. **Die Decision/Arm-Hälfte** (`FUN_80101224` @0x80101560+, `jal FUN_8001bc08`): wo `+0x1d8|=0x100`
+   gesetzt + `+0x1da` geseedet wird (= wann der Zombie zum Angriff committet — aktuell im Test manuell
+   gearmt). + die Sub-States [2]/[3]/[4] (0x80105a8c/06ba4/0919c). Prüfen, ob die EXE-Leaves
+   (FUN_8004f100, Phase 4-5) geteilt sind. **Direkt aus STAGE1.BIN disasm (NICHT .c trauen).**
+2. **`game_step`-Wiring:** `re15_enemy_ai_live_step` pro aktivem 0x10/0x11/0x16-Gegner aus
+   `FUN_8001a50c` rufen (typ-gegated → Elliot 0x47/Krähen 0x21 unberührt → 1170 sicher),
+   savestate-verifiziert. Hier wird auch das atk_pt-Live-Wiring verifizierbar.
+3. **Dynamische Verifikation:** `re15-room-capture` + `re15-savestate-ghidra` (Spieler in Range → Lunge
    + HP-Fall Port vs. Original; 0x10/0x11-Hitbox-Dims aus dem Savestate).
 - **WAS VOM 0x47-PORT BLEIBT:** der `@0x801217a0`-Code (Phase 2-7) ist echte byte-true RE eines
   PARALLELEN Typs (0x47) — nicht wegwerfen, klar als 0x47 gelabelt; der Live-Pfad ist `@0x8011f7b4`.
