@@ -369,6 +369,46 @@ void re15_enemy_ai_live_init(int slot)
     e->ai_timer = 0x14;                            /* +0x9c = 0x14 */
 }
 
+/* Feeding sub-mode (@0x8011f80c[6] = 0x801018f8, STAGE1.BIN) — the briefing zombie's dist-gated
+ * WAKE-UP (byte-true, disasm-verified 2026-06-29 + savestate-confirmed: every active zombie in the
+ * live ROOM1140 combat save has woken to +0x9=0). The feeding handler runs two stages each frame:
+ *   stage A (0x80103980): if cached dist +0x1d0 < 0xfa0 (4000) AND +0x6 == 0 -> +0x6 = 1 and
+ *     +0x9c = rand()&0xf (the wait timer). (The 1/4-chance feeding SE @0x800453d0 is deferred.)
+ *   the +0x6 state machine (shared post-step 0x80103a58): 1 = count +0x9c down (0x80103ad0), at 0 ->
+ *     +0x6=2 / +0x8f=0xf; 2 = play the stand-up anim (0x80103b08, anim_set +0x170/+0x174) -> +0x6 +=
+ *     anim-done; 3 = COMMIT (0x80103b3c): `sb zero,9` -> +0x9 = 0 (combat sub-mode), `sw 0x201,4` ->
+ *     +0x4 word = 0x201 (state 1 ACTIVE / +0x5 = 2 = the engage brain), `andi +0x93,0xfe`.
+ * The woken zombie lands in combat sub 0 with the decision brain at phase 2 (engage =
+ * re15_ai_decide_engage). NOT gated on DAT_800aca3c — the wake is distance-only (only the DORMANT
+ * lunge-arm needs that flag; in this prototype nothing sets it, so the real attack is the GRAB the
+ * engage commits, see 8.8). Faithful-line: the phase-2 stand-up anim duration is the deferred anim
+ * layer, so the port advances 2->3 directly (the AI transition is byte-true; the exact anim frame
+ * count is not modeled — same stance as re15_enemy_lunge_begin). The phase-0 busy writes (+0x93|=1 /
+ * +0x1b8=1 @0x80103aac) are deferred: +0x93 is the port's shared hit-guard byte and +0x1b8 the
+ * neck-flags, so replaying them would disturb the damage/neck subsystems — they are a wake-up busy
+ * latch with no port consumer. Fields: sub_state_2 (+0x6), ai_timer (+0x9c), anim_frac (+0x8f). */
+static void re15_enemy_ai_live_feeding(re15_actor_t *e)
+{
+    /* stage A — start the wake sequence when the player closes within 4000. */
+    if (e->ai_dist < 4000u && e->sub_state_2 == 0) {     /* +0x1d0 < 0xfa0 && +0x6 == 0 */
+        e->sub_state_2 = 1;                              /* +0x6 = 1 */
+        e->ai_timer    = (int16_t)(re15_engine_rand8() & 0xf);  /* +0x9c = rand()&0xf */
+    }
+    switch (e->sub_state_2) {                            /* the +0x6 0->3 wake machine */
+        case 0: break;                                   /* idle-feeding (busy writes deferred) */
+        case 1:                                           /* count the wait timer down (0x80103ad0) */
+            if (e->ai_timer != 0) e->ai_timer = (int16_t)(e->ai_timer - 1);
+            else { e->sub_state_2 = 2; e->anim_frac = 0xf; }
+            break;
+        case 2: e->sub_state_2 = 3; break;               /* stand-up anim (0x80103b08) — faithful stand-in */
+        case 3:                                           /* COMMIT (0x80103b3c) -> combat / engage */
+            e->grid_id     = 0;                          /* +0x9 = 0 (combat sub-mode 0) */
+            re15_ai_set_state_word(e, 0x201);            /* +0x4 = state 1 / +0x5 = 2 (engage) */
+            e->hit_react  &= (uint8_t)~1u;               /* +0x93 &= ~1 */
+            break;
+    }
+}
+
 /* FUN_80101224 (@0x8011f7b4[1], STAGE1.BIN) — the LIVE zombie ACTIVE handler. The ATTACK-WINDUP
  * half (byte-true): when the attack-arm bit (+0x1d8 & 0x100) is set and the freeze bit (+0x0 &
  * 0x1000) clear, the windup timer +0x1da counts down each frame; at == 0x12c (300) the original
@@ -394,18 +434,29 @@ int re15_enemy_ai_live_active(int slot)
          * (FUN_80101b64/de4/2058) ported in Phase 3, confirmed LIVE here (the earlier "System B =
          * parallel, not live" label was WRONG — it IS the live decision graph for type 0x10/0x11).**
          * It commits the attack (state word 0x701 -> +0x5=7) when the player is in range/off-arc.
-         * DEFERRED (cited): the FUN_8001bc08 sensor + the +0x1d8 update, the non-0 sub-modes
-         * (@0x8011f80c[1..15] = the briefing feeding/lying handlers), and the ATTACK-ARM itself
-         * (+0x1d8 |= 0x100 + the +0x1da windup seed live in a +0x5=7 sub-handler -- FUN_8010ab2c/
-         * b274/cb34 family, the +0x1da writers; see HANDOVER 8.5c). */
-        if ((e->grid_id & 0xf) == 0) {
-            re15_ai_dispatch_decision(e, &g_actors[RE15_ACTOR_SLOT_PLAYER]);
-            /* Faithful-line: when the brain commits the attack (+0x5=7) the lunge gets armed
-             * (FUN_8010ab2c — the attack-commit setup that seeds +0x1da + sets +0x1d8|0x100).
-             * Arm ONCE (only when not already armed); the exact dispatch slot that runs
-             * FUN_8010ab2c is deferred, the commit->arm coupling is the observable behavior. */
-            if (e->sub_state_1 == 7 && !(e->ai_flags & 0x100))
-                re15_enemy_ai_live_arm(slot);
+         * The briefing zombies SPAWN in the non-0 sub-modes (+0x9 & 0xf = 6 feeding / 8 lying); the
+         * feeding handler is the dist-gated WAKE-UP that transitions them to combat (sub 0). DEFERRED
+         * (cited): the FUN_8001bc08 sensor + the +0x1d8 update, and the ATTACK-ARM (+0x1d8 |= 0x100 +
+         * the +0x1da windup seed; FUN_8010ab2c) — which is DORMANT in this prototype (DAT_800aca3c & 1
+         * is never set, savestate-proven), so the in-game attack is the GRAB the engage brain commits
+         * (8.8), not the lunge. */
+        switch (e->grid_id & 0xf) {                       /* @0x8011f80c[+0x9 & 0xf] sub-mode */
+            case 0:   /* combat sub-mode 0 -> @0x8011f80c[0]=FUN_8010168c -> the decision brain */
+                re15_ai_dispatch_decision(e, &g_actors[RE15_ACTOR_SLOT_PLAYER]);
+                /* Faithful-line: when the brain commits the lunge-attack (+0x5=7) it would arm
+                 * (FUN_8010ab2c) — gated on DAT_800aca3c & 1, which is dormant here. Arm ONCE if the
+                 * flag is ever set; otherwise this is inert (the engage commits the GRAB instead). */
+                if (e->sub_state_1 == 7 && !(e->ai_flags & 0x100))
+                    re15_enemy_ai_live_arm(slot);
+                break;
+            case 5: case 6:   /* feeding (@0x8011f80c[5]/[6]=0x801018f8) -> the dist-gated wake-up */
+                re15_enemy_ai_live_feeding(e);
+                break;
+            case 7: case 8:   /* lying (@0x8011f80c[7]/[8]=0x80101974): stage-A is an empty `jr ra` —
+                               * no dist gate; the lying zombie stays passive until externally nudged. */
+                break;
+            default:  /* @0x8011f80c[1..4],[9..15]: other sub-modes — deferred (cited) */
+                break;
         }
         return 0;
     }

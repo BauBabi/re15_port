@@ -175,8 +175,45 @@ int main(void)
         else printf("  (4) Elliot 0x47 in slot %d untouched by run_all (type-gated) = 1170-safe\n", es);
     }
 
+    /* (5): the dist-gated WAKE-UP (Phase 8.7, byte-true gate 0x80103980: feeding sub 6 wakes when
+     * cached dist +0x1d0 < 0xfa0 = 4000). Take two still-asleep feeding zombies (grid sub 6); move
+     * ONE next to the player (dist 1000 < 4000) and leave the other at its far briefing spot. After
+     * a few frames of run_all the near one must wake to combat (grid_id -> 0) / ACTIVE and land in
+     * the engage brain (+0x5 >= 2 = engage, or the grab/attack it then commits); the far one stays
+     * asleep (still grid sub 6). This is the in-engine wake the live combat savestate confirms. */
+    re15_damage_seed_rng(0x5eed1234u);
+    pl->x = 0; pl->z = 0; pl->hp = 100; pl->hit_react = 0; pl->state = 0;
+    int wake_slot = -1, far_slot = -1;
+    for (int i = 0; i < nz; i++) {
+        re15_actor_t *z = &g_actors[zslots[i]];
+        if ((z->grid_id & 0x0f) == 6 && z->state == RE15_AI_STATE_ACTIVE && z->sub_state_2 == 0) {
+            if (wake_slot < 0) wake_slot = zslots[i];
+            else if (far_slot < 0) far_slot = zslots[i];
+        }
+    }
+    if (wake_slot < 0 || far_slot < 0) {
+        fprintf(stderr, "FAIL: need two asleep feeding zombies for the wake-up test (got %d/%d)\n",
+                wake_slot, far_slot); fail = 1;
+    } else {
+        re15_actor_t *wz = &g_actors[wake_slot];
+        re15_actor_t *fz = &g_actors[far_slot];   /* stays at its briefing pos (~20000 from origin) */
+        wz->x = 1000; wz->z = 0;                   /* within 4000 of the player @origin */
+        for (int f = 0; f < 40; f++) re15_enemy_ai_run_all(1);
+        if (wz->grid_id != 0 || wz->state != RE15_AI_STATE_ACTIVE || wz->sub_state_1 < 2) {
+            fprintf(stderr, "FAIL: near feeding zombie slot %d must wake to combat/engage; "
+                    "got grid=0x%02X state=%d +0x5=%d\n",
+                    wake_slot, wz->grid_id, wz->state, wz->sub_state_1); fail = 1; }
+        if ((fz->grid_id & 0x0f) != 6) {
+            fprintf(stderr, "FAIL: far feeding zombie slot %d must stay asleep (grid sub 6); got grid=0x%02X\n",
+                    far_slot, fz->grid_id); fail = 1; }
+        if (!fail)
+            printf("  (5) feeding zombie slot %d woke near player (grid 0x86->0x%02X, state %d, +0x5=%d engage); "
+                   "far slot %d still feeding (grid 0x%02X)\n",
+                   wake_slot, wz->grid_id, wz->state, wz->sub_state_1, far_slot, fz->grid_id);
+    }
+
     free(buf);
     if (fail) { fprintf(stderr, "\nROOM1140 COMBAT-WIRING TEST FAILED\n"); return 1; }
-    printf("\nPASS: ROOM1140 live-AI game_step wiring (spawn->tick->[wake deferred]; armed lunge->HP; type-gated)\n");
+    printf("\nPASS: ROOM1140 live-AI game_step wiring (spawn->tick; feeding zombie WAKES->engage; armed lunge->HP; type-gated)\n");
     return 0;
 }

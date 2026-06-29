@@ -25,10 +25,21 @@ Ergänzt die Auto-Memory (v.a. `reai-v2-foundation-combat` = die laufende AI-RE,
   Raum-Load gelöscht). Verifiziert port-seitig via neuem ctest **`test_room1140_combat`** (echte ROOM1140 laden →
   sub00 spawnt 5 Zombies → run_all tickt sie INIT→ACTIVE + dist, sie feeden [Wake-up deferred], armed-Lunge durch
   run_all → HP fällt, 0x47 typ-gegated unberührt) + Live-Headless-Boot ROOM1140 (Zombies ticken, kein Crash). 31/31 ctest.
-- **Nächster Schritt:** die Briefing-Zombies AUFWECKEN — die feeding/lying-Sub-Modes `@0x8011f80c[6]/[8]` portieren (sie
-  transitionieren `grid_id & 0xf` → 0 = Combat-Brain) + das `Set(bank1,bit31)`→`combat_active`-Coupling — DANN gegen ein
-  ROOM1140-Savestate (`re15-room-capture`) den echten Wert von `DAT_800aca3c & 1` prüfen (offen: ob der Prototyp das
-  Arm-Gate je aktiviert oder ob die Briefing-Zombies ein reines Feeding-Set-Piece sind). Siehe §8.6.
+- **PHASE 8.7 ERLEDIGT (savestate-Ground-Truth + 2 Befunde + Wake-up portiert):**
+  - **8.7a Hitbox-Dims (Commit 0283bd2c):** 0x10/0x11 = **400/1440** byte-true aus dem Live-Combat-Save gewired (fielen
+    vorher durch zu „keine Hitbox").
+  - **⚠️ GROSSER BEFUND — der Lunge-Arm ist DORMANT, die Zombies greifen per GRAB an.** Über ALLE 9 Savestates (inkl. dem
+    echten ROOM1140-Combat) ist `DAT_800aca3c & 1` **nie** gesetzt; ROOM1140-SCD macht nur `Set bank1 bit27` (≠ bit31 = das
+    Combat-Bit). Der Spieler stirbt mit state 7 = *grabbed*. Der echte In-Game-Kill = der **GRAB** (engage FUN_80102058 →
+    +0x5=3/4 → FUN_80102548: Player-Register 0x800aca58 + player+0x93|=1 + **−5 HP/Biss** direkt auf player+0x9a, umgeht
+    FUN_80012d60, KEIN DAT_800aca3c-Gate). Mein 8.5d-Lunge-Arm bleibt byte-true als Mechanismus, ist aber dormant.
+  - **8.7b Wake-up portiert (dieser Commit):** der feeding-Sub-Mode `@0x8011f80c[6]=0x801018f8` (dist-Gate 0x80103980 +
+    +0x6-State-Machine 0x80103a58) → bei `dist<4000` wacht der Zombie zu combat auf (+0x9=0, +0x4=0x201=state1/+0x5=2
+    engage). Lying `[8]=0x80101974` = passiv (leeres `jr ra`). In `re15_enemy_ai_live_active` eingehängt; alles disasm-
+    selbst-verifiziert. test_room1140_combat Part (5): feeding-Zombie nah → wacht zu engage auf, ferner bleibt schlafend.
+- **Nächster Schritt (8.8): die GRAB-Execution portieren** = der eigentliche In-Game-Angriff (FUN_80102548 @0x8011f890[3/4]:
+  −5 HP/Biss + Player-grabbed-State 0x800aca58) + die Bewegungs-Leaves (+0x5≥3 approach). Dann gegen ein mid-Combat
+  ROOM1140-Savestate (`re15-room-capture`) verifizieren. (Der Lunge-Arm bleibt dormant, bis ein Skript bank1/bit31 setzt.)
 - **Neues Tooling:** Skill **`re15-room-probe`** (echten Raum laden + SCD/AI ticken + State lesen, kein DuckStation —
   genau für die 8.6-Verifikation) + `re15-psx-disasm` um „Decompile-Misstrauen" + Tabellen-Familien-Decode erweitert.
 - **Disziplin:** jede Konstante zitiert eine Disasm-Adresse/Datei-Offset; Overlay-`.c` vor dem Portieren disasm-
@@ -181,15 +192,37 @@ dort zum No-Op (Headless-Boot unverändert, kein Crash; ROOM1140-Headless tickt 
   betreten, auch mit combat_active=1), (3) ein manuell armed Zombie feuert durch run_all die Lunge → Player −10 HP +
   hurt(2), (4) ein 0x47-Actor bleibt typ-gegated unberührt. 31/31 ctest grün.
 
-### 8.7+ — was als Nächstes (die Briefing-Zombies AUFWECKEN + Savestate-Vergleich)
-1. **Wake-up:** die feeding/lying-Sub-Modes `@0x8011f80c[6]/[8]` (FUN_801018f8 etc.) portieren — sie transitionieren
-   `grid_id & 0xf` → 0 (Combat-Sub-Mode), erst dann läuft das Decision-Brain → arm → Lunge IM Spiel. + das
-   `Set(bank1,bit31)`→`g_scd.combat_active`-Coupling (welcher ROOM1140-SCD-`Set` das Bit setzt, falls überhaupt).
-2. **Savestate-Vergleich (`re15-room-capture`):** ROOM1140-Savestate ziehen, `DAT_800aca3c` lesen (ist `& 1` je 1?),
-   die echten 0x10/0x11-Hitbox-Dims auslesen (fehlen in `re15_enemy_apply_hitbox`), Lunge-Geometrie vs. Port.
-3. **Verbleibende byte-true Details:** die Sub-States [2]/[3]/[4] (0x80105a8c/06ba4/0919c = hurt/death/idle), der
-   FUN_8001bc08-Sensor/+0x1d8-Update, der AI-Pause-Gate (DAT_800aca40 & 0x20000000 → `re15_enemy_ai_set_paused`,
-   noch nicht in game_step gekoppelt — aktuell unpaused, ohne Effekt da Zombies feeden). atk_pt-Live aus dem Render.
+### 8.7 — Savestate-Ground-Truth + Wake-up portiert (ERLEDIGT) → das Attack-Modell ist KORRIGIERT
+**Aus dem Live-Combat-Savestate (`stage_saves/mzd_stage1_combat_death.sav`, via Skill `re15-savestate-ghidra`
+`re15_enemy_state.py`) + 9-Save-Sweep + RE (Agent + Selbst-Disasm-Verify) drei Befunde:**
+- **8.7a Hitbox-Dims (Commit 0283bd2c):** 0x10/0x11/0x16 = **400/1440** (Live-RAM-Read `*(entity+0x78)`), byte-true in
+  `re15_enemy_apply_hitbox` gewired (0x10/0x11 fielen vorher durch zu „keine Hitbox"). test_room1140_combat assertet es.
+- **⚠️ DER LUNGE-ARM IST DORMANT — die Zombies greifen per GRAB an.** `DAT_800aca3c & 1` (das Arm-Gate `FUN_8010ab2c`
+  @0x8010a4f0 `andi v0,v0,0x1`) ist über ALLE 9 Savestates **nie** gesetzt; ROOM1140-SCD macht nur `Set bank1 bit27`
+  (Maske 0x10 = bit4), **nie bit31** (= das Combat-Bit, Maske 0x80000000>>31 = 0x1). Der Spieler stirbt mit state 7 =
+  *grabbed*. → Der echte In-Game-Kill = der **GRAB**: engage `FUN_80102058` (+0x5=2, schon portiert als
+  `re15_ai_decide_engage`) committet bei dist<0x4b0 && arc(0x200) && same-floor && facing den Grab (+0x5=3/4) →
+  `FUN_80102548` (@0x8011f890[3/4]): setzt Player-Register `0x800aca58 = (+0x5−3)<<8|5` + `player+0x93|=1` (grabbed) +
+  zieht **−5 HP/Biss** direkt auf `player+0x9a` (wenn das Bite-Anim-Frame landet, `anim_set` a3=0x200), umgeht FUN_80012d60.
+  Alles byte-true selbst-disasm-verifiziert (0x80102620/0x80102640/0x801027cc-e4). **8.5d-Lunge-Arm bleibt byte-true als
+  Mechanismus, ist aber dormant.**
+- **8.7b Wake-up portiert (dieser Commit):** feeding `@0x8011f80c[6]=0x801018f8` (Stage-A 0x80103980: `dist<0xfa0(4000)` &&
+  +0x6==0 → +0x6=1, +0x9c=rng&0xf; +0x6-Machine 0x80103a58: 1=Timer-Countdown → 2=Stand-up-Anim → 3=COMMIT 0x80103b3c:
+  +0x9=0, +0x4=0x201=state1/+0x5=2 engage, +0x93&=~1). Lying `[8]=0x80101974` = passiv (leeres `jr ra`, kein Dist-Gate).
+  `re15_enemy_ai_live_feeding` + Sub-Mode-Dispatch in `re15_enemy_ai_live_active`. Faithful-line: die Phase-2-Stand-up-Anim-
+  Dauer ist die deferred Anim-Schicht (Port advanced 2→3 direkt); die Phase-0-Busy-Writes (+0x93|=1/+0x1b8=1) deferred
+  (Port-Feld-Aliasing). test_room1140_combat Part (5): feeding-Zombie nah am Spieler → wacht zu engage auf, ferner schläft.
+
+### 8.8+ — was als Nächstes (die GRAB-Execution = der eigentliche In-Game-Angriff)
+1. **GRAB-Execution portieren** (`FUN_80102548` @0x8011f890[3/4], die f890-ANIMATE-Dispatch — der Port modelliert bisher
+   nur die f840-DECIDE-Hälfte): Sub-Step-Machine (entity+0x8f) → grab-init (Player-Register 0x800aca58 + player+0x93|=1) →
+   grab-bite (−5 HP/Frame wenn Bite-Anim landet) + den Player-grabbed-FSM (0x800aca58 treibt die Player-Reaktion → state 7).
+2. **Bewegungs-Leaves (+0x5≥3 approach/walk):** die deferred f840[3..]/f890-Movement (FUN_80102540/2bd0/2d20) auf den
+   Port-Walker mappen — damit der geweckte Zombie auch zum Spieler LÄUFT (sonst wacht er auf, bewegt sich aber nicht).
+3. **Savestate-Vergleich (`re15-room-capture`):** mid-Combat ROOM1140-Savestate ziehen (der vorhandene ist post-death),
+   die Grab-Sub-Steps + −5-HP-Timing + den Player-grabbed-State live gegen den Port prüfen.
+- **Verbleibende byte-true Details:** Sub-States [2]/[3]/[4] (0x80105a8c/06ba4/0919c = hurt/death/idle), FUN_8001bc08-
+  Sensor/+0x1d8-Update, AI-Pause-Gate (DAT_800aca40 & 0x20000000 → `re15_enemy_ai_set_paused`, noch nicht in game_step).
 - **WAS VOM 0x47-PORT BLEIBT:** der `@0x801217a0`-Code (Phase 2-7) ist echte byte-true RE eines
   PARALLELEN Typs (0x47) — nicht wegwerfen, klar als 0x47 gelabelt; der Live-Pfad ist `@0x8011f7b4`.
 
