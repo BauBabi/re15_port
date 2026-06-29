@@ -172,14 +172,30 @@ int re15_player_death_tick(void)
  * The damaged enemy then runs the zombie HURT/DEATH state (re15_enemy_ai_live_hurt/death).
  *
  * BYTE-TRUE TABLES (dumped from PSX.EXE): the zombie damage row (enemy types 0x10/0x11/0x16 are all
- * IDENTICAL, @0x8006e650/0x8006e6a8/0x8006e860) and the per-weapon reach (@0x8006e5a0). FAITHFUL-LINE:
- * the auto-aim picks the nearest LIVE zombie within the per-weapon reach that is IN FRONT of the player
- * (re15_ai_arc_test(player, ex,ez, 0x400) = the front hemisphere — the RE auto-aim auto-targets the
- * nearest forward enemy; the EXACT per-weapon line-vs-box cone tester FUN_80012574/7fc/8a0 + FUN_8004f008
- * projection is the deferred refinement). The per-type damage table is ported for the ZOMBIE types only
- * (the port's hittable enemies); other types' rows are the deferred refinement. The hit-direction clip
- * (+0x6) + the equipped-weapon source (DAT_800aca5d) + the aim/fire input FSM (@0x80035810, the next
- * chunk) are deferred. Returns the hit enemy slot+1 (0 = no target in cone/reach). */
+ * IDENTICAL, @0x8006e650/0x8006e6a8/0x8006e860) and the per-weapon reach (@0x8006e5a0, u32[22]).
+ *
+ * THE PER-WEAPON CONE TESTER (PTR_LAB_8006e548[weapon], @0x80011fec call): the gun weapons all use one
+ * of two BYTE-IDENTICAL pure-2D testers — FUN_800127fc (pistol w1/w2) and FUN_800128a0 (magnum/shotgun
+ * class). Disassembled byte-true, both are:
+ *     dx = enemy(+0x34) - aim.x ; dz = enemy(+0x3c) - aim.z ; dist = SquareRoot0(dx*dx + dz*dz)
+ *     R   = (u16 @ enemy_hitbox_data+6  i.e. hit_radius_min) + (reach & 0xffff)
+ *     HIT iff (dist < R)  [strict, unsigned] AND (dist < DAT_8008f5e0)  -> latch DAT_8008f5e0 = dist
+ * i.e. it is a radial reach test from the AIM POINT, picking the nearest, where the per-enemy hitbox
+ * radius (hbdata+6) is ADDED to the weapon reach. PORTED byte-true here: R = reach + e->hit_radius_min,
+ * strict dist < R (was: dist <= reach, the radius omitted -> the zombie's 400-unit radius shrank the
+ * pistol's effective range from the true 1399 to 999). The knife (FUN_80012574) is a projected polygon
+ * (5x FUN_8004f008) -> deferred (needs the camera projection).
+ *
+ * FAITHFUL-LINE (proven blocked on the aim FSM the port lacks): the original measures dist from the
+ * forward-projected AIM POINT (param_2 = a 16-bit world SVECTOR the aim/fire FSM @0x80035810 computes);
+ * the port measures from the player and keeps re15_ai_arc_test(player, ex,ez, 0x400) (front hemisphere)
+ * as the directional stand-in for both the aim point and the camera line-of-fire geometry block
+ * (FUN_80011f50 @0x80012280-0x80012370 = DAT_800ac784 camera + DAT_800aca88/8c/90 aim ray + FUN_8001bf04,
+ * none of which the port has). DEFERRED (each needs absent infra, do NOT guess): the hit-direction clip
+ * +0x6 = DAT_8006f410[heading>>0x1d] = {7,0,1,7,2,0,0,0} (needs DAT_800acaec/aim-Z, anim detail), the
+ * per-type damage rows for non-zombies, the equipped-weapon source DAT_800aca5d (inventory), and the
+ * aim/fire input FSM. The aim-mode alternate reach row (@+0x58, DAT_800aca5c&4) is byte-IDENTICAL to the
+ * base row -> nothing to port. Returns the hit enemy slot+1 (0 = no target in cone/reach). */
 
 /* Per-weapon damage to a zombie (types 0x10/0x11/0x16, identical rows @0x8006e650). 22 weapons. */
 static const uint16_t s_player_wpn_dmg_zombie[22] = {
@@ -206,8 +222,11 @@ int re15_player_weapon_fire(int weapon_id)
         if (e->type != 0x10 && e->type != 0x11 && e->type != 0x16) continue;  /* the port's hittable enemies */
         if (e->state == 7) continue;   /* RE15_AI_STATE_CORPSE — already a corpse (literal: avoid the AI-header dep) */
         uint32_t dist = (uint32_t)re15_enemy_player_dist(e, pl);
-        if (dist > reach) continue;                                          /* out of the weapon's reach */
-        if (re15_ai_arc_test(pl, e->x, e->z, 0x400) != 0) continue;          /* not in front (faithful-line cone) */
+        /* byte-true cone tester FUN_800127fc/800128a0: R = reach + enemy hitbox radius (hbdata+6),
+         * hit iff strict dist < R (unsigned). The 400-unit zombie radius is part of the reach. */
+        uint32_t R = reach + ((uint32_t)e->hit_radius_min & 0xffffu);
+        if (dist >= R) continue;                                             /* out of (reach + radius) */
+        if (re15_ai_arc_test(pl, e->x, e->z, 0x400) != 0) continue;          /* not in front (faithful-line dir) */
         if (dist < best_dist) { best_dist = dist; best = s; }
     }
     if (best < 0) return 0;   /* no target in cone/reach */

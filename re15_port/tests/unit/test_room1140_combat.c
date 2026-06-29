@@ -442,6 +442,33 @@ int main(void)
             printf("  (11) player pistol -> auto-aim FRONT zombie -24 -> HURT(2) (behind skipped); lethal -> DEATH->CORPSE(7)\n");
     }
 
+    /* (12): the BYTE-TRUE reach bound (cone tester FUN_800127fc/800128a0): R = reach + enemy hitbox
+     * radius (hbdata+6 = hit_radius_min = 400 for zombies), hit iff strict dist < R. The pistol's table
+     * reach is 1000, so the true effective range vs a zombie is 1000+400 = 1400 (strict). Pre-fix the
+     * port tested dist <= reach (radius omitted) and would have MISSED a zombie at 1000..1399. */
+    {
+        pl->x = 0; pl->z = 0; pl->hp = 100; pl->hit_react = 0; pl->state = 0; pl->rot_y = 0; pl->floor = 0;
+        re15_player_death_reset();
+        for (int i = 0; i < nz; i++) {   /* park all far */
+            re15_actor_t *z = &g_actors[zslots[i]];
+            z->state = RE15_AI_STATE_ACTIVE; z->x = 30000; z->z = 30000; z->hp = 60; z->hit_react = 0;
+            z->sub_state_1 = 0; z->grid_id = 0;
+        }
+        re15_actor_t *z = &g_actors[zslots[0]];
+        if (z->hit_radius_min != 400) {   /* the spawn dim this whole bound depends on */
+            fprintf(stderr, "FAIL: (12) zombie hit_radius_min must be 400, ist %u\n", z->hit_radius_min); fail = 1; }
+        /* in the band reach..R-1: dist 1399 (> reach 1000, < R 1400) -> MUST hit now */
+        z->x = 0; z->z = 1399; z->hp = 60; z->hit_react = 0; z->state = RE15_AI_STATE_ACTIVE;
+        if (re15_player_weapon_fire(2) != (zslots[0] + 1) || z->hp != (int16_t)(60 - 24)) {
+            fprintf(stderr, "FAIL: (12) zombie at dist 1399 (< reach+radius 1400) must be HIT, HP=%d\n", z->hp); fail = 1; }
+        /* at exactly R = 1400: strict dist < R -> MUST miss */
+        z->x = 0; z->z = 1400; z->hp = 60; z->hit_react = 0; z->state = RE15_AI_STATE_ACTIVE;
+        if (re15_player_weapon_fire(2) != 0 || z->hp != 60) {
+            fprintf(stderr, "FAIL: (12) zombie at dist 1400 (== reach+radius, strict <) must MISS, hp=%d\n", z->hp); fail = 1; }
+        if (!fail)
+            printf("  (12) byte-true reach: hit at dist 1399 (reach 1000 + radius 400), miss at 1400 (strict <)\n");
+    }
+
     free(buf);
     if (fail) { fprintf(stderr, "\nROOM1140 COMBAT-WIRING TEST FAILED\n"); return 1; }
     printf("\nPASS: ROOM1140 live-AI game_step wiring (spawn; WAKE->engage; TURN-to-face->GRAB->HP; "
