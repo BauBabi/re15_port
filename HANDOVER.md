@@ -6,19 +6,20 @@ state 7, 120-Frame-Timer; Fade/Game-Over-Screen deferred).** Der Combat-Loop ist
 Forward-Walk AUFGELÖST: das m0-Live-Brain (das der Port hat) setzt NIE +0x5=6 → der Briefing-Combat (wake→engage→turn→grab→
 pin→drain) ist byte-true KOMPLETT für ROOM1140. Der +0x5=6-Walk im Save ist ein Dead-Player-„walk-to-corpse"-Artefakt
 (player hp=-1) + ein m1-Varianten-Verhalten (andere Räume). KEINE Live-Lücke; nichts zu portieren für ROOM1140 (§8.10).
-**ZWEI-SEITIGER Combat: die Damage-Schleife ist GESCHLOSSEN (Nutzer-gewählt).** Die Zombie-hurt/death-States ([2]/[3]→corpse)
-+ der Player-Schuss-Damage-CORE (`re15_player_weapon_fire` = FUN_80011f50: Auto-Aim Front-Zombie in Reach → byte-true
-per-Waffe-Damage [Pistole 24] → hurt/death) sind portiert. **OFFEN:** der Fire-INPUT (die Aim/Fire-FSM @0x80035810 in
-game_step wiren) + die exakte Cone-Geometrie + die Aim/Fire-Anim — der nächste Chunk (FSM-Adressen im §8.10). Ergänzt die Auto-Memory (v.a. `reai-v2-foundation-combat` = die laufende AI-RE, `disasm-verify-decompiles`,
+**ZWEI-SEITIGER Combat: SPIELBAR in-game (Nutzer-gewählt).** Beide Schleifen laufen end-to-end: Zombie→Spieler (spawn→wake→
+engage→turn→grab→pin→drain→Tod) UND Spieler→Zombie (**R1 zielen + Square feuern** → `re15_player_weapon_fire`=FUN_80011f50:
+Auto-Aim Front-Zombie in Reach → byte-true per-Waffe-Damage [Pistole 24] → hurt/death→corpse), gewired in game_step.
+**DEFERRED (Präsentation):** die exakte Aim/Fire-Command-FSM (@0x80035810), die Waffen-Inventory, die Aim/Muzzle-Anim, +
+Fade/Game-Over. Ergänzt die Auto-Memory (v.a. `reai-v2-foundation-combat` = die laufende AI-RE, `disasm-verify-decompiles`,
 `reai-v2-duckstation-dynamic-re`).
 
 ## TL;DR — Wo stehe ich
 
-- **Git:** master, sauber (nur `.idea/` untracked). Phase 8.10 = **7 Commits:** `fb4a06e7` Player-grabbed-Lock ·
-  `a7ae354a` Forward-Walk-RE · `8038cc5f` Forward-Walk AUFGELÖST · `05af1a76` Player-DEATH-FSM-Kern · `062992d7`
-  Zombie-hurt/death-States · (+ dieser Commit) Player-Schuss-Damage-CORE. **Beide Combat-Schleifen byte-true geschlossen:**
-  Zombie→Spieler (spawn→wake→engage→turn→grab→pin→drain→TOD) UND Spieler→Zombie (Schuss→Auto-Aim→Damage→hurt/death→corpse);
-  offen = der Fire-INPUT + die Präsentation (Fade/Game-Over/Aim-Anim).
+- **Git:** master, sauber (nur `.idea/` untracked). Phase 8.10 = **8 Commits** (grabbed-Lock `fb4a06e7` · Forward-Walk-RE
+  `a7ae354a` · Forward-Walk aufgelöst `8038cc5f` · Player-DEATH `05af1a76` · Zombie-hurt/death `062992d7` · Player-Schuss-
+  Damage `e058ad25` · Fire-Input `93c9f233` · + dieser Doku-Commit). **Beide Combat-Schleifen laufen in-game end-to-end:**
+  Zombie→Spieler (spawn→wake→engage→turn→grab→pin→drain→TOD) UND Spieler→Zombie (R1+Square→Auto-Aim→byte-true-Damage→
+  hurt/death→corpse). Offen = nur die Präsentation (Fade/Game-Over-Screen, Aim/Muzzle-Anim) + die exakte Aim-FSM/Cone.
 - **Build/Test:** `taskkill //F //IM re15_pc.exe 2>/dev/null; true; export PATH="/c/msys64/mingw64/bin:$PATH";
   cmake --build re15_port/build; ctest --test-dir re15_port/build --timeout 30` → **31/31 grün** (mingw64 GCC + Ninja).
   (Das `taskkill` ist nötig, falls die Exe noch läuft + die Datei sperrt — sonst Link-„Permission denied", kein Code-Fehler.)
@@ -301,12 +302,14 @@ Hälften (anim_set selbst bewegt NICHT — nur Frames/Pose). State-Split byte-tr
 - **Test Part (7):** Zombie bei +0x5=7, 90° abgewandt, nah (dist 600) → dreht sich (rot_y 1024→1664) → Grab-Commit →
   Player-HP fällt. 31/31 ctest, ROOM1140-Headless sauber.
 
-### 8.10 — ZWEI-SEITIGER Combat: Player-Schuss-CORE + Zombie-hurt/death ERLEDIGT (Damage-Schleife geschlossen)
+### 8.10 — ZWEI-SEITIGER Combat SPIELBAR (Player-Schuss-CORE + Fire-Input + Zombie-hurt/death ERLEDIGT)
 
 **RICHTUNG (Nutzer-gewählt): ZWEI-SEITIGER Combat (Spieler schießt → Zombie hurt/death).** Bottom-up: empfangende Seite
-(Zombie-hurt/death, TEIL 5) → Player-Schuss-Damage-CORE (TEIL 6). **Die Damage-Schleife ist geschlossen** (der Spieler
-schießt → der Zombie nimmt byte-true Schaden → hurt/death). OFFEN: der Fire-INPUT (die Aim/Fire-FSM in game_step) + die
-exakte Cone-Geometrie + die Aim/Fire-Anim = der nächste Chunk (Workflow `player-fire-re` hat die FSM RE't — s.u.).
+(Zombie-hurt/death, TEIL 5) → Player-Schuss-Damage-CORE (TEIL 6) → **Fire-Input gewired (TEIL 7, Commit 93c9f233):**
+game_step-Normal-Branch, **R1 halten = zielen, Square = feuern** → `re15_player_weapon_fire`; beim Zielen feuert Square +
+triggert KEINE Tür/Treppe (g_aot_action_pressed unterdrückt). **Beide Combat-Schleifen laufen jetzt in-game end-to-end.**
+DEFERRED: die exakte Aim/Fire-Command-FSM (@0x80035810), die Waffen-Inventory (DAT_800aca5d→Pistole w2 default), die
+Aim/Raise/Muzzle-Anim + die exakte Line-vs-Box-Cone. **1170-sicher** (feuert nur auf R1+Square; trifft nur Live-Zombies).
 
 **TEIL 6 (Player-Schuss-Damage-CORE) PORTIERT (dieser Commit, 31/31 ctest):** `re15_player_weapon_fire(weapon_id)`
 (re15_damage.c) = der byte-true Kern von **FUN_80011f50** (ein SEPARATER Resolver vom Enemy-FUN_80012d60!). Verifiziert +
