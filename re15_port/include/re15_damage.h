@@ -119,7 +119,16 @@ int re15_enemy_attack(int attacker_slot);
  * The lunge MOVEMENT (the work-struct velocity/pos advance + the GTE attack-point) is the
  * port's skeleton job (faithful-line); the exact end-of-window keyframe transition
  * (FUN_800174e4) is deferred. The byte-true core here is the active-frame window + the
- * per-frame fire + the bite-once-per-lunge reset. */
+ * per-frame fire + the bite-once-per-lunge reset.
+ *
+ * The lunge is action 0x16/0x17/0x18 in the action table PTR_LAB_80071d40 ([0x16]=LAB_
+ * 80017eb0 setup, [0x17]=LAB_80017ed8 advance/movement, [0x18]=LAB_80017f50 fire). The
+ * action driver FUN_80019e20 runs the model-instance's +0x0 slot (movement 0x16->0x17) and
+ * its +0x2 slot (fire 0x18) each frame. The lunge BEGIN (instance +0x0 := 0x16) is set by
+ * an anim-keyframe action event (FUN_80019e20's +0x37/+0x3c keyframe stepping) — i.e. it
+ * fires when the approach/attack animation reaches its lunge frame. That begin-trigger is
+ * part of the deferred model-pool/anim layer; in the port the AI/anim layer calls
+ * re15_enemy_lunge_begin at the equivalent point. */
 void re15_enemy_lunge_begin(int attacker_slot);
 int  re15_enemy_lunge_tick(int attacker_slot);
 

@@ -477,10 +477,52 @@ static int test_exe_dispatch_and_tick(void)
     return 0;
 }
 
+/* ----- Phase 7: full chain via re15_enemy_ai_step (spawn → FSM tick → lunge → HP fällt) ----- *
+ * Komponiert alle byte-true Teile in-engine: ein gespawnter Gegner wird über re15_enemy_ai_step
+ * getickt (INIT→ACTIVE, dist gecacht, Decision läuft); dann wird die Lunge ausgelöst (= das
+ * deferred Anim-Keyframe-Event; atk_pt = Skeleton-Attack-Bone-Stand-in auf dem Spieler) und der
+ * nächste Step feuert die Hitbox → Spieler-HP fällt. KEIN game_step-Eingriff. */
+static int test_ai_step_chain(void)
+{
+    re15_actor_init();                         /* Spieler slot 0: hp 100, Hitbox 450/1530 @origin */
+    re15_actor_t *pl = &g_actors[0];
+    pl->x = 0; pl->z = 0; pl->hit_react = 0;
+    re15_enemy_ai_set_paused(0);
+    re15_enemy_ai_set_global_flag(0);
+
+    int s = re15_actor_alloc(0x10);            /* Gegner spawnen */
+    if (s < 1) { fprintf(stderr, "FAIL: actor_alloc Gegner\n"); return 1; }
+    re15_actor_t *e = &g_actors[s];
+    e->x = 0; e->z = 1200; e->rot_y = 1024;    /* 1200 vor dem Spieler, blickt -Z (zum Spieler) */
+    e->state = RE15_AI_STATE_INIT;
+
+    /* Frame 1: INIT läuft (state 0→1), dist gecacht. */
+    re15_enemy_ai_step(s);
+    if (e->state != RE15_AI_STATE_ACTIVE) { fprintf(stderr, "FAIL: chain INIT→ACTIVE, ist %d\n", e->state); return 1; }
+    if (e->ai_dist != 1200) { fprintf(stderr, "FAIL: chain dist=1200, ist %u\n", e->ai_dist); return 1; }
+
+    /* Frame 2: ACTIVE-Decision läuft (assess; bleibt aktiv). */
+    re15_enemy_ai_step(s);
+    if (e->state != RE15_AI_STATE_ACTIVE) { fprintf(stderr, "FAIL: chain bleibt ACTIVE, ist %d\n", e->state); return 1; }
+
+    /* Lunge auslösen (deferred Anim-Keyframe-Event) + Attack-Point = Spieler (Skeleton-Stand-in). */
+    e->atk_pt_x = 0; e->atk_pt_y = 0; e->atk_pt_z = 0;
+    re15_enemy_lunge_begin(s);
+    int16_t hp_before = pl->hp;
+
+    /* Frame 3: ai_step tickt die Lunge → Hitbox feuert → Spieler -10. */
+    re15_enemy_ai_step(s);
+    if (pl->hp != (int16_t)(hp_before - 10)) { fprintf(stderr, "FAIL: chain Lunge-Biss -10, HP %d→%d\n", hp_before, pl->hp); return 1; }
+    if (pl->state != 2) { fprintf(stderr, "FAIL: chain Spieler hurt(2), ist %d\n", pl->state); return 1; }
+
+    printf("PASS: test_ai_step_chain (spawn→tick→lunge→HP %d→%d)\n", hp_before, pl->hp);
+    return 0;
+}
+
 int main(void)
 {
     int failures = 0;
-    printf("=== Enemy-AI FSM Unit Tests (Phase 2-5, dispatch + brain + live EXE leaves + chain) ===\n\n");
+    printf("=== Enemy-AI FSM Unit Tests (Phase 2-7, dispatch + brain + live leaves + lunge chain) ===\n\n");
 
     failures += test_ai_init();
     failures += test_ai_init_stationary();
@@ -498,6 +540,7 @@ int main(void)
     failures += test_exe_search();
     failures += test_exe_turn();
     failures += test_exe_dispatch_and_tick();
+    failures += test_ai_step_chain();
 
     if (failures == 0) printf("\nALL ENEMY-AI TESTS PASSED\n");
     else               fprintf(stderr, "\n%d TEST(S) FAILED\n", failures);

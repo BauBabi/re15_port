@@ -124,6 +124,16 @@ int re15_enemy_ai_tick(int slot)
     return 1;
 }
 
+/* The per-enemy per-frame integration step (the entry game_step will call): the FSM tick
+ * (decision) + the lunge slice of the action driver (fires the hitbox while a lunge is
+ * active). re15_enemy_lunge_tick is the FUN_80019e20 lunge action (re15_damage.c). */
+int re15_enemy_ai_step(int slot)
+{
+    int r = re15_enemy_ai_tick(slot);   /* FUN_8011d6d4 — gate, dist, FSM/decision */
+    re15_enemy_lunge_tick(slot);        /* FUN_80019e20 lunge slice — hitbox per active frame */
+    return r;
+}
+
 /* ============ System (A): the LIVE STAGE1 EXE-leaf path (dynamically confirmed) ======= *
  * Resolved empirically from stage_saves/mzd_stage1_combat_death.sav: the overlay dispatch
  * tables (PTR_FUN_801217a0/b4) are NOT patched at runtime (live RAM == on-disc STAGE1.BIN),

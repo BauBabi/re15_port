@@ -86,6 +86,16 @@ void re15_enemy_ai_set_paused(int paused);
  * helpers (FUN_8002b498/FUN_8002aec4/...) are other subsystems and are NOT run here. */
 int re15_enemy_ai_tick(int slot);
 
+/* The per-enemy per-frame step = the port's single integration entry that game_step will
+ * call for each active enemy: the FSM tick (FUN_8011d6d4, the decision) followed by the
+ * lunge slice of the action driver (the FUN_80019e20 lunge action -> re15_enemy_lunge_tick,
+ * which fires the hitbox while a lunge is active). Combines the two per-frame passes the
+ * original runs separately (the entity-update loop + the model-instance action driver).
+ * Returns the tick result. NOT yet called from game_step — the live wiring (+ the room1140
+ * overlay spawn + the skeleton attack-point + the anim-keyframe lunge-begin) is the
+ * remaining integration block; this is the byte-true-composed entry, exercised by the test. */
+int re15_enemy_ai_step(int slot);
+
 /* ACTIVE state = FUN_8011d9f4: dispatch on grid_id & 0xf. For sub 0 (the live STAGE1
  * routing) this is FUN_8011da48's +0x5 logic/anim double-dispatch; subs 1..15 are the
  * generic-humanoid EXE leaves (deferred). Returns the resolved sub index (grid_id & 0xf).
