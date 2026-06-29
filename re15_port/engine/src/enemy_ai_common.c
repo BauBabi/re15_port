@@ -1,0 +1,176 @@
+/*
+ * RE1.5 Rebuilt — Enemy-AI FSM dispatch + decision brain (Phase 2).
+ *
+ * Byte-true port of the STAGE1 zombie AI's dispatch foundation + the confirmed
+ * decision handlers. Every constant cites either the decompiled overlay
+ * (RE_15_Quellcode_Overlays/STAGE1_full) or the raw STAGE1.BIN pointer tables
+ * (load @0x80100000, no header — file offset = addr-0x80100000; tables decoded
+ * 2026-06-29). See re15_enemy_ai.h for the full table map.
+ *
+ * Scope (Phase 2): the named state model, INIT (FUN_8011d84c), the tick entry +
+ * main-state dispatch (FUN_8011d6d4), the ACTIVE sub-dispatch (FUN_8011d9f4), and
+ * the byte-true decision handlers FUN_80101b64 / FUN_80101c7c / FUN_80101de4.
+ * DEFERRED (cited, not guessed): the generic-humanoid EXE leaves (PTR_FUN_801217b4
+ * [1..15] = 0x8004f../0x80050../0x80051.., the movement/anim execution), the +0x5
+ * logic/anim leaves inside FUN_8011da48, FUN_80102058 (the directional grab + low-HP
+ * flee — needs the FUN_8001a780 octant + the DAT_800acad6/DAT_800acae7 game globals),
+ * and the HURT/DEATH/IDLE main-state bodies. Nothing here is wired into game_step yet
+ * (no tick side effects → no 1170 risk; same stance as re15_damage.c).
+ */
+#include "re15_enemy_ai.h"
+#include "re15_damage.h"   /* re15_enemy_player_dist, re15_ai_arc_test, re15_engine_rand8,
+                            * re15_enemy_apply_hitbox */
+
+/* Engine-wide AI freeze = DAT_800aca40 & 0x20000000 (FUN_8011d6d4 gate). */
+static int s_ai_paused = 0;
+void re15_enemy_ai_set_paused(int paused) { s_ai_paused = paused ? 1 : 0; }
+
+/* The 32-bit state word the decision handlers store at entity+0x4, split into the
+ * port's per-byte state fields (state=+0x4, sub_state_1=+0x5, sub_state_2=+0x6,
+ * sub_state_3=+0x7). Byte-true to `*(undefined4 *)(entity + 4) = word` (LE). */
+void re15_ai_set_state_word(re15_actor_t *e, uint32_t word)
+{
+    if (!e) return;
+    e->state       = (uint8_t)( word        & 0xff);
+    e->sub_state_1 = (uint8_t)((word >>  8) & 0xff);
+    e->sub_state_2 = (uint8_t)((word >> 16) & 0xff);
+    e->sub_state_3 = (uint8_t)((word >> 24) & 0xff);
+}
+
+/* INIT — FUN_8011d84c (STAGE1_full). The spawn/setup main-state. Byte-true map:
+ *   +0x4   = 1            -> state ACTIVE
+ *   +0x0  |= 0x40000000   (a lifecycle flag word; the port has no +0x0 word repr)
+ *   +0x78  = hitbox ptr   -> re15_enemy_apply_hitbox (PTR_DAT_8012179c = the per-type
+ *                            struct; for 0x47 = 450/1530, confirmed in STAGE1.BIN data)
+ *   +0x1a8 = &player      -> implicit (port slot 0 is always the player)
+ *   +0x93 = 0  (hit guard), +0x8f = 0 (anim FRAC), +0x95 = 0 (frame index)
+ *   model pool +0x5fc = 0x2c8 (attack arc), +0x5f8 = 0x40, +0x5fa = 0x30, +0x5fe = 0x138,
+ *              +0x5f4 = 0, +0x5f6 = 0   -> the ai_* param fields (0 by spawn memset)
+ *   if (+0x9 & 0x40) { +0x4 = 4 (IDLE); +0x5 = 6 }   -> stationary briefing zombie
+ * DEFERRED (cited, no port field yet): +0x9a = 0xffff, +0x9e = 0x78, +0x1b8 = 0,
+ *   +0x1b9 = 8, +0x94 = 2, the anim seed FUN_8001f314, the light FUN_8001af5c.
+ *   ai_timer (+0x9c) is NOT seeded here — the original seeds it in a sub-handler. */
+void re15_enemy_ai_init(int slot)
+{
+    if (slot < 0 || slot >= RE15_ACTOR_MAX) return;
+    re15_actor_t *e = &g_actors[slot];
+
+    e->state = (uint8_t)RE15_AI_STATE_ACTIVE;   /* +0x4 = 1 */
+    re15_enemy_apply_hitbox(e, e->type);        /* +0x78 = per-type hitbox struct */
+    e->hit_react  = 0;                          /* +0x93 = 0 */
+    e->anim_frac  = 0;                           /* +0x8f = 0 */
+    e->anim_frame = 0;                           /* +0x95 = 0 */
+    e->ai_arc  = 0x2c8;                          /* model pool +0x5fc */
+    e->ai_p5f8 = 0x40;                           /* +0x5f8 */
+    e->ai_p5fa = 0x30;                           /* +0x5fa */
+    e->ai_p5fe = 0x138;                          /* +0x5fe */
+
+    if (e->grid_id & RE15_AI_GRID_STATIONARY) {  /* +0x9 & 0x40 */
+        e->state       = (uint8_t)RE15_AI_STATE_IDLE;  /* +0x4 = 4 */
+        e->sub_state_1 = 6;                            /* +0x5 = 6 */
+    }
+}
+
+/* ACTIVE — FUN_8011d9f4: dispatch on grid_id & 0xf into PTR_FUN_801217b4. Sub 0 is
+ * FUN_8011da48 (the +0x5 logic/anim double-dispatch — the routing the live STAGE1
+ * zombies use, grid_id low nibble 0); subs 1..15 are the generic-humanoid EXE leaves.
+ * The leaf BODIES (movement/anim) + the FUN_8011d9f4 tail func_0x80012aa4(3000) are
+ * DEFERRED — this returns the resolved sub index so the routing is observable/testable
+ * without executing un-ported code. The decision brain (below) is what those leaves
+ * call to pick the next state; it is exposed directly for now. */
+int re15_enemy_ai_active(int slot)
+{
+    if (slot < 0 || slot >= RE15_ACTOR_MAX) return -1;
+    return g_actors[slot].grid_id & RE15_AI_GRID_SUB_MASK;
+}
+
+/* TICK — FUN_8011d6d4 entry. Honour the gate, cache the player distance @+0x1d0, then
+ * dispatch the main state. Returns 1 if dispatched, 0 if the gate skipped this enemy. */
+int re15_enemy_ai_tick(int slot)
+{
+    if (slot < 1 || slot >= RE15_ACTOR_MAX) return 0;   /* slot 0 = player, never an AI */
+    re15_actor_t *e = &g_actors[slot];
+    if (!e->active) return 0;
+
+    /* gate: ((DAT_800aca40 & 0x20000000)==0) && ((entity+0x9 & 0x20)==0). If either is
+     * set the gated block (dist + dispatch) is skipped; the original still runs the
+     * always-on tail func_0x8001b064(+0xb0, hp@+0x1ba) — a health/render helper, deferred. */
+    if (s_ai_paused) return 0;
+    if (e->grid_id & RE15_AI_GRID_SKIP) return 0;
+
+    /* cache dist @+0x1d0 (byte-true: 16-bit-wrapped ΔX/ΔZ, SquareRoot0). */
+    e->ai_dist = (uint32_t)re15_enemy_player_dist(e, &g_actors[RE15_ACTOR_SLOT_PLAYER]);
+    /* func_0x8001bd60(-10,20) / func_0x80039e7c(&player,0,0) setup helpers — deferred. */
+
+    /* main-state dispatch (*PTR_FUN_801217a0[entity+0x4])(). */
+    switch (e->state) {
+        case RE15_AI_STATE_INIT:   re15_enemy_ai_init(slot);   break;
+        case RE15_AI_STATE_ACTIVE: re15_enemy_ai_active(slot); break;
+        case RE15_AI_STATE_HURT:   /* FUN_8011db40 — body not decoded, deferred */ break;
+        case RE15_AI_STATE_DEATH:  /* FUN_8011db88 — body not decoded, deferred */ break;
+        case RE15_AI_STATE_IDLE:   /* 0x80050be8 (EXE) — deferred                */ break;
+        default: break;
+    }
+    /* post-dispatch FUN_8002b498/FUN_8002aec4/FUN_8002b544/... collision+render — other
+     * subsystems, run by game_step in a later phase; not here. */
+    return 1;
+}
+
+/* ================= Decision brain (per-mode vtable[0..1] entries) ===================== *
+ * func_0x8001a9cc(&player, cone) = re15_ai_arc_test(e, player->x, player->z, cone): 0 if
+ * the player is inside the ±cone front arc, else ±cone. func_0x8001af20() = the shared
+ * RNG (re15_engine_rand8). The state word is stored at +0x4 via re15_ai_set_state_word. */
+
+/* FUN_80101b64 (STAGE1_full) — search with a countdown timer. */
+void re15_ai_decide_search_timer(re15_actor_t *e, const re15_actor_t *player)
+{
+    if (!e || !player) return;
+    int narrow = re15_ai_arc_test(e, player->x, player->z, 0x2c8);   /* sVar2 */
+    int wide   = re15_ai_arc_test(e, player->x, player->z, 0x5f4);   /* sVar3 */
+
+    int16_t t = e->ai_timer;                 /* +0x9c */
+    e->ai_timer = (int16_t)(t - 1);
+    if (t == 0) re15_ai_set_state_word(e, 0x101);
+
+    if (e->ai_dist < 2000u && narrow != 0)   /* dist<0x7d0 && off narrow front arc */
+        re15_ai_set_state_word(e, 0x701);    /* attack-commit */
+
+    if (wide == 0 && (e->ai_flags & 0x10) != 0) {      /* in wide arc + approach gate */
+        re15_ai_set_state_word(e, 0x201);              /* approach (comma side effect) */
+        if (e->ai_dist > 10000u && (re15_engine_rand8() & 7) == 0)
+            re15_ai_set_state_word(e, 0x801);          /* wander (1/8, only if far) */
+    }
+}
+
+/* FUN_80101c7c (STAGE1_full) — approach-only (no attack/timer). */
+void re15_ai_decide_approach(re15_actor_t *e, const re15_actor_t *player)
+{
+    if (!e || !player) return;
+    int wide = re15_ai_arc_test(e, player->x, player->z, 0x5f4);
+
+    if (wide == 0 && (e->ai_flags & 0x10) != 0 && e->ai_dist < 4000u) {
+        re15_ai_set_state_word(e, 0x201);
+        if ((re15_engine_rand8() & 7) == 0)
+            re15_ai_set_state_word(e, 0x801);
+    }
+}
+
+/* FUN_80101de4 (STAGE1_full) — search, no timer, adds the +0x1c4 anim-flag override. */
+void re15_ai_decide_search(re15_actor_t *e, const re15_actor_t *player)
+{
+    if (!e || !player) return;
+    int narrow = re15_ai_arc_test(e, player->x, player->z, 0x2c8);
+    int wide   = re15_ai_arc_test(e, player->x, player->z, 0x5f4);
+
+    if (e->ai_dist < 2000u && narrow != 0)
+        re15_ai_set_state_word(e, 0x701);
+
+    if (wide == 0 && (e->ai_flags & 0x10) != 0) {
+        re15_ai_set_state_word(e, 0x201);
+        if (e->ai_dist > 10000u && (re15_engine_rand8() & 3) == 0)   /* mask &3 (not &7) */
+            re15_ai_set_state_word(e, 0x801);
+    }
+
+    if ((e->anim_flags & 0x1000) != 0)        /* entity+0x1c4 & 0x1000 */
+        re15_ai_set_state_word(e, 0x1001);
+}

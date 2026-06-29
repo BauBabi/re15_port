@@ -51,13 +51,17 @@ static uint32_t s_rng = 0x2545f491u;
 
 void re15_damage_seed_rng(uint32_t seed) { s_rng = seed ? seed : 1u; }
 
-static uint32_t dmg_rng(void)
+/* FUN_8001af20 — the engine's shared random draw. Public so the enemy-AI module draws
+ * from the SAME global sequence the original does (one RNG for bleed AND AI decisions). */
+uint8_t re15_engine_rand8(void)
 {
     uint32_t x = s_rng;
     x ^= x << 13; x ^= x >> 17; x ^= x << 5;   /* xorshift32 entropy */
     s_rng = x;
-    return (x + (x >> 7)) & 0xffu;              /* FUN_8001af20 hash */
+    return (uint8_t)((x + (x >> 7)) & 0xffu);   /* FUN_8001af20 hash */
 }
+
+static uint32_t dmg_rng(void) { return re15_engine_rand8(); }
 
 /* FUN_8001a7a8 (@8001a7a8) — 1 if the hit came from the player's FRONT hemisphere
  * (within ±90° of facing), else 0; selects the hurt-anim sub-state (2 = back, 3 =

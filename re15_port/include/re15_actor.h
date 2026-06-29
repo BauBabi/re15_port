@@ -82,6 +82,30 @@ typedef struct {
      * which the attack trigger FUN_80017fa4 resolves a radius-500 hitbox. Precomputed
      * by the (deferred) lunge-movement AI; read by re15_enemy_attack. 0 until wired. */
     int16_t  atk_pt_x, atk_pt_y, atk_pt_z;
+    /* ===== Enemy-AI state (byte-true, STAGE1 zombie handler FUN_8011d6d4) ==========
+     * The AI is a nested FSM dispatched off three entity bytes the port maps onto the
+     * existing actor fields (no new bytes for these — they ARE state/grid_id/sub_state_1):
+     *   main state  entity+0x4  = actor.state       -> PTR_FUN_801217a0[state]
+     *   sub index   entity+0x9  = actor.grid_id      -> PTR_FUN_801217b4[grid_id & 0xf]
+     *               (for enemies grid_id ALSO packs flags: bit0x20 = skip-tick this frame,
+     *                bit0x40 = stationary spawn — set by the room1140 briefing zombies)
+     *   anim phase  entity+0x5  = actor.sub_state_1  -> the +0x5 logic/anim leaves
+     * The transitions write a 32-bit word at +0x4 (e.g. 0x701 = state 1 / sub_state_1 7).
+     * The fields below are the AI work-area the decision handlers read/write that DON'T
+     * already exist above; offsets cite the RE1.5 entity struct (see re15_enemy_ai.c).   */
+    uint32_t ai_dist;       /* +0x1d0: cached player distance SquareRoot0(ΔX²+ΔZ²) (tick) */
+    int16_t  ai_timer;      /* +0x9c : search decision countdown (FUN_80101b64; 0 -> 0x101) */
+    uint16_t ai_flags;      /* +0x1d8: bit0x10 = "approach permitted" gate (decision block)  */
+    uint8_t  ai_contact;    /* +0x90 : contact/collision bits (FUN_80102058, low byte)        */
+    /* AI params FUN_8011d84c writes (PSX: into the model pool entity[0x62]+0x5fx). The
+     * port has no model pool, so they live here as named actor fields (faithful-line:
+     * map the data representation onto the port, don't rebuild the GTE/model-pool). The
+     * attack cone 0x2c8 / wide cone 0x5f4 the decision handlers use are LITERALS in the
+     * disasm, so these are init-faithful state rather than read by the decision path.   */
+    int16_t  ai_arc;        /* +0x5fc = 0x2c8 (attack front arc) */
+    int16_t  ai_p5f8;       /* +0x5f8 = 0x40                     */
+    int16_t  ai_p5fa;       /* +0x5fa = 0x30                     */
+    int16_t  ai_p5fe;       /* +0x5fe = 0x138                    */
     /* Phase 4.5.13-RE2 F1: speed was at ID 27 (wrong) — correct ID is
      * 0x16 (+0x1CC in RE2). Renamed for clarity; opcode 0x35 Speed_set
      * uses an indexed velocity vector (ID 0x17..0x1A), not this scalar. */

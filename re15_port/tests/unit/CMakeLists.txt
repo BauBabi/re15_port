@@ -57,6 +57,13 @@ target_include_directories(test_damage PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_damage COMMAND test_damage)
 set_tests_properties(unit_damage PROPERTIES TIMEOUT 30)
 
+# --- Enemy-AI-FSM Unit-Test (Phase 2 — byte-true FUN_8011d6d4/d84c/d9f4 + 80101b64/c7c/de4) ---
+add_executable(test_enemy_ai test_enemy_ai.c)
+target_link_libraries(test_enemy_ai PRIVATE re15_engine re15_test_support)
+target_include_directories(test_enemy_ai PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_enemy_ai COMMAND test_enemy_ai)
+set_tests_properties(unit_enemy_ai PROPERTIES TIMEOUT 30)
+
 # --- Audio VAB-Parsing Unit-Test (Requirement 6.6, 12.1) ---
 add_executable(test_audio_vab test_audio_vab.c)
 target_include_directories(test_audio_vab PRIVATE ${CMAKE_SOURCE_DIR}/include)

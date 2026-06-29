@@ -132,4 +132,11 @@ int     re15_enemy_should_attack(const re15_actor_t *e, const re15_actor_t *play
  * see re15_damage.c for how the EXACT hash + EXACT 1/4 probability are preserved. */
 void re15_damage_seed_rng(uint32_t seed);
 
+/* The engine's shared pseudo-random draw = FUN_8001af20 (the (x + (x>>7)) & 0xff hash).
+ * The original is ONE global RNG used everywhere — the bleed roll here AND the enemy-AI
+ * decision draws (FUN_80101b64 `&7`, FUN_80101de4 `&3`). Exposed so the AI module draws
+ * from the SAME sequence (faithful: one RNG), seeded by re15_damage_seed_rng. Returns
+ * the low 8 bits of the hash, matching the original's byte result. */
+uint8_t re15_engine_rand8(void);
+
 #endif /* RE15_DAMAGE_H */
