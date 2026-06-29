@@ -64,6 +64,15 @@ target_include_directories(test_enemy_ai PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_enemy_ai COMMAND test_enemy_ai)
 set_tests_properties(unit_enemy_ai PROPERTIES TIMEOUT 30)
 
+# --- ROOM1140 briefing-zombie spawn (Phase 8.2 — byte-true Sce_em_set roster via real RDT) ---
+add_executable(test_room1140_spawn test_room1140_spawn.c)
+target_link_libraries(test_room1140_spawn PRIVATE re15_engine re15_test_support)
+target_include_directories(test_room1140_spawn PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_room1140_spawn PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_room1140_spawn COMMAND test_room1140_spawn)
+set_tests_properties(unit_room1140_spawn PROPERTIES TIMEOUT 30)
+
 # --- Audio VAB-Parsing Unit-Test (Requirement 6.6, 12.1) ---
 add_executable(test_audio_vab test_audio_vab.c)
 target_include_directories(test_audio_vab PRIVATE ${CMAKE_SOURCE_DIR}/include)

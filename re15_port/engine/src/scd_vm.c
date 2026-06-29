@@ -2466,7 +2466,18 @@ static int op_sce_em_set(scd_thread_t *t)
         a->active = 1;
         a->type   = type;
         re15_enemy_apply_hitbox(a, type);   /* byte-true +0x78 hitbox dims (savestate-verified) */
-        a->state  = behavior;
+        /* BYTE-TRUE (LAB_800420a0, ghidra1_V2.txt:152547/152580; RE'd 2026-06-29): the
+         * Sce_em_set behavior byte pc[3] is the entity's grid_id (+0x9) — the AI sub-dispatch
+         * index (FUN_8011d9f4 reads +0x9 & 0xf) PLUS the spawn-pose selector (FUN_80100424 reads
+         * +0x9 & 0x1f / & 0x80) PLUS the flag bits (0x40 stationary / 0x20 skip). The MAIN state
+         * (+0x4) is initialised to 0 (INIT). The earlier `state = behavior` was a pre-AI-RE
+         * mis-map: with the enemy AI now dispatching the main state on +0x4 (PTR_FUN_801217a0)
+         * and the sub-mode on +0x9, behavior-in-+0x4 would mis-dispatch every spawned enemy.
+         * (The pc[18]!=0 -> state=4 "spawn straight to IDLE" variant is a deferred nuance; the
+         * room1140 briefing roster has pc[18]=0 -> state 0. The spawn pose still comes from the
+         * `behavior` arg below, so this re-mapping does not change the existing pose result.) */
+        a->grid_id = behavior;   /* +0x9 (sub-dispatch + pose-sel + flags) */
+        a->state   = 0;          /* +0x4 = INIT */
         a->motion = re15_enemy_spawn_action(type, behavior);  /* byte-true spawn pose */
         /* BYTE-TRUE PLAYBACK MODE (RE'd from the FUN_80050cb8 phase FSM): anim-flags
          * (entity+0x1c4) bit 0x04 = LOOP, CLEAR = play-once-then-HOLD-LAST. The enemy AI sets

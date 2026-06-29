@@ -71,18 +71,32 @@ Geliefert (additiv, getestet, **kein** `game_step`-Eingriff):
   Pool leer). + Live-Wiring von `re15_enemy_update_attack_point` in den Render/Step-Pfad (deferred,
   da Konsument noch nicht in `game_step`).
 
-### 8.2+ — Rest der Integration (Reihenfolge + Risiko)
+### 8.2 — room1140-Spawn (ERLEDIGT + byte-true verifiziert, Commit nach Phase 8.1)
+**PRÄMISSE KORRIGIERT:** Die Briefing-Zombies kommen DOCH via `Sce_em_set` — aus dem RDT-SCD
+**sub00** des Raums (`sub_scd[0]`), NICHT aus einer Overlay-Entity-Liste. RE'd byte-true 2026-06-29
+(ROOM1140.RDT sub00 + EXE-Handler `LAB_800420a0` ghidra1:152496-152869, eigener Agent). sub00 hat
+10 `Sce_em_set` (5 IF / 5 ELSE) gegated über `Ck zone3 flag 0xd2`; Flag clear (scd_vm_init nullt
+Flags) = Erstbesuch = 5 Zombies: **0x16/0x10/0x10/0x11/0x11** an festen Positionen, Posen 0x13
+liegend / 0x27 fressend. Da der Port `op_sce_em_set` hat + sub00 läuft, spawnt er sie **schon**.
+- **Verifiziert:** neuer Test `tests/unit/test_room1140_spawn.c` lädt die ECHTE ROOM1140.RDT, tickt
+  main00+sub00, prüft das 5-Zombie-Roster byte-true (Typ/Pos/rot_y/Pose). **30/30 ctest grün.**
+- **Byte-true Fix:** `op_sce_em_set` (scd_vm.c) schrieb `behavior` (pc[3]) nach **state** (+0x4)
+  statt **grid_id** (+0x9) — Pre-AI-RE-Mismap; korrigiert (state→0=INIT, grid_id→behavior). Nötig,
+  weil die AI auf +0x4 (Main-State) + +0x9 (Sub-Mode/Pose-Sel) dispatcht.
+- **OFFEN (cited):** Hitbox-Dims für Typ 0x10/0x11 fehlen in `re15_enemy_apply_hitbox` (nur 0x16/0x47
+  da; on-disc-Tabelle ist overlay-gepatcht → braucht room1140-Savestate, `re15-room-capture`). Die
+  pc[18]!=0→state=4-Variante deferred (Roster hat pc[18]=0).
+
+### 8.3+ — Rest der Integration (Reihenfolge + Risiko)
 1. **Movement/Anim-Exec-Leaves** (`+0x5`≥3, rufen `anim_set`/walker) auf Walker/Skeleton mappen +
    den byte-true Lunge-BEGIN-Trigger (`entity+0x1da`==300, oben) statt des Platzhalter-Calls.
-2. **room1140-Overlay-Spawn:** der bisher fehlende Spawn-Pfad — die Briefing-Zombies kommen NICHT
-   via `Sce_em_set`, sondern aus der Overlay-Entity-Liste. Ohne diesen Spawn gibt es keinen
-   aktiven Gegner zum Ticken.
-3. **`game_step`-Wiring:** `re15_enemy_ai_step` pro aktivem Gegner aufrufen. **1170-Risiko** →
+2. **`game_step`-Wiring:** `re15_enemy_ai_step` pro aktivem Gegner aufrufen. **1170-Risiko** →
    vorsichtig additiv (inert solange kein Gegner spawnt) + savestate-verifizieren. Hier wird auch
-   das atk_pt-Live-Wiring + die EMD-Bone-Wahl savestate-verifizierbar.
-4. **Dynamische Verifikation:** mit `re15-room-capture` (`re15_quickload.py`/`--provoke`) +
+   das atk_pt-Live-Wiring + die EMD-Bone-Wahl savestate-verifizierbar. (Der room1140-Spawn steht
+   jetzt → es GIBT aktive Gegner zum Ticken, sobald game_step sie ruft.)
+3. **Dynamische Verifikation:** mit `re15-room-capture` (`re15_quickload.py`/`--provoke`) +
    `re15-savestate-ghidra` (`re15_enemy_state.py`): Spieler in Range → Gegner-`+0x5`-Transition +
-   HP-Fall vergleichen Port vs. Original.
+   HP-Fall vergleichen Port vs. Original. (Auch: 0x10/0x11-Hitbox-Dims aus dem Savestate ziehen.)
 
 Werkzeuge: **`re15-psx-disasm`** (EXE/Overlay-Disasm), **`re15-savestate-ghidra`** (Live-RAM +
 Tabellen-Patch-Check), **`re15-room-capture`** (Raum laden/provozieren). Memory `reai-v2-foundation-combat`
