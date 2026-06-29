@@ -129,15 +129,25 @@ Tabelle). **SCHLÜSSEL-BEFUND:** `@0x8011f840 == &@0x8011f80c[13]` — d.h. das 
 parallel" korrigiert). Portiert: `re15_enemy_ai_live_active` un-armed (sub 0) → `re15_ai_dispatch_
 decision` (committet 0x701→+0x5=7 bei Spieler-in-Range). Test angepasst.
 
-### 8.5d+ — Rest der Live-AI + Integration
-1. **Der ATTACK-ARM** (das eigentlich fehlende Stück): wo `+0x1d8 |= 0x100` + der `+0x1da`-Windup
-   geseedet werden = wann der Zombie WIRKLICH zum Angriff committet (aktuell im Test manuell gearmt).
-   Liegt in einem +0x5=7-Sub-Handler — die `+0x1da`-Writer **FUN_8010ab2c/b274/cb34/d7f8/dbcc/e6d4**
-   (STAGE1_full). Einen davon disasm/decompile, den finden, der `+0x1d8|0x100` + `+0x1da`(>300) setzt.
-2. Die **non-0 Sub-Modes** (`@0x8011f80c[1..15]` = Briefing-Feeding/Lying-Handler 0x801018f8 etc.) +
-   die Sub-States [2]/[3]/[4] (0x80105a8c/06ba4/0919c) + der FUN_8001bc08-Sensor/+0x1d8-Update.
-3. **`game_step`-Wiring:** `re15_enemy_ai_live_step` pro aktivem 0x10/0x11/0x16-Gegner aus
-   `FUN_8001a50c` (typ-gegated → 1170 sicher), savestate-verifiziert (auch atk_pt-Live + Hitbox-Dims).
+### 8.5d — ATTACK-ARM portiert (ERLEDIGT, Commit b0b973f9) → die Live-AI-Kette ist FUNKTIONAL KOMPLETT
+**`FUN_8010ab2c` disasm-VERIFIZIERT** (das `.c` ist KORREKT — das falsche `FUN_80100424.c` hatte
+DESSEN Pose-Body geborgt): der Attack-Commit/Arm. AI-Params (Arc `+0x5fc=0x390` live, ≠0x2c8;
++0x5f8=0x60 etc.); gated `DAT_800aca3c & 1` → `+0x1d8|=0x100` (Arm-Bit) + `(rng&1)<<9` + Seed
+`+0x1da = rng&0xff + rng&0xff + 600` (600..1110, zählt auf 300=Lunge). `re15_enemy_ai_live_arm` +
+`re15_enemy_ai_set_combat_active`, eingehängt: Brain committet (+0x5=7) → arm (once) → Windup →
+Lunge@300. **Die volle byte-true Live-Attack-Kette läuft jetzt aus einer ENTSCHEIDUNG** (Tick→INIT→
+ACTIVE→Brain→arm→Windup→Lunge@300→geteilte Hitbox→HP fällt), alles auf der korrekten @0x8011f7b4-
+Familie. Tests `test_live_decision_arm` + `test_live_step_chain`. 30/30 grün.
+
+### 8.6+ — INTEGRATION (der eigentliche game_step-Schritt, 1170-Risiko)
+1. **`game_step`-Wiring:** `re15_enemy_ai_live_step` pro aktivem 0x10/0x11/0x16-Gegner aus
+   `FUN_8001a50c` rufen (TYP-gegated → Elliot 0x47/Krähen 0x21 unberührt → 1170 sicher) +
+   `re15_enemy_ai_set_combat_active(1)` an den echten DAT_800aca3c-Flag koppeln + atk_pt-Live aus
+   dem Render/Skeleton. **Savestate-verifizieren** (Spieler in Range → Lunge + HP-Fall vs. Original).
+2. **Verbleibende byte-true Details (optional, für volle Treue):** die non-0 Sub-Modes
+   (`@0x8011f80c[1..15]` = Briefing-Feeding/Lying 0x801018f8 etc.), die Sub-States [2]/[3]/[4]
+   (0x80105a8c/06ba4/0919c = hurt/death/idle), der FUN_8001bc08-Sensor/+0x1d8-Update, die
+   0x10/0x11-Hitbox-Dims (Savestate). Prüfen, ob die EXE-Leaves (FUN_8004f100, Phase 4-5) geteilt sind.
 - **WAS VOM 0x47-PORT BLEIBT:** der `@0x801217a0`-Code (Phase 2-7) ist echte byte-true RE eines
   PARALLELEN Typs (0x47) — nicht wegwerfen, klar als 0x47 gelabelt; der Live-Pfad ist `@0x8011f7b4`.
 
