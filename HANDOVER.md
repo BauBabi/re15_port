@@ -87,31 +87,36 @@ liegend / 0x27 fressend. Da der Port `op_sce_em_set` hat + sub00 läuft, spawnt 
   da; on-disc-Tabelle ist overlay-gepatcht → braucht room1140-Savestate, `re15-room-capture`). Die
   pc[18]!=0→state=4-Variante deferred (Roster hat pc[18]=0).
 
-### 8.3 — Zombie-Spawn-Konstruktor FUN_80100424 (ERLEDIGT, Commit bf631fd9)
-**WICHTIGER DISPATCH-BEFUND:** Mein portierter AI-Tick (`FUN_8011d6d4`/`d84c`/`d9f4`/`da48`) ist
-der Typ-**0x47**-Handler. Die Briefing-/Combat-Zombies sind **0x10/0x11/0x16** → die Entity-Tabelle
-`@0x80072bac` mappt sie auf **`FUN_80100424`** (decompiliert), NICHT meinen Tick. `FUN_80100424` =
-der Typ-Konstruktor (vom Sce_em_set-Handler `LAB_800420a0` sofort gerufen): setzt die finale
-Spawn-State aus `+0x9`. Portiert (`re15_enemy_spawn_init`, scd_vm.c, typ-gegated 0x10-Familie):
-sel6 fressend→`+0x4`=0x20c01 (state1/+0x5=0xc/+0x6=2)/`+0x9`=0; sel0xd→0x201; sel0xe→0x1201;
-sel1/3→`+0x5`=5; sel8 liegend→kein +0x4-Write/`+0x9` bleibt (state0/grid0x88). Elliot/Krähen/Irons
-unberührt. `test_room1140_spawn` prüft jetzt den vollen Post-Konstruktor-State byte-true. 30/30 grün.
-- **OFFEN (Voraussetzung fürs game_step-Wiring):** der **Per-Frame-Handler der 0x10-Familie** ist
-  noch nicht gepinnt. Die aktive State-Maschinerie (`PTR_FUN_801217a0[1]`=`FUN_8011d9f4`) ist laut
-  Phase-4-Savestate GETEILT zw. 0x47 und 0x10 — aber der Per-Frame-Typ-Eintrag (`@0x80072bac[0x10]`)
-  unterscheidet sich. VOR dem Wiring klären: ist mein Tick auch der 0x10-Per-Frame-Handler (geteilt)
-  oder ein eigener? → room1140-Savestate (live entity update-fn-ptr) ODER Disasm der Entity-Update-
-  Schleife, die `@0x80072bac` ruft.
+### 8.3 — REVERTET + GRAVIERENDE ARCHITEKTUR-KORREKTUR (Commit c3e577e7)
+**⚠️ Mein portierter AI-Root ist die FALSCHE Typ-Tabelle.** Phase 8.3 (Spawn-Konstruktor
+`re15_enemy_spawn_init`) war aus `RE_15_Quellcode_Overlays/STAGE1/FUN_80100424.c` portiert — das
+Decompilat ist **FALSCH/fehlanalysiert** (savestate + raw-STAGE1.BIN-PROVEN). Reverted. Der echte
+**`FUN_80100424` ist der PER-FRAME-AI-TICK der LIVE-Zombies (0x10/0x11/0x16)**: dist-cache @+0x1d0 +
+Dispatch **`@0x8011f7b4[+0x4]`** (active root **`FUN_80101224`**). `@0x80072bac` ist die Per-Frame-
+Tick-Tabelle (einziger Caller = die Per-Frame-Loop **`FUN_8001a50c`** @0x8001ce04, stride 0x1f4); KEIN
+Spawn-Konstruktor — Sce_em_set schreibt Felder inline (state=0). Briefing-Zombies-Spawn-State byte-true
+= state 0 / grid=behavior (Phase 8.2, Test re-asserted). **Details: RE15_FUN_CATALOG „HIGH-VALUE CORRECTIONS".**
+- **Mein Phase-2-7-Port = die Typ-0x47-Tabelle `@0x801217a0` (FUN_8011d6d4→FUN_8011d9f4→da48).** Die
+  Live-Zombies nutzen die PARALLELE `@0x8011f7b4`-Familie (FUN_80100424→FUN_80101224). Phase-4s
+  „Live-Pfad = FUN_8011d9f4" war eine falsche Inferenz (jetzt savestate-widerlegt).
+- **GERETTET (geteilt + korrekt):** die Execution-/Lunge-/Hitbox-/Damage-/Attack-Point-Schicht
+  (Phase 6-7). `FUN_80101224` ENTHÄLT den byte-true Lunge-BEGIN (`+0x1da==0x12c(300) → FUN_80019d50
+  (8,3,0x16)` über die Body-Part-LUT `@0x8011f7a4`); FUN_80017fa4/80012d60/80019e20 sind typ-agnostische
+  EXE. Auch das atk_pt-Skeleton-Mapping (8.1) + der room1140-Spawn (8.2) bleiben gültig.
 
-### 8.4+ — Rest der Integration (Reihenfolge + Risiko)
-1. **Per-Frame-Dispatch 0x10-Familie auflösen** (oben) — Voraussetzung.
-2. **`game_step`-Wiring:** `re15_enemy_ai_step` pro aktivem Gegner. **1170-Risiko** → typ-gegated
-   auf die Zombie-Familie (Elliot 0x47/Krähen 0x21 aus → 1170 beweisbar unberührt), savestate-
-   verifizieren. Hier wird auch atk_pt-Live-Wiring + EMD-Bone-Wahl verifizierbar.
-3. **Movement/Anim-Exec-Leaves** (`+0x5`≥3, `anim_set`/walker) + byte-true Lunge-BEGIN
-   (`entity+0x1da`==300) statt Platzhalter.
-4. **Dynamische Verifikation:** `re15-room-capture` + `re15-savestate-ghidra`: Spieler in Range →
-   `+0x5`-Transition + HP-Fall Port vs. Original. (Auch: 0x10/0x11-Hitbox-Dims aus dem Savestate.)
+### 8.4+ — KORRIGIERTER Pfad (die Live-AI re-rooten)
+1. **`@0x8011f7b4`-Familie portieren** (der echte Live-Zombie-Brain): `FUN_80100424` (Per-Frame-Tick,
+   dist-cache + `@0x8011f7b4[+0x4]`-Dispatch) + `FUN_80101224` (active, enthält schon den Lunge-Timer
+   `+0x1da`→300) + die Sub-States [0]/[2]/[3]/[4] (0x80100688/05a8c/06ba4/0919c). Den Decision-Graph
+   (assess/search/turn) gegen DIESE Familie prüfen — NICHT die `.c` trauen, direkt aus STAGE1.BIN
+   disassemblieren (Skill `re15-psx-disasm`: `dis 0x80101224 --bin STAGE1.BIN`). Prüfen, ob die
+   EXE-Leaves (FUN_8004f100-Familie, Phase 4-5) auch hier geteilt sind.
+2. **`game_step`-Wiring:** den korrekten Live-Tick (FUN_80100424-Port) pro aktivem 0x10/0x11/0x16-
+   Gegner aus `FUN_8001a50c` (typ-gegated → 1170 unberührt), savestate-verifiziert.
+3. **Dynamische Verifikation:** `re15-room-capture` + `re15-savestate-ghidra`: Spieler in Range →
+   Lunge + HP-Fall Port vs. Original. (Auch: 0x10/0x11-Hitbox-Dims aus dem Savestate.)
+- **WAS VOM 0x47-PORT BLEIBT:** der `@0x801217a0`-Code (Phase 2-7) ist echte byte-true RE eines
+  PARALLELEN Typs (0x47) — nicht wegwerfen, aber klar als 0x47 labeln; der Live-Pfad ist `@0x8011f7b4`.
 
 Werkzeuge: **`re15-psx-disasm`** (EXE/Overlay-Disasm), **`re15-savestate-ghidra`** (Live-RAM +
 Tabellen-Patch-Check), **`re15-room-capture`** (Raum laden/provozieren). Memory `reai-v2-foundation-combat`
