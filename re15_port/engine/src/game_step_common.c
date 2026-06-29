@@ -16,6 +16,7 @@
 #include "re15_audio.h"         /* re15_audio_footstep */
 #include "re15_rdt.h"           /* re15_rdt_floor_sound */
 #include "re15_enemy_ai.h"      /* re15_enemy_ai_run_all — the LIVE-zombie per-frame pass (8.6) */
+#include "re15_damage.h"        /* re15_player_is_dead / re15_player_death_tick (8.10 death FSM) */
 
 void re15_game_step(const re15_game_ctx_t *c)
 {
@@ -51,6 +52,21 @@ void re15_game_step(const re15_game_ctx_t *c)
          * flips the cut as Leon crosses it during the descent. */
         re15_stair_tick(c->rdt, c->pl00_skel, c->pl00_anim);
         g_scd.cut_auto_enabled = 1;
+        re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
+    } else if (c->rdt_ok && re15_player_is_dead()) {
+        /* PLAYER DEATH (Phase 8.10, byte-true core of the death FSM): HP < 0 -> the player is dead.
+         * The original routes the player's per-frame command FSM to the death-sequence handler
+         * (@0x80073f90[state]: [7] = the GRABBED death @0x8003694c, what the grab reaches; [3] = the
+         * generic death @0x800366bc), which freezes input and runs a fade + death camera on a
+         * 120-frame timer, then game over — it NEVER reads the pad. The port freezes the player
+         * exactly like the stair/grab branches (skip re15_player_tick + collision) and advances the
+         * byte-true death timer (re15_player_death_tick = 0x78 -> 0). The colour fade + death camera +
+         * the eaten-anim FSM + the game-over screen are the DEFERRED presentation (no port fade/
+         * game-over infra). This branch is unreachable until a hit drives HP < 0 (the grab, in
+         * ROOM1140), so a healthy room is unaffected = no 1170 regression. Death takes precedence over
+         * the grab: a zombie that killed the player then dead-grabs the corpse (the engage's hp<0
+         * dead-grab arm) while the player runs the death sequence. Keep the RVD cam scan (death cam). */
+        re15_player_death_tick();
         re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
     } else if (c->rdt_ok && re15_player_is_grabbed()) {
         /* PLAYER-GRABBED LOCK (Phase 8.10, byte-true LAB_80036834): a live zombie has the player

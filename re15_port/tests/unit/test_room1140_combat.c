@@ -326,9 +326,44 @@ int main(void)
                    free_before, grabbed_during, free_after);
     }
 
+    /* (9): the PLAYER DEATH FSM (Phase 8.10). When the grab drains the player's HP < 0 he DIES:
+     * re15_player_is_dead() goes true, the byte-true GRABBED-death state 7 is set (the live combat-
+     * death save shows 0x800aca58 = 7), and the death-sequence timer (0x78 = 120 frames @0x8003694c
+     * INIT) seeds + counts down. game_step would then freeze the player (skip re15_player_tick) for
+     * the whole sequence; here we drive the grab to a kill and check the death state + timer directly. */
+    {
+        int ds = zslots[0];
+        re15_actor_t *dz = &g_actors[ds];
+        re15_player_death_reset();
+        pl->x = 0; pl->z = 0; pl->hp = 8; pl->hit_react = 0; pl->state = 0; pl->floor = 0;
+        for (int i = 0; i < nz; i++) {   /* isolate the test zombie (others far + asleep) */
+            re15_actor_t *z = &g_actors[zslots[i]];
+            z->grid_id = 0x86; z->sub_state_1 = 0; z->sub_state_2 = 0; z->ai_flags = 0;
+            z->x = 30000; z->z = 30000;
+        }
+        dz->x = 500; dz->z = 0; dz->floor = 0; dz->state = RE15_AI_STATE_ACTIVE;
+        dz->grid_id = 0; dz->sub_state_1 = 3; dz->sub_state_2 = 0; dz->ai_flags = 0;
+        if (re15_player_is_dead()) {
+            fprintf(stderr, "FAIL: player must be alive before the kill (HP %d)\n", pl->hp); fail = 1; }
+        re15_enemy_ai_run_all(1);   /* [0] init */
+        re15_enemy_ai_run_all(1);   /* [1] pull */
+        re15_enemy_ai_run_all(1);   /* [2] IMPACT -> HP 8-10 = -2 < 0 -> DEAD */
+        if (!re15_player_is_dead()) {
+            fprintf(stderr, "FAIL: grab IMPACT must kill the player (HP %d, expected <0)\n", pl->hp); fail = 1; }
+        if (pl->state != 7) {
+            fprintf(stderr, "FAIL: grabbed death must set player state 7, ist %d\n", pl->state); fail = 1; }
+        int t0 = re15_player_death_tick();   /* INIT  -> seed 0x78 (120) */
+        int t1 = re15_player_death_tick();   /* sub-1 -> 0x77 (119) */
+        if (t0 != 0x78 || t1 != 0x77) {
+            fprintf(stderr, "FAIL: death timer 0x78->0x77, got 0x%x->0x%x\n", t0, t1); fail = 1; }
+        if (!fail)
+            printf("  (9) player death: grab kill -> HP %d, dead -> grabbed-death state %d, death timer 0x%x->0x%x\n",
+                   pl->hp, pl->state, t0, t1);
+    }
+
     free(buf);
     if (fail) { fprintf(stderr, "\nROOM1140 COMBAT-WIRING TEST FAILED\n"); return 1; }
     printf("\nPASS: ROOM1140 live-AI game_step wiring "
-           "(spawn; WAKE->engage; TURN-to-face->GRAB->HP; GRABBED-lock; type-gated)\n");
+           "(spawn; WAKE->engage; TURN-to-face->GRAB->HP; GRABBED-lock; player DEATH; type-gated)\n");
     return 0;
 }

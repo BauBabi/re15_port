@@ -52,6 +52,19 @@ int re15_player_take_damage(re15_actor_t *p, uint8_t attack_type,
  * hit landed, 0 if the enemy was already hit this attack window. */
 int re15_enemy_take_damage(re15_actor_t *e, uint8_t attack_type);
 
+/* Player DEATH state (Phase 8.10) — the byte-true core of the player death FSM. The player is dead
+ * when HP < 0 (FUN_80012d60 @0x80012ee8; the grab drains HP to the same HP<0). The original then runs
+ * the death-sequence command handler (player command 0x800aca58 dispatched @0x80073f90[state]: [3] =
+ * generic death @0x800366bc, [7] = the GRABBED death @0x8003694c — the combat-death save shows 7),
+ * which freezes input and runs a fade + death camera on a 120-frame timer (@0x8003694c INIT:
+ * DAT_800acaf2 = 0x78), then game over. game_step reads re15_player_is_dead() to FREEZE the player
+ * (skip the tick) while dead and advances re15_player_death_tick(). The fade/camera + the eaten-anim
+ * FSM (@0x8010a28c) + the game-over screen are the DEFERRED presentation (no port fade/game-over). */
+int  re15_player_is_dead(void);      /* 1 iff the player HP < 0 (death). */
+void re15_player_death_reset(void);  /* clear the death-sequence timer (new game / continue / test). */
+int  re15_player_death_tick(void);   /* advance the death sequence one frame; returns frames left
+                                      * (120..0; 0 = sequence done -> game over deferred; -1 = alive). */
+
 /* Clear the per-attack hit-once guard (+0x93 bit0x1). The original clears it when the
  * attacker's hitbox deactivates so the NEXT attack can land; that clear-trigger lives
  * in the deferred enemy-attack FSM. Exposed so the future wiring (and the unit test)

@@ -1,7 +1,8 @@
 # RE1.5 Port — Session-Handover (Stand 2026-06-29, Phase 8.10 Player-grabbed-Lock abgeschlossen)
 
 Kanonisches „lies-mich-zuerst" für die nächste Session. **Die STAGE1-Zombie-Combat-Logik ist byte-true in-game:
-spawn → wake (dist<4000) → engage → turn-to-face → GRAB (−10/−5 HP) → Spieler GEPINNT (kann nicht weglaufen).**
+spawn → wake (dist<4000) → engage → turn-to-face → GRAB (−10/−5 HP) → Spieler GEPINNT → HP<0 → TOD (death-FSM-Kern,
+state 7, 120-Frame-Timer; Fade/Game-Over-Screen deferred).** Der Combat-Loop ist damit end-to-end geschlossen.
 Forward-Walk AUFGELÖST: das m0-Live-Brain (das der Port hat) setzt NIE +0x5=6 → der Briefing-Combat (wake→engage→turn→grab→
 pin→drain) ist byte-true KOMPLETT für ROOM1140. Der +0x5=6-Walk im Save ist ein Dead-Player-„walk-to-corpse"-Artefakt
 (player hp=-1) + ein m1-Varianten-Verhalten (andere Räume). KEINE Live-Lücke; nichts zu portieren für ROOM1140 (§8.10).
@@ -10,9 +11,10 @@ Ergänzt die Auto-Memory (v.a. `reai-v2-foundation-combat` = die laufende AI-RE,
 
 ## TL;DR — Wo stehe ich
 
-- **Git:** HEAD = `2af750cc` (master, sauber; nur `.idea/` untracked). Vorige Session = 6 Commits (8.6→8.9) + Skill-Wrap-up
-  (`2af750cc`). DIESE Session = **Phase 8.10 Player-grabbed-Lock** (1 Commit folgt): der Grab pinnt jetzt den Spieler
-  (game_step skippt `re15_player_tick` während grabbed) + die volle byte-true Forward-Walk-RE (Translation deferred).
+- **Git:** master, sauber (nur `.idea/` untracked). Phase 8.10 = **4 Commits:** `fb4a06e7` Player-grabbed-Lock ·
+  `a7ae354a` Forward-Walk-RE + Root-Motion-Doku-Fix · `8038cc5f` Forward-Walk AUFGELÖST (keine Live-Lücke) ·
+  (+ dieser Commit) Player-DEATH-FSM-Kern. Der Combat-Loop ROOM1140 ist end-to-end byte-true geschlossen
+  (spawn→wake→engage→turn→grab→pin→drain→TOD); Fade/Game-Over-Screen = deferred Präsentation.
 - **Build/Test:** `taskkill //F //IM re15_pc.exe 2>/dev/null; true; export PATH="/c/msys64/mingw64/bin:$PATH";
   cmake --build re15_port/build; ctest --test-dir re15_port/build --timeout 30` → **31/31 grün** (mingw64 GCC + Ninja).
   (Das `taskkill` ist nötig, falls die Exe noch läuft + die Datei sperrt — sonst Link-„Permission denied", kein Code-Fehler.)
@@ -295,7 +297,20 @@ Hälften (anim_set selbst bewegt NICHT — nur Frames/Pose). State-Split byte-tr
 - **Test Part (7):** Zombie bei +0x5=7, 90° abgewandt, nah (dist 600) → dreht sich (rot_y 1024→1664) → Grab-Commit →
   Player-HP fällt. 31/31 ctest, ROOM1140-Headless sauber.
 
-### 8.10 — Player-grabbed-Lock ERLEDIGT + Forward-Walk AUFGELÖST (keine Live-ROOM1140-Lücke; Combat komplett)
+### 8.10 — Player-grabbed-Lock + Player-DEATH-FSM ERLEDIGT + Forward-Walk AUFGELÖST (Combat komplett)
+
+**TEIL 4 (Player-DEATH-FSM-Kern) PORTIERT (dieser Commit, 31/31 ctest):** der Grab TÖTET jetzt den Spieler. Byte-true:
+HP<0 = Tod (FUN_80012d60 @0x80012ee8); der Grab erreicht dasselbe HP<0 → setzt **grabbed-death state 7** (save-bestätigt:
+combat_death.sav `0x800aca58 = 7`; generic death = state 3 @0x800366bc, grabbed-death = state 7 @0x8003694c). Portiert
+(re15_damage.c): `re15_player_is_dead()` (=HP<0) + `re15_player_death_tick()` (der byte-true Death-Sequenz-Timer **0x78=120**,
+@0x8003694c INIT `DAT_800acaf2=0x78`) + `re15_player_death_reset()` (in re15_actor_init). game_step: neuer Branch
+`else if (rdt_ok && re15_player_is_dead())` VOR dem grabbed-Branch — friert den Spieler ein (skip `re15_player_tick`+Collision,
+liest kein Pad = exakt der originale Death-FSM) + tickt den Timer; RVD-Cam läuft (Death-Kamera). **1170-sicher** (Branch nur
+erreichbar wenn ein Hit HP<0 treibt = der Grab in ROOM1140; gesunder Raum unberührt). Death hat Vorrang vor dem Grab (der
+Zombie dead-grabt dann die Leiche — die hp<0-dead-grab-Arm der engage). test_room1140_combat Part(9): Grab-Kill → HP -2, dead
+→ state 7, Timer 0x78→0x77. **DEFERRED (zitiert, Port hat keine Fade/Game-Over-Infra):** der Color-Fade + Death-Kamera
+(@0x8003694c), der „gefressen"-Anim-FSM (@0x8010a28c, verschachtelt), der Game-Over-Screen (sub-state 2).
+
 **TEIL 2 (Player-grabbed-Lock) PORTIERT (dieser Commit, 31/31 ctest):** der Grab pinnt jetzt den Spieler. Byte-true
 selbst-disasm-verifiziert: der Grab latcht `0x800aca58 = ((+0x5-3)<<8)|5` = **cmd 5** (FUN_80102548 Sub-Step 0 @0x80102640),
 der Player-Command-FSM dispatcht `@0x80073f90[cmd]` → `[5]=LAB_80036834` (@0x80036834): pinnt den Spieler (Init bei

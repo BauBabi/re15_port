@@ -28,6 +28,7 @@ void re15_actor_init(void)
     g_actors[RE15_ACTOR_SLOT_PLAYER].type   = 0;     /* PLAYER = type 0 */
     g_actors[RE15_ACTOR_SLOT_PLAYER].flags  = 0x01;  /* visible */
     g_actors[RE15_ACTOR_SLOT_PLAYER].hp     = 100;   /* nominal */
+    re15_player_death_reset();                       /* clear the death-sequence timer (8.10) */
     /* Root-motion delta tracker starts uninitialized so first tick just
      * records the current keyframe without applying any delta. */
     g_actors[RE15_ACTOR_SLOT_PLAYER].root_prev_kf     = -1;

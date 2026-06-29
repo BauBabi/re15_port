@@ -474,13 +474,14 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
         case 1: e->sub_state_2 = 2; break;   /* [1] pull-in (anim-gated -> faithful stand-in advance) */
         case 2:                               /* [2] IMPACT — the byte-true -10 grab hit (0x801026f0) */
             player->hp     = (int16_t)(player->hp - 10);
-            if (player->hp < 0) player->state = 3;   /* hp<0 -> death (FUN_80012d60 @0x80012ee8) */
+            if (player->hp < 0) player->state = 7;   /* hp<0 -> GRABBED death (state 7, save-confirmed;
+                                                      * re15_player_is_dead() = hp<0 drives the death FSM) */
             e->ai_timer    = 0x6e;           /* +0x9c bite window (the loop count is anim-gated) */
             e->sub_state_2 = 3;
             break;
         case 3:                               /* [3] BITE — the byte-true -5/bite (0x80102788, loops) */
             player->hp     = (int16_t)(player->hp - 5);
-            if (player->hp < 0) player->state = 3;
+            if (player->hp < 0) player->state = 7;   /* hp<0 -> GRABBED death (state 7, save-confirmed) */
             e->sub_state_2 = 6;             /* one bite/cycle: the anim-gated bite LOOP is deferred */
             break;
         case 6: e->sub_state_2 = 8; break;   /* [6] release anim (player grabbed-flag clear deferred) */

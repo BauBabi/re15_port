@@ -120,6 +120,39 @@ int re15_player_take_damage(re15_actor_t *p, uint8_t attack_type,
     return 1;
 }
 
+/* ===== Player DEATH state (Phase 8.10) — the byte-true core of the player death FSM ========= *
+ * The player dies when HP goes signed-negative: FUN_80012d60 @0x80012ee8 (`bgez hp` → state 3),
+ * and the GRAB drains HP the same way (re15_enemy_ai_live_grab) and reaches the same HP<0. The
+ * original then runs the death-sequence COMMAND handler — the player command register 0x800aca58
+ * (= player block +0x4) is dispatched via @0x80073f90[state]: [3] = the GENERIC death (@0x800366bc,
+ * a shot-to-death), [7] = the GRABBED death (@0x8003694c — the live combat-death save shows 0x800aca58
+ * = 7, the player died while held). The death handler @0x8003694c INIT (sub-state 0) seeds the
+ * fade timer DAT_800acaf2 = 0x78 (120 frames) and a screen colour fade (DAT_800acb18/acb40 masked
+ * 0xff000000 | 0x00ffff38), then per frame (sub-state 1) advances a death camera and counts the timer
+ * down to sub-state 2 = game over. It NEVER reads the pad — the player is frozen for the whole death
+ * sequence. The port models the byte-true CORE: "the player is dead -> input frozen -> the 120-frame
+ * death sequence runs", and game_step freezes the player (skip player_tick) while dead. DEFERRED
+ * (cited, the port has no fade/game-over infra): the colour fade + death camera (@0x8003694c), the
+ * zombie-grabbed eaten-animation FSM (@0x8010a28c), and the game-over screen (sub-state 2). */
+#define RE15_DEATH_SEQ_FRAMES 0x78   /* @0x8003694c INIT: DAT_800acaf2 = 0x78 (120) death-fade timer */
+static int s_death_seq = -1;         /* -1 = not in the death sequence; >=0 = frames left (120..0) */
+
+int re15_player_is_dead(void)
+{
+    /* signed HP < 0 = death (FUN_80012d60 @0x80012ee8). */
+    return g_actors[RE15_ACTOR_SLOT_PLAYER].hp < 0;
+}
+
+void re15_player_death_reset(void) { s_death_seq = -1; }
+
+int re15_player_death_tick(void)
+{
+    if (!re15_player_is_dead()) { s_death_seq = -1; return -1; }   /* alive -> not in the sequence */
+    if (s_death_seq < 0) s_death_seq = RE15_DEATH_SEQ_FRAMES;      /* first dead frame = INIT (seed 120) */
+    else if (s_death_seq > 0) s_death_seq--;                       /* sub-state 1: count the fade timer down */
+    return s_death_seq;   /* 0 = the death sequence is complete -> game over (deferred presentation) */
+}
+
 /* Enemy branch of FUN_80012d60 (@80012f08-80013034): apply a resolved hit to an
  * ENEMY actor — the counterpart to the player branch. Same dmg table, but the
  * reaction sub-state is the hit-clip from re15_react_table (not the front/back
