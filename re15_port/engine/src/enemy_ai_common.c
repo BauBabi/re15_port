@@ -364,6 +364,29 @@ void re15_ai_dispatch_decision(re15_actor_t *e, const re15_actor_t *player)
 static int s_live_combat_active = 0;
 void re15_enemy_ai_set_combat_active(int v) { s_live_combat_active = v ? 1 : 0; }
 
+/* DAT_800aca58 == cmd 5 — the PLAYER-GRABBED latch (Phase 8.10). When a live zombie's grab
+ * execution latches the player (FUN_80102548 sub-step 0 @0x80102640: `0x800aca58 = ((+0x5-3)
+ * <<8)|5`), the player's command FSM (FUN_8002e... -> the per-command vtable @0x80073f90[cmd])
+ * dispatches cmd 5 = LAB_80036834 (the grabbed handler @0x80036834). That handler pins the
+ * player (sets the grabbed-Y reference DAT_800acc0e = -floor*1800 @0x80036880) and runs a
+ * per-enemy-type grabbed POSE handler (@0x800ac758[enemy.type]) — it NEVER reads the pad, so
+ * the player cannot steer or walk away while held (he takes the repeated -5 bites until death
+ * or, in the original, the deferred struggle frees him). The port models the byte-true
+ * OBSERVABLE effect — "while grabbed the player is pinned, the pad is ignored" — as this flag,
+ * which game_step reads to skip re15_player_tick (the same engine-driven-no-steer stance the
+ * stair traversal already uses). FAITHFUL-LINE: the original LATCHES cmd 5 (the grab sets it,
+ * does NOT clear it at exit @0x80102b90 — the player grabbed-FSM resets it when the grabbed anim
+ * completes / the struggle frees him, both deferred). The port instead re-derives the latch each
+ * frame = "is a live zombie currently in the grab sub-mode" (set in re15_enemy_ai_live_grab,
+ * cleared at the top of re15_enemy_ai_run_all). That is a faithful stand-in for the deferred
+ * player grabbed-FSM release that avoids a permanent soft-lock: when the engage stops re-committing
+ * the grab (player out of the ±0x4b0 cone / different floor / mid-hit), no zombie is in grab state
+ * → the player is free. DEFERRED (cited): the per-type grabbed POSE/anim, the exact XZ/Y pin
+ * (DAT_800acc0e), the struggle-escape (sub-step 5 @0x80102968, anim-gated + the bit-0x2 check),
+ * and the cmd-6 "being-approached" walk command (coupled to the deferred forward-walk). */
+static int s_player_grabbed = 0;
+int re15_player_is_grabbed(void) { return s_player_grabbed; }
+
 /* FUN_80100688 (@0x8011f7b4[0], STAGE1.BIN) — the LIVE zombie INIT state. Byte-true core:
  *   +0x4 = 1            -> state ACTIVE        (sb @0x80100704)
  *   +0x1bc/+0x1be = player X/Z snapshot        (sh @0x8010071c/734 — a "last-seen" ref)
@@ -441,6 +464,11 @@ static void re15_enemy_ai_live_feeding(re15_actor_t *e)
 static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
 {
     if (!player) return;
+    /* The grab has the player latched (DAT_800aca58 = cmd 5, byte-true @0x80102640): hold the
+     * player-grabbed flag every frame the grab runs so game_step pins the player (re15_player_is_
+     * grabbed). re15_enemy_ai_run_all clears it each frame, so it tracks "a live zombie is grabbing
+     * THIS frame" = the faithful-line release for the deferred player grabbed-FSM. */
+    s_player_grabbed = 1;
     switch (e->sub_state_2) {                /* +0x6 sub-step (reset to 0 by the 0x301/0x401 commit) */
         case 0: e->sub_state_2 = 1; break;   /* [0] init/latch (player register/flag + motion deferred) */
         case 1: e->sub_state_2 = 2; break;   /* [1] pull-in (anim-gated -> faithful stand-in advance) */
@@ -631,6 +659,11 @@ int re15_enemy_ai_live_step(int slot)
 void re15_enemy_ai_run_all(int combat_active)
 {
     re15_enemy_ai_set_combat_active(combat_active);
+    /* Re-derive the player-grabbed latch each frame (the faithful-line release for the deferred
+     * player grabbed-FSM, see s_player_grabbed): cleared here, then re15_enemy_ai_live_grab sets it
+     * for any live zombie in the grab sub-mode this frame. A room with no grabbing zombie (or no
+     * live zombie at all, e.g. ROOM1170) leaves it 0 → game_step never pins the player = 1170-safe. */
+    s_player_grabbed = 0;
     for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) {
         re15_actor_t *e = &g_actors[s];
         if (!e->active) continue;

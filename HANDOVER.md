@@ -1,16 +1,17 @@
-# RE1.5 Port — Session-Handover (Stand 2026-06-29, Phase 8.9 abgeschlossen)
+# RE1.5 Port — Session-Handover (Stand 2026-06-29, Phase 8.10 Player-grabbed-Lock abgeschlossen)
 
 Kanonisches „lies-mich-zuerst" für die nächste Session. **Die STAGE1-Zombie-Combat-Logik ist byte-true in-game:
-spawn → wake (dist<4000) → engage → turn-to-face → GRAB (−10/−5 HP).** Nächster Schritt = der Forward-Walk
-(Anim-Root-Motion, damit der Zombie über Distanz läuft) + der Player-grabbed-FSM + ein mid-Combat-Savestate (§8.10).
+spawn → wake (dist<4000) → engage → turn-to-face → GRAB (−10/−5 HP) → Spieler GEPINNT (kann nicht weglaufen).**
+Nächster Schritt = der Forward-Walk-TRANSLATION (Anim-Root-Motion FUN_8001ad68 — byte-true RE'd, aber braucht die
+Enemy-Walk-Anim-Displacement-Tabelle im Step-Pfad, deferred) + ein mid-Combat-Savestate (cmd5 live fangen) (§8.10).
 Ergänzt die Auto-Memory (v.a. `reai-v2-foundation-combat` = die laufende AI-RE, `disasm-verify-decompiles`,
 `reai-v2-duckstation-dynamic-re`).
 
 ## TL;DR — Wo stehe ich
 
-- **Git:** HEAD = `fbef50ca` (master, sauber; nur `.idea/` untracked). Diese Session = **6 Commits** (Phase 8.6→8.9):
-  `7bab2737` 8.6 game_step-Wiring · `0283bd2c` 8.7a Hitbox-Dims · `3e067cdd` 8.7b Wake-up + Grab-statt-Lunge-Korrektur ·
-  `ccdd8bbb` 8.8 Grab-Execution · `fbef50ca` 8.9 Turn-to-face + +0x5=7-Korrektur · (+ 1 Skill-/Doku-Commit dieser Wrap-up).
+- **Git:** HEAD = `2af750cc` (master, sauber; nur `.idea/` untracked). Vorige Session = 6 Commits (8.6→8.9) + Skill-Wrap-up
+  (`2af750cc`). DIESE Session = **Phase 8.10 Player-grabbed-Lock** (1 Commit folgt): der Grab pinnt jetzt den Spieler
+  (game_step skippt `re15_player_tick` während grabbed) + die volle byte-true Forward-Walk-RE (Translation deferred).
 - **Build/Test:** `taskkill //F //IM re15_pc.exe 2>/dev/null; true; export PATH="/c/msys64/mingw64/bin:$PATH";
   cmake --build re15_port/build; ctest --test-dir re15_port/build --timeout 30` → **31/31 grün** (mingw64 GCC + Ninja).
   (Das `taskkill` ist nötig, falls die Exe noch läuft + die Datei sperrt — sonst Link-„Permission denied", kein Code-Fehler.)
@@ -58,11 +59,28 @@ Ergänzt die Auto-Memory (v.a. `reai-v2-foundation-combat` = die laufende AI-RE,
   Test Part (7): Zombie bei +0x5=7 90° abgewandt nah am Spieler → dreht sich (rot_y 1024→1664) → committet Grab →
   Player-HP fällt. **OFFEN-Befund:** der Vorwärts-Walk [5/6] ist Anim-Root-Motion-gekoppelt (FUN_8001ad68, Displacement
   aus dem Walk-Anim-Stream) → deferred wie der Player-Walk. 31/31 ctest, ROOM1140-Headless sauber.
-- **Nächster Schritt (8.10): der FORWARD-WALK + der Player-grabbed-FSM.** (1) Der Anim-Root-Motion-Walk (+0x5=5/6,
-  FUN_8001ad68 → die Enemy-Walk-Anim + Root-Motion wie beim Player) — damit der Zombie über Distanz zum Spieler LÄUFT
-  (heute dreht er sich + grabt nur, wenn der Spieler in Range kommt; im Briefing-Room läuft der Spieler zum Zombie, also
-  reicht das oft). (2) Der Player-grabbed-FSM (0x800aca58 cmd 5 → LAB_80036834 pinnt+animiert den Spieler). (3) mid-Combat
-  ROOM1140-Savestate-Vergleich. (Der Lunge-Arm bleibt dormant, bis ein Skript bank1/bit31 setzt.)
+- **PHASE 8.10 TEIL 2 ERLEDIGT (dieser Commit): der PLAYER-GRABBED-LOCK — der Spieler wird beim Grab gepinnt.** Byte-true
+  RE't (Selbst-Disasm) + portiert: der Grab latcht `0x800aca58 = cmd 5` (FUN_80102548 Sub-Step 0 @0x80102640); der
+  Player-Command-FSM dispatcht cmd 5 → `LAB_80036834` (@0x80073f90[5]) = der grabbed-Handler, der den Spieler pinnt
+  (`DAT_800acc0e = -floor*1800`) + die per-Typ grabbed-Pose fährt und **NIE das Pad liest** → der Spieler kann nicht
+  steuern/weglaufen während des Grabs. Portiert als `re15_player_is_grabbed()` (enemy_ai_common.c) — gesetzt in
+  `re15_enemy_ai_live_grab` (jeder Frame im Grab-State), je Frame in `re15_enemy_ai_run_all` neu abgeleitet (= faithful-line
+  Release für den deferred Player-grabbed-FSM, kein Soft-Lock). game_step pinnt den Spieler (skippt `re15_player_tick` +
+  Collision, wie der Stair-Branch) wenn grabbed. **1170-sicher** (Branch nur erreichbar wenn ein Live-Zombie grabt; ROOM1170/
+  1240 = nie). Savestate-verankert: 0x800aca58-Sweep über 9 Saves zeigt cmd 1/4/**7** live (cmd 7 = death im Combat-Death-Save
+  = der Grab→Death-Pfad belegt; cmd 5 = der transiente Mid-Grab). test_room1140_combat Part(8): free→grabbed→free. 31/31 ctest.
+- **8.10 TEIL 1 (FORWARD-WALK) byte-true RE'd, TRANSLATION deferred:** decide f840[5/6] @0x80102bd0 = `jr ra` No-Op; animate
+  f890[5/6] @0x80102bd8 = Setup bei +0x6==0 (motion +0x94 = `+0x5+4` = Walk-Clip 9/10, frame=0, anim_frac=7, `0x800aca58 =
+  cmd 6`, Grab-Link 0x800acbcc/d0, SE 0x800453d0(4)) dann per-Frame `FUN_8001ad68` + `anim_set(…,0x200)`. **FUN_8001ad68
+  selbst-disasm-verifiziert:** `FUN_8001ae38(entity[0x170],[0x174],&disp)` liest dispVec.x/z aus der **Anim-Daten-
+  Displacement-Tabelle** (indiziert über `+0x94` motion / `+0x95` frame — KEINE EMR-Rotations-Keyframes, eine separate
+  Displacement-Struktur), dann `M = RotMatrix(rot_y +0x6a)`, `disp = ApplyMatrix(M, disp)`, `x(+0x34)=+0xa0+disp.x`,
+  `z(+0x3c)=+0xa2+disp.z`. → Die Vorwärts-Translation ist DATEN-getrieben aus der Enemy-Walk-Anim, die der Port nicht in
+  dieser Form lädt → byte-true unmöglich ohne die Anim-Subsystem-Integration (raten verboten). **DEFERRED:** die Enemy-Walk-
+  Anim-Displacement-Tabelle (entity[0x170]/[0x174]) in den Step-Pfad wiren. Wo +0x5=5/6 gesetzt wird: in den höheren
+  Sub-Mode-Handlern (z.B. @0x801036c0 schreibt 0x601), NICHT in den portierten search/engage/turn-Decides.
+- **8.10 TEIL 3 (mid-Combat-Savestate) OFFEN:** der vorhandene Combat-Save ist post-death (cmd 7); einen mid-Grab ziehen
+  (cmd 5 + Player-Pin live) → die Sub-Steps + Bite-Count + den Pin gegen den Port prüfen (`re15-room-capture`).
 - **Neues Tooling:** Skill **`re15-room-probe`** (echten Raum laden + SCD/AI ticken + State lesen, kein DuckStation —
   genau für die 8.6-Verifikation) + `re15-psx-disasm` um „Decompile-Misstrauen" + Tabellen-Familien-Decode erweitert.
 - **Disziplin:** jede Konstante zitiert eine Disasm-Adresse/Datei-Offset; Overlay-`.c` vor dem Portieren disasm-
@@ -276,14 +294,39 @@ Hälften (anim_set selbst bewegt NICHT — nur Frames/Pose). State-Split byte-tr
 - **Test Part (7):** Zombie bei +0x5=7, 90° abgewandt, nah (dist 600) → dreht sich (rot_y 1024→1664) → Grab-Commit →
   Player-HP fällt. 31/31 ctest, ROOM1140-Headless sauber.
 
-### 8.10+ — was als Nächstes (FORWARD-WALK + Player-grabbed-FSM → das volle beobachtbare Combat)
-1. **Forward-Walk (+0x5=5/6, FUN_8001ad68 = Anim-Root-Motion):** die Enemy-Walk-Anim + Root-Motion wie beim Player wiren —
-   damit der Zombie über Distanz zum Spieler LÄUFT (heute dreht er sich + grabt nur, wenn der Spieler in Range kommt; im
-   Briefing-Room läuft der Spieler zum Zombie, also reicht Turn+Grab oft). Braucht die Enemy-Anim/Skeleton im Step-Pfad.
-2. **Player-grabbed-FSM:** die Player-Seite (0x800aca58 cmd 5 → LAB_80036834 pinnt+animiert den Spieler) — damit der Spieler
-   beim Grab gehalten wird (sonst kann er weglaufen während −5/Biss); + der player+0x93-grabbed-Flag sauber.
-3. **mid-Combat ROOM1140-Savestate (`re15-room-capture`):** der vorhandene Save ist post-death — einen mid-Grab ziehen, die
-   Sub-Steps + Bite-Count + Player-grabbed-State live gegen den Port prüfen.
+### 8.10 — Player-grabbed-Lock ERLEDIGT + Forward-Walk byte-true RE'd (Translation deferred)
+**TEIL 2 (Player-grabbed-Lock) PORTIERT (dieser Commit, 31/31 ctest):** der Grab pinnt jetzt den Spieler. Byte-true
+selbst-disasm-verifiziert: der Grab latcht `0x800aca58 = ((+0x5-3)<<8)|5` = **cmd 5** (FUN_80102548 Sub-Step 0 @0x80102640),
+der Player-Command-FSM dispatcht `@0x80073f90[cmd]` → `[5]=LAB_80036834` (@0x80036834): pinnt den Spieler (Init bei
+DAT_800aca5a==0: `DAT_800acc0e = -floor*1800` grabbed-Y; `DAT_800acb04=0`), holt die greifende Entity (`DAT_800acbfc`,
+gesetzt vom Walk/Grab-Setup), dispatcht eine **per-Typ grabbed-Pose** (`@0x800ac758[enemy.type]`) — liest NIE das Pad. Der
+Exit [8] @0x80102b90 clear-t cmd 5 NICHT (Latch; der Player-grabbed-FSM resettet ihn beim Anim-Ende/Struggle = deferred).
+Portiert: `re15_player_is_grabbed()` (enemy_ai_common.c) — `s_player_grabbed` gesetzt in `re15_enemy_ai_live_grab` (jeder
+Frame im Grab), in `re15_enemy_ai_run_all` je Frame genullt = faithful-line Release (grabbed ⟺ ein Live-Zombie grabt diesen
+Frame → kein Soft-Lock; wenn der engage nicht mehr re-committet [Spieler aus dem ±0x4b0-Kegel], ist der Spieler frei).
+game_step: neuer Branch `else if (rdt_ok && re15_player_is_grabbed())` pinnt den Spieler (skip `re15_player_tick` +
+Collision + Door-Scan, RVD-Cam-Scan läuft weiter — exakt der Stair-„engine-driven, kein Steuern"-Pattern). **1170-sicher**
+(Branch nur erreichbar wenn ein Live-Zombie grabt). test_room1140_combat Part(8): `free=1 before → grabbed=1 during → free=1
+after`. **Savestate-verankert:** 0x800aca58-Sweep (re15_flag_sweep.py) über 9 Saves = cmd 1/4/**7** live (cmd 7 = death im
+mzd_stage1_combat_death.sav = der Grab→Death-Pfad belegt; cmd 5/6 = transiente Mid-Grab/Walk-Werte).
+**DEFERRED (zitiert):** die per-Typ grabbed-Pose/-Anim (`@0x800ac758[type]`), der exakte XZ/Y-Pin (`DAT_800acc0e`), der
+Struggle-Escape (Sub-Step 5 @0x80102968 = anim-gegatet + bit-0x2-Check), `player+0x93|=1` (Feld-Aliasing zum Hit-Guard).
+
+**TEIL 1 (FORWARD-WALK) byte-true RE'd, TRANSLATION DEFERRED:** decide f840[5/6] @0x80102bd0 = `jr ra` No-Op (alle Arbeit
+in der animate-Hälfte, wie Grab); animate f890[5/6] @0x80102bd8: Setup bei `+0x6==0` (motion `+0x94 = +0x5+4` = Walk-Clip
+9/10, frame `+0x95=0`, `+0x8f=7`, `0x800aca58 = ((+0x5-5)<<8)|6` = **cmd 6**, Grab-Link 0x800acbfc/cbcc/cbd0, SE
+0x800453d0(4)) → per-Frame `FUN_8001ad68` (Root-Motion) + `anim_set(entity[0x170],[0x174],0,0x200)`. **FUN_8001ad68
+selbst-disasm-verifiziert (@0x8001ad68):** `FUN_8001ae38(entity[0x170],entity[0x174],&disp)` liest dispVec.x@+0 / .z@+4 aus
+einer **Anim-Daten-Displacement-Tabelle** (FUN_8001ae38 @0x8001ae38: indiziert über `g_entity+0x94` motion + `+0x95` frame,
+bit-gepackte Records — eine SEPARATE Struktur, NICHT die EMR-Rotations-Keyframes [die laut Port-L3-Forensik nur Rotationen
+tragen]); dann `M=RotMatrix(rot_y +0x6a)` (FUN_800659d0), `disp=ApplyMatrix(M,disp)` (FUN_80067a28), `x(+0x34)=
+entity[+0xa0]+disp.x`, `z(+0x3c)=entity[+0xa2]+disp.z`. → **Die Vorwärts-Translation ist DATEN-getrieben aus der
+Enemy-Walk-Anim-Displacement-Tabelle (entity[0x170]/[0x174]), die der Port für Gegner nicht in dieser Form lädt → byte-true
+unmöglich ohne die Anim-Subsystem-Integration (raten verboten → deferred).** Die +0x5=5/6-Transition selbst liegt in den
+höheren Sub-Mode-Handlern (z.B. @0x801036c0 schreibt `0x601`), NICHT in den portierten search/engage/turn-Decides.
+
+**TEIL 3 (mid-Combat-Savestate) OFFEN:** der vorhandene Save ist post-death (cmd 7); einen mid-Grab ziehen (cmd 5 +
+Player-Pin live) → Sub-Steps/Bite-Count/Pin gegen den Port prüfen (`re15-room-capture`; provoke ist timing-sensitiv).
 - **Verbleibende byte-true Details:** Sub-States [2]/[3]/[4] (0x80105a8c/06ba4/0919c = hurt/death/idle), FUN_8001bc08-
   Sensor/+0x1d8-Update, AI-Pause-Gate (DAT_800aca40 & 0x20000000 → `re15_enemy_ai_set_paused`, noch nicht in game_step).
 - **WAS VOM 0x47-PORT BLEIBT:** der `@0x801217a0`-Code (Phase 2-7) ist echte byte-true RE eines

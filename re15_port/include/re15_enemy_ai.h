@@ -235,6 +235,16 @@ void re15_enemy_ai_live_arm(int slot);
  * 0 by default; game_step wires the real flag. */
 void re15_enemy_ai_set_combat_active(int v);
 
+/* DAT_800aca58 == cmd 5 — is the player currently GRABBED by a live zombie (Phase 8.10)? The grab
+ * execution (FUN_80102548 sub-step 0 @0x80102640) latches the player command register to cmd 5,
+ * whose player-FSM handler LAB_80036834 pins the player and runs the grabbed pose — it never reads
+ * the pad, so the player cannot steer/walk away while held. game_step reads this to skip the player
+ * tick (pin the player), the same engine-driven-no-steer stance the stair traversal uses. 1 while a
+ * live zombie is in the grab sub-mode, 0 otherwise (re-derived each frame in re15_enemy_ai_run_all =
+ * a faithful-line stand-in for the deferred player grabbed-FSM release, no soft-lock). The per-type
+ * grabbed pose/anim, the exact XZ/Y pin, and the struggle-escape are deferred (cited in the .c). */
+int re15_player_is_grabbed(void);
+
 /* Phase 8.6 — the per-frame LIVE-zombie AI pass, the port's faithful slice of the original's
  * entity-update loop FUN_8001a50c (@0x8001ce04: iterate the entity array, dispatch
  * @0x80072bac[type] per active entity). The port runs ONLY the live-zombie types (0x10/0x11/0x16)

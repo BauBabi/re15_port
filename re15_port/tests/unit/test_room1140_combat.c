@@ -284,8 +284,51 @@ int main(void)
                    ts, trot0, tz->rot_y, thp0, pl->hp);
     }
 
+    /* (8): the PLAYER-GRABBED LOCK (Phase 8.10). While a live zombie is in the grab sub-mode the
+     * player is latched (DAT_800aca58 = cmd 5, byte-true @0x80102640) and game_step pins him
+     * (re15_player_is_grabbed -> skip re15_player_tick = the player cannot steer/walk away). Verify
+     * the flag TRACKS the grab: 0 with no zombie grabbing, 1 the frame a zombie is in the grab
+     * sub-mode, back to 0 once the grab releases and the player is out of range (the no-soft-lock
+     * faithful-line release for the deferred player grabbed-FSM). */
+    {
+        int gs = zslots[4];
+        re15_actor_t *gz = &g_actors[gs];
+        pl->x = 0; pl->z = 0; pl->hp = 100; pl->hit_react = 0; pl->state = 0; pl->floor = 0;
+        /* Isolate: park every zombie far + asleep so none grabs spuriously. */
+        for (int i = 0; i < nz; i++) {
+            re15_actor_t *z = &g_actors[zslots[i]];
+            z->grid_id = 0x86; z->sub_state_1 = 0; z->sub_state_2 = 0; z->ai_flags = 0;
+            z->x = 30000; z->z = 30000;
+        }
+        re15_enemy_ai_run_all(1);                     /* no zombie grabbing -> latch clears */
+        int free_before = !re15_player_is_grabbed();
+        if (!free_before) {
+            fprintf(stderr, "FAIL: player must NOT be grabbed with all zombies asleep/far\n"); fail = 1; }
+
+        /* commit one zombie to the face-to-face grab (+0x5=3, grid 0) right next to the player */
+        gz->x = 500; gz->z = 0; gz->floor = 0; gz->state = RE15_AI_STATE_ACTIVE;
+        gz->grid_id = 0; gz->sub_state_1 = 3; gz->sub_state_2 = 0; gz->ai_flags = 0;
+        re15_enemy_ai_run_all(1);                     /* the grab dispatches -> latch set */
+        int grabbed_during = re15_player_is_grabbed();
+        if (!grabbed_during) {
+            fprintf(stderr, "FAIL: player must be grabbed while a zombie is in the grab sub-mode\n"); fail = 1; }
+
+        /* release: move the player out of the ±0x4b0 grab cone and put the zombie back in engage so
+         * it cannot re-commit; after a run_all no zombie is in grab state -> the latch clears. */
+        pl->x = 60000; pl->z = 60000;
+        gz->sub_state_1 = 2; gz->sub_state_2 = 0;     /* engage; player far -> no re-commit */
+        re15_enemy_ai_run_all(1);
+        int free_after = !re15_player_is_grabbed();
+        if (!free_after) {
+            fprintf(stderr, "FAIL: player must be released once no zombie is grabbing (player far)\n"); fail = 1; }
+        if (!fail)
+            printf("  (8) player-grabbed lock: free=%d before -> grabbed=%d during grab -> free=%d after release\n",
+                   free_before, grabbed_during, free_after);
+    }
+
     free(buf);
     if (fail) { fprintf(stderr, "\nROOM1140 COMBAT-WIRING TEST FAILED\n"); return 1; }
-    printf("\nPASS: ROOM1140 live-AI game_step wiring (spawn; WAKE->engage; TURN-to-face->GRAB->HP; type-gated)\n");
+    printf("\nPASS: ROOM1140 live-AI game_step wiring "
+           "(spawn; WAKE->engage; TURN-to-face->GRAB->HP; GRABBED-lock; type-gated)\n");
     return 0;
 }

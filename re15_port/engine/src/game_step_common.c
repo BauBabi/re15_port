@@ -52,6 +52,20 @@ void re15_game_step(const re15_game_ctx_t *c)
         re15_stair_tick(c->rdt, c->pl00_skel, c->pl00_anim);
         g_scd.cut_auto_enabled = 1;
         re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
+    } else if (c->rdt_ok && re15_player_is_grabbed()) {
+        /* PLAYER-GRABBED LOCK (Phase 8.10, byte-true LAB_80036834): a live zombie has the player
+         * latched (DAT_800aca58 = cmd 5). The original routes the player's per-frame command FSM to
+         * the cmd-5 grabbed handler, which pins the player + plays the grabbed pose and NEVER reads
+         * the pad — so the player cannot steer or walk away while held (he takes the repeated -5
+         * bites). The port pins the player exactly as the stair traversal does (engine-driven, the
+         * player does NOT steer): SKIP re15_player_tick + collision + the door-start scan. The player
+         * holds his current XZ (the exact grab-pin pose/offset DAT_800acc0e = -floor*1800 is the
+         * deferred anim layer). The grabbing zombie's hitbox + the bite damage are applied by
+         * re15_enemy_ai_run_all at the END of this step (same slot as the lunge). The RVD camera cut
+         * scan KEEPS running (byte-true: the per-frame cam scan is ungated by the player's state), so
+         * the cut still frames the grab. This branch is unreachable unless a live zombie grabs, so a
+         * room with no live zombie (ROOM1170/1240 boot) never enters it = no 1170 regression. */
+        re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
     } else {
         int32_t ox = pl->x, oz = pl->z;
         re15_player_tick(c->cam_view, c->pad_current);
