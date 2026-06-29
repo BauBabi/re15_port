@@ -80,9 +80,14 @@ typedef struct {
      * enters the body; the predicate opcode (Ck/Cmp/Member_cmp/Sce_key_ck) then
      * runs as a real opcode and RETURNS its boolean — FALSE makes the dispatcher
      * (FUN_8003f0a0) pop this stack and jump PC to block_end. Else(0x07)/End_if
-     * (0x08) pop. Replaces the old op_if pre-evaluation look-ahead. */
-    const uint8_t *block_stack[8];
-    int8_t         block_sp;
+     * (0x08) pop. Replaces the old op_if pre-evaluation look-ahead.
+     * [#17] PER GOSUB-FRAME (indexed by call_depth): the PSX gives each Gosub
+     * frame its OWN block region (Gosub LAB_8003fbe8 rebases block_sp to a fresh
+     * empty stack, Return LAB_8003fc50 restores the caller's). 124/278 real Gosubs
+     * fire from INSIDE an open If-block + 15/22 Gotos unwind a block (pc[1]!=0xFF)
+     * → the old single shared stack corrupted the caller's FALSE-pop targets. */
+    const uint8_t *block_stack[SCD_CALL_DEPTH_MAX][8];
+    int8_t         block_sp[SCD_CALL_DEPTH_MAX];
 
     /* For/Next loop state now lives in the unified loop model above (loop_back /
      * loop_for_cnt / loop_count — see [#8]). ROOM1170 sub06/07/08 (heli takeoff

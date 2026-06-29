@@ -508,9 +508,12 @@ void scd_vm_tick(void)
                  * block_end the If pushed (= past End_if, or the else-body for
                  * if/else). The predicate already advanced PC past itself; the
                  * pop overwrites it. */
-                if (t->block_sp > 0) {
-                    t->block_sp--;
-                    t->pc = t->block_stack[(int)t->block_sp];
+                {
+                    int cd = (int)t->call_depth;   /* [#17] block stack is per Gosub-frame */
+                    if (t->block_sp[cd] > 0) {
+                        t->block_sp[cd]--;
+                        t->pc = t->block_stack[cd][(int)t->block_sp[cd]];
+                    }
                 }
                 /* else: FALSE predicate with no open block (malformed) → PC is
                  * already past the predicate; just continue. */
@@ -904,8 +907,28 @@ static int op_goto(scd_thread_t *t)
      *
      * AO-round 2026-05-26 (rotor non-spin investigation): 5/5 RE
      * agents independently identified this as the bug. */
+    /* [#17] byte-true Goto unwind (LAB_8003fb9c @0x8003fbc0-bf60): pc[1] = the
+     * If-block nesting level to unwind TO (PSX block_sp = base + (s8)pc[1]*4 + 4 →
+     * flat per-frame index (s8)pc[1]+1; empty = -1 → 0); pc[2] = the loop counter to
+     * restore (PSX thread+frame+0x8). EMPIRICAL: 15/22 real Gotos use pc[1]!=0xFF
+     * (a real out-of-block jump that MUST unwind, else the next If's FALSE-pop
+     * targets a stale block_end); pc[2] is 0xFF in all 22 (→ loop_count reset to 0).
+     * The verified rotor Goto (sub04 `17 FF FF 00 FE FF`) has pc[1]=pc[2]=0xFF and no
+     * surrounding block → unwind to 0 = no-op (no regression). */
+    int8_t  unwind_to = (int8_t)t->pc[1];   /* block level (-1 = empty) */
+    int8_t  loop_to   = (int8_t)t->pc[2];   /* loop count  (-1 = empty) */
     int16_t off = (int16_t)((uint16_t)t->pc[4] | ((uint16_t)t->pc[5] << 8));
     t->pc += off;
+    int cd  = (int)t->call_depth;
+    int cap = (int)(sizeof(t->block_stack[cd]) / sizeof(t->block_stack[cd][0]));
+    int bs  = (int)unwind_to + 1;
+    if (bs < 0)   bs = 0;
+    if (bs > cap) bs = cap;
+    t->block_sp[cd] = (int8_t)bs;
+    int lc = (int)loop_to + 1;
+    if (lc < 0) lc = 0;
+    if (lc > 4) lc = 4;
+    t->loop_count = (int8_t)lc;
     return 1;
 }
 
@@ -927,6 +950,11 @@ static int op_gosub(scd_thread_t *t)
     if (target && t->call_depth + 1 < SCD_CALL_DEPTH_MAX) {
         t->call_stack[(int)t->call_depth] = t->pc + 2;
         t->call_depth++;
+        /* [#17] byte-true Gosub (LAB_8003fbe8): the callee frame gets a FRESH,
+         * EMPTY If-block stack (PSX inits the new frame's block-level to -1 and
+         * rebases block_sp). The caller's block_stack[caller_depth] is untouched
+         * and restored implicitly on Return (call_depth--). */
+        t->block_sp[(int)t->call_depth] = 0;
         t->pc = target;
     } else {
         /* target missing or call stack overflow — advance past gosub */
@@ -969,8 +997,9 @@ static int op_if(scd_thread_t *t)
 {
     uint16_t block_length = (uint16_t)t->pc[2] | ((uint16_t)t->pc[3] << 8);
     const uint8_t *block_end = t->pc + 4 + block_length;
-    int cap = (int)(sizeof(t->block_stack) / sizeof(t->block_stack[0]));
-    if ((int)t->block_sp < cap) t->block_stack[(int)t->block_sp++] = block_end;
+    int cd  = (int)t->call_depth;   /* [#17] block stack is per Gosub-frame */
+    int cap = (int)(sizeof(t->block_stack[cd]) / sizeof(t->block_stack[cd][0]));
+    if ((int)t->block_sp[cd] < cap) t->block_stack[cd][(int)t->block_sp[cd]++] = block_end;
     t->pc += 4;                 /* always enter the body; the predicate decides */
     return SCD_R_CONTINUE;
 }
@@ -989,7 +1018,8 @@ static int op_else(scd_thread_t *t)
     /* byte-true LAB_8003f368: pop the block-stack (the If that opened this), then
      * PC = pc + else_block_length (skip the else-body on the TRUE path). */
     int16_t skip = (int16_t)((uint16_t)t->pc[2] | ((uint16_t)t->pc[3] << 8));
-    if (t->block_sp > 0) t->block_sp--;
+    int cd = (int)t->call_depth;   /* [#17] per Gosub-frame */
+    if (t->block_sp[cd] > 0) t->block_sp[cd]--;
     t->pc += skip;
     return SCD_R_CONTINUE;
 }
@@ -997,7 +1027,8 @@ static int op_else(scd_thread_t *t)
 /* 0x08 — End_if: byte-true LAB_8003f3a4 — pop the block-stack, PC += 2. */
 static int op_end_if(scd_thread_t *t)
 {
-    if (t->block_sp > 0) t->block_sp--;
+    int cd = (int)t->call_depth;   /* [#17] per Gosub-frame */
+    if (t->block_sp[cd] > 0) t->block_sp[cd]--;
     t->pc += 2;
     return SCD_R_CONTINUE;
 }
@@ -2933,7 +2964,7 @@ int op_evt_chain(scd_thread_t *t)
     if (!target) { t->pc += 4; return 1; }   /* no such sub → advance (port guard) */
     t->pc         = target;   /* thread[0x1c] */
     t->loop_count = 0;        /* thread[0x8] (PSX -1 = port's empty sentinel 0) */
-    t->block_sp   = 0;        /* thread[0x140] block-stack reset */
+    t->block_sp[(int)t->call_depth] = 0;   /* [#17] thread[0x140] block-stack reset (current frame) */
     /* active stays 1; call_depth/work_slot preserved (FUN_8003edec leaves them). */
     return 1;
 }

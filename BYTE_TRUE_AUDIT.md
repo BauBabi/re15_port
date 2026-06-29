@@ -176,6 +176,17 @@ Multi-Agent-Audit: 20 Subsysteme, 123 WRONG/MISSING-Verdachtsfälle, **104 adver
 ### #17 · MEDIUM · REPAIR · scd-control-flow
 **Goto (0x17), Gosub/Return Block-/Loop-Stack-Unwind + per-Frame-Isolation**
 
+> ✅ **ERLEDIGT 2026-06-29 (byte-true, empirisch belegt)** — `block_stack`/`block_sp` jetzt **pro Gosub-Frame**
+> (indexiert nach call_depth, re15_scd.h). op_gosub initialisiert den neuen Frame mit leerem Block-Stack
+> (byte-true LAB_8003fbe8); Return/Evt_end (call_depth--) restaurieren den Caller implizit. **op_goto** unwindt
+> `block_sp[cd] = (s8)pc[1]+1` + `loop_count = (s8)pc[2]+1` (LAB_8003fb9c: PSX `base+(s8)pc[1]*4+4`, leer = -1 → 0).
+> **Empirischer SCD-weiter Scan (alle 344 Subs):** **15/22 Gotos** nutzen pc[1]≠0xFF (echtes Out-of-Block-Unwind),
+> **124/278 Gosubs** feuern aus einem offenen If-Block — der alte FLACHE Single-Stack + ignore-Goto-args
+> korrumpierte die FALSE-Pop-Ziele. pc[2]≠0xFF: **0×** (Goto resettet Loops immer auf leer). Verifizierter
+> Rotor-Goto (`17 FF FF 00 FE FF`, pc1=pc2=0xFF, kein umgebender Block) → Unwind auf 0 = No-Op (keine Regression).
+> Tests `test_goto_block_unwind` + `test_gosub_block_isolation` (test_scd_opcodes.c). 28/28 ctest grün;
+> ROOM1240→1170-Intro (Gosub/If/Goto-intensiv) ~10s clean.
+
 - **Ort:** `re15_port/engine/src/scd_vm.c:807-827 (op_goto), :839-865 (op_gosub/op_return), re15_scd.h:78-89 (geteilte Stacks)`
 - **RE-Beleg:** Goto LAB_8003fb9c: block_sp(thread+0x140)=(frame*32+0xc0)+pc[1]*4+4 @0x8003fbd4, pc[1]=Unwind-Level, pc[2]=Loop-Counter. Gosub LAB_8003fc18 Block-SP-Rebase @0x8003fc18-24, 0xFF-Init @0x8003fc10; Return-Restore @0x8003fc7c-9c. If-Push +0x4 @LAB_8003f328.
 - **Fix:** op_goto: block_sp + do/for-Depth auf pc[1]-Niveau zurÃ¼cksetzen, Loop-Counter (pc[2]) restaurieren. op_gosub/return: Block-/Loop-Stacks pro Gosub-Frame (indexiert nach call_depth, oder save+null/restore).
@@ -183,6 +194,13 @@ Multi-Agent-Audit: 20 Subsysteme, 123 WRONG/MISSING-Verdachtsfälle, **104 adver
 
 ### #18 · MEDIUM · REPAIR · scd-control-flow
 **Edwhile (0x12) volle PrÃ¤dikat-Kette + Do (0x11) Exit-PC speichern + Return Root-Terminierung**
+
+> ✅ **ERLEDIGT durch den #8-Loop-Umbau (verifiziert 2026-06-29)** — op_edwhile nutzt bereits die volle
+> `scd_eval_pred_chain` (AND/OR-Prädikatkette via echten Dispatcher, nicht nur Ck); op_do pusht bereits
+> `loop_exit[idx] = body+block_len` (Exit-PC). Beide #18-Hauptpunkte sind im aktuellen Code byte-true. Der
+> dritte (op_return Root → SCD_R_FRAME_RET) ist äquivalent gelöst: **Evt_end (0x00) gibt 0 = SCD_R_FRAME_RET**
+> zurück (op_evt_end:584), der Dispatcher poppt den Frame (scd_vm.c:519-531) bzw. terminiert bei call_depth==0 —
+> die byte-true Root-Terminierung. Kein zusätzlicher Code nötig.
 
 - **Ort:** `re15_port/engine/src/scd_vm.c:605-630 (op_edwhile), :584-592 (op_do), :856-865 (op_return Root)`
 - **RE-Beleg:** Edwhile LAB_8003f930 (@0x800744f0): Kette dispatcht jeden cond-Opcode, AND/OR-Akku s2 @0x8003f9a8. Do LAB_8003f8bc (@0x800744ec): block_length lh @0x8003f8f0, Exit-PC thread+0x60 @0x8003f918. Return root: korrekt via Evt_end (return 2 YIELD); op_return root sollte SCD_R_FRAME_RET.

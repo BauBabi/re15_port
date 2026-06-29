@@ -814,6 +814,75 @@ static int test_evt_exec_direct_slot(void)
     return 0;
 }
 
+/* =========================================================================
+ * Test [#17]: Goto (0x17) byte-true block-unwind + Gosub (0x18) per-frame block
+ * isolation. Empirical scan of all RE1.5 SCDs: 15/22 Gotos use pc[1]!=0xFF (real
+ * out-of-block unwind), 124/278 Gosubs fire from INSIDE an open If-block. The old
+ * flat single block-stack + ignore-Goto-args corrupted the caller's FALSE-pop
+ * targets. block_stack/block_sp are now per Gosub-frame (indexed by call_depth);
+ * Goto unwinds block_sp[cd] = (s8)pc[1]+1 (LAB_8003fb9c).
+ * ========================================================================= */
+static int test_goto_block_unwind(void)
+{
+    /* If opens a block; Goto(pc1=0xFF) jumps PAST the Endif to Save, leaving the
+     * block "open" → byte-true Goto unwinds block_sp[0] back to 0. */
+    uint8_t bc[] = {
+        0x06, 0x00, 0x08, 0x00,              /* +0  If(len=8): push, block_sp[0]=1, body @+4 */
+        0x17, 0xFF, 0xFF, 0x00, 0x08, 0x00,  /* +4  Goto(pc1=0xFF,pc2=0xFF, off=8 → +0xC) */
+        0x08, 0x00,                          /* +A  Endif  (SKIPPED by the Goto) */
+        0x24, 0x00, 0x55, 0x00,              /* +C  Save(w0 = 0x55) */
+        SCD_OP_EVT_END                       /* +10 Evt_end */
+    };
+    scd_vm_init();
+    scd_thread_start(0, bc);
+    scd_vm_tick();
+    if (g_scd.threads[0].block_sp[0] != 0) {
+        fprintf(stderr, "FAIL: Goto(pc1=0xFF) muss block_sp[0] auf 0 unwinden, ist %d\n",
+                g_scd.threads[0].block_sp[0]); return 1; }
+    if (g_scd.work_vars[0] != 0x55) {
+        fprintf(stderr, "FAIL: Save nach Goto muss laufen (w0=0x55), ist %d\n",
+                g_scd.work_vars[0]); return 1; }
+    printf("PASS: test_goto_block_unwind\n");
+    return 0;
+}
+
+static int test_gosub_block_isolation(void)
+{
+    /* main opens a block, then Gosubs sub1 which opens its OWN block then yields
+     * (Evt_next). Byte-true: caller block_sp[0] and callee block_sp[1] are
+     * INDEPENDENT per Gosub-frame. */
+    uint8_t sub1[] = {
+        0x06, 0x00, 0x02, 0x00,  /* +0 If(len=2) → block_sp[1]=1 (its OWN frame) */
+        0x02,                    /* +4 Evt_next → yield (tick ends here, call_depth=1) */
+        0x08, 0x00,              /* +5 Endif */
+        SCD_OP_EVT_END           /* +7 */
+    };
+    re15_rdt_t rdt; memset(&rdt, 0, sizeof(rdt));
+    rdt.sub_scd[1] = sub1;
+    uint8_t main_bc[] = {
+        0x06, 0x00, 0x04, 0x00,  /* +0 If(len=4) → block_sp[0]=1, body @+4 */
+        0x18, 0x01,              /* +4 Gosub(sub1) */
+        0x08, 0x00,              /* +6 Endif */
+        SCD_OP_EVT_END           /* +8 */
+    };
+    scd_vm_init();
+    scd_register_current_rdt(&rdt);
+    scd_thread_start(0, main_bc);
+    scd_vm_tick();   /* main If → Gosub → sub1 If → Evt_next (yield) */
+    scd_register_current_rdt(NULL);
+    if (g_scd.threads[0].call_depth != 1) {
+        fprintf(stderr, "FAIL: nach Gosub+Evt_next call_depth=1, ist %d\n",
+                g_scd.threads[0].call_depth); return 1; }
+    if (g_scd.threads[0].block_sp[0] != 1) {
+        fprintf(stderr, "FAIL: Caller-Block block_sp[0] muss 1 bleiben, ist %d\n",
+                g_scd.threads[0].block_sp[0]); return 1; }
+    if (g_scd.threads[0].block_sp[1] != 1) {
+        fprintf(stderr, "FAIL: Callee-Block block_sp[1] muss 1 sein (eigener Frame), ist %d\n",
+                g_scd.threads[0].block_sp[1]); return 1; }
+    printf("PASS: test_gosub_block_isolation\n");
+    return 0;
+}
+
 int main(void)
 {
     int failures = 0;
@@ -832,6 +901,8 @@ int main(void)
     failures += test_switch_case_break();
     failures += test_evt_chain_reinit();
     failures += test_evt_exec_direct_slot();
+    failures += test_goto_block_unwind();
+    failures += test_gosub_block_isolation();
     failures += test_ck_set_flags();
     failures += test_work_set();
     failures += test_speed_set();
