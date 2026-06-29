@@ -225,4 +225,14 @@ int re15_enemy_ai_live_tick(int slot);
  * re15_enemy_ai_step. NOT yet wired into game_step. */
 int re15_enemy_ai_live_step(int slot);
 
+/* FUN_8010ab2c (@STAGE1.BIN, disasm-verified) — the live attack-COMMIT setup / ARM: sets the live
+ * AI params (attack arc +0x5fc=0x390 etc.) and, gated by the combat-active flag, arms the lunge
+ * windup (ai_flags |= 0x100 + ai_attack_timer = rand8()+rand8()+600, counting down to 300 = fire).
+ * Called when the decision brain commits the attack (+0x5=7). */
+void re15_enemy_ai_live_arm(int slot);
+
+/* DAT_800aca3c & 1 — the live family's combat-active gate (FUN_8010ab2c only arms when set).
+ * 0 by default; game_step wires the real flag. */
+void re15_enemy_ai_set_combat_active(int v);
+
 #endif /* RE15_ENEMY_AI_H */

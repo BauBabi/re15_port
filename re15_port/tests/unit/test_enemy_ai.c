@@ -546,16 +546,18 @@ static int test_live_active_lunge(void)
     if (e->state != RE15_AI_STATE_ACTIVE) { fprintf(stderr, "FAIL: live init state->1, ist %d\n", e->state); return 1; }
     if (e->ai_timer != 0x14)              { fprintf(stderr, "FAIL: live init ai_timer=0x14, ist 0x%x\n", e->ai_timer); return 1; }
 
-    /* (b) NOT armed (ai_flags & 0x100 == 0): the unarmed path runs the LIVE decision brain for the
-     * combat sub-mode (grid&0xf==0 -> @0x8011f80c[0]=FUN_8010168c -> @0x8011f840[+0x5] =
-     * re15_ai_dispatch_decision). Player in range + off the front arc -> brain commits attack
-     * (0x701 -> +0x5=7). No windup (timer untouched; the arm is a deferred +0x5=7 sub-handler). */
+    /* (b) NOT armed, combat INACTIVE: the unarmed path runs the LIVE decision brain (sub 0 ->
+     * @0x8011f80c[0]=FUN_8010168c -> @0x8011f840[+0x5] = re15_ai_dispatch_decision). Player in range
+     * + off the front arc -> brain commits attack (0x701 -> +0x5=7), but with combat off the arm
+     * stays inert (no +0x1d8|0x100, no windup seed). */
+    re15_enemy_ai_set_combat_active(0);
     e = fresh_enemy(0x10);                 /* grid_id 0 (sub 0), +0x5=0 (search-timer brain entry) */
     put_player(1000, 0);                   /* right (+X): off narrow arc, dist 1000 < 2000 */
     e->ai_flags = 0; e->ai_dist = 1000; e->ai_attack_timer = 500;
     if (re15_enemy_ai_live_active(1) != 0) { fprintf(stderr, "FAIL: unarmed active muss 0 liefern\n"); return 1; }
-    if (e->ai_attack_timer != 500)        { fprintf(stderr, "FAIL: unarmed darf windup-timer nicht anfassen, ist %d\n", e->ai_attack_timer); return 1; }
     if (e->sub_state_1 != 7)              { fprintf(stderr, "FAIL: unarmed sub0 -> Brain committet Attack (+0x5=7), ist %d\n", e->sub_state_1); return 1; }
+    if (e->ai_flags & 0x100)             { fprintf(stderr, "FAIL: combat-off darf nicht armen\n"); return 1; }
+    if (e->ai_attack_timer != 500)       { fprintf(stderr, "FAIL: combat-off darf windup-timer nicht seeden, ist %d\n", e->ai_attack_timer); return 1; }
 
     /* (c) Armed: timer counts down; at == 0x12c (300) it fires the lunge (re15_enemy_lunge_begin
      * -> lunge_frames = 0x20) and returns 1. */
@@ -584,6 +586,37 @@ static int test_live_active_lunge(void)
     if (e->motion != 0x1f) { fprintf(stderr, "FAIL: grid&0x80 recovery motion 0x1f, ist %d\n", e->motion); return 1; }
 
     printf("PASS: test_live_active_lunge\n");
+    return 0;
+}
+
+/* ----- LIVE decision -> ARM (FUN_8010ab2c): the brain commits +0x5=7 with combat ACTIVE -> the
+ * lunge windup is armed (ai_flags|0x100, ai_attack_timer seeded rand8()+rand8()+600 in [600,1110],
+ * live attack arc ai_arc=0x390). With combat inactive the commit happens but the arm stays inert. */
+static int test_live_decision_arm(void)
+{
+    re15_enemy_ai_set_combat_active(1);
+    re15_damage_seed_rng(0x13572468u);
+    re15_actor_t *e = fresh_enemy(0x10);   /* sub 0, +0x5=0 (search-timer brain entry) */
+    put_player(1000, 0);                    /* in range + off arc -> brain commits */
+    e->ai_flags = 0; e->ai_dist = 1000; e->ai_attack_timer = 0;
+
+    re15_enemy_ai_live_active(1);           /* unarmed -> brain commits +0x5=7 -> arm */
+
+    if (e->sub_state_1 != 7)    { fprintf(stderr, "FAIL: arm: Brain muss committen (+0x5=7), ist %d\n", e->sub_state_1); return 1; }
+    if (!(e->ai_flags & 0x100)) { fprintf(stderr, "FAIL: arm: combat-on muss +0x1d8|0x100 setzen\n"); return 1; }
+    if (e->ai_arc != 0x390)     { fprintf(stderr, "FAIL: arm: live attack arc 0x390, ist 0x%x\n", e->ai_arc); return 1; }
+    if (e->ai_attack_timer < 600 || e->ai_attack_timer > 1110) {
+        fprintf(stderr, "FAIL: arm: +0x1da seed in [600,1110], ist %d\n", e->ai_attack_timer); return 1; }
+
+    /* Combat OFF: same commit, arm inert. */
+    re15_enemy_ai_set_combat_active(0);
+    e = fresh_enemy(0x10);
+    put_player(1000, 0);
+    e->ai_flags = 0; e->ai_dist = 1000; e->ai_attack_timer = 0;
+    re15_enemy_ai_live_active(1);
+    if (e->ai_flags & 0x100) { fprintf(stderr, "FAIL: arm: combat-off darf nicht armen\n"); return 1; }
+
+    printf("PASS: test_live_decision_arm\n");
     return 0;
 }
 
@@ -648,6 +681,7 @@ int main(void)
     failures += test_exe_turn();
     failures += test_exe_dispatch_and_tick();
     failures += test_live_active_lunge();
+    failures += test_live_decision_arm();
     failures += test_live_step_chain();
     failures += test_ai_step_chain();
 

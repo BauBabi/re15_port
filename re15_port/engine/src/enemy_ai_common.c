@@ -346,6 +346,13 @@ void re15_ai_dispatch_decision(re15_actor_t *e, const re15_actor_t *player)
  * is SHARED + correct; this re-roots the AI decision/tick onto the right table. NOT wired into
  * game_step yet (no 1170 risk). */
 
+/* DAT_800aca3c & 1 — the live family's "combat active" gate (FUN_8010ab2c only arms the lunge
+ * when set). 0 by default (the arm stays inert until combat is enabled / game_step wires the real
+ * flag); the test + the eventual wiring set it. (DAT_800aca3c also carries the cut-freeze bit
+ * 0x100 elsewhere — see reai-v2-cut-opcodes; bit 0x1 is the combat-active sub-flag here.) */
+static int s_live_combat_active = 0;
+void re15_enemy_ai_set_combat_active(int v) { s_live_combat_active = v ? 1 : 0; }
+
 /* FUN_80100688 (@0x8011f7b4[0], STAGE1.BIN) — the LIVE zombie INIT state. Byte-true core:
  *   +0x4 = 1            -> state ACTIVE        (sb @0x80100704)
  *   +0x1bc/+0x1be = player X/Z snapshot        (sh @0x8010071c/734 — a "last-seen" ref)
@@ -391,8 +398,15 @@ int re15_enemy_ai_live_active(int slot)
          * (@0x8011f80c[1..15] = the briefing feeding/lying handlers), and the ATTACK-ARM itself
          * (+0x1d8 |= 0x100 + the +0x1da windup seed live in a +0x5=7 sub-handler -- FUN_8010ab2c/
          * b274/cb34 family, the +0x1da writers; see HANDOVER 8.5c). */
-        if ((e->grid_id & 0xf) == 0)
+        if ((e->grid_id & 0xf) == 0) {
             re15_ai_dispatch_decision(e, &g_actors[RE15_ACTOR_SLOT_PLAYER]);
+            /* Faithful-line: when the brain commits the attack (+0x5=7) the lunge gets armed
+             * (FUN_8010ab2c — the attack-commit setup that seeds +0x1da + sets +0x1d8|0x100).
+             * Arm ONCE (only when not already armed); the exact dispatch slot that runs
+             * FUN_8010ab2c is deferred, the commit->arm coupling is the observable behavior. */
+            if (e->sub_state_1 == 7 && !(e->ai_flags & 0x100))
+                re15_enemy_ai_live_arm(slot);
+        }
         return 0;
     }
 
@@ -407,6 +421,33 @@ int re15_enemy_ai_live_active(int slot)
         e->motion = (e->grid_id & 0x80) ? 0x1f : 0x0b;   /* +0x94 recovery action */
     }
     return fired;
+}
+
+/* FUN_8010ab2c (STAGE1.BIN, disasm-VERIFIED — the STAGE1/FUN_8010ab2c.c decompile IS correct,
+ * unlike FUN_80100424.c) — the live zombie's attack-COMMIT setup, the ARM. It writes the live AI
+ * params into the model pool (attack arc +0x5fc = 0x390 — the live family's, vs 0x2c8 for type 0x47;
+ * +0x5f8=0x60/+0x5fa=0x30/+0x5fe=0x138), and — gated by the combat-active flag DAT_800aca3c & 1 —
+ * ARMS the lunge windup: +0x1d8 |= 0x100 (the attack-arm bit FUN_80101224 gates the windup on) +
+ * |= (rng & 1) << 9 (a left/right variant), and seeds the windup timer +0x1da = (rng & 0xff) +
+ * (rng & 0xff) + 600 (600..1110; counts down to 0x12c=300 = the lunge fire). Byte-true @0x8010acbc-
+ * 0x8010ad6c (3 rng draws: bit 0x200, then the two seed bytes). The 8x model-pool body-part anim
+ * setup (func_80019700) + the HP roll (+0x9a = 0x32 + rng&0x1f) + the pose-setter are deferred /
+ * other subsystems. The bleed-style RNG is non-reproducible-by-construction (re15_engine_rand8). */
+void re15_enemy_ai_live_arm(int slot)
+{
+    if (slot < 0 || slot >= RE15_ACTOR_MAX) return;
+    re15_actor_t *e = &g_actors[slot];
+    e->ai_arc  = 0x390;   /* +0x5fc — the LIVE attack arc (wider than the 0x47 family's 0x2c8) */
+    e->ai_p5f8 = 0x60;    /* +0x5f8 */
+    e->ai_p5fa = 0x30;    /* +0x5fa */
+    e->ai_p5fe = 0x138;   /* +0x5fe */
+    if (!s_live_combat_active) return;                       /* DAT_800aca3c & 1 gate */
+    e->ai_flags |= 0x100;                                    /* +0x1d8 |= 0x100 (attack-arm) */
+    if (re15_engine_rand8() & 1) e->ai_flags |= 0x200;       /* (rng & 1) << 9 (variant) */
+    {
+        int seed = (int)re15_engine_rand8() + (int)re15_engine_rand8() + 600;   /* +0x1da seed */
+        e->ai_attack_timer = (int16_t)seed;
+    }
 }
 
 /* FUN_80100424 (@0x80072bac[0x10/0x11/0x16], STAGE1.BIN) — the LIVE zombie PER-FRAME TICK, the
