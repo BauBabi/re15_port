@@ -210,6 +210,17 @@ Multi-Agent-Audit: 20 Subsysteme, 123 WRONG/MISSING-Verdachtsfälle, **104 adver
 ### #19 · MEDIUM · REPAIR · scd-vars-flags
 **Ck (0x21) value>=2 Bitset-Semantik + Opcode 0x58/0x59 indizierte Flag-Ops (statt Plc_rot/Xa_on)**
 
+> ✅ **ERLEDIGT/DEFERRED 2026-06-29 (byte-true RE + empirischer Scan):** **Ck (0x21) ist byte-true** (op_ck @scd_vm.c:1384:
+> `(got!=0)^(value==0)`, voller value, re15_game_flag_get löst idx>31 auf — verifiziert vs LAB_8003fcf4; schon Wave-1).
+> **0x58/0x59 RE't** (LAB_8003fd54 @disp 0x80074608 = indizierter Flag-CHECK; LAB_8003fe90 @0x8007460c = indizierter
+> Flag-SET OR/AND/XOR; ghidra1:149868-149954): beide indexieren das Flag-Wort über **`DAT_800b0fd0[pc[2]]>>5`** =
+> das **AOT-Zonen-Scratch-Array** (geschrieben von FUN_80042bac) → **an das deferred #14 AOT-System gekoppelt**.
+> **Empirischer SCD-weiter Scan (344 Subs):** **0x58 = 0 Verwendungen** (Port-`op_plc_rot@0x58` ist totes RE2-Mapping,
+> RE1.5 0x58 ist KEIN Plc_rot); **0x59 = 1 Verwendung** (room1030/sub09 `59 05 04 01` = Flag-Set op=1). Der Port-Handler
+> (op_xa_on/op_plc_rot) advanced PC korrekt (size 4) → kein Desync, nur Action-Divergenz in 1 unverifiziertem Raum.
+> → **0x58/0x59-Flag-Op-Port DEFERRED bis #14** (AOT-Zonen-Index DAT_800b0fd0); byte-true entkoppeln wäre ohne den
+> AOT-Index ein Rateschritt (= exakt die Audit-Risiko-Notiz). Kein Blind-Fix.
+
 - **Ort:** `re15_port/engine/src/scd_vm.c:1221 (op_ck got==value), :289 (0x58->op_plc_rot), :205 (0x59->op_xa_on)`
 - **RE-Beleg:** Ck LAB_8003fcf4: value=pc[3] voll @0x8003fd1c, a1=(value==0) @0x8003fd30, XOR @0x8003fd50. 0x58 LAB_8003fd54 (@0x80074608), 0x59 LAB_8003fe90 (@0x8007460c): indizierte Flag-Ops DAT_800b0fd0, PTR_DAT_80074664, OR/AND/XOR.
 - **Fix:** op_ck: cond=(got!=0)!=(value==0). 0x58/0x59: prÃ¼fen ob STAGE1-6-Skripte sie nutzen; falls ja op_idxflag_check/set portieren (zone=pc[1],var=pc[2],bit=pc[2]&0x1f,word=work_vars[var]>>5) und von Plc_rot/Xa_on entkoppeln.
