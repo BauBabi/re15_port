@@ -2439,6 +2439,38 @@ static uint8_t re15_enemy_spawn_action(uint8_t type, uint8_t behavior)
     return 0;   /* other types: their overlay decoders not yet RE'd → spawn at idle action 0 */
 }
 
+/* STAGE1 zombie-family spawn CONSTRUCTOR — FUN_80100424 (RE_15_Quellcode_Overlays/STAGE1,
+ * RE'd 2026-06-29). The Sce_em_set handler LAB_800420a0 invokes @0x80072bac[type] right after
+ * writing the entity fields; for the zombie family (0x10/0x11/0x12/0x16/0x18/0x1c-0x1f) that is
+ * FUN_80100424, which reads the behavior byte (+0x9 & 0x1f = sel) and sets the FINAL spawned
+ * state — the looping poses get an explicit state word (+0x4) and clear +0x9 (so the active
+ * sub-dispatch runs sub 0). The POSE half (+0x94) is re15_enemy_spawn_action above (byte-
+ * identical); this is the state-word + grid-clear half. Byte-true (FUN_80100424.c):
+ *   sel 6  feeding -> +0x4 = 0x20c01 (state 1 / +0x5=0x0c / +0x6=2),  +0x9 = 0   @0x801004cc
+ *   sel 0xd        -> +0x4 = 0x201   (state 1 / +0x5=2),             +0x9 = 0   @0x80100540
+ *   sel 0xe        -> +0x4 = 0x1201  (state 1 / +0x5=0x12),          +0x9 = 0   @0x80100598
+ *   sel 1/3 (flags)-> +0x5 = 5  (the anim-phase byte only; +0x4 untouched)      @0x80100488
+ *   other sels (e.g. 8 lying): no +0x4 write, +0x9 kept -> state 0 / grid intact.
+ * Other types (0x45 Irons -> FUN_8011d2b8, 0x47/0x21 cinematic) have no zombie constructor here. */
+static void re15_enemy_spawn_init(re15_actor_t *a, uint8_t type, uint8_t behavior)
+{
+    int is_zombie = (type == 0x10 || type == 0x11 || type == 0x12 || type == 0x16 ||
+                     type == 0x18 || (type >= 0x1c && type <= 0x1f));
+    if (!is_zombie) return;
+    int sel = behavior & 0x1f;
+
+    if ((behavior & 0x80) && (sel == 1 || sel == 3))
+        a->sub_state_1 = 5;                                  /* +0x5 = 5 (flags-block) */
+
+    if (sel == 6) {                                          /* feeding: 0x20c01 */
+        a->state = 1; a->sub_state_1 = 0x0c; a->sub_state_2 = 2; a->sub_state_3 = 0; a->grid_id = 0;
+    } else if (sel == 0xd) {                                 /* 0x201 */
+        a->state = 1; a->sub_state_1 = 2;    a->sub_state_2 = 0; a->sub_state_3 = 0; a->grid_id = 0;
+    } else if (sel == 0xe) {                                 /* 0x1201 */
+        a->state = 1; a->sub_state_1 = 0x12; a->sub_state_2 = 0; a->sub_state_3 = 0; a->grid_id = 0;
+    }
+}
+
 static int op_sce_em_set(scd_thread_t *t)
 {
     uint8_t  slot     = t->pc[1];
@@ -2489,6 +2521,10 @@ static int op_sce_em_set(scd_thread_t *t)
             int settle = (mo == 0x0C || mo == 0x0E || mo == 0x12 || mo == 0x13);
             a->anim_flags = settle ? 0 : 0x04;
         }
+        /* Zombie-family spawn constructor (FUN_80100424, @0x80072bac[type]): the original
+         * runs this INSIDE Sce_em_set right after the field writes — it sets the FINAL spawned
+         * state word (+0x4) for the looping poses + clears +0x9. (No-op for non-zombie types.) */
+        re15_enemy_spawn_init(a, type, behavior);
         a->flags  = 0x01;          /* visible */
         a->x = (int32_t)x;
         a->y = (int32_t)y;

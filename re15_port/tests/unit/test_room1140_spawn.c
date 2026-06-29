@@ -52,16 +52,22 @@ static uint8_t *slurp(const char *path, long *out_sz)
     return b;
 }
 
-/* Expected first-visit roster (IF-branch). grid = the Sce_em_set behavior byte pc[3]
- * (byte-true LAB_800420a0: behavior -> entity +0x9, state +0x4 = 0). 0x88 = lying
- * (pose sel 8 -> action 0x13), 0x86 = feeding (sel 6 -> action 0x27). */
-typedef struct { uint8_t type; int32_t x, y, z; int16_t rot_y; uint8_t grid; uint8_t motion; } expect_t;
+/* Expected first-visit roster (IF-branch) AFTER the byte-true field flow:
+ *   Sce_em_set (LAB_800420a0): behavior pc[3] -> +0x9, state +0x4 = 0, pose -> motion;
+ *   then the zombie constructor FUN_80100424 (@0x80072bac[type]) sets the FINAL state:
+ *     sel 8 (0x88) lying:   no +0x4 write, +0x9 kept -> state 0, grid 0x88, motion 0x13
+ *     sel 6 (0x86) feeding: +0x4 = 0x20c01 -> state 1 / +0x5=0x0c / +0x6=2, grid cleared 0,
+ *                           motion 0x27 */
+typedef struct {
+    uint8_t type; int32_t x, y, z; int16_t rot_y;
+    uint8_t state, sub1, sub2, grid, motion;
+} expect_t;
 static const expect_t s_expect[5] = {
-    { 0x16,  -800, 0, -20600, 1024, 0x88, 0x13 },
-    { 0x10, -1800, 0, -19600,  512, 0x86, 0x27 },
-    { 0x10, -1800, 0, -21600, 3584, 0x86, 0x27 },
-    { 0x11,   200, 0, -21600, 2560, 0x86, 0x27 },
-    { 0x11,   200, 0, -19600, 1536, 0x86, 0x27 },
+    { 0x16,  -800, 0, -20600, 1024, 0, 0x00, 0, 0x88, 0x13 },
+    { 0x10, -1800, 0, -19600,  512, 1, 0x0c, 2, 0x00, 0x27 },
+    { 0x10, -1800, 0, -21600, 3584, 1, 0x0c, 2, 0x00, 0x27 },
+    { 0x11,   200, 0, -21600, 2560, 1, 0x0c, 2, 0x00, 0x27 },
+    { 0x11,   200, 0, -19600, 1536, 1, 0x0c, 2, 0x00, 0x27 },
 };
 
 int main(void)
@@ -124,12 +130,13 @@ int main(void)
                     e->active, e->type, e->x, e->y, e->z, e->rot_y);
             fail = 1;
         }
-        /* byte-true field mapping: behavior pc[3] -> grid_id (+0x9), state (+0x4) = 0,
-         * spawn pose (motion) decoded from behavior. */
-        if (e->grid_id != x->grid || e->state != 0 || e->motion != x->motion) {
-            fprintf(stderr, "FAIL: actor %d expected grid=0x%02X state=0 motion=%d; "
-                    "got grid=0x%02X state=0x%02X motion=%d\n",
-                    k + 1, x->grid, x->motion, e->grid_id, e->state, e->motion);
+        /* byte-true post-constructor state (Sce_em_set + FUN_80100424). */
+        if (e->state != x->state || e->sub_state_1 != x->sub1 || e->sub_state_2 != x->sub2 ||
+            e->grid_id != x->grid || e->motion != x->motion) {
+            fprintf(stderr, "FAIL: actor %d expected state=%d +0x5=0x%02X +0x6=%d grid=0x%02X motion=%d; "
+                    "got state=%d +0x5=0x%02X +0x6=%d grid=0x%02X motion=%d\n",
+                    k + 1, x->state, x->sub1, x->sub2, x->grid, x->motion,
+                    e->state, e->sub_state_1, e->sub_state_2, e->grid_id, e->motion);
             fail = 1;
         }
     }
