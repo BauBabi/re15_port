@@ -15,11 +15,13 @@ Fade/Game-Over. Ergänzt die Auto-Memory (v.a. `reai-v2-foundation-combat` = die
 
 ## TL;DR — Wo stehe ich
 
-- **Git:** master, sauber (nur `.idea/` untracked). Phase 8.10 = **8 Commits** (grabbed-Lock `fb4a06e7` · Forward-Walk-RE
+- **Git:** master, sauber (nur `.idea/` untracked). Phase 8.10 = **9+ Commits** (grabbed-Lock `fb4a06e7` · Forward-Walk-RE
   `a7ae354a` · Forward-Walk aufgelöst `8038cc5f` · Player-DEATH `05af1a76` · Zombie-hurt/death `062992d7` · Player-Schuss-
-  Damage `e058ad25` · Fire-Input `93c9f233` · + dieser Doku-Commit). **Beide Combat-Schleifen laufen in-game end-to-end:**
-  Zombie→Spieler (spawn→wake→engage→turn→grab→pin→drain→TOD) UND Spieler→Zombie (R1+Square→Auto-Aim→byte-true-Damage→
-  hurt/death→corpse). Offen = nur die Präsentation (Fade/Game-Over-Screen, Aim/Muzzle-Anim) + die exakte Aim-FSM/Cone.
+  Damage `e058ad25` · Fire-Input `93c9f233` · **Reach-Cone byte-true `7d3e305b`** [TEIL 8] · Doku/Skills). **Beide Combat-
+  Schleifen laufen in-game end-to-end:** Zombie→Spieler (spawn→wake→engage→turn→grab→pin→drain→TOD) UND Spieler→Zombie
+  (R1+Square→Auto-Aim→byte-true-Damage [Reach = reach+Hitbox-Radius, strikt]→hurt/death→corpse). **Die infra-freien byte-true
+  Refinements sind ausgeschöpft** (TEIL 8 war das letzte); was bleibt ist auf fehlende Infra geblockt (Aim-FSM/Kamera/Anim,
+  byte-true belegt in §8.10 TEIL 8) oder ein neues Subsystem.
 - **Build/Test:** `taskkill //F //IM re15_pc.exe 2>/dev/null; true; export PATH="/c/msys64/mingw64/bin:$PATH";
   cmake --build re15_port/build; ctest --test-dir re15_port/build --timeout 30` → **31/31 grün** (mingw64 GCC + Ninja).
   (Das `taskkill` ist nötig, falls die Exe noch läuft + die Datei sperrt — sonst Link-„Permission denied", kein Code-Fehler.)
@@ -411,16 +413,40 @@ darum bewusst NICHT portiert. Drei Befunde:
   ROOM1140-JUMP-Index (--triangle/--right, nicht dokumentiert → eine --menushot-Erkundung). Niedrige Priorität: die statische
   RE ist eindeutig (das Live-Brain hat keinen Walk-Pfad).
 
+### 8.10 TEIL 8 — die per-Waffe REACH-CONE byte-true (ERLEDIGT, Commit 7d3e305b)
+Refinement-Richtung 2. Der Player-Schuss-Resolver `re15_player_weapon_fire` hatte die HIT-Application byte-true, aber die
+Auto-Aim-REACH war faithful-line (`dist <= table-reach`). Der echte per-Waffe Cone-Tester `PTR_LAB_8006e548[weapon]`
+(@0x80011fec) disassembliert: für ALLE Gun-Waffen einer von zwei **byte-IDENTISCHEN** reinen-2D-Testern — `FUN_800127fc`
+(Pistole w1/w2) + `FUN_800128a0` (Magnum/Shotgun): `dist = SquareRoot0(dx²+dz²)` vom Aim-Point; `R = (u16 @ hbdata+6 =
+hit_radius_min) + (reach & 0xffff)`; Treffer ⟺ `dist < R` (strikt) **UND** `dist < DAT_8008f5e0` (Min-Latch, nächster).
+→ Der Enemy-**Hitbox-Radius** (hbdata+6, Zombie=400) wird zur Reach ADDIERT. Der Port HATTE den Radius (`hit_radius_min`),
+ließ ihn aber weg + nutzte `<=` → die effektive Pistolen-Reichweite war 999 statt der echten 1399. **FIX:** `R = reach +
+(hit_radius_min & 0xffff)`, strikt `dist < R`. test Part(12): Treffer bei dist 1399, Miss bei 1400. 31/31 ctest.
+- **PROVEN-BLOCKER (byte-true belegt, NICHT geraten — für die nächste Session, damit niemand denselben Tunnel gräbt):**
+  - Die Dist-ORIGIN bleibt faithful-line (Spieler statt des **Aim-Points**): `param_2` ist ein 16-bit Welt-SVECTOR, den die
+    Aim/Fire-FSM @0x80035810 **nach vorn projiziert** — der Port hat diese FSM nicht. `arc_test(0x400)` bleibt der Richtungs-
+    Stand-in (für den Aim-Point + den Kamera-Line-of-fire-Block FUN_80011f50 @0x80012280–0x80012370 = `DAT_800ac784` Kamera +
+    `DAT_800aca88/8c/90` Aim-Ray + `FUN_8001bf04` — alles Kamera-Infra, die der Port nicht hat).
+  - **Hit-Stun-Dauer** (empfangende Seite, würde den Stagger echt machen): die HURT-State `FUN_80105a8c` kehrt nur zu ACTIVE
+    zurück wenn `s16 @ +0x1dc < 0` (`+0x4=1, +0x5=0x11, +0x6=0`). Aber `+0x1dc` wird in der Stagger-Anim-FSM `@0x8011fb90`
+    geseedet (SPARSE: nur Row1[0,1] → `0x80105b7c`), die tief im Anim-System sitzt (`+0x188` Anim-Base, `+0x8c=0x14`,
+    `+0x94`, `+0x9e` Anim-Felder) — der Port hat das Enemy-Anim-Playback nicht. = Anim-Präsentations-Detail, deferred.
+  - **Hit-Dir-Clip** `+0x6 = DAT_8006f410[heading>>0x1d]` = `{7,0,1,7,2,0,0,0}` (Tabelle gedumpt) → braucht `DAT_800acaec`
+    (16-bit Hit-Winkel) + die Front/Back-Verfeinerung via `DAT_800aca8c` (Aim-Z) = Aim-FSM-Daten.
+  - **Waffen-Inventory** `DAT_800aca5d` (statt Default-Pistole) → braucht das Inventory-System (der Global wird nie gesetzt).
+  - Die Aim-Mode-Alternate-Reach-Row (@+0x58, `DAT_800aca5c&4`) ist byte-IDENTISCH zur Base-Row → **nichts zu portieren**.
+
 ### 8.10 — NÄCHSTE SESSION: der byte-true Combat-KERN ist KOMPLETT (beide Schleifen spielbar). Was bleibt:
-Der Combat ist in beide Richtungen byte-true geschlossen + in-game spielbar. Die offenen Punkte sind **Präsentation/Polish**
-oder **neue Subsysteme** — eine echte Richtungswahl (frag den Nutzer oder wähl):
-1. **PRÄSENTATION (macht den Combat sichtbar):** die Aim/Raise/Muzzle-**Animation** (Player hebt die Waffe) + die Zombie-
-   Stagger/Death-**Animation** (heute instant) + der **Game-Over-Screen** + der Death-**Color-Fade** (@0x8003694c, 0x00ffff38).
-   Braucht eine Fade/UI-Render-Schicht (PC SDL2/GL) — der Port hat keine. Mittlerer–großer Scope.
-2. **EXAKTE byte-true Verfeinerungen (Refinement):** die exakte Aim/Fire-Command-FSM (@0x80035810, 3-Level @0x80073f90[4]→
-   action 8) statt des faithful-line R1/Square; die exakte per-Waffe Line-vs-Box-Cone (Tester @0x8006e548) statt des
-   `arc_test(0x400)`; die Waffen-Inventory (DAT_800aca5d) statt der Default-Pistole; der Forward-Walk-TRANSLATION (m1-Gegner in
-   einem ANDEREN Raum — `re15_emd_get_keyframe_speed` ist da); die exakte Hit-Stun-Dauer (Reaktions-Clip-Framecount).
+Der Combat ist in beide Richtungen byte-true geschlossen + in-game spielbar; die infra-freien Refinements (Reach-Cone, TEIL 8)
+sind ausgeschöpft. Die verbleibenden Punkte sind **alle auf fehlende Infra geblockt** (oben byte-true belegt) oder **neue
+Subsysteme** — eine echte Richtungswahl (frag den Nutzer oder wähl):
+1. **PRÄSENTATION (macht den Combat sichtbar + entblockt die meisten Refinements):** eine **Anim/Render-Schicht** (PC SDL2/GL)
+   — sie ist die gemeinsame Wurzel von: der Aim/Raise/Muzzle-Animation, der Zombie-Stagger-/Death-Animation (heute instant; +
+   entblockt die **Hit-Stun-Dauer** +0x1dc oben), dem **Game-Over-Screen** + dem Death-**Color-Fade** (@0x8003694c). Der Port
+   hat keine Fade/UI/Enemy-Anim-Schicht. Mittlerer–großer Scope, aber der höchste Hebel (entblockt mehrere deferrals).
+2. **AIM/FIRE-FSM + KAMERA-Infra (entblockt die exakte Cone):** die Aim/Fire-Command-FSM @0x80035810 (3-Level @0x80073f90[4]→
+   action 8) → liefert den **Aim-Point** (param_2) + die Kamera-Line-of-fire → entblockt die exakte Dist-Origin, den Hit-Dir-
+   Clip, die Waffen-Inventory. Braucht die Player-Command-FSM (der Port läuft auf re15_player_tick+SCD) — großer Scope.
 3. **VERIFIKATION:** ein mid-LIVE-Combat-Savestate (`re15-room-capture --provoke`, kurz) → die ganze 8.6–8.10-Kette live
    gegen den Port (braucht den ROOM1140-JUMP-Index via --menushot).
 4. **NEUES SUBSYSTEM:** weg vom Combat — die deferred Audit-Fixes (#21/#25/#26/#27/#29/#30/#31/#33), ein anderer Raum, oder
