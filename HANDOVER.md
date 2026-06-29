@@ -411,12 +411,24 @@ darum bewusst NICHT portiert. Drei Befunde:
   ROOM1140-JUMP-Index (--triangle/--right, nicht dokumentiert → eine --menushot-Erkundung). Niedrige Priorität: die statische
   RE ist eindeutig (das Live-Brain hat keinen Walk-Pfad).
 
-**TEIL 3 (mid-Combat-Savestate) OFFEN:** der vorhandene Save ist post-death (cmd 7); einen mid-Grab ziehen (cmd 5 +
-Player-Pin live) → Sub-Steps/Bite-Count/Pin gegen den Port prüfen (`re15-room-capture`; provoke ist timing-sensitiv).
-- **Verbleibende byte-true Details:** Sub-States [2]/[3]/[4] (0x80105a8c/06ba4/0919c = hurt/death/idle), FUN_8001bc08-
-  Sensor/+0x1d8-Update, AI-Pause-Gate (DAT_800aca40 & 0x20000000 → `re15_enemy_ai_set_paused`, noch nicht in game_step).
-- **WAS VOM 0x47-PORT BLEIBT:** der `@0x801217a0`-Code (Phase 2-7) ist echte byte-true RE eines
-  PARALLELEN Typs (0x47) — nicht wegwerfen, klar als 0x47 gelabelt; der Live-Pfad ist `@0x8011f7b4`.
+### 8.10 — NÄCHSTE SESSION: der byte-true Combat-KERN ist KOMPLETT (beide Schleifen spielbar). Was bleibt:
+Der Combat ist in beide Richtungen byte-true geschlossen + in-game spielbar. Die offenen Punkte sind **Präsentation/Polish**
+oder **neue Subsysteme** — eine echte Richtungswahl (frag den Nutzer oder wähl):
+1. **PRÄSENTATION (macht den Combat sichtbar):** die Aim/Raise/Muzzle-**Animation** (Player hebt die Waffe) + die Zombie-
+   Stagger/Death-**Animation** (heute instant) + der **Game-Over-Screen** + der Death-**Color-Fade** (@0x8003694c, 0x00ffff38).
+   Braucht eine Fade/UI-Render-Schicht (PC SDL2/GL) — der Port hat keine. Mittlerer–großer Scope.
+2. **EXAKTE byte-true Verfeinerungen (Refinement):** die exakte Aim/Fire-Command-FSM (@0x80035810, 3-Level @0x80073f90[4]→
+   action 8) statt des faithful-line R1/Square; die exakte per-Waffe Line-vs-Box-Cone (Tester @0x8006e548) statt des
+   `arc_test(0x400)`; die Waffen-Inventory (DAT_800aca5d) statt der Default-Pistole; der Forward-Walk-TRANSLATION (m1-Gegner in
+   einem ANDEREN Raum — `re15_emd_get_keyframe_speed` ist da); die exakte Hit-Stun-Dauer (Reaktions-Clip-Framecount).
+3. **VERIFIKATION:** ein mid-LIVE-Combat-Savestate (`re15-room-capture --provoke`, kurz) → die ganze 8.6–8.10-Kette live
+   gegen den Port (braucht den ROOM1140-JUMP-Index via --menushot).
+4. **NEUES SUBSYSTEM:** weg vom Combat — die deferred Audit-Fixes (#21/#25/#26/#27/#29/#30/#31/#33), ein anderer Raum, oder
+   die Asset-Schicht.
+- **Verbleibende kleine byte-true Combat-Details:** FUN_8001bc08-Sensor/+0x1d8-Update, AI-Pause-Gate (DAT_800aca40 &
+  0x20000000 → `re15_enemy_ai_set_paused`, noch nicht in game_step gewired).
+- **WAS VOM 0x47-PORT BLEIBT:** der `@0x801217a0`-Code (Phase 2-7) ist echte byte-true RE eines PARALLELEN Typs (0x47) —
+  nicht wegwerfen, klar als 0x47 gelabelt; der Live-Pfad ist `@0x8011f7b4`.
 
 Werkzeuge: **`re15-psx-disasm`** (EXE/Overlay-Disasm), **`re15-savestate-ghidra`** (Live-RAM +
 Tabellen-Patch-Check), **`re15-room-capture`** (Raum laden/provozieren). Memory `reai-v2-foundation-combat`
