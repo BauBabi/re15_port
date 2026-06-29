@@ -19,11 +19,20 @@
  *   FUN_8011da48 (sub 0):  logic = SUB[1 + (entity+0x5)] , anim = SUB[4 + (entity+0x5)]
  *        (verified: +0x5=7 -> logic SUB[8]=0x80050ddc, anim SUB[11]=0x80051148.)
  *
- * The "brain" — the transitions that pick the next state word @+0x4 — lives in the
- * per-AI-mode vtables (0x8011f840 / f960 / 120264 / 120324, each 8 entries):
- *   [0] FUN_80101b64 (search w/ timer) | FUN_80101c7c (approach-only)
- *   [1] FUN_80101de4 (search)          [2] FUN_80102058 (rich: grab/flee)
- *   [3..7] FUN_80102540 / FUN_80102bd0 / FUN_80102d20 (movement/anim, deferred)
+ * There are TWO decision systems (DYNAMICALLY DISAMBIGUATED from the live combat
+ * savestate, dispatch tables un-patched at runtime — see re15_enemy_ai.c):
+ *  (A) the LIVE STAGE1 combat path: state +0x4=1 -> FUN_8011d9f4 -> sub +0x9=0 ->
+ *      FUN_8011da48 -> logic = PTR_FUN_801217b4[1+(+0x5)], anim = [4+(+0x5)] — the
+ *      EXE generic-humanoid leaves (0x8004f.., e.g. FUN_8004f100 = the +0x5=0 assess).
+ *      The active type-0x10 zombies run THIS (verified +0x9=0, +0x5 in {1,2,6,12}).
+ *  (B) a PARALLEL per-AI-mode vtable system, dispatched on +0x5 by FUN_8010168c /
+ *      FUN_80101784 / FUN_8010b6d4 / FUN_8010b800 (held in the mode table @0x8011f800)
+ *      into 0x8011f840 / f960 / 120264 / 120324 (decide) + f890/1202a8 (animate):
+ *        [0] FUN_80101b64 (search w/ timer) | FUN_80101c7c (approach-only)
+ *        [1] FUN_80101de4 (search)          [2] FUN_80102058 (rich: grab/flee)
+ *        [3..] FUN_80102540 / FUN_80102bd0 / FUN_80102d20 (movement/anim, deferred)
+ *      This system is byte-true RE'd below but is NOT on the confirmed live +0x9=0
+ *      path — it serves a different AI mode / type. Kept (real code) + clearly labelled.
  *
  * This module ports: the named state model, INIT (FUN_8011d84c), the tick entry +
  * main dispatch (FUN_8011d6d4), the ACTIVE sub-dispatch structure (FUN_8011d9f4), and
@@ -83,6 +92,26 @@ int re15_enemy_ai_tick(int slot);
  * The leaf BODIES are not executed yet — see the module header. */
 int re15_enemy_ai_active(int slot);
 
+/* ==== System (A): the LIVE STAGE1 EXE-leaf path (dynamically confirmed) ============== *
+ * The active type-0x10 zombies dispatch through FUN_8011da48 to the EXE generic-humanoid
+ * leaves. These are pure decision logic (no model pool) and ARE the live AI. */
+
+/* DAT_800aca52 & 1 — a STAGE1 global flag the assess leaf reads (only for type 0x4b).
+ * 0 by default; setter for the Phase-5 wiring + the test. */
+void re15_enemy_ai_set_global_flag(int v);
+
+/* FUN_8004f100 — the +0x5=0 "assess" leaf (PTR_FUN_801217b4[1], the SUB[1+0] logic for
+ * FUN_8011da48 at +0x5=0): the live sub-mode that picks the next +0x5 from dist/arc/
+ * flags. Byte-true (PSX.EXE @0x8004f100). Writes (last condition wins):
+ *   dist (ai_dist) >= 0x5dd      -> +0x5 = 1 (+0x6 = 0)   [far -> search]
+ *   player OUTSIDE the ±0x4b0 arc -> +0x5 = 2 (+0x6 = 0)   [turn to face]
+ *   (global_flag & 1) && type==0x4b -> +0x5 = 6 (+0x6 = 0)
+ *   player.hit_react != 0         -> +0x5 = 6 (+0x6 = 0)   [react to the player's hit]
+ * (FUN_8001ab9c — the leaf's arc test — is FUN_8001a9cc with the cone passed directly, i.e.
+ * re15_ai_arc_test; verified identical incl. the 0x800 boundary.) */
+void re15_ai_exe_assess(re15_actor_t *e, const re15_actor_t *player);
+
+/* ==== System (B): the parallel per-AI-mode decision brain (byte-true, not the live path) */
 /* ---- Decision brain (byte-true; the per-mode vtable[0..1] entries) ------------------ *
  * Each reads the cached ai_dist + the arc tests (re15_ai_arc_test) + ai_timer/ai_flags/
  * anim_flags + the shared RNG, and writes the next state word at +0x4 via

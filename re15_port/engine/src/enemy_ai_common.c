@@ -116,7 +116,39 @@ int re15_enemy_ai_tick(int slot)
     return 1;
 }
 
-/* ================= Decision brain (per-mode vtable[0..1] entries) ===================== *
+/* ============ System (A): the LIVE STAGE1 EXE-leaf path (dynamically confirmed) ======= *
+ * Resolved empirically from stage_saves/mzd_stage1_combat_death.sav: the overlay dispatch
+ * tables (PTR_FUN_801217a0/b4) are NOT patched at runtime (live RAM == on-disc STAGE1.BIN),
+ * and the active type-0x10 zombies are state +0x4=1, sub +0x9=0, anim +0x5 in {1,2,6,12}.
+ * So the live path is FUN_8011d9f4 -> FUN_8011da48 -> logic = SUB[1+(+0x5)] = the EXE
+ * generic-humanoid leaves (0x8004f.., disassembled from PSX.EXE), NOT the per-mode overlay
+ * brain (System B) which a different AI mode/type uses. FUN_8004f100 (the +0x5=0 leaf) is
+ * ported here; the remaining live leaves (+0x5 = 1/2/6/12 = 0x8004f3a4/5e8/0x80050cb8/
+ * 0x800517f0 + their anim siblings SUB[4+k]) are the next slice (some touch the model pool
+ * -> the skeleton-mapped, deferred part). */
+
+/* DAT_800aca52 & 1 — a STAGE1 global flag the assess leaf reads (only for type 0x4b). */
+static int s_ai_global_flag = 0;
+void re15_enemy_ai_set_global_flag(int v) { s_ai_global_flag = v ? 1 : 0; }
+
+/* FUN_8004f100 (PSX.EXE) — the +0x5=0 assess leaf. Instruction map:
+ *   8004f118  sltiu (dist < 0x5dd) ; 8004f11c bne -> if dist>=0x5dd: +0x5=1, +0x6=0
+ *   8004f148  jal FUN_8001ab9c(playerX, playerZ, 0x4b0)  (= re15_ai_arc_test, cone 0x4b0)
+ *   8004f150  if result != 0 (player outside the arc): +0x5=2, +0x6=0
+ *   8004f17c  lhu DAT_800aca52 & 1 ; if set && type(+0x8)==0x4b: +0x5=6, +0x6=0
+ *   8004f1c4  lbu DAT_800acae7 (player+0x93 hit_react) ; if != 0: +0x5=6, +0x6=0 */
+void re15_ai_exe_assess(re15_actor_t *e, const re15_actor_t *player)
+{
+    if (!e || !player) return;
+    if (e->ai_dist >= 0x5ddu)        { e->sub_state_1 = 1; e->sub_state_2 = 0; }   /* far -> search */
+    if (re15_ai_arc_test(e, player->x, player->z, 0x4b0) != 0)                     /* outside ±0x4b0 */
+                                     { e->sub_state_1 = 2; e->sub_state_2 = 0; }   /* turn to face */
+    if (s_ai_global_flag && e->type == 0x4b)
+                                     { e->sub_state_1 = 6; e->sub_state_2 = 0; }
+    if (player->hit_react != 0)      { e->sub_state_1 = 6; e->sub_state_2 = 0; }   /* react to hit */
+}
+
+/* ================= System (B): parallel decision brain (per-mode vtable[0..1]) ======== *
  * func_0x8001a9cc(&player, cone) = re15_ai_arc_test(e, player->x, player->z, cone): 0 if
  * the player is inside the ±cone front arc, else ±cone. func_0x8001af20() = the shared
  * RNG (re15_engine_rand8). The state word is stored at +0x4 via re15_ai_set_state_word. */

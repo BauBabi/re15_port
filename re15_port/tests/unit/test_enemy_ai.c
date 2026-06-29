@@ -327,10 +327,56 @@ static int test_dispatch_decision(void)
     return 0;
 }
 
+/* ----- System A: live EXE-leaf assess (FUN_8004f100, +0x5=0) ----- */
+static int test_exe_assess(void)
+{
+    re15_actor_t *e;
+    re15_enemy_ai_set_global_flag(0);
+
+    /* (a) far (dist>=0x5dd) + Spieler vorne (im 0x4b0-Arc) + nicht getroffen → +0x5=1. */
+    e = fresh_enemy(0x10);
+    put_player(0, 50000);                          /* vorne (+Z): arc 0x4b0 == 0 */
+    g_actors[0].hit_react = 0;
+    e->ai_dist = 2000u;                            /* >= 0x5dd(1501) */
+    re15_ai_exe_assess(e, &g_actors[0]);
+    if (e->sub_state_1 != 1) { fprintf(stderr, "FAIL: assess far→+0x5=1, ist %d\n", e->sub_state_1); return 1; }
+
+    /* (b) nah + Spieler HINTEN (außerhalb ±0x4b0) → +0x5=2 (turn to face). */
+    e = fresh_enemy(0x10);
+    put_player(0, -50000);                         /* hinten (-Z): arc 0x4b0 != 0 */
+    g_actors[0].hit_react = 0;
+    e->ai_dist = 1000u;                            /* < 0x5dd → kein +0x5=1 */
+    re15_ai_exe_assess(e, &g_actors[0]);
+    if (e->sub_state_1 != 2) { fprintf(stderr, "FAIL: assess outside-arc→+0x5=2, ist %d\n", e->sub_state_1); return 1; }
+
+    /* (c) Spieler getroffen (hit_react!=0) → +0x5=6 (überschreibt). */
+    e = fresh_enemy(0x10);
+    put_player(0, 50000);
+    g_actors[0].hit_react = 1;
+    e->ai_dist = 2000u;                            /* würde +0x5=1 setzen, aber hit überschreibt */
+    re15_ai_exe_assess(e, &g_actors[0]);
+    if (e->sub_state_1 != 6) { fprintf(stderr, "FAIL: assess player-hit→+0x5=6, ist %d\n", e->sub_state_1); return 1; }
+
+    /* (d) global flag&1 + type==0x4b → +0x5=6; type!=0x4b → NICHT. */
+    e = fresh_enemy(0x4b);
+    put_player(0, 50000); g_actors[0].hit_react = 0; e->ai_dist = 1000u;
+    re15_enemy_ai_set_global_flag(1);
+    re15_ai_exe_assess(e, &g_actors[0]);
+    if (e->sub_state_1 != 6) { fprintf(stderr, "FAIL: assess flag+type0x4b→+0x5=6, ist %d\n", e->sub_state_1); return 1; }
+    e = fresh_enemy(0x10);                         /* type 0x10: flag-branch tot */
+    put_player(0, 50000); g_actors[0].hit_react = 0; e->ai_dist = 1000u;
+    re15_ai_exe_assess(e, &g_actors[0]);
+    if (e->sub_state_1 == 6) { fprintf(stderr, "FAIL: flag-branch darf bei type!=0x4b nicht feuern\n"); return 1; }
+    re15_enemy_ai_set_global_flag(0);
+
+    printf("PASS: test_exe_assess\n");
+    return 0;
+}
+
 int main(void)
 {
     int failures = 0;
-    printf("=== Enemy-AI FSM Unit Tests (Phase 2+3, FUN_8011d6d4/d84c/d9f4 + 80101b64/c7c/de4/2058) ===\n\n");
+    printf("=== Enemy-AI FSM Unit Tests (Phase 2-4, dispatch + decision brain + live EXE leaf) ===\n\n");
 
     failures += test_ai_init();
     failures += test_ai_init_stationary();
@@ -344,6 +390,7 @@ int main(void)
     failures += test_facing_aligned();
     failures += test_decide_engage();
     failures += test_dispatch_decision();
+    failures += test_exe_assess();
 
     if (failures == 0) printf("\nALL ENEMY-AI TESTS PASSED\n");
     else               fprintf(stderr, "\n%d TEST(S) FAILED\n", failures);
