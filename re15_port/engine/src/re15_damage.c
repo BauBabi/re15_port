@@ -326,3 +326,44 @@ int re15_enemy_attack(int attacker_slot)
     box.radius = 500;               /* 0x1f4 @80018008 */
     return re15_resolve_attack(&box, 0, attacker_slot);   /* attack_type 0 = 10 dmg */
 }
+
+/* ====================================================================== *
+ *  Hitbox-dimension setup — byte-true values for the +0x78 struct data.   *
+ * ====================================================================== */
+
+/* Player hitbox = the fixed EXE-static struct @0x80073e94, VERIFIED in the on-disc
+ * PSX.EXE at file offset 0x64694 (bytes 00 00 06 fa 00 00 c2 01 fa 05 c2 01 →
+ * +6 radius_min = 0x01c2 = 450, +8 height = 0x05fa = 1530, +10 radius_max = 0x01c2
+ * = 450; radius_min==radius_max → circular). Call at player init. */
+void re15_player_apply_hitbox(re15_actor_t *p)
+{
+    if (!p) return;
+    p->hit_radius_min = p->hit_radius_max = 450;
+    p->hit_height     = 1530;
+    /* The player's +0x7c local offset was not extracted; XZ offset 0 centres the
+     * hitbox on the player horizontally (the only component the circular XZ test
+     * uses); the Y-centre offset is left 0 (unconfirmed for the player). */
+    p->hit_offset_x = p->hit_offset_y = p->hit_offset_z = 0;
+}
+
+/* Enemy hitbox by type. The per-type +0x78 struct (DAT_800b2248[type<<2] + 0x8) is
+ * overlay-PATCHED at runtime — the on-disc table slots are null — so these are read
+ * byte-true from room-savestate RAM (player-HP=100 sanity-gated, the +6/+8/+10 layout
+ * cross-checked against FUN_8002b5d0). Each enemy's +0x7c local offset = (0,-height,0).
+ * Unknown types get NO hitbox (0) — no guessing. Call at enemy spawn. */
+void re15_enemy_apply_hitbox(re15_actor_t *a, uint8_t type)
+{
+    if (!a) return;
+    uint16_t r, h;
+    switch (type) {
+        case 0x47: r = 450;  h = 1530; break;  /* STAGE1 humanoid/zombie (HASH-..._1.sav)   */
+        case 0x16: r = 400;  h = 1440; break;  /* STAGE2 enemy (mzd_stage2_room.sav)         */
+        case 0x29: r = 1100; h = 1080; break;  /* wide/short creature (HASH-..._5.sav)       */
+        default:   return;                      /* unverified type → no hitbox (no guessing) */
+    }
+    a->hit_radius_min = a->hit_radius_max = r;
+    a->hit_height     = h;
+    a->hit_offset_x   = 0;
+    a->hit_offset_y   = (int16_t)(-(int32_t)h);   /* +0x7c local offset = (0, -height, 0) */
+    a->hit_offset_z   = 0;
+}

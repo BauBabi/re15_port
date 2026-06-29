@@ -27,6 +27,7 @@
 #include "re15_aot.h"        /* Phase 4.4.6: AOT trigger ops */
 #include "re15_inventory.h"  /* Phase 4.4.7 */
 #include "re15_actor.h"      /* Phase 4.4.8 */
+#include "re15_damage.h"     /* re15_enemy_apply_hitbox — wire the spawned enemy's +0x78 hitbox */
 #include "re15_msg.h"        /* re15_msg_is_choice — YES/NO vs plain Message_on gating */
 #include "re15_to_re2.h"     /* RE1.5 → RE2 adapter layer */
 
@@ -2464,6 +2465,7 @@ static int op_sce_em_set(scd_thread_t *t)
         re15_actor_t *a = &g_actors[actor_slot];
         a->active = 1;
         a->type   = type;
+        re15_enemy_apply_hitbox(a, type);   /* byte-true +0x78 hitbox dims (savestate-verified) */
         a->state  = behavior;
         a->motion = re15_enemy_spawn_action(type, behavior);  /* byte-true spawn pose */
         /* BYTE-TRUE PLAYBACK MODE (RE'd from the FUN_80050cb8 phase FSM): anim-flags

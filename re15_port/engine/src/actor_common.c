@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include "re15_actor.h"
 #include "re15_engine.h"
+#include "re15_damage.h"   /* re15_player_apply_hitbox — wire the player's +0x78 hitbox */
 
 re15_actor_t g_actors[RE15_ACTOR_MAX];
 uint8_t      g_actor_count = 0;
@@ -31,6 +32,8 @@ void re15_actor_init(void)
      * records the current keyframe without applying any delta. */
     g_actors[RE15_ACTOR_SLOT_PLAYER].root_prev_kf     = -1;
     g_actors[RE15_ACTOR_SLOT_PLAYER].root_prev_motion = -1;
+    /* Byte-true player attack-hitbox (EXE-static @0x80073e94): radius 450, height 1530. */
+    re15_player_apply_hitbox(&g_actors[RE15_ACTOR_SLOT_PLAYER]);
     g_actor_count = 1;
 }
 

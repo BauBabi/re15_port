@@ -302,6 +302,35 @@ static int test_enemy_attack(void)
     return 0;
 }
 
+/* ----- Echte Hitbox-Werte (savestate/EXE-verifiziert) ----- *
+ * Player @0x80073e94 = 450/1530 circular (PSX.EXE @0x64694). Zombie Typ 0x47 =
+ * 450/1530, Offset (0,-1530,0). Unbekannter Typ → keine Hitbox. */
+static int test_real_hitbox_values(void)
+{
+    re15_actor_t a = {0};
+    re15_player_apply_hitbox(&a);
+    if (a.hit_radius_min != 450 || a.hit_radius_max != 450 || a.hit_height != 1530) {
+        fprintf(stderr, "FAIL: Player-Hitbox 450/450/1530, ist %u/%u/%u\n",
+                a.hit_radius_min, a.hit_radius_max, a.hit_height); return 1; }
+
+    re15_actor_t z = {0};
+    re15_enemy_apply_hitbox(&z, 0x47);              /* STAGE1-Zombie */
+    if (z.hit_radius_min != 450 || z.hit_radius_max != 450 || z.hit_height != 1530) {
+        fprintf(stderr, "FAIL: Zombie(0x47) 450/450/1530, ist %u/%u/%u\n",
+                z.hit_radius_min, z.hit_radius_max, z.hit_height); return 1; }
+    if (z.hit_offset_y != -1530) {
+        fprintf(stderr, "FAIL: Zombie offset_y -1530, ist %d\n", z.hit_offset_y); return 1; }
+
+    re15_actor_t u = {0};
+    re15_enemy_apply_hitbox(&u, 0x99);              /* unbekannt → keine Hitbox */
+    if (u.hit_radius_min != 0 || u.hit_height != 0) {
+        fprintf(stderr, "FAIL: unbekannter Typ muss 0 bleiben, ist %u/%u\n",
+                u.hit_radius_min, u.hit_height); return 1; }
+
+    printf("PASS: test_real_hitbox_values\n");
+    return 0;
+}
+
 int main(void)
 {
     int failures = 0;
@@ -317,6 +346,7 @@ int main(void)
     failures += test_hitbox_overlap_circular();
     failures += test_resolve_attack();
     failures += test_enemy_attack();
+    failures += test_real_hitbox_values();
 
     if (failures == 0) printf("\nALL PLAYER-DAMAGE TESTS PASSED\n");
     else               fprintf(stderr, "\n%d TEST(S) FAILED\n", failures);

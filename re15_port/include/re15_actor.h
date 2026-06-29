@@ -70,11 +70,12 @@ typedef struct {
     /* Attack-hitbox dimensions — FUN_8002b5d0 reads these via target+0x78 (the
      * dim struct: radius_min@+6, height@+8, radius_max@+10) and target+0x7c (the
      * local centre offset). radius_min==radius_max → circular hitbox; else angular
-     * sector (DEFERRED). hit_height = Y half-extent. SOURCE (RE'd 2026-06-29, values
-     * not yet extracted): enemies = a per-type table in the EXE (FUN_80019700
-     * @80019894 sets +0x78 = type_table+0x8, +0x7c @800198b0); player = a fixed EXE
-     * table. To be populated at model-load; 0 = no hitbox (default). The geometry +
-     * resolver (re15_damage.c) are byte-true regardless of where the values come from. */
+     * sector (DEFERRED). hit_height = Y half-extent. SOURCE (RE'd 2026-06-29):
+     * enemies = a per-type table (FUN_80019700 @80019894 sets +0x78 = type_table+0x8,
+     * +0x7c @800198b0), overlay-patched → values read byte-true from room savestates;
+     * player = a fixed EXE struct @0x80073e94 (radius 450/height 1530, VERIFIED in
+     * PSX.EXE @0x64694). Wired by re15_player_apply_hitbox / re15_enemy_apply_hitbox
+     * (re15_damage.c); 0 = no hitbox. All known instances are circular (radius_min==max). */
     uint16_t hit_radius_min, hit_radius_max, hit_height;
     int16_t  hit_offset_x, hit_offset_y, hit_offset_z;
     /* Forward attack-point (attacker +0x28/+0x2a/+0x2c) — the lunge's reach point at
