@@ -582,6 +582,45 @@ static int test_live_active_lunge(void)
     return 0;
 }
 
+/* ----- LIVE full chain via re15_enemy_ai_live_step (FUN_80100424 tick + shared lunge) ----- *
+ * The correct-family analog of test_ai_step_chain: a live 0x10 zombie is ticked through the
+ * @0x8011f7b4 dispatcher (INIT->ACTIVE, dist cached); then armed; the windup timer fires the
+ * lunge at == 300; the shared lunge slice fires the hitbox -> player HP falls. KEIN game_step. */
+static int test_live_step_chain(void)
+{
+    re15_actor_init();
+    re15_actor_t *pl = &g_actors[0];
+    pl->x = 0; pl->z = 0; pl->hit_react = 0;
+    re15_enemy_ai_set_paused(0);
+
+    int s = re15_actor_alloc(0x10);
+    if (s < 1) { fprintf(stderr, "FAIL: actor_alloc live zombie\n"); return 1; }
+    re15_actor_t *e = &g_actors[s];
+    e->x = 0; e->z = 1200; e->rot_y = 1024; e->state = RE15_AI_STATE_INIT;
+
+    /* Frame 1: live tick runs the live INIT (state 0->1), dist cached @+0x1d0, ai_timer=0x14. */
+    re15_enemy_ai_live_step(s);
+    if (e->state != RE15_AI_STATE_ACTIVE) { fprintf(stderr, "FAIL: live chain INIT->ACTIVE, ist %d\n", e->state); return 1; }
+    if (e->ai_dist != 1200)               { fprintf(stderr, "FAIL: live chain dist=1200, ist %u\n", e->ai_dist); return 1; }
+    if (e->ai_timer != 0x14)              { fprintf(stderr, "FAIL: live chain ai_timer=0x14, ist 0x%x\n", e->ai_timer); return 1; }
+
+    /* Arm the attack + seed the windup so the next active frame hits 300 = fires the lunge.
+     * atk_pt set directly to the player (the skeleton mapping is covered by test_attack_point_mapping). */
+    e->ai_flags |= 0x100;
+    e->ai_attack_timer = 0x12d;          /* -> 0x12c (300) next frame */
+    e->atk_pt_x = 0; e->atk_pt_y = 0; e->atk_pt_z = 0;
+    int16_t hp_before = pl->hp;
+
+    /* Frame 2: active counts 0x12d->0x12c (300) -> lunge_begin (window 0x20); then the lunge slice
+     * fires the shared hitbox this same frame -> player -10 + hurt(2), bite-once resets the window. */
+    re15_enemy_ai_live_step(s);
+    if (pl->hp != (int16_t)(hp_before - 10)) { fprintf(stderr, "FAIL: live chain lunge bite -10, HP %d->%d\n", hp_before, pl->hp); return 1; }
+    if (pl->state != 2)                      { fprintf(stderr, "FAIL: live chain player hurt(2), ist %d\n", pl->state); return 1; }
+
+    printf("PASS: test_live_step_chain (live spawn->tick->arm->lunge@300->HP %d->%d)\n", hp_before, pl->hp);
+    return 0;
+}
+
 int main(void)
 {
     int failures = 0;
@@ -604,6 +643,7 @@ int main(void)
     failures += test_exe_turn();
     failures += test_exe_dispatch_and_tick();
     failures += test_live_active_lunge();
+    failures += test_live_step_chain();
     failures += test_ai_step_chain();
 
     if (failures == 0) printf("\nALL ENEMY-AI TESTS PASSED\n");

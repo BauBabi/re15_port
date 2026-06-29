@@ -391,3 +391,40 @@ int re15_enemy_ai_live_active(int slot)
     }
     return fired;
 }
+
+/* FUN_80100424 (@0x80072bac[0x10/0x11/0x16], STAGE1.BIN) — the LIVE zombie PER-FRAME TICK, the
+ * entry the per-frame loop FUN_8001a50c dispatches each frame. Byte-true core (the live analog of
+ * re15_enemy_ai_tick / FUN_8011d6d4): the pause gate (g_pauseflags & 0x20000000) + the per-entity
+ * skip gate (+0x9 & 0x20), cache the player distance @+0x1d0 (same SquareRoot0(16-bit ΔX²+ΔZ²)),
+ * then dispatch the main state @0x8011f7b4[entity+0x4] (INIT/ACTIVE ported; [2]/[3]/[4] deferred).
+ * The post-dispatch attack-point (FUN_80104178 -> the port atk_pt skeleton map, re15_damage.c) +
+ * the collision/render helpers (FUN_8002b498/aec4/b544/FUN_8003b0a4) are other subsystems, not run
+ * here. Returns 1 if dispatched, 0 if a gate skipped it. */
+int re15_enemy_ai_live_tick(int slot)
+{
+    if (slot < 1 || slot >= RE15_ACTOR_MAX) return 0;   /* slot 0 = player, never an AI */
+    re15_actor_t *e = &g_actors[slot];
+    if (!e->active) return 0;
+    if (s_ai_paused) return 0;                          /* g_pauseflags & 0x20000000 */
+    if (e->grid_id & RE15_AI_GRID_SKIP) return 0;       /* +0x9 & 0x20 */
+
+    e->ai_dist = (uint32_t)re15_enemy_player_dist(e, &g_actors[RE15_ACTOR_SLOT_PLAYER]);
+
+    switch (e->state) {                                  /* @0x8011f7b4[entity+0x4] */
+        case RE15_AI_STATE_INIT:   re15_enemy_ai_live_init(slot);   break;  /* [0] FUN_80100688 */
+        case RE15_AI_STATE_ACTIVE: re15_enemy_ai_live_active(slot); break;  /* [1] FUN_80101224 */
+        default: /* [2]=0x80105a8c / [3]=0x80106ba4 / [4]=0x8010919c — deferred */ break;
+    }
+    return 1;
+}
+
+/* The per-enemy per-frame STEP for the LIVE family — the entry game_step will call for each active
+ * 0x10/0x11/0x16 zombie: the FUN_80100424 tick (decision) + the lunge slice (re15_enemy_lunge_tick
+ * fires the SHARED hitbox while a lunge window is open). The live analog of re15_enemy_ai_step.
+ * NOT yet wired into game_step (no 1170 risk). */
+int re15_enemy_ai_live_step(int slot)
+{
+    int r = re15_enemy_ai_live_tick(slot);   /* FUN_80100424 — gate, dist, @0x8011f7b4[+0x4] */
+    re15_enemy_lunge_tick(slot);             /* shared lunge slice — hitbox per active frame */
+    return r;
+}

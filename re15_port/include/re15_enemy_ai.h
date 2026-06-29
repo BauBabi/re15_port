@@ -215,4 +215,14 @@ void re15_enemy_ai_live_init(int slot);
  * DEFERRED (see enemy_ai_common.c). */
 int re15_enemy_ai_live_active(int slot);
 
+/* FUN_80100424 (@0x80072bac[0x10/0x11/0x16]) — the LIVE zombie per-frame tick: pause + skip gates,
+ * cache dist @+0x1d0, then dispatch @0x8011f7b4[+0x4] (INIT/ACTIVE ported; [2]/[3]/[4] deferred).
+ * The live analog of re15_enemy_ai_tick. Returns 1 if dispatched, 0 if a gate skipped it. */
+int re15_enemy_ai_live_tick(int slot);
+
+/* The per-enemy per-frame step for the LIVE family (the entry game_step will call): the live tick
+ * (FUN_80100424) + the shared lunge slice (re15_enemy_lunge_tick). The live analog of
+ * re15_enemy_ai_step. NOT yet wired into game_step. */
+int re15_enemy_ai_live_step(int slot);
+
 #endif /* RE15_ENEMY_AI_H */
