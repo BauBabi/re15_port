@@ -412,7 +412,13 @@ void re15_enemy_apply_hitbox(re15_actor_t *a, uint8_t type)
     uint16_t r, h;
     switch (type) {
         case 0x47: r = 450;  h = 1530; break;  /* STAGE1 humanoid/zombie (HASH-..._1.sav)   */
-        case 0x16: r = 400;  h = 1440; break;  /* STAGE2 enemy (mzd_stage2_room.sav)         */
+        /* The LIVE STAGE1 briefing zombies (0x10/0x11/0x16) all read 400/1440 — byte-true
+         * from the live combat RAM (stage_saves/mzd_stage1_combat_death.sav, Phase 8.7: every
+         * active 0x10/0x11 entity's *(+0x78) hitbox struct = radius 400 / height 1440, the
+         * value the on-disc table is overlay-patched to). Was 0x16-only (a STAGE2 save);
+         * 0x10/0x11 fell through to "no hitbox" — now wired from the STAGE1 combat save. */
+        case 0x10: case 0x11:
+        case 0x16: r = 400;  h = 1440; break;  /* STAGE1 briefing zombies + STAGE2 enemy     */
         case 0x29: r = 1100; h = 1080; break;  /* wide/short creature (HASH-..._5.sav)       */
         default:   return;                      /* unverified type → no hitbox (no guessing) */
     }

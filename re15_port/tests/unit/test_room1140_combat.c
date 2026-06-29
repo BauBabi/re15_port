@@ -124,6 +124,11 @@ int main(void)
             fprintf(stderr, "FAIL: zombie slot %d must NOT commit attack as spawned (+0x5=7)\n", zslots[i]); fail = 1; }
         if (e->ai_flags & 0x100) {
             fprintf(stderr, "FAIL: zombie slot %d must NOT be armed as spawned\n", zslots[i]); fail = 1; }
+        /* Hitbox dims (+0x78) wired at spawn = byte-true 400/1440 from the live STAGE1 combat
+         * RAM (mzd_stage1_combat_death.sav). Was missing for 0x10/0x11 (fell through to none). */
+        if (e->hit_radius_min != 400 || e->hit_radius_max != 400 || e->hit_height != 1440) {
+            fprintf(stderr, "FAIL: zombie slot %d hitbox 400/1440 expected, got %u/%u(min..max %u)\n",
+                    zslots[i], e->hit_radius_min, e->hit_height, e->hit_radius_max); fail = 1; }
     }
     if (pl->hp != hp_before_idle) {
         fprintf(stderr, "FAIL: briefing zombies must not damage the player as spawned, HP %d->%d\n",
