@@ -174,3 +174,68 @@ void re15_ai_decide_search(re15_actor_t *e, const re15_actor_t *player)
     if ((e->anim_flags & 0x1000) != 0)        /* entity+0x1c4 & 0x1000 */
         re15_ai_set_state_word(e, 0x1001);
 }
+
+/* FUN_8001a780 — relative-facing octant. param_1 = the other actor; uses the current
+ * entity (DAT_800ac784). 1 if the other's heading is within ±0x800 (the front
+ * hemisphere) of ours: ((other.rot_y - e.rot_y + 0x400) & 0xfff) < 0x800. */
+int re15_ai_facing_aligned(const re15_actor_t *e, const re15_actor_t *other)
+{
+    if (!e || !other) return 0;
+    return ((((int32_t)other->rot_y - (int32_t)e->rot_y) + 0x400) & 0xfff) < 0x800;
+}
+
+/* FUN_80102058 (STAGE1_full) — the rich engage decision (vtable[2] = +0x5=2). */
+void re15_ai_decide_engage(re15_actor_t *e, const re15_actor_t *player)
+{
+    if (!e || !player) return;
+    uint8_t contact = e->ai_contact;                       /* bVar1 = entity+0x90 */
+
+    /* contact-direction gate: (bVar1&0xf0)*0x10 = the packed contact heading; relative to
+     * our facing (+0x6a), +0x200, &0xfff. NORMAL branch unless we're in firm contact
+     * (bVar1&3) AND that contact is from ~ahead (the &0xfff result <= 0x3ff). */
+    int32_t dir = (int32_t)(contact & 0xf0) * 0x10;        /* (bVar1 & 0xf0) * 0x10 */
+    uint32_t off = (uint32_t)((dir - (int32_t)e->rot_y) + 0x200) & 0xfff;
+
+    if ((contact & 3) == 0 || off > 0x3ff) {
+        /* attack-commit (dist<0x7d0 && off the narrow front arc). */
+        if (e->ai_dist < 2000u && re15_ai_arc_test(e, player->x, player->z, 0x2c8) != 0)
+            re15_ai_set_state_word(e, 0x701);
+
+        /* directional grab: player not mid-hit, very close (<0x4b0), inside the 0x200
+         * front cone, on the SAME floor band -> 0x301 (face-to-face) / 0x401 (from behind). */
+        if (player->hit_react == 0 &&                      /* DAT_800acae7 = player+0x93 */
+            e->ai_dist < 0x4b0u &&
+            re15_ai_arc_test(e, player->x, player->z, 0x200) == 0 &&
+            player->floor == e->floor) {                   /* DAT_800acad6 = player+0x82 */
+            int aligned = re15_ai_facing_aligned(e, player);
+            re15_ai_set_state_word(e, (uint32_t)((aligned + 3) * 0x100) | 1u);
+        }
+
+        /* player-dead grab: close (<0x5dc) && player HP < 0 (DAT_800acaee = player+0x9a). */
+        if (e->ai_dist < 0x5dcu && player->hp < 0)
+            re15_ai_set_state_word(e, 0xc01);
+
+        if ((e->anim_flags & 0x1000) != 0)                 /* entity+0x1c4 & 0x1000 */
+            re15_ai_set_state_word(e, 0x1001);
+    } else {
+        /* firm contact from the front: the contact reaction (0x901 / 0xa01). */
+        re15_ai_set_state_word(e, (uint32_t)(((contact & 1) + 9) * 0x100) | 1u);
+    }
+}
+
+/* The +0x5 decision dispatch = FUN_8010168c's PTR_FUN_8011f840[entity+0x5] call. Routes
+ * the active sub-mode to its (byte-true) decision handler; indices 3.. are the deferred
+ * movement / attack-execution leaves. See re15_enemy_ai.h for the full vtable + why this
+ * is not auto-wired into the tick yet (the generic-humanoid EXE leaf layer is deferred). */
+void re15_ai_dispatch_decision(re15_actor_t *e, const re15_actor_t *player)
+{
+    if (!e || !player) return;
+    switch (e->sub_state_1) {                              /* entity+0x5 */
+        case 0: re15_ai_decide_search_timer(e, player); break;  /* f840[0]=FUN_80101b64 */
+        case 1: re15_ai_decide_search(e, player);       break;  /* f840[1]=FUN_80101de4 */
+        case 2: re15_ai_decide_engage(e, player);       break;  /* f840[2]=FUN_80102058 */
+        default:                                                /* f840[3..]=FUN_80102540/  */
+            /* 2bd0/2d20/2f1c/.. movement+attack-execution leaves — DEFERRED (model pool). */
+            break;
+    }
+}

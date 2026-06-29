@@ -103,4 +103,33 @@ void re15_ai_decide_approach(re15_actor_t *e, const re15_actor_t *player);
  * 0x1001. */
 void re15_ai_decide_search(re15_actor_t *e, const re15_actor_t *player);
 
+/* FUN_8001a780 — relative-facing test: 1 if `other`'s heading (rot_y, +0x6a) is within
+ * the front hemisphere of `e`'s heading: ((other.rot_y - e.rot_y + 0x400) & 0xfff) <
+ * 0x800. Used by the engage decision to pick a grab-from-front vs grab-from-behind. */
+int re15_ai_facing_aligned(const re15_actor_t *e, const re15_actor_t *other);
+
+/* FUN_80102058 — the rich "engage" decision (the per-mode vtable[2] = the +0x5=2 sub-
+ * mode). Two arms gated by the contact byte ai_contact (+0x90):
+ *  - in firm contact (ai_contact&3) from ~ahead -> 0x901 / 0xa01 (the contact reaction);
+ *  - else: attack 0x701 (dist<2000 && arc(0x2c8)!=0); a directional GRAB 0x301/0x401
+ *    (player not mid-hit && dist<0x4b0 && in the 0x200 front cone && SAME floor band,
+ *    front/back via re15_ai_facing_aligned); a player-DEAD grab 0xc01 (dist<0x5dc &&
+ *    player.hp<0); and anim_flags&0x1000 -> 0x1001. The original's DAT_800acae7/ad6/ee
+ *    are the player block's +0x93 (hit_react) / +0x82 (floor) / +0x9a (hp) — i.e. the
+ *    `player` actor here. */
+void re15_ai_decide_engage(re15_actor_t *e, const re15_actor_t *player);
+
+/* The +0x5 decision dispatch = FUN_8010168c's first call (*PTR_FUN_8011f840[entity+0x5])().
+ * Routes the active-AI sub-mode (+0x5 = sub_state_1) to its decision handler. Byte-true
+ * f840 vtable: [0]=FUN_80101b64 (search+timer) [1]=FUN_80101de4 (search) [2]=FUN_80102058
+ * (engage) [3,4]=FUN_80102540 [5,6]=FUN_80102bd0 [7]=FUN_80102d20 [8]=FUN_80102f1c
+ * [9]=0x801031a4 [10]=0x801033c0 [11]=0x80103854 — indices 3.. are the movement / attack-
+ * execution leaves (DEFERRED; they drive the model pool + skeleton). The f960 mode is the
+ * same table with [0]=FUN_80101c7c (approach-only, re15_ai_decide_approach). The companion
+ * animate dispatch (*PTR_FUN_8011f890[+0x5])() is a separate per-mode anim vtable (deferred).
+ * NOT auto-wired into the tick yet: the live path reaches here through the generic-humanoid
+ * EXE leaves (PTR_FUN_801217b4[1..15] = 0x8004f.., raw-byte in the dump) which are deferred;
+ * this models the decision LAYER byte-true and is exposed for testing + later wiring. */
+void re15_ai_dispatch_decision(re15_actor_t *e, const re15_actor_t *player);
+
 #endif /* RE15_ENEMY_AI_H */

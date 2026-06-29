@@ -230,10 +230,107 @@ static int test_decide_wander_path(void)
     return 0;
 }
 
+/* ----- FUN_8001a780: relative-facing octant ----- */
+static int test_facing_aligned(void)
+{
+    re15_actor_t e = {0}, o = {0};
+    e.rot_y = 0;
+    o.rot_y = 0;                                   /* gleiche Richtung → 1 (Front-Hemisphäre) */
+    if (re15_ai_facing_aligned(&e, &o) != 1) { fprintf(stderr, "FAIL: gleiche Richtung→1\n"); return 1; }
+    o.rot_y = 2048;                                /* 180° → außerhalb → 0 */
+    if (re15_ai_facing_aligned(&e, &o) != 0) { fprintf(stderr, "FAIL: 180°→0\n"); return 1; }
+    printf("PASS: test_facing_aligned\n");
+    return 0;
+}
+
+/* ----- FUN_80102058: engage-Decision (attack / grab / dead-grab / contact) ----- */
+static int test_decide_engage(void)
+{
+    re15_actor_t *e;
+
+    /* (a) Attack 0x701: contact 0, Spieler rechts (+X, off narrow arc), dist<2000,
+     * Spieler mid-hit (hit_react=1) → Grab-Arm aus, lebt → kein dead-grab. */
+    e = fresh_enemy(0x47);
+    put_player(1000, 0);
+    g_actors[0].hit_react = 1; g_actors[0].hp = 100;
+    e->ai_contact = 0; e->ai_dist = 1000u; e->floor = 0; g_actors[0].floor = 0;
+    re15_ai_decide_engage(e, &g_actors[0]);
+    if (e->state != 1 || e->sub_state_1 != 7) { fprintf(stderr, "FAIL: engage attack→0x701, ist %d/%d\n", e->state, e->sub_state_1); return 1; }
+
+    /* (b) Directional grab 0x401: Spieler VORNE (+Z: arc 0x2c8==0 → kein attack, arc 0x200==0),
+     * nah (<0x4b0), nicht mid-hit, gleicher floor; Spieler blickt gleich (aligned=1) → 0x401. */
+    e = fresh_enemy(0x47);                          /* e.rot_y = -1024 (faces +Z) */
+    put_player(0, 1000);
+    g_actors[0].hit_react = 0; g_actors[0].hp = 100; g_actors[0].rot_y = -1024;  /* aligned=1 */
+    e->ai_contact = 0; e->ai_dist = 1000u; e->floor = 0; g_actors[0].floor = 0;
+    re15_ai_decide_engage(e, &g_actors[0]);
+    if (e->state != 1 || e->sub_state_1 != 4) { fprintf(stderr, "FAIL: grab(aligned)→0x401, ist %d/%d\n", e->state, e->sub_state_1); return 1; }
+
+    /* (c) Face-to-face grab 0x301: Spieler blickt zum Gegner (aligned=0) → 0x301. */
+    e = fresh_enemy(0x47);
+    put_player(0, 1000);
+    g_actors[0].hit_react = 0; g_actors[0].hp = 100; g_actors[0].rot_y = 1024;   /* faces -Z → aligned=0 */
+    e->ai_contact = 0; e->ai_dist = 1000u; e->floor = 0; g_actors[0].floor = 0;
+    re15_ai_decide_engage(e, &g_actors[0]);
+    if (e->state != 1 || e->sub_state_1 != 3) { fprintf(stderr, "FAIL: grab(face)→0x301, ist %d/%d\n", e->state, e->sub_state_1); return 1; }
+
+    /* (d) Grab gated by floor mismatch: anderer floor → kein Grab (bleibt attack 0x701). */
+    e = fresh_enemy(0x47);
+    put_player(0, 1000);
+    g_actors[0].hit_react = 0; g_actors[0].hp = 100; g_actors[0].rot_y = -1024;
+    e->ai_contact = 0; e->ai_dist = 1000u; e->floor = 0; g_actors[0].floor = 1;   /* mismatch */
+    re15_ai_decide_engage(e, &g_actors[0]);
+    if (e->sub_state_1 == 4 || e->sub_state_1 == 3) { fprintf(stderr, "FAIL: floor-mismatch darf nicht grabben, sub=%d\n", e->sub_state_1); return 1; }
+
+    /* (e) Player-dead grab 0xc01: nah (<0x5dc), Spieler HP<0. */
+    e = fresh_enemy(0x47);
+    put_player(1000, 0);
+    g_actors[0].hit_react = 1; g_actors[0].hp = -5;
+    e->ai_contact = 0; e->ai_dist = 1000u; e->floor = 0; g_actors[0].floor = 0;
+    re15_ai_decide_engage(e, &g_actors[0]);
+    if (e->state != 1 || e->sub_state_1 != 0x0c) { fprintf(stderr, "FAIL: dead-grab→0xc01, ist %d/0x%x\n", e->state, e->sub_state_1); return 1; }
+
+    /* (f) Contact reaction 0x901/0xa01: ai_contact&3 gesetzt + Kontakt von vorne (off<=0x3ff). */
+    e = fresh_enemy(0x47);
+    e->rot_y = 0;                                   /* dir=0, off=(0+0x200)&0xfff=0x200<=0x3ff */
+    e->ai_contact = 0x02;                           /* &3!=0, &1==0 → (0+9)→0x901 */
+    re15_ai_decide_engage(e, &g_actors[0]);
+    if (e->state != 1 || e->sub_state_1 != 9) { fprintf(stderr, "FAIL: contact even→0x901, ist %d/%d\n", e->state, e->sub_state_1); return 1; }
+    e = fresh_enemy(0x47);
+    e->rot_y = 0; e->ai_contact = 0x03;             /* &1==1 → (1+9)→0xa01 */
+    re15_ai_decide_engage(e, &g_actors[0]);
+    if (e->state != 1 || e->sub_state_1 != 0x0a) { fprintf(stderr, "FAIL: contact odd→0xa01, ist %d/0x%x\n", e->state, e->sub_state_1); return 1; }
+
+    printf("PASS: test_decide_engage\n");
+    return 0;
+}
+
+/* ----- +0x5 Decision-Dispatch (FUN_8010168c → f840[+0x5]) ----- */
+static int test_dispatch_decision(void)
+{
+    /* sub_state_1 = 2 → engage; Attack-Szenario → 0x701 (überschreibt +0x5 auf 7). */
+    re15_actor_t *e = fresh_enemy(0x47);
+    put_player(1000, 0);
+    g_actors[0].hit_react = 1; g_actors[0].hp = 100;
+    e->ai_contact = 0; e->ai_dist = 1000u; e->sub_state_1 = 2;
+    re15_ai_dispatch_decision(e, &g_actors[0]);
+    if (e->state != 1 || e->sub_state_1 != 7) { fprintf(stderr, "FAIL: dispatch[2]=engage→0x701, ist %d/%d\n", e->state, e->sub_state_1); return 1; }
+
+    /* sub_state_1 = 0 → search+timer; Timer 0 + fern/vorne → 0x101. */
+    e = fresh_enemy(0x47);
+    put_player(0, 50000);
+    e->ai_dist = 50000u; e->ai_flags = 0; e->ai_timer = 0; e->sub_state_1 = 0;
+    re15_ai_dispatch_decision(e, &g_actors[0]);
+    if (e->state != 1 || e->sub_state_1 != 1) { fprintf(stderr, "FAIL: dispatch[0]=search_timer→0x101, ist %d/%d\n", e->state, e->sub_state_1); return 1; }
+
+    printf("PASS: test_dispatch_decision\n");
+    return 0;
+}
+
 int main(void)
 {
     int failures = 0;
-    printf("=== Enemy-AI FSM Unit Tests (Phase 2, FUN_8011d6d4/d84c/d9f4 + 80101b64/c7c/de4) ===\n\n");
+    printf("=== Enemy-AI FSM Unit Tests (Phase 2+3, FUN_8011d6d4/d84c/d9f4 + 80101b64/c7c/de4/2058) ===\n\n");
 
     failures += test_ai_init();
     failures += test_ai_init_stationary();
@@ -244,6 +341,9 @@ int main(void)
     failures += test_decide_approach();
     failures += test_decide_search();
     failures += test_decide_wander_path();
+    failures += test_facing_aligned();
+    failures += test_decide_engage();
+    failures += test_dispatch_decision();
 
     if (failures == 0) printf("\nALL ENEMY-AI TESTS PASSED\n");
     else               fprintf(stderr, "\n%d TEST(S) FAILED\n", failures);
