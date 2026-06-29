@@ -403,9 +403,48 @@ int main(void)
             printf("  (10) zombie shot -> HURT(2)->ACTIVE; lethal -> DEATH(3)->CORPSE(7), inert (no player damage)\n");
     }
 
+    /* (11): the PLAYER WEAPON SHOT (Phase 8.10, TWO-SIDED combat) — re15_player_weapon_fire. The player
+     * auto-aims the nearest live zombie IN FRONT within the per-weapon reach and applies the byte-true
+     * per-weapon damage (pistol = weapon 2 = 24 to a zombie); the zombie enters HURT (2) / DEATH (3).
+     * This closes the two-sided loop: the player shoots -> the zombie hurt/death (part 10). */
+    {
+        pl->x = 0; pl->z = 0; pl->hp = 100; pl->hit_react = 0; pl->state = 0; pl->rot_y = 0; pl->floor = 0;
+        re15_player_death_reset();
+        for (int i = 0; i < nz; i++) {   /* park the others far (active but out of the pistol's reach) */
+            re15_actor_t *z = &g_actors[zslots[i]];
+            z->grid_id = 0; z->sub_state_1 = 0; z->sub_state_2 = 0; z->ai_flags = 0;
+            z->state = RE15_AI_STATE_ACTIVE; z->x = 30000; z->z = 30000; z->hp = 60; z->hit_react = 0;
+        }
+        re15_actor_t *front  = &g_actors[zslots[2]];
+        re15_actor_t *behind = &g_actors[zslots[3]];
+        front->x = 0;  front->z = 800;    /* IN FRONT (+Z, player rot_y=0), dist 800 < pistol reach 1000 */
+        behind->x = 0; behind->z = -500;  /* BEHIND, nearer (500) but outside the front cone */
+        int16_t zhp0 = front->hp;
+        int hit = re15_player_weapon_fire(2);   /* fire the pistol (weapon 2 = 24 dmg) */
+        if (hit != (zslots[2] + 1)) {
+            fprintf(stderr, "FAIL: pistol must auto-aim the FRONT zombie slot %d (not the nearer behind one), hit=%d\n",
+                    zslots[2], hit); fail = 1; }
+        if (front->hp != (int16_t)(zhp0 - 24)) {
+            fprintf(stderr, "FAIL: pistol -> zombie -24 (byte-true), HP %d->%d\n", zhp0, front->hp); fail = 1; }
+        if (front->state != RE15_AI_STATE_HURT || front->sub_state_1 != 2) {
+            fprintf(stderr, "FAIL: shot zombie -> HURT(2) + reaction +0x5=2, state=%d +0x5=%d\n",
+                    front->state, front->sub_state_1); fail = 1; }
+        if (behind->hp != 60) {
+            fprintf(stderr, "FAIL: the BEHIND zombie must NOT be auto-aimed, HP=%d\n", behind->hp); fail = 1; }
+        front->hp = 10; front->hit_react = 0; front->state = RE15_AI_STATE_ACTIVE;   /* lethal shot */
+        re15_player_weapon_fire(2);   /* 10-24 = -14 < 0 -> DEATH */
+        if (front->state != RE15_AI_STATE_DEATH) {
+            fprintf(stderr, "FAIL: lethal shot -> zombie DEATH (3), ist %d (HP %d)\n", front->state, front->hp); fail = 1; }
+        re15_enemy_ai_live_tick(zslots[2]);   /* DEATH -> CORPSE (7) */
+        if (front->state != RE15_AI_STATE_CORPSE) {
+            fprintf(stderr, "FAIL: shot DEATH -> CORPSE (7), ist %d\n", front->state); fail = 1; }
+        if (!fail)
+            printf("  (11) player pistol -> auto-aim FRONT zombie -24 -> HURT(2) (behind skipped); lethal -> DEATH->CORPSE(7)\n");
+    }
+
     free(buf);
     if (fail) { fprintf(stderr, "\nROOM1140 COMBAT-WIRING TEST FAILED\n"); return 1; }
-    printf("\nPASS: ROOM1140 live-AI game_step wiring "
-           "(spawn; WAKE->engage; TURN-to-face->GRAB->HP; GRABBED-lock; player DEATH; zombie HURT/DEATH; type-gated)\n");
+    printf("\nPASS: ROOM1140 live-AI game_step wiring (spawn; WAKE->engage; TURN-to-face->GRAB->HP; "
+           "GRABBED-lock; player DEATH; zombie HURT/DEATH; PLAYER-SHOOTS; type-gated)\n");
     return 0;
 }

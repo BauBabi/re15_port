@@ -153,6 +153,78 @@ int re15_player_death_tick(void)
     return s_death_seq;   /* 0 = the death sequence is complete -> game over (deferred presentation) */
 }
 
+/* ===== Player WEAPON SHOT (Phase 8.10, two-sided combat) = the byte-true core of FUN_80011f50 ===== *
+ * The player gun/knife fire-and-resolve is a SEPARATE function from FUN_80012d60 (the enemy resolver
+ * the rest of re15_damage.c ports): FUN_80011f50(weapon_id = DAT_800aca5d, aim_ptr = player+0x7c)
+ * @0x80011f50. It iterates the active enemies (DAT_800acc2c, stride 0x1f4), runs a per-weapon AIM-CONE
+ * hit test (PTR_LAB_8006e548[weapon_id], a line-vs-box tester), picks the NEAREST hit via the min-dist
+ * accumulator DAT_8008f5e0 (seed 0x7fffffff @0x8001205c), then on the winner applies, byte-true
+ * (@0x800124b0-0x80012528):
+ *   dmg  = u16 @ [0x8006e0d0 + enemy_type(+0x8)*0x58 + weapon_id*4]   (a DISTINCT table from the
+ *          enemy-attack DAT_8006f418 — do NOT reuse re15_damage_table)
+ *   +0x5 = weapon_id  (the reaction clip @0x800124bc)
+ *   HP  -= dmg        (+0x9a @0x800124f4/0x80012504)
+ *   +0x93 |= 1        (the one-hit guard @0x800124f8)
+ *   crit: (weapon_id==7) || (weapon_id==8 && dist<3000) -> +0x93|=0x40; if (+0x93&0x40 && type<0x20)
+ *         HP = -1     (instant kill, @0x800124fc-0x8001251c)
+ *   +0x4 = (HP >= 0) ? 2 (HURT) : 3 (DEATH)   (@0x80012520)
+ *   +0x6 = DAT_8006f410[heading>>0x1d]  (the hit-direction clip — deferred, anim detail)
+ * The damaged enemy then runs the zombie HURT/DEATH state (re15_enemy_ai_live_hurt/death).
+ *
+ * BYTE-TRUE TABLES (dumped from PSX.EXE): the zombie damage row (enemy types 0x10/0x11/0x16 are all
+ * IDENTICAL, @0x8006e650/0x8006e6a8/0x8006e860) and the per-weapon reach (@0x8006e5a0). FAITHFUL-LINE:
+ * the auto-aim picks the nearest LIVE zombie within the per-weapon reach that is IN FRONT of the player
+ * (re15_ai_arc_test(player, ex,ez, 0x400) = the front hemisphere — the RE auto-aim auto-targets the
+ * nearest forward enemy; the EXACT per-weapon line-vs-box cone tester FUN_80012574/7fc/8a0 + FUN_8004f008
+ * projection is the deferred refinement). The per-type damage table is ported for the ZOMBIE types only
+ * (the port's hittable enemies); other types' rows are the deferred refinement. The hit-direction clip
+ * (+0x6) + the equipped-weapon source (DAT_800aca5d) + the aim/fire input FSM (@0x80035810, the next
+ * chunk) are deferred. Returns the hit enemy slot+1 (0 = no target in cone/reach). */
+
+/* Per-weapon damage to a zombie (types 0x10/0x11/0x16, identical rows @0x8006e650). 22 weapons. */
+static const uint16_t s_player_wpn_dmg_zombie[22] = {
+    0, 6, 24, 5, 5, 15, 15, 200, 40, 100, 200, 100, 10, 100, 10, 100, 200, 100, 400, 20, 0, 100
+};
+/* Per-weapon shot reach (UNK_8006e5a0, u32). 22 weapons. */
+static const uint16_t s_player_wpn_reach[22] = {
+    1000, 1100, 1000, 1000, 1100, 1000, 1200, 1000, 1500, 1000, 1000,
+    1000, 1300, 1800, 1000, 1000, 1000, 1000, 1000, 1100, 1000, 1000
+};
+
+int re15_player_weapon_fire(int weapon_id)
+{
+    if (weapon_id < 0 || weapon_id >= 22) return 0;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    uint32_t reach = s_player_wpn_reach[weapon_id];
+
+    /* auto-aim: nearest live zombie in front, within reach (DAT_8008f5e0 min-dist, seed 0x7fffffff). */
+    int best = -1;
+    uint32_t best_dist = 0x7fffffffu;
+    for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) {
+        re15_actor_t *e = &g_actors[s];
+        if (!e->active) continue;
+        if (e->type != 0x10 && e->type != 0x11 && e->type != 0x16) continue;  /* the port's hittable enemies */
+        if (e->state == 7) continue;   /* RE15_AI_STATE_CORPSE — already a corpse (literal: avoid the AI-header dep) */
+        uint32_t dist = (uint32_t)re15_enemy_player_dist(e, pl);
+        if (dist > reach) continue;                                          /* out of the weapon's reach */
+        if (re15_ai_arc_test(pl, e->x, e->z, 0x400) != 0) continue;          /* not in front (faithful-line cone) */
+        if (dist < best_dist) { best_dist = dist; best = s; }
+    }
+    if (best < 0) return 0;   /* no target in cone/reach */
+
+    re15_actor_t *e = &g_actors[best];
+    int dmg = s_player_wpn_dmg_zombie[weapon_id];   /* byte-true per-weapon zombie damage */
+    e->sub_state_1 = (uint8_t)weapon_id;            /* +0x5 = reaction clip = weapon_id (@0x800124bc) */
+    e->hp          = (int16_t)(e->hp - dmg);        /* +0x9a -= dmg */
+    e->hit_react  |= 0x1;                           /* +0x93 |= 1 (one-hit guard) */
+    /* crit/headshot (@0x800124fc-0x8001251c): weapon 7, or weapon 8 within 3000 -> instant kill (type<0x20). */
+    if ((weapon_id == 7 || (weapon_id == 8 && best_dist < 3000u)) && e->type < 0x20)
+        e->hp = -1;
+    e->state       = (e->hp >= 0) ? 2 : 3;          /* +0x4 = HURT(2) / DEATH(3) (@0x80012520) */
+    e->sub_state_2 = 0;                              /* +0x6 hit-dir clip (DAT_8006f410[heading>>0x1d]) — deferred */
+    return best + 1;                                /* hit (slot+1, non-zero) */
+}
+
 /* Enemy branch of FUN_80012d60 (@80012f08-80013034): apply a resolved hit to an
  * ENEMY actor — the counterpart to the player branch. Same dmg table, but the
  * reaction sub-state is the hit-clip from re15_react_table (not the front/back

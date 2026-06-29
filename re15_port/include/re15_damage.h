@@ -65,6 +65,17 @@ void re15_player_death_reset(void);  /* clear the death-sequence timer (new game
 int  re15_player_death_tick(void);   /* advance the death sequence one frame; returns frames left
                                       * (120..0; 0 = sequence done -> game over deferred; -1 = alive). */
 
+/* Player WEAPON SHOT (Phase 8.10, two-sided combat) — the byte-true core of FUN_80011f50 (a SEPARATE
+ * resolver from the enemy FUN_80012d60). Auto-aims the nearest live zombie in front of the player
+ * within the per-weapon reach (byte-true table @0x8006e5a0), applies the per-weapon byte-true damage
+ * (table @0x8006e0d0, the zombie row; a DISTINCT table from re15_damage_table) -> the enemy enters
+ * state 2 (HURT) / 3 (DEATH) + reaction clip (+0x5=weapon_id), with the crit/headshot rule (weapon 7,
+ * or weapon 8 within 3000 -> instant kill). The damaged zombie then runs re15_enemy_ai_live_hurt/death.
+ * weapon_id 0..21 (DAT_800aca5d). Returns the hit enemy slot+1 (0 = no target in cone/reach). The exact
+ * per-weapon line-vs-box cone tester + the aim/fire input FSM (@0x80035810) + the hit-direction clip
+ * are the deferred refinements. */
+int  re15_player_weapon_fire(int weapon_id);
+
 /* Clear the per-attack hit-once guard (+0x93 bit0x1). The original clears it when the
  * attacker's hitbox deactivates so the NEXT attack can land; that clear-trigger lives
  * in the deferred enemy-attack FSM. Exposed so the future wiring (and the unit test)

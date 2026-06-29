@@ -6,17 +6,19 @@ state 7, 120-Frame-Timer; Fade/Game-Over-Screen deferred).** Der Combat-Loop ist
 Forward-Walk AUFGELÖST: das m0-Live-Brain (das der Port hat) setzt NIE +0x5=6 → der Briefing-Combat (wake→engage→turn→grab→
 pin→drain) ist byte-true KOMPLETT für ROOM1140. Der +0x5=6-Walk im Save ist ein Dead-Player-„walk-to-corpse"-Artefakt
 (player hp=-1) + ein m1-Varianten-Verhalten (andere Räume). KEINE Live-Lücke; nichts zu portieren für ROOM1140 (§8.10).
-**ZWEI-SEITIGER Combat begonnen (Nutzer-gewählt): die Zombie-hurt/death-States ([2]/[3]→corpse) sind portiert (die
-empfangende Seite); der Player-Fire-Trigger (Aim/Fire→`re15_resolve_attack`→hurt/death) ist der nächste Chunk — der
-Background-Workflow `player-fire-re` REt die Player-Fire-Pipeline.** Ergänzt die Auto-Memory (v.a. `reai-v2-foundation-combat` = die laufende AI-RE, `disasm-verify-decompiles`,
+**ZWEI-SEITIGER Combat: die Damage-Schleife ist GESCHLOSSEN (Nutzer-gewählt).** Die Zombie-hurt/death-States ([2]/[3]→corpse)
++ der Player-Schuss-Damage-CORE (`re15_player_weapon_fire` = FUN_80011f50: Auto-Aim Front-Zombie in Reach → byte-true
+per-Waffe-Damage [Pistole 24] → hurt/death) sind portiert. **OFFEN:** der Fire-INPUT (die Aim/Fire-FSM @0x80035810 in
+game_step wiren) + die exakte Cone-Geometrie + die Aim/Fire-Anim — der nächste Chunk (FSM-Adressen im §8.10). Ergänzt die Auto-Memory (v.a. `reai-v2-foundation-combat` = die laufende AI-RE, `disasm-verify-decompiles`,
 `reai-v2-duckstation-dynamic-re`).
 
 ## TL;DR — Wo stehe ich
 
-- **Git:** master, sauber (nur `.idea/` untracked). Phase 8.10 = **6 Commits:** `fb4a06e7` Player-grabbed-Lock ·
-  `a7ae354a` Forward-Walk-RE + Root-Motion-Doku-Fix · `8038cc5f` Forward-Walk AUFGELÖST · `05af1a76` Player-DEATH-FSM-Kern ·
-  (+ dieser Commit) Zombie-hurt/death-States (zwei-seitiger Combat begonnen). Der Combat-Loop ROOM1140 ist end-to-end
-  byte-true geschlossen (spawn→wake→engage→turn→grab→pin→drain→TOD); Fade/Game-Over-Screen = deferred Präsentation.
+- **Git:** master, sauber (nur `.idea/` untracked). Phase 8.10 = **7 Commits:** `fb4a06e7` Player-grabbed-Lock ·
+  `a7ae354a` Forward-Walk-RE · `8038cc5f` Forward-Walk AUFGELÖST · `05af1a76` Player-DEATH-FSM-Kern · `062992d7`
+  Zombie-hurt/death-States · (+ dieser Commit) Player-Schuss-Damage-CORE. **Beide Combat-Schleifen byte-true geschlossen:**
+  Zombie→Spieler (spawn→wake→engage→turn→grab→pin→drain→TOD) UND Spieler→Zombie (Schuss→Auto-Aim→Damage→hurt/death→corpse);
+  offen = der Fire-INPUT + die Präsentation (Fade/Game-Over/Aim-Anim).
 - **Build/Test:** `taskkill //F //IM re15_pc.exe 2>/dev/null; true; export PATH="/c/msys64/mingw64/bin:$PATH";
   cmake --build re15_port/build; ctest --test-dir re15_port/build --timeout 30` → **31/31 grün** (mingw64 GCC + Ninja).
   (Das `taskkill` ist nötig, falls die Exe noch läuft + die Datei sperrt — sonst Link-„Permission denied", kein Code-Fehler.)
@@ -299,11 +301,34 @@ Hälften (anim_set selbst bewegt NICHT — nur Frames/Pose). State-Split byte-tr
 - **Test Part (7):** Zombie bei +0x5=7, 90° abgewandt, nah (dist 600) → dreht sich (rot_y 1024→1664) → Grab-Commit →
   Player-HP fällt. 31/31 ctest, ROOM1140-Headless sauber.
 
-### 8.10 — Player-grabbed-Lock + Player-DEATH + Zombie-hurt/death ERLEDIGT; ZWEI-SEITIGER Combat begonnen
+### 8.10 — ZWEI-SEITIGER Combat: Player-Schuss-CORE + Zombie-hurt/death ERLEDIGT (Damage-Schleife geschlossen)
 
-**RICHTUNG (Nutzer-gewählt): ZWEI-SEITIGER Combat (Spieler schießt → Zombie hurt/death).** Bottom-up gebaut: zuerst die
-empfangende Seite (Zombie-hurt/death), dann der Trigger (Player-Fire). Ein Background-Workflow `player-fire-re` REt die
-Player-Fire-Pipeline (Aim/Fire-FSM @0x80073f90 + Fire→Damage-Trigger + Port-Input-Seite) für den nächsten Chunk.
+**RICHTUNG (Nutzer-gewählt): ZWEI-SEITIGER Combat (Spieler schießt → Zombie hurt/death).** Bottom-up: empfangende Seite
+(Zombie-hurt/death, TEIL 5) → Player-Schuss-Damage-CORE (TEIL 6). **Die Damage-Schleife ist geschlossen** (der Spieler
+schießt → der Zombie nimmt byte-true Schaden → hurt/death). OFFEN: der Fire-INPUT (die Aim/Fire-FSM in game_step) + die
+exakte Cone-Geometrie + die Aim/Fire-Anim = der nächste Chunk (Workflow `player-fire-re` hat die FSM RE't — s.u.).
+
+**TEIL 6 (Player-Schuss-Damage-CORE) PORTIERT (dieser Commit, 31/31 ctest):** `re15_player_weapon_fire(weapon_id)`
+(re15_damage.c) = der byte-true Kern von **FUN_80011f50** (ein SEPARATER Resolver vom Enemy-FUN_80012d60!). Verifiziert +
+Tabellen byte-true aus PSX.EXE gedumpt: Auto-Aim den nächsten LIVE-Zombie VOR dem Spieler in per-Waffe-Reach (Tabelle
+@0x8006e5a0: Pistole=1000), per-Waffe/per-Typ Damage (Tabelle @0x8006e0d0, `dmg = u16[type*0x58 + weapon*4]`; **Pistole(w2)
+= 24** an einem Zombie; alle Zombie-Typen 0x10/0x11/0x16 identisch) → enemy `+0x5=weapon_id` (Reaktions-Clip), `HP-=dmg`,
+`+0x93|=1`, **Crit** (Waffe 7, oder Waffe 8 in <3000 → HP=-1 für type<0x20), `+0x4=2(HURT)/3(DEATH)`. Der getroffene Zombie
+läuft dann die hurt/death-States (TEIL 5). **FAITHFUL-LINE:** Auto-Aim = nächster Frontal-Zombie (`re15_ai_arc_test(player,
+0x400)` = Front-Hemisphäre) in Reach; die EXAKTE per-Waffe Line-vs-Box-Cone (FUN_80012574/7fc/8a0 + FUN_8004f008) + der
+Hit-Dir-Clip (+0x6) + die Per-Typ-Tabelle für NICHT-Zombies = deferred Refinement. **1170-sicher** (standalone, nicht in
+game_step). test Part(11): Pistole → Front-Zombie −24 → HURT(2) (näherer Zombie HINTER dem Spieler übersprungen); tödlich →
+DEATH→CORPSE.
+- **NÄCHSTER CHUNK — der Fire-INPUT (Aim/Fire-FSM, aus dem Workflow `player-fire-re` byte-true RE't):** der Player hat eine
+  3-Level-Command-FSM: cmd-Register `DAT_800aca58`(+0x4)→@0x80073f90[state] (normal-play [4]=0x80030660); Action-Register
+  `DAT_800aca59`(+0x5)→@0x80073e30/fb0/ff0[action] (Aim/Fire = **action 8**); Sub-State `DAT_800aca5a`(+0x6). Aim/Fire-Post-
+  Handler **0x80035810** = 8-Phasen-Sub-FSM (@0x80010b68); **FIRE-DISCHARGE = Aim-Sub-State 5 @0x80035a00** → `FUN_80045024`
+  (weapon-spawn) → DANN intern `FUN_80011f50` (= mein `re15_player_weapon_fire`). Input: idle (action 0, 0x80031f38) liest
+  Pad `DAT_800ac768`(held)/`DAT_800ac76c`(pressed); **Square**(pressed 0x80) + Waffe-equipped (`DAT_800aca5d`!=0) → cmd 0x701
+  (Waffe heben); Aim Up/Down = `0x1000`/`0x4000`. ⚠️ Square ist im Port schon der AOT-Action-Button → das Input-Mapping
+  braucht Sorgfalt (evtl. R1-halten-zum-Zielen + Square-fire, wie RE). Der Port hat KEINE Player-Command-FSM (Player läuft auf
+  re15_player_tick+SCD) → das Aim/Fire muss faithful auf das Port-Modell gemappt werden (`re15_player_weapon_fire` ist der
+  Damage-Endpunkt; davor: Aim-Mode-Toggle + Fire-Input → den Call). Die Aim/Fire-ANIM (Waffe heben, Muzzle-Flash) = deferred.
 
 **TEIL 5 (Zombie-hurt/death-States) PORTIERT (dieser Commit, 31/31 ctest):** die @0x8011f7b4-AI-Dispatch ist jetzt KOMPLETT
 ([0]init/[1]active/[2]hurt/[3]death/[4]idle-deferred/7=corpse). `re15_enemy_take_damage` (existiert) setzt state 2 (HURT) bei
