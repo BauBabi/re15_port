@@ -49,6 +49,20 @@ int re15_skel_compute_pose(const re15_emd_skeleton_t *skel,
                             int                       keyframe_index,
                             re15_skel_pose_t          poses[RE15_EMD_MAX_BONES]);
 
+/* Transform one bone's MODEL-LOCAL pose translation (poses[b].trans, as produced by
+ * re15_skel_compute_pose) into WORLD space for an actor at (ox,oy,oz) facing `yaw`:
+ *
+ *     world = (ox,oy,oz) + Ryaw(yaw) · trans
+ *     Ryaw  = [  cos 0 sin ;  0 1 0 ; -sin 0 cos ]   (mesh faces +X at yaw 0)
+ *
+ * This is the EXACT model→world transform the NPC render loop (platform main.c) and the
+ * stair foot-position probe (stair_common.c) apply per bone — factored out so a single
+ * bone's world position can be queried in shared, testable engine code. Q12 trig, int64
+ * accumulate then >>12 (GTE-faithful, bit-identical to the render path). `out` may not
+ * alias `trans`. */
+void re15_skel_bone_to_world(const int32_t trans[3], int16_t yaw,
+                             int32_t ox, int32_t oy, int32_t oz, int32_t out[3]);
+
 /* BYTE-TRUE keyframe crossfade (FUN_8001f3bc, 2026-06-15): the current actor
  * whose pose is being computed = the original's DAT_800ac784. re15_skel_compute_pose
  * reads its anim_frac / prev_angles / prev_root to blend the new clip in from the

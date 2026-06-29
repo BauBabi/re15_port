@@ -19,6 +19,7 @@
  *   80012ee8-efc  if (HP < 0) state=3 (death), +0x5=0, +0x6=0
  */
 #include "re15_damage.h"
+#include "re15_skeleton.h"   /* re15_skel_compute_pose / re15_skel_bone_to_world / g_anim_pose_actor */
 
 /* DAT_8006f418 — ghidra1_V2.txt:223455-223478 (11×s16 LE). */
 const int16_t re15_damage_table[11] = {
@@ -353,6 +354,32 @@ int re15_enemy_lunge_tick(int attacker_slot)
     int hits = re15_enemy_attack(attacker_slot);     /* FUN_80017fa4 fires every active frame */
     if (hits > 0) a->lunge_frames = 0;               /* connect -> reset (+0x6e=0xd): bite once */
     return hits;
+}
+
+/* Phase 8.1 — faithful-line attack-point: pose the enemy's skeleton at `keyframe` (QUERY,
+ * crossfade state preserved) and store `attack_bone`'s world position into atk_pt_*. The
+ * model->world transform is byte-true (re15_skel_bone_to_world = the render-loop math); the
+ * BONE selection is the documented faithful-line stand-in for the deferred GTE/model-pool
+ * attack point (see re15_damage.h). atk_pt_* are int16 to match the original's short store. */
+void re15_enemy_update_attack_point(int slot, const re15_emd_skeleton_t *skel,
+                                    int keyframe, int attack_bone)
+{
+    if (slot < 0 || slot >= RE15_ACTOR_MAX || !skel) return;
+    if (attack_bone < 0 || attack_bone >= skel->bone_count) return;
+    re15_actor_t *a = &g_actors[slot];
+
+    re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+    void *save = g_anim_pose_actor;
+    g_anim_pose_actor = NULL;     /* pose QUERY — don't consume/mutate the crossfade blend */
+    int rv = re15_skel_compute_pose(skel, keyframe, poses);
+    g_anim_pose_actor = save;
+    if (rv != 0) return;
+
+    int32_t w[3];
+    re15_skel_bone_to_world(poses[attack_bone].trans, a->rot_y, a->x, a->y, a->z, w);
+    a->atk_pt_x = (int16_t)w[0];
+    a->atk_pt_y = (int16_t)w[1];
+    a->atk_pt_z = (int16_t)w[2];
 }
 
 /* ====================================================================== *

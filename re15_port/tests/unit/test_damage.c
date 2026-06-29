@@ -14,10 +14,13 @@
  * direkt mit (attack_type, hitbox-origin) aufgerufen — wie FUN_80017fa4 ihn ruft.
  */
 #include "re15_damage.h"
-#include "re15_actor.h"   /* g_actors, re15_actor_init, RE15_ACTOR_SLOT_PLAYER */
+#include "re15_actor.h"     /* g_actors, re15_actor_init, RE15_ACTOR_SLOT_PLAYER */
+#include "re15_skeleton.h"  /* re15_skel_bone_to_world, g_anim_pose_actor (Phase 8.1) */
+#include "re15_emd.h"       /* re15_emd_skeleton_t (synthetic skeleton) */
 
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 /* Frischer Spieler: Slot 0 aktiv, hp=100, alle Flags 0 (re15_actor_init memset). */
 static re15_actor_t *fresh_player(void)
@@ -430,6 +433,62 @@ static int test_enemy_lunge(void)
     return 0;
 }
 
+/* ----- Phase 8.1: faithful-line attack-point skeleton mapping ----- *
+ * re15_skel_bone_to_world = the byte-true model->world transform (the SAME Ryaw math the
+ * NPC render loop + the stair foot-probe apply). re15_enemy_update_attack_point poses a
+ * skeleton as a QUERY (g_anim_pose_actor preserved) and writes the attack bone's world pos
+ * into atk_pt_*. Synthetic 2-bone skeleton: keyframe_count 0 -> identity poses, so the
+ * child bone's model-local trans == its bone_relative_pos -> fully deterministic. */
+static int test_attack_point_mapping(void)
+{
+    /* (1) Pure transform at yaw 0 (cos=1,sin=0): world = origin + trans, no rotation. */
+    int32_t trans[3] = { 0, -200, 300 };
+    int32_t w[3];
+    re15_skel_bone_to_world(trans, 0, 1000, 500, 2000, w);
+    if (w[0] != 1000 || w[1] != 300 || w[2] != 2300) {
+        fprintf(stderr, "FAIL: bone_to_world yaw0 = (1000,300,2300), war (%d,%d,%d)\n", w[0], w[1], w[2]); return 1; }
+
+    /* (2) yaw 1024 (90°): local +Z (300) rotates to +X; +X (0) leaves Z. Tolerance for the
+     * isin/sinf LSB disagreement (same APPROX stance as test_skeleton.c). */
+    re15_skel_bone_to_world(trans, 1024, 1000, 500, 2000, w);
+    if (w[0] < 1297 || w[0] > 1303 || w[1] != 300 || w[2] < 1997 || w[2] > 2003) {
+        fprintf(stderr, "FAIL: bone_to_world yaw1024 ~ (1300,300,2000), war (%d,%d,%d)\n", w[0], w[1], w[2]); return 1; }
+
+    /* (3) Updater: synthetic skeleton, attack bone 1 local (0,-200,300); enemy at
+     * (1000,500,2000) facing +X (yaw 0) -> atk_pt = (1000,300,2300). */
+    re15_actor_init();
+    re15_actor_t *e = &g_actors[1];
+    e->active = 1; e->type = 0x10; e->x = 1000; e->y = 500; e->z = 2000; e->rot_y = 0;
+
+    re15_emd_skeleton_t skel; memset(&skel, 0, sizeof skel);
+    skel.bone_count = 2;
+    skel.bone_parent[0] = -1; skel.bone_parent[1] = 0;
+    skel.bone_relative_pos[1][0] = 0;
+    skel.bone_relative_pos[1][1] = -200;
+    skel.bone_relative_pos[1][2] = 300;
+    skel.keyframe_size_bytes = 80;
+
+    void *sentinel = (void *)0x1234;
+    g_anim_pose_actor = sentinel;             /* pose QUERY must restore it (no blend mutation) */
+    re15_enemy_update_attack_point(1, &skel, 0, 1);
+    if (g_anim_pose_actor != sentinel) {
+        fprintf(stderr, "FAIL: update_attack_point muss g_anim_pose_actor restaurieren\n"); return 1; }
+    g_anim_pose_actor = NULL;
+    if (e->atk_pt_x != 1000 || e->atk_pt_y != 300 || e->atk_pt_z != 2300) {
+        fprintf(stderr, "FAIL: atk_pt = (1000,300,2300), war (%d,%d,%d)\n",
+                e->atk_pt_x, e->atk_pt_y, e->atk_pt_z); return 1; }
+
+    /* (4) bad bone index -> no-op (atk_pt unchanged, no OOB read). */
+    e->atk_pt_x = 7; e->atk_pt_y = 7; e->atk_pt_z = 7;
+    re15_enemy_update_attack_point(1, &skel, 0, 5);    /* bone 5 >= bone_count 2 */
+    if (e->atk_pt_x != 7 || e->atk_pt_y != 7 || e->atk_pt_z != 7) {
+        fprintf(stderr, "FAIL: bad bone index muss no-op sein, war (%d,%d,%d)\n",
+                e->atk_pt_x, e->atk_pt_y, e->atk_pt_z); return 1; }
+
+    printf("PASS: test_attack_point_mapping\n");
+    return 0;
+}
+
 int main(void)
 {
     int failures = 0;
@@ -446,6 +505,7 @@ int main(void)
     failures += test_resolve_attack();
     failures += test_enemy_attack();
     failures += test_enemy_lunge();
+    failures += test_attack_point_mapping();
     failures += test_real_hitbox_values();
     failures += test_zombie_ai_primitives();
     failures += test_enemy_should_attack();

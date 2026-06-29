@@ -132,6 +132,23 @@ int re15_enemy_attack(int attacker_slot);
 void re15_enemy_lunge_begin(int attacker_slot);
 int  re15_enemy_lunge_tick(int attacker_slot);
 
+/* Faithful-line skeleton mapping of the lunge ATTACK-POINT (Phase 8.1). The original's
+ * attack point is NOT a bone: FUN_80019e20 ([0x14/0x15/0x16] = work +0x28/+0x2a/+0x2c, read
+ * by FUN_80017fa4) and the overlay lunge driver FUN_80104178 (STAGE1_full) both build it from
+ * the model-instance GTE pose (RotMatrix(ent+0x6a)/ApplyMatrix over the +0x188 model pool) plus
+ * a forward lunge-step delta (const vec DAT_80100098/9c rotated by rot_y+0x800, Y-ramp +0x3a+=
+ * 0x32). That model-pool/GTE path is DEFERRED by design (RE15_FUN_CATALOG FUN_80104178/80019e20:
+ * "in the port = an attack-bone world position from re15_skel_compute_pose"). This function is
+ * that faithful-line stand-in: it poses the enemy's skeleton at `keyframe` (as a QUERY — the
+ * crossfade blend state is preserved), takes `attack_bone`'s world position via
+ * re15_skel_bone_to_world (the EXACT transform the render loop applies), and stores it into
+ * atk_pt_* (int16, matching the original's short store). The MECHANISM (pose -> world) is exact;
+ * the BONE choice is a documented faithful-line decision, not a byte-true constant — so the bone
+ * is a parameter, not hardcoded here. Inert until a lunge fires (atk_pt is only read by
+ * re15_enemy_attack while lunge_frames>0). No-op on bad slot/skeleton/bone. */
+void re15_enemy_update_attack_point(int slot, const re15_emd_skeleton_t *skel,
+                                    int keyframe, int attack_bone);
+
 /* Wire the byte-true hitbox dims (+0x78 struct radius_min/height/radius_max + the
  * +0x7c local offset) onto an actor. Player = the fixed EXE-static struct @0x80073e94
  * (VERIFIED in PSX.EXE @0x64694: radius 450 / height 1530, circular). Enemies = the

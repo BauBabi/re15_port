@@ -425,3 +425,18 @@ int re15_skel_compute_pose(const re15_emd_skeleton_t *skel,
     if (bact) bact->anim_prev_valid = 1;
     return 0;
 }
+
+/* Model-local bone translation -> world. Same Ryaw convention + int64-accumulate-then->>12
+ * as the NPC render loop (platform main.c: nyaw[]={c,0,s, 0,1,0, -s,0,c}; trans rotated then
+ * + actor.xyz) and the stair foot probe (stair_common.c). Single source of truth for the
+ * transform so a queried bone (e.g. the lunge attack point) is bit-identical to what renders. */
+void re15_skel_bone_to_world(const int32_t trans[3], int16_t yaw,
+                             int32_t ox, int32_t oy, int32_t oz, int32_t out[3])
+{
+    if (!trans || !out) return;
+    int32_t cs = re15_cos_q12((int)yaw);
+    int32_t sn = re15_sin_q12((int)yaw);
+    out[0] = ox + (int32_t)(( (int64_t)cs * trans[0] + (int64_t)sn * trans[2]) >> 12);
+    out[1] = oy + trans[1];
+    out[2] = oz + (int32_t)((-(int64_t)sn * trans[0] + (int64_t)cs * trans[2]) >> 12);
+}

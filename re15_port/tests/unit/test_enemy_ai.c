@@ -15,9 +15,11 @@
 #include "re15_enemy_ai.h"
 #include "re15_actor.h"
 #include "re15_damage.h"
+#include "re15_emd.h"      /* re15_emd_skeleton_t (synthetic skeleton for the attack-point) */
 
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 /* Frischer Gegner in Slot 1: aktiv, Typ 0x47 (STAGE1-Zombie), Blick +Z (rot_y -1024). */
 static re15_actor_t *fresh_enemy(uint8_t type)
@@ -505,8 +507,20 @@ static int test_ai_step_chain(void)
     re15_enemy_ai_step(s);
     if (e->state != RE15_AI_STATE_ACTIVE) { fprintf(stderr, "FAIL: chain bleibt ACTIVE, ist %d\n", e->state); return 1; }
 
-    /* Lunge auslösen (deferred Anim-Keyframe-Event) + Attack-Point = Spieler (Skeleton-Stand-in). */
-    e->atk_pt_x = 0; e->atk_pt_y = 0; e->atk_pt_z = 0;
+    /* Lunge auslösen (deferred Anim-Keyframe-Event). Attack-Point jetzt über die REALE
+     * faithful-line Skeleton-Abbildung (Phase 8.1, re15_enemy_update_attack_point) statt eines
+     * manuellen Stand-ins: ein synthetisches 2-Bone-Skelett, dessen Attack-Bone lokal +X 1200
+     * (= Modell-Vorne) reicht. Bei rot_y=1024 zeigt Modell-+X nach Welt-−Z, der Gegner steht bei
+     * z=1200 → die Attack-Bone-Weltpos fällt auf den Spieler am Ursprung. Posed als QUERY. */
+    re15_emd_skeleton_t skel; memset(&skel, 0, sizeof skel);
+    skel.bone_count = 2;
+    skel.bone_parent[0] = -1; skel.bone_parent[1] = 0;
+    skel.bone_relative_pos[1][0] = 1200;          /* Modell-+X-Reichweite (Vorne) */
+    skel.keyframe_size_bytes = 80;
+    re15_enemy_update_attack_point(s, &skel, 0, 1);    /* attack_bone = 1 → atk_pt ≈ Spieler */
+    if (e->atk_pt_x * e->atk_pt_x + e->atk_pt_z * e->atk_pt_z > 500 * 500) {
+        fprintf(stderr, "FAIL: chain atk_pt (%d,%d) sollte am Spieler liegen (<500)\n",
+                e->atk_pt_x, e->atk_pt_z); return 1; }
     re15_enemy_lunge_begin(s);
     int16_t hp_before = pl->hp;
 
