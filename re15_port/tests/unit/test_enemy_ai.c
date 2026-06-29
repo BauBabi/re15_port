@@ -546,11 +546,16 @@ static int test_live_active_lunge(void)
     if (e->state != RE15_AI_STATE_ACTIVE) { fprintf(stderr, "FAIL: live init state->1, ist %d\n", e->state); return 1; }
     if (e->ai_timer != 0x14)              { fprintf(stderr, "FAIL: live init ai_timer=0x14, ist 0x%x\n", e->ai_timer); return 1; }
 
-    /* (b) NOT armed (ai_flags & 0x100 == 0): no countdown, returns 0 (movement tail deferred). */
-    e = fresh_enemy(0x10);
-    e->ai_flags = 0; e->ai_attack_timer = 500;
+    /* (b) NOT armed (ai_flags & 0x100 == 0): the unarmed path runs the LIVE decision brain for the
+     * combat sub-mode (grid&0xf==0 -> @0x8011f80c[0]=FUN_8010168c -> @0x8011f840[+0x5] =
+     * re15_ai_dispatch_decision). Player in range + off the front arc -> brain commits attack
+     * (0x701 -> +0x5=7). No windup (timer untouched; the arm is a deferred +0x5=7 sub-handler). */
+    e = fresh_enemy(0x10);                 /* grid_id 0 (sub 0), +0x5=0 (search-timer brain entry) */
+    put_player(1000, 0);                   /* right (+X): off narrow arc, dist 1000 < 2000 */
+    e->ai_flags = 0; e->ai_dist = 1000; e->ai_attack_timer = 500;
     if (re15_enemy_ai_live_active(1) != 0) { fprintf(stderr, "FAIL: unarmed active muss 0 liefern\n"); return 1; }
-    if (e->ai_attack_timer != 500)        { fprintf(stderr, "FAIL: unarmed darf timer nicht dekrementieren, ist %d\n", e->ai_attack_timer); return 1; }
+    if (e->ai_attack_timer != 500)        { fprintf(stderr, "FAIL: unarmed darf windup-timer nicht anfassen, ist %d\n", e->ai_attack_timer); return 1; }
+    if (e->sub_state_1 != 7)              { fprintf(stderr, "FAIL: unarmed sub0 -> Brain committet Attack (+0x5=7), ist %d\n", e->sub_state_1); return 1; }
 
     /* (c) Armed: timer counts down; at == 0x12c (300) it fires the lunge (re15_enemy_lunge_begin
      * -> lunge_frames = 0x20) and returns 1. */

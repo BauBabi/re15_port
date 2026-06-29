@@ -377,7 +377,24 @@ int re15_enemy_ai_live_active(int slot)
 {
     if (slot < 0 || slot >= RE15_ACTOR_MAX) return 0;
     re15_actor_t *e = &g_actors[slot];
-    if (!(e->ai_flags & 0x100)) return 0;          /* not attack-armed -> movement tail (deferred) */
+
+    if (!(e->ai_flags & 0x100)) {
+        /* UNARMED decision path (FUN_80101224 @0x80101560+): the original reads a FUN_8001bc08
+         * sensor into +0x1d8, manages the +0x0 lifecycle, then dispatches @0x8011f80c[+0x9 & 0xf]
+         * (the sub-mode table). For the COMBAT sub-mode (+0x9 & 0xf == 0 -> @0x8011f80c[0] =
+         * FUN_8010168c -> @0x8011f840[entity+0x5]) the DECISION BRAIN runs. **That brain IS
+         * re15_ai_dispatch_decision below — @0x8011f840 == &@0x8011f80c[13], i.e. the SAME vtable
+         * (FUN_80101b64/de4/2058) ported in Phase 3, confirmed LIVE here (the earlier "System B =
+         * parallel, not live" label was WRONG — it IS the live decision graph for type 0x10/0x11).**
+         * It commits the attack (state word 0x701 -> +0x5=7) when the player is in range/off-arc.
+         * DEFERRED (cited): the FUN_8001bc08 sensor + the +0x1d8 update, the non-0 sub-modes
+         * (@0x8011f80c[1..15] = the briefing feeding/lying handlers), and the ATTACK-ARM itself
+         * (+0x1d8 |= 0x100 + the +0x1da windup seed live in a +0x5=7 sub-handler -- FUN_8010ab2c/
+         * b274/cb34 family, the +0x1da writers; see HANDOVER 8.5c). */
+        if ((e->grid_id & 0xf) == 0)
+            re15_ai_dispatch_decision(e, &g_actors[RE15_ACTOR_SLOT_PLAYER]);
+        return 0;
+    }
 
     int fired = 0;
     e->ai_attack_timer = (int16_t)(e->ai_attack_timer - 1);   /* +0x1da -= 1 */
