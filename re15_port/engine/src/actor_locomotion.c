@@ -26,9 +26,15 @@
  *
  * Forensic basis: re_locomotion_lround_FINAL_2026_05_21.md (memory).
  * Key files cross-referenced:
- *   RE_15_modified_V2/player_move_by_rotation.c (verbatim walker)
- *   RE_15_modified_V2/anim_keyframe_process.c   (keyframes hold ONLY
- *                                                rotations — no root motion)
+ *   RE_15_modified_V2/player_move_by_rotation.c (verbatim walker = the
+ *                                                player's SCALAR-speed walk,
+ *                                                FUN_800245d8 / +0x8C)
+ *   RE_15_modified_V2/anim_keyframe_process.c   (the BONE-ROTATION half of the
+ *                                                keyframe; NOTE: keyframes ALSO
+ *                                                carry root SPEED at bytes 6..11
+ *                                                — see re15_actor_apply_root_motion
+ *                                                below + emd_common.c
+ *                                                re15_emd_get_keyframe_speed)
  *   PSX.EXE 0x80041BE4                          (Plc_dest opcode handler
  *                                                — state-init only, no math)
  *
@@ -319,18 +325,33 @@ void re15_actor_step_all_walkers(void)
     }
 }
 
-/* Phase 4.5.13 L-FINAL: keyframe-driven root motion DELETED.
+/* Phase 4.5.13 L-FINAL → CORRECTED 2026-06-29 (Phase 8.10 forward-walk RE).
  *
- * L3 forensic of RE_15_modified_V2/anim_keyframe_process.c established
- * that EMR keyframes contain ONLY bone rotations — bytes 0..5 are bone 0
- * Euler X/Y/Z (Q12), bytes 6..11 are UNREAD by the anim processor, and
- * bytes 12..79 are packed 12-bit Euler for bones 1..14. There is no
- * root motion data in keyframes; per-tick translation comes from the
- * scalar speed field at +0x8C (our `walk_active` path above), not from
- * the animation stream.
+ * This stub stays a NO-OP, but its old justification ("EMR keyframes contain
+ * ONLY bone rotations ... bytes 6..11 are UNREAD ... there is no root motion
+ * data in keyframes") is WRONG and is corrected here so it does not mislead.
  *
- * Stub kept to preserve the declared API surface (re15_actor.h) without
- * forcing a header churn. Callers may invoke it; it is a no-op.        */
+ * The EMR keyframe is "12B position+speed + variable-length packed angles"
+ * (RE15_KNOWLEDGE.md §5.2 L461): bytes 0..5 the renderer reads as the bone-0
+ * pose, and bytes 6..11 ARE the root SPEED_xyz (s16 LE) = the per-frame root
+ * translation. This codebase already reads them: re15_emd_get_keyframe_speed
+ * (emd_common.c) returns +6/+8/+10. The ORIGINAL applies them two ways:
+ *   - player CINEMATIC clips (e.g. ROOM1170 RBJ walk-to-helicopter): FUN_8001F3BC
+ *     GTE-rotates speed_xyz by the actor yaw and ADDS to pos each active tick.
+ *   - ENEMY locomotion (the zombie forward-walk, +0x5=5/6): FUN_8001AD68 →
+ *     FUN_8001AE38 reads the SAME keyframe speed (dx=+6, dz=+10), RotMatrix by
+ *     entity rot_y(+0x6a), ApplyMatrix, then entity.x/z = base(+0xa0/+0xa2)+disp.
+ * So root motion IS in the keyframes; the reader exists.
+ *
+ * Why this stays a no-op anyway: the PLAYER GAMEPLAY walk/run legitimately does
+ * NOT use keyframe root motion — the player command FSM steps via the SCALAR
+ * speed field +0x8C (FUN_800245d8, the `walk_active` path above), a separate,
+ * byte-true mechanism (FUN_8001AD68 has zero EXE callers — it is overlay/enemy
+ * only). The deferred consumer is the ENEMY forward-walk: it needs the zombie
+ * EDD/EMR loaded + re15_emd_get_keyframe_speed wired into the +0x5=5/6 walk
+ * animate (FUN_80102BD8). That, plus the still-unresolved m0 +0x5=6 trigger
+ * (the variant-layer puzzle, see HANDOVER §8.10), is what blocks the byte-true
+ * forward-walk port — not the keyframe data, which is present + readable here. */
 void re15_actor_apply_root_motion(re15_actor_t *a,
                                   const re15_emd_skeleton_t *skel,
                                   const re15_emd_animation_t *anim)
