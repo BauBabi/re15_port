@@ -329,6 +329,15 @@ Multi-Agent-Audit: 20 Subsysteme, 123 WRONG/MISSING-Verdachtsfälle, **104 adver
 ### #29 · HIGH · PORT · collision-stair
 **Slope/Diagonal-Kollisionstypen 2/4/5/6/7 portieren**
 
+> 🔶 **RE'T + UMFANG-KORREKTUR (2026-06-29):** Dispatch verifiziert: `handler[cell.type](cell, player+0x34, player+0x40)`
+> via Runtime-Jump-Table DAT_800b2858 (FUN_8003b0a4 @8003b480-a8, Quadrant-Helfer FUN_8003b068 = port `quadrant_of`).
+> **Umfang viel größer als der Audit-Einzeiler:** EIN Handler (type2 LAB_8003d00c @145450) ist bereits **~230 Zeilen**
+> intricate Fixpunkt-Linien/Schräge-Intersection (Quadranten-Klassifikation, 5+ Sub-Cases LAB_8003d128/27c/3cc/51c/678,
+> mult/div-Schnittpunkt-Mathematik). **5 Handler ≈ 1000+ Zeilen** error-prone Fixpunkt-Transliteration; volle Konfidenz
+> braucht Slope-Raum-Savestate-Verifikation (ROOM1010 t2, ROOM1050 t4/5, ROOM10D0 t4-7). ✅ Niedriges Risiko (ADDITIV:
+> ROOM1170 hat keine Slope-Cells → kein Regress; aktuell laufen Spieler durch Schrägen). → **Eigener fokussierter Lauf
+> (worktree-isoliert) verdient** — NICHT am Sessionende rushen (Fixpunkt-Fehler wahrscheinlich + ohne Slope-Raum schwer
+> zu fangen). Handler-Adressen: t2 LAB_8003d00c / t4 LAB_8003beb0 / t5 LAB_8003c734 / t6 LAB_8003cb9c / t7 LAB_8003c2cc.
 - **Ort:** `re15_port/engine/src/re15_collision.c:304-307 (DEFERRED)`
 - **RE-Beleg:** Dispatch 0x800b2858 @0x8003b4a0; t2=LAB_8003d00c, t4=LAB_8003beb0, t5=LAB_8003c734, t6=LAB_8003cb9c, t7=LAB_8003c2cc. RDT: ROOM1010 t2, ROOM1050 t4/t5, ROOM10D0 t4-7.
 - **Fix:** 5 Handler @LAB_8003d00c/8003beb0/8003c734/8003cb9c/8003c2cc transliterieren (Fixpunkt-intensiv), an Origin=0-Konvention anpassen; in Slope-Raum (ROOM1050) gegen Savestate verifizieren.
