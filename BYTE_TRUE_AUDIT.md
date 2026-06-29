@@ -433,6 +433,10 @@ Multi-Agent-Audit: 20 Subsysteme, 123 WRONG/MISSING-Verdachtsfälle, **104 adver
 ### #42 · LOW · REPAIR · render-pc-parity
 **CLEAR_RGB-Wert korrigieren (0x081030FF, opake Alpha)**
 
+> ✅ **ERLEDIGT 2026-06-29 (byte-true):** Texture-Format ist `SDL_PIXELFORMAT_RGBA8888` = 0xRRGGBBAA (Byte-Order-Zweifel
+> der Memory aufgelöst) → PSX `setRGB0(draw_env,8,16,48)` (psx/render.c:157) = **0x081030FF** (R8 G16 B48 opak). Das alte
+> `0x00081830` war byte-verschoben (R0 G8 B24 + halbtransparent A0x30). render_pc.c:287. Build+Boot clean. Sichtbar nur
+> auf Boot-/Fehlframes vor dem ersten BG-Blit.
 - **Ort:** `re15_port/platform/pc/src/render_pc.c:287`
 - **RE-Beleg:** PSX render.c:157-158 setRGB0(8,16,48). Port 0x00081830 dekodiert zu R=0,G=8,B=24,A=0x30. Sichtbar nur Boot-/Fehlframes (BG-memcpy Ã¼berschreibt sonst).
 - **Fix:** CLEAR_RGB = 0x081030FFu (R=8,G=16,B=48,A=0xFF).

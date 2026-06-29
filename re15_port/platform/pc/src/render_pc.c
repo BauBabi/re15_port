@@ -284,7 +284,12 @@ static const uint8_t s_font6x8[96][8] = {
     /* 0x7F     */ {0,0,0,0,0,0,0,0},
 };
 
-#define CLEAR_RGB  0x00081830u   /* dark blue, matches PSX target (8,16,48) */
+/* [#42] byte-true PSX clear colour. Texture is SDL_PIXELFORMAT_RGBA8888 = 0xRRGGBBAA,
+ * so the PSX `setRGB0(draw_env, 8, 16, 48)` (psx/render.c:157) = R8 G16 B48, opaque
+ * alpha → 0x081030FF. The old 0x00081830 was byte-shifted (R0 G8 B24 A0x30 = wrong
+ * colour AND semi-transparent). Visible only on boot/error frames before the first
+ * BG blit (the BG memcpy overwrites it otherwise). */
+#define CLEAR_RGB  0x081030FFu
 
 static void put_pixel(int x, int y, uint32_t rgba)
 {
