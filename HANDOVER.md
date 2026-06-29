@@ -1,47 +1,57 @@
-# RE1.5 Port — Session-Handover (Stand 2026-06-29, Phase 8.1)
+# RE1.5 Port — Session-Handover (Stand 2026-06-29, Phase 8.5 abgeschlossen)
 
-Kanonisches „lies-mich-zuerst" für die nächste Session. Aktueller Fokus: **Gegner-/Zombie-AI**.
-Ergänzt die Auto-Memory (v.a. `reai-v2-foundation-combat` = die laufende AI-RE) +
-`reai-v2-duckstation-dynamic-re`, `reai-v2-ghidra-pipeline`, `reai-v2-byte-true-audit`.
+Kanonisches „lies-mich-zuerst" für die nächste Session. Aktueller Fokus: **STAGE1-Zombie-AI → `game_step`-Integration**.
+Ergänzt die Auto-Memory (v.a. `reai-v2-foundation-combat` = die laufende AI-RE, `disasm-verify-decompiles`,
+`reai-v2-duckstation-dynamic-re`).
 
-## TL;DR — Wo stehe ich (2026-06-29)
+## TL;DR — Wo stehe ich
 
-- **Git:** HEAD = `c278b08e` (master, sauber). Diese Session = **6 AI-Commits**
-  (`bb942f38` Phase 2 → `8580df9c` 3 → `06c0c055` 4 → `9ae78de1` 5 → `9c86ae3c` 6 → `c278b08e` 7).
-- **Build/Test:** `export PATH="/c/msys64/mingw64/bin:$PATH"; cmake --build re15_port/build;
-  ctest --test-dir re15_port/build --timeout 30` → **29/29 grün** (mingw64 GCC + Ninja).
-  Neuer Test: `unit_enemy_ai` (17/17 Sub-Tests); `unit_damage` (17/17, inkl. Lunge).
-- **Die byte-true RE der STAGE1-Zombie-AI ist KOMPLETT** (Decision-FSM + Live-Decision-Graph +
-  Lunge-Attack-Sequenz + Hitbox + Damage; alles portiert + getestet, additiv, **NICHT** in
-  `game_step` verdrahtet = kein 1170-Risiko). Full-Chain bewiesen: spawn→tick→lunge→Spieler-HP fällt.
-- **Nächster Schritt = PHASE 8 (Integration, NICHT mehr reines byte-true):** siehe unten.
-- **Neues Tooling:** Skill **`re15-psx-disasm`** (MIPS-Direkt-Disasm der PSX.EXE/Overlays, „Weg C").
-- **Disziplin:** jede Konstante zitiert eine Disasm-Adresse/Datei-Offset; additiv + getestet;
-  kein `game_step`-Eingriff bis Phase 8 (vorsichtig, savestate-verifiziert).
+- **Git:** HEAD = `b1b3f95e` (master, sauber; nur `.idea/` untracked). Diese Session ≈ **21 Commits** (Phase 8.1–8.5d).
+- **Build/Test:** `taskkill //F //IM re15_pc.exe 2>/dev/null; true; export PATH="/c/msys64/mingw64/bin:$PATH";
+  cmake --build re15_port/build; ctest --test-dir re15_port/build --timeout 30` → **30/30 grün** (mingw64 GCC + Ninja).
+  (Das `taskkill` ist nötig, falls die Exe noch läuft + die Datei sperrt — sonst Link-„Permission denied", kein Code-Fehler.)
+- **⚠️ GROSSE KORREKTUR diese Session:** die in Phase 2–7 portierte AI (`FUN_8011d6d4` → `@0x801217a0`) ist die Typ-**0x47**-
+  Familie — NICHT die Live-Zombies. Savestate-bewiesen laufen die Live-Zombies (Typ 0x10/0x11/0x16) über `@0x8011f7b4`
+  (`FUN_80100424`/`FUN_80101224`). Ursache: das Decompilat `STAGE1/FUN_80100424.c` ist FALSCH (→ Memory
+  `disasm-verify-decompiles` + Katalog „HIGH-VALUE CORRECTIONS"). Phase 8.3 (darauf gebaut) → revertiert; die Live-AI
+  auf der korrekten Familie re-rooted (8.5a–d).
+- **Die Live-Zombie-AI ist jetzt FUNKTIONAL KOMPLETT** (alles auf `@0x8011f7b4`, byte-true, additiv, **NICHT** in
+  `game_step` = kein 1170-Risiko): die volle Attack-Kette läuft aus einer ENTSCHEIDUNG —
+  **Tick → INIT → ACTIVE → Decision-Brain committet (+0x5=7) → Arm → Windup → Lunge@300 → geteilte Hitbox → HP fällt.**
+- **Nächster Schritt = PHASE 8.6:** das `game_step`-Wiring (1170-Risiko) + dynamische Verifikation — siehe §8.6 unten.
+- **Neues Tooling:** Skill **`re15-room-probe`** (echten Raum laden + SCD/AI ticken + State lesen, kein DuckStation —
+  genau für die 8.6-Verifikation) + `re15-psx-disasm` um „Decompile-Misstrauen" + Tabellen-Familien-Decode erweitert.
+- **Disziplin:** jede Konstante zitiert eine Disasm-Adresse/Datei-Offset; Overlay-`.c` vor dem Portieren disasm-
+  verifizieren (eins war diese Session falsch); additiv + getestet; kein `game_step`-Eingriff bis 8.6.
 
-## Enemy-AI byte-true RE (Phase 2–7, diese Session) — Architektur-Karte
+## Die LIVE STAGE1-Zombie-AI (`@0x8011f7b4`-Familie) — Architektur-Karte (byte-true, KORREKT)
 
-Tick `FUN_8011d6d4` → Main-State `+0x4` (`PTR_FUN_801217a0[0..4]`: 0 init/1 active/2 hurt/3 death/4 idle)
-→ active `FUN_8011d9f4` → sub `+0x9 & 0xf` (`PTR_FUN_801217b4[0..15]`; **live = sub 0** = `FUN_8011da48`)
-→ `+0x5` logic `SUB[1+(+0x5)]` + anim `SUB[4+(+0x5)]`.
+Per-Frame-Loop `FUN_8001a50c` (@0x8001ce04 im Main-Update) iteriert `DAT_800acc2c` (stride 0x1f4) und ruft
+`@0x80072bac[entity+0x8 type]`. Für die Live-Zombies (Typ **0x10/0x11/0x16**):
+```
+FUN_80100424  per-frame Tick: pause/skip-Gates + dist@+0x1d0 + dispatch @0x8011f7b4[entity+0x4]
+  [0] FUN_80100688  INIT    → state→ACTIVE(1), ai_timer(+0x9c)=0x14
+  [1] FUN_80101224  ACTIVE  → IF +0x1d8&0x100 (armed): +0x1da-- ; @0x12c(300) Lunge ; @0 Recovery(0x1503)
+                            → ELSE (unarmed): @0x8011f80c[+0x9&0xf] → (sub0) FUN_8010168c → @0x8011f840[+0x5]
+                              = das Decision-Brain (FUN_80101b64/de4/2058 — und @0x8011f840 == &@0x8011f80c[13])
+  [2/3/4] 0x80105a8c/06ba4/0919c   hurt/death/idle — DEFERRED
+ARM = FUN_8010ab2c (Attack-Commit, vom Brain bei +0x5=7): Arc +0x5fc=0x390 ; gated DAT_800aca3c&1 →
+      +0x1d8|=0x100 + Seed +0x1da = (rng&0xff)+(rng&0xff)+600  (600..1110 → zählt auf 300 = Lunge)
+```
+Die Lunge-EXECUTION ist GETEILT + typ-agnostisch (EXE): `FUN_80017fa4` (Biss) liest den GTE-Attack-Point
+work `+0x28/+0x2a/+0x2c` (im Port = atk_pt-Skeleton-Bone, 8.1), `FUN_80012d60(500,&pt,0)` = Damage-Resolver.
 
-**ZWEI parallele Decision-Systeme** (savestate-disambiguiert, Tabellen NICHT laufzeit-gepatcht):
-- **(A) LIVE** = die EXE-Generic-Leaves (`FUN_8004f100` assess `+0x5`=0 / `FUN_8004f3a4` search 1 /
-  `FUN_8004f5e8` turn 2; `+0x5`≥3 = Movement/Anim-Exec). **Kein Leaf setzt `+0x5`=7** — die Lunge
-  emergiert aus Anim + Action-Driver `FUN_80019e20` (action `0x16`/`0x17`/`0x18` → Hitbox `FUN_80017fa4`).
-- **(B) PARALLEL** (byte-true, aber NICHT live) = die Overlay-Handler `FUN_80101b64/c7c/de4/2058`
-  via `FUN_8010168c`-Familie → vtables `f840/…` auf `+0x5`.
-
-**Portierter Code** (alles additiv, getestet):
-- `re15_port/engine/src/enemy_ai_common.c` + `include/re15_enemy_ai.h`: `re15_enemy_ai_init`
-  (`FUN_8011d84c`), `re15_enemy_ai_tick` (`FUN_8011d6d4`), `re15_enemy_ai_active` (`FUN_8011d9f4`,
-  ruft live `re15_ai_exe_dispatch`), System-A-Leaves `re15_ai_exe_assess/search/turn`, System-B-Brain
-  `re15_ai_decide_search_timer/approach/search/engage` + `re15_ai_facing_aligned`, `re15_ai_set_state_word`,
-  und der Integrations-Entry **`re15_enemy_ai_step(slot)`** (FSM-Tick + Lunge-Slice — den ruft game_step).
-- `re15_port/engine/src/re15_damage.c`: Damage-Resolver + Hitbox (schon vorher) + **Lunge-Driver**
-  `re15_enemy_lunge_begin/tick` (`LAB_80017eb0`/`LAB_80017f50`: 0x20-Frame-Window, feuert `re15_enemy_attack`
-  jeden Frame, beißt 1×). Neue Actor-Felder: `ai_dist/ai_timer/ai_flags/ai_contact/ai_arc/…/ai_target_x/z/
-  lunge_frames` (`re15_actor.h`, alle offset-zitiert).
+**Portierter Code** (`enemy_ai_common.c`/`re15_enemy_ai.h`, alles additiv + getestet — `test_enemy_ai`,
+`test_damage`, `test_room1140_spawn`):
+- **Live-Familie:** `re15_enemy_ai_live_init/active/tick/step`, `re15_enemy_ai_live_arm`,
+  `re15_enemy_ai_set_combat_active`. Neues Actor-Feld `ai_attack_timer` (+0x1da). Wiederverwendet:
+  `re15_ai_dispatch_decision` (das Decision-Brain, jetzt als LIVE bestätigt — NICHT „System B parallel"),
+  `re15_enemy_lunge_begin/tick` + `re15_enemy_attack` + Damage/Hitbox (`re15_damage.c`, geteilt),
+  `re15_enemy_update_attack_point` + `re15_skel_bone_to_world` (atk_pt, 8.1), `op_sce_em_set` +
+  `re15_enemy_spawn_action` (room1140-Spawn, 8.2 — verifiziert via `test_room1140_spawn`).
+- **0x47-Familie (Phase 2–7)** = `re15_enemy_ai_init/tick/active` + `re15_ai_exe_assess/search/turn`
+  (`@0x801217a0`/`FUN_8011d6d4`): echte byte-true RE eines PARALLELEN Gegner-Typs — behalten, klar als 0x47
+  gelabelt, **NICHT der Live-Pfad**. Leicht zu verwechseln (gleiche Struktur, andere Tabelle).
 
 ## PHASE 8 — wo es weiter geht (Integration + dynamische Verifikation)
 

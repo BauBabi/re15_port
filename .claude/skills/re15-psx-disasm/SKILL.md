@@ -31,9 +31,24 @@ python $S dis   0x8011d6d4 30 --bin STAGE5.BIN
 - **`table`** — liest Words als Funktionspointer; markiert `overlay` (`0x8010xxxx`) vs `EXE` (`0x800xxxxx`) vs `data/?`. Das Werkzeug für AI-Dispatch-/Action-Tabellen.
 - **`scan`** — symbolischer Schnell-Überblick einer Funktion: `sb`-Writes auf `+0x4/+0x5/+0x6/+0x7` (FSM-State-Transitions), `jal`-Ziele, `sltiu`-Schwellen (z.B. Distanz-Gates), bis `jr ra`. Ideal, um den Transition-Graph mehrerer Leaves zu kartieren, ohne jede Zeile zu lesen.
 
+## ⚠️ DECOMPILE-MISSTRAUEN — die wichtigste Lehre (2026-06-29)
+
+**Ein Overlay-Decompilat (`RE_15_Quellcode_Overlays/STAGE*/FUN_*.c`) kann komplett FALSCH/fehl-analysiert sein.** Konkret: `STAGE1/FUN_80100424.c` zeigte einen Pose-Setter-Body — der echte `FUN_80100424` (Direkt-Disasm aus STAGE1.BIN) ist ein **Per-Frame-AI-Tick** (dist-cache + `@0x8011f7b4[+0x4]`-Dispatch). Der Decompiler hatte den Body einer ANDEREN Funktion (`FUN_8010ab2c`) drangehängt. Eine ganze Phase (8.3) wurde auf dieser Fiktion gebaut → revertiert.
+
+**Regel:** Bevor du Code aus einem Overlay-`.c` portierst, der AI-/Dispatch-/State-Logik trägt, **disasm-verifiziere mindestens den Prolog + die Schlüssel-Konstanten** gegen die rohen Bytes (`dis <addr>`). Stimmt `dis <addr> 4` nicht mit dem `.c`-Anfang überein (z.B. `.c` liest sofort `+0x94`, aber `dis` zeigt dist-cache `SquareRoot0`+`@tabelle[+0x4]`) → dem `.c` NICHT trauen, aus den Bytes arbeiten. Live-RAM aus einem Savestate (`re15-savestate-ghidra`) ist der finale Schiedsrichter (Bytes @addr == on-disc?).
+
+## Dispatch-Tabellen-Familien decodieren (`table`)
+
+Die STAGE1-Zombie-AI ist ein Geflecht paralleler Tabellen — pro Gegner-Typ eine eigene. So aufgelöst (alle byte-true 2026-06-29):
+- **Per-Frame-Entity-Loop** = `FUN_8001a50c` (@0x8001ce04 im Main-Update), iteriert `DAT_800acc2c` (stride 0x1f4) und ruft `@0x80072bac[entity+0x8 type]` (die Per-Frame-Tick-Tabelle).
+- **Typ 0x10/0x11/0x16** (Live-Briefing/Combat-Zombies): `@0x80072bac[type]=FUN_80100424` → `@0x8011f7b4[+0x4]` (state) → active `FUN_80101224`; dessen un-armed Tail → `@0x8011f80c[+0x9&0xf]` (sub-mode), und **`@0x8011f840 == &@0x8011f80c[13]`** (das +0x5-Decision-Brain `FUN_80101b64/de4/2058`).
+- **Typ 0x47** (anderer Gegner): `@0x80072bac[0x47]=FUN_8011d6d4` → `@0x801217a0[+0x4]` → `FUN_8011d9f4`/`da48`. **PARALLEL, NICHT der Live-Pfad** — leicht zu verwechseln (gleiche Struktur, andere Tabelle).
+
+Rezept: `table <base> 16` für jede vermutete Vtable; den Per-Frame-Caller über die XREFs der Tabelle im `ghidra1_V2.txt` finden (`grep 80072bac ghidra1_V2.txt` → `XREF` = die Loop); NIE annehmen, dass zwei Typen dieselbe Tabelle teilen, ohne das Savestate-`+0x8`-Typbyte + den `@0x80072bac[type]`-Eintrag zu lesen.
+
 ## Verifikation (so wurde es belegt)
 
-- Pointer-Tabelle gegen die **Live-RAM** gegenprüfen (ist sie zur Laufzeit gepatcht?): mit `re15-savestate-ghidra` (`re15_ss.Ram`) dieselben Adressen aus einem Savestate lesen und mit der `table`-Ausgabe vergleichen. 2026-06-29 so bewiesen: die STAGE1-AI-Tabellen sind **nicht** gepatcht (Live == on-disc) → der Live-Pfad sind wirklich die EXE-Leaves.
+- Pointer-Tabelle gegen die **Live-RAM** gegenprüfen (ist sie zur Laufzeit gepatcht?): mit `re15-savestate-ghidra` (`re15_ss.Ram`) dieselben Adressen aus einem Savestate lesen und mit der `table`-Ausgabe vergleichen.
 - Prolog-Spot-Check für die Load-Adresse: `dis <fn> 4` muss ein plausibles `addiu sp,sp,-N; sw ra,..` zeigen.
 
 ## Verwandte Skills / Quellen
