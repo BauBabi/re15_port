@@ -96,6 +96,21 @@ void re15_game_step(const re15_game_ctx_t *c)
             pl->x = nx;
             pl->z = nz;
         }
+        /* PLAYER WEAPON FIRE (Phase 8.10, two-sided combat — faithful-line input). Classic-RE
+         * aim+fire: hold R1 to AIM, press Square to FIRE. While aiming, Square fires the equipped
+         * weapon — re15_player_weapon_fire (the byte-true FUN_80011f50 core: auto-targets the nearest
+         * zombie in FRONT within reach, applies the per-weapon byte-true damage -> the zombie HURT/
+         * DEATH) — and does NOT trigger a door/stair (the original blocks actions while the weapon is
+         * raised; here the R1 aim suppresses g_aot_action_pressed). FAITHFUL-LINE / DEFERRED: the exact
+         * original aim/fire command FSM (@0x80035810, the 3-level player command FSM with the anim-
+         * gated discharge), the weapon INVENTORY (DAT_800aca5d -> defaulted to the pistol = weapon 2),
+         * and the aim/raise/muzzle ANIMATION. 1170-SAFE: fires only on R1+Square (no input in a boot)
+         * and re15_player_weapon_fire only hits live zombies (a no-zombie room is a no-op). */
+        if (c->rdt_ok && (c->pad_current & RE15_PAD_BIT_R1)) {
+            if (c->pad_pressed & RE15_PAD_BIT_SQUARE)
+                re15_player_weapon_fire(2);   /* pistol (weapon 2); the weapon inventory is deferred */
+            g_aot_action_pressed = 0;         /* aiming blocks the door/stair action (no doors while aiming) */
+        }
         /* A stair may START this frame: ACTION pressed while in/against a stair
          * zone. If so it consumes the action and we SKIP the door scan;
          * otherwise scan the door AOTs (also action-gated). */
