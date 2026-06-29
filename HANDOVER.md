@@ -45,11 +45,20 @@ Ergänzt die Auto-Memory (v.a. `reai-v2-foundation-combat` = die laufende AI-RE,
   Anim-gegatete Sub-Step-Advances + der Bite-LOOP-Count sind Stand-ins (Port = 1 Biss/Grab-Zyklus, der engage re-committet
   während der Spieler in Range bleibt → Damage wiederholt sich). Test Part (6): Zombie im Grab-State → Player −15 HP →
   Exit zu engage. 31/31 ctest, ROOM1140-Headless sauber.
-- **Nächster Schritt (8.9): die BEWEGUNG (approach) + der Player-grabbed-FSM.** (1) Die Movement-Leaves (+0x5≥3 approach,
-  FUN_80102540/2bd0/2d20 → Port-Walker) — damit der geweckte Zombie zum Spieler LÄUFT (sonst wacht er auf, bewegt sich
-  aber nicht in Grab-Range). (2) Der Player-grabbed-FSM (Register 0x800aca58 cmd 5 → LAB_80036834 pinnt+animiert den
-  Spieler; player+0x93|=1) — damit der Spieler beim Grab gehalten wird. (3) mid-Combat ROOM1140-Savestate-Vergleich
-  (`re15-room-capture`; der vorhandene ist post-death). (Der Lunge-Arm bleibt dormant, bis ein Skript bank1/bit31 setzt.)
+- **PHASE 8.9 ERLEDIGT (dieser Commit): die TURN-to-face portiert + eine Modell-Korrektur.** Der aktive Zombie DREHT
+  sich jetzt zum Spieler: `+0x5=7` ist die **TURN**-State (decide [7] 0x80102d20 = Grab-Commit wenn nah+facing(0x200)+
+  floor; animate [7] 0x80102dc8 = `rot_y += arc_test(player,0x80)` ±0x80/Frame). `re15_enemy_ai_live_turn` +
+  dispatch_decision case 7, in die Combat-Animate-Hälfte eingehängt. **KORREKTUR:** `+0x5=7` ist NICHT der Lunge-Arm
+  (meine 8.5d-Kopplung war eine Approximation) — der Arm (FUN_8010ab2c) ist ein SEPARATER, dormanter Dispatch
+  (@0x80120208[+0x4=6]); die falsche Kopplung entfernt, `test_live_decision_arm` re-pointed aufs Arm-Primitiv direkt.
+  Test Part (7): Zombie bei +0x5=7 90° abgewandt nah am Spieler → dreht sich (rot_y 1024→1664) → committet Grab →
+  Player-HP fällt. **OFFEN-Befund:** der Vorwärts-Walk [5/6] ist Anim-Root-Motion-gekoppelt (FUN_8001ad68, Displacement
+  aus dem Walk-Anim-Stream) → deferred wie der Player-Walk. 31/31 ctest, ROOM1140-Headless sauber.
+- **Nächster Schritt (8.10): der FORWARD-WALK + der Player-grabbed-FSM.** (1) Der Anim-Root-Motion-Walk (+0x5=5/6,
+  FUN_8001ad68 → die Enemy-Walk-Anim + Root-Motion wie beim Player) — damit der Zombie über Distanz zum Spieler LÄUFT
+  (heute dreht er sich + grabt nur, wenn der Spieler in Range kommt; im Briefing-Room läuft der Spieler zum Zombie, also
+  reicht das oft). (2) Der Player-grabbed-FSM (0x800aca58 cmd 5 → LAB_80036834 pinnt+animiert den Spieler). (3) mid-Combat
+  ROOM1140-Savestate-Vergleich. (Der Lunge-Arm bleibt dormant, bis ein Skript bank1/bit31 setzt.)
 - **Neues Tooling:** Skill **`re15-room-probe`** (echten Raum laden + SCD/AI ticken + State lesen, kein DuckStation —
   genau für die 8.6-Verifikation) + `re15-psx-disasm` um „Decompile-Misstrauen" + Tabellen-Familien-Decode erweitert.
 - **Disziplin:** jede Konstante zitiert eine Disasm-Adresse/Datei-Offset; Overlay-`.c` vor dem Portieren disasm-
@@ -241,10 +250,32 @@ Frame) · [4] hold · [5] struggle (Alt-Exit 0xb01 wenn Spieler sich freikämpft
 - **Test Part (6):** Zombie direkt im Grab-State (grid 0, +0x5=3, +0x6=0) nah am Spieler → run_all durch die Sub-Steps →
   Player HP 100→85 (−15 byte-true) → Exit zu engage (+0x5=2). 31/31 ctest, ROOM1140-Headless sauber.
 
-### 8.9+ — was als Nächstes (BEWEGUNG + Player-grabbed-FSM → das volle beobachtbare Combat)
-1. **Bewegungs-Leaves (+0x5≥3 approach):** die deferred f840[3..]/f890-Movement (FUN_80102540 ist No-Op für 3/4; die
-   approach-States 2bd0/2d20 + der Walker) auf den Port-Walker mappen — damit der geweckte Zombie zum Spieler LÄUFT
-   (heute wacht er auf + greift nur, wenn er schon in Range ist; ohne Movement schließt er die Lücke nicht).
+### 8.9 — die TURN-to-face portiert (ERLEDIGT) + die +0x5=7-Modell-Korrektur
+**Agent + Selbst-Disasm-Verify** der aktiven Zombie-Bewegung. Dispatch: FUN_8010168c ruft je Frame die DECIDE-Hälfte
+@0x8011f840[+0x5] DANN die ANIMATE-Hälfte @0x8011f890[+0x5] (gepaart, +8 Bytes versetzt). Bewegung NUR in den Animate-
+Hälften (anim_set selbst bewegt NICHT — nur Frames/Pose). State-Split byte-true:
+- **TURN [7]** (decide 0x80102d20 / animate 0x80102dc8): keine Translation, nur Drehung. animate = `+0x6a += arc_test(
+  playerX,0x80)` (±0x80 ≈ 7°/Frame zum Spieler, @0x80102ee0). decide = der Grab-Commit (`player+0x93==0 && dist<0x4b0 &&
+  arc_test(playerX,0x200)==0 && floor==`) → +0x4=(facing+3)<<8|1 (= grab 0x301/0x401). Also: dreht bis facing → grabt.
+- **FORWARD-WALK [5/6]** (0x80102bd8): nutzt `FUN_8001ad68` = **Anim-Root-Motion** (Displacement aus dem Walk-Anim-Stream
+  via FUN_8001ae38, indexiert by +0x94/+0x95, GTE-rotiert by Heading + +0xa0/+0xa2). **KEIN konstanter Step** → deferred
+  (braucht die Enemy-Walk-Anim + Root-Motion, wie der Player-Walk). Der konstante Walker FUN_800245d8 (Speed +0x8c) wird
+  nur für Back-Step/Recover genutzt, nicht den Vorwärts-Walk.
+- **search [1] / engage [2]:** stehen + tracken (Yaw-Slew FUN_8001aac4 auf das AI-Target +0x1bc/+0x1be), keine Translation.
+- **Yaw-Slew FUN_8001a8f8/aac4:** slewt +0x6a zum Bearing (atan2) um ±param_2/Frame, Overshoot-Korrektur. Turn nutzt 0x201.
+- **⚠️ MODELL-KORREKTUR:** `+0x5=7` ist die **TURN**-State, NICHT der Lunge-Arm (meine 8.5d-„+0x5=7→arm"-Kopplung war eine
+  Approximation). Der Arm (FUN_8010ab2c) ist ein SEPARATER, dormanter Dispatch (@0x80120208[+0x4=6]; DAT_800aca3c&1 nie
+  gesetzt, 8.7). Die falsche Kopplung entfernt; `test_live_decision_arm` re-pointed aufs Arm-Primitiv direkt.
+- **Portiert:** `re15_enemy_ai_live_turn` (animate [7]) + `re15_ai_dispatch_decision` case 7 (decide [7] grab-commit), in
+  die Combat-Animate-Hälfte von `re15_enemy_ai_live_active` eingehängt (decide dann animate; +0x5=3/4→grab, +0x5=7→turn).
+  Reine rot_y-Mutation (byte-true ±0x80-Rate); die within-±0x80-Fein-Slew ist moot (der ±0x200-Grab-Commit feuert zuerst).
+- **Test Part (7):** Zombie bei +0x5=7, 90° abgewandt, nah (dist 600) → dreht sich (rot_y 1024→1664) → Grab-Commit →
+  Player-HP fällt. 31/31 ctest, ROOM1140-Headless sauber.
+
+### 8.10+ — was als Nächstes (FORWARD-WALK + Player-grabbed-FSM → das volle beobachtbare Combat)
+1. **Forward-Walk (+0x5=5/6, FUN_8001ad68 = Anim-Root-Motion):** die Enemy-Walk-Anim + Root-Motion wie beim Player wiren —
+   damit der Zombie über Distanz zum Spieler LÄUFT (heute dreht er sich + grabt nur, wenn der Spieler in Range kommt; im
+   Briefing-Room läuft der Spieler zum Zombie, also reicht Turn+Grab oft). Braucht die Enemy-Anim/Skeleton im Step-Pfad.
 2. **Player-grabbed-FSM:** die Player-Seite (0x800aca58 cmd 5 → LAB_80036834 pinnt+animiert den Spieler) — damit der Spieler
    beim Grab gehalten wird (sonst kann er weglaufen während −5/Biss); + der player+0x93-grabbed-Flag sauber.
 3. **mid-Combat ROOM1140-Savestate (`re15-room-capture`):** der vorhandene Save ist post-death — einen mid-Grab ziehen, die

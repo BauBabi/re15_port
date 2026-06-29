@@ -317,10 +317,10 @@ void re15_ai_decide_engage(re15_actor_t *e, const re15_actor_t *player)
     }
 }
 
-/* The +0x5 decision dispatch = FUN_8010168c's PTR_FUN_8011f840[entity+0x5] call. Routes
- * the active sub-mode to its (byte-true) decision handler; indices 3.. are the deferred
- * movement / attack-execution leaves. See re15_enemy_ai.h for the full vtable + why this
- * is not auto-wired into the tick yet (the generic-humanoid EXE leaf layer is deferred). */
+/* The +0x5 decision dispatch = FUN_8010168c's PTR_FUN_8011f840[entity+0x5] call (the DECIDE half).
+ * Routes the active sub-mode to its byte-true decision handler. f840[3..6] are `jr ra` stubs (the
+ * grab/walk states do all their work in the f890 ANIMATE half); f840[7] is the turn-state's
+ * grab-commit check; indices 8.. are the deferred leaves. See re15_enemy_ai.h. */
 void re15_ai_dispatch_decision(re15_actor_t *e, const re15_actor_t *player)
 {
     if (!e || !player) return;
@@ -328,8 +328,19 @@ void re15_ai_dispatch_decision(re15_actor_t *e, const re15_actor_t *player)
         case 0: re15_ai_decide_search_timer(e, player); break;  /* f840[0]=FUN_80101b64 */
         case 1: re15_ai_decide_search(e, player);       break;  /* f840[1]=FUN_80101de4 */
         case 2: re15_ai_decide_engage(e, player);       break;  /* f840[2]=FUN_80102058 */
-        default:                                                /* f840[3..]=FUN_80102540/  */
-            /* 2bd0/2d20/2f1c/.. movement+attack-execution leaves — DEFERRED (model pool). */
+        case 7:  /* f840[7]=FUN_80102d20 — the TURN state's grab-commit check (byte-true): once the
+                  * turn (animate) has the zombie close + facing within the ±0x200 cone + same floor +
+                  * the player not mid-hit, commit the GRAB (+0x5=3/4). Otherwise stay turning. This
+                  * is the same condition as the engage's directional-grab arm (re15_ai_decide_engage). */
+            if (player->hit_react == 0 && e->ai_dist < 0x4b0u &&
+                re15_ai_arc_test(e, player->x, player->z, 0x200) == 0 &&
+                player->floor == e->floor) {
+                int aligned = re15_ai_facing_aligned(e, player);
+                re15_ai_set_state_word(e, (uint32_t)((aligned + 3) * 0x100) | 1u);
+            }
+            break;
+        default:                                                /* f840[3..6],[8..] */
+            /* grab/walk stubs + the deferred movement/anim-execution leaves (model pool). */
             break;
     }
 }
@@ -451,6 +462,24 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
     }
 }
 
+/* Turn-to-face ANIMATE (@0x8011f890[7] = FUN_80102dc8, STAGE1.BIN) — the +0x5=7 TURN state's
+ * movement half (byte-true, disasm-verified). The active zombie enters +0x5=7 from the engage
+ * (re15_ai_decide_engage 0x701: close <0x7d0 but OUTSIDE the narrow 0x2c8 arc -> turn to face). Each
+ * frame it rotates the heading toward the player by the arc_test(player, 0x80) residual (the
+ * @0x80102ecc-0x80102ee4 path: `entity+0x6a += arc_test`), i.e. ±0x80 (~7deg) per frame toward the
+ * player, 0 once within the ±0x80 cone. NO translation (the turn state stands and pivots; the only
+ * forward locomotion is the deferred anim-root-motion walk in the +0x5=5/6 states). The companion
+ * DECIDE half f840[7] (re15_ai_dispatch_decision case 7) commits the GRAB as soon as the heading is
+ * within the wider ±0x200 grab cone — so the zombie turns until it faces the player, then grabs.
+ * (The within-±0x80 fine slew FUN_8001a8f8(player,0x201) @0x80102e90 is moot here: the ±0x200 grab
+ * commit fires first since ±0x80 is inside ±0x200.) */
+static void re15_enemy_ai_live_turn(re15_actor_t *e, const re15_actor_t *player)
+{
+    if (!player) return;
+    int16_t turn = (int16_t)re15_ai_arc_test(e, player->x, player->z, 0x80);  /* ±0x80 toward player */
+    e->rot_y = (int16_t)(((int32_t)e->rot_y + turn) & 0x0fff);                 /* +0x6a += residual */
+}
+
 /* FUN_80101224 (@0x8011f7b4[1], STAGE1.BIN) — the LIVE zombie ACTIVE handler. The ATTACK-WINDUP
  * half (byte-true): when the attack-arm bit (+0x1d8 & 0x100) is set and the freeze bit (+0x0 &
  * 0x1000) clear, the windup timer +0x1da counts down each frame; at == 0x12c (300) the original
@@ -485,18 +514,20 @@ int re15_enemy_ai_live_active(int slot)
         switch (e->grid_id & 0xf) {                       /* @0x8011f80c[+0x9 & 0xf] sub-mode */
             case 0: {  /* combat sub-mode 0 -> FUN_8010168c: the DECIDE (f840) then the ANIMATE (f890) */
                 re15_actor_t *player = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-                re15_ai_dispatch_decision(e, player);   /* f840[+0x5] decide brain */
-                /* Faithful-line: when the brain commits the lunge-attack (+0x5=7) it would arm
-                 * (FUN_8010ab2c) — gated on DAT_800aca3c & 1, which is dormant here. Arm ONCE if the
-                 * flag is ever set; otherwise this is inert (the engage commits the GRAB instead). */
-                if (e->sub_state_1 == 7 && !(e->ai_flags & 0x100))
-                    re15_enemy_ai_live_arm(slot);
-                /* The f890 ANIMATE half: for the grab sub-modes (+0x5 = 3/4) that is FUN_80102548 =
-                 * the in-game attack (the other +0x5 animate handlers are the deferred anim layer).
-                 * Same frame as the decide (FUN_8010168c calls decide then animate), so the engage
-                 * committing +0x5=3 runs the grab init this very tick. */
+                re15_ai_dispatch_decision(e, player);   /* f840[+0x5] decide (incl. 7 = grab-commit) */
+                /* The f890 ANIMATE half, dispatched on the (possibly just-updated) +0x5 — same frame
+                 * as the decide (FUN_8010168c calls decide then animate). The ported animate handlers:
+                 *   +0x5 = 3/4 -> the GRAB (FUN_80102548) = the in-game attack (8.8);
+                 *   +0x5 = 7   -> the TURN-to-face (FUN_80102dc8): rotate toward the player so the
+                 *                 decide's grab-commit (the ±0x200 cone) can fire (8.9).
+                 * (The +0x5=0/1/2 animate halves are the idle/track anim — deferred; the +0x5=5/6
+                 * forward walk is anim-root-motion-coupled — deferred. The lunge-arm FUN_8010ab2c is a
+                 * SEPARATE dispatch @0x80120208[+0x4=6] and is DORMANT — DAT_800aca3c&1 is never set,
+                 * 8.7 — so it is not wired here; +0x5=7 is the TURN state, not the arm.) */
                 if (e->sub_state_1 == 3 || e->sub_state_1 == 4)
                     re15_enemy_ai_live_grab(e, player);
+                else if (e->sub_state_1 == 7)
+                    re15_enemy_ai_live_turn(e, player);
                 break;
             }
             case 5: case 6:   /* feeding (@0x8011f80c[5]/[6]=0x801018f8) -> the dist-gated wake-up */

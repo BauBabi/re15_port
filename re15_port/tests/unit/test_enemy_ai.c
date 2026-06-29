@@ -589,34 +589,44 @@ static int test_live_active_lunge(void)
     return 0;
 }
 
-/* ----- LIVE decision -> ARM (FUN_8010ab2c): the brain commits +0x5=7 with combat ACTIVE -> the
- * lunge windup is armed (ai_flags|0x100, ai_attack_timer seeded rand8()+rand8()+600 in [600,1110],
- * live attack arc ai_arc=0x390). With combat inactive the commit happens but the arm stays inert. */
+/* ----- LIVE arm primitive (FUN_8010ab2c) + the +0x5=7 = TURN correction (8.9) -----
+ * (1) re15_enemy_ai_live_arm IS the byte-true lunge attack-commit setup, but it is a DORMANT path
+ *     in this prototype: its real trigger is a SEPARATE dispatch @0x80120208[+0x4=6], which never
+ *     fires because DAT_800aca3c & 1 is never set (8.7). So it is tested as a STANDALONE primitive:
+ *     combat ACTIVE -> ai_flags|0x100, the live attack arc ai_arc=0x390, windup ai_attack_timer in
+ *     [600,1110]; combat INACTIVE -> inert.
+ * (2) +0x5=7 is the TURN-to-face state, NOT the arm (8.9 byte-true correction: f840[7]=0x80102d20
+ *     grab-commit + f890[7]=0x80102dc8 turn). The brain committing +0x5=7 must NOT arm the lunge. */
 static int test_live_decision_arm(void)
 {
+    /* (1a) arm primitive, combat ACTIVE -> the byte-true arm. */
     re15_enemy_ai_set_combat_active(1);
     re15_damage_seed_rng(0x13572468u);
-    re15_actor_t *e = fresh_enemy(0x10);   /* sub 0, +0x5=0 (search-timer brain entry) */
-    put_player(1000, 0);                    /* in range + off arc -> brain commits */
-    e->ai_flags = 0; e->ai_dist = 1000; e->ai_attack_timer = 0;
-
-    re15_enemy_ai_live_active(1);           /* unarmed -> brain commits +0x5=7 -> arm */
-
-    if (e->sub_state_1 != 7)    { fprintf(stderr, "FAIL: arm: Brain muss committen (+0x5=7), ist %d\n", e->sub_state_1); return 1; }
-    if (!(e->ai_flags & 0x100)) { fprintf(stderr, "FAIL: arm: combat-on muss +0x1d8|0x100 setzen\n"); return 1; }
+    re15_actor_t *e = fresh_enemy(0x10);
+    e->ai_flags = 0; e->ai_attack_timer = 0;
+    re15_enemy_ai_live_arm(1);
+    if (!(e->ai_flags & 0x100)) { fprintf(stderr, "FAIL: arm primitive (combat on) muss +0x1d8|0x100 setzen\n"); return 1; }
     if (e->ai_arc != 0x390)     { fprintf(stderr, "FAIL: arm: live attack arc 0x390, ist 0x%x\n", e->ai_arc); return 1; }
     if (e->ai_attack_timer < 600 || e->ai_attack_timer > 1110) {
-        fprintf(stderr, "FAIL: arm: +0x1da seed in [600,1110], ist %d\n", e->ai_attack_timer); return 1; }
+        fprintf(stderr, "FAIL: arm: +0x1da windup in [600,1110], ist %d\n", e->ai_attack_timer); return 1; }
 
-    /* Combat OFF: same commit, arm inert. */
+    /* (1b) arm primitive, combat INACTIVE -> inert. */
     re15_enemy_ai_set_combat_active(0);
-    e = fresh_enemy(0x10);
-    put_player(1000, 0);
-    e->ai_flags = 0; e->ai_dist = 1000; e->ai_attack_timer = 0;
-    re15_enemy_ai_live_active(1);
+    e = fresh_enemy(0x10); e->ai_flags = 0; e->ai_attack_timer = 0;
+    re15_enemy_ai_live_arm(1);
     if (e->ai_flags & 0x100) { fprintf(stderr, "FAIL: arm: combat-off darf nicht armen\n"); return 1; }
 
-    printf("PASS: test_live_decision_arm\n");
+    /* (2) +0x5=7 is the TURN, not the arm: combat ACTIVE, the brain commits +0x5=7 -> NO arm. */
+    re15_enemy_ai_set_combat_active(1);
+    e = fresh_enemy(0x10);                 /* sub 0, +0x5=0 (search-timer brain entry) */
+    put_player(1000, 0);                    /* in range + off the narrow arc -> brain commits 0x701 */
+    e->ai_flags = 0; e->ai_dist = 1000; e->ai_attack_timer = 0;
+    re15_enemy_ai_live_active(1);           /* brain commits +0x5=7 -> the TURN runs (NOT the arm) */
+    if (e->sub_state_1 != 7) { fprintf(stderr, "FAIL: Brain muss committen (+0x5=7), ist %d\n", e->sub_state_1); return 1; }
+    if (e->ai_flags & 0x100) { fprintf(stderr, "FAIL: +0x5=7 ist die TURN-State, darf den Lunge NICHT armen\n"); return 1; }
+    re15_enemy_ai_set_combat_active(0);
+
+    printf("PASS: test_live_decision_arm (arm primitive dormant + 0x5=7 = turn, not arm)\n");
     return 0;
 }
 

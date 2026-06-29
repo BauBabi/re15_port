@@ -221,6 +221,13 @@ int main(void)
         int gs = zslots[2];                 /* a spare briefing zombie slot */
         re15_actor_t *gz = &g_actors[gs];
         pl->x = 0; pl->z = 0; pl->hp = 100; pl->hit_react = 0; pl->state = 0;
+        /* Isolate the test zombie: park every OTHER zombie far away + asleep (feeding sub 6) so it
+         * can neither wake nor grab — part 5 may have left one mid-grab, which would double the HP. */
+        for (int i = 0; i < nz; i++) {
+            re15_actor_t *z = &g_actors[zslots[i]];
+            z->grid_id = 0x86; z->sub_state_1 = 0; z->sub_state_2 = 0; z->ai_flags = 0;
+            z->x = 30000; z->z = 30000;
+        }
         gz->x = 500; gz->z = 0; gz->state = RE15_AI_STATE_ACTIVE;
         gz->grid_id = 0; gz->sub_state_1 = 3; gz->sub_state_2 = 0; gz->ai_flags = 0;
         int16_t ghp0 = pl->hp;
@@ -241,8 +248,44 @@ int main(void)
                    gs, ghp0, pl->hp, gz->sub_state_1);
     }
 
+    /* (7): the TURN-to-face -> grab chain (Phase 8.9). Put a zombie in the turn state (+0x5=7, grid 0
+     * combat) CLOSE to the player but FACING 90deg AWAY; tick run_all: the turn animate rotates rot_y
+     * toward the player (byte-true ±0x80/frame, arc_test(0x80) residual) until within the ±0x200 grab
+     * cone, then the decide [7] commits the grab -> the grab drains the player's HP. Proves the woken
+     * zombie turns to face the approaching player and attacks (the forward walk stays deferred). */
+    {
+        int ts = zslots[3];
+        re15_actor_t *tz = &g_actors[ts];
+        pl->x = 0; pl->z = 0; pl->hp = 100; pl->hit_react = 0; pl->state = 0; pl->floor = 0;
+        /* Isolate the test zombie (park the others far + asleep), as in part 6. */
+        for (int i = 0; i < nz; i++) {
+            re15_actor_t *z = &g_actors[zslots[i]];
+            z->grid_id = 0x86; z->sub_state_1 = 0; z->sub_state_2 = 0; z->ai_flags = 0;
+            z->x = 30000; z->z = 30000;
+        }
+        tz->x = 600; tz->z = 0; tz->floor = 0;       /* close (dist 600 < 1200), same floor */
+        tz->rot_y = 1024;                            /* facing +Z = 90deg off the player (at -X) */
+        tz->state = RE15_AI_STATE_ACTIVE; tz->grid_id = 0; tz->sub_state_1 = 7; tz->sub_state_2 = 0;
+        tz->ai_flags = 0; tz->ai_dist = 600;
+        int16_t trot0 = tz->rot_y, thp0 = pl->hp;
+        int committed = 0;
+        for (int f = 0; f < 30; f++) {
+            re15_enemy_ai_run_all(1);
+            if (tz->sub_state_1 == 3 || tz->sub_state_1 == 4) committed = 1;   /* reached the grab */
+        }
+        if (tz->rot_y == trot0) {
+            fprintf(stderr, "FAIL: turn-to-face must rotate rot_y toward the player (still %d)\n", tz->rot_y); fail = 1; }
+        if (!committed) {
+            fprintf(stderr, "FAIL: turn must reach facing -> grab commit (+0x5 never 3/4)\n"); fail = 1; }
+        if (pl->hp >= thp0) {
+            fprintf(stderr, "FAIL: turn->grab must drain player HP, ist %d (was %d)\n", pl->hp, thp0); fail = 1; }
+        if (!fail)
+            printf("  (7) turn-to-face slot %d: rot_y %d->%d (turned to face), committed grab, player HP %d->%d\n",
+                   ts, trot0, tz->rot_y, thp0, pl->hp);
+    }
+
     free(buf);
     if (fail) { fprintf(stderr, "\nROOM1140 COMBAT-WIRING TEST FAILED\n"); return 1; }
-    printf("\nPASS: ROOM1140 live-AI game_step wiring (spawn->tick; feeding WAKES->engage; GRAB -15 HP; type-gated)\n");
+    printf("\nPASS: ROOM1140 live-AI game_step wiring (spawn; WAKE->engage; TURN-to-face->GRAB->HP; type-gated)\n");
     return 0;
 }
