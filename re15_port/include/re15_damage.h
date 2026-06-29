@@ -94,6 +94,16 @@ int re15_hitbox_test(const re15_actor_t *target, const re15_attack_box_t *atk);
 int re15_resolve_attack(const re15_attack_box_t *atk, uint8_t attack_type,
                         int attacker_slot);
 
+/* FUN_80017fa4 (ghidra1_V2.txt:84648-84717) — the enemy attack-action's DAMAGE
+ * trigger (dispatch @0x80071da4 index 12). Resolves a radius-500 (0x1f4),
+ * attack_type-0 (= 10 dmg) hitbox at the attacker's forward attack-point (its
+ * atk_pt_* fields = the original's attacker+0x28/+0x2a/+0x2c) via re15_resolve_attack;
+ * attacker_slot is self-excluded. Returns the engagement count (>0 = lunge connected).
+ * DEFERRED: the FUN_8001c6e8 room-collision secondary trigger, the on-hit SE +
+ * attacker state-reset (+0x6e=0xd), and the AI DECISION that enters this action
+ * (range/state — STAGE1 overlay, needs a savestate). See re15_damage.c. */
+int re15_enemy_attack(int attacker_slot);
+
 /* Seed the bleed/poison RNG (deterministic tests + reproducible future runs). The PSX
  * source (FUN_8001af20 over a leftover register) is non-reproducible by construction;
  * see re15_damage.c for how the EXACT hash + EXACT 1/4 probability are preserved. */

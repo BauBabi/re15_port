@@ -299,3 +299,30 @@ int re15_resolve_attack(const re15_attack_box_t *atk, uint8_t attack_type,
     }
     return hits;
 }
+
+/* FUN_80017fa4 (ghidra1_V2.txt:84648-84717) — the enemy attack-action's DAMAGE
+ * trigger. The original builds the hitbox descriptor from the attacker's precomputed
+ * forward attack-point (DAT_800b52c4 +0x28/+0x2a/+0x2c = the s16 fields read @80017fc4-
+ * fe8) and calls FUN_80012d60(0x1f4, &point, 0) @80018008 — attack_radius 500,
+ * attack_type 0 (= 10 dmg). This ports that damage path onto the port actor's atk_pt_*
+ * fields + re15_resolve_attack.
+ *
+ * DEFERRED (the rest of the attack-action handler; its offsets/SE don't map to the
+ * port's actor subset and depend on unported subsystems):
+ *   - the lunge per-frame advance (attacker+0x4/+0x6 += 0x1e @80017fb4/fcc),
+ *   - the FUN_8001c6e8 room-collision secondary trigger (the `sVar2 <= Y` OR-branch),
+ *   - the on-hit SE (FUN_800199d4 / FUN_80045024) + attacker state-reset + the
+ *     +0x6e = 0xd next-action transition (@80018030-98),
+ *   - the AI DECISION that enters this action (range/state) — lives in the STAGE1
+ *     overlay, address not yet RE'd; both agents recommend a room1140 savestate. */
+int re15_enemy_attack(int attacker_slot)
+{
+    if (attacker_slot < 0 || attacker_slot >= RE15_ACTOR_MAX) return 0;
+    const re15_actor_t *atk = &g_actors[attacker_slot];
+    re15_attack_box_t box;
+    box.x      = atk->atk_pt_x;     /* attacker+0x28 (s16) */
+    box.y      = atk->atk_pt_y;     /* attacker+0x2a (s16) */
+    box.z      = atk->atk_pt_z;     /* attacker+0x2c (s16) */
+    box.radius = 500;               /* 0x1f4 @80018008 */
+    return re15_resolve_attack(&box, 0, attacker_slot);   /* attack_type 0 = 10 dmg */
+}

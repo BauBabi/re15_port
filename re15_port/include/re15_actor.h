@@ -77,6 +77,10 @@ typedef struct {
      * resolver (re15_damage.c) are byte-true regardless of where the values come from. */
     uint16_t hit_radius_min, hit_radius_max, hit_height;
     int16_t  hit_offset_x, hit_offset_y, hit_offset_z;
+    /* Forward attack-point (attacker +0x28/+0x2a/+0x2c) — the lunge's reach point at
+     * which the attack trigger FUN_80017fa4 resolves a radius-500 hitbox. Precomputed
+     * by the (deferred) lunge-movement AI; read by re15_enemy_attack. 0 until wired. */
+    int16_t  atk_pt_x, atk_pt_y, atk_pt_z;
     /* Phase 4.5.13-RE2 F1: speed was at ID 27 (wrong) — correct ID is
      * 0x16 (+0x1CC in RE2). Renamed for clarity; opcode 0x35 Speed_set
      * uses an indexed velocity vector (ID 0x17..0x1A), not this scalar. */

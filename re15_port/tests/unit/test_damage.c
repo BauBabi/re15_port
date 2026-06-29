@@ -270,6 +270,38 @@ static int test_resolve_attack(void)
     return 0;
 }
 
+/* ----- re15_enemy_attack (FUN_80017fa4-Trigger): Lunge feuert resolve ----- *
+ * Angreifer (slot1) mit Forward-Attack-Point; Player am Punkt mit Hitbox.
+ * re15_enemy_attack(1) → Box (attack-point, r500, type0) → Player -10 HP.
+ * Out-of-range Attack-Point → kein Schaden. */
+static int test_enemy_attack(void)
+{
+    re15_actor_init();
+    re15_actor_t *pl  = &g_actors[0];
+    set_hitbox(pl, 1000, 0, 100);                       /* Player am Treffpunkt */
+    re15_actor_t *atk = &g_actors[1];
+    atk->active = 1; atk->type = 0x10; atk->hp = 100;
+    atk->atk_pt_x = 1000; atk->atk_pt_y = 0; atk->atk_pt_z = 0;   /* Forward-Point auf Player */
+
+    int n = re15_enemy_attack(1);                       /* Lunge */
+    if (n < 1)          { fprintf(stderr, "FAIL: enemy_attack treffen (>=1), war %d\n", n); return 1; }
+    if (pl->hp != 90)   { fprintf(stderr, "FAIL: enemy_attack Player 100-10=90, ist %d\n", pl->hp); return 1; }
+    if (pl->state != 2) { fprintf(stderr, "FAIL: enemy_attack Player hurt(2), ist %d\n", pl->state); return 1; }
+
+    re15_actor_init();                                  /* Out-of-range */
+    re15_actor_t *pl2 = &g_actors[0];
+    set_hitbox(pl2, 1000, 0, 100);
+    re15_actor_t *atk2 = &g_actors[1];
+    atk2->active = 1; atk2->type = 0x10; atk2->hp = 100;
+    atk2->atk_pt_x = 30000; atk2->atk_pt_y = 0; atk2->atk_pt_z = 0;
+    int n2 = re15_enemy_attack(1);
+    if (n2 != 0)        { fprintf(stderr, "FAIL: out-of-range enemy_attack 0, war %d\n", n2); return 1; }
+    if (pl2->hp != 100) { fprintf(stderr, "FAIL: out-of-range Player muss 100 bleiben, ist %d\n", pl2->hp); return 1; }
+
+    printf("PASS: test_enemy_attack\n");
+    return 0;
+}
+
 int main(void)
 {
     int failures = 0;
@@ -284,6 +316,7 @@ int main(void)
     failures += test_enemy_take_damage();
     failures += test_hitbox_overlap_circular();
     failures += test_resolve_attack();
+    failures += test_enemy_attack();
 
     if (failures == 0) printf("\nALL PLAYER-DAMAGE TESTS PASSED\n");
     else               fprintf(stderr, "\n%d TEST(S) FAILED\n", failures);
