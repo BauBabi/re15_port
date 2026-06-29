@@ -2,9 +2,9 @@
 
 Kanonisches „lies-mich-zuerst" für die nächste Session. **Die STAGE1-Zombie-Combat-Logik ist byte-true in-game:
 spawn → wake (dist<4000) → engage → turn-to-face → GRAB (−10/−5 HP) → Spieler GEPINNT (kann nicht weglaufen).**
-Forward-Walk exhaustiv byte-true RE'd (Translation = EMR-Keyframe-Speed +6/+10, Reader `re15_emd_get_keyframe_speed`
-existiert schon!) aber NICHT portiert — 2 Blocker: der m0-+0x5=6-Trigger ist ein savestate-aufgedecktes Varianten-Rätsel
-+ der Port lädt keine Enemy-Anim. Nächster Schritt = den Trigger aus einem mid-COMBAT-Save auflösen, dann wiren (§8.10).
+Forward-Walk AUFGELÖST: das m0-Live-Brain (das der Port hat) setzt NIE +0x5=6 → der Briefing-Combat (wake→engage→turn→grab→
+pin→drain) ist byte-true KOMPLETT für ROOM1140. Der +0x5=6-Walk im Save ist ein Dead-Player-„walk-to-corpse"-Artefakt
+(player hp=-1) + ein m1-Varianten-Verhalten (andere Räume). KEINE Live-Lücke; nichts zu portieren für ROOM1140 (§8.10).
 Ergänzt die Auto-Memory (v.a. `reai-v2-foundation-combat` = die laufende AI-RE, `disasm-verify-decompiles`,
 `reai-v2-duckstation-dynamic-re`).
 
@@ -295,7 +295,7 @@ Hälften (anim_set selbst bewegt NICHT — nur Frames/Pose). State-Split byte-tr
 - **Test Part (7):** Zombie bei +0x5=7, 90° abgewandt, nah (dist 600) → dreht sich (rot_y 1024→1664) → Grab-Commit →
   Player-HP fällt. 31/31 ctest, ROOM1140-Headless sauber.
 
-### 8.10 — Player-grabbed-Lock ERLEDIGT + Forward-Walk exhaustiv RE'd (NICHT portiert: 2 Blocker)
+### 8.10 — Player-grabbed-Lock ERLEDIGT + Forward-Walk AUFGELÖST (keine Live-ROOM1140-Lücke; Combat komplett)
 **TEIL 2 (Player-grabbed-Lock) PORTIERT (dieser Commit, 31/31 ctest):** der Grab pinnt jetzt den Spieler. Byte-true
 selbst-disasm-verifiziert: der Grab latcht `0x800aca58 = ((+0x5-3)<<8)|5` = **cmd 5** (FUN_80102548 Sub-Step 0 @0x80102640),
 der Player-Command-FSM dispatcht `@0x80073f90[cmd]` → `[5]=LAB_80036834` (@0x80036834): pinnt den Spieler (Init bei
@@ -327,21 +327,30 @@ darum bewusst NICHT portiert. Drei Befunde:
   §5.2 + die Disasm widerlegt); dieser Commit korrigiert die actor_locomotion.c-Kommentare. Player-Walk nutzt korrekt
   Scalar-Speed (FUN_800245d8, +0x8C); FUN_8001ad68 hat NULL EXE-Caller (Overlay/Enemy-only). Quelle: das Enemy-Modell-File
   (EMS/EMD) — der Loader FUN_80022300 löst die Sections auf (`entity[0x170]=B+dir[4]`=EMR, `entity[0x174]=B+dir[3]`=EDD).
-- **⚠️ BLOCKER A — die VARIANT-Schicht ist nicht modelliert + der m0-+0x5=6-Trigger ist ein RÄTSEL.** Der Workflow fand:
-  `entity[+0x9]&0xf` wählt **13 Dispatcher** @0x8011f80c (m0..m12); m0=FUN_8010168c (DECIDE 0x8011f840 — worauf der Port
-  gewurzelt ist), m1=FUN_80101708 (DECIDE 0x8011f8e0 — andere Tabelle). Der Workflow behauptete „Forward-Walk nur in m1"
-  (einziger `ori 0x601`-Write @0x801036c0 = m1 DECIDE[0], gegated `+0x1c4&0x2000 && !(+0x1d8&0x80)`). **SAVESTATE-WIDERLEGT:**
-  `re15_enemy_state.py` auf mzd_stage1_combat_death.sav zeigt ALLE 7 Live-Zombies `+0x9&0xf == 0` (= **m0**), slot 0 dist 357
-  = `+0x5=6` (**forward-walk, m0!**). Also: der Live-Walk ist m0, NICHT m1. **ABER:** meine eigene exhaustive Suche der
-  ganzen m0-Region (0x80101b64..0x80105800) findet **KEINEN** +0x5=6-Write (die `sb ,5`-Writes setzen nur 0x13/2/copy;
-  kein `0x601`). → Ungelöst: wie erreicht der m0-Zombie +0x5=6? (Varianten-Transition m1→m0 unter Beibehaltung von +0x5?
-  ein berechneter/Nicht-Overlay-Setter? der post-death-Save atypisch?). **Den Trigger jetzt zu portieren hieße raten →
-  verboten.** Disziplin-Win: ein gründlicher Agenten-Befund (m1-only) war FALSCH — der Savestate ist der Schiedsrichter
-  ([[disasm-verify-decompiles]]).
-- **BLOCKER B:** der Port lädt für Gegner KEINE Anim (EDD/EMR) → selbst mit dem Reader gibt es keinen geladenen Walk-Clip.
-- **Verbleibender byte-true Port-Scope (für eine spätere Session, KEIN Raten):** (1) den m0-+0x5=6-Trigger aus einem
-  **mid-COMBAT** (nicht post-death) Savestate auflösen ODER die Varianten-Transition finden; (2) die Enemy-EDD/EMR laden;
-  (3) `re15_emd_get_keyframe_speed` in die +0x5=5/6-Walk-Animate wiren (RotMatrix(rot_y)·speed + pos = FUN_8001ad68).
+- **✅ TRIGGER AUFGELÖST (dieser Turn): der Forward-Walk ist KEINE Live-ROOM1140-Lücke — der Briefing-Combat ist komplett.**
+  Variant-Schicht: `entity[+0x9]&0xf` wählt 13 Dispatcher @0x8011f80c (m0=FUN_8010168c/DECIDE 0x8011f840 [Port-Wurzel],
+  m1=FUN_80101708/DECIDE 0x8011f8e0). Der einzige immediate `ori 0x601`-Write im GANZEN Overlay ist @0x801036c0 = m1
+  DECIDE[0]. **Schlüssel-Befund 1 (byte-true):** die feeding-WAKE-up committet `sb zero,9` → grid_id **0 = m0** (@0x80103b3c)
+  — die Briefing-Zombies wachen zu m0 auf, sind **nie m1**. **Schlüssel-Befund 2 (exhaustiv getract):** das m0-LIVE-
+  Entscheidungs-Brain (engage-decide @0x80102058 + search-decides 0x80101b64/de4 — ALLE im Port als `re15_ai_decide_*`)
+  produziert +0x5 ∈ {7 turn, 3/4 grab, 9/10 contact, 12 dead-grab, 16} — **NIE 6**. Also forward-walkt ein LIVE (Spieler
+  lebt) m0-Briefing-Zombie NIE; er macht wake→engage→turn→grab (genau was der Port tut). **Schlüssel-Befund 3 (Savestate):**
+  das +0x5=6 in mzd_stage1_combat_death.sav ist ein **DEAD-PLAYER-Artefakt** — der Save ist post-death (player hp=-1, cmd 7);
+  die Distanz-Progression slot 2 (dist 4492) engage(2) → slot 1 (dist 1476) dead-grab(+0x5=12, das die engage NUR bei
+  `hp<0` setzt) → slot 0 (dist 357) walk(+0x5=6, motion=10) = ein „walk-to-corpse" nach Spielertod, KEIN Live-Combat-Pfad.
+  → **Der Forward-Walk (+0x5=6) ist ein m1-Varianten-Verhalten (andere Räume/Gegner) + ein Dead-Player-Edge — KEINE Live-
+  Lücke für ROOM1140. Der Port-Combat dort ist byte-true KOMPLETT.** Disziplin-Win: drei Turns lang das +0x5=6 eines
+  **post-death** Saves verfolgt — die Lehre: ein post-death-Save ist atypisch; für „was tut der LIVE-Combat" MUSS der
+  Referenz-Save den Spieler am Leben haben ([[disasm-verify-decompiles]]).
+- **Translation-Reader EXISTIERT + Enemy-Anim WIRD geladen** (Blocker B war keiner): die Enemy-Bank (`re15_enemy_bank_t`,
+  re15_enemy.h) trägt `skel` (EMR+Keyframes) + `anim` (EDD) — beim Zombie-Spawn geladen; `re15_emd_get_keyframe_speed`
+  liest die Walk-Speed +6/+10. D.h. WENN der Forward-Walk je gebraucht wird (m1-Gegner in einem anderen Raum), ist die
+  Translation in ~10 Zeilen wirbar: motion=walk-Clip → `re15_emd_get_keyframe_speed(&bank->skel, kf, …)` → RotMatrix(rot_y)
+  · speed + pos. Aber für ROOM1140 ist NICHTS zu tun.
+- **OPTIONALE finale Bestätigung (kein Blocker):** ein mid-**LIVE**-Combat-Save (`re15_mzd_load_room.py --provoke S` mit
+  KURZEM S, Spieler lebt) → bestätigen, dass die Live-m0-Zombies nur turn/grab erreichen (nie +0x5=6). Braucht zuerst den
+  ROOM1140-JUMP-Index (--triangle/--right, nicht dokumentiert → eine --menushot-Erkundung). Niedrige Priorität: die statische
+  RE ist eindeutig (das Live-Brain hat keinen Walk-Pfad).
 
 **TEIL 3 (mid-Combat-Savestate) OFFEN:** der vorhandene Save ist post-death (cmd 7); einen mid-Grab ziehen (cmd 5 +
 Player-Pin live) → Sub-Steps/Bite-Count/Pin gegen den Port prüfen (`re15-room-capture`; provoke ist timing-sensitiv).
