@@ -1,4 +1,4 @@
-# RE1.5 Port — Session-Handover (Stand 2026-06-29, Phase 8.10 Player-grabbed-Lock abgeschlossen)
+# RE1.5 Port — Session-Handover (Stand 2026-06-30, Phase 8.10: Combat-Loop komplett + zwei-seitig begonnen)
 
 Kanonisches „lies-mich-zuerst" für die nächste Session. **Die STAGE1-Zombie-Combat-Logik ist byte-true in-game:
 spawn → wake (dist<4000) → engage → turn-to-face → GRAB (−10/−5 HP) → Spieler GEPINNT → HP<0 → TOD (death-FSM-Kern,
@@ -6,15 +6,17 @@ state 7, 120-Frame-Timer; Fade/Game-Over-Screen deferred).** Der Combat-Loop ist
 Forward-Walk AUFGELÖST: das m0-Live-Brain (das der Port hat) setzt NIE +0x5=6 → der Briefing-Combat (wake→engage→turn→grab→
 pin→drain) ist byte-true KOMPLETT für ROOM1140. Der +0x5=6-Walk im Save ist ein Dead-Player-„walk-to-corpse"-Artefakt
 (player hp=-1) + ein m1-Varianten-Verhalten (andere Räume). KEINE Live-Lücke; nichts zu portieren für ROOM1140 (§8.10).
-Ergänzt die Auto-Memory (v.a. `reai-v2-foundation-combat` = die laufende AI-RE, `disasm-verify-decompiles`,
+**ZWEI-SEITIGER Combat begonnen (Nutzer-gewählt): die Zombie-hurt/death-States ([2]/[3]→corpse) sind portiert (die
+empfangende Seite); der Player-Fire-Trigger (Aim/Fire→`re15_resolve_attack`→hurt/death) ist der nächste Chunk — der
+Background-Workflow `player-fire-re` REt die Player-Fire-Pipeline.** Ergänzt die Auto-Memory (v.a. `reai-v2-foundation-combat` = die laufende AI-RE, `disasm-verify-decompiles`,
 `reai-v2-duckstation-dynamic-re`).
 
 ## TL;DR — Wo stehe ich
 
-- **Git:** master, sauber (nur `.idea/` untracked). Phase 8.10 = **4 Commits:** `fb4a06e7` Player-grabbed-Lock ·
-  `a7ae354a` Forward-Walk-RE + Root-Motion-Doku-Fix · `8038cc5f` Forward-Walk AUFGELÖST (keine Live-Lücke) ·
-  (+ dieser Commit) Player-DEATH-FSM-Kern. Der Combat-Loop ROOM1140 ist end-to-end byte-true geschlossen
-  (spawn→wake→engage→turn→grab→pin→drain→TOD); Fade/Game-Over-Screen = deferred Präsentation.
+- **Git:** master, sauber (nur `.idea/` untracked). Phase 8.10 = **6 Commits:** `fb4a06e7` Player-grabbed-Lock ·
+  `a7ae354a` Forward-Walk-RE + Root-Motion-Doku-Fix · `8038cc5f` Forward-Walk AUFGELÖST · `05af1a76` Player-DEATH-FSM-Kern ·
+  (+ dieser Commit) Zombie-hurt/death-States (zwei-seitiger Combat begonnen). Der Combat-Loop ROOM1140 ist end-to-end
+  byte-true geschlossen (spawn→wake→engage→turn→grab→pin→drain→TOD); Fade/Game-Over-Screen = deferred Präsentation.
 - **Build/Test:** `taskkill //F //IM re15_pc.exe 2>/dev/null; true; export PATH="/c/msys64/mingw64/bin:$PATH";
   cmake --build re15_port/build; ctest --test-dir re15_port/build --timeout 30` → **31/31 grün** (mingw64 GCC + Ninja).
   (Das `taskkill` ist nötig, falls die Exe noch läuft + die Datei sperrt — sonst Link-„Permission denied", kein Code-Fehler.)
@@ -297,9 +299,23 @@ Hälften (anim_set selbst bewegt NICHT — nur Frames/Pose). State-Split byte-tr
 - **Test Part (7):** Zombie bei +0x5=7, 90° abgewandt, nah (dist 600) → dreht sich (rot_y 1024→1664) → Grab-Commit →
   Player-HP fällt. 31/31 ctest, ROOM1140-Headless sauber.
 
-### 8.10 — Player-grabbed-Lock + Player-DEATH-FSM ERLEDIGT + Forward-Walk AUFGELÖST (Combat komplett)
+### 8.10 — Player-grabbed-Lock + Player-DEATH + Zombie-hurt/death ERLEDIGT; ZWEI-SEITIGER Combat begonnen
 
-**TEIL 4 (Player-DEATH-FSM-Kern) PORTIERT (dieser Commit, 31/31 ctest):** der Grab TÖTET jetzt den Spieler. Byte-true:
+**RICHTUNG (Nutzer-gewählt): ZWEI-SEITIGER Combat (Spieler schießt → Zombie hurt/death).** Bottom-up gebaut: zuerst die
+empfangende Seite (Zombie-hurt/death), dann der Trigger (Player-Fire). Ein Background-Workflow `player-fire-re` REt die
+Player-Fire-Pipeline (Aim/Fire-FSM @0x80073f90 + Fire→Damage-Trigger + Port-Input-Seite) für den nächsten Chunk.
+
+**TEIL 5 (Zombie-hurt/death-States) PORTIERT (dieser Commit, 31/31 ctest):** die @0x8011f7b4-AI-Dispatch ist jetzt KOMPLETT
+([0]init/[1]active/[2]hurt/[3]death/[4]idle-deferred/7=corpse). `re15_enemy_take_damage` (existiert) setzt state 2 (HURT) bei
+Treffer / 3 (DEATH) bei HP<0; der Tick dispatcht jetzt: **[2] HURT** (`re15_enemy_ai_live_hurt`, FUN_80105a8c) → zurück zu
+ACTIVE (byte-true `+0x4=1` @0x80105b48; das 2D-Stagger-Anim-FSM @0x8011fb90 + die Hit-Stun-DAUER = Reaktions-Clip-Framecount
+= deferred Anim); **[3] DEATH** (`re15_enemy_ai_live_death`, FUN_80106ba4→0x80107cb0) → state **7** = CORPSE (byte-true
+`+0x4=7` @0x80107ec8; out-of-range → kein Dispatch = inerter Corpse, kann nicht mehr engagen/grabben; Death-Anim+SE+Gore
+deferred). **1170-sicher** (nur dispatcht wenn ein Treffer state 2/3 setzt = der kommende Player-Schuss). test Part(10):
+Zombie-Schuss → HURT(2)→ACTIVE; tödlich → DEATH(3)→CORPSE(7) inert (kein Player-Damage). **Nächster Chunk: der Player-Fire-
+Trigger** (Aim/Fire-Input → Hitbox → `re15_resolve_attack` [existiert] → diese hurt/death-States), aus dem Workflow-Ergebnis.
+
+**TEIL 4 (Player-DEATH-FSM-Kern) PORTIERT (31/31 ctest):** der Grab TÖTET jetzt den Spieler. Byte-true:
 HP<0 = Tod (FUN_80012d60 @0x80012ee8); der Grab erreicht dasselbe HP<0 → setzt **grabbed-death state 7** (save-bestätigt:
 combat_death.sav `0x800aca58 = 7`; generic death = state 3 @0x800366bc, grabbed-death = state 7 @0x8003694c). Portiert
 (re15_damage.c): `re15_player_is_dead()` (=HP<0) + `re15_player_death_tick()` (der byte-true Death-Sequenz-Timer **0x78=120**,

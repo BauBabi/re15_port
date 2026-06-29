@@ -50,11 +50,12 @@
 
 /* Main-state values at entity+0x4 (= actor.state) — PTR_FUN_801217a0 index. */
 enum {
-    RE15_AI_STATE_INIT   = 0,   /* FUN_8011d84c */
-    RE15_AI_STATE_ACTIVE = 1,   /* FUN_8011d9f4 */
-    RE15_AI_STATE_HURT   = 2,   /* FUN_8011db40 (deferred) */
-    RE15_AI_STATE_DEATH  = 3,   /* FUN_8011db88 (deferred) */
-    RE15_AI_STATE_IDLE   = 4    /* 0x80050be8  (deferred)  */
+    RE15_AI_STATE_INIT   = 0,   /* FUN_8011d84c (0x47) / FUN_80100688 (live) */
+    RE15_AI_STATE_ACTIVE = 1,   /* FUN_8011d9f4 (0x47) / FUN_80101224 (live) */
+    RE15_AI_STATE_HURT   = 2,   /* live: FUN_80105a8c — stagger reaction (re15_enemy_ai_live_hurt) */
+    RE15_AI_STATE_DEATH  = 3,   /* live: FUN_80106ba4 — death (re15_enemy_ai_live_death) */
+    RE15_AI_STATE_IDLE   = 4,   /* live: 0x8010919c (deferred) */
+    RE15_AI_STATE_CORPSE = 7    /* live death-complete (@0x80107ec8 +0x4=7): inert corpse, no dispatch */
 };
 
 /* grid_id (entity+0x9) bit usage for an enemy actor (the original packs all three into
@@ -215,9 +216,19 @@ void re15_enemy_ai_live_init(int slot);
  * DEFERRED (see enemy_ai_common.c). */
 int re15_enemy_ai_live_active(int slot);
 
+/* FUN_80105a8c (@0x8011f7b4[2]) — the LIVE zombie HURT state: the stagger reaction after a hit
+ * (re15_enemy_take_damage sets state 2). The original runs a 2D nested anim FSM then returns to ACTIVE
+ * when the stagger clip ends; faithful-line: advance HURT -> ACTIVE (the stagger anim/duration is the
+ * deferred anim layer). FUN_80106ba4 (@0x8011f7b4[3]) — the LIVE zombie DEATH state: a hit that drives
+ * HP < 0 sets state 3; the original plays the death anim then sets the entity state = 7 (corpse).
+ * faithful-line: set the byte-true CORPSE state 7 (inert, no longer dispatched = can't engage/grab);
+ * the death anim + SE + gore are deferred. Both are dispatched by re15_enemy_ai_live_tick. */
+void re15_enemy_ai_live_hurt(int slot);
+void re15_enemy_ai_live_death(int slot);
+
 /* FUN_80100424 (@0x80072bac[0x10/0x11/0x16]) — the LIVE zombie per-frame tick: pause + skip gates,
- * cache dist @+0x1d0, then dispatch @0x8011f7b4[+0x4] (INIT/ACTIVE ported; [2]/[3]/[4] deferred).
- * The live analog of re15_enemy_ai_tick. Returns 1 if dispatched, 0 if a gate skipped it. */
+ * cache dist @+0x1d0, then dispatch @0x8011f7b4[+0x4] (INIT/ACTIVE/HURT/DEATH ported; [4] idle deferred;
+ * state 7 = inert corpse, no dispatch). The live analog of re15_enemy_ai_tick. Returns 1 if dispatched. */
 int re15_enemy_ai_live_tick(int slot);
 
 /* The per-enemy per-frame step for the LIVE family (the entry game_step will call): the live tick

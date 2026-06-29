@@ -611,6 +611,43 @@ void re15_enemy_ai_live_arm(int slot)
     }
 }
 
+/* HURT — FUN_80105a8c (@0x8011f7b4[2], STAGE1.BIN). The live zombie's stagger reaction to a hit:
+ * re15_enemy_take_damage (re15_damage.c, the FUN_80012d60 enemy branch) sets the zombie to state 2
+ * (HURT) + the reaction clip (sub_state_1 = re15_react_table[type]); the tick then dispatches here.
+ * The original runs a 2D nested anim FSM (dispatch table @0x8011fb90 indexed [+0x5][+0x6], @0x80105ae8-
+ * 0x80105b14) that plays the stagger clip, then returns to ACTIVE when the stagger animation completes
+ * (`+0x4 = 1` @0x80105b48, gated on the anim-done signal +0x1dc < 0 && grid_id & 0x80 clear). The
+ * port has no zombie stagger animation, so FAITHFUL-LINE: advance HURT -> ACTIVE (the byte-true
+ * transition; the stagger clip + its hit-stun DURATION = the reaction clip's frame count in the loaded
+ * zombie EDD, the deferred anim layer — same stance as the wake-up's anim-skip). The grid_id & 0x80
+ * special path (@0x80105ab0-0x80105ae0, sub-handlers 0x801068a0/0x80106a38) is the briefing-pose
+ * stagger variant — also the deferred anim. Sub_state_2 cleared. */
+void re15_enemy_ai_live_hurt(int slot)
+{
+    if (slot < 0 || slot >= RE15_ACTOR_MAX) return;
+    re15_actor_t *e = &g_actors[slot];
+    e->state       = (uint8_t)RE15_AI_STATE_ACTIVE;   /* +0x4 = 1 (@0x80105b48) — stagger done -> active */
+    e->sub_state_2 = 0;
+}
+
+/* DEATH — FUN_80106ba4 (@0x8011f7b4[3], STAGE1.BIN) -> FUN_80107cb0. The live zombie's death: a hit
+ * that drives the zombie's HP < 0 sets state 3 (DEATH, re15_enemy_take_damage); the tick dispatches
+ * here. FUN_80107cb0 plays the death animation (anim_set @0x80107e84) + the death SE (0x800453d0) +
+ * the gore/model setup (FUN_80019700), then sets the entity state word = 7 (@0x80107ec8) = the
+ * death-complete / CORPSE state — which is OUT of the @0x8011f7b4[0..4] dispatch range, so the tick
+ * no longer dispatches it (an inert corpse that can no longer engage/grab). FAITHFUL-LINE: the death
+ * anim + SE + gore are the deferred presentation; set the byte-true corpse state 7 (the zombie stops
+ * being a threat). The full death sequence (the fall animation, the corpse, an eventual despawn) is
+ * the deferred anim layer. */
+void re15_enemy_ai_live_death(int slot)
+{
+    if (slot < 0 || slot >= RE15_ACTOR_MAX) return;
+    re15_actor_t *e = &g_actors[slot];
+    e->state       = (uint8_t)RE15_AI_STATE_CORPSE;   /* +0x4 = 7 (@0x80107ec8) — inert corpse */
+    e->sub_state_1 = 0;
+    e->sub_state_2 = 0;
+}
+
 /* FUN_80100424 (@0x80072bac[0x10/0x11/0x16], STAGE1.BIN) — the LIVE zombie PER-FRAME TICK, the
  * entry the per-frame loop FUN_8001a50c dispatches each frame. Byte-true core (the live analog of
  * re15_enemy_ai_tick / FUN_8011d6d4): the pause gate (g_pauseflags & 0x20000000) + the per-entity
@@ -632,7 +669,9 @@ int re15_enemy_ai_live_tick(int slot)
     switch (e->state) {                                  /* @0x8011f7b4[entity+0x4] */
         case RE15_AI_STATE_INIT:   re15_enemy_ai_live_init(slot);   break;  /* [0] FUN_80100688 */
         case RE15_AI_STATE_ACTIVE: re15_enemy_ai_live_active(slot); break;  /* [1] FUN_80101224 */
-        default: /* [2]=0x80105a8c / [3]=0x80106ba4 / [4]=0x8010919c — deferred */ break;
+        case RE15_AI_STATE_HURT:   re15_enemy_ai_live_hurt(slot);   break;  /* [2] FUN_80105a8c */
+        case RE15_AI_STATE_DEATH:  re15_enemy_ai_live_death(slot);  break;  /* [3] FUN_80106ba4 */
+        default: /* [4]=0x8010919c idle (deferred) / 7 = inert corpse (no dispatch) */ break;
     }
     return 1;
 }

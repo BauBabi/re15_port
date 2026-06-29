@@ -361,9 +361,51 @@ int main(void)
                    pl->hp, pl->state, t0, t1);
     }
 
+    /* (10): the zombie HURT/DEATH states [2]/[3] (Phase 8.10) — the receiving end of the (coming)
+     * player attack (two-sided combat). re15_enemy_take_damage sets the zombie to state 2 (HURT) on a
+     * hit / state 3 (DEATH) on HP<0; the live tick now dispatches [2] HURT -> back to ACTIVE (the
+     * stagger) and [3] DEATH -> state 7 (an inert CORPSE, no longer dispatched = can't engage/grab). */
+    {
+        pl->x = 0; pl->z = 0; pl->hp = 100; pl->hit_react = 0; pl->state = 0;
+        re15_player_death_reset();
+        int zs = zslots[1];
+        re15_actor_t *zc = &g_actors[zs];
+        for (int i = 0; i < nz; i++) {   /* park the others far + asleep */
+            re15_actor_t *z = &g_actors[zslots[i]];
+            z->grid_id = 0x86; z->sub_state_1 = 0; z->sub_state_2 = 0; z->ai_flags = 0;
+            z->x = 30000; z->z = 30000;
+        }
+        zc->x = 500; zc->z = 0; zc->state = RE15_AI_STATE_ACTIVE; zc->grid_id = 0;
+        zc->sub_state_1 = 2; zc->sub_state_2 = 0; zc->hp = 30; zc->hit_react = 0; zc->ai_flags = 0;
+
+        re15_enemy_take_damage(zc, 0);   /* non-lethal: HP 30->20 -> HURT (state 2) */
+        if (zc->state != RE15_AI_STATE_HURT) {
+            fprintf(stderr, "FAIL: non-lethal hit -> zombie HURT (state 2), ist %d\n", zc->state); fail = 1; }
+        re15_enemy_ai_live_tick(zs);     /* [2] HURT -> ACTIVE (stagger done) */
+        if (zc->state != RE15_AI_STATE_ACTIVE) {
+            fprintf(stderr, "FAIL: HURT -> ACTIVE after the stagger, ist %d\n", zc->state); fail = 1; }
+
+        zc->hp = 5; zc->hit_react = 0;
+        re15_enemy_take_damage(zc, 0);   /* lethal: 5-10 = -5 < 0 -> DEATH (state 3) */
+        if (zc->state != RE15_AI_STATE_DEATH) {
+            fprintf(stderr, "FAIL: lethal hit -> zombie DEATH (state 3), ist %d (HP %d)\n", zc->state, zc->hp); fail = 1; }
+        re15_enemy_ai_live_tick(zs);     /* [3] DEATH -> CORPSE (state 7) */
+        if (zc->state != RE15_AI_STATE_CORPSE) {
+            fprintf(stderr, "FAIL: DEATH -> CORPSE (state 7), ist %d\n", zc->state); fail = 1; }
+
+        int16_t hp_corpse = pl->hp;
+        for (int f = 0; f < 5; f++) re15_enemy_ai_run_all(1);   /* the corpse must stay inert */
+        if (zc->state != RE15_AI_STATE_CORPSE) {
+            fprintf(stderr, "FAIL: corpse must stay inert (state 7), ist %d\n", zc->state); fail = 1; }
+        if (pl->hp != hp_corpse) {
+            fprintf(stderr, "FAIL: a corpse must not damage the player, HP %d->%d\n", hp_corpse, pl->hp); fail = 1; }
+        if (!fail)
+            printf("  (10) zombie shot -> HURT(2)->ACTIVE; lethal -> DEATH(3)->CORPSE(7), inert (no player damage)\n");
+    }
+
     free(buf);
     if (fail) { fprintf(stderr, "\nROOM1140 COMBAT-WIRING TEST FAILED\n"); return 1; }
     printf("\nPASS: ROOM1140 live-AI game_step wiring "
-           "(spawn; WAKE->engage; TURN-to-face->GRAB->HP; GRABBED-lock; player DEATH; type-gated)\n");
+           "(spawn; WAKE->engage; TURN-to-face->GRAB->HP; GRABBED-lock; player DEATH; zombie HURT/DEATH; type-gated)\n");
     return 0;
 }
