@@ -73,6 +73,25 @@ Darunter ruft er `analyzeHeadless … -loader BinaryLoader -loader-baseAddr 0x80
 
 **Belegtes Beispiel aus dieser Session:** Ein Diff flaggte `0x800b532c/0x800b532e` (Werte 1 in Stage-1-Raum, 2 in Stage-2-Raum) als vermeintliche Stage-ID. Die Ghidra-Decompilation widerlegte das byte-genau: `DAT_800b5330 = DAT_800b532e << 3` und `DAT_800b532e` indiziert die Kamera-Cut-Tabellen @`0x8008f82c` → es ist der **aktive Kamera-Cut-Index**, nicht die Stage (die Werte 1/2 waren zufällig der Start-Cut). Genau dafür ist Schritt 5 da: nicht den Diff-Wert glauben, den Mechanismus belegen.
 
+## 6. Enemy-AI-State dumpen (`scripts/re15_enemy_state.py`)
+
+Dumpt die **live Gegner-KI** aus dem Savestate: das Enemy-Array `DAT_800acc2c` (stride `0x1f4`) + den Player-Block, und labelt jeden Gegner per der byte-true RE'ten FSM-Map (`RE15_FUN_CATALOG.md` Sektion „Enemy AI" + Memory `reai-v2-foundation-combat`). Spart die manuelle Forensik, die sonst pro Save anfällt.
+
+```bash
+python scripts/re15_enemy_state.py <savestate.sav>
+```
+
+Verifizierter Output (Live-Combat-Save `stage_saves/mzd_stage1_combat_death.sav`, 7 Zombies + toter Spieler):
+
+```
+player HP    : -1   |  player state : 7 (death/grabbed)  |  active count : 7
+slot type  +0x4 +0x5 +0x9(&f) act  dist   flags hitbox    label
+0    0x10  1    6    0x00(0)  0x01 357    0x11  400/1440  active: approach (+0x5=6)
+...                                              450/1530  idle           (type 0x47, HASH_1)
+```
+
+Felder + FSM-Map (alle byte-true belegt): **+0x4** Main-State → `PTR_FUN_801217a0[+0x4]` (0=init 1=active-AI(FUN_8011d9f4) 2=hurt 3=death 4=idle); **+0x9** Sub-State (`(&0xf)`→`PTR_FUN_801217b4`; 0=sub0=FUN_8011da48, aktive Humanoid-AI); **+0x5** Anim-Phase (FUN_8011da48→`DAT_801217b8[+0x5]`; Attack-Commit `0x701` setzt +0x5=7); **+0x0** low = Model-Instanz-Action (`@0x80071d40`; **0x16-0x19 = Lunge-Sequenz = Hitbox-Fenster**); **Hitbox** = `*(ent+0x78)` radius_min@+6/height@+8/radius_max@+10 (Typ 0x47 = 450/1530, Typ 0x10/0x11/0x16 = 400/1440). Die eigentliche Hitbox `FUN_80017fa4` feuert über den Action-Driver `FUN_80019e20`, wenn die Lunge-Anim die aktiven Frames erreicht.
+
 ## Disziplin
 
 „Wert ändert sich plausibel zwischen zwei Savestates" ist **kein** Beweis für die Bedeutung einer Adresse. Erst wenn Ghidra zeigt, welche Funktion das Global wie verwendet, ist es byte-true. Diff findet Kandidaten — Ghidra bestätigt/benennt sie.

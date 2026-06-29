@@ -19,6 +19,7 @@ Fährt das **Original-RE1.5** (MZD-Mod, identische Original-`PSX.EXE` → alle `
 
 - **`re15_capture.py`** — EMPFOHLEN: Capture **+** Auto-Verifikation in einem. Fährt den Treiber, lädt danach sofort den Savestate, prüft Globals + **erkennt schwarze (zu früh gespeicherte) Frames** und sagt dir, `--postload` zu erhöhen. Exit≠0 bei Schwarzbild.
 - **`re15_mzd_load_room.py`** — der reine vgamepad-Treiber (erstellt den Pad, startet DuckStation `-batch <cue>`, Boot→Debug-Menü→JUMP, graziöser Close → `SaveStateOnExit` → Kopie nach `--out`).
+- **`re15_quickload.py`** — QUICK-LOAD eines Savestates via DuckStation `-statefile` (überspringt den ~64 s-Boot → ~20-40 s/Lauf). Navigiert das JUMP-Menü + Menü-Shot/Laden/Provoke. Für die Gegner-/AI-Capture-Iteration (s.u.).
 - **`re15_ss.py`** — Decoder für manuelle Verifikation (geteilt mit re15-savestate-ghidra).
 
 ```bash
@@ -56,7 +57,25 @@ Erwartung für einen sauber geladenen Gameplay-Raum: `blob ≈ 4 MB`, RAM-Base `
 
 ## Demo-Artefakte
 
-`stage_saves/mzd_demo/` enthält die beiden live erzeugten, verifizierten Captures: `mzd_stage1_room.sav/.png` (Stage-1-Gang, Warnschild/Gully) und `mzd_stage2_room.sav/.png` (Stage-2-Tunnel). Stage-Wechsel belegt: Overlay-Region @0x80100000 differiert zu 97 % zwischen den beiden (gleiche Stage über Räume = 0 %).
+`stage_saves/mzd_demo/` enthält die beiden live erzeugten, verifizierten Captures: `mzd_stage1_room.sav/.png` (Stage-1-Gang, Warnschild/Gully) und `mzd_stage2_room.sav/.png` (Stage-2-Tunnel). Stage-Wechsel belegt: Overlay-Region @0x80100000 differiert zu 97 % zwischen den beiden (gleiche Stage über Räume = 0 %). `stage_saves/mzd_stage1_combat_death.sav/.png` = ein **Live-Combat-Frame** (7 aktive Zombies + getöteter Spieler), erzeugt über den Provoke-Modus.
+
+## Gegner-/AI-Capture (Provoke, Menü-Shot, Quick-Load) — 2026-06-29
+
+Für byte-true Gegner-KI braucht man einen Savestate mit **aktiven** Gegnern (idle ≠ approach/attack). Zusätzliche Treiber-Modi (verstehe die Felder mit `re15-savestate-ghidra/scripts/re15_enemy_state.py`):
+
+- **`--jump`** (re15_mzd_load_room.py): erzwingt den Debug-JUMP auch bei `--right 0` (lädt den Default-JUMP-Raum).
+- **`--menushot`**: stoppt IM JUMP-Menü OHNE zu laden → der Savestate fängt das Menü; dump das VRAM-PNG (`re15_ss.py`) und lies die angezeigte `JUMP <raum> <name>`-Zeile, um `--right`→Raum zu mappen. **Die JUMP-Liste enthält ALLE Räume.** ⚠️ **DPad-Right zählt ABWÄRTS durch die Liste; ein langer Hold löst Auto-Repeat aus und überspringt ans Listenende** — `STEP_HOLD` ist kurz (≤0.05 s), jeden Schritt mit `--menushot` verifizieren.
+- **`--provoke S`**: läuft nach dem Laden S Sekunden vorwärts (DPad-Up + Rotations-Sweeps), bis ein Gegner den Spieler erkennt und in seinen approach/attack-State geht (für Live-Combat-/Mid-Lunge-Frames).
+
+**Quick-Load-Workflow** (`re15_quickload.py`, 3× schneller — spart den 64 s-Boot):
+```bash
+# 1) EINMAL: Debug-Menü-Base-State per Boot erzeugen
+python scripts/re15_mzd_load_room.py --jump --menushot --out menu.sav
+# 2) dann wiederholt quick-loaden: Menü lesen / Raum laden + provozieren
+python scripts/re15_quickload.py --state menu.sav --right N --menushot --out probe.sav
+python scripts/re15_quickload.py --state menu.sav --right N --provoke 14 --out room.sav
+```
+⚠️ `-statefile` quick-loadet zuverlässig für **Menü-Shots/Stepping**; der echte Square-LOAD greift nach einem State-Load nicht immer → für einen garantierten Raum-Load den Boot-Treiber `re15_mzd_load_room.py` nehmen. Ein Base-State, der während des Live-Intro-Briefings gesichert wurde, ist **zeit-sensitiv** (das Briefing spielt während der Load-Wartezeit weiter).
 
 ## Troubleshooting
 
