@@ -132,20 +132,28 @@ int re15_enemy_attack(int attacker_slot);
 void re15_enemy_lunge_begin(int attacker_slot);
 int  re15_enemy_lunge_tick(int attacker_slot);
 
-/* Faithful-line skeleton mapping of the lunge ATTACK-POINT (Phase 8.1). The original's
- * attack point is NOT a bone: FUN_80019e20 ([0x14/0x15/0x16] = work +0x28/+0x2a/+0x2c, read
- * by FUN_80017fa4) and the overlay lunge driver FUN_80104178 (STAGE1_full) both build it from
- * the model-instance GTE pose (RotMatrix(ent+0x6a)/ApplyMatrix over the +0x188 model pool) plus
- * a forward lunge-step delta (const vec DAT_80100098/9c rotated by rot_y+0x800, Y-ramp +0x3a+=
- * 0x32). That model-pool/GTE path is DEFERRED by design (RE15_FUN_CATALOG FUN_80104178/80019e20:
- * "in the port = an attack-bone world position from re15_skel_compute_pose"). This function is
- * that faithful-line stand-in: it poses the enemy's skeleton at `keyframe` (as a QUERY — the
- * crossfade blend state is preserved), takes `attack_bone`'s world position via
- * re15_skel_bone_to_world (the EXACT transform the render loop applies), and stores it into
- * atk_pt_* (int16, matching the original's short store). The MECHANISM (pose -> world) is exact;
- * the BONE choice is a documented faithful-line decision, not a byte-true constant — so the bone
- * is a parameter, not hardcoded here. Inert until a lunge fires (atk_pt is only read by
- * re15_enemy_attack while lunge_frames>0). No-op on bad slot/skeleton/bone. */
+/* Faithful-line skeleton mapping of the lunge ATTACK-POINT (Phase 8.1). The original's damage
+ * origin is NOT a single bone/offset: it is the live GTE WORLD position of the attacker's posed
+ * body-part frames, recomputed every tick by the EXE action driver FUN_80019e20 into the work
+ * record's +0x28/+0x2a/+0x2c (read by FUN_80017fa4 as work[0x14/0x15/0x16]). FUN_80019e20 builds
+ * it as ApplyMatrix(M1, vecA) + (+0x60) + ApplyMatrix(M_pose, vecB), where M_pose is refreshed
+ * each tick from the per-body-part frame ptr +0x74 = model_base(+0x188) + bodypart*0xac + 0x40 —
+ * so the point tracks that body-part's posed position. The lunge actually drives EIGHT body-part
+ * hitboxes (model-pool LUT DAT_8011f7a4 = {00,07,08,0e,02,04,09,0d}; the head/upper-body parts
+ * 0x0e/0x08 dominate), each firing FUN_80017fa4(500,&pt,0). (The overlay FUN_80104178 drives the
+ * lunge MOTION + gore on the entity block, NOT the damage point — RE15_FUN_CATALOG 73/77
+ * conflated this; RE'd byte-true 2026-06-29, FUN_80019e20.c/FUN_80019d50.c/FUN_8010b274.c.)
+ *
+ * That GTE/model-pool path is DEFERRED by design. This function is the faithful-line stand-in:
+ * it poses the enemy's skeleton at `keyframe` (as a QUERY — the crossfade blend state is
+ * preserved), takes `attack_bone`'s world position via re15_skel_bone_to_world (the EXACT
+ * transform the render loop applies), and stores it into atk_pt_* (int16, matching the original's
+ * short store). The MECHANISM (pose -> world) is exact; choosing ONE representative attack bone
+ * (vs the original's 8 body-part frames) is a documented faithful-line SIMPLIFICATION, so the
+ * bone is a parameter, not a byte-true constant hardcoded here. The model-pool-index -> EMD-bone
+ * resolution (which em10/16/47 bone == head/jaw) is the open integration-step item (needs the
+ * model-pool build order or a mid-lunge room1140 savestate). Inert until a lunge fires (atk_pt
+ * is only read by re15_enemy_attack while lunge_frames>0). No-op on bad slot/skeleton/bone. */
 void re15_enemy_update_attack_point(int slot, const re15_emd_skeleton_t *skel,
                                     int keyframe, int attack_bone);
 

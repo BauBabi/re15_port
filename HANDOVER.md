@@ -1,4 +1,4 @@
-# RE1.5 Port — Session-Handover (Stand 2026-06-29)
+# RE1.5 Port — Session-Handover (Stand 2026-06-29, Phase 8.1)
 
 Kanonisches „lies-mich-zuerst" für die nächste Session. Aktueller Fokus: **Gegner-/Zombie-AI**.
 Ergänzt die Auto-Memory (v.a. `reai-v2-foundation-combat` = die laufende AI-RE) +
@@ -45,17 +45,41 @@ Tick `FUN_8011d6d4` → Main-State `+0x4` (`PTR_FUN_801217a0[0..4]`: 0 init/1 ac
 
 ## PHASE 8 — wo es weiter geht (Integration + dynamische Verifikation)
 
-Reihenfolge + Risiko:
-1. **Skeleton-Mapping (faithful-line, kein reines byte-true):** `atk_pt_*` pro Frame aus der
-   Attack-Bone-Weltpos (`re15_skel_compute_pose`) speisen — der GTE-Attack-Point `FUN_80019e20`
-   `[0x14/0x15/0x16]` / `FUN_80104178` wird bewusst NICHT als PSX-Model-Pool nachgebaut. Die
-   Movement/Anim-Exec-Leaves (`+0x5`≥3, rufen `anim_set`/walker) + das Anim-Keyframe-Lunge-Begin
-   auf Walker/Skeleton mappen.
+### 8.1 — atk_pt-Skeleton-Mapping (ERLEDIGT, Commit nach c278b08e)
+Geliefert (additiv, getestet, **kein** `game_step`-Eingriff):
+- `re15_skel_bone_to_world` (skeleton_common.c) = die **byte-true** Modell→Welt-Bone-Transformation
+  (`Ryaw(rot_y)·trans + actor.pos`), herausgezogen aus NPC-Render-Loop + Stair-Fuß-Probe.
+- `re15_enemy_update_attack_point` (re15_damage.c) = faithful-line Stand-in: posed das Skelett (QUERY)
+  und schreibt die Attack-Bone-Weltpos in `atk_pt_*` (int16). **Mechanismus exakt; Bone = Parameter.**
+- Tests: `test_attack_point_mapping` + `test_ai_step_chain` treibt `atk_pt` jetzt durch die reale
+  Abbildung. **29/29 ctest grün.**
+
+**Byte-true Lunge-Kette (RE'd 2026-06-29, 2 Agenten + Decompile, trianguliert):**
+- **Damage-Punkt** = die live GTE-Weltpos der **8 posed Body-Part-Frames**, jeden Frame von
+  `FUN_80019e20` (EXE-Action-Driver) in work `+0x28/+0x2a/+0x2c` geschrieben = `ApplyMatrix(M1,vecA)
+  + (+0x60) + ApplyMatrix(M_pose,vecB)`, `M_pose` aus `+0x74 = model_base(+0x188)+bodypart*0xac+0x40`.
+  `FUN_80017fa4` liest ihn → `FUN_80012d60(500,&pt,0)`. Body-Part-LUT `DAT_8011f7a4 =
+  {00,07,08,0e,02,04,09,0d}` (0x0e/0x08 = Kopf/Oberkörper dominieren). **`FUN_80104178` = Lunge-MOTION
+  +Gore (Entity-Block), NICHT der Damage-Punkt** (Katalog 73/77 hatten das konflatiert — korrigiert).
+- **Lunge-BEGIN-Trigger** (= das „Anim-Keyframe-Event", das im Port `re15_enemy_lunge_begin` ersetzt):
+  Attack-Timer `entity+0x1da` zählt auf **300** → `FUN_8010b274` feuert 8× `FUN_80019d50(8,3,0x16,
+  body_part_ptr)` → schreibt Action `0x16` (`sh a2,0(v1)` @0x80019d98) in die Body-Part-Records →
+  Action-Selbstlauf `0x16(setup +0xe=0x20)→0x17→0x18(jal FUN_80017fa4)→0x19(Biss)`. Dispatch verifiziert
+  `0x80071da4→FUN_80017fa4`, `0x80071d98→LAB_80017eb0`.
+- **OFFEN (Integration):** Model-Pool-Index → EMD-Bone (welcher em10/16/47-Bone == Kopf/Kiefer) braucht
+  die Model-Pool-Build-Order ODER ein mid-lunge room1140-Savestate (combat_death.sav war post-bite,
+  Pool leer). + Live-Wiring von `re15_enemy_update_attack_point` in den Render/Step-Pfad (deferred,
+  da Konsument noch nicht in `game_step`).
+
+### 8.2+ — Rest der Integration (Reihenfolge + Risiko)
+1. **Movement/Anim-Exec-Leaves** (`+0x5`≥3, rufen `anim_set`/walker) auf Walker/Skeleton mappen +
+   den byte-true Lunge-BEGIN-Trigger (`entity+0x1da`==300, oben) statt des Platzhalter-Calls.
 2. **room1140-Overlay-Spawn:** der bisher fehlende Spawn-Pfad — die Briefing-Zombies kommen NICHT
    via `Sce_em_set`, sondern aus der Overlay-Entity-Liste. Ohne diesen Spawn gibt es keinen
    aktiven Gegner zum Ticken.
 3. **`game_step`-Wiring:** `re15_enemy_ai_step` pro aktivem Gegner aufrufen. **1170-Risiko** →
-   vorsichtig additiv (inert solange kein Gegner spawnt) + savestate-verifizieren.
+   vorsichtig additiv (inert solange kein Gegner spawnt) + savestate-verifizieren. Hier wird auch
+   das atk_pt-Live-Wiring + die EMD-Bone-Wahl savestate-verifizierbar.
 4. **Dynamische Verifikation:** mit `re15-room-capture` (`re15_quickload.py`/`--provoke`) +
    `re15-savestate-ghidra` (`re15_enemy_state.py`): Spieler in Range → Gegner-`+0x5`-Transition +
    HP-Fall vergleichen Port vs. Original.
