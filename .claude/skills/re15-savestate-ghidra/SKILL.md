@@ -92,6 +92,22 @@ slot type  +0x4 +0x5 +0x9(&f) act  dist   flags hitbox    label
 
 Felder + FSM-Map (alle byte-true belegt): **+0x4** Main-State → `PTR_FUN_801217a0[+0x4]` (0=init 1=active-AI(FUN_8011d9f4) 2=hurt 3=death 4=idle); **+0x9** Sub-State (`(&0xf)`→`PTR_FUN_801217b4`; 0=sub0=FUN_8011da48, aktive Humanoid-AI); **+0x5** Anim-Phase (FUN_8011da48→`DAT_801217b8[+0x5]`; Attack-Commit `0x701` setzt +0x5=7); **+0x0** low = Model-Instanz-Action (`@0x80071d40`; **0x16-0x19 = Lunge-Sequenz = Hitbox-Fenster**); **Hitbox** = `*(ent+0x78)` radius_min@+6/height@+8/radius_max@+10 (Typ 0x47 = 450/1530, Typ 0x10/0x11/0x16 = 400/1440). Die eigentliche Hitbox `FUN_80017fa4` feuert über den Action-Driver `FUN_80019e20`, wenn die Lunge-Anim die aktiven Frames erreicht.
 
+## 7. DORMANZ-Check: ein Gate-Bit über ALLE Saves sweepen (`scripts/re15_flag_sweep.py`)
+
+**Bevor du einen Code-Pfad portierst, der auf einem Flag/Bit gegated ist, prüfe ob das Bit im echten Spiel je gesetzt wird.** Ein statisches `if (DAT & bit)` im Disassembly heißt NICHT, dass der Pfad live läuft — das Bit könnte im Prototyp nie gesetzt werden (dormant).
+
+```bash
+python scripts/re15_flag_sweep.py 0x800aca3c 0x1     # Bit 0x1 über alle stage_saves/*.sav
+python scripts/re15_flag_sweep.py 0x800acaee          # einen Wert (ohne Maske) sweepen
+python scripts/re15_flag_sweep.py <addr> <mask> --width 1|2|4 --glob "stage_saves/*.sav"
+```
+
+Dumpt das Global pro Save + den Overlay-Fingerprint (gruppiert nach Stage, §3) + ein **VERDICT**: ist das Bit in 0 Saves gesetzt → DORMANT (der gegatete Pfad läuft nicht; den echten In-Game-Mechanismus ermitteln, nicht das statische Gate annehmen); sonst → live (+ in welchen Stages).
+
+**Beleg (Phase 8.7, 2026-06-29 — der Befund, der das Attack-Modell korrigierte):** `DAT_800aca3c & 1` (das STAGE1-Zombie-Lunge-Arm-Gate, das `FUN_8010ab2c` liest) ist über ALLE 9 Saves — inkl. dem Live-ROOM1140-Combat mit 7 aktiven Zombies — **nie** gesetzt. → Der Lunge-Arm ist im Prototyp **dormant**; die Zombies greifen per **GRAB** an (FUN_80102548, −10/−5 HP), nicht per Lunge. Der Sweep hat eine ganze (sonst plausibel byte-true portierte) Annahme widerlegt. Siehe Memory `disasm-verify-decompiles` + `reai-v2-foundation-combat`.
+
+→ Kombiniere mit §6 (`re15_enemy_state.py`, der Live-Gegner-State) für die Combat-RE: **erst den Live-Combat-Save dumpen** (welche State/+0x5/+0x9/Hitbox erreichen die Gegner WIRKLICH?) + Gate-Bits sweepen, DANN den bestätigten Pfad byte-true portieren. So wurden 8.7–8.9 (Wake-up/Grab/Turn) gegen die Realität verankert + zwei Modell-Annahmen korrigiert.
+
 ## Disziplin
 
-„Wert ändert sich plausibel zwischen zwei Savestates" ist **kein** Beweis für die Bedeutung einer Adresse. Erst wenn Ghidra zeigt, welche Funktion das Global wie verwendet, ist es byte-true. Diff findet Kandidaten — Ghidra bestätigt/benennt sie.
+„Wert ändert sich plausibel zwischen zwei Savestates" ist **kein** Beweis für die Bedeutung einer Adresse. Erst wenn Ghidra zeigt, welche Funktion das Global wie verwendet, ist es byte-true. Diff findet Kandidaten — Ghidra bestätigt/benennt sie. Und: ein statisches Gate (`if (DAT & bit)`) heißt nicht, dass der Pfad live ist — §7 sweepen, sonst portierst du dormanten Code als „den In-Game-Mechanismus".

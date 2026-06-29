@@ -1,14 +1,18 @@
-# RE1.5 Port — Session-Handover (Stand 2026-06-29, Phase 8.6 game_step-Wiring abgeschlossen)
+# RE1.5 Port — Session-Handover (Stand 2026-06-29, Phase 8.9 abgeschlossen)
 
-Kanonisches „lies-mich-zuerst" für die nächste Session. Aktueller Fokus: **STAGE1-Zombie-AI ist in `game_step` integriert** → nächster Schritt = die Briefing-Zombies AUFWECKEN (feeding→combat Sub-Mode-Handler) + Savestate-Vergleich.
+Kanonisches „lies-mich-zuerst" für die nächste Session. **Die STAGE1-Zombie-Combat-Logik ist byte-true in-game:
+spawn → wake (dist<4000) → engage → turn-to-face → GRAB (−10/−5 HP).** Nächster Schritt = der Forward-Walk
+(Anim-Root-Motion, damit der Zombie über Distanz läuft) + der Player-grabbed-FSM + ein mid-Combat-Savestate (§8.10).
 Ergänzt die Auto-Memory (v.a. `reai-v2-foundation-combat` = die laufende AI-RE, `disasm-verify-decompiles`,
 `reai-v2-duckstation-dynamic-re`).
 
 ## TL;DR — Wo stehe ich
 
-- **Git:** HEAD = `b1b3f95e` (master, sauber; nur `.idea/` untracked). Diese Session ≈ **21 Commits** (Phase 8.1–8.5d).
+- **Git:** HEAD = `fbef50ca` (master, sauber; nur `.idea/` untracked). Diese Session = **6 Commits** (Phase 8.6→8.9):
+  `7bab2737` 8.6 game_step-Wiring · `0283bd2c` 8.7a Hitbox-Dims · `3e067cdd` 8.7b Wake-up + Grab-statt-Lunge-Korrektur ·
+  `ccdd8bbb` 8.8 Grab-Execution · `fbef50ca` 8.9 Turn-to-face + +0x5=7-Korrektur · (+ 1 Skill-/Doku-Commit dieser Wrap-up).
 - **Build/Test:** `taskkill //F //IM re15_pc.exe 2>/dev/null; true; export PATH="/c/msys64/mingw64/bin:$PATH";
-  cmake --build re15_port/build; ctest --test-dir re15_port/build --timeout 30` → **30/30 grün** (mingw64 GCC + Ninja).
+  cmake --build re15_port/build; ctest --test-dir re15_port/build --timeout 30` → **31/31 grün** (mingw64 GCC + Ninja).
   (Das `taskkill` ist nötig, falls die Exe noch läuft + die Datei sperrt — sonst Link-„Permission denied", kein Code-Fehler.)
 - **⚠️ GROSSE KORREKTUR diese Session:** die in Phase 2–7 portierte AI (`FUN_8011d6d4` → `@0x801217a0`) ist die Typ-**0x47**-
   Familie — NICHT die Live-Zombies. Savestate-bewiesen laufen die Live-Zombies (Typ 0x10/0x11/0x16) über `@0x8011f7b4`

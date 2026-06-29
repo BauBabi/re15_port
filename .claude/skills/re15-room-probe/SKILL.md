@@ -12,6 +12,7 @@ Für byte-true RE gibt es zwei dynamische Wege: das echte Spiel (`re15-room-capt
 - **Die PC-Exe ignoriert `argv`** (`platform/pc/main.c`: `(void)argc; (void)argv;`). `re15_pc.exe --headless` tut NICHTS — Steuerung läuft über env-Vars (`RE15_START_ROOM=1140`), und es gibt keinen sauberen „lade Raum + dump State"-CLI-Pfad. → Nicht mit der Exe kämpfen; einen **ctest-Probe** schreiben (unten).
 - **`re15_pc.exe` sperrt die eigene Datei**, solange sie läuft (auch ein hängender Hintergrund-Lauf). Ein folgender Build scheitert dann mit `cannot open output file platform\pc\re15_pc.exe: Permission denied` (KEIN Code-Fehler!). → **Vor jedem Build, der nach einem Exe-Lauf kommt: `taskkill //F //IM re15_pc.exe 2>/dev/null; true`.**
 - `tools/` ist standardmäßig AUS (`RE15_BUILD_TOOLS=OFF`, alte API) — KEIN neues Tool dort ablegen, es verrottet. Die **Test-Infra** (`tests/unit/`, GLOB-gebaut, ctest) ist der robuste Ort für Probes.
+- **Test-State-Kontamination zwischen Probe-Teilen** (Phase 8.9): wenn ein Probe-ctest mehrere Szenarien NACHEINANDER auf demselben `g_actors[]` fährt, schleppt jeder Teil den State des vorigen mit. Konkret biss diese Gotcha: Part-5 ließ einen Zombie mitten im Grab (+0x5=3) zurück → Part-6 (das den −15-HP-Grab eines ANDEREN Zombies prüfte) bekam doppelten Damage, weil der Part-5-Zombie weiter-grabte. → Pro Szenario **den Test-Gegner ISOLIEREN**: alle anderen Gegner weit weg parken + benign setzen, z.B. `for (i) { z=&g_actors[zslots[i]]; z->grid_id=0x86; z->sub_state_1=0; z->sub_state_2=0; z->ai_flags=0; z->x=z->z=30000; }` (feeding-Sub-Mode + dist≫4000 → kein Wake/Grab), und Player-HP/Pos frisch setzen. Sonst misst du Cross-Talk, nicht den getesteten Pfad.
 
 ## Muster: ein Raum-Probe-ctest (Vorlage)
 
@@ -39,25 +40,22 @@ for (int s = 1; s < RE15_ACTOR_MAX; s++)   /* g_actors[1..] inspizieren */
 
 So wurde 2026-06-29 byte-true verifiziert, dass ROOM1140s sub00 die 5 Briefing-Zombies (0x16/0x10/0x10/0x11/0x11) via `Sce_em_set` spawnt — die alte „kommt aus der Overlay-Entity-Liste"-Annahme widerlegt.
 
-## Rezept für Phase 8.6 (Live-AI in einem echten Raum ticken)
+## Rezept: die Live-Zombie-Combat-Kette in einem echten Raum (IMPLEMENTIERT, Phase 8.6–8.9)
 
-Den Spawn-Probe erweitern, um die Live-Zombie-AI zu fahren + die Attack-Kette zu beobachten (statt manuellem Arming in den Unit-Tests):
+Die laufende Combat-Probe ist **`re15_port/tests/unit/test_room1140_combat.c`** (7 Teile, treibt `re15_enemy_ai_run_all` gegen die echte ROOM1140). Die byte-true In-Game-Kette ist: **spawn → tick (INIT→ACTIVE) → feeding-Zombie WACHT auf (dist<4000) → engage → TURN-to-face → GRAB (−10/−5 HP)**. (Der Lunge-Arm ist DORMANT — `re15-savestate-ghidra` §7 bewies `DAT_800aca3c & 1` wird nie gesetzt; der echte Angriff ist der Grab, nicht der Lunge.)
 
 ```c
-/* nach dem Spawn (oben): die Live-AI pro 0x10/0x11/0x16-Gegner ticken */
-re15_enemy_ai_set_combat_active(1);                 /* DAT_800aca3c & 1 (sonst armt der Lunge nie) */
-g_actors[0].x = ...; g_actors[0].z = ...;           /* Spieler in Reichweite des Zombies setzen */
-for (int f = 0; f < 1200; f++) {
-    for (int s = 1; s < RE15_ACTOR_MAX; s++) {
-        uint8_t t = g_actors[s].type;
-        if (g_actors[s].active && (t==0x10||t==0x11||t==0x16))
-            re15_enemy_ai_live_step(s);             /* tick -> brain -> arm -> windup -> lunge@300 */
-    }
-    /* g_actors[0].hp / der Gegner-State (+0x5, ai_attack_timer) pro Frame loggen */
-}
-/* erwartet: brain committet (+0x5=7) -> arm (ai_attack_timer 600..1110) -> @300 lunge -> HP fällt */
+/* nach dem Spawn (oben): die Live-AI pro 0x10/0x11/0x16-Gegner ticken — re15_enemy_ai_run_all IST
+ * die typ-gegatete Slice (game_step ruft sie); sie tickt nur die Live-Zombie-Typen. */
+re15_actor_t *pl = &g_actors[0];
+pl->x = 0; pl->z = 0; pl->hp = 100; pl->hit_react = 0;
+/* feeding-Zombie nah an den Spieler -> er wacht auf (dist<0xfa0=4000) + dreht sich + grabt */
+g_actors[wake_slot].x = 1000; g_actors[wake_slot].z = 0;
+for (int f = 0; f < 60; f++) re15_enemy_ai_run_all(/*combat_active=*/0);  /* 0: combat-active ist dormant! */
+/* erwartet: grid 0x86->0 (wach), state->1, +0x5 läuft 2(engage)->7(turn)->3/4(grab); player HP fällt */
 ```
-Das ist die port-seitige Verifikation des `game_step`-Wirings, BEVOR man es ans echte `game_step` hängt (1170-Risiko) und gegen ein DuckStation-Savestate (`re15-room-capture`) vergleicht.
+
+Wichtig (Stand 8.9): `combat_active` (= `DAT_800aca3c & 1`) ist **dormant** — der Grab braucht es NICHT (nur der dormante Lunge-Arm liest es). Den Grab-State direkt setzen, um die Execution zu prüfen: `gz->state=1; gz->grid_id=0; gz->sub_state_1=3; gz->sub_state_2=0;` (= committed grab) → run_all → −10 (Impact) dann −5 (Bite) → Exit +0x5=2. Den Turn prüfen: `gz->sub_state_1=7;` + Zombie abgewandt nah → run_all → `rot_y` slewt zum Spieler → Grab-Commit. (DEFERRED, noch nicht beobachtbar: der Forward-Walk +0x5=5/6 = Anim-Root-Motion, FUN_8001ad68 — der Zombie läuft noch nicht über Distanz; im Briefing-Room läuft der Spieler zum Zombie, daher reicht Turn+Grab.) Finaler Vergleich gegen ein mid-Combat DuckStation-Savestate (`re15-room-capture`).
 
 ## Build/Run
 
