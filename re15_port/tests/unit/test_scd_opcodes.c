@@ -926,6 +926,33 @@ static int test_flag_ck2(void)
     return fail;
 }
 
+/* op_cut_replace (0x4b) live in-room switch — byte-true tail (LAB_80040414 @0x800404ac): after the
+ * zone relabel, if the active (displayed) cut == a, switch the camera to b via the cam-change path. */
+static int test_cut_replace_live_switch(void)
+{
+    int fail = 0;
+    extern int g_re15_active_cut;
+    /* (a) active cut == a (9): Cut_replace(9,8) -> request switch to b (8). */
+    {
+        uint8_t bc[4]; bc[0]=0x4b; bc[1]=9; bc[2]=8; bc[3]=SCD_OP_EVT_END;
+        scd_vm_init(); g_scd.cam_change_pending = 0; g_re15_active_cut = 9;
+        scd_thread_start(0, bc); scd_vm_tick();
+        if (g_scd.cam_id != 8 || g_scd.cam_change_pending != 1) {
+            fprintf(stderr,"FAIL: cut_replace live switch: cam_id=%d pending=%d (want 8/1)\n",
+                    (int)g_scd.cam_id, (int)g_scd.cam_change_pending); fail=1; }
+    }
+    /* (b) active cut != a (5): no switch. */
+    {
+        uint8_t bc[4]; bc[0]=0x4b; bc[1]=9; bc[2]=8; bc[3]=SCD_OP_EVT_END;
+        scd_vm_init(); g_scd.cam_change_pending = 0; g_re15_active_cut = 5;
+        scd_thread_start(0, bc); scd_vm_tick();
+        if (g_scd.cam_change_pending != 0) {
+            fprintf(stderr,"FAIL: cut_replace no-switch: pending=%d (want 0)\n", (int)g_scd.cam_change_pending); fail=1; }
+    }
+    if (!fail) printf("PASS: test_cut_replace_live_switch (0x4b active==a -> switch to b)\n");
+    return fail;
+}
+
 int main(void)
 {
     int failures = 0;
@@ -950,6 +977,7 @@ int main(void)
     failures += test_work_set();
     failures += test_speed_set();
     failures += test_flag_ck2();
+    failures += test_cut_replace_live_switch();
 
     if (failures == 0) {
         printf("\nALL SCD OPCODE TESTS PASSED\n");

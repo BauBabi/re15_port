@@ -25,10 +25,17 @@
 >     dispatch via DAT_800ac9b0 registry; port does `aot_on`), 0x50 (byte-true = bytecode-ptr latch
 >     into DAT_800ac9b0; port does `item_aot_set`), 0x53 (byte-true = indirect Work_set binding
 >     inst+0x154; port stubs as `fade_set`).
->   - **Missing/incomplete side-effects:** 0x2d (port fabricates world collision from bytes the
->     engine uses as inline model data), 0x38 (stub; byte-true sets an SCA collision AABB), 0x4a
->     (port omits the entity state-4 writes via inst+0x154), 0x4b (port omits the immediate live
->     cut-switch when active==a).
+>   **0x4b `cut_replace` — FIXED:** added the byte-true tail (LAB_80040414 @0x800404ac) — after the
+>   zone relabel, if the active cut == a, switch the camera to b (the live in-room replacement the
+>   ROOM1130 user saw missing). Reuses the port's cam-change path (g_scd.cam_id + cam_change_pending);
+>   active cut read from g_re15_active_cut. +unit test.
+>   - **Missing/incomplete side-effects (remaining):** 0x2d (port fabricates world collision from
+>     bytes the engine uses as inline model data), 0x38 (stub; byte-true sets an SCA collision AABB),
+>     0x4a (port omits the entity state-4 writes via inst+0x154).
+>   - **Investigated, NOT fixed (no-guessing):** 0x53 — multi-mode indirect Work_set; mode 1 binds an
+>     unidentified BSS object (0x800aba84), modes 3/5 (effect-sprite/ptr) aren't actor slots, and
+>     mode 2's entity-index vs the port's work_slot convention is unverified — deferred rather than
+>     guess.
 > All 8 byte-true RE'd ops left to cross-check from the first list (0x06/0x14/0x17/0x21/0x22/0x2A/...)
 > are covered above and MATCH/STUB except as listed.
 

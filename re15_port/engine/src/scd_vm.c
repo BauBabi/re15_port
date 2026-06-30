@@ -2883,6 +2883,21 @@ int op_cut_replace(scd_thread_t *t)
         extern void re15_aot_cut_replace(uint8_t a, uint8_t b);
         re15_aot_cut_replace(a, b);   /* also swap the live CAM_SWITCH AOTs (cam_from/target) */
     }
+    /* byte-true tail (LAB_80040414 @0x800404ac-d0): after relabelling the zones, if the CURRENTLY
+     * ACTIVE cut == a, switch the camera to b immediately (FUN_800142f4 = store the new cut +
+     * repoint the active camera struct DAT_800ac794). Without this the camera only changes on the
+     * next zone re-entry — the live in-room replacement (the ROOM1130 case above) was the camera
+     * change the user saw missing. The port requests it via the standard cam-change path (the same
+     * g_scd.cam_id + cam_change_pending that Cut_chg / the door fire use; applied in re15_game_step,
+     * i.e. next frame rather than literally immediate — faithful-line). Cross-check 2026-06-30. */
+    {
+        extern int g_re15_active_cut;   /* the displayed cut (light_common.c, set per cut apply) */
+        if ((uint8_t)g_re15_active_cut == a) {
+            g_scd.cam_id_prev        = g_scd.cam_id;
+            g_scd.cam_id             = b;
+            g_scd.cam_change_pending = 1;
+        }
+    }
     t->pc += 3;
     return 1;
 }
