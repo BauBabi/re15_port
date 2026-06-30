@@ -125,6 +125,11 @@ void           re15_esp_fx_tick(const re15_esp_t *bank);
 /** Read slot `i` (for the draw/tests); returns NULL if inactive/out-of-range. */
 const re15_esp_fx_t *re15_esp_fx_get(int i);
 
+/** Bind the room's parsed ESP as the active bank for op-0x3a spawns (set at room load, NULL on
+ *  unload). op_sce_espr_on + the per-frame fx tick read it via re15_esp_room_bank(). */
+void              re15_esp_set_room_bank(const re15_esp_t *bank);
+const re15_esp_t *re15_esp_room_bank(void);
+
 /* ===== Phase ESP-B: the active effect-sprite POOL (spawn + AABB-cull dispatch) ============
  *
  * Byte-true model of the runtime effect pool (PSX globals DAT_800b2360 = active count,

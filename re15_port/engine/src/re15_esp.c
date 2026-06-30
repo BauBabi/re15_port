@@ -181,6 +181,10 @@ int re15_esp_find_id(const re15_esp_t *esp, uint8_t effect_id)
 /* ===== Phase ESP-C: op-0x3a effect particle pool ======================================= */
 
 static re15_esp_fx_t s_esp_fx[RE15_ESP_FX_MAX];
+static const re15_esp_t *s_room_bank = NULL;
+
+void              re15_esp_set_room_bank(const re15_esp_t *bank) { s_room_bank = bank; }
+const re15_esp_t *re15_esp_room_bank(void)                       { return s_room_bank; }
 
 void re15_esp_fx_reset(void) { memset(s_esp_fx, 0, sizeof(s_esp_fx)); }
 

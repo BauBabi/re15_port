@@ -27,6 +27,7 @@
 #include "re15_aot.h"        /* Phase 4.4.6: AOT trigger ops */
 #include "re15_inventory.h"  /* Phase 4.4.7 */
 #include "re15_actor.h"      /* Phase 4.4.8 */
+#include "re15_esp.h"        /* Phase ESP-C: op-0x3a effect particle spawn */
 #include "re15_damage.h"     /* re15_enemy_apply_hitbox — wire the spawned enemy's +0x78 hitbox */
 #include "re15_msg.h"        /* re15_msg_is_choice — YES/NO vs plain Message_on gating */
 #include "re15_to_re2.h"     /* RE1.5 → RE2 adapter layer */
@@ -2834,10 +2835,32 @@ int op_add_aspeed(scd_thread_t *t)
     return 1;
 }
 
-/* Sce_espr_on (0x3A) — 16 bytes. Spawn sprite/effect (muzzle flash, blood, etc.).
- * No-op for now (we don't render sprites); just advance PC. */
+/* Sce_espr_on (0x3A) — 16 bytes. Spawn an effect particle (muzzle flash, blood, …) into the
+ * op-0x3a model_inst pool. Byte-true operand map (FUN_80041864 -> FUN_80019700):
+ *   pc[2] = effect-id (the bank; FUN_80019700 cat = a0>>24 = pc[2] -> DAT_800b2248[id*4])
+ *   pc[3] = sub-index   pc[4] = owner category (0 static / 1 global / 2 entity / 3 pool)
+ *   pc[8/10/12] = local offset (LE s16, added to the owner-transform position)   pc[14] = param
+ * Owner-transform: the original snapshots a2[0..7] (the owner's matrix) into the slot; the port
+ * uses the work-slot actor's world position (the entity running this script) + the local offset.
+ * The exact owner-category -> actor mapping is faithful-line (work-slot), flagged for refinement.
+ * Anim/draw run from the room bank via re15_esp_fx_tick / the platform draw. */
 int op_sce_espr_on(scd_thread_t *t)
 {
+    uint8_t effect_id = t->pc[2];
+    uint8_t sub_index = t->pc[3];
+    int16_t ox = (int16_t)((uint16_t)t->pc[8]  | ((uint16_t)t->pc[9]  << 8));
+    int16_t oy = (int16_t)((uint16_t)t->pc[10] | ((uint16_t)t->pc[11] << 8));
+    int16_t oz = (int16_t)((uint16_t)t->pc[12] | ((uint16_t)t->pc[13] << 8));
+    int16_t param = (int16_t)((uint16_t)t->pc[14] | ((uint16_t)t->pc[15] << 8));
+
+    int8_t ws = (t->work_slot >= 0) ? t->work_slot : g_scd.work_slot;
+    int32_t bx = 0, by = 0, bz = 0;
+    if (ws >= 0 && ws < RE15_ACTOR_MAX) {
+        bx = g_actors[ws].x; by = g_actors[ws].y; bz = g_actors[ws].z;
+    }
+    re15_esp_fx_spawn(re15_esp_room_bank(), effect_id, sub_index,
+                      bx + ox, by + oy, bz + oz, param);
+
     t->pc += 16;
     return 1;
 }

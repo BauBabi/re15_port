@@ -39,7 +39,8 @@
  */
 
 #include "re15_scd.h"
-#include "re15_actor.h"   /* RE15_ACTOR_SLOT_PLAYER */
+#include "re15_actor.h"   /* RE15_ACTOR_SLOT_PLAYER, g_actors */
+#include "re15_esp.h"     /* op_sce_espr_on -> re15_esp_fx pool */
 #include "re15_rdt.h"     /* re15_rdt_t.sub_scd[] for Evt_chain/Evt_exec tests */
 
 #include <stdint.h>
@@ -953,6 +954,47 @@ static int test_cut_replace_live_switch(void)
     return fail;
 }
 
+/* op_sce_espr_on (0x3a) — spawn an effect particle into the op-0x3a fx pool. pc[2]=effect-id,
+ * pc[3]=sub-index, pc[8/10/12]=LE s16 local offset (added to the work-slot actor world pos),
+ * pc[14]=param. (FUN_80041864 operand map -> FUN_80019700; owner = work-slot actor, faithful-line.) */
+static int test_sce_espr_on_spawn(void)
+{
+    int fail = 0;
+    uint8_t bc[18];
+    memset(bc, 0, sizeof(bc));
+    bc[0] = 0x3a;                        /* op */
+    bc[2] = 0x05;                        /* effect-id */
+    bc[3] = 0x02;                        /* sub-index */
+    write_le16(&bc[8],  (uint16_t)100);  /* ox */
+    write_le16(&bc[10], (uint16_t)200);  /* oy */
+    write_le16(&bc[12], (uint16_t)300);  /* oz */
+    write_le16(&bc[14], (uint16_t)0x55); /* param */
+    bc[16] = SCD_OP_EVT_END;
+
+    re15_esp_fx_reset();
+    re15_esp_set_room_bank(NULL);        /* unresolved bank: spawn still records the fields */
+    scd_vm_init();
+    g_actors[RE15_ACTOR_SLOT_PLAYER].x = 1000;
+    g_actors[RE15_ACTOR_SLOT_PLAYER].y = 2000;
+    g_actors[RE15_ACTOR_SLOT_PLAYER].z = 3000;
+    scd_thread_start(0, bc);
+    g_scd.work_slot = RE15_ACTOR_SLOT_PLAYER;   /* owner = player */
+    scd_vm_tick();
+
+    const re15_esp_fx_t *f = re15_esp_fx_get(0);
+    if (re15_esp_fx_count() != 1 || !f ||
+        f->effect_id != 0x05 || f->sub_index != 0x02 || f->param != 0x55 ||
+        f->x != 1100 || f->y != 2200 || f->z != 3300) {
+        fprintf(stderr, "FAIL: sce_espr_on spawn: count=%d", re15_esp_fx_count());
+        if (f) fprintf(stderr, " id=%u sub=%u xyz=(%ld,%ld,%ld) param=%d",
+                       f->effect_id, f->sub_index, (long)f->x, (long)f->y, (long)f->z, f->param);
+        fprintf(stderr, "\n"); fail = 1;
+    }
+    re15_esp_fx_reset();
+    if (!fail) printf("PASS: test_sce_espr_on_spawn (0x3a -> fx at owner+offset, id/sub/param)\n");
+    return fail;
+}
+
 int main(void)
 {
     int failures = 0;
@@ -978,6 +1020,7 @@ int main(void)
     failures += test_speed_set();
     failures += test_flag_ck2();
     failures += test_cut_replace_live_switch();
+    failures += test_sce_espr_on_spawn();
 
     if (failures == 0) {
         printf("\nALL SCD OPCODE TESTS PASSED\n");
