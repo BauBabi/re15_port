@@ -603,12 +603,15 @@ Sandbox **erfolgreich gefahren** (re15-room-capture: 2 Live-Captures + 1 Menüsh
   Savestate-RAM lesen, nicht aus dem BIN** (`re15_ss.Ram(sav).u32(0x8011f840+i*4)`). Runtime: +0x5=0x13 → decide `FUN_8010561c` /
   animate `FUN_801057bc`. Disasm-verifiziert: **0x13 = engage (FUN_80102058) + eine vorangestellte `+0x90&3`+Winkel-Forward-Walk-Prüfung**
   (→ +0x5=9/10). Der Rest (turn 0x701 @dist<0x7d0+arc0x2c8; grab (facing+3)<<8|1 @dist<0x4b0+arc0x200+gleicher Boden+facing_aligned;
-  dead-grab 0xc01 @dist<0x5dc+hp<0; fallback 0x1001) ist **byte-IDENTISCH zu engage**. → die nächsten Live-Zombies landen real in 0x13;
-  der Port weckt zu engage(2) → **turn→grab→damage byte-true faithful, ABER der Port-Zombie läuft NICHT auf den Spieler zu** (Forward-Walk
-  +0x5=9/10), wie es das Original in 0x13 tut. **Das ÜBERSTIMMT 8.10 TEIL 1 (§„Forward-Walk = m1/dead-player, KEINE Live-ROOM1140-Lücke")
-  — der Live-Save als Schiedsrichter zeigt: 0x13 IST live in ROOM1140 erreicht. → NÄCHSTER byte-true Schritt = den Forward-Walk
-  portieren** (Translation-Reader `re15_emd_get_keyframe_speed` +6/+10 existiert; m0-Walk-Handler +0x5=9/10 = decide 0x801031a4 /
-  0x801033c0, animate 0x801031e4 / 0x801033c8 — aus dem Live-Save weiter disassemblieren).
+  dead-grab 0xc01 @dist<0x5dc+hp<0; fallback 0x1001) ist **byte-IDENTISCH zu engage**. → die nächsten Live-Zombies landen real in 0x13.
+  **ABER der Forward-Walk-Zweig ist gegated durch `+0x90 & 3`, und im Live-Save ist `+0x90 == 0x00` für ALLE 5 Zombies (auch die zwei in
+  0x13)** → der Forward-Walk wird NICHT genommen; 0x13 fällt durch zur engage-identischen turn/grab-Logik → **0x13 verhält sich für
+  ROOM1140 byte-IDENTISCH zu engage(2); der Port (wake→engage 2) ist verhaltens-byte-true faithful — NICHTS zu portieren.** Das
+  BESTÄTIGT 8.10 TEIL 1 („Forward-Walk = andere-Konfig, keine ROOM1140-Lücke"), nur präziser: nicht „0x13 nie erreicht" (0x13 IST live
+  erreicht), sondern der Forward-Walk in 0x13 ist via +0x90 dormant. **→ C11 für ROOM1140 ist VOLL geschlossen** (wake→engage→turn→grab→
+  damage→death live byte-true). Forward-Walk-Port nur falls je ein Raum mit `+0x90&3`-Zombies drankommt (Reader +6/+10 + m0-Walk-Handler
+  +0x5=9/10 @decide 0x801031a4/0x801033c0 existieren). **Lehre: ein State zu ERREICHEN ≠ sein Verhalten ist aktiv — immer die Gate-Flags
+  (hier +0x90) im Live-Save prüfen, bevor man ein Verhalten portiert.**
 
 Werkzeuge: **`re15-psx-disasm`** (EXE/Overlay-Disasm), **`re15-savestate-ghidra`** (Live-RAM +
 Tabellen-Patch-Check), **`re15-room-capture`** (Raum laden/provozieren). Memory `reai-v2-foundation-combat`
