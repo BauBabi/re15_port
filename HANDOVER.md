@@ -586,18 +586,16 @@ Sandbox **erfolgreich gefahren** (re15-room-capture: 2 Live-Captures + 1 Menüsh
   `stage_saves/mzd_debugmenu.sav` eingecheckt + Default. **Befunde (verifiziert):** r0=124 OPENING(=ROOM1240/Boot), 125 LOBBY,
   126 SEWER PASSAGE, --left10=114 SEWER EXIT, --right3=100 BATH-LOCKERS (Square-Load bestätigt, 96 % non-black). **Die Debug-JUMP-
   Nummer ≠ Port-ROOM####** (114=SEWER EXIT ≠ ROOM1140).
-- **C11-Live-Capture: 8 Läufe gefahren, TEIL-bestätigt + der Blocker präzise charakterisiert (2026-06-30).** Live bestätigt:
-  Elliot **0x47** Hitbox 450/1530 (player-alive in-game, ROOM1170-Briefing-Dialog); JUMP zu `114 SEWER EXIT` (=ROOM1140,
-  Debug-Nr=ROOM####/10) spawnt einen Gegner (1× **0x40**) → **JUMP führt das Spawn-SCD AUS** (mein früherer „kein Spawn"-Schluss
-  war falsch; 124 OPENING ist nur leer). Engage `+0x5=2` (combat_death) matcht den Port.
-- **BLOCKER (warum der player-alive 5-Zombie-Frame nicht automatisierbar war):** ROOM1140 via JUMP lädt eine **ANDERE SCD-Szenario-
-  Variante** (1× 0x40) als die Port-First-Visit (5 Zombies 0x10/0x11/0x16). Die 5-Zombie-Briefing ist die **geskriptete New-Game-
-  FIRST-VISIT-Sequenz**: Intro-Cinematic (~30-50s, 0x100-Freeze) → Elliot-Dialog (ROOM1170) → Spieler-Kontrolle → Zombies hinter
-  Türen tiefer in der Progression. Random-`--provoke`(+neuem `--advance`=Cross/Türen) erreicht nur Elliot/ROOM1170, navigiert die
-  Türen NICHT zuverlässig. `combat_death.sav` (7 Zombies, post-death) bleibt die einzige Ground-Truth dieser Szene.
-- **Verbleibende C11-Schuld:** ein player-alive 5-Zombie-Frame braucht deterministische Routen-Navigation (großer Automations-
-  Aufwand) ODER der Nutzer spielt bis zur Briefing + sichert. HURT zusätzlich: `--provoke`/`--advance` um R1+Square erweitern.
-  Die Capture-NAVIGATION selbst ist gelöst + durable (Stepping/Stage/Load getestet); nur die geskriptete Briefing-Progression bleibt.
+- **C11-Live-Capture: der BRIEFING-RAUM ist gefunden + player-alive gesichert (2026-06-30, Nutzer-korrigiert).** Der Port-ROOM1140
+  = **`0x114 BRIEFING ROOM`** im Debug-JUMP = **`--left 16`** von der Base (die JUMP-Nummern sind **HEX**!). Ein CLEAN JUMP lädt die
+  **5 Briefing-Zombies** (Typ 0x10/0x11/0x16, Hitbox **400/1440**, slot0=0x16 grid 0x88 lying) — matcht den Port (`test_room1140_spawn`)
+  exakt. Artefakt: `stage_saves/mzd_stage1_briefing.sav` (+ `_live`). **MEINE FRÜHEREN FEHLER (korrigiert):** ich las die Hex-Nummer
+  `0x11A` als `114` und war 6 Schritte zu kurz → lud `0x11A SEWER EXIT` (1× 0x40); daraus folgte fälschlich „Briefing nicht per JUMP /
+  geskriptetes New-Game". FALSCH — der Briefing IST ein JUMP-Raum (0x114). Live auch bestätigt: Elliot 0x47 Hitbox 450/1530 (ROOM1170).
+- **OFFEN — die Zombies LIVE engagen (turn/grab):** beim Laufen blockiert der **Konferenztisch** Geradeaus (Zombie-Distanz bleibt
+  konstant ~7-8k, +0x5=12). Es braucht einen Umweg um den Tisch (`re15_quickload --path "R…,U…,L…,U…"`, neu eingebaut). Die exakten
+  Pfad-Werte sind blind schwer (mehrere Versuche konvergierten auf den Tisch-Block); am besten mit Live-Screen-Feedback (PNG/Schritt)
+  iterieren oder der Nutzer nennt den Weg. HURT zusätzlich: R1-aim + Square ergänzen. = der verbleibende C11-Rest (Spawn ist gesichert).
 
 Werkzeuge: **`re15-psx-disasm`** (EXE/Overlay-Disasm), **`re15-savestate-ghidra`** (Live-RAM +
 Tabellen-Patch-Check), **`re15-room-capture`** (Raum laden/provozieren). Memory `reai-v2-foundation-combat`

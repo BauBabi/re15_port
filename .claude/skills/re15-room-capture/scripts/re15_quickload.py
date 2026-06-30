@@ -48,6 +48,8 @@ def main():
     ap.add_argument("--menushot", action="store_true")
     ap.add_argument("--postload", type=float, default=8.0)
     ap.add_argument("--provoke", type=float, default=0.0)
+    ap.add_argument("--path", default="")   # directed move after load, e.g. "R0.4,U2.5,L0.6,U6"
+                                            # tokens: U/D forward/back, L/R turn, X cross, S square; <secs> hold
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
     T0 = time.monotonic()
@@ -84,6 +86,19 @@ def main():
     else:
         log("Square -> LOAD room"); tap(B.XUSB_GAMEPAD_X, gap=0.6)
         log("settle %.0fs" % args.postload); time.sleep(args.postload)
+        if args.path:
+            # DIRECTED move (room-specific, e.g. around an obstacle): U/D = forward/back, L/R = turn,
+            # X = cross, S = square. The 0x114 BRIEFING ROOM needs a table detour (user: a bit right,
+            # turn left, then straight): --path "R0.4,U2.5,L0.7,U6"
+            PMAP = {"U": B.XUSB_GAMEPAD_DPAD_UP, "D": B.XUSB_GAMEPAD_DPAD_DOWN,
+                    "L": B.XUSB_GAMEPAD_DPAD_LEFT, "R": B.XUSB_GAMEPAD_DPAD_RIGHT,
+                    "X": B.XUSB_GAMEPAD_A, "S": B.XUSB_GAMEPAD_X}
+            for tok in args.path.split(","):
+                tok = tok.strip()
+                if not tok: continue
+                btn = PMAP.get(tok[0].upper()); secs = float(tok[1:] or "0.5")
+                if btn is None: continue
+                log("PATH %s %.2fs" % (tok[0].upper(), secs)); hold_btn(btn, secs)
         if args.provoke > 0:
             log("PROVOKE %.0fs" % args.provoke)
             t_end = time.monotonic() + args.provoke; seq = 0
