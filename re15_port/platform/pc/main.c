@@ -62,6 +62,10 @@ static inline int RNDI(float f) {
 #include "re15_anim_select.h"  /* SHARED actor bank/clip selection view-model */
 #include "re15_esp.h"          /* Phase ESP-C: op-0x3a effect-sprite bank + particle pool */
 
+#define RE15_TIM_SLOT_EFFECT 19   /* effect-sprite TIM render slot (0..18 used by chars/props) */
+
+extern void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
+
 /* Phase ESP-C: the current room's parsed effect-sprite bank (borrows the resident RDT buf;
  * bound via re15_esp_set_room_bank so op_sce_espr_on can resolve effect ids to anim records). */
 static re15_esp_t s_room_esp;
@@ -84,8 +88,57 @@ static void pc_load_room_esp(const uint8_t *rdt_buf, int rdt_size, unsigned room
                 s_room_esp.id_count ? s_room_esp.eff[0].effect_id : 0,
                 s_room_esp.id_count ? s_room_esp.eff[0].count_a : 0,
                 s_room_esp.id_count ? s_room_esp.eff[0].count_b : 0);
+        /* Upload the effect TIM (eff[0].tim_off) to the dedicated effect render slot. */
+        if (s_room_esp.id_count && s_room_esp.eff[0].tim_off &&
+            (uint32_t)rdt_size > s_room_esp.eff[0].tim_off) {
+            re15_tim_t tim;
+            if (re15_tim_parse(rdt_buf + s_room_esp.eff[0].tim_off,
+                               (size_t)rdt_size - s_room_esp.eff[0].tim_off, &tim) == 0) {
+                re15_render_pc_upload_tim_slot(&tim, RE15_TIM_SLOT_EFFECT);
+                fprintf(stderr, "[esp] effect TIM (id 0x%02x) -> slot %d: %dx%d\n",
+                        s_room_esp.eff[0].effect_id, RE15_TIM_SLOT_EFFECT, tim.width, tim.height);
+            }
+        }
     } else {
         fprintf(stderr, "[esp] room %04X: no effect bank (rc=%d)\n", room_id, rc);
+    }
+}
+
+/* Phase ESP-C draw: project each live effect particle (byte-true owner+offset world pos, same
+ * camera transform as the player) and emit a billboard quad textured from the effect TIM.
+ * FAITHFUL-LINE (flagged): the exact anim-record -> coord-cell mapping + the cell's screen
+ * geometry are the data-driven bit (C3_RENDER_DESIGN.md §2c, TBD via live capture); here the
+ * cell index = frame % count_b, a fixed 24px UV span at the cell's byte-true (u,v) origin, and a
+ * ~world-600 half-size billboard. Position + effect TIM + cell origin are byte-true. */
+static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy)
+{
+    extern int  re15_render_pc_dbg_slot_loaded(int slot);
+    extern void re15_render_pc_bind_tim_slot(int slot);
+    if (!re15_render_pc_dbg_slot_loaded(RE15_TIM_SLOT_EFFECT)) return;   /* no effect TIM loaded */
+    const re15_esp_t *bank = re15_esp_room_bank();
+    re15_render_pc_bind_tim_slot(RE15_TIM_SLOT_EFFECT);
+    for (int i = 0; i < RE15_ESP_FX_MAX; i++) {
+        const re15_esp_fx_t *f = re15_esp_fx_get(i);
+        if (!f) continue;
+        float wx = (float)f->x, wy = (float)f->y, wz = (float)f->z;
+        float vx = (cam->rot[0]*wx + cam->rot[1]*wy + cam->rot[2]*wz) / 4096.0f + cam->trans[0];
+        float vy = (cam->rot[3]*wx + cam->rot[4]*wy + cam->rot[5]*wz) / 4096.0f + cam->trans[1];
+        float vz = (cam->rot[6]*wx + cam->rot[7]*wy + cam->rot[8]*wz) / 4096.0f + cam->trans[2];
+        if (vz < 1.0f) continue;                      /* behind / on the camera plane */
+        float proj = (float)cam->fov_screen_dist / vz;
+        int sx = cx + RNDI(vx * proj), sy = cy + RNDI(vy * proj);
+        re15_esp_coord_t c = {0, 0, 0, 0};            /* byte-true cell origin (u,v) */
+        if (bank && f->eff_idx >= 0) {
+            int nb = bank->eff[f->eff_idx].count_b;
+            if (nb > 0) re15_esp_coord(bank, f->eff_idx, f->frame % nb, &c);
+        }
+        int half = (int)(600.0f * proj); if (half < 3) half = 3; if (half > 120) half = 120;
+        int u0 = c.u, v0 = c.v, u1 = c.u + 24, v1 = c.v + 24;   /* faithful 24px UV cell */
+        int z = (int)vz >> 4;
+        re15_render_textured_tri(sx-half, sy-half, u0, v0,  sx+half, sy-half, u1, v0,
+                                 sx-half, sy+half, u0, v1,  0, 0, z, 128, 128, 128);
+        re15_render_textured_tri(sx+half, sy-half, u1, v0,  sx+half, sy+half, u1, v1,
+                                 sx-half, sy+half, u0, v1,  0, 0, z, 128, 128, 128);
     }
 }
 
@@ -2671,6 +2724,9 @@ int main(int argc, char *argv[])
 
             /* Cut/player HUD + projection marker silenced. */
             (void)active_cut_count;
+
+            /* Phase ESP-C: draw the op-0x3a effect particles (after actors, in cam_view scope). */
+            pc_draw_effects(&cam_view, cx, cy);
         }
 
 
