@@ -1,13 +1,18 @@
-# RE1.5 Port — Session-Handover (Stand 2026-06-30, Phase 8.12: Enemy-Modelle laden + Death/Hurt-Anim)
+# RE1.5 Port — Session-Handover (Stand 2026-06-30, Phase 8.13: Enemy-Combat-Animation komplett)
 
-> **NEUESTE SESSION (8.12) — die HURT-Stagger-Anim + Hit-Stun ist byte-true portiert (Commit 2f3cec99).** RE'd via
-> Workflow `hurt-stagger-re` (5 Finder + adversariale Verify, 18 Agenten). Der geschossene Zombie zuckt jetzt (Stagger-Clip
-> {2,3,4,5}) + ist ~2-3 Frames handlungsunfähig (Hit-Stun `+0x1dc`, Seed 4..7, −step[+0x5]/Frame), statt sofort zu ACTIVE zu
-> snappen. Neue dedizierte Actor-Felder (`hurt_clip`/`hit_stun` — NICHT `ai_target_x` wiederverwendet, Workflow-Must-Fix).
-> Death (8.11) + Hurt (8.12) sind die sichtbare empfangende Seite. **Verifikations-Schuld (C11):** kein Savestate bezeugt HURT
-> → ein „Zombie schießen"-Capture bestätigt Clip/Stun-Dauer dynamisch + klärt die Gunshot-`+0x5=2`-NULL-Row (C4). Details §8.12.
+> **NEUESTE SESSION (8.13) — die PER-STATE Animations-Clips (engage/turn/grab) sind byte-true portiert (Commit 475093f7).**
+> RE'd via Workflow `enemy-anim-clips-re` (5 Finder + adversariale Verify, 18 Agenten). Der Zombie animiert jetzt durch seinen
+> GANZEN Combat-Lebenszyklus: feeding → (wake) → ENGAGE (idle-track clip +0x1d4) → TURN (variant clip @entry) → GRAB
+> (clips (+0x5−3)*3+{0,1} → release 17) → HURT (8.12) / DEATH (8.11). Damit ist die sichtbare Gegner-Combat-Animation komplett
+> für ROOM1140. Geflaggt-aber-deferred (RE'd): Stand-up-Ramp 27→28→29 (braucht Anim-Dauer-Timing), Forward-Walk/Search-Clips
+> (m0 nicht live erreicht). Details §8.13.
 >
-> **VORSESSION (8.11) — die Anim-PRÄSENTATION ist entsperrt.** Großer Befund: die „Anim-Schicht"
+> **VORSESSION (8.12) — HURT-Stagger + Hit-Stun byte-true (2f3cec99):** geschossener Zombie zuckt (Clip {2,3,4,5}) + ~2-3 Frames
+> Stun (`+0x1dc` Seed 4..7). **VORSESSION (8.11) — die Anim-PRÄSENTATION entsperrt** (Enemy-Modelle laden aus CDEMD*.EMS +
+> Death-Anim). **Verifikations-Schuld (C11):** kein Savestate bezeugt HURT/Grab-mid → ein „Zombie schießen"-Capture bestätigt
+> Clip/Stun/Grab-Clips dynamisch + klärt die Gunshot-`+0x5=2`-NULL-Row (C4).
+>
+> **ÄLTER (8.11) — die Anim-PRÄSENTATION ist entsperrt.** Großer Befund: die „Anim-Schicht"
 > war in Wahrheit auf das **Enemy-Modell-LADEN** geblockt — die Gegnermodelle liegen NUR in `EMD/CDEMD0.EMS`/`CDEMD1.EMS`
 > (~4,7 MB Archive), NICHT als per-Typ `EM<NN>.EMD`; `pc_enemy_load` (las `EM%02X.EMD`) scheiterte für JEDEN Typ → kein
 > Gegner renderte mit echtem Modell → gar keine Anim möglich. **GELÖST (Commit 0e2203a8):** neuer engine-seitiger EMS-Index
@@ -527,6 +532,21 @@ fortgesetzt). Der geschossene Zombie zuckt jetzt + ist kurz handlungsunfähig, s
   seedet 1× im Init + time-shared mit ai_target_x — faithful-line); (b) der Gunshot setzt `+0x5=weapon_id`(Pistole 2) → die
   Original-Stagger-Row für +0x5=2 ist NULL (C4) + kein Savestate bezeugt HURT (C11) → der Port spielt den verifizierten
   kanonischen Stagger (Step für +0x5=2 = byte-true −2); die exakte Original-Pistolen-Reaktion = Verifikations-Schuld (Capture).
+
+### 8.13 — PER-STATE ANIMATIONS-CLIPS (engage/turn/grab) byte-true (ERLEDIGT, Commit 475093f7) → der Zombie animiert durch den ganzen Combat
+RE'd via Workflow `enemy-anim-clips-re` (5 Finder + adversariale Verify, 18 Agenten). Jeder Live-State spielt jetzt seinen
+byte-true `+0x94`-motion-Clip, nicht nur Hurt/Death. Alle Clips re-disasm-verifiziert.
+- **ENGAGE** (+0x5=2, animate @0x801021f8): `motion = +0x1d4` variant {2,3,4,5} (derselbe per-Spawn-Clip wie Hurt/Turn).
+- **TURN** (+0x5=7, FUN_80102dc8): bei Entry (`+0x6==0`-Latch) `motion = +0x1d4` variant + `anim_frame=0` (@0x80102e00/08/18).
+- **GRAB** (+0x5=3/4, FUN_80102548): per Sub-Step `+0x94 = (+0x5−3)*3 + {0,1}` → Face-Grab {0,1}, Behind {3,4} (@0x801025bc/
+  0x80102714); RELEASE = Literal-Clip 17 (@0x80102a64). K=2-Hold-Step collapsed (faithful-line).
+- **Verifiziert aber NICHT gewired (ehrlich geflaggt):** Init schreibt `g_entity+0x94` NICHT (das „init=motion 0" war FALSCH/
+  refuted — das einzige sh-to-148 trifft `*(entity+0x188)+0x94`, ein bbox-Sub-Record); Feeding/Liege-Pose = inferred clip-0
+  (struct-zero). **STAND-UP** Get-up-Clips 27→28→29 (@0x80103c20/d7c/f44): RE'd, Ramp deferred (braucht Anim-Dauer-Timing).
+  **FORWARD-WALK** (clip +0x5+4=9/10) + **SEARCH** (clip 0/1): byte-true RE'd, aber von ROOM1140 m0 nicht live erreicht → optional.
+- `re15_ai_set_state_word` resettet `+0x6` aus den High-Bytes des State-Words (0x701/0x301/0x401/0x201 → +0x6=0) → die Turn-/
+  Grab-Entry-Latches sind sauber. test Part(15). 32/32 ctest. **NÄCHSTER SCHRITT:** Stand-up-Ramp (braucht Anim-Dauer), Player-
+  Aim/Muzzle-Anim, Game-Over/Fade, oder das HURT/Grab-Verifikations-Capture (C11).
 
 Werkzeuge: **`re15-psx-disasm`** (EXE/Overlay-Disasm), **`re15-savestate-ghidra`** (Live-RAM +
 Tabellen-Patch-Check), **`re15-room-capture`** (Raum laden/provozieren). Memory `reai-v2-foundation-combat`
