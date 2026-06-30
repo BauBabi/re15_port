@@ -37,6 +37,22 @@ static void wr_u32(uint8_t *p, uint32_t v)
     p[0] = (uint8_t)v; p[1] = (uint8_t)(v >> 8); p[2] = (uint8_t)(v >> 16); p[3] = (uint8_t)(v >> 24);
 }
 
+/* The shared 7-way signed comparison (jump tables @0x80010c3c [op23] / @0x80010cdc [op3e]):
+ * 0 == · 1 > · 2 >= · 3 < · 4 <= · 5 != · 6 (lhs & rhs) != 0; selector >= 7 -> 0. */
+static int espvm_cmp7(int sel, int16_t lhs, int16_t rhs)
+{
+    switch (sel) {
+        case 0: return lhs == rhs;
+        case 1: return lhs >  rhs;
+        case 2: return lhs >= rhs;
+        case 3: return lhs <  rhs;
+        case 4: return lhs <= rhs;
+        case 5: return lhs != rhs;
+        case 6: return (lhs & rhs) != 0;
+        default: return 0;
+    }
+}
+
 /* op 0x0c wait-condition gate (the port's stand-in for the FUN_8004efe4(0x800aca3c,0x1a) /
  * DAT_800b8520&0x80 global pause flags). Default 0 = normal play. */
 static int s_espvm_wait_gate = 0;
@@ -114,6 +130,8 @@ static int op_init_state(re15_espvm_instance_t *inst);
 static int op_member_set_imm(re15_espvm_instance_t *inst);
 static int op_member_set_reg(re15_espvm_instance_t *inst);
 static int op_anim_flags(re15_espvm_instance_t *inst);
+static int op_get_field(re15_espvm_instance_t *inst);
+static int op_get_field_cmp(re15_espvm_instance_t *inst);
 
 /* Install the ported real opcode table (PTR_800744a8). Unported entries stay the stub. C2 grows
  * this as more @0x800744a8 handlers are reverse-engineered. NB: re15_espvm_reset() must call this
@@ -154,6 +172,8 @@ static void re15_espvm_install_ops(void)
     s_optable[0x33] = op_set_rot;      /* set bound actor rotation x/y/z (0x80041080) */
     s_optable[0x34] = op_member_set_imm; /* member-set immediate (0x800410b8) */
     s_optable[0x35] = op_member_set_reg; /* member-set from register (0x80041108) */
+    s_optable[0x3d] = op_get_field;      /* get entity field -> register (0x80041238) */
+    s_optable[0x3e] = op_get_field_cmp;  /* compare entity field -> CONT/YIELD (0x80041290) */
     s_optable[0x42] = op_init_state;   /* init bound actor state block (0x80041f88) */
     s_optable[0x43] = op_anim_flags;   /* anim_flags SET/OR/XOR (0x80041fb8) */
     s_optable[0x1b] = op_for_begin_reg;/* FOR-begin, count from register (0x8003f5d0) */
@@ -759,6 +779,32 @@ static int op_anim_flags(re15_espvm_instance_t *inst)
     return RE15_ESPVM_RET_CONT;
 }
 
+/* 0x3d: get-field -> register — reg[u8@pc+1] = the bound entity's member[u8@pc+2] (the byte-true
+ * 20-member get-dispatch FUN_80041358 = re15_actor_get_member, low 16 bits). pc+=3; CONT. (0x80041238) */
+static int op_get_field(re15_espvm_instance_t *inst)
+{
+    uint32_t pc   = INST_PC(inst);
+    uint8_t  ridx = inst->code_base[pc + 1];
+    uint8_t  sel  = inst->code_base[pc + 2];
+    INST_SETPC(inst, pc + 3);
+    int32_t v = re15_actor_get_member(inst->bound_slot, sel);
+    wr_u16(s_reg + (uint32_t)ridx * 2, (uint16_t)v);
+    return RE15_ESPVM_RET_CONT;
+}
+
+/* 0x3e: get-field compare — compare the bound entity's member[(w&0xff)] (w=u16@pc+2) against
+ * s16@pc+4 by selector (w>>8), via the shared 7-way compare. Returns CONT if true else YIELD (the
+ * IF mechanism, like 0x23 but the LHS is an entity field). pc+=6. (0x80041290) */
+static int op_get_field_cmp(re15_espvm_instance_t *inst)
+{
+    uint32_t pc  = INST_PC(inst);
+    uint16_t w   = rd_u16(inst->code_base + pc + 2);
+    int16_t  rhs = (int16_t)rd_u16(inst->code_base + pc + 4);
+    INST_SETPC(inst, pc + 6);
+    int16_t  lhs = (int16_t)re15_actor_get_member(inst->bound_slot, (uint8_t)(w & 0xff));
+    return espvm_cmp7(w >> 8, lhs, rhs) ? RE15_ESPVM_RET_CONT : RE15_ESPVM_RET_YIELD;
+}
+
 /* 0x19: pop level — level--; pc = saved-pc[level-1] (+0x144 + (level-1)*4); restore the loop
  * stack pointer. CONT. (0x8003fc50; reads level unsigned then decrements, byte-true) */
 static int op_pop_level(re15_espvm_instance_t *inst)
@@ -867,18 +913,7 @@ static int op_reg_compare(re15_espvm_instance_t *inst)
     int16_t  rhs = (int16_t)rd_u16(inst->code_base + pc + 4);
     INST_SETPC(inst, pc + 6);
     int16_t  lhs = (int16_t)rd_u16(s_reg + (uint32_t)(w & 0xff) * 2);
-    int      res;
-    switch (w >> 8) {
-        case 0: res = (lhs == rhs);            break;
-        case 1: res = (lhs >  rhs);            break;
-        case 2: res = (lhs >= rhs);            break;
-        case 3: res = (lhs <  rhs);            break;
-        case 4: res = (lhs <= rhs);            break;
-        case 5: res = (lhs != rhs);            break;
-        case 6: res = ((lhs & rhs) != 0);      break;   /* bitwise-AND test */
-        default: res = 0;                      break;
-    }
-    return res ? RE15_ESPVM_RET_CONT : RE15_ESPVM_RET_YIELD;
+    return espvm_cmp7(w >> 8, lhs, rhs) ? RE15_ESPVM_RET_CONT : RE15_ESPVM_RET_YIELD;
 }
 
 /* 0x26: reg[w>>8] op= s16@pc+4, op = w&0xff; w=u16@pc+2. pc+=6; CONT. (0x8004008c) */

@@ -1,7 +1,7 @@
 # RE1.5 Effect-Script VM — Opcode Map (@0x800744a8, 95 ops 0x00-0x5e)
 
 Dispatch: `FUN_8003f0a0` runs `(*table[*pc])(instance)` per active 0x170-instance. Port: `re15_esp_vm.c`.
-Status: **✅PORTED** = byte-true in re15_esp_vm.c (re15_espvm_install_ops) + tested (test_esp_vm). **42/95 ported.**
+Status: **✅PORTED** = byte-true in re15_esp_vm.c (re15_espvm_install_ops) + tested (test_esp_vm). **44/95 ported.**
 Classification of 0x0d-0x5e by the 77-agent workflow (2026-06-30); every PORTED row self-disassembled before porting.
 `portable_now` = pure instance-local + bytecode operands (no external pool/work-struct/GTE/audio).
 ⚠️ The rows marked `·portable` were AGENT-flagged portable but self-verified to deref the work-struct @inst+0x154
@@ -65,8 +65,8 @@ or the effect pool DAT_800b2368 -> actually **defer** (see deferred groups).
 | 0x3a | 0x80041864 | —defer | draw-sprite | 0x80019700 | Opcode 0x3a reads a 16-byte bytecode record, selects an external base/struct address via a 6-entry inner dispatch (a1&0xff indexing globals  |
 | 0x3b | 0x800405bc | —defer | external-global |  | Opcode 0x3b: looks up a global "trigger/event" table slot (@0x800ac9b0 + operand[pc+1]*4); if the slot is 0, bumps a global byte counter @0x |
 | 0x3c | 0x800403ac | —defer | external-global |  | Opcode 0x3c: cut/freeze-flag toggle — reads 1 operand byte at [pc+1]; operand==1 clears bit 0x100 of external global DAT_800aca3c, else sets |
-| 0x3d | 0x80041238 | —defer | external-global | 0x80041358 | "Get game-object field (selector=op2, source=instance+0x154 referent, via FUN_80041358's 0x14-entry field-dispatch) and store the s16 result |
-| 0x3e | 0x80041290 | —defer | control-flow | 0x80041358 | Conditional/control-flow opcode: reads an external object pointer at instance+0x154, queries one of 20 of its fields (selector lo-byte of u1 |
+| 0x3d | 0x80041238 | ✅PORTED | external-global | 0x80041358 | "Get game-object field (selector=op2, source=instance+0x154 referent, via FUN_80041358's 0x14-entry field-dispatch) and store the s16 result |
+| 0x3e | 0x80041290 | ✅PORTED | control-flow | 0x80041358 | Conditional/control-flow opcode: reads an external object pointer at instance+0x154, queries one of 20 of its fields (selector lo-byte of u1 |
 | 0x3f | 0x80041b90 | ·portable | field-setter |  | Opcode 0x3f: set-animation/state on the instance's +0x154 work struct — writes anim-id (0x05=operand byte), mode=4 (0x04), low operand byte  |
 | 0x40 | 0x80041be4 | —defer | draw-sprite |  | Opcode 0x40: configures a sprite/effect render record (pointed at by instance+0x140) — sets a flags-gated animation state, position params ( |
 | 0x41 | 0x80041e98 | —defer | draw-sprite |  | Opcode 0x41: configures the instance's associated draw/sprite primitive (struct at instance+0x154) — sets a GPU blend/primitive code byte at |

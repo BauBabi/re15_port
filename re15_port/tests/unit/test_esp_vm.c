@@ -829,8 +829,33 @@ static int run_work_op_tests(void)
     re15_espvm_alloc(0, 0, s_wcode); re15_espvm_run_all();
     if (g_actors[0].anim_flags != 0x0f0f) { fprintf(stderr, "FAIL: (13h) op43 anim_flags=0x%x\n", g_actors[0].anim_flags); fail = 1; }
 
+    /* (13i) op3d get-field -> register: reg[5] = member 4 (rot_y) of the bound player. */
+    for (int i = 0; i < 48; i++) s_wcode[i] = 0;
+    s_wcode[0]=0x20;
+    s_wcode[0x20]=0x2e; s_wcode[0x21]=0x01; s_wcode[0x22]=0x00;
+    s_wcode[0x23]=0x3d; s_wcode[0x24]=0x05; s_wcode[0x25]=0x04; s_wcode[0x26]=0xFF;
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    g_actors[0].rot_y = 0x0321; re15_espvm_reg_set(5, 0);
+    re15_espvm_alloc(0, 0, s_wcode); re15_espvm_run_all();
+    if (re15_espvm_reg_get(5) != 0x0321) { fprintf(stderr, "FAIL: (13i) op3d reg5=0x%x\n", re15_espvm_reg_get(5)); fail = 1; }
+
+    /* (13j) op3e get-field compare: member 19 (hp) >= 40. true -> CONT (tick runs); false -> YIELD. */
+    for (int i = 0; i < 48; i++) s_wcode[i] = 0;
+    s_wcode[0]=0x20;
+    s_wcode[0x20]=0x2e; s_wcode[0x21]=0x01; s_wcode[0x22]=0x00;
+    s_wcode[0x23]=0x3e; s_wcode[0x25]=0x13; s_wcode[0x26]=0x02; /* w = sel(>=)<<8 | member 19 */
+    s_wcode[0x27]=40; s_wcode[0x28]=0x00; s_wcode[0x29]=0xF4; s_wcode[0x2a]=0xFF;  /* rhs=40; tick; halt */
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt); re15_espvm_set_opcode(0xF4, op_tick);
+    g_actors[0].hp = 50; s_tick = 0;
+    re15_espvm_alloc(0, 0, s_wcode); re15_espvm_run_all();
+    if (s_tick != 1) { fprintf(stderr, "FAIL: (13j) op3e hp>=40 true: tick=%d\n", s_tick); fail = 1; }
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt); re15_espvm_set_opcode(0xF4, op_tick);
+    g_actors[0].hp = 30; s_tick = 0;
+    re15_espvm_alloc(0, 0, s_wcode); re15_espvm_run_all();
+    if (s_tick != 0) { fprintf(stderr, "FAIL: (13j) op3e hp>=40 false: tick=%d\n", s_tick); fail = 1; }
+
     if (!fail) printf("  (13) PASS: work-target ops byte-true "
-                      "(bind/clear, set-pos/rot/state, member-set imm+reg, anim_flags)\n");
+                      "(bind/clear, set-pos/rot/state, member-set, anim_flags, get-field + get-field-compare)\n");
     return fail;
 }
 
