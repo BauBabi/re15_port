@@ -66,10 +66,12 @@ enum {
     RE15_ESPVM_RET_STOP  = 2    /* instance done for this frame                                 */
 };
 
-/** One effect-VM instance (the 0x170-byte image, plus the port-side bytecode base). */
+/** One effect-VM instance (the 0x170-byte image, plus port-side handles). */
 typedef struct {
     uint8_t        mem[RE15_ESPVM_STRIDE];  /* byte-true instance image (offsets above)          */
     const uint8_t *code_base;               /* DAT_800b3f70 analog (the bytecode blob base)      */
+    int16_t        bound_slot;              /* op2e work-target: g_actors[] slot, or -1 = none.
+                                             * Replaces the original mem[+0x154] entity pointer. */
 } re15_espvm_instance_t;
 
 /** An opcode handler: reads/advances `inst` and returns one of RE15_ESPVM_RET_*. */

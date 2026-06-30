@@ -7,7 +7,9 @@
  * handlers are stubs (C2) and there is no GPU draw / game_step wiring (C3) yet.
  */
 #include "re15_esp_vm.h"
+#include "re15_actor.h"   /* op2e/op32 work-target = a g_actors[] entity */
 #include <string.h>
+#include <stdint.h>
 
 /* The 0x170-instance pool (DAT_800b2b4c; 10 instances). The original packs the menu pool into the
  * same array (slots 10..13, DAT_800b3f7a==1 path); the port models the in-game pool (slots 0..9). */
@@ -105,6 +107,10 @@ static int op_gosub(re15_espvm_instance_t *inst);
 static int op_if_begin(re15_espvm_instance_t *inst);
 static int op_cond_chain(re15_espvm_instance_t *inst);
 static int op_switch(re15_espvm_instance_t *inst);
+static int op_set_target(re15_espvm_instance_t *inst);
+static int op_set_pos(re15_espvm_instance_t *inst);
+static int op_set_rot(re15_espvm_instance_t *inst);
+static int op_init_state(re15_espvm_instance_t *inst);
 
 /* Install the ported real opcode table (PTR_800744a8). Unported entries stay the stub. C2 grows
  * this as more @0x800744a8 handlers are reverse-engineered. NB: re15_espvm_reset() must call this
@@ -138,8 +144,12 @@ static void re15_espvm_install_ops(void)
     s_optable[0x18] = op_gosub;        /* GOSUB / push level (0x8003fbe8) */
     s_optable[0x19] = op_pop_level;    /* pop level (0x8003fc50) */
     s_optable[0x1a] = op_for_break;    /* FOR-break (0x8003fca8) */
+    s_optable[0x2e] = op_set_target;   /* bind work-target to an actor (0x80040d2c) */
     s_optable[0x2f] = op_set_u16;      /* set instance u16 field (0x80040f14) */
     s_optable[0x31] = op_integrate;    /* per-frame position integrator (0x80040fd4) */
+    s_optable[0x32] = op_set_pos;      /* set bound actor position x/y/z (0x80041048) */
+    s_optable[0x33] = op_set_rot;      /* set bound actor rotation x/y/z (0x80041080) */
+    s_optable[0x42] = op_init_state;   /* init bound actor state block (0x80041f88) */
     s_optable[0x1b] = op_for_begin_reg;/* FOR-begin, count from register (0x8003f5d0) */
     s_optable[0x23] = op_reg_compare;  /* register compare -> CONT/YIELD (0x8003ff68) */
     s_optable[0x24] = op_reg_set;      /* register = s16 imm (0x80040018) */
@@ -181,7 +191,8 @@ int re15_espvm_active_count(void)
  * *(uint*)(param_1+0x1c)  = DAT_800b3f70 + *(u16*)(param_2*2 + DAT_800b3f70);   (pc = base+off) */
 static void re15_espvm_init(re15_espvm_instance_t *inst, uint16_t bytecode_id, const uint8_t *code_base)
 {
-    inst->code_base = code_base;
+    inst->code_base  = code_base;
+    inst->bound_slot = -1;             /* no work-target until op2e binds one */
     inst->mem[RE15_ESPVM_OFF_ACTIVE] = 1;
     inst->mem[RE15_ESPVM_OFF_OP0]    = 0;
     inst->mem[RE15_ESPVM_OFF_DEPTH0] = 0xff;
@@ -627,6 +638,77 @@ static int op_switch(re15_espvm_instance_t *inst)
         a3 += skip;                                                  /* skip to next case */
     }
     INST_SETPC(inst, a3);
+    return RE15_ESPVM_RET_CONT;
+}
+
+/* ---- Phase ESP-C2 batch 8 — the work-target ops (the effect VM pokes a game entity) ---------
+ * op2e binds inst[+0x154] to a game object; the field-setters then write entity fields through it.
+ * The original targets are the player (0x800aca54), the entity list (0x800acc2c, stride 0x1f4),
+ * the effect-sprite pool (0x800b3f98, stride 0x94), or a pointer table (0x800b23f4). The port maps
+ * the actor targets (player + entity list) onto g_actors[]; the effect-sprite / pointer-table
+ * targets (kind 3/5) are deferred. The bound slot lives in inst->bound_slot (replacing the 32-bit
+ * mem[+0x154] pointer). Disasm-verified @0x80040d2c / @0x80041048. */
+
+/* 0x2e: set-target — clear inst[0x158..0x16f]; bind kind=u8@pc+1 / index=u8@pc+2: kind 1 -> player
+ * (slot 0), kind 2 -> entity slot `index`; kind 3 (effect-sprite pool) / 5 (pointer table) deferred
+ * (bound_slot = -1). pc+=3; CONT. (0x80040d2c) */
+static int op_set_target(re15_espvm_instance_t *inst)
+{
+    memset(inst->mem + 0x158, 0, 6 * 4);             /* clear the 6 pos/vel words */
+    uint32_t pc   = INST_PC(inst);
+    uint8_t  kind = inst->code_base[pc + 1];
+    uint8_t  idx  = inst->code_base[pc + 2];
+    INST_SETPC(inst, pc + 3);
+    if (kind == 1)
+        inst->bound_slot = RE15_ACTOR_SLOT_PLAYER;
+    else if (kind == 2)
+        inst->bound_slot = (idx < RE15_ACTOR_MAX) ? (int16_t)idx : -1;
+    else
+        inst->bound_slot = -1;                        /* kind 3/5 = non-actor pools, deferred */
+    return RE15_ESPVM_RET_CONT;
+}
+
+/* 0x32: set-position — write three s16 operands (sign-extended to 32-bit) to the bound entity's
+ * x/y/z (entity +0x34/+0x38/+0x3c = actor.x/y/z, RE1.5 Member ids 0/1/2). pc+=8; CONT. (0x80041048) */
+static int op_set_pos(re15_espvm_instance_t *inst)
+{
+    uint32_t pc = INST_PC(inst);
+    int16_t  x  = (int16_t)rd_u16(inst->code_base + pc + 2);
+    int16_t  y  = (int16_t)rd_u16(inst->code_base + pc + 4);
+    int16_t  z  = (int16_t)rd_u16(inst->code_base + pc + 6);
+    INST_SETPC(inst, pc + 8);
+    if (inst->bound_slot >= 0 && inst->bound_slot < RE15_ACTOR_MAX) {
+        re15_actor_t *t = &g_actors[inst->bound_slot];
+        t->x = x; t->y = y; t->z = z;
+    }
+    return RE15_ESPVM_RET_CONT;
+}
+
+/* 0x33: set-rotation — write three u16 operands to the bound entity's rot_x/y/z (entity
+ * +0x68/+0x6a/+0x6c). pc+=8; CONT. (0x80041080) */
+static int op_set_rot(re15_espvm_instance_t *inst)
+{
+    uint32_t pc = INST_PC(inst);
+    uint16_t rx = rd_u16(inst->code_base + pc + 2);
+    uint16_t ry = rd_u16(inst->code_base + pc + 4);
+    uint16_t rz = rd_u16(inst->code_base + pc + 6);
+    INST_SETPC(inst, pc + 8);
+    if (inst->bound_slot >= 0 && inst->bound_slot < RE15_ACTOR_MAX) {
+        re15_actor_t *t = &g_actors[inst->bound_slot];
+        t->rot_x = (int16_t)rx; t->rot_y = (int16_t)ry; t->rot_z = (int16_t)rz;
+    }
+    return RE15_ESPVM_RET_CONT;
+}
+
+/* 0x42: init-state — set the bound entity's state block: state(+0x4)=1, sub_state_1/2/3(+0x5/6/7)=0.
+ * pc+=1; CONT. (0x80041f88) */
+static int op_init_state(re15_espvm_instance_t *inst)
+{
+    INST_SETPC(inst, INST_PC(inst) + 1);
+    if (inst->bound_slot >= 0 && inst->bound_slot < RE15_ACTOR_MAX) {
+        re15_actor_t *t = &g_actors[inst->bound_slot];
+        t->state = 1; t->sub_state_1 = 0; t->sub_state_2 = 0; t->sub_state_3 = 0;
+    }
     return RE15_ESPVM_RET_CONT;
 }
 

@@ -9,6 +9,7 @@
  * be tested standalone. They do not claim to implement any real @0x800744a8 opcode semantics.
  */
 #include "re15_esp_vm.h"
+#include "re15_actor.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -721,6 +722,85 @@ static int run_cond_op_tests(void)
     return fail;
 }
 
+/* ESP-C2 batch 8 — the work-target ops 0x2e (bind) / 0x32 (set position). */
+static uint8_t s_wcode[48];
+
+static int run_work_op_tests(void)
+{
+    int fail = 0;
+    printf("  --- ESP-C2 batch 8: work-target ops 0x2e (bind) / 0x32 (set-pos) ---\n");
+
+    /* (13a) bind to the player (kind 1) and set its position. */
+    for (int i = 0; i < 48; i++) s_wcode[i] = 0;
+    s_wcode[0]=0x20;
+    s_wcode[0x20]=0x2e; s_wcode[0x21]=0x01; s_wcode[0x22]=0x00;     /* bind kind 1 (player slot 0) */
+    s_wcode[0x23]=0x32; s_wcode[0x25]=100; s_wcode[0x27]=200;
+    s_wcode[0x29]=(uint8_t)300; s_wcode[0x2a]=(uint8_t)(300>>8); s_wcode[0x2b]=0xFF;
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    g_actors[0].x = g_actors[0].y = g_actors[0].z = -1;
+    re15_espvm_instance_t *w = re15_espvm_alloc(0, 0, s_wcode);
+    re15_espvm_run_all();
+    if (w->bound_slot != 0 || g_actors[0].x != 100 || g_actors[0].y != 200 || g_actors[0].z != 300 ||
+        re15_espvm_get_pc(w) != 0x2b) {
+        fprintf(stderr, "FAIL: (13a) player bind/set-pos slot=%d x=%d y=%d z=%d pc=0x%x\n",
+                w->bound_slot, g_actors[0].x, g_actors[0].y, g_actors[0].z, re15_espvm_get_pc(w)); fail = 1; }
+
+    /* (13b) bind to an entity slot (kind 2, index 3) and set its position. */
+    for (int i = 0; i < 48; i++) s_wcode[i] = 0;
+    s_wcode[0]=0x20;
+    s_wcode[0x20]=0x2e; s_wcode[0x21]=0x02; s_wcode[0x22]=0x03;     /* bind kind 2 entity slot 3 */
+    s_wcode[0x23]=0x32; s_wcode[0x25]=50; s_wcode[0x27]=60; s_wcode[0x29]=70; s_wcode[0x2b]=0xFF;
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    g_actors[3].x = g_actors[3].y = g_actors[3].z = -1;
+    re15_espvm_instance_t *w2 = re15_espvm_alloc(0, 0, s_wcode);
+    re15_espvm_run_all();
+    if (w2->bound_slot != 3 || g_actors[3].x != 50 || g_actors[3].y != 60 || g_actors[3].z != 70) {
+        fprintf(stderr, "FAIL: (13b) entity bind/set-pos slot=%d x=%d y=%d z=%d\n",
+                w2->bound_slot, g_actors[3].x, g_actors[3].y, g_actors[3].z); fail = 1; }
+
+    /* (13c) op2e clears the 6 pos/vel words @+0x158, and an unsupported kind (3) leaves bound_slot=-1. */
+    for (int i = 0; i < 48; i++) s_wcode[i] = 0;
+    s_wcode[0]=0x20;
+    s_wcode[0x20]=0x2e; s_wcode[0x21]=0x03; s_wcode[0x22]=0x00; s_wcode[0x23]=0xFF;   /* kind 3 deferred */
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    re15_espvm_instance_t *w3 = re15_espvm_alloc(0, 0, s_wcode);
+    for (int k = 0; k < 24; k++) w3->mem[0x158 + k] = 0xAB;   /* dirty the pos/vel region */
+    re15_espvm_run_all();
+    int cleared = 1; for (int k = 0; k < 24; k++) if (w3->mem[0x158 + k] != 0) cleared = 0;
+    if (w3->bound_slot != -1 || !cleared) {
+        fprintf(stderr, "FAIL: (13c) kind3 slot=%d cleared=%d\n", w3->bound_slot, cleared); fail = 1; }
+
+    /* (13d) op33 set-rotation on the bound player. */
+    for (int i = 0; i < 48; i++) s_wcode[i] = 0;
+    s_wcode[0]=0x20;
+    s_wcode[0x20]=0x2e; s_wcode[0x21]=0x01; s_wcode[0x22]=0x00;
+    s_wcode[0x23]=0x33; s_wcode[0x25]=0x00; s_wcode[0x26]=0x04; /* rot_x=0x0400 */
+    s_wcode[0x27]=0x00; s_wcode[0x28]=0x08;                     /* rot_y=0x0800 */
+    s_wcode[0x29]=0x00; s_wcode[0x2a]=0x0c; s_wcode[0x2b]=0xFF; /* rot_z=0x0c00 */
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    g_actors[0].rot_x = g_actors[0].rot_y = g_actors[0].rot_z = -1;
+    re15_espvm_alloc(0, 0, s_wcode); re15_espvm_run_all();
+    if (g_actors[0].rot_x != 0x0400 || g_actors[0].rot_y != 0x0800 || g_actors[0].rot_z != 0x0c00) {
+        fprintf(stderr, "FAIL: (13d) op33 rot=%d/%d/%d\n", g_actors[0].rot_x, g_actors[0].rot_y, g_actors[0].rot_z); fail = 1; }
+
+    /* (13e) op42 init-state on the bound player: state=1, sub_state_1/2/3=0. */
+    for (int i = 0; i < 48; i++) s_wcode[i] = 0;
+    s_wcode[0]=0x20;
+    s_wcode[0x20]=0x2e; s_wcode[0x21]=0x01; s_wcode[0x22]=0x00;
+    s_wcode[0x23]=0x42; s_wcode[0x24]=0xFF;
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    g_actors[0].state = 9; g_actors[0].sub_state_1 = 9; g_actors[0].sub_state_2 = 9; g_actors[0].sub_state_3 = 9;
+    re15_espvm_alloc(0, 0, s_wcode); re15_espvm_run_all();
+    if (g_actors[0].state != 1 || g_actors[0].sub_state_1 != 0 ||
+        g_actors[0].sub_state_2 != 0 || g_actors[0].sub_state_3 != 0) {
+        fprintf(stderr, "FAIL: (13e) op42 state=%d sub=%d/%d/%d\n", g_actors[0].state,
+                g_actors[0].sub_state_1, g_actors[0].sub_state_2, g_actors[0].sub_state_3); fail = 1; }
+
+    if (!fail) printf("  (13) PASS: work-target ops byte-true "
+                      "(op2e bind player/entity/clear, op32 set-pos, op33 set-rot, op42 init-state)\n");
+    return fail;
+}
+
 int main(void)
 {
     int fail = 0;
@@ -811,6 +891,8 @@ int main(void)
     if (run_reg_op_tests()) fail = 1;
     /* (12) the conditional block evaluators 0x0f/0x12/0x13. */
     if (run_cond_op_tests()) fail = 1;
+    /* (13) the work-target ops 0x2e / 0x32. */
+    if (run_work_op_tests()) fail = 1;
 
     if (fail) { fprintf(stderr, "\nESP-VM TEST FAILED\n"); return 1; }
     printf("\nPASS: ESP effect-script VM (C1) — pool + FUN_8003f0a0 dispatch byte-true\n");
