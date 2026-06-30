@@ -214,11 +214,18 @@ Wichtige Korrektur zu §2c-§2e (die „Anim-Phase/Death-Sequenz"-Deutung war fa
   Der **effect-5-Handler `FUN_80106edc` ist master-row 0x20 (entity+5==0x20/flat 0x58) → ein HÖHERER/ANDERER Enemy**,
   NICHT der ROOM1140-m0-Zombie (der maxt bei 0x14). → **meine Gore-Bricks (effect-0 Tick / effect-5 Setup) sind
   byte-true, aber treffen ROOM1140 nicht.**
-- **Fazit:** die sichtbare ROOM1140-Zombie-Gore hat KEINEN sauberen Pfad über diese Mechanik (Zombie spawnt
-  effect-0/NULL, nicht die Room-05/07). Die Room-Effekte 05/07 sind wahrscheinlich kinematisch / für einen anderen
-  Enemy. **Nächste Einheit (byte-true, korrekt, per Mandat): den Master-Tabellen-Effekt-Dispatch porten**
-  (`FUN_80105a8c` HURT + die row-Handler) — die richtige Mechanik, auch wenn die ROOM1140-Sichtbarkeit von der
-  Effekt-ID↔Bank-Zuordnung abhängt (die noch zu klären ist: lädt das Original einen globalen Bank für effect-0?).
+- **VOLLSTÄNDIG geklärt (2026-07-01):** ALLE Master-Row-Hit-Handler spawnen **effect-id 0** — `FUN_80105b7c`
+  (rows 1/3/4, a0=0x2000), `FUN_80106290` (rows 5/6, a0=0x1000), `FUN_80106624` (rows 7/8, a0=0x2000); alle
+  `a0>>24`=0. **RDT-Survey (189 Räume): effect-05 = 161 Räume, effect-07 = 169 Räume (universell), effect-0 = 0
+  Räume.** → **effect-0 ist ein GLOBALER Hit-Effekt-Bank** (player/game-init geladen, da universell von allen
+  Hit-Handlern genutzt, aber in keinem Room-Header) — NICHT per-Room. effect-05/07 = die per-Room-Universaleffekte
+  (separater Mechanismus, wohl Sprite-Priority/ambient, nicht der Hit-Effekt). master-row 2 (Pistole) = NULL.
+- **Effekt-System VOLLSTÄNDIG kartiert.** Der sichtbare Hit-Effekt (Blut) = effect-id 0 aus dem GLOBALEN Bank,
+  dispatcht via Master-Tabelle `[entity+5=hit-zone/weapon][entity+6=hit-dir]` (HURT FUN_80105a8c), gespawnt von
+  `FUN_80105b7c`/`290`/`624`. **NÄCHSTE EINHEIT (byte-true, das fehlende Glied): (1) den GLOBALEN effect-0-Bank-Load
+  finden+porten** (wo DAT_800b2248[0] bei game/player-init gesetzt wird — scan fand nur FUN_80019354/FUN_8001945c
+  per-Room; der globale Load ist separat, evtl. ein eigenes Effekt-CD-File bei Stage-Init) **+ (2) den
+  Master-Dispatch FUN_80105a8c + die row-Handler porten.** Dann ist das Hit-Blut sichtbar (Zombie/Enemy anschießen).
 
 ## 3. op 0x3a `Sce_espr_on` (Spawn, Subsystem 2) — byte-true (16 Bytes)
 `FUN_80019700(a0,a1,a2,a3)` spawnt in `DAT_800a73b8` (verifiziert: `addiu s3,s3,29624`
