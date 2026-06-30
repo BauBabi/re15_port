@@ -2985,9 +2985,17 @@ int op_evt_chain(scd_thread_t *t)
     return 1;
 }
 
-/* (0x52) — RE1.5 = 4 bytes (disasm LAB_8004295c: flag-AND condition check, NOT a
- * sprite control; retail RE2's Sce_espr_control(6) is a different opcode). */
-int op_sce_espr_control(scd_thread_t *t)  { t->pc += 4; return 1; }
+/* (0x52) — RE1.5 = 4 bytes. byte-true LAB_8004295c is a FLAG-AND CONDITION CHECK predicate
+ * (NOT a sprite control; RE2's Sce_espr_control is a different opcode): param=pc[1], mask=u16@pc[2];
+ * cond = (mask & DAT_800ac76c) != 0 ? param : (param^1); PC+=4. Same shape as Sce_key_ck (0x51) but
+ * on flag word DAT_800ac76c. We don't model DAT_800ac76c yet → state 0 (no flag) → cond = param^1.
+ * Cross-check 2026-06-30: was a `return 1` stub (always ran the If body); now a byte-true predicate. */
+int op_sce_espr_control(scd_thread_t *t)
+{
+    uint8_t param = t->pc[1];
+    t->pc += 4;
+    return (param ^ 1) ? SCD_R_CONTINUE : SCD_R_IF_FALSE;   /* no-flag: param^1 */
+}
 /* Sce_bgm_control (0x54) — 6 bytes [op, slot, ctl, _, _, _]. The PSX handler
  * (jump-table idx 0x54 → FUN_80044da4) is the SsSeq software-sequencer slot
  * control. byte[1]=seq slot, byte[2]=ctl (1=SsSeqSetVol+SsSeqPlay loop, 2=SsSeqStop,
@@ -3049,15 +3057,15 @@ int op_xa_vol(scd_thread_t *t)            { t->pc += 2; return 1; }
 /* Sce_key_ck (0x51) — 4 bytes. */
 int op_sce_key_ck(scd_thread_t *t)
 {
-    /* byte-true predicate LAB_80042920: param=pc[1], mask=LE u16 @pc[2];
-     * cond=(mask & DAT_800ac768) ? param^1 : param; PC+=4. We don't model the
-     * per-frame action-button register DAT_800ac768 yet → state 0 → cond=param
-     * (the no-key result, exact for the cinematics we run). Return it as the
-     * dispatch boolean (FALSE pops the If block-stack). See the catalog
-     * (DAT_800ac768 + FUN_80030444) for the turnkey full register. */
+    /* byte-true predicate LAB_80042920: param=pc[1], mask=LE u16 @pc[2]; cond = (mask &
+     * DAT_800ac768) != 0 ? param : (param^1); PC+=4. The `bne v1,zero` takes the key-pressed
+     * branch (delay slot `addu v0,a1` = param); the no-key fall-through is `xori v0,a1,0x1` =
+     * param^1. We don't model the per-frame action register DAT_800ac768 yet → state 0 (no key)
+     * → cond = param^1 (NOT param — the prior comment/return had this inverted; cross-check
+     * 2026-06-30). Return it as the dispatch boolean (FALSE pops the If block-stack). */
     uint8_t param = t->pc[1];
     t->pc += 4;
-    return param ? SCD_R_CONTINUE : SCD_R_IF_FALSE;
+    return (param ^ 1) ? SCD_R_CONTINUE : SCD_R_IF_FALSE;   /* no-key: param^1 */
 }
 /* (0x5E) — RE1.5 = 4 bytes (disasm LAB_80042b04; retail RE2 Keep_Item_ck = 2). */
 int op_keep_item_ck(scd_thread_t *t)      { t->pc += 4; return 1; }

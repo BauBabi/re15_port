@@ -11,10 +11,23 @@
 > - **0x35 `op_member_set2`** read its value from a per-thread `locals[]` u8 placeholder instead of
 >   `g_scd.work_vars[pc[2]]` (global s16 = DAT_800b0fd0; byte-true `lh @0x80041138`) — wrong value.
 >
-> A 16-op handler-semantics cross-check (the ops byte-true RE'd here) was otherwise clean: 14 MATCH,
-> + 0x0d (op_for) a documented defensive count==0 deviation (byte-true would 65535-iter / hang).
-> Still to cross-check: the scd_vm.c handlers NOT byte-true RE'd here (0x06/0x14/0x17/0x21/0x22/0x2A/
-> 0x2D/0x37-0x3C/0x47/0x4A/0x4B/0x50-0x5E).
+> Two handler-semantics cross-check passes ran (16 + 35 ops, each divergence self-verified):
+> - **Pass 1 (16 ops):** 14 MATCH; 0x35 BUG (fixed); 0x0d documented-defensive count==0 deviation.
+> - **Pass 2 (35 ops):** 17 MATCH, 8 STUB, 10 DIVERGE. Fixed two clean flag-check predicates:
+>   **0x51 `sce_key_ck`** (no-key result was inverted: returned `param`, byte-true `param^1`) and
+>   **0x52 `sce_espr_control`** (was a `return 1` stub; byte-true is a flag-AND predicate = `param^1`
+>   when DAT_800ac76c unmodelled). Remaining DIVERGE need decisions/external state:
+>   - **RE2-misattributed (port runs the WRONG RE1.5 handler):** 0x47 (byte-true = object-handler
+>     dispatch via DAT_800ac9b0 registry; port does `aot_on`), 0x50 (byte-true = bytecode-ptr latch
+>     into DAT_800ac9b0; port does `item_aot_set`), 0x53 (byte-true = indirect Work_set binding
+>     inst+0x154; port stubs as `fade_set`), 0x58 (byte-true = @0x80074664 flag-bank bit-check
+>     predicate; port does `plc_rot`).
+>   - **Missing/incomplete side-effects:** 0x2d (port fabricates world collision from bytes the
+>     engine uses as inline model data), 0x38 (stub; byte-true sets an SCA collision AABB), 0x4a
+>     (port omits the entity state-4 writes via inst+0x154), 0x4b (port omits the immediate live
+>     cut-switch when active==a).
+> All 8 byte-true RE'd ops left to cross-check from the first list (0x06/0x14/0x17/0x21/0x22/0x2A/...)
+> are covered above and MATCH/STUB except as listed.
 
 Dispatch: `FUN_8003f0a0` runs `(*table[*pc])(instance)` per active 0x170-instance; each handler
 advances pc itself. The "✅PORTED" column below reflects the (now-removed) re15_esp_vm.c byte-true
