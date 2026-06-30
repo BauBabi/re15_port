@@ -60,6 +60,34 @@ static inline int RNDI(float f) {
 #include "re15_room_list.h"   /* GENERATED room-id list for the [ / ] debug room-browser */
 #include "re15_room_spawns.h" /* GENERATED per-room entry spawn (inbound-door landing spot) */
 #include "re15_anim_select.h"  /* SHARED actor bank/clip selection view-model */
+#include "re15_esp.h"          /* Phase ESP-C: op-0x3a effect-sprite bank + particle pool */
+
+/* Phase ESP-C: the current room's parsed effect-sprite bank (borrows the resident RDT buf;
+ * bound via re15_esp_set_room_bank so op_sce_espr_on can resolve effect ids to anim records). */
+static re15_esp_t s_room_esp;
+
+/* Parse `room_id`'s ESP section from its RDT and bind it as the active effect bank. */
+static void pc_load_room_esp(const uint8_t *rdt_buf, int rdt_size, unsigned room_id)
+{
+    re15_esp_fx_reset();
+    re15_esp_set_room_bank(NULL);
+    if (!rdt_buf || rdt_size < 0x5C) return;
+    #define U32LE(o) ((uint32_t)rdt_buf[o] | ((uint32_t)rdt_buf[(o)+1]<<8) | \
+                      ((uint32_t)rdt_buf[(o)+2]<<16) | ((uint32_t)rdt_buf[(o)+3]<<24))
+    uint32_t idh = U32LE(0x4C), pe = U32LE(0x50), tb = U32LE(0x54), te = U32LE(0x58);
+    #undef U32LE
+    int rc = re15_esp_parse(rdt_buf, (size_t)rdt_size, idh, pe, tb, te, &s_room_esp);
+    if (rc == 0) {
+        re15_esp_set_room_bank(&s_room_esp);
+        fprintf(stderr, "[esp] room %04X: %d effect bank(s) parsed (e.g. id 0x%02x: %u anim/%u cells)\n",
+                room_id, s_room_esp.id_count,
+                s_room_esp.id_count ? s_room_esp.eff[0].effect_id : 0,
+                s_room_esp.id_count ? s_room_esp.eff[0].count_a : 0,
+                s_room_esp.id_count ? s_room_esp.eff[0].count_b : 0);
+    } else {
+        fprintf(stderr, "[esp] room %04X: no effect bank (rc=%d)\n", room_id, rc);
+    }
+}
 
 /* AZ-round 2026-05-28: sprite.pri overdraw — push parsed mask list to
  * the renderer's overdraw layer (declared in render_pc.c). */
@@ -342,6 +370,8 @@ int main(int argc, char *argv[])
                 rdt.nCut, rdt.nDoor, rdt.nItem, rdt.zone_count,
                 rdt.main_scd_size, rdt.sub_scd_count, rdt.prop_count);
     }
+    /* Phase ESP-C: parse + bind this room's effect-sprite bank for op-0x3a spawns. */
+    pc_load_room_esp(rdt_buf, rdt_size, boot_room);
 
     /* Phase 4.6.1: SDL audio device + SCD audio queue consumer. Silent
      * playback callback until 4.6.3 wires the ADPCM mixer in. */
@@ -807,6 +837,7 @@ int main(int argc, char *argv[])
          * SCD ticks every 2nd frame so SCD remains 30Hz. */
         if (target_fps == 30 || (g_engine.frame_count & 1) == 0) {
             scd_vm_tick();
+            re15_esp_fx_tick(re15_esp_room_bank());   /* Phase ESP-C: advance effect particles (30Hz) */
             /* Walker steps once per 30 Hz SCD tick. (A 2026-06-01 disasm trace
              * suggested the PSX walker runs at 60 Hz → tried 2× stepping, but the
              * USER confirmed 2× FEELS TOO FAST vs PSX — so the PSX position-advance

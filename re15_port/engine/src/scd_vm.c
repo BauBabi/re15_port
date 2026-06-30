@@ -2861,6 +2861,10 @@ int op_sce_espr_on(scd_thread_t *t)
     re15_esp_fx_spawn(re15_esp_room_bank(), effect_id, sub_index,
                       bx + ox, by + oy, bz + oz, param);
 
+    { static int s_n = 0; if (s_n++ < 12)
+        fprintf(stderr, "[esp] op 0x3a fire #%d: id=0x%02x sub=%u off=(%d,%d,%d) ws=%d\n",
+                s_n, effect_id, sub_index, ox, oy, oz, (int)ws); }
+
     t->pc += 16;
     return 1;
 }
