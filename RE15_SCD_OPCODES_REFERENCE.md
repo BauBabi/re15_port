@@ -16,12 +16,15 @@
 > - **Pass 2 (35 ops):** 17 MATCH, 8 STUB, 10 DIVERGE. Fixed two clean flag-check predicates:
 >   **0x51 `sce_key_ck`** (no-key result was inverted: returned `param`, byte-true `param^1`) and
 >   **0x52 `sce_espr_control`** (was a `return 1` stub; byte-true is a flag-AND predicate = `param^1`
->   when DAT_800ac76c unmodelled). Remaining DIVERGE need decisions/external state:
+>   when DAT_800ac76c unmodelled).
+>   **0x58 `plc_rot` was an RE2 misattribution — FIXED:** byte-true LAB_8003fd54 is a flag-bank
+>   bit-check predicate (bank=pc[1], word=work_vars[desc&0xff]>>5, bit=desc&0x1f MSB-first, optional
+>   invert when (desc>>8)==0). Reimplemented as `op_flag_ck2` (reuses re15_game_flag_get; +3 unit
+>   tests in test_scd_opcodes). Remaining DIVERGE need decisions/external state:
 >   - **RE2-misattributed (port runs the WRONG RE1.5 handler):** 0x47 (byte-true = object-handler
 >     dispatch via DAT_800ac9b0 registry; port does `aot_on`), 0x50 (byte-true = bytecode-ptr latch
 >     into DAT_800ac9b0; port does `item_aot_set`), 0x53 (byte-true = indirect Work_set binding
->     inst+0x154; port stubs as `fade_set`), 0x58 (byte-true = @0x80074664 flag-bank bit-check
->     predicate; port does `plc_rot`).
+>     inst+0x154; port stubs as `fade_set`).
 >   - **Missing/incomplete side-effects:** 0x2d (port fabricates world collision from bytes the
 >     engine uses as inline model data), 0x38 (stub; byte-true sets an SCA collision AABB), 0x4a
 >     (port omits the entity state-4 writes via inst+0x154), 0x4b (port omits the immediate live
@@ -119,7 +122,7 @@ The 0x0d-0x5e classification came from the 77-agent workflow; every ✅ row was 
 | 0x55 | 0x80041a88 | —defer | draw-sprite | 0x80019d50 | 6-byte opcode: switch on [pc+4] picks an external target struct (0x80072d4c / 0x800aca74 / pool 0x800acc4c stride0x174 / pool 0x800b3fb8 str |
 | 0x56 | 0x80042a58 | —defer | external-global | 0x800217b0 | Opcode 0x56: reads a 16-bit id (bytes pc+1,pc+2), a byte (pc+3) and a signed half (pc+4) and forwards them with constant arg3=7 to FUN_80021 |
 | 0x57 | 0x80042ab4 | —defer | audio-se | 0x800216ec | Opcode 0x57: reads u8 id + u16 value operands and calls external helper 0x800216ec to set/queue an entry in the global table @0x800b5458 (ch |
-| 0x58 | 0x8003fd54 | —defer | control-flow |  | Opcode 0x58 = conditional flag-bit test: advances pc by 4, reads a game-flag bank (via tables @0x800b0fd0 + @0x80074664) and returns v0 = (b |
+| 0x58 | 0x8003fd54 | ✅FIXED-scd | control-flow |  | Opcode 0x58 = conditional flag-bit test: advances pc by 4, reads a game-flag bank (via tables @0x800b0fd0 + @0x80074664) and returns v0 = (b |
 | 0x59 | 0x8003fe90 | —defer | external-global |  | Opcode 0x59 = SET/CLEAR/TOGGLE one bit in an external game-flag bitfield: ptr table @0x80074664[operand1] gives flag bank, bit-map table @0x |
 | 0x5a | 0x80041474 | —defer | field-setter | 0x80041554,0x80040140 | Opcode 0x5a: resolve a target halfword field (via jump-table helper 0x80041554, off instance field 0x154) and apply an arithmetic/bitwise op |
 | 0x5b | 0x800414e0 | —defer | field-setter | 0x80041554,0x80040140 | Opcode 0x5b: apply an arithmetic op (selector [pc+1], range<0xc) using an s16 constant from global table DAT_800b0fd0[[pc+3]] to a resolved  |

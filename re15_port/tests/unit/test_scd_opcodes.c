@@ -883,6 +883,49 @@ static int test_gosub_block_isolation(void)
     return 0;
 }
 
+/* op_flag_ck2 (0x58) — byte-true flag-bank bit-check predicate (LAB_8003fd54; the prior op_plc_rot
+ * was an RE2 misattribution). desc=u16@pc[2], bank=pc[1]; word = work_vars[desc&0xff]>>5,
+ * bit = desc&0x1f, invert when (desc>>8)==0. Same IF/predicate/body layout as test_if_true. */
+static int test_flag_ck2(void)
+{
+    int fail = 0;
+    /* (a) TRUE: work_vars[3]=0 -> word 0, bit 3; flag(5,3)=1; desc=0x0103 (hi!=0, no invert) -> body runs. */
+    {
+        uint8_t bc[13]; memset(bc, SCD_OP_NOP, sizeof(bc));
+        bc[0]=SCD_OP_IF; bc[1]=0; write_le16(bc+2, 8);
+        bc[4]=0x58; bc[5]=5; write_le16(bc+6, 0x0103);
+        bc[8]=SCD_OP_SET; bc[9]=6; bc[10]=0; bc[11]=1; bc[12]=SCD_OP_EVT_END;
+        scd_vm_init();
+        g_scd.work_vars[3]=0; re15_game_flag_set(5,3,1); re15_game_flag_set(6,0,0);
+        scd_thread_start(0, bc); scd_vm_tick();
+        if (re15_game_flag_get(6,0)!=1) { fprintf(stderr,"FAIL: flag_ck2 (a) flag set -> body should run\n"); fail=1; }
+    }
+    /* (b) INVERT: desc=0x0003 (hi==0 -> invert); flag(5,3)=1 -> cond = 1^1 = 0 -> body skipped. */
+    {
+        uint8_t bc[13]; memset(bc, SCD_OP_NOP, sizeof(bc));
+        bc[0]=SCD_OP_IF; bc[1]=0; write_le16(bc+2, 8);
+        bc[4]=0x58; bc[5]=5; write_le16(bc+6, 0x0003);
+        bc[8]=SCD_OP_SET; bc[9]=6; bc[10]=0; bc[11]=1; bc[12]=SCD_OP_EVT_END;
+        scd_vm_init();
+        g_scd.work_vars[3]=0; re15_game_flag_set(5,3,1); re15_game_flag_set(6,0,0);
+        scd_thread_start(0, bc); scd_vm_tick();
+        if (re15_game_flag_get(6,0)!=0) { fprintf(stderr,"FAIL: flag_ck2 (b) invert -> body should be skipped\n"); fail=1; }
+    }
+    /* (c) WORD from work-var: work_vars[3]=32 -> word 1; flag(5, (1<<5)|3 = 35)=1; desc=0x0103 -> body runs. */
+    {
+        uint8_t bc[13]; memset(bc, SCD_OP_NOP, sizeof(bc));
+        bc[0]=SCD_OP_IF; bc[1]=0; write_le16(bc+2, 8);
+        bc[4]=0x58; bc[5]=5; write_le16(bc+6, 0x0103);
+        bc[8]=SCD_OP_SET; bc[9]=6; bc[10]=0; bc[11]=1; bc[12]=SCD_OP_EVT_END;
+        scd_vm_init();
+        g_scd.work_vars[3]=32; re15_game_flag_set(5,35,1); re15_game_flag_set(6,0,0);
+        scd_thread_start(0, bc); scd_vm_tick();
+        if (re15_game_flag_get(6,0)!=1) { fprintf(stderr,"FAIL: flag_ck2 (c) word-from-workvar -> body should run\n"); fail=1; }
+    }
+    if (!fail) printf("PASS: test_flag_ck2 (0x58 flag predicate: read/invert/word-from-workvar)\n");
+    return fail;
+}
+
 int main(void)
 {
     int failures = 0;
@@ -906,6 +949,7 @@ int main(void)
     failures += test_ck_set_flags();
     failures += test_work_set();
     failures += test_speed_set();
+    failures += test_flag_ck2();
 
     if (failures == 0) {
         printf("\nALL SCD OPCODE TESTS PASSED\n");

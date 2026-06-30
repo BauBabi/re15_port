@@ -292,7 +292,7 @@ static void register_opcodes(void)
     extern int op_sce_bgm_control(scd_thread_t *t);
     extern int op_sce_fade_set(scd_thread_t *t);
     extern int op_sce_shake_on(scd_thread_t *t);
-    extern int op_plc_rot(scd_thread_t *t);
+    extern int op_flag_ck2(scd_thread_t *t);   /* 0x58 = flag-bank bit-check predicate (was misnamed op_plc_rot) */
     extern int op_weapon_chg(scd_thread_t *t);
     extern int op_plc_cnt(scd_thread_t *t);
     extern int op_member_calc(scd_thread_t *t);
@@ -309,7 +309,7 @@ static void register_opcodes(void)
     s_op_table[0x54]                  = op_sce_bgm_control;
     s_op_table[0x53]                  = op_sce_fade_set;
     s_op_table[0x5C]                  = op_sce_shake_on;
-    s_op_table[0x58]                  = op_plc_rot;
+    s_op_table[0x58]                  = op_flag_ck2;   /* RE1.5 0x58 = flag-check predicate */
     s_op_table[0x5A]                  = op_weapon_chg;
     s_op_table[0x5B]                  = op_plc_cnt;
     s_op_table[0x55]                  = op_member_calc;
@@ -3028,16 +3028,30 @@ int op_sce_shake_on(scd_thread_t *t)      { t->pc += 4; return 1; }
  * is read `lhu` = LITTLE-ENDIAN (LAB_8003fd54 @8003fd5c). We keep the (unused,
  * harmless) rot_y write but read LE for correctness/consistency.
  * (corrected 2026-06-08: was scd_read_be_s16; verified LE vs the PSX handler.) */
-int op_plc_rot(scd_thread_t *t)
+/* 0x58 — byte-true LAB_8003fd54 is a FLAG-BANK BIT-CHECK PREDICATE, NOT player rotation. The
+ * previous `op_plc_rot` (set g_actors[ws].rot_y = s16@pc[2]) was an RE2 misattribution — RE1.5
+ * 0x58 reads a flag bank and returns a boolean for the enclosing If (cross-check 2026-06-30).
+ * 4 bytes [op, bank, desc_lo, desc_hi]. desc = u16@pc[2], bank selector = pc[1]:
+ *   raw  = work_vars[desc & 0xff]                 (s16, DAT_800b0fd0)
+ *   word = (s16)raw >> 5,  bit = desc & 0x1f       (MSB-first mask 0x80000000>>bit)
+ *   cond = (flagbank[bank][word] & mask) != 0,  then XOR ((desc>>8)==0)   (the optional invert,
+ *          @0x8003fd8c-90 `sra/sltiu` + @0x8003fdcc `xor`).  PC += 4; return cond.
+ * The port flag model (re15_game_flag_get -> g_game.flags[bank][8], 256 bits/zone, MSB-first —
+ * the identical convention, game_state.c:29-32) covers word 0..7; word>=8 (raw>=256, or raw<0)
+ * is beyond it -> cond=0 (guard; the original would read adjacent flag memory, unmodelled). */
+int op_flag_ck2(scd_thread_t *t)
 {
-    int16_t angle = scd_read_le_s16(&t->pc[2]);
-    /* BO-round 2026-05-29 (hack audit): per-thread work_slot (AO7 class). */
-    int8_t ws = (t->work_slot >= 0) ? t->work_slot : g_scd.work_slot;
-    if (ws >= 0 && ws < RE15_ACTOR_MAX) {
-        g_actors[ws].rot_y = angle;
-    }
+    uint16_t desc = (uint16_t)(t->pc[2] | (t->pc[3] << 8));
+    uint8_t  bank = t->pc[1];
+    int16_t  raw  = g_scd.work_vars[desc & 0xff];
+    int      word = (int)raw >> 5;
+    int      bit  = (int)(desc & 0x1f);
+    int      cond = (word >= 0 && word < RE15_FLAG_WORDS_ZONE)
+                  ? re15_game_flag_get(bank, (uint8_t)((word << 5) | bit))
+                  : 0;
+    if (((desc >> 8) & 0xff) == 0) cond ^= 1;      /* (desc>>8)==0 -> invert */
     t->pc += 4;
-    return 1;
+    return cond ? SCD_R_CONTINUE : SCD_R_IF_FALSE;
 }
 /* (0x5A) — RE1.5 = 6 bytes (disasm LAB_80041474; retail RE2 Weapon_chg = 2). */
 int op_weapon_chg(scd_thread_t *t)        { t->pc += 6; return 1; }
