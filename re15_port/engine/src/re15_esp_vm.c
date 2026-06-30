@@ -26,10 +26,19 @@ static uint32_t rd_u32(const uint8_t *p)
 {
     return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24);
 }
+static void wr_u16(uint8_t *p, uint16_t v)
+{
+    p[0] = (uint8_t)v; p[1] = (uint8_t)(v >> 8);
+}
 static void wr_u32(uint8_t *p, uint32_t v)
 {
     p[0] = (uint8_t)v; p[1] = (uint8_t)(v >> 8); p[2] = (uint8_t)(v >> 16); p[3] = (uint8_t)(v >> 24);
 }
+
+/* op 0x0c wait-condition gate (the port's stand-in for the FUN_8004efe4(0x800aca3c,0x1a) /
+ * DAT_800b8520&0x80 global pause flags). Default 0 = normal play. */
+static int s_espvm_wait_gate = 0;
+void re15_espvm_set_wait_gate(int waiting) { s_espvm_wait_gate = waiting ? 1 : 0; }
 
 uint32_t re15_espvm_get_pc(const re15_espvm_instance_t *inst)
 {
@@ -65,6 +74,10 @@ static int op_kill(re15_espvm_instance_t *inst);
 static int op_loop_push(re15_espvm_instance_t *inst);
 static int op_loop_jump(re15_espvm_instance_t *inst);
 static int op_loop_pop(re15_espvm_instance_t *inst);
+static int op_counter_set(re15_espvm_instance_t *inst);
+static int op_counter_wait(re15_espvm_instance_t *inst);
+static int op_counter_push(re15_espvm_instance_t *inst);
+static int op_wait_cond(re15_espvm_instance_t *inst);
 
 /* Install the ported real opcode table (PTR_800744a8). Unported entries stay the stub. C2 grows
  * this as more @0x800744a8 handlers are reverse-engineered. NB: re15_espvm_reset() must call this
@@ -80,6 +93,10 @@ static void re15_espvm_install_ops(void)
     s_optable[0x06] = op_loop_push;    /* loop-push (0x8003f328) */
     s_optable[0x07] = op_loop_jump;    /* loop-jump (0x8003f368) */
     s_optable[0x08] = op_loop_pop;     /* loop-pop  (0x8003f3a4) */
+    s_optable[0x09] = op_counter_set;  /* counter-set  (0x8003f3e0) */
+    s_optable[0x0a] = op_counter_wait; /* counter-wait (0x8003f428) */
+    s_optable[0x0b] = op_counter_push; /* counter-push (0x8003f490) */
+    s_optable[0x0c] = op_wait_cond;    /* wait-condition (0x8003f4c4) */
     s_optable[0x1c] = op_nop;          /* nop-continue (0x8003f1c0) */
     s_optable[0x1d] = op_nop;          /* aliases of 0x8003f1d8 in the table (0x1d..0x20) */
     s_optable[0x1e] = op_nop;
@@ -266,6 +283,65 @@ static int op_loop_pop(re15_espvm_instance_t *inst)
     wr_u32(inst->mem + RE15_ESPVM_OFF_PC, pc + 2);               /* pc += 2 */
     inst->mem[level + 4] = (uint8_t)(inst->mem[level + 4] - 1);   /* depth-- */
     return RE15_ESPVM_RET_CONT;
+}
+
+/* ---- Phase ESP-C2 batch 2 — the per-level loop-counter ops 0x09..0x0c ----------------------
+ * A frame-counter loop: 0x09 sets up a counter (count = u16 @pc+2), 0x0a counts it down one per
+ * frame and skips past once it hits 0. Together [09 0a lo hi] = "wait `lo|hi<<8` frames". The
+ * counters live in the per-level u16 array (inst + level*8 + 0xa0), indexed by inst[level+8]. */
+
+/* 0x09: counter-set — cidx++, store count = u16 @pc+2 into counter[cidx], pc+=1, CONT. The op
+ * advances pc by only 1 (onto the paired 0x0a byte); 0x0a's pc+=3 later skips the count u16.
+ * (0x8003f3e0) */
+static int op_counter_set(re15_espvm_instance_t *inst)
+{
+    uint32_t pc    = INST_PC(inst);
+    int8_t   level = (int8_t)inst->mem[RE15_ESPVM_OFF_LEVEL];
+    uint16_t count = rd_u16(inst->code_base + pc + 2);
+    uint8_t  cidx  = (uint8_t)(inst->mem[level + 8] + 1);        /* cidx++ */
+    inst->mem[level + 8] = cidx;
+    INST_SETPC(inst, pc + 1);
+    int idx = (int8_t)cidx;                                       /* (s8) then *2, per the original */
+    wr_u16(inst->mem + level * 8 + RE15_ESPVM_OFF_CARRAY + idx * 2, count);
+    return RE15_ESPVM_RET_CONT;
+}
+
+/* 0x0a: counter-wait — counter[cidx]--; while != 0 STOP (re-run next frame); when it reaches 0,
+ * pc+=3 (skip this op + the count u16) and pop the counter (cidx--), STOP. (0x8003f428) */
+static int op_counter_wait(re15_espvm_instance_t *inst)
+{
+    int8_t   level = (int8_t)inst->mem[RE15_ESPVM_OFF_LEVEL];
+    int8_t   cidx  = (int8_t)inst->mem[level + 8];
+    uint8_t *slot  = inst->mem + level * 8 + RE15_ESPVM_OFF_CARRAY + cidx * 2;
+    uint16_t c     = (uint16_t)(rd_u16(slot) - 1);
+    wr_u16(slot, c);
+    if (c != 0)
+        return RE15_ESPVM_RET_STOP;
+    INST_SETPC(inst, INST_PC(inst) + 3);
+    inst->mem[level + 8] = (uint8_t)(inst->mem[level + 8] - 1);   /* cidx-- */
+    return RE15_ESPVM_RET_STOP;
+}
+
+/* 0x0b: counter-push — cidx++, pc+=1, CONT. (0x8003f490) */
+static int op_counter_push(re15_espvm_instance_t *inst)
+{
+    int8_t level = (int8_t)inst->mem[RE15_ESPVM_OFF_LEVEL];
+    inst->mem[level + 8] = (uint8_t)(inst->mem[level + 8] + 1);
+    INST_SETPC(inst, INST_PC(inst) + 1);
+    return RE15_ESPVM_RET_CONT;
+}
+
+/* 0x0c: wait-condition — while the global pause/freeze gate holds, STOP (stay at pc); once it
+ * clears, pc+=1, cidx--, STOP. Gate = FUN_8004efe4(0x800aca3c,0x1a) || (*(u8*)0x800b8520 & 0x80),
+ * which the port models via re15_espvm_set_wait_gate (default 0 = normal play). (0x8003f4c4) */
+static int op_wait_cond(re15_espvm_instance_t *inst)
+{
+    if (s_espvm_wait_gate)
+        return RE15_ESPVM_RET_STOP;
+    int8_t level = (int8_t)inst->mem[RE15_ESPVM_OFF_LEVEL];
+    INST_SETPC(inst, INST_PC(inst) + 1);
+    inst->mem[level + 8] = (uint8_t)(inst->mem[level + 8] - 1);   /* cidx-- */
+    return RE15_ESPVM_RET_STOP;
 }
 
 /* ---- FUN_8003f0a0: per-frame VM walker ----------------------------------------------------- */

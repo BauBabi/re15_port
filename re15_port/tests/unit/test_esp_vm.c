@@ -82,6 +82,7 @@ static void build_code(void)
     s_code[0x32] = OP_STOP;
 }
 
+static uint16_t rd_u16(const uint8_t *p) { return (uint16_t)(p[0] | (p[1] << 8)); }
 static uint32_t rd_u32(const uint8_t *p)
 {
     return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24);
@@ -220,6 +221,83 @@ static int run_real_op_tests(void)
     return fail;
 }
 
+/* ESP-C2 batch 2 — the loop-counter ops 0x09..0x0c (counter array @inst+level*8+0xa0). */
+static uint8_t s_ccode[96];
+static void build_ccode(void)
+{
+    for (int i = 0; i < 96; i++) s_ccode[i] = 0;
+    s_ccode[0x0]=0x20; s_ccode[0x2]=0x30; s_ccode[0x4]=0x40; s_ccode[0x6]=0x50;
+    s_ccode[0x20]=0x09; s_ccode[0x21]=0x0a; s_ccode[0x22]=0x03; s_ccode[0x24]=0xFF; /* id0: wait 3 frames, halt */
+    s_ccode[0x30]=0x09; s_ccode[0x31]=0xFF; s_ccode[0x32]=0x05;                      /* id1: isolated counter-set 5 */
+    s_ccode[0x40]=0x0b; s_ccode[0x41]=0xFF;                                          /* id2: counter-push          */
+    s_ccode[0x50]=0x0c; s_ccode[0x51]=0xFF;                                          /* id3: wait-condition        */
+}
+
+static int run_counter_op_tests(void)
+{
+    int fail = 0;
+    build_ccode();
+    printf("  --- ESP-C2 batch 2: loop-counter ops 0x09..0x0c ---\n");
+
+    /* (8a) op9+opa = "wait 3 frames": frame1 sets counter[0]=3 then decrements to 2 (STOP);
+     * frames 2,3 decrement; at 0 the loop skips pc+=3 (0x21->0x24) and pops the counter. */
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    re15_espvm_instance_t *w = re15_espvm_alloc(0, 0, s_ccode);
+    re15_espvm_run_all();   /* frame 1 */
+    if (rd_u16(w->mem + RE15_ESPVM_OFF_CARRAY) != 2 || re15_espvm_get_pc(w) != 0x21 ||
+        w->mem[RE15_ESPVM_OFF_CIDX0] != 0x00) {
+        fprintf(stderr, "FAIL: (8a) frame1 counter=%u pc=0x%x cidx=0x%x\n",
+                rd_u16(w->mem + RE15_ESPVM_OFF_CARRAY), re15_espvm_get_pc(w),
+                w->mem[RE15_ESPVM_OFF_CIDX0]); fail = 1; }
+    re15_espvm_run_all();   /* frame 2 -> counter 1 */
+    re15_espvm_run_all();   /* frame 3 -> counter 0 -> skip + pop */
+    if (re15_espvm_get_pc(w) != 0x24 || w->mem[RE15_ESPVM_OFF_CIDX0] != 0xff) {
+        fprintf(stderr, "FAIL: (8a) after 3 frames pc=0x%x cidx=0x%x (want 0x24/0xff)\n",
+                re15_espvm_get_pc(w), w->mem[RE15_ESPVM_OFF_CIDX0]); fail = 1; }
+
+    /* (8b) op9 isolated: cidx 0xff->0x00, counter[0]=5, pc->0x31. */
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    re15_espvm_instance_t *c = re15_espvm_alloc(0, 1, s_ccode);
+    re15_espvm_run_all();
+    if (rd_u16(c->mem + RE15_ESPVM_OFF_CARRAY) != 5 || c->mem[RE15_ESPVM_OFF_CIDX0] != 0x00 ||
+        re15_espvm_get_pc(c) != 0x31) {
+        fprintf(stderr, "FAIL: (8b) op9 counter=%u cidx=0x%x pc=0x%x\n",
+                rd_u16(c->mem + RE15_ESPVM_OFF_CARRAY), c->mem[RE15_ESPVM_OFF_CIDX0],
+                re15_espvm_get_pc(c)); fail = 1; }
+
+    /* (8c) opb counter-push: cidx 5->6, pc->0x41. */
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    re15_espvm_instance_t *b = re15_espvm_alloc(0, 2, s_ccode);
+    b->mem[RE15_ESPVM_OFF_CIDX0] = 0x05;
+    re15_espvm_run_all();
+    if (b->mem[RE15_ESPVM_OFF_CIDX0] != 0x06 || re15_espvm_get_pc(b) != 0x41) {
+        fprintf(stderr, "FAIL: (8c) opb cidx=0x%x pc=0x%x\n",
+                b->mem[RE15_ESPVM_OFF_CIDX0], re15_espvm_get_pc(b)); fail = 1; }
+
+    /* (8d) opc wait-condition: gate clear -> advance (pc+1, cidx--); gate set -> stay. */
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    re15_espvm_set_wait_gate(0);
+    re15_espvm_instance_t *g = re15_espvm_alloc(0, 3, s_ccode);
+    g->mem[RE15_ESPVM_OFF_CIDX0] = 0x03;
+    re15_espvm_run_all();
+    if (re15_espvm_get_pc(g) != 0x51 || g->mem[RE15_ESPVM_OFF_CIDX0] != 0x02) {
+        fprintf(stderr, "FAIL: (8d) opc gate-clear pc=0x%x cidx=0x%x\n",
+                re15_espvm_get_pc(g), g->mem[RE15_ESPVM_OFF_CIDX0]); fail = 1; }
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    re15_espvm_set_wait_gate(1);
+    re15_espvm_instance_t *g2 = re15_espvm_alloc(0, 3, s_ccode);
+    g2->mem[RE15_ESPVM_OFF_CIDX0] = 0x03;
+    re15_espvm_run_all();
+    if (re15_espvm_get_pc(g2) != 0x50 || g2->mem[RE15_ESPVM_OFF_CIDX0] != 0x03) {
+        fprintf(stderr, "FAIL: (8d) opc gate-set should stay pc=0x%x cidx=0x%x\n",
+                re15_espvm_get_pc(g2), g2->mem[RE15_ESPVM_OFF_CIDX0]); fail = 1; }
+    re15_espvm_set_wait_gate(0);
+
+    if (!fail) printf("  (8) PASS: loop-counter ops 0x09..0x0c byte-true "
+                      "(set/wait[=wait-N-frames]/push/wait-cond)\n");
+    return fail;
+}
+
 int main(void)
 {
     int fail = 0;
@@ -300,6 +378,8 @@ int main(void)
 
     /* (7) the real ported opcodes 0x00..0x08. */
     if (run_real_op_tests()) fail = 1;
+    /* (8) the loop-counter ops 0x09..0x0c. */
+    if (run_counter_op_tests()) fail = 1;
 
     if (fail) { fprintf(stderr, "\nESP-VM TEST FAILED\n"); return 1; }
     printf("\nPASS: ESP effect-script VM (C1) — pool + FUN_8003f0a0 dispatch byte-true\n");

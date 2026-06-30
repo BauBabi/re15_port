@@ -15,14 +15,14 @@
  *
  * Phase ESP-C1 delivered the instance-pool struct, the allocator/init, and the FUN_8003f0a0
  * dispatch loop (byte-true, disasm-verified). Phase ESP-C2 ports the ~52 opcode handlers
- * @0x800744a8 one by one. Done so far (C2 batch 1, the control-flow core, disasm-verified
- * @0x8003f1c0..f3dc):
+ * @0x800744a8 one by one. Done so far (C2 batches 1+2, the control-flow + loop-counter core,
+ * disasm-verified @0x8003f1c0..f53c):
  *   0x00/0x1c/0x1d-0x20 nop-continue · 0x01 end/return-level · 0x02 wait-1-frame ·
  *   0x03 jump-script · 0x04 spawn · 0x05 kill-instance · 0x06 loop-push · 0x07 loop-jump ·
- *   0x08 loop-pop.  Every other opcode is still the stub (returns STOP).
- * Still ahead: the per-level loop-counter ops (0x09-0x0c), then the draw / GTE / field ops
- * (0x0d+), then the bytecode source (DAT_800b3f70) + TIM/UV LUTs (Phase ESP-C3). No GPU draw,
- * no game_step wiring yet.
+ *   0x08 loop-pop · 0x09 counter-set · 0x0a counter-wait · 0x0b counter-push · 0x0c wait-cond.
+ *   (0x09+0x0a together = "wait N frames".)  Every other opcode is still the stub (returns STOP).
+ * Still ahead: the draw / GTE / field ops (0x0d+), then the bytecode source (DAT_800b3f70) +
+ * TIM/UV LUTs (Phase ESP-C3). No GPU draw, no game_step wiring yet.
  *
  * Pointer handling: the original instance stores a 32-bit absolute pc at +0x1c and 32-bit return
  * pointers on the +0xc0 sub-stack. The PC port keeps the 0x170-byte instance image byte-true but
@@ -46,6 +46,7 @@
 #define RE15_ESPVM_OFF_DEPTH0  0x04   /* loop-stack depth for level 0 (inst[level+4]; init 0xff) */
 #define RE15_ESPVM_OFF_CIDX0   0x08   /* loop-counter index for level 0 (inst[level+8]; init 0xff)*/
 #define RE15_ESPVM_OFF_PC      0x1c   /* lw 28(s0): program counter (port: u32 offset)           */
+#define RE15_ESPVM_OFF_CARRAY  0xa0   /* per-level loop-counter array (inst + level*8 + 0xa0)     */
 #define RE15_ESPVM_OFF_STACK   0xc0   /* loop-return stack base (instance + level*0x20 + 0xc0)   */
 #define RE15_ESPVM_OFF_SP      0x140  /* lw 320(s0): stack pointer (port: u32 offset into mem)   */
 #define RE15_ESPVM_OFF_RETPC   0x144  /* per-level saved pc array (inst + 0x144 + level*4)       */
@@ -89,6 +90,11 @@ int re15_espvm_run_all(void);
 /** Install an opcode handler at index `op` (C2 ports the real @0x800744a8 entries here; tests
  *  install synthetic handlers to exercise the dispatch loop). */
 void re15_espvm_set_opcode(uint8_t op, re15_espvm_op_fn fn);
+
+/** Opcode 0x0c (wait-condition) gate. Byte-true the original waits while
+ *  (*(u32*)0x800aca3c & 0x20) || (*(u8*)0x800b8520 & 0x80) — a global pause/freeze the port does
+ *  not model yet. Default 0 (normal play: op 0x0c advances). Set nonzero to make op 0x0c wait. */
+void re15_espvm_set_wait_gate(int waiting);
 
 /* ---- accessors (inspection / tests) ------------------------------------------------------- */
 
