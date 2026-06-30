@@ -119,9 +119,16 @@ parst (EFF-Bodies @0x11E8 effect-05, @0x13B8 effect-07; verifiziert). EFF-Body-L
   (0x0401,0x0405,0x0409,…) = Frame→UV-Cell-Index; f4=0x1801 (Dauer/Flags).
 - **UV-Cells** (4 B, count_b Stück, @+0x4c): `{u, v, w, h}` = Textur-Rechtecke in der Effekt-TIM;
   U-Grid 0/24/48/72/96…, W/H ≈ 232/240, V=0 (eine Zeile). effect-07: U-Grid 0/32/64/96… W/H=240.
-- ⚠️ **Offen:** die exakte `FUN_80019700`-Parse-Schleife (`puVar10 += *puVar10*0x14+2`, Copy von
-  8 Words → slot+0x00..0x1c) muss noch Feld-für-Feld dekodiert werden, um den Parser byte-true zu
-  schreiben (welcher Sub-Index → welche Anim-Record/UV-Cell, das f4-params-Encoding).
+- **Parse-Schleife `FUN_80019700` DEKODIERT** (@0x800198a4-0x800199b8; Agent A's „*0x14" war falsch):
+  - `slot+0x7c = bankhdr + (count_a*4+4)*2` (Ende der Anim-Record-Tabelle, t9=count_a*4+4).
+  - Walk zu Sub-Index N (t4 aus Offset-Tabelle): `a0 += *(u16)a0 * 0x28 + 4` pro Record
+    (Stride = `count*0x28 + 4`, 0x28=40-Byte-Sub-Element).
+  - Am Ziel: `a0 += 4` (Count-Header) → `slot+0x80 = a0` → **32-Byte-Geometrie-Block** kopiert
+    (`lwl/lwr/swl/swr` unaligned bzw. `lw/sw` aligned) → `slot+0x00..0x1c` (enthält slot[0]/slot[1]
+    Dispatch-Indizes + Geometrie/UV).
+  - ⚠️ Verbleibend für den Port: die **Semantik des 32-Byte-Blocks** (was slot[0]/slot[1]/Geometrie als
+    Primitiv zeichnen — der datengetriebene Draw aus §2b) + das f4-params-Encoding. Der Parser-Walk selbst
+    ist jetzt byte-true bekannt.
 - Effekt-TIM: `out->eff[i].tim_off` (ESP-A) → TIM @0x1A628/0x1CA68; GPU-Upload nötig.
 
 ## 3. op 0x3a `Sce_espr_on` (Spawn, Subsystem 2) — byte-true (16 Bytes)
