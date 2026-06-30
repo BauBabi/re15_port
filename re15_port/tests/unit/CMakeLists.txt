@@ -100,6 +100,13 @@ target_compile_definitions(test_esp_parse PRIVATE
 add_test(NAME unit_esp_parse COMMAND test_esp_parse)
 set_tests_properties(unit_esp_parse PROPERTIES TIMEOUT 30)
 
+# --- ESP effect-script VM (Phase ESP-C1 — re15_esp_vm.c, byte-true FUN_8003edec/ee3c/f0a0) ---
+add_executable(test_esp_vm test_esp_vm.c)
+target_link_libraries(test_esp_vm PRIVATE re15_engine re15_test_support)
+target_include_directories(test_esp_vm PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_esp_vm COMMAND test_esp_vm)
+set_tests_properties(unit_esp_vm PROPERTIES TIMEOUT 30)
+
 # --- Audio VAB-Parsing Unit-Test (Requirement 6.6, 12.1) ---
 add_executable(test_audio_vab test_audio_vab.c)
 target_include_directories(test_audio_vab PRIVATE ${CMAKE_SOURCE_DIR}/include)

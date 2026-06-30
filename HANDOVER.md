@@ -21,7 +21,9 @@ cmake --build re15_port/build && ctest --test-dir re15_port/build --timeout 30  
 2. **Overlay-File-Offset-Trap:** STAGE*.BIN-Overlays haben **KEINEN 0x800-Header** (`off = addr − 0x80100000`; nur die EXE hat den Header). Den Offset NIE selbst rechnen → `re15_disasm.py` (table/dis/read) bzw. `re15_ss.Ram` nutzen. (Ein ad-hoc `+0x800` las die Dispatch-Tabellen `@0x8011f840/890` als „null" → falscher „runtime-patched"-Schluss; korrekt gelesen stehen sie statisch in der BIN, 40/40 == RAM. `re15_runtime_table.py` = der Cross-Check statisch↔RAM.)
 3. **State-erreicht ≠ State-aktiv:** `+0x5=0x13` = engage + ein `(+0x90&3)`-gegateter forward-walk-Vorabcheck. In allen Live-Zombies ist `+0x90==0x00` → fw-Branch nie genommen → 0x13 == engage für ROOM1140 → nichts zu portieren. **IMMER Gate-Flags im Live-Save prüfen** (`re15_enemy_state.py --ai` / `re15_flag_sweep.py`), bevor man einen gegateten Pfad portiert.
 
-**AKTIVE ARBEIT — ESP-Sprite-Subsystem (Nutzer-gewählt):** **ESP-A** (byte-true Parser, 9c907ca2) + **ESP-B** (Pool + Spawn + AABB-Cull-Dispatch, c147f527) ERLEDIGT, 33/33. **ESP-C (Render) = ein 3-Schichten-EFFEKT-SCRIPT-VM** (byte-true kartiert): Effekt-Pool → 0x170-Instanz-Pool (`DAT_800b2b4c`) → per-Instanz-Bytecode-VM `FUN_8003f0a0` mit **16+ Opcodes @0x800744a8** (ein Draw-Op = der 40×30-SPRT `FUN_80046a1c`). **Das ist ein dediziertes Mehr-Schritt-Phase-Projekt (C1 Instanz-Pool+VM-Loop, C2 die 16 Opcodes, C3 Bytecode-Quelle+TIM/UV-LUTs), NICHT in einem Rutsch.** (Statische Synthese-Kette hielt nicht; dynamischer Capture scheiterte — Briefing hat Messer w1, Muzzle eh 1-Frame.) Volle Karte mit allen Adressen: ESP-C unten. Volle Details: Abschnitt „ESP-SPRITE-SUBSYSTEM" unten. (Andere Optionen: Fade/Game-Over-UI · neuer Raum/Gegner · C11. Raise-Clip 17 ✓ 8.16.)
+**AKTIVE ARBEIT — ESP-Sprite-Subsystem (Nutzer-gewählt):** **ESP-A** (byte-true Parser, 9c907ca2) + **ESP-B** (Pool + Spawn + AABB-Cull-Dispatch, c147f527) ERLEDIGT. **ESP-C (Render) = ein 3-Schichten-EFFEKT-SCRIPT-VM** (byte-true kartiert): Effekt-Pool → 0x170-Instanz-Pool (`DAT_800b2b4c`) → per-Instanz-Bytecode-VM `FUN_8003f0a0` mit **52+ Opcodes @0x800744a8** (ein Draw-Op = der 40×30-SPRT `FUN_80046a1c`).
+- **✅ ESP-C1 ERLEDIGT (dieser Commit), 34/34:** `re15_esp_vm.{h,c}` + `test_esp_vm` (6 Pfade). Byte-true (disasm-verifiziert @0x8003f0a0): die 0x170-Instanz-Pool-Struct (10 Instanzen; Flag +0x01, Level +0x02, Depth-Counter +0x04/+0x08, pc +0x1c, Sub-Stack +0xc0.., SP +0x140), der Allokator `FUN_8003ee3c` (in-game: slot=idx, ≥10→2) + Init `FUN_8003edec` (pc = `u16[code_base + id*2]`), und der **`FUN_8003f0a0`-Dispatch-Loop** mit der vollen return-1/2/0-Semantik (CONT=weiter / STOP=fertig / YIELD=Sub-Return-Stack-Pop). Opcodes sind **explizite Stubs** (default=STOP); pc/Stack-Entries als 32-bit-OFFSETS gespeichert (PSX-Ptr ist 32-bit). **KEIN game_step-Wiring, kein GPU-Draw** (C1 hat by-design kein sichtbares Ergebnis). FUN_8003ebf4/ec28-Tail (GPU-OT-Housekeeping) deferred zur Render-Integration.
+- **➡️ NÄCHSTER SCHRITT = ESP-C2:** die ~52 Opcode-Handler `@0x800744a8` einzeln RE'n+porten (`re15_espvm_set_opcode(idx, fn)` ist der Hook), v.a. die Draw-Ops → PC-Sprite-Quad. **C3** = Bytecode-Quelle (`DAT_800b3f70`) + TIM/UV-LUTs dumpen. **Das ist ein dediziertes Mehr-Schritt-Projekt, NICHT in einem Rutsch.** (Statische Synthese hielt nicht; dynamischer Capture scheiterte — Briefing hat Messer w1, Muzzle eh 1-Frame.) Volle Karte: ESP-C unten. (Andere Optionen: Fade/Game-Over-UI · neuer Raum/Gegner · C11. Raise-Clip 17 ✓ 8.16.)
 
 ---
 
@@ -687,10 +689,16 @@ offset/flags-Split**, und nur die Pointer-/TIM-Tabellen werden ABWÄRTS gelesen 
        **EFFEKT-SCRIPT-VM** = `(*PTR_800744a8[*instance_pc])(instance)`. Opcode-Tabelle **`@0x800744a8`** hat **16+ Opcodes**
        (`0x8003f1d8`/f1f0/f258/f270/f2a0/f2dc/f328/f368/f3a4/f3e0/f428/f490/f4c4/f540/f674/f6f4). Einer dieser Draw-Opcodes ist der
        40×30-SPRT-Builder `FUN_80046a1c` (`GetClut(0,0x1e4)`, code 0x66, UV-LUTs `DAT_80076244/46/274/76`).
-  - **→ ESP-C PORT = ein dediziertes MEHR-SCHRITT-PHASE-PROJEKT** (wie die SCD-VM, aber für Effekte): (C1) die 0x170-Instanz-Pool-
-    Struct + `FUN_8003f0a0`-Walker + die VM-Dispatch-Schleife; (C2) die 16 Opcode-Handler `@0x800744a8` einzeln RE'n+porten (v.a. die
-    Draw-Ops → der PC-Sprite-Quad); (C3) woher der Instanz-Bytecode kommt (`DAT_800b3f70`) + die TIM/UV-LUTs dumpen. Nicht in einem
-    Rutsch byte-true machbar. **ODER (b) dynamisch:** persistenten Effekt (Blut/Gore) in einem GUN-Raum capturen (nicht Briefing —
+  - **→ ESP-C PORT = ein dediziertes MEHR-SCHRITT-PHASE-PROJEKT** (wie die SCD-VM, aber für Effekte):
+    - **✅ (C1) ERLEDIGT (`re15_esp_vm.{h,c}` + `test_esp_vm`, 34/34):** die 0x170-Instanz-Pool-Struct + `FUN_8003f0a0`-Walker + die
+      VM-Dispatch-Schleife, byte-true disasm-verifiziert. Allokator `FUN_8003ee3c` (in-game-Pfad) + Init `FUN_8003edec`. Loop-Semantik
+      nageldicht: pc=inst[0x1c], op=*pc, ret=optable[op](inst); ret==1→weiter, ret==2→fertig, ret==0→Sub-Return-Stack-Pop
+      (depth=(s8)inst[inst[0x02]+4]; <0→fertig, sonst sp=inst[0x140], pc=*(sp-4), sp-=4, depth--). pc/Stack als 32-bit-OFFSETS
+      (PSX-Ptr=32-bit). Opcodes = Stubs (default STOP), Hook `re15_espvm_set_opcode`. KEIN game_step/GPU (C1 = unsichtbar by-design).
+    - **(C2) NÄCHSTER:** die ~52 Opcode-Handler `@0x800744a8` einzeln RE'n+porten (v.a. die Draw-Ops → der PC-Sprite-Quad). Die volle
+      Tabelle steht in `ghidra1_V2.txt` @0x800744a8 (Einträge 0x8003f1d8.. bis 0x80040xxx); jeder Handler kriegt `inst` (a0) und gibt 1/2/0.
+    - **(C3):** woher der Instanz-Bytecode kommt (`DAT_800b3f70` = `*(DAT_800ac778 + 0x40/0x44)`, ein u16-Offset-Table-Blob) + die TIM/UV-LUTs dumpen.
+    **ODER (b) dynamisch:** persistenten Effekt (Blut/Gore) in einem GUN-Raum capturen (nicht Briefing —
     dort Messer w1). PC-Render-Ziel: halbtransparenter Quad aus dem ESP-TIM-Atlas via SDL-Framebuffer + `re15_render_shadow_quad`-Blend.
 - **ESP-D (MUZZLE-FLASH, das Nutzer-Ziel) — zuletzt:** `FUN_80045024` (Pistole = weapon a0>>24=2): **1-Frame**-Flash
   (`sltiu s0,0x10` single-burst, frame_count=1), halbtransparent. Wiring: nach `re15_player_weapon_fire(2)` in
