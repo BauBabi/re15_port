@@ -1,6 +1,13 @@
-# RE1.5 Port — Session-Handover (Stand 2026-06-30, Phase 8.11: Enemy-Modelle laden + Death-Anim)
+# RE1.5 Port — Session-Handover (Stand 2026-06-30, Phase 8.12: Enemy-Modelle laden + Death/Hurt-Anim)
 
-> **NEUESTE SESSION (8.11) — die Anim-PRÄSENTATION ist entsperrt + begonnen.** Großer Befund: die „Anim-Schicht"
+> **NEUESTE SESSION (8.12) — die HURT-Stagger-Anim + Hit-Stun ist byte-true portiert (Commit 2f3cec99).** RE'd via
+> Workflow `hurt-stagger-re` (5 Finder + adversariale Verify, 18 Agenten). Der geschossene Zombie zuckt jetzt (Stagger-Clip
+> {2,3,4,5}) + ist ~2-3 Frames handlungsunfähig (Hit-Stun `+0x1dc`, Seed 4..7, −step[+0x5]/Frame), statt sofort zu ACTIVE zu
+> snappen. Neue dedizierte Actor-Felder (`hurt_clip`/`hit_stun` — NICHT `ai_target_x` wiederverwendet, Workflow-Must-Fix).
+> Death (8.11) + Hurt (8.12) sind die sichtbare empfangende Seite. **Verifikations-Schuld (C11):** kein Savestate bezeugt HURT
+> → ein „Zombie schießen"-Capture bestätigt Clip/Stun-Dauer dynamisch + klärt die Gunshot-`+0x5=2`-NULL-Row (C4). Details §8.12.
+>
+> **VORSESSION (8.11) — die Anim-PRÄSENTATION ist entsperrt.** Großer Befund: die „Anim-Schicht"
 > war in Wahrheit auf das **Enemy-Modell-LADEN** geblockt — die Gegnermodelle liegen NUR in `EMD/CDEMD0.EMS`/`CDEMD1.EMS`
 > (~4,7 MB Archive), NICHT als per-Typ `EM<NN>.EMD`; `pc_enemy_load` (las `EM%02X.EMD`) scheiterte für JEDEN Typ → kein
 > Gegner renderte mit echtem Modell → gar keine Anim möglich. **GELÖST (Commit 0e2203a8):** neuer engine-seitiger EMS-Index
@@ -486,19 +493,40 @@ KEINE per-Typ `EM<NN>.EMD`, und `pc_enemy_load` las `EM%02X.EMD` → scheiterte 
   Bank): sofort Corpse (keine Regression). + byte-true `+0x7=0` in `re15_player_weapon_fire` (FUN_80011f50 L157). test
   Part(11/13). **In-game-Sicht: GUI-Run `RE15_START_ROOM=1140`** (die Exe läuft headless 8s ohne Crash; Pipe-Log-Capture
   geht im Sandbox-Run nicht — SDL/Windows leitet stdout nicht in die Pipe; visuelle Bestätigung = interaktiver Run).
+- **HURT-Stagger-Anim + Hit-Stun = ERLEDIGT (Commit 2f3cec99, §8.12 unten).** ⚠️ KORREKTUR meiner früheren Annahme hier:
+  `+0x1dc` ist NICHT die Clip-Länge — der Workflow `hurt-stagger-re` (5 Finder + adversarial verify) bewies byte-true, dass
+  `+0x1dc` ein **unabhängiger Hit-Stun-Timer** ist (Init-Seed `(rng&3)+4`=4..7 @0x80100838; Dekrement/Frame via
+  `step[+0x5]` @0x8011fe30={0,-2,-2,-3,...}; Exit zu ACTIVE bei `<0`, NICHT bei Clip-Ende). Hurt-Clip `+0x1d4` = zufällig
+  {2,3,4,5} (Init @0x8010079c, Tabelle @0x8011f7e4). Portiert in `re15_enemy_ai_live_hurt`. Siehe §8.12.
 - **NÄCHSTER SCHRITT (jetzt ENTSPERRT — die Modelle laden + spielen Clips):**
-  1. **HURT-Stagger-Anim + Hit-Stun** (die empfangende Seite sichtbar machen): `re15_enemy_ai_live_hurt` = `FUN_80105a8c`:
-     Stagger-Anim-FSM `@0x8011fb90[+0x5][+0x6]` (SPARSE — nur Row1[0,1]→`0x80105b7c`; setzt Anim-Felder +0x188/+0x8c=0x14/
-     +0x94=`u8@+0x1d4`(Hurt-Clip)/+0x9e), kehrt zu ACTIVE zurück erst wenn `s16@+0x1dc<0` (`+0x4=1,+0x5=0x11,+0x6=0`
-     @0x80105b48). **+0x1dc = der Anim-Frames-verbleibend-Zähler = die Stagger-Clip-Länge** (wird in der Anim-Wiedergabe
-     geseedet, nicht in der Hurt-Fn → analog zur Death-Anim auf `re15_enemy_ai_live_death` modellieren: Hurt-Clip setzen,
-     halten bis Clip ausgespielt, dann ACTIVE). Der Hurt-Clip-Index +0x1d4 ist per-Entity (am Spawn geseedet) — Quelle
-     ermitteln (Init FUN_80100688 / Savestate). Macht den geschossenen Zombie sichtbar zucken + kurz handlungsunfähig.
-  2. Die TURN/WALK/GRAB-States setzen schon `motion` (re15_enemy_ai_live_turn/grab) — prüfen, ob ihre Clips jetzt korrekt
-     rendern (Modell ist da). 3. Aim/Raise/Muzzle-Anim (Player). 4. Game-Over-Screen + Death-Fade (@0x8003694c) = Fade/UI-Schicht.
+  1. Die TURN/WALK/GRAB-States setzen schon `motion` (re15_enemy_ai_live_turn/grab) — prüfen, ob ihre Clips jetzt korrekt
+     rendern (Modell ist da). 2. Aim/Raise/Muzzle-Anim (Player). 3. Game-Over-Screen + Death-Fade (@0x8003694c) = Fade/UI-Schicht.
+  4. **VERIFIKATIONS-SCHULD (C11):** kein Savestate bezeugt einen HURT-Zombie (alle zeigen ACTIVE) → ein frisches
+     „STAGE1 → Zombie schießen"-Capture (re15-room-capture) bestätigt die HURT-Clip/Stun-Dauer/Recovery dynamisch; und klärt
+     die Gunshot-`+0x5=2`-NULL-Row-Frage (C4: das Original dispatcht für +0x5=2 eine NULL-Stagger-Row).
 - **Offene Detail-Frage:** CDEMD0 vs CDEMD1 (zwei Archive, leicht andere Per-EMD-Größen — vermutl. Disc1/Disc2 oder LOD); der
   Port nutzt CDEMD0. Falls das Briefing-Modell sichtbar falsch ist, CDEMD1 testen. Und: laden die Briefing-Zombies im
   initialen Kamera-Cut (sonst erst sichtbar, wenn das Briefing spielt)?
+
+### 8.12 — HURT-STAGGER-ANIM + HIT-STUN (ERLEDIGT, Commit 2f3cec99) → die empfangende Combat-Seite ist sichtbar
+RE'd via Workflow `hurt-stagger-re` (5 parallele Finder, jeder disasm-verifiziert, dann adversariale Refutation jeder
+Behauptung, dann Spec-Synthese — 18 Agenten; ein JS-Klammer-Bug im Script abgefangen + per `resumeFromRunId` aus dem Cache
+fortgesetzt). Der geschossene Zombie zuckt jetzt + ist kurz handlungsunfähig, statt sofort zu ACTIVE zu snappen.
+- **`FUN_80105a8c` = ROUTER:** testet `+0x9&0x80`; NORMAL-Pfad dispatcht die 2D-Tabelle `@0x8011fb90[+0x5*8 + +0x6]`
+  (Live-Stagger-Handler `0x80105b7c` für +0x5 in {1,3,4}) → fällt in die EXIT-GATE `@0x80105b18`. Stagger-Handler phase 0
+  kopiert `+0x1d4 → +0x94` (motion); EXIT recovered zu ACTIVE wenn `s16 +0x1dc < 0` (NICHT Clip-Ende, anders als Death!),
+  setzt `+0x5=0x11, +0x6=0`.
+- **Hit-Stun `+0x1dc`** (eigenständiger Timer, NICHT Clip-Länge): Init-Seed `(rng&3)+4`=4..7 (@0x80100838); Dekrement/Frame
+  via `step[+0x5]` aus `@0x8011fe30={0,-2,-2,-3,-3,-3,-3,0,0,0,0,0}` (Pistole +0x5=2→−2; Melee-React +0x5=3→−3; Seed/3 ≈
+  2-3 Frames Stagger). **Hurt-Clip `+0x1d4`** = zufällig {2,3,4,5} (Init @0x8010079c, Tabelle @0x8011f7e4).
+- **Port:** neue dedizierte Actor-Felder `hurt_clip`(+0x1d4) + `hit_stun` (⚠️ NICHT `ai_target_x` wiederverwenden — das
+  Original time-shared `+0x1dc` mit `ai_target_x`; der Workflow flaggte das als Must-Fix). `live_init` seedet den Clip;
+  `re15_enemy_ai_live_hurt` (ersetzt den Snap-Stub) = der kanonische Stagger (motion=hurt_clip, halten via Stun-Timer,
+  Recovery zu ACTIVE). `+0x9&0x80`-Special-Branch = dormanter Stub. test Part(10/14). 32/32 ctest.
+- **DOKUMENTIERTE UNSICHERHEITEN (Workflow-geflaggt, kein Raten):** (a) der Port re-seedet `hit_stun` per Hit (Original
+  seedet 1× im Init + time-shared mit ai_target_x — faithful-line); (b) der Gunshot setzt `+0x5=weapon_id`(Pistole 2) → die
+  Original-Stagger-Row für +0x5=2 ist NULL (C4) + kein Savestate bezeugt HURT (C11) → der Port spielt den verifizierten
+  kanonischen Stagger (Step für +0x5=2 = byte-true −2); die exakte Original-Pistolen-Reaktion = Verifikations-Schuld (Capture).
 
 Werkzeuge: **`re15-psx-disasm`** (EXE/Overlay-Disasm), **`re15-savestate-ghidra`** (Live-RAM +
 Tabellen-Patch-Check), **`re15-room-capture`** (Raum laden/provozieren). Memory `reai-v2-foundation-combat`
