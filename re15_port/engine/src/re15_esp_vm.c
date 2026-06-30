@@ -88,6 +88,8 @@ static int op_skip6(re15_espvm_instance_t *inst);
 static int op_skip2(re15_espvm_instance_t *inst);
 static int op_block_setup(re15_espvm_instance_t *inst);
 static int op_pop_level(re15_espvm_instance_t *inst);
+static int op_set_u16(re15_espvm_instance_t *inst);
+static int op_integrate(re15_espvm_instance_t *inst);
 
 /* Install the ported real opcode table (PTR_800744a8). Unported entries stay the stub. C2 grows
  * this as more @0x800744a8 handlers are reverse-engineered. NB: re15_espvm_reset() must call this
@@ -117,6 +119,8 @@ static void re15_espvm_install_ops(void)
     s_optable[0x17] = op_block_setup;  /* block setup (0x8003fb9c) */
     s_optable[0x19] = op_pop_level;    /* pop level (0x8003fc50) */
     s_optable[0x1a] = op_for_break;    /* FOR-break (0x8003fca8) */
+    s_optable[0x2f] = op_set_u16;      /* set instance u16 field (0x80040f14) */
+    s_optable[0x31] = op_integrate;    /* per-frame position integrator (0x80040fd4) */
     s_optable[0x1c] = op_nop;          /* nop-continue (0x8003f1c0) */
     s_optable[0x1d] = op_nop;          /* aliases of 0x8003f1d8 in the table (0x1d..0x20) */
     s_optable[0x1e] = op_nop;
@@ -493,6 +497,36 @@ static int op_pop_level(re15_espvm_instance_t *inst)
     int8_t   depth = (int8_t)inst->mem[nls + 4];
     uint32_t sp    = (uint32_t)((int)nls * 0x20 + RE15_ESPVM_OFF_STACK + (int)depth * 4 + 4);
     wr_u32(inst->mem + RE15_ESPVM_OFF_SP, sp);
+    return RE15_ESPVM_RET_CONT;
+}
+
+/* ---- Phase ESP-C2 batch 4 — the two instance-local field ops -------------------------------
+ * The effect's position(+0x158..0x162)/velocity(+0x164..0x16e) u16 fields (the 6 words the
+ * allocator zeroes @+0x158). The OTHER field-setters (0x32/0x4d/0x3f/0x42/0x4a/0x4c) dereference
+ * an external pointer (the work struct @inst+0x154 or the effect pool DAT_800b2368) and are
+ * deferred to the pool/work-struct integration. Disasm-verified @0x80040f14 / @0x80040fd4. */
+
+/* 0x2f: u16-store — inst[0x158 + (u8@pc+1)*2] = u16@pc+2; pc+=4; CONT. (0x80040f14) */
+static int op_set_u16(re15_espvm_instance_t *inst)
+{
+    uint32_t pc = INST_PC(inst);
+    uint8_t  id = inst->code_base[pc + 1];
+    uint16_t v  = rd_u16(inst->code_base + pc + 2);
+    INST_SETPC(inst, pc + 4);
+    wr_u16(inst->mem + 0x158 + (uint32_t)id * 2, v);
+    return RE15_ESPVM_RET_CONT;
+}
+
+/* 0x31: per-frame integrator — six u16 accumulators inst[0x158..0x162] += six u16 deltas
+ * inst[0x164..0x16e]; pc+=1; CONT. (the acc/delta ranges are disjoint, so order is moot). (0x80040fd4) */
+static int op_integrate(re15_espvm_instance_t *inst)
+{
+    for (int i = 0; i < 6; i++) {
+        uint8_t *acc = inst->mem + 0x158 + i * 2;
+        uint16_t d   = rd_u16(inst->mem + 0x164 + i * 2);
+        wr_u16(acc, (uint16_t)(rd_u16(acc) + d));
+    }
+    INST_SETPC(inst, INST_PC(inst) + 1);
     return RE15_ESPVM_RET_CONT;
 }
 

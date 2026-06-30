@@ -441,6 +441,51 @@ static int run_for_op_tests(void)
     return fail;
 }
 
+/* ESP-C2 batch 4 — the two instance-local field ops 0x2f / 0x31. */
+static uint8_t s_xcode[48];
+static void build_xcode(void)
+{
+    for (int i = 0; i < 48; i++) s_xcode[i] = 0;
+    s_xcode[0x0]=0x20; s_xcode[0x2]=0x30;
+    s_xcode[0x20]=0x2f; s_xcode[0x21]=0x03; s_xcode[0x22]=0x34; s_xcode[0x23]=0x12; s_xcode[0x24]=0xFF; /* op2f id3=0x1234 */
+    s_xcode[0x30]=0x31; s_xcode[0x31]=0xFF;                                                            /* op31 integrate */
+}
+
+static int run_field_op_tests(void)
+{
+    int fail = 0;
+    build_xcode();
+    printf("  --- ESP-C2 batch 4: instance-local field ops 0x2f / 0x31 ---\n");
+
+    /* (10a) op2f: inst[0x158 + 3*2 = 0x15e] = 0x1234; pc += 4 -> 0x24. */
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    re15_espvm_instance_t *s = re15_espvm_alloc(0, 0, s_xcode);
+    re15_espvm_run_all();
+    if (rd_u16(s->mem + 0x15e) != 0x1234 || re15_espvm_get_pc(s) != 0x24) {
+        fprintf(stderr, "FAIL: (10a) op2f field=0x%x pc=0x%x\n",
+                rd_u16(s->mem + 0x15e), re15_espvm_get_pc(s)); fail = 1; }
+
+    /* (10b) op31: six accumulators (+0x158..+0x162) += six deltas (+0x164..+0x16e); pc+=1. */
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    re15_espvm_instance_t *g = re15_espvm_alloc(0, 1, s_xcode);
+    const uint16_t acc0[6] = {100, 200, 300, 400, 500, 600};
+    const uint16_t dlt[6]  = {1, 2, 3, 4, 5, 6};
+    for (int i = 0; i < 6; i++) {
+        g->mem[0x158 + i*2] = (uint8_t)acc0[i]; g->mem[0x159 + i*2] = (uint8_t)(acc0[i] >> 8);
+        g->mem[0x164 + i*2] = (uint8_t)dlt[i];  g->mem[0x165 + i*2] = (uint8_t)(dlt[i] >> 8);
+    }
+    re15_espvm_run_all();
+    for (int i = 0; i < 6; i++) {
+        uint16_t got = rd_u16(g->mem + 0x158 + i*2);
+        if (got != (uint16_t)(acc0[i] + dlt[i])) {
+            fprintf(stderr, "FAIL: (10b) op31 acc[%d]=%u expected %u\n", i, got, acc0[i]+dlt[i]); fail = 1; }
+    }
+    if (re15_espvm_get_pc(g) != 0x31) { fprintf(stderr, "FAIL: (10b) op31 pc=0x%x\n", re15_espvm_get_pc(g)); fail = 1; }
+
+    if (!fail) printf("  (10) PASS: field ops 0x2f (u16-set) / 0x31 (position integrator) byte-true\n");
+    return fail;
+}
+
 int main(void)
 {
     int fail = 0;
@@ -525,6 +570,8 @@ int main(void)
     if (run_counter_op_tests()) fail = 1;
     /* (9) the FOR-loop ops 0x0d..0x1a. */
     if (run_for_op_tests()) fail = 1;
+    /* (10) the instance-local field ops 0x2f / 0x31. */
+    if (run_field_op_tests()) fail = 1;
 
     if (fail) { fprintf(stderr, "\nESP-VM TEST FAILED\n"); return 1; }
     printf("\nPASS: ESP effect-script VM (C1) — pool + FUN_8003f0a0 dispatch byte-true\n");
