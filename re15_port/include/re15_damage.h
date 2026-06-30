@@ -57,6 +57,11 @@ int re15_enemy_take_damage(re15_actor_t *e, uint8_t attack_type);
  * Called per live zombie in re15_enemy_ai_run_all. */
 void re15_enemy_gore_tick(re15_actor_t *e);
 
+/* Zombie gore-SETUP behaviour (FUN_80106edc @0x80106edc, dispatch index sub_state_1==0x58): on
+ * entry (sub_state_3==0) a 50% RNG spawns the gore burst (2x effect-id 0 + 1x effect-id 5 = the
+ * VISIBLE ROOM1140 gore) at the zombie + sets sub_state_3=1. Called per live zombie in run_all. */
+void re15_enemy_gore_setup(re15_actor_t *e);
+
 /* Player DEATH state (Phase 8.10) — the byte-true core of the player death FSM. The player is dead
  * when HP < 0 (FUN_80012d60 @0x80012ee8; the grab drains HP to the same HP<0). The original then runs
  * the death-sequence command handler (player command 0x800aca58 dispatched @0x80073f90[state]: [3] =

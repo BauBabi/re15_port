@@ -1030,6 +1030,51 @@ static int test_enemy_gore_tick(void)
     return fail;
 }
 
+/* re15_enemy_gore_setup (FUN_80106edc, dispatch index sub_state_1==0x58): the effect-id-5 gore
+ * setup. Gated on sub_state_1==0x58 + sub_state_3==0 + (rand&1); spawns 2x effect-0 + 1x effect-5. */
+static int test_enemy_gore_setup(void)
+{
+    int fail = 0;
+    re15_esp_fx_reset();
+    re15_esp_set_room_bank(NULL);
+    re15_actor_t z;
+    memset(&z, 0, sizeof z);
+    z.active = 1; z.type = 0x10; z.x = 10; z.y = 20; z.z = 30; z.rot_y = 7;
+
+    /* GATE: wrong sub_state_1 -> no spawn (deterministic). */
+    z.sub_state_1 = 0x10; z.sub_state_3 = 0;
+    re15_enemy_gore_setup(&z);
+    if (re15_esp_fx_count() != 0) { fprintf(stderr, "FAIL: (gore_setup) fired on wrong state\n"); fail = 1; }
+
+    /* GATE: sub_state_3 != 0 (already set up) -> no spawn. */
+    z.sub_state_1 = 0x58; z.sub_state_3 = 1;
+    re15_enemy_gore_setup(&z);
+    if (re15_esp_fx_count() != 0) { fprintf(stderr, "FAIL: (gore_setup) fired with sub_state_3!=0\n"); fail = 1; }
+
+    /* correct state (sub_state_1==0x58, sub_state_3==0): rand-gated -> loop until it spawns. */
+    int spawned = 0;
+    for (int k = 0; k < 60 && !spawned; k++) {
+        re15_esp_fx_reset();
+        z.sub_state_1 = 0x58; z.sub_state_3 = 0; z.sub_state_2 = 0;
+        re15_enemy_gore_setup(&z);
+        if (re15_esp_fx_count() == 3 && z.sub_state_3 == 1) {  /* 2x effect-0 + 1x effect-5 */
+            int has5 = 0;
+            for (int i = 0; i < RE15_ESP_FX_MAX; i++) {
+                const re15_esp_fx_t *f = re15_esp_fx_get(i);
+                if (f && f->effect_id == 5 && f->x == 10 && f->param == 7) has5 = 1;
+            }
+            if (has5) spawned = 1;
+        } else if (z.sub_state_2 == 5 && re15_esp_fx_count() == 0) {
+            /* defer branch (rand even): no spawn, sub_state_2=5 — byte-true, keep looping. */
+        }
+    }
+    if (!spawned) { fprintf(stderr, "FAIL: (gore_setup) never spawned effect-5 in 60 tries\n"); fail = 1; }
+
+    re15_esp_fx_reset();
+    if (!fail) printf("PASS: test_enemy_gore_setup (0x80106edc sub_state_1==0x58 -> effect-5 gore burst)\n");
+    return fail;
+}
+
 int main(void)
 {
     int failures = 0;
@@ -1057,6 +1102,7 @@ int main(void)
     failures += test_cut_replace_live_switch();
     failures += test_sce_espr_on_spawn();
     failures += test_enemy_gore_tick();
+    failures += test_enemy_gore_setup();
 
     if (failures == 0) {
         printf("\nALL SCD OPCODE TESTS PASSED\n");

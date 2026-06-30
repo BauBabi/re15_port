@@ -300,6 +300,35 @@ void re15_enemy_gore_tick(re15_actor_t *e)
     }
 }
 
+/* Zombie gore-SETUP behaviour — byte-true FUN_80106edc @0x80106edc (STAGE1). Dispatched via
+ * (*(code*)(&PTR_LAB_8011fe30)[entity+0x5])() at index 0x58 (0x8011fe30 + 0x58*4 = 0x8011ff90 =
+ * FUN_80106edc) -> the byte-true trigger is sub_state_1 (entity+0x5) == 0x58. On first entry
+ * (entity+7==0): a 50% RNG (func_0x8001af20 & 1) either defers (==0 -> entity+6=5, retry) or runs
+ * the SETUP (==1): entity+0x93|=1, entity+7=1, then the gore burst at the zombie bone:
+ *   2x func_0x80019700(0x2000, rot_y, bone, &LAB_8012016c)  = effect-id 0
+ *   1x func_0x80019700(0x5002800, rot_y, bone, &LAB_8012016c) = effect-id 5  <-- VISIBLE ROOM1140 gore
+ * Position is the model_inst bone block (entity+0x188 + LAB_8011f784[entity+8]*0xac) -> actor world
+ * position (faithful-line). The anim/behaviour fields +0x8f/+0x94/+0x95/+0x1b8, the spawned slot's
+ * model_inst init, and the func_0x800453d0(9) sound are NOT modelled in the port -> flagged-skipped.
+ * Fires once the AI puts the zombie in sub_state_1==0x58 (the transition INTO this state is the next
+ * brick, C3_RENDER_DESIGN.md §2e). */
+void re15_enemy_gore_setup(re15_actor_t *e)
+{
+    if (!e || !e->active) return;
+    if (e->sub_state_1 != 0x58) return;      /* PTR_LAB_8011fe30[+0x5]==0x58 -> FUN_80106edc */
+    if (e->sub_state_3 != 0) return;         /* entity+7 != 0: setup already run (anim phase) */
+    if ((re15_engine_rand8() & 1) == 0) {    /* func_0x8001af20 & 1 == 0 -> defer, no spawn */
+        e->sub_state_2 = 5;                  /* entity+6 = 5 */
+        return;
+    }
+    e->hit_react   |= 0x1;                    /* entity+0x93 |= 1 */
+    e->sub_state_3  = 1;                      /* entity+7 = 1 (run the setup once) */
+    const re15_esp_t *bank = re15_esp_room_bank();
+    re15_esp_fx_spawn(bank, 0, 0, e->x, e->y, e->z, (int16_t)e->rot_y);  /* a0=0x2000   effect-id 0 */
+    re15_esp_fx_spawn(bank, 0, 0, e->x, e->y, e->z, (int16_t)e->rot_y);  /* a0=0x2000   effect-id 0 */
+    re15_esp_fx_spawn(bank, 5, 0, e->x, e->y, e->z, (int16_t)e->rot_y);  /* a0=0x5002800 effect-id 5 */
+}
+
 /* ====================================================================== *
  *  Attack-hitbox vs actor collision test — FUN_8002b5d0                   *
  *  (ghidra1_V2.txt:118005-118130). The per-target geometry test the       *
