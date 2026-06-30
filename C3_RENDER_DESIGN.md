@@ -83,6 +83,31 @@ Walkt `DAT_800b2584` (Count = `*DAT_800ac778`); pro gesetztem Flag:
 - SCD-Sprite-Ops sind Stubs: `op_sce_espr_on` (0x3a, `scd_vm.c:2839`),
   `op_sce_espr_kill` (0x4c, :2849), `op_sce_espr_control` (0x52, flag-predicate :3008).
 
+## 2b. op-0x3a Draw-Pfad — STATISCH FERTIG RE'd (2026-06-30): model_inst-Partikel-System
+Verifiziert: Subsystem 2 ist ein **Partikel-/Sub-Objekt-System**, kein einfacher Sprite.
+- **Spawn** `FUN_80019700` (alive-tag **3**) + **Sub-Spawn** `FUN_800199d4` (IDENTISCHE Struktur,
+  alive-tag **0xa**) → `DAT_800a73b8` (96×0x84). Effekte spawnen über `FUN_80045024`/op 0x3a;
+  per-Entity-STATE-Spawner `FUN_8002c444` (liest `entity+0x5`=FSM-State → `FUN_80045024(0x2060000,
+  entity+0x34)` = Kat 2/idx 6/Position).
+- **Tick** `FUN_80019e20` (jeden Frame, walk stride 0x84, gate flag `+0x6c`): pro Instanz
+  3D-Transform (`RotMatrix` aus slot[0x10/0x11+0x17/0x12]-Winkeln, `ApplyMatrix` slot[0x1a/0x1c/0x1e]-
+  Translation → World-XYZ in **slot[0x14/0x15/0x16]**), dann **`PTR_LAB_80071d40[slot[1]]()`** (Draw/Anim-
+  Dispatch, 24 Handler @0x80017248-0x80017ed8), dann Velocity-Integration (slot[0x10]+=slot[0xc]…) +
+  Keyframe-Advance (slot+0x6d Timer, slot+0x3c Anim-Daten, 8-Byte-Entries).
+- **Handler `PTR_LAB_80071d40`** (verifiziert [3]/[7]/[8]): Animations/State-Controller —
+  [7]=`FUN_800174e4` Keyframe-Interpolator (kopiert 0x28-Byte-Keyframe `slot+0x6f*0x28+slot[0x20]`
+  in den Slot-Transform-Kopf via unaligned-memcpy); [3]=Timed-Wait+Keyframe; [8]=Sub-Spawn
+  `FUN_800199d4`+Keyframe. Sie operieren auf `DAT_800b52c4` (= aktueller Slot, Ghidra: „attack_workstruct").
+- **Der per-Instanz Pixel-Draw ist DATENGETRIEBEN:** `slot[1]` (aus dem Bank-Clip-Block slot+0x00..0x1c)
+  wählt den Primitiv-Handler. Welcher Index der Muzzle/Blut-Effekt nutzt + welcher Primitiv-Typ/UV →
+  **steckt in den Effekt-Bank-Daten** (`DAT_800b2248[cat]`/`DAT_800b22d4[cat]`), die statisch ohne
+  einen konkreten geparsten Effekt-Bank bzw. ein Live-Capture NICHT auf „der Muzzle = Handler N" pinbar
+  sind. → **genau hier liegt der Live-Capture-vs-statisch-Fork.**
+- **Port-Konsequenz:** op-0x3a-Effekte sind animierte texturierte Partikel-MODELLE (3D-projiziert +
+  texturierte Primitive aus der Effekt-TIM @VRAM(320,256)), gezeichnet durch die Modell-Pipeline —
+  ANDERS als der Port-Skeletal-Pfad. Port = eigenes Partikel-Subsystem (Pool + Tick/Transform +
+  Projektion → textri-Quad mit Effekt-TIM), positioniert per Owner-Transform.
+
 ## 3. op 0x3a `Sce_espr_on` (Spawn, Subsystem 2) — byte-true (16 Bytes)
 `FUN_80019700(a0,a1,a2,a3)` spawnt in `DAT_800a73b8` (verifiziert: `addiu s3,s3,29624`
 @0x80019724; stride 132 @0x80019794-9c; 96 Slots @0x8004978c; busy `+0x6c`, alive=3;
