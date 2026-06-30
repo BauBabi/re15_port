@@ -619,6 +619,27 @@ Die action-8-Aim-Sub-FSM `FUN_80035810` direkt disassembliert (Weg C, `re15-psx-
 - **DEFERRED (cited):** Muzzle-Flash-Sprite (`FUN_80045024`-Effekt), die Aim-Elevation-Pitch (entity+0x66, +0x6a-Bits), die
   Waffen-Inventory (`DAT_800aca5d`), der Holster-Lower-Clip (states 6/7), Fade/Game-Over.
 
+### ROOM1140-COMBAT-STATUS (nach 8.16) — byte-true KOMPLETT; die Reste sind INFRA-GEBLOCKT oder NICHT-self-contained
+Erschöpfende Sichtung 2026-06-30 (damit niemand dieselben Sackgassen erneut gräbt — alle Befunde disasm-belegt):
+- **Muzzle-Flash → INFRA-BLOCKED:** `FUN_80045024` dispatcht per-Waffe in ein **ESP-Sprite-Effekt-System** (Sprite-Tabellen
+  `@0x801f….`, jump `@0x80010e70`). Der Port hat KEIN ESP-Sprite-Rendering — `op_sce_espr_on`/`_kill`/`_control` (scd_vm.c) sind
+  PC-Stubs (`pc += n; return 1`). Muzzle-Flash braucht zuerst das ganze ESP-Spawn+Render-Subsystem (wie Fade/Game-Over).
+- **Game-Over + Death-Color-Fade (`@0x8003694c`) → INFRA-BLOCKED:** Port hat keine Fade/UI-Schicht.
+- **§8.13 „STAND-UP 27→28→29" (@0x80103c20/d7c/f44) → LABEL ZWEIFELHAFT, vor Port RE-VERIFIZIEREN:** Disasm zeigt `@0x80103d7c`
+  macht `player.hp −= 5` (ein Biss) und `@0x80103f44` setzt `DAT_800aca50|=1` + SE `FUN_800453d0(7)` — das sind Feeding/Biss-Ops,
+  inkonsistent mit einem reinen Get-up-Ramp. Die §8.13-Adressen/Bedeutung neu prüfen (Clip-Werte + Dispatcher), bevor man hier portiert.
+- **Lying-Get-up → EXTERN GETRIGGERT, kein self-contained Handler:** der Lying-Handler `@0x8011f80c[7/8]=0x80101974` ist ein leeres
+  `jr ra` (kein Self-Wake). Der Briefing-Lying-Zombie (slot0 grid 8) steht im Live-Save zwar auf (→ ACTIVE/search), aber via
+  externem Wecker (Briefing-Alarm-Broadcast), nicht durch einen portierbaren AI-Handler. Braucht das Alert/Broadcast-Subsystem.
+- **Weapon-Inventory / AI-Pause-Gate → ~0 beobachtbarer Effekt in ROOM1140:** Inventory wird im Fire-Pfad als Konstante übergeben
+  (`lui a0,0x207`→Waffe 2); das Equip lebt im Inventar-Menü (Port hat keins). Pause-Gate `DAT_800aca40 & 0x20000000` hat keinen
+  Port-Pause-State zum Treiben (kein Menü). `re15_player_aim_ready()` ist gewired; `re15_enemy_ai_set_paused` existiert ungewired.
+- **Aim-Elevation-Pitch (+0x6a) → renderer-gekoppelt:** `FUN_80035810` states 0/1 lerpen +0x6a (Ziel via `FUN_80045630`); die
+  Anwendung als Bone-Pitch braucht Renderer-Arbeit + die +0x6a→Bone-Map; für Boden-Zombies ist der Pitch ≈ 0.
+**FAZIT:** Der zwei-seitige ROOM1140-Combat ist byte-true + spielbar abgeschlossen. Echte Weiterarbeit = (A) NEUES SUBSYSTEM
+(ESP-Sprites — entblockt Muzzle + `op_sce_espr` + Effekte; ODER Fade/Game-Over-UI), (B) NEUER RAUM/GEGNER (net-neue AI/Clips,
+z.B. ein m1-Zombie mit `+0x90&3!=0` → der Forward-Walk), oder (C) LIVE-C11-VERIFIKATION der 8.11–8.16-Kette (re15-room-capture).
+
 ### 8.15 — C11 DYNAMISCHE VERIFIKATION (TEIL-erledigt) → das statische RE der Combat-Kette gegen Live-Daten bestätigt
 Disziplin-Schritt: alles seit 8.11 war nur statisch RE't. Das C11-Capture (DuckStation + MZD-Disc + vgamepad) wurde aus der
 Sandbox **erfolgreich gefahren** (re15-room-capture: 2 Live-Captures + 1 Menüshot, Pipeline reproduzierbar). Bestätigt:
