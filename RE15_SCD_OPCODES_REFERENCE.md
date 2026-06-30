@@ -1,11 +1,18 @@
-# RE1.5 Effect-Script VM — Opcode Map (@0x800744a8, 95 ops 0x00-0x5e)
+# RE1.5 SCD Opcode Reference — byte-true catalog (@0x800744a8, 95 ops 0x00-0x5e)
 
-Dispatch: `FUN_8003f0a0` runs `(*table[*pc])(instance)` per active 0x170-instance. Port: `re15_esp_vm.c`.
-Status: **✅PORTED** = byte-true in re15_esp_vm.c (re15_espvm_install_ops) + tested (test_esp_vm). **45/95 ported.**
-Classification of 0x0d-0x5e by the 77-agent workflow (2026-06-30); every PORTED row self-disassembled before porting.
-`portable_now` = pure instance-local + bytecode operands (no external pool/work-struct/GTE/audio).
-⚠️ The rows marked `·portable` were AGENT-flagged portable but self-verified to deref the work-struct @inst+0x154
-or the effect pool DAT_800b2368 -> actually **defer** (see deferred groups).
+> ⚠️ **This is a REFERENCE, not a VM.** `FUN_8003f0a0` + the @0x800744a8 jump table IS the SCD VM
+> (the 0x170-instance pool runs the room main/sub SCD from RDT+0x40/+0x44). The port already
+> implements it: **`re15_port/engine/src/scd_vm.c`** is the SCD VM. (A parallel `re15_esp_vm.c` was
+> built under a mistaken "separate effect VM" framing and has been removed; this catalog is what
+> survived — the byte-true disassembly of all 95 opcode handlers, useful for validating scd_vm.c.)
+>
+> Cross-check payoff: this RE caught a length-table bug in scd_vm.c — **0x3d was 4, byte-true 3**
+> (LAB_80041238 `addiu pc,pc,3`, unmapped -> op_unknown desynced +1). Fixed in scd_vm.c.
+
+Dispatch: `FUN_8003f0a0` runs `(*table[*pc])(instance)` per active 0x170-instance; each handler
+advances pc itself. The "✅PORTED" column below reflects the (now-removed) re15_esp_vm.c byte-true
+disassembly status — read it as **"byte-true reverse-engineered"**, the per-op evidence for scd_vm.c.
+The 0x0d-0x5e classification came from the 77-agent workflow; every ✅ row was self-disassembled.
 
 | op | addr | status | category | calls | summary |
 |----|------|--------|----------|-------|---------|
