@@ -12,9 +12,15 @@ Workflow:
        re15_quickload.py --state menu.sav --right N --provoke 14 --out room.sav
 
 Caveats:
-  - `-statefile` reliably quick-loads for MENU-SHOTS and stepping; the actual
-    Square-LOAD does not always take after a state-load (use the boot driver
-    re15_mzd_load_room.py for a guaranteed load).
+  - `-statefile` reliably quick-loads for menu-shots, stepping AND the Square-LOAD
+    (verified end-to-end 2026-06-30 — Square is RELIABLE after the Up,Up,Down menu
+    re-activation the script does; allow --postload >=8s for a room / >=16s for a
+    cross-stage load before the close, quickload skips asset-settle so the frame
+    can stall late in that window).
+  - WORKING live-engage capture (ROOM1140 = 0x114 BRIEFING, player alive, all 5
+    zombies wake):  re15_quickload.py --left 16 --postload 10 --path "R0.5,U2,R0.3,U6"
+    Artifact: stage_saves/mzd_stage1_engage_live.sav. Debug-JUMP numbers are HEX
+    (--left 16 = 0x114 BRIEFING; --left 10 = 0x11A SEWER EXIT -- a 6-step trap).
   - The debug JUMP list holds ALL rooms. DPad-Right steps DOWN the list; a long
     hold AUTO-REPEATS and overshoots to the list end, so STEP_HOLD is short and
     you should verify each step with --menushot.
@@ -87,9 +93,14 @@ def main():
         log("Square -> LOAD room"); tap(B.XUSB_GAMEPAD_X, gap=0.6)
         log("settle %.0fs" % args.postload); time.sleep(args.postload)
         if args.path:
-            # DIRECTED move (room-specific, e.g. around an obstacle): U/D = forward/back, L/R = turn,
-            # X = cross, S = square. The 0x114 BRIEFING ROOM needs a table detour (user: a bit right,
-            # turn left, then straight): --path "R0.4,U2.5,L0.7,U6"
+            # DIRECTED move (TANK CONTROL): U/D = forward/back, L/R ROTATE the player (NOT strafe),
+            # X = cross, S = square. Rotation is RELATIVE TO CAMERA: in 0x114 BRIEFING the spawn faces
+            # the camera, so R rotates toward SCREEN-LEFT = toward the feeding zombies in the left aisle
+            # (between conference table and wall). Walking straight hits the table. VERIFIED path:
+            #   --path "R0.5,U2,R0.3,U6"   (R=face left to zombies, U=past table edge, R=into aisle, U=down it)
+            # Two-R (R..,U..,R..,U..) is more robust than R-then-L (the counter-rotation overcorrects).
+            # Keep rotations short (~0.3-0.5s; >0.7s overrotates). Verify each try with the PNG (re15_ss.py)
+            # + distances with re15_enemy_state.py (target: nearest zombie dist<4000).
             PMAP = {"U": B.XUSB_GAMEPAD_DPAD_UP, "D": B.XUSB_GAMEPAD_DPAD_DOWN,
                     "L": B.XUSB_GAMEPAD_DPAD_LEFT, "R": B.XUSB_GAMEPAD_DPAD_RIGHT,
                     "X": B.XUSB_GAMEPAD_A, "S": B.XUSB_GAMEPAD_X}

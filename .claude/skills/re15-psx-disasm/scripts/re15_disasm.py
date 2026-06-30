@@ -130,9 +130,20 @@ def cmd_dis(a, n, binname):
 def cmd_table(a, n, binname):
     data, fo, path = load(a, binname)
     print(f"; {path}  pointer table @0x{a:08x}")
+    zero = 0
     for i in range(n):
         v = word(data, fo, a + i*4)
+        if v == 0: zero += 1
         print(f"  [{i:2d}] 0x{a+i*4:08x} -> 0x{v:08x}  {tag_addr(v)}")
+    if n and zero > n // 2:
+        # Mostly-null usually means the WRONG offset/address, NOT a runtime-patched table.
+        # Overlays load at 0x80100000 with NO 0x800 header (off = addr-0x80100000); adding a
+        # 0x800 header (like the EXE) reads 0x800 bytes too far -> garbage/nulls. This tool's
+        # load() is correct; a hand-rolled offset is the usual culprit.
+        print(f"; WARNING: {zero}/{n} entries are 0x00000000 -- suspect the ADDRESS or --bin first")
+        print(f";          (overlays have NO 0x800 header: off = addr-0x80100000). If the address is")
+        print(f";          right and it's still null, cross-check live RAM:")
+        print(f";          re15-savestate-ghidra/scripts/re15_runtime_table.py <sav> 0x{a:08x} {n}")
 
 def cmd_scan(a, binname, maxn=256):
     data, fo, path = load(a, binname)

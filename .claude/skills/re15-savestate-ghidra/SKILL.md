@@ -79,6 +79,8 @@ Dumpt die **live Gegner-KI** aus dem Savestate: das Enemy-Array `DAT_800acc2c` (
 
 ```bash
 python scripts/re15_enemy_state.py <savestate.sav>
+python scripts/re15_enemy_state.py <savestate.sav> --ai   # + AI-Felder & den +0x5=0x13 fw-gate
+python scripts/re15_runtime_table.py <sav> 0x8011f840 16 --pair 0x8011f890   # Cross-Check: +0x5-Dispatch-Tabellen RAM vs. statische BIN
 ```
 
 Verifizierter Output (Live-Combat-Save `stage_saves/mzd_stage1_combat_death.sav`, 7 Zombies + toter Spieler):
@@ -91,6 +93,8 @@ slot type  +0x4 +0x5 +0x9(&f) act  dist   flags hitbox    label
 ```
 
 Felder + FSM-Map (alle byte-true belegt): **+0x4** Main-State → `PTR_FUN_801217a0[+0x4]` (0=init 1=active-AI(FUN_8011d9f4) 2=hurt 3=death 4=idle); **+0x9** Sub-State (`(&0xf)`→`PTR_FUN_801217b4`; 0=sub0=FUN_8011da48, aktive Humanoid-AI); **+0x5** Anim-Phase (FUN_8011da48→`DAT_801217b8[+0x5]`; Attack-Commit `0x701` setzt +0x5=7); **+0x0** low = Model-Instanz-Action (`@0x80071d40`; **0x16-0x19 = Lunge-Sequenz = Hitbox-Fenster**); **Hitbox** = `*(ent+0x78)` radius_min@+6/height@+8/radius_max@+10 (Typ 0x47 = 450/1530, Typ 0x10/0x11/0x16 = 400/1440). Die eigentliche Hitbox `FUN_80017fa4` feuert über den Action-Driver `FUN_80019e20`, wenn die Lunge-Anim die aktiven Frames erreicht.
+
+⚠️ **Der obige Beispiel-Output + die `+0x5=7=Lunge`/act-`0x16-0x19`-Map gelten für Typ 0x47** (`@0x801217a0`-Familie). Die LIVE-STAGE1-Briefing-Zombies (0x10/0x11/0x16) nutzen die **PARALLELE `@0x8011f7b4`-Familie** mit ANDERER +0x5-Bedeutung — das Skript labelt jetzt standardmäßig diese (0=search 2=ENGAGE 3/4=GRAB 5/6=walk **7=TURN-to-face** 0xc=feeding 0x13=engage+fw-precheck). Nicht mischen. Die +0x5-Dispatch-Tabellen `@0x8011f840`(decide)/`@0x8011f890`(animate) stehen STATISCH in STAGE1.BIN (`re15_disasm.py table 0x8011f840` liest sie korrekt) und sind 40/40 identisch zum RAM — `re15_runtime_table.py <sav> 0x8011f840 16 --pair 0x8011f890` ist der **Cross-Check statisch↔RAM** (NICHT weil sie gepatcht wären — ein früherer „runtime-patched"-Befund war ein Overlay-Offset-Bug, siehe [[reai-v2-re-pitfalls]]). **`--ai`** dumpt +0x90(fw-gate)/+0x6a(rot)/+0x94(motion)/+0x1d4(hurt_clip)/+0x1dc(stun) und wertet den `(+0x90&3)`-Gate aus: in `mzd_stage1_engage_live.sav` ist +0x90==0x00 für alle 5 Zombies → forward-walk **DORMANT** → +0x5=0x13 verhält sich byte-identisch zu engage; nichts zu portieren für ROOM1140.
 
 ## 7. DORMANZ-Check: ein Gate-Bit über ALLE Saves sweepen (`scripts/re15_flag_sweep.py`)
 

@@ -1,4 +1,29 @@
-# RE1.5 Port — Session-Handover (Stand 2026-06-30, Phase 8.14: zwei-seitiger Combat BEIDSEITIG sichtbar)
+# RE1.5 Port — Session-Handover (Stand 2026-06-30, Phase 8.15: C11 dynamisch geschlossen; zwei-seitiger Combat spielbar)
+
+## 0. NÄCHSTE SESSION — START HERE
+
+**Stand:** Der ROOM1140-Briefing-Combat ist byte-true in-game UND zwei-seitig SPIELBAR; beide Schleifen laufen end-to-end:
+- **Zombie→Spieler:** spawn → wake (dist<4000) → engage → turn → GRAB (−10/−5 HP) → Spieler gepinnt → HP<0 → Tod (state 7, 120-Frame-Timer).
+- **Spieler→Zombie:** R1 zielen + Square feuern → `re15_player_weapon_fire` (Auto-Aim Front-Zombie → per-Waffe-Damage, Pistole 24 → hurt/death/corpse). Aim/Fire-Anim sichtbar (PL00.EDD clip 18).
+- **C11 dynamisch GESCHLOSSEN** für ROOM1140 (live gegen das echte Spiel verifiziert; Artefakt `stage_saves/mzd_stage1_engage_live.sav`).
+
+**Build/Test:**
+```bash
+export PATH="/c/msys64/mingw64/bin:$PATH"
+cmake -S re15_port -B re15_port/build -G Ninja -DRE15_BUILD_PC=ON     # nur beim ersten Mal
+cmake --build re15_port/build && ctest --test-dir re15_port/build --timeout 30   # 32/32 grün
+```
+
+**Skills zuerst (KEIN ad-hoc Python/Disasm mehr bauen — die Skills ersetzen das):** `ghidra-mapping` (Katalog) → `re15-psx-disasm` (statisch: dis/table/read) → `re15-savestate-ghidra` (Savestate×Ghidra: `re15_enemy_state.py --ai`, `re15_runtime_table.py`, `re15_flag_sweep.py`) → `re15-room-capture` (echtes Spiel via DuckStation) / `re15-room-probe` (Port-Probe als ctest).
+
+**3 SESSION-LEARNINGS (2026-06-30), die NICHT neu erlernt werden müssen — durable in den Skills + Memory [[reai-v2-re-pitfalls]]:**
+1. **Navigation:** Debug-JUMP-Nummern sind **HEX**. ROOM1140 = `0x114 BRIEFING` = `re15_quickload.py --left 16` (`0x11A SEWER EXIT` = `--left 10` = der 6-Schritte-Lesefehler). Live-Engage-Capture: `re15_quickload.py --left 16 --postload 10 --path "R0.5,U2,R0.3,U6"`. `--path` L/R **DREHEN** (Tank, kein Strafe); `R` = Bildschirm-links zu den Zombies; zwei-R robuster.
+2. **Overlay-File-Offset-Trap:** STAGE*.BIN-Overlays haben **KEINEN 0x800-Header** (`off = addr − 0x80100000`; nur die EXE hat den Header). Den Offset NIE selbst rechnen → `re15_disasm.py` (table/dis/read) bzw. `re15_ss.Ram` nutzen. (Ein ad-hoc `+0x800` las die Dispatch-Tabellen `@0x8011f840/890` als „null" → falscher „runtime-patched"-Schluss; korrekt gelesen stehen sie statisch in der BIN, 40/40 == RAM. `re15_runtime_table.py` = der Cross-Check statisch↔RAM.)
+3. **State-erreicht ≠ State-aktiv:** `+0x5=0x13` = engage + ein `(+0x90&3)`-gegateter forward-walk-Vorabcheck. In allen Live-Zombies ist `+0x90==0x00` → fw-Branch nie genommen → 0x13 == engage für ROOM1140 → nichts zu portieren. **IMMER Gate-Flags im Live-Save prüfen** (`re15_enemy_state.py --ai` / `re15_flag_sweep.py`), bevor man einen gegateten Pfad portiert.
+
+**Mögliche nächste Tasks (eine wählen):** Fade/Game-Over-Screen (deferred, Port hat keine Fade-Infra) · exakte Aim/Fire-Command-FSM `@0x80035810` + Waffen-Inventory · Muzzle-Flash / Raise-Clip 17 · ein anderer Raum/Gegner (dann ggf. m1-Forward-Walk, `+0x90&3 != 0`). Details in der Phasen-Historie unten.
+
+---
 
 > **NEUESTE SESSION (8.14) — die PLAYER-AIM/FIRE-Animation ist byte-true portiert (Commit b3379f71).** RE'd via Workflow
 > `player-aim-anim-re` (4 Finder + adversariale Verify, 16 Agenten). Der Spieler hebt jetzt sichtbar die Waffe (R1 halten →
@@ -9,7 +34,7 @@
 >
 > **VORSESSION (8.13) — die PER-STATE Gegner-Clips (engage/turn/grab) byte-true (475093f7):** der Zombie animiert durch seinen
 > GANZEN Lebenszyklus (feeding→wake→ENGAGE→TURN→GRAB→HURT→DEATH). ENGAGE/TURN = +0x1d4 variant, GRAB = (+0x5−3)*3+{0,1}→release 17.
-> Deferred: Stand-up-Ramp 27→28→29 (Anim-Dauer), Forward-Walk/Search (m0 nicht live).
+> Deferred: Stand-up-Ramp 27→28→29 (Anim-Dauer). Forward-Walk: für ROOM1140 **dormant** (+0x90&3==0 in allen Live-Zombies, 8.15-live-bestätigt), AUFGELÖST — kein Port nötig; nur falls ein anderer Raum einen m1-Zombie mit +0x90&3!=0 hat (siehe SECTION 0, Learning 3).
 >
 > **VORSESSION (8.12) — HURT-Stagger + Hit-Stun byte-true (2f3cec99):** geschossener Zombie zuckt (Clip {2,3,4,5}) + ~2-3 Frames
 > Stun (`+0x1dc` Seed 4..7). **VORSESSION (8.11) — die Anim-PRÄSENTATION entsperrt** (Enemy-Modelle laden aus CDEMD*.EMS +
@@ -30,9 +55,11 @@
 Kanonisches „lies-mich-zuerst" für die nächste Session. **Die STAGE1-Zombie-Combat-Logik ist byte-true in-game:
 spawn → wake (dist<4000) → engage → turn-to-face → GRAB (−10/−5 HP) → Spieler GEPINNT → HP<0 → TOD (death-FSM-Kern,
 state 7, 120-Frame-Timer; Fade/Game-Over-Screen deferred).** Der Combat-Loop ist damit end-to-end geschlossen.
-Forward-Walk AUFGELÖST: das m0-Live-Brain (das der Port hat) setzt NIE +0x5=6 → der Briefing-Combat (wake→engage→turn→grab→
-pin→drain) ist byte-true KOMPLETT für ROOM1140. Der +0x5=6-Walk im Save ist ein Dead-Player-„walk-to-corpse"-Artefakt
-(player hp=-1) + ein m1-Varianten-Verhalten (andere Räume). KEINE Live-Lücke; nichts zu portieren für ROOM1140 (§8.10).
+Forward-Walk AUFGELÖST (8.15 live-bestätigt): die nächsten Live-Zombies erreichen +0x5=0x13 (engage + ein (+0x90&3)-
+gegateter forward-walk-Vorabcheck), aber +0x90==0x00 in ALLEN 5 Live-Zombies → der fw-Branch wird nie genommen → 0x13 ==
+engage für ROOM1140 → der Briefing-Combat (wake→engage→turn→grab→pin→drain) ist byte-true KOMPLETT, nichts zu portieren.
+Das +0x5=6 im combat_death.sav war ein Dead-Player-„walk-to-corpse"-Artefakt (player hp=-1) — KEINE Live-Lücke (§8.10/§8.15;
+SECTION 0 Learning 3).
 **ZWEI-SEITIGER Combat: SPIELBAR in-game (Nutzer-gewählt).** Beide Schleifen laufen end-to-end: Zombie→Spieler (spawn→wake→
 engage→turn→grab→pin→drain→Tod) UND Spieler→Zombie (**R1 zielen + Square feuern** → `re15_player_weapon_fire`=FUN_80011f50:
 Auto-Aim Front-Zombie in Reach → byte-true per-Waffe-Damage [Pistole 24] → hurt/death→corpse), gewired in game_step.
@@ -599,9 +626,10 @@ Sandbox **erfolgreich gefahren** (re15-room-capture: 2 Live-Captures + 1 Menüsh
   den Zombies (Bildschirm-LINKS, linke Gasse hinter dem Tisch), die zwei-R-Variante (`R…,U…,R…,U…`) ist robuster als R-L (die Gegen-
   Drehung überkorrigiert). HURT-Capture braucht zusätzlich R1-aim+Square.
 - **⚠️ NEUER BYTE-TRUE BEFUND aus dem Live-Engage — +0x5=0x13 (FUN_8010561c):** die AI-Dispatch-Tabellen `@0x8011f840` (decide) /
-  `@0x8011f890` (animate) sind **RUNTIME-GEPATCHT** — in STAGE1.BIN sind die Slots null (nur 0x80107634 vereinzelt) → **aus dem
-  Savestate-RAM lesen, nicht aus dem BIN** (`re15_ss.Ram(sav).u32(0x8011f840+i*4)`). Runtime: +0x5=0x13 → decide `FUN_8010561c` /
-  animate `FUN_801057bc`. Disasm-verifiziert: **0x13 = engage (FUN_80102058) + eine vorangestellte `+0x90&3`+Winkel-Forward-Walk-Prüfung**
+  `@0x8011f890` (animate) stehen STATISCH in STAGE1.BIN (`re15_disasm.py table 0x8011f840`; Overlay-Offset = `addr−0x80100000`, KEIN
+  0x800-Header) und sind 40/40 identisch zum RAM. (⚠️ KORREKTUR: ein früherer Eintrag hier behauptete „RUNTIME-GEPATCHT, in STAGE1.BIN
+  null" — das war ein ad-hoc-Offset-Bug [`+0x800` für ein Overlay], siehe SECTION 0 Learning 2 + [[reai-v2-re-pitfalls]]. `re15_runtime_table.py`
+  = der Cross-Check statisch↔RAM, nicht weil die Tabelle gepatcht wäre.) +0x5=0x13 → decide `FUN_8010561c` / animate `FUN_801057bc`. Disasm-verifiziert: **0x13 = engage (FUN_80102058) + eine vorangestellte `+0x90&3`+Winkel-Forward-Walk-Prüfung**
   (→ +0x5=9/10). Der Rest (turn 0x701 @dist<0x7d0+arc0x2c8; grab (facing+3)<<8|1 @dist<0x4b0+arc0x200+gleicher Boden+facing_aligned;
   dead-grab 0xc01 @dist<0x5dc+hp<0; fallback 0x1001) ist **byte-IDENTISCH zu engage**. → die nächsten Live-Zombies landen real in 0x13.
   **ABER der Forward-Walk-Zweig ist gegated durch `+0x90 & 3`, und im Live-Save ist `+0x90 == 0x00` für ALLE 5 Zombies (auch die zwei in

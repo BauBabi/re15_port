@@ -40,6 +40,13 @@ python $S dis   0x8011d6d4 30 --bin STAGE5.BIN
 
 **Regel:** Bevor du Code aus einem Overlay-`.c` portierst, der AI-/Dispatch-/State-Logik trägt, **disasm-verifiziere mindestens den Prolog + die Schlüssel-Konstanten** gegen die rohen Bytes (`dis <addr>`). Stimmt `dis <addr> 4` nicht mit dem `.c`-Anfang überein (z.B. `.c` liest sofort `+0x94`, aber `dis` zeigt dist-cache `SquareRoot0`+`@tabelle[+0x4]`) → dem `.c` NICHT trauen, aus den Bytes arbeiten. Live-RAM aus einem Savestate (`re15-savestate-ghidra`) ist der finale Schiedsrichter (Bytes @addr == on-disc?).
 
+## ⚠ NIE DEN FILE-OFFSET SELBST RECHNEN (Overlay = KEIN 0x800-Header)
+
+Die PSX.EXE hat einen **0x800-Byte-Header** (`off = 0x800 + addr − t_addr`). Die **STAGE*.BIN-Overlays haben KEINEN** (`off = addr − 0x80100000`). Wer ad-hoc `addr − 0x80100000 + 0x800` rechnet (den EXE-Header fälschlich annimmt), liest **0x800 Bytes zu weit = Garbage/Nullen** — und schließt dann fälschlich „die Tabelle ist leer / runtime-gepatcht".
+**Belegt (2026-06-30):** die AI-Dispatch-Tabellen `@0x8011f840`(decide)/`@0x8011f890`(animate) wurden ad-hoc mit `+0x800` als „null" gelesen → falscher „runtime-patched"-Schluss. Mit korrektem Offset (`table 0x8011f840`) stehen sie **vollständig in STAGE1.BIN** und sind **40/40 identisch zum Savestate-RAM**: `0x80101b64`(search) `0x80102058`(engage) `0x80102548`(grab) `0x80102bd0`(walk) `0x80102dc8`(turn) `0x801048a8`(feeding) `0x8010561c`(0x13=engage+fw-precheck) = statische Overlay-Daten, NICHT gepatcht.
+
+**Regel:** den Offset NIE selbst rechnen — `re15_disasm.py` (dis/table/read, nutzt `load()` = immer korrekt) bzw. `re15_ss.Ram` verwenden. `table <addr>` liefert viele `0x00000000` → ERST Adresse/`--bin`/Offset verdächtigen (das Tool warnt jetzt selbst), NICHT „runtime-patched" annehmen. **Cross-Check statisch↔RAM** (falls eine Tabelle WIRKLICH zur Laufzeit gebaut wird): `../re15-savestate-ghidra/scripts/re15_runtime_table.py <sav> 0x8011f840 16 --pair 0x8011f890` — Match ⇒ statisch, Diff ⇒ runtime-gebaut. Siehe [[reai-v2-re-pitfalls]].
+
 ## Dispatch-Tabellen-Familien decodieren (`table`)
 
 Die STAGE1-Zombie-AI ist ein Geflecht paralleler Tabellen — pro Gegner-Typ eine eigene. So aufgelöst (alle byte-true 2026-06-29):
