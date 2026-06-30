@@ -56,6 +56,7 @@ static inline int RNDI(float f) {
 #include "re15_game_step.h"   /* SHARED per-frame interpreter step (PSX+PC) */
 #include "re15_room.h"        /* SHARED cross-room transition (re15_room_apply_pending) */
 #include "re15_enemy.h"       /* generic enemy-model registry (re15_enemy_find/alloc/reset) */
+#include "re15_ems.h"         /* enemy-model archive index (load EMDs out of CDEMD*.EMS) */
 #include "re15_room_list.h"   /* GENERATED room-id list for the [ / ] debug room-browser */
 #include "re15_room_spawns.h" /* GENERATED per-room entry spawn (inbound-door landing spot) */
 #include "re15_anim_select.h"  /* SHARED actor bank/clip selection view-model */
@@ -186,19 +187,52 @@ static re15_emd_animation_t s_cine_scratch_anim;
  * tree into a registry bank + upload its texture to render slot 11+bank. Lazy: called
  * from the NPC render loop the first time an actor of `type` appears. Replaces the
  * em21-only special case for every OTHER enemy type. */
+/* Cached CDEMD0.EMS — the enemy-model archive every generic enemy loads from
+ * (the disc has no per-type EM<NN>.EMD; ~4.7 MB, read once, kept resident). */
+static const uint8_t *pc_cdemd(size_t *out_sz)
+{
+    static uint8_t *s_ems = NULL; static int s_sz = 0; static int s_tried = 0;
+    if (!s_tried) { s_tried = 1; s_ems = pc_read_shared("EMD/CDEMD0.EMS", &s_sz); }
+    if (out_sz) *out_sz = (size_t)s_sz;
+    return s_ems;
+}
+
 static void pc_enemy_load(uint8_t type)
 {
     extern void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
     if (type == 0 || re15_enemy_find(type)) return;
     re15_enemy_bank_t *eb = re15_enemy_alloc(type);
     if (!eb) return;                                   /* registry full */
-    char rel[32]; snprintf(rel, sizeof rel, "EMD/EM%02X.EMD", type);
-    int sz = 0; uint8_t *buf = pc_read_shared(rel, &sz);
-    if (!buf) { eb->type = 0; fprintf(stderr, "[enemy] EM%02X.EMD not found\n", type); return; }
+
+    /* Enemy models live inside CDEMD0.EMS (no per-type EM<NN>.EMD on the disc).
+     * Try a standalone split file first (back-compat / future), else extract the
+     * type's EMD blob out of the archive (re15_ems, the byte-true port of the
+     * Java EMS splitter). Either way `buf` ends up a private, bank-owned copy. */
+    uint8_t *buf = NULL; size_t buflen = 0;
+    char rel[32]; int sz = 0;
+    snprintf(rel, sizeof rel, "EMD/EM%02X.EMD", type);
+    buf = pc_read_shared(rel, &sz);                    /* malloc'd if it exists */
+    if (buf) {
+        buflen = (size_t)sz;
+    } else {
+        int idx = re15_ems_index_for_type(type);
+        size_t ems_sz = 0; const uint8_t *ems = (idx >= 0) ? pc_cdemd(&ems_sz) : NULL;
+        size_t off = 0, len = 0;
+        if (ems && re15_ems_get_entry(ems, ems_sz, idx, &off, &len) == 0) {
+            buf = (uint8_t *)malloc(len);             /* private copy: banks free their buf */
+            if (buf) { memcpy(buf, ems + off, len); buflen = len; }
+        }
+    }
+    if (!buf) {
+        eb->type = 0;
+        fprintf(stderr, "[enemy] EM%02X model not found (no split file, not in CDEMD0.EMS)\n", type);
+        return;
+    }
+
     re15_tim_t tim = {0};
-    if (re15_emd_parse_container(buf, (size_t)sz, &eb->md1, &eb->skel, &eb->anim, &tim) != 0) {
+    if (re15_emd_parse_container(buf, buflen, &eb->md1, &eb->skel, &eb->anim, &tim) != 0) {
         free(buf); eb->type = 0;
-        fprintf(stderr, "[enemy] EM%02X.EMD parse FAILED\n", type);
+        fprintf(stderr, "[enemy] EM%02X EMD parse FAILED\n", type);
         return;
     }
     eb->buf = buf;                                     /* md1/skel/anim point into buf */
