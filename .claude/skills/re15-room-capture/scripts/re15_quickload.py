@@ -56,6 +56,14 @@ def main():
     ap.add_argument("--provoke", type=float, default=0.0)
     ap.add_argument("--path", default="")   # directed move after load, e.g. "R0.4,U2.5,L0.6,U6"
                                             # tokens: U/D forward/back, L/R turn, X cross, S square; <secs> hold
+    ap.add_argument("--fire", type=int, default=0)   # after path: hold R1 (aim) + tap Square N times.
+                                                     # The input injection WORKS (verified runs 2026-06-30). BUT two
+                                                     # gotchas make it useless for capturing the muzzle in the BRIEFING:
+                                                     #  (1) the MUZZLE is 1 frame -> gone by save-time (save is at close);
+                                                     #  (2) the briefing player has weapon DAT_800aca5d=1 (knife/melee, NOT
+                                                     #      the pistol w2) -> no muzzle, no ranged hit, effect pool stays 0.
+                                                     # To capture an ESP effect: use a GUN-equipped gameplay room AND a
+                                                     # PERSISTENT effect (blood/death-gore), or save ON the effect frame.
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
     T0 = time.monotonic()
@@ -110,6 +118,15 @@ def main():
                 btn = PMAP.get(tok[0].upper()); secs = float(tok[1:] or "0.5")
                 if btn is None: continue
                 log("PATH %s %.2fs" % (tok[0].upper(), secs)); hold_btn(btn, secs)
+        if args.fire > 0:
+            # Hold R1 (aim) then tap Square (fire) N times. R1 = right shoulder; Square = XUSB_X
+            # in this pad mapping (the same button the menu LOAD used). The aim/raise needs a beat
+            # to settle before the discharge registers.
+            log("FIRE: hold R1 (aim) + Square x%d" % args.fire)
+            gp.press_button(button=B.XUSB_GAMEPAD_RIGHT_SHOULDER); gp.update(); time.sleep(0.7)
+            for s in range(args.fire):
+                tap(B.XUSB_GAMEPAD_X, hold=0.13, gap=0.45)
+            gp.release_button(button=B.XUSB_GAMEPAD_RIGHT_SHOULDER); gp.update(); time.sleep(0.2)
         if args.provoke > 0:
             log("PROVOKE %.0fs" % args.provoke)
             t_end = time.monotonic() + args.provoke; seq = 0
