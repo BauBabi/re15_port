@@ -79,10 +79,10 @@ static uint32_t rd_u32(const uint8_t *p)
 }
 static int32_t rd_s32(const uint8_t *p) { return (int32_t)rd_u32(p); }
 
-int re15_esp_parse(const uint8_t *raw, size_t size,
-                   uint32_t idh_off, uint32_t ptr_end_off,
-                   uint32_t tim_base_off, uint32_t tim_end_off,
-                   re15_esp_t *out)
+static int esp_parse_core(const uint8_t *raw, size_t size,
+                          uint32_t idh_off, uint32_t ptr_end_off,
+                          uint32_t tim_base_off, uint32_t tim_end_off,
+                          re15_esp_t *out, int zero_ok)
 {
     if (!raw || !out) return -1;
     memset(out, 0, sizeof(*out));
@@ -90,8 +90,10 @@ int re15_esp_parse(const uint8_t *raw, size_t size,
     out->raw_size = size;
 
     /* FUN_80019354 guard: piVar4 != 0 && *piVar4 != -1 (idh present + first word not the
-     * 0xFFFFFFFF "no effects" marker). idh_off must leave room for the 8-byte id header. */
-    if (idh_off == 0 || (size_t)idh_off + 8 > size) return -2;
+     * 0xFFFFFFFF "no effects" marker). For the ROOM call idh_off==0 = "no ESP" (RDT+0x4C is
+     * NULL); the GLOBAL file CORE00.ESP (FUN_8001923c) has its id header at genuine file
+     * offset 0, so zero_ok lifts that rejection. */
+    if ((idh_off == 0 && !zero_ok) || (size_t)idh_off + 8 > size) return -2;
     if (rd_u32(raw + idh_off) == 0xFFFFFFFFu) return -2;
 
     /* FUN_8001945c: id array forward from idh_off; pointer table DOWNWARD from ptr_end_off
@@ -140,6 +142,26 @@ int re15_esp_parse(const uint8_t *raw, size_t size,
     return 0;
 }
 
+int re15_esp_parse(const uint8_t *raw, size_t size,
+                   uint32_t idh_off, uint32_t ptr_end_off,
+                   uint32_t tim_base_off, uint32_t tim_end_off,
+                   re15_esp_t *out)
+{
+    return esp_parse_core(raw, size, idh_off, ptr_end_off, tim_base_off, tim_end_off, out, 0);
+}
+
+/* Parse the GLOBAL effect bank file CORE00.ESP (FUN_8001923c @0x8001923c): the id header is at
+ * file offset 0 ({3,8,0,2,4}), the pointer table is read DOWNWARD from ptr_end = round_up4(size)-4
+ * (the installer math @0x80019310-0x80019330), and there is NO embedded TIM (the global installer
+ * calls only FUN_8001945c, never the TIM walker — the effects address VRAM-resident textures via
+ * the EFF-header word1 page/clut). Yields effect-id 0 (the universal hit effects) + 2/3/4/8. */
+int re15_esp_parse_global(const uint8_t *raw, size_t size, re15_esp_t *out)
+{
+    if (!raw || size < 8) return -1;
+    uint32_t ptr_end = (uint32_t)(((size + 3u) & ~(size_t)3u) - 4u);
+    return esp_parse_core(raw, size, 0, ptr_end, 0, 0, out, 1);
+}
+
 /* ===== Phase ESP-C: EFF clip record accessors ========================================== */
 
 int re15_esp_anim(const re15_esp_t *esp, int eff_idx, int i, re15_esp_anim_t *out)
@@ -186,6 +208,10 @@ static const re15_esp_t *s_room_bank = NULL;
 void              re15_esp_set_room_bank(const re15_esp_t *bank) { s_room_bank = bank; }
 const re15_esp_t *re15_esp_room_bank(void)                       { return s_room_bank; }
 
+static const re15_esp_t *s_global_bank = NULL;   /* CORE00.ESP (effect-ids 0/2/3/4/8) */
+void              re15_esp_set_global_bank(const re15_esp_t *bank) { s_global_bank = bank; }
+const re15_esp_t *re15_esp_global_bank(void)                       { return s_global_bank; }
+
 void re15_esp_fx_reset(void) { memset(s_esp_fx, 0, sizeof(s_esp_fx)); }
 
 int re15_esp_fx_count(void)
@@ -211,7 +237,13 @@ re15_esp_fx_t *re15_esp_fx_spawn(const re15_esp_t *bank, uint8_t effect_id, uint
         f->active    = 1;
         f->effect_id = effect_id;
         f->sub_index = sub_index;
-        f->eff_idx   = (int8_t)re15_esp_find_id(bank, effect_id);   /* -1 if bank lacks it */
+        f->eff_idx   = (int8_t)re15_esp_find_id(bank, effect_id);   /* the ROOM bank first */
+        f->bank      = (f->eff_idx >= 0) ? bank : NULL;
+        if (f->eff_idx < 0) {                                       /* fall back to the GLOBAL bank */
+            const re15_esp_t *gb = re15_esp_global_bank();          /* CORE00.ESP (effect-0 hit fx, …) */
+            int gi = re15_esp_find_id(gb, effect_id);
+            if (gi >= 0) { f->eff_idx = (int8_t)gi; f->bank = gb; }
+        }
         f->frame     = 0;
         f->timer     = 0;     /* 0 -> the next tick advances to frame 0's duration (FUN_80019e20) */
         f->x = x; f->y = y; f->z = z;
@@ -225,7 +257,9 @@ void re15_esp_fx_tick(const re15_esp_t *bank)
 {
     /* Byte-true FUN_80019e20 frame timer (L117-131): when the per-slot timer hits 0, advance
      * the anim-record index; the new record's param-low byte = its duration, 0xFF = loop back
-     * to the record's desc-low byte, 0/0 (duration & loop-target both 0) = end -> despawn. */
+     * to the record's desc-low byte, 0/0 (duration & loop-target both 0) = end -> despawn.
+     * Each fx animates from ITS OWN resolved bank (room or global), set at spawn. */
+    (void)bank;   /* per-fx bank now (f->bank); kept for call-site compat */
     for (int i = 0; i < RE15_ESP_FX_MAX; i++) {
         re15_esp_fx_t *f = &s_esp_fx[i];
         if (!f->active) continue;
@@ -233,7 +267,7 @@ void re15_esp_fx_tick(const re15_esp_t *bank)
         if (f->timer == 0) {
             f->frame++;
             re15_esp_anim_t a;
-            if (f->eff_idx < 0 || re15_esp_anim(bank, f->eff_idx, f->frame, &a) != 0) {
+            if (f->eff_idx < 0 || re15_esp_anim(f->bank, f->eff_idx, f->frame, &a) != 0) {
                 f->active = 0;            /* no bank / ran past the records */
                 continue;
             }
@@ -242,7 +276,7 @@ void re15_esp_fx_tick(const re15_esp_t *bank)
             if (dur == 0 && loop == 0) { f->active = 0; continue; }   /* terminator */
             if (dur == 0xff) {                                        /* loop marker */
                 f->frame = loop;
-                if (re15_esp_anim(bank, f->eff_idx, f->frame, &a) != 0) { f->active = 0; continue; }
+                if (re15_esp_anim(f->bank, f->eff_idx, f->frame, &a) != 0) { f->active = 0; continue; }
                 dur = (uint8_t)(a.param & 0xff);
             }
             f->timer = (int16_t)dur;

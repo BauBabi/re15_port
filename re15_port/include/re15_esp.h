@@ -92,6 +92,16 @@ int re15_esp_coord(const re15_esp_t *esp, int eff_idx, int i, re15_esp_coord_t *
 /** Resolve effect-id (RDT header value, e.g. 0x05) to its eff[] index, or -1 if not present. */
 int re15_esp_find_id(const re15_esp_t *esp, uint8_t effect_id);
 
+/** Parse the GLOBAL effect bank file CORE00.ESP (FUN_8001923c): id header @file offset 0, ptr
+ *  table downward from round_up4(size)-4, no embedded TIM. Holds effect-ids {3,8,0,2,4} incl the
+ *  universal hit effects (effect-id 0). 0 = ok, <0 = error (see re15_esp_parse). */
+int re15_esp_parse_global(const uint8_t *raw, size_t size, re15_esp_t *out);
+
+/** Bind the parsed GLOBAL effect bank (CORE00.ESP), set once at game-init. re15_esp_fx_spawn
+ *  resolves an effect-id against the room bank first, then this global bank (effect-0 etc.). */
+void              re15_esp_set_global_bank(const re15_esp_t *bank);
+const re15_esp_t *re15_esp_global_bank(void);
+
 /* ===== Phase ESP-C: the op-0x3a effect PARTICLE pool ====================================
  *
  * The model_inst-pool effect sprites (PSX DAT_800a73b8, spawned by op 0x3a -> FUN_80019700,
@@ -112,6 +122,7 @@ typedef struct {
     int16_t  timer;        /* frames until next advance (the byte-true 0x6d frame timer) */
     int32_t  x, y, z;      /* world position = owner-transform + local offset (Q12) */
     int16_t  param;        /* op-0x3a pc[14] */
+    const re15_esp_t *bank;/* the bank that resolved effect_id (room or GLOBAL CORE00.ESP); NULL = unresolved */
 } re15_esp_fx_t;
 
 void           re15_esp_fx_reset(void);

@@ -217,6 +217,47 @@ int main(void)
             printf("  (B) PASS: pool spawn/count, byte-true AABB-cull dispatch, duration despawn, reset\n");
     }
 
+    /* === Phase ESP-D: the GLOBAL effect bank CORE00.ESP (universal hit effects, effect-id 0) === */
+    {
+        const char *gpath = RE15_ASSET_PSX_DIR "/DATA/CORE00.ESP";
+        long gsz = 0;
+        uint8_t *gbuf = slurp(gpath, &gsz);
+        if (!gbuf) { fprintf(stderr, "FAIL: (D) cannot open %s\n", gpath); fail = 1; }
+        else {
+            re15_esp_t gesp;
+            int dfail = 0;
+            if (re15_esp_parse_global(gbuf, (size_t)gsz, &gesp) != 0) {
+                fprintf(stderr, "FAIL: (D) re15_esp_parse_global failed\n"); dfail = 1; }
+            if (gesp.id_count != 5) {                                  /* ids {3,8,0,2,4} */
+                fprintf(stderr, "FAIL: (D) id_count=%d (exp 5)\n", gesp.id_count); dfail = 1; }
+            int i0 = re15_esp_find_id(&gesp, 0x00);                     /* the universal hit effects */
+            if (i0 < 0 || gesp.eff[i0].eff_start != 0x824 ||
+                gesp.eff[i0].count_a != 22 || gesp.eff[i0].count_b != 20) {
+                fprintf(stderr, "FAIL: (D) effect-0 @0x824/22/20 (got i=%d start=0x%x a=%u b=%u)\n",
+                        i0, i0 >= 0 ? gesp.eff[i0].eff_start : 0,
+                        i0 >= 0 ? gesp.eff[i0].count_a : 0, i0 >= 0 ? gesp.eff[i0].count_b : 0); dfail = 1; }
+
+            /* fx spawn resolves effect-0 from the GLOBAL bank when the room bank lacks it. */
+            re15_esp_set_room_bank(NULL);
+            re15_esp_set_global_bank(&gesp);
+            re15_esp_fx_reset();
+            re15_esp_fx_t *fx0 = re15_esp_fx_spawn(NULL, 0x00, 0, 10, 20, 30, 0);
+            if (!fx0 || fx0->eff_idx < 0 || fx0->bank != &gesp) {
+                fprintf(stderr, "FAIL: (D) effect-0 should resolve from the global bank\n"); dfail = 1; }
+            /* effect-05 isn't in CORE00 (or the NULL room) -> stays unresolved. */
+            re15_esp_fx_reset();
+            re15_esp_fx_t *fx5 = re15_esp_fx_spawn(NULL, 0x05, 0, 0, 0, 0, 0);
+            if (!fx5 || fx5->eff_idx >= 0) {
+                fprintf(stderr, "FAIL: (D) effect-05 should be unresolved (not in CORE00/NULL room)\n"); dfail = 1; }
+
+            re15_esp_fx_reset();
+            re15_esp_set_global_bank(NULL);
+            free(gbuf);
+            if (dfail) fail = 1;
+            else printf("  (D) PASS: CORE00.ESP global bank {3,8,0,2,4}; effect-0 @0x824 (22a/20c); fx resolves effect-0 from global\n");
+        }
+    }
+
     free(buf);
     if (fail) { fprintf(stderr, "\nESP-PARSE TEST FAILED\n"); return 1; }
     printf("\nPASS: ESP-section parse byte-true vs ROOM1140.RDT\n");
