@@ -13,11 +13,16 @@
  *                    `(*PTR_800744a8[*pc])(instance)` — opcode table @0x800744a8 (52+ ops; one
  *                    draw-op = the 40x30 SPRT builder FUN_80046a1c).
  *
- * THIS FILE is Phase ESP-C1: the instance-pool struct, the allocator/init, and the FUN_8003f0a0
- * dispatch loop (byte-true, disasm-verified @0x8003f0a0). The opcode HANDLERS are explicit stubs
- * here (the default returns STOP) — porting the ~52 opcodes one by one is Phase ESP-C2, and the
- * bytecode source (DAT_800b3f70) + TIM/UV LUTs are Phase ESP-C3. No GPU draw, no game_step wiring
- * yet (C1 has no visible result by design).
+ * Phase ESP-C1 delivered the instance-pool struct, the allocator/init, and the FUN_8003f0a0
+ * dispatch loop (byte-true, disasm-verified). Phase ESP-C2 ports the ~52 opcode handlers
+ * @0x800744a8 one by one. Done so far (C2 batch 1, the control-flow core, disasm-verified
+ * @0x8003f1c0..f3dc):
+ *   0x00/0x1c/0x1d-0x20 nop-continue · 0x01 end/return-level · 0x02 wait-1-frame ·
+ *   0x03 jump-script · 0x04 spawn · 0x05 kill-instance · 0x06 loop-push · 0x07 loop-jump ·
+ *   0x08 loop-pop.  Every other opcode is still the stub (returns STOP).
+ * Still ahead: the per-level loop-counter ops (0x09-0x0c), then the draw / GTE / field ops
+ * (0x0d+), then the bytecode source (DAT_800b3f70) + TIM/UV LUTs (Phase ESP-C3). No GPU draw,
+ * no game_step wiring yet.
  *
  * Pointer handling: the original instance stores a 32-bit absolute pc at +0x1c and 32-bit return
  * pointers on the +0xc0 sub-stack. The PC port keeps the 0x170-byte instance image byte-true but
@@ -38,11 +43,12 @@
 #define RE15_ESPVM_OFF_OP0     0x00   /* cleared by init                                         */
 #define RE15_ESPVM_OFF_ACTIVE  0x01   /* lbu 1(s0): active flag (0 = skip instance)              */
 #define RE15_ESPVM_OFF_LEVEL   0x02   /* lb 2(s0): (s8) level/track index                        */
-#define RE15_ESPVM_OFF_DEPTH0  0x04   /* depth counter for level 0 (init = 0xff)                 */
-#define RE15_ESPVM_OFF_DEPTH1  0x08   /* depth counter for level 4 (init = 0xff)                 */
+#define RE15_ESPVM_OFF_DEPTH0  0x04   /* loop-stack depth for level 0 (inst[level+4]; init 0xff) */
+#define RE15_ESPVM_OFF_CIDX0   0x08   /* loop-counter index for level 0 (inst[level+8]; init 0xff)*/
 #define RE15_ESPVM_OFF_PC      0x1c   /* lw 28(s0): program counter (port: u32 offset)           */
-#define RE15_ESPVM_OFF_STACK   0xc0   /* sub-return stack base (instance + level*0x20 + 0xc0)    */
+#define RE15_ESPVM_OFF_STACK   0xc0   /* loop-return stack base (instance + level*0x20 + 0xc0)   */
 #define RE15_ESPVM_OFF_SP      0x140  /* lw 320(s0): stack pointer (port: u32 offset into mem)   */
+#define RE15_ESPVM_OFF_RETPC   0x144  /* per-level saved pc array (inst + 0x144 + level*4)       */
 
 /** Opcode handler return codes (FUN_8003f0a0 dispatch). */
 enum {

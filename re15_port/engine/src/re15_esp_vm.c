@@ -55,10 +55,43 @@ void re15_espvm_set_opcode(uint8_t op, re15_espvm_op_fn fn)
     s_optable[op] = fn ? fn : re15_espvm_op_stub;
 }
 
+/* The ported opcode handlers (defined below, after the allocator/init they depend on). */
+static int op_nop(re15_espvm_instance_t *inst);
+static int op_end(re15_espvm_instance_t *inst);
+static int op_wait(re15_espvm_instance_t *inst);
+static int op_jump_script(re15_espvm_instance_t *inst);
+static int op_spawn(re15_espvm_instance_t *inst);
+static int op_kill(re15_espvm_instance_t *inst);
+static int op_loop_push(re15_espvm_instance_t *inst);
+static int op_loop_jump(re15_espvm_instance_t *inst);
+static int op_loop_pop(re15_espvm_instance_t *inst);
+
+/* Install the ported real opcode table (PTR_800744a8). Unported entries stay the stub. C2 grows
+ * this as more @0x800744a8 handlers are reverse-engineered. NB: re15_espvm_reset() must call this
+ * AFTER the stub-fill so the real ops overwrite the stubs. */
+static void re15_espvm_install_ops(void)
+{
+    s_optable[0x00] = op_nop;          /* nop-continue (0x8003f1d8) */
+    s_optable[0x01] = op_end;          /* end/return-level (0x8003f1f0) */
+    s_optable[0x02] = op_wait;         /* wait-1-frame (0x8003f258) */
+    s_optable[0x03] = op_jump_script;  /* jump-script (0x8003f270) */
+    s_optable[0x04] = op_spawn;        /* spawn instance (0x8003f2a0) */
+    s_optable[0x05] = op_kill;         /* kill instance (0x8003f2dc) */
+    s_optable[0x06] = op_loop_push;    /* loop-push (0x8003f328) */
+    s_optable[0x07] = op_loop_jump;    /* loop-jump (0x8003f368) */
+    s_optable[0x08] = op_loop_pop;     /* loop-pop  (0x8003f3a4) */
+    s_optable[0x1c] = op_nop;          /* nop-continue (0x8003f1c0) */
+    s_optable[0x1d] = op_nop;          /* aliases of 0x8003f1d8 in the table (0x1d..0x20) */
+    s_optable[0x1e] = op_nop;
+    s_optable[0x1f] = op_nop;
+    s_optable[0x20] = op_nop;
+}
+
 void re15_espvm_reset(void)
 {
     memset(s_pool, 0, sizeof(s_pool));
     for (int i = 0; i < RE15_ESPVM_OPCODES; i++) s_optable[i] = re15_espvm_op_stub;
+    re15_espvm_install_ops();
 }
 
 re15_espvm_instance_t *re15_espvm_instance(int i)
@@ -85,7 +118,7 @@ static void re15_espvm_init(re15_espvm_instance_t *inst, uint16_t bytecode_id, c
     inst->mem[RE15_ESPVM_OFF_ACTIVE] = 1;
     inst->mem[RE15_ESPVM_OFF_OP0]    = 0;
     inst->mem[RE15_ESPVM_OFF_DEPTH0] = 0xff;
-    inst->mem[RE15_ESPVM_OFF_DEPTH1] = 0xff;
+    inst->mem[RE15_ESPVM_OFF_CIDX0]  = 0xff;
 
     /* stack pointer = instance + level*0x20 + 0xc0 (port: a mem-offset). level (mem[0x02]) is 0
      * here, set by the allocator below, so the stack base is +0xc0. */
@@ -115,6 +148,124 @@ re15_espvm_instance_t *re15_espvm_alloc(uint8_t slot_index, uint16_t bytecode_id
 
     re15_espvm_init(inst, bytecode_id, code_base);
     return inst;
+}
+
+/* ============================================================================================
+ * Phase ESP-C2 batch 1 — the control-flow core opcodes @0x800744a8[0x00..0x08] + the nop aliases.
+ * Each handler receives the instance (a0), reads its operands from code_base[pc+n], advances the
+ * pc itself, and returns CONT / STOP / YIELD. All disasm-verified @0x8003f1c0..f3dc.
+ * ============================================================================================ */
+
+#define INST_PC(i)      rd_u32((i)->mem + RE15_ESPVM_OFF_PC)
+#define INST_SETPC(i,v) wr_u32((i)->mem + RE15_ESPVM_OFF_PC, (v))
+
+/* 0x00 / 0x1c / 0x1d-0x20: nop-continue — pc++ (no operand), CONT. (0x8003f1d8 / 0x8003f1c0) */
+static int op_nop(re15_espvm_instance_t *inst)
+{
+    INST_SETPC(inst, INST_PC(inst) + 1);
+    return RE15_ESPVM_RET_CONT;
+}
+
+/* 0x02: wait-1-frame — pc++ (no operand), STOP (the instance resumes next frame). (0x8003f258) */
+static int op_wait(re15_espvm_instance_t *inst)
+{
+    INST_SETPC(inst, INST_PC(inst) + 1);
+    return RE15_ESPVM_RET_STOP;
+}
+
+/* 0x01: end/return — at level 0 deactivate the instance + STOP; else pop one nesting level
+ * (restore pc from inst[0x144 + (level-1)*4], restore the loop-stack pointer) + CONT. (0x8003f1f0) */
+static int op_end(re15_espvm_instance_t *inst)
+{
+    int8_t level = (int8_t)inst->mem[RE15_ESPVM_OFF_LEVEL];
+    if (level == 0) {
+        inst->mem[RE15_ESPVM_OFF_ACTIVE] = 0;           /* sb zero -> inst[0x01] */
+        return RE15_ESPVM_RET_STOP;
+    }
+    int8_t nl = (int8_t)(level - 1);
+    uint32_t pc = rd_u32(inst->mem + RE15_ESPVM_OFF_RETPC + (uint32_t)nl * 4u);
+    wr_u32(inst->mem + RE15_ESPVM_OFF_PC, pc);          /* pc = saved[level-1] */
+    int8_t depth = (int8_t)inst->mem[nl + 4];           /* loop-depth of level-1 */
+    inst->mem[RE15_ESPVM_OFF_LEVEL] = (uint8_t)nl;      /* pop level */
+    uint32_t sp = (uint32_t)((int)nl * 0x20 + RE15_ESPVM_OFF_STACK + (int)depth * 4 + 4);
+    wr_u32(inst->mem + RE15_ESPVM_OFF_SP, sp);          /* restore loop-stack pointer */
+    return RE15_ESPVM_RET_CONT;
+}
+
+/* 0x03: jump-script — re-seed THIS instance with bytecode id = operand @pc+3 (FUN_8003edec),
+ * then CONT (immediately start the new script). (0x8003f270) */
+static int op_jump_script(re15_espvm_instance_t *inst)
+{
+    uint32_t pc = INST_PC(inst);
+    uint8_t  id = inst->code_base[pc + 3];
+    re15_espvm_init(inst, id, inst->code_base);
+    return RE15_ESPVM_RET_CONT;
+}
+
+/* 0x04: spawn — allocate a sibling instance (slot = operand @pc+1, bytecode = operand @pc+3) via
+ * FUN_8003ee3c, advance pc by 4, CONT. (0x8003f2a0) */
+static int op_spawn(re15_espvm_instance_t *inst)
+{
+    uint32_t pc   = INST_PC(inst);
+    uint8_t  slot = inst->code_base[pc + 1];
+    uint8_t  id   = inst->code_base[pc + 3];
+    INST_SETPC(inst, pc + 4);
+    re15_espvm_alloc(slot, id, inst->code_base);
+    return RE15_ESPVM_RET_CONT;
+}
+
+/* 0x05: kill — clear the active flag of pool instance index = operand @pc+1, pc+=2, CONT.
+ * (0x8003f2dc; the original computes pool[idx]+1 with no bound check — the port guards idx<10.) */
+static int op_kill(re15_espvm_instance_t *inst)
+{
+    uint32_t pc  = INST_PC(inst);
+    uint8_t  idx = inst->code_base[pc + 1];
+    if (idx < RE15_ESPVM_INSTANCES)
+        s_pool[idx].mem[RE15_ESPVM_OFF_ACTIVE] = 0;
+    INST_SETPC(inst, pc + 2);
+    return RE15_ESPVM_RET_CONT;
+}
+
+/* 0x06: loop-push — push (pc+4 + u16 @pc+2) onto the loop-return stack, increment the level's
+ * depth counter, advance pc by 4, CONT. (0x8003f328) */
+static int op_loop_push(re15_espvm_instance_t *inst)
+{
+    uint32_t pc      = INST_PC(inst);
+    int8_t   level   = (int8_t)inst->mem[RE15_ESPVM_OFF_LEVEL];
+    uint16_t operand = rd_u16(inst->code_base + pc + 2);
+    uint32_t next_pc = pc + 4;
+    INST_SETPC(inst, next_pc);
+    inst->mem[level + 4] = (uint8_t)(inst->mem[level + 4] + 1);   /* depth++ */
+    uint32_t sp = rd_u32(inst->mem + RE15_ESPVM_OFF_SP);
+    wr_u32(inst->mem + sp, next_pc + operand);                    /* *(sp) = target */
+    wr_u32(inst->mem + RE15_ESPVM_OFF_SP, sp + 4);                /* sp += 4 */
+    return RE15_ESPVM_RET_CONT;
+}
+
+/* 0x07: loop-jump — pop (sp-=4), relative jump pc += u16 @pc+2, decrement the level's depth,
+ * CONT. (0x8003f368) */
+static int op_loop_jump(re15_espvm_instance_t *inst)
+{
+    uint32_t sp      = rd_u32(inst->mem + RE15_ESPVM_OFF_SP);
+    uint32_t pc      = INST_PC(inst);
+    wr_u32(inst->mem + RE15_ESPVM_OFF_SP, sp - 4);                /* sp -= 4 */
+    uint16_t operand = rd_u16(inst->code_base + pc + 2);
+    int8_t   level   = (int8_t)inst->mem[RE15_ESPVM_OFF_LEVEL];
+    wr_u32(inst->mem + RE15_ESPVM_OFF_PC, pc + operand);          /* pc += operand */
+    inst->mem[level + 4] = (uint8_t)(inst->mem[level + 4] - 1);   /* depth-- */
+    return RE15_ESPVM_RET_CONT;
+}
+
+/* 0x08: loop-pop — pop (sp-=4), advance pc by 2, decrement the level's depth, CONT. (0x8003f3a4) */
+static int op_loop_pop(re15_espvm_instance_t *inst)
+{
+    uint32_t sp    = rd_u32(inst->mem + RE15_ESPVM_OFF_SP);
+    wr_u32(inst->mem + RE15_ESPVM_OFF_SP, sp - 4);                /* sp -= 4 */
+    uint32_t pc    = INST_PC(inst);
+    int8_t   level = (int8_t)inst->mem[RE15_ESPVM_OFF_LEVEL];
+    wr_u32(inst->mem + RE15_ESPVM_OFF_PC, pc + 2);               /* pc += 2 */
+    inst->mem[level + 4] = (uint8_t)(inst->mem[level + 4] - 1);   /* depth-- */
+    return RE15_ESPVM_RET_CONT;
 }
 
 /* ---- FUN_8003f0a0: per-frame VM walker ----------------------------------------------------- */
