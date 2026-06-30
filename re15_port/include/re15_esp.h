@@ -89,6 +89,42 @@ int re15_esp_anim (const re15_esp_t *esp, int eff_idx, int i, re15_esp_anim_t  *
 /** Read sprite-coord record `i` (0..count_b-1) of effect `eff_idx`. 0 = ok, -1 = bad index. */
 int re15_esp_coord(const re15_esp_t *esp, int eff_idx, int i, re15_esp_coord_t *out);
 
+/** Resolve effect-id (RDT header value, e.g. 0x05) to its eff[] index, or -1 if not present. */
+int re15_esp_find_id(const re15_esp_t *esp, uint8_t effect_id);
+
+/* ===== Phase ESP-C: the op-0x3a effect PARTICLE pool ====================================
+ *
+ * The model_inst-pool effect sprites (PSX DAT_800a73b8, spawned by op 0x3a -> FUN_80019700,
+ * ticked by FUN_80019e20). The op selects a bank by effect-id (pc[2]) + sub-index (pc[3]),
+ * the local offset (pc[8/10/12]) is added to the owner-transform position, and the anim
+ * records cycle per the byte-true timing in FUN_80019e20 (per-record duration = anim.param
+ * low byte; 0xff = loop back to anim.desc low byte; 0/0 = end -> despawn). This is the port's
+ * particle pool; the GPU draw (project + textri quad w/ the coord cell) is the platform side. */
+
+#define RE15_ESP_FX_MAX 16
+
+typedef struct {
+    uint8_t  active;
+    uint8_t  effect_id;    /* op-0x3a pc[2] (RDT effect id, 0x05/0x07 in ROOM1140) */
+    uint8_t  sub_index;    /* op-0x3a pc[3] */
+    int8_t   eff_idx;      /* resolved index into re15_esp_t.eff[] (-1 = unresolved bank) */
+    int16_t  frame;        /* current anim-record index */
+    int16_t  timer;        /* frames until next advance (the byte-true 0x6d frame timer) */
+    int32_t  x, y, z;      /* world position = owner-transform + local offset (Q12) */
+    int16_t  param;        /* op-0x3a pc[14] */
+} re15_esp_fx_t;
+
+void           re15_esp_fx_reset(void);
+int            re15_esp_fx_count(void);
+/** Spawn an op-0x3a effect particle. `bank` = the room's parsed ESP (resolves effect_id ->
+ *  eff_idx for anim cycling; may be NULL -> eff_idx=-1, anim disabled). Returns the slot or NULL. */
+re15_esp_fx_t *re15_esp_fx_spawn(const re15_esp_t *bank, uint8_t effect_id, uint8_t sub_index,
+                                 int32_t x, int32_t y, int32_t z, int16_t param);
+/** Per-frame anim advance (byte-true FUN_80019e20 frame timer); despawns ended particles. */
+void           re15_esp_fx_tick(const re15_esp_t *bank);
+/** Read slot `i` (for the draw/tests); returns NULL if inactive/out-of-range. */
+const re15_esp_fx_t *re15_esp_fx_get(int i);
+
 /* ===== Phase ESP-B: the active effect-sprite POOL (spawn + AABB-cull dispatch) ============
  *
  * Byte-true model of the runtime effect pool (PSX globals DAT_800b2360 = active count,

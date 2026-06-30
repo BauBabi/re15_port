@@ -144,6 +144,41 @@ int main(void)
         else printf("  (C) PASS: EFF clip records byte-true (eff05 9 anim/29 cells; eff07 11/9; desc/param + coord cells)\n");
     }
 
+    /* === Phase ESP-C: op-0x3a particle pool — spawn + byte-true anim cycling === */
+    {
+        int pfail = 0;
+        re15_esp_fx_reset();
+        if (re15_esp_fx_count() != 0) { fprintf(stderr, "FAIL: (C2) fx reset -> 0\n"); pfail = 1; }
+
+        /* spawn effect 0x05 at a world position; resolves to eff[0]. */
+        re15_esp_fx_t *fx = re15_esp_fx_spawn(&esp, 0x05, 2, 1000, 2000, 3000, 0x55);
+        if (!fx || re15_esp_fx_count() != 1 || fx->effect_id != 0x05 || fx->sub_index != 2 ||
+            fx->eff_idx != 0 || fx->x != 1000 || fx->y != 2000 || fx->z != 3000 || fx->param != 0x55) {
+            fprintf(stderr, "FAIL: (C2) fx spawn fields\n"); pfail = 1; }
+
+        /* effect 05: dur=1/frame, terminator anim record at frame 8 -> ends at the 8th tick. */
+        for (int k = 0; k < 7; k++) re15_esp_fx_tick(&esp);
+        if (re15_esp_fx_count() != 1) { fprintf(stderr, "FAIL: (C2) eff05 ended too early (k=7)\n"); pfail = 1; }
+        for (int k = 0; k < 4; k++) re15_esp_fx_tick(&esp);
+        if (re15_esp_fx_count() != 0) { fprintf(stderr, "FAIL: (C2) eff05 should end at terminator\n"); pfail = 1; }
+
+        /* effect 07 LOOPS (anim[5].param low byte = 0xFF -> loop to desc-low 0) -> never ends. */
+        re15_esp_fx_reset();
+        re15_esp_fx_spawn(&esp, 0x07, 0, 0, 0, 0, 0);
+        for (int k = 0; k < 60; k++) re15_esp_fx_tick(&esp);
+        if (re15_esp_fx_count() != 1) { fprintf(stderr, "FAIL: (C2) eff07 should loop forever\n"); pfail = 1; }
+
+        /* unresolved bank (NULL) -> eff_idx -1 -> first tick despawns. */
+        re15_esp_fx_reset();
+        re15_esp_fx_spawn(NULL, 0x05, 0, 0, 0, 0, 0);
+        re15_esp_fx_tick(NULL);
+        if (re15_esp_fx_count() != 0) { fprintf(stderr, "FAIL: (C2) unresolved bank should despawn\n"); pfail = 1; }
+
+        re15_esp_fx_reset();
+        if (pfail) fail = 1;
+        else printf("  (C2) PASS: op-0x3a fx pool spawn + byte-true anim (eff05 terminates@8, eff07 loops@5->0)\n");
+    }
+
     /* === Phase ESP-B: pool spawn + byte-true AABB-cull dispatch (FUN_8004d5f0) + lifetime === */
     {
         re15_esp_pool_reset();

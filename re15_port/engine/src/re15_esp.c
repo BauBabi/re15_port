@@ -169,3 +169,80 @@ int re15_esp_coord(const re15_esp_t *esp, int eff_idx, int i, re15_esp_coord_t *
     out->u = p[0]; out->v = p[1]; out->w = p[2]; out->h = p[3];
     return 0;
 }
+
+int re15_esp_find_id(const re15_esp_t *esp, uint8_t effect_id)
+{
+    if (!esp) return -1;
+    for (int i = 0; i < esp->id_count; i++)
+        if (esp->eff[i].effect_id == effect_id) return i;
+    return -1;
+}
+
+/* ===== Phase ESP-C: op-0x3a effect particle pool ======================================= */
+
+static re15_esp_fx_t s_esp_fx[RE15_ESP_FX_MAX];
+
+void re15_esp_fx_reset(void) { memset(s_esp_fx, 0, sizeof(s_esp_fx)); }
+
+int re15_esp_fx_count(void)
+{
+    int n = 0;
+    for (int i = 0; i < RE15_ESP_FX_MAX; i++) if (s_esp_fx[i].active) n++;
+    return n;
+}
+
+const re15_esp_fx_t *re15_esp_fx_get(int i)
+{
+    if (i < 0 || i >= RE15_ESP_FX_MAX || !s_esp_fx[i].active) return NULL;
+    return &s_esp_fx[i];
+}
+
+re15_esp_fx_t *re15_esp_fx_spawn(const re15_esp_t *bank, uint8_t effect_id, uint8_t sub_index,
+                                 int32_t x, int32_t y, int32_t z, int16_t param)
+{
+    for (int i = 0; i < RE15_ESP_FX_MAX; i++) {
+        re15_esp_fx_t *f = &s_esp_fx[i];
+        if (f->active) continue;
+        memset(f, 0, sizeof(*f));
+        f->active    = 1;
+        f->effect_id = effect_id;
+        f->sub_index = sub_index;
+        f->eff_idx   = (int8_t)re15_esp_find_id(bank, effect_id);   /* -1 if bank lacks it */
+        f->frame     = 0;
+        f->timer     = 0;     /* 0 -> the next tick advances to frame 0's duration (FUN_80019e20) */
+        f->x = x; f->y = y; f->z = z;
+        f->param     = param;
+        return f;
+    }
+    return NULL;   /* pool full */
+}
+
+void re15_esp_fx_tick(const re15_esp_t *bank)
+{
+    /* Byte-true FUN_80019e20 frame timer (L117-131): when the per-slot timer hits 0, advance
+     * the anim-record index; the new record's param-low byte = its duration, 0xFF = loop back
+     * to the record's desc-low byte, 0/0 (duration & loop-target both 0) = end -> despawn. */
+    for (int i = 0; i < RE15_ESP_FX_MAX; i++) {
+        re15_esp_fx_t *f = &s_esp_fx[i];
+        if (!f->active) continue;
+
+        if (f->timer == 0) {
+            f->frame++;
+            re15_esp_anim_t a;
+            if (f->eff_idx < 0 || re15_esp_anim(bank, f->eff_idx, f->frame, &a) != 0) {
+                f->active = 0;            /* no bank / ran past the records */
+                continue;
+            }
+            uint8_t dur  = (uint8_t)(a.param & 0xff);   /* pcVar6[2] */
+            uint8_t loop = (uint8_t)(a.desc  & 0xff);   /* pcVar6[0] */
+            if (dur == 0 && loop == 0) { f->active = 0; continue; }   /* terminator */
+            if (dur == 0xff) {                                        /* loop marker */
+                f->frame = loop;
+                if (re15_esp_anim(bank, f->eff_idx, f->frame, &a) != 0) { f->active = 0; continue; }
+                dur = (uint8_t)(a.param & 0xff);
+            }
+            f->timer = (int16_t)dur;
+        }
+        if (f->timer > 0) f->timer--;
+    }
+}
