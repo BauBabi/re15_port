@@ -65,6 +65,30 @@ int re15_esp_parse(const uint8_t *raw, size_t size,
                    uint32_t tim_base_off, uint32_t tim_end_off,
                    re15_esp_t *out);
 
+/* ===== Phase ESP-C: the EFF clip records (the data the effect renderer draws) =============
+ *
+ * Inside each EFF body (verified byte-true against ROOM1140.RDT, 2026-06-30) the layout is:
+ *     [+0]  u32  word0  = { count_a = lo16, count_b = hi16 }
+ *     [+4]  u16  clut/U-base (0x7840 in ROOM1140), u16 V-base (0)        — the 8-byte header
+ *     [+8]  count_a x 8-byte ANIM records  { u16 desc, u16 param, u32 rsv }
+ *     [..]  count_b x 4-byte COORD records { u8 u, v, w, h }             — sprite cells in the TIM
+ * The op-0x3a spawn (FUN_80019700) walks these per (category, sub-index); the model_inst tick
+ * (FUN_80019e20) cycles the anim records, each `desc` low-byte selecting a coord cell. See
+ * C3_RENDER_DESIGN.md §2b/§2c for the full draw path. These accessors expose the records
+ * byte-true (read straight from esp->raw — no copy held). */
+
+/** One 8-byte EFF anim record (count_a of them, @eff_start+8). `desc` high byte = sprite group,
+ *  low byte = frame index (steps of 4 in ROOM1140 eff05); the last record's desc==0 = terminator. */
+typedef struct { uint16_t desc; uint16_t param; uint32_t rsv; } re15_esp_anim_t;
+
+/** One 4-byte EFF sprite-coord record (count_b of them, @eff_start+8+count_a*8): a sprite cell. */
+typedef struct { uint8_t u, v, w, h; } re15_esp_coord_t;
+
+/** Read anim record `i` (0..count_a-1) of effect `eff_idx` (0..id_count-1). 0 = ok, -1 = bad index. */
+int re15_esp_anim (const re15_esp_t *esp, int eff_idx, int i, re15_esp_anim_t  *out);
+/** Read sprite-coord record `i` (0..count_b-1) of effect `eff_idx`. 0 = ok, -1 = bad index. */
+int re15_esp_coord(const re15_esp_t *esp, int eff_idx, int i, re15_esp_coord_t *out);
+
 /* ===== Phase ESP-B: the active effect-sprite POOL (spawn + AABB-cull dispatch) ============
  *
  * Byte-true model of the runtime effect pool (PSX globals DAT_800b2360 = active count,

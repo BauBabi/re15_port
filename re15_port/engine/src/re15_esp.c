@@ -139,3 +139,33 @@ int re15_esp_parse(const uint8_t *raw, size_t size,
     }
     return 0;
 }
+
+/* ===== Phase ESP-C: EFF clip record accessors ========================================== */
+
+int re15_esp_anim(const re15_esp_t *esp, int eff_idx, int i, re15_esp_anim_t *out)
+{
+    if (!esp || !esp->raw || !out || eff_idx < 0 || eff_idx >= esp->id_count) return -1;
+    const re15_esp_eff_t *e = &esp->eff[eff_idx];
+    if (i < 0 || i >= (int)e->count_a) return -1;
+    /* anim records start after the 8-byte EFF header (word0 + clut/U/V), 8 bytes each. */
+    uint32_t off = e->eff_start + 8u + (uint32_t)i * 8u;
+    if ((size_t)off + 8 > esp->raw_size) return -1;
+    const uint8_t *p = esp->raw + off;
+    out->desc  = (uint16_t)((uint16_t)p[0] | ((uint16_t)p[1] << 8));
+    out->param = (uint16_t)((uint16_t)p[2] | ((uint16_t)p[3] << 8));
+    out->rsv   = rd_u32(p + 4);
+    return 0;
+}
+
+int re15_esp_coord(const re15_esp_t *esp, int eff_idx, int i, re15_esp_coord_t *out)
+{
+    if (!esp || !esp->raw || !out || eff_idx < 0 || eff_idx >= esp->id_count) return -1;
+    const re15_esp_eff_t *e = &esp->eff[eff_idx];
+    if (i < 0 || i >= (int)e->count_b) return -1;
+    /* coord records follow the count_a 8-byte anim records (after the 8-byte header). */
+    uint32_t off = e->eff_start + 8u + (uint32_t)e->count_a * 8u + (uint32_t)i * 4u;
+    if ((size_t)off + 4 > esp->raw_size) return -1;
+    const uint8_t *p = esp->raw + off;
+    out->u = p[0]; out->v = p[1]; out->w = p[2]; out->h = p[3];
+    return 0;
+}

@@ -113,6 +113,37 @@ int main(void)
     if (!fail)
         printf("  (A) PASS: 2 effect ids {05,07}; EFF @0x11E8(196B)/0x13B8(132B); TIM @0x1A628/0x1CA68 (magic 0x10)\n");
 
+    /* === Phase ESP-C: EFF clip record accessors (anim records + sprite-coord cells) ===
+     * All expected values dumped from the real ROOM1140.RDT EFF bodies. */
+    {
+        re15_esp_anim_t  an;
+        re15_esp_coord_t co;
+        int cfail = 0;
+
+        /* effect 05 (eff[0]): 9 anim + 29 coord records. */
+        if (re15_esp_anim(&esp, 0, 0, &an) != 0 || an.desc != 0x0100 || an.param != 0x1801 || an.rsv != 0) {
+            fprintf(stderr, "FAIL: (C) eff05 anim[0]={0x%04x,0x%04x,0x%x}\n", an.desc, an.param, an.rsv); cfail = 1; }
+        if (re15_esp_anim(&esp, 0, 1, &an) != 0 || an.desc != 0x0401) {
+            fprintf(stderr, "FAIL: (C) eff05 anim[1].desc=0x%04x (exp 0x0401)\n", an.desc); cfail = 1; }
+        if (re15_esp_anim(&esp, 0, 8, &an) != 0 || an.desc != 0x0000) {
+            fprintf(stderr, "FAIL: (C) eff05 anim[8] terminator desc=0x%04x\n", an.desc); cfail = 1; }
+        if (re15_esp_coord(&esp, 0, 1, &co) != 0 || co.u != 24 || co.v != 0 || co.w != 232 || co.h != 232) {
+            fprintf(stderr, "FAIL: (C) eff05 coord[1]={%u,%u,%u,%u}\n", co.u, co.v, co.w, co.h); cfail = 1; }
+
+        /* effect 07 (eff[1]): 11 anim + 9 coord; anim[0].param=0x2003, coord[1]={32,0,240,240}. */
+        if (re15_esp_anim(&esp, 1, 0, &an) != 0 || an.desc != 0x0100 || an.param != 0x2003) {
+            fprintf(stderr, "FAIL: (C) eff07 anim[0]={0x%04x,0x%04x}\n", an.desc, an.param); cfail = 1; }
+        if (re15_esp_coord(&esp, 1, 1, &co) != 0 || co.u != 32 || co.v != 0 || co.w != 240 || co.h != 240) {
+            fprintf(stderr, "FAIL: (C) eff07 coord[1]={%u,%u,%u,%u}\n", co.u, co.v, co.w, co.h); cfail = 1; }
+
+        /* bounds: out-of-range index returns -1, not 0. */
+        if (re15_esp_anim (&esp, 0,  9, &an) != -1) { fprintf(stderr, "FAIL: (C) anim OOB !=-1\n");  cfail = 1; }
+        if (re15_esp_coord(&esp, 0, 29, &co) != -1) { fprintf(stderr, "FAIL: (C) coord OOB !=-1\n"); cfail = 1; }
+
+        if (cfail) fail = 1;
+        else printf("  (C) PASS: EFF clip records byte-true (eff05 9 anim/29 cells; eff07 11/9; desc/param + coord cells)\n");
+    }
+
     /* === Phase ESP-B: pool spawn + byte-true AABB-cull dispatch (FUN_8004d5f0) + lifetime === */
     {
         re15_esp_pool_reset();
