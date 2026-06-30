@@ -1,7 +1,7 @@
 # RE1.5 Effect-Script VM — Opcode Map (@0x800744a8, 95 ops 0x00-0x5e)
 
 Dispatch: `FUN_8003f0a0` runs `(*table[*pc])(instance)` per active 0x170-instance. Port: `re15_esp_vm.c`.
-Status: **✅PORTED** = byte-true in re15_esp_vm.c (re15_espvm_install_ops) + tested (test_esp_vm). **31/95 ported.**
+Status: **✅PORTED** = byte-true in re15_esp_vm.c (re15_espvm_install_ops) + tested (test_esp_vm). **32/95 ported.**
 Classification of 0x0d-0x5e by the 77-agent workflow (2026-06-30); every PORTED row self-disassembled before porting.
 `portable_now` = pure instance-local + bytecode operands (no external pool/work-struct/GTE/audio).
 ⚠️ The rows marked `·portable` were AGENT-flagged portable but self-verified to deref the work-struct @inst+0x154
@@ -33,7 +33,7 @@ or the effect pool DAT_800b2368 -> actually **defer** (see deferred groups).
 | 0x15 | 0x8003fb50 | ✅PORTED | control-flow |  | Opcode 0x15 is a 2-byte no-op/skip: it advances the bytecode pc by 2 and returns CONT(1); touches only the instance pc field (+0x1c). |
 | 0x16 | 0x8003fb68 | ✅PORTED | loop-counter |  | Decrements the per-level loop counter-index (instance[+0x08+level] -= 1), advances pc by 2, and returns CONT(1). |
 | 0x17 | 0x8003fb9c | ✅PORTED | control-flow |  | Loop/block-setup opcode: stores loop-depth[level]=op@[pc+1] and counter-index[level]=op@[pc+2], sets stack-pointer (+0x140) into the level's |
-| 0x18 | 0x8003fbe8 | —defer | control-flow |  | GOSUB/push-level opcode: saves return pc (pc+2) into per-level array at +0x144, increments level (+0x02), reinitializes the new level's loop |
+| 0x18 | 0x8003fbe8 | ✅PORTED | control-flow |  | GOSUB/push-level opcode: saves return pc (pc+2) into per-level array at +0x144, increments level (+0x02), reinitializes the new level's loop |
 | 0x19 | 0x8003fc50 | ✅PORTED | loop-counter |  | Loop/scope POP (end-of-loop-iteration return): decrements the per-instance level at +0x02, restores pc (+0x1c) from the saved-return-pc tabl |
 | 0x1a | 0x8003fca8 | ✅PORTED | control-flow |  | Loop-pop / return: restores pc (+0x1c) from the per-level saved-pc array (+0x60 + level*0x10 + counter_index*4), decrements counter-index[le |
 | 0x1b | 0x8003f5d0 | ✅PORTED | loop-counter |  | FOR-loop / loop-counter setup: bumps the per-level counter-index, loads an iteration count from the read-only table at 0x800b0fd0, and pushe |

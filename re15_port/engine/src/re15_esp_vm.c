@@ -101,6 +101,7 @@ static int op_reg_set(re15_espvm_instance_t *inst);
 static int op_reg_copy(re15_espvm_instance_t *inst);
 static int op_reg_arith_imm(re15_espvm_instance_t *inst);
 static int op_reg_arith_reg(re15_espvm_instance_t *inst);
+static int op_gosub(re15_espvm_instance_t *inst);
 
 /* Install the ported real opcode table (PTR_800744a8). Unported entries stay the stub. C2 grows
  * this as more @0x800744a8 handlers are reverse-engineered. NB: re15_espvm_reset() must call this
@@ -128,6 +129,7 @@ static void re15_espvm_install_ops(void)
     s_optable[0x15] = op_skip2;        /* pc+=2 (0x8003fb50) */
     s_optable[0x16] = op_for_popci;    /* pop counter-index (0x8003fb68) */
     s_optable[0x17] = op_block_setup;  /* block setup (0x8003fb9c) */
+    s_optable[0x18] = op_gosub;        /* GOSUB / push level (0x8003fbe8) */
     s_optable[0x19] = op_pop_level;    /* pop level (0x8003fc50) */
     s_optable[0x1a] = op_for_break;    /* FOR-break (0x8003fca8) */
     s_optable[0x2f] = op_set_u16;      /* set instance u16 field (0x80040f14) */
@@ -500,6 +502,25 @@ static int op_block_setup(re15_espvm_instance_t *inst)
     wr_u32(inst->mem + RE15_ESPVM_OFF_SP, sp);
     inst->mem[level + 8] = ci;
     INST_SETPC(inst, pc + (uint32_t)(int32_t)rel);
+    return RE15_ESPVM_RET_CONT;
+}
+
+/* 0x18: GOSUB / push level — save the return pc (pc+2) to saved-pc[level] (+0x144 + level*4),
+ * level++, reinit the new level's loop-depth(+4)/counter-index(+8) to 0xff and its stack pointer,
+ * then jump pc to sub-script id@pc+1 (pc = offset_table[id], the DAT_800b3f70/code_base table).
+ * CONT. (0x8003fbe8) */
+static int op_gosub(re15_espvm_instance_t *inst)
+{
+    uint32_t pc    = INST_PC(inst);
+    int8_t   level = (int8_t)inst->mem[RE15_ESPVM_OFF_LEVEL];
+    uint8_t  subid = inst->code_base[pc + 1];
+    wr_u32(inst->mem + RE15_ESPVM_OFF_RETPC + (uint32_t)((int)level * 4), pc + 2);  /* saved-pc[level] = pc+2 */
+    int nl = level + 1;
+    inst->mem[nl + 4] = 0xff;          /* loop-depth[level+1] = 0xff */
+    inst->mem[nl + 8] = 0xff;          /* counter-index[level+1] = 0xff */
+    wr_u32(inst->mem + RE15_ESPVM_OFF_SP, (uint32_t)(nl * 0x20 + RE15_ESPVM_OFF_STACK));
+    inst->mem[RE15_ESPVM_OFF_LEVEL] = (uint8_t)nl;
+    INST_SETPC(inst, rd_u16(inst->code_base + (uint32_t)subid * 2));   /* pc = offset_table[subid] */
     return RE15_ESPVM_RET_CONT;
 }
 

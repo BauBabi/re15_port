@@ -316,6 +316,7 @@ static void build_fcode(void)
     /* offset table ids 0..9 */
     s_fcode[0x0]=0x20; s_fcode[0x2]=0x30; s_fcode[0x4]=0x40; s_fcode[0x6]=0x50; s_fcode[0x8]=0x60;
     s_fcode[0xa]=0x70; s_fcode[0xc]=0x80; s_fcode[0xe]=0x90; s_fcode[0x10]=0xa0; s_fcode[0x12]=0xb0;
+    s_fcode[0x14]=0xc0; s_fcode[0x16]=0xd0;   /* id10 GOSUB main, id11 sub-script */
     /* id0 @0x20: op0d isolated (count=7, rel=4), halt at the post-pc 0x26 */
     s_fcode[0x20]=0x0d; s_fcode[0x22]=0x04; s_fcode[0x24]=0x07; s_fcode[0x26]=0xFF;
     /* id1 @0x30: full FOR loop (count=3, rel=6): op0d, body tick@0x36, NEXT@0x37, halt@0x39 */
@@ -337,6 +338,9 @@ static void build_fcode(void)
     s_fcode[0xa0]=0x17; s_fcode[0xa1]=0x02; s_fcode[0xa2]=0x03; s_fcode[0xa4]=0x08; s_fcode[0xa8]=0xFF;
     /* id9 @0xb0: op19 pop-level (saved-pc poked to 0xb6), halt@0xb6 */
     s_fcode[0xb0]=0x19; s_fcode[0xb6]=0xFF;
+    /* id10 @0xc0: op18 GOSUB to id11, halt@0xc2 (the return lands here); id11 @0xd0: op1 END */
+    s_fcode[0xc0]=0x18; s_fcode[0xc1]=0x0b; s_fcode[0xc2]=0xFF;
+    s_fcode[0xd0]=0x01;
 }
 
 static int run_for_op_tests(void)
@@ -436,8 +440,17 @@ static int run_for_op_tests(void)
                 pl->mem[RE15_ESPVM_OFF_LEVEL], re15_espvm_get_pc(pl),
                 rd_u32(pl->mem + RE15_ESPVM_OFF_SP)); fail = 1; }
 
-    if (!fail) printf("  (9) PASS: FOR-loop ops 0x0d..0x1a byte-true "
-                      "(begin/next[=run-body-N-times]/loop-back/break/pop-ci/skips/block/pop-level)\n");
+    /* (9i) op18 GOSUB + op1 RETURN round-trip: main GOSUBs id11 (level 0->1), the sub's END pops
+     * back (level 1->0) to the saved return pc 0xc2. */
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    re15_espvm_instance_t *gs = re15_espvm_alloc(0, 10, s_fcode);
+    re15_espvm_run_all();
+    if (gs->mem[RE15_ESPVM_OFF_LEVEL] != 0 || re15_espvm_get_pc(gs) != 0xc2) {
+        fprintf(stderr, "FAIL: (9i) GOSUB/RETURN level=%d pc=0x%x (want 0/0xc2)\n",
+                gs->mem[RE15_ESPVM_OFF_LEVEL], re15_espvm_get_pc(gs)); fail = 1; }
+
+    if (!fail) printf("  (9) PASS: FOR-loop ops 0x0d..0x1a + GOSUB 0x18 byte-true "
+                      "(begin/next[=run-body-N-times]/loop-back/break/pop-ci/skips/block/pop-level/gosub-return)\n");
     return fail;
 }
 
