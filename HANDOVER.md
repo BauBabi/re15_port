@@ -219,9 +219,11 @@ liegend / 0x27 fressend. Da der Port `op_sce_em_set` hat + sub00 läuft, spawnt 
 - **Byte-true Fix:** `op_sce_em_set` (scd_vm.c) schrieb `behavior` (pc[3]) nach **state** (+0x4)
   statt **grid_id** (+0x9) — Pre-AI-RE-Mismap; korrigiert (state→0=INIT, grid_id→behavior). Nötig,
   weil die AI auf +0x4 (Main-State) + +0x9 (Sub-Mode/Pose-Sel) dispatcht.
-- **OFFEN (cited):** Hitbox-Dims für Typ 0x10/0x11 fehlen in `re15_enemy_apply_hitbox` (nur 0x16/0x47
-  da; on-disc-Tabelle ist overlay-gepatcht → braucht room1140-Savestate, `re15-room-capture`). Die
-  pc[18]!=0→state=4-Variante deferred (Roster hat pc[18]=0).
+- **[RESOLVED in 8.7a, Commit 0283bd2c — hier nur historisch]** Hitbox-Dims für Typ 0x10/0x11 fehlten in
+  `re15_enemy_apply_hitbox` (nur 0x16/0x47 da). Behoben: **400/1440**, byte-true aus dem Live-Save gelesen
+  (`*(entity+0x78)`), gewired + von `test_room1140_combat` assertet (siehe 8.7a unten). (Die damalige
+  „on-disc overlay-gepatcht"-Vermutung blieb unverifiziert — der Wert kam aus dem Savestate; nicht mit dem
+  retracteten Dispatch-Tabellen-Offset-Bug verwechseln.) Die pc[18]!=0→state=4-Variante deferred (Roster hat pc[18]=0).
 
 ### 8.3 — REVERTET + GRAVIERENDE ARCHITEKTUR-KORREKTUR (Commit c3e577e7)
 **⚠️ Mein portierter AI-Root ist die FALSCHE Typ-Tabelle.** Phase 8.3 (Spawn-Konstruktor
