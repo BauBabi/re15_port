@@ -68,6 +68,12 @@
  * view is rebuilt for the current cut. */
 void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits);
 
+/* Aim sub-phase query for game_step (Phase 8.16): returns 1 ONLY when the weapon-raise (PL00.EDD
+ * clip 17) has played out and the player is in the held AIM-READY pose (action-8 state 5) — the
+ * byte-true gate for the discharge (the original fires only in state 5, never mid-raise). Returns
+ * 0 while raising or not aiming. */
+int re15_player_aim_ready(void);
+
 /* Phase 4.4.5.2 debug helper: bump g_game.player_motion by `delta`
  * (typically +1 or -1), wrapped to [0, clip_count). Used to find which
  * EDD clip is forward-walk for the test asset. Call from main on

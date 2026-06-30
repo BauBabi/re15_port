@@ -1,10 +1,10 @@
-# RE1.5 Port — Session-Handover (Stand 2026-06-30, Phase 8.15: C11 dynamisch geschlossen; zwei-seitiger Combat spielbar)
+# RE1.5 Port — Session-Handover (Stand 2026-06-30, Phase 8.16: Player-Raise-Clip byte-true; C11 geschlossen; zwei-seitiger Combat spielbar)
 
 ## 0. NÄCHSTE SESSION — START HERE
 
 **Stand:** Der ROOM1140-Briefing-Combat ist byte-true in-game UND zwei-seitig SPIELBAR; beide Schleifen laufen end-to-end:
 - **Zombie→Spieler:** spawn → wake (dist<4000) → engage → turn → GRAB (−10/−5 HP) → Spieler gepinnt → HP<0 → Tod (state 7, 120-Frame-Timer).
-- **Spieler→Zombie:** R1 zielen + Square feuern → `re15_player_weapon_fire` (Auto-Aim Front-Zombie → per-Waffe-Damage, Pistole 24 → hurt/death/corpse). Aim/Fire-Anim sichtbar (PL00.EDD clip 18).
+- **Spieler→Zombie:** R1 zielen → **Waffe heben (RAISE clip 17, 10f) → Aim-Ready (clip 18 gehalten)**, dann Square feuern (nur in Aim-Ready, gegated) → `re15_player_weapon_fire` (Auto-Aim Front-Zombie → per-Waffe-Damage, Pistole 24 → hurt/death/corpse). Volle byte-true Aim-Sequenz sichtbar (8.16).
 - **C11 dynamisch GESCHLOSSEN** für ROOM1140 (live gegen das echte Spiel verifiziert; Artefakt `stage_saves/mzd_stage1_engage_live.sav`).
 
 **Build/Test:**
@@ -21,7 +21,7 @@ cmake --build re15_port/build && ctest --test-dir re15_port/build --timeout 30  
 2. **Overlay-File-Offset-Trap:** STAGE*.BIN-Overlays haben **KEINEN 0x800-Header** (`off = addr − 0x80100000`; nur die EXE hat den Header). Den Offset NIE selbst rechnen → `re15_disasm.py` (table/dis/read) bzw. `re15_ss.Ram` nutzen. (Ein ad-hoc `+0x800` las die Dispatch-Tabellen `@0x8011f840/890` als „null" → falscher „runtime-patched"-Schluss; korrekt gelesen stehen sie statisch in der BIN, 40/40 == RAM. `re15_runtime_table.py` = der Cross-Check statisch↔RAM.)
 3. **State-erreicht ≠ State-aktiv:** `+0x5=0x13` = engage + ein `(+0x90&3)`-gegateter forward-walk-Vorabcheck. In allen Live-Zombies ist `+0x90==0x00` → fw-Branch nie genommen → 0x13 == engage für ROOM1140 → nichts zu portieren. **IMMER Gate-Flags im Live-Save prüfen** (`re15_enemy_state.py --ai` / `re15_flag_sweep.py`), bevor man einen gegateten Pfad portiert.
 
-**Mögliche nächste Tasks (eine wählen):** Fade/Game-Over-Screen (deferred, Port hat keine Fade-Infra) · exakte Aim/Fire-Command-FSM `@0x80035810` + Waffen-Inventory · Muzzle-Flash / Raise-Clip 17 · ein anderer Raum/Gegner (dann ggf. m1-Forward-Walk, `+0x90&3 != 0`). Details in der Phasen-Historie unten.
+**Mögliche nächste Tasks (eine wählen):** Muzzle-Flash-Sprite (`FUN_80045024`-Effekt) · Fade/Game-Over-Screen (Port hat keine Fade-Infra) · Waffen-Inventory (`DAT_800aca5d`) + Aim-Elevation-Pitch (entity+0x66) · ein anderer Raum/Gegner (dann ggf. m1-Forward-Walk, `+0x90&3 != 0`). (Raise-Clip 17 ✓ 8.16.) Details in der Phasen-Historie unten.
 
 ---
 
@@ -585,8 +585,10 @@ RE'd via Workflow `player-aim-anim-re` (4 Finder + adversariale Verify, 16 Agent
 (R1 halten) + recoilt beim Schuss — symmetrisch zur Gegner-Hurt/Death-Reaktion. **KORREKTUR (Workflow-bewiesen):** die Aim/Fire-
 Anim nutzt NICHT die PL00W01-Waffen-Bank, sondern die **gemeinsame PL00.EDD-Bank** (`anim_set` a1=DAT_800acbc0). Die action-8-
 Aim-Sub-FSM (`@0x80035810`) schreibt die Player-motion (entity+0x94 = 0x800acae8; Player-Block-Base 0x800aca54 bewiesen
-@0x8001d0a0): phase2 RAISE = clip 0x11=17 (25f), phase4 AIM-READY + phase5 FIRE = clip 0x12=18 (20f, @0x800359e0; Discharge
-re-spielt clip 18).
+@0x8001d0a0): phase2 RAISE = clip 0x11=17, phase4 AIM-READY + phase5 FIRE = clip 0x12=18 (@0x800359e0; Discharge
+re-spielt clip 18). ⚠️ **FRAME-COUNT-KORREKTUR (8.16, PL00.EDD-verifiziert):** clip 17 = **10 Frames**, clip 18 = **25 Frames** —
+die hier ursprünglich notierten „25f/20f" waren VERTAUSCHT/falsch; die Asset-Bytes (clip-Tabelle u16@i*4) sagen 10/25. Lehre: nie
+einen gemerkten Frame-Count vertrauen, immer die clip-Tabelle parsen.
 - **Port:** `re15_player_tick` — R1 halten → ROOT (keine Translation; Turn bleibt) + `p->motion = 18` DIREKT (PL00.EDD clip 18,
   KEIN Sentinel → anim_select überspringt das W01/idle-Remap → clip 18 mit HOLD-LAST = gehaltene Aim-Pose). `game_step` — Square-
   Fire resettet `pl->anim_frame = 0` → clip 18 re-spielt = sichtbarer Recoil, im selben Frame wie der Damage (re15_player_weapon_
@@ -595,8 +597,27 @@ re-spielt clip 18).
   DAT_800aca5d, NICHT Square — C8 refuted; Port-R1/Square ist faithful-line); der RAISE-Clip 17 (rate-aware Anim-Completion fehlt
   in player_tick); die Aim-Elevation-Pitch (entity+0x66); die Waffen-Inventory; der Muzzle-Flash; Fade/Game-Over. C7 (FUN_80045024
   →FUN_80011f50 intern) UNVERIFIED (Verifier-Tod), non-blocking (Port feuert den Damage eh am Square-Frame).
-- **NÄCHSTER SCHRITT:** Muzzle-Flash-Sprite + Raise-Clip 17 (braucht die Anim-Completion-Schicht — gemeinsam mit der Stand-up-Ramp
-  8.13), der Game-Over-Screen + Death-Fade (@0x8003694c), die Waffen-Inventory, oder das Combat-Verifikations-Capture (C11).
+- **NÄCHSTER SCHRITT:** ~~Raise-Clip 17~~ (ERLEDIGT in 8.16), Muzzle-Flash-Sprite, der Game-Over-Screen + Death-Fade
+  (@0x8003694c), die Waffen-Inventory, oder das Combat-Verifikations-Capture (C11).
+
+### 8.16 — PLAYER-RAISE-CLIP byte-true (ERLEDIGT) → die Aim-Anim spielt jetzt die volle Hebe-Sequenz
+Die action-8-Aim-Sub-FSM `FUN_80035810` direkt disassembliert (Weg C, `re15-psx-disasm`; es gibt kein Decompilat). Jump-Tabelle
+`@0x80010b68` über die Aim-Sub-State `DAT_800aca5a` (0..7), alle 8 States dekodiert:
+- **0** init (motion 0, +0x8f=7, +0x8c=0) → sub=1, fällt in 1.  **1** Prep-Anim + +0x6a-Elevation tracken; wenn die Anim-Done-Bits
+  (`+0x6a & 0x3e0`) clear → sub=2.  **2** `motion=0x11`=**17 (RAISE)** → sub=3, fällt in 3.  **3** RAISE clip 17 spielen;
+  `aim_sub += anim_set()` (Terminal-Frame-Return) → bei Clip-Ende sub=4.  **4** `motion=0x12`=**18 (AIM-READY)** → sub=5, fällt in 5.
+  **5** clip 18 gehalten; bei `anim_frame==1` Discharge `FUN_80045024` (Schuss+Muzzle); Release-Input → Holster `FUN_800369f8`.
+  **6** Lower-Anim, sub += ret → 7.  **7** `+0x4=1` Action-Exit.
+- **Frame-Counts PL00.EDD-verifiziert** (clip-Tabelle u16@i*4, 2× extrahiert, identisch): **clip 17 = 10 Frames, clip 18 = 25.**
+  (Die §8.14-Notiz „25f/20f" war falsch/vertauscht — siehe Korrektur dort.)
+- **Port (`player_common.c` re15_player_tick):** Aim-Sub-Phase `s_player_aim_phase` (0=none/1=RAISE/2=READY, file-scope für den
+  Fire-Gate). R1-Start → RAISE (`motion=17`); wenn `anim_frame >= RE15_RAISE_FC-1` (10, rate-aware wie der Enemy-Death-Clip-End) →
+  READY (`motion=18`, hold-last). R1-Release → none. Der **Fire-Gate** `re15_player_aim_ready()` (neu, `re15_player.h`) lässt
+  `game_step` den Schuss NUR in READY feuern (byte-true State-5-Gate, kein Schuss mid-raise). Prep-State 0/1 (motion 0 +
+  +0x6a-Elevation) = die deferred Aim-Elevation, faithful-line collapsed. test Part(16): R1→RAISE 17→(10f)→READY 18→Release→idle.
+  32/32 ctest.
+- **DEFERRED (cited):** Muzzle-Flash-Sprite (`FUN_80045024`-Effekt), die Aim-Elevation-Pitch (entity+0x66, +0x6a-Bits), die
+  Waffen-Inventory (`DAT_800aca5d`), der Holster-Lower-Clip (states 6/7), Fade/Game-Over.
 
 ### 8.15 — C11 DYNAMISCHE VERIFIKATION (TEIL-erledigt) → das statische RE der Combat-Kette gegen Live-Daten bestätigt
 Disziplin-Schritt: alles seit 8.11 war nur statisch RE't. Das C11-Capture (DuckStation + MZD-Disc + vgamepad) wurde aus der

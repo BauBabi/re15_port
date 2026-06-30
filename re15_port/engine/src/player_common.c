@@ -85,15 +85,35 @@
 #define RE15_MOTION_IDLE_LEG      212   /* hand-thru-hair-> W01 clip 4 (50f)  */
 #define RE15_MOTION_IDLE_HURT1    213   /* injured idle  -> PL00 clip 22 (30f) HP<50 */
 #define RE15_MOTION_IDLE_HURT2    214   /* worse-injured -> PL00 clip 23 (30f) HP<30 */
-/* AIM/FIRE pose (Phase 8.14). NOT a sentinel — the byte-true PL00.EDD clip index used DIRECTLY:
- * the player aim/fire FSM (action-8 sub-FSM @0x80035810) writes the player motion (entity+0x94 =
- * 0x800acae8) from the COMMON bank PL00.EDD: phase2 RAISE = clip 0x11=17 (deferred, rate-aware),
- * phase4 AIM-READY + phase5 FIRE-discharge = clip 0x12=18 (@0x800359e0, the discharge re-plays it).
- * Setting p->motion = 18 (a real PL00 clip, NOT a sentinel) makes anim_select skip the W01/idle
- * remap and play PL00.EDD clip 18 with HOLD-LAST (clip_override=-1) = the held aim pose; a fire
- * resets anim_frame=0 -> clip 18 replays = the visible recoil (game_step). Bank: in a gameplay
- * (RBJ-less) room def_*==PL00.EDD, so clip 18 indexes the same byte-true bank the original uses. */
-#define RE15_MOTION_AIM            18    /* PL00.EDD clip 18 = aim-ready / fire (held, hold-last) */
+/* AIM/RAISE/FIRE poses (Phase 8.14 + 8.16). NOT sentinels — the byte-true PL00.EDD clip indices
+ * used DIRECTLY. The player aim/fire FSM (action-8 sub-FSM FUN_80035810, jump table @0x80010b68 on
+ * the aim sub-state DAT_800aca5a) writes the player motion (entity+0x94 = 0x800acae8) from the
+ * COMMON bank PL00.EDD across its phases (disasm-verified):
+ *   state 2->3 (@0x8003592c): RAISE  = clip 0x11=17, played to completion — the original advances
+ *                             on anim_set's terminal-frame return (`aim_sub += anim_set()`), then
+ *   state 4->5 (@0x800359d4): AIM-READY/FIRE = clip 0x12=18 (held; the discharge FUN_80045024 fires
+ *                             at anim_frame==1 @0x80035a00 and re-plays clip 18 = the recoil).
+ * Frame counts are PL00.EDD-VERIFIED (clip table u16 @ i*4): clip 17 = 10 frames, clip 18 = 25.
+ * (NB 2026-06-30: an earlier handover note had these SWAPPED as 25/20 — the asset bytes are 10/25;
+ *  always verify the clip table, never trust a remembered count.) Setting p->motion to a real PL00
+ * clip (NOT a sentinel) makes anim_select skip the W01/idle remap and play that PL00.EDD clip with
+ * HOLD-LAST (clip_override=-1); a fire resets anim_frame=0 -> clip 18 replays = the visible recoil
+ * (game_step). In a gameplay (RBJ-less) room def_*==PL00.EDD, so the clip indexes the same byte-true
+ * bank the original uses. The motion-0 prep + aim-elevation pitch (states 0/1, +0x6a & 0x3e0) are
+ * the deferred aim-elevation subsystem (faithful-line collapsed). */
+#define RE15_MOTION_RAISE          17    /* PL00.EDD clip 17 = weapon-raise (one-shot, 10 frames)  */
+#define RE15_RAISE_FC              10    /* clip 17 frame_count (PL00.EDD-verified) = raise done    */
+#define RE15_MOTION_AIM            18    /* PL00.EDD clip 18 = aim-ready / fire (held, hold-last)   */
+/* Player aim sub-phase (the action-8 FSM @0x80035810 collapsed to the visible raise->ready path):
+ * 0 = not aiming, 1 = RAISE (clip 17 playing), 2 = AIM-READY (clip 18 held, the discharge is gated
+ * here). File-scope so game_step can gate the shot via re15_player_aim_ready() — the original only
+ * fires in state 5 (READY), never mid-raise. */
+#define RE15_AIM_NONE   0
+#define RE15_AIM_RAISE  1
+#define RE15_AIM_READY  2
+static int s_player_aim_phase = RE15_AIM_NONE;
+
+int re15_player_aim_ready(void) { return s_player_aim_phase == RE15_AIM_READY; }
 /* One-shot phase durations = the clip's exact frame_count (compute_actor_kf maps
  * anim_frame 1:1, so one cycle = frame_count ticks; a longer timer replays it —
  * that was the "hair 2x" bug). Timer-gated phases use the byte-exact pseudo-random
@@ -166,6 +186,7 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
          * aim-elevation pitch are deferred; the held aim pose + the fire recoil are byte-true.) */
         int aiming = (pad_bits & RE15_PAD_BIT_R1) != 0;
         if (aiming) move_dir = 0;   /* rooted: no translation while aiming */
+        else s_player_aim_phase = RE15_AIM_NONE;   /* dropped R1 -> reset the raise/ready FSM */
 
         /* Pick the locomotion state: forward = walk (or run if held), back = the
          * walk clip with a negated step (RE1.5 mode 8: motion 0x30, step negated —
@@ -182,8 +203,19 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
         int16_t want_motion = RE15_MOTION_IDLE;
         int32_t speed = 0;
         if (aiming) {
-            /* held aim pose = PL00.EDD clip 18 (hold-last). speed stays 0 (rooted). */
-            want_motion = RE15_MOTION_AIM;
+            /* action-8 aim sub-FSM @0x80035810 (byte-true): on aim-start play the RAISE clip 17
+             * (state 2->3, motion 0x11) ONCE, then when it has played out advance to the held
+             * AIM-READY pose clip 18 (state 4->5, motion 0x12). The original advances on anim_set's
+             * terminal-frame return; the port mirrors it rate-aware via clip 17's frame_count
+             * (RE15_RAISE_FC = 10, PL00.EDD-verified). speed stays 0 (rooted, set above). */
+            if (s_player_aim_phase == RE15_AIM_NONE) s_player_aim_phase = RE15_AIM_RAISE;
+            if (s_player_aim_phase == RE15_AIM_RAISE) {
+                want_motion = RE15_MOTION_RAISE;                    /* clip 17 */
+                if (p->motion == RE15_MOTION_RAISE && p->anim_frame >= RE15_RAISE_FC - 1)
+                    s_player_aim_phase = RE15_AIM_READY;            /* raise played out -> READY */
+            }
+            if (s_player_aim_phase == RE15_AIM_READY)
+                want_motion = RE15_MOTION_AIM;                      /* clip 18 held */
             s_idle_phase = -1;
         } else if (move_dir > 0) {
             if (run) { want_motion = RE15_MOTION_RUN;  speed = RUN_SPEED_PER_FRAME;  }

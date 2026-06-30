@@ -101,16 +101,17 @@ void re15_game_step(const re15_game_ctx_t *c)
          * weapon — re15_player_weapon_fire (the byte-true FUN_80011f50 core: auto-targets the nearest
          * zombie in FRONT within reach, applies the per-weapon byte-true damage -> the zombie HURT/
          * DEATH) — and does NOT trigger a door/stair (the original blocks actions while the weapon is
-         * raised; here the R1 aim suppresses g_aot_action_pressed). The AIM POSE + FIRE RECOIL ARE now
-         * shown (8.14): re15_player_tick sets the player motion to PL00.EDD clip 18 (the byte-true
-         * action-8 aim/fire clip) while R1 is held (hold-last = the held aim pose), and the Square fire
-         * resets anim_frame = 0 (the discharge re-plays clip 18 = recoil). FAITHFUL-LINE / DEFERRED: the
-         * exact 3-level command FSM (@0x80035810), the weapon INVENTORY (DAT_800aca5d -> defaulted to
-         * the pistol = weapon 2), the RAISE clip 17 (rate-aware anim-completion), the aim-elevation pitch
-         * (entity+0x66), and the muzzle-flash sprite. 1170-SAFE: fires only on R1+Square (no input in a boot)
-         * and re15_player_weapon_fire only hits live zombies (a no-zombie room is a no-op). */
+         * raised; here the R1 aim suppresses g_aot_action_pressed). The AIM SEQUENCE + FIRE RECOIL ARE
+         * shown (8.14/8.16): re15_player_tick runs the byte-true action-8 aim sub-FSM @0x80035810 —
+         * R1-held first plays the RAISE clip 17 (10 frames, PL00.EDD-verified) ONCE, then holds the
+         * AIM-READY pose clip 18 (hold-last). Square fires ONLY once aim-ready (re15_player_aim_ready,
+         * the byte-true state-5 gate — no shot mid-raise) and resets anim_frame = 0 (the discharge
+         * @0x80035a00 re-plays clip 18 = recoil). FAITHFUL-LINE / DEFERRED: the exact 3-level command
+         * FSM, the weapon INVENTORY (DAT_800aca5d -> defaulted to the pistol = weapon 2), the
+         * aim-elevation pitch (entity+0x66), and the muzzle-flash sprite. 1170-SAFE: fires only on
+         * R1+Square (no input in a boot) and re15_player_weapon_fire only hits live zombies. */
         if (c->rdt_ok && (c->pad_current & RE15_PAD_BIT_R1)) {
-            if (c->pad_pressed & RE15_PAD_BIT_SQUARE) {
+            if ((c->pad_pressed & RE15_PAD_BIT_SQUARE) && re15_player_aim_ready()) {
                 re15_player_weapon_fire(2);   /* pistol (weapon 2); the weapon inventory is deferred */
                 pl->anim_frame = 0;           /* FIRE recoil: restart the aim/fire clip 18 (action-8 phase5
                                                * @0x80035a00 re-plays clip 18 on discharge). The aim POSE
