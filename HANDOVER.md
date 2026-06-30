@@ -1,11 +1,15 @@
-# RE1.5 Port — Session-Handover (Stand 2026-06-30, Phase 8.13: Enemy-Combat-Animation komplett)
+# RE1.5 Port — Session-Handover (Stand 2026-06-30, Phase 8.14: zwei-seitiger Combat BEIDSEITIG sichtbar)
 
-> **NEUESTE SESSION (8.13) — die PER-STATE Animations-Clips (engage/turn/grab) sind byte-true portiert (Commit 475093f7).**
-> RE'd via Workflow `enemy-anim-clips-re` (5 Finder + adversariale Verify, 18 Agenten). Der Zombie animiert jetzt durch seinen
-> GANZEN Combat-Lebenszyklus: feeding → (wake) → ENGAGE (idle-track clip +0x1d4) → TURN (variant clip @entry) → GRAB
-> (clips (+0x5−3)*3+{0,1} → release 17) → HURT (8.12) / DEATH (8.11). Damit ist die sichtbare Gegner-Combat-Animation komplett
-> für ROOM1140. Geflaggt-aber-deferred (RE'd): Stand-up-Ramp 27→28→29 (braucht Anim-Dauer-Timing), Forward-Walk/Search-Clips
-> (m0 nicht live erreicht). Details §8.13.
+> **NEUESTE SESSION (8.14) — die PLAYER-AIM/FIRE-Animation ist byte-true portiert (Commit b3379f71).** RE'd via Workflow
+> `player-aim-anim-re` (4 Finder + adversariale Verify, 16 Agenten). Der Spieler hebt jetzt sichtbar die Waffe (R1 halten →
+> rooted + PL00.EDD clip 18 hold-last) + recoilt beim Schuss (Square → anim_frame=0 re-spielt clip 18). **Damit ist der zwei-
+> seitige Combat BEIDSEITIG sichtbar.** KORREKTUR: die Aim-Anim nutzt die gemeinsame PL00.EDD-Bank (NICHT PL00W01); action-8-FSM
+> @0x80035810 schreibt entity+0x94 (Player-Base 0x800aca54 bewiesen). Geflaggt-deferred: Raise-Clip 17 + Muzzle + die exakte
+> Command-FSM (R1/Square ist faithful-line). Details §8.14.
+>
+> **VORSESSION (8.13) — die PER-STATE Gegner-Clips (engage/turn/grab) byte-true (475093f7):** der Zombie animiert durch seinen
+> GANZEN Lebenszyklus (feeding→wake→ENGAGE→TURN→GRAB→HURT→DEATH). ENGAGE/TURN = +0x1d4 variant, GRAB = (+0x5−3)*3+{0,1}→release 17.
+> Deferred: Stand-up-Ramp 27→28→29 (Anim-Dauer), Forward-Walk/Search (m0 nicht live).
 >
 > **VORSESSION (8.12) — HURT-Stagger + Hit-Stun byte-true (2f3cec99):** geschossener Zombie zuckt (Clip {2,3,4,5}) + ~2-3 Frames
 > Stun (`+0x1dc` Seed 4..7). **VORSESSION (8.11) — die Anim-PRÄSENTATION entsperrt** (Enemy-Modelle laden aus CDEMD*.EMS +
@@ -545,8 +549,25 @@ byte-true `+0x94`-motion-Clip, nicht nur Hurt/Death. Alle Clips re-disasm-verifi
   (struct-zero). **STAND-UP** Get-up-Clips 27→28→29 (@0x80103c20/d7c/f44): RE'd, Ramp deferred (braucht Anim-Dauer-Timing).
   **FORWARD-WALK** (clip +0x5+4=9/10) + **SEARCH** (clip 0/1): byte-true RE'd, aber von ROOM1140 m0 nicht live erreicht → optional.
 - `re15_ai_set_state_word` resettet `+0x6` aus den High-Bytes des State-Words (0x701/0x301/0x401/0x201 → +0x6=0) → die Turn-/
-  Grab-Entry-Latches sind sauber. test Part(15). 32/32 ctest. **NÄCHSTER SCHRITT:** Stand-up-Ramp (braucht Anim-Dauer), Player-
-  Aim/Muzzle-Anim, Game-Over/Fade, oder das HURT/Grab-Verifikations-Capture (C11).
+  Grab-Entry-Latches sind sauber. test Part(15). 32/32 ctest.
+
+### 8.14 — PLAYER-AIM/FIRE-ANIMATION byte-true (ERLEDIGT, Commit b3379f71) → der zwei-seitige Combat ist BEIDSEITIG sichtbar
+RE'd via Workflow `player-aim-anim-re` (4 Finder + adversariale Verify, 16 Agenten). Der Spieler hebt jetzt sichtbar die Waffe
+(R1 halten) + recoilt beim Schuss — symmetrisch zur Gegner-Hurt/Death-Reaktion. **KORREKTUR (Workflow-bewiesen):** die Aim/Fire-
+Anim nutzt NICHT die PL00W01-Waffen-Bank, sondern die **gemeinsame PL00.EDD-Bank** (`anim_set` a1=DAT_800acbc0). Die action-8-
+Aim-Sub-FSM (`@0x80035810`) schreibt die Player-motion (entity+0x94 = 0x800acae8; Player-Block-Base 0x800aca54 bewiesen
+@0x8001d0a0): phase2 RAISE = clip 0x11=17 (25f), phase4 AIM-READY + phase5 FIRE = clip 0x12=18 (20f, @0x800359e0; Discharge
+re-spielt clip 18).
+- **Port:** `re15_player_tick` — R1 halten → ROOT (keine Translation; Turn bleibt) + `p->motion = 18` DIREKT (PL00.EDD clip 18,
+  KEIN Sentinel → anim_select überspringt das W01/idle-Remap → clip 18 mit HOLD-LAST = gehaltene Aim-Pose). `game_step` — Square-
+  Fire resettet `pl->anim_frame = 0` → clip 18 re-spielt = sichtbarer Recoil, im selben Frame wie der Damage (re15_player_weapon_
+  fire). Kein anim_select-Edit nötig (motion=18 ist ein echter PL00-Clip; in einem RBJ-losen Gameplay-Raum ist def_*==PL00). test Part(16).
+- **FAITHFUL-LINE / DEFERRED (geflaggt):** die exakte 3-Level-Command-FSM (echter Raise-Trigger = HELD pad 0x100 + Waffe-equipped
+  DAT_800aca5d, NICHT Square — C8 refuted; Port-R1/Square ist faithful-line); der RAISE-Clip 17 (rate-aware Anim-Completion fehlt
+  in player_tick); die Aim-Elevation-Pitch (entity+0x66); die Waffen-Inventory; der Muzzle-Flash; Fade/Game-Over. C7 (FUN_80045024
+  →FUN_80011f50 intern) UNVERIFIED (Verifier-Tod), non-blocking (Port feuert den Damage eh am Square-Frame).
+- **NÄCHSTER SCHRITT:** Muzzle-Flash-Sprite + Raise-Clip 17 (braucht die Anim-Completion-Schicht — gemeinsam mit der Stand-up-Ramp
+  8.13), der Game-Over-Screen + Death-Fade (@0x8003694c), die Waffen-Inventory, oder das Combat-Verifikations-Capture (C11).
 
 Werkzeuge: **`re15-psx-disasm`** (EXE/Overlay-Disasm), **`re15-savestate-ghidra`** (Live-RAM +
 Tabellen-Patch-Check), **`re15-room-capture`** (Raum laden/provozieren). Memory `reai-v2-foundation-combat`
