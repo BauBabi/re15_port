@@ -91,6 +91,15 @@ target_compile_definitions(test_ems PRIVATE
 add_test(NAME unit_ems COMMAND test_ems)
 set_tests_properties(unit_ems PROPERTIES TIMEOUT 30)
 
+# --- ESP effect-sprite section parse (Phase ESP-A — re15_esp.c, byte-true vs real ROOM1140.RDT) ---
+add_executable(test_esp_parse test_esp_parse.c)
+target_link_libraries(test_esp_parse PRIVATE re15_engine re15_test_support)
+target_include_directories(test_esp_parse PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_esp_parse PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_esp_parse COMMAND test_esp_parse)
+set_tests_properties(unit_esp_parse PROPERTIES TIMEOUT 30)
+
 # --- Audio VAB-Parsing Unit-Test (Requirement 6.6, 12.1) ---
 add_executable(test_audio_vab test_audio_vab.c)
 target_include_directories(test_audio_vab PRIVATE ${CMAKE_SOURCE_DIR}/include)
