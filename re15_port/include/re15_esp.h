@@ -65,4 +65,47 @@ int re15_esp_parse(const uint8_t *raw, size_t size,
                    uint32_t tim_base_off, uint32_t tim_end_off,
                    re15_esp_t *out);
 
+/* ===== Phase ESP-B: the active effect-sprite POOL (spawn + AABB-cull dispatch) ============
+ *
+ * Byte-true model of the runtime effect pool (PSX globals DAT_800b2360 = active count,
+ * DAT_800b2368 = slot-pointer array). In the original a slot is a POINTER into the live SCD
+ * bytecode (spawn @0x80040858 stores `DAT_800b2368[operand_byte1] = pc+2`, then count++), so
+ * the slot fields overlay the SCD operand bytes:
+ *     slot+0x00 u8  type   (index into the 8-entry handler table @0x80074c68)
+ *     slot+0x02 s16 x      (screen-space)        slot+0x04 s16 y
+ *     slot+0x06 u16 w      (AABB extent X)       slot+0x08 u16 h (AABB extent Y)
+ *     slot+0x0A ...  per-type handler data
+ * The per-frame walker FUN_8004d5f0(px,py) skips null slots, AABB-tests each
+ * ( (u32)(px - x) <= w  &&  (u32)(py - y) <= h ), and on a hit calls handler[type](slot+0x0A).
+ * The pool count is zeroed by the room/per-frame setup (0x8004c730) and rebuilt.
+ *
+ * The PC port copies the fields into a slot struct (it doesn't alias bytecode); behaviour is
+ * faithful. The per-type HANDLERS (the actual tick/render/despawn) are Phase ESP-C — here the
+ * walker dispatches to a caller-supplied callback so the pool can be tested standalone. The
+ * exact per-slot lifetime (handler-managed vs per-frame re-registration) is ESP-C/savestate;
+ * a faithful-line `duration` is provided meanwhile. */
+
+#define RE15_ESP_MAX_SLOTS  32   /* pool cap (DAT_800b2368 capacity unconfirmed; flag) */
+#define RE15_ESP_SLOT_DATA  16   /* per-type handler data window (slot+0x0A) */
+
+typedef struct {
+    uint8_t  active;
+    uint8_t  type;                       /* slot+0x00 -> handler table index */
+    int16_t  x, y;                       /* slot+0x02 / +0x04 (screen-space) */
+    uint16_t w, h;                       /* slot+0x06 / +0x08 (AABB extents) */
+    int16_t  duration;                   /* faithful-line lifetime (<=0 = despawn); 0 = unmanaged */
+    uint8_t  data[RE15_ESP_SLOT_DATA];   /* slot+0x0A handler data */
+} re15_esp_slot_t;
+
+/** Per-slot dispatch callback (the port-side analog of handler_table[type], ESP-C). */
+typedef void (*re15_esp_handler_fn)(re15_esp_slot_t *slot, int index);
+
+void             re15_esp_pool_reset(void);                 /* 0x8004c730: count = 0, clear slots */
+int              re15_esp_pool_count(void);                 /* live DAT_800b2360 analog */
+re15_esp_slot_t *re15_esp_spawn(uint8_t type, int16_t x, int16_t y,
+                                uint16_t w, uint16_t h, int16_t duration); /* 0x80040858 add */
+/** FUN_8004d5f0: walk the pool, AABB-cull against (px,py), dispatch `fn` on each hit.
+ *  Decrements `duration` (faithful-line) and despawns slots that reach 0. Returns # dispatched. */
+int              re15_esp_run(int16_t px, int16_t py, re15_esp_handler_fn fn);
+
 #endif /* RE15_ESP_H */

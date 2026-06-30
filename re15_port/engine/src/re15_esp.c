@@ -13,6 +13,66 @@
 #include "re15_esp.h"
 #include <string.h>
 
+/* ===== Phase ESP-B: the active effect-sprite pool ====================================== */
+
+/* The port's effect pool (the re15_ems-style C analog of DAT_800b2360/DAT_800b2368). Unlike
+ * the original — where a slot is a pointer INTO the live SCD bytecode — the port owns the slot
+ * storage and copies the fields in; behaviour is faithful (the walker reads the same fields). */
+static re15_esp_slot_t s_esp_pool[RE15_ESP_MAX_SLOTS];
+
+void re15_esp_pool_reset(void)
+{
+    /* 0x8004c730: `sw zero, DAT_800b2360` — the room/per-frame setup zeroes the count and the
+     * pool is rebuilt by the active effects (SCD op_sce_espr / the weapon discharge). */
+    memset(s_esp_pool, 0, sizeof(s_esp_pool));
+}
+
+int re15_esp_pool_count(void)
+{
+    int n = 0;
+    for (int i = 0; i < RE15_ESP_MAX_SLOTS; i++) if (s_esp_pool[i].active) n++;
+    return n;   /* live DAT_800b2360 analog */
+}
+
+re15_esp_slot_t *re15_esp_spawn(uint8_t type, int16_t x, int16_t y,
+                                uint16_t w, uint16_t h, int16_t duration)
+{
+    /* 0x80040858: register a new slot + count++. The original indexes DAT_800b2368 by the SCD
+     * operand byte and stores the bytecode pointer; the port claims the first free slot. */
+    for (int i = 0; i < RE15_ESP_MAX_SLOTS; i++) {
+        re15_esp_slot_t *e = &s_esp_pool[i];
+        if (e->active) continue;
+        memset(e, 0, sizeof(*e));
+        e->active   = 1;
+        e->type     = type;
+        e->x = x; e->y = y; e->w = w; e->h = h;
+        e->duration = duration;
+        return e;
+    }
+    return NULL;   /* pool full (no original overflow path) */
+}
+
+int re15_esp_run(int16_t px, int16_t py, re15_esp_handler_fn fn)
+{
+    /* FUN_8004d5f0: walk the slot array; for each live slot AABB-test the cull point and, on a
+     * hit, dispatch handler[type](slot+0x0A). Byte-true AABB: (u32)(px - x) <= w (unsigned). */
+    int dispatched = 0;
+    for (int i = 0; i < RE15_ESP_MAX_SLOTS; i++) {
+        re15_esp_slot_t *e = &s_esp_pool[i];
+        if (!e->active) continue;                         /* null slot (pbVar2 == 0) */
+        uint32_t dx = (uint32_t)(int32_t)(px - e->x);     /* (uint)(param_1 - slot[2]) */
+        uint32_t dy = (uint32_t)(int32_t)(py - e->y);
+        if (dx <= (uint32_t)e->w && dy <= (uint32_t)e->h) {
+            if (fn) fn(e, i);                             /* (*handler[type])(slot + 0x0A) */
+            dispatched++;
+        }
+        /* faithful-line lifetime: a positive duration counts down; 0 = unmanaged (the original's
+         * exact per-slot lifetime lives in the per-type handlers / per-frame re-registration). */
+        if (e->duration > 0 && --e->duration == 0) e->active = 0;
+    }
+    return dispatched;
+}
+
 static uint32_t rd_u32(const uint8_t *p)
 {
     return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24);

@@ -39,6 +39,15 @@ static uint32_t u32le(const uint8_t *p)
     return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24);
 }
 
+/* ESP-B pool dispatch recorder. */
+static int s_disp[RE15_ESP_MAX_SLOTS];
+static int s_disp_n;
+static void rec_handler(re15_esp_slot_t *slot, int index)
+{
+    (void)slot;
+    if (s_disp_n < RE15_ESP_MAX_SLOTS) s_disp[s_disp_n++] = index;
+}
+
 int main(void)
 {
     const char *path = RE15_ASSET_PSX_DIR "/STAGE1/ROOM1140.RDT";
@@ -102,7 +111,45 @@ int main(void)
     }
 
     if (!fail)
-        printf("  PASS: 2 effect ids {05,07}; EFF @0x11E8(196B)/0x13B8(132B); TIM @0x1A628/0x1CA68 (magic 0x10)\n");
+        printf("  (A) PASS: 2 effect ids {05,07}; EFF @0x11E8(196B)/0x13B8(132B); TIM @0x1A628/0x1CA68 (magic 0x10)\n");
+
+    /* === Phase ESP-B: pool spawn + byte-true AABB-cull dispatch (FUN_8004d5f0) + lifetime === */
+    {
+        re15_esp_pool_reset();
+        if (re15_esp_pool_count() != 0) { fprintf(stderr, "FAIL: (B) reset -> count 0\n"); fail = 1; }
+
+        /* A: AABB [100..140]x[50..80]; B: tiny box far away. */
+        re15_esp_slot_t *a = re15_esp_spawn(3, 100, 50, 40, 30, 0);
+        re15_esp_slot_t *b = re15_esp_spawn(1, 200, 80, 10, 10, 0);
+        if (!a || !b || re15_esp_pool_count() != 2) {
+            fprintf(stderr, "FAIL: (B) spawn 2 -> count %d\n", re15_esp_pool_count()); fail = 1; }
+
+        /* cull point (110,60) is inside A only -> exactly 1 dispatch, slot 0. */
+        s_disp_n = 0;
+        int n = re15_esp_run(110, 60, rec_handler);
+        if (n != 1 || s_disp_n != 1 || s_disp[0] != 0) {
+            fprintf(stderr, "FAIL: (B) run(110,60) dispatched=%d (expected 1, slot 0)\n", n); fail = 1; }
+
+        /* byte-true unsigned AABB edges: px-x must be in [0,w]. (140-100=40<=40 hit; 141 miss;
+         * 99 -> (u32)(-1) huge -> miss). */
+        s_disp_n = 0; if (re15_esp_run(140, 50, rec_handler) != 1) {
+            fprintf(stderr, "FAIL: (B) AABB right edge (px-x==w) should hit\n"); fail = 1; }
+        s_disp_n = 0; if (re15_esp_run(141, 50, rec_handler) != 0) {
+            fprintf(stderr, "FAIL: (B) AABB px-x==w+1 should miss\n"); fail = 1; }
+        s_disp_n = 0; if (re15_esp_run(99, 50, rec_handler) != 0) {
+            fprintf(stderr, "FAIL: (B) AABB px<x (unsigned wrap) should miss\n"); fail = 1; }
+
+        /* lifetime: a duration=1 slot despawns after one run that ticks it. */
+        re15_esp_pool_reset();
+        re15_esp_spawn(3, 0, 0, 100, 100, 1);
+        if (re15_esp_run(10, 10, NULL) != 1) { fprintf(stderr, "FAIL: (B) dur slot first run\n"); fail = 1; }
+        if (re15_esp_pool_count() != 0) { fprintf(stderr, "FAIL: (B) duration=1 -> despawn after 1 run\n"); fail = 1; }
+        if (re15_esp_run(10, 10, NULL) != 0) { fprintf(stderr, "FAIL: (B) despawned slot still dispatched\n"); fail = 1; }
+
+        re15_esp_pool_reset();
+        if (!fail)
+            printf("  (B) PASS: pool spawn/count, byte-true AABB-cull dispatch, duration despawn, reset\n");
+    }
 
     free(buf);
     if (fail) { fprintf(stderr, "\nESP-PARSE TEST FAILED\n"); return 1; }
