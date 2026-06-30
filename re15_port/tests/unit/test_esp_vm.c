@@ -486,6 +486,113 @@ static int run_field_op_tests(void)
     return fail;
 }
 
+/* ESP-C2 batch 5 — the VM register file (DAT_800b0fd0) ops 0x1b/0x23/0x24/0x25/0x26/0x27. */
+static uint8_t s_gcode[160];
+static void build_gcode(void)
+{
+    for (int i = 0; i < 160; i++) s_gcode[i] = 0;
+    s_gcode[0x0]=0x20; s_gcode[0x2]=0x30; s_gcode[0x4]=0x40; s_gcode[0x6]=0x50;
+    s_gcode[0x8]=0x60; s_gcode[0xa]=0x70; s_gcode[0xc]=0x80;
+    s_gcode[0x20]=0x24; s_gcode[0x21]=0x03; s_gcode[0x22]=0x34; s_gcode[0x23]=0x12; s_gcode[0x24]=0xFF; /* op24 reg[3]=0x1234 */
+    s_gcode[0x30]=0x25; s_gcode[0x31]=0x03; s_gcode[0x32]=0x05; s_gcode[0x33]=0xFF;                      /* op25 reg[3]=reg[5] */
+    s_gcode[0x40]=0x23; s_gcode[0x46]=0xF4; s_gcode[0x47]=0xFF;                                          /* op23; tick; halt (w/rhs patched) */
+    s_gcode[0x60]=0x26; s_gcode[0x66]=0xFF;                                                              /* op26 (w/val patched) */
+    s_gcode[0x70]=0x27; s_gcode[0x74]=0xFF;                                                              /* op27 (op/dst/src patched) */
+    s_gcode[0x80]=0x1b; s_gcode[0x82]=0x06; s_gcode[0x85]=0x04;                                          /* op1b rel=6, count=reg[4] */
+    s_gcode[0x86]=0xF4; s_gcode[0x87]=0x0e; s_gcode[0x89]=0xFF;                                          /* body tick; NEXT; halt */
+}
+
+static int arith_case(int op, uint16_t initial, int16_t val, uint16_t expected)
+{
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    re15_espvm_reg_set(7, initial);
+    uint16_t w = (uint16_t)((7 << 8) | op);
+    s_gcode[0x62]=(uint8_t)w; s_gcode[0x63]=(uint8_t)(w>>8);
+    s_gcode[0x64]=(uint8_t)val; s_gcode[0x65]=(uint8_t)((uint16_t)val>>8);
+    re15_espvm_alloc(0, 4, s_gcode);   /* id4 @0x60 = op26 */
+    re15_espvm_run_all();
+    uint16_t got = re15_espvm_reg_get(7);
+    if (got != expected) {
+        fprintf(stderr, "FAIL: arith op%x %u,%d -> 0x%x (want 0x%x)\n", op, initial, val, got, expected); return 1; }
+    return 0;
+}
+
+static int compare_case(int sel, int16_t lhs, int16_t rhs, int expect_cont)
+{
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt); re15_espvm_set_opcode(0xF4, op_tick);
+    re15_espvm_reg_set(2, (uint16_t)lhs);
+    uint16_t w = (uint16_t)((sel << 8) | 2);            /* id=2, selector=sel */
+    s_gcode[0x42]=(uint8_t)w; s_gcode[0x43]=(uint8_t)(w>>8);
+    s_gcode[0x44]=(uint8_t)rhs; s_gcode[0x45]=(uint8_t)((uint16_t)rhs>>8);
+    re15_espvm_alloc(0, 2, s_gcode);   /* id2 @0x40 = op23 then tick */
+    s_tick = 0;
+    re15_espvm_run_all();
+    /* CONT -> the tick after op23 runs; YIELD -> frame ends (depth 0xff) and tick does NOT run. */
+    if (s_tick != (expect_cont ? 1 : 0)) {
+        fprintf(stderr, "FAIL: cmp sel%d %d?%d tick=%d (want cont=%d)\n", sel, lhs, rhs, s_tick, expect_cont); return 1; }
+    return 0;
+}
+
+static int run_reg_op_tests(void)
+{
+    int fail = 0;
+    build_gcode();
+    printf("  --- ESP-C2 batch 5: VM register ops 0x1b/0x23/0x24/0x25/0x26/0x27 ---\n");
+
+    /* (11a) op24 set-imm + op25 copy. */
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    re15_espvm_alloc(0, 0, s_gcode); re15_espvm_run_all();
+    if (re15_espvm_reg_get(3) != 0x1234) { fprintf(stderr, "FAIL: (11a) op24 reg[3]=0x%x\n", re15_espvm_reg_get(3)); fail = 1; }
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    re15_espvm_reg_set(5, 0xABCD);
+    re15_espvm_alloc(0, 1, s_gcode); re15_espvm_run_all();
+    if (re15_espvm_reg_get(3) != 0xABCD) { fprintf(stderr, "FAIL: (11a) op25 reg[3]=0x%x\n", re15_espvm_reg_get(3)); fail = 1; }
+
+    /* (11b) all 12 arithmetic ops (FUN_80040140) via op26. */
+    fail |= arith_case(0x0, 100, 5, 105);          /* add */
+    fail |= arith_case(0x1, 100, 30, 70);          /* sub */
+    fail |= arith_case(0x2, 6, 7, 42);             /* mul */
+    fail |= arith_case(0x3, 100, 7, 14);           /* div */
+    fail |= arith_case(0x4, 100, 7, 2);            /* mod */
+    fail |= arith_case(0x5, 0x00f0, 0x0f0f, 0x0fff); /* or */
+    fail |= arith_case(0x6, 0x0ff0, 0x0f0f, 0x0f00); /* and */
+    fail |= arith_case(0x7, 0x0ff0, 0x0f0f, 0x00ff); /* xor */
+    fail |= arith_case(0x8, 0x0f0f, 0, 0xf0f0);    /* not */
+    fail |= arith_case(0x9, 0x0001, 4, 0x0010);    /* shl */
+    fail |= arith_case(0xa, 0x8000, 4, 0x0800);    /* shr logical */
+    fail |= arith_case(0xb, 0x8000, 4, 0xf800);    /* shr arithmetic */
+    fail |= arith_case(0x3, 50, 0, 50);            /* div by 0 -> unchanged (orig traps) */
+
+    /* (11c) op27 reg-arith-reg: reg[3] *= reg[5]. */
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    re15_espvm_reg_set(3, 8); re15_espvm_reg_set(5, 2);
+    s_gcode[0x71]=0x02; s_gcode[0x72]=0x03; s_gcode[0x73]=0x05;   /* op=mul dst=3 src=5 */
+    re15_espvm_alloc(0, 5, s_gcode); re15_espvm_run_all();
+    if (re15_espvm_reg_get(3) != 16) { fprintf(stderr, "FAIL: (11c) op27 reg[3]=%u\n", re15_espvm_reg_get(3)); fail = 1; }
+
+    /* (11d) op23 compare — all 7 selectors, true and false. */
+    fail |= compare_case(0, 10, 10, 1); fail |= compare_case(0, 10, 11, 0);  /* == */
+    fail |= compare_case(1, 11, 10, 1); fail |= compare_case(1, 10, 10, 0);  /* >  */
+    fail |= compare_case(2, 10, 10, 1); fail |= compare_case(2, 9, 10, 0);   /* >= */
+    fail |= compare_case(3, 9, 10, 1);  fail |= compare_case(3, 10, 10, 0);  /* <  */
+    fail |= compare_case(4, 10, 10, 1); fail |= compare_case(4, 11, 10, 0);  /* <= */
+    fail |= compare_case(5, 10, 11, 1); fail |= compare_case(5, 10, 10, 0);  /* != */
+    fail |= compare_case(6, 0x0f, 0x03, 1); fail |= compare_case(6, 0x10, 0x0f, 0); /* & test */
+
+    /* (11e) op1b FOR-begin with count from reg[4]: body runs reg[4] times. */
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt); re15_espvm_set_opcode(0xF4, op_tick);
+    re15_espvm_reg_set(4, 4);
+    re15_espvm_instance_t *fb = re15_espvm_alloc(0, 6, s_gcode);
+    s_tick = 0;
+    re15_espvm_run_all();
+    if (s_tick != 4 || re15_espvm_get_pc(fb) != 0x89) {
+        fprintf(stderr, "FAIL: (11e) op1b ticks=%d pc=0x%x (want 4/0x89)\n", s_tick, re15_espvm_get_pc(fb)); fail = 1; }
+
+    if (!fail) printf("  (11) PASS: VM register ops byte-true "
+                      "(set/copy/12 arith/7 compare/FOR-begin-from-register)\n");
+    return fail;
+}
+
 int main(void)
 {
     int fail = 0;
@@ -572,6 +679,8 @@ int main(void)
     if (run_for_op_tests()) fail = 1;
     /* (10) the instance-local field ops 0x2f / 0x31. */
     if (run_field_op_tests()) fail = 1;
+    /* (11) the VM register ops 0x1b/0x23/0x24/0x25/0x26/0x27. */
+    if (run_reg_op_tests()) fail = 1;
 
     if (fail) { fprintf(stderr, "\nESP-VM TEST FAILED\n"); return 1; }
     printf("\nPASS: ESP effect-script VM (C1) — pool + FUN_8003f0a0 dispatch byte-true\n");

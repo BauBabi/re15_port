@@ -1,28 +1,27 @@
 # RE1.5 Effect-Script VM — Opcode Map (@0x800744a8, 95 ops 0x00-0x5e)
 
 Dispatch: `FUN_8003f0a0` runs `(*table[*pc])(instance)` per active 0x170-instance. Port: `re15_esp_vm.c`.
-Status: **PORTED** = byte-true in re15_esp_vm.c (re15_espvm_install_ops) + tested (test_esp_vm).
-Classification of 0x0d-0x5e by the 77-agent workflow (2026-06-30), verified against the bytes before porting.
-`portable_now` = pure instance-local + bytecode operands (no external pool/work-struct/GTE/audio/VM-register).
-⚠️ The 6 rows still marked `·portable` (0x32/0x3f/0x42/0x4a/0x4c/0x4d) were AGENT-flagged portable but
-self-verified to dereference the work-struct @inst+0x154 or the effect pool DAT_800b2368 → actually **defer**
-(see the deferred groups). All `✅PORTED` rows were byte-true self-disassembled before porting.
+Status: **✅PORTED** = byte-true in re15_esp_vm.c (re15_espvm_install_ops) + tested (test_esp_vm). **31/95 ported.**
+Classification of 0x0d-0x5e by the 77-agent workflow (2026-06-30); every PORTED row self-disassembled before porting.
+`portable_now` = pure instance-local + bytecode operands (no external pool/work-struct/GTE/audio).
+⚠️ The rows marked `·portable` were AGENT-flagged portable but self-verified to deref the work-struct @inst+0x154
+or the effect pool DAT_800b2368 -> actually **defer** (see deferred groups).
 
 | op | addr | status | category | calls | summary |
 |----|------|--------|----------|-------|---------|
 | 0x00 | 0x8003f1d8 | ✅PORTED | control-flow |  | nop-continue (pc++, CONT) [alias 0x1c-0x20] |
 | 0x01 | 0x8003f1f0 | ✅PORTED | control-flow |  | end/return-level (lvl0 deactivate+STOP, else pop level) |
 | 0x02 | 0x8003f258 | ✅PORTED | control-flow |  | wait-1-frame (pc++, STOP) |
-| 0x03 | 0x8003f270 | ✅PORTED | control-flow |  | jump-script (re-seed via FUN_8003edec, id@pc+3) |
+| 0x03 | 0x8003f270 | ✅PORTED | control-flow |  | jump-script (re-seed FUN_8003edec, id@pc+3) |
 | 0x04 | 0x8003f2a0 | ✅PORTED | spawn |  | spawn sibling (FUN_8003ee3c slot@pc+1 id@pc+3) |
 | 0x05 | 0x8003f2dc | ✅PORTED | control-flow |  | kill instance[idx@pc+1] |
-| 0x06 | 0x8003f328 | ✅PORTED | loop |  | loop-push (stack: push pc+4+u16@pc+2, depth++) |
+| 0x06 | 0x8003f328 | ✅PORTED | loop |  | loop-push (push pc+4+u16@pc+2, depth++) |
 | 0x07 | 0x8003f368 | ✅PORTED | loop |  | loop-jump (pc+=u16@pc+2, depth--) |
 | 0x08 | 0x8003f3a4 | ✅PORTED | loop |  | loop-pop (pc+=2, depth--) |
 | 0x09 | 0x8003f3e0 | ✅PORTED | loop |  | counter-set (CARRAY[++ci]=u16@pc+2) |
-| 0x0a | 0x8003f428 | ✅PORTED | loop |  | counter-wait (CARRAY[ci]--; ==0 pc+=3,ci--) [0x09+0x0a=wait N frames] |
-| 0x0b | 0x8003f490 | ✅PORTED | loop |  | counter-push (ci++, pc+=1) |
-| 0x0c | 0x8003f4c4 | ✅PORTED | loop |  | wait-condition (gate re15_espvm_set_wait_gate; else pc+=1,ci--) |
+| 0x0a | 0x8003f428 | ✅PORTED | loop |  | counter-wait [0x09+0x0a=wait N frames] |
+| 0x0b | 0x8003f490 | ✅PORTED | loop |  | counter-push (ci++) |
+| 0x0c | 0x8003f4c4 | ✅PORTED | loop |  | wait-condition (re15_espvm_set_wait_gate) |
 | 0x0d | 0x8003f540 | ✅PORTED | loop-counter |  | FOR/loop-push opcode: increments the per-level loop counter-index (+0x08), pushes a new loop frame — u16 iteration count (operand@pc+4) into |
 | 0x0e | 0x8003f674 | ✅PORTED | loop-counter |  | Opcode 0x0e = NEXT/loop-back: decrements per-level u16 loop counter at +0xa0; if nonzero, restores pc from the loop-return stack (mem[+0x20  |
 | 0x0f | 0x8003f6f4 | —defer | control-flow | *(0x800744a8 + 4*subopcode) via jalr v0 @0x8003f7ac (predicate head),*(0x800744a8 + 4*subopcode) via jalr v0 @0x8003f7f0 (predicate term loo | Conditional/loop-begin opcode: pushes a loop frame (+0x20 start, +0x60 end, +0x0c depth, +0x08 counter-index), evaluates a chained AND/OR pr |
@@ -37,14 +36,14 @@ self-verified to dereference the work-struct @inst+0x154 or the effect pool DAT_
 | 0x18 | 0x8003fbe8 | —defer | control-flow |  | GOSUB/push-level opcode: saves return pc (pc+2) into per-level array at +0x144, increments level (+0x02), reinitializes the new level's loop |
 | 0x19 | 0x8003fc50 | ✅PORTED | loop-counter |  | Loop/scope POP (end-of-loop-iteration return): decrements the per-instance level at +0x02, restores pc (+0x1c) from the saved-return-pc tabl |
 | 0x1a | 0x8003fca8 | ✅PORTED | control-flow |  | Loop-pop / return: restores pc (+0x1c) from the per-level saved-pc array (+0x60 + level*0x10 + counter_index*4), decrements counter-index[le |
-| 0x1b | 0x8003f5d0 | —defer | loop-counter |  | FOR-loop / loop-counter setup: bumps the per-level counter-index, loads an iteration count from the read-only table at 0x800b0fd0, and pushe |
+| 0x1b | 0x8003f5d0 | ✅PORTED | loop-counter |  | FOR-loop / loop-counter setup: bumps the per-level counter-index, loads an iteration count from the read-only table at 0x800b0fd0, and pushe |
 | 0x21 | 0x8003fcf4 | —defer | control-flow |  | Conditional flag-test opcode: selects a global flag bank via pointer-table[0x80074664][byte[pc+1]], tests bit (hw[pc+2]&0x1f) in word ((hw[p |
 | 0x22 | 0x8003fdd0 | —defer | field-setter |  | Opcode 0x22: set/clear/toggle a single bit in an external global flag array selected by a pointer table @0x80074664; advances pc by 4 and re |
-| 0x23 | 0x8003ff68 | —defer | control-flow |  | Opcode 0x23 = compare/test: LHS = global register DAT_800b0fd0[pc[2]&0xff] (s16), RHS = s16 imm at pc[4], op selector = pc[2]>>8 (0..6: ==,  |
-| 0x24 | 0x80040018 | —defer | field-setter |  | SET-IMMEDIATE: writes s16 immediate operand into VM variable/register table 0x800b0fd0[id], advances pc+=4, returns CONT(1). |
-| 0x25 | 0x8004004c | —defer | field-setter |  | Copy VM-variable: DAT_800b0fd0[u8 dest] = DAT_800b0fd0[u8 src] over the global u16 register array; advances pc+=3, returns CONT(1). |
-| 0x26 | 0x8004008c | —defer | field-setter | 0x80040140 | VM "apply arithmetic/bitwise op to global variable" opcode: pc+=6, reads var-index+op-selector (u16@pc+2) and value (s16@pc+4), calls helper |
-| 0x27 | 0x800400dc | —defer | field-setter | 0x80040140 | Opcode 0x27: arithmetic/logic op on the global VM register table @0x800b0fd0 — reads 3 operand bytes (op-id, dst-index, src-index), dispatch |
+| 0x23 | 0x8003ff68 | ✅PORTED | control-flow |  | Opcode 0x23 = compare/test: LHS = global register DAT_800b0fd0[pc[2]&0xff] (s16), RHS = s16 imm at pc[4], op selector = pc[2]>>8 (0..6: ==,  |
+| 0x24 | 0x80040018 | ✅PORTED | field-setter |  | SET-IMMEDIATE: writes s16 immediate operand into VM variable/register table 0x800b0fd0[id], advances pc+=4, returns CONT(1). |
+| 0x25 | 0x8004004c | ✅PORTED | field-setter |  | Copy VM-variable: DAT_800b0fd0[u8 dest] = DAT_800b0fd0[u8 src] over the global u16 register array; advances pc+=3, returns CONT(1). |
+| 0x26 | 0x8004008c | ✅PORTED | field-setter | 0x80040140 | VM "apply arithmetic/bitwise op to global variable" opcode: pc+=6, reads var-index+op-selector (u16@pc+2) and value (s16@pc+4), calls helper |
+| 0x27 | 0x800400dc | ✅PORTED | field-setter | 0x80040140 | Opcode 0x27: arithmetic/logic op on the global VM register table @0x800b0fd0 — reads 3 operand bytes (op-id, dst-index, src-index), dispatch |
 | 0x28 | 0x80040270 | —defer | rng-misc | 0x8003ea3c | Opcode 0x28: advance pc by 1 (no operands), invoke RNG/misc subroutine 0x8003ea3c (updates globals 0x800b3f6c/0x800b0fea), return CONT(1). |
 | 0x29 | 0x800402a0 | —defer | control-flow | 0x800142f4 | Opcode 0x29 = cut/montage display-switch: saves the current display-id globals (0x800b3f7b/0x800b0fe8), sets the cut-freeze bit 0x800aca3c\| |
 | 0x2a | 0x8004032c | —defer | control-flow | 0x800142f4 | Opcode 0x2a: a 1-byte (no-operand) control op that snapshots/sets a global display-state pair (saves [0x800b0fe4]->[0x800b0fe8], stores byte |
@@ -101,13 +100,13 @@ self-verified to dereference the work-struct @inst+0x154 or the effect pool DAT_
 | 0x5d | 0x8004203c | —defer | field-setter |  | Opcode 0x5d: writes the u16 operand [pc+2] to offset 0x1c8 (selector 0) or 0x1ca (selector 1) of the object pointed to by instance field +0x |
 | 0x5e | 0x80042b04 | —defer | external-global | 0x80013278 | Opcode 0x5e: sets bit 0x20 in the cut/game-state global 0x800aca3c, then calls external helper FUN_80013278(id=byte@pc+1, count=halfword@pc+ |
 
-## Deferred opcode groups (need C3 / external integration)
+## Deferred opcode groups (need external integration / C3), by dependency
 
-- **VM registers** `DAT_800b0fd0` (0x1b set-count, 0x23 compare, 0x24 set-imm, 0x25 copy, 0x26/0x27 arith) — a 256-entry u16 global register file.
-- **work-struct @inst+0x154** (0x32/0x3f/0x42/0x4a/0x3d/0x3e) — derefs a pointer to an external anim/render struct.
-- **effect pool `DAT_800b2368`** (0x4c spawn-slot, 0x4d slot-config, 0x2d/0x48 model-set) — the ESP-B pool integration.
-- **draw/GTE** (0x36/0x3a/0x40/0x41/0x47/0x4f/0x55 + the SPRT builder FUN_80046a1c) — needs the render path.
-- **external game-flags / cuts** (0x21/0x22/0x29/0x2a/0x3b/0x3c/0x4b/0x58/0x59/0x5e) — DAT_800aca3c / display globals.
-- **audio** 0x57 (0x800216ec). **RNG** 0x28 (0x8003ea3c). **entity spawn** 0x44 (0x800420a0).
+1. ~~**VM registers** DAT_800b0fd0~~ ✅ DONE (0x1b/0x23/0x24/0x25/0x26/0x27).
+2. **work-struct @inst+0x154** (0x32/0x3f/0x42/0x4a/0x3d/0x3e/0x33/0x34/0x35/0x43/0x5a/0x5b/0x5d) — derefs a pointer to an external anim/render struct; needs that struct allocated/bound first.
+3. **effect pool DAT_800b2368** (0x4c spawn-slot, 0x4d slot-config, 0x2d/0x48 model-set, 0x37/0x38/0x4f) — ESP-B pool integration.
+4. **draw/GTE** (0x36/0x3a/0x40/0x41/0x47/0x55 + the SPRT builder FUN_80046a1c) — needs the render path (C3).
+5. **external game-flags / cuts** (0x21/0x22/0x29/0x2a/0x3b/0x3c/0x4b/0x50/0x51/0x52/0x58/0x59/0x5e) — DAT_800aca3c / @0x80074664 flag banks / display globals.
+6. **misc external** audio 0x57 (0x800216ec) · RNG 0x28 (0x8003ea3c) · entity-spawn 0x44 (0x800420a0) · 0x2b/0x39/0x45/0x46/0x49/0x54/0x56/0x5c (engine helpers).
 
-Full per-op disasm: workflow run wv6srppqn (session-temp, regenerable via the esp-vm-opcode-classify workflow).
+Full per-op disasm: workflow run wv6srppqn (regenerable via the esp-vm-opcode-classify workflow).

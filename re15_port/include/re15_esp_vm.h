@@ -21,11 +21,13 @@
  *   0x03 jump-script · 0x04 spawn · 0x05 kill-instance · 0x06 loop-push · 0x07 loop-jump ·
  *   0x08 loop-pop · 0x09 counter-set · 0x0a counter-wait · 0x0b counter-push · 0x0c wait-cond ·
  *   0x0d FOR-begin · 0x0e NEXT · 0x10 loop-back · 0x11 FOR-begin(no count) · 0x14 skip6 ·
- *   0x15 skip2 · 0x16 pop-ci · 0x17 block-setup · 0x19 pop-level · 0x1a FOR-break.
- *   (0x09+0x0a = "wait N frames"; 0x0d..0x1a = the 2nd FOR-loop subsystem indexed by the per-level
- *   counter-index inst[level+8] over the +0x0c/+0x20/+0x60/+0xa0 arrays.)  Other opcodes = stub.
- * Still ahead: the field-setters (0x2f/0x31/0x32/0x4d…), then the draw/GTE/spawn/external ops, then
- * the bytecode source (DAT_800b3f70) + TIM/UV LUTs (Phase ESP-C3). No GPU draw, no game_step wiring.
+ *   0x15 skip2 · 0x16 pop-ci · 0x17 block-setup · 0x19 pop-level · 0x1a FOR-break ·
+ *   0x2f set-u16 · 0x31 integrator · 0x1b FOR-begin(reg) · 0x23 compare · 0x24 reg-set ·
+ *   0x25 reg-copy · 0x26 reg-arith-imm · 0x27 reg-arith-reg.  (0x09+0x0a = "wait N frames";
+ *   0x0d..0x1a = the 2nd FOR-loop subsystem; 0x1b/0x23..0x27 = the DAT_800b0fd0 register file.)
+ * Full opcode classification: RE15_ESP_VM_OPCODES.md (95 ops). Other opcodes = stub. Still ahead:
+ * the work-struct (+0x154) / effect-pool / draw-GTE / game-flag / audio ops, then the bytecode
+ * source (DAT_800b3f70) + TIM/UV LUTs (Phase ESP-C3). No GPU draw, no game_step wiring yet.
  *
  * Pointer handling: the original instance stores a 32-bit absolute pc at +0x1c and 32-bit return
  * pointers on the +0xc0 sub-stack. The PC port keeps the 0x170-byte instance image byte-true but
@@ -101,6 +103,11 @@ void re15_espvm_set_opcode(uint8_t op, re15_espvm_op_fn fn);
  *  (*(u32*)0x800aca3c & 0x20) || (*(u8*)0x800b8520 & 0x80) — a global pause/freeze the port does
  *  not model yet. Default 0 (normal play: op 0x0c advances). Set nonzero to make op 0x0c wait. */
 void re15_espvm_set_wait_gate(int waiting);
+
+/** The VM global register file (DAT_800b0fd0): 256 u16 variables shared by all instances, used by
+ *  opcodes 0x1b/0x23/0x24/0x25/0x26/0x27. Zeroed by re15_espvm_reset. */
+uint16_t re15_espvm_reg_get(int idx);              /* idx in [0,256) */
+void     re15_espvm_reg_set(int idx, uint16_t v);
 
 /* ---- accessors (inspection / tests) ------------------------------------------------------- */
 
