@@ -239,6 +239,7 @@ int re15_player_weapon_fire(int weapon_id)
     /* crit/headshot (@0x800124fc-0x8001251c): weapon 7, or weapon 8 within 3000 -> instant kill (type<0x20). */
     if ((weapon_id == 7 || (weapon_id == 8 && best_dist < 3000u)) && e->type < 0x20)
         e->hp = -1;
+    e->sub_state_3 = 0;                              /* +0x7 = 0 (@0x80012... line 157) — start the hurt/death anim FSM at phase 0 */
     e->state       = (e->hp >= 0) ? 2 : 3;          /* +0x4 = HURT(2) / DEATH(3) (@0x80012520) */
     e->sub_state_2 = 0;                              /* +0x6 hit-dir clip (DAT_8006f410[heading>>0x1d]) — deferred */
     return best + 1;                                /* hit (slot+1, non-zero) */

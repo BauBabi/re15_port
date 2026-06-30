@@ -37,6 +37,7 @@
 #include "re15_actor.h"
 #include "re15_aot.h"
 #include "re15_enemy_ai.h"
+#include "re15_enemy.h"    /* re15_enemy_alloc/find/reset — mock the death-clip bank */
 #include "re15_damage.h"   /* re15_damage_seed_rng */
 
 #include <stdint.h>
@@ -389,7 +390,10 @@ int main(void)
         re15_enemy_take_damage(zc, 0);   /* lethal: 5-10 = -5 < 0 -> DEATH (state 3) */
         if (zc->state != RE15_AI_STATE_DEATH) {
             fprintf(stderr, "FAIL: lethal hit -> zombie DEATH (state 3), ist %d (HP %d)\n", zc->state, zc->hp); fail = 1; }
-        re15_enemy_ai_live_tick(zs);     /* [3] DEATH -> CORPSE (state 7) */
+        re15_enemy_ai_live_tick(zs);     /* [3] death FSM phase 0: set death clip 0x1f, hold DEATH */
+        if (zc->motion != 0x1f) {
+            fprintf(stderr, "FAIL: death phase0 sets motion 0x1f, ist %d\n", zc->motion); fail = 1; }
+        re15_enemy_ai_live_tick(zs);     /* phase 1->2 (no model bank -> straight to CORPSE state 7) */
         if (zc->state != RE15_AI_STATE_CORPSE) {
             fprintf(stderr, "FAIL: DEATH -> CORPSE (state 7), ist %d\n", zc->state); fail = 1; }
 
@@ -431,15 +435,21 @@ int main(void)
                     front->state, front->sub_state_1); fail = 1; }
         if (behind->hp != 60) {
             fprintf(stderr, "FAIL: the BEHIND zombie must NOT be auto-aimed, HP=%d\n", behind->hp); fail = 1; }
-        front->hp = 10; front->hit_react = 0; front->state = RE15_AI_STATE_ACTIVE;   /* lethal shot */
-        re15_player_weapon_fire(2);   /* 10-24 = -14 < 0 -> DEATH */
-        if (front->state != RE15_AI_STATE_DEATH) {
-            fprintf(stderr, "FAIL: lethal shot -> zombie DEATH (3), ist %d (HP %d)\n", front->state, front->hp); fail = 1; }
-        re15_enemy_ai_live_tick(zslots[2]);   /* DEATH -> CORPSE (7) */
+        front->hp = 10; front->hit_react = 0; front->state = RE15_AI_STATE_ACTIVE; front->sub_state_3 = 9;
+        re15_player_weapon_fire(2);   /* 10-24 = -14 < 0 -> DEATH; +0x7 reset to 0 */
+        if (front->state != RE15_AI_STATE_DEATH || front->sub_state_3 != 0) {
+            fprintf(stderr, "FAIL: lethal shot -> DEATH(3) + sub_state_3 reset to 0, state=%d +0x7=%d (HP %d)\n",
+                    front->state, front->sub_state_3, front->hp); fail = 1; }
+        re15_enemy_ai_live_tick(zslots[2]);   /* death FSM phase 0: set the death clip 0x1f, hold DEATH */
+        if (front->motion != 0x1f || front->state != RE15_AI_STATE_DEATH) {
+            fprintf(stderr, "FAIL: death phase0 sets motion 0x1f + holds DEATH, motion=%d state=%d\n",
+                    front->motion, front->state); fail = 1; }
+        re15_enemy_ai_live_tick(zslots[2]);   /* phase 1->2 (no model bank loaded -> straight to corpse) */
         if (front->state != RE15_AI_STATE_CORPSE) {
             fprintf(stderr, "FAIL: shot DEATH -> CORPSE (7), ist %d\n", front->state); fail = 1; }
         if (!fail)
-            printf("  (11) player pistol -> auto-aim FRONT zombie -24 -> HURT(2) (behind skipped); lethal -> DEATH->CORPSE(7)\n");
+            printf("  (11) player pistol -> auto-aim FRONT zombie -24 -> HURT(2) (behind skipped); "
+                   "lethal -> DEATH(motion 0x1f)->CORPSE(7)\n");
     }
 
     /* (12): the BYTE-TRUE reach bound (cone tester FUN_800127fc/800128a0): R = reach + enemy hitbox
@@ -467,6 +477,38 @@ int main(void)
             fprintf(stderr, "FAIL: (12) zombie at dist 1400 (== reach+radius, strict <) must MISS, hp=%d\n", z->hp); fail = 1; }
         if (!fail)
             printf("  (12) byte-true reach: hit at dist 1399 (reach 1000 + radius 400), miss at 1400 (strict <)\n");
+    }
+
+    /* (13): the byte-true DEATH ANIMATION play-out (FUN_80107cb0). With the enemy model bank loaded,
+     * the death state sets the death clip (motion 0x1f) and HOLDS state DEATH until that clip has
+     * played to its last frame (anim_frame == frame_count-1) — only THEN -> CORPSE. (In-game the
+     * shared anim loop advances anim_frame; here we drive it.) Mock a bank with a 5-frame death clip. */
+    {
+        re15_actor_t *z = &g_actors[zslots[0]];
+        re15_enemy_bank_t *bank = re15_enemy_alloc(z->type);   /* claim a bank for this zombie type */
+        if (!bank) { fprintf(stderr, "FAIL: (13) could not alloc a mock bank\n"); fail = 1; }
+        else {
+            bank->anim.clip_count = 0x20;                       /* clips 0..0x1f exist */
+            bank->anim.clips[0x1f].frame_count = 5;             /* the death clip = 5 frames */
+            bank->ok = 1;                                       /* re15_enemy_find now returns it */
+
+            z->state = RE15_AI_STATE_DEATH; z->sub_state_3 = 0; z->motion = 0; z->anim_frame = 0;
+            re15_enemy_ai_live_tick(zslots[0]);                /* phase 0: motion 0x1f, hold DEATH */
+            if (z->motion != 0x1f || z->state != RE15_AI_STATE_DEATH || z->sub_state_3 != 1) {
+                fprintf(stderr, "FAIL: (13) phase0 motion=%d state=%d +0x7=%d\n",
+                        z->motion, z->state, z->sub_state_3); fail = 1; }
+            z->anim_frame = 3;                                  /* clip still playing (3 < 5-1) */
+            re15_enemy_ai_live_tick(zslots[0]);
+            if (z->state != RE15_AI_STATE_DEATH) {
+                fprintf(stderr, "FAIL: (13) mid-clip (frame 3/5) must stay DEATH, state=%d\n", z->state); fail = 1; }
+            z->anim_frame = 4;                                  /* clip's last frame (5-1) */
+            re15_enemy_ai_live_tick(zslots[0]);
+            if (z->state != RE15_AI_STATE_CORPSE) {
+                fprintf(stderr, "FAIL: (13) clip end (frame 4/5) -> CORPSE(7), state=%d\n", z->state); fail = 1; }
+            if (!fail)
+                printf("  (13) death anim: motion 0x1f, holds DEATH through the 5-frame clip, then CORPSE(7)\n");
+        }
+        re15_enemy_reset();   /* drop the mock bank so it can't leak into other runs */
     }
 
     free(buf);

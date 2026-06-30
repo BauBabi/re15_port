@@ -18,6 +18,7 @@
  * (no tick side effects → no 1170 risk; same stance as re15_damage.c).
  */
 #include "re15_enemy_ai.h"
+#include "re15_enemy.h"    /* re15_enemy_find — the loaded model bank (death-clip framecount) */
 #include "re15_damage.h"   /* re15_enemy_player_dist, re15_ai_arc_test, re15_engine_rand8,
                             * re15_enemy_apply_hitbox */
 
@@ -631,21 +632,42 @@ void re15_enemy_ai_live_hurt(int slot)
 }
 
 /* DEATH — FUN_80106ba4 (@0x8011f7b4[3], STAGE1.BIN) -> FUN_80107cb0. The live zombie's death: a hit
- * that drives the zombie's HP < 0 sets state 3 (DEATH, re15_enemy_take_damage); the tick dispatches
- * here. FUN_80107cb0 plays the death animation (anim_set @0x80107e84) + the death SE (0x800453d0) +
- * the gore/model setup (FUN_80019700), then sets the entity state word = 7 (@0x80107ec8) = the
- * death-complete / CORPSE state — which is OUT of the @0x8011f7b4[0..4] dispatch range, so the tick
- * no longer dispatches it (an inert corpse that can no longer engage/grab). FAITHFUL-LINE: the death
- * anim + SE + gore are the deferred presentation; set the byte-true corpse state 7 (the zombie stops
- * being a threat). The full death sequence (the fall animation, the corpse, an eventual despawn) is
- * the deferred anim layer. */
+ * that drives the zombie's HP < 0 sets state 3 (DEATH, re15_enemy_take_damage / the player shot);
+ * the tick dispatches here each frame. FUN_80107cb0 is a 3-phase sub-FSM on +0x7 (sub_state_3):
+ *   phase 0 (@0x80107d00): +0x93|=1, +0x94 (motion) = 0x1f (the DEATH clip 31), +0x95 (anim_frame) = 0,
+ *                          +0x7 = 1  (start the death animation)
+ *   phase 1 (@0x80107dcc): play clip 0x1f via anim_set (@0x80107e84); the death SE fires at frame 7
+ *                          (0x800453d0, rng&1?8:5) + gore at frame 35 (FUN_80019700); when anim_set
+ *                          hits the clip's terminal frame it advances +0x7 -> 2
+ *   phase 2 (@0x80107eac): +0x0 |= 2 (lifecycle), +0x4 = 7 (@0x80107ec8) = CORPSE — OUT of the
+ *                          @0x8011f7b4[0..4] dispatch range, so the tick stops dispatching it (an
+ *                          inert corpse that can no longer engage/grab; motion stays 0x1f -> the
+ *                          render holds the clip's last frame = the fallen pose).
+ * Ported byte-true onto the port's shared anim playback (player_common.c advances every actor's
+ * anim_frame + holds the last keyframe): set motion 0x1f, then hold state DEATH until the death clip
+ * has played out (anim_frame reaches its last frame, read from the loaded model bank), then -> CORPSE.
+ * FAITHFUL-LINE: the death SE (frame 7) + the gore spawn (frame 35) are the deferred presentation.
+ * Headless / model-not-loaded fallback: with no bank the clip length is unknown -> go straight to
+ * CORPSE (the prior behaviour, no regression). */
 void re15_enemy_ai_live_death(int slot)
 {
     if (slot < 0 || slot >= RE15_ACTOR_MAX) return;
     re15_actor_t *e = &g_actors[slot];
-    e->state       = (uint8_t)RE15_AI_STATE_CORPSE;   /* +0x4 = 7 (@0x80107ec8) — inert corpse */
-    e->sub_state_1 = 0;
-    e->sub_state_2 = 0;
+
+    if (e->sub_state_3 == 0) {                         /* phase 0 — start the death anim */
+        e->hit_react  |= 0x1;                          /* +0x93 |= 1 (@0x80107d08) */
+        e->motion      = 0x1f;                         /* +0x94 = death clip 31 (@0x80107d2c) */
+        e->anim_frame  = 0;                            /* +0x95 = 0 (@0x80107d40) */
+        e->sub_state_3 = 1;                            /* +0x7 = 1 (@0x80107d1c) */
+        return;
+    }
+    if (e->sub_state_3 == 1) {                         /* phase 1 — play clip 0x1f to its end */
+        re15_enemy_bank_t *bank = re15_enemy_find(e->type);
+        int frames = (bank && 0x1f < bank->anim.clip_count) ? bank->anim.clips[0x1f].frame_count : 0;
+        if (frames > 0 && e->anim_frame < frames - 1) return;   /* still playing */
+        e->sub_state_3 = 2;
+    }
+    e->state = (uint8_t)RE15_AI_STATE_CORPSE;          /* phase 2 — +0x4 = 7 (@0x80107ec8) */
 }
 
 /* FUN_80100424 (@0x80072bac[0x10/0x11/0x16], STAGE1.BIN) — the LIVE zombie PER-FRAME TICK, the
