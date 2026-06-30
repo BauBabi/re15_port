@@ -141,6 +141,28 @@ parst (EFF-Bodies @0x11E8 effect-05, @0x13B8 effect-07; verifiziert). EFF-Body-L
 - Gespawnt beim **Verhaltens-Setup** (`entity+7` 0→1-Übergang) zusammen mit 2× effect-id-0 (`0x2000`). `FUN_8002c444` (effect-id 6 12-fach-Burst) = ANDERER Raum/Kinematik.
 - **Port-Status:** der Port hat eine VEREINFACHTE Zombie-AI (`enemy_ai_common.c`: INIT/ACTIVE/HURT/DEATH/IDLE) OHNE diese Verhaltens-Sub-Handler. **Nächster Port-Schritt = diese AI-Verhaltens-Handler portieren** (FUN_801066dc/a44/… + die Zombie-Internals entity+7/+8/+0x188/+0x8f/+0x93… + der Effekt-Handler LAB_8012016c), dann den Effekt-Spawn byte-true einklinken. Substanzielle, eigene Port-Einheit (Teil des 100%-Ports, siehe Memory full-port-mandate).
 
+## 2e. Zombie-Gore-Port — Fortschritt + die nächsten Bricks (2026-06-30)
+**GELIEFERT (Commit e4fca663, getestet):** `re15_enemy_gore_tick` = byte-true `FUN_80106a44`
+@0x80106a98-abc (der `+0x93 & 2`-Hit-Spawn): pro Live-Zombie in `re15_enemy_ai_run_all`, wenn
+das 2.-Hit-Bit (von `re15_enemy_take_damage` @0x80012fcc gesetzt) an ist → spawn effect-id 0
+(`a0=0x2000`, `a1`=rot_y) + Bit löschen. Position = Actor-Welt (faithful, Bone-Block +0x188 nicht
+im Port). Bank-gated: effect-id 0 ist in ROOM1140 unbelegt → no-op dort (byte-true); sichtbar wo
+effect-0 geladen ist.
+
+**NÄCHSTE BRICKS (für die SICHTBARE ROOM1140-Gore = effect-id 5 am Behavior-SETUP):**
+1. **Behavior-Dispatch mappen:** die Handler stehen in stride-0x10-Behavior-Tabellen @`0x8011ff90`
+   und @`0x80120720` (STAGE1.BIN; Einträge `0x80106edc`/`0x80107244`/`0x80107ee0` @ +0/0x10/0x20…).
+   `FUN_80106a44`/`FUN_801066dc` stehen NICHT direkt drin → werden indirekt gerufen. Disasm STAGE1.BIN
+   (`--bin`, lädt @0x80100000) bei diesen Tabellen + den Callern → welche Zombie-State (entity+0x5 /
+   +0x6) = `FUN_80106a44`.
+2. **Den Behavior-SETUP porten** (`FUN_80106a44:17-34`): wenn der Zombie diese Behavior betritt
+   (`entity+7`==0 → der Port hat `sub_state_3`), spawn **effect-id 5** (`a0=0x5002800`, a1=rot_y,
+   pos=bone→Actor faithful) + 2× effect-0, und setze die Setup-Felder (entity+0x9c=4, +0x8f=7,
+   +0x93|=1, +0x1b8=1 …). → SICHTBAR in ROOM1140 (effect-5 ist in der Bank).
+3. **Den Rest von `FUN_80106a44` + die Geschwister** (`801066dc/104b40/106edc/107244/107ee0`) +
+   `LAB_8012016c`/`8012017c` (Effekt-Handler-Configs) byte-true porten → die volle Briefing-Zombie-
+   Verhaltens-AI (Teil des 100%-Ports, [[reai-v2-full-port-mandate]]).
+
 ## 3. op 0x3a `Sce_espr_on` (Spawn, Subsystem 2) — byte-true (16 Bytes)
 `FUN_80019700(a0,a1,a2,a3)` spawnt in `DAT_800a73b8` (verifiziert: `addiu s3,s3,29624`
 @0x80019724; stride 132 @0x80019794-9c; 96 Slots @0x8004978c; busy `+0x6c`, alive=3;
