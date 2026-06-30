@@ -1,4 +1,4 @@
-# RE1.5 Port — Session-Handover (Stand 2026-06-30, Phase 8.16: Player-Raise-Clip byte-true; C11 geschlossen; zwei-seitiger Combat spielbar)
+# RE1.5 Port — Session-Handover (Stand 2026-06-30, Phase 8.16 + ESP-A: Player-Raise-Clip + ESP-Sprite-Parser byte-true; Combat spielbar)
 
 ## 0. NÄCHSTE SESSION — START HERE
 
@@ -21,7 +21,7 @@ cmake --build re15_port/build && ctest --test-dir re15_port/build --timeout 30  
 2. **Overlay-File-Offset-Trap:** STAGE*.BIN-Overlays haben **KEINEN 0x800-Header** (`off = addr − 0x80100000`; nur die EXE hat den Header). Den Offset NIE selbst rechnen → `re15_disasm.py` (table/dis/read) bzw. `re15_ss.Ram` nutzen. (Ein ad-hoc `+0x800` las die Dispatch-Tabellen `@0x8011f840/890` als „null" → falscher „runtime-patched"-Schluss; korrekt gelesen stehen sie statisch in der BIN, 40/40 == RAM. `re15_runtime_table.py` = der Cross-Check statisch↔RAM.)
 3. **State-erreicht ≠ State-aktiv:** `+0x5=0x13` = engage + ein `(+0x90&3)`-gegateter forward-walk-Vorabcheck. In allen Live-Zombies ist `+0x90==0x00` → fw-Branch nie genommen → 0x13 == engage für ROOM1140 → nichts zu portieren. **IMMER Gate-Flags im Live-Save prüfen** (`re15_enemy_state.py --ai` / `re15_flag_sweep.py`), bevor man einen gegateten Pfad portiert.
 
-**Mögliche nächste Tasks (eine wählen):** Muzzle-Flash-Sprite (`FUN_80045024`-Effekt) · Fade/Game-Over-Screen (Port hat keine Fade-Infra) · Waffen-Inventory (`DAT_800aca5d`) + Aim-Elevation-Pitch (entity+0x66) · ein anderer Raum/Gegner (dann ggf. m1-Forward-Walk, `+0x90&3 != 0`). (Raise-Clip 17 ✓ 8.16.) Details in der Phasen-Historie unten.
+**AKTIVE ARBEIT — ESP-Sprite-Subsystem (Nutzer-gewählt):** Phase **ESP-A ERLEDIGT** (`re15_esp.c`, byte-true Parser, Commit 9c907ca2, 33/33). **NÄCHST: ESP-B** (Effekt-Pool + spawn/kill/tick) → **ESP-C** (PC-Render) → **ESP-D** (Pistolen-Muzzle-Flash, das Ziel). Volle byte-true Spec + Adressen + UNKNOWNs: siehe Abschnitt „ESP-SPRITE-SUBSYSTEM" unten. (Andere offene Optionen: Fade/Game-Over-UI · neuer Raum/Gegner m1-Forward-Walk · C11-Verifikation. Raise-Clip 17 ✓ 8.16.)
 
 ---
 
@@ -639,6 +639,37 @@ Erschöpfende Sichtung 2026-06-30 (damit niemand dieselben Sackgassen erneut gr�
 **FAZIT:** Der zwei-seitige ROOM1140-Combat ist byte-true + spielbar abgeschlossen. Echte Weiterarbeit = (A) NEUES SUBSYSTEM
 (ESP-Sprites — entblockt Muzzle + `op_sce_espr` + Effekte; ODER Fade/Game-Over-UI), (B) NEUER RAUM/GEGNER (net-neue AI/Clips,
 z.B. ein m1-Zombie mit `+0x90&3!=0` → der Forward-Walk), oder (C) LIVE-C11-VERIFIKATION der 8.11–8.16-Kette (re15-room-capture).
+**→ NUTZER-WAHL: (A) ESP-Sprite-System bauen (siehe nächster Abschnitt).**
+
+### ESP-SPRITE-SUBSYSTEM — Phase ESP-A ERLEDIGT; B/C/D als Nächstes
+Vom RE-Workflow `esp-sprite-runtime-re` (5 Finder + Synthese) byte-true RE't; die volle Spec liegt im Task-Output
+(session-temp, daher hier die durable Essenz). **ACHTUNG:** die Synthese erbte von einem widerlegten Finder zwei FEHLER, die ich
+am echten Asset korrigiert habe (siehe ESP-A unten) — der **Pointer-Table-Eintrag ist ein ganzer Offset (entry+base), KEIN
+offset/flags-Split**, und nur die Pointer-/TIM-Tabellen werden ABWÄRTS gelesen (das ID-Array vorwärts).
+
+- **ESP-A (ERLEDIGT, Commit 9c907ca2):** `re15_esp.{h,c}` + `test_esp_parse` (33/33). Format byte-true gegen ROOM1140.RDT
+  (RDT-Dir-Slots 0x4C id-header / 0x50 EFF-ptr-table-END abwärts / 0x54 TIM-base / 0x58 TIM-table-END abwärts; EFF-start =
+  entry+idh; EFF-word0 = {count_a lo16 ×8B-Recs, count_b hi16 ×4B-Sprite-Coord-Recs}; size = (a*2+b+2) u32). Loader:
+  `FUN_80019354`/`FUN_8001945c`/`FUN_800194f8` (Decompiles in RE_15_Quellcode_V2/, byte-verifiziert). Nur Parse/Index — kein Render.
+- **ESP-B (POOL + SPAWN + TICK) — nächst:** Pool `DAT_800b2360` (active count) + `DAT_800b2368` (Slot-Pointer-Array, stride 4).
+  Slot-Felder (aus `FUN_8004d5f0`): +0x00 u8 type (→ Handler-Tab `@0x80074c68`), +0x02 s16 x, +0x04 s16 y, +0x06 u16 w,
+  +0x08 u16 h, +0x0A GPU-Cmd-Area. SCD-Opcodes (jetzt Stubs `scd_vm.c:2836/2846`): 0x3A `Sce_espr_on` (16B), 0x4C
+  `Sce_espr_kill` (18B), 0x52 `Sce_espr_control` (4B = Flag-AND-Check, NICHT Sprite — so lassen). Vorschlag: `re15_esp_spawn/
+  kill/tick` + `re15_esp_tick()` in game_step. **UNKNOWN:** der echte 0x3A-Handler ist umstritten (Finder 2 @0x80043328 ist ein
+  FALSCHES Call-Target; Seed @0x8003e2a8) → Operand-Layout (Bytes 1-15) per Savestate eines Spawn-Frames RE'n, sonst faithful-line.
+- **ESP-C (RENDER) — danach:** Dispatcher `FUN_8004d5f0` → Handler-Tab `@0x80074c68` (8 Einträge; type 3 = `0x8004d728` der
+  Haupt-Textur-Renderer); SPRT-Builder `FUN_80046a1c`: **40×30**, `GetClut(0,0x1e4)`, prim-code **0x66** (SPRT+ABE
+  halbtransparent, RGB-Mod 0x80), **10-Frame-Strip**, Pos = Slot+0x02/+0x04 SCREEN-SPACE (NICHT projiziert). **UNKNOWN:** die
+  Per-Frame-UV-LUTs `DAT_80076244/46` (U) + `DAT_80076274/76` (V) aus PSX.EXE dumpen (ROM-resident, by frame). PC-Render: das
+  vorhandene SDL-Framebuffer + die `re15_render_shadow_quad`-Blend-Quad-Infra (render_pc.c) → halbtransparenter 40×30-Quad aus dem
+  ESP-TIM-Atlas an (x,y), nach dem 3D-Pass.
+- **ESP-D (MUZZLE-FLASH, das Nutzer-Ziel) — zuletzt:** `FUN_80045024` (Pistole = weapon a0>>24=2): **1-Frame**-Flash
+  (`sltiu s0,0x10` single-burst, frame_count=1), halbtransparent. Wiring: nach `re15_player_weapon_fire(2)` in
+  `game_step_common.c:114` ein `re15_esp_spawn(<pistol-flash-id>, muzzle_x, muzzle_y, type=3, duration=1)`. **UNKNOWN:** welche
+  CORE00/Effekt-ID = Pistolen-Muzzle (Savestate eines Fire-Frames: Pool `DAT_800b2360/2368` lesen) + die exakte Muzzle-Screen-Pos
+  (`FUN_80045a64` Aim-Ray→Screen-Projektion, noch nicht portiert → faithful-line: Player-Screen-Pos + fixer Offset).
+- **HINWEIS:** Room-ESP (`op_sce_espr`, FUN_80019354) und der Muzzle (`FUN_80045024`) sind ZWEI Einstiege in dasselbe
+  Pool+Render-System; der Muzzle nutzt zusätzlich den g_entity-Model-Pool + den 0x801f-RAM-Scratch (runtime, via Savestate lesen).
 
 ### 8.15 — C11 DYNAMISCHE VERIFIKATION (TEIL-erledigt) → das statische RE der Combat-Kette gegen Live-Daten bestätigt
 Disziplin-Schritt: alles seit 8.11 war nur statisch RE't. Das C11-Capture (DuckStation + MZD-Disc + vgamepad) wurde aus der
