@@ -592,10 +592,23 @@ Sandbox **erfolgreich gefahren** (re15-room-capture: 2 Live-Captures + 1 Menüsh
   exakt. Artefakt: `stage_saves/mzd_stage1_briefing.sav` (+ `_live`). **MEINE FRÜHEREN FEHLER (korrigiert):** ich las die Hex-Nummer
   `0x11A` als `114` und war 6 Schritte zu kurz → lud `0x11A SEWER EXIT` (1× 0x40); daraus folgte fälschlich „Briefing nicht per JUMP /
   geskriptetes New-Game". FALSCH — der Briefing IST ein JUMP-Raum (0x114). Live auch bestätigt: Elliot 0x47 Hitbox 450/1530 (ROOM1170).
-- **OFFEN — die Zombies LIVE engagen (turn/grab):** beim Laufen blockiert der **Konferenztisch** Geradeaus (Zombie-Distanz bleibt
-  konstant ~7-8k, +0x5=12). Es braucht einen Umweg um den Tisch (`re15_quickload --path "R…,U…,L…,U…"`, neu eingebaut). Die exakten
-  Pfad-Werte sind blind schwer (mehrere Versuche konvergierten auf den Tisch-Block); am besten mit Live-Screen-Feedback (PNG/Schritt)
-  iterieren oder der Nutzer nennt den Weg. HURT zusätzlich: R1-aim + Square ergänzen. = der verbleibende C11-Rest (Spawn ist gesichert).
+- **✅ LIVE-ENGAGE GESICHERT (2026-06-30) — der verbleibende C11-Rest ist erledigt (player-alive engage):** der Weg um den Tisch ist
+  gelöst: `re15_quickload --left 16 --postload 10 --path "R0.5,U2,R0.3,U6"` → `stage_saves/mzd_stage1_engage_live.sav` (+.png). Alle
+  5 Zombies geweckt (flags 0x0→0x10, dist <~3.5k), **Spieler lebt (HP 100)**: slot1 → **+0x5=2 ENGAGE**, slots 2/3 (nächste ~1.6k) →
+  **+0x5=0x13**, slot0 (lying) → +0x5=0 (search). Tank-Control-Lehre (im Skill fest): `--path`-L/R DREHEN (kein Strafe), `R` dreht zu
+  den Zombies (Bildschirm-LINKS, linke Gasse hinter dem Tisch), die zwei-R-Variante (`R…,U…,R…,U…`) ist robuster als R-L (die Gegen-
+  Drehung überkorrigiert). HURT-Capture braucht zusätzlich R1-aim+Square.
+- **⚠️ NEUER BYTE-TRUE BEFUND aus dem Live-Engage — +0x5=0x13 (FUN_8010561c):** die AI-Dispatch-Tabellen `@0x8011f840` (decide) /
+  `@0x8011f890` (animate) sind **RUNTIME-GEPATCHT** — in STAGE1.BIN sind die Slots null (nur 0x80107634 vereinzelt) → **aus dem
+  Savestate-RAM lesen, nicht aus dem BIN** (`re15_ss.Ram(sav).u32(0x8011f840+i*4)`). Runtime: +0x5=0x13 → decide `FUN_8010561c` /
+  animate `FUN_801057bc`. Disasm-verifiziert: **0x13 = engage (FUN_80102058) + eine vorangestellte `+0x90&3`+Winkel-Forward-Walk-Prüfung**
+  (→ +0x5=9/10). Der Rest (turn 0x701 @dist<0x7d0+arc0x2c8; grab (facing+3)<<8|1 @dist<0x4b0+arc0x200+gleicher Boden+facing_aligned;
+  dead-grab 0xc01 @dist<0x5dc+hp<0; fallback 0x1001) ist **byte-IDENTISCH zu engage**. → die nächsten Live-Zombies landen real in 0x13;
+  der Port weckt zu engage(2) → **turn→grab→damage byte-true faithful, ABER der Port-Zombie läuft NICHT auf den Spieler zu** (Forward-Walk
+  +0x5=9/10), wie es das Original in 0x13 tut. **Das ÜBERSTIMMT 8.10 TEIL 1 (§„Forward-Walk = m1/dead-player, KEINE Live-ROOM1140-Lücke")
+  — der Live-Save als Schiedsrichter zeigt: 0x13 IST live in ROOM1140 erreicht. → NÄCHSTER byte-true Schritt = den Forward-Walk
+  portieren** (Translation-Reader `re15_emd_get_keyframe_speed` +6/+10 existiert; m0-Walk-Handler +0x5=9/10 = decide 0x801031a4 /
+  0x801033c0, animate 0x801031e4 / 0x801033c8 — aus dem Live-Save weiter disassemblieren).
 
 Werkzeuge: **`re15-psx-disasm`** (EXE/Overlay-Disasm), **`re15-savestate-ghidra`** (Live-RAM +
 Tabellen-Patch-Check), **`re15-room-capture`** (Raum laden/provozieren). Memory `reai-v2-foundation-combat`
