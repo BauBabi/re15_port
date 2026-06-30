@@ -156,9 +156,17 @@ effect-0 geladen ist.
 → **Trigger = Anim-Phase `0x58` (88)**; die Effekt-Handler stehen an den hohen Phasen 79-96 = das
 ENDE einer langen Zombie-Animation (Gore-Höhepunkt). `re15_enemy_gore_setup` = byte-true `FUN_80106edc`
 (2× effect-0 + 1× effect-5, gated sub_state_1==0x58 + sub_state_3==0 + rand&1), in `run_all` verdrahtet.
-**LETZTER BRICK zur sichtbaren Gore:** der Port-Zombie muss Anim-Phase `sub_state_1==0x58` erreichen —
-d.h. die lange Zombie-Animation (Feeding/Death) byte-true ticken bis Phase 0x58. Das ist die nächste
-Einheit: das Zombie-Anim-Phase-Advancement (`func_0x8001f314` → entity+5) porten, bis es 0x58 erreicht.
+**LETZTER BRICK zur sichtbaren Gore — PRÄZISIERT:** `sub_state_1` (entity+5) ist eine Behavior-State
+(0x00-0x7b), NICHT ein freier Frame-Counter. Die volle `PTR_LAB_8011fe30`-Tabelle (in STAGE1.BIN
+dekodiert): States 0x00-0x14 = niedrige Behaviors (`0x80105a24/a4c/a6c/a2c`); **Gore-States 0x57-0x65**
+(`0x57→0x80108abc`, `0x58→FUN_80106edc effect-5`, `0x5c→FUN_80107244`, `0x60→FUN_80107ee0`) = die
+**Death-Animations-Sequenz**. Die WALKING-Behavior `FUN_80105b7c` (Phase via entity+7) setzt entity+5
+nur auf NIEDRIGE States (0x02/0x07/0x08/0x13 via State-Word `0x10201`/`0x801`/`0x701`/`entity+5=0x13`)
+— **nie 0x58**. → Der Zombie erreicht 0x58 nur über den **DEATH-Handler** (Zombie-Main-Dispatch
+@0x8011f7b4[3] = `FUN_8011db88`, im Port DEFERRED/state 3). **NÄCHSTE EINHEIT = den Zombie-Death-State
+porten** (`FUN_8011db88` + die Death-Anim-Sequenz, die entity+5 in 0x57→0x58→… setzt) → dann feuert der
+schon-verdrahtete `re15_enemy_gore_setup` und die effect-5-Gore ist beim Zombie-Tod SICHTBAR. Das ist
+Teil des Zombie-AI-Ports (Death-Body war schon vorher deferred, siehe enemy_ai_common.c:119).
 
 1. **Behavior-Dispatch mappen — ERLEDIGT (siehe oben). Historischer Stand:**
    - Der Top-Level Zombie-Dispatch ist `(*(code*)(&PTR_FUN_8011fXXX)[*(byte*)(entity+5)])()` —
