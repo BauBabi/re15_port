@@ -150,11 +150,19 @@ im Port). Bank-gated: effect-id 0 ist in ROOM1140 unbelegt → no-op dort (byte-
 effect-0 geladen ist.
 
 **NÄCHSTE BRICKS (für die SICHTBARE ROOM1140-Gore = effect-id 5 am Behavior-SETUP):**
-1. **Behavior-Dispatch mappen:** die Handler stehen in stride-0x10-Behavior-Tabellen @`0x8011ff90`
-   und @`0x80120720` (STAGE1.BIN; Einträge `0x80106edc`/`0x80107244`/`0x80107ee0` @ +0/0x10/0x20…).
-   `FUN_80106a44`/`FUN_801066dc` stehen NICHT direkt drin → werden indirekt gerufen. Disasm STAGE1.BIN
-   (`--bin`, lädt @0x80100000) bei diesen Tabellen + den Callern → welche Zombie-State (entity+0x5 /
-   +0x6) = `FUN_80106a44`.
+1. **Behavior-Dispatch mappen (TEILWEISE — exakter Stand für Fortsetzung):**
+   - Der Top-Level Zombie-Dispatch ist `(*(code*)(&PTR_FUN_8011fXXX)[*(byte*)(entity+5)])()` —
+     **indiziert per `entity+0x5` (sub_state_1, Anim-Phase)**, ~30 stride-**4** PTR-Tabellen
+     @`0x8011f840`–`0x8011f9dc` (STAGE1_full/_ALL_combined.c:292-393).
+   - **ABER die effect-5-Handler (`FUN_80106edc`/`80107244`/`80107ee0`) stehen NICHT in den
+     entity+5-Tabellen** — sie sind in stride-**0x10**-STRUCT-Tabellen @`0x8011ff90` und `0x80120720`
+     (Handler @entry+0 UND @entry+0xc=`0x80107634`/`0x80108abc`). Kein direkter `lui 0x8012`-Caller
+     gefunden → diese Tabellen werden über einen **Sub-Dispatch / einen in einem Global gespeicherten
+     Pointer** erreicht, NICHT entity+5 direkt. **DAS ist der nächste RE-Schritt:** finden, was die
+     stride-0x10-Tabelle indiziert (Kandidaten: entity+0x8 sub_state_4, entity+0x94, eine Behavior-ID)
+     und welche entity+5-State dorthin führt. (Workflow `zombie-fx-dispatch-re` war angesetzt, scheiterte
+     am Session-Limit; bei Reset erneut laufen lassen — 3 Tasks: dispatch-chain / FUN_80106edc / port-state.)
+   - `FUN_80106edc`/`FUN_80106a44` (STAGE1/.c) = die effect-5-Setup-Behaviors; Entry `entity+7==0`.
 2. **Den Behavior-SETUP porten** (`FUN_80106a44:17-34`): wenn der Zombie diese Behavior betritt
    (`entity+7`==0 → der Port hat `sub_state_3`), spawn **effect-id 5** (`a0=0x5002800`, a1=rot_y,
    pos=bone→Actor faithful) + 2× effect-0, und setze die Setup-Felder (entity+0x9c=4, +0x8f=7,
