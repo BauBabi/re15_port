@@ -11,11 +11,17 @@ Die Vorsession-Notiz „ESP-B = effect-sprite pool + AABB-cull (FUN_8004d5f0)" w
 **Fehlattribution**. Es gibt drei separate Systeme; der Port modelliert in `re15_esp.c`
 **das falsche**:
 
+> ⚠️ **KORREKTUR (2026-06-30, nach Verifikation):** Subsystem 3 war FEHLATTRIBUIERT —
+> es ist NICHT der Muzzle/Blut-Rasterizer, sondern das **sprite.pri Foreground-Mask-System**
+> (`FUN_800392d4` liest `room_struct+0x24` = **`cameraStart`**, RDT-Offset 0x24, per-Cut →
+> Sprite-Prioritäts-Liste). Der Port hat das **bereits byte-true portiert** (main.c:1034-1075).
+> Der echte Effekt-Sprite-Gap (Muzzle/Blut) ist **Subsystem 2** (op 0x3a, model_inst_pool).
+
 | # | Pool / Globals | Spawn / Tick / Draw | Was es WIRKLICH ist | Port-Status |
 |---|---|---|---|---|
-| 1 | `DAT_800b2360` (count) / `DAT_800b2368` (ptr-array) | Cull `FUN_8004d5f0` → dispatch `PTR_LAB_80074c68[type]` → `FUN_8003ee3c` (SCD-Slot-Alloc), **kein Draw** | **Status/Inventar/MAP-Screen-Sprite-Layer** (OT `0x800aa6d8`, `FUN_8004d96c`) | ⚠️ `re15_esp.c` ESP-B modelliert GENAU DIES (falsch — ist kein In-World-Effekt) |
-| 2 | `DAT_800a73b8` „model_inst_pool" (96 × `0x84`) | Spawn op 0x3a→`FUN_80019700`; Tick+Transform `FUN_80019e20` (`RotMatrix`); Draw `PTR_LAB_80071d40[type]` | **3D-animierte Model-Instance-Effekte** (Flamme/Glow als 3D-Objekt) | nicht portiert |
-| 3 | `DAT_800bb4d4`/`d8` (Prim-Buffer), `DAT_800b2584` (Flag-Array) | Producer `FUN_800392d4` → Rasterizer `FUN_80039590` → AddPrim→OT | **Der In-World-2D-Effekt-Rasterizer** (Muzzle/Blut/ambient) | nicht portiert |
+| 1 | `DAT_800b2360` (count) / `DAT_800b2368` (ptr-array) | Cull `FUN_8004d5f0` → dispatch `PTR_LAB_80074c68[type]` → `FUN_8003ee3c` (SCD-Slot-Alloc), **kein Draw** | **Status/Inventar/MAP-Screen-Sprite-Layer** (OT `0x800aa6d8`, `FUN_8004d96c`) | `re15_esp.c` ESP-B modelliert dies (Menü-Layer, nicht In-World) |
+| 2 | `DAT_800a73b8` „model_inst_pool" (96 × `0x84`) | Spawn op 0x3a→`FUN_80019700`; Tick+Transform `FUN_80019e20` (`RotMatrix`); Draw `PTR_LAB_80071d40[type]` | **model_inst_pool — shared für Charakter-Modell-Render (FUN_8002c444/FUN_80045630, 12+ Spawns) UND op-0x3a-Effekt-Sprites** (Muzzle/Blut). Per-Frame neu aufgebaut (darum Saves „0 busy") | ⚠️ **DER echte Effekt-Gap** — nicht portiert |
+| 3 | `DAT_800bb4d4`/`d8` + `DAT_800b2584` | Producer `FUN_800392d4` (liest `cameraStart`!) → Rasterizer `FUN_80039590` | **sprite.pri Foreground-Occlusion-Masks** (per-Cut Geländer/Kisten/Pfeiler) | ✅ **BEREITS byte-true portiert** (main.c:1034-1075, bg_pc.c Foreground-Atlas, pri_common.c, re15_pri.h) |
 
 ## 1. Subsystem 3 — der In-World-Rasterizer (PRIMÄRZIEL für C3)
 
@@ -85,18 +91,24 @@ full→`0xff`). Kategorie `pc[4]&0xff` wählt Owner `a2`: 0=`0x80072d4c`, 1=`0x8
 slot+0x4c..0x68 (Owner-Transform-Snapshot); pc+8/10/12 → slot+0x40/44/48 (lokaler Offset);
 UV-Seed slot+0x32/+0x30 aus Bank-Header (`DAT_800b2248[cat]`). Return = Slot-Index.
 
-## 4. Implementierungs-Plan (inkrementell, byte-true)
-1. **Record-Layout dekodieren** — den `0x80124d14`-POLY_FT4-Record (stride 0x34) Feld-für-Feld
-   gegen `FUN_800392d4`-Stores mappen (xy-Space klären). Savestate = Schiedsrichter.
-2. **Effekt-TIM GPU-resident** — `re15_esp_parse`-`tim_off` → TIM-Parse → Textur-Slot-Upload.
-3. **Rasterizer-Port** — `re15_esp_draw_frame()`: walk Flag-Array → pro Sprite Quad via
-   `re15_render_textured_tri_lit` (UV/size/pos/rgb byte-true aus dem Record); Hook nach 3D-Meshes.
-4. **Producer-Port** — die Effekt-Zustände, die die Records füllen (SCD-Ops 0x36/0x40/0x41/0x47/0x55,
-   aktuell `—defer`), an den Record-Builder andocken.
-5. **op_sce_espr_on/kill** — von Stub auf echten Spawn/Despawn umstellen.
+## 4. Implementierungs-Plan — RETARGET auf Subsystem 2 (op 0x3a Effekt-Sprites)
+Subsystem 3 (Foreground-Masks) ist erledigt; der echte „sichtbare-Effekte"-Gap = die
+SCD-gespawnten Effekt-Sprites (Muzzle/Blut) via op 0x3a → `FUN_80019700` → `DAT_800a73b8`.
+Architektur-Hürde: der Pool ist shared mit Charakter-Modell-Render (das der Port ANDERS macht),
+und es gibt KEIN Live-Save mit aktivem Effekt (Pool per-Frame transient). Plan:
+1. **op-0x3a Draw statisch RE'en** — `FUN_80019e20` (Tick+`RotMatrix`) + `PTR_LAB_80071d40[type]`-
+   Dispatch: wie ein model_inst-Slot zum gezeichneten Sprite/Quad wird (3D-Projektion + UV aus
+   dem Bank-Header `DAT_800b2248[cat]`, Felder slot+0x32/+0x30).
+2. **Live-Daten** — Savestate mit aktivem op-0x3a-Effekt (Pistole feuern, mid-frame capturen)
+   ODER rein statisch porten (byte-true-Risiko ohne Live-Verifikation klar kennzeichnen).
+3. **Port-Spawn** — `op_sce_espr_on` (Stub→echt): port-seitiger Effekt-Slot (Position aus
+   Owner-Transform `a2[0..7]` + lokalem Offset pc+8/10/12; UV aus Effekt-Bank/TIM); `op_sce_espr_kill` despawn.
+4. **Draw + TIM** — `re15_esp_effect_draw_frame()`: pro Slot 3D-Position projizieren → textri-Quad
+   mit Effekt-TIM-UV; Effekt-TIM GPU-Upload (`re15_esp_parse`-`tim_off` → TIM-Parse → Slot).
 
-## 5. Korrektur am Port (Folgearbeit)
-`re15_port/engine/src/re15_esp.c` ESP-B (`s_esp_pool`, `re15_esp_spawn(type,x,y,w,h,duration)`,
-`re15_esp_run` = `FUN_8004d5f0`) modelliert **Subsystem 1 (Map/Menü-Layer)**, nicht den
-In-World-Effekt. Für C3 ist Subsystem 3 (`FUN_800392d4`/`FUN_80039590`) zu portieren; die
-ESP-A-Schicht (RDT-EFF/TIM-Parser) bleibt korrekt und liefert die Effekt-TIM.
+## 5. Verifizierter Port-Status der drei Subsysteme
+- **Subsystem 3 (Foreground-Masks) = ✅ erledigt** (main.c:1034-1075, `re15_pri_*`, bg_pc.c-Atlas).
+- **Subsystem 1 (Menü-Sprites):** `re15_esp.c` ESP-B (`s_esp_pool`, `re15_esp_run`=`FUN_8004d5f0`)
+  modelliert dies — Menü-Layer, kein In-World-Effekt (für C3 irrelevant).
+- **Subsystem 2 (op 0x3a Effekt-Sprites) = der offene Gap** (siehe §4). ESP-A-Parser
+  (RDT-EFF/TIM, RDT+0x4C) bleibt korrekt und liefert die Effekt-TIM-Daten.
