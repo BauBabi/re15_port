@@ -565,6 +565,54 @@ int main(void)
                    "special +0x9&0x80 stays HURT; gunshot staggers\n");
     }
 
+    /* (15): the per-state ANIMATION CLIPS (+0x94 motion) byte-true through the combat lifecycle —
+     * ENGAGE/TURN play the +0x1d4 variant; GRAB plays (+0x5-3)*3+{0,1} then release clip 17.
+     * Driven through re15_enemy_ai_live_active (the f840 decide + f890 animate dispatch). */
+    {
+        re15_actor_t *z = &g_actors[zslots[0]];
+        for (int i = 1; i < nz; i++) { g_actors[zslots[i]].x = 30000; g_actors[zslots[i]].z = 30000; }
+        z->state = RE15_AI_STATE_ACTIVE; z->grid_id = 0; z->ai_flags = 0; z->floor = 0;
+        pl->floor = 0; pl->hit_react = 1;   /* player mid-hit -> blocks the directional grab-commit */
+
+        /* ENGAGE (+0x5=2): player far (ai_dist huge -> no turn/grab commit) -> stays engage, clip=hurt_clip. */
+        z->sub_state_1 = 2; z->sub_state_2 = 0; z->sub_state_3 = 0; z->hurt_clip = 4; z->motion = 99; z->ai_dist = 30000u;
+        re15_enemy_ai_live_active(zslots[0]);
+        if (z->sub_state_1 != 2 || z->motion != 4) {
+            fprintf(stderr, "FAIL: (15) ENGAGE idle clip = hurt_clip(4), +0x5=%d motion=%d\n",
+                    z->sub_state_1, z->motion); fail = 1; }
+
+        /* TURN (+0x5=7): on entry (+0x6==0) sets motion=hurt_clip + anim_frame=0 + latches +0x6=1. */
+        z->sub_state_1 = 7; z->sub_state_2 = 0; z->hurt_clip = 5; z->motion = 99; z->anim_frame = 99; z->ai_dist = 30000u;
+        re15_enemy_ai_live_active(zslots[0]);
+        if (z->sub_state_1 != 7 || z->motion != 5 || z->anim_frame != 0 || z->sub_state_2 != 1) {
+            fprintf(stderr, "FAIL: (15) TURN entry clip=hurt_clip(5)+anim_frame0+latch, +0x5=%d motion=%d af=%d +0x6=%d\n",
+                    z->sub_state_1, z->motion, z->anim_frame, z->sub_state_2); fail = 1; }
+
+        /* GRAB face (+0x5=3): base=(3-3)*3=0; sub-steps play clip 0 -> (impact) 1 -> (release) 17. */
+        pl->hp = 300; pl->state = 0;
+        z->sub_state_1 = 3; z->sub_state_2 = 0; z->sub_state_3 = 0; z->motion = 99; z->ai_dist = 100u;
+        re15_enemy_ai_live_active(zslots[0]);                     /* grab [0]: motion=base 0 */
+        if (z->motion != 0 || z->sub_state_2 != 1) {
+            fprintf(stderr, "FAIL: (15) GRAB [0] clip=base 0, motion=%d +0x6=%d\n", z->motion, z->sub_state_2); fail = 1; }
+        re15_enemy_ai_live_active(zslots[0]);                     /* grab [1]: pull-in (no clip) */
+        re15_enemy_ai_live_active(zslots[0]);                     /* grab [2] IMPACT: motion=base+1=1 */
+        if (z->motion != 1) {
+            fprintf(stderr, "FAIL: (15) GRAB [2] IMPACT clip=base+1=1, motion=%d\n", z->motion); fail = 1; }
+        re15_enemy_ai_live_active(zslots[0]);                     /* grab [3] BITE (no clip) */
+        re15_enemy_ai_live_active(zslots[0]);                     /* grab [6] RELEASE: motion=17 */
+        if (z->motion != 17) {
+            fprintf(stderr, "FAIL: (15) GRAB [6] RELEASE clip=17, motion=%d\n", z->motion); fail = 1; }
+
+        /* GRAB behind (+0x5=4): base=(4-3)*3=3 -> clip 3 on entry. */
+        z->sub_state_1 = 4; z->sub_state_2 = 0; z->motion = 99;
+        re15_enemy_ai_live_active(zslots[0]);
+        if (z->motion != 3) {
+            fprintf(stderr, "FAIL: (15) GRAB-behind [0] clip=base 3, motion=%d\n", z->motion); fail = 1; }
+
+        if (!fail)
+            printf("  (15) per-state clips: ENGAGE/TURN=+0x1d4 variant; GRAB (+0x5-3)*3+{0,1}->release 17\n");
+    }
+
     free(buf);
     if (fail) { fprintf(stderr, "\nROOM1140 COMBAT-WIRING TEST FAILED\n"); return 1; }
     printf("\nPASS: ROOM1140 live-AI game_step wiring (spawn; WAKE->engage; TURN-to-face->GRAB->HP; "

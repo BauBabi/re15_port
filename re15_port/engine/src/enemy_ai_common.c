@@ -476,22 +476,34 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
      * grabbed). re15_enemy_ai_run_all clears it each frame, so it tracks "a live zombie is grabbing
      * THIS frame" = the faithful-line release for the deferred player grabbed-FSM. */
     s_player_grabbed = 1;
+    /* per-sub-step GRAB CLIP (FUN_80102548 +0x6 sub-steps 0/2/4 @0x801025bc/0x80102714/0x801028f0):
+     * +0x94 = (+0x5-3)*3 + {0,1,2}. +0x5 = the facing (3 face / 4 behind, dynamic from the engage),
+     * so face-grab plays clips {0,1,2}, behind-grab {3,4,5}; the release (sub-step 6) is the literal
+     * clip 17 (@0x80102a64). The port maps its sub_state_2 machine (0/2 = the byte-true clip steps,
+     * 6 = release); the K=2 hold step (sub-step 4) is collapsed (faithful-line). Each set resets
+     * anim_frame (+0x95) = 0. */
+    uint8_t grab_base = (uint8_t)((e->sub_state_1 - 3) * 3);   /* (+0x5-3)*3 */
     switch (e->sub_state_2) {                /* +0x6 sub-step (reset to 0 by the 0x301/0x401 commit) */
-        case 0: e->sub_state_2 = 1; break;   /* [0] init/latch (player register/flag + motion deferred) */
+        case 0:                               /* [0] init/latch + grab clip base (@0x801025bc) */
+            e->motion = grab_base; e->anim_frame = 0;
+            e->sub_state_2 = 1; break;
         case 1: e->sub_state_2 = 2; break;   /* [1] pull-in (anim-gated -> faithful stand-in advance) */
-        case 2:                               /* [2] IMPACT — the byte-true -10 grab hit (0x801026f0) */
+        case 2:                               /* [2] IMPACT — clip base+1 (@0x80102714) + the byte-true -10 hit */
+            e->motion = (uint8_t)(grab_base + 1); e->anim_frame = 0;
             player->hp     = (int16_t)(player->hp - 10);
             if (player->hp < 0) player->state = 7;   /* hp<0 -> GRABBED death (state 7, save-confirmed;
                                                       * re15_player_is_dead() = hp<0 drives the death FSM) */
             e->ai_timer    = 0x6e;           /* +0x9c bite window (the loop count is anim-gated) */
             e->sub_state_2 = 3;
             break;
-        case 3:                               /* [3] BITE — the byte-true -5/bite (0x80102788, loops) */
+        case 3:                               /* [3] BITE — the byte-true -5/bite (0x80102788, loops; no clip) */
             player->hp     = (int16_t)(player->hp - 5);
             if (player->hp < 0) player->state = 7;   /* hp<0 -> GRABBED death (state 7, save-confirmed) */
             e->sub_state_2 = 6;             /* one bite/cycle: the anim-gated bite LOOP is deferred */
             break;
-        case 6: e->sub_state_2 = 8; break;   /* [6] release anim (player grabbed-flag clear deferred) */
+        case 6:                               /* [6] release — clip 17 (0x11, @0x80102a64) */
+            e->motion = 0x11; e->anim_frame = 0;
+            e->sub_state_2 = 8; break;
         default:                              /* [8] EXIT (0x80102b90) -> back to the engage brain */
             re15_ai_set_state_word(e, 0x201);   /* +0x4 = state 1 / +0x5 = 2 (engage) */
             break;
@@ -512,6 +524,14 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
 static void re15_enemy_ai_live_turn(re15_actor_t *e, const re15_actor_t *player)
 {
     if (!player) return;
+    /* TURN ANIMATE entry latch (@0x80102de0-e18): on the first turn frame (+0x6==0; the engage's
+     * 0x701 commit reset +0x6 to 0) set the turn clip +0x94 = +0x1d4 variant {2,3,4,5} + +0x95=0,
+     * then latch +0x6=1 so it is set only once on entry. */
+    if (e->sub_state_2 == 0) {
+        e->motion     = e->hurt_clip;   /* +0x94 = +0x1d4 (@0x80102e00/08) */
+        e->anim_frame = 0;              /* +0x95 = 0 (@0x80102e18) */
+        e->sub_state_2 = 1;             /* +0x6 = 1 entry latch (@0x80102df0) */
+    }
     int16_t turn = (int16_t)re15_ai_arc_test(e, player->x, player->z, 0x80);  /* ±0x80 toward player */
     e->rot_y = (int16_t)(((int32_t)e->rot_y + turn) & 0x0fff);                 /* +0x6a += residual */
 }
@@ -556,14 +576,21 @@ int re15_enemy_ai_live_active(int slot)
                  *   +0x5 = 3/4 -> the GRAB (FUN_80102548) = the in-game attack (8.8);
                  *   +0x5 = 7   -> the TURN-to-face (FUN_80102dc8): rotate toward the player so the
                  *                 decide's grab-commit (the ±0x200 cone) can fire (8.9).
-                 * (The +0x5=0/1/2 animate halves are the idle/track anim — deferred; the +0x5=5/6
-                 * forward walk is anim-root-motion-coupled — deferred. The lunge-arm FUN_8010ab2c is a
+                 *   +0x5 = 2   -> the ENGAGE idle-track ANIMATE clip (+0x1d4 variant, 8.13 below).
+                 * (The grab/turn/engage animate clips are ported [8.13]; the +0x5=0/1 search anim +0x5=5/6
+                 * forward walk are RE'd byte-true [search clip 0/1, walk clip +0x5+4] but NOT reached
+                 * live by ROOM1140 m0 (engage/turn/grab only) -> deferred. The lunge-arm FUN_8010ab2c is a
                  * SEPARATE dispatch @0x80120208[+0x4=6] and is DORMANT — DAT_800aca3c&1 is never set,
                  * 8.7 — so it is not wired here; +0x5=7 is the TURN state, not the arm.) */
                 if (e->sub_state_1 == 3 || e->sub_state_1 == 4)
                     re15_enemy_ai_live_grab(e, player);
                 else if (e->sub_state_1 == 7)
                     re15_enemy_ai_live_turn(e, player);
+                else if (e->sub_state_1 == 2)
+                    /* ENGAGE idle-track ANIMATE (@0x8011f890[2]=0x801021f8): +0x94 = +0x1d4 variant
+                     * {2,3,4,5} (@0x80102248/50), the SAME per-spawn clip the hurt/turn use. No +0x95
+                     * reset (the original sets only the clip here) — the global advance plays it. */
+                    e->motion = e->hurt_clip;
                 break;
             }
             case 5: case 6:   /* feeding (@0x8011f80c[5]/[6]=0x801018f8) -> the dist-gated wake-up */
