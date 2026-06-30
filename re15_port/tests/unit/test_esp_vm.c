@@ -606,6 +606,121 @@ static int run_reg_op_tests(void)
     return fail;
 }
 
+/* ESP-C2 batch 7 — the conditional block evaluators 0x0f/0x12/0x13 (predicates are op23). */
+static uint8_t s_kcode[160];
+static void build_kcode(void)
+{
+    for (int i = 0; i < 160; i++) s_kcode[i] = 0;
+    s_kcode[0x0]=0x20; s_kcode[0x2]=0x30; s_kcode[0x4]=0x50; s_kcode[0x6]=0x70;
+    /* id0 @0x20: op12 [0x12,len=6, op23(6B) @0x22], s3=0x28(false halt); PCARR[0] poked -> 0x40(true halt) */
+    s_kcode[0x20]=0x12; s_kcode[0x21]=0x06; s_kcode[0x22]=0x23; /* op23 operands (w/rhs) patched per test */
+    s_kcode[0x28]=0xFF; s_kcode[0x40]=0xFF;
+    /* id1 @0x30: op0f [0x0f,len=6,rel=0x10, op23(6B) @0x34], s3=0x3a(block/true halt); TGTARR=0x34+0x10=0x44(false halt) */
+    s_kcode[0x30]=0x0f; s_kcode[0x31]=0x06; s_kcode[0x32]=0x10; s_kcode[0x34]=0x23;
+    s_kcode[0x3a]=0xFF; s_kcode[0x44]=0xFF;
+    /* id2 @0x50: op13 [0x13,reg=5,dr=0], caseA @0x54 [0,_,skip=8,val=10], body@0x5a halt, end 0x15 @0x5c */
+    s_kcode[0x50]=0x13; s_kcode[0x51]=0x05;
+    s_kcode[0x56]=0x08; s_kcode[0x58]=0x0a;   /* caseA: skip=8, val=10 */
+    s_kcode[0x5a]=0xFF; s_kcode[0x5c]=0x15; s_kcode[0x5e]=0xFF; /* body halt; end marker; post-switch halt */
+    /* id3 @0x70: op13 [0x13,reg=5,dr=0], caseA @0x74 [0,_,skip=8,val=10], body@0x7a halt, default 0x16 @0x7c */
+    s_kcode[0x70]=0x13; s_kcode[0x71]=0x05;
+    s_kcode[0x76]=0x08; s_kcode[0x78]=0x0a;
+    s_kcode[0x7a]=0xFF; s_kcode[0x7c]=0x16; s_kcode[0x7e]=0xFF;  /* body halt; default marker; post-switch halt */
+}
+
+/* patch the op23 predicate at `off` (selector sel, register id 2, immediate rhs). */
+static void patch_pred(int off, int sel, int16_t rhs)
+{
+    uint16_t w = (uint16_t)((sel << 8) | 2);
+    s_kcode[off+2]=(uint8_t)w; s_kcode[off+3]=(uint8_t)(w>>8);
+    s_kcode[off+4]=(uint8_t)rhs; s_kcode[off+5]=(uint8_t)((uint16_t)rhs>>8);
+}
+
+static int run_cond_op_tests(void)
+{
+    int fail = 0;
+    build_kcode();
+    printf("  --- ESP-C2 batch 7: conditional evaluators 0x0f/0x12/0x13 ---\n");
+
+    /* (12a) op12 TRUE: reg[2]=10 >= 5 -> loop back to PCARR[0]=0x40. */
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    re15_espvm_reg_set(2, 10); patch_pred(0x22, 2, 5);   /* sel 2 = >= */
+    re15_espvm_instance_t *c1 = re15_espvm_alloc(0, 0, s_kcode);
+    c1->mem[RE15_ESPVM_OFF_CIDX0] = 0; wr_u32(c1->mem + 0x20, 0x40);
+    re15_espvm_run_all();
+    if (re15_espvm_get_pc(c1) != 0x40 || c1->mem[RE15_ESPVM_OFF_CIDX0] != 0) {
+        fprintf(stderr, "FAIL: (12a) op12 TRUE pc=0x%x ci=0x%x\n", re15_espvm_get_pc(c1), c1->mem[RE15_ESPVM_OFF_CIDX0]); fail = 1; }
+
+    /* (12b) op12 FALSE: reg[2]=10 < 5 -> ci-- (0->0xff), pc falls through to s3=0x28. */
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    re15_espvm_reg_set(2, 10); patch_pred(0x22, 3, 5);   /* sel 3 = < */
+    re15_espvm_instance_t *c2 = re15_espvm_alloc(0, 0, s_kcode);
+    c2->mem[RE15_ESPVM_OFF_CIDX0] = 0; wr_u32(c2->mem + 0x20, 0x40);
+    re15_espvm_run_all();
+    if (re15_espvm_get_pc(c2) != 0x28 || c2->mem[RE15_ESPVM_OFF_CIDX0] != 0xff) {
+        fprintf(stderr, "FAIL: (12b) op12 FALSE pc=0x%x ci=0x%x\n", re15_espvm_get_pc(c2), c2->mem[RE15_ESPVM_OFF_CIDX0]); fail = 1; }
+
+    /* (12c) op0f TRUE: reg[2]=10 >= 5 -> enter block (pc=s3=0x3a); ci 0xff->0, PCARR[0]=0x30, TGTARR[0]=0x44. */
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    re15_espvm_reg_set(2, 10); patch_pred(0x34, 2, 5);
+    re15_espvm_instance_t *c3 = re15_espvm_alloc(0, 1, s_kcode);
+    re15_espvm_run_all();
+    if (re15_espvm_get_pc(c3) != 0x3a || c3->mem[RE15_ESPVM_OFF_CIDX0] != 0 ||
+        rd_u32(c3->mem + 0x20) != 0x30 || rd_u32(c3->mem + 0x60) != 0x44) {
+        fprintf(stderr, "FAIL: (12c) op0f TRUE pc=0x%x ci=0x%x P=0x%x T=0x%x\n",
+                re15_espvm_get_pc(c3), c3->mem[RE15_ESPVM_OFF_CIDX0], rd_u32(c3->mem+0x20), rd_u32(c3->mem+0x60)); fail = 1; }
+
+    /* (12d) op0f FALSE: reg[2]=10 < 5 -> skip block (pc=TGTARR[0]=0x44), ci-- (0->0xff). */
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    re15_espvm_reg_set(2, 10); patch_pred(0x34, 3, 5);
+    re15_espvm_instance_t *c4 = re15_espvm_alloc(0, 1, s_kcode);
+    re15_espvm_run_all();
+    if (re15_espvm_get_pc(c4) != 0x44 || c4->mem[RE15_ESPVM_OFF_CIDX0] != 0xff) {
+        fprintf(stderr, "FAIL: (12d) op0f FALSE pc=0x%x ci=0x%x\n", re15_espvm_get_pc(c4), c4->mem[RE15_ESPVM_OFF_CIDX0]); fail = 1; }
+
+    /* (12e) op0f AND-chain: 2 predicates (10>=5 AND 10<20) -> true. Build a 2-pred chain at 0x34. */
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    /* chain: [op23 a (6B)] [flag u16 = 0 (AND)] [op23 b (6B)] = 14 bytes; len=0x0e, block s3=0x34+0xe=0x42 */
+    s_kcode[0x31]=0x0e; s_kcode[0x3a]=0x00; /* relocate: new block at 0x42 */ s_kcode[0x42]=0xFF;
+    s_kcode[0x34]=0x23; patch_pred(0x34, 2, 5);     /* 10 >= 5 */
+    s_kcode[0x3a]=0x00; s_kcode[0x3b]=0x00;          /* AND flag */
+    s_kcode[0x3c]=0x23; patch_pred(0x3c, 3, 20);     /* 10 < 20 */
+    re15_espvm_reg_set(2, 10);
+    re15_espvm_instance_t *c5 = re15_espvm_alloc(0, 1, s_kcode);
+    re15_espvm_run_all();
+    if (re15_espvm_get_pc(c5) != 0x42) {
+        fprintf(stderr, "FAIL: (12e) op0f AND-chain pc=0x%x (want 0x42 true)\n", re15_espvm_get_pc(c5)); fail = 1; }
+    build_kcode();   /* restore */
+
+    /* (12f) op13 switch match: reg[5]=10 -> caseA matches -> pc=case body 0x5a; ci 0xff->0. */
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    re15_espvm_reg_set(5, 10);
+    re15_espvm_instance_t *sw1 = re15_espvm_alloc(0, 2, s_kcode);
+    re15_espvm_run_all();
+    if (re15_espvm_get_pc(sw1) != 0x5a || sw1->mem[RE15_ESPVM_OFF_CIDX0] != 0) {
+        fprintf(stderr, "FAIL: (12f) op13 match pc=0x%x ci=0x%x\n", re15_espvm_get_pc(sw1), sw1->mem[RE15_ESPVM_OFF_CIDX0]); fail = 1; }
+
+    /* (12g) op13 switch no-match -> 0x15 end: reg[5]=99 -> skip caseA -> end -> pc=0x5e, ci=0 (only ++). */
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    re15_espvm_reg_set(5, 99);
+    re15_espvm_instance_t *sw2 = re15_espvm_alloc(0, 2, s_kcode);
+    re15_espvm_run_all();
+    if (re15_espvm_get_pc(sw2) != 0x5e || sw2->mem[RE15_ESPVM_OFF_CIDX0] != 0) {
+        fprintf(stderr, "FAIL: (12g) op13 end pc=0x%x ci=0x%x\n", re15_espvm_get_pc(sw2), sw2->mem[RE15_ESPVM_OFF_CIDX0]); fail = 1; }
+
+    /* (12h) op13 no-match -> 0x16 default: reg[5]=99 -> default -> pc=0x7e, ci 0xff->0->0xff. */
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    re15_espvm_reg_set(5, 99);
+    re15_espvm_instance_t *sw3 = re15_espvm_alloc(0, 3, s_kcode);
+    re15_espvm_run_all();
+    if (re15_espvm_get_pc(sw3) != 0x7e || sw3->mem[RE15_ESPVM_OFF_CIDX0] != 0xff) {
+        fprintf(stderr, "FAIL: (12h) op13 default pc=0x%x ci=0x%x\n", re15_espvm_get_pc(sw3), sw3->mem[RE15_ESPVM_OFF_CIDX0]); fail = 1; }
+
+    if (!fail) printf("  (12) PASS: conditional evaluators byte-true "
+                      "(op12 IF true/false, op0f block true/false/AND-chain, op13 switch match/end/default)\n");
+    return fail;
+}
+
 int main(void)
 {
     int fail = 0;
@@ -694,6 +809,8 @@ int main(void)
     if (run_field_op_tests()) fail = 1;
     /* (11) the VM register ops 0x1b/0x23/0x24/0x25/0x26/0x27. */
     if (run_reg_op_tests()) fail = 1;
+    /* (12) the conditional block evaluators 0x0f/0x12/0x13. */
+    if (run_cond_op_tests()) fail = 1;
 
     if (fail) { fprintf(stderr, "\nESP-VM TEST FAILED\n"); return 1; }
     printf("\nPASS: ESP effect-script VM (C1) — pool + FUN_8003f0a0 dispatch byte-true\n");

@@ -1,7 +1,7 @@
 # RE1.5 Effect-Script VM — Opcode Map (@0x800744a8, 95 ops 0x00-0x5e)
 
 Dispatch: `FUN_8003f0a0` runs `(*table[*pc])(instance)` per active 0x170-instance. Port: `re15_esp_vm.c`.
-Status: **✅PORTED** = byte-true in re15_esp_vm.c (re15_espvm_install_ops) + tested (test_esp_vm). **32/95 ported.**
+Status: **✅PORTED** = byte-true in re15_esp_vm.c (re15_espvm_install_ops) + tested (test_esp_vm). **35/95 ported.**
 Classification of 0x0d-0x5e by the 77-agent workflow (2026-06-30); every PORTED row self-disassembled before porting.
 `portable_now` = pure instance-local + bytecode operands (no external pool/work-struct/GTE/audio).
 ⚠️ The rows marked `·portable` were AGENT-flagged portable but self-verified to deref the work-struct @inst+0x154
@@ -24,11 +24,11 @@ or the effect pool DAT_800b2368 -> actually **defer** (see deferred groups).
 | 0x0c | 0x8003f4c4 | ✅PORTED | loop |  | wait-condition (re15_espvm_set_wait_gate) |
 | 0x0d | 0x8003f540 | ✅PORTED | loop-counter |  | FOR/loop-push opcode: increments the per-level loop counter-index (+0x08), pushes a new loop frame — u16 iteration count (operand@pc+4) into |
 | 0x0e | 0x8003f674 | ✅PORTED | loop-counter |  | Opcode 0x0e = NEXT/loop-back: decrements per-level u16 loop counter at +0xa0; if nonzero, restores pc from the loop-return stack (mem[+0x20  |
-| 0x0f | 0x8003f6f4 | —defer | control-flow | *(0x800744a8 + 4*subopcode) via jalr v0 @0x8003f7ac (predicate head),*(0x800744a8 + 4*subopcode) via jalr v0 @0x8003f7f0 (predicate term loo | Conditional/loop-begin opcode: pushes a loop frame (+0x20 start, +0x60 end, +0x0c depth, +0x08 counter-index), evaluates a chained AND/OR pr |
+| 0x0f | 0x8003f6f4 | ✅PORTED | control-flow | *(0x800744a8 + 4*subopcode) via jalr v0 @0x8003f7ac (predicate head),*(0x800744a8 + 4*subopcode) via jalr v0 @0x8003f7f0 (predicate term loo | Conditional/loop-begin opcode: pushes a loop frame (+0x20 start, +0x60 end, +0x0c depth, +0x08 counter-index), evaluates a chained AND/OR pr |
 | 0x10 | 0x8003f878 | ✅PORTED | loop-counter |  | Loop-back opcode: restores pc from the per-level saved-PC stack slot (+0x20 + level*0x10 + idx*4) and decrements the per-level counter-index |
 | 0x11 | 0x8003f8bc | ✅PORTED | loop-counter |  | FOR/loop-entry opcode: increments per-level counter-index, pushes loop-body-start (pc+4) and loop-end target (pc+4 + s16@[pc+2]) into per-le |
-| 0x12 | 0x8003f930 | —defer | control-flow |  | Opcode 0x12 = a compound-conditional / loop-test: it re-dispatches a block of N sub-condition opcodes through the VM table @0x800744a8, AND/ |
-| 0x13 | 0x8003fa5c | —defer | control-flow |  | Opcode 0x13: a loop/jump-setup opcode — pushes a per-level pointer (pc+u16@pc+2) and a level byte into the instance's +0x60/+0x0c per-level  |
+| 0x12 | 0x8003f930 | ✅PORTED | control-flow |  | Opcode 0x12 = a compound-conditional / loop-test: it re-dispatches a block of N sub-condition opcodes through the VM table @0x800744a8, AND/ |
+| 0x13 | 0x8003fa5c | ✅PORTED | control-flow |  | Opcode 0x13: a loop/jump-setup opcode — pushes a per-level pointer (pc+u16@pc+2) and a level byte into the instance's +0x60/+0x0c per-level  |
 | 0x14 | 0x8003fb38 | ✅PORTED | control-flow |  | Opcode 0x14: fixed 6-byte NOP/skip — advances the bytecode pc (+0x1c) by 6 and returns CONT(1); reads no operands and writes nothing else. |
 | 0x15 | 0x8003fb50 | ✅PORTED | control-flow |  | Opcode 0x15 is a 2-byte no-op/skip: it advances the bytecode pc by 2 and returns CONT(1); touches only the instance pc field (+0x1c). |
 | 0x16 | 0x8003fb68 | ✅PORTED | loop-counter |  | Decrements the per-level loop counter-index (instance[+0x08+level] -= 1), advances pc by 2, and returns CONT(1). |

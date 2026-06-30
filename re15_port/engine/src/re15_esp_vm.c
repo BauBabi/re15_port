@@ -102,6 +102,9 @@ static int op_reg_copy(re15_espvm_instance_t *inst);
 static int op_reg_arith_imm(re15_espvm_instance_t *inst);
 static int op_reg_arith_reg(re15_espvm_instance_t *inst);
 static int op_gosub(re15_espvm_instance_t *inst);
+static int op_if_begin(re15_espvm_instance_t *inst);
+static int op_cond_chain(re15_espvm_instance_t *inst);
+static int op_switch(re15_espvm_instance_t *inst);
 
 /* Install the ported real opcode table (PTR_800744a8). Unported entries stay the stub. C2 grows
  * this as more @0x800744a8 handlers are reverse-engineered. NB: re15_espvm_reset() must call this
@@ -125,6 +128,9 @@ static void re15_espvm_install_ops(void)
     s_optable[0x0e] = op_for_next;     /* NEXT (0x8003f674) */
     s_optable[0x10] = op_for_loop;     /* loop-back (0x8003f878) */
     s_optable[0x11] = op_for_begin_nc; /* FOR-begin no-count (0x8003f8bc) */
+    s_optable[0x0f] = op_if_begin;     /* IF/while block-begin + predicate chain (0x8003f6f4) */
+    s_optable[0x12] = op_cond_chain;   /* compound IF (AND/OR predicate chain) (0x8003f930) */
+    s_optable[0x13] = op_switch;       /* register switch/case (0x8003fa5c) */
     s_optable[0x14] = op_skip6;        /* pc+=6 (0x8003fb38) */
     s_optable[0x15] = op_skip2;        /* pc+=2 (0x8003fb50) */
     s_optable[0x16] = op_for_popci;    /* pop counter-index (0x8003fb68) */
@@ -521,6 +527,106 @@ static int op_gosub(re15_espvm_instance_t *inst)
     wr_u32(inst->mem + RE15_ESPVM_OFF_SP, (uint32_t)(nl * 0x20 + RE15_ESPVM_OFF_STACK));
     inst->mem[RE15_ESPVM_OFF_LEVEL] = (uint8_t)nl;
     INST_SETPC(inst, rd_u16(inst->code_base + (uint32_t)subid * 2));   /* pc = offset_table[subid] */
+    return RE15_ESPVM_RET_CONT;
+}
+
+/* ---- Phase ESP-C2 batch 7 — the conditional block evaluators (0x0f/0x12/0x13) --------------
+ * 0x0f/0x12 evaluate a chain of predicate sub-opcodes (each dispatched through the opcode table,
+ * combined with AND when the inter-predicate u16 flag == 0 else OR); 0x13 is a register switch.
+ * Disasm-verified @0x8003f6f4 / @0x8003f930 / @0x8003fa5c. A predicate sub-op returns 1 (true) or
+ * 0 (false) — exactly what 0x23 (compare) yields; an unported flag-test predicate (stub returns
+ * STOP=2) would read as "true", so the conditional ops are byte-true only over ported predicates. */
+
+/* Evaluate the predicate chain [chain_start, s3): dispatch the first predicate, then loop reading
+ * a u16 AND/OR flag + the next predicate until pc reaches s3. Returns the combined boolean. */
+static int espvm_eval_chain(re15_espvm_instance_t *inst, uint32_t chain_start, uint32_t s3)
+{
+    INST_SETPC(inst, chain_start);
+    int res = s_optable[inst->code_base[chain_start]](inst);          /* first predicate */
+    int guard = 0;
+    while (INST_PC(inst) != s3 && guard++ < 64) {                     /* guard: malformed-chain hang */
+        uint32_t p    = INST_PC(inst);
+        uint16_t flag = rd_u16(inst->code_base + p);                  /* 0 = AND, != 0 = OR */
+        INST_SETPC(inst, p + 2);
+        int r = s_optable[inst->code_base[INST_PC(inst)]](inst);
+        res = (flag == 0) ? (res & r) : (res | r);
+    }
+    return res;
+}
+
+/* 0x0f: IF/while block-begin — push a FOR-frame (ci++, PCARR[ci]=this op's addr, TGTARR[ci]=
+ * (pc+4)+s16@pc+2, DEPTHARR[ci]=loop-depth[level]); pc+=4; evaluate the predicate chain of
+ * len=u8@pc+1 bytes. TRUE -> enter the block (pc left after the chain); FALSE -> pc=TGTARR[ci]
+ * (skip the block) and ci--. CONT. (0x8003f6f4) */
+static int op_if_begin(re15_espvm_instance_t *inst)
+{
+    uint32_t pc    = INST_PC(inst);
+    int8_t   level = (int8_t)inst->mem[RE15_ESPVM_OFF_LEVEL];
+    int      ci    = (int8_t)(inst->mem[level + 8] + 1);
+    inst->mem[level + 8] = (uint8_t)ci;
+    uint8_t  len   = inst->code_base[pc + 1];
+    int16_t  rel   = (int16_t)rd_u16(inst->code_base + pc + 2);
+    uint32_t npc   = pc + 4;
+    wr_u32(inst->mem + for_pcarr(level, ci), pc);                     /* PCARR[ci] = this op's addr */
+    wr_u32(inst->mem + for_tgtarr(level, ci), npc + (uint32_t)(int32_t)rel);
+    inst->mem[for_deptharr(level, ci)] = inst->mem[level + 4];
+    int res = espvm_eval_chain(inst, npc, npc + len);
+    if (res == 0) {
+        INST_SETPC(inst, rd_u32(inst->mem + for_tgtarr(level, ci))); /* skip block */
+        inst->mem[level + 8] = (uint8_t)(inst->mem[level + 8] - 1);  /* ci-- */
+    }
+    return RE15_ESPVM_RET_CONT;
+}
+
+/* 0x12: compound IF — evaluate the predicate chain of len=u8@pc+1 bytes (chain @pc+2). TRUE ->
+ * pc=PCARR[ci] (loop back to the block body); FALSE -> ci-- (exit). CONT. (0x8003f930) */
+static int op_cond_chain(re15_espvm_instance_t *inst)
+{
+    uint32_t pc    = INST_PC(inst);
+    int8_t   level = (int8_t)inst->mem[RE15_ESPVM_OFF_LEVEL];
+    uint8_t  len   = inst->code_base[pc + 1];
+    uint32_t cs    = pc + 2;
+    int res = espvm_eval_chain(inst, cs, cs + len);
+    int ci  = (int8_t)inst->mem[level + 8];
+    if (res != 0)
+        INST_SETPC(inst, rd_u32(inst->mem + for_pcarr(level, ci))); /* loop back */
+    else
+        inst->mem[level + 8] = (uint8_t)(inst->mem[level + 8] - 1); /* exit */
+    return RE15_ESPVM_RET_CONT;
+}
+
+/* 0x13: register switch — push a FOR-frame (ci++, TGTARR[ci]=(pc+4)+u16@pc+2 = default/exit,
+ * DEPTHARR[ci]=loop-depth[level]); switch value = reg[u8@pc+1]. Walk the case list at pc+4: a
+ * 0x15 byte ends it, 0x16 is the default (ci--), otherwise each case = [marker, _, u16 skip,
+ * s16 value]: on a value match jump to the case body (a3+=6) else skip (a3+=skip). pc=a3. CONT.
+ * (0x8003fa5c) */
+static int op_switch(re15_espvm_instance_t *inst)
+{
+    uint32_t pc    = INST_PC(inst);
+    int8_t   level = (int8_t)inst->mem[RE15_ESPVM_OFF_LEVEL];
+    uint8_t  ridx  = inst->code_base[pc + 1];
+    uint16_t drel  = rd_u16(inst->code_base + pc + 2);
+    uint32_t a3    = pc + 4;
+    int      ci    = (int8_t)(inst->mem[level + 8] + 1);
+    inst->mem[level + 8] = (uint8_t)ci;
+    wr_u32(inst->mem + for_tgtarr(level, ci), a3 + drel);
+    inst->mem[for_deptharr(level, ci)] = inst->mem[level + 4];
+    int16_t  sw    = (int16_t)rd_u16(s_reg + (uint32_t)ridx * 2);
+    int guard = 0;
+    for (;;) {
+        if (guard++ > 256) break;                                    /* malformed-list guard */
+        uint8_t marker = inst->code_base[a3];
+        if (marker == 0x15) { a3 += 2; break; }                      /* end of switch */
+        if (marker == 0x16) {                                        /* default case */
+            inst->mem[level + 8] = (uint8_t)(inst->mem[level + 8] - 1);
+            a3 += 2; break;
+        }
+        uint16_t skip = rd_u16(inst->code_base + a3 + 2);
+        int16_t  val  = (int16_t)rd_u16(inst->code_base + a3 + 4);
+        if (sw == val) { a3 += 6; break; }                           /* match -> case body */
+        a3 += skip;                                                  /* skip to next case */
+    }
+    INST_SETPC(inst, a3);
     return RE15_ESPVM_RET_CONT;
 }
 
