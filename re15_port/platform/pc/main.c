@@ -69,6 +69,8 @@ extern void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
 /* Phase ESP-C: the current room's parsed effect-sprite bank (borrows the resident RDT buf;
  * bound via re15_esp_set_room_bank so op_sce_espr_on can resolve effect ids to anim records). */
 static re15_esp_t s_room_esp;
+static re15_esp_t s_global_esp;        /* the GLOBAL effect bank CORE00.ESP (effect-id 0 = hit fx) */
+static uint8_t   *s_global_esp_buf = NULL;
 
 /* Parse `room_id`'s ESP section from its RDT and bind it as the active effect bank. */
 static void pc_load_room_esp(const uint8_t *rdt_buf, int rdt_size, unsigned room_id)
@@ -425,6 +427,20 @@ int main(int argc, char *argv[])
     }
     /* Phase ESP-C: parse + bind this room's effect-sprite bank for op-0x3a spawns. */
     pc_load_room_esp(rdt_buf, rdt_size, boot_room);
+
+    /* Phase ESP-D: load the GLOBAL effect bank CORE00.ESP once at game-init (FUN_8001923c) so the
+     * universal hit effects (effect-id 0, used by the master-table hit handlers) resolve. */
+    {
+        int gsz = 0;
+        s_global_esp_buf = pc_read_shared("DATA/CORE00.ESP", &gsz);
+        if (s_global_esp_buf && re15_esp_parse_global(s_global_esp_buf, (size_t)gsz, &s_global_esp) == 0) {
+            re15_esp_set_global_bank(&s_global_esp);
+            fprintf(stderr, "[esp] global bank CORE00.ESP: %d effects (incl effect-id 0 hit fx)\n",
+                    s_global_esp.id_count);
+        } else {
+            fprintf(stderr, "[esp] global bank CORE00.ESP NOT loaded\n");
+        }
+    }
 
     /* Phase 4.6.1: SDL audio device + SCD audio queue consumer. Silent
      * playback callback until 4.6.3 wires the ADPCM mixer in. */

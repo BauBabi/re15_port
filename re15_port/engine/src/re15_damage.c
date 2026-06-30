@@ -329,6 +329,24 @@ void re15_enemy_gore_setup(re15_actor_t *e)
     re15_esp_fx_spawn(bank, 5, 0, e->x, e->y, e->z, (int16_t)e->rot_y);  /* a0=0x5002800 effect-id 5 */
 }
 
+/* Zombie HURT hit-effect — byte-true: the master-table hurt dispatch FUN_80105a8c (entity+4==2)
+ * calls master[entity+5=react-zone][entity+6=hit-dir] = the hit handler FUN_80105b7c (rows 1/3/4),
+ * whose phase-0 (entity+7==0) spawns the hit/blood effect: func_0x80019700(0x2000, rot_y, bone+0x40,
+ * &LAB_8011fe84) = effect-id 0 (the UNIVERSAL hit fx, from the global CORE00.ESP bank — NOW resolvable
+ * via re15_esp_set_global_bank). Position is the model_inst bone block in the original -> the actor
+ * world position (faithful-line). re15_enemy_take_damage already sets state=2 + sub_state_3=0, so this
+ * fires once on the hurt entry (shoot a zombie -> visible blood). +0x93|=1, entity+7=1 to advance. */
+void re15_enemy_hurt_fx(re15_actor_t *e)
+{
+    if (!e || !e->active) return;
+    if (e->state != 2) return;               /* HURT state (entity+4==2) */
+    if (e->sub_state_3 != 0) return;         /* FUN_80105b7c phase 0 (entity+7==0): spawn once */
+    re15_esp_fx_spawn(re15_esp_room_bank(), 0 /*effect-id*/, 0 /*sub*/,
+                      e->x, e->y, e->z, (int16_t)e->rot_y);   /* a0=0x2000 -> effect-id 0, a1=rot_y */
+    e->hit_react   |= 0x1;                    /* entity+0x93 |= 1 */
+    e->sub_state_3  = 1;                      /* entity+7 = 1 (phase advance) */
+}
+
 /* ====================================================================== *
  *  Attack-hitbox vs actor collision test — FUN_8002b5d0                   *
  *  (ghidra1_V2.txt:118005-118130). The per-target geometry test the       *

@@ -1075,6 +1075,40 @@ static int test_enemy_gore_setup(void)
     return fail;
 }
 
+/* re15_enemy_hurt_fx (FUN_80105a8c/FUN_80105b7c): on the hurt entry (state==2, sub_state_3==0)
+ * spawn effect-id 0 (the universal hit/blood fx) at the zombie + advance the phase. */
+static int test_enemy_hurt_fx(void)
+{
+    int fail = 0;
+    re15_esp_fx_reset();
+    re15_esp_set_room_bank(NULL);
+    re15_esp_set_global_bank(NULL);
+    re15_actor_t z;
+    memset(&z, 0, sizeof z);
+    z.active = 1; z.type = 0x10; z.x = 5; z.y = 6; z.z = 7; z.rot_y = 0x33;
+
+    /* not in HURT state -> no spawn. */
+    z.state = 1; z.sub_state_3 = 0;
+    re15_enemy_hurt_fx(&z);
+    if (re15_esp_fx_count() != 0) { fprintf(stderr, "FAIL: hurt_fx fired when not hurt\n"); fail = 1; }
+
+    /* hurt entry (state 2, sub_state_3 0) -> spawn effect-0 + sub_state_3=1. */
+    z.state = 2; z.sub_state_3 = 0;
+    re15_enemy_hurt_fx(&z);
+    const re15_esp_fx_t *f = re15_esp_fx_get(0);
+    if (re15_esp_fx_count() != 1 || !f || f->effect_id != 0 || f->x != 5 || f->param != 0x33 ||
+        z.sub_state_3 != 1) {
+        fprintf(stderr, "FAIL: hurt_fx spawn (count=%d sub3=%u)\n", re15_esp_fx_count(), z.sub_state_3); fail = 1; }
+
+    /* phase advanced -> no re-spawn while staying in hurt. */
+    re15_enemy_hurt_fx(&z);
+    if (re15_esp_fx_count() != 1) { fprintf(stderr, "FAIL: hurt_fx double-spawn\n"); fail = 1; }
+
+    re15_esp_fx_reset();
+    if (!fail) printf("PASS: test_enemy_hurt_fx (state2+sub3=0 -> effect-0 hit blood + phase advance)\n");
+    return fail;
+}
+
 int main(void)
 {
     int failures = 0;
@@ -1103,6 +1137,7 @@ int main(void)
     failures += test_sce_espr_on_spawn();
     failures += test_enemy_gore_tick();
     failures += test_enemy_gore_setup();
+    failures += test_enemy_hurt_fx();
 
     if (failures == 0) {
         printf("\nALL SCD OPCODE TESTS PASSED\n");

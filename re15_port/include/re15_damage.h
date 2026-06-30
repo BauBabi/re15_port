@@ -62,6 +62,11 @@ void re15_enemy_gore_tick(re15_actor_t *e);
  * VISIBLE ROOM1140 gore) at the zombie + sets sub_state_3=1. Called per live zombie in run_all. */
 void re15_enemy_gore_setup(re15_actor_t *e);
 
+/* Zombie HURT hit-effect (master hurt dispatch FUN_80105a8c -> FUN_80105b7c phase 0): on the hurt
+ * entry (state==2, sub_state_3==0) spawn effect-id 0 (the universal hit/blood fx from the global
+ * CORE00.ESP bank) at the zombie + advance the phase. Called per live zombie in run_all. */
+void re15_enemy_hurt_fx(re15_actor_t *e);
+
 /* Player DEATH state (Phase 8.10) — the byte-true core of the player death FSM. The player is dead
  * when HP < 0 (FUN_80012d60 @0x80012ee8; the grab drains HP to the same HP<0). The original then runs
  * the death-sequence command handler (player command 0x800aca58 dispatched @0x80073f90[state]: [3] =
