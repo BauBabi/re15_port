@@ -569,6 +569,22 @@ re-spielt clip 18).
 - **NÄCHSTER SCHRITT:** Muzzle-Flash-Sprite + Raise-Clip 17 (braucht die Anim-Completion-Schicht — gemeinsam mit der Stand-up-Ramp
   8.13), der Game-Over-Screen + Death-Fade (@0x8003694c), die Waffen-Inventory, oder das Combat-Verifikations-Capture (C11).
 
+### 8.15 — C11 DYNAMISCHE VERIFIKATION (TEIL-erledigt) → das statische RE der Combat-Kette gegen Live-Daten bestätigt
+Disziplin-Schritt: alles seit 8.11 war nur statisch RE't. Das C11-Capture (DuckStation + MZD-Disc + vgamepad) wurde aus der
+Sandbox **erfolgreich gefahren** (re15-room-capture: 2 Live-Captures + 1 Menüshot, Pipeline reproduzierbar). Bestätigt:
+- **Capture-Pipeline funktioniert** aus dieser Sandbox (DuckStation `.../duckstation-qt-x64-ReleaseLTCG.exe`, MZD-Disc
+  `…/Downloads/ePSXe2018/Biohazard 1.5 (MZD Mod) Update 25-01-2025.cue`, vgamepad+zstandard OK). ~110-120s/Lauf (boot 64s).
+- **ENGAGE-Clip + Hitbox byte-true bestätigt** (Cross-Check `stage_saves/mzd_stage1_combat_death.sav`, re15_enemy_state.py):
+  slot 2 = `+0x4=1, +0x5=2 (ENGAGE), hitbox 400/1440` → MATCHT die Port-Vorhersage (engage → motion=+0x1d4 variant, 8.13;
+  Hitbox 400/1440, 8.7a). Die übrigen Slots (+0x5=1 search / 6 walk / 12 dead-grab) sind die **8.10-Post-Death-Artefakte**
+  (Spieler HP=-1, state 7) — konsistent mit der 8.10-Auflösung (das m0-Live-Brain macht engage→turn→grab, die search/walk/
+  dead-grab sind post-death/m1).
+- **OFFEN (die volle Live-Bestätigung):** ein PLAYER-ALIVE ROOM1140-Capture (engage→turn→grab live, + HURT durch Schießen)
+  braucht den **ROOM1140-JUMP-Index**. Befund: das Default-JUMP-Menü zeigt **„124 OPENING"** (= ROOM1240, der ruhige Boot-Raum;
+  New-Game-Landing hat 0 Zombies, Vorwärts-Laufen erreicht den Combat nicht). ROOM1140 ist ein anderer `--right`-Listen-Index
+  (Listen-Reihenfolge unbekannt → eine `--menushot`-Schrittweise-Erkundung von „124" aus). HURT-Capture braucht zusätzlich
+  Feuern (das `--provoke` läuft nur + dreht, schießt nicht → müsste um Square erweitert werden). = die verbleibende C11-Schuld.
+
 Werkzeuge: **`re15-psx-disasm`** (EXE/Overlay-Disasm), **`re15-savestate-ghidra`** (Live-RAM +
 Tabellen-Patch-Check), **`re15-room-capture`** (Raum laden/provozieren). Memory `reai-v2-foundation-combat`
 hat die volle Detail-Karte (alle Adressen, FSM-Stufen, deferred-Teile).

@@ -37,7 +37,10 @@ def log(m): print("[%6.1f] %s" % (time.monotonic()-T0, m), flush=True)
 def main():
     global T0
     ap = argparse.ArgumentParser()
-    ap.add_argument("--state", required=True)            # savestate to quick-load (e.g. a debug-menu state)
+    # The DURABLE debug-menu quickload base (committed): quick-loading it lands directly on the
+    # JUMP line in ~40s (vs ~110s for a cold boot). Default so a capture run is zero-config from the
+    # repo root. Regenerate with: re15_mzd_load_room.py --jump --menushot --out stage_saves/mzd_debugmenu.sav
+    ap.add_argument("--state", default="stage_saves/mzd_debugmenu.sav")   # savestate to quick-load
     ap.add_argument("--load", type=float, default=16.0)  # wait after launch for the state to load
     ap.add_argument("--right", type=int, default=0)
     ap.add_argument("--left", type=int, default=0)
