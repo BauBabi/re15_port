@@ -1,4 +1,15 @@
-# RE1.5 Port — Session-Handover (Stand 2026-06-30, Phase 8.10: Combat-Loop komplett + zwei-seitig begonnen)
+# RE1.5 Port — Session-Handover (Stand 2026-06-30, Phase 8.11: Enemy-Modelle laden + Death-Anim)
+
+> **NEUESTE SESSION (8.11) — die Anim-PRÄSENTATION ist entsperrt + begonnen.** Großer Befund: die „Anim-Schicht"
+> war in Wahrheit auf das **Enemy-Modell-LADEN** geblockt — die Gegnermodelle liegen NUR in `EMD/CDEMD0.EMS`/`CDEMD1.EMS`
+> (~4,7 MB Archive), NICHT als per-Typ `EM<NN>.EMD`; `pc_enemy_load` (las `EM%02X.EMD`) scheiterte für JEDEN Typ → kein
+> Gegner renderte mit echtem Modell → gar keine Anim möglich. **GELÖST (Commit 0e2203a8):** neuer engine-seitiger EMS-Index
+> `re15_ems.c` (byte-true Port von `RE15MasterExtractor.parseEmsEntries`) + `pc_enemy_load` extrahiert das Typ-Blob aus
+> CDEMD0.EMS. ctest gegen das echte Asset: em16-Zombie parst zu 15 Meshes/15 Bones/**43 Clips, Death-Clip 0x1f = 73 Frames**.
+> **Death-Anim portiert (Commit 91f7d20b):** `re15_enemy_ai_live_death` = byte-true `FUN_80107cb0` (motion=0x1f spielt aus →
+> Corpse bei Clip-Ende, statt sofort-Corpse). 32/32 ctest. **NÄCHSTER SCHRITT jetzt ENTSPERRT:** die HURT-Stagger-Anim
+> (+0x1d4 Hurt-Clip + der Hit-Stun-Timer +0x1dc = Stagger-Clip-Länge) — siehe §8.11 unten. In-game-Sichtprüfung: GUI-Run
+> `RE15_START_ROOM=1140`.
 
 Kanonisches „lies-mich-zuerst" für die nächste Session. **Die STAGE1-Zombie-Combat-Logik ist byte-true in-game:
 spawn → wake (dist<4000) → engage → turn-to-face → GRAB (−10/−5 HP) → Spieler GEPINNT → HP<0 → TOD (death-FSM-Kern,
@@ -440,10 +451,10 @@ ließ ihn aber weg + nutzte `<=` → die effektive Pistolen-Reichweite war 999 s
 Der Combat ist in beide Richtungen byte-true geschlossen + in-game spielbar; die infra-freien Refinements (Reach-Cone, TEIL 8)
 sind ausgeschöpft. Die verbleibenden Punkte sind **alle auf fehlende Infra geblockt** (oben byte-true belegt) oder **neue
 Subsysteme** — eine echte Richtungswahl (frag den Nutzer oder wähl):
-1. **PRÄSENTATION (macht den Combat sichtbar + entblockt die meisten Refinements):** eine **Anim/Render-Schicht** (PC SDL2/GL)
-   — sie ist die gemeinsame Wurzel von: der Aim/Raise/Muzzle-Animation, der Zombie-Stagger-/Death-Animation (heute instant; +
-   entblockt die **Hit-Stun-Dauer** +0x1dc oben), dem **Game-Over-Screen** + dem Death-**Color-Fade** (@0x8003694c). Der Port
-   hat keine Fade/UI/Enemy-Anim-Schicht. Mittlerer–großer Scope, aber der höchste Hebel (entblockt mehrere deferrals).
+1. **PRÄSENTATION (macht den Combat sichtbar) — BEGONNEN in §8.11:** das Enemy-Modell-LADEN (war der echte Blocker) + die
+   Death-Anim sind ERLEDIGT. Offen: die Hurt-Stagger-Anim + Hit-Stun (jetzt entsperrt, §8.11), die Aim/Raise/Muzzle-Anim, der
+   **Game-Over-Screen** + der Death-**Color-Fade** (@0x8003694c). Der Port hat keine Fade/UI-Schicht; die Enemy-Anim-Schicht
+   ist jetzt DA (Modelle laden + spielen Clips).
 2. **AIM/FIRE-FSM + KAMERA-Infra (entblockt die exakte Cone):** die Aim/Fire-Command-FSM @0x80035810 (3-Level @0x80073f90[4]→
    action 8) → liefert den **Aim-Point** (param_2) + die Kamera-Line-of-fire → entblockt die exakte Dist-Origin, den Hit-Dir-
    Clip, die Waffen-Inventory. Braucht die Player-Command-FSM (der Port läuft auf re15_player_tick+SCD) — großer Scope.
@@ -455,6 +466,39 @@ Subsysteme** — eine echte Richtungswahl (frag den Nutzer oder wähl):
   0x20000000 → `re15_enemy_ai_set_paused`, noch nicht in game_step gewired).
 - **WAS VOM 0x47-PORT BLEIBT:** der `@0x801217a0`-Code (Phase 2-7) ist echte byte-true RE eines PARALLELEN Typs (0x47) —
   nicht wegwerfen, klar als 0x47 gelabelt; der Live-Pfad ist `@0x8011f7b4`.
+
+### 8.11 — ENEMY-MODELL-LADEN + DEATH-ANIM (ERLEDIGT) → die Anim-Präsentation ist entsperrt + begonnen
+**Der Schlüssel-Befund:** „die Anim-Schicht" war nicht das Problem — der Port hatte sie schon (`anim_select_common.c` +
+`re15_compute_actor_kf` + der per-Actor `anim_frame`-Advance in [player_common.c:317-329] + Hold-Last). Das echte Problem
+war, dass die GEGNERMODELLE nie geladen wurden: sie liegen NUR in `EMD/CDEMD0.EMS`/`CDEMD1.EMS` (~4,7 MB Archive), es gibt
+KEINE per-Typ `EM<NN>.EMD`, und `pc_enemy_load` las `EM%02X.EMD` → scheiterte für JEDEN Typ → kein Gegner mit echtem Modell
+→ keine Anim. (Auch Krähen/etc. — nur Elliot 0x47 hat einen eigenen PLD-Pfad.)
+- **EMS-Loader (Commit 0e2203a8):** neuer engine-seitiger `re15_ems.c`/`.h` = byte-true Port von
+  `RE15MasterExtractor.parseEmsEntries` + `DEFAULT_EMS_ORDER`. Ein EMS = Folge von EMD-Blobs, jeder öffnet mit `u32 dir_off`
+  (EMD-eigener Section-Dir-Offset; gültig ⟺ `>=36 && (&3)==0`), Länge `dir_off+36`, 2048-Sektor-aligned, Zero-Gaps
+  übersprungen. `re15_ems_index_for_type(type)` (Order-Tabelle: em10=0x10@0, em11@1, em16@4, …, em47=Elliot@21).
+  `pc_enemy_load` (PC): erst Standalone `EM<NN>.EMD` (Back-Compat), sonst Blob aus gecachtem CDEMD0.EMS in einen privaten
+  Bank-Buffer → `re15_emd_parse_container`. **ctest `test_ems` gegen das echte CDEMD0.EMS:** Offsets byte-true (em10@0/
+  em11@215040/em16@874496); em16-Zombie parst zu **15 Meshes / 15 Bones / 43 Clips, Death-Clip 0x1f = 73 Frames**.
+- **Death-Anim (Commit 91f7d20b):** `re15_enemy_ai_live_death` = byte-true `FUN_80107cb0` (3-Phasen-FSM auf +0x7): Phase 0
+  `motion=0x1f`(Death-Clip 31)/`anim_frame=0`/`+0x7=1` → Phase 1 Clip ausspielen (SE@Frame7, Gore@Frame35 deferred) → Phase 2
+  `+0x4=7` CORPSE bei Clip-Ende. Vorher snappte er sofort zu Corpse. Hold-Last hält die Liege-Pose. Headless-Fallback (keine
+  Bank): sofort Corpse (keine Regression). + byte-true `+0x7=0` in `re15_player_weapon_fire` (FUN_80011f50 L157). test
+  Part(11/13). **In-game-Sicht: GUI-Run `RE15_START_ROOM=1140`** (die Exe läuft headless 8s ohne Crash; Pipe-Log-Capture
+  geht im Sandbox-Run nicht — SDL/Windows leitet stdout nicht in die Pipe; visuelle Bestätigung = interaktiver Run).
+- **NÄCHSTER SCHRITT (jetzt ENTSPERRT — die Modelle laden + spielen Clips):**
+  1. **HURT-Stagger-Anim + Hit-Stun** (die empfangende Seite sichtbar machen): `re15_enemy_ai_live_hurt` = `FUN_80105a8c`:
+     Stagger-Anim-FSM `@0x8011fb90[+0x5][+0x6]` (SPARSE — nur Row1[0,1]→`0x80105b7c`; setzt Anim-Felder +0x188/+0x8c=0x14/
+     +0x94=`u8@+0x1d4`(Hurt-Clip)/+0x9e), kehrt zu ACTIVE zurück erst wenn `s16@+0x1dc<0` (`+0x4=1,+0x5=0x11,+0x6=0`
+     @0x80105b48). **+0x1dc = der Anim-Frames-verbleibend-Zähler = die Stagger-Clip-Länge** (wird in der Anim-Wiedergabe
+     geseedet, nicht in der Hurt-Fn → analog zur Death-Anim auf `re15_enemy_ai_live_death` modellieren: Hurt-Clip setzen,
+     halten bis Clip ausgespielt, dann ACTIVE). Der Hurt-Clip-Index +0x1d4 ist per-Entity (am Spawn geseedet) — Quelle
+     ermitteln (Init FUN_80100688 / Savestate). Macht den geschossenen Zombie sichtbar zucken + kurz handlungsunfähig.
+  2. Die TURN/WALK/GRAB-States setzen schon `motion` (re15_enemy_ai_live_turn/grab) — prüfen, ob ihre Clips jetzt korrekt
+     rendern (Modell ist da). 3. Aim/Raise/Muzzle-Anim (Player). 4. Game-Over-Screen + Death-Fade (@0x8003694c) = Fade/UI-Schicht.
+- **Offene Detail-Frage:** CDEMD0 vs CDEMD1 (zwei Archive, leicht andere Per-EMD-Größen — vermutl. Disc1/Disc2 oder LOD); der
+  Port nutzt CDEMD0. Falls das Briefing-Modell sichtbar falsch ist, CDEMD1 testen. Und: laden die Briefing-Zombies im
+  initialen Kamera-Cut (sonst erst sichtbar, wenn das Briefing spielt)?
 
 Werkzeuge: **`re15-psx-disasm`** (EXE/Overlay-Disasm), **`re15-savestate-ghidra`** (Live-RAM +
 Tabellen-Patch-Check), **`re15-room-capture`** (Raum laden/provozieren). Memory `reai-v2-foundation-combat`
