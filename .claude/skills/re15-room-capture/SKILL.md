@@ -67,19 +67,26 @@ Für byte-true Gegner-KI braucht man einen Savestate mit **aktiven** Gegnern (id
 - **`--menushot`**: stoppt IM JUMP-Menü OHNE zu laden → der Savestate fängt das Menü; dump das VRAM-PNG (`re15_ss.py`) und lies die angezeigte `JUMP <raum> <name>`-Zeile, um `--right`→Raum zu mappen. **Die JUMP-Liste enthält ALLE Räume.** ⚠️ **DPad-Right zählt ABWÄRTS durch die Liste; ein langer Hold löst Auto-Repeat aus und überspringt ans Listenende** — `STEP_HOLD` ist kurz (≤0.05 s), jeden Schritt mit `--menushot` verifizieren.
 - **`--provoke S`**: läuft nach dem Laden S Sekunden vorwärts (DPad-Up + Rotations-Sweeps), bis ein Gegner den Spieler erkennt und in seinen approach/attack-State geht (für Live-Combat-/Mid-Lunge-Frames).
 
-**Quick-Load-Workflow** (`re15_quickload.py`, ~41 s statt ~110 s — spart den 64 s-Boot). Die **dauerhafte Debug-Menü-Base ist eingecheckt** (`stage_saves/mzd_debugmenu.sav`, JUMP-Zeile, nicht zeit-sensitiv) und ist der **Default** von `--state` → keine Neu-Erzeugung nötig:
+**Quick-Load-Workflow** (`re15_quickload.py`, ~27-36 s statt ~110 s — spart den 64 s-Boot). Die **dauerhafte Debug-Menü-Base ist eingecheckt** (`stage_saves/mzd_debugmenu.sav`) und ist der **Default** von `--state` → keine Neu-Erzeugung nötig. **VERIFIZIERT lauffähig 2026-06-30 (end-to-end: steppt Räume + lädt sie).**
 ```bash
-# Default --state = stage_saves/mzd_debugmenu.sav (committet); landet in ~41 s im JUMP-Menü.
-python scripts/re15_quickload.py --right N --menushot --out probe.sav      # Menü lesen
-python scripts/re15_quickload.py --right N --provoke 14 --out room.sav      # Raum laden + provozieren
+# Default --state = stage_saves/mzd_debugmenu.sav (committet). Räume steppen + Menü lesen:
+python scripts/re15_quickload.py --right N --menushot --out probe.sav      # N Räume rechts, nur Menü
+python scripts/re15_quickload.py --left  N --menushot --out probe.sav      # N Räume links
+python scripts/re15_quickload.py --triangle M --right N --menushot --out probe.sav   # Stage M weiter
+# Raum WIRKLICH laden (Square) + optional provozieren:
+python scripts/re15_quickload.py --right N --postload 10 --out room.sav
+python scripts/re15_quickload.py --right N --provoke 14 --out room.sav
 # Base neu erzeugen (falls je nötig, einmaliger 110 s-Boot):
 python scripts/re15_mzd_load_room.py --jump --menushot --out stage_saves/mzd_debugmenu.sav
 ```
-**VERIFIZIERT 2026-06-30 (C11-Verifikations-Session):**
-- Quickload aus der committen Base funktioniert (~41 s, landet im JUMP-Menü). Default-JUMP = **„124 OPENING"** = ROOM1240 (ruhiger Boot-Raum; New-Game-Landing hat 0 Zombies).
-- ⚠️ **DPad-Right (`--right`) steppt den JUMP-Raum nach einem Quickload NICHT** (getestet `--right 5` und `--right 20` → bleibt „124 OPENING"); die Menü-Stepping-Eingabe ist nach `-statefile`-Restore inaktiv. **OFFEN:** den korrekten Stepping-Knopf finden (nur Cross/Square/Triangle/Circle/Select/Start/DPad sind in `settings.ini` gebunden — KEIN L1/R1; evtl. Menü nach Quickload re-aktivieren [Down/Up], oder Triangle=Stage + anderer Knopf=Raum). Bis dahin garantierter Raum-Wechsel nur über den **Boot-Treiber** `re15_mzd_load_room.py --right N` (frische Nav) — dessen `--right`-Mapping ist aber ebenfalls unbestätigt (combat_death.sav-Raum-Index undokumentiert).
-- **ROOM1140 (Briefing-Combat) JUMP-Index = unbekannt** (von „124" schrittweise via `--menushot` zu erkunden, sobald der Stepping-Knopf steht). Vorhandene Live-Daten: `stage_saves/mzd_stage1_combat_death.sav` (7 Zombies, **post-death**).
-- **HURT-Capture braucht Feuern:** `--provoke` läuft nur vorwärts + dreht (→ Grab/Death wie combat_death), **drückt NICHT Square** → bezeugt nie den HURT-State (C11-Kern). Für ein HURT-Frame `--provoke` um einen Square-Tap erweitern.
+**Die Debug-Menü-Sequenz (Nutzer-bestätigt + getestet — der Treiber macht das):** man landet im DEBUG-Menü **ganz oben** → **Down** zu „JUMP" → **Links/Rechts** = vereinzelte KURZE Drücke wechseln den Raum (Raum-Nummer ±1) → **Square** = Raum laden. **Dreieck** wechselt im JUMP die **Stage**. ⚠️ **KRITISCH nach `-statefile`-Quickload:** ein blankes Rechts wird IGNORIERT — die Menü-Eingabe muss erst durch eine Navigations-Taste RE-AKTIVIERT werden. `re15_quickload.py` macht das automatisch (Up×2 → zur Spitze, Down → JUMP, *dann* steppen) = die frische Nav-Sequenz des Boot-Treibers.
+
+**Befunde (verifiziert 2026-06-30):**
+- Stepping läuft: r0=**124 OPENING** (=ROOM1240, der Boot-Raum = die Base), r1=125 LOBBY ER4-1, r2=126 SEWER PASSAGE, `--left 10`=114 SEWER EXIT, `--right 3`=100 BATH-LOCKERS. `--right`=Raum +1, `--left`=Raum −1, `--triangle`=Stage.
+- Square-Load bestätigt: `--right 3` + Square lädt 100 BATH-LOCKERS (display 96 % non-black, Gameplay-State, freeze=0x0).
+- ⚠️ **Die Debug-JUMP-Nummer ≠ der Port-ROOM####-Code** (114 = „SEWER EXIT", NICHT ROOM1140). Die Liste ist sequenziell mit RE-Raum-Namen.
+- **Briefing-Combat (Port ROOM1140, 5 Zombies) ist KEIN JUMP-Raum:** ein Debug-JUMP lädt die Raum-Geometrie, aber das **Spawn-SCD läuft dabei nicht** → ein gejumpter Raum ist gegnerlos (124 OPENING: 0 Zombies). Die Briefing-Zombies sind eine **geskriptete New-Game-Sequenz**; `stage_saves/mzd_stage1_combat_death.sav` (7 Zombies) wurde per **New Game + `--provoke`** (Boot-Treiber) erzeugt, NICHT per JUMP.
+- **HURT-Capture braucht Feuern:** `--provoke` läuft nur vorwärts + dreht (→ Grab/Death), **drückt kein Square** → bezeugt nie den HURT-State. Für ein HURT-Frame `--provoke` um einen Square-Tap erweitern (+ kurze Dauer, damit der Spieler lebt).
 
 ## Troubleshooting
 

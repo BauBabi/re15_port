@@ -42,8 +42,9 @@ def main():
     # repo root. Regenerate with: re15_mzd_load_room.py --jump --menushot --out stage_saves/mzd_debugmenu.sav
     ap.add_argument("--state", default="stage_saves/mzd_debugmenu.sav")   # savestate to quick-load
     ap.add_argument("--load", type=float, default=16.0)  # wait after launch for the state to load
-    ap.add_argument("--right", type=int, default=0)
-    ap.add_argument("--left", type=int, default=0)
+    ap.add_argument("--right", type=int, default=0)      # rooms to step RIGHT (down the JUMP list)
+    ap.add_argument("--left", type=int, default=0)       # rooms to step LEFT (up the JUMP list)
+    ap.add_argument("--triangle", type=int, default=0)   # stages to advance (Triangle cycles the stage)
     ap.add_argument("--menushot", action="store_true")
     ap.add_argument("--postload", type=float, default=8.0)
     ap.add_argument("--provoke", type=float, default=0.0)
@@ -64,10 +65,22 @@ def main():
     proc = subprocess.Popen([DUCK, "-batch", "-statefile", args.state, CUE])
     log("DuckStation launched pid=%d, loading state %.0fs..." % (proc.pid, args.load))
     time.sleep(args.load)
-    for i in range(args.right): tap(B.XUSB_GAMEPAD_DPAD_RIGHT, hold=STEP_HOLD, gap=0.40)
-    for i in range(args.left):  tap(B.XUSB_GAMEPAD_DPAD_LEFT,  hold=STEP_HOLD, gap=0.40)
+
+    # The DEBUG-MENU flow (user-confirmed 2026-06-30): you land in the DEBUG menu at the TOP; press
+    # DOWN once to reach JUMP; change rooms with single SHORT Left/Right presses; switch stage with
+    # TRIANGLE; LOAD with SQUARE. CRITICAL after a -statefile restore: a bare Right is IGNORED — the
+    # menu input must be RE-ACTIVATED by a navigation press first. So normalise to the top (Up x2) then
+    # press Down -> JUMP (this re-engages stepping), exactly the boot driver's fresh-nav sequence.
+    for _ in range(2): tap(B.XUSB_GAMEPAD_DPAD_UP, hold=0.06, gap=0.30)   # -> DEBUG menu top
+    tap(B.XUSB_GAMEPAD_DPAD_DOWN, hold=0.06, gap=0.50)                    # -> JUMP line (re-activates input)
+    for i in range(args.triangle):                                        # Triangle = stage select
+        log("Triangle -> stage +1 (%d/%d)" % (i+1, args.triangle)); tap(B.XUSB_GAMEPAD_Y, hold=0.06, gap=0.55)
+    for i in range(args.right):                                           # short individual Right presses
+        log("Right -> room (%d/%d)" % (i+1, args.right)); tap(B.XUSB_GAMEPAD_DPAD_RIGHT, hold=0.08, gap=0.45)
+    for i in range(args.left):
+        log("Left -> room (%d/%d)" % (i+1, args.left)); tap(B.XUSB_GAMEPAD_DPAD_LEFT, hold=0.08, gap=0.45)
     if args.menushot:
-        log("MENU SHOT (right=%d left=%d), no load" % (args.right, args.left)); time.sleep(1.2)
+        log("MENU SHOT (tri=%d right=%d left=%d), no load" % (args.triangle, args.right, args.left)); time.sleep(1.2)
     else:
         log("Square -> LOAD room"); tap(B.XUSB_GAMEPAD_X, gap=0.6)
         log("settle %.0fs" % args.postload); time.sleep(args.postload)

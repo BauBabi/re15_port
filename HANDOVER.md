@@ -579,11 +579,18 @@ Sandbox **erfolgreich gefahren** (re15-room-capture: 2 Live-Captures + 1 Menüsh
   Hitbox 400/1440, 8.7a). Die übrigen Slots (+0x5=1 search / 6 walk / 12 dead-grab) sind die **8.10-Post-Death-Artefakte**
   (Spieler HP=-1, state 7) — konsistent mit der 8.10-Auflösung (das m0-Live-Brain macht engage→turn→grab, die search/walk/
   dead-grab sind post-death/m1).
-- **OFFEN (die volle Live-Bestätigung):** ein PLAYER-ALIVE ROOM1140-Capture (engage→turn→grab live, + HURT durch Schießen)
-  braucht den **ROOM1140-JUMP-Index**. Befund: das Default-JUMP-Menü zeigt **„124 OPENING"** (= ROOM1240, der ruhige Boot-Raum;
-  New-Game-Landing hat 0 Zombies, Vorwärts-Laufen erreicht den Combat nicht). ROOM1140 ist ein anderer `--right`-Listen-Index
-  (Listen-Reihenfolge unbekannt → eine `--menushot`-Schrittweise-Erkundung von „124" aus). HURT-Capture braucht zusätzlich
-  Feuern (das `--provoke` läuft nur + dreht, schießt nicht → müsste um Square erweitert werden). = die verbleibende C11-Schuld.
+- **CAPTURE-NAVIGATION LAUFFÄHIG GEMACHT + DURABLE (Nutzer-Feedback, getestet):** die Debug-Menü-Quickload-Navigation funktioniert
+  jetzt end-to-end (Räume steppen + laden), ~27-36 s statt 110 s. **Schlüssel-Fix:** nach `-statefile`-Quickload wird ein blankes
+  Rechts IGNORIERT → die Menü-Eingabe muss erst re-aktiviert werden (Up×2→Spitze, Down→JUMP), *dann* steppt Links/Rechts (±1 Raum),
+  Dreieck=Stage, Square=laden. In `re15_quickload.py` eingebaut + in der `re15-room-capture`-Skill dokumentiert; Base
+  `stage_saves/mzd_debugmenu.sav` eingecheckt + Default. **Befunde (verifiziert):** r0=124 OPENING(=ROOM1240/Boot), 125 LOBBY,
+  126 SEWER PASSAGE, --left10=114 SEWER EXIT, --right3=100 BATH-LOCKERS (Square-Load bestätigt, 96 % non-black). **Die Debug-JUMP-
+  Nummer ≠ Port-ROOM####** (114=SEWER EXIT ≠ ROOM1140).
+- **OFFEN (die volle Live-HURT/Grab-Bestätigung):** der **Briefing-Combat (ROOM1140) ist KEIN JUMP-Raum** — ein Debug-JUMP lädt die
+  Geometrie, aber das Spawn-SCD läuft nicht (gejumpter Raum = 0 Zombies). Die Briefing-Zombies sind eine **geskriptete New-Game-
+  Sequenz** (combat_death.sav = New Game + `--provoke`, nicht JUMP). Für ein PLAYER-ALIVE-Combat-Frame: New Game + kürzeres
+  `--provoke` (Spieler lebt) bis die Briefing-Zombies spawnen; für HURT zusätzlich `--provoke` um einen Square-Tap erweitern
+  (es schießt sonst nie). = die verbleibende C11-Schuld (die Navigation selbst ist jetzt gelöst + durable).
 
 Werkzeuge: **`re15-psx-disasm`** (EXE/Overlay-Disasm), **`re15-savestate-ghidra`** (Live-RAM +
 Tabellen-Patch-Check), **`re15-room-capture`** (Raum laden/provozieren). Memory `reai-v2-foundation-combat`
