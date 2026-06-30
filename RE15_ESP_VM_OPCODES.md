@@ -1,7 +1,7 @@
 # RE1.5 Effect-Script VM — Opcode Map (@0x800744a8, 95 ops 0x00-0x5e)
 
 Dispatch: `FUN_8003f0a0` runs `(*table[*pc])(instance)` per active 0x170-instance. Port: `re15_esp_vm.c`.
-Status: **✅PORTED** = byte-true in re15_esp_vm.c (re15_espvm_install_ops) + tested (test_esp_vm). **44/95 ported.**
+Status: **✅PORTED** = byte-true in re15_esp_vm.c (re15_espvm_install_ops) + tested (test_esp_vm). **45/95 ported.**
 Classification of 0x0d-0x5e by the 77-agent workflow (2026-06-30); every PORTED row self-disassembled before porting.
 `portable_now` = pure instance-local + bytecode operands (no external pool/work-struct/GTE/audio).
 ⚠️ The rows marked `·portable` were AGENT-flagged portable but self-verified to deref the work-struct @inst+0x154
@@ -80,7 +80,7 @@ or the effect pool DAT_800b2368 -> actually **defer** (see deferred groups).
 | 0x49 | 0x80040cd0 | —defer | field-setter |  | Opcode 0x49: copies three sub-struct fields (+0x5c/0x60/0x64 -> +0x34/0x38/0x3c), plants a hardcoded global pointer 0x80072d4c into sub-stru |
 | 0x4a | 0x80041e54 | ·portable | field-setter |  | Opcode 0x4a: sets the per-instance sub-struct (pointer @instance+0x154) into mode 4 with sub-mode = operand byte[pc+1], clears its 6/7/0x1c8 |
 | 0x4b | 0x80040414 | —defer | external-global | 0x800142f4 | Opcode 0x4b: room camera-pair remap — swaps two cut/camera ids (operands pc+1,pc+2) throughout the room cam-def list (DAT_800ac778+0x28, 0x1 |
-| 0x4c | 0x80040858 | ·portable | field-setter |  | Opcode 0x4c registers an effect-script subroutine/slot: saves the bytecode pointer pc+2 into pool table DAT_800b2368[id*4] (id = u8 @pc+1),  |
+| 0x4c | 0x80040858 | ✅PORTED | field-setter |  | Opcode 0x4c registers an effect-script subroutine/slot: saves the bytecode pointer pc+2 into pool table DAT_800b2368[id*4] (id = u8 @pc+1),  |
 | 0x4d | 0x800408a8 | ·portable | field-setter |  | Opcode 0x4d: copy a 10-byte operand block from bytecode into fields (+0x0/+0x1 bytes, +0xa/+0xc/+0xe halfwords) of the effect-pool record se |
 | 0x4e | 0x80041980 | —defer | external-global | 0x80019ca8 | Opcode 0x4e: reads a 5-byte instruction (2 id bytes + selector + index), picks one of four external base tables (0x80072d4c/0x800aca74/0x800 |
 | 0x4f | 0x80016f20 | —defer | draw-sprite | 0x80017048 | Opcode 0x4f: configures an effect/sprite pool object (slot = pc[1], table 0x800b23f4) from a 22-byte operand block, sets a draw-link flag fi |

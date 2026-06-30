@@ -8,6 +8,7 @@
  */
 #include "re15_esp_vm.h"
 #include "re15_actor.h"   /* op2e/op32 work-target = a g_actors[] entity */
+#include "re15_esp.h"     /* op4c spawns into the ESP-B effect-sprite pool */
 #include <string.h>
 #include <stdint.h>
 
@@ -132,6 +133,7 @@ static int op_member_set_reg(re15_espvm_instance_t *inst);
 static int op_anim_flags(re15_espvm_instance_t *inst);
 static int op_get_field(re15_espvm_instance_t *inst);
 static int op_get_field_cmp(re15_espvm_instance_t *inst);
+static int op_espr_spawn(re15_espvm_instance_t *inst);
 
 /* Install the ported real opcode table (PTR_800744a8). Unported entries stay the stub. C2 grows
  * this as more @0x800744a8 handlers are reverse-engineered. NB: re15_espvm_reset() must call this
@@ -174,6 +176,7 @@ static void re15_espvm_install_ops(void)
     s_optable[0x35] = op_member_set_reg; /* member-set from register (0x80041108) */
     s_optable[0x3d] = op_get_field;      /* get entity field -> register (0x80041238) */
     s_optable[0x3e] = op_get_field_cmp;  /* compare entity field -> CONT/YIELD (0x80041290) */
+    s_optable[0x4c] = op_espr_spawn;     /* spawn an ESP-B effect-sprite (0x80040858) */
     s_optable[0x42] = op_init_state;   /* init bound actor state block (0x80041f88) */
     s_optable[0x43] = op_anim_flags;   /* anim_flags SET/OR/XOR (0x80041fb8) */
     s_optable[0x1b] = op_for_begin_reg;/* FOR-begin, count from register (0x8003f5d0) */
@@ -803,6 +806,24 @@ static int op_get_field_cmp(re15_espvm_instance_t *inst)
     INST_SETPC(inst, pc + 6);
     int16_t  lhs = (int16_t)re15_actor_get_member(inst->bound_slot, (uint8_t)(w & 0xff));
     return espvm_cmp7(w >> 8, lhs, rhs) ? RE15_ESPVM_RET_CONT : RE15_ESPVM_RET_YIELD;
+}
+
+/* 0x4c: spawn effect-sprite (the SCD op_sce_espr, ESP-B pool spawn @0x80040858). The original
+ * stores DAT_800b2368[u8@pc+1] = pc+2 (the 16-byte effect record) and bumps the count; the port
+ * copies the record fields into the ESP-B pool via re15_esp_spawn. Record (relative to pc+2):
+ * type@+0, x@+2 (s16), y@+4 (s16), w@+6 (u16), h@+8 (u16). pc+=0x12; CONT. (0x80040858) */
+static int op_espr_spawn(re15_espvm_instance_t *inst)
+{
+    uint32_t pc = INST_PC(inst);
+    const uint8_t *rec = inst->code_base + pc + 2;
+    uint8_t  type = rec[0];
+    int16_t  x = (int16_t)rd_u16(rec + 2);
+    int16_t  y = (int16_t)rd_u16(rec + 4);
+    uint16_t w = rd_u16(rec + 6);
+    uint16_t h = rd_u16(rec + 8);
+    INST_SETPC(inst, pc + 0x12);
+    re15_esp_spawn(type, x, y, w, h, 0);
+    return RE15_ESPVM_RET_CONT;
 }
 
 /* 0x19: pop level — level--; pc = saved-pc[level-1] (+0x144 + (level-1)*4); restore the loop

@@ -10,6 +10,7 @@
  */
 #include "re15_esp_vm.h"
 #include "re15_actor.h"
+#include "re15_esp.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -859,6 +860,36 @@ static int run_work_op_tests(void)
     return fail;
 }
 
+/* ESP-C2 batch 11 — the effect-pool spawn op 0x4c (connects the VM to the ESP-B pool). */
+static int s_esp_type;
+static void esp_rec(re15_esp_slot_t *slot, int idx) { (void)idx; s_esp_type = slot->type; }
+
+static int run_pool_op_tests(void)
+{
+    int fail = 0;
+    printf("  --- ESP-C2 batch 11: effect-pool spawn 0x4c (ESP-B) ---\n");
+    uint8_t code[48];
+    for (int i = 0; i < 48; i++) code[i] = 0;
+    code[0]=0x20;
+    /* op4c @0x20: [0x4c, slot, <record type@+2=3, x@+4=100, y@+6=50, w@+8=40, h@+a=30>], halt @0x32 */
+    code[0x20]=0x4c; code[0x21]=0x00;
+    code[0x22]=0x03; code[0x24]=100; code[0x26]=50; code[0x28]=40; code[0x2a]=30;
+    code[0x32]=0xFF;   /* pc = 0x20 + 0x12 */
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    re15_esp_pool_reset();
+    re15_espvm_alloc(0, 0, code); re15_espvm_run_all();
+    if (re15_esp_pool_count() != 1) {
+        fprintf(stderr, "FAIL: (14) op4c pool count=%d\n", re15_esp_pool_count()); fail = 1; }
+    /* the spawned AABB [100..140]x[50..80]: a cull point inside dispatches handler with type 3. */
+    s_esp_type = -1;
+    int n = re15_esp_run(110, 60, esp_rec);
+    if (n != 1 || s_esp_type != 3) {
+        fprintf(stderr, "FAIL: (14) spawned AABB dispatch n=%d type=%d\n", n, s_esp_type); fail = 1; }
+    re15_esp_pool_reset();
+    if (!fail) printf("  (14) PASS: op4c spawns an ESP-B effect-sprite (type/x/y/w/h byte-true)\n");
+    return fail;
+}
+
 int main(void)
 {
     int fail = 0;
@@ -951,6 +982,8 @@ int main(void)
     if (run_cond_op_tests()) fail = 1;
     /* (13) the work-target ops 0x2e / 0x32. */
     if (run_work_op_tests()) fail = 1;
+    /* (14) the effect-pool spawn op 0x4c. */
+    if (run_pool_op_tests()) fail = 1;
 
     if (fail) { fprintf(stderr, "\nESP-VM TEST FAILED\n"); return 1; }
     printf("\nPASS: ESP effect-script VM (C1) — pool + FUN_8003f0a0 dispatch byte-true\n");
