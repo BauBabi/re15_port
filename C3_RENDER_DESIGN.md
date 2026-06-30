@@ -108,6 +108,22 @@ Verifiziert: Subsystem 2 ist ein **Partikel-/Sub-Objekt-System**, kein einfacher
   ANDERS als der Port-Skeletal-Pfad. Port = eigenes Partikel-Subsystem (Pool + Tick/Transform +
   Projektion → textri-Quad mit Effekt-TIM), positioniert per Owner-Transform.
 
+## 2c. EFF-Bank-Clip-Format (empirisch aus ROOM1140.RDT, 2026-06-30)
+Die op-0x3a-Effekt-Bank = RDT+0x4C `effectStart` (=0x11e0), die `ESP-A` (`re15_esp.c`) bereits
+parst (EFF-Bodies @0x11E8 effect-05, @0x13B8 effect-07; verifiziert). EFF-Body-Layout
+(parsed real bytes):
+- `word0` (+0): `count_a (lo16) | count_b (hi16)`. effect-05: count_a=9, count_b=29.
+- **Bank-Header** (8 B @+4) = `FUN_80019700` bankhdr[+4]/+6/+8/+10: `{clut≈0x7840, V/0, clipPtr=0x0100,
+  params=0x1801}`. (bankhdr[0]=count_a treibt `t9=count_a*4+4`.)
+- **Anim-Records** (8 B, @+0xc..): `{U(2), V(2), clipRef f3(2), params f4(2)}`; f3 läuft in 4er-Schritten
+  (0x0401,0x0405,0x0409,…) = Frame→UV-Cell-Index; f4=0x1801 (Dauer/Flags).
+- **UV-Cells** (4 B, count_b Stück, @+0x4c): `{u, v, w, h}` = Textur-Rechtecke in der Effekt-TIM;
+  U-Grid 0/24/48/72/96…, W/H ≈ 232/240, V=0 (eine Zeile). effect-07: U-Grid 0/32/64/96… W/H=240.
+- ⚠️ **Offen:** die exakte `FUN_80019700`-Parse-Schleife (`puVar10 += *puVar10*0x14+2`, Copy von
+  8 Words → slot+0x00..0x1c) muss noch Feld-für-Feld dekodiert werden, um den Parser byte-true zu
+  schreiben (welcher Sub-Index → welche Anim-Record/UV-Cell, das f4-params-Encoding).
+- Effekt-TIM: `out->eff[i].tim_off` (ESP-A) → TIM @0x1A628/0x1CA68; GPU-Upload nötig.
+
 ## 3. op 0x3a `Sce_espr_on` (Spawn, Subsystem 2) — byte-true (16 Bytes)
 `FUN_80019700(a0,a1,a2,a3)` spawnt in `DAT_800a73b8` (verifiziert: `addiu s3,s3,29624`
 @0x80019724; stride 132 @0x80019794-9c; 96 Slots @0x8004978c; busy `+0x6c`, alive=3;
