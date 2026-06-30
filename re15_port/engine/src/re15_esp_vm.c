@@ -111,6 +111,9 @@ static int op_set_target(re15_espvm_instance_t *inst);
 static int op_set_pos(re15_espvm_instance_t *inst);
 static int op_set_rot(re15_espvm_instance_t *inst);
 static int op_init_state(re15_espvm_instance_t *inst);
+static int op_member_set_imm(re15_espvm_instance_t *inst);
+static int op_member_set_reg(re15_espvm_instance_t *inst);
+static int op_anim_flags(re15_espvm_instance_t *inst);
 
 /* Install the ported real opcode table (PTR_800744a8). Unported entries stay the stub. C2 grows
  * this as more @0x800744a8 handlers are reverse-engineered. NB: re15_espvm_reset() must call this
@@ -149,7 +152,10 @@ static void re15_espvm_install_ops(void)
     s_optable[0x31] = op_integrate;    /* per-frame position integrator (0x80040fd4) */
     s_optable[0x32] = op_set_pos;      /* set bound actor position x/y/z (0x80041048) */
     s_optable[0x33] = op_set_rot;      /* set bound actor rotation x/y/z (0x80041080) */
+    s_optable[0x34] = op_member_set_imm; /* member-set immediate (0x800410b8) */
+    s_optable[0x35] = op_member_set_reg; /* member-set from register (0x80041108) */
     s_optable[0x42] = op_init_state;   /* init bound actor state block (0x80041f88) */
+    s_optable[0x43] = op_anim_flags;   /* anim_flags SET/OR/XOR (0x80041fb8) */
     s_optable[0x1b] = op_for_begin_reg;/* FOR-begin, count from register (0x8003f5d0) */
     s_optable[0x23] = op_reg_compare;  /* register compare -> CONT/YIELD (0x8003ff68) */
     s_optable[0x24] = op_reg_set;      /* register = s16 imm (0x80040018) */
@@ -708,6 +714,47 @@ static int op_init_state(re15_espvm_instance_t *inst)
     if (inst->bound_slot >= 0 && inst->bound_slot < RE15_ACTOR_MAX) {
         re15_actor_t *t = &g_actors[inst->bound_slot];
         t->state = 1; t->sub_state_1 = 0; t->sub_state_2 = 0; t->sub_state_3 = 0;
+    }
+    return RE15_ESPVM_RET_CONT;
+}
+
+/* 0x34: member-set (immediate) — bound entity member[u8@pc+1] = s16@pc+2, via the byte-true
+ * 20-member dispatch FUN_8004116c (== re15_actor_set_member). pc+=4; CONT. (0x800410b8) */
+static int op_member_set_imm(re15_espvm_instance_t *inst)
+{
+    uint32_t pc  = INST_PC(inst);
+    uint8_t  mid = inst->code_base[pc + 1];
+    int16_t  v   = (int16_t)rd_u16(inst->code_base + pc + 2);
+    INST_SETPC(inst, pc + 4);
+    re15_actor_set_member(inst->bound_slot, mid, v);   /* slot<0 -> internal no-op */
+    return RE15_ESPVM_RET_CONT;
+}
+
+/* 0x35: member-set (from register) — bound entity member[u8@pc+1] = reg[u8@pc+2]. pc+=3; CONT.
+ * (0x80041108) */
+static int op_member_set_reg(re15_espvm_instance_t *inst)
+{
+    uint32_t pc   = INST_PC(inst);
+    uint8_t  mid  = inst->code_base[pc + 1];
+    uint8_t  ridx = inst->code_base[pc + 2];
+    INST_SETPC(inst, pc + 3);
+    re15_actor_set_member(inst->bound_slot, mid, (int16_t)rd_u16(s_reg + (uint32_t)ridx * 2));
+    return RE15_ESPVM_RET_CONT;
+}
+
+/* 0x43: anim-flags modify — the bound entity's anim_flags (entity+0x1c4 = member 16):
+ * sub-mode@pc+1 = 0 OR, 1 SET, 2 XOR; value = u16@pc+2. pc+=4; CONT. (0x80041fb8) */
+static int op_anim_flags(re15_espvm_instance_t *inst)
+{
+    uint32_t pc   = INST_PC(inst);
+    uint8_t  mode = inst->code_base[pc + 1];
+    uint16_t v    = rd_u16(inst->code_base + pc + 2);
+    INST_SETPC(inst, pc + 4);
+    if (inst->bound_slot >= 0 && inst->bound_slot < RE15_ACTOR_MAX) {
+        re15_actor_t *t = &g_actors[inst->bound_slot];
+        if      (mode == 1) t->anim_flags = v;          /* SET */
+        else if (mode == 0) t->anim_flags |= v;         /* OR  */
+        else if (mode == 2) t->anim_flags ^= v;         /* XOR */
     }
     return RE15_ESPVM_RET_CONT;
 }

@@ -1,7 +1,7 @@
 # RE1.5 Effect-Script VM — Opcode Map (@0x800744a8, 95 ops 0x00-0x5e)
 
 Dispatch: `FUN_8003f0a0` runs `(*table[*pc])(instance)` per active 0x170-instance. Port: `re15_esp_vm.c`.
-Status: **✅PORTED** = byte-true in re15_esp_vm.c (re15_espvm_install_ops) + tested (test_esp_vm). **39/95 ported.**
+Status: **✅PORTED** = byte-true in re15_esp_vm.c (re15_espvm_install_ops) + tested (test_esp_vm). **42/95 ported.**
 Classification of 0x0d-0x5e by the 77-agent workflow (2026-06-30); every PORTED row self-disassembled before porting.
 `portable_now` = pure instance-local + bytecode operands (no external pool/work-struct/GTE/audio).
 ⚠️ The rows marked `·portable` were AGENT-flagged portable but self-verified to deref the work-struct @inst+0x154
@@ -56,8 +56,8 @@ or the effect pool DAT_800b2368 -> actually **defer** (see deferred groups).
 | 0x31 | 0x80040fd4 | ✅PORTED | field-setter |  | Opcode 0x31: per-tick integrator — adds six u16 velocity/delta fields (+0x164..+0x16e) into six u16 accumulator fields (+0x158..+0x162) on t |
 | 0x32 | 0x80041048 | ✅PORTED | field-setter |  | Opcode 0x32: reads three signed-16 operands from the bytecode and stores them as three 32-bit words at offsets +0x34/+0x38/+0x3c of the inst |
 | 0x33 | 0x80041080 | ✅PORTED | field-setter |  | Opcode 0x33: copies three u16 bytecode operands (pc+2/+4/+6) into the render/output struct pointed to by instance+0x154 at +0x68/+0x6a/+0x6c |
-| 0x34 | 0x800410b8 | —defer | field-setter | 0x8004116c | Opcode 0x34: writes the s16 operand at [pc+2] into a field (selected by byte [pc+1], table 0..0x13) of the effect object pointed to by insta |
-| 0x35 | 0x80041108 | —defer | field-setter | 0x8004116c | Opcode 0x35: SET actor member — selector byte[pc+1] picks an actor field, byte[pc+2] indexes external global table DAT_800b0fd0 (lh) for the |
+| 0x34 | 0x800410b8 | ✅PORTED | field-setter | 0x8004116c | Opcode 0x34: writes the s16 operand at [pc+2] into a field (selected by byte [pc+1], table 0..0x13) of the effect object pointed to by insta |
+| 0x35 | 0x80041108 | ✅PORTED | field-setter | 0x8004116c | Opcode 0x35: SET actor member — selector byte[pc+1] picks an actor field, byte[pc+2] indexes external global table DAT_800b0fd0 (lh) for the |
 | 0x36 | 0x80041624 | —defer | draw-sprite | 0x80045024 | Opcode 0x36: spawn/draw a positioned effect-sprite — picks a world-origin base (0/player@0x800b..ca94 / enemy_array@0x800b..cea c / object-p |
 | 0x37 | 0x8004175c | —defer | field-setter |  | Opcode 0x37: byte-setter — resolves a 12-byte struct in the external pool behind DAT_800ac778 (mem[+0x20] table indexed by op1, element op2) |
 | 0x38 | 0x800417ac | —defer | field-setter |  | Opcode 0x38: writes a 4×16-bit record (two u16 + two s16 from operands) into a stride-0xC slot of an external effect/object pool (indexed vi |
@@ -71,7 +71,7 @@ or the effect pool DAT_800b2368 -> actually **defer** (see deferred groups).
 | 0x40 | 0x80041be4 | —defer | draw-sprite |  | Opcode 0x40: configures a sprite/effect render record (pointed at by instance+0x140) — sets a flags-gated animation state, position params ( |
 | 0x41 | 0x80041e98 | —defer | draw-sprite |  | Opcode 0x41: configures the instance's associated draw/sprite primitive (struct at instance+0x154) — sets a GPU blend/primitive code byte at |
 | 0x42 | 0x80041f88 | ✅PORTED | field-setter |  | Opcode 0x42: dereferences instance pointer field +0x154 and sets sub-struct bytes [+0x4]=1, [+0x5..+0x7]=0 (init/reset a flag block), advanc |
-| 0x43 | 0x80041fb8 | —defer | field-setter |  | Opcode 0x43: SET/OR/XOR (sub-mode at pc+1) a u16 operand (pc+2) into the +0x1c4 field of a struct pointed to by instance+0x154; advances pc+ |
+| 0x43 | 0x80041fb8 | ✅PORTED | field-setter |  | Opcode 0x43: SET/OR/XOR (sub-mode at pc+1) a u16 operand (pc+2) into the +0x1c4 field of a struct pointed to by instance+0x154; advances pc+ |
 | 0x44 | 0x800420a0 | —defer | spawn-alloc | 0x8004efe4,0x80039b2c | Opcode 0x44 = SPAWN-ENTITY: allocates a fresh ~0x170-byte entity from the effect/entity pool (DAT_800ac77c), initializes ~40 fields from an  |
 | 0x45 | 0x800428d4 | —defer | external-global | 0x800396a8 | Opcode 0x45: reads 2 operand bytes [pc+1],[pc+2], calls helper 0x800396a8 with a0=(op1+1), a1=op2 to set a byte field on all matching entrie |
 | 0x46 | 0x80040738 | —defer | field-setter |  | Opcode 0x46: 10-byte field-setter that pokes an object fetched from the EXTERNAL global table @0x800ac9b0 (indexed by operand [pc+1]) — sets |

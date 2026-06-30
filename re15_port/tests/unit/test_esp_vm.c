@@ -796,8 +796,41 @@ static int run_work_op_tests(void)
         fprintf(stderr, "FAIL: (13e) op42 state=%d sub=%d/%d/%d\n", g_actors[0].state,
                 g_actors[0].sub_state_1, g_actors[0].sub_state_2, g_actors[0].sub_state_3); fail = 1; }
 
+    /* (13f) op34 member-set immediate: member 4 (rot_y) = 0x0700. */
+    for (int i = 0; i < 48; i++) s_wcode[i] = 0;
+    s_wcode[0]=0x20;
+    s_wcode[0x20]=0x2e; s_wcode[0x21]=0x01; s_wcode[0x22]=0x00;
+    s_wcode[0x23]=0x34; s_wcode[0x24]=0x04; s_wcode[0x25]=0x00; s_wcode[0x26]=0x07; s_wcode[0x27]=0xFF;
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    g_actors[0].rot_y = -1;
+    re15_espvm_alloc(0, 0, s_wcode); re15_espvm_run_all();
+    if (g_actors[0].rot_y != 0x0700) { fprintf(stderr, "FAIL: (13f) op34 rot_y=%d\n", g_actors[0].rot_y); fail = 1; }
+
+    /* (13g) op35 member-set from register: member 8 (state) = reg[6]=0x0234 -> state=(u8)0x34. */
+    for (int i = 0; i < 48; i++) s_wcode[i] = 0;
+    s_wcode[0]=0x20;
+    s_wcode[0x20]=0x2e; s_wcode[0x21]=0x01; s_wcode[0x22]=0x00;
+    s_wcode[0x23]=0x35; s_wcode[0x24]=0x08; s_wcode[0x25]=0x06; s_wcode[0x26]=0xFF;
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    re15_espvm_reg_set(6, 0x0234); g_actors[0].state = 0;
+    re15_espvm_alloc(0, 0, s_wcode); re15_espvm_run_all();
+    if (g_actors[0].state != 0x34) { fprintf(stderr, "FAIL: (13g) op35 state=0x%x\n", g_actors[0].state); fail = 1; }
+
+    /* (13h) op43 anim_flags: SET 0x00f0, then OR 0x0f00 -> 0x0ff0, then XOR 0x00ff -> 0x0f0f. */
+    for (int i = 0; i < 48; i++) s_wcode[i] = 0;
+    s_wcode[0]=0x20;
+    s_wcode[0x20]=0x2e; s_wcode[0x21]=0x01; s_wcode[0x22]=0x00;
+    s_wcode[0x23]=0x43; s_wcode[0x24]=0x01; s_wcode[0x25]=0xf0; s_wcode[0x26]=0x00;   /* SET 0x00f0 */
+    s_wcode[0x27]=0x43; s_wcode[0x28]=0x00; s_wcode[0x29]=0x00; s_wcode[0x2a]=0x0f;   /* OR  0x0f00 */
+    s_wcode[0x2b]=0x43; s_wcode[0x2c]=0x02; s_wcode[0x2d]=0xff; s_wcode[0x2e]=0x00;   /* XOR 0x00ff */
+    s_wcode[0x2f]=0xFF;
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    g_actors[0].anim_flags = 0;
+    re15_espvm_alloc(0, 0, s_wcode); re15_espvm_run_all();
+    if (g_actors[0].anim_flags != 0x0f0f) { fprintf(stderr, "FAIL: (13h) op43 anim_flags=0x%x\n", g_actors[0].anim_flags); fail = 1; }
+
     if (!fail) printf("  (13) PASS: work-target ops byte-true "
-                      "(op2e bind player/entity/clear, op32 set-pos, op33 set-rot, op42 init-state)\n");
+                      "(bind/clear, set-pos/rot/state, member-set imm+reg, anim_flags)\n");
     return fail;
 }
 
