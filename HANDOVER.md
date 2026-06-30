@@ -611,8 +611,8 @@ Sandbox **erfolgreich gefahren** (re15-room-capture: 2 Live-Captures + 1 Menüsh
   Rechts IGNORIERT → die Menü-Eingabe muss erst re-aktiviert werden (Up×2→Spitze, Down→JUMP), *dann* steppt Links/Rechts (±1 Raum),
   Dreieck=Stage, Square=laden. In `re15_quickload.py` eingebaut + in der `re15-room-capture`-Skill dokumentiert; Base
   `stage_saves/mzd_debugmenu.sav` eingecheckt + Default. **Befunde (verifiziert):** r0=124 OPENING(=ROOM1240/Boot), 125 LOBBY,
-  126 SEWER PASSAGE, --left10=114 SEWER EXIT, --right3=100 BATH-LOCKERS (Square-Load bestätigt, 96 % non-black). **Die Debug-JUMP-
-  Nummer ≠ Port-ROOM####** (114=SEWER EXIT ≠ ROOM1140).
+  126 SEWER PASSAGE, --left 10 = 0x11A SEWER EXIT, --right3=100 BATH-LOCKERS (Square-Load bestätigt, 96 % non-black). **Die Debug-JUMP-
+  Nummern sind HEX** (0x11A SEWER EXIT = --left 10; **0x114 BRIEFING = ROOM1140 = --left 16** — siehe SECTION 0 Learning 1).
 - **C11-Live-Capture: der BRIEFING-RAUM ist gefunden + player-alive gesichert (2026-06-30, Nutzer-korrigiert).** Der Port-ROOM1140
   = **`0x114 BRIEFING ROOM`** im Debug-JUMP = **`--left 16`** von der Base (die JUMP-Nummern sind **HEX**!). Ein CLEAN JUMP lädt die
   **5 Briefing-Zombies** (Typ 0x10/0x11/0x16, Hitbox **400/1440**, slot0=0x16 grid 0x88 lying) — matcht den Port (`test_room1140_spawn`)
