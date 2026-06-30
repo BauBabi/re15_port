@@ -39,6 +39,7 @@
 #include "re15_enemy_ai.h"
 #include "re15_enemy.h"    /* re15_enemy_alloc/find/reset — mock the death-clip bank */
 #include "re15_damage.h"   /* re15_damage_seed_rng */
+#include "re15_player.h"   /* re15_player_tick + RE15_PAD_BIT_R1 (the aim pose, Phase 8.14) */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -611,6 +612,29 @@ int main(void)
 
         if (!fail)
             printf("  (15) per-state clips: ENGAGE/TURN=+0x1d4 variant; GRAB (+0x5-3)*3+{0,1}->release 17\n");
+    }
+
+    /* (16): the PLAYER AIM pose (Phase 8.14) — holding R1 roots the player + plays the byte-true
+     * aim/fire clip (PL00.EDD clip 18 = action-8 phase4/5 @0x800359e0), released reverts to idle. */
+    {
+        g_scd.player_mode = 0; g_scd.message_display_frames = 0; g_scd.message_query = 0;
+        pl->motion = 200;   /* a non-aim sentinel (idle) */
+        pl->hp = 100; pl->rot_y = 0; pl->x = 0; pl->z = 0;
+        re15_player_tick(NULL, RE15_PAD_BIT_R1);          /* hold R1 -> aim */
+        if (pl->motion != 18 /* PL00.EDD aim clip */) {
+            fprintf(stderr, "FAIL: (16) hold R1 -> aim pose (motion 18), ist %d\n", pl->motion); fail = 1; }
+        int32_t ax = pl->x, az = pl->z;
+        re15_player_tick(NULL, RE15_PAD_BIT_R1 | RE15_PAD_BIT_UP);   /* aiming + UP: rooted (no move) */
+        if (pl->x != ax || pl->z != az) {
+            fprintf(stderr, "FAIL: (16) aiming roots the player (no translation on UP), moved %d,%d\n",
+                    (int)(pl->x - ax), (int)(pl->z - az)); fail = 1; }
+        if (pl->motion != 18) {
+            fprintf(stderr, "FAIL: (16) still aiming -> motion 18, ist %d\n", pl->motion); fail = 1; }
+        re15_player_tick(NULL, 0);                        /* release R1 -> revert to idle/walk */
+        if (pl->motion == 18) {
+            fprintf(stderr, "FAIL: (16) release R1 -> leave the aim pose, motion still %d\n", pl->motion); fail = 1; }
+        if (!fail)
+            printf("  (16) player AIM: R1 held -> PL00 clip 18 (rooted), released -> idle\n");
     }
 
     free(buf);

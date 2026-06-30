@@ -85,6 +85,15 @@
 #define RE15_MOTION_IDLE_LEG      212   /* hand-thru-hair-> W01 clip 4 (50f)  */
 #define RE15_MOTION_IDLE_HURT1    213   /* injured idle  -> PL00 clip 22 (30f) HP<50 */
 #define RE15_MOTION_IDLE_HURT2    214   /* worse-injured -> PL00 clip 23 (30f) HP<30 */
+/* AIM/FIRE pose (Phase 8.14). NOT a sentinel — the byte-true PL00.EDD clip index used DIRECTLY:
+ * the player aim/fire FSM (action-8 sub-FSM @0x80035810) writes the player motion (entity+0x94 =
+ * 0x800acae8) from the COMMON bank PL00.EDD: phase2 RAISE = clip 0x11=17 (deferred, rate-aware),
+ * phase4 AIM-READY + phase5 FIRE-discharge = clip 0x12=18 (@0x800359e0, the discharge re-plays it).
+ * Setting p->motion = 18 (a real PL00 clip, NOT a sentinel) makes anim_select skip the W01/idle
+ * remap and play PL00.EDD clip 18 with HOLD-LAST (clip_override=-1) = the held aim pose; a fire
+ * resets anim_frame=0 -> clip 18 replays = the visible recoil (game_step). Bank: in a gameplay
+ * (RBJ-less) room def_*==PL00.EDD, so clip 18 indexes the same byte-true bank the original uses. */
+#define RE15_MOTION_AIM            18    /* PL00.EDD clip 18 = aim-ready / fire (held, hold-last) */
 /* One-shot phase durations = the clip's exact frame_count (compute_actor_kf maps
  * anim_frame 1:1, so one cycle = frame_count ticks; a longer timer replays it —
  * that was the "hair 2x" bug). Timer-gated phases use the byte-exact pseudo-random
@@ -150,6 +159,14 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
             p->rot_y = (int16_t)((int)p->rot_y + yaw_delta);
         }
 
+        /* AIM (Phase 8.14, faithful-line of the action-8 aim FSM @0x80035810): hold R1 to aim.
+         * The original aim state ROOTS the player (no walk/run translation) while keeping the gun
+         * up; turning (rot_y, above) stays allowed. Disable forward/back move so want_motion below
+         * picks the aim pose, not walk/idle. (The exact 3-level command FSM + the raise clip 17 +
+         * aim-elevation pitch are deferred; the held aim pose + the fire recoil are byte-true.) */
+        int aiming = (pad_bits & RE15_PAD_BIT_R1) != 0;
+        if (aiming) move_dir = 0;   /* rooted: no translation while aiming */
+
         /* Pick the locomotion state: forward = walk (or run if held), back = the
          * walk clip with a negated step (RE1.5 mode 8: motion 0x30, step negated —
          * no distinct back animation), nothing = idle. */
@@ -164,7 +181,11 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
 
         int16_t want_motion = RE15_MOTION_IDLE;
         int32_t speed = 0;
-        if (move_dir > 0) {
+        if (aiming) {
+            /* held aim pose = PL00.EDD clip 18 (hold-last). speed stays 0 (rooted). */
+            want_motion = RE15_MOTION_AIM;
+            s_idle_phase = -1;
+        } else if (move_dir > 0) {
             if (run) { want_motion = RE15_MOTION_RUN;  speed = RUN_SPEED_PER_FRAME;  }
             else     { want_motion = RE15_MOTION_WALK; speed = WALK_SPEED_PER_FRAME; }
             s_idle_phase = -1;
