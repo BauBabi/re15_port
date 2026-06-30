@@ -197,6 +197,29 @@ Teil des Zombie-AI-Ports (Death-Body war schon vorher deferred, siehe enemy_ai_c
    `LAB_8012016c`/`8012017c` (Effekt-Handler-Configs) byte-true porten → die volle Briefing-Zombie-
    Verhaltens-AI (Teil des 100%-Ports, [[reai-v2-full-port-mandate]]).
 
+## 2f. KORREKTUR (2026-07-01, Workflow+Verifikation): der Effekt-Dispatch ist eine Master-Tabelle, entity+5 wird ON DAMAGE gesetzt
+Wichtige Korrektur zu §2c-§2e (die „Anim-Phase/Death-Sequenz"-Deutung war falsch):
+- **`entity+0x5` (sub_state_1) wird ON DAMAGE gesetzt**, von genau zwei Funktionen (die EINZIGEN Writer des
+  Enemy-+5-Bytes in EXE+Overlay): `FUN_80012d60`:78 (Melee) `entity+5 = DAT_8006f430[hit_zone]`,
+  `FUN_80011f50`:165 (Spieler-Schuss) `entity+5 = weapon_id`. Gleicher Block: `entity+4=2`(hurt)/`=3`(death),
+  `entity+6=hit-dir-col`, `entity+7=0`. **Der Port macht das schon byte-true** (`re15_react_table[11]` ==
+  `DAT_8006f430` = `[03,03,09,0A,0B,0E,0F,10,11,12,14]`, gesetzt @`re15_enemy_take_damage:270`).
+- **Der Effekt-Dispatch ist eine 2D-MASTER-TABELLE @0x8011fb90**, `record=u32 code-ptr`, row-stride 0x20 (8 cols),
+  col-stride 4, indiziert `[entity+5 row][entity+6 col]`. Drei Views: HURT `FUN_80105a8c` (base 0x8011fb90,
+  verifiziert: `entity+5<<5 + entity+6<<2`), DEATH `FUN_80106ba4` (base 0x8011feac), ACTIVE flat
+  `PTR_LAB_8011fe30` (= master row 0x15 @0x8011fe30). Zombie-Main-Dispatch @0x8011f7b4[entity+4]:
+  [0]init FUN_80100688 / [1]active FUN_80101224 / [2]hurt FUN_80105a8c / [3]death FUN_80106ba4.
+- **`entity+5` des ROOM1140-Zombies ∈ {3,9,0xa,0xb,0xe,0xf,0x10,0x11,0x12,0x14}** (aus DAT_8006f430). Master-row 3 =
+  `FUN_80105b7c` (spawnt effect-0 0x2000); rows 9/…/0x14 col0 = NULL. **effect-0 ist NICHT in ROOM1140s Bank (05/07)**.
+  Der **effect-5-Handler `FUN_80106edc` ist master-row 0x20 (entity+5==0x20/flat 0x58) → ein HÖHERER/ANDERER Enemy**,
+  NICHT der ROOM1140-m0-Zombie (der maxt bei 0x14). → **meine Gore-Bricks (effect-0 Tick / effect-5 Setup) sind
+  byte-true, aber treffen ROOM1140 nicht.**
+- **Fazit:** die sichtbare ROOM1140-Zombie-Gore hat KEINEN sauberen Pfad über diese Mechanik (Zombie spawnt
+  effect-0/NULL, nicht die Room-05/07). Die Room-Effekte 05/07 sind wahrscheinlich kinematisch / für einen anderen
+  Enemy. **Nächste Einheit (byte-true, korrekt, per Mandat): den Master-Tabellen-Effekt-Dispatch porten**
+  (`FUN_80105a8c` HURT + die row-Handler) — die richtige Mechanik, auch wenn die ROOM1140-Sichtbarkeit von der
+  Effekt-ID↔Bank-Zuordnung abhängt (die noch zu klären ist: lädt das Original einen globalen Bank für effect-0?).
+
 ## 3. op 0x3a `Sce_espr_on` (Spawn, Subsystem 2) — byte-true (16 Bytes)
 `FUN_80019700(a0,a1,a2,a3)` spawnt in `DAT_800a73b8` (verifiziert: `addiu s3,s3,29624`
 @0x80019724; stride 132 @0x80019794-9c; 96 Slots @0x8004978c; busy `+0x6c`, alive=3;
