@@ -21,7 +21,7 @@ cmake --build re15_port/build && ctest --test-dir re15_port/build --timeout 30  
 2. **Overlay-File-Offset-Trap:** STAGE*.BIN-Overlays haben **KEINEN 0x800-Header** (`off = addr − 0x80100000`; nur die EXE hat den Header). Den Offset NIE selbst rechnen → `re15_disasm.py` (table/dis/read) bzw. `re15_ss.Ram` nutzen. (Ein ad-hoc `+0x800` las die Dispatch-Tabellen `@0x8011f840/890` als „null" → falscher „runtime-patched"-Schluss; korrekt gelesen stehen sie statisch in der BIN, 40/40 == RAM. `re15_runtime_table.py` = der Cross-Check statisch↔RAM.)
 3. **State-erreicht ≠ State-aktiv:** `+0x5=0x13` = engage + ein `(+0x90&3)`-gegateter forward-walk-Vorabcheck. In allen Live-Zombies ist `+0x90==0x00` → fw-Branch nie genommen → 0x13 == engage für ROOM1140 → nichts zu portieren. **IMMER Gate-Flags im Live-Save prüfen** (`re15_enemy_state.py --ai` / `re15_flag_sweep.py`), bevor man einen gegateten Pfad portiert.
 
-**AKTIVE ARBEIT — ESP-Sprite-Subsystem (Nutzer-gewählt):** **ESP-A** (byte-true Parser, 9c907ca2) + **ESP-B** (Pool + Spawn + AABB-Cull-Dispatch, c147f527) ERLEDIGT, 33/33. **ESP-C (Render) bleibt offen** — statischer Render-Pfad verworren (zwei Pools; Synthese-Kette `FUN_8003ee3c`→`FUN_80046a1c` hält NICHT), und der dynamische Capture-Versuch schlug fehl (Briefing-Spieler hat Messer w1, nicht Pistole; Muzzle ist eh 1-Frame). **Weg vorwärts:** (a) statisch den 0x170-Instanz-Pool-Render (`DAT_800b2b4c`) RE'n = der echte Effekt-Draw, ODER (b) einen PERSISTENTEN Effekt (Blut/Gore) in einem GUN-Raum capturen. Details: ESP-C unten. Volle Details: Abschnitt „ESP-SPRITE-SUBSYSTEM" unten. (Andere Optionen: Fade/Game-Over-UI · neuer Raum/Gegner · C11. Raise-Clip 17 ✓ 8.16.)
+**AKTIVE ARBEIT — ESP-Sprite-Subsystem (Nutzer-gewählt):** **ESP-A** (byte-true Parser, 9c907ca2) + **ESP-B** (Pool + Spawn + AABB-Cull-Dispatch, c147f527) ERLEDIGT, 33/33. **ESP-C (Render) = ein 3-Schichten-EFFEKT-SCRIPT-VM** (byte-true kartiert): Effekt-Pool → 0x170-Instanz-Pool (`DAT_800b2b4c`) → per-Instanz-Bytecode-VM `FUN_8003f0a0` mit **16+ Opcodes @0x800744a8** (ein Draw-Op = der 40×30-SPRT `FUN_80046a1c`). **Das ist ein dediziertes Mehr-Schritt-Phase-Projekt (C1 Instanz-Pool+VM-Loop, C2 die 16 Opcodes, C3 Bytecode-Quelle+TIM/UV-LUTs), NICHT in einem Rutsch.** (Statische Synthese-Kette hielt nicht; dynamischer Capture scheiterte — Briefing hat Messer w1, Muzzle eh 1-Frame.) Volle Karte mit allen Adressen: ESP-C unten. Volle Details: Abschnitt „ESP-SPRITE-SUBSYSTEM" unten. (Andere Optionen: Fade/Game-Over-UI · neuer Raum/Gegner · C11. Raise-Clip 17 ✓ 8.16.)
 
 ---
 
@@ -677,12 +677,21 @@ offset/flags-Split**, und nur die Pointer-/TIM-Tabellen werden ABWÄRTS gelesen 
     `DAT_800b2360 = 0`, kein Zombie hurt/death, Spieler HP 100/lebt. **ZWEI Gründe, warum der Briefing-Muzzle nicht capturebar ist:**
     (1) der **Muzzle ist 1 Frame** → beim Save-am-Ende längst weg; (2) der Briefing-Spieler hat **Waffe `DAT_800aca5d = 1`**
     (Messer/Melee, NICHT die Pistole w2) → gar kein Muzzle/Ranged-Hit. (Savestate verworfen, kein Effekt drin.)
-  - **WEG FÜR DEN NÄCHSTEN ANLAUF (priorisiert):** **(a) statisch** den **0x170-Instanz-Pool-Render** (`DAT_800b2b4c`, der allgemeine
-    Model/Sprite-Instanz-Pool, den `FUN_8003ee3c`/`FUN_8003edec` füllen) RE'n — das ist der ECHTE Effekt-Draw (zentrales Subsystem,
-    auch für andere Sprites). ODER **(b) dynamisch** in einem **GUN-equippten Gameplay-Raum** (nicht Briefing) einen **PERSISTENTEN**
-    Effekt (Blut/Death-Gore) capturen — der überlebt evtl. bis Save-Zeit, anders als der 1-Frame-Muzzle. Tools: `re15-savestate-ghidra`
-    + `re15-room-capture` (`--fire` da). PC-Render-Ziel bleibt: halbtransparenter Quad aus dem ESP-TIM-Atlas via SDL-Framebuffer +
-    `re15_render_shadow_quad`-Blend-Infra (render_pc.c), nach dem 3D-Pass.
+  - **VOLLE ARCHITEKTUR-KARTE (2026-06-30 byte-true RE't) — ESP-C ist ein 3-Schichten-VM, KEIN Render-Quad:**
+    1. **Effekt-Pool** `DAT_800b2360`/`2368` (ESP-B, portiert): spawn `0x80040858`, AABB-Cull-Walker `FUN_8004d5f0` →
+       `handler[type]` @`0x80074c68`. Type-3 `0x8004d728` → `FUN_8003ee3c(slot[0x0A],[0x0C])`.
+    2. **`FUN_8003ee3c`** = Allokator in den **0x170-Instanz-Pool** `DAT_800b2b4c` (10 Instanzen × 0x170) → `FUN_8003edec`
+       (Init: [1]=1, [0x140]=sub-ptr, [0x1c]=bytecode-ptr aus `DAT_800b3f70`). Jede Instanz hat einen **eigenen Bytecode** (pc in
+       `DAT_800b2b68`+i).
+    3. **`FUN_8003f0a0`** (per-frame Render, gerufen von `FUN_8003ef6c`/`FUN_8003f038`): pro aktiver Instanz läuft ein
+       **EFFEKT-SCRIPT-VM** = `(*PTR_800744a8[*instance_pc])(instance)`. Opcode-Tabelle **`@0x800744a8`** hat **16+ Opcodes**
+       (`0x8003f1d8`/f1f0/f258/f270/f2a0/f2dc/f328/f368/f3a4/f3e0/f428/f490/f4c4/f540/f674/f6f4). Einer dieser Draw-Opcodes ist der
+       40×30-SPRT-Builder `FUN_80046a1c` (`GetClut(0,0x1e4)`, code 0x66, UV-LUTs `DAT_80076244/46/274/76`).
+  - **→ ESP-C PORT = ein dediziertes MEHR-SCHRITT-PHASE-PROJEKT** (wie die SCD-VM, aber für Effekte): (C1) die 0x170-Instanz-Pool-
+    Struct + `FUN_8003f0a0`-Walker + die VM-Dispatch-Schleife; (C2) die 16 Opcode-Handler `@0x800744a8` einzeln RE'n+porten (v.a. die
+    Draw-Ops → der PC-Sprite-Quad); (C3) woher der Instanz-Bytecode kommt (`DAT_800b3f70`) + die TIM/UV-LUTs dumpen. Nicht in einem
+    Rutsch byte-true machbar. **ODER (b) dynamisch:** persistenten Effekt (Blut/Gore) in einem GUN-Raum capturen (nicht Briefing —
+    dort Messer w1). PC-Render-Ziel: halbtransparenter Quad aus dem ESP-TIM-Atlas via SDL-Framebuffer + `re15_render_shadow_quad`-Blend.
 - **ESP-D (MUZZLE-FLASH, das Nutzer-Ziel) — zuletzt:** `FUN_80045024` (Pistole = weapon a0>>24=2): **1-Frame**-Flash
   (`sltiu s0,0x10` single-burst, frame_count=1), halbtransparent. Wiring: nach `re15_player_weapon_fire(2)` in
   `game_step_common.c:114` ein `re15_esp_spawn(<pistol-flash-id>, muzzle_x, muzzle_y, type=3, duration=1)`. **UNKNOWN:** welche
