@@ -44,6 +44,7 @@ def main():
     ap.add_argument("--jump", action="store_true")      # force the JUMP even at right=0
     ap.add_argument("--menushot", action="store_true")  # capture the JUMP menu WITHOUT loading
     ap.add_argument("--provoke", type=float, default=0.0)  # seconds of post-load provocation movement
+    ap.add_argument("--advance", action="store_true")      # also tap Cross each step (skip dialog / open doors / navigate)
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
     T0 = time.monotonic()
@@ -93,11 +94,15 @@ def main():
             time.sleep(args.postload)
 
     if args.provoke > 0 and not args.menushot:
-        log("PROVOKE %.0fs (walk forward + rotate sweeps)" % args.provoke)
+        log("PROVOKE %.0fs (walk forward + rotate sweeps%s)" % (args.provoke, " + Cross/advance" if args.advance else ""))
         t_end = time.monotonic() + args.provoke
         seq = 0
         while time.monotonic() < t_end:
+            if args.advance:                                  # Cross: skip dialog / open a faced door / interact
+                tap(B.XUSB_GAMEPAD_A, hold=0.10, gap=0.25)
             hold_btn(B.XUSB_GAMEPAD_DPAD_UP, 2.5)
+            if args.advance:                                  # Cross again after closing on a door, then push through
+                tap(B.XUSB_GAMEPAD_A, hold=0.10, gap=0.25); hold_btn(B.XUSB_GAMEPAD_DPAD_UP, 1.2)
             hold_btn(B.XUSB_GAMEPAD_DPAD_RIGHT if seq % 2 == 0 else B.XUSB_GAMEPAD_DPAD_LEFT, 0.8)
             seq += 1
 

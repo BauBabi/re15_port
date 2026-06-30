@@ -586,11 +586,18 @@ Sandbox **erfolgreich gefahren** (re15-room-capture: 2 Live-Captures + 1 Menüsh
   `stage_saves/mzd_debugmenu.sav` eingecheckt + Default. **Befunde (verifiziert):** r0=124 OPENING(=ROOM1240/Boot), 125 LOBBY,
   126 SEWER PASSAGE, --left10=114 SEWER EXIT, --right3=100 BATH-LOCKERS (Square-Load bestätigt, 96 % non-black). **Die Debug-JUMP-
   Nummer ≠ Port-ROOM####** (114=SEWER EXIT ≠ ROOM1140).
-- **OFFEN (die volle Live-HURT/Grab-Bestätigung):** der **Briefing-Combat (ROOM1140) ist KEIN JUMP-Raum** — ein Debug-JUMP lädt die
-  Geometrie, aber das Spawn-SCD läuft nicht (gejumpter Raum = 0 Zombies). Die Briefing-Zombies sind eine **geskriptete New-Game-
-  Sequenz** (combat_death.sav = New Game + `--provoke`, nicht JUMP). Für ein PLAYER-ALIVE-Combat-Frame: New Game + kürzeres
-  `--provoke` (Spieler lebt) bis die Briefing-Zombies spawnen; für HURT zusätzlich `--provoke` um einen Square-Tap erweitern
-  (es schießt sonst nie). = die verbleibende C11-Schuld (die Navigation selbst ist jetzt gelöst + durable).
+- **C11-Live-Capture: 8 Läufe gefahren, TEIL-bestätigt + der Blocker präzise charakterisiert (2026-06-30).** Live bestätigt:
+  Elliot **0x47** Hitbox 450/1530 (player-alive in-game, ROOM1170-Briefing-Dialog); JUMP zu `114 SEWER EXIT` (=ROOM1140,
+  Debug-Nr=ROOM####/10) spawnt einen Gegner (1× **0x40**) → **JUMP führt das Spawn-SCD AUS** (mein früherer „kein Spawn"-Schluss
+  war falsch; 124 OPENING ist nur leer). Engage `+0x5=2` (combat_death) matcht den Port.
+- **BLOCKER (warum der player-alive 5-Zombie-Frame nicht automatisierbar war):** ROOM1140 via JUMP lädt eine **ANDERE SCD-Szenario-
+  Variante** (1× 0x40) als die Port-First-Visit (5 Zombies 0x10/0x11/0x16). Die 5-Zombie-Briefing ist die **geskriptete New-Game-
+  FIRST-VISIT-Sequenz**: Intro-Cinematic (~30-50s, 0x100-Freeze) → Elliot-Dialog (ROOM1170) → Spieler-Kontrolle → Zombies hinter
+  Türen tiefer in der Progression. Random-`--provoke`(+neuem `--advance`=Cross/Türen) erreicht nur Elliot/ROOM1170, navigiert die
+  Türen NICHT zuverlässig. `combat_death.sav` (7 Zombies, post-death) bleibt die einzige Ground-Truth dieser Szene.
+- **Verbleibende C11-Schuld:** ein player-alive 5-Zombie-Frame braucht deterministische Routen-Navigation (großer Automations-
+  Aufwand) ODER der Nutzer spielt bis zur Briefing + sichert. HURT zusätzlich: `--provoke`/`--advance` um R1+Square erweitern.
+  Die Capture-NAVIGATION selbst ist gelöst + durable (Stepping/Stage/Load getestet); nur die geskriptete Briefing-Progression bleibt.
 
 Werkzeuge: **`re15-psx-disasm`** (EXE/Overlay-Disasm), **`re15-savestate-ghidra`** (Live-RAM +
 Tabellen-Patch-Check), **`re15-room-capture`** (Raum laden/provozieren). Memory `reai-v2-foundation-combat`
