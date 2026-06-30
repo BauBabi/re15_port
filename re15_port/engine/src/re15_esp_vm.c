@@ -78,6 +78,16 @@ static int op_counter_set(re15_espvm_instance_t *inst);
 static int op_counter_wait(re15_espvm_instance_t *inst);
 static int op_counter_push(re15_espvm_instance_t *inst);
 static int op_wait_cond(re15_espvm_instance_t *inst);
+static int op_for_begin(re15_espvm_instance_t *inst);
+static int op_for_begin_nc(re15_espvm_instance_t *inst);
+static int op_for_next(re15_espvm_instance_t *inst);
+static int op_for_loop(re15_espvm_instance_t *inst);
+static int op_for_break(re15_espvm_instance_t *inst);
+static int op_for_popci(re15_espvm_instance_t *inst);
+static int op_skip6(re15_espvm_instance_t *inst);
+static int op_skip2(re15_espvm_instance_t *inst);
+static int op_block_setup(re15_espvm_instance_t *inst);
+static int op_pop_level(re15_espvm_instance_t *inst);
 
 /* Install the ported real opcode table (PTR_800744a8). Unported entries stay the stub. C2 grows
  * this as more @0x800744a8 handlers are reverse-engineered. NB: re15_espvm_reset() must call this
@@ -97,6 +107,16 @@ static void re15_espvm_install_ops(void)
     s_optable[0x0a] = op_counter_wait; /* counter-wait (0x8003f428) */
     s_optable[0x0b] = op_counter_push; /* counter-push (0x8003f490) */
     s_optable[0x0c] = op_wait_cond;    /* wait-condition (0x8003f4c4) */
+    s_optable[0x0d] = op_for_begin;    /* FOR-begin w/ count (0x8003f540) */
+    s_optable[0x0e] = op_for_next;     /* NEXT (0x8003f674) */
+    s_optable[0x10] = op_for_loop;     /* loop-back (0x8003f878) */
+    s_optable[0x11] = op_for_begin_nc; /* FOR-begin no-count (0x8003f8bc) */
+    s_optable[0x14] = op_skip6;        /* pc+=6 (0x8003fb38) */
+    s_optable[0x15] = op_skip2;        /* pc+=2 (0x8003fb50) */
+    s_optable[0x16] = op_for_popci;    /* pop counter-index (0x8003fb68) */
+    s_optable[0x17] = op_block_setup;  /* block setup (0x8003fb9c) */
+    s_optable[0x19] = op_pop_level;    /* pop level (0x8003fc50) */
+    s_optable[0x1a] = op_for_break;    /* FOR-break (0x8003fca8) */
     s_optable[0x1c] = op_nop;          /* nop-continue (0x8003f1c0) */
     s_optable[0x1d] = op_nop;          /* aliases of 0x8003f1d8 in the table (0x1d..0x20) */
     s_optable[0x1e] = op_nop;
@@ -342,6 +362,138 @@ static int op_wait_cond(re15_espvm_instance_t *inst)
     INST_SETPC(inst, INST_PC(inst) + 1);
     inst->mem[level + 8] = (uint8_t)(inst->mem[level + 8] - 1);   /* cidx-- */
     return RE15_ESPVM_RET_STOP;
+}
+
+/* ---- Phase ESP-C2 batch 3 — the 2nd loop subsystem (FOR-loops, 0x0d..0x1a) -----------------
+ * Indexed by the per-level counter-index ci = inst[level+8] over four per-level arrays:
+ *   DEPTHARR byte  @ inst + level*4    + 0x0c + ci
+ *   PCARR    u32   @ inst + level*0x10 + 0x20 + ci*4   (loop body start)
+ *   TGTARR   u32   @ inst + level*0x10 + 0x60 + ci*4   (loop end target)
+ *   CARRAY   u16   @ inst + level*8    + 0xa0 + ci*2   (iteration count, shared with 0x09/0x0a)
+ * All disasm-verified @0x8003f540..fcf0. */
+
+static uint32_t for_deptharr(int level, int ci) { return (uint32_t)(level * 4    + RE15_ESPVM_OFF_DEPTHARR + ci);     }
+static uint32_t for_pcarr(int level, int ci)    { return (uint32_t)(level * 0x10 + RE15_ESPVM_OFF_PCARR    + ci * 4); }
+static uint32_t for_tgtarr(int level, int ci)   { return (uint32_t)(level * 0x10 + RE15_ESPVM_OFF_TGTARR   + ci * 4); }
+static uint32_t for_carray(int level, int ci)   { return (uint32_t)(level * 8    + RE15_ESPVM_OFF_CARRAY   + ci * 2); }
+
+/* 0x0d: FOR-begin (count from bytecode) — ci++; CARRAY[ci]=u16@pc+4; TGTARR[ci]=(pc+6)+s16@pc+2;
+ * PCARR[ci]=pc+6; DEPTHARR[ci]=loop-depth[level]; pc+=6; CONT. (0x8003f540) */
+static int op_for_begin(re15_espvm_instance_t *inst)
+{
+    uint32_t pc    = INST_PC(inst);
+    int8_t   level = (int8_t)inst->mem[RE15_ESPVM_OFF_LEVEL];
+    int16_t  rel   = (int16_t)rd_u16(inst->code_base + pc + 2);
+    uint16_t count = rd_u16(inst->code_base + pc + 4);
+    int      ci    = (int8_t)(inst->mem[level + 8] + 1);
+    inst->mem[level + 8] = (uint8_t)ci;
+    uint32_t npc   = pc + 6;
+    wr_u16(inst->mem + for_carray(level, ci), count);
+    wr_u32(inst->mem + for_tgtarr(level, ci), npc + (uint32_t)(int32_t)rel);
+    wr_u32(inst->mem + for_pcarr(level, ci), npc);
+    INST_SETPC(inst, npc);
+    inst->mem[for_deptharr(level, ci)] = inst->mem[level + 4];
+    return RE15_ESPVM_RET_CONT;
+}
+
+/* 0x11: FOR-begin (no count) — ci++; PCARR[ci]=pc+4; TGTARR[ci]=(pc+4)+s16@pc+2;
+ * DEPTHARR[ci]=loop-depth[level]; pc+=4; CONT. (0x8003f8bc) */
+static int op_for_begin_nc(re15_espvm_instance_t *inst)
+{
+    uint32_t pc    = INST_PC(inst);
+    int8_t   level = (int8_t)inst->mem[RE15_ESPVM_OFF_LEVEL];
+    int16_t  rel   = (int16_t)rd_u16(inst->code_base + pc + 2);
+    int      ci    = (int8_t)(inst->mem[level + 8] + 1);
+    inst->mem[level + 8] = (uint8_t)ci;
+    uint32_t npc   = pc + 4;
+    wr_u32(inst->mem + for_pcarr(level, ci), npc);
+    INST_SETPC(inst, npc);
+    wr_u32(inst->mem + for_tgtarr(level, ci), npc + (uint32_t)(int32_t)rel);
+    inst->mem[for_deptharr(level, ci)] = inst->mem[level + 4];
+    return RE15_ESPVM_RET_CONT;
+}
+
+/* 0x0e: NEXT — CARRAY[ci]--; if != 0 pc=PCARR[ci] (loop back); else pc+=2, ci--. CONT. (0x8003f674) */
+static int op_for_next(re15_espvm_instance_t *inst)
+{
+    int8_t   level = (int8_t)inst->mem[RE15_ESPVM_OFF_LEVEL];
+    int8_t   ci    = (int8_t)inst->mem[level + 8];
+    uint8_t *cnt   = inst->mem + for_carray(level, ci);
+    uint16_t c     = (uint16_t)(rd_u16(cnt) - 1);
+    wr_u16(cnt, c);
+    if (c != 0) {
+        wr_u32(inst->mem + RE15_ESPVM_OFF_PC, rd_u32(inst->mem + for_pcarr(level, ci)));
+    } else {
+        INST_SETPC(inst, INST_PC(inst) + 2);
+        inst->mem[level + 8] = (uint8_t)(inst->mem[level + 8] - 1);
+    }
+    return RE15_ESPVM_RET_CONT;
+}
+
+/* 0x10: loop-back — pc=PCARR[ci]; ci--. CONT. (0x8003f878) */
+static int op_for_loop(re15_espvm_instance_t *inst)
+{
+    int8_t level = (int8_t)inst->mem[RE15_ESPVM_OFF_LEVEL];
+    int8_t ci    = (int8_t)inst->mem[level + 8];
+    wr_u32(inst->mem + RE15_ESPVM_OFF_PC, rd_u32(inst->mem + for_pcarr(level, ci)));
+    inst->mem[level + 8] = (uint8_t)(inst->mem[level + 8] - 1);
+    return RE15_ESPVM_RET_CONT;
+}
+
+/* 0x1a: FOR-break — pc=TGTARR[ci]; loop-depth[level]=DEPTHARR[ci]; ci--. CONT. (0x8003fca8) */
+static int op_for_break(re15_espvm_instance_t *inst)
+{
+    int8_t level = (int8_t)inst->mem[RE15_ESPVM_OFF_LEVEL];
+    int8_t ci    = (int8_t)inst->mem[level + 8];
+    wr_u32(inst->mem + RE15_ESPVM_OFF_PC, rd_u32(inst->mem + for_tgtarr(level, ci)));
+    inst->mem[level + 4] = inst->mem[for_deptharr(level, ci)];
+    inst->mem[level + 8] = (uint8_t)(inst->mem[level + 8] - 1);
+    return RE15_ESPVM_RET_CONT;
+}
+
+/* 0x16: pop counter-index — ci--; pc+=2. CONT. (0x8003fb68) */
+static int op_for_popci(re15_espvm_instance_t *inst)
+{
+    int8_t level = (int8_t)inst->mem[RE15_ESPVM_OFF_LEVEL];
+    inst->mem[level + 8] = (uint8_t)(inst->mem[level + 8] - 1);
+    INST_SETPC(inst, INST_PC(inst) + 2);
+    return RE15_ESPVM_RET_CONT;
+}
+
+/* 0x14: pc+=6; CONT. (0x8003fb38)   0x15: pc+=2; CONT. (0x8003fb50) */
+static int op_skip6(re15_espvm_instance_t *inst) { INST_SETPC(inst, INST_PC(inst) + 6); return RE15_ESPVM_RET_CONT; }
+static int op_skip2(re15_espvm_instance_t *inst) { INST_SETPC(inst, INST_PC(inst) + 2); return RE15_ESPVM_RET_CONT; }
+
+/* 0x17: block setup — loop-depth[level]=u8@pc+1; counter-index[level]=u8@pc+2;
+ * sp = level*0x20 + 0xc0 + depth*4 + 4; pc += s16@pc+4 (relative). CONT. (0x8003fb9c) */
+static int op_block_setup(re15_espvm_instance_t *inst)
+{
+    uint32_t pc    = INST_PC(inst);
+    int8_t   level = (int8_t)inst->mem[RE15_ESPVM_OFF_LEVEL];
+    uint8_t  depth = inst->code_base[pc + 1];
+    uint8_t  ci    = inst->code_base[pc + 2];
+    int16_t  rel   = (int16_t)rd_u16(inst->code_base + pc + 4);
+    inst->mem[level + 4] = depth;
+    uint32_t sp = (uint32_t)(level * 0x20 + RE15_ESPVM_OFF_STACK + (int)depth * 4 + 4);
+    wr_u32(inst->mem + RE15_ESPVM_OFF_SP, sp);
+    inst->mem[level + 8] = ci;
+    INST_SETPC(inst, pc + (uint32_t)(int32_t)rel);
+    return RE15_ESPVM_RET_CONT;
+}
+
+/* 0x19: pop level — level--; pc = saved-pc[level-1] (+0x144 + (level-1)*4); restore the loop
+ * stack pointer. CONT. (0x8003fc50; reads level unsigned then decrements, byte-true) */
+static int op_pop_level(re15_espvm_instance_t *inst)
+{
+    uint8_t nl = (uint8_t)(inst->mem[RE15_ESPVM_OFF_LEVEL] - 1);
+    inst->mem[RE15_ESPVM_OFF_LEVEL] = nl;
+    int8_t nls = (int8_t)nl;
+    wr_u32(inst->mem + RE15_ESPVM_OFF_PC,
+           rd_u32(inst->mem + RE15_ESPVM_OFF_RETPC + (uint32_t)((int)nls * 4)));
+    int8_t   depth = (int8_t)inst->mem[nls + 4];
+    uint32_t sp    = (uint32_t)((int)nls * 0x20 + RE15_ESPVM_OFF_STACK + (int)depth * 4 + 4);
+    wr_u32(inst->mem + RE15_ESPVM_OFF_SP, sp);
+    return RE15_ESPVM_RET_CONT;
 }
 
 /* ---- FUN_8003f0a0: per-frame VM walker ----------------------------------------------------- */

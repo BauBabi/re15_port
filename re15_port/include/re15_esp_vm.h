@@ -19,10 +19,13 @@
  * disasm-verified @0x8003f1c0..f53c):
  *   0x00/0x1c/0x1d-0x20 nop-continue · 0x01 end/return-level · 0x02 wait-1-frame ·
  *   0x03 jump-script · 0x04 spawn · 0x05 kill-instance · 0x06 loop-push · 0x07 loop-jump ·
- *   0x08 loop-pop · 0x09 counter-set · 0x0a counter-wait · 0x0b counter-push · 0x0c wait-cond.
- *   (0x09+0x0a together = "wait N frames".)  Every other opcode is still the stub (returns STOP).
- * Still ahead: the draw / GTE / field ops (0x0d+), then the bytecode source (DAT_800b3f70) +
- * TIM/UV LUTs (Phase ESP-C3). No GPU draw, no game_step wiring yet.
+ *   0x08 loop-pop · 0x09 counter-set · 0x0a counter-wait · 0x0b counter-push · 0x0c wait-cond ·
+ *   0x0d FOR-begin · 0x0e NEXT · 0x10 loop-back · 0x11 FOR-begin(no count) · 0x14 skip6 ·
+ *   0x15 skip2 · 0x16 pop-ci · 0x17 block-setup · 0x19 pop-level · 0x1a FOR-break.
+ *   (0x09+0x0a = "wait N frames"; 0x0d..0x1a = the 2nd FOR-loop subsystem indexed by the per-level
+ *   counter-index inst[level+8] over the +0x0c/+0x20/+0x60/+0xa0 arrays.)  Other opcodes = stub.
+ * Still ahead: the field-setters (0x2f/0x31/0x32/0x4d…), then the draw/GTE/spawn/external ops, then
+ * the bytecode source (DAT_800b3f70) + TIM/UV LUTs (Phase ESP-C3). No GPU draw, no game_step wiring.
  *
  * Pointer handling: the original instance stores a 32-bit absolute pc at +0x1c and 32-bit return
  * pointers on the +0xc0 sub-stack. The PC port keeps the 0x170-byte instance image byte-true but
@@ -45,8 +48,11 @@
 #define RE15_ESPVM_OFF_LEVEL   0x02   /* lb 2(s0): (s8) level/track index                        */
 #define RE15_ESPVM_OFF_DEPTH0  0x04   /* loop-stack depth for level 0 (inst[level+4]; init 0xff) */
 #define RE15_ESPVM_OFF_CIDX0   0x08   /* loop-counter index for level 0 (inst[level+8]; init 0xff)*/
+#define RE15_ESPVM_OFF_DEPTHARR 0x0c  /* FOR-loop saved-depth array (inst + level*4 + 0x0c + ci) */
 #define RE15_ESPVM_OFF_PC      0x1c   /* lw 28(s0): program counter (port: u32 offset)           */
-#define RE15_ESPVM_OFF_CARRAY  0xa0   /* per-level loop-counter array (inst + level*8 + 0xa0)     */
+#define RE15_ESPVM_OFF_PCARR   0x20   /* FOR-loop body-start array (inst + level*0x10 + 0x20 + ci*4)*/
+#define RE15_ESPVM_OFF_TGTARR  0x60   /* FOR-loop end-target array (inst + level*0x10 + 0x60 + ci*4)*/
+#define RE15_ESPVM_OFF_CARRAY  0xa0   /* per-level loop-counter array (inst + level*8 + 0xa0 + ci*2)*/
 #define RE15_ESPVM_OFF_STACK   0xc0   /* loop-return stack base (instance + level*0x20 + 0xc0)   */
 #define RE15_ESPVM_OFF_SP      0x140  /* lw 320(s0): stack pointer (port: u32 offset into mem)   */
 #define RE15_ESPVM_OFF_RETPC   0x144  /* per-level saved pc array (inst + 0x144 + level*4)       */

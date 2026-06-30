@@ -298,6 +298,149 @@ static int run_counter_op_tests(void)
     return fail;
 }
 
+/* ESP-C2 batch 3 — the 2nd FOR-loop subsystem (0x0d..0x1a). 0xF4 = a synthetic body op that
+ * counts its executions (pc+=1, CONT); 0xFF = HALT sentinel. */
+static int s_tick;
+static int op_tick(re15_espvm_instance_t *inst)
+{
+    s_tick++;
+    re15_espvm_set_pc(inst, re15_espvm_get_pc(inst) + 1);
+    return RE15_ESPVM_RET_CONT;
+}
+
+static uint8_t s_fcode[192];
+static uint16_t rd16(const uint8_t *p) { return rd_u16(p); }
+static void build_fcode(void)
+{
+    for (int i = 0; i < 192; i++) s_fcode[i] = 0;
+    /* offset table ids 0..9 */
+    s_fcode[0x0]=0x20; s_fcode[0x2]=0x30; s_fcode[0x4]=0x40; s_fcode[0x6]=0x50; s_fcode[0x8]=0x60;
+    s_fcode[0xa]=0x70; s_fcode[0xc]=0x80; s_fcode[0xe]=0x90; s_fcode[0x10]=0xa0; s_fcode[0x12]=0xb0;
+    /* id0 @0x20: op0d isolated (count=7, rel=4), halt at the post-pc 0x26 */
+    s_fcode[0x20]=0x0d; s_fcode[0x22]=0x04; s_fcode[0x24]=0x07; s_fcode[0x26]=0xFF;
+    /* id1 @0x30: full FOR loop (count=3, rel=6): op0d, body tick@0x36, NEXT@0x37, halt@0x39 */
+    s_fcode[0x30]=0x0d; s_fcode[0x32]=0x06; s_fcode[0x34]=0x03;
+    s_fcode[0x36]=0xF4; s_fcode[0x37]=0x0e; s_fcode[0x39]=0xFF;
+    /* id2 @0x40: op11 FOR-begin-no-count (rel=5), halt@0x44 */
+    s_fcode[0x40]=0x11; s_fcode[0x42]=0x05; s_fcode[0x44]=0xFF;
+    /* id3 @0x50: op10 loop-back (PCARR target poked to 0x55), halt@0x55 */
+    s_fcode[0x50]=0x10; s_fcode[0x55]=0xFF;
+    /* id4 @0x60: op1a FOR-break (TGTARR poked to 0x66), halt@0x66 */
+    s_fcode[0x60]=0x1a; s_fcode[0x66]=0xFF;
+    /* id5 @0x70: op16 pop-ci (pc+=2 -> 0x72) */
+    s_fcode[0x70]=0x16; s_fcode[0x72]=0xFF;
+    /* id6 @0x80: op14 skip6 (pc+=6 -> 0x86) */
+    s_fcode[0x80]=0x14; s_fcode[0x86]=0xFF;
+    /* id7 @0x90: op15 skip2 (pc+=2 -> 0x92) */
+    s_fcode[0x90]=0x15; s_fcode[0x92]=0xFF;
+    /* id8 @0xa0: op17 block-setup (depth=2, ci=3, rel=8 -> pc 0xa8) */
+    s_fcode[0xa0]=0x17; s_fcode[0xa1]=0x02; s_fcode[0xa2]=0x03; s_fcode[0xa4]=0x08; s_fcode[0xa8]=0xFF;
+    /* id9 @0xb0: op19 pop-level (saved-pc poked to 0xb6), halt@0xb6 */
+    s_fcode[0xb0]=0x19; s_fcode[0xb6]=0xFF;
+}
+
+static int run_for_op_tests(void)
+{
+    int fail = 0;
+    build_fcode();
+    printf("  --- ESP-C2 batch 3: FOR-loop ops 0x0d..0x1a ---\n");
+
+    /* (9a) op0d isolated: ci 0xff->0, CARRAY[0]=7, TGTARR[0]=0x26+4=0x2a, PCARR[0]=0x26,
+     * DEPTHARR[0]=loop-depth[0](=0xff init), pc=0x26. */
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    re15_espvm_instance_t *d = re15_espvm_alloc(0, 0, s_fcode);
+    re15_espvm_run_all();
+    if (d->mem[RE15_ESPVM_OFF_CIDX0] != 0x00 || rd16(d->mem + 0xa0) != 7 ||
+        rd_u32(d->mem + 0x60) != 0x2a || rd_u32(d->mem + 0x20) != 0x26 ||
+        d->mem[0x0c] != 0xff || re15_espvm_get_pc(d) != 0x26) {
+        fprintf(stderr, "FAIL: (9a) op0d ci=0x%x C=%u T=0x%x P=0x%x D=0x%x pc=0x%x\n",
+                d->mem[RE15_ESPVM_OFF_CIDX0], rd16(d->mem+0xa0), rd_u32(d->mem+0x60),
+                rd_u32(d->mem+0x20), d->mem[0x0c], re15_espvm_get_pc(d)); fail = 1; }
+
+    /* (9b) full FOR loop: op0d count=3 + tick body + op0e NEXT -> body runs exactly 3x in one
+     * frame; counter consumed to 0, ci popped to 0xff, pc lands on the post-loop halt 0x39. */
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt); re15_espvm_set_opcode(0xF4, op_tick);
+    re15_espvm_instance_t *L = re15_espvm_alloc(0, 1, s_fcode);
+    s_tick = 0;
+    re15_espvm_run_all();
+    if (s_tick != 3 || re15_espvm_get_pc(L) != 0x39 || L->mem[RE15_ESPVM_OFF_CIDX0] != 0xff) {
+        fprintf(stderr, "FAIL: (9b) FOR loop ticks=%d pc=0x%x ci=0x%x (want 3/0x39/0xff)\n",
+                s_tick, re15_espvm_get_pc(L), L->mem[RE15_ESPVM_OFF_CIDX0]); fail = 1; }
+
+    /* (9c) op11 FOR-begin-no-count: ci->0, PCARR[0]=0x44, TGTARR[0]=0x44+5=0x49, no CARRAY write, pc=0x44. */
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    re15_espvm_instance_t *n = re15_espvm_alloc(0, 2, s_fcode);
+    re15_espvm_run_all();
+    if (n->mem[RE15_ESPVM_OFF_CIDX0] != 0x00 || rd_u32(n->mem + 0x20) != 0x44 ||
+        rd_u32(n->mem + 0x60) != 0x49 || re15_espvm_get_pc(n) != 0x44) {
+        fprintf(stderr, "FAIL: (9c) op11 ci=0x%x P=0x%x T=0x%x pc=0x%x\n",
+                n->mem[RE15_ESPVM_OFF_CIDX0], rd_u32(n->mem+0x20), rd_u32(n->mem+0x60),
+                re15_espvm_get_pc(n)); fail = 1; }
+
+    /* (9d) op10 loop-back: ci=0, PCARR[0]=0x55 -> pc=0x55, ci->0xff. */
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    re15_espvm_instance_t *lb = re15_espvm_alloc(0, 3, s_fcode);
+    lb->mem[RE15_ESPVM_OFF_CIDX0] = 0; wr_u32(lb->mem + 0x20, 0x55);
+    re15_espvm_run_all();
+    if (re15_espvm_get_pc(lb) != 0x55 || lb->mem[RE15_ESPVM_OFF_CIDX0] != 0xff) {
+        fprintf(stderr, "FAIL: (9d) op10 pc=0x%x ci=0x%x\n",
+                re15_espvm_get_pc(lb), lb->mem[RE15_ESPVM_OFF_CIDX0]); fail = 1; }
+
+    /* (9e) op1a FOR-break: ci=0, TGTARR[0]=0x66, DEPTHARR[0]=0x42 -> pc=0x66, loop-depth[0]=0x42, ci->0xff. */
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    re15_espvm_instance_t *br = re15_espvm_alloc(0, 4, s_fcode);
+    br->mem[RE15_ESPVM_OFF_CIDX0] = 0; wr_u32(br->mem + 0x60, 0x66); br->mem[0x0c] = 0x42;
+    re15_espvm_run_all();
+    if (re15_espvm_get_pc(br) != 0x66 || br->mem[RE15_ESPVM_OFF_DEPTH0] != 0x42 ||
+        br->mem[RE15_ESPVM_OFF_CIDX0] != 0xff) {
+        fprintf(stderr, "FAIL: (9e) op1a pc=0x%x depth=0x%x ci=0x%x\n",
+                re15_espvm_get_pc(br), br->mem[RE15_ESPVM_OFF_DEPTH0],
+                br->mem[RE15_ESPVM_OFF_CIDX0]); fail = 1; }
+
+    /* (9f) op16 pop-ci (ci 5->4, pc+=2); op14 skip6; op15 skip2. */
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    re15_espvm_instance_t *pc16 = re15_espvm_alloc(0, 5, s_fcode);
+    pc16->mem[RE15_ESPVM_OFF_CIDX0] = 5;
+    re15_espvm_run_all();
+    if (pc16->mem[RE15_ESPVM_OFF_CIDX0] != 4 || re15_espvm_get_pc(pc16) != 0x72) {
+        fprintf(stderr, "FAIL: (9f) op16 ci=0x%x pc=0x%x\n",
+                pc16->mem[RE15_ESPVM_OFF_CIDX0], re15_espvm_get_pc(pc16)); fail = 1; }
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    re15_espvm_instance_t *s6 = re15_espvm_alloc(0, 6, s_fcode);
+    re15_espvm_run_all();
+    if (re15_espvm_get_pc(s6) != 0x86) { fprintf(stderr, "FAIL: (9f) op14 pc=0x%x\n", re15_espvm_get_pc(s6)); fail = 1; }
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    re15_espvm_instance_t *s2 = re15_espvm_alloc(0, 7, s_fcode);
+    re15_espvm_run_all();
+    if (re15_espvm_get_pc(s2) != 0x92) { fprintf(stderr, "FAIL: (9f) op15 pc=0x%x\n", re15_espvm_get_pc(s2)); fail = 1; }
+
+    /* (9g) op17 block-setup: loop-depth[0]=2, counter-index[0]=3, sp=0xc0+2*4+4=0xcc, pc=0xa0+8=0xa8. */
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    re15_espvm_instance_t *bs = re15_espvm_alloc(0, 8, s_fcode);
+    re15_espvm_run_all();
+    if (bs->mem[RE15_ESPVM_OFF_DEPTH0] != 2 || bs->mem[RE15_ESPVM_OFF_CIDX0] != 3 ||
+        rd_u32(bs->mem + RE15_ESPVM_OFF_SP) != 0xcc || re15_espvm_get_pc(bs) != 0xa8) {
+        fprintf(stderr, "FAIL: (9g) op17 depth=0x%x ci=0x%x sp=0x%x pc=0x%x\n",
+                bs->mem[RE15_ESPVM_OFF_DEPTH0], bs->mem[RE15_ESPVM_OFF_CIDX0],
+                rd_u32(bs->mem + RE15_ESPVM_OFF_SP), re15_espvm_get_pc(bs)); fail = 1; }
+
+    /* (9h) op19 pop-level: level 1->0, pc=saved-pc[0]=0xb6, loop-depth[0]=0 -> sp=0xc0+0+4=0xc4. */
+    re15_espvm_reset(); re15_espvm_set_opcode(0xFF, op_halt);
+    re15_espvm_instance_t *pl = re15_espvm_alloc(0, 9, s_fcode);
+    pl->mem[RE15_ESPVM_OFF_LEVEL] = 1; wr_u32(pl->mem + RE15_ESPVM_OFF_RETPC, 0xb6);
+    pl->mem[RE15_ESPVM_OFF_DEPTH0] = 0;
+    re15_espvm_run_all();
+    if (pl->mem[RE15_ESPVM_OFF_LEVEL] != 0 || re15_espvm_get_pc(pl) != 0xb6 ||
+        rd_u32(pl->mem + RE15_ESPVM_OFF_SP) != 0xc4) {
+        fprintf(stderr, "FAIL: (9h) op19 level=%d pc=0x%x sp=0x%x\n",
+                pl->mem[RE15_ESPVM_OFF_LEVEL], re15_espvm_get_pc(pl),
+                rd_u32(pl->mem + RE15_ESPVM_OFF_SP)); fail = 1; }
+
+    if (!fail) printf("  (9) PASS: FOR-loop ops 0x0d..0x1a byte-true "
+                      "(begin/next[=run-body-N-times]/loop-back/break/pop-ci/skips/block/pop-level)\n");
+    return fail;
+}
+
 int main(void)
 {
     int fail = 0;
@@ -380,6 +523,8 @@ int main(void)
     if (run_real_op_tests()) fail = 1;
     /* (8) the loop-counter ops 0x09..0x0c. */
     if (run_counter_op_tests()) fail = 1;
+    /* (9) the FOR-loop ops 0x0d..0x1a. */
+    if (run_for_op_tests()) fail = 1;
 
     if (fail) { fprintf(stderr, "\nESP-VM TEST FAILED\n"); return 1; }
     printf("\nPASS: ESP effect-script VM (C1) — pool + FUN_8003f0a0 dispatch byte-true\n");
