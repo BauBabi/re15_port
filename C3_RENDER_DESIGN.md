@@ -227,6 +227,42 @@ Wichtige Korrektur zu §2c-§2e (die „Anim-Phase/Death-Sequenz"-Deutung war fa
   per-Room; der globale Load ist separat, evtl. ein eigenes Effekt-CD-File bei Stage-Init) **+ (2) den
   Master-Dispatch FUN_80105a8c + die row-Handler porten.** Dann ist das Hit-Blut sichtbar (Zombie/Enemy anschießen).
 
+## 2g. DEFINITIVE SAVESTATE-VERIFIKATION (2026-07-01) — der globale Bank IST CORE00.ESP, byte-true bestätigt
+
+Die §2f-Behauptungen (z.T. aus einem Workflow-Agenten) sind jetzt **unabhängig gegen den LIVE-ROOM1140-RAM verifiziert**
+(`stage_saves/mzd_stage1_briefing.sav` + `_engage_live` + `_briefing_live`, gelesen via `re15_ss.py`):
+
+- **Install-id-Liste `DAT_800bbdf0` = `03 08 00 02 04 ff ff ff | 05 07 ff ff …`** → zwei Gruppen:
+  - **Global (param_4=0, Slots 0-4): ids {3,8,0,2,4}** = **EXAKT CORE00.ESP** (DATA/CORE00.ESP id-header). Enthält **id 0**.
+  - Room (param_4=8, Slots 8-9): ids {5,7} (die ROOM1140-RDT-Effekte).
+- **Bank `DAT_800b2248[id*4]` (Runtime-Ptr je id-VALUE):** id0=0x801ed524 (**count_a=22, count_b=20** = exakt CORE00.ESP
+  effect-0 @0x824), id2/3/4/8 @0x801ed…/0x801ee… (= CORE00-RAM, hoch), id5/7 @0x80122… (Overlay/Room-RAM).
+  → **Mein Port (CORE00.ESP via `re15_esp_parse_global` als Global-Bank laden, effect-0 daraus auflösen) ist byte-true KORREKT.**
+- **`FUN_8001945c` indiziert die Bank nach id-VALUE** (`DAT_800b2248[bVar1]`), nicht nach Slot — der Slot/param_4 betrifft
+  nur die Upload-Reihenfolge `DAT_800bbdf0`. Beide Installer (`FUN_8001945c`/`FUN_800194f8`) haben je nur EINEN XREF
+  (`FUN_80019354`, Room). Der **globale Install (param_4=0) ist NICHT im dekompilierten Set** (Boot/Player-Init; "CORE00"-
+  String = 0 Treffer, Load per File-id).
+- **Zombie-Hurt spawnt effect-0 — byte-true bestätigt** (`FUN_80105b7c`:81/85, Phase entity+7==0):
+  `func_0x80019700(0x2000, entity+0x6a, pos, &LAB_8011fe84)` → effect-id `0x2000>>0x18` = **0**. (Z.90 = Master-Flat-
+  Dispatch `PTR_LAB_8011fe30[entity+5]`.)
+
+### Effekt-TEXTUR-Mechanik (byte-true) + das EINE Rest-Item
+- **`FUN_800194f8`** (Room-Textur-Uploader, einziger Caller `FUN_80019354`): lädt bis zu 8 Effekt-TIMs, packt sie nach
+  VRAM **rechts** `x=(15,14,…)*64`=960,896,… (y vertikal bis 256, dann Spalte −64), CLUT nach `x=0x120=288, y=480+`;
+  schreibt tpage/clut **zur Upload-Zeit** in den Bank-Header (`puVar6[2]=GetClut`, `puVar6[3]=GetTPage`) und patcht die
+  v-Coords (`*pcVar4 += y_off`). **Die GLOBALEN Effekte laufen NICHT hier durch** (ihr Runtime-word1 == Datei-word1).
+- **effect-0 word1 = 0x001f7951** (Runtime == Datei): **tpage 0x001f → VRAM-Page (960,256), 4-bit; CLUT 0x7951 → VRAM(272,485).**
+  Spawn-Pool (`FUN_80019700`): pool `DAT_800a73b8`, stride **0x108**, 96 Slots; `+0x6c`=state, `+0x30`=tpage, `+0x32`=clut, `+0x70`=effect-id.
+- **Live-Pool-Scan (alle Saves):** HASH_2.sav hat echte Effekte (slots 0-9, effid 6/11) mit tpage VRAM(960,0)/(896,0),
+  clut VRAM(288,481)/(288,484) → bestätigt die Mechanik (Textur rechts, clut x≈272-288 y≈480-485). **Die ROOM1140-Saves
+  hatten KEINEN aktiven effect-0** (Pool-Low-Slots leer) → die effect-0-Textur ist dort nicht resident capturebar.
+- **DAS EINZIGE OFFENE = die effect-0-Textur-PIXEL.** Mechanik 100% byte-true; der Port spawnt/animiert/zeichnet effect-0
+  (Platzhalter = Room-Effekt-TIM Slot 19). Für die exakten Pixel zwei Wege (RE-Disziplin: nicht raten):
+  **(a)** ROOM1140-Savestate MIT aktivem Hit-Effekt capturen (Zombie anschießen + speichern) → VRAM(960,256)+CLUT(272,485)
+  extrahieren [sauberster dynamischer Weg, braucht DuckStation-Interaktion]; **(b)** den globalen Effekt-Textur-Upload-Site
+  via Boot-Init-Disasm finden (param_4=0-Pfad, das paired Global-Effekt-TIM-File). Naive Savestate-CLUT-Extraktion @(272,485)/
+  (288,481) las Null → CLUT-Band-Offset kalibrieren oder Live-Capture nötig.
+
 ## 3. op 0x3a `Sce_espr_on` (Spawn, Subsystem 2) — byte-true (16 Bytes)
 `FUN_80019700(a0,a1,a2,a3)` spawnt in `DAT_800a73b8` (verifiziert: `addiu s3,s3,29624`
 @0x80019724; stride 132 @0x80019794-9c; 96 Slots @0x8004978c; busy `+0x6c`, alive=3;
