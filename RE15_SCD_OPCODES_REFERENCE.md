@@ -30,8 +30,19 @@
 >   ROOM1130 user saw missing). Reuses the port's cam-change path (g_scd.cam_id + cam_change_pending);
 >   active cut read from g_re15_active_cut. +unit test.
 >   - **Missing/incomplete side-effects (remaining):** 0x2d (port fabricates world collision from
->     bytes the engine uses as inline model data), 0x38 (stub; byte-true sets an SCA collision AABB),
->     0x4a (port omits the entity state-4 writes via inst+0x154).
+>     bytes the engine uses as inline model data), 0x38 (stub; byte-true sets an SCA collision AABB).
+>   - **0x4a `plc_gun` — RESOLVED, no fix needed (evidence-backed):** static RE of the `+0x1c8/+0x1ca`
+>     clears (the only divergence beyond the state writes) found **0x1c8/0x1ca are entity ANIMATION-POSE
+>     fields**. Evidence: all 21 EXE accesses are `sh` WRITES in the SCD-VM region 0x80041bbc-0x80042084
+>     (clears in op3f/4a/53; a mode-indexed setter @0x80041cac that looks up a u16 pose code from
+>     per-mode tables @0x80073ea5/ec5/ee5/f05/f25, indexed by `entity[8]`); the overlays also clear
+>     `_DAT_800ac784+0x1c8` from AI handlers (STAGE1 FUN_8011da2c etc.). **No literal-offset reader
+>     exists** — zero `lh/lhu/lw …,0x1c8(` in the EXE, zero non-clear overlay reads — so it is consumed
+>     by the pose/anim renderer via computed access. The port models animation a different way
+>     (bank.skel/anim) and has no equivalent field → **the clears are faithful no-ops.** The remaining
+>     state-4 writes are a working port simplification (`g_scd.plc_gun_state`); forcing the byte-true
+>     entity writes via the player work-slot would collide with the player FSM for no observable benefit
+>     → declined like 0x53. (0x3f/0x5d share the same 0x1c8/0x1ca fields → same faithful-no-op rationale.)
 >   - **Investigated, NOT fixed (no-guessing):** 0x53 — multi-mode indirect Work_set; mode 1 binds an
 >     unidentified BSS object (0x800aba84), modes 3/5 (effect-sprite/ptr) aren't actor slots, and
 >     mode 2's entity-index vs the port's work_slot convention is unverified — deferred rather than
