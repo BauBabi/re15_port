@@ -6,8 +6,15 @@
 > built under a mistaken "separate effect VM" framing and has been removed; this catalog is what
 > survived — the byte-true disassembly of all 95 opcode handlers, useful for validating scd_vm.c.)
 >
-> Cross-check payoff: this RE caught a length-table bug in scd_vm.c — **0x3d was 4, byte-true 3**
-> (LAB_80041238 `addiu pc,pc,3`, unmapped -> op_unknown desynced +1). Fixed in scd_vm.c.
+> Cross-check payoff (2 bugs fixed in scd_vm.c so far):
+> - **0x3d length** was 4, byte-true 3 (LAB_80041238 `addiu pc,pc,3`, unmapped -> op_unknown desynced +1).
+> - **0x35 `op_member_set2`** read its value from a per-thread `locals[]` u8 placeholder instead of
+>   `g_scd.work_vars[pc[2]]` (global s16 = DAT_800b0fd0; byte-true `lh @0x80041138`) — wrong value.
+>
+> A 16-op handler-semantics cross-check (the ops byte-true RE'd here) was otherwise clean: 14 MATCH,
+> + 0x0d (op_for) a documented defensive count==0 deviation (byte-true would 65535-iter / hang).
+> Still to cross-check: the scd_vm.c handlers NOT byte-true RE'd here (0x06/0x14/0x17/0x21/0x22/0x2A/
+> 0x2D/0x37-0x3C/0x47/0x4A/0x4B/0x50-0x5E).
 
 Dispatch: `FUN_8003f0a0` runs `(*table[*pc])(instance)` per active 0x170-instance; each handler
 advances pc itself. The "✅PORTED" column below reflects the (now-removed) re15_esp_vm.c byte-true

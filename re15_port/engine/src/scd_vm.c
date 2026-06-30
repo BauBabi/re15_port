@@ -2797,13 +2797,16 @@ int op_cut_auto(scd_thread_t *t)
 }
 
 /* Member_set2 (0x35) — 3 bytes [op, member_id, value_var_idx].
- * Like Member_set but value comes from a local variable. We don't have a
- * full local-var system, so use a static placeholder. */
+ * Like Member_set, but the value comes from the GLOBAL work-var array, not an immediate.
+ * Byte-true LAB_80041108: value = (s16)work_vars[pc[2]] — @0x80041138 `lh a2, 0x800b0fd0+pc[2]*2`
+ * (DAT_800b0fd0 = g_scd.work_vars[256], the same array op_cmp/op_member_cmp read). Cross-check
+ * 2026-06-30 fixed a bug: this used a per-thread `locals[]` u8 placeholder (truncated/zeroed the
+ * value and dropped idx 128..255), so any Member_set2 driven by a work-var wrote the wrong value. */
 int op_member_set2(scd_thread_t *t)
 {
     uint8_t member_id = t->pc[1];
     uint8_t var_idx   = t->pc[2];
-    int32_t value     = (var_idx < 128) ? (int32_t)t->locals[var_idx] : 0;
+    int32_t value     = (int32_t)g_scd.work_vars[var_idx];   /* lh, signed; var_idx 0..255 in range */
     /* BO-round 2026-05-29 (hack audit): per-thread work_slot (AO7 class) — the
      * bare global g_scd.work_slot let a concurrent thread's Work_set leak in.
      * Mirror op_member_set (per-thread primary). */
