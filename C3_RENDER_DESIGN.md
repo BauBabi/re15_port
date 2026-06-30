@@ -163,6 +163,14 @@ effect-0 geladen ist.
      und welche entity+5-State dorthin führt. (Workflow `zombie-fx-dispatch-re` war angesetzt, scheiterte
      am Session-Limit; bei Reset erneut laufen lassen — 3 Tasks: dispatch-chain / FUN_80106edc / port-state.)
    - `FUN_80106edc`/`FUN_80106a44` (STAGE1/.c) = die effect-5-Setup-Behaviors; Entry `entity+7==0`.
+   - **STAGE1.BIN-Scan-Befund (2026-06-30):** die stride-0x10-Tabellen haben Basen @`0x8011fe30`/
+     `0x8011fe84`/`0x8011fe94`/`0x8011fe9c`/`0x8011feac` (referenziert von den Verhaltens-Funktionen
+     `FUN_80105c5c`/`80106xxx` via `lui 0x8012;addiu`). Die Effekt-Config-Blöcke `LAB_8012016c`/
+     `0x8012017c`/`0x8012018c` (= a3-Arg der Spawns, der „Effekt-Handler") werden von ~20 Funktionen
+     referenziert (`0x80106ce4`/`80106fe4`/`80107310`/…) — auch die zu portieren. **Nächster konkreter
+     Schritt:** eine dieser Verhaltens-Funktionen (z.B. `FUN_80106ce4`, referenziert `0x8012016c`)
+     disassemblieren/decompilen → wie sie die stride-0x10-Tabelle indiziert (welches entity-Feld) +
+     welche entity+5-State dort hinführt → dann den effect-5-Setup byte-true an die Port-State hooken.
 2. **Den Behavior-SETUP porten** (`FUN_80106a44:17-34`): wenn der Zombie diese Behavior betritt
    (`entity+7`==0 → der Port hat `sub_state_3`), spawn **effect-id 5** (`a0=0x5002800`, a1=rot_y,
    pos=bone→Actor faithful) + 2× effect-0, und setze die Setup-Felder (entity+0x9c=4, +0x8f=7,
