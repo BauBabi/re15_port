@@ -19,12 +19,28 @@ Die Vorsession-Notiz „ESP-B = effect-sprite pool + AABB-cull (FUN_8004d5f0)" w
 
 ## 1. Subsystem 3 — der In-World-Rasterizer (PRIMÄRZIEL für C3)
 
-### Producer `FUN_800392d4` @0x800392d4
-Liest per-Instanz-Zustand (Command-List), schreibt einen Primitiv-Record in den
-double-buffered Prim-Buffer (`DAT_800bb4d4`=Buf A / `DAT_800bb4d8`=Buf B, gesetzt von
-Init `FUN_80039270` @0x800392a0/0x800392b8), und setzt `DAT_800b2584[k] |= 1`.
-Verifizierte SPRT-Feld-Stores (@0x80039490–0x80039500): rgb@+0x4, x0@+0x8, y0@+0xa,
-u0@+0xc, v0@+0xd, **clut=`0x7800`@+0xe**, w@+0x10, h@+0x12.
+### Producer `FUN_800392d4` @0x800392d4 — VOLL DEKODIERT (decompile L26-110)
+Quelle: **Raum-Effekt-Command-List** `puVar10 = *(*(DAT_800ac778+0x24) + DAT_800b0fe4*0x20 + 0x1c)`
+(L26) — `DAT_800b0fe4`=Szenario-Index, `DAT_800ac778`=Raum-Struct. **Das sind Raum-Daten,
+statisch parsebar** (kein Live-Savestate für die Sprite-Liste nötig). Word0 = `count<<16 | flags`;
+0xffffffff → keine Effekte (`*DAT_800ac778=0`, L28). Pro Sprite-Gruppe (`uVar21` Gruppen,
+`*puVar11` Sub-Sprites je Gruppe) baut der Producer in **BEIDE** Buffer (A=`DAT_800bb4d4`,
+B=`DAT_800bb4d8`; Init `FUN_80039270` @0x800392a0/b8) einen Record **stride 0x20**,
+SPRT bei `record+0xc`, und setzt `DAT_800b2584[k] |= 1` (L57) + den Sprite-Index `+1` (L58):
+
+| Record-Offset | Wert | decompile |
+|---|---|---|
+| +0xc | SPRT-Setup `SetShadeTex(blk+0xc,1)` | L76/77 |
+| +0x10/+0x11/+0x12 | rgb = 0x80,0x80,0x80 (neutral-modulate) | L80-85 |
+| +0x14 | x0 = `psVar13[-1] + (byte)puVar16[-4]` (cmdlist-X + UV-X-Off) | L88 |
+| +0x16 | y0 = `*psVar13 + (byte)puVar16[-7]` | L87 |
+| +0x18 / +0x19 | u0 = `(char)*puVar3`, v0 = `*(puVar16-9)` | L91/92 |
+| +0x1a | **clut = `0x7800`** | L99/100 |
+| +0x1c / +0x1e | u2/w = `uVar17`, v2/h = `uVar18` | L95/96 |
+
+UV-Mode (L64): `(puVar16[-2] & 0xf000)==0` → 6-short-Sprite (eigene u/v Paare); sonst
+`uVar17 = (puVar16[-2]>>0xc)<<3` (4-short-Sprite, abgeleitete Größe). Command-List-Cursor
+`psVar13 += 4 shorts` je Gruppe (Anchor-X/Y bei +10/+12), `puVar16` = UV/Größe-Records.
 
 ### Rasterizer `FUN_80039590` @0x80039590
 Walkt `DAT_800b2584` (Count = `*DAT_800ac778`); pro gesetztem Flag:
@@ -44,10 +60,11 @@ Walkt `DAT_800b2584` (Count = `*DAT_800ac778`); pro gesetztem Flag:
 - `DAT_800b2584`: **~11 Flags gesetzt** (idx 1,6,21,22,25,26,33,37,38,48,49) —
   **schon im reinen Briefing-Raum ohne Combat** → das sind **persistente Raum-Effekt-Sprites**
   (kein Feuern nötig, byte-true Live-Daten verfügbar).
-- Prim-Buffer-Base (`DAT_800bb4d4` → **`0x80124d14`**): enthält Records mit Stride **`0x34`**,
-  code-Byte **`0x34` = POLY_FT4** (texturierter Quad), rgb=80,80,80 (neutral-modulate).
-  ⚠️ Feld-Layout noch nicht sauber dekodiert (gelesene xy passen nicht auf 320×240 →
-  Modell-/Pre-Projektion-Space oder Offset-Versatz). **Nächster RE-Schritt.**
+- Prim-Buffer-Base (`DAT_800bb4d4` → **`0x80124d14`** im Save): Producer-Output ist laut
+  decompile **stride 0x20** (`iVar12+=0x20`), SPRT@+0xc — siehe §1-Tabelle. (Das im rohen
+  Save-Dump gesehene stride-0x34/code-0x34-Muster war eine ANDERE Struktur — vermutlich die
+  Command-List-Quelle bzw. ein stale Frame-Buffer, NICHT der Producer-Output; der Code ist
+  maßgeblich.) rgb=0x80 neutral + clut 0x7800 = der Producer-Fingerabdruck.
 
 ## 2. Port-Render-Pfad (Andock-Punkte, aus `re15_port`)
 - Frame-Order: `re15_render_begin_frame` → BG-Blit → 3D-Meshes → `re15_render_end_frame`
