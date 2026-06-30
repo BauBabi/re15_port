@@ -52,6 +52,11 @@ int re15_player_take_damage(re15_actor_t *p, uint8_t attack_type,
  * hit landed, 0 if the enemy was already hit this attack window. */
 int re15_enemy_take_damage(re15_actor_t *e, uint8_t attack_type);
 
+/* Per-frame zombie gore effect (FUN_80106a44 @0x80106a98): if +0x93 & 2 (the 2nd-hit bit set
+ * by re15_enemy_take_damage) is set, spawn the gore effect at the zombie and clear the bit.
+ * Called per live zombie in re15_enemy_ai_run_all. */
+void re15_enemy_gore_tick(re15_actor_t *e);
+
 /* Player DEATH state (Phase 8.10) — the byte-true core of the player death FSM. The player is dead
  * when HP < 0 (FUN_80012d60 @0x80012ee8; the grab drains HP to the same HP<0). The original then runs
  * the death-sequence command handler (player command 0x800aca58 dispatched @0x80073f90[state]: [3] =

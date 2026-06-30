@@ -813,7 +813,9 @@ void re15_enemy_ai_run_all(int combat_active)
         re15_actor_t *e = &g_actors[s];
         if (!e->active) continue;
         uint8_t t = e->type;
-        if (t == 0x10 || t == 0x11 || t == 0x16)   /* the live STAGE1 zombie types only */
+        if (t == 0x10 || t == 0x11 || t == 0x16) { /* the live STAGE1 zombie types only */
             re15_enemy_ai_live_step(s);
+            re15_enemy_gore_tick(e);   /* FUN_80106a44 +0x93&2 -> gore effect spawn */
+        }
     }
 }

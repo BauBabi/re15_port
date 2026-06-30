@@ -20,6 +20,7 @@
  */
 #include "re15_damage.h"
 #include "re15_skeleton.h"   /* re15_skel_compute_pose / re15_skel_bone_to_world / g_anim_pose_actor */
+#include "re15_esp.h"        /* re15_esp_fx_spawn — zombie gore effect (FUN_80106a44) */
 
 /* DAT_8006f418 — ghidra1_V2.txt:223455-223478 (11×s16 LE). */
 const int16_t re15_damage_table[11] = {
@@ -277,6 +278,26 @@ int re15_enemy_take_damage(re15_actor_t *e, uint8_t attack_type)
 void re15_player_clear_hit_guard(re15_actor_t *p)
 {
     if (p) p->hit_react &= (uint8_t)~0x1;
+}
+
+/* Zombie gore effect — byte-true FUN_80106a44 @0x80106a98-0x80106abc (STAGE1 briefing zombie
+ * behaviour handler): per frame, if the "took a 2nd hit while still hit-guarded" bit
+ * (+0x93 & 2, set by re15_enemy_take_damage @0x80012fcc) is set, spawn the gore effect at the
+ * zombie and clear the bit. Byte-true: a0 = 0x2000 -> effect-id 0, sub 0; a1 = entity+0x6a =
+ * rot_y; spawn handler &DAT_8012017c. The original position is the model_inst bone block
+ * (entity+0x188 + 0x4f4); the port has no such bone block, so it uses the actor's world
+ * position (faithful-line, flagged). Bank-gated: effect-id 0 only resolves where the room RDT
+ * loads it — ROOM1140 loads ids 05/07, so this no-ops there byte-true (the visible ROOM1140
+ * gore is the effect-id-5 spawn at the behaviour SETUP, which needs the full FUN_80106a44 port).
+ * The setup-spawn + the behaviour state machine are the next port unit (C3_RENDER_DESIGN.md §2d). */
+void re15_enemy_gore_tick(re15_actor_t *e)
+{
+    if (!e || !e->active) return;
+    if (e->hit_react & 0x2) {                                  /* +0x93 & 2 (@0x80106a98) */
+        re15_esp_fx_spawn(re15_esp_room_bank(), 0 /*effect-id*/, 0 /*sub*/,
+                          e->x, e->y, e->z, (int16_t)e->rot_y);  /* a1 = entity+0x6a = rot_y */
+        e->hit_react &= (uint8_t)~0x2;                         /* +0x93 &= 0xfd (@0x80106abc) */
+    }
 }
 
 /* ====================================================================== *

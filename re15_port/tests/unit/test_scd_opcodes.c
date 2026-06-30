@@ -41,6 +41,7 @@
 #include "re15_scd.h"
 #include "re15_actor.h"   /* RE15_ACTOR_SLOT_PLAYER, g_actors */
 #include "re15_esp.h"     /* op_sce_espr_on -> re15_esp_fx pool */
+#include "re15_damage.h"  /* re15_enemy_gore_tick (FUN_80106a44) */
 #include "re15_rdt.h"     /* re15_rdt_t.sub_scd[] for Evt_chain/Evt_exec tests */
 
 #include <stdint.h>
@@ -995,6 +996,40 @@ static int test_sce_espr_on_spawn(void)
     return fail;
 }
 
+/* re15_enemy_gore_tick (FUN_80106a44 @0x80106a98): the 2nd-hit bit (+0x93 & 2) -> spawn the
+ * gore effect at the zombie + clear the bit. Byte-true effect-id 0, a1 = rot_y. */
+static int test_enemy_gore_tick(void)
+{
+    int fail = 0;
+    re15_esp_fx_reset();
+    re15_esp_set_room_bank(NULL);
+    re15_actor_t z;
+    memset(&z, 0, sizeof z);
+    z.active = 1; z.type = 0x10; z.hit_react = 0x2;
+    z.x = 100; z.y = 200; z.z = 300; z.rot_y = 0x40;
+
+    re15_enemy_gore_tick(&z);
+    const re15_esp_fx_t *f = re15_esp_fx_get(0);
+    if (re15_esp_fx_count() != 1 || (z.hit_react & 0x2) != 0 || !f ||
+        f->effect_id != 0 || f->x != 100 || f->y != 200 || f->z != 300 || f->param != 0x40) {
+        fprintf(stderr, "FAIL: gore_tick spawn/clear: count=%d hit=0x%x\n",
+                re15_esp_fx_count(), z.hit_react); fail = 1; }
+
+    /* bit cleared -> next tick must NOT re-spawn. */
+    re15_enemy_gore_tick(&z);
+    if (re15_esp_fx_count() != 1) { fprintf(stderr, "FAIL: gore_tick double-spawn\n"); fail = 1; }
+
+    /* no bit -> no spawn. */
+    re15_esp_fx_reset();
+    z.hit_react = 0;
+    re15_enemy_gore_tick(&z);
+    if (re15_esp_fx_count() != 0) { fprintf(stderr, "FAIL: gore_tick spawned without bit\n"); fail = 1; }
+
+    re15_esp_fx_reset();
+    if (!fail) printf("PASS: test_enemy_gore_tick (0x80106a44 +0x93&2 -> spawn + clear)\n");
+    return fail;
+}
+
 int main(void)
 {
     int failures = 0;
@@ -1021,6 +1056,7 @@ int main(void)
     failures += test_flag_ck2();
     failures += test_cut_replace_live_switch();
     failures += test_sce_espr_on_spawn();
+    failures += test_enemy_gore_tick();
 
     if (failures == 0) {
         printf("\nALL SCD OPCODE TESTS PASSED\n");
