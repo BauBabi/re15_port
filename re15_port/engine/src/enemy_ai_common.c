@@ -402,6 +402,12 @@ void re15_enemy_ai_live_init(int slot)
     re15_actor_t *e = &g_actors[slot];
     e->state    = (uint8_t)RE15_AI_STATE_ACTIVE;   /* +0x4 = 1 */
     e->ai_timer = 0x14;                            /* +0x9c = 0x14 */
+    /* seed the per-spawn HURT stagger clip (FUN_80100688 @0x80100774-9c): +0x1d4 =
+     * seed_table[rng()&7], table @0x8011f7e4 = {2,3,4,5,2,3,4,5} -> a random clip in {2,3,4,5}. */
+    {
+        static const uint8_t hurt_clip_seed[8] = { 2, 3, 4, 5, 2, 3, 4, 5 };
+        e->hurt_clip = hurt_clip_seed[re15_engine_rand8() & 7];
+    }
 }
 
 /* Feeding sub-mode (@0x8011f80c[6] = 0x801018f8, STAGE1.BIN) — the briefing zombie's dist-gated
@@ -623,12 +629,62 @@ void re15_enemy_ai_live_arm(int slot)
  * zombie EDD, the deferred anim layer — same stance as the wake-up's anim-skip). The grid_id & 0x80
  * special path (@0x80105ab0-0x80105ae0, sub-handlers 0x801068a0/0x80106a38) is the briefing-pose
  * stagger variant — also the deferred anim. Sub_state_2 cleared. */
+/* HURT — FUN_80105a8c (@0x8011f7b4[2], STAGE1.BIN). A ROUTER: tests +0x9&0x80, then on the NORMAL
+ * path dispatches the 2D stagger table @0x8011fb90[+0x5*8 + +0x6] (the live stagger handler 0x80105b7c
+ * for +0x5 in {1,3,4}) and falls into the EXIT GATE @0x80105b18. The stagger handler 0x80105b7c is a
+ * +0x7-phased machine: phase 0 copies the per-spawn clip +0x1d4 -> +0x94 (motion), sets +0x93|=1,
+ * +0x7=1; phase 1+ plays it via anim_set (a3=0x200) and NEVER writes +0x95 (relies on the global
+ * per-actor anim_frame advance, like the death port). The EXIT GATE (@0x80105b18) is NOT clip-playout
+ * (unlike death): it reads the s16 hit-stun budget +0x1dc; if >= 0 it STAYS HURT (bgez @0x80105b2c);
+ * else (and if +0x9&0x80 clear) it recovers: +0x4=1 ACTIVE (@0x80105b48), +0x5=0x11 (@0x80105b58),
+ * +0x6=0 (@0x80105b68). +0x1dc is decremented per HURT frame by step[+0x5] from @0x8011fe30 =
+ * {0,-2,-2,-3,-3,-3,-3,0,0,0,0,0} (dispatched inside the handler @0x80105d08); the canonical melee
+ * stagger +0x5=react_table[atk]=3 subtracts 3/frame (seed 4..7 -> ~2 frames of stagger).
+ *
+ * PORT MODEL (re15_ems / death-port style): the port is a C function, not a table dispatch, so it runs
+ * the canonical stagger directly — motion = hurt_clip (+0x1d4), hold HURT while hit_stun >= 0,
+ * decrement by step[+0x5], recover to ACTIVE. byte-true constants cited above + the seed tables.
+ * FAITHFUL-LINE / documented uncertainties (the RE workflow flagged these, no guessing):
+ *  - The original time-shares +0x1dc with ai_target_x and seeds it once at INIT; the port re-seeds the
+ *    DEDICATED hit_stun field per HURT entry with the byte-true value (rng&3)+4 -> a fresh stagger
+ *    each hit (the time-sharing isn't replicated).
+ *  - The player GUNSHOT sets +0x5=weapon_id (pistol=2); the original's stagger table row for +0x5=2 is
+ *    NULL (FUN_80011f50 @0x800124bc + table @0x8011fbd0) -> the exact original pistol-hurt reaction is
+ *    unresolved (no savestate witnesses HURT, C11). The port plays the verified canonical stagger for
+ *    every hit; the stun step for +0x5=2 is the byte-true @0x8011fe30[2] = -2.
+ *  - The +0x9&0x80 SPECIAL collapse branch (fixed clip 30/37/38) is DORMANT for ROOM1140 (set only by
+ *    the grab-stun seed) -> a documented stub that just holds HURT. */
 void re15_enemy_ai_live_hurt(int slot)
 {
     if (slot < 0 || slot >= RE15_ACTOR_MAX) return;
     re15_actor_t *e = &g_actors[slot];
-    e->state       = (uint8_t)RE15_AI_STATE_ACTIVE;   /* +0x4 = 1 (@0x80105b48) — stagger done -> active */
-    e->sub_state_2 = 0;
+
+    /* SPECIAL branch (@0x80105aa8 +0x9&0x80): killed-mid-reaction collapse — DORMANT for ROOM1140.
+     * Mirror the exit gate's bne-stay (@0x80105b40): hold HURT, never recover (fixed clip deferred). */
+    if (e->grid_id & 0x80) return;
+
+    /* stagger handler 0x80105b7c phase 0 (+0x7==0): start the stagger clip + (re)seed the hit-stun. */
+    if (e->sub_state_3 == 0) {
+        e->hit_react  |= 0x1;                          /* +0x93 |= 1 (@0x80105ce8-cf8) */
+        e->motion      = e->hurt_clip;                 /* +0x94 = +0x1d4 (@0x80105c30/c38), clip {2,3,4,5} */
+        e->anim_frame  = 0;                            /* +0x95 = 0 (fresh clip; global advance plays it) */
+        e->sub_state_3 = 1;                            /* +0x7 = 1 (@0x80105be0) */
+        e->hit_stun    = (int16_t)((re15_engine_rand8() & 3) + 4);  /* +0x1dc seed 4..7 (@0x80100838) */
+    }
+
+    /* per-HURT-frame decrement by the +0x5-selected step (@0x8011fe30, dispatched @0x80105d08). */
+    {
+        static const int8_t stun_step[12] = { 0, -2, -2, -3, -3, -3, -3, 0, 0, 0, 0, 0 };
+        e->hit_stun = (int16_t)(e->hit_stun + (e->sub_state_1 < 12 ? stun_step[e->sub_state_1] : 0));
+    }
+
+    /* exit gate (@0x80105b18): recover to ACTIVE only when the stun goes negative. */
+    if (e->hit_stun >= 0) return;                      /* still stunned -> stay HURT (@0x80105b2c bgez) */
+    e->state       = (uint8_t)RE15_AI_STATE_ACTIVE;    /* +0x4 = 1 (@0x80105b48) */
+    e->sub_state_1 = 0x11;                             /* +0x5 = 0x11 (@0x80105b58) */
+    e->sub_state_2 = 0;                                /* +0x6 = 0 (@0x80105b68) */
+    /* +0x7 is reset by the next damage event (re15_enemy_take_damage / re15_player_weapon_fire set
+     * +0x7=0), as in the original — no reset here. */
 }
 
 /* DEATH — FUN_80106ba4 (@0x8011f7b4[3], STAGE1.BIN) -> FUN_80107cb0. The live zombie's death: a hit

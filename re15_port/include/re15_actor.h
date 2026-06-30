@@ -120,6 +120,16 @@ typedef struct {
      * bit (ai_flags & 0x100 = +0x1d8 & 0x100) is set; at == 0x12c (300) it fires the lunge, at
      * == 0 it transitions to the post-attack recovery state. See re15_enemy_ai_live_active. */
     int16_t  ai_attack_timer;   /* +0x1da */
+    /* HURT-state (FUN_80105a8c) fields. The original time-shares +0x1dc with ai_target_x (search
+     * target) and uses +0x1d4 for the per-spawn stagger clip; the port keeps DEDICATED fields:
+     *  - hurt_clip (+0x1d4): the stagger clip, seeded once per spawn = {2,3,4,5}[rng&7] (init
+     *    FUN_80100688 @0x8010079c, table @0x8011f7e4). Copied to motion (+0x94) on HURT entry
+     *    (stagger handler 0x80105b7c phase 0 @0x80105c30/c38).
+     *  - hit_stun: the s16 hit-stun countdown (the +0x1dc semantic in HURT state). HURT holds while
+     *    hit_stun >= 0, decrements per frame by step[+0x5] (@0x8011fe30), recovers to ACTIVE at < 0
+     *    (FUN_80105a8c exit gate @0x80105b18). */
+    uint8_t  hurt_clip;         /* +0x1d4 — per-spawn stagger clip {2,3,4,5} */
+    int16_t  hit_stun;          /* HURT-stun countdown (the +0x1dc-in-HURT semantic) */
     /* Phase 4.5.13-RE2 F1: speed was at ID 27 (wrong) — correct ID is
      * 0x16 (+0x1CC in RE2). Renamed for clarity; opcode 0x35 Speed_set
      * uses an indexed velocity vector (ID 0x17..0x1A), not this scalar. */

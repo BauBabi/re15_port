@@ -377,14 +377,21 @@ int main(void)
             z->x = 30000; z->z = 30000;
         }
         zc->x = 500; zc->z = 0; zc->state = RE15_AI_STATE_ACTIVE; zc->grid_id = 0;
-        zc->sub_state_1 = 2; zc->sub_state_2 = 0; zc->hp = 30; zc->hit_react = 0; zc->ai_flags = 0;
+        zc->sub_state_1 = 2; zc->sub_state_2 = 0; zc->sub_state_3 = 0; zc->hp = 30; zc->hit_react = 0; zc->ai_flags = 0;
+        zc->hurt_clip = 3;   /* the per-spawn stagger clip (normally seeded in live_init) */
 
-        re15_enemy_take_damage(zc, 0);   /* non-lethal: HP 30->20 -> HURT (state 2) */
+        re15_enemy_take_damage(zc, 0);   /* non-lethal: HP 30->20 -> HURT (state 2), +0x5=react_table[0]=3 */
         if (zc->state != RE15_AI_STATE_HURT) {
             fprintf(stderr, "FAIL: non-lethal hit -> zombie HURT (state 2), ist %d\n", zc->state); fail = 1; }
-        re15_enemy_ai_live_tick(zs);     /* [2] HURT -> ACTIVE (stagger done) */
-        if (zc->state != RE15_AI_STATE_ACTIVE) {
-            fprintf(stderr, "FAIL: HURT -> ACTIVE after the stagger, ist %d\n", zc->state); fail = 1; }
+        re15_enemy_ai_live_tick(zs);     /* [2] HURT phase 0: play the stagger clip + seed/decrement the stun */
+        if (zc->state != RE15_AI_STATE_HURT || zc->motion != 3) {
+            fprintf(stderr, "FAIL: HURT holds + plays the stagger clip (motion=hurt_clip=3), state=%d motion=%d\n",
+                    zc->state, zc->motion); fail = 1; }
+        int ht = 0;                       /* the stun (seed 4..7, -3/frame for +0x5=3) recovers in <=3 frames */
+        while (zc->state == RE15_AI_STATE_HURT && ht < 12) { re15_enemy_ai_live_tick(zs); ht++; }
+        if (zc->state != RE15_AI_STATE_ACTIVE || zc->sub_state_1 != 0x11) {
+            fprintf(stderr, "FAIL: HURT -> ACTIVE after the stun (+0x5=0x11), state=%d +0x5=%d\n",
+                    zc->state, zc->sub_state_1); fail = 1; }
 
         zc->hp = 5; zc->hit_react = 0;
         re15_enemy_take_damage(zc, 0);   /* lethal: 5-10 = -5 < 0 -> DEATH (state 3) */
@@ -509,6 +516,53 @@ int main(void)
                 printf("  (13) death anim: motion 0x1f, holds DEATH through the 5-frame clip, then CORPSE(7)\n");
         }
         re15_enemy_reset();   /* drop the mock bank so it can't leak into other runs */
+    }
+
+    /* (14): the byte-true HURT-STAGGER + HIT-STUN (FUN_80105a8c). The stagger plays the per-spawn clip
+     * +0x1d4 (random {2,3,4,5}, seeded in live_init) and HOLDS state HURT until the s16 hit-stun budget
+     * +0x1dc goes negative (seed 4..7, -step[+0x5]/frame), then recovers to ACTIVE with +0x5=0x11. */
+    {
+        re15_actor_t *z = &g_actors[zslots[0]];
+        /* (a) live_init seeds the stagger clip into {2,3,4,5} (@0x8011f7e4 table). */
+        z->state = RE15_AI_STATE_INIT; z->hurt_clip = 0;
+        re15_enemy_ai_live_init(zslots[0]);
+        if (z->hurt_clip < 2 || z->hurt_clip > 5) {
+            fprintf(stderr, "FAIL: (14a) live_init hurt_clip must be in {2,3,4,5}, ist %d\n", z->hurt_clip); fail = 1; }
+
+        /* (b) the +0x9&0x80 SPECIAL branch (dormant collapse) HOLDS HURT — never recovers. */
+        z->state = RE15_AI_STATE_HURT; z->grid_id = 0x80; z->sub_state_3 = 0; z->sub_state_1 = 3; z->hit_stun = 5;
+        for (int f = 0; f < 8; f++) re15_enemy_ai_live_hurt(zslots[0]);
+        if (z->state != RE15_AI_STATE_HURT) {
+            fprintf(stderr, "FAIL: (14b) +0x9&0x80 special branch must stay HURT, ist %d\n", z->state); fail = 1; }
+
+        /* (c) the GUNSHOT path: pistol -> HURT with +0x5=weapon_id=2 (stun step @0x8011fe30[2] = -2);
+         * the zombie staggers (motion=hurt_clip) then recovers to ACTIVE. */
+        pl->x = 0; pl->z = 0; pl->rot_y = 0; pl->hp = 100; pl->hit_react = 0; pl->state = 0;
+        re15_player_death_reset();
+        for (int i = 0; i < nz; i++) {   /* park the others far */
+            re15_actor_t *o = &g_actors[zslots[i]];
+            o->state = RE15_AI_STATE_ACTIVE; o->x = 30000; o->z = 30000; o->grid_id = 0;
+        }
+        z->x = 0; z->z = 800; z->grid_id = 0; z->hp = 60; z->hit_react = 0;
+        z->state = RE15_AI_STATE_ACTIVE; z->sub_state_1 = 0; z->sub_state_2 = 0; z->sub_state_3 = 0;
+        z->hurt_clip = 4; z->hit_stun = 0;
+        if (re15_player_weapon_fire(2) != (zslots[0] + 1)) {
+            fprintf(stderr, "FAIL: (14c) pistol must hit the front zombie\n"); fail = 1; }
+        if (z->state != RE15_AI_STATE_HURT || z->sub_state_1 != 2) {
+            fprintf(stderr, "FAIL: (14c) shot -> HURT(2) + +0x5=weapon_id 2, state=%d +0x5=%d\n",
+                    z->state, z->sub_state_1); fail = 1; }
+        re15_enemy_ai_live_tick(zslots[0]);   /* HURT phase 0: motion=hurt_clip=4, seed + decrement -2 */
+        if (z->motion != 4 || z->state != RE15_AI_STATE_HURT) {
+            fprintf(stderr, "FAIL: (14c) gunshot stagger plays motion=hurt_clip=4 + holds, motion=%d state=%d\n",
+                    z->motion, z->state); fail = 1; }
+        int gt = 0;                            /* step -2/frame, seed 4..7 -> recovers in <=4 frames */
+        while (z->state == RE15_AI_STATE_HURT && gt < 12) { re15_enemy_ai_live_tick(zslots[0]); gt++; }
+        if (z->state != RE15_AI_STATE_ACTIVE || z->sub_state_1 != 0x11) {
+            fprintf(stderr, "FAIL: (14c) gunshot HURT -> ACTIVE (+0x5=0x11), state=%d +0x5=%d\n",
+                    z->state, z->sub_state_1); fail = 1; }
+        if (!fail)
+            printf("  (14) HURT stagger: clip {2,3,4,5}; holds via the +0x1dc stun then ACTIVE(+0x5=0x11); "
+                   "special +0x9&0x80 stays HURT; gunshot staggers\n");
     }
 
     free(buf);
