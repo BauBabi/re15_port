@@ -5,7 +5,7 @@ description: Lädt im echten RE1.5 (MZD-Disc) über DuckStation autonom einen be
 
 # RE1.5 Raum-Capture (DuckStation + virtueller Gamepad)
 
-Fährt das **Original-RE1.5** (MZD-Mod, identische Original-`PSX.EXE` → alle `0x80xxxxxx`-Adressen gültig), navigiert autonom ins Debug-Menü, lädt einen Raum aus einer wählbaren Stage und schreibt einen Savestate. Verifiziert 2026-06-28 (2 Räume aus Stage 1 + Stage 2 live geladen). Schwester-Skill: **re15-savestate-ghidra** (extrahiert Werte aus dem Savestate). Siehe auch Memory `reai-v2-duckstation-dynamic-re`.
+Fährt das **Original-RE1.5** (MZD-Mod, identische Original-`PSX.EXE` → alle `0x80xxxxxx`-Adressen gültig), navigiert autonom ins Debug-Menü, lädt einen Raum aus einer wählbaren Stage und schreibt einen Savestate. **Verifiziert lauffähig:** 2026-06-28 (Boot-Treiber, Stage 1+2) + 2026-06-30 (Quickload-Navigation end-to-end — Räume steppen + Square-laden in Stage 1/2/3, Cross-Stage per Overlay-Fingerprint bewiesen, ~27-36 s/Lauf). Schwester-Skill: **re15-savestate-ghidra** (extrahiert Werte aus dem Savestate). Siehe auch Memory `reai-v2-duckstation-dynamic-re`.
 
 ## Voraussetzungen (auf dieser Maschine eingerichtet)
 
@@ -64,7 +64,7 @@ Erwartung für einen sauber geladenen Gameplay-Raum: `blob ≈ 4 MB`, RAM-Base `
 Für byte-true Gegner-KI braucht man einen Savestate mit **aktiven** Gegnern (idle ≠ approach/attack). Zusätzliche Treiber-Modi (verstehe die Felder mit `re15-savestate-ghidra/scripts/re15_enemy_state.py`):
 
 - **`--jump`** (re15_mzd_load_room.py): erzwingt den Debug-JUMP auch bei `--right 0` (lädt den Default-JUMP-Raum).
-- **`--menushot`**: stoppt IM JUMP-Menü OHNE zu laden → der Savestate fängt das Menü; dump das VRAM-PNG (`re15_ss.py`) und lies die angezeigte `JUMP <raum> <name>`-Zeile, um `--right`→Raum zu mappen. **Die JUMP-Liste enthält ALLE Räume.** ⚠️ **DPad-Right zählt ABWÄRTS durch die Liste; ein langer Hold löst Auto-Repeat aus und überspringt ans Listenende** — `STEP_HOLD` ist kurz (≤0.05 s), jeden Schritt mit `--menushot` verifizieren.
+- **`--menushot`**: stoppt IM JUMP-Menü OHNE zu laden → der Savestate fängt das Menü; dump das VRAM-PNG (`re15_ss.py`) und lies die angezeigte `JUMP <raum> <name>`-Zeile, um `--right`→Raum zu mappen. **Die JUMP-Liste enthält ALLE Räume.** **`--right` = nächster Listen-Eintrag = Raum-Nummer +1; `--left` = −1** (verifiziert 2026-06-30). ⚠️ Einzeldrücke kurz halten — **ein langer Hold löst Auto-Repeat aus und überspringt ans Listenende** (`STEP_HOLD` ≤0.08 s); jeden Schritt mit `--menushot` verifizieren.
 - **`--provoke S`**: läuft nach dem Laden S Sekunden vorwärts (DPad-Up + Rotations-Sweeps), bis ein Gegner den Spieler erkennt und in seinen approach/attack-State geht (für Live-Combat-/Mid-Lunge-Frames).
 
 **Quick-Load-Workflow** (`re15_quickload.py`, ~27-36 s statt ~110 s — spart den 64 s-Boot). Die **dauerhafte Debug-Menü-Base ist eingecheckt** (`stage_saves/mzd_debugmenu.sav`) und ist der **Default** von `--state` → keine Neu-Erzeugung nötig. **VERIFIZIERT lauffähig 2026-06-30 (end-to-end: steppt Räume + lädt sie).**
@@ -83,7 +83,9 @@ python scripts/re15_mzd_load_room.py --jump --menushot --out stage_saves/mzd_deb
 
 **Befunde (verifiziert 2026-06-30):**
 - Stepping läuft: r0=**124 OPENING** (=ROOM1240, der Boot-Raum = die Base), r1=125 LOBBY ER4-1, r2=126 SEWER PASSAGE, `--left 10`=114 SEWER EXIT, `--right 3`=100 BATH-LOCKERS. `--right`=Raum +1, `--left`=Raum −1, `--triangle`=Stage.
-- Square-Load bestätigt: `--right 3` + Square lädt 100 BATH-LOCKERS (display 96 % non-black, Gameplay-State, freeze=0x0).
+- Square-Load bestätigt (Stage 1): `--right 3` + Square lädt 100 BATH-LOCKERS (display 96 % non-black, Gameplay-State, freeze=0x0).
+- **Cross-Stage-Load bewiesen:** je ein Raum in Stage 1/2/3 geladen (`--right 2` / `--triangle 1` / `--triangle 2`, alle display 85-98 % non-black). Overlay-Region @0x80100000 (0x20000 B) byte-Diff: Stage1↔Stage2 = **87.9 %**, Stage1↔Stage3 = 85.5 %, Stage2↔Stage3 = 88.2 % (= verschiedene Stage-Overlays); Stage1↔Base = **0.0 %** (gleiche Stage = Methoden-Sanity). Cross-Stage braucht `--postload ≥16 s` (Overlay lädt von CD; sonst Frame mitten im Laden — Stage-3-Test war noch state 4/fade 0xf0 bei postload 20, ggf. 24 s).
+- Overlay-Diff selbst messen: `re15_ss.Ram(sav).bytes(0x80100000, 0x20000)` aus beiden Saves byte-vergleichen.
 - ⚠️ **Die Debug-JUMP-Nummer ≠ der Port-ROOM####-Code** (114 = „SEWER EXIT", NICHT ROOM1140). Die Liste ist sequenziell mit RE-Raum-Namen.
 - **Briefing-Combat (Port ROOM1140, 5 Zombies) ist KEIN JUMP-Raum:** ein Debug-JUMP lädt die Raum-Geometrie, aber das **Spawn-SCD läuft dabei nicht** → ein gejumpter Raum ist gegnerlos (124 OPENING: 0 Zombies). Die Briefing-Zombies sind eine **geskriptete New-Game-Sequenz**; `stage_saves/mzd_stage1_combat_death.sav` (7 Zombies) wurde per **New Game + `--provoke`** (Boot-Treiber) erzeugt, NICHT per JUMP.
 - **HURT-Capture braucht Feuern:** `--provoke` läuft nur vorwärts + dreht (→ Grab/Death), **drückt kein Square** → bezeugt nie den HURT-State. Für ein HURT-Frame `--provoke` um einen Square-Tap erweitern (+ kurze Dauer, damit der Spieler lebt).
