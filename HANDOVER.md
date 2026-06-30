@@ -21,7 +21,7 @@ cmake --build re15_port/build && ctest --test-dir re15_port/build --timeout 30  
 2. **Overlay-File-Offset-Trap:** STAGE*.BIN-Overlays haben **KEINEN 0x800-Header** (`off = addr − 0x80100000`; nur die EXE hat den Header). Den Offset NIE selbst rechnen → `re15_disasm.py` (table/dis/read) bzw. `re15_ss.Ram` nutzen. (Ein ad-hoc `+0x800` las die Dispatch-Tabellen `@0x8011f840/890` als „null" → falscher „runtime-patched"-Schluss; korrekt gelesen stehen sie statisch in der BIN, 40/40 == RAM. `re15_runtime_table.py` = der Cross-Check statisch↔RAM.)
 3. **State-erreicht ≠ State-aktiv:** `+0x5=0x13` = engage + ein `(+0x90&3)`-gegateter forward-walk-Vorabcheck. In allen Live-Zombies ist `+0x90==0x00` → fw-Branch nie genommen → 0x13 == engage für ROOM1140 → nichts zu portieren. **IMMER Gate-Flags im Live-Save prüfen** (`re15_enemy_state.py --ai` / `re15_flag_sweep.py`), bevor man einen gegateten Pfad portiert.
 
-**AKTIVE ARBEIT — ESP-Sprite-Subsystem (Nutzer-gewählt):** **ESP-A** (byte-true Parser, 9c907ca2) + **ESP-B** (Pool + Spawn + AABB-Cull-Dispatch, c147f527) ERLEDIGT, 33/33. **NÄCHST: ESP-C** (die Per-Typ-Render-Handler `@0x80074c68`, v.a. type-3 `0x8004d728` → SPRT-Builder `FUN_80046a1c`; PC-Quad) → **ESP-D** (Pistolen-Muzzle-Flash `FUN_80045024`, das Ziel). Volle byte-true Spec + Adressen + UNKNOWNs: siehe Abschnitt „ESP-SPRITE-SUBSYSTEM" unten. (Andere Optionen: Fade/Game-Over-UI · neuer Raum/Gegner m1-Forward-Walk · C11-Verifikation. Raise-Clip 17 ✓ 8.16.)
+**AKTIVE ARBEIT — ESP-Sprite-Subsystem (Nutzer-gewählt):** **ESP-A** (byte-true Parser, 9c907ca2) + **ESP-B** (Pool + Spawn + AABB-Cull-Dispatch, c147f527) ERLEDIGT, 33/33. **ESP-C (Render) ist BLOCKED auf einen SAVESTATE** eines aktiven Effekts — der statische Render-Pfad ist verworren (zwei Pools; die Synthese-Kette `FUN_8003ee3c`→`FUN_80046a1c` hält NICHT, siehe ESP-C unten). Nächster Schritt = Effekt-Frame capturen (`re15-room-capture`, DuckStation da) → den Draw + Pos/UV/TIM live verfolgen; klärt auch ESP-D (Muzzle-Effekt-ID). Volle Details: Abschnitt „ESP-SPRITE-SUBSYSTEM" unten. (Andere Optionen: Fade/Game-Over-UI · neuer Raum/Gegner · C11. Raise-Clip 17 ✓ 8.16.)
 
 ---
 
@@ -662,14 +662,21 @@ offset/flags-Split**, und nur die Pointer-/TIM-Tabellen werden ABWÄRTS gelesen 
     GTE/Winding-Func, 0x80043328 ein falsches Target) → der für den Muzzle relevante Spawn ist `FUN_80045024` (ESP-D); die SCD-Op-
     Verdrahtung ist deferred. Port: `re15_esp_pool_reset/spawn/run` + Per-Typ-Handler-Callback (die echten Handler = ESP-C);
     faithful-line `duration` bis ESP-C/Savestate das Handler-Lifetime-Modell klärt.
-- **ESP-C (RENDER = die Per-Typ-Handler) — NÄCHST:** der Walker `FUN_8004d5f0` ist DA (ESP-B); ESP-C = die Handler aus Tab
-  `@0x80074c68` portieren (8 Einträge: 0x8004d6fc/d718/d720/**d728(type3=Textur)**/d768/0x8004cd6c/cef4/d128). **Type-3-Handler
-  `0x8004d728` disassemblieren** (er ruft den SPRT-Builder `FUN_80046a1c`: **40×30**, `GetClut(0,0x1e4)`, prim-code **0x66**
-  (SPRT+ABE halbtransparent, RGB-Mod 0x80), **10-Frame-Strip**, Pos = Slot+0x02/+0x04 SCREEN-SPACE). **UNKNOWN:** die Per-Frame-
-  UV-LUTs `DAT_80076244/46`(U) + `DAT_80076274/76`(V) aus PSX.EXE dumpen (ROM-resident, by frame). PC-Render: SDL-Framebuffer +
-  die `re15_render_shadow_quad`-Blend-Quad-Infra (render_pc.c) → halbtransparenter 40×30-Quad aus dem ESP-TIM-Atlas an (x,y), nach
-  dem 3D-Pass. Auch klären: ruft der Render `FUN_8004d5f0` mit einem Cull-Punkt, der ALLE Effekte trifft, ODER gibt es einen
-  separaten Render-Walk? (ESP-B-Befund: FUN_8004d5f0 cullt per Punkt — für „alle zeichnen" braucht's den richtigen Aufruf/Walk.)
+- **ESP-C (RENDER) — BLOCKER: braucht einen SAVESTATE eines aktiven Effekts (statischer Pfad erschöpft/verworren).**
+  RE-Befund 2026-06-30 (ESP-C-Anlauf): die Synthese-Kette „type-3 → `FUN_8003ee3c` → `FUN_80046a1c` → 40×30-Sprite" **HÄLT NICHT**:
+  - Type-3-Handler `0x8004d728`: gegated auf `*(0x800b25c1)==1`, liest 2×u16 aus Slot+0x0A/+0x0C, ruft `FUN_8003ee3c(a0,a1)`.
+  - `FUN_8003ee3c` (Decompile) ist KEIN Sprite-Draw, sondern ein **Pool-Allokator** in einen ZWEITEN Pool `DAT_800b2b4c`
+    (stride **0x170**, das allgemeine Model/Sprite-Instanz-Pool) → ruft `FUN_8003edec`. D.h. der Effekt erzeugt eine
+    0x170-Instanz, die der allgemeine Instanz-Pool-Render zeichnet — eine zweite, große Subsystem-Ebene.
+  - `FUN_80046a1c` (der 40×30-SPRT-Builder, `GetClut(0,0x1e4)`, code 0x66, RGB 0x80, 10-Sub-Sprite-Strip, Pos aus LUTs
+    `DAT_80076274/76`, UV aus `DAT_80076244/46`) ist ein SEPARATER Builder; sein Tail baut ein 6×8-Tile-Grid + Vollbild-Tiles →
+    sieht nach **Menü/Inventar-Render** aus, NICHT dem generischen Effekt-Draw. Also sind auch die UV/Pos-LUTs evtl. menü-spezifisch.
+  - **→ Der statische Render-Pfad ist verworren (zwei Pools, mehrdeutige Builder).** Nächster Schritt = **DYNAMISCH**: einen
+    Savestate mit einem AKTIVEN Effekt ziehen (Pistole feuern, ODER ein Raum mit Ambient-Effekt wie Dampf/Feuer), den Effekt-Pool
+    `DAT_800b2360/2368` + den 0x170-Pool `DAT_800b2b4c` lesen und verfolgen, WELCHER Builder den aktiven Effekt zeichnet + woher
+    Pos/UV/TIM real kommen. Das klärt zugleich ESP-D (welche Effekt-ID = Muzzle). Tools: `re15-room-capture` (DuckStation da) +
+    `re15-savestate-ghidra`. PC-Render-Ziel bleibt: halbtransparenter Quad aus dem ESP-TIM-Atlas via SDL-Framebuffer +
+    `re15_render_shadow_quad`-Blend-Infra (render_pc.c), nach dem 3D-Pass.
 - **ESP-D (MUZZLE-FLASH, das Nutzer-Ziel) — zuletzt:** `FUN_80045024` (Pistole = weapon a0>>24=2): **1-Frame**-Flash
   (`sltiu s0,0x10` single-burst, frame_count=1), halbtransparent. Wiring: nach `re15_player_weapon_fire(2)` in
   `game_step_common.c:114` ein `re15_esp_spawn(<pistol-flash-id>, muzzle_x, muzzle_y, type=3, duration=1)`. **UNKNOWN:** welche
