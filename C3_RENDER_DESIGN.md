@@ -150,7 +150,17 @@ im Port). Bank-gated: effect-id 0 ist in ROOM1140 unbelegt → no-op dort (byte-
 effect-0 geladen ist.
 
 **NÄCHSTE BRICKS (für die SICHTBARE ROOM1140-Gore = effect-id 5 am Behavior-SETUP):**
-1. **Behavior-Dispatch mappen (TEILWEISE — exakter Stand für Fortsetzung):**
+**GELÖST + GELIEFERT (Commit a405f446, getestet):** der effect-5-Dispatch ist
+`(*(code*)(&PTR_LAB_8011fe30)[entity+0x5])()` = die EFFEKT-Aspekt-Tabelle, indiziert per
+**`entity+0x5` = sub_state_1 = die ANIM-PHASE**. `0x8011fe30 + 0x58*4 = 0x8011ff90 = FUN_80106edc`
+→ **Trigger = Anim-Phase `0x58` (88)**; die Effekt-Handler stehen an den hohen Phasen 79-96 = das
+ENDE einer langen Zombie-Animation (Gore-Höhepunkt). `re15_enemy_gore_setup` = byte-true `FUN_80106edc`
+(2× effect-0 + 1× effect-5, gated sub_state_1==0x58 + sub_state_3==0 + rand&1), in `run_all` verdrahtet.
+**LETZTER BRICK zur sichtbaren Gore:** der Port-Zombie muss Anim-Phase `sub_state_1==0x58` erreichen —
+d.h. die lange Zombie-Animation (Feeding/Death) byte-true ticken bis Phase 0x58. Das ist die nächste
+Einheit: das Zombie-Anim-Phase-Advancement (`func_0x8001f314` → entity+5) porten, bis es 0x58 erreicht.
+
+1. **Behavior-Dispatch mappen — ERLEDIGT (siehe oben). Historischer Stand:**
    - Der Top-Level Zombie-Dispatch ist `(*(code*)(&PTR_FUN_8011fXXX)[*(byte*)(entity+5)])()` —
      **indiziert per `entity+0x5` (sub_state_1, Anim-Phase)**, ~30 stride-**4** PTR-Tabellen
      @`0x8011f840`–`0x8011f9dc` (STAGE1_full/_ALL_combined.c:292-393).
