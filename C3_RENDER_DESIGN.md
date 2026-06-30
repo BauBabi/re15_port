@@ -131,6 +131,16 @@ parst (EFF-Bodies @0x11E8 effect-05, @0x13B8 effect-07; verifiziert). EFF-Body-L
     ist jetzt byte-true bekannt.
 - Effekt-TIM: `out->eff[i].tim_off` (ESP-A) → TIM @0x1A628/0x1CA68; GPU-Upload nötig.
 
+## 2d. DER ECHTE ROOM1140-EFFEKT-TRIGGER — präzise lokalisiert (2026-06-30)
+**ROOM1140 feuert KEIN op 0x3a** (korrekt disassembliert: main 1 / sub 6 / extra 2 Scripts = 0× op 0x3a/0x36/0x4c; die Roh-Scan-Treffer @0xd99/dcd/df9 waren Daten-Fehlalarme). Die Effekte 05/07 werden vom **STAGE1-Overlay-Zombie-AI-Code** gespawnt:
+- `FUN_8001945c` indexiert `DAT_800b2248[id_VALUE*4]` → ROOM1140 belegt nur `[0x05]` und `[0x07]` (nach ID-Wert). cat 0/2/6 (andere Overlay/`FUN_8002c444`-Spawns) sind in ROOM1140 unbelegt → gehören zu anderen Räumen.
+- **Effekt-ID 5 Spawner (verifiziert):** `FUN_801066dc`, `FUN_80106a44`, `FUN_80104b40`, `FUN_80106edc`, `FUN_80107244`, `FUN_80107ee0` (alle STAGE1) rufen
+  `func_0x80019700(0x5002800, *(s16)(entity+0x6a), <bone_pos>, &LAB_8012016c)` —
+  a0=`0x5002800`: effect-id **5**, sub 0, sprite 0x2800; Position `<bone_pos>` =
+  `LAB_8011f784[entity+8]*0xac + *(entity+0x188) + 0x40/+0x10` (Bone-Daten); a3=`&LAB_8012016c` (gemeinsamer Effekt-Handler).
+- Gespawnt beim **Verhaltens-Setup** (`entity+7` 0→1-Übergang) zusammen mit 2× effect-id-0 (`0x2000`). `FUN_8002c444` (effect-id 6 12-fach-Burst) = ANDERER Raum/Kinematik.
+- **Port-Status:** der Port hat eine VEREINFACHTE Zombie-AI (`enemy_ai_common.c`: INIT/ACTIVE/HURT/DEATH/IDLE) OHNE diese Verhaltens-Sub-Handler. **Nächster Port-Schritt = diese AI-Verhaltens-Handler portieren** (FUN_801066dc/a44/… + die Zombie-Internals entity+7/+8/+0x188/+0x8f/+0x93… + der Effekt-Handler LAB_8012016c), dann den Effekt-Spawn byte-true einklinken. Substanzielle, eigene Port-Einheit (Teil des 100%-Ports, siehe Memory full-port-mandate).
+
 ## 3. op 0x3a `Sce_espr_on` (Spawn, Subsystem 2) — byte-true (16 Bytes)
 `FUN_80019700(a0,a1,a2,a3)` spawnt in `DAT_800a73b8` (verifiziert: `addiu s3,s3,29624`
 @0x80019724; stride 132 @0x80019794-9c; 96 Slots @0x8004978c; busy `+0x6c`, alive=3;
