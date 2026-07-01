@@ -1,5 +1,6 @@
 .gradle
 build/
+build_linux/
 /psx_dev/re15_reborn_pc/build_mingw/
 /re15_port/_legacy_minimal/
 **/debug.log

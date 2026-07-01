@@ -63,6 +63,11 @@ static inline int RNDI(float f) {
 #include "re15_esp.h"          /* Phase ESP-C: op-0x3a effect-sprite bank + particle pool */
 
 #define RE15_TIM_SLOT_EFFECT 19   /* effect-sprite TIM render slot (0..18 used by chars/props) */
+#define RE15_TIM_SLOT_EFFECT_GLOBAL 20 /* GLOBAL effect bank (CORE00.ESP) sprite sheet — effect-id 0
+                                        * hit/blood. Its texture is NOT in any RDT; it lives in VRAM
+                                        * (tpage 0x001f -> VRAM(960,256) 4-bit, clut 0x7951). Extracted
+                                        * byte-true from the live ShowVRAM ground truth into a TIM
+                                        * (tools/vram_png_to_tim.py) shipped at extracted_fx/effect0_blood.tim. */
 
 extern void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
 
@@ -108,20 +113,29 @@ static void pc_load_room_esp(const uint8_t *rdt_buf, int rdt_size, unsigned room
 
 /* Phase ESP-C draw: project each live effect particle (byte-true owner+offset world pos, same
  * camera transform as the player) and emit a billboard quad textured from the effect TIM.
- * FAITHFUL-LINE (flagged): the exact anim-record -> coord-cell mapping + the cell's screen
- * geometry are the data-driven bit (C3_RENDER_DESIGN.md §2c, TBD via live capture); here the
- * cell index = frame % count_b, a fixed 24px UV span at the cell's byte-true (u,v) origin, and a
- * ~world-600 half-size billboard. Position + effect TIM + cell origin are byte-true. */
+ * The texture is byte-true: room fx sample the RDT effect TIM (slot 19); GLOBAL-bank fx (effect-id
+ * 0 hit/blood from CORE00.ESP, whose sheet is VRAM-only) sample the byte-true extracted TIM (slot 20).
+ * FAITHFUL-LINE (flagged): the exact anim-record -> coord-cell mapping + the cell's screen geometry
+ * are the data-driven bit (C3_RENDER_DESIGN.md §2c, TBD via live capture / the PTR_LAB_80071d40 draw
+ * dispatch); here the cell index = frame % count_b, a fixed 24px UV span at the cell's byte-true (u,v)
+ * origin (the coord record's w/h = signed pivot offsets, deferred with the draw routine), and a
+ * ~world-600 half-size billboard. Position, effect TIM, and cell origin are byte-true. */
 static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy)
 {
     extern int  re15_render_pc_dbg_slot_loaded(int slot);
     extern void re15_render_pc_bind_tim_slot(int slot);
-    if (!re15_render_pc_dbg_slot_loaded(RE15_TIM_SLOT_EFFECT)) return;   /* no effect TIM loaded */
-    const re15_esp_t *bank = re15_esp_room_bank();
-    re15_render_pc_bind_tim_slot(RE15_TIM_SLOT_EFFECT);
+    const re15_esp_t *global_bank = re15_esp_global_bank();
     for (int i = 0; i < RE15_ESP_FX_MAX; i++) {
         const re15_esp_fx_t *f = re15_esp_fx_get(i);
         if (!f) continue;
+        /* Each particle animates from ITS OWN resolved bank: the room ESP (RDT-TIM slot 19) or the
+         * GLOBAL bank CORE00.ESP (effect-id 0 hit/blood, whose sheet lives only in VRAM -> the
+         * byte-true extracted TIM in slot 20). Pick the matching texture slot per particle. */
+        const re15_esp_t *bank = f->bank;
+        int slot = (bank && bank == global_bank) ? RE15_TIM_SLOT_EFFECT_GLOBAL
+                                                  : RE15_TIM_SLOT_EFFECT;
+        if (!re15_render_pc_dbg_slot_loaded(slot)) continue;   /* that bank's texture not loaded */
+        re15_render_pc_bind_tim_slot(slot);
         float wx = (float)f->x, wy = (float)f->y, wz = (float)f->z;
         float vx = (cam->rot[0]*wx + cam->rot[1]*wy + cam->rot[2]*wz) / 4096.0f + cam->trans[0];
         float vy = (cam->rot[3]*wx + cam->rot[4]*wy + cam->rot[5]*wz) / 4096.0f + cam->trans[1];
@@ -192,6 +206,25 @@ static uint8_t *pc_read_shared(const char *rel, int *size)
         if (db) return db;
     }
 #endif
+    /* Original-CD-Baum (shared_assets/PSX) für Assets, die NICHT im extrahierten
+     * assets_shared liegen: DATA/CORE00.ESP (globale Effekt-Bank) sowie die daraus/aus
+     * VRAM abgeleiteten Effekt-Texturen unter extracted_fx/ (Geschwister von PSX). Gleiche
+     * Konvention wie render_pc.c (RE15_CD_ROOT env übersteuert den Compile-Default). */
+    {
+        const char *cdroot = getenv("RE15_CD_ROOT");
+#ifdef RE15_CD_ROOT_DEFAULT
+        if (!cdroot || !cdroot[0]) cdroot = RE15_CD_ROOT_DEFAULT;
+#endif
+        if (cdroot && cdroot[0]) {
+            char cpath[300];
+            snprintf(cpath, sizeof cpath, "%s/%s", cdroot, rel);        /* CD-Datei: DATA/... */
+            uint8_t *cb = re15_asset_read_file(cpath, size);
+            if (cb) return cb;
+            snprintf(cpath, sizeof cpath, "%s/../%s", cdroot, rel);     /* Geschwister: extracted_fx/... */
+            cb = re15_asset_read_file(cpath, size);
+            if (cb) return cb;
+        }
+    }
     static const char *roots[] = {
         "../../assets_shared/", "../assets_shared/", "../../../assets_shared/",
         "psx_dev/assets_shared/", "assets_shared/",
@@ -439,6 +472,24 @@ int main(int argc, char *argv[])
                     s_global_esp.id_count);
         } else {
             fprintf(stderr, "[esp] global bank CORE00.ESP NOT loaded\n");
+        }
+        /* The GLOBAL effect textures live only in VRAM (no RDT TIM). effect-id 0 (hit/blood) was
+         * extracted byte-true from the live ShowVRAM ground truth into a TIM; upload it to the
+         * dedicated global-effect slot so pc_draw_effects can bind it for global-bank particles. */
+        int bsz = 0;
+        uint8_t *bloodtim = pc_read_shared("extracted_fx/effect0_blood.tim", &bsz);
+        if (bloodtim) {
+            re15_tim_t btim;
+            if (re15_tim_parse(bloodtim, bsz, &btim) == 0) {
+                re15_render_pc_upload_tim_slot(&btim, RE15_TIM_SLOT_EFFECT_GLOBAL);
+                fprintf(stderr, "[esp] global effect-0 blood TIM -> slot %d: %dx%d %dbpp\n",
+                        RE15_TIM_SLOT_EFFECT_GLOBAL, btim.width, btim.height, btim.bpp);
+            } else {
+                fprintf(stderr, "[esp] effect0_blood.tim parse FAILED\n");
+            }
+            free(bloodtim);
+        } else {
+            fprintf(stderr, "[esp] effect0_blood.tim NOT found\n");
         }
     }
 
