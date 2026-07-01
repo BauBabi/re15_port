@@ -285,9 +285,29 @@ count_b=20 CORE00.ESP-Coord-Cells indizieren genau diese Frames.
 **Artefakte** (`re15_port/shared_assets/extracted_fx/`): `effect0_blood.png` (256×256 RGBA, Port-Asset),
 `effect0_clut.txt` (16 CLUT-Einträge), `vram_view_ground_truth.png` (die volle 1024×512-VRAM-Referenz —
 enthält auch die anderen Effekt-Texturen id 2/3/4/5/7/8, gleich extrahierbar via `re15_vram_extract.py`).
-**Damit ist die Effekt-Kette KOMPLETT** (Spawn + Mechanik byte-true + jetzt die echte Textur). Offen
-nur noch die **Port-Integration** (die extrahierte Textur in einen GPU-Slot laden + `pc_draw_effects`
-für global-bank-fx daran binden statt Room-TIM-Slot 19).
+**Damit ist die Effekt-Kette KOMPLETT** (Spawn + Mechanik byte-true + jetzt die echte Textur).
+
+## 2i. PORT-INTEGRATION ERLEDIGT (2026-07-01, Commit fd1ea376) — effect-0 rendert im Port
+
+Die extrahierte Blut-Textur ist jetzt im Port GEBUNDEN → effect-id 0 (universeller Hit-/Blut-Effekt)
+zeichnet tatsächlich:
+- **`tools/vram_png_to_tim.py`** (pure-Python, zlib, KEIN PIL): rekonstruiert die exakten VRAM-Halfwords
+  aus einer ShowVRAM-PNG und schreibt eine echte PSX-**TIM** (4/8/16-bit + CLUT) → der Port lädt sie über
+  seinen normalen `re15_tim_parse`-Pfad (kein Runtime-PNG-Decoder, keine neue Dependency).
+- **`shared_assets/extracted_fx/effect0_blood.tim`**: effect-0 als byte-true 256×256-4bpp-TIM (tpage 0x001f
+  → VRAM(960,256), clut 0x7951 → VRAM(272,485); CLUT == effect0_clut.txt exakt).
+- **`platform/pc/main.c`**: Blut-TIM → dedizierter Global-Effekt-Slot **20** beim Game-Init (neben dem
+  CORE00.ESP-Load); `pc_draw_effects` wählt den Textur-Slot **pro Partikel** aus `f->bank` — Room-fx
+  behalten RDT-TIM-Slot 19, Global-Bank-fx (effect-id 0) samplen Slot 20. Coord-Lookup nutzt jetzt
+  `f->bank` (war fälschlich immer die Room-Bank). Cell-Geometrie (coord w/h = signed Pivot-Offsets) bleibt
+  geflaggt mit dem deferred `PTR_LAB_80071d40`-Draw-Dispatch.
+- **LATENTER BUG GEFIXT:** `pc_read_shared` fand `DATA/CORE00.ESP` NICHT (liegt in shared_assets/PSX, nicht
+  im extrahierten assets_shared) → die **globale Effekt-Bank war still leer**, effect-0 löste nie auf. CD-Root-
+  Fallback (RE15_CD_ROOT / shared_assets/PSX, gleiche Konvention wie render_pc.c) + Geschwister-Probe für
+  extracted_fx/ ergänzt. Jetzt lädt die globale Bank (5 Effekte) und die Blut-TIM auflöst.
+- **Verifiziert:** 33/33 ctest; Headless-ROOM1140 loggt „global bank CORE00.ESP: 5 effects" +
+  „effect-0 blood TIM → slot 20: 256×256 4bpp"; Standalone-Harness bestätigt
+  `re15_esp_fx_spawn(room_bank, 0, …)` → globale Bank (eff_idx 2, bank==global, 20 Cells) → Slot-20-Bind.
 
 ## 3. op 0x3a `Sce_espr_on` (Spawn, Subsystem 2) — byte-true (16 Bytes)
 `FUN_80019700(a0,a1,a2,a3)` spawnt in `DAT_800a73b8` (verifiziert: `addiu s3,s3,29624`
