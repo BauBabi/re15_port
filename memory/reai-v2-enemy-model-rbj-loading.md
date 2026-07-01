@@ -34,5 +34,13 @@ Gegner-Bank (`re15_enemy_find(type)`) → eigenes mesh/skel/anim + `pc_tex_slot`
 `player_common.c` advanced (liegende 0x0C/0E/12/13 auf Frame 0 eingefroren = prone). Diagnose-Tool:
 `RE15_ENEMY_DIAG=1` → eine Zeile pro Actor beim ersten Render (Modell-Quelle/motion/anim_frame).
 
+**COVERAGE game-weit verifiziert:** alle real boot-gespawnten Gegner über ALLE 6 Stages sind Typen, die
+schon im Loader (`s_ems_order` / CDEMD0.EMS) liegen: **0x10,0x11,0x16,0x18,0x25,0x29,0x30,0x36,0x40,0x42,
+0x49,0x4B**. CDEMD0.EMS UND CDEMD1.EMS enthalten beide dieselben 25 Typen (em10–em4D) + 4 unbenannte
+Extra-Blobs — CDEMD1 ist nur eine Größen-Variante, Laden von CDEMD0 reicht. → KEINE weitere Lade-Lücke.
+Methodik-Lehre: ein statischer SCD-Opcode-Walk-Scanner (Python) DESYNCT und meldet Falsch-Positive
+(0x4E–0x55, 0x7F/0x80/0xB6 = Müll); Ground Truth = die echte VM (`op_sce_em_set` in scd_vm.c) mit
+`RE15_SPAWN_DIAG=1` bzw. das `[enemy] EM%02X loaded`-Log. Cutscene-gegatete Räume spawnen nicht beim Boot.
+
 Build auf proot-Debian (aarch64): gcc 14.2 + cmake 3.31 + ninja + SDL2 2.32.4 — vollständig, `build_linux`
 baut re15_pc (SDL2 statisch via FetchContent), 33/33 ctest. Siehe [[reai-v2-build-recipe]].
