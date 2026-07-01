@@ -21,6 +21,18 @@ Fährt das **Original-RE1.5** (MZD-Mod, identische Original-`PSX.EXE` → alle `
 - **`re15_mzd_load_room.py`** — der reine vgamepad-Treiber (erstellt den Pad, startet DuckStation `-batch <cue>`, Boot→Debug-Menü→JUMP, graziöser Close → `SaveStateOnExit` → Kopie nach `--out`).
 - **`re15_quickload.py`** — QUICK-LOAD eines Savestates via DuckStation `-statefile` (überspringt den ~64 s-Boot → ~20-40 s/Lauf). Navigiert das JUMP-Menü + Menü-Shot/Laden/Provoke. Für die Gegner-/AI-Capture-Iteration (s.u.).
 - **`re15_ss.py`** — Decoder für manuelle Verifikation (geteilt mit re15-savestate-ghidra).
+- **`re15_fire_capture.py`** — WAFFE EQUIPPEN + FEUERN + Effekt-Frame LIVE capturen (2026-07-01). Lädt eine gun-equippte ROOM1140-Base, läuft auf Feuerdistanz, zielt (R1) + feuert (Square), snapshottet den transienten Hit-Effekt via **Controller-gebundenem Save-Hotkey** (s.u.). Erzeugte `stage_saves/mzd_stage1_hit_effect.sav` (3 aktive effect-0 im Pool).
+
+### LIVE-Save mitten im Spiel (Durchbruch für transiente Effekte, 2026-07-01)
+DuckStation-Hotkeys an **Controller-Buttons** binden → via vgamepad OHNE Fokus/Keyboard triggerbar (Keyboard-Injektion ans Frontend scheitert am Fokus-Klau-Schutz). In `settings.ini`:
+- `[Hotkeys] SaveSelectedSaveState = SDL-0/LeftShoulder` — LB = Slot-1-Save des Live-Frames.
+- `[Pad1] R1 = Keyboard/E & SDL-0/RightShoulder` — R1/Zielen via Pad (war NUR Keyboard=gefiltert).
+- **KRITISCH:** `&` in einem Binding ist ein **CHORD (beide gleichzeitig)**, NICHT OR — darum feuerte `Keyboard/F2 & SDL-0/LeftStick` nie. SINGLE-Binding pro Hotkey. **Shoulder-Buttons zuverlässig**, L3/R3 (`LeftStick`/`RightStick`) NICHT.
+- Loop: Square (feuern) → LB (Save) → `HASH-957757946319438E_1.sav` rauskopieren → wiederholen. Jede Kopie = ein Frame; re15_ss.py scannt den Pool auf aktiven effect-0.
+- **Equip funktioniert aus briefing_live** (sicher, Inventar pausiert; weapon 1→3). engage_live ist unbrauchbar: Player stirbt beim Resume sofort (adjacent Zombies). Feuerdistanz ~U5 (U6=Grab/Tod, U4=zu fern).
+
+### Effekt-TEXTUR im Debug-Jump NICHT resident (Befund 2026-07-01)
+Der Effekt SPAWNT (Bank aus CPU-RAM: CORE00.ESP global + RDT room), aber die **VRAM-Effekt-Texturen/CLUTs sind NICHT resident**: alle 7 Banks (room 5/7 + global 0/2/3/4/8) zeigen ihre CLUT auf VRAM x=272-288 y=480-491, doch das Band ist SCHWARZ (Framebuffer @x=448 dekodiert korrekt → Offset stimmt). Der globale Effekt-Textur-Upload läuft nur im normalen Verlauf. → Textur-PIXEL brauchen einen **Normal-Playthrough-Save** oder Boot-Init-Disasm des param_4=0-Uploads.
 
 ```bash
 # Raum aus Stage 1 (2 Räume weiter als der Boot-Raum), mit Auto-Verify + PNG:
