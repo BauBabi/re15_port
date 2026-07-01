@@ -18,6 +18,7 @@
  * Each subsequent phase adds more opcodes to widen RE1.5 coverage.
  */
 #include <string.h>
+#include <stdlib.h>    /* getenv (spawn diagnostics) */
 #ifdef RE15_PLATFORM_PC
 #include <stdio.h>
 #endif
@@ -2460,6 +2461,10 @@ static int op_sce_em_set(scd_thread_t *t)
      * (each NPC must face a direction). Spec source: RE15Editor's
      * Enemy_sceEmSet_44.java struct. */
     int16_t  dir = scd_read_le_s16(&t->pc[16]);
+
+    if (getenv("RE15_SPAWN_DIAG"))
+        fprintf(stderr, "[spawn-diag] Sce_em_set type=0x%02X behavior=0x%02X slot=%u pos=(%d,%d,%d) dir=%d\n",
+                type, behavior, slot, x, y, z, dir);
 
     int actor_slot = SCRIPT_SLOT_TO_ACTOR(slot);
     if (actor_slot < RE15_ACTOR_MAX) {
