@@ -263,6 +263,32 @@ Die §2f-Behauptungen (z.T. aus einem Workflow-Agenten) sind jetzt **unabhängig
   via Boot-Init-Disasm finden (param_4=0-Pfad, das paired Global-Effekt-TIM-File). Naive Savestate-CLUT-Extraktion @(272,485)/
   (288,481) las Null → CLUT-Band-Offset kalibrieren oder Live-Capture nötig.
 
+## 2h. effect-0-BLUT-TEXTUR EXTRAHIERT (2026-07-01) — byte-true aus Live-VRAM
+
+Der Nutzer bestätigte: beim Zombie-Treffer blitzt sichtbar Blut auf → die Textur IST im VRAM.
+Der Blocker war ausschließlich **`re15_ss.py`s SAVESTATE-VRAM-Decode** (DuckStation speichert VRAM
+in einem Layout, das re15_ss NICHT linear liest — der Framebuffer landet bei x=448 statt x=0, die
+CLUT-Zeilen lesen leer/verschoben; die RAM-Reads von re15_ss sind korrekt, nur die VRAM-Reads nicht).
+
+**Zuverlässiger Weg (verifiziert):** DuckStations eigener **VRAM-Viewer** `[Debug] ShowVRAM=true`
++ Screenshot-Hotkey an einen Pad-Button (`SDL-0/LeftShoulder`) → eine 1024×512-PNG die **VRAM 1:1**
+ist (RGB aus RGB555). Savestate mit aktivem Effekt quickladen (`mzd_stage1_hit_effect.sav`), Button
+drücken → `screenshots/*.png`. Dann die rohen 15-bit-VRAM-Werte aus der PNG **rekonstruieren**
+(`v = (R>>3)|((G>>3)<<5)|((B>>3)<<10)`) und die 4-bit-Textur dekodieren. Tool: `re15_vram_extract.py`.
+
+**effect-0 = byte-true bestätigt:** tpage `0x001f` → VRAM **(960,256) 4-bit**, CLUT `0x7951` →
+VRAM **(272,485)** = **Blut-Palette** (0x084c=(96,16,16), 0x042b=(88,8,8), … dunkelrot-Gradient).
+Dekodiert = ein **Blut-Sprite-Sheet**: ~20 Impact-Splatter-Frames + runde Blut-Pfützen/Tropfen +
+Blut-Streaks + Hit-Marker (14% opak, 86% index-0/transparent = korrektes Sprite-Sheet). Die
+count_b=20 CORE00.ESP-Coord-Cells indizieren genau diese Frames.
+
+**Artefakte** (`re15_port/shared_assets/extracted_fx/`): `effect0_blood.png` (256×256 RGBA, Port-Asset),
+`effect0_clut.txt` (16 CLUT-Einträge), `vram_view_ground_truth.png` (die volle 1024×512-VRAM-Referenz —
+enthält auch die anderen Effekt-Texturen id 2/3/4/5/7/8, gleich extrahierbar via `re15_vram_extract.py`).
+**Damit ist die Effekt-Kette KOMPLETT** (Spawn + Mechanik byte-true + jetzt die echte Textur). Offen
+nur noch die **Port-Integration** (die extrahierte Textur in einen GPU-Slot laden + `pc_draw_effects`
+für global-bank-fx daran binden statt Room-TIM-Slot 19).
+
 ## 3. op 0x3a `Sce_espr_on` (Spawn, Subsystem 2) — byte-true (16 Bytes)
 `FUN_80019700(a0,a1,a2,a3)` spawnt in `DAT_800a73b8` (verifiziert: `addiu s3,s3,29624`
 @0x80019724; stride 132 @0x80019794-9c; 96 Slots @0x8004978c; busy `+0x6c`, alive=3;

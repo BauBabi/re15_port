@@ -31,8 +31,19 @@ DuckStation-Hotkeys an **Controller-Buttons** binden → via vgamepad OHNE Fokus
 - Loop: Square (feuern) → LB (Save) → `HASH-957757946319438E_1.sav` rauskopieren → wiederholen. Jede Kopie = ein Frame; re15_ss.py scannt den Pool auf aktiven effect-0.
 - **Equip funktioniert aus briefing_live** (sicher, Inventar pausiert; weapon 1→3). engage_live ist unbrauchbar: Player stirbt beim Resume sofort (adjacent Zombies). Feuerdistanz ~U5 (U6=Grab/Tod, U4=zu fern).
 
-### Effekt-TEXTUR im Debug-Jump NICHT resident (Befund 2026-07-01)
-Der Effekt SPAWNT (Bank aus CPU-RAM: CORE00.ESP global + RDT room), aber die **VRAM-Effekt-Texturen/CLUTs sind NICHT resident**: alle 7 Banks (room 5/7 + global 0/2/3/4/8) zeigen ihre CLUT auf VRAM x=272-288 y=480-491, doch das Band ist SCHWARZ (Framebuffer @x=448 dekodiert korrekt → Offset stimmt). Der globale Effekt-Textur-Upload läuft nur im normalen Verlauf. → Textur-PIXEL brauchen einen **Normal-Playthrough-Save** oder Boot-Init-Disasm des param_4=0-Uploads.
+### VRAM-Textur-Extraktion via ShowVRAM (2026-07-01) — `re15_ss` VRAM-Decode ist FALSCH
+**WICHTIG:** `re15_ss.py`s **VRAM**-Decode (`vram_png`/hw für VRAM) liest die DuckStation-Savestate-VRAM
+FALSCH (nicht-lineares Layout: Framebuffer landet @x=448 statt x=0, CLUT-Zeilen lesen leer/verschoben).
+Die **RAM**-Reads von re15_ss sind korrekt — nur VRAM nicht. Ich hatte daraus fälschlich „Textur nicht
+resident" geschlossen; die Textur IST da (Nutzer bestätigt sichtbares Blut).
+
+**Zuverlässig:** DuckStations **VRAM-Viewer** `[Debug] ShowVRAM=true` + Screenshot-Hotkey an einen Pad-Button
+(`[Hotkeys] Screenshot = SDL-0/LeftShoulder`, SINGLE-Binding) → Savestate mit aktivem Effekt quickladen →
+Button drücken → `screenshots/*.png` = **1024×512 = VRAM 1:1** (RGB aus RGB555). `re15_vram_extract.py`
+rekonstruiert die rohen 15-bit-Werte aus der PNG (`v=(R>>3)|((G>>3)<<5)|((B>>3)<<10)`) und dekodiert die
+Textur bei tpage+clut. **Verifiziert:** effect-0 tpage 0x001f→(960,256) 4-bit + clut 0x7951→(272,485)=Blut-
+Palette → das byte-true Blut-Sprite-Sheet (`re15_port/shared_assets/extracted_fx/effect0_blood.png`). Die
+volle VRAM-Referenz (`vram_view_ground_truth.png`) enthält auch id 2/3/4/5/7/8 (gleich extrahierbar).
 
 ```bash
 # Raum aus Stage 1 (2 Räume weiter als der Boot-Raum), mit Auto-Verify + PNG:
