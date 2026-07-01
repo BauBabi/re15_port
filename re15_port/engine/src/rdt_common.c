@@ -331,6 +331,24 @@ int re15_rdt_parse(const uint8_t *data, size_t size, re15_rdt_t *out)
         }
     }
 
+    /* ANIMATION (RBJ) block (RDT+0x5C): the per-room cinematic anim container. Length is
+     * self-described (dirOff + recordCount*8, the directory at the container's end); byte-
+     * identical to the extracted standalone RBJ. See re15_rdt.h. */
+    out->animation = NULL; out->animation_size = 0;
+    {
+        uint32_t anim_start = read_u32_le(&data[0x5c]);
+        if (anim_start != 0 && (size_t)anim_start + 8 <= size) {
+            uint32_t dir_off = read_u32_le(&data[anim_start]);
+            uint32_t rec_cnt = read_u32_le(&data[anim_start + 4]) & 0xFF;
+            uint32_t rbj_len = dir_off + rec_cnt * 8u;
+            if (rec_cnt >= 1 && rec_cnt <= 8 && dir_off > 0 &&
+                (size_t)anim_start + (size_t)rbj_len <= size) {
+                out->animation      = data + anim_start;
+                out->animation_size = (int)rbj_len;
+            }
+        }
+    }
+
     /* block.blk (RDT+0x38): CANONICALLY UNUSED — the original NEVER dereferences
      * DAT_800ac778+0x38 (disasm-confirmed 2026-06-09 via a full DAT_800ac778 xref
      * sweep: 0x10..0x60 used, 0x38 never). We are byte-exact by NOT parsing it. */

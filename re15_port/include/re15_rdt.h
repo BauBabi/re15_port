@@ -117,6 +117,18 @@ typedef struct {
     const uint8_t           *messages;
     int                      messages_size;
 
+    /* ANIMATION (RBJ) — the per-room CINEMATIC animation container, parsed from RDT
+     * header offset 0x5C (animationStart, the last section address; RDTExtractor
+     * writeAnimation:362-368 slices exactly this). RE1.5 has NO standalone RBJ files
+     * on the disc — every room's cinematic clip table + keyframe pool live INSIDE its
+     * RDT here (Irons kneel = ROOM1150, the helipad intro = ROOM1170, …). Container
+     * layout (re15_emd_parse_rbj / FUN_8001b3f8): u32 dirOff, u32 recordCount(low byte),
+     * then recordCount*8-B directory at +dirOff → total length = dirOff + recordCount*8
+     * (the directory sits at the container's END; verified byte-identical to the extracted
+     * ROOM1170.RBJ). `animation` aliases the resident RDT buffer. NULL/0 if absent/odd. */
+    const uint8_t           *animation;
+    int                      animation_size;
+
     /* FLOOR (floor.flr, RDT offset 0x34) — FOOTSTEP-SOUND region table (NOT floor
      * height; height comes from the band formula / SCA cells). Format (verified vs
      * FUN_800437d4): u16 count, then 12-B entries {s16 x, s16 z, u16 width, u16

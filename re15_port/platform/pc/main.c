@@ -669,7 +669,19 @@ int main(int argc, char *argv[])
         rbj_path = rbj_default;
     }
     uint8_t *rbj_buf = pc_read_shared(rbj_path, &rbj_size);
-    fprintf(stderr, "[rbj] loading cinematic bank: %s (%d bytes)\n", rbj_path, rbj_size);
+    /* RE1.5 ships NO standalone RBJ files — every room's cinematic anim lives INSIDE its
+     * RDT (@0x5C, now parsed into rdt.animation). Fall back to that byte-true slice when
+     * the (optional/debug) standalone file is absent — this is what makes room1150's Irons
+     * kneel + any other room's cinematics actually load. `rbj_borrowed` aliases the resident
+     * RDT buffer (must NOT be freed). The RE15_RBJ env override still wins for debug runs. */
+    int rbj_borrowed = 0;
+    if (!rbj_buf && rdt_ok && rdt.animation && rdt.animation_size > 0) {
+        rbj_buf = (uint8_t *)rdt.animation;     /* alias into resident RDT — do not free */
+        rbj_size = rdt.animation_size;
+        rbj_borrowed = 1;
+    }
+    fprintf(stderr, "[rbj] loading cinematic bank: %s (%d bytes%s)\n",
+            rbj_path, rbj_size, rbj_borrowed ? ", from RDT@0x5C" : "");
     /* X-round (2026-05-25): rbj overlay DISABLED. Deep RE of rbj keyframes
      * proved the overlay clips contain NO walk cycle — all "moving" clips
      * have correlated shoulders (both arms doing same motion = gestures)
@@ -1500,9 +1512,22 @@ int main(int argc, char *argv[])
                             snprintf(rpath, sizeof rpath, "RBJ/ROOM%04X.RBJ", dest_room);
                             int rsz = 0;
                             uint8_t *rbuf = pc_read_shared(rpath, &rsz);
+                            /* RE1.5 has no standalone RBJ — slice the dest room's cinematic anim
+                             * from its now-resident RDT (@0x5C, rdt.animation; apply_pending above
+                             * updated the local `rdt` in-place to dest_room via rc.rdt = &rdt).
+                             * Borrowed alias into the resident RDT buffer → keep s_room_rbj=NULL so
+                             * it is never freed. */
+                            int rbj_borrowed = 0;
+                            if ((!rbuf || rsz <= 0) && rdt_ok &&
+                                rdt.animation && rdt.animation_size > 0) {
+                                rbuf = (uint8_t *)rdt.animation;
+                                rsz  = rdt.animation_size;
+                                rbj_borrowed = 1;
+                            }
                             if (rbuf && rsz > 0) {
                                 if (s_room_rbj) free(s_room_rbj);
-                                s_room_rbj = rbuf; s_rbj_room = dest_room;
+                                s_room_rbj = rbj_borrowed ? NULL : rbuf;
+                                s_rbj_room = dest_room;
                                 /* SHARED overlay (enemy_common.c) — identical math to the PSX
                                  * re15_load_room_cinematic: Leon (from pl00 base) + Elliot (from
                                  * his base) + per-room enemy rebind (pc_enemy_load force-loads). */
@@ -2289,6 +2314,25 @@ int main(int argc, char *argv[])
                 const re15_md1_t           *npc_md1  = av.mesh;
                 const re15_emd_skeleton_t  *npc_skel = av.skel;
                 const re15_emd_animation_t *npc_anim = av.anim;
+
+                /* DIAG (RE15_ENEMY_DIAG=1): one line per actor on first render — proves the
+                 * generic enemy uses its OWN model (mesh != Leon's def_mesh) vs a Leon fallback,
+                 * and shows motion/anim_frame so a "static Leon" report can be diagnosed headless. */
+                if (getenv("RE15_ENEMY_DIAG")) {
+                    static uint32_t s_diag_seen = 0;   /* bitmask by actor index, one-shot */
+                    int ai = (int)(npc - g_actors);
+                    if (ai >= 0 && ai < 32 && !(s_diag_seen & (1u << ai))) {
+                        s_diag_seen |= (1u << ai);
+                        const char *which = (av.mesh == &md1) ? "LEON-FALLBACK"
+                                          : is_elliot ? "elliot"
+                                          : (av.pc_tex_slot >= 0) ? "enemy-bank" : "other";
+                        fprintf(stderr, "[enemy-diag] actor%d type=0x%02x model=%s slot=%d "
+                                "motion=%u anim_frame=%u clips=%d\n",
+                                ai, npc->type, which, av.pc_tex_slot,
+                                (unsigned)npc->motion, (unsigned)npc->anim_frame,
+                                npc_anim->clip_count);
+                    }
+                }
 
                 /* Bind the NPC's TIM: a generic enemy bank's own slot (av.pc_tex_slot,
                  * which now covers the crows too), else Elliot (1) / Leon (0). */
