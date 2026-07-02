@@ -222,18 +222,18 @@ extern void re15_render_pc_set_pri_player(int sx, int sy, int z);
 extern uint8_t *re15_asset_read_file(const char *path, int *size);
 extern void     re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
 
-/* Globalization Phase 3-B (2026-06-13): read a global asset from the SHARED tree
- * (psx_dev/assets_shared/<rel>), trying the run-dir-relative roots (build/Debug,
- * build/Release, project root, …). Replaces the per-asset 4-5 candidate
- * re15_reborn/assets/ path chains so the PC engine sources from assets_shared like
- * the PSX disc does. Returns a malloc'd buffer (caller frees/keeps); *size set; NULL
- * if not found in any root. */
+/* Asset-Pfad-Konsolidierung (2026-07-02): read a global asset from the EINEN Asset-Wurzel
+ * shared_assets/PSX/<rel>. Dieser Baum enthält jetzt ALLES — den rohen CD-Baum (RDT unter
+ * STAGE{N}/, DATA, gepackte Container) PLUS die vor-extrahierten Assets (PLD-Split, RBJ/,
+ * per-cut BSS/). Die alte psx_dev/assets_shared- + re15_reborn-Abhängigkeit ist entfernt.
+ * Auflösungsreihenfolge: env RE15_ASSET_ROOT → RE15_ASSET_ROOT_DEFAULT → env RE15_CD_ROOT →
+ * RE15_CD_ROOT_DEFAULT (alle = shared_assets/PSX; die Defaults sind identisch) → cwd-relative
+ * Fallbacks. Returns a malloc'd buffer (caller frees/keeps); *size set; NULL if not found. */
 static uint8_t *pc_read_shared(const char *rel, int *size)
 {
-    /* Höchste Priorität: expliziter Asset-Wurzel-Pfad aus der Umgebung
-     * (RE15_ASSET_ROOT). Macht den nach re15_port verschobenen Build
-     * cwd-unabhängig — er findet den extrahierten assets_shared-Baum unabhängig
-     * davon, von wo aus die .exe gestartet wird. */
+    /* Höchste Priorität: expliziter Asset-Wurzel-Pfad aus der Umgebung (RE15_ASSET_ROOT),
+     * macht den Build cwd-unabhängig — er findet shared_assets/PSX unabhängig davon, von wo
+     * aus die .exe gestartet wird. */
     {
         const char *envroot = getenv("RE15_ASSET_ROOT");
         if (envroot && envroot[0]) {
@@ -253,10 +253,10 @@ static uint8_t *pc_read_shared(const char *rel, int *size)
         if (db) return db;
     }
 #endif
-    /* Original-CD-Baum (shared_assets/PSX) für Assets, die NICHT im extrahierten
-     * assets_shared liegen: DATA/CORE00.ESP (globale Effekt-Bank) sowie die daraus/aus
-     * VRAM abgeleiteten Effekt-Texturen unter extracted_fx/ (Geschwister von PSX). Gleiche
-     * Konvention wie render_pc.c (RE15_CD_ROOT env übersteuert den Compile-Default). */
+    /* Dieselbe Wurzel über RE15_CD_ROOT (env) bzw. RE15_CD_ROOT_DEFAULT — deckt zusätzlich die
+     * Geschwister-Texturen unter extracted_fx/ ab (…/PSX/../extracted_fx/). Der Default ist mit
+     * RE15_ASSET_ROOT_DEFAULT identisch (beide = shared_assets/PSX); getrennt gehalten nur wegen
+     * der env-Override-Semantik und des ../-Geschwister-Pfads. */
     {
         const char *cdroot = getenv("RE15_CD_ROOT");
 #ifdef RE15_CD_ROOT_DEFAULT
@@ -272,70 +272,20 @@ static uint8_t *pc_read_shared(const char *rel, int *size)
             if (cb) return cb;
         }
     }
-    static const char *roots[] = {
-        "../../assets_shared/", "../assets_shared/", "../../../assets_shared/",
-        "psx_dev/assets_shared/", "assets_shared/",
-        "../re15_reborn/", "../../re15_reborn/", "../../../re15_reborn/",
-        /* Fallback for repositories that still store runtime content here. */
-        "../re15_reborn/assets/", "../../re15_reborn/assets/", "../../../re15_reborn/assets/",
-        "psx_dev/re15_reborn/", "psx_dev/re15_reborn/assets/",
-        "re15_reborn/", "re15_reborn/assets/",
-        NULL
-    };
-    static const struct {
-        const char *rel;
-        const char *legacy[4];
-    } aliases[] = {
-        { "PLD/PL00.TIM",   { "TEST.TIM",     "test.tim",     NULL } },
-        { "PLD/PL00.MD1",   { "test.md1",     "pl00_model.bin", NULL } },
-        { "PLD/ELLIOT.TIM", { "ELLIOT.TIM",   "elliot.tim",   NULL } },
-        { "PLD/ELLIOT.MD1", { "ELLIOT.MD1",   "elliot.md1",   NULL } },
-        { "PLD/ELLIOT.EDD", { "elliot.edd",   NULL } },
-        { "PLD/ELLIOT.EMR", { "elliot.emr",   NULL } },
-        { "PLD/PL00W01.EDD", { "pl00w01.edd", NULL } },
-        { "PLD/PL00W01.EMR", { "pl00w01.emr", NULL } },
-        { NULL, { NULL } }
-    };
-    char path[192];
-    for (int i = 0; roots[i]; i++) {
-        snprintf(path, sizeof path, "%s%s", roots[i], rel);
-        uint8_t *b = re15_asset_read_file(path, size);
-        if (b) return b;
-    }
+    /* Asset-Pfad-Konsolidierung (2026-07-02): die alten assets_shared- + re15_reborn-Ketten
+     * und Legacy-Namens-Aliase sind ENTFERNT. Alles kommt aus der EINEN Wurzel shared_assets/PSX
+     * (oben via env RE15_ASSET_ROOT/RE15_CD_ROOT bzw. den Compile-Default abgedeckt). Diese
+     * cwd-relativen Einträge sind nur der Fallback für CTest/headless aus wechselnden
+     * Arbeitsverzeichnissen. */
     {
-        const char *leaf = strrchr(rel, '/');
-        if (leaf && leaf[1]) {
-            char lower_leaf[64];
-            leaf++;
-            for (int i = 0; roots[i]; i++) {
-                snprintf(path, sizeof path, "%s%s", roots[i], leaf);
-                uint8_t *b = re15_asset_read_file(path, size);
-                if (b) return b;
-            }
-            size_t n = strlen(leaf);
-            if (n >= sizeof lower_leaf) n = sizeof lower_leaf - 1;
-            for (size_t i = 0; i < n; i++) {
-                char ch = leaf[i];
-                lower_leaf[i] = (ch >= 'A' && ch <= 'Z') ? (char)(ch - 'A' + 'a') : ch;
-            }
-            lower_leaf[n] = '\0';
-            for (int i = 0; roots[i]; i++) {
-                snprintf(path, sizeof path, "%s%s", roots[i], lower_leaf);
-                uint8_t *b = re15_asset_read_file(path, size);
-                if (b) return b;
-            }
+        static const char *rel_roots[] = { "shared_assets/PSX/", "../shared_assets/PSX/",
+                                           "../../shared_assets/PSX/", "../../../shared_assets/PSX/", NULL };
+        char path[300];
+        for (int i = 0; rel_roots[i]; i++) {
+            snprintf(path, sizeof path, "%s%s", rel_roots[i], rel);
+            uint8_t *b = re15_asset_read_file(path, size);
+            if (b) return b;
         }
-    }
-    for (int i = 0; aliases[i].rel; i++) {
-        if (strcmp(rel, aliases[i].rel) != 0) continue;
-        for (int j = 0; aliases[i].legacy[j]; j++) {
-            for (int k = 0; roots[k]; k++) {
-                snprintf(path, sizeof path, "%s%s", roots[k], aliases[i].legacy[j]);
-                uint8_t *b = re15_asset_read_file(path, size);
-                if (b) return b;
-            }
-        }
-        break;
     }
     return NULL;
 }

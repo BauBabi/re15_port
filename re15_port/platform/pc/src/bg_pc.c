@@ -51,18 +51,17 @@ extern void re15_render_pc_set_pri_atlas(const uint32_t *rgba, int w, int h);
 static const char *re15_bg_room_prefix(unsigned room_id);   /* fwd (defined below) */
 static uint32_t s_pri_atlas_rgba[256 * 256];
 
+/* Asset-Pfad-Konsolidierung (2026-07-02): die per-cut Hintergründe (BSS/ROOM####/BG##.BSS)
+ * und Vordergrund-Atlanten (BSS/ROOM####/PRI##.TIM) liegen jetzt in der EINEN Asset-Wurzel
+ * shared_assets/PSX. Die alten psx_dev/assets_shared- + re15_reborn-Ketten sind entfernt.
+ * RE15_ASSET_ROOT_DEFAULT zeigt (CMake) auf shared_assets/PSX; die cwd-relativen Einträge
+ * decken CTest/headless aus verschiedenen Arbeitsverzeichnissen ab. */
 static const char *const s_pc_bg_roots[] = {
 #ifdef RE15_ASSET_ROOT_DEFAULT
-    /* Verschiebung nach re15_port: absolute Default-Wurzel (psx_dev/assets_shared)
-     * als Erstes — cwd-unabhängig. Gleicher Mechanismus wie pc_read_shared in main.c. */
     RE15_ASSET_ROOT_DEFAULT "/",
 #endif
-    "../../assets_shared/", "../assets_shared/", "../../../assets_shared/",
-    "psx_dev/assets_shared/", "assets_shared/",
-    "../re15_reborn/", "../../re15_reborn/", "../../../re15_reborn/",
-    "../re15_reborn/assets/", "../../re15_reborn/assets/", "../../../re15_reborn/assets/",
-    "psx_dev/re15_reborn/", "psx_dev/re15_reborn/assets/",
-    "re15_reborn/", "re15_reborn/assets/",
+    "shared_assets/PSX/", "../shared_assets/PSX/",
+    "../../shared_assets/PSX/", "../../../shared_assets/PSX/",
     NULL
 };
 
@@ -176,14 +175,17 @@ int re15_bg_load_from_bss(const uint8_t *bss_chunk, size_t size)
 
 int re15_bg_load_test_asset(void)
 {
-    /* Try several plausible paths so the binary works from CTest, the
-     * IDE, and `cmake --build && cd build/Release && .\re15_reborn_pc.exe`.
-     * The bundled BSS lives at psx_dev/re15_reborn/assets/test.bss. */
+    /* Asset-Pfad-Konsolidierung (2026-07-02): der Boot-Platzhalter-BSS liegt jetzt in der EINEN
+     * Wurzel shared_assets/PSX (DATA/TEST.BSS). Die alten re15_reborn-Pfade sind entfernt; der
+     * absolute Compile-Default deckt cwd-unabhängig, die Relativen decken CTest/headless ab. */
     static const char *candidates[] = {
-        "../../re15_reborn/assets/test.bss",            /* from build/Release */
-        "../re15_reborn/assets/test.bss",               /* from build */
-        "../../../re15_reborn/assets/test.bss",         /* from build/Release/subdir */
-        "psx_dev/re15_reborn/assets/test.bss",          /* from repo root */
+#ifdef RE15_ASSET_ROOT_DEFAULT
+        RE15_ASSET_ROOT_DEFAULT "/DATA/TEST.BSS",
+#endif
+        "shared_assets/PSX/DATA/TEST.BSS",
+        "../shared_assets/PSX/DATA/TEST.BSS",
+        "../../shared_assets/PSX/DATA/TEST.BSS",
+        "../../../shared_assets/PSX/DATA/TEST.BSS",
         NULL
     };
 

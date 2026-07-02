@@ -19,39 +19,34 @@ static unsigned char *s_pc_room_buf = NULL;
 
 int re15_room_load(unsigned room_id)
 {
-    /* Globalization fix 2026-06-13: cross-room RDTs come from the SHARED tree
-     * (assets_shared/RDT/ROOM%04X.RDT). The old re15_reborn/assets/ only held
-     * test.rdt + room1140.rdt, so ANY other destination (e.g. door4 -> ROOM1130)
-     * was not found and the room change silently aborted. Windows file lookup is
-     * case-insensitive so ROOM%04X matches the tree. */
-    static const char *prefixes[] = {
-#ifdef RE15_ASSET_ROOT_DEFAULT
-        /* Verschiebung nach re15_port: absolute Default-Wurzel zuerst (cwd-unabhängig,
-         * enthält alle 240 RDTs). Gleicher Mechanismus wie pc_read_shared / bg_pc. */
-        RE15_ASSET_ROOT_DEFAULT "/",
-#endif
-        "../../assets_shared/", "../assets_shared/", "../../../assets_shared/",
-        "assets_shared/", "psx_dev/assets_shared/",
-        "../re15_reborn/", "../../re15_reborn/", "../../../re15_reborn/",
-        "../re15_reborn/assets/", "../../re15_reborn/assets/", "../../../re15_reborn/assets/",
-        "psx_dev/re15_reborn/", "psx_dev/re15_reborn/assets/",
-        "re15_reborn/", "re15_reborn/assets/"
-    };
-    char path[256];
+    /* Asset-Pfad-Konsolidierung (2026-07-02): der Raum-RDT kommt aus der EINEN Asset-
+     * Wurzel shared_assets/PSX, CD-Layout STAGE{N}/ROOM%04X.RDT. Die erste Hex-Ziffer der
+     * Room-ID = Stage (verifiziert: 80/32/32/32/48/16 = 240 RDTs unter STAGE1..6). Die alten
+     * assets_shared/RDT-Flach- + re15_reborn-Ketten sind entfernt — es gibt nur noch diese
+     * eine Wurzel (env RE15_ASSET_ROOT / RE15_CD_ROOT übersteuern; sonst der Compile-Default). */
+    char path[300];
     uint8_t *buf = NULL;
     int size = 0;
-    for (int i = 0; i < (int)(sizeof prefixes / sizeof prefixes[0]); i++) {
-        snprintf(path, sizeof path, "%sRDT/ROOM%04X.RDT", prefixes[i], room_id);
+    unsigned stage = (room_id >> 12) & 0xF;
+
+    const char *roots[3]; int nroots = 0;
+    const char *er = getenv("RE15_ASSET_ROOT"); if (er && er[0]) roots[nroots++] = er;
+    const char *cr = getenv("RE15_CD_ROOT");    if (cr && cr[0]) roots[nroots++] = cr;
+#ifdef RE15_ASSET_ROOT_DEFAULT
+    roots[nroots++] = RE15_ASSET_ROOT_DEFAULT;
+#endif
+    for (int i = 0; i < nroots && !buf && stage >= 1 && stage <= 6; i++) {
+        snprintf(path, sizeof path, "%s/STAGE%u/ROOM%04X.RDT", roots[i], stage, room_id);
         buf = re15_asset_read_file(path, &size);
-        if (buf) break;
     }
-    for (int i = 0; !buf && i < (int)(sizeof prefixes / sizeof prefixes[0]); i++) {
-        snprintf(path, sizeof path, "%sROOM%04X.RDT", prefixes[i], room_id);
-        buf = re15_asset_read_file(path, &size);
-    }
-    for (int i = 0; !buf && i < (int)(sizeof prefixes / sizeof prefixes[0]); i++) {
-        snprintf(path, sizeof path, "%sroom%04x.rdt", prefixes[i], room_id);
-        buf = re15_asset_read_file(path, &size);
+    /* cwd-relative Fallbacks (CTest/headless aus unterschiedlichen Arbeitsverzeichnissen). */
+    if (!buf && stage >= 1 && stage <= 6) {
+        static const char *rel[] = { "shared_assets/PSX/", "../shared_assets/PSX/",
+                                     "../../shared_assets/PSX/", "../../../shared_assets/PSX/", NULL };
+        for (int i = 0; rel[i] && !buf; i++) {
+            snprintf(path, sizeof path, "%sSTAGE%u/ROOM%04X.RDT", rel[i], stage, room_id);
+            buf = re15_asset_read_file(path, &size);
+        }
     }
     if (!buf) {
         fprintf(stderr, "[room] PC load FAILED: room%04x.rdt not found\n", room_id);

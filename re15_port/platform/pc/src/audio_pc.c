@@ -323,18 +323,16 @@ static void audio_callback(void *userdata, Uint8 *stream, int len)
  * against CWD differences (run from build/, from repo root, etc.). */
 static int load_bundled_vab_pc(void)
 {
+    /* Asset-Pfad-Konsolidierung (2026-07-02): der frühe Bring-up-Test-VAB (test.vh/.vb) ist
+     * retired — die alten re15_reborn-Pfade sind entfernt. Diese Kandidaten zeigen nur noch auf
+     * die EINE Wurzel shared_assets/PSX; die Dateien existieren dort nicht (Loader bleibt inert),
+     * das echte Spiel-Audio läuft über den SOUND/-Pfad weiter unten. */
     static const char *vh_candidates[] = {
-        "../../re15_reborn/assets/test.vh",
-        "../re15_reborn/assets/test.vh",
-        "../../../re15_reborn/assets/test.vh",
-        "psx_dev/re15_reborn/assets/test.vh",
+        "shared_assets/PSX/DATA/TEST.VH", "../shared_assets/PSX/DATA/TEST.VH",
         NULL
     };
     static const char *vb_candidates[] = {
-        "../../re15_reborn/assets/test.vb",
-        "../re15_reborn/assets/test.vb",
-        "../../../re15_reborn/assets/test.vb",
-        "psx_dev/re15_reborn/assets/test.vb",
+        "shared_assets/PSX/DATA/TEST.VB", "../shared_assets/PSX/DATA/TEST.VB",
         NULL
     };
 

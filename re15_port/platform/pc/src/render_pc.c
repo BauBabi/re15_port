@@ -1131,12 +1131,13 @@ static void re15_msgfont_ensure(void)
     s_msgfont_ready = 1;   /* attempt once; on failure callers fall back to 6x8 */
 
     extern uint8_t *re15_asset_read_file(const char *, int *);
-    static const char *cand[5] = {
+    /* Asset-Pfad-Konsolidierung (2026-07-02): TEX.TIM kommt aus der EINEN Wurzel
+     * shared_assets/PSX (CD-Baum, unten CD-root-first). Die alten re15_reborn-Fallbacks
+     * sind entfernt; die extracted/PSX-Relativen bleiben nur als cwd-Fallback. */
+    static const char *cand[3] = {
         "../../../../extracted/PSX/DATA/TEX.TIM",
         "../../../extracted/PSX/DATA/TEX.TIM",
         "extracted/PSX/DATA/TEX.TIM",
-        "../../re15_reborn/assets/TEX.TIM",
-        "psx_dev/re15_reborn/assets/TEX.TIM",
     };
     uint8_t *buf = NULL; int sz = 0;
     /* Original-CD-Baum zuerst: TEX.TIM liegt dort unter DATA/ (re15_port
@@ -1152,7 +1153,7 @@ static void re15_msgfont_ensure(void)
             buf = re15_asset_read_file(p, &sz);
         }
     }
-    for (int i = 0; i < 5 && !buf; i++) buf = re15_asset_read_file(cand[i], &sz);
+    for (int i = 0; i < 3 && !buf; i++) buf = re15_asset_read_file(cand[i], &sz);
     if (!buf) return;
 
     re15_tim_t tim;
@@ -1197,15 +1198,13 @@ static void re15_msgfont_ensure(void)
      * init value). avg 8.2px vs our old maxc+2 ~10px → fixes the ~17% over-wide
      * text. We load the real bytes here; maxc+2 only as a last-resort fallback. */
     {
-        static const char *dcand[5] = {
+        static const char *dcand[3] = {
             "../../../../extracted/PSX/BIN/DEBUG.BIN",
             "../../../extracted/PSX/BIN/DEBUG.BIN",
             "extracted/PSX/BIN/DEBUG.BIN",
-            "../../re15_reborn/assets/DEBUG.BIN",
-            "psx_dev/re15_reborn/assets/DEBUG.BIN",
         };
         uint8_t *dbg = NULL; int dsz = 0;
-        /* Original-CD-Baum zuerst: DEBUG.BIN liegt dort unter BIN/. */
+        /* Original-CD-Baum zuerst: DEBUG.BIN liegt dort unter BIN/ (shared_assets/PSX). */
         {
             const char *cdroot = getenv("RE15_CD_ROOT");
 #ifdef RE15_CD_ROOT_DEFAULT
@@ -1217,7 +1216,7 @@ static void re15_msgfont_ensure(void)
                 dbg = re15_asset_read_file(p, &dsz);
             }
         }
-        for (int i = 0; i < 5 && !dbg; i++) dbg = re15_asset_read_file(dcand[i], &dsz);
+        for (int i = 0; i < 3 && !dbg; i++) dbg = re15_asset_read_file(dcand[i], &dsz);
         if (dbg && dsz >= 0x4416 + 256) {
             for (int code = 0; code < 256; code++)
                 s_msgfont_w[code] = dbg[0x4416 + code];   /* RAM 0x800c4416[code] */

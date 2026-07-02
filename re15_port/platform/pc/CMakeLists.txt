@@ -49,17 +49,13 @@ add_executable(re15_pc main.c ${PC_PLATFORM_SOURCES})
 
 target_compile_definitions(re15_pc PRIVATE RE15_PLATFORM_PC)
 
-# Default-Asset-Wurzel (extrahierter assets_shared-Baum) als Compile-String, damit
-# der Build die Assets auch ohne gesetzte RE15_ASSET_ROOT-Env findet. Phase-A-
-# Übergang; der Original-CD-Reader (shared_assets/PSX) ist das spätere Ziel.
+# EINZIGE Asset-Wurzel (2026-07-02): der in-repo Baum shared_assets/PSX enthält jetzt
+# ALLES — den rohen CD-Baum (RDT unter STAGE{N}/, DATA, gepackte Container) PLUS die
+# vor-extrahierten Assets (PLD-Split TIM/MD1/EDD/EMR, RBJ/, per-cut BSS/ROOM####/…).
+# Die alte psx_dev/assets_shared-Abhängigkeit ist damit entfernt. Beide Defaults zeigen
+# auf denselben Baum; RE15_ASSET_ROOT / RE15_CD_ROOT (env) übersteuern zur Laufzeit.
 target_compile_definitions(re15_pc PRIVATE
-    RE15_ASSET_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/../psx_dev/assets_shared"
-)
-
-# Original-CD-Baum (shared_assets/PSX) für Assets, die NICHT im extrahierten
-# assets_shared liegen: TEX.TIM (Original-Subtitle-Font) + DEBUG.BIN (proportionale
-# Glyph-Breiten @0x4416). RE15_CD_ROOT (env) übersteuert zur Laufzeit.
-target_compile_definitions(re15_pc PRIVATE
+    RE15_ASSET_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
     RE15_CD_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
 )
 
