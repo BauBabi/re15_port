@@ -56,6 +56,21 @@ static inline int RNDI(float f) {
 #include "re15_game_step.h"   /* SHARED per-frame interpreter step (PSX+PC) */
 #include "re15_menu.h"        /* re15_menu_* — inventory/weapon-select overlay (8.20) */
 #include "re15_item_icon.h"   /* re15_item_icon_* — byte-true ITEMALL grid icons (8.22) */
+#include "re15_damage.h"      /* re15_player_equipped_weapon (ARMS CONTROL panel, 8.23) */
+
+/* Draw a byte-true 40×30 ITEMALL icon at (x,y) over the paused inventory (pixel-wise; transparent
+ * skipped). Returns 1 if drawn, 0 if the item has no captured palette (caller can text-fallback). */
+static int re15_pc_draw_item_icon(int x, int y, uint8_t id)
+{
+    if (!re15_item_icon_available(id)) return 0;
+    for (int iv = 0; iv < 30; iv++)
+        for (int iu = 0; iu < 40; iu++) {
+            uint8_t pr, pg, pb;
+            if (re15_item_icon_pixel(id, iu, iv, &pr, &pg, &pb))
+                re15_render_tile(x + iu, y + iv, 1, 1, 0, pr, pg, pb);
+        }
+    return 1;
+}
 #include "re15_room.h"        /* SHARED cross-room transition (re15_room_apply_pending) */
 #include "re15_enemy.h"       /* generic enemy-model registry (re15_enemy_find/alloc/reset) */
 #include "re15_ems.h"         /* enemy-model archive index (load EMDs out of CDEMD*.EMS) */
@@ -1095,52 +1110,68 @@ int main(int argc, char *argv[])
             }
         }
 
-        /* INVENTORY overlay (Phase 8.21). Drawn on top of the HUD when open (game_step pauses gameplay).
-         * BYTE-TRUE LAYOUT: the 2-col × 5-row grid (DAT_80076274: cols {4,44}, rows {32,62,92,122,152})
-         * at panel origin (215,26)+20 → screen cells at X 219/259, Y 78 + row*30; the byte-true cursor
-         * highlight + quantity; a name/type line for the selected item. The per-item composite ITEMALL
-         * pixel icons (descriptor table @0x80074a8c) are the one deferred piece — cells show the id/qty
-         * placeholder for now (RE15_INVENTORY_SUBSYSTEM.md §3). */
+        /* INVENTORY / STATUS SCREEN (Phase 8.23). The real RE1.5 inventory is a 3-column status screen
+         * (framebuffer ground truth = stage_saves/mzd_inv_open.sav): LEFT = ID card + CONDITION/ECG +
+         * ITEM/MAP/FILE/EXIT tabs; CENTER = ARMS CONTROL (equipped weapon); RIGHT = ITEM LIST (the 2-col
+         * item grid). Chrome = faithful-line panels (the byte-true window-frame builder FUN_800467a8 is
+         * deferred); the ITEM-LIST + equipped-weapon ICONS + the grid POSITIONS (cells @217/257,58+row*30)
+         * + the CONDITION text are byte-true. See RE15_INVENTORY_SUBSYSTEM.md §3. */
         if (re15_menu_is_open()) {
             int n = re15_menu_count(), cur = re15_menu_cursor();
-            re15_render_tile(208, 64, 112, 156, 3, 0, 0, 48);              /* panel */
-            re15_debug_text(214, 68, 0, "ITEM");
-            for (int c = 0; c < 10; c++) {
-                int cx = 215 + ((c & 1) ? 44 : 4);
-                int cy = 78 + (c >> 1) * 30;
-                int occ = (c < n);
-                if (c == cur) re15_render_tile(cx - 1, cy - 1, 42, 30, 2, 48, 48, 128);  /* cursor */
-                re15_render_tile(cx, cy, 40, 28, 1, occ ? 24 : 10, occ ? 24 : 10, occ ? 56 : 24);
-                if (occ) {
-                    uint8_t id = re15_menu_disp_id(c);
-                    /* byte-true ITEMALL icon (40×30, native, framebuffer-derived palette). Drawn pixel-wise
-                     * over the cell (paused menu → perf is fine); transparent pixels skipped. Falls back to
-                     * the id/qty text when the item's palette isn't captured yet (re15_item_icon_available). */
-                    if (re15_item_icon_available(id)) {
-                        for (int iv = 0; iv < 30; iv++)
-                            for (int iu = 0; iu < 40; iu++) {
-                                uint8_t pr, pg, pb;
-                                if (re15_item_icon_pixel(id, iu, iv, &pr, &pg, &pb))
-                                    re15_render_tile(cx + iu, cy + iv, 1, 1, 0, pr, pg, pb);
-                            }
-                    } else {
-                        char t[8];
-                        snprintf(t, sizeof t, "%02X", id);
-                        re15_debug_text(cx + 2, cy + 2, 0, t);
-                    }
-                    uint8_t q = re15_menu_disp_qty(c);
-                    if (q > 0) { char t[8]; snprintf(t, sizeof t, "%d", q); re15_debug_text(cx + 2, cy + 18, 0, t); }
-                }
+            re15_actor_t *plr = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+            uint8_t eqw = (uint8_t)re15_player_equipped_weapon();
+            re15_render_tile(0, 0, SCREEN_XRES, SCREEN_YRES, 5, 20, 28, 64);   /* screen background */
+
+            /* ---- LEFT column: ID card + CONDITION + tabs ---- */
+            re15_render_tile(8, 6, 144, 84, 4, 36, 52, 100);
+            re15_render_tile(14, 22, 40, 54, 3, 12, 12, 32);                   /* photo */
+            re15_debug_text(64, 12, 0, "POLICE");
+            re15_debug_text(60, 26, 0, "Leon.S.kennedy");
+            re15_render_tile(8, 94, 144, 66, 4, 36, 52, 100);
+            re15_debug_text(14, 98, 0, "CONDITION");
+            re15_debug_text(18, 118, 0, "ECG");
+            {   /* byte-true condition thresholds (idle-FSM @0x8003206c: <0x32 caution, <0x1e danger) */
+                const char *cond = plr->hp >= 50 ? "FINE" : plr->hp >= 30 ? "CAUTION" : "DANGER";
+                re15_debug_text(48, 138, 0, cond);
             }
+            {   static const char *tabs[4] = { "ITEM", "MAP", "FILE", "EXIT" };
+                for (int i = 0; i < 4; i++)
+                    re15_debug_text(66 + (i & 1) * 48, 168 + (i >> 1) * 18, 0, tabs[i]); }
+
+            /* ---- CENTER: ARMS CONTROL (equipped weapon) ---- */
+            re15_render_tile(156, 6, 52, 152, 4, 36, 52, 100);
+            re15_debug_text(158, 8, 0, "ARMS");
+            re15_debug_text(160, 24, 0, "EQUIP");
+            if (!re15_pc_draw_item_icon(160, 44, eqw))
+                re15_debug_text(168, 52, 0, "--");
+            re15_debug_text(158, 96, 0, "STD ARMS");
+            re15_pc_draw_item_icon(160, 112, eqw);
+
+            /* ---- RIGHT: ITEM LIST (byte-true 2-col grid, cells @217/257,58+row*30) ---- */
+            re15_render_tile(212, 6, 104, 152, 4, 36, 52, 100);
+            re15_debug_text(214, 8, 0, "ITEM LIST");
+            for (int c = 0; c < 10; c++) {
+                int cx = 217 + ((c & 1) ? 40 : 0);
+                int cy = 58 + (c >> 1) * 30;
+                if (c >= n) continue;
+                if (c == cur) re15_render_tile(cx - 1, cy - 1, 42, 32, 3, 40, 40, 120);  /* cursor */
+                uint8_t id = re15_menu_disp_id(c);
+                if (!re15_pc_draw_item_icon(cx, cy, id)) {
+                    char t[8]; snprintf(t, sizeof t, "%02X", id);
+                    re15_debug_text(cx + 2, cy + 2, 0, t);
+                }
+                uint8_t q = re15_menu_disp_qty(c);
+                if (q > 0) { char t[8]; snprintf(t, sizeof t, "%d", q); re15_debug_text(cx + 22, cy + 20, 0, t); }
+            }
+
+            /* selected item name + controls */
             if (n > 0) {
                 uint8_t id = re15_menu_disp_id(cur);
                 const char *ty = re15_item_is_weapon(id) ? "WEAPON"
                                : re15_item_is_ammo(id)   ? "AMMO" : "ITEM";
                 char line[64];
-                snprintf(line, sizeof line, "%s  [%s]   Enter=equip  Shift=close", re15_item_name(id), ty);
-                re15_debug_text(20, 224, 0, line);
-            } else {
-                re15_debug_text(20, 224, 0, "(empty)   Shift=close");
+                snprintf(line, sizeof line, "%s [%s]  Enter=equip Shift=close", re15_item_name(id), ty);
+                re15_debug_text(158, 224, 0, line);
             }
         }
 
