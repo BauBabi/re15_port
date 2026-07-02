@@ -14,6 +14,8 @@ add_library(re15_test_support STATIC
     ${CMAKE_SOURCE_DIR}/platform/pc/src/skeleton_trig_pc.c)
 target_include_directories(re15_test_support PUBLIC ${CMAKE_SOURCE_DIR}/include)
 target_link_libraries(re15_test_support PUBLIC m)
+target_compile_definitions(re15_test_support PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 
 # Test-Runner Executable
 add_executable(re15_tests test_main.c)

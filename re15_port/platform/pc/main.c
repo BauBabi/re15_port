@@ -55,6 +55,7 @@ static inline int RNDI(float f) {
 #include "re15_stair.h"
 #include "re15_game_step.h"   /* SHARED per-frame interpreter step (PSX+PC) */
 #include "re15_menu.h"        /* re15_menu_* — inventory/weapon-select overlay (8.20) */
+#include "re15_item_icon.h"   /* re15_item_icon_* — byte-true ITEMALL grid icons (8.22) */
 #include "re15_room.h"        /* SHARED cross-room transition (re15_room_apply_pending) */
 #include "re15_enemy.h"       /* generic enemy-model registry (re15_enemy_find/alloc/reset) */
 #include "re15_ems.h"         /* enemy-model archive index (load EMDs out of CDEMD*.EMS) */
@@ -1111,11 +1112,24 @@ int main(int argc, char *argv[])
                 if (c == cur) re15_render_tile(cx - 1, cy - 1, 42, 30, 2, 48, 48, 128);  /* cursor */
                 re15_render_tile(cx, cy, 40, 28, 1, occ ? 24 : 10, occ ? 24 : 10, occ ? 56 : 24);
                 if (occ) {
-                    char t[8];
-                    snprintf(t, sizeof t, "%02X", re15_menu_disp_id(c));
-                    re15_debug_text(cx + 2, cy + 2, 0, t);
+                    uint8_t id = re15_menu_disp_id(c);
+                    /* byte-true ITEMALL icon (40×30, native, framebuffer-derived palette). Drawn pixel-wise
+                     * over the cell (paused menu → perf is fine); transparent pixels skipped. Falls back to
+                     * the id/qty text when the item's palette isn't captured yet (re15_item_icon_available). */
+                    if (re15_item_icon_available(id)) {
+                        for (int iv = 0; iv < 30; iv++)
+                            for (int iu = 0; iu < 40; iu++) {
+                                uint8_t pr, pg, pb;
+                                if (re15_item_icon_pixel(id, iu, iv, &pr, &pg, &pb))
+                                    re15_render_tile(cx + iu, cy + iv, 1, 1, 0, pr, pg, pb);
+                            }
+                    } else {
+                        char t[8];
+                        snprintf(t, sizeof t, "%02X", id);
+                        re15_debug_text(cx + 2, cy + 2, 0, t);
+                    }
                     uint8_t q = re15_menu_disp_qty(c);
-                    if (q > 0) { snprintf(t, sizeof t, "%d", q); re15_debug_text(cx + 2, cy + 16, 0, t); }
+                    if (q > 0) { char t[8]; snprintf(t, sizeof t, "%d", q); re15_debug_text(cx + 2, cy + 18, 0, t); }
                 }
             }
             if (n > 0) {

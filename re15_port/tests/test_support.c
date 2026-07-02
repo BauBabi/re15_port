@@ -37,3 +37,31 @@ void re15_audio_start_room_bgm(int stage, int room)
 void re15_audio_room_se(int se_id) { (void)se_id; }
 void re15_audio_weapon_se(int se_id) { (void)se_id; }
 void re15_audio_prime_weapon(int weapon_id) { (void)weapon_id; }
+
+/* Real asset reader for tests (the engine's item_icon_common.c reads ITEMALL.PIX through this; the PC
+ * backend provides the game one). Resolves a "shared_assets/PSX/..." path via RE15_ASSET_PSX_DIR so the
+ * icon test finds the in-repo asset. Returns a malloc'd buffer (+ size) or NULL. */
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#ifndef RE15_ASSET_PSX_DIR
+#define RE15_ASSET_PSX_DIR "shared_assets/PSX"
+#endif
+unsigned char *re15_asset_read_file(const char *path, int *out_size)
+{
+    char buf[512];
+    const char *pfx = "shared_assets/PSX/";
+    if (strncmp(path, pfx, strlen(pfx)) == 0)
+        snprintf(buf, sizeof buf, "%s/%s", RE15_ASSET_PSX_DIR, path + strlen(pfx));
+    else
+        snprintf(buf, sizeof buf, "%s", path);
+    FILE *f = fopen(buf, "rb");
+    if (!f) return NULL;
+    fseek(f, 0, SEEK_END); long sz = ftell(f); fseek(f, 0, SEEK_SET);
+    if (sz <= 0) { fclose(f); return NULL; }
+    unsigned char *b = (unsigned char *)malloc((size_t)sz);
+    if (b && fread(b, 1, (size_t)sz, f) != (size_t)sz) { free(b); b = NULL; }
+    fclose(f);
+    if (b && out_size) *out_size = (int)sz;
+    return b;
+}

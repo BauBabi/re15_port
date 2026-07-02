@@ -131,6 +131,24 @@ composite** (RE15_INVENTORY_SUBSYSTEM.md §3), fully SPEC'd + extracted but not 
   stride) then uploaded to VRAM tpage 0x22a (VRAM(640,0), 4-bit), CLUT `GetClut(0x100, 0x1e8+clut_idx)`.
 - **Source** `DATA/ITEMALL.PIX` (86400 B, raw 8-bit indexed) → needs a PIX decoder + CLUT + the file→VRAM
   repack; the Java extractor (`Step3CorrectItemPIXToTIMConverter`) has the PIX→TIM logic to port.
+- **ITEMALL.PIX layout RESOLVED (2026-07-02, adversarial verify) [BT]**: the file is **NOT** a non-linear
+  swizzle — it is a plain **row-major 8-bit raster of width 40**, i.e. **72 concatenated 40×30 tiles**
+  (86400 = 72·1200; `Step3…Converter:125` itemWidth=40 itemHeight=30). Proven three ways: (1) rendering
+  each 1200-byte tile at 40×30 gives clean, unmistakable icons (knife, handguns, revolver, shotgun,
+  grenade, first-aid spray, ink ribbon, keys); (2) a horizontal/vertical adjacent-pixel coherence sweep
+  bottoms out globally at **W=40** (hcoh 16.4 / vcoh 19.4; every wider divisor keeps vcoh 40–78 = rows
+  don't line up); (3) file bytes are found **verbatim in the lossless savestate VRAM** — knife tile row
+  N at VRAM(x_word=59, y=272), row N+1 at (59, 273): consecutive file rows land on consecutive VRAM
+  lines at the SAME x ⇒ a **direct rectangular LoadImage blit**, not a swizzle. (Savestate VRAM is at
+  `Ram.base + 0x200000`, 16bpp 1024×512 — lossless, unlike the RGB555 ShowVRAM PNG.) The earlier
+  "non-linear repack / no clean W≤256" note was WRONG: 86400 has many clean 8-bit W×H (e.g. 40×2160,
+  240×360, 96×900); the coherence tests failed only because they swept W 96..384 and never tested the
+  true W=**40**. ⚠ Nuance: the **descriptor sub-sprites** (U up to 232, w up to 88, composite ty ~136)
+  slice from the larger **VRAM composite atlas** the game builds — a DIFFERENT, bigger representation
+  than the 40×30 grid tiles. For the small grid icon the port can index the PIX tile directly:
+  **tile index → file offset = tile·1200, 40×30, CLUT = the embedded 256-color Step3 palette** (or the
+  per-item `GetClut(0x100, 0x1e8+clut_idx)`). U/V→pixel is 1:1 (`sb U@+2, V@+3` in FUN_80047648, no
+  scale multiply). C arrays (descriptor 0x00..0x18 + id 1/3/0x15 sub-sprites) captured this session.
 - **To build**: (1) a PIX decoder (port from the Java) + the ITEMALL CLUTs; (2) embed the descriptor +
   sub-sprite template data for ids 0x00..0x18; (3) a composite render (per item, draw its sub-sprites via
   `re15_render_textured_tri` at grid pos + the item CLUT). This is the inventory's last visual piece.

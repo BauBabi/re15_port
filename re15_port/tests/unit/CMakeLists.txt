@@ -112,3 +112,10 @@ target_link_libraries(test_weapon_select PRIVATE re15_engine re15_test_support)
 target_include_directories(test_weapon_select PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_weapon_select COMMAND test_weapon_select)
 set_tests_properties(unit_weapon_select PROPERTIES TIMEOUT 30)
+
+# --- Inventory item ICON decode (Phase 8.22 — item_icon_common.c, byte-true ITEMALL.PIX) ---
+add_executable(test_item_icon test_item_icon.c)
+target_link_libraries(test_item_icon PRIVATE re15_engine re15_test_support)
+target_include_directories(test_item_icon PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_item_icon COMMAND test_item_icon)
+set_tests_properties(unit_item_icon PROPERTIES TIMEOUT 30)
