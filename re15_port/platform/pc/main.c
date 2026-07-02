@@ -2975,6 +2975,13 @@ int main(int argc, char *argv[])
             pc_draw_effects(&cam_view, cx, cy);
         }
 
+        /* INVENTORY on top (Phase 8.26): the overlay above is drawn into the framebuffer, but end_frame
+         * draws the queued 3D meshes (textured-tri queue) ON TOP of the framebuffer — which would cover
+         * the inventory. When the menu is open, discard those meshes so the full-screen inventory shows. */
+        if (re15_menu_is_open()) {
+            extern void re15_render_pc_clear_textris(void);
+            re15_render_pc_clear_textris();
+        }
 
         re15_render_end_frame();
 

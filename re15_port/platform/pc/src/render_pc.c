@@ -316,6 +316,10 @@ static int s_dbg_bbox_valid = 0;
 static int s_dbg_last_min_sx = 0, s_dbg_last_max_sx = 0;
 static int s_dbg_last_min_sy = 0, s_dbg_last_max_sy = 0;
 int re15_render_pc_dbg_textri_count(void)    { return s_dbg_last_textri_count; }
+/* Discard the queued textured tris (3D meshes) for this frame — used by a full-screen framebuffer
+ * overlay (the inventory) so the meshes, which end_frame draws ON TOP of the framebuffer, don't
+ * cover it. Call after the scene render + overlay draw, before re15_render_end_frame. */
+void re15_render_pc_clear_textris(void)      { s_textri_count = 0; }
 int re15_render_pc_dbg_tim_loaded(void)      { return s_tim_texture != NULL ? 1 : 0; }
 int re15_render_pc_dbg_min_sx(void)          { return s_dbg_last_min_sx; }
 int re15_render_pc_dbg_max_sx(void)          { return s_dbg_last_max_sx; }
