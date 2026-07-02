@@ -98,34 +98,42 @@ Companion to `RE15_COMBAT_SE_SUBSYSTEM.md`. Port status in memory `reai-v2-found
 
 ## 4. Port plan
 
-### PHASE 1 — minimal playable/testable weapon-select — ✅ DONE (Phase 8.20)
+### ✅ DONE — the FUNCTIONAL byte-true inventory (Phase 8.20/8.21)
 
-- **`re15_menu.h` + `menu_common.c`** (engine LOGIC, headless-testable): `re15_menu_toggle` (START edge),
-  `re15_menu_tick` (UP/DOWN cursor, SQUARE=equip+close, CROSS=cancel; START owned by toggle),
-  `re15_menu_is_open` + getters (count/cursor/entry_name/entry_weapon). EQUIP calls
-  `re15_player_set_equipped_weapon(w)` + `re15_audio_prime_weapon(w)` — the byte-true equip order
-  (`@0x80046688` + `@0x800466c4`). **[FL]** menu owned-set = a fixed test list {1 HANDGUN, 2, 3} (kept
-  for multi-weapon testing; the byte-true briefing owns only the handgun as a weapon).
-- **Byte-true initial inventory** (Phase 8.20b): `re15_inv_load_briefing()` (inventory_common.c) populates
-  `g_inv` with the savestate-confirmed briefing loadout (`DAT_800b10ac`: item 0x01 qty 0 = HANDGUN, item
-  0x03 qty 15, item 0x15 qty 50); wired at boot (main.c, after scd_vm_init). `re15_item_is_weapon(id)`
-  byte-true-recognizes the handgun (id 1). Test (0) in test_weapon_select. NOTE: per-room persistence
-  across `room_unload -> scd_vm_init` (which clears g_inv) is a separate pre-existing concern.
-- **Item CLASSIFICATION status** (the Phase-2b bottleneck): the equip-commit @0x80046688 stores the raw
-  slot id (no is-weapon gate THERE), so the weapon/ammo/key classification lives in an item-attribute
-  table. Located in the DEBUG.BIN **item module @0x800c0000** (resident in RAM, capstone-disassemblable):
-  the char-default table @0x800c00d4 (`01×15,00`) is decoded (FUN_800c00a8), a second indexed table
-  @0x800c5ea0 was found, but the item-id→type table is not yet pinned (needs a dedicated disasm of the
-  item add/use/equip functions + the inventory sub-action FSM FUN_8004cdc4). Ways already exhausted:
-  savestate inventory bytes, EXE equip-path disasm, RE2-Leon, RE15Editor, the info/ refs, module capstone scan.
-- **`game_step_common.c`**: menu branch prepended to the stair/dead/grabbed chain — START toggles; while
-  open, tick + keep the RVD cam scan + clear the action edge + SKIP player_tick/collision/fire (inline
-  pause, §1). 1170-safe (only entered when the menu opens).
-- **`input_pc.c`**: `I` → `RE15_PAD_START` (0x0008). **`audio_pc.c`**: `re15_audio_prime_weapon` (public
-  re-prime = `load_weapon_se_vab_pc`); PSX + test stubs. **`main.c`**: overlay render (panel + text list +
-  `>` cursor; **[FL]** presentation).
-- **Test** `test_weapon_select.c` (unit_weapon_select): open snaps to equipped, START toggle-only, nav
-  clamps, SQUARE equips+closes, CROSS cancels. **34/34 ctest.**
+The inventory is functionally byte-true complete: it opens on START (PC: I), shows the real `g_inv`
+items in the byte-true grid, navigates byte-true, classifies items byte-true, and equips weapons.
+- **Open + pause**: START edge toggles it (state-1 poll @0x8001cd68); while open, `game_step_common.c`
+  ticks the menu + keeps the RVD cam scan + clears the action edge + SKIPS player_tick/collision/fire
+  (inline pause, §1). PC: `I` → `RE15_PAD_START` (input_pc.c). 1170-safe.
+- **`menu_common.c` + `re15_menu.h`** (engine LOGIC, headless-testable): the display list = the occupied
+  `g_inv` slots compacted into 10 grid cells (matches `FUN_8004dc4c`); byte-true column-major 2-wide
+  cursor nav (`FUN_800487b0`: Right +1 / Left −1 parity, Down +2 / Up −2, no wrap); EQUIP gated to
+  weapons (`re15_item_is_weapon`, id < 0x15) → `re15_player_set_equipped_weapon` + `re15_audio_prime_weapon`
+  (@0x80046688 + @0x800466c4); SQUARE-on-ammo + CROSS = no-op/cancel.
+- **Byte-true CLASSIFICATION + CATALOG** (inventory_common.c): `re15_item_is_weapon/is_ammo/is_key`
+  (id-range gate §2) + `re15_item_name` (catalog 0x00..0x21 §3). Briefing loadout `re15_inv_load_briefing`
+  (knife 1 / BROWNING HP 3×15 / H.GUN BULLETS 0x15×50), wired at boot.
+- **`main.c`**: byte-true grid render — panel origin (215,26), cells at X 219/259 Y 78+row*30 (DAT_80076274),
+  cursor highlight, quantity, selected-item name/type line.
+- **Test** `test_weapon_select.c` (unit_weapon_select): classification + catalog + 2-col grid nav +
+  equip-weapons-only + ammo/cancel no-op. **34/34 ctest.**
+
+### ⬜ REMAINING — the composite pixel ICONS (a separate rendering subsystem)
+
+The grid currently shows an id/qty placeholder per cell. The byte-true item art is a **multi-sub-sprite
+composite** (RE15_INVENTORY_SUBSYSTEM.md §3), fully SPEC'd + extracted but not yet rendered — the port has
+**no `.PIX` decoder** at all, so this is a new subsystem:
+- **Descriptor table `DAT_80074a8c`** (stride 12, ids 0x00..0x18), extracted this session:
+  `{u16 clut_idx, u16 sprite_count, u32 template_ptr, u32 vram_dest}`. e.g. id 1 (KNIFE) count=15 tmpl
+  0x80075240; id 3 (BROWNING HP) count=9 tmpl 0x80075318; id 0x15 (BULLETS) count=2 tmpl 0x800754b0.
+- **Sub-sprite template** (template_ptr + k*12): `{u16 tx,ty,w,h; u8 U,_,V,_}` (U@8, V@10). The tiles are
+  large (w up to 88, composite ty up to ~136) — built into a RAM buffer (`vram_dest` 0x8019xxxx, 0x600
+  stride) then uploaded to VRAM tpage 0x22a (VRAM(640,0), 4-bit), CLUT `GetClut(0x100, 0x1e8+clut_idx)`.
+- **Source** `DATA/ITEMALL.PIX` (86400 B, raw 8-bit indexed) → needs a PIX decoder + CLUT + the file→VRAM
+  repack; the Java extractor (`Step3CorrectItemPIXToTIMConverter`) has the PIX→TIM logic to port.
+- **To build**: (1) a PIX decoder (port from the Java) + the ITEMALL CLUTs; (2) embed the descriptor +
+  sub-sprite template data for ids 0x00..0x18; (3) a composite render (per item, draw its sub-sprites via
+  `re15_render_textured_tri` at grid pos + the item CLUT). This is the inventory's last visual piece.
 
 ### PHASE 2 — byte-true grid + icons + sub-actions (deferred)
 
