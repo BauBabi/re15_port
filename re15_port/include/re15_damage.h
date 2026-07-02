@@ -67,6 +67,10 @@ void re15_enemy_gore_setup(re15_actor_t *e);
  * CORE00.ESP bank) at the zombie + advance the phase. Called per live zombie in run_all. */
 void re15_enemy_hurt_fx(re15_actor_t *e);
 
+/* Zombie DEATH gore (death sub-FSM FUN_80107cb0): effect-id 0 blood burst at death-start and again
+ * at anim_frame 35. Called from re15_enemy_ai_live_death at both points. */
+void re15_enemy_death_fx(re15_actor_t *e);
+
 /* Player DEATH state (Phase 8.10) — the byte-true core of the player death FSM. The player is dead
  * when HP < 0 (FUN_80012d60 @0x80012ee8; the grab drains HP to the same HP<0). The original then runs
  * the death-sequence command handler (player command 0x800aca58 dispatched @0x80073f90[state]: [3] =

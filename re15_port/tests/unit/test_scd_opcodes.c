@@ -1109,6 +1109,33 @@ static int test_enemy_hurt_fx(void)
     return fail;
 }
 
+/* re15_enemy_death_fx (FUN_80107cb0 death gore): spawns the effect-id 0 blood burst at the zombie
+ * (fired from re15_enemy_ai_live_death at death-start and again at anim_frame 35). */
+static int test_enemy_death_fx(void)
+{
+    int fail = 0;
+    re15_esp_fx_reset();
+    re15_esp_set_room_bank(NULL);
+    re15_esp_set_global_bank(NULL);
+    re15_actor_t z;
+    memset(&z, 0, sizeof z);
+    z.active = 1; z.type = 0x10; z.x = 11; z.y = 22; z.z = 33; z.rot_y = 0x44;
+
+    re15_enemy_death_fx(&z);
+    const re15_esp_fx_t *f = re15_esp_fx_get(0);
+    if (re15_esp_fx_count() != 1 || !f || f->effect_id != 0 || f->x != 11 || f->z != 33 || f->param != 0x44) {
+        fprintf(stderr, "FAIL: death_fx spawn (count=%d)\n", re15_esp_fx_count()); fail = 1; }
+
+    /* inactive actor -> no spawn. */
+    z.active = 0;
+    re15_enemy_death_fx(&z);
+    if (re15_esp_fx_count() != 1) { fprintf(stderr, "FAIL: death_fx fired on inactive\n"); fail = 1; }
+
+    re15_esp_fx_reset();
+    if (!fail) printf("PASS: test_enemy_death_fx (FUN_80107cb0 -> effect-0 death gore burst)\n");
+    return fail;
+}
+
 int main(void)
 {
     int failures = 0;
@@ -1138,6 +1165,7 @@ int main(void)
     failures += test_enemy_gore_tick();
     failures += test_enemy_gore_setup();
     failures += test_enemy_hurt_fx();
+    failures += test_enemy_death_fx();
 
     if (failures == 0) {
         printf("\nALL SCD OPCODE TESTS PASSED\n");

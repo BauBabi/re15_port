@@ -347,6 +347,21 @@ void re15_enemy_hurt_fx(re15_actor_t *e)
     e->sub_state_3  = 1;                      /* entity+7 = 1 (phase advance) */
 }
 
+/* Zombie DEATH gore — byte-true: FUN_80107cb0 (the death sub-FSM under @0x8011f7b4[3]) spawns the
+ * effect-id 0 blood burst TWICE during the death animation: at death START (phase 0 @L23,
+ * func_0x80019700(0x2500, rot_y, entity+0x188+0x40, ...)) and again at anim_frame 35 (+0x95==0x23
+ * @L44, func_0x80019700(0x2000, rot_y, bone*0xac + entity+0x188+0x40, ...)). Both are effect-0 (from
+ * the global CORE00.ESP bank) = the same universal hit/blood fx as the hurt spawn. Called from
+ * re15_enemy_ai_live_death at those two points. Position = the actor world pos (the frame-35 bone
+ * offset DAT_8011f784[entity+8]*0xac is the deferred refinement, faithful-line). Frame 7 death SE
+ * (func_0x800453d0) is the deferred audio side. */
+void re15_enemy_death_fx(re15_actor_t *e)
+{
+    if (!e || !e->active) return;
+    re15_esp_fx_spawn(re15_esp_room_bank(), 0 /*effect-id*/, 0 /*sub*/,
+                      e->x, e->y, e->z, (int16_t)e->rot_y);
+}
+
 /* ====================================================================== *
  *  Attack-hitbox vs actor collision test — FUN_8002b5d0                   *
  *  (ghidra1_V2.txt:118005-118130). The per-target geometry test the       *

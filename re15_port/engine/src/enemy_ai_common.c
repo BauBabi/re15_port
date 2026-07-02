@@ -742,9 +742,12 @@ void re15_enemy_ai_live_death(int slot)
         e->motion      = 0x1f;                         /* +0x94 = death clip 31 (@0x80107d2c) */
         e->anim_frame  = 0;                            /* +0x95 = 0 (@0x80107d40) */
         e->sub_state_3 = 1;                            /* +0x7 = 1 (@0x80107d1c) */
+        re15_enemy_death_fx(e);                        /* death-start blood burst (@0x80107cf4 spawn) */
         return;
     }
     if (e->sub_state_3 == 1) {                         /* phase 1 — play clip 0x1f to its end */
+        if (e->anim_frame == 35)                       /* +0x95 == 0x23 (@0x80107d94): frame-35 gore burst */
+            re15_enemy_death_fx(e);
         re15_enemy_bank_t *bank = re15_enemy_find(e->type);
         int frames = (bank && 0x1f < bank->anim.clip_count) ? bank->anim.clips[0x1f].frame_count : 0;
         if (frames > 0 && e->anim_frame < frames - 1) return;   /* still playing */
