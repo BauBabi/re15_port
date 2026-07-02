@@ -538,16 +538,6 @@ void re15_render_end_frame(void)
         }
     }
 
-    /* Subtitle overlay ON TOP of the 3D + foreground (drawn after the character
-     * tris + sprite.pri overdraw so the actors' feet no longer cover the text),
-     * but BEFORE the letterbox bars (so a bar can still clip text that strays
-     * into the bar region). This is the fix for "Leon's feet cover the text". */
-    if (s_text_overlay_used && s_text_overlay_tex) {
-        SDL_UpdateTexture(s_text_overlay_tex, NULL, s_text_overlay,
-                          SCREEN_XRES * sizeof(uint32_t));
-        SDL_RenderCopy(s_renderer, s_text_overlay_tex, NULL, NULL);
-    }
-
     s_dbg_last_textri_count = s_textri_count;
     s_dbg_last_min_sx       = s_dbg_min_sx;
     s_dbg_last_max_sx       = s_dbg_max_sx;
@@ -555,16 +545,27 @@ void re15_render_end_frame(void)
     s_dbg_last_max_sy       = s_dbg_max_sy;
     s_textri_count = 0;  /* reset queue for next frame */
 
-    /* BJ-round: cinematic letterbox — draw black bars over the top & bottom of
-     * the full composited frame during cutscenes (matches the PSX intro, which
-     * has ~17px bars hiding the topmost window row). Drawn LAST so it occludes
-     * BG, 3D and HUD alike. s_letterbox_h=0 during gameplay (no bars). */
+    /* #1B (2026-07-02): cinematic letterbox — black bars top+bottom during cutscenes.
+     * Drawn BEFORE the subtitle overlay so the cinematic subtitle sits ON the black bar
+     * (text OVER bars), byte-true to the PSX original where the letterbox POLY_F4 quads
+     * (FUN_80020f8c) are behind the text primitives in the OT. Was drawn AFTER the text,
+     * which covered/clipped the subtitle. Bars still occlude BG + 3D (composited earlier);
+     * s_letterbox_h=0 during gameplay (no bars). */
     if (s_letterbox_h > 0) {
         SDL_SetRenderDrawColor(s_renderer, 0, 0, 0, 255);
         SDL_Rect top = { 0, 0, SCREEN_XRES, s_letterbox_h };
         SDL_Rect bot = { 0, SCREEN_YRES - s_letterbox_h, SCREEN_XRES, s_letterbox_h };
         SDL_RenderFillRect(s_renderer, &top);
         SDL_RenderFillRect(s_renderer, &bot);
+    }
+
+    /* Subtitle overlay ON TOP of the 3D + foreground AND the letterbox bars (drawn after
+     * the character tris + sprite.pri overdraw so the actors' feet no longer cover the text,
+     * and after the bars so the cinematic subtitle reads on the black bar — #1B). */
+    if (s_text_overlay_used && s_text_overlay_tex) {
+        SDL_UpdateTexture(s_text_overlay_tex, NULL, s_text_overlay,
+                          SCREEN_XRES * sizeof(uint32_t));
+        SDL_RenderCopy(s_renderer, s_text_overlay_tex, NULL, NULL);
     }
 
     /* BN-round 2026-05-29: cinematic FADE-IN overlay (PSX engine-driven fade,

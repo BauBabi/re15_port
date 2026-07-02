@@ -1136,6 +1136,23 @@ static int re15_room_has_voice(unsigned room_id)
     return 0;
 }
 
+/* #1A (2026-07-02): rooms whose Message_on captions render FULL-TEXT (all-at-once), NOT the
+ * per-glyph typewriter — the cinematic INTRO captions (ROOM1240 pre-intro narrator sub02 msg
+ * ids 0..5; ROOM1170 helipad). [FL-observed] — matched to the user's direct observation of the
+ * ORIGINAL showing full-text. The statically-visible EXE printer (Message_on 0x2B → LAB_800404f4
+ * hardcodes param_2=0x300 → FUN_80027e68 sets DAT_800b8521=0 unconditionally → FUN_80028134) is
+ * byte-true TYPEWRITER-ONLY with no full-text branch, so the original's full-text captions come
+ * from a path absent from ghidra1_V2.txt (DEBUG.BIN @0x800C0000, savestate-only). Byte-true closure
+ * needs a live ROOM1240 pre-intro savestate to read DAT_800b8521/8524/852c — see RE15_ROOM_FIXES.md #1A.
+ * Separate from re15_room_has_voice: 1240's narrator has NO VOICE##.VAG, so it must NOT queue voice. */
+static int re15_room_full_text(unsigned room_id)
+{
+    static const unsigned ft[] = { 0x1170, 0x1240 };
+    for (unsigned k = 0; k < sizeof(ft)/sizeof(ft[0]); k++)
+        if (ft[k] == room_id) return 1;
+    return 0;
+}
+
 static int op_message_on(scd_thread_t *t)
 {
     extern uint8_t g_aot_action_pressed;
@@ -1172,18 +1189,22 @@ static int op_message_on(scd_thread_t *t)
         return 1;                                  /* → Evt_next + the YES/NO branch */
     }
 
-    /* Plain line. EXAMINE / gameplay text (non-voiced room) → the SAME typewriter FSM, but
-     * NON-blocking (the thread continues; the FSM types it out + dismisses on the action
-     * button / its own hold). VOICED cinematic subtitles (the verified room1170 intro) keep
-     * the legacy all-at-once timed display so their tuned voice-sync timing is untouched. */
-    if (re15_room_has_voice(g_current_room_id)) {
-        msg_show(t);                               /* legacy timed path (message_fsm_active=0) */
+    /* Plain line. FULL-TEXT cinematic captions (the intro: ROOM1240 pre-intro narrator + ROOM1170
+     * helipad) use the legacy all-at-once timed display; every OTHER room's EXAMINE / gameplay text
+     * uses the byte-true per-glyph typewriter FSM, NON-blocking (the thread continues; the FSM types
+     * it out + dismisses on the action button / its own hold). VOICE is queued only for rooms that
+     * actually have authored VOICE##.VAG (re15_room_has_voice = {0x1170}) — NOT 1240's narrator (msg
+     * ids 0..5 have no voice clip; queuing would collide with 1170's voice bank). See #1A above. */
+    if (re15_room_full_text(g_current_room_id)) {
+        msg_show(t);                               /* full-text all-at-once (message_fsm_active=0) */
         g_scd.message_fsm_active = 0;
-        scd_audio_event_t vev;
-        memset(&vev, 0, sizeof vev);
-        vev.kind      = (uint8_t)SCD_AUDIO_VOICE_ON;
-        vev.sample_id = t->pc[1];
-        scd_audio_queue_push(&vev);
+        if (re15_room_has_voice(g_current_room_id)) {
+            scd_audio_event_t vev;
+            memset(&vev, 0, sizeof vev);
+            vev.kind      = (uint8_t)SCD_AUDIO_VOICE_ON;
+            vev.sample_id = t->pc[1];
+            scd_audio_queue_push(&vev);
+        }
     } else {
         re15_dialog_open((int)t->pc[1], 0);        /* non-blocking typewriter */
         g_scd.message_arg2 = t->pc[2];
