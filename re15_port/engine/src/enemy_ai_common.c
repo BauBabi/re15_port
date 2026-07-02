@@ -19,7 +19,8 @@
  */
 #include "re15_enemy_ai.h"
 #include "re15_enemy.h"    /* re15_enemy_find — the loaded model bank (death-clip framecount) */
-#include "re15_audio.h"    /* re15_audio_room_se — the zombie death groan (FUN_80107cb0 frame 7) */
+#include "re15_audio.h"    /* re15_audio_room_se — zombie combat SEs on snd1 (func_0x800453d0):
+                            * grab-start 4, grab-release 7 (FUN_80102548), death groan 5/8 (FUN_80107cb0 f7) */
 #include "re15_damage.h"   /* re15_enemy_player_dist, re15_ai_arc_test, re15_engine_rand8,
                             * re15_enemy_apply_hitbox */
 
@@ -487,6 +488,7 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
     switch (e->sub_state_2) {                /* +0x6 sub-step (reset to 0 by the 0x301/0x401 commit) */
         case 0:                               /* [0] init/latch + grab clip base (@0x801025bc) */
             e->motion = grab_base; e->anim_frame = 0;
+            re15_audio_room_se(4);            /* grab-START SE (@0x8010268c func_0x800453d0(4), snd1) */
             e->sub_state_2 = 1; break;
         case 1: e->sub_state_2 = 2; break;   /* [1] pull-in (anim-gated -> faithful stand-in advance) */
         case 2:                               /* [2] IMPACT — clip base+1 (@0x80102714) + the byte-true -10 hit */
@@ -504,6 +506,8 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
             break;
         case 6:                               /* [6] release — clip 17 (0x11, @0x80102a64) */
             e->motion = 0x11; e->anim_frame = 0;
+            re15_audio_room_se(7);            /* grab-RELEASE SE (@0x80102920/60 func_0x800453d0(7), snd1;
+                                               * orig plays twice, one play = the faithful audible release) */
             e->sub_state_2 = 8; break;
         default:                              /* [8] EXIT (0x80102b90) -> back to the engage brain */
             re15_ai_set_state_word(e, 0x201);   /* +0x4 = state 1 / +0x5 = 2 (engage) */

@@ -649,11 +649,12 @@ int main(void)
             printf("  (16) player AIM: R1 -> RAISE clip 17 (10f) -> AIM-READY clip 18 (gated fire), released -> idle\n");
     }
 
-    /* (17): the ZOMBIE DEATH-SE bank lookup (Phase 8.17, byte-true FUN_80107cb0 frame 7 -> FUN_800453d0).
-     * The death groan is one of two SE ids {5, 8} (rng&1) played from the room's snd1 SE bank. The SE-id
-     * -> VAG resolution reuses re15_footstep_vag on snd1 (identical tone-table path as FUN_800453d0:
-     * program = EDT byte1 & 0x7f, tone = EDT byte2 >> 4, VAG = tone.vag_index - 1). Verify both death SE
-     * ids resolve to a VALID, DISTINCT VAG inside ROOM1140's 11-VAG snd1 bank (record bytes cited below). */
+    /* (17): the ZOMBIE COMBAT-SE bank lookup (Phase 8.17/8.18, byte-true via FUN_800453d0 on the snd1 room bank).
+     * These are the C-driven zombie combat sounds, all func_0x800453d0(id) on snd1: grab-START 4 (FUN_80102548
+     * case 0 @0x8010268c), grab-RELEASE 7 (case 4 @0x80102920/60), death groan 5/8 (FUN_80107cb0 frame 7). The
+     * SE-id -> VAG resolution reuses re15_footstep_vag on snd1 (identical tone-table path as FUN_80045024/453d0:
+     * program = EDT byte1 & 0x7f, tone = EDT byte2 >> 4, VAG = tone.vag_index - 1). Verify each resolves to a
+     * VALID VAG inside ROOM1140's 11-VAG snd1 bank, and the two death ids are distinct. */
     {
         re15_vab_t se_vab;
         if (!rdt.snd_vh[1] || rdt.snd_vh_size[1] <= 0 || !rdt.snd_edt[1]) {
@@ -664,21 +665,27 @@ int main(void)
             /* ROOM1140 snd1: program_count=1, vag_count=11 (VH header @+18/+22). */
             if (se_vab.vag_count != 11) {
                 fprintf(stderr, "FAIL: (17) snd1 vag_count 11 expected, ist %d\n", se_vab.vag_count); fail = 1; }
-            /* death SE 5: EDT record 00 00 69 15 -> prog 0, tone 6 -> VAG index 6 -> 0-based 5. */
-            int v5 = re15_footstep_vag(rdt.snd_edt[1], &se_vab, 5);
-            /* death SE 8: EDT record 00 00 92 15 -> prog 0, tone 9 -> VAG index 9 -> 0-based 8. */
-            int v8 = re15_footstep_vag(rdt.snd_edt[1], &se_vab, 8);
+            int v4 = re15_footstep_vag(rdt.snd_edt[1], &se_vab, 4);   /* grab-start */
+            int v7 = re15_footstep_vag(rdt.snd_edt[1], &se_vab, 7);   /* grab-release */
+            int v5 = re15_footstep_vag(rdt.snd_edt[1], &se_vab, 5);   /* death (EDT 00 00 69 15 -> prog0 tone6 -> VAG5) */
+            int v8 = re15_footstep_vag(rdt.snd_edt[1], &se_vab, 8);   /* death (EDT 00 00 92 15 -> prog0 tone9 -> VAG8) */
+            if (v4 != 4) {
+                fprintf(stderr, "FAIL: (17) grab-start SE 4 must resolve to VAG 4, ist %d\n", v4); fail = 1; }
+            if (v7 != 7) {
+                fprintf(stderr, "FAIL: (17) grab-release SE 7 must resolve to VAG 7, ist %d\n", v7); fail = 1; }
             if (v5 != 5) {
                 fprintf(stderr, "FAIL: (17) death SE 5 must resolve to VAG 5, ist %d\n", v5); fail = 1; }
             if (v8 != 8) {
                 fprintf(stderr, "FAIL: (17) death SE 8 must resolve to VAG 8, ist %d\n", v8); fail = 1; }
             if (v5 == v8) {
                 fprintf(stderr, "FAIL: (17) the two death SEs must be distinct VAGs, both %d\n", v5); fail = 1; }
-            if (v5 < 0 || v5 >= se_vab.vag_count || v8 < 0 || v8 >= se_vab.vag_count) {
-                fprintf(stderr, "FAIL: (17) death SE VAGs out of the 11-VAG bank (%d, %d)\n", v5, v8); fail = 1; }
+            int se[4] = { v4, v7, v5, v8 };
+            for (int i = 0; i < 4; i++)
+                if (se[i] < 0 || se[i] >= se_vab.vag_count) {
+                    fprintf(stderr, "FAIL: (17) combat SE VAG %d out of the %d-VAG bank\n", se[i], se_vab.vag_count); fail = 1; }
             if (!fail)
-                printf("  (17) death SE bank: snd1 %d VAGs; SE 5 -> VAG %d, SE 8 -> VAG %d (byte-true re15_footstep_vag)\n",
-                       se_vab.vag_count, v5, v8);
+                printf("  (17) zombie combat SE bank: snd1 %d VAGs; grab-start 4->VAG %d, release 7->VAG %d, "
+                       "death 5->VAG %d, 8->VAG %d (byte-true re15_footstep_vag)\n", se_vab.vag_count, v4, v7, v5, v8);
         }
     }
 
