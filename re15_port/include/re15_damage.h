@@ -95,6 +95,14 @@ int  re15_player_death_tick(void);   /* advance the death sequence one frame; re
  * are the deferred refinements. */
 int  re15_player_weapon_fire(int weapon_id);
 
+/* The EQUIPPED weapon id (DAT_800aca5d — byte-true FUN_800c00a8: the inventory's equipped-weapon
+ * item, fallback 0). The player fires THIS weapon (game_step passes it to re15_player_weapon_fire),
+ * and the audio backend loads its ARMS SE bank (FUN_80043d8c). DYNAMIC ground truth: every STAGE1
+ * briefing/combat savestate has DAT_800aca5d == 1 (the handgun = ARMS01), so the port's byte-true
+ * default is weapon 1. The setter is the hook for the (deferred) inventory weapon-selection UI. */
+int  re15_player_equipped_weapon(void);
+void re15_player_set_equipped_weapon(int weapon_id);
+
 /* Clear the per-attack hit-once guard (+0x93 bit0x1). The original clears it when the
  * attacker's hitbox deactivates so the NEXT attack can land; that clear-trigger lives
  * in the deferred enemy-attack FSM. Exposed so the future wiring (and the unit test)

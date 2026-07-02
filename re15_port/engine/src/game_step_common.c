@@ -107,12 +107,15 @@ void re15_game_step(const re15_game_ctx_t *c)
          * AIM-READY pose clip 18 (hold-last). Square fires ONLY once aim-ready (re15_player_aim_ready,
          * the byte-true state-5 gate — no shot mid-raise) and resets anim_frame = 0 (the discharge
          * @0x80035a00 re-plays clip 18 = recoil). FAITHFUL-LINE / DEFERRED: the exact 3-level command
-         * FSM, the weapon INVENTORY (DAT_800aca5d -> defaulted to the pistol = weapon 2), the
+         * FSM, the weapon INVENTORY UI/selection (DAT_800aca5d -> byte-true defaulted to the briefing
+         * handgun = weapon 1 = ARMS01, re15_player_equipped_weapon; the equip UI is deferred), the
          * aim-elevation pitch (entity+0x66), and the muzzle-flash sprite. 1170-SAFE: fires only on
          * R1+Square (no input in a boot) and re15_player_weapon_fire only hits live zombies. */
         if (c->rdt_ok && (c->pad_current & RE15_PAD_BIT_R1)) {
             if ((c->pad_pressed & RE15_PAD_BIT_SQUARE) && re15_player_aim_ready()) {
-                re15_player_weapon_fire(2);   /* pistol (weapon 2); the weapon inventory is deferred */
+                re15_player_weapon_fire(re15_player_equipped_weapon());  /* the equipped weapon (DAT_800aca5d;
+                                               * byte-true briefing default = weapon 1 = the handgun, ARMS01,
+                                               * savestate-confirmed — was hardcoded 2 = the wrong weapon/damage) */
                 re15_audio_weapon_se(8);      /* GUNSHOT muzzle SE (byte-true FUN_80035538/FUN_80011f50 ->
                                                * FUN_80045024(0x1080001) = bank1 idx 8). The bank = the equipped
                                                * weapon's ARMS (primed weapon 1 = ARMS01, the briefing handgun,

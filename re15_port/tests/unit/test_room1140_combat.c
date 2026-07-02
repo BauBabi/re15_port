@@ -726,6 +726,40 @@ int main(void)
         free(edh);
     }
 
+    /* (19): the EQUIPPED WEAPON (Phase 8.19, DAT_800aca5d). The port now models the equipped weapon
+     * and defaults it byte-true to weapon 1 (the ROOM1140 briefing handgun = ARMS01, savestate-
+     * confirmed) instead of the previously-hardcoded weapon 2. game_step fires re15_player_weapon_fire(
+     * re15_player_equipped_weapon()), so a shot does weapon 1's byte-true zombie damage (6), not 24. */
+    {
+        if (re15_player_equipped_weapon() != 1) {
+            fprintf(stderr, "FAIL: (19) equipped weapon must default to 1 (briefing handgun), ist %d\n",
+                    re15_player_equipped_weapon()); fail = 1; }
+        pl->x = 0; pl->z = 0; pl->hp = 100; pl->rot_y = 0; pl->floor = 0; pl->hit_react = 0; pl->state = 0;
+        re15_player_death_reset();
+        for (int i = 0; i < nz; i++) {
+            re15_actor_t *z = &g_actors[zslots[i]];
+            z->state = RE15_AI_STATE_ACTIVE; z->x = 30000; z->z = 30000; z->hp = 60;
+            z->hit_react = 0; z->sub_state_1 = 0; z->grid_id = 0;
+        }
+        re15_actor_t *zt = &g_actors[zslots[0]];
+        zt->x = 0; zt->z = 800; zt->hp = 60; zt->hit_react = 0; zt->state = RE15_AI_STATE_ACTIVE;
+        /* fire the EQUIPPED weapon (1) -> byte-true weapon-1 zombie damage = 6 */
+        int hit = re15_player_weapon_fire(re15_player_equipped_weapon());
+        if (hit != (zslots[0] + 1) || zt->hp != (int16_t)(60 - 6)) {
+            fprintf(stderr, "FAIL: (19) equipped weapon 1 must do 6 dmg (not 24), HP 60->%d\n", zt->hp); fail = 1; }
+        /* the setter (the future inventory equip UI hook) switches the weapon */
+        zt->hp = 60; zt->hit_react = 0; zt->state = RE15_AI_STATE_ACTIVE; zt->sub_state_1 = 0;
+        re15_player_set_equipped_weapon(2);
+        if (re15_player_equipped_weapon() != 2) {
+            fprintf(stderr, "FAIL: (19) set_equipped_weapon(2) must stick\n"); fail = 1; }
+        re15_player_weapon_fire(re15_player_equipped_weapon());
+        if (zt->hp != (int16_t)(60 - 24)) {
+            fprintf(stderr, "FAIL: (19) weapon 2 must do 24 dmg, HP 60->%d\n", zt->hp); fail = 1; }
+        re15_player_set_equipped_weapon(1);   /* restore the byte-true briefing default */
+        if (!fail)
+            printf("  (19) equipped weapon: default 1 (handgun) -> 6 dmg; set 2 -> 24 dmg (byte-true DAT_800aca5d)\n");
+    }
+
     free(buf);
     if (fail) { fprintf(stderr, "\nROOM1140 COMBAT-WIRING TEST FAILED\n"); return 1; }
     printf("\nPASS: ROOM1140 live-AI game_step wiring (spawn; WAKE->engage; TURN-to-face->GRAB->HP; "

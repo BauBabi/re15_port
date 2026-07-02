@@ -208,6 +208,16 @@ static const uint16_t s_player_wpn_reach[22] = {
     1000, 1300, 1800, 1000, 1000, 1000, 1000, 1000, 1100, 1000, 1000
 };
 
+/* The equipped weapon (DAT_800aca5d). Byte-true default = 1: EVERY STAGE1 briefing/combat savestate
+ * has DAT_800aca5d == 1 (the handgun; 0x801fcd00 == ARMS01.EDH). FUN_800c00a8 derives it from the
+ * inventory's equipped slot — the port defaults it here until the inventory weapon-select UI is ported. */
+static int s_player_weapon = 1;
+int  re15_player_equipped_weapon(void) { return s_player_weapon; }
+void re15_player_set_equipped_weapon(int weapon_id)
+{
+    if (weapon_id >= 0 && weapon_id < 22) s_player_weapon = weapon_id;
+}
+
 int re15_player_weapon_fire(int weapon_id)
 {
     if (weapon_id < 0 || weapon_id >= 22) return 0;
