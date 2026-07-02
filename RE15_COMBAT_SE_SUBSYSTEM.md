@@ -123,12 +123,26 @@ SE index 8, positional** (`lui a0,0x108` + `ori a0,a0,0x1`). Two call sites, bot
 `FUN_80011f50`'s `param_1` **is the equipped weapon id** `DAT_800aca5d` (all callers `lbu a0,DAT_800aca5d` before the jal).
 Weapon-class dispatch @0x80074030 (idx DAT_800aca5d*4): weapons 0/1/2 → LAB_80034e70; 3..11,13,15,16,17,18 → LAB_80032e9c; 12,14,19 → LAB_80034014.
 
-> ⚠ **BLOCKED — the pistol's actual shot SE index is UNVERIFIED.** Player pistol = **weapon 2**,
-> which does NOT hit the `param_1==1` branch. Index 8 is out of ARMS02's 8-record range (idx 8 =
-> the pBAV header = garbage), and case-1's only bound is ≤0x20 (no catch). The per-shot SE for
-> weapon 2 is not in the decompiles. **Do NOT hardcode 8.** Resolve dynamically (DuckStation
-> savestate: fire the pistol, watch the se_id passed to FUN_80035538 / FUN_80045024). This is the
-> single gate on shipping the player gunshot byte-true.
+> ⚠ **BLOCKED — the pistol's actual shot SE index is UNVERIFIED (static path exhausted 2026-07-02).**
+> The static trace CONVERGED but hit a genuine data-binding contradiction:
+> - Pistol = **weapon 2** (reach table @0x8006e5a8 = 0x3e8 = 1000, matches the damage-row weapon 2).
+> - weapon 2 → weapon-class dispatch @0x80074030[2] = **LAB_80034e70** (the shared 0/1/2 handler).
+> - LAB_80034e70 sets the aim sub-state DAT_800aca5a then dispatches @0x80074164[aca5a]; the fire
+>   sub-state → **FUN_80035538**, which plays `FUN_80045024(0x01080001)` = **bank1 idx 8** in the
+>   DAT_800aca5b==0 fire-start branch (@0x800355f8). So the pistol-class DOES fire idx 8 (proven,
+>   not the `param_1==1`-only path).
+> - BUT weapon 2 → bank1 file-id 0x7b (0x77+2·2) → **ARMS02** (structural .cat/id mapping), which
+>   has only **8 records (idx 0-7)**; idx 8 = the pBAV header (program 0x42, out of ARMS02's single
+>   program) = **garbage**. Case-1's only bound is ≤0x20 (no catch).
+> - The aim/fire FSM (aca5a 0..7 @0x80074164/0x80074150) also plays bank1 idx **1/3/5** at other
+>   sub-states (jals @0x8003338c/0x80033ed0/0x80034488/0x80034a0c/0x80034e54/0x8003537c).
+>
+> Two facts remain statically unprovable: (a) the file-id→ARMS **filename** binding (the EXE holds
+> LBAs @0x8006f43c, not names; re15.cat is a 2023 mkpsxiso REBUILD spec, not the original disc's LBA
+> map), and (b) which of idx 1/3/5/8 is the pistol's actual per-shot muzzle vs raise/aim/holster.
+> **Do NOT hardcode an index.** Next path = **DYNAMIC** (DuckStation: equip the pistol, fire, observe
+> which ARMS bank loads into 0x801fcd00 + the se_id passed to FUN_80045024) — the user's "Variante 3"
+> capture setup. This is the single gate on shipping the player gunshot byte-true.
 
 Per-weapon-class fire slots (all bank1, positional, a1=&DAT_800aca88) in the un-ported aim/fire FSMs:
 idx 1 (jals @0x8003338c/0x80034488/0x80034a0c), idx 3 (@0x80033ed0/0x80034e54), idx 5 (@0x8003537c), idx 8 (the two above).
