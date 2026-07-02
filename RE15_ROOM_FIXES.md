@@ -22,11 +22,24 @@ Savestate-Adresse oder Datei-Offset), Mechanismus beweisen — „sieht richtig 
   VOR dem Text-Overlay → Untertitel sitzt auf dem schwarzen Balken (Text über Balken), byte-true zum
   Original (Letterbox POLY_F4-Quads `FUN_80020f8c` im OT hinter den Text-Primitiven).
 
-## 2. ROOM 1170/Pre-Intro — Hintergrund falsch (soll pur schwarz)  ⬜
-- **Original:** Der Pre-Intro-Text läuft auf **pur schwarzem** Hintergrund.
-- **Port:** lädt ROOM 1170 als BG (Kisten sichtbar, Leon steht rum) statt Schwarz.
-- Hängt evtl. mit dem Boot-BG-Preload (`re15_bg_load_cut(0)` @main.c:427, „boot into ROOM1170 cut 0")
-  zusammen — der Pre-Intro darf keinen Raum-BG zeigen.
+## 2. ROOM 1240/Pre-Intro — Hintergrund  ✅ (verifiziert gegen Original, KEIN Code-Change nötig)
+- **Ursprüngliche Beobachtung:** Port zeigt ROOM1170-Kisten während des Pre-Intro-Textes statt des Intros.
+- **Byte-true RE (statisch):** ROOM1240s Narrator = `sub[2]` (subScdStart @RDT 0x53c, off 0x1e) macht
+  **9× Cut_chg (cut 0→8) + 6× Message_on**, cycled also durch ROOM1240s EIGENE Backgrounds
+  **BG00–BG08** (exakt 9 Dateien vorhanden). SCD-Disasm bestätigt (scd_dis.py). Cut 0=schwarz,
+  1=Zombie, 2–4=T-Virus-Zellen, 5–7=S.T.A.R.S.-Logo, 8=Heli/Umbrella.
+- **Ursache der Kisten:** Der Boot-BG-Load (`re15_bg_load_cut(0)` @main.c:427) läuft VOR
+  `g_current_room_id = boot_room` (@main.c:457) → nutzt den Default `0x1170` (room_common.c:31).
+  VOR dem Boot-Fix (a883a93f) lud ROOM1240s RDT nicht → sub[2] lief nie → kein Cut_chg → der
+  ROOM1170-Boot-BG blieb stehen = die Kisten. Der Boot-Fix hat ROOM1240s SCD zum Laufen gebracht
+  → sub[2]s Cut_chg(0) lädt sofort ROOM1240 BG00 → #2 als Seiteneffekt mitgefixt.
+- **Dynamische Verifikation (DuckStation, selbst gecaptured 2026-07-02):** Original-Pre-Intro
+  Frame-für-Frame gegen den Port verglichen (`shots/COMPARE_port_vs_original.png`,
+  `shots/contact_ORIGINAL.png`): **Port == Original** — beide zeigen schwarz→Zombie→T-Virus→
+  S.T.A.R.S.→Heli→Umbrella-Logo mit dem Text DARÜBER, alle 6 Captions, danach Handoff zu ROOM1170.
+  Die „pur schwarz"-Beobachtung = der lange Schwarz-Vorlauf (in BEIDEN da). Die Kisten erscheinen
+  im Port jetzt korrekt ERST NACH dem Intro (Helipad-Gameplay f3180+).
+- **Rest:** main.c:424 Kommentar („boot directly into ROOM1170 cut 0 BG") war irreführend → korrigiert.
 
 ## 3. Waffe/Inventar — Modell + Anheben + Schuss-Anim + Effekte falsch  ⬜
 - Beim Waffen-Auswählen wird das **Waffenmodell an Leon (außerhalb des Inventars) nicht geladen**.

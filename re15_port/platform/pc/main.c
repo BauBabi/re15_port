@@ -421,9 +421,16 @@ int main(int argc, char *argv[])
      * targets show the same room background. PC decodes the BSS chunk
      * in software (IDCT + YUV→RGB) into a 320×240 RGBA cache. */
     re15_bg_init();
-    /* Phase 4.5.12: boot directly into ROOM1170 cut 0 BG (intro view).
-     * Fall back to the bundled test asset only if the per-cut file is
-     * missing, so dev builds without ROOM1170 BSS still show something. */
+    /* Boot BG preload: re15_bg_load_cut(0) is room-aware via g_current_room_id,
+     * which is still the room_common.c default (0x1170) HERE — g_current_room_id
+     * isn't set to boot_room until ~L457 below. So this caches ROOM1170's cut 0 as
+     * a transient placeholder; it is immediately overwritten once the boot room's
+     * SCD runs and its first Cut_chg fires the real per-cut load (~L1274). For the
+     * ROOM1240 boot this is the pre-intro: sub[2] Cut_chg(0..8) cycles ROOM1240's OWN
+     * BG00..BG08 (black->zombie->T-Virus->STARS->heli->Umbrella), verified byte-true
+     * against the original — the crates the placeholder shows never reach the screen
+     * (frame 0 is cut 0 = black). Fall back to the bundled test asset if the file is
+     * missing, so dev builds without room BSS still show something. */
     if (re15_bg_load_cut(0) != 0) {
         re15_bg_load_test_asset();
     }
