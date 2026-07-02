@@ -309,6 +309,30 @@ zeichnet tatsächlich:
   „effect-0 blood TIM → slot 20: 256×256 4bpp"; Standalone-Harness bestätigt
   `re15_esp_fx_spawn(room_bank, 0, …)` → globale Bank (eff_idx 2, bank==global, 20 Cells) → Slot-20-Bind.
 
+## 2j. GLOBALE EFFEKT-TEXTUREN 100% KARTIERT + Transparenz-Fix (2026-07-02, Commit 43e4528f)
+
+Die 5 globalen Effekte (CORE00.ESP-Bank {3,8,0,2,4}) sind nur **ZWEI VRAM-Sprite-Sheets, per-CLUT
+umgefärbt** — aus der Ground-Truth-VRAM extrahiert + identifiziert (`extracted_fx/README.md` + PNGs):
+
+| id | tpage → VRAM | CLUT → VRAM | Sheet / Farbe |
+|----|--------------|-------------|---------------|
+| **0** | 0x001f → (960,256) | 0x7951 → (272,485) | **Blut-Sheet, dunkelrot** — der integrierte Hit-Effekt |
+| 2 | 0x001f → (960,256) | 0x7a51 → (272,489) | Blut-Sheet, hellrot/frisch |
+| 4 | 0x001f → (960,256) | 0x7ad1 → (272,491) | Blut-Sheet, braun/getrocknet |
+| **8** | 0x001e → (896,256) | 0x7911 → (272,484) | **Wolken-Sheet, Feuer/Explosion** (~340 Spawns game-weit) |
+| 3 | 0x001e → (896,256) | 0x7811 → (272,480) | Wolken-Sheet, grau = Rauch/Staub |
+
+- Blut-Sheet (960,256): ~20 Splatter-Frames + Pfützen/Tropfen + Streaks + Hit-Marker.
+- Wolken-Sheet (896,256): Burst-Wolken + Flammen (Feuer wenn orange, Rauch wenn grau).
+
+**TRANSPARENZ-FIX (43e4528f):** die 4bpp-Effekt-TIM hatte durch `treat_index_0_opaque=1` (Model-
+Heuristik) einen opak-schwarzen Hintergrund. Fix: `re15_render_pc_upload_tim_slot` behandelt index-0
+für die Effekt-Slots **19/20 als transparent** (byte-true PSX-Sprite-Semantik, CLUT[0]=0x0000=transparent);
+Model/Prop-Slots 0-18 unverändert. Test **ESP-E** verifiziert das Asset. **effect-0 rendert korrekt
+(Blut auf transparent), 33/33.** effect-8/2/3/4 sind extrahiert+kartiert, aber NOCH nicht integriert
+(kein Port-Spawner — sie kommen aus Overlay-Verhalten `FUN_80100688`/`8010ab2c`/`80114ba4`, nicht dem
+ROOM1140-Hit-Pfad). Integration (TIMs + per-effect-id-Slot-Map) sobald diese Spawner portiert sind.
+
 ## 3. op 0x3a `Sce_espr_on` (Spawn, Subsystem 2) — byte-true (16 Bytes)
 `FUN_80019700(a0,a1,a2,a3)` spawnt in `DAT_800a73b8` (verifiziert: `addiu s3,s3,29624`
 @0x80019724; stride 132 @0x80019794-9c; 96 Slots @0x8004978c; busy `+0x6c`, alive=3;
