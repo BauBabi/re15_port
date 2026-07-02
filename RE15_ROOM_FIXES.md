@@ -48,14 +48,33 @@ Savestate-Adresse oder Datei-Offset), Mechanismus beweisen — „sieht richtig 
 - **Effekte fehlen** (Mündungsfeuer/Treffer?) — evtl. mit den obigen Punkten gekoppelt.
 - (Item-Menü-Submenüs sind separat unvollständig — siehe der laufende Submenü-Map-Workflow.)
 
-## 4. ROOM 1140 — Zombie-Trigger + falsche Anim + Hänger  ⬜
+## 4. ROOM 1140 — Zombie-Trigger + falsche Anim + Hänger  🔎 (in RE, 2026-07-02)
 - Zombies starten **korrekt** (fressend am Boden). ✅
 - Sobald der Spieler den **Trigger-Punkt des ERSTEN Zombies** erreicht, stehen **SOFORT ALLE** Zombies
   und spielen eine **falsche „getroffen"-Animation** (sollten einzeln/anders reagieren).
 - **Biss** spielt die **falsche Animation**.
 - **Ab einem bestimmten Punkt hängt das Spiel** (Freeze).
-- Betrifft die portierte Zombie-AI (@0x8011f7b4-Dispatch, wake/engage/hurt-States) — Verdacht:
-  Wake-Trigger weckt global statt per-Zombie, + falsche Clip-Zuordnung, + ein State ohne Exit (Hang).
+
+### RE-Befunde (byte-true, laufend)
+- **Wake-Trigger IST per-Zombie** (kein globaler Trigger): `FUN_80103980` prüft die EIGENE Distanz
+  des Entities (`_DAT_800ac784 + 0x1d0 < 4000`) → der Port (`re15_enemy_ai_live_feeding`,
+  `e->ai_dist < 4000`) macht das gleiche. Also „alle wachen auf einmal auf" ist NICHT der Trigger —
+  entweder sind die 5 Zombies geclustert (dann korrekt) ODER `e->ai_dist` wird im Port nicht
+  per-Zombie berechnet. **TODO: empirisch prüfen** (Port ROOM1140 laden, ai_dist je Slot lesen).
+- **WURZEL der 3 Anim-Symptome = die deferrte Enemy-Anim-Hälfte.** Der Port hat die Zombie-Clips
+  bei den Übergängen NICHT gesetzt (deferred): Wake-Stand-up (`re15_enemy_ai_live_feeding` case 2 =
+  „faithful stand-in", kein Clip), Grab/Biss („port has no zombie grab anim"), Hurt (`hurt_clip`
+  nur geseedet). → Zombie bleibt im falschen Default/Stale-Clip stehen = die „falsche getroffen-Anim".
+- **Original-Dispatch-Kette:** `FUN_801018f8` (feeding-Handler) ruft ZWEI Tabellen indexiert per
+  entity+0x5: `PTR_FUN_8011f9d0[+5]` (Logik) + `PTR_FUN_8011f9d4[+5]` (**ANIMATE** — die deferrte
+  Hälfte). Der Stand-up-anim_set sitzt @0x80103b08 (+0x170/+0x174). **TODO: die zwei Tabellen aus
+  STAGE1.BIN auflösen (re15-psx-disasm) → Stand-up/Hurt/Biss-Clip-Indizes byte-true bestimmen.**
+- **Hang-Verdacht:** die Death/Grab-Lock-Kette ohne Game-Over-Infra — Biss → HP<0 → Death-State 7 →
+  game_step friert Spieler ein (Death-Timer 0x78), aber kein Game-Over/Fade → Spieler permanent
+  eingefroren = der „Hang". ODER der player-grabbed-Lock (`s_player_grabbed`) löst nie aus.
+  **TODO: empirisch belegen wo genau es freezt.**
+- Quellen: `FUN_80103980/801018f8/80102548/80105a8c/80100688.c` (STAGE1_full), Dispatch
+  `@0x8011f7b4`/`@0x8011f80c`/`@0x8011f890`, Tabellen `PTR_FUN_8011f9d0/d4`.
 
 ## 5. ROOM 1070 — Irons-Office-Cutscene endet nicht  ⬜
 - In der Irons-Cutscene **hängt Leon am Ende**, die **Cutscene endet nicht** (kein Exit/Handoff).
