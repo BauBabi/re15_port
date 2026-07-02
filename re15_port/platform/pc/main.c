@@ -441,7 +441,11 @@ int main(int argc, char *argv[])
      * kneel cutscene to compare frame-exact vs ablauf4). Default = the ROOM1170 intro. */
     const char *start_room = getenv("RE15_START_ROOM");
     unsigned boot_room = (start_room && *start_room) ? (unsigned)strtoul(start_room, 0, 16) : 0x1240;
-    char rdt_path[32]; snprintf(rdt_path, sizeof rdt_path, "RDT/ROOM%04X.RDT", boot_room);
+    /* Asset-Pfad-Konsolidierung (2026-07-02): der Boot-Room-RDT kommt aus dem CD-Layout
+     * STAGE{N}/ROOM%04X.RDT (N = room_id>>12), NICHT mehr aus der entfernten flachen RDT/-Struktur.
+     * Identische Auflösung wie re15_room_load (room_pc.c) für die Cross-Room-Transitions. */
+    char rdt_path[32]; snprintf(rdt_path, sizeof rdt_path, "STAGE%u/ROOM%04X.RDT",
+                                (boot_room >> 12) & 0xFu, boot_room);
     uint8_t *rdt_buf = pc_read_shared(rdt_path, &rdt_size);
     fprintf(stderr, "[boot] room RDT: %s (%d bytes)\n", rdt_path, rdt_size);
     re15_rdt_t rdt = {0};
