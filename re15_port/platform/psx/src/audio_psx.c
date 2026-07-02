@@ -243,6 +243,12 @@ void re15_audio_weapon_se(int se_id)
     (void)se_id;   /* TODO(psx): load the equipped weapon's ARMS bank to SPU + play se_id (gunshot=8) */
 }
 
+/* Re-prime the weapon SE bank on equip (byte-true FUN_80043d8c). PSX SPU path = follow-up stub. */
+void re15_audio_prime_weapon(int weapon_id)
+{
+    (void)weapon_id;   /* TODO(psx): FUN_80043d8c parity — load ARMS<weapon>.EDH/.VB into the SPU bank */
+}
+
 /* ════════════════════════════════════════════════════════════════════════
  *  VOICE path (RE2 dialogue) — SCD Message_on (0x2B) → SCD_AUDIO_VOICE_ON.
  *  RE2 streams dialogue as CD-XA mixed into the SPU; PSn00bSDK has no XA

@@ -105,3 +105,10 @@ add_executable(test_audio_vab test_audio_vab.c)
 target_include_directories(test_audio_vab PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_audio_vab COMMAND test_audio_vab)
 set_tests_properties(unit_audio_vab PROPERTIES TIMEOUT 30)
+
+# --- Inventory / weapon-select menu LOGIC (Phase 8.20 — menu_common.c) ---
+add_executable(test_weapon_select test_weapon_select.c)
+target_link_libraries(test_weapon_select PRIVATE re15_engine re15_test_support)
+target_include_directories(test_weapon_select PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_weapon_select COMMAND test_weapon_select)
+set_tests_properties(unit_weapon_select PROPERTIES TIMEOUT 30)

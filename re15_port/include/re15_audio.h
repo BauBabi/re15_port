@@ -110,4 +110,10 @@ void re15_audio_room_se(int se_id);
  * handgun, savestate-confirmed). Called C-side at the player fire in game_step. PSX = follow-up stub. */
 void re15_audio_weapon_se(int se_id);
 
+/* Re-prime the resident weapon SE bank (bank1) to `weapon_id`'s ARMS bank (byte-true FUN_80043d8c:
+ * the equip-commit + room-init both re-load the equipped weapon's ARMS bank). Called by the
+ * weapon-select menu on EQUIP so re15_audio_weapon_se then plays the newly-equipped weapon's SEs.
+ * PC = load_weapon_se_vab_pc(weapon_id); PSX = follow-up stub. */
+void re15_audio_prime_weapon(int weapon_id);
+
 #endif /* RE15_AUDIO_H */

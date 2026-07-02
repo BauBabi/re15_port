@@ -36,3 +36,4 @@ void re15_audio_start_room_bgm(int stage, int room)
  * not linked into test binaries). enemy_ai_common.c's death FSM calls re15_audio_room_se. */
 void re15_audio_room_se(int se_id) { (void)se_id; }
 void re15_audio_weapon_se(int se_id) { (void)se_id; }
+void re15_audio_prime_weapon(int weapon_id) { (void)weapon_id; }

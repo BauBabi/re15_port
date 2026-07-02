@@ -20,9 +20,10 @@ int re15_inv_grant(uint8_t type, uint8_t amount)
     if (type == 0 || amount == 0) return -1;
 
     /* Pass 1: stack onto an existing same-id slot (RE2 ammo stacks). No 255 clamp
-     * — the byte-true write path (FUN_8006947c) does a raw qty write; a single
-     * pickup-merge never exceeds a uint8 in practice. (The grant-level merge wrapper
-     * itself was not disasm-pinned; FUN_8006947c only verifies the raw slot write.) */
+     * — the byte-true slot write is a raw qty write; a single pickup-merge never exceeds a
+     * uint8 in practice. (The grant-level merge wrapper was not disasm-pinned. NOTE: the earlier
+     * "FUN_8006947c" citation was WRONG — that is sys.c GPU code, not an inventory writer; the real
+     * writers are FUN_8004a1f0/FUN_8004dc4c/FUN_8004e214 on DAT_800b10ac. See RE15_INVENTORY_SUBSYSTEM.md §2.4.) */
     for (int i = 0; i < RE15_INV_MAX_SLOTS; i++) {
         if (g_inv.slots[i].id == type) {
             g_inv.slots[i].qty               = (uint8_t)(g_inv.slots[i].qty + amount);
@@ -32,7 +33,7 @@ int re15_inv_grant(uint8_t type, uint8_t amount)
             return 0;
         }
     }
-    /* Pass 2: place in first free slot (raw write, matching FUN_8006947c). */
+    /* Pass 2: place in first free slot (raw slot write, DAT_800b10ac 4-byte stride). */
     for (int i = 0; i < RE15_INV_MAX_SLOTS; i++) {
         if (g_inv.slots[i].id == 0) {
             g_inv.slots[i].id     = type;

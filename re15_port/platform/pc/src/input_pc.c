@@ -20,12 +20,13 @@
 #define RE15_PAD_RIGHT    0x0020
 #define RE15_PAD_DOWN     0x0040
 #define RE15_PAD_LEFT     0x0080
-#define RE15_PAD_L1       0x0400   /* Q  = "L1" — cycle cut backward */
-#define RE15_PAD_R1       0x0800   /* E  = "R1" — cycle cut forward */
+#define RE15_PAD_L1       0x0400   /* Q  = "L1" — reserved (currently unused) */
+#define RE15_PAD_R1       0x0800   /* E  = "R1" — AIM / raise the weapon (hold; game_step + player aim FSM) */
 #define RE15_PAD_CROSS    0x4000   /* Shift = "X" — RUN modifier (held) */
 #define RE15_PAD_SQUARE   0x8000   /* Enter = "Square" — ACTION button */
 /* Phase 4.5.13-RE2 H5 (2026-05-21): motion-debug keys */
 #define RE15_PAD_SELECT   0x0001   /* Tab    = toggle motion-debug-lock */
+#define RE15_PAD_START    0x0008   /* I      = open the inventory/weapon-select (== engine RE15_PAD_BIT_START) */
 #define RE15_PAD_DBG_NEXT 0x1000   /* PageUp   = clip +1 */
 #define RE15_PAD_DBG_PREV 0x2000   /* PageDown = clip -1 */
 
@@ -48,6 +49,9 @@ void re15_input_tick(void)
         if (keys[SDL_SCANCODE_RETURN] || keys[SDL_SCANCODE_KP_ENTER]) bits |= RE15_PAD_SQUARE;
         if (keys[SDL_SCANCODE_Q])         bits |= RE15_PAD_L1;
         if (keys[SDL_SCANCODE_E])         bits |= RE15_PAD_R1;
+        /* START = I (user-chosen PC binding, 2026-07-02): opens the inventory/weapon-select menu.
+         * PSX Start (bit 0x0008); inert until the inventory screen consumes it. */
+        if (keys[SDL_SCANCODE_I])         bits |= RE15_PAD_START;
         /* DEV room-browser (globalization 2026-06-13): [ = prev room, ] = next room.
          * Cycles through every room in the shared tree (re15_room_list.h). Uses the
          * FREE L2/R2 bits (0x0100/0x0200) — NOT 0x4000/0x8000, which are CROSS (=RUN,

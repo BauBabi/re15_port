@@ -548,6 +548,13 @@ void re15_audio_weapon_se(int se_id)
     SDL_UnlockAudioDevice(s_audio_dev);
 }
 
+/* Re-prime bank1 to `weapon_id`'s ARMS bank (byte-true FUN_80043d8c parity) — the weapon-select
+ * menu calls this on EQUIP so the next re15_audio_weapon_se plays the newly-equipped weapon's SEs. */
+void re15_audio_prime_weapon(int weapon_id)
+{
+    load_weapon_se_vab_pc(weapon_id);
+}
+
 /* Triggered from re15_audio_tick when a SCD Se_on event arrives. */
 static void play_sample_pc(int vag_index, int scd_volume)
 {

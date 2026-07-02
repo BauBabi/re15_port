@@ -54,6 +54,7 @@ static inline int RNDI(float f) {
 #include "re15_collision.h"
 #include "re15_stair.h"
 #include "re15_game_step.h"   /* SHARED per-frame interpreter step (PSX+PC) */
+#include "re15_menu.h"        /* re15_menu_* — inventory/weapon-select overlay (8.20) */
 #include "re15_room.h"        /* SHARED cross-room transition (re15_room_apply_pending) */
 #include "re15_enemy.h"       /* generic enemy-model registry (re15_enemy_find/alloc/reset) */
 #include "re15_ems.h"         /* enemy-model archive index (load EMDs out of CDEMD*.EMS) */
@@ -1085,6 +1086,20 @@ int main(int argc, char *argv[])
                 re15_render_pc_msg_text(244, 196, no_g,  2);
                 if (g_scd.message_blink & 0x18)
                     re15_render_pc_cursor((g_scd.message_choice ? 230 : 160), 196);
+            }
+        }
+
+        /* INVENTORY / weapon-select menu overlay (Phase 8.20). Drawn on top of the HUD when open
+         * (game_step pauses gameplay). Faithful-line presentation: a panel + a text list with a '>'
+         * cursor; the byte-true 2-col grid + ITEMALL icons are Phase 2 (RE15_INVENTORY_SUBSYSTEM.md §3). */
+        if (re15_menu_is_open()) {
+            int n = re15_menu_count(), cur = re15_menu_cursor();
+            re15_render_tile(48, 40, 224, 40 + n * 16 + 24, 3, 0, 0, 48);   /* panel (behind the text) */
+            re15_debug_text(64, 52, 0, "EQUIP WEAPON  (Enter=select  Shift=cancel)");
+            for (int i = 0; i < n; i++) {
+                char line[48];
+                snprintf(line, sizeof line, "%c %s", (i == cur) ? '>' : ' ', re15_menu_entry_name(i));
+                re15_debug_text(72, 76 + i * 16, 0, line);
             }
         }
 

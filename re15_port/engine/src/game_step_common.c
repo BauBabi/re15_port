@@ -17,6 +17,7 @@
 #include "re15_rdt.h"           /* re15_rdt_floor_sound */
 #include "re15_enemy_ai.h"      /* re15_enemy_ai_run_all — the LIVE-zombie per-frame pass (8.6) */
 #include "re15_damage.h"        /* re15_player_is_dead / re15_player_death_tick (8.10 death FSM) */
+#include "re15_menu.h"          /* re15_menu_* — the inventory/weapon-select menu (8.20) */
 
 void re15_game_step(const re15_game_ctx_t *c)
 {
@@ -43,7 +44,18 @@ void re15_game_step(const re15_game_ctx_t *c)
      * it needs the root bone matrix there to get the look angle in the correct frame. The
      * old re15_neck_update body-relative slew is retired to avoid double-slewing.) */
 
-    if (c->rdt_ok && re15_stair_active()) {
+    /* INVENTORY / weapon-select menu (Phase 8.20): START (PC: I) toggles it. START is owned by the
+     * toggle (not re15_menu_tick), so open+tick on the same frame does not immediately close it. While
+     * OPEN, gameplay is PAUSED — tick the menu input, keep the RVD camera scan (like the grabbed branch)
+     * and clear the action edge (no doors/stairs while the menu is up), then SKIP player_tick + collision
+     * + fire. Byte-true open trigger = the state-1 START poll @0x8001cd68; the inline pause mirrors the
+     * stair/dead/grabbed skip (the workflow OVERTURNED the "PSX thread-scheduler pause" as unproven). */
+    if (c->rdt_ok && (c->pad_pressed & RE15_PAD_BIT_START)) re15_menu_toggle();
+    if (c->rdt_ok && re15_menu_is_open()) {
+        re15_menu_tick(c->pad_pressed);
+        g_aot_action_pressed = 0;
+        re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
+    } else if (c->rdt_ok && re15_stair_active()) {
         /* Engine-driven stair traversal (action-triggered): auto-walk Leon
          * up/down + force the stair clip + sink/raise Y. The player does NOT
          * steer — SKIP player_tick + collision (the 0x4000-latch behaviour) —
