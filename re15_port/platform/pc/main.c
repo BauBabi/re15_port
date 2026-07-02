@@ -71,6 +71,36 @@ static int re15_pc_draw_item_icon(int x, int y, uint8_t id)
         }
     return 1;
 }
+
+/* FAITHFUL-LINE inventory chrome (the byte-true window-frame builder FUN_800467a8 is deferred): a
+ * beveled blue panel — dark fill + a lighter top/left edge + darker bottom/right edge (the RE1.5
+ * status-screen panel look). z=4 (behind the content). */
+static void re15_pc_panel(int x, int y, int w, int h)
+{
+    re15_render_tile(x, y, w, h, 4, 32, 48, 96);              /* fill   */
+    re15_render_tile(x, y, w, 1, 4, 96, 128, 200);            /* top    */
+    re15_render_tile(x, y, 1, h, 4, 96, 128, 200);            /* left   */
+    re15_render_tile(x, y + h - 1, w, 1, 4, 12, 20, 48);      /* bottom */
+    re15_render_tile(x + w - 1, y, 1, h, 4, 12, 20, 48);      /* right  */
+}
+
+/* FAITHFUL-LINE ECG heart-rate trace (the byte-true waveform generator is deferred): a green scrolling
+ * heartbeat across the CONDITION panel. `hp` picks the beat shape (Fine = steady, Danger = erratic);
+ * `phase` scrolls it. Draws into a wxh box at (x,y). */
+static void re15_pc_ecg(int x, int y, int w, int h, int hp, unsigned phase)
+{
+    int mid = y + h / 2;
+    for (int c = 0; c < w; c++) {
+        int t = (c + (int)phase) % 40;         /* one beat per 40 px */
+        int dy = 0;
+        if      (t == 8)  dy = -1;
+        else if (t == 9)  dy = (hp >= 50 ? -h / 3 : -h / 2);   /* R spike (taller when injured) */
+        else if (t == 10) dy = (hp >= 30 ? h / 4 : h / 2);     /* S dip */
+        else if (t == 11) dy = -1;
+        else if (hp < 30 && (t == 20 || t == 28)) dy = -(h / 4) + (c & 1);  /* erratic extra beats */
+        re15_render_tile(x + c, mid + dy, 1, 1, 0, 64, 224, 96);
+    }
+}
 #include "re15_room.h"        /* SHARED cross-room transition (re15_room_apply_pending) */
 #include "re15_enemy.h"       /* generic enemy-model registry (re15_enemy_find/alloc/reset) */
 #include "re15_ems.h"         /* enemy-model archive index (load EMDs out of CDEMD*.EMS) */
@@ -1117,26 +1147,31 @@ int main(int argc, char *argv[])
          * deferred); the ITEM-LIST + equipped-weapon ICONS + the grid POSITIONS (cells @217/257,58+row*30)
          * + the CONDITION text are byte-true. See RE15_INVENTORY_SUBSYSTEM.md §3. */
         if (re15_menu_is_open()) {
+            static unsigned s_inv_frame = 0; s_inv_frame++;   /* ECG scroll phase */
             int n = re15_menu_count(), cur = re15_menu_cursor();
             re15_actor_t *plr = &g_actors[RE15_ACTOR_SLOT_PLAYER];
             uint8_t eqw = (uint8_t)re15_player_equipped_weapon();
             re15_render_tile(0, 0, SCREEN_XRES, SCREEN_YRES, 5, 20, 28, 64);   /* screen background */
 
             /* ---- LEFT column: ID card + CONDITION + tabs ---- */
-            re15_render_tile(8, 6, 144, 84, 4, 36, 52, 100);
-            re15_render_tile(14, 22, 40, 54, 3, 12, 12, 32);                   /* photo */
+            re15_pc_panel(8, 6, 144, 84);
+            re15_render_tile(14, 22, 40, 54, 3, 12, 12, 32);                   /* photo (placeholder) */
             re15_debug_text(64, 12, 0, "POLICE");
             re15_debug_text(60, 26, 0, "Leon.S.kennedy");
-            re15_render_tile(8, 94, 144, 66, 4, 36, 52, 100);
+            re15_pc_panel(8, 94, 144, 66);
             re15_debug_text(14, 98, 0, "CONDITION");
             re15_debug_text(18, 118, 0, "ECG");
+            re15_pc_ecg(46, 112, 100, 22, plr->hp, s_inv_frame / 2);          /* FL heart-rate trace */
             {   /* byte-true condition thresholds (idle-FSM @0x8003206c: <0x32 caution, <0x1e danger) */
                 const char *cond = plr->hp >= 50 ? "FINE" : plr->hp >= 30 ? "CAUTION" : "DANGER";
                 re15_debug_text(48, 138, 0, cond);
             }
             {   static const char *tabs[4] = { "ITEM", "MAP", "FILE", "EXIT" };
-                for (int i = 0; i < 4; i++)
-                    re15_debug_text(66 + (i & 1) * 48, 168 + (i >> 1) * 18, 0, tabs[i]); }
+                for (int i = 0; i < 4; i++) {
+                    int tx = 66 + (i & 1) * 48, ty = 168 + (i >> 1) * 18;
+                    if (i == 0) re15_render_tile(tx - 4, ty - 2, 44, 12, 3, 48, 72, 140);  /* ITEM = active tab */
+                    re15_debug_text(tx, ty, 0, tabs[i]);
+                } }
 
             /* ---- CENTER: ARMS CONTROL ---- Equip Arms = the equipped weapon's 40×30 grid icon, native
              * (BYTE-TRUE, inventory-composite-icon-re workflow: ITEMALL tile==id reproduces the Equip box
@@ -1144,7 +1179,7 @@ int main(int argc, char *argv[])
              * "Standard Arms" IS the larger composite (descriptor @0x80074a8c, a separate 4-bit-atlas
              * subsystem) — shown as the grid icon = FAITHFUL-LINE (its atlas was unresolvable from the
              * capture; deferred). */
-            re15_render_tile(156, 6, 52, 152, 4, 36, 52, 100);
+            re15_pc_panel(156, 6, 52, 152);
             re15_debug_text(158, 8, 0, "ARMS");
             re15_debug_text(160, 24, 0, "EQUIP");
             if (!re15_pc_draw_item_icon(160, 44, eqw))
@@ -1153,7 +1188,7 @@ int main(int argc, char *argv[])
             re15_pc_draw_item_icon(160, 112, eqw);
 
             /* ---- RIGHT: ITEM LIST (byte-true 2-col grid, cells @217/257,58+row*30) ---- */
-            re15_render_tile(212, 6, 104, 152, 4, 36, 52, 100);
+            re15_pc_panel(212, 6, 104, 152);
             re15_debug_text(214, 8, 0, "ITEM LIST");
             for (int c = 0; c < 10; c++) {
                 int cx = 217 + ((c & 1) ? 40 : 0);
