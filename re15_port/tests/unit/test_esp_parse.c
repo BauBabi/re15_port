@@ -10,6 +10,7 @@
  * @0x1A628 / @0x1CA68, both PSX-TIM magic 0x10).
  */
 #include "re15_esp.h"
+#include "re15_tim.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -255,6 +256,58 @@ int main(void)
             free(gbuf);
             if (dfail) fail = 1;
             else printf("  (D) PASS: CORE00.ESP global bank {3,8,0,2,4}; effect-0 @0x824 (22a/20c); fx resolves effect-0 from global\n");
+        }
+    }
+
+    /* === Phase ESP-E: the effect-0 blood TEXTURE (extracted_fx/effect0_blood.tim, byte-true VRAM) ===
+     * The GLOBAL effect sheet is VRAM-only; extracted byte-true (tpage 0x001f -> VRAM(960,256) 4bpp,
+     * clut 0x7951 -> VRAM(272,485)). Verify it parses + is a blood sprite: CLUT[0]=0x0000 (index-0
+     * TRANSPARENT — the port's effect slot treats it transparent, not opaque black), red-dominant
+     * palette, and the sheet is a mostly-transparent sprite with substantial blood texels. */
+    {
+        const char *tpath = RE15_ASSET_PSX_DIR "/../extracted_fx/effect0_blood.tim";
+        long tsz = 0;
+        uint8_t *tb = slurp(tpath, &tsz);
+        if (!tb) { fprintf(stderr, "FAIL: (E) cannot open %s\n", tpath); fail = 1; }
+        else {
+            re15_tim_t tim;
+            int efail = 0;
+            if (re15_tim_parse(tb, (int)tsz, &tim) != 0) {
+                fprintf(stderr, "FAIL: (E) re15_tim_parse failed\n"); efail = 1; }
+            else if (tim.width != 256 || tim.height != 256 || !tim.has_clut) {
+                fprintf(stderr, "FAIL: (E) exp 256x256 with CLUT, got %dx%d clut=%d\n",
+                        tim.width, tim.height, tim.has_clut); efail = 1; }
+            else if (tim.clut[0] != 0x0000) {
+                fprintf(stderr, "FAIL: (E) CLUT[0]=0x%04x (exp 0x0000 = transparent index)\n", tim.clut[0]); efail = 1; }
+            else {
+                /* red-dominant palette (blood) + mostly index-0 (transparent bg) for a 4bpp sheet. */
+                int redcol = 0;
+                for (int k = 1; k < 16 && k < tim.clut_entries; k++) {
+                    uint16_t c = tim.clut[k]; int r = c & 0x1f, g = (c >> 5) & 0x1f, b = (c >> 10) & 0x1f;
+                    if (c && r >= g && r >= b) redcol++;
+                }
+                if (redcol < 8) { fprintf(stderr, "FAIL: (E) only %d red-dominant CLUT entries (exp blood palette)\n", redcol); efail = 1; }
+                if (tim.bpp == 4) {
+                    const uint8_t *idx = (const uint8_t *)tim.pixels;
+                    long clear = 0, blood = 0;
+                    int npx = tim.width * tim.height;
+                    for (int i = 0; i < npx; i++) {
+                        int nib = (i & 1) ? (idx[i / 2] >> 4) : (idx[i / 2] & 0xF);
+                        if (nib == 0) clear++; else blood++;
+                    }
+                    if (clear < npx / 2 || blood < 1000) {
+                        fprintf(stderr, "FAIL: (E) index dist %ld transparent / %ld blood (exp majority transparent, >=1000 blood)\n",
+                                clear, blood); efail = 1; }
+                    if (!efail)
+                        printf("  (E) PASS: effect0_blood.tim 256x256 %dbpp; CLUT[0]=transparent + %d red-dominant; %ld transparent / %ld blood texels\n",
+                               tim.bpp, redcol, clear, blood);
+                } else if (!efail) {
+                    printf("  (E) PASS: effect0_blood.tim 256x256 %dbpp; CLUT[0]=transparent + %d red-dominant blood entries\n",
+                           tim.bpp, redcol);
+                }
+            }
+            free(tb);
+            if (efail) fail = 1;
         }
     }
 

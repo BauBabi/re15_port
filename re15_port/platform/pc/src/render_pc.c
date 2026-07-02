@@ -773,12 +773,18 @@ void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot)
     if (!tim || !s_renderer) return;
     if (slot < 0 || slot >= RE15_TIM_SLOT_MAX) return;
 
-    /* Heuristic: for indexed TIMs treat index 0 as OPAQUE (CLUT[0] colour)
+    /* Heuristic: for indexed MODEL/PROP TIMs treat index 0 as OPAQUE (CLUT[0] colour)
      * rather than transparent. RE1.5 MD1 textures need this to look right —
      * fully-black trim pixels (door handle, weapon details) are stored as
      * palette index 0 with CLUT[0] = 0x0000 (black). Treating them as
-     * transparent produces the "triangle-shaped holes" the user reported. */
-    const int treat_index_0_opaque = 1;
+     * transparent produces the "triangle-shaped holes" the user reported.
+     *
+     * EXCEPTION — the effect-sprite slots (19 = room RDT effect TIM, 20 = GLOBAL effect
+     * bank / effect-id 0 hit-blood, see main.c RE15_TIM_SLOT_EFFECT[_GLOBAL]): these are
+     * PSX textured SPRITES, where index 0 / CLUT[0]=0x0000 is TRANSPARENT (byte-true GPU
+     * sprite semantics). Without this, the 4bpp blood sheet would render as a black box
+     * around each splatter (the ~86% index-0 background becomes opaque black). */
+    const int treat_index_0_opaque = (slot != 19 && slot != 20);
 
     /* Phase 4.5.7.5 #PC-2: support multi-CLUT TIMs by decoding each CLUT
      * into its own copy of the TIM, stacked vertically. The texture
