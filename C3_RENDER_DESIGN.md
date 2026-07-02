@@ -333,6 +333,15 @@ Model/Prop-Slots 0-18 unverändert. Test **ESP-E** verifiziert das Asset. **effe
 (kein Port-Spawner — sie kommen aus Overlay-Verhalten `FUN_80100688`/`8010ab2c`/`80114ba4`, nicht dem
 ROOM1140-Hit-Pfad). Integration (TIMs + per-effect-id-Slot-Map) sobald diese Spawner portiert sind.
 
+**ORIGINAL-QUELLE GEFUNDEN (2026-07-02): `DATA/TEX.TIM`** — der geflaggte „Original-Effekt-TIM
+unbekannt"-Gap ist gelöst. TEX.TIM (1280×256 4bpp, common UI+Font+Effekt-Atlas) enthält die Effekt-
+Sprites im rechten Teil (x≳768) UND die Effekt-CLUTs (CLUT-Block @VRAM(256,480), rechte Hälfte Spalten
+16-31). **Byte-true bewiesen:** TEX.TIM clut(272,485)=`0000 884c 842b …` == meine VRAM-Extraktion
+`0000 084c 042b …` **exakt modulo Bit15 (STP-Bit)**, das TEX.TIM behält und die ShowVRAM-PNG verlor.
+Die VRAM-Effekt-Pages sind ein **repackter** Upload dieser Region (kein direkter Row-Slice) → der
+VRAM-Stand-in `effect0_blood.tim` ist byte-true zu TEX.TIM (modulo STP) und rendert identisch; ein
+exakter TEX.TIM-Slice bräuchte die Repack-Map, bringt aber keine visuelle Änderung. Details: `extracted_fx/README.md`.
+
 ## 3. op 0x3a `Sce_espr_on` (Spawn, Subsystem 2) — byte-true (16 Bytes)
 `FUN_80019700(a0,a1,a2,a3)` spawnt in `DAT_800a73b8` (verifiziert: `addiu s3,s3,29624`
 @0x80019724; stride 132 @0x80019794-9c; 96 Slots @0x8004978c; busy `+0x6c`, alive=3;

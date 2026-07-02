@@ -40,6 +40,20 @@ The 5 global effects are only **TWO texture pages**, recoloured via different CL
   spawner for them yet (they're spawned by overlay behaviours, e.g. FUN_80100688/8010ab2c/
   80114ba4 in STAGE1, not the ROOM1140 zombie-hit path). Integrate their TIMs + a per-effect-id
   slot map when those spawners are ported.
-- The ORIGINAL global-effect-TIM upload (the boot installer that puts these two sheets in VRAM)
-  is not in the decompiled set → boot-init disasm would find the authoritative source file; these
-  extracts are the byte-true VRAM-recovered stand-in until then.
+## ORIGINAL SOURCE FOUND (2026-07-02): `DATA/TEX.TIM`
+
+The authoritative source of these effect sheets is **`DATA/TEX.TIM`** — a 1280×256 4bpp common
+atlas (status/inventory UI + font + the effect sprites in its right portion). Proof (byte-true):
+TEX.TIM's CLUT block is at VRAM(256,480) 32×24; the effect CLUTs live in its **right half
+(columns 16–31)** and are **byte-identical** to the VRAM-extracted palettes **except bit 15 (the
+STP / semi-transparency bit), which TEX.TIM preserves** and the ShowVRAM PNG lost:
+
+    effect-0 blood @TEX clut(272,485): 0000 884c 842b 842a 8429 …   (VRAM extract: 0000 084c 042b …)
+    effect-8 fire  @TEX clut(272,484): 0000 ffff efde e3de d7de …   (VRAM extract: 0000 7fff 6fde …)
+
+The effect sprites (blood/cloud/flames/hit-marker) are visible in TEX.TIM's right portion
+(x≳768). The VRAM effect PAGES are a **repacked** upload of that region (a straight 256-wide row
+slice does NOT match TEX.TIM row-for-row — the boot installer rearranges it), so slicing the exact
+page from the file needs the upload's repack map; not worth it since the VRAM-extracted stand-in
+already renders identically (the port ignores STP). => the flag "original file unknown" is RESOLVED:
+it is TEX.TIM. `effect0_blood.tim` (VRAM stand-in) is byte-true to TEX.TIM's content modulo STP.
