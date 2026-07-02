@@ -226,6 +226,15 @@ void re15_audio_footstep(int foot, int sound_type)
                      getSPUSampleRate(22050));
 }
 
+/* Room SE by id (byte-true FUN_800453d0 core) — the combat/room SE bank (snd1). PSX SPU
+ * path is a FOLLOW-UP: it needs the snd1 bank transferred to a reserved SPU region (mirror
+ * of the snd0 footstep load) before play_sample_from can key it. Stub keeps the target
+ * buildable; the PC backend (audio_pc.c) has the real impl. */
+void re15_audio_room_se(int se_id)
+{
+    (void)se_id;   /* TODO(psx): load snd1 to SPU + play_sample_from like re15_audio_footstep */
+}
+
 /* ════════════════════════════════════════════════════════════════════════
  *  VOICE path (RE2 dialogue) — SCD Message_on (0x2B) → SCD_AUDIO_VOICE_ON.
  *  RE2 streams dialogue as CD-XA mixed into the SPU; PSn00bSDK has no XA

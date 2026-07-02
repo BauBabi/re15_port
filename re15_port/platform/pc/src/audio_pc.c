@@ -91,6 +91,16 @@ static re15_vab_t s_foot_vab;
 static uint8_t    s_foot_edt[128];
 static int        s_foot_loaded = 0;
 
+/* Room SE bank (snd1, RDT +0x14/+0x18/+0x1c) — the per-room sound-effect bank that the
+ * overlay SE-play FUN_800453d0 uses (DAT_800ac778+0x14 = snd1's EDT/SE-table). This is
+ * where the COMBAT SEs live (zombie death groan, etc.). Same EDT→program→tone→VAG lookup
+ * as the footstep bank, so re15_audio_room_se reuses re15_footstep_vag on snd1. */
+static int16_t   *s_se_decoded    [RE15_VAB_MAX_SAMPLES];
+static int        s_se_decoded_len[RE15_VAB_MAX_SAMPLES];
+static re15_vab_t s_se_vab;
+static const uint8_t *s_se_edt   = NULL;
+static int        s_se_loaded    = 0;
+
 /* ===== RE2-style dialogue-voice subsystem (RE 2026-05-30) ================
  * Modelled on RE2's CD-XA voice path: the script selects a voice by
  * (file, channel) → CdlSetfilter, then CdlReadS streams its sectors into the
@@ -386,6 +396,63 @@ static int load_footstep_vab_pc(void)
     return 0;
 }
 
+/* Load + decode the room SE bank (snd1, RDT +0x14/+0x18/+0x1c) — the combat/room SE bank
+ * FUN_800453d0 plays from. Sliced from the resident RDT (g_room_rdt.snd_*[1]); the EDT is
+ * the SE-parameter table (se_id*4 records) that re15_audio_room_se indexes. Mirrors
+ * load_footstep_vab_pc for bank index 1. */
+static int load_room_se_vab_pc(void)
+{
+    if (!g_room_rdt_ok) return -1;
+    const uint8_t *vh  = g_room_rdt.snd_vh[1];
+    const uint8_t *vb  = g_room_rdt.snd_vb[1];
+    const uint8_t *edt = g_room_rdt.snd_edt[1];
+    int vb_sz = g_room_rdt.snd_vb_size[1], vh_sz = g_room_rdt.snd_vh_size[1];
+    if (!vh || !vb || !edt || re15_vab_parse(vh, (size_t)vh_sz, &s_se_vab) != 0)
+        return -1;
+    for (int i = 0; i < s_se_vab.vag_count; i++) {
+        uint32_t off = s_se_vab.samples[i].offset, sz = s_se_vab.samples[i].size;
+        if (off + sz > (uint32_t)vb_sz) continue;
+        size_t cap = (sz / 16) * 28;
+        int16_t *pcm = (int16_t *)malloc(cap * sizeof(int16_t));
+        if (!pcm) continue;
+        s_se_decoded[i]     = pcm;
+        s_se_decoded_len[i] = re15_vag_adpcm_decode(vb + off, sz, pcm, cap);
+    }
+    s_se_edt    = edt;
+    s_se_loaded = 1;
+    return 0;
+}
+
+/* Play a room SE by id (byte-true FUN_800453d0 core, PC path). The per-room SE table
+ * (snd1 EDT, DAT_800ac778+0x14) maps se_id → program+tone → VAG (identical to the footstep
+ * lookup, re15_footstep_vag). We resolve the VAG and mix it into the SE voices. The exact
+ * pitch (record byte0) + SPU voice/pan (byte3) are FAITHFUL-LINE (the VAG selection + play
+ * is byte-true; the fine voice params are the deferred SPU-driver detail). Used by the C-driven
+ * combat (e.g. the zombie death groan, FUN_80107cb0 frame 7 -> func_0x800453d0(rng&1?8:5)). */
+void re15_audio_room_se(int se_id)
+{
+    if (!g_audio.initialized || !s_se_loaded || se_id < 0 || se_id >= 0x19) return;
+    int vag = re15_footstep_vag(s_se_edt, &s_se_vab, se_id);   /* EDT record -> program/tone -> VAG */
+    if (vag < 0 || vag >= RE15_VAB_MAX_SAMPLES || !s_se_decoded[vag]) return;
+
+    int tvol = 100;                                            /* default; per-tone vol is the refinement */
+    int vol  = (tvol * 0x4000 / 127) >> 1;
+    if (vol > 0x4000) vol = 0x4000; if (vol < 0) vol = 0;
+
+    SDL_LockAudioDevice(s_audio_dev);
+    int slot = -1;
+    for (int i = 0; i < MIXER_MAX_ACTIVE_SAMPLES; i++)
+        if (!s_active[i].active) { slot = i; break; }
+    if (slot < 0) { slot = s_next_slot; s_next_slot = (s_next_slot + 1) % MIXER_MAX_ACTIVE_SAMPLES; }
+    s_active[slot].pcm        = s_se_decoded[vag];
+    s_active[slot].pcm_len    = s_se_decoded_len[vag];
+    s_active[slot].pos        = 0;
+    s_active[slot].subpos     = 0;
+    s_active[slot].volume_q15 = vol;
+    s_active[slot].active     = 1;
+    SDL_UnlockAudioDevice(s_audio_dev);
+}
+
 /* Triggered from re15_audio_tick when a SCD Se_on event arrives. */
 static void play_sample_pc(int vag_index, int scd_volume)
 {
@@ -464,6 +531,7 @@ void re15_audio_init(void)
     /* Phase 4.6.3: load bundled VAB so Se_on events have something to play. */
     load_bundled_vab_pc();
     load_footstep_vab_pc();   /* room snd0 + its EDT table (footstep SE) */
+    load_room_se_vab_pc();    /* room snd1 + its SE table (combat/room SE, FUN_800453d0) */
 
     /* RE2-style XA voice: gate the CD-input into the SPU mix (== CD_initvol). */
     re15_xa_init();

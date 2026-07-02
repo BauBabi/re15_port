@@ -19,6 +19,7 @@
  */
 #include "re15_enemy_ai.h"
 #include "re15_enemy.h"    /* re15_enemy_find — the loaded model bank (death-clip framecount) */
+#include "re15_audio.h"    /* re15_audio_room_se — the zombie death groan (FUN_80107cb0 frame 7) */
 #include "re15_damage.h"   /* re15_enemy_player_dist, re15_ai_arc_test, re15_engine_rand8,
                             * re15_enemy_apply_hitbox */
 
@@ -746,6 +747,8 @@ void re15_enemy_ai_live_death(int slot)
         return;
     }
     if (e->sub_state_3 == 1) {                         /* phase 1 — play clip 0x1f to its end */
+        if (e->anim_frame == 7)                        /* +0x95 == 7 (@0x80107cf4): death groan SE (rng: 5 or 8) */
+            re15_audio_room_se((re15_engine_rand8() & 1) ? 5 : 8);
         if (e->anim_frame == 35)                       /* +0x95 == 0x23 (@0x80107d94): frame-35 gore burst */
             re15_enemy_death_fx(e);
         re15_enemy_bank_t *bank = re15_enemy_find(e->type);

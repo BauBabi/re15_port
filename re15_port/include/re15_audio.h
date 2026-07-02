@@ -17,9 +17,9 @@
  * Working: SCD Se_on SFX (ADPCM VAG mixer), player footsteps (room snd0 + EDT),
  * dialogue voice (RE2-style CD-XA stream), BGM (SsSeq synth: MAIN+SUB, ADSR,
  * note2pitch, STUDIO_B SPU reverb), looping rotor ambience.
- * NOT yet wired: COMBAT SFX (gunshot/hit/death) — those come from the overlay
- * SE-play FUN_800453d0 (per-room SE table), not the SCD Se_on path, so the
- * C-driven combat is currently silent.
+ * COMBAT SFX come from the overlay SE-play FUN_800453d0 (per-room snd1 SE table),
+ * NOT the SCD Se_on path — re15_audio_room_se is that path (PC). WIRED: the zombie
+ * death groan (FUN_80107cb0 frame 7). NOT yet wired: gunshot/hit SEs (same snd1 path).
  * Historical phasing: 4.6.1 foundation · 4.6.2 VAB+ADPCM · 4.6.3 Se_on SFX ·
  * 4.6.4 XA/BGM (all done on PC).
  */
@@ -96,5 +96,11 @@ void re15_audio_shutdown(void);
  * playing: audio_pc.c load_footstep_vab_pc slices snd0 VH/VB/EDT from the resident
  * RDT (g_room_rdt.snd_*[0]) and re15_audio_footstep mixes the resolved VAG. */
 void re15_audio_footstep(int foot, int sound_type);
+
+/* Room SE by id (byte-true FUN_800453d0 core): play the per-room snd1 SE bank's sound for
+ * `se_id` (0..0x18). This is the COMBAT/room SE path (zombie death groan, etc.) — distinct
+ * from the SCD Se_on path in re15_audio_tick. The snd1 bank + its SE table (EDT) are loaded
+ * from the resident RDT. Called C-side (e.g. the zombie death FSM frame 7). */
+void re15_audio_room_se(int se_id);
 
 #endif /* RE15_AUDIO_H */

@@ -40,6 +40,7 @@
 #include "re15_enemy.h"    /* re15_enemy_alloc/find/reset — mock the death-clip bank */
 #include "re15_damage.h"   /* re15_damage_seed_rng */
 #include "re15_player.h"   /* re15_player_tick + RE15_PAD_BIT_R1 (the aim pose, Phase 8.14) */
+#include "re15_vab.h"      /* re15_vab_parse + re15_footstep_vag — the death-SE bank lookup (Phase 8.17) */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -646,6 +647,39 @@ int main(void)
             fprintf(stderr, "FAIL: (16) release R1 -> not aim-ready\n"); fail = 1; }
         if (!fail)
             printf("  (16) player AIM: R1 -> RAISE clip 17 (10f) -> AIM-READY clip 18 (gated fire), released -> idle\n");
+    }
+
+    /* (17): the ZOMBIE DEATH-SE bank lookup (Phase 8.17, byte-true FUN_80107cb0 frame 7 -> FUN_800453d0).
+     * The death groan is one of two SE ids {5, 8} (rng&1) played from the room's snd1 SE bank. The SE-id
+     * -> VAG resolution reuses re15_footstep_vag on snd1 (identical tone-table path as FUN_800453d0:
+     * program = EDT byte1 & 0x7f, tone = EDT byte2 >> 4, VAG = tone.vag_index - 1). Verify both death SE
+     * ids resolve to a VALID, DISTINCT VAG inside ROOM1140's 11-VAG snd1 bank (record bytes cited below). */
+    {
+        re15_vab_t se_vab;
+        if (!rdt.snd_vh[1] || rdt.snd_vh_size[1] <= 0 || !rdt.snd_edt[1]) {
+            fprintf(stderr, "FAIL: (17) ROOM1140 has no snd1 SE bank (VH/EDT missing)\n"); fail = 1; }
+        else if (re15_vab_parse(rdt.snd_vh[1], (size_t)rdt.snd_vh_size[1], &se_vab) != 0) {
+            fprintf(stderr, "FAIL: (17) snd1 VH parse failed\n"); fail = 1; }
+        else {
+            /* ROOM1140 snd1: program_count=1, vag_count=11 (VH header @+18/+22). */
+            if (se_vab.vag_count != 11) {
+                fprintf(stderr, "FAIL: (17) snd1 vag_count 11 expected, ist %d\n", se_vab.vag_count); fail = 1; }
+            /* death SE 5: EDT record 00 00 69 15 -> prog 0, tone 6 -> VAG index 6 -> 0-based 5. */
+            int v5 = re15_footstep_vag(rdt.snd_edt[1], &se_vab, 5);
+            /* death SE 8: EDT record 00 00 92 15 -> prog 0, tone 9 -> VAG index 9 -> 0-based 8. */
+            int v8 = re15_footstep_vag(rdt.snd_edt[1], &se_vab, 8);
+            if (v5 != 5) {
+                fprintf(stderr, "FAIL: (17) death SE 5 must resolve to VAG 5, ist %d\n", v5); fail = 1; }
+            if (v8 != 8) {
+                fprintf(stderr, "FAIL: (17) death SE 8 must resolve to VAG 8, ist %d\n", v8); fail = 1; }
+            if (v5 == v8) {
+                fprintf(stderr, "FAIL: (17) the two death SEs must be distinct VAGs, both %d\n", v5); fail = 1; }
+            if (v5 < 0 || v5 >= se_vab.vag_count || v8 < 0 || v8 >= se_vab.vag_count) {
+                fprintf(stderr, "FAIL: (17) death SE VAGs out of the 11-VAG bank (%d, %d)\n", v5, v8); fail = 1; }
+            if (!fail)
+                printf("  (17) death SE bank: snd1 %d VAGs; SE 5 -> VAG %d, SE 8 -> VAG %d (byte-true re15_footstep_vag)\n",
+                       se_vab.vag_count, v5, v8);
+        }
     }
 
     free(buf);
