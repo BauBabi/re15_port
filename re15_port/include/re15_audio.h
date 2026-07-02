@@ -12,13 +12,16 @@
  * or XA stream starts, exactly like RE2 does between the SCD VM and
  * its libsnd/libsd layer.
  *
- * Phased build-up:
- *   4.6.1 (this header)  — module foundation: init, tick, queue drain,
- *                          diagnostic counters. No actual playback yet.
- *   4.6.2                 — VAB sample loader + ADPCM decoder.
- *   4.6.3                 — SFX playback via Se_on (SPU voices on PSX,
- *                          SDL mixer on PC).
- *   4.6.4                 — XA streaming for BGM.
+ * STATUS (updated 2026-07-02): built + PLAYING end-to-end on the PC backend
+ * (audio_pc.c) — the old "4.6.1: no playback yet" phasing below is historical.
+ * Working: SCD Se_on SFX (ADPCM VAG mixer), player footsteps (room snd0 + EDT),
+ * dialogue voice (RE2-style CD-XA stream), BGM (SsSeq synth: MAIN+SUB, ADSR,
+ * note2pitch, STUDIO_B SPU reverb), looping rotor ambience.
+ * NOT yet wired: COMBAT SFX (gunshot/hit/death) — those come from the overlay
+ * SE-play FUN_800453d0 (per-room SE table), not the SCD Se_on path, so the
+ * C-driven combat is currently silent.
+ * Historical phasing: 4.6.1 foundation · 4.6.2 VAB+ADPCM · 4.6.3 Se_on SFX ·
+ * 4.6.4 XA/BGM (all done on PC).
  */
 #ifndef RE15_AUDIO_H
 #define RE15_AUDIO_H
@@ -89,8 +92,9 @@ void re15_audio_shutdown(void);
 /* Player FOOTSTEP SE (byte-true FUN_80045630). Called from re15_game_step on a
  * foot-plant (re15_actor_footstep) during walk/run: `foot` = 7 (left) / 4 (right),
  * `sound_type` = the floor.flr region material (re15_rdt_floor_sound). The backend
- * maps sound_type → the snd0/snd1 VAB program and plays it. (STUB until snd0/snd1
- * + the EDT table are loaded — see room1170_100pct_completion.) */
+ * maps sound_type → the snd0 VAB program (via the EDT table) and plays it. WIRED +
+ * playing: audio_pc.c load_footstep_vab_pc slices snd0 VH/VB/EDT from the resident
+ * RDT (g_room_rdt.snd_*[0]) and re15_audio_footstep mixes the resolved VAG. */
 void re15_audio_footstep(int foot, int sound_type);
 
 #endif /* RE15_AUDIO_H */

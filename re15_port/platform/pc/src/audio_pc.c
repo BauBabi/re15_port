@@ -1,17 +1,22 @@
 /*
- * RE1.5 Rebuilt — Audio backend, PC (Phase 4.6.1, 2026-05-18).
+ * RE1.5 Rebuilt — Audio backend, PC (started Phase 4.6.1; NOW FULLY PLAYING).
  *
- * SDL2 audio device + SCD audio queue consumer. No playback yet —
- * Phase 4.6.3 adds ADPCM-decoded sample buffers into the SDL audio
- * callback's mix.
+ * SDL2 audio device (44.1 kHz, S16 stereo) + a software mixer running in the
+ * SDL callback thread (mixer state guarded by SDL_LockAudioDevice). What is
+ * ACTUALLY built + playing here (the "4.6.1 no playback" note below was long
+ * outdated — this backend renders sound end-to-end):
+ *   - SCD Se_on SFX: ADPCM-decoded VAGs mixed via play_sample_pc (re15_audio_tick).
+ *   - Player FOOTSTEPS: re15_audio_footstep plays the room snd0 bank via its EDT.
+ *   - Dialogue VOICE: RE2-style re15_xa CD-XA stream (re15_voice_play, from synchro WAVs).
+ *   - BGM: a full SsSeq software synth (MAIN+SUB layers, SEQp→MIDI, VAB soundfont,
+ *     real PSX SPU ADSR envelopes + note2pitch + STUDIO_B SPU reverb).
+ *   - Looping room ambience (helicopter rotor) with distance/pan.
  *
- * Audio spec: 44.1 kHz, signed 16-bit, stereo. SDL audio callback
- * runs on a background thread (set by SDL); the main thread feeds
- * playback requests via a lock-free queue (Phase 4.6.3).
- *
- * For Phase 4.6.1 we open the device with a SILENT callback (writes
- * zeros into the mix buffer). The infrastructure is in place; real
- * audio comes in 4.6.3.
+ * NOT YET wired: COMBAT SFX (gunshot / hit / zombie death groan). Those come from
+ * the OVERLAY SE-play FUN_800453d0 (the per-room SE table @DAT_800ac778+0x14), a
+ * DIFFERENT path than the SCD Se_on above — the C-driven combat (re15_enemy_*_fx,
+ * player fire) emits no audio yet. Porting it = FUN_800453d0's SE-id→VAG+voice-param
+ * logic + the combat SE bank. (Unverifiable by ear in the headless/agent env.)
  */
 #include <stdint.h>
 #include <stdio.h>
