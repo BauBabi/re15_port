@@ -50,4 +50,19 @@ void re15_inv_init(void);
  * the inventory is full. Sets the HUD pickup echo on success. */
 int  re15_inv_grant(uint8_t type, uint8_t amount);
 
+/* Load the byte-true STAGE1 briefing loadout into g_inv (clears first). Savestate-confirmed
+ * (mzd_stage1_briefing.sav / mzd_stage1_engage_live.sav, DAT_800b10ac): slot0 = item 0x01 qty 0
+ * (the HANDGUN — the equipped weapon, DAT_800aca5d==1), slot1 = item 0x03 qty 15, slot2 = item
+ * 0x15 qty 50 (the two non-weapon stacks). This is the game-start loadout; a full new-game-init
+ * table + the per-item weapon/ammo/key CLASSIFICATION (the item-attribute table in the DEBUG.BIN
+ * item module @0x800c0000) are Phase 2b. See RE15_INVENTORY_SUBSYSTEM.md §2.4. */
+void re15_inv_load_briefing(void);
+
+/* Is item id a WEAPON (equippable -> DAT_800aca5d)? BYTE-TRUE: id 0x01 = the handgun (weapon 1,
+ * the briefing weapon, savestate-confirmed; item-id == weapon-id in the equip-commit @0x80046688).
+ * The general item-attribute table (all weapons/ammo/keys) lives in the DEBUG.BIN item module
+ * @0x800c0000 (resident, capstone-disassemblable; the char-default table @0x800c00d4 is decoded,
+ * the type table is not yet located) -> Phase 2b. The briefing owns only the handgun as a weapon. */
+int  re15_item_is_weapon(uint8_t id);
+
 #endif /* RE15_INVENTORY_H */

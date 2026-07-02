@@ -91,8 +91,20 @@ Companion to `RE15_COMBAT_SE_SUBSYSTEM.md`. Port status in memory `reai-v2-found
   `re15_menu_tick` (UP/DOWN cursor, SQUARE=equip+close, CROSS=cancel; START owned by toggle),
   `re15_menu_is_open` + getters (count/cursor/entry_name/entry_weapon). EQUIP calls
   `re15_player_set_equipped_weapon(w)` + `re15_audio_prime_weapon(w)` — the byte-true equip order
-  (`@0x80046688` + `@0x800466c4`). **[FL]** owned-set = a fixed test list {1 HANDGUN, 2, 3} (the general
-  inventory→weapon derivation is the undisassemblable `FUN_800c00a8` — Phase 2 scans `g_inv`).
+  (`@0x80046688` + `@0x800466c4`). **[FL]** menu owned-set = a fixed test list {1 HANDGUN, 2, 3} (kept
+  for multi-weapon testing; the byte-true briefing owns only the handgun as a weapon).
+- **Byte-true initial inventory** (Phase 8.20b): `re15_inv_load_briefing()` (inventory_common.c) populates
+  `g_inv` with the savestate-confirmed briefing loadout (`DAT_800b10ac`: item 0x01 qty 0 = HANDGUN, item
+  0x03 qty 15, item 0x15 qty 50); wired at boot (main.c, after scd_vm_init). `re15_item_is_weapon(id)`
+  byte-true-recognizes the handgun (id 1). Test (0) in test_weapon_select. NOTE: per-room persistence
+  across `room_unload -> scd_vm_init` (which clears g_inv) is a separate pre-existing concern.
+- **Item CLASSIFICATION status** (the Phase-2b bottleneck): the equip-commit @0x80046688 stores the raw
+  slot id (no is-weapon gate THERE), so the weapon/ammo/key classification lives in an item-attribute
+  table. Located in the DEBUG.BIN **item module @0x800c0000** (resident in RAM, capstone-disassemblable):
+  the char-default table @0x800c00d4 (`01×15,00`) is decoded (FUN_800c00a8), a second indexed table
+  @0x800c5ea0 was found, but the item-id→type table is not yet pinned (needs a dedicated disasm of the
+  item add/use/equip functions + the inventory sub-action FSM FUN_8004cdc4). Ways already exhausted:
+  savestate inventory bytes, EXE equip-path disasm, RE2-Leon, RE15Editor, the info/ refs, module capstone scan.
 - **`game_step_common.c`**: menu branch prepended to the stair/dead/grabbed chain — START toggles; while
   open, tick + keep the RVD cam scan + clear the action edge + SKIP player_tick/collision/fire (inline
   pause, §1). 1170-safe (only entered when the menu opens).

@@ -46,3 +46,20 @@ int re15_inv_grant(uint8_t type, uint8_t amount)
     }
     return -1;   /* inventory full */
 }
+
+/* Byte-true STAGE1 briefing loadout (mzd_stage1_briefing.sav, DAT_800b10ac 4-byte slots). */
+void re15_inv_load_briefing(void)
+{
+    re15_inv_init();                                    /* clear first */
+    g_inv.slots[0].id = 0x01; g_inv.slots[0].qty = 0;   /* HANDGUN (weapon 1 = ARMS01, the equipped weapon) */
+    g_inv.slots[1].id = 0x03; g_inv.slots[1].qty = 15;  /* stack (non-weapon)                                */
+    g_inv.slots[2].id = 0x15; g_inv.slots[2].qty = 50;  /* stack (non-weapon)                                */
+}
+
+/* Item id -> is-weapon. BYTE-TRUE: 0x01 = the handgun (weapon 1). The full item-attribute table
+ * (all weapon/ammo/key ids) is in the DEBUG.BIN item module @0x800c0000 — not yet located (Phase 2b);
+ * the briefing owns only the handgun as a weapon. See RE15_INVENTORY_SUBSYSTEM.md §2.4. */
+int re15_item_is_weapon(uint8_t id)
+{
+    return id == 0x01;
+}

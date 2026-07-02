@@ -8,14 +8,29 @@
  * by re15_menu_toggle (open+tick on one frame must NOT self-close). See RE15_INVENTORY_SUBSYSTEM.md.
  */
 #include "re15_menu.h"
-#include "re15_damage.h"   /* re15_player_equipped_weapon / re15_player_set_equipped_weapon */
-#include "re15_player.h"   /* RE15_PAD_BIT_* */
+#include "re15_damage.h"     /* re15_player_equipped_weapon / re15_player_set_equipped_weapon */
+#include "re15_player.h"     /* RE15_PAD_BIT_* */
+#include "re15_inventory.h"  /* re15_inv_load_briefing / re15_item_is_weapon / g_inv */
 #include <stdio.h>
 
 int main(void)
 {
     int fail = 0;
     printf("=== weapon-select menu (Phase 8.20) ===\n");
+
+    /* (0) byte-true STAGE1 briefing loadout: handgun (id 1, weapon) + 2 non-weapon stacks
+     * (id 3 x15, id 0x15 x50), savestate-confirmed (DAT_800b10ac). */
+    re15_inv_load_briefing();
+    if (g_inv.slots[0].id != 0x01 || g_inv.slots[0].qty != 0 ||
+        g_inv.slots[1].id != 0x03 || g_inv.slots[1].qty != 15 ||
+        g_inv.slots[2].id != 0x15 || g_inv.slots[2].qty != 50) {
+        fprintf(stderr, "FAIL: (0) briefing loadout mismatch: [%02x:%d][%02x:%d][%02x:%d]\n",
+                g_inv.slots[0].id, g_inv.slots[0].qty, g_inv.slots[1].id, g_inv.slots[1].qty,
+                g_inv.slots[2].id, g_inv.slots[2].qty); fail = 1; }
+    if (!re15_item_is_weapon(0x01) || re15_item_is_weapon(0x03) || re15_item_is_weapon(0x15)) {
+        fprintf(stderr, "FAIL: (0) is-weapon: handgun(1)=weapon, 3/0x15=non-weapon\n"); fail = 1; }
+    if (!fail)
+        printf("  (0) briefing loadout: handgun(1) + stacks 3x15,21x50; is_weapon(1)=1, is_weapon(3/21)=0\n");
 
     /* Start closed, equipped = the byte-true default (weapon 1 = the handgun). */
     re15_player_set_equipped_weapon(1);

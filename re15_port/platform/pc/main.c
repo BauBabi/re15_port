@@ -756,6 +756,11 @@ int main(int argc, char *argv[])
 
     /* Phase 4.4: SCD VM init + start demo thread */
     scd_vm_init();
+    /* Byte-true STAGE1 briefing loadout into g_inv (handgun + 2 stacks; savestate-confirmed).
+     * scd_vm_init just cleared it; populate the game-start inventory here. (Per-room persistence
+     * across a room_unload -> scd_vm_init is a separate concern; the briefing/combat room boots
+     * with this. Phase 2b: the full inventory screen renders g_inv + the item classification.) */
+    re15_inv_load_briefing();
     scd_register_room_events(rdt_ok ? &rdt : NULL);
 
     /* AW-round 2026-05-28: pre-parse ROOM1170 .msg files for canonical
