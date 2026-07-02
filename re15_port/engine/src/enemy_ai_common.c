@@ -28,6 +28,9 @@
 static int s_ai_paused = 0;
 void re15_enemy_ai_set_paused(int paused) { s_ai_paused = paused ? 1 : 0; }
 
+/* FSM-CLOCK clip-end signal (defined below, used by the feeding stand-up + grab + death sub-FSMs). */
+static int re15_enemy_clip_done(const re15_actor_t *e);
+
 /* The 32-bit state word the decision handlers store at entity+0x4, split into the
  * port's per-byte state fields (state=+0x4, sub_state_1=+0x5, sub_state_2=+0x6,
  * sub_state_3=+0x7). Byte-true to `*(undefined4 *)(entity + 4) = word` (LE). */
@@ -441,9 +444,15 @@ static void re15_enemy_ai_live_feeding(re15_actor_t *e)
         case 0: break;                                   /* idle-feeding (busy writes deferred) */
         case 1:                                           /* count the wait timer down (0x80103ad0) */
             if (e->ai_timer != 0) e->ai_timer = (int16_t)(e->ai_timer - 1);
-            else { e->sub_state_2 = 2; e->anim_frac = 0xf; }
+            else { e->sub_state_2 = 2; e->anim_frac = 0xf; e->anim_frame = 0; }  /* enter stand-up: seed crossfade + restart the clip */
             break;
-        case 2: e->sub_state_2 = 3; break;               /* stand-up anim (0x80103b08) — faithful stand-in */
+        case 2:                                           /* stand-up anim (0x80103b08): play the spawn feeding pose
+                                                           * FORWARD until clip-end, THEN commit — byte-true
+                                                           * `+0x6 += func_0x8001f314(+0x170,+0x174,0,0x100)`
+                                                           * (FUN_80103a58.c:28-30). No new +0x94 write: it replays
+                                                           * the clip already loaded at INIT. Was a 1-frame snap. */
+            e->sub_state_2 += (uint8_t)re15_enemy_clip_done(e);
+            break;
         case 3:                                           /* COMMIT (0x80103b3c) -> combat / engage */
             e->grid_id     = 0;                          /* +0x9 = 0 (combat sub-mode 0) */
             re15_ai_set_state_word(e, 0x201);            /* +0x4 = state 1 / +0x5 = 2 (engage) */
@@ -490,7 +499,11 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
             e->motion = grab_base; e->anim_frame = 0;
             re15_audio_room_se(4);            /* grab-START SE (@0x8010268c func_0x800453d0(4), snd1) */
             e->sub_state_2 = 1; break;
-        case 1: e->sub_state_2 = 2; break;   /* [1] pull-in (anim-gated -> faithful stand-in advance) */
+        case 1:                               /* [1] pull-in — play the grab-base clip, advance ON CLIP-END
+                                               * (byte-true `+0x6 += func_0x8001f314(+0x5c,+0x5d,0,0x200)`;
+                                               * was a 1-frame snap). No bank -> guard -> immediate. */
+            e->sub_state_2 += (uint8_t)re15_enemy_clip_done(e);
+            break;
         case 2:                               /* [2] IMPACT — clip base+1 (@0x80102714) + the byte-true -10 hit */
             e->motion = (uint8_t)(grab_base + 1); e->anim_frame = 0;
             player->hp     = (int16_t)(player->hp - 10);
@@ -499,16 +512,24 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
             e->ai_timer    = 0x6e;           /* +0x9c bite window (the loop count is anim-gated) */
             e->sub_state_2 = 3;
             break;
-        case 3:                               /* [3] BITE — the byte-true -5/bite (0x80102788, loops; no clip) */
-            player->hp     = (int16_t)(player->hp - 5);
-            if (player->hp < 0) player->state = 7;   /* hp<0 -> GRABBED death (state 7, save-confirmed) */
-            e->sub_state_2 = 6;             /* one bite/cycle: the anim-gated bite LOOP is deferred */
+        case 3:                               /* [3] BITE — clip base+1; apply the byte-true -5 ON the bite-clip
+                                               * completion (@0x801027dc). The original LOOPS -5 per clip-wrap
+                                               * over the +0x9c=0x6e window; the port keeps ONE -5 per bite clip
+                                               * (the exact loop count is the loaded-EDD-gated FL count). */
+            if (re15_enemy_clip_done(e)) {
+                player->hp = (int16_t)(player->hp - 5);
+                if (player->hp < 0) player->state = 7;   /* hp<0 -> GRABBED death (state 7, save-confirmed) */
+                e->sub_state_2 = 6;
+            }
             break;
-        case 6:                               /* [6] release — clip 17 (0x11, @0x80102a64) */
+        case 6:                               /* [6] release — set clip 17 (0x11, @0x80102a64) + SE, then wait */
             e->motion = 0x11; e->anim_frame = 0;
             re15_audio_room_se(7);            /* grab-RELEASE SE (@0x80102920/60 func_0x800453d0(7), snd1;
                                                * orig plays twice, one play = the faithful audible release) */
-            e->sub_state_2 = 8; break;
+            e->sub_state_2 = 7; break;
+        case 7:                               /* [7] play the release clip 0x11 to its end (byte-true anim-gate) */
+            e->sub_state_2 += (uint8_t)(re15_enemy_clip_done(e) ? 1 : 0);   /* 7 -> 8 on clip-end */
+            break;
         default:                              /* [8] EXIT (0x80102b90) -> back to the engage brain */
             re15_ai_set_state_word(e, 0x201);   /* +0x4 = state 1 / +0x5 = 2 (engage) */
             break;
@@ -737,6 +758,24 @@ void re15_enemy_ai_live_hurt(int slot)
  * FAITHFUL-LINE: the death SE (frame 7) + the gore spawn (frame 35) are the deferred presentation.
  * Headless / model-not-loaded fallback: with no bank the clip length is unknown -> go straight to
  * CORPSE (the prior behaviour, no regression). */
+/* FSM-CLOCK clip-end signal — the byte-true FUN_8001f3bc/FUN_8001f8b4 RETURN contract, the piece
+ * every live-zombie ANIMATE sub-FSM gates its +0x6/+0x5 sub-step on: a sub-step advances ONLY when
+ * its clip finishes a cycle (`+0x6 += func_0x8001f314(...)`). The port's original divergence was
+ * advancing sub-steps every frame (immediate) instead of on clip-end, which snapped zombies through
+ * their stand-up/grab/turn animations. The shared per-frame anim pass (re15_actors_anim_advance) is
+ * the SOLE anim_frame incrementer; this only READS it (no double-increment). Returns 1 when the
+ * current clip has reached its last frame, 0 while still playing. GUARD: returns 1 (done) when the
+ * bank/clip is unloaded or empty so the sub-state FSM never stalls (avoids a new hang) — never the
+ * FUN_8001f8b4 unbounded &0x8000 keyframe scan. Factored out of the death handler (was inline). */
+static int re15_enemy_clip_done(const re15_actor_t *e)
+{
+    re15_enemy_bank_t *bank = re15_enemy_find(e->type);
+    if (!bank || (int)e->motion >= bank->anim.clip_count) return 1;
+    int frames = bank->anim.clips[e->motion].frame_count;
+    if (frames <= 0) return 1;
+    return (e->anim_frame >= frames - 1) ? 1 : 0;
+}
+
 void re15_enemy_ai_live_death(int slot)
 {
     if (slot < 0 || slot >= RE15_ACTOR_MAX) return;
@@ -746,6 +785,10 @@ void re15_enemy_ai_live_death(int slot)
         e->hit_react  |= 0x1;                          /* +0x93 |= 1 (@0x80107d08) */
         e->motion      = 0x1f;                         /* +0x94 = death clip 31 (@0x80107d2c) */
         e->anim_frame  = 0;                            /* +0x95 = 0 (@0x80107d40) */
+        e->anim_flags &= (uint16_t)~0x04u;             /* CLEAR LOOP: the death clip 0x1f plays ONCE + holds
+                                                        * its fallen last frame (render clip_override=-1), it
+                                                        * must NOT loop like the feeding/idle clip did (0x04 was
+                                                        * set at spawn). Complements the state-7 corpse freeze. */
         e->sub_state_3 = 1;                            /* +0x7 = 1 (@0x80107d1c) */
         re15_enemy_death_fx(e);                        /* death-start blood burst (@0x80107cf4 spawn) */
         return;
@@ -755,9 +798,7 @@ void re15_enemy_ai_live_death(int slot)
             re15_audio_room_se((re15_engine_rand8() & 1) ? 5 : 8);
         if (e->anim_frame == 35)                       /* +0x95 == 0x23 (@0x80107d94): frame-35 gore burst */
             re15_enemy_death_fx(e);
-        re15_enemy_bank_t *bank = re15_enemy_find(e->type);
-        int frames = (bank && 0x1f < bank->anim.clip_count) ? bank->anim.clips[0x1f].frame_count : 0;
-        if (frames > 0 && e->anim_frame < frames - 1) return;   /* still playing */
+        if (!re15_enemy_clip_done(e)) return;          /* still playing death clip 0x1f (FSM-clock gate) */
         e->sub_state_3 = 2;
     }
     e->state = (uint8_t)RE15_AI_STATE_CORPSE;          /* phase 2 — +0x4 = 7 (@0x80107ec8) */

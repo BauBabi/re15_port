@@ -68,6 +68,12 @@
  * view is rebuilt for the current cut. */
 void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits);
 
+/* Shared per-frame NPC animation advance — runs in EVERY game_step branch (unlike the player anim,
+ * which is frozen when player_tick is skipped). Keeps zombies animating while the player is grabbed/
+ * dead and lets a dying zombie's death clip complete to CORPSE. Byte-true: entity anim advances in
+ * the per-type handler (FUN_8001a50c -> @0x80072bac[type]), independent of the player command FSM. */
+void re15_actors_anim_advance(void);
+
 /* Aim sub-phase query for game_step (Phase 8.16): returns 1 ONLY when the weapon-raise (PL00.EDD
  * clip 17) has played out and the player is in the held AIM-READY pose (action-8 state 5) — the
  * byte-true gate for the discharge (the original fires only in state 5, never mid-raise). Returns

@@ -242,7 +242,8 @@ int main(void)
         re15_enemy_ai_run_all(1);   /* [3] BITE  -> player -5, +0x6=6 */
         if (pl->hp != (int16_t)(ghp0 - 15)) {
             fprintf(stderr, "FAIL: grab BITE -5 (total -15), HP %d->%d\n", ghp0, pl->hp); fail = 1; }
-        re15_enemy_ai_run_all(1);   /* [6] release -> +0x6=8 */
+        re15_enemy_ai_run_all(1);   /* [6] release -> set clip 0x11 + SE, +0x6=7 */
+        re15_enemy_ai_run_all(1);   /* [7] release clip done (no model bank -> clip_done guard = immediate) -> +0x6=8 */
         re15_enemy_ai_run_all(1);   /* [8] EXIT  -> +0x5=2 (engage) */
         if (gz->sub_state_1 != 2) {
             fprintf(stderr, "FAIL: grab must exit to engage (+0x5=2), ist %d\n", gz->sub_state_1); fail = 1; }
@@ -518,6 +519,50 @@ int main(void)
                 printf("  (13) death anim: motion 0x1f, holds DEATH through the 5-frame clip, then CORPSE(7)\n");
         }
         re15_enemy_reset();   /* drop the mock bank so it can't leak into other runs */
+    }
+
+    /* (13b): the byte-true feeding STAND-UP clip-gate (FUN_80103a58 case 2 = `+0x6 += f314(+0x170,
+     * +0x174,0,0x100)`). The port used to SNAP the wake stand-up (feeding case 2 -> 3 in ONE frame)
+     * -> the zombie popped straight into the engage clip = the user-reported "wrong getroffen anim on
+     * wake". Byte-true: case 2 REPLAYS the spawn feeding clip forward and advances ONLY on clip-end,
+     * THEN commits to engage. With a mock bank (feeding clip 0x27 = 6 frames), the stand-up must HOLD
+     * in case 2 until anim_frame hits frame_count-1. (run_all doesn't call the shared anim pass; drive
+     * anim_frame here, as (13) does. Same clip-done gate the GRAB sub-steps now use.) */
+    {
+        re15_actor_t *z = &g_actors[zslots[0]];
+        pl->x = 0; pl->z = 0; pl->hp = 100; pl->hit_react = 0; pl->state = 0;
+        for (int i = 0; i < nz; i++) {   /* isolate: park the others far + asleep */
+            re15_actor_t *o = &g_actors[zslots[i]];
+            o->grid_id = 0x86; o->sub_state_1 = 0; o->sub_state_2 = 0; o->ai_flags = 0; o->x = 30000; o->z = 30000;
+        }
+        re15_enemy_bank_t *bank = re15_enemy_alloc(z->type);
+        if (!bank) { fprintf(stderr, "FAIL: (13b) could not alloc a mock bank\n"); fail = 1; }
+        else {
+            bank->anim.clip_count = 0x30;
+            bank->anim.clips[0x27].frame_count = 6;   /* the feeding/stand-up clip = 6 frames */
+            bank->ok = 1;
+            /* feeding zombie, near the player, wake wait-timer already elapsed (sub_state_2=1, ai_timer=0). */
+            z->state = RE15_AI_STATE_ACTIVE; z->grid_id = 6; z->sub_state_1 = 0;
+            z->sub_state_2 = 1; z->ai_timer = 0; z->motion = 0x27; z->anim_frame = 4; z->x = 1000; z->z = 0;
+            re15_enemy_ai_run_all(1);                  /* case1 (timer 0) -> enter case2, resets anim_frame=0 */
+            if (z->sub_state_2 != 2 || z->anim_frame != 0) {
+                fprintf(stderr, "FAIL: (13b) wake must enter stand-up case2 + restart clip, +0x6=%d frame=%d\n",
+                        z->sub_state_2, z->anim_frame); fail = 1; }
+            z->anim_frame = 3;                          /* mid-clip (3 < 6-1): must HOLD */
+            re15_enemy_ai_run_all(1);
+            if (z->sub_state_2 != 2 || z->grid_id == 0) {
+                fprintf(stderr, "FAIL: (13b) mid stand-up must HOLD case2 (no snap), +0x6=%d grid=%d\n",
+                        z->sub_state_2, z->grid_id); fail = 1; }
+            z->anim_frame = 5;                          /* clip's last frame (6-1) = done */
+            re15_enemy_ai_run_all(1);                  /* case2 clip-done -> case3 */
+            re15_enemy_ai_run_all(1);                  /* case3 COMMIT -> grid 0, +0x5=2 engage */
+            if (z->grid_id != 0 || z->sub_state_1 != 2) {
+                fprintf(stderr, "FAIL: (13b) stand-up clip-end must commit to engage, grid=%d +0x5=%d\n",
+                        z->grid_id, z->sub_state_1); fail = 1; }
+            if (!fail)
+                printf("  (13b) feeding stand-up: HELD case2 through the 6-frame clip, then committed to engage (grid 0, +0x5=2)\n");
+        }
+        re15_enemy_reset();
     }
 
     /* (14): the byte-true HURT-STAGGER + HIT-STUN (FUN_80105a8c). The stagger plays the per-spawn clip

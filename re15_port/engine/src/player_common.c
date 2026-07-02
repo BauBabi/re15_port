@@ -21,6 +21,7 @@
 #include "re15_actor.h"
 #include "re15_skeleton.h"   /* re15_sin_q12 / re15_cos_q12 */
 #include "re15_scd.h"        /* g_scd.player_mode (BL-round input gate) */
+#include "re15_enemy_ai.h"   /* RE15_AI_STATE_CORPSE — corpse-hold in re15_actors_anim_advance */
 
 /* Locomotion speeds = the RE1.5 per-direction speed bytes (FUN_80041BE4 mode
  * tables 0x80076cXX): WALK=0x4B(75), RUN=0xC8(200), BACK=0x3C(60). Translation is
@@ -363,21 +364,35 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
         p->anim_frame++;
         if (p->anim_frac > 0) p->anim_frac--;
     }
-    /* Also advance NPC anim_frames so their clips animate. EXCEPTION: a downed/corpse enemy
-     * (its spawn action is a lie-down/get-up clip 0x0C/0x0E/0x12/0x13) must stay on its LYING
-     * START frame — freeze its anim_frame at 0 so the looping clip renders slot 0 (prone). The
-     * eating/walking enemies (other action indices) advance + loop normally. Full rate. */
+    /* NPC anim advance MOVED OUT to re15_actors_anim_advance() (called UNCONDITIONALLY from
+     * game_step). It used to live here inside re15_player_tick, which is SKIPPED in the grabbed/
+     * dead/stair/menu branches — so the moment the player was grabbed, EVERY zombie's animation
+     * (and the dying zombie's death clip) froze on a stale frame while HP drained through death =
+     * the ROOM1140 "hang". The original advances each entity's anim in its own per-type handler
+     * (FUN_8001a50c -> @0x80072bac[type]), INDEPENDENT of the player command FSM @0x80073f90. */
+}
+
+/* Shared per-frame NPC animation advance — byte-true independence of the player command FSM.
+ * Runs in EVERY game_step branch (normal/grabbed/dead/stair/menu) so zombies keep animating and a
+ * dying zombie's DEATH clip 0x1f can complete to CORPSE even while the player is grabbed/dead.
+ * Freeze rules (byte-true): (a) state==CORPSE(7) holds its fallen pose — the original stops
+ * dispatching a state-7 entity (out of the @0x8011f7b4[0..4] range) so its anim never re-advances;
+ * (b) the lie-down spawn clips 0x0C/0E/12/13 stay pinned to their prone START frame; (c) the
+ * Plc_motion 1-tick init-delay holds keyframe 0. Otherwise advance anim_frame + consume the FRAC
+ * crossfade (mirrors FUN_8001f3bc). The render (re15_compute_actor_kf) wraps the frame per clip. */
+void re15_actors_anim_advance(void)
+{
     for (int i = 1; i < RE15_ACTOR_MAX; i++) {
-        if (!g_actors[i].active) continue;
-        uint16_t mo = g_actors[i].motion;
-        if (mo == 0x0C || mo == 0x0E || mo == 0x12 || mo == 0x13) { g_actors[i].anim_frame = 0; continue; }
-        if (g_actors[i].motion_init_delay > 0) {
-            /* init-hold frame: render keyframe 0 without consuming the FRAC crossfade
-             * (mirrors the player path above + byte-true FUN_8001f3bc decrement order). */
-            g_actors[i].motion_init_delay--;
+        re15_actor_t *a = &g_actors[i];
+        if (!a->active) continue;
+        if (a->state == RE15_AI_STATE_CORPSE) continue;   /* +0x4==7: corpse holds its fallen pose */
+        uint16_t mo = a->motion;
+        if (mo == 0x0C || mo == 0x0E || mo == 0x12 || mo == 0x13) { a->anim_frame = 0; continue; }
+        if (a->motion_init_delay > 0) {
+            a->motion_init_delay--;
         } else {
-            g_actors[i].anim_frame++;
-            if (g_actors[i].anim_frac > 0) g_actors[i].anim_frac--;
+            a->anim_frame++;
+            if (a->anim_frac > 0) a->anim_frac--;
         }
     }
 }

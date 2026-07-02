@@ -235,6 +235,13 @@ void re15_game_step(const re15_game_ctx_t *c)
      * spawn in the feeding/lying sub-modes (grid_id & 0xf != 0), so the combat decision brain is
      * not even entered yet — they tick (INIT->ACTIVE) but do not attack until the deferred
      * feeding->combat wake-up handler runs. Verified in a real room by test_room1140_combat. */
+    /* NPC ANIMATION ADVANCE — byte-true independent of the player command FSM (FUN_8001a50c per-type
+     * handler, NOT gated by @0x80073f90). Runs UNCONDITIONALLY here, so it fires in the grabbed/dead/
+     * stair/menu branches too (it used to sit inside re15_player_tick, which those branches skip →
+     * the whole scene froze the instant the player was grabbed = the ROOM1140 "hang"). Placed BEFORE
+     * run_all so the AI's clip-end gate (re15_enemy_clip_done) reads the frame this pass advanced. */
+    re15_actors_anim_advance();
+
     if (c->rdt_ok)
         re15_enemy_ai_run_all(g_scd.combat_active);
 }
