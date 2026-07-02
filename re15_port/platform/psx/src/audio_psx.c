@@ -235,6 +235,14 @@ void re15_audio_room_se(int se_id)
     (void)se_id;   /* TODO(psx): load snd1 to SPU + play_sample_from like re15_audio_footstep */
 }
 
+/* Weapon SE by id (byte-true FUN_80045024 bank1 core) — the equipped weapon's ARMS bank. PSX SPU
+ * path is a FOLLOW-UP: mirror FUN_80043d8c (load ARMS%02X.EDH/.VB into a reserved SPU region) before
+ * play_sample_from can key it. Stub keeps the target buildable; audio_pc.c has the real impl. */
+void re15_audio_weapon_se(int se_id)
+{
+    (void)se_id;   /* TODO(psx): load the equipped weapon's ARMS bank to SPU + play se_id (gunshot=8) */
+}
+
 /* ════════════════════════════════════════════════════════════════════════
  *  VOICE path (RE2 dialogue) — SCD Message_on (0x2B) → SCD_AUDIO_VOICE_ON.
  *  RE2 streams dialogue as CD-XA mixed into the SPU; PSn00bSDK has no XA

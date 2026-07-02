@@ -103,4 +103,11 @@ void re15_audio_footstep(int foot, int sound_type);
  * from the resident RDT. Called C-side (e.g. the zombie death FSM frame 7). */
 void re15_audio_room_se(int se_id);
 
+/* WEAPON SE by id (byte-true FUN_80045024 bank1 core): play the equipped weapon's resident ARMS SE
+ * bank (SOUND/ARMS%02X.EDH/.VB, bank selector 1) sound for `se_id`. This is the PLAYER-FIRE path —
+ * the GUNSHOT is se_id 8 (FUN_80035538/FUN_80011f50 -> FUN_80045024(0x1080001)). The bank is loaded
+ * per equipped weapon (FUN_80043d8c); the port primes weapon 1 = ARMS01 (the ROOM1140 briefing
+ * handgun, savestate-confirmed). Called C-side at the player fire in game_step. PSX = follow-up stub. */
+void re15_audio_weapon_se(int se_id);
+
 #endif /* RE15_AUDIO_H */

@@ -689,6 +689,43 @@ int main(void)
         }
     }
 
+    /* (18): the PLAYER GUNSHOT SE bank (Phase 8.19, byte-true FUN_80045024 bank1 = the equipped weapon's
+     * ARMS bank). The ROOM1140 briefing handgun is weapon 1 = ARMS01 (savestate-confirmed: DAT_800aca5d==1,
+     * 0x801fcd00 == ARMS01.EDH across all STAGE1 saves). The .EDH = [EDT records @0][VH "pBAV" @pBAV_off]
+     * [8-byte trailer]; pBAV_off = u32 @ edh[size-8]. The gunshot = SE index 8 (FUN_80035538/FUN_80011f50
+     * -> FUN_80045024(0x1080001)); resolve it the byte-true way (re15_footstep_vag on the EDT prefix). */
+    {
+        long esz = 0;
+        uint8_t *edh = slurp(RE15_ASSET_PSX_DIR "/SOUND/ARMS01.EDH", &esz);
+        if (!edh || esz < 8) {
+            fprintf(stderr, "FAIL: (18) cannot read ARMS01.EDH\n"); fail = 1; }
+        else {
+            uint32_t pbav = (uint32_t)edh[esz-8] | ((uint32_t)edh[esz-7] << 8) |
+                            ((uint32_t)edh[esz-6] << 16) | ((uint32_t)edh[esz-5] << 24);
+            re15_vab_t wv;
+            if (pbav != 0x28) {   /* ARMS01: 10 EDT records (0x28/4) then the VH */
+                fprintf(stderr, "FAIL: (18) ARMS01 pBAV offset 0x28 expected, ist 0x%x\n", pbav); fail = 1; }
+            else if (edh[pbav] != 0x70 || edh[pbav+1] != 0x42) {   /* "pBAV" magic 0x56414270 */
+                fprintf(stderr, "FAIL: (18) no pBAV VH at ARMS01 offset 0x%x\n", pbav); fail = 1; }
+            else if (re15_vab_parse(edh + pbav, (size_t)esz - pbav, &wv) != 0) {
+                fprintf(stderr, "FAIL: (18) ARMS01 VH parse failed\n"); fail = 1; }
+            else {
+                if (wv.vag_count != 5) {   /* ARMS01: prog1/tone5/vag5 */
+                    fprintf(stderr, "FAIL: (18) ARMS01 vag_count 5 expected, ist %d\n", wv.vag_count); fail = 1; }
+                /* gunshot idx 8: EDT record 00 00 43 11 -> prog 0, tone 4 -> vag_index 5 -> 0-based VAG 4. */
+                int vg = re15_footstep_vag(edh, &wv, 8);
+                if (vg != 4) {
+                    fprintf(stderr, "FAIL: (18) gunshot SE 8 must resolve to VAG 4, ist %d\n", vg); fail = 1; }
+                if (vg < 0 || vg >= wv.vag_count) {
+                    fprintf(stderr, "FAIL: (18) gunshot VAG %d out of the %d-VAG ARMS01 bank\n", vg, wv.vag_count); fail = 1; }
+                if (!fail)
+                    printf("  (18) player gunshot bank: ARMS01 (weapon 1) pBAV@0x%x, %d VAGs; SE 8 -> VAG %d "
+                           "(byte-true re15_footstep_vag)\n", pbav, wv.vag_count, vg);
+            }
+        }
+        free(edh);
+    }
+
     free(buf);
     if (fail) { fprintf(stderr, "\nROOM1140 COMBAT-WIRING TEST FAILED\n"); return 1; }
     printf("\nPASS: ROOM1140 live-AI game_step wiring (spawn; WAKE->engage; TURN-to-face->GRAB->HP; "

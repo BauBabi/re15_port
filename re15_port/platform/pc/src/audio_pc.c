@@ -101,6 +101,22 @@ static re15_vab_t s_se_vab;
 static const uint8_t *s_se_edt   = NULL;
 static int        s_se_loaded    = 0;
 
+/* Resident WEAPON SE bank (bank1, byte-true FUN_80043d8c parity): the equipped weapon's
+ * SOUND/ARMS%02X.EDH + .VB (bank selector 1 in FUN_80045024). The .EDH is [EDT SE-records @0]
+ * [VAB VH "pBAV" @pBAV_off][8-byte trailer]; pBAV_off = the u32 at edh[size-8] (= the EDT prefix
+ * size, per-file: ARMS01=0x28). The GUNSHOT muzzle = SE index 8 (FUN_80035538 / FUN_80011f50 ->
+ * FUN_80045024(0x1080001)). ROOM1140 briefing handgun = weapon 1 = ARMS01 (savestate-confirmed
+ * across all STAGE1 saves: DAT_800aca5d==1, 0x801fcd00 == ARMS01.EDH); idx 8 -> prog0/tone4 -> VAG 4.
+ * Same EDT->prog/tone->VAG lookup as snd0/snd1, so re15_audio_weapon_se reuses re15_footstep_vag.
+ * See RE15_COMBAT_SE_SUBSYSTEM.md §3. */
+static int16_t   *s_weap_decoded    [RE15_VAB_MAX_SAMPLES];
+static int        s_weap_decoded_len[RE15_VAB_MAX_SAMPLES];
+static re15_vab_t s_weap_vab;
+static uint8_t   *s_weap_edt   = NULL;   /* owns the EDH buffer; the EDT prefix lives at [0..pBAV_off) */
+static int        s_weap_edt_count = 0;  /* EDT record count = pBAV_off/4 (se_id bound) */
+static int        s_weap_loaded = 0;
+static int        s_weap_id     = -1;
+
 /* ===== RE2-style dialogue-voice subsystem (RE 2026-05-30) ================
  * Modelled on RE2's CD-XA voice path: the script selects a voice by
  * (file, channel) → CdlSetfilter, then CdlReadS streams its sectors into the
@@ -453,6 +469,85 @@ void re15_audio_room_se(int se_id)
     SDL_UnlockAudioDevice(s_audio_dev);
 }
 
+/* Load + decode the resident WEAPON SE bank (bank1) for `weapon_id` from SOUND/ARMS%02X.EDH + .VB
+ * (byte-true FUN_80043d8c parity: it loads the equipped-weapon DAT_800aca5d's ARMS bank into
+ * 0x801fcd00). The .EDH = [EDT prefix @0][VH "pBAV" @pBAV_off][8-byte trailer]; pBAV_off = the u32
+ * at edh[size-8]. We parse the VH from pBAV_off, decode the VAGs from the .VB, and keep the EDH
+ * (the EDT prefix @0) for the se_id lookup. Idempotent per weapon; frees the previous bank on change. */
+static int load_weapon_se_vab_pc(int weapon_id)
+{
+    if (weapon_id < 0 || weapon_id > 0xff) return -1;
+    if (s_weap_loaded && s_weap_id == weapon_id) return 0;
+    for (int i = 0; i < RE15_VAB_MAX_SAMPLES; i++) {
+        free(s_weap_decoded[i]); s_weap_decoded[i] = NULL; s_weap_decoded_len[i] = 0;
+    }
+    free(s_weap_edt); s_weap_edt = NULL; s_weap_edt_count = 0; s_weap_loaded = 0; s_weap_id = -1;
+
+    static const char *dirs[] = { "shared_assets/PSX/SOUND/", "SOUND/", "PSX/SOUND/",
+                                  "../shared_assets/PSX/SOUND/", NULL };
+    char path[256];
+    uint8_t *edh = NULL, *vb = NULL; int edh_sz = 0, vb_sz = 0;
+    for (int i = 0; dirs[i] && !edh; i++) {
+        snprintf(path, sizeof path, "%sARMS%02X.EDH", dirs[i], weapon_id);
+        edh = re15_asset_read_file(path, &edh_sz);
+    }
+    for (int i = 0; dirs[i] && !vb; i++) {
+        snprintf(path, sizeof path, "%sARMS%02X.VB", dirs[i], weapon_id);
+        vb = re15_asset_read_file(path, &vb_sz);
+    }
+    if (!edh || !vb || edh_sz < 8) { free(edh); free(vb); return -1; }
+    /* pBAV (VH) offset = the trailer u32 at edh[size-8] (= the EDT-prefix byte size). */
+    uint32_t pbav = (uint32_t)edh[edh_sz-8] | ((uint32_t)edh[edh_sz-7] << 8) |
+                    ((uint32_t)edh[edh_sz-6] << 16) | ((uint32_t)edh[edh_sz-5] << 24);
+    if (pbav + 0x20u > (uint32_t)edh_sz ||
+        re15_vab_parse(edh + pbav, (size_t)edh_sz - pbav, &s_weap_vab) != 0) {
+        free(edh); free(vb); return -1;
+    }
+    for (int i = 0; i < s_weap_vab.vag_count; i++) {
+        uint32_t off = s_weap_vab.samples[i].offset, sz = s_weap_vab.samples[i].size;
+        if (off + sz > (uint32_t)vb_sz) continue;
+        size_t cap = (sz / 16) * 28;
+        int16_t *pcm = (int16_t *)malloc(cap * sizeof(int16_t));
+        if (!pcm) continue;
+        s_weap_decoded[i]     = pcm;
+        s_weap_decoded_len[i] = re15_vag_adpcm_decode(vb + off, sz, pcm, cap);
+    }
+    free(vb);                          /* the VAGs are decoded; only the EDH (EDT prefix) is kept */
+    s_weap_edt       = edh;
+    s_weap_edt_count = (int)(pbav / 4);
+    s_weap_loaded    = 1;
+    s_weap_id        = weapon_id;
+    return 0;
+}
+
+/* Play a WEAPON SE by id (byte-true FUN_80045024 bank1 core, PC path). The equipped weapon's ARMS
+ * EDT (bank1) maps se_id -> program+tone -> VAG (identical to re15_footstep_vag). The GUNSHOT is
+ * se_id 8. FAITHFUL-LINE: pitch (record byte0 VAB-ID override) + SPU voice/pan (byte3) deferred;
+ * the VAG selection + positional-less play is byte-true. Wired at the player fire in game_step. */
+void re15_audio_weapon_se(int se_id)
+{
+    if (!g_audio.initialized || !s_weap_loaded || se_id < 0 || se_id >= s_weap_edt_count) return;
+    int vag = re15_footstep_vag(s_weap_edt, &s_weap_vab, se_id);   /* EDT record -> program/tone -> VAG */
+    if (vag < 0 || vag >= RE15_VAB_MAX_SAMPLES || !s_weap_decoded[vag]) return;
+
+    int tvol = 100;                                            /* default; per-tone vol is the refinement */
+    int vol  = (tvol * 0x4000 / 127) >> 1;
+    if (vol > 0x4000) vol = 0x4000; if (vol < 0) vol = 0;
+
+    SDL_LockAudioDevice(s_audio_dev);
+    int slot = -1;
+    for (int i = 0; i < MIXER_MAX_ACTIVE_SAMPLES; i++)
+        if (!s_active[i].active) { slot = i; break; }
+    if (slot < 0) { slot = s_next_slot; s_next_slot = (s_next_slot + 1) % MIXER_MAX_ACTIVE_SAMPLES; }
+    s_active[slot].pcm        = s_weap_decoded[vag];
+    s_active[slot].pcm_len    = s_weap_decoded_len[vag];
+    s_active[slot].pos        = 0;
+    s_active[slot].subpos     = 0;
+    s_active[slot].volume_q15 = vol;
+    s_active[slot].active     = 1;
+    SDL_UnlockAudioDevice(s_audio_dev);
+}
+
 /* Triggered from re15_audio_tick when a SCD Se_on event arrives. */
 static void play_sample_pc(int vag_index, int scd_volume)
 {
@@ -532,6 +627,9 @@ void re15_audio_init(void)
     load_bundled_vab_pc();
     load_footstep_vab_pc();   /* room snd0 + its EDT table (footstep SE) */
     load_room_se_vab_pc();    /* room snd1 + its SE table (combat/room SE, FUN_800453d0) */
+    load_weapon_se_vab_pc(1); /* bank1: the briefing handgun ARMS01 (weapon 1, savestate-confirmed);
+                               * gunshot = re15_audio_weapon_se(8). FUN_80043d8c loads the equipped
+                               * weapon's ARMS bank — per-room/on-equip reload is a follow-up. */
 
     /* RE2-style XA voice: gate the CD-input into the SPU mix (== CD_initvol). */
     re15_xa_init();

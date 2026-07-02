@@ -113,6 +113,10 @@ void re15_game_step(const re15_game_ctx_t *c)
         if (c->rdt_ok && (c->pad_current & RE15_PAD_BIT_R1)) {
             if ((c->pad_pressed & RE15_PAD_BIT_SQUARE) && re15_player_aim_ready()) {
                 re15_player_weapon_fire(2);   /* pistol (weapon 2); the weapon inventory is deferred */
+                re15_audio_weapon_se(8);      /* GUNSHOT muzzle SE (byte-true FUN_80035538/FUN_80011f50 ->
+                                               * FUN_80045024(0x1080001) = bank1 idx 8). The bank = the equipped
+                                               * weapon's ARMS (primed weapon 1 = ARMS01, the briefing handgun,
+                                               * savestate-confirmed; idx 8 -> VAG 4). See RE15_COMBAT_SE_SUBSYSTEM.md §3. */
                 pl->anim_frame = 0;           /* FIRE recoil: restart the aim/fire clip 18 (action-8 phase5
                                                * @0x80035a00 re-plays clip 18 on discharge). The aim POSE
                                                * itself (clip 18, held) is set by re15_player_tick while R1
