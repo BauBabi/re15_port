@@ -16,9 +16,16 @@
 
 #include <stdint.h>
 
-/* Load DATA/ITEMALL.PIX once (86400 B = 72×40×30 8-bit tiles). Returns 0 on success, -1 on failure.
- * Idempotent. Call before re15_item_icon_pixel (or it lazy-loads on first use). */
+/* Load DATA/ITEMALL.PIX once (86400 B = 72×40×30 8-bit tiles) via re15_asset_read_file. Returns 0 on
+ * success, -1 on failure. Idempotent AND fail-once: a failed load is NOT retried (so a missing asset
+ * can't turn the per-pixel icon draw into a per-pixel file-open storm). Call before re15_item_icon_pixel
+ * (or it lazy-loads on first use). */
 int  re15_itemall_load(void);
+
+/* Hand the engine the already-loaded ITEMALL.PIX bytes (the PC backend loads it via pc_read_shared,
+ * which resolves the cwd-independent asset root — re15_asset_read_file only fopen's a raw path). Call
+ * once at boot; supersedes the lazy load. `pix` must remain valid for the program's lifetime. */
+void re15_itemall_set_pix(const uint8_t *pix, int size);
 
 /* Decode one icon pixel for item `id` at (u,v) in [0,40)×[0,30). On an OPAQUE pixel: writes the
  * byte-true 8-bit RGB (0..255 each) and returns 1. On a TRANSPARENT pixel (or if the id has no

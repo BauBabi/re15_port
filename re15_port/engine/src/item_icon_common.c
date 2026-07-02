@@ -15,8 +15,9 @@ extern uint8_t *re15_asset_read_file(const char *path, int *out_size);
 #define ITEMALL_TILES         72
 #define ITEMALL_SIZE        (ITEMALL_TILE_BYTES * ITEMALL_TILES)   /* 86400 */
 
-static const uint8_t *s_pix = NULL;   /* the raw ITEMALL.PIX (owned) */
+static const uint8_t *s_pix = NULL;   /* the raw ITEMALL.PIX */
 static int            s_loaded = 0;
+static int            s_tried  = 0;   /* fail-once: don't retry a failed lazy load every pixel */
 
 /* Byte-true grid-icon palettes (framebuffer-derived, mzd_inv_open.sav, zero-mismatch align).
  * s_pal_clut2 = items with descriptor clut_idx 2 (knife, handgun, …); s_pal_clut6 = clut_idx 6 (shells, …).
@@ -49,9 +50,16 @@ static const uint16_t *item_palette(uint8_t id)
     }
 }
 
+void re15_itemall_set_pix(const uint8_t *pix, int size)
+{
+    if (pix && size >= ITEMALL_SIZE) { s_pix = pix; s_loaded = 1; s_tried = 1; }
+}
+
 int re15_itemall_load(void)
 {
     if (s_loaded) return 0;
+    if (s_tried)  return -1;   /* fail-once — a missing asset must not fopen-storm the per-pixel draw */
+    s_tried = 1;
     static const char *dirs[] = { "shared_assets/PSX/DATA/", "DATA/", "PSX/DATA/",
                                   "../shared_assets/PSX/DATA/", NULL };
     char path[256];
@@ -73,6 +81,7 @@ int re15_itemall_load(void)
 
 int re15_item_icon_available(uint8_t id)
 {
+    if (!s_loaded && re15_itemall_load() != 0) return 0;   /* no PIX -> text fallback (not a blank cell) */
     return item_palette(id) != NULL;
 }
 

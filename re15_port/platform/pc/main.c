@@ -807,6 +807,14 @@ int main(int argc, char *argv[])
      * across a room_unload -> scd_vm_init is a separate concern; the briefing/combat room boots
      * with this. Phase 2b: the full inventory screen renders g_inv + the item classification.) */
     re15_inv_load_briefing();
+    /* Load the item-icon sheet via the cwd-independent asset root (pc_read_shared) and hand it to the
+     * engine — re15_asset_read_file only fopen's a raw relative path, which fails when the .exe runs
+     * from the build dir (that made the icons blank AND re-tried the open every pixel = dog-slow). */
+    {
+        int isz = 0;
+        uint8_t *ipix = pc_read_shared("DATA/ITEMALL.PIX", &isz);
+        if (ipix) re15_itemall_set_pix(ipix, isz);   /* buffer intentionally kept for the program's life */
+    }
     scd_register_room_events(rdt_ok ? &rdt : NULL);
 
     /* AW-round 2026-05-28: pre-parse ROOM1170 .msg files for canonical
