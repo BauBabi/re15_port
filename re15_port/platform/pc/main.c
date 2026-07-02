@@ -1138,13 +1138,18 @@ int main(int argc, char *argv[])
                 for (int i = 0; i < 4; i++)
                     re15_debug_text(66 + (i & 1) * 48, 168 + (i >> 1) * 18, 0, tabs[i]); }
 
-            /* ---- CENTER: ARMS CONTROL (equipped weapon) ---- */
+            /* ---- CENTER: ARMS CONTROL ---- Equip Arms = the equipped weapon's 40×30 grid icon, native
+             * (BYTE-TRUE, inventory-composite-icon-re workflow: ITEMALL tile==id reproduces the Equip box
+             * with ZERO mismatch, same tile+CLUT as ITEM LIST — the equip icon is NOT the 88×136 composite).
+             * "Standard Arms" IS the larger composite (descriptor @0x80074a8c, a separate 4-bit-atlas
+             * subsystem) — shown as the grid icon = FAITHFUL-LINE (its atlas was unresolvable from the
+             * capture; deferred). */
             re15_render_tile(156, 6, 52, 152, 4, 36, 52, 100);
             re15_debug_text(158, 8, 0, "ARMS");
             re15_debug_text(160, 24, 0, "EQUIP");
             if (!re15_pc_draw_item_icon(160, 44, eqw))
                 re15_debug_text(168, 52, 0, "--");
-            re15_debug_text(158, 96, 0, "STD ARMS");
+            re15_debug_text(158, 96, 0, "STD ARMS");   /* FL: real Standard-Arms art is the 88×136 composite */
             re15_pc_draw_item_icon(160, 112, eqw);
 
             /* ---- RIGHT: ITEM LIST (byte-true 2-col grid, cells @217/257,58+row*30) ---- */
