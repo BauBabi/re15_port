@@ -1,9 +1,22 @@
 # RE1.5 Inventory / Weapon-Select Subsystem — byte-true reference + phased port plan
 
-From the `inventory-weapon-select-re` workflow (4 finders, adversarial verify — **40 confirmed / 9
-corrected**, synthesis). Tags: **[BT]** byte-true (disasm/asset/savestate proven), **[FL]**
-faithful-line interim, **[UNVERIFIED]** cited but a verdict overturned/could-not-prove it. Constants
-cite `ghidra1_V2.txt` / a decompile file / a file byte-offset / a savestate.
+From the `inventory-weapon-select-re` + `inventory-data-tables-re` workflows (adversarial verify).
+Tags: **[BT]** byte-true (disasm/asset/savestate proven), **[FL]** faithful-line interim, **[UNVERIFIED]**.
+Constants cite `ghidra1_V2.txt` / a decompile file / a file byte-offset / a savestate.
+
+> **CORRECTIONS (2026-07-02, inventory-data-tables-re workflow, 13 confirmed / 7 corrected):**
+> - **Item CLASSIFICATION is an id-RANGE, not a type byte** [BT]: WEAPON = `id < 0x15` (0x00..0x14,
+>   `sltiu id,0x15` @0x80047d54; the ARMS-head table @0x8007492c is non-zero exactly for 0..0x14).
+>   AMMO = 0x15..0x21. KEY/heal = id ≥ 0x22 (max_stack 1). Port: `re15_item_is_weapon/ammo/key`.
+> - **Briefing items** [BT]: id 1 = **COMBAT KNIFE** (the *equipped* weapon, DAT_800aca5d==1), id 3 =
+>   **BROWNING HP** handgun (15-round clip), id 0x15 = **H. GUN BULLETS** (ammo). (Earlier "id 1 = handgun"
+>   was WRONG.) The equipped briefing weapon is the KNIFE, not a gun.
+> - **The item-attribute table IS located**: EXE `DAT_80074da8` (stride 12: [0]=max_stack, [4]=recipe_ptr,
+>   [8]=icon-CLUT selector, [9]=recipe_count) — NOT "unlocated in DEBUG.BIN @0x800c0000" (that note is superseded).
+> - **Icons = multi-sub-sprite COMPOSITE** via descriptor table `DAT_80074a8c` (stride 12: {clut_idx,
+>   sprite_count, template_ptr, vram_dest}, ids 0x00..0x18), each sub-sprite a 12-byte template {tx,ty,w,h,
+>   U@8,V@10}. ITEMALL tpage 0x22a = VRAM(640,0) 4-bit. NOT a single id→cell tile.
+> - **Full item catalog 0x00..0x21** (names from DAT_800c4a28 blob) is embedded in the port (`re15_item_name`).
 
 Companion to `RE15_COMBAT_SE_SUBSYSTEM.md`. Port status in memory `reai-v2-foundation-combat`.
 

@@ -52,17 +52,24 @@ int  re15_inv_grant(uint8_t type, uint8_t amount);
 
 /* Load the byte-true STAGE1 briefing loadout into g_inv (clears first). Savestate-confirmed
  * (mzd_stage1_briefing.sav / mzd_stage1_engage_live.sav, DAT_800b10ac): slot0 = item 0x01 qty 0
- * (the HANDGUN — the equipped weapon, DAT_800aca5d==1), slot1 = item 0x03 qty 15, slot2 = item
- * 0x15 qty 50 (the two non-weapon stacks). This is the game-start loadout; a full new-game-init
- * table + the per-item weapon/ammo/key CLASSIFICATION (the item-attribute table in the DEBUG.BIN
- * item module @0x800c0000) are Phase 2b. See RE15_INVENTORY_SUBSYSTEM.md §2.4. */
+ * (COMBAT KNIFE — the equipped weapon, DAT_800aca5d==1), slot1 = item 0x03 qty 15 (BROWNING HP
+ * handgun, 15-round clip), slot2 = item 0x15 qty 50 (H. GUN BULLETS, ammo). This is the game-start
+ * loadout. See RE15_INVENTORY_SUBSYSTEM.md §2. */
 void re15_inv_load_briefing(void);
 
-/* Is item id a WEAPON (equippable -> DAT_800aca5d)? BYTE-TRUE: id 0x01 = the handgun (weapon 1,
- * the briefing weapon, savestate-confirmed; item-id == weapon-id in the equip-commit @0x80046688).
- * The general item-attribute table (all weapons/ammo/keys) lives in the DEBUG.BIN item module
- * @0x800c0000 (resident, capstone-disassemblable; the char-default table @0x800c00d4 is decoded,
- * the type table is not yet located) -> Phase 2b. The briefing owns only the handgun as a weapon. */
+/* Item CLASSIFICATION — BYTE-TRUE id-range gate (RE15_INVENTORY_SUBSYSTEM.md §2): the game uses an
+ * item-id RANGE, not a per-item type byte. WEAPON = id < 0x15 (0x00..0x14; `sltiu id,0x15` @0x80047d54,
+ * backed by the ARMS-head table @0x8007492c being non-zero exactly for 0..0x14). AMMO = 0x15..0x21.
+ * KEY/heal/unique = id >= 0x22 (max_stack 1, outside the 0x22 icon bound). Equipping stores the raw
+ * item id -> DAT_800aca5d (item-id == weapon-id, @0x80046688); the equip commit is UNGATED, so the port
+ * uses re15_item_is_weapon as the faithful-line "offer equip" gate (the true per-room offer list is
+ * SCD-driven). NOTE: id 1 = COMBAT KNIFE (the briefing's equipped weapon), id 3 = BROWNING HP handgun. */
 int  re15_item_is_weapon(uint8_t id);
+int  re15_item_is_ammo(uint8_t id);
+int  re15_item_is_key(uint8_t id);
+
+/* Byte-true item NAME for the inventory display (catalog 0x00..0x21, from the DAT_800c4a28 string blob
+ * via DAT_800c495c offsets). Returns "" for ids outside the proven catalog. See RE15_INVENTORY_SUBSYSTEM.md §3. */
+const char *re15_item_name(uint8_t id);
 
 #endif /* RE15_INVENTORY_H */

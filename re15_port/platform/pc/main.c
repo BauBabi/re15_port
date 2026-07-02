@@ -1094,17 +1094,39 @@ int main(int argc, char *argv[])
             }
         }
 
-        /* INVENTORY / weapon-select menu overlay (Phase 8.20). Drawn on top of the HUD when open
-         * (game_step pauses gameplay). Faithful-line presentation: a panel + a text list with a '>'
-         * cursor; the byte-true 2-col grid + ITEMALL icons are Phase 2 (RE15_INVENTORY_SUBSYSTEM.md §3). */
+        /* INVENTORY overlay (Phase 8.21). Drawn on top of the HUD when open (game_step pauses gameplay).
+         * BYTE-TRUE LAYOUT: the 2-col × 5-row grid (DAT_80076274: cols {4,44}, rows {32,62,92,122,152})
+         * at panel origin (215,26)+20 → screen cells at X 219/259, Y 78 + row*30; the byte-true cursor
+         * highlight + quantity; a name/type line for the selected item. The per-item composite ITEMALL
+         * pixel icons (descriptor table @0x80074a8c) are the one deferred piece — cells show the id/qty
+         * placeholder for now (RE15_INVENTORY_SUBSYSTEM.md §3). */
         if (re15_menu_is_open()) {
             int n = re15_menu_count(), cur = re15_menu_cursor();
-            re15_render_tile(48, 40, 224, 40 + n * 16 + 24, 3, 0, 0, 48);   /* panel (behind the text) */
-            re15_debug_text(64, 52, 0, "EQUIP WEAPON  (Enter=select  Shift=cancel)");
-            for (int i = 0; i < n; i++) {
-                char line[48];
-                snprintf(line, sizeof line, "%c %s", (i == cur) ? '>' : ' ', re15_menu_entry_name(i));
-                re15_debug_text(72, 76 + i * 16, 0, line);
+            re15_render_tile(208, 64, 112, 156, 3, 0, 0, 48);              /* panel */
+            re15_debug_text(214, 68, 0, "ITEM");
+            for (int c = 0; c < 10; c++) {
+                int cx = 215 + ((c & 1) ? 44 : 4);
+                int cy = 78 + (c >> 1) * 30;
+                int occ = (c < n);
+                if (c == cur) re15_render_tile(cx - 1, cy - 1, 42, 30, 2, 48, 48, 128);  /* cursor */
+                re15_render_tile(cx, cy, 40, 28, 1, occ ? 24 : 10, occ ? 24 : 10, occ ? 56 : 24);
+                if (occ) {
+                    char t[8];
+                    snprintf(t, sizeof t, "%02X", re15_menu_disp_id(c));
+                    re15_debug_text(cx + 2, cy + 2, 0, t);
+                    uint8_t q = re15_menu_disp_qty(c);
+                    if (q > 0) { snprintf(t, sizeof t, "%d", q); re15_debug_text(cx + 2, cy + 16, 0, t); }
+                }
+            }
+            if (n > 0) {
+                uint8_t id = re15_menu_disp_id(cur);
+                const char *ty = re15_item_is_weapon(id) ? "WEAPON"
+                               : re15_item_is_ammo(id)   ? "AMMO" : "ITEM";
+                char line[64];
+                snprintf(line, sizeof line, "%s  [%s]   Enter=equip  Shift=close", re15_item_name(id), ty);
+                re15_debug_text(20, 224, 0, line);
+            } else {
+                re15_debug_text(20, 224, 0, "(empty)   Shift=close");
             }
         }
 
