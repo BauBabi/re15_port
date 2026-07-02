@@ -137,12 +137,23 @@ Weapon-class dispatch @0x80074030 (idx DAT_800aca5d*4): weapons 0/1/2 → LAB_80
 > - The aim/fire FSM (aca5a 0..7 @0x80074164/0x80074150) also plays bank1 idx **1/3/5** at other
 >   sub-states (jals @0x8003338c/0x80033ed0/0x80034488/0x80034a0c/0x80034e54/0x8003537c).
 >
-> Two facts remain statically unprovable: (a) the file-id→ARMS **filename** binding (the EXE holds
-> LBAs @0x8006f43c, not names; re15.cat is a 2023 mkpsxiso REBUILD spec, not the original disc's LBA
-> map), and (b) which of idx 1/3/5/8 is the pistol's actual per-shot muzzle vs raise/aim/holster.
-> **Do NOT hardcode an index.** Next path = **DYNAMIC** (DuckStation: equip the pistol, fire, observe
-> which ARMS bank loads into 0x801fcd00 + the se_id passed to FUN_80045024) — the user's "Variante 3"
-> capture setup. This is the single gate on shipping the player gunshot byte-true.
+> Two facts were statically unprovable: (a) the file-id→ARMS **filename** binding (the EXE holds LBAs
+> @0x8006f43c, not names; re15.cat is a 2023 mkpsxiso REBUILD spec), and (b) whether idx 8 is valid
+> for the equipped bank.
+>
+> ✅ **RESOLVED DYNAMICALLY (2026-07-02, DuckStation savestates — RAM 0x801fcd00 = the loaded bank1 VH):**
+> - **ALL** STAGE1 briefing/combat saves (mzd_stage1_briefing / _engage_live / _combat_death, the six
+>   HASH-* saves, mzd_debugmenu) have `DAT_800aca5d == 1` and 0x801fcd00 **byte-matches ARMS01.EDH**
+>   (pBAV@0x28) → the ROOM1140 handgun is **weapon 1 = ARMS01** (weapon N → ARMS0N confirmed; a manual
+>   equip test showed weapon 3 → ARMS03, pBAV@0x40, byte-matched). The idx8/ARMS02 contradiction was a
+>   red herring — ARMS02 is not the fired weapon.
+> - ARMS01 gunshot: EDT record 8 = `00 00 43 11` → prog 0 / tone 4 → tone_entry vag_index 5 → **0-based
+>   VAG 4** (VALID; ARMS01 has 10 EDT records + 5 VAGs). So idx 8 IS the byte-true handgun muzzle.
+>
+> **PORTED (f327afaa)** — `load_weapon_se_vab_pc` + `re15_audio_weapon_se(8)` at the fire, bank primed
+> weapon 1 = ARMS01. NOTE (separate, flagged): the port's damage side fires `re15_player_weapon_fire(2)`,
+> but the live briefing player is weapon 1 (6 dmg, not weapon 2's 24) — a distinct weapon-id discrepancy
+> to verify later.
 
 Per-weapon-class fire slots (all bank1, positional, a1=&DAT_800aca88) in the un-ported aim/fire FSMs:
 idx 1 (jals @0x8003338c/0x80034488/0x80034a0c), idx 3 (@0x80033ed0/0x80034e54), idx 5 (@0x8003537c), idx 8 (the two above).
@@ -182,18 +193,20 @@ init, `0x02070001` (**snd0** idx7) at frame '#'(0x23), `0x04030001` (CORE idx3) 
 
 - **snd1 zombie combat SEs** — DONE: grab-start 4 + release 7 (784240e7), death groan 5/8 (5e10a0ec),
   all via the existing `re15_audio_room_se` + `re15_footstep_vag`.
-- **Resident weapon-SE bank (bank1)** loader — buildable (assets present, format known):
-  - `load_weapon_se_vab_pc(weapon)`: read `SOUND/ARMS%02X.EDH`; `pBAV_off = read_u32_le(edh+edh_sz-8)`;
-    `re15_vab_parse(edh+pBAV_off, edh_sz-pBAV_off, &s_weap_vab)`; decode VAGs from `ARMS%02X.VB`;
-    keep `s_weap_edt = edh` (EDT prefix @0, size = pBAV_off).
-  - `re15_audio_weapon_se(se_id)`: guard se_id∈[0,0x20]; `vag = re15_footstep_vag(s_weap_edt, &s_weap_vab, se_id)`;
-    reuse the `re15_audio_room_se` mixer block.
-  - Prime at room-load (parity with FUN_80043d8c from FUN_800314b0) with the equipped weapon; reload on change.
+- **Resident weapon-SE bank (bank1) + the GUNSHOT** — ✅ DONE (f327afaa):
+  - `load_weapon_se_vab_pc(weapon)`: reads `SOUND/ARMS%02X.EDH`; `pBAV_off = u32 @edh[size-8]`;
+    `re15_vab_parse(edh+pBAV_off, …, &s_weap_vab)`; decodes VAGs from `ARMS%02X.VB`; keeps the EDT
+    prefix (edh[0..pBAV_off)) for the se_id lookup. Primed weapon 1 (ARMS01) at init.
+  - `re15_audio_weapon_se(se_id)`: `vag = re15_footstep_vag(s_weap_edt, &s_weap_vab, se_id)` + the mixer.
+  - Wired `re15_audio_weapon_se(8)` at the player fire (game_step_common.c). Test (18): ARMS01 idx8 → VAG 4.
+- **file-id → ARMS-name binding** — ✅ dynamically confirmed (§3): weapon N → ARMS0N (0x801fcd00 byte-match).
 
-### BLOCKED
+### BLOCKED / follow-up
 
-1. **Which SE index the pistol (weapon 2) fires** — unproven; needs a DuckStation dynamic check (§3). The gate on the gunshot.
-2. **id 0x77 → ARMS00 filename** — inferred, not byte-proven; confirm via CD ISO dir / runtime LBA.
+1. **Per-equipped-weapon reload** (FUN_80043d8c on equip/room-load) — the port primes weapon 1 once at
+   init; a full inventory-driven reload is a follow-up (also affects footsteps/room-SE per-room reload).
+2. **Port damage-side weapon id** — fires `re15_player_weapon_fire(2)`, but the live briefing player is
+   weapon **1** (6 dmg vs weapon 2's 24) — a distinct weapon-id discrepancy to verify (§3 note).
 3. **The aim/fire command FSM** (DAT_800aca59 tables @0x80073fb0/ff0; sub-switch DAT_800aca5a @0x80010b68;
    trigger latch DAT_800acae9; weapon-class dispatch @0x80074030) — not ported. Needed to fire the SE at the exact frame.
 4. **bank0 resident SE blob** (DAT_801a1000) — boot-resident region, not a named SOUND/ file.
