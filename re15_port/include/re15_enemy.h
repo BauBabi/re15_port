@@ -39,6 +39,11 @@ typedef struct {
     re15_md1_t           md1;
     re15_emd_skeleton_t  skel;
     re15_emd_animation_t anim;
+    /* Locomotion bank (bank 0 = dir[1]/dir[2]): the APPROACH state (+0x5=0x13) plays it (entity+0x84)
+     * with per-keyframe 0x2000 foot-lock flags. loco_ok=1 when loaded. Aliases into buf like skel/anim. */
+    re15_emd_skeleton_t  skel_loco;
+    re15_emd_animation_t anim_loco;
+    uint8_t              loco_ok;
     int tpage, clut;              /* PSX VRAM handles (per-tri path: both -1) */
     int xshift, yshift;           /* PSX VRAM tpage-X / CLUT-row relocation shifts */
     int pc_tex_slot;              /* PC render texture slot (-1 if unused) */

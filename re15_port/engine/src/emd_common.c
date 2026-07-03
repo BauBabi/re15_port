@@ -527,3 +527,28 @@ int re15_emd_parse_container(const uint8_t *emd, size_t emd_size,
 
     return (ok_anim && ok_skel && ok_md1) ? 0 : -1;
 }
+
+/* Parse the em<NN> LOCOMOTION bank (bank 0 = directory pair dir[1]=EDD, dir[2]=EMR) as its own
+ * skel+anim. The STAGE1 zombie AI plays this bank for the APPROACH state (+0x5=0x13, FUN_801057bc
+ * -> f314(entity+0x84 = bank0)) — 6 clips whose per-keyframe frame flags carry the 0x2000 foot-lock
+ * event (clip 1 = the 99-frame approach walk, flag on frames 30-83). re15_emd_parse_container picks
+ * the LARGEST bank (bank1, 43 clips) for the action set, so bank0 must be loaded separately for the
+ * byte-true walk gait. dir[2] carries the shared bone structure AND bank0's own keyframe pool (no
+ * re-point needed — that is exactly what parse_skeleton returns for dir[2]). */
+int re15_emd_parse_loco_bank(const uint8_t *emd, size_t emd_size,
+                             re15_emd_skeleton_t  *out_skel,
+                             re15_emd_animation_t *out_anim)
+{
+    if (!emd || emd_size < 12) return -1;
+    uint32_t begin = read_u32_le(emd + 0);
+    uint32_t count = read_u32_le(emd + 4);
+    if (count < 4 || count > 64) return -1;                 /* PLDs have no separate loco bank */
+    if ((size_t)begin + (size_t)count * 4 > emd_size) return -1;
+    uint32_t off_edd0 = read_u32_le(emd + begin + 1 * 4);   /* dir[1] = bank0 EDD */
+    uint32_t off_emr0 = read_u32_le(emd + begin + 2 * 4);   /* dir[2] = shared struct + bank0 kf */
+    int ok_anim = out_anim && off_edd0 && off_edd0 < emd_size &&
+                  re15_emd_parse_animation(emd + off_edd0, emd_size - off_edd0, out_anim) == 0;
+    int ok_skel = out_skel && off_emr0 && off_emr0 < emd_size &&
+                  re15_emd_parse_skeleton (emd + off_emr0, emd_size - off_emr0, out_skel) == 0;
+    return (ok_anim && ok_skel) ? 0 : -1;
+}

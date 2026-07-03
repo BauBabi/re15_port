@@ -349,6 +349,10 @@ static void pc_enemy_load(uint8_t type)
         return;
     }
     eb->buf = buf;                                     /* md1/skel/anim point into buf */
+    /* Load the LOCOMOTION bank (bank 0) too — the STAGE1 zombie APPROACH state (+0x5=0x13) plays it
+     * (the 6-clip loco set with the 0x2000 foot-lock frame flags), which parse_container skips in
+     * favour of the 43-clip action bank. Aliases into buf (no extra alloc). */
+    eb->loco_ok = (re15_emd_parse_loco_bank(buf, buflen, &eb->skel_loco, &eb->anim_loco) == 0);
     int slot = 11 + (int)(eb - g_enemy);
     if (tim.width > 0 && tim.height > 0 && slot < 24) {
         re15_render_pc_upload_tim_slot(&tim, slot);
@@ -1459,8 +1463,8 @@ int main(int argc, char *argv[])
                     for (int si = 1; si < RE15_ACTOR_MAX; si++) {
                         re15_actor_t *e = &g_actors[si];
                         if (!e->active || e->type == 0) continue;
-                        fprintf(s_state_log, " [%d t=%02x st=%d ss1=%d mo=%d af=%d d=%u @(%d,%d,r%d)]",
-                                si, e->type, e->state, e->sub_state_1, e->motion,
+                        fprintf(s_state_log, " [%d t=%02x st=%d ss1=%d g=%02x mo=%d af=%d d=%u @(%d,%d,r%d)]",
+                                si, e->type, e->state, e->sub_state_1, e->grid_id, e->motion,
                                 e->anim_frame, e->ai_dist, e->x, e->z, e->rot_y);
                     }
                     fputc('\n', s_state_log); fflush(s_state_log);

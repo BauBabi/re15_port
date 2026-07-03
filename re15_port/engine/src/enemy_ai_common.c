@@ -697,31 +697,72 @@ static void re15_enemy_face_player(re15_actor_t *e, const re15_actor_t *player, 
     e->rot_y = (int16_t)(((int32_t)e->rot_y + r) & 0x0fff);
 }
 
-/* Forward WALK / APPROACH animate (byte-true FUN_80102bd8 @0x8011f890[5/6] + FUN_801057bc @[0x13]):
- * play the walk clip (+0x5+4 = 0x0a for +0x5=6; the +0x5=0x13 track uses clip 1) and STEP FORWARD
- * each frame along the heading (the walk clip's root-motion func_0x8001ad68). Rotates to track the
- * player so the zombie heads at him. The engage/approach DECIDE (re15_ai_decide_engage / f840[0x13]=
- * FUN_8010561c, identical) commits the GRAB once within 0x4b0. FAITHFUL-LINE: the exact per-frame
- * root translation (func_0x8001ad68 is undisassembled in the dump) is modeled as a fixed walk cadence
- * along +0x6a; the clip index + the approach-transition + the heading track ARE byte-true. */
+/* Per-actor FOOT-LOCK state (byte-true FUN_8010939c): the planted support-foot's world pos, cached
+ * from the previous tick, so the body can be dragged by the foot's per-tick world delta. By slot. */
+static int32_t s_zfoot_ref[RE15_ACTOR_MAX][3];
+static uint8_t s_zfoot_ok[RE15_ACTOR_MAX];
+static uint8_t s_zfoot_sel[RE15_ACTOR_MAX];
+
+/* APPROACH animate — byte-true FUN_801057bc (@0x8011f890[+0x5=0x13], STAGE1.BIN): the LIVE walk gait.
+ * Plays the LOCOMOTION bank's clip 1 (bank0, entity+0x84 — the 99-frame approach walk) and carries
+ * the body forward via the FUN_8010939c FOOT-LOCK: clip 1 has NET-ZERO keyframe root-motion (it
+ * sways), so the forward travel EMERGES from the planted foot — p.X/Z -= (footWorld - footPrev)
+ * (identical to the stair FK foot-lock FUN_800390e0, stair_common.c). The SUPPORT foot each frame is
+ * chosen by the clip's per-keyframe 0x2000 flag (bank0 clip1 frames 30-83; foot bone 6 right / 3 left,
+ * the leg-chain leaves). Rotates to track the player; the decide (re15_ai_decide_engage = FUN_8010561c)
+ * commits the GRAB in range. This is the byte-true LIVE approach (+0x5=6 clip 0xa is the corpse-walk). */
+static void re15_enemy_ai_live_approach(int slot, re15_actor_t *e, const re15_actor_t *player)
+{
+    static re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+    if (!player) return;
+    if (e->sub_state_2 == 0) {                        /* entry (@0x801057cc): clip 1, restart, re-seed foot */
+        e->motion = 0x01; e->anim_frame = 0; e->anim_frac = 0xf;
+        e->sub_state_2 = 1;
+        if (slot >= 0 && slot < RE15_ACTOR_MAX) s_zfoot_ok[slot] = 0;
+    }
+    re15_enemy_face_player(e, player, 0x30);          /* scan/track toward the player (yaw slew) */
+
+    re15_enemy_bank_t *bank = re15_enemy_find(e->type);
+    if (!bank || !bank->loco_ok || slot < 0 || slot >= RE15_ACTOR_MAX) return;
+    re15_emd_animation_t *a = &bank->anim_loco;
+    re15_emd_skeleton_t  *s = &bank->skel_loco;
+    if (a->clip_count <= 1) return;
+    const re15_emd_clip_t *clip = &a->clips[1];
+    if (clip->frame_count <= 0) return;
+    int fslot = (int)((uint32_t)e->anim_frame % (uint32_t)clip->frame_count);
+    uint32_t fe  = a->frames[clip->first_frame + fslot];   /* the current EDD frame entry (with flags) */
+    int      sel = (fe & 0x2000) ? 1 : 0;                    /* the byte-true support-foot flag */
+    int      foot = sel ? 6 : 3;                             /* right leaf / left leaf (bind-pose feet) */
+    if (foot >= s->bone_count) return;
+    int kf = re15_compute_actor_kf(a, s, e, 0x01, (uint32_t)e->anim_frame);
+    g_anim_pose_actor = NULL;                                /* pose QUERY, not a render (no crossfade) */
+    if (re15_skel_compute_pose(s, kf, poses) != 0) return;
+    int32_t lx = poses[foot].trans[0], lz = poses[foot].trans[2];
+    int32_t cs = re15_cos_q12(e->rot_y), sn = re15_sin_q12(e->rot_y);   /* foot local->world by facing */
+    int32_t wx = (int32_t)(( (int64_t)cs * lx + (int64_t)sn * lz) >> 12);
+    int32_t wz = (int32_t)((-(int64_t)sn * lx + (int64_t)cs * lz) >> 12);
+    if (s_zfoot_ok[slot] && sel == s_zfoot_sel[slot]) {      /* same planted foot -> drag the body */
+        e->x -= (wx - s_zfoot_ref[slot][0]);
+        e->z -= (wz - s_zfoot_ref[slot][2]);
+    }
+    s_zfoot_ref[slot][0] = wx; s_zfoot_ref[slot][2] = wz;
+    s_zfoot_ok[slot] = 1; s_zfoot_sel[slot] = (uint8_t)sel;
+}
+
+/* Forward WALK animate — byte-true FUN_80102bd8 (@0x8011f890[+0x5=5/6]): the CORPSE-WALK (walk to the
+ * dead player), clip 0xa + func_0x8001ad68 keyframe root-motion. NOT the live approach (that is the
+ * +0x5=0x13 FOOT-LOCK approach above; no decide sets +0x5=6 while the player lives — it is a
+ * dead-player-reaction state, savestate-proven adv_t1). */
 static void re15_enemy_ai_live_walk(re15_actor_t *e, const re15_actor_t *player)
 {
     if (!player) return;
-    int track = (e->sub_state_1 == 0x13);            /* 0x13 = TRACK (clip 1, rotate) ; 5/6 = WALK (clip 0xa) */
-    uint8_t clip = (uint8_t)(track ? 0x01 : 0x0a);
-    if (e->sub_state_2 == 0) {                        /* +0x6==0 entry (@0x801057d0 / @0x80102c0c) */
-        e->motion = clip; e->anim_frame = 0; e->anim_frac = 7;
+    if (e->sub_state_2 == 0) {                        /* +0x6==0 entry (@0x80102c0c) */
+        e->motion = 0x0a; e->anim_frame = 0; e->anim_frac = 7;
         re15_audio_room_se(4);
         e->sub_state_2 = 1;
     }
     int16_t residual = (int16_t)re15_ai_arc_test(e, player->x, player->z, 0x60);  /* rotate toward player */
     e->rot_y = (int16_t)(((int32_t)e->rot_y + residual) & 0x0fff);
-    if (track) {
-        /* +0x5=0x13 (FUN_801057bc): rotate/track in place playing clip 1; once FACING the player,
-         * break into the forward WALK (+0x5=6). No translation here — the pose just tracks. */
-        if (residual == 0) { e->sub_state_1 = 6; e->sub_state_2 = 0; }
-        return;
-    }
     /* +0x5=6 WALK (byte-true FUN_80102bd8 -> func_0x8001ad68 @0x8001ad68 + the keyframe decoder
      * func_0x8001ae38 @0x8001ae38, disassembled from PSX.EXE). The forward step IS the walk clip's
      * baked root translation: clip 0xa's keyframes carry a CUMULATIVE forward offset at +6 (the
@@ -806,9 +847,14 @@ int re15_enemy_ai_live_active(int slot)
                     re15_enemy_ai_standup_animate(e);           /* f890[0xd]=FUN_80104a50 */
                 else if (e->sub_state_1 == 7)
                     re15_enemy_ai_live_turn(e, player);
-                else if (e->sub_state_1 == 5 || e->sub_state_1 == 6 || e->sub_state_1 == 0x13)
-                    /* FORWARD-WALK / APPROACH (@0x8011f890[5/6]=FUN_80102bd8, [0x13]=FUN_801057bc):
-                     * the woken zombie WALKS UPRIGHT toward the player (was stubbed = it stood). 8.19. */
+                else if (e->sub_state_1 == 0x13)
+                    /* APPROACH (@0x8011f890[0x13]=FUN_801057bc): the byte-true LIVE walk gait — the
+                     * locomotion bank's clip 1 + the FUN_8010939c FOOT-LOCK carries the zombie at the
+                     * player. This is what LIVE zombies use (engage->0x13); +0x5=6 is the corpse-walk. */
+                    re15_enemy_ai_live_approach(slot, e, player);
+                else if (e->sub_state_1 == 5 || e->sub_state_1 == 6)
+                    /* CORPSE-WALK (@0x8011f890[5/6]=FUN_80102bd8): clip 0xa keyframe root-motion (only
+                     * reached post-death; no decide sets +0x5=6 while the player lives). */
                     re15_enemy_ai_live_walk(e, player);
                 else if (e->sub_state_1 == 2) {
                     /* ENGAGE animate (byte-true FUN_801021f8 @0x8011f890[2]): set the engage-idle clip

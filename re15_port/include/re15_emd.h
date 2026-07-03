@@ -173,4 +173,10 @@ int re15_emd_parse_container(const uint8_t *emd_data, size_t emd_size,
                              re15_emd_animation_t *out_anim,
                              re15_tim_t           *out_tim);
 
+/* Parse the em<NN> locomotion bank (bank 0 = dir[1]/dir[2]) as its own skel+anim (the STAGE1 zombie
+ * APPROACH state plays it via entity+0x84). Returns 0 on success. See emd_common.c. */
+int re15_emd_parse_loco_bank(const uint8_t *emd, size_t emd_size,
+                             re15_emd_skeleton_t  *out_skel,
+                             re15_emd_animation_t *out_anim);
+
 #endif /* RE15_EMD_H */
