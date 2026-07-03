@@ -99,6 +99,8 @@ typedef struct {
      * already exist above; offsets cite the RE1.5 entity struct (see re15_enemy_ai.c).   */
     uint32_t ai_dist;       /* +0x1d0: cached player distance SquareRoot0(ΔX²+ΔZ²) (tick) */
     int16_t  ai_timer;      /* +0x9c : search decision countdown (FUN_80101b64; 0 -> 0x101) */
+    int16_t  grab_kill_ctr; /* +0x9e : the grab KILL counter (FUN_80102548 [2]=100; [3] -- per tick;
+                             * was-0 OR player-hp<0 -> the DEVOUR handoff word ((+0x5)+2)<<8|1) */
     uint16_t ai_flags;      /* +0x1d8: bit0x10 = "approach permitted" gate (decision block)  */
     uint8_t  ai_contact;    /* +0x90 : contact/collision bits (FUN_80102058, low byte)        */
     /* AI params FUN_8011d84c writes (PSX: into the model pool entity[0x62]+0x5fx). The

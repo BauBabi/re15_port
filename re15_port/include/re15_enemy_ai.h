@@ -266,6 +266,11 @@ int      re15_player_victim_state(void);
 uint8_t  re15_player_victim_type(void);
 void     re15_player_victim_tick(void);
 void     re15_player_victim_reset(void);
+/* The zombie THROW-OFF [4] starts Leon's release finish in lockstep (DAT_800aca5a=4 / clip base+2). */
+void     re15_player_victim_throwoff(void);
+/* The DEVOUR-FINISH sub0 (FUN_80102bd8 @0x80102c80) latches player cmd 6 = the devoured COLLAPSE
+ * (clip variant+6; hp=-1 stored at collapse frame 0x23 by the handler, not here). */
+void     re15_player_victim_devour(const re15_actor_t *zombie);
 
 /* Phase 8.6 — the per-frame LIVE-zombie AI pass, the port's faithful slice of the original's
  * entity-update loop FUN_8001a50c (@0x8001ce04: iterate the entity array, dispatch

@@ -242,17 +242,34 @@ int main(void)
         re15_enemy_ai_run_all(1);   /* [2] IMPACT-> player -10, +0x6=3 */
         if (pl->hp != (int16_t)(ghp0 - 10)) {
             fprintf(stderr, "FAIL: grab IMPACT -10, HP %d->%d\n", ghp0, pl->hp); fail = 1; }
-        re15_enemy_ai_run_all(1);   /* [3] BITE  -> player -5, +0x6=6 */
+        re15_enemy_ai_run_all(1);   /* [3] BITE-loop: -5 per bite-clip wrap (no bank -> wrap every tick) */
         if (pl->hp != (int16_t)(ghp0 - 15)) {
             fprintf(stderr, "FAIL: grab BITE -5 (total -15), HP %d->%d\n", ghp0, pl->hp); fail = 1; }
-        re15_enemy_ai_run_all(1);   /* [6] release -> set clip 0x11 + SE, +0x6=7 */
-        re15_enemy_ai_run_all(1);   /* [7] release clip done (no model bank -> clip_done guard = immediate) -> +0x6=8 */
-        re15_enemy_ai_run_all(1);   /* [8] EXIT  -> +0x5=2 (engage) */
-        if (gz->sub_state_1 != 2) {
-            fprintf(stderr, "FAIL: grab must exit to engage (+0x5=2), ist %d\n", gz->sub_state_1); fail = 1; }
+        /* TIMELINE-VERIFIED HOLD (deterministic /tmp/tl3): the grab HOLDS the bite sub-step (+0x6=3),
+         * biting -5 per clip wrap over the 0x6e window — it does NOT release after one bite. Drive it
+         * until the bites kill; the killer must then exit to +0x5=6 WALK-to-corpse (observed live:
+         * killer walks clip 0xa and circles the corpse), NOT re-enter the engage brain. */
+        int held_ok = 1, guard = 0;
+        while (pl->hp >= 0 && guard < 200) {
+            if (gz->sub_state_1 != 3 || gz->sub_state_2 != 3) held_ok = 0;
+            re15_enemy_ai_run_all(1); guard++;
+        }
+        if (!held_ok) {
+            fprintf(stderr, "FAIL: grab must HOLD the bite sub-step (+0x6=3) until the kill\n"); fail = 1; }
+        if (pl->hp >= 0) {
+            fprintf(stderr, "FAIL: the held grab must kill (bites/devour), hp=%d after %d ticks\n", pl->hp, guard); fail = 1; }
+        /* the kill hands off to the DEVOUR-FINISH state (+0x5)+2: this was a FACE grab (3) -> 5.
+         * (The live behind-grab hands to 6 — observed in the original timeline.) */
+        if (gz->sub_state_1 != 5) {
+            fprintf(stderr, "FAIL: killer must hand off to DEVOUR (+0x5=3+2=5), ist %d\n", gz->sub_state_1); fail = 1; }
+        /* the devour decide is a jr-ra stub: the killer STAYS in it forever (timeline: 20+s at d<0x5dc
+         * while only ENGAGE-state zombies commit the dead-feed) */
+        for (int f = 0; f < 10; f++) re15_enemy_ai_run_all(1);
+        if (gz->sub_state_1 != 5) {
+            fprintf(stderr, "FAIL: killer must STAY in the devour state (+0x5=5), ist %d\n", gz->sub_state_1); fail = 1; }
         if (!fail)
-            printf("  (6) grab zombie slot %d: IMPACT+BITE -> player HP %d->%d (-15 byte-true), exited to engage (+0x5=%d)\n",
-                   gs, ghp0, pl->hp, gz->sub_state_1);
+            printf("  (6) grab slot %d: IMPACT -10, held BITE-loop -5/wrap kills (hp %d->%d in %d ticks), exit +0x5=6 walk\n",
+                   gs, ghp0, pl->hp, guard);
     }
 
     /* (7): the TURN-to-face -> grab chain (Phase 8.9). Put a zombie in the turn state (+0x5=7, grid 0
@@ -666,10 +683,11 @@ int main(void)
         re15_enemy_ai_live_active(zslots[0]);                     /* grab [2] IMPACT: motion=base+1=1 */
         if (z->motion != 1) {
             fprintf(stderr, "FAIL: (15) GRAB [2] IMPACT clip=base+1=1, motion=%d\n", z->motion); fail = 1; }
-        re15_enemy_ai_live_active(zslots[0]);                     /* grab [3] BITE (no clip) */
-        re15_enemy_ai_live_active(zslots[0]);                     /* grab [6] RELEASE: motion=17 */
-        if (z->motion != 17) {
-            fprintf(stderr, "FAIL: (15) GRAB [6] RELEASE clip=17, motion=%d\n", z->motion); fail = 1; }
+        re15_enemy_ai_live_active(zslots[0]);                     /* grab [3] BITE-loop: HOLDS clip base+1 */
+        re15_enemy_ai_live_active(zslots[0]);                     /* (timeline-verified: no release mid-hold) */
+        if (z->motion != 1 || z->sub_state_2 != 3) {
+            fprintf(stderr, "FAIL: (15) GRAB [3] must HOLD the bite clip base+1 (+0x6=3), motion=%d +0x6=%d\n",
+                    z->motion, z->sub_state_2); fail = 1; }
 
         /* GRAB behind (+0x5=4): base=(4-3)*3=3 -> clip 3 on entry. */
         z->sub_state_1 = 4; z->sub_state_2 = 0; z->motion = 99;
@@ -1018,17 +1036,24 @@ int main(void)
                 fprintf(stderr, "FAIL: (22d) release clip done -> Leon freed (state 0), ist %d\n",
                         re15_player_victim_state()); fail = 1; }
 
-            /* (e) the grab-DEATH COLLAPSE: with Leon dead (HP<0) a grabbing zombie drives the collapse
-             * clip variant+6 (=6, face), persisting (the devour, state 6). */
+            /* (e) the DEVOUR COLLAPSE (byte-true chain): a grab on a dead/dying player runs [3] ->
+             * hands off to the devour-finish (+0x5=3+2=5), whose sub0 latches Leon's collapse (state 2,
+             * clip variant+6 = 6 face). Drive the chain through run_all + victim ticks. */
             re15_player_victim_reset();
             pl->x = 0; pl->z = 0; pl->hp = -1; pl->state = 7; pl->motion = 200; pl->anim_frame = 0;
+            pl->hit_react = 0;
             gz->x = 500; gz->z = 0; gz->floor = 0; gz->state = RE15_AI_STATE_ACTIVE;
             gz->grid_id = 0; gz->sub_state_1 = 3; gz->sub_state_2 = 0; gz->ai_flags = 0;
-            re15_enemy_ai_run_all(1);
-            re15_player_victim_tick();
+            for (int f = 0; f < 8 && re15_player_victim_state() != 2; f++) {
+                re15_enemy_ai_run_all(1);
+                re15_player_victim_tick();
+            }
             if (re15_player_victim_state() != 2) {
-                fprintf(stderr, "FAIL: (22e) grab-death -> Leon COLLAPSE (state 2), ist %d\n",
+                fprintf(stderr, "FAIL: (22e) grab-on-dead -> devour handoff -> Leon COLLAPSE (state 2), ist %d\n",
                         re15_player_victim_state()); fail = 1; }
+            if (gz->sub_state_1 != 5) {
+                fprintf(stderr, "FAIL: (22e) the zombie must be in the devour state (+0x5=5), ist %d\n",
+                        gz->sub_state_1); fail = 1; }
             if (pl->motion != 6) {   /* face variant -> collapse clip 0+6 = 6 */
                 fprintf(stderr, "FAIL: (22e) collapse must pose Leon at clip 6 (variant+6), motion=%d\n", pl->motion); fail = 1; }
 

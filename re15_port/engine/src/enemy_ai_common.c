@@ -348,15 +348,13 @@ void re15_ai_dispatch_decision(re15_actor_t *e, const re15_actor_t *player)
                 re15_ai_set_state_word(e, 0xd01);
             break;
         case 0x0d: break;                                       /* standup decide FUN_80104a48 = jr ra stub */
-        case 5: case 6: re15_ai_decide_engage(e, player); break;
-            /* +0x5=5/6 WALK grab-commit. Byte-true f840[6]=FUN_80102bd0 is a `jr ra` stub, BUT the
-             * port's +0x5=6 is a CONTINUOUS forward-walk standing in for the original's approach-scan
-             * (FUN_8010561c) + one-clip walk-lurch cycle (the zombie there mostly sits in +0x5=0x13
-             * where the grab commits; the port collapses that into the walk). Without this the walking
-             * zombie reached the player but NEVER grabbed -> parity FAIL: the original grabs & kills the
-             * idle player within 5s (adv_t5: HP=-1 state 7), the port left him at HP=100. Runs the SAME
-             * byte-true FUN_8010561c commit (dist<2000->turn 7, dist<0x4b0+facing->grab 3/4) each walk
-             * frame so the walk closes on the player and commits the grab in range. */
+        case 5: case 6:
+            /* +0x5=5/6 = the DEVOUR-FINISH (D3/D5 disasm 2026-07-03): its DECIDE f840[5]/[6] =
+             * FUN_80102bd0 = `jr ra` — NOTHING re-routes it, ever (the killer stays inert over the
+             * corpse; timeline: +0x5=6 for 20+s at d 214..636 while the ENGAGE-state zombies committed
+             * the 0x5dc dead-feed). The old port routed this into decide_engage (a walk stand-in) —
+             * removed: byte-true these states only run their ANIMATE (re15_enemy_ai_live_devour). */
+            break;
         case 7:  /* f840[7]=FUN_80102d20 — the TURN state's grab-commit check (byte-true): once the
                   * turn (animate) has the zombie close + facing within the ±0x200 cone + same floor +
                   * the player not mid-hit, commit the GRAB (+0x5=3/4). Otherwise stay turning. This
@@ -417,10 +415,12 @@ static int s_player_grabbed = 0;
 int re15_player_is_grabbed(void)
 {
     /* Pinned while a zombie holds him (cmd 5) AND through the victim struggle/release-finish anims
-     * (the original's cmd-5 handler stays routed until the release clip restores the free player). */
+     * (the original's cmd-5 handler stays routed until the release clip restores the free player) AND
+     * the devour COLLAPSE (cmd 6) — hp stays 70 until collapse frame 35, so the death branch cannot
+     * pin those first 35 frames; the cmd-6 handler never reads the pad either. */
     extern int re15_player_victim_state(void);
     int vs = re15_player_victim_state();
-    return s_player_grabbed || vs == 1 || vs == 3;
+    return s_player_grabbed || vs == 1 || vs == 2 || vs == 3;
 }
 
 /* ===================== LEON GRAB-VICTIM ANIMATION (state 5 struggle / state 6 collapse) ===========
@@ -459,9 +459,15 @@ static void re15_clip_root_motion_delta(re15_actor_t *a,
     if (!skel || !anim || clip < 0 || clip >= anim->clip_count) return;
     const re15_emd_clip_t *c = &anim->clips[clip];
     if (c->frame_count <= 0) return;
-    if (fr_prev < 0 || fr_now <= fr_prev || fr_now >= c->frame_count) return;  /* wrap/entry: re-anchor */
-    int kf_n = (int)(anim->frames[c->first_frame + fr_now ] & 0xFFFu);
-    int kf_p = (int)(anim->frames[c->first_frame + fr_prev] & 0xFFFu);
+    if (fr_prev < 0 || fr_now != fr_prev + 1) return;              /* clip-set/jump: re-anchor */
+    /* The shared anim pass advances anim_frame MONOTONICALLY (it does not wrap at the clip length —
+     * the renderer takes slot = frame % frame_count). Mirror that here: consecutive frames map to
+     * consecutive LOOP SLOTS; a slot wrap (now < prev) is the loop restart = re-anchor (skip). */
+    int s_now  = fr_now  % c->frame_count;
+    int s_prev = fr_prev % c->frame_count;
+    if (s_now != s_prev + 1) return;                               /* wrapped -> re-anchor */
+    int kf_n = (int)(anim->frames[c->first_frame + s_now ] & 0xFFFu);
+    int kf_p = (int)(anim->frames[c->first_frame + s_prev] & 0xFFFu);
     int16_t sx, sy, sz, sx0, sz0;
     if (!re15_emd_get_keyframe_speed(skel, kf_n, &sx,  &sy, &sz))  return;
     if (!re15_emd_get_keyframe_speed(skel, kf_p, &sx0, &sy, &sz0)) return;
@@ -473,7 +479,8 @@ static void re15_clip_root_motion_delta(re15_actor_t *a,
 }
 
 /* Called by the grab (re15_enemy_ai_live_grab) each frame it pins the player: latch the victim anim
- * state (which zombie's bank, face/behind) + enter struggle (0->1) or collapse (on grab-death). */
+ * state (which zombie's bank, face/behind) + enter the STRUGGLE. (The COLLAPSE is NOT keyed off hp
+ * here — byte-true it is the DEVOUR state's sub0 latching player cmd 6, re15_player_victim_devour.) */
 static void re15_player_victim_latch(const re15_actor_t *zombie, re15_actor_t *player)
 {
     re15_enemy_bank_t *vb = re15_enemy_find(zombie->type);
@@ -481,14 +488,42 @@ static void re15_player_victim_latch(const re15_actor_t *zombie, re15_actor_t *p
     g_player_victim_type    = zombie->type;
     g_player_victim_zombie  = (int)(zombie - g_actors);  /* remember the grabber for the turn-to-face */
     g_player_victim_variant = (uint8_t)((zombie->sub_state_1 >= 4) ? 1 : 0);  /* +0x5=4 behind else face */
-    if (player->hp < 0) {                               /* grab-death -> devour COLLAPSE (state 6) */
-        if (g_player_victim != 2) player->anim_frame = 0;
-        g_player_victim = 2;
-    } else if (g_player_victim == 0) {                  /* enter grabbed STRUGGLE (state 5) */
+    if (g_player_victim == 0 || g_player_victim == 3) { /* enter (or re-enter from the release finish) */
         g_player_victim = 1;
         s_victim_phase  = 0;
         player->anim_frame = 0;
     }
+}
+
+/* The zombie's THROW-OFF [4] starts the player's release finish in lockstep (byte-true: the grab's
+ * escape path writes DAT_800aca5a = 4 = the struggle FSM's release phase; clip base+2). */
+void re15_player_victim_throwoff(void)
+{
+    if (g_player_victim != 1) return;
+    re15_actor_t *player = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    g_player_victim = 3;
+    player->motion = (uint8_t)(g_player_victim_variant * 3 + 2);
+    player->anim_frame = 0;
+}
+
+/* The zombie's DEVOUR-FINISH sub0 (FUN_80102bd8 @0x80102c80) latches player cmd = ((+0x5)-5)<<8 | 6 —
+ * the devoured COLLAPSE. Byte-true: the variant byte is the zombie's (+0x5)-5 (5 face / 6 behind) and
+ * HP is NOT touched here (the -1 lands at collapse frame 0x23 in the cmd-6 handler @0x8010a80c). */
+void re15_player_victim_devour(const re15_actor_t *zombie)
+{
+    re15_enemy_bank_t *vb = re15_enemy_find(zombie->type);
+    if (!vb || !vb->victim_ok) {                        /* no victim bank -> keep the old kill plumbing */
+        re15_actor_t *player = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        if (player->hp >= 0) player->hp = -1;
+        player->state = 7;
+        return;
+    }
+    re15_actor_t *player = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    g_player_victim_type    = zombie->type;
+    g_player_victim_zombie  = (int)(zombie - g_actors);
+    g_player_victim_variant = (uint8_t)((zombie->sub_state_1 >= 6) ? 1 : 0);  /* (+0x5)-5 */
+    g_player_victim = 2;
+    player->anim_frame = 0;                             /* @0x8010a75c frame reset on collapse entry */
 }
 
 /* Advance Leon's grab-victim animation one game tick (game_step, after re15_enemy_ai_run_all so the
@@ -548,10 +583,19 @@ void re15_player_victim_tick(void)
             re15_clip_root_motion_delta(player, &vb->skel_victim, &vb->anim_victim,
                                         clip, (int)player->anim_frame, fr_prev);
         }
-    } else {                                           /* RELEASE finish (state 3): clip base+2 once -> free */
-        if (s_player_grabbed) {                        /* re-grabbed mid-release -> back to the struggle */
-            g_player_victim = 1; s_victim_phase = 1; player->anim_frame = 0; return;
+        /* HP = -1 EXACTLY at collapse anim frame 0x23=35 (byte-true FUN_8010a6f8 @0x8010a80c/814,
+         * gate @0x8010a7e8 == 0x23) — a DIRECT SET in the cmd-6 handler, NOT a clamp in the damage
+         * path; the original hands the devour off at hp=70 and this store makes the corpse -1
+         * (every kill save reads exactly -1). The chomp SE (0x2070001) + the frame-0x37 blood
+         * effect (0x80019700(0x2000) + 0x4030001) need an effect/SE sink — deferred, cited. */
+        if (player->anim_frame == 0x23) {
+            player->hp    = -1;
+            player->state = 7;                          /* the port's death FSM keys off hp<0/state 7 */
         }
+    } else {                                           /* RELEASE finish (state 3): clip base+2 once -> free.
+                                                        * (Entered via re15_player_victim_throwoff — the
+                                                        * zombie holds sub-steps [4..7] while this plays,
+                                                        * so s_player_grabbed stays latched; no re-enter.) */
         uint8_t clip = (uint8_t)(base + 2);
         player->motion = clip;
         int fc = (clip < vb->anim_victim.clip_count) ? vb->anim_victim.clips[clip].frame_count : 1;
@@ -559,6 +603,8 @@ void re15_player_victim_tick(void)
         int fr_prev = (int)player->anim_frame;
         if (++player->anim_frame >= fc) {              /* release clip done -> Leon is free */
             g_player_victim = 0;
+            player->hit_react &= (uint8_t)~1u;         /* clear the grabbed flag (+0x93 &= ~1) — a new
+                                                        * grab may commit again from here */
             return;
         }
         re15_clip_root_motion_delta(player, &vb->skel_victim, &vb->anim_victim,
@@ -738,12 +784,12 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
     /* Drive Leon's grab-victim animation (state 5 struggle / state 6 collapse on grab-death) off this
      * zombie's bank 2 — so he struggles + collapses instead of freezing (the "no Leon reactions"). */
     re15_player_victim_latch(e, player);
-    /* GRAB-CLIP ROOT MOTION (byte-true func_0x8001ad68, called by the grab's animate half every frame):
-     * the zombie's grab clips carry root translation — TIMELINE-VERIFIED (/tmp/tl3): the grabbed pair
-     * DRIFTS together (~65 units/1.3s, zombie (-2398,-20166)->(-2520,-20283) while biting) instead of
-     * standing frozen. Apply the per-frame keyframe delta of the CURRENT grab clip (the shared anim
-     * pass advanced anim_frame just before run_all; delta skips wraps/clip-sets = re-anchor). */
-    {
+    /* GRAB-CLIP ROOT MOTION (byte-true: FUN_80102548 calls func_0x8001ad68(zombie, +0x170, +0x174) in
+     * sub-steps [1] pull-in, [3] bite and [5] throw-off ONLY — NOT the recovery [6]/[7] (D2 disasm).
+     * The grab clips carry root translation — TIMELINE-VERIFIED (/tmp/tl3): the grabbed pair DRIFTS
+     * together (~65 units/1.3s) instead of standing frozen. Per-frame keyframe delta of the CURRENT
+     * clip (the shared anim pass advanced anim_frame just before run_all; wrap/clip-set = re-anchor). */
+    if (e->sub_state_2 == 1 || e->sub_state_2 == 3 || e->sub_state_2 == 5) {
         re15_enemy_bank_t *gb = re15_enemy_find(e->type);
         if (gb && gb->ok)
             re15_clip_root_motion_delta(e, &gb->skel, &gb->anim,
@@ -759,6 +805,15 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
     switch (e->sub_state_2) {                /* +0x6 sub-step (reset to 0 by the 0x301/0x401 commit) */
         case 0:                               /* [0] init/latch + grab clip base (@0x801025bc) */
             e->motion = grab_base; e->anim_frame = 0;
+            /* GRABBED flag (byte-true player+0x93 |= 1, latched with the cmd-5 write @0x80102640):
+             * the engage/turn grab-commits require +0x93 == 0, so a SECOND zombie cannot grab the
+             * already-held player. TIMELINE-VERIFIED: the original's other zombie stayed in engage at
+             * d=851 for the whole hold; the port had TWO simultaneous grabbers (F223) = double bites. */
+            player->hit_react |= 1;
+            /* YAW SNAP (byte-true [0] FUN_8001a8f8(&player_pos, 0x800): with clamp 0x800 the compare
+             * (0x800+delta)&0xfff < 0x1000 is always true -> the zombie's facing SNAPS to the player.
+             * This aims the grab clips' baked root translation AT the player (D2 disasm). */
+            e->rot_y = (int16_t)(((int)re15_atan2_q12(player->z - e->z, player->x - e->x) - 0x400) & 0x0fff);
             re15_audio_room_se(4);            /* grab-START SE (@0x8010268c func_0x800453d0(4), snd1) */
             e->sub_state_2 = 1; break;
         case 1:                               /* [1] pull-in — play the grab-base clip, advance ON CLIP-END
@@ -771,23 +826,71 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
             player->hp     = (int16_t)(player->hp - 10);
             if (player->hp < 0) player->state = 7;   /* hp<0 -> GRABBED death (state 7, save-confirmed;
                                                       * re15_player_is_dead() = hp<0 drives the death FSM) */
-            e->ai_timer    = 0x6e;           /* +0x9c bite window (the loop count is anim-gated) */
+            e->ai_timer      = 0x6e;         /* +0x9c ESCAPE window (@0x8010276c; 5 on a re-grab after a
+                                              * break-free, DAT_800aca50&1 — mash-flag deferred) */
+            e->grab_kill_ctr = 100;          /* +0x9e KILL counter (@0x8010276c: 0x64) */
             e->sub_state_2 = 3;
             break;
-        case 3:                               /* [3] BITE — clip base+1; apply the byte-true -5 ON the bite-clip
-                                               * completion (@0x801027dc). The original LOOPS -5 per clip-wrap
-                                               * over the +0x9c=0x6e window; the port keeps ONE -5 per bite clip
-                                               * (the exact loop count is the loaded-EDD-gated FL count). */
-            if (re15_enemy_clip_done(e)) {
-                player->hp = (int16_t)(player->hp - 5);
-                if (player->hp < 0) player->state = 7;   /* hp<0 -> GRABBED death (state 7, save-confirmed) */
-                e->sub_state_2 = 6;
+        case 3:                               /* [3] BITE-LOOP (@0x801027dc) — the HELD bite. TIMELINE-VERIFIED
+                                               * (deterministic /tmp/tl3): the grab HOLDS this sub-step for the
+                                               * whole +0x9c=0x6e (110-frame) window, applying -5 PER bite-clip
+                                               * WRAP (observed hp 85->80->75->70, one -5 per ~26f clip ~0.87s);
+                                               * at WINDOW EXPIRY the FATAL DEVOUR lands (FUN_801185dc: HP-=600,
+                                               * player cmd 6 devour-collapse; observed corpse hp == -1 exactly,
+                                               * kill at ~t+5.0 == 110 frames after the impact ✓). The zombie
+                                               * then exits to +0x5=6 WALK (observed: killer walks clip 0xa,
+                                               * circles the corpse). The old port did ONE -5 then released ->
+                                               * ground the kill over re-grab cycles (~15s vs the true ~7.6s). */
+            {
+                /* -5 ONCE PER BITE-CLIP CYCLE (@0x801027dc, gated on func_0x8001f314's wrap return).
+                 * anim_frame runs monotonically (the shared pass does not wrap it), so "clip wrap" =
+                 * the loop slot hitting the clip's last frame — exactly one frame per cycle (original
+                 * cadence: -5 per ~26f ~0.87s; measured identical in v4). No bank -> immediate fallback. */
+                re15_enemy_bank_t *bb = re15_enemy_find(e->type);
+                int bite_fc = 0;
+                if (bb && bb->ok && e->motion < bb->anim.clip_count)
+                    bite_fc = bb->anim.clips[e->motion].frame_count;
+                int bite_now = (bite_fc > 0) ? (((int)e->anim_frame % bite_fc) == bite_fc - 1)
+                                             : re15_enemy_clip_done(e);
+                if (bite_now && player->hp >= 0) {
+                    player->hp = (int16_t)(player->hp - 5);
+                    if (player->hp < 0) player->state = 7;
+                }
+                /* TWO byte-true counters (D3/D5 disasm of FUN_80102548 [3]):
+                 *  +0x9c ESCAPE window: -= 1 + 5*mash-presses (FUN_80037024; mash deferred = -1/tick);
+                 *      goes NEGATIVE -> THROW-OFF [4] (the player breaks free ALIVE).
+                 *  +0x9e KILL counter: -1 per tick; WAS 0 (or player hp<0) -> the DEVOUR handoff
+                 *      +0x4 word = ((+0x5)+2)<<8|1 (face 3->5, behind 4->6; @word-write in [3]) — the
+                 *      zombie's devour-finish state; HP is NOT touched here (the original hands off at
+                 *      hp=70; the -1 lands at collapse frame 35 in the player cmd-6 handler).
+                 * Un-mashed: kill (100) < escape (110) -> every held grab is fatal ✓ timeline. */
+                int16_t kc = e->grab_kill_ctr;
+                e->grab_kill_ctr = (int16_t)(kc - 1);
+                if (kc == 0 || player->hp < 0) {
+                    re15_ai_set_state_word(e, ((uint32_t)(e->sub_state_1 + 2) << 8) | 1u);
+                    break;
+                }
+                e->ai_timer = (int16_t)(e->ai_timer - 1);
+                if (e->ai_timer < 0) {                   /* escape window ran out -> THROW-OFF (alive) */
+                    e->sub_state_2 = 4;
+                }
             }
             break;
-        case 6:                               /* [6] release — set clip 17 (0x11, @0x80102a64) + SE, then wait */
+        case 4:                               /* [4] THROW-OFF — clip base+2 (@0x801028f0) + SE 7; the
+                                               * player-side release finish starts in lockstep (the
+                                               * original writes DAT_800aca5a=4 = the struggle FSM's
+                                               * release phase). */
+            e->motion = (uint8_t)(grab_base + 2); e->anim_frame = 0;
+            re15_audio_room_se(7);
+            re15_player_victim_throwoff();
+            e->sub_state_2 = 5;
+            break;
+        case 5:                               /* [5] throw-off plays to its end (root motion active) */
+            e->sub_state_2 += (uint8_t)(re15_enemy_clip_done(e) ? 1 : 0);
+            break;
+        case 6:                               /* [6] recovery — set the literal clip 17 (0x11, @0x80102a64);
+                                               * the SE 7 belongs to the THROW-OFF [4] (@0x80102920/60). */
             e->motion = 0x11; e->anim_frame = 0;
-            re15_audio_room_se(7);            /* grab-RELEASE SE (@0x80102920/60 func_0x800453d0(7), snd1;
-                                               * orig plays twice, one play = the faithful audible release) */
             e->sub_state_2 = 7; break;
         case 7:                               /* [7] play the release clip 0x11 to its end (byte-true anim-gate) */
             e->sub_state_2 += (uint8_t)(re15_enemy_clip_done(e) ? 1 : 0);   /* 7 -> 8 on clip-end */
@@ -949,18 +1052,27 @@ static void re15_enemy_ai_live_approach(int slot, re15_actor_t *e, const re15_ac
     s_zfoot_ok[slot] = 1; s_zfoot_sel[slot] = (uint8_t)sel;
 }
 
-/* Forward WALK animate — byte-true FUN_80102bd8 (@0x8011f890[+0x5=5/6]): the CORPSE-WALK (walk to the
- * dead player), clip 0xa + func_0x8001ad68 keyframe root-motion. NOT the live approach (that is the
- * +0x5=0x13 FOOT-LOCK approach above; no decide sets +0x5=6 while the player lives — it is a
- * dead-player-reaction state, savestate-proven adv_t1). */
-static void re15_enemy_ai_live_walk(re15_actor_t *e, const re15_actor_t *player)
+/* DEVOUR-FINISH animate — byte-true FUN_80102bd8 (@0x8011f890[+0x5=5/6], D3/D5 disasm 2026-07-03):
+ * the state the grab's KILL counter hands off to ((+0x5)+2: 3->5 face, 4->6 behind). NOT a generic
+ * walk: sub0 (@0x80102c0c..c80) sets clip +0x94 = (+0x5)+4 (9 face / 0xa behind), latches the victim
+ * banks (DAT_800acbcc/d0/bfc) AND the player command DAT_800aca58 = ((+0x5)-5)<<8 | 6 = the devoured
+ * COLLAPSE (whose handler stores hp=-1 at frame 0x23); sub1 plays the clip with func_0x8001ad68 root
+ * motion (carries the zombie down ONTO the corpse — observed dist 822->214) + SE 3 at frame 0x28;
+ * clip done -> sub2 = INERT forever (the observed hover; the decide f840[5]/[6]=0x80102bd0 is jr ra,
+ * so nothing ever re-routes it). */
+static void re15_enemy_ai_live_devour(re15_actor_t *e, const re15_actor_t *player)
 {
     if (!player) return;
+    if (e->sub_state_2 >= 2) return;                  /* sub2+: inert forever (@ the sub-dispatch) */
     if (e->sub_state_2 == 0) {                        /* +0x6==0 entry (@0x80102c0c) */
-        e->motion = 0x0a; e->anim_frame = 0; e->anim_frac = 7;
+        e->motion = (uint8_t)(e->sub_state_1 + 4);    /* (+0x5)+4: 9 face / 0xa behind */
+        e->anim_frame = 0; e->anim_frac = 7;
         re15_audio_room_se(4);
+        re15_player_victim_devour(e);                 /* player cmd 6 -> the devour collapse */
         e->sub_state_2 = 1;
     }
+    if (e->anim_frame == 0x28) re15_audio_room_se(3); /* chomp SE (@ frame 0x28, D3 disasm) */
+    if (re15_enemy_clip_done(e)) { e->sub_state_2 = 2; return; }   /* clip done -> INERT */
     int16_t residual = (int16_t)re15_ai_arc_test(e, player->x, player->z, 0x60);  /* rotate toward player */
     e->rot_y = (int16_t)(((int32_t)e->rot_y + residual) & 0x0fff);
     /* +0x5=6 WALK (byte-true FUN_80102bd8 -> func_0x8001ad68 @0x8001ad68 + the keyframe decoder
@@ -1053,9 +1165,11 @@ int re15_enemy_ai_live_active(int slot)
                      * player. This is what LIVE zombies use (engage->0x13); +0x5=6 is the corpse-walk. */
                     re15_enemy_ai_live_approach(slot, e, player);
                 else if (e->sub_state_1 == 5 || e->sub_state_1 == 6)
-                    /* CORPSE-WALK (@0x8011f890[5/6]=FUN_80102bd8): clip 0xa keyframe root-motion (only
-                     * reached post-death; no decide sets +0x5=6 while the player lives). */
-                    re15_enemy_ai_live_walk(e, player);
+                    /* DEVOUR-FINISH (@0x8011f890[5/6]=FUN_80102bd8, D3/D5 disasm): NOT a generic walk —
+                     * the state the grab's kill counter hands off to. sub0 latches the player's devour
+                     * COLLAPSE (cmd 6); sub1 plays clip (+0x5)+4 (9 face / 0xa behind) with root motion
+                     * (carries the zombie down onto the victim); sub2 = INERT forever (the hover). */
+                    re15_enemy_ai_live_devour(e, player);
                 else if (e->sub_state_1 == 2) {
                     /* ENGAGE animate (byte-true FUN_801021f8 @0x8011f890[2]): set the engage-idle clip
                      * ({2,3,4,5} = +0x1d4), then on ENTRY roll the byte-true behavior table — value 2
