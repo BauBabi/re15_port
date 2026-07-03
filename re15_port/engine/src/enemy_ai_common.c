@@ -341,6 +341,15 @@ void re15_ai_dispatch_decision(re15_actor_t *e, const re15_actor_t *player)
         case 0x13: re15_ai_decide_engage(e, player);    break;  /* f840[0x13]=FUN_8010561c == the engage
                                                                  * decide: while APPROACHING, commit the
                                                                  * grab/turn once in range (8.19). */
+        case 5: case 6: re15_ai_decide_engage(e, player); break;
+            /* +0x5=5/6 WALK grab-commit. Byte-true f840[6]=FUN_80102bd0 is a `jr ra` stub, BUT the
+             * port's +0x5=6 is a CONTINUOUS forward-walk standing in for the original's approach-scan
+             * (FUN_8010561c) + one-clip walk-lurch cycle (the zombie there mostly sits in +0x5=0x13
+             * where the grab commits; the port collapses that into the walk). Without this the walking
+             * zombie reached the player but NEVER grabbed -> parity FAIL: the original grabs & kills the
+             * idle player within 5s (adv_t5: HP=-1 state 7), the port left him at HP=100. Runs the SAME
+             * byte-true FUN_8010561c commit (dist<2000->turn 7, dist<0x4b0+facing->grab 3/4) each walk
+             * frame so the walk closes on the player and commits the grab in range. */
         case 7:  /* f840[7]=FUN_80102d20 — the TURN state's grab-commit check (byte-true): once the
                   * turn (animate) has the zombie close + facing within the ±0x200 cone + same floor +
                   * the player not mid-hit, commit the GRAB (+0x5=3/4). Otherwise stay turning. This
