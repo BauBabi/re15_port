@@ -677,6 +677,10 @@ void re15_player_victim_tick(void)
             g_player_victim = 0;
             player->hit_react &= (uint8_t)~1u;         /* clear the grabbed flag (+0x93 &= ~1) — a new
                                                         * grab may commit again from here */
+            player->motion = 200;                      /* restore the idle sentinel: the stale bank2
+                                                        * clip index must not feed the normal player
+                                                        * anim select for a frame (a wrong-clip flash) */
+            player->anim_frame = 0;
             return;
         }
         re15_clip_root_motion_abs(player, &vb->skel_victim, &vb->anim_victim,
@@ -780,10 +784,21 @@ static void re15_enemy_ai_feeding_animate(re15_actor_t *e, const re15_actor_t *p
 /* Stand-up ANIMATE — byte-true FUN_80104a50 (@0x8011f890[+0x5=0xd], STAGE1.BIN). The woken feeder's
  * GET-UP: play clip 0x29 (@0x80104aa8 sets +0x94=0x29) once to clip-end, then +0x4=0x201 (+0x5=2
  * engage) @0x80104b24. This is the byte-true state-machine home of the "stehen sauber auf" clip. */
+/* ONE-SHOT clip HOLD: clamp anim_frame at the clip's last frame so the monotonic counter + the
+ * render's %fc wrap can never REPLAY a one-shot from its start (byte-true f8b4 terminal clamp). */
+static void re15_enemy_hold_last_frame(re15_actor_t *e)
+{
+    re15_enemy_bank_t *hb = re15_enemy_find(e->type);
+    if (!hb || !hb->ok || (int)e->motion >= hb->anim.clip_count) return;
+    int fc = hb->anim.clips[e->motion].frame_count;
+    if (fc > 0 && (int)e->anim_frame > fc - 1) e->anim_frame = (uint16_t)(fc - 1);
+}
+
 static void re15_enemy_ai_standup_animate(re15_actor_t *e)
 {
     uint8_t phase = e->sub_state_2;                        /* +0x6 */
     if (phase >= 2) {                                     /* clip played out -> engage */
+        re15_enemy_hold_last_frame(e);                    /* keep holding through the handoff ticks */
         if (phase == 2) re15_ai_set_state_word(e, 0x201); /* +0x4 = 0x201 -> +0x5=2 */
         return;
     }
@@ -792,7 +807,14 @@ static void re15_enemy_ai_standup_animate(re15_actor_t *e)
         e->motion = 0x29; e->anim_frame = 0; e->anim_frac = 7;
         if ((re15_engine_rand8() & 3) == 0) re15_audio_room_se(5);  /* @0x80104ae0 func_0x800453d0(5) */
     }
-    e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_enemy_clip_done(e));  /* +0x6 += clip-done */
+    /* ONE-SHOT HOLD (byte-true f8b4: a 0x8000-terminal frame entry CLAMPS the counter — one-shots
+     * never wrap). The port's monotonic anim_frame + the render's %fc wrap REPLAYED the stand-up
+     * from its crouching first frames during the exit handoff — RENDER-DUMP-PROVEN: F51 kf946
+     * standing, F60 kf921 back in the crouch = the "falls down again after standing up" report. */
+    if (re15_enemy_clip_done(e)) {
+        re15_enemy_hold_last_frame(e);                    /* hold the standing last frame */
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + 1);
+    }
 }
 
 static void re15_enemy_ai_live_feeding(re15_actor_t *e)
@@ -1258,7 +1280,8 @@ void re15_body_push_player(void)
 static void re15_enemy_ai_live_devour(re15_actor_t *e, const re15_actor_t *player)
 {
     if (!player) return;
-    if (e->sub_state_2 >= 2) return;                  /* sub2+: inert forever (@ the sub-dispatch) */
+    if (e->sub_state_2 >= 2) { re15_enemy_hold_last_frame(e); return; }   /* sub2+: INERT — hold the
+                                                       * final devour pose forever (no %fc re-wrap) */
     if (e->sub_state_2 == 0) {                        /* +0x6==0 entry (@0x80102c0c) */
         e->motion = (uint8_t)(e->sub_state_1 + 4);    /* (+0x5)+4: 9 face / 0xa behind */
         e->anim_frame = 0; e->anim_frac = 7;

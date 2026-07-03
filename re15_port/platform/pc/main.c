@@ -2574,6 +2574,24 @@ int main(int argc, char *argv[])
                 re15_skel_pose_t npc_poses[RE15_EMD_MAX_BONES];
                 g_anim_pose_actor = npc;   /* FRAC crossfade for this NPC/enemy body */
                 if (re15_skel_compute_pose(npc_skel, npc_kf, npc_poses) != 0) continue;
+                /* RE15_POSE_DUMP=1: per-frame RENDER-LEVEL pose log (verify the posed keyframes reach
+                 * the screen — the walk-look investigations). b13 = the em10 reach forearm. */
+                {
+                    static FILE *s_pose_fp = NULL; static int s_pose_tried = 0;
+                    if (!s_pose_tried) { s_pose_tried = 1;
+                        const char *pd = getenv("RE15_POSE_DUMP");
+                        if (pd && *pd) s_pose_fp = fopen(pd, "w");
+                    }
+                    if (s_pose_fp) {
+                        fprintf(s_pose_fp, "[pose] F%u slot%d ss1=%d mo=%d af=%d frac=%d kf=%d "
+                                "b9(%d,%d,%d) b13(%d,%d,%d)\n",
+                                (unsigned)g_engine.frame_count, (int)(npc - g_actors),
+                                npc->sub_state_1, npc->motion, npc->anim_frame, npc->anim_frac, npc_kf,
+                                (int)npc_poses[9].trans[0], (int)npc_poses[9].trans[1], (int)npc_poses[9].trans[2],
+                                (int)npc_poses[13].trans[0], (int)npc_poses[13].trans[1], (int)npc_poses[13].trans[2]);
+                        fflush(s_pose_fp);
+                    }
+                }
 
                 int32_t nfs = re15_sin_q12((int)npc->rot_y);
                 int32_t nfc = re15_cos_q12((int)npc->rot_y);
