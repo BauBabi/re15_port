@@ -1960,7 +1960,12 @@ int main(int argc, char *argv[])
                     s_victim_skel.keyframe_size_bytes = vb->skel_victim.keyframe_size_bytes;
                     p_skel = &s_victim_skel;
                     p_anim = &vb->anim_victim;
-                    p_clip_override = 1;   /* motion = a direct bank-2 clip index (not a locomotion sel) */
+                    /* player->motion IS the bank-2 clip the victim FSM set (struggle 0-5 / collapse
+                     * 6-7). re15_compute_actor_kf takes clip_override>=0 as the LITERAL clip index and
+                     * loops slot = anim_frame % frame_count — so pass motion, NOT a bare 1 (that pinned
+                     * Leon to clip 1: the collapse never rendered + behind-grab showed the wrong pose;
+                     * caught by the byte-true render-path verify, invisible to the motion-value test). */
+                    p_clip_override = (int)player_ref->motion;
                 }
             }
             int kf_idx = 0;

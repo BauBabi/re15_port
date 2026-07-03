@@ -957,6 +957,7 @@ int main(void)
 
             pl->x = 0; pl->z = 0; pl->hp = 100; pl->hit_react = 0; pl->state = 0; pl->floor = 0;
             pl->motion = 200; pl->anim_frame = 0;                     /* a non-victim idle sentinel */
+            pl->rot_y = 0x555;                                        /* a WRONG facing -> must turn to face */
             for (int i = 0; i < nz; i++) {   /* isolate: park the others far + asleep */
                 re15_actor_t *z = &g_actors[zslots[i]];
                 z->grid_id = 0x86; z->sub_state_1 = 0; z->sub_state_2 = 0; z->ai_flags = 0;
@@ -981,6 +982,14 @@ int main(void)
                         re15_player_victim_state()); fail = 1; }
             if (pl->motion != 0) {   /* face variant, phase 0 -> struggle clip 0 */
                 fprintf(stderr, "FAIL: (22b) struggle must pose Leon at face clip 0, motion=%d\n", pl->motion); fail = 1; }
+            /* TURN-TO-FACE (byte-true func_0x8001a8f8 snap): Leon yaw must SNAP to face the grabbing
+             * zombie (at +500 X here), NOT stay at the wrong 0x555. Face variant -> face the zombie. */
+            {
+                int expect_face = ((int)re15_atan2_q12(gz->z - pl->z, gz->x - pl->x) - 0x400) & 0x0fff;
+                if (pl->rot_y == 0x555 || pl->rot_y != (int16_t)expect_face) {
+                    fprintf(stderr, "FAIL: (22b) struggle must SNAP Leon to face the grabber, rot_y=%d (want %d)\n",
+                            pl->rot_y, expect_face); fail = 1; }
+            }
 
             /* (c) the struggle PHASE advances ONLY on clip-done (byte-true DAT_800aca5a). The grab keeps
              * s_player_grabbed latched; each 4-frame clip completion bumps the clip 0 -> 1 -> 2, then

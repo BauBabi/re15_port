@@ -433,6 +433,7 @@ static int     g_player_victim = 0;
 static uint8_t g_player_victim_type = 0;      /* grabbing zombie type -> its bank 2 (skel/anim_victim) */
 static uint8_t g_player_victim_variant = 0;   /* 0 face / 1 behind (from the grab facing +0x5-3) */
 static uint8_t s_victim_phase = 0;            /* struggle phase 0..2 (DAT_800aca5a) */
+static int     g_player_victim_zombie = -1;   /* grabbing zombie actor slot -> its XZ for the turn-to-face */
 int     re15_player_victim_state(void) { return g_player_victim; }
 uint8_t re15_player_victim_type(void)  { return g_player_victim_type; }
 
@@ -443,6 +444,7 @@ static void re15_player_victim_latch(const re15_actor_t *zombie, re15_actor_t *p
     re15_enemy_bank_t *vb = re15_enemy_find(zombie->type);
     if (!vb || !vb->victim_ok) return;                  /* no victim bank -> keep old frozen behaviour */
     g_player_victim_type    = zombie->type;
+    g_player_victim_zombie  = (int)(zombie - g_actors);  /* remember the grabber for the turn-to-face */
     g_player_victim_variant = (uint8_t)((zombie->sub_state_1 >= 4) ? 1 : 0);  /* +0x5=4 behind else face */
     if (player->hp < 0) {                               /* grab-death -> devour COLLAPSE (state 6) */
         if (g_player_victim != 2) player->anim_frame = 0;
@@ -463,6 +465,18 @@ void re15_player_victim_tick(void)
     re15_actor_t *player = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     re15_enemy_bank_t *vb = re15_enemy_find(g_player_victim_type);
     if (!vb || !vb->victim_ok) { g_player_victim = 0; return; }
+    /* TURN-TO-FACE (byte-true func_0x8001a8f8 @0x8010a3a4, disasm-verified): every struggle/collapse
+     * frame Leon's yaw is SET to face the grabbing zombie. The helper's clamp is 2*0x800 = 0x1000 (a
+     * full 180deg), so (0x800 + delta) & 0xfff is ALWAYS < 0x1000 = it SNAPS to the target every frame
+     * (never the incremental step). Face grab (variant 0) faces the zombie; behind grab (variant 1) the
+     * original flips +0x800 (faces away). Same yaw convention as the zombie turn-to-face: rot_y =
+     * atan2_q12(dz,dx) - 0x400. Was MISSING -> Leon struggled facing wherever he last walked. */
+    if (g_player_victim_zombie >= 0 && g_player_victim_zombie < RE15_ACTOR_MAX) {
+        const re15_actor_t *gz = &g_actors[g_player_victim_zombie];
+        int face = ((int)re15_atan2_q12(gz->z - player->z, gz->x - player->x) - 0x400) & 0x0fff;
+        if (g_player_victim_variant == 1) face = (face + 0x800) & 0x0fff;   /* behind -> face away */
+        player->rot_y = (int16_t)face;
+    }
     if (g_player_victim == 1) {                         /* STRUGGLE (state 5) */
         if (!s_player_grabbed) { g_player_victim = 0; return; }   /* grab ended -> Leon free */
         uint8_t base = (uint8_t)(g_player_victim_variant * 3);
@@ -485,7 +499,8 @@ void re15_player_victim_tick(void)
 
 /* Reset on room change / death-continue reload (called from re15_enemy_reset). */
 void re15_player_victim_reset(void) { g_player_victim = 0; g_player_victim_type = 0;
-                                      g_player_victim_variant = 0; s_victim_phase = 0; }
+                                      g_player_victim_variant = 0; s_victim_phase = 0;
+                                      g_player_victim_zombie = -1; }
 
 /* FUN_80100688 (@0x8011f7b4[0], STAGE1.BIN) — the LIVE zombie INIT state. Byte-true core:
  *   +0x4 = 1            -> state ACTIVE        (sb @0x80100704)
