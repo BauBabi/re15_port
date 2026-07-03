@@ -54,6 +54,7 @@ def main():
     ap.add_argument("--menushot", action="store_true")
     ap.add_argument("--postload", type=float, default=8.0)
     ap.add_argument("--provoke", type=float, default=0.0)
+    ap.add_argument("--after", type=float, default=0.0)   # post-path stand-still settle (let a zombie grab)
     ap.add_argument("--path", default="")   # directed move after load, e.g. "R0.4,U2.5,L0.6,U6"
                                             # tokens: U/D forward/back, L/R turn, X cross, S square; <secs> hold
     ap.add_argument("--fire", type=int, default=0)   # after path: hold R1 (aim) + tap Square N times.
@@ -118,6 +119,10 @@ def main():
                 btn = PMAP.get(tok[0].upper()); secs = float(tok[1:] or "0.5")
                 if btn is None: continue
                 log("PATH %s %.2fs" % (tok[0].upper(), secs)); hold_btn(btn, secs)
+            if args.after > 0:
+                # POST-PATH SETTLE: stand still (no input) so a woken zombie can approach + GRAB the
+                # (stationary) player before the save — needed to capture a mid-grab / struggle frame.
+                log("AFTER settle %.0fs (let a zombie reach + grab)" % args.after); time.sleep(args.after)
         if args.fire > 0:
             # Hold R1 (aim) then tap Square (fire) N times. R1 = right shoulder; Square = XUSB_X
             # in this pad mapping (the same button the menu LOAD used). The aim/raise needs a beat
