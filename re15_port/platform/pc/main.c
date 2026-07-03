@@ -103,6 +103,7 @@ static void re15_pc_ecg(int x, int y, int w, int h, int hp, unsigned phase)
 }
 #include "re15_room.h"        /* SHARED cross-room transition (re15_room_apply_pending) */
 #include "re15_enemy.h"       /* generic enemy-model registry (re15_enemy_find/alloc/reset) */
+#include "re15_enemy_ai.h"    /* re15_player_victim_state/type — Leon's grab-victim render override */
 #include "re15_ems.h"         /* enemy-model archive index (load EMDs out of CDEMD*.EMS) */
 #include "re15_room_list.h"   /* GENERATED room-id list for the [ / ] debug room-browser */
 #include "re15_room_spawns.h" /* GENERATED per-room entry spawn (inbound-door landing spot) */
@@ -1938,6 +1939,30 @@ int main(int argc, char *argv[])
             re15_actor_anim_select(player_ref, 1, &banks, &av);
             const re15_emd_skeleton_t  *p_skel = av.skel;
             const re15_emd_animation_t *p_anim = av.anim;
+            int p_clip_override = av.clip_override;
+            /* LEON GRAB-VICTIM render override (state 5 struggle / state 6 collapse): while a zombie
+             * has Leon grabbed (or the grab killed him), pose Leon from the grabbing zombie's EMD
+             * BANK 2 (the grab-victim set) at player->motion (the struggle/collapse clip the victim
+             * FSM set). Byte-true: @0x8010a28c/@0x8010a6f8 animate the PLAYER from DAT_800acbcc/acbd0
+             * = *(zombie+0x178)/+0x17c (bank 2), NOT his own PL00 set. This is what stops Leon from
+             * freezing during the grab/death (the "no Leon reactions / death finish missing"). */
+            if (re15_player_victim_state() != 0 && pl00_ok) {
+                re15_enemy_bank_t *vb = re15_enemy_find(re15_player_victim_type());
+                if (vb && vb->victim_ok && vb->anim_victim.clip_count > 0) {
+                    /* Pose Leon with HIS OWN structure (PL00 bone hierarchy + bind = his proportions)
+                     * but bank 2's keyframe POSES + clip table. The original renders the player with
+                     * the player entity's skeleton; the victim EDD/EMR only supply the clips+poses. */
+                    static re15_emd_skeleton_t s_victim_skel;
+                    s_victim_skel = pl00_skel;                              /* Leon's bones + bind pose */
+                    s_victim_skel.keyframe_data       = vb->skel_victim.keyframe_data;   /* bank2 poses */
+                    s_victim_skel.keyframe_data_size  = vb->skel_victim.keyframe_data_size;
+                    s_victim_skel.keyframe_count      = vb->skel_victim.keyframe_count;
+                    s_victim_skel.keyframe_size_bytes = vb->skel_victim.keyframe_size_bytes;
+                    p_skel = &s_victim_skel;
+                    p_anim = &vb->anim_victim;
+                    p_clip_override = 1;   /* motion = a direct bank-2 clip index (not a locomotion sel) */
+                }
+            }
             int kf_idx = 0;
             if (player_visible && skel_ok && p_anim->clip_count > 0) {
                 /* The platform owns the fps policy: at 30fps target anim_frame is
@@ -1946,7 +1971,7 @@ int main(int argc, char *argv[])
                     ? (uint32_t)player_ref->anim_frame
                     : ((uint32_t)player_ref->anim_frame >> 1);
                 kf_idx = re15_compute_actor_kf(p_anim, p_skel, player_ref,
-                                               av.clip_override, cur);
+                                               p_clip_override, cur);
             }
             re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
             int pose_ok = 0;

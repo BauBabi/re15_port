@@ -256,6 +256,17 @@ void re15_enemy_ai_set_combat_active(int v);
  * grabbed pose/anim, the exact XZ/Y pin, and the struggle-escape are deferred (cited in the .c). */
 int re15_player_is_grabbed(void);
 
+/* LEON GRAB-VICTIM ANIMATION (byte-true state-5 struggle / state-6 collapse, see enemy_ai_common.c).
+ * The grab animates Leon from the zombie's EMD bank 2 (grab-victim set) so he struggles then
+ * collapses instead of freezing (the "no Leon reactions / death finish"). re15_player_victim_state():
+ * 0 none / 1 struggle / 2 collapse. re15_player_victim_type(): grabbing zombie type -> its bank 2.
+ * re15_player_victim_tick(): advance one game tick (call from game_step AFTER re15_enemy_ai_run_all).
+ * re15_player_victim_reset(): clear on room change / death-continue reload. */
+int      re15_player_victim_state(void);
+uint8_t  re15_player_victim_type(void);
+void     re15_player_victim_tick(void);
+void     re15_player_victim_reset(void);
+
 /* Phase 8.6 — the per-frame LIVE-zombie AI pass, the port's faithful slice of the original's
  * entity-update loop FUN_8001a50c (@0x8001ce04: iterate the entity array, dispatch
  * @0x80072bac[type] per active entity). The port runs ONLY the live-zombie types (0x10/0x11/0x16)

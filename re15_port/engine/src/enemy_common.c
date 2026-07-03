@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "re15_enemy.h"
+#include "re15_enemy_ai.h"   /* re15_player_victim_reset */
 
 re15_enemy_bank_t g_enemy[RE15_ENEMY_MAX];
 
@@ -41,6 +42,7 @@ void re15_enemy_reset(void)
         memset(&g_enemy[i], 0, sizeof(g_enemy[i]));
         g_enemy[i].pc_tex_slot = -1;
     }
+    re15_player_victim_reset();   /* clear Leon's grab-victim anim state (banks just dropped) */
 }
 
 /* Room-cinematic overlay — see re15_enemy.h. PC-port only (its boot + cross-room reload);

@@ -261,6 +261,12 @@ void re15_game_step(const re15_game_ctx_t *c)
 
     if (c->rdt_ok)
         re15_enemy_ai_run_all(g_scd.combat_active);
+
+    /* LEON GRAB-VICTIM ANIMATION (state 5 struggle / state 6 collapse) — advance AFTER run_all so the
+     * grab (re15_enemy_ai_live_grab) has latched the victim state this frame. Drives Leon's motion/
+     * anim_frame off the grabbing zombie's bank 2 so he struggles + collapses instead of freezing
+     * (byte-true player-command FSM @0x8010a28c/@0x8010a6f8). No-op when no zombie is grabbing. */
+    re15_player_victim_tick();
 }
 
 /* SHARED helicopter-rotor spatialization driver — see re15_game_step.h. Was inline

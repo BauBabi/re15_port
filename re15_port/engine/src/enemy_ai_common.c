@@ -416,6 +416,77 @@ void re15_enemy_ai_set_combat_active(int v) { s_live_combat_active = v ? 1 : 0; 
 static int s_player_grabbed = 0;
 int re15_player_is_grabbed(void) { return s_player_grabbed; }
 
+/* ===================== LEON GRAB-VICTIM ANIMATION (state 5 struggle / state 6 collapse) ===========
+ * Byte-true source: the player-command FSM on DAT_800aca58 (EXE PTR_LAB_80073f90[cmd]) — [5] grabbed
+ * @0x8010a28c, [6] devoured @0x8010a6f8. LEON is animated NOT from his own PL00 set but from the
+ * GRAB-VICTIM anim set the ZOMBIE carries (DAT_800acbcc/acbd0 = *(zombie+0x178)/+0x17c = the em<NN>
+ * EMD bank 2), applied to the player via func_0x8001ad68 + func_0x8001f314. STATE 5 (grabbed,
+ * @0x8010a28c): variant DAT_800aca59 (0 front / 1 back) -> Leon motion = variant*3+phase => struggle
+ * clips {0,1,2}(front)/{3,4,5}(back); phase (DAT_800aca5a) advances ONLY on clip-done. STATE 6
+ * (devoured, @0x8010a6f8): Leon motion = variant+6 => collapse clip {6}/{7}, played to its end.
+ *
+ * The port previously FROZE Leon during the grab/death (the "no Leon reactions / death finish
+ * missing"). This drives Leon's motion/anim_frame off the grabbing zombie's bank 2 so he struggles
+ * then collapses. g_player_victim: 0 none / 1 struggle / 2 collapse. Set by re15_enemy_ai_live_grab
+ * (the grab that pins him), advanced by re15_player_victim_tick (game_step, after the enemy AI). */
+static int     g_player_victim = 0;
+static uint8_t g_player_victim_type = 0;      /* grabbing zombie type -> its bank 2 (skel/anim_victim) */
+static uint8_t g_player_victim_variant = 0;   /* 0 face / 1 behind (from the grab facing +0x5-3) */
+static uint8_t s_victim_phase = 0;            /* struggle phase 0..2 (DAT_800aca5a) */
+int     re15_player_victim_state(void) { return g_player_victim; }
+uint8_t re15_player_victim_type(void)  { return g_player_victim_type; }
+
+/* Called by the grab (re15_enemy_ai_live_grab) each frame it pins the player: latch the victim anim
+ * state (which zombie's bank, face/behind) + enter struggle (0->1) or collapse (on grab-death). */
+static void re15_player_victim_latch(const re15_actor_t *zombie, re15_actor_t *player)
+{
+    re15_enemy_bank_t *vb = re15_enemy_find(zombie->type);
+    if (!vb || !vb->victim_ok) return;                  /* no victim bank -> keep old frozen behaviour */
+    g_player_victim_type    = zombie->type;
+    g_player_victim_variant = (uint8_t)((zombie->sub_state_1 >= 4) ? 1 : 0);  /* +0x5=4 behind else face */
+    if (player->hp < 0) {                               /* grab-death -> devour COLLAPSE (state 6) */
+        if (g_player_victim != 2) player->anim_frame = 0;
+        g_player_victim = 2;
+    } else if (g_player_victim == 0) {                  /* enter grabbed STRUGGLE (state 5) */
+        g_player_victim = 1;
+        s_victim_phase  = 0;
+        player->anim_frame = 0;
+    }
+}
+
+/* Advance Leon's grab-victim animation one game tick (game_step, after re15_enemy_ai_run_all so the
+ * grab has latched this frame). Frees Leon (state->0) when the grab stops (struggle only; the collapse
+ * persists until the death sequence reloads). Byte-true: struggle phase advances on clip-done. */
+void re15_player_victim_tick(void)
+{
+    if (g_player_victim == 0) return;
+    re15_actor_t *player = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_enemy_bank_t *vb = re15_enemy_find(g_player_victim_type);
+    if (!vb || !vb->victim_ok) { g_player_victim = 0; return; }
+    if (g_player_victim == 1) {                         /* STRUGGLE (state 5) */
+        if (!s_player_grabbed) { g_player_victim = 0; return; }   /* grab ended -> Leon free */
+        uint8_t base = (uint8_t)(g_player_victim_variant * 3);
+        uint8_t clip = (uint8_t)(base + (s_victim_phase < 2 ? s_victim_phase : 2));
+        player->motion = clip;
+        int fc = (clip < vb->anim_victim.clip_count) ? vb->anim_victim.clips[clip].frame_count : 1;
+        if (fc < 1) fc = 1;
+        if (++player->anim_frame >= fc) {              /* clip-done -> advance phase (hold at 2) */
+            player->anim_frame = 0;
+            if (s_victim_phase < 2) s_victim_phase++;
+        }
+    } else {                                           /* COLLAPSE (state 6): clip variant+6, hold last */
+        uint8_t clip = (uint8_t)(g_player_victim_variant + 6);
+        player->motion = clip;
+        int fc = (clip < vb->anim_victim.clip_count) ? vb->anim_victim.clips[clip].frame_count : 1;
+        if (fc < 1) fc = 1;
+        if (player->anim_frame < fc - 1) player->anim_frame++;
+    }
+}
+
+/* Reset on room change / death-continue reload (called from re15_enemy_reset). */
+void re15_player_victim_reset(void) { g_player_victim = 0; g_player_victim_type = 0;
+                                      g_player_victim_variant = 0; s_victim_phase = 0; }
+
 /* FUN_80100688 (@0x8011f7b4[0], STAGE1.BIN) — the LIVE zombie INIT state. Byte-true core:
  *   +0x4 = 1            -> state ACTIVE        (sb @0x80100704)
  *   +0x1bc/+0x1be = player X/Z snapshot        (sh @0x8010071c/734 — a "last-seen" ref)
@@ -580,6 +651,9 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
      * grabbed). re15_enemy_ai_run_all clears it each frame, so it tracks "a live zombie is grabbing
      * THIS frame" = the faithful-line release for the deferred player grabbed-FSM. */
     s_player_grabbed = 1;
+    /* Drive Leon's grab-victim animation (state 5 struggle / state 6 collapse on grab-death) off this
+     * zombie's bank 2 — so he struggles + collapses instead of freezing (the "no Leon reactions"). */
+    re15_player_victim_latch(e, player);
     /* per-sub-step GRAB CLIP (FUN_80102548 +0x6 sub-steps 0/2/4 @0x801025bc/0x80102714/0x801028f0):
      * +0x94 = (+0x5-3)*3 + {0,1,2}. +0x5 = the facing (3 face / 4 behind, dynamic from the engage),
      * so face-grab plays clips {0,1,2}, behind-grab {3,4,5}; the release (sub-step 6) is the literal
