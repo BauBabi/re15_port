@@ -48,14 +48,43 @@ Savestate-Adresse oder Datei-Offset), Mechanismus beweisen — „sieht richtig 
 - **Effekte fehlen** (Mündungsfeuer/Treffer?) — evtl. mit den obigen Punkten gekoppelt.
 - (Item-Menü-Submenüs sind separat unvollständig — siehe der laufende Submenü-Map-Workflow.)
 
-## 4. ROOM 1140 — Zombie-Trigger + falsche Anim + Hänger  🔎 (in RE, 2026-07-02)
-- Zombies starten **korrekt** (fressend am Boden). ✅
-- Sobald der Spieler den **Trigger-Punkt des ERSTEN Zombies** erreicht, stehen **SOFORT ALLE** Zombies
-  und spielen eine **falsche „getroffen"-Animation** (sollten einzeln/anders reagieren).
-- **Biss** spielt die **falsche Animation**.
-- **Ab einem bestimmten Punkt hängt das Spiel** (Freeze).
+## 4. ROOM 1140 — Zombie-Trigger + falsche Anim + Hänger  ✅ (byte-true gefixt, 2026-07-03; live-GUI-Verify offen)
 
-### RE-Befunde (byte-true, laufend)
+### FIX (Commits 473282cd Anim-FSM-Clock + e9782897 Death-Continue)
+- **WURZEL = „THE FSM CLOCK":** jeder Gegner-ANIMATE-Sub-FSM rückt seinen +0x6/+0x5-Sub-Step nur bei
+  **Clip-Ende** vor (`+0x6 += func_0x8001f314(...)`, FUN_8001f3bc/f8b4-Return `+0x95++; count<=+0x95 →
+  wrap→return 1`). Der Port machte sofortige Ein-Frame-Advances → Snap durch Stand-up/Grab.
+  6-Angle-Workflow (STAGE1.BIN-Disasm) + Savestate-Cross-Check (`+0x94`: Engage 0x02∈{2,3,4,5}, Search
+  0x01, Walk 0x0a, Death 0x1f).
+- **`re15_enemy_clip_done(e)`** = der f314-Clip-End-Gate (aus Death-Handler faktorisiert; Guard→done bei
+  fehlender Bank, kein neuer Hang). **Feeding-Stand-up** (case 2) + **Grab-Sub-Steps** (1/3/7) gaten darauf.
+- **„falsche getroffen-Anim" GEFIXT:** der Wake snappte in die Engage-Idle-Clip {2,3,4,5}; jetzt spielt
+  der Zombie erst seinen Feeding-Clip zu Ende (steht auf), DANN Engage. + Wake-Timer `ai_timer=rand&0xf`
+  (0-15 Frames) staffelt die 5 Zombies → kein simultaner Instant-Snap („DIREKT alle stehen").
+- **Szenen-Freeze GEFIXT:** der NPC-Anim-Advance lag in `re15_player_tick` (in grab/dead-Branch
+  übersprungen) → alles fror beim Grab ein. Verschoben in `re15_actors_anim_advance()`, **unbedingt in
+  ALLEN game_step-Branches** (byte-true: FUN_8001a50c per-Typ-Handler, unabhängig von der Player-FSM
+  @0x80073f90). Corpse (state 7) hält seine Pose (skip + LOOP-Flag gelöscht).
+- **HANG (permanenter Death-Pin) GEFIXT:** HP<0 pinnte den Player ewig (kein Game-Over im Port). Nach dem
+  byte-true 0x78=120-Frame-Death-Timer → **Continue-Reload des aktuellen Raums** (`re15_player_continue_
+  reload` → re15_room_request_change → re15_actor_init HP=100 → is_dead klärt sich). **[FL / Nutzer-gewählt]**
+  — die exakte Continue-vs-Title-Routing (Reader von DAT_800aca59==2) ist ein fehlendes EXE-Subsystem;
+  Fade + „YOU DIED"-Screen bleiben deferred.
+- **„alle wachen auf einmal" = FAITHFUL** (kein Bug): Wake ist per-Zombie (`FUN_80103980`, eigene
+  Distanz<4000), Original + Port identisch, Savestate-bestätigt gestaffelt. Cluster-Geometrie (5 Zombies
+  am Tisch) lässt sie zusammen wachen — wie im Original.
+- Tests: test_room1140_combat (13b Stand-up-Gate, 6 Grab, 13 Death-Clip, **20 Death→Continue**), 35/35.
+  ROOM1140 rendert clean (Smoke). **OFFEN: live-Combat-GUI-Verify** (Wake-Stand-up spielt / Grab spielt /
+  Death→Reload) — braucht Spieler-Input, am besten vom Nutzer in der GUI.
+
+### Ursprüngliche Symptome (Nutzer-Beobachtung, alle oben adressiert)
+- Zombies starten **korrekt** (fressend am Boden). ✅
+- Trigger-Punkt → **SOFORT ALLE** stehen + **falsche „getroffen"-Anim** → jetzt: Stand-up-Anim spielt +
+  Wake-Timer staffelt (kein Snap); „getroffen" war die übersprungene Stand-up→Engage-Idle {2,3,4,5}.
+- **Biss falsche Anim** → Grab-Clips gaten jetzt auf Clip-Ende.
+- **Hang** → Szenen-Freeze + permanenter Death-Pin, beide gefixt.
+
+### RE-Historie (Befunde während der Untersuchung)
 - **Wake-Trigger IST per-Zombie** (kein globaler Trigger): `FUN_80103980` prüft die EIGENE Distanz
   des Entities (`_DAT_800ac784 + 0x1d0 < 4000`) → der Port (`re15_enemy_ai_live_feeding`,
   `e->ai_dist < 4000`) macht das gleiche. Also „alle wachen auf einmal auf" ist NICHT der Trigger —
