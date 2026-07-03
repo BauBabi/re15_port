@@ -1470,6 +1470,29 @@ int main(int argc, char *argv[])
                     fputc('\n', s_state_log); fflush(s_state_log);
                 }
             }
+            /* DEATH PRESENTATION (byte-true FUN_8003694c): fade the scene to black over the 0x78 death
+             * timer (g_death_fade), then show the YOU DIED graphic (YOUDIED.TIM) for ~2s before the RE
+             * continue = reload the current room. (Original: YOU DIED -> title; the port has no title
+             * screen, so the continue-reload is the tail — a healthy room clears g_gameover_active.) */
+            {
+                extern void re15_render_pc_set_fade(int a);
+                extern void re15_render_pc_show_gameover(const re15_tim_t *tim);
+                extern void re15_render_pc_hide_gameover(void);
+                static re15_tim_t s_youdied = {0}; static int s_yd_tried = 0; static int s_go_timer = 0;
+                if (re15_player_is_dead() || g_gameover_active)
+                    re15_render_pc_set_fade(g_death_fade);           /* fade to black as the timer runs */
+                if (g_gameover_active) {
+                    if (!s_yd_tried) { s_yd_tried = 1; int ysz = 0;
+                        uint8_t *yb = pc_read_shared("DATA/YOUDIED.TIM", &ysz);
+                        if (yb) re15_tim_parse(yb, ysz, &s_youdied); }   /* resident; TIM aliases yb */
+                    if (s_youdied.pixels) re15_render_pc_show_gameover(&s_youdied);
+                    if (++s_go_timer >= 120) {                         /* hold ~2s (30fps) then continue */
+                        s_go_timer = 0; g_gameover_active = 0;
+                        re15_render_pc_hide_gameover(); re15_render_pc_set_fade(0);
+                        re15_player_continue_reload();                 /* queue the current-room reload */
+                    }
+                }
+            }
             /* DEBUG: per-tick kneel trace — find the exact frames + camera cut where Leon
              * kneels (motion 10-12), so the autoshot can target the kneel-down vs ablauf4. */
             {

@@ -21,6 +21,11 @@ extern re15_rdt_t g_room_rdt;
 extern int        g_room_rdt_ok;
 extern unsigned   g_current_room_id;   /* room resident in g_room_rdt (per-room asset paths) */
 
+/* Death/game-over presentation (game_step_common.c). g_death_fade = 0..255 fade-to-black over the
+ * byte-true 0x78 death timer; g_gameover_active = 1 once it expires -> the PC loop shows YOU DIED. */
+extern int g_death_fade;
+extern int g_gameover_active;
+
 /* The room the game boots into (RE1.5 intro = the helipad, STAGE1/ROOM1170). The single
  * entry point; everything else is reached via doors (data-driven). */
 #define RE15_BOOT_ROOM  0x1170

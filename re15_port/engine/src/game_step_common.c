@@ -19,6 +19,12 @@
 #include "re15_damage.h"        /* re15_player_is_dead / re15_player_death_tick (8.10 death FSM) */
 #include "re15_menu.h"          /* re15_menu_* — the inventory/weapon-select menu (8.20) */
 
+/* GAME-OVER / death presentation (byte-true FUN_8003694c). g_death_fade = 0..255 fade-to-black over
+ * the 0x78 death timer; g_gameover_active = 1 once the timer expires (the PC loop shows YOU DIED then
+ * continue-reloads). Platform-read (re15_render_pc). */
+int g_death_fade    = 0;
+int g_gameover_active = 0;
+
 void re15_game_step(const re15_game_ctx_t *c)
 {
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
@@ -80,15 +86,16 @@ void re15_game_step(const re15_game_ctx_t *c)
          * dead-grab arm) while the player runs the death sequence. Keep the RVD cam scan (death cam). */
         int death_seq = re15_player_death_tick();
         re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
-        if (death_seq == 0) {
-            /* The byte-true 0x78 death timer expired. The port has no game-over/continue screen (that
-             * subsystem is not in the STAGE1 overlay), so — per the user-chosen behavior — do the RE
-             * "continue": reload the CURRENT room fresh (re15_actor_init restores player HP=100 ->
-             * re15_player_is_dead() clears -> this branch exits next frame; the SCD respawns the
-             * zombies). Without this the player was pinned dead FOREVER = the ROOM1140 "hang". The
-             * fade + "YOU DIED" presentation stays deferred. re15_room_apply_pending (main loop, after
-             * this scan) applies the queued reload. */
-            re15_player_continue_reload();
+        /* death-fade progress (byte-true FUN_8003694c runs a fade over the 0x78=120-frame timer):
+         * publish 0..255 as the timer counts 120->0 so the PC loop fades the scene to black. */
+        g_death_fade = death_seq > 0 ? ((120 - death_seq) * 255) / 120 : 255;
+        if (death_seq == 0 && !g_gameover_active) {
+            /* The byte-true 0x78 death timer expired -> the GAME-OVER screen (YOU DIED). The port has
+             * no STAGE1-overlay game-over handler, so we drive the presentation from the PC loop: raise
+             * g_gameover_active; the loop shows YOUDIED.TIM, then does the RE "continue" = reload the
+             * current room (re15_actor_init restores HP=100 -> is_dead clears). Byte-true target is
+             * YOU DIED -> title; the port has no title screen, so the continue-reload is the FL tail. */
+            g_gameover_active = 1;
         }
     } else if (c->rdt_ok && re15_player_is_grabbed()) {
         /* PLAYER-GRABBED LOCK (Phase 8.10, byte-true LAB_80036834): a live zombie has the player
