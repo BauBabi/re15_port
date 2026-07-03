@@ -2490,6 +2490,19 @@ int main(int argc, char *argv[])
                 const re15_emd_skeleton_t  *npc_skel = av.skel;
                 const re15_emd_animation_t *npc_anim = av.anim;
 
+                /* LOCO-BANK render: the STAGE1 zombie APPROACH (+0x5=0x13) plays the locomotion bank
+                 * (bank0, entity+0x84 = the 99-frame walk the FUN_8010939c foot-lock drives), NOT the
+                 * 43-clip action bank. The renderer must pose from bank0 too, else the walk MOTION
+                 * (bank0) and the walk ANIMATION (bank1 clip 1 = a different 26-frame clip) mismatch. */
+                if (npc->sub_state_1 == 0x13) {
+                    re15_enemy_bank_t *lb = re15_enemy_find(npc->type);
+                    if (lb && lb->loco_ok && lb->anim_loco.clip_count > 1) {
+                        npc_skel = &lb->skel_loco;
+                        npc_anim = &lb->anim_loco;
+                        av.clip_override = 1;              /* bank0 clip 1 = the approach walk */
+                    }
+                }
+
                 /* DIAG (RE15_ENEMY_DIAG=1): one line per actor on first render — proves the
                  * generic enemy uses its OWN model (mesh != Leon's def_mesh) vs a Leon fallback,
                  * and shows motion/anim_frame so a "static Leon" report can be diagnosed headless. */
