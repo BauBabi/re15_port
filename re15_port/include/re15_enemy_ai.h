@@ -276,6 +276,14 @@ void     re15_player_victim_devour(const re15_actor_t *zombie);
  * passes its pad_pressed each tick; the grab's bite loop drains the escape window 1 + 5*mash. */
 void     re15_enemy_ai_set_pad_pressed(uint16_t edge_bits);
 
+/* ENTITY BODY COLLISION (byte-true FUN_8002aec4/FUN_8002b544): cylinder push-out — the PUSHEE is
+ * moved out of the pusher's radius by pen/(dist+1) along the center line. re15_body_push_player =
+ * the player-tick pass (player pushed out of every live enemy; call AFTER the player move, BEFORE
+ * the SCA wall resolver — walls win). The zombie side runs inside re15_enemy_ai_run_all. */
+int      re15_body_push(const re15_actor_t *pusher, int32_t r_pusher,
+                        re15_actor_t *pushee, int32_t r_pushee);
+void     re15_body_push_player(void);
+
 /* Phase 8.6 — the per-frame LIVE-zombie AI pass, the port's faithful slice of the original's
  * entity-update loop FUN_8001a50c (@0x8001ce04: iterate the entity array, dispatch
  * @0x80072bac[type] per active entity). The port runs ONLY the live-zombie types (0x10/0x11/0x16)

@@ -1029,6 +1029,24 @@ static const struct { uint16_t tmr; int16_t rot; } s_wander_tbl[16] = {
     {110,1},{100,-1},{150,1},{80,-1},{130,1},{70,-1},{130,1},{90,-1}
 };
 
+/* ENGAGE-walker gait rows (byte-true FUN_801021f8 @0x8011f9f0 + variant*0x80, W1 disasm 2026-07-03):
+ * 32 x {u16 segment_timer, s16 rot_dir}, indexed by +0x9f (wrap &0x1f). The +0x1de gait VARIANT is
+ * the s_zbehavior roll: 0 -> row0 (@0x8011f9f0), 1 -> row1 (@0x8011fa70), 2 -> SWITCH to the 0x13
+ * lurch, other values (6/12 in the <5 table) -> all-zero rows = walk dead straight. */
+static const struct { uint16_t tmr; int16_t rot; } s_gait_row0[32] = {   /* @0x8011f9f0 */
+    {150,1},{20,-1},{10,1},{20,-1},{10,1},{20,-1},{200,1},{20,-1},
+    {10,1},{20,-1},{10,1},{30,-1},{250,1},{20,-1},{10,1},{30,-1},
+    {40,1},{20,-1},{90,1},{20,-1},{300,1},{20,-1},{10,1},{25,-1},
+    {20,1},{30,-1},{190,1},{20,-1},{10,1},{20,-1},{20,1},{15,-1}
+};
+static const struct { uint16_t tmr; int16_t rot; } s_gait_row1[32] = {   /* @0x8011fa70 */
+    {150,1},{40,-1},{160,1},{50,-1},{110,1},{40,-1},{20,1},{20,-1},
+    {130,1},{30,-1},{20,1},{30,-1},{210,1},{30,-1},{20,1},{30,-1},
+    {20,1},{30,-1},{10,1},{20,-1},{200,1},{40,-1},{30,1},{25,-1},
+    {20,1},{30,-1},{190,1},{30,-1},{20,1},{10,-1},{120,1},{30,-1}
+};
+static uint8_t s_gait_variant[RE15_ACTOR_MAX];   /* +0x1de per slot (persisted while engaged) */
+
 /* APPROACH animate — byte-true FUN_801057bc (@0x8011f890[+0x5=0x13], STAGE1.BIN): the LIVE walk gait.
  * Plays the LOCOMOTION bank's clip 1 (bank0, entity+0x84 — the 99-frame approach walk) and carries
  * the body forward via the FUN_8010939c FOOT-LOCK: clip 1 has NET-ZERO keyframe root-motion (it
@@ -1037,9 +1055,10 @@ static const struct { uint16_t tmr; int16_t rot; } s_wander_tbl[16] = {
  * chosen by the clip's per-keyframe 0x2000 flag (bank0 clip1 frames 30-83; foot bone 6 right / 3 left,
  * the leg-chain leaves). Rotates to track the player; the decide (re15_ai_decide_engage = FUN_8010561c)
  * commits the GRAB in range. This is the byte-true LIVE approach (+0x5=6 clip 0xa is the corpse-walk). */
+static void re15_enemy_footlock_step(int slot, re15_actor_t *e);   /* fwd (defined below) */
+
 static void re15_enemy_ai_live_approach(int slot, re15_actor_t *e, const re15_actor_t *player)
 {
-    static re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
     if (!player || slot < 0 || slot >= RE15_ACTOR_MAX) return;
     if (e->sub_state_2 == 0) {                        /* entry (@0x801057c0-6c8): clip1 + wander seed */
         e->sub_state_2 = 1;
@@ -1068,19 +1087,29 @@ static void re15_enemy_ai_live_approach(int slot, re15_actor_t *e, const re15_ac
         e->rot_y = (int16_t)(((int32_t)e->rot_y + flip) & 0x0fff);
     }
 
+    re15_enemy_footlock_step(slot, e);
+}
+
+/* The FUN_8010939c FOOT-LOCK, factored (used by the 0x13 lurch AND the ENGAGE walker): pose the loco
+ * bank's CURRENT clip (e->motion — clip 1 lurch / clips 2-5 engage walks), pick the support foot by
+ * the per-frame 0x2000 EDD flag, and drag the body by the planted foot's world delta. */
+static void re15_enemy_footlock_step(int slot, re15_actor_t *e)
+{
+    static re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
     re15_enemy_bank_t *bank = re15_enemy_find(e->type);
     if (!bank || !bank->loco_ok || slot < 0 || slot >= RE15_ACTOR_MAX) return;
     re15_emd_animation_t *a = &bank->anim_loco;
     re15_emd_skeleton_t  *s = &bank->skel_loco;
-    if (a->clip_count <= 1) return;
-    const re15_emd_clip_t *clip = &a->clips[1];
+    int ci = (int)e->motion;
+    if (ci < 0 || ci >= a->clip_count) return;
+    const re15_emd_clip_t *clip = &a->clips[ci];
     if (clip->frame_count <= 0) return;
     int fslot = (int)((uint32_t)e->anim_frame % (uint32_t)clip->frame_count);
     uint32_t fe  = a->frames[clip->first_frame + fslot];   /* the current EDD frame entry (with flags) */
     int      sel = (fe & 0x2000) ? 1 : 0;                    /* the byte-true support-foot flag */
     int      foot = sel ? 6 : 3;                             /* right leaf / left leaf (bind-pose feet) */
     if (foot >= s->bone_count) return;
-    int kf = re15_compute_actor_kf(a, s, e, 0x01, (uint32_t)e->anim_frame);
+    int kf = re15_compute_actor_kf(a, s, e, ci, (uint32_t)e->anim_frame);
     g_anim_pose_actor = NULL;                                /* pose QUERY, not a render (no crossfade) */
     if (re15_skel_compute_pose(s, kf, poses) != 0) return;
     int32_t lx = poses[foot].trans[0], lz = poses[foot].trans[2];
@@ -1093,6 +1122,62 @@ static void re15_enemy_ai_live_approach(int slot, re15_actor_t *e, const re15_ac
     }
     s_zfoot_ref[slot][0] = wx; s_zfoot_ref[slot][2] = wz;
     s_zfoot_ok[slot] = 1; s_zfoot_sel[slot] = (uint8_t)sel;
+}
+
+/* ================== ENTITY BODY COLLISION (byte-true FUN_8002aec4 + FUN_8002b544) ================
+ * The walk-through blocker (W2 disasm 2026-07-03): a mutual CYLINDER PUSH-OUT run on every entity's
+ * own tick — a positional slide, never a move veto. FUN_8002aec4(pusher, pushee) MOVES THE PUSHEE:
+ * pen = (r1+r2) - dist2D; pushee.pos += d * pen / (dist+1). Radii/heights from the hitbox structs:
+ * PLAYER = {r 450, half_h 1530} (PSX.EXE file 0x64694: 00 00 06 fa 00 00 c2 01 fa 05 c2 01), ZOMBIE
+ * = {r 400, half_h 1440} (STAGE1.BIN file 0x1f778) = the port's hit_radius_min/hit_height. Call
+ * sites: the player tick FUN_80031c44 runs FUN_8002b544() AFTER the cmd-FSM move and BEFORE the SCA
+ * wall resolver (walls win) -> the PLAYER is pushed out of every enemy; the zombie tick FUN_8010a8c8
+ * runs aec4(&player, zombie) + b544 -> the ZOMBIE is pushed out of the player + the other zombies.
+ * This is also what holds the GRABBED pair at ~850 = 400+450 (observed 822 live) — the pull-in root
+ * motion presses in, the push holds them apart. Skip gates: the original skips when BOTH carry the
+ * 0x1000 freeze or status&2 — port-observable equivalent: skip pairs involving a DEAD player (the
+ * devour zombie overlaps the corpse, observed d=48) or a CORPSE zombie (state 7). Ellipse radii
+ * (hitbox +6 != +0xa) degenerate to circles for player/zombies (450/450, 400/400) — circle only. */
+#define RE15_BODY_R_PLAYER  450   /* PSX.EXE hitbox @file 0x64694: 0x1c2 */
+#define RE15_BODY_H_PLAYER 1530   /* 0x5fa */
+
+static int32_t re15_body_isqrt(int64_t v)
+{
+    if (v <= 0) return 0;
+    int64_t r = v, last = 0;
+    /* Newton, converges in <8 iters for our <2^32 magnitudes; exactness beyond the original's
+     * SquareRoot0 rounding is immaterial (the push is a per-frame relaxation). */
+    for (int i = 0; i < 24 && r != last; i++) { last = r; r = (r + v / r) >> 1; }
+    return (int32_t)r;
+}
+
+int re15_body_push(const re15_actor_t *pusher, int32_t r_pusher,
+                   re15_actor_t *pushee, int32_t r_pushee)
+{
+    int32_t dx = (int32_t)(int16_t)(pushee->x - pusher->x);   /* s16-truncated like the original */
+    int32_t dz = (int32_t)(int16_t)(pushee->z - pusher->z);
+    int32_t R  = r_pusher + r_pushee;
+    if (dx > R || dx < -R || dz > R || dz < -R) return 0;     /* fast reject (aec4 pre-tests) */
+    int32_t dist = re15_body_isqrt((int64_t)dx * dx + (int64_t)dz * dz);
+    int32_t pen  = R - dist;
+    if (pen < 1) return 0;                                    /* @aec4: pen<1 -> no hit */
+    pushee->x += dx * pen / (dist + 1);
+    pushee->z += dz * pen / (dist + 1);
+    return 1;
+}
+
+/* The PLAYER-side pass (byte-true FUN_8002b544 from the player tick): push the player out of every
+ * live enemy cylinder. Runs in game_step AFTER the player move, BEFORE the SCA wall resolver. */
+void re15_body_push_player(void)
+{
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (pl->hp < 0) return;                                   /* dead: the devour overlaps the corpse */
+    for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) {
+        re15_actor_t *e = &g_actors[s];
+        if (!e->active || e->hit_radius_min == 0) continue;
+        if (e->state == (uint8_t)RE15_AI_STATE_CORPSE) continue;
+        re15_body_push(e, (int32_t)e->hit_radius_min, pl, RE15_BODY_R_PLAYER);
+    }
 }
 
 /* DEVOUR-FINISH animate — byte-true FUN_80102bd8 (@0x8011f890[+0x5=5/6], D3/D5 disasm 2026-07-03):
@@ -1214,23 +1299,57 @@ int re15_enemy_ai_live_active(int slot)
                      * (carries the zombie down onto the victim); sub2 = INERT forever (the hover). */
                     re15_enemy_ai_live_devour(e, player);
                 else if (e->sub_state_1 == 2) {
-                    /* ENGAGE animate (byte-true FUN_801021f8 @0x8011f890[2]): set the engage-idle clip
-                     * ({2,3,4,5} = +0x1d4), then on ENTRY roll the byte-true behavior table — value 2
-                     * BREAKS INTO THE FORWARD APPROACH (+0x5=0x13). It also tracks (rotates toward) the
-                     * player. Was a bare `e->motion = e->hurt_clip` stub -> the zombie stood forever. */
-                    if (e->sub_state_2 == 0) {
-                        e->motion = e->hurt_clip; e->anim_frame = 0; e->anim_frac = 0xf;
+                    /* ENGAGE animate (byte-true FUN_801021f8 @0x8011f890[2], W1 disasm 2026-07-03):
+                     * THE AWARE WALK — not a stationary tracker. Plays the per-zombie BANK0 walk clip
+                     * +0x1d4 in {2,3,4,5} (seeded @0x80100774 from @0x8011f7e4 — the port's hurt_clip
+                     * field IS +0x1d4) with the SAME foot-lock translation as the 0x13 lurch, weaving
+                     * toward the player via the 32-entry gait row (@0x8011f9f0 + variant*0x80). The
+                     * old port kept the engage STANDING and did all walking in 0x13/clip 1 — clip 1 is
+                     * the UNAWARE shamble (the state-1 wander uses it too) = the user-reported "walks
+                     * like he hasn't noticed Leon". */
+                    if (e->sub_state_2 == 0) {                       /* entry (+0x6==0 @0x80102204..) */
+                        e->motion     = e->hurt_clip;                /* +0x94 = +0x1d4 (walk clip 2..5) */
+                        e->anim_frame = (uint16_t)(re15_engine_rand8() & 0x1f);   /* +0x95 = rng&0x1f */
+                        e->anim_frac  = 0xf;                          /* +0x8f */
+                        s_wander_mag[slot] = (uint8_t)((re15_engine_rand8() & 0xf) + 8); /* +0x9e = 8..23 */
+                        if ((re15_engine_rand8() & 3) == 0)          /* 1-in-4 moan SE 4/5 */
+                            re15_audio_room_se((re15_engine_rand8() & 1) ? 4 : 5);
                         const uint8_t *tbl = (re15_enemy_live_count() >= 5) ? s_zbehavior_5plus
                                                                             : s_zbehavior_lt5;
-                        uint8_t beh = tbl[re15_engine_rand8() & 0x1f];   /* @0x8011faf0/fb00[rng&0x1f] */
-                        if (beh == 2) { e->sub_state_1 = 0x13; e->sub_state_2 = 0; break; } /* -> approach */
+                        uint8_t beh = tbl[re15_engine_rand8() & 0x1f];   /* +0x1de = @0x8011faf0/fb00 */
+                        if (beh == 2) { e->sub_state_1 = 0x13; e->sub_state_2 = 0; break; } /* -> lurch */
+                        s_gait_variant[slot] = beh;
+                        s_wander_idx[slot] = (uint8_t)(re15_engine_rand8() & 0x1f);  /* +0x9f (32-row) */
+                        s_wander_tmr[slot] = (int16_t)((beh == 0) ? s_gait_row0[s_wander_idx[slot]].tmr
+                                            : (beh == 1) ? s_gait_row1[s_wander_idx[slot]].tmr : 0);
+                        s_zfoot_ok[slot] = 0;
                         e->sub_state_2 = 1;
                     }
-                    re15_enemy_face_player(e, player, 0x40);   /* sway/track toward the player */
-                    /* re-decide each time the engage-idle clip completes a cycle (faithful-line: the
-                     * original re-rolls via its sway timer + player-move turn cycles) so an engaged
-                     * zombie against a stationary player eventually breaks into the approach. */
-                    if (re15_enemy_clip_done(e)) e->sub_state_2 = 0;
+                    /* per-frame walker: sVar7 = +0x9e * row[+0x9f].dir; slew the yaw toward the player
+                     * by |sVar7| (rows 6/12 are all-zero -> dead straight); segment timer -> advance
+                     * the row index (wrap 0x1f) + random +-sVar7 jitter; then the foot-lock carries
+                     * the body along the walk clip. */
+                    {
+                        uint8_t v = s_gait_variant[slot];
+                        int16_t rot = (v == 0) ? s_gait_row0[s_wander_idx[slot]].rot
+                                    : (v == 1) ? s_gait_row1[s_wander_idx[slot]].rot : 0;
+                        int16_t sVar7 = (int16_t)((int16_t)s_wander_mag[slot] * rot);
+                        int16_t mag   = (int16_t)(sVar7 < 0 ? -sVar7 : sVar7);
+                        if (mag == 0) mag = (int16_t)s_wander_mag[slot];   /* zero-row: straight at him */
+                        re15_enemy_face_player(e, player, mag);
+                        if (v <= 1) {
+                            int16_t was = s_wander_tmr[slot];
+                            s_wander_tmr[slot] = (int16_t)(was - 1);
+                            if (was == 0) {
+                                s_wander_idx[slot] = (uint8_t)((s_wander_idx[slot] + 1) & 0x1f);
+                                s_wander_tmr[slot] = (int16_t)((v == 0) ? s_gait_row0[s_wander_idx[slot]].tmr
+                                                                        : s_gait_row1[s_wander_idx[slot]].tmr);
+                                int16_t flip = (int16_t)(sVar7 - (int16_t)(re15_engine_rand8() & 1) * (int16_t)(sVar7 * 2));
+                                e->rot_y = (int16_t)(((int32_t)e->rot_y + flip) & 0x0fff);
+                            }
+                        }
+                        re15_enemy_footlock_step(slot, e);
+                    }
                 }
                 break;
             }
@@ -1487,6 +1606,26 @@ void re15_enemy_ai_run_all(int combat_active)
             re15_enemy_hurt_fx(e);      /* FUN_80105a8c/FUN_80105b7c hurt -> effect-0 hit blood (visible) */
             re15_enemy_gore_tick(e);    /* FUN_80106a44 +0x93&2 -> gore effect spawn */
             re15_enemy_gore_setup(e);   /* FUN_80106edc sub_state_1==0x58 -> effect-5 gore setup */
+            /* BODY COLLISION, zombie side (byte-true FUN_8010a8c8 tail: aec4(&player, this) + the
+             * b544 pass): this zombie is pushed out of the LIVE player and the other zombies.
+             * FREEZE GATE (aec4 entry: skip when BOTH carry the 0x1000 freeze): the grab sets the
+             * zombie freeze @[0] and the cmd-5 handler pins the player -> the GRABBING pair is
+             * exempt (live-verified: the original face-grab closed to d=293, the devour to d=48 —
+             * impossible with the push active). Gate = this zombie in the grab machine (+0x5 3/4,
+             * all sub-steps incl. throw-off/recovery) or devouring (5/6). */
+            if (e->state != (uint8_t)RE15_AI_STATE_CORPSE && e->hit_radius_min != 0) {
+                re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+                int pair_frozen = (e->sub_state_1 >= 3 && e->sub_state_1 <= 6);
+                if (pl->hp >= 0 && !pair_frozen)
+                    re15_body_push(pl, RE15_BODY_R_PLAYER, e, (int32_t)e->hit_radius_min);
+                for (int o = RE15_ACTOR_SLOT_PLAYER + 1; o < RE15_ACTOR_MAX; o++) {
+                    if (o == s) continue;
+                    re15_actor_t *z2 = &g_actors[o];
+                    if (!z2->active || z2->hit_radius_min == 0) continue;
+                    if (z2->state == (uint8_t)RE15_AI_STATE_CORPSE) continue;
+                    re15_body_push(z2, (int32_t)z2->hit_radius_min, e, (int32_t)e->hit_radius_min);
+                }
+            }
         }
     }
 }

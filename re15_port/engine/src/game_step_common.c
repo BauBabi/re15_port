@@ -114,6 +114,10 @@ void re15_game_step(const re15_game_ctx_t *c)
     } else {
         int32_t ox = pl->x, oz = pl->z;
         re15_player_tick(c->cam_view, c->pad_current);
+        /* ENTITY BODY COLLISION (byte-true FUN_80031c44 order: cmd-FSM move -> FUN_8002b544 body
+         * push-out -> FUN_8003b0a4 walls, so the WALLS win): push the player out of every live
+         * enemy cylinder (450 + 400) — the "walk through zombies" fix. */
+        re15_body_push_player();
         if (c->rdt_ok) {
             /* Room SCA collision then object collision: push the player out of
              * his band's perimeter wall cells, then out of solid Obj_model_set

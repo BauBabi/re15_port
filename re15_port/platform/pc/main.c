@@ -2523,16 +2523,19 @@ int main(int argc, char *argv[])
                 const re15_emd_skeleton_t  *npc_skel = av.skel;
                 const re15_emd_animation_t *npc_anim = av.anim;
 
-                /* LOCO-BANK render: the STAGE1 zombie APPROACH (+0x5=0x13) plays the locomotion bank
-                 * (bank0, entity+0x84 = the 99-frame walk the FUN_8010939c foot-lock drives), NOT the
-                 * 43-clip action bank. The renderer must pose from bank0 too, else the walk MOTION
-                 * (bank0) and the walk ANIMATION (bank1 clip 1 = a different 26-frame clip) mismatch. */
-                if (npc->sub_state_1 == 0x13) {
+                /* LOCO-BANK render: the STAGE1 zombie WALKING states pose the locomotion bank (bank0,
+                 * entity+0x84), NOT the 43-clip action bank. W1 disasm 2026-07-03: the ENGAGE (+0x5=2)
+                 * IS the aware walk (bank0 clip +0x1d4 in {2..5} — the arms-out per-zombie walks),
+                 * the 0x13 lurch plays bank0 clip 1, and the TURN (+0x5=7) pivots on the same +0x1d4
+                 * clip. Gate on state ACTIVE (a HURT zombie has +0x5 = the weapon id, which collides
+                 * with 2 — its stagger renders bank1 as before). motion carries the clip index. */
+                if (npc->state == 1 &&
+                    (npc->sub_state_1 == 0x13 || npc->sub_state_1 == 2 || npc->sub_state_1 == 7)) {
                     re15_enemy_bank_t *lb = re15_enemy_find(npc->type);
-                    if (lb && lb->loco_ok && lb->anim_loco.clip_count > 1) {
+                    if (lb && lb->loco_ok && (int)npc->motion < lb->anim_loco.clip_count) {
                         npc_skel = &lb->skel_loco;
                         npc_anim = &lb->anim_loco;
-                        av.clip_override = 1;              /* bank0 clip 1 = the approach walk */
+                        av.clip_override = (int)npc->motion;   /* bank0: 1 = lurch, 2..5 = engage walks */
                     }
                 }
 
