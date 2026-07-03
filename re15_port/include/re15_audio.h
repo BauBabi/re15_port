@@ -110,6 +110,10 @@ void re15_audio_room_se(int se_id);
  * handgun, savestate-confirmed). Called C-side at the player fire in game_step. PSX = follow-up stub. */
 void re15_audio_weapon_se(int se_id);
 
+/* CORE-bank SE (byte-true FUN_80045024 bank selector 4 = the resident CORE00.EDH table
+ * @0x801fbd00; Se_on(0x40NN0001) = record NN). Used by the devour-collapse SEs. */
+void re15_audio_core_se(int se_id);
+
 /* Re-prime the resident weapon SE bank (bank1) to `weapon_id`'s ARMS bank (byte-true FUN_80043d8c:
  * the equip-commit + room-init both re-load the equipped weapon's ARMS bank). Called by the
  * weapon-select menu on EQUIP so re15_audio_weapon_se then plays the newly-equipped weapon's SEs.

@@ -422,6 +422,15 @@ static uint16_t s_pad_pressed_edge = 0;
 void re15_enemy_ai_set_pad_pressed(uint16_t edge_bits) { s_pad_pressed_edge = edge_bits; }
 static int re15_mash_pressed(void) { return (s_pad_pressed_edge & 0xf0f0u) != 0; }
 
+/* JUST-ESCAPED mercy window (byte-true DAT_800aca50 bit 0): the grab's THROW-OFF [4] sets the flag +
+ * a 0x5a=90-tick timer on the thrower (+0x1d5, FUN_80102548 case 4 @line "DAT_800aca50 |= 1" +
+ * "+0x1d5 = 0x5a"); the zombie tick FUN_8010a8c8 decrements it and CLEARS the flag at 0. While set,
+ * a grab IMPACT seeds the escape window 5 instead of 0x6e -> a re-grab within 3s throws off almost
+ * immediately (the post-escape mercy). Port: one global timer (grabs are exclusive, so at most one
+ * thrower runs a timer), decremented in run_all. */
+static int16_t s_grab_mercy_timer = 0;
+static int re15_grab_mercy_active(void) { return s_grab_mercy_timer > 0; }
+
 static int s_player_grabbed = 0;
 int re15_player_is_grabbed(void)
 {
@@ -535,6 +544,8 @@ void re15_player_victim_devour(const re15_actor_t *zombie)
     g_player_victim_variant = (uint8_t)((zombie->sub_state_1 >= 6) ? 1 : 0);  /* (+0x5)-5 */
     g_player_victim = 2;
     player->anim_frame = 0;                             /* @0x8010a75c frame reset on collapse entry */
+    re15_audio_core_se(1);                              /* collapse-entry SE: Se_on(0x4010001) = CORE
+                                                         * bank4 record 1 (FUN_8010a6f8 init) */
 }
 
 /* Advance Leon's grab-victim animation one game tick (game_step, after re15_enemy_ai_run_all so the
@@ -603,11 +614,15 @@ void re15_player_victim_tick(void)
             player->state = 7;                          /* the port's death FSM keys off hp<0/state 7 */
         }
         /* frame 0x37=55: the big BLOOD burst at the player pos+yaw (byte-true FUN_8010a6f8:
-         * FUN_80019700(0x2000) = effect-id 0 — the SAME spawn the hurt-fx uses; + Se_on(0x4030001),
-         * whose Se_on bank routing is still un-RE'd -> SE deferred, the visible blood fires). */
-        if (player->anim_frame == 0x37)
+         * FUN_80019700(0x2000) = effect-id 0 — the SAME spawn the hurt-fx uses) + its SE
+         * Se_on(0x4030001) = CORE bank4 record 3 (Se_on RE'd: FUN_80045024 top byte = bank,
+         * bank4 = the resident CORE00.EDH table @0x801fbd00, RAM-matched). The frame-0x23 chomp
+         * Se_on(0x2070001) is BANK 2 (*(DAT_800ac778+8), a room-state pointer) — still deferred. */
+        if (player->anim_frame == 0x37) {
             re15_esp_fx_spawn(re15_esp_room_bank(), 0, 0,
                               player->x, player->y, player->z, (int16_t)player->rot_y);
+            re15_audio_core_se(3);
+        }
     } else {                                           /* RELEASE finish (state 3): clip base+2 once -> free.
                                                         * (Entered via re15_player_victim_throwoff — the
                                                         * zombie holds sub-steps [4..7] while this plays,
@@ -631,7 +646,7 @@ void re15_player_victim_tick(void)
 /* Reset on room change / death-continue reload (called from re15_enemy_reset). */
 void re15_player_victim_reset(void) { g_player_victim = 0; g_player_victim_type = 0;
                                       g_player_victim_variant = 0; s_victim_phase = 0;
-                                      g_player_victim_zombie = -1; }
+                                      g_player_victim_zombie = -1; s_grab_mercy_timer = 0; }
 
 /* FUN_80100688 (@0x8011f7b4[0], STAGE1.BIN) — the LIVE zombie INIT state. Byte-true core:
  *   +0x4 = 1            -> state ACTIVE        (sb @0x80100704)
@@ -842,8 +857,10 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
             player->hp     = (int16_t)(player->hp - 10);
             if (player->hp < 0) player->state = 7;   /* hp<0 -> GRABBED death (state 7, save-confirmed;
                                                       * re15_player_is_dead() = hp<0 drives the death FSM) */
-            e->ai_timer      = 0x6e;         /* +0x9c ESCAPE window (@0x8010276c; 5 on a re-grab after a
-                                              * break-free, DAT_800aca50&1 — mash-flag deferred) */
+            e->ai_timer      = re15_grab_mercy_active() ? 5 : 0x6e;
+                                             /* +0x9c ESCAPE window (@0x8010276c): 0x6e, or 5 while the
+                                              * just-escaped mercy flag DAT_800aca50&1 is set -> the
+                                              * re-grab throws off after ~5 ticks */
             e->grab_kill_ctr = 100;          /* +0x9e KILL counter (@0x8010276c: 0x64) */
             e->sub_state_2 = 3;
             break;
@@ -898,10 +915,12 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
         case 4:                               /* [4] THROW-OFF — clip base+2 (@0x801028f0) + SE 7; the
                                                * player-side release finish starts in lockstep (the
                                                * original writes DAT_800aca5a=4 = the struggle FSM's
-                                               * release phase). */
+                                               * release phase). Sets the just-escaped mercy flag
+                                               * DAT_800aca50|=1 + the 0x5a=90-tick clear timer (+0x1d5). */
             e->motion = (uint8_t)(grab_base + 2); e->anim_frame = 0;
             re15_audio_room_se(7);
             re15_player_victim_throwoff();
+            s_grab_mercy_timer = 0x5a;
             e->sub_state_2 = 5;
             break;
         case 5:                               /* [5] throw-off plays to its end (root motion active) */
@@ -1456,6 +1475,9 @@ void re15_enemy_ai_run_all(int combat_active)
      * for any live zombie in the grab sub-mode this frame. A room with no grabbing zombie (or no
      * live zombie at all, e.g. ROOM1170) leaves it 0 → game_step never pins the player = 1170-safe. */
     s_player_grabbed = 0;
+    /* just-escaped mercy timer (the thrower's +0x1d5, ticked by FUN_8010a8c8; clears DAT_800aca50&1
+     * at 0 — port: the global timer stands in, see re15_grab_mercy_active). */
+    if (s_grab_mercy_timer > 0) s_grab_mercy_timer--;
     for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) {
         re15_actor_t *e = &g_actors[s];
         if (!e->active) continue;

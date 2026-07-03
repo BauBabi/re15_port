@@ -818,3 +818,10 @@ void re15_audio_shutdown(void)
     SpuSetCommonMasterVolume(0, 0);
     g_audio.backend_active = 0;
 }
+
+/* CORE-bank SE (byte-true FUN_80045024 bank4, the resident CORE00 table @0x801fbd00 — the devour
+ * SEs). PSX SPU path = follow-up stub like the other SE banks; audio_pc.c has the real impl. */
+void re15_audio_core_se(int se_id)
+{
+    (void)se_id;   /* TODO(psx): load CORE00.EDH/.VB to SPU + play se_id */
+}

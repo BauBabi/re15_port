@@ -117,6 +117,17 @@ static int        s_weap_edt_count = 0;  /* EDT record count = pBAV_off/4 (se_id
 static int        s_weap_loaded = 0;
 static int        s_weap_id     = -1;
 
+/* The resident CORE SE bank (FUN_80045024 bank selector 4, resident @0x801fbd00 — RAM-matched to
+ * SOUND/CORE00.EDH in the STAGE1 briefing save; all CORE0N share the EDT, the diffs are the runtime
+ * master-vol bytes Se_on writes into the table). Se_on(0x40NN0001) = CORE EDT record NN. Used by the
+ * devour-collapse SEs (FUN_8010a6f8: record 1 at entry, record 3 = the frame-0x37 blood). */
+static int16_t   *s_core_decoded    [RE15_VAB_MAX_SAMPLES];
+static int        s_core_decoded_len[RE15_VAB_MAX_SAMPLES];
+static re15_vab_t s_core_vab;
+static uint8_t   *s_core_edt   = NULL;
+static int        s_core_edt_count = 0;
+static int        s_core_loaded = 0;
+
 /* ===== RE2-style dialogue-voice subsystem (RE 2026-05-30) ================
  * Modelled on RE2's CD-XA voice path: the script selects a voice by
  * (file, channel) → CdlSetfilter, then CdlReadS streams its sectors into the
@@ -516,6 +527,71 @@ static int load_weapon_se_vab_pc(int weapon_id)
     s_weap_loaded    = 1;
     s_weap_id        = weapon_id;
     return 0;
+}
+
+/* Load + decode the resident CORE SE bank (bank4, SOUND/CORE00.EDH + .VB — same EDH layout as the
+ * ARMS banks). Lazy, once. */
+static int load_core_se_vab_pc(void)
+{
+    if (s_core_loaded) return 0;
+    static const char *dirs[] = { "shared_assets/PSX/SOUND/", "SOUND/", "PSX/SOUND/",
+                                  "../shared_assets/PSX/SOUND/", NULL };
+    char path[256];
+    uint8_t *edh = NULL, *vb = NULL; int edh_sz = 0, vb_sz = 0;
+    for (int i = 0; dirs[i] && !edh; i++) {
+        snprintf(path, sizeof path, "%sCORE00.EDH", dirs[i]);
+        edh = re15_asset_read_file(path, &edh_sz);
+    }
+    for (int i = 0; dirs[i] && !vb; i++) {
+        snprintf(path, sizeof path, "%sCORE00.VB", dirs[i]);
+        vb = re15_asset_read_file(path, &vb_sz);
+    }
+    if (!edh || !vb || edh_sz < 8) { free(edh); free(vb); return -1; }
+    uint32_t pbav = (uint32_t)edh[edh_sz-8] | ((uint32_t)edh[edh_sz-7] << 8) |
+                    ((uint32_t)edh[edh_sz-6] << 16) | ((uint32_t)edh[edh_sz-5] << 24);
+    if (pbav + 0x20u > (uint32_t)edh_sz ||
+        re15_vab_parse(edh + pbav, (size_t)edh_sz - pbav, &s_core_vab) != 0) {
+        free(edh); free(vb); return -1;
+    }
+    for (int i = 0; i < s_core_vab.vag_count; i++) {
+        uint32_t off = s_core_vab.samples[i].offset, sz = s_core_vab.samples[i].size;
+        if (off + sz > (uint32_t)vb_sz) continue;
+        size_t cap = (sz / 16) * 28;
+        int16_t *pcm = (int16_t *)malloc(cap * sizeof(int16_t));
+        if (!pcm) continue;
+        s_core_decoded[i]     = pcm;
+        s_core_decoded_len[i] = re15_vag_adpcm_decode(vb + off, sz, pcm, cap);
+    }
+    free(vb);
+    s_core_edt       = edh;
+    s_core_edt_count = (int)(pbav / 4);
+    s_core_loaded    = 1;
+    return 0;
+}
+
+/* Play a CORE-bank SE by EDT record index (byte-true FUN_80045024 bank4: Se_on(0x40NN0001) -> record
+ * NN of the resident CORE table @0x801fbd00 -> program+tone -> VAG, same lookup as the room/weapon
+ * banks). FAITHFUL-LINE: per-tone volume/pan deferred, like the other SE paths. */
+void re15_audio_core_se(int se_id)
+{
+    if (!g_audio.initialized) return;
+    if (!s_core_loaded && load_core_se_vab_pc() != 0) return;
+    if (se_id < 0 || se_id >= s_core_edt_count) return;
+    int vag = re15_footstep_vag(s_core_edt, &s_core_vab, se_id);
+    if (vag < 0 || vag >= RE15_VAB_MAX_SAMPLES || !s_core_decoded[vag]) return;
+    int vol = (100 * 0x4000 / 127) >> 1;
+    SDL_LockAudioDevice(s_audio_dev);
+    int slot = -1;
+    for (int i = 0; i < MIXER_MAX_ACTIVE_SAMPLES; i++)
+        if (!s_active[i].active) { slot = i; break; }
+    if (slot < 0) { slot = s_next_slot; s_next_slot = (s_next_slot + 1) % MIXER_MAX_ACTIVE_SAMPLES; }
+    s_active[slot].pcm        = s_core_decoded[vag];
+    s_active[slot].pcm_len    = s_core_decoded_len[vag];
+    s_active[slot].pos        = 0;
+    s_active[slot].subpos     = 0;
+    s_active[slot].volume_q15 = vol;
+    s_active[slot].active     = 1;
+    SDL_UnlockAudioDevice(s_audio_dev);
 }
 
 /* Play a WEAPON SE by id (byte-true FUN_80045024 bank1 core, PC path). The equipped weapon's ARMS

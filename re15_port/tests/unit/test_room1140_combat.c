@@ -1100,9 +1100,23 @@ int main(void)
                     gz->sub_state_1); fail = 1; }
         if (pl->hit_react & 1) {
             fprintf(stderr, "FAIL: (23) the freed player's grabbed flag must clear (re-grabbable)\n"); fail = 1; }
+        /* MERCY WINDOW (byte-true DAT_800aca50 bit 0 + the 0x5a-tick +0x1d5 timer): a RE-grab right
+         * after the escape seeds the escape window 5 -> throws off in ~5 ticks WITHOUT mashing. */
+        int16_t hp_before_regrab = pl->hp;
+        gz->sub_state_1 = 3; gz->sub_state_2 = 0; gz->state = RE15_AI_STATE_ACTIVE;
+        int mercy_free = 0;
+        for (int f = 0; f < 20 && !mercy_free; f++) {
+            re15_enemy_ai_run_all(1);                          /* NO mashing */
+            if (gz->sub_state_2 >= 4 && gz->sub_state_1 == 3) mercy_free = 1;   /* throw-off again */
+            if (gz->sub_state_1 == 2) mercy_free = 1;                            /* or already exited */
+        }
+        if (!mercy_free) {
+            fprintf(stderr, "FAIL: (23) a re-grab in the mercy window must throw off in ~5 ticks unmashed\n"); fail = 1; }
+        if (pl->hp < 0) {
+            fprintf(stderr, "FAIL: (23) the mercy re-grab must not kill (hp=%d)\n", pl->hp); fail = 1; }
         if (!fail)
-            printf("  (23) mash-escape: window drained -6/tick -> THROW-OFF in %d ticks, player ALIVE (hp=%d), "
-                   "zombie back to engage, flag cleared\n", guard, pl->hp);
+            printf("  (23) mash-escape: THROW-OFF in %d ticks, player ALIVE (hp=%d); mercy re-grab "
+                   "(window=5) threw off unmashed (hp %d->%d)\n", guard, pl->hp, hp_before_regrab, pl->hp);
     }
 
     if (fail) { fprintf(stderr, "\nROOM1140 COMBAT-WIRING TEST FAILED\n"); return 1; }
