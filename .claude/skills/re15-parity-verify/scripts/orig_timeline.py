@@ -25,6 +25,8 @@ def main():
     ap.add_argument("--path", default="")            # tank tokens: U/D fwd/back, L/R turn, X cross
     ap.add_argument("--samples", type=int, default=12)
     ap.add_argument("--interval", type=float, default=1.5)
+    ap.add_argument("--mash", type=float, default=0.0)   # after the path: rapidly tap CROSS for N s
+                                                          # (the grab mash-escape; ~8 taps/s)
     ap.add_argument("--outdir", required=True)
     a = ap.parse_args()
     os.makedirs(a.outdir, exist_ok=True)
@@ -54,10 +56,22 @@ def main():
     t_path_end = time.monotonic()
     print("[tl] path done (%.2fs), sampling %d x %.1fs" % (t_path_end - t_path0, a.samples, a.interval), flush=True)
 
+    def mash_for(secs):
+        # rapid CROSS taps (~8/s): any D-pad/face press EDGE (FUN_80037024 mask 0xf0f0) drains the
+        # grab's escape window by 5 extra per tap frame -> break free alive.
+        t_end = time.monotonic() + secs
+        while time.monotonic() < t_end:
+            gp.press_button(button=B.XUSB_GAMEPAD_A); gp.update(); time.sleep(0.06)
+            gp.release_button(button=B.XUSB_GAMEPAD_A); gp.update(); time.sleep(0.06)
+
     # SAMPLE LOOP: LB (save slot 1) -> wait for the write -> copy out. Timestamps are relative to
     # path END (the port aligns on its own path-end tick). One run = one consistent timeline.
+    # With --mash the inter-sample gap is filled with CROSS taps (mash-escape probe, samples DURING).
     for i in range(a.samples):
-        time.sleep(a.interval)
+        if a.mash > 0 and (time.monotonic() - t_path_end) < a.mash:
+            mash_for(a.interval)
+        else:
+            time.sleep(a.interval)
         m0 = os.path.getmtime(SLOT1) if os.path.exists(SLOT1) else 0
         gp.press_button(button=B.XUSB_GAMEPAD_LEFT_SHOULDER); gp.update(); time.sleep(0.12)
         gp.release_button(button=B.XUSB_GAMEPAD_LEFT_SHOULDER); gp.update()

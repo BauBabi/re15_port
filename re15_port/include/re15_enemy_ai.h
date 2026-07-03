@@ -272,6 +272,10 @@ void     re15_player_victim_throwoff(void);
  * (clip variant+6; hp=-1 stored at collapse frame 0x23 by the handler, not here). */
 void     re15_player_victim_devour(const re15_actor_t *zombie);
 
+/* MASH-ESCAPE feed (byte-true FUN_80037024: press-EDGE & 0xf0f0 = any D-pad/face button). game_step
+ * passes its pad_pressed each tick; the grab's bite loop drains the escape window 1 + 5*mash. */
+void     re15_enemy_ai_set_pad_pressed(uint16_t edge_bits);
+
 /* Phase 8.6 — the per-frame LIVE-zombie AI pass, the port's faithful slice of the original's
  * entity-update loop FUN_8001a50c (@0x8001ce04: iterate the entity array, dispatch
  * @0x80072bac[type] per active entity). The port runs ONLY the live-zombie types (0x10/0x11/0x16)

@@ -268,7 +268,7 @@ int main(void)
         if (gz->sub_state_1 != 5) {
             fprintf(stderr, "FAIL: killer must STAY in the devour state (+0x5=5), ist %d\n", gz->sub_state_1); fail = 1; }
         if (!fail)
-            printf("  (6) grab slot %d: IMPACT -10, held BITE-loop -5/wrap kills (hp %d->%d in %d ticks), exit +0x5=6 walk\n",
+            printf("  (6) grab slot %d: IMPACT -10, held BITE-loop -5/wrap kills (hp %d->%d in %d ticks), devour handoff +0x5=5\n",
                    gs, ghp0, pl->hp, guard);
     }
 
@@ -1064,8 +1064,50 @@ int main(void)
         re15_enemy_reset();                 /* drop the mock bank + clear the victim state */
     }
 
+    /* (23): the MASH-ESCAPE (byte-true FUN_80037024 + the grab's dual counters). The bite loop drains
+     * the +0x9c escape window by 1 + 5*mash (any D-pad/face-button press EDGE, mask 0xf0f0); mashing
+     * every tick = -6 -> the window (0x6e=110) goes negative at tick ~19, BEFORE the 100-tick kill
+     * counter -> THROW-OFF [4] (clip base+2) -> recovery clip 17 -> exit ENGAGE with the player ALIVE
+     * and re-grabbable. No mash (part 6) = devoured. HP high enough that the -5/tick no-bank bites
+     * cannot kill within the escape. */
+    {
+        int gs = zslots[0];
+        re15_actor_t *gz = &g_actors[gs];
+        re15_enemy_reset();
+        pl->x = 0; pl->z = 0; pl->hp = 300; pl->hit_react = 0; pl->state = 0; pl->floor = 0;
+        re15_player_death_reset();
+        for (int i = 0; i < nz; i++) {   /* isolate */
+            re15_actor_t *z = &g_actors[zslots[i]];
+            z->grid_id = 0x86; z->sub_state_1 = 0; z->sub_state_2 = 0; z->ai_flags = 0;
+            z->x = 30000; z->z = 30000;
+        }
+        gz->x = 500; gz->z = 0; gz->floor = 0; gz->state = RE15_AI_STATE_ACTIVE;
+        gz->grid_id = 0; gz->sub_state_1 = 3; gz->sub_state_2 = 0; gz->ai_flags = 0;
+        re15_enemy_ai_set_pad_pressed(RE15_PAD_BIT_CROSS);   /* mash every tick (edge) */
+        int threw_off = 0, guard = 0;
+        while (guard < 60 && gz->sub_state_1 == 3) {
+            re15_enemy_ai_run_all(1);
+            if (gz->sub_state_2 >= 4 && gz->sub_state_2 <= 7) threw_off = 1;   /* [4..7] throw-off/recovery */
+            guard++;
+        }
+        re15_enemy_ai_set_pad_pressed(0);
+        if (!threw_off) {
+            fprintf(stderr, "FAIL: (23) mashing must trigger the THROW-OFF (sub-steps 4..7)\n"); fail = 1; }
+        if (pl->hp < 0) {
+            fprintf(stderr, "FAIL: (23) the masher must survive (hp=%d)\n", pl->hp); fail = 1; }
+        if (gz->sub_state_1 != 2) {
+            fprintf(stderr, "FAIL: (23) after the throw-off the zombie exits to ENGAGE (+0x5=2), ist %d\n",
+                    gz->sub_state_1); fail = 1; }
+        if (pl->hit_react & 1) {
+            fprintf(stderr, "FAIL: (23) the freed player's grabbed flag must clear (re-grabbable)\n"); fail = 1; }
+        if (!fail)
+            printf("  (23) mash-escape: window drained -6/tick -> THROW-OFF in %d ticks, player ALIVE (hp=%d), "
+                   "zombie back to engage, flag cleared\n", guard, pl->hp);
+    }
+
     if (fail) { fprintf(stderr, "\nROOM1140 COMBAT-WIRING TEST FAILED\n"); return 1; }
     printf("\nPASS: ROOM1140 live-AI game_step wiring (spawn; WAKE->engage; TURN-to-face->GRAB->HP; "
-           "GRABBED-lock; player DEATH; zombie HURT/DEATH; PLAYER-SHOOTS; LEON grab-victim anim; type-gated)\n");
+           "GRABBED-lock; player DEATH; zombie HURT/DEATH; PLAYER-SHOOTS; LEON grab-victim anim; "
+           "MASH-escape; type-gated)\n");
     return 0;
 }

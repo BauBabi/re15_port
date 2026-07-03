@@ -21,6 +21,7 @@
 #include "re15_enemy.h"    /* re15_enemy_find — the loaded model bank (death-clip framecount) */
 #include "re15_audio.h"    /* re15_audio_room_se — zombie combat SEs on snd1 (func_0x800453d0):
                             * grab-start 4, grab-release 7 (FUN_80102548), death groan 5/8 (FUN_80107cb0 f7) */
+#include "re15_esp.h"      /* re15_esp_fx_spawn — the collapse frame-0x37 blood burst */
 #include "re15_damage.h"   /* re15_enemy_player_dist, re15_ai_arc_test, re15_engine_rand8,
                             * re15_enemy_apply_hitbox */
 #include "re15_skeleton.h" /* re15_sin_q12 / re15_cos_q12 — forward-walk root-motion step (8.19) */
@@ -411,6 +412,16 @@ void re15_enemy_ai_set_combat_active(int v) { s_live_combat_active = v ? 1 : 0; 
  * → the player is free. DEFERRED (cited): the per-type grabbed POSE/anim, the exact XZ/Y pin
  * (DAT_800acc0e), the struggle-escape (sub-step 5 @0x80102968, anim-gated + the bit-0x2 check),
  * and the cmd-6 "being-approached" walk command (coupled to the deferred forward-walk). */
+/* MASH-ESCAPE input (byte-true FUN_80037024 @0x80037024, raw disasm): returns 1 when the press-EDGE
+ * pad register (0x800ac762) has ANY D-pad direction (bits 4-7) or face button (bits 12-15) set —
+ * mask 0xf0f0. The port's pad bits mirror the PSX layout 1:1, so the mask applies unchanged to
+ * pad_pressed. game_step feeds the edge bits each tick (re15_enemy_ai_set_pad_pressed); the grab's
+ * bite loop drains its escape window by 1 + 5*mash — mash fast enough and the window goes negative
+ * (THROW-OFF, break free alive) before the 100-tick kill counter devours you. */
+static uint16_t s_pad_pressed_edge = 0;
+void re15_enemy_ai_set_pad_pressed(uint16_t edge_bits) { s_pad_pressed_edge = edge_bits; }
+static int re15_mash_pressed(void) { return (s_pad_pressed_edge & 0xf0f0u) != 0; }
+
 static int s_player_grabbed = 0;
 int re15_player_is_grabbed(void)
 {
@@ -586,12 +597,17 @@ void re15_player_victim_tick(void)
         /* HP = -1 EXACTLY at collapse anim frame 0x23=35 (byte-true FUN_8010a6f8 @0x8010a80c/814,
          * gate @0x8010a7e8 == 0x23) — a DIRECT SET in the cmd-6 handler, NOT a clamp in the damage
          * path; the original hands the devour off at hp=70 and this store makes the corpse -1
-         * (every kill save reads exactly -1). The chomp SE (0x2070001) + the frame-0x37 blood
-         * effect (0x80019700(0x2000) + 0x4030001) need an effect/SE sink — deferred, cited. */
+         * (every kill save reads exactly -1). */
         if (player->anim_frame == 0x23) {
             player->hp    = -1;
             player->state = 7;                          /* the port's death FSM keys off hp<0/state 7 */
         }
+        /* frame 0x37=55: the big BLOOD burst at the player pos+yaw (byte-true FUN_8010a6f8:
+         * FUN_80019700(0x2000) = effect-id 0 — the SAME spawn the hurt-fx uses; + Se_on(0x4030001),
+         * whose Se_on bank routing is still un-RE'd -> SE deferred, the visible blood fires). */
+        if (player->anim_frame == 0x37)
+            re15_esp_fx_spawn(re15_esp_room_bank(), 0, 0,
+                              player->x, player->y, player->z, (int16_t)player->rot_y);
     } else {                                           /* RELEASE finish (state 3): clip base+2 once -> free.
                                                         * (Entered via re15_player_victim_throwoff — the
                                                         * zombie holds sub-steps [4..7] while this plays,
@@ -870,7 +886,10 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
                     re15_ai_set_state_word(e, ((uint32_t)(e->sub_state_1 + 2) << 8) | 1u);
                     break;
                 }
-                e->ai_timer = (int16_t)(e->ai_timer - 1);
+                /* the escape window drains 1 + 5*mash (byte-true FUN_80037024 edge-press: any D-pad or
+                 * face button = -6 that tick). Mash ~every 4 frames -> escape in ~50 ticks (< the 100-
+                 * tick kill counter, breaks free ALIVE); no mash -> 110 > 100, devoured. */
+                e->ai_timer = (int16_t)(e->ai_timer - (int16_t)(1 + 5 * re15_mash_pressed()));
                 if (e->ai_timer < 0) {                   /* escape window ran out -> THROW-OFF (alive) */
                     e->sub_state_2 = 4;
                 }
@@ -897,6 +916,11 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
             break;
         default:                              /* [8] EXIT (0x80102b90) -> back to the engage brain */
             re15_ai_set_state_word(e, 0x201);   /* +0x4 = state 1 / +0x5 = 2 (engage) */
+            /* the player-side release clears the grabbed flag (+0x93 &= ~1). With a victim bank the
+             * release-finish anim does it; WITHOUT one (headless/unit tests) clear it here so a later
+             * grab can commit again (no permanent grab-immunity). */
+            if (re15_player_victim_state() == 0)
+                player->hit_react &= (uint8_t)~1u;
             break;
     }
 }

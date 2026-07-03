@@ -259,6 +259,11 @@ void re15_game_step(const re15_game_ctx_t *c)
      * run_all so the AI's clip-end gate (re15_enemy_clip_done) reads the frame this pass advanced. */
     re15_actors_anim_advance();
 
+    /* MASH-ESCAPE feed (byte-true FUN_80037024): the grab's bite loop reads the press-EDGE pad bits
+     * (any D-pad/face button & 0xf0f0) to drain its escape window 1 + 5*mash — the classic wiggle-out.
+     * Fed every tick (also while the grabbed branch skips re15_player_tick — the pad edge still
+     * arrives here), so mashing during the grab breaks Leon free via the THROW-OFF. */
+    re15_enemy_ai_set_pad_pressed(c->pad_pressed);
     if (c->rdt_ok)
         re15_enemy_ai_run_all(g_scd.combat_active);
 
