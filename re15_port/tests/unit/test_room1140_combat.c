@@ -540,15 +540,16 @@ int main(void)
         if (!bank) { fprintf(stderr, "FAIL: (13b) could not alloc a mock bank\n"); fail = 1; }
         else {
             bank->anim.clip_count = 0x30;
-            bank->anim.clips[0x27].frame_count = 6;   /* the feeding/stand-up clip = 6 frames */
+            bank->anim.clips[0x27].frame_count = 6;   /* feeding loop clip */
+            bank->anim.clips[0x29].frame_count = 6;   /* the byte-true GET-UP clip 0x29 (FUN_80104a50) */
             bank->ok = 1;
             /* feeding zombie, near the player, wake wait-timer already elapsed (sub_state_2=1, ai_timer=0). */
             z->state = RE15_AI_STATE_ACTIVE; z->grid_id = 6; z->sub_state_1 = 0;
             z->sub_state_2 = 1; z->ai_timer = 0; z->motion = 0x27; z->anim_frame = 4; z->x = 1000; z->z = 0;
-            re15_enemy_ai_run_all(1);                  /* case1 (timer 0) -> enter case2, resets anim_frame=0 */
-            if (z->sub_state_2 != 2 || z->anim_frame != 0) {
-                fprintf(stderr, "FAIL: (13b) wake must enter stand-up case2 + restart clip, +0x6=%d frame=%d\n",
-                        z->sub_state_2, z->anim_frame); fail = 1; }
+            re15_enemy_ai_run_all(1);                  /* case1 (timer 0) -> enter case2: set the get-up clip 0x29, restart */
+            if (z->sub_state_2 != 2 || z->anim_frame != 0 || z->motion != 0x29) {
+                fprintf(stderr, "FAIL: (13b) wake must enter stand-up case2 + play GET-UP clip 0x29, +0x6=%d frame=%d mo=%d\n",
+                        z->sub_state_2, z->anim_frame, z->motion); fail = 1; }
             z->anim_frame = 3;                          /* mid-clip (3 < 6-1): must HOLD */
             re15_enemy_ai_run_all(1);
             if (z->sub_state_2 != 2 || z->grid_id == 0) {

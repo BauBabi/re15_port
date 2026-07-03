@@ -451,13 +451,17 @@ static void re15_enemy_ai_live_feeding(re15_actor_t *e)
         case 0: break;                                   /* idle-feeding (busy writes deferred) */
         case 1:                                           /* count the wait timer down (0x80103ad0) */
             if (e->ai_timer != 0) e->ai_timer = (int16_t)(e->ai_timer - 1);
-            else { e->sub_state_2 = 2; e->anim_frac = 0xf; e->anim_frame = 0; }  /* enter stand-up: seed crossfade + restart the clip */
+            else { e->sub_state_2 = 2; e->motion = 0x29; e->anim_frac = 0xf; e->anim_frame = 0; }
+            /* enter stand-up: play the byte-true GET-UP clip 0x29 (59f). The RAM-authoritative wake
+             * runs the feeding as combat-sub-mode +0x5=0xc (FUN_801048e8) -> +0x5=0xd stand-up
+             * (FUN_80104a50 @0x8011f890[0xd]) which sets +0x94 = 0x29 and plays it to clip-end before
+             * engaging (disasm STAGE1.BIN @0x80104aa8). The port was REPLAYING the loaded feeding clip
+             * 0x27 here -> "stehen nicht sauber auf" (parity: original played the get-up, port did not).
+             * Clip 0x29 verified present in the loaded zombie EDD (bank1 clip 0x29 = 59 frames). */
             break;
-        case 2:                                           /* stand-up anim (0x80103b08): play the spawn feeding pose
-                                                           * FORWARD until clip-end, THEN commit — byte-true
-                                                           * `+0x6 += func_0x8001f314(+0x170,+0x174,0,0x100)`
-                                                           * (FUN_80103a58.c:28-30). No new +0x94 write: it replays
-                                                           * the clip already loaded at INIT. Was a 1-frame snap. */
+        case 2:                                           /* stand-up anim: play clip 0x29 (the get-up) FORWARD
+                                                           * until clip-end, THEN commit — byte-true FUN_80104a50
+                                                           * `+0x6 += func_0x8001f314(+0x170,+0x174,0,0x200)`. */
             e->sub_state_2 += (uint8_t)re15_enemy_clip_done(e);
             break;
         case 3:                                           /* COMMIT (0x80103b3c) -> combat / engage */
