@@ -29,16 +29,23 @@
 #define WALK_SPEED_PER_FRAME 75
 #define RUN_SPEED_PER_FRAME  200
 #define BACK_SPEED_PER_FRAME 60
-/* Tank-control free-roam TURN rate (4096 units = 360°) — BYTE-TRUE from the PSX
- * player pad handler (ghidra1_V2.txt:127558 / :128011). Holding LEFT/RIGHT adds/
- * subtracts a per-camera turn byte to the heading accumulator DAT_800acabe once
- * per 30 Hz frame: WALK turn = DAT_80073ea5 = 0x30 (48), RUN turn = DAT_80073ee5
- * = 0x60 (96). That accumulator IS the facing heading (fed straight into the GTE
- * RotMatrix at FUN_8001ceb8), so its per-frame delta is the visible turn rate —
- * no further slew divides it down. The old single 0x80 (128) was 2.67× the walk
- * rate AND ignored the walk/run split → "Leon dreht sich zu schnell". */
-#define TURN_RATE_WALK_PER_FRAME 0x30   /* 48 — walk turn (DAT_80073ea5) */
-#define TURN_RATE_RUN_PER_FRAME  0x60   /* 96 — run turn  (DAT_80073ee5) */
+/* Tank-control free-roam TURN rate (4096 units = 360°) — BYTE-TRUE from the PSX player pad handler.
+ * Holding LEFT/RIGHT adds/subtracts a PER-MOVE-SUB-STATE, per-camera turn byte to the heading
+ * accumulator DAT_800acabe once per 30 Hz frame; that accumulator IS the facing heading (fed straight
+ * into the GTE RotMatrix), so its per-frame delta is the visible turn rate.
+ *
+ * CORRECTION 2026-07-03 (DuckStation parity, DETERMINISTIC direct-load measurement — re15-parity-verify):
+ * the 48-vs-96 split is NOT walk-vs-run (the old model). It is MOVING-FORWARD vs TURNING-IN-PLACE:
+ *   - TURN-IN-PLACE (LEFT/RIGHT, no forward/back): DAT_80073ee5 = 0x60 = 96/frame  <- MEASURED:
+ *       hold R 1s -> +2784, 2s -> +5664 (linear ~96/frame at 30fps); the port's 48 was HALF -> Leon
+ *       pivoted at half speed, so the same tank-path reached a DIFFERENT spot than the original.
+ *   - turning WHILE walking forward (UP + LEFT/RIGHT): DAT_80073ea5 = 0x30 = 48/frame (the walk curve).
+ * The four per-camera tables are @0x80073ea5(48 walk-fwd) / ec5(48 back) / ee5(96 turn-in-place) /
+ * f25(72). The walk speed (75/frame) + forward direction + wall x=-5118 were already parity-matched;
+ * only the turn-in-place rate was off. */
+#define TURN_RATE_WALK_PER_FRAME     0x30   /* 48 — turn while walking forward (DAT_80073ea5) */
+#define TURN_RATE_RUN_PER_FRAME      0x60   /* 96 — run turn (DAT_80073ee5 shares 0x60) */
+#define TURN_RATE_IN_PLACE_PER_FRAME 0x60   /* 96 — pivot in place (DAT_80073ee5), MEASURED byte-true */
 
 /* Animation-clip sentinels consumed by the renderer:
  *   105 -> PL00W01 clip 5 = Walk_Forward (FSM bank 0x174, motion 0x30)
@@ -164,13 +171,15 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
     if (g_scd.player_mode != 2 && !msg_block) {
         int yaw_delta = 0;
         int move_dir  = 0;
-        /* RUN modifier: X (CROSS) on PSX / shift→CROSS on PC, HELD. (The door
-         * action uses the CROSS press-EDGE elsewhere, so the two coexist.) */
-        int run = (pad_bits & RE15_PAD_BIT_CROSS) != 0;
-        /* Byte-true turn rate: 0x60 while running (CROSS held), else 0x30 walk
-         * (PSX reads DAT_80073ee5 in the RUN intent handler, DAT_80073ea5 in the
-         * WALK one — both per-camera tables are uniformly 0x60 / 0x30). */
-        int turn_rate = run ? TURN_RATE_RUN_PER_FRAME : TURN_RATE_WALK_PER_FRAME;
+        /* RUN modifier: X (CROSS) on PSX / shift→CROSS on PC, HELD (Nutzer-bestätigt: RE1.5/RE2 walk
+         * by default, hold X + direction to run). The door action uses the CROSS press-EDGE elsewhere. */
+        int run    = (pad_bits & RE15_PAD_BIT_CROSS) != 0;
+        int moving = (pad_bits & (RE15_PAD_BIT_UP | RE15_PAD_BIT_DOWN)) != 0;
+        /* Byte-true turn rate (see the constants block): TURNING IN PLACE (no forward/back) pivots at
+         * 96/frame (DAT_80073ee5, MEASURED); turning WHILE walking forward curves at 48 (DAT_80073ea5).
+         * The old model used walk/run (CROSS) here — that was wrong and made in-place pivots half-speed. */
+        int turn_rate = !moving ? TURN_RATE_IN_PLACE_PER_FRAME
+                                : (run ? TURN_RATE_RUN_PER_FRAME : TURN_RATE_WALK_PER_FRAME);
         if (pad_bits & RE15_PAD_BIT_LEFT)  yaw_delta -= turn_rate;
         if (pad_bits & RE15_PAD_BIT_RIGHT) yaw_delta += turn_rate;
         if (pad_bits & RE15_PAD_BIT_UP)    move_dir  += 1;
