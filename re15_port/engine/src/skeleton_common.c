@@ -195,7 +195,11 @@ int re15_skel_compute_pose(const re15_emd_skeleton_t *skel,
     /* wp = prev weight = frac * 0x200 (byte-true FUN_8001f3bc: weight = entity+0x8f * param_5,
      * param_5 = 0x200 from FUN_80035538/FUN_80036718; clamp to 0x1000). The blend is recursive
      * (prev = the blended output, snapshotted below) and only smooths the first few frames. */
-    int           wp     = blend ? ((int)bact->anim_frac * 0x200) : 0;
+    int           rate   = (bact && bact->anim_blend_rate) ? (int)bact->anim_blend_rate : 0x200;
+    /* rate = the f314 4th arg (byte-true): player handlers 0x200; ZOMBIE WALK states 0x100 =
+     * max 0xf00/94% decaying 6%/frame, never a frozen 100% plateau (the old flat 0x200+clamp
+     * froze the pose 8 frames per walk-state entry -> the upright 'unaware-looking' walk). */
+    int           wp     = blend ? ((int)bact->anim_frac * rate) : 0;
     if (wp > 0x1000) wp = 0x1000;
     int           wc     = 0x1000 - wp;
 

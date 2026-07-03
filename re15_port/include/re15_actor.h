@@ -200,6 +200,11 @@ typedef struct {
      * struct so the literal is used here). Seeded to 7 on every motion change. */
     uint8_t  anim_frac;
     uint8_t  anim_prev_valid;
+    uint16_t anim_blend_rate;   /* the FUN_8001f314 4th arg = the crossfade WEIGHT STEP: prev weight
+                                 * = anim_frac * rate (0x1000 = 100%). WALK-family zombie states pass
+                                 * 0x100 (max 0xf00 = 94%, decaying -6%/frame — never a frozen
+                                 * plateau); one-shots (stand-up, grab, devour, the player handlers)
+                                 * pass 0x200. 0 -> treated as 0x200 (the player default). */
     /* Player animation-bank select. 1 = PL00.EDD (the original's COMMON/char-keyed bank, holds
      * the ROOM1150 kneel clip 11 = the real ~25-frame stand→kneel pelvis fold py -1810→-761);
      * 0 = the room RBJ cinematic overlay (ROOM1170 wave + the clip-11 HOLD/settle, gesture clips

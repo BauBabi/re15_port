@@ -879,6 +879,7 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
     switch (e->sub_state_2) {                /* +0x6 sub-step (reset to 0 by the 0x301/0x401 commit) */
         case 0:                               /* [0] init/latch + grab clip base (@0x801025bc) */
             e->motion = grab_base; e->anim_frame = 0;
+            e->anim_blend_rate = 0x200;               /* one-shot f314 rate */
             /* GRABBED flag (byte-true player+0x93 |= 1, latched with the cmd-5 write @0x80102640):
              * the engage/turn grab-commits require +0x93 == 0, so a SECOND zombie cannot grab the
              * already-held player. TIMELINE-VERIFIED: the original's other zombie stayed in engage at
@@ -988,11 +989,12 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
             e->speed_h = 0x32;
             e->sub_state_2 = 7; break;
         case 7:                               /* [7] recovery plays clip 0x11 — NO ad68 root motion: the
-                                               * zombie VELOCITY-walks backward-facing (func_0x800245d8:
-                                               * forward speed +0x8c, -2/tick, min 10 — P2 disasm) while
-                                               * the clip plays out (the stagger-away after the fling). */
-            e->x += (int32_t)(((int32_t)re15_cos_q12(e->rot_y) * e->speed_h) >> 12);
-            e->z -= (int32_t)(((int32_t)re15_sin_q12(e->rot_y) * e->speed_h) >> 12);
+                                               * zombie VELOCITY-staggers BACKWARD (func_0x800245d8(0x800)
+                                               * = move along yaw+180°; speed +0x8c, -2/tick, min 10 —
+                                               * P2 disasm) while the clip plays out — AWAY from the
+                                               * player, not into him. */
+            e->x -= (int32_t)(((int32_t)re15_cos_q12(e->rot_y) * e->speed_h) >> 12);
+            e->z += (int32_t)(((int32_t)re15_sin_q12(e->rot_y) * e->speed_h) >> 12);
             e->speed_h = (int16_t)(e->speed_h - 2);
             if (e->speed_h < 10) e->speed_h = 10;
             e->sub_state_2 += (uint8_t)(re15_enemy_clip_done(e) ? 1 : 0);   /* 7 -> 8 on clip-end */
@@ -1130,6 +1132,7 @@ static void re15_enemy_ai_live_approach(int slot, re15_actor_t *e, const re15_ac
         e->motion = 0x01;                                                /* +0x94 = clip 1 */
         e->anim_frame = (uint16_t)(re15_engine_rand8() & 0x1f);          /* +0x95 = rng & 0x1f (random phase) */
         e->anim_frac  = 0xf;                                             /* +0x8f */
+        e->anim_blend_rate = 0x100;                                      /* walk-family f314 rate */
         if ((re15_engine_rand8() & 3) == 0)                             /* 1/4: SE 4 or 5 */
             re15_audio_room_se((re15_engine_rand8() & 1) ? 4 : 5);
         s_wander_idx[slot] = (uint8_t)(re15_engine_rand8() & 0xf);       /* +0x9f = rng & 0xf */
@@ -1259,6 +1262,7 @@ static void re15_enemy_ai_live_devour(re15_actor_t *e, const re15_actor_t *playe
     if (e->sub_state_2 == 0) {                        /* +0x6==0 entry (@0x80102c0c) */
         e->motion = (uint8_t)(e->sub_state_1 + 4);    /* (+0x5)+4: 9 face / 0xa behind */
         e->anim_frame = 0; e->anim_frac = 7;
+        e->anim_blend_rate = 0x200;
         re15_audio_room_se(4);
         re15_player_victim_devour(e);                 /* player cmd 6 -> the devour collapse */
         e->sub_state_2 = 1;
@@ -1366,6 +1370,7 @@ int re15_enemy_ai_live_active(int slot)
                         e->motion     = e->hurt_clip;                /* +0x94 = +0x1d4 (walk clip 2..5) */
                         e->anim_frame = (uint16_t)(re15_engine_rand8() & 0x1f);   /* +0x95 = rng&0x1f */
                         e->anim_frac  = 0xf;                          /* +0x8f */
+                        e->anim_blend_rate = 0x100;                   /* walk-family f314 rate */
                         s_wander_mag[slot] = (uint8_t)((re15_engine_rand8() & 0xf) + 8); /* +0x9e = 8..23 */
                         if ((re15_engine_rand8() & 3) == 0)          /* 1-in-4 moan SE 4/5 */
                             re15_audio_room_se((re15_engine_rand8() & 1) ? 4 : 5);
