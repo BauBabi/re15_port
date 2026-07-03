@@ -866,6 +866,19 @@ int main(int argc, char *argv[])
      * RESTORED 2026-06-07 to push-out band 4 (the band-4-FREE complement is walkable;
      * band-4 cells are walls). */
     re15_collision_set_band(re15_collision_band_from_y(g_actors[RE15_ACTOR_SLOT_PLAYER].y));
+    /* PARITY STATE-INJECT (RE15_PLAYER_POS="x,z,rot"): teleport the player after spawn so a port
+     * run can START from the SAME player pose as a DuckStation savestate — isolates the zombie-AI
+     * parity from the (fuzzy vgamepad) input-replay. Reusable parity tool (memory: parity-oracle). */
+    {
+        const char *pp = getenv("RE15_PLAYER_POS");
+        int px = 0, pz = 0, prot = 0;
+        if (pp && *pp && sscanf(pp, "%d,%d,%d", &px, &pz, &prot) >= 2) {
+            g_actors[RE15_ACTOR_SLOT_PLAYER].x     = px;
+            g_actors[RE15_ACTOR_SLOT_PLAYER].z     = pz;
+            g_actors[RE15_ACTOR_SLOT_PLAYER].rot_y = (int16_t)prot;
+            fprintf(stderr, "[parity] player teleported to (%d,%d) rot=%d\n", px, pz, prot);
+        }
+    }
     /* Phase 4.5.13-A6: user-verified ground truth:
      *   0=walk, 12=fall, 15=climb, 20=march, 22=hurt1, 23=hurt2
      * Try clip 7 (113 frames, wrist at head level per J2 — 2nd-most-
@@ -1428,6 +1441,30 @@ int main(int argc, char *argv[])
                 gctx.pad_current = (uint16_t)g_engine.pad_current;
                 gctx.pad_pressed = (uint16_t)g_engine.pad_pressed;
                 re15_game_step(&gctx);
+            }
+            /* PARITY STATE-LOG (RE15_STATE_LOG=path): append per-tick player pose + each live
+             * enemy's AI state so the port run can be diffed NUMERICALLY against the DuckStation
+             * savestate (re15_enemy_state.py). One line/tick: F<frame> pad=<hex> PL(x,z,rot,hp)
+             * then per zombie [slot type st ss1 dist]. This is the parity oracle's measuring tape. */
+            {
+                static FILE *s_state_log = NULL; static int s_slog_init = 0;
+                if (!s_slog_init) { s_slog_init = 1;
+                    const char *lp = getenv("RE15_STATE_LOG");
+                    if (lp && *lp) s_state_log = fopen(lp, "w"); }
+                if (s_state_log) {
+                    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+                    fprintf(s_state_log, "F%u pad=%04x PL(%d,%d,rot=%d,hp=%d)",
+                            g_engine.frame_count, g_engine.pad_current,
+                            pl->x, pl->z, pl->rot_y, pl->hp);
+                    for (int si = 1; si < RE15_ACTOR_MAX; si++) {
+                        re15_actor_t *e = &g_actors[si];
+                        if (!e->active || e->type == 0) continue;
+                        fprintf(s_state_log, " [%d t=%02x st=%d ss1=%d mo=%d af=%d d=%u @(%d,%d,r%d)]",
+                                si, e->type, e->state, e->sub_state_1, e->motion,
+                                e->anim_frame, e->ai_dist, e->x, e->z, e->rot_y);
+                    }
+                    fputc('\n', s_state_log); fflush(s_state_log);
+                }
             }
             /* DEBUG: per-tick kneel trace — find the exact frames + camera cut where Leon
              * kneels (motion 10-12), so the autoshot can target the kneel-down vs ablauf4. */
