@@ -636,30 +636,34 @@ static void re15_enemy_ai_live_walk(re15_actor_t *e, const re15_actor_t *player)
         if (residual == 0) { e->sub_state_1 = 6; e->sub_state_2 = 0; }
         return;
     }
-    /* +0x5=6 WALK (FUN_80102bd8 -> func_0x8001ad68): the forward step comes FROM THE WALK CLIP's
-     * per-frame root translation (EMR keyframe speed +6/+10, re15_emd_get_keyframe_speed), rotated by
-     * the heading — so the FEET STAY PLANTED (no glide). The grab commits once within 0x4b0. */
+    /* +0x5=6 WALK (byte-true FUN_80102bd8 -> func_0x8001ad68 @0x8001ad68 + the keyframe decoder
+     * func_0x8001ae38 @0x8001ae38, disassembled from PSX.EXE). The forward step IS the walk clip's
+     * baked root translation: clip 0xa's keyframes carry a CUMULATIVE forward offset at +6 (the
+     * re15_emd_get_keyframe_speed `sx`): 821 -> 2654 -> 2237 over the 65 frames (verified from
+     * EM10.EMD bank1). The original anchors at clip start (FUN_8001ac38: 0xa0 = pos - rotate(off))
+     * then each frame pos = 0xa0 + rotate(off[kf], yaw). Equivalent per-frame form: pos += rotate(
+     * off[kf] - off[kf-1], yaw). rot_y is steered at the player (face_player above); the engine's
+     * yaw->world convention is (x += cos*d, z -= sin*d) — the SAME the player walk uses AND the frame
+     * the zombie's own +1024 arc_test heading lives in (re15_ai_arc_test: rel = ang-(rot_y+1024)) —
+     * so a facing zombie walks straight AT the player with feet planted to the clip cadence (no glide,
+     * no fixed shamble). sz is ~0 in this clip (|sz|<=2) so the lateral cross-term is omitted. */
     re15_enemy_bank_t *bank = re15_enemy_find(e->type);
-    int32_t fwd = 0;
-    if (bank && (int)e->motion < bank->anim.clip_count) {
-        int kf = re15_compute_actor_kf(&bank->anim, &bank->skel, e, (int)e->motion, (uint32_t)e->anim_frame);
-        int16_t sx = 0, sy = 0, sz = 0; (void)sy;
-        if (re15_emd_get_keyframe_speed(&bank->skel, kf, &sx, &sy, &sz) == 0) {
-            int32_t ax = sx < 0 ? -sx : sx, az = sz < 0 ? -sz : sz;
-            fwd = ax > az ? ax : az;                  /* per-frame root distance from the walk clip */
-        }
+    int32_t d = 0;
+    if (bank && bank->skel.keyframe_count > 0 && (int)e->motion < bank->anim.clip_count) {
+        int f       = (int)e->anim_frame;
+        int kf_cur  = re15_compute_actor_kf(&bank->anim, &bank->skel, e, (int)e->motion, (uint32_t)f);
+        int kf_prev = re15_compute_actor_kf(&bank->anim, &bank->skel, e, (int)e->motion,
+                                            (uint32_t)(f > 0 ? f - 1 : 0));
+        int16_t sx = 0, sx0 = 0, sy = 0, sz = 0; (void)sy; (void)sz;
+        re15_emd_get_keyframe_speed(&bank->skel, kf_cur,  &sx,  &sy, &sz);
+        re15_emd_get_keyframe_speed(&bank->skel, kf_prev, &sx0, &sy, &sz);
+        d = (int32_t)sx - (int32_t)sx0;              /* per-frame forward offset delta (+6) */
+        /* clip-start (f==0) and the loop wrap (kf resets 273->209 => d ~= -1416) re-anchor: no step
+         * that frame (legit per-frame |delta| <= ~140; a >300 jump is the wrap boundary). */
+        if (f == 0 || d < -300 || d > 300) d = 0;
     }
-    /* Step toward the player while the WALK CLIP (0xa) plays (legs animate = reads as a walk, not the
-     * earlier standing-clip glide). FAITHFUL-LINE: the extracted zombie EDD carries NO keyframe
-     * root-motion (fwd measured 0 in-game), so the original's func_0x8001ad68 keyframe-speed step has
-     * no data here -> use a fixed slow shamble cadence toward the player vector (proven direction). */
-    int32_t step = (fwd > 0) ? fwd : 48;
-    int32_t dx = (int32_t)player->x - e->x, dz = (int32_t)player->z - e->z;
-    int32_t len = (int32_t)re15_enemy_player_dist(e, player);
-    if (len > 40) {
-        e->x += dx * step / len;
-        e->z += dz * step / len;
-    }
+    e->x += (int32_t)(((int32_t)re15_cos_q12(e->rot_y) * d) >> 12);
+    e->z -= (int32_t)(((int32_t)re15_sin_q12(e->rot_y) * d) >> 12);
 }
 
 /* FUN_80101224 (@0x8011f7b4[1], STAGE1.BIN) — the LIVE zombie ACTIVE handler. The ATTACK-WINDUP

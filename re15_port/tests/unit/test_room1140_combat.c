@@ -853,6 +853,85 @@ int main(void)
             printf("  (20) death->continue: 0x78=120-frame timer expiry queues a fresh reload of ROOM1140 (no permanent pin)\n");
     }
 
+    /* (21): the FORWARD-WALK ROOT MOTION (Phase 8.20, byte-true FUN_80102bd8 -> func_0x8001ad68 +
+     * the keyframe decoder func_0x8001ae38, disassembled from PSX.EXE). The walk step IS the walk
+     * clip's baked root translation: clip 0xa keyframes carry a CUMULATIVE forward offset at +6 (the
+     * re15_emd_get_keyframe_speed `sx`). The port had an INVERTED return check (`== 0` on a function
+     * that returns 1 on success) so it NEVER used the value -> fell back to a constant shamble = the
+     * "schweben" glide. Seed a mock bank with the REAL EM10 bank1 clip-0xa +6 values and drive the
+     * walk frame-by-frame facing a distant player. Byte-true expectations:
+     *   - a facing zombie steps straight toward the player (+Z), x stays put;
+     *   - the per-frame step follows the keyframe DELTA (sx[kf]-sx[kf-1]), NOT a constant:
+     *       f4  delta = 1243-1092 = 151  -> a big step;
+     *       f19 delta = 2048-2048 =   0  -> NO step (the old constant-48 shamble would still move). */
+    {
+        /* the REAL EM10.EMD bank1 clip-0xa +6 (sx) offsets, frames 0..30 (verified from the asset). */
+        static const int16_t sx[31] = {
+            821, 858, 956,1092,1243,1387,1501,1579,1636,1686,1739,1801,1854,1891,1926,1959,
+           1990,2020,2048,2048,2105,2172,2240,2310,2383,2451,2505,2521,2505,2478,2442 };
+        int zs = zslots[0];
+        re15_actor_t *z = &g_actors[zs];
+        /* park every other zombie far + asleep so only this one ticks. */
+        for (int i = 1; i < nz; i++) {
+            re15_actor_t *o = &g_actors[zslots[i]];
+            o->grid_id = 0x86; o->sub_state_1 = 0; o->sub_state_2 = 0; o->ai_flags = 0;
+            o->x = 30000; o->z = 30000;
+        }
+        /* mock a bank for this zombie's type carrying clip 0xa + the real keyframe +6 offsets. */
+        re15_enemy_reset();
+        re15_enemy_bank_t *bank = re15_enemy_alloc(z->type);
+        static uint8_t kfbuf[260 * 80];
+        if (!bank) { fprintf(stderr, "FAIL: (21) could not alloc a mock walk bank\n"); fail = 1; }
+        else {
+            memset(kfbuf, 0, sizeof kfbuf);
+            for (int f = 0; f <= 30; f++) {          /* kf 209+f gets sx[f] at byte +6 (s16 LE) */
+                int kf = 209 + f; uint8_t *p = kfbuf + kf * 80 + 6;
+                p[0] = (uint8_t)(sx[f] & 0xff); p[1] = (uint8_t)((sx[f] >> 8) & 0xff);
+            }
+            bank->skel.keyframe_size_bytes = 80;
+            bank->skel.keyframe_count      = 260;
+            bank->skel.keyframe_data       = kfbuf;
+            bank->skel.keyframe_data_size  = sizeof kfbuf;
+            bank->anim.clip_count          = 0x0b;
+            bank->anim.clips[0x0a].first_frame = 300;
+            bank->anim.clips[0x0a].frame_count = 31;
+            for (int f = 0; f <= 30; f++) bank->anim.frames[300 + f] = (uint32_t)(209 + f);
+            bank->ok = 1;
+
+            /* place the walking zombie at the origin, the player straight ahead at +Z, and FACE it. */
+            pl->x = 0; pl->z = 20000; pl->hp = 100; pl->hit_react = 0; pl->state = 0; pl->floor = 0;
+            z->x = 0; z->z = 0; z->floor = 0; z->active = 1;
+            z->rot_y = (int16_t)((re15_atan2_q12(pl->z - z->z, pl->x - z->x) - 1024) & 0x0fff);
+            z->state = RE15_AI_STATE_ACTIVE; z->grid_id = 0; z->ai_flags = 0;
+            z->sub_state_1 = 6; z->sub_state_2 = 1;  /* WALK, entry already done (skip the SE/reset) */
+            z->motion = 0x0a;
+
+            int32_t z0 = z->z, x0 = z->x, step4 = 0, step19 = 0;
+            for (int f = 0; f <= 20; f++) {
+                z->anim_frame = (uint16_t)f;
+                int32_t zb = z->z;
+                re15_enemy_ai_live_tick(zs);
+                if (f == 4)  step4  = z->z - zb;
+                if (f == 19) step19 = z->z - zb;
+            }
+            int32_t dz_total = z->z - z0, dx_total = z->x - x0;
+            /* net = the telescoped keyframe offset delta = sx[20]-sx[0] = 2105-821 = 1284 EXACTLY
+             * (byte-true: pos = anchor + rotate(off[kf]); over frames 1..20 it sums to sx[20]-sx[0]). */
+            if (dz_total < 1270 || dz_total > 1300) {
+                fprintf(stderr, "FAIL: (21) walk net must be the telescoped 1284 toward +Z, got dz=%d\n", dz_total); fail = 1; }
+            if (dx_total < -60 || dx_total > 60) {
+                fprintf(stderr, "FAIL: (21) walk must go STRAIGHT at the player; drifted dx=%d\n", dx_total); fail = 1; }
+            if (step4 < 120 || step4 > 180) {         /* byte-true keyframe delta 151, NOT the constant 48 */
+                fprintf(stderr, "FAIL: (21) f4 step must be the keyframe delta ~151, got %d\n", step4); fail = 1; }
+            if (step19 < -8 || step19 > 8) {          /* keyframe delta 0 -> NO move (kills the constant shamble) */
+                fprintf(stderr, "FAIL: (21) f19 step must be ~0 (flat keyframe), got %d (constant shamble?)\n", step19); fail = 1; }
+            if (!fail)
+                printf("  (21) walk root-motion: dz=%d (toward player), dx=%d, f4 step=%d (delta 151), "
+                       "f19 step=%d (delta 0 = no glide)\n", dz_total, dx_total, step4, step19);
+        }
+        re15_enemy_reset();                           /* drop the mock bank */
+    }
+
     if (fail) { fprintf(stderr, "\nROOM1140 COMBAT-WIRING TEST FAILED\n"); return 1; }
     printf("\nPASS: ROOM1140 live-AI game_step wiring (spawn; WAKE->engage; TURN-to-face->GRAB->HP; "
            "GRABBED-lock; player DEATH; zombie HURT/DEATH; PLAYER-SHOOTS; type-gated)\n");
