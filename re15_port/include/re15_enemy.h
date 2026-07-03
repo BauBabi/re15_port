@@ -44,6 +44,11 @@ typedef struct {
     re15_emd_skeleton_t  skel_loco;
     re15_emd_animation_t anim_loco;
     uint8_t              loco_ok;
+    /* Grab-VICTIM bank (bank 2 = dir[5]/[6]): the animation the grab plays on LEON (entity+0x178/+0x17c).
+     * PL00-compatible (15 bones). Clips 0-5 struggle, 6/7 collapse. victim_ok=1 when loaded. */
+    re15_emd_skeleton_t  skel_victim;
+    re15_emd_animation_t anim_victim;
+    uint8_t              victim_ok;
     int tpage, clut;              /* PSX VRAM handles (per-tri path: both -1) */
     int xshift, yshift;           /* PSX VRAM tpage-X / CLUT-row relocation shifts */
     int pc_tex_slot;              /* PC render texture slot (-1 if unused) */

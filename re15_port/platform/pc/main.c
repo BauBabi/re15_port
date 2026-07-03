@@ -353,6 +353,9 @@ static void pc_enemy_load(uint8_t type)
      * (the 6-clip loco set with the 0x2000 foot-lock frame flags), which parse_container skips in
      * favour of the 43-clip action bank. Aliases into buf (no extra alloc). */
     eb->loco_ok = (re15_emd_parse_loco_bank(buf, buflen, &eb->skel_loco, &eb->anim_loco) == 0);
+    /* Load the GRAB-VICTIM bank (bank 2) — the animation the grab plays on LEON (struggle clips 0-5 /
+     * collapse 6/7); PL00-compatible. Used by the player-victim FSM when a zombie grabs the player. */
+    eb->victim_ok = (re15_emd_parse_victim_bank(buf, buflen, &eb->skel_victim, &eb->anim_victim) == 0);
     int slot = 11 + (int)(eb - g_enemy);
     if (tim.width > 0 && tim.height > 0 && slot < 24) {
         re15_render_pc_upload_tim_slot(&tim, slot);

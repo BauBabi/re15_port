@@ -179,4 +179,10 @@ int re15_emd_parse_loco_bank(const uint8_t *emd, size_t emd_size,
                              re15_emd_skeleton_t  *out_skel,
                              re15_emd_animation_t *out_anim);
 
+/* Parse the em<NN> GRAB-VICTIM bank (bank 2 = dir[5] EDD + dir[6] kf, dir[2] struct) — the animation
+ * the grab plays on LEON (entity+0x178/+0x17c). Clips 0-5 struggle, 6/7 collapse. See emd_common.c. */
+int re15_emd_parse_victim_bank(const uint8_t *emd, size_t emd_size,
+                               re15_emd_skeleton_t  *out_skel,
+                               re15_emd_animation_t *out_anim);
+
 #endif /* RE15_EMD_H */

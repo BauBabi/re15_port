@@ -552,3 +552,36 @@ int re15_emd_parse_loco_bank(const uint8_t *emd, size_t emd_size,
                   re15_emd_parse_skeleton (emd + off_emr0, emd_size - off_emr0, out_skel) == 0;
     return (ok_anim && ok_skel) ? 0 : -1;
 }
+
+/* Parse the em<NN> GRAB-VICTIM bank (bank 2 = dir[5]=EDD, dir[6]=keyframe pool) — the animation the
+ * STAGE1 grab plays on LEON (entity+0x178/+0x17c -> DAT_800acbcc/acbd0 -> func_0x8001ad68(&player,..));
+ * bank 2 is PL00-compatible (15 bones, kf_size 80). Clips 0-5 = the grabbed STRUGGLE (front {0,1,2} /
+ * back {3,4,5}), clips 6/7 = the 65-frame devour-COLLAPSE. Structure comes from dir[2] (shared), the
+ * keyframe pool is re-pointed to dir[6] (bank2's own, like the container's bank re-point). */
+int re15_emd_parse_victim_bank(const uint8_t *emd, size_t emd_size,
+                               re15_emd_skeleton_t  *out_skel,
+                               re15_emd_animation_t *out_anim)
+{
+    if (!emd || emd_size < 12) return -1;
+    uint32_t begin = read_u32_le(emd + 0);
+    uint32_t count = read_u32_le(emd + 4);
+    if (count < 7) return -1;                               /* need dir[5]/[6] */
+    if ((size_t)begin + (size_t)count * 4 > emd_size) return -1;
+    uint32_t off_edd  = read_u32_le(emd + begin + 5 * 4);   /* dir[5] = bank2 EDD (14 clips) */
+    uint32_t off_emr  = read_u32_le(emd + begin + 2 * 4);   /* dir[2] = shared bone structure */
+    uint32_t off_kf   = read_u32_le(emd + begin + 6 * 4);   /* dir[6] = bank2 keyframe pool */
+    int ok_anim = out_anim && off_edd && off_edd < emd_size &&
+                  re15_emd_parse_animation(emd + off_edd, emd_size - off_edd, out_anim) == 0;
+    int ok_skel = out_skel && off_emr && off_emr < emd_size &&
+                  re15_emd_parse_skeleton (emd + off_emr, emd_size - off_emr, out_skel) == 0;
+    if (ok_skel && off_kf && (size_t)off_kf + 8 < emd_size && out_skel->keyframe_size_bytes > 0) {
+        int kf_off = (int)read_u16_le(emd + off_kf + 2);    /* bank2 EMR keyframes_offset (u16 @ +2) */
+        if ((size_t)(off_kf + kf_off) < emd_size) {
+            out_skel->keyframe_data      = emd + off_kf + kf_off;
+            out_skel->keyframe_data_size = emd_size - (size_t)(off_kf + kf_off);
+            out_skel->keyframe_count     = (int)(out_skel->keyframe_data_size /
+                                                 (size_t)out_skel->keyframe_size_bytes);
+        }
+    }
+    return (ok_anim && ok_skel) ? 0 : -1;
+}
