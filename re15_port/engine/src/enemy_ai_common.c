@@ -25,6 +25,8 @@
                             * re15_enemy_apply_hitbox */
 #include "re15_skeleton.h" /* re15_sin_q12 / re15_cos_q12 — forward-walk root-motion step (8.19) */
 #include "re15_actor.h"    /* re15_atan2_q12 — heading toward the player for the approach/walk */
+#include "re15_anim_select.h" /* re15_compute_actor_kf — current keyframe for the walk root-motion */
+#include "re15_emd.h"      /* re15_emd_get_keyframe_speed — the walk clip's per-frame root translation */
 
 /* Engine-wide AI freeze = DAT_800aca40 & 0x20000000 (FUN_8011d6d4 gate). */
 static int s_ai_paused = 0;
@@ -619,22 +621,44 @@ static void re15_enemy_face_player(re15_actor_t *e, const re15_actor_t *player, 
 static void re15_enemy_ai_live_walk(re15_actor_t *e, const re15_actor_t *player)
 {
     if (!player) return;
-    uint8_t walk_clip = (uint8_t)((e->sub_state_1 == 0x13) ? 0x01 : (e->sub_state_1 + 4)); /* 0x13->1, 5/6->9/10 */
-    if (e->sub_state_2 == 0) {                       /* +0x6==0 entry (@0x80102c0c / @0x801057d0) */
-        e->motion = walk_clip; e->anim_frame = 0; e->anim_frac = 7;
-        re15_audio_room_se(4);                       /* walk-start SE (func_0x800453d0(4)) */
+    int track = (e->sub_state_1 == 0x13);            /* 0x13 = TRACK (clip 1, rotate) ; 5/6 = WALK (clip 0xa) */
+    uint8_t clip = (uint8_t)(track ? 0x01 : 0x0a);
+    if (e->sub_state_2 == 0) {                        /* +0x6==0 entry (@0x801057d0 / @0x80102c0c) */
+        e->motion = clip; e->anim_frame = 0; e->anim_frac = 7;
+        re15_audio_room_se(4);
         e->sub_state_2 = 1;
     }
-    re15_enemy_face_player(e, player, 0x60);         /* track the player (homing) */
-    /* forward root-motion: step TOWARD the player. FAITHFUL-LINE (func_0x8001ad68 is undisassembled):
-     * step directly along the player vector at a fixed walk cadence (~90/frame) so the direction is
-     * always correct regardless of the heading convention. The grab commits once within 0x4b0. */
+    int16_t residual = (int16_t)re15_ai_arc_test(e, player->x, player->z, 0x60);  /* rotate toward player */
+    e->rot_y = (int16_t)(((int32_t)e->rot_y + residual) & 0x0fff);
+    if (track) {
+        /* +0x5=0x13 (FUN_801057bc): rotate/track in place playing clip 1; once FACING the player,
+         * break into the forward WALK (+0x5=6). No translation here — the pose just tracks. */
+        if (residual == 0) { e->sub_state_1 = 6; e->sub_state_2 = 0; }
+        return;
+    }
+    /* +0x5=6 WALK (FUN_80102bd8 -> func_0x8001ad68): the forward step comes FROM THE WALK CLIP's
+     * per-frame root translation (EMR keyframe speed +6/+10, re15_emd_get_keyframe_speed), rotated by
+     * the heading — so the FEET STAY PLANTED (no glide). The grab commits once within 0x4b0. */
+    re15_enemy_bank_t *bank = re15_enemy_find(e->type);
+    int32_t fwd = 0;
+    if (bank && (int)e->motion < bank->anim.clip_count) {
+        int kf = re15_compute_actor_kf(&bank->anim, &bank->skel, e, (int)e->motion, (uint32_t)e->anim_frame);
+        int16_t sx = 0, sy = 0, sz = 0; (void)sy;
+        if (re15_emd_get_keyframe_speed(&bank->skel, kf, &sx, &sy, &sz) == 0) {
+            int32_t ax = sx < 0 ? -sx : sx, az = sz < 0 ? -sz : sz;
+            fwd = ax > az ? ax : az;                  /* per-frame root distance from the walk clip */
+        }
+    }
+    /* Step toward the player while the WALK CLIP (0xa) plays (legs animate = reads as a walk, not the
+     * earlier standing-clip glide). FAITHFUL-LINE: the extracted zombie EDD carries NO keyframe
+     * root-motion (fwd measured 0 in-game), so the original's func_0x8001ad68 keyframe-speed step has
+     * no data here -> use a fixed slow shamble cadence toward the player vector (proven direction). */
+    int32_t step = (fwd > 0) ? fwd : 48;
     int32_t dx = (int32_t)player->x - e->x, dz = (int32_t)player->z - e->z;
     int32_t len = (int32_t)re15_enemy_player_dist(e, player);
-    if (len > 40) {                                  /* don't overshoot into the player */
-        int32_t speed = 90;
-        e->x += dx * speed / len;
-        e->z += dz * speed / len;
+    if (len > 40) {
+        e->x += dx * step / len;
+        e->z += dz * step / len;
     }
 }
 
