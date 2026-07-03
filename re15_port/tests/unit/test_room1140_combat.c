@@ -41,7 +41,8 @@
 #include "re15_damage.h"   /* re15_damage_seed_rng */
 #include "re15_player.h"   /* re15_player_tick + RE15_PAD_BIT_R1 (the aim pose, Phase 8.14) */
 #include "re15_vab.h"      /* re15_vab_parse + re15_footstep_vag — the death-SE bank lookup (Phase 8.17) */
-#include "re15_room.h"     /* g_room_change + g_current_room_id — the death->continue reload (part 20) */
+#include "re15_room.h"
+#include "re15_skeleton.h" /* re15_sin/cos_q12 - the test-21 anchor seed */     /* g_room_change + g_current_room_id — the death->continue reload (part 20) */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -924,8 +925,17 @@ int main(void)
             z->x = 0; z->z = 0; z->floor = 0; z->active = 1;
             z->rot_y = (int16_t)((re15_atan2_q12(pl->z - z->z, pl->x - z->x) - 1024) & 0x0fff);
             z->state = RE15_AI_STATE_ACTIVE; z->grid_id = 0; z->ai_flags = 0;
-            z->sub_state_1 = 6; z->sub_state_2 = 1;  /* WALK, entry already done (skip the SE/reset) */
+            z->sub_state_1 = 6; z->sub_state_2 = 1;  /* DEVOUR, entry already done (skip the SE/latch) */
             z->motion = 0x0a;
+            /* the devour places ABSOLUTELY from the grab's shared anchor (P2, FUN_8001ac38 persists);
+             * this direct-entry test seeds the anchor the way the grab latch would: anchor = pos -
+             * rotate(off[frame0]) — the placement then telescopes the authored 821->2654 offsets. */
+            {
+                int16_t sx0 = (int16_t)821, szz = 0;    /* off[kf0=209] = (821,0), clip 0xa frame 0 */
+                int32_t cs = re15_cos_q12(z->rot_y), sn = re15_sin_q12(z->rot_y);
+                z->anchor_x = z->x - (int32_t)(( (int64_t)cs * sx0 + (int64_t)sn * szz) >> 12);
+                z->anchor_z = z->z - (int32_t)((-(int64_t)sn * sx0 + (int64_t)cs * szz) >> 12);
+            }
 
             int32_t z0 = z->z, x0 = z->x, step4 = 0, step19 = 0;
             for (int f = 0; f <= 20; f++) {
@@ -1000,14 +1010,12 @@ int main(void)
                         re15_player_victim_state()); fail = 1; }
             if (pl->motion != 0) {   /* face variant, phase 0 -> struggle clip 0 */
                 fprintf(stderr, "FAIL: (22b) struggle must pose Leon at face clip 0, motion=%d\n", pl->motion); fail = 1; }
-            /* TURN-TO-FACE (byte-true func_0x8001a8f8 snap): Leon yaw must SNAP to face the grabbing
-             * zombie (at +500 X here), NOT stay at the wrong 0x555. Face variant -> face the zombie. */
-            {
-                int expect_face = ((int)re15_atan2_q12(gz->z - pl->z, gz->x - pl->x) - 0x400) & 0x0fff;
-                if (pl->rot_y == 0x555 || pl->rot_y != (int16_t)expect_face) {
-                    fprintf(stderr, "FAIL: (22b) struggle must SNAP Leon to face the grabber, rot_y=%d (want %d)\n",
-                            pl->rot_y, expect_face); fail = 1; }
-            }
+                        /* VICTIM YAW (live-verified rigid coupling): Leon's yaw == the grabber's yaw for BOTH
+             * variants (tl3 behind-grab: Leon 1547 constant vs zombie ~1527; the victim clips are
+             * authored in the zombie-yaw frame). Must leave the wrong 0x555. */
+            if (pl->rot_y == 0x555 || pl->rot_y != gz->rot_y) {
+                fprintf(stderr, "FAIL: (22b) Leon victim yaw must equal the grabber's, rot_y=%d (zombie %d)\n",
+                        pl->rot_y, gz->rot_y); fail = 1; }
 
             /* (c) TIMELINE-VERIFIED struggle model (deterministic DuckStation /tmp/tl3 + Q4 disasm of
              * @0x8010a28c): the intro clip base+0 plays ONCE, then the handler LOOPS clip base+1 for the

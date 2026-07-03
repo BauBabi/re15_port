@@ -119,3 +119,12 @@ target_link_libraries(test_item_icon PRIVATE re15_engine re15_test_support)
 target_include_directories(test_item_icon PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_item_icon COMMAND test_item_icon)
 set_tests_properties(unit_item_icon PROPERTIES TIMEOUT 30)
+
+# --- Zombie AWARE-WALK Pose-Oracle (P1 regression: em10 loco clip2/kf97 == live PSX hunch) ---
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_zombie_pose.c")
+    add_executable(test_zombie_pose test_zombie_pose.c)
+    target_link_libraries(test_zombie_pose PRIVATE re15_engine re15_test_support)
+    target_include_directories(test_zombie_pose PRIVATE ${CMAKE_SOURCE_DIR}/include)
+    add_test(NAME unit_zombie_pose COMMAND test_zombie_pose WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+    set_tests_properties(unit_zombie_pose PROPERTIES TIMEOUT 30)
+endif()

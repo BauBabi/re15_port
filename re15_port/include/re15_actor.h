@@ -101,6 +101,11 @@ typedef struct {
     int16_t  ai_timer;      /* +0x9c : search decision countdown (FUN_80101b64; 0 -> 0x101) */
     int16_t  grab_kill_ctr; /* +0x9e : the grab KILL counter (FUN_80102548 [2]=100; [3] -- per tick;
                              * was-0 OR player-hp<0 -> the DEVOUR handoff word ((+0x5)+2)<<8|1) */
+    int32_t  anchor_x;      /* +0xa0 : the clip root-motion ANCHOR (FUN_8001ac38: pos - rotate(off));
+                             * +0xa2   func_0x8001ad68 places pos = anchor + rotate(off[kf], yaw).
+                             *         The grab [0] COPIES the zombie anchor onto the player -> the
+                             *         pair interlocks in the AUTHORED formation (no clipping). */
+    int32_t  anchor_z;
     uint16_t ai_flags;      /* +0x1d8: bit0x10 = "approach permitted" gate (decision block)  */
     uint8_t  ai_contact;    /* +0x90 : contact/collision bits (FUN_80102058, low byte)        */
     /* AI params FUN_8011d84c writes (PSX: into the model pool entity[0x62]+0x5fx). The

@@ -471,6 +471,46 @@ uint8_t re15_player_victim_type(void)  { return g_player_victim_type; }
  * with the local->world convention of the foot-lock (wx = cos*lx + sin*lz, wz = -sin*lx + cos*lz).
  * TIMELINE-VERIFIED (deterministic /tmp/tl3): the grabbed PAIR drifts together (~65 units/1.3s) and
  * the devour collapse DRAGS Leon ~600 units — both are this root motion, missing before. */
+/* ANCHOR SET (byte-true FUN_8001ac38 @0x8001ac38): anchor(+0xa0/+0xa2) = pos - rotate(off[kf], yaw)
+ * for the CURRENT clip/frame's keyframe root offset — so the subsequent absolute placements replay
+ * the clip's authored trajectory from the current position. */
+static void re15_clip_anchor_set(re15_actor_t *a,
+                                 const re15_emd_skeleton_t *skel,
+                                 const re15_emd_animation_t *anim, int clip, int frame)
+{
+    a->anchor_x = a->x; a->anchor_z = a->z;
+    if (!skel || !anim || clip < 0 || clip >= anim->clip_count) return;
+    const re15_emd_clip_t *c = &anim->clips[clip];
+    if (c->frame_count <= 0) return;
+    int slot = frame % c->frame_count;
+    int kf = (int)(anim->frames[c->first_frame + slot] & 0xFFFu);
+    int16_t sx, sy, sz;
+    if (!re15_emd_get_keyframe_speed(skel, kf, &sx, &sy, &sz)) return;
+    int32_t cs = re15_cos_q12(a->rot_y), sn = re15_sin_q12(a->rot_y);
+    a->anchor_x = a->x - (int32_t)(( (int64_t)cs * sx + (int64_t)sn * sz) >> 12);
+    a->anchor_z = a->z - (int32_t)((-(int64_t)sn * sx + (int64_t)cs * sz) >> 12);
+}
+
+/* ABSOLUTE clip root motion (byte-true func_0x8001ad68 @0x8001ad68 core: entity+0x34/+0x3c =
+ * anchor(+0xa0/+0xa2) + rotate(off[kf], yaw)) — the placement the grab pair uses: with BOTH anchors
+ * equal (the grab [0] copies the zombie anchor to the player) the authored clip offsets hold the
+ * pair in the interlocking formation instead of drifting into each other. */
+static void re15_clip_root_motion_abs(re15_actor_t *a,
+                                      const re15_emd_skeleton_t *skel,
+                                      const re15_emd_animation_t *anim, int clip, int frame)
+{
+    if (!skel || !anim || clip < 0 || clip >= anim->clip_count) return;
+    const re15_emd_clip_t *c = &anim->clips[clip];
+    if (c->frame_count <= 0) return;
+    int slot = frame % c->frame_count;
+    int kf = (int)(anim->frames[c->first_frame + slot] & 0xFFFu);
+    int16_t sx, sy, sz;
+    if (!re15_emd_get_keyframe_speed(skel, kf, &sx, &sy, &sz)) return;
+    int32_t cs = re15_cos_q12(a->rot_y), sn = re15_sin_q12(a->rot_y);
+    a->x = a->anchor_x + (int32_t)(( (int64_t)cs * sx + (int64_t)sn * sz) >> 12);
+    a->z = a->anchor_z + (int32_t)((-(int64_t)sn * sx + (int64_t)cs * sz) >> 12);
+}
+
 static void re15_clip_root_motion_delta(re15_actor_t *a,
                                         const re15_emd_skeleton_t *skel,
                                         const re15_emd_animation_t *anim,
@@ -557,17 +597,21 @@ void re15_player_victim_tick(void)
     re15_actor_t *player = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     re15_enemy_bank_t *vb = re15_enemy_find(g_player_victim_type);
     if (!vb || !vb->victim_ok) { g_player_victim = 0; return; }
-    /* TURN-TO-FACE (byte-true func_0x8001a8f8 @0x8010a3a4, disasm-verified): every struggle/collapse
-     * frame Leon's yaw is SET to face the grabbing zombie. The helper's clamp is 2*0x800 = 0x1000 (a
-     * full 180deg), so (0x800 + delta) & 0xfff is ALWAYS < 0x1000 = it SNAPS to the target every frame
-     * (never the incremental step). Face grab (variant 0) faces the zombie; behind grab (variant 1) the
-     * original flips +0x800 (faces away). Same yaw convention as the zombie turn-to-face: rot_y =
-     * atan2_q12(dz,dx) - 0x400. Was MISSING -> Leon struggled facing wherever he last walked. */
+    /* VICTIM YAW — RIGIDLY COUPLED to the grabber (LIVE-verified: Leon's rot stays CONSTANT 1547 for
+     * the whole behind-grab in /tmp/tl3 while the zombie holds ~1527 — i.e. θ_leon == θ_zombie for
+     * the behind grab, θ_leon == θ_zombie + 0x800 for the face grab, both facing each other). The
+     * original's per-frame FUN_8001a8f8 bearing-snap converges to exactly this because the shared-
+     * anchor placement keeps the pair in the authored formation; a LIVE bearing-snap in the port
+     * ping-ponged 180° per frame (the abs placement moved Leon past the zombie -> bearing flip ->
+     * placement flip: measured PL oscillation ±2300 units @F97-116). The rigid coupling is the
+     * fixed point of the original's snap = observably byte-equal, and unconditionally stable. */
     if (g_player_victim_zombie >= 0 && g_player_victim_zombie < RE15_ACTOR_MAX) {
         const re15_actor_t *gz = &g_actors[g_player_victim_zombie];
-        int face = ((int)re15_atan2_q12(gz->z - player->z, gz->x - player->x) - 0x400) & 0x0fff;
-        if (g_player_victim_variant == 1) face = (face + 0x800) & 0x0fff;   /* behind -> face away */
-        player->rot_y = (int16_t)face;
+        /* θ_leon == θ_zombie for BOTH variants (live: behind-grab Leon 1547 vs zombie ~1527; and
+         * with θl=θz the face-grab abs placement lands Leon exactly at his grab spot IN FRONT of
+         * the zombie). The victim clips are authored in the ZOMBIE-yaw frame — the visible facing
+         * (toward/away) is baked into the clip content, not the entity yaw. */
+        player->rot_y = gz->rot_y;
     }
     uint8_t base = (uint8_t)(g_player_victim_variant * 3);
     if (g_player_victim == 1) {                         /* STRUGGLE (state 5, @0x8010a28c 6-phase machine) */
@@ -586,13 +630,12 @@ void re15_player_victim_tick(void)
         player->motion = clip;
         int fc = (clip < vb->anim_victim.clip_count) ? vb->anim_victim.clips[clip].frame_count : 1;
         if (fc < 1) fc = 1;
-        int fr_prev = (int)player->anim_frame;
         if (++player->anim_frame >= fc) {              /* clip-done -> intro advances, hold clip LOOPS */
             player->anim_frame = 0;
             if (s_victim_phase < 1) s_victim_phase++;
         }
-        re15_clip_root_motion_delta(player, &vb->skel_victim, &vb->anim_victim,
-                                    clip, (int)player->anim_frame, fr_prev);
+        re15_clip_root_motion_abs(player, &vb->skel_victim, &vb->anim_victim,
+                                  clip, (int)player->anim_frame);
     } else if (g_player_victim == 2) {                 /* COLLAPSE (state 6): clip variant+6, play once +
                                                         * ROOT MOTION (the ~600-unit devour drag), hold last */
         uint8_t clip = (uint8_t)(g_player_victim_variant + 6);
@@ -600,10 +643,9 @@ void re15_player_victim_tick(void)
         int fc = (clip < vb->anim_victim.clip_count) ? vb->anim_victim.clips[clip].frame_count : 1;
         if (fc < 1) fc = 1;
         if (player->anim_frame < fc - 1) {
-            int fr_prev = (int)player->anim_frame;
             player->anim_frame++;
-            re15_clip_root_motion_delta(player, &vb->skel_victim, &vb->anim_victim,
-                                        clip, (int)player->anim_frame, fr_prev);
+            re15_clip_root_motion_abs(player, &vb->skel_victim, &vb->anim_victim,
+                                      clip, (int)player->anim_frame);
         }
         /* HP = -1 EXACTLY at collapse anim frame 0x23=35 (byte-true FUN_8010a6f8 @0x8010a80c/814,
          * gate @0x8010a7e8 == 0x23) — a DIRECT SET in the cmd-6 handler, NOT a clamp in the damage
@@ -631,15 +673,14 @@ void re15_player_victim_tick(void)
         player->motion = clip;
         int fc = (clip < vb->anim_victim.clip_count) ? vb->anim_victim.clips[clip].frame_count : 1;
         if (fc < 1) fc = 1;
-        int fr_prev = (int)player->anim_frame;
         if (++player->anim_frame >= fc) {              /* release clip done -> Leon is free */
             g_player_victim = 0;
             player->hit_react &= (uint8_t)~1u;         /* clear the grabbed flag (+0x93 &= ~1) — a new
                                                         * grab may commit again from here */
             return;
         }
-        re15_clip_root_motion_delta(player, &vb->skel_victim, &vb->anim_victim,
-                                    clip, (int)player->anim_frame, fr_prev);
+        re15_clip_root_motion_abs(player, &vb->skel_victim, &vb->anim_victim,
+                                  clip, (int)player->anim_frame);
     }
 }
 
@@ -815,16 +856,18 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
     /* Drive Leon's grab-victim animation (state 5 struggle / state 6 collapse on grab-death) off this
      * zombie's bank 2 — so he struggles + collapses instead of freezing (the "no Leon reactions"). */
     re15_player_victim_latch(e, player);
-    /* GRAB-CLIP ROOT MOTION (byte-true: FUN_80102548 calls func_0x8001ad68(zombie, +0x170, +0x174) in
-     * sub-steps [1] pull-in, [3] bite and [5] throw-off ONLY — NOT the recovery [6]/[7] (D2 disasm).
-     * The grab clips carry root translation — TIMELINE-VERIFIED (/tmp/tl3): the grabbed pair DRIFTS
-     * together (~65 units/1.3s) instead of standing frozen. Per-frame keyframe delta of the CURRENT
-     * clip (the shared anim pass advanced anim_frame just before run_all; wrap/clip-set = re-anchor). */
+    /* GRAB-CLIP ROOT MOTION — ABSOLUTE from the SHARED ANCHOR (P2 disasm 2026-07-04, survived
+     * refutation): FUN_80102548 calls func_0x8001ad68(zombie, +0x170, +0x174) in sub-steps [1] pull-in,
+     * [3] bite and [5] throw-off — an ABSOLUTE placement pos = anchor(+0xa0/+0xa2) + RotY(own yaw) *
+     * off[kf] of the bank1 grab clip. Because the grab [0] copied ONE anchor to both the zombie and
+     * the player (FUN_8001ac38 @0x801025f0), the pair sits in the clips' AUTHORED interlocking
+     * formation — the old per-entity DELTA let them drift INTO each other (observed d=2..23 = Leon
+     * clipped inside the zombie). Recovery [7] is NOT ad68 — it is a velocity walk-back (below). */
     if (e->sub_state_2 == 1 || e->sub_state_2 == 3 || e->sub_state_2 == 5) {
         re15_enemy_bank_t *gb = re15_enemy_find(e->type);
         if (gb && gb->ok)
-            re15_clip_root_motion_delta(e, &gb->skel, &gb->anim,
-                                        (int)e->motion, (int)e->anim_frame, (int)e->anim_frame - 1);
+            re15_clip_root_motion_abs(e, &gb->skel, &gb->anim,
+                                      (int)e->motion, (int)e->anim_frame);
     }
     /* per-sub-step GRAB CLIP (FUN_80102548 +0x6 sub-steps 0/2/4 @0x801025bc/0x80102714/0x801028f0):
      * +0x94 = (+0x5-3)*3 + {0,1,2}. +0x5 = the facing (3 face / 4 behind, dynamic from the engage),
@@ -841,9 +884,21 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
              * already-held player. TIMELINE-VERIFIED: the original's other zombie stayed in engage at
              * d=851 for the whole hold; the port had TWO simultaneous grabbers (F223) = double bites. */
             player->hit_react |= 1;
-            /* YAW SNAP (byte-true [0] FUN_8001a8f8(&player_pos, 0x800): with clamp 0x800 the compare
-             * (0x800+delta)&0xfff < 0x1000 is always true -> the zombie's facing SNAPS to the player.
-             * This aims the grab clips' baked root translation AT the player (D2 disasm). */
+            /* THE SHARED ANCHOR (byte-true FUN_8001ac38 @0x801025f0, P2 disasm): computed on the
+             * PRE-SNAP yaw from the BANK0 pair (+0x84/+0x16c) clip[grab_base] frame-0 root offset
+             * (em10: (0,7) ~= the latch position), then COPIED to the player (@0x8001ad28-ad48) —
+             * both entities place ABSOLUTELY from this one anchor for the whole grab choreography. */
+            {
+                re15_enemy_bank_t *gb0 = re15_enemy_find(e->type);
+                if (gb0 && gb0->loco_ok)
+                    re15_clip_anchor_set(e, &gb0->skel_loco, &gb0->anim_loco, (int)grab_base, 0);
+                else { e->anchor_x = e->x; e->anchor_z = e->z; }
+                player->anchor_x = e->anchor_x;
+                player->anchor_z = e->anchor_z;
+            }
+            /* YAW SNAP (byte-true [0] FUN_8001a8f8(&player_pos, 0x800), AFTER ac38: with clamp 0x800
+             * the compare (0x800+delta)&0xfff < 0x1000 is always true -> the facing SNAPS to the
+             * player. This aims the grab clips' baked root translation AT the player. */
             e->rot_y = (int16_t)(((int)re15_atan2_q12(player->z - e->z, player->x - e->x) - 0x400) & 0x0fff);
             re15_audio_room_se(4);            /* grab-START SE (@0x8010268c func_0x800453d0(4), snd1) */
             e->sub_state_2 = 1; break;
@@ -927,10 +982,19 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
             e->sub_state_2 += (uint8_t)(re15_enemy_clip_done(e) ? 1 : 0);
             break;
         case 6:                               /* [6] recovery — set the literal clip 17 (0x11, @0x80102a64);
-                                               * the SE 7 belongs to the THROW-OFF [4] (@0x80102920/60). */
+                                               * the SE 7 belongs to the THROW-OFF [4] (@0x80102920/60).
+                                               * Seeds the walk-back speed +0x8c = 0x32 (P2 disasm). */
             e->motion = 0x11; e->anim_frame = 0;
+            e->speed_h = 0x32;
             e->sub_state_2 = 7; break;
-        case 7:                               /* [7] play the release clip 0x11 to its end (byte-true anim-gate) */
+        case 7:                               /* [7] recovery plays clip 0x11 — NO ad68 root motion: the
+                                               * zombie VELOCITY-walks backward-facing (func_0x800245d8:
+                                               * forward speed +0x8c, -2/tick, min 10 — P2 disasm) while
+                                               * the clip plays out (the stagger-away after the fling). */
+            e->x += (int32_t)(((int32_t)re15_cos_q12(e->rot_y) * e->speed_h) >> 12);
+            e->z -= (int32_t)(((int32_t)re15_sin_q12(e->rot_y) * e->speed_h) >> 12);
+            e->speed_h = (int16_t)(e->speed_h - 2);
+            if (e->speed_h < 10) e->speed_h = 10;
             e->sub_state_2 += (uint8_t)(re15_enemy_clip_done(e) ? 1 : 0);   /* 7 -> 8 on clip-end */
             break;
         default:                              /* [8] EXIT (0x80102b90) -> back to the engage brain */
@@ -1201,8 +1265,9 @@ static void re15_enemy_ai_live_devour(re15_actor_t *e, const re15_actor_t *playe
     }
     if (e->anim_frame == 0x28) re15_audio_room_se(3); /* chomp SE (@ frame 0x28, D3 disasm) */
     if (re15_enemy_clip_done(e)) { e->sub_state_2 = 2; return; }   /* clip done -> INERT */
-    int16_t residual = (int16_t)re15_ai_arc_test(e, player->x, player->z, 0x60);  /* rotate toward player */
-    e->rot_y = (int16_t)(((int32_t)e->rot_y + residual) & 0x0fff);
+    /* NO steering in the devour (P2/D3 disasm: sub1 = ad68 root motion + SE only) — the yaw stays
+     * as the grab left it; live: Leon (yaw-coupled) held rot 1547 constant through the collapse.
+     * A leftover arc-steer here chased the falling corpse -> the pair swept a 3000-unit arc. */
     /* +0x5=6 WALK (byte-true FUN_80102bd8 -> func_0x8001ad68 @0x8001ad68 + the keyframe decoder
      * func_0x8001ae38 @0x8001ae38, disassembled from PSX.EXE). The forward step IS the walk clip's
      * baked root translation: clip 0xa's keyframes carry a CUMULATIVE forward offset at +6 (the
@@ -1214,23 +1279,13 @@ static void re15_enemy_ai_live_devour(re15_actor_t *e, const re15_actor_t *playe
      * the zombie's own +1024 arc_test heading lives in (re15_ai_arc_test: rel = ang-(rot_y+1024)) —
      * so a facing zombie walks straight AT the player with feet planted to the clip cadence (no glide,
      * no fixed shamble). sz is ~0 in this clip (|sz|<=2) so the lateral cross-term is omitted. */
+    /* ABSOLUTE placement from the grab's SHARED ANCHOR (P2 disasm: FUN_80102bd8 has NO ac38 — the
+     * anchor set at the grab latch PERSISTS; per-frame ad68(zombie, bank1) places pos = anchor +
+     * RotY(yaw)*off[kf]. The devour clip's 821->2654 offsets carry the zombie down ONTO the corpse
+     * exactly as authored — while Leon's collapse clip (same anchor) drags him under it. */
     re15_enemy_bank_t *bank = re15_enemy_find(e->type);
-    int32_t d = 0;
-    if (bank && bank->skel.keyframe_count > 0 && (int)e->motion < bank->anim.clip_count) {
-        int f       = (int)e->anim_frame;
-        int kf_cur  = re15_compute_actor_kf(&bank->anim, &bank->skel, e, (int)e->motion, (uint32_t)f);
-        int kf_prev = re15_compute_actor_kf(&bank->anim, &bank->skel, e, (int)e->motion,
-                                            (uint32_t)(f > 0 ? f - 1 : 0));
-        int16_t sx = 0, sx0 = 0, sy = 0, sz = 0; (void)sy; (void)sz;
-        re15_emd_get_keyframe_speed(&bank->skel, kf_cur,  &sx,  &sy, &sz);
-        re15_emd_get_keyframe_speed(&bank->skel, kf_prev, &sx0, &sy, &sz);
-        d = (int32_t)sx - (int32_t)sx0;              /* per-frame forward offset delta (+6) */
-        /* clip-start (f==0) and the loop wrap (kf resets 273->209 => d ~= -1416) re-anchor: no step
-         * that frame (legit per-frame |delta| <= ~140; a >300 jump is the wrap boundary). */
-        if (f == 0 || d < -300 || d > 300) d = 0;
-    }
-    e->x += (int32_t)(((int32_t)re15_cos_q12(e->rot_y) * d) >> 12);
-    e->z -= (int32_t)(((int32_t)re15_sin_q12(e->rot_y) * d) >> 12);
+    if (bank && bank->ok)
+        re15_clip_root_motion_abs(e, &bank->skel, &bank->anim, (int)e->motion, (int)e->anim_frame);
 }
 
 /* FUN_80101224 (@0x8011f7b4[1], STAGE1.BIN) — the LIVE zombie ACTIVE handler. The ATTACK-WINDUP
