@@ -32,6 +32,7 @@
 static int s_ai_paused = 0;
 void re15_enemy_ai_set_paused(int paused) { s_ai_paused = paused ? 1 : 0; }
 
+static void re15_enemy_face_player(re15_actor_t *e, const re15_actor_t *player, int16_t slew);  /* fwd */
 /* FSM-CLOCK clip-end signal (defined below, used by the feeding stand-up + grab + death sub-FSMs). */
 static int re15_enemy_clip_done(const re15_actor_t *e);
 
@@ -341,6 +342,12 @@ void re15_ai_dispatch_decision(re15_actor_t *e, const re15_actor_t *player)
         case 0x13: re15_ai_decide_engage(e, player);    break;  /* f840[0x13]=FUN_8010561c == the engage
                                                                  * decide: while APPROACHING, commit the
                                                                  * grab/turn once in range (8.19). */
+        case 0x0c:  /* feeding decide FUN_801048a8 (@0x8011f840[0xc]): dist<0xbb8 (3000) && player
+                     * alive -> +0x4=0xd01 (+0x5=0xd stand-up). The byte-true wake for a spawn-feeder. */
+            if (e->ai_dist < 0xbb8u && player->hp >= 0)
+                re15_ai_set_state_word(e, 0xd01);
+            break;
+        case 0x0d: break;                                       /* standup decide FUN_80104a48 = jr ra stub */
         case 5: case 6: re15_ai_decide_engage(e, player); break;
             /* +0x5=5/6 WALK grab-commit. Byte-true f840[6]=FUN_80102bd0 is a `jr ra` stub, BUT the
              * port's +0x5=6 is a CONTINUOUS forward-walk standing in for the original's approach-scan
@@ -429,6 +436,24 @@ void re15_enemy_ai_live_init(int slot)
         static const uint8_t hurt_clip_seed[8] = { 2, 3, 4, 5, 2, 3, 4, 5 };
         e->hurt_clip = hurt_clip_seed[re15_engine_rand8() & 7];
     }
+    /* BYTE-TRUE SPAWN-STATE DECODER (@0x80100c20, branched from the init FUN_80100688 @0x80100904).
+     * The Sce_em_set behavior byte (entity+0x9 = grid_id) carries, in its low nibble, the initial AI
+     * state — NOT just the spawn pose. The port previously seeded only +0x94 (re15_enemy_spawn_action)
+     * and left +0x5=0 / grid=0x86 -> the feeding zombies ran the grid-submode-6 FALLBACK instead of
+     * the byte-true combat-submode +0x5=0xc. Here we add the +0x5/+0x6/grid the decoder writes so the
+     * spawn state is RAM-identical to the original (briefing.sav: feeders grid=0 +0x5=0xc +0x6=2). */
+    {
+        uint8_t sel = (uint8_t)(e->grid_id & 0x1f);
+        if (sel == 6) {                 /* feeding: +0x4=0x00020c01 @0x80100e60 + grid=0 @0x80100eb0 */
+            e->sub_state_1 = 0x0c; e->sub_state_2 = 2; e->grid_id = 0; e->motion = 0x27;
+        } else if (sel == 0x0d) {       /* pre-engaged: +0x4=0x201 + grid=0 @0x80100f40-54 */
+            e->sub_state_1 = 0x02; e->grid_id = 0; e->motion = 0x27;
+        } else if (sel == 1 || sel == 3) { /* +0x5=5, +0x94=0xc @0x80100d54 */
+            e->sub_state_1 = 0x05; e->motion = 0x0c;
+        }
+        /* sel 8 (lying, 0x88) / 0xb / 0xe: pose-only in the decoder -> +0x5 stays 0, grid unchanged
+         * (RAM: the 0x16 lyer keeps grid=0x88 +0x5=0, mo=0x13). */
+    }
 }
 
 /* Feeding sub-mode (@0x8011f80c[6] = 0x801018f8, STAGE1.BIN) — the briefing zombie's dist-gated
@@ -449,6 +474,54 @@ void re15_enemy_ai_live_init(int slot)
  * +0x1b8=1 @0x80103aac) are deferred: +0x93 is the port's shared hit-guard byte and +0x1b8 the
  * neck-flags, so replaying them would disturb the damage/neck subsystems — they are a wake-up busy
  * latch with no port consumer. Fields: sub_state_2 (+0x6), ai_timer (+0x9c), anim_frac (+0x8f). */
+/* Feeding ANIMATE — byte-true FUN_801048e8 (@0x8011f890[+0x5=0xc], STAGE1.BIN). The combat-sub-mode
+ * feeding loop the ROOM1140 briefing zombies SPAWN into (spawn decoder @0x80100e40: behavior nibble
+ * 6 -> +0x5=0xc, +0x6=2, grid=0, mo=0x27). Phase (+0x6): entry(0) -> clip 0x29 intro (1) -> loop
+ * {0x27 or 0x28} (2 re-roll -> 3 play), clearing the +0x1d8 attack bit, with a slow yaw-slew toward
+ * the food target (+0x1bc/+0x1be, seeded to the player at init -> faithful-line: slew at the byte-true
+ * 0x20 toward the player). The wake (decide FUN_801048a8) flips +0x5=0xc -> 0xd when dist<3000. */
+static void re15_enemy_ai_feeding_animate(re15_actor_t *e, const re15_actor_t *player)
+{
+    uint8_t phase = e->sub_state_2;                        /* +0x6 */
+    if (phase != 1) {
+        if (phase > 1) {                                  /* the {0x27/0x28} feeding loop */
+            if (phase == 2) {                             /* re-roll the feeding clip (@0x8010491c) */
+                e->sub_state_2 = 3;
+                e->motion = (uint8_t)(0x27 + (re15_engine_rand8() & 1));
+                e->anim_frame = 0;
+                return;                                   /* new clip -> not done this frame */
+            }
+            if (phase != 3) return;
+            e->ai_flags &= (uint16_t)~0x10u;              /* +0x1d8 &= 0xffef */
+            if (re15_enemy_clip_done(e)) e->sub_state_2 = 2;  /* clip done -> re-roll */
+            return;
+        }
+        if (phase != 0) return;
+        e->sub_state_2 = 1;                               /* entry: clip 0x29 intro (@0x801049a0) */
+        e->motion = 0x29; e->anim_frame = 0; e->anim_frac = 7;
+    }
+    if (player) re15_enemy_face_player(e, player, 0x20);  /* func_0x8001aac4(+0x1bc,+0x1be,0x20) */
+    if (re15_enemy_clip_done(e)) e->sub_state_2 = 2;      /* 0x29 intro done -> the loop */
+}
+
+/* Stand-up ANIMATE — byte-true FUN_80104a50 (@0x8011f890[+0x5=0xd], STAGE1.BIN). The woken feeder's
+ * GET-UP: play clip 0x29 (@0x80104aa8 sets +0x94=0x29) once to clip-end, then +0x4=0x201 (+0x5=2
+ * engage) @0x80104b24. This is the byte-true state-machine home of the "stehen sauber auf" clip. */
+static void re15_enemy_ai_standup_animate(re15_actor_t *e)
+{
+    uint8_t phase = e->sub_state_2;                        /* +0x6 */
+    if (phase >= 2) {                                     /* clip played out -> engage */
+        if (phase == 2) re15_ai_set_state_word(e, 0x201); /* +0x4 = 0x201 -> +0x5=2 */
+        return;
+    }
+    if (phase == 0) {                                     /* entry: the get-up clip 0x29 */
+        e->sub_state_2 = 1;
+        e->motion = 0x29; e->anim_frame = 0; e->anim_frac = 7;
+        if ((re15_engine_rand8() & 3) == 0) re15_audio_room_se(5);  /* @0x80104ae0 func_0x800453d0(5) */
+    }
+    e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_enemy_clip_done(e));  /* +0x6 += clip-done */
+}
+
 static void re15_enemy_ai_live_feeding(re15_actor_t *e)
 {
     /* stage A — start the wake sequence when the player closes within 4000. */
@@ -727,6 +800,10 @@ int re15_enemy_ai_live_active(int slot)
                  * 8.7 — so it is not wired here; +0x5=7 is the TURN state, not the arm.) */
                 if (e->sub_state_1 == 3 || e->sub_state_1 == 4)
                     re15_enemy_ai_live_grab(e, player);
+                else if (e->sub_state_1 == 0x0c)
+                    re15_enemy_ai_feeding_animate(e, player);   /* f890[0xc]=FUN_801048e8 */
+                else if (e->sub_state_1 == 0x0d)
+                    re15_enemy_ai_standup_animate(e);           /* f890[0xd]=FUN_80104a50 */
                 else if (e->sub_state_1 == 7)
                     re15_enemy_ai_live_turn(e, player);
                 else if (e->sub_state_1 == 5 || e->sub_state_1 == 6 || e->sub_state_1 == 0x13)

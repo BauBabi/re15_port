@@ -121,9 +121,11 @@ int main(void)
             fprintf(stderr, "FAIL: zombie slot %d live_init ai_timer=0x14, ist 0x%x\n", zslots[i], e->ai_timer); fail = 1; }
         if (e->ai_dist == 0) {
             fprintf(stderr, "FAIL: zombie slot %d player-dist not cached (ai_dist=0)\n", zslots[i]); fail = 1; }
-        if ((e->grid_id & 0x0f) == 0) {
-            fprintf(stderr, "FAIL: zombie slot %d expected feeding/lying sub-mode (grid&0xf!=0), grid=0x%02X\n",
-                    zslots[i], e->grid_id); fail = 1; }
+        /* byte-true spawn state (decoder @0x80100c20): feeders (behavior 0x86) -> grid=0 +0x5=0xc,
+         * the lyer (0x88) -> grid=0x88 +0x5=0. Dormant = feeding (+0x5=0xc) OR lying (grid&0xf==8). */
+        if (e->sub_state_1 != 0x0c && (e->grid_id & 0x0f) != 8) {
+            fprintf(stderr, "FAIL: zombie slot %d expected dormant feeding(+0x5=0xc)/lying(grid8), grid=0x%02X +0x5=%d\n",
+                    zslots[i], e->grid_id, e->sub_state_1); fail = 1; }
         if (e->sub_state_1 == 7) {
             fprintf(stderr, "FAIL: zombie slot %d must NOT commit attack as spawned (+0x5=7)\n", zslots[i]); fail = 1; }
         if (e->ai_flags & 0x100) {
@@ -179,18 +181,18 @@ int main(void)
         else printf("  (4) Elliot 0x47 in slot %d untouched by run_all (type-gated) = 1170-safe\n", es);
     }
 
-    /* (5): the dist-gated WAKE-UP (Phase 8.7, byte-true gate 0x80103980: feeding sub 6 wakes when
-     * cached dist +0x1d0 < 0xfa0 = 4000). Take two still-asleep feeding zombies (grid sub 6); move
-     * ONE next to the player (dist 1000 < 4000) and leave the other at its far briefing spot. After
-     * a few frames of run_all the near one must wake to combat (grid_id -> 0) / ACTIVE and land in
-     * the engage brain (+0x5 >= 2 = engage, or the grab/attack it then commits); the far one stays
-     * asleep (still grid sub 6). This is the in-engine wake the live combat savestate confirms. */
+    /* (5): the dist-gated WAKE-UP (byte-true FUN_801048a8, the +0x5=0xc feeding DECIDE @0x8011f840[0xc]:
+     * dist +0x1d0 < 0xbb8 = 3000 && player alive -> +0x5=0xd stand-up -> +0x5=2 engage). Take two
+     * still-feeding zombies (+0x5=0xc); move ONE next to the player (dist 1000 < 3000) and leave the
+     * other at its far briefing spot. After a few frames the near one wakes through the stand-up to the
+     * engage brain (+0x5 >= 2); the far one stays feeding (+0x5=0xc). Byte-true spawn = grid=0, so the
+     * feeders are identified by +0x5=0xc now, not the old grid sub-6. */
     re15_damage_seed_rng(0x5eed1234u);
     pl->x = 0; pl->z = 0; pl->hp = 100; pl->hit_react = 0; pl->state = 0;
     int wake_slot = -1, far_slot = -1;
     for (int i = 0; i < nz; i++) {
         re15_actor_t *z = &g_actors[zslots[i]];
-        if ((z->grid_id & 0x0f) == 6 && z->state == RE15_AI_STATE_ACTIVE && z->sub_state_2 == 0) {
+        if (z->sub_state_1 == 0x0c && z->state == RE15_AI_STATE_ACTIVE) {
             if (wake_slot < 0) wake_slot = zslots[i];
             else if (far_slot < 0) far_slot = zslots[i];
         }
@@ -207,13 +209,13 @@ int main(void)
             fprintf(stderr, "FAIL: near feeding zombie slot %d must wake to combat/engage; "
                     "got grid=0x%02X state=%d +0x5=%d\n",
                     wake_slot, wz->grid_id, wz->state, wz->sub_state_1); fail = 1; }
-        if ((fz->grid_id & 0x0f) != 6) {
-            fprintf(stderr, "FAIL: far feeding zombie slot %d must stay asleep (grid sub 6); got grid=0x%02X\n",
-                    far_slot, fz->grid_id); fail = 1; }
+        if (fz->sub_state_1 != 0x0c) {
+            fprintf(stderr, "FAIL: far feeding zombie slot %d must stay feeding (+0x5=0xc); got +0x5=%d grid=0x%02X\n",
+                    far_slot, fz->sub_state_1, fz->grid_id); fail = 1; }
         if (!fail)
-            printf("  (5) feeding zombie slot %d woke near player (grid 0x86->0x%02X, state %d, +0x5=%d engage); "
-                   "far slot %d still feeding (grid 0x%02X)\n",
-                   wake_slot, wz->grid_id, wz->state, wz->sub_state_1, far_slot, fz->grid_id);
+            printf("  (5) feeding zombie slot %d woke near player (grid 0x%02X, state %d, +0x5=%d engage); "
+                   "far slot %d still feeding (+0x5=0xc)\n",
+                   wake_slot, wz->grid_id, wz->state, wz->sub_state_1, far_slot);
     }
 
     /* (6): the GRAB execution (Phase 8.8) — the actual in-game attack. Put a zombie directly in the
