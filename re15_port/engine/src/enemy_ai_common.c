@@ -414,7 +414,14 @@ void re15_enemy_ai_set_combat_active(int v) { s_live_combat_active = v ? 1 : 0; 
  * (DAT_800acc0e), the struggle-escape (sub-step 5 @0x80102968, anim-gated + the bit-0x2 check),
  * and the cmd-6 "being-approached" walk command (coupled to the deferred forward-walk). */
 static int s_player_grabbed = 0;
-int re15_player_is_grabbed(void) { return s_player_grabbed; }
+int re15_player_is_grabbed(void)
+{
+    /* Pinned while a zombie holds him (cmd 5) AND through the victim struggle/release-finish anims
+     * (the original's cmd-5 handler stays routed until the release clip restores the free player). */
+    extern int re15_player_victim_state(void);
+    int vs = re15_player_victim_state();
+    return s_player_grabbed || vs == 1 || vs == 3;
+}
 
 /* ===================== LEON GRAB-VICTIM ANIMATION (state 5 struggle / state 6 collapse) ===========
  * Byte-true source: the player-command FSM on DAT_800aca58 (EXE PTR_LAB_80073f90[cmd]) — [5] grabbed
@@ -429,13 +436,41 @@ int re15_player_is_grabbed(void) { return s_player_grabbed; }
  * missing"). This drives Leon's motion/anim_frame off the grabbing zombie's bank 2 so he struggles
  * then collapses. g_player_victim: 0 none / 1 struggle / 2 collapse. Set by re15_enemy_ai_live_grab
  * (the grab that pins him), advanced by re15_player_victim_tick (game_step, after the enemy AI). */
-static int     g_player_victim = 0;
+static int     g_player_victim = 0;           /* 0 none / 1 struggle / 2 collapse / 3 release-finish */
 static uint8_t g_player_victim_type = 0;      /* grabbing zombie type -> its bank 2 (skel/anim_victim) */
 static uint8_t g_player_victim_variant = 0;   /* 0 face / 1 behind (from the grab facing +0x5-3) */
-static uint8_t s_victim_phase = 0;            /* struggle phase 0..2 (DAT_800aca5a) */
+static uint8_t s_victim_phase = 0;            /* struggle phase (DAT_800aca5a model: 0 intro, >=1 hold) */
 static int     g_player_victim_zombie = -1;   /* grabbing zombie actor slot -> its XZ for the turn-to-face */
 int     re15_player_victim_state(void) { return g_player_victim; }
 uint8_t re15_player_victim_type(void)  { return g_player_victim_type; }
+
+/* CLIP ROOT MOTION (byte-true func_0x8001ad68 @0x8001ad68): each frame the entity position is the
+ * anchor + the CURRENT keyframe's root-translation offset rotated by the entity yaw. Per-frame delta
+ * form (identical to the corpse-walk port): pos += rotate(off[kf_now] - off[kf_prev], yaw); skip the
+ * delta on a clip change / wrap (= the original's re-anchor). Applies the FULL (sx, sz) offset vector
+ * with the local->world convention of the foot-lock (wx = cos*lx + sin*lz, wz = -sin*lx + cos*lz).
+ * TIMELINE-VERIFIED (deterministic /tmp/tl3): the grabbed PAIR drifts together (~65 units/1.3s) and
+ * the devour collapse DRAGS Leon ~600 units — both are this root motion, missing before. */
+static void re15_clip_root_motion_delta(re15_actor_t *a,
+                                        const re15_emd_skeleton_t *skel,
+                                        const re15_emd_animation_t *anim,
+                                        int clip, int fr_now, int fr_prev)
+{
+    if (!skel || !anim || clip < 0 || clip >= anim->clip_count) return;
+    const re15_emd_clip_t *c = &anim->clips[clip];
+    if (c->frame_count <= 0) return;
+    if (fr_prev < 0 || fr_now <= fr_prev || fr_now >= c->frame_count) return;  /* wrap/entry: re-anchor */
+    int kf_n = (int)(anim->frames[c->first_frame + fr_now ] & 0xFFFu);
+    int kf_p = (int)(anim->frames[c->first_frame + fr_prev] & 0xFFFu);
+    int16_t sx, sy, sz, sx0, sz0;
+    if (!re15_emd_get_keyframe_speed(skel, kf_n, &sx,  &sy, &sz))  return;
+    if (!re15_emd_get_keyframe_speed(skel, kf_p, &sx0, &sy, &sz0)) return;
+    int32_t dx = (int32_t)sx - sx0, dz = (int32_t)sz - sz0;
+    if (dx == 0 && dz == 0) return;
+    int32_t cs = re15_cos_q12(a->rot_y), sn = re15_sin_q12(a->rot_y);
+    a->x += (int32_t)(( (int64_t)cs * dx + (int64_t)sn * dz) >> 12);
+    a->z += (int32_t)((-(int64_t)sn * dx + (int64_t)cs * dz) >> 12);
+}
 
 /* Called by the grab (re15_enemy_ai_live_grab) each frame it pins the player: latch the victim anim
  * state (which zombie's bank, face/behind) + enter struggle (0->1) or collapse (on grab-death). */
@@ -477,23 +512,57 @@ void re15_player_victim_tick(void)
         if (g_player_victim_variant == 1) face = (face + 0x800) & 0x0fff;   /* behind -> face away */
         player->rot_y = (int16_t)face;
     }
-    if (g_player_victim == 1) {                         /* STRUGGLE (state 5) */
-        if (!s_player_grabbed) { g_player_victim = 0; return; }   /* grab ended -> Leon free */
-        uint8_t base = (uint8_t)(g_player_victim_variant * 3);
-        uint8_t clip = (uint8_t)(base + (s_victim_phase < 2 ? s_victim_phase : 2));
+    uint8_t base = (uint8_t)(g_player_victim_variant * 3);
+    if (g_player_victim == 1) {                         /* STRUGGLE (state 5, @0x8010a28c 6-phase machine) */
+        if (!s_player_grabbed) {                        /* grab ended alive -> RELEASE finish (phases 4/5:
+                                                         * clip base+2 ONCE, then restore the free player) */
+            g_player_victim = 3;
+            player->motion = (uint8_t)(base + 2);
+            player->anim_frame = 0;
+            return;
+        }
+        /* TIMELINE-VERIFIED (deterministic /tmp/tl3 + the Q4 disasm of @0x8010a28c): phase 0/1 play the
+         * intro clip base+0 once; from phase 2 on the handler LOOPS clip base+1 (motion=4 observed with
+         * DAT_800aca5a self-held at 3, anim frame wrapping 0->18->15). The old port held base+2 — that is
+         * the RELEASE clip (@0x8010a4e8 = acaf3*3+2), wrong during the hold. */
+        uint8_t clip = (uint8_t)(base + (s_victim_phase < 1 ? 0 : 1));
         player->motion = clip;
         int fc = (clip < vb->anim_victim.clip_count) ? vb->anim_victim.clips[clip].frame_count : 1;
         if (fc < 1) fc = 1;
-        if (++player->anim_frame >= fc) {              /* clip-done -> advance phase (hold at 2) */
+        int fr_prev = (int)player->anim_frame;
+        if (++player->anim_frame >= fc) {              /* clip-done -> intro advances, hold clip LOOPS */
             player->anim_frame = 0;
-            if (s_victim_phase < 2) s_victim_phase++;
+            if (s_victim_phase < 1) s_victim_phase++;
         }
-    } else {                                           /* COLLAPSE (state 6): clip variant+6, hold last */
+        re15_clip_root_motion_delta(player, &vb->skel_victim, &vb->anim_victim,
+                                    clip, (int)player->anim_frame, fr_prev);
+    } else if (g_player_victim == 2) {                 /* COLLAPSE (state 6): clip variant+6, play once +
+                                                        * ROOT MOTION (the ~600-unit devour drag), hold last */
         uint8_t clip = (uint8_t)(g_player_victim_variant + 6);
         player->motion = clip;
         int fc = (clip < vb->anim_victim.clip_count) ? vb->anim_victim.clips[clip].frame_count : 1;
         if (fc < 1) fc = 1;
-        if (player->anim_frame < fc - 1) player->anim_frame++;
+        if (player->anim_frame < fc - 1) {
+            int fr_prev = (int)player->anim_frame;
+            player->anim_frame++;
+            re15_clip_root_motion_delta(player, &vb->skel_victim, &vb->anim_victim,
+                                        clip, (int)player->anim_frame, fr_prev);
+        }
+    } else {                                           /* RELEASE finish (state 3): clip base+2 once -> free */
+        if (s_player_grabbed) {                        /* re-grabbed mid-release -> back to the struggle */
+            g_player_victim = 1; s_victim_phase = 1; player->anim_frame = 0; return;
+        }
+        uint8_t clip = (uint8_t)(base + 2);
+        player->motion = clip;
+        int fc = (clip < vb->anim_victim.clip_count) ? vb->anim_victim.clips[clip].frame_count : 1;
+        if (fc < 1) fc = 1;
+        int fr_prev = (int)player->anim_frame;
+        if (++player->anim_frame >= fc) {              /* release clip done -> Leon is free */
+            g_player_victim = 0;
+            return;
+        }
+        re15_clip_root_motion_delta(player, &vb->skel_victim, &vb->anim_victim,
+                                    clip, (int)player->anim_frame, fr_prev);
     }
 }
 
@@ -669,6 +738,17 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
     /* Drive Leon's grab-victim animation (state 5 struggle / state 6 collapse on grab-death) off this
      * zombie's bank 2 — so he struggles + collapses instead of freezing (the "no Leon reactions"). */
     re15_player_victim_latch(e, player);
+    /* GRAB-CLIP ROOT MOTION (byte-true func_0x8001ad68, called by the grab's animate half every frame):
+     * the zombie's grab clips carry root translation — TIMELINE-VERIFIED (/tmp/tl3): the grabbed pair
+     * DRIFTS together (~65 units/1.3s, zombie (-2398,-20166)->(-2520,-20283) while biting) instead of
+     * standing frozen. Apply the per-frame keyframe delta of the CURRENT grab clip (the shared anim
+     * pass advanced anim_frame just before run_all; delta skips wraps/clip-sets = re-anchor). */
+    {
+        re15_enemy_bank_t *gb = re15_enemy_find(e->type);
+        if (gb && gb->ok)
+            re15_clip_root_motion_delta(e, &gb->skel, &gb->anim,
+                                        (int)e->motion, (int)e->anim_frame, (int)e->anim_frame - 1);
+    }
     /* per-sub-step GRAB CLIP (FUN_80102548 +0x6 sub-steps 0/2/4 @0x801025bc/0x80102714/0x801028f0):
      * +0x94 = (+0x5-3)*3 + {0,1,2}. +0x5 = the facing (3 face / 4 behind, dynamic from the engage),
      * so face-grab plays clips {0,1,2}, behind-grab {3,4,5}; the release (sub-step 6) is the literal

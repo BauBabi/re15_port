@@ -991,26 +991,31 @@ int main(void)
                             pl->rot_y, expect_face); fail = 1; }
             }
 
-            /* (c) the struggle PHASE advances ONLY on clip-done (byte-true DAT_800aca5a). The grab keeps
-             * s_player_grabbed latched; each 4-frame clip completion bumps the clip 0 -> 1 -> 2, then
-             * HOLDS at the last struggle clip. (Drive the tick without re-running the grab machine.) */
-            for (int f = 0; f < 4; f++) re15_player_victim_tick();      /* clip 0 done -> phase 1 */
+            /* (c) TIMELINE-VERIFIED struggle model (deterministic DuckStation /tmp/tl3 + Q4 disasm of
+             * @0x8010a28c): the intro clip base+0 plays ONCE, then the handler LOOPS clip base+1 for the
+             * whole hold (observed live: motion=4=base3+1, DAT_800aca5a self-held, frames wrapping) —
+             * it never advances to base+2 while held (base+2 is the RELEASE clip @0x8010a4e8). */
+            for (int f = 0; f < 4; f++) re15_player_victim_tick();      /* intro clip 0 done -> hold clip 1 */
             if (pl->motion != 1) {
-                fprintf(stderr, "FAIL: (22c) struggle phase must advance to clip 1 on clip-done, motion=%d\n", pl->motion); fail = 1; }
-            for (int f = 0; f < 4; f++) re15_player_victim_tick();      /* clip 1 done -> phase 2 */
-            if (pl->motion != 2) {
-                fprintf(stderr, "FAIL: (22c) struggle phase must advance to clip 2, motion=%d\n", pl->motion); fail = 1; }
-            for (int f = 0; f < 8; f++) re15_player_victim_tick();      /* holds at the last struggle clip */
-            if (pl->motion != 2) {
-                fprintf(stderr, "FAIL: (22c) struggle must HOLD at the last clip 2 (no wrap past), motion=%d\n", pl->motion); fail = 1; }
+                fprintf(stderr, "FAIL: (22c) struggle intro done -> HOLD clip 1, motion=%d\n", pl->motion); fail = 1; }
+            for (int f = 0; f < 10; f++) re15_player_victim_tick();     /* hold clip LOOPS (wraps), stays 1 */
+            if (pl->motion != 1) {
+                fprintf(stderr, "FAIL: (22c) struggle hold must LOOP clip 1 (never base+2), motion=%d\n", pl->motion); fail = 1; }
 
-            /* (d) RELEASE — no zombie grabbing (park + engage, player out of range) frees Leon (state->0). */
+            /* (d) RELEASE — grab ends alive -> the RELEASE finish plays clip base+2 ONCE (the original's
+             * phases 4/5, motion acaf3*3+2 @0x8010a4e8/a50c), Leon stays pinned through it, THEN free. */
             gz->sub_state_1 = 2; gz->x = 30000; gz->z = 30000;     /* engage, far -> won't re-commit */
             pl->x = 60000; pl->z = 60000;
             re15_enemy_ai_run_all(1);                              /* clears s_player_grabbed */
-            re15_player_victim_tick();
+            re15_player_victim_tick();                             /* -> RELEASE finish (state 3), clip 2 */
+            if (re15_player_victim_state() != 3 || pl->motion != 2) {
+                fprintf(stderr, "FAIL: (22d) grab end -> RELEASE finish (state 3, clip base+2), state=%d motion=%d\n",
+                        re15_player_victim_state(), pl->motion); fail = 1; }
+            if (!re15_player_is_grabbed()) {
+                fprintf(stderr, "FAIL: (22d) Leon stays PINNED through the release finish\n"); fail = 1; }
+            for (int f = 0; f < 6; f++) re15_player_victim_tick();      /* release clip (4f) plays out */
             if (re15_player_victim_state() != 0) {
-                fprintf(stderr, "FAIL: (22d) grab ended -> Leon freed from the victim anim (state 0), ist %d\n",
+                fprintf(stderr, "FAIL: (22d) release clip done -> Leon freed (state 0), ist %d\n",
                         re15_player_victim_state()); fail = 1; }
 
             /* (e) the grab-DEATH COLLAPSE: with Leon dead (HP<0) a grabbing zombie drives the collapse
