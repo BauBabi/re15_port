@@ -41,6 +41,7 @@
 #include "re15_damage.h"   /* re15_damage_seed_rng */
 #include "re15_player.h"   /* re15_player_tick + RE15_PAD_BIT_R1 (the aim pose, Phase 8.14) */
 #include "re15_vab.h"      /* re15_vab_parse + re15_footstep_vag — the death-SE bank lookup (Phase 8.17) */
+#include "re15_room.h"     /* g_room_change + g_current_room_id — the death->continue reload (part 20) */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -806,6 +807,35 @@ int main(void)
     }
 
     free(buf);
+    /* (20): the DEATH -> CONTINUE reload (the second half of the ROOM1140 "hang" fix). When the player
+     * dies (HP<0) the death branch runs the byte-true 0x78 (120-frame) timer; at expiry game_step fires
+     * re15_player_continue_reload, which QUEUES a reload of the CURRENT room (re15_room_apply_pending in
+     * the main loop then re-inits the actors -> re15_actor_init restores player HP=100 -> not dead ->
+     * the death branch exits). Without this the player was pinned dead FOREVER = the hang. Verify the
+     * timer runs to 0 and the continue queues a fresh reload of the current room. */
+    {
+        g_current_room_id = 0x1140;
+        g_room_change.pending = 0;
+        re15_player_death_reset();               /* fresh death sequence */
+        pl->hp = -1; pl->state = 7;              /* player dead/grabbed */
+        int seq = -1, guard = 0;
+        do { seq = re15_player_death_tick(); guard++; } while (seq != 0 && guard < 200);
+        if (seq != 0) {
+            fprintf(stderr, "FAIL: (20) death timer never reached 0 (ran %d ticks)\n", guard); fail = 1; }
+        if (guard != 0x78 + 1) {                 /* seed 120 on tick 1, then 119..0 -> 121 ticks to hit 0 */
+            fprintf(stderr, "FAIL: (20) death timer must be the byte-true 0x78=120 frames (took %d ticks)\n", guard); fail = 1; }
+        re15_player_continue_reload();
+        if (!g_room_change.pending) {
+            fprintf(stderr, "FAIL: (20) death-complete must QUEUE a continue-reload (pending stayed 0)\n"); fail = 1; }
+        if (g_room_change.room_id != 0x1140) {
+            fprintf(stderr, "FAIL: (20) continue must reload the CURRENT room 0x1140, got 0x%X\n", g_room_change.room_id); fail = 1; }
+        g_room_change.pending = 0;               /* don't leak the queued change into other test runs */
+        re15_player_death_reset();
+        pl->hp = 100; pl->state = 0;
+        if (!fail)
+            printf("  (20) death->continue: 0x78=120-frame timer expiry queues a fresh reload of ROOM1140 (no permanent pin)\n");
+    }
+
     if (fail) { fprintf(stderr, "\nROOM1140 COMBAT-WIRING TEST FAILED\n"); return 1; }
     printf("\nPASS: ROOM1140 live-AI game_step wiring (spawn; WAKE->engage; TURN-to-face->GRAB->HP; "
            "GRABBED-lock; player DEATH; zombie HURT/DEATH; PLAYER-SHOOTS; type-gated)\n");

@@ -21,6 +21,9 @@
 #include "re15_damage.h"
 #include "re15_skeleton.h"   /* re15_skel_compute_pose / re15_skel_bone_to_world / g_anim_pose_actor */
 #include "re15_esp.h"        /* re15_esp_fx_spawn — zombie gore effect (FUN_80106a44) */
+#include "re15_room.h"       /* g_current_room_id + g_room_change + re15_room_request_change (death continue) */
+#include "re15_room_list.h"  /* re15_room_ids[] / RE15_ROOM_COUNT — current-room index for the continue spawn */
+#include "re15_room_spawns.h"/* re15_room_spawns[] — the current room's entry spawn for the continue-reload */
 
 /* DAT_8006f418 — ghidra1_V2.txt:223455-223478 (11×s16 LE). */
 const int16_t re15_damage_table[11] = {
@@ -152,6 +155,36 @@ int re15_player_death_tick(void)
     if (s_death_seq < 0) s_death_seq = RE15_DEATH_SEQ_FRAMES;      /* first dead frame = INIT (seed 120) */
     else if (s_death_seq > 0) s_death_seq--;                       /* sub-state 1: count the fade timer down */
     return s_death_seq;   /* 0 = the death sequence is complete -> game over (deferred presentation) */
+}
+
+/* RE-style CONTINUE — fired by game_step when the death sequence completes (re15_player_death_tick
+ * returned 0 = the byte-true 0x78 death timer expired). The port has NO game-over/continue screen:
+ * the original PARKS at @0x8003694c (sets DAT_800aca59=2) and a SEPARATE EXE subsystem (the reader of
+ * DAT_800aca59==2, NOT in the STAGE1 overlay) drives the continue/title. Per the user-chosen behavior
+ * we do the RE "continue" = RELOAD THE CURRENT ROOM fresh: queue a room change to g_current_room_id at
+ * its entry spawn; the main loop's re15_room_apply_pending re-inits the actors (re15_actor_init restores
+ * player HP=100 -> re15_player_is_dead() clears -> the death branch exits) and the SCD respawns the
+ * zombies at their feeding poses. The fade + "YOU DIED" presentation stays DEFERRED (no port infra).
+ * FL: the exact continue-vs-title routing is the missing subsystem; a current-room reload is the
+ * faithful functional stand-in (the death handler never leaves the room by itself). */
+void re15_player_continue_reload(void)
+{
+    if (g_room_change.pending) return;   /* a reload is already queued this frame — don't double-fire */
+    unsigned room = g_current_room_id;
+    int32_t sx = g_actors[RE15_ACTOR_SLOT_PLAYER].x;   /* fallback: where he died (walkable, he got there) */
+    int32_t sy = g_actors[RE15_ACTOR_SLOT_PLAYER].y;
+    int32_t sz = g_actors[RE15_ACTOR_SLOT_PLAYER].z;
+    int16_t syaw = 0; int scut = 0;
+    for (int i = 0; i < RE15_ROOM_COUNT; i++) {
+        if (re15_room_ids[i] == room) {
+            const re15_room_spawn_t *rs = &re15_room_spawns[i];
+            if (rs->x || rs->y || rs->z) { sx = rs->x; sy = rs->y; sz = rs->z; }  /* the room's entry spawn */
+            syaw = rs->yaw; scut = rs->cut;
+            break;
+        }
+    }
+    re15_room_request_change(room, sx, sy, sz, syaw, scut);   /* main loop applies it AFTER the AOT scan */
+    re15_player_death_reset();                                /* clear the death-sequence counter for the fresh life */
 }
 
 /* ===== Player WEAPON SHOT (Phase 8.10, two-sided combat) = the byte-true core of FUN_80011f50 ===== *

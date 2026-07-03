@@ -83,6 +83,10 @@ int  re15_player_is_dead(void);      /* 1 iff the player HP < 0 (death). */
 void re15_player_death_reset(void);  /* clear the death-sequence timer (new game / continue / test). */
 int  re15_player_death_tick(void);   /* advance the death sequence one frame; returns frames left
                                       * (120..0; 0 = sequence done -> game over deferred; -1 = alive). */
+void re15_player_continue_reload(void);  /* death sequence complete (timer hit 0) -> RE "continue":
+                                          * queue a reload of the CURRENT room (player HP restored by
+                                          * re15_actor_init, zombies respawn) so the player is no longer
+                                          * pinned dead. Fired once by game_step. Presentation deferred. */
 
 /* Player WEAPON SHOT (Phase 8.10, two-sided combat) — the byte-true core of FUN_80011f50 (a SEPARATE
  * resolver from the enemy FUN_80012d60). Auto-aims the nearest live zombie in front of the player

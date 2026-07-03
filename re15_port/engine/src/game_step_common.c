@@ -78,8 +78,18 @@ void re15_game_step(const re15_game_ctx_t *c)
          * ROOM1140), so a healthy room is unaffected = no 1170 regression. Death takes precedence over
          * the grab: a zombie that killed the player then dead-grabs the corpse (the engage's hp<0
          * dead-grab arm) while the player runs the death sequence. Keep the RVD cam scan (death cam). */
-        re15_player_death_tick();
+        int death_seq = re15_player_death_tick();
         re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
+        if (death_seq == 0) {
+            /* The byte-true 0x78 death timer expired. The port has no game-over/continue screen (that
+             * subsystem is not in the STAGE1 overlay), so — per the user-chosen behavior — do the RE
+             * "continue": reload the CURRENT room fresh (re15_actor_init restores player HP=100 ->
+             * re15_player_is_dead() clears -> this branch exits next frame; the SCD respawns the
+             * zombies). Without this the player was pinned dead FOREVER = the ROOM1140 "hang". The
+             * fade + "YOU DIED" presentation stays deferred. re15_room_apply_pending (main loop, after
+             * this scan) applies the queued reload. */
+            re15_player_continue_reload();
+        }
     } else if (c->rdt_ok && re15_player_is_grabbed()) {
         /* PLAYER-GRABBED LOCK (Phase 8.10, byte-true LAB_80036834): a live zombie has the player
          * latched (DAT_800aca58 = cmd 5). The original routes the player's per-frame command FSM to
