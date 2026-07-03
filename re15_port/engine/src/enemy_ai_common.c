@@ -23,6 +23,8 @@
                             * grab-start 4, grab-release 7 (FUN_80102548), death groan 5/8 (FUN_80107cb0 f7) */
 #include "re15_damage.h"   /* re15_enemy_player_dist, re15_ai_arc_test, re15_engine_rand8,
                             * re15_enemy_apply_hitbox */
+#include "re15_skeleton.h" /* re15_sin_q12 / re15_cos_q12 — forward-walk root-motion step (8.19) */
+#include "re15_actor.h"    /* re15_atan2_q12 — heading toward the player for the approach/walk */
 
 /* Engine-wide AI freeze = DAT_800aca40 & 0x20000000 (FUN_8011d6d4 gate). */
 static int s_ai_paused = 0;
@@ -334,6 +336,9 @@ void re15_ai_dispatch_decision(re15_actor_t *e, const re15_actor_t *player)
         case 0: re15_ai_decide_search_timer(e, player); break;  /* f840[0]=FUN_80101b64 */
         case 1: re15_ai_decide_search(e, player);       break;  /* f840[1]=FUN_80101de4 */
         case 2: re15_ai_decide_engage(e, player);       break;  /* f840[2]=FUN_80102058 */
+        case 0x13: re15_ai_decide_engage(e, player);    break;  /* f840[0x13]=FUN_8010561c == the engage
+                                                                 * decide: while APPROACHING, commit the
+                                                                 * grab/turn once in range (8.19). */
         case 7:  /* f840[7]=FUN_80102d20 — the TURN state's grab-commit check (byte-true): once the
                   * turn (animate) has the zombie close + facing within the ±0x200 cone + same floor +
                   * the player not mid-hit, commit the GRAB (+0x5=3/4). Otherwise stay turning. This
@@ -559,7 +564,78 @@ static void re15_enemy_ai_live_turn(re15_actor_t *e, const re15_actor_t *player)
         e->sub_state_2 = 1;             /* +0x6 = 1 entry latch (@0x80102df0) */
     }
     int16_t turn = (int16_t)re15_ai_arc_test(e, player->x, player->z, 0x80);  /* ±0x80 toward player */
+    /* byte-true FUN_80102dc8 @0x80102e5c: once WITHIN the ±0x80 cone (arc_test==0 = facing the
+     * player), transition BACK TO ENGAGE (+0x5=2). The engage then rolls the behavior table and
+     * breaks into the forward APPROACH — so the zombie turns to face, then WALKS at the player.
+     * Was MISSING -> the zombie pivoted forever at medium range and never approached (8.19). */
+    if (turn == 0)
+        re15_ai_set_state_word(e, 0x201);                                     /* +0x5 = 2 (engage) */
     e->rot_y = (int16_t)(((int32_t)e->rot_y + turn) & 0x0fff);                 /* +0x6a += residual */
+}
+
+/* ================= FORWARD-WALK / APPROACH (Phase 8.19, the piece the port had STUBBED) ==========
+ * The ORIGINAL ROOM1140 zombie, once engaged, does NOT stand still: FUN_801021f8 (engage animate)
+ * rolls a behavior byte from a table and BREAKS INTO A FORWARD APPROACH, walking UPRIGHT toward the
+ * player before it grabs (validated at the real game: stage_saves/mzd_stage1_walked.sav slot 2 =
+ * +0x5=6 WALK @dist 1731; shots/ORIG_wake.png frame #40 = a zombie walking upright at the player).
+ * The port's engage was a bare `e->motion = e->hurt_clip` stub -> the zombie stood forever = the
+ * user-reported "everything wrong". Byte-true anchors: behavior tables @0x8011faf0 (>=5 alive, more
+ * aggressive) / @0x8011fb00 (<5), rolled rng&0x1f; value 2 -> +0x5=0x13 approach; walk clip = +0x5+4
+ * (@0x80102bfc) = 0x0a; forward root-motion func_0x8001ad68 @0x8011f890[5/6]=FUN_80102bd8. */
+static const uint8_t s_zbehavior_5plus[32] = {
+    0,1,2,1,2,0,2,2,2,2,1,2,2,1,2,1,0,1,0,0,1,0,0,1,2,0,0,0,2,1,0,0 };   /* @0x8011faf0 */
+static const uint8_t s_zbehavior_lt5[32] = {
+    0,1,0,0,1,0,0,1,2,0,0,0,2,1,0,0,12,0,0,0,2,0,0,0,1,0,0,0,6,0,0,0 };  /* @0x8011fb00 */
+
+/* Count the live briefing zombies (byte-true DAT_800aca4e drives the behavior-table pick). */
+static int re15_enemy_live_count(void)
+{
+    int n = 0;
+    for (int i = 1; i < RE15_ACTOR_MAX; i++) {
+        re15_actor_t *z = &g_actors[i];
+        if (z->active && (z->type == 0x10 || z->type == 0x11 || z->type == 0x16)
+            && z->state != (uint8_t)RE15_AI_STATE_CORPSE)
+            n++;
+    }
+    return n;
+}
+
+/* Rotate the heading toward the player by up to `slew` (byte-true homing func_0x8001aac4). Uses the
+ * SAME re15_ai_arc_test residual the turn + the decide use, so the states stay consistent (a mixed
+ * atan2 convention made the engage↔turn oscillate). arc_test returns 0 within the cone, else ±slew. */
+static void re15_enemy_face_player(re15_actor_t *e, const re15_actor_t *player, int16_t slew)
+{
+    int16_t r = (int16_t)re15_ai_arc_test(e, player->x, player->z, slew);
+    e->rot_y = (int16_t)(((int32_t)e->rot_y + r) & 0x0fff);
+}
+
+/* Forward WALK / APPROACH animate (byte-true FUN_80102bd8 @0x8011f890[5/6] + FUN_801057bc @[0x13]):
+ * play the walk clip (+0x5+4 = 0x0a for +0x5=6; the +0x5=0x13 track uses clip 1) and STEP FORWARD
+ * each frame along the heading (the walk clip's root-motion func_0x8001ad68). Rotates to track the
+ * player so the zombie heads at him. The engage/approach DECIDE (re15_ai_decide_engage / f840[0x13]=
+ * FUN_8010561c, identical) commits the GRAB once within 0x4b0. FAITHFUL-LINE: the exact per-frame
+ * root translation (func_0x8001ad68 is undisassembled in the dump) is modeled as a fixed walk cadence
+ * along +0x6a; the clip index + the approach-transition + the heading track ARE byte-true. */
+static void re15_enemy_ai_live_walk(re15_actor_t *e, const re15_actor_t *player)
+{
+    if (!player) return;
+    uint8_t walk_clip = (uint8_t)((e->sub_state_1 == 0x13) ? 0x01 : (e->sub_state_1 + 4)); /* 0x13->1, 5/6->9/10 */
+    if (e->sub_state_2 == 0) {                       /* +0x6==0 entry (@0x80102c0c / @0x801057d0) */
+        e->motion = walk_clip; e->anim_frame = 0; e->anim_frac = 7;
+        re15_audio_room_se(4);                       /* walk-start SE (func_0x800453d0(4)) */
+        e->sub_state_2 = 1;
+    }
+    re15_enemy_face_player(e, player, 0x60);         /* track the player (homing) */
+    /* forward root-motion: step TOWARD the player. FAITHFUL-LINE (func_0x8001ad68 is undisassembled):
+     * step directly along the player vector at a fixed walk cadence (~90/frame) so the direction is
+     * always correct regardless of the heading convention. The grab commits once within 0x4b0. */
+    int32_t dx = (int32_t)player->x - e->x, dz = (int32_t)player->z - e->z;
+    int32_t len = (int32_t)re15_enemy_player_dist(e, player);
+    if (len > 40) {                                  /* don't overshoot into the player */
+        int32_t speed = 90;
+        e->x += dx * speed / len;
+        e->z += dz * speed / len;
+    }
 }
 
 /* FUN_80101224 (@0x8011f7b4[1], STAGE1.BIN) — the LIVE zombie ACTIVE handler. The ATTACK-WINDUP
@@ -612,11 +688,29 @@ int re15_enemy_ai_live_active(int slot)
                     re15_enemy_ai_live_grab(e, player);
                 else if (e->sub_state_1 == 7)
                     re15_enemy_ai_live_turn(e, player);
-                else if (e->sub_state_1 == 2)
-                    /* ENGAGE idle-track ANIMATE (@0x8011f890[2]=0x801021f8): +0x94 = +0x1d4 variant
-                     * {2,3,4,5} (@0x80102248/50), the SAME per-spawn clip the hurt/turn use. No +0x95
-                     * reset (the original sets only the clip here) — the global advance plays it. */
-                    e->motion = e->hurt_clip;
+                else if (e->sub_state_1 == 5 || e->sub_state_1 == 6 || e->sub_state_1 == 0x13)
+                    /* FORWARD-WALK / APPROACH (@0x8011f890[5/6]=FUN_80102bd8, [0x13]=FUN_801057bc):
+                     * the woken zombie WALKS UPRIGHT toward the player (was stubbed = it stood). 8.19. */
+                    re15_enemy_ai_live_walk(e, player);
+                else if (e->sub_state_1 == 2) {
+                    /* ENGAGE animate (byte-true FUN_801021f8 @0x8011f890[2]): set the engage-idle clip
+                     * ({2,3,4,5} = +0x1d4), then on ENTRY roll the byte-true behavior table — value 2
+                     * BREAKS INTO THE FORWARD APPROACH (+0x5=0x13). It also tracks (rotates toward) the
+                     * player. Was a bare `e->motion = e->hurt_clip` stub -> the zombie stood forever. */
+                    if (e->sub_state_2 == 0) {
+                        e->motion = e->hurt_clip; e->anim_frame = 0; e->anim_frac = 0xf;
+                        const uint8_t *tbl = (re15_enemy_live_count() >= 5) ? s_zbehavior_5plus
+                                                                            : s_zbehavior_lt5;
+                        uint8_t beh = tbl[re15_engine_rand8() & 0x1f];   /* @0x8011faf0/fb00[rng&0x1f] */
+                        if (beh == 2) { e->sub_state_1 = 0x13; e->sub_state_2 = 0; break; } /* -> approach */
+                        e->sub_state_2 = 1;
+                    }
+                    re15_enemy_face_player(e, player, 0x40);   /* sway/track toward the player */
+                    /* re-decide each time the engage-idle clip completes a cycle (faithful-line: the
+                     * original re-rolls via its sway timer + player-move turn cycles) so an engaged
+                     * zombie against a stationary player eventually breaks into the approach. */
+                    if (re15_enemy_clip_done(e)) e->sub_state_2 = 0;
+                }
                 break;
             }
             case 5: case 6:   /* feeding (@0x8011f80c[5]/[6]=0x801018f8) -> the dist-gated wake-up */

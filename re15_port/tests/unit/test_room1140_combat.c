@@ -622,19 +622,36 @@ int main(void)
         z->state = RE15_AI_STATE_ACTIVE; z->grid_id = 0; z->ai_flags = 0; z->floor = 0;
         pl->floor = 0; pl->hit_react = 1;   /* player mid-hit -> blocks the directional grab-commit */
 
-        /* ENGAGE (+0x5=2): player far (ai_dist huge -> no turn/grab commit) -> stays engage, clip=hurt_clip. */
+        /* ENGAGE (+0x5=2, byte-true FUN_801021f8): on entry sets the idle clip (hurt_clip) AND rolls
+         * the behavior table (@0x8011faf0/fb00) — a "2" roll BREAKS INTO THE FORWARD APPROACH
+         * (+0x5=0x13). Both outcomes are byte-true (8.19); the zombie no longer just stands. */
         z->sub_state_1 = 2; z->sub_state_2 = 0; z->sub_state_3 = 0; z->hurt_clip = 4; z->motion = 99; z->ai_dist = 30000u;
         re15_enemy_ai_live_active(zslots[0]);
-        if (z->sub_state_1 != 2 || z->motion != 4) {
-            fprintf(stderr, "FAIL: (15) ENGAGE idle clip = hurt_clip(4), +0x5=%d motion=%d\n",
+        if (z->motion != 4 || (z->sub_state_1 != 2 && z->sub_state_1 != 0x13)) {
+            fprintf(stderr, "FAIL: (15) ENGAGE clip=hurt_clip(4) + stays engage(2) OR breaks to approach(0x13), +0x5=%d motion=%d\n",
                     z->sub_state_1, z->motion); fail = 1; }
 
-        /* TURN (+0x5=7): on entry (+0x6==0) sets motion=hurt_clip + anim_frame=0 + latches +0x6=1. */
+        /* TURN (+0x5=7): on entry (+0x6==0) sets motion=hurt_clip + anim_frame=0 + latches +0x6=1.
+         * The zombie faces 90deg OFF the player (rot_y perpendicular) so it stays TURNING (byte-true
+         * FUN_80102dc8 only flips to engage when WITHIN the +-0x80 facing cone). */
+        z->x = 0; z->z = 0; z->rot_y = 1024; pl->x = 5000; pl->z = 0;   /* player to the side -> not facing */
         z->sub_state_1 = 7; z->sub_state_2 = 0; z->hurt_clip = 5; z->motion = 99; z->anim_frame = 99; z->ai_dist = 30000u;
         re15_enemy_ai_live_active(zslots[0]);
         if (z->sub_state_1 != 7 || z->motion != 5 || z->anim_frame != 0 || z->sub_state_2 != 1) {
             fprintf(stderr, "FAIL: (15) TURN entry clip=hurt_clip(5)+anim_frame0+latch, +0x5=%d motion=%d af=%d +0x6=%d\n",
                     z->sub_state_1, z->motion, z->anim_frame, z->sub_state_2); fail = 1; }
+        /* TURN -> ENGAGE once facing (byte-true FUN_80102dc8 @0x80102e5c: arc_test(0x80)==0 -> +0x5=2).
+         * The turn rotates toward the player each frame; tick it until it faces + LEAVES the turn state
+         * (flips to engage/approach) instead of pivoting forever = the fix for the "stood still" bug. */
+        z->sub_state_1 = 7; z->sub_state_2 = 1; z->ai_dist = 30000u;   /* still perpendicular (rot_y=1024) */
+        int turn_flipped = 0;
+        for (int f = 0; f < 60 && !turn_flipped; f++) {
+            re15_enemy_ai_live_active(zslots[0]);
+            if (z->sub_state_1 != 7) turn_flipped = 1;   /* left TURN -> engage(2)/approach(0x13) */
+        }
+        if (!turn_flipped) {
+            fprintf(stderr, "FAIL: (15) TURN must rotate to face then FLIP OUT of turn (was stuck pivoting), +0x5=%d\n",
+                    z->sub_state_1); fail = 1; }
 
         /* GRAB face (+0x5=3): base=(3-3)*3=0; sub-steps play clip 0 -> (impact) 1 -> (release) 17. */
         pl->hp = 300; pl->state = 0;
