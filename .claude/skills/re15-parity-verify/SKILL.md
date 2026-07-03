@@ -53,9 +53,13 @@ Tank-Control-Tokens (kommagetrennt `"<Buchstabe><Sekunden>"`): **U/D** = vor/zur
 **Was „derselbe Weg" byte-true bedeutet (die Bewegungs-Konstanten, EXE-verifiziert + Nutzer-bestätigt):**
 - **Default = WALK** (Richtung allein); **RUN** nur mit gehaltenem **X/CROSS + Richtung** (RE2 UND RE1.5
   rennen NICHT per Default — Nutzer bestätigt 2026-07-03).
-- WALK: **speed 0x4b = 75/Frame**, turn **0x30 = 48/Frame**. RUN: speed 200, turn **0x60 = 96/Frame**.
-  (Per-Kamera-Tabelle @`0x80073ea4` (walk) / `0x80073ee4` (run); Player-cmd-FSM @`0x80073f90`,
-  [0]=`0x800318f8` default-move.)
+- Vorwärts-**speed**: WALK 0x4b=**75/Frame**, RUN 200/Frame.
+- **TURN-Rate ist per Move-Sub-State, NICHT walk/run** (korrigiert 2026-07-03, deterministisch gemessen):
+  **TURN-IN-PLACE** (L/R OHNE vor/zurück) = **0x60 = 96/Frame** (@`0x80073ee5`); Drehen WÄHREND
+  vorwärts-Gehen = **0x30 = 48/Frame** (@`0x80073ea5`). Die 4 per-Kamera-Turn-Tabellen:
+  ea5(48 walk-fwd)/ec5(48 back)/**ee5(96 in-place)**/f25(72). Der Port hatte turn-in-place FÄLSCHLICH
+  auf 48 (halbe Pivot-Geschwindigkeit → gleicher Pfad, andere Endstelle) — gefixt Commit 94b99546.
+  Player-cmd-FSM @`0x80073f90` [0]=`0x800318f8` default-move.
 - Yaw-Konvention: `0 = +X`, forward `= (cos θ, −sin θ)`; `R` erhöht rot (dreht Richtung Bildschirm-LINKS
   im Briefing), `L` verringert. 4096 = 360°.
 - Collision: SCA-Push-out (FUN_8003b0a4 = `re15_collision_constrain`), slide entlang Wänden.
@@ -76,15 +80,22 @@ Divergenz → Port-Bug lokalisieren und **byte-true** fixen (Adresse/Bytes zitie
 
 ---
 
-## 4. ⚠️ KRITISCHE FALLE: DuckStation läuft mit VARIABLER fps — Wall-clock ist NICHT frame-genau
+## 4. ⚠️ DIRECT-LOAD ist DETERMINISTISCH — JUMP-nav quickload NICHT
 
-**Die vgamepad-Automation hält Buttons für WALL-CLOCK-Sekunden, aber DuckStation emuliert mit
-schwankender, unbekannter fps (pro Lauf verschieden).** Beweis (2026-07-03, 5 Läufe):
-- Derselbe `hold U 3s` bewegte nur ~9 Game-Frames×75 (≈9 fps); ein `hold R 2s`-Turn implizierte ~30-60 fps.
-  KEINE einzelne fps erklärt beide.
-- **Dasselbe `R0.3` ergab über Läufe +96° / +768° / +960° Drehung** → der Spieler landete an 4+
-  verschiedenen Stellen (ein Lauf lief zur Tür raus). Präzises Positionieren via `--path` ist so
-  UNMÖGLICH.
+**DER SCHLÜSSEL (2026-07-03):** wie man DuckStation lädt entscheidet über Reproduzierbarkeit.
+- ✅ **DIRECT-LOAD = DETERMINISTISCH:** `re15_walk_probe.py --state <gameplay.sav>` lädt einen
+  Gameplay-Savestate direkt via `-statefile` (KEINE Debug-Menü-JUMP-Nav), wartet `--load` (16s, voll
+  gesettled), hält EINE Richtung. Wiederholung ist bit-identisch: `--hold R --secs 2` gab **rot=5568 in
+  BEIDEN Läufen**. → Damit sind byte-true RATEN-Messungen möglich (so wurde der 48-vs-96-Turn-Bug gefunden).
+- ❌ **JUMP-nav quickload = VARIABEL:** `re15_quickload.py --left N …` navigiert erst das Debug-Menü +
+  lädt den Raum von „CD" → das Room-Load-SETTLING macht die per-Frame-fps schwankend. Beweis (5 Läufe):
+  dasselbe `R0.3` ergab **+96° / +768° / +960°** → Spieler an 4+ Stellen (einmal zur Tür raus). Präzises
+  Positionieren via quickload-`--path` ist UNMÖGLICH.
+
+**Regel:** für Raten/Trajektorie-Parität IMMER direct-load (walk_probe auf einem Gameplay-Save wie
+`stage_saves/mzd_stage1_briefing.sav`). quickload NUR zum initialen Raum-Erreichen/Savestate-Erzeugen,
+nicht zum Messen. (Für einen MULTI-Token-Tank-Path bräuchte walk_probe eine `--path`-Erweiterung; für
+Primitive — turn-in-place, walk-fwd/back — reicht der Einzel-Hold, und Primitive SIND die byte-true Basis.)
 
 **Folgen + Workarounds:**
 - **Ein „gleicher Pfad" endet an verschiedenen Stellen** = MESS-ARTEFAKT, KEIN Port-Bug. Nicht
@@ -108,9 +119,12 @@ schwankender, unbekannter fps (pro Lauf verschieden).** Beweis (2026-07-03, 5 L�
 
 ## 5. Was byte-true bereits FESTSTEHT (ROOM1140, 2026-07-03)
 
-Timing-unabhängig gegen `stage_saves/mzd_stage1_briefing.sav` geprüft: Spawn, forward-Richtung
-(ratio≈0.145 = rot −96), Wand x=−5118 + Slide — ALLE port==original. Konstanten disasm-verifiziert
-(§2). **→ Port-Navigation IST byte-true; die scheinbare Pfad-Divergenz war die DuckStation-fps-Falle.**
+Direct-load gegen `stage_saves/mzd_stage1_briefing.sav` (deterministisch, §4) geprüft: Spawn,
+forward-Richtung (ratio≈0.145 = rot −96), Wand x=−5118 + Slide, WALK-speed 75/Frame — port==original.
+**ABER: turn-in-place war ein ECHTER Port-Bug** (48 statt 96/Frame; gemessen R1→+2784/R2→+5664 =
+96/Frame; gefixt Commit 94b99546, §2). D.h. die Pfad-Divergenz war ZWEIERLEI: (a) die JUMP-quickload-
+fps-Falle (Mess-Artefakt) UND (b) der reale halbe-Pivot-Bug. **Lehre: nicht vorschnell „nur Harness"
+schließen — mit DIRECT-LOAD sauber messen, dann trennt sich Artefakt von echtem Bug.**
 Der Combat (Grab-Victim-Anim state 5/6) ist per adversarial RE-Workflow byte-true belegt (bank2 =
 victim-set via FUN_80022300, PL00-Struktur via FUN_8001e5b0, variant via FUN_80102548) — das ist der
 Mechanismus-Beleg, stärker als ein Pixel-Vergleich.
@@ -126,6 +140,11 @@ Mechanismus-Beleg, stärker als ein Pixel-Vergleich.
   zuverlässig; VRAM-Decode NICHT — siehe re15-room-capture).
 - `re15-room-capture/scripts/re15_quickload.py` — fährt DuckStation (JUMP + `--path` + `--after`).
 - `re15-room-capture/scripts/re15_walk_probe.py` — hält EINE Richtung N s (Einzel-Primitiv-Test).
+- `parity_net/parity_net.py` — gelernter (PyTorch) Frame-Matcher: matcht PSX-Capture-Frames ↔
+  Port-Serie INHALTSbasiert (timing-unabhängig, umgeht die §4-fps-Falle) und flaggt Frames ohne
+  Gegenstück als `CHECK-DIVERGENCE`. `match --queries <psx> --gallery <port> --sheet` →
+  CSV + Side-by-Side-Sheet. ⚠️ Score = „sieht richtig aus"-Triage, KEIN byte-true Beleg.
+  Details/Retraining: `parity_net/README.md`.
 
 ## 7. Ablauf-Checkliste
 
