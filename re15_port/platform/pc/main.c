@@ -1478,18 +1478,33 @@ int main(int argc, char *argv[])
                 extern void re15_render_pc_set_fade(int a);
                 extern void re15_render_pc_show_gameover(const re15_tim_t *tim);
                 extern void re15_render_pc_hide_gameover(void);
-                static re15_tim_t s_youdied = {0}; static int s_yd_tried = 0; static int s_go_timer = 0;
+                extern void re15_render_pc_show_title(const re15_tim_t *tim);
+                extern void re15_render_pc_hide_title(void);
+                static re15_tim_t s_youdied = {0}; static re15_tim_t s_title = {0};
+                static int s_yd_tried = 0, s_tt_tried = 0, s_go_timer = 0, s_in_title = 0;
                 if (re15_player_is_dead() || g_gameover_active)
                     re15_render_pc_set_fade(g_death_fade);           /* fade to black as the timer runs */
-                if (g_gameover_active) {
+                if (g_gameover_active && !s_in_title) {
+                    /* PHASE 1 — YOU DIED (byte-true FUN_8003694c game-over), held ~2s. */
                     if (!s_yd_tried) { s_yd_tried = 1; int ysz = 0;
                         uint8_t *yb = pc_read_shared("DATA/YOUDIED.TIM", &ysz);
-                        if (yb) re15_tim_parse(yb, ysz, &s_youdied); }   /* resident; TIM aliases yb */
+                        if (yb) re15_tim_parse(yb, ysz, &s_youdied); }
                     if (s_youdied.pixels) re15_render_pc_show_gameover(&s_youdied);
-                    if (++s_go_timer >= 120) {                         /* hold ~2s (30fps) then continue */
-                        s_go_timer = 0; g_gameover_active = 0;
+                    if (++s_go_timer >= 120) {                        /* YOU DIED -> TITLE */
+                        s_go_timer = 0; s_in_title = 1;
                         re15_render_pc_hide_gameover(); re15_render_pc_set_fade(0);
-                        re15_player_continue_reload();                 /* queue the current-room reload */
+                    }
+                } else if (g_gameover_active && s_in_title) {
+                    /* PHASE 2 — TITLE screen (byte-true tail: YOU DIED -> title). Press Square (NEW
+                     * GAME) to restart via the RE continue-reload of the current room. */
+                    if (!s_tt_tried) { s_tt_tried = 1; int tsz = 0;
+                        uint8_t *tb = pc_read_shared("DATA/TITLEU.TIM", &tsz);
+                        if (tb) re15_tim_parse(tb, tsz, &s_title); }
+                    if (s_title.pixels) re15_render_pc_show_title(&s_title);
+                    if (g_engine.pad_pressed & 0x8000) {              /* SQUARE = NEW GAME */
+                        s_in_title = 0; g_gameover_active = 0;
+                        re15_render_pc_hide_title(); re15_render_pc_set_fade(0);
+                        re15_player_continue_reload();                /* queue the current-room reload */
                     }
                 }
             }

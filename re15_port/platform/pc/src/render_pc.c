@@ -63,6 +63,8 @@ static int           s_letterbox_h = 0;
 static uint8_t       s_fade_alpha = 0;   /* BN-round: cinematic fade-in overlay (255=black .. 0=none) */
 static SDL_Texture  *s_gameover_tex = NULL;   /* YOU DIED graphic (YOUDIED.TIM), converted once */
 static int           s_gameover_w = 0, s_gameover_h = 0, s_gameover_show = 0;
+static SDL_Texture  *s_title_tex = NULL;      /* TITLE screen (TITLEU.TIM 320x240 16bpp) */
+static int           s_title_show = 0;
 static uint32_t      rgb555_to_argb8888(uint16_t c);   /* fwd (defined with the TIM converters) */
 
 /* Phase 4.5.5: textured-triangle layer.
@@ -584,6 +586,13 @@ void re15_render_end_frame(void)
         SDL_RenderFillRect(s_renderer, &full);
     }
 
+    /* TITLE screen (TITLEU.TIM) — full-screen, OVER everything. Byte-true tail of the death sequence
+     * (YOU DIED -> title) and the boot front-end. Drawn before YOU DIED so a mid-death title wins. */
+    if (s_title_show && s_title_tex) {
+        SDL_Rect full = { 0, 0, SCREEN_XRES, SCREEN_YRES };
+        SDL_RenderCopy(s_renderer, s_title_tex, NULL, &full);
+    }
+
     /* GAME-OVER (YOU DIED) — drawn OVER the death fade. The graphic (YOUDIED.TIM) is centred on the
      * faded-black scene. Byte-true death FSM (FUN_8003694c) fades then shows this before the title. */
     if (s_gameover_show && s_gameover_tex) {
@@ -635,6 +644,27 @@ void re15_render_pc_show_gameover(const re15_tim_t *tim)
 }
 
 void re15_render_pc_hide_gameover(void) { s_gameover_show = 0; }
+
+/* TITLE screen (TITLEU.TIM, 320x240 16bpp RGB555). Converts once, then draws full-screen each
+ * end_frame while shown. The byte-true YOU DIED -> title tail (and the boot front-end). */
+void re15_render_pc_show_title(const re15_tim_t *tim)
+{
+    if (!s_renderer || !tim || !tim->pixels) return;
+    if (!s_title_tex) {
+        int n = tim->width * tim->height;
+        if (n <= 0 || tim->bpp != 16) return;
+        uint32_t *rgba = (uint32_t *) malloc((size_t)n * 4);
+        if (!rgba) return;
+        for (int i = 0; i < n; i++) rgba[i] = 0xff000000u | (rgb555_to_argb8888(tim->pixels[i]) & 0xffffffu);
+        s_title_tex = SDL_CreateTexture(s_renderer, SDL_PIXELFORMAT_ARGB8888,
+                                        SDL_TEXTUREACCESS_STATIC, tim->width, tim->height);
+        if (s_title_tex) SDL_UpdateTexture(s_title_tex, NULL, rgba, tim->width * 4);
+        free(rgba);
+    }
+    s_title_show = 1;
+}
+
+void re15_render_pc_hide_title(void) { s_title_show = 0; }
 
 /* BJ-round 2026-05-29: set cinematic letterbox bar height (px, in 320x240
  * space). 0 = no bars (gameplay). The main loop sets this each frame based on
