@@ -703,6 +703,17 @@ static int32_t s_zfoot_ref[RE15_ACTOR_MAX][3];
 static uint8_t s_zfoot_ok[RE15_ACTOR_MAX];
 static uint8_t s_zfoot_sel[RE15_ACTOR_MAX];
 
+/* Per-actor APPROACH WANDER state (byte-true FUN_801057bc): 0x9e=slew magnitude, 0x9f=table index,
+ * 0x9c=segment timer. The look-at target (+0x1bc/+0x1be) is the LIVE player (updated @FUN_8010e6d4). */
+static uint8_t s_wander_mag[RE15_ACTOR_MAX];   /* +0x9e */
+static uint8_t s_wander_idx[RE15_ACTOR_MAX];   /* +0x9f */
+static int16_t s_wander_tmr[RE15_ACTOR_MAX];   /* +0x9c */
+/* @0x8011fb50: {u16 segment_timer, s16 rot_dir} x16, indexed by +0x9f (STAGE1.BIN, byte-verified). */
+static const struct { uint16_t tmr; int16_t rot; } s_wander_tbl[16] = {
+    {200,1},{80,-1},{210,1},{100,-1},{180,1},{90,-1},{150,1},{75,-1},
+    {110,1},{100,-1},{150,1},{80,-1},{130,1},{70,-1},{130,1},{90,-1}
+};
+
 /* APPROACH animate — byte-true FUN_801057bc (@0x8011f890[+0x5=0x13], STAGE1.BIN): the LIVE walk gait.
  * Plays the LOCOMOTION bank's clip 1 (bank0, entity+0x84 — the 99-frame approach walk) and carries
  * the body forward via the FUN_8010939c FOOT-LOCK: clip 1 has NET-ZERO keyframe root-motion (it
@@ -714,13 +725,33 @@ static uint8_t s_zfoot_sel[RE15_ACTOR_MAX];
 static void re15_enemy_ai_live_approach(int slot, re15_actor_t *e, const re15_actor_t *player)
 {
     static re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
-    if (!player) return;
-    if (e->sub_state_2 == 0) {                        /* entry (@0x801057cc): clip 1, restart, re-seed foot */
-        e->motion = 0x01; e->anim_frame = 0; e->anim_frac = 0xf;
+    if (!player || slot < 0 || slot >= RE15_ACTOR_MAX) return;
+    if (e->sub_state_2 == 0) {                        /* entry (@0x801057c0-6c8): clip1 + wander seed */
         e->sub_state_2 = 1;
-        if (slot >= 0 && slot < RE15_ACTOR_MAX) s_zfoot_ok[slot] = 0;
+        s_wander_mag[slot] = (uint8_t)((re15_engine_rand8() & 7) + 8);   /* +0x9e = (rng&7)+8 */
+        e->motion = 0x01;                                                /* +0x94 = clip 1 */
+        e->anim_frame = (uint16_t)(re15_engine_rand8() & 0x1f);          /* +0x95 = rng & 0x1f (random phase) */
+        e->anim_frac  = 0xf;                                             /* +0x8f */
+        if ((re15_engine_rand8() & 3) == 0)                             /* 1/4: SE 4 or 5 */
+            re15_audio_room_se((re15_engine_rand8() & 1) ? 4 : 5);
+        s_wander_idx[slot] = (uint8_t)(re15_engine_rand8() & 0xf);       /* +0x9f = rng & 0xf */
+        s_wander_tmr[slot] = (int16_t)s_wander_tbl[s_wander_idx[slot]].tmr;  /* +0x9c */
+        s_zfoot_ok[slot] = 0;
     }
-    re15_enemy_face_player(e, player, 0x30);          /* scan/track toward the player (yaw slew) */
+    /* wander slew: sVar7 = +0x9e * table[+0x9f].rot (= +-(8..15)); slew the yaw toward the live player
+     * (+0x1bc/+0x1be) by |sVar7|; every table[+0x9f].tmr frames advance the index (wrap 0xf) and add a
+     * random +-sVar7 jitter to +0x6a (FUN_801057bc @0x8010572c-58). */
+    int16_t sVar7 = (int16_t)((int16_t)s_wander_mag[slot] * s_wander_tbl[s_wander_idx[slot]].rot);
+    int16_t mag   = (int16_t)(sVar7 < 0 ? -sVar7 : sVar7);
+    re15_enemy_face_player(e, player, mag);          /* func_0x8001aac4(+0x1bc,+0x1be,sVar7): slew to player */
+    int16_t was = s_wander_tmr[slot];
+    s_wander_tmr[slot] = (int16_t)(was - 1);
+    if (was == 0) {
+        s_wander_idx[slot] = (uint8_t)((s_wander_idx[slot] + 1) & 0xf);
+        s_wander_tmr[slot] = (int16_t)s_wander_tbl[s_wander_idx[slot]].tmr;
+        int16_t flip = (int16_t)(sVar7 - (int16_t)(re15_engine_rand8() & 1) * (int16_t)(sVar7 * 2));
+        e->rot_y = (int16_t)(((int32_t)e->rot_y + flip) & 0x0fff);
+    }
 
     re15_enemy_bank_t *bank = re15_enemy_find(e->type);
     if (!bank || !bank->loco_ok || slot < 0 || slot >= RE15_ACTOR_MAX) return;
