@@ -1030,6 +1030,7 @@ int main(void)
 
             /* (d) RELEASE — grab ends alive -> the RELEASE finish plays clip base+2 ONCE (the original's
              * phases 4/5, motion acaf3*3+2 @0x8010a4e8/a50c), Leon stays pinned through it, THEN free. */
+            int16_t face_hold_yaw = pl->rot_y;                     /* the one-shot grab yaw (bearing+0x800) */
             gz->sub_state_1 = 2; gz->x = 30000; gz->z = 30000;     /* engage, far -> won't re-commit */
             pl->x = 60000; pl->z = 60000;
             re15_enemy_ai_run_all(1);                              /* clears s_player_grabbed */
@@ -1039,10 +1040,38 @@ int main(void)
                         re15_player_victim_state(), pl->motion); fail = 1; }
             if (!re15_player_is_grabbed()) {
                 fprintf(stderr, "FAIL: (22d) Leon stays PINNED through the release finish\n"); fail = 1; }
-            for (int f = 0; f < 6; f++) re15_player_victim_tick();      /* release clip (4f) plays out */
+            for (int f = 0; f < 7; f++) re15_player_victim_tick();      /* release clip (4f) plays out */
             if (re15_player_victim_state() != 0) {
                 fprintf(stderr, "FAIL: (22d) release clip done -> Leon freed (state 0), ist %d\n",
                         re15_player_victim_state()); fail = 1; }
+            /* BYTE-TRUE EXIT YAW FLIP (D1 disasm @0x8010a614-624; live-exact tlm2/04->05 2009->4057):
+             * the FACE release flips Leon's yaw +0x800 -> he ends FACING the zombie he shoved off
+             * (the entity yaw pointed AWAY for the whole hold). Without it Leon stood 180° reversed
+             * after every face-grab push-away ("steht verkehrt herum"). */
+            if (pl->rot_y != (int16_t)(((int)face_hold_yaw + 0x800) & 0x0fff)) {
+                fprintf(stderr, "FAIL: (22d) FACE release must flip yaw +0x800 (hold %d -> %d, expect %d)\n",
+                        face_hold_yaw, pl->rot_y, (int)(((int)face_hold_yaw + 0x800) & 0x0fff)); fail = 1; }
+
+            /* (d2) BEHIND release: NO flip — Leon keeps the grab yaw (the @0x8010a648 -0x800 branch
+             * belongs to variant 3 = the second clip set; live tl3: rot 1547 through AND past the hold). */
+            pl->x = 0; pl->z = 0; pl->hit_react = 0; pl->motion = 200; pl->anim_frame = 0; pl->rot_y = 0x123;
+            gz->x = 500; gz->z = 0; gz->state = RE15_AI_STATE_ACTIVE;
+            gz->grid_id = 0; gz->sub_state_1 = 4; gz->sub_state_2 = 0; gz->ai_flags = 0;   /* BEHIND grab */
+            re15_enemy_ai_run_all(1);
+            re15_player_victim_tick();
+            if (re15_player_victim_state() != 1) {
+                fprintf(stderr, "FAIL: (22d2) behind grab must latch the STRUGGLE, ist %d\n",
+                        re15_player_victim_state()); fail = 1; }
+            int16_t behind_hold_yaw = pl->rot_y;
+            gz->sub_state_1 = 2; gz->x = 30000; gz->z = 30000;
+            pl->x = 60000; pl->z = 60000;
+            re15_enemy_ai_run_all(1);
+            for (int f = 0; f < 8 && re15_player_victim_state() != 0; f++) re15_player_victim_tick();
+            if (re15_player_victim_state() != 0) {
+                fprintf(stderr, "FAIL: (22d2) behind release must free Leon\n"); fail = 1; }
+            if (pl->rot_y != behind_hold_yaw) {
+                fprintf(stderr, "FAIL: (22d2) BEHIND release must NOT flip the yaw (hold %d -> %d)\n",
+                        behind_hold_yaw, pl->rot_y); fail = 1; }
 
             /* (e) the DEVOUR COLLAPSE (byte-true chain): a grab on a dead/dying player runs [3] ->
              * hands off to the devour-finish (+0x5=3+2=5), whose sub0 latches Leon's collapse (state 2,

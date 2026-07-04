@@ -57,6 +57,9 @@ void re15_game_step(const re15_game_ctx_t *c)
      * + fire. Byte-true open trigger = the state-1 START poll @0x8001cd68; the inline pause mirrors the
      * stair/dead/grabbed skip (the workflow OVERTURNED the "PSX thread-scheduler pause" as unproven). */
     if (c->rdt_ok && (c->pad_pressed & RE15_PAD_BIT_START)) re15_menu_toggle();
+    int grabbed_branch = 0;      /* the grabbed-pin branch ran this tick (its body push happens AFTER
+                                  * the victim placement at the end of the step; the normal branch
+                                  * already pushed inline — never both, no same-tick double push) */
     if (c->rdt_ok && re15_menu_is_open()) {
         re15_menu_tick(c->pad_pressed);
         g_aot_action_pressed = 0;
@@ -98,6 +101,7 @@ void re15_game_step(const re15_game_ctx_t *c)
             g_gameover_active = 1;
         }
     } else if (c->rdt_ok && re15_player_is_grabbed()) {
+        grabbed_branch = 1;
         /* PLAYER-GRABBED LOCK (Phase 8.10, byte-true LAB_80036834): a live zombie has the player
          * latched (DAT_800aca58 = cmd 5). The original routes the player's per-frame command FSM to
          * the cmd-5 grabbed handler, which pins the player + plays the grabbed pose and NEVER reads
@@ -276,6 +280,27 @@ void re15_game_step(const re15_game_ctx_t *c)
      * anim_frame off the grabbing zombie's bank 2 so he struggles + collapses instead of freezing
      * (byte-true player-command FSM @0x8010a28c/@0x8010a6f8). No-op when no zombie is grabbing. */
     re15_player_victim_tick();
+
+    /* Body push WHILE GRABBED (byte-true FUN_80031c44: the cmd-5 victim handler — placement — is
+     * followed by FUN_8002b544 body push then the walls in the SAME player tick): a THIRD zombie
+     * still pushes the pinned player; the grabbing PAIR itself is exempt inside re15_body_push_player
+     * (the both-0x1000 AND, FUN_8002aec4 @0x8002af14). Gated on grabbed_branch so the grab-COMMIT
+     * tick (normal branch already pushed inline) does not double-push. Ordered AFTER the victim
+     * placement above == the original's placement->push->walls order (walls win: a third zombie
+     * cannot shove the pinned player through the SCA perimeter). */
+    if (c->rdt_ok && grabbed_branch && re15_player_is_grabbed()) {
+        re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        int32_t ox = pl->x, oz = pl->z;                   /* the anchored placement = the valid pos */
+        re15_body_push_player();
+        if (pl->x != ox || pl->z != oz) {                 /* pushed -> wall-resolve the push delta */
+            int32_t nx = pl->x, nz = pl->z;
+            re15_collision_ensure_band(pl->y);
+            re15_collision_constrain(c->rdt, ox, oz, &nx, &nz);
+            re15_collision_objects(&nx, &nz);
+            pl->x = nx;
+            pl->z = nz;
+        }
+    }
 }
 
 /* SHARED helicopter-rotor spatialization driver — see re15_game_step.h. Was inline

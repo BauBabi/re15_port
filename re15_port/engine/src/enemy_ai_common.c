@@ -460,6 +460,10 @@ static int     g_player_victim = 0;           /* 0 none / 1 struggle / 2 collaps
 static uint8_t g_player_victim_type = 0;      /* grabbing zombie type -> its bank 2 (skel/anim_victim) */
 static uint8_t g_player_victim_variant = 0;   /* 0 face / 1 behind (from the grab facing +0x5-3) */
 static uint8_t s_victim_phase = 0;            /* struggle phase (DAT_800aca5a model: 0 intro, >=1 hold) */
+static uint8_t s_victim_fresh = 0;            /* clip (re)set THIS tick -> pose frame 0 before advancing
+                                               * (byte-true f314 POST-increment: phase 0 poses +0x95=0 on
+                                               * the latch tick @0x8010a398/a438; the old ++-first port
+                                               * skipped frame 0 = the pair ran 1 authored frame apart) */
 static int     g_player_victim_zombie = -1;   /* grabbing zombie actor slot -> its XZ for the turn-to-face */
 int     re15_player_victim_state(void) { return g_player_victim; }
 uint8_t re15_player_victim_type(void)  { return g_player_victim_type; }
@@ -552,6 +556,16 @@ static void re15_player_victim_latch(const re15_actor_t *zombie, re15_actor_t *p
         g_player_victim = 1;
         s_victim_phase  = 0;
         player->anim_frame = 0;
+        s_victim_fresh  = 1;
+        /* ONE-SHOT yaw latch (byte-true phase 0, D1 disasm @0x8010a344-a3d4): a8f8(grabber pos,
+         * ±0x800) snaps rot_y := bearing(Leon->zombie), face then adds 0x800 -> BOTH variants end at
+         * bearing+0x800 = yaw(zombie->player) = the same value the zombie's own [0] snap writes
+         * (live: pl_rot == zrot within -2..-6 in all 17 grab rows). NOT re-snapped per frame — the
+         * only later yaw write is the release-exit ±0x800 fix-up (re15_player_victim_tick). */
+        player->rot_y = (int16_t)(((int)re15_atan2_q12(player->z - zombie->z,
+                                                       player->x - zombie->x) - 0x400) & 0x0fff);
+        player->anim_frac = 0;       /* +0x8f := 0 (@0x8010a3a0) — Leon's grab-start pose is a HARD
+                                      * cut; only the zombie blends (+0x8f=7 on its side) */
     }
 }
 
@@ -564,6 +578,10 @@ void re15_player_victim_throwoff(void)
     g_player_victim = 3;
     player->motion = (uint8_t)(g_player_victim_variant * 3 + 2);
     player->anim_frame = 0;
+    s_victim_fresh = 1;
+    player->anim_frac = 7;            /* +0x8f=7 (@0x8010a594, D1 disasm) — Leon BLENDS struggle ->
+                                       * release over ~8 frames (unlike the hard grab-start cut) */
+    player->anim_blend_rate = 0x200;  /* phase-5 f314 rate (@0x8010a5ec: a3=0x200) */
 }
 
 /* The zombie's DEVOUR-FINISH sub0 (FUN_80102bd8 @0x80102c80) latches player cmd = ((+0x5)-5)<<8 | 6 —
@@ -584,6 +602,7 @@ void re15_player_victim_devour(const re15_actor_t *zombie)
     g_player_victim_variant = (uint8_t)((zombie->sub_state_1 >= 6) ? 1 : 0);  /* (+0x5)-5 */
     g_player_victim = 2;
     player->anim_frame = 0;                             /* @0x8010a75c frame reset on collapse entry */
+    s_victim_fresh = 1;
     re15_audio_core_se(1);                              /* collapse-entry SE: Se_on(0x4010001) = CORE
                                                          * bank4 record 1 (FUN_8010a6f8 init) */
 }
@@ -597,22 +616,19 @@ void re15_player_victim_tick(void)
     re15_actor_t *player = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     re15_enemy_bank_t *vb = re15_enemy_find(g_player_victim_type);
     if (!vb || !vb->victim_ok) { g_player_victim = 0; return; }
-    /* VICTIM YAW — RIGIDLY COUPLED to the grabber (LIVE-verified: Leon's rot stays CONSTANT 1547 for
-     * the whole behind-grab in /tmp/tl3 while the zombie holds ~1527 — i.e. θ_leon == θ_zombie for
-     * the behind grab, θ_leon == θ_zombie + 0x800 for the face grab, both facing each other). The
-     * original's per-frame FUN_8001a8f8 bearing-snap converges to exactly this because the shared-
-     * anchor placement keeps the pair in the authored formation; a LIVE bearing-snap in the port
-     * ping-ponged 180° per frame (the abs placement moved Leon past the zombie -> bearing flip ->
-     * placement flip: measured PL oscillation ±2300 units @F97-116). The rigid coupling is the
-     * fixed point of the original's snap = observably byte-equal, and unconditionally stable. */
-    if (g_player_victim_zombie >= 0 && g_player_victim_zombie < RE15_ACTOR_MAX) {
-        const re15_actor_t *gz = &g_actors[g_player_victim_zombie];
-        /* θ_leon == θ_zombie for BOTH variants (live: behind-grab Leon 1547 vs zombie ~1527; and
-         * with θl=θz the face-grab abs placement lands Leon exactly at his grab spot IN FRONT of
-         * the zombie). The victim clips are authored in the ZOMBIE-yaw frame — the visible facing
-         * (toward/away) is baked into the clip content, not the entity yaw. */
-        player->rot_y = gz->rot_y;
-    }
+    /* +0x8f blend counter decay — byte-true f314 decrements it once per call (FUN_8001f3bc line 78),
+     * and the cmd-5/6 handlers call f314 every tick. The port's normal decay sites (re15_player_tick /
+     * re15_actors_anim_advance slot>=1) BOTH skip the pinned player, so without this the throw-off
+     * blend seed (7) never decayed = a non-terminating fade that leaked into the post-release idle.
+     * Skipped on the seed tick (fresh) so the full 7 renders once — the same first-frame-87.5%
+     * cadence the zombie side shows (F84 frac=7 in the pose dump). */
+    if (player->anim_frac > 0 && !s_victim_fresh) player->anim_frac--;
+    /* VICTIM YAW: latched ONE-SHOT at grab commit (see re15_player_victim_latch) — D1 disasm: the
+     * a8f8 call exists ONLY in phase 0 (@0x8010a3a4); no per-frame re-snap anywhere in the cmd-5
+     * handler. Live-verified: pl_rot constant for the whole hold (behind 1547, face 2009/3083/...),
+     * == the zombie's snapped yaw within -2..-6. The only later write is the release-exit ±0x800
+     * fix-up below. (The old per-frame θl:=θz copy was observably equal during the hold but wrong
+     * in mechanism, and it kept overwriting the release-exit flip.) */
     uint8_t base = (uint8_t)(g_player_victim_variant * 3);
     if (g_player_victim == 1) {                         /* STRUGGLE (state 5, @0x8010a28c 6-phase machine) */
         if (!s_player_grabbed) {                        /* grab ended alive -> RELEASE finish (phases 4/5:
@@ -620,6 +636,9 @@ void re15_player_victim_tick(void)
             g_player_victim = 3;
             player->motion = (uint8_t)(base + 2);
             player->anim_frame = 0;
+            s_victim_fresh = 1;
+            player->anim_frac = 7;                     /* +0x8f=7 @0x8010a594 — blend into the release */
+            player->anim_blend_rate = 0x200;
             return;
         }
         /* TIMELINE-VERIFIED (deterministic /tmp/tl3 + the Q4 disasm of @0x8010a28c): phase 0/1 play the
@@ -627,13 +646,18 @@ void re15_player_victim_tick(void)
          * DAT_800aca5a self-held at 3, anim frame wrapping 0->18->15). The old port held base+2 — that is
          * the RELEASE clip (@0x8010a4e8 = acaf3*3+2), wrong during the hold. */
         uint8_t clip = (uint8_t)(base + (s_victim_phase < 1 ? 0 : 1));
-        player->motion = clip;
         int fc = (clip < vb->anim_victim.clip_count) ? vb->anim_victim.clips[clip].frame_count : 1;
         if (fc < 1) fc = 1;
-        if (++player->anim_frame >= fc) {              /* clip-done -> intro advances, hold clip LOOPS */
+        if (!s_victim_fresh &&
+            ++player->anim_frame >= fc) {              /* clip-done -> intro advances, hold clip LOOPS
+                                                        * (advance SKIPPED on the latch tick: frame 0 is
+                                                        * posed first — byte-true f314 post-increment) */
             player->anim_frame = 0;
             if (s_victim_phase < 1) s_victim_phase++;
+            clip = (uint8_t)(base + (s_victim_phase < 1 ? 0 : 1));
         }
+        s_victim_fresh = 0;
+        player->motion = clip;
         re15_clip_root_motion_abs(player, &vb->skel_victim, &vb->anim_victim,
                                   clip, (int)player->anim_frame);
     } else if (g_player_victim == 2) {                 /* COLLAPSE (state 6): clip variant+6, play once +
@@ -642,11 +666,13 @@ void re15_player_victim_tick(void)
         player->motion = clip;
         int fc = (clip < vb->anim_victim.clip_count) ? vb->anim_victim.clips[clip].frame_count : 1;
         if (fc < 1) fc = 1;
-        if (player->anim_frame < fc - 1) {
+        if (!s_victim_fresh && player->anim_frame < fc - 1)     /* frame 0 posed on the entry tick */
             player->anim_frame++;
-            re15_clip_root_motion_abs(player, &vb->skel_victim, &vb->anim_victim,
-                                      clip, (int)player->anim_frame);
-        }
+        s_victim_fresh = 0;
+        re15_clip_root_motion_abs(player, &vb->skel_victim, &vb->anim_victim,
+                                  clip, (int)player->anim_frame);   /* placed EVERY tick (ad68 runs in
+                                                                     * all cmd-6 frames), incl. entry f0
+                                                                     * and the held last frame */
         /* HP = -1 EXACTLY at collapse anim frame 0x23=35 (byte-true FUN_8010a6f8 @0x8010a80c/814,
          * gate @0x8010a7e8 == 0x23) — a DIRECT SET in the cmd-6 handler, NOT a clamp in the damage
          * path; the original hands the devour off at hp=70 and this store makes the corpse -1
@@ -670,19 +696,30 @@ void re15_player_victim_tick(void)
                                                         * zombie holds sub-steps [4..7] while this plays,
                                                         * so s_player_grabbed stays latched; no re-enter.) */
         uint8_t clip = (uint8_t)(base + 2);
-        player->motion = clip;
         int fc = (clip < vb->anim_victim.clip_count) ? vb->anim_victim.clips[clip].frame_count : 1;
         if (fc < 1) fc = 1;
-        if (++player->anim_frame >= fc) {              /* release clip done -> Leon is free */
+        if (!s_victim_fresh &&
+            ++player->anim_frame >= fc) {              /* release clip done -> Leon is free */
             g_player_victim = 0;
             player->hit_react &= (uint8_t)~1u;         /* clear the grabbed flag (+0x93 &= ~1) — a new
                                                         * grab may commit again from here */
+            /* BYTE-TRUE EXIT YAW FIX-UP (D1 disasm @0x8010a614-624, live-exact tlm2/04->05
+             * 2009->4057 = +0x800): the FACE variant flips +0x6a += 0x800 -> Leon ends FACING the
+             * zombie he shoved off (his entity yaw pointed AWAY for the whole grab; the face-victim
+             * clips are authored root-180°-flipped). BEHIND keeps the grab yaw (no flip). Without
+             * this Leon stood 180° reversed after every face-grab push-away. (The variant-3 -0x800
+             * @0x8010a648 belongs to the second clip set {8..13} — not in the port's variant model.) */
+            if (g_player_victim_variant == 0)
+                player->rot_y = (int16_t)(((int)player->rot_y + 0x800) & 0x0fff);
             player->motion = 200;                      /* restore the idle sentinel: the stale bank2
                                                         * clip index must not feed the normal player
                                                         * anim select for a frame (a wrong-clip flash) */
             player->anim_frame = 0;
+            player->anim_frac = 0;                     /* no victim-blend leak into the free idle */
             return;
         }
+        s_victim_fresh = 0;
+        player->motion = clip;
         re15_clip_root_motion_abs(player, &vb->skel_victim, &vb->anim_victim,
                                   clip, (int)player->anim_frame);
     }
@@ -691,6 +728,7 @@ void re15_player_victim_tick(void)
 /* Reset on room change / death-continue reload (called from re15_enemy_reset). */
 void re15_player_victim_reset(void) { g_player_victim = 0; g_player_victim_type = 0;
                                       g_player_victim_variant = 0; s_victim_phase = 0;
+                                      s_victim_fresh = 0;
                                       g_player_victim_zombie = -1; s_grab_mercy_timer = 0; }
 
 /* FUN_80100688 (@0x8011f7b4[0], STAGE1.BIN) — the LIVE zombie INIT state. Byte-true core:
@@ -1015,6 +1053,10 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
                                                * the SE 7 belongs to the THROW-OFF [4] (@0x80102920/60).
                                                * Seeds the walk-back speed +0x8c = 0x32 (P2 disasm). */
             e->motion = 0x11; e->anim_frame = 0;
+            e->anim_frac = 0xf;               /* [6] re-seeds +0x8f = 0xf (D2 disasm) — the throw-off ->
+                                               * stagger-back pose blend... */
+            e->anim_blend_rate = 0x100;       /* ...consumed by [7]'s f314(1, 0x100) rate (@decompile
+                                               * line 101) — slower 15-step fade than the grab's 0x200 */
             e->speed_h = 0x32;
             e->sub_state_2 = 7; break;
         case 7:                               /* [7] recovery plays clip 0x11 — NO ad68 root motion: the
@@ -1268,10 +1310,19 @@ void re15_body_push_player(void)
 {
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     if (pl->hp < 0) return;                                   /* dead: the devour overlaps the corpse */
+    int pl_locked = re15_player_is_grabbed();                 /* player +0x0 & 0x1000 (set at grab [0]
+                                                               * @0x80102624, cleared at release end
+                                                               * @0x8010a680) */
     for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) {
         re15_actor_t *e = &g_actors[s];
         if (!e->active || e->hit_radius_min == 0) continue;
         if (e->state == (uint8_t)RE15_AI_STATE_CORPSE) continue;
+        /* GRABBING-PAIR EXEMPTION = an AND of BOTH freeze bits (byte-true FUN_8002aec4 @0x8002af14:
+         * `and v0,a0,v1; andi 0x1000; bne -> return`): only the pair skips — a THIRD zombie still
+         * pushes the grabbed player. Zombie-side bit: set at [0] @0x80102610, cleared at [8]
+         * @0x80102bb8 = its sub_state_1 stays 3..6 for exactly that window. */
+        if (pl_locked && e->state == 1 &&
+            e->sub_state_1 >= 3 && e->sub_state_1 <= 6) continue;
         re15_body_push(e, (int32_t)e->hit_radius_min, pl, RE15_BODY_R_PLAYER);
     }
 }
