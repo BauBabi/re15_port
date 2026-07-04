@@ -33,7 +33,7 @@
 static int s_ai_paused = 0;
 void re15_enemy_ai_set_paused(int paused) { s_ai_paused = paused ? 1 : 0; }
 
-static void re15_enemy_face_player(re15_actor_t *e, const re15_actor_t *player, int16_t slew);  /* fwd */
+static void re15_enemy_steer_point(re15_actor_t *e, int32_t tx, int32_t tz, int slew);          /* fwd */
 /* FSM-CLOCK clip-end signal (defined below, used by the feeding stand-up + grab + death sub-FSMs). */
 static int re15_enemy_clip_done(const re15_actor_t *e);
 
@@ -745,6 +745,10 @@ void re15_enemy_ai_live_init(int slot)
     re15_actor_t *e = &g_actors[slot];
     e->state    = (uint8_t)RE15_AI_STATE_ACTIVE;   /* +0x4 = 1 */
     e->ai_timer = 0x14;                            /* +0x9c = 0x14 */
+    /* +0x1bc/+0x1be = the player-pos STEER SNAPSHOT (sh @0x8010071c/734): the ONLY write —
+     * both live walks aim at this fixed point ever after; the TURN state provides the live re-aim. */
+    e->steer_x = (int16_t)g_actors[RE15_ACTOR_SLOT_PLAYER].x;
+    e->steer_z = (int16_t)g_actors[RE15_ACTOR_SLOT_PLAYER].z;
     /* seed the per-spawn HURT stagger clip (FUN_80100688 @0x80100774-9c): +0x1d4 =
      * seed_table[rng()&7], table @0x8011f7e4 = {2,3,4,5,2,3,4,5} -> a random clip in {2,3,4,5}. */
     {
@@ -815,7 +819,9 @@ static void re15_enemy_ai_feeding_animate(re15_actor_t *e, const re15_actor_t *p
         e->sub_state_2 = 1;                               /* entry: clip 0x29 intro (@0x801049a0) */
         e->motion = 0x29; e->anim_frame = 0; e->anim_frac = 7;
     }
-    if (player) re15_enemy_face_player(e, player, 0x20);  /* func_0x8001aac4(+0x1bc,+0x1be,0x20) */
+    (void)player;
+    re15_enemy_steer_point(e, e->steer_x, e->steer_z, 0x20);  /* func_0x8001aac4(+0x1bc,+0x1be,0x20)
+                                                               * — the stored snapshot, byte-true */
     if (re15_enemy_clip_done(e)) e->sub_state_2 = 2;      /* 0x29 intro done -> the loop */
 }
 
@@ -1140,13 +1146,28 @@ static int re15_enemy_live_count(void)
     return n;
 }
 
-/* Rotate the heading toward the player by up to `slew` (byte-true homing func_0x8001aac4). Uses the
- * SAME re15_ai_arc_test residual the turn + the decide use, so the states stay consistent (a mixed
- * atan2 convention made the engage↔turn oscillate). arc_test returns 0 within the cone, else ±slew. */
-static void re15_enemy_face_player(re15_actor_t *e, const re15_actor_t *player, int16_t slew)
+/* func_0x8001aac4 (@0x8001aac4, EXE decompile-verified) — the WALK steer: slew the heading toward
+ * the POINT (tx,tz) at |slew|/tick; NEGATIVE slew steers AWAY (bearing+0x800) — the gait rows'
+ * -1 segments are the drunken-weave wiggle the walks are authored around. Byte-true math:
+ *   bearing = a6d4(self, target)   (the yaw value that faces the point; port: atan2-0x400)
+ *   slew<0 -> slew=-slew, bearing+=0x800
+ *   delta = (slew + bearing - yaw) & 0xfff
+ *   delta < 2*slew -> SNAP yaw=bearing; else yaw-=slew, and delta<0x801 -> yaw+=2*slew (short side).
+ * slew==0 (the zero gait rows, roll 6/12) is a NO-OP = walk dead straight. */
+static void re15_enemy_steer_point(re15_actor_t *e, int32_t tx, int32_t tz, int slew)
 {
-    int16_t r = (int16_t)re15_ai_arc_test(e, player->x, player->z, slew);
-    e->rot_y = (int16_t)(((int32_t)e->rot_y + r) & 0x0fff);
+    if (slew == 0) return;
+    int bearing = ((int)re15_atan2_q12(tz - e->z, tx - e->x) - 0x400) & 0x0fff;
+    if (slew < 0) { slew = -slew; bearing = (bearing + 0x800) & 0x0fff; }
+    int yaw   = (int)e->rot_y & 0x0fff;
+    int delta = (slew + bearing - yaw) & 0x0fff;
+    if (delta < 2 * slew)
+        e->rot_y = (int16_t)bearing;
+    else {
+        yaw = (yaw - slew) & 0x0fff;
+        if (delta < 0x801) yaw = (yaw + 2 * slew) & 0x0fff;
+        e->rot_y = (int16_t)yaw;
+    }
 }
 
 /* Per-actor FOOT-LOCK state (byte-true FUN_8010939c): the planted support-foot's world pos, cached
@@ -1210,12 +1231,14 @@ static void re15_enemy_ai_live_approach(int slot, re15_actor_t *e, const re15_ac
         s_wander_tmr[slot] = (int16_t)s_wander_tbl[s_wander_idx[slot]].tmr;  /* +0x9c */
         s_zfoot_ok[slot] = 0;
     }
-    /* wander slew: sVar7 = +0x9e * table[+0x9f].rot (= +-(8..15)); slew the yaw toward the live player
-     * (+0x1bc/+0x1be) by |sVar7|; every table[+0x9f].tmr frames advance the index (wrap 0xf) and add a
-     * random +-sVar7 jitter to +0x6a (FUN_801057bc @0x8010572c-58). */
+    /* wander slew: sVar7 = +0x9e * table[+0x9f].rot (= +-(8..15)) — SIGNED into the aac4 steer at the
+     * STEER SNAPSHOT +0x1bc/+0x1be (decompile FUN_801057bc:40), NOT the live player: negative rows
+     * wiggle AWAY. The old port homed |sVar7| onto the LIVE player -> the facing error never grew ->
+     * the TURN state never fired -> the wake-roll was absorbing (a 0x13 roll = a permanent arms-down
+     * shambler glued to the player = the user report). Every table[+0x9f].tmr frames advance the index
+     * (wrap 0xf) and add a random +-sVar7 jitter to +0x6a (FUN_801057bc @0x8010572c-58). */
     int16_t sVar7 = (int16_t)((int16_t)s_wander_mag[slot] * s_wander_tbl[s_wander_idx[slot]].rot);
-    int16_t mag   = (int16_t)(sVar7 < 0 ? -sVar7 : sVar7);
-    re15_enemy_face_player(e, player, mag);          /* func_0x8001aac4(+0x1bc,+0x1be,sVar7): slew to player */
+    re15_enemy_steer_point(e, e->steer_x, e->steer_z, sVar7);
     int16_t was = s_wander_tmr[slot];
     s_wander_tmr[slot] = (int16_t)(was - 1);
     if (was == 0) {
@@ -1466,18 +1489,19 @@ int re15_enemy_ai_live_active(int slot)
                         s_zfoot_ok[slot] = 0;
                         e->sub_state_2 = 1;
                     }
-                    /* per-frame walker: sVar7 = +0x9e * row[+0x9f].dir; slew the yaw toward the player
-                     * by |sVar7| (rows 6/12 are all-zero -> dead straight); segment timer -> advance
-                     * the row index (wrap 0x1f) + random +-sVar7 jitter; then the foot-lock carries
-                     * the body along the walk clip. */
+                    /* per-frame walker: sVar7 = +0x9e * row[+0x9f].dir — SIGNED into the aac4 steer at
+                     * the STEER SNAPSHOT +0x1bc/+0x1be (decompile FUN_801021f8:57): +1 rows pull toward
+                     * the point, -1 rows wiggle AWAY = the authored drunken weave; the all-zero rows
+                     * (roll 6/12) steer NOT AT ALL (dead straight — the old "straight at him" fallback
+                     * was a live-homing bug). Live re-aim = the TURN state only. Segment timer ->
+                     * advance the row index (wrap 0x1f) + random +-sVar7 jitter; then the foot-lock
+                     * carries the body along the walk clip. */
                     {
                         uint8_t v = s_gait_variant[slot];
                         int16_t rot = (v == 0) ? s_gait_row0[s_wander_idx[slot]].rot
                                     : (v == 1) ? s_gait_row1[s_wander_idx[slot]].rot : 0;
                         int16_t sVar7 = (int16_t)((int16_t)s_wander_mag[slot] * rot);
-                        int16_t mag   = (int16_t)(sVar7 < 0 ? -sVar7 : sVar7);
-                        if (mag == 0) mag = (int16_t)s_wander_mag[slot];   /* zero-row: straight at him */
-                        re15_enemy_face_player(e, player, mag);
+                        re15_enemy_steer_point(e, e->steer_x, e->steer_z, sVar7);
                         if (v <= 1) {
                             int16_t was = s_wander_tmr[slot];
                             s_wander_tmr[slot] = (int16_t)(was - 1);

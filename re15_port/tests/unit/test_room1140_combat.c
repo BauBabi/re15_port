@@ -1156,6 +1156,32 @@ int main(void)
                    "(window=5) threw off unmashed (hp %d->%d)\n", guard, pl->hp, hp_before_regrab, pl->hp);
     }
 
+    /* (24): STEER SNAPSHOT (+0x1bc/+0x1be, FUN_80100688 sh @0x8010071c/734): the walks aim at the
+     * player pos captured ONCE at the live-init and NEVER refreshed (exhaustive m0 store-scan
+     * 2026-07-04) — live homing is the TURN state's job. The old port homed the walks onto the LIVE
+     * player -> the turn never fired -> the wake behavior-roll was absorbing (a 0x13 roll = a
+     * permanent arms-down shambler = the user report). */
+    {
+        int gs = zslots[0];
+        re15_actor_t *gz = &g_actors[gs];
+        pl->x = 1234; pl->z = -5678; pl->hp = 100; pl->hit_react = 0;
+        re15_enemy_ai_live_init(gs);
+        if (gz->steer_x != 1234 || gz->steer_z != -5678) {
+            fprintf(stderr, "FAIL: (24) live-init must snapshot the player pos into +0x1bc/+0x1be "
+                    "(got %d,%d)\n", gz->steer_x, gz->steer_z); fail = 1; }
+        pl->x = 20000; pl->z = 20000;                       /* the player MOVES... */
+        gz->x = 0; gz->z = 0; gz->floor = 0; gz->state = RE15_AI_STATE_ACTIVE;
+        gz->grid_id = 0; gz->sub_state_1 = 2; gz->sub_state_2 = 0; gz->ai_flags = 0;
+        for (int f = 0; f < 20; f++) re15_enemy_ai_run_all(1);
+        if (gz->steer_x != 1234 || gz->steer_z != -5678) {  /* ...the snapshot must NOT follow */
+            fprintf(stderr, "FAIL: (24) the steer snapshot must never refresh (got %d,%d)\n",
+                    gz->steer_x, gz->steer_z); fail = 1; }
+        if (!fail)
+            printf("  (24) steer snapshot: init captures (1234,-5678), 20 engage ticks with the player "
+                   "moved -> snapshot unchanged (live re-aim = the TURN state only)\n");
+        re15_enemy_reset();
+    }
+
     if (fail) { fprintf(stderr, "\nROOM1140 COMBAT-WIRING TEST FAILED\n"); return 1; }
     printf("\nPASS: ROOM1140 live-AI game_step wiring (spawn; WAKE->engage; TURN-to-face->GRAB->HP; "
            "GRABBED-lock; player DEATH; zombie HURT/DEATH; PLAYER-SHOOTS; LEON grab-victim anim; "

@@ -122,6 +122,13 @@ typedef struct {
      * a movement leaf (deferred, model-pool); read here as an input. 0 = origin. */
     int16_t  ai_target_x;   /* +0x1dc */
     int16_t  ai_target_z;   /* +0x1de */
+    /* STEER-TARGET snapshot (+0x1bc/+0x1be) — the player XZ captured ONCE at the m0 INIT
+     * (FUN_80100688 sh @0x8010071c/734) and NEVER refreshed by any m0 code (exhaustive overlay
+     * store-scan + EXE decompile grep, 2026-07-04). BOTH live walks steer toward THIS point
+     * (FUN_801021f8/FUN_801057bc: func_0x8001aac4(+0x1bc,+0x1be,±sVar7)) — live homing happens
+     * only through the TURN state's re-aim (decide arc tests run against the live player). */
+    int16_t  steer_x;       /* +0x1bc */
+    int16_t  steer_z;       /* +0x1be */
     /* LIVE STAGE1 zombie (@0x8011f7b4 family, FUN_80100424/FUN_80101224) attack windup timer
      * (entity +0x1da, s16). The active handler FUN_80101224 counts it down while the attack-arm
      * bit (ai_flags & 0x100 = +0x1d8 & 0x100) is set; at == 0x12c (300) it fires the lunge, at
