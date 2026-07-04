@@ -83,15 +83,20 @@ static void script_parse_once(void)
         while (*p == ',' || *p == ' ') p++;
         if (!*p) break;
         uint16_t bits = 0;
+        int mash = 0;   /* 'B<secs>' = BUTTON-MASH: CROSS press-EDGE every other tick (the grab
+                         * mash-escape probe; a constant hold is one edge and never re-triggers
+                         * the FUN_80037024 press-edge test) */
         while (*p && ((*p >= 'A' && *p <= 'Z') || (*p >= 'a' && *p <= 'z'))) {
-            bits |= script_bit_for(*p); p++;
+            if (*p == 'B' || *p == 'b') mash = 1; else bits |= script_bit_for(*p);
+            p++;
         }
         char *end = NULL;
         double secs = strtod(p, &end);
         if (end == p) { p++; continue; }              /* malformed token: skip a char */
         p = end;
         int n = (int)(secs * fps + 0.5);
-        for (int i = 0; i < n && ticks < RE15_SCRIPT_MAX_TICKS; i++) s_script[ticks++] = bits;
+        for (int i = 0; i < n && ticks < RE15_SCRIPT_MAX_TICKS; i++)
+            s_script[ticks++] = mash ? (((i & 1) ? 0 : RE15_PAD_CROSS) | bits) : bits;
     }
     s_script_len = ticks;
     fprintf(stderr, "[input-script] RE15_INPUT_SCRIPT=\"%s\" -> %d ticks @ %d fps, start frame %d\n",

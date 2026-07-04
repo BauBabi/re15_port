@@ -875,9 +875,10 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
      * grabbed). re15_enemy_ai_run_all clears it each frame, so it tracks "a live zombie is grabbing
      * THIS frame" = the faithful-line release for the deferred player grabbed-FSM. */
     s_player_grabbed = 1;
-    /* Drive Leon's grab-victim animation (state 5 struggle / state 6 collapse on grab-death) off this
-     * zombie's bank 2 — so he struggles + collapses instead of freezing (the "no Leon reactions"). */
-    re15_player_victim_latch(e, player);
+    /* Leon's victim latch (cmd 5) happens ONCE at the [0] commit (@0x80102640) — NOT here every
+     * frame: the every-frame latch re-entered the struggle from the release state 3 one frame after
+     * the THROW-OFF [4] (the latch's ==3 re-enter path) = Leon's push-away anim never played
+     * (dump-proven: F131 vs=3 -> F132 vs=1 while the zombie ran its own throw-off [5]). */
     /* GRAB-CLIP ROOT MOTION — ABSOLUTE from the SHARED ANCHOR (P2 disasm 2026-07-04, survived
      * refutation): FUN_80102548 calls func_0x8001ad68(zombie, +0x170, +0x174) in sub-steps [1] pull-in,
      * [3] bite and [5] throw-off — an ABSOLUTE placement pos = anchor(+0xa0/+0xa2) + RotY(own yaw) *
@@ -900,7 +901,13 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
     uint8_t grab_base = (uint8_t)((e->sub_state_1 - 3) * 3);   /* (+0x5-3)*3 */
     switch (e->sub_state_2) {                /* +0x6 sub-step (reset to 0 by the 0x301/0x401 commit) */
         case 0:                               /* [0] init/latch + grab clip base (@0x801025bc) */
+            /* Leon's victim latch = the byte-true cmd-5 write @0x80102640 — [0] only (see above). */
+            re15_player_victim_latch(e, player);
             e->motion = grab_base; e->anim_frame = 0;
+            e->anim_frac = 7;                         /* +0x8f = 7 (byte-true [0], P2 disasm) — the
+                                                       * ~8-frame walk->grab pose blend; without it the
+                                                       * zombie SNAPPED from the bank0 walk pose to the
+                                                       * bank1 pull-in = the grab-start flash */
             e->anim_blend_rate = 0x200;               /* one-shot f314 rate */
             /* GRABBED flag (byte-true player+0x93 |= 1, latched with the cmd-5 write @0x80102640):
              * the engage/turn grab-commits require +0x93 == 0, so a SECOND zombie cannot grab the

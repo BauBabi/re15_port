@@ -1983,6 +1983,24 @@ int main(int argc, char *argv[])
             if (player_visible && skel_ok) {
                 g_anim_pose_actor = player_ref;   /* FRAC crossfade for the player body */
                 pose_ok = (re15_skel_compute_pose(p_skel, kf_idx, poses) == 0);
+                /* RE15_POSE_DUMP: LEON render-level pose (grab-start / release investigations) */
+                {
+                    static FILE *s_lp = NULL; static int s_lp_tried = 0;
+                    if (!s_lp_tried) { s_lp_tried = 1;
+                        const char *pd = getenv("RE15_POSE_DUMP");
+                        if (pd && *pd) { char pb[512]; snprintf(pb, sizeof pb, "%s.leon", pd); s_lp = fopen(pb, "w"); }
+                    }
+                    if (s_lp && pose_ok) {
+                        fprintf(s_lp, "[leon] F%u vs=%d mo=%d af=%d frac=%d kf=%d ovr=%d rot=%d "
+                                "b9(%d,%d,%d) b13(%d,%d,%d)\n",
+                                (unsigned)g_engine.frame_count, re15_player_victim_state(),
+                                player_ref->motion, player_ref->anim_frame, player_ref->anim_frac,
+                                kf_idx, p_clip_override, (int)player_ref->rot_y,
+                                (int)poses[9].trans[0], (int)poses[9].trans[1], (int)poses[9].trans[2],
+                                (int)poses[13].trans[0], (int)poses[13].trans[1], (int)poses[13].trans[2]);
+                        fflush(s_lp);
+                    }
+                }
             }
             /* Per-bone composed matrix `view × bone_world` (Q12 rotation
              * + world-unit translation, float copies for in-macro math).
