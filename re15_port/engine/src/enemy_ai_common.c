@@ -22,6 +22,9 @@
 #include "re15_audio.h"    /* re15_audio_room_se — zombie combat SEs on snd1 (func_0x800453d0):
                             * grab-start 4, grab-release 7 (FUN_80102548), death groan 5/8 (FUN_80107cb0 f7) */
 #include "re15_esp.h"      /* re15_esp_fx_spawn — the collapse frame-0x37 blood burst */
+#include "re15_collision.h" /* re15_collision_constrain — the enemy SCA wall clamp (m0 root
+                             * @0x8010062c jal 0x8003b0a4, runs per tick after the state handler) */
+#include "re15_room.h"      /* g_room_rdt for the enemy wall clamp + the nav-zone graph */
 #include "re15_damage.h"   /* re15_enemy_player_dist, re15_ai_arc_test, re15_engine_rand8,
                             * re15_enemy_apply_hitbox */
 #include "re15_skeleton.h" /* re15_sin_q12 / re15_cos_q12 — forward-walk root-motion step (8.19) */
@@ -1978,12 +1981,22 @@ int re15_enemy_ai_live_tick(int slot)
                           e->ai_wp_node, (int)(e->ai_flags & 8u));
     e->ai_flags &= (uint16_t)~8u;                        /* the @0x8010a9f8 one-shot clear */
 
+    int32_t wall_ox = e->x, wall_oz = e->z;              /* pre-dispatch pos for the wall clamp */
     switch (e->state) {                                  /* @0x8011f7b4[entity+0x4] */
         case RE15_AI_STATE_INIT:   re15_enemy_ai_live_init(slot);   break;  /* [0] FUN_80100688 */
         case RE15_AI_STATE_ACTIVE: re15_enemy_ai_live_active(slot); break;  /* [1] FUN_80101224 */
         case RE15_AI_STATE_HURT:   re15_enemy_ai_live_hurt(slot);   break;  /* [2] FUN_80105a8c */
         case RE15_AI_STATE_DEATH:  re15_enemy_ai_live_death(slot);  break;  /* [3] FUN_80106ba4 */
         default: /* [4]=0x8010919c idle (deferred) / 7 = inert corpse (no dispatch) */ break;
+    }
+    /* ENEMY SCA WALL CLAMP — byte-true m0 root tail (@0x8010062c: jal 0x8003b0a4 AFTER the state
+     * handler + body pushes): the zombie is wall-resolved EVERY tick like the player. Without it a
+     * steered walker leaves the room geometry (live-proven: a zombie crossed the z=-23900 boundary
+     * out of every nav zone and wandered off-world). Slide semantics == the player's resolver. */
+    if (g_room_rdt_ok && (e->x != wall_ox || e->z != wall_oz)) {
+        int32_t nx = e->x, nz = e->z;
+        re15_collision_constrain(&g_room_rdt, wall_ox, wall_oz, &nx, &nz);
+        e->x = nx; e->z = nz;
     }
     return 1;
 }
