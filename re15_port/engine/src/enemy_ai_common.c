@@ -1254,6 +1254,58 @@ static int re15_enemy_los_probe(int slot, re15_actor_t *e, const re15_actor_t *p
     return 2;
 }
 
+/* CORPSE / PRONE-SETTLE (root state 7 = FUN_80109554, shared m0/m1; raw-disasm'd C7 2026-07-05):
+ * a killed zombie does NOT freeze — it lies in clip 0x15 (face-down) / 0x14 (face-up, after the
+ * backward fall 0xb or when downed +0x9&0x80), its blood pool spreads (+0xbc/+0xbe += 8/frame for
+ * ~91 frames — the shadow quad recolored 0x00ffff38, same mechanism as the player death pool),
+ * the lying clip CREEPS with random 1..8-frame hiccups, then it TWITCHES: random pauses
+ * (rand&0x1f)+1 alternating with fast (rate 0x400 = 4 frames/tick) clip replays, on a 0x1f4-frame
+ * master budget — then rests forever (sub 4 is terminal for zombies; NO corpse ever returns to
+ * ACTIVE — the @0x80109758/801098b4 writes are +0x5 sub-steps, not revives). Entry writers all
+ * store the +0x4=7 halfword (+0x5=0). Uses grab_kill_ctr=+0x9e (pool budget 0x5a, then twitch
+ * delay) and ai_timer=+0x9c (creep hiccup, then the 0x1f4 master). */
+static void re15_enemy_corpse_settle(re15_actor_t *e)
+{
+    switch (e->sub_state_1) {
+        case 0:                                   /* INIT (@0x8010959c), falls into sub1 same tick */
+            e->grab_kill_ctr = 0x5a;              /* +0x9e = 90 pool-spread frames */
+            e->sub_state_1 = 1;
+            e->motion = (uint8_t)(((e->grid_id & 0x80) || e->motion == 0x0b) ? 0x14 : 0x15);
+            e->anim_frame = 0;
+            e->anim_frac = 0xf; e->anim_blend_rate = 0x100;   /* +0x8f=0xf (@0x801096a4) */
+            e->ai_timer = 0;                      /* +0x9c = 0 (@0x801096b4) */
+            /* fallthrough */
+        case 1:                                   /* POOL-SPREAD + lying-clip creep (@0x80109704) */
+            if (e->ai_timer == 0) {
+                e->anim_frame++;                  /* f314 rate 0x100 (@0x801097e8) */
+                if (re15_enemy_clip_done(e)) {
+                    e->anim_frame = 0;
+                    e->ai_timer = (int16_t)((re15_engine_rand8() & 7) + 1);  /* hiccup (@0x801097f8) */
+                }
+            } else e->ai_timer--;
+            if (e->grab_kill_ctr > 0) e->grab_kill_ctr--;     /* the pool grows render-side */
+            else {
+                e->sub_state_1 = 2;                            /* (@0x80109750-78) */
+                e->grab_kill_ctr = (int16_t)((re15_engine_rand8() & 0x1f) + 1);
+                e->ai_timer = 0x1f4;                           /* master twitch budget = 500 */
+            }
+            break;
+        case 2:                                   /* PAUSE (@0x80109824): anim frozen */
+            if (--e->grab_kill_ctr <= 0) e->sub_state_1 = 3;
+            if (e->ai_timer-- <= 0) e->sub_state_1 = 4;        /* master expiry overrides (@0x80109860) */
+            break;
+        case 3:                                   /* TWITCH (@0x80109884): rate 0x400 = 4 frames/tick */
+            e->anim_frame = (uint16_t)(e->anim_frame + 4);
+            if (re15_enemy_clip_done(e)) {
+                e->anim_frame = 0;
+                e->sub_state_1 = 2;                            /* (@0x801098a4-c8) */
+                e->grab_kill_ctr = (int16_t)((re15_engine_rand8() & 0x1f) + 1);
+            }
+            break;
+        default: break;                           /* 4 REST — terminal (@0x80109918) */
+    }
+}
+
 /* KNOCKDOWN / GET-UP (+0x5=0x11) — byte-true FUN_8010512c (@0x8011f890[0x11], cluster F): the poise-
  * break target. [0] fall clip 0xb, +0x8f=0xf rate 0x100, +0x93|=1, +0x1dc=0x80 (downed sentinel),
  * +0x9|=0x80 (reroutes HURT->flinch / DEATH->downed clip 0x1f while down); [1] play out; [2] lie
@@ -2180,7 +2232,10 @@ void re15_enemy_ai_live_death(int slot)
         if (!re15_enemy_clip_done(e)) return;          /* still playing death clip 0x1f (FSM-clock gate) */
         e->sub_state_3 = 2;
     }
-    e->state = (uint8_t)RE15_AI_STATE_CORPSE;          /* phase 2 — +0x4 = 7 (@0x80107ec8) */
+    e->state = (uint8_t)RE15_AI_STATE_CORPSE;          /* phase 2 — +0x4 = 7 (@0x80107ec8): the
+                                                        * halfword write zeroes +0x5 -> the settle
+                                                        * FSM starts at INIT */
+    e->sub_state_1 = 0; e->sub_state_2 = 0;
 }
 
 /* FUN_80100424 (@0x80072bac[0x10/0x11/0x16], STAGE1.BIN) — the LIVE zombie PER-FRAME TICK, the
@@ -2199,7 +2254,6 @@ int re15_enemy_ai_live_tick(int slot)
     if (s_ai_paused) return 0;                          /* g_pauseflags & 0x20000000 */
     if (e->grid_id & RE15_AI_GRID_SKIP) return 0;       /* +0x9 & 0x20 */
 
-    e->contact_flags = 0;                                /* FUN_8002b498 tail: +0x1c2 := 0 per tick */
     e->ai_dist = (uint32_t)re15_enemy_player_dist(e, &g_actors[RE15_ACTOR_SLOT_PLAYER]);
     /* +0x1bc/+0x1be STEER TARGET — the per-tick writer is EXE FUN_80039e7c (RESOLVED 2026-07-04;
      * the RAM observation "== player pos every tick" was the SAME-ZONE case). Byte-true call
@@ -2218,17 +2272,13 @@ int re15_enemy_ai_live_tick(int slot)
         case RE15_AI_STATE_ACTIVE: re15_enemy_ai_live_active(slot); break;  /* [1] FUN_80101224 */
         case RE15_AI_STATE_HURT:   re15_enemy_ai_live_hurt(slot);   break;  /* [2] FUN_80105a8c */
         case RE15_AI_STATE_DEATH:  re15_enemy_ai_live_death(slot);  break;  /* [3] FUN_80106ba4 */
-        default: /* [4]=0x8010919c idle (deferred) / 7 = inert corpse (no dispatch) */ break;
+        case RE15_AI_STATE_CORPSE:                       /* [7] = FUN_80109554 corpse settle */
+            re15_enemy_corpse_settle(e);
+            break;
+        default: /* [4]=0x8010919c idle (deferred) */ break;
     }
-    /* ENEMY SCA WALL CLAMP — byte-true m0 root tail (@0x8010062c: jal 0x8003b0a4 AFTER the state
-     * handler + body pushes): the zombie is wall-resolved EVERY tick like the player. Without it a
-     * steered walker leaves the room geometry (live-proven: a zombie crossed the z=-23900 boundary
-     * out of every nav zone and wandered off-world). Slide semantics == the player's resolver. */
-    if (g_room_rdt_ok && (e->x != wall_ox || e->z != wall_oz)) {
-        int32_t nx = e->x, nz = e->z;
-        re15_collision_constrain(&g_room_rdt, wall_ox, wall_oz, &nx, &nz);
-        e->x = nx; e->z = nz;
-    }
+    (void)wall_ox; (void)wall_oz;   /* the SCA wall clamp moved to run_all (byte-true b0a4 order:
+                                      * AFTER the body pushes @0x8010062c) */
     return 1;
 }
 
@@ -2268,10 +2318,16 @@ void re15_enemy_ai_run_all(int combat_active)
         if (!e->active) continue;
         uint8_t t = e->type;
         if (t == 0x10 || t == 0x11 || t == 0x16) { /* the live STAGE1 zombie types only */
+            int32_t sweep_ox = e->x, sweep_oz = e->z;    /* pre-dispatch pos (wall-sweep origin) */
             re15_enemy_ai_live_step(s);
             re15_enemy_hurt_fx(e);      /* FUN_80105a8c/FUN_80105b7c hurt -> effect-0 hit blood (visible) */
             re15_enemy_gore_tick(e);    /* FUN_80106a44 +0x93&2 -> gore effect spawn */
             re15_enemy_gore_setup(e);   /* FUN_80106edc sub_state_1==0x58 -> effect-5 gore setup */
+            /* CONTACT CLEAR — byte-true FUN_8002b498 position (@0x801005f4, AFTER the state
+             * dispatch, BEFORE the pushes): the handlers above read LAST tick's +0x1c2 (the grab-[5]
+             * domino read @0x801029ec) — clearing at tick START kept the domino permanently dead =
+             * "the push-out feels dead" (user report). */
+            e->contact_flags = 0;
             /* BODY COLLISION, zombie side (byte-true FUN_8010a8c8 tail: aec4(&player, this) + the
              * b544 pass): this zombie is pushed out of the LIVE player and the other zombies.
              * FREEZE GATE (aec4 entry: skip when BOTH carry the 0x1000 freeze): the grab sets the
@@ -2281,7 +2337,9 @@ void re15_enemy_ai_run_all(int combat_active)
              * all sub-steps incl. throw-off/recovery) or devouring (5/6). */
             if (e->state != (uint8_t)RE15_AI_STATE_CORPSE && e->hit_radius_min != 0) {
                 re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-                int pair_frozen = (e->sub_state_1 >= 3 && e->sub_state_1 <= 6);
+                int pair_frozen = (e->state == 1 && e->sub_state_1 >= 3 && e->sub_state_1 <= 6);
+                                                       /* the both-0x1000 AND: only the ACTIVE grab
+                                                        * window (a HURT sub 4 must not be exempt) */
                 if (pl->hp >= 0 && !pair_frozen)
                     if (re15_body_push(pl, RE15_BODY_R_PLAYER, e, (int32_t)e->hit_radius_min))
                         e->contact_flags |= 1;         /* +0x1c2 |= 1: the PLAYER pushed me (aec4) */
@@ -2295,6 +2353,13 @@ void re15_enemy_ai_run_all(int combat_active)
                         e->contact_slot   = (int8_t)o; /* -> the grab [5] domino target */
                     }
                 }
+            }
+            /* ENEMY SCA WALL CLAMP — byte-true order (@0x8010062c: b0a4 runs AFTER aec4+b544,
+             * unconditionally): pushes can no longer leave a zombie inside a wall. */
+            if (g_room_rdt_ok && (e->x != sweep_ox || e->z != sweep_oz)) {
+                int32_t nx = e->x, nz = e->z;
+                re15_collision_constrain(&g_room_rdt, sweep_ox, sweep_oz, &nx, &nz);
+                e->x = nx; e->z = nz;
             }
         }
     }

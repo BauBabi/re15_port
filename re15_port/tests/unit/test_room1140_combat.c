@@ -1240,6 +1240,59 @@ int main(void)
                    "2->0 crossing (-4400, own z); same-zone = raw pass-through (RAM ground truth)\n");
     }
 
+    /* (26): CORPSE-SETTLE FSM (root state 7 = FUN_80109554, C7 raw-disasm): a killed zombie lies in
+     * clip 0x15 (face-down; 0x14 face-up when downed/backward-fall), creeps the lying clip with
+     * random hiccups while the pool budget +0x9e=0x5a runs, then TWITCH-cycles (pause (rand&0x1f)+1
+     * <-> fast replay) on the 0x1f4 master budget, then RESTS forever (sub 4; no corpse ever
+     * returns to ACTIVE). Also: the grab-[5] DOMINO fires now that contact_flags are cleared at the
+     * byte-true b498 position (AFTER the dispatch) — a contacted bystander is knocked into 0xb. */
+    {
+        re15_actor_t *cz = &g_actors[zslots[1]];
+        re15_enemy_bank_t *cb = re15_enemy_alloc(cz->type);
+        if (!cb) { fprintf(stderr, "FAIL: (26) no bank\n"); fail = 1; }
+        else {
+            cb->ok = 1;
+            cb->anim.clip_count = 0x20;
+            cb->anim.clips[0x15].frame_count = 10;      /* the lying clip */
+            cb->anim.clips[0x14].frame_count = 10;
+            cz->state = RE15_AI_STATE_CORPSE; cz->sub_state_1 = 0; cz->sub_state_2 = 0;
+            cz->motion = 0x0d; cz->anim_frame = 0; cz->grid_id = 0; cz->active = 1;
+            re15_enemy_ai_live_tick(zslots[1]);         /* INIT -> sub1, lying clip */
+            if (cz->sub_state_1 != 1 || cz->motion != 0x15) {
+                fprintf(stderr, "FAIL: (26) corpse INIT -> sub1 lying clip 0x15, ss1=%d mo=%d\n",
+                        cz->sub_state_1, cz->motion); fail = 1; }
+            int tw = 0, rest = 0;
+            for (int f = 0; f < 800 && !rest; f++) {    /* run through settle + twitch cycles */
+                re15_enemy_ai_live_tick(zslots[1]);
+                if (cz->sub_state_1 == 3) tw = 1;       /* a twitch happened */
+                if (cz->sub_state_1 == 4) rest = 1;     /* terminal rest */
+                if (cz->state != RE15_AI_STATE_CORPSE) {
+                    fprintf(stderr, "FAIL: (26) a corpse must NEVER return to ACTIVE (state=%d)\n",
+                            cz->state); fail = 1; break; }
+            }
+            if (!tw)   { fprintf(stderr, "FAIL: (26) the corpse must TWITCH (sub 3 never seen)\n"); fail = 1; }
+            if (!rest) { fprintf(stderr, "FAIL: (26) the corpse must reach REST (sub 4)\n"); fail = 1; }
+            /* the DOMINO: a reeling grab-[5] zombie with a fresh enemy contact knocks the bystander
+             * into 0xb01 (the contact must SURVIVE into the next tick's dispatch — the b498 order). */
+            re15_actor_t *ga = &g_actors[zslots[2]], *by = &g_actors[zslots[3]];
+            ga->state = RE15_AI_STATE_ACTIVE; ga->grid_id = 0; ga->active = 1;
+            ga->sub_state_1 = 3; ga->sub_state_2 = 5;    /* throw-off reel [5] */
+            ga->anim_frame = 20; ga->motion = 2;         /* +0x95 > 7 */
+            ga->contact_flags = 2; ga->contact_slot = (int8_t)zslots[3];   /* enemy contact latched */
+            by->state = RE15_AI_STATE_ACTIVE; by->grid_id = 0; by->active = 1;
+            by->sub_state_1 = 2; by->sub_state_2 = 1; by->hp = 60; by->ai_flags = 0;
+            by->x = ga->x + 100; by->z = ga->z;
+            re15_enemy_ai_live_tick(zslots[2]);          /* the [5] dispatch reads the latched contact */
+            if (by->state != 1 || by->sub_state_1 != 0x0b) {
+                fprintf(stderr, "FAIL: (26) the domino must knock the bystander into 0xb01, "
+                        "state=%d ss1=%d\n", by->state, by->sub_state_1); fail = 1; }
+            if (!fail)
+                printf("  (26) corpse settle: INIT->lying 0x15 -> creep -> TWITCH cycles -> REST "
+                       "(never revives); grab-[5] domino -> bystander 0xb01\n");
+        }
+        re15_enemy_reset();
+    }
+
     if (fail) { fprintf(stderr, "\nROOM1140 COMBAT-WIRING TEST FAILED\n"); return 1; }
     printf("\nPASS: ROOM1140 live-AI game_step wiring (spawn; WAKE->engage; TURN-to-face->GRAB->HP; "
            "GRABBED-lock; player DEATH; zombie HURT/DEATH; PLAYER-SHOOTS; LEON grab-victim anim; "

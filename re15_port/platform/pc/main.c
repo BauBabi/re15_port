@@ -2557,9 +2557,24 @@ int main(int argc, char *argv[])
                     int32_t nfs = re15_sin_q12((int)npc->rot_y);
                     int32_t nfc = re15_cos_q12((int)npc->rot_y);
                     int32_t nyaw[9] = { nfc, 0, nfs,  0, 0x1000, 0,  -nfs, 0, nfc };
+                    /* CORPSE BLOOD POOL (root-state-7 sub0/1, FUN_80109554 @0x801095e8-614 +
+                     * @0x80109710-24): the shadow recolors 0x00ffff38 (subtractive dark red) and
+                     * its half-extents grow +8/frame for the 0x5a pool budget (600/700 base ->
+                     * ~1328/1428). Pool progress = 0x5a - +0x9e while settling (sub1), full after. */
+                    int32_t nhx = 500, nhz = 600;
+                    int corpse_pool = 0;
+                    if (npc->state == RE15_AI_STATE_CORPSE) {
+                        int grow = (npc->sub_state_1 <= 1)
+                                     ? (0x5a - (npc->grab_kill_ctr > 0 ? npc->grab_kill_ctr : 0))
+                                     : 0x5a;
+                        if (grow < 0) grow = 0;
+                        nhx = 600 + 8 * grow;                 /* af5c base for zombies = 600/700 */
+                        nhz = 700 + 8 * grow;
+                        corpse_pool = 1;
+                    }
                     int32_t nsh_c[4][3] = {
-                        { -500, 0,  600 }, { -500, 0, -600 },
-                        {  500, 0,  600 }, {  500, 0, -600 },
+                        { -nhx, 0,  nhz }, { -nhx, 0, -nhz },
+                        {  nhx, 0,  nhz }, {  nhx, 0, -nhz },
                     };
                     int32_t nsh_world[3] = { npc->x, npc->y, npc->z };
                     int32_t nsh_rot[9], nsh_trans[3];
@@ -2580,9 +2595,15 @@ int main(int argc, char *argv[])
                         nsx[v] = cx + RNDI(_vx * _proj);
                         nsy[v] = cy + RNDI(_vy * _proj);
                     }
-                    if (nok)
-                        re15_render_shadow_quad(nsx[0], nsy[0], nsx[1], nsy[1],
-                                                nsx[2], nsy[2], nsx[3], nsy[3]);
+                    if (nok) {
+                        if (corpse_pool)
+                            re15_render_shadow_quad_c(nsx[0], nsy[0], nsx[1], nsy[1],
+                                                      nsx[2], nsy[2], nsx[3], nsy[3],
+                                                      0x38, 0xff, 0xff);   /* the dark-red pool */
+                        else
+                            re15_render_shadow_quad(nsx[0], nsy[0], nsx[1], nsy[1],
+                                                    nsx[2], nsy[2], nsx[3], nsy[3]);
+                    }
                 }
 
                 /* GENERIC ENEMY (globalization 2026-06-13; em21 folded 2026-06-14f): first
