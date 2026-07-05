@@ -847,6 +847,7 @@ static void re15_enemy_ai_feeding_animate(re15_actor_t *e, const re15_actor_t *p
                 e->sub_state_2 = 3;
                 e->motion = (uint8_t)(0x27 + (re15_engine_rand8() & 1));
                 e->anim_frame = 0;
+                e->anim_flags &= (uint16_t)~0x80u;        /* the loop plays FORWARD */
                 return;                                   /* new clip -> not done this frame */
             }
             if (phase != 3) return;
@@ -857,6 +858,12 @@ static void re15_enemy_ai_feeding_animate(re15_actor_t *e, const re15_actor_t *p
         if (phase != 0) return;
         e->sub_state_2 = 1;                               /* entry: clip 0x29 intro (@0x801049a0) */
         e->motion = 0x29; e->anim_frame = 0; e->anim_frac = 7;
+        e->anim_flags |= 0x80;                            /* the KNEEL-DOWN plays clip 0x29 (the
+                                                           * get-up) IN REVERSE — f314 a2=1
+                                                           * (@0x80104994, cluster-E raw): the
+                                                           * zombie SINKS from standing onto the
+                                                           * corpse; the stand-up 0xd plays the
+                                                           * same clip FORWARD (a2=0 @0x80104af0) */
     }
     (void)player;
     re15_enemy_steer_point(e, e->steer_x, e->steer_z, 0x20);  /* func_0x8001aac4(+0x1bc,+0x1be,0x20)
@@ -1130,7 +1137,7 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
             e->sub_state_2 += (uint8_t)(re15_enemy_clip_done(e) ? 1 : 0);   /* 7 -> 8 on clip-end */
             break;
         default:                              /* [8] EXIT (0x80102b90) -> back to the engage brain */
-            e->anim_flags &= (uint8_t)~0x80u;   /* drop the [6] reverse-playback flag */
+            e->anim_flags &= (uint16_t)~0x80u;  /* drop the [6] reverse-playback flag */
             re15_ai_set_state_word(e, 0x201);   /* +0x4 = state 1 / +0x5 = 2 (engage) */
             /* the player-side release clears the grabbed flag (+0x93 &= ~1). With a victim bank the
              * release-finish anim does it; WITHOUT one (headless/unit tests) clear it here so a later
@@ -1139,6 +1146,85 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
                 player->hit_react &= (uint8_t)~1u;
             break;
     }
+}
+
+/* SEARCH-STAND animate (+0x5=0) — byte-true FUN_80101d08 (@0x8011f890[0], cluster-B raw): the idle
+ * stand between wander walks. Entry: +0x9c=(rand&0x3f)+0x12c (300..363 ticks), clip 0 (idle),
+ * +0x8f=0xf, rate 0x100, clears +0x93. No steering — it just stands (the decide escalates). */
+static void re15_enemy_ai_live_search_stand(re15_actor_t *e)
+{
+    if (e->sub_state_2 == 0) {
+        e->sub_state_2 = 1;
+        e->ai_timer = (int16_t)((re15_engine_rand8() & 0x3f) + 0x12c);
+        e->motion = 0; e->anim_frame = 0;
+        e->anim_frac = 0xf; e->anim_blend_rate = 0x100;
+        e->hit_react = 0;                                 /* +0x93 = 0 */
+    }
+}
+
+/* WANDER-WALK animate (+0x5=1) — byte-true FUN_80101ef0 (@0x8011f890[1], cluster-B raw): the slow
+ * unaware shamble. Entry: +0x9c=(rand&0xff)+0x258 (600..855 ticks), clip 1, +0x8f=0xf, +0x1d6 =
+ * a RANDOM NAV ZONE (FUN_8003a07c) = the roam target. EVERY tick: +0x1d8 |= 8 (the one-shot roam
+ * request the m0 root's nav steer consumes -> the zombie roams to the zone's midpoint), steer
+ * aac4(+0x1bc,+0x1be, 8), rate 0x100, foot-lock; timer done -> +0x4 word = 1 (back to search). */
+static void re15_enemy_ai_live_wander(int slot, re15_actor_t *e)
+{
+    if (e->sub_state_2 == 0) {
+        e->sub_state_2 = 1;
+        e->ai_timer = (int16_t)((re15_engine_rand8() & 0xff) + 0x258);
+        e->motion = 0x01; e->anim_frame = 0;
+        e->anim_frac = 0xf; e->anim_blend_rate = 0x100;
+        e->ai_wp_node = re15_nav_rand_zone();             /* +0x1d6 = rand zone (@0x80101f5c-70) */
+        e->hit_react = 0;
+        s_zfoot_ok[slot] = 0;
+    }
+    e->ai_flags |= 8;                                     /* roam request, re-asserted per tick
+                                                           * (@0x80101f90-9c); consumed + cleared by
+                                                           * the root nav steer next tick */
+    int16_t t = e->ai_timer;
+    e->ai_timer = (int16_t)(t - 1);
+    if (t == 0) { re15_ai_set_state_word(e, 0x0001); return; }   /* -> search-stand */
+    re15_enemy_steer_point(e, e->steer_x, e->steer_z, 8); /* aac4(+0x1bc,+0x1be,8) */
+    re15_enemy_footlock_step(slot, e);
+}
+
+/* LOS SENSOR — byte-true FUN_8001bc08 (EXE, raw-disasm'd cluster B; NO decompile): the amortized
+ * 16-tick line-of-sight probe the ACTIVE root runs per tick (@0x80101560), whose result drives
+ * +0x1d8 bit 0x10 = "player visible" — the gate that lets search/wander escalate to ENGAGE/CHARGE.
+ * Ticks 0..3 of the +0x1f0 counter probe one ray step each (original FUN_8001b84c(0x5e8, player));
+ * on tick 3, blocked-bit clear -> +0x1bc/+0x1be := player snapshot, return 1 (visible); blocked ->
+ * 0; ticks 4..15 return 2 (no update). FAITHFUL-LINE stand-in for the b84c ray step: sample the
+ * enemy->player segment at (i+1)*0x5e8 units and test the SCA walkable floor (walls = sight
+ * blockers) — the port has no separate ray-cast geometry. Counter/gating cadence is byte-true. */
+static uint8_t s_los_counter[RE15_ACTOR_MAX];             /* +0x1f0 low bits */
+static uint8_t s_los_blocked[RE15_ACTOR_MAX];             /* +0x1f0 bit 0x20 accumulator */
+static int re15_enemy_los_probe(int slot, re15_actor_t *e, const re15_actor_t *player)
+{
+    uint8_t step = (uint8_t)(s_los_counter[slot] & 0x0f);
+    s_los_counter[slot] = (uint8_t)((s_los_counter[slot] + 1) & 0x0f);
+    if (step > 3) return 2;                               /* ticks 4..15: keep the old bit */
+    if (g_room_rdt_ok) {                                  /* one ray step of 0x5e8 units */
+        int32_t dx = player->x - e->x, dz = player->z - e->z;
+        int32_t dist = (int32_t)e->ai_dist;
+        int32_t at = (int32_t)(step + 1) * 0x5e8;
+        if (dist > 0 && at < dist) {
+            int32_t sx = e->x + (int32_t)((int64_t)dx * at / dist);
+            int32_t sz = e->z + (int32_t)((int64_t)dz * at / dist);
+            if (!re15_collision_on_floor(&g_room_rdt, sx, sz))
+                s_los_blocked[slot] = 1;
+        }
+    }
+    if (step == 3) {                                      /* the verdict tick */
+        int blocked = s_los_blocked[slot];
+        s_los_blocked[slot] = 0;                          /* both paths clear bit 0x20 (@0x8001bd04) */
+        if (!blocked) {
+            e->steer_x = (int16_t)player->x;              /* the last-seen snapshot (@0x8001bc90-b0) */
+            e->steer_z = (int16_t)player->z;
+            return 1;
+        }
+        return 0;
+    }
+    return 2;
 }
 
 /* SLEEPING-LYING (+0x5=0x12) — byte-true FUN_801054f4 (@0x8011f890[0x12]; decide 0x80105470
@@ -1196,6 +1282,10 @@ static void re15_enemy_ai_live_charge(int slot, re15_actor_t *e)
     e->anim_frame++;                              /* the SECOND f314: double anim rate (the shared
                                                    * pass adds the first advance) */
     re15_enemy_footlock_step(slot, e);            /* FUN_8010939c — carries the doubled stride */
+    /* FUN_800245d8(0) @0x8010318c (cluster-B raw): a +0x8c=0x19 (25 u/tick) FORWARD slide along
+     * the heading ON TOP of the foot-lock — the charge hustles faster than the clip cadence. */
+    e->x += (int32_t)(((int32_t)re15_cos_q12(e->rot_y) * e->speed_h) >> 12);
+    e->z -= (int32_t)(((int32_t)re15_sin_q12(e->rot_y) * e->speed_h) >> 12);
 }
 
 /* Slew the heading toward a TARGET ANGLE by up to `step` per tick (byte-true func_0x8001aa68
@@ -1645,6 +1735,16 @@ int re15_enemy_ai_live_active(int slot)
     if (slot < 0 || slot >= RE15_ACTOR_MAX) return 0;
     re15_actor_t *e = &g_actors[slot];
 
+    /* LOS SENSOR (byte-true FUN_80101224 @0x80101560-b0): run the amortized FUN_8001bc08 probe
+     * every ACTIVE tick; result 0/1 (`(r&0xff)>>1==0`) updates +0x1d8 bit 0x10 = "player visible"
+     * (clear @0x80101588-94, |= r<<4 @0x801015a4-b0); result 2 keeps the old bit. This gate is what
+     * lets the search/wander decides escalate to ENGAGE (0x201) / CHARGE (0x801). */
+    {
+        int r = re15_enemy_los_probe(slot, e, &g_actors[RE15_ACTOR_SLOT_PLAYER]);
+        if ((r >> 1) == 0)
+            e->ai_flags = (uint16_t)((e->ai_flags & ~0x10u) | ((uint16_t)r << 4));
+    }
+
     if (!(e->ai_flags & 0x100)) {
         /* UNARMED decision path (FUN_80101224 @0x80101560+): the original reads a FUN_8001bc08
          * sensor into +0x1d8, manages the +0x0 lifecycle, then dispatches @0x8011f80c[+0x9 & 0xf]
@@ -1704,6 +1804,12 @@ int re15_enemy_ai_live_active(int slot)
                 else if (e->sub_state_1 == 0x12)
                     /* SLEEPING-LYING (@0x8011f890[0x12]=FUN_801054f4): dormant until the decide wakes. */
                     re15_enemy_ai_live_sleeping(e);
+                else if (e->sub_state_1 == 0)
+                    /* SEARCH-STAND (@0x8011f890[0]=FUN_80101d08): idle stand, LOS-gated escalation. */
+                    re15_enemy_ai_live_search_stand(e);
+                else if (e->sub_state_1 == 1)
+                    /* WANDER-WALK (@0x8011f890[1]=FUN_80101ef0): shamble-roam to a random nav zone. */
+                    re15_enemy_ai_live_wander(slot, e);
                 else if (e->sub_state_1 == 9)
                     /* CONTACT-STAGGER (@0x8011f890[9]=FUN_801031e4): bumped from ahead. */
                     re15_enemy_ai_live_contact_stagger(e);
