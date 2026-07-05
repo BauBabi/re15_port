@@ -971,7 +971,11 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
      * player-grabbed flag every frame the grab runs so game_step pins the player (re15_player_is_
      * grabbed). re15_enemy_ai_run_all clears it each frame, so it tracks "a live zombie is grabbing
      * THIS frame" = the faithful-line release for the deferred player grabbed-FSM. */
-    s_player_grabbed = 1;
+    if (e->sub_state_2 <= 3)
+        s_player_grabbed = 1;   /* the pin tracks the HOLD [0..3] only: from the throw-off [4] on,
+                                 * the player's OWN release clip (victim state 3, cmd->1 at ITS end)
+                                 * governs his pin — byte-true he can already move while the zombie
+                                 * still plays the [6]/[7] recovery (user-verified vs original). */
     /* Leon's victim latch (cmd 5) happens ONCE at the [0] commit (@0x80102640) — NOT here every
      * frame: the every-frame latch re-entered the struggle from the release state 3 one frame after
      * the THROW-OFF [4] (the latch's ==3 re-enter path) = Leon's push-away anim never played
@@ -1035,9 +1039,13 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
             e->sub_state_2 += (uint8_t)re15_enemy_clip_done(e);
             break;
         case 2:                               /* [2] IMPACT — clip base+1 (@0x80102714) + the byte-true -10 hit */
-            e->motion = (uint8_t)(grab_base + 1);     /* NO +0x95 reset (@0x80102714 writes only
-                                                        * +0x94 — cluster D; the bite clip picks up
-                                                        * mid-phase) */
+            e->motion = (uint8_t)(grab_base + 1); e->anim_frame = 0;
+                                                      /* @0x80102714 writes only +0x94 — but the
+                                                       * original +0x95 has just WRAPPED to 0 (f8b4)
+                                                       * when [1] completed; the port counter is
+                                                       * MONOTONIC, so frame=0 IS the equivalent
+                                                       * (keeping it desynced the pair = bite-phase
+                                                       * clipping, user-verified). */
             player->hp     = (int16_t)(player->hp - 10);
             if (player->hp < 0) player->state = 7;   /* hp<0 -> GRABBED death (state 7, save-confirmed;
                                                       * re15_player_is_dead() = hp<0 drives the death FSM) */

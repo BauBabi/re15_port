@@ -14,6 +14,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <math.h>
 #include <string.h>
 #include <SDL_timer.h>    /* SDL_GetTicks/SDL_Delay — Frame-Timing (ohne main-Umleitung) */
@@ -398,6 +399,16 @@ int main(int argc, char *argv[])
 
     re15_render_init();
     re15_input_init();
+    /* RNG SESSION ENTROPY (interactive runs only): the original FUN_8001af20 state evolves from
+     * boot across ALL callers (idle timers/SEs/other rooms) -> each playthrough sees different
+     * behavior rolls. The port's fixed-seed xorshift + a fixed draw count made every roll IDENTICAL
+     * per run (e.g. the chair zombie ALWAYS rolled the slow 0x13 shamble). Seed from the wall clock
+     * unless a deterministic parity run is scripted (RE15_INPUT_SCRIPT / RE15_POSE_DUMP). */
+    {
+        extern void re15_damage_seed_rng(uint32_t seed);
+        if (!getenv("RE15_INPUT_SCRIPT") && !getenv("RE15_POSE_DUMP"))
+            re15_damage_seed_rng((uint32_t)SDL_GetTicks() ^ 0xA5F15A3Du ^ (uint32_t)time(NULL));
+    }
 
     /* BE-round REVERTED (2026-05-28): tried 60fps default + 60Hz SCD as
      * PSX-canonical, but our cinematic was tuned for 30Hz SCD so all
