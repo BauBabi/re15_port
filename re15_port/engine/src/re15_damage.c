@@ -248,10 +248,14 @@ static const uint16_t s_player_wpn_reach[22] = {
  * dereference (that function lives in the DEBUG.BIN overlay @0x800C0000, all-?? in the EXE dump —
  * disassembled from savestate RAM). The in-game equip (menu SQUARE) overwrites it via re15_menu_tick ->
  * re15_player_set_equipped_weapon (byte-true equip-commit @0x80046688). Default 1 = the pristine entry. */
-static int s_player_weapon = 3;   /* CORRECTED (discharge-chain RE): aca5d = the inventory ITEM id;
-                                   * the handgun = ITEM 3 (equip_test.sav: slot1 item 3 x15 ->
-                                   * aca5d=3; damage row [3]=5, reach [3]=1000). The old default 1
-                                   * was the KNIFE row (6 dmg). */
+static int s_player_weapon = 1;   /* RE-CORRECTED twice: aca5d = the inventory ITEM id. The byte-true
+                                   * GAME-START equip = ITEM 1 = the COMBAT KNIFE (briefing loadout,
+                                   * savestate-confirmed: mzd_stage1_briefing.sav DAT_800aca5d==1;
+                                   * slot1 holds item 3 = the BROWNING HP x15, equipped only via the
+                                   * menu -> equip_test.sav aca5d==3). Item class split @0x80074030:
+                                   * 0-2 melee (knife dmg row [1]=6, reach [1]=1100), 3+ gun (row
+                                   * [3]=5, reach [3]=1000). My interim default 3 was a start-state
+                                   * divergence (parity oracle: the original spawns with the knife). */
 int  re15_player_equipped_weapon(void) { return s_player_weapon; }
 void re15_player_set_equipped_weapon(int weapon_id)
 {

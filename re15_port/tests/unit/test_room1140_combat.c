@@ -733,6 +733,9 @@ int main(void)
         extern int  re15_player_aim_clip(void);
         extern void re15_player_fire_start(void);
         g_scd.player_mode = 0; g_scd.message_display_frames = 0; g_scd.message_query = 0;
+        re15_player_set_equipped_weapon(3);  /* the GUN FSM needs a gun ITEM (3+ @0x80074030);
+                                              * the byte-true DEFAULT equip is 1 = the KNIFE
+                                              * (briefing loadout) — tested below + in (19) */
         re15_player_tick(NULL, 0);          /* a non-aim tick first -> reset the aim FSM to NONE */
         pl->motion = 200;                   /* a non-aim sentinel (idle) */
         pl->anim_frame = 0; pl->hp = 100; pl->rot_y = 0; pl->x = 0; pl->z = 0;
@@ -784,9 +787,28 @@ int main(void)
             fprintf(stderr, "FAIL: (16) release R1 -> leave the aim pose, motion still %d\n", pl->motion); fail = 1; }
         if (re15_player_aim_ready()) {
             fprintf(stderr, "FAIL: (16) release R1 -> not aim-ready\n"); fail = 1; }
+        /* MELEE path (items 0-2 @0x80074030 -> FSM 0x80034e70): the KNIFE (byte-true default
+         * equip, item 1) draws W-bank clip 0xD (FUN_80035538) and HOLDS it — no clip switch,
+         * no elevation; the slash stand-in replays 0xD as the cadence gate. */
+        re15_player_set_equipped_weapon(1);
+        re15_player_tick(NULL, 0);
+        pl->motion = 200; pl->anim_frame = 0;
+        re15_player_tick(NULL, RE15_PAD_BIT_R1);
+        if (pl->motion != 213 || re15_player_aim_clip() != 0x0d) {
+            fprintf(stderr, "FAIL: (16) knife aim = W-bank DRAW clip 0xD, mo=%d clip=%d\n",
+                    pl->motion, re15_player_aim_clip()); fail = 1; }
+        for (int f = 0; f < 12; f++) re15_player_tick(NULL, RE15_PAD_BIT_R1 | RE15_PAD_BIT_UP);
+        if (re15_player_aim_clip() != 0x0d || !re15_player_aim_ready()) {
+            fprintf(stderr, "FAIL: (16) knife draw done -> HOLDS 0xD + ready (no elevation), clip=%d\n",
+                    re15_player_aim_clip()); fail = 1; }
+        re15_player_fire_start();
+        if (re15_player_aim_clip() != 0x0d || pl->anim_frame != 0 || re15_player_aim_ready()) {
+            fprintf(stderr, "FAIL: (16) knife fire -> replay 0xD from f0, cadence-gated, clip=%d af=%d\n",
+                    re15_player_aim_clip(), (int)pl->anim_frame); fail = 1; }
+        re15_player_tick(NULL, 0);                        /* leave aim; default equip stays 1 */
         if (!fail)
-            printf("  (16) player GUN FSM: R1 -> RAISE 6 -> HOLD 8 (ready) -> fire -> RECOIL 7 "
-                   "(gated) -> HOLD 8 (byte-true @0x800740f4 sub-FSM)\n");
+            printf("  (16) player weapon FSM: GUN raise 6 -> hold 8 -> recoil 7 -> hold 8; "
+                   "KNIFE draw 0xD hold + slash gate (item dispatch @0x80074030)\n");
     }
 
     /* (17): the ZOMBIE COMBAT-SE bank lookup (Phase 8.17/8.18, byte-true via FUN_800453d0 on the snd1 room bank).
@@ -866,14 +888,15 @@ int main(void)
         free(edh);
     }
 
-    /* (19): the EQUIPPED WEAPON (Phase 8.19, DAT_800aca5d). CORRECTED by the discharge-chain RE:
-     * aca5d holds the inventory ITEM id and the handgun = ITEM 3 (equip_test.sav: equipping the
-     * handgun x15 writes aca5d=3; action-7 dispatch @0x80074030 routes items 3+ to the GUN FSM
-     * 0x80032e9c, items 0-2 to the melee FSM 0x80034e70). Damage row [3] = 5 (@0x8006e650),
-     * reach [3] = 1000 (@0x8006e5a0). The old default 1 was the knife row — an item/weapon mixup. */
+    /* (19): the EQUIPPED WEAPON (Phase 8.19, DAT_800aca5d). RE-CORRECTED twice: aca5d holds the
+     * inventory ITEM id, and the byte-true GAME-START equip = ITEM 1 = the COMBAT KNIFE
+     * (mzd_stage1_briefing.sav: DAT_800aca5d==1; the handgun item 3 x15 sits in slot 1 and is
+     * equipped via the menu -> equip_test.sav aca5d==3). Item dispatch @0x80074030: 0-2 melee,
+     * 3+ gun. Damage rows @0x8006e650: [1]=6 knife, [3]=5 handgun; reach @0x8006e5a0: [1]=1100,
+     * [3]=1000. */
     {
-        if (re15_player_equipped_weapon() != 3) {
-            fprintf(stderr, "FAIL: (19) equipped item must default to 3 (handgun, equip_test.sav aca5d=3), ist %d\n",
+        if (re15_player_equipped_weapon() != 1) {
+            fprintf(stderr, "FAIL: (19) equipped item must default to 1 (KNIFE, briefing aca5d=1), ist %d\n",
                     re15_player_equipped_weapon()); fail = 1; }
         pl->x = 0; pl->z = 0; pl->hp = 100; pl->rot_y = 0; pl->floor = 0; pl->hit_react = 0; pl->state = 0;
         re15_player_death_reset();
@@ -884,21 +907,22 @@ int main(void)
         }
         re15_actor_t *zt = &g_actors[zslots[0]];
         zt->x = 0; zt->z = 800; zt->hp = 60; zt->hit_react = 0; zt->state = RE15_AI_STATE_ACTIVE;
-        /* fire the EQUIPPED item (3 = handgun) -> byte-true row-3 zombie damage = 5 */
+        /* strike with the EQUIPPED item (1 = knife) -> byte-true row-1 zombie damage = 6 */
         int hit = re15_player_weapon_fire(re15_player_equipped_weapon());
-        if (hit != (zslots[0] + 1) || zt->hp != (int16_t)(60 - 5)) {
-            fprintf(stderr, "FAIL: (19) handgun (item 3) must do 5 dmg, HP 60->%d\n", zt->hp); fail = 1; }
-        /* the setter (the future inventory equip UI hook) switches the item */
+        if (hit != (zslots[0] + 1) || zt->hp != (int16_t)(60 - 6)) {
+            fprintf(stderr, "FAIL: (19) knife (item 1) must do 6 dmg, HP 60->%d\n", zt->hp); fail = 1; }
+        /* the menu equip switches to the handgun (equip_test.sav chain: aca5d 1 -> 3) */
         zt->hp = 60; zt->hit_react = 0; zt->state = RE15_AI_STATE_ACTIVE; zt->sub_state_1 = 0;
-        re15_player_set_equipped_weapon(2);
-        if (re15_player_equipped_weapon() != 2) {
-            fprintf(stderr, "FAIL: (19) set_equipped_weapon(2) must stick\n"); fail = 1; }
+        re15_player_set_equipped_weapon(3);
+        if (re15_player_equipped_weapon() != 3) {
+            fprintf(stderr, "FAIL: (19) set_equipped_weapon(3) must stick\n"); fail = 1; }
         re15_player_weapon_fire(re15_player_equipped_weapon());
-        if (zt->hp != (int16_t)(60 - 24)) {
-            fprintf(stderr, "FAIL: (19) item 2 must do 24 dmg (row 2 @0x8006e650), HP 60->%d\n", zt->hp); fail = 1; }
-        re15_player_set_equipped_weapon(3);   /* restore the byte-true briefing default (handgun) */
+        if (zt->hp != (int16_t)(60 - 5)) {
+            fprintf(stderr, "FAIL: (19) handgun (item 3) must do 5 dmg (row 3 @0x8006e650), HP 60->%d\n", zt->hp); fail = 1; }
+        re15_player_set_equipped_weapon(1);   /* restore the byte-true briefing default (knife) */
         if (!fail)
-            printf("  (19) equipped item: default 3 (handgun) -> 5 dmg; set 2 -> 24 dmg (byte-true DAT_800aca5d)\n");
+            printf("  (19) equipped item: default 1 (knife) -> 6 dmg; menu-equip 3 (handgun) -> 5 dmg "
+                   "(byte-true DAT_800aca5d)\n");
     }
 
     free(buf);

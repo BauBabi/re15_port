@@ -690,6 +690,26 @@ int main(int argc, char *argv[])
                     w01_skel_raw.bone_count, w01_anim.clip_count, w01_skel_raw.keyframe_count);
         }
     }
+    /* PL00W03 = the GUN carry set (byte-true item->bank map: the equip loader @0x80036b80 loads
+     * CD file DAT_800741e8[char]=76 + item — melee trio W00≡W01≡W02 (items 0-2, md5-identical),
+     * gun pair W03≡W04 (items 3/4). Same 14-clip layout as W01 (raise 6=10f, holds 8/10/12=1f,
+     * recoils 7/9/11=23/24/24f, reload 0xD=32f). W03.EDD/.EMR = byte-true slices of PL00W03.PLW
+     * (dir[0]/dir[1]), extracted the same way as the vendored W01 pair (slice==vendored verified). */
+    int w03_edd_size = 0, w03_emr_size = 0;
+    uint8_t *w03_edd_buf = pc_read_shared("PLD/PL00W03.EDD", &w03_edd_size);
+    uint8_t *w03_emr_buf = pc_read_shared("PLD/PL00W03.EMR", &w03_emr_size);
+    re15_emd_animation_t w03_anim = {0};
+    re15_emd_skeleton_t  w03_skel_raw = {0};
+    re15_emd_skeleton_t  w03_skel = {0};
+    int w03_ok = 0;
+    if (w03_edd_buf && w03_emr_buf) {
+        if (re15_emd_parse_animation(w03_edd_buf, w03_edd_size, &w03_anim) == 0 &&
+            re15_emd_parse_skeleton (w03_emr_buf, w03_emr_size, &w03_skel_raw) == 0) {
+            w03_ok = 1;
+            fprintf(stderr, "[w03] PL00W03 gun-track: %d bones, %d clips, %d kf\n",
+                    w03_skel_raw.bone_count, w03_anim.clip_count, w03_skel_raw.keyframe_count);
+        }
+    }
 
     /* Elliot TIM into slot 1. */
     int elliot_tim_size = 0;
@@ -786,17 +806,32 @@ int main(int argc, char *argv[])
         w01_skel = skel;   /* copy bone hierarchy + bind pose from PL00 */
         w01_skel.keyframe_data       = w01_skel_raw.keyframe_data;
         w01_skel.keyframe_data_size  = w01_skel_raw.keyframe_data_size;
-        /* the GUN RAISE clip = W01 clip 6 (gun FSM sub0 @0x80032f18) — its length drives the
-         * raise->hold + recoil->hold gates (FL: one shared length for the W clips). */
-        if (w01_anim.clip_count > 6) {
-            extern void re15_player_set_aim_clip_len(int fc);
-            re15_player_set_aim_clip_len(w01_anim.clips[6].frame_count);
-        }
         w01_skel.keyframe_count      = w01_skel_raw.keyframe_count;
         w01_skel.keyframe_size_bytes = w01_skel_raw.keyframe_size_bytes;
         fprintf(stderr, "[w01-composite] PL00 bind + W01 keyframes: %d bones, %d kf\n",
                 w01_skel.bone_count, w01_skel.keyframe_count);
     }
+    if (w03_ok && skel_ok) {
+        w03_skel = skel;   /* same composite pattern: PL00 bind + W03 keyframe pool */
+        w03_skel.keyframe_data       = w03_skel_raw.keyframe_data;
+        w03_skel.keyframe_data_size  = w03_skel_raw.keyframe_data_size;
+        w03_skel.keyframe_count      = w03_skel_raw.keyframe_count;
+        w03_skel.keyframe_size_bytes = w03_skel_raw.keyframe_size_bytes;
+        fprintf(stderr, "[w03-composite] PL00 bind + W03 keyframes: %d bones, %d kf\n",
+                w03_skel.bone_count, w03_skel.keyframe_count);
+    }
+    /* Seed the aim-FSM per-clip lengths with the START bank (byte-true default equip = the
+     * KNIFE, item 1 -> melee bank W01). The per-frame equip watcher below re-feeds on switch. */
+    {
+        extern void re15_player_set_aim_clip_lens(const uint16_t *fcs, int n);
+        uint16_t fcs[14]; int n = (w01_anim.clip_count < 14) ? w01_anim.clip_count : 14;
+        for (int i = 0; i < n; i++) fcs[i] = (uint16_t)w01_anim.clips[i].frame_count;
+        if (w01_ok) re15_player_set_aim_clip_lens(fcs, n);
+    }
+    /* The ACTIVE player W bank (equip-dependent; watcher in the main loop switches these). */
+    re15_emd_skeleton_t  *wact_skel = &w01_skel;
+    re15_emd_animation_t *wact_anim = &w01_anim;
+    int                   wact_ok   = w01_ok;
 
     /* Unify 2026-06-06: keep the PL00 BASE track (PL00.edd clips, incl. clip 22/23
      * injured idle) BEFORE the rbj overlay below overwrites anim/skel. Mirrors PSX
@@ -2043,9 +2078,29 @@ int main(int argc, char *argv[])
              * 200/210/211/212 -> PL00W01, HP-gated injured idle 213/214 -> PL00
              * base, else the actor's own cinematic bank (motion = direct clip
              * index). Fill the bank table from this build's locals. */
+            /* EQUIP WATCHER — the byte-true W-bank switch (loader @0x80036b80: CD file 76+item):
+             * items 0-2 -> melee bank (W01 trio), items 3+ -> gun bank (W03 pair). The WHOLE
+             * carry set switches (locomotion + aim clips share the 14-clip layout), and the aim
+             * FSM gets the new bank's per-clip frame counts (recoil 23f vs draw 15f cadence). */
+            {
+                extern int  re15_player_equipped_weapon(void);
+                extern void re15_player_set_aim_clip_lens(const uint16_t *fcs, int n);
+                static int s_wgun = -1;
+                int want_gun = (re15_player_equipped_weapon() >= 3) && w03_ok;
+                if (want_gun != s_wgun) {
+                    s_wgun = want_gun;
+                    wact_skel = want_gun ? &w03_skel : &w01_skel;
+                    wact_anim = want_gun ? &w03_anim : &w01_anim;
+                    wact_ok   = want_gun ? w03_ok    : w01_ok;
+                    uint16_t fcs[14];
+                    int n = (wact_anim->clip_count < 14) ? wact_anim->clip_count : 14;
+                    for (int i = 0; i < n; i++) fcs[i] = (uint16_t)wact_anim->clips[i].frame_count;
+                    re15_player_set_aim_clip_lens(fcs, n);
+                }
+            }
             re15_anim_banks_t banks = {
                 .def_mesh = &md1, .def_skel = &skel, .def_anim = &anim,
-                .w01_skel = &w01_skel, .w01_anim = &w01_anim, .w01_ok = w01_ok,
+                .w01_skel = wact_skel, .w01_anim = wact_anim, .w01_ok = wact_ok,
                 .pl00_skel = &pl00_skel, .pl00_anim = &pl00_anim, .pl00_ok = pl00_ok,
                 .elliot_mesh = &elliot_md1, .elliot_skel = &elliot_skel,
                 .elliot_anim = &elliot_anim, .elliot_ok = (elliot_ok && elliot_skel_ok),
@@ -2083,17 +2138,18 @@ int main(int argc, char *argv[])
                     p_clip_override = (int)player_ref->motion;
                 }
             }
-            /* AIM render override (byte-true FUN_80035538): while aiming, Leon poses from the
-             * WEAPON bank (PL00W01) clip 0xD — his own bones + the weapon pool, same pattern as
-             * the grab-victim override. */
+            /* AIM render override: while aiming, Leon poses from the EQUIPPED W bank — his own
+             * bones + the weapon pool, same pattern as the grab-victim override. Melee (items
+             * 0-2, bank W01): draw clip 0xD (FUN_80035538); gun (items 3+, bank W03): the gun-FSM
+             * clip (6 raise / 8|10|12 hold / 7|9|11 recoil). */
             {
                 extern int re15_player_aim_active(void);
-                if (re15_player_aim_active() && w01_ok &&
+                if (re15_player_aim_active() && wact_ok &&
                     re15_player_victim_state() == 0) {
                     extern int re15_player_aim_clip(void);
-                    p_skel = &w01_skel;              /* the existing composite: PL00 bones + W01 pool */
-                    p_anim = &w01_anim;
-                    p_clip_override = re15_player_aim_clip();   /* 6 raise / 8|10|12 hold / 7|9|11 fire */
+                    p_skel = wact_skel;              /* composite: PL00 bones + active W pool */
+                    p_anim = wact_anim;
+                    p_clip_override = re15_player_aim_clip();
                 }
             }
             int kf_idx = 0;

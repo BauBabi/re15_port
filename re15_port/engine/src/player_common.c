@@ -124,7 +124,8 @@
  * The MOTION sentinel 213 tells the render "weapon-bank pose"; re15_player_aim_clip() carries the
  * actual W-bank clip. */
 #define RE15_MOTION_AIM_W         213    /* sentinel: pose from the WEAPON bank (clip via aim_clip) */
-#define RE15_AIM_TURN_RATE         24    /* @0x80074090[(3-1)*5] — handgun manual aim turn/tick */
+#define RE15_AIM_TURN_RATE         24    /* @0x80074090: 5-u16 records per weapon, rec[0] low byte
+                                          * = 0x3018&0xff = 0x18 = 24 — identical for ALL weapons */
 /* Player aim sub-phase (the action-8 FSM @0x80035810 collapsed to the visible raise->ready path):
  * 0 = not aiming, 1 = RAISE (clip 17 playing), 2 = AIM-READY (clip 18 held, the discharge is gated
  * here). File-scope so game_step can gate the shot via re15_player_aim_ready() — the original only
@@ -133,21 +134,44 @@
 #define RE15_AIM_RAISE  1
 #define RE15_AIM_READY  2
 static int s_player_aim_phase = RE15_AIM_NONE;
-static int s_aim_clip_fc = 0;               /* W-bank RAISE clip 6 frame count (platform sets) */
-static int s_aim_cur_clip = 6;              /* the current W-bank clip (6 raise/8 hold/7 recoil/10/12/9/11) */
-static int s_aim_recoil = 0;                /* 1 while the discharge clip plays */
+/* Per-clip frame counts of the equipped W bank (the platform re-feeds them on bank switch).
+ * PLW-verified layout (PL00W01≡W00≡W02 melee / PL00W03≡W04 gun, both 14 clips): melee draw+hold
+ * = clip 0xD (15f); gun raise 6 (10f), holds 8/10/12 (1f), recoils 7/9/11 (23/24/24f), reload 0xD
+ * (32f). re15_player_set_aim_clip_len(fc) survives as the "all clips = fc" test mock. */
+#define RE15_AIM_CLIP_MAX 14
+static uint16_t s_aim_clip_fcs[RE15_AIM_CLIP_MAX] = {0};
+static int s_aim_cur_clip = 6;              /* the current W-bank clip (melee 0xD; gun 6/8/7/...) */
+static int s_aim_recoil = 0;                /* 1 while the discharge/slash clip plays */
 static int s_aim_elev = 0;                  /* 0 level / +1 up / -1 down (acaec bits 15/13) */
-void re15_player_set_aim_clip_len(int fc) { s_aim_clip_fc = fc; }
+static int s_aim_melee = 0;                 /* latched item class at raise entry (item < 3) */
+void re15_player_set_aim_clip_len(int fc)
+{
+    for (int i = 0; i < RE15_AIM_CLIP_MAX; i++) s_aim_clip_fcs[i] = (uint16_t)fc;
+}
+void re15_player_set_aim_clip_lens(const uint16_t *fcs, int n)
+{
+    if (!fcs) return;
+    if (n > RE15_AIM_CLIP_MAX) n = RE15_AIM_CLIP_MAX;
+    for (int i = 0; i < n; i++) s_aim_clip_fcs[i] = fcs[i];
+}
+static int aim_cur_fc(void)
+{
+    return (s_aim_cur_clip >= 0 && s_aim_cur_clip < RE15_AIM_CLIP_MAX)
+               ? (int)s_aim_clip_fcs[s_aim_cur_clip] : 0;
+}
 int  re15_player_aim_active(void) { return s_player_aim_phase != RE15_AIM_NONE; }
 int  re15_player_aim_clip(void)   { return s_aim_cur_clip; }
-/* FIRE trigger (game_step, SQUARE held in HOLD): start the DISCHARGE — recoil clip 7/9/11 plays
- * out, then the FSM returns to HOLD (sub2 @0x80033460: anim end -> sub1 = auto-refire cadence). */
+/* FIRE trigger (game_step, SQUARE held in HOLD/READY): GUN = DISCHARGE — recoil clip 7/9/11
+ * plays out, then back to HOLD (sub2 @0x80033460: anim end -> sub1 = auto-refire cadence).
+ * MELEE (items 0-2) = faithful-line slash stand-in: re-play the draw clip 0xD as the cadence
+ * gate (the true melee ATTACK FSM 0x80034e70 slash chain is un-RE'd, documented deferred). */
 void re15_player_fire_start(void)
 {
     extern re15_actor_t g_actors[];
     if (s_player_aim_phase != RE15_AIM_READY || s_aim_recoil) return;
     s_aim_recoil = 1;
-    s_aim_cur_clip = 7 + (s_aim_elev > 0 ? 2 : s_aim_elev < 0 ? 4 : 0);   /* 7/9/11 */
+    s_aim_cur_clip = s_aim_melee ? 0x0d
+                   : 7 + (s_aim_elev > 0 ? 2 : s_aim_elev < 0 ? 4 : 0);   /* 7/9/11 */
     g_actors[RE15_ACTOR_SLOT_PLAYER].anim_frame = 0;
     g_actors[RE15_ACTOR_SLOT_PLAYER].anim_frac  = 7;
 }
@@ -264,22 +288,32 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
         int16_t want_motion = RE15_MOTION_IDLE;
         int32_t speed = 0;
         if (aiming) {
-            /* byte-true GUN FSM: RAISE clip 6 (frame 0, +0x8f=7) plays once -> HOLD clip 8 (10/12
-             * with dpad elevation); the DISCHARGE (re15_player_fire_start) swaps in the recoil clip
-             * 7/9/11 which plays out and drops back to HOLD (@0x80033460 anim end -> sub1). */
+            /* byte-true ACTION-7 dispatch BY ITEM (@0x80074030): items 0-2 -> MELEE FSM 0x80034e70
+             * (draw = W-bank clip 0xD via FUN_80035538, one-shot + hold-last, entry SE 0x1080001);
+             * items 3+ -> GUN FSM 0x80032e9c (RAISE clip 6 -> HOLD 8/10/12 with dpad elevation;
+             * the DISCHARGE swaps in recoil 7/9/11 which plays out and drops back to HOLD
+             * @0x80033460). The W bank itself switches with the item (melee trio W00≡W01≡W02,
+             * gun pair W03≡W04 — CD-file index = DAT_800741e8[char]=76 + item, loader @0x80036b80). */
             if (s_player_aim_phase == RE15_AIM_NONE) {
+                extern int re15_player_equipped_weapon(void);       /* re15_damage.c (DAT_800aca5d) */
                 s_player_aim_phase = RE15_AIM_RAISE;
-                s_aim_cur_clip = 6;                                 /* RAISE (sub0 @0x80032f18) */
+                s_aim_melee = (re15_player_equipped_weapon() < 3);  /* @0x80074030 class split */
+                s_aim_cur_clip = s_aim_melee ? 0x0d : 6;            /* draw 0xD / RAISE 6 */
                 s_aim_recoil = 0; s_aim_elev = 0;
+                if (s_aim_melee) {
+                    extern void re15_audio_weapon_se(int idx);
+                    re15_audio_weapon_se(8);                        /* FUN_80035538 entry SE 0x1080001 */
+                }
             }
             want_motion = RE15_MOTION_AIM_W;
             if (s_player_aim_phase == RE15_AIM_RAISE &&
                 p->motion == RE15_MOTION_AIM_W &&
-                s_aim_clip_fc > 0 && p->anim_frame >= s_aim_clip_fc - 1) {
-                s_player_aim_phase = RE15_AIM_READY;                /* raise done -> HOLD */
-                s_aim_cur_clip = 8; p->anim_frame = 0;
+                aim_cur_fc() > 0 && p->anim_frame >= aim_cur_fc() - 1) {
+                s_player_aim_phase = RE15_AIM_READY;                /* raise/draw done -> READY */
+                if (!s_aim_melee) { s_aim_cur_clip = 8; p->anim_frame = 0; }   /* gun: HOLD clip 8 */
+                /* melee: clip 0xD holds its terminal pose (hold-last, no clip switch) */
             }
-            if (s_player_aim_phase == RE15_AIM_READY && !s_aim_recoil) {
+            if (!s_aim_melee && s_player_aim_phase == RE15_AIM_READY && !s_aim_recoil) {
                 int elev = (pad_bits & RE15_PAD_BIT_UP) ? 1 : (pad_bits & RE15_PAD_BIT_DOWN) ? -1 : 0;
                 if (elev != s_aim_elev) {                           /* elevation switch re-enters */
                     s_aim_elev = elev;
@@ -287,10 +321,12 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
                     p->anim_frame = 0;
                 }
             }
-            if (s_aim_recoil && s_aim_clip_fc > 0 && p->anim_frame >= s_aim_clip_fc - 1) {
-                s_aim_recoil = 0;                                   /* recoil played out -> HOLD */
-                s_aim_cur_clip = 8 + (s_aim_elev > 0 ? 2 : s_aim_elev < 0 ? 4 : 0);
-                p->anim_frame = 0;
+            if (s_aim_recoil && aim_cur_fc() > 0 && p->anim_frame >= aim_cur_fc() - 1) {
+                s_aim_recoil = 0;                                   /* recoil/slash played out */
+                if (!s_aim_melee) {
+                    s_aim_cur_clip = 8 + (s_aim_elev > 0 ? 2 : s_aim_elev < 0 ? 4 : 0);
+                    p->anim_frame = 0;                              /* gun: back to HOLD (refire) */
+                }
             }
             s_idle_phase = -1;
         } else if (move_dir > 0) {
@@ -439,11 +475,11 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
         p->anim_frame++;
         if (p->anim_frac > 0) p->anim_frac--;
         /* W-bank clips are ONE-SHOTS (raise/hold/recoil hold their terminal pose): clamp after
-         * the advance so the render's %fc wrap can never replay them. (FL: one shared length —
-         * the platform passes the raise clip's fc; per-clip lengths deferred.) */
-        if (p->motion == RE15_MOTION_AIM_W && s_aim_clip_fc > 0 &&
-            p->anim_frame > s_aim_clip_fc - 1)
-            p->anim_frame = (uint16_t)(s_aim_clip_fc - 1);
+         * the advance so the render's %fc wrap can never replay them. Per-clip lengths (the
+         * platform feeds the equipped bank's EDD frame counts via set_aim_clip_lens). */
+        if (p->motion == RE15_MOTION_AIM_W && aim_cur_fc() > 0 &&
+            p->anim_frame > aim_cur_fc() - 1)
+            p->anim_frame = (uint16_t)(aim_cur_fc() - 1);
     }
     /* NPC anim advance MOVED OUT to re15_actors_anim_advance() (called UNCONDITIONALLY from
      * game_step). It used to live here inside re15_player_tick, which is SKIPPED in the grabbed/

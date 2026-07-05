@@ -245,11 +245,13 @@ void re15_game_step(const re15_game_ctx_t *c)
         if (c->rdt_ok && (c->pad_current & RE15_PAD_BIT_R1)) {
             if ((c->pad_current & RE15_PAD_BIT_SQUARE) && re15_player_aim_ready()) {
                 extern void re15_player_fire_start(void);
-                re15_player_fire_start();                 /* recoil clip 7/9/11 + cadence gate */
-                re15_player_weapon_fire(re15_player_equipped_weapon());  /* equipped ITEM (DAT_800aca5d;
-                                               * byte-true default 3 = the handgun, equip_test.sav) */
-                re15_audio_weapon_se(8);      /* stand-in for the ESP-data-driven bang (see block cmt) */
-                {   /* discharge fx (byte-true ids 2/3/4 from CORE00.ESP; anchor faithful-line) */
+                int eq_item = re15_player_equipped_weapon();   /* DAT_800aca5d; byte-true start = 1 KNIFE */
+                re15_player_fire_start();                 /* gun: recoil 7/9/11; melee: slash stand-in */
+                re15_player_weapon_fire(eq_item);         /* FUN_80011f50 resolve (per-item dmg/reach) */
+                if (eq_item >= 3) {                       /* GUN-only discharge side (@0x800337bc):
+                                                           * the melee items 0-2 have no muzzle/shell */
+                    re15_audio_weapon_se(8);  /* stand-in for the ESP-data-driven bang (see block cmt) */
+                    /* discharge fx (byte-true ids 2/3/4 from CORE00.ESP; anchor faithful-line) */
                     int32_t fcos = re15_cos_q12((int)pl->rot_y);
                     int32_t fsin = re15_sin_q12((int)pl->rot_y);
                     int32_t gy   = pl->y - 2083;          /* measured aim hand-bone height (b13) */
