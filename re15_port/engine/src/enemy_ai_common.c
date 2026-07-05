@@ -1967,14 +1967,16 @@ int re15_enemy_ai_live_tick(int slot)
     if (e->grid_id & RE15_AI_GRID_SKIP) return 0;       /* +0x9 & 0x20 */
 
     e->ai_dist = (uint32_t)re15_enemy_player_dist(e, &g_actors[RE15_ACTOR_SLOT_PLAYER]);
-    /* +0x1bc/+0x1be STEER TARGET = refreshed to the player pos EVERY tick. RAM-ARBITRATED
-     * (2026-07-04, 16 live samples tl_run2: every zombie's +0x1bc/+0x1be == the player pos in every
-     * frame, 1-frame skew = written in the enemy tick before the player moves). The "snapshot only
-     * at init, never refreshed" static finding was REFUTED by this data — the per-tick writer hides
-     * from an offset-literal scan (EXE-side/pointer-form store; exact address = open RE item). The
-     * init store @0x8010071c/734 is just the first write of the same mirror. */
-    e->steer_x = (int16_t)g_actors[RE15_ACTOR_SLOT_PLAYER].x;
-    e->steer_z = (int16_t)g_actors[RE15_ACTOR_SLOT_PLAYER].z;
+    /* +0x1bc/+0x1be STEER TARGET — the per-tick writer is EXE FUN_80039e7c (RESOLVED 2026-07-04;
+     * the RAM observation "== player pos every tick" was the SAME-ZONE case). Byte-true call
+     * (zombie driver @0x8010a9c0-9e0 / m0 root @0x80100538): a0 = the player-pos block, a1 = the
+     * waypoint node +0x1d6, a2 = +0x1d8 & 8 (one-shot roam request, cleared right after). Same
+     * zone -> steer = raw player pos; CROSS-ZONE -> pathfind first-hop crossing (ROOM1140: the
+     * 5-zone ring around the conference table — the zombies path AROUND it, RAM-verified). */
+    re15_nav_update_steer(e, (int16_t)g_actors[RE15_ACTOR_SLOT_PLAYER].x,
+                             (int16_t)g_actors[RE15_ACTOR_SLOT_PLAYER].z,
+                          e->ai_wp_node, (int)(e->ai_flags & 8u));
+    e->ai_flags &= (uint16_t)~8u;                        /* the @0x8010a9f8 one-shot clear */
 
     switch (e->state) {                                  /* @0x8011f7b4[entity+0x4] */
         case RE15_AI_STATE_INIT:   re15_enemy_ai_live_init(slot);   break;  /* [0] FUN_80100688 */

@@ -349,10 +349,21 @@ int re15_rdt_parse(const uint8_t *data, size_t size, re15_rdt_t *out)
         }
     }
 
-    /* block.blk (RDT+0x38): CANONICALLY UNUSED — the original NEVER dereferences
-     * DAT_800ac778+0x38 (disasm-confirmed 2026-06-09 via a full DAT_800ac778 xref
-     * sweep: 0x10..0x60 used, 0x38 never). We are byte-exact by NOT parsing it. */
+    /* block.blk (RDT+0x38): the NAV-ZONE GRAPH (see re15_rdt.h — the "unused" claim was
+     * disproven 2026-07-04; six undecompiled EXE functions walk it). u32 count + 12B nodes. */
     out->blocks = NULL; out->block_count = 0;
+    {
+        uint32_t blk_start = read_u32_le(&data[0x38]);
+        if (blk_start >= 0x40 && blk_start + 4 <= size) {
+            uint32_t n = read_u32_le(&data[blk_start]) & 0xffffu;   /* runtime reads u16 count */
+            if (n <= 16 && blk_start + 4 + n * 12u <= size) {       /* u16 link masks cap at 16 */
+                out->blocks      = data + blk_start + 4;            /* nodes base (tbl+4), stride 12:
+                                                                     * +0 x1 +2 z1 +4 x2 +6 z2
+                                                                     * +8 resv +10 links */
+                out->block_count = (int)n;
+            }
+        }
+    }
 
     /* RVD block */
     parse_zones(data, size, zone_start, out);

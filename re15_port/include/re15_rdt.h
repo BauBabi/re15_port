@@ -173,13 +173,16 @@ typedef struct {
     const uint8_t           *raw;
     int                      raw_size;
 
-    /* block.blk (RDT offset 0x38) — CANONICALLY UNUSED. The original engine NEVER
-     * dereferences DAT_800ac778+0x38 (disasm-confirmed 2026-06-09: a full xref
-     * sweep of every DAT_800ac778 offset finds 0x10..0x60 used but NOT 0x38; room
-     * load FUN_8001d600/FUN_800396fc, the collision FUN_8003aea0, and the per-frame
-     * loops all skip it). So we are byte-exact by NOT parsing it; the 12-B layout
-     * was only a speculative BLKParser.java guess. `blocks` stays NULL. */
-    const int16_t           *blocks;     /* always NULL (block.blk is unused) */
+    /* block.blk (RDT offset 0x38) — the NAV-ZONE GRAPH (CORRECTED 2026-07-04: the earlier
+     * "canonically unused" sweep missed six UNDECOMPILED EXE functions — raw bytes in the
+     * ghidra dump: FUN_80039e7c steer-update, FUN_8003a0fc zone-from-pos, FUN_8003a07c
+     * rand-zone, FUN_8003a1a4/FUN_8003a31c edge-crossing, FUN_8003a524 pathfind DFS — all
+     * walk *(DAT_800ac778+0x38)). Layout: u32 count, then count x 12 bytes:
+     *   +4 s16 x1, +6 s16 z1, +8 s16 x2, +0xa s16 z2   (half-open [min,max) XZ box)
+     *   +0xc u16 reserved (0), +0xe u16 links (adjacency bitmask, bit j = adj. to node j)
+     * ROOM1140: 5 zones ringing the conference table (0-1-4-3-2-0), RAM-verified identical
+     * to the file bytes. Consumed by re15_nav_* (nav_zone_common.c). */
+    const uint8_t           *blocks;     /* -> the first 12-byte node (file bytes, LE) */
     int                      block_count;
 } re15_rdt_t;
 

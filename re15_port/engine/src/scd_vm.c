@@ -2505,6 +2505,8 @@ static int op_sce_em_set(scd_thread_t *t)
          * `behavior` arg below, so this re-mapping does not change the existing pose result.) */
         a->grid_id = behavior;   /* +0x9 (sub-dispatch + pose-sel + flags) */
         a->state   = 0;          /* +0x4 = INIT */
+        a->repath_timer = (uint8_t)(slot & 7);   /* +0x91 = spawn_index & 7 (@0x80042244) — staggers
+                                                  * the per-tick nav-DFS across the spawned enemies */
         a->motion = re15_enemy_spawn_action(type, behavior);  /* byte-true spawn pose */
         /* BYTE-TRUE PLAYBACK MODE (RE'd from the FUN_80050cb8 phase FSM): anim-flags
          * (entity+0x1c4) bit 0x04 = LOOP, CLEAR = play-once-then-HOLD-LAST. The enemy AI sets

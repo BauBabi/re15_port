@@ -1181,6 +1181,42 @@ int main(void)
         re15_enemy_reset();
     }
 
+    /* (25): NAV-ZONE GRAPH + PATHFINDER (byte-true FUN_8003a0fc/FUN_8003a524/FUN_80039e7c over
+     * the RDT block.blk @+0x38) — RAM-verified ROOM1140 ground truth (mzd_stage1_briefing.sav):
+     * 5 zones ringing the conference table; spawn(-7600,-17600)->zone 0, aisle/feeders->zone 2;
+     * a zone-2 feeder pathing at the zone-0 player steers to the 2->0 edge crossing (-4400, its
+     * OWN z — the entity-preference of FUN_8003a31c, margin 2*400). */
+    {
+        extern re15_rdt_t g_room_rdt; extern int g_room_rdt_ok;
+        g_room_rdt = rdt; g_room_rdt_ok = 1;              /* publish for the nav module */
+        if (rdt.block_count != 5 || !rdt.blocks) {
+            fprintf(stderr, "FAIL: (25) ROOM1140 BLK must parse 5 nav zones (got %d)\n",
+                    rdt.block_count); fail = 1; }
+        if (re15_nav_zone_from_pos(-7600, -17600) != 0) {
+            fprintf(stderr, "FAIL: (25) spawn must be zone 0 (got %d)\n",
+                    re15_nav_zone_from_pos(-7600, -17600)); fail = 1; }
+        if (re15_nav_zone_from_pos(-1800, -18100) != 2 || re15_nav_zone_from_pos(-1800, -19600) != 2) {
+            fprintf(stderr, "FAIL: (25) the feeder aisle must be zone 2\n"); fail = 1; }
+        re15_actor_t *nz2 = &g_actors[zslots[0]];
+        nz2->x = -1800; nz2->z = -21600; nz2->floor = 0;   /* the far feeder, zone 2 */
+        nz2->state = RE15_AI_STATE_ACTIVE;
+        nz2->hit_radius_min = 400;
+        nz2->repath_timer = 1;                             /* -> decrements to the DFS 0-tick */
+        int r = re15_nav_update_steer(nz2, -7600, -17600, 0, 0);   /* target = the spawn (zone 0) */
+        if (r != 1 || nz2->steer_x != -4400 || nz2->steer_z != -21600) {
+            fprintf(stderr, "FAIL: (25) cross-zone steer must be the 2->0 crossing (-4400, own z "
+                    "-21600), got r=%d (%d,%d)\n", r, nz2->steer_x, nz2->steer_z); fail = 1; }
+        nz2->repath_timer = 1;
+        r = re15_nav_update_steer(nz2, -1900, -20000, 0, 0);       /* target in the SAME zone 2 */
+        if (r != 1 || nz2->steer_x != -1900 || nz2->steer_z != -20000) {
+            fprintf(stderr, "FAIL: (25) same-zone steer must pass the raw target through, got "
+                    "(%d,%d)\n", nz2->steer_x, nz2->steer_z); fail = 1; }
+        g_room_rdt_ok = 0;
+        if (!fail)
+            printf("  (25) nav zones: BLK=5 (table ring), spawn->0 aisle->2; cross-zone steer = the "
+                   "2->0 crossing (-4400, own z); same-zone = raw pass-through (RAM ground truth)\n");
+    }
+
     if (fail) { fprintf(stderr, "\nROOM1140 COMBAT-WIRING TEST FAILED\n"); return 1; }
     printf("\nPASS: ROOM1140 live-AI game_step wiring (spawn; WAKE->engage; TURN-to-face->GRAB->HP; "
            "GRABBED-lock; player DEATH; zombie HURT/DEATH; PLAYER-SHOOTS; LEON grab-victim anim; "

@@ -208,6 +208,17 @@ void re15_ai_dispatch_decision(re15_actor_t *e, const re15_actor_t *player);
  * are deferred — cited in enemy_ai_common.c.) The live analog of re15_enemy_ai_init. */
 void re15_enemy_ai_live_init(int slot);
 
+/* NAV-ZONE / PATHFINDING (nav_zone_common.c) — byte-true FUN_8003a0fc/8003a07c/8003a524/
+ * 80039e7c over the RDT block.blk zone graph (see re15_rdt.h). */
+uint8_t re15_nav_zone_from_pos(int16_t x, int16_t z);
+uint8_t re15_nav_rand_zone(void);
+void    re15_nav_pathfind(const re15_actor_t *e, uint8_t start, uint8_t goal,
+                          int16_t tx, int16_t tz);
+int     re15_nav_update_steer(re15_actor_t *e, int16_t tx, int16_t tz,
+                              uint8_t wp_node, int wp_mode);
+uint8_t re15_nav_dbg_zone_self(void);
+uint8_t re15_nav_dbg_zone_target(void);
+
 /* FUN_80101224 (@0x8011f7b4[1]) — the LIVE zombie ACTIVE handler, attack-windup half (byte-true):
  * while attack-armed (ai_flags & 0x100), the windup timer ai_attack_timer (+0x1da) counts down;
  * at == 0x12c (300) it fires the lunge via re15_enemy_lunge_begin (the original's 8x action-0x16

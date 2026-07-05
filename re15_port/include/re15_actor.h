@@ -130,6 +130,12 @@ typedef struct {
      * AWAY = the authored weave). */
     int16_t  steer_x;       /* +0x1bc */
     int16_t  steer_z;       /* +0x1be */
+    uint8_t  repath_timer;  /* +0x91 : nav repath cycle (low7: reload |7 at 0, -1/tick; the DFS
+                             * runs only on the 0-tick). bit 0x80 = nav-disable latch (checked,
+                             * never set in the shipped game). Spawn seed = spawn_index & 7
+                             * (@0x80042244) — staggers the per-tick DFS across entities. */
+    uint8_t  ai_wp_node;    /* +0x1d6: wander-roam waypoint node id (set by the state-1 roam
+                             * entry = re15_nav_rand_zone; consumed with ai_flags bit3) */
     /* LIVE STAGE1 zombie (@0x8011f7b4 family, FUN_80100424/FUN_80101224) attack windup timer
      * (entity +0x1da, s16). The active handler FUN_80101224 counts it down while the attack-arm
      * bit (ai_flags & 0x100 = +0x1d8 & 0x100) is set; at == 0x12c (300) it fires the lunge, at
