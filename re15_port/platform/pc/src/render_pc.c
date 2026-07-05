@@ -472,8 +472,33 @@ void re15_render_end_frame(void)
     SDL_UpdateTexture(s_texture, NULL, s_framebuffer, SCREEN_XRES * sizeof(uint32_t));
     SDL_SetRenderDrawColor(s_renderer, 0, 0, 0, 255);
     SDL_RenderClear(s_renderer);
-    if (!s_black_bg)
+    if (!s_black_bg) {
         SDL_RenderCopy(s_renderer, s_texture, NULL, NULL);
+    } else if (s_gameover_tex) {
+        /* THE SPOTLIGHT BACKDROP (YOU-DIED chain): the glow quadrant of YOUDIED.TIM mirrored 2x2
+         * around the screen centre, drawn as the BACKGROUND (the 3D corpse renders OVER it as a
+         * dark shape — the original's 4 fullscreen GT4 quads are backdrop prims, drawing it after
+         * the 3D washed the corpse out). Two additive passes saturate the core like the original. */
+        extern int g_death_glow;
+        int gb = g_death_glow + ((int)s_white_alpha * 5) / 8;
+        if (gb > 255) gb = 255;
+        SDL_Rect gsrc = { 0, 64, 148, 88 };
+        int hx = SCREEN_XRES / 2, hy = SCREEN_YRES / 2;
+        SDL_Rect q0 = { 0, 0, hx, hy }, q1 = { hx, 0, hx, hy };
+        SDL_Rect q2 = { 0, hy, hx, hy }, q3 = { hx, hy, hx, hy };
+        SDL_SetTextureBlendMode(s_gameover_tex, SDL_BLENDMODE_ADD);
+        for (int pass = 0; pass < 2; pass++) {
+            int m = pass ? gb / 2 : gb;                    /* core ~1.5x -> blown-out white */
+            SDL_SetTextureColorMod(s_gameover_tex, (Uint8)m, (Uint8)m, (Uint8)m);
+            SDL_RenderCopyEx(s_renderer, s_gameover_tex, &gsrc, &q0, 0, NULL, SDL_FLIP_NONE);
+            SDL_RenderCopyEx(s_renderer, s_gameover_tex, &gsrc, &q1, 0, NULL, SDL_FLIP_HORIZONTAL);
+            SDL_RenderCopyEx(s_renderer, s_gameover_tex, &gsrc, &q2, 0, NULL, SDL_FLIP_VERTICAL);
+            SDL_RenderCopyEx(s_renderer, s_gameover_tex, &gsrc, &q3, 0, NULL,
+                             (SDL_RendererFlip)(SDL_FLIP_HORIZONTAL | SDL_FLIP_VERTICAL));
+        }
+        SDL_SetTextureColorMod(s_gameover_tex, 255, 255, 255);
+        SDL_SetTextureBlendMode(s_gameover_tex, SDL_BLENDMODE_BLEND);
+    }
 
     /* Step 1.5: RE1.5 character shadows — subtractive blob quads on the floor.
      * Drawn after the BG (darken the helipad) and before the character tris
@@ -641,38 +666,12 @@ void re15_render_end_frame(void)
          * (~192x144) — the original draws it as 4 MIRRORED fullscreen GT4 quads = the spotlight
          * backdrop (FUN_80015a80's 4 fullscreen quads), with the flat additive fade prim pulsing
          * ON TOP (the heartbeat). */
-        if (s_black_bg) {
-            /* the radial glow backdrop: 4 mirrored copies of the glow quadrant around the screen
-             * center, brightness = a dim base + the fade level (flash decay + heartbeat pulses). */
-            SDL_Rect gsrc = { 0, 64, 148, 88 };   /* src cut AT the glow hotspot (~148,152 abs in
-                                                    * the TIM) so the mirrored bright corners MEET
-                                                    * at the screen center (else a dark cross) */
-            extern int g_death_glow;
-            int gb = g_death_glow + ((int)s_white_alpha * 5) / 8;   /* base ramp + heartbeat crest */
-            if (gb > 255) gb = 255;
-            SDL_SetTextureColorMod(s_gameover_tex, (Uint8)gb, (Uint8)gb, (Uint8)gb);
-            SDL_SetTextureBlendMode(s_gameover_tex, SDL_BLENDMODE_ADD);
-            int hx = SCREEN_XRES / 2, hy = SCREEN_YRES / 2;
-            SDL_Rect q0 = { 0, 0, hx, hy };          /* top-left: quadrant flipped both ways so the
-                                                      * bright corner meets the screen center */
-            SDL_Rect q1 = { hx, 0, hx, hy };
-            SDL_Rect q2 = { 0, hy, hx, hy };
-            SDL_Rect q3 = { hx, hy, hx, hy };
-            /* glow texture's bright corner is its BOTTOM-RIGHT -> mirror per quadrant */
-            SDL_RenderCopyEx(s_renderer, s_gameover_tex, &gsrc, &q0, 0, NULL, SDL_FLIP_NONE);
-            SDL_RenderCopyEx(s_renderer, s_gameover_tex, &gsrc, &q1, 0, NULL, SDL_FLIP_HORIZONTAL);
-            SDL_RenderCopyEx(s_renderer, s_gameover_tex, &gsrc, &q2, 0, NULL, SDL_FLIP_VERTICAL);
-            SDL_RenderCopyEx(s_renderer, s_gameover_tex, &gsrc, &q3, 0, NULL,
-                             (SDL_RendererFlip)(SDL_FLIP_HORIZONTAL | SDL_FLIP_VERTICAL));
-            SDL_SetTextureColorMod(s_gameover_tex, 255, 255, 255);
-            SDL_SetTextureBlendMode(s_gameover_tex, SDL_BLENDMODE_BLEND);
-        }
-        /* the YOU DIED letters: near-full-width in the UPPER screen area (original s17/s19:
-         * text spans ~y 20..70 of 240). Src = the TIM's top text rows. */
+        /* the YOU DIED letters (original s17/s19: HUGE — near-full width, ~40%% screen height
+         * with a ~2x vertical stretch, vertically centred around ~58%%). Src = the TIM text rows. */
         SDL_Rect tsrc = { 0, 0, 256, 56 };
-        int tw = (SCREEN_XRES * 95) / 100;
-        int th = (tw * 56) / 256;
-        SDL_Rect tdst = { (SCREEN_XRES - tw) / 2, SCREEN_YRES * 8 / 100, tw, th };
+        int tw = (SCREEN_XRES * 97) / 100;
+        int th = (SCREEN_YRES * 42) / 100;
+        SDL_Rect tdst = { (SCREEN_XRES - tw) / 2, (SCREEN_YRES * 38) / 100, tw, th };
         if (s_go_flyin >= 0 && s_go_flyin < 50) {
             /* LETTER FLY-IN (byte-true FUN_80015a80: 4 quads glide (target-start)/0x32 over 50
              * frames) — FL: 4 vertical slices of the text strip slide in from alternating sides. */
@@ -687,6 +686,10 @@ void re15_render_end_frame(void)
             }
         } else {
             SDL_RenderCopy(s_renderer, s_gameover_tex, &tsrc, &tdst);
+            SDL_SetTextureBlendMode(s_gameover_tex, SDL_BLENDMODE_ADD);
+            SDL_RenderCopy(s_renderer, s_gameover_tex, &tsrc, &tdst);   /* PSX GT4 0xFF gouraud =
+                                                                          * 2x texture brightness */
+            SDL_SetTextureBlendMode(s_gameover_tex, SDL_BLENDMODE_BLEND);
         }
     }
 
@@ -732,9 +735,16 @@ void re15_render_pc_show_gameover(const re15_tim_t *tim)
         if (!rgba) return;
         if (tim->bpp == 8 && tim->has_clut && tim->clut) {
             const uint8_t *src = (const uint8_t *) tim->pixels;
-            for (int i = 0; i < n; i++) rgba[i] = rgb555_to_argb8888(tim->clut[src[i]]);
+            for (int i = 0; i < n; i++) {
+                uint16_t c = tim->clut[src[i]];
+                rgba[i] = (c & 0x7fff) ? rgb555_to_argb8888(c) : 0;   /* RGB-black (incl. STP-black
+                                                            * 0x8000) = TRANSPARENT — the letter key */
+            }
         } else if (tim->bpp == 16) {
-            for (int i = 0; i < n; i++) rgba[i] = rgb555_to_argb8888(tim->pixels[i]);
+            for (int i = 0; i < n; i++) {
+                uint16_t c = tim->pixels[i];
+                rgba[i] = (c & 0x7fff) ? rgb555_to_argb8888(c) : 0;
+            }
         } else { free(rgba); return; }
         s_gameover_tex = SDL_CreateTexture(s_renderer, SDL_PIXELFORMAT_ARGB8888,
                                            SDL_TEXTUREACCESS_STATIC, tim->width, tim->height);
