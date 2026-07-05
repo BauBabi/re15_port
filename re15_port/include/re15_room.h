@@ -23,8 +23,13 @@ extern unsigned   g_current_room_id;   /* room resident in g_room_rdt (per-room 
 
 /* Death/game-over presentation (game_step_common.c). g_death_fade = 0..255 fade-to-black over the
  * byte-true 0x78 death timer; g_gameover_active = 1 once it expires -> the PC loop shows YOU DIED. */
-extern int g_death_fade;
+extern int g_death_fade;      /* BLACK exit fade 0..255 (game-over sub 6) */
 extern int g_gameover_active;
+extern int g_death_white;     /* ADDITIVE white overlay 0..255 (FUN_80021880 level>>7) */
+extern int g_death_blackbg;   /* flat-black background mode (FUN_80021634(2,0)) */
+extern int g_death_cam;       /* death-camera glide active */
+extern int g_death_pool;      /* blood-pool growth ticks (500+12t x 600+12t) */
+extern int g_death_flyin;     /* YOU DIED letter fly-in tick 0..50, -1 hidden */
 
 /* The room the game boots into (RE1.5 intro = the helipad, STAGE1/ROOM1170). The single
  * entry point; everything else is reached via doors (data-driven). */

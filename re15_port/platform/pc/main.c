@@ -1366,7 +1366,32 @@ int main(int argc, char *argv[])
                         (unsigned)active_cuts[active_cut_idx].pri_offset, pri_n, has_fg);
             }
             re15_camera_view_t cam_view;
-            re15_camera_build_view(&active_cuts[active_cut_idx], &cam_view);
+            /* DEATH CAMERA (byte-true game-over sub 2, @0x8001547c-e4 + the per-frame glide
+             * FUN_80015850): once g_death_cam arms, the CURRENT cut is rewritten to orbit the
+             * corpse — target = corpse + {0x1f4, 0xbb8, 0x1f4}; the camera then GLIDES (live:
+             * crane-up ~-100 y/tick with the target locked on the corpse). Faithful-line glide:
+             * ease the cut copy toward the orbit pose each death frame. */
+            re15_camera_cut_t death_cut;
+            const re15_camera_cut_t *view_cut = &active_cuts[active_cut_idx];
+            {
+                static int s_dc_on = 0; static re15_camera_cut_t s_dc;
+                if (g_death_cam) {
+                    re15_actor_t *dcp = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+                    if (!s_dc_on) { s_dc = *view_cut; s_dc_on = 1; }   /* seed from the live cut */
+                    s_dc.target_x = dcp->x + 0x1f4;                     /* cut +0x1c/+0x1e/+0x20 */
+                    s_dc.target_y = dcp->y + 0xbb8;
+                    s_dc.target_z = dcp->z + 0x1f4;
+                    s_dc.pos_y   -= 100;                                /* the live crane-up */
+                    if (s_dc.pos_y < dcp->y - 9600) s_dc.pos_y = dcp->y - 9600;  /* live span ~9.5k */
+                    s_dc.pos_x   += (dcp->x - s_dc.pos_x) / 32;         /* gentle drift over the corpse */
+                    s_dc.pos_z   += (dcp->z - s_dc.pos_z) / 32;
+                    death_cut = s_dc;
+                    view_cut  = &death_cut;
+                } else if (s_dc_on) {
+                    s_dc_on = 0;                                        /* revive/reload -> normal cam */
+                }
+            }
+            re15_camera_build_view(view_cut, &cam_view);
 
             /* sprite.pri depth gate: project the player into camera + screen space
              * (same scale as the per-tri avg_z / mask depth<<3) so a mask BEHIND him
@@ -1491,34 +1516,55 @@ int main(int argc, char *argv[])
              * screen, so the continue-reload is the tail — a healthy room clears g_gameover_active.) */
             {
                 extern void re15_render_pc_set_fade(int a);
+                extern void re15_render_pc_set_white_fade(int a);
+                extern void re15_render_pc_set_black_bg(int on);
+                extern void re15_render_pc_set_gameover_flyin(int t);
                 extern void re15_render_pc_show_gameover(const re15_tim_t *tim);
                 extern void re15_render_pc_hide_gameover(void);
                 extern void re15_render_pc_show_title(const re15_tim_t *tim);
                 extern void re15_render_pc_hide_title(void);
                 static re15_tim_t s_youdied = {0}; static re15_tim_t s_title = {0};
-                static int s_yd_tried = 0, s_tt_tried = 0, s_go_timer = 0, s_in_title = 0;
-                if (re15_player_is_dead() || g_gameover_active)
-                    re15_render_pc_set_fade(g_death_fade);           /* fade to black as the timer runs */
-                if (g_gameover_active && !s_in_title) {
-                    /* PHASE 1 — YOU DIED (byte-true FUN_8003694c game-over), held ~2s. */
-                    if (!s_yd_tried) { s_yd_tried = 1; int ysz = 0;
-                        uint8_t *yb = pc_read_shared("DATA/YOUDIED.TIM", &ysz);
-                        if (yb) re15_tim_parse(yb, ysz, &s_youdied); }
-                    if (s_youdied.pixels) re15_render_pc_show_gameover(&s_youdied);
-                    if (++s_go_timer >= 120) {                        /* YOU DIED -> TITLE */
-                        s_go_timer = 0; s_in_title = 1;
-                        re15_render_pc_hide_gameover(); re15_render_pc_set_fade(0);
+                static int s_yd_tried = 0, s_tt_tried = 0, s_in_title = 0;
+                /* THE BYTE-TRUE YOU-DIED CHAIN (game_step FSM drives; this block only renders):
+                 * white additive flash + heartbeat pulses (g_death_white), flat-black background
+                 * (g_death_blackbg), YOU DIED letters flying in over 50 frames (g_death_flyin),
+                 * the sub-6 exit fade-to-black (g_death_fade), then the title flow. */
+                if (re15_player_is_dead() || g_gameover_active) {
+                    re15_render_pc_set_fade(g_death_fade);
+                    re15_render_pc_set_white_fade(g_death_white);
+                    re15_render_pc_set_black_bg(g_death_blackbg);
+                    if (g_death_flyin >= 0 && !s_in_title) {
+                        if (!s_yd_tried) { s_yd_tried = 1; int ysz = 0;
+                            uint8_t *yb = pc_read_shared("DATA/YOUDIED.TIM", &ysz);
+                            if (yb) re15_tim_parse(yb, ysz, &s_youdied); }
+                        if (s_youdied.pixels) {
+                            re15_render_pc_show_gameover(&s_youdied);
+                            re15_render_pc_set_gameover_flyin(g_death_flyin);
+                        }
                     }
-                } else if (g_gameover_active && s_in_title) {
-                    /* PHASE 2 — TITLE screen (byte-true tail: YOU DIED -> title). Press Square (NEW
-                     * GAME) to restart via the RE continue-reload of the current room. */
+                }
+                if (g_gameover_active && !s_in_title) {
+                    /* sub-6 ctr 0x6d reached: the original stops all audio and leaves the in-game
+                     * module to the attract/title flow (@0x80015810-38, main-loop gate @0x8001d1e8).
+                     * Port: straight to the title screen (the FL attract chain: disclaimer/FMV are
+                     * not ported). */
+                    s_in_title = 1;
+                    re15_render_pc_hide_gameover();
+                    re15_render_pc_set_gameover_flyin(-1);
+                    re15_render_pc_set_black_bg(0);
+                    re15_render_pc_set_white_fade(0);
+                    re15_render_pc_set_fade(0);
+                }
+                if (s_in_title) {
+                    /* TITLE (byte-true tail: YOU DIED -> title). Square (NEW GAME) = the RE continue
+                     * = reload the current room. */
                     if (!s_tt_tried) { s_tt_tried = 1; int tsz = 0;
                         uint8_t *tb = pc_read_shared("DATA/TITLEU.TIM", &tsz);
                         if (tb) re15_tim_parse(tb, tsz, &s_title); }
                     if (s_title.pixels) re15_render_pc_show_title(&s_title);
                     if (g_engine.pad_pressed & 0x8000) {              /* SQUARE = NEW GAME */
-                        s_in_title = 0; g_gameover_active = 0;
-                        re15_render_pc_hide_title(); re15_render_pc_set_fade(0);
+                        s_in_title = 0;
+                        re15_render_pc_hide_title();
                         re15_player_continue_reload();                /* queue the current-room reload */
                     }
                 }
@@ -2073,8 +2119,14 @@ int main(int argc, char *argv[])
              * where every actor stands on the −7200 floor). Player-only, matching
              * the PSX caller (player update FUN_80031c44). */
             if (player_visible) {
-                static const int32_t SH_HALF_X = 500;   /* a2 = 0x1F4 */
-                static const int32_t SH_HALF_Z = 600;   /* a3 = 0x258 */
+                int32_t SH_HALF_X = 500;                /* a2 = 0x1F4 */
+                int32_t SH_HALF_Z = 600;                /* a3 = 0x258 */
+                /* DEATH BLOOD POOL (LAB_8003694c @0x800369bc-d8): the quad half-extents grow
+                 * +0xc per death tick (live terminal 0x7ac/0x810 after ~122 ticks). */
+                if (re15_player_is_dead() && g_death_pool > 0) {
+                    SH_HALF_X += 12 * g_death_pool;
+                    SH_HALF_Z += 12 * g_death_pool;
+                }
                 int32_t sh_corner[4][3] = {
                     { -SH_HALF_X, 0,  SH_HALF_Z },   /* ecke1 (-X,+Z) → uv(0,0) */
                     { -SH_HALF_X, 0, -SH_HALF_Z },   /* ecke2 (-X,-Z) → uv(1,0) */
@@ -2110,9 +2162,18 @@ int main(int argc, char *argv[])
                     sx[v] = cx + RNDI(_vx * _proj);
                     sy[v] = cy + RNDI(_vy * _proj);
                 }
-                if (sok)
-                    re15_render_shadow_quad(sx[0], sy[0], sx[1], sy[1],
-                                            sx[2], sy[2], sx[3], sy[3]);
+                if (sok) {
+                    if (re15_player_is_dead() && g_death_pool > 0)
+                        /* BLOOD POOL (byte-true LAB_8003694c): the shadow quad turns dark-red
+                         * (subtractive color 0x38/0xff/0xff @0x8003699c-b8) — the SIZE growth
+                         * (+0xc/frame) is applied to sh_corner above via g_death_pool. */
+                        re15_render_shadow_quad_c(sx[0], sy[0], sx[1], sy[1],
+                                                  sx[2], sy[2], sx[3], sy[3],
+                                                  0x38, 0xff, 0xff);
+                    else
+                        re15_render_shadow_quad(sx[0], sy[0], sx[1], sy[1],
+                                                sx[2], sy[2], sx[3], sy[3]);
+                }
             }
 
             /* CANONICAL per-bone NCCT lighting (2026-06-02, mirrors the PSX-native

@@ -135,6 +135,9 @@ void re15_render_textured_tri_lit(int x0, int y0, int u0, int v0,
  * (half-extents 500x600 around the actor, at floor Y, yaw-rotated). The PC
  * backend draws the extracted TEX.TIM blob with ABR-mode-2 (subtractive)
  * blending. Order of corners: 0=(-X,+Z) 1=(-X,-Z) 2=(+X,+Z) 3=(+X,-Z). */
+void re15_render_shadow_quad_c(int x0, int y0, int x1, int y1,
+                               int x2, int y2, int x3, int y3,
+                               uint8_t r, uint8_t g, uint8_t b);   /* death blood pool */
 void re15_render_shadow_quad(int x0, int y0, int x1, int y1,
                              int x2, int y2, int x3, int y3);
 

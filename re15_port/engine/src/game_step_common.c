@@ -19,15 +19,108 @@
 #include "re15_damage.h"        /* re15_player_is_dead / re15_player_death_tick (8.10 death FSM) */
 #include "re15_menu.h"          /* re15_menu_* — the inventory/weapon-select menu (8.20) */
 
-/* GAME-OVER / death presentation (byte-true FUN_8003694c). g_death_fade = 0..255 fade-to-black over
- * the 0x78 death timer; g_gameover_active = 1 once the timer expires (the PC loop shows YOU DIED then
- * continue-reloads). Platform-read (re15_render_pc). */
-int g_death_fade    = 0;
-int g_gameover_active = 0;
+/* GAME-OVER / death presentation — REWRITTEN 2026-07-05 to the byte-true model (full raw RE of
+ * LAB_8003694c + the game-over FSM FUN_8001500c/@0x80071d10, live-verified vs 92 DuckStation
+ * samples, shots/you_died_seq/):
+ *  - cmd 7 (LAB_8003694c) does NO fade and NO camera: it grows the player's floor-shadow quad into
+ *    the dark-red BLOOD POOL (subtractive, color 0x38/0xff/0xff @0x8003699c-b8, half-extents
+ *    +0xc/frame @0x800369bc-d8 from the 500x600 base; live terminal 0x7ac/0x810 after ~122 ticks).
+ *    Its 0x78 timer is DEAD CODE (phase 0x800aca59 never advances - RAM-verified pinned 0x77).
+ *  - The REAL presentation = the PARALLEL game-over FSM (main loop, cmd in {3,6,7}; sub @0x800b522a):
+ *    sub0: BGM decrescendo/frame; ctr 0x32 -> WHITE ADDITIVE fade up rate +0x4bd (FUN_800217b0
+ *          mode1=ABR1, brightness = level>>7; FUN_80021880)
+ *    sub1: ctr 0x1b -> rate -0x2556 (decay) + flat-BLACK background (FUN_80021634(2,0))
+ *    sub2: YOUDIED.TIM load + 4 letter quads (50-frame fly-in, FUN_80015a80 /0x32) + DEATH CAMERA
+ *          (cut rewrite: target = corpse + {0x1f4,0xbb8,0x1f4} @0x8001547c-e4 + glide FUN_80015850;
+ *          live: crane-up ~-100 y/tick, target locked on the corpse)
+ *    sub3/4: heartbeat - lap every 0x13 frames, 3 laps, each a white pulse +0x2aaa (2f) / -0x2aaa
+ *    sub5: swell +0x7ff, ctr 0xf -> -0x800
+ *    sub6: ctr 0x50 -> subtractive fade-to-BLACK rate +0x400; ctr 0x6d -> stop audio + exit to the
+ *          title flow (@0x80015810-38; main loop gate @0x8001d1e8). NO pad read - fixed timing.
+ * Platform-read globals: */
+int g_death_fade    = 0;   /* BLACK fade 0..255 (the sub-6 exit fade only) */
+int g_gameover_active = 0; /* sub-6 ctr 0x6d reached -> the title tail */
+int g_death_white   = 0;   /* ADDITIVE white overlay 0..255 (level>>7) */
+int g_death_blackbg = 0;   /* flat-black background mode (room backdrop off, 3D corpse stays) */
+int g_death_cam     = 0;   /* death-camera glide active (sub 2+) */
+int g_death_pool    = 0;   /* blood-pool growth ticks (half-extents 500+12t x 600+12t, cap 122) */
+int g_death_flyin   = -1;  /* YOU DIED letter fly-in tick 0..50 (-1 = hidden) */
+
+static int s_go_sub = 0, s_go_ctr = 0, s_go_lap = 0, s_go_on = 0;
+static int32_t s_go_lvl = 0, s_go_rate = 0;
+
+static void re15_gameover_fsm_reset(void)
+{
+    s_go_sub = s_go_ctr = s_go_lap = s_go_on = 0;
+    s_go_lvl = s_go_rate = 0;
+    g_death_fade = g_death_white = g_death_blackbg = g_death_cam = g_death_pool = 0;
+    g_death_flyin = -1;
+    g_gameover_active = 0;
+}
+
+/* One death tick of the byte-true chain (called from the death branch below). */
+static void re15_gameover_fsm_tick(void)
+{
+    if (!s_go_on) { re15_gameover_fsm_reset(); s_go_on = 1; }
+    if (g_death_pool < 122) g_death_pool++;               /* cmd-7 pool +0xc/frame, live cap 122 */
+    s_go_lvl += s_go_rate;                                /* FUN_80021880: level += rate */
+    if (s_go_lvl < 0) s_go_lvl = 0;
+    int b = (int)(s_go_lvl >> 7);                         /* brightness = level>>7 */
+    g_death_white = b > 255 ? 255 : b;
+    switch (s_go_sub) {
+        case 0:                                           /* BGM decrescendo (0x3c) - port: no BGM yet */
+            if (++s_go_ctr >= 0x32) { s_go_rate = 0x4bd; s_go_sub = 1; s_go_ctr = 0; }
+            break;
+        case 1:
+            if (++s_go_ctr >= 0x1b) {
+                s_go_rate = -0x2556;
+                g_death_blackbg = 1;                      /* FUN_80021634(2,0) */
+                s_go_sub = 2; s_go_ctr = 0;
+            }
+            break;
+        case 2:                                           /* YOU DIED + death camera arm */
+            g_death_cam = 1;
+            g_death_flyin = 0;
+            s_go_sub = 3; s_go_ctr = 0;
+            break;
+        case 3:                                           /* heartbeat laps (0x13 frames each) */
+            if (g_death_flyin < 50) g_death_flyin++;
+            if (++s_go_ctr >= 0x13) {
+                s_go_ctr = 0; s_go_lap++;
+                s_go_sub = (s_go_lap < 3) ? 4 : 5;
+            }
+            break;
+        case 4:                                           /* white heartbeat pulse */
+            if (g_death_flyin < 50) g_death_flyin++;
+            if (s_go_ctr == 0) s_go_rate = 0x2aaa;
+            if (s_go_ctr == 2) { s_go_rate = -0x2aaa; s_go_sub = 3; }
+            s_go_ctr++;
+            break;
+        case 5:                                           /* the final swell */
+            if (g_death_flyin < 50) g_death_flyin++;
+            if (s_go_ctr == 0) s_go_rate = 0x7ff;
+            if (s_go_ctr == 0xf) { s_go_rate = -0x800; s_go_sub = 6; s_go_ctr = 0; break; }
+            s_go_ctr++;
+            break;
+        case 6:                                           /* exit: fade to black + leave */
+            if (g_death_flyin < 50) g_death_flyin++;
+            if (s_go_ctr >= 0x50) {                       /* +0x400/frame subtractive -> 8/frame */
+                int f = (s_go_ctr - 0x50) * 8;
+                g_death_fade = f > 255 ? 255 : f;
+            }
+            if (s_go_ctr >= 0x6d && !g_gameover_active)
+                g_gameover_active = 1;                    /* -> the title tail (audio stop deferred) */
+            s_go_ctr++;
+            break;
+        default: break;
+    }
+}
 
 void re15_game_step(const re15_game_ctx_t *c)
 {
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (s_go_on && !re15_player_is_dead())
+        re15_gameover_fsm_reset();                       /* continue-reload revived the player */
 
     /* Action-button press edge (Square). Drives BOTH the stair trigger and the
      * door AOT scan below. */
@@ -87,19 +180,11 @@ void re15_game_step(const re15_game_ctx_t *c)
          * ROOM1140), so a healthy room is unaffected = no 1170 regression. Death takes precedence over
          * the grab: a zombie that killed the player then dead-grabs the corpse (the engage's hp<0
          * dead-grab arm) while the player runs the death sequence. Keep the RVD cam scan (death cam). */
-        int death_seq = re15_player_death_tick();
+        (void)re15_player_death_tick();                  /* keep the legacy 0x78 counter ticking (its
+                                                          * countdown is DEAD CODE in the original -
+                                                          * the presentation is the FSM below) */
         re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
-        /* death-fade progress (byte-true FUN_8003694c runs a fade over the 0x78=120-frame timer):
-         * publish 0..255 as the timer counts 120->0 so the PC loop fades the scene to black. */
-        g_death_fade = death_seq > 0 ? ((120 - death_seq) * 255) / 120 : 255;
-        if (death_seq == 0 && !g_gameover_active) {
-            /* The byte-true 0x78 death timer expired -> the GAME-OVER screen (YOU DIED). The port has
-             * no STAGE1-overlay game-over handler, so we drive the presentation from the PC loop: raise
-             * g_gameover_active; the loop shows YOUDIED.TIM, then does the RE "continue" = reload the
-             * current room (re15_actor_init restores HP=100 -> is_dead clears). Byte-true target is
-             * YOU DIED -> title; the port has no title screen, so the continue-reload is the FL tail. */
-            g_gameover_active = 1;
-        }
+        re15_gameover_fsm_tick();                        /* the byte-true parallel game-over chain */
     } else if (c->rdt_ok && re15_player_is_grabbed()) {
         grabbed_branch = 1;
         /* PLAYER-GRABBED LOCK (Phase 8.10, byte-true LAB_80036834): a live zombie has the player

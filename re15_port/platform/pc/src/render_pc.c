@@ -61,6 +61,9 @@ static int           s_shadow_quad_count = 0;
  * frame (= cinematic active ? ~17 : 0) via re15_render_pc_set_letterbox(). */
 static int           s_letterbox_h = 0;
 static uint8_t       s_fade_alpha = 0;   /* BN-round: cinematic fade-in overlay (255=black .. 0=none) */
+static uint8_t       s_white_alpha = 0;  /* YOU-DIED chain: ADDITIVE white overlay (FUN_80021880 ABR1) */
+static int           s_black_bg = 0;     /* YOU-DIED chain: flat-black background (FUN_80021634(2,0)) */
+static int           s_go_flyin = -1;    /* YOU DIED letter fly-in tick 0..50 (-1 = classic full draw) */
 static SDL_Texture  *s_gameover_tex = NULL;   /* YOU DIED graphic (YOUDIED.TIM), converted once */
 static int           s_gameover_w = 0, s_gameover_h = 0, s_gameover_show = 0;
 static SDL_Texture  *s_title_tex = NULL;      /* TITLE screen (TITLEU.TIM 320x240 16bpp) */
@@ -399,6 +402,27 @@ void re15_render_init(void)
 /* Queue one shadow quad (4 projected floor corners in the FUN_8001af5c order:
  * 0=(-X,+Z)->uv(0,0), 1=(-X,-Z)->uv(1,0), 2=(+X,+Z)->uv(0,1), 3=(+X,-Z)->uv(1,1)).
  * Two tris cover the quad. Subtractive blend is set on the texture. */
+/* Colored variant — the DEATH BLOOD POOL (LAB_8003694c: the shadow quad's color words flip to
+ * 0x00ffff38 = R 0x38 G 0xff B 0xff on the SUBTRACTIVE blend -> all green/blue and ~78%% red are
+ * subtracted under the quad = a dark-RED pool). */
+void re15_render_shadow_quad_c(int x0, int y0, int x1, int y1,
+                               int x2, int y2, int x3, int y3,
+                               uint8_t r, uint8_t g, uint8_t b)
+{
+    if (!s_shadow_tex || s_shadow_quad_count >= SHADOW_QUAD_MAX) return;
+    const SDL_Color col = { r, g, b, 255 };
+    SDL_FPoint p[4] = { {(float)x0,(float)y0}, {(float)x1,(float)y1},
+                        {(float)x2,(float)y2}, {(float)x3,(float)y3} };
+    SDL_FPoint t[4] = { {0.f,0.f}, {1.f,0.f}, {0.f,1.f}, {1.f,1.f} };
+    const int idx[6] = { 0, 2, 3, 0, 3, 1 };
+    shadow_quad_t *q = &s_shadow_quads[s_shadow_quad_count++];
+    for (int i = 0; i < 6; i++) {
+        q->v[i].position  = p[idx[i]];
+        q->v[i].tex_coord = t[idx[i]];
+        q->v[i].color     = col;
+    }
+}
+
 void re15_render_shadow_quad(int x0, int y0, int x1, int y1,
                              int x2, int y2, int x3, int y3)
 {
@@ -442,10 +466,14 @@ void re15_render_begin_frame(void)
 
 void re15_render_end_frame(void)
 {
-    /* Step 1: blit the software framebuffer (2D primitives) onto the renderer. */
+    /* Step 1: blit the software framebuffer (2D primitives) onto the renderer.
+     * FLAT-BLACK BG MODE (YOU-DIED chain, byte-true FUN_80021634(2,0)): the pre-rendered room
+     * backdrop is replaced by black — the 3D scene (corpse/zombies) still draws on top. */
     SDL_UpdateTexture(s_texture, NULL, s_framebuffer, SCREEN_XRES * sizeof(uint32_t));
+    SDL_SetRenderDrawColor(s_renderer, 0, 0, 0, 255);
     SDL_RenderClear(s_renderer);
-    SDL_RenderCopy(s_renderer, s_texture, NULL, NULL);
+    if (!s_black_bg)
+        SDL_RenderCopy(s_renderer, s_texture, NULL, NULL);
 
     /* Step 1.5: RE1.5 character shadows — subtractive blob quads on the floor.
      * Drawn after the BG (darken the helipad) and before the character tris
@@ -579,6 +607,15 @@ void re15_render_end_frame(void)
      * room entry). Full-screen black with decreasing alpha, drawn LAST (over
      * everything incl. letterbox), so the helipad fades in from black like PSX
      * (and covers our 1-frame stale-BG on the Cut_chg(0) frame). */
+    /* ADDITIVE WHITE overlay (YOU-DIED chain: FUN_800217b0 mode1 = ABR1 additive, brightness =
+     * level>>7; the white death-flash + the 3 heartbeat pulses). Drawn UNDER the black fade. */
+    if (s_white_alpha > 0) {
+        SDL_SetRenderDrawBlendMode(s_renderer, SDL_BLENDMODE_ADD);
+        SDL_SetRenderDrawColor(s_renderer, s_white_alpha, s_white_alpha, s_white_alpha, 255);
+        SDL_Rect fullw = { 0, 0, SCREEN_XRES, SCREEN_YRES };
+        SDL_RenderFillRect(s_renderer, &fullw);
+        SDL_SetRenderDrawBlendMode(s_renderer, SDL_BLENDMODE_BLEND);
+    }
     if (s_fade_alpha > 0) {
         SDL_SetRenderDrawBlendMode(s_renderer, SDL_BLENDMODE_BLEND);
         SDL_SetRenderDrawColor(s_renderer, 0, 0, 0, s_fade_alpha);
@@ -600,7 +637,22 @@ void re15_render_end_frame(void)
         if (dw > SCREEN_XRES) dw = SCREEN_XRES;
         if (dh > SCREEN_YRES) dh = SCREEN_YRES;
         SDL_Rect dst = { (SCREEN_XRES - dw) / 2, (SCREEN_YRES - dh) / 2, dw, dh };
-        SDL_RenderCopy(s_renderer, s_gameover_tex, NULL, &dst);
+        if (s_go_flyin >= 0 && s_go_flyin < 50) {
+            /* LETTER FLY-IN (byte-true FUN_80015a80: 4 quads glide (target-start)/0x32 over 50
+             * frames) — faithful-line: 4 horizontal strips of YOUDIED.TIM slide in from
+             * alternating screen sides, arriving together at tick 50. */
+            int sh = s_gameover_h / 4;
+            for (int i = 0; i < 4; i++) {
+                int rem  = 50 - s_go_flyin;
+                int off  = (SCREEN_XRES * rem) / 50;
+                int offx = (i & 1) ? off : -off;
+                SDL_Rect src = { 0, i * sh, s_gameover_w, sh };
+                SDL_Rect d2  = { dst.x + offx, dst.y + i * (dh / 4), dw, dh / 4 };
+                SDL_RenderCopy(s_renderer, s_gameover_tex, &src, &d2);
+            }
+        } else {
+            SDL_RenderCopy(s_renderer, s_gameover_tex, NULL, &dst);
+        }
     }
 
     SDL_RenderPresent(s_renderer);
@@ -614,6 +666,24 @@ void re15_render_pc_set_fade(int a)
     if (a > 255) a = 255;
     s_fade_alpha = (uint8_t)a;
 }
+
+/* ADDITIVE white overlay (byte-true FUN_800217b0 mode 1 = ABR 1 + FUN_80021880 fullscreen quad,
+ * brightness = level>>7) — the YOU-DIED white flash / heartbeat pulses. */
+void re15_render_pc_set_white_fade(int a)
+{
+    if (a < 0) a = 0;
+    if (a > 255) a = 255;
+    s_white_alpha = (uint8_t)a;
+}
+
+/* Flat-BLACK background mode (byte-true FUN_80021634(2,0)): the pre-rendered room backdrop is
+ * replaced by black; the 3D scene (the corpse + zombies) keeps rendering on top. */
+void re15_render_pc_set_black_bg(int on) { s_black_bg = on ? 1 : 0; }
+
+/* YOU DIED letter fly-in tick (byte-true FUN_80015a80: 4 letter quads glide (target-start)/0x32
+ * over 50 frames). The port draws the YOUDIED.TIM in 4 horizontal strips gliding in from
+ * alternating screen sides (faithful-line of the 4 authored letter quads). -1 = classic full. */
+void re15_render_pc_set_gameover_flyin(int t) { s_go_flyin = t; }
 
 /* GAME-OVER graphic (YOUDIED.TIM). Converts the indexed TIM to RGBA once, then flags it to draw
  * full-screen (centred) over the death fade each end_frame. re15_render_pc_hide_gameover clears it. */
