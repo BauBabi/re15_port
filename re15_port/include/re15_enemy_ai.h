@@ -207,6 +207,9 @@ void re15_ai_dispatch_decision(re15_actor_t *e, const re15_actor_t *player);
  * (+0x9c) = 0x14. (Player-pos snapshot +0x1bc/+0x1be, lifecycle flag, RNG seed, GTE vectors
  * are deferred — cited in enemy_ai_common.c.) The live analog of re15_enemy_ai_init. */
 void re15_enemy_ai_live_init(int slot);
+void re15_enemy_spawn_count_inc(void);     /* DAT_800aca4e ++ at Sce_em_set (never decremented) */
+void re15_enemy_spawn_count_reset(void);   /* room init reset (@0x8003f014) */
+int  re15_enemy_spawn_count(void);
 
 /* NAV-ZONE / PATHFINDING (nav_zone_common.c) — byte-true FUN_8003a0fc/8003a07c/8003a524/
  * 80039e7c over the RDT block.blk zone graph (see re15_rdt.h). */
