@@ -34,6 +34,8 @@ static int s_ai_paused = 0;
 void re15_enemy_ai_set_paused(int paused) { s_ai_paused = paused ? 1 : 0; }
 
 static void re15_enemy_steer_point(re15_actor_t *e, int32_t tx, int32_t tz, int slew);          /* fwd */
+static void re15_enemy_footlock_step(int slot, re15_actor_t *e);                                /* fwd */
+static uint8_t s_zfoot_ok[RE15_ACTOR_MAX];                     /* tentative def (full def below) */
 /* FSM-CLOCK clip-end signal (defined below, used by the feeding stand-up + grab + death sub-FSMs). */
 static int re15_enemy_clip_done(const re15_actor_t *e);
 
@@ -360,6 +362,23 @@ void re15_ai_dispatch_decision(re15_actor_t *e, const re15_actor_t *player)
             break;
         case 0x0a: break;                                       /* edge-fall decide @0x8011f840[0xa] =
                                                                  * 0x801033c0 = jr ra stub (byte-verified) */
+        case 8: {   /* charge decide @0x8011f840[8] = FUN_80102f1c (decompile-exact): the engage
+                     * contact + grab gates, WITHOUT the turn/dead-feed/0x1001 commits. */
+            uint8_t contact = e->ai_contact;
+            int32_t dir = (int32_t)(contact & 0xf0) * 0x10;
+            uint32_t off = (uint32_t)((dir - (int32_t)e->rot_y) + 0x200) & 0xfff;
+            if ((contact & 3) == 0 || off > 0x3ff) {
+                if (player->hit_react == 0 && e->ai_dist < 0x4b0u &&
+                    re15_ai_arc_test(e, player->x, player->z, 0x200) == 0 &&
+                    player->floor == e->floor) {
+                    int aligned = re15_ai_facing_aligned(e, player);
+                    re15_ai_set_state_word(e, (uint32_t)((aligned + 3) * 0x100) | 1u);
+                }
+            } else {
+                re15_ai_set_state_word(e, (uint32_t)(((contact & 1) + 9) * 0x100) | 1u);
+            }
+            break;
+        }
         case 5: case 6:
             /* +0x5=5/6 = the DEVOUR-FINISH (D3/D5 disasm 2026-07-03): its DECIDE f840[5]/[6] =
              * FUN_80102bd0 = `jr ra` — NOTHING re-routes it, ever (the killer stays inert over the
@@ -1113,6 +1132,36 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
     }
 }
 
+/* CHARGE / fast-approach (+0x5=8) — byte-true FUN_80103014 (@0x8011f890[8]; decide FUN_80102f1c =
+ * the engage gates MINUS turn/dead-feed). Entered from the search decides at dist>0x2711 with a 25%
+ * roll (0x801 overwrite). The zombie plays its arms-up walk clip +0x1d4 at DOUBLE anim rate (f314
+ * called TWICE @0x801030dc/f0) with hard 0x40/tick homing (aac4, no weave) for (rand&0x3f)+0x96
+ * ticks, then drops to +0x5=2 by BYTE write — +0x6 stays 1, so the engage entry roll is SKIPPED
+ * (the original quirk: stale gait fields carry over). */
+static void re15_enemy_ai_live_charge(int slot, re15_actor_t *e)
+{
+    if (e->sub_state_2 == 0) {                    /* entry (+0x6==0) */
+        e->sub_state_2 = 1;
+        e->motion = e->hurt_clip;                 /* +0x94 = +0x1d4 (the arms-up walk variant) */
+        e->anim_frame = 0;
+        e->anim_frac = 7;                         /* +0x8f = 7 */
+        e->anim_blend_rate = 0x200;               /* f314 rate 0x200 */
+        e->speed_h = 0x19;                        /* +0x8c = 0x19 */
+        e->ai_timer = (int16_t)((re15_engine_rand8() & 0x3f) + 0x96);   /* +0x9c = 150..213 */
+        if ((re15_engine_rand8() & 3) == 0)       /* 1-in-4 moan */
+            re15_audio_room_se((re15_engine_rand8() & 1) ? 4 : 5);
+        s_zfoot_ok[slot] = 0;
+    }
+    re15_enemy_steer_point(e, e->steer_x, e->steer_z, 0x40);   /* aac4(+0x1bc,+0x1be,0x40) */
+    int16_t t = e->ai_timer;
+    e->ai_timer = (int16_t)(t - 1);
+    if (t == 0)
+        e->sub_state_1 = 2;                       /* BYTE write +0x5=2 (+0x6 untouched — no re-roll) */
+    e->anim_frame++;                              /* the SECOND f314: double anim rate (the shared
+                                                   * pass adds the first advance) */
+    re15_enemy_footlock_step(slot, e);            /* FUN_8010939c — carries the doubled stride */
+}
+
 /* Slew the heading toward a TARGET ANGLE by up to `step` per tick (byte-true func_0x8001aa68
  * semantics: returns the applied delta, 0 once aligned — the caller adds it to +0x6a). */
 static int16_t re15_slew_to_angle(re15_actor_t *e, int target, int step)
@@ -1613,6 +1662,9 @@ int re15_enemy_ai_live_active(int slot)
                     /* PUSH-OFF stagger (@0x8011f890[0xb]=FUN_8010385c): knocked back by the grab
                      * machine's domino shove — one-shot clip 0x10 + backward slide, exit engage. */
                     re15_enemy_ai_live_pushoff(e, player);
+                else if (e->sub_state_1 == 8)
+                    /* CHARGE (@0x8011f890[8]=FUN_80103014): double-rate hustle at the steer target. */
+                    re15_enemy_ai_live_charge(slot, e);
                 else if (e->sub_state_1 == 9)
                     /* CONTACT-STAGGER (@0x8011f890[9]=FUN_801031e4): bumped from ahead. */
                     re15_enemy_ai_live_contact_stagger(e);
