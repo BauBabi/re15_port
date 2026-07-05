@@ -284,6 +284,14 @@ int re15_player_weapon_fire(int weapon_id)
     e->sub_state_1 = (uint8_t)weapon_id;            /* +0x5 = reaction clip = weapon_id (@0x800124bc) */
     e->hp          = (int16_t)(e->hp - dmg);        /* +0x9a -= dmg */
     e->hit_react  |= 0x1;                           /* +0x93 |= 1 (one-hit guard) */
+    /* FRONT/BACK latch (FUN_80011f50: FUN_8001a780(entity) -> +0x93 |= 0x80, cluster F2): shot
+     * heading aligned with the zombie's -> the standing death falls FORWARD with clip 0xb instead
+     * of 0xd (FUN_80106c18 reads (s8)+0x93>>7). a780 = headings within +-0x400. */
+    {
+        const re15_actor_t *pl2 = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        if (((((int32_t)pl2->rot_y - (int32_t)e->rot_y) + 0x400) & 0xfff) < 0x800)
+            e->hit_react |= 0x80;
+    }
     /* crit/headshot (@0x800124fc-0x8001251c): weapon 7, or weapon 8 within 3000 -> instant kill (type<0x20). */
     if ((weapon_id == 7 || (weapon_id == 8 && best_dist < 3000u)) && e->type < 0x20)
         e->hp = -1;

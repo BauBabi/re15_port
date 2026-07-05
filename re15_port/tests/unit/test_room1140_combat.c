@@ -411,19 +411,41 @@ int main(void)
         if (zc->state != RE15_AI_STATE_HURT || zc->motion != 3) {
             fprintf(stderr, "FAIL: HURT holds + plays the stagger clip (motion=hurt_clip=3), state=%d motion=%d\n",
                     zc->state, zc->motion); fail = 1; }
-        int ht = 0;                       /* the stun (seed 4..7, -3/frame for +0x5=3) recovers in <=3 frames */
+        int ht = 0;                       /* the 4-frame torso-bend cadence, then the exit gate */
         while (zc->state == RE15_AI_STATE_HURT && ht < 12) { re15_enemy_ai_live_tick(zs); ht++; }
-        if (zc->state != RE15_AI_STATE_ACTIVE || zc->sub_state_1 != 0x11) {
-            fprintf(stderr, "FAIL: HURT -> ACTIVE after the stun (+0x5=0x11), state=%d +0x5=%d\n",
+        /* BYTE-TRUE exit (cluster F): poise survives the first hit (seed 4..7, ONE -3 per hit) ->
+         * the NORMAL stagger exit 0x10201 = ENGAGE-family with an inline re-roll (2/0x13/7/8);
+         * KNOCKDOWN (0x11) only on poise BREAK. */
+        if (zc->state != RE15_AI_STATE_ACTIVE ||
+            !(zc->sub_state_1 == 2 || zc->sub_state_1 == 0x13 || zc->sub_state_1 == 7 || zc->sub_state_1 == 8)) {
+            fprintf(stderr, "FAIL: HURT -> ENGAGE-family re-roll (2/0x13/7/8), state=%d +0x5=%d\n",
                     zc->state, zc->sub_state_1); fail = 1; }
+        int kb = 0;                       /* repeated hits BREAK the poise -> KNOCKDOWN 0x11 */
+        zc->hp = 100;                     /* enough HP for the 2-3 poise-breaking hits */
+        while (zc->sub_state_1 != 0x11 && kb < 6 && zc->hp > 12) {
+            zc->hit_react = 0;
+            re15_enemy_take_damage(zc, 0);
+            for (int f = 0; f < 12 && zc->state == RE15_AI_STATE_HURT; f++) re15_enemy_ai_live_tick(zs);
+            kb++;
+        }
+        if (zc->sub_state_1 != 0x11) {
+            fprintf(stderr, "FAIL: repeated hits must BREAK the poise -> KNOCKDOWN (+0x5=0x11), "
+                    "+0x5=%d after %d hits\n", zc->sub_state_1, kb); fail = 1; }
+        re15_enemy_ai_live_tick(zs);      /* knockdown [0]: fall clip 0xb + downed flag +0x9|=0x80 */
+        if (zc->motion != 0x0b || !(zc->grid_id & 0x80)) {
+            fprintf(stderr, "FAIL: knockdown [0] = fall clip 0xb + +0x9|=0x80, motion=%d grid=%02x\n",
+                    zc->motion, zc->grid_id); fail = 1; }
+        zc->grid_id &= 0x7f;              /* clear the downed flag for the death part below */
+        zc->sub_state_1 = 2;
 
         zc->hp = 5; zc->hit_react = 0;
         re15_enemy_take_damage(zc, 0);   /* lethal: 5-10 = -5 < 0 -> DEATH (state 3) */
         if (zc->state != RE15_AI_STATE_DEATH) {
             fprintf(stderr, "FAIL: lethal hit -> zombie DEATH (state 3), ist %d (HP %d)\n", zc->state, zc->hp); fail = 1; }
-        re15_enemy_ai_live_tick(zs);     /* [3] death FSM phase 0: set death clip 0x1f, hold DEATH */
-        if (zc->motion != 0x1f) {
-            fprintf(stderr, "FAIL: death phase0 sets motion 0x1f, ist %d\n", zc->motion); fail = 1; }
+        re15_enemy_ai_live_tick(zs);     /* [3] death phase 0: STANDING death = clip 0xd (front) /
+                                          * 0xb (back-latch +0x93 bit0x80); clip 0x1f = the DOWNED path */
+        if (zc->motion != 0x0d && zc->motion != 0x0b) {
+            fprintf(stderr, "FAIL: standing death phase0 sets clip 0xd/0xb, ist %d\n", zc->motion); fail = 1; }
         re15_enemy_ai_live_tick(zs);     /* phase 1->2 (no model bank -> straight to CORPSE state 7) */
         if (zc->state != RE15_AI_STATE_CORPSE) {
             fprintf(stderr, "FAIL: DEATH -> CORPSE (state 7), ist %d\n", zc->state); fail = 1; }
@@ -471,9 +493,9 @@ int main(void)
         if (front->state != RE15_AI_STATE_DEATH || front->sub_state_3 != 0) {
             fprintf(stderr, "FAIL: lethal shot -> DEATH(3) + sub_state_3 reset to 0, state=%d +0x7=%d (HP %d)\n",
                     front->state, front->sub_state_3, front->hp); fail = 1; }
-        re15_enemy_ai_live_tick(zslots[2]);   /* death FSM phase 0: set the death clip 0x1f, hold DEATH */
-        if (front->motion != 0x1f || front->state != RE15_AI_STATE_DEATH) {
-            fprintf(stderr, "FAIL: death phase0 sets motion 0x1f + holds DEATH, motion=%d state=%d\n",
+        re15_enemy_ai_live_tick(zslots[2]);   /* death phase 0: STANDING death clip 0xd/0xb */
+        if ((front->motion != 0x0d && front->motion != 0x0b) || front->state != RE15_AI_STATE_DEATH) {
+            fprintf(stderr, "FAIL: standing death phase0 clip 0xd/0xb + holds DEATH, motion=%d state=%d\n",
                     front->motion, front->state); fail = 1; }
         re15_enemy_ai_live_tick(zslots[2]);   /* phase 1->2 (no model bank loaded -> straight to corpse) */
         if (front->state != RE15_AI_STATE_CORPSE) {
@@ -520,10 +542,11 @@ int main(void)
         if (!bank) { fprintf(stderr, "FAIL: (13) could not alloc a mock bank\n"); fail = 1; }
         else {
             bank->anim.clip_count = 0x20;                       /* clips 0..0x1f exist */
-            bank->anim.clips[0x1f].frame_count = 5;             /* the death clip = 5 frames */
+            bank->anim.clips[0x1f].frame_count = 5;             /* the DOWNED death clip = 5 frames */
             bank->ok = 1;                                       /* re15_enemy_find now returns it */
 
             z->state = RE15_AI_STATE_DEATH; z->sub_state_3 = 0; z->motion = 0; z->anim_frame = 0;
+            z->grid_id |= 0x80;                                 /* DOWNED -> the clip-0x1f death path */
             re15_enemy_ai_live_tick(zslots[0]);                /* phase 0: motion 0x1f, hold DEATH */
             if (z->motion != 0x1f || z->state != RE15_AI_STATE_DEATH || z->sub_state_3 != 1) {
                 fprintf(stderr, "FAIL: (13) phase0 motion=%d state=%d +0x7=%d\n",

@@ -107,7 +107,13 @@ typedef struct {
                              *         pair interlocks in the AUTHORED formation (no clipping). */
     int32_t  anchor_z;
     uint16_t ai_flags;      /* +0x1d8: bit0x10 = "approach permitted" gate (decision block)  */
-    uint8_t  ai_contact;    /* +0x90 : contact/collision bits (FUN_80102058, low byte)        */
+    uint8_t  ai_contact;    /* +0x90 : WALL-contact byte (writer = the SCA resolver FUN_8003b0a4:
+                             * heading-nibble<<4 | 8 | cell-attr&3; low nibble cleared per pass).
+                             * Port writer deferred (ROOM1140 has 0 attr cells). */
+    uint8_t  contact_flags; /* +0x1c2: BODY-push contact bits (FUN_8002aec4: |=1 player pushed me,
+                             * |=2 an enemy did); cleared per tick (FUN_8002b498). */
+    int8_t   contact_slot;  /* +0x1ac: the contacting ENEMY's actor slot (ptr in the original) —
+                             * the grab [5] domino-shove target. */
     /* AI params FUN_8011d84c writes (PSX: into the model pool entity[0x62]+0x5fx). The
      * port has no model pool, so they live here as named actor fields (faithful-line:
      * map the data representation onto the port, don't rebuild the GTE/model-pool). The

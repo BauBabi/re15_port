@@ -39,6 +39,8 @@ void re15_enemy_ai_set_paused(int paused) { s_ai_paused = paused ? 1 : 0; }
 static void re15_enemy_steer_point(re15_actor_t *e, int32_t tx, int32_t tz, int slew);          /* fwd */
 static void re15_enemy_footlock_step(int slot, re15_actor_t *e);                                /* fwd */
 static uint8_t s_zfoot_ok[RE15_ACTOR_MAX];                     /* tentative def (full def below) */
+static uint8_t s_wander_mag[RE15_ACTOR_MAX];                   /* tentative def (full def below) */
+static uint8_t s_wander_idx[RE15_ACTOR_MAX];                   /* tentative def (full def below) */
 /* FSM-CLOCK clip-end signal (defined below, used by the feeding stand-up + grab + death sub-FSMs). */
 static int re15_enemy_clip_done(const re15_actor_t *e);
 
@@ -354,6 +356,8 @@ void re15_ai_dispatch_decision(re15_actor_t *e, const re15_actor_t *player)
                 re15_ai_set_state_word(e, 0xd01);
             break;
         case 0x0d: break;                                       /* standup decide FUN_80104a48 = jr ra stub */
+        case 0x11: break;                                       /* knockdown decide @0x8011f840[0x11] =
+                                                                 * 0x80105124 = jr ra stub (byte-verified) */
         case 0x0b: break;                                       /* push-off decide @0x8011f840[0xb] =
                                                                  * 0x80103854 = jr ra stub (byte-verified) */
         case 9:     /* stagger decide @0x8011f840[9] = 0x801031a4 (raw-disasm'd, exact): while the
@@ -784,6 +788,8 @@ void re15_enemy_ai_live_init(int slot)
     re15_actor_t *e = &g_actors[slot];
     e->state    = (uint8_t)RE15_AI_STATE_ACTIVE;   /* +0x4 = 1 */
     e->ai_timer = 0x14;                            /* +0x9c = 0x14 */
+    e->hit_stun = (int16_t)((re15_engine_rand8() & 3) + 4);   /* +0x1dc POISE seed (@0x8010082c):
+                                                * persistent across hits; decremented once per hit */
     /* +0x1bc/+0x1be steer target: the init write (sh @0x8010071c/734) — the per-tick refresh in
      * re15_enemy_ai_live_tick keeps it mirroring the player (RAM-arbitrated, see there). */
     e->steer_x = (int16_t)g_actors[RE15_ACTOR_SLOT_PLAYER].x;
@@ -858,6 +864,7 @@ static void re15_enemy_ai_feeding_animate(re15_actor_t *e, const re15_actor_t *p
         if (phase != 0) return;
         e->sub_state_2 = 1;                               /* entry: clip 0x29 intro (@0x801049a0) */
         e->motion = 0x29; e->anim_frame = 0; e->anim_frac = 7;
+        e->anim_blend_rate = 0x200;                       /* every 0xc/0xd f314 = a3 0x200 (cluster E) */
         e->anim_flags |= 0x80;                            /* the KNEEL-DOWN plays clip 0x29 (the
                                                            * get-up) IN REVERSE — f314 a2=1
                                                            * (@0x80104994, cluster-E raw): the
@@ -1028,7 +1035,9 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
             e->sub_state_2 += (uint8_t)re15_enemy_clip_done(e);
             break;
         case 2:                               /* [2] IMPACT — clip base+1 (@0x80102714) + the byte-true -10 hit */
-            e->motion = (uint8_t)(grab_base + 1); e->anim_frame = 0;
+            e->motion = (uint8_t)(grab_base + 1);     /* NO +0x95 reset (@0x80102714 writes only
+                                                        * +0x94 — cluster D; the bite clip picks up
+                                                        * mid-phase) */
             player->hp     = (int16_t)(player->hp - 10);
             if (player->hp < 0) player->state = 7;   /* hp<0 -> GRABBED death (state 7, save-confirmed;
                                                       * re15_player_is_dead() = hp<0 drives the death FSM) */
@@ -1095,6 +1104,7 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
             e->motion = (uint8_t)(grab_base + 2); e->anim_frame = 0;
             e->anim_frac = 7;                 /* +0x8f = 7 (@[4] decompile line 71) — walk->fling blend */
             re15_audio_room_se(7);
+            re15_audio_room_se(7);            /* SE 7 plays TWICE (@0x80102920 AND @0x80102960) */
             re15_player_victim_throwoff();
             s_grab_mercy_timer = 0x5a;
             e->sub_state_2 = 5;
@@ -1105,10 +1115,16 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
                                                * `if (+0x95 == 0x18) +0x6 = 6`) — the fling clip is cut
                                                * to the recovery at frame 24 even before clip-end */
                 e->sub_state_2 = 6;
-            /* DEFERRED (cited @[5] lines 84-89): the DOMINO SHOVE — while +0x1c2&2 (a body-contact
-             * flag) and +0x95>7, the reeling zombie writes 0xb01 into the CONTACTED entity ptr +0x1ac
-             * (alive, +0x9&0x80==0, +0x1d8&1==0) -> knocks a bystander zombie into the 0xb push-off.
-             * Needs the +0x1ac/+0x1c2 contact-writer (EXE body collision) — audit cluster F. */
+            /* DOMINO SHOVE (@0x80102a50, live-observed 3x in the DYN trace): while the reeling
+             * zombie has a body contact from another ENEMY (+0x1c2&2, ptr +0x1ac — written by the
+             * body push) and +0x95 > 7, the CONTACTED bystander is knocked into the 0xb push-off
+             * (gates: alive, not downed +0x9&0x80, +0x1d8&1 clear). */
+            if ((e->contact_flags & 2) && (int)e->anim_frame > 7 &&
+                e->contact_slot > 0 && e->contact_slot < RE15_ACTOR_MAX) {
+                re15_actor_t *by = &g_actors[e->contact_slot];
+                if (by->active && by->hp >= 0 && !(by->grid_id & 0x80) && !(by->ai_flags & 1))
+                    re15_ai_set_state_word(by, 0xb01);
+            }
             break;
         case 6:                               /* [6] recovery — set the literal clip 17 (0x11, @0x80102a64);
                                                * the SE 7 belongs to the THROW-OFF [4] (@0x80102920/60).
@@ -1203,16 +1219,19 @@ static int re15_enemy_los_probe(int slot, re15_actor_t *e, const re15_actor_t *p
     uint8_t step = (uint8_t)(s_los_counter[slot] & 0x0f);
     s_los_counter[slot] = (uint8_t)((s_los_counter[slot] + 1) & 0x0f);
     if (step > 3) return 2;                               /* ticks 4..15: keep the old bit */
-    if (g_room_rdt_ok) {                                  /* one ray step of 0x5e8 units */
+    /* FOV CONE +-0x5e8 (FUN_8001b84c @0x8001b898-b0, cluster A): a player OUTSIDE the +-0x5e8
+     * facing cone is NOT seen (rear approaches stay unnoticed) — the 0x5e8 arg is the cone. */
+    {
+        int fb = ((int)re15_atan2_q12(player->z - e->z, player->x - e->x) - 0x400) & 0x0fff;
+        int d = (((fb - (int)e->rot_y) + 0x800) & 0x0fff) - 0x800;
+        if (d < -0x5e8 || d > 0x5e8) s_los_blocked[slot] = 1;
+    }
+    if (g_room_rdt_ok) {                                  /* one amortized ray sample per step */
         int32_t dx = player->x - e->x, dz = player->z - e->z;
-        int32_t dist = (int32_t)e->ai_dist;
-        int32_t at = (int32_t)(step + 1) * 0x5e8;
-        if (dist > 0 && at < dist) {
-            int32_t sx = e->x + (int32_t)((int64_t)dx * at / dist);
-            int32_t sz = e->z + (int32_t)((int64_t)dz * at / dist);
-            if (!re15_collision_on_floor(&g_room_rdt, sx, sz))
-                s_los_blocked[slot] = 1;
-        }
+        int32_t sx = e->x + dx * (step + 1) / 5;
+        int32_t sz = e->z + dz * (step + 1) / 5;
+        if (!re15_collision_on_floor(&g_room_rdt, sx, sz))
+            s_los_blocked[slot] = 1;
     }
     if (step == 3) {                                      /* the verdict tick */
         int blocked = s_los_blocked[slot];
@@ -1225,6 +1244,49 @@ static int re15_enemy_los_probe(int slot, re15_actor_t *e, const re15_actor_t *p
         return 0;
     }
     return 2;
+}
+
+/* KNOCKDOWN / GET-UP (+0x5=0x11) — byte-true FUN_8010512c (@0x8011f890[0x11], cluster F): the poise-
+ * break target. [0] fall clip 0xb, +0x8f=0xf rate 0x100, +0x93|=1, +0x1dc=0x80 (downed sentinel),
+ * +0x9|=0x80 (reroutes HURT->flinch / DEATH->downed clip 0x1f while down); [1] play out; [2] lie
+ * timer +0x9c = tbl@0x8011FB10[rand&0xf] * 30; [3] count down; [4] get-up clip 0x12; [5] play out;
+ * [6] +0x9&=0x7f, word 0x201 (engage re-entry + re-roll), +0x93&=0xfe, POISE re-arm (rand&3)+4.
+ * Without this state every non-fatal hit froze the zombie forever (HURT always exits to 0x11). */
+static void re15_enemy_ai_live_knockdown(re15_actor_t *e)
+{
+    static const uint32_t lie_tbl[16] = { 12,2,1,6,25,20,8,11,5,10,7,13,15,9,3,1 };  /* @0x8011FB10 */
+    switch (e->sub_state_2) {
+        case 0:
+            e->motion = 0x0b; e->anim_frame = 0;
+            e->anim_frac = 0xf; e->anim_blend_rate = 0x100;
+            e->hit_react |= 1;
+            e->hit_stun = (int16_t)0x80;              /* +0x1dc = 0x80 downed sentinel */
+            e->grid_id |= 0x80;                       /* +0x9 |= 0x80 (downed reroute) */
+            e->sub_state_2 = 1;
+            break;
+        case 2:
+            e->ai_timer = (int16_t)(lie_tbl[re15_engine_rand8() & 0xf] * 30);
+            e->sub_state_2 = 3;
+            break;
+        case 3:
+            if (--e->ai_timer <= 0) e->sub_state_2 = 4;
+            re15_enemy_hold_last_frame(e);            /* lie still on the fallen frame */
+            break;
+        case 4:
+            e->motion = 0x12; e->anim_frame = 0;      /* get-up clip */
+            e->anim_frac = 0xf;
+            e->sub_state_2 = 5;
+            break;
+        case 6:
+            e->grid_id &= (uint8_t)0x7f;
+            re15_ai_set_state_word(e, 0x201);         /* -> engage (entry re-roll) */
+            e->hit_react &= (uint8_t)~1u;
+            e->hit_stun = (int16_t)((re15_engine_rand8() & 3) + 4);   /* poise re-arm */
+            break;
+        default:                                       /* [1]/[5]: play to clip end */
+            e->sub_state_2 = (uint8_t)(e->sub_state_2 + (uint8_t)re15_enemy_clip_done(e));
+            break;
+    }
 }
 
 /* SLEEPING-LYING (+0x5=0x12) — byte-true FUN_801054f4 (@0x8011f890[0x12]; decide 0x80105470
@@ -1369,9 +1431,9 @@ static void re15_enemy_ai_live_edge_fall(re15_actor_t *e)
             e->rot_y = (int16_t)((((int)(e->ai_contact & 0xf0) << 4)) & 0x0fff);  /* yaw snap */
             /* fallthrough */
         case 3:
-            if ((int)e->anim_frame == 0x46) {       /* the landing frame: fall vel + the -0x708 hit */
-                e->hp = (int16_t)(e->hp - 0x708);
-            }
+            /* frame 0x46 (@0x80103554): +0xb0 = 0x474 fall velocity + +0x1ba -= 0x708 = the GROUND-Y
+             * CACHE moves one band (cluster F0.1: +0x1ba is NOT hp — the original deals NO damage
+             * here; the port's y/floor update below covers the ground shift; +0xb0 vel deferred). */
             if (re15_enemy_clip_done(e)) {          /* fall complete -> the floor below */
                 e->floor = (uint8_t)(e->floor + 1);
                 e->y -= 0x708;                      /* the literal +0x38 += -0x708 */
@@ -1430,6 +1492,11 @@ static void re15_enemy_ai_live_turn(re15_actor_t *e, const re15_actor_t *player)
     if (e->sub_state_2 == 0) {
         e->motion     = e->hurt_clip;   /* +0x94 = +0x1d4 (@0x80102e00/08) */
         e->anim_frame = 0;              /* +0x95 = 0 (@0x80102e18) */
+        e->anim_frac  = 7;              /* +0x8f = 7 (decompile line 17) — the engage->turn blend
+                                         * (was a hard pose pop) */
+        e->anim_blend_rate = 0x200;     /* turn f314 rate 0x200 */
+        if ((re15_engine_rand8() & 3) == 0)   /* 1-in-4 moan on turn entry (lines 19-25) */
+            re15_audio_room_se((re15_engine_rand8() & 1) ? 4 : 5);
         e->sub_state_2 = 1;             /* +0x6 = 1 entry latch (@0x80102df0) */
     }
     int16_t turn = (int16_t)re15_ai_arc_test(e, player->x, player->z, 0x80);  /* ±0x80 toward player */
@@ -1439,6 +1506,14 @@ static void re15_enemy_ai_live_turn(re15_actor_t *e, const re15_actor_t *player)
      * Was MISSING -> the zombie pivoted forever at medium range and never approached (8.19). */
     if (turn == 0)
         re15_ai_set_state_word(e, 0x201);                                     /* +0x5 = 2 (engage) */
+        /* a8f8(&player, 0x80) @0x80102e90: within the +-0x80 cone the slew SNAPS -> the zombie
+         * leaves the turn facing the player EXACTLY (feeds the next walk segment's geometry). */
+        e->rot_y = (int16_t)(((int)re15_atan2_q12(player->z - e->z, player->x - e->x) - 0x400) & 0x0fff);
+        {
+            int ts = (int)(e - g_actors);                       /* exit rand writes (lines 33-36) */
+            s_wander_mag[ts] = (uint8_t)((re15_engine_rand8() & 0x1f) + 8);   /* +0x9e */
+            s_wander_idx[ts] = (uint8_t)((re15_engine_rand8() & 1) + 1);      /* +0x9f */
+        }
     e->rot_y = (int16_t)(((int32_t)e->rot_y + turn) & 0x0fff);                 /* +0x6a += residual */
 }
 
@@ -1804,6 +1879,9 @@ int re15_enemy_ai_live_active(int slot)
                 else if (e->sub_state_1 == 0x12)
                     /* SLEEPING-LYING (@0x8011f890[0x12]=FUN_801054f4): dormant until the decide wakes. */
                     re15_enemy_ai_live_sleeping(e);
+                else if (e->sub_state_1 == 0x11)
+                    /* KNOCKDOWN/GET-UP (@0x8011f890[0x11]=FUN_8010512c): the poise-break fall. */
+                    re15_enemy_ai_live_knockdown(e);
                 else if (e->sub_state_1 == 0)
                     /* SEARCH-STAND (@0x8011f890[0]=FUN_80101d08): idle stand, LOS-gated escalation. */
                     re15_enemy_ai_live_search_stand(e);
@@ -1971,28 +2049,57 @@ void re15_enemy_ai_live_hurt(int slot)
      * Mirror the exit gate's bne-stay (@0x80105b40): hold HURT, never recover (fixed clip deferred). */
     if (e->grid_id & 0x80) return;
 
-    /* stagger handler 0x80105b7c phase 0 (+0x7==0): start the stagger clip + (re)seed the hit-stun. */
-    if (e->sub_state_3 == 0) {
-        e->hit_react  |= 0x1;                          /* +0x93 |= 1 (@0x80105ce8-cf8) */
-        e->motion      = e->hurt_clip;                 /* +0x94 = +0x1d4 (@0x80105c30/c38), clip {2,3,4,5} */
-        e->anim_frame  = 0;                            /* +0x95 = 0 (fresh clip; global advance plays it) */
-        e->sub_state_3 = 1;                            /* +0x7 = 1 (@0x80105be0) */
-        e->hit_stun    = (int16_t)((re15_engine_rand8() & 3) + 4);  /* +0x1dc seed 4..7 (@0x80100838) */
+    /* CLUSTER-F CORRECTED MODEL (raw @0x80105b7c/@0x80105b18): POISE +0x1dc is decremented ONCE PER
+     * HIT (the @0x8011fe30 step dispatch @0x80105d28 sits INSIDE the +0x7==0 phase-0 block), persists
+     * across hits (seeded (rand&3)+4 at INIT @0x8010082c, re-armed at get-up / stagger-9 exit), the
+     * stagger keeps the walk clip WITHOUT a frame reset (the recoil is a 4-frame torso bend, phases
+     * on +0x7), and the NORMAL exit is 0x10201 (engage, +0x6=1 = entry skipped) + an INLINE behavior
+     * re-roll — only a poise BREAK (+0x1dc<0) routes to the 0x11 KNOCKDOWN. */
+    if (e->sub_state_3 == 0) {                         /* phase 0 — once per HIT (+0x7 reset by damage) */
+        e->hit_react  |= 0x1;                          /* +0x93 |= 1 */
+        e->motion      = e->hurt_clip;                 /* +0x94 = +0x1d4 — NO +0x95 reset (walk phase
+                                                        * continues; the recoil is the bend, not a clip) */
+        e->speed_h     = 0x14;                         /* +0x8c = 0x14 */
+        e->anim_frac   = 0;                            /* +0x8f = 0 */
+        e->sub_state_3 = 1;
+        re15_audio_room_se(6);                         /* FUN_800453d0(6) */
+        {                                              /* poise ONCE-per-hit (@0x8011fe30[+0x5]) */
+            static const int8_t stun_step[12] = { 0, -2, -2, -3, -3, -3, -3, 0, 0, 0, 0, 0 };
+            e->hit_stun = (int16_t)(e->hit_stun + (e->sub_state_1 < 12 ? stun_step[e->sub_state_1] : 0));
+        }
+        return;
     }
-
-    /* per-HURT-frame decrement by the +0x5-selected step (@0x8011fe30, dispatched @0x80105d08). */
-    {
-        static const int8_t stun_step[12] = { 0, -2, -2, -3, -3, -3, -3, 0, 0, 0, 0, 0 };
-        e->hit_stun = (int16_t)(e->hit_stun + (e->sub_state_1 < 12 ? stun_step[e->sub_state_1] : 0));
+    if (e->sub_state_3 < 5) {                          /* the 4-frame torso-bend cadence (phases 1/3:
+                                                        * spine +-0x80/frame — bone-bend deferred; the
+                                                        * HOLD duration is the byte-true 4 ticks) */
+        e->sub_state_3++;
+        return;
     }
-
-    /* exit gate (@0x80105b18): recover to ACTIVE only when the stun goes negative. */
-    if (e->hit_stun >= 0) return;                      /* still stunned -> stay HURT (@0x80105b2c bgez) */
-    e->state       = (uint8_t)RE15_AI_STATE_ACTIVE;    /* +0x4 = 1 (@0x80105b48) */
-    e->sub_state_1 = 0x11;                             /* +0x5 = 0x11 (@0x80105b58) */
-    e->sub_state_2 = 0;                                /* +0x6 = 0 (@0x80105b68) */
-    /* +0x7 is reset by the next damage event (re15_enemy_take_damage / re15_player_weapon_fire set
-     * +0x7=0), as in the original — no reset here. */
+    /* exit gate (@0x80105b18): poise still >= 0 -> NORMAL stagger exit 0x10201 + inline re-roll
+     * (FUN_80105b7c phase 3); poise broken -> KNOCKDOWN 0x11. */
+    if (e->hit_stun >= 0) {
+        int slot2 = (int)(e - g_actors);
+        re15_ai_set_state_word(e, 0x10201u);           /* ACTIVE / +0x5=2 / +0x6=1 (entry SKIPPED) */
+        s_wander_mag[slot2] = (uint8_t)((re15_engine_rand8() & 0x1f) + 8);   /* +0x9e */
+        {
+            const uint8_t *tbl = (re15_enemy_live_count() >= 5) ? s_zbehavior_5plus : s_zbehavior_lt5;
+            uint8_t beh = tbl[re15_engine_rand8() & 0x1f];                    /* +0x1de */
+            if (beh == 2) e->sub_state_1 = 0x13;
+            s_gait_variant[slot2] = beh;
+            s_wander_idx[slot2] = (uint8_t)(re15_engine_rand8() & 0x1f);      /* +0x9f */
+            s_wander_tmr[slot2] = (int16_t)((beh == 0) ? s_gait_row0[s_wander_idx[slot2]].tmr
+                                 : (beh == 1) ? s_gait_row1[s_wander_idx[slot2]].tmr : 0);
+        }
+        e->hit_react &= (uint8_t)~1u;                  /* +0x93 &= 0xfe */
+        if ((re15_engine_rand8() & 0xf) == 0)          /* rare: break into the CHARGE */
+            re15_ai_set_state_word(e, 0x801);
+        if (re15_ai_facing_aligned(e, &g_actors[RE15_ACTOR_SLOT_PLAYER]))    /* a780 -> TURN */
+            re15_ai_set_state_word(e, 0x701);
+        return;
+    }
+    e->state       = (uint8_t)RE15_AI_STATE_ACTIVE;    /* poise BROKEN -> KNOCKDOWN (@0x80105b48-68) */
+    e->sub_state_1 = 0x11;
+    e->sub_state_2 = 0;
 }
 
 /* DEATH — FUN_80106ba4 (@0x8011f7b4[3], STAGE1.BIN) -> FUN_80107cb0. The live zombie's death: a hit
@@ -2038,8 +2145,17 @@ void re15_enemy_ai_live_death(int slot)
 
     if (e->sub_state_3 == 0) {                         /* phase 0 — start the death anim */
         e->hit_react  |= 0x1;                          /* +0x93 |= 1 (@0x80107d08) */
-        e->motion      = 0x1f;                         /* +0x94 = death clip 31 (@0x80107d2c) */
-        e->anim_frame  = 0;                            /* +0x95 = 0 (@0x80107d40) */
+        if (e->grid_id & 0x80) {                       /* DOWNED death (FUN_80107cb0): clip 0x1f */
+            e->motion = 0x1f; e->anim_frame = 0;
+        } else {                                       /* STANDING death FUN_80106c18 (cluster F):
+                                                        * clip = ((s8)+0x93>>7)*2 + 0xd -> 0xb when the
+                                                        * shot's front/back latch +0x93 bit0x80 is set
+                                                        * (fall BACKWARD), else 0xd; random start frame
+                                                        * rand&3; SE 5. */
+            e->motion = (uint8_t)((e->hit_react & 0x80) ? 0x0b : 0x0d);
+            e->anim_frame = (uint16_t)(re15_engine_rand8() & 3);
+            re15_audio_room_se(5);
+        }
         e->anim_flags &= (uint16_t)~0x04u;             /* CLEAR LOOP: the death clip 0x1f plays ONCE + holds
                                                         * its fallen last frame (render clip_override=-1), it
                                                         * must NOT loop like the feeding/idle clip did (0x04 was
@@ -2075,6 +2191,7 @@ int re15_enemy_ai_live_tick(int slot)
     if (s_ai_paused) return 0;                          /* g_pauseflags & 0x20000000 */
     if (e->grid_id & RE15_AI_GRID_SKIP) return 0;       /* +0x9 & 0x20 */
 
+    e->contact_flags = 0;                                /* FUN_8002b498 tail: +0x1c2 := 0 per tick */
     e->ai_dist = (uint32_t)re15_enemy_player_dist(e, &g_actors[RE15_ACTOR_SLOT_PLAYER]);
     /* +0x1bc/+0x1be STEER TARGET — the per-tick writer is EXE FUN_80039e7c (RESOLVED 2026-07-04;
      * the RAM observation "== player pos every tick" was the SAME-ZONE case). Byte-true call
@@ -2158,13 +2275,17 @@ void re15_enemy_ai_run_all(int combat_active)
                 re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
                 int pair_frozen = (e->sub_state_1 >= 3 && e->sub_state_1 <= 6);
                 if (pl->hp >= 0 && !pair_frozen)
-                    re15_body_push(pl, RE15_BODY_R_PLAYER, e, (int32_t)e->hit_radius_min);
+                    if (re15_body_push(pl, RE15_BODY_R_PLAYER, e, (int32_t)e->hit_radius_min))
+                        e->contact_flags |= 1;         /* +0x1c2 |= 1: the PLAYER pushed me (aec4) */
                 for (int o = RE15_ACTOR_SLOT_PLAYER + 1; o < RE15_ACTOR_MAX; o++) {
                     if (o == s) continue;
                     re15_actor_t *z2 = &g_actors[o];
                     if (!z2->active || z2->hit_radius_min == 0) continue;
                     if (z2->state == (uint8_t)RE15_AI_STATE_CORPSE) continue;
-                    re15_body_push(z2, (int32_t)z2->hit_radius_min, e, (int32_t)e->hit_radius_min);
+                    if (re15_body_push(z2, (int32_t)z2->hit_radius_min, e, (int32_t)e->hit_radius_min)) {
+                        e->contact_flags |= 2;         /* +0x1c2 |= 2 + +0x1ac = the pushing ENEMY */
+                        e->contact_slot   = (int8_t)o; /* -> the grab [5] domino target */
+                    }
                 }
             }
         }
