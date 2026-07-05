@@ -788,28 +788,60 @@ int main(void)
             fprintf(stderr, "FAIL: (16) release R1 -> leave the aim pose, motion still %d\n", pl->motion); fail = 1; }
         if (re15_player_aim_ready()) {
             fprintf(stderr, "FAIL: (16) release R1 -> not aim-ready\n"); fail = 1; }
-        /* MELEE path (items 0-2 @0x80074030 -> FSM 0x80034e70): the KNIFE (byte-true default
-         * equip, item 1) draws W-bank clip 0xD (FUN_80035538) and HOLDS it — no clip switch,
-         * no elevation; the slash stand-in replays 0xD as the cadence gate. */
-        re15_player_set_equipped_weapon(1);
-        re15_player_tick(NULL, 0);
-        pl->motion = 200; pl->anim_frame = 0;
-        re15_player_tick(NULL, RE15_PAD_BIT_R1);
-        if (pl->motion != 213 || re15_player_aim_clip() != 0x0d) {
-            fprintf(stderr, "FAIL: (16) knife aim = W-bank DRAW clip 0xD, mo=%d clip=%d\n",
-                    pl->motion, re15_player_aim_clip()); fail = 1; }
-        for (int f = 0; f < 12; f++) re15_player_tick(NULL, RE15_PAD_BIT_R1 | RE15_PAD_BIT_UP);
-        if (re15_player_aim_clip() != 0x0d || !re15_player_aim_ready()) {
-            fprintf(stderr, "FAIL: (16) knife draw done -> HOLDS 0xD + ready (no elevation), clip=%d\n",
-                    re15_player_aim_clip()); fail = 1; }
-        re15_player_fire_start();
-        if (re15_player_aim_clip() != 0x0d || pl->anim_frame != 0 || re15_player_aim_ready()) {
-            fprintf(stderr, "FAIL: (16) knife fire -> replay 0xD from f0, cadence-gated, clip=%d af=%d\n",
-                    re15_player_aim_clip(), (int)pl->anim_frame); fail = 1; }
+        /* MELEE path (items 0-2 @0x80074030 -> FSM 0x80034e70, byte-true wf_306144dd-336):
+         * COLD entry = DRAW sub4 (clip 0xD + SE, sets the in-hand 0x4000 flag) -> HOLD clips
+         * 8/10/12 (same dpad elevation as the gun) -> SLASH clips 7/9/11 with the damage window
+         * frames 6..11 -> HOLD; R1 release -> LOWER (clip 6 REVERSED) -> exit; the NEXT aim
+         * RE-RAISES with clip 6 (no draw, in-hand persists). */
+        {
+            extern void re15_player_aim_reset(void);
+            extern int  re15_player_slash_window(void);
+            extern int  re15_player_aim_active(void);
+            re15_player_set_equipped_weapon(1);
+            re15_player_aim_reset();                      /* clean slate incl. in-hand flag */
+            pl->motion = 200; pl->anim_frame = 0;
+            re15_player_tick(NULL, RE15_PAD_BIT_R1);
+            if (pl->motion != 213 || re15_player_aim_clip() != 0x0d) {
+                fprintf(stderr, "FAIL: (16) knife COLD aim = DRAW clip 0xD (sub4), mo=%d clip=%d\n",
+                        pl->motion, re15_player_aim_clip()); fail = 1; }
+            for (int f = 0; f < 12; f++) re15_player_tick(NULL, RE15_PAD_BIT_R1 | RE15_PAD_BIT_UP);
+            if (re15_player_aim_clip() != 10 || !re15_player_aim_ready()) {
+                fprintf(stderr, "FAIL: (16) knife draw done + UP -> HOLD clip 10 (elevation!), clip=%d\n",
+                        re15_player_aim_clip()); fail = 1; }
+            re15_player_fire_start();                      /* SLASH at elevation UP -> clip 9 */
+            if (re15_player_aim_clip() != 9 || pl->anim_frame != 0 || re15_player_aim_ready()) {
+                fprintf(stderr, "FAIL: (16) knife slash (UP) -> clip 9 from f0, gated, clip=%d af=%d\n",
+                        re15_player_aim_clip(), (int)pl->anim_frame); fail = 1; }
+            /* damage window = frames 6..11 only (@0x80035388-94) */
+            if (re15_player_slash_window()) {
+                fprintf(stderr, "FAIL: (16) slash frame 0 must be outside the damage window\n"); fail = 1; }
+            for (int f = 0; f < 7; f++) re15_player_tick(NULL, RE15_PAD_BIT_R1);
+            if (!re15_player_slash_window()) {
+                fprintf(stderr, "FAIL: (16) slash frame %d must be inside the window [6..11]\n",
+                        (int)pl->anim_frame); fail = 1; }
+            /* R1 release from HOLD -> LOWER: clip 6 REVERSED plays out, then exit; in-hand stays */
+            for (int f = 0; f < 14; f++) re15_player_tick(NULL, RE15_PAD_BIT_R1);   /* slash out -> HOLD */
+            re15_player_tick(NULL, 0);
+            if (!re15_player_aim_active() || re15_player_aim_clip() != 6 ||
+                !(pl->anim_flags & 0x80)) {
+                fprintf(stderr, "FAIL: (16) R1 release -> LOWER clip 6 REVERSED, clip=%d fl=%02x\n",
+                        re15_player_aim_clip(), pl->anim_flags); fail = 1; }
+            for (int f = 0; f < 12; f++) re15_player_tick(NULL, 0);
+            if (re15_player_aim_active() || (pl->anim_flags & 0x80)) {
+                fprintf(stderr, "FAIL: (16) LOWER played out -> aim exit + reverse cleared\n"); fail = 1; }
+            /* re-aim: in-hand persists -> RAISE clip 6, NOT the 0xD draw */
+            pl->motion = 200; pl->anim_frame = 0;
+            re15_player_tick(NULL, RE15_PAD_BIT_R1);
+            if (re15_player_aim_clip() != 6) {
+                fprintf(stderr, "FAIL: (16) re-aim with knife in hand -> RAISE clip 6, ist %d\n",
+                        re15_player_aim_clip()); fail = 1; }
+            re15_player_aim_reset();
+        }
         re15_player_tick(NULL, 0);                        /* leave aim; default equip stays 1 */
         if (!fail)
             printf("  (16) player weapon FSM: GUN raise 6 -> hold 8 -> recoil 7 -> hold 8; "
-                   "KNIFE draw 0xD hold + slash gate (item dispatch @0x80074030)\n");
+                   "KNIFE draw 0xD -> hold 10 (UP) -> slash 9 (window 6-11) -> LOWER reversed "
+                   "-> re-raise 6 (item dispatch @0x80074030)\n");
     }
 
     /* (17): the ZOMBIE COMBAT-SE bank lookup (Phase 8.17/8.18, byte-true via FUN_800453d0 on the snd1 room bank).
@@ -1397,8 +1429,9 @@ int main(void)
             extern int  re15_player_reloading(void);
             extern int  re15_player_aim_clip(void);
             extern void re15_player_set_aim_clip_len(int fc);
+            extern void re15_player_aim_reset(void);
             re15_player_set_aim_clip_len(10);            /* mock clip lengths */
-            re15_player_tick(NULL, 0);                   /* reset the aim FSM */
+            re15_player_aim_reset();                     /* clean slate (no stale LOWER etc.) */
             pl->motion = 200; pl->anim_frame = 0; pl->hp = 100;
             for (int f = 0; f < 14; f++) re15_player_tick(NULL, RE15_PAD_BIT_R1);  /* raise -> HOLD */
             if (!re15_player_aim_ready()) {

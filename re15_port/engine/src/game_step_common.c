@@ -262,10 +262,12 @@ void re15_game_step(const re15_game_ctx_t *c)
             }
             else if ((c->pad_current & RE15_PAD_BIT_SQUARE) && re15_player_aim_ready()) {
                 extern void re15_player_fire_start(void);
-                re15_player_fire_start();                 /* gun: recoil 7/9/11; melee: slash stand-in */
-                re15_player_weapon_fire(eq_item);         /* FUN_80011f50 resolve (per-item dmg/reach) */
+                re15_player_fire_start();                 /* gun: recoil 7/9/11; melee: SLASH 7/9/11
+                                                           * (swing SE inside; damage runs per-tick
+                                                           * in the frame-6..11 window below) */
                 if (eq_item >= 3) {                       /* GUN-only discharge side (@0x800337bc):
                                                            * the melee items 0-2 have no muzzle/shell */
+                    re15_player_weapon_fire(eq_item);     /* FUN_80011f50 resolve (per-item dmg/reach) */
                     re15_ammo_consume();                  /* FUN_8004eae4 @0x80033888 (after damage,
                                                            * return unchecked for the handgun) */
                     re15_audio_weapon_se(8);  /* stand-in for the ESP-data-driven bang (see block cmt) */
@@ -285,6 +287,16 @@ void re15_game_step(const re15_game_ctx_t *c)
                 }
             }
             g_aot_action_pressed = 0;         /* aiming blocks the door/stair action (no doors while aiming) */
+        }
+        /* MELEE SLASH DAMAGE WINDOW (byte-true @0x80035388-cc): while the slash clip's anim frame
+         * is in [6..11], the resolver runs EVERY tick — the once-per-target latch + recursion
+         * inside re15_player_weapon_fire keep it one-damage-per-target (and allow a second victim).
+         * The original passes the BLADE-TIP world point ([0x800acbdc]+0x7b8); the port measures
+         * from the player centre (faithful-line, OPEN O1 — slightly shorter effective range). */
+        {
+            extern int re15_player_slash_window(void);
+            if (re15_player_slash_window())
+                re15_player_weapon_fire(re15_player_equipped_weapon());
         }
         /* A stair may START this frame: ACTION pressed while in/against a stair
          * zone. If so it consumes the action and we SKIP the door scan;

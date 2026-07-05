@@ -2274,6 +2274,10 @@ void re15_enemy_ai_live_hurt(int slot)
     if (e->hit_stun >= 0) {
         int slot2 = (int)(e - g_actors);
         re15_ai_set_state_word(e, 0x10201u);           /* ACTIVE / +0x5=2 / +0x6=1 (entry SKIPPED) */
+        e->hit_react &= (uint8_t)~0x1u;                /* +0x93 &= 0xfe (@0x80105f9c-fac): the hurt
+                                                        * RECOVERY clears the once-per-attack hit
+                                                        * latch — the next shot/slash damages again
+                                                        * (needed by the weapon_fire latch/recursion) */
         s_wander_mag[slot2] = (uint8_t)((re15_engine_rand8() & 0x1f) + 8);   /* +0x9e */
         {
             const uint8_t *tbl = (re15_enemy_live_count() >= 5) ? s_zbehavior_5plus : s_zbehavior_lt5;

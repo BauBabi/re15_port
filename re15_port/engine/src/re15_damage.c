@@ -271,12 +271,14 @@ void re15_player_set_equipped_weapon(int weapon_id)
     }
 }
 
-/* AIM TARGET LATCH (byte-true FUN_8003703c(2000) via FUN_80035538): the nearest live front-cone
- * zombie within 2000 — the aim auto-turn slews toward it. Returns 1 + its XZ. */
-int re15_player_aim_target(int32_t *tx, int32_t *tz)
+/* AIM TARGET LATCH (byte-true FUN_8003703c(radius)): the nearest live front-cone zombie within
+ * `radius` — the raise-sub auto-turn slews toward it. Radii per machine/sub: gun raise 30000
+ * (0x7530), melee DRAW 2000 (0x7d0 @0x800355d0), melee RE-RAISE 5000 (0x1388 @0x80034f7c).
+ * Returns 1 + its XZ. */
+int re15_player_aim_target(int32_t radius, int32_t *tx, int32_t *tz)
 {
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-    int best = -1; uint32_t bd = 30000;   /* FUN_8003703c(0x7530) — the gun autoaim latch radius */
+    int best = -1; uint32_t bd = (radius > 0) ? (uint32_t)radius : 30000u;
     for (int s2 = RE15_ACTOR_SLOT_PLAYER + 1; s2 < RE15_ACTOR_MAX; s2++) {
         re15_actor_t *e = &g_actors[s2];
         if (!e->active) continue;
@@ -296,14 +298,24 @@ int re15_player_weapon_fire(int weapon_id)
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     uint32_t reach = s_player_wpn_reach[weapon_id];
 
-    /* auto-aim: nearest live zombie in front, within reach (DAT_8008f5e0 min-dist, seed 0x7fffffff). */
+    /* auto-aim: nearest live zombie in front, within reach (DAT_8008f5e0 min-dist, seed 0x7fffffff).
+     * ONCE-PER-TARGET latch (byte-true FUN_80011f50 internals, melee-FSM arbitration): candidates
+     * with +0x93 bits 0+1 BOTH set are excluded (@0x800120c0/f4 0x3000000-mask... the +0x93-pair
+     * equivalent); a selected target that already carries bit0 gets |=2 and the resolver RECURSES
+     * to the next-nearest (@0x80012404-18). Without this the knife's 6-tick damage window
+     * (frames 6-11, one resolver call per tick) would deal 6x damage to one target — and one
+     * slash can legitimately wound TWO zombies (the recursion). Guns call this once per shot,
+     * where the latch is a no-op on fresh targets. */
     int best = -1;
     uint32_t best_dist = 0x7fffffffu;
+retry_after_latch:
+    best = -1; best_dist = 0x7fffffffu;
     for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) {
         re15_actor_t *e = &g_actors[s];
         if (!e->active) continue;
         if (e->type != 0x10 && e->type != 0x11 && e->type != 0x16) continue;  /* the port's hittable enemies */
         if (e->state == 7) continue;   /* RE15_AI_STATE_CORPSE — already a corpse (literal: avoid the AI-header dep) */
+        if ((e->hit_react & 0x3) == 0x3) continue;   /* already hit + re-touched this attack -> excluded */
         uint32_t dist = (uint32_t)re15_enemy_player_dist(e, pl);
         /* byte-true cone tester FUN_800127fc/800128a0: R = reach + enemy hitbox radius (hbdata+6),
          * hit iff strict dist < R (unsigned). The 400-unit zombie radius is part of the reach. */
@@ -313,6 +325,10 @@ int re15_player_weapon_fire(int weapon_id)
         if (dist < best_dist) { best_dist = dist; best = s; }
     }
     if (best < 0) return 0;   /* no target in cone/reach */
+    if (g_actors[best].hit_react & 0x1) {            /* hit earlier in THIS attack window */
+        g_actors[best].hit_react |= 0x2;             /* +0x93 |= 2 (@0x8001240c) */
+        goto retry_after_latch;                      /* the @0x80012418 recursion (seek 2nd victim) */
+    }
 
     re15_actor_t *e = &g_actors[best];
     int dmg = s_player_wpn_dmg_zombie[weapon_id];   /* byte-true per-weapon zombie damage */
@@ -330,9 +346,22 @@ int re15_player_weapon_fire(int weapon_id)
     /* crit/headshot (@0x800124fc-0x8001251c): weapon 7, or weapon 8 within 3000 -> instant kill (type<0x20). */
     if ((weapon_id == 7 || (weapon_id == 8 && best_dist < 3000u)) && e->type < 0x20)
         e->hp = -1;
-    e->sub_state_3 = 0;                              /* +0x7 = 0 (@0x80012... line 157) — start the hurt/death anim FSM at phase 0 */
+    e->sub_state_3 = 0;                              /* +0x7 = 0 (@0x80012428) — start the hurt/death anim FSM at phase 0 */
     e->state       = (e->hp >= 0) ? 2 : 3;          /* +0x4 = HURT(2) / DEATH(3) (@0x80012520) */
-    e->sub_state_2 = 0;                              /* +0x6 hit-dir clip (DAT_8006f410[heading>>0x1d]) — deferred */
+    /* +0x6 = VERTICAL HIT-DIR (@0x80012438-50): DAT_8006f410[player_word>>29] = [7,0,1,7,2,...]
+     * indexed by the aim-elevation bits (acaec<<16): UP(bit31,idx4)->2, LEVEL(bit30,idx2)->1,
+     * DOWN(bit29,idx1)->0. Feeds the hurt master's hit-dir column. */
+    {
+        extern int re15_player_aim_elevation(void);  /* player_common.c */
+        int elev = re15_player_aim_elevation();      /* -1 down / 0 level / +1 up */
+        e->sub_state_2 = (uint8_t)(elev > 0 ? 2 : elev < 0 ? 0 : 1);
+    }
+    /* knife-only HIT SE (@0x800123c0-d8): weapon==1 && hit landed -> FUN_80045024(0x1080001)
+     * = the flesh-hit SE at the player position (the whiff plays only the swing SE 0x1050001). */
+    if (weapon_id == 1) {
+        extern void re15_audio_weapon_se(int idx);
+        re15_audio_weapon_se(8);
+    }
     return best + 1;                                /* hit (slot+1, non-zero) */
 }
 

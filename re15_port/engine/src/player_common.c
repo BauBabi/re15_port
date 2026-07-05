@@ -134,6 +134,7 @@
 #define RE15_AIM_RAISE  1
 #define RE15_AIM_READY  2
 #define RE15_AIM_RELOAD 3   /* gun FSM sub4 @0x80033d7c: clip 0xD plays out -> refill + HOLD */
+#define RE15_AIM_LOWER  4   /* melee sub3 @0x80035424: clip 6 REVERSED plays out -> exit */
 static int s_player_aim_phase = RE15_AIM_NONE;
 /* Per-clip frame counts of the equipped W bank (the platform re-feeds them on bank switch).
  * PLW-verified layout (PL00W01≡W00≡W02 melee / PL00W03≡W04 gun, both 14 clips): melee draw+hold
@@ -145,6 +146,10 @@ static int s_aim_cur_clip = 6;              /* the current W-bank clip (melee 0x
 static int s_aim_recoil = 0;                /* 1 while the discharge/slash clip plays */
 static int s_aim_elev = 0;                  /* 0 level / +1 up / -1 down (acaec bits 15/13) */
 static int s_aim_melee = 0;                 /* latched item class at raise entry (item < 3) */
+static int s_knife_in_hand = 0;             /* player word 0x800aca54 bit 0x4000: the knife DRAW
+                                             * (sub4, clip 0xD + SE + model attach) runs only ONCE;
+                                             * later aims RE-RAISE (sub0, clip 6, no SE). Persists
+                                             * across lower/raise (@0x80034e88-a8 pre-check). */
 void re15_player_set_aim_clip_len(int fc)
 {
     for (int i = 0; i < RE15_AIM_CLIP_MAX; i++) s_aim_clip_fcs[i] = (uint16_t)fc;
@@ -162,6 +167,24 @@ static int aim_cur_fc(void)
 }
 int  re15_player_aim_active(void) { return s_player_aim_phase != RE15_AIM_NONE; }
 int  re15_player_aim_clip(void)   { return s_aim_cur_clip; }
+int  re15_player_aim_elevation(void) { return s_aim_elev; }   /* -1 down / 0 level / +1 up */
+void re15_player_aim_reset(void)                              /* test/room-change clean slate */
+{
+    extern re15_actor_t g_actors[];
+    s_player_aim_phase = RE15_AIM_NONE;
+    s_aim_recoil = 0; s_aim_elev = 0; s_knife_in_hand = 0;
+    g_actors[RE15_ACTOR_SLOT_PLAYER].anim_flags &= (uint8_t)~0x80u;
+}
+/* SLASH damage window (byte-true @0x80035388-94): while the melee SLASH clip plays and the anim
+ * frame is in [6..11], the resolver FUN_80011f50 is called EVERY tick (once-per-target latch +
+ * recursion live inside weapon_fire). game_step polls this. */
+int re15_player_slash_window(void)
+{
+    extern re15_actor_t g_actors[];
+    if (!s_aim_melee || !s_aim_recoil) return 0;
+    int f = (int)g_actors[RE15_ACTOR_SLOT_PLAYER].anim_frame;
+    return (f >= 6 && f <= 11);
+}
 /* RELOAD entry (gun FSM sub4 @0x80033d7c, fired by the empty+press-edge gate @0x80033378):
  * clip 0xD from frame 0 with blend 7, elevation reset to LEVEL ((x&0x1fff)|0x4000 -> acaec),
  * NO SE at entry — the reload SE 0x01030001 plays at clip COMPLETION together with the
@@ -179,17 +202,22 @@ void re15_player_reload_start(void)
 int re15_player_reloading(void) { return s_player_aim_phase == RE15_AIM_RELOAD; }
 /* FIRE trigger (game_step, SQUARE held in HOLD/READY): GUN = DISCHARGE — recoil clip 7/9/11
  * plays out, then back to HOLD (sub2 @0x80033460: anim end -> sub1 = auto-refire cadence).
- * MELEE (items 0-2) = faithful-line slash stand-in: re-play the draw clip 0xD as the cadence
- * gate (the true melee ATTACK FSM 0x80034e70 slash chain is un-RE'd, documented deferred). */
+ * MELEE = SLASH (sub2 @0x80035314, byte-true): the SAME 7/9/11 elevation-clip formula
+ * (7+2*up+4*down @0x8003535c-70), swing/whiff SE 0x1050001 at entry (@0x8003537c, ALWAYS —
+ * hit and whiff alike); the damage runs per-tick in frames 6..11 (re15_player_slash_window).
+ * Clip done -> HOLD; SQUARE held -> auto-repeat with one 1-tick hold gap. */
 void re15_player_fire_start(void)
 {
     extern re15_actor_t g_actors[];
     if (s_player_aim_phase != RE15_AIM_READY || s_aim_recoil) return;
     s_aim_recoil = 1;
-    s_aim_cur_clip = s_aim_melee ? 0x0d
-                   : 7 + (s_aim_elev > 0 ? 2 : s_aim_elev < 0 ? 4 : 0);   /* 7/9/11 */
+    s_aim_cur_clip = 7 + (s_aim_elev > 0 ? 2 : s_aim_elev < 0 ? 4 : 0);   /* 7/9/11 (both FSMs) */
     g_actors[RE15_ACTOR_SLOT_PLAYER].anim_frame = 0;
     g_actors[RE15_ACTOR_SLOT_PLAYER].anim_frac  = 7;
+    if (s_aim_melee) {
+        extern void re15_audio_weapon_se(int idx);
+        re15_audio_weapon_se(5);                       /* swing SE 0x1050001 (@0x8003537c) */
+    }
 }
 extern int16_t re15_atan2_q12(int32_t dz, int32_t dx);
 static int16_t re15_atan2_q12_pl(int32_t dz, int32_t dx) { return re15_atan2_q12(dz, dx); }
@@ -267,23 +295,44 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
          * up; turning (rot_y, above) stays allowed. Disable forward/back move so want_motion below
          * picks the aim pose, not walk/idle. (The exact 3-level command FSM + the raise clip 17 +
          * aim-elevation pitch are deferred; the held aim pose + the fire recoil are byte-true.) */
-        int aiming = (pad_bits & RE15_PAD_BIT_R1) != 0;
+        /* R1 released: the GUN exits instantly (its lower sub [3]@0x80033c74 is un-RE'd, deferred);
+         * the MELEE plays its byte-true LOWER (sub3 @0x80035424: clip 6 REVERSED) — the machine
+         * only tests R1 in HOLD, so a running raise/slash first completes, then lowers. */
+        int r1_held = (pad_bits & RE15_PAD_BIT_R1) != 0;
+        if (!r1_held && s_player_aim_phase != RE15_AIM_NONE) {
+            if (!s_aim_melee) {
+                s_player_aim_phase = RE15_AIM_NONE;
+                p->anim_flags &= (uint8_t)~RE15_ANIM_REVERSE;
+            } else if (s_player_aim_phase == RE15_AIM_READY && !s_aim_recoil) {
+                s_player_aim_phase = RE15_AIM_LOWER;    /* HOLD + !R1 -> sub 3 (@0x8003513c-44) */
+                s_aim_cur_clip = 6;                     /* clip 6, REVERSED (a2=1 @0x800354b4) */
+                s_aim_elev = 0;                         /* acaec &= 0x1fff (@LOWER entry) */
+                p->anim_frame = 0; p->anim_frac = 7;
+                p->anim_flags |= RE15_ANIM_REVERSE;
+            }
+        }
+        int aiming = r1_held || (s_aim_melee && s_player_aim_phase != RE15_AIM_NONE);
         if (aiming) move_dir = 0;   /* rooted: no translation while aiming */
-        else s_player_aim_phase = RE15_AIM_NONE;   /* dropped R1 -> reset the raise/ready FSM */
         if (aiming) {
-            /* byte-true aim steering (FUN_80035538): manual turn +-24/tick (weapon-1 rate, table
-             * @0x80074090) on LEFT/RIGHT; AUTO-TURN toward the nearest front zombie within 2000
-             * (FUN_8003703c latch) at a8f8 slew 0xc0/tick. */
-            if (pad_bits & RE15_PAD_BIT_LEFT)  p->rot_y = (int16_t)(((int)p->rot_y + RE15_AIM_TURN_RATE) & 0xfff);
-            if (pad_bits & RE15_PAD_BIT_RIGHT) p->rot_y = (int16_t)(((int)p->rot_y - RE15_AIM_TURN_RATE) & 0xfff);
-            {
-                extern int re15_player_aim_target(int32_t *tx, int32_t *tz);   /* re15_damage.c */
+            /* Manual aim turn (table @0x80074090, 5-BYTE records per weapon): byte0=24 during
+             * RAISE/DRAW, byte1=48 during HOLD (@0x80035270 base 0x80074091); LOWER = constant 24
+             * (@0x800354a0/c4). Knife AND handgun records are [24,48,...]. */
+            int rate = (s_player_aim_phase == RE15_AIM_READY) ? 48 : 24;
+            if (pad_bits & RE15_PAD_BIT_LEFT)  p->rot_y = (int16_t)(((int)p->rot_y + rate) & 0xfff);
+            if (pad_bits & RE15_PAD_BIT_RIGHT) p->rot_y = (int16_t)(((int)p->rot_y - rate) & 0xfff);
+            /* AUTO-TRACK toward the latched front target — byte-true ONLY during the RAISE/DRAW
+             * sub (@0x80034fa0-c0 melee slew 0xC0 / gun sub0 slew 0xC8); the HOLD subs have no
+             * a8f8 call. Latch radii: gun 30000, melee draw 2000, melee re-raise 5000. */
+            if (s_player_aim_phase == RE15_AIM_RAISE) {
+                extern int re15_player_aim_target(int32_t radius, int32_t *tx, int32_t *tz);
+                int32_t radius = s_aim_melee ? (s_aim_cur_clip == 0x0d ? 2000 : 5000) : 30000;
+                int32_t slew   = s_aim_melee ? 0xc0 : 0xc8;
                 int32_t tx, tz;
-                if (re15_player_aim_target(&tx, &tz)) {              /* FUN_8003703c(30000) latch */
+                if (re15_player_aim_target(radius, &tx, &tz)) {
                     int bearing = ((int)re15_atan2_q12_pl(tz - p->z, tx - p->x) - 0x400) & 0xfff;
                     int d = (((bearing - (int)p->rot_y) + 0x800) & 0xfff) - 0x800;
-                    if (d >  0xc8) d =  0xc8;                        /* a8f8 slew 0xC8 (@sub0) */
-                    if (d < -0xc8) d = -0xc8;
+                    if (d >  slew) d =  slew;
+                    if (d < -slew) d = -slew;
                     p->rot_y = (int16_t)(((int)p->rot_y + d) & 0xfff);
                 }
             }
@@ -305,37 +354,47 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
         int32_t speed = 0;
         if (aiming) {
             /* byte-true ACTION-7 dispatch BY ITEM (@0x80074030): items 0-2 -> MELEE FSM 0x80034e70
-             * (draw = W-bank clip 0xD via FUN_80035538, one-shot + hold-last, entry SE 0x1080001);
-             * items 3+ -> GUN FSM 0x80032e9c (RAISE clip 6 -> HOLD 8/10/12 with dpad elevation;
-             * the DISCHARGE swaps in recoil 7/9/11 which plays out and drops back to HOLD
-             * @0x80033460). The W bank itself switches with the item (melee trio W00≡W01≡W02,
+             * (cold entry: sub==0 && !in-hand(0x4000) -> DRAW sub4 = clip 0xD + SE 0x1080001 +
+             * model attach; else RAISE sub0 = clip 6, latch 5000, NO SE); items 3+ -> GUN FSM
+             * 0x80032e9c (RAISE clip 6). BOTH continue to HOLD 8/10/12 with dpad elevation and
+             * fire clips 7/9/11. The W bank switches with the item (melee trio W00≡W01≡W02,
              * gun pair W03≡W04 — CD-file index = DAT_800741e8[char]=76 + item, loader @0x80036b80). */
             if (s_player_aim_phase == RE15_AIM_NONE) {
                 extern int re15_player_equipped_weapon(void);       /* re15_damage.c (DAT_800aca5d) */
                 s_player_aim_phase = RE15_AIM_RAISE;
                 s_aim_melee = (re15_player_equipped_weapon() < 3);  /* @0x80074030 class split */
-                s_aim_cur_clip = s_aim_melee ? 0x0d : 6;            /* draw 0xD / RAISE 6 */
                 s_aim_recoil = 0; s_aim_elev = 0;
-                if (s_aim_melee) {
+                if (s_aim_melee && !s_knife_in_hand) {
+                    s_aim_cur_clip = 0x0d;                          /* DRAW (sub4 @0x80035538) */
                     extern void re15_audio_weapon_se(int idx);
-                    re15_audio_weapon_se(8);                        /* FUN_80035538 entry SE 0x1080001 */
+                    re15_audio_weapon_se(8);                        /* SE 0x1080001 (@0x800355f8) */
+                } else {
+                    s_aim_cur_clip = 6;                             /* RAISE (sub0; melee @0x80034ee8) */
                 }
             }
             want_motion = RE15_MOTION_AIM_W;
             if (s_player_aim_phase == RE15_AIM_RAISE &&
                 p->motion == RE15_MOTION_AIM_W &&
                 aim_cur_fc() > 0 && p->anim_frame >= aim_cur_fc() - 1) {
-                s_player_aim_phase = RE15_AIM_READY;                /* raise/draw done -> READY */
-                if (!s_aim_melee) { s_aim_cur_clip = 8; p->anim_frame = 0; }   /* gun: HOLD clip 8 */
-                /* melee: clip 0xD holds its terminal pose (hold-last, no clip switch) */
+                if (s_aim_melee && s_aim_cur_clip == 0x0d)
+                    s_knife_in_hand = 1;                            /* DRAW done -> in-hand 0x4000 */
+                s_player_aim_phase = RE15_AIM_READY;                /* raise/draw done -> HOLD */
+                s_aim_cur_clip = 8; p->anim_frame = 0;              /* HOLD clip 8 (both machines) */
             }
-            if (!s_aim_melee && s_player_aim_phase == RE15_AIM_READY && !s_aim_recoil) {
+            if (s_player_aim_phase == RE15_AIM_READY && !s_aim_recoil) {
+                /* dpad elevation (BOTH machines, same acaec scheme @0x80035164/1b8/204): the hold
+                 * clip re-enters as 8/10/12 = 8 + 2*up + 4*down. */
                 int elev = (pad_bits & RE15_PAD_BIT_UP) ? 1 : (pad_bits & RE15_PAD_BIT_DOWN) ? -1 : 0;
                 if (elev != s_aim_elev) {                           /* elevation switch re-enters */
                     s_aim_elev = elev;
                     s_aim_cur_clip = 8 + (elev > 0 ? 2 : elev < 0 ? 4 : 0);   /* 8/10/12 */
                     p->anim_frame = 0;
                 }
+            }
+            if (s_player_aim_phase == RE15_AIM_LOWER &&
+                aim_cur_fc() > 0 && p->anim_frame >= aim_cur_fc() - 1) {
+                s_player_aim_phase = RE15_AIM_NONE;                 /* LOWER done -> exit action-7 */
+                p->anim_flags &= (uint8_t)~RE15_ANIM_REVERSE;       /* (in-hand flag persists) */
             }
             if (s_aim_recoil && aim_cur_fc() > 0 && p->anim_frame >= aim_cur_fc() - 1) {
                 s_aim_recoil = 0;                                   /* recoil/slash played out */
@@ -430,9 +489,12 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
         }
 
         /* BACK plays the walk clip in reverse (legs step backward); all other
-         * states play forward. */
-        if (move_dir < 0) p->anim_flags |= RE15_ANIM_REVERSE;
-        else              p->anim_flags &= (uint8_t)~RE15_ANIM_REVERSE;
+         * states play forward — EXCEPT the melee LOWER, which owns the reverse flag
+         * (clip 6 played backwards, FUN_8001f314 a2=1 @0x800354b4). */
+        if (s_player_aim_phase != RE15_AIM_LOWER) {
+            if (move_dir < 0) p->anim_flags |= RE15_ANIM_REVERSE;
+            else              p->anim_flags &= (uint8_t)~RE15_ANIM_REVERSE;
+        }
 
         /* Drive the animation: on a clip change restart the cycle from frame 0. */
         if (p->motion != want_motion) {
