@@ -733,9 +733,15 @@ int main(void)
         re15_player_tick(NULL, 0);          /* a non-aim tick first -> reset the aim FSM to NONE */
         pl->motion = 200;                   /* a non-aim sentinel (idle) */
         pl->anim_frame = 0; pl->hp = 100; pl->rot_y = 0; pl->x = 0; pl->z = 0;
-        re15_player_tick(NULL, RE15_PAD_BIT_R1);          /* hold R1 -> start the RAISE (clip 17) */
-        if (pl->motion != 17) {
-            fprintf(stderr, "FAIL: (16) hold R1 -> RAISE clip 17, ist %d\n", pl->motion); fail = 1; }
+        {
+            extern void re15_player_set_aim_clip_len(int fc);
+            re15_player_set_aim_clip_len(10);   /* mock the W01 clip-0xD length (platform sets it) */
+        }
+        re15_player_tick(NULL, RE15_PAD_BIT_R1);          /* hold R1 -> the WEAPON-BANK aim clip
+                                                           * (byte-true FUN_80035538: clip 0xD from
+                                                           * the PLW pair; PL00 17/18 = the box push) */
+        if (pl->motion != 213) {
+            fprintf(stderr, "FAIL: (16) hold R1 -> weapon-bank aim sentinel 213, ist %d\n", pl->motion); fail = 1; }
         if (re15_player_aim_ready()) {
             fprintf(stderr, "FAIL: (16) mid-raise must NOT be aim-ready (no shot mid-raise)\n"); fail = 1; }
         int32_t ax = pl->x, az = pl->z;
@@ -744,17 +750,21 @@ int main(void)
         if (pl->x != ax || pl->z != az) {
             fprintf(stderr, "FAIL: (16) aiming roots the player (no translation on UP), moved %d,%d\n",
                     (int)(pl->x - ax), (int)(pl->z - az)); fail = 1; }
-        if (pl->motion != 18) {
-            fprintf(stderr, "FAIL: (16) raise played out -> AIM-READY clip 18, ist %d\n", pl->motion); fail = 1; }
+        if (pl->motion != 213) {
+            fprintf(stderr, "FAIL: (16) aim pose HOLDS the weapon-bank clip (213), ist %d\n", pl->motion); fail = 1; }
         if (!re15_player_aim_ready()) {
             fprintf(stderr, "FAIL: (16) raise done -> aim-ready (can fire)\n"); fail = 1; }
+        if (pl->anim_frame > 9) {
+            fprintf(stderr, "FAIL: (16) the aim clip must HOLD its terminal frame (one-shot), af=%d\n",
+                    (int)pl->anim_frame); fail = 1; }
         re15_player_tick(NULL, 0);                        /* release R1 -> revert to idle/walk */
-        if (pl->motion == 18 || pl->motion == 17) {
-            fprintf(stderr, "FAIL: (16) release R1 -> leave the aim/raise pose, motion still %d\n", pl->motion); fail = 1; }
+        if (pl->motion == 213) {
+            fprintf(stderr, "FAIL: (16) release R1 -> leave the aim pose, motion still %d\n", pl->motion); fail = 1; }
         if (re15_player_aim_ready()) {
             fprintf(stderr, "FAIL: (16) release R1 -> not aim-ready\n"); fail = 1; }
         if (!fail)
-            printf("  (16) player AIM: R1 -> RAISE clip 17 (10f) -> AIM-READY clip 18 (gated fire), released -> idle\n");
+            printf("  (16) player AIM: R1 -> weapon-bank clip 0xD (sentinel 213, one-shot hold) -> "
+                   "aim-ready (gated fire), released -> idle\n");
     }
 
     /* (17): the ZOMBIE COMBAT-SE bank lookup (Phase 8.17/8.18, byte-true via FUN_800453d0 on the snd1 room bank).

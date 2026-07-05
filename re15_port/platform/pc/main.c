@@ -739,6 +739,11 @@ int main(int argc, char *argv[])
         w01_skel = skel;   /* copy bone hierarchy + bind pose from PL00 */
         w01_skel.keyframe_data       = w01_skel_raw.keyframe_data;
         w01_skel.keyframe_data_size  = w01_skel_raw.keyframe_data_size;
+        /* the byte-true AIM clip = W01 clip 0xD (FUN_80035538) — hand its length to the player FSM */
+        if (w01_anim.clip_count > 0x0d) {
+            extern void re15_player_set_aim_clip_len(int fc);
+            re15_player_set_aim_clip_len(w01_anim.clips[0x0d].frame_count);
+        }
         w01_skel.keyframe_count      = w01_skel_raw.keyframe_count;
         w01_skel.keyframe_size_bytes = w01_skel_raw.keyframe_size_bytes;
         fprintf(stderr, "[w01-composite] PL00 bind + W01 keyframes: %d bones, %d kf\n",
@@ -2023,6 +2028,18 @@ int main(int argc, char *argv[])
                      * Leon to clip 1: the collapse never rendered + behind-grab showed the wrong pose;
                      * caught by the byte-true render-path verify, invisible to the motion-value test). */
                     p_clip_override = (int)player_ref->motion;
+                }
+            }
+            /* AIM render override (byte-true FUN_80035538): while aiming, Leon poses from the
+             * WEAPON bank (PL00W01) clip 0xD — his own bones + the weapon pool, same pattern as
+             * the grab-victim override. */
+            {
+                extern int re15_player_aim_active(void);
+                if (re15_player_aim_active() && w01_ok &&
+                    re15_player_victim_state() == 0) {
+                    p_skel = &w01_skel;              /* the existing composite: PL00 bones + W01 pool */
+                    p_anim = &w01_anim;
+                    p_clip_override = 0x0d;          /* the byte-true aim clip (FUN_80035538) */
                 }
             }
             int kf_idx = 0;

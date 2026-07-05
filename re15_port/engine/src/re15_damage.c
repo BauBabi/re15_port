@@ -255,6 +255,25 @@ void re15_player_set_equipped_weapon(int weapon_id)
     if (weapon_id >= 0 && weapon_id < 22) s_player_weapon = weapon_id;
 }
 
+/* AIM TARGET LATCH (byte-true FUN_8003703c(2000) via FUN_80035538): the nearest live front-cone
+ * zombie within 2000 — the aim auto-turn slews toward it. Returns 1 + its XZ. */
+int re15_player_aim_target(int32_t *tx, int32_t *tz)
+{
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    int best = -1; uint32_t bd = 2000;
+    for (int s2 = RE15_ACTOR_SLOT_PLAYER + 1; s2 < RE15_ACTOR_MAX; s2++) {
+        re15_actor_t *e = &g_actors[s2];
+        if (!e->active) continue;
+        if (e->type != 0x10 && e->type != 0x11 && e->type != 0x16) continue;
+        if (e->state == 7 || e->hp < 0) continue;
+        uint32_t d = (uint32_t)re15_enemy_player_dist(e, pl);
+        if (d < bd && re15_ai_arc_test(pl, e->x, e->z, 0x400) == 0) { bd = d; best = s2; }
+    }
+    if (best < 0) return 0;
+    *tx = g_actors[best].x; *tz = g_actors[best].z;
+    return 1;
+}
+
 int re15_player_weapon_fire(int weapon_id)
 {
     if (weapon_id < 0 || weapon_id >= 22) return 0;
