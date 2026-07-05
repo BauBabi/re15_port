@@ -362,6 +362,12 @@ void re15_ai_dispatch_decision(re15_actor_t *e, const re15_actor_t *player)
             break;
         case 0x0a: break;                                       /* edge-fall decide @0x8011f840[0xa] =
                                                                  * 0x801033c0 = jr ra stub (byte-verified) */
+        case 0x12:  /* sleeping decide @0x8011f840[0x12] = 0x80105470 (raw-disasm'd): wake +0x6 1->2
+                     * on the grid trigger (+0x9&0x1f)==0xf OR proximity dist<0xbb8 && player alive. */
+            if (e->sub_state_2 == 1 &&
+                (((e->grid_id & 0x1f) == 0x0f) || (e->ai_dist < 0xbb8u && player->hp >= 0)))
+                e->sub_state_2 = 2;
+            break;
         case 8: {   /* charge decide @0x8011f840[8] = FUN_80102f1c (decompile-exact): the engage
                      * contact + grab gates, WITHOUT the turn/dead-feed/0x1001 commits. */
             uint8_t contact = e->ai_contact;
@@ -1132,6 +1138,33 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
     }
 }
 
+/* SLEEPING-LYING (+0x5=0x12) — byte-true FUN_801054f4 (@0x8011f890[0x12]; decide 0x80105470
+ * raw-disasm'd): a dormant floor zombie. [0] sets the sleep flag +0x1b8=1; [1] WAITS — the DECIDE
+ * wakes it (+0x6=2) when (+0x9&0x1f)==0xf (grid trigger) OR dist<0xbb8 && player alive; [2] plays
+ * the wake-stir clip 0x2a with +0x8f=0 (hard cut); [3] clip done -> [4] +0x4=0xd01 (stand-up),
+ * clears +0x1b8 and +0x93 bit 0. */
+static void re15_enemy_ai_live_sleeping(re15_actor_t *e)
+{
+    switch (e->sub_state_2) {
+        case 0:
+            e->sub_state_2 = 1;                   /* +0x1b8 sleep flag: no port field consumer yet */
+            break;
+        case 2:
+            e->motion = 0x2a; e->anim_frame = 0;
+            e->anim_frac = 0;                     /* +0x8f = 0 — hard pose cut */
+            e->sub_state_2 = 3;
+            /* fallthrough */
+        case 3:
+            e->sub_state_2 = (uint8_t)(e->sub_state_2 + (uint8_t)re15_enemy_clip_done(e));
+            break;
+        case 4:
+            re15_ai_set_state_word(e, 0xd01);     /* -> stand-up */
+            e->hit_react &= (uint8_t)~1u;
+            break;
+        default: break;                           /* [1] wait for the decide */
+    }
+}
+
 /* CHARGE / fast-approach (+0x5=8) — byte-true FUN_80103014 (@0x8011f890[8]; decide FUN_80102f1c =
  * the engage gates MINUS turn/dead-feed). Entered from the search decides at dist>0x2711 with a 25%
  * roll (0x801 overwrite). The zombie plays its arms-up walk clip +0x1d4 at DOUBLE anim rate (f314
@@ -1665,6 +1698,9 @@ int re15_enemy_ai_live_active(int slot)
                 else if (e->sub_state_1 == 8)
                     /* CHARGE (@0x8011f890[8]=FUN_80103014): double-rate hustle at the steer target. */
                     re15_enemy_ai_live_charge(slot, e);
+                else if (e->sub_state_1 == 0x12)
+                    /* SLEEPING-LYING (@0x8011f890[0x12]=FUN_801054f4): dormant until the decide wakes. */
+                    re15_enemy_ai_live_sleeping(e);
                 else if (e->sub_state_1 == 9)
                     /* CONTACT-STAGGER (@0x8011f890[9]=FUN_801031e4): bumped from ahead. */
                     re15_enemy_ai_live_contact_stagger(e);
