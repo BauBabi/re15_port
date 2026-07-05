@@ -18,6 +18,8 @@
 #include "re15_enemy_ai.h"      /* re15_enemy_ai_run_all — the LIVE-zombie per-frame pass (8.6) */
 #include "re15_damage.h"        /* re15_player_is_dead / re15_player_death_tick (8.10 death FSM) */
 #include "re15_menu.h"          /* re15_menu_* — the inventory/weapon-select menu (8.20) */
+#include "re15_esp.h"           /* re15_esp_fx_spawn — the discharge muzzle/smoke/shell fx (ids 2/3/4) */
+#include "re15_skeleton.h"      /* re15_sin_q12/re15_cos_q12 — the muzzle forward offset */
 
 /* GAME-OVER / death presentation — REWRITTEN 2026-07-05 to the byte-true model (full raw RE of
  * LAB_8003694c + the game-over FSM FUN_8001500c/@0x80071d10, live-verified vs 92 DuckStation
@@ -223,34 +225,44 @@ void re15_game_step(const re15_game_ctx_t *c)
             pl->x = nx;
             pl->z = nz;
         }
-        /* PLAYER WEAPON FIRE (Phase 8.10, two-sided combat — faithful-line input). Classic-RE
-         * aim+fire: hold R1 to AIM, press Square to FIRE. While aiming, Square fires the equipped
-         * weapon — re15_player_weapon_fire (the byte-true FUN_80011f50 core: auto-targets the nearest
-         * zombie in FRONT within reach, applies the per-weapon byte-true damage -> the zombie HURT/
-         * DEATH) — and does NOT trigger a door/stair (the original blocks actions while the weapon is
-         * raised; here the R1 aim suppresses g_aot_action_pressed). The AIM SEQUENCE + FIRE RECOIL ARE
-         * shown (8.14/8.16): re15_player_tick runs the byte-true action-8 aim sub-FSM @0x80035810 —
-         * R1-held first plays the RAISE clip 17 (10 frames, PL00.EDD-verified) ONCE, then holds the
-         * AIM-READY pose clip 18 (hold-last). Square fires ONLY once aim-ready (re15_player_aim_ready,
-         * the byte-true state-5 gate — no shot mid-raise) and resets anim_frame = 0 (the discharge
-         * @0x80035a00 re-plays clip 18 = recoil). FAITHFUL-LINE / DEFERRED: the exact 3-level command
-         * FSM, the weapon INVENTORY UI/selection (DAT_800aca5d -> byte-true defaulted to the briefing
-         * handgun = weapon 1 = ARMS01, re15_player_equipped_weapon; the equip UI is deferred), the
-         * aim-elevation pitch (entity+0x66), and the muzzle-flash sprite. 1170-SAFE: fires only on
-         * R1+Square (no input in a boot) and re15_player_weapon_fire only hits live zombies. */
+        /* PLAYER WEAPON FIRE — the byte-true GUN-FSM discharge (cmd1/ACTION 7, item dispatch
+         * @0x80074030 -> gun FSM 0x80032e9c, sub-table @0x800740f4). Hold R1 to AIM (re15_player_tick
+         * runs RAISE clip 6 -> HOLD clip 8/10/12); FIRE = SQUARE **HELD** in HOLD (@0x80033308,
+         * NOT an edge — the recoil clip gates the auto-refire cadence: discharge -> anim end ->
+         * HOLD -> refire). The handgun (ITEM 3) one-shot @0x800337bc:
+         *   FUN_80019700(0x02000800, yaw, posebuf+0x7a4, {0x8c,0x25d,0})   = MUZZLE FLASH (fx-id 2)
+         *   FUN_80019700(0x03000c00, yaw, posebuf+0x7a4, {0x91,0x1f4,-25}) = SMOKE       (fx-id 3)
+         *   FUN_80019700(0x04000800, yaw, posebuf+0x7a4, {0x91,0x109,-50}) = SHELL EJECT (fx-id 4)
+         *   FUN_80011f50 (damage resolve) + FUN_8004eae4 (ammo-1).
+         * The anchor posebuf+0x7a4 = the GUN-BONE matrix; the port has no engine-side pose buffer,
+         * so the spawns anchor at the actor + the MEASURED aim-pose hand-bone height (pose-dump
+         * shots/pose_aim.txt.leon b13 y=-2083) + the cited local offsets along facing (faithful-
+         * line position, byte-true ids/offsets). There is NO direct shot SE in the discharge path —
+         * the bang is driven by the spawned ESP effect's data; until the port's fx tick drives
+         * audio, re15_audio_weapon_se(8) (ARMS bank VAG 4) stands in for it (faithful-line,
+         * RE15_COMBAT_SE_SUBSYSTEM.md §3). Aiming suppresses g_aot_action_pressed (no door/stair
+         * while the weapon is raised). 1170-SAFE: needs R1+Square input; hits only live zombies. */
         if (c->rdt_ok && (c->pad_current & RE15_PAD_BIT_R1)) {
-            if ((c->pad_pressed & RE15_PAD_BIT_SQUARE) && re15_player_aim_ready()) {
-                re15_player_weapon_fire(re15_player_equipped_weapon());  /* the equipped weapon (DAT_800aca5d;
-                                               * byte-true briefing default = weapon 1 = the handgun, ARMS01,
-                                               * savestate-confirmed — was hardcoded 2 = the wrong weapon/damage) */
-                re15_audio_weapon_se(8);      /* GUNSHOT muzzle SE (byte-true FUN_80035538/FUN_80011f50 ->
-                                               * FUN_80045024(0x1080001) = bank1 idx 8). The bank = the equipped
-                                               * weapon's ARMS (primed weapon 1 = ARMS01, the briefing handgun,
-                                               * savestate-confirmed; idx 8 -> VAG 4). See RE15_COMBAT_SE_SUBSYSTEM.md §3. */
-                pl->anim_frame = 0;           /* FIRE recoil: restart the aim/fire clip 18 (action-8 phase5
-                                               * @0x80035a00 re-plays clip 18 on discharge). The aim POSE
-                                               * itself (clip 18, held) is set by re15_player_tick while R1
-                                               * is held; this restart is the visible recoil on the shot. */
+            if ((c->pad_current & RE15_PAD_BIT_SQUARE) && re15_player_aim_ready()) {
+                extern void re15_player_fire_start(void);
+                re15_player_fire_start();                 /* recoil clip 7/9/11 + cadence gate */
+                re15_player_weapon_fire(re15_player_equipped_weapon());  /* equipped ITEM (DAT_800aca5d;
+                                               * byte-true default 3 = the handgun, equip_test.sav) */
+                re15_audio_weapon_se(8);      /* stand-in for the ESP-data-driven bang (see block cmt) */
+                {   /* discharge fx (byte-true ids 2/3/4 from CORE00.ESP; anchor faithful-line) */
+                    int32_t fcos = re15_cos_q12((int)pl->rot_y);
+                    int32_t fsin = re15_sin_q12((int)pl->rot_y);
+                    int32_t gy   = pl->y - 2083;          /* measured aim hand-bone height (b13) */
+                    re15_esp_fx_spawn(re15_esp_global_bank(), 2, 0,     /* MUZZLE {0x8c,0x25d,0} */
+                        pl->x + ( fcos * 0x25d >> 12), gy,
+                        pl->z + (-fsin * 0x25d >> 12), (int16_t)pl->rot_y);
+                    re15_esp_fx_spawn(re15_esp_global_bank(), 3, 0,     /* SMOKE {0x91,0x1f4,-25} */
+                        pl->x + ( fcos * 0x1f4 >> 12), gy - 25,
+                        pl->z + (-fsin * 0x1f4 >> 12), (int16_t)pl->rot_y);
+                    re15_esp_fx_spawn(re15_esp_global_bank(), 4, 0,     /* SHELL {0x91,0x109,-50} */
+                        pl->x + ( fcos * 0x109 >> 12), gy - 50,
+                        pl->z + (-fsin * 0x109 >> 12), (int16_t)pl->rot_y);
+                }
             }
             g_aot_action_pressed = 0;         /* aiming blocks the door/stair action (no doors while aiming) */
         }

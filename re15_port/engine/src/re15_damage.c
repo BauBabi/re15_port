@@ -248,7 +248,10 @@ static const uint16_t s_player_wpn_reach[22] = {
  * dereference (that function lives in the DEBUG.BIN overlay @0x800C0000, all-?? in the EXE dump —
  * disassembled from savestate RAM). The in-game equip (menu SQUARE) overwrites it via re15_menu_tick ->
  * re15_player_set_equipped_weapon (byte-true equip-commit @0x80046688). Default 1 = the pristine entry. */
-static int s_player_weapon = 1;
+static int s_player_weapon = 3;   /* CORRECTED (discharge-chain RE): aca5d = the inventory ITEM id;
+                                   * the handgun = ITEM 3 (equip_test.sav: slot1 item 3 x15 ->
+                                   * aca5d=3; damage row [3]=5, reach [3]=1000). The old default 1
+                                   * was the KNIFE row (6 dmg). */
 int  re15_player_equipped_weapon(void) { return s_player_weapon; }
 void re15_player_set_equipped_weapon(int weapon_id)
 {
@@ -260,7 +263,7 @@ void re15_player_set_equipped_weapon(int weapon_id)
 int re15_player_aim_target(int32_t *tx, int32_t *tz)
 {
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-    int best = -1; uint32_t bd = 2000;
+    int best = -1; uint32_t bd = 30000;   /* FUN_8003703c(0x7530) — the gun autoaim latch radius */
     for (int s2 = RE15_ACTOR_SLOT_PLAYER + 1; s2 < RE15_ACTOR_MAX; s2++) {
         re15_actor_t *e = &g_actors[s2];
         if (!e->active) continue;

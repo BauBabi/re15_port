@@ -109,15 +109,22 @@
  * (game_step). In a gameplay (RBJ-less) room def_*==PL00.EDD, so the clip indexes the same byte-true
  * bank the original uses. The motion-0 prep + aim-elevation pitch (states 0/1, +0x6a & 0x3e0) are
  * the deferred aim-elevation subsystem (faithful-line collapsed). */
-/* AIM (CORRECTED 2026-07-05 — user-identified: PL00 clips 17/18 are the BOX-PUSH animation, which
- * is why aiming showed Leon shoving air): the byte-true aim (FUN_80035538 decompile) plays clip
- * 0xD from the WEAPON bank DAT_800acbc4/acbc8 (= the equipped PL00Wxx.PLW EDD/EMR pair), frame 0,
- * +0x8f=7, rate 0x200, raise-SE 0x1080001 at entry, auto-turn a8f8(target,0xc0) while a front
- * target (FUN_8003703c(2000)) is latched, and manual aim-turn +-tbl@0x80074090[(wpn-1)*5] (weapon
- * 1 = 24/tick) on LEFT/RIGHT. The render overrides the skeleton pool with the weapon bank; the
- * MOTION value is a sentinel the platform maps (RE15_MOTION_AIM_W). */
-#define RE15_MOTION_AIM_W         213    /* sentinel: aim pose from the WEAPON bank, clip 0xD */
-#define RE15_AIM_TURN_RATE         24    /* @0x80074090[(1-1)*5] — handgun manual aim turn/tick */
+/* GUN FSM (RE-CORRECTED 2026-07-05 round 2, full discharge-chain disasm): the weapon aim/fire is
+ * cmd1/ACTION 7 (@0x80032018 R1-held entry), gun sub-FSM @0x800740f4 dispatched by the equipped
+ * INVENTORY ITEM @0x80074030 (handgun = ITEM 3). Clips are from the WEAPON PLW bank:
+ *   RAISE  = clip 6  (sub0 @0x80032f18: frame 0, +0x8f=7, elevation LEVEL 0x4000,
+ *                     autoaim latch FUN_8003703c(30000), auto-track a8f8(target, 0xC8))
+ *   HOLD   = clip 8 / 10 (UP) / 12 (DOWN)  (sub1 @0x80033180; dpad switches elevation)
+ *   FIRE   = SQUARE HELD in hold (@0x80033308) -> sub2 DISCHARGE: recoil clip 7/9/11 plays out,
+ *            muzzle flash (0x02000800) + smoke (0x03000c00) + shell (0x04000800) at the gun bone,
+ *            FUN_80011f50 damage, ammo-1; anim end -> back to HOLD (auto-refire while held)
+ *   NO direct shot SE — the bang is data-driven by the spawned ESP effect.
+ * (The earlier clip-0xD model was the MELEE FSM's knife DRAW — FUN_80035538 belongs to items 0-2;
+ * its SE 0x1080001 is the knife draw. PL00 clips 17/18 = the box push. Both prior models wrong.)
+ * The MOTION sentinel 213 tells the render "weapon-bank pose"; re15_player_aim_clip() carries the
+ * actual W-bank clip. */
+#define RE15_MOTION_AIM_W         213    /* sentinel: pose from the WEAPON bank (clip via aim_clip) */
+#define RE15_AIM_TURN_RATE         24    /* @0x80074090[(3-1)*5] — handgun manual aim turn/tick */
 /* Player aim sub-phase (the action-8 FSM @0x80035810 collapsed to the visible raise->ready path):
  * 0 = not aiming, 1 = RAISE (clip 17 playing), 2 = AIM-READY (clip 18 held, the discharge is gated
  * here). File-scope so game_step can gate the shot via re15_player_aim_ready() — the original only
@@ -126,13 +133,28 @@
 #define RE15_AIM_RAISE  1
 #define RE15_AIM_READY  2
 static int s_player_aim_phase = RE15_AIM_NONE;
-static int s_aim_clip_fc = 0;               /* the weapon-bank clip 0xD frame count (platform sets) */
+static int s_aim_clip_fc = 0;               /* W-bank RAISE clip 6 frame count (platform sets) */
+static int s_aim_cur_clip = 6;              /* the current W-bank clip (6 raise/8 hold/7 recoil/10/12/9/11) */
+static int s_aim_recoil = 0;                /* 1 while the discharge clip plays */
+static int s_aim_elev = 0;                  /* 0 level / +1 up / -1 down (acaec bits 15/13) */
 void re15_player_set_aim_clip_len(int fc) { s_aim_clip_fc = fc; }
 int  re15_player_aim_active(void) { return s_player_aim_phase != RE15_AIM_NONE; }
+int  re15_player_aim_clip(void)   { return s_aim_cur_clip; }
+/* FIRE trigger (game_step, SQUARE held in HOLD): start the DISCHARGE — recoil clip 7/9/11 plays
+ * out, then the FSM returns to HOLD (sub2 @0x80033460: anim end -> sub1 = auto-refire cadence). */
+void re15_player_fire_start(void)
+{
+    extern re15_actor_t g_actors[];
+    if (s_player_aim_phase != RE15_AIM_READY || s_aim_recoil) return;
+    s_aim_recoil = 1;
+    s_aim_cur_clip = 7 + (s_aim_elev > 0 ? 2 : s_aim_elev < 0 ? 4 : 0);   /* 7/9/11 */
+    g_actors[RE15_ACTOR_SLOT_PLAYER].anim_frame = 0;
+    g_actors[RE15_ACTOR_SLOT_PLAYER].anim_frac  = 7;
+}
 extern int16_t re15_atan2_q12(int32_t dz, int32_t dx);
 static int16_t re15_atan2_q12_pl(int32_t dz, int32_t dx) { return re15_atan2_q12(dz, dx); }
 
-int re15_player_aim_ready(void) { return s_player_aim_phase == RE15_AIM_READY; }
+int re15_player_aim_ready(void) { return s_player_aim_phase == RE15_AIM_READY && !s_aim_recoil; }
 /* One-shot phase durations = the clip's exact frame_count (compute_actor_kf maps
  * anim_frame 1:1, so one cycle = frame_count ticks; a longer timer replays it —
  * that was the "hair 2x" bug). Timer-gated phases use the byte-exact pseudo-random
@@ -217,11 +239,11 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
             {
                 extern int re15_player_aim_target(int32_t *tx, int32_t *tz);   /* re15_damage.c */
                 int32_t tx, tz;
-                if (re15_player_aim_target(&tx, &tz)) {
+                if (re15_player_aim_target(&tx, &tz)) {              /* FUN_8003703c(30000) latch */
                     int bearing = ((int)re15_atan2_q12_pl(tz - p->z, tx - p->x) - 0x400) & 0xfff;
                     int d = (((bearing - (int)p->rot_y) + 0x800) & 0xfff) - 0x800;
-                    if (d >  0xc0) d =  0xc0;
-                    if (d < -0xc0) d = -0xc0;
+                    if (d >  0xc8) d =  0xc8;                        /* a8f8 slew 0xC8 (@sub0) */
+                    if (d < -0xc8) d = -0xc8;
                     p->rot_y = (int16_t)(((int)p->rot_y + d) & 0xfff);
                 }
             }
@@ -242,19 +264,34 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
         int16_t want_motion = RE15_MOTION_IDLE;
         int32_t speed = 0;
         if (aiming) {
-            /* byte-true FUN_80035538: ONE weapon-bank clip (0xD) raises AND holds — phase 0 seeds
-             * frame 0 / +0x8f=7 + the raise SE; the clip plays once (rate 0x200) and the FSM goes
-             * READY on its terminal frame (f314 return); the pose then holds (one-shot clamp). */
+            /* byte-true GUN FSM: RAISE clip 6 (frame 0, +0x8f=7) plays once -> HOLD clip 8 (10/12
+             * with dpad elevation); the DISCHARGE (re15_player_fire_start) swaps in the recoil clip
+             * 7/9/11 which plays out and drops back to HOLD (@0x80033460 anim end -> sub1). */
             if (s_player_aim_phase == RE15_AIM_NONE) {
                 s_player_aim_phase = RE15_AIM_RAISE;
-                extern void re15_audio_weapon_se(int idx);
-                re15_audio_weapon_se(8);                            /* FUN_80045024(0x1080001) entry SE */
+                s_aim_cur_clip = 6;                                 /* RAISE (sub0 @0x80032f18) */
+                s_aim_recoil = 0; s_aim_elev = 0;
             }
-            want_motion = RE15_MOTION_AIM_W;                        /* weapon-bank clip 0xD (render map) */
+            want_motion = RE15_MOTION_AIM_W;
             if (s_player_aim_phase == RE15_AIM_RAISE &&
                 p->motion == RE15_MOTION_AIM_W &&
-                s_aim_clip_fc > 0 && p->anim_frame >= s_aim_clip_fc - 1)
-                s_player_aim_phase = RE15_AIM_READY;                /* raise played out -> READY */
+                s_aim_clip_fc > 0 && p->anim_frame >= s_aim_clip_fc - 1) {
+                s_player_aim_phase = RE15_AIM_READY;                /* raise done -> HOLD */
+                s_aim_cur_clip = 8; p->anim_frame = 0;
+            }
+            if (s_player_aim_phase == RE15_AIM_READY && !s_aim_recoil) {
+                int elev = (pad_bits & RE15_PAD_BIT_UP) ? 1 : (pad_bits & RE15_PAD_BIT_DOWN) ? -1 : 0;
+                if (elev != s_aim_elev) {                           /* elevation switch re-enters */
+                    s_aim_elev = elev;
+                    s_aim_cur_clip = 8 + (elev > 0 ? 2 : elev < 0 ? 4 : 0);   /* 8/10/12 */
+                    p->anim_frame = 0;
+                }
+            }
+            if (s_aim_recoil && s_aim_clip_fc > 0 && p->anim_frame >= s_aim_clip_fc - 1) {
+                s_aim_recoil = 0;                                   /* recoil played out -> HOLD */
+                s_aim_cur_clip = 8 + (s_aim_elev > 0 ? 2 : s_aim_elev < 0 ? 4 : 0);
+                p->anim_frame = 0;
+            }
             s_idle_phase = -1;
         } else if (move_dir > 0) {
             if (run) { want_motion = RE15_MOTION_RUN;  speed = RUN_SPEED_PER_FRAME;  }
@@ -401,8 +438,9 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
     } else {
         p->anim_frame++;
         if (p->anim_frac > 0) p->anim_frac--;
-        /* the AIM clip is a ONE-SHOT (FUN_80035538 holds the terminal pose): clamp after the
-         * advance so the render's %fc wrap can never replay the raise. */
+        /* W-bank clips are ONE-SHOTS (raise/hold/recoil hold their terminal pose): clamp after
+         * the advance so the render's %fc wrap can never replay them. (FL: one shared length —
+         * the platform passes the raise clip's fc; per-clip lengths deferred.) */
         if (p->motion == RE15_MOTION_AIM_W && s_aim_clip_fc > 0 &&
             p->anim_frame > s_aim_clip_fc - 1)
             p->anim_frame = (uint16_t)(s_aim_clip_fc - 1);

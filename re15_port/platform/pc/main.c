@@ -117,6 +117,10 @@ static void re15_pc_ecg(int x, int y, int w, int h, int hp, unsigned phase)
                                         * (tpage 0x001f -> VRAM(960,256) 4-bit, clut 0x7951). Extracted
                                         * byte-true from the live ShowVRAM ground truth into a TIM
                                         * (tools/vram_png_to_tim.py) shipped at extracted_fx/effect0_blood.tim. */
+#define RE15_TIM_SLOT_FX_MUZZLE 21 /* global effect-id 2 — muzzle flash/sparks (handgun discharge
+                                    * 0x02000800 @0x800337bc); ShowVRAM-extracted sheet. */
+#define RE15_TIM_SLOT_FX_SMOKE  22 /* global effect-id 3 — gun smoke (0x03000c00) */
+#define RE15_TIM_SLOT_FX_SHELL  23 /* global effect-id 4 — shell eject/debris (0x04000800) */
 
 extern void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
 
@@ -169,6 +173,15 @@ static void pc_load_room_esp(const uint8_t *rdt_buf, int rdt_size, unsigned room
  * dispatch); here the cell index = frame % count_b, a fixed 24px UV span at the cell's byte-true (u,v)
  * origin (the coord record's w/h = signed pivot offsets, deferred with the draw routine), and a
  * ~world-600 half-size billboard. Position, effect TIM, and cell origin are byte-true. */
+FILE *pc_fx_log_handle(void)
+{
+    static FILE *s_fxlog = NULL; static int s_fxlog_init = 0;
+    if (!s_fxlog_init) { s_fxlog_init = 1;
+        const char *fl = getenv("RE15_FX_LOG");
+        if (fl && *fl) s_fxlog = fopen(fl, "w"); }
+    return s_fxlog;
+}
+
 static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy)
 {
     extern int  re15_render_pc_dbg_slot_loaded(int slot);
@@ -178,17 +191,36 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy)
         const re15_esp_fx_t *f = re15_esp_fx_get(i);
         if (!f) continue;
         /* Each particle animates from ITS OWN resolved bank: the room ESP (RDT-TIM slot 19) or the
-         * GLOBAL bank CORE00.ESP (effect-id 0 hit/blood, whose sheet lives only in VRAM -> the
-         * byte-true extracted TIM in slot 20). Pick the matching texture slot per particle. */
+         * GLOBAL bank CORE00.ESP, whose sheets live only in VRAM -> the byte-true extracted TIMs.
+         * Global ids have per-id sheets (0 blood / 2 muzzle / 3 smoke / 4 shell) in slots 20-23. */
         const re15_esp_t *bank = f->bank;
-        int slot = (bank && bank == global_bank) ? RE15_TIM_SLOT_EFFECT_GLOBAL
-                                                  : RE15_TIM_SLOT_EFFECT;
+        int slot = RE15_TIM_SLOT_EFFECT;
+        if (bank && bank == global_bank) {
+            switch (f->effect_id) {
+                case 2:  slot = RE15_TIM_SLOT_FX_MUZZLE;     break;
+                case 3:  slot = RE15_TIM_SLOT_FX_SMOKE;      break;
+                case 4:  slot = RE15_TIM_SLOT_FX_SHELL;      break;
+                default: slot = RE15_TIM_SLOT_EFFECT_GLOBAL; break;
+            }
+        }
         if (!re15_render_pc_dbg_slot_loaded(slot)) continue;   /* that bank's texture not loaded */
         re15_render_pc_bind_tim_slot(slot);
         float wx = (float)f->x, wy = (float)f->y, wz = (float)f->z;
         float vx = (cam->rot[0]*wx + cam->rot[1]*wy + cam->rot[2]*wz) / 4096.0f + cam->trans[0];
         float vy = (cam->rot[3]*wx + cam->rot[4]*wy + cam->rot[5]*wz) / 4096.0f + cam->trans[1];
         float vz = (cam->rot[6]*wx + cam->rot[7]*wy + cam->rot[8]*wz) / 4096.0f + cam->trans[2];
+        /* RE15_FX_LOG: per-particle draw decision trace (debug harness) */
+        {
+            FILE *fl = pc_fx_log_handle();
+            if (fl) {
+                extern int re15_render_pc_dbg_textri_count(void);
+                fprintf(fl, "id=%d sub=%d eidx=%d frame=%d w(%d,%d,%d) v(%.0f,%.0f,%.0f) slot=%d q=%d\n",
+                        f->effect_id, f->sub_index, f->eff_idx, f->frame,
+                        f->x, f->y, f->z, vx, vy, vz, slot,
+                        re15_render_pc_dbg_textri_count());
+                fflush(fl);
+            }
+        }
         if (vz < 1.0f) continue;                      /* behind / on the camera plane */
         float proj = (float)cam->fov_screen_dist / vz;
         int sx = cx + RNDI(vx * proj), sy = cy + RNDI(vy * proj);
@@ -196,6 +228,11 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy)
         if (bank && f->eff_idx >= 0) {
             int nb = bank->eff[f->eff_idx].count_b;
             if (nb > 0) re15_esp_coord(bank, f->eff_idx, f->frame % nb, &c);
+        }
+        {
+            extern FILE *pc_fx_log_handle(void);
+            FILE *fl = pc_fx_log_handle();
+            if (fl) fprintf(fl, "   -> sx=%d sy=%d proj=%.4f cell(u=%d v=%d)\n", sx, sy, proj, c.u, c.v);
         }
         int half = (int)(600.0f * proj); if (half < 3) half = 3; if (half > 120) half = 120;
         int u0 = c.u, v0 = c.v, u1 = c.u + 24, v1 = c.v + 24;   /* faithful 24px UV cell */
@@ -500,23 +537,33 @@ int main(int argc, char *argv[])
         } else {
             fprintf(stderr, "[esp] global bank CORE00.ESP NOT loaded\n");
         }
-        /* The GLOBAL effect textures live only in VRAM (no RDT TIM). effect-id 0 (hit/blood) was
-         * extracted byte-true from the live ShowVRAM ground truth into a TIM; upload it to the
-         * dedicated global-effect slot so pc_draw_effects can bind it for global-bank particles. */
-        int bsz = 0;
-        uint8_t *bloodtim = pc_read_shared("extracted_fx/effect0_blood.tim", &bsz);
-        if (bloodtim) {
-            re15_tim_t btim;
-            if (re15_tim_parse(bloodtim, bsz, &btim) == 0) {
-                re15_render_pc_upload_tim_slot(&btim, RE15_TIM_SLOT_EFFECT_GLOBAL);
-                fprintf(stderr, "[esp] global effect-0 blood TIM -> slot %d: %dx%d %dbpp\n",
-                        RE15_TIM_SLOT_EFFECT_GLOBAL, btim.width, btim.height, btim.bpp);
+        /* The GLOBAL effect textures live only in VRAM (no RDT TIM). All four sheets were
+         * extracted byte-true from the live ShowVRAM ground truth (re15_vram_extract.py):
+         * id 0 = hit/blood, id 2 = muzzle flash/sparks, id 3 = smoke, id 4 = shell/debris —
+         * the ids the handgun discharge spawns (@0x800337bc: 0x02000800/0x03000c00/0x04000800).
+         * Upload each to its own slot so pc_draw_effects binds per effect id. */
+        static const struct { const char *file; int slot; const char *tag; } k_gfx[] = {
+            { "extracted_fx/effect0_blood.tim",  RE15_TIM_SLOT_EFFECT_GLOBAL, "0 blood"  },
+            { "extracted_fx/effect2_muzzle.tim", RE15_TIM_SLOT_FX_MUZZLE,     "2 muzzle" },
+            { "extracted_fx/effect3_smoke.tim",  RE15_TIM_SLOT_FX_SMOKE,      "3 smoke"  },
+            { "extracted_fx/effect4_shell.tim",  RE15_TIM_SLOT_FX_SHELL,      "4 shell"  },
+        };
+        for (size_t gi = 0; gi < sizeof(k_gfx)/sizeof(k_gfx[0]); gi++) {
+            int bsz = 0;
+            uint8_t *gtim = pc_read_shared(k_gfx[gi].file, &bsz);
+            if (gtim) {
+                re15_tim_t btim;
+                if (re15_tim_parse(gtim, bsz, &btim) == 0) {
+                    re15_render_pc_upload_tim_slot(&btim, k_gfx[gi].slot);
+                    fprintf(stderr, "[esp] global effect-%s TIM -> slot %d: %dx%d %dbpp\n",
+                            k_gfx[gi].tag, k_gfx[gi].slot, btim.width, btim.height, btim.bpp);
+                } else {
+                    fprintf(stderr, "[esp] %s parse FAILED\n", k_gfx[gi].file);
+                }
+                free(gtim);
             } else {
-                fprintf(stderr, "[esp] effect0_blood.tim parse FAILED\n");
+                fprintf(stderr, "[esp] %s NOT found\n", k_gfx[gi].file);
             }
-            free(bloodtim);
-        } else {
-            fprintf(stderr, "[esp] effect0_blood.tim NOT found\n");
         }
     }
 
@@ -739,10 +786,11 @@ int main(int argc, char *argv[])
         w01_skel = skel;   /* copy bone hierarchy + bind pose from PL00 */
         w01_skel.keyframe_data       = w01_skel_raw.keyframe_data;
         w01_skel.keyframe_data_size  = w01_skel_raw.keyframe_data_size;
-        /* the byte-true AIM clip = W01 clip 0xD (FUN_80035538) — hand its length to the player FSM */
-        if (w01_anim.clip_count > 0x0d) {
+        /* the GUN RAISE clip = W01 clip 6 (gun FSM sub0 @0x80032f18) — its length drives the
+         * raise->hold + recoil->hold gates (FL: one shared length for the W clips). */
+        if (w01_anim.clip_count > 6) {
             extern void re15_player_set_aim_clip_len(int fc);
-            re15_player_set_aim_clip_len(w01_anim.clips[0x0d].frame_count);
+            re15_player_set_aim_clip_len(w01_anim.clips[6].frame_count);
         }
         w01_skel.keyframe_count      = w01_skel_raw.keyframe_count;
         w01_skel.keyframe_size_bytes = w01_skel_raw.keyframe_size_bytes;
@@ -1502,9 +1550,14 @@ int main(int argc, char *argv[])
                     if (lp && *lp) s_state_log = fopen(lp, "w"); }
                 if (s_state_log) {
                     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-                    fprintf(s_state_log, "F%u pad=%04x PL(%d,%d,rot=%d,hp=%d)",
+                    extern int re15_player_aim_clip(void);
+                    extern int re15_render_pc_dbg_slot_loaded(int slot);
+                    fprintf(s_state_log, "F%u pad=%04x PL(%d,%d,rot=%d,hp=%d) mo=%d ac=%d fx=%d sl=%d%d%d%d",
                             g_engine.frame_count, g_engine.pad_current,
-                            pl->x, pl->z, pl->rot_y, pl->hp);
+                            pl->x, pl->z, pl->rot_y, pl->hp,
+                            pl->motion, re15_player_aim_clip(), re15_esp_fx_count(),
+                            re15_render_pc_dbg_slot_loaded(20), re15_render_pc_dbg_slot_loaded(21),
+                            re15_render_pc_dbg_slot_loaded(22), re15_render_pc_dbg_slot_loaded(23));
                     for (int si = 1; si < RE15_ACTOR_MAX; si++) {
                         re15_actor_t *e = &g_actors[si];
                         if (!e->active || e->type == 0) continue;
@@ -2037,9 +2090,10 @@ int main(int argc, char *argv[])
                 extern int re15_player_aim_active(void);
                 if (re15_player_aim_active() && w01_ok &&
                     re15_player_victim_state() == 0) {
+                    extern int re15_player_aim_clip(void);
                     p_skel = &w01_skel;              /* the existing composite: PL00 bones + W01 pool */
                     p_anim = &w01_anim;
-                    p_clip_override = 0x0d;          /* the byte-true aim clip (FUN_80035538) */
+                    p_clip_override = re15_player_aim_clip();   /* 6 raise / 8|10|12 hold / 7|9|11 fire */
                 }
             }
             int kf_idx = 0;

@@ -723,48 +723,70 @@ int main(void)
             printf("  (15) per-state clips: ENGAGE/TURN=+0x1d4 variant; GRAB (+0x5-3)*3+{0,1}->release 17\n");
     }
 
-    /* (16): the PLAYER AIM/RAISE sequence (Phase 8.14 + 8.16) — holding R1 roots the player and runs
-     * the byte-true action-8 aim sub-FSM @0x80035810: first the RAISE clip 17 (10 frames, PL00.EDD-
-     * verified) plays out, THEN the held AIM-READY pose clip 18 (@0x800359e0). The discharge is gated
-     * on aim-ready (re15_player_aim_ready) = the byte-true state-5 gate (no shot mid-raise). Released
-     * reverts to idle. */
+    /* (16): the PLAYER GUN FSM (discharge-chain RE) — holding R1 roots the player and runs the
+     * byte-true ACTION-7 gun sub-FSM (@0x80074030 item dispatch -> 0x80032e9c, sub-table
+     * @0x800740f4): sub0 RAISE = W-bank clip 6 plays out, then sub1 HOLD = clip 8 (aim-ready);
+     * the DISCHARGE (re15_player_fire_start) swaps in the RECOIL clip 7 which plays out and drops
+     * back to HOLD 8 (auto-refire cadence @0x80033460). aim_ready is FALSE mid-raise AND mid-
+     * recoil (the cadence gate). Released reverts to idle. */
     {
+        extern int  re15_player_aim_clip(void);
+        extern void re15_player_fire_start(void);
         g_scd.player_mode = 0; g_scd.message_display_frames = 0; g_scd.message_query = 0;
         re15_player_tick(NULL, 0);          /* a non-aim tick first -> reset the aim FSM to NONE */
         pl->motion = 200;                   /* a non-aim sentinel (idle) */
         pl->anim_frame = 0; pl->hp = 100; pl->rot_y = 0; pl->x = 0; pl->z = 0;
         {
             extern void re15_player_set_aim_clip_len(int fc);
-            re15_player_set_aim_clip_len(10);   /* mock the W01 clip-0xD length (platform sets it) */
+            re15_player_set_aim_clip_len(10);   /* mock the W-bank clip length (platform sets it) */
         }
-        re15_player_tick(NULL, RE15_PAD_BIT_R1);          /* hold R1 -> the WEAPON-BANK aim clip
-                                                           * (byte-true FUN_80035538: clip 0xD from
-                                                           * the PLW pair; PL00 17/18 = the box push) */
+        re15_player_tick(NULL, RE15_PAD_BIT_R1);          /* hold R1 -> gun FSM sub0 RAISE */
         if (pl->motion != 213) {
-            fprintf(stderr, "FAIL: (16) hold R1 -> weapon-bank aim sentinel 213, ist %d\n", pl->motion); fail = 1; }
+            fprintf(stderr, "FAIL: (16) hold R1 -> weapon-bank sentinel 213, ist %d\n", pl->motion); fail = 1; }
+        if (re15_player_aim_clip() != 6) {
+            fprintf(stderr, "FAIL: (16) the raise = W-bank clip 6 (sub0 @0x80032f18), ist %d\n",
+                    re15_player_aim_clip()); fail = 1; }
         if (re15_player_aim_ready()) {
             fprintf(stderr, "FAIL: (16) mid-raise must NOT be aim-ready (no shot mid-raise)\n"); fail = 1; }
         int32_t ax = pl->x, az = pl->z;
-        /* run enough ticks for the 10-frame raise to play out -> AIM-READY (clip 18) */
+        /* run enough ticks for the 10-frame raise to play out -> HOLD clip 8 (aim-ready) */
         for (int f = 0; f < 12; f++) re15_player_tick(NULL, RE15_PAD_BIT_R1 | RE15_PAD_BIT_UP);
         if (pl->x != ax || pl->z != az) {
             fprintf(stderr, "FAIL: (16) aiming roots the player (no translation on UP), moved %d,%d\n",
                     (int)(pl->x - ax), (int)(pl->z - az)); fail = 1; }
-        if (pl->motion != 213) {
-            fprintf(stderr, "FAIL: (16) aim pose HOLDS the weapon-bank clip (213), ist %d\n", pl->motion); fail = 1; }
+        /* UP was held -> the HOLD switched to the AIM-UP elevation clip 10 (byte-true dpad
+         * elevation @0x80033180: UP/DOWN swap clips 8/10/12 + acaec 0x8000/0x2000) */
+        if (pl->motion != 213 || re15_player_aim_clip() != 10) {
+            fprintf(stderr, "FAIL: (16) raise done + UP held -> HOLD clip 10 (aim-up), mo=%d clip=%d\n",
+                    pl->motion, re15_player_aim_clip()); fail = 1; }
+        re15_player_tick(NULL, RE15_PAD_BIT_R1);          /* dpad released -> back to LEVEL clip 8 */
+        if (re15_player_aim_clip() != 8) {
+            fprintf(stderr, "FAIL: (16) dpad released -> LEVEL HOLD clip 8, ist %d\n",
+                    re15_player_aim_clip()); fail = 1; }
         if (!re15_player_aim_ready()) {
-            fprintf(stderr, "FAIL: (16) raise done -> aim-ready (can fire)\n"); fail = 1; }
+            fprintf(stderr, "FAIL: (16) hold -> aim-ready (can fire)\n"); fail = 1; }
         if (pl->anim_frame > 9) {
-            fprintf(stderr, "FAIL: (16) the aim clip must HOLD its terminal frame (one-shot), af=%d\n",
+            fprintf(stderr, "FAIL: (16) the W clips HOLD their terminal frame (one-shot), af=%d\n",
                     (int)pl->anim_frame); fail = 1; }
+        /* DISCHARGE: fire_start -> recoil clip 7, NOT ready (cadence gate), plays out -> HOLD 8 */
+        re15_player_fire_start();
+        if (re15_player_aim_clip() != 7 || pl->anim_frame != 0) {
+            fprintf(stderr, "FAIL: (16) discharge -> RECOIL clip 7 from frame 0, clip=%d af=%d\n",
+                    re15_player_aim_clip(), (int)pl->anim_frame); fail = 1; }
+        if (re15_player_aim_ready()) {
+            fprintf(stderr, "FAIL: (16) mid-recoil must NOT be aim-ready (the refire cadence gate)\n"); fail = 1; }
+        for (int f = 0; f < 12; f++) re15_player_tick(NULL, RE15_PAD_BIT_R1);
+        if (re15_player_aim_clip() != 8 || !re15_player_aim_ready()) {
+            fprintf(stderr, "FAIL: (16) recoil played out -> back to HOLD 8 + ready (auto-refire), clip=%d\n",
+                    re15_player_aim_clip()); fail = 1; }
         re15_player_tick(NULL, 0);                        /* release R1 -> revert to idle/walk */
         if (pl->motion == 213) {
             fprintf(stderr, "FAIL: (16) release R1 -> leave the aim pose, motion still %d\n", pl->motion); fail = 1; }
         if (re15_player_aim_ready()) {
             fprintf(stderr, "FAIL: (16) release R1 -> not aim-ready\n"); fail = 1; }
         if (!fail)
-            printf("  (16) player AIM: R1 -> weapon-bank clip 0xD (sentinel 213, one-shot hold) -> "
-                   "aim-ready (gated fire), released -> idle\n");
+            printf("  (16) player GUN FSM: R1 -> RAISE 6 -> HOLD 8 (ready) -> fire -> RECOIL 7 "
+                   "(gated) -> HOLD 8 (byte-true @0x800740f4 sub-FSM)\n");
     }
 
     /* (17): the ZOMBIE COMBAT-SE bank lookup (Phase 8.17/8.18, byte-true via FUN_800453d0 on the snd1 room bank).
@@ -844,13 +866,14 @@ int main(void)
         free(edh);
     }
 
-    /* (19): the EQUIPPED WEAPON (Phase 8.19, DAT_800aca5d). The port now models the equipped weapon
-     * and defaults it byte-true to weapon 1 (the ROOM1140 briefing handgun = ARMS01, savestate-
-     * confirmed) instead of the previously-hardcoded weapon 2. game_step fires re15_player_weapon_fire(
-     * re15_player_equipped_weapon()), so a shot does weapon 1's byte-true zombie damage (6), not 24. */
+    /* (19): the EQUIPPED WEAPON (Phase 8.19, DAT_800aca5d). CORRECTED by the discharge-chain RE:
+     * aca5d holds the inventory ITEM id and the handgun = ITEM 3 (equip_test.sav: equipping the
+     * handgun x15 writes aca5d=3; action-7 dispatch @0x80074030 routes items 3+ to the GUN FSM
+     * 0x80032e9c, items 0-2 to the melee FSM 0x80034e70). Damage row [3] = 5 (@0x8006e650),
+     * reach [3] = 1000 (@0x8006e5a0). The old default 1 was the knife row — an item/weapon mixup. */
     {
-        if (re15_player_equipped_weapon() != 1) {
-            fprintf(stderr, "FAIL: (19) equipped weapon must default to 1 (briefing handgun), ist %d\n",
+        if (re15_player_equipped_weapon() != 3) {
+            fprintf(stderr, "FAIL: (19) equipped item must default to 3 (handgun, equip_test.sav aca5d=3), ist %d\n",
                     re15_player_equipped_weapon()); fail = 1; }
         pl->x = 0; pl->z = 0; pl->hp = 100; pl->rot_y = 0; pl->floor = 0; pl->hit_react = 0; pl->state = 0;
         re15_player_death_reset();
@@ -861,21 +884,21 @@ int main(void)
         }
         re15_actor_t *zt = &g_actors[zslots[0]];
         zt->x = 0; zt->z = 800; zt->hp = 60; zt->hit_react = 0; zt->state = RE15_AI_STATE_ACTIVE;
-        /* fire the EQUIPPED weapon (1) -> byte-true weapon-1 zombie damage = 6 */
+        /* fire the EQUIPPED item (3 = handgun) -> byte-true row-3 zombie damage = 5 */
         int hit = re15_player_weapon_fire(re15_player_equipped_weapon());
-        if (hit != (zslots[0] + 1) || zt->hp != (int16_t)(60 - 6)) {
-            fprintf(stderr, "FAIL: (19) equipped weapon 1 must do 6 dmg (not 24), HP 60->%d\n", zt->hp); fail = 1; }
-        /* the setter (the future inventory equip UI hook) switches the weapon */
+        if (hit != (zslots[0] + 1) || zt->hp != (int16_t)(60 - 5)) {
+            fprintf(stderr, "FAIL: (19) handgun (item 3) must do 5 dmg, HP 60->%d\n", zt->hp); fail = 1; }
+        /* the setter (the future inventory equip UI hook) switches the item */
         zt->hp = 60; zt->hit_react = 0; zt->state = RE15_AI_STATE_ACTIVE; zt->sub_state_1 = 0;
         re15_player_set_equipped_weapon(2);
         if (re15_player_equipped_weapon() != 2) {
             fprintf(stderr, "FAIL: (19) set_equipped_weapon(2) must stick\n"); fail = 1; }
         re15_player_weapon_fire(re15_player_equipped_weapon());
         if (zt->hp != (int16_t)(60 - 24)) {
-            fprintf(stderr, "FAIL: (19) weapon 2 must do 24 dmg, HP 60->%d\n", zt->hp); fail = 1; }
-        re15_player_set_equipped_weapon(1);   /* restore the byte-true briefing default */
+            fprintf(stderr, "FAIL: (19) item 2 must do 24 dmg (row 2 @0x8006e650), HP 60->%d\n", zt->hp); fail = 1; }
+        re15_player_set_equipped_weapon(3);   /* restore the byte-true briefing default (handgun) */
         if (!fail)
-            printf("  (19) equipped weapon: default 1 (handgun) -> 6 dmg; set 2 -> 24 dmg (byte-true DAT_800aca5d)\n");
+            printf("  (19) equipped item: default 3 (handgun) -> 5 dmg; set 2 -> 24 dmg (byte-true DAT_800aca5d)\n");
     }
 
     free(buf);

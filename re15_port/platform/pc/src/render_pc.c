@@ -86,7 +86,10 @@ static uint32_t      rgb555_to_argb8888(uint16_t c);   /* fwd (defined with the 
  *   5. end_frame: RenderPresent
  *
  * The queue is bounded to keep per-frame allocations off the heap. */
-#define TEXTRI_QUEUE_MAX 2048   /* enough for a mesh of ~700 quads */
+#define TEXTRI_QUEUE_MAX 8192   /* was 2048 ("~700 quads" = ONE actor) — ROOM1140 draws 7 actors
+                                 * (Leon + W01 + 5 zombies + corpses) and saturated the queue, which
+                                 * silently dropped everything queued after it (the effect sprites:
+                                 * muzzle/smoke/shell + gore were never drawn). 8192 ≈ 4 rooms' worth. */
 
 /* TIM slot pool — allows multiple characters/props to have their own
  * textures. Slot 0 = player default (Leon); other slots for NPCs/props. */
