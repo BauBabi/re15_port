@@ -57,6 +57,17 @@ int  re15_inv_grant(uint8_t type, uint8_t amount);
  * loadout. See RE15_INVENTORY_SUBSYSTEM.md §2. */
 void re15_inv_load_briefing(void);
 
+/* ===== AMMO / MAGAZINE / RELOAD (byte-true FUN_8004ea6c/eae4/dfec/eb70/ebdc) ============
+ * The MAGAZINE is the equipped weapon slot's qty byte; the RESERVE is a separate ammo-item
+ * slot (handgun -> item 0x15). Equipped SLOT index = DAT_800b25c8 (0x80 = none). */
+int  re15_inv_equipped_slot(void);
+void re15_inv_set_equipped_slot(int s);
+int  re15_inv_find_item(uint8_t id);        /* FUN_8004dfec: slot or -1                     */
+int  re15_ammo_mag_nonzero(void);           /* FUN_8004ea6c: equipped slot qty != 0         */
+int  re15_ammo_consume(void);               /* FUN_8004eae4: qty--; pre-decrement bool      */
+int  re15_ammo_reserve_slot(void);          /* FUN_8004eb70: ammo slot >0, or 0 (slot-0 quirk!) */
+void re15_ammo_reload_exec(void);           /* FUN_8004ebdc: chunk transfer / box removal   */
+
 /* Item CLASSIFICATION — BYTE-TRUE id-range gate (RE15_INVENTORY_SUBSYSTEM.md §2): the game uses an
  * item-id RANGE, not a per-item type byte. WEAPON = id < 0x15 (0x00..0x14; `sltiu id,0x15` @0x80047d54,
  * backed by the ARMS-head table @0x8007492c being non-zero exactly for 0..0x14). AMMO = 0x15..0x21.

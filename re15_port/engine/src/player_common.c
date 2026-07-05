@@ -133,6 +133,7 @@
 #define RE15_AIM_NONE   0
 #define RE15_AIM_RAISE  1
 #define RE15_AIM_READY  2
+#define RE15_AIM_RELOAD 3   /* gun FSM sub4 @0x80033d7c: clip 0xD plays out -> refill + HOLD */
 static int s_player_aim_phase = RE15_AIM_NONE;
 /* Per-clip frame counts of the equipped W bank (the platform re-feeds them on bank switch).
  * PLW-verified layout (PL00W01≡W00≡W02 melee / PL00W03≡W04 gun, both 14 clips): melee draw+hold
@@ -161,6 +162,21 @@ static int aim_cur_fc(void)
 }
 int  re15_player_aim_active(void) { return s_player_aim_phase != RE15_AIM_NONE; }
 int  re15_player_aim_clip(void)   { return s_aim_cur_clip; }
+/* RELOAD entry (gun FSM sub4 @0x80033d7c, fired by the empty+press-edge gate @0x80033378):
+ * clip 0xD from frame 0 with blend 7, elevation reset to LEVEL ((x&0x1fff)|0x4000 -> acaec),
+ * NO SE at entry — the reload SE 0x01030001 plays at clip COMPLETION together with the
+ * refill (@0x80033ebc-d4). */
+void re15_player_reload_start(void)
+{
+    extern re15_actor_t g_actors[];
+    if (s_player_aim_phase != RE15_AIM_READY || s_aim_recoil || s_aim_melee) return;
+    s_player_aim_phase = RE15_AIM_RELOAD;
+    s_aim_cur_clip = 0x0d;
+    s_aim_elev = 0;                                       /* acaec -> 0x4000 LEVEL */
+    g_actors[RE15_ACTOR_SLOT_PLAYER].anim_frame = 0;
+    g_actors[RE15_ACTOR_SLOT_PLAYER].anim_frac  = 7;      /* blend 7 @0x80033dc8 */
+}
+int re15_player_reloading(void) { return s_player_aim_phase == RE15_AIM_RELOAD; }
 /* FIRE trigger (game_step, SQUARE held in HOLD/READY): GUN = DISCHARGE — recoil clip 7/9/11
  * plays out, then back to HOLD (sub2 @0x80033460: anim end -> sub1 = auto-refire cadence).
  * MELEE (items 0-2) = faithful-line slash stand-in: re-play the draw clip 0xD as the cadence
@@ -327,6 +343,18 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
                     s_aim_cur_clip = 8 + (s_aim_elev > 0 ? 2 : s_aim_elev < 0 ? 4 : 0);
                     p->anim_frame = 0;                              /* gun: back to HOLD (refire) */
                 }
+            }
+            /* RELOAD sub4 exit (@0x80033ea8-d4): the 0xD clip finishing writes sub=1 (HOLD),
+             * THEN the refill FUN_8004ebdc, THEN the reload SE 0x01030001 (ARMS record 3) —
+             * refill + SE at clip COMPLETION, not at the sub4 entry. */
+            if (s_player_aim_phase == RE15_AIM_RELOAD &&
+                aim_cur_fc() > 0 && p->anim_frame >= aim_cur_fc() - 1) {
+                extern void re15_ammo_reload_exec(void);
+                extern void re15_audio_weapon_se(int idx);
+                s_player_aim_phase = RE15_AIM_READY;                /* sub=1 -> HOLD */
+                s_aim_cur_clip = 8; p->anim_frame = 0;
+                re15_ammo_reload_exec();                            /* @0x80033ec0 */
+                re15_audio_weapon_se(3);                            /* 0x01030001 @0x80033ec8-d4 */
             }
             s_idle_phase = -1;
         } else if (move_dir > 0) {

@@ -41,6 +41,7 @@
 #include "re15_damage.h"   /* re15_damage_seed_rng */
 #include "re15_player.h"   /* re15_player_tick + RE15_PAD_BIT_R1 (the aim pose, Phase 8.14) */
 #include "re15_vab.h"      /* re15_vab_parse + re15_footstep_vag — the death-SE bank lookup (Phase 8.17) */
+#include "re15_inventory.h" /* g_inv + re15_ammo_* — the byte-true magazine/reload model (part 27) */
 #include "re15_room.h"
 #include "re15_skeleton.h" /* re15_sin/cos_q12 - the test-21 anchor seed */     /* g_room_change + g_current_room_id — the death->continue reload (part 20) */
 
@@ -1348,6 +1349,81 @@ int main(void)
                        "(never revives); grab-[5] domino -> bystander 0xb01\n");
         }
         re15_enemy_reset();
+    }
+
+    /* (27): the AMMO / MAGAZINE / RELOAD model — byte-true FUN_8004ea6c/eae4/dfec/eb70/ebdc
+     * (workflow wf_7fc66a06-55e, arbitrated). Magazine = the equipped weapon SLOT's qty byte
+     * (@0x800b10ad+slot*4, slot @0x800b25c8); reserve = a separate ammo-item slot (handgun ->
+     * item 0x15); refill chunk = props table @0x80074da8 (handgun 15); reserve-present has the
+     * byte-true SLOT-0 QUIRK (@0x8004ebc4 `slt zero,slot`: ammo in slot 0 is never seen). */
+    {
+        re15_inv_load_briefing();                       /* knife s0 q0 / handgun s1 q15 / bullets s2 q50 */
+        re15_player_set_equipped_weapon(3);             /* handgun -> derives slot 1 (dfec scan) */
+        if (re15_inv_equipped_slot() != 1) {
+            fprintf(stderr, "FAIL: (27) equip handgun -> slot 1 (dfec), ist %d\n",
+                    re15_inv_equipped_slot()); fail = 1; }
+        if (!re15_ammo_mag_nonzero()) {
+            fprintf(stderr, "FAIL: (27) full mag (15) -> ea6c true\n"); fail = 1; }
+        for (int i = 0; i < 15; i++)
+            if (!re15_ammo_consume()) {
+                fprintf(stderr, "FAIL: (27) eae4 must return had-ammo for shot %d\n", i); fail = 1; break; }
+        if (g_inv.slots[1].qty != 0 || re15_ammo_mag_nonzero()) {
+            fprintf(stderr, "FAIL: (27) 15 shots -> mag 0 + ea6c false, qty=%d\n",
+                    g_inv.slots[1].qty); fail = 1; }
+        if (re15_ammo_consume() != 0) {
+            fprintf(stderr, "FAIL: (27) eae4 on empty -> 0, no underflow\n"); fail = 1; }
+        if (re15_ammo_reserve_slot() != 2) {
+            fprintf(stderr, "FAIL: (27) eb70 -> bullets slot 2, ist %d\n", re15_ammo_reserve_slot()); fail = 1; }
+        re15_ammo_reload_exec();                        /* ebdc: chunk 15 < box 50 */
+        if (g_inv.slots[1].qty != 15 || g_inv.slots[2].qty != 35) {
+            fprintf(stderr, "FAIL: (27) reload -> mag 15 / box 35, ist %d/%d\n",
+                    g_inv.slots[1].qty, g_inv.slots[2].qty); fail = 1; }
+        /* box-exhaust branch: box < chunk -> mag += box, ammo slot removed */
+        g_inv.slots[1].qty = 0; g_inv.slots[2].qty = 7;
+        re15_ammo_reload_exec();
+        if (g_inv.slots[1].qty != 7 || g_inv.slots[2].id != 0) {
+            fprintf(stderr, "FAIL: (27) box-exhaust reload -> mag 7 + slot removed, qty=%d id=%d\n",
+                    g_inv.slots[1].qty, g_inv.slots[2].id); fail = 1; }
+        /* the byte-true SLOT-0 QUIRK: ammo in inventory slot 0 is NOT seen as reserve */
+        g_inv.slots[0].id = 0x15; g_inv.slots[0].qty = 50;   /* bullets into slot 0 */
+        if (re15_ammo_reserve_slot() != 0) {
+            fprintf(stderr, "FAIL: (27) eb70 slot-0 quirk: ammo in slot 0 -> NOT recognized\n"); fail = 1; }
+        /* RELOAD FSM: empty mag -> reload_start plays W clip 0xD out -> refill + HOLD */
+        re15_inv_load_briefing();
+        re15_player_set_equipped_weapon(3);
+        g_inv.slots[1].qty = 0;                          /* empty the mag */
+        {
+            extern void re15_player_reload_start(void);
+            extern int  re15_player_reloading(void);
+            extern int  re15_player_aim_clip(void);
+            extern void re15_player_set_aim_clip_len(int fc);
+            re15_player_set_aim_clip_len(10);            /* mock clip lengths */
+            re15_player_tick(NULL, 0);                   /* reset the aim FSM */
+            pl->motion = 200; pl->anim_frame = 0; pl->hp = 100;
+            for (int f = 0; f < 14; f++) re15_player_tick(NULL, RE15_PAD_BIT_R1);  /* raise -> HOLD */
+            if (!re15_player_aim_ready()) {
+                fprintf(stderr, "FAIL: (27) hold ready before reload\n"); fail = 1; }
+            re15_player_reload_start();                  /* the empty+edge gate fires this */
+            if (!re15_player_reloading() || re15_player_aim_clip() != 0x0d || pl->anim_frame != 0) {
+                fprintf(stderr, "FAIL: (27) reload -> clip 0xD from f0, clip=%d\n",
+                        re15_player_aim_clip()); fail = 1; }
+            if (re15_player_aim_ready()) {
+                fprintf(stderr, "FAIL: (27) reloading must not be fire-ready\n"); fail = 1; }
+            for (int f = 0; f < 12; f++) re15_player_tick(NULL, RE15_PAD_BIT_R1);  /* clip 0xD out */
+            if (re15_player_reloading() || !re15_player_aim_ready() || re15_player_aim_clip() != 8) {
+                fprintf(stderr, "FAIL: (27) reload done -> HOLD 8 + ready, clip=%d\n",
+                        re15_player_aim_clip()); fail = 1; }
+            if (g_inv.slots[1].qty != 15 || g_inv.slots[2].qty != 35) {
+                fprintf(stderr, "FAIL: (27) reload-exit refill -> mag 15 / box 35, ist %d/%d\n",
+                        g_inv.slots[1].qty, g_inv.slots[2].qty); fail = 1; }
+            re15_player_tick(NULL, 0);
+        }
+        re15_player_set_equipped_weapon(1);              /* restore the briefing default */
+        re15_inv_load_briefing();
+        if (!fail)
+            printf("  (27) ammo: mag=slot qty (15 shots -> empty, no underflow); eb70 reserve "
+                   "(slot-0 quirk); ebdc refill 15/35 + box-exhaust removal; RELOAD clip 0xD -> "
+                   "refill+HOLD (byte-true FUN_8004ea6c/eae4/eb70/ebdc)\n");
     }
 
     if (fail) { fprintf(stderr, "\nROOM1140 COMBAT-WIRING TEST FAILED\n"); return 1; }

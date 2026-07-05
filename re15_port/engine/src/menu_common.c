@@ -64,6 +64,9 @@ void re15_menu_tick(uint16_t pad_pressed)
         uint8_t id = g_inv.slots[s_disp_slot[s_cursor]].id;
         if (re15_item_is_weapon(id)) {                 /* only weapons are equippable (id < 0x15) */
             re15_player_set_equipped_weapon(id);       /* DAT_800aca5d = id (@0x80046688)          */
+            re15_inv_set_equipped_slot(s_disp_slot[s_cursor]); /* DAT_800b25c8 = the CURSOR slot —
+                                                        * the primary equip record; ea6c/eae4
+                                                        * resolve the MAGAZINE through it */
             re15_audio_prime_weapon(id);               /* re-load its ARMS SE bank (@0x800466c4)   */
             s_open = 0;                                /* equip closes the menu                    */
         }

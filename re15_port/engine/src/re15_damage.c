@@ -259,7 +259,16 @@ static int s_player_weapon = 1;   /* RE-CORRECTED twice: aca5d = the inventory I
 int  re15_player_equipped_weapon(void) { return s_player_weapon; }
 void re15_player_set_equipped_weapon(int weapon_id)
 {
-    if (weapon_id >= 0 && weapon_id < 22) s_player_weapon = weapon_id;
+    if (weapon_id >= 0 && weapon_id < 22) {
+        s_player_weapon = weapon_id;
+        /* keep the equipped SLOT (DAT_800b25c8) in sync — the byte-true menu commit stores the
+         * cursor SLOT; this id-based setter (tests/SCD) derives it via the FUN_8004dfec scan.
+         * No match -> 0x80 (nothing equipped), the ea6c sentinel. */
+        extern int  re15_inv_find_item(uint8_t id);
+        extern void re15_inv_set_equipped_slot(int s);
+        int s = re15_inv_find_item((uint8_t)weapon_id);
+        re15_inv_set_equipped_slot(s >= 0 ? s : 0x80);
+    }
 }
 
 /* AIM TARGET LATCH (byte-true FUN_8003703c(2000) via FUN_80035538): the nearest live front-cone

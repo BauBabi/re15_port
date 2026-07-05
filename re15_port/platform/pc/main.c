@@ -875,6 +875,18 @@ int main(int argc, char *argv[])
      * across a room_unload -> scd_vm_init is a separate concern; the briefing/combat room boots
      * with this. Phase 2b: the full inventory screen renders g_inv + the item classification.) */
     re15_inv_load_briefing();
+    /* RE15_EQUIP=<item> (debug harness): equip an item at boot without the menu — input scripts
+     * have no START/menu tokens, so deterministic gun probes (ammo chain, discharge fx) need this.
+     * The byte-true default stays the briefing knife (aca5d=1, slot 0). */
+    {
+        const char *eqe = getenv("RE15_EQUIP");
+        if (eqe && *eqe) {
+            extern void re15_player_set_equipped_weapon(int weapon_id);
+            re15_player_set_equipped_weapon((int)strtol(eqe, NULL, 0));
+            fprintf(stderr, "[equip] RE15_EQUIP -> item %ld (slot %d)\n",
+                    strtol(eqe, NULL, 0), re15_inv_equipped_slot());
+        }
+    }
     /* Load the item-icon sheet via the cwd-independent asset root (pc_read_shared) and hand it to the
      * engine — re15_asset_read_file only fopen's a raw relative path, which fails when the .exe runs
      * from the build dir (that made the icons blank AND re-tried the open every pixel = dog-slow). */
@@ -1587,12 +1599,19 @@ int main(int argc, char *argv[])
                     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
                     extern int re15_player_aim_clip(void);
                     extern int re15_render_pc_dbg_slot_loaded(int slot);
-                    fprintf(s_state_log, "F%u pad=%04x PL(%d,%d,rot=%d,hp=%d) mo=%d ac=%d fx=%d sl=%d%d%d%d",
-                            g_engine.frame_count, g_engine.pad_current,
-                            pl->x, pl->z, pl->rot_y, pl->hp,
-                            pl->motion, re15_player_aim_clip(), re15_esp_fx_count(),
-                            re15_render_pc_dbg_slot_loaded(20), re15_render_pc_dbg_slot_loaded(21),
-                            re15_render_pc_dbg_slot_loaded(22), re15_render_pc_dbg_slot_loaded(23));
+                    {
+                        int eqs = re15_inv_equipped_slot();
+                        int mag = (eqs >= 0 && eqs < RE15_INV_MAX_SLOTS) ? g_inv.slots[eqs].qty : -1;
+                        int bxs = re15_inv_find_item(0x15);
+                        int box = (bxs >= 0) ? g_inv.slots[bxs].qty : -1;
+                        fprintf(s_state_log,
+                                "F%u pad=%04x PL(%d,%d,rot=%d,hp=%d) mo=%d ac=%d fx=%d mg=%d bx=%d sl=%d%d%d%d",
+                                g_engine.frame_count, g_engine.pad_current,
+                                pl->x, pl->z, pl->rot_y, pl->hp,
+                                pl->motion, re15_player_aim_clip(), re15_esp_fx_count(), mag, box,
+                                re15_render_pc_dbg_slot_loaded(20), re15_render_pc_dbg_slot_loaded(21),
+                                re15_render_pc_dbg_slot_loaded(22), re15_render_pc_dbg_slot_loaded(23));
+                    }
                     for (int si = 1; si < RE15_ACTOR_MAX; si++) {
                         re15_actor_t *e = &g_actors[si];
                         if (!e->active || e->type == 0) continue;

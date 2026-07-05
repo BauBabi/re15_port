@@ -19,6 +19,7 @@
 #include "re15_damage.h"        /* re15_player_is_dead / re15_player_death_tick (8.10 death FSM) */
 #include "re15_menu.h"          /* re15_menu_* — the inventory/weapon-select menu (8.20) */
 #include "re15_esp.h"           /* re15_esp_fx_spawn — the discharge muzzle/smoke/shell fx (ids 2/3/4) */
+#include "re15_inventory.h"     /* re15_ammo_* — the byte-true magazine/reload model (FUN_8004ea6c/eae4) */
 #include "re15_skeleton.h"      /* re15_sin_q12/re15_cos_q12 — the muzzle forward offset */
 
 /* GAME-OVER / death presentation — REWRITTEN 2026-07-05 to the byte-true model (full raw RE of
@@ -243,13 +244,30 @@ void re15_game_step(const re15_game_ctx_t *c)
          * RE15_COMBAT_SE_SUBSYSTEM.md §3). Aiming suppresses g_aot_action_pressed (no door/stair
          * while the weapon is raised). 1170-SAFE: needs R1+Square input; hits only live zombies. */
         if (c->rdt_ok && (c->pad_current & RE15_PAD_BIT_R1)) {
-            if ((c->pad_current & RE15_PAD_BIT_SQUARE) && re15_player_aim_ready()) {
+            /* THE HOLD FIRE GATE (@0x80033300-84, byte-true): Square HELD + FUN_8004ea6c
+             * (mag>0) -> DISCHARGE. Mag EMPTY: only on the Square PRESS-EDGE (@0x80033338
+             * lw 0x800ac76c) — held-but-not-newly-pressed does NOTHING — either auto-RELOAD
+             * (FUN_8004eb70 reserve present AND item<9 @0x80033368 sltiu) or the empty-click
+             * SE 0x01010001 (@0x80033384-90). Melee items (0-2) have no ammo model. */
+            int eq_item = re15_player_equipped_weapon();   /* DAT_800aca5d; byte-true start = 1 KNIFE */
+            if ((c->pad_current & RE15_PAD_BIT_SQUARE) && re15_player_aim_ready() &&
+                eq_item >= 3 && !re15_ammo_mag_nonzero()) {
+                if (c->pad_pressed & RE15_PAD_BIT_SQUARE) {         /* press-EDGE only */
+                    extern void re15_player_reload_start(void);
+                    if (re15_ammo_reserve_slot() > 0 && eq_item < 9)
+                        re15_player_reload_start();                 /* sub=4 @0x80033378 */
+                    else
+                        re15_audio_weapon_se(1);                    /* click 0x01010001 */
+                }
+            }
+            else if ((c->pad_current & RE15_PAD_BIT_SQUARE) && re15_player_aim_ready()) {
                 extern void re15_player_fire_start(void);
-                int eq_item = re15_player_equipped_weapon();   /* DAT_800aca5d; byte-true start = 1 KNIFE */
                 re15_player_fire_start();                 /* gun: recoil 7/9/11; melee: slash stand-in */
                 re15_player_weapon_fire(eq_item);         /* FUN_80011f50 resolve (per-item dmg/reach) */
                 if (eq_item >= 3) {                       /* GUN-only discharge side (@0x800337bc):
                                                            * the melee items 0-2 have no muzzle/shell */
+                    re15_ammo_consume();                  /* FUN_8004eae4 @0x80033888 (after damage,
+                                                           * return unchecked for the handgun) */
                     re15_audio_weapon_se(8);  /* stand-in for the ESP-data-driven bang (see block cmt) */
                     /* discharge fx (byte-true ids 2/3/4 from CORE00.ESP; anchor faithful-line) */
                     int32_t fcos = re15_cos_q12((int)pl->rot_y);
