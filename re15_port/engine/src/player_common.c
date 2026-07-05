@@ -169,6 +169,7 @@ static int aim_cur_fc(void)
 int  re15_player_aim_active(void) { return s_player_aim_phase != RE15_AIM_NONE; }
 int  re15_player_aim_clip(void)   { return s_aim_cur_clip; }
 int  re15_player_aim_elevation(void) { return s_aim_elev; }   /* -1 down / 0 level / +1 up */
+int  re15_player_knife_in_hand(void) { return s_knife_in_hand; }  /* 0x800aca54 bit 0x4000 */
 void re15_player_aim_reset(void)                              /* test/room-change clean slate */
 {
     extern re15_actor_t g_actors[];

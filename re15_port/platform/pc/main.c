@@ -121,6 +121,8 @@ static void re15_pc_ecg(int x, int y, int w, int h, int hp, unsigned phase)
                                     * 0x02000800 @0x800337bc); ShowVRAM-extracted sheet. */
 #define RE15_TIM_SLOT_FX_SMOKE  22 /* global effect-id 3 — gun smoke (0x03000c00) */
 #define RE15_TIM_SLOT_FX_SHELL  23 /* global effect-id 4 — shell eject/debris (0x04000800) */
+#define RE15_TIM_SLOT_WPN_MELEE 24 /* PL00W01.PLW dir[3] — the knife-class in-hand model TIM */
+#define RE15_TIM_SLOT_WPN_GUN   25 /* PL00W03.PLW dir[3] — the handgun-class in-hand model TIM */
 
 extern void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
 
@@ -766,6 +768,36 @@ int main(int argc, char *argv[])
             w03_ok = 1;
             fprintf(stderr, "[w03] PL00W03 gun-track: %d bones, %d clips, %d kf\n",
                     w03_skel_raw.bone_count, w03_anim.clip_count, w03_skel_raw.keyframe_count);
+        }
+    }
+    /* WEAPON-IN-HAND MODELS (room-fix #3, byte-true mechanism: the melee DRAW's anim-event
+     * attaches the equipped weapon's model pointers @0x800356f0-70 into kine+1900..1912 —
+     * drawn as extra parts on the weapon bone (bone 11). The MESHES live in the PLW
+     * containers: dir[2] = MD1 (1 mesh), dir[3] = TIM; PL00.MD1's meshes 15/16 are only the
+     * empty attach slots). Slice + parse both class models; TIMs -> slots 24/25. */
+    re15_md1_t wpn_md1[2]; int wpn_md1_ok[2] = {0, 0};
+    for (int wi = 0; wi < 2; wi++) {
+        const char *plw_name = wi ? "PLD/PL00W03.PLW" : "PLD/PL00W01.PLW";
+        int psz = 0;
+        uint8_t *plw = pc_read_shared(plw_name, &psz);   /* stays resident (MD1 borrows) */
+        if (!plw || psz < 16) continue;
+        uint32_t diroff = (uint32_t)(plw[0] | (plw[1]<<8) | (plw[2]<<16) | ((uint32_t)plw[3]<<24));
+        if (diroff + 16 > (uint32_t)psz) continue;
+        uint32_t de[4];
+        for (int k = 0; k < 4; k++)
+            de[k] = (uint32_t)(plw[diroff+4*k] | (plw[diroff+4*k+1]<<8) |
+                               (plw[diroff+4*k+2]<<16) | ((uint32_t)plw[diroff+4*k+3]<<24));
+        if (de[2] >= de[3] || de[3] > (uint32_t)psz) continue;
+        if (re15_md1_parse(plw + de[2], (int)(de[3] - de[2]), &wpn_md1[wi]) == 0) {
+            re15_tim_t wtim;
+            if (re15_tim_parse(plw + de[3], (int)(diroff - de[3]), &wtim) == 0) {
+                re15_render_pc_upload_tim_slot(&wtim, wi ? RE15_TIM_SLOT_WPN_GUN
+                                                         : RE15_TIM_SLOT_WPN_MELEE);
+                wpn_md1_ok[wi] = 1;
+                fprintf(stderr, "[wpn] %s: %d mesh(es), TIM %dx%d -> slot %d\n", plw_name,
+                        wpn_md1[wi].mesh_count, wtim.width, wtim.height,
+                        wi ? RE15_TIM_SLOT_WPN_GUN : RE15_TIM_SLOT_WPN_MELEE);
+            }
         }
     }
 
@@ -2269,6 +2301,10 @@ int main(int argc, char *argv[])
              * view_bone. */
             float bone_m[9] = {4096,0,0,  0,4096,0,  0,0,4096};
             float bone_t[3] = {0, 0, 0};
+            /* bone-11 composed matrix capture (the weapon-in-hand attach bone) */
+            float   wpn_bone_m[9], wpn_bone_t[3];
+            int32_t wpn_yawed[9];
+            int     wpn_bone_valid = 0;
 
 /* Phase 4.5.8.2: bone_m / bone_t now hold view × bone_world. Vertex maps
  * directly into camera space — no extra MESH_POS_Z hack. Perspective
@@ -2520,6 +2556,12 @@ int main(int argc, char *argv[])
                 bone_t[0] = (float)combined_trans[0];
                 bone_t[1] = (float)combined_trans[1];
                 bone_t[2] = (float)combined_trans[2];
+                /* save bone 11's COMPOSED matrix for the weapon-in-hand draw below */
+                if (bi == 11) {
+                    for (int k = 0; k < 9; k++) { wpn_bone_m[k] = bone_m[k]; wpn_yawed[k] = yawed_rot[k]; }
+                    wpn_bone_t[0] = bone_t[0]; wpn_bone_t[1] = bone_t[1]; wpn_bone_t[2] = bone_t[2];
+                    wpn_bone_valid = 1;
+                }
 
                 /* Phase 4.5.10-I DEBUG: HD per-bone marker. 8×8 high-contrast
                  * tile per bone. If projected position is OFF-screen, render
@@ -2736,6 +2778,112 @@ int main(int argc, char *argv[])
                         sx2, sy2, (int)uv->u2 + page_x_offset, (int)uv->v2,
                         0, (int)uv->clut, avg_z2,
                         qr0, qg0, qb0, qr3, qg3, qb3, qr2, qg2, qb2);
+                }
+            }
+
+            /* WEAPON-IN-HAND (room-fix #3, byte-true mechanism @0x800356f0-70: the DRAW
+             * anim-event attaches the equipped weapon's model as extra parts on the weapon
+             * bone; the port draws the equipped PLW's MD1 mesh with bone-11's composed
+             * matrix). Visible: melee once the knife is IN-HAND (the 0x4000 flag, persists
+             * across lower/raise); gun once equipped (faithful-line — the gun FSM's attach
+             * event is un-RE'd; classic-RE carry look). */
+            {
+                extern int re15_player_equipped_weapon(void);
+                extern int re15_player_knife_in_hand(void);
+                int eq = re15_player_equipped_weapon();
+                int wi = (eq >= 3) ? 1 : 0;
+                int vis = (eq >= 3) ? 1 : re15_player_knife_in_hand();
+                if (vis && wpn_bone_valid && wpn_md1_ok[wi] && player_visible &&
+                    re15_player_victim_state() == 0) {
+                    re15_render_pc_bind_tim_slot(wi ? RE15_TIM_SLOT_WPN_GUN
+                                                    : RE15_TIM_SLOT_WPN_MELEE);
+                    for (int k = 0; k < 9; k++) bone_m[k] = wpn_bone_m[k];
+                    bone_t[0] = wpn_bone_t[0]; bone_t[1] = wpn_bone_t[1]; bone_t[2] = wpn_bone_t[2];
+                    if (player_lit)
+                        re15_light_ctx_rotate_for_bone(&lctx_player_world, wpn_yawed, &lctx_player);
+                    const re15_md1_mesh_t *m = &wpn_md1[wi].meshes[0];
+                    for (int ti = 0; ti < m->triangle_count; ti++) {
+                        const re15_md1_triangle_t *t = &m->triangles[ti];
+                        if (t->v0 >= (uint32_t)m->tri_vertex_count ||
+                            t->v1 >= (uint32_t)m->tri_vertex_count ||
+                            t->v2 >= (uint32_t)m->tri_vertex_count) continue;
+                        int sx0, sy0, sx1, sy1, sx2, sy2;
+                        float wz0, wz1, wz2;
+                        PROJECT_VERT(&m->tri_vertices[t->v0], sx0, sy0, wz0);
+                        PROJECT_VERT(&m->tri_vertices[t->v1], sx1, sy1, wz1);
+                        PROJECT_VERT(&m->tri_vertices[t->v2], sx2, sy2, wz2);
+                        if (wz0 < 0 || wz1 < 0 || wz2 < 0) continue;
+                        if (IS_BACKFACE(sx0, sy0, sx1, sy1, sx2, sy2)) continue;
+                        const re15_md1_tri_uv_t *uv = &m->triangle_uvs[ti];
+                        int pxo = (int)((uv->page & 0x000F) * 128);
+                        int avg_z = (int)((wz0 + wz1 + wz2) * (1.0f / 3.0f));
+                        uint8_t r0t,g0t,b0t,r1t,g1t,b1t,r2t,g2t,b2t;
+                        if (m->tri_normals && t->n0 < (uint32_t)m->tri_normal_count &&
+                            t->n1 < (uint32_t)m->tri_normal_count &&
+                            t->n2 < (uint32_t)m->tri_normal_count) {
+                            const re15_md1_vertex_t *n0 = &m->tri_normals[t->n0];
+                            const re15_md1_vertex_t *n1 = &m->tri_normals[t->n1];
+                            const re15_md1_vertex_t *n2 = &m->tri_normals[t->n2];
+                            re15_light_shade_vertex(&lctx_player, n0->x,n0->y,n0->z, &r0t,&g0t,&b0t);
+                            re15_light_shade_vertex(&lctx_player, n1->x,n1->y,n1->z, &r1t,&g1t,&b1t);
+                            re15_light_shade_vertex(&lctx_player, n2->x,n2->y,n2->z, &r2t,&g2t,&b2t);
+                        } else {
+                            r0t=r1t=r2t=g_re15_light_tint[0];
+                            g0t=g1t=g2t=g_re15_light_tint[1];
+                            b0t=b1t=b2t=g_re15_light_tint[2];
+                        }
+                        re15_render_textured_tri_lit(
+                            sx0, sy0, (int)uv->u0 + pxo, (int)uv->v0,
+                            sx1, sy1, (int)uv->u1 + pxo, (int)uv->v1,
+                            sx2, sy2, (int)uv->u2 + pxo, (int)uv->v2,
+                            0, (int)uv->clut, avg_z,
+                            r0t,g0t,b0t, r1t,g1t,b1t, r2t,g2t,b2t);
+                    }
+                    for (int qi = 0; qi < m->quad_count; qi++) {
+                        const re15_md1_quad_t *q = &m->quads[qi];
+                        if (q->v0 >= (uint32_t)m->quad_vertex_count ||
+                            q->v1 >= (uint32_t)m->quad_vertex_count ||
+                            q->v2 >= (uint32_t)m->quad_vertex_count ||
+                            q->v3 >= (uint32_t)m->quad_vertex_count) continue;
+                        int sx0,sy0,sx1,sy1,sx2,sy2,sx3,sy3;
+                        float wz0,wz1,wz2,wz3;
+                        PROJECT_VERT(&m->quad_vertices[q->v0], sx0, sy0, wz0);
+                        PROJECT_VERT(&m->quad_vertices[q->v1], sx1, sy1, wz1);
+                        PROJECT_VERT(&m->quad_vertices[q->v2], sx2, sy2, wz2);
+                        PROJECT_VERT(&m->quad_vertices[q->v3], sx3, sy3, wz3);
+                        if (wz0 < 0 || wz1 < 0 || wz2 < 0 || wz3 < 0) continue;
+                        if (IS_BACKFACE(sx0, sy0, sx1, sy1, sx2, sy2)) continue;
+                        const re15_md1_quad_uv_t *uv = &m->quad_uvs[qi];
+                        int pxo = (int)((uv->page & 0x000F) * 128);
+                        int avg_z1 = (int)((wz0 + wz1 + wz3) * (1.0f / 3.0f));
+                        int avg_z2 = (int)((wz0 + wz3 + wz2) * (1.0f / 3.0f));
+                        uint8_t c0[3], c1[3], c2[3], c3[3];
+                        c0[0]=c1[0]=c2[0]=c3[0]=g_re15_light_tint[0];
+                        c0[1]=c1[1]=c2[1]=c3[1]=g_re15_light_tint[1];
+                        c0[2]=c1[2]=c2[2]=c3[2]=g_re15_light_tint[2];
+                        if (m->quad_normals && q->n0 < (uint32_t)m->quad_normal_count &&
+                            q->n1 < (uint32_t)m->quad_normal_count &&
+                            q->n2 < (uint32_t)m->quad_normal_count &&
+                            q->n3 < (uint32_t)m->quad_normal_count) {
+                            const re15_md1_vertex_t *n;
+                            n=&m->quad_normals[q->n0]; re15_light_shade_vertex(&lctx_player,n->x,n->y,n->z,&c0[0],&c0[1],&c0[2]);
+                            n=&m->quad_normals[q->n1]; re15_light_shade_vertex(&lctx_player,n->x,n->y,n->z,&c1[0],&c1[1],&c1[2]);
+                            n=&m->quad_normals[q->n2]; re15_light_shade_vertex(&lctx_player,n->x,n->y,n->z,&c2[0],&c2[1],&c2[2]);
+                            n=&m->quad_normals[q->n3]; re15_light_shade_vertex(&lctx_player,n->x,n->y,n->z,&c3[0],&c3[1],&c3[2]);
+                        }
+                        re15_render_textured_tri_lit(
+                            sx0, sy0, (int)uv->u0 + pxo, (int)uv->v0,
+                            sx1, sy1, (int)uv->u1 + pxo, (int)uv->v1,
+                            sx3, sy3, (int)uv->u3 + pxo, (int)uv->v3,
+                            0, (int)uv->clut, avg_z1,
+                            c0[0],c0[1],c0[2], c1[0],c1[1],c1[2], c3[0],c3[1],c3[2]);
+                        re15_render_textured_tri_lit(
+                            sx0, sy0, (int)uv->u0 + pxo, (int)uv->v0,
+                            sx3, sy3, (int)uv->u3 + pxo, (int)uv->v3,
+                            sx2, sy2, (int)uv->u2 + pxo, (int)uv->v2,
+                            0, (int)uv->clut, avg_z2,
+                            c0[0],c0[1],c0[2], c3[0],c3[1],c3[2], c2[0],c2[1],c2[2]);
+                    }
                 }
             }
 #undef PROJECT_VERT
