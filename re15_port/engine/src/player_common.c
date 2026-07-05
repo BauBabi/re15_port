@@ -21,7 +21,8 @@
 #include "re15_actor.h"
 #include "re15_skeleton.h"   /* re15_sin_q12 / re15_cos_q12 */
 #include "re15_scd.h"        /* g_scd.player_mode (BL-round input gate) */
-#include "re15_enemy_ai.h"   /* RE15_AI_STATE_CORPSE — corpse-hold in re15_actors_anim_advance */
+#include "re15_enemy_ai.h"
+#include "re15_esp.h"       /* re15_esp_fx_spawn — the weapon-7 speedloader drop */   /* RE15_AI_STATE_CORPSE — corpse-hold in re15_actors_anim_advance */
 
 /* Locomotion speeds = the RE1.5 per-direction speed bytes (FUN_80041BE4 mode
  * tables 0x80076cXX): WALK=0x4B(75), RUN=0xC8(200), BACK=0x3C(60). Translation is
@@ -295,23 +296,34 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
          * up; turning (rot_y, above) stays allowed. Disable forward/back move so want_motion below
          * picks the aim pose, not walk/idle. (The exact 3-level command FSM + the raise clip 17 +
          * aim-elevation pitch are deferred; the held aim pose + the fire recoil are byte-true.) */
-        /* R1 released: the GUN exits instantly (its lower sub [3]@0x80033c74 is un-RE'd, deferred);
-         * the MELEE plays its byte-true LOWER (sub3 @0x80035424: clip 6 REVERSED) — the machine
-         * only tests R1 in HOLD, so a running raise/slash first completes, then lowers. */
+        /* R1 released -> LOWER (sub 3, BOTH machines — gun @0x80033c74 / melee @0x80035424 are
+         * structurally identical: clip 6 REVERSED (f314 a2=1), elevation cleared, no SE; exit
+         * clears the action). Three byte-true entry paths: (1) HOLD + !R1 (@0x80033200 gun /
+         * @0x8003513c melee), (2) gun DISCHARGE + !R1 once frame > the per-weapon threshold
+         * byte2 @0x80074092+(w-1)*5 (handgun rec = [24,48,7,..] -> 7; @0x8003364c) — the recoil
+         * can be broken into the lower, (3) post-reload-exec + !R1 (@0x80033fbc; the port's
+         * RELOAD->READY->next-tick-LOWER is the same observable order). Raise/slash/reload
+         * themselves never test R1 and play out first. */
         int r1_held = (pad_bits & RE15_PAD_BIT_R1) != 0;
-        if (!r1_held && s_player_aim_phase != RE15_AIM_NONE) {
-            if (!s_aim_melee) {
-                s_player_aim_phase = RE15_AIM_NONE;
-                p->anim_flags &= (uint8_t)~RE15_ANIM_REVERSE;
-            } else if (s_player_aim_phase == RE15_AIM_READY && !s_aim_recoil) {
-                s_player_aim_phase = RE15_AIM_LOWER;    /* HOLD + !R1 -> sub 3 (@0x8003513c-44) */
-                s_aim_cur_clip = 6;                     /* clip 6, REVERSED (a2=1 @0x800354b4) */
+        if (!r1_held && s_player_aim_phase != RE15_AIM_NONE &&
+            s_player_aim_phase != RE15_AIM_LOWER) {
+            int enter_lower = 0;
+            if (s_player_aim_phase == RE15_AIM_READY && !s_aim_recoil)
+                enter_lower = 1;                        /* HOLD + !R1 */
+            else if (!s_aim_melee && s_aim_recoil && p->anim_frame > 7)
+                enter_lower = 1;                        /* gun recoil break (@0x8003364c, thr 7) */
+            if (enter_lower) {
+                s_player_aim_phase = RE15_AIM_LOWER;
+                s_aim_recoil = 0;
+                s_aim_cur_clip = 6;                     /* clip 6, REVERSED (a2=1) */
                 s_aim_elev = 0;                         /* acaec &= 0x1fff (@LOWER entry) */
                 p->anim_frame = 0; p->anim_frac = 7;
                 p->anim_flags |= RE15_ANIM_REVERSE;
             }
         }
-        int aiming = r1_held || (s_aim_melee && s_player_aim_phase != RE15_AIM_NONE);
+        /* Aim stays ACTIVE past the R1 release until the machine exits through LOWER (both
+         * machines): a raise/slash/recoil plays out, then HOLD sees !R1 -> LOWER -> exit. */
+        int aiming = r1_held || (s_player_aim_phase != RE15_AIM_NONE);
         if (aiming) move_dir = 0;   /* rooted: no translation while aiming */
         if (aiming) {
             /* Manual aim turn (table @0x80074090, 5-BYTE records per weapon): byte0=24 during
@@ -322,8 +334,13 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
             if (pad_bits & RE15_PAD_BIT_RIGHT) p->rot_y = (int16_t)(((int)p->rot_y - rate) & 0xfff);
             /* AUTO-TRACK toward the latched front target — byte-true ONLY during the RAISE/DRAW
              * sub (@0x80034fa0-c0 melee slew 0xC0 / gun sub0 slew 0xC8); the HOLD subs have no
-             * a8f8 call. Latch radii: gun 30000, melee draw 2000, melee re-raise 5000. */
-            if (s_player_aim_phase == RE15_AIM_RAISE) {
+             * a8f8 call. Latch radii: gun 30000, melee draw 2000, melee re-raise 5000.
+             * L1 RETARGET (gun sub5 @0x80033eec, HOLD writer of 5 @0x800332f8): holding L1 in
+             * HOLD re-runs the a8f8 slew + arc-test until aligned -> back to HOLD — the quick
+             * re-face onto the nearest target. Port: L1 held in READY re-enables the track. */
+            if (s_player_aim_phase == RE15_AIM_RAISE ||
+                (s_player_aim_phase == RE15_AIM_READY && !s_aim_recoil &&
+                 !s_aim_melee && (pad_bits & RE15_PAD_BIT_L1))) {
                 extern int re15_player_aim_target(int32_t radius, int32_t *tx, int32_t *tz);
                 int32_t radius = s_aim_melee ? (s_aim_cur_clip == 0x0d ? 2000 : 5000) : 30000;
                 int32_t slew   = s_aim_melee ? 0xc0 : 0xc8;
@@ -401,6 +418,19 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
                 if (!s_aim_melee) {
                     s_aim_cur_clip = 8 + (s_aim_elev > 0 ? 2 : s_aim_elev < 0 ? 4 : 0);
                     p->anim_frame = 0;                              /* gun: back to HOLD (refire) */
+                }
+            }
+            /* RELOAD weapon-7 SPEEDLOADER drop (@0x80033e34-88): item 7 (SUPER REDHAWK) at anim
+             * frame 10 spawns effect 0x04060800 (fx-id 4, sub 6 = the speedloader/shell drop) at
+             * the gun bone + {0x91,0x1f4,-25} — the same anchor/offset as the discharge smoke. */
+            if (s_player_aim_phase == RE15_AIM_RELOAD && p->anim_frame == 10) {
+                extern int re15_player_equipped_weapon(void);
+                if (re15_player_equipped_weapon() == 7) {
+                    int32_t fcos = re15_cos_q12((int)p->rot_y);
+                    int32_t fsin = re15_sin_q12((int)p->rot_y);
+                    re15_esp_fx_spawn_ex(re15_esp_global_bank(), 4, 6, 0x0800,   /* 0x04060800 */
+                        p->x + ( fcos * 0x1f4 >> 12), p->y - 2083 - 25,
+                        p->z + (-fsin * 0x1f4 >> 12), (int16_t)p->rot_y);
                 }
             }
             /* RELOAD sub4 exit (@0x80033ea8-d4): the 0xD clip finishing writes sub=1 (HOLD),

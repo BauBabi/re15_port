@@ -122,6 +122,8 @@ typedef struct {
     int16_t  timer;        /* frames until next advance (the byte-true 0x6d frame timer) */
     int32_t  x, y, z;      /* world position = owner-transform + local offset (Q12) */
     int16_t  param;        /* op-0x3a pc[14] */
+    uint16_t scale16;      /* spawn packed-arg low16 (Q12 size; slot+0x72 in the pool @0x800a73b8) —
+                            * muzzle 0x800, smoke 0xc00, shell 0x1000, gore 0x2000/0x2800 */
     const re15_esp_t *bank;/* the bank that resolved effect_id (room or GLOBAL CORE00.ESP); NULL = unresolved */
 } re15_esp_fx_t;
 
@@ -129,6 +131,9 @@ void           re15_esp_fx_reset(void);
 int            re15_esp_fx_count(void);
 /** Spawn an op-0x3a effect particle. `bank` = the room's parsed ESP (resolves effect_id ->
  *  eff_idx for anim cycling; may be NULL -> eff_idx=-1, anim disabled). Returns the slot or NULL. */
+re15_esp_fx_t *re15_esp_fx_spawn_ex(const re15_esp_t *bank, uint8_t effect_id, uint8_t sub_index,
+                                    uint16_t scale16,
+                                    int32_t x, int32_t y, int32_t z, int16_t param);
 re15_esp_fx_t *re15_esp_fx_spawn(const re15_esp_t *bank, uint8_t effect_id, uint8_t sub_index,
                                  int32_t x, int32_t y, int32_t z, int16_t param);
 /** Per-frame anim advance (byte-true FUN_80019e20 frame timer); despawns ended particles. */

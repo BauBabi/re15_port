@@ -292,11 +292,26 @@ int re15_player_aim_target(int32_t radius, int32_t *tx, int32_t *tz)
     return 1;
 }
 
+/* BLADE/HAND world point (byte-true: the melee slash passes *(0x800acbdc)+0x7b8 = the player's
+ * bone-11 world-matrix translation as the hit-test point — the GUNS pass the player entity
+ * position instead). The platform render feeds it per frame (1-frame stale, faithful-line). */
+static int32_t s_hand_world[3];
+static int     s_hand_valid = 0;
+static int32_t dmg_isqrt(int64_t x);        /* fwd (BIOS SquareRoot0 clone, defined below) */
+void re15_player_set_hand_world(int32_t x, int32_t y, int32_t z)
+{
+    s_hand_world[0] = x; s_hand_world[1] = y; s_hand_world[2] = z;
+    s_hand_valid = 1;
+}
+
 int re15_player_weapon_fire(int weapon_id)
 {
     if (weapon_id < 0 || weapon_id >= 22) return 0;
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     uint32_t reach = s_player_wpn_reach[weapon_id];
+    /* the melee hit-test ORIGIN = the blade/hand point (@0x800353a4-c8); guns = player pos */
+    int32_t ox = pl->x, oz = pl->z;
+    if (weapon_id < 3 && s_hand_valid) { ox = s_hand_world[0]; oz = s_hand_world[2]; }
 
     /* auto-aim: nearest live zombie in front, within reach (DAT_8008f5e0 min-dist, seed 0x7fffffff).
      * ONCE-PER-TARGET latch (byte-true FUN_80011f50 internals, melee-FSM arbitration): candidates
@@ -316,7 +331,25 @@ retry_after_latch:
         if (e->type != 0x10 && e->type != 0x11 && e->type != 0x16) continue;  /* the port's hittable enemies */
         if (e->state == 7) continue;   /* RE15_AI_STATE_CORPSE — already a corpse (literal: avoid the AI-header dep) */
         if ((e->hit_react & 0x3) == 0x3) continue;   /* already hit + re-touched this attack -> excluded */
-        uint32_t dist = (uint32_t)re15_enemy_player_dist(e, pl);
+        /* ELEVATION-BAND gate (byte-true @0x800120d0-ec: candidate needs
+         * enemy.word0 & player_word & 0xe0000000 != 0, player band = acaec<<16 ->
+         * UP bit31 / LEVEL bit30 / DOWN bit29). Savestate ground truth
+         * (mzd_stage1_briefing.sav): STANDING zombies carry 0x40000000 (bit30),
+         * the LYING feeder carries 0 -> unhittable (scripted). Port: band by
+         * spawn pose; up/down aim whiffs vs standing zombies = the original
+         * "down-aim is for crawlers" behavior. */
+        {
+            extern int re15_player_aim_elevation(void);
+            int elev = re15_player_aim_elevation();
+            uint32_t pband = (elev > 0) ? 0x80000000u : (elev < 0) ? 0x20000000u : 0x40000000u;
+            uint32_t eband = (e->type == 0x16 && (e->grid_id & 0x80)) ? 0u : 0x40000000u;
+            if ((pband & eband) == 0) continue;
+        }
+        /* distance from the hit-test ORIGIN (0x800127fc measures POINT->target: lh 0(a2) vs
+         * actor+0x34): guns = player pos; melee = the bone-11 blade point (extends the effective
+         * knife range forward, byte-true). */
+        int32_t ddx = e->x - ox, ddz = e->z - oz;
+        uint32_t dist = (uint32_t)dmg_isqrt((int64_t)ddx*ddx + (int64_t)ddz*ddz);
         /* byte-true cone tester FUN_800127fc/800128a0: R = reach + enemy hitbox radius (hbdata+6),
          * hit iff strict dist < R (unsigned). The 400-unit zombie radius is part of the reach. */
         uint32_t R = reach + ((uint32_t)e->hit_radius_min & 0xffffu);
@@ -443,9 +476,9 @@ void re15_enemy_gore_setup(re15_actor_t *e)
     e->hit_react   |= 0x1;                    /* entity+0x93 |= 1 */
     e->sub_state_3  = 1;                      /* entity+7 = 1 (run the setup once) */
     const re15_esp_t *bank = re15_esp_room_bank();
-    re15_esp_fx_spawn(bank, 0, 0, e->x, e->y, e->z, (int16_t)e->rot_y);  /* a0=0x2000   effect-id 0 */
-    re15_esp_fx_spawn(bank, 0, 0, e->x, e->y, e->z, (int16_t)e->rot_y);  /* a0=0x2000   effect-id 0 */
-    re15_esp_fx_spawn(bank, 5, 0, e->x, e->y, e->z, (int16_t)e->rot_y);  /* a0=0x5002800 effect-id 5 */
+    re15_esp_fx_spawn_ex(bank, 0, 0, 0x2000, e->x, e->y, e->z, (int16_t)e->rot_y);  /* a0=0x2000 */
+    re15_esp_fx_spawn_ex(bank, 0, 0, 0x2000, e->x, e->y, e->z, (int16_t)e->rot_y);  /* a0=0x2000 */
+    re15_esp_fx_spawn_ex(bank, 5, 0, 0x2800, e->x, e->y, e->z, (int16_t)e->rot_y);  /* a0=0x5002800 */
 }
 
 /* Zombie HURT hit-effect — byte-true: the master-table hurt dispatch FUN_80105a8c (entity+4==2)

@@ -227,8 +227,9 @@ const re15_esp_fx_t *re15_esp_fx_get(int i)
     return &s_esp_fx[i];
 }
 
-re15_esp_fx_t *re15_esp_fx_spawn(const re15_esp_t *bank, uint8_t effect_id, uint8_t sub_index,
-                                 int32_t x, int32_t y, int32_t z, int16_t param)
+re15_esp_fx_t *re15_esp_fx_spawn_ex(const re15_esp_t *bank, uint8_t effect_id, uint8_t sub_index,
+                                    uint16_t scale16,
+                                    int32_t x, int32_t y, int32_t z, int16_t param)
 {
     for (int i = 0; i < RE15_ESP_FX_MAX; i++) {
         re15_esp_fx_t *f = &s_esp_fx[i];
@@ -237,6 +238,7 @@ re15_esp_fx_t *re15_esp_fx_spawn(const re15_esp_t *bank, uint8_t effect_id, uint
         f->active    = 1;
         f->effect_id = effect_id;
         f->sub_index = sub_index;
+        f->scale16   = scale16 ? scale16 : 0x1000;   /* spawn packed-arg low16 (Q12; @entry+0x72) */
         f->eff_idx   = (int8_t)re15_esp_find_id(bank, effect_id);   /* the ROOM bank first */
         f->bank      = (f->eff_idx >= 0) ? bank : NULL;
         if (f->eff_idx < 0) {                                       /* fall back to the GLOBAL bank */
@@ -251,6 +253,12 @@ re15_esp_fx_t *re15_esp_fx_spawn(const re15_esp_t *bank, uint8_t effect_id, uint
         return f;
     }
     return NULL;   /* pool full */
+}
+
+re15_esp_fx_t *re15_esp_fx_spawn(const re15_esp_t *bank, uint8_t effect_id, uint8_t sub_index,
+                                 int32_t x, int32_t y, int32_t z, int16_t param)
+{
+    return re15_esp_fx_spawn_ex(bank, effect_id, sub_index, 0x1000, x, y, z, param);
 }
 
 void re15_esp_fx_tick(const re15_esp_t *bank)

@@ -332,6 +332,10 @@ int re15_render_pc_dbg_textri_count(void)    { return s_dbg_last_textri_count; }
  * overlay (the inventory) so the meshes, which end_frame draws ON TOP of the framebuffer, don't
  * cover it. Call after the scene render + overlay draw, before re15_render_end_frame. */
 void re15_render_pc_clear_textris(void)      { s_textri_count = 0; }
+/* Per-tri vertex alpha for SUBSEQUENTLY queued tris (PSX ABE semi-transparency: the effect
+ * sprites draw ABR0 = 0.5*back + 0.5*front -> alpha 128 with SDL BLEND). Reset to 255 after. */
+static int s_tri_alpha = 255;
+void re15_render_pc_set_tri_alpha(int a) { s_tri_alpha = (a < 0) ? 0 : (a > 255) ? 255 : a; }
 int re15_render_pc_dbg_tim_loaded(void)      { return s_tim_texture != NULL ? 1 : 0; }
 int re15_render_pc_dbg_min_sx(void)          { return s_dbg_last_min_sx; }
 int re15_render_pc_dbg_max_sx(void)          { return s_dbg_last_max_sx; }
@@ -1130,7 +1134,7 @@ void re15_render_textured_tri(int x0, int y0, int u0, int v0,
     const float inv_w = 1.0f / (float)s_tim_w;
     const float inv_h = 1.0f / (float)s_tim_h;
 
-    SDL_Color tint = { r, g, b, 0xFF };
+    SDL_Color tint = { r, g, b, (Uint8)s_tri_alpha };
 
     t->v[0].position.x = (float)x0;
     t->v[0].position.y = (float)y0;

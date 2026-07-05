@@ -783,11 +783,15 @@ int main(void)
         if (re15_player_aim_clip() != 8 || !re15_player_aim_ready()) {
             fprintf(stderr, "FAIL: (16) recoil played out -> back to HOLD 8 + ready (auto-refire), clip=%d\n",
                     re15_player_aim_clip()); fail = 1; }
-        re15_player_tick(NULL, 0);                        /* release R1 -> revert to idle/walk */
-        if (pl->motion == 213) {
-            fprintf(stderr, "FAIL: (16) release R1 -> leave the aim pose, motion still %d\n", pl->motion); fail = 1; }
+        re15_player_tick(NULL, 0);                        /* release R1 -> gun LOWER (sub3 @0x80033c74) */
+        if (re15_player_aim_clip() != 6 || !(pl->anim_flags & 0x80)) {
+            fprintf(stderr, "FAIL: (16) gun release R1 -> LOWER clip 6 REVERSED, clip=%d fl=%02x\n",
+                    re15_player_aim_clip(), pl->anim_flags); fail = 1; }
         if (re15_player_aim_ready()) {
             fprintf(stderr, "FAIL: (16) release R1 -> not aim-ready\n"); fail = 1; }
+        for (int f = 0; f < 12; f++) re15_player_tick(NULL, 0);  /* lower plays out -> exit */
+        if (pl->motion == 213 || (pl->anim_flags & 0x80)) {
+            fprintf(stderr, "FAIL: (16) gun LOWER done -> leave the aim pose, motion=%d\n", pl->motion); fail = 1; }
         /* MELEE path (items 0-2 @0x80074030 -> FSM 0x80034e70, byte-true wf_306144dd-336):
          * COLD entry = DRAW sub4 (clip 0xD + SE, sets the in-hand 0x4000 flag) -> HOLD clips
          * 8/10/12 (same dpad elevation as the gun) -> SLASH clips 7/9/11 with the damage window

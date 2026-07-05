@@ -224,23 +224,81 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy)
         if (vz < 1.0f) continue;                      /* behind / on the camera plane */
         float proj = (float)cam->fov_screen_dist / vz;
         int sx = cx + RNDI(vx * proj), sy = cy + RNDI(vy * proj);
-        re15_esp_coord_t c = {0, 0, 0, 0};            /* byte-true cell origin (u,v) */
+        /* ===== BYTE-TRUE SPRITE BUILD (FUN_800534c4, arbitrated wf_efa45868-e53) =============
+         * anim record = {u8 coord_start, u8 n_sprites, u8 duration, u8 S}: byte0 = the FIRST
+         * coord-cell index (NOT frame%count!), byte1 = quads this frame, byte3 = S = the SxS UV
+         * cell size AND the scale numerator. Screen size (16.16):
+         *   step16 = (S * scale16 * camf) / (sz<<4)      sz = view z; camf = RDT cam fov>>7
+         *   w16    = defW(Q12, 0x1000 for the weapon fx) * step16;  h16 analog
+         * corner  = projected center + s8(coord dx/dy) * (w16/S)    (dx=dy=-S/2 -> centered)
+         * UV      = (u,v)..(u+S,v+S), minus 1 texel per axis when its step > 0x1ffff
+         * blend   = ABE (def status bit4; muzzle 0x93 / smoke 0x13 -> ON) = PSX ABR0 50/50. */
+        int S = 24, nspr = 1, cstart = f->frame;      /* legacy fallback when no record resolves */
         if (bank && f->eff_idx >= 0) {
-            int nb = bank->eff[f->eff_idx].count_b;
-            if (nb > 0) re15_esp_coord(bank, f->eff_idx, f->frame % nb, &c);
+            re15_esp_anim_t a;
+            if (re15_esp_anim(bank, f->eff_idx, f->frame, &a) == 0) {
+                cstart = a.desc & 0xff;
+                nspr   = (a.desc >> 8) & 0xff;
+                S      = (a.param >> 8) & 0xff;
+                if (nspr < 1) nspr = 1;
+                if (S < 1) S = 24;
+            }
         }
+        int camf = 208;                               /* ROOM1140 fallback (26684>>7) */
+        {
+            extern int pc_fx_camf(void);              /* RDT cam record fov>>7 (below) */
+            int cf = pc_fx_camf();
+            if (cf > 0) camf = cf;
+        }
+        int sz = (int)vz; if (sz < 1) sz = 1;
+        int64_t step16 = ((int64_t)S * (int64_t)f->scale16 * (int64_t)camf) / ((int64_t)sz << 4);
+        int64_t w16 = 0x1000 * step16;                /* w16 = defW * step16 (RAW mult, byte-true —
+                                                       * defW u16 0x1000; the 16.16 result absorbs
+                                                       * the Q12: px = w16>>16 @0x800535f0) */
+        int64_t h16 = w16;                            /* defH identical for the weapon fx */
+        int64_t stepX = (S > 0) ? w16 / S : 0;
+        int64_t stepY = (S > 0) ? h16 / S : 0;
+        int ute = (stepX > 0x1ffff) ? 1 : 0;          /* >=2x magnification edge trim */
+        int vte = (stepY > 0x1ffff) ? 1 : 0;
+        int abe = (bank == global_bank && (f->effect_id == 2 || f->effect_id == 3));
+        int z = (int)vz >> 4;
         {
             extern FILE *pc_fx_log_handle(void);
             FILE *fl = pc_fx_log_handle();
-            if (fl) fprintf(fl, "   -> sx=%d sy=%d proj=%.4f cell(u=%d v=%d)\n", sx, sy, proj, c.u, c.v);
+            if (fl) fprintf(fl, "   -> sx=%d sy=%d S=%d n=%d c0=%d w16=%lld camf=%d\n",
+                            sx, sy, S, nspr, cstart, (long long)w16, camf);
         }
-        int half = (int)(600.0f * proj); if (half < 3) half = 3; if (half > 120) half = 120;
-        int u0 = c.u, v0 = c.v, u1 = c.u + 24, v1 = c.v + 24;   /* faithful 24px UV cell */
-        int z = (int)vz >> 4;
-        re15_render_textured_tri(sx-half, sy-half, u0, v0,  sx+half, sy-half, u1, v0,
-                                 sx-half, sy+half, u0, v1,  0, 0, z, 128, 128, 128);
-        re15_render_textured_tri(sx+half, sy-half, u1, v0,  sx+half, sy+half, u1, v1,
-                                 sx-half, sy+half, u0, v1,  0, 0, z, 128, 128, 128);
+        extern void re15_render_pc_set_tri_alpha(int a);
+        if (abe) re15_render_pc_set_tri_alpha(128);   /* ABR0 = 0.5*back + 0.5*front */
+        for (int q = 0; q < nspr; q++) {
+            re15_esp_coord_t c;
+            if (!bank || f->eff_idx < 0 ||
+                re15_esp_coord(bank, f->eff_idx, cstart + q, &c) != 0) break;
+            int x0 = sx + (int)(((int64_t)(int8_t)c.w * stepX) >> 16);
+            int y0 = sy + (int)(((int64_t)(int8_t)c.h * stepY) >> 16);
+            int x1 = sx + (int)((((int64_t)(int8_t)c.w * stepX) + w16) >> 16);
+            int y1 = sy + (int)((((int64_t)(int8_t)c.h * stepY) + h16) >> 16);
+            if (x1 <= x0 || y1 <= y0) continue;
+            int u0 = c.u, v0 = c.v, u1 = c.u + S - ute, v1 = c.v + S - vte;
+            re15_render_textured_tri(x0, y0, u0, v0,  x1, y0, u1, v0,
+                                     x0, y1, u0, v1,  0, 0, z, 128, 128, 128);
+            re15_render_textured_tri(x1, y0, u1, v0,  x1, y1, u1, v1,
+                                     x0, y1, u0, v1,  0, 0, z, 128, 128, 128);
+        }
+        if (abe) re15_render_pc_set_tri_alpha(255);
+    }
+}
+
+/* The active camera's fx scale field: u16 @ RDT + cut*0x20 + 0x62, >>7 (byte-true
+ * FUN_800534c4 camf; ROOM1140 = 26684>>7 = 208). The main loop publishes it per frame. */
+static int s_fx_camf = 0;
+int  pc_fx_camf(void) { return s_fx_camf; }
+static void pc_fx_set_camf(const uint8_t *rdt_raw, size_t rdt_size, int cut)
+{
+    size_t off = (size_t)cut * 0x20 + 0x62;
+    if (rdt_raw && off + 2 <= rdt_size) {
+        uint16_t v = (uint16_t)(rdt_raw[off] | (rdt_raw[off + 1] << 8));
+        s_fx_camf = v >> 7;
     }
 }
 
@@ -2397,6 +2455,16 @@ int main(int argc, char *argv[])
                     yawed_trans[1] + model_pos_y,
                     yawed_trans[2] + model_pos_z,
                 };
+                /* BLADE/HAND WORLD POINT capture (byte-true kine layout: the melee SLASH reads
+                 * *(0x800acbdc)+0x7b8 = bone-11 matrix translation — per-bone stride 0xAC, matrix
+                 * @+0x40, translation @+0x14 -> 11*0xAC+0x40+0x14 = 0x7b8; resolver LAB_80040b88).
+                 * Hand the player's bone-11 world origin to the damage resolver each rendered
+                 * frame (1-frame-stale vs the PSX in-frame pose pass — faithful-line). */
+                if (bi == 11) {
+                    extern void re15_player_set_hand_world(int32_t x, int32_t y, int32_t z);
+                    re15_player_set_hand_world(bone_world_trans[0], bone_world_trans[1],
+                                               bone_world_trans[2]);
+                }
                 /* CANONICAL per-bone light fold (2026-06-02): rotate the world
                  * light dirs into THIS bone's frame so the raw bone-local normals
                  * shade as L_world · N_world. yawed_rot = R_y(yaw) × pose.rot is the
@@ -3336,6 +3404,7 @@ int main(int argc, char *argv[])
             (void)active_cut_count;
 
             /* Phase ESP-C: draw the op-0x3a effect particles (after actors, in cam_view scope). */
+            pc_fx_set_camf(rdt_buf, (size_t)rdt_size, (int)g_scd.cam_id);
             pc_draw_effects(&cam_view, cx, cy);
         }
 

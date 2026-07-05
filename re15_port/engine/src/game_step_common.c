@@ -124,6 +124,9 @@ static void re15_gameover_fsm_tick(void)
     }
 }
 
+static int s_bang_delay = 0;   /* gunshot-bang scheduler (the muzzle fx row-1 SE, 2nd tick) */
+static int s_shell_pending = 0; /* shell-eject scheduler (discharge frame 0x16/0x18) */
+
 void re15_game_step(const re15_game_ctx_t *c)
 {
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
@@ -270,23 +273,69 @@ void re15_game_step(const re15_game_ctx_t *c)
                     re15_player_weapon_fire(eq_item);     /* FUN_80011f50 resolve (per-item dmg/reach) */
                     re15_ammo_consume();                  /* FUN_8004eae4 @0x80033888 (after damage,
                                                            * return unchecked for the handgun) */
-                    re15_audio_weapon_se(8);  /* stand-in for the ESP-data-driven bang (see block cmt) */
+                    s_bang_delay = 1;                     /* the BANG is effect-data-driven: the muzzle
+                                                           * slot's descriptor ROW 1 (routine 9
+                                                           * @0x80017654, 2nd tick) plays
+                                                           * FUN_80045024(0x01000001) = ARMS record 0
+                                                           * POSITIONAL — scheduled one tick out */
                     /* discharge fx (byte-true ids 2/3/4 from CORE00.ESP; anchor faithful-line) */
                     int32_t fcos = re15_cos_q12((int)pl->rot_y);
                     int32_t fsin = re15_sin_q12((int)pl->rot_y);
                     int32_t gy   = pl->y - 2083;          /* measured aim hand-bone height (b13) */
-                    re15_esp_fx_spawn(re15_esp_global_bank(), 2, 0,     /* MUZZLE {0x8c,0x25d,0} */
+                    re15_esp_fx_spawn_ex(re15_esp_global_bank(), 2, 0, 0x0800,  /* MUZZLE 0x02000800 {0x8c,0x25d,0} */
                         pl->x + ( fcos * 0x25d >> 12), gy,
                         pl->z + (-fsin * 0x25d >> 12), (int16_t)pl->rot_y);
-                    re15_esp_fx_spawn(re15_esp_global_bank(), 3, 0,     /* SMOKE {0x91,0x1f4,-25} */
+                    re15_esp_fx_spawn_ex(re15_esp_global_bank(), 3, 0, 0x0c00,  /* SMOKE 0x03000c00 {0x91,0x1f4,-25} */
                         pl->x + ( fcos * 0x1f4 >> 12), gy - 25,
                         pl->z + (-fsin * 0x1f4 >> 12), (int16_t)pl->rot_y);
-                    re15_esp_fx_spawn(re15_esp_global_bank(), 4, 0,     /* SHELL {0x91,0x109,-50} */
-                        pl->x + ( fcos * 0x109 >> 12), gy - 50,
-                        pl->z + (-fsin * 0x109 >> 12), (int16_t)pl->rot_y);
+                    /* the SHELL EJECT is NOT part of the one-shot: the DISCHARGE handler itself
+                     * spawns 0x040d1000 (id 4 sub 0xd) at recoil frames 0x16/0x18 (elevation-
+                     * gated, @0x800336b0-b8) — scheduled below via the recoil-frame watcher. */
+                    s_shell_pending = 1;
                 }
             }
             g_aot_action_pressed = 0;         /* aiming blocks the door/stair action (no doors while aiming) */
+        }
+        /* GUNSHOT BANG (byte-true wf_efa45868-e53): the muzzle effect's 40-byte descriptor ROW
+         * script fires it on the slot's SECOND tick — row1 u16[0]=9 -> routine 9 @0x80017654 ->
+         * FUN_80045024(0x01000001, &slot_worldpos) = ARMS bank record 0, positional. The port's
+         * fx layer has no descriptor rows (deferred); this 1-tick scheduler is the observable
+         * equivalent. (Routine 9 also writes the noise global 0x800b5358=1 — consumer un-RE'd,
+         * deferred.) The old immediate re15_audio_weapon_se(8) was the WRONG record (8 = the
+         * knife-draw/flesh-hit SE). */
+        if (s_bang_delay > 0 && --s_bang_delay == 0) {
+            re15_audio_weapon_se(0);                      /* 0x01000001 -> ARMS record 0 */
+            /* routine 8 also CHAINS the secondary flash: FUN_800199d4(0x02040bb8) = fx id 2
+             * sub 4 scale 0xbb8, one tick after the primary muzzle (same anchor). */
+            int32_t fcos2 = re15_cos_q12((int)pl->rot_y);
+            int32_t fsin2 = re15_sin_q12((int)pl->rot_y);
+            re15_esp_fx_spawn_ex(re15_esp_global_bank(), 2, 4, 0x0bb8,   /* 0x02040bb8 */
+                pl->x + ( fcos2 * 0x25d >> 12), pl->y - 2083,
+                pl->z + (-fsin2 * 0x25d >> 12), (int16_t)pl->rot_y);
+        }
+        /* SHELL EJECT watcher (byte-true @0x800336b0-b8): the DISCHARGE handler spawns
+         * 0x040d1000 (id 4 sub 0xd) when the recoil clip reaches frame 0x16 (LEVEL, 23f clip)
+         * or 0x18 (UP/DOWN, clamped to the 24f clips' last frame) — the casing ejects at the
+         * END of the recoil, not at the shot. */
+        {
+            extern int re15_player_aim_clip(void);
+            extern int re15_player_aim_elevation(void);
+            int ac = re15_player_aim_clip();
+            if (s_shell_pending && (ac == 7 || ac == 9 || ac == 11)) {
+                int thr = (re15_player_aim_elevation() == 0) ? 0x16 : 0x17;
+                if ((int)pl->anim_frame >= thr) {
+                    s_shell_pending = 0;
+                    int32_t fcos2 = re15_cos_q12((int)pl->rot_y);
+                    int32_t fsin2 = re15_sin_q12((int)pl->rot_y);
+                    re15_esp_fx_spawn_ex(re15_esp_global_bank(), 4, 0x0d, 0x1000,   /* 0x040d1000 */
+                        pl->x + ( fcos2 * 0x109 >> 12), pl->y - 2083 - 50,
+                        pl->z + (-fsin2 * 0x109 >> 12), (int16_t)pl->rot_y);
+                }
+            } else if (s_shell_pending && ac != 7 && ac != 9 && ac != 11) {
+                extern int re15_player_aim_active(void);
+                /* recoil aborted (grab/lower/exit) -> drop the pending shell */
+                if (!re15_player_aim_active()) s_shell_pending = 0;
+            }
         }
         /* MELEE SLASH DAMAGE WINDOW (byte-true @0x80035388-cc): while the slash clip's anim frame
          * is in [6..11], the resolver runs EVERY tick — the once-per-target latch + recursion
