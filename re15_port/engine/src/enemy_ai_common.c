@@ -349,6 +349,17 @@ void re15_ai_dispatch_decision(re15_actor_t *e, const re15_actor_t *player)
                 re15_ai_set_state_word(e, 0xd01);
             break;
         case 0x0d: break;                                       /* standup decide FUN_80104a48 = jr ra stub */
+        case 0x0b: break;                                       /* push-off decide @0x8011f840[0xb] =
+                                                                 * 0x80103854 = jr ra stub (byte-verified) */
+        case 9:     /* stagger decide @0x8011f840[9] = 0x801031a4 (raw-disasm'd, exact): while the
+                     * push flag +0x1c0&0x8000 is HELD the 0x17/0x18 clips play; once clear, any
+                     * sub-step <4 jumps to the 0x19 recover. (No +0x1c0 writer in the port yet ->
+                     * the flag reads clear -> immediate recover; the writer = audit cluster F.) */
+            if (e->sub_state_2 < 4)
+                e->sub_state_2 = 4;
+            break;
+        case 0x0a: break;                                       /* edge-fall decide @0x8011f840[0xa] =
+                                                                 * 0x801033c0 = jr ra stub (byte-verified) */
         case 5: case 6:
             /* +0x5=5/6 = the DEVOUR-FINISH (D3/D5 disasm 2026-07-03): its DECIDE f840[5]/[6] =
              * FUN_80102bd0 = `jr ra` — NOTHING re-routes it, ever (the killer stays inert over the
@@ -1047,6 +1058,7 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
                                                * release phase). Sets the just-escaped mercy flag
                                                * DAT_800aca50|=1 + the 0x5a=90-tick clear timer (+0x1d5). */
             e->motion = (uint8_t)(grab_base + 2); e->anim_frame = 0;
+            e->anim_frac = 7;                 /* +0x8f = 7 (@[4] decompile line 71) — walk->fling blend */
             re15_audio_room_se(7);
             re15_player_victim_throwoff();
             s_grab_mercy_timer = 0x5a;
@@ -1054,6 +1066,14 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
             break;
         case 5:                               /* [5] throw-off plays to its end (root motion active) */
             e->sub_state_2 += (uint8_t)(re15_enemy_clip_done(e) ? 1 : 0);
+            if ((int)e->anim_frame == 0x18)   /* HARD CUT at anim frame 0x18 (@[5] decompile line 82:
+                                               * `if (+0x95 == 0x18) +0x6 = 6`) — the fling clip is cut
+                                               * to the recovery at frame 24 even before clip-end */
+                e->sub_state_2 = 6;
+            /* DEFERRED (cited @[5] lines 84-89): the DOMINO SHOVE — while +0x1c2&2 (a body-contact
+             * flag) and +0x95>7, the reeling zombie writes 0xb01 into the CONTACTED entity ptr +0x1ac
+             * (alive, +0x9&0x80==0, +0x1d8&1==0) -> knocks a bystander zombie into the 0xb push-off.
+             * Needs the +0x1ac/+0x1c2 contact-writer (EXE body collision) — audit cluster F. */
             break;
         case 6:                               /* [6] recovery — set the literal clip 17 (0x11, @0x80102a64);
                                                * the SE 7 belongs to the THROW-OFF [4] (@0x80102920/60).
@@ -1063,13 +1083,18 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
                                                * stagger-back pose blend... */
             e->anim_blend_rate = 0x100;       /* ...consumed by [7]'s f314(1, 0x100) rate (@decompile
                                                * line 101) — slower 15-step fade than the grab's 0x200 */
+            e->anim_flags |= 0x80;            /* [7] plays clip 0x11 in REVERSE (f314 a2=1 @decompile
+                                               * line 101) — the stagger-back is the get-up clip run
+                                               * BACKWARD (the port render honors flag 0x80) */
             e->speed_h = 0x32;
+            player->hit_react &= (uint8_t)~1u; /* [6] DAT_800acae7 &= 0xfe (@decompile line 98) — the
+                                                * zombie-side release of the player grab flag */
             e->sub_state_2 = 7; break;
-        case 7:                               /* [7] recovery plays clip 0x11 — NO ad68 root motion: the
-                                               * zombie VELOCITY-staggers BACKWARD (func_0x800245d8(0x800)
-                                               * = move along yaw+180°; speed +0x8c, -2/tick, min 10 —
-                                               * P2 disasm) while the clip plays out — AWAY from the
-                                               * player, not into him. */
+        case 7:                               /* [7] recovery plays clip 0x11 BACKWARD — NO ad68 root
+                                               * motion: the zombie VELOCITY-staggers BACKWARD
+                                               * (func_0x800245d8(0x800) = move along yaw+180°; speed
+                                               * +0x8c, -2/tick (+0x9e=2 @[6]), min 10) while the clip
+                                               * plays out — AWAY from the player, not into him. */
             e->x -= (int32_t)(((int32_t)re15_cos_q12(e->rot_y) * e->speed_h) >> 12);
             e->z += (int32_t)(((int32_t)re15_sin_q12(e->rot_y) * e->speed_h) >> 12);
             e->speed_h = (int16_t)(e->speed_h - 2);
@@ -1077,6 +1102,7 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
             e->sub_state_2 += (uint8_t)(re15_enemy_clip_done(e) ? 1 : 0);   /* 7 -> 8 on clip-end */
             break;
         default:                              /* [8] EXIT (0x80102b90) -> back to the engage brain */
+            e->anim_flags &= (uint8_t)~0x80u;   /* drop the [6] reverse-playback flag */
             re15_ai_set_state_word(e, 0x201);   /* +0x4 = state 1 / +0x5 = 2 (engage) */
             /* the player-side release clears the grabbed flag (+0x93 &= ~1). With a victim bank the
              * release-finish anim does it; WITHOUT one (headless/unit tests) clear it here so a later
@@ -1085,6 +1111,128 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
                 player->hit_react &= (uint8_t)~1u;
             break;
     }
+}
+
+/* Slew the heading toward a TARGET ANGLE by up to `step` per tick (byte-true func_0x8001aa68
+ * semantics: returns the applied delta, 0 once aligned — the caller adds it to +0x6a). */
+static int16_t re15_slew_to_angle(re15_actor_t *e, int target, int step)
+{
+    int d = ((target - (int)e->rot_y) + 0x800) & 0x0fff;   /* signed residual in [-0x800,0x800) */
+    d -= 0x800;
+    if (d == 0) return 0;
+    int16_t r = (int16_t)(d > step ? step : (d < -step ? -step : d));
+    e->rot_y = (int16_t)(((int)e->rot_y + r) & 0x0fff);
+    return r;
+}
+
+/* CONTACT-STAGGER (+0x5=9) — byte-true FUN_801031e4 (@0x8011f890[9]): the bumped-from-ahead
+ * reaction the engage decide rolls with (rand&1)+9 on firm front contact (+0x90&3 && heading
+ * ahead). 3-clip chain: 0x17 intro -> 0x18 hold (the decide 0x801031a4 releases it: +0x6=4 once
+ * +0x1c0&0x8000 clears) -> 0x19 recover (frame seed 1, SE 0) -> exit 0x201 engage (also clears
+ * +0x93, +0x1b8, seeds +0x1dc=3, drops grid bit 0x80). */
+static void re15_enemy_ai_live_contact_stagger(re15_actor_t *e)
+{
+    switch (e->sub_state_2) {
+        case 0:
+            e->sub_state_2 = 1;
+            e->motion = 0x17; e->anim_frame = 0;
+            e->anim_frac = 7; e->anim_blend_rate = 0x200;
+            e->hit_react |= 1;                      /* entity+0x93 = 1 (in-reaction flag) */
+            break;
+        case 2:
+            e->sub_state_2 = 3;
+            e->motion = (uint8_t)(e->motion + 1);   /* 0x17 -> 0x18 */
+            e->anim_frame = 0;
+            /* fallthrough: [3] plays without the f314 advance-add */
+        case 3:
+            /* [3] HOLDS clip 0x18; the DECIDE releases it (+0x6=4 while +0x1c4&0x8000 clear — the
+             * port has no +0x1c0 writer yet, so the decide releases immediately = a short hold). */
+            return;
+        case 4:
+            e->sub_state_2 = 5;
+            e->motion = 0x19; e->anim_frame = 1;    /* +0x95 = 1 (@0x8010325c) */
+            e->hit_react &= (uint8_t)~1u;
+            re15_audio_room_se(0);
+            break;
+        case 6:
+            re15_ai_set_state_word(e, 0x201);       /* exit -> engage */
+            e->hit_react &= (uint8_t)~1u;
+            e->hit_stun = 3;                        /* +0x1dc = 3 */
+            e->grid_id &= (uint8_t)0x7f;            /* +0x9 &= 0x7f */
+            return;
+        default: break;                             /* [1]/[5]: play + advance below */
+    }
+    e->sub_state_2 = (uint8_t)(e->sub_state_2 + (uint8_t)re15_enemy_clip_done(e));
+}
+
+/* EDGE-FALL (+0x5=0xa) — byte-true FUN_801033c8 (@0x8011f890[0xa]): the OTHER contact roll — the
+ * zombie walks INTO the contact heading (clip 1 while slewing +0x10/tick to (+0x90&0xf0)<<4), then
+ * TUMBLES OVER THE EDGE: clip 0x16, yaw snapped to the contact heading, +0x8c=0x474; at clip frame
+ * 0x46 the fall lands (fall-vel +0xb0=0x474, HP -= 0x708=1800); clip done -> +0x82(floor) += 1,
+ * Y -= 0x708 (the literal store `+0x38 += -0x708`; the port world IS the PSX frame — copy the
+ * bytes, not an interpretation), +0x4 = 1 (idle re-init on the lower floor). THE BRIEFING-ROOM
+ * PIT: a zombie chasing across the floor hole falls in. */
+static void re15_enemy_ai_live_edge_fall(re15_actor_t *e)
+{
+    switch (e->sub_state_2) {
+        case 0:
+            e->sub_state_2 = 1;
+            e->motion = 0x01; e->anim_frame = 0;
+            e->anim_frac = 7; e->anim_blend_rate = 0x200;
+            /* fallthrough into the [1] turn-to-contact */
+        case 1: {
+            int heading = ((int)(e->ai_contact & 0xf0) << 4) & 0x0fff;
+            if (re15_slew_to_angle(e, heading, 0x10) == 0)
+                e->sub_state_2 = 2;                 /* aligned -> the stumble */
+            return;
+        }
+        case 2:
+            e->sub_state_2 = 3;
+            e->motion = 0x16; e->anim_frame = 0;
+            e->anim_frac = 7; e->anim_blend_rate = 0x200;
+            e->speed_h = 0x474;                     /* +0x8c = 0x474 */
+            e->rot_y = (int16_t)((((int)(e->ai_contact & 0xf0) << 4)) & 0x0fff);  /* yaw snap */
+            /* fallthrough */
+        case 3:
+            if ((int)e->anim_frame == 0x46) {       /* the landing frame: fall vel + the -0x708 hit */
+                e->hp = (int16_t)(e->hp - 0x708);
+            }
+            if (re15_enemy_clip_done(e)) {          /* fall complete -> the floor below */
+                e->floor = (uint8_t)(e->floor + 1);
+                e->y -= 0x708;                      /* the literal +0x38 += -0x708 */
+                re15_ai_set_state_word(e, 0x0001);  /* +0x4 word = 1 -> state 1 / +0x5 = 0 idle */
+            }
+            return;
+        default: return;
+    }
+}
+
+/* PUSH-OFF / Wegstoß-Stagger (+0x5=0xb) — byte-true FUN_8010385c (@0x8011f890[0xb]; decide
+ * @0x8011f840[0xb] = jr-ra stub). Entered via the 0xb01 state-word: the grab machine's DOMINO shove
+ * ([5] writes 0xb01 into the contacted bystander +0x1ac) — the zombie is KNOCKED back: one-shot
+ * clip 0x10 with a sharp backward slide (speed +0x8c=300 decaying +0x9e=0x32/tick, min 10), then
+ * back to the engage brain. Live-observed in the original mash-escape (ss1=0xb s6=7 mo=0x10). */
+static void re15_enemy_ai_live_pushoff(re15_actor_t *e, re15_actor_t *player)
+{
+    if (e->sub_state_2 == 0) {                /* entry (+0x6==0) */
+        e->motion = 0x10; e->anim_frame = 0;  /* +0x94 = 0x10, +0x95 = 0 */
+        e->sub_state_2 = 7;                   /* +0x6 = 7 (the original's marker sub-step) */
+        e->anim_frac = 7;                     /* +0x8f = 7 */
+        e->anim_blend_rate = 0x200;           /* f314 rate 0x200 (per-frame call) */
+        e->speed_h = 300;                     /* +0x8c = 300 — the knockback impulse */
+        e->grab_kill_ctr = 0x32;              /* +0x9e = 0x32 — the per-tick decay step */
+        re15_audio_room_se(0);                /* func_0x800453d0(0) */
+        if (player) player->hit_react &= (uint8_t)~1u;   /* DAT_800acae7 &= 0xfe */
+    }
+    if (re15_enemy_clip_done(e)) {            /* f314 done -> +0x4 = 0x201 (engage) */
+        re15_ai_set_state_word(e, 0x201);
+        return;
+    }
+    /* func_0x800245d8(0x800): slide BACKWARD along yaw+180° at +0x8c, decaying by +0x9e, min 10. */
+    e->x -= (int32_t)(((int32_t)re15_cos_q12(e->rot_y) * e->speed_h) >> 12);
+    e->z += (int32_t)(((int32_t)re15_sin_q12(e->rot_y) * e->speed_h) >> 12);
+    e->speed_h = (int16_t)(e->speed_h - e->grab_kill_ctr);
+    if (e->speed_h < 10) e->speed_h = 10;
 }
 
 /* Turn-to-face ANIMATE (@0x8011f890[7] = FUN_80102dc8, STAGE1.BIN) — the +0x5=7 TURN state's
@@ -1461,6 +1609,17 @@ int re15_enemy_ai_live_active(int slot)
                      * COLLAPSE (cmd 6); sub1 plays clip (+0x5)+4 (9 face / 0xa behind) with root motion
                      * (carries the zombie down onto the victim); sub2 = INERT forever (the hover). */
                     re15_enemy_ai_live_devour(e, player);
+                else if (e->sub_state_1 == 0x0b)
+                    /* PUSH-OFF stagger (@0x8011f890[0xb]=FUN_8010385c): knocked back by the grab
+                     * machine's domino shove — one-shot clip 0x10 + backward slide, exit engage. */
+                    re15_enemy_ai_live_pushoff(e, player);
+                else if (e->sub_state_1 == 9)
+                    /* CONTACT-STAGGER (@0x8011f890[9]=FUN_801031e4): bumped from ahead. */
+                    re15_enemy_ai_live_contact_stagger(e);
+                else if (e->sub_state_1 == 0x0a)
+                    /* EDGE-FALL (@0x8011f890[0xa]=FUN_801033c8): tumbles over the contact edge
+                     * (the briefing-room pit) down one floor. */
+                    re15_enemy_ai_live_edge_fall(e);
                 else if (e->sub_state_1 == 2) {
                     /* ENGAGE animate (byte-true FUN_801021f8 @0x8011f890[2], W1 disasm 2026-07-03):
                      * THE AWARE WALK — not a stationary tracker. Plays the per-zombie BANK0 walk clip
