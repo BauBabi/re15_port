@@ -105,9 +105,33 @@ Savestate-Adresse oder Datei-Offset), Mechanismus beweisen — „sieht richtig 
 - Quellen: `FUN_80103980/801018f8/80102548/80105a8c/80100688.c` (STAGE1_full), Dispatch
   `@0x8011f7b4`/`@0x8011f80c`/`@0x8011f890`, Tabellen `PTR_FUN_8011f9d0/d4`.
 
-## 5. ROOM 1070 — Irons-Office-Cutscene endet nicht  ⬜
-- In der Irons-Cutscene **hängt Leon am Ende**, die **Cutscene endet nicht** (kein Exit/Handoff).
-- Verdacht: fehlender/fälschlicher Cutscene-End-Trigger oder ein Clip/Event ohne Terminierung.
+## 5. ~~ROOM 1070~~ ROOM 1150 — Irons-Office-Cutscene  ✅ (2026-07-06, RE-verifiziert; funktioniert)
+- **RAUM-NUMMER KORRIGIERT:** Die Irons-Cutscene ist **ROOM1150 = "CHIEF OFFICE" (JUMP 0x115)**, NICHT
+  ROOM1070. ROOM1070 = "LOBBY OFFICE" (0x107), ein 5-Zombie-Kampfraum ohne NPC/Cutscene (Doc-Vertipper
+  "LOBBY OFFICE" ↔ "CHIEF OFFICE"). Beleg: `information74.txt:108` (0x115 = SHOCHO/Chief/Irons);
+  der Cutscene-End-Byte-Block existiert NUR in ROOM1150.RDT (@0xf6a), in ROOM1070.RDT keine Übereinstimmung.
+  Irons nutzt Leons Modell als Platzhalter (`information74.txt:251`) → die Figur wird von PLAYER-Opcodes
+  animiert (Plc_motion/Plc_neck/Plc_ret), kein NPC-Handler. Workflow wf_c5742c63-dc4.
+- **Byte-true RE der Cutscene (ROOM1150 sub[8], getriggert per AOT 6):** Cut_chg 5 → drei `Plc_dest`
+  Geh-zu-Ziel + `do{Evt_next}edwhile`-Ankunftsschleifen → Kniefall (Plc_motion 0x0b) + Plc_neck +
+  Message_on-Dialog → Cut_chg 7 → Tail `Cut_old` (Kamera zurück + Auto-Cam an, byte-true op_cut_old) →
+  `Plc_motion→routine 4` → `Plc_ret` (routine 1 = Gameplay, byte-true LAB_80041f88) → `Set(2,7,0)/
+  Set(1,27,0)` (Cine-Flags löschen) → Evt_end. **Keine blockierenden Opcodes** — die Cutscene MUSS enden.
+- **VERIFIZIERT (headless, RE15_FORCE_EVENT=8 aus dem AOT-6-Bereich):** Walk-in kommt am Ziel an (F52) →
+  Kniefall/Dialog (mo 11/10/12) → Ende bei F1421 (mo→200 Idle) → **Plc_ret-Handoff, player_mode→0** →
+  Post-Cutscene-Input (pad=UP) **bewegt Leon wieder** (F1519 mo=105, x läuft). Letterbox + Kamera-Cut
+  korrekt (Screenshot `shots/irons_kneel.png`: Leon kniet über dem liegenden Chief, Balken oben/unten).
+- **Der ursprüngliche „Hänger" reproduziert NICHT mehr** — durch die umfangreiche SCD-Clock-/Cutscene-Arbeit
+  seit dem 02.07. behoben (Do/Edwhile-Ankunfts-Poll + Plc_dest-Walker + Sleep-Yield laufen byte-true).
+  Ein „Hänger" ist nur bei FALSCHER Startposition erzeugbar (Test-Artefakt: startet man Leon am Spawn statt
+  am AOT-6-Trigger, blockt eine Wand bei z=-15446 die Straight-Line-Walk → der Walk-to-dest-Poll kommt nie
+  an; der echte Trigger AOT 6 ≈(-21550,-22800) liegt aber neben dem Ziel = kein Wall im Weg).
+- **Bekannte byte-true DIVERGENZ (aktuell benign, Refactor deferred):** Der Port keyt player_mode=2 +
+  Letterbox auf die Cine-FLAGS (1,27)/(2,7) [main.c:1236]; das Original gated den Input auf das Player-
+  ROUTINE-Byte DAT_800aca58 (Plc_motion→4 scripted / Plc_ret→1 gameplay). Für JEDE Cutscene die der Port
+  fährt sind beide observably identisch (die Cutscene setzt UND löscht beide + Plc_ret). Nicht refactort:
+  der Flag-Gate ist load-bearing für 1170/1240-Intro; ein Umbau riskiert dort Regressionen für einen
+  nicht-reproduzierenden Bug. Recovery-Spec im Arbiter-Verdict (wf_c5742c63-dc4).
 
 ---
 
