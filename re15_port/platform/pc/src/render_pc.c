@@ -610,8 +610,11 @@ void re15_render_end_frame(void)
     /* ADDITIVE WHITE overlay (YOU-DIED chain: FUN_800217b0 mode1 = ABR1 additive, brightness =
      * level>>7; the white death-flash + the 3 heartbeat pulses). Drawn UNDER the black fade. */
     if (s_white_alpha > 0) {
+        /* while the glow backdrop is active, the flat prim only adds the PULSE crest (the glow
+         * quads already carry the level) — full flat white only for the pre-glow flash. */
+        uint8_t wf = s_black_bg ? (uint8_t)(s_white_alpha / 3) : s_white_alpha;
         SDL_SetRenderDrawBlendMode(s_renderer, SDL_BLENDMODE_ADD);
-        SDL_SetRenderDrawColor(s_renderer, s_white_alpha, s_white_alpha, s_white_alpha, 255);
+        SDL_SetRenderDrawColor(s_renderer, wf, wf, wf, 255);
         SDL_Rect fullw = { 0, 0, SCREEN_XRES, SCREEN_YRES };
         SDL_RenderFillRect(s_renderer, &fullw);
         SDL_SetRenderDrawBlendMode(s_renderer, SDL_BLENDMODE_BLEND);
@@ -633,25 +636,57 @@ void re15_render_end_frame(void)
     /* GAME-OVER (YOU DIED) — drawn OVER the death fade. The graphic (YOUDIED.TIM) is centred on the
      * faded-black scene. Byte-true death FSM (FUN_8003694c) fades then shows this before the title. */
     if (s_gameover_show && s_gameover_tex) {
-        int dw = s_gameover_w, dh = s_gameover_h;
-        if (dw > SCREEN_XRES) dw = SCREEN_XRES;
-        if (dh > SCREEN_YRES) dh = SCREEN_YRES;
-        SDL_Rect dst = { (SCREEN_XRES - dw) / 2, (SCREEN_YRES - dh) / 2, dw, dh };
+        /* YOUDIED.TIM layout (decoded 2026-07-05, shots/youdied_tim_content.png): rows 0..~56 =
+         * the red dripping "YOU DIED" letters (256 wide); below = the radial GLOW quadrant
+         * (~192x144) — the original draws it as 4 MIRRORED fullscreen GT4 quads = the spotlight
+         * backdrop (FUN_80015a80's 4 fullscreen quads), with the flat additive fade prim pulsing
+         * ON TOP (the heartbeat). */
+        if (s_black_bg) {
+            /* the radial glow backdrop: 4 mirrored copies of the glow quadrant around the screen
+             * center, brightness = a dim base + the fade level (flash decay + heartbeat pulses). */
+            SDL_Rect gsrc = { 0, 64, 148, 88 };   /* src cut AT the glow hotspot (~148,152 abs in
+                                                    * the TIM) so the mirrored bright corners MEET
+                                                    * at the screen center (else a dark cross) */
+            extern int g_death_glow;
+            int gb = g_death_glow + ((int)s_white_alpha * 5) / 8;   /* base ramp + heartbeat crest */
+            if (gb > 255) gb = 255;
+            SDL_SetTextureColorMod(s_gameover_tex, (Uint8)gb, (Uint8)gb, (Uint8)gb);
+            SDL_SetTextureBlendMode(s_gameover_tex, SDL_BLENDMODE_ADD);
+            int hx = SCREEN_XRES / 2, hy = SCREEN_YRES / 2;
+            SDL_Rect q0 = { 0, 0, hx, hy };          /* top-left: quadrant flipped both ways so the
+                                                      * bright corner meets the screen center */
+            SDL_Rect q1 = { hx, 0, hx, hy };
+            SDL_Rect q2 = { 0, hy, hx, hy };
+            SDL_Rect q3 = { hx, hy, hx, hy };
+            /* glow texture's bright corner is its BOTTOM-RIGHT -> mirror per quadrant */
+            SDL_RenderCopyEx(s_renderer, s_gameover_tex, &gsrc, &q0, 0, NULL, SDL_FLIP_NONE);
+            SDL_RenderCopyEx(s_renderer, s_gameover_tex, &gsrc, &q1, 0, NULL, SDL_FLIP_HORIZONTAL);
+            SDL_RenderCopyEx(s_renderer, s_gameover_tex, &gsrc, &q2, 0, NULL, SDL_FLIP_VERTICAL);
+            SDL_RenderCopyEx(s_renderer, s_gameover_tex, &gsrc, &q3, 0, NULL,
+                             (SDL_RendererFlip)(SDL_FLIP_HORIZONTAL | SDL_FLIP_VERTICAL));
+            SDL_SetTextureColorMod(s_gameover_tex, 255, 255, 255);
+            SDL_SetTextureBlendMode(s_gameover_tex, SDL_BLENDMODE_BLEND);
+        }
+        /* the YOU DIED letters: near-full-width in the UPPER screen area (original s17/s19:
+         * text spans ~y 20..70 of 240). Src = the TIM's top text rows. */
+        SDL_Rect tsrc = { 0, 0, 256, 56 };
+        int tw = (SCREEN_XRES * 95) / 100;
+        int th = (tw * 56) / 256;
+        SDL_Rect tdst = { (SCREEN_XRES - tw) / 2, SCREEN_YRES * 8 / 100, tw, th };
         if (s_go_flyin >= 0 && s_go_flyin < 50) {
             /* LETTER FLY-IN (byte-true FUN_80015a80: 4 quads glide (target-start)/0x32 over 50
-             * frames) — faithful-line: 4 horizontal strips of YOUDIED.TIM slide in from
-             * alternating screen sides, arriving together at tick 50. */
-            int sh = s_gameover_h / 4;
+             * frames) — FL: 4 vertical slices of the text strip slide in from alternating sides. */
+            int sw = 256 / 4;
             for (int i = 0; i < 4; i++) {
                 int rem  = 50 - s_go_flyin;
                 int off  = (SCREEN_XRES * rem) / 50;
                 int offx = (i & 1) ? off : -off;
-                SDL_Rect src = { 0, i * sh, s_gameover_w, sh };
-                SDL_Rect d2  = { dst.x + offx, dst.y + i * (dh / 4), dw, dh / 4 };
+                SDL_Rect src = { i * sw, 0, sw, 56 };
+                SDL_Rect d2  = { tdst.x + i * (tw / 4) + offx, tdst.y, tw / 4, th };
                 SDL_RenderCopy(s_renderer, s_gameover_tex, &src, &d2);
             }
         } else {
-            SDL_RenderCopy(s_renderer, s_gameover_tex, NULL, &dst);
+            SDL_RenderCopy(s_renderer, s_gameover_tex, &tsrc, &tdst);
         }
     }
 

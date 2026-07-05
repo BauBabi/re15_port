@@ -45,6 +45,8 @@ int g_death_blackbg = 0;   /* flat-black background mode (room backdrop off, 3D 
 int g_death_cam     = 0;   /* death-camera glide active (sub 2+) */
 int g_death_pool    = 0;   /* blood-pool growth ticks (half-extents 500+12t x 600+12t, cap 122) */
 int g_death_flyin   = -1;  /* YOU DIED letter fly-in tick 0..50 (-1 = hidden) */
+int g_death_glow    = 0;   /* the spotlight-backdrop brightness (starts saturated at the black-bg
+                            * switch, decays gradually — the live s14->s16 gray->dark ramp) */
 
 static int s_go_sub = 0, s_go_ctr = 0, s_go_lap = 0, s_go_on = 0;
 static int32_t s_go_lvl = 0, s_go_rate = 0;
@@ -67,6 +69,8 @@ static void re15_gameover_fsm_tick(void)
     if (s_go_lvl < 0) s_go_lvl = 0;
     int b = (int)(s_go_lvl >> 7);                         /* brightness = level>>7 */
     g_death_white = b > 255 ? 255 : b;
+    if (g_death_glow > 56) g_death_glow -= 4;             /* ...and ramps down over ~50 ticks to the
+                                                           * dim hold (live s14->s16 ~1.1s) */
     switch (s_go_sub) {
         case 0:                                           /* BGM decrescendo (0x3c) - port: no BGM yet */
             if (++s_go_ctr >= 0x32) { s_go_rate = 0x4bd; s_go_sub = 1; s_go_ctr = 0; }
@@ -75,6 +79,7 @@ static void re15_gameover_fsm_tick(void)
             if (++s_go_ctr >= 0x1b) {
                 s_go_rate = -0x2556;
                 g_death_blackbg = 1;                      /* FUN_80021634(2,0) */
+                g_death_glow = 255;                       /* backdrop starts saturated... */
                 s_go_sub = 2; s_go_ctr = 0;
             }
             break;

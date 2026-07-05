@@ -30,6 +30,7 @@ extern int g_death_blackbg;   /* flat-black background mode (FUN_80021634(2,0)) 
 extern int g_death_cam;       /* death-camera glide active */
 extern int g_death_pool;      /* blood-pool growth ticks (500+12t x 600+12t) */
 extern int g_death_flyin;     /* YOU DIED letter fly-in tick 0..50, -1 hidden */
+extern int g_death_glow;      /* spotlight backdrop brightness (gradual decay) */
 
 /* The room the game boots into (RE1.5 intro = the helipad, STAGE1/ROOM1170). The single
  * entry point; everything else is reached via doors (data-driven). */
