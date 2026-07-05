@@ -122,11 +122,12 @@ typedef struct {
      * a movement leaf (deferred, model-pool); read here as an input. 0 = origin. */
     int16_t  ai_target_x;   /* +0x1dc */
     int16_t  ai_target_z;   /* +0x1de */
-    /* STEER-TARGET snapshot (+0x1bc/+0x1be) — the player XZ captured ONCE at the m0 INIT
-     * (FUN_80100688 sh @0x8010071c/734) and NEVER refreshed by any m0 code (exhaustive overlay
-     * store-scan + EXE decompile grep, 2026-07-04). BOTH live walks steer toward THIS point
-     * (FUN_801021f8/FUN_801057bc: func_0x8001aac4(+0x1bc,+0x1be,±sVar7)) — live homing happens
-     * only through the TURN state's re-aim (decide arc tests run against the live player). */
+    /* STEER TARGET (+0x1bc/+0x1be) — the player XZ, REFRESHED EVERY TICK (RAM-arbitrated: in all
+     * 16 live tl_run2 samples every zombie's +0x1bc/+0x1be == the player pos; the init store
+     * @0x8010071c/734 is only the FIRST write; the per-tick writer evades an offset-literal scan —
+     * exact address = open RE item). BOTH live walks steer toward it with the SIGNED gait slew
+     * (FUN_801021f8:57/FUN_801057bc:40: func_0x8001aac4(+0x1bc,+0x1be,±sVar7) — the -1 rows steer
+     * AWAY = the authored weave). */
     int16_t  steer_x;       /* +0x1bc */
     int16_t  steer_z;       /* +0x1be */
     /* LIVE STAGE1 zombie (@0x8011f7b4 family, FUN_80100424/FUN_80101224) attack windup timer

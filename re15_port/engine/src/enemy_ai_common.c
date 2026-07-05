@@ -745,8 +745,8 @@ void re15_enemy_ai_live_init(int slot)
     re15_actor_t *e = &g_actors[slot];
     e->state    = (uint8_t)RE15_AI_STATE_ACTIVE;   /* +0x4 = 1 */
     e->ai_timer = 0x14;                            /* +0x9c = 0x14 */
-    /* +0x1bc/+0x1be = the player-pos STEER SNAPSHOT (sh @0x8010071c/734): the ONLY write —
-     * both live walks aim at this fixed point ever after; the TURN state provides the live re-aim. */
+    /* +0x1bc/+0x1be steer target: the init write (sh @0x8010071c/734) — the per-tick refresh in
+     * re15_enemy_ai_live_tick keeps it mirroring the player (RAM-arbitrated, see there). */
     e->steer_x = (int16_t)g_actors[RE15_ACTOR_SLOT_PLAYER].x;
     e->steer_z = (int16_t)g_actors[RE15_ACTOR_SLOT_PLAYER].z;
     /* seed the per-spawn HURT stagger clip (FUN_80100688 @0x80100774-9c): +0x1d4 =
@@ -1720,6 +1720,14 @@ int re15_enemy_ai_live_tick(int slot)
     if (e->grid_id & RE15_AI_GRID_SKIP) return 0;       /* +0x9 & 0x20 */
 
     e->ai_dist = (uint32_t)re15_enemy_player_dist(e, &g_actors[RE15_ACTOR_SLOT_PLAYER]);
+    /* +0x1bc/+0x1be STEER TARGET = refreshed to the player pos EVERY tick. RAM-ARBITRATED
+     * (2026-07-04, 16 live samples tl_run2: every zombie's +0x1bc/+0x1be == the player pos in every
+     * frame, 1-frame skew = written in the enemy tick before the player moves). The "snapshot only
+     * at init, never refreshed" static finding was REFUTED by this data — the per-tick writer hides
+     * from an offset-literal scan (EXE-side/pointer-form store; exact address = open RE item). The
+     * init store @0x8010071c/734 is just the first write of the same mirror. */
+    e->steer_x = (int16_t)g_actors[RE15_ACTOR_SLOT_PLAYER].x;
+    e->steer_z = (int16_t)g_actors[RE15_ACTOR_SLOT_PLAYER].z;
 
     switch (e->state) {                                  /* @0x8011f7b4[entity+0x4] */
         case RE15_AI_STATE_INIT:   re15_enemy_ai_live_init(slot);   break;  /* [0] FUN_80100688 */

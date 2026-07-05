@@ -1156,29 +1156,28 @@ int main(void)
                    "(window=5) threw off unmashed (hp %d->%d)\n", guard, pl->hp, hp_before_regrab, pl->hp);
     }
 
-    /* (24): STEER SNAPSHOT (+0x1bc/+0x1be, FUN_80100688 sh @0x8010071c/734): the walks aim at the
-     * player pos captured ONCE at the live-init and NEVER refreshed (exhaustive m0 store-scan
-     * 2026-07-04) — live homing is the TURN state's job. The old port homed the walks onto the LIVE
-     * player -> the turn never fired -> the wake behavior-roll was absorbing (a 0x13 roll = a
-     * permanent arms-down shambler = the user report). */
+    /* (24): STEER TARGET (+0x1bc/+0x1be): refreshed to the player pos EVERY tick — RAM-ARBITRATED
+     * against 16 live original samples (tl_run2 2026-07-04: every zombie's +0x1bc/+0x1be == the
+     * player pos in every frame; the init store @0x8010071c/734 is just the first write). The walks
+     * consume it via func_0x8001aac4 with the SIGNED gait slew (the -1 rows steer AWAY = the weave). */
     {
         int gs = zslots[0];
         re15_actor_t *gz = &g_actors[gs];
         pl->x = 1234; pl->z = -5678; pl->hp = 100; pl->hit_react = 0;
         re15_enemy_ai_live_init(gs);
         if (gz->steer_x != 1234 || gz->steer_z != -5678) {
-            fprintf(stderr, "FAIL: (24) live-init must snapshot the player pos into +0x1bc/+0x1be "
+            fprintf(stderr, "FAIL: (24) live-init must write the player pos into +0x1bc/+0x1be "
                     "(got %d,%d)\n", gz->steer_x, gz->steer_z); fail = 1; }
         pl->x = 20000; pl->z = 20000;                       /* the player MOVES... */
         gz->x = 0; gz->z = 0; gz->floor = 0; gz->state = RE15_AI_STATE_ACTIVE;
         gz->grid_id = 0; gz->sub_state_1 = 2; gz->sub_state_2 = 0; gz->ai_flags = 0;
-        for (int f = 0; f < 20; f++) re15_enemy_ai_run_all(1);
-        if (gz->steer_x != 1234 || gz->steer_z != -5678) {  /* ...the snapshot must NOT follow */
-            fprintf(stderr, "FAIL: (24) the steer snapshot must never refresh (got %d,%d)\n",
-                    gz->steer_x, gz->steer_z); fail = 1; }
+        for (int f = 0; f < 3; f++) re15_enemy_ai_run_all(1);
+        if (gz->steer_x != 20000 || gz->steer_z != 20000) { /* ...the target FOLLOWS (per-tick mirror) */
+            fprintf(stderr, "FAIL: (24) the steer target must refresh to the live player every tick "
+                    "(got %d,%d)\n", gz->steer_x, gz->steer_z); fail = 1; }
         if (!fail)
-            printf("  (24) steer snapshot: init captures (1234,-5678), 20 engage ticks with the player "
-                   "moved -> snapshot unchanged (live re-aim = the TURN state only)\n");
+            printf("  (24) steer target: init writes (1234,-5678); player moved -> per-tick refresh "
+                   "follows to (20000,20000) (RAM-arbitrated live mirror)\n");
         re15_enemy_reset();
     }
 
