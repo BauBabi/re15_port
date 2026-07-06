@@ -125,6 +125,15 @@ typedef struct {
     uint16_t scale16;      /* spawn packed-arg low16 (Q12 size; slot+0x72 in the pool @0x800a73b8) —
                             * muzzle 0x800, smoke 0xc00, shell 0x1000, gore 0x2000/0x2800 */
     const re15_esp_t *bank;/* the bank that resolved effect_id (room or GLOBAL CORE00.ESP); NULL = unresolved */
+    /* ===== byte-true physics (RE15_ESP_ROWMACHINE.md; tick @0x8001a2f0, routine 11 @0x80017718;
+     * LIVE-confirmed mzd_stage1_hit_effect.sav). A SPLATTER child particle: gravity accel.y=8,
+     * RNG-spread initial drift, integrated position offset xlat, floor bounce (routine 12). Draw
+     * adds xlat to the anchor. phys==0 = a normal (non-splatter) fx = the existing cell-cycle. */
+    uint8_t  phys;         /* 1 = run the drift/gravity integration (slot+0x6c bit5==0) */
+    int16_t  accel_x, accel_y, accel_z;   /* slot+0x08/0a/0c (gravity: y=+8 down, live-confirmed) */
+    int16_t  drift_x, drift_y, drift_z;   /* slot+0x10/12/14 (velocity; routine 11 RNG spread)    */
+    int32_t  xlat_x, xlat_y, xlat_z;      /* slot+0x34/38/3c s32 (accumulated fall offset)         */
+    int32_t  floor_y;      /* the bounce plane (routine 12 room_coll → collapsed to a floor clamp) */
 } re15_esp_fx_t;
 
 void           re15_esp_fx_reset(void);
@@ -136,6 +145,12 @@ re15_esp_fx_t *re15_esp_fx_spawn_ex(const re15_esp_t *bank, uint8_t effect_id, u
                                     int32_t x, int32_t y, int32_t z, int16_t param);
 re15_esp_fx_t *re15_esp_fx_spawn(const re15_esp_t *bank, uint8_t effect_id, uint8_t sub_index,
                                  int32_t x, int32_t y, int32_t z, int16_t param);
+/** Spawn `n` byte-true SPLATTER child particles at (x,y,z) with floor at floor_y — the
+ *  parent→routine-2→routine-11 blood/gore chain collapsed: each child = effect_id sprite +
+ *  gravity accel.y=8 + routine-11 RNG drift (drift.x -= rand&0xa, drift.y -= rand&0x14,
+ *  drift.z += rand&0x14) + floor bounce. (RE15_ESP_ROWMACHINE.md; LIVE-confirmed.) */
+void re15_esp_fx_splatter(const re15_esp_t *bank, uint8_t effect_id, int n,
+                          int32_t x, int32_t y, int32_t z, int32_t floor_y);
 /** Per-frame anim advance (byte-true FUN_80019e20 frame timer); despawns ended particles. */
 void           re15_esp_fx_tick(const re15_esp_t *bank);
 /** Read slot `i` (for the draw/tests); returns NULL if inactive/out-of-range. */

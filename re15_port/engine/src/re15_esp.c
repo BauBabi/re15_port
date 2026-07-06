@@ -13,6 +13,8 @@
 #include "re15_esp.h"
 #include <string.h>
 
+extern uint8_t re15_engine_rand8(void);   /* the shared FUN_8001af20 draw (re15_damage.c) */
+
 /* ===== Phase ESP-B: the active effect-sprite pool ====================================== */
 
 /* The port's effect pool (the re15_ems-style C analog of DAT_800b2360/DAT_800b2368). Unlike
@@ -261,6 +263,32 @@ re15_esp_fx_t *re15_esp_fx_spawn(const re15_esp_t *bank, uint8_t effect_id, uint
     return re15_esp_fx_spawn_ex(bank, effect_id, sub_index, 0x1000, x, y, z, param);
 }
 
+/* Byte-true blood/gore SPLATTER (RE15_ESP_ROWMACHINE.md; the parent→routine-2→routine-11 chain
+ * collapsed into n physics children). Physics = the tick @0x8001a2f0 (drift += accel; xlat +=
+ * drift, gated flags bit5==0) + routine 11 @0x80017718 RNG drift spread; accel.y = 8 (gravity,
+ * live-confirmed mzd_stage1_hit_effect.sav accel=[-3,8,0]). Floor bounce = routine 12 (room_coll)
+ * collapsed to a plane clamp with a damped drift.y flip. accel.x = small RNG (faithful-line: the
+ * live -2/-3 source is a not-yet-mapped row constant; the ground-truth magnitude is used). */
+void re15_esp_fx_splatter(const re15_esp_t *bank, uint8_t effect_id, int n,
+                          int32_t x, int32_t y, int32_t z, int32_t floor_y)
+{
+    for (int k = 0; k < n; k++) {
+        /* scale 0x1000 = visible DROPLETS (faithful-line: the exact child scale is a routine-2
+         * child-spawn param, not yet mapped; 0x1000 reads as distinct droplets, not one gore blob). */
+        re15_esp_fx_t *f = re15_esp_fx_spawn_ex(bank, effect_id, 0, 0x1000, x, y, z, 0);
+        if (!f) return;                 /* pool full */
+        f->phys    = 1;
+        f->accel_x = (int16_t)((re15_engine_rand8() & 3) - 1);   /* small (live -2..-3 magnitude) */
+        f->accel_y = 8;                 /* gravity down (+Y = down; live-confirmed) */
+        f->accel_z = 0;
+        f->drift_x = (int16_t)(-(re15_engine_rand8() & 0x0a));    /* routine 11: -= rand&0xa   */
+        f->drift_y = (int16_t)(-(re15_engine_rand8() & 0x14));    /*             -= rand&0x14   */
+        f->drift_z = (int16_t)( (re15_engine_rand8() & 0x14));    /*             += rand&0x14   */
+        f->xlat_x = f->xlat_y = f->xlat_z = 0;
+        f->floor_y = floor_y;
+    }
+}
+
 void re15_esp_fx_tick(const re15_esp_t *bank)
 {
     /* Byte-true FUN_80019e20 frame timer (L117-131): when the per-slot timer hits 0, advance
@@ -271,6 +299,26 @@ void re15_esp_fx_tick(const re15_esp_t *bank)
     for (int i = 0; i < RE15_ESP_FX_MAX; i++) {
         re15_esp_fx_t *f = &s_esp_fx[i];
         if (!f->active) continue;
+
+        /* PHYSICS (byte-exact tick @0x8001a2f0, gated flags bit5==0): the position offset xlat
+         * (s32) integrates the drift velocity, which itself accelerates by gravity — LIVE-confirmed
+         * against mzd_stage1_hit_effect.sav. Draw adds xlat to the anchor. */
+        if (f->phys) {
+            f->xlat_x += f->drift_x;                 /* xlat[0x34] += drift[0x10] */
+            f->xlat_y += f->drift_y;                 /* xlat[0x38] += drift[0x12] */
+            f->xlat_z += f->drift_z;                 /* xlat[0x3c] += drift[0x14] */
+            f->drift_x = (int16_t)(f->drift_x + f->accel_x);   /* drift += accel (gravity) */
+            f->drift_y = (int16_t)(f->drift_y + f->accel_y);
+            f->drift_z = (int16_t)(f->drift_z + f->accel_z);
+            /* FLOOR BOUNCE (routine 12 room_coll @0x8001c6e8, collapsed to a plane clamp): when the
+             * particle reaches the floor, clamp it there and damp-flip drift.y so it settles. */
+            if (f->y + f->xlat_y >= f->floor_y) {
+                f->xlat_y = f->floor_y - f->y;
+                f->drift_y = (int16_t)(-f->drift_y / 2);       /* 50% restitution */
+                f->drift_x = (int16_t)(f->drift_x * 3 / 4);    /* ground friction */
+                f->drift_z = (int16_t)(f->drift_z * 3 / 4);
+            }
+        }
 
         if (f->timer == 0) {
             f->frame++;

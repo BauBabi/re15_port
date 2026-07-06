@@ -207,7 +207,10 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy)
         }
         if (!re15_render_pc_dbg_slot_loaded(slot)) continue;   /* that bank's texture not loaded */
         re15_render_pc_bind_tim_slot(slot);
-        float wx = (float)f->x, wy = (float)f->y, wz = (float)f->z;
+        /* SPLATTER physics offset (byte-true xlat): a physics particle draws at anchor + xlat. */
+        float wx = (float)(f->x + f->xlat_x);
+        float wy = (float)(f->y + f->xlat_y);
+        float wz = (float)(f->z + f->xlat_z);
         float vx = (cam->rot[0]*wx + cam->rot[1]*wy + cam->rot[2]*wz) / 4096.0f + cam->trans[0];
         float vy = (cam->rot[3]*wx + cam->rot[4]*wy + cam->rot[5]*wz) / 4096.0f + cam->trans[1];
         float vz = (cam->rot[6]*wx + cam->rot[7]*wy + cam->rot[8]*wz) / 4096.0f + cam->trans[2];
@@ -216,9 +219,10 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy)
             FILE *fl = pc_fx_log_handle();
             if (fl) {
                 extern int re15_render_pc_dbg_textri_count(void);
-                fprintf(fl, "id=%d sub=%d eidx=%d frame=%d w(%d,%d,%d) v(%.0f,%.0f,%.0f) slot=%d q=%d\n",
+                fprintf(fl, "id=%d sub=%d eidx=%d frame=%d w(%d,%d,%d) phys=%d xlat=(%d,%d,%d) drift=(%d,%d,%d) slot=%d q=%d\n",
                         f->effect_id, f->sub_index, f->eff_idx, f->frame,
-                        f->x, f->y, f->z, vx, vy, vz, slot,
+                        f->x, f->y, f->z, f->phys, f->xlat_x, f->xlat_y, f->xlat_z,
+                        f->drift_x, f->drift_y, f->drift_z, slot,
                         re15_render_pc_dbg_textri_count());
                 fflush(fl);
             }
@@ -1212,6 +1216,15 @@ int main(int argc, char *argv[])
          * SCD ticks every 2nd frame so SCD remains 30Hz. */
         if (target_fps == 30 || (g_engine.frame_count & 1) == 0) {
             scd_vm_tick();
+            /* RE15_FORCE_SPLAT: debug — throw one byte-true blood splatter burst at the player at
+             * F30 to visually verify the physics (gravity + RNG spread + floor bounce). */
+            if (getenv("RE15_FORCE_SPLAT") && g_engine.frame_count == 30) {
+                extern void re15_esp_fx_splatter(const re15_esp_t *, uint8_t, int,
+                                                 int32_t, int32_t, int32_t, int32_t);
+                re15_actor_t *pp = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+                re15_esp_fx_splatter(re15_esp_global_bank(), 0, 12,
+                                     pp->x, pp->y - 1400, pp->z, pp->y);
+            }
             re15_esp_fx_tick(re15_esp_room_bank());   /* Phase ESP-C: advance effect particles (30Hz) */
             /* Walker steps once per 30 Hz SCD tick. (A 2026-06-01 disasm trace
              * suggested the PSX walker runs at 60 Hz → tried 2× stepping, but the

@@ -1122,17 +1122,24 @@ static int test_enemy_death_fx(void)
     z.active = 1; z.type = 0x10; z.x = 11; z.y = 22; z.z = 33; z.rot_y = 0x44;
 
     re15_enemy_death_fx(&z);
+    /* the death burst = 1 effect-0 gore sprite (slot 0) + 8 blood SPLATTER children (byte-true
+     * parent->routine-2->routine-11 chain, RE15_ESP_ROWMACHINE.md): count 9. */
     const re15_esp_fx_t *f = re15_esp_fx_get(0);
-    if (re15_esp_fx_count() != 1 || !f || f->effect_id != 0 || f->x != 11 || f->z != 33 || f->param != 0x44) {
-        fprintf(stderr, "FAIL: death_fx spawn (count=%d)\n", re15_esp_fx_count()); fail = 1; }
+    if (re15_esp_fx_count() != 9 || !f || f->effect_id != 0 || f->x != 11 || f->z != 33 || f->param != 0x44) {
+        fprintf(stderr, "FAIL: death_fx spawn (count=%d, want 9 = gore + 8 splatter)\n", re15_esp_fx_count()); fail = 1; }
+    /* the splatter children carry physics (gravity accel.y=8, RNG drift) + a floor plane. */
+    const re15_esp_fx_t *sp = re15_esp_fx_get(1);
+    if (!sp || !sp->phys || sp->accel_y != 8 || sp->floor_y != 22) {
+        fprintf(stderr, "FAIL: death_fx splatter physics (phys=%d accel_y=%d floor=%d)\n",
+                sp ? sp->phys : -1, sp ? sp->accel_y : -1, sp ? (int)sp->floor_y : -1); fail = 1; }
 
     /* inactive actor -> no spawn. */
     z.active = 0;
     re15_enemy_death_fx(&z);
-    if (re15_esp_fx_count() != 1) { fprintf(stderr, "FAIL: death_fx fired on inactive\n"); fail = 1; }
+    if (re15_esp_fx_count() != 9) { fprintf(stderr, "FAIL: death_fx fired on inactive\n"); fail = 1; }
 
     re15_esp_fx_reset();
-    if (!fail) printf("PASS: test_enemy_death_fx (FUN_80107cb0 -> effect-0 death gore burst)\n");
+    if (!fail) printf("PASS: test_enemy_death_fx (FUN_80107cb0 -> effect-0 gore + 8 physics splatter)\n");
     return fail;
 }
 

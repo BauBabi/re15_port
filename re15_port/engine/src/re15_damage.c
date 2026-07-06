@@ -512,6 +512,11 @@ void re15_enemy_death_fx(re15_actor_t *e)
     if (!e || !e->active) return;
     re15_esp_fx_spawn(re15_esp_room_bank(), 0 /*effect-id*/, 0 /*sub*/,
                       e->x, e->y, e->z, (int16_t)e->rot_y);
+    /* BLOOD SPLATTER (byte-true parent→child chain, RE15_ESP_ROWMACHINE.md): the death burst
+     * throws a spray of physics droplets (gravity + RNG spread + floor bounce) — the byte-true
+     * blood spread that the single cycling sprite alone lacked. Floor = the actor's ground Y. */
+    re15_esp_fx_splatter(re15_esp_room_bank(), 0 /*blood*/, 8,
+                         e->x, e->y - 1200, e->z, e->y);
 }
 
 /* ====================================================================== *
