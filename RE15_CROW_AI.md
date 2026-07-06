@@ -111,25 +111,27 @@ return (+0x1d4 & 0x80) ? −1 : +1             // @0x80115e04 — Hysterese
 - **Climb-back sub6** 0x80112d34: Yaw-Slew(50), +0x1d5-Countdown → sub9.
 - **resume sub9** 0x80113384: clip, Steer (0x80115dc8).
 
-## DAMAGE-MODELL (verifiziert — die Krähe macht KEINEN direkten Schaden)
+## DAMAGE-MODELL (byte-true — die Krähe macht Schaden in ihren ANGRIFFS-Substates)
 
-**Byte-true über ALLE Krähen-States geprüft: kein Spieler-HP-Write, kein Player-Command-Write
-(0x800aca58 nur als READ im Root = das Standard-Player-State-Gate), kein Damage-Entry-Call
-(0x80012d60/0x80011f50), keine Hitbox (0x8002b5xx), keine HP-Arithmetik.** Die Proximity-Helfer
-0x80012974/**0x80012a0c** setzen ein Flag auf der **EIGENEN Krähen-Entity** (`sw v1,0(cur_entity)`,
-bit 0x20000000/0x80000000 @0x80012a88, dist<6000 zum Spieler) — ein Render/LOD-Flag auf der Krähe
-selbst, KEIN Spieler-Schaden. → **Die Krähe (0x21) ist ein positioneller/Harassment-Gegner; ihr
-Sturzflug ist rein positionell.** Ob Krähen den Spieler im Prototyp überhaupt verletzen (via einem
-geteilten Spieler-seitigen Kontakt-System) ist offen — die Krähen-KI selbst tut es nicht.
+Die Krähe verletzt den Spieler in den **Flock-koordinierten Angriffs-Substates** (nicht im
+Cruise/Dive-Decide, die ich zuerst allein scannte — daher die frühere Fehl-Schlussfolgerung):
+- **DIVE-ATTACK move[11] 0x801137fc**: bei Treffer (dist<600 & vert-err∈[1,3599] & player+0x93==0)
+  → **`player.hp −= 4`** (@0x80113b04), `0x800aca58=2` (dive-hit-cmd).
+- **GRAPPLE move[12] 0x80113c7c**: bei Kontakt (+0x1d0) → **`player.hp −= 8`** (@0x80113e34),
+  `0x800aca58=5` (grab/hold), Grab-Link-Block (0x800acbcc/bd0/bfc), → sub 13.
+- **GRAB-HOLD/FEED move[13] 0x80113e94**: Peck-Loop + Struggle-Drain (+0x9c, RNG), Release → sub 14
+  (flock `|0x4000`); bei Spieler-Tod flock `|0x2000`.
+- **STRIKE/PECK move[16] 0x80114484**: → **`player.hp −= 4`** (@0x801144f0); bei Kill flock `|0x2000`.
+- Bei jedem lethalen Treffer (`player.hp<0`) → `0x800aca58=3` (death-cmd) + flock `|0x2000` = KILL-
+  Broadcast (der Dispatcher zwingt alle Krähen in den Plunge sub 17); `+0x1d8=1` exempt den Killer.
 
-> ⚠️ **KORREKTUR (2026-07-06):** Ein früher notierter „Touch-Damage `player.hp −= 2` im State-7-
-> Pre-Pass 0x80116288" war eine **Fehlzuordnung**. **0x80116288 ist der Root-Handler von Nachbar-
-> Typ 0x26**, NICHT der Krähe — die Registrierungs-Tabelle @0x8011e8e4-904 lädt drei getrennte
-> Roots: `0x80112020` (Krähe 0x21), `0x80116288` (Typ 0x26), `0x80116db8` (Typ 0x27). Der Krähen-
-> Root ruft 0x80116288 NIE. Der Death/Special-CLUSTER-Agent war in 0x26s Code gewandert; der
-> adversariale Verify prüfte die Adressen (die den −2-Code DO enthalten), aber nicht die Typ-
-> Zugehörigkeit — die Disziplin-Falle „ein Nachbar-Handler ≠ dieser Typ". Die 0x80116288/
-> 0x80116758-Details unten beschreiben also **Typ 0x26**, nicht die Krähe.
+> ⚠️ **Zwei Korrekturen dokumentiert:** (1) Die früher notierte „Touch-Damage −2 im Pre-Pass
+> 0x80116288" war eine **Fehlzuordnung** — 0x80116288 ist der Root von Nachbar-**Typ 0x26** (Reg-
+> Tabelle @0x8011e8e4-904: 0x80112020=Krähe / 0x80116288=0x26 / 0x80116db8=0x27); der Krähen-Root
+> ruft es nie. (2) Meine daraus folgende „Krähe macht KEINEN Schaden" war ebenfalls FALSCH — ich
+> hatte nur die Cruise/Dive-Decide-States gescannt, nicht die Angriffs-Substates 11/12/13/16. Der
+> volle 18-Substate-RE (Workflow wf_a7e1ebcf) zeigt: die Krähe macht −4 (Dive/Strike) und −8 (Grab).
+> Die Proximity-Helfer 0x80012974/0x80012a0c flaggen nur die eigene Entity (Render/LOD, kein Schaden).
 
 ## DEATH — 0x801146d0 (Tabelle @0x801211cc: [0-6]→0x80114738, [7]→0x801149c4 Gib)
 
@@ -192,14 +194,19 @@ der KI-Tick** (`run_all` gated auf 0x10/0x11/0x16, [enemy_ai_common.c:2457]).
    Branch `else if (t==0x21)` in run_all; INIT + ACTIVE-Cruise (Yaw-Slew rate 50 + Höhen-Oracle +
    vvel-Integration + Horizontal-Advance). Live: 3 Krähen kreisen/fliegen zum Spieler in ROOM10C0,
    Modell rendert. Test test_crow_ai.
-2. **Wave 2 — Schwarm-Flug + Sturzflug (GETRACT, dedizierter Port):** die „Event-Quelle" ist das
-   Krähen-**Flocking** (0x800aca50, oben vollständig gemappt), kein externes Event. Byte-true portierbar,
-   aber es ist das **volle Flug-Brain**: (a) den Dispatcher 0x80116068 (Flag-Leser → forced Sub-States
-   14/15/17); (b) die 18 Flug-Substates (Move @0x80121184 / Steer @0x8012113c) mit ihren Flag-Set-
-   Bedingungen (das Soaring, das die Krähe auf Dive-Höhe bringt); (c) DANN die Dive (0x80112628 →
-   sub4/5, Dive-END `y<perch−3600`). **KEINE Touch-Damage** (0x80116288 war Typ 0x26). Ein Teil-Dive
-   ist nicht byte-true (die Dive-Physik braucht die ersoarte Korridor-Höhe). = ein Mehr-Sitzungs-Port
-   des Schwarm-Systems; die Struktur ist jetzt komplett bekannt.
+2. **✅ Wave 2 — Volles Flug-Brain PORTIERT + LIVE (Commit folgt):** das komplette Schwarm-Flug-System
+   in `re15_crow_ai_tick` (enemy_ai_common.c): Root-Pre-Pass + ACTIVE-Orchestrator (sense → flock-
+   dispatch 0x80116068 → steer[+0x5] → move[+0x5]) + **alle 18 Substates** (Patrol 0-3, Dive-Launch 4,
+   Second-Arc 5, Cruise 6, Crash-Dive 7, Land 8, Resume 9, Cruise-to-Player 10, **Dive-Attack 11 (−4)**,
+   **Grapple 12 (−8)**, **Grab-Feed 13**, Bank 14, Homing 15, **Strike 16 (−4)**, Plunge 17) + der Flock-
+   Dispatcher + die 4-Pfad-Dive-Decide + der KILL-Broadcast (0x2000). Shared `s_crow_flock` (=0x800aca50),
+   Reset in re15_enemy_reset. **Live verifiziert** (ROOM10C0): Krähen perchen bis Spieler<5000, dann
+   Patrol→Dive→Grapple→GRAB (Spieler HP 100→92)→Bank→Resume→Re-Grapple→Strike, kontinuierlich, kein
+   Freeze. Test test_crow_ai (37/37). **Faithful-line** (markiert): AI-lokaler Anim-Frame (16er-Flap-Loop,
+   die exakten EM021-Clip-Längen nicht byte-gemappt); mode +0x1d4=0-Default (der Bit-0x1f-Setter im
+   globalen Kombat-Flag-Array 0x800b1028 ist EXE-Event-seitig — Cruise-Soar-Drift bleibt 0, die expliziten
+   Dive-vvel −80/−120/200 sind byte-true); Kontakt-Proxy (dist<500) statt der AABB-Box 0x8001b9b4;
+   Grab-Player-Pin (0x800aca58=5) als HP-Schaden ohne die volle Player-Grab-FSM-Integration.
 3. **Wave 3 — Death**: Downed-Promotion 4→3, Fall-from-sky + Land + Gib, State 7 (RE komplett).
 4. **Dynamik-Verify**: Savestate ROOM10C0/1120 (JUMP hex) + `re15_enemy_state.py` mit NEUER Krähen-
    Label-Map (die Zombie-Map @0x8011f7b4 passt NICHT — eigene Root-Tabelle @0x8012111c).

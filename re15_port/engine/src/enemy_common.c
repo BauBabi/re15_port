@@ -45,6 +45,7 @@ void re15_enemy_reset(void)
         g_enemy[i].pc_tex_slot = -1;
     }
     re15_player_victim_reset();   /* clear Leon's grab-victim anim state (banks just dropped) */
+    { extern void re15_crow_flock_reset(void); re15_crow_flock_reset(); }  /* 0x800aca50 = 0 on room change (FUN_8010d13c) */
 }
 
 /* Room-cinematic overlay — see re15_enemy.h. PC-port only (its boot + cross-room reload);

@@ -286,6 +286,22 @@ typedef struct {
     int16_t  crow_vvel;      /* +0x1e4: vertical velocity, integrated into y each fly tick    */
     uint8_t  crow_mode;      /* +0x1d4: mode/flags (low6 = |vvel|, bit0x80 = climb/descend)   */
     int16_t  crow_dist;      /* +0x1dc: horizontal distance to the player (SquareRoot0)       */
+    int16_t  crow_grav;      /* +0x1e8: vertical accel added to vvel each dive/fall tick       */
+    int16_t  crow_speed;     /* +0x8c : horizontal move speed (per flight sub-state)           */
+    uint8_t  crow_timer;     /* +0x1d5: sub-state countdown (climb-back / maneuver duration)   */
+    uint8_t  crow_pturn;     /* +0x1d3: anim/timer completion flag (dive-decide pending-turn)  */
+    uint8_t  crow_hs;        /* +0x1d8: flock handshake byte (dispatcher force-substate gate)  */
+    uint8_t  crow_parity;    /* +0x1d2: per-tick LOS/parity toggle (wing-flap alternation)     */
+    uint8_t  crow_atk_ctr;   /* +0x1d6: attack/peck attempt counter (gates re-commit, <3)      */
+    uint8_t  crow_bank;      /* +0x1d7: proximity yaw-weave bank latch (0x80115e24)            */
+    uint8_t  crow_diveflag;  /* +0x1da: dive-committed flag                                    */
+    uint8_t  crow_armed;     /* +0x1db: attack-armed flag (LOS-gated)                          */
+    int16_t  crow_yawrate;   /* +0x1de: per-state yaw-slew rate                                */
+    int16_t  crow_accel;     /* +0x1e6: per-tick speed accel (dive ramp)                       */
+    uint8_t  crow_contact;   /* +0x1d0: player-contact flag (strike/grab connect)             */
+    int16_t  crow_struggle;  /* +0x9c : grab-hold struggle meter (drains, <0 = release)        */
+    uint8_t  crow_aframe;    /* AI-local anim frame counter (drives the +0x95 frame-8 re-thrust
+                              * + clip-done gates; decoupled from the render's anim_frame)      */
 } re15_actor_t;
 
 extern re15_actor_t g_actors[RE15_ACTOR_MAX];

@@ -2439,7 +2439,12 @@ int re15_enemy_ai_live_step(int slot)
  * higher) and it is NOT ground-clamped, so run_all gives it its OWN branch that
  * skips the zombie body-push and SCA wall-clamp entirely.
  * ==========================================================================*/
-#define CROW_CRUISE_SPEED 40   /* faithful-line: the cruise move[6] +0x8c not byte-captured */
+/* ---- shared flock-coordination word (the port of 0x800aca50) --------------------------
+ * The crows write high bits (0x2000/0x4000/0x8000) into this word as they fly; the flock
+ * dispatcher reads them to force flock-mates into the coordinated maneuvers 14/15/17. Low
+ * 12 bits carry the pending-yaw + count<<4 (INIT). Reset on room change. */
+static uint16_t s_crow_flock;
+void re15_crow_flock_reset(void) { s_crow_flock = 0; }
 
 /* Height oracle — byte-true FUN_80115dc8: returns +1 (descend, y grows) / -1 (climb) to
  * hold the crow in the corridor 1800..5400 units ABOVE its perch height. In-band the
@@ -2453,55 +2458,413 @@ static int re15_crow_height_dir(const re15_actor_t *e)
     return (e->crow_mode & 0x80) ? -1 : 1;   /* @0x80115e04: in-band hysteresis         */
 }
 
-/* One crow AI tick (dispatched from re15_enemy_ai_run_all for type 0x21). */
+/* setters — 0x80115d94 (clip) / 0x80115d74 (sub-state, zeroes the nested step +0x6) */
+static void re15_crow_clip(re15_actor_t *e, uint8_t c) { e->motion = c; e->anim_frame = 0; e->anim_frac = 7; e->crow_aframe = 0; }
+static void re15_crow_sub (re15_actor_t *e, uint8_t s) { e->sub_state_1 = s; e->sub_state_2 = 0; }
+
+/* horizontal advance along yaw at crow_speed (pos_advance FUN_800245d8, a0=0) */
+static void re15_crow_advance(re15_actor_t *e)
+{
+    e->x += (int32_t)(((int32_t)re15_cos_q12(e->rot_y) * e->crow_speed) >> 12);
+    e->z -= (int32_t)(((int32_t)re15_sin_q12(e->rot_y) * e->crow_speed) >> 12);
+}
+
+/* AI-local clip clock: advances crow_aframe; returns 1 on the (nominal 16-frame) clip wrap
+ * = the 0x8001f314 "clip done" flag. crow_aframe==8 is the wing-flap re-thrust key.
+ * Faithful-line: the exact per-clip EM021 lengths are not byte-mapped; 16 is the flap loop. */
+static int re15_crow_anim(re15_actor_t *e)
+{
+    e->crow_aframe++;
+    if (e->crow_aframe >= 16) { e->crow_aframe = 0; return 1; }
+    return 0;
+}
+
+/* proximity yaw-weave — byte-true 0x80115e24: latch a bank dir in +0x1d7 when dist<2000,
+ * roll +0x6a by ±80/tick; clear the latch when dist>=2000. */
+static void re15_crow_weave(re15_actor_t *e)
+{
+    if (e->crow_dist < 2000) {                                 /* @0x80115e38 sltiu 0x7d0 */
+        if (e->crow_bank == 0) e->crow_bank = (e->crow_mode & 1) ? 2 : 1;  /* @0x80115e5c */
+    } else {
+        e->crow_bank = (uint8_t)(e->crow_bank & 0xfc);         /* @0x80115e9c */
+    }
+    if      (e->crow_bank == 1) e->rot_y = (int16_t)(e->rot_y + 80);   /* @0x80115ee4 */
+    else if (e->crow_bank == 2) e->rot_y = (int16_t)(e->rot_y - 80);   /* @0x80115ef0 */
+}
+
+/* the byte-true flat damage the crow deals: dive/strike -4, grab -8 (the player+0x93 hit
+ * gate keeps it once-per-contact; on a lethal hit broadcast the KILL bit 0x2000 to the flock). */
+static void re15_crow_hit_player(re15_actor_t *e, re15_actor_t *player, int dmg)
+{
+    if (player->hit_react != 0) return;              /* +0x93 gate (once per contact)      */
+    player->hp = (int16_t)(player->hp - dmg);        /* @0x80113b04 (-4) / @0x80113e34 (-8) */
+    player->hit_react |= 1;
+    if (player->hp < 0) {                            /* lethal -> KILL broadcast            */
+        s_crow_flock = (uint16_t)((s_crow_flock & 0xfff) | 0x2000);   /* @0x80113b58 */
+        e->crow_hs = 1;                              /* +0x1d8 self-exempt                  */
+    }
+}
+
+/* FLOCK DISPATCHER 0x80116068 — reads s_crow_flock, forces flock-mates into 15/14/17. */
+static void re15_crow_flock_dispatch(re15_actor_t *e)
+{
+    uint16_t fw = s_crow_flock;
+    if (fw & 0x8000) {                               /* @0x80116080 */
+        if (e->grid_id < 0x80) {                     /* @0x801160a0 not downed */
+            if (e->crow_hs != 0) s_crow_flock = (uint16_t)(fw & 0xfff);   /* initiator clears */
+            else if (e->sub_state_1 >= 5) re15_crow_sub(e, 15);          /* @0x801160d8 */
+            e->crow_hs = 0;
+            fw = s_crow_flock;
+        }
+    }
+    if (fw & 0x4000) {                               /* @0x80116100 */
+        if (e->crow_hs != 0) s_crow_flock = (uint16_t)(fw & 0xfff);
+        else if (e->sub_state_1 >= 4) re15_crow_sub(e, 14);             /* @0x80116144 */
+        e->crow_hs = 0;
+    }
+    uint16_t fw2 = s_crow_flock;
+    if (fw2 & 0x2000) {                              /* @0x8011616c */
+        if (e->crow_hs != 0) s_crow_flock = (uint16_t)((fw2 & 0xfff) | 0x1000);  /* -> dive bit */
+        e->crow_hs = 0;
+        if (e->sub_state_1 >= 4 && e->grid_id != 0x80) re15_crow_sub(e, 17);     /* @0x801161d0 */
+    }
+}
+
+/* ---- STEER phase — steer-table @0x8012113c[+0x5] (decision/transition only) ------------ */
+static void re15_crow_steer(re15_actor_t *e, re15_actor_t *player)
+{
+    switch (e->sub_state_1) {
+    case 0: case 1: case 2: case 3: {   /* DIVE-DECIDE 0x80112628 (4 commit paths, all evaluated;
+                                         * NO early return — byte-true the last set_substate wins). */
+        if (e->crow_pturn != 0) {                                   /* (A) pending-turn */
+            e->crow_pturn = 0;
+            e->rot_y = (int16_t)(e->rot_y + ((e->crow_mode & 1) ? 40 : -40));
+            re15_crow_sub(e, (uint8_t)(e->crow_mode & 3));
+        }
+        int ring = (e->grid_id < 0x80) ? 5000 : 10000;             /* (B) ring: grid<0x80 -> 5000 */
+        if (e->crow_dist < ring && e->crow_vert_err < 5400) re15_crow_sub(e, 4);
+        if ((s_crow_flock & 0x1000) && e->crow_vert_err < 5400)     /* (D) flock 0x1000 -> dive */
+            re15_crow_sub(e, (uint8_t)((e->crow_mode % 3) + 1));
+        return;
+    }
+    case 5:   /* DIVE-END 0x80112bac: climbed >3600 above perch -> resume */
+        if (e->y < e->crow_perch_h - 3600) re15_crow_sub(e, 9);
+        return;
+    case 7: case 8:   /* 0x80112e4c / 0x801130fc: floor-ref (+0x1ba) != perch (+0x1ea) -> sub 5.
+                       * faithful-line: still airborne (y well above the perch/ground) -> abort. */
+        if (e->y < e->crow_perch_h - 400) re15_crow_sub(e, 5);
+        return;
+    case 9: {   /* 0x8011325c: settle re-arm, then ATTACK-COMMIT */
+        if (e->crow_pturn != 0) {
+            e->crow_pturn = 0;
+            if ((e->crow_mode & 0xf) != 0) re15_crow_sub(e, 9);
+            else if (e->sub_state_1 != 6)  re15_crow_sub(e, 6);
+        }
+        if (e->crow_parity != 0 && e->crow_armed != 0 &&
+            e->crow_dist < 10000 && e->crow_atk_ctr < 3) {          /* attack-commit */
+            re15_crow_sub(e, (e->grid_id & 0x80) ? 10 : 12);        /* downed->cruise, else grapple */
+        }
+        return;
+    }
+    case 10:   /* 0x801134f8 */
+        if (e->crow_armed == 0)          { re15_crow_sub(e, 5); return; }
+        if (e->crow_dist < 2500)         { re15_crow_sub(e, 14); return; }
+        if (e->crow_vert_err >= 5401)    { re15_crow_sub(e, 5); e->crow_atk_ctr = 4; }
+        return;
+    case 11:   /* 0x8011376c */
+        if (e->crow_dist < 900)          { re15_crow_sub(e, 14); return; }  /* AABB proxy */
+        if (e->crow_vert_err >= 5401)    { re15_crow_sub(e, 5); e->crow_atk_ctr = 4; }
+        return;
+    case 12: case 13: case 15: case 16:   /* 0x80113c0c (shared) */
+        if (e->crow_armed == 0)          { re15_crow_sub(e, 14); return; }
+        if (e->crow_vert_err >= 5401)    { re15_crow_sub(e, 5); e->crow_atk_ctr = 4; }
+        return;
+    case 14:   /* 0x80114100 */
+        if (e->crow_dist >= 12001)       re15_crow_sub(e, 9);      /* too far -> break off */
+        return;
+    default:   /* 4,6,17 = bare ret */
+        return;
+    }
+}
+
+/* ---- MOVE phase — move-table @0x80121184[+0x5] (motion + physics) ---------------------- */
+static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
+{
+    switch (e->sub_state_1) {
+    /* --- patrol[0-3]: clip-set + anim-advance + timer; transitions owned by steer --- */
+    case 0:
+        if (e->sub_state_2 == 0) { e->crow_timer = (uint8_t)(e->crow_mode % 60); e->sub_state_2 = 1; }
+        if (e->crow_timer == 0)  e->crow_pturn++;          /* completion flag */
+        else                     e->crow_timer--;
+        return;
+    case 1:
+        if (e->sub_state_2 == 0) { re15_crow_clip(e, 1); e->sub_state_2 = 1; }
+        e->crow_pturn = (uint8_t)re15_crow_anim(e);
+        return;
+    case 2:
+        if (e->sub_state_2 == 0) { re15_crow_clip(e, 2); e->sub_state_2 = 1; }
+        e->crow_pturn = (uint8_t)re15_crow_anim(e);
+        return;
+    case 3:
+        if (e->sub_state_2 == 0) { re15_crow_clip(e, 0); e->sub_state_2 = 1; }
+        e->crow_pturn = (uint8_t)re15_crow_anim(e);
+        return;
+
+    /* --- sub 4: DIVE LAUNCH (climb via vvel -80 + frame-8 re-thrust) --- */
+    case 4:
+        if (e->sub_state_2 == 0) { re15_crow_clip(e, 6); e->crow_diveflag = 1; e->sub_state_2 = 1; }
+        if (e->sub_state_2 == 1) { e->crow_vvel = -80; e->crow_speed = 60; e->sub_state_2 = 2; }
+        if (e->crow_aframe == 8) e->sub_state_2 = 1;       /* re-thrust */
+        e->crow_vvel = (int16_t)(e->crow_vvel + 6);        /* gravity */
+        e->y += e->crow_vvel;
+        re15_crow_advance(e);
+        if (re15_crow_anim(e)) re15_crow_sub(e, 5);        /* anim end -> second arc */
+        return;
+
+    /* --- sub 5: SECOND ARC (stronger climb vvel -120) --- */
+    case 5:
+        if (e->sub_state_2 == 0) { re15_crow_clip(e, 4); e->sub_state_2 = 1; }
+        if (e->sub_state_2 == 1) { e->crow_vvel = -120; e->crow_speed = 160; e->sub_state_2 = 2; }
+        if (e->crow_aframe == 8) e->sub_state_2 = 1;
+        e->crow_vvel = (int16_t)(e->crow_vvel + 6);
+        e->y += e->crow_vvel;
+        re15_crow_advance(e);
+        re15_crow_anim(e);
+        return;
+
+    /* --- sub 6: CRUISE / oracle-driven climb-descend (altitude + yaw only) --- */
+    case 6:
+        if (e->sub_state_2 == 0) { re15_crow_clip(e, 6); e->crow_timer = (uint8_t)(e->crow_mode & 0x32); e->sub_state_2 = 1; }
+        if (e->crow_timer == 0) { re15_crow_sub(e, 9); return; }
+        e->crow_timer--;
+        re15_enemy_steer_point(e, player->x, player->z, 0x32);
+        e->crow_vvel = (int16_t)((e->crow_mode & 0x3f) * re15_crow_height_dir(e));
+        e->y += e->crow_vvel;
+        return;
+
+    /* --- sub 7: CRASH-DIVE / BOUNCE --- */
+    case 7:
+        if (e->sub_state_2 == 0) { e->crow_speed = 140; e->crow_vvel = 0; re15_crow_clip(e, 5); e->crow_timer = 21; e->sub_state_2 = 1; }
+        else if (e->sub_state_2 == 1) {
+            if (e->crow_timer == 0) e->sub_state_2 = 2; else e->crow_timer--;
+            e->crow_speed = (int16_t)(e->crow_speed + 3);
+            e->crow_vvel  = (int16_t)(e->crow_vvel + 8);
+            e->y += e->crow_vvel; re15_crow_advance(e); re15_crow_anim(e);
+        } else if (e->sub_state_2 == 2) {
+            e->crow_vvel = (int16_t)(e->crow_vvel + 3);
+            e->y += e->crow_vvel;
+            if (e->y > e->crow_perch_h - 750) { e->sub_state_2 = 3; e->crow_vvel = 0; e->crow_timer = 12; }
+            re15_crow_weave(e); re15_crow_advance(e);
+        } else {   /* step 3: bounce */
+            e->crow_speed = (int16_t)(e->crow_speed + 9);
+            e->crow_vvel  = (int16_t)(e->crow_vvel - 9);
+            e->y += e->crow_vvel;
+            if (e->crow_timer == 0) re15_crow_sub(e, 8); else e->crow_timer--;
+            re15_crow_advance(e);
+        }
+        return;
+
+    /* --- sub 8: DESCEND-AND-LAND (clamp to floor-400, anim end -> sub 0) --- */
+    case 8:
+        if (e->sub_state_2 == 0) { re15_crow_clip(e, 7); e->crow_vvel = 0; e->sub_state_2 = 1; return; }
+        e->crow_vvel = (int16_t)(e->crow_vvel + 10);
+        e->y += e->crow_vvel;
+        if (!(e->y < e->crow_perch_h - 400)) e->y = e->crow_perch_h - 400;   /* land clamp */
+        if (re15_crow_anim(e)) { re15_crow_sub(e, 0); e->crow_diveflag = 0; e->crow_atk_ctr = 0; }
+        return;
+
+    /* --- sub 9: RESUME / CLIMB-BACK cruise toward the player --- */
+    case 9:
+        if (e->sub_state_2 == 0) {
+            if (e->crow_mode & 1) { e->crow_speed = 160; re15_crow_clip(e, 3); }
+            else                  { e->crow_speed = 180; re15_crow_clip(e, 4); }
+            e->crow_vvel = (int16_t)((e->crow_mode & 0x3f) * re15_crow_height_dir(e));
+            e->sub_state_2 = 1;
+        }
+        e->y += e->crow_vvel;
+        if (e->crow_atk_ctr < 3) { re15_enemy_steer_point(e, player->x, player->z, 0x1e); re15_crow_weave(e); }
+        else if (e->crow_mode & 4) re15_enemy_steer_point(e, player->x, player->z, 0x1e);
+        re15_crow_advance(e);
+        e->crow_pturn = (uint8_t)re15_crow_anim(e);
+        return;
+
+    /* --- sub 10: CRUISE-TO-PLAYER (approach at corridor, arrival -> sub 11 dive) --- */
+    case 10:
+        if (e->sub_state_2 == 0) { re15_crow_clip(e, 6); e->crow_speed = 0; e->sub_state_2 = 1; }
+        if (e->sub_state_2 == 1) {
+            re15_enemy_steer_point(e, player->x, player->z, 0x32);
+            int32_t tgt = e->crow_perch_h;
+            if (tgt - 3600 < e->y)      { e->crow_vvel = (int16_t)(-(e->crow_mode & 0x3f)); e->y += e->crow_vvel; }
+            else if (e->y < tgt - 5400) { e->crow_vvel = (int16_t)( (e->crow_mode & 0x3f)); e->y += e->crow_vvel; }
+            else { e->crow_speed = 50; e->sub_state_2 = 2; }
+            return;
+        }
+        re15_enemy_steer_point(e, player->x, player->z, 0x32);
+        re15_crow_advance(e);
+        if (e->crow_dist <= 9000) re15_crow_sub(e, 11);      /* ARRIVAL -> dive attack */
+        return;
+
+    /* --- sub 11: DIVE ATTACK (the swoop; -4 HP on connect) --- */
+    case 11:
+        if (e->sub_state_2 == 0) { re15_crow_clip(e, 4); e->crow_speed = 80; e->crow_accel = 20; e->crow_vvel = 200; e->crow_yawrate = 5; e->crow_timer = 9; e->sub_state_2 = 1; }
+        else if (e->sub_state_2 == 1) {
+            if (e->crow_timer == 0) { e->crow_timer = 30; e->sub_state_2 = 2; } else e->crow_timer--;
+            re15_enemy_steer_point(e, player->x, player->z, e->crow_yawrate);
+            e->crow_speed = (int16_t)(e->crow_speed + 20);
+            e->crow_vvel  = (int16_t)(e->crow_vvel - 7);
+            re15_crow_anim(e);
+        } else {
+            if (e->crow_timer == 0) { re15_crow_sub(e, 5); } else e->crow_timer--;
+            e->crow_yawrate = (int16_t)(e->crow_yawrate + 2);
+            re15_enemy_steer_point(e, player->x, player->z, e->crow_yawrate);
+            e->crow_speed = (int16_t)(e->crow_speed + e->crow_accel);
+            e->crow_vvel  = (int16_t)(e->crow_vvel - 7);
+            if (e->crow_dist < 600 && (uint16_t)(e->crow_vert_err - 1) < 3599 && player->hit_react == 0) {
+                e->crow_accel = -20;
+                re15_crow_hit_player(e, player, 4);          /* DIVE HIT: -4 HP @0x80113b04 */
+            }
+        }
+        e->y += e->crow_vvel;
+        re15_crow_advance(e);
+        return;
+
+    /* --- sub 12: GRAPPLE STRIKE (contact -> grab, -8 HP) --- */
+    case 12:
+        if (e->sub_state_2 == 0) {
+            if (e->crow_mode & 1) { re15_crow_clip(e, 3); e->crow_speed = 160; }
+            else                  { re15_crow_clip(e, 4); e->crow_speed = 180; }
+            e->crow_vvel = (int16_t)(e->crow_mode & 0x3f);
+            if (e->crow_vert_err < 2000) e->crow_vvel = (int16_t)(-e->crow_vvel);
+            e->crow_timer = 30; e->sub_state_2 = 1;
+            return;
+        }
+        re15_crow_anim(e);
+        e->y += e->crow_vvel;
+        re15_enemy_steer_point(e, player->x, player->z, 0x32);
+        re15_crow_advance(e);
+        if (e->crow_dist < 500) {                            /* contact -> GRAB */
+            e->crow_hs = 1;                                  /* +0x1d8=1 self-exempt @0x80113ddc */
+            s_crow_flock = (uint16_t)((s_crow_flock & 0xfff) | 0x8000);   /* @0x80113dfc */
+            re15_crow_hit_player(e, player, 8);              /* GRAB: -8 HP @0x80113e34 */
+            e->crow_struggle = 100;
+            re15_crow_sub(e, 13);
+        } else if (e->crow_timer == 0) { re15_crow_sub(e, 5); } else e->crow_timer--;
+        return;
+
+    /* --- sub 13: GRAB-HOLD / FEEDING (peck, struggle drain, release -> sub 14) --- */
+    case 13:
+        if (e->sub_state_2 == 0) { re15_crow_clip(e, 8); e->crow_atk_ctr++; e->crow_struggle = 100; e->crow_timer = 30; e->sub_state_2 = 1; }
+        re15_crow_anim(e);
+        if (e->crow_timer == 0) e->crow_timer = 30; else e->crow_timer--;
+        e->crow_struggle = (int16_t)(e->crow_struggle - (1 + (re15_engine_rand8() % 3) * 3));
+        if (e->crow_struggle < 0) {                          /* RELEASE */
+            s_crow_flock = (uint16_t)((s_crow_flock & 0xfff) | 0x4000);
+            e->crow_hs = 1;
+            re15_crow_sub(e, 14);
+        }
+        return;
+
+    /* --- sub 14: BANK / TURN-AROUND (regroup peel-off) --- */
+    case 14:
+        if (e->sub_state_2 == 0) {
+            re15_crow_clip(e, 4); e->crow_speed = 180; e->crow_timer = 32;
+            e->crow_yawrate = (e->crow_mode & 0x80) ? -60 : 60;
+            e->sub_state_2 = 1;
+        } else if (e->sub_state_2 == 1) {
+            e->rot_y = (int16_t)(e->rot_y + e->crow_yawrate);
+            if (e->crow_timer != 0) e->crow_timer--; else { e->sub_state_2 = 2; e->crow_timer = 90; }
+        } else {
+            if (e->crow_timer != 0) e->crow_timer--; else re15_crow_sub(e, 9);
+        }
+        e->crow_vvel = (int16_t)((e->crow_mode & 0x3f) * re15_crow_height_dir(e));
+        e->y += e->crow_vvel;
+        re15_crow_advance(e);
+        return;
+
+    /* --- sub 15: HOMING DESCENT (coordinated swoop-in -> strike) --- */
+    case 15:
+        if (e->sub_state_2 == 0) {
+            re15_crow_clip(e, 4); e->crow_speed = 180; e->crow_atk_ctr++;
+            e->crow_vvel = (int16_t)(e->crow_mode & 0x3f);
+            if (e->crow_vert_err < 2000) e->crow_vvel = (int16_t)(-e->crow_vvel);
+            e->sub_state_2 = 1;
+            return;
+        }
+        if (re15_crow_anim(e)) e->sub_state_2 = 0;
+        re15_enemy_steer_point(e, player->x, player->z, 0x32);
+        e->y += e->crow_vvel;
+        if (e->crow_dist < 500) { re15_crow_sub(e, 16); return; }   /* contact -> STRIKE */
+        re15_crow_advance(e);
+        return;
+
+    /* --- sub 16: STRIKE / PECK (-4 HP) --- */
+    case 16:
+        if (e->sub_state_2 == 0) {
+            re15_crow_clip(e, 8);
+            re15_crow_hit_player(e, player, 4);              /* STRIKE: -4 HP @0x801144f0 */
+            e->sub_state_2 = 1;
+        }
+        re15_crow_anim(e);
+        return;
+
+    /* --- sub 17: FAST PLUNGE-TO-GROUND --- */
+    case 17:
+        if (e->sub_state_2 == 0) { re15_crow_clip(e, 3); e->crow_speed = 100; e->sub_state_2 = 1; return; }
+        re15_enemy_steer_point(e, player->x, player->z, 0x64);
+        e->crow_vvel = (int16_t)((e->crow_mode & 0x3f) + 48);
+        if (e->y < e->crow_perch_h - 750) e->y += e->crow_vvel;
+        re15_crow_advance(e);
+        re15_crow_anim(e);
+        if (e->crow_dist < 1000 && !(e->y < e->crow_perch_h - 750)) re15_crow_sub(e, 8);
+        return;
+
+    default:
+        return;
+    }
+}
+
+/* One crow AI tick (dispatched from re15_enemy_ai_run_all for type 0x21).
+ * Full flight brain — byte-true port of the FUN_80112020 family (RE15_CROW_AI.md):
+ * root pre-pass -> INIT / ACTIVE (sense -> flock-dispatch -> steer[+0x5] -> move[+0x5]). */
 static void re15_crow_ai_tick(int slot)
 {
     re15_actor_t *e      = &g_actors[slot];
     re15_actor_t *player = &g_actors[RE15_ACTOR_SLOT_PLAYER];
 
+    /* --- ROOT pre-pass (0x80112020): death promotion when downed in flight-2 state 4 --- */
+    if (e->crow_mode /*+0x1d4*/ && e->state == 4 && (e->grid_id & 0x40)) {
+        e->state = 3; re15_crow_sub(e, 0);
+    }
+
     switch (e->state) {
-    case 0:   /* INIT — FUN_8011224c: capture perch height, lift off, enter ACTIVE */
-        e->crow_perch_h = (int16_t)e->y;     /* +0x1ea = spawn Y      (@0x801123a0)      */
-        e->y           -= 400;               /* +0x38 -= 400 lift-off (@0x801123b8)      */
-        e->crow_mode    = 0;                 /* clear the mode block  (+0x1d0..+0x1ec)   */
-        e->crow_vvel    = 0;                 /* +0x1e4 = 0                               */
-        e->motion       = 0;                 /* set clip 0 (0x80115d94 a0=0 @0x801122e4) */
-        e->anim_frame   = 0;
-        e->anim_flags   = 0x04;              /* LOOP the flap clip                       */
-        e->state        = 1;                 /* +0x4 = 1 ACTIVE (@0x80112388)            */
-        e->sub_state_1  = 6;                 /* cruise move-table entry move[6]          */
-        break;
-
-    case 1: { /* ACTIVE cruise — FUN_80112420 + the cruise move[6] 0x80112d34 */
-        /* horizontal distance to the player (+0x1dc, SquareRoot0 @0x801124ac) */
-        e->crow_dist     = (int16_t)re15_enemy_player_dist(e, player);
-        /* vertical error +0x1ec = playerY - crowY (@0x801124cc: lhu 0x800aca8c - +0x38) */
-        e->crow_vert_err = (int16_t)(player->y - e->y);
-
-        /* C. yaw-slew toward the player at cruise rate 50 (@0x80112dcc jal 0x8001a8f8, a1=0x32).
-         * re15_enemy_steer_point = the port's bearing+slew (FUN_8001aac4) — byte-equivalent to
-         * slewing rot_y toward the player position at the given rate. */
-        re15_enemy_steer_point(e, player->x, player->z, 0x32);
-
-        /* CRUISE vertical velocity = (mode & 0x3f) * dir (@0x80112df0 andi 0x3f; mult dir).
-         * The mode byte's climb-rate source (the 0x80116068 command path, driven by the global
-         * AI flags 0x800aca50) is not yet ported, so mode stays 0 at spawn and the crow holds
-         * its lift-off altitude while circling — that IS the byte-true mode=0 result. When the
-         * mode-writer is ported (Wave 2) the corridor bob comes for free. */
-        int dir = re15_crow_height_dir(e);
-        e->crow_vvel = (int16_t)((e->crow_mode & 0x3f) * dir);
-        e->y += e->crow_vvel;                /* A. vertical integration: y += vvel (@0x80112e18) */
-
-        /* B. horizontal advance along the yaw (pos_advance FUN_800245d8, a0=0; same sign
-         * convention as the zombie walker @enemy_ai_common.c:1409-1410). */
-        e->x += (int32_t)(((int32_t)re15_cos_q12(e->rot_y) * CROW_CRUISE_SPEED) >> 12);
-        e->z -= (int32_t)(((int32_t)re15_sin_q12(e->rot_y) * CROW_CRUISE_SPEED) >> 12);
+    case 0: {  /* INIT — FUN_80111a4c: count-flock, capture perch, lift off, enter ACTIVE */
+        int n = 0;
+        for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++)
+            if (g_actors[s].active && g_actors[s].type == 0x21) n++;
+        s_crow_flock    = (uint16_t)(n << 4);        /* 0x800aca50 = count<<4 (@FUN_80111a4c) */
+        e->crow_perch_h = (int16_t)e->y;             /* +0x1ea = spawn Y                      */
+        e->y           -= 400;                       /* +0x38 -= 400 lift-off                 */
+        e->crow_mode    = 0;                          /* +0x1d4 (mode/flag bit, 0 default)     */
+        e->crow_vvel = 0; e->crow_speed = 0; e->crow_atk_ctr = 0; e->crow_diveflag = 0;
+        e->crow_armed   = 1;                          /* +0x1db armed (LOS-gated; faithful-line) */
+        re15_crow_clip(e, 0);
+        e->anim_flags   = 0x04;
+        e->state        = 1;                          /* +0x4 = 1 ACTIVE                       */
+        e->sub_state_1  = 0; e->sub_state_2 = 0;      /* INIT leaves +0x5/+0x6 = 0 (patrol)   */
         break;
     }
 
-    default:
-        /* states 2 (hurt stub) / 3 (death) / 4 (flight-2) / 7 (special) / 8-9 (dive)
-         * = later waves. Hold pose for now. */
+    case 1:    /* ACTIVE (0x80112420): sense -> flock-dispatch -> steer -> move */
+        e->crow_parity   = (uint8_t)(e->crow_parity ^ 1);            /* +0x1d2 (LOS parity toggle) */
+        e->crow_dist     = (int16_t)re15_enemy_player_dist(e, player);  /* +0x1dc */
+        e->crow_vert_err = (int16_t)(player->y - e->y);                 /* +0x1ec */
+        e->crow_contact  = (uint8_t)(e->crow_dist < 500);              /* +0x1d0 contact proxy */
+        if (s_crow_flock & 0xff00) re15_crow_flock_dispatch(e);        /* 0x80116068 */
+        re15_crow_steer(e, player);                                    /* steer[+0x5] */
+        re15_crow_move(e, player);                                     /* move[+0x5]  */
+        break;
+
+    default:   /* states 2/5/6 HURT stub, 3 DEATH, 4 FLIGHT-2, 7 SPECIAL — hold (deferred) */
         break;
     }
 }
