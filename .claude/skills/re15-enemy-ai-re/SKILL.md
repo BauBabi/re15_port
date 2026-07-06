@@ -1,8 +1,11 @@
 # RE1.5 Gegner-KI Reverse Engineering (Playbook)
 
-Destilliert aus der ROOM1140-Zombie-Kampagne (Typen 0x10/0x11/0x16, ~30 Commits, 2026-06/07):
-der schnellste bekannte Weg, die KI + Animationen eines **neuen Gegnertyps** byte-true zu
-RE'en und in den Port zu bringen. **Dieser Skill besitzt den End-to-End-Bogen**
+Destilliert aus drei gelösten Referenz-Exemplaren: **Zombie** (0x10/0x11/0x16, ROOM1140, ~30 Commits) =
+das Boden-Grab-Muster; **Krähe** (0x21, 3D-Flieger, komplett byte-true inkl. Flocking/Death/Präsentation,
+RE15_CROW_AI.md) = Doppel-Dispatch + Flag-Globals + stage-gated Killability; **Hund** (0x20, Cerberus,
+Boden-Chase/Biss, RE15_DOG_AI.md) = Dual-Dispatch-Brain + Aliasing-Tabellen + Damage-im-inner-jt. Der
+schnellste bekannte Weg, die KI + Animationen eines **neuen Gegnertyps** byte-true zu RE'en und in den
+Port zu bringen. **Dieser Skill besitzt den End-to-End-Bogen**
 (Typ-Byte → Dispatch-Familie → FSM-Graph → Dormanz-Check → Port → Parity); die
 Werkzeug-Skills liefern die Einzelschritte und werden hier nur referenziert:
 `re15-psx-disasm` (statischer Disasm + Tabellen-Decoder — das PRIMÄRE Statik-Tool),
@@ -52,6 +55,22 @@ EXE @0x80072bac[typ]  →  Overlay-Root (Zombie: FUN_80100424)
 
 **Zweiter bekannter Datenpunkt fürs Muster**: Elliot (Typ 0x47) nutzt eine EIGENE Tabelle
 @0x801217a0 — das Root-Tabellen-Muster gilt, die Adressen sind je Typ-Familie verschieden.
+
+**Dritter Datenpunkt — Krähe (0x21, Root 0x80112020, State-Tab @0x8012111c):** 3D-FLIEGER. Der
+ACTIVE-State ist selbst ein DOPPEL-Dispatch auf +0x5 über ZWEI Tabellen — Steer-Tab @0x8012113c +
+Move-Tab @0x80121184 (18 Einträge, NICHT 12 — Bounds vom sltiu ableiten). Zwei Flag-GLOBALS statt einem:
+0x800aca50 (Schwarm-Koordination, Bit-Kommandos) + 0x800b1028 (Bit-Array, Death-Gate bit-0x1f). Killability
+ist STAGE-SPEZIFISCH: bit-0x1f wird nur in STAGE3/5 gesetzt → STAGE1-Krähen byte-true UNSTERBLICH.
+
+**Vierter Datenpunkt — Hund (0x20, Root 0x8010d7f8, State-Tab @0x80120f74, 12 Einträge):** Boden-Chase/Biss.
+Zwei neue Muster: (a) **DUAL-DISPATCH-BRAIN** — der ACTIVE-State (1) dispatcht +0x5 über eine DECISION-Tab
+(@0x80120f94, „think": setzt Transitionen) UND eine ACT-Tab (@0x80120fd4, „move": clip+Motion), BEIDE jeden
+Frame. (b) **ALIASING/überlappende Tabellen** — @0x80120f94 = state-tab+0x20, d.h. die B-Decision-Tab[0..3]
+IST state-tab[8..11]; dieselbe Adresse ist per +0x4 (state) UND per +0x5 (sub) erreichbar. Den PRIMÄR-Pfad
+klären (welches +0x4/+0x5 real gesetzt wird), sonst deutet man einen Handler doppelt. (c) **Damage im
+inner-jt, NICHT im State-Handler** — die Biss-Damage (player.hp−=10) war in den State-Handlern „unresolved";
+sie lag im INNEREN Jumptable der BITE-Sub-State (@0x801001ec, am Connect-Frame anim_frame≥N). Die Damage/
+Hitbox sitzt fast immer im tiefsten Nested-Step (Connect-Frame), nicht im Top-Level-Handler → dahin folgen.
 
 **Vorgehen für einen neuen Typ** (Tool: `re15-psx-disasm`, `S=.claude/skills/re15-psx-disasm/scripts/re15_disasm.py`):
 1. Handler-Adresse aus @0x80072bac[typ] (Savestate-RAM oder BIN + Registrierungs-Xref).
@@ -199,6 +218,23 @@ SPIELER während des Grabs — Leons PL00-Knochen + bank2-Keyframes), bank3 = Pa
   pushes → wall clamp (b0a4-Position). Handler lesen die Kontakte des VORTICKS.
 - Verhaltens-/Gait-Blobs **verbatim aus der BIN einbetten** (`s_gait_blob`-Muster) statt
   sie zu „verstehen" — unbegrenzte Fetches inklusive (v12-Pointer-Bytes waren Verhalten).
+- **Clip-Frame-Counts (EM0XX-EDD) VERBATIM einbetten** (`static const uint8_t s_dog_clip_len[28]={49,18,…}`,
+  aus dem Modell-EDD via re15_emd_parse_animation), NICHT aus der render-geladenen Bank lesen. Grund
+  (Crow-Falle, teuer): die AI an `re15_enemy_find(type)->anim` zu koppeln FROR den Gegner ein, sobald er
+  off-camera war — die Bank lädt LAZY im Render-Loop (`pc_enemy_load`), also gab `re15_enemy_find` NULL →
+  fc=1 → anim_frame wrappt jeden Tick → frame-N-Trigger (Re-Thrust/Connect) feuert nie. Zusätzlich den
+  Gegner aus dem geteilten `re15_actors_anim_advance` AUSNEHMEN (`if (a->type==0xNN) continue;`) — sein
+  Flug/Attack-Brain besitzt +0x95 selbst (byte-true 0x8001f314: POST-inc + Wrap an der echten Clip-Länge).
+- **Grid-gated Handler FREEZE-sicher routen:** wenn ein byte-true Pfad in einen Sub-State führt, dessen
+  Handler per Grid-Gate (`+0x9==0xNN`) für den häufigen Fall SOFORT exit't (leerer State → Standbild), darf
+  der Port den nicht-passenden Fall NICHT einfrieren lassen — sicher zurück in den Chase/Active-Loop routen
+  (Dog-Lunge→state-5-Pounce-Land war grid-0x43-gated; ein normaler Dog wäre sonst in state 5 erfroren). Das
+  Original verlässt sich darauf, dass der häufige Fall den State gar nicht erst erreicht.
+- **Zwei-seitiges Damage-Modell prüfen:** die EMPFANGENDE Seite (Hurt/Death/Corpse-States, meist [2]/[3]/[7],
+  spiegeln den Zombie) hängt an der GETEILTEN `re15_enemy_take_damage` → der Gegner ist killbar „gratis" (Dog).
+  ODER es gibt KEINE Death-Promotion im erreichbaren State (Crow: state-4+grid&0x40+bit-0x1f, nie STAGE1) →
+  byte-true unsterblich. Für 100%-Portierbarkeit die unerreichbaren States TROTZDEM porten (mit einem
+  Test-Trigger für den Gate-Flag), aber den STAGE1-Pfad nicht ändern.
 - Jede Konstante mit Disassembly-Adresse im Kommentar; Approximationen als „faithful-line"
   markieren und den Mechanismus zitieren (nie als byte-true verkaufen).
 
@@ -264,3 +300,22 @@ Für einen kompletten neuen Gegner hat sich diese Orchestrierung bewährt:
 10. **DuckStation-Pfade**: `--state` braucht Backslash-Pfad (Forward-Slash → rc=0 sofort, stale Samples).
 11. **vgamepad-Chords**: `&` in Bindings = CHORD, nicht OR; Shoulder-Buttons zuverlässig, L3/R3 nicht.
 12. **Vor dem Bauen greppen**: existiert die Implementierung schon? (ESP-VM-Duplikat-Lehre.)
+13. **Nachbar-Handler ≠ dieser Typ** (Crow-Falle, teuer): ein CLUSTER-Agent fand „Touch-Damage −2" in
+    0x80116288 — das ist aber der ROOT von Nachbar-Typ 0x26, NICHT der Krähe. Der Adress-nahe Code gehört
+    oft dem nächsten registrierten Typ. Der adversariale Verify prüfte die Adress-Bytes, aber NICHT die
+    Typ-Zugehörigkeit. → Jeden gefundenen Handler gegen die Registrierungs-Tabelle (@0x8011e8xx, `sw v0,
+    0x80072bXX`) prüfen: gehört die Adresse WIRKLICH zu deinem Typ-Slot?
+14. **„Kein X" ist nur so gut wie die Scan-Vollständigkeit** (Crow): „die Krähe macht keinen Schaden" war
+    FALSCH — die Damage lag in den noch nicht gescannten Flock-Angriffs-Substates (11/12/13/16 = −4/−8).
+    Eine „kein-Damage/kein-Hitbox/kein-X"-Aussage braucht ALLE erreichbaren States inkl. der tiefen Subs.
+15. **Damage/Hitbox sitzt im inner-jt, nicht im State-Handler** (Dog): die Biss-Damage (−10 HP) war in den
+    State-Handlern „unresolved" — sie lag im INNEREN Jumptable der BITE-Sub-State (@0x801001ec, Connect-
+    Frame anim_frame≥N). Zum tiefsten Nested-Step folgen, nicht am Top-Level aufgeben.
+16. **Aliasing-Dispatch-Tabellen**: State-Tab (per +0x4) und ACTIVE-Sub-Tab (per +0x5) können ÜBERLAPPEN
+    (Dog: B-Tab @0x80120f94 = state-tab+0x20). Dieselbe Adresse ist über zwei Pfade erreichbar → nicht als
+    zwei Handler fehldeuten; den real gesetzten Index (+0x4 vs +0x5) als Primär-Pfad bestimmen.
+17. **Killability stage-gated**: vor „State X unerreichbar/deferred" die Stage prüfen, die das Gate-Flag
+    setzt (Crow-Death-bit-0x1f: nur STAGE3/5, nie STAGE1). Für 100%-Port trotzdem porten (Test-Trigger),
+    aber den STAGE1-Pfad nicht ändern.
+18. **Grid-gated-Freeze**: ein byte-true Pfad kann den häufigen Fall einfrieren (Dog-Lunge→grid-0x43-
+    Pounce-Land; normaler Dog erfriert in state 5) — den nicht-passenden Fall sicher zurück routen (§6).
