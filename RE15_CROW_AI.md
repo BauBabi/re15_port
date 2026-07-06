@@ -202,11 +202,25 @@ der KI-Tick** (`run_all` gated auf 0x10/0x11/0x16, [enemy_ai_common.c:2457]).
    Dispatcher + die 4-Pfad-Dive-Decide + der KILL-Broadcast (0x2000). Shared `s_crow_flock` (=0x800aca50),
    Reset in re15_enemy_reset. **Live verifiziert** (ROOM10C0): Krähen perchen bis Spieler<5000, dann
    Patrol→Dive→Grapple→GRAB (Spieler HP 100→92)→Bank→Resume→Re-Grapple→Strike, kontinuierlich, kein
-   Freeze. Test test_crow_ai (37/37). **Faithful-line** (markiert): AI-lokaler Anim-Frame (16er-Flap-Loop,
-   die exakten EM021-Clip-Längen nicht byte-gemappt); mode +0x1d4=0-Default (der Bit-0x1f-Setter im
-   globalen Kombat-Flag-Array 0x800b1028 ist EXE-Event-seitig — Cruise-Soar-Drift bleibt 0, die expliziten
-   Dive-vvel −80/−120/200 sind byte-true); Kontakt-Proxy (dist<500) statt der AABB-Box 0x8001b9b4;
-   Grab-Player-Pin (0x800aca58=5) als HP-Schaden ohne die volle Player-Grab-FSM-Integration.
+   Freeze. Test test_crow_ai (37/37).
+
+   **Byte-true-Härtung (Commits 773b20af + Folge — „100% byte-true"):**
+   - **Anim-Takt**: die echten EM021-Clip-Frame-Counts (23/35/21/16/10/24/33/40/8/30/40/36/15/16, aus
+     dem Modell-EDD) verbatim eingebettet; re15_crow_anim = byte-true 0x8001f314 (POST-inc +0x95,
+     +0x8f-Blend-Decay, Wrap an echter Clip-Länge). Krähen aus re15_actors_anim_advance ausgenommen.
+   - **Hitbox** r=200/h=180 byte-true aus dem +0x78-Dim-Block @0x801210fc.
+   - **Kontakt +0x1d0**: der Root-Post-Pass-Body-Push (aec4) mit echter Krähen-Hitbox statt dist<500.
+   - **ARRIVAL-Oracle** (move[10]): dist≤9000 UND facing±100 (0x8001a804). **AABB-Box** (steer[11]):
+     die echte 0xf00×0x300-Box (0x8001b9b4).
+   - **+0x1d2 Parität** = der frame-parity/blink-Toggle (0x8001bc08 & 1; kein Ground-Floor-LOS für
+     einen Flieger). **mode +0x1d4=0 ist BYTE-TRUE für STAGE1** (Bit 0x1f wird nur in STAGE3/STAGE5
+     gesetzt, nie STAGE1 — root @0x80112048). **+0x1db=1 ist BYTE-TRUE** (FUN_80111a4c: grid=0 → 1).
+   - **Grab-Player-Pin**: s_player_grabbed für Krähe sub 13 (0x800aca58=5) → game_step skippt
+     re15_player_tick, wie der Zombie-Grab.
+
+   **Verbleibend PRÄSENTATION-only (kein Gameplay-/Verhaltens-Effekt):** 0x80019700 Pose-Apply
+   (Render-Pose beim Strike/Grab — der Port rendert generisch clip 8 = die Angriffs-Animation) +
+   0x801161e8 Screech-SFX (distanz-getiert via 0x80037edc) = reine Audio/Render-Nuancen.
 3. **Wave 3 — Death**: Downed-Promotion 4→3, Fall-from-sky + Land + Gib, State 7 (RE komplett).
 4. **Dynamik-Verify**: Savestate ROOM10C0/1120 (JUMP hex) + `re15_enemy_state.py` mit NEUER Krähen-
    Label-Map (die Zombie-Map @0x8011f7b4 passt NICHT — eigene Root-Tabelle @0x8012111c).

@@ -2861,9 +2861,12 @@ static void re15_crow_ai_tick(int slot)
         s_crow_flock    = (uint16_t)(n << 4);        /* 0x800aca50 = count<<4 (@FUN_80111a4c) */
         e->crow_perch_h = (int16_t)e->y;             /* +0x1ea = spawn Y                      */
         e->y           -= 400;                       /* +0x38 -= 400 lift-off                 */
-        e->crow_mode    = 0;                          /* +0x1d4 (mode/flag bit, 0 default)     */
+        e->crow_mode    = 0;                          /* +0x1d4 = testbit(0x800b1028,0x1f) — byte-true 0
+                                                       * in STAGE1: bit 0x1f is set only by STAGE3/
+                                                       * STAGE5 handlers, never STAGE1 (root @0x80112048) */
         e->crow_vvel = 0; e->crow_speed = 0; e->crow_atk_ctr = 0; e->crow_diveflag = 0;
-        e->crow_armed   = 1;                          /* +0x1db armed (LOS-gated; faithful-line) */
+        e->crow_armed   = 1;                          /* +0x1db = 1 — byte-true (FUN_80111a4c: grid&0x10
+                                                       * -> 0, else -> 1; the ROOM10C0 crows have grid=0) */
         re15_crow_clip(e, 0);
         e->anim_flags   = 0x04;
         e->state        = 1;                          /* +0x4 = 1 ACTIVE                       */
@@ -2885,6 +2888,11 @@ static void re15_crow_ai_tick(int slot)
          * +0x1d0 = contact (the strike/grab connect the handlers read next tick). */
         e->crow_contact = (uint8_t)(re15_body_push(player, RE15_BODY_R_PLAYER, e,
                                                    (int32_t)e->hit_radius_min) ? 1 : 0);
+        /* GRAB-HOLD pins the player (byte-true move[12] @0x80113e48: 0x800aca58 = cmd 5 grabbed).
+         * s_player_grabbed (cleared at the top of run_all) latches the pin for sub 13 = game_step
+         * skips re15_player_tick, exactly like the zombie grab. The crow releases via its own
+         * struggle drain (move[13]), not player mash — so the pin lifts when it leaves sub 13. */
+        if (e->sub_state_1 == 13) s_player_grabbed = 1;
         break;
     }
 
