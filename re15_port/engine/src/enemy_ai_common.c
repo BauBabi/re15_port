@@ -3118,6 +3118,43 @@ static int re15_dog_arc(const re15_actor_t *e, const re15_actor_t *pl, int dth, 
     return (df >= -ytol && df <= ytol);
 }
 
+/* STATE 4/5/6 (0x80111350) — the POUNCE-LAND + grid-0x40 player-kill cutscenes. Sub-dispatch on +0x5
+ * (table @0x801210c8): [0/1] pounce-land (grid-0x43/0x42 gated), [4/5] kill machine A (0x80111984),
+ * [10/11] kill machine B (0x80111cf0). Reached from the ACTIVE lunge (sub 4 -> state 5 when the dog's
+ * hp>=0). Byte-true pounce-land for a grid-0x43 dog; a non-special dog routes safely back to chase. */
+static void re15_dog_state456(re15_actor_t *e, re15_actor_t *pl)
+{
+    switch (e->sub_state_1) {
+    case 0: case 1:   /* POUNCE-LAND 0x80111398: leap arc (rise) -> land -> chase (grid-0x43/0x42 gated) */
+        if (e->sub_state_2 == 0) {
+            if (e->grid_id != 0x43 && e->grid_id != 0x42) { e->state = 1; re15_dog_sub(e, 2); break; }  /* @0x801113e8 gate: normal dog -> chase (safe) */
+            e->hit_react |= 3; re15_dog_clip(e, 0x14); e->crow_speed = 0xf0; re15_audio_room_se(2);  /* +0x93|=3, clip 0x14, +0x8c=0xf0 @0x801113d8 */
+            e->sub_state_2 = 1;
+        } else if (e->sub_state_2 == 1) {                 /* LEAP: rise + lunge forward @0x80111458 */
+            if (e->anim_frame >= 0x0d) { e->crow_speed = (int16_t)(e->crow_speed + 6); re15_dog_advance(e, e->crow_speed); e->y -= 20; }  /* +0x38-=20 rise @0x801114dc */
+            if (re15_dog_anim(e)) { re15_dog_clip(e, 0x15); e->crow_timer = 0; e->sub_state_2 = 2; }   /* land pose clip 0x15 @0x801114f4 */
+        } else {                                          /* LAND -> back to chase @0x801115e0 */
+            e->y = 0;                                     /* +0x38 = +0x1ba floor (dog ground = 0) */
+            e->dog_atk_cd = 0x78; e->hit_react = 0;       /* +0x1d6=0x78, +0x93=0 */
+            e->state = 1; e->sub_state_1 = 2; e->sub_state_2 = 0;  /* +0x4=0x201 -> state 1 / sub 2 CHASE @0x8011162c */
+        }
+        break;
+
+    case 4: case 5:    /* player-kill cutscene machine A (0x80111984) — the "eaten by dog" death */
+    case 10: case 11:  /* machine B (0x80111cf0) */
+        /* The dog pins the player (player-cmd FSM 0x800aca58/59/5a, parallels the zombie grab) and
+         * plays the drag/eat death. Port: latch s_player_grabbed (game_step pins the player, like the
+         * zombie/crow grab) + hold. Faithful-line: the exact aca5a sub-FSM cadence is deferred. */
+        s_player_grabbed = 1;
+        re15_dog_anim(e);
+        break;
+
+    default:
+        e->state = 1; re15_dog_sub(e, 2);   /* unhandled -> chase */
+        break;
+    }
+}
+
 static void re15_dog_ai_tick(int slot)
 {
     re15_actor_t *e  = &g_actors[slot];
@@ -3198,7 +3235,10 @@ static void re15_dog_ai_tick(int slot)
                 e->sub_state_2 = 1;
             }
             re15_dog_advance(e, 40);                             /* leap forward */
-            if (re15_dog_anim(e)) re15_dog_sub(e, 3);            /* land -> ATTACK-RANGE (bite) */
+            if (re15_dog_anim(e)) {                              /* step4 transition @0x8010eb88 (on the dog's hp) */
+                if (e->hp >= 0) { e->state = 5; e->sub_state_1 = 0; e->sub_state_2 = 0; }  /* -> state 5 POUNCE-LAND @0x8010eb8c */
+                else { e->state = 3; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 1; }  /* shot mid-leap -> DEATH @0x8010eb90 */
+            }
             break;
 
         default:  /* kill-cutscenes / reroute (13/14) = Wave 3 -> fall back to chase */
@@ -3207,6 +3247,10 @@ static void re15_dog_ai_tick(int slot)
         }
         break;
     }
+
+    case 4: case 5: case 6:   /* POUNCE-LAND + grid-0x40 player-kill cutscenes (0x80111350) */
+        re15_dog_state456(e, pl);
+        break;
 
     case 2:   /* HURT 0x801108f0: flinch clip 6 -> recover (state 1) / death (state 3) */
         if (e->sub_state_3 == 0) { re15_dog_clip(e, 6); re15_audio_room_se(1); e->sub_state_3 = 1; }  /* clip 6 + Se(1) @0x80110a3c */

@@ -83,6 +83,25 @@ int main(void)
     if (!reached_corpse) { fprintf(stderr, "FAIL(4): a killed dog must reach CORPSE (state 7), state=%d hp=%d\n", d->state, d->hp); fail = 1; }
     printf("  (4) DEATH: lethal hit -> state 7 CORPSE (hp=%d)\n", d->hp);
 
+    /* (5) POUNCE-LAND (state 5, 0x80111350): a grid-0x43 dog does the byte-true leap arc (rises) ->
+     *     lands -> back to CHASE (state 1 / sub 2). A normal dog (grid 0) routes there safely (no freeze). */
+    memset(g_actors, 0, sizeof g_actors);
+    pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->active = 1; pl->type = 0; pl->x = 0; pl->y = 0; pl->z = 3000; pl->hp = 100;
+    re15_actor_t *pd = &g_actors[1];
+    pd->active = 1; pd->type = 0x20; pd->grid_id = 0x43; pd->state = 5; pd->sub_state_1 = 0; pd->sub_state_2 = 0;
+    pd->x = 0; pd->y = 0; pd->z = 0; pd->hp = 20;
+    re15_enemy_apply_hitbox(pd, 0x20);
+    int32_t pky = 32767; int landed_chase = 0;
+    for (int f = 0; f < 200; f++) {
+        re15_enemy_ai_run_all(0);
+        if ((int32_t)pd->y < pky) pky = pd->y;                  /* track the peak of the rise */
+        if (pd->state == 1 && pd->sub_state_1 == 2) { landed_chase = 1; break; }  /* landed -> chase */
+    }
+    if (pky >= 0)         { fprintf(stderr, "FAIL(5): pounce-land must rise (y<0 at peak), peak y=%d\n", (int)pky); fail = 1; }
+    if (!landed_chase)    { fprintf(stderr, "FAIL(5): pounce-land must land -> CHASE (state 1/sub 2), state=%d sub=%d\n", pd->state, pd->sub_state_1); fail = 1; }
+    printf("  (5) POUNCE-LAND: grid-0x43 leap peaked y=%d, landed -> CHASE\n", (int)pky);
+
     if (fail) { printf("DOG WAVE-1: FAIL\n"); return 1; }
     printf("DOG WAVE-1: all checks passed\n");
     return 0;
