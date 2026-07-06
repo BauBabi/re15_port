@@ -88,7 +88,33 @@ geteilte take_damage). Der offensive Teil (chase/lunge/bite) ist im ACTIVE-Brain
 
 **Der Hund (Typ 0x20) ist byte-true portiert — die KOMPLETTE State-Machine** (0 INIT / 1 ACTIVE [idle/turn/
 chase/attack-range/lunge/bite] / 2 HURT / 3 DEATH / 4-5-6 POUNCE-LAND+Kill / 7 CORPSE): spawnt, jagt, beißt
-(−10 HP), springt (Pounce-Leap+Land), pinnt den Spieler (grid-0x40-Kill), und ist tötbar. Einzige faithful-
-line: die exakte Drag/Eat-Kadenz der Kill-Cutscene + die Obstacle-Reroute-Feinheit (sub 13/14).
+(−10 HP), springt (Pounce-Leap+Land), pinnt den Spieler (grid-0x40-Kill), und ist tötbar.
+
+## ✅ FINALE Welle (Commit dog-100%): die zwei deferrten Punkte byte-true portiert — ZERO faithful-line
+
+RE via Workflow wf_7cc285c0 (5 RE-Agenten + 5 Refuter, adversarial) + 2 Solo-Agenten, alle disasm-zitiert:
+
+1. **Eaten-GRAB (der Kill, war „exakte Drag/Eat-Kadenz deferred")** — der Tod liegt in **state 1, sub 9/10**
+   (NICHT 4/5/6; Agenten-Korrektur). **Eintritt @0x8010f458:** ein Biss (sub 8, −10 HP) eskaliert zum
+   Fressen `+0x5 = facing_aligned + 9` **gdw. (A) `+0x1e4≠0` (armed) ODER (B) hp−10 < 0 (lethal)** — lethaler
+   Biss frisst immer, non-lethal nur wenn der Dog bei hp<50 vor-armed (sub 5 windup @0x8010ed54). **Grab-Hold
+   7-Step @0x8010020c/@0x8010022c** (`re15_dog_grabhold`): Latch clip 0x17/0x1a → Eat-Loop clip 0x18 (Struggle-
+   Drain +0x9c=100 −(1+100·mash), Feed-Timer +0x9e=50) → Release clip 0x19; Exits **sub 0xb** (gefressen,
+   aca58=6 → devour → Player state 7) / **sub 0xc** (befreit → clip 8 → chase). Spieler-Seite = die geteilte
+   Victim-FSM (`re15_player_victim_latch/devour`, aca58=5, Leon aus EM020 bank2 — wie der Zombie-Grab).
+   **Pounce-Kill (state 4/5/6, machine A @0x80111984 9-Phasen / machine B @0x80111cf0 5-Phasen):** beide
+   animieren den SPIELER via s_victim_phase + Blut/Gore-fx (0x1500/0x2000) + Kill (aca58=7 @0x80111ea0);
+   Port = Victim-FSM + `re15_esp_fx_spawn` + devour. (Cam-Pan acb10/acb12 + Cut-Freeze aca3c|=0xc0 = port-
+   weite Cutscene-Kamera-Lücke, geteilt mit dem Zombie-Grab-Tod.)
+2. **Obstacle-Reroute (sub 13 leap-over @0x801102dc / sub 14 turn-around @0x801105bc)** —
+   `re15_dog_reroute13/14`. **Eintritt aus der CHASE-Decision:** `+0x5 = 0xe − (+0x90 & 1)` (@0x8010e2b4/d4) →
+   sub 13 bei Wall-Kontakt, sub 14 sonst. Beide lesen +0x90 (ai_contact) — Escape-Heading = `(+0x90&0xf0)<<4`
+   (16 Richtungen), drehen dahin, laufen clip 9/0x0a drüber, zurück zu CHASE (+0x5=2). Port: +0x90 wird
+   byte-true-äquivalent aus dem Kollisions-Clamp-Displacement (dieselbe Wall-Normale, die der SCA-Resolver
+   0x8003b0a4 @0x8003b1dc kodiert) in `re15_enemy_ai_run_all` gesetzt.
+
+Test `test_dog_ai` Teile (6) EATEN-GRAB (Biss→Grab→pinned→gefressen state 7), (7) ARM-GRAB (hp<50→sub 5/7),
+(8) REROUTE (sub 13→dreht→läuft→CHASE). **38/38 ctest grün.** Einzige verbleibende faithful-line = die
+port-weite Cutscene-Kamera/Fade-Infra (nicht Dog-spezifisch, geteilt mit dem Zombie).
 5. **Dynamik-Verify:** Savestate aus einem Hunde-Raum + `re15_enemy_state.py` mit NEUER Dog-Label-Map
    (@0x80120f74; die Zombie-Map @0x8011f7b4 passt NICHT).

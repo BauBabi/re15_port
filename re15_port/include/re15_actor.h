@@ -310,6 +310,9 @@ typedef struct {
     uint8_t  dog_atk_cd;     /* +0x1d6: attack-cooldown timer (menace)                          */
     uint8_t  dog_pounce_cd;  /* +0x1e6: pounce-cooldown timer                                   */
     int16_t  dog_yawrate;    /* +0x1e2: per-approach yaw-slew rate (+0x7 micro-step = sub_state_3) */
+    int16_t  dog_grab_armed; /* +0x1e4: grab-armed flag (set=1 by sub 5 windup @0x8010ed54; a bite
+                              * then escalates to the eaten GRAB even when non-lethal). Cleared on
+                              * grab entry @0x8010f4b4 / recover. */
 } re15_actor_t;
 
 extern re15_actor_t g_actors[RE15_ACTOR_MAX];

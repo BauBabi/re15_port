@@ -102,6 +102,64 @@ int main(void)
     if (!landed_chase)    { fprintf(stderr, "FAIL(5): pounce-land must land -> CHASE (state 1/sub 2), state=%d sub=%d\n", pd->state, pd->sub_state_1); fail = 1; }
     printf("  (5) POUNCE-LAND: grid-0x43 leap peaked y=%d, landed -> CHASE\n", (int)pky);
 
+    /* (6) EATEN-GRAB (the deferred kill-cutscene, now byte-true): an ARMED bite escalates to the
+     *     eaten GRAB (sub 9/10, @0x8010f47c) -> the player is PINNED (re15_player_is_grabbed) and,
+     *     with no struggle input, the feed countdown devours him (hp<0 / state 7). */
+    extern int re15_player_is_grabbed(void);
+    memset(g_actors, 0, sizeof g_actors);
+    pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->active = 1; pl->type = 0; pl->x = 0; pl->y = 0; pl->z = 1000; pl->hp = 100; pl->rot_y = 0;
+    re15_actor_t *gg = &g_actors[1];
+    gg->active = 1; gg->type = 0x20; gg->state = 1; gg->sub_state_1 = 8; gg->sub_state_2 = 0;   /* seeded in BITE */
+    gg->x = 0; gg->y = 0; gg->z = 0; gg->rot_y = 0; gg->hp = 20; gg->dog_grab_armed = 1;         /* pre-armed (sub-5 windup) */
+    re15_enemy_apply_hitbox(gg, 0x20);
+    int grabbed = 0, escalated = 0, eaten = 0;
+    for (int f = 0; f < 240; f++) {
+        re15_enemy_ai_run_all(0);
+        if (gg->sub_state_1 == 9 || gg->sub_state_1 == 10) escalated = 1;
+        if (re15_player_is_grabbed()) grabbed = 1;
+        if (pl->hp < 0 || pl->state == 7) { eaten = 1; break; }
+    }
+    if (!escalated) { fprintf(stderr, "FAIL(6): armed bite must escalate to the eaten GRAB (sub 9/10), sub=%d\n", gg->sub_state_1); fail = 1; }
+    if (!grabbed)   { fprintf(stderr, "FAIL(6): the eaten grab must PIN the player\n"); fail = 1; }
+    if (!eaten)     { fprintf(stderr, "FAIL(6): the eaten grab must devour the player (hp<0 / state 7), hp=%d state=%d\n", pl->hp, pl->state); fail = 1; }
+    printf("  (6) EATEN-GRAB: bite->grab(sub %d), pinned=%d, player hp=%d state=%d\n", gg->sub_state_1, grabbed, pl->hp, pl->state);
+
+    /* (7) ARM-GRAB: a weak player (hp<50) makes the attack-range decision arm the eaten grab
+     *     (sub 5 windup sets +0x1e4 @0x8010ed54, or the coin-flip picks the low-HP lunge sub 7). */
+    memset(g_actors, 0, sizeof g_actors);
+    pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->active = 1; pl->type = 0; pl->x = 0; pl->y = 0; pl->z = 1500; pl->hp = 30; pl->rot_y = 0;   /* weak */
+    re15_actor_t *g7 = &g_actors[1];
+    g7->active = 1; g7->type = 0x20; g7->state = 1; g7->sub_state_1 = 3; g7->sub_state_2 = 0;        /* ATTACK-RANGE */
+    g7->x = 0; g7->y = 0; g7->z = 0; g7->hp = 20;
+    g7->rot_y = (int16_t)(((int)re15_atan2_q12(pl->z - g7->z, pl->x - g7->x) - 0x400) & 0xfff);      /* face the player (the steered bearing) */
+    re15_enemy_apply_hitbox(g7, 0x20);
+    int armed = 0;
+    for (int f = 0; f < 90; f++) {
+        re15_enemy_ai_run_all(0);
+        if (g7->dog_grab_armed != 0 || g7->sub_state_1 == 5 || g7->sub_state_1 == 7) { armed = 1; break; }
+    }
+    if (!armed) { fprintf(stderr, "FAIL(7): weak player -> attack-range must arm the grab (sub 5) or pick low-HP lunge (sub 7), sub=%d\n", g7->sub_state_1); fail = 1; }
+    printf("  (7) ARM-GRAB: weak player -> sub=%d, dog_grab_armed=%d\n", g7->sub_state_1, g7->dog_grab_armed);
+
+    /* (8) OBSTACLE-REROUTE: a dog seeded in sub 13 (wall contact, escape heading in ai_contact hi
+     *     nibble) turns to the heading, runs the reroute clip 9, and returns to CHASE (sub 2). */
+    memset(g_actors, 0, sizeof g_actors);
+    pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->active = 1; pl->type = 0; pl->x = 5000; pl->y = 0; pl->z = 5000; pl->hp = 100;
+    re15_actor_t *g8 = &g_actors[1];
+    g8->active = 1; g8->type = 0x20; g8->state = 1; g8->sub_state_1 = 13; g8->sub_state_2 = 0;
+    g8->x = 0; g8->y = 0; g8->z = 0; g8->rot_y = 0; g8->hp = 20; g8->ai_contact = 0x11;   /* heading nibble 1 (0x100) + contact bit */
+    re15_enemy_apply_hitbox(g8, 0x20);
+    int rerouted = 0;
+    for (int f = 0; f < 300; f++) {
+        re15_enemy_ai_run_all(0);
+        if (g8->state == 1 && g8->sub_state_1 == 2) { rerouted = 1; break; }   /* returned to CHASE */
+    }
+    if (!rerouted) { fprintf(stderr, "FAIL(8): reroute (sub 13) must navigate + return to CHASE (sub 2), sub=%d rot=%u\n", g8->sub_state_1, (unsigned)g8->rot_y); fail = 1; }
+    printf("  (8) REROUTE: sub 13 -> turned to escape heading -> ran -> CHASE (sub 2)\n");
+
     if (fail) { printf("DOG WAVE-1: FAIL\n"); return 1; }
     printf("DOG WAVE-1: all checks passed\n");
     return 0;
