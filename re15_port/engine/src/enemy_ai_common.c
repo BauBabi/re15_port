@@ -2444,7 +2444,12 @@ int re15_enemy_ai_live_step(int slot)
  * dispatcher reads them to force flock-mates into the coordinated maneuvers 14/15/17. Low
  * 12 bits carry the pending-yaw + count<<4 (INIT). Reset on room change. */
 static uint16_t s_crow_flock;
-void re15_crow_flock_reset(void) { s_crow_flock = 0; }
+/* the second crow global: the flag-array word @0x800b1028 (bit-array, MSB-first: bit N ->
+ * mask 0x80000000>>(N&0x1f)). FLIGHT-2 uses bits 0x1c(mask 0x8, set by HOVER-grab), 0x1d
+ * (mask 0x4, tested by the dispatcher -> spin), 0x1e (mask 0x2, tested by dive-arm); 0x1f
+ * (mask 0x1) = the death gate, set only in STAGE3/STAGE5. In STAGE1 only 0x1c is ever set. */
+static uint32_t s_crow_gflags;
+void re15_crow_flock_reset(void) { s_crow_flock = 0; s_crow_gflags = 0; }
 
 /* Height oracle — byte-true FUN_80115dc8: returns +1 (descend, y grows) / -1 (climb) to
  * hold the crow in the corridor 1800..5400 units ABOVE its perch height. In-band the
@@ -2859,6 +2864,85 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
     }
 }
 
+/* FLIGHT-2 (state 4) sub-machine — byte-true 0x80114e54 family (workflow wf_2c7076b7, 0 refutations).
+ * The grid&0x40 event crow's perch sequence via the substate table @0x80121220[0-4]: ASCEND -> HOVER
+ * -> (grab on contact) ORIENT; SPIN/DIVE-ARM only fire on the event flags s_crow_gflags bit 0x1d/0x1e
+ * (never set in STAGE1). FLIGHT-2 never writes +0x4 (no state exit) and never touches the death bit
+ * 0x1f — so the event crow stays in state 4 and remains byte-true unkillable in STAGE1. */
+static void re15_crow_flight2_sub(re15_actor_t *e, re15_actor_t *player)
+{
+    switch (e->sub_state_1) {
+    case 0:   /* ASCEND 0x80114fb8: climb (vvel -120 + frame-8 re-thrust) -> HOVER when high enough */
+        if (e->sub_state_2 == 0) { re15_crow_clip(e, 4); e->sub_state_2 = 1; }
+        if (e->sub_state_2 == 1) { e->crow_vvel = -120; e->crow_speed = 160; e->sub_state_2 = 2; }
+        if (e->anim_frame == 8) e->sub_state_2 = 1;                     /* @0x80115088 re-thrust */
+        e->crow_vvel = (int16_t)(e->crow_vvel + 6);                     /* @0x801150a4 gravity */
+        re15_enemy_steer_point(e, player->x, player->z, 0x14);          /* @0x801150cc yaw-slew rate 20 */
+        e->y += e->crow_vvel;                                           /* @0x801150d0 integrate */
+        re15_crow_advance(e);
+        re15_crow_anim(e);
+        if (e->crow_vert_err >= 2001) re15_crow_sub(e, 1);             /* @0x80115118 -> HOVER */
+        break;
+
+    case 1:   /* HOVER 0x80115130: oscillate + yaw-slew; grab the player on contact -> ORIENT */
+        if (e->sub_state_2 == 0) {
+            re15_crow_clip(e, 4); e->crow_speed = 180;                  /* @0x80115164/70 */
+            e->crow_vvel = (int16_t)(e->crow_mode & 0x3f);             /* @0x80115188 */
+            if (e->crow_vert_err < 2000) e->crow_vvel = (int16_t)(-e->crow_vvel);  /* @0x801151a4 */
+            e->sub_state_2 = 1;
+        }
+        if (re15_crow_anim(e)) e->sub_state_2 = 0;                      /* clip done -> next half-cycle */
+        re15_enemy_steer_point(e, player->x, player->z, 0x32);          /* @0x801151f4 rate 50 */
+        e->y += e->crow_vvel;
+        re15_crow_advance(e);
+        if (e->crow_contact) {                                          /* @0x80115248 grab gate (+0x1d0) */
+            s_crow_gflags |= 0x8u;                                      /* @0x801152c0 setbit 0x1c */
+            re15_crow_hit_player(e, player, 8);                         /* grab: 0x800aca58=5 (@0x801152a4) */
+            re15_crow_sub(e, 2);                                        /* @0x801152b8 -> ORIENT */
+        }
+        break;
+
+    case 2:   /* ORIENT 0x801152e0: hold the attack pose; promoted to SPIN by the dispatcher 0x1d-tick */
+        if (e->sub_state_2 == 0) { re15_crow_clip(e, 8); e->sub_state_2 = 1; }  /* @0x80115310 clip 8 */
+        re15_crow_anim(e);   /* pose 0x80019700(a3=0x8012110c null table) = no distinct effect; hold */
+        break;
+
+    case 3:   /* SPIN 0x801153ac: spin the yaw, timer -> back to HOVER */
+        if (e->sub_state_2 == 0) { re15_crow_clip(e, 4); e->crow_speed = 180; e->crow_vvel = -30; e->crow_timer = 32; e->sub_state_2 = 1; }
+        e->rot_y = (int16_t)(e->rot_y + 60);                           /* @0x80115460 yaw += 60 */
+        if (e->sub_state_2 == 1) {
+            if (e->crow_timer == 0) { e->sub_state_2 = 2; e->crow_vvel = 10; e->crow_timer = 40; }  /* @0x801154b4/c4 */
+            else e->crow_timer--;
+        } else {
+            if (e->crow_timer == 0) re15_crow_sub(e, 1);              /* @0x801154e4 -> HOVER */
+            else e->crow_timer--;
+        }
+        e->y += e->crow_vvel; re15_crow_advance(e); re15_crow_anim(e); /* @0x801154f8 */
+        break;
+
+    case 4:   /* DIVE-ARM 0x8011553c: the armed descent (attack flags +0x0|0x2/0x40/0x8); gated on bit 0x1e */
+        if (e->sub_state_2 == 0) {
+            re15_crow_clip(e, 4); e->crow_speed = 80; e->crow_accel = 20;
+            e->crow_vvel = 200; e->crow_yawrate = 5; e->crow_timer = 9;  /* @0x801155a4-d8 */
+            if (s_crow_gflags & 0x2u) e->sub_state_2 = 1;              /* @0x801155e8 testbit 0x1e */
+        } else if (e->sub_state_2 == 1) {
+            if (e->crow_timer == 0) { e->crow_timer = 30; e->sub_state_2 = 2; } else e->crow_timer--;
+            e->crow_speed = (int16_t)(e->crow_speed + 20);            /* @0x801156c0 */
+            e->crow_vvel  = (int16_t)(e->crow_vvel - 7);
+            re15_crow_anim(e);
+        } else {
+            if (e->crow_timer != 0) e->crow_timer--;
+            e->crow_speed = (int16_t)(e->crow_speed + e->crow_accel);
+            e->crow_vvel  = (int16_t)(e->crow_vvel - 7);
+        }
+        e->y += e->crow_vvel; re15_crow_advance(e);                    /* @0x801157b4 tail */
+        break;
+
+    default:  /* sub 5-9 = the SPECIAL/fade handlers (0x80115830+), out of scope in STAGE1 */
+        break;
+    }
+}
+
 /* One crow AI tick (dispatched from re15_enemy_ai_run_all for type 0x21).
  * Full flight brain — byte-true port of the FUN_80112020 family (RE15_CROW_AI.md):
  * root pre-pass -> INIT / ACTIVE (sense -> flock-dispatch -> steer[+0x5] -> move[+0x5]). */
@@ -2888,8 +2972,10 @@ static void re15_crow_ai_tick(int slot)
                                                        * -> 0, else -> 1; the ROOM10C0 crows have grid=0) */
         re15_crow_clip(e, 0);
         e->anim_flags   = 0x04;
-        e->state        = 1;                          /* +0x4 = 1 ACTIVE                       */
-        e->sub_state_1  = 0; e->sub_state_2 = 0;      /* INIT leaves +0x5/+0x6 = 0 (patrol)   */
+        e->state        = 1;                          /* +0x4 = 1 ACTIVE (@0x80112388)        */
+        if (e->grid_id & 0x40) e->state = 4;          /* byte-true override (@0x80112408): the
+                                                       * grid&0x40 event crow (0xe1) enters FLIGHT-2 */
+        e->sub_state_1  = 0; e->sub_state_2 = 0;      /* INIT leaves +0x5/+0x6 = 0 (patrol/ascend) */
         break;
     }
 
@@ -2915,7 +3001,19 @@ static void re15_crow_ai_tick(int slot)
         break;
     }
 
-    default:   /* states 2/5/6 HURT stub, 3 DEATH, 4 FLIGHT-2, 7 SPECIAL — hold (deferred) */
+    case 4: {  /* FLIGHT-2 (0x80114e54): preamble -> 0x1d-tick -> substate[+0x5] (the event crow) */
+        e->crow_dist     = (int16_t)re15_enemy_player_dist(e, player);  /* +0x1dc (@0x80114f1c) */
+        e->crow_vert_err = (int16_t)(player->y - e->y);                 /* +0x1ec (@0x80114f40) */
+        if ((s_crow_gflags & 0x4u) && e->sub_state_1 != 3)             /* testbit 0x1d (@0x80114f34) */
+            re15_crow_sub(e, 3);                                        /* -> SPIN */
+        re15_crow_flight2_sub(e, player);
+        e->crow_contact = (uint8_t)(re15_body_push(player, RE15_BODY_R_PLAYER, e,
+                                                   (int32_t)e->hit_radius_min) ? 1 : 0);
+        if (e->sub_state_1 == 2) s_player_grabbed = 1;                  /* ORIENT = holding the grabbed player */
+        break;
+    }
+
+    default:   /* states 2/5/6 HURT stub, 3 DEATH (byte-true unreachable in STAGE1), 7 SPECIAL — hold */
         break;
     }
 }

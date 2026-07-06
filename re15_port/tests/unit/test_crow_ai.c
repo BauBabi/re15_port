@@ -73,6 +73,27 @@ int main(void)
     if (pl->hp >= hp_before) { fprintf(stderr, "FAIL(3): crow attack never connected, player HP %d->%d\n", hp_before, pl->hp); fail = 1; }
     printf("  (3) ENGAGE: max sub-state %d, player HP %d->%d (attack connected)\n", max_sub, hp_before, pl->hp);
 
+    /* (4) FLIGHT-2: the grid&0x40 event crow — INIT overrides to state 4, then ASCEND (climbs) ->
+     *     HOVER; it never writes +0x4 (no state exit) so it stays in FLIGHT-2 (byte-true). */
+    memset(g_actors, 0, sizeof g_actors);
+    pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->active = 1; pl->type = 0; pl->x = 300; pl->y = 0; pl->z = 30000; pl->hp = 100;
+    re15_actor_t *ev = &g_actors[1];
+    ev->active = 1; ev->type = 0x21; ev->state = 0; ev->grid_id = 0x40;   /* the event crow */
+    ev->x = 2000; ev->y = 700; ev->z = 300; ev->rot_y = 0;
+    re15_enemy_ai_run_all(0);
+    if (ev->state != 4) { fprintf(stderr, "FAIL(4): grid&0x40 crow must INIT to FLIGHT-2 state 4, got %d\n", ev->state); fail = 1; }
+    int32_t f2y0 = ev->y; int f2_hover = 0;
+    for (int f = 0; f < 200; f++) {
+        re15_enemy_ai_run_all(0);
+        if (ev->state != 4) break;                       /* must never leave state 4 */
+        if (ev->sub_state_1 == 1) f2_hover = 1;          /* reached HOVER */
+    }
+    if (ev->state != 4) { fprintf(stderr, "FAIL(4): FLIGHT-2 crow left state 4 (state=%d) — should never exit\n", ev->state); fail = 1; }
+    if (ev->y >= f2y0)   { fprintf(stderr, "FAIL(4): ASCEND must climb (smaller y), y %d->%d\n", (int)f2y0, (int)ev->y); fail = 1; }
+    if (!f2_hover)       { fprintf(stderr, "FAIL(4): FLIGHT-2 crow never reached HOVER (sub 1)\n"); fail = 1; }
+    printf("  (4) FLIGHT-2: grid&0x40 -> state 4, ascended y %d->%d, reached HOVER, stayed in state 4\n", (int)f2y0, (int)ev->y);
+
     if (fail) { printf("CROW FLIGHT-BRAIN: FAIL\n"); return 1; }
     printf("CROW FLIGHT-BRAIN: all checks passed\n");
     return 0;
