@@ -57,7 +57,23 @@ int main(void)
     if (c1 >= c0) { fprintf(stderr, "FAIL(2): maggot must crawl closer, dist %d->%d\n", c0, c1); fail = 1; }
     printf("  (2) CHASE: sub reached 3, dist %d->%d (closing)\n", c0, c1);
 
+    /* (2b) BITE: with the player in range the maggot enters BITE (sub 5) and deals -6 on connect */
+    pl->x = m->x; pl->z = m->z + 1200; pl->hp = 100; pl->hit_react = 0;   /* just ahead, inside the 3000 bite range */
+    m->rot_y = (int16_t)(((int)re15_atan2_q12(pl->z - m->z, pl->x - m->x) - 0x400) & 0xfff);  /* face the player (the steered bearing) */
+    m->dog_atk_cd = 0;
+    int16_t bp0 = pl->hp; int bit = 0;
+    for (int f = 0; f < 200; f++) {
+        re15_enemy_ai_run_all(0);
+        if (m->sub_state_1 == 5) bit = 1;
+        pl->hit_react = 0;                              /* clear so successive bites can land */
+        if (pl->hp < bp0) break;
+    }
+    if (!bit)             { fprintf(stderr, "FAIL(2b): maggot never reached BITE (sub 5); sub=%d\n", m->sub_state_1); fail = 1; }
+    if (pl->hp != bp0 - 6){ fprintf(stderr, "FAIL(2b): bite must deal exactly -6, hp %d->%d\n", bp0, pl->hp); fail = 1; }
+    printf("  (2b) BITE: sub reached 5, player hp %d->%d (-6 on connect)\n", bp0, pl->hp);
+
     /* (3) KILLABLE: a lethal hit -> DEATH -> CORPSE */
+    pl->x = 0; pl->z = 8000;   /* move the player away so the bite doesn't interfere */
     m->hp = 4; m->hit_react = 0;
     re15_enemy_take_damage(m, 2);              /* shared damage entry; hp goes <0 -> state 3 death */
     int reached_corpse = 0;

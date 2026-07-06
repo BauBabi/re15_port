@@ -3706,13 +3706,28 @@ static void re15_maggot_ai_tick(int slot)
             re15_maggot_anim(e);
             break;
         case 3:   /* CHASE (A[3] 0x80117a3c decision / B[3] 0x80117c90 crawl) */
-            if (e->sub_state_2 == 0) { re15_maggot_clip(e, 4); e->sub_state_2 = 1; }   /* crawl clip 4 (rng 4/5/7 = wave 2) @0x80117cc0 */
+            if (e->dog_atk_cd) e->dog_atk_cd--;               /* +0x1dc attack lockout (reused field) */
+            /* A[3] decision @0x80117a5c: player in range 3000 & lockout==0 -> BITE (+0x5=5) */
+            if (e->dog_atk_cd == 0 && re15_dog_arc(e, pl, 3000, 384)) { re15_maggot_clip(e, 0x12); re15_dog_sub(e, 5); break; }
+            if (e->sub_state_2 == 0) { re15_maggot_clip(e, 4); e->sub_state_2 = 1; }   /* crawl clip 4 (rng 4/5/7 = wave 2b) @0x80117cc0 */
             re15_enemy_steer_point(e, pl->x, pl->z, 0x20);    /* yaw-slew toward player @0x80117d50 */
-            re15_dog_advance(e, 40);                          /* crawl forward (exact speed via 0x8011bf50 = wave 2) */
+            re15_dog_advance(e, 40);                          /* crawl forward (exact speed via 0x8011bf50 = wave 2b) */
             re15_maggot_anim(e);
-            /* wave 2: A[3] transitions to the bite/heavy-bite/leap attacks (+0x5=5/15/4) when in range */
             break;
-        default:  /* sub 4+ = the attack chain (bite/leap) = wave 2 -> fall back to idle */
+
+        case 5:   /* BITE 0x80118270 (clip 0x12): -6 HP on the damage-window frames {0x0c-0x0f} */
+            if (e->anim_frame >= 0x0c && e->anim_frame <= 0x0f          /* damage window @0x80118400 (tab @0x8012146c) */
+                && pl->hit_react == 0 && re15_dog_arc(e, pl, 2000, 384)) {   /* hitbox 0x8001bff8 (1000) @0x801183cc */
+                if (e->anim_frame == 0x0c) {                            /* connect once per bite */
+                    pl->hp = (int16_t)(pl->hp - 6);                     /* player.hp -= 6 @0x80118468 */
+                    re15_audio_room_se(6);                              /* Se(6) bite @0x80118474 */
+                    pl->hit_react |= 1; e->dog_atk_cd = 0x2d;           /* +0x1dc = 45 lockout @0x80118478 */
+                }
+            }
+            if (re15_maggot_anim(e)) { re15_dog_sub(e, 3); if (e->dog_atk_cd == 0) e->dog_atk_cd = 0x14; }  /* -> CHASE, lockout 20 @0x801184f0 */
+            break;
+
+        default:  /* sub 6/7 (heavy-bite/leap) + the ballistic selector = wave 2b -> fall back to idle */
             e->sub_state_1 = 0; e->sub_state_2 = 0;
             break;
         }

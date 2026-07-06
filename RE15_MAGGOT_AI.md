@@ -77,9 +77,13 @@ bite 0x12=25, heavy 0x13=40, leap 0x14=40, death 0xe=70, corpse 0xa=40, crawl 4=
 2. ✅ **Wave 1 PORTIERT** (test_maggot_ai, 40/40): re15_maggot_ai_tick (run_all `else if t==0x27`, Boden→wall-
    clamp) — INIT (HP=180) + STATE[1] idle-wander (clip 0x16) + CHASE (yaw-slew + crawl clip 4) + killbar
    (DEATH clip 0xe → CORPSE clip 0xa). EM027-Clips embedded, Hitbox 0x27=1600/1440.
-3. **Wave 2 (deferred):** die Attacks (BITE −6 clip 0x12 / HEAVY-BITE −12 clip 0x13 / LEAP ballistic clip
-   0x14 + Grab-Handshake) + der exakte Crawl-Speed (move-helper 0x8011bf50) + die ballistischen far-states
-   [2-7] + die Attack-Range-Transitionen (A[3] → +0x5=5/6/7). Braucht einen Maggot-Savestate für die
-   Dynamik (kein Maggot in STAGE1 — spätere Stage).
+3. ✅ **Wave 2a PORTIERT (test_maggot_ai (2b), 41/41): der BITE-Angriff.** CHASE (sub 3) → wenn Spieler in
+   range 3000 & Lockout(+0x1dc)==0 (A[3] @0x80117a5c) → **BITE sub 5** (clip 0x12): im Damage-Window
+   anim_frame {0x0c-0x0f} & Cone 2000/384 → **player.hp −= 6** (@0x80118468) + Se(6) + Lockout 45 → zurück
+   zu CHASE. `dog_atk_cd` als +0x1dc-Lockout wiederverwendet.
+4. **Wave 2b (deferred):** HEAVY-BITE −12 (clip 0x13, sub 6, dual-hitbox) + LEAP (clip 0x14, sub 7,
+   ballistic) + der Grab-Handshake (aca58/59/5a) + der exakte Crawl-Speed (move-helper 0x8011bf50) + die
+   ballistischen far-states [2-7] + der Attack-Selector-State [12]. Braucht einen Maggot-Savestate für die
+   volle Dynamik (kein Maggot in STAGE1 — spätere Stage).
 4. **Dynamik-Verify:** Savestate aus einem Maggot-Raum + re15_enemy_state.py mit Maggot-Label-Map
    @0x801213c8; die CHASE→Attack-Transition + der Bite-Damage live.
