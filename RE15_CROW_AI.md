@@ -232,7 +232,18 @@ der KI-Tick** (`run_all` gated auf 0x10/0x11/0x16, [enemy_ai_common.c:2457]).
    also **keinen distinkten sichtbaren Effekt** — die byte-true Angriffs-Pose ist clip 8 (die gerenderte
    Strike/Grab-Animation), und der Port zeigt genau die. → **Präsentation vollständig** (Audio + Animation);
    kein fehlender Effekt-Layer.
-3. **Wave 3 — Death**: Downed-Promotion 4→3, Fall-from-sky + Land + Gib, State 7 (RE komplett).
+3. **Wave 3 — Death: byte-true UNERREICHBAR in STAGE1 (kein Port nötig).** Die einzige Death-Promotion
+   im Krähen-Root (@0x80112050-8c) ist `bit-0x1f(mode +0x1d4) && state==4 && grid&0x40 → state 3`. Aber
+   **bit-0x1f von 0x800b1028 wird NUR in STAGE3/STAGE5 gesetzt (FUN_80118d00/80119514/…), NIE in STAGE1**
+   — und alle 4 Krähen-Räume (ROOM10C0/10C1/1120/1121) sind STAGE1. RDT-Zensus: je Raum 3× behavior 0x00
+   (grid=0, state 1) am Raum-Load + eine Event-Krähe behavior 0xe1 (grid&0x40) im Sub-Skript. Selbst die
+   0xe1-Krähe kann in STAGE1 nicht sterben (bit-0x1f fehlt). → **ALLE STAGE1-Krähen sind byte-true
+   unsterblich**; der deferred Death-State (2/3/7) ist korrekt unerreichbar. Der Auto-Aim filtert
+   byte-true per Elevation-Band, nicht per Typ (der Port-Typ-Gate 0x10/0x11/0x16 schließt Krähen aus =
+   Simplification), aber ein Treffer würde eine STAGE1-Krähe ohnehin nicht töten.
+   **Offen nur für die 0xe1-Event-Krähe**: der FLIGHT-2-Dispatcher (state 4: Ascend/Hover/Orient/Spin/
+   Dive-Arm, @0x80114e54) — ein bedingter Event-Spawn, nicht die primäre 3-Krähen-Begegnung. Für die
+   primäre STAGE1-Begegnung ist die Krähe 100% byte-true (Flug + Angriff + unsterblich).
 4. **Dynamik-Verify**: Savestate ROOM10C0/1120 (JUMP hex) + `re15_enemy_state.py` mit NEUER Krähen-
    Label-Map (die Zombie-Map @0x8011f7b4 passt NICHT — eigene Root-Tabelle @0x8012111c).
 
