@@ -3140,7 +3140,11 @@ static void re15_dog_advance(re15_actor_t *e, int32_t sp)   /* pos_advance along
 /* arc-range test 0x8001a804: player within dist_thresh AND facing within yaw_tol (Q12). */
 static int re15_dog_arc(const re15_actor_t *e, const re15_actor_t *pl, int dth, int ytol)
 {
-    if (e->dog_dist >= dth) return 0;
+    /* range: compute the dist FRESH as int32 — the byte-true range checks (0x8001a804/0x8001a9cc)
+     * recompute the distance internally, so they never overflow. The cached +0x1d4 (dog_dist) is s16
+     * and WRAPS NEGATIVE past 32767 (live bug: a maggot in ROOM11C0 at ~45000 wrapped to a "close"
+     * negative and bit the air). Use the int32 dist here to match the original. */
+    if ((int32_t)re15_enemy_player_dist(e, pl) >= dth) return 0;
     int fb = ((int)re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0xfff;
     int df = (((fb - (int)e->rot_y) + 0x800) & 0xfff) - 0x800;
     return (df >= -ytol && df <= ytol);
