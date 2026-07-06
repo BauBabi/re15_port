@@ -71,7 +71,18 @@ geteilte take_damage). Der offensive Teil (chase/lunge/bite) ist im ACTIVE-Brain
    - **POUNCE-Gate (CHASE @0x8010e194):** cd==0 & player.hp≥81 & dist≥7001 & LOS & ¼ → sub 4 (byte-true).
    - **LUNGE (sub 4, 0x8010ea44, clip 0xb):** funktionaler Sprung → Land → attack-range. *Faithful-line:
      die exakte inner-jt-Sprung-Physik (@0x801001ac) = Wave 3.*
-4. **Wave 3 (offen):** exakte Lunge-inner-jt-Physik, Obstacle-Reroute (sub 13/14), die grid-0x40-Player-
-   Kill-„gefressen"-Cutscenes (Maschine A @0x80111984 / B @0x80111cf0, player-cmd-FSM aca58/59/5a).
+4. ✅ **Wave 3 (teil, Commit e93c9013): Lunge-Windup byte-true.** inner-jt @0x801001ac RE'd: step0 clip 0xb
+   + timer 0x3c + Aim, step2 Bark Se(2) @0x8010eb40, step4 schreibt **+0x4=5 → state 5** (0x80111350). **KERN:
+   state 5s Pounce-Land ist grid-gated (+0x9==0x43 @0x801113e8)** — der Pounce-Pin + die grid-0x40-Kill-
+   Cutscenes sind **Spezial-Grid-Verhalten** (0x40/0x42/0x43), NICHT der normale Combat-Dog. Windup portiert
+   (clip 0xb, Bark); der normale Dog-Sprung löst zu attack-range auf.
+5. **Offen (grid-gated Spezial-Dog, wie der Zombie-Grab):** der Pounce-Land (state 5, 0x80111350 sub 0:
+   Sprung-Bogen +0x38−=20, Land → state 0x201) für grid-0x43-Dogs + die Player-Kill-„gefressen"-Cutscenes
+   (Maschine A @0x80111984 / B @0x80111cf0, player-cmd-FSM aca58/59/5a — parallel zum Zombie-Grab). Plus
+   Obstacle-Reroute (sub 13/14, braucht +0x90-Wall-Contact vom vollen SCA-Resolver).
+6. **Dynamik-Verify:** Savestate aus einem Hunde-Raum + `re15_enemy_state.py`, neue Dog-Label-Map @0x80120f74.
+
+**Der NORMALE Combat-Dog ist funktional komplett** (Spawn → Chase → Biss −10 HP → Pounce-Leap → killbar);
+offen ist nur das grid-0x40/43-Spezial-Verhalten (Pounce-Pin + „gefressen"-Kill).
 5. **Dynamik-Verify:** Savestate aus einem Hunde-Raum + `re15_enemy_state.py` mit NEUER Dog-Label-Map
    (@0x80120f74; die Zombie-Map @0x8011f7b4 passt NICHT).
