@@ -185,9 +185,11 @@ void re15_game_step(const re15_game_ctx_t *c)
          * generic death @0x800366bc), which freezes input and runs a fade + death camera on a
          * 120-frame timer, then game over — it NEVER reads the pad. The port freezes the player
          * exactly like the stair/grab branches (skip re15_player_tick + collision) and advances the
-         * byte-true death timer (re15_player_death_tick = 0x78 -> 0). The colour fade + death camera +
-         * the eaten-anim FSM + the game-over screen are the DEFERRED presentation (no port fade/
-         * game-over infra). This branch is unreachable until a hit drives HP < 0 (the grab, in
+         * byte-true death timer (re15_player_death_tick = 0x78 -> 0). The full presentation IS ported:
+         * the eaten-anim plays on Leon (re15_player_victim_tick, from the grabber's bank2 — zombie EM10
+         * or dog EM020), and the parallel game-over FSM (re15_gameover_fsm_tick below) drives the white
+         * flash / YOU DIED / death camera / fade-to-black / title tail (live-verified vs 92 DuckStation
+         * samples). This branch is unreachable until a hit drives HP < 0 (the grab, in
          * ROOM1140), so a healthy room is unaffected = no 1170 regression. Death takes precedence over
          * the grab: a zombie that killed the player then dead-grabs the corpse (the engage's hp<0
          * dead-grab arm) while the player runs the death sequence. Keep the RVD cam scan (death cam). */

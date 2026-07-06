@@ -612,6 +612,25 @@ static void re15_player_victim_latch(const re15_actor_t *zombie, re15_actor_t *p
     }
 }
 
+/* Victim-anim CLIP MAP per grabber type — which bank-2 clips the eaten player plays. Both the ZOMBIE
+ * (EM10 bank2, 14 clips) and the DOG (EM020 bank2, 15-bone PL00 player set verified, 29 clips) carry a
+ * player-eaten set, but with DIFFERENT layouts:
+ *  - ZOMBIE (@0x8010a28c): intro = variant*3, hold = +1, release = +2; collapse = variant+6.
+ *  - DOG (byte-true machine A @0x80111984): intro = 3*variant (@0x80111a0c), hold = 1 (@0x80111abc),
+ *    release/kill = 2 (@0x80111b1c), collapse = 0xB (@0x80111bf4).
+ * Default = the zombie layout, so the live-verified zombie grab is byte-identical (unchanged). */
+static void re15_victim_clip_map(uint8_t *c_intro, uint8_t *c_hold, uint8_t *c_release, uint8_t *c_collapse)
+{
+    uint8_t v = g_player_victim_variant;
+    if (g_player_victim_type == 0x20) {                 /* DOG (EM020) */
+        *c_intro = (uint8_t)(3 * v); *c_hold = 1; *c_release = 2; *c_collapse = 0x0b;
+    } else {                                            /* ZOMBIE (default) */
+        uint8_t base = (uint8_t)(v * 3);
+        *c_intro = base; *c_hold = (uint8_t)(base + 1);
+        *c_release = (uint8_t)(base + 2); *c_collapse = (uint8_t)(v + 6);
+    }
+}
+
 /* The zombie's THROW-OFF [4] starts the player's release finish in lockstep (byte-true: the grab's
  * escape path writes DAT_800aca5a = 4 = the struggle FSM's release phase; clip base+2). */
 void re15_player_victim_throwoff(void)
@@ -619,7 +638,8 @@ void re15_player_victim_throwoff(void)
     if (g_player_victim != 1) return;
     re15_actor_t *player = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     g_player_victim = 3;
-    player->motion = (uint8_t)(g_player_victim_variant * 3 + 2);
+    uint8_t vi, vh, vr, vc; re15_victim_clip_map(&vi, &vh, &vr, &vc);
+    player->motion = vr;                                /* release clip (zombie base+2 / dog 2) */
     player->anim_frame = 0;
     s_victim_fresh = 1;
     player->anim_frac = 7;            /* +0x8f=7 (@0x8010a594, D1 disasm) — Leon BLENDS struggle ->
@@ -672,12 +692,13 @@ void re15_player_victim_tick(void)
      * == the zombie's snapped yaw within -2..-6. The only later write is the release-exit ±0x800
      * fix-up below. (The old per-frame θl:=θz copy was observably equal during the hold but wrong
      * in mechanism, and it kept overwriting the release-exit flip.) */
-    uint8_t base = (uint8_t)(g_player_victim_variant * 3);
+    uint8_t c_intro, c_hold, c_release, c_collapse;
+    re15_victim_clip_map(&c_intro, &c_hold, &c_release, &c_collapse);
     if (g_player_victim == 1) {                         /* STRUGGLE (state 5, @0x8010a28c 6-phase machine) */
         if (!s_player_grabbed) {                        /* grab ended alive -> RELEASE finish (phases 4/5:
-                                                         * clip base+2 ONCE, then restore the free player) */
+                                                         * clip release ONCE, then restore the free player) */
             g_player_victim = 3;
-            player->motion = (uint8_t)(base + 2);
+            player->motion = c_release;
             player->anim_frame = 0;
             s_victim_fresh = 1;
             player->anim_frac = 7;                     /* +0x8f=7 @0x8010a594 — blend into the release */
@@ -688,7 +709,7 @@ void re15_player_victim_tick(void)
          * intro clip base+0 once; from phase 2 on the handler LOOPS clip base+1 (motion=4 observed with
          * DAT_800aca5a self-held at 3, anim frame wrapping 0->18->15). The old port held base+2 — that is
          * the RELEASE clip (@0x8010a4e8 = acaf3*3+2), wrong during the hold. */
-        uint8_t clip = (uint8_t)(base + (s_victim_phase < 1 ? 0 : 1));
+        uint8_t clip = (s_victim_phase < 1) ? c_intro : c_hold;
         int fc = (clip < vb->anim_victim.clip_count) ? vb->anim_victim.clips[clip].frame_count : 1;
         if (fc < 1) fc = 1;
         if (!s_victim_fresh &&
@@ -697,15 +718,15 @@ void re15_player_victim_tick(void)
                                                         * posed first — byte-true f314 post-increment) */
             player->anim_frame = 0;
             if (s_victim_phase < 1) s_victim_phase++;
-            clip = (uint8_t)(base + (s_victim_phase < 1 ? 0 : 1));
+            clip = (s_victim_phase < 1) ? c_intro : c_hold;
         }
         s_victim_fresh = 0;
         player->motion = clip;
         re15_clip_root_motion_abs(player, &vb->skel_victim, &vb->anim_victim,
                                   clip, (int)player->anim_frame);
-    } else if (g_player_victim == 2) {                 /* COLLAPSE (state 6): clip variant+6, play once +
+    } else if (g_player_victim == 2) {                 /* COLLAPSE (state 6): collapse clip, play once +
                                                         * ROOT MOTION (the ~600-unit devour drag), hold last */
-        uint8_t clip = (uint8_t)(g_player_victim_variant + 6);
+        uint8_t clip = c_collapse;
         player->motion = clip;
         int fc = (clip < vb->anim_victim.clip_count) ? vb->anim_victim.clips[clip].frame_count : 1;
         if (fc < 1) fc = 1;
@@ -719,8 +740,11 @@ void re15_player_victim_tick(void)
         /* HP = -1 EXACTLY at collapse anim frame 0x23=35 (byte-true FUN_8010a6f8 @0x8010a80c/814,
          * gate @0x8010a7e8 == 0x23) — a DIRECT SET in the cmd-6 handler, NOT a clamp in the damage
          * path; the original hands the devour off at hp=70 and this store makes the corpse -1
-         * (every kill save reads exactly -1). */
-        if (player->anim_frame == 0x23) {
+         * (every kill save reads exactly -1). The zombie collapse clips (6/7) run well past 0x23; the
+         * DOG collapse clip 0xB can be shorter, so cap the kill frame to the clip end (robust, the dog
+         * eaten-death always resolves to the corpse). */
+        int kill_fr = 0x23; if (fc - 1 < kill_fr) kill_fr = fc - 1;
+        if (player->anim_frame == kill_fr && player->hp >= 0) {
             player->hp    = -1;
             player->state = 7;                          /* the port's death FSM keys off hp<0/state 7 */
         }
@@ -728,17 +752,19 @@ void re15_player_victim_tick(void)
          * FUN_80019700(0x2000) = effect-id 0 — the SAME spawn the hurt-fx uses) + its SE
          * Se_on(0x4030001) = CORE bank4 record 3 (Se_on RE'd: FUN_80045024 top byte = bank,
          * bank4 = the resident CORE00.EDH table @0x801fbd00, RAM-matched). The frame-0x23 chomp
-         * Se_on(0x2070001) is BANK 2 (*(DAT_800ac778+8), a room-state pointer) — still deferred. */
-        if (player->anim_frame == 0x37) {
+         * Se_on(0x2070001) is BANK 2 (*(DAT_800ac778+8), a room-state pointer) — still deferred.
+         * (Dog clip 0xB may end before 0x37 -> cap to the clip end so the eaten burst still fires.) */
+        int blood_fr = 0x37; if (fc - 1 < blood_fr) blood_fr = fc - 1;
+        if (player->anim_frame == blood_fr) {
             re15_esp_fx_spawn(re15_esp_room_bank(), 0, 0,
                               player->x, player->y, player->z, (int16_t)player->rot_y);
             re15_audio_core_se(3);
         }
-    } else {                                           /* RELEASE finish (state 3): clip base+2 once -> free.
+    } else {                                           /* RELEASE finish (state 3): release clip once -> free.
                                                         * (Entered via re15_player_victim_throwoff — the
                                                         * zombie holds sub-steps [4..7] while this plays,
                                                         * so s_player_grabbed stays latched; no re-enter.) */
-        uint8_t clip = (uint8_t)(base + 2);
+        uint8_t clip = c_release;
         int fc = (clip < vb->anim_victim.clip_count) ? vb->anim_victim.clips[clip].frame_count : 1;
         if (fc < 1) fc = 1;
         if (!s_victim_fresh &&
@@ -3299,11 +3325,14 @@ static void re15_dog_state456(re15_actor_t *e, re15_actor_t *pl)
          * player's victim-bank pointers (= the dog's bank2, bound at grab-start) indexed by s_victim_phase
          * (aca5a), spawn the blood/gore fx (machine A phase 4 fx 0x1500 @0x80111b58; machine B phase 1
          * fx 0x2000 + gore @0x80111ddc), and KILL him (machine B phase 2: aca58 = player STATE 7
-         * @0x80111ea0). Port: drive the shared victim FSM (Leon animates from EM020 bank2, collapses and
-         * dies via re15_player_victim_devour) + the blood burst; the dog holds its land pose. The exact
-         * per-phase player clip map (motion 3*variant/1/2/0xB) is the shared player-victim subsystem
-         * (same as the zombie grab); the camera-pan (acb10/acb12) + cut-freeze (aca3c|=0xc0) are the
-         * port-wide cutscene-camera gap (shared with the zombie grab-death, no fade infra). */
+         * @0x80111ea0). Port: drive the shared victim FSM (Leon animates from EM020 bank2 — its 15-bone
+         * PL00 player set, via the byte-true dog clip map in re15_victim_clip_map — collapses and dies
+         * via re15_player_victim_devour) + the blood burst; the dog holds its land pose. The death
+         * presentation (white flash / YOU DIED / death camera / fade / game-over) is the ported
+         * re15_gameover_fsm_tick, which this player death drives. Only the grid-0x43 pounce-cutscene's
+         * own camera-pan (acb10/acb12) + cut-freeze bits (aca3c&0xc0) are unported: their display
+         * semantics are not statically pinnable (the main/display gates read bits 31/15/0x8000, not
+         * 0x40/0x80) and need dynamic RE — not faked. */
         s_player_grabbed = 1;
         if (e->sub_state_2 == 0) {                        /* setup phase @0x80111b04 / @0x80111d28 */
             re15_player_victim_latch(e, pl);              /* pin + animate Leon from the dog's victim bank */
