@@ -40,12 +40,30 @@ ENUMERATE-Grundlage (Skill `re15-enemy-ai-re`); der Port ist ein Mehr-Wellen-Auf
   AI-Tick-Einfügepunkt: `run_all`-Gate [enemy_ai_common.c:2457] (`else if (t==0x20)`, eigener Branch;
   der Hund ist boden-basiert → nutzt anders als der Crow die geteilte Wall-Clamp/Body-Push-Reihenfolge).
 
-## Nächste Schritte (Wellen — Skill §8)
+## Architektur (via CLUSTER-Workflow wf_ccc60f69, adversarial verifiziert)
 
-1. **CLUSTER** (Workflow wf_ccc60f69, läuft): je 1 Agent auf INIT+ACTIVE / Angriff (2/3/7) / HURT (4/5/6/8/9)
-   / DEATH (10/11), byte-true Disasm-Zitate + adversariale Verifikation.
-2. **Port Wave 1**: INIT + ACTIVE (idle/patrol/chase) — sichtbar: Hund spawnt + jagt den Spieler.
-3. **Wave 2**: Lunge-Sprung + Biss (Damage).
-4. **Wave 3**: Hurt + Death (Sturz/Corpse).
-5. **Dynamik-Verify**: Savestate aus einem Hunde-Raum + `re15_enemy_state.py` mit NEUER Dog-Label-Map
+**Wichtige Korrektur:** Die State-Tabelle @0x80120f74 (per +0x4) und die ACTIVE-Sub-Tabellen aliasen
+(B-decision @0x80120f94 = state-tab+0x20). Der Root dispatcht +0x4; **state 1 (ACTIVE) ist der Brain**
+= Dual-Dispatch auf +0x5 (decision B @0x80120f94 + act C @0x80120fd4). Und: **states [2]/[3]/[7] sind
+die EMPFANGENDE Seite** (HURT/DEATH/CORPSE, spiegeln den Zombie exakt — der Dog ist KILLBAR via die
+geteilte take_damage). Der offensive Teil (chase/lunge/bite) ist im ACTIVE-Brain.
+
+- **ACTIVE-Sub-States (+0x5):** 0 IDLE (dec 0x8010ddb8: dist<4000 & LOS / alarm → sub 1), 1 TURN (clip 2
+  → sub 2), 2 CHASE (dec 0x8010e0c4: arc 2500/192 → sub 3; **POUNCE-Gate** cd==0 & player.hp≥81 & dist≥7001
+  & LOS & ¼-Chance → sub 4 LUNGE; act: walk clip 0, yaw-slew, footstep Se(6), speed 8), 3 ATTACK-RANGE
+  (dec 0x8010e568: arc 3000/384 → sub 8 BITE; act: growl clip 3), 4 LUNGE (clip 0xb), 8 **BITE** (clip 0x14),
+  13/14 OBSTACLE-REROUTE.
+- **states 4/5/6 = 0x80111350** (grid-0x40-Dogs): LUNGE/pounce-land + **Player-Kill-„gefressen"-Cutscenes**
+  (Maschine A @0x80111984 / B @0x80111cf0, player-cmd-FSM 0x800aca58/59/5a — wie der Zombie-Grab).
+- **HURT [2]:** flinch clip 6 → hp≥0 recover state 1 / hp<0 state 3. **DEATH [3]:** clip 0x0e (grounded) /
+  clip 7 (airborne + Forward-Slide) + Se(7) yelp, 150f-Timer → state 7. **CORPSE [7]:** 90f Color-Fade → inert.
+
+## Wellen-Status
+
+1. ✅ **CLUSTER RE** (wf_ccc60f69): alle 12 States byte-true + adversarial verifiziert.
+2. ✅ **Wave 1 PORTIERT** (Commit f8874c99, test_dog_ai, 38/38): INIT + ACTIVE (idle/turn/chase/attack-range)
+   + HURT/DEATH/CORPSE (killbar). Hund spawnt, jagt den Spieler, ist tötbar. EM020-Clips embedded.
+3. **Wave 2 (offen):** Lunge (POUNCE-Gate → sub 4), Biss-Damage (sub 8 / die player-pinned Struggle-FSM),
+   Obstacle-Reroute (sub 13/14), die grid-0x40-Kill-Cutscenes (Maschine A/B).
+4. **Dynamik-Verify:** Savestate aus einem Hunde-Raum + `re15_enemy_state.py` mit NEUER Dog-Label-Map
    (@0x80120f74; die Zombie-Map @0x8011f7b4 passt NICHT).
