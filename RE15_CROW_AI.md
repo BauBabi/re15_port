@@ -28,6 +28,25 @@ CROW }`). Ein distanz-reaktiver FLIEGER (Flug/Kreisen → Sturzflug-Angriff bei 
 
 - **Krähen-Helfer** (die typ-spezifische Logik, noch zu RE'en): 0x80115d74 (meist-genutzt, Fly-Move?),
   0x80115d94, 0x80115f70, 0x80116068, 0x80116288.
+- **FLUG-SPEZIFISCHE EXTRA-FELDER (das Neue):** der Fly-Move (0x80115d94) liest **+0x1ea** (`lh 490(e)`)
+  + +0x38 (Z-Pos) und cleart +0x6 — die Krähe hat Felder JENSEITS der Standard-Struct (~0x1dc endet der
+  Zombie) für die 3D-HÖHEN-/Geschwindigkeits-Bewegung. Das (Y-Achse-Flug + Sturzflug) ist der Kern-
+  Unterschied zum Boden-Zombie und der eigentliche neue Port-Mechanismus.
+
+## Kern-Mechanismus byte-konkret (CLUSTER-Anfang, Disasm-verifiziert)
+
+- **INIT 0x8011224c**: cleart +0x1b8/+0x1b9/+0x93 (hit_react); `sll v0,4` (16-Byte-Stride-Tabellen-
+  Index), liest +0x84/+0x16c; lädt Pointer aus @0x80121108 (Krähen-Init-Datentabelle). Setzt die
+  Startbewegung über 0x80115d94.
+- **DISTANZ-DIVE 0x80112628** (die Angriffs-Entscheidung, byte-verifiziert @0x801126ac-f4):
+  - Gate: +0x9 (grid) `sltiu <0x80` (downed-Bit) → dann
+  - **Distanz +0x1dc**: `sltiu <0x1388 (5000)` bzw. `<0x2710 (10000)` — zwei Nähe-Ringe.
+  - **HÖHE +0x1ec** (`lh 492`, SIGNED): `slti <5400` — die Krähe taucht nur, wenn ihre Flughöhe unter
+    5400 ist. **+0x1ea (490) + +0x1ec (492) = die 3D-Flug-Höhen-/Vertikal-Felder** (jenseits der
+    Zombie-Struct ~0x1dc), der Kern-Unterschied zum Boden-Gegner.
+  - ruft **0x80115d74(mode = +0x1d4 & 3)** = der Fly-Move-Kern (Bewegung/Sturz je Sub-Mode);
+    prüft g_flag52-Bit 0x1 (globales Event-Gate).
+  → **Dive-Bedingung byte-true: Spieler in 5000/10000-Ring UND Krähen-Höhe < 5400 → Fly-Move-Sturz.**
 
 ## Offen (die Wellen — Skill §8 CLUSTER)
 
