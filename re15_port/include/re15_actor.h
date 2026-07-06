@@ -275,6 +275,17 @@ typedef struct {
     int16_t  root_prev_y;
     int16_t  root_prev_z;
     int16_t  root_pad;
+
+    /* Crow (type 0x21) 3D-flight state — byte-true FUN_80112020 family (RE15_CROW_AI.md).
+     * The crow shares this actor struct but flies in 3D: y (+0x38) IS the altitude
+     * (smaller y = higher). Its flight fields live BEYOND the modeled zombie offsets
+     * (+0x1e4/+0x1ea/+0x1ec/+0x1d4), so they get dedicated names — same pattern as the
+     * dedicated hurt_clip/hit_stun fields above. */
+    int16_t  crow_perch_h;   /* +0x1ea: target/perch height, seeded once at INIT (= spawn y) */
+    int16_t  crow_vert_err;  /* +0x1ec: playerY - y, recomputed every ACTIVE tick            */
+    int16_t  crow_vvel;      /* +0x1e4: vertical velocity, integrated into y each fly tick    */
+    uint8_t  crow_mode;      /* +0x1d4: mode/flags (low6 = |vvel|, bit0x80 = climb/descend)   */
+    int16_t  crow_dist;      /* +0x1dc: horizontal distance to the player (SquareRoot0)       */
 } re15_actor_t;
 
 extern re15_actor_t g_actors[RE15_ACTOR_MAX];

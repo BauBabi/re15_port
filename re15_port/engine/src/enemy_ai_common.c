@@ -2430,6 +2430,82 @@ int re15_enemy_ai_live_step(int slot)
     return r;
 }
 
+/* ============================================================================
+ * CROW (type 0x21) — 3D flight AI. Byte-true port of the FUN_80112020 family
+ * (root state table @0x8012111c; full spec + disasm citations in RE15_CROW_AI.md).
+ * WAVE 1 = INIT + ACTIVE cruise (the altitude-corridor circling flight). Dive /
+ * hurt / death are later waves. The crow shares the entity struct + shared infra
+ * (steer / dist / trig) but flies in 3D — y (+0x38) IS the altitude (smaller y =
+ * higher) and it is NOT ground-clamped, so run_all gives it its OWN branch that
+ * skips the zombie body-push and SCA wall-clamp entirely.
+ * ==========================================================================*/
+#define CROW_CRUISE_SPEED 40   /* faithful-line: the cruise move[6] +0x8c not byte-captured */
+
+/* Height oracle — byte-true FUN_80115dc8: returns +1 (descend, y grows) / -1 (climb) to
+ * hold the crow in the corridor 1800..5400 units ABOVE its perch height. In-band the
+ * +0x1d4 bit 0x80 chooses climb-vs-descend (hysteresis). */
+static int re15_crow_height_dir(const re15_actor_t *e)
+{
+    int32_t target = e->crow_perch_h;
+    int32_t cur    = e->y;
+    if (cur < target - 5400) return  1;      /* @0x80115ddc: above ceiling -> descend */
+    if (cur > target - 1800) return -1;      /* @0x80115dec: below band     -> climb   */
+    return (e->crow_mode & 0x80) ? -1 : 1;   /* @0x80115e04: in-band hysteresis         */
+}
+
+/* One crow AI tick (dispatched from re15_enemy_ai_run_all for type 0x21). */
+static void re15_crow_ai_tick(int slot)
+{
+    re15_actor_t *e      = &g_actors[slot];
+    re15_actor_t *player = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+
+    switch (e->state) {
+    case 0:   /* INIT — FUN_8011224c: capture perch height, lift off, enter ACTIVE */
+        e->crow_perch_h = (int16_t)e->y;     /* +0x1ea = spawn Y      (@0x801123a0)      */
+        e->y           -= 400;               /* +0x38 -= 400 lift-off (@0x801123b8)      */
+        e->crow_mode    = 0;                 /* clear the mode block  (+0x1d0..+0x1ec)   */
+        e->crow_vvel    = 0;                 /* +0x1e4 = 0                               */
+        e->motion       = 0;                 /* set clip 0 (0x80115d94 a0=0 @0x801122e4) */
+        e->anim_frame   = 0;
+        e->anim_flags   = 0x04;              /* LOOP the flap clip                       */
+        e->state        = 1;                 /* +0x4 = 1 ACTIVE (@0x80112388)            */
+        e->sub_state_1  = 6;                 /* cruise move-table entry move[6]          */
+        break;
+
+    case 1: { /* ACTIVE cruise — FUN_80112420 + the cruise move[6] 0x80112d34 */
+        /* horizontal distance to the player (+0x1dc, SquareRoot0 @0x801124ac) */
+        e->crow_dist     = (int16_t)re15_enemy_player_dist(e, player);
+        /* vertical error +0x1ec = playerY - crowY (@0x801124cc: lhu 0x800aca8c - +0x38) */
+        e->crow_vert_err = (int16_t)(player->y - e->y);
+
+        /* C. yaw-slew toward the player at cruise rate 50 (@0x80112dcc jal 0x8001a8f8, a1=0x32).
+         * re15_enemy_steer_point = the port's bearing+slew (FUN_8001aac4) — byte-equivalent to
+         * slewing rot_y toward the player position at the given rate. */
+        re15_enemy_steer_point(e, player->x, player->z, 0x32);
+
+        /* CRUISE vertical velocity = (mode & 0x3f) * dir (@0x80112df0 andi 0x3f; mult dir).
+         * The mode byte's climb-rate source (the 0x80116068 command path, driven by the global
+         * AI flags 0x800aca50) is not yet ported, so mode stays 0 at spawn and the crow holds
+         * its lift-off altitude while circling — that IS the byte-true mode=0 result. When the
+         * mode-writer is ported (Wave 2) the corridor bob comes for free. */
+        int dir = re15_crow_height_dir(e);
+        e->crow_vvel = (int16_t)((e->crow_mode & 0x3f) * dir);
+        e->y += e->crow_vvel;                /* A. vertical integration: y += vvel (@0x80112e18) */
+
+        /* B. horizontal advance along the yaw (pos_advance FUN_800245d8, a0=0; same sign
+         * convention as the zombie walker @enemy_ai_common.c:1409-1410). */
+        e->x += (int32_t)(((int32_t)re15_cos_q12(e->rot_y) * CROW_CRUISE_SPEED) >> 12);
+        e->z -= (int32_t)(((int32_t)re15_sin_q12(e->rot_y) * CROW_CRUISE_SPEED) >> 12);
+        break;
+    }
+
+    default:
+        /* states 2 (hurt stub) / 3 (death) / 4 (flight-2) / 7 (special) / 8-9 (dive)
+         * = later waves. Hold pose for now. */
+        break;
+    }
+}
+
 /* Phase 8.6 — the per-frame LIVE-zombie AI pass. The port's faithful, TYPE-GATED slice of the
  * original entity-update loop FUN_8001a50c (@0x8001ce04): the original walks the entity array
  * (DAT_800acc2c, stride 0x1f4) and, for every active entity (+0x0 & 1), dispatches its per-type
@@ -2498,6 +2574,10 @@ void re15_enemy_ai_run_all(int combat_active)
                 re15_collision_constrain(&g_room_rdt, sweep_ox, sweep_oz, &nx, &nz);
                 e->x = nx; e->z = nz;
             }
+        }
+        else if (t == 0x21) {   /* CROW (type 0x21) — 3D flight AI (Wave 1: INIT + cruise).
+                                 * Own branch: flies in 3D, NOT ground-clamped, no body-push. */
+            re15_crow_ai_tick(s);
         }
     }
 }
