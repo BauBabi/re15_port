@@ -3155,7 +3155,9 @@ static void re15_dog_ai_tick(int slot)
 
         case 2:   /* CHASE / APPROACH (dec 0x8010e0c4 / act 0x8010e304) */
             if (pl->hit_react == 0 && re15_dog_arc(e, pl, 2500, 192)) { re15_dog_sub(e, 3); break; }  /* bite cone @0x8010e0e0 -> ATTACK-RANGE */
-            /* POUNCE gate (@0x8010e194): cd==0 && player.hp>=81 && dist>=7001 && LOS && 1/4 -> sub 4 LUNGE (Wave 2). */
+            /* POUNCE gate (@0x8010e194): cd==0 && player.hp>=81 && dist>=7001 && LOS && 1/4 -> sub 4 LUNGE */
+            if (e->dog_pounce_cd == 0 && pl->hp >= 81 && e->dog_dist >= 7001 && (e->dog_flags & 1)
+                && (re15_engine_rand8() & 1) && (re15_engine_rand8() & 1)) { re15_dog_sub(e, 4); break; }
             if (e->sub_state_2 == 0) { re15_dog_clip(e, 0); e->sub_state_2 = 1; }   /* walk clip 0 @0x8010e324 */
             re15_enemy_steer_point(e, pl->x, pl->z, 12);      /* yaw-slew toward player @0x8010e468 */
             re15_dog_advance(e, 8);                           /* pos_advance speed 8 @0x8010e548 */
@@ -3170,12 +3172,28 @@ static void re15_dog_ai_tick(int slot)
             re15_dog_anim(e);
             break;
 
-        case 8:   /* BITE (clip 0x14) — the lunge/bite; damage = Wave 2 (deferred) */
-            if (e->sub_state_2 == 0) { re15_dog_clip(e, 0x14); e->dog_atk_cd = 0x78; e->sub_state_2 = 1; }
+        case 8:   /* BITE 0x8010f15c (clip 0x14): lunge forward + the -10 HP bite on connect */
+            if (e->sub_state_2 == 0) { re15_dog_clip(e, 0x14); re15_audio_room_se(5); e->dog_atk_cd = 0x78; e->crow_speed = 0; e->sub_state_2 = 1; }  /* Se(5) @0x8010f1fc; crow_speed = the +0x8c field */
+            if (e->anim_frame >= 13) {                        /* connect window @0x8010f254 (frame>=0xd) */
+                e->crow_speed = (int16_t)(e->crow_speed + 6);
+                re15_dog_advance(e, e->crow_speed);           /* lunge forward @0x8010f26c */
+                if (pl->hit_react == 0 && re15_dog_arc(e, pl, 2000, 384)) {   /* +0x93==0 @0x8010f294 & cone 2000/384 @0x8010f2a8 */
+                    pl->hp = (int16_t)(pl->hp - 10);          /* BITE: player.hp -= 10 @0x8010f2d0 */
+                    pl->hit_react |= 1;                       /* gate re-hit this bite */
+                }
+            }
             if (re15_dog_anim(e)) re15_dog_sub(e, 2);         /* clip done -> back to CHASE */
             break;
 
-        default:  /* lunge (4) / kill-cutscenes / reroute (13/14) = Wave 2 -> fall back to chase */
+        case 4:   /* LUNGE / POUNCE (0x8010ea44): the leap toward the player -> land -> attack-range */
+            /* faithful-line: the exact inner-jt (@0x801001ac) leap physics are deferred to Wave 3;
+             * a functional leap — clip 0xb, thrust toward the player, on clip-end -> attack-range. */
+            if (e->sub_state_2 == 0) { re15_dog_clip(e, 0x0b); e->dog_pounce_cd = 0x78; re15_enemy_steer_point(e, pl->x, pl->z, 0x20); e->sub_state_2 = 1; }
+            re15_dog_advance(e, 40);
+            if (re15_dog_anim(e)) re15_dog_sub(e, 3);         /* land -> ATTACK-RANGE (bite) */
+            break;
+
+        default:  /* kill-cutscenes / reroute (13/14) = Wave 3 -> fall back to chase */
             re15_dog_sub(e, 2);
             break;
         }
