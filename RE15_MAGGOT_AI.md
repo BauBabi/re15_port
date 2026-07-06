@@ -89,9 +89,25 @@ gefixt (Commit 2213dcd0):** re15_dog_arc dog_dist-s16-Overflow (Maggot biss Luft
    range 3000 & Lockout(+0x1dc)==0 (A[3] @0x80117a5c) → **BITE sub 5** (clip 0x12): im Damage-Window
    anim_frame {0x0c-0x0f} & Cone 2000/384 → **player.hp −= 6** (@0x80118468) + Se(6) + Lockout 45 → zurück
    zu CHASE. `dog_atk_cd` als +0x1dc-Lockout wiederverwendet.
-4. **Wave 2b (deferred):** HEAVY-BITE −12 (clip 0x13, sub 6, dual-hitbox) + LEAP (clip 0x14, sub 7,
-   ballistic) + der Grab-Handshake (aca58/59/5a) + der exakte Crawl-Speed (move-helper 0x8011bf50) + die
-   ballistischen far-states [2-7] + der Attack-Selector-State [12]. Braucht einen Maggot-Savestate für die
-   volle Dynamik (kein Maggot in STAGE1 — spätere Stage).
+4. **Wave 2b (deferred, Savestate-Schiedsrichter nötig):** HEAVY-BITE −12 (clip 0x13, sub 6) + LEAP (clip
+   0x14, sub 7, ballistic). **Präziser Blocker (byte-verifiziert):** A[3] CHASE (0x80117a3c) emittet NUR
+   **+0x5=5 (Bite @0x80117a94) und +0x5=15/0xf (@0x80117b34)** — NICHT +0x5=4/6/7. Der Attack-Selector
+   (state[12]/A[4] 0x80117e40) + Heavy/Leap werden also NICHT direkt von CHASE erreicht, sondern über die
+   **zwei-stufige Decide(A)/Animate(B)-FSM** (A base @0x801213e8=&tab[8], B base @0x80121428=&tab[24]), wo
+   mehrere Decide-Handler +0x5 durch 5→6→7 eskalieren. Diese Eskalations-DYNAMIK ist statisch nicht sauber
+   pinbar → braucht einen **provozierten** Maggot-Savestate (Spieler mid-attack am Maggot in ROOM11C0). Der
+   Maggot ist funktional byte-true KOMPLETT (Chase + Bite −6, live-verifiziert); Heavy/Leap sind Sekundär-
+   Varianten.
+
+   **LEAP-Skelett byte-zitiert (statisch soweit erschöpft):** CHASE A[3] emittet +0x5=15/0xf (@0x80117b34).
+   +0x5=15 → **A[15] = tab[8+15] @0x80121424 = 0x8011a878 = der ballistische AIRBORNE/Landing-Handler**:
+   liest +0x93 → `&0x2`==0 (nicht airborne) → Ende (No-Op); `&0x2` gesetzt & `&0x40`==0 (mid-air) → Bit 0x2
+   clearen + **Landing-Dust-fx** 0x80019700 (Offset-Vektor @0x801213a8, rotiert um +0x6a); `&0x2 && &0x40`
+   (gelandet) → +0x38=+0x1ba (ground-y restore), +0x9c=0, **+0x4=2 (Recovery-State 0x8011af5c), +0x5=7**.
+   Der Leap-LAUNCH (sub 7 0x80118908) setzt +0x1e0=1 (airborne) + +0x8c=rng-Impuls + +0x93&0x2. Also die
+   ballistische Flow selbst ist byte-true bekannt — nur die **Launch-ENTSCHEIDUNG** (welcher Decide-Handler
+   +0x5=15 unter welcher +0x93/Distanz-Bedingung setzt) ist der dynamische Rest → Savestate.
+   **Statische Wege erschöpft:** A[3]-Emits (5/15), A[15]-Airborne, 0x8011a900-Landing-fx, alle +0x93-Bit-
+   Writer (@0x8011a8c8/a900/aaec/aba8/ad1c/ae00/ae8c) getract; die Entscheidung bleibt DYNAMIK.
 4. **Dynamik-Verify:** Savestate aus einem Maggot-Raum + re15_enemy_state.py mit Maggot-Label-Map
    @0x801213c8; die CHASE→Attack-Transition + der Bite-Damage live.
