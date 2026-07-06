@@ -89,9 +89,29 @@ gefixt (Commit 2213dcd0):** re15_dog_arc dog_dist-s16-Overflow (Maggot biss Luft
    range 3000 & Lockout(+0x1dc)==0 (A[3] @0x80117a5c) → **BITE sub 5** (clip 0x12): im Damage-Window
    anim_frame {0x0c-0x0f} & Cone 2000/384 → **player.hp −= 6** (@0x80118468) + Se(6) + Lockout 45 → zurück
    zu CHASE. `dog_atk_cd` als +0x1dc-Lockout wiederverwendet.
-4. **Wave 2b (deferred, Savestate-Schiedsrichter nötig):** HEAVY-BITE −12 (clip 0x13, sub 6) + LEAP (clip
-   0x14, sub 7, ballistic). **Präziser Blocker (byte-verifiziert):** A[3] CHASE (0x80117a3c) emittet NUR
-   **+0x5=5 (Bite @0x80117a94) und +0x5=15/0xf (@0x80117b34)** — NICHT +0x5=4/6/7. Der Attack-Selector
+4. ✅ **Wave 2b HEAVY-BITE PORTIERT + LIVE-VERIFIZIERT (test_maggot_ai (2c), 42/42).** Der **Savestate-
+   Repacker** (`re15_ss_patch.py`, neu — patcht RAM in einem DuckStation-Save + repackt; DuckStation
+   akzeptiert es, kein Checksum) erlaubte den **Provoke ohne Navigation**: Maggot neben den Player
+   teleportieren + Skip-Tick (+0x9&0x20) clearen → `stage_saves/mzd_stage1_maggot_heavy.sav` zeigt die
+   **+0x5 3→4→6-Eskalation** live, Player HP 94→82 = **−12**. Die volle byte-true Kette:
+   - **A[3] CHASE tail @0x80117c54:** `player.hit_react==0 & dist>=6001 (0x1771) & +0x1d0&1 (LOS)` → **+0x5=4
+     SELECTOR** (der Player ist fern-aber-sichtbar → committe zum Heavy-Approach).
+   - **SELECTOR A[4]=state[12] 0x80117e40:** krabbelt näher (B[4] clip 6, advance) bis **in range 4000
+     (a0=0xfa0) cone 192 (a1=0xc0) @0x80117e90 & hit_react==0 @0x80117e88 & +0x1dc-Lockout==0 @0x80117eb0**
+     → **+0x5=6 HEAVY** (@0x80117ec4). [Der else-Zweig +0x5=7 LEAP = wave 2c, s.u.]
+   - **HEAVY sub 6 0x8011854c:** clip 0x13, **LUNGE nach vorne** (move-helper 0x8011bf50 @0x80118664), dual-
+     hitbox 800/800 (0x8001bff8 a2=0x320 ×2), Damage-Window frame≥0x15 (@0x80118650) → **player.hp −= 12**
+     (@0x801187bc) + **Se(5)** (@0x80118798) + Grab-Handshake aca58/59/5a (@0x801187d8) → zurück zu CHASE.
+
+5. **Wave 2c (situativ, LEAP):** der SELECTOR-else-Zweig (+0x5=7, clip 0x14, ballistic — path/arc/facing-
+   checks @0x80117f50/0x80118000/0x801180d8) feuert nur wenn der Heavy fehlschlägt (Player außerhalb
+   4000/192 mit Pfad-Bedingung). Nicht im Flank-Provoke gefangen (die Maggots krabbelten stets in den Heavy).
+   Das ballistische Flow-Skelett ist byte-true bekannt (A[15]=0x8011a878 airborne, +0x93&0x2/0x40-Gates); das
+   Provoke braucht ein Wide-Angle/Edge-Range-Setup. Die anderen Sekundär-Konstanten (exakter Crawl-Speed
+   0x8011bf50, far-states [2-7]) sind faithful-line.
+
+   **Historischer Blocker (jetzt GELÖST):** A[3] CHASE emittet +0x5=5 (Bite @0x80117a94) / 15/0xf
+   (@0x80117b34) / **4 (@0x80117c54, den ich zuerst übersah)**. Der Attack-Selector
    (state[12]/A[4] 0x80117e40) + Heavy/Leap werden also NICHT direkt von CHASE erreicht, sondern über die
    **zwei-stufige Decide(A)/Animate(B)-FSM** (A base @0x801213e8=&tab[8], B base @0x80121428=&tab[24]), wo
    mehrere Decide-Handler +0x5 durch 5→6→7 eskalieren. Diese Eskalations-DYNAMIK ist statisch nicht sauber

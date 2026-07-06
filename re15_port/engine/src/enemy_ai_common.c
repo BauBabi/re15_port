@@ -3714,13 +3714,30 @@ static void re15_maggot_ai_tick(int slot)
             break;
         case 3:   /* CHASE (A[3] 0x80117a3c decision / B[3] 0x80117c90 crawl) */
             if (e->dog_atk_cd) e->dog_atk_cd--;               /* +0x1dc attack lockout (reused field) */
-            /* A[3] decision @0x80117a5c: player in range 3000 & cone 384 & lockout==0 -> BITE (+0x5=5).
-             * (A[3] byte-true emits only +0x5=5/0xf/4 — NOT +0x5=6; the HEAVY-BITE/LEAP are reached from
-             * the SELECTOR state [12] 0x80117e40 via a transition that needs a savestate to pin = wave 2c.) */
+            /* A[3] decision @0x80117a5c: player in range 3000 & cone 384 & lockout==0 -> BITE (+0x5=5). */
             if (e->dog_atk_cd == 0 && re15_dog_arc(e, pl, 3000, 384)) { re15_maggot_clip(e, 0x12); re15_dog_sub(e, 5); break; }
+            /* A[3] tail @0x80117c54: player.hit_react==0 & dist>=6001 & LOS(+0x1d0&1) -> SELECTOR (+0x5=4).
+             * The maggot commits to a HEAVY approach when the player is FAR-but-visible (byte-true + live-
+             * verified: mzd_stage1_maggot_heavy.sav, the +0x5 3->4->6 escalation). */
+            if (pl->hit_react == 0 && dist >= 6001 && los != 0) { re15_maggot_clip(e, 6); re15_dog_sub(e, 4); break; }
             if (e->sub_state_2 == 0) { re15_maggot_clip(e, 4); e->sub_state_2 = 1; }   /* crawl clip 4 (rng 4/5/7 = wave 2b) @0x80117cc0 */
             re15_enemy_steer_point(e, pl->x, pl->z, 0x20);    /* yaw-slew toward player @0x80117d50 */
             re15_dog_advance(e, 40);                          /* crawl forward (exact speed via 0x8011bf50 = wave 2b) */
+            re15_maggot_anim(e);
+            break;
+
+        case 4:   /* SELECTOR (A[4] state[12] 0x80117e40 decide + B[4] crawl clip 6): close in, then HEAVY.
+                   * @0x80117e88 player.hit_react==0 & @0x80117e90 in range 4000 (a0=0xfa0) cone 192 (a1=0xc0)
+                   * & @0x80117eb0 +0x1dc lockout==0 -> +0x5=6 HEAVY (@0x80117ec4). LIVE-VERIFIED (the
+                   * selector persists, crawling clip 6, until in range -> heavy). The leap else-branch
+                   * (@0x80117f50/0x80118000/0x801180d8 -> +0x5=7, ballistic) = wave 2c. */
+            if (e->dog_atk_cd) e->dog_atk_cd--;
+            if (pl->hit_react == 0 && e->dog_atk_cd == 0 && re15_dog_arc(e, pl, 4000, 0xc0)) {
+                re15_maggot_clip(e, 0x13); re15_dog_sub(e, 6); e->sub_state_3 = 0; break;   /* -> HEAVY (clear connect-once) */
+            }
+            if (dist >= 12000) { re15_dog_sub(e, 3); break; }  /* lost the player -> back to CHASE (faithful: selector abandons a far target) */
+            re15_enemy_steer_point(e, pl->x, pl->z, 0x20);     /* crawl toward player (B[4]) */
+            re15_dog_advance(e, 40);
             re15_maggot_anim(e);
             break;
 
@@ -3736,8 +3753,24 @@ static void re15_maggot_ai_tick(int slot)
             if (re15_maggot_anim(e)) { re15_dog_sub(e, 3); if (e->dog_atk_cd == 0) e->dog_atk_cd = 0x14; }  /* -> CHASE, lockout 20 @0x801184f0 */
             break;
 
-        default:  /* sub 6/7 (heavy-bite -12 / leap) via the SELECTOR state [12] = wave 2c (savestate needed
-                   * to pin the CHASE<->selector state transition byte-true) -> fall back to idle */
+        case 6:   /* HEAVY-BITE 0x8011854c (clip 0x13): the maggot LUNGES forward (move-helper 0x8011bf50
+                   * @0x80118664) closing the gap, then its dual-hitbox 800/800 (0x8001bff8 a2=0x320 ×2)
+                   * on the damage window (frame>=0x15 @0x80118650) -> player.hp -= 12 (@0x801187bc) +
+                   * Se(5) (@0x80118798) + grab-handshake (aca58/59/5a @0x801187d8). LIVE-VERIFIED
+                   * (-12: mzd_stage1_maggot_heavy.sav, HP 94->82). sub_state_3 = connect-once latch. */
+            re15_enemy_steer_point(e, pl->x, pl->z, 0x20);              /* keep facing the player */
+            re15_dog_advance(e, 40);                                    /* lunge forward (0x8011bf50) */
+            if (e->sub_state_3 == 0 && e->anim_frame >= 0x15            /* damage window @0x80118650 */
+                && pl->hit_react == 0 && re15_dog_arc(e, pl, 1600, 0xc0)) {   /* dual-hitbox 800 (0x8001bff8) */
+                pl->hp = (int16_t)(pl->hp - 12);                        /* player.hp -= 12 @0x801187bc */
+                re15_audio_room_se(5);                                  /* Se(5) heavy @0x80118798 */
+                pl->hit_react |= 1; e->dog_atk_cd = 0x2d; e->sub_state_3 = 1;   /* connect once */
+            }
+            if (re15_maggot_anim(e)) { re15_dog_sub(e, 3); e->sub_state_3 = 0; if (e->dog_atk_cd == 0) e->dog_atk_cd = 0x14; }  /* -> CHASE */
+            break;
+
+        default:  /* sub 7 (leap/ballistic) via the selector else-branch = wave 2c (situational; the leap
+                   * launch decision needs a wide-angle/edge-range provoke) -> resume the brain */
             e->sub_state_1 = 0; e->sub_state_2 = 0;
             break;
         }

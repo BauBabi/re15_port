@@ -72,6 +72,23 @@ int main(void)
     if (pl->hp != bp0 - 6){ fprintf(stderr, "FAIL(2b): bite must deal exactly -6, hp %d->%d\n", bp0, pl->hp); fail = 1; }
     printf("  (2b) BITE: sub reached 5, player hp %d->%d (-6 on connect)\n", bp0, pl->hp);
 
+    /* (2c) HEAVY-BITE: the SELECTOR (sub 4) closes in and, when the player is in range 4000/cone 192,
+     * commits the HEAVY-BITE (sub 6, clip 0x13) dealing -12. Byte-true + live-verified
+     * (mzd_stage1_maggot_heavy.sav: the +0x5 3->4->6 escalation, player HP 94->82 = -12). */
+    pl->x = m->x; pl->z = m->z + 2000; pl->hp = 100; pl->hit_react = 0;   /* just ahead, inside the 4000 heavy range */
+    m->rot_y = (int16_t)(((int)re15_atan2_q12(pl->z - m->z, pl->x - m->x) - 0x400) & 0xfff);  /* face the player */
+    m->sub_state_1 = 4; m->sub_state_2 = 0; m->dog_atk_cd = 0;            /* force the SELECTOR state */
+    int16_t hp0 = pl->hp; int heavy = 0;
+    for (int f = 0; f < 200; f++) {
+        re15_enemy_ai_run_all(0);
+        if (m->sub_state_1 == 6) heavy = 1;
+        pl->hit_react = 0;                                 /* clear so the heavy can connect */
+        if (pl->hp < hp0) break;
+    }
+    if (!heavy)             { fprintf(stderr, "FAIL(2c): maggot never reached HEAVY (sub 6); sub=%d\n", m->sub_state_1); fail = 1; }
+    if (pl->hp != hp0 - 12) { fprintf(stderr, "FAIL(2c): heavy-bite must deal exactly -12, hp %d->%d\n", hp0, pl->hp); fail = 1; }
+    printf("  (2c) HEAVY: selector(sub 4)->heavy(sub 6), player hp %d->%d (-12 on connect)\n", hp0, pl->hp);
+
     /* (3) KILLABLE: a lethal hit -> DEATH -> CORPSE */
     pl->x = 0; pl->z = 8000;   /* move the player away so the bite doesn't interfere */
     m->hp = 4; m->hit_react = 0;
