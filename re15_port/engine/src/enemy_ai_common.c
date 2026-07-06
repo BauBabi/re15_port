@@ -3707,7 +3707,9 @@ static void re15_maggot_ai_tick(int slot)
             break;
         case 3:   /* CHASE (A[3] 0x80117a3c decision / B[3] 0x80117c90 crawl) */
             if (e->dog_atk_cd) e->dog_atk_cd--;               /* +0x1dc attack lockout (reused field) */
-            /* A[3] decision @0x80117a5c: player in range 3000 & lockout==0 -> BITE (+0x5=5) */
+            /* A[3] decision @0x80117a5c: player in range 3000 & cone 384 & lockout==0 -> BITE (+0x5=5).
+             * (A[3] byte-true emits only +0x5=5/0xf/4 — NOT +0x5=6; the HEAVY-BITE/LEAP are reached from
+             * the SELECTOR state [12] 0x80117e40 via a transition that needs a savestate to pin = wave 2c.) */
             if (e->dog_atk_cd == 0 && re15_dog_arc(e, pl, 3000, 384)) { re15_maggot_clip(e, 0x12); re15_dog_sub(e, 5); break; }
             if (e->sub_state_2 == 0) { re15_maggot_clip(e, 4); e->sub_state_2 = 1; }   /* crawl clip 4 (rng 4/5/7 = wave 2b) @0x80117cc0 */
             re15_enemy_steer_point(e, pl->x, pl->z, 0x20);    /* yaw-slew toward player @0x80117d50 */
@@ -3727,7 +3729,8 @@ static void re15_maggot_ai_tick(int slot)
             if (re15_maggot_anim(e)) { re15_dog_sub(e, 3); if (e->dog_atk_cd == 0) e->dog_atk_cd = 0x14; }  /* -> CHASE, lockout 20 @0x801184f0 */
             break;
 
-        default:  /* sub 6/7 (heavy-bite/leap) + the ballistic selector = wave 2b -> fall back to idle */
+        default:  /* sub 6/7 (heavy-bite -12 / leap) via the SELECTOR state [12] = wave 2c (savestate needed
+                   * to pin the CHASE<->selector state transition byte-true) -> fall back to idle */
             e->sub_state_1 = 0; e->sub_state_2 = 0;
             break;
         }
