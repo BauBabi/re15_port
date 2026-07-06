@@ -90,6 +90,22 @@ Timer +0x1d4 = rng()&0x3f + 16 = [16,79].
 | 0x8001af5c | Ground-Shadow-Init (cosmetic) |
 | 0x8001af20 | RNG |
 
+## ✅ LIVE-VERIFIZIERT (2026-07-06, ROOM1090)
+
+Der Spider spawnt in **STAGE1 ROOM1090** (6× Schwarm, port-ladbar + DuckStation-capturebar). DuckStation-
+Savestate `stage_saves/mzd_stage1_spider.sav` (JUMP 0x109 = `--left 27`) bestätigt **byte-true**:
+- **Wave 1:** Typ 0x26 (6×), +0x4=1 (active), +0x5/+0x9 = Variant 0-4 (== mein `grid&0x7f`, Behavior A für
+  0-2 / B für 3-4), **Hitbox 600/720** (== mein re15_damage.c case 0x26).
+- **Wave 2 (Hit-Codes) LIVE-GEPINNT:** der Kollisions-Instanz-Pool @0x800a73b8 zeigt **14 Instanzen mit
+  inst+0 = 0x12 (COMMIT-Hit-Code)** auf Body-Part-Slots **8/16** (inst+0x71=3, inst+0x74=Model-Inst-Ptr
+  0x8013cxxx) — **exakt** die RE (COMMIT 0x12 via 0x80019d50, a0=slot 8 für Variant 0,3 / 0x10 für 1,2,4,
+  a1=3). Der Damage-Mechanismus (0x80019d50 schreibt den Hit-Code in inst+0; das shared contact system liest
+  inst+0 → Player-Schaden) ist damit live bestätigt.
+
+**PORT-Anforderung Wave 2:** das **Kollisions-Instanz-System** (0x80019d50 Hit-Code-Arming + der shared
+contact reader inst+0 → Damage) — der Spider-Angriff läuft NICHT über direkten player.hp-Write, sondern über
+diese geteilte Infra (die der Port noch nicht hat). Substantieller Infra-Zusatz.
+
 ## Wellen-Status
 
 1. ✅ **ENUMERATE + CLUSTER RE** (wf_b77c2591, adversarial verifiziert): alle 6 Handler + Root + Sub-Dispatch
