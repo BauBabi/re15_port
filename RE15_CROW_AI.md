@@ -226,12 +226,12 @@ der KI-Tick** (`run_all` gated auf 0x10/0x11/0x16, [enemy_ai_common.c:2457]).
    screecht jetzt durch den ganzen Flug + Angriff (war stumm). Die Angriffs-**Animation** (clip 8) rendert
    bereits byte-true über den generischen NPC-Render + die echten Clip-Längen.
 
-   **Verbleibend (ein Render-Overlay):** 0x80019700 = der ESP-Model-Instance-Spawner (`model_inst_pool`
-   @0x800a73b8) spawnt beim Strike/Grab einen sekundären Render-Effekt aus der krähen-spezifischen
-   Clip-/Pose-Tabelle 0x8012110c (a0=Pose-Selektor +0x1d7<<11 / 0x2000, a3=0x8012110c). Das exakte
-   Pose-Format dieser Tabelle ist noch nicht RE'd → nicht geraten (das würde einen falschen Effekt
-   spawnen). Die sichtbare Angriffs-Pose = clip 8 (die byte-true Animation) ist DA; der 0x80019700-
-   Overlay ist ein zusätzlicher Effekt-Layer (nächster RE-Schritt: das 0x8012110c-Pose-Format).
+   **✅ 0x80019700-Overlay AUFGELÖST (kein distinkter Effekt):** die Pose-/Clip-Tabelle @0x8012110c,
+   die der Strike/Grab-Call als a3 übergibt, ist **komplett NULL** (16 Bytes 0x00, statisch in STAGE1.BIN,
+   direkt vor der State-Tabelle @0x8012111c). Der ESP-Model-Instance-Spawn mit a3=Null-Zeiger erzeugt
+   also **keinen distinkten sichtbaren Effekt** — die byte-true Angriffs-Pose ist clip 8 (die gerenderte
+   Strike/Grab-Animation), und der Port zeigt genau die. → **Präsentation vollständig** (Audio + Animation);
+   kein fehlender Effekt-Layer.
 3. **Wave 3 — Death**: Downed-Promotion 4→3, Fall-from-sky + Land + Gib, State 7 (RE komplett).
 4. **Dynamik-Verify**: Savestate ROOM10C0/1120 (JUMP hex) + `re15_enemy_state.py` mit NEUER Krähen-
    Label-Map (die Zombie-Map @0x8011f7b4 passt NICHT — eigene Root-Tabelle @0x8012111c).
