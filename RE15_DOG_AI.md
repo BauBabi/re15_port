@@ -63,7 +63,15 @@ geteilte take_damage). Der offensive Teil (chase/lunge/bite) ist im ACTIVE-Brain
 1. ✅ **CLUSTER RE** (wf_ccc60f69): alle 12 States byte-true + adversarial verifiziert.
 2. ✅ **Wave 1 PORTIERT** (Commit f8874c99, test_dog_ai, 38/38): INIT + ACTIVE (idle/turn/chase/attack-range)
    + HURT/DEATH/CORPSE (killbar). Hund spawnt, jagt den Spieler, ist tötbar. EM020-Clips embedded.
-3. **Wave 2 (offen):** Lunge (POUNCE-Gate → sub 4), Biss-Damage (sub 8 / die player-pinned Struggle-FSM),
-   Obstacle-Reroute (sub 13/14), die grid-0x40-Kill-Cutscenes (Maschine A/B).
-4. **Dynamik-Verify:** Savestate aus einem Hunde-Raum + `re15_enemy_state.py` mit NEUER Dog-Label-Map
+3. ✅ **Wave 2 PORTIERT (Commit 9f7857c6, test_dog_ai, 38/38): der Biss-Angriff.**
+   - **BITE (sub 8, 0x8010f15c, clip 0x14):** im Connect-Fenster (anim_frame≥13, @0x8010f254) Vorwärts-
+     Lunge (+0x8c+=6) und — wenn Spieler nicht reagiert (+0x93==0) & im Cone 2000/384 (arc @0x8010f2a8) —
+     **`player.hp -= 10`** (@0x8010f2d0) + Se(5). → zurück zu CHASE. **Der Biss war „unresolved" im Cluster;
+     per Direkt-Disasm der inner-jt @0x801001ec gefunden = −10 HP (kein Grab; die Grab-Kill ist state 4/5/6).**
+   - **POUNCE-Gate (CHASE @0x8010e194):** cd==0 & player.hp≥81 & dist≥7001 & LOS & ¼ → sub 4 (byte-true).
+   - **LUNGE (sub 4, 0x8010ea44, clip 0xb):** funktionaler Sprung → Land → attack-range. *Faithful-line:
+     die exakte inner-jt-Sprung-Physik (@0x801001ac) = Wave 3.*
+4. **Wave 3 (offen):** exakte Lunge-inner-jt-Physik, Obstacle-Reroute (sub 13/14), die grid-0x40-Player-
+   Kill-„gefressen"-Cutscenes (Maschine A @0x80111984 / B @0x80111cf0, player-cmd-FSM aca58/59/5a).
+5. **Dynamik-Verify:** Savestate aus einem Hunde-Raum + `re15_enemy_state.py` mit NEUER Dog-Label-Map
    (@0x80120f74; die Zombie-Map @0x8011f7b4 passt NICHT).
