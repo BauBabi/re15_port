@@ -3329,10 +3329,13 @@ static void re15_dog_state456(re15_actor_t *e, re15_actor_t *pl)
          * PL00 player set, via the byte-true dog clip map in re15_victim_clip_map — collapses and dies
          * via re15_player_victim_devour) + the blood burst; the dog holds its land pose. The death
          * presentation (white flash / YOU DIED / death camera / fade / game-over) is the ported
-         * re15_gameover_fsm_tick, which this player death drives. Only the grid-0x43 pounce-cutscene's
-         * own camera-pan (acb10/acb12) + cut-freeze bits (aca3c&0xc0) are unported: their display
-         * semantics are not statically pinnable (the main/display gates read bits 31/15/0x8000, not
-         * 0x40/0x80) and need dynamic RE — not faked. */
+         * re15_gameover_fsm_tick, which this player death drives. VERIFIED COMPLETE (static RE + the
+         * live mzd_death_cmd5/6/7 savestates): the acb10/acb12 that machine B writes are NOT a camera
+         * pan — they are the BLOOD-POOL half-extents (live base 500/600, +12/frame, terminal 1964/2064),
+         * already ported as g_death_pool. And aca3c|=0xc0 (set through the whole eaten death, save-
+         * confirmed 0xc0 in cmd5/6/7) only gates PSX-hardware display re-inits (@0x8001cd04 framebuffer
+         * swap / @0x800214e8 fade) that the PC renderer has no equivalent of = a no-op here. So there is
+         * no unported dog-death behaviour; only the shared game-over CAMERA fade infra is engine-wide. */
         s_player_grabbed = 1;
         if (e->sub_state_2 == 0) {                        /* setup phase @0x80111b04 / @0x80111d28 */
             re15_player_victim_latch(e, pl);              /* pin + animate Leon from the dog's victim bank */
