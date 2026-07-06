@@ -128,13 +128,24 @@ Variante `FUN_800199d4` (child-Spawn) init flags=**0x0a**.
    Tabellen-Format + die 40-Byte-Row-Felder direkt aus CORE00.ESP (ab coord_end je Effekt 2/3/4/0)
    dumpen und gegen `re15_esp_anim`/`re15_esp_coord`-Layout verifizieren; dann die echten Muzzle-Row-
    Velocities (@Row +0x0e/16/1e) + Routine-Selektoren (@Row +0x00/0x02) auslesen.
-   ⚠️ **DIREKT-PARSE-VERSUCH 2026-07-06 lieferte GARBAGE** (id 2 sub 0: „routineA=258 count=110",
-   sub 2: „count=4096") = mein angenommenes Layout (Sub-Tabelle=8×u16 byte-offsets ab rowblk,
-   `count=lhu(base)`, Rows=`base+4+r*40` mit Feldern @+0x0e/16/1e/26) ist FALSCH. Der Row-Block IST
-   an coord_end (byte-verifiziert), aber die interne Row-Listen-Struktur braucht die EXAKTE
-   Spawner-Indexier-Mathematik (@0x80019730-98: `v0=lhu(t6+(sub&7)*2); t6+=v0<<2; count=lhu(t6);
-   (sub>>3)<<6 addend`) instruction-genau RE'd — die habe ich nur STRUKTURELL, nicht byte-exakt.
-   Bis das steht, ist JEDER Physik-Seed geraten → bewusst NICHT portiert.
+   ✅ **ROW-LISTEN-INDEXIERUNG byte-exakt RE'd (Spawner @0x80019728-80, 2026-07-06):**
+   ```
+   cat = a0>>24;  sub = (a0>>16)&0xff
+   rowblk = DAT_800b22d4[cat]                         // = body + (ca*2+cb+2)*4 = coord_end
+   sub_off = lhu(rowblk + (sub&7)*2)                  // 8×u16 Sub-Offset-Tabelle @rowblk
+   base = rowblk + sub_off*4                          // <-- der *4 (sll v0,v0,2 @0x80019770)
+   count = lhu(base);  rows = base + 4                // count×40-Byte-Rows
+   // + Addend (sub>>3)*0x40 für sub>=8 (Waffen-FX nutzen sub<8)
+   ```
+   Damit parst CORE00.ESP SAUBER (kein Garbage mehr): id 2 (muzzle) sub0 count=2 vel=(0,20,0);
+   **id 4 (shell) sub1 vel=(10,−50,0) = Abwärts-Drift**; id 3 (smoke) vel=(0,20,0) = aufwärts.
+   Row-Feld-Offsets: Velocity @+0x0e/16/1e (von Routine 6 gelesen = bestätigt), Advance-Gate @+0x26.
+   **ABER: die Waffen-Rows selektieren Routinen 0/2/3 (noop/spawn/draw), NICHT Routine 6 (Drift)** —
+   die Drift ist also für ANDERE Effekt-Typen (Blut/Gore-Fall), nicht das Mündungsfeuer. Die Row-+0x00-
+   Werte sind teils >19 (z.B. 3372) = „Daten-Rows" die eine Multi-Row-Routine liest, NICHT jede Row
+   ist ein Opcode. → Der byte-true Port braucht die exakte Row-VM-SEMANTIK (welche Row Opcode vs Daten)
+   + die Routinen-Bodies 0-19, um zu wissen WAS je Effekt tatsächlich läuft. Parser-Einstieg + Indexierung
+   sind gelöst; die VM-Interpretation ist der offene Kern.
 2. **Routinen 10-19** (@0x800176b0..0x80017d08): scan+dis je Routine (die 2 Workflow-Agenten scheiterten
    am StructuredOutput-Encoding, NICHT an der RE — Weg wechseln: Direkt-Disasm wie Routine 6).
 3. **Fade/Alpha-Offset**: von einer un-decompilten Routine 0-19 geschrieben; nach §5.2 pinnen.
