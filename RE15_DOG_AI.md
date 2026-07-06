@@ -76,13 +76,19 @@ geteilte take_damage). Der offensive Teil (chase/lunge/bite) ist im ACTIVE-Brain
    state 5s Pounce-Land ist grid-gated (+0x9==0x43 @0x801113e8)** — der Pounce-Pin + die grid-0x40-Kill-
    Cutscenes sind **Spezial-Grid-Verhalten** (0x40/0x42/0x43), NICHT der normale Combat-Dog. Windup portiert
    (clip 0xb, Bark); der normale Dog-Sprung löst zu attack-range auf.
-5. **Offen (grid-gated Spezial-Dog, wie der Zombie-Grab):** der Pounce-Land (state 5, 0x80111350 sub 0:
-   Sprung-Bogen +0x38−=20, Land → state 0x201) für grid-0x43-Dogs + die Player-Kill-„gefressen"-Cutscenes
-   (Maschine A @0x80111984 / B @0x80111cf0, player-cmd-FSM aca58/59/5a — parallel zum Zombie-Grab). Plus
-   Obstacle-Reroute (sub 13/14, braucht +0x90-Wall-Contact vom vollen SCA-Resolver).
+5. ✅ **Wave 3 KOMPLETT (Commit 19d4a12e): POUNCE-LAND (state 5) + Kill-Cutscene-Entry.**
+   - Lunge (sub 4) → byte-true auf Dog-HP (@0x8010eb88): hp≥0 → state 5 (Pounce-Land), hp<0 → state 3 (Death).
+   - **re15_dog_state456** POUNCE-LAND (sub 0, 0x80111398): clip 0x14, Sprung-Bogen (+0x38−=20 Rise @0x801114dc),
+     Land clip 0x15, → +0x4=0x201 state 1/sub 2 CHASE. **Grid-gated (+0x9==0x43/0x42)** — normaler Dog routet
+     SICHER zu chase (kein Freeze). Test(5): grid-0x43 Sprung Peak y=−80 → Land → CHASE.
+   - **Kill-Cutscene-Entry** (sub 4/5 Maschine A / 10/11 B): Dog pinnt den Spieler via s_player_grabbed
+     (game_step pinnt, parallel zum Zombie/Crow-Grab). *Faithful-line: die exakte aca5a-player-cmd-Sub-FSM-
+     Kadenz (die Drag/Eat-Frames) ist deferred.*
 6. **Dynamik-Verify:** Savestate aus einem Hunde-Raum + `re15_enemy_state.py`, neue Dog-Label-Map @0x80120f74.
 
-**Der NORMALE Combat-Dog ist funktional komplett** (Spawn → Chase → Biss −10 HP → Pounce-Leap → killbar);
-offen ist nur das grid-0x40/43-Spezial-Verhalten (Pounce-Pin + „gefressen"-Kill).
+**Der Hund (Typ 0x20) ist byte-true portiert — die KOMPLETTE State-Machine** (0 INIT / 1 ACTIVE [idle/turn/
+chase/attack-range/lunge/bite] / 2 HURT / 3 DEATH / 4-5-6 POUNCE-LAND+Kill / 7 CORPSE): spawnt, jagt, beißt
+(−10 HP), springt (Pounce-Leap+Land), pinnt den Spieler (grid-0x40-Kill), und ist tötbar. Einzige faithful-
+line: die exakte Drag/Eat-Kadenz der Kill-Cutscene + die Obstacle-Reroute-Feinheit (sub 13/14).
 5. **Dynamik-Verify:** Savestate aus einem Hunde-Raum + `re15_enemy_state.py` mit NEUER Dog-Label-Map
    (@0x80120f74; die Zombie-Map @0x8011f7b4 passt NICHT).
