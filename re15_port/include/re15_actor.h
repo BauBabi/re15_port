@@ -313,6 +313,15 @@ typedef struct {
     int16_t  dog_grab_armed; /* +0x1e4: grab-armed flag (set=1 by sub 5 windup @0x8010ed54; a bite
                               * then escalates to the eaten GRAB even when non-lethal). Cleared on
                               * grab entry @0x8010f4b4 / recover. */
+
+    /* ---- Spider-Baby (type 0x26, EM026) — a STATIONARY web-spitter/ambush (RE15_SPIDER_AI.md).
+     * Emerges vertically from its spawn point (spider_phase < 13 = intangible), then solid + a -2
+     * contact stagger. STATE[1] arms collision hit-codes + telegraph "web" fx; killable (hurt/death). */
+    uint8_t  spider_phase;   /* +0x1d0: emerge/attack budget (0..12 emerging-intangible; strike init 40/44) */
+    int16_t  spider_timer;   /* +0x1d4: inter-strike wind-up timer (rng&0x3f + 16 = [16,79]) */
+    int16_t  spider_home_x;  /* +0x1d8: cached spawn X (u16) */
+    int16_t  spider_home_y;  /* +0x1d6: cached spawn Y (u16) — the vertical emerge anchor */
+    int16_t  spider_home_z;  /* +0x1da: cached spawn Z (u16) */
 } re15_actor_t;
 
 extern re15_actor_t g_actors[RE15_ACTOR_MAX];

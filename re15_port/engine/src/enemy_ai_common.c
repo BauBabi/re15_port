@@ -3554,6 +3554,109 @@ static void re15_dog_ai_tick(int slot)
     }
 }
 
+/* ============================ SPIDER-BABY (type 0x26, EM026) — Wave 1 ======================== *
+ * Byte-true 0x80116288 family (RE15_SPIDER_AI.md; workflow wf_b77c2591, adversarially verified). A
+ * STATIONARY web-spitter/ambush: root 0x80116288 dispatches +0x4 via @0x80121268 (INIT / ACTIVE /
+ * HURT / DEATH), the spider EMERGES vertically from its spawn (spider_phase < 13 = intangible), then is
+ * solid + deals a -2 contact stagger. STATE[1] is a stationary attack-arming brain that paces strike
+ * hit-codes + telegraph "web" fx by an RNG timer (NO locomotion — exhaustive-scan confirmed). WAVE 1:
+ * INIT + emerge gate + -2 contact + killable (hurt/death/corpse). DEFERRED to wave 2 (need a spider
+ * savestate as the dynamics arbiter): the collision-instance hit-code arming (0x80019d50 -> the shared
+ * contact system applies the strike damage) + the exact emerge-vs-attack +0x1d0 progression + the
+ * Behavior-C windup (variant>=5) + EM026 clip indices. */
+static void re15_spider_ai_tick(int slot)
+{
+    re15_actor_t *e  = &g_actors[slot];
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    uint8_t variant  = (uint8_t)(e->grid_id & 0x7f);
+
+    switch (e->state) {
+    case 0:   /* INIT 0x801164b0: one-shot -> ACTIVE */
+        if (e->hp <= 0) e->hp = 100;                      /* +0x9a=100 @0x801164f8 */
+        e->hit_react = 0; e->motion = 0; e->anim_frame = 0; e->anim_frac = 0;  /* clear @0x801164ec-544 */
+        e->spider_phase = 0; e->spider_timer = 0;         /* +0x1d0..+0x1ec = 0 @0x80116594 (phase starts 0) */
+        e->spider_home_x = (int16_t)e->x; e->spider_home_y = (int16_t)e->y; e->spider_home_z = (int16_t)e->z;  /* cache spawn @0x801165fc-2c */
+        e->state = 1; e->sub_state_1 = variant;           /* +0x4=1 ACTIVE, +0x5 = +0x9 & 0x7f @0x80116690/ac */
+        e->sub_state_2 = 0; e->sub_state_3 = 0;
+        break;
+
+    case 1: {  /* ACTIVE 0x801166fc: the stationary strike-arming brain (Behavior A/B on +0x6). */
+        uint8_t budget = (e->sub_state_1 >= 3) ? 0x2c : 0x28;   /* A(0,1,2)=40 / B(3,4)=44 @0x80116784/8011689c */
+        switch (e->sub_state_2) {
+        case 0:   /* +0x6==0: seed the strike budget + telegraph "web" fx (ROLL 0x80116d00) */
+            e->spider_phase = budget;
+            re15_esp_fx_spawn(re15_esp_room_bank(), 0, 0,
+                              e->x, e->y, e->z, (int16_t)e->rot_y);   /* web telegraph fx 0x0803../0x1003.. @0x80116d84 */
+            e->spider_timer = (int16_t)((re15_engine_rand8() & 0x3f) + 16);  /* +0x1d4 = rng&0x3f+16 [16,79] @0x80116da0 */
+            e->sub_state_2 = 1;
+            break;
+        case 1:   /* +0x6==1: wind-up; on timer expiry arm a STEP strike (wave 2: hit-code 0x22) */
+            if (e->spider_timer > 0) { e->spider_timer--; break; }   /* +0x1d4-- @0x801167d4 */
+            if (e->spider_phase >= 0x30) break;                      /* budget exhausted -> hold @0x801167ec */
+            if (e->sub_state_1 < 3 && e->spider_phase < 8) { e->sub_state_2 = 3; break; }  /* A dead-abort @0x8011683c */
+            e->spider_phase++;                                       /* +0x1d0++ @0x8011681c */
+            e->sub_state_2 = 2;
+            break;
+        case 2:   /* +0x6==2: COMMIT strike (wave 2: hit-code 0x12) + re-roll the timer -> loop */
+            e->spider_timer = (int16_t)((re15_engine_rand8() & 0x3f) + 16);  /* @0x80116cec */
+            e->sub_state_2 = 1;
+            break;
+        default:  /* +0x6==3: Behavior-A dead sub-state (idle hold) */
+            break;
+        }
+        break;
+    }
+
+    case 2:   /* HURT ENTRY: the shared re15_enemy_take_damage sets +0x4=2 (hurt) generically; for the
+               * spider that state-table slot [2-4] trampolines to the +0x7 flinch 0x80116a04 -> route it. */
+        e->state = 10; e->sub_state_3 = 0;
+        break;
+    case 3:   /* DEATH ENTRY: take_damage sets +0x4=3 when hp<0; route to the spider gib-burst 0x80116870. */
+        e->state = 8; e->sub_state_2 = 0;
+        break;
+
+    case 8: case 9:   /* DEATH 0x80116870: gib burst -> corpse (+0x1d0 climbs to 0x30 then inert) */
+        if (e->sub_state_2 == 0) {
+            re15_esp_fx_spawn(re15_esp_room_bank(), 0, 0,
+                              e->x, e->y, e->z, (int16_t)e->rot_y);   /* gib burst @0x80116d84 */
+            e->spider_phase = (uint8_t)((re15_engine_rand8() & 0x3f) + 16);
+            e->sub_state_2 = 1;
+        } else if (e->spider_phase < 0x30) {
+            e->spider_phase++;                                       /* climb to the corpse latch @0x80116934 */
+        } else {
+            e->state = 7;                                           /* permanent inert corpse @0x80116904 */
+        }
+        break;
+
+    case 7:   /* CORPSE: inert */
+        break;
+
+    default:  /* states 10-15 = HURT 0x80116a04 (+0x7 3-frame one-shot -> reset to state 1) */
+        if (e->state >= 10 && e->state <= 15) {
+            switch (e->sub_state_3) {
+            case 0:  e->hit_react = 3; e->sub_state_3 = 1; break;     /* +0x93=3 hit-flash @0x80116a50 */
+            case 1:  e->sub_state_3 = 2; break;                      /* COMMIT clip 0x12 @0x80116b04 */
+            default: e->state = 1; e->sub_state_1 = variant;         /* RESET +0x4=0x10001 -> state 1 @0x80116b30 */
+                     e->sub_state_2 = 1; e->sub_state_3 = 0; e->hit_react = 0; break;
+            }
+        }
+        break;
+    }
+
+    /* --- root tail (@0x80116288): EMERGE gate (+0x1d0 < 13 intangible + vertical) + -2 contact --- */
+    if (e->spider_phase < 13) {                          /* EMERGE: intangible, vertical climb slaved to +0x1d0 */
+        int step = (e->grid_id & 0x80) ? 40 : 20;        /* step 40/20 @0x80116474/90 */
+        e->y = (int32_t)e->spider_home_y - step * ((int)e->spider_phase - 1);  /* +0x38 = +0x1d6 - step*(phase-1) @0x80116494 */
+    } else if (e->state == 1) {                          /* SOLID: -2 contact stagger on body overlap */
+        int32_t dx = e->x - pl->x, dz = e->z - pl->z;
+        if ((int64_t)dx*dx + (int64_t)dz*dz < (int64_t)600*600 && pl->hit_react == 0) {  /* body box ~600 (0x8002aec4) @0x80116370 */
+            pl->hit_react |= 1;                          /* DAT_800aca58=2 stagger marker is byte-true but the
+                                                          * port keys the hit-react gate off +0x93 (faithful) */
+            if (pl->hp >= 4) pl->hp = (int16_t)(pl->hp - 2);  /* player.hp -= 2 (floor: never below 2) @0x801163c8 */
+        }
+    }
+}
+
 /* Phase 8.6 — the per-frame LIVE-zombie AI pass. The port's faithful, TYPE-GATED slice of the
  * original entity-update loop FUN_8001a50c (@0x8001ce04): the original walks the entity array
  * (DAT_800acc2c, stride 0x1f4) and, for every active entity (+0x0 & 1), dispatches its per-type
@@ -3642,6 +3745,10 @@ void re15_enemy_ai_run_all(int combat_active)
                     e->ai_contact = (uint8_t)((((push >> 8) & 0xf) << 4) | 1);   /* +0x90: hi-nibble heading (16 dirs) + bit0 contact */
                 }
             }
+        }
+        else if (t == 0x26) {   /* SPIDER-BABY (type 0x26) — stationary web-spitter (Wave 1).
+                                 * Emerges vertically + -2 contact; does NOT translate -> no wall-clamp. */
+            re15_spider_ai_tick(s);
         }
     }
 }

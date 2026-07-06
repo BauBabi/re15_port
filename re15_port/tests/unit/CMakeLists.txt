@@ -96,6 +96,13 @@ target_include_directories(test_crow_ai PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_crow_ai COMMAND test_crow_ai)
 set_tests_properties(unit_crow_ai PROPERTIES TIMEOUT 30)
 
+# --- Spider-Baby (type 0x26) stationary web-spitter AI — Wave 1 (re15_spider_ai_tick) ---
+add_executable(test_spider_ai test_spider_ai.c)
+target_link_libraries(test_spider_ai PRIVATE re15_engine re15_test_support)
+target_include_directories(test_spider_ai PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_spider_ai COMMAND test_spider_ai)
+set_tests_properties(unit_spider_ai PROPERTIES TIMEOUT 30)
+
 # --- EMS enemy-model archive index (re15_ems.c — load enemy EMDs from CDEMD*.EMS) ---
 add_executable(test_ems test_ems.c)
 target_link_libraries(test_ems PRIVATE re15_engine re15_test_support)

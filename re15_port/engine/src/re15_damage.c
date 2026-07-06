@@ -791,6 +791,9 @@ void re15_enemy_apply_hitbox(re15_actor_t *a, uint8_t type)
                                                 * @0x801210fc: hw[+6]=0xc8=200 (radius),
                                                 * hw[+8]=0xb4=180 (height), hw[+10]=200 (INIT
                                                 * FUN_80111a4c: +0x78 = DAT_80121108)          */
+        case 0x26: r = 600;  h = 720;  break;  /* SPIDER-BABY — byte-true from its +0x78 collision box
+                                                * @0x80121258 = {0,0,0,600,720,600} (INIT 0x801164b0:
+                                                * +0x78 = DAT_80121264)                         */
         default:   return;                      /* unverified type → no hitbox (no guessing) */
     }
     a->hit_radius_min = a->hit_radius_max = r;
