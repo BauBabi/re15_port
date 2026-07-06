@@ -3803,6 +3803,78 @@ static void re15_npc_ai_tick(int slot)
     }
 }
 
+/* ============================ ZOMBIE GIRL (type 0x13, EM013 = ZOMBIE_GIRL) — Wave 1 ========== *
+ * Byte-true 0x8010a8c8 family (RE15_ZOMBIEGIRL_AI.md; workflow wf_21e29175, adversarially verified). A
+ * NAV-PATHING female-zombie variant that REUSES the standard zombie's combat machinery: her active brain
+ * (0x8010b274) dispatches the SAME phase handlers (engage 0x80102058, GRAB 0x80102548 = cmd5 + player.hp
+ * -=10) and shares the zombie corpse-settle (state 7 = 0x80109554). WAVE 1: INIT (HP 50-81) + nav-chase
+ * (clip 26) + the grab (-10, pins the player via the shared victim FSM) + killable (-> corpse). DEFERRED to
+ * wave 2: the exact mode-dispatch (+0x9&0xf @0x80120230), the lunge-arm timer choreography, the repeated
+ * grab bites. */
+static const uint8_t s_zgirl_clip_len[42] =   /* EM013 clip frame-counts (CDEMD0.EMS idx 3, dir[3]) */
+    { 14,30,26,14,30,26,3,3,3,65,65,55,1,55,1,40,40,60,98,98,5,5,138,17,1,85,79,19,15,21,25,68,2,1,64,1,65,3,3,68,89,59 };
+static void re15_zgirl_clip(re15_actor_t *e, uint8_t c) { e->motion = c; e->anim_frame = 0; e->anim_frac = 7; }
+static int re15_zgirl_anim(re15_actor_t *e)
+{
+    uint8_t c = e->motion; int fc = (c < 42) ? s_zgirl_clip_len[c] : 1; if (fc < 1) fc = 1;
+    int done = (e->anim_frame + 1 >= fc);
+    e->anim_frame = (uint8_t)((e->anim_frame + 1) % fc);
+    return done;
+}
+
+static void re15_zgirl_ai_tick(int slot)
+{
+    re15_actor_t *e  = &g_actors[slot];
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+
+    switch (e->state) {
+    case 0:   /* INIT 0x8010ab2c: -> ACTIVE, HP 50-81, nav-walk pose, steer=player */
+        if (e->hp <= 0) e->hp = (int16_t)((re15_engine_rand8() & 0x1f) + 50);  /* +0x9a = (rng&0x1f)+50 @0x8010ac1c */
+        e->motion = 0x1a; e->anim_frame = 0; e->anim_frac = 7; e->hit_react = 0;  /* nav-walk clip 26 */
+        e->steer_x = (int16_t)pl->x; e->steer_z = (int16_t)pl->z;  /* +0x1bc/+0x1be = player @0x8010abc0 */
+        e->ai_timer = 0x14;                                   /* +0x9c = 20 @0x8010ac04 */
+        e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* +0x4=1 @0x8010aba8 */
+        break;
+
+    case 1: {  /* ACTIVE brain 0x8010b274: nav-chase (nav-walk clip 26) -> engage/GRAB */
+        e->dog_dist = (int16_t)re15_enemy_player_dist(e, pl);
+        /* engage decider 0x80102058: player close (<1200) & aligned & not reacting -> GRAB (state 3) @0x80102128 */
+        if (pl->hit_react == 0 && re15_dog_arc(e, pl, 1200, 384)) { e->state = 3; e->sub_state_3 = 0; break; }
+        if (e->sub_state_2 == 0) { re15_zgirl_clip(e, 0x1a); e->sub_state_2 = 1; }   /* nav-walk clip 26 @0x8010be50 */
+        re15_enemy_steer_point(e, pl->x, pl->z, 0x10);        /* steer rate 0x10 (0x8001aac4) @0x8010bdec */
+        re15_dog_advance(e, 30);                              /* nav-walk forward (root-motion 0x8010c088) */
+        re15_zgirl_anim(e);
+        break;
+    }
+
+    case 3:   /* commit to attack GRAB 0x8010c014 (hp>=0) — OR take_damage DEATH (hp<0) */
+        if (e->hp < 0) { e->state = 7; e->sub_state_3 = 0; break; }   /* lethal -> shared corpse */
+        /* GRAB 0x80102548: pin the player + -10 (the same cmd5 grab as the standard zombie) */
+        if (e->sub_state_3 == 0) {
+            re15_zgirl_clip(e, 0x0b);                         /* lunge/grab clip 11 @0x8010b584 */
+            s_player_grabbed = 1; re15_player_victim_latch(e, pl);
+            if (pl->hit_react == 0) { pl->hp = (int16_t)(pl->hp - 10); pl->hit_react |= 1; }  /* player.hp -= 10 @0x80102774 */
+            e->sub_state_3 = 1;
+        } else {
+            s_player_grabbed = 1;
+            if (re15_zgirl_anim(e)) { e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0; }  /* release -> chase */
+        }
+        break;
+
+    case 2:   /* HURT (take_damage +0x4=2) -> flinch -> resume the brain */
+        e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0; e->hit_react = (uint8_t)(e->hit_react & ~1u);
+        break;
+
+    case 7:   /* CORPSE (shared zombie 0x80109554): settle, inert */
+        re15_zgirl_anim(e);
+        break;
+
+    default:  /* the mode-dispatch attack/turn sub-states = wave 2 -> resume the brain */
+        e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0;
+        break;
+    }
+}
+
 /* Phase 8.6 — the per-frame LIVE-zombie AI pass. The port's faithful, TYPE-GATED slice of the
  * original entity-update loop FUN_8001a50c (@0x8001ce04): the original walks the entity array
  * (DAT_800acc2c, stride 0x1f4) and, for every active entity (+0x0 & 1), dispatches its per-type
@@ -3909,6 +3981,16 @@ void re15_enemy_ai_run_all(int combat_active)
         else if (t == 0x40) {   /* CHIEF IRONS (type 0x40) — invulnerable NPC cutscene actor (Wave 1:
                                  * INIT + idle pose). The walk/look/dialogue VM = wave 2. */
             re15_npc_ai_tick(s);
+        }
+        else if (t == 0x13) {   /* ZOMBIE GIRL (type 0x13) — nav-pathing zombie variant (Wave 1).
+                                 * Ground enemy: SCA wall-clamp after the tick like the dog/zombie. */
+            int32_t zg_ox = e->x, zg_oz = e->z;
+            re15_zgirl_ai_tick(s);
+            if (g_room_rdt_ok && (e->x != zg_ox || e->z != zg_oz)) {
+                int32_t nx = e->x, nz = e->z;
+                re15_collision_constrain(&g_room_rdt, zg_ox, zg_oz, &nx, &nz);
+                e->x = nx; e->z = nz;
+            }
         }
     }
 }

@@ -784,6 +784,8 @@ void re15_enemy_apply_hitbox(re15_actor_t *a, uint8_t type)
          * 0x10/0x11 fell through to "no hitbox" — now wired from the STAGE1 combat save. */
         case 0x10: case 0x11:
         case 0x16: r = 400;  h = 1440; break;  /* STAGE1 briefing zombies + STAGE2 enemy     */
+        case 0x13: r = 400;  h = 1440; break;  /* ZOMBIE GIRL (EM013) — zombie-family (shares the
+                                                * zombie combat/corpse; faithful-line dims)     */
         case 0x29: r = 1100; h = 1080; break;  /* wide/short creature (HASH-..._5.sav)       */
         case 0x20: r = 500;  h = 600;  break;  /* DOG (Cerberus) — low+wide ground enemy
                                                 * (faithful-line: exact +0x78 dims deferred to Wave 2) */

@@ -117,6 +117,13 @@ target_include_directories(test_npc_ai PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_npc_ai COMMAND test_npc_ai)
 set_tests_properties(unit_npc_ai PROPERTIES TIMEOUT 30)
 
+# --- Zombie Girl (type 0x13, EM013) nav-pathing zombie variant AI — Wave 1 (re15_zgirl_ai_tick) ---
+add_executable(test_zgirl_ai test_zgirl_ai.c)
+target_link_libraries(test_zgirl_ai PRIVATE re15_engine re15_test_support)
+target_include_directories(test_zgirl_ai PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_zgirl_ai COMMAND test_zgirl_ai)
+set_tests_properties(unit_zgirl_ai PROPERTIES TIMEOUT 30)
+
 # --- EMS enemy-model archive index (re15_ems.c — load enemy EMDs from CDEMD*.EMS) ---
 add_executable(test_ems test_ems.c)
 target_link_libraries(test_ems PRIVATE re15_engine re15_test_support)
