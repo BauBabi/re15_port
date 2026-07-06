@@ -79,7 +79,38 @@ Helfer: RotMatrix `0x80068098`, ApplyMatrix `0x800661c0`.
 | **7** | **0x800174e4** | **ROW-ADVANCE** (`slot[0x6f]++`, memcpy next 40B von base @0x80 nach 0x00-0x27) |
 | **8** | **0x800175dc** | SPAWN+DRAW (Muzzle: `flags=row[0x0e]`, chained Sub-Spawn 0x02040bb8, ApplyMatrix) |
 | **9** | **0x80017654** | **SE (BANG)**: `FUN_80045024(0x01000001,&pos)` + noise-Latch `0x800b5358=1` + Row-Advance |
-| 10-19 | 0x800176b0..0x80017d08 | **OFFEN** (Agenten am Encoding gescheitert; incl. Lunge-Action FUN_80017fa4 = idx 0x19) |
+| 10 | 0x800176b0 | DRAW + UV/CLUT-Set (+0x30/32 aus +0x16/1e) |
+| 11 | 0x80017718 | **RNG-VELOCITY-Init** (3× rand → +0x10/12/18) = Splatter-Streuung |
+| 12 | 0x8001779c | **KOLLISION** (ruft room_coll 0x8001c6e8) = Partikel-Bounce |
+| 13 | 0x80017990 | Kollision + Branch (Bounce-Response) |
+| 14 | 0x80017a60 | DRAW + Advance-Gate |
+| 15 | 0x80017ac8 | DRAW + Countdown +0x0e |
+| 16 | 0x80017b80 | DRAW + Countdown +0x16 |
+| 17 | 0x80017c00 | DRAW + **RNG auf +0x30** (Random-Sprite-Zelle) + Advance |
+| 18 | 0x80017c8c | Multi-Feld-Update (+0x16/1e/06/26/04) |
+| 19 | 0x80017d08 | Countdown +0x0e + RNG auf +0x16 |
+
+**RE STRUKTUR-KOMPLETT** (alle 20 Routinen direkt-disasm'd 2026-07-06; die 2 Workflow-Agenten
+scheiterten NUR am StructuredOutput-Encoding). Routinen 11/12/13/17 = die Blut/Gore-Physik
+(Random-Velocity-Streuung + Wand/Boden-Bounce + Random-Sprite). ABER: die CORE00.ESP-Rows der
+Effekte 0/2/4 selektieren in +0x00/+0x02 nur Routinen **0/2/3** (noop/timed-sub-spawn/draw) —
+NICHT 11/12/13. Diese Blut-SPLATTER-Routinen werden also von den CHILD-Partikeln genutzt die
+Routine 2 spawnt, ODER von anderen Effekt-Banken (Raum-ESPs). Die Verkettung Parent→Child→Splatter
+ist der noch nicht durchgezogene Pfad.
+
+**TICK-PHYSIK byte-exakt (@0x8001a2f0-388, gated flags&0x20==0):**
+```
+euler[0x20/22/24]  += angvel[0x18/1a/1c]      // Billboard-Spin
+xlat[0x34/38/3c] s32 += drift[0x10/12/14]     // POSITIONS-Drift (der Fall)
+drift[0x10/12/14]  += accel[0x08/0a/0c]        // GRAVITY (Drift beschleunigt)
+```
+= der Arbiter-accel-Pfad ist der echte Fall (NICHT Routine 6 — die ist ein zweiter Pfad).
+⚠️ **RESIDUALE AMBIGUITÄT (nur dynamisch lösbar):** auf die echten Blut-Row-Daten (id 0 r0)
+angewandt ist accel@+0x08 = 0x1000 → `drift += 0x1000/frame` würde EXPLODIEREN. Also entweder
+(a) der Effekt setzt flags bit5 (freeze-physics), (b) +0x08 ist NICHT accel sondern Scale (mein
+Row↔Slot-Offset-Versatz), oder (c) eine Routine cleart accel. **Statisch nicht entscheidbar** →
+braucht einen Savestate eines fliegenden Blut-Effekts (DuckStation) + Slot-Felder über Frames lesen
+(flags/accel/drift/xlat). Bis dahin würde ein Physik-Port riskieren, dass Effekte explodieren.
 
 **Routine 6 = die fehlende Physik (roh @0x80017484 verifiziert):**
 ```c
