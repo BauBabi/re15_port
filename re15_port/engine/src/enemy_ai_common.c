@@ -3741,6 +3741,50 @@ static void re15_maggot_ai_tick(int slot)
     }
 }
 
+/* ============================ NPCs (Irons/Sherry/Annette/Katherine) — Wave 1 ================ *
+ * Byte-true 0x8011c5a0 family (RE15_NPC_AI.md; workflow wf_69c86050, adversarially verified). The STAGE1
+ * NPCs (0x40/0x42 Chief Irons, 0x45 Sherry, 0x47/0x49 Annette, 0x4b Katherine) are INVULNERABLE cutscene
+ * actors (HP = -1) that idle-pose, walk (nav-steer), look-at the player, and (Katherine) trigger dialogue.
+ * They share a common EXE behaviour library: state [4] 0x80050be8 = a nested sub-dispatcher on +0x5
+ * (@0x80076ca0: idle-pose 0-3 / walk-to-target 4/5/7/8 / turn-look 9), states [6]/[7] = event-watchers.
+ * WAVE 1: the Irons (0x40) INIT + the idle-pose hold (the NPC stands + animates, invulnerable). DEFERRED
+ * to wave 2 (need an NPC-active savestate): the walk-to-target + look-at + dialogue behaviour VM, the
+ * per-NPC overlay states, and the other 5 NPC types. */
+static const uint8_t s_irons_clip_len[24] =   /* EM040 (Chief Irons) clip frame-counts (CDEMD0.EMS idx 18, dir[1]) */
+    { 34,32,50,26,20,20,50,1,1,1,1,25,1,1,1,1,1,10,25,1,1,1,30,30 };
+static void re15_npc_clip(re15_actor_t *e, uint8_t c) { e->motion = c; e->anim_frame = 0; e->anim_frac = 7; }
+static int re15_npc_anim(re15_actor_t *e)     /* POST-inc +0x95, wrap at the real EM040 clip length */
+{
+    uint8_t c = e->motion; int fc = (c < 24) ? s_irons_clip_len[c] : 1; if (fc < 1) fc = 1;
+    int done = (e->anim_frame + 1 >= fc);
+    e->anim_frame = (uint8_t)((e->anim_frame + 1) % fc);
+    return done;
+}
+
+static void re15_npc_ai_tick(int slot)
+{
+    re15_actor_t *e = &g_actors[slot];
+
+    switch (e->state) {
+    case 0:   /* INIT 0x8011c6dc: idle pose, INVULNERABLE, -> state 1 (or the shared executor) */
+        e->hp = -1;                                       /* +0x9a = -1 (no HP / invulnerable) @0x8011c744 */
+        e->motion = 2; e->anim_frame = 0; e->anim_frac = 0; e->hit_react = 0;  /* idle clip 2 @0x8011c7bc */
+        e->ai_timer = 0x78;                               /* +0x9e = 120 @0x8011c754 */
+        if (e->grid_id & 0x40) { e->state = 4; e->sub_state_1 = 6; }  /* +0x9&0x40 -> shared executor, +0x5=6 @0x8011c860 */
+        else e->state = 1;                                /* default -> Irons overlay state 1 @0x8011c884 */
+        e->sub_state_2 = 0; e->sub_state_3 = 0;
+        break;
+
+    case 4:   /* shared executor 0x80050be8: dispatch +0x5 -> the idle-pose leaf (wave 1: animate the pose).
+               * The walk/turn/watch behaviour VM (@0x80076ca0 subs 4/5/7/8/9 + states [6]/[7]) = wave 2. */
+    case 1:   /* Irons overlay state 1 = idle/scripted (wave 2) -> hold the idle pose */
+    default:  /* all other NPC states (watchers / overlay) = wave 2 -> hold the idle pose */
+        if (e->motion < 24 && s_irons_clip_len[e->motion] <= 1) re15_npc_clip(e, 2);  /* keep a real looping idle clip */
+        re15_npc_anim(e);
+        break;
+    }
+}
+
 /* Phase 8.6 — the per-frame LIVE-zombie AI pass. The port's faithful, TYPE-GATED slice of the
  * original entity-update loop FUN_8001a50c (@0x8001ce04): the original walks the entity array
  * (DAT_800acc2c, stride 0x1f4) and, for every active entity (+0x0 & 1), dispatches its per-type
@@ -3843,6 +3887,10 @@ void re15_enemy_ai_run_all(int combat_active)
                 re15_collision_constrain(&g_room_rdt, mag_ox, mag_oz, &nx, &nz);
                 e->x = nx; e->z = nz;
             }
+        }
+        else if (t == 0x40) {   /* CHIEF IRONS (type 0x40) — invulnerable NPC cutscene actor (Wave 1:
+                                 * INIT + idle pose). The walk/look/dialogue VM = wave 2. */
+            re15_npc_ai_tick(s);
         }
     }
 }
