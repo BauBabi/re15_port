@@ -232,7 +232,19 @@ der KI-Tick** (`run_all` gated auf 0x10/0x11/0x16, [enemy_ai_common.c:2457]).
    also **keinen distinkten sichtbaren Effekt** — die byte-true Angriffs-Pose ist clip 8 (die gerenderte
    Strike/Grab-Animation), und der Port zeigt genau die. → **Präsentation vollständig** (Audio + Animation);
    kein fehlender Effekt-Layer.
-3. **Wave 3 — Death: byte-true UNERREICHBAR in STAGE1 (kein Port nötig).** Die einzige Death-Promotion
+3. **✅ Wave 3 — Death + Corpse PORTIERT (Commit 6875b700, für volle Portierbarkeit STAGE3/5):**
+   - Root refresht `+0x1d4 = testbit(0x800b1028, 0x1f)` jeden Tick (@0x80112048); die DEATH-Promotion
+     (@0x80112050-8c) feuert, wenn eine state-4-grid&0x40-Krähe Bit 0x1f gesetzt sieht → state 3, Bit gecleart.
+   - **re15_crow_death (state 3, 0x801146d0):** INIT (Se(3), hp=−1, +0x1e8=0x26 Gravity), FALL (rot_z-Spin,
+     Gravity in +0x38 integriert, Land bei Boden−400 → clip 0x0a + Se(5)), FINISH (Countdown → state 7).
+     GIB-Lane (+0x5==7): Feder-Burst (re15_esp_fx_splatter, die 13 Kinder @0x80114a50 kollabiert) → state 7.
+   - **re15_crow_special (state 7, 0x801157e8):** Corpse settlet (Color-Fade render-seitig wie Zombie-Corpse;
+     scripted Event sub 2/3 = scene-spezifisch, deferred). **re15_crow_death_event()** = der STAGE3/5-„Krähen-
+     sterben"-Trigger (setzt Bit 0x1f) für SCD/Event + Test. Test(5): Bit-0x1f → state 3 (Sturz von y=−2124) →
+     state 7 CORPSE. **Ändert STAGE1 NICHT** (Bit 0x1f dort nie gesetzt → Krähen bleiben byte-true unsterblich);
+     macht die Krähe komplett + portierbar in die Stages, wo der Tod erreichbar ist.
+
+   *(Doku-Historie unten: warum Death byte-true UNERREICHBAR in STAGE1 ist.)* Die einzige Death-Promotion
    im Krähen-Root (@0x80112050-8c) ist `bit-0x1f(mode +0x1d4) && state==4 && grid&0x40 → state 3`. Aber
    **bit-0x1f von 0x800b1028 wird NUR in STAGE3/STAGE5 gesetzt (FUN_80118d00/80119514/…), NIE in STAGE1**
    — und alle 4 Krähen-Räume (ROOM10C0/10C1/1120/1121) sind STAGE1. RDT-Zensus: je Raum 3× behavior 0x00
