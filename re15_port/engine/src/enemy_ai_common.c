@@ -3657,6 +3657,90 @@ static void re15_spider_ai_tick(int slot)
     }
 }
 
+/* ============================ MAGGOTS (type 0x27, EM027 = MAGGOTS_BABY) — Wave 1 ============= *
+ * Byte-true 0x80116db8 family (RE15_MAGGOT_AI.md; workflow wf_f597f55d, adversarially verified). A
+ * LARGE moving ground creature (1600x1440 body, HP 180 @0x8011f514, ~1.7 crawl): root 0x80116db8
+ * dispatches +0x4 via @0x801213c8 (16 states), then the shared body-push + SCA wall-clamp tail. STATE[1]
+ * 0x80117254 is a two-table brain (A decision + B movement on +0x5): idle-wander (clip 0x16) -> CHASE
+ * (yaw-slew + crawl toward the player) -> GRAB/bite (-6/-12) / LEAP (ballistic). WAVE 1: INIT + idle +
+ * chase + killable (death clip 0xe -> corpse clip 0xa). DEFERRED to wave 2: the bite/heavy-bite/leap
+ * attacks (0x80118270/854c/908, direct -6/-12 + grab handshake + ballistic pounce), the exact crawl
+ * speed (move-helper 0x8011bf50), and the far ballistic states [2-7]. */
+static const uint8_t s_maggot_clip_len[29] =   /* EM027 clip frame-counts, byte-true (CDEMD0.EMS idx 12, dir[1]) */
+    { 78,20,15,70,78,39,24,12,25,25,40,40,100,40,70,90,35,20,25,40,40,21,58,30,50,40,70,30,52 };
+static void re15_maggot_clip(re15_actor_t *e, uint8_t c) { e->motion = c; e->anim_frame = 0; e->anim_frac = 7; }
+static int re15_maggot_anim(re15_actor_t *e)   /* POST-inc +0x95, wrap at the real EM027 clip length */
+{
+    uint8_t c = e->motion; int fc = (c < 29) ? s_maggot_clip_len[c] : 1; if (fc < 1) fc = 1;
+    int done = (e->anim_frame + 1 >= fc);
+    e->anim_frame = (uint8_t)((e->anim_frame + 1) % fc);
+    return done;
+}
+
+static void re15_maggot_ai_tick(int slot)
+{
+    re15_actor_t *e  = &g_actors[slot];
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+
+    switch (e->state) {
+    case 0:   /* INIT 0x80116f50: -> ACTIVE, HP 180, steer=player, variant from grid&1 */
+        if (e->hp <= 0) e->hp = 180;                          /* +0x9a=180 (HP tab @0x8011f514 row 0x27) */
+        e->motion = 0; e->anim_frame = 0; e->anim_frac = 0; e->hit_react = 0;  /* clear @0x80116f9c-fcc */
+        e->steer_x = (int16_t)pl->x; e->steer_z = (int16_t)pl->z;  /* +0x1bc/+0x1be = player @0x80116fe4/ffc */
+        e->state = 1;
+        e->sub_state_1 = (uint8_t)((e->grid_id & 1) ? 1 : 0);  /* +0x5 = 1 if +0x9&1 else 0 @0x80116f88 */
+        e->sub_state_2 = 0; e->sub_state_3 = 0;
+        break;
+
+    case 1: {  /* ACTIVE brain 0x80117254: LOS + dist -> decision(A)/move(B) on +0x5 */
+        int los = re15_enemy_los_probe(slot, e, pl);          /* 0x8001bc08 @0x8011725c */
+        int32_t dist = re15_enemy_player_dist(e, pl);         /* SquareRoot0 @0x80117300 */
+        e->dog_dist = (int16_t)dist;                          /* +0x1d4 dist cache */
+        switch (e->sub_state_1) {
+        case 0:   /* A[0] DECISION 0x80117484 + B[0] idle-wander 0x80117574 (clip 0x16) */
+            if (dist < 5000 && los != 0) { e->sub_state_1 = 3; e->sub_state_2 = 0; e->sub_state_3 = 0; break; }  /* dist<5000 & LOS -> CHASE @0x801174c4 */
+            if (dist < 3000) { e->sub_state_1 = 3; e->sub_state_2 = 0; e->sub_state_3 = 1; break; }  /* blind chase (dist<3000) @0x80117548 */
+            if (e->sub_state_2 == 0) { e->ai_timer = (int16_t)(re15_engine_rand8() + 59); re15_maggot_clip(e, 0x16); e->sub_state_2 = 1; }  /* +0x9c=rng+59, idle clip 0x16 @0x801175a4/c4 */
+            else if (e->ai_timer == 0) { e->sub_state_1 = 3; e->sub_state_2 = 0; e->sub_state_3 = 1; }  /* wander expiry -> CHASE @0x80117618 */
+            else e->ai_timer--;
+            re15_maggot_anim(e);
+            break;
+        case 3:   /* CHASE (A[3] 0x80117a3c decision / B[3] 0x80117c90 crawl) */
+            if (e->sub_state_2 == 0) { re15_maggot_clip(e, 4); e->sub_state_2 = 1; }   /* crawl clip 4 (rng 4/5/7 = wave 2) @0x80117cc0 */
+            re15_enemy_steer_point(e, pl->x, pl->z, 0x20);    /* yaw-slew toward player @0x80117d50 */
+            re15_dog_advance(e, 40);                          /* crawl forward (exact speed via 0x8011bf50 = wave 2) */
+            re15_maggot_anim(e);
+            /* wave 2: A[3] transitions to the bite/heavy-bite/leap attacks (+0x5=5/15/4) when in range */
+            break;
+        default:  /* sub 4+ = the attack chain (bite/leap) = wave 2 -> fall back to idle */
+            e->sub_state_1 = 0; e->sub_state_2 = 0;
+            break;
+        }
+        break;
+    }
+
+    case 2:   /* HURT ENTRY: shared take_damage sets +0x4=2. The maggot's state 2 is a ballistic special
+               * (leap-abort); for wave 1 flinch briefly then resume the brain. */
+        e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0; e->hit_react = (uint8_t)(e->hit_react & ~1u);
+        break;
+
+    case 3:   /* DEATH 0x8011b6fc -> death-anim 0x8011b7b8: clip 0xe + gore + Se(0) -> corpse */
+        if (e->sub_state_3 == 0) { re15_maggot_clip(e, 0x0e); re15_audio_room_se(0); e->hit_react |= 2; e->sub_state_3 = 1; }  /* death clip 0xe @0x8011b830 */
+        else if (e->sub_state_3 == 1) { if (re15_maggot_anim(e)) e->sub_state_3 = 2; }
+        else { e->state = 7; e->sub_state_3 = 0; }            /* -> CORPSE */
+        break;
+
+    case 7:   /* CORPSE 0x8011b998: settle to the corpse pose (clip 0xa), inert */
+        if (e->motion != 0x0a) re15_maggot_clip(e, 0x0a);
+        re15_maggot_anim(e);
+        break;
+
+    default:  /* the ballistic far-states [2-7] (leap/special) = wave 2 -> resume the brain */
+        e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0;
+        break;
+    }
+}
+
 /* Phase 8.6 — the per-frame LIVE-zombie AI pass. The port's faithful, TYPE-GATED slice of the
  * original entity-update loop FUN_8001a50c (@0x8001ce04): the original walks the entity array
  * (DAT_800acc2c, stride 0x1f4) and, for every active entity (+0x0 & 1), dispatches its per-type
@@ -3749,6 +3833,16 @@ void re15_enemy_ai_run_all(int combat_active)
         else if (t == 0x26) {   /* SPIDER-BABY (type 0x26) — stationary web-spitter (Wave 1).
                                  * Emerges vertically + -2 contact; does NOT translate -> no wall-clamp. */
             re15_spider_ai_tick(s);
+        }
+        else if (t == 0x27) {   /* MAGGOTS (type 0x27) — large moving ground creature (Wave 1).
+                                 * Crawls toward the player -> SCA wall-clamp after the tick like the dog. */
+            int32_t mag_ox = e->x, mag_oz = e->z;
+            re15_maggot_ai_tick(s);
+            if (g_room_rdt_ok && (e->x != mag_ox || e->z != mag_oz)) {
+                int32_t nx = e->x, nz = e->z;
+                re15_collision_constrain(&g_room_rdt, mag_ox, mag_oz, &nx, &nz);
+                e->x = nx; e->z = nz;
+            }
         }
     }
 }

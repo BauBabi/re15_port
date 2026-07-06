@@ -103,6 +103,13 @@ target_include_directories(test_spider_ai PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_spider_ai COMMAND test_spider_ai)
 set_tests_properties(unit_spider_ai PROPERTIES TIMEOUT 30)
 
+# --- Maggots (type 0x27) large moving ground creature AI — Wave 1 (re15_maggot_ai_tick) ---
+add_executable(test_maggot_ai test_maggot_ai.c)
+target_link_libraries(test_maggot_ai PRIVATE re15_engine re15_test_support)
+target_include_directories(test_maggot_ai PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_maggot_ai COMMAND test_maggot_ai)
+set_tests_properties(unit_maggot_ai PROPERTIES TIMEOUT 30)
+
 # --- EMS enemy-model archive index (re15_ems.c — load enemy EMDs from CDEMD*.EMS) ---
 add_executable(test_ems test_ems.c)
 target_link_libraries(test_ems PRIVATE re15_engine re15_test_support)
