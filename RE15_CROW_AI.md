@@ -157,6 +157,30 @@ tick(a1=0x1d) & +0x5≠3 → 0x80115d74(a0=3). Substates (Nested-Step-Machine, k
 Tabellen @0x801002ec/@0x80100304; SE 0x80045024 a0=0x03020001). *(0x80116288/0x80116758 = Typ 0x26, siehe
 Korrektur oben — NICHT die Krähe.)*
 
+## Die „mode/Dive-Event-Quelle" — GETRACT: es ist KRÄHEN-FLOCKING (2026-07-06)
+
+Die Frage „wer setzt 0x800aca50 & 0x8000/0x4000/0x2000, die die mode/Dive triggern" ist beantwortet:
+**die Krähen selbst** — es ist ein Schwarm-Koordinations-Global, kein externes Event.
+
+- **Schreiber (alle im Krähen-Code, decompile-belegt `_DAT_800aca50`):** INIT `FUN_80111a4c` (`count<<4`),
+  dann setzen die Flug-Substates die High-Bits: `| 0x4000` (FUN_80112534@L69, FUN_80113694@L63,
+  FUN_80112d90@L89), `| 0x8000` (FUN_8011347c@L52), `| 0x2000` (viele: FUN_80112230/80112938/80112a5c/
+  80112b84/80112d90/80112ffc/801132d0/8011347c/80113694/80113c84/801132d0…), `| 0x800` (FUN_80113f38@L43,
+  via `& 0xf0ff | 0x800`). Muster überall: `_DAT_800aca50 = _DAT_800aca50 & 0xfff | <bit>` (low 12 bit =
+  pending-yaw, High-Bits = Flock-Kommandos). Clear: `& 0xf0ff` (FUN_80111c20/80111c9c/80113f38).
+- **Leser = Dispatcher 0x80116068** (jeden ACTIVE-Tick, @0x801124e8): bit 0x8000 → zwingt Flock-Mate in
+  **Sub-State 15**, 0x4000 → **14**, 0x2000 → **17** (via 0x80115d74), gated auf grid/+0x5/+0x1d8.
+- **Volle 18-Einträge-Sub-State-Tabellen** (NICHT 12 — die Flymove-RE hatte nur [0-11]):
+  - Steer @0x8012113c: `[12/13/15/16]=0x80113c0c [14]=0x80114100 [17]=0x80112a28(ret)`.
+  - Move @0x80121184: `[12]=0x80113c7c [13]=0x80113e94 [14]=0x8011413c [15]=0x8011431c [16]=0x80114484
+    [17]=0x80114594`. → Sub-States 12-17 = die **geflockten Koordinations-Manöver** (der Schwarm-Dive).
+
+→ **Konsequenz für den Port:** Der Sturzflug ist kein isoliertes Feature, sondern das **volle
+Flug-Brain**: der Dispatcher 0x80116068 + die 18 Flug-Substates (0-17) + ihre Flag-Bedingungen + die
+Korridor-Soaring (die die Krähe erst auf Dive-Höhe bringt). Ein Teil-Dive kann nicht byte-true sein (die
+Dive-END `y<perch−3600` setzt die ersoarte Höhe voraus). = ein dedizierter Mehr-Sitzungs-Port des
+kompletten Schwarm-Flug-Systems, jetzt vollständig gemappt.
+
 ## Port-Plan (Wave-basiert)
 
 **Port-Infrastruktur ist Wave-1-bereit** (verifiziert): RDT ROOM10C0.RDT vorhanden; `op_sce_em_set` spawnt
@@ -168,15 +192,14 @@ der KI-Tick** (`run_all` gated auf 0x10/0x11/0x16, [enemy_ai_common.c:2457]).
    Branch `else if (t==0x21)` in run_all; INIT + ACTIVE-Cruise (Yaw-Slew rate 50 + Höhen-Oracle +
    vvel-Integration + Horizontal-Advance). Live: 3 Krähen kreisen/fliegen zum Spieler in ROOM10C0,
    Modell rendert. Test test_crow_ai.
-2. **Wave 2 — Sturzflug (BLOCKIERT, kein sauberer Port):** die DISTANZ-DIVE-Trigger-Schwellen sind
-   byte-true (Ring 5000/10000, Höhe<5400), ABER die Dive-EXECUTION ist NICHT sauber portierbar:
-   (a) die Dive-Physik (vvel−80-Launch/Gravity+6) setzt die **Korridor-Start-Höhe** voraus, die von
-   der **mode-Quelle 0x80116068** kommt — und die ist EVENT-getrieben (globale Flags 0x800aca50
-   High-Bits), noch nicht getract; (b) der **Climb-back-Mechanismus** (wie die Krähe nach dem Sturz
-   wieder auf `y<perch−3600` steigt) ist nicht gecaptured; (c) **es gibt KEINE Touch-Damage** (siehe
-   Korrektur oben — 0x80116288 war Typ 0x26). Ohne die mode-Quelle bleibt eine gestartete Dive in
-   sub5 hängen. → Nächster Weg: die mode-Quelle 0x80116068 + ihre Flag-Setter tracen (wer setzt
-   0x800aca50 & 0x8000/0x4000/0x2000/0x1000), DANN die Dive end-to-end. Kein Raten.
+2. **Wave 2 — Schwarm-Flug + Sturzflug (GETRACT, dedizierter Port):** die „Event-Quelle" ist das
+   Krähen-**Flocking** (0x800aca50, oben vollständig gemappt), kein externes Event. Byte-true portierbar,
+   aber es ist das **volle Flug-Brain**: (a) den Dispatcher 0x80116068 (Flag-Leser → forced Sub-States
+   14/15/17); (b) die 18 Flug-Substates (Move @0x80121184 / Steer @0x8012113c) mit ihren Flag-Set-
+   Bedingungen (das Soaring, das die Krähe auf Dive-Höhe bringt); (c) DANN die Dive (0x80112628 →
+   sub4/5, Dive-END `y<perch−3600`). **KEINE Touch-Damage** (0x80116288 war Typ 0x26). Ein Teil-Dive
+   ist nicht byte-true (die Dive-Physik braucht die ersoarte Korridor-Höhe). = ein Mehr-Sitzungs-Port
+   des Schwarm-Systems; die Struktur ist jetzt komplett bekannt.
 3. **Wave 3 — Death**: Downed-Promotion 4→3, Fall-from-sky + Land + Gib, State 7 (RE komplett).
 4. **Dynamik-Verify**: Savestate ROOM10C0/1120 (JUMP hex) + `re15_enemy_state.py` mit NEUER Krähen-
    Label-Map (die Zombie-Map @0x8011f7b4 passt NICHT — eigene Root-Tabelle @0x8012111c).
