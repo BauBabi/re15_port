@@ -103,12 +103,25 @@ gefixt (Commit 2213dcd0):** re15_dog_arc dog_dist-s16-Overflow (Maggot biss Luft
      hitbox 800/800 (0x8001bff8 a2=0x320 ×2), Damage-Window frame≥0x15 (@0x80118650) → **player.hp −= 12**
      (@0x801187bc) + **Se(5)** (@0x80118798) + Grab-Handshake aca58/59/5a (@0x801187d8) → zurück zu CHASE.
 
-5. **Wave 2c (situativ, LEAP):** der SELECTOR-else-Zweig (+0x5=7, clip 0x14, ballistic — path/arc/facing-
-   checks @0x80117f50/0x80118000/0x801180d8) feuert nur wenn der Heavy fehlschlägt (Player außerhalb
-   4000/192 mit Pfad-Bedingung). Nicht im Flank-Provoke gefangen (die Maggots krabbelten stets in den Heavy).
-   Das ballistische Flow-Skelett ist byte-true bekannt (A[15]=0x8011a878 airborne, +0x93&0x2/0x40-Gates); das
-   Provoke braucht ein Wide-Angle/Edge-Range-Setup. Die anderen Sekundär-Konstanten (exakter Crawl-Speed
-   0x8011bf50, far-states [2-7]) sind faithful-line.
+5. ✅ **Wave 2c LEAP PORTIERT + LIVE-VERIFIZIERT (test_maggot_ai (2d), 42/42).** RE via Workflow
+   **wf_c1de93d6-bae** (5 Agenten + adversariale Verifikation, 3/4 CONFIRMED). Der SELECTOR-else-Zweig
+   (+0x5=7, clip 0x14) ist ein **ballistischer 0-DAMAGE-Reposition-Pounce** (KEIN player.hp-Write in den
+   260 Instruktionen von 0x80118908 — CONFIRMED), der die Distanz schließt, landet, und zum SELECTOR
+   zurückkehrt (→ dann Heavy). Byte-true:
+   - **Trigger (far-ballistic Path B @0x80118028):** Player außerhalb des Heavy-Fensters (dist>4000 ODER
+     off-cone) & LOS(+0x1d0&1) & **dist(+0x1d4)>=6001** (@0x8011806c) & maggot **aimed ±32** (arc_test
+     0x8001a9cc @0x80118084) & **Player blickt ZUM Maggot** (facing_aligned 0x8001a780==0 @0x801180bc:
+     playerYaw vs maggotYaw >±90°) & **rng&1** (~50% @0x801180a8, bypass wenn *(0x800aca58)==0x701).
+     [Path A Zone-Leaps (+0x1e2!=0 → 0x8003b93c Raum-Zonen-Lookup, +0x7=1/3) brauchen BLK-Kollisions-Zonen.]
+   - **Launch (sub 7 = 4-Phasen-FSM auf +0x6):** Phase 0/1 WINDUP frames 0..9 (slew facing) → **frame 10 =
+     LAUNCH** (@0x80118a3c: +0x6=2, **airborne +0x1e0=1**, Impuls **+0x8c=rng&0x1f+200** @0x80118a50, bzw.
+     0x32a=810 für Variante +0x7=3) → Phase 2 IN-FLIGHT: ballistic-Integrator **0x8001c1a4(a0=+0x8c horiz,
+     a1=+0x1d8=(+0x1e2)*30+600=720 vert, a2=-60 gravity, a3=+0x1ba groundY)** — Parabel apex ~12 frames,
+     total ~25 airborne → Landung → Recovery (+0x5=9 @0x80118b60) → zurück zum SELECTOR.
+   - **LIVE-VERIFIZIERT** (forced +0x5=7 via re15_ss_patch): **Impuls +0x8c=201 geseedet** (=rng&0x1f+200,
+     der Launch lief), Maggot schloss **dist 10000→596**, Player-HP unberührt vom Leap selbst.
+   - Port (sub 7): windup 10 frames → launch (crow_speed-Impuls) → re15_crow_advance + Y-Parabel (720/-60) →
+     Land bei ~25 frames → SELECTOR. Der Se/exakte Se-Bank (landing-thud 0x800453d0 a0=2) ist faithful-line.
 
    **Historischer Blocker (jetzt GELÖST):** A[3] CHASE emittet +0x5=5 (Bite @0x80117a94) / 15/0xf
    (@0x80117b34) / **4 (@0x80117c54, den ich zuerst übersah)**. Der Attack-Selector

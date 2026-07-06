@@ -89,6 +89,24 @@ int main(void)
     if (pl->hp != hp0 - 12) { fprintf(stderr, "FAIL(2c): heavy-bite must deal exactly -12, hp %d->%d\n", hp0, pl->hp); fail = 1; }
     printf("  (2c) HEAVY: selector(sub 4)->heavy(sub 6), player hp %d->%d (-12 on connect)\n", hp0, pl->hp);
 
+    /* (2d) LEAP: the far-ballistic selector else-branch (sub 7) is a 0-DAMAGE reposition pounce that
+     * closes the gap and returns to the brain. Byte-true (workflow wf_c1de93d6-bae CONFIRMED) +
+     * live-verified (forced +0x5=7: impulse seeded, maggot closed dist 10000->596, HP untouched). */
+    pl->x = 0; pl->z = 9000; pl->hp = 100; pl->hit_react = 0;
+    m->x = 0; m->z = 0; m->y = 0;
+    m->rot_y = (int16_t)(((int)re15_atan2_q12(pl->z - m->z, pl->x - m->x) - 0x400) & 0xfff);  /* face the player */
+    m->state = 1; m->sub_state_1 = 7; m->sub_state_2 = 0; m->motion = 0x14; m->anim_frame = 0;   /* force LEAP */
+    int32_t lp0 = xz_dist(m, pl); int16_t lhp0 = pl->hp; int landed = 0;
+    for (int f = 0; f < 80; f++) {
+        re15_enemy_ai_run_all(0);
+        if (m->sub_state_1 != 7) { landed = 1; break; }   /* leap completed -> back to the brain */
+    }
+    int32_t lp1 = xz_dist(m, pl);
+    if (!landed)        { fprintf(stderr, "FAIL(2d): leap never completed (stuck in sub 7)\n"); fail = 1; }
+    if (lp1 >= lp0)     { fprintf(stderr, "FAIL(2d): leap must close distance, %d->%d\n", lp0, lp1); fail = 1; }
+    if (pl->hp != lhp0) { fprintf(stderr, "FAIL(2d): leap must deal 0 damage, hp %d->%d\n", lhp0, pl->hp); fail = 1; }
+    printf("  (2d) LEAP: sub 7 pounce closed dist %d->%d, 0 damage (hp=%d)\n", lp0, lp1, pl->hp);
+
     /* (3) KILLABLE: a lethal hit -> DEATH -> CORPSE */
     pl->x = 0; pl->z = 8000;   /* move the player away so the bite doesn't interfere */
     m->hp = 4; m->hit_react = 0;

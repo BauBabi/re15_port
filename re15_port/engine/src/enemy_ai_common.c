@@ -3735,6 +3735,17 @@ static void re15_maggot_ai_tick(int slot)
             if (pl->hit_react == 0 && e->dog_atk_cd == 0 && re15_dog_arc(e, pl, 4000, 0xc0)) {
                 re15_maggot_clip(e, 0x13); re15_dog_sub(e, 6); e->sub_state_3 = 0; break;   /* -> HEAVY (clear connect-once) */
             }
+            /* LEAP else-branch (far-ballistic path B @0x80118028, workflow wf_c1de93d6-bae CONFIRMED):
+             * player OUT of the heavy window but LOS(+0x1d0&1) & dist(+0x1d4)>=6001 (@0x8011806c) &
+             * aimed at player within +-32 (arc_test 0x8001a9cc @0x80118084) & the PLAYER facing the maggot
+             * (facing_aligned 0x8001a780==0 @0x801180bc: playerYaw vs maggotYaw > +-90deg) & rng&1 (~50%,
+             * @0x801180a8, bypassed if player action *(0x800aca58)==0x701). -> +0x5=7 LEAP (+0x7=0). */
+            if (dist >= 6001 && los != 0 && e->dog_atk_cd == 0
+                && re15_dog_arc(e, pl, 0x7fff, 0x20)                       /* arc_test: maggot aimed at player (+-32) */
+                && (((int)(pl->rot_y - e->rot_y) + 0x400) & 0xfff) >= 0x800 /* facing_aligned==0: player faces the maggot */
+                && (re15_engine_rand8() & 1)) {                            /* rng&1 coin-flip @0x801180a8 */
+                re15_maggot_clip(e, 0x14); re15_dog_sub(e, 7); break;      /* -> LEAP (sub 7) */
+            }
             if (dist >= 12000) { re15_dog_sub(e, 3); break; }  /* lost the player -> back to CHASE (faithful: selector abandons a far target) */
             re15_enemy_steer_point(e, pl->x, pl->z, 0x20);     /* crawl toward player (B[4]) */
             re15_dog_advance(e, 40);
@@ -3769,8 +3780,36 @@ static void re15_maggot_ai_tick(int slot)
             if (re15_maggot_anim(e)) { re15_dog_sub(e, 3); e->sub_state_3 = 0; if (e->dog_atk_cd == 0) e->dog_atk_cd = 0x14; }  /* -> CHASE */
             break;
 
-        default:  /* sub 7 (leap/ballistic) via the selector else-branch = wave 2c (situational; the leap
-                   * launch decision needs a wide-angle/edge-range provoke) -> resume the brain */
+        case 7: {  /* LEAP 0x80118908 (clip 0x14): a 4-phase FSM on +0x6. A ballistic REPOSITION pounce
+                    * that deals ZERO damage (no player.hp write in the whole 260-instr handler - workflow
+                    * wf_c1de93d6-bae CONFIRMED); it closes the gap, lands, and returns to the SELECTOR so
+                    * the HEAVY then applies the -12. LIVE-VERIFIED (forced +0x5=7: impulse +0x8c=201 seeded,
+                    * maggot closed dist 10000->596, player HP untouched by the leap itself). */
+            if (e->sub_state_2 == 0) {                        /* phase 0/1: INIT + WINDUP (frames 0..9) */
+                if (e->motion != 0x14) { re15_maggot_clip(e, 0x14); e->crow_speed = (int16_t)((re15_engine_rand8() & 0x1f) + 180); }  /* @0x8011895c seed impulse */
+                re15_enemy_steer_point(e, pl->x, pl->z, 0x20);            /* slew facing toward the launch dir */
+                if (re15_maggot_anim(e) || e->anim_frame >= 0x0a) {       /* LAUNCH at frame 10 (@0x80118a3c) */
+                    e->sub_state_2 = 2;                                   /* +0x6=2 in-flight (@0x80118aa4) */
+                    e->crow_speed   = (int16_t)((re15_engine_rand8() & 0x1f) + 200);  /* re-roll impulse @0x80118a50 */
+                    e->ai_timer     = 0;                                 /* +0x9c airtime = 0 */
+                    e->crow_perch_h = (int16_t)e->y;                     /* cache ground-Y (+0x1ba) for the land */
+                }
+            } else {                                          /* phase 2: IN-FLIGHT ballistic arc (@0x80118b14) */
+                re15_crow_advance(e);                                     /* horizontal pounce at crow_speed */
+                int32_t s1 = 720 - 60 * (int32_t)e->ai_timer;            /* vert-vel +0x1d8=720, gravity -60 (0x8001c1a4) */
+                e->y -= s1;                                              /* +0x38 -= s1 (Y-down: rises then falls) */
+                e->ai_timer++;
+                re15_maggot_anim(e);
+                if ((int32_t)e->ai_timer >= 25 || ((int32_t)e->ai_timer > 12 && e->y >= (int32_t)e->crow_perch_h)) {
+                    e->y = (int32_t)e->crow_perch_h;                     /* land: clamp back to ground */
+                    re15_dog_sub(e, 4);                                 /* recovery (+0x5=9 @0x80118b60) folded -> SELECTOR */
+                }
+            }
+            break;
+        }
+
+        default:  /* sub 8/9 (mid-air finisher / landing-recovery) — brief anims that resolve back to the
+                   * selector; fold to the brain (no damage of their own) */
             e->sub_state_1 = 0; e->sub_state_2 = 0;
             break;
         }
