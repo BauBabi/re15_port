@@ -105,12 +105,31 @@ xlat[0x34/38/3c] s32 += drift[0x10/12/14]     // POSITIONS-Drift (der Fall)
 drift[0x10/12/14]  += accel[0x08/0a/0c]        // GRAVITY (Drift beschleunigt)
 ```
 = der Arbiter-accel-Pfad ist der echte Fall (NICHT Routine 6 — die ist ein zweiter Pfad).
-⚠️ **RESIDUALE AMBIGUITÄT (nur dynamisch lösbar):** auf die echten Blut-Row-Daten (id 0 r0)
-angewandt ist accel@+0x08 = 0x1000 → `drift += 0x1000/frame` würde EXPLODIEREN. Also entweder
-(a) der Effekt setzt flags bit5 (freeze-physics), (b) +0x08 ist NICHT accel sondern Scale (mein
-Row↔Slot-Offset-Versatz), oder (c) eine Routine cleart accel. **Statisch nicht entscheidbar** →
-braucht einen Savestate eines fliegenden Blut-Effekts (DuckStation) + Slot-Felder über Frames lesen
-(flags/accel/drift/xlat). Bis dahin würde ein Physik-Port riskieren, dass Effekte explodieren.
+✅ **LIVE-BESTÄTIGT (stage_saves/mzd_stage1_hit_effect.sav, 6 aktive effect-0-Slots):** die Physik
+LÄUFT (flags 0x0013/0x0003, bit5=0x20 NICHT gesetzt). Reale Slot-Felder: **accel=[-3,8,0]/[-2,8,0]**
+(Y=+8 = GRAVITY abwärts, X=kleiner Random, Z=0), drift=[34,24,18]… (akkumuliert), **xlat=[505,-200,180]**
+(die Fall-Position — Draw = anchor + xlat, gleiche World-Units, kein Shift). Die frühere „0x1000-
+explodiert"-Sorge war ein Row↔Slot-Offset-Lesefehler in meinem STATISCHEN Parse — die Live-Werte sind
+klein + sinnvoll. accel/drift werden per RNG gesetzt, NICHT aus der Row kopiert.
+
+✅ **SPLATTER-SEED byte-exakt (Routine 11 @0x80017718):**
+```
+drift[0x10] -= rand() & 0x0a;   // drift.x Streuung  (-10..0)
+drift[0x12] -= rand() & 0x14;   // drift.y Streuung  (-20..0)
+routineB[0x02] = 0x0c;          // -> ab jetzt läuft Routine 12 (KOLLISION/Bounce)
+routineA[0x00] = 0;             // opcode -> noop
+drift[0x14] += rand() & 0x14;   // drift.z Streuung  (0..+20)
+```
+**Blut/Gore-Kette komplett belegt:** Parent (id 0) spawnt per Routine 2 Child-Partikel → Child läuft
+Routine 11 (RNG-Velocity-Streuung, setzt sich selbst auf Routine 12) → jede Frame Tick-Physik
+(`drift += accel` mit accel.y=8 Gravity, `xlat += drift`) + Routine 12 Boden/Wand-Bounce (room_coll
+0x8001c6e8) → xlat-Fall+Spread. **Der byte-true PORT** = re15_esp_fx_t um accel/drift/xlat[3] erweitern,
+Blut/Gore-Effekte mit accel.y=8 + Routine-11-RNG seeden, Tick-Integration (gated bit5), Draw@anchor+xlat,
+Routine-12-Floor-Bounce. OFFEN-fiddly (faithful-line-Kandidat): die exakte accel-SEED-Quelle (accel.y=8
+ist Konstante, accel.x=-2/-3 klein — Row-Konstante an noch nicht sauber gemapptem Row-Offset ODER
+Routine-Setter; Live-Werte als Grundwahrheit vorhanden). VM-„welcher Effekt läuft welche Routine" =
+die Parent→Child-Verkettung (Routine 2 spawnt, Routine 11 konfiguriert das Child) — der noch nicht
+im Port gebaute Kern.
 
 **Routine 6 = die fehlende Physik (roh @0x80017484 verifiziert):**
 ```c
