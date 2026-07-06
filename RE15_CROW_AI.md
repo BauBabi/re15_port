@@ -241,9 +241,16 @@ der KI-Tick** (`run_all` gated auf 0x10/0x11/0x16, [enemy_ai_common.c:2457]).
    unsterblich**; der deferred Death-State (2/3/7) ist korrekt unerreichbar. Der Auto-Aim filtert
    byte-true per Elevation-Band, nicht per Typ (der Port-Typ-Gate 0x10/0x11/0x16 schließt Krähen aus =
    Simplification), aber ein Treffer würde eine STAGE1-Krähe ohnehin nicht töten.
-   **Offen nur für die 0xe1-Event-Krähe**: der FLIGHT-2-Dispatcher (state 4: Ascend/Hover/Orient/Spin/
-   Dive-Arm, @0x80114e54) — ein bedingter Event-Spawn, nicht die primäre 3-Krähen-Begegnung. Für die
-   primäre STAGE1-Begegnung ist die Krähe 100% byte-true (Flug + Angriff + unsterblich).
+   **✅ FLIGHT-2 (state 4) PORTIERT (Commit 74121bb8, Workflow wf_2c7076b7, 0 Refutations):** der INIT-
+   Override `if (grid&0x40) state=4` + der Dispatcher 0x80114e54 (Preamble; testbit 0x800b1028-Bit-0x1d &
+   +0x5≠3 → sub 3; kein +0x4-Write = kein State-Exit) + die 5 Substates: ASCEND (vvel−120+frame-8-Re-
+   Thrust, Yaw-Slew 20 → HOVER wenn vert-err≥2001), HOVER (Oszillation vvel=±(mode&0x3f), Yaw-Slew 50,
+   Grab bei Kontakt → ORIENT + setbit 0x1c), ORIENT (clip 8, halten; SPIN via 0x1d-Tick), SPIN (yaw+=60,
+   Timer → HOVER), DIVE-ARM (armierter Sturz, Attack-Flags +0x0|0x2/0x40/0x8, gated auf getestetes Bit 0x1e).
+   Neues `s_crow_gflags` (0x800b1028-Bit-Array). **KERN bestätigt: DIVE-ARM TESTET Bit 0x1e (setzt nicht),
+   Death-Bit 0x1f nie angefasst, FLIGHT-2 schreibt nie +0x4** → die Event-Krähe bleibt auch byte-true
+   unsterblich in STAGE1. Test (4): grid&0x40 → state 4, steigt y 300→−2124, HOVER, bleibt state 4.
+   **Die Krähen-State-Machine ist jetzt vollständig portiert** (0/1/2-Stub/4; 3/7 unerreichbar in STAGE1).
 4. **Dynamik-Verify**: Savestate ROOM10C0/1120 (JUMP hex) + `re15_enemy_state.py` mit NEUER Krähen-
    Label-Map (die Zombie-Map @0x8011f7b4 passt NICHT — eigene Root-Tabelle @0x8012111c).
 
