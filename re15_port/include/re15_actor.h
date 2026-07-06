@@ -300,6 +300,16 @@ typedef struct {
     int16_t  crow_accel;     /* +0x1e6: per-tick speed accel (dive ramp)                       */
     uint8_t  crow_contact;   /* +0x1d0: player-contact flag (strike/grab connect)             */
     int16_t  crow_struggle;  /* +0x9c : grab-hold struggle meter (drains, <0 = release)        */
+
+    /* Dog (Cerberus, type 0x20) AI state — byte-true 0x8010d7f8 family (RE15_DOG_AI.md).
+     * A ground chase/lunge/bite enemy; shares the zombie steering/collision + take_damage.
+     * State 1 (ACTIVE) is a dual-dispatch brain on sub_state_1 (decision @0x80120f94 + act
+     * @0x80120fd4): sub 0 idle / 1 turn / 2 chase / 3 attack-range / 4 lunge / 8 bite. */
+    int16_t  dog_dist;       /* +0x1d4: cached dist-to-player (lh signed, SquareRoot0)          */
+    uint16_t dog_flags;      /* +0x1d0: bit0 = sticky has-LOS                                   */
+    uint8_t  dog_atk_cd;     /* +0x1d6: attack-cooldown timer (menace)                          */
+    uint8_t  dog_pounce_cd;  /* +0x1e6: pounce-cooldown timer                                   */
+    int16_t  dog_yawrate;    /* +0x1e2: per-approach yaw-slew rate (+0x7 micro-step = sub_state_3) */
 } re15_actor_t;
 
 extern re15_actor_t g_actors[RE15_ACTOR_MAX];

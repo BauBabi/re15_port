@@ -82,6 +82,13 @@ target_compile_definitions(test_room1140_combat PRIVATE
 add_test(NAME unit_room1140_combat COMMAND test_room1140_combat)
 set_tests_properties(unit_room1140_combat PROPERTIES TIMEOUT 30)
 
+# --- Dog (type 0x20) chase/bite AI — Wave 1 port probe (re15_dog_ai_tick in enemy_ai_common.c) ---
+add_executable(test_dog_ai test_dog_ai.c)
+target_link_libraries(test_dog_ai PRIVATE re15_engine re15_test_support)
+target_include_directories(test_dog_ai PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_dog_ai COMMAND test_dog_ai)
+set_tests_properties(unit_dog_ai PROPERTIES TIMEOUT 30)
+
 # --- Crow (type 0x21) 3D-flight AI — Wave 1 port probe (re15_crow_ai_tick in enemy_ai_common.c) ---
 add_executable(test_crow_ai test_crow_ai.c)
 target_link_libraries(test_crow_ai PRIVATE re15_engine re15_test_support)

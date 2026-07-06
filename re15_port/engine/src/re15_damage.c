@@ -282,7 +282,7 @@ int re15_player_aim_target(int32_t radius, int32_t *tx, int32_t *tz)
     for (int s2 = RE15_ACTOR_SLOT_PLAYER + 1; s2 < RE15_ACTOR_MAX; s2++) {
         re15_actor_t *e = &g_actors[s2];
         if (!e->active) continue;
-        if (e->type != 0x10 && e->type != 0x11 && e->type != 0x16) continue;
+        if (e->type != 0x10 && e->type != 0x11 && e->type != 0x16 && e->type != 0x20) continue;
         if (e->state == 7 || e->hp < 0) continue;
         uint32_t d = (uint32_t)re15_enemy_player_dist(e, pl);
         if (d < bd && re15_ai_arc_test(pl, e->x, e->z, 0x400) == 0) { bd = d; best = s2; }
@@ -328,7 +328,7 @@ retry_after_latch:
     for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) {
         re15_actor_t *e = &g_actors[s];
         if (!e->active) continue;
-        if (e->type != 0x10 && e->type != 0x11 && e->type != 0x16) continue;  /* the port's hittable enemies */
+        if (e->type != 0x10 && e->type != 0x11 && e->type != 0x16 && e->type != 0x20) continue;  /* the port's hittable enemies (+ dog) */
         if (e->state == 7) continue;   /* RE15_AI_STATE_CORPSE — already a corpse (literal: avoid the AI-header dep) */
         if ((e->hit_react & 0x3) == 0x3) continue;   /* already hit + re-touched this attack -> excluded */
         /* ELEVATION-BAND gate (byte-true @0x800120d0-ec: candidate needs
@@ -785,6 +785,8 @@ void re15_enemy_apply_hitbox(re15_actor_t *a, uint8_t type)
         case 0x10: case 0x11:
         case 0x16: r = 400;  h = 1440; break;  /* STAGE1 briefing zombies + STAGE2 enemy     */
         case 0x29: r = 1100; h = 1080; break;  /* wide/short creature (HASH-..._5.sav)       */
+        case 0x20: r = 500;  h = 600;  break;  /* DOG (Cerberus) — low+wide ground enemy
+                                                * (faithful-line: exact +0x78 dims deferred to Wave 2) */
         case 0x21: r = 200;  h = 180;  break;  /* CROW — byte-true from its +0x78 dim block
                                                 * @0x801210fc: hw[+6]=0xc8=200 (radius),
                                                 * hw[+8]=0xb4=180 (height), hw[+10]=200 (INIT
