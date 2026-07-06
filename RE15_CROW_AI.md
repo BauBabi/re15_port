@@ -111,12 +111,25 @@ return (+0x1d4 & 0x80) ? −1 : +1             // @0x80115e04 — Hysterese
 - **Climb-back sub6** 0x80112d34: Yaw-Slew(50), +0x1d5-Countdown → sub9.
 - **resume sub9** 0x80113384: clip, Steer (0x80115dc8).
 
-## DAMAGE-MODELL (verifiziert — KEIN HP im Swoop-Pfad)
+## DAMAGE-MODELL (verifiziert — die Krähe macht KEINEN direkten Schaden)
 
-Der gesamte Flug/Dive-Pfad enthält **keine HP-Arithmetik, keinen Hitbox-Call (0x8002b5xx), kein
-0x80012d60**. Die Proximity-Helfer 0x80012974/0x80012a0c setzen nur Render-Flags nach Vertikal-Distanz.
-**Die Touch-Damage sitzt im State-Pre-Pass 0x80116288**: bei Kontakt (`player+0x93==0`) →
-`player.hp −= 2` **nur wenn hp≥4** (@0x801163c8), plus 0x800aca58/59/5a-Kontakt-Handshake.
+**Byte-true über ALLE Krähen-States geprüft: kein Spieler-HP-Write, kein Player-Command-Write
+(0x800aca58 nur als READ im Root = das Standard-Player-State-Gate), kein Damage-Entry-Call
+(0x80012d60/0x80011f50), keine Hitbox (0x8002b5xx), keine HP-Arithmetik.** Die Proximity-Helfer
+0x80012974/**0x80012a0c** setzen ein Flag auf der **EIGENEN Krähen-Entity** (`sw v1,0(cur_entity)`,
+bit 0x20000000/0x80000000 @0x80012a88, dist<6000 zum Spieler) — ein Render/LOD-Flag auf der Krähe
+selbst, KEIN Spieler-Schaden. → **Die Krähe (0x21) ist ein positioneller/Harassment-Gegner; ihr
+Sturzflug ist rein positionell.** Ob Krähen den Spieler im Prototyp überhaupt verletzen (via einem
+geteilten Spieler-seitigen Kontakt-System) ist offen — die Krähen-KI selbst tut es nicht.
+
+> ⚠️ **KORREKTUR (2026-07-06):** Ein früher notierter „Touch-Damage `player.hp −= 2` im State-7-
+> Pre-Pass 0x80116288" war eine **Fehlzuordnung**. **0x80116288 ist der Root-Handler von Nachbar-
+> Typ 0x26**, NICHT der Krähe — die Registrierungs-Tabelle @0x8011e8e4-904 lädt drei getrennte
+> Roots: `0x80112020` (Krähe 0x21), `0x80116288` (Typ 0x26), `0x80116db8` (Typ 0x27). Der Krähen-
+> Root ruft 0x80116288 NIE. Der Death/Special-CLUSTER-Agent war in 0x26s Code gewandert; der
+> adversariale Verify prüfte die Adressen (die den −2-Code DO enthalten), aber nicht die Typ-
+> Zugehörigkeit — die Disziplin-Falle „ein Nachbar-Handler ≠ dieser Typ". Die 0x80116288/
+> 0x80116758-Details unten beschreiben also **Typ 0x26**, nicht die Krähe.
 
 ## DEATH — 0x801146d0 (Tabelle @0x801211cc: [0-6]→0x80114738, [7]→0x801149c4 Gib)
 
@@ -141,8 +154,8 @@ tick(a1=0x1d) & +0x5≠3 → 0x80115d74(a0=3). Substates (Nested-Step-Machine, k
 
 `[0]0x80115830` Color-Fade (+0xbc/+0xbe += 10, +0xc4/+0xec Farbe = `(old&0xff000000)|0x00ffff38`),
 `[1]0x80115910`, `[2]0x801159bc`/`[3]0x80115b80` geskriptetes Event (gate `0x800aca5a sltiu 5`, Overlay-
-Tabellen @0x801002ec/@0x80100304; SE 0x80045024 a0=0x03020001). Pre-Pass **0x80116288** (Kontakt-Damage
-+State-Arm-Tabelle @0x80121268; `[5/6/7]=0x80116758` = die State-7-Arm).
+Tabellen @0x801002ec/@0x80100304; SE 0x80045024 a0=0x03020001). *(0x80116288/0x80116758 = Typ 0x26, siehe
+Korrektur oben — NICHT die Krähe.)*
 
 ## Port-Plan (Wave-basiert)
 
@@ -151,12 +164,20 @@ Typ 0x21; Modell EM021 lädt generisch aus **CDEMD0.EMS @Index 8** (Offset 0x17b
 8-Sektionen-EMD) via `pc_enemy_load(0x21)`; NPC-Render-Loop zeichnet 0x21 generisch. **Einzige Lücke =
 der KI-Tick** (`run_all` gated auf 0x10/0x11/0x16, [enemy_ai_common.c:2457]).
 
-1. **Wave 1 — Spawn + Kreisflug sichtbar**: neue `re15_crow_ai.c`; Branch `else if (t==0x21)` in run_all;
-   INIT + ACTIVE-Cruise (Höhen-Korridor-Oracle + vvel-Integration + Yaw-Slew) + FLIGHT-2 Ascend/Hover.
-   Clip-Mapping via EM021-Bank. Milestone: Krähe kreist in ROOM10C0.
-2. **Wave 2 — Sturzflug**: DISTANZ-DIVE-Commit (4 Pfade) + Dive/Second-Arc/Climb-back + Touch-Damage
-   (State-7-Pre-Pass, player.hp−=2).
-3. **Wave 3 — Death**: Downed-Promotion 4→3, Fall-from-sky + Land + Gib, State 7.
+1. **✅ Wave 1 — Spawn + Flug (PORTIERT, Commit 9d3ce206):** `re15_crow_ai_tick` in enemy_ai_common.c;
+   Branch `else if (t==0x21)` in run_all; INIT + ACTIVE-Cruise (Yaw-Slew rate 50 + Höhen-Oracle +
+   vvel-Integration + Horizontal-Advance). Live: 3 Krähen kreisen/fliegen zum Spieler in ROOM10C0,
+   Modell rendert. Test test_crow_ai.
+2. **Wave 2 — Sturzflug (BLOCKIERT, kein sauberer Port):** die DISTANZ-DIVE-Trigger-Schwellen sind
+   byte-true (Ring 5000/10000, Höhe<5400), ABER die Dive-EXECUTION ist NICHT sauber portierbar:
+   (a) die Dive-Physik (vvel−80-Launch/Gravity+6) setzt die **Korridor-Start-Höhe** voraus, die von
+   der **mode-Quelle 0x80116068** kommt — und die ist EVENT-getrieben (globale Flags 0x800aca50
+   High-Bits), noch nicht getract; (b) der **Climb-back-Mechanismus** (wie die Krähe nach dem Sturz
+   wieder auf `y<perch−3600` steigt) ist nicht gecaptured; (c) **es gibt KEINE Touch-Damage** (siehe
+   Korrektur oben — 0x80116288 war Typ 0x26). Ohne die mode-Quelle bleibt eine gestartete Dive in
+   sub5 hängen. → Nächster Weg: die mode-Quelle 0x80116068 + ihre Flag-Setter tracen (wer setzt
+   0x800aca50 & 0x8000/0x4000/0x2000/0x1000), DANN die Dive end-to-end. Kein Raten.
+3. **Wave 3 — Death**: Downed-Promotion 4→3, Fall-from-sky + Land + Gib, State 7 (RE komplett).
 4. **Dynamik-Verify**: Savestate ROOM10C0/1120 (JUMP hex) + `re15_enemy_state.py` mit NEUER Krähen-
    Label-Map (die Zombie-Map @0x8011f7b4 passt NICHT — eigene Root-Tabelle @0x8012111c).
 
