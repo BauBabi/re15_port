@@ -94,6 +94,31 @@ int main(void)
     if (!f2_hover)       { fprintf(stderr, "FAIL(4): FLIGHT-2 crow never reached HOVER (sub 1)\n"); fail = 1; }
     printf("  (4) FLIGHT-2: grid&0x40 -> state 4, ascended y %d->%d, reached HOVER, stayed in state 4\n", (int)f2y0, (int)ev->y);
 
+    /* (5) DEATH: the scripted death bit (0x1f, STAGE3/5) promotes a state-4 grid&0x40 crow to
+     *     DEATH (state 3) -> fall from the sky -> land -> CORPSE (state 7). Byte-true unreachable
+     *     in STAGE1, so the test triggers the event explicitly via re15_crow_death_event(). */
+    {
+        extern void re15_crow_death_event(void);
+        memset(g_actors, 0, sizeof g_actors);
+        pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        pl->active = 1; pl->type = 0; pl->x = 300; pl->y = 0; pl->z = 30000; pl->hp = 100;
+        re15_actor_t *dc = &g_actors[1];
+        dc->active = 1; dc->type = 0x21; dc->state = 0; dc->grid_id = 0x40;
+        dc->x = 2000; dc->y = 700; dc->z = 300; dc->rot_y = 0;
+        for (int f = 0; f < 40; f++) re15_enemy_ai_run_all(0);   /* INIT -> state 4, ASCEND (climbs high) */
+        int32_t dy0 = dc->y;
+        re15_crow_death_event();                                  /* the scripted "crows die" trigger */
+        int died = 0, corpse = 0;
+        for (int f = 0; f < 400; f++) {
+            re15_enemy_ai_run_all(0);
+            if (dc->state == 3) died = 1;
+            if (dc->state == 7) { corpse = 1; break; }
+        }
+        if (!died)   { fprintf(stderr, "FAIL(5): bit-0x1f must promote the state-4 crow to DEATH (state 3)\n"); fail = 1; }
+        if (!corpse) { fprintf(stderr, "FAIL(5): the dead crow must fall + land -> CORPSE (state 7), state=%d\n", dc->state); fail = 1; }
+        printf("  (5) DEATH: bit-0x1f -> state 3 (fell from y=%d) -> state 7 CORPSE @y=%d\n", (int)dy0, (int)dc->y);
+    }
+
     if (fail) { printf("CROW FLIGHT-BRAIN: FAIL\n"); return 1; }
     printf("CROW FLIGHT-BRAIN: all checks passed\n");
     return 0;

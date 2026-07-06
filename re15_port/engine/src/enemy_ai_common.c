@@ -2450,6 +2450,9 @@ static uint16_t s_crow_flock;
  * (mask 0x1) = the death gate, set only in STAGE3/STAGE5. In STAGE1 only 0x1c is ever set. */
 static uint32_t s_crow_gflags;
 void re15_crow_flock_reset(void) { s_crow_flock = 0; s_crow_gflags = 0; }
+/* the scripted "crows die" event trigger (STAGE3/STAGE5 set bit 0x1f of 0x800b1028 via
+ * FUN_80118d00/80119514): the root then promotes every state-4 grid&0x40 crow to DEATH. */
+void re15_crow_death_event(void) { s_crow_gflags |= 0x1u; }
 
 /* Height oracle — byte-true FUN_80115dc8: returns +1 (descend, y grows) / -1 (climb) to
  * hold the crow in the corridor 1800..5400 units ABOVE its perch height. In-band the
@@ -2943,6 +2946,56 @@ static void re15_crow_flight2_sub(re15_actor_t *e, re15_actor_t *player)
     }
 }
 
+/* DEATH (state 3) — byte-true 0x801146d0 (crow-cluster-wave2, verified). Fall from the sky
+ * (gravity +0x1e8=0x26), land (clip 0x0a), finish -> state 7 (corpse). Reached via the root
+ * promotion (state 4 + grid&0x40 + mode bit-0x1f); byte-true UNREACHABLE in STAGE1 (bit-0x1f only
+ * STAGE3/5), ported for full-stage portability. Lane on +0x5: [0-6] normal (nested on +0x7 =
+ * sub_state_3), [7] gib (the feather burst). */
+static void re15_crow_death(re15_actor_t *e)
+{
+    if (e->sub_state_1 == 7) {   /* GIB lane 0x801149c4: 13 feather children (@0x80114a50) -> corpse */
+        if (e->sub_state_2 == 0) {
+            re15_esp_fx_splatter(re15_esp_room_bank(), 0, 13, e->x, e->y, e->z, e->crow_perch_h);
+            e->hp = -1; e->crow_timer = 0x32; e->sub_state_2 = 1;    /* +0x1d5=0x32 */
+        } else if (e->crow_timer == 0) { e->state = 7; re15_crow_sub(e, 0); }  /* @0x80114b90 +0x4=7 */
+        else e->crow_timer--;
+        return;
+    }
+    switch (e->sub_state_3) {     /* normal death, nested on +0x7 (step-router 0x80114738) */
+    case 0:   /* INIT 0x80114784 */
+        re15_audio_room_se(3);                                       /* Se(3) @0x80114784 */
+        e->hp = -1; e->crow_vvel = 0; e->crow_grav = 0x26;           /* +0x9a=-1, +0x1e4=0, +0x1e8=0x26 */
+        e->crow_speed = 0; e->rot_z = 0; e->sub_state_3 = 1;         /* +0x8c=0, +0x6c=0 */
+        break;
+    case 1: { /* FALL 0x80114828 */
+        e->rot_z = (int16_t)(e->rot_z + 140); if (e->rot_z > 1024) e->rot_z = 1024;  /* +0x6c spin, clamp */
+        e->crow_speed = 60;                                          /* +0x8c=60 */
+        e->crow_vvel = (int16_t)(e->crow_vvel + e->crow_grav);       /* gravity @0x80114894 */
+        e->y += e->crow_vvel; re15_crow_advance(e);                  /* integrate @0x801148b4 */
+        if (e->y >= e->crow_perch_h - 400) {                         /* land: floor +0x1ba-400 (floor=perch, faithful-line) */
+            e->y = e->crow_perch_h - 400;
+            re15_crow_clip(e, 0x0a); re15_audio_room_se(5);          /* land clip 0x0a + Se(5) @0x801148f4 */
+            e->crow_timer = 11; e->sub_state_3 = 2;                  /* +0x1d5=11 */
+        }
+        break;
+    }
+    case 2:   /* FINISH 0x80114934 */
+        re15_crow_anim(e);
+        if (e->crow_timer == 0) { e->state = 7; e->sub_state_1 = 0; e->sub_state_3 = 0; }  /* +0x4=7 @0x80114978 */
+        else e->crow_timer--;
+        break;
+    }
+}
+
+/* SPECIAL (state 7) — byte-true 0x801157e8: the CORPSE settle / color-fade (dispatch on +0x5;
+ * [0] color-fade 0x80115830, [2/3] scripted event — scene-specific, deferred). The dead crow lies
+ * in its landed pose (clip 0x0a); the render draws it like the zombie corpse (state 7). The exact
+ * +0xbc/+0xbe/+0xc4 shadow-recolor fade is the shared render-side corpse pool. */
+static void re15_crow_special(re15_actor_t *e)
+{
+    re15_crow_anim(e);   /* hold the corpse pose; the fade is render-side (like the zombie corpse) */
+}
+
 /* One crow AI tick (dispatched from re15_enemy_ai_run_all for type 0x21).
  * Full flight brain — byte-true port of the FUN_80112020 family (RE15_CROW_AI.md):
  * root pre-pass -> INIT / ACTIVE (sense -> flock-dispatch -> steer[+0x5] -> move[+0x5]). */
@@ -2951,9 +3004,13 @@ static void re15_crow_ai_tick(int slot)
     re15_actor_t *e      = &g_actors[slot];
     re15_actor_t *player = &g_actors[RE15_ACTOR_SLOT_PLAYER];
 
-    /* --- ROOT pre-pass (0x80112020): death promotion when downed in flight-2 state 4 --- */
-    if (e->crow_mode /*+0x1d4*/ && e->state == 4 && (e->grid_id & 0x40)) {
-        e->state = 3; re15_crow_sub(e, 0);
+    /* --- ROOT pre-pass (0x80112020) --- */
+    e->crow_mode = (uint8_t)((s_crow_gflags & 0x1u) ? 1 : 0);   /* +0x1d4 = testbit(0x800b1028, 0x1f) */
+    /* DEATH promotion (@0x80112050-8c): a state-4 grid&0x40 crow dies when the scripted death bit
+     * 0x1f is set (STAGE3/5 only — byte-true unreachable in STAGE1). */
+    if (e->crow_mode && e->state == 4 && (e->grid_id & 0x40)) {
+        e->state = 3; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* +0x4=3, 0x80115d74(0) */
+        s_crow_gflags &= ~0x1u;                                                     /* clearbit 0x1f @0x80112098 */
     }
 
     switch (e->state) {
@@ -3013,7 +3070,15 @@ static void re15_crow_ai_tick(int slot)
         break;
     }
 
-    default:   /* states 2/5/6 HURT stub, 3 DEATH (byte-true unreachable in STAGE1), 7 SPECIAL — hold */
+    case 3:    /* DEATH (0x801146d0): fall from the sky + land + gib -> state 7. */
+        re15_crow_death(e);
+        break;
+
+    case 7:    /* SPECIAL / CORPSE (0x801157e8): the dead crow settles + fades. */
+        re15_crow_special(e);
+        break;
+
+    default:   /* states 2/5/6 = HURT (byte-true empty stub, no reaction) — hold */
         break;
     }
 }
