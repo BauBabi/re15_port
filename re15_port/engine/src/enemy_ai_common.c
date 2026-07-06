@@ -2502,6 +2502,19 @@ static void re15_crow_weave(re15_actor_t *e)
     else if (e->crow_bank == 2) e->rot_y = (int16_t)(e->rot_y - 80);   /* @0x80115ef0 */
 }
 
+/* crow screech — byte-true 0x801161e8: a vertical-distance-tiered vocalization. The original
+ * layers several SE ids per tier via 0x80037edc; the crow room's SE bank holds its caws, so the
+ * port plays the tier's primary caw through re15_audio_room_se (the same room-SE path the zombie
+ * combat SEs use). Cited tier thresholds on +0x1ec: 1500 / 3000 / 3600. */
+static void re15_crow_screech(const re15_actor_t *e)
+{
+    int16_t ve = e->crow_vert_err;
+    if      (ve < 1500) re15_audio_room_se(1);   /* @0x80116200/08 (nearest -> screech 1) */
+    else if (ve < 3000) re15_audio_room_se(3);   /* @0x80116220/28 (mid -> screech 3,4,6) */
+    else if (ve < 3600) re15_audio_room_se(5);   /* @0x80116254/60 (screech 5)            */
+    else                re15_audio_room_se(7);   /* @0x80116268    (far -> screech 7)      */
+}
+
 /* the byte-true flat damage the crow deals: dive/strike -4, grab -8 (the player+0x93 hit
  * gate keeps it once-per-contact; on a lethal hit broadcast the KILL bit 0x2000 to the flock). */
 static void re15_crow_hit_player(re15_actor_t *e, re15_actor_t *player, int dmg)
@@ -2621,13 +2634,14 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
     case 3:
         if (e->sub_state_2 == 0) { re15_crow_clip(e, 0); e->sub_state_2 = 1; }
         e->crow_pturn = (uint8_t)re15_crow_anim(e);
+        if (e->crow_pturn) re15_audio_room_se(6);          /* Se(6) on anim-complete @0x801129f4 */
         return;
 
     /* --- sub 4: DIVE LAUNCH (climb via vvel -80 + frame-8 re-thrust) --- */
     case 4:
-        if (e->sub_state_2 == 0) { re15_crow_clip(e, 6); e->crow_diveflag = 1; e->sub_state_2 = 1; }
+        if (e->sub_state_2 == 0) { re15_crow_clip(e, 6); e->crow_diveflag = 1; re15_audio_room_se(1); e->sub_state_2 = 1; }  /* Se(1) @0x80112a7c */
         if (e->sub_state_2 == 1) { e->crow_vvel = -80; e->crow_speed = 60; e->sub_state_2 = 2; }
-        if (e->anim_frame == 8) e->sub_state_2 = 1;        /* frame-8 re-thrust (@0x80112b00) */
+        if (e->anim_frame == 8) { e->sub_state_2 = 1; re15_audio_room_se(1); }   /* frame-8 re-thrust + flap Se(1) @0x80112b10 */
         e->crow_vvel = (int16_t)(e->crow_vvel + 6);        /* gravity */
         e->y += e->crow_vvel;
         re15_crow_advance(e);
@@ -2636,7 +2650,7 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
 
     /* --- sub 5: SECOND ARC (stronger climb vvel -120) --- */
     case 5:
-        if (e->sub_state_2 == 0) { re15_crow_clip(e, 4); e->sub_state_2 = 1; }
+        if (e->sub_state_2 == 0) { re15_crow_clip(e, 4); re15_audio_room_se(0); e->sub_state_2 = 1; }  /* Se(0) @0x80112c38 */
         if (e->sub_state_2 == 1) { e->crow_vvel = -120; e->crow_speed = 160; e->sub_state_2 = 2; }
         if (e->anim_frame == 8) e->sub_state_2 = 1;        /* frame-8 re-thrust (@0x80112cac) */
         e->crow_vvel = (int16_t)(e->crow_vvel + 6);
@@ -2647,7 +2661,7 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
 
     /* --- sub 6: CRUISE / oracle-driven climb-descend (altitude + yaw only) --- */
     case 6:
-        if (e->sub_state_2 == 0) { re15_crow_clip(e, 6); e->crow_timer = (uint8_t)(e->crow_mode & 0x32); e->sub_state_2 = 1; }
+        if (e->sub_state_2 == 0) { re15_crow_clip(e, 6); e->crow_timer = (uint8_t)(e->crow_mode & 0x32); re15_audio_room_se(0); e->sub_state_2 = 1; }  /* Se(0) @0x80112d78 */
         if (e->crow_timer == 0) { re15_crow_sub(e, 9); return; }
         e->crow_timer--;
         re15_enemy_steer_point(e, player->x, player->z, 0x32);
@@ -2703,7 +2717,7 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
 
     /* --- sub 10: CRUISE-TO-PLAYER (approach at corridor, arrival -> sub 11 dive) --- */
     case 10:
-        if (e->sub_state_2 == 0) { re15_crow_clip(e, 6); e->crow_speed = 0; e->sub_state_2 = 1; }
+        if (e->sub_state_2 == 0) { re15_crow_clip(e, 6); re15_audio_room_se(1); e->crow_speed = 0; e->sub_state_2 = 1; }  /* Se(1) @0x801135e8 */
         if (e->sub_state_2 == 1) {
             re15_enemy_steer_point(e, player->x, player->z, 0x32);
             int32_t tgt = e->crow_perch_h;
@@ -2738,7 +2752,9 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
             e->crow_vvel  = (int16_t)(e->crow_vvel - 7);
             if (e->crow_dist < 600 && (uint16_t)(e->crow_vert_err - 1) < 3599 && player->hit_react == 0) {
                 e->crow_accel = -20;
+                re15_audio_room_se(4);                       /* Se(4) hit @0x80113ae8 */
                 re15_crow_hit_player(e, player, 4);          /* DIVE HIT: -4 HP @0x80113b04 */
+                re15_crow_screech(e);                        /* 0x801161e8 @0x80113b7c */
             }
         }
         e->y += e->crow_vvel;
@@ -2770,9 +2786,11 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
 
     /* --- sub 13: GRAB-HOLD / FEEDING (peck, struggle drain, release -> sub 14) --- */
     case 13:
-        if (e->sub_state_2 == 0) { re15_crow_clip(e, 8); e->crow_atk_ctr++; e->crow_struggle = 100; e->crow_timer = 30; e->sub_state_2 = 1; }
+        if (e->sub_state_2 == 0) { re15_crow_clip(e, 8); e->crow_atk_ctr++; e->crow_struggle = 100; re15_audio_room_se(2); e->crow_timer = 30; e->sub_state_2 = 1; }  /* Se(2) peck @0x80113f74 */
         re15_crow_anim(e);
-        if (e->crow_timer == 0) e->crow_timer = 30; else e->crow_timer--;
+        if (e->crow_timer == 0) { e->crow_timer = 30; re15_audio_room_se(2); }  /* re-peck every 30f @0x8011400c */
+        else e->crow_timer--;
+        if ((e->crow_timer % 10) == 0) re15_audio_room_se(0);   /* chirp every 10f @0x80114060 */
         e->crow_struggle = (int16_t)(e->crow_struggle - (1 + (re15_engine_rand8() % 3) * 3));
         if (e->crow_struggle < 0) {                          /* RELEASE */
             s_crow_flock = (uint16_t)((s_crow_flock & 0xfff) | 0x4000);
@@ -2784,7 +2802,7 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
     /* --- sub 14: BANK / TURN-AROUND (regroup peel-off) --- */
     case 14:
         if (e->sub_state_2 == 0) {
-            re15_crow_clip(e, 4); e->crow_speed = 180; e->crow_timer = 32;
+            re15_crow_clip(e, 4); re15_audio_room_se(0); e->crow_speed = 180; e->crow_timer = 32;  /* Se(0) screech @0x80114188 */
             e->crow_yawrate = (e->crow_mode & 0x80) ? -60 : 60;
             e->sub_state_2 = 1;
         } else if (e->sub_state_2 == 1) {
@@ -2818,6 +2836,7 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
     case 16:
         if (e->sub_state_2 == 0) {
             re15_crow_clip(e, 8);
+            re15_crow_screech(e);                            /* 0x801161e8 @0x801144bc */
             re15_crow_hit_player(e, player, 4);              /* STRIKE: -4 HP @0x801144f0 */
             e->sub_state_2 = 1;
         }

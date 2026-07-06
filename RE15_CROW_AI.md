@@ -218,9 +218,20 @@ der KI-Tick** (`run_all` gated auf 0x10/0x11/0x16, [enemy_ai_common.c:2457]).
    - **Grab-Player-Pin**: s_player_grabbed für Krähe sub 13 (0x800aca58=5) → game_step skippt
      re15_player_tick, wie der Zombie-Grab.
 
-   **Verbleibend PRÄSENTATION-only (kein Gameplay-/Verhaltens-Effekt):** 0x80019700 Pose-Apply
-   (Render-Pose beim Strike/Grab — der Port rendert generisch clip 8 = die Angriffs-Animation) +
-   0x801161e8 Screech-SFX (distanz-getiert via 0x80037edc) = reine Audio/Render-Nuancen.
+   **✅ PRÄSENTATION PORTIERT (Audio):** alle Se-Calls (0x800453d0 → re15_audio_room_se) an den
+   zitierten Punkten verdrahtet — Patrol Se(6) @0x801129f4, Dive-Launch Se(1) @0x80112a7c + frame-8-
+   Flap-Se(1), Second-Arc/Cruise Se(0), Cruise-to-Player Se(1) @0x801135e8, Dive-Hit Se(4) @0x80113ae8,
+   Grab-Peck Se(2) @0x80113f74 + Re-Peck/Chirp, Bank Se(0) @0x80114188; **Screech 0x801161e8** (distanz-
+   getiert nach +0x1ec: 1500/3000/3600) an Dive-Hit @0x80113b7c + Strike @0x801144bc. Die Krähe cawt/
+   screecht jetzt durch den ganzen Flug + Angriff (war stumm). Die Angriffs-**Animation** (clip 8) rendert
+   bereits byte-true über den generischen NPC-Render + die echten Clip-Längen.
+
+   **Verbleibend (ein Render-Overlay):** 0x80019700 = der ESP-Model-Instance-Spawner (`model_inst_pool`
+   @0x800a73b8) spawnt beim Strike/Grab einen sekundären Render-Effekt aus der krähen-spezifischen
+   Clip-/Pose-Tabelle 0x8012110c (a0=Pose-Selektor +0x1d7<<11 / 0x2000, a3=0x8012110c). Das exakte
+   Pose-Format dieser Tabelle ist noch nicht RE'd → nicht geraten (das würde einen falschen Effekt
+   spawnen). Die sichtbare Angriffs-Pose = clip 8 (die byte-true Animation) ist DA; der 0x80019700-
+   Overlay ist ein zusätzlicher Effekt-Layer (nächster RE-Schritt: das 0x8012110c-Pose-Format).
 3. **Wave 3 — Death**: Downed-Promotion 4→3, Fall-from-sky + Land + Gib, State 7 (RE komplett).
 4. **Dynamik-Verify**: Savestate ROOM10C0/1120 (JUMP hex) + `re15_enemy_state.py` mit NEUER Krähen-
    Label-Map (die Zombie-Map @0x8011f7b4 passt NICHT — eigene Root-Tabelle @0x8012111c).
