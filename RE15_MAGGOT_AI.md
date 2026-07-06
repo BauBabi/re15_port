@@ -74,6 +74,14 @@ bite 0x12=25, heavy 0x13=40, leap 0x14=40, death 0xe=70, corpse 0xa=40, crawl 4=
 
 1. ✅ **ENUMERATE + CLUSTER RE** (wf_f597f55d, adversarial): alle 16 States + Root/INIT + die 2 Tabellen +
    die Attacks + Death byte-true, jede Konstante disasm-zitiert.
+### ✅ LIVE-VERIFIZIERT (2026-07-06, ROOM11C0)
+
+Der Maggot spawnt in **STAGE1 ROOM11C0** (2×, port-ladbar + DuckStation-capturebar). DuckStation-Savestate
+`stage_saves/mzd_stage1_maggot.sav` (JUMP 0x11C = `--left 8`) bestätigt mein Wave-1-Port **byte-true**: Typ
+0x27, +0x4=1 (active), +0x5=0 (idle-wander), +0x9=0x30 (mode 0), **Hitbox 1600/1440** (== mein
+re15_damage.c case 0x27). Live im Port (`RE15_START_ROOM=11C0`): 2 Maggots st=1, idle→chase. **Live-Bug
+gefixt (Commit 2213dcd0):** re15_dog_arc dog_dist-s16-Overflow (Maggot biss Luft bei ~45000 Distanz).
+
 2. ✅ **Wave 1 PORTIERT** (test_maggot_ai, 40/40): re15_maggot_ai_tick (run_all `else if t==0x27`, Boden→wall-
    clamp) — INIT (HP=180) + STATE[1] idle-wander (clip 0x16) + CHASE (yaw-slew + crawl clip 4) + killbar
    (DEATH clip 0xe → CORPSE clip 0xa). EM027-Clips embedded, Hitbox 0x27=1600/1440.
