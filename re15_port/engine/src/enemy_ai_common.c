@@ -3185,12 +3185,20 @@ static void re15_dog_ai_tick(int slot)
             if (re15_dog_anim(e)) re15_dog_sub(e, 2);         /* clip done -> back to CHASE */
             break;
 
-        case 4:   /* LUNGE / POUNCE (0x8010ea44): the leap toward the player -> land -> attack-range */
-            /* faithful-line: the exact inner-jt (@0x801001ac) leap physics are deferred to Wave 3;
-             * a functional leap — clip 0xb, thrust toward the player, on clip-end -> attack-range. */
-            if (e->sub_state_2 == 0) { re15_dog_clip(e, 0x0b); e->dog_pounce_cd = 0x78; re15_enemy_steer_point(e, pl->x, pl->z, 0x20); e->sub_state_2 = 1; }
-            re15_dog_advance(e, 40);
-            if (re15_dog_anim(e)) re15_dog_sub(e, 3);         /* land -> ATTACK-RANGE (bite) */
+        case 4:   /* LUNGE / POUNCE (0x8010ea44, inner-jt @0x801001ac): windup -> leap -> land.
+                   * Byte-true windup (clip 0xb @0x8010ea9c, bark Se(2) @0x8010eb40, aim). The byte-true
+                   * land writes +0x4=5 -> state 5 (0x80111350) = the pounce-land handler, but that is
+                   * grid-gated (+0x9==0x43, a special-grid dog); for the normal combat dog the leap
+                   * resolves back to attack-range (faithful-line: the grid-0x40/43 pounce-pin + kill
+                   * cutscene are Wave 3). */
+            if (e->sub_state_2 == 0) {
+                re15_dog_clip(e, 0x0b); e->dog_pounce_cd = 0x78;
+                re15_enemy_steer_point(e, pl->x, pl->z, 0x20);   /* aim at the player before the leap */
+                re15_audio_room_se(2);                           /* bark Se(2) @0x8010eb40 */
+                e->sub_state_2 = 1;
+            }
+            re15_dog_advance(e, 40);                             /* leap forward */
+            if (re15_dog_anim(e)) re15_dog_sub(e, 3);            /* land -> ATTACK-RANGE (bite) */
             break;
 
         default:  /* kill-cutscenes / reroute (13/14) = Wave 3 -> fall back to chase */
