@@ -98,13 +98,19 @@ Savestate `stage_saves/mzd_stage1_spider.sav` (JUMP 0x109 = `--left 27`) bestät
   0-2 / B für 3-4), **Hitbox 600/720** (== mein re15_damage.c case 0x26).
 - **Wave 2 (Hit-Codes) LIVE-GEPINNT:** der Kollisions-Instanz-Pool @0x800a73b8 zeigt **14 Instanzen mit
   inst+0 = 0x12 (COMMIT-Hit-Code)** auf Body-Part-Slots **8/16** (inst+0x71=3, inst+0x74=Model-Inst-Ptr
-  0x8013cxxx) — **exakt** die RE (COMMIT 0x12 via 0x80019d50, a0=slot 8 für Variant 0,3 / 0x10 für 1,2,4,
-  a1=3). Der Damage-Mechanismus (0x80019d50 schreibt den Hit-Code in inst+0; das shared contact system liest
-  inst+0 → Player-Schaden) ist damit live bestätigt.
+  0x8013cxxx) — **exakt** die RE (COMMIT 0x12 via 0x80019d50, a0=slot 8 für Variant 0,3 / 0x10 für 1,2,4, a1=3).
 
-**PORT-Anforderung Wave 2:** das **Kollisions-Instanz-System** (0x80019d50 Hit-Code-Arming + der shared
-contact reader inst+0 → Damage) — der Spider-Angriff läuft NICHT über direkten player.hp-Write, sondern über
-diese geteilte Infra (die der Port noch nicht hat). Substantieller Infra-Zusatz.
+**⚠️ KORREKTUR (byte-verifiziert): die Hit-Codes sind VISUELL, KEIN Schaden.** Der Hit-Code (inst+0) ist ein
+**Dispatch-Index** in die Tabelle @0x80071d40 (0x80019e58: `inst+0 → ×4 → jalr table[code]`). table[0x12] =
+**0x80017c8c** = ein **Partikel/Sprite-Handler** (macht +0x16-lifetime−−, +0x4/+0x6/+0xe/+0x1e/+0x26-
+Koordinaten-Swaps — das Web-Spuck-SPRITE, nicht Schaden). Bestätigt: table[0x22]=0x80018784 macht dasselbe,
+und **KEIN player.hp(0x800acaee)-Write in der ganzen Effekt-Region 0x80017600-0x80018000**. Der spdr_9-Befund
+„Player-HP via contact reader inst+0" war FALSCH.
+
+**→ Der Spider-SCHADEN ist NUR der −2 Contact (Root, schon byte-true portiert). Der Spider ist gameplay-
+KOMPLETT.** Wave 2 = ausschließlich die **visuelle Web-Spuck-Sprite-Präsentation** (das Partikel-System, kein
+Damage-Infra). Der Port spawnt bereits einen Telegraph-fx (re15_esp_fx_spawn im ACTIVE-Brain) als Näherung;
+die exakte Web-Sprite-Choreografie über die Model-Instanz-Slots ist ein reines Präsentations-Detail.
 
 ## Wellen-Status
 

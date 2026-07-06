@@ -3562,12 +3562,15 @@ static void re15_dog_ai_tick(int slot)
  * Byte-true 0x80116288 family (RE15_SPIDER_AI.md; workflow wf_b77c2591, adversarially verified). A
  * STATIONARY web-spitter/ambush: root 0x80116288 dispatches +0x4 via @0x80121268 (INIT / ACTIVE /
  * HURT / DEATH), the spider EMERGES vertically from its spawn (spider_phase < 13 = intangible), then is
- * solid + deals a -2 contact stagger. STATE[1] is a stationary attack-arming brain that paces strike
- * hit-codes + telegraph "web" fx by an RNG timer (NO locomotion — exhaustive-scan confirmed). WAVE 1:
- * INIT + emerge gate + -2 contact + killable (hurt/death/corpse). DEFERRED to wave 2 (need a spider
- * savestate as the dynamics arbiter): the collision-instance hit-code arming (0x80019d50 -> the shared
- * contact system applies the strike damage) + the exact emerge-vs-attack +0x1d0 progression + the
- * Behavior-C windup (variant>=5) + EM026 clip indices. */
+ * solid + deals a -2 contact stagger. STATE[1] is a stationary brain that paces web-spit SPRITE effects
+ * (NO locomotion — exhaustive-scan confirmed). The -2 CONTACT is the spider's ONLY player damage.
+ * LIVE-VERIFIED byte-true (ROOM1090 savestate): type 0x26, state 1, hitbox 600/720, variant behaviour.
+ * CORRECTION (byte-verified via the collision-instance readers): STATE[1]'s "hit-codes" (0x12/0x22/0x23
+ * armed via 0x80019d50) are NOT damage — inst+0 is a DISPATCH INDEX into @0x80071d40, and table[0x12] =
+ * 0x80017c8c is a PARTICLE/SPRITE handler (the web-spit visual); there is NO player.hp write in the whole
+ * effect region 0x80017600-0x80018000. So the spider is gameplay-COMPLETE (the -2 contact IS the damage).
+ * The only remaining wave-2 item is PRESENTATION: the exact web-spit sprite choreography (the port already
+ * spawns a telegraph fx below as a faithful approximation). */
 static void re15_spider_ai_tick(int slot)
 {
     re15_actor_t *e  = &g_actors[slot];
