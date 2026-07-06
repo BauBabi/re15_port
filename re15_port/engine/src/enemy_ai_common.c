@@ -2459,7 +2459,7 @@ static int re15_crow_height_dir(const re15_actor_t *e)
 }
 
 /* setters — 0x80115d94 (clip) / 0x80115d74 (sub-state, zeroes the nested step +0x6) */
-static void re15_crow_clip(re15_actor_t *e, uint8_t c) { e->motion = c; e->anim_frame = 0; e->anim_frac = 7; e->crow_aframe = 0; }
+static void re15_crow_clip(re15_actor_t *e, uint8_t c) { e->motion = c; e->anim_frame = 0; e->anim_frac = 7; }
 static void re15_crow_sub (re15_actor_t *e, uint8_t s) { e->sub_state_1 = s; e->sub_state_2 = 0; }
 
 /* horizontal advance along yaw at crow_speed (pos_advance FUN_800245d8, a0=0) */
@@ -2469,13 +2469,23 @@ static void re15_crow_advance(re15_actor_t *e)
     e->z -= (int32_t)(((int32_t)re15_sin_q12(e->rot_y) * e->crow_speed) >> 12);
 }
 
-/* AI-local clip clock: advances crow_aframe; returns 1 on the (nominal 16-frame) clip wrap
- * = the 0x8001f314 "clip done" flag. crow_aframe==8 is the wing-flap re-thrust key.
- * Faithful-line: the exact per-clip EM021 lengths are not byte-mapped; 16 is the flap loop. */
+/* EM021 (crow) clip frame-counts — byte-true, embedded verbatim from the model's EDD
+ * (CDEMD0.EMS idx 8, re15_emd_parse_animation). Embedded (not read from the lazily
+ * render-loaded bank) so the flight brain has the real lengths every tick even while the
+ * crow is off-camera / its bank not yet uploaded — same rationale as the gait-blob embed. */
+static const uint8_t s_crow_clip_len[14] =
+    { 23, 35, 21, 16, 10, 24, 33, 40, 8, 30, 40, 36, 15, 16 };
+
+/* clip-advance — byte-true 0x8001f314: POST-increment +0x95 (anim_frame), decay the +0x8f
+ * blend, and WRAP at the real EM021 clip length (FUN_8001f8b4), returning the wrap flag =
+ * the "clip done" the move handlers branch on. anim_frame==8 is the wing-flap re-thrust key. */
 static int re15_crow_anim(re15_actor_t *e)
 {
-    e->crow_aframe++;
-    if (e->crow_aframe >= 16) { e->crow_aframe = 0; return 1; }
+    int fc = (e->motion < 14) ? s_crow_clip_len[e->motion] : 1;
+    if (fc <= 0) fc = 1;
+    e->anim_frame++;                              /* +0x95++ (POST-inc) */
+    if (e->anim_frac > 0) e->anim_frac--;         /* +0x8f blend decay  */
+    if ((int)e->anim_frame >= fc) { e->anim_frame = 0; return 1; }   /* wrap -> clip done */
     return 0;
 }
 
@@ -2571,10 +2581,13 @@ static void re15_crow_steer(re15_actor_t *e, re15_actor_t *player)
         if (e->crow_dist < 2500)         { re15_crow_sub(e, 14); return; }
         if (e->crow_vert_err >= 5401)    { re15_crow_sub(e, 5); e->crow_atk_ctr = 4; }
         return;
-    case 11:   /* 0x8011376c */
-        if (e->crow_dist < 900)          { re15_crow_sub(e, 14); return; }  /* AABB proxy */
+    case 11: {  /* 0x8011376c */
+        int32_t adx = player->x - e->x, adz = player->z - e->z, ady = player->y - e->y;   /* AABB box */
+        if (adx < 0) adx = -adx; if (adz < 0) adz = -adz; if (ady < 0) ady = -ady;
+        if (adx < 0xf00 && adz < 0xf00 && ady < 0x300) { re15_crow_sub(e, 14); return; }  /* 0x8001b9b4 */
         if (e->crow_vert_err >= 5401)    { re15_crow_sub(e, 5); e->crow_atk_ctr = 4; }
         return;
+    }
     case 12: case 13: case 15: case 16:   /* 0x80113c0c (shared) */
         if (e->crow_armed == 0)          { re15_crow_sub(e, 14); return; }
         if (e->crow_vert_err >= 5401)    { re15_crow_sub(e, 5); e->crow_atk_ctr = 4; }
@@ -2614,7 +2627,7 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
     case 4:
         if (e->sub_state_2 == 0) { re15_crow_clip(e, 6); e->crow_diveflag = 1; e->sub_state_2 = 1; }
         if (e->sub_state_2 == 1) { e->crow_vvel = -80; e->crow_speed = 60; e->sub_state_2 = 2; }
-        if (e->crow_aframe == 8) e->sub_state_2 = 1;       /* re-thrust */
+        if (e->anim_frame == 8) e->sub_state_2 = 1;        /* frame-8 re-thrust (@0x80112b00) */
         e->crow_vvel = (int16_t)(e->crow_vvel + 6);        /* gravity */
         e->y += e->crow_vvel;
         re15_crow_advance(e);
@@ -2625,7 +2638,7 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
     case 5:
         if (e->sub_state_2 == 0) { re15_crow_clip(e, 4); e->sub_state_2 = 1; }
         if (e->sub_state_2 == 1) { e->crow_vvel = -120; e->crow_speed = 160; e->sub_state_2 = 2; }
-        if (e->crow_aframe == 8) e->sub_state_2 = 1;
+        if (e->anim_frame == 8) e->sub_state_2 = 1;        /* frame-8 re-thrust (@0x80112cac) */
         e->crow_vvel = (int16_t)(e->crow_vvel + 6);
         e->y += e->crow_vvel;
         re15_crow_advance(e);
@@ -2701,7 +2714,11 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
         }
         re15_enemy_steer_point(e, player->x, player->z, 0x32);
         re15_crow_advance(e);
-        if (e->crow_dist <= 9000) re15_crow_sub(e, 11);      /* ARRIVAL -> dive attack */
+        {   /* ARRIVAL oracle 0x8001a804(thresh=9000, yaw-tol=100): dist<=9000 AND facing player */
+            int fb = ((int)re15_atan2_q12(player->z - e->z, player->x - e->x) - 0x400) & 0xfff;
+            int df = (((fb - (int)e->rot_y) + 0x800) & 0xfff) - 0x800;
+            if (e->crow_dist <= 9000 && df >= -100 && df <= 100) re15_crow_sub(e, 11);
+        }
         return;
 
     /* --- sub 11: DIVE ATTACK (the swoop; -4 HP on connect) --- */
@@ -2742,7 +2759,7 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
         e->y += e->crow_vvel;
         re15_enemy_steer_point(e, player->x, player->z, 0x32);
         re15_crow_advance(e);
-        if (e->crow_dist < 500) {                            /* contact -> GRAB */
+        if (e->crow_contact) {                               /* +0x1d0 contact -> GRAB (@0x80113dd4) */
             e->crow_hs = 1;                                  /* +0x1d8=1 self-exempt @0x80113ddc */
             s_crow_flock = (uint16_t)((s_crow_flock & 0xfff) | 0x8000);   /* @0x80113dfc */
             re15_crow_hit_player(e, player, 8);              /* GRAB: -8 HP @0x80113e34 */
@@ -2793,7 +2810,7 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
         if (re15_crow_anim(e)) e->sub_state_2 = 0;
         re15_enemy_steer_point(e, player->x, player->z, 0x32);
         e->y += e->crow_vvel;
-        if (e->crow_dist < 500) { re15_crow_sub(e, 16); return; }   /* contact -> STRIKE */
+        if (e->crow_contact) { re15_crow_sub(e, 16); return; }      /* +0x1d0 contact -> STRIKE */
         re15_crow_advance(e);
         return;
 
@@ -2854,15 +2871,22 @@ static void re15_crow_ai_tick(int slot)
         break;
     }
 
-    case 1:    /* ACTIVE (0x80112420): sense -> flock-dispatch -> steer -> move */
-        e->crow_parity   = (uint8_t)(e->crow_parity ^ 1);            /* +0x1d2 (LOS parity toggle) */
-        e->crow_dist     = (int16_t)re15_enemy_player_dist(e, player);  /* +0x1dc */
-        e->crow_vert_err = (int16_t)(player->y - e->y);                 /* +0x1ec */
-        e->crow_contact  = (uint8_t)(e->crow_dist < 500);              /* +0x1d0 contact proxy */
+    case 1: {  /* ACTIVE (0x80112420): sense -> flock-dispatch -> steer -> move -> post-pass */
+        e->crow_parity = (uint8_t)(e->crow_parity ^ 1);              /* +0x1d2 = 0x8001bc08 & 1
+                                                                      * (the frame-parity/blink toggle
+                                                                      * @0x8011243c; NOT the ground
+                                                                      * floor-LOS — a crow is a flyer) */
+        e->crow_dist     = (int16_t)re15_enemy_player_dist(e, player);  /* +0x1dc SquareRoot0 */
+        e->crow_vert_err = (int16_t)(player->y - e->y);                 /* +0x1ec (@0x801124cc) */
         if (s_crow_flock & 0xff00) re15_crow_flock_dispatch(e);        /* 0x80116068 */
         re15_crow_steer(e, player);                                    /* steer[+0x5] */
         re15_crow_move(e, player);                                     /* move[+0x5]  */
+        /* ROOT post-pass body-push (aec4 @0x801121d4): crow pushed out of the player;
+         * +0x1d0 = contact (the strike/grab connect the handlers read next tick). */
+        e->crow_contact = (uint8_t)(re15_body_push(player, RE15_BODY_R_PLAYER, e,
+                                                   (int32_t)e->hit_radius_min) ? 1 : 0);
         break;
+    }
 
     default:   /* states 2/5/6 HURT stub, 3 DEATH, 4 FLIGHT-2, 7 SPECIAL — hold (deferred) */
         break;

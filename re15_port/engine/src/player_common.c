@@ -624,6 +624,7 @@ void re15_actors_anim_advance(void)
         re15_actor_t *a = &g_actors[i];
         if (!a->active) continue;
         if (a->state == RE15_AI_STATE_CORPSE) continue;   /* +0x4==7: corpse holds its fallen pose */
+        if (a->type == 0x21) continue;                    /* crow: its flight brain owns +0x95 (0x8001f314) */
         uint16_t mo = a->motion;
         if (mo == 0x0C || mo == 0x0E || mo == 0x12 || mo == 0x13) { a->anim_frame = 0; continue; }
         if (a->motion_init_delay > 0) {

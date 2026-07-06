@@ -785,6 +785,10 @@ void re15_enemy_apply_hitbox(re15_actor_t *a, uint8_t type)
         case 0x10: case 0x11:
         case 0x16: r = 400;  h = 1440; break;  /* STAGE1 briefing zombies + STAGE2 enemy     */
         case 0x29: r = 1100; h = 1080; break;  /* wide/short creature (HASH-..._5.sav)       */
+        case 0x21: r = 200;  h = 180;  break;  /* CROW — byte-true from its +0x78 dim block
+                                                * @0x801210fc: hw[+6]=0xc8=200 (radius),
+                                                * hw[+8]=0xb4=180 (height), hw[+10]=200 (INIT
+                                                * FUN_80111a4c: +0x78 = DAT_80121108)          */
         default:   return;                      /* unverified type → no hitbox (no guessing) */
     }
     a->hit_radius_min = a->hit_radius_max = r;

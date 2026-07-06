@@ -300,8 +300,6 @@ typedef struct {
     int16_t  crow_accel;     /* +0x1e6: per-tick speed accel (dive ramp)                       */
     uint8_t  crow_contact;   /* +0x1d0: player-contact flag (strike/grab connect)             */
     int16_t  crow_struggle;  /* +0x9c : grab-hold struggle meter (drains, <0 = release)        */
-    uint8_t  crow_aframe;    /* AI-local anim frame counter (drives the +0x95 frame-8 re-thrust
-                              * + clip-done gates; decoupled from the render's anim_frame)      */
 } re15_actor_t;
 
 extern re15_actor_t g_actors[RE15_ACTOR_MAX];
