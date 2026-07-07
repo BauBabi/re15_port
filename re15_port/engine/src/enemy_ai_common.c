@@ -3390,7 +3390,12 @@ static void re15_dog_ai_tick(int slot)
         re15_dog_clip(e, 1);                                  /* +0x94=1 idle clip @0x8010d960 */
         e->steer_x = (int16_t)pl->x; e->steer_z = (int16_t)pl->z;  /* +0x1bc/+0x1be @0x8010d9a8 */
         e->ai_timer = 0; e->dog_atk_cd = 0; e->dog_pounce_cd = 0; e->dog_flags = 0;
-        if (e->hp <= 0) e->hp = 20;                           /* variant HP row @0x8011f034 (faithful-line) */
+        {   /* BYTE-TRUE HP (dog INIT @0x8010dae8-db0c): +0x9a = HPtable[type*0x20 + (rng&0xf)*2], the
+             * SAME shared table @0x8011f034 as the zombie/maggot. Dog row @0x8011f434 (type 0x20). */
+            static const uint16_t dog_hp[16] =
+                { 65, 85, 85, 69,105, 87, 73, 87,107, 77,111, 80, 93, 83, 97,103 };
+            if (e->hp <= 0) e->hp = (int16_t)dog_hp[re15_engine_rand8() & 0xf];
+        }
         e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* +0x4=1 @0x8010d950 */
         break;
 
