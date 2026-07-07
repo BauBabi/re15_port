@@ -59,15 +59,20 @@ cmake -B build_psx -DRE15_BUILD_PSX=ON -DCMAKE_TOOLCHAIN_FILE=cmake/psx_toolchai
 
 ### Nur Tests (ohne vollständigen Rebuild)
 
+> ⚠️ **Die ctest-Suite ist Opt-in: `-DRE15_BUILD_TESTS=ON` (Default OFF).** Ein reiner
+> `-DRE15_BUILD_PC=ON`-Configure baut KEINE Tests → `ctest` meldet dann „No tests were found!!!".
+> Ein **Clean-Rebuild (`rm -rf build`) verliert das Flag still** (der inkrementelle Build behielt es
+> nur aus dem Cache) — beim Clean IMMER `-DRE15_BUILD_TESTS=ON` mitgeben. Test-Exes: `build/tests/unit/*.exe`.
+
 ```bash
-cd build && ctest --output-on-failure --timeout 30
+cd build && ctest --output-on-failure --timeout 30      # setzt voraus: mit -DRE15_BUILD_TESTS=ON konfiguriert
 ```
 
 ### Clean Rebuild
 
 ```bash
-# PC
-rm -rf build && cmake -B build -DRE15_BUILD_PC=ON -DRE15_ASSETS_PATH=<assets_pfad> && cmake --build build
+# PC (RE15_BUILD_TESTS=ON nicht vergessen, sonst fehlt die ctest-Suite)
+rm -rf build && cmake -B build -DRE15_BUILD_PC=ON -DRE15_BUILD_TESTS=ON -DRE15_ASSETS_PATH=<assets_pfad> && cmake --build build
 
 # PSX
 rm -rf build_psx && cmake -B build_psx -DRE15_BUILD_PSX=ON -DCMAKE_TOOLCHAIN_FILE=cmake/psx_toolchain.cmake -DPSN00BSDK_PATH=<sdk_pfad> -DRE15_ASSETS_PATH=<assets_pfad> && cmake --build build_psx
