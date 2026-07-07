@@ -4643,5 +4643,10 @@ void re15_enemy_ai_run_all(int combat_active)
                                  * constrain (byte-true: zero locomotion primitives in the handler). */
             re15_writher_ai_tick(s);
         }
+        /* type 0x22 (EM022, STAGE2 root 0x8010c080) is a VERIFIED STUB (wf_5c34ffe7): a scaffolded
+         * state machine whose every dispatch leaf is a `jr ra` no-op — NO HP, NO clip, NO locomotion,
+         * NO attack, NO player.hp write. The registered-but-unimplemented pattern (like G-Birkin
+         * form-3 0x33). Byte-true = deliberately UNROUTED: it spawns and sits inert (its only real code
+         * is the shared cutscene model-draw aux, which the port's renderer already covers). */
     }
 }
