@@ -53,6 +53,34 @@ int main(void)
         fprintf(stderr, "FAIL(3): AUTO_EVENT must NOT fire when the entity is outside\n"); fail = 1; }
     else printf("  (3) outside: no fire\n");
 
+    /* (4) #14(c) generic BAND-GATE: a wrong-floor event AOT does not fire. */
+    extern void re15_collision_set_band(int band);
+    extern void re15_collision_reset_band(void);
+    re15_aot_set(2, RE15_AOT_TYPE_AUTO_EVENT, 9, 3000, 3000, 500, 500);
+    g_aot.slots[2].band = 4;                         /* AOT on floor band 4 */
+
+    re15_collision_set_band(4);                      /* player on band 4 -> MATCH -> fires */
+    g_aot.fired_event_id_this_frame = 0;
+    re15_aot_scan(3000, 3000, 0xFF);
+    if (g_aot.fired_event_id_this_frame != 9) { fprintf(stderr, "FAIL(4a): matching-band AUTO must fire\n"); fail = 1; }
+
+    re15_collision_set_band(0);                      /* player on band 0 -> MISMATCH -> gated */
+    g_aot.fired_event_id_this_frame = 0;
+    re15_aot_scan(3000, 3000, 0xFF);
+    if (g_aot.fired_event_id_this_frame != 0) { fprintf(stderr, "FAIL(4b): wrong-band AUTO must be GATED (fired=%d)\n", g_aot.fired_event_id_this_frame); fail = 1; }
+
+    g_aot.slots[2].band = 0x80 | 4;                  /* 0x80 ignore-band -> fires regardless of floor */
+    g_aot.fired_event_id_this_frame = 0;
+    re15_aot_scan(3000, 3000, 0xFF);
+    if (g_aot.fired_event_id_this_frame != 9) { fprintf(stderr, "FAIL(4c): 0x80 ignore-band AUTO must fire on any floor\n"); fail = 1; }
+
+    g_aot.slots[2].band = 4;
+    re15_collision_reset_band();                     /* band unknown (-1) -> ungated (pre-band room) */
+    g_aot.fired_event_id_this_frame = 0;
+    re15_aot_scan(3000, 3000, 0xFF);
+    if (g_aot.fired_event_id_this_frame != 9) { fprintf(stderr, "FAIL(4d): band -1 (unknown) must NOT gate\n"); fail = 1; }
+    if (!fail) printf("  (4) BAND-GATE: match fires, mismatch gated, 0x80 ignores, band -1 ungated\n");
+
     if (fail) { printf("AOT-EDGE: FAIL\n"); return 1; }
     printf("AOT-EDGE: all checks passed\n");
     return 0;

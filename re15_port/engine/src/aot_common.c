@@ -396,6 +396,19 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
             int32_t fz = player_z - (int32_t)((563 * s) >> 12);
             gen_reach = (abs_i32(fx - a->x) <= 900) && (abs_i32(fz - a->z) <= 900);
         }
+        /* #14(c) GENERIC band-gate (byte-true FUN_80042cac @0x80042cac): the scan tests the AOT's band
+         * byte BEFORE the geometry — a wrong-FLOOR event AOT does not fire. (band & 0x80) = ignore-band;
+         * otherwise require player_band == band. Only gate when a collision band is established (pb >= 0),
+         * exactly like the DOOR gate above (a pre-band / -1 room keeps the ungated behaviour). Doors use
+         * their own door_params band; stair/cam are handled/skipped earlier — so this covers the event
+         * types (GENERIC/AUTO_EVENT/MESSAGE/EXAMINE), whose band is now populated from Aot_set pc[4]. */
+        if (a->type == RE15_AOT_TYPE_GENERIC || a->type == RE15_AOT_TYPE_AUTO_EVENT ||
+            a->type == RE15_AOT_TYPE_MESSAGE || a->type == RE15_AOT_TYPE_EXAMINE_WORKVAR) {
+            int pb = re15_collision_debug_band();
+            if (pb >= 0 && !(a->band & 0x80) && (int)a->band != pb) {
+                gen_reach = 0; inside = 0;   /* band mismatch -> gate the fire this frame */
+            }
+        }
         int is_action = (a->type == RE15_AOT_TYPE_DOOR ||
                          a->type == RE15_AOT_TYPE_GENERIC ||
                          a->type == RE15_AOT_TYPE_MESSAGE ||

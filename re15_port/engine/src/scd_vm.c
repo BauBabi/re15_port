@@ -1962,6 +1962,14 @@ static int op_aot_set(scd_thread_t *t)
         } else {
             re15_aot_set(slot, type, event_id, cx, cz, hw, hh);
         }
+        /* #14(c): pc[4] is the runtime AOT band for EVERY Aot_set type (same field the stair reads as
+         * `chain` and the door as its band). Store it so the scan's generic band-gate (byte-true
+         * FUN_80042cac: (band&0x80) || player_band==band) can keep a wrong-floor event AOT from firing. */
+        if (slot >= 0 && slot < RE15_AOT_MAX) g_aot.slots[slot].band = t->pc[4];
+#ifdef RE15_AOTBAND_DIAG
+        fprintf(stderr, "[AOTBAND] room set slot=%d type=%d flags=0x%02x band=pc4=0x%02x ev=0x%02x\n",
+                slot, (int)t->pc[2], (int)t->pc[3], (int)t->pc[4], (int)t->pc[17]);
+#endif
     }
     /* PC-Vorschub konditional pc[3]&0x80: 28 vs 20. Byte-true: LAB_80040534 @0x80040590
      * `lbu v0,0x3(v1)`; @0x80040598 `andi 0x80`; @0x8004059c `beq` -> +0x1c(28)/+0x14(20)
