@@ -22,6 +22,7 @@
 extern int16_t re15_atan2_q12(int32_t, int32_t);
 extern int  re15_player_is_grabbed(void);
 extern void re15_body_push_player(void);
+extern void re15_actors_anim_advance(void);   /* the shared per-frame anim pass game_step runs at :481 */
 
 static int32_t xz_dist(const re15_actor_t *a, const re15_actor_t *b)
 {
@@ -31,8 +32,11 @@ static int32_t xz_dist(const re15_actor_t *a, const re15_actor_t *b)
     return r;
 }
 
-/* one game_step-order frame for the enemy loop: player-push, then the AI tick */
-static void step(void) { re15_body_push_player(); re15_enemy_ai_run_all(0); }
+/* one game_step-order frame for the enemy loop, byte-true to game_step_common.c:
+ * body_push_player (:250) -> re15_actors_anim_advance (:481) -> re15_enemy_ai_run_all (:489).
+ * The anim pass MUST be here: it is the shared advance that pinned the maggot's bite clip 0x12 to
+ * frame 0 (double-advance / lie-down pin) — a step() without it hid the "harmless maggot" bug. */
+static void step(void) { re15_body_push_player(); re15_actors_anim_advance(); re15_enemy_ai_run_all(0); }
 
 int main(void)
 {

@@ -618,13 +618,35 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
  * (b) the lie-down spawn clips 0x0C/0E/12/13 stay pinned to their prone START frame; (c) the
  * Plc_motion 1-tick init-delay holds keyframe 0. Otherwise advance anim_frame + consume the FRAC
  * crossfade (mirrors FUN_8001f3bc). The render (re15_compute_actor_kf) wraps the frame per clip. */
+/* Types whose per-type AI tick advances +0x95 (anim_frame) ITSELF (each ports its own handler's
+ * f314 advance): dog 0x20 / crow 0x21 / alligator 0x23 / fx-emitter 0x24 / adult-spider 0x25 /
+ * maggot 0x27 / cockroach 0x29 / tyrant 0x2b / ivy 0x2d / birkin 0x30+0x36 / zombie-girl 0x13 /
+ * writher 0x1a / NPC 0x40. re15_actors_anim_advance must NOT also advance them — a SECOND advance
+ * here doubles their clip rate, and the zombie lie-down pin below (clips 0x0C/0E/12/13 -> frame 0)
+ * would freeze their ATTACK clips: the maggot bite (clip 0x12) / heavy (0x13) stuck at frame 0 =
+ * the "harmless maggot" bug (live-diagnosed ROOM11C0: af pinned at 0/1, the damage window af 0x0c
+ * never reached). Only the shared-root ZOMBIE types (0x10/0x11/0x12/0x16/0x18, ticked by
+ * re15_enemy_ai_live_step) and the stationary SPIDER-BABY (0x26) do NOT self-advance and so rely on
+ * this pass. Verified 2026-07-07: every mobile enemy tick self-advances in every state. */
+static int re15_type_self_advances_anim(uint8_t t)
+{
+    switch (t) {
+    case 0x13: case 0x1a: case 0x20: case 0x21: case 0x23: case 0x24:
+    case 0x25: case 0x27: case 0x29: case 0x2b: case 0x2d: case 0x30:
+    case 0x36: case 0x40:
+        return 1;
+    default:
+        return 0;
+    }
+}
+
 void re15_actors_anim_advance(void)
 {
     for (int i = 1; i < RE15_ACTOR_MAX; i++) {
         re15_actor_t *a = &g_actors[i];
         if (!a->active) continue;
         if (a->state == RE15_AI_STATE_CORPSE) continue;   /* +0x4==7: corpse holds its fallen pose */
-        if (a->type == 0x21) continue;                    /* crow: its flight brain owns +0x95 (0x8001f314) */
+        if (re15_type_self_advances_anim(a->type)) continue;  /* self-advancing tick owns +0x95 (dog/maggot/crow/…) */
         uint16_t mo = a->motion;
         if (mo == 0x0C || mo == 0x0E || mo == 0x12 || mo == 0x13) { a->anim_frame = 0; continue; }
         if (a->motion_init_delay > 0) {

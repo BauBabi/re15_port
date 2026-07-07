@@ -499,3 +499,50 @@ Multi-Agent-Audit: 20 Subsysteme, 123 WRONG/MISSING-Verdachtsfälle, **104 adver
 - STAGE2-6 generell: Fast alle Asset-Belege stammen aus STAGE1 (ROOM10xx/11xx/12xx) plus vereinzelt STAGE3/4. Opcode-Vorkommen (0x58/0x59, 0x4C-0x4F, Door 4P-Variante, Slope-Typen) wurden NICHT systematisch Ã¼ber alle 6 Stages mit einem SCD-Walker gezÃ¤hlt â€” viele 'kommt real vor?'-Fragen sind nur stichprobenartig beantwortet.
 - PSX-Build-Pfad: Die meisten Render-/Mathematik-Fixes (RotMatrix, Trig-LUT, Kamera-Integer) wurden gegen die EXE-Disassembly belegt, aber der PSX-Port (PSn00bSDK gte_rtpt/RotMatrix) wurde nur als 'teils korrekt' eingestuft â€” eigene RotMatrix/LUT auf PSX ist ungetestet und kÃ¶nnte die PSX-ParitÃ¤t brechen.
 - Enemy-Subsysteme (AI, sce_em_set Spawn, Zombie-Logik in STAGE-Overlays @0x8010xxxx): Der gesamte Audit fokussiert Engine-Infrastruktur (EXE-FUN_80xxxxxx). Die Overlay-Decompilate (RE_15_Quellcode_Overlays/STAGE{1..6}) als PRIMÃ„RE Quelle fÃ¼r Raum-/Gegner-Logik wurden NICHT auditiert â€” Gegnerverhalten/Dispatch @0x80072bac ist eine komplett ungeprÃ¼fte Subsystem-Klasse.
+## Nachtrag: Enemy-Integration Deep-Audit (2026-07) — die zuletzt offene Subsystem-Klasse
+
+Die letzte offene Lücke oben ("Enemy-Subsysteme … komplett ungeprüfte Subsystem-Klasse") wurde
+mit zwei adversariellen Deep-Audit-Workflows geschlossen, nachdem der gesamte registrierte
+Gegner-Roster (STAGE1-6, 14 AI-Ticks) portiert war. 8 reale Integrations-Bugs gefunden+gefixt:
+
+- **wf_246147e3** (Commit 57c4c48c): 2 Bugs — (a) der Actor-vs-Actor-Body-Push (b544) hing im
+  zombie-only Dispatch-Branch → Nicht-Zombie-Schwärme kollabierten auf einen Punkt
+  (`re15_enemy_body_push_tail` jetzt für JEDEN bewegten Ground-Gegner); (b) Corpse-Blutlache
+  zog fälschlich für Nicht-Zombies (main.c type-gate).
+- **wf_555f18eb** (Commit fa6fe9a8): 6 Bugs, zwei gekoppelte Ursachen, die die groß-körperigen
+  Nicht-Zombies **in-game praktisch harmlos** ließen:
+  - **Part A (HP)** — `Sce_em_set` seedete `a->hp = 100`; das Original FUN_800420a0 schreibt hier
+    KEIN +0x9a. Jede Nicht-Zombie-INIT seedet ihre byte-true Tabellen-HP unter `if (e->hp<=0)`,
+    also übersprang die 100 den Seed → Gegner auf 100 statt Row (Maggot 180, Dog 65-111, Gator
+    300, …). Fix: hp beim struct-cleared 0 lassen. Zombies unbetroffen (setzen HP bedingungslos).
+  - **Part B (Reach)** — `re15_body_push_player` hält den Spieler auf `hit_radius_min +
+    RE15_BODY_R_PLAYER` aus jedem Gegner-Body (aec4/b544-Standoff; aec4 liest +0x78[6]/[0xa] =
+    dieselben Dims wie hit_radius_min). Fünf Melee-Connects gateten auf eine Distanz UNTER diesem
+    Standoff → mit aktivem Push nie in Reichweite: Maggot BITE 2000/HEAVY 1600, Adult-Spider GRAB
+    900, Alligator GRAB 1400, Spider-Baby -2-Kontakt 600 (Standoffs 2050/1450/2650/1050). Fix:
+    neuer `re15_body_contact_reach`-Helper; jeder Connect gatet jetzt auf Body-Kontakt (byte-true
+    landet der Angriff via seiner forward-projizierten Hitbox 0x8001bff8 am Kontakt).
+  - Zwei Claims adversariell VERWORFEN (is_real=false): Tyrant/Ivy-Grab-ohne-Anim (by-design
+    faithful-line), Alligator-sub-9-Exemption (Gator setzt sub_state_1 nie auf 9).
+  - Regression: `test_enemy_attack_reach` fährt die game_step-Reihenfolge (body_push_player →
+    run_all) und prüft, dass jeder Gegner durch den Push trifft — die per-Gegner-Unit-Tests
+    verfehlten das, weil sie den Player-Push nie liefen. 54/54 ctest grün.
+
+### Live-Verifikations-Nachtrag (2026-07-07): der Anim-Advance-Pin (dritter Maggot-Blocker)
+
+Beim End-to-End-Verifizieren von Part B im echten Binary (ROOM11C0, 2 Maggots) fiel auf: die
+Maggot-Bite verband trotz korrektem Connect-Threshold NICHT — `af` steckte bei 0/1, das
+Damage-Fenster (af 0x0c) wurde nie erreicht. Dynamisch diagnostiziert (env-gated File-Log in
+`re15_maggot_ai_tick`; die exe ist GUI-Subsystem → stderr geht ins Leere, nur File-Ausgaben
+überleben): `re15_actors_anim_advance` (player_common.c, game_step:481, LÄUFT VOR run_all) advanct
++0x95 für ALLE Nicht-Corpse-Actors — aber die **mobilen Gegner advancen +0x95 in ihrem eigenen
+Tick** (dog/maggot/spiders/roach/birkin/gator/tyrant/ivy/zgirl/writher/fx/npc, in JEDEM State
+verifiziert). Zwei Fehler: (a) **Double-Advance** (+2/Frame → Bite-Connect `af==0x0c` wird
+übersprungen); (b) der **Zombie-Lie-Down-Pin** (Motions 0x0C/0E/12/13 → `anim_frame=0`) fror die
+Maggot-Bite (Clip 0x12) / Heavy (0x13) auf Frame 0 = permanent harmlos. Fix: `re15_actors_anim_advance`
+überspringt jetzt die self-advancing Typen (`re15_type_self_advances_anim`); nur die
+Shared-Root-Zombies (0x10/0x11/0x12/0x16/0x18, via re15_enemy_ai_live_step) + Spider-Baby (0x26)
+verlassen sich noch darauf. Der Unit-Test verfehlte das, weil er run_all OHNE die anim-Pass fuhr —
+`test_enemy_attack_reach.step()` fährt jetzt die volle game_step-Reihenfolge (body_push_player →
+re15_actors_anim_advance → run_all) und reproduziert den Bug (schlägt ohne den Fix fehl). Live
+bestätigt: Maggot beißt (HP 100→94 @F62). 54/54 ctest grün.
