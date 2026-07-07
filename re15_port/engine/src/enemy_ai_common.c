@@ -4572,6 +4572,41 @@ static void re15_alligator_ai_tick(int slot)
     }
 }
 
+/* ============================ AMBIENT FX-EMITTER (type 0x24, EM024) — STAGE2 =================== *
+ * Byte-true from workflow wf_5c34ffe7 (root 0x8010ee9c). EM024 is NOT a combat enemy — it is a
+ * scripted particle/swarm EMITTER (single-bone flat green billboard) used as room ambience. It has
+ * NO HP, DISABLES its own collision at INIT (*+0x188 &= ~1 @0x8010efe4), and does ZERO player damage
+ * (no player.hp write, no grab, no damage-entry, no hitbox anywhere in 0x8010ee9c..0x80110a00). Its
+ * ACTIVE loop is an accelerating leftward X-DRIFT that wraps, plus a 3-level (+0x4/+0x5/+0x6) phase
+ * sequencer firing timed particle bursts (0x80019700). The port models the byte-true gameplay:
+ * INIT (no HP, state 1) + the X-drift/wrap; the particle-burst choreography is faithful-line (the
+ * EM024 sprite belongs to the ESP/particle subsystem). */
+static void re15_fx_emitter_ai_tick(int slot)
+{
+    re15_actor_t *e  = &g_actors[slot];
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    (void)pl;
+    switch (e->state) {
+    case 0:   /* INIT 0x8010ef1c: no HP, disable own collision, drift timer 120 -> ACTIVE. */
+        e->hit_react = 1;                        /* +0x93 = 1 @0x8010ef58 */
+        e->motion = 0; e->anim_frame = 0; e->anim_frac = 0;   /* clip 0 via FUN_8011089c @0x801108a8 */
+        e->ai_timer = 0x78;                      /* +0x8c drift timer = 120 @0x8010ef6c */
+        e->sub_state_1 = e->grid_id;             /* +0x5 = grid @0x8010f00c */
+        e->sub_state_2 = 0; e->sub_state_3 = 0;
+        e->state = 1;                            /* +0x4 = 1 @0x8010eff4 */
+        break;
+    case 1:   /* ACTIVE 0x8010f020: accelerating leftward X-drift + timed FX bursts (faithful). No damage. */
+        e->ai_timer++;                           /* timer++ @0x8010f0c8 */
+        e->x -= e->ai_timer;                     /* X -= timer @0x8010f0e8 */
+        if (e->x < -25000) { e->x = 20000; e->ai_timer = 0xe1; }   /* wrap @0x8010f100-11c (0x4e20/0xe1) */
+        e->anim_frame++;                         /* the phase sequencer would fire 0x80019700 bursts here */
+        break;
+    default:
+        e->state = 1;
+        break;
+    }
+}
+
 /* Phase 8.6 — the per-frame LIVE-zombie AI pass. The port's faithful, TYPE-GATED slice of the
  * original entity-update loop FUN_8001a50c (@0x8001ce04): the original walks the entity array
  * (DAT_800acc2c, stride 0x1f4) and, for every active entity (+0x0 & 1), dispatches its per-type
@@ -4736,6 +4771,11 @@ void re15_enemy_ai_run_all(int combat_active)
                 re15_collision_constrain(&g_room_rdt, al_ox, al_oz, &nx, &nz);
                 e->x = nx; e->z = nz;
             }
+        }
+        else if (t == 0x24) {   /* AMBIENT FX-EMITTER (type 0x24, EM024, STAGE2) — harmless drifting swarm.
+                                 * NO wall-clamp: it drives its own scripted X-drift/wrap and disables its
+                                 * own collision (byte-true: not a physical obstacle). */
+            re15_fx_emitter_ai_tick(s);
         }
         /* type 0x22 (EM022, STAGE2 root 0x8010c080) is a VERIFIED STUB (wf_5c34ffe7): a scaffolded
          * state machine whose every dispatch leaf is a `jr ra` no-op — NO HP, NO clip, NO locomotion,
