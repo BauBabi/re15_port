@@ -50,10 +50,10 @@ int main(void)
     if (c1 >= c0) { fprintf(stderr, "FAIL(2): the boss must close on the player, dist %d->%d\n", c0, c1); fail = 1; }
     printf("  (2) NAV-CHASE: dist %d->%d (closing)\n", c0, c1);
 
-    /* (2b) ATTACK: with the player in the front cone within range the boss's HUB (sub 1) commits a
-     * LUNGE/CLAW (sub 3) or BITE (sub 4) that deals -10. Byte-true (@0x801177f0). */
+    /* (2b) CLOSE ATTACK: with the player in the front cone within 2500 the boss's HUB (sub 1) commits a
+     * BITE (sub 4) / LUNGE-CLAW (sub 3) that deals -10. Byte-true (@0x801177f0). */
     extern int16_t re15_atan2_q12(int32_t, int32_t);
-    pl->x = e->x; pl->z = e->z + 1500; pl->hp = 100; pl->hit_react = 0;   /* just ahead, within the 2500/3200 range */
+    pl->x = e->x; pl->z = e->z + 1500; pl->hp = 100; pl->hit_react = 0;   /* just ahead, within the 2500 range */
     e->rot_y = (int16_t)(((int)re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0xfff);  /* face the player */
     e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0;           /* force the HUB */
     int attacked = 0; int16_t ahp0 = pl->hp;
@@ -63,9 +63,28 @@ int main(void)
         pl->hit_react = 0;
         if (pl->hp < ahp0) break;
     }
-    if (!attacked)         { fprintf(stderr, "FAIL(2b): boss never committed an attack (sub 3/4); sub=%d\n", e->sub_state_1); fail = 1; }
-    if (pl->hp != ahp0 - 10) { fprintf(stderr, "FAIL(2b): the boss attack must deal -10, hp %d->%d\n", ahp0, pl->hp); fail = 1; }
-    printf("  (2b) ATTACK: sub reached %d, player hp %d->%d (-10 on connect)\n", e->sub_state_1, ahp0, pl->hp);
+    if (!attacked)         { fprintf(stderr, "FAIL(2b): boss never committed a close attack (sub 3/4); sub=%d\n", e->sub_state_1); fail = 1; }
+    if (pl->hp != ahp0 - 10) { fprintf(stderr, "FAIL(2b): the close attack must deal -10, hp %d->%d\n", ahp0, pl->hp); fail = 1; }
+    printf("  (2b) CLOSE ATTACK: sub reached %d, player hp %d->%d (-10 on connect)\n", e->sub_state_1, ahp0, pl->hp);
+
+    /* (2c) TACKLE (sub 7): player in the 3200..3800 band + aligned -> the HUB commits a TACKLE (sub 7),
+     * clip 5, two windows -> player.hp -= 5 (@0x80118b1c). Byte-true tackle damage. */
+    pl->x = e->x; pl->z = e->z + 3500; pl->hp = 100; pl->hit_react = 0;   /* in the 3200..3800 tackle band */
+    e->rot_y = (int16_t)(((int)re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0xfff);
+    e->state = 1; e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0;
+    int tackled = 0; int16_t thp0 = pl->hp;
+    for (int f = 0; f < 240; f++) {
+        re15_enemy_ai_run_all(0);
+        if (e->sub_state_1 == 7) tackled = 1;
+        pl->hit_react = 0;
+        if (pl->hp < thp0) break;
+        /* keep the player pinned in the band so the boss doesn't close past it into sub 3/4 */
+        if (e->sub_state_1 == 1) { pl->x = e->x; pl->z = e->z + 3500;
+            e->rot_y = (int16_t)(((int)re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0xfff); }
+    }
+    if (!tackled)          { fprintf(stderr, "FAIL(2c): boss never committed a TACKLE (sub 7); sub=%d\n", e->sub_state_1); fail = 1; }
+    if (pl->hp != thp0 - 5) { fprintf(stderr, "FAIL(2c): the TACKLE must deal -5, hp %d->%d\n", thp0, pl->hp); fail = 1; }
+    printf("  (2c) TACKLE: sub reached %d, player hp %d->%d (-5 on connect)\n", e->sub_state_1, thp0, pl->hp);
 
     /* (3) KILLABLE: a lethal hit -> DEATH -> CORPSE */
     pl->x = 0; pl->z = 20000;

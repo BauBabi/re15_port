@@ -4306,30 +4306,44 @@ static void re15_birkin_ai_tick(int slot)
             if (e->motion != 0x10) re15_birkin_clip(e, 0x10);
             if (re15_birkin_anim(e)) { e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0; }
             break;
-        case 0: case 1:  /* HUB (sub 1 0x801171d4 decide + 0x80116f6c): walk clip 1 toward the player, DECIDE
-                          * the attack: dist<3200 & cone 0x338 -> LUNGE (sub 3); dist<2500 & cone 0x1f4 -> BITE (4) */
+        case 0: case 1:  /* HUB (sub 1 0x80116f6c decide + 0x801171d4 act): walk clip 1 toward the player, DECIDE
+                          * the attack by distance/cone (byte-true thresholds from the sub-1 DECIDE cascade). */
             if (e->motion != 1) re15_birkin_clip(e, 1);
             re15_enemy_steer_point(e, pl->x, pl->z, 0x20);    /* walk steer rate 0x20 @0x80117254 */
             re15_dog_advance(e, 40);
-            if (pl->hit_react == 0 && dist < 2500 && re15_dog_arc(e, pl, 2500, 0x1f4)) {  /* -> BITE @0x80116f6c */
-                re15_birkin_clip(e, 4); e->sub_state_1 = 4; e->sub_state_2 = 0; e->sub_state_3 = 0; }
-            else if (pl->hit_react == 0 && dist < 3200 && re15_dog_arc(e, pl, 3200, 0x338)) {  /* -> LUNGE/CLAW */
-                re15_birkin_clip(e, 3); e->sub_state_1 = 3; e->sub_state_2 = 0; e->sub_state_3 = 0; }
+            if (pl->hit_react == 0) {
+                if (dist < 2500 && re15_dog_arc(e, pl, 2500, 0x1f4)) {          /* -> BITE (sub 4) @0x80116f6c */
+                    re15_birkin_clip(e, 4); e->sub_state_1 = 4; e->sub_state_2 = 0; e->sub_state_3 = 0; }
+                else if (dist < 3200 && re15_dog_arc(e, pl, 3200, 0x338)) {     /* -> LUNGE/CLAW (sub 3) */
+                    re15_birkin_clip(e, 3); e->sub_state_1 = 3; e->sub_state_2 = 0; e->sub_state_3 = 0; }
+                else if (dist < 3800 && re15_dog_arc(e, pl, 3800, 0x464)) {     /* -> TACKLE (sub 7): the sub-1
+                          * DECIDE gate is (arc 0x10 != 0 && arc 0x464 == 0) i.e. the player is inside the WIDE
+                          * ±0x464 cone but not razor-dead-ahead (±0x10); the ±0x10 exclusion is faithful-line
+                          * (a negligible sliver the closer sub 3/4 gates already own). */
+                    re15_birkin_clip(e, 5); e->sub_state_1 = 7; e->sub_state_2 = 0; e->sub_state_3 = 0; }
+                else if (dist >= 3800 && dist < 9000) {                        /* -> CHARGE-COMBO (sub 10, faithful far-range) */
+                    re15_birkin_clip(e, 1); e->sub_state_1 = 10; e->sub_state_2 = 0; e->sub_state_3 = 0; }
+            }
             re15_birkin_anim(e);
             break;
-        case 3:   /* LUNGE/CLAW GRAB (sub 3 0x801174fc): clip 3 windup+strike -> player.hp -= 10 on the damage
-                   * window (+0x95 in [0x24..0x2b] @0x801177f0) -> clip 0xa recovery -> HUB. */
+        case 3:   /* LUNGE/CLAW GRAB (sub 3 0x801174fc): clip 3 strike -> player.hp -= 10 on the window
+                   * (+0x95 [0x24..0x2b] @0x801177f0, grab latch aca58=(facing<<8)|5) -> clip 0xa recovery ->
+                   * GRAB-THROW (sub 5). */
             if (e->sub_state_3 == 0) {
-                re15_enemy_steer_point(e, pl->x, pl->z, 0x50);   /* strike steer 0x50 @0x801175xx */
+                re15_enemy_steer_point(e, pl->x, pl->z, 0x50);
                 if (e->anim_frame >= 0x24 && e->anim_frame <= 0x2b && pl->hit_react == 0 && re15_dog_arc(e, pl, 2500, 0x400)) {
                     if (e->anim_frame == 0x24) {
                         pl->hp = (int16_t)(pl->hp - 10);        /* player.hp -= 10 @0x801177f0 */
                         if (pl->hp < 0) pl->hp = 1;             /* keep-alive clamp @0x80117810 */
-                        re15_audio_room_se(7); pl->hit_react |= 1;   /* Se7 + grab latch (aca58 deferred) */
+                        re15_audio_room_se(7); pl->hit_react |= 1; s_player_grabbed = 1;   /* grab latch (cmd 5) */
+                        e->sub_state_2 = 1;                     /* mark: grabbed -> throw combo */
                     }
                 }
-                if (re15_birkin_anim(e)) { re15_birkin_clip(e, 0x0a); e->sub_state_3 = 1; }  /* -> recovery clip 0xa */
-            } else if (re15_birkin_anim(e)) { e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0; }  /* -> HUB */
+                if (re15_birkin_anim(e)) { re15_birkin_clip(e, 0x0a); e->sub_state_3 = 1; }
+            } else if (re15_birkin_anim(e)) {
+                e->sub_state_1 = (uint8_t)(e->sub_state_2 ? 5 : 1);   /* grabbed -> THROW (sub 5), else -> HUB */
+                e->sub_state_2 = 0; e->sub_state_3 = 0;
+            }
             break;
         case 4:   /* FAST BITE/CLAW (sub 4 0x801179d8): clip 4 -> player.hp -= 10 -> HUB */
             re15_enemy_steer_point(e, pl->x, pl->z, 0x50);
@@ -4342,7 +4356,52 @@ static void re15_birkin_ai_tick(int slot)
             }
             if (re15_birkin_anim(e)) { e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0; }
             break;
-        default:  /* the other attack subs (5 grab-hold / 6 / 7 / 8 / 10 charge-combo) = wave 2b -> HUB */
+        case 5:   /* GRAB-AND-HOLD/THROW (sub 5 0x80117d30): clip 0xb. NON-damaging grab-throw — latches the
+                   * player grab-cmd DAT_800aca58=6 at the contact frame (+0x95==0x2c @0x80117ee4, via the
+                   * attack-box overlap); the throw+damage is the shared player grab-FSM (cmd 6). -> HUB. */
+            re15_enemy_steer_point(e, pl->x, pl->z, 0x50);
+            if (e->motion != 0x0b) re15_birkin_clip(e, 0x0b);
+            if (e->anim_frame == 0x2c && re15_dog_arc(e, pl, 2500, 0x400)) {
+                s_player_grabbed = 1; pl->hit_react |= 1; re15_audio_room_se(2);   /* grab-throw latch (cmd 6) */
+            }
+            if (re15_birkin_anim(e)) { e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0; }
+            break;
+        case 6:   /* THROW FOLLOW-UP (sub 6 0x80117f80): clip 0x14, NO damage (mesh/throw anim) -> HUB */
+            if (e->motion != 0x14) re15_birkin_clip(e, 0x14);
+            if (re15_birkin_anim(e)) { e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0; }
+            break;
+        case 7:   /* TACKLE (sub 7 0x801188f8): clip 5, a LUNGING body-slam from up to 3800. The boss charges
+                   * forward (the sub-7 movement advances the body @0x80118a10) and the attack-box overlap
+                   * (0x8001a5e0) connects on the TWO windows ([4..13]/[18..27] @0x80118ab0) -> player.hp -= 5
+                   * (@0x80118b1c) + keep-alive clamp (@0x80118b38) + latch aca58=0x202 -> HUB. The forward
+                   * lunge speed is faithful-line (exact scale via the 0x80118a10 pos-advance). */
+            re15_enemy_steer_point(e, pl->x, pl->z, 0x50);
+            re15_dog_advance(e, 0x50);                          /* lunge forward into the tackle */
+            if (((e->anim_frame >= 4 && e->anim_frame <= 13) || (e->anim_frame >= 18 && e->anim_frame <= 27))
+                && pl->hit_react == 0 && re15_dog_arc(e, pl, 2500, 0x400)) {
+                if (e->anim_frame == 4 || e->anim_frame == 18) {
+                    pl->hp = (int16_t)(pl->hp - 5);             /* player.hp -= 5 @0x80118b1c */
+                    if (pl->hp < 0) pl->hp = 1;                 /* keep-alive clamp @0x80118b38 */
+                    re15_audio_room_se(4); pl->hit_react |= 1;
+                }
+            }
+            if (re15_birkin_anim(e)) { e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0; }
+            break;
+        case 8:   /* REPOSITION (sub 8 0x80118b58): clip 1, NO damage, a short (0x78=120) approach -> GRAB (sub 5) */
+            if (e->motion != 1) re15_birkin_clip(e, 1);
+            re15_enemy_steer_point(e, pl->x, pl->z, 0x20);
+            re15_dog_advance(e, 40);
+            if (re15_birkin_anim(e)) { e->sub_state_1 = 5; e->sub_state_2 = 0; e->sub_state_3 = 0; }
+            break;
+        case 10:  /* CHARGE-COMBO (sub 10 0x80119524): 14-step, clip 1(charge)->0xf(atk A)->0x13(atk B). The
+                   * charge damage is via the shared body-contact hitbox (no direct hp write in the handler).
+                   * Fast charge toward the player -> LUNGE (sub 3). */
+            if (e->motion != 1) re15_birkin_clip(e, 1);
+            re15_enemy_steer_point(e, pl->x, pl->z, 0x30);    /* charge steer 0x30 */
+            re15_dog_advance(e, 80);                          /* fast charge (faithful; exact speed via 0x80119xxx) */
+            if (re15_birkin_anim(e) || dist < 1500) { re15_birkin_clip(e, 3); e->sub_state_1 = 3; e->sub_state_2 = 0; e->sub_state_3 = 0; }  /* -> LUNGE */
+            break;
+        default:
             e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0;
             re15_birkin_anim(e);
             break;
@@ -4350,13 +4409,21 @@ static void re15_birkin_ai_tick(int slot)
         break;
     }
 
-    case 2:   /* HURT (take_damage +0x4=2): the boss flinches -> resume the brain */
-        e->state = 1; e->sub_state_1 = 9; e->sub_state_2 = 0; e->hit_react = (uint8_t)(e->hit_react & ~1u);
+    case 2:   /* HURT / super-armor FLINCH (0x8011a3f0): a non-lethal hit while the boss is in an armored
+               * action (+0x7==0 && +0x1dd&8 @0x8011a43c/450) plays a gore flinch (+0x1de=9 @0x8011a458,
+               * blood FX via 0x80019700 by bone) and RESUMES the saved pre-hit action (+0x4 = *(+0x1d8)
+               * @0x8011a560-568). The lethal case clears the armor flag in the damage entry so it falls to
+               * DEATH instead — so mapping (state 2 = resume, state 3 = die) is byte-true-equivalent. Resume
+               * to the HUB (sub 1), NOT re-emergence: the boss returns to fighting. */
+        e->state = 1; e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0;
+        e->hit_react = (uint8_t)(e->hit_react & ~1u);
         break;
 
-    case 3:   /* DEATH (take_damage +0x4=3): -> corpse. The byte-true FORM-3 (type 0x33) morph-on-death is
-               * deferred (needs the ACTIVE-brain / transition-state RE). */
-        e->state = 7; e->sub_state_3 = 0;
+    case 3:   /* DEATH down-machine (0x8011a56c): the lethal path sets the downed flags (+0x1b8 |= 0x12
+               * @0x8011a584) and runs the clip-9 topple (the +0x5/+0x6 sub-table @0x8011f1e4 dispatch, whose
+               * down-machine 0x8011a5d8 sets +0x94 = 9 @0x8011a634) -> settle to CORPSE. */
+        if (e->motion != 9) re15_birkin_clip(e, 9);            /* clip 9 = death topple @0x8011a634 */
+        if (re15_birkin_anim(e)) { e->state = 7; e->sub_state_3 = 0; }   /* topple done -> CORPSE */
         break;
 
     case 7:   /* CORPSE: settle, inert */
