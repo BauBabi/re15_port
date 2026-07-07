@@ -50,6 +50,23 @@ int main(void)
     if (c1 >= c0) { fprintf(stderr, "FAIL(2): the boss must close on the player, dist %d->%d\n", c0, c1); fail = 1; }
     printf("  (2) NAV-CHASE: dist %d->%d (closing)\n", c0, c1);
 
+    /* (2b) ATTACK: with the player in the front cone within range the boss's HUB (sub 1) commits a
+     * LUNGE/CLAW (sub 3) or BITE (sub 4) that deals -10. Byte-true (@0x801177f0). */
+    extern int16_t re15_atan2_q12(int32_t, int32_t);
+    pl->x = e->x; pl->z = e->z + 1500; pl->hp = 100; pl->hit_react = 0;   /* just ahead, within the 2500/3200 range */
+    e->rot_y = (int16_t)(((int)re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0xfff);  /* face the player */
+    e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0;           /* force the HUB */
+    int attacked = 0; int16_t ahp0 = pl->hp;
+    for (int f = 0; f < 200; f++) {
+        re15_enemy_ai_run_all(0);
+        if (e->sub_state_1 == 3 || e->sub_state_1 == 4) attacked = 1;
+        pl->hit_react = 0;
+        if (pl->hp < ahp0) break;
+    }
+    if (!attacked)         { fprintf(stderr, "FAIL(2b): boss never committed an attack (sub 3/4); sub=%d\n", e->sub_state_1); fail = 1; }
+    if (pl->hp != ahp0 - 10) { fprintf(stderr, "FAIL(2b): the boss attack must deal -10, hp %d->%d\n", ahp0, pl->hp); fail = 1; }
+    printf("  (2b) ATTACK: sub reached %d, player hp %d->%d (-10 on connect)\n", e->sub_state_1, ahp0, pl->hp);
+
     /* (3) KILLABLE: a lethal hit -> DEATH -> CORPSE */
     pl->x = 0; pl->z = 20000;
     e->hp = 4; e->hit_react = 0;

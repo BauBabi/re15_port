@@ -4297,14 +4297,56 @@ static void re15_birkin_ai_tick(int slot)
         e->state = 1; e->sub_state_1 = 9; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* grid 0x33 -> sub 9 @0x80116890 */
         break;
 
-    case 1: {  /* ACTIVE brain 0x80116d38 (~13KB, deferred): WAVE 1 = nav-chase toward the player. The attack
-                * sub-states + the form-3 transition live here (@0x8011eeb8 by +0x5) = wave 2. */
+    case 1: {  /* ACTIVE brain 0x80116d38 — the byte-true sub-dispatch on +0x5 (workflow wf_204436c3-0fb).
+                * Boss starts at sub 9 (emergence) -> sub 1 (HUB: walk + decide) -> sub 3/4 (claw/bite -10). */
         int32_t dist = re15_enemy_player_dist(e, pl);
         e->dog_dist = (int16_t)dist;
-        if (e->motion != 4) re15_birkin_clip(e, 4);           /* nav-walk clip (placeholder; exact clip = wave 2) */
-        re15_enemy_steer_point(e, pl->x, pl->z, 0x10);        /* nav-steer toward player (0x80039e7c faithful) */
-        re15_dog_advance(e, 40);                              /* nav-walk advance (faithful; exact speed = wave 2) */
-        re15_birkin_anim(e);
+        switch (e->sub_state_1) {
+        case 9:   /* EMERGENCE (sub 9 0x80119378): clip 0x10 emerge pose -> the HUB */
+            if (e->motion != 0x10) re15_birkin_clip(e, 0x10);
+            if (re15_birkin_anim(e)) { e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0; }
+            break;
+        case 0: case 1:  /* HUB (sub 1 0x801171d4 decide + 0x80116f6c): walk clip 1 toward the player, DECIDE
+                          * the attack: dist<3200 & cone 0x338 -> LUNGE (sub 3); dist<2500 & cone 0x1f4 -> BITE (4) */
+            if (e->motion != 1) re15_birkin_clip(e, 1);
+            re15_enemy_steer_point(e, pl->x, pl->z, 0x20);    /* walk steer rate 0x20 @0x80117254 */
+            re15_dog_advance(e, 40);
+            if (pl->hit_react == 0 && dist < 2500 && re15_dog_arc(e, pl, 2500, 0x1f4)) {  /* -> BITE @0x80116f6c */
+                re15_birkin_clip(e, 4); e->sub_state_1 = 4; e->sub_state_2 = 0; e->sub_state_3 = 0; }
+            else if (pl->hit_react == 0 && dist < 3200 && re15_dog_arc(e, pl, 3200, 0x338)) {  /* -> LUNGE/CLAW */
+                re15_birkin_clip(e, 3); e->sub_state_1 = 3; e->sub_state_2 = 0; e->sub_state_3 = 0; }
+            re15_birkin_anim(e);
+            break;
+        case 3:   /* LUNGE/CLAW GRAB (sub 3 0x801174fc): clip 3 windup+strike -> player.hp -= 10 on the damage
+                   * window (+0x95 in [0x24..0x2b] @0x801177f0) -> clip 0xa recovery -> HUB. */
+            if (e->sub_state_3 == 0) {
+                re15_enemy_steer_point(e, pl->x, pl->z, 0x50);   /* strike steer 0x50 @0x801175xx */
+                if (e->anim_frame >= 0x24 && e->anim_frame <= 0x2b && pl->hit_react == 0 && re15_dog_arc(e, pl, 2500, 0x400)) {
+                    if (e->anim_frame == 0x24) {
+                        pl->hp = (int16_t)(pl->hp - 10);        /* player.hp -= 10 @0x801177f0 */
+                        if (pl->hp < 0) pl->hp = 1;             /* keep-alive clamp @0x80117810 */
+                        re15_audio_room_se(7); pl->hit_react |= 1;   /* Se7 + grab latch (aca58 deferred) */
+                    }
+                }
+                if (re15_birkin_anim(e)) { re15_birkin_clip(e, 0x0a); e->sub_state_3 = 1; }  /* -> recovery clip 0xa */
+            } else if (re15_birkin_anim(e)) { e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0; }  /* -> HUB */
+            break;
+        case 4:   /* FAST BITE/CLAW (sub 4 0x801179d8): clip 4 -> player.hp -= 10 -> HUB */
+            re15_enemy_steer_point(e, pl->x, pl->z, 0x50);
+            if (e->anim_frame >= 0x0c && e->anim_frame <= 0x12 && pl->hit_react == 0 && re15_dog_arc(e, pl, 2500, 0x400)) {
+                if (e->anim_frame == 0x0c) {
+                    pl->hp = (int16_t)(pl->hp - 10);            /* player.hp -= 10 (2nd -10 site) */
+                    if (pl->hp < 0) pl->hp = 1;
+                    re15_audio_room_se(7); pl->hit_react |= 1;
+                }
+            }
+            if (re15_birkin_anim(e)) { e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0; }
+            break;
+        default:  /* the other attack subs (5 grab-hold / 6 / 7 / 8 / 10 charge-combo) = wave 2b -> HUB */
+            e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0;
+            re15_birkin_anim(e);
+            break;
+        }
         break;
     }
 
