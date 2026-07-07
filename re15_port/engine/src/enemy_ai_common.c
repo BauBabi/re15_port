@@ -4152,6 +4152,116 @@ static void re15_adult_spider_ai_tick(int slot)
     }
 }
 
+/* ============================ COCKROACH (type 0x29, EM029) — STAGE3 ========================= *
+ * Byte-true 0x80110b00 family (STAGE3.BIN; workflow wf_066cfe96-fc2, adversarially verified). A small
+ * MAGGOT-LIKE ground creature: root 0x80110b00 dispatches +0x4 via @0x8011eca4 (16 states) -> shared
+ * body-tail. The ACTIVE brain (state[1] 0x8011101c) is a two-table A/B brain (A decision @0x8011ecc4 +
+ * B movement @0x8011ed04 on +0x5, like the maggot). It scurries TOWARD the player (no flee, no swarm) and
+ * deals DIRECT player.hp damage: BITE -5 (clip 0x12 @0x80111f60) + HEAVY -10 (clip 0x13 @0x801122ac).
+ * WAVE 1: INIT + idle/approach/scurry chase + bite/heavy + killable (HURT clip 7 / DEATH clip 0xe /
+ * CORPSE). DEFERRED (cited): the exact scurry speed, the lunge sub-states 8/9, the -500 overwhelm attack. */
+static const uint16_t s_roach_hp_row[16] =      /* HP table @0x8011d6e8 (base 0x8011d1c8 + 0x29*0x20) */
+    { 81,109,97,83,99,113,87,101,117,89,91,103,121,93,105,95 };   /* hp = row[rng()&0xf] = 81-121 */
+static const uint8_t s_roach_clip_len[32] =     /* EM029 bank0 dir[1] EDD clip frame-counts (32 clips) */
+    { 78,20,15,70,78,39,24,12,25,25,40,40,100,40,70,90,35,20,25,40,40,21,58,30,50,40,70,30,39,20,51,70 };
+static void re15_roach_clip(re15_actor_t *e, uint8_t c) { e->motion = c; e->anim_frame = 0; e->anim_frac = 7; }
+static int re15_roach_anim(re15_actor_t *e)
+{
+    uint8_t c = e->motion; int fc = (c < 32) ? s_roach_clip_len[c] : 1; if (fc < 1) fc = 1;
+    int done = (e->anim_frame + 1 >= fc);
+    e->anim_frame = (uint8_t)((e->anim_frame + 1) % fc);
+    if (e->anim_frac > 0) e->anim_frac--;
+    return done;
+}
+static void re15_cockroach_ai_tick(int slot)
+{
+    re15_actor_t *e  = &g_actors[slot];
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+
+    switch (e->state) {
+    case 0:   /* INIT 0x80110c98: -> ACTIVE, HP row, idle clip 0x16, steer=player */
+        if (e->hp <= 0) e->hp = (int16_t)s_roach_hp_row[re15_engine_rand8() & 0xf];   /* +0x9a, HP 81-121 */
+        e->motion = 0x16; e->anim_frame = 0; e->anim_frac = 0; e->hit_react = 0;      /* clip 0x16 @0x80111310 */
+        e->steer_x = (int16_t)pl->x; e->steer_z = (int16_t)pl->z;
+        e->ai_timer = 0; e->dog_atk_cd = 0; e->dog_dist = 0;
+        e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;
+        break;
+
+    case 1: {  /* ACTIVE two-table A/B brain 0x8011101c (A decision @0x8011ecc4 + B movement @0x8011ed04) */
+        int los = re15_enemy_los_probe(slot, e, pl);          /* 0x8001bc08 -> +0x1d0/+0x1d8 */
+        int32_t dist = re15_enemy_player_dist(e, pl);         /* SquareRoot0 -> +0x1d4 */
+        e->dog_dist = (int16_t)dist;
+        switch (e->sub_state_1) {
+        case 0: case 1:  /* A[0/1] idle (clip 0x16) + decision @0x80111220 */
+            if ((dist < 5000 && los != 0) || dist < 3000) { re15_dog_sub(e, 3); break; }   /* -> APPROACH */
+            if (e->sub_state_2 == 0) { e->ai_timer = (int16_t)(re15_engine_rand8() + 0x3b); re15_roach_clip(e, 0x16); e->sub_state_2 = 1; }  /* idle timer rng+59 */
+            else if (e->ai_timer-- <= 0) { re15_dog_sub(e, 3); }
+            re15_roach_anim(e);
+            break;
+        case 3:  /* A[3] approach-walk (clip 4, steer only) + decision @0x801117d8 */
+            if (e->dog_atk_cd) e->dog_atk_cd--;               /* +0x1dc lockout */
+            if (e->dog_atk_cd == 0 && pl->hit_react == 0 && re15_dog_arc(e, pl, 3000, 0x180)) {  /* in range 3000/384 -> BITE */
+                re15_roach_clip(e, 0x12); re15_dog_sub(e, 5); break; }
+            if (dist >= 6001 && los != 0) { re15_dog_sub(e, 4); break; }   /* far + LOS -> fast SCURRY */
+            if (e->sub_state_2 == 0) { re15_roach_clip(e, 4); e->sub_state_2 = 1; }
+            re15_enemy_steer_point(e, pl->x, pl->z, 0x20);    /* steer toward player (clip root-motion advance) */
+            re15_dog_advance(e, 30);                          /* faithful root-motion advance */
+            re15_roach_anim(e);
+            break;
+        case 4:  /* A[4] fast forward scurry (clip 6, pos_advance @+0x8c) + decision @0x80111ac0 */
+            if (e->dog_atk_cd) e->dog_atk_cd--;
+            if (e->dog_atk_cd == 0 && pl->hit_react == 0 && re15_dog_arc(e, pl, 4000, 0xc0)) {   /* in range 4000/192 -> HEAVY */
+                re15_roach_clip(e, 0x13); re15_dog_sub(e, 6); break; }
+            if (e->sub_state_2 == 0) { re15_roach_clip(e, 6); e->crow_speed = (int16_t)((re15_engine_rand8() & 0x1f) + 0xb4); e->sub_state_2 = 1; }  /* speed rng+180 @0x80111c08 */
+            re15_enemy_steer_point(e, pl->x, pl->z, 0x40);
+            re15_dog_advance(e, e->crow_speed >> 3);          /* pos_advance @speed +0x8c (faithful scale) */
+            re15_roach_anim(e);
+            break;
+        case 5:  /* B[5] BITE (clip 0x12): player.hp -= 5 on the damage window @0x80111d68 */
+            if (e->anim_frame >= 0x0c && e->anim_frame <= 0x0f && pl->hit_react == 0 && re15_dog_arc(e, pl, 2000, 0x180)) {
+                if (e->anim_frame == 0x0c) {
+                    pl->hp = (int16_t)(pl->hp - 5);           /* player.hp -= 5 @0x80111f60 */
+                    re15_audio_room_se(5); pl->hit_react |= 1; e->dog_atk_cd = 0x2d;   /* Se5 + lockout 45 @0x80111f74 */
+                }
+            }
+            if (re15_roach_anim(e)) { re15_dog_sub(e, 3); if (e->dog_atk_cd == 0) e->dog_atk_cd = 0x14; }
+            break;
+        case 6:  /* HEAVY (clip 0x13): player.hp -= 10 @0x801122ac */
+            if (e->anim_frame >= 0x0c && e->anim_frame <= 0x11 && pl->hit_react == 0 && re15_dog_arc(e, pl, 2000, 0xc0)) {
+                if (e->anim_frame == 0x0c) {
+                    pl->hp = (int16_t)(pl->hp - 10);          /* player.hp -= 10 @0x801122ac */
+                    re15_audio_room_se(5); pl->hit_react |= 1; e->dog_atk_cd = 0x2d;
+                }
+            }
+            if (re15_roach_anim(e)) { re15_dog_sub(e, 3); if (e->dog_atk_cd == 0) e->dog_atk_cd = 0x14; }
+            break;
+        default:  /* reorient/lunge sub-states (7/8/9) = deferred -> resume the brain */
+            re15_dog_sub(e, 0); re15_roach_anim(e);
+            break;
+        }
+        break;
+    }
+
+    case 2:   /* HURT 0x80114790: flinch clip 7 (12f) + Se(2) -> ACTIVE */
+        if (e->sub_state_3 == 0) { re15_roach_clip(e, 7); re15_audio_room_se(2); e->sub_state_3 = 1; }  /* @0x801148c4 */
+        else if (re15_roach_anim(e)) { e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0; e->hit_react = (uint8_t)(e->hit_react & ~1u); }
+        break;
+
+    case 3:   /* DEATH 0x80114fb4: collapse clip 0xe (70f) + Se(7) -> CORPSE (state 7) */
+        if (e->sub_state_3 == 0) { re15_roach_clip(e, 0x0e); re15_audio_room_se(7); e->hit_react |= 2; e->sub_state_3 = 1; }  /* @0x801150e8 */
+        else if (re15_roach_anim(e)) { e->state = 7; e->sub_state_3 = 0; }
+        break;
+
+    case 7:   /* CORPSE 0x80115a6c: hold the final death pose, sink/fade, inert */
+        re15_roach_anim(e);
+        break;
+
+    default:
+        e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0;
+        break;
+    }
+}
+
 /* Phase 8.6 — the per-frame LIVE-zombie AI pass. The port's faithful, TYPE-GATED slice of the
  * original entity-update loop FUN_8001a50c (@0x8001ce04): the original walks the entity array
  * (DAT_800acc2c, stride 0x1f4) and, for every active entity (+0x0 & 1), dispatches its per-type
@@ -4252,6 +4362,16 @@ void re15_enemy_ai_run_all(int combat_active)
             if (g_room_rdt_ok && (e->x != asp_ox || e->z != asp_oz)) {
                 int32_t nx = e->x, nz = e->z;
                 re15_collision_constrain(&g_room_rdt, asp_ox, asp_oz, &nx, &nz);
+                e->x = nx; e->z = nz;
+            }
+        }
+        else if (t == 0x29) {   /* COCKROACH (type 0x29, EM029, STAGE3) — small maggot-like scurrier (Wave 1).
+                                 * Scurries toward the player + bites -> SCA wall-clamp after the tick. */
+            int32_t rc_ox = e->x, rc_oz = e->z;
+            re15_cockroach_ai_tick(s);
+            if (g_room_rdt_ok && (e->x != rc_ox || e->z != rc_oz)) {
+                int32_t nx = e->x, nz = e->z;
+                re15_collision_constrain(&g_room_rdt, rc_ox, rc_oz, &nx, &nz);
                 e->x = nx; e->z = nz;
             }
         }
