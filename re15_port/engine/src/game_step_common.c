@@ -164,6 +164,26 @@ void re15_game_step(const re15_game_ctx_t *c)
     int grabbed_branch = 0;      /* the grabbed-pin branch ran this tick (its body push happens AFTER
                                   * the victim placement at the end of the step; the normal branch
                                   * already pushed inline — never both, no same-tick double push) */
+
+    /* PLAYER HIT-FLINCH (#22, byte-true FUN_80031c44 -> state 2 -> FUN_80035af0 -> hurt clip 0xa
+     * @0x80035bd8): a non-lethal enemy hit routes the player command FSM to state 2 (HIT), which plays
+     * the flinch clip 0xa and returns to idle. UNBLOCKED THIS SESSION — the ported enemy AI now applies
+     * the damage (player.hp drops on a hit), which the audit (#22) cited as the missing trigger. Detect
+     * the drop here (before re15_enemy_ai_run_all re-damages at the end of the step; s_prev_hp updated
+     * pre-damage so the next tick sees the drop) and root the player in the flinch. Gated to plain
+     * gameplay — grabbed/dead/stair/aim take precedence (the exact 4-direction hit sub-FSM on
+     * DAT_800aca59 + the aim-interrupt are faithful-line). */
+    static int     s_hit_flinch = 0;
+    static int16_t s_prev_hp    = 100;
+    extern int re15_player_aim_active(void);     /* player_common.c — don't flinch mid-aim */
+    if (c->rdt_ok && pl->hp < s_prev_hp && pl->hp >= 0 && s_hit_flinch == 0 &&
+        !re15_player_is_dead() && !re15_player_is_grabbed() && !re15_stair_active() &&
+        !re15_player_aim_active()) {
+        s_hit_flinch = 15;                       /* flinch duration (faithful-line; PL00 clip-0xa length) */
+        pl->motion = 0x0a; pl->anim_frame = 0; pl->anim_frac = 7;
+    }
+    s_prev_hp = pl->hp;                           /* pre-damage baseline for the NEXT tick's drop check */
+
     if (c->rdt_ok && re15_menu_is_open()) {
         re15_menu_tick(c->pad_pressed);
         g_aot_action_pressed = 0;
@@ -212,6 +232,14 @@ void re15_game_step(const re15_game_ctx_t *c)
          * scan KEEPS running (byte-true: the per-frame cam scan is ungated by the player's state), so
          * the cut still frames the grab. This branch is unreachable unless a live zombie grabs, so a
          * room with no live zombie (ROOM1170/1240 boot) never enters it = no 1170 regression. */
+        re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
+    } else if (c->rdt_ok && s_hit_flinch > 0) {
+        /* HIT-FLINCH branch: root the player + play the flinch clip 0xa (same engine-driven skip as the
+         * stair/grab branches — no pad, no steer), keep the RVD cam scan running. When the clip plays
+         * out (timer -> 0) motion returns to idle so the normal tick resumes next frame. Unreachable
+         * unless a non-lethal hit landed, so a room with no combat never enters it = no 1170 regression. */
+        pl->anim_frame++;
+        if (--s_hit_flinch == 0) pl->motion = 0;
         re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
     } else {
         int32_t ox = pl->x, oz = pl->z;
