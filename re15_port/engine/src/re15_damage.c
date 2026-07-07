@@ -314,7 +314,11 @@ int re15_player_aim_target(int32_t radius, int32_t *tx, int32_t *tz)
     for (int s2 = RE15_ACTOR_SLOT_PLAYER + 1; s2 < RE15_ACTOR_MAX; s2++) {
         re15_actor_t *e = &g_actors[s2];
         if (!e->active) continue;
-        if (e->type != 0x10 && e->type != 0x11 && e->type != 0x16 && e->type != 0x20) continue;
+        if (e->hit_radius_min <= 0) continue;   /* byte-true: the aim-latch (FUN_8003703c), like the fire
+                                                 * resolver, considers any entity with a DAMAGE HITBOX —
+                                                 * not a zombie-only whitelist. So the player auto-turns
+                                                 * toward EVERY combat enemy (weapon-immune ivies/etc. still
+                                                 * lock the reticle; the non-combat types have no box). */
         if (e->state == 7 || e->hp < 0) continue;
         uint32_t d = (uint32_t)re15_enemy_player_dist(e, pl);
         if (d < bd && re15_ai_arc_test(pl, e->x, e->z, 0x400) == 0) { bd = d; best = s2; }
