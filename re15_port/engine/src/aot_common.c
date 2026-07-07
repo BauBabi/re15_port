@@ -414,7 +414,17 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
                  : (a->type == RE15_AOT_TYPE_GENERIC || a->type == RE15_AOT_TYPE_MESSAGE ||
                     a->type == RE15_AOT_TYPE_EXAMINE_WORKVAR)
                        ? (gen_reach && g_aot_action_pressed && !msg_block && !action_fired)
-                       : (inside && !a->was_inside);
+                       /* #14 byte-true (FUN_80042bac @0x80043018): the AUTO zone has NO prev-frame-inside
+                        * field — it fires EVERY frame the entity is inside, not just on the entry EDGE.
+                        * DONE for ITEM (type 2): the ITEM case self-disables SYNCHRONOUSLY in the same scan
+                        * pass (a->active=0 @Item_aot_reset), so every-frame == fires-once = provably safe.
+                        * DEFERRED for AUTO_EVENT (type 6): its re-trigger stop is the SCD sub's own Aot_reset,
+                        * but scd_event_fire has no already-running guard and starts a NEW sub copy per frame,
+                        * so the safety hinges on the sub's Aot_reset TIMING (frame-1 = safe; later = N cutscene
+                        * copies, e.g. ROOM1150 Irons sub08). That timing needs a DuckStation savestate trace
+                        * to confirm before the edge can be dropped -> keep the edge here (result-correct). */
+                       : (a->type == RE15_AOT_TYPE_ITEM) ? inside
+                                                         : (inside && !a->was_inside);
         if (fire) {
             if (is_action) action_fired = 1;   /* one action handler per press (byte-true) */
             /* Edge: just entered. (2026-06-03: removed the invented 90-frame
