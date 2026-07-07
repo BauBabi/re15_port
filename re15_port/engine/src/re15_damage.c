@@ -328,7 +328,13 @@ retry_after_latch:
     for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) {
         re15_actor_t *e = &g_actors[s];
         if (!e->active) continue;
-        if (e->type != 0x10 && e->type != 0x11 && e->type != 0x16 && e->type != 0x20) continue;  /* the port's hittable enemies (+ dog) */
+        /* BYTE-TRUE target set: FUN_80011f50 iterates ALL entities and tests each one's DAMAGE HITBOX
+         * (+0x78 present) — NOT a per-type whitelist. apply_hitbox gives a radius to every combat enemy
+         * (zombies 0x10/0x11/0x12/0x16/0x18, dog 0x20, crow 0x21, spiders 0x25/0x26, maggot 0x27,
+         * cockroach 0x29, birkin 0x30/0x36, alligator 0x23, tyrant 0x2b, ivy 0x2d, zgirl 0x13); the
+         * non-combat types (writher 0x1a / fx-emitter 0x24 / stub 0x22 / NPC 0x40) get NO box and are
+         * excluded automatically. So gate on the hitbox, which makes every ported enemy shootable. */
+        if (e->hit_radius_min <= 0) continue;   /* no damage hitbox -> not a valid auto-aim target */
         if (e->state == 7) continue;   /* RE15_AI_STATE_CORPSE — already a corpse (literal: avoid the AI-header dep) */
         if ((e->hit_react & 0x3) == 0x3) continue;   /* already hit + re-touched this attack -> excluded */
         /* ELEVATION-BAND gate (byte-true @0x800120d0-ec: candidate needs
