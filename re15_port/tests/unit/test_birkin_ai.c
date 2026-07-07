@@ -98,6 +98,21 @@ int main(void)
     if (!reached_corpse) { fprintf(stderr, "FAIL(3): a killed boss must reach CORPSE (state 7), state=%d hp=%d\n", e->state, e->hp); fail = 1; }
     printf("  (3) DEATH: lethal hit -> CORPSE (state %d, hp=%d)\n", e->state, e->hp);
 
+    /* (4) FORM-5 (type 0x36, EM036): STAGE3 registers 0x30 AND 0x36 to the same root 0x80116230 (zero +0x8
+     * type reads, zero 0x36 immediates in the boss code) -> byte-IDENTICAL AI. Assert 0x36 runs the same
+     * boss brain: INIT -> HP 300, sub 9. */
+    memset(g_actors, 0, sizeof g_actors);
+    pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->active = 1; pl->type = 0; pl->x = 0; pl->y = 0; pl->z = 4000; pl->hp = 100;
+    re15_actor_t *e5 = &g_actors[BS];
+    e5->active = 1; e5->type = 0x36; e5->state = 0; e5->grid_id = 0x33; e5->x = 0; e5->y = 0; e5->z = 0;
+    re15_enemy_apply_hitbox(e5, 0x36);
+    re15_enemy_ai_run_all(0);
+    if (e5->state != 1)       { fprintf(stderr, "FAIL(4): form-5 INIT->ACTIVE expected state 1, got %d\n", e5->state); fail = 1; }
+    if (e5->hp != 300)        { fprintf(stderr, "FAIL(4): form-5 must share the boss brain (HP 300), got %d\n", e5->hp); fail = 1; }
+    if (e5->sub_state_1 != 9) { fprintf(stderr, "FAIL(4): form-5 grid 0x33 -> sub 9, got %d\n", e5->sub_state_1); fail = 1; }
+    printf("  (4) FORM-5 (0x36): shares the boss brain -> state=%d hp=%d sub=%d\n", e5->state, e5->hp, e5->sub_state_1);
+
     if (fail) { printf("BIRKIN BOSS WAVE-1: FAIL\n"); return 1; }
     printf("BIRKIN BOSS WAVE-1: all checks passed\n");
     return 0;

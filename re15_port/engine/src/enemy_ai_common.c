@@ -4549,8 +4549,11 @@ void re15_enemy_ai_run_all(int combat_active)
                 e->x = nx; e->z = nz;
             }
         }
-        else if (t == 0x30) {   /* G-BIRKIN boss form 1 (type 0x30, EM030, STAGE3) — nav-chasing boss (Wave 1:
-                                 * INIT byte-true + nav-chase; attacks + form-3 = wave 2). Wall-clamp like the rest. */
+        else if (t == 0x30 || t == 0x36) {   /* G-BIRKIN boss (type 0x30 form-1 EM030 / type 0x36 form-5 EM036).
+                                 * STAGE3 registers BOTH 0x30 and 0x36 to the SAME root 0x80116230, which has ZERO
+                                 * +0x8 type reads and ZERO 0x36 immediates in [0x80116230..0x8011a800] — the two
+                                 * forms run byte-IDENTICAL AI; the type only selects the EMD model (EM030 vs
+                                 * EM036) at spawn. So one brain covers both. Wall-clamp like the rest. */
             int32_t bk_ox = e->x, bk_oz = e->z;
             re15_birkin_ai_tick(s);
             if (g_room_rdt_ok && (e->x != bk_ox || e->z != bk_oz)) {
