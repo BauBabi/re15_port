@@ -234,9 +234,13 @@ static int reference_transform(int16_t vx, int16_t vy, int16_t vz,
                                int32_t h, int32_t cx, int32_t cy,
                                double* sx_out, double* sy_out)
 {
-    double rad = angle_to_radians(angle);
-    double cos_a = cos(rad);
-    double sin_a = sin(rad);
+    /* BYTE-TRUE (audit #2): use the SAME sin/cos as the fixed-point path — the game's DAT_800794c4
+     * table (re15_sin_q12/cos_q12), NOT ideal float. This test measures the fixed-point ARITHMETIC
+     * precision (Q12 rounding in the rotate+project), which is its real ±1-pixel intent; feeding it
+     * ideal float here would re-fail on the table's deliberate ~2-3 LSB cos bias (that bias IS what
+     * the original renders — it is not a port error). The high-precision reference stays in double. */
+    double cos_a = (double)re15_cos_q12(angle) / 4096.0;
+    double sin_a = (double)re15_sin_q12(angle) / 4096.0;
 
     /* Y-Achsen-Rotation (SAME convention as fp_rot_matrix_y / mat3_rot_y):
      *   [ cos   0   sin ] * [vx]

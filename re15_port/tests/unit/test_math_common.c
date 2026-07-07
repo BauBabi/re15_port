@@ -169,33 +169,38 @@ static void test_sin_cos_basic(void) {
     ASSERT_NEAR(0, re15_cos_q12(3072), 1, "cos(270)");
 }
 
-/* --- sin/cos Genauigkeit gegen Referenz (float) ---
- * Toleranz 2 LSB: die aktuelle PC-Impl. (skeleton_trig_pc.c) trunkiert mit
- * (int)(sinf(rad)*4096.0f) statt zu runden -> bis zu ~1 LSB systematischer
- * Bias + float-Rundung. Intent (Tabelle ~= float-Referenz) bleibt erhalten. */
+/* --- sin/cos BYTE-TRUE gegen die echte Spiel-Tabelle DAT_800794c4 (audit #2) ---
+ * re15_sin_q12/cos_q12 lesen jetzt die aus PSX.EXE extrahierte Tabelle (re15_trig_lut.c), NICHT
+ * mehr sinf/cosf. Die Spiel-Tabelle weicht bewusst von echtem float ab: sin ~= exakt, aber cos hat
+ * einen systematischen ~2-3-LSB-Bias unter dem echten Kosinus (verifiziert direkt aus der EXE) —
+ * genau diesen Bias rendert das Original, und er ist die Wurzel des gemeldeten Pixel-Shifts. Der
+ * frühere Test prüfte gegen float (tol 2) und ist damit für die byte-true Tabelle falsch. Diese
+ * Version prüft die IMPL exakt gegen aus der EXE verifizierte (angle,sin,cos)-Tripel und meldet die
+ * float-Abweichung nur informativ. */
 static void test_sin_cos_accuracy(void) {
-    int max_err = 0;
-    int angle;
-
-    for (angle = 0; angle < 4096; angle++) {
-        double rad = (double)angle * 2.0 * M_PI / 4096.0;
-        int32_t expected_sin = (int32_t)round(sin(rad) * 4096.0);
-        int32_t expected_cos = (int32_t)round(cos(rad) * 4096.0);
-
-        int32_t actual_sin = re15_sin_q12(angle);
-        int32_t actual_cos = re15_cos_q12(angle);
-
-        int err_sin = abs(expected_sin - actual_sin);
-        int err_cos = abs(expected_cos - actual_cos);
-
-        if (err_sin > max_err) max_err = err_sin;
-        if (err_cos > max_err) max_err = err_cos;
-
-        ASSERT_NEAR(expected_sin, actual_sin, 2, "sin accuracy");
-        ASSERT_NEAR(expected_cos, actual_cos, 2, "cos accuracy");
+    /* verified verbatim from PSX.EXE DAT_800794c4 (file 0x69cc4 + angle*4; sin=low16, cos=high16) */
+    static const struct { int a, s, c; } bt[] = {
+        {    0,      0,   4096 }, {  100,    626,   4047 }, {  224,   1380,   3854 },
+        {  512,   2896,   2892 }, {  683,   3548,   2041 }, {  900,   4022,    768 },
+        { 1024,   4096,      0 }, { 1337,   3630,  -1892 }, { 1536,   2892,  -2896 },
+        { 2048,      0,  -4096 }, { 2731,  -3548,  -2041 }, { 3072,  -4096,      0 },
+        { 3500,  -3241,   2500 }, { 3900,  -1207,   3912 }, { 4095,      0,   4096 },
+        { 2000,    295,  -4085 },
+    };
+    for (unsigned i = 0; i < sizeof bt / sizeof bt[0]; i++) {
+        ASSERT_EQ(bt[i].s, re15_sin_q12(bt[i].a), "byte-true sin == DAT_800794c4");
+        ASSERT_EQ(bt[i].c, re15_cos_q12(bt[i].a), "byte-true cos == DAT_800794c4");
     }
-
-    printf("  Max sin/cos error across all 4096 angles: %d (Q12 LSBs)\n", max_err);
+    /* informational: how far the byte-true table sits from ideal float (documents the pixel-shift bias) */
+    int max_err = 0;
+    for (int angle = 0; angle < 4096; angle++) {
+        double rad = (double)angle * 2.0 * M_PI / 4096.0;
+        int es = (int)round(sin(rad) * 4096.0), ec = (int)round(cos(rad) * 4096.0);
+        int ds = abs(es - re15_sin_q12(angle)), dc = abs(ec - re15_cos_q12(angle));
+        if (ds > max_err) max_err = ds;
+        if (dc > max_err) max_err = dc;
+    }
+    printf("  byte-true table max deviation from float across 4096 angles: %d LSB (expected: nonzero cos bias)\n", max_err);
 }
 
 /* --- sin/cos Wrap-Verhalten bei negativen Winkeln ---
@@ -223,8 +228,11 @@ static void test_sin_cos_identity(void) {
 
         if (err > max_err) max_err = err;
 
-        /* Toleranz: ±4 LSB (Trunkierung beider Faktoren + doppelte Rundung). */
-        ASSERT_NEAR(4096, result, 4, "sin^2+cos^2=1");
+        /* Toleranz: ±8 LSB. Die byte-true Spiel-Tabelle DAT_800794c4 (audit #2) ist NICHT perfekt
+         * normiert — ihr sin²+cos² weicht real um bis zu 8 LSB von 4096 ab (max @Winkel 448,
+         * direkt aus PSX.EXE gemessen). Das ist byte-true (das Original rechnet mit dieser
+         * leichten Denormierung); ein grob falsches Tabellen-Layout würde weit mehr abweichen. */
+        ASSERT_NEAR(4096, result, 8, "sin^2+cos^2=1");
     }
 
     printf("  Max sin^2+cos^2 deviation from 4096: %d\n", max_err);
