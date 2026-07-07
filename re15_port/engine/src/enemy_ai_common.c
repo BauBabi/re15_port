@@ -4004,7 +4004,17 @@ static void re15_adult_spider_ai_tick(int slot)
         e->motion = 0x10; e->anim_frame = 0; e->anim_frac = 0; e->hit_react = 0;   /* clip 0x10 @0x80110b90 */
         e->steer_x = (int16_t)pl->x; e->steer_z = (int16_t)pl->z;   /* +0x1bc/+0x1be = player @0x80110bd8/bf0 */
         e->ai_timer = 0; e->dog_atk_cd = 0; e->dog_dist = 0;        /* clear +0x9c/+0x1dc lockout etc */
-        e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* -> ACTIVE @0x80110b80 */
+        e->sub_state_2 = 0; e->sub_state_3 = 0;
+        /* grid-branch (byte-true @0x80110b6c, ceiling-drop cluster CONFIRMED): grid 0x40 -> state 4 sub 0,
+         * grid 0x41 -> state 4 sub 1 (the AMBUSH cling-approach @0x80114ec8, 9-phase @0x8010027c) — the
+         * ROOM2060 ground spiders spawn grid 0x41; grid 2-0x1f -> ceiling-drop (y=-10800; unexercised);
+         * else -> ACTIVE. */
+        if (e->grid_id == 0x40 || e->grid_id == 0x41) {
+            e->state = 4; e->sub_state_1 = (uint8_t)(e->grid_id & 1);
+        } else {
+            if ((unsigned)((e->grid_id & 0xffu) - 2u) < 0x1eu) e->y = -10800;   /* ceiling-drop start (unexercised) */
+            e->state = 1; e->sub_state_1 = 0;
+        }
         break;
 
     case 1: {  /* ACTIVE brain 0x80110e50 — the byte-true TWO-TABLE driver (workflow wf_3467b541-a93,
@@ -4104,6 +4114,19 @@ static void re15_adult_spider_ai_tick(int slot)
             re15_aspider_anim(e);
             break;
         }
+        break;
+    }
+
+    case 4: {  /* AMBUSH 0x80114e18[+0x5]=0x80114ec8 (grid 0x40/0x41): a 9-phase +0x7 cling-approach maneuver
+                * (@0x8010027c) — clip 0x10 cling pose (@0x80114f34) + pos_advance @200 (0xc8 @0x80114fa8)
+                * toward the player; when the player is in LOS + range it hands off to the ACTIVE brain. */
+        if (e->motion != 0x10) re15_aspider_clip(e, 0x10);
+        re15_enemy_steer_point(e, pl->x, pl->z, 0x20);
+        re15_dog_advance(e, 0xc8 >> 5);                                /* pos_advance @200 @0x80114fb0 */
+        if ((re15_enemy_los_probe(slot, e, pl) & 1) && re15_enemy_player_dist(e, pl) < 4000) {
+            e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* -> ACTIVE brain */
+        }
+        re15_aspider_anim(e);
         break;
     }
 
