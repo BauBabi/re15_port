@@ -4436,6 +4436,58 @@ static void re15_birkin_ai_tick(int slot)
     }
 }
 
+/* ============================ ROOTED WRITHE-HAZARD (type 0x1a, EM01A) — STAGE1 ================ *
+ * Byte-true from workflow wf_5c34ffe7 (root 0x8010c1ec, state table @0x8012093c). A ROOTED, ground-
+ * emergent, segmented WRITHING contact-hazard: it NEVER walks/chases (zero steer 0x8001aac4 / yaw-slew
+ * 0x8001a8f8 / atan2 0x8001a6d4 calls anywhere in 0x8010c014..0x8010d914), only bobs vertically and
+ * rotates in place. It is UNKILLABLE — the handler sets NO HP (+0x9a) and has NO hurt/death/corpse
+ * states. It does NO player damage — no write to player.hp (0x800acaee), no grab (DAT_800aca58), no
+ * shared damage-entry (0x80012d60); it only arms the shared body-contact flag (+0x1b8 |= 0x12
+ * @0x8010c2d8) which pushes the player out (0x8003b0a4). So the port models: INIT (record spawn pos +
+ * rng writhe timers, NO HP) -> ACTIVE writhe: emerge from ground when buried (grid & 0x80 -> clip 0x1f
+ * @0x80107d2c), else loop the in-place writhe clips 0/1/2 with rng-jittered timers. The exact 16-grid-
+ * variant dual-table + 2D sub-brain writhe choreography is faithful-line (cosmetic; cited above). */
+static void re15_writher_ai_tick(int slot)
+{
+    re15_actor_t *e  = &g_actors[slot];
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+
+    switch (e->state) {
+    case 0:   /* INIT 0x8010c33c: record player spawn pos (+0x1bc/+0x1be), timers, NO HP. -> ACTIVE. */
+        e->steer_x = (int16_t)pl->x; e->steer_z = (int16_t)pl->z;   /* +0x1bc/+0x1be @0x8010c368/380 */
+        e->ai_timer = 0x14;                                          /* +0x9c = 0x14 @0x8010c3ac */
+        e->anim_frac = 7;                                           /* +0x8f blend seed (writhe crossfade) */
+        e->sub_state_2 = 0; e->sub_state_3 = 0;
+        /* buried spawn (grid bit 0x80) emerges from the ground first (clip 0x1f), else writhe idle */
+        if (e->grid_id & 0x80) { e->motion = 0x1f; e->anim_frame = 0; e->sub_state_1 = 1; }  /* emerge @0x80107d2c */
+        else                   { e->motion = 0;    e->anim_frame = 0; e->sub_state_1 = 0; }
+        e->state = 1;                                               /* +0x4 = 1 @0x8010c350 */
+        break;
+
+    case 1: {  /* ACTIVE writhe (0x8010c488): rooted — X/Z (+0x34/+0x3c) are NEVER advanced. Emerge if
+                * buried, then loop the in-place writhe clips with rng-jittered dwell timers. */
+        (void)pl;
+        if (e->sub_state_1 == 1) {          /* EMERGE from ground: play clip 0x1f once -> writhe idle */
+            if (++e->anim_frame >= 40) { e->sub_state_1 = 0; e->motion = 0; e->anim_frame = 0; }
+        } else {                            /* WRITHE: cycle the twitch clips 0/1/2 on a jittered timer */
+            if (e->ai_timer > 0) e->ai_timer--;
+            if (e->ai_timer == 0) {
+                e->ai_timer = (int16_t)((re15_engine_rand8() & 0x1f) + 30);   /* +0x1d0 = (rng&0x1f)+30 @0x8010c3fc */
+                e->motion = (uint8_t)((e->motion >= 2) ? 0 : e->motion + 1);  /* writhe clips 0/1/2 (faithful) */
+                e->anim_frame = 0; e->anim_frac = 7;
+            } else {
+                e->anim_frame++;            /* twitch anim advances in place */
+            }
+        }
+        break; }
+
+    default:  /* UNKILLABLE: it has no hurt/death state. If the damage entry ever forced state 2/3,
+               * snap it back to writhing (byte-true: 0x1a can never leave the writhe machine). */
+        e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;
+        break;
+    }
+}
+
 /* Phase 8.6 — the per-frame LIVE-zombie AI pass. The port's faithful, TYPE-GATED slice of the
  * original entity-update loop FUN_8001a50c (@0x8001ce04): the original walks the entity array
  * (DAT_800acc2c, stride 0x1f4) and, for every active entity (+0x0 & 1), dispatches its per-type
@@ -4585,6 +4637,11 @@ void re15_enemy_ai_run_all(int combat_active)
                 re15_collision_constrain(&g_room_rdt, zg_ox, zg_oz, &nx, &nz);
                 e->x = nx; e->z = nz;
             }
+        }
+        else if (t == 0x1a) {   /* ROOTED WRITHE-HAZARD (type 0x1a, EM01A) — anchored, unkillable, no
+                                 * damage. NO wall-clamp: it never advances X/Z, so there is nothing to
+                                 * constrain (byte-true: zero locomotion primitives in the handler). */
+            re15_writher_ai_tick(s);
         }
     }
 }
