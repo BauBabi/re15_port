@@ -231,10 +231,42 @@ void re15_player_continue_reload(void)
  * aim/fire input FSM. The aim-mode alternate reach row (@+0x58, DAT_800aca5c&4) is byte-IDENTICAL to the
  * base row -> nothing to port. Returns the hit enemy slot+1 (0 = no target in cone/reach). */
 
-/* Per-weapon damage to a zombie (types 0x10/0x11/0x16, identical rows @0x8006e650). 22 weapons. */
-static const uint16_t s_player_wpn_dmg_zombie[22] = {
+/* PER-TYPE per-weapon damage table (byte-true @0x8006e0d0: dmg = u16[type*0x58 + weapon*4], 22 weapons/
+ * row). Read verbatim from PSX.EXE for every routed combat type — the damage varies a LOT per type (a
+ * crow takes 2/shot, a tyrant 16, an alligator/maggot/birkin 30), and three types have ALL-ZERO rows =
+ * WEAPON-IMMUNE: spider-baby 0x26 (tightly bracketed by 0x25=24 / 0x27=30), ivy 0x2d, and birkin-5 0x36
+ * (an isolated zero between the populated 0x30-0x35 boss rows) — matching RE2, where ivies/final-forms
+ * are not killable by normal gunfire. Zombies 0x10/0x11/0x12/0x16/0x18 + zgirl 0x13 share the row. */
+static const uint16_t s_player_wpn_dmg_zombie[22] = {  /* 0x10/0x11/0x12/0x13/0x16/0x18 @0x8006e650 */
     0, 6, 24, 5, 5, 15, 15, 200, 40, 100, 200, 100, 10, 100, 10, 100, 200, 100, 400, 20, 0, 100
 };
+static const uint16_t s_wpn_dmg_dog[22]     = { 0,5,20,10,10,24,24,200,40,100,100,200,30,100,10,100,100,200,400,20,0,100 };  /* 0x20 */
+static const uint16_t s_wpn_dmg_crow[22]    = { 0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0,100 };                            /* 0x21 */
+static const uint16_t s_wpn_dmg_gator[22]   = { 0,7,30,7,7,21,21,50,30,70,30,30,8,50,8,70,30,30,400,20,0,100 };            /* 0x23 */
+static const uint16_t s_wpn_dmg_aspider[22] = { 0,6,24,10,10,24,24,200,36,100,50,200,10,100,10,100,50,200,400,20,0,100 };  /* 0x25 */
+static const uint16_t s_wpn_dmg_maggot[22]  = { 0,7,30,12,12,28,28,50,38,40,40,70,8,50,8,40,40,70,400,20,0,100 };          /* 0x27 */
+static const uint16_t s_wpn_dmg_roach[22]   = { 0,7,30,14,14,25,25,200,40,50,100,200,10,80,15,50,100,200,400,20,0,100 };   /* 0x29 */
+static const uint16_t s_wpn_dmg_tyrant[22]  = { 0,4,16,10,10,20,20,200,30,50,200,100,10,80,10,50,200,100,400,20,0,100 };   /* 0x2b */
+static const uint16_t s_wpn_dmg_birkin[22]  = { 0,7,30,15,15,28,28,50,40,40,70,40,8,50,8,40,70,40,400,20,0,100 };          /* 0x30 */
+static const uint16_t s_wpn_dmg_immune[22]  = { 0 };  /* 0x26 spider-baby / 0x2d ivy / 0x36 birkin-5 = weapon-immune */
+
+/* type -> its byte-true damage row (@0x8006e0d0 + type*0x58). */
+static const uint16_t *re15_enemy_dmg_row(uint8_t type)
+{
+    switch (type) {
+        case 0x10: case 0x11: case 0x12: case 0x13: case 0x16: case 0x18: return s_player_wpn_dmg_zombie;
+        case 0x20: return s_wpn_dmg_dog;
+        case 0x21: return s_wpn_dmg_crow;
+        case 0x23: return s_wpn_dmg_gator;
+        case 0x25: return s_wpn_dmg_aspider;
+        case 0x27: return s_wpn_dmg_maggot;
+        case 0x29: return s_wpn_dmg_roach;
+        case 0x2b: return s_wpn_dmg_tyrant;
+        case 0x30: return s_wpn_dmg_birkin;
+        case 0x26: case 0x2d: case 0x36: return s_wpn_dmg_immune;   /* all-zero rows = weapon-immune */
+        default:   return s_player_wpn_dmg_zombie;                  /* fallback (unrouted combat types) */
+    }
+}
 /* Per-weapon shot reach (UNK_8006e5a0, u32). 22 weapons. */
 static const uint16_t s_player_wpn_reach[22] = {
     1000, 1100, 1000, 1000, 1100, 1000, 1200, 1000, 1500, 1000, 1000,
@@ -370,7 +402,7 @@ retry_after_latch:
     }
 
     re15_actor_t *e = &g_actors[best];
-    int dmg = s_player_wpn_dmg_zombie[weapon_id];   /* byte-true per-weapon zombie damage */
+    int dmg = re15_enemy_dmg_row(e->type)[weapon_id];   /* byte-true PER-TYPE per-weapon damage @0x8006e0d0 */
     e->sub_state_1 = (uint8_t)weapon_id;            /* +0x5 = reaction clip = weapon_id (@0x800124bc) */
     e->hp          = (int16_t)(e->hp - dmg);        /* +0x9a -= dmg */
     e->hit_react  |= 0x1;                           /* +0x93 |= 1 (one-hit guard) */
