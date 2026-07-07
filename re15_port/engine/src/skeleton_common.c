@@ -116,49 +116,37 @@ static void mat3_rot_z(int angle_4096, int32_t m[9])
     m[6] =  0;            m[7] =  0;            m[8] = RE15_SKEL_ONE;
 }
 
-/* Composite Euler rotation = Ry * Rx * Rz (YXZ Euler — apply Rz first to a
- * column vector, then Rx, then Ry). Ported byte-for-byte from RE2's stock
- * `RotMatrix` at `RE2_Quellcode/RotMatrix.c:25-39` so per-bone orientation
- * matches the original engine exactly. Previously this routine built
- * `Rx*Ry*Rz` (XYZ) which scrambles every bone with non-zero pitch+roll. */
+/* Composite Euler rotation, BYTE-TRUE to RE1.5's own RotMatrix (RE_15_Quellcode_V2/RotMatrix.c,
+ * disasm @0x80068130; audit #1). Same convention/terms/signs as before (they already matched
+ * RE2==RE1.5 — a decode scare about flipped triple-term signs was resolved: the original folds the
+ * -sin(vy) negation INTO the intermediate `iVar4 = cz*(-sy)>>12`, so m[1][0] = sz*cx + cz*sy*sx as
+ * here). The ONLY change is the TRUNCATION, which is what the pixel-shift needed:
+ *   (a) PER-PRODUCT >>12 with a short cast on each term (the old form accumulated the whole
+ *       off-diagonal in Q36 and shifted once = MORE precise = not byte-true);
+ *   (b) NEGATE-BEFORE-SHIFT on m[1]/m[5] (`(-(sz*cy))>>12`, not `-((sz*cy)>>12)` — differs by 1 LSB
+ *       whenever the product is not a multiple of 4096, @0x80068170).
+ * PSX int32 arithmetic: every product fits in 32 bits, matching the original mflo (low word). */
 static void mat3_from_euler(int ax, int ay, int az, int32_t m[9])
 {
     int32_t sx = re15_sin_q12(ax), cx = re15_cos_q12(ax);
     int32_t sy = re15_sin_q12(ay), cy = re15_cos_q12(ay);
     int32_t sz = re15_sin_q12(az), cz = re15_cos_q12(az);
-    /* M-round (2026-05-25): the off-diagonal rows are 2-term sums where
-     * each term has different multiply-depth (sz·cx is Q24, cz·sy·sx is
-     * Q36). Old form `Q12_MUL(a,b) + Q12_MUL(Q12_MUL(c,d),e)` truncated
-     * the triple-product TWICE before summing — up to 2 LSB error. New
-     * form accumulates everything in Q36 and shifts once at the end. */
-    /* Row 0 */
-    m[0] = Q12_MUL(cz, cy);
-    m[1] = -Q12_MUL(sz, cy);
-    m[2] = sy;
-    /* Row 1 — sum two terms in Q36 then truncate once. */
+    int32_t nsy = -sy;                                            /* iVar9 = -(int)sin(vy) @line 22 */
+    m[2] = (int16_t)sy;                                           /* m[0][2] @line 25 */
+    m[5] = (int16_t)((-(cy * sx)) >> 12);                         /* m[1][2] negate-before-shift @line 26 */
+    m[8] = (int16_t)((cy * cx) >> 12);                            /* m[2][2] @line 27 */
+    m[0] = (int16_t)((cz * cy) >> 12);                            /* m[0][0] @line 32 */
+    m[1] = (int16_t)((-(sz * cy)) >> 12);                         /* m[0][1] negate-before-shift @line 33 */
     {
-        int64_t t1 = ((int64_t)sz * (int64_t)cx) << 12;            /* Q24<<12 = Q36 */
-        int64_t t2 = (int64_t)cz * (int64_t)sy * (int64_t)sx;      /* Q36 */
-        m[3] = (int32_t)((t1 + t2) >> 24);
+        int32_t t1 = (cz * nsy) >> 12;                            /* iVar4 = cz*(-sy)>>12 @line 34 */
+        m[3] = (int16_t)((int16_t)((sz * cx) >> 12) - (int16_t)((t1 * sx) >> 12));   /* m[1][0] @line 35 */
+        m[6] = (int16_t)((int16_t)((sz * sx) >> 12) + (int16_t)((t1 * cx) >> 12));   /* m[2][0] @line 36 */
     }
     {
-        int64_t t1 = ((int64_t)cz * (int64_t)cx) << 12;
-        int64_t t2 = (int64_t)sz * (int64_t)sy * (int64_t)sx;
-        m[4] = (int32_t)((t1 - t2) >> 24);
+        int32_t t2 = (sz * nsy) >> 12;                            /* iVar9' = sz*(-sy)>>12 @line 37 */
+        m[4] = (int16_t)((int16_t)((cz * cx) >> 12) + (int16_t)((t2 * sx) >> 12));   /* m[1][1] @line 38 */
+        m[7] = (int16_t)((int16_t)((cz * sx) >> 12) - (int16_t)((t2 * cx) >> 12));   /* m[2][1] @line 39 */
     }
-    m[5] = -Q12_MUL(cy, sx);
-    /* Row 2 — same pattern. */
-    {
-        int64_t t1 = ((int64_t)sz * (int64_t)sx) << 12;
-        int64_t t2 = (int64_t)cz * (int64_t)sy * (int64_t)cx;
-        m[6] = (int32_t)((t1 - t2) >> 24);
-    }
-    {
-        int64_t t1 = ((int64_t)cz * (int64_t)sx) << 12;
-        int64_t t2 = (int64_t)sz * (int64_t)sy * (int64_t)cx;
-        m[7] = (int32_t)((t1 + t2) >> 24);
-    }
-    m[8] = Q12_MUL(cy, cx);
 }
 
 /* ----- Public API ------------------------------------------------------ */
@@ -443,4 +431,13 @@ void re15_skel_bone_to_world(const int32_t trans[3], int16_t yaw,
     out[0] = ox + (int32_t)(( (int64_t)cs * trans[0] + (int64_t)sn * trans[2]) >> 12);
     out[1] = oy + trans[1];
     out[2] = oz + (int32_t)((-(int64_t)sn * trans[0] + (int64_t)cs * trans[2]) >> 12);
+}
+
+/* TEST HOOK (byte-true RotMatrix verification, audit #1): a non-static thin wrapper so
+ * test_rotmatrix.c can drive the internal mat3_from_euler over a wide angle vector and compare it,
+ * element-for-element, to an independent transliteration of RE_15_Quellcode_V2/RotMatrix.c. Not
+ * used by the engine itself. */
+void re15_skel_euler_matrix_for_test(int ax, int ay, int az, int32_t m[9])
+{
+    mat3_from_euler(ax, ay, az, m);
 }

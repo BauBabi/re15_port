@@ -237,6 +237,13 @@ target_include_directories(test_enemy_body_push PRIVATE ${CMAKE_SOURCE_DIR}/incl
 add_test(NAME unit_enemy_body_push COMMAND test_enemy_body_push)
 set_tests_properties(unit_enemy_body_push PROPERTIES TIMEOUT 30)
 
+# --- Byte-true RE1.5 RotMatrix (audit #1 — per-product truncation + negate-before-shift, pixel-shift) ---
+add_executable(test_rotmatrix test_rotmatrix.c)
+target_link_libraries(test_rotmatrix PRIVATE re15_engine re15_test_support)
+target_include_directories(test_rotmatrix PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_rotmatrix COMMAND test_rotmatrix)
+set_tests_properties(unit_rotmatrix PROPERTIES TIMEOUT 30)
+
 # --- Melee reach through the body-push standoff (audit wf_555f18eb Part B — the "harmless enemy" bug) ---
 add_executable(test_enemy_attack_reach test_enemy_attack_reach.c)
 target_link_libraries(test_enemy_attack_reach PRIVATE re15_engine re15_test_support)
