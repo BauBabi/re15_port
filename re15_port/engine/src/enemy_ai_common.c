@@ -826,6 +826,25 @@ void re15_enemy_ai_live_init(int slot)
         static const uint8_t hurt_clip_seed[8] = { 2, 3, 4, 5, 2, 3, 4, 5 };
         e->hurt_clip = hurt_clip_seed[re15_engine_rand8() & 7];
     }
+    /* BYTE-TRUE HP (FUN_80100688 @0x801007d8-f4): +0x9a = HPtable[type*0x20 + (rng&0xf)*2], base
+     * @0x8011f034. Each zombie type has its own 16-entry per-grid-variant HP row (NOT the nominal 100
+     * the spawn seeds). The exact pick is rng = session entropy (byte-true-equivalent to the original's
+     * rng pick). Rows read directly from STAGE1.BIN @0x8011f034 + type*0x20. */
+    {
+        static const uint16_t z_hp[5][16] = {
+            /* 0x10 */ { 61, 95, 79, 65, 98, 81, 67,101, 85, 69, 87, 73, 89, 75, 93, 77 },
+            /* 0x11 */ { 71, 85,103, 73, 87,105, 75,107, 89, 77, 93, 79, 95, 81, 98, 83 },
+            /* 0x12 */ { 71, 91,105, 75, 93,109, 79,111, 95, 81, 83, 99, 97, 89, 90,100 },
+            /* 0x16 */ { 71, 83, 95, 83, 85, 97, 75, 85, 99, 77, 87, 87, 89, 81, 81, 91 },
+            /* 0x18 */ { 71, 93, 75,1058, 75, 95, 77,107, 97, 81, 99,109, 99, 83,101,103 },
+        };
+        int row = -1;
+        switch (e->type) {
+            case 0x10: row = 0; break; case 0x11: row = 1; break; case 0x12: row = 2; break;
+            case 0x16: row = 3; break; case 0x18: row = 4; break;
+        }
+        if (row >= 0) e->hp = (int16_t)z_hp[row][re15_engine_rand8() & 0xf];   /* +0x9a @0x801007f4 */
+    }
     /* BYTE-TRUE SPAWN-STATE DECODER (@0x80100c20, branched from the init FUN_80100688 @0x80100904).
      * The Sce_em_set behavior byte (entity+0x9 = grid_id) carries, in its low nibble, the initial AI
      * state — NOT just the spawn pose. The port previously seeded only +0x94 (re15_enemy_spawn_action)
