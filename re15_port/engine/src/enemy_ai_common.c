@@ -4803,7 +4803,13 @@ void re15_enemy_ai_run_all(int combat_active)
         re15_actor_t *e = &g_actors[s];
         if (!e->active) continue;
         uint8_t t = e->type;
-        if (t == 0x10 || t == 0x11 || t == 0x16) { /* the live STAGE1 zombie types only */
+        if (t == 0x10 || t == 0x11 || t == 0x16 || t == 0x12 || t == 0x18) { /* the STAGE1-5 zombie
+             * variants that share the root FUN_80100424: 0x10/0x11/0x16 (briefing) plus 0x12 and 0x18,
+             * which have real type-indexed HP rows (@0x8011f034+type*0x20: 0x12={71,91,105,..},
+             * 0x18={71,93,75,..}). Types 0x1c/0x1d/0x1e/0x1f are ALSO registered to this root but their
+             * HP rows are all-zero = unused registration slots, so they are deliberately NOT routed
+             * (a spawned one would be inert). Adding 0x12/0x18 is safe for the tested rooms: ROOM1140/
+             * 1170 contain only 0x10/0x11/0x16, so their combat is unchanged. */
             int32_t sweep_ox = e->x, sweep_oz = e->z;    /* pre-dispatch pos (wall-sweep origin) */
             re15_enemy_ai_live_step(s);
             re15_enemy_hurt_fx(e);      /* FUN_80105a8c/FUN_80105b7c hurt -> effect-0 hit blood (visible) */
