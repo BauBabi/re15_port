@@ -59,6 +59,9 @@
 #include <string.h>
 #include <stdint.h>
 
+extern uint8_t g_scd_action_held;   /* HELD action level (pad_current & SQUARE) — the byte-true door
+                                     * accumulator; a single edge no longer opens a door. */
+
 /* =========================================================================
  * Test-Konstanten
  *
@@ -174,10 +177,12 @@ static int test_stage1_to_stage2_full(void)
     /* Spieler im Ursprung, Aktionstaste gedrückt. */
     g_actors[RE15_ACTOR_SLOT_PLAYER].x = 0;
     g_actors[RE15_ACTOR_SLOT_PLAYER].z = 0;
-    g_aot_action_pressed = 1;
+    g_scd_action_held = 1; g_aot_action_pressed = 0;   /* byte-true: HOLD, not a tap edge */
 
-    /* AOT-Scan (active_cut beliebig — DOOR ignoriert cam_from-Filter). */
-    re15_aot_scan(0, 0, /*active_cut*/0);
+    /* AOT-Scan (active_cut beliebig — DOOR ignoriert cam_from-Filter). Byte-true: die Tür öffnet
+     * erst nach 9 gehaltenen Frames (door_hold-Akkumulator, aot_common.c), nicht auf einer Edge. */
+    for (int _df = 0; _df < 9; _df++)
+        re15_aot_scan(0, 0, /*active_cut*/0);
 
     /* --- Assertions: cross-room Transition wurde QUEUED --- */
     if (!g_room_change.pending) {
@@ -238,9 +243,9 @@ static int test_cross_stage_elza(void)
 
     g_actors[RE15_ACTOR_SLOT_PLAYER].x = 0;
     g_actors[RE15_ACTOR_SLOT_PLAYER].z = 0;
-    g_aot_action_pressed = 1;
-
-    re15_aot_scan(0, 0, 0);
+    g_scd_action_held = 1; g_aot_action_pressed = 0;   /* byte-true: HOLD, not tap */
+    for (int _df = 0; _df < 9; _df++)   /* door opens on the 9th held frame */
+        re15_aot_scan(0, 0, 0);
 
     if (!g_room_change.pending) {
         fprintf(stderr, "FAIL: door scan should have queued a room change\n");

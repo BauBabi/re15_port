@@ -83,7 +83,8 @@ typedef struct {
      * (entry+0x82 in the original) = the platform this stair end sits on
      * (0/2/4 in ROOM1170). Stair entry is gated on band == player band. */
     uint8_t  band;
-    uint8_t  pad_quad[1];
+    uint8_t  door_hold;   /* DOOR only: byte-true 9-frame press-and-hold accumulator (obj+0x8C,
+                           * FUN_8002bd44) — the door opens when this reaches 9, not on a tap-edge */
     int16_t  xs[4];       /* quad corners X (LE from RDT zone) */
     int16_t  zs[4];       /* quad corners Z */
     int32_t  x;           /* axis-aligned rect, XZ plane (PSX world units) */

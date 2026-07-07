@@ -13,6 +13,7 @@
 #include <stdint.h>
 #include "re15_actor.h"
 #include "re15_aot.h"
+#include "re15_room.h"   /* g_room_change — the DOOR fire observable */
 
 int main(void)
 {
@@ -80,6 +81,38 @@ int main(void)
     re15_aot_scan(3000, 3000, 0xFF);
     if (g_aot.fired_event_id_this_frame != 9) { fprintf(stderr, "FAIL(4d): band -1 (unknown) must NOT gate\n"); fail = 1; }
     if (!fail) printf("  (4) BAND-GATE: match fires, mismatch gated, 0x80 ignores, band -1 ungated\n");
+
+    /* (5) DOOR 9-frame press-and-HOLD accumulator (byte-true FUN_8002bd44 obj+0x8C): a door opens
+     * only after the action button is HELD for 9 consecutive in-reach frames — NOT on a single tap
+     * edge (the old bug). The counter resets the instant the button is released. */
+    {
+        extern uint8_t g_scd_action_held;
+        int door_fail = 0;
+        memset(&g_room_change, 0, sizeof g_room_change);
+        g_actors[RE15_ACTOR_SLOT_PLAYER].x = 0; g_actors[RE15_ACTOR_SLOT_PLAYER].z = 0;
+        g_actors[RE15_ACTOR_SLOT_PLAYER].rot_y = 0;          /* faces +X -> forward-reach at (563, 0) */
+        re15_aot_set_door(3, 563, 0, 900, 900, /*cut*/1, /*spawn*/100, 0, 100, 0);
+        re15_collision_reset_band();                         /* band unknown -> ungated */
+        /* Observe the accumulator directly (this test door has no dest_room, so it never queues a
+         * room change — the FIRE is observable as the DOOR handler resetting door_hold to 0). */
+        g_aot_action_pressed = 0; g_scd_action_held = 1;     /* HOLD, not a tap */
+        for (int f = 0; f < 8; f++) re15_aot_scan(0, 0, 0xFF);   /* 8 held frames -> counts to 8, no fire */
+        if (g_aot.slots[3].door_hold != 8) {
+            fprintf(stderr, "FAIL(5): door_hold must accumulate to 8 over 8 held frames (no fire yet), got %d\n",
+                    g_aot.slots[3].door_hold); door_fail = 1; }
+        re15_aot_scan(0, 0, 0xFF);                            /* the 9th held frame -> FIRE (handler resets to 0) */
+        if (g_aot.slots[3].door_hold != 0) {
+            fprintf(stderr, "FAIL(5): door must OPEN on the 9th consecutive held frame (door_hold should reset to 0, got %d)\n",
+                    g_aot.slots[3].door_hold); door_fail = 1; }
+        /* release-then-hold: the counter resets to 0 the moment the button is not held */
+        g_scd_action_held = 1; for (int f = 0; f < 3; f++) re15_aot_scan(0, 0, 0xFF);   /* re-accumulate to 3 */
+        g_scd_action_held = 0; re15_aot_scan(0, 0, 0xFF);                                /* release */
+        if (g_aot.slots[3].door_hold != 0) {
+            fprintf(stderr, "FAIL(5): releasing the action button must reset door_hold to 0, got %d\n",
+                    g_aot.slots[3].door_hold); door_fail = 1; }
+        if (door_fail) fail = 1;
+        else printf("  (5) DOOR HOLD: 8 held frames = no open, opens on the 9th, resets on release (byte-true)\n");
+    }
 
     if (fail) { printf("AOT-EDGE: FAIL\n"); return 1; }
     printf("AOT-EDGE: all checks passed\n");

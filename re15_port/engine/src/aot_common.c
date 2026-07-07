@@ -409,6 +409,20 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
                 gen_reach = 0; inside = 0;   /* band mismatch -> gate the fire this frame */
             }
         }
+        /* DOOR 9-frame press-and-HOLD accumulator (byte-true FUN_8002bd44, obj+0x8C @0x8002bf60):
+         * the original opens a door only after the action button is HELD for 9 consecutive frames
+         * while the forward-reach + band both hold — NOT on a single tap-edge (which is what the port
+         * fired on). The counter resets to 0 the instant any condition fails. (The blocked-path
+         * variant that latches the counter at 10 via FUN_8003b558 is a faithful-line deferral — the
+         * port's collision already keeps the player out of a physically blocked doorway.) */
+        if (a->type == RE15_AOT_TYPE_DOOR) {
+            extern uint8_t g_scd_action_held;
+            if (door_inside && g_scd_action_held && !msg_block) {
+                if (a->door_hold < 9) a->door_hold++;
+            } else {
+                a->door_hold = 0;
+            }
+        }
         int is_action = (a->type == RE15_AOT_TYPE_DOOR ||
                          a->type == RE15_AOT_TYPE_GENERIC ||
                          a->type == RE15_AOT_TYPE_MESSAGE ||
@@ -423,7 +437,7 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
                         * Tür wird dort NICHT spurious ausgelöst. */
                        ? (in_cinematic && scd_idle && scd_ran && !msg_block && !action_fired)
                  : (a->type == RE15_AOT_TYPE_DOOR)
-                       ? (door_inside && g_aot_action_pressed && !msg_block && !action_fired)
+                       ? (a->door_hold == 9 && !msg_block && !action_fired)   /* opens on the 9th held frame */
                  : (a->type == RE15_AOT_TYPE_GENERIC || a->type == RE15_AOT_TYPE_MESSAGE ||
                     a->type == RE15_AOT_TYPE_EXAMINE_WORKVAR)
                        ? (gen_reach && g_aot_action_pressed && !msg_block && !action_fired)
@@ -446,6 +460,10 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
              * HUD echo — last_event_* had no readers in either build.) */
             switch (a->type) {
             case RE15_AOT_TYPE_DOOR: {
+                a->door_hold = 0;   /* consumed the hold -> reset the accumulator so a still-held
+                                     * button can't re-fire before the room actually changes (the
+                                     * original sets 8 and relies on the transition state; resetting
+                                     * to 0 is the safe equivalent — the door is gone after the pass) */
                 /* Built-in DOOR behavior: target cut + spawn pos +
                  * door SFX. Mirrors RE2's FUN_8003a9f4 door-pass code:
                  * Cut_chg + Pos_set + door-open audio queued. */
