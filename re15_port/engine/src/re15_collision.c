@@ -274,6 +274,278 @@ int re15_collision_band_centroid(const re15_rdt_t *rdt, int band,
     return 1;
 }
 
+/* ================= SCA DIAGONAL / SLOPE cells (types 2/4/5/6/7) =====================
+ * Byte-true from RE workflow wf_b5520814 (ghidra1_V2.txt line ranges cited per handler). These were
+ * DEFERRED (the player walked through diagonal walls in e.g. ROOM11C0 = 12x type2 + 2x type4 +
+ * 1x type6). Each handler has push_rect's signature and mutates *lx/*lz in place. KEY findings:
+ *   - the DAT_80010c34/c38 "edge constants" are INERT ZEROS (a scratch-cell init), NOT geometry;
+ *     the diagonal is derived from the cell (x_max = e->x+width, z_max = e->z+density, centre).
+ *   - origin=0: the resident ref-cell add is dropped, exactly like push_rect/push_circle.
+ *   - the /18 pre-scale in the cross products keeps the absolute-coord products inside int32
+ *     (byte-true: it affects the exact edge classification, so it is kept). */
+
+/* MIPS `mult;mflo` = LOW 32 bits of the signed product (wraps mod 2^32); make the wrap explicit. */
+static int32_t m32(int32_t a, int32_t b) { return (int32_t)((uint32_t)a * (uint32_t)b); }
+
+/* FUN_8003b068 via the cell CENTRE (corner + half-extent), the classifier type-2 opens with. */
+static int quadrant_of_cell(const re15_sca_entry_t *e, int32_t px, int32_t pz)
+{
+    int16_t cx = (int16_t)((int32_t)e->x + (int32_t)(e->width  >> 1));   /* ghidra 145484-145489 */
+    int16_t cz = (int16_t)((int32_t)e->z + (int32_t)(e->density >> 1));  /* ghidra 145486-145491 */
+    return quadrant_of(px, pz, cx, cz);
+}
+
+/* type-2 shared diagonal-normal projection tail (byte-identical in all four quadrant sub-cases). */
+static void diag2_push(int32_t den, int32_t pen, int32_t den2, int32_t *off_x, int32_t *off_z)
+{
+    int32_t q1    = (den * pen) / den2;      /* ghidra 145559-145574 */
+    int32_t q1sq  = q1 * q1;                 /* 145580-145581 */
+    int32_t denom = q1sq + pen * pen;        /* 145582-145584 */
+    if (denom == 0) { *off_x = 0; *off_z = 0; return; }
+    *off_x = (q1 * pen * pen) / denom;       /* 145576-145597 */
+    *off_z = (q1sq * pen)     / denom;       /* 145598-145612 */
+}
+
+/* LAB_8003d00c @0x8003d00c (ghidra1_V2.txt:145450-145916) — type-2 main diagonal push-out. */
+static int push_diag2(const re15_sca_entry_t *e, int32_t *lx, int32_t *lz,
+                      int32_t old_x, int32_t old_z, int32_t r)
+{
+    (void)old_x; (void)old_z;
+    r &= 0xffff;
+    int32_t px = *lx, pz = *lz;
+    int32_t x_max = (int16_t)((int32_t)e->width   + (int32_t)e->x);
+    int32_t z_max = (int16_t)((int32_t)e->density + (int32_t)e->z);
+    int32_t cx    = (int16_t)((int32_t)e->x + (int32_t)(e->width   >> 1));
+    int32_t cz    = (int16_t)((int32_t)e->z + (int32_t)(e->density >> 1));
+    int q = quadrant_of_cell(e, px, pz);
+    int32_t den, den2, edge, pcmp, pen, off_x = 0, off_z = 0;
+    if (q == 0) {
+        int32_t dz = cz - (z_max + r);
+        den  = (x_max + r) - cx;
+        edge = (dz * (px - cx)) / den;
+        pcmp = pz - (z_max + r);
+        if (!(pcmp < edge)) return 0;
+        pen  = pcmp - edge;
+        den2 = (z_max + r) - cz;
+        diag2_push(den, pen, den2, &off_x, &off_z);
+        *lx = px - off_x;
+    } else if (q == 1) {
+        int32_t hz  = (z_max + r) - cz;
+        int32_t xlo = (int32_t)e->x - r;
+        den  = cx - xlo;
+        edge = (hz * (px - xlo)) / den;
+        pcmp = pz - cz;
+        if (!(pcmp < edge)) return 0;
+        pen  = pcmp - edge;
+        den2 = hz;
+        diag2_push(den, pen, den2, &off_x, &off_z);
+        *lx = px + off_x;
+    } else if (q == 2) {
+        int32_t zlo   = (int32_t)e->z - r;
+        int32_t den_z = cz - zlo;
+        den  = (x_max + r) - cx;
+        edge = (den_z * (px - cx)) / den;
+        pcmp = pz - zlo;
+        if (!(edge < pcmp)) return 0;
+        pen  = pcmp - edge;
+        den2 = den_z;
+        diag2_push(den, pen, den2, &off_x, &off_z);
+        *lx = px + off_x;
+    } else {
+        int32_t zlo = (int32_t)e->z - r;
+        int32_t a1v = zlo - cz;
+        int32_t xlo = (int32_t)e->x - r;
+        den  = cx - xlo;
+        edge = (a1v * (px - xlo)) / den;
+        pcmp = pz - cz;
+        if (!(edge < pcmp)) return 0;
+        pen  = pcmp - edge;
+        den2 = cz - zlo;
+        diag2_push(den, pen, den2, &off_x, &off_z);
+        *lx = px - off_x;
+    }
+    *lz = pz - off_z;
+    return 1;
+}
+
+/* LAB_8003beb0 (ghidra1_V2.txt:144231-144520) — type-4 anti-diagonal push-out. */
+static int push_diag4(const re15_sca_entry_t *e, int32_t *lx, int32_t *lz,
+                      int32_t prevx, int32_t prevz, int32_t r)
+{
+    r &= 0xffff;
+    int32_t px = *lx, pz = *lz;
+    int32_t ex = e->x, ez = e->z, W = e->width, D = e->density;
+    int32_t x_max = ex + W, z_max = ez + D;
+    int32_t Q  = m32(-(r + D), (px - ex + r)) / (W + r);
+    int32_t s8 = pz - z_max;
+    if (!(Q < s8)) return 0;
+    int32_t ex18 = ex / 18, ez18 = ez / 18, xm18 = x_max / 18, zm18 = z_max / 18;
+    int32_t pxx  = prevx / 18, pzz = prevz / 18;
+    int32_t cross = (ez18 - zm18) * pxx - (xm18 - ex18) * pzz - ex18 * ez18 + xm18 * zm18;
+    if (cross >= 0) {
+        int32_t a2 = s8 - Q;
+        int32_t Kx = m32(W + r, a2) / (D + r);
+        int32_t denom = m32(Kx, Kx) + m32(a2, a2);
+        if (denom == 0) return 1;
+        int32_t dx = m32(m32(Kx, a2), a2) / denom;
+        int32_t dz = m32(m32(Kx, Kx), a2) / denom;
+        *lx = px - dx;
+        *lz = pz - dz;
+        return 1;
+    }
+    if (!((uint32_t)(px - ex) < (uint32_t)(W + r))) return 0;
+    if (!((uint32_t)(pz - ez) < (uint32_t)(D + r))) return 0;
+    int32_t penX = (x_max + r - px) + 0x12;
+    int32_t penZ = (z_max + r - pz) + 0x12;
+    unsigned code = ((unsigned)(penX ^ (px - prevx)) >> 31)
+                  | (((unsigned)(penZ ^ (pz - prevz)) >> 30) & 2);
+    int32_t ax = penX < 0 ? -penX : penX, az = penZ < 0 ? -penZ : penZ;
+    if (code == 2) {
+        if (((unsigned)(az + 0x190) & 0xffff) < 0x321) { *lz = penZ + pz; return 1; }
+        if (ax < az) *lx = penX + *lx; else *lz = penZ + *lz;
+        return 1;
+    }
+    if (code == 1) {
+        if (((unsigned)(ax + 0x190) & 0xffff) < 0x321) { *lx = penX + px; return 1; }
+        if (ax < az) *lx = penX + *lx; else *lz = penZ + *lz;
+        return 1;
+    }
+    if (code == 3) { if (ax < az) *lx = penX + *lx; else *lz = penZ + *lz; return 1; }
+    *lx = prevx; *lz = prevz;
+    return 0;
+}
+
+/* LAB_8003c734 (ghidra1_V2.txt:144830-145138) — type-5 "/" diagonal push-out. */
+static int push_diag5(const re15_sca_entry_t *e, int32_t *lx, int32_t *lz,
+                      int32_t prevx, int32_t prevz, int32_t r)
+{
+    r &= 0xffff;
+    int32_t X = (int16_t)e->x, Z = (int16_t)e->z;
+    int32_t W = (uint16_t)e->width, D = (uint16_t)e->density;
+    int32_t XM = (int16_t)(X + W), ZM = (int16_t)(Z + D);
+    int32_t DXR = (XM + r) - X, DZR = ZM - (Z - r);
+    int32_t PX = *lx, PZ = *lz;
+    int32_t LINE  = (DZR * (PX - X)) / DXR;
+    int32_t ZTERM = PZ - (Z - r);
+    if (!(LINE < ZTERM)) return 0;
+    int32_t pX = (int16_t)prevx, pZ = (int16_t)prevz;
+    int32_t X18=X/18, Z18=Z/18, XM18=XM/18, ZM18=ZM/18, PRX18=pX/18, PRZ18=pZ/18;
+    int32_t det = (ZM18-Z18)*PRX18 - (XM18-X18)*PRZ18 - X18*ZM18 + XM18*Z18;
+    if (det >= 0) {
+        int32_t PENZ = ZTERM - LINE;
+        int32_t PROJ = (DXR * PENZ) / DZR;
+        int32_t denom = PROJ*PROJ + PENZ*PENZ;
+        if (denom == 0) return 1;
+        int32_t dxp = (PROJ*PENZ*PENZ) / denom;
+        int32_t dzp = (PROJ*PROJ*PENZ) / denom;
+        *lx = PX + dxp;
+        *lz = PZ - dzp;
+        return 1;
+    }
+    if ((uint32_t)(PX - (X - r)) >= (uint32_t)(W + r)) return 0;
+    if ((uint32_t)(PZ -  Z)      >= (uint32_t)(D + r)) return 0;
+    int32_t ex = ((X - r) - PX) - 0x12;
+    int32_t ez = ((ZM + r) - PZ) + 0x12;
+    int32_t mX = PX - pX, mZ = PZ - pZ;
+    unsigned code = (((unsigned)(ex ^ mX)) >> 31) | ((((unsigned)(ez ^ mZ)) >> 30) & 2u);
+    int32_t aex = ex < 0 ? -ex : ex, aez = ez < 0 ? -ez : ez;
+    if (code == 0) { *lx = pX; *lz = pZ; return 0; }
+    if (code == 2) { if (((unsigned)(aez + 400) & 0xffff) < 0x321) { *lz = PZ + ez; return 1; } }
+    else if (code == 1) { if (((unsigned)(aex + 400) & 0xffff) < 0x321) { *lx = PX + ex; return 1; } }
+    if (aex < aez) *lx = PX + ex; else *lz = PZ + ez;
+    return 1;
+}
+
+/* LAB_8003cb9c (ghidra1_V2.txt:145139-145449) — type-6 main-diagonal push-out. */
+static int push_diag6(const re15_sca_entry_t *e, int32_t *lx, int32_t *lz,
+                      int32_t prevx, int32_t prevz, int32_t r)
+{
+    r &= 0xffff;
+    int32_t x = (int16_t)e->x, z = (int16_t)e->z;
+    int32_t x_max = (int16_t)((int32_t)e->x + (int32_t)e->width);
+    int32_t z_max = (int16_t)((int32_t)e->z + (int32_t)e->density);
+    int32_t px = *lx, pz = *lz;
+    int32_t s0   = (z_max + r) - z;
+    int32_t divW = x_max - (x - r);
+    int32_t s7q  = (s0 * (px - (x - r))) / divW;
+    int32_t s3   = pz - z;
+    if (!(s3 < s7q)) return 0;
+    int32_t X=x/18, Xm=x_max/18, Z=z/18, Zm=z_max/18, PX=prevx/18, PZ=prevz/18;
+    int32_t cross = (Zm - Z) * PX - (Xm - X) * PZ - X * Zm + Xm * Z;
+    if (cross > 0) {
+        if (!((uint32_t)(px - x)       < (uint32_t)((int32_t)e->width   + r))) return 0;
+        if (!((uint32_t)(pz - (z - r)) < (uint32_t)((int32_t)e->density + r))) return 0;
+        int32_t penX = ((x_max + r) - px) + 0x12;
+        int32_t penZ = ((z - r) - pz) - 0x12;
+        unsigned code = ((unsigned)(penX ^ (px - prevx)) >> 31)
+                      | (((unsigned)(penZ ^ (pz - prevz)) >> 30) & 2);
+        int32_t ax = penX < 0 ? -penX : penX, az = penZ < 0 ? -penZ : penZ;
+        if (code == 0) { *lx = prevx; *lz = prevz; return 0; }
+        if (code == 1 && ((unsigned)(ax + 0x190) & 0xffff) < 0x321) { *lx = penX + px; return 1; }
+        if (code == 2 && ((unsigned)(az + 0x190) & 0xffff) < 0x321) { *lz = penZ + pz; return 1; }
+        if (ax < az) *lx = penX + px; else *lz = penZ + pz;
+        return 1;
+    }
+    int32_t a2    = (pz - z) - s7q;
+    int32_t q     = (divW * a2) / s0;
+    int32_t denom = q * q + a2 * a2;
+    if (denom == 0) return 1;
+    int32_t off_x = (q * a2 * a2) / denom;
+    int32_t off_z = (q * q * a2) / denom;
+    *lx = px + off_x;
+    *lz = pz - off_z;
+    return 1;
+}
+
+/* LAB_8003c2cc (ghidra1_V2.txt:144521-144829) — type-7 anti-diagonal push-out. */
+static int push_diag7(const re15_sca_entry_t *e, int32_t *lx, int32_t *lz,
+                      int32_t prevx, int32_t prevz, int32_t r)
+{
+    r &= 0xffff;
+    int32_t px = *lx, pz = *lz;
+    int32_t x0 = (int16_t)e->x, z0 = (int16_t)e->z;
+    int32_t x_max = (int16_t)((int32_t)e->x + (int32_t)e->width);
+    int32_t z_max = (int16_t)((int32_t)e->z + (int32_t)e->density);
+    int32_t zr = z_max + r, widthr = (x_max + r) - x0;
+    int32_t s3 = ((int32_t)(z0 - zr) * (int32_t)(px - x0)) / widthr;
+    int32_t s6 = pz - zr;
+    if (!(s6 < s3)) return 0;
+    int32_t ez18 = (int16_t)(z0 / 18), zmax18 = (int16_t)(z_max / 18);
+    int32_t ex18 = (int16_t)(x0 / 18), xmax18 = (int16_t)(x_max / 18);
+    int32_t px18 = prevx / 18, pz18 = prevz / 18;
+    int32_t cross = (ez18 - zmax18) * px18 - (xmax18 - ex18) * pz18 - ex18 * ez18 + xmax18 * zmax18;
+    if (cross > 0) {
+        if (!((uint32_t)(px - (x0 - r)) < (uint32_t)((int32_t)e->width   + r))) return 0;
+        if (!((uint32_t)(pz - (z0 - r)) < (uint32_t)((int32_t)e->density + r))) return 0;
+        int32_t ax = (x0 - r - px) - 0x12, az = (z0 - r - pz) - 0x12;
+        unsigned code = ((unsigned)(ax ^ (px - prevx)) >> 0x1f)
+                      | (((unsigned)(az ^ (pz - prevz)) >> 0x1e) & 2);
+        int32_t aax = ax < 0 ? -ax : ax, aaz = az < 0 ? -az : az;
+        if (code == 2) {
+            if (((unsigned)(aaz + 0x190) & 0xffff) < 0x321) *lz = az + pz;
+            else if (aax < aaz) *lx = ax + px; else *lz = az + pz;
+            return 1;
+        }
+        if (code == 1) {
+            if (((unsigned)(aax + 0x190) & 0xffff) < 0x321) *lx = ax + px;
+            else if (aax < aaz) *lx = ax + px; else *lz = az + pz;
+            return 1;
+        }
+        if (code == 3) { if (aax < aaz) *lx = ax + px; else *lz = az + pz; return 1; }
+        *lx = prevx; *lz = prevz;
+        return 0;
+    }
+    int32_t a2 = s6 - s3;
+    int32_t p  = (widthr * a2) / ((z_max + r) - z0);
+    int32_t denom = p * p + a2 * a2;
+    if (denom == 0) return 1;
+    int32_t push_x = (p * a2 * a2) / denom;
+    int32_t push_z = (p * p * a2) / denom;
+    *lx = px - push_x;
+    *lz = pz - push_z;
+    return 1;
+}
+
 /* FUN_8003b0a4 — main resolver (PUSH-OUT of band-matching solid cells). */
 void re15_collision_constrain(const re15_rdt_t *rdt,
                               int32_t old_x, int32_t old_z,
@@ -301,10 +573,13 @@ void re15_collision_constrain(const re15_rdt_t *rdt,
             else if (e->type == 3) push_circle(e, x, z, r);
             else if (e->type == 8) push_caps8(e, x, z, old_x, old_z, r);   /* ⚠️ best-effort, unverified */
             else if (e->type == 9) push_caps9(e, x, z, old_x, old_z, r);   /* ⚠️ best-effort, unverified */
-            /* slope/diagonal push-out types 2/4/5/6/7 = DEFERRED (raw-MIPS only,
-             * intricate fixed-point, unverifiable in ROOM1170 which has none).
-             * See [[slope_collision_deferred_2026_06_09]]; player passes through
-             * those cells in non-1170 rooms until the slope-room verification phase. */
+            /* slope/diagonal push-out — byte-true from RE workflow wf_b5520814 (was DEFERRED, the
+             * player walked through diagonal walls; ROOM11C0/1190 have type 2/4/6). */
+            else if (e->type == 2) push_diag2(e, x, z, old_x, old_z, r);
+            else if (e->type == 4) push_diag4(e, x, z, old_x, old_z, r);
+            else if (e->type == 5) push_diag5(e, x, z, old_x, old_z, r);
+            else if (e->type == 6) push_diag6(e, x, z, old_x, old_z, r);
+            else if (e->type == 7) push_diag7(e, x, z, old_x, old_z, r);
         }
     }
 }

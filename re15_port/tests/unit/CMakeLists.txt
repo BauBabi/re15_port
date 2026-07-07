@@ -245,6 +245,13 @@ target_include_directories(test_scd_aot_opcodes PRIVATE ${CMAKE_SOURCE_DIR}/incl
 add_test(NAME unit_scd_aot_opcodes COMMAND test_scd_aot_opcodes)
 set_tests_properties(unit_scd_aot_opcodes PROPERTIES TIMEOUT 30)
 
+# --- Byte-true SCA diagonal/slope push-out types 2/4/5/6/7 (was DEFERRED — walk through walls) ---
+add_executable(test_slope_collision test_slope_collision.c)
+target_link_libraries(test_slope_collision PRIVATE re15_engine re15_test_support)
+target_include_directories(test_slope_collision PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_slope_collision COMMAND test_slope_collision)
+set_tests_properties(unit_slope_collision PROPERTIES TIMEOUT 30)
+
 # --- Byte-true RE1.5 camera LookAt (audit #3 — integer SquareRoot0 + division, no float/rounding) ---
 add_executable(test_camera_view test_camera_view.c)
 target_link_libraries(test_camera_view PRIVATE re15_engine re15_test_support)
