@@ -94,97 +94,51 @@ static int16_t fov_to_screen_dist(uint16_t fov)
     return (int16_t)sd;
 }
 
+static uint32_t cam_isqrt(uint32_t x);   /* byte-true SquareRoot0 (defined below) */
+
 int re15_camera_build_view(const re15_camera_cut_t *cut,
                             re15_camera_view_t      *view_out)
 {
     if (!cut || !view_out) return -1;
 
-    float dx = (float)(cut->target_x - cut->pos_x);
-    float dy = (float)(cut->target_y - cut->pos_y);
-    float dz = (float)(cut->target_z - cut->pos_z);
-
-    float len_sq = dx*dx + dy*dy + dz*dz;
-    if (len_sq < 1.0f) return -2;            /* pos == target → degenerate */
-    float len    = my_sqrtf(len_sq);
-    float inv_l  = 1.0f / len;
-
-    float fx = dx * inv_l;
-    float fy = dy * inv_l;
-    float fz = dz * inv_l;
-
-    /* Extract sp/cp/sy/cy from the normalized forward vector.
-     *
-     * pitch = atan2(fy, |forward_xz|)  → sp = fy, cp = |forward_xz|
-     * yaw   = atan2(fx, fz)            → sy = fx/cp, cy = fz/cp
-     *
-     * If cp ≈ 0 the camera is looking straight up or down — yaw is
-     * undefined; pin sy=0, cy=1 so the matrix degenerates gracefully
-     * to a pure pitch. */
-    float sp = fy;
-    float cp = my_sqrtf(fx*fx + fz*fz);
-    float sy, cy;
-    if (cp > 0.0001f) {
-        float inv_cp = 1.0f / cp;
-        sy = fx * inv_cp;
-        cy = fz * inv_cp;
-    } else {
-        sy = 0.0f;
-        cy = 1.0f;
+    /* BYTE-TRUE RE1.5 setupCameraLookAtMatrix (FUN_80053ca4 @0x80053ca4; audit #3). The old code
+     * built the view matrix in FLOAT (my_sqrtf + float products) then rounded to Q12 with +0.5 — the
+     * "T-REZ2" note claimed rounding matched the GTE, but the original is pure INTEGER: SquareRoot0
+     * for the magnitudes + TRUNCATING integer division ((component*4096)/dist) for the normalized
+     * sin/cos of pitch and yaw, then V = Rx(pitch) * Ry(yaw) via the GTE MulMatrix, translation via
+     * ApplyMatrixLV. No float, no +0.5 rounding = the camera half of the pixel-shift. Rx/Ry are
+     * sparse, so each V element reduces to one (a*b)>>12 product (per-product == sum truncation). */
+    int32_t dx = cut->target_x - cut->pos_x;
+    int32_t dy = cut->target_y - cut->pos_y;
+    int32_t dz = cut->target_z - cut->pos_z;
+    int32_t dist  = (int32_t)cam_isqrt((uint32_t)((int64_t)dx*dx + (int64_t)dy*dy + (int64_t)dz*dz));
+    if (dist == 0) return -2;                                   /* pos == target -> degenerate (the original traps) */
+    int32_t horiz = (int32_t)cam_isqrt((uint32_t)((int64_t)dx*dx + (int64_t)dz*dz));
+    /* pitch: sin_p = (pos.y - target.y)*4096/dist = -dy*4096/dist; cos_p = horiz*4096/dist (sVar1/uVar7) */
+    int32_t sp = (int16_t)(int32_t)(((int64_t)(-dy) * 4096) / dist);
+    int32_t cp = (int16_t)(int32_t)(((int64_t)horiz * 4096) / dist);
+    int32_t r0, r1, r2, r3, r4, r5, r6, r7, r8;
+    if (horiz != 0) {
+        int32_t sy = (int16_t)(int32_t)(((int64_t)dx * 4096) / horiz);   /* sin_yaw (uVar7') */
+        int32_t cy = (int16_t)(int32_t)(((int64_t)dz * 4096) / horiz);   /* cos_yaw (uVar8) */
+        r0 = cy;                        r1 = 0;   r2 = -sy;
+        r3 = (sp * sy) >> 12;           r4 = cp;  r5 = (sp * cy) >> 12;
+        r6 = (cp * sy) >> 12;           r7 = -sp; r8 = (cp * cy) >> 12;
+    } else {                                                    /* straight up/down: skip yaw, V = Rx */
+        r0 = 4096; r1 = 0;   r2 = 0;
+        r3 = 0;    r4 = cp;  r5 = sp;
+        r6 = 0;    r7 = -sp; r8 = cp;
     }
-
-    /* View matrix V = R_x(pitch) · R_y(-yaw) (column-vector convention,
-     * v' = V·v). Derived so that V·forward = (0, 0, 1) — i.e. the world's
-     * forward direction maps to camera-space +Z. Verification: row 2 of
-     * V equals the forward unit vector itself.
-     *
-     *   R_y(-yaw) = | cy   0  -sy |     R_x(pitch) = | 1  0   0  |
-     *               | 0    1   0  |                   | 0  cp -sp |
-     *               | sy   0   cy |                   | 0  sp  cp |
-     *
-     * V = R_x · R_y =
-     *   | cy        0    -sy       |
-     *   | -sp · sy  cp   -sp · cy  |
-     *   | cp · sy   sp    cp · cy  |
-     *
-     * (Row 2 = (cp·sy, sp, cp·cy) = (fx, fy, fz) = forward. Confirmed
-     * algebraically.) */
-    float m00 =       cy;        float m01 = 0.0f;   float m02 = -sy;
-    float m10 = -sp * sy;        float m11 = cp;     float m12 = -sp * cy;
-    float m20 =  cp * sy;        float m21 = sp;     float m22 =  cp * cy;
-
-    /* Translation: t = -M * pos. In camera space, the world origin sits
-     * at -M·pos relative to the camera, so vertices get +t added to
-     * land at correct view-space positions. */
-    float px = (float)cut->pos_x;
-    float py = (float)cut->pos_y;
-    float pz = (float)cut->pos_z;
-    float tx = -(m00*px + m01*py + m02*pz);
-    float ty = -(m10*px + m11*py + m12*pz);
-    float tz = -(m20*px + m21*py + m22*pz);
-
-    /* Convert rotation to Q12 fixed-point.
-     * T-REZ2 (50-agent dive) found that plain `(int)(f*ONE_Q12)` truncates
-     * — losing up to 0.5 LSB per element. Across the 9 rotation elements
-     * accumulating through Q12_MUL in the bone compose, this causes ±0.5..1
-     * pixel jitter (user-reported "wiederkehrende Pixel Verschiebungen").
-     * Fix: add 0.5 LSB before cast for proper round-to-nearest, matching
-     * the PSX GTE's native 15→12-bit rounding behavior.                  */
-    #define Q12_ROUND(f) ((int32_t)((f) * ONE_Q12 + ((f) >= 0.0f ? 0.5f : -0.5f)))
-    view_out->rot[0] = Q12_ROUND(m00);
-    view_out->rot[1] = Q12_ROUND(m01);
-    view_out->rot[2] = Q12_ROUND(m02);
-    view_out->rot[3] = Q12_ROUND(m10);
-    view_out->rot[4] = Q12_ROUND(m11);
-    view_out->rot[5] = Q12_ROUND(m12);
-    view_out->rot[6] = Q12_ROUND(m20);
-    view_out->rot[7] = Q12_ROUND(m21);
-    view_out->rot[8] = Q12_ROUND(m22);
-    #undef Q12_ROUND
-
-    /* Translation rounding too — same +0.5 LSB trick. */
-    view_out->trans[0] = (int32_t)(tx + (tx >= 0.0f ? 0.5f : -0.5f));
-    view_out->trans[1] = (int32_t)(ty + (ty >= 0.0f ? 0.5f : -0.5f));
-    view_out->trans[2] = (int32_t)(tz + (tz >= 0.0f ? 0.5f : -0.5f));
+    view_out->rot[0] = r0; view_out->rot[1] = r1; view_out->rot[2] = r2;
+    view_out->rot[3] = r3; view_out->rot[4] = r4; view_out->rot[5] = r5;
+    view_out->rot[6] = r6; view_out->rot[7] = r7; view_out->rot[8] = r8;
+    /* translation t = V * (-pos): ApplyMatrixLV = per-row MAC then >>12 (int64 accumulate) */
+    {
+        int64_t npx = -(int64_t)cut->pos_x, npy = -(int64_t)cut->pos_y, npz = -(int64_t)cut->pos_z;
+        view_out->trans[0] = (int32_t)(((int64_t)r0*npx + (int64_t)r1*npy + (int64_t)r2*npz) >> 12);
+        view_out->trans[1] = (int32_t)(((int64_t)r3*npx + (int64_t)r4*npy + (int64_t)r5*npz) >> 12);
+        view_out->trans[2] = (int32_t)(((int64_t)r6*npx + (int64_t)r7*npy + (int64_t)r8*npz) >> 12);
+    }
 
     view_out->fov_screen_dist = fov_to_screen_dist(cut->fov);
 
