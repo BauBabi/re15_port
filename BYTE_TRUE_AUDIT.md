@@ -567,3 +567,31 @@ einen breiten Vektor getestet (nicht „rendert noch"):
 **Lehre (zentral für Render-RE):** die byte-true Mathe ist oft WENIGER präzise als der naive Port —
 „genauer" ≠ byte-true. Delikate Render-Änderungen IMMER gegen die authoritative Decompile-Referenz
 über einen breiten Test-Vektor verifizieren.
+
+## Nachtrag: Completeness-Audit der Nicht-Combat/Nicht-Render-Systeme (wf_6fb46a73, 2026-07-08)
+
+12 Subsystem-Scanner + adversarielle Refuter fanden die höchstwertigen verbleibenden byte-true-
+DIVERGENZEN (nicht zitierte No-Ops). 5 adversariell BESTÄTIGT (alle STAGE1-reachable):
+
+**GEFIXT diese Runde:**
+- ✅ **Item_aot_set 0x50 (HIGH, Commit 6f9bf45a):** las Item-Typ/Menge aus pc[15]/pc[17] (BE-High-
+  Bytes = 0) statt pc[14]/pc[16] (LE-Low) → JEDES STAGE1-Item-Pickup gewährte nichts. + verwaisten
+  test_scd_aot_opcodes reaktiviert.
+- ✅ **Dialog 0x04-arg-0 Instant-Reveal (HIGH, Commit 3cf76ca9):** die `04 00`-Flash-Span wurde
+  ignoriert → alle STAGE1-Cutscene-Captions (Irons/Marvin/Ada) tippten Buchstabe-für-Buchstabe.
+
+**OFFEN (gerankt, bestätigt HIGH, STAGE1):**
+- **SCA Slope/Diagonal-Push-out (collision, HIGH):** SCA-Zell-Typen 2/4/5/6/7 (diagonale Slopes)
+  deferred in `re15_collision_constrain` → der Spieler läuft durch diagonale Wände in STAGE1-Räumen.
+- **Tür-Trigger falscher Input (aot, HIGH):** feuert auf einer Square-Press-EDGE statt der
+  Original-Öffnungs-Bedingung (Press-and-Hold-Akkumulation / andere Eingabe). STAGE1-Türen.
+
+**OFFEN (medium/low, STAGE1, aus dem Scan — noch nicht einzeln refuter-verifiziert):**
+- ESP-Effekt-Gravity/Drift nicht getrieben (STAGE1-Blut-fx statisch, phys=0).
+- Kamera-Soft-Track/Orbit-Animator (FUN_80015850) gestubbt+unwired.
+- Player-Hit-Reaction spielt Clip 0xa ohne Knockback statt der byte-true Richtungs-Reaktion.
+- Stair-Ascend-FSM ohne Phase-0/1-Turn-to-face-Preamble (PL00 Clip 5).
+- Auto-Aim/Fire auf Front-±90°-Arc geklemmt statt nächster Gegner rundum.
+- SCD Se_on (0x36) ignoriert den Bank-Selektor → routet auf eine pensionierte Test-VAB (Skript-SE).
+- SCD 0x1B (For2, work_vars[N]-count FOR) unimplementiert → op_unknown (LOW).
+- op_sce_em_set spawnt jeden Gegner ohne das pc[7]-Spawn-Enable-Gate (STAGE1=nein).
