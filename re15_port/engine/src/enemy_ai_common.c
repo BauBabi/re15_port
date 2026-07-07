@@ -4003,18 +4003,43 @@ static void re15_adult_spider_ai_tick(int slot)
         e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* -> ACTIVE @0x80110b80 */
         break;
 
-    case 1: {  /* ACTIVE brain 0x80110e50 (dual-table): WAVE 1 = chase toward the player. The grid-DECIDE
-                * picks the attack when in cone/range (0x80/0x100, dist 3000/5001) -> GRAB (aca58=2) = wave 2. */
+    case 1: {  /* ACTIVE brain 0x80110e50 (dual-table grid-DECIDE @0x80118e44 + substep-ACT @0x80118e64):
+                * chase toward the player -> GRAB when close + aligned. sub_state_1: 0 chase / 1 grab. */
         int los = re15_enemy_los_probe(slot, e, pl);          /* 0x8001bc08 -> +0x1d0/+0x1e0 */
         int32_t dist = re15_enemy_player_dist(e, pl);         /* SquareRoot0 -> +0x1d4 */
         e->dog_dist = (int16_t)dist;
-        if (e->motion != 0x10) re15_aspider_clip(e, 0x10);    /* chase/idle clip 0x10 (attack windup 8 = wave 2) */
+
+        if (e->sub_state_1 == 1) {   /* GRAB (grab A 0x801120b8 / B 0x801127f0 connect @0x8011254c/0x801129cc).
+                                      * The adult spider's attack is a NON-DAMAGING stagger-grab: exhaustively
+                                      * verified (whole 0x25 code 0x801109e4-0x801158a0) there is NO hitbox /
+                                      * take_damage / direct player.hp write — only a keep-alive CLAMP. The
+                                      * grab latches the player grab-cmd (DAT_800aca58=2 = a stagger, cmd 2 =
+                                      * 0x80035af0 = anim-only, no hp) + chains while grabbed. */
+            if (e->sub_state_2 == 0) {                        /* connect once @0x8011254c */
+                re15_audio_room_se(2);                        /* Se 0x800453d0(a0=2) @0x8011254c */
+                s_player_grabbed = 1;                         /* DAT_800aca58=2 stagger-grab -> pin the player */
+                pl->hit_react |= 1;                           /* player+0x93 |= 1 @0x80112554 */
+                if (pl->hp < 0) pl->hp = 1;                   /* keep-alive clamp @0x8011259c (NO damage dealt) */
+                e->sub_state_2 = 1;
+            } else {
+                s_player_grabbed = 1;                         /* hold the stagger */
+                if (re15_aspider_anim(e)) { e->sub_state_1 = 0; e->sub_state_2 = 0; }  /* grab clip done -> chase */
+            }
+            break;
+        }
+
+        /* GRAB trigger: player in range + inside the front cone (arc_test 0x8001a9cc a1=0x80 @0x80111578) &
+         * not already reacting -> commit the grab. */
+        if (pl->hit_react == 0 && re15_dog_arc(e, pl, 1200, 0x80)) {
+            re15_aspider_clip(e, 2); e->sub_state_1 = 1; e->sub_state_2 = 0; break;   /* -> GRAB */
+        }
+        /* chase: slew toward the player (LOS-gated, rate 0x10) + advance */
+        if (e->motion != 0x10) re15_aspider_clip(e, 0x10);
         if (los != 0) {
-            re15_enemy_steer_point(e, pl->x, pl->z, 0x10);    /* slew toward player rate 0x10 (LOS-gated) @0x80110e50 */
-            re15_dog_advance(e, 0x40);                        /* advance (faithful: the byte-true pos_advance
-                                                               * 0x800245d8 a0=0x800 uses an a0<<16 GTE transform,
-                                                               * a different scale than this >>12 stand-in;
-                                                               * exact chase speed = wave 2) */
+            re15_enemy_steer_point(e, pl->x, pl->z, 0x10);    /* slew rate 0x10 (LOS-gated) @0x80110e50 */
+            re15_dog_advance(e, 0x40);                        /* advance (faithful: pos_advance 0x800245d8
+                                                               * a0=0x800 uses an a0<<16 GTE transform, a
+                                                               * different scale than this >>12 stand-in) */
         }
         re15_aspider_anim(e);
         break;

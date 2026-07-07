@@ -53,6 +53,26 @@ int main(void)
     if (c1 >= c0) { fprintf(stderr, "FAIL(2): the spider must close on a visible player, dist %d->%d\n", c0, c1); fail = 1; }
     printf("  (2) CHASE: state=%d, dist %d->%d (closing)\n", e->state, c0, c1);
 
+    /* (2b) GRAB: the adult spider's attack is a NON-DAMAGING stagger-grab. With the player in the front
+     * cone within range, the spider commits the grab (pins/staggers the player) and deals ZERO HP damage.
+     * Byte-true: the whole 0x25 code has no hitbox/take_damage/direct hp write; the connect @0x8011254c
+     * latches DAT_800aca58=2 + a keep-alive clamp only. */
+    extern int re15_player_is_grabbed(void);
+    memset(g_actors, 0, sizeof g_actors);
+    pl = &g_actors[RE15_ACTOR_SLOT_PLAYER]; pl->active = 1; pl->type = 0; pl->x = 0; pl->z = 800; pl->hp = 100;
+    e = &g_actors[SS]; e->active = 1; e->type = 0x25; e->state = 1; e->sub_state_1 = 0; e->hp = 100; e->x = 0; e->z = 0;
+    re15_enemy_apply_hitbox(e, 0x25);
+    e->rot_y = (int16_t)(((int)re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0xfff);  /* face the player */
+    int grabbed = 0; int16_t ghp0 = pl->hp;
+    for (int f = 0; f < 60; f++) {
+        re15_enemy_ai_run_all(0);
+        if (re15_player_is_grabbed()) grabbed = 1;
+        if (grabbed) break;
+    }
+    if (!grabbed)       { fprintf(stderr, "FAIL(2b): the spider must grab/stagger-pin the player; sub=%d\n", e->sub_state_1); fail = 1; }
+    if (pl->hp != ghp0) { fprintf(stderr, "FAIL(2b): the grab must deal ZERO damage (byte-true), hp %d->%d\n", ghp0, pl->hp); fail = 1; }
+    printf("  (2b) GRAB: stagger-pin (grabbed=%d), player hp %d->%d (byte-true 0 damage)\n", grabbed, ghp0, pl->hp);
+
     /* (3) KILLABLE: a lethal hit -> DEATH -> CORPSE */
     pl->x = 0; pl->z = 20000;   /* player far so the chase doesn't interfere */
     e->hp = 4; e->hit_react = 0;
