@@ -788,6 +788,9 @@ void re15_enemy_apply_hitbox(re15_actor_t *a, uint8_t type)
                                                 * zombie combat/corpse; faithful-line dims)     */
         case 0x29: r = 1100; h = 1080; break;  /* COCKROACH (EM029, STAGE3) — live-observed box
                                                 * (HASH-..._5.sav); maggot-like scurrier            */
+        case 0x30: r = 1000; h = 1440; break;  /* G-BIRKIN boss form 1 (EM030, STAGE3) — byte-true from
+                                                * INIT 0x801166e0: +0x78 = box @0x8011ee64 =
+                                                * {0,-1440,0,1000,1440,1000} (circular, radius_min==max)  */
         case 0x20: r = 500;  h = 600;  break;  /* DOG (Cerberus) — low+wide ground enemy
                                                 * (faithful-line: exact +0x78 dims deferred to Wave 2) */
         case 0x21: r = 200;  h = 180;  break;  /* CROW — byte-true from its +0x78 dim block

@@ -4262,6 +4262,71 @@ static void re15_cockroach_ai_tick(int slot)
     }
 }
 
+/* ============================ G-BIRKIN boss form 1 (type 0x30, EM030) — STAGE3 ============== *
+ * Byte-true 0x80116230 family (STAGE3.BIN; workflow wf_5df42870-cba, INIT cluster adversarially CONFIRMED).
+ * The central STAGE3 BOSS (STAGE2's 0x30 is an un-registered placeholder). Root 0x80116230: pause/skip gates
+ * -> dist -> NAV-STEER 0x80039e7c (RDT nav zones) -> +0x4 dispatch @0x8011ee84 (16 states). Spawns ROOM3070
+ * (with 0x33 = the next form, BIRKIN_3), grid 0x33.
+ * WAVE 1: INIT byte-true (boss HP 300 hardcoded, hurt-box 1000/1440, idle clip 0, -> ACTIVE sub 9) + a
+ * faithful NAV-CHASE placeholder + killable. DEFERRED (the boss's meat, needs a decomposed RE of the ~13KB
+ * ACTIVE brain 0x80116d38): the claw/lunge/grab ATTACK sub-states (player.hp damage), the sub-dispatch
+ * (@0x8011eeb8 by +0x5 / @0x8011eea4 by grid), and the FORM-3 (type 0x33) transition-on-death (morph). */
+static void re15_birkin_clip(re15_actor_t *e, uint8_t c) { e->motion = c; e->anim_frame = 0; e->anim_frac = 7; }
+static int re15_birkin_anim(re15_actor_t *e)
+{
+    re15_enemy_bank_t *bb = re15_enemy_find(e->type);     /* EM030 clip lengths from the loaded bank */
+    int fc = 40;
+    if (bb && bb->ok && e->motion < bb->anim.clip_count && bb->anim.clips[e->motion].frame_count > 0)
+        fc = bb->anim.clips[e->motion].frame_count;
+    int done = (e->anim_frame + 1 >= fc);
+    e->anim_frame = (uint8_t)((e->anim_frame + 1) % fc);
+    if (e->anim_frac > 0) e->anim_frac--;
+    return done;
+}
+static void re15_birkin_ai_tick(int slot)
+{
+    re15_actor_t *e  = &g_actors[slot];
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+
+    switch (e->state) {
+    case 0:   /* INIT 0x801166e0 (byte-true CONFIRMED): boss HP 300, idle clip 0, steer=player -> ACTIVE sub 9 */
+        if (e->hp <= 0) e->hp = 300;                          /* +0x9a = 0x12c hardcoded @0x80116910 (boss HP) */
+        e->motion = 0; e->anim_frame = 0; e->anim_frac = 0; e->hit_react = 0;   /* idle clip 0 @0x8011683c */
+        e->steer_x = (int16_t)pl->x; e->steer_z = (int16_t)pl->z;   /* +0x1bc/+0x1be = player @0x80116710/728 */
+        e->ai_timer = 100; e->dog_atk_cd = 9;                 /* +0x9c=100 @0x8011677c, +0x1dc=9 @0x80116800 */
+        e->state = 1; e->sub_state_1 = 9; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* grid 0x33 -> sub 9 @0x80116890 */
+        break;
+
+    case 1: {  /* ACTIVE brain 0x80116d38 (~13KB, deferred): WAVE 1 = nav-chase toward the player. The attack
+                * sub-states + the form-3 transition live here (@0x8011eeb8 by +0x5) = wave 2. */
+        int32_t dist = re15_enemy_player_dist(e, pl);
+        e->dog_dist = (int16_t)dist;
+        if (e->motion != 4) re15_birkin_clip(e, 4);           /* nav-walk clip (placeholder; exact clip = wave 2) */
+        re15_enemy_steer_point(e, pl->x, pl->z, 0x10);        /* nav-steer toward player (0x80039e7c faithful) */
+        re15_dog_advance(e, 40);                              /* nav-walk advance (faithful; exact speed = wave 2) */
+        re15_birkin_anim(e);
+        break;
+    }
+
+    case 2:   /* HURT (take_damage +0x4=2): the boss flinches -> resume the brain */
+        e->state = 1; e->sub_state_1 = 9; e->sub_state_2 = 0; e->hit_react = (uint8_t)(e->hit_react & ~1u);
+        break;
+
+    case 3:   /* DEATH (take_damage +0x4=3): -> corpse. The byte-true FORM-3 (type 0x33) morph-on-death is
+               * deferred (needs the ACTIVE-brain / transition-state RE). */
+        e->state = 7; e->sub_state_3 = 0;
+        break;
+
+    case 7:   /* CORPSE: settle, inert */
+        re15_birkin_anim(e);
+        break;
+
+    default:
+        e->state = 1; e->sub_state_1 = 9; e->sub_state_2 = 0;
+        break;
+    }
+}
+
 /* Phase 8.6 — the per-frame LIVE-zombie AI pass. The port's faithful, TYPE-GATED slice of the
  * original entity-update loop FUN_8001a50c (@0x8001ce04): the original walks the entity array
  * (DAT_800acc2c, stride 0x1f4) and, for every active entity (+0x0 & 1), dispatches its per-type
@@ -4372,6 +4437,16 @@ void re15_enemy_ai_run_all(int combat_active)
             if (g_room_rdt_ok && (e->x != rc_ox || e->z != rc_oz)) {
                 int32_t nx = e->x, nz = e->z;
                 re15_collision_constrain(&g_room_rdt, rc_ox, rc_oz, &nx, &nz);
+                e->x = nx; e->z = nz;
+            }
+        }
+        else if (t == 0x30) {   /* G-BIRKIN boss form 1 (type 0x30, EM030, STAGE3) — nav-chasing boss (Wave 1:
+                                 * INIT byte-true + nav-chase; attacks + form-3 = wave 2). Wall-clamp like the rest. */
+            int32_t bk_ox = e->x, bk_oz = e->z;
+            re15_birkin_ai_tick(s);
+            if (g_room_rdt_ok && (e->x != bk_ox || e->z != bk_oz)) {
+                int32_t nx = e->x, nz = e->z;
+                re15_collision_constrain(&g_room_rdt, bk_ox, bk_oz, &nx, &nz);
                 e->x = nx; e->z = nz;
             }
         }
