@@ -416,15 +416,17 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
                        ? (gen_reach && g_aot_action_pressed && !msg_block && !action_fired)
                        /* #14 byte-true (FUN_80042bac @0x80043018): the AUTO zone has NO prev-frame-inside
                         * field — it fires EVERY frame the entity is inside, not just on the entry EDGE.
-                        * DONE for ITEM (type 2): the ITEM case self-disables SYNCHRONOUSLY in the same scan
-                        * pass (a->active=0 @Item_aot_reset), so every-frame == fires-once = provably safe.
-                        * DEFERRED for AUTO_EVENT (type 6): its re-trigger stop is the SCD sub's own Aot_reset,
-                        * but scd_event_fire has no already-running guard and starts a NEW sub copy per frame,
-                        * so the safety hinges on the sub's Aot_reset TIMING (frame-1 = safe; later = N cutscene
-                        * copies, e.g. ROOM1150 Irons sub08). That timing needs a DuckStation savestate trace
-                        * to confirm before the edge can be dropped -> keep the edge here (result-correct). */
-                       : (a->type == RE15_AOT_TYPE_ITEM) ? inside
-                                                         : (inside && !a->was_inside);
+                        * Re-trigger is stopped HANDLER-SIDE:
+                        *   ITEM (2): the ITEM case self-disables synchronously in this scan pass (a->active=0).
+                        *   AUTO_EVENT (6): the SCD sub's own Aot_reset(slot,0) disables the zone. The order is
+                        *     scd_tick -> aot_scan -> scd_event_fire, and the started sub first ticks NEXT frame
+                        *     BEFORE that frame's scan; the byte-true AUTO subs make Aot_reset their FIRST
+                        *     (yield-free) opcode, so the zone is dead before the 2nd scan = exactly one fire.
+                        *     VERIFIED: ROOM1150 sub08 (Irons cutscene) bytecode opens `46 06 00...` =
+                        *     Aot_reset(6,0) as opcode 0. (The original has no edge either, so any AUTO sub that
+                        *     did NOT self-disable first would multi-fire in the original too -> all working AUTO
+                        *     subs self-disable first.) The old `!was_inside` edge was mechanism-divergent. */
+                       : inside;
         if (fire) {
             if (is_action) action_fired = 1;   /* one action handler per press (byte-true) */
             /* Edge: just entered. (2026-06-03: removed the invented 90-frame
