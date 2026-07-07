@@ -4806,6 +4806,27 @@ static void re15_ivy_ai_tick(int slot)
     }
 }
 
+/* Shared ENEMY-vs-ENEMY body separation (the FUN_8002b544 pass of the enemy root tail): push THIS
+ * ground enemy out of every OTHER active, non-corpse enemy with a hitbox. The original enemy roots
+ * run aec4(&player,this)+b544(others); in the PORT the enemy-vs-PLAYER half is already the separate
+ * re15_body_push_player pass (game_step, live-verified for the maggot bite), so only the enemy-vs-
+ * enemy half was missing — non-zombie swarms (maggots, dog packs, spiders) inter-penetrated to a
+ * single point (audit wf_246147e3). Adding aec4(player) here would DOUBLE-push AND over-separate
+ * (hit_radius_min is the DAMAGE box: maggot 1600 / alligator 2200 -> the enemy is shoved out of
+ * attack range), so we do only the b544 enemy-vs-enemy loop. No grab-freeze exemption needed here
+ * (that gate is for the zombie's own aec4-vs-player, which this does not do). */
+static void re15_enemy_body_push_tail(int s, re15_actor_t *e)
+{
+    if (e->state == (uint8_t)RE15_AI_STATE_CORPSE || e->hit_radius_min == 0) return;
+    for (int o = RE15_ACTOR_SLOT_PLAYER + 1; o < RE15_ACTOR_MAX; o++) {          /* b544: vs every other enemy */
+        if (o == s) continue;
+        re15_actor_t *z2 = &g_actors[o];
+        if (!z2->active || z2->hit_radius_min == 0) continue;
+        if (z2->state == (uint8_t)RE15_AI_STATE_CORPSE) continue;
+        re15_body_push(z2, (int32_t)z2->hit_radius_min, e, (int32_t)e->hit_radius_min);
+    }
+}
+
 /* Phase 8.6 — the per-frame LIVE-zombie AI pass. The port's faithful, TYPE-GATED slice of the
  * original entity-update loop FUN_8001a50c (@0x8001ce04): the original walks the entity array
  * (DAT_800acc2c, stride 0x1f4) and, for every active entity (+0x0 & 1), dispatches its per-type
@@ -4890,6 +4911,7 @@ void re15_enemy_ai_run_all(int combat_active)
             int32_t dog_ox = e->x, dog_oz = e->z;
             e->ai_contact = (uint8_t)(e->ai_contact & 0xf0);  /* the SCA resolver clears the contact bit each frame (@0x8003b1dc) */
             re15_dog_ai_tick(s);
+            re15_enemy_body_push_tail(s, e);                  /* aec4+b544 body separation (dog root tail) */
             if (g_room_rdt_ok && (e->x != dog_ox || e->z != dog_oz)) {
                 int32_t ix = e->x, iz = e->z;                 /* the AI's INTENDED position this frame */
                 int32_t nx = ix, nz = iz;
@@ -4909,6 +4931,7 @@ void re15_enemy_ai_run_all(int combat_active)
                                  * Chases the player -> SCA wall-clamp after the tick like the maggot/dog. */
             int32_t asp_ox = e->x, asp_oz = e->z;
             re15_adult_spider_ai_tick(s);
+            re15_enemy_body_push_tail(s, e);
             if (g_room_rdt_ok && (e->x != asp_ox || e->z != asp_oz)) {
                 int32_t nx = e->x, nz = e->z;
                 re15_collision_constrain(&g_room_rdt, asp_ox, asp_oz, &nx, &nz);
@@ -4919,6 +4942,7 @@ void re15_enemy_ai_run_all(int combat_active)
                                  * Scurries toward the player + bites -> SCA wall-clamp after the tick. */
             int32_t rc_ox = e->x, rc_oz = e->z;
             re15_cockroach_ai_tick(s);
+            re15_enemy_body_push_tail(s, e);
             if (g_room_rdt_ok && (e->x != rc_ox || e->z != rc_oz)) {
                 int32_t nx = e->x, nz = e->z;
                 re15_collision_constrain(&g_room_rdt, rc_ox, rc_oz, &nx, &nz);
@@ -4932,6 +4956,7 @@ void re15_enemy_ai_run_all(int combat_active)
                                  * EM036) at spawn. So one brain covers both. Wall-clamp like the rest. */
             int32_t bk_ox = e->x, bk_oz = e->z;
             re15_birkin_ai_tick(s);
+            re15_enemy_body_push_tail(s, e);
             if (g_room_rdt_ok && (e->x != bk_ox || e->z != bk_oz)) {
                 int32_t nx = e->x, nz = e->z;
                 re15_collision_constrain(&g_room_rdt, bk_ox, bk_oz, &nx, &nz);
@@ -4942,6 +4967,7 @@ void re15_enemy_ai_run_all(int combat_active)
                                  * Crawls toward the player -> SCA wall-clamp after the tick like the dog. */
             int32_t mag_ox = e->x, mag_oz = e->z;
             re15_maggot_ai_tick(s);
+            re15_enemy_body_push_tail(s, e);
             if (g_room_rdt_ok && (e->x != mag_ox || e->z != mag_oz)) {
                 int32_t nx = e->x, nz = e->z;
                 re15_collision_constrain(&g_room_rdt, mag_ox, mag_oz, &nx, &nz);
@@ -4956,6 +4982,7 @@ void re15_enemy_ai_run_all(int combat_active)
                                  * Ground enemy: SCA wall-clamp after the tick like the dog/zombie. */
             int32_t zg_ox = e->x, zg_oz = e->z;
             re15_zgirl_ai_tick(s);
+            re15_enemy_body_push_tail(s, e);
             if (g_room_rdt_ok && (e->x != zg_ox || e->z != zg_oz)) {
                 int32_t nx = e->x, nz = e->z;
                 re15_collision_constrain(&g_room_rdt, zg_ox, zg_oz, &nx, &nz);
@@ -4971,6 +4998,7 @@ void re15_enemy_ai_run_all(int combat_active)
                                  * grab-eat. SCA wall-clamp after the tick like the dog/zombie. */
             int32_t al_ox = e->x, al_oz = e->z;
             re15_alligator_ai_tick(s);
+            re15_enemy_body_push_tail(s, e);
             if (g_room_rdt_ok && (e->x != al_ox || e->z != al_oz)) {
                 int32_t nx = e->x, nz = e->z;
                 re15_collision_constrain(&g_room_rdt, al_ox, al_oz, &nx, &nz);
@@ -4986,6 +5014,7 @@ void re15_enemy_ai_run_all(int combat_active)
                                  * 2x -10 attacks + grab-pins. SCA wall-clamp after the tick. */
             int32_t ty_ox = e->x, ty_oz = e->z;
             re15_tyrant_ai_tick(s);
+            re15_enemy_body_push_tail(s, e);
             if (g_room_rdt_ok && (e->x != ty_ox || e->z != ty_oz)) {
                 int32_t nx = e->x, nz = e->z;
                 re15_collision_constrain(&g_room_rdt, ty_ox, ty_oz, &nx, &nz);
@@ -4996,6 +5025,7 @@ void re15_enemy_ai_run_all(int combat_active)
                                  * grab-instakill. SCA wall-clamp after the tick like the other walkers. */
             int32_t iv_ox = e->x, iv_oz = e->z;
             re15_ivy_ai_tick(s);
+            re15_enemy_body_push_tail(s, e);
             if (g_room_rdt_ok && (e->x != iv_ox || e->z != iv_oz)) {
                 int32_t nx = e->x, nz = e->z;
                 re15_collision_constrain(&g_room_rdt, iv_ox, iv_oz, &nx, &nz);

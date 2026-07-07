@@ -2938,7 +2938,16 @@ int main(int argc, char *argv[])
                      * ~1328/1428). Pool progress = 0x5a - +0x9e while settling (sub1), full after. */
                     int32_t nhx = 500, nhz = 600;
                     int corpse_pool = 0;
-                    if (npc->state == RE15_AI_STATE_CORPSE) {
+                    /* The growing dark-red blood pool is the ZOMBIE root's corpse-settle (FUN_80109554):
+                     * only the live-step zombie types (0x10/0x11/0x12/0x16/0x18) actually run
+                     * re15_enemy_corpse_settle (the writer of grab_kill_ctr=0x5a). Every other enemy
+                     * (dog/crow/spider/maggot/cockroach/alligator/tyrant/ivy/birkin/zgirl) reaches state 7
+                     * WITHOUT it, so its grab_kill_ctr/sub_state_1 hold unrelated values -> gating the pool
+                     * on state==7 alone drew a spurious full-size zombie blood pool under those corpses
+                     * (audit wf_246147e3). Gate on the zombie type: those others keep the normal shadow. */
+                    int nis_zombie = (npc->type == 0x10 || npc->type == 0x11 || npc->type == 0x12 ||
+                                      npc->type == 0x16 || npc->type == 0x18);
+                    if (npc->state == RE15_AI_STATE_CORPSE && nis_zombie) {
                         int grow = (npc->sub_state_1 <= 1)
                                      ? (0x5a - (npc->grab_kill_ctr > 0 ? npc->grab_kill_ctr : 0))
                                      : 0x5a;
