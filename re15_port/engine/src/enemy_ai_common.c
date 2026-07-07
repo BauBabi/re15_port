@@ -4704,6 +4704,81 @@ static void re15_tyrant_ai_tick(int slot)
     }
 }
 
+/* ============================ IVY plant-grappler (type 0x2d, EM02D) — STAGE4 lab ============== *
+ * Byte-true from workflow wf_5c34ffe7 (root 0x801168c4, state table @0x8011a2c0). A humanoid plant
+ * grappler (HP 100 @0x80116954): nav-walks/chases on the shared EXE humanoid walker library, emerges/
+ * idles with a procedural bone-sway, and its ONE attack is a GRAB -> EATEN-DEATH. The grab does NO
+ * chip hp (the report found no player.hp subtract); it drives the player straight into the death FSM
+ * via the shared grab-command DAT_800aca58 = 7 (instant kill, @0x80116858, the 5-stage grab VM
+ * @0x801003c4). So the port models: INIT (HP 100) -> nav-chase -> GRAB (pin + eaten-death). Killable
+ * (real hurt/death). The dual-table walk/look choreography + bone-sway are faithful-line. */
+static void re15_ivy_ai_tick(int slot)
+{
+    re15_actor_t *e  = &g_actors[slot];
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+
+    switch (e->state) {
+    case 0:   /* INIT 0x80116920: HP 100, clip 0, state 1 (ACTIVE). */
+        if (e->hp <= 0) e->hp = 100;              /* +0x9a = 0x64 @0x80116954 */
+        e->motion = 0; e->anim_frame = 0; e->anim_frac = 0; e->hit_react = 0;   /* clip 0 @0x8011698c */
+        e->steer_x = (int16_t)pl->x; e->steer_z = (int16_t)pl->z;
+        e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;
+        e->state = 1;                             /* +0x4 = 1 @0x80116988 */
+        break;
+
+    case 1: {  /* ACTIVE 0x801169b8: nav-chase the player; in body-contact range -> GRAB. */
+        int32_t dist = re15_enemy_player_dist(e, pl); e->dog_dist = (int16_t)dist;
+        switch (e->sub_state_1) {
+        case 0: default:   /* NAV-CHASE (walker 0x800245d8 + pathfind 0x800509e4(15000)) */
+            if (e->motion != 1) { e->motion = 1; e->anim_frame = 0; }
+            re15_enemy_steer_point(e, pl->x, pl->z, 0x30);
+            re15_dog_advance(e, 40);
+            e->anim_frame++;
+            if (pl->hit_react == 0 && dist < 1400 && re15_dog_arc(e, pl, 1400, 0x400)) {   /* body AABB 0x2c8 reach -> GRAB */
+                e->motion = 2; e->anim_frame = 0; e->sub_state_1 = 3; e->sub_state_2 = 0; e->sub_state_3 = 0; }
+            break;
+        case 3:   /* GRAB -> EATEN-DEATH (5-stage @0x801003c4): lunge to contact, latch the pin + drive the
+                   * player death FSM (DAT_800aca58=7 @0x80116858) — an instant kill (no chip damage). */
+            re15_enemy_steer_point(e, pl->x, pl->z, 0x30);
+            if (e->sub_state_3 == 0) {                       /* lunge into the grab */
+                re15_dog_advance(e, 48);
+                if (e->anim_frame >= 3 && dist < 900 && re15_dog_arc(e, pl, 900, 0x400) && !s_player_grabbed) {
+                    s_player_grabbed = 1; pl->hit_react |= 1;    /* grab latch @0x80116850-58 */
+                    re15_audio_room_se(2); e->ai_timer = 60; e->sub_state_3 = 1;
+                }
+                if (++e->anim_frame >= 40) { e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0; }  /* missed -> chase */
+            } else {                                          /* HOLD -> eaten (cmd 7) = player death */
+                s_player_grabbed = 1;
+                if (e->ai_timer > 0) e->ai_timer--;
+                if (e->ai_timer == 0) {                       /* EATEN-DEATH: DAT_800aca58=7 -> instant kill */
+                    if (pl->hp >= 0) pl->hp = -1;
+                    s_player_grabbed = 0;
+                    e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;
+                }
+            }
+            break;
+        }
+        break; }
+
+    case 2:   /* HURT (take_damage +0x4=2): flinch -> resume the chase */
+        e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;
+        e->hit_react = (uint8_t)(e->hit_react & ~1u);
+        break;
+
+    case 3:   /* DEATH (take_damage +0x4=3): -> corpse */
+        e->state = 7; e->sub_state_3 = 0;
+        break;
+
+    case 7:   /* CORPSE: settle, inert */
+        e->anim_frame++;
+        break;
+
+    default:
+        e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0;
+        break;
+    }
+}
+
 /* Phase 8.6 — the per-frame LIVE-zombie AI pass. The port's faithful, TYPE-GATED slice of the
  * original entity-update loop FUN_8001a50c (@0x8001ce04): the original walks the entity array
  * (DAT_800acc2c, stride 0x1f4) and, for every active entity (+0x0 & 1), dispatches its per-type
@@ -4881,6 +4956,16 @@ void re15_enemy_ai_run_all(int combat_active)
             if (g_room_rdt_ok && (e->x != ty_ox || e->z != ty_oz)) {
                 int32_t nx = e->x, nz = e->z;
                 re15_collision_constrain(&g_room_rdt, ty_ox, ty_oz, &nx, &nz);
+                e->x = nx; e->z = nz;
+            }
+        }
+        else if (t == 0x2d) {   /* IVY plant-grappler (type 0x2d, EM02D, STAGE4) — nav-chasing humanoid +
+                                 * grab-instakill. SCA wall-clamp after the tick like the other walkers. */
+            int32_t iv_ox = e->x, iv_oz = e->z;
+            re15_ivy_ai_tick(s);
+            if (g_room_rdt_ok && (e->x != iv_ox || e->z != iv_oz)) {
+                int32_t nx = e->x, nz = e->z;
+                re15_collision_constrain(&g_room_rdt, iv_ox, iv_oz, &nx, &nz);
                 e->x = nx; e->z = nz;
             }
         }

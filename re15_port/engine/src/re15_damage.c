@@ -801,6 +801,9 @@ void re15_enemy_apply_hitbox(re15_actor_t *a, uint8_t type)
         case 0x2b: r = 800;  h = 1710; break;  /* TYRANT (EM02B, STAGE4/5) — byte-true box @0x8011a094 =
                                                 * {0,-1710,0,800,1710,800,0,-900}: x_max 800, y_max 1710
                                                 * (tall biped) — INIT +0x78 @0x80111c38 */
+        case 0x2d: r = 450;  h = 1530; break;  /* IVY plant-grappler (EM02D, STAGE4) — byte-true box
+                                                * @0x8011a2c8 = {0,-1530,0,450,1530,450}: x_max 450,
+                                                * y_max 1530 (humanoid) — SETUP +0x78 install */
         case 0x21: r = 200;  h = 180;  break;  /* CROW — byte-true from its +0x78 dim block
                                                 * @0x801210fc: hw[+6]=0xc8=200 (radius),
                                                 * hw[+8]=0xb4=180 (height), hw[+10]=200 (INIT
