@@ -359,3 +359,14 @@ Ergebnisse via `type`/`model_guess`-EM-Nummer disambiguieren (ein Alligator-Resu
     Grab-Handler haben oft KEINEN eigenen player.hp-Subtract (der Chip/Kill liegt in der geteilten cmd-FSM
     @0x80073f90) — „kein Damage im Handler" heißt Grab-Kanal, nicht harmlos. Hitbox-Box IMMER byte-true aus
     dem +0x78-Ziel lesen (`re15_disasm.py read <box> 6-8 --w 2 --signed`) statt raten.
+22. **Der geteilte Anim-Pass friert self-advancing Attack-Clips** (2026-07-07, teuer live-diagnostiziert):
+    `re15_actors_anim_advance` (player_common.c, game_step VOR run_all) advanct +0x95 für alle Nicht-Corpse-
+    Actors — geschrieben für ZOMBIES, die im Tick NICHT selbst advancen. Aber JEDER mobile Gegner advanct
+    +0x95 in seinem eigenen Tick → Doppel-Rate (der Once-per-hit Connect `af==0x0c` wird übersprungen) +
+    der Zombie-Lie-Down-Pin (Motions 0x0C/0E/12/13 → `anim_frame=0`) friert Attack-Clips 0x12/0x13 auf
+    Frame 0 = permanent harmlos (Maggot-Bite/Heavy, Cockroach-Bite). Fix: self-advancing Typen aus dem Pass
+    ausschließen (`re15_type_self_advances_anim`); nur Zombies (0x10/0x11/0x12/0x16/0x18) + Spider-Baby (0x26)
+    verlassen sich darauf. **Lehre für JEDE Live-Verifikation:** der Unit-Test (nur `run_all`) FEHLT die
+    anim-Pass — die volle game_step-Reihenfolge fahren (`body_push_player → re15_actors_anim_advance →
+    run_all`), sonst versteckt sich der Bug. Und: die SDL-exe ist GUI-Subsystem → **stderr geht ins Leere**,
+    Debug NUR in eine Datei loggen (env-gated `fopen`), nie `fprintf(stderr,…)`.
