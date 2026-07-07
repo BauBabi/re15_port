@@ -224,3 +224,9 @@ target_link_libraries(test_enemy_shootable PRIVATE re15_engine re15_test_support
 target_include_directories(test_enemy_shootable PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_enemy_shootable COMMAND test_enemy_shootable)
 set_tests_properties(unit_enemy_shootable PROPERTIES TIMEOUT 30)
+
+add_executable(test_aot_edge test_aot_edge.c)
+target_link_libraries(test_aot_edge PRIVATE re15_engine re15_test_support)
+target_include_directories(test_aot_edge PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_aot_edge COMMAND test_aot_edge)
+set_tests_properties(unit_aot_edge PROPERTIES TIMEOUT 30)
