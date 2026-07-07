@@ -4,7 +4,7 @@
  *
  * Testet die korrekte Ausführung der AOT-/Interaktions-Opcodes der SCD-VM:
  * Cut_chg (0x29), Aot_set (0x2C), Obj_model_set (0x2D), Se_on (0x36),
- * Sce_em_set (0x44), Item_aot_set (0x4E) und Door_aot_set (0x3B).
+ * Sce_em_set (0x44), Item_aot_set (0x50) und Door_aot_set (0x3B).
  *
  * Requirements: 4.1, 4.6
  *
@@ -40,8 +40,8 @@
  *       LAB_80040914 +0x22) [Legacy-Test erwartete 22]
  *   - Se_on     0x36 = 12 (op_se_on: t->pc+=12)
  *   - Sce_em_set 0x44 = 20 (op_sce_em_set: t->pc+=20) [Legacy-Test erwartete 22]
- *   - Item_aot_set 0x4E = 22 (op_item_aot_set, 0x4E ist registrierter
- *       Legacy-Alias auf op_item_aot_set; t->pc+=22)
+ *   - Item_aot_set 0x50 = 22 (op_item_aot_set; t->pc+=22). item_type/amount sind LE
+ *       u16 @+14/+16 -> das LOW byte pc[14]/pc[16] ist Typ/Menge (nicht pc[15]/pc[17]).
  *   - Door_aot_set 0x3B = 32 (op_door_aot_set: t->pc+=32). Der Legacy-Opcode
  *       0x68 "Door_aot_set_4p" hat keinen dedizierten Handler mehr (-> op_unknown,
  *       skippt nur s_opcode_sizes[0x68]=40 Bytes OHNE Tür zu installieren). Der
@@ -240,21 +240,23 @@ static void test_sce_em_set(void)
 }
 
 /* =========================================================================
- * Test: Item_aot_set (0x4E, 22 Bytes) — installiert ITEM-AOT
+ * Test: Item_aot_set (0x50, 22 Bytes) — installiert ITEM-AOT
  * ========================================================================= */
 
 static void test_item_aot_set(void)
 {
-    /* op_item_aot_set (scd_vm.c:2366; 0x4E = Legacy-Alias auf den 0x50-Handler):
-     * slot=pc[1], rect (LE) @pc[6..13], item_type=pc[15], amount=pc[17];
-     * re15_aot_set_item -> ITEM-AOT aktiv. pc+=22. */
+    /* op_item_aot_set (0x4E = Legacy-Alias auf den 0x50-Handler): slot=pc[1], rect (LE) @pc[6..13],
+     * item_type = LE LOW byte pc[14], amount = LE LOW byte pc[16] (u16-Felder; die High-Bytes
+     * pc[15]/pc[17] sind 0x00 fuer jedes echte STAGE1-Item). Hier ein echtes STAGE1-Item: Handgun-
+     * Ammo (0x15) x30 (0x1e), wie ROOM1050.RDT @0xb9a. Ein frueherer "BE-Fix" las pc[15]/pc[17] (=0)
+     * -> jedes Pickup gewaehrte type 0 / amount 0 = nichts. pc+=22. */
     uint8_t bytecode[23] = {
-        0x4E, 0x05, 0x02, 0x00,             /* slot=5 */
-        0x00, 0x00, 0x00, 0x01,             /* rect_x (LE @6) */
+        0x50, 0x05, 0x02, 0x00,             /* op 0x50 (Item_aot_set), slot=5, sce, sat (kein 0x80) */
+        0x00, 0x00, 0x00, 0x01,             /* floor, super, rect_x (LE @6) */
         0x00, 0x02, 0x00, 0x03,             /* rect_z, rect_w */
-        0x00, 0x04, 0x00, 0x07,             /* rect_d; item_type=pc[15]=7 */
-        0x00, 0x01, 0x00, 0x00,             /* amount=pc[17]=1 */
-        0x00, 0x00,                          /* pc[20..21] */
+        0x00, 0x04, 0x15, 0x00,             /* rect_d; item_type (LE) = 0x15 @pc[14] */
+        0x1e, 0x00, 0x00, 0x00,             /* amount (LE) = 0x1e @pc[16]; action */
+        0x00, 0x00,                          /* flags @pc[20..21] */
         OP_EVT_NEXT                          /* Sentinel */
     };
     long n;
@@ -265,8 +267,12 @@ static void test_item_aot_set(void)
     TEST_ASSERT_EQ("Item_aot_set: Opcode-Größe = 22", 22, n);
     TEST_ASSERT_EQ("Item_aot_set: Slot 5 aktiv", 1, g_aot.slots[5].active);
     TEST_ASSERT_EQ("Item_aot_set: Typ ITEM", RE15_AOT_TYPE_ITEM, g_aot.slots[5].type);
+    /* THE byte-read regression: item_type + amount come from the LE LOW bytes pc[14]/pc[16], NOT
+     * the high bytes pc[15]/pc[17] (=0 = the old bug -> re15_inv_grant rejects -> pick up nothing). */
+    TEST_ASSERT_EQ("Item_aot_set: item_type=0x15 (LE low byte pc[14])", 0x15, g_aot.item_params[5].item_type);
+    TEST_ASSERT_EQ("Item_aot_set: amount=30 (LE low byte pc[16])", 0x1e, g_aot.item_params[5].amount);
 
-    TEST_OK("Item_aot_set (0x4E)");
+    TEST_OK("Item_aot_set (0x50)");
 }
 
 /* =========================================================================

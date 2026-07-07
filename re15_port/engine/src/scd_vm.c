@@ -2672,9 +2672,15 @@ static int op_item_aot_set(scd_thread_t *t)
     int16_t  rect_z = scd_read_le_s16(&t->pc[8]);
     int16_t  rect_w = scd_read_le_s16(&t->pc[10]);
     int16_t  rect_d = scd_read_le_s16(&t->pc[12]);
-    /* BE: hi byte at +14 / +16 (was reading low byte → wrong for large IDs). */
-    uint8_t  item_t = t->pc[15];      /* low byte of BE item_type */
-    uint8_t  amount = t->pc[17];      /* low byte of BE amount */
+    /* item_type/amount are LITTLE-ENDIAN u16 at +14/+16 (like the rect fields above) — the type is
+     * the LE LOW byte pc[14], the count pc[16]. A prior "BE fix" wrongly read the HIGH bytes
+     * pc[15]/pc[17], which are 0x00 for every STAGE1 item, so every pickup granted type 0 / amount 0
+     * and re15_inv_grant rejected it = you picked up NOTHING (the AOT still deactivated, so the item
+     * silently vanished). Verified against the raw RDT: ROOM1050.RDT @0xb9a `...15 00 1e 00...` =
+     * handgun ammo (0x15) x30 (0x1e); ROOM1070 @0x156e = 0x15 x15; ROOM1000 @0xc24 = 0x31 x1. The
+     * original pickup handler reads lhu block+14 (type) / lbu block+16 (amount) (LAB_80043500). */
+    uint8_t  item_t = t->pc[14];      /* LE low byte = item type */
+    uint8_t  amount = t->pc[16];      /* LE low byte = amount */
     int32_t cx = (int32_t)rect_x + (int32_t)rect_w / 2;
     int32_t cz = (int32_t)rect_z + (int32_t)rect_d / 2;
     int32_t hw = (int32_t)(rect_w < 0 ? -rect_w : rect_w) / 2;
