@@ -546,3 +546,24 @@ verlassen sich noch darauf. Der Unit-Test verfehlte das, weil er run_all OHNE di
 `test_enemy_attack_reach.step()` fährt jetzt die volle game_step-Reihenfolge (body_push_player →
 re15_actors_anim_advance → run_all) und reproduziert den Bug (schlägt ohne den Fix fehl). Live
 bestätigt: Maggot beißt (HP 100→94 @F62). 54/54 ctest grün.
+
+## Nachtrag: Pixel-Shift #1-#3 byte-true GEFIXT (2026-07-07/08)
+
+Die drei gekoppelten Render-LSB-Quellen (der wiederholt gemeldete Pixel-Shift, oben als höchste
+Priorität markiert) sind byte-true beseitigt, jede gegen die authoritative Decompile-Referenz über
+einen breiten Vektor getestet (nicht „rendert noch"):
+- **#2 Trig (8f8948a5):** `re15_sin/cos_q12` lesen die echte Tabelle DAT_800794c4 (extrahiert nach
+  `engine/src/re15_trig_lut.c` via `tools/gen_trig_lut.py`) statt sinf/cosf-Trunkierung; beide
+  Plattformen. Die Tabelle weicht bewusst von float ab (cos-Bias, sin²+cos² denormalisiert) — genau
+  das rendert das Original. Tests auf byte-true umgestellt.
+- **#1 RotMatrix (00f2d2f2):** `mat3_from_euler` per-Produkt-Trunkierung + negate-before-shift statt
+  Q36-Single-Shift (RE_15_Quellcode_V2/RotMatrix.c / @0x80068130). Vorzeichen unverändert (Decode-
+  Schreck widerlegt). `test_rotmatrix` == Decompile über breiten Winkel-Vektor.
+- **#3 Kamera (f6ce84b9):** `re15_camera_build_view` integer LookAt (SquareRoot0 + trunkierende
+  Integer-Division + GTE-MulMatrix/ApplyMatrixLV) statt float+`Q12_ROUND(+0.5)` — der authoritative
+  FUN_80053ca4 trunkiert (Audit #3 bestätigt; der „T-REZ2"-+0.5 war falsch). `test_camera_view` ==
+  Decompile über 20 Cuts.
+
+**Lehre (zentral für Render-RE):** die byte-true Mathe ist oft WENIGER präzise als der naive Port —
+„genauer" ≠ byte-true. Delikate Render-Änderungen IMMER gegen die authoritative Decompile-Referenz
+über einen breiten Test-Vektor verifizieren.
