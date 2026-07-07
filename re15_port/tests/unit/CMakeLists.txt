@@ -110,6 +110,12 @@ target_include_directories(test_maggot_ai PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_maggot_ai COMMAND test_maggot_ai)
 set_tests_properties(unit_maggot_ai PROPERTIES TIMEOUT 30)
 
+add_executable(test_adult_spider_ai test_adult_spider_ai.c)
+target_link_libraries(test_adult_spider_ai PRIVATE re15_engine re15_test_support)
+target_include_directories(test_adult_spider_ai PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_adult_spider_ai COMMAND test_adult_spider_ai)
+set_tests_properties(unit_adult_spider_ai PROPERTIES TIMEOUT 30)
+
 # --- NPC (Chief Irons, type 0x40) invulnerable cutscene actor AI — Wave 1 (re15_npc_ai_tick) ---
 add_executable(test_npc_ai test_npc_ai.c)
 target_link_libraries(test_npc_ai PRIVATE re15_engine re15_test_support)

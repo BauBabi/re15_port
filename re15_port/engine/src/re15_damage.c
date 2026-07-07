@@ -799,6 +799,10 @@ void re15_enemy_apply_hitbox(re15_actor_t *a, uint8_t type)
         case 0x27: r = 1600; h = 1440; break;  /* MAGGOTS_BABY — byte-true from its +0x78 collision box
                                                 * @0x80121350 = {0,-1440,0,1600,1440,1600} (INIT
                                                 * 0x80116f50: +0x1e2=4 -> table[4] @0x80121368)  */
+        case 0x25: r = 1000; h = 900;  break;  /* ADULT SPIDER (EM025, STAGE2) — byte-true from its +0x78
+                                                * box A @0x80118dd4 = off(0,-900,0) half(1000,900,1000)
+                                                * (INIT 0x80110b6c: +0x78 = *(0x80118e04) = box A;
+                                                * state-swapped to box C @0x80118dec (200,1440,200)) */
         default:   return;                      /* unverified type → no hitbox (no guessing) */
     }
     a->hit_radius_min = a->hit_radius_max = r;

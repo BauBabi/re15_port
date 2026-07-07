@@ -3964,6 +3964,84 @@ static void re15_zgirl_ai_tick(int slot)
     }
 }
 
+/* ============================ ADULT SPIDER (type 0x25, EM025 = SPIDER) — Wave 1 ============= *
+ * Byte-true 0x801109e4 family (STAGE2.BIN; workflow wf_1f5685b3-a78, 12 agents adversarially verified).
+ * The larger MOBILE counterpart to the ported 0x26 SPIDER_BABY. Root 0x801109e4 (pause-gate DAT_800aca40
+ * &0x20000000, skip-gate +0x9&0x20) dispatches +0x4 via @0x80118e24 (16 states) -> shared body-tail
+ * (0x8002b498 contact-clear, 0x8002aec4+0x8002b544 body-push, 0x8003b0a4 SCA-wall-clamp, 0x8001b064 box-
+ * rebuild) — a ground creature like the maggot. The ACTIVE brain (state[1] 0x80110e50) is a DUAL-TABLE
+ * A/B brain (grid-DECIDE @0x80118e44 by +0x9 gated on +0x5==0, substep-ACT @0x80118e64 by +0x6). Its
+ * attack is a GRAB (latch DAT_800aca58=2 + a keep-alive clamp; NO direct player.hp write anywhere in
+ * 0x801109e4-0x801158a0 — the shared player grab-FSM applies the damage). WAVE 1: INIT + chase + killable.
+ * DEFERRED to wave 2 (needs a STAGE2 provoke via the repacker + the DAT_800aca58=2 player-FSM): the exact
+ * grab damage/pin, the full grid/substep dispatch, the ceiling-drop variant, the exact chase speed. */
+static const uint16_t s_aspider_hp_row[16] =    /* HP table @0x8011761c = HPbase 0x8011717c + 0x25*0x20 */
+    { 76,105,125,78,80,109,129,83,113,132,87,117,136,93,99,121 };   /* hp = row[rng()&0xf] @0x80110da0 */
+static void re15_aspider_clip(re15_actor_t *e, uint8_t c) { e->motion = c; e->anim_frame = 0; e->anim_frac = 7; }
+static int re15_aspider_anim(re15_actor_t *e)
+{
+    re15_enemy_bank_t *bb = re15_enemy_find(e->type);   /* real EM025 clip lengths from the loaded bank */
+    int fc = 30;                                        /* fallback when the bank is absent (unit test) */
+    if (bb && bb->ok && e->motion < bb->anim.clip_count && bb->anim.clips[e->motion].frame_count > 0)
+        fc = bb->anim.clips[e->motion].frame_count;
+    int done = (e->anim_frame + 1 >= fc);
+    e->anim_frame = (uint8_t)((e->anim_frame + 1) % fc);
+    if (e->anim_frac > 0) e->anim_frac--;
+    return done;
+}
+static void re15_adult_spider_ai_tick(int slot)
+{
+    re15_actor_t *e  = &g_actors[slot];
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+
+    switch (e->state) {
+    case 0:   /* INIT 0x80110b6c: -> ACTIVE, HP row, clip 0x10, steer=player */
+        if (e->hp <= 0) e->hp = (int16_t)s_aspider_hp_row[re15_engine_rand8() & 0xf];  /* +0x9a @0x80110da0 */
+        e->motion = 0x10; e->anim_frame = 0; e->anim_frac = 0; e->hit_react = 0;   /* clip 0x10 @0x80110b90 */
+        e->steer_x = (int16_t)pl->x; e->steer_z = (int16_t)pl->z;   /* +0x1bc/+0x1be = player @0x80110bd8/bf0 */
+        e->ai_timer = 0; e->dog_atk_cd = 0; e->dog_dist = 0;        /* clear +0x9c/+0x1dc lockout etc */
+        e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* -> ACTIVE @0x80110b80 */
+        break;
+
+    case 1: {  /* ACTIVE brain 0x80110e50 (dual-table): WAVE 1 = chase toward the player. The grid-DECIDE
+                * picks the attack when in cone/range (0x80/0x100, dist 3000/5001) -> GRAB (aca58=2) = wave 2. */
+        int los = re15_enemy_los_probe(slot, e, pl);          /* 0x8001bc08 -> +0x1d0/+0x1e0 */
+        int32_t dist = re15_enemy_player_dist(e, pl);         /* SquareRoot0 -> +0x1d4 */
+        e->dog_dist = (int16_t)dist;
+        if (e->motion != 0x10) re15_aspider_clip(e, 0x10);    /* chase/idle clip 0x10 (attack windup 8 = wave 2) */
+        if (los != 0) {
+            re15_enemy_steer_point(e, pl->x, pl->z, 0x10);    /* slew toward player rate 0x10 (LOS-gated) @0x80110e50 */
+            re15_dog_advance(e, 0x40);                        /* advance (faithful: the byte-true pos_advance
+                                                               * 0x800245d8 a0=0x800 uses an a0<<16 GTE transform,
+                                                               * a different scale than this >>12 stand-in;
+                                                               * exact chase speed = wave 2) */
+        }
+        re15_aspider_anim(e);
+        break;
+    }
+
+    case 2:   /* HURT 0x80113a0c: flinch clip 1 + blend 7 + Se(2) -> recover to ACTIVE */
+        if (e->sub_state_3 == 0) { re15_aspider_clip(e, 1); re15_audio_room_se(2); e->sub_state_3 = 1; }  /* @0x80113a0c */
+        else if (re15_aspider_anim(e)) { e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0;
+                                         e->sub_state_3 = 0; e->hit_react = (uint8_t)(e->hit_react & ~1u); }
+        break;
+
+    case 3:   /* DEATH 0x80113f40: collapse clip 1 + gore (0x8004ef90) + Se(5) + kill-flag -> CORPSE (state 7) */
+        if (e->sub_state_3 == 0) { re15_aspider_clip(e, 1); re15_audio_room_se(5); e->hit_react |= 2; e->sub_state_3 = 1; }  /* @0x80113f40 */
+        else if (re15_aspider_anim(e)) { e->state = 7; e->sub_state_3 = 0; }
+        break;
+
+    case 7:   /* CORPSE 0x801153d4: final clip 5, sink into the floor, inert (flags 0x2|0x40) */
+        if (e->motion != 5) re15_aspider_clip(e, 5);          /* @0x801153d4 */
+        re15_aspider_anim(e);
+        break;
+
+    default:  /* the grid/substep attack sub-states = wave 2 -> resume the brain */
+        e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0;
+        break;
+    }
+}
+
 /* Phase 8.6 — the per-frame LIVE-zombie AI pass. The port's faithful, TYPE-GATED slice of the
  * original entity-update loop FUN_8001a50c (@0x8001ce04): the original walks the entity array
  * (DAT_800acc2c, stride 0x1f4) and, for every active entity (+0x0 & 1), dispatches its per-type
@@ -4056,6 +4134,16 @@ void re15_enemy_ai_run_all(int combat_active)
         else if (t == 0x26) {   /* SPIDER-BABY (type 0x26) — stationary web-spitter (Wave 1).
                                  * Emerges vertically + -2 contact; does NOT translate -> no wall-clamp. */
             re15_spider_ai_tick(s);
+        }
+        else if (t == 0x25) {   /* ADULT SPIDER (type 0x25, EM025, STAGE2) — mobile ground creature (Wave 1).
+                                 * Chases the player -> SCA wall-clamp after the tick like the maggot/dog. */
+            int32_t asp_ox = e->x, asp_oz = e->z;
+            re15_adult_spider_ai_tick(s);
+            if (g_room_rdt_ok && (e->x != asp_ox || e->z != asp_oz)) {
+                int32_t nx = e->x, nz = e->z;
+                re15_collision_constrain(&g_room_rdt, asp_ox, asp_oz, &nx, &nz);
+                e->x = nx; e->z = nz;
+            }
         }
         else if (t == 0x27) {   /* MAGGOTS (type 0x27) — large moving ground creature (Wave 1).
                                  * Crawls toward the player -> SCA wall-clamp after the tick like the dog. */
