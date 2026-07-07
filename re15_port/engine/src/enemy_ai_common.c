@@ -4708,8 +4708,10 @@ static void re15_tyrant_ai_tick(int slot)
         e->hit_react = (uint8_t)(e->hit_react & ~1u);
         break;
 
-    case 3:   /* DEATH (0x80114c68): -> corpse. Exact death sub-machine = faithful-line. */
-        e->state = 7; e->sub_state_3 = 0;
+    case 3:   /* DEATH (0x80114c68 -> single handler 0x80114cb0): play the topple clip 8 (+0x94=8
+               * @0x80114d28, +0x93|=2 gore @0x80114d08) to its end -> CORPSE. */
+        if (e->motion != 8) re15_birkin_clip(e, 8);        /* death clip 8 (generic bank clip/anim) */
+        if (re15_birkin_anim(e)) { e->state = 7; e->sub_state_3 = 0; }
         break;
 
     case 4:   /* EMERGE (0x80114fe4, state-4 sub-table @0x8011a270): play the emerge anim (sub2 0x801155ac
