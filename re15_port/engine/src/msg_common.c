@@ -393,7 +393,31 @@ static void re15_dialog_step(void)
             }
             if (b == 0x03) { g_scd.message_fsm = 3; g_scd.message_select = 1; break; }  /* yes/no */
             if (b == 0x05) { g_scd.message_color = (g_scd.message_parse + 1 < rlen) ? raw[g_scd.message_parse + 1] : 0; g_scd.message_parse += 2; continue; }
-            if (b == 0x04) { unsigned char a = (g_scd.message_parse + 1 < rlen) ? raw[g_scd.message_parse + 1] : 2; if (a) g_scd.message_scroll = a; g_scd.message_parse += 2; continue; }
+            if (b == 0x04) {               /* scroll-speed code */
+                unsigned char a = (g_scd.message_parse + 1 < rlen) ? raw[g_scd.message_parse + 1] : 2;
+                if (a == 0) {
+                    /* INSTANT-REVEAL span (byte-true FUN_80028134 case 4 @0x80028334): a `04 00`
+                     * flashes everything up to the next `04 NN` in ONE frame, then typewriters at
+                     * speed NN. The port's reveal pointer is message_parse (window = [page, parse)),
+                     * so advance it PAST the whole span: skip `04 00`, walk to the next 0x04 skipping
+                     * the arg byte of each 2-byte code (5/6/9/10/11), then consume that `04 NN` and
+                     * set the new scroll speed. Without this the STAGE1 cutscene captions
+                     * (Irons/Marvin/Ada, all `[SPD=0]...`) typewritered letter-by-letter. */
+                    g_scd.message_parse += 2;                                    /* skip 04 00 */
+                    while (g_scd.message_parse < rlen && raw[g_scd.message_parse] != 0x04) {
+                        unsigned char c = raw[g_scd.message_parse];
+                        if (c == 0x05 || c == 0x06 || c == 0x09 || c == 0x0a || c == 0x0b)
+                            g_scd.message_parse++;                               /* 2-byte code: skip its arg */
+                        g_scd.message_parse++;
+                    }
+                    unsigned char nn = (g_scd.message_parse + 1 < rlen) ? raw[g_scd.message_parse + 1] : 0;
+                    g_scd.message_parse += 2;                                    /* consume the trailing 04 NN */
+                    if (nn) g_scd.message_scroll = nn;
+                    g_scd.message_timer = g_scd.message_scroll;                  /* wait NN before the next glyph */
+                    break;                                                      /* the span is now flashed this frame */
+                }
+                g_scd.message_scroll = a; g_scd.message_parse += 2; continue;
+            }
             if (b == 0x08) { g_scd.message_parse++; continue; }   /* newline (render breaks) */
             g_scd.message_parse++;          /* reveal one glyph, then wait scroll frames */
             g_scd.message_timer = g_scd.message_scroll;
