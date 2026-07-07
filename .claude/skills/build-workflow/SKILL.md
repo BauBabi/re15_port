@@ -77,12 +77,21 @@ rm -rf build_psx && cmake -B build_psx -DRE15_BUILD_PSX=ON -DCMAKE_TOOLCHAIN_FIL
 
 ## Build-Fehler-Diagnose
 
+> ⚠️ **ZUERST prüfen bei `ninja: build stopped` OHNE jede `error:`-Zeile** (2026-07-07, teuer):
+> gcc/cc1 gibt **exit 1 mit NULL Diagnostik** (kein stderr, keine `.obj`, auch bei `--version`/
+> trivialem `int main(){}`), wenn **`C:\msys64\mingw64\bin` NICHT im `PATH`** ist — dann findet
+> `cc1.exe` seine abhängigen DLLs (libisl/libmpc/libwinpthread…) nicht und stirbt still. Das ist
+> KEIN Code-Fehler. Fix in der Shell (Bash-Tool): `export PATH="/c/msys64/mingw64/bin:$PATH"` vor
+> `cmake --build …` (CLAUDE.md: „mingw64 muss im PATH sein"). Symptom-Test: `gcc -fsyntax-only`
+> auf einer trivialen Datei gibt exit 1 → PATH-Problem, nicht dein Code.
+
 Wenn ein Build fehlschlägt, analysiere den Fehler-Output wie folgt:
 
 ### Schritt 1: Fehlertyp identifizieren
 
 | Fehlertyp | Erkennungsmuster | Typische Ursache |
 |-----------|-----------------|------------------|
+| **Stiller gcc-Crash** | `FAILED`/`build stopped` OHNE `error:`, keine .obj | **mingw64/bin nicht im PATH** (cc1 lädt DLLs nicht) — s.o. |
 | Compiler-Fehler | `error:` mit Datei:Zeile | Syntaxfehler, fehlende Includes, Typfehler |
 | Linker-Fehler | `undefined reference to` | Fehlende Implementierung, nicht gelinkte Library |
 | CMake-Fehler | `CMake Error` | Fehlende Abhängigkeit, ungültiger Pfad |

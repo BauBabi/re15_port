@@ -23,15 +23,28 @@ Pathfinding, Damage) ist EXE-seitig gemeinsam — NICHT neu reverse-engineeren (
 
 ## 0. Vorbereitung: Typ-ID und Overlay finden
 
+0. **ROSTER ZUERST (schnellster erster Zug, 2026-07-07):** Bevor du einen einzelnen Typ RE'st,
+   enumerier den GANZEN registrierten Roster der Stage in einem Schuss —
+   `python scripts/re15_reg_scan.py info/Re1.5/PSX/BIN/STAGE{N}.BIN`. Das scannt die
+   `sw handler,(0x80072bac+type*4)`-Stores und gibt `type → handler`, gruppiert nach Handler.
+   Direkt sichtbar: welche Typen die Stage hat, welche sich EINEN Root teilen (Zombie-Band
+   0x10-0x1f; G-Birkin 0x30+0x36), und — nach INIT-Check — welche nur Placeholder sind. Spart
+   ganze Workflows an Stubs/unbenutzten Slots (s. §9.13). Scanner-Gegenprobe = die bekannte
+   STAGE1-Liste (0x10-0x21,0x26,0x27,0x40).
 1. **Typ-ID**: aus dem Savestate (`re15_enemy_state.py <sav>` zeigt `t=XX` je Slot) oder der
    RDT-EM-Liste des Raums. Zombies: 0x10/0x11/0x16 (ein gemeinsames Root), 0x13 (eigenes Brain).
+   **Modell-Identität schnell**: `Typ == EMD-Nummer` → `info/.../BioModels-master/src/BioModels.h`
+   mappt `EMxxx.EMD → Kreatur` (EM023→ALLIGATOR, EM02B→TYRANT, EM02D→ZOMBIE_ARMS/Ivy). ⚠️ Das
+   sind RE2-RETAIL-Namen: in RE1.5 kann der Slot anders sein (EM022/EM024 = „Licker" retail, aber
+   im 1.5-Prototyp Stub bzw. FX-Emitter) — Verhalten aus dem Handler belegen, nicht aus dem Namen.
 2. **Stage-Overlay**: Raum-Nummer → Stage (JUMP-Nummern sind HEX; Stage 1 = 0x100er).
    Der Gegner-Handler liegt im Overlay `STAGE{N}.BIN` @0x80100000.
 3. **EXE-Dispatch @0x80072bac**: mappt Typ → Overlay-Handler. Die Overlay-Registrierung
    (STAGE1: @0x8011e864) schreibt die Einträge beim Overlay-Load — die Tabellen selbst stehen
    STATISCH in der BIN (40/40 == RAM verifiziert; kein Runtime-Patching).
 4. **Erste Anlaufstelle IMMER**: `RE15_FUN_CATALOG.md` (Repo-Root) + Memory
-   `reai-v2-room1140-anim-re` — der Zombie ist das vollständig gelöste Referenz-Exemplar.
+   `reai-v2-room1140-anim-re` (Zombie = Referenz-Exemplar) + `reai-v2-enemy-roster-complete`
+   (der VOLLE Roster STAGE1-6 mit je-Gegner-Adressen — alle Handler sind schon portiert).
 
 ## 1. Statisch: die Dispatch-Kette auflösen (das Muster)
 
@@ -284,6 +297,16 @@ Für einen kompletten neuen Gegner hat sich diese Orchestrierung bewährt:
    Forward-Walk-Modus). „Observably equal" ist NICHT der Mechanismus (Victim-Yaw-Lehre).
 5. Pro Welle: portieren → ctest → deterministische Live-Probe → committen → Memory updaten.
 
+**Roster-IDENTIFY-Muster (mehrere unbekannte Typen auf einmal, 2026-07-07):** wenn `re15_reg_scan.py`
+N noch-unportierte Handler zeigt, EIN read-only Agent pro Typ parallel (`parallel(TYPES.map(...))`),
+jeder mit striktem Schema `{model_guess, confidence, init_summary (HP+clip+hitbox-ptr), state_table
+(Tab-Addr + Bounds + Slot-Rollen), behavior (Loko-Stil), attacks (JEDER exakte player.hp-=N mit Addr
+ODER „kein Subtract, Grab-Kanal"), disasm_citations, port_complexity}`. Ergebnis = die Work-List, dann
+EINZELN zu 100% porten (nicht alle halb). So wurden 0x1a/0x22/0x23/0x24/0x2b/0x2d in einem Lauf
+identifiziert (Alligator/Tyrant/Ivy real, 0x22 Stub, 0x24 FX-Emitter, 0x1a rooted-hazard). Journal-
+Ergebnisse via `type`/`model_guess`-EM-Nummer disambiguieren (ein Alligator-Result matchte fälschlich
+„0x22", weil es den Nachbarn erwähnte — nach EM-Nummer im model_guess keyen, nicht nach erstem Vorkommen).
+
 ## 9. Fallen-Katalog (teuer bezahlt — vor JEDER Welle lesen)
 
 1. **Overlay-Offsets**: STAGE*.BIN ohne Header; +0x800 liest Garbage („runtime-patched"-Trugschluss).
@@ -319,3 +342,20 @@ Für einen kompletten neuen Gegner hat sich diese Orchestrierung bewährt:
     aber den STAGE1-Pfad nicht ändern.
 18. **Grid-gated-Freeze**: ein byte-true Pfad kann den häufigen Fall einfrieren (Dog-Lunge→grid-0x43-
     Pounce-Land; normaler Dog erfriert in state 5) — den nicht-passenden Fall sicher zurück routen (§6).
+19. **Registriert ≠ implementiert — DREI Muster** (2026-07-07, spart ganze Workflows; IMMER INIT+HP prüfen
+    bevor „porten"): (a) **unregistered** — Typ fehlt in der Dispatch-Tab; Entity-Loop FUN_8001a50c guardet
+    den 0-Handler @0x8001a568 (`beq v0,zero`) → spawnt inert (0x33 Birkin-form-3). (b) **registriert-gestubbt**
+    — Handler existiert, aber alle Dispatch-Leaves sind `jr ra` No-Ops, kein +0x9a/+0x94/Attack (0x22 EM022).
+    (c) **registriert-Null-HP** — Handler + Root geteilt, aber die typ-indizierte HP-Row ist all-zero
+    (@0x8011f034+type*0x20 für Zombies 0x1c-0x1f) = unbenutzter Slot. Alle drei = **byte-true UNROUTED lassen**;
+    dokumentieren, nicht „porten".
+20. **Geteilter Root → Byte-Identität beweisen, nicht annehmen** (0x30+0x36 G-Birkin): teilen sich zwei Typen
+    EINEN Handler (aus `re15_reg_scan.py`), dann die GANZE Handler-Region auf `lbu rX,8(rY)` (+0x8-Typ-Reads)
+    UND den anderen Typ als Immediate (`addiu/ori/sltiu …,0xNN`) scannen. 0 Treffer = byte-IDENTISCHE KI, der
+    Typ wählt nur das EMD-Modell → EIN Tick deckt beide, nur run_all-Route + Hitbox-Case ergänzen.
+21. **Grab-Kanal-Taxonomie** (alle über `DAT_800aca58`, Port pinnt via `s_player_grabbed`, am Anfang von
+    run_all gecleart → Boss-Ticks setzen es danach): **cmd 2** = in-jaws (Alligator) → **3** eaten/swallow bei
+    hp<0; **cmd 5** = pin (Tyrant/Zombie) → **6** collapse/throw; **cmd 7** = eaten-death (Ivy, instant-kill).
+    Grab-Handler haben oft KEINEN eigenen player.hp-Subtract (der Chip/Kill liegt in der geteilten cmd-FSM
+    @0x80073f90) — „kein Damage im Handler" heißt Grab-Kanal, nicht harmlos. Hitbox-Box IMMER byte-true aus
+    dem +0x78-Ziel lesen (`re15_disasm.py read <box> 6-8 --w 2 --signed`) statt raten.
