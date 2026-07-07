@@ -4607,6 +4607,103 @@ static void re15_fx_emitter_ai_tick(int slot)
     }
 }
 
+/* ============================ TYRANT boss (type 0x2b, EM02B) — STAGE4/5 ======================= *
+ * Byte-true from workflow wf_5c34ffe7 (root 0x801118d0, state table @0x8011a0b4). A bipedal ground
+ * WALK-CHASER with an EMERGE intro, TWO -10 melee attacks and two grab-PINs; real hurt/death (a
+ * killable prototype Tyrant, HP pool 86..126). Uses the generic bank clip/anim helpers (re15_birkin_
+ * clip/anim are type-parameterized: they look up EM02B's loaded bank). Byte-true damage/HP/ranges;
+ * the exact 16-sub dual-table walk choreography + emerge clip are faithful-line. */
+static const uint16_t s_tyrant_hp[16] =    /* HP pool @0x80118b00 (index = rng & 0xf) */
+    { 86, 89, 103, 119, 91, 107, 121, 93, 109, 124, 117, 97, 113, 126, 99, 101 };
+
+static void re15_tyrant_ai_tick(int slot)
+{
+    re15_actor_t *e  = &g_actors[slot];
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+
+    switch (e->state) {
+    case 0:   /* INIT 0x80111a64: HP from the pool; grid-variant EMERGE (0x40/0x41/0x43 -> state 4). */
+        if (e->hp <= 0) e->hp = (int16_t)s_tyrant_hp[re15_engine_rand8() & 0xf];   /* +0x9a @0x80111c04 */
+        e->motion = 0; e->anim_frame = 0; e->anim_frac = 0; e->hit_react = 0;      /* clear +0x94/95/8f/93 */
+        e->steer_x = (int16_t)pl->x; e->steer_z = (int16_t)pl->z;                   /* +0x1bc/+0x1be */
+        e->sub_state_2 = 0; e->sub_state_3 = 0;
+        if (e->grid_id == 0x40)      { e->state = 4; e->sub_state_1 = 0; }          /* @0x80111b5c */
+        else if (e->grid_id == 0x41) { e->state = 4; e->sub_state_1 = 1; }          /* @0x80111b7c */
+        else if (e->grid_id == 0x43) { e->state = 4; e->sub_state_1 = 2; }          /* @0x80111ba0 */
+        else                         { e->state = 1; e->sub_state_1 = 0; }          /* +0x4 = 1 @0x80111a78 */
+        break;
+
+    case 1: {  /* ACTIVE 0x80111c98: walk-chase + dual A/B brain on +0x5. */
+        int32_t dist = re15_enemy_player_dist(e, pl); e->dog_dist = (int16_t)dist;
+        switch (e->sub_state_1) {
+        case 0: default:  /* APPROACH + DECIDE (A[3] 0x801123e8 / A[13] 0x80113c74): close lunge in <2000,
+                           * near attack in <2501 (@0x80112458/0x80113c88), else walk toward the player. */
+            if (e->motion != 1) re15_birkin_clip(e, 1);
+            re15_enemy_steer_point(e, pl->x, pl->z, 0x30);            /* yaw-slew 0x8001a8f8 */
+            re15_dog_advance(e, 40);                                 /* pos_advance 0x800245d8 */
+            if (pl->hit_react == 0 && dist < 2000 && re15_dog_arc(e, pl, 2000, 0x300)) {   /* -> ATTACK2 (sub 14) */
+                re15_birkin_clip(e, 5); e->sub_state_1 = 14; e->sub_state_2 = 0; e->sub_state_3 = 0; }
+            else if (pl->hit_react == 0 && dist < 2501 && re15_dog_arc(e, pl, 2501, 0x300)) {  /* -> ATTACK1 (sub 4) */
+                re15_birkin_clip(e, 4); e->sub_state_1 = 4; e->sub_state_2 = 0; e->sub_state_3 = 0; }
+            re15_birkin_anim(e);
+            break;
+        case 4:   /* ATTACK1 near bite/claw (B[4] 0x80112840): player.hp -= 10 (@0x80112898) on the window
+                   * (+0x95<10 @0x80112854). If the hit drops the player below 50 -> GRAB1 (sub 5) @0x801128ac. */
+            re15_enemy_steer_point(e, pl->x, pl->z, 0x40);
+            if (e->sub_state_2 == 0 && e->anim_frame >= 3 && e->anim_frame < 10 && re15_dog_arc(e, pl, 2500, 0x400)) {
+                pl->hp = (int16_t)(pl->hp - 10);                    /* player.hp -= 10 @0x80112898 (no clamp) */
+                re15_audio_room_se(4); pl->hit_react |= 1; e->sub_state_2 = 1;
+                if (pl->hp < 50 && pl->hp >= 0) { re15_birkin_clip(e, 6); e->sub_state_1 = 5; e->sub_state_2 = 0; e->sub_state_3 = 0; break; }  /* -> GRAB1 */
+            }
+            if (re15_birkin_anim(e)) { e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0; }
+            break;
+        case 14:  /* ATTACK2 close lunge (B[14] 0x80113f00): player.hp -= 10 (@0x80113ff8), window +0x95<11. */
+            re15_enemy_steer_point(e, pl->x, pl->z, 0x40);
+            if (e->sub_state_2 == 0 && e->anim_frame >= 3 && e->anim_frame < 11 && re15_dog_arc(e, pl, 2500, 0x400)) {
+                pl->hp = (int16_t)(pl->hp - 10);                    /* player.hp -= 10 @0x80113ff8 */
+                re15_audio_room_se(4); pl->hit_react |= 1; e->sub_state_2 = 1;
+            }
+            if (re15_birkin_anim(e)) { e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0; }
+            break;
+        case 5:   /* GRAB1 (A[5] 0x80112a5c, 7-phase @0x8010026c): LATCH grab-cmd DAT_800aca58=5 (PIN)
+                   * @0x80112b34 + hold (+0x9c=100), later collapse (cmd 6 @0x80112ea4). No grab hp subtract
+                   * (the throw damage is the shared cmd 5/6 FSM = faithful-line). -> back to APPROACH. */
+            re15_enemy_steer_point(e, pl->x, pl->z, 0x30);
+            if (e->sub_state_3 == 0) { s_player_grabbed = 1; pl->hit_react |= 1; e->ai_timer = 100; e->sub_state_3 = 1; re15_audio_room_se(2); }
+            else {
+                s_player_grabbed = 1;
+                if (e->ai_timer > 0) e->ai_timer--;
+                if (e->ai_timer == 0) { s_player_grabbed = 0; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0; }  /* collapse -> release */
+            }
+            break;
+        }
+        break; }
+
+    case 2:   /* HURT (0x80114770): stagger -> resume ACTIVE (returns +0x4=0x601 = active sub 6). */
+        e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;
+        e->hit_react = (uint8_t)(e->hit_react & ~1u);
+        break;
+
+    case 3:   /* DEATH (0x80114c68): -> corpse. Exact death sub-machine = faithful-line. */
+        e->state = 7; e->sub_state_3 = 0;
+        break;
+
+    case 4:   /* EMERGE (0x80114fe4, state-4 sub-table @0x8011a270): play the emerge anim (sub2 0x801155ac
+               * fires 8x FX-spawn dust) -> go ACTIVE (+0x4=0x101). Exact emerge clip = faithful-line. */
+        if (e->motion != 0x10) re15_birkin_clip(e, 0x10);
+        if (re15_birkin_anim(e)) { e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0; }
+        break;
+
+    case 7:   /* CORPSE: settle, inert */
+        re15_birkin_anim(e);
+        break;
+
+    default:
+        e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0;
+        break;
+    }
+}
+
 /* Phase 8.6 — the per-frame LIVE-zombie AI pass. The port's faithful, TYPE-GATED slice of the
  * original entity-update loop FUN_8001a50c (@0x8001ce04): the original walks the entity array
  * (DAT_800acc2c, stride 0x1f4) and, for every active entity (+0x0 & 1), dispatches its per-type
@@ -4776,6 +4873,16 @@ void re15_enemy_ai_run_all(int combat_active)
                                  * NO wall-clamp: it drives its own scripted X-drift/wrap and disables its
                                  * own collision (byte-true: not a physical obstacle). */
             re15_fx_emitter_ai_tick(s);
+        }
+        else if (t == 0x2b) {   /* TYRANT boss (type 0x2b, EM02B, STAGE4/5) — bipedal ground walk-chaser +
+                                 * 2x -10 attacks + grab-pins. SCA wall-clamp after the tick. */
+            int32_t ty_ox = e->x, ty_oz = e->z;
+            re15_tyrant_ai_tick(s);
+            if (g_room_rdt_ok && (e->x != ty_ox || e->z != ty_oz)) {
+                int32_t nx = e->x, nz = e->z;
+                re15_collision_constrain(&g_room_rdt, ty_ox, ty_oz, &nx, &nz);
+                e->x = nx; e->z = nz;
+            }
         }
         /* type 0x22 (EM022, STAGE2 root 0x8010c080) is a VERIFIED STUB (wf_5c34ffe7): a scaffolded
          * state machine whose every dispatch leaf is a `jr ra` no-op — NO HP, NO clip, NO locomotion,
