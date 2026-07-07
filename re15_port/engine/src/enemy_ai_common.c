@@ -4703,8 +4703,9 @@ static void re15_tyrant_ai_tick(int slot)
         }
         break; }
 
-    case 2:   /* HURT (0x80114770): stagger -> resume ACTIVE (returns +0x4=0x601 = active sub 6). */
-        e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;
+    case 2:   /* HURT (0x80114770): stagger -> resume ACTIVE at sub 6 (byte-true +0x4=0x601 @0x801147d8;
+               * the stagger clip is a +0x5 sub-dispatch = faithful-line — the HUB owns sub 6 == sub 0). */
+        e->state = 1; e->sub_state_1 = 6; e->sub_state_2 = 0; e->sub_state_3 = 0;
         e->hit_react = (uint8_t)(e->hit_react & ~1u);
         break;
 
