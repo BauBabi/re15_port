@@ -55,6 +55,21 @@ int main(void)
     if (!hurt10)  { fprintf(stderr, "FAIL(2): the grab must deal -10, player hp %d->%d\n", php0, pl->hp); fail = 1; }
     printf("  (2) GRAB: state=%d, pinned=%d, player hp %d->%d\n", g->state, grabbed, php0, pl->hp);
 
+    /* (2b) HELD BITE-LOOP: byte-true FUN_80102548 [3] deals a repeated -5 per grab-clip cycle (NOT a
+     * single -10 then release), and the kill window (+0x9e=100) < escape window (+0x9c=110, unmashed)
+     * devours the player -> death (state 7). */
+    int16_t hp_after_impact = pl->hp;   /* ~90 after the -10 impact */
+    int extra_bite = 0, devoured = 0;
+    for (int f = 0; f < 300; f++) {
+        re15_enemy_ai_run_all(0);
+        if (pl->hp <= hp_after_impact - 5) extra_bite = 1;   /* a held -5 landed beyond the impact */
+        if (pl->state == 7) { devoured = 1; break; }         /* kill window ran out -> devoured */
+        pl->hit_react = 0;
+    }
+    if (!extra_bite) { fprintf(stderr, "FAIL(2b): the held grab must deal repeated -5 bites (hp stayed %d)\n", pl->hp); fail = 1; }
+    if (!devoured)   { fprintf(stderr, "FAIL(2b): an unmashed held grab must devour the player (state 7)\n"); fail = 1; }
+    printf("  (2b) HELD BITE: repeated -5, unmashed grab devoured the player (state %d, hp=%d)\n", pl->state, pl->hp);
+
     /* (3) KILLABLE: a lethal hit -> CORPSE (state 7) */
     memset(g_actors, 0, sizeof g_actors);
     pl = &g_actors[RE15_ACTOR_SLOT_PLAYER]; pl->active = 1; pl->type = 0; pl->x = 0; pl->z = 8000; pl->hp = 100;

@@ -3926,17 +3926,27 @@ static void re15_zgirl_ai_tick(int slot)
         break;
     }
 
-    case 3:   /* commit to attack GRAB 0x8010c014 (hp>=0) — OR take_damage DEATH (hp<0) */
+    case 3:   /* commit to attack GRAB 0x8010c014 (hp>=0) — OR take_damage DEATH (hp<0). The zgirl REUSES
+               * the standard zombie's grab FUN_80102548 byte-true: [0/2] IMPACT -10 then a HELD BITE-LOOP
+               * of -5 per clip cycle, gated by the kill (+0x9e=100) and escape (+0x9c=110) counters —
+               * NOT a single -10 then release. */
         if (e->hp < 0) { e->state = 7; e->sub_state_3 = 0; break; }   /* lethal -> shared corpse */
-        /* GRAB 0x80102548: pin the player + -10 (the same cmd5 grab as the standard zombie) */
-        if (e->sub_state_3 == 0) {
-            re15_zgirl_clip(e, 0x0b);                         /* lunge/grab clip 11 @0x8010b584 */
-            s_player_grabbed = 1; re15_player_victim_latch(e, pl);
-            if (pl->hit_react == 0) { pl->hp = (int16_t)(pl->hp - 10); pl->hit_react |= 1; }  /* player.hp -= 10 @0x80102774 */
+        s_player_grabbed = 1; re15_player_victim_latch(e, pl);        /* pin the player (cmd5 @0x80102640) */
+        if (e->sub_state_3 == 0) {                                    /* [0/2] commit + IMPACT */
+            re15_zgirl_clip(e, 0x0b);                                 /* lunge/grab clip 11 @0x8010b584 */
+            if (pl->hit_react == 0) { pl->hp = (int16_t)(pl->hp - 10); pl->hit_react |= 1; }  /* -10 @0x8010277c */
+            e->grab_kill_ctr = 100; e->ai_timer = 110;               /* +0x9e kill / +0x9c escape windows */
             e->sub_state_3 = 1;
-        } else {
-            s_player_grabbed = 1;
-            if (re15_zgirl_anim(e)) { e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0; }  /* release -> chase */
+        } else {                                                     /* [3] BITE-LOOP: -5 per clip cycle */
+            if (re15_zgirl_anim(e) && pl->hp >= 0) {                  /* one bite per grab-clip wrap @0x801027dc */
+                pl->hp = (int16_t)(pl->hp - 5);
+                if (pl->hp < 0) pl->state = 7;                        /* devoured -> player death */
+            }
+            if (--e->grab_kill_ctr <= 0 || pl->hp < 0) {             /* kill window ran out -> devour handoff */
+                pl->state = 7; e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0; break;
+            }
+            e->ai_timer = (int16_t)(e->ai_timer - (int16_t)(1 + 5 * re15_mash_pressed()));  /* escape drain @0x80037024 */
+            if (e->ai_timer < 0) { e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0; }  /* THROW-OFF (escape alive) */
         }
         break;
 
