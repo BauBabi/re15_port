@@ -3977,6 +3977,10 @@ static void re15_zgirl_ai_tick(int slot)
  * grab damage/pin, the full grid/substep dispatch, the ceiling-drop variant, the exact chase speed. */
 static const uint16_t s_aspider_hp_row[16] =    /* HP table @0x8011761c = HPbase 0x8011717c + 0x25*0x20 */
     { 76,105,125,78,80,109,129,83,113,132,87,117,136,93,99,121 };   /* hp = row[rng()&0xf] @0x80110da0 */
+/* ROAM (grid 0) idle-next-substep table @0x80118ea4 [2 rows x 8, idx=(LOS&1)*8 + (rng&7)] (byte-true). */
+static const uint8_t s_aspider_idle_next[16] =
+    { 0x02,0x01,0x02,0x02,0x02,0x01,0x02,0x05,   /* row0 (no LOS) */
+      0x0b,0x04,0x05,0x0b,0x03,0x05,0x04,0x04 }; /* row1 (LOS) */
 static void re15_aspider_clip(re15_actor_t *e, uint8_t c) { e->motion = c; e->anim_frame = 0; e->anim_frac = 7; }
 static int re15_aspider_anim(re15_actor_t *e)
 {
@@ -4003,45 +4007,103 @@ static void re15_adult_spider_ai_tick(int slot)
         e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* -> ACTIVE @0x80110b80 */
         break;
 
-    case 1: {  /* ACTIVE brain 0x80110e50 (dual-table grid-DECIDE @0x80118e44 + substep-ACT @0x80118e64):
-                * chase toward the player -> GRAB when close + aligned. sub_state_1: 0 chase / 1 grab. */
-        int los = re15_enemy_los_probe(slot, e, pl);          /* 0x8001bc08 -> +0x1d0/+0x1e0 */
+    case 1: {  /* ACTIVE brain 0x80110e50 — the byte-true TWO-TABLE driver (workflow wf_3467b541-a93,
+                * grid-DECIDE + substep-ACT adversarially CONFIRMED). Every frame: LOS + dist, then
+                * grid-DECIDE @0x80118e44[+0x9] (ONLY if the +0x5 commit-latch is 0), then substep-ACT
+                * @0x80118e64[+0x6] (ALWAYS). +0x5=commit-latch, +0x6=substep, +0x7=grab-step. */
+        int los = re15_enemy_los_probe(slot, e, pl) & 1;      /* +0x1d0 bit0 = clear LoS @0x80110e50 */
         int32_t dist = re15_enemy_player_dist(e, pl);         /* SquareRoot0 -> +0x1d4 */
         e->dog_dist = (int16_t)dist;
+        if (e->dog_atk_cd) e->dog_atk_cd--;                   /* +0x1d6 post-grab lockout */
 
-        if (e->sub_state_1 == 1) {   /* GRAB (grab A 0x801120b8 / B 0x801127f0 connect @0x8011254c/0x801129cc).
-                                      * The adult spider's attack is a NON-DAMAGING stagger-grab: exhaustively
-                                      * verified (whole 0x25 code 0x801109e4-0x801158a0) there is NO hitbox /
-                                      * take_damage / direct player.hp write — only a keep-alive CLAMP. The
-                                      * grab latches the player grab-cmd (DAT_800aca58=2 = a stagger, cmd 2 =
-                                      * 0x80035af0 = anim-only, no hp) + chains while grabbed. */
-            if (e->sub_state_2 == 0) {                        /* connect once @0x8011254c */
-                re15_audio_room_se(2);                        /* Se 0x800453d0(a0=2) @0x8011254c */
-                s_player_grabbed = 1;                         /* DAT_800aca58=2 stagger-grab -> pin the player */
-                pl->hit_react |= 1;                           /* player+0x93 |= 1 @0x80112554 */
-                if (pl->hp < 0) pl->hp = 1;                   /* keep-alive clamp @0x8011259c (NO damage dealt) */
-                e->sub_state_2 = 1;
-            } else {
-                s_player_grabbed = 1;                         /* hold the stagger */
-                if (re15_aspider_anim(e)) { e->sub_state_1 = 0; e->sub_state_2 = 0; }  /* grab clip done -> chase */
+        if (e->sub_state_1 == 0) {                            /* grid-DECIDE (grid fixed at spawn; no +0x9 write) */
+            int grid = e->grid_id & 0xf;
+            if (grid == 1 || grid == 5) {                     /* APPROACH 0x80111240 */
+                if (e->dog_atk_cd == 0 && dist < 7500 && los) {          /* lunge-trigger @0x80111368 */
+                    e->sub_state_1 = 1; e->sub_state_2 = (uint8_t)(6 + (re15_engine_rand8() & 1)); e->sub_state_3 = 0;
+                } else if (los) { e->sub_state_1 = 1; e->sub_state_2 = 4; e->sub_state_3 = 0; }  /* else CHASE [4] */
+            } else if (grid == 2) {                           /* ATTACK 0x80111488 */
+                if (e->dog_atk_cd == 0 && dist < 3000) { e->sub_state_1 = 1; e->sub_state_2 = 8; e->sub_state_3 = 0; }
+                else if (los) { e->sub_state_1 = 1; e->sub_state_2 = 4; e->sub_state_3 = 0; }
+            } else {                                          /* ROAM 0x80111040: idle-next table @0x80118ea4 */
+                int idx = (los ? 8 : 0) + (re15_engine_rand8() & 7);
+                e->sub_state_1 = 1; e->sub_state_2 = s_aspider_idle_next[idx]; e->sub_state_3 = 0;
+            }
+        }
+
+        switch (e->sub_state_2) {                             /* substep-ACT @0x80118e64[+0x6] */
+        case 2:   /* SCAN 0x80111c5c: clip 3, rot_y += ±0x18, wander timer -> re-decide */
+            if (e->motion != 3) { re15_aspider_clip(e, 3); e->ai_timer = (int16_t)(re15_engine_rand8() & 0x3f); }
+            e->rot_y = (int16_t)((e->rot_y + ((e->ai_timer & 1) ? 0x18 : -0x18)) & 0xfff);
+            if (los && re15_dog_arc(e, pl, 0x7fff, 0x40)) { e->sub_state_2 = 4; }   /* now facing -> CHASE @0x80111d5c */
+            else if (e->ai_timer-- <= 0) { e->sub_state_1 = 0; e->sub_state_2 = (uint8_t)(los ? 4 : 0); }  /* @0x80111da8 */
+            re15_aspider_anim(e);
+            break;
+        case 3: case 5:  /* TURN-to-face 0x80111e04/0x8011207c: clip 2, slew, -> CREEP/idle when faced */
+            if (e->motion != 2) re15_aspider_clip(e, 2);
+            re15_enemy_steer_point(e, pl->x, pl->z, (e->sub_state_2 == 3) ? 0x80 : 0x20);
+            if (re15_dog_arc(e, pl, 0x7fff, 0x40)) { e->sub_state_1 = 0; e->sub_state_2 = (uint8_t)(los ? 11 : 0); }  /* @0x80111f2c */
+            re15_aspider_anim(e);
+            break;
+        case 4:   /* CHASE 0x80112004: clip 2, +0x8c += 100/frame, steer 0x30, advance forward @0x80112064 */
+            if (e->motion != 2) { re15_aspider_clip(e, 2); e->crow_speed = 0; }
+            e->crow_speed = (int16_t)(e->crow_speed + 100);
+            re15_enemy_steer_point(e, pl->x, pl->z, 0x30);
+            re15_dog_advance(e, e->crow_speed >> 5);          /* faithful: pos_advance a0<<16 GTE (>>5 stand-in) */
+            if (e->dog_atk_cd == 0 && dist < 7500 && los) { e->sub_state_1 = 0; }  /* re-decide -> may lunge */
+            re15_aspider_anim(e);
+            break;
+        case 11:  /* CREEP 0x8011302c: clip 3, +0x8c -= 20/frame, steer 0x10, advance @0x8011308c */
+            if (e->motion != 3) { re15_aspider_clip(e, 3); e->crow_speed = 400; }
+            if (e->crow_speed > 20) e->crow_speed = (int16_t)(e->crow_speed - 20);
+            re15_enemy_steer_point(e, pl->x, pl->z, 0x10);
+            re15_dog_advance(e, e->crow_speed >> 5);
+            if (e->dog_atk_cd == 0 && dist < 3000 && los) { e->sub_state_1 = 0; }
+            re15_aspider_anim(e);
+            break;
+        case 6: case 7:  /* GRAB A 0x801120b8 (walking lunge-bite, +0x7 9-phase @0x8010019c). NON-DAMAGING. */
+            if (e->sub_state_3 == 0) { re15_aspider_clip(e, 8); e->sub_state_3 = 1; }        /* [0] clip 8 windup */
+            else if (e->sub_state_3 <= 2) {                                                   /* [1/2] windup adv @100 */
+                re15_dog_advance(e, 100 >> 5);
+                if (re15_aspider_anim(e)) { re15_aspider_clip(e, 0x0b); e->sub_state_3 = 3; } /* -> clip 0xb track */
+            } else if (e->sub_state_3 == 3) {                                                 /* [3] track: face player */
+                re15_enemy_steer_point(e, pl->x, pl->z, 0x40);
+                if (re15_dog_arc(e, pl, 0x7fff, 0x40)) e->sub_state_3 = 4;                    /* faced -> STRIKE */
+                re15_aspider_anim(e);
+            } else if (e->sub_state_3 == 4) {                                                 /* [4/5] STRIKE adv @300 */
+                re15_enemy_steer_point(e, pl->x, pl->z, 0x10);
+                re15_dog_advance(e, 300 >> 5);
+                if (pl->hit_react == 0 && re15_dog_arc(e, pl, 900, 0x100)) {                  /* contact CONNECT @0x8011254c */
+                    re15_audio_room_se(2); s_player_grabbed = 1; pl->hit_react |= 1;
+                    if (pl->hp < 0) pl->hp = 1;                                               /* keep-alive clamp (NO damage) */
+                    re15_aspider_clip(e, 9); e->sub_state_3 = 6;                              /* -> recover */
+                } else if (re15_aspider_anim(e)) { re15_aspider_clip(e, 9); e->sub_state_3 = 6; }  /* miss -> recover */
+            } else {                                                                          /* [6/7] clip 9 recover */
+                re15_dog_advance(e, 100 >> 5);
+                if (re15_aspider_anim(e)) { e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0; e->dog_atk_cd = 0xf; }  /* [8] reset + lockout 15 */
             }
             break;
+        case 8:   /* GRAB B 0x801127f0 (ballistic LEAP grab, +0x7 5-phase @0x801001c4). NON-DAMAGING. */
+            if (e->sub_state_3 == 0) { re15_aspider_clip(e, 0); e->crow_perch_h = (int16_t)e->y; e->ai_timer = 0;
+                                       re15_enemy_steer_point(e, pl->x, pl->z, 0x40); e->sub_state_3 = 1; }  /* [0] launch */
+            else if (e->sub_state_3 == 1) {                                                   /* [1] leap parabola @0x80112884 */
+                e->y += 8 * (int32_t)e->ai_timer * (int32_t)e->ai_timer;   /* Y += 8*t^2 (Y-down) */
+                e->ai_timer++;
+                re15_dog_advance(e, 200 >> 5);                                                /* forward while airborne */
+                if (pl->hit_react == 0 && re15_dog_arc(e, pl, 900, 0x100)) {                  /* CONNECT @0x801129cc */
+                    re15_audio_room_se(2); s_player_grabbed = 1; pl->hit_react |= 1;
+                    if (pl->hp < 0) pl->hp = 1;                                               /* keep-alive clamp (NO damage) */
+                }
+                if (e->y >= (int32_t)e->crow_perch_h) { e->y = (int32_t)e->crow_perch_h; re15_aspider_clip(e, 7); e->sub_state_3 = 2; }  /* land */
+            } else {                                                                          /* [2..4] clip 7 recover */
+                if (re15_aspider_anim(e)) { e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0; e->dog_atk_cd = 0xf; }
+            }
+            break;
+        default:  /* feed/reroute/hold substeps (7/9/10/12/13) = cited mechanism -> resume the driver */
+            e->sub_state_1 = 0; e->sub_state_2 = (uint8_t)(los ? 4 : 0); e->sub_state_3 = 0;
+            re15_aspider_anim(e);
+            break;
         }
-
-        /* GRAB trigger: player in range + inside the front cone (arc_test 0x8001a9cc a1=0x80 @0x80111578) &
-         * not already reacting -> commit the grab. */
-        if (pl->hit_react == 0 && re15_dog_arc(e, pl, 1200, 0x80)) {
-            re15_aspider_clip(e, 2); e->sub_state_1 = 1; e->sub_state_2 = 0; break;   /* -> GRAB */
-        }
-        /* chase: slew toward the player (LOS-gated, rate 0x10) + advance */
-        if (e->motion != 0x10) re15_aspider_clip(e, 0x10);
-        if (los != 0) {
-            re15_enemy_steer_point(e, pl->x, pl->z, 0x10);    /* slew rate 0x10 (LOS-gated) @0x80110e50 */
-            re15_dog_advance(e, 0x40);                        /* advance (faithful: pos_advance 0x800245d8
-                                                               * a0=0x800 uses an a0<<16 GTE transform, a
-                                                               * different scale than this >>12 stand-in) */
-        }
-        re15_aspider_anim(e);
         break;
     }
 

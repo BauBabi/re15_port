@@ -60,11 +60,11 @@ int main(void)
     extern int re15_player_is_grabbed(void);
     memset(g_actors, 0, sizeof g_actors);
     pl = &g_actors[RE15_ACTOR_SLOT_PLAYER]; pl->active = 1; pl->type = 0; pl->x = 0; pl->z = 800; pl->hp = 100;
-    e = &g_actors[SS]; e->active = 1; e->type = 0x25; e->state = 1; e->sub_state_1 = 0; e->hp = 100; e->x = 0; e->z = 0;
+    e = &g_actors[SS]; e->active = 1; e->type = 0x25; e->state = 1; e->sub_state_1 = 0; e->grid_id = 1; e->hp = 100; e->x = 0; e->z = 0;  /* grid 1 = APPROACH (lunges) */
     re15_enemy_apply_hitbox(e, 0x25);
     e->rot_y = (int16_t)(((int)re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0xfff);  /* face the player */
     int grabbed = 0; int16_t ghp0 = pl->hp;
-    for (int f = 0; f < 60; f++) {
+    for (int f = 0; f < 120; f++) {
         re15_enemy_ai_run_all(0);
         if (re15_player_is_grabbed()) grabbed = 1;
         if (grabbed) break;
