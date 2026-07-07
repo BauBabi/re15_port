@@ -4488,6 +4488,90 @@ static void re15_writher_ai_tick(int slot)
     }
 }
 
+/* ============================ ALLIGATOR boss (type 0x23, EM023) — STAGE2 sewer ================ *
+ * Byte-true from workflow wf_5c34ffe7 (root 0x8010c448, state table @0x80118bc8). A giant ground
+ * WALK-CHASER whose ONE attack is a lunging GRAB-and-EAT (jaws). HP 300 (type row @0x801175dc = 16x
+ * 300, RNG-invariant). The grab does NO chip hp write in the handler (the report's player.hp touches
+ * are redundant self-stores); it latches the shared grab-command DAT_800aca58 = 2 (in-jaws) and
+ * escalates to = 3 ("eaten"/swallow = death) — @0x8010d27c/@0x8010d288 (sub 3) and @0x8010e120/
+ * @0x8010e130 (sub 9). So the port models the grab as a MASH-window jaws-hold that SWALLOWS (kills)
+ * the player when the hold expires. Locomotion is the shared walker (steer 0x8001a804 + pos_advance
+ * 0x800245d8); the exact directional walk-clip LUT (@0x80118d44) + dual-table decision choreography
+ * are faithful-line (the grab mechanism + HP + ranges are byte-true). */
+static void re15_alligator_ai_tick(int slot)
+{
+    re15_actor_t *e  = &g_actors[slot];
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+
+    switch (e->state) {
+    case 0:   /* INIT 0x8010c56c: HP 300, clip 4, state 1 sub 6, mode +0x1e0. Grid-odd = melee. */
+        if (e->hp <= 0) e->hp = 300;                 /* +0x9a from row @0x801175dc (16x300) @0x8010c6d4 */
+        e->motion = 4; e->anim_frame = 0; e->anim_frac = 7;   /* clip 4 @0x8010c590 */
+        e->hit_react = 0; e->ai_timer = 0;
+        e->steer_x = (int16_t)pl->x; e->steer_z = (int16_t)pl->z;
+        if (e->grid_id & 1) { e->sub_state_1 = 0; e->dog_atk_cd = 0; }   /* grid-odd = melee (+0x1e0=0) @0x8010c620-region */
+        else                { e->sub_state_1 = 6; e->dog_atk_cd = 1; }   /* default = ranged/approach (+0x1e0=1, sub 6) */
+        e->sub_state_2 = 0; e->sub_state_3 = 0;
+        e->state = 1;                                /* +0x4 = 0x601 -> state 1 @0x8010c580 */
+        break;
+
+    case 1: {  /* ACTIVE 0x8010c860: walk-chase + decision hub (dist-gated). Dual A/B brain on +0x5. */
+        int32_t dist = re15_enemy_player_dist(e, pl);
+        e->dog_dist = (int16_t)dist;
+        switch (e->sub_state_1) {
+        case 6: case 0: default:   /* APPROACH / decision HUB (A[6] init 0x8010da0c / A[4] 0x8010d3a4):
+                                    * walk toward the player; when in jaws range + facing -> LUNGE-GRAB. */
+            if (e->motion != 4) { e->motion = 4; e->anim_frame = 0; }        /* directional walk clip (faithful) */
+            re15_enemy_steer_point(e, pl->x, pl->z, 0x40);                    /* yaw-slew 0x8001a8f8 */
+            re15_dog_advance(e, 48);                                         /* pos_advance 0x800245d8 */
+            e->anim_frame++;
+            if (pl->hit_react == 0 && dist < 3000 && re15_dog_arc(e, pl, 3000, 0x338)) {  /* commit range 0xbb8 @A[4] */
+                e->motion = 3; e->anim_frame = 0; e->sub_state_1 = 3; e->sub_state_2 = 0; e->sub_state_3 = 0; }
+            break;
+        case 3:   /* LUNGE-GRAB (B[3] 0x8010cfbc): lunge into the jaws-reach; on connect latch the grab
+                   * (DAT_800aca58=2) and hold -> SWALLOW (eaten) at hold-end. Reach 800 @0x8001bff8. */
+        case 9:   /* GRAB (B[9] 0x8010df34): the same jaws-grab, second site. Route through here. */
+            re15_enemy_steer_point(e, pl->x, pl->z, 0x30);
+            if (e->sub_state_3 == 0) {                       /* lunge windup: close into reach */
+                re15_dog_advance(e, 64);
+                if (e->anim_frame >= 3 && dist < 1400 && re15_dog_arc(e, pl, 1400, 0x400) && !s_player_grabbed) {
+                    s_player_grabbed = 1; pl->hit_react |= 1;      /* grab latch cmd 2 (in-jaws) @0x8010d27c */
+                    e->ai_timer = 100;                             /* +0x1dc hold timer = 100 @0x8010d270 */
+                    e->sub_state_3 = 1; re15_audio_room_se(2);
+                }
+                if (++e->anim_frame >= 40) { e->sub_state_1 = 6; e->sub_state_2 = 0; e->sub_state_3 = 0; }  /* missed -> HUB */
+            } else {                                          /* JAWS HOLD -> swallow (eaten) at hold-end */
+                s_player_grabbed = 1;                          /* keep the player pinned */
+                if (e->ai_timer > 0) e->ai_timer--;
+                if (e->ai_timer == 0) {                        /* SWALLOW: eaten -> death (cmd 2 -> 3 @0x8010d288) */
+                    if (pl->hp >= 0) pl->hp = -1;              /* player.hp<0 -> DAT_800aca58=3 (eaten) */
+                    s_player_grabbed = 0;
+                    e->sub_state_1 = 6; e->sub_state_2 = 0; e->sub_state_3 = 0;
+                }
+            }
+            break;
+        }
+        break; }
+
+    case 2:   /* HURT (take_damage +0x4=2): flinch -> resume the approach/decision hub */
+        e->state = 1; e->sub_state_1 = 6; e->sub_state_2 = 0; e->sub_state_3 = 0;
+        e->hit_react = (uint8_t)(e->hit_react & ~1u);
+        break;
+
+    case 3:   /* DEATH (take_damage +0x4=3): -> corpse. Exact death-topple clip = faithful-line. */
+        e->state = 7; e->sub_state_3 = 0;
+        break;
+
+    case 7:   /* CORPSE: settle, inert */
+        e->anim_frame++;
+        break;
+
+    default:
+        e->state = 1; e->sub_state_1 = 6; e->sub_state_2 = 0;
+        break;
+    }
+}
+
 /* Phase 8.6 — the per-frame LIVE-zombie AI pass. The port's faithful, TYPE-GATED slice of the
  * original entity-update loop FUN_8001a50c (@0x8001ce04): the original walks the entity array
  * (DAT_800acc2c, stride 0x1f4) and, for every active entity (+0x0 & 1), dispatches its per-type
@@ -4642,6 +4726,16 @@ void re15_enemy_ai_run_all(int combat_active)
                                  * damage. NO wall-clamp: it never advances X/Z, so there is nothing to
                                  * constrain (byte-true: zero locomotion primitives in the handler). */
             re15_writher_ai_tick(s);
+        }
+        else if (t == 0x23) {   /* ALLIGATOR boss (type 0x23, EM023, STAGE2) — giant ground walk-chaser +
+                                 * grab-eat. SCA wall-clamp after the tick like the dog/zombie. */
+            int32_t al_ox = e->x, al_oz = e->z;
+            re15_alligator_ai_tick(s);
+            if (g_room_rdt_ok && (e->x != al_ox || e->z != al_oz)) {
+                int32_t nx = e->x, nz = e->z;
+                re15_collision_constrain(&g_room_rdt, al_ox, al_oz, &nx, &nz);
+                e->x = nx; e->z = nz;
+            }
         }
         /* type 0x22 (EM022, STAGE2 root 0x8010c080) is a VERIFIED STUB (wf_5c34ffe7): a scaffolded
          * state machine whose every dispatch leaf is a `jr ra` no-op — NO HP, NO clip, NO locomotion,

@@ -795,6 +795,9 @@ void re15_enemy_apply_hitbox(re15_actor_t *a, uint8_t type)
                                                 * it uses the same box.  */
         case 0x20: r = 500;  h = 600;  break;  /* DOG (Cerberus) — low+wide ground enemy
                                                 * (faithful-line: exact +0x78 dims deferred to Wave 2) */
+        case 0x23: r = 2200; h = 720;  break;  /* ALLIGATOR (EM023, STAGE2) — byte-true box @0x80118b98 =
+                                                * {1000,-720,0,2200,720,800}: x_max 2200 (wide), y_max 720
+                                                * (low, giant) — INIT +0x78 @0x8010c708 */
         case 0x21: r = 200;  h = 180;  break;  /* CROW — byte-true from its +0x78 dim block
                                                 * @0x801210fc: hw[+6]=0xc8=200 (radius),
                                                 * hw[+8]=0xb4=180 (height), hw[+10]=200 (INIT
