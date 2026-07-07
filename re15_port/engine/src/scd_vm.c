@@ -2549,7 +2549,13 @@ static int op_sce_em_set(scd_thread_t *t)
          * store -(pc[4]*1800) — into hp it would corrupt the Member-0x13 path
          * (+0x1C2 != +0x1BA), and a dedicated +0x1BA field would be dead.
          * Wire it (own field, real value) when bone-physics is ported. */
-        a->hp     = 100;
+        /* Leave hp at the struct-cleared 0 (Sce_em_set carries NO hp; the original FUN_800420a0 does
+         * not write +0x9a here). A nominal 100 here DEFEATED every non-zombie INIT's byte-true HP seed,
+         * which is guarded `if (e->hp <= 0)` (dog/maggot/alligator/tyrant/… only set the table HP when
+         * hp<=0): a 100 seed skipped it and locked the enemy at 100 instead of its table row (maggot
+         * 180, dog 65-111, boss 300, …). Zombies are unaffected (their INIT sets HP unconditionally).
+         * Audit wf_555f18eb. */
+        a->hp     = 0;
         a->speed_h = 0;
         if ((uint8_t)(actor_slot + 1) > g_actor_count)
             g_actor_count = (uint8_t)(actor_slot + 1);

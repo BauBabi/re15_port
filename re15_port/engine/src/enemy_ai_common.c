@@ -1976,6 +1976,19 @@ void re15_body_push_player(void)
     }
 }
 
+/* Body-contact melee-connect distance (audit wf_555f18eb Part B). re15_body_push_player above holds
+ * the player at exactly hit_radius_min + RE15_BODY_R_PLAYER — the aec4/b544 standoff (both cited
+ * above: aec4 reads the +0x78[6]/[0xa] box half-extents = the SAME dims as hit_radius_min; player
+ * radius 0x1c2 @PSX.EXE file 0x64694). A melee gate set BELOW that standoff can therefore never
+ * reach the pushed-away player, which left the big-bodied enemies (maggot 1600 / alligator 2200 /
+ * adult-spider 1000) harmless in-game. Byte-true the attack lands via a FORWARD-projected attack
+ * hitbox (0x8001bff8) that reaches the player at body contact, so we gate the connect on the
+ * standoff itself. The +1 promotes re15_dog_arc's strict '<' to include the equilibrium dist == R. */
+static inline int32_t re15_body_contact_reach(const re15_actor_t *e)
+{
+    return (int32_t)e->hit_radius_min + RE15_BODY_R_PLAYER + 1;
+}
+
 /* DEVOUR-FINISH animate — byte-true FUN_80102bd8 (@0x8011f890[+0x5=5/6], D3/D5 disasm 2026-07-03):
  * the state the grab's KILL counter hands off to ((+0x5)+2: 3->5 face, 4->6 behind). NOT a generic
  * walk: sub0 (@0x80102c0c..c80) sets clip +0x94 = (+0x5)+4 (9 face / 0xa behind), latches the victim
@@ -3680,7 +3693,8 @@ static void re15_spider_ai_tick(int slot)
         e->y = (int32_t)e->spider_home_y - step * ((int)e->spider_phase - 1);  /* +0x38 = +0x1d6 - step*(phase-1) @0x80116494 */
     } else if (e->state == 1) {                          /* SOLID: -2 contact stagger on body overlap */
         int32_t dx = e->x - pl->x, dz = e->z - pl->z;
-        if ((int64_t)dx*dx + (int64_t)dz*dz < (int64_t)600*600 && pl->hit_react == 0) {  /* body box ~600 (0x8002aec4) @0x80116370 */
+        int32_t rc = (int32_t)e->hit_radius_min + RE15_BODY_R_PLAYER;   /* aec4 body-contact standoff (was 600, below the push standoff -> never fired; audit wf_555f18eb Part B) */
+        if ((int64_t)dx*dx + (int64_t)dz*dz <= (int64_t)rc*rc && pl->hit_react == 0) {  /* body box (0x8002aec4) @0x80116370 */
             pl->hit_react |= 1;                          /* DAT_800aca58=2 stagger marker is byte-true but the
                                                           * port keys the hit-react gate off +0x93 (faithful) */
             if (pl->hp >= 4) pl->hp = (int16_t)(pl->hp - 2);  /* player.hp -= 2 (floor: never below 2) @0x801163c8 */
@@ -3778,7 +3792,7 @@ static void re15_maggot_ai_tick(int slot)
 
         case 5:   /* BITE 0x80118270 (clip 0x12): -6 HP on the damage-window frames {0x0c-0x0f} */
             if (e->anim_frame >= 0x0c && e->anim_frame <= 0x0f          /* damage window @0x80118400 (tab @0x8012146c) */
-                && pl->hit_react == 0 && re15_dog_arc(e, pl, 2000, 384)) {   /* hitbox 0x8001bff8 (1000) @0x801183cc */
+                && pl->hit_react == 0 && re15_dog_arc(e, pl, re15_body_contact_reach(e), 384)) {   /* hitbox 0x8001bff8 (1000) @0x801183cc; connect at body contact (was 2000 < push standoff 2050; audit wf_555f18eb Part B) */
                 if (e->anim_frame == 0x0c) {                            /* connect once per bite */
                     pl->hp = (int16_t)(pl->hp - 6);                     /* player.hp -= 6 @0x80118468 */
                     re15_audio_room_se(6);                              /* Se(6) bite @0x80118474 */
@@ -3796,7 +3810,7 @@ static void re15_maggot_ai_tick(int slot)
             re15_enemy_steer_point(e, pl->x, pl->z, 0x20);              /* keep facing the player */
             re15_dog_advance(e, 40);                                    /* lunge forward (0x8011bf50) */
             if (e->sub_state_3 == 0 && e->anim_frame >= 0x15            /* damage window @0x80118650 */
-                && pl->hit_react == 0 && re15_dog_arc(e, pl, 1600, 0xc0)) {   /* dual-hitbox 800 (0x8001bff8) */
+                && pl->hit_react == 0 && re15_dog_arc(e, pl, re15_body_contact_reach(e), 0xc0)) {   /* dual-hitbox 800 (0x8001bff8); connect at body contact (was 1600 < push standoff 2050; audit wf_555f18eb Part B) */
                 pl->hp = (int16_t)(pl->hp - 12);                        /* player.hp -= 12 @0x801187bc */
                 re15_audio_room_se(5);                                  /* Se(5) heavy @0x80118798 */
                 pl->hit_react |= 1; e->dog_atk_cd = 0x2d; e->sub_state_3 = 1;   /* connect once */
@@ -4107,7 +4121,7 @@ static void re15_adult_spider_ai_tick(int slot)
             } else if (e->sub_state_3 == 4) {                                                 /* [4/5] STRIKE adv @300 */
                 re15_enemy_steer_point(e, pl->x, pl->z, 0x10);
                 re15_dog_advance(e, 300 >> 5);
-                if (pl->hit_react == 0 && re15_dog_arc(e, pl, 900, 0x100)) {                  /* contact CONNECT @0x8011254c */
+                if (pl->hit_react == 0 && re15_dog_arc(e, pl, re15_body_contact_reach(e), 0x100)) {  /* contact CONNECT @0x8011254c; body contact (was 900 < push standoff 1450; audit wf_555f18eb Part B) */
                     re15_audio_room_se(2); s_player_grabbed = 1; pl->hit_react |= 1;
                     if (pl->hp < 0) pl->hp = 1;                                               /* keep-alive clamp (NO damage) */
                     re15_aspider_clip(e, 9); e->sub_state_3 = 6;                              /* -> recover */
@@ -4124,7 +4138,7 @@ static void re15_adult_spider_ai_tick(int slot)
                 e->y += 8 * (int32_t)e->ai_timer * (int32_t)e->ai_timer;   /* Y += 8*t^2 (Y-down) */
                 e->ai_timer++;
                 re15_dog_advance(e, 200 >> 5);                                                /* forward while airborne */
-                if (pl->hit_react == 0 && re15_dog_arc(e, pl, 900, 0x100)) {                  /* CONNECT @0x801129cc */
+                if (pl->hit_react == 0 && re15_dog_arc(e, pl, re15_body_contact_reach(e), 0x100)) {  /* CONNECT @0x801129cc; body contact (was 900 < push standoff 1450; audit wf_555f18eb Part B) */
                     re15_audio_room_se(2); s_player_grabbed = 1; pl->hit_react |= 1;
                     if (pl->hp < 0) pl->hp = 1;                                               /* keep-alive clamp (NO damage) */
                 }
@@ -4558,7 +4572,7 @@ static void re15_alligator_ai_tick(int slot)
             re15_enemy_steer_point(e, pl->x, pl->z, 0x30);
             if (e->sub_state_3 == 0) {                       /* lunge windup: close into reach */
                 re15_dog_advance(e, 64);
-                if (e->anim_frame >= 3 && dist < 1400 && re15_dog_arc(e, pl, 1400, 0x400) && !s_player_grabbed) {
+                if (e->anim_frame >= 3 && dist <= re15_body_contact_reach(e) && re15_dog_arc(e, pl, re15_body_contact_reach(e), 0x400) && !s_player_grabbed) {   /* jaws reach at body contact (was 1400 < push standoff 2650; audit wf_555f18eb Part B) */
                     s_player_grabbed = 1; pl->hit_react |= 1;      /* grab latch cmd 2 (in-jaws) @0x8010d27c */
                     e->ai_timer = 100;                             /* +0x1dc hold timer = 100 @0x8010d270 */
                     e->sub_state_3 = 1; re15_audio_room_se(2);

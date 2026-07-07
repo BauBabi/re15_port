@@ -1,0 +1,109 @@
+/* test_enemy_attack_reach.c — melee attacks must CONNECT through the player body-push standoff.
+ *
+ * Audit wf_555f18eb Part B. re15_body_push_player (game_step) holds the player at exactly
+ * hit_radius_min + RE15_BODY_R_PLAYER out of every enemy body (the aec4/b544 standoff). The
+ * big-bodied enemies gated their melee connect on a distance SMALLER than that standoff
+ * (maggot 2000/1600 < 2050, adult-spider 900 < 1450, alligator 1400 < 2650, spider-baby 600 <
+ * 1050), so in-game — with the push active — the attack could NEVER reach the pushed-away player
+ * and the enemy was silently harmless. The per-enemy unit tests never caught it because they run
+ * re15_enemy_ai_run_all WITHOUT the game_step player-push.
+ *
+ * This regression drives the SAME loop game_step does — re15_body_push_player() THEN
+ * re15_enemy_ai_run_all() — and asserts each affected enemy still lands its attack. On the
+ * pre-fix code every case fails (hp stays 100 / never grabbed); the body-contact gate restores it.
+ */
+#include <stdio.h>
+#include <string.h>
+#include <stdint.h>
+#include "re15_actor.h"
+#include "re15_enemy_ai.h"
+#include "re15_damage.h"
+
+extern int16_t re15_atan2_q12(int32_t, int32_t);
+extern int  re15_player_is_grabbed(void);
+extern void re15_body_push_player(void);
+
+static int32_t xz_dist(const re15_actor_t *a, const re15_actor_t *b)
+{
+    int64_t dx = (int64_t)a->x - b->x, dz = (int64_t)a->z - b->z;
+    int64_t d2 = dx * dx + dz * dz;
+    int32_t r = 0; while ((int64_t)(r + 1) * (r + 1) <= d2) r++;
+    return r;
+}
+
+/* one game_step-order frame for the enemy loop: player-push, then the AI tick */
+static void step(void) { re15_body_push_player(); re15_enemy_ai_run_all(0); }
+
+int main(void)
+{
+    int fail = 0;
+    printf("=== enemy melee reach through the body-push standoff (audit wf_555f18eb Part B) ===\n");
+
+    /* (1) MAGGOT 0x27 — bite/heavy must chip the player through the 2050 standoff (was 2000/1600). */
+    {
+        memset(g_actors, 0, sizeof g_actors);
+        re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        pl->active = 1; pl->type = 0; pl->x = 0; pl->z = 3200; pl->hp = 100;
+        re15_actor_t *m = &g_actors[1];
+        m->active = 1; m->type = 0x27; m->state = 0; m->x = 0; m->z = 0; m->rot_y = 0;
+        re15_enemy_apply_hitbox(m, 0x27);
+        m->rot_y = (int16_t)(((int)re15_atan2_q12(pl->z - m->z, pl->x - m->x) - 0x400) & 0xfff);
+        int hit = 0;
+        for (int f = 0; f < 400; f++) { step(); if (pl->hp < 100) { hit = 1; break; } pl->hit_react = 0; }
+        if (!hit) { fprintf(stderr, "FAIL(1): maggot never chipped the player through the push (hp=%d, dist=%d)\n", pl->hp, xz_dist(m, pl)); fail = 1; }
+        else printf("  (1) MAGGOT: lands damage under the push, hp=%d (dist=%d)\n", pl->hp, xz_dist(m, pl));
+    }
+
+    /* (2) ADULT SPIDER 0x25 — non-damaging stagger-GRAB must still latch through the 1450 standoff. */
+    {
+        memset(g_actors, 0, sizeof g_actors);
+        re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        pl->active = 1; pl->type = 0; pl->x = 0; pl->z = 1600; pl->hp = 100;
+        re15_actor_t *e = &g_actors[1];
+        e->active = 1; e->type = 0x25; e->state = 1; e->sub_state_1 = 0; e->grid_id = 1; e->hp = 100; e->x = 0; e->z = 0;
+        re15_enemy_apply_hitbox(e, 0x25);
+        e->rot_y = (int16_t)(((int)re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0xfff);
+        int grabbed = 0; int16_t hp0 = pl->hp;
+        for (int f = 0; f < 240; f++) { step(); if (re15_player_is_grabbed()) { grabbed = 1; break; } pl->hit_react = 0; }
+        if (!grabbed)      { fprintf(stderr, "FAIL(2): adult spider never grabbed through the push (dist=%d)\n", xz_dist(e, pl)); fail = 1; }
+        if (pl->hp != hp0) { fprintf(stderr, "FAIL(2): the stagger-grab must deal 0 damage, hp %d->%d\n", hp0, pl->hp); fail = 1; }
+        else if (grabbed)  printf("  (2) ADULT SPIDER: stagger-grab latches under the push (hp %d, byte-true 0 dmg)\n", pl->hp);
+    }
+
+    /* (3) ALLIGATOR 0x23 — jaws grab-eat must reach + swallow through the 2650 standoff (was 1400). */
+    {
+        memset(g_actors, 0, sizeof g_actors);
+        re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        pl->active = 1; pl->type = 0; pl->x = 0; pl->z = 2400; pl->hp = 100;
+        re15_actor_t *e = &g_actors[1];
+        e->active = 1; e->type = 0x23; e->state = 1; e->sub_state_1 = 6; e->hp = 300; e->x = 0; e->z = 0;
+        re15_enemy_apply_hitbox(e, 0x23);
+        e->rot_y = (int16_t)(((int)re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0xfff);
+        int grabbed = 0;
+        for (int f = 0; f < 300; f++) { step(); if (re15_player_is_grabbed()) grabbed = 1; pl->hit_react = 0; if (pl->hp < 0) break; }
+        if (!grabbed)    { fprintf(stderr, "FAIL(3): alligator never grabbed through the push (dist=%d)\n", xz_dist(e, pl)); fail = 1; }
+        if (pl->hp >= 0) { fprintf(stderr, "FAIL(3): the jaws-hold must swallow (kill) the player, hp=%d\n", pl->hp); fail = 1; }
+        else if (grabbed) printf("  (3) ALLIGATOR: jaws reach + swallow under the push (hp=%d)\n", pl->hp);
+    }
+
+    /* (4) SPIDER-BABY 0x26 — stationary -2 contact must fire at the 1050 standoff (was 600). */
+    {
+        memset(g_actors, 0, sizeof g_actors);
+        re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        pl->active = 1; pl->type = 0; pl->x = 3000; pl->z = 8000; pl->hp = 100;   /* far while it emerges */
+        re15_actor_t *s = &g_actors[1];
+        s->active = 1; s->type = 0x26; s->state = 0; s->x = 3000; s->z = 3000; s->grid_id = 0x02;
+        re15_enemy_apply_hitbox(s, 0x26);
+        for (int f = 0; f < 140; f++) re15_enemy_ai_run_all(0);   /* emerge to SOLID (no player nearby) */
+        pl->x = s->x; pl->z = s->z + 400; pl->hp = 100; pl->hit_react = 0;   /* walk into the body */
+        int16_t hp0 = pl->hp; int hit = 0;
+        for (int f = 0; f < 80; f++) { step(); if (pl->hp < hp0) { hit = 1; break; } pl->hit_react = 0; }
+        if (!hit)               { fprintf(stderr, "FAIL(4): spider-baby contact never fired through the push (dist=%d)\n", xz_dist(s, pl)); fail = 1; }
+        else if (pl->hp != hp0 - 2) { fprintf(stderr, "FAIL(4): contact must be exactly -2, hp %d->%d\n", hp0, pl->hp); fail = 1; }
+        else printf("  (4) SPIDER-BABY: -2 contact fires at the standoff, hp %d->%d\n", hp0, pl->hp);
+    }
+
+    if (fail) { printf("ENEMY-ATTACK-REACH: FAIL\n"); return 1; }
+    printf("ENEMY-ATTACK-REACH: all checks passed\n");
+    return 0;
+}

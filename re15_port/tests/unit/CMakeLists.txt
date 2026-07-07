@@ -236,3 +236,10 @@ target_link_libraries(test_enemy_body_push PRIVATE re15_engine re15_test_support
 target_include_directories(test_enemy_body_push PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_enemy_body_push COMMAND test_enemy_body_push)
 set_tests_properties(unit_enemy_body_push PROPERTIES TIMEOUT 30)
+
+# --- Melee reach through the body-push standoff (audit wf_555f18eb Part B — the "harmless enemy" bug) ---
+add_executable(test_enemy_attack_reach test_enemy_attack_reach.c)
+target_link_libraries(test_enemy_attack_reach PRIVATE re15_engine re15_test_support)
+target_include_directories(test_enemy_attack_reach PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_enemy_attack_reach COMMAND test_enemy_attack_reach)
+set_tests_properties(unit_enemy_attack_reach PROPERTIES TIMEOUT 30)
