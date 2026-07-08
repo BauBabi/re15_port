@@ -303,8 +303,9 @@ void re15_player_set_equipped_weapon(int weapon_id)
     }
 }
 
-/* AIM TARGET LATCH (byte-true FUN_8003703c(radius)): the nearest live front-cone zombie within
- * `radius` — the raise-sub auto-turn slews toward it. Radii per machine/sub: gun raise 30000
+/* AIM TARGET LATCH (byte-true FUN_8003703c(radius)): the nearest live hitbox-bearing enemy within
+ * `radius`, ALL-AROUND (no angle-vs-facing gate) — the raise-sub auto-turn then slews toward it, so
+ * the player faces whatever he locked. Radii per machine/sub: gun raise 30000
  * (0x7530), melee DRAW 2000 (0x7d0 @0x800355d0), melee RE-RAISE 5000 (0x1388 @0x80034f7c).
  * Returns 1 + its XZ. */
 int re15_player_aim_target(int32_t radius, int32_t *tx, int32_t *tz)
@@ -321,7 +322,12 @@ int re15_player_aim_target(int32_t radius, int32_t *tx, int32_t *tz)
                                                  * lock the reticle; the non-combat types have no box). */
         if (e->state == 7 || e->hp < 0) continue;
         uint32_t d = (uint32_t)re15_enemy_player_dist(e, pl);
-        if (d < bd && re15_ai_arc_test(pl, e->x, e->z, 0x400) == 0) { bd = d; best = s2; }
+        /* NEAREST enemy ALL-AROUND — byte-true FUN_8003703c @0x8003703c: the auto-aim latch computes
+         * ONLY SquareRoot0(dx^2+dz^2) and keeps the smallest (3 flag-priority buckets); it has NO
+         * angle-vs-facing test anywhere. The player then AUTO-TURNS toward the pick (the caller slews
+         * rot_y, player_common.c:350-354 = the original's FUN_8001a8f8), so a front-arc gate here was a
+         * divergence — it stopped the player turning to an enemy off to the side/behind. */
+        if (d < bd) { bd = d; best = s2; }
     }
     if (best < 0) return 0;
     *tx = g_actors[best].x; *tz = g_actors[best].z;

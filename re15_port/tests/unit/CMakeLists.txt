@@ -252,6 +252,13 @@ target_include_directories(test_slope_collision PRIVATE ${CMAKE_SOURCE_DIR}/incl
 add_test(NAME unit_slope_collision COMMAND test_slope_collision)
 set_tests_properties(unit_slope_collision PROPERTIES TIMEOUT 30)
 
+# --- Byte-true auto-aim latch is ALL-AROUND (FUN_8003703c has no angle gate; the front-arc gate was a divergence) ---
+add_executable(test_aim_all_around test_aim_all_around.c)
+target_link_libraries(test_aim_all_around PRIVATE re15_engine re15_test_support)
+target_include_directories(test_aim_all_around PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_aim_all_around COMMAND test_aim_all_around)
+set_tests_properties(unit_aim_all_around PROPERTIES TIMEOUT 30)
+
 # --- Byte-true RE1.5 camera LookAt (audit #3 — integer SquareRoot0 + division, no float/rounding) ---
 add_executable(test_camera_view test_camera_view.c)
 target_link_libraries(test_camera_view PRIVATE re15_engine re15_test_support)
