@@ -1519,21 +1519,33 @@ static int op_pos_set(scd_thread_t *t)
     return 1;
 }
 
-/* Dir_set (0x33) — set actor heading. 8-byte encoding mirrors Pos_set:
- *   [op, register, rot_x, rot_y, rot_z]  (each s16 LE — corrected 2026-06-08;
- *   was mislabelled "_be"/"(each s16 BE)", the disproven all-BE assumption)
- *
- * Only Y axis matters in practice (4096 = 360°). Register honored like
- * Pos_set: 0 = player, non-zero = NPC (currently no-op). */
+/* Dir_set (0x33) — set actor/prop heading. Byte-true LAB_80041080 (@0x80041080): writes ALL THREE
+ * rotation axes (rot_x=pc[2], rot_y=pc[4], rot_z=pc[6], each LE s16) to the WORK ENTITY (thread+0x154,
+ * selected by the preceding Work_set) at +0x68/+0x6a/+0x6c — pc[1] is NEVER read as a target register.
+ *   80041080 lw v1,28(a0)=pc ; 80041084 lw a1,340(a0)=work ; lhu 2(v1)->sh 104(a1) (rot_x) ;
+ *   lhu 4(v1)->sh 106(a1) (rot_y) ; lhu 6(v1)->sh 108(a1) (rot_z) ; addiu v1,8 (pc+=8).
+ * This mirrors the already-fixed op_pos_set. The OLD port form (read pc[1] as reg, gate on reg==0,
+ * hardcode the player, decode only rot_y) coincided for ROOM1170 (Dir_set after Work_set(1,0)->player,
+ * pc[1]==0) but mis-targeted + dropped fields elsewhere: ROOM11F0 sub[17] does 10x `Work_set(3,N);
+ * Dir_set 33 00 00 00 00 00 00 02` to rotate props 2..11 to rot_z=0x200 — the port instead set the
+ * PLAYER's rot_y to 0 ten times and left every prop unrotated. (ROOM11D0/11D1 sub[2] the same.) */
 static int op_dir_set(scd_thread_t *t)
 {
-    uint8_t reg = t->pc[1];
-    /* yaw LE (R3000 `lh`), same class as Pos_set coords + Sce_em_set's dir
-     * field (LE-verified, 8/8 NPCs produce valid Q12 yaws only via LE). The
-     * old BE here was the same wrong "all-BE" assumption. (2026-06-08) */
-    int16_t yaw = scd_read_le_s16(&t->pc[4]);
-    if (reg == 0) {
-        g_actors[RE15_ACTOR_SLOT_PLAYER].rot_y = yaw;
+    int16_t rx = scd_read_le_s16(&t->pc[2]);
+    int16_t ry = scd_read_le_s16(&t->pc[4]);
+    int16_t rz = scd_read_le_s16(&t->pc[6]);
+    int8_t ws = (t->work_slot >= 0) ? t->work_slot : g_scd.work_slot;
+    if (ws >= 0 && ws < RE15_ACTOR_MAX) {
+        g_actors[ws].rot_x = rx;
+        g_actors[ws].rot_y = ry;
+        g_actors[ws].rot_z = rz;
+    } else {
+        int8_t pi = (t->work_prop_idx >= 0) ? t->work_prop_idx : g_scd.work_prop_idx;
+        if (pi >= 0 && pi < (int)g_scd.prop_count && g_scd.props[pi].active) {
+            g_scd.props[pi].rot_x = rx;
+            g_scd.props[pi].rot_y = ry;
+            g_scd.props[pi].rot_z = rz;
+        }
     }
     t->pc += 8;
     return 1;

@@ -307,6 +307,13 @@ target_include_directories(test_rvd_scan_order PRIVATE ${CMAKE_SOURCE_DIR}/inclu
 add_test(NAME unit_rvd_scan_order COMMAND test_rvd_scan_order)
 set_tests_properties(unit_rvd_scan_order PROPERTIES TIMEOUT 30)
 
+# --- Byte-true SCD Dir_set (0x33): 3 axes to the work entity, ignores pc[1] (was player-only rot_y) ---
+add_executable(test_scd_dir_set test_scd_dir_set.c)
+target_link_libraries(test_scd_dir_set PRIVATE re15_engine re15_test_support)
+target_include_directories(test_scd_dir_set PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_scd_dir_set COMMAND test_scd_dir_set)
+set_tests_properties(unit_scd_dir_set PROPERTIES TIMEOUT 30)
+
 # --- Byte-true RE1.5 camera LookAt (audit #3 — integer SquareRoot0 + division, no float/rounding) ---
 add_executable(test_camera_view test_camera_view.c)
 target_link_libraries(test_camera_view PRIVATE re15_engine re15_test_support)
