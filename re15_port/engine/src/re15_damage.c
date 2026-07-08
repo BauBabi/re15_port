@@ -104,9 +104,15 @@ int re15_player_take_damage(re15_actor_t *p, uint8_t attack_type,
     p->hp = (int16_t)(p->hp - dmg);
 
     /* type<2 → hit SE + bleed/poison roll (@80012e68-eb8). The SE (FUN_800453d0(10))
-     * is DEFERRED until the SE-id table is wired; the bleed roll is byte-true. */
+     * is DEFERRED until the SE-id table is wired; the bleed roll is byte-true. Both RNG draws are
+     * UNCONDITIONAL in the original: two back-to-back `jal FUN_8001af20` @0x80012e78/e80, THEN the two
+     * `&1` results are AND'd @0x80012e88-90. A short-circuit `&&` would skip the 2nd draw when the 1st
+     * is even, consuming ONE rng value where the PSX consumes TWO — and re15_engine_rand8 is the
+     * SHARED engine stream (bleed AND AI decisions), so dropping a draw desyncs everything downstream. */
     if (type < 2) {
-        if ((dmg_rng() & 1) && (dmg_rng() & 1))
+        uint32_t r1 = dmg_rng() & 1;
+        uint32_t r2 = dmg_rng() & 1;           /* draw BOTH, unconditionally, before testing */
+        if (r1 && r2)
             p->status_flags |= 0x2;            /* DAT_800acaec bit0x2 = bleed/poison */
     }
 
