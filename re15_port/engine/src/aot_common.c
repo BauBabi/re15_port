@@ -267,6 +267,17 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
         if (g_scd.threads[ti].active) { scd_idle = 0; break; }
     int scd_ran = (g_scd.tick_count > 90);
 
+    /* RVD CAM_SWITCH pick (byte-true FUN_80014230): among the RVD zones the player is inside for the
+     * current cam_from, the ORIGINAL selects the FIRST in RVD TABLE order. The port installs RVD zones
+     * top-down (install#0 = lowest table index -> slot 63) and scans slots ASCENDING, so "first inside
+     * wins" picked the LOWEST slot = the LAST table zone = wrong cut (e.g. ROOM1190 dog cam_from=3:
+     * zone[14]->cut5 vs zone[15]->cut4 overlap ~49 pts; PSX shows cut5, the port showed cut4 — and since
+     * cam_to becomes next frame's cam_from, the whole trajectory could cascade). Fix: don't return on the
+     * first inside CAM_SWITCH; record it and keep scanning. Because the RVD region occupies the TOP slots
+     * (scanned last, after every SCD AOT) the LAST inside match = highest slot = lowest table index =
+     * the byte-true FIRST zone, and no SCD AOT is scanned after it so precedence is unchanged. */
+    int best_cam_id = -1;
+
     for (int i = 0; i < RE15_AOT_MAX; i++) {
         re15_aot_t *a = &g_aot.slots[i];
         if (!a->active) continue;
@@ -339,10 +350,9 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
              * bytecode → empty pad), NOT this gate. From the correct cwd the
              * intro plays end-to-end with the gate in place. Gate RESTORED. */
             if (inside && g_scd.cut_auto_enabled) {
-                g_scd.cam_id              = (uint8_t)a->event_id;
-                g_scd.cam_change_pending  = 1;
-                a->was_inside             = 1;
-                return;  /* first match wins */
+                best_cam_id   = (int)a->event_id;   /* keep the LAST (highest-slot = lowest table index) */
+                a->was_inside = 1;
+                continue;    /* do NOT return — a later (higher-slot / lower table index) zone wins */
             }
             a->was_inside = 0;
             continue;  /* CAM_SWITCH handled, skip default edge logic */
@@ -631,5 +641,13 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
             }
         }
         a->was_inside = (uint8_t)inside;
+    }
+
+    /* Apply the RVD pick recorded above: the highest-slot inside CAM_SWITCH = the lowest RVD table
+     * index the player is inside for this cam_from (byte-true FIRST-in-table). Only reached when no
+     * earlier SCD AOT fired (returned) — preserving the original SCD-AOT-vs-camera precedence. */
+    if (best_cam_id >= 0) {
+        g_scd.cam_id             = (uint8_t)best_cam_id;
+        g_scd.cam_change_pending = 1;
     }
 }

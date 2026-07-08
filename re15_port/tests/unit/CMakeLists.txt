@@ -300,6 +300,13 @@ target_include_directories(test_getup_advance PRIVATE ${CMAKE_SOURCE_DIR}/includ
 add_test(NAME unit_getup_advance COMMAND test_getup_advance)
 set_tests_properties(unit_getup_advance PROPERTIES TIMEOUT 30)
 
+# --- RVD CAM_SWITCH scan picks the FIRST table zone on overlap (audit rvd-scan-order: reversed scan) ---
+add_executable(test_rvd_scan_order test_rvd_scan_order.c)
+target_link_libraries(test_rvd_scan_order PRIVATE re15_engine re15_test_support)
+target_include_directories(test_rvd_scan_order PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_rvd_scan_order COMMAND test_rvd_scan_order)
+set_tests_properties(unit_rvd_scan_order PROPERTIES TIMEOUT 30)
+
 # --- Byte-true RE1.5 camera LookAt (audit #3 — integer SquareRoot0 + division, no float/rounding) ---
 add_executable(test_camera_view test_camera_view.c)
 target_link_libraries(test_camera_view PRIVATE re15_engine re15_test_support)
