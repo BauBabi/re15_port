@@ -311,10 +311,18 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
         if (!r1_held && s_player_aim_phase != RE15_AIM_NONE &&
             s_player_aim_phase != RE15_AIM_LOWER) {
             int enter_lower = 0;
+            /* Per-weapon recoil-break frame threshold = byte2 @0x80074092+(w-1)*5 (byte-true, record
+             * index = equipped weapon aca5d - 1): handgun records 2/3 = 7, the heavier guns records
+             * 4..12 = 10. The port had hardcoded 7 (correct only for the STAGE1 handgun; 3 frames early
+             * for the Glock/Beretta/Redhawk/M870/SPAS). */
+            static const uint8_t recoil_break[16] = {0,0,7,7,10,10,10,10,10,10,10,10,10,0,0,0};
+            extern int re15_player_equipped_weapon(void);   /* re15_damage.c (DAT_800aca5d) */
+            int eq_w = re15_player_equipped_weapon();
+            int rb_thr = (eq_w >= 1 && eq_w <= 16) ? recoil_break[eq_w - 1] : 7;
             if (s_player_aim_phase == RE15_AIM_READY && !s_aim_recoil)
                 enter_lower = 1;                        /* HOLD + !R1 */
-            else if (!s_aim_melee && s_aim_recoil && p->anim_frame > 7)
-                enter_lower = 1;                        /* gun recoil break (@0x8003364c, thr 7) */
+            else if (!s_aim_melee && s_aim_recoil && p->anim_frame > rb_thr)
+                enter_lower = 1;                        /* gun recoil break (@0x8003364c, per-weapon byte2) */
             if (enter_lower) {
                 s_player_aim_phase = RE15_AIM_LOWER;
                 s_aim_recoil = 0;
@@ -329,10 +337,15 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
         int aiming = r1_held || (s_player_aim_phase != RE15_AIM_NONE);
         if (aiming) move_dir = 0;   /* rooted: no translation while aiming */
         if (aiming) {
-            /* Manual aim turn (table @0x80074090, 5-BYTE records per weapon): byte0=24 during
-             * RAISE/DRAW, byte1=48 during HOLD (@0x80035270 base 0x80074091); LOWER = constant 24
-             * (@0x800354a0/c4). Knife AND handgun records are [24,48,...]. */
-            int rate = (s_player_aim_phase == RE15_AIM_READY) ? 48 : 24;
+            /* Manual aim turn (table @0x80074090 = [24,48,...], 5-BYTE records per weapon): byte0=24
+             * during RAISE/DRAW **and DISCHARGE/recoil**, byte1=48 during HOLD only (@0x80035270 base
+             * 0x80074091); LOWER = constant 24 (@0x800354a0/c4). The DISCHARGE sub (aca5a=5 @0x800359dc,
+             * clip 0x12) turns at byte0=24 (`acabe -= byte @0x80074090+(wpn-1)*5` @0x80035000-18), NOT
+             * the HOLD byte1=48 — so while the recoil clip plays the turn is HALF the HOLD rate. The
+             * port keeps the player in AIM_READY during recoil (s_aim_recoil), so gate it: 24 while
+             * recoiling, 48 in steady HOLD. (Sustained handgun fire keeps Leon in recoil most frames,
+             * so this is the common STAGE1 case.) */
+            int rate = (s_player_aim_phase == RE15_AIM_READY) ? (s_aim_recoil ? 24 : 48) : 24;
             if (pad_bits & RE15_PAD_BIT_LEFT)  p->rot_y = (int16_t)(((int)p->rot_y + rate) & 0xfff);
             if (pad_bits & RE15_PAD_BIT_RIGHT) p->rot_y = (int16_t)(((int)p->rot_y - rate) & 0xfff);
             /* AUTO-TRACK toward the latched front target — byte-true ONLY during the RAISE/DRAW
