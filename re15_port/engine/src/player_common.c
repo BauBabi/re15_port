@@ -29,24 +29,26 @@
  * speed*heading (the W01 clips are in-place gait cycles). */
 #define WALK_SPEED_PER_FRAME 75
 #define RUN_SPEED_PER_FRAME  200
-#define BACK_SPEED_PER_FRAME 60
+#define BACK_SPEED_PER_FRAME 70   /* @0x80073ec4 = [70,48] (back speed 70); cinematic 0x8003109c + PLC
+                                   * mode 7/8 also load 0x46=70. Port had 60 -> retreat ~14% too slow. */
 /* Tank-control free-roam TURN rate (4096 units = 360°) — BYTE-TRUE from the PSX player pad handler.
  * Holding LEFT/RIGHT adds/subtracts a PER-MOVE-SUB-STATE, per-camera turn byte to the heading
  * accumulator DAT_800acabe once per 30 Hz frame; that accumulator IS the facing heading (fed straight
  * into the GTE RotMatrix), so its per-frame delta is the visible turn rate.
  *
- * CORRECTION 2026-07-03 (DuckStation parity, DETERMINISTIC direct-load measurement — re15-parity-verify):
- * the 48-vs-96 split is NOT walk-vs-run (the old model). It is MOVING-FORWARD vs TURNING-IN-PLACE:
- *   - TURN-IN-PLACE (LEFT/RIGHT, no forward/back): DAT_80073ee5 = 0x60 = 96/frame  <- MEASURED:
- *       hold R 1s -> +2784, 2s -> +5664 (linear ~96/frame at 30fps); the port's 48 was HALF -> Leon
- *       pivoted at half speed, so the same tank-path reached a DIFFERENT spot than the original.
- *   - turning WHILE walking forward (UP + LEFT/RIGHT): DAT_80073ea5 = 0x30 = 48/frame (the walk curve).
- * The four per-camera tables are @0x80073ea5(48 walk-fwd) / ec5(48 back) / ee5(96 turn-in-place) /
- * f25(72). The walk speed (75/frame) + forward direction + wall x=-5118 were already parity-matched;
- * only the turn-in-place rate was off. */
-#define TURN_RATE_WALK_PER_FRAME     0x30   /* 48 — turn while walking forward (DAT_80073ea5) */
-#define TURN_RATE_RUN_PER_FRAME      0x60   /* 96 — run turn (DAT_80073ee5 shares 0x60) */
-#define TURN_RATE_IN_PLACE_PER_FRAME 0x60   /* 96 — pivot in place (DAT_80073ee5), MEASURED byte-true */
+ * CORRECTION 2026-07-03 (DuckStation parity, DETERMINISTIC direct-load measurement — re15-parity-verify)
+ * + 2026-07-08 (byte-true audit, tables re-read from PSX.EXE): there are THREE distinct FORWARD/pivot
+ * turn rates, one per move sub-state, each a [speed,turn] pair indexed by camera*2:
+ *   - WALK-forward  @0x80073ea4 = [75, 48]  -> turn 0x30 = 48/frame
+ *   - RUN-forward   @0x80073f24 = [200, 72] -> turn 0x48 = 72/frame   (byte @0x80073f25 = 0x48)
+ *   - TURN-IN-PLACE @0x80073ee4 = [0, 96]   -> turn 0x60 = 96/frame   (MEASURED: hold R 1s -> +2784)
+ *   - BACK          @0x80073ec4 = [70, 48]  -> speed 70, turn 48
+ * The port previously collapsed RUN into IN-PLACE (both 0x60=96); byte-verified that run-forward
+ * turn is 72, not 96, so running+steering was ~33% too sharp. */
+#define TURN_RATE_WALK_PER_FRAME     0x30   /* 48 — turn while walking forward (@0x80073ea4 = [75,48]) */
+#define TURN_RATE_RUN_PER_FRAME      0x48   /* 72 — turn while RUNNING forward (@0x80073f24 = [200,72]);
+                                             * distinct from in-place 0x60 (the port had wrongly shared it) */
+#define TURN_RATE_IN_PLACE_PER_FRAME 0x60   /* 96 — pivot in place (@0x80073ee4 = [0,96]), MEASURED byte-true */
 
 /* Animation-clip sentinels consumed by the renderer:
  *   105 -> PL00W01 clip 5 = Walk_Forward (FSM bank 0x174, motion 0x30)

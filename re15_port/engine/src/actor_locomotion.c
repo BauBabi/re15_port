@@ -97,7 +97,10 @@
  * rotate-in-place, completion-flag); the "0x40 walker deviation" was largely a phantom of the
  * disproven "handlers write speeds 75/96/200" premise (those are yaw turn-rates, not speeds).
  * Shared by both ports (actor_locomotion.c). State-2 fine-adjust stays 0x30. */
-#define PLC_YAW_SLEW_INIT    0x15e  /* 350, turn-init slew — byte-true FUN_8001aac4 a2 */
+#define PLC_YAW_SLEW_INIT    0x60   /* 96 — state-1 align slew: FUN_8001aac4 a2 = 0x60, byte-verified at
+                                     * both callers @0x80030ba4 (walk) and @0x80030df8 (run). The value
+                                     * had been 0x15e (350) = the SEPARATE convergence THRESHOLD below
+                                     * (FUN_8001ab9c), so the align slewed ~3.6x too fast per tick. */
 #define PLC_YAW_SLEW_ACTIVE  0x30   /* ~4.2° per tick, state 2               */
 #define PLC_YAW_SLEW_THRESH  0x100  /* |delta| > this → use INIT slew         */
 #define PLC_YAW_ARRIVAL      0x20   /* ~2.8° — mode 9 fires when |Δ| ≤ this  */
