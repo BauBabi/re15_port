@@ -155,6 +155,33 @@ static void test_aot_set(void)
     TEST_ASSERT_EQ("Aot_set: Slot 3 aktiv", 1, g_aot.slots[3].active);
     TEST_ASSERT_EQ("Aot_set: Typ GENERIC", RE15_AOT_TYPE_GENERIC, g_aot.slots[3].type);
 
+    /* LONG form (pc[3]&0x80): a 4-VERTEX POLYGON @pc[6..21] + event fields shifted +8 (eventId
+     * pc[17]->pc[25]). The ROOM1090-shaped quad (100,1300),(1850,2150),(3550,-2000),(1800,-2800) has
+     * pc[17]=0xF8 (v2.z high byte) — the OLD code read that as the event (dead) and installed a garbage
+     * rect from the first two vertices. Fixed: install the quad + read eventId at pc[25]. pc += 28. */
+    uint8_t bc_poly[29] = {
+        0x2C, 0x07, 0x01, 0x80,             /* slot=7, type=1, flags=0x80 (LONG, bit0x10 clear->AUTO) */
+        0x00, 0x00,                          /* band, pad */
+        0x64, 0x00, 0x14, 0x05,             /* v0=(100,1300) */
+        0x3A, 0x07, 0x66, 0x08,             /* v1=(1850,2150) */
+        0xDE, 0x0D, 0x30, 0xF8,             /* v2=(3550,-2000)  <- pc[17]=0xF8 (old garbage event) */
+        0x08, 0x07, 0x10, 0xF5,             /* v3=(1800,-2800) */
+        0xFF, 0x00, 0x00, 0x02,             /* act=pc[22]=0xFF; eventId=pc[25]=2 */
+        0x00, 0x00,                          /* pc[26..27] */
+        OP_EVT_NEXT                          /* @pc[28] sentinel */
+    };
+    setup_vm();
+    n = run_one_opcode(bc_poly);
+    TEST_ASSERT_EQ("Aot_set LONG: Opcode-Größe = 28", 28, n);
+    TEST_ASSERT_EQ("Aot_set LONG: Slot 7 aktiv", 1, g_aot.slots[7].active);
+    TEST_ASSERT_EQ("Aot_set LONG: has_quad", 1, g_aot.slots[7].has_quad);
+    TEST_ASSERT_EQ("Aot_set LONG: v0.x=100", 100, g_aot.slots[7].xs[0]);
+    TEST_ASSERT_EQ("Aot_set LONG: v0.z=1300", 1300, g_aot.slots[7].zs[0]);
+    TEST_ASSERT_EQ("Aot_set LONG: v2.x=3550", 3550, g_aot.slots[7].xs[2]);
+    TEST_ASSERT_EQ("Aot_set LONG: v2.z=-2000", -2000, g_aot.slots[7].zs[2]);
+    TEST_ASSERT_EQ("Aot_set LONG: eventId=2 (pc[25], not pc[17]=0xF8)", 2, g_aot.slots[7].event_id);
+    TEST_ASSERT_EQ("Aot_set LONG: Typ AUTO_EVENT", RE15_AOT_TYPE_AUTO_EVENT, g_aot.slots[7].type);
+
     TEST_OK("Aot_set (0x2C)");
 }
 

@@ -1946,17 +1946,38 @@ static int op_aot_set(scd_thread_t *t)
 {
     int     slot     = (int)t->pc[1];
     uint8_t type     = t->pc[2];
-    /* AOT rect is LITTLE-ENDIAN (2026-06-04 fix, same as Door_aot_set). */
-    int16_t rect_x   = scd_read_le_s16(&t->pc[6]);
-    int16_t rect_z   = scd_read_le_s16(&t->pc[8]);
-    int16_t rect_w   = scd_read_le_s16(&t->pc[10]);
-    int16_t rect_d   = scd_read_le_s16(&t->pc[12]);
-    uint8_t event_id = t->pc[14];   /* act */
-    /* NW corner + extent → center + half-extents (matches Door/Item path). */
-    int32_t cx = (int32_t)rect_x + (int32_t)rect_w / 2;
-    int32_t cz = (int32_t)rect_z + (int32_t)rect_d / 2;
-    int32_t hw = (int32_t)(rect_w < 0 ? -rect_w : rect_w) / 2;
-    int32_t hh = (int32_t)(rect_d < 0 ? -rect_d : rect_d) / 2;
+    /* EXTENDED 4-POINT AOT (byte-true FUN_80042bac @0x80042dc4: `lbu 1(s0); andi 0x80; beq`, s0=pc+2
+     * so the tested byte is pc[3]): when pc[3]&0x80 is SET the geometry is a 4-VERTEX POLYGON at
+     * pc[6..21] (eight LE s16 @s0+4..s0+18 = v0(pc6,pc8) v1(pc10,pc12) v2(pc14,pc16) v3(pc18,pc20),
+     * tested by point-in-polygon FUN_80014368) — NOT a rect — and EVERY trailing field shifts +8
+     * (act pc[14]->22, eventId pc[17]->25). The port used to read the naive rect pc[6..13] + pc[17]
+     * for every form, so a long-form AOT (e.g. ROOM1090 sub00 `2C .. B1 ..`) installed a garbage rect
+     * from the first two polygon vertices and read a polygon byte (0xF8) as the event -> a dead,
+     * wrong-shaped trigger. The SHORT form (pc[3]&0x80 clear) is byte-for-byte unchanged. */
+    int     long_form = (t->pc[3] & 0x80) != 0;
+    int16_t vx[4] = {0,0,0,0}, vz[4] = {0,0,0,0};
+    int32_t cx, cz, hw, hh;
+    if (long_form) {
+        for (int i = 0; i < 4; i++) { vx[i] = scd_read_le_s16(&t->pc[6 + i*4]); vz[i] = scd_read_le_s16(&t->pc[8 + i*4]); }
+        int32_t minx = vx[0], maxx = vx[0], minz = vz[0], maxz = vz[0];
+        for (int i = 1; i < 4; i++) {
+            if (vx[i] < minx) minx = vx[i]; if (vx[i] > maxx) maxx = vx[i];
+            if (vz[i] < minz) minz = vz[i]; if (vz[i] > maxz) maxz = vz[i];
+        }
+        cx = (minx + maxx) / 2; cz = (minz + maxz) / 2;   /* AABB fallback centre for the AOT scan */
+        hw = (maxx - minx) / 2; hh = (maxz - minz) / 2;
+    } else {
+        /* AOT rect is LITTLE-ENDIAN (2026-06-04 fix, same as Door_aot_set). NW corner + extent -> */
+        int16_t rect_x = scd_read_le_s16(&t->pc[6]);
+        int16_t rect_z = scd_read_le_s16(&t->pc[8]);
+        int16_t rect_w = scd_read_le_s16(&t->pc[10]);
+        int16_t rect_d = scd_read_le_s16(&t->pc[12]);
+        cx = (int32_t)rect_x + (int32_t)rect_w / 2;       /* center + half-extents (matches Door/Item) */
+        cz = (int32_t)rect_z + (int32_t)rect_d / 2;
+        hw = (int32_t)(rect_w < 0 ? -rect_w : rect_w) / 2;
+        hh = (int32_t)(rect_d < 0 ? -rect_d : rect_d) / 2;
+    }
+    uint8_t event_id = long_form ? t->pc[22] : t->pc[14];   /* act (+8 in the long form) */
     /* SCD Aot_set types 12/13 = the STAIR band-transition zones (the ROOM1170
      * outdoor staircase). Route them to the stair setter so stair_common.c can
      * action-trigger the descent/ascent (band change) — see re15_aot.h. data0
@@ -1980,7 +2001,7 @@ static int op_aot_set(scd_thread_t *t)
          * zone + never fired). The aot scan fires GENERIC on action → scd_event_fire →
          * sub_scd[eventId]. AOTs with eventId==0xFF (no event, e.g. room1170 slot-5) keep
          * the prior type/act behaviour untouched. */
-        uint8_t ev = t->pc[17];
+        uint8_t ev = long_form ? t->pc[25] : t->pc[17];   /* eventId (+8 in the long form) */
         if (ev == 0) {
             /* eventId==0 is NOT an event sub (sub_scd[0]=init is never an AOT target). It's an
              * EXAMINE→work-var AOT (ROOM1150 slot-2 type-5 over Irons): on the action examine
@@ -2009,6 +2030,12 @@ static int op_aot_set(scd_thread_t *t)
          * `chain` and the door as its band). Store it so the scan's generic band-gate (byte-true
          * FUN_80042cac: (band&0x80) || player_band==band) can keep a wrong-floor event AOT from firing. */
         if (slot >= 0 && slot < RE15_AOT_MAX) g_aot.slots[slot].band = t->pc[4];
+        /* LONG form: install the 4-vertex polygon so the AOT scan uses point-in-quad (FUN_80014368)
+         * instead of the AABB fallback (mirrors the RVD quad install in rdt_common.c). */
+        if (long_form && slot >= 0 && slot < RE15_AOT_MAX) {
+            for (int k = 0; k < 4; k++) { g_aot.slots[slot].xs[k] = vx[k]; g_aot.slots[slot].zs[k] = vz[k]; }
+            g_aot.slots[slot].has_quad = 1;
+        }
 #ifdef RE15_AOTBAND_DIAG
         fprintf(stderr, "[AOTBAND] room set slot=%d type=%d flags=0x%02x band=pc4=0x%02x ev=0x%02x\n",
                 slot, (int)t->pc[2], (int)t->pc[3], (int)t->pc[4], (int)t->pc[17]);
