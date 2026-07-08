@@ -66,6 +66,9 @@ typedef struct {
      * (RE2 +0x98, DAT_800acaec, u16): bit0x2 = bleed/poison, rolled on a type<2 hit
      * via 2×RNG&1 @80012ea4. See re15_damage.c. */
     uint8_t  hit_react;    /* RE2 +0x93 — per-attack hit guard + enemy collision bits */
+    uint8_t  em_flag_id;   /* +0x1C6 — the Sce_em_set (0x44) pc[7] kill-flag index, latched at spawn.
+                            * On death-commit the enemy sets the em-status flag[em_flag_id] so it does
+                            * not respawn on room re-entry (the spawn gate GETs it). 0xFF = never persist. */
     uint16_t status_flags; /* RE2/RE1.5 +0x98 (Member id 17, lhu) — bit0x2 = bleed/poison */
     /* Attack-hitbox dimensions — FUN_8002b5d0 reads these via target+0x78 (the
      * dim struct: radius_min@+6, height@+8, radius_max@+10) and target+0x7c (the

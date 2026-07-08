@@ -24,7 +24,8 @@
 #include "re15_esp.h"      /* re15_esp_fx_spawn — the collapse frame-0x37 blood burst */
 #include "re15_collision.h" /* re15_collision_constrain — the enemy SCA wall clamp (m0 root
                              * @0x8010062c jal 0x8003b0a4, runs per tick after the state handler) */
-#include "re15_room.h"      /* g_room_rdt for the enemy wall clamp + the nav-zone graph */
+#include "re15_room.h"      /* g_room_rdt + g_current_room_id (em-status stage zone) */
+#include "re15_scd.h"       /* re15_game_flag_get/set — the em-status kill-flag persistence */
 #include "re15_damage.h"   /* re15_enemy_player_dist, re15_ai_arc_test, re15_engine_rand8,
                             * re15_enemy_apply_hitbox */
 #include "re15_skeleton.h" /* re15_sin_q12 / re15_cos_q12 — forward-walk root-motion step (8.19) */
@@ -4850,6 +4851,15 @@ static void re15_enemy_body_push_tail(int s, re15_actor_t *e)
  * (Elliot 0x47, crows 0x21, room props) is left to its existing handling. Because of the type
  * gate, a room with no live zombie (e.g. the ROOM1170 boot/helipad) makes this a pure no-op =
  * no 1170 regression. `combat_active` is forwarded to the arm gate (DAT_800aca3c & 1). */
+/* Byte-true FUN_80109554/FUN_80106edc index math: stage 0-based from the room id (ROOM1140 -> 0);
+ * the em-status kill-flag bank is SCD flag zone 7 (stage<3) / 8 (stage>=3) = PSX 0x800b1038 /
+ * 0x800b1058 (op_set table @0x80074664[7]/[8], DAT_800b0fe0<3 discriminator @0x800420ec). */
+uint8_t re15_em_status_zone(void)
+{
+    int stage0 = (int)((g_current_room_id >> 12) & 0xFu) - 1;   /* room id packs (stage+1)<<12 */
+    return (stage0 < 3) ? 7 : 8;
+}
+
 void re15_enemy_ai_run_all(int combat_active)
 {
     re15_enemy_ai_set_combat_active(combat_active);
@@ -4864,6 +4874,13 @@ void re15_enemy_ai_run_all(int combat_active)
     for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) {
         re15_actor_t *e = &g_actors[s];
         if (!e->active) continue;
+        /* EM-STATUS KILL PERSISTENCE (byte-true FUN_80109554 @0x801096fc / FUN_80106edc @0x8010716c set
+         * flag[entity+0x1C6] on the death-commit): once an enemy is a CORPSE (state 7), set its em-status
+         * kill flag so re-entering the room does NOT respawn it (the Sce_em_set gate GETs this flag). The
+         * set is idempotent (re15_game_flag_set writes the same bit) so doing it each corpse tick == the
+         * PSX's set-once-on-commit for the spawn gate's purposes; em_flag_id==0xFF means "never persist". */
+        if (e->state == (uint8_t)RE15_AI_STATE_CORPSE && e->em_flag_id != 0xFF)
+            re15_game_flag_set(re15_em_status_zone(), e->em_flag_id, 1);
         uint8_t t = e->type;
         if (t == 0x10 || t == 0x11 || t == 0x16 || t == 0x12 || t == 0x18) { /* the STAGE1-5 zombie
              * variants that share the root FUN_80100424: 0x10/0x11/0x16 (briefing) plus 0x12 and 0x18,

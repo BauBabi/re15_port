@@ -22,6 +22,9 @@ uint8_t      g_actor_count = 0;
 void re15_actor_init(void)
 {
     memset(g_actors, 0, sizeof(g_actors));
+    /* em_flag_id defaults to 0xFF (never-persist): a corpse reached without an op_sce_em_set spawn
+     * must NOT set em-status flag 0. Sce_em_set overwrites it with pc[7] at spawn. */
+    for (int i = 0; i < RE15_ACTOR_MAX; i++) g_actors[i].em_flag_id = 0xFF;
     /* Slot 0 = player, always active (RE2-pure). Main initialises x/y/z
      * from the room's spawn-entry data (stage-transition or fallback). */
     g_actors[RE15_ACTOR_SLOT_PLAYER].active = 1;

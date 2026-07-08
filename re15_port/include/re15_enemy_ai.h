@@ -211,6 +211,13 @@ void re15_enemy_spawn_count_inc(void);     /* DAT_800aca4e ++ at Sce_em_set (nev
 void re15_enemy_spawn_count_reset(void);   /* room init reset (@0x8003f014) */
 int  re15_enemy_spawn_count(void);
 
+/* Enemy-status kill-flag persistence (byte-true FUN_80109554/FUN_80106edc SET + Sce_em_set gate
+ * @0x800420a0). The em-status flag bank = SCD flag zones 7/8 (op_set table @0x80074664[7]/[8] =
+ * 0x800b1038 stage<3 / 0x800b1058 stage>=3), MSB-first bits — the SAME re15_game_flag store, which
+ * persists across room re-entry (never per-room-cleared). re15_em_status_zone() picks the stage zone
+ * from g_current_room_id. Killed enemies set flag[em_flag_id] so they don't respawn. */
+uint8_t re15_em_status_zone(void);
+
 /* NAV-ZONE / PATHFINDING (nav_zone_common.c) — byte-true FUN_8003a0fc/8003a07c/8003a524/
  * 80039e7c over the RDT block.blk zone graph (see re15_rdt.h). */
 uint8_t re15_nav_zone_from_pos(int16_t x, int16_t z);

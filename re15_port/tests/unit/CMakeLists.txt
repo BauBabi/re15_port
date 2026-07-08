@@ -314,6 +314,13 @@ target_include_directories(test_scd_dir_set PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_scd_dir_set COMMAND test_scd_dir_set)
 set_tests_properties(unit_scd_dir_set PROPERTIES TIMEOUT 30)
 
+# --- Byte-true enemy-status kill-flag persistence: killed enemies don't respawn on room re-entry ---
+add_executable(test_em_status_persist test_em_status_persist.c)
+target_link_libraries(test_em_status_persist PRIVATE re15_engine re15_test_support)
+target_include_directories(test_em_status_persist PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_em_status_persist COMMAND test_em_status_persist)
+set_tests_properties(unit_em_status_persist PROPERTIES TIMEOUT 30)
+
 # --- Byte-true RE1.5 camera LookAt (audit #3 — integer SquareRoot0 + division, no float/rounding) ---
 add_executable(test_camera_view test_camera_view.c)
 target_link_libraries(test_camera_view PRIVATE re15_engine re15_test_support)

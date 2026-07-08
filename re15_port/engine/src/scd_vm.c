@@ -2565,9 +2565,19 @@ static int op_sce_em_set(scd_thread_t *t)
         fprintf(stderr, "[spawn-diag] Sce_em_set type=0x%02X behavior=0x%02X slot=%u pos=(%d,%d,%d) dir=%d\n",
                 type, behavior, slot, x, y, z, dir);
 
+    /* EM-STATUS SPAWN GATE (byte-true FUN_800420a0 @0x80042120-38): pc[7] is the kill-flag index; the
+     * spawn is SUPPRESSED when that flag is already set in the stage's em-status zone (a killed or
+     * story-cleared enemy stays dead across room re-entry). pc[7]==0xFF bypasses the gate (@0x80042128).
+     * The index is latched onto the actor (+0x1C6 @0x80042170) so its death-commit sets the same flag.
+     * The em-status banks 0x800b1038/0x800b1058 ARE re15_game_flag zones 7/8 (op_set table [7]/[8],
+     * 256-bit MSB-first — identical primitive), and g_game.flags persists across room loads. */
+    extern uint8_t re15_em_status_zone(void);
+    uint8_t  persist  = t->pc[7];
+    int      suppress = (persist != 0xFF) && re15_game_flag_get(re15_em_status_zone(), persist);
     int actor_slot = SCRIPT_SLOT_TO_ACTOR(slot);
-    if (actor_slot < RE15_ACTOR_MAX) {
+    if (!suppress && actor_slot < RE15_ACTOR_MAX) {
         re15_actor_t *a = &g_actors[actor_slot];
+        a->em_flag_id = persist;            /* +0x1C6 latch (0x80042170) — the death-commit's flag index */
         a->active = 1;
         a->type   = type;
         re15_enemy_apply_hitbox(a, type);   /* byte-true +0x78 hitbox dims (savestate-verified) */
