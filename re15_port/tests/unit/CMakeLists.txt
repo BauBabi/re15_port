@@ -272,6 +272,13 @@ target_include_directories(test_se_bank_routing PRIVATE ${CMAKE_SOURCE_DIR}/incl
 add_test(NAME unit_se_bank_routing COMMAND test_se_bank_routing)
 set_tests_properties(unit_se_bank_routing PROPERTIES TIMEOUT 30)
 
+# --- Byte-true SCD For2 (0x1B): For loop with a work-variable count (was unmapped -> op_unknown) ---
+add_executable(test_scd_for2 test_scd_for2.c)
+target_link_libraries(test_scd_for2 PRIVATE re15_engine re15_test_support)
+target_include_directories(test_scd_for2 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_scd_for2 COMMAND test_scd_for2)
+set_tests_properties(unit_scd_for2 PROPERTIES TIMEOUT 30)
+
 # --- Byte-true RE1.5 camera LookAt (audit #3 — integer SquareRoot0 + division, no float/rounding) ---
 add_executable(test_camera_view test_camera_view.c)
 target_link_libraries(test_camera_view PRIVATE re15_engine re15_test_support)

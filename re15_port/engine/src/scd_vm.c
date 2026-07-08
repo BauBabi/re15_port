@@ -52,6 +52,7 @@ static int op_sleeping (scd_thread_t *t);
 static int op_do       (scd_thread_t *t);   /* Phase 4.5.13-RE2 */
 static int op_edwhile  (scd_thread_t *t);   /* Phase 4.5.13-RE2 */
 static int op_for      (scd_thread_t *t);   /* AO4-round 2026-05-26 */
+static int op_for2     (scd_thread_t *t);   /* For2 = For, work-var count (LAB_8003f5d0) */
 static int op_next     (scd_thread_t *t);   /* AO4-round 2026-05-26 */
 static int op_while    (scd_thread_t *t);   /* [#8] 0x0F */
 static int op_ewhile   (scd_thread_t *t);   /* [#8] 0x10 */
@@ -201,6 +202,7 @@ static void register_opcodes(void)
     s_op_table[0x0F]              = op_while;   /* [#8] */
     s_op_table[0x10]              = op_ewhile;  /* [#8] */
     s_op_table[0x1A]              = op_break;   /* [#8] */
+    s_op_table[0x1B]              = op_for2;    /* For2 = For with a work-var count (LAB_8003f5d0) */
     s_op_table[SCD_OP_EVT_EXEC]   = op_evt_exec;   /* Phase 4.5.11 */
     s_op_table[SCD_OP_SLEEP]      = op_sleep;
     s_op_table[SCD_OP_SLEEPING]   = op_sleeping;
@@ -712,6 +714,35 @@ static int op_next(scd_thread_t *t)
         t->loop_count--;
     }
     t->pc += 2;
+    return SCD_R_CONTINUE;
+}
+
+/* 0x1B — For2 (LAB_8003f5d0): a For loop whose iteration COUNT comes from a script WORK VARIABLE
+ * instead of a literal — the dynamic-count sibling of op_for. 6-byte header:
+ *   [0x1B][_] [block_len LE s16 @+2] [_ @+4] [var_idx u8 @+5]
+ * block_len is read @+2 with `lh` exactly like For (@0x8003f5f4). The count is
+ * `work_vars[var_idx]` read UNSIGNED (`lhu a1, 0x800b0fd0 + var_idx*2` @0x8003f620 — DAT_800b0fd0
+ * = g_scd.work_vars, the same array op_cmp/op_ck read). Everything else (the loop-frame push, and
+ * the Next/Break that pop it) is identical to For, so op_next/op_break need no change.
+ * count==0 skips the block (same defensive port early-out as op_for; byte-true For2 would push a
+ * 0 count -> Next decrements-then-tests so it underflows to 0xFFFF = 65536 iterations, which no
+ * known RE1.5 script relies on and the dispatcher safety-cap bounds). */
+static int op_for2(scd_thread_t *t)
+{
+    int16_t  block_len = scd_read_le_s16(t->pc + 2);
+    uint16_t count     = (uint16_t)g_scd.work_vars[t->pc[5]];
+    const uint8_t *body = t->pc + 6;
+    if (count == 0) {
+        t->pc = body + block_len;
+        return SCD_R_CONTINUE;
+    }
+    if (t->loop_count < 4) {
+        int idx = t->loop_count++;
+        t->loop_back[idx]    = body;
+        t->loop_exit[idx]    = body + block_len;
+        t->loop_for_cnt[idx] = count;
+    }
+    t->pc += 6;
     return SCD_R_CONTINUE;
 }
 
