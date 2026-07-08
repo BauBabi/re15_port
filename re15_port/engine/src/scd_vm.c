@@ -2710,8 +2710,15 @@ static int op_item_aot_set(scd_thread_t *t)
      * silently vanished). Verified against the raw RDT: ROOM1050.RDT @0xb9a `...15 00 1e 00...` =
      * handgun ammo (0x15) x30 (0x1e); ROOM1070 @0x156e = 0x15 x15; ROOM1000 @0xc24 = 0x31 x1. The
      * original pickup handler reads lhu block+14 (type) / lbu block+16 (amount) (LAB_80043500). */
-    uint8_t  item_t = t->pc[14];      /* LE low byte = item type */
-    uint8_t  amount = t->pc[16];      /* LE low byte = amount */
+    /* The EXTENDED-AOT long form (pc[3]&0x80) inserts 8 extra bytes before the item fields, so
+     * type/amount shift +8: byte-true FUN @0x80040668 branches on (pc[3]&0x80) and reads type/amount
+     * at record+26/+28 (long, @0x80040670-74) vs record+18/+20 (short, @0x80040680-84) — a +8 delta.
+     * The short-form base (pc[14]/pc[16]) is RDT-verified; the long form is therefore pc[22]/pc[24].
+     * The port read pc[14]/pc[16] unconditionally while advancing +30 for the long form = garbage
+     * item/amount. This is the long-form sibling of the fixed short-form LE-byte bug. */
+    int      long_form = (t->pc[3] & 0x80) != 0;
+    uint8_t  item_t = long_form ? t->pc[22] : t->pc[14];   /* LE low byte = item type */
+    uint8_t  amount = long_form ? t->pc[24] : t->pc[16];   /* LE low byte = amount */
     int32_t cx = (int32_t)rect_x + (int32_t)rect_w / 2;
     int32_t cz = (int32_t)rect_z + (int32_t)rect_d / 2;
     int32_t hw = (int32_t)(rect_w < 0 ? -rect_w : rect_w) / 2;

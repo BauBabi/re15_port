@@ -125,7 +125,10 @@ static const re15_wpn_prop_t s_wpn_props[16] = {
     {15,0x15}, {15,0x15}, {15,0x15}, {15,0x15},/* 3-6 handgun class -> H.GUN BULLETS */
     {6,0x17},  {7,0x16},                       /* 7 REDHAWK -> MAGNUM; 8 M870 -> SHELLS */
     {250,0},   {250,0},  {250,0},              /* 9-11 grenades (no reload: gate <9) */
-    {100,0x15},{12,0x16},{100,0x18},{6,0x19},  /* 12 M10; 13 SPAS; 14 FLAME; 15 GL   */
+    {100,0x15},{12,0x16},{100,0x18},{6,0},     /* 12 M10; 13 SPAS; 14 FLAME; 15 GL (ammo_id 0: the
+                                                * grenade-launcher row's ammo ptr @0x80074E5C[1]=
+                                                * 0x80074C88 dereferences to byte 0, like the 9-11
+                                                * grenades; the port had 0x19 = FLAME ammo by mistake) */
 };
 
 /* FUN_8004eb70 @0x8004eb70 — reserve-ammo-present: property-table lookup of the equipped

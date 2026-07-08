@@ -272,6 +272,27 @@ static void test_item_aot_set(void)
     TEST_ASSERT_EQ("Item_aot_set: item_type=0x15 (LE low byte pc[14])", 0x15, g_aot.item_params[5].item_type);
     TEST_ASSERT_EQ("Item_aot_set: amount=30 (LE low byte pc[16])", 0x1e, g_aot.item_params[5].amount);
 
+    /* LONG form (pc[3]&0x80): the extended AOT inserts 8 bytes before the item fields, so type/amount
+     * shift +8 to pc[22]/pc[24] (byte-true FUN @0x80040670-84: long record+26/+28 vs short +18/+20).
+     * DECOY 0xAA/0xBB sit at the short offsets pc[14]/pc[16] — reading those (the bug) would grant
+     * garbage; the real 0x15 x30 are at pc[22]/pc[24]. pc += 30. */
+    uint8_t bc_long[31] = {
+        0x50, 0x06, 0x02, 0x80,             /* op, slot=6, sce, sat=0x80 (LONG form) */
+        0x00, 0x00, 0x00, 0x01,             /* floor, super, rect_x (LE @6) */
+        0x00, 0x02, 0x00, 0x03,             /* rect_z, rect_w */
+        0x00, 0x04, 0xAA, 0x00,             /* rect_d; DECOY @pc[14]=0xAA (must NOT be read) */
+        0xBB, 0x00, 0x00, 0x00,             /* DECOY @pc[16]=0xBB; extended-AOT extra bytes */
+        0x00, 0x00, 0x15, 0x00,             /* pc[20..21] extra; item_type (LE) = 0x15 @pc[22] */
+        0x1e, 0x00, 0x00, 0x00,             /* amount (LE) = 0x1e @pc[24]; trailing */
+        0x00, 0x00,                          /* pc[28..29] */
+        OP_EVT_NEXT                          /* @pc[30] sentinel */
+    };
+    setup_vm();
+    n = run_one_opcode(bc_long);
+    TEST_ASSERT_EQ("Item_aot_set LONG: Opcode-Größe = 30", 30, n);
+    TEST_ASSERT_EQ("Item_aot_set LONG: item_type=0x15 (pc[22], not decoy pc[14])", 0x15, g_aot.item_params[6].item_type);
+    TEST_ASSERT_EQ("Item_aot_set LONG: amount=30 (pc[24], not decoy pc[16])", 0x1e, g_aot.item_params[6].amount);
+
     TEST_OK("Item_aot_set (0x50)");
 }
 
