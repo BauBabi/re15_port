@@ -286,6 +286,20 @@ target_include_directories(test_stair_turn PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_stair_turn COMMAND test_stair_turn)
 set_tests_properties(unit_stair_turn PROPERTIES TIMEOUT 30)
 
+# --- Byte-true bleed/poison roll consumes TWO RNG draws (was short-circuited by C && -> shared RNG desync) ---
+add_executable(test_bleed_rng test_bleed_rng.c)
+target_link_libraries(test_bleed_rng PRIVATE re15_engine re15_test_support)
+target_include_directories(test_bleed_rng PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_bleed_rng COMMAND test_bleed_rng)
+set_tests_properties(unit_bleed_rng PROPERTIES TIMEOUT 30)
+
+# --- Zombie knockdown GET-UP clip must advance, not freeze (audit ANIM-1: dual-use clip 0x12 pin) ---
+add_executable(test_getup_advance test_getup_advance.c)
+target_link_libraries(test_getup_advance PRIVATE re15_engine re15_test_support)
+target_include_directories(test_getup_advance PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_getup_advance COMMAND test_getup_advance)
+set_tests_properties(unit_getup_advance PROPERTIES TIMEOUT 30)
+
 # --- Byte-true RE1.5 camera LookAt (audit #3 — integer SquareRoot0 + division, no float/rounding) ---
 add_executable(test_camera_view test_camera_view.c)
 target_link_libraries(test_camera_view PRIVATE re15_engine re15_test_support)

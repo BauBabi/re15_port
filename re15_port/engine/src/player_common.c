@@ -650,7 +650,16 @@ void re15_actors_anim_advance(void)
         if (a->state == RE15_AI_STATE_CORPSE) continue;   /* +0x4==7: corpse holds its fallen pose */
         if (re15_type_self_advances_anim(a->type)) continue;  /* self-advancing tick owns +0x95 (dog/maggot/crow/…) */
         uint16_t mo = a->motion;
-        if (mo == 0x0C || mo == 0x0E || mo == 0x12 || mo == 0x13) { a->anim_frame = 0; continue; }
+        /* These clips hold frame 0 for the SPAWN lie-down (a downed zombie stays flat). But clips
+         * 0x12/0x13 are DUAL-USE: the KNOCKDOWN GET-UP (re15_enemy_ai_live_knockdown case 4 sets
+         * motion 0x12) MUST advance — its case-5 step waits on re15_enemy_clip_done to reach case 6
+         * (re-engage). The PSX distinguishes by STATE, not clip: the get-up state calls FUN_8001f314
+         * each frame (advance); the lie/downed states don't (hold). Release the pin only for the
+         * get-up (sub_state_1==0x11, sub_state_2>=4 = case 4 onward), so a poise-broken zombie stands
+         * back up instead of freezing forever in the get-up start pose. Strictly additive: every other
+         * lie-down (incl. the spawn one, sub_state_2<4) still holds exactly as before. */
+        int getup = (a->sub_state_1 == 0x11 && a->sub_state_2 >= 4);
+        if ((mo == 0x0C || mo == 0x0E || mo == 0x12 || mo == 0x13) && !getup) { a->anim_frame = 0; continue; }
         if (a->motion_init_delay > 0) {
             a->motion_init_delay--;
         } else {
