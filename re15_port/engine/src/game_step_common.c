@@ -125,7 +125,6 @@ static void re15_gameover_fsm_tick(void)
 }
 
 static int s_bang_delay = 0;   /* gunshot-bang scheduler (the muzzle fx row-1 SE, 2nd tick) */
-static int s_shell_pending = 0; /* shell-eject scheduler (discharge frame 0x16/0x18) */
 
 void re15_game_step(const re15_game_ctx_t *c)
 {
@@ -345,10 +344,15 @@ void re15_game_step(const re15_game_ctx_t *c)
                     re15_esp_fx_spawn_ex(re15_esp_global_bank(), 3, 0, 0x0c00,  /* SMOKE 0x03000c00 {0x91,0x1f4,-25} */
                         pl->x + ( fcos * 0x1f4 >> 12), gy - 25,
                         pl->z + (-fsin * 0x1f4 >> 12), (int16_t)pl->rot_y);
-                    /* the SHELL EJECT is NOT part of the one-shot: the DISCHARGE handler itself
-                     * spawns 0x040d1000 (id 4 sub 0xd) at recoil frames 0x16/0x18 (elevation-
-                     * gated, @0x800336b0-b8) — scheduled below via the recoil-frame watcher. */
-                    s_shell_pending = 1;
+                    /* SHELL EJECT (byte-true @0x8003383c-64 of the handgun one-shot @0x800337bc =
+                     * item-dispatch [6]/[7]): id 4 sub 0 scale 0x800 = 0x04000800, spawned INLINE at
+                     * discharge alongside muzzle+smoke (offset {0x91,0x109,-50}) — the SAME handler the
+                     * muzzle 0x02000800 + smoke 0x03000c00 above come from. The old code deferred a
+                     * 0x040d1000 (id 4 sub 0xd) to a recoil-frame watcher, but that 0x040d1000-at-recoil
+                     * is a DIFFERENT weapon handler (@0x80033680), never the handgun's — a mis-port. */
+                    re15_esp_fx_spawn_ex(re15_esp_global_bank(), 4, 0, 0x0800,  /* SHELL 0x04000800 {0x91,0x109,-50} */
+                        pl->x + ( fcos * 0x109 >> 12), gy - 50,
+                        pl->z + (-fsin * 0x109 >> 12), (int16_t)pl->rot_y);
                 }
             }
             g_aot_action_pressed = 0;         /* aiming blocks the door/stair action (no doors while aiming) */
@@ -370,30 +374,9 @@ void re15_game_step(const re15_game_ctx_t *c)
                 pl->x + ( fcos2 * 0x25d >> 12), pl->y - 2083,
                 pl->z + (-fsin2 * 0x25d >> 12), (int16_t)pl->rot_y);
         }
-        /* SHELL EJECT watcher (byte-true @0x800336b0-b8): the DISCHARGE handler spawns
-         * 0x040d1000 (id 4 sub 0xd) when the recoil clip reaches frame 0x16 (LEVEL, 23f clip)
-         * or 0x18 (UP/DOWN, clamped to the 24f clips' last frame) — the casing ejects at the
-         * END of the recoil, not at the shot. */
-        {
-            extern int re15_player_aim_clip(void);
-            extern int re15_player_aim_elevation(void);
-            int ac = re15_player_aim_clip();
-            if (s_shell_pending && (ac == 7 || ac == 9 || ac == 11)) {
-                int thr = (re15_player_aim_elevation() == 0) ? 0x16 : 0x17;
-                if ((int)pl->anim_frame >= thr) {
-                    s_shell_pending = 0;
-                    int32_t fcos2 = re15_cos_q12((int)pl->rot_y);
-                    int32_t fsin2 = re15_sin_q12((int)pl->rot_y);
-                    re15_esp_fx_spawn_ex(re15_esp_global_bank(), 4, 0x0d, 0x1000,   /* 0x040d1000 */
-                        pl->x + ( fcos2 * 0x109 >> 12), pl->y - 2083 - 50,
-                        pl->z + (-fsin2 * 0x109 >> 12), (int16_t)pl->rot_y);
-                }
-            } else if (s_shell_pending && ac != 7 && ac != 9 && ac != 11) {
-                extern int re15_player_aim_active(void);
-                /* recoil aborted (grab/lower/exit) -> drop the pending shell */
-                if (!re15_player_aim_active()) s_shell_pending = 0;
-            }
-        }
+        /* (The shell casing is now ejected INLINE at discharge — see the one-shot above — matching
+         * the handgun handler @0x800337bc; the old 0x040d1000-at-recoil watcher was a mis-ported
+         * different-weapon effect and has been removed.) */
         /* MELEE SLASH DAMAGE WINDOW (byte-true @0x80035388-cc): while the slash clip's anim frame
          * is in [6..11], the resolver runs EVERY tick — the once-per-target latch + recursion
          * inside re15_player_weapon_fire keep it one-damage-per-target (and allow a second victim).
