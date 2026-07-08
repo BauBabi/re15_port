@@ -53,4 +53,10 @@ int  re15_stair_try_start(const re15_rdt_t *rdt, int action_pressed);
 /* Clear any in-progress traversal (call on room change). */
 void re15_stair_reset(void);
 
+/* One frame of the byte-true stair TURN-to-face heading settle (LAB_80037fd8 @0x800380b0-f4):
+ * geometrically decay the heading residual `res` (u16, 0x1000=360deg) toward the nearest 0x400
+ * cardinal — step=(res>>2)&0xff, +step if bit 0x200 set else -step — and set *aligned when the
+ * exit gate (res & 0x3e0)==0 passes. Exposed for the regression test. */
+uint16_t re15_stair_turn_settle(uint16_t res, int *aligned);
+
 #endif /* RE15_STAIR_H */
