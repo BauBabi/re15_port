@@ -1942,8 +1942,13 @@ static int32_t re15_body_isqrt(int64_t v)
 int re15_body_push(const re15_actor_t *pusher, int32_t r_pusher,
                    re15_actor_t *pushee, int32_t r_pushee)
 {
-    int32_t dx = (int32_t)(int16_t)(pushee->x - pusher->x);   /* s16-truncated like the original */
-    int32_t dz = (int32_t)(int16_t)(pushee->z - pusher->z);
+    /* Full 32-bit delta (byte-true FUN_8002aec4 @0x8002af8c): the original reads the two positions
+     * with `lh` (s16) and takes their `subu` difference — it does NOT truncate the DIFFERENCE to s16.
+     * Room coords are s16-range so the delta fits, and the fast-reject + isqrt handle the full width;
+     * the old `(int16_t)` cast wrapped a delta > 32768 into a spurious close push (the "s16-truncated
+     * like the original" comment mis-read the position `lh` as a delta truncation). */
+    int32_t dx = pushee->x - pusher->x;
+    int32_t dz = pushee->z - pusher->z;
     int32_t R  = r_pusher + r_pushee;
     if (dx > R || dx < -R || dz > R || dz < -R) return 0;     /* fast reject (aec4 pre-tests) */
     int32_t dist = re15_body_isqrt((int64_t)dx * dx + (int64_t)dz * dz);
@@ -4929,7 +4934,7 @@ void re15_enemy_ai_run_all(int combat_active)
              * unconditionally): pushes can no longer leave a zombie inside a wall. */
             if (g_room_rdt_ok && (e->x != sweep_ox || e->z != sweep_oz)) {
                 int32_t nx = e->x, nz = e->z;
-                re15_collision_constrain(&g_room_rdt, sweep_ox, sweep_oz, &nx, &nz);
+                re15_collision_constrain_enemy(&g_room_rdt, sweep_ox, sweep_oz, &nx, &nz, e->hit_radius_min, e->y);
                 e->x = nx; e->z = nz;
             }
         }
@@ -4946,7 +4951,7 @@ void re15_enemy_ai_run_all(int combat_active)
             if (g_room_rdt_ok && (e->x != dog_ox || e->z != dog_oz)) {
                 int32_t ix = e->x, iz = e->z;                 /* the AI's INTENDED position this frame */
                 int32_t nx = ix, nz = iz;
-                re15_collision_constrain(&g_room_rdt, dog_ox, dog_oz, &nx, &nz);
+                re15_collision_constrain_enemy(&g_room_rdt, dog_ox, dog_oz, &nx, &nz, e->hit_radius_min, e->y);
                 e->x = nx; e->z = nz;
                 if (nx != ix || nz != iz) {                   /* the clamp moved it = WALL CONTACT (the SCA resolver's +0x90) */
                     int push = ((int)re15_atan2_q12(nz - iz, nx - ix) - 0x400) & 0xfff;  /* wall-normal / escape heading */
@@ -4965,7 +4970,7 @@ void re15_enemy_ai_run_all(int combat_active)
             re15_enemy_body_push_tail(s, e);
             if (g_room_rdt_ok && (e->x != asp_ox || e->z != asp_oz)) {
                 int32_t nx = e->x, nz = e->z;
-                re15_collision_constrain(&g_room_rdt, asp_ox, asp_oz, &nx, &nz);
+                re15_collision_constrain_enemy(&g_room_rdt, asp_ox, asp_oz, &nx, &nz, e->hit_radius_min, e->y);
                 e->x = nx; e->z = nz;
             }
         }
@@ -4976,7 +4981,7 @@ void re15_enemy_ai_run_all(int combat_active)
             re15_enemy_body_push_tail(s, e);
             if (g_room_rdt_ok && (e->x != rc_ox || e->z != rc_oz)) {
                 int32_t nx = e->x, nz = e->z;
-                re15_collision_constrain(&g_room_rdt, rc_ox, rc_oz, &nx, &nz);
+                re15_collision_constrain_enemy(&g_room_rdt, rc_ox, rc_oz, &nx, &nz, e->hit_radius_min, e->y);
                 e->x = nx; e->z = nz;
             }
         }
@@ -4990,7 +4995,7 @@ void re15_enemy_ai_run_all(int combat_active)
             re15_enemy_body_push_tail(s, e);
             if (g_room_rdt_ok && (e->x != bk_ox || e->z != bk_oz)) {
                 int32_t nx = e->x, nz = e->z;
-                re15_collision_constrain(&g_room_rdt, bk_ox, bk_oz, &nx, &nz);
+                re15_collision_constrain_enemy(&g_room_rdt, bk_ox, bk_oz, &nx, &nz, e->hit_radius_min, e->y);
                 e->x = nx; e->z = nz;
             }
         }
@@ -5001,7 +5006,7 @@ void re15_enemy_ai_run_all(int combat_active)
             re15_enemy_body_push_tail(s, e);
             if (g_room_rdt_ok && (e->x != mag_ox || e->z != mag_oz)) {
                 int32_t nx = e->x, nz = e->z;
-                re15_collision_constrain(&g_room_rdt, mag_ox, mag_oz, &nx, &nz);
+                re15_collision_constrain_enemy(&g_room_rdt, mag_ox, mag_oz, &nx, &nz, e->hit_radius_min, e->y);
                 e->x = nx; e->z = nz;
             }
         }
@@ -5016,7 +5021,7 @@ void re15_enemy_ai_run_all(int combat_active)
             re15_enemy_body_push_tail(s, e);
             if (g_room_rdt_ok && (e->x != zg_ox || e->z != zg_oz)) {
                 int32_t nx = e->x, nz = e->z;
-                re15_collision_constrain(&g_room_rdt, zg_ox, zg_oz, &nx, &nz);
+                re15_collision_constrain_enemy(&g_room_rdt, zg_ox, zg_oz, &nx, &nz, e->hit_radius_min, e->y);
                 e->x = nx; e->z = nz;
             }
         }
@@ -5032,7 +5037,7 @@ void re15_enemy_ai_run_all(int combat_active)
             re15_enemy_body_push_tail(s, e);
             if (g_room_rdt_ok && (e->x != al_ox || e->z != al_oz)) {
                 int32_t nx = e->x, nz = e->z;
-                re15_collision_constrain(&g_room_rdt, al_ox, al_oz, &nx, &nz);
+                re15_collision_constrain_enemy(&g_room_rdt, al_ox, al_oz, &nx, &nz, e->hit_radius_min, e->y);
                 e->x = nx; e->z = nz;
             }
         }
@@ -5048,7 +5053,7 @@ void re15_enemy_ai_run_all(int combat_active)
             re15_enemy_body_push_tail(s, e);
             if (g_room_rdt_ok && (e->x != ty_ox || e->z != ty_oz)) {
                 int32_t nx = e->x, nz = e->z;
-                re15_collision_constrain(&g_room_rdt, ty_ox, ty_oz, &nx, &nz);
+                re15_collision_constrain_enemy(&g_room_rdt, ty_ox, ty_oz, &nx, &nz, e->hit_radius_min, e->y);
                 e->x = nx; e->z = nz;
             }
         }
@@ -5059,7 +5064,7 @@ void re15_enemy_ai_run_all(int combat_active)
             re15_enemy_body_push_tail(s, e);
             if (g_room_rdt_ok && (e->x != iv_ox || e->z != iv_oz)) {
                 int32_t nx = e->x, nz = e->z;
-                re15_collision_constrain(&g_room_rdt, iv_ox, iv_oz, &nx, &nz);
+                re15_collision_constrain_enemy(&g_room_rdt, iv_ox, iv_oz, &nx, &nz, e->hit_radius_min, e->y);
                 e->x = nx; e->z = nz;
             }
         }

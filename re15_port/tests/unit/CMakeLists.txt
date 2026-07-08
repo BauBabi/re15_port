@@ -321,6 +321,13 @@ target_include_directories(test_em_status_persist PRIVATE ${CMAKE_SOURCE_DIR}/in
 add_test(NAME unit_em_status_persist COMMAND test_em_status_persist)
 set_tests_properties(unit_em_status_persist PROPERTIES TIMEOUT 30)
 
+# --- Byte-true per-actor SCA wall clamp: enemy solid-mask 4 + own radius (was player 1/450 for all) ---
+add_executable(test_collision_layers test_collision_layers.c)
+target_link_libraries(test_collision_layers PRIVATE re15_engine re15_test_support)
+target_include_directories(test_collision_layers PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_collision_layers COMMAND test_collision_layers)
+set_tests_properties(unit_collision_layers PROPERTIES TIMEOUT 30)
+
 # --- Byte-true RE1.5 camera LookAt (audit #3 — integer SquareRoot0 + division, no float/rounding) ---
 add_executable(test_camera_view test_camera_view.c)
 target_link_libraries(test_camera_view PRIVATE re15_engine re15_test_support)

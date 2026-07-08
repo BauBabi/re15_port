@@ -546,13 +546,20 @@ static int push_diag7(const re15_sca_entry_t *e, int32_t *lx, int32_t *lz,
     return 1;
 }
 
-/* FUN_8003b0a4 — main resolver (PUSH-OUT of band-matching solid cells). */
-void re15_collision_constrain(const re15_rdt_t *rdt,
-                              int32_t old_x, int32_t old_z,
-                              int32_t *x, int32_t *z)
+/* FUN_8003b0a4 — main resolver (PUSH-OUT of band-matching solid cells). Byte-true it is fully
+ * parameterized on (a1=radius, a2=solid-mask, a3=entity): the CELL is kept solid iff (mask & u0),
+ * the cell's band must equal the ENTITY's +0x82 band, and the broad-phase/push are inflated by the
+ * ENTITY's own radius box[+0x78][6]. The PLAYER caller passes (450, mask 1, its band); every enemy
+ * caller passes (box[6]=hit_radius_min, mask 4 @entity+0x1d7, its own band @+0x82 = band_from_y). The
+ * port had baked in the player values (r=450, mask=1, band=s_coll_band) for ALL actors, so enemies
+ * were clamped against the wrong cells (ROOM11C0 maggot walked through its enemy-solid u0=0x04 wall)
+ * and with the wrong radius (a 1600-radius maggot under-clamped at 450 sank into thin walls). */
+static void collision_constrain_impl(const re15_rdt_t *rdt,
+                                     int32_t old_x, int32_t old_z,
+                                     int32_t *x, int32_t *z,
+                                     int band, int32_t r, unsigned mask)
 {
     if (!rdt || !rdt->sca || rdt->sca_count <= 0) return;
-    int band = s_coll_band;
     if (band < 0) return;
 
     int q = quadrant_of(*x, *z, (int16_t)rdt->ceiling_x, (int16_t)rdt->ceiling_z);
@@ -561,12 +568,11 @@ void re15_collision_constrain(const re15_rdt_t *rdt,
     if (end > rdt->sca_count) end = rdt->sca_count;
     if (start < 0) start = 0;
 
-    int32_t r = PR;
     for (int i = start; i < end; i++) {
         const re15_sca_entry_t *e = &rdt->sca[i];
         if (band != (e->floor >> 4)) continue;             /* strict band == (line 19473) */
-        if (((unsigned)1 & e->u0) == 0) continue;          /* mask gate: 0 = status-only */
-        /* broad-phase: player (radius-inflated) overlaps the cell? */
+        if ((mask & e->u0) == 0) continue;                 /* (a2 & u0): 0 = not solid to this actor */
+        /* broad-phase: the actor (radius-inflated) overlaps the cell? */
         if ((unsigned)(*x - ((int32_t)e->x - r)) < (unsigned)((int32_t)e->width   + r * 2) &&
             (unsigned)(*z - ((int32_t)e->z - r)) < (unsigned)((int32_t)e->density + r * 2)) {
             if      (e->type == 1) push_rect(e, x, z, old_x, old_z, r);
@@ -582,6 +588,27 @@ void re15_collision_constrain(const re15_rdt_t *rdt,
             else if (e->type == 7) push_diag7(e, x, z, old_x, old_z, r);
         }
     }
+}
+
+/* PLAYER wall clamp — byte-true args (radius 450, solid-mask 1, the player's current band). */
+void re15_collision_constrain(const re15_rdt_t *rdt,
+                              int32_t old_x, int32_t old_z,
+                              int32_t *x, int32_t *z)
+{
+    collision_constrain_impl(rdt, old_x, old_z, x, z, s_coll_band, PR, 1u);
+}
+
+/* ENEMY wall clamp — byte-true args: the enemy's OWN radius (box[+0x78][6] = hit_radius_min), the
+ * enemy solid-mask 4 (entity+0x1d7, @0x80100624), and the enemy's own band from its Y (+0x82, which
+ * the port does not maintain for enemies, so derive it like the player does). Every ground-enemy
+ * wall-clamp caller in enemy_ai_common.c must route through this instead of the player clamp. */
+void re15_collision_constrain_enemy(const re15_rdt_t *rdt,
+                                    int32_t old_x, int32_t old_z,
+                                    int32_t *x, int32_t *z,
+                                    int32_t radius, int32_t enemy_y)
+{
+    collision_constrain_impl(rdt, old_x, old_z, x, z,
+                             re15_collision_band_from_y(enemy_y), radius, 4u);
 }
 
 /* FUN_8002cabc / FUN_8002bd44 — OBJECT (Obj_model_set prop) push-out.
