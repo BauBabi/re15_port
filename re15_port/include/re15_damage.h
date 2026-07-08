@@ -235,6 +235,12 @@ int     re15_ai_arc_test(const re15_actor_t *e, int32_t px, int32_t pz, int cone
  * chain + the arc convention are still open (see re15_damage.c). */
 int     re15_enemy_should_attack(const re15_actor_t *e, const re15_actor_t *player);
 
+/* Hit-reaction helpers (game-step hit-flinch): the byte-true front/back test (FUN_8001a7a8) and the
+ * attacker-identity lookup for a contact hit. See re15_damage.c. */
+int                 re15_player_hit_from_front(const re15_actor_t *p, int32_t sx, int32_t sz);
+const re15_actor_t *re15_nearest_hostile(const re15_actor_t *pl);
+void                re15_player_knockback_delta(int16_t rot_y, int32_t mag, int32_t *dx, int32_t *dz);
+
 /* Seed the bleed/poison RNG (deterministic tests + reproducible future runs). The PSX
  * source (FUN_8001af20 over a leftover register) is non-reproducible by construction;
  * see re15_damage.c for how the EXACT hash + EXACT 1/4 probability are preserved. */

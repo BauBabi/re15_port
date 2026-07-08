@@ -259,6 +259,13 @@ target_include_directories(test_aim_all_around PRIVATE ${CMAKE_SOURCE_DIR}/inclu
 add_test(NAME unit_aim_all_around COMMAND test_aim_all_around)
 set_tests_properties(unit_aim_all_around PROPERTIES TIMEOUT 30)
 
+# --- Byte-true player HURT reaction: directional clip 0x8/0x9 + backward knockback (FUN_80035af0) ---
+add_executable(test_hit_reaction test_hit_reaction.c)
+target_link_libraries(test_hit_reaction PRIVATE re15_engine re15_test_support)
+target_include_directories(test_hit_reaction PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_hit_reaction COMMAND test_hit_reaction)
+set_tests_properties(unit_hit_reaction PROPERTIES TIMEOUT 30)
+
 # --- Byte-true RE1.5 camera LookAt (audit #3 — integer SquareRoot0 + division, no float/rounding) ---
 add_executable(test_camera_view test_camera_view.c)
 target_link_libraries(test_camera_view PRIVATE re15_engine re15_test_support)

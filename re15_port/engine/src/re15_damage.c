@@ -78,9 +78,10 @@ static uint32_t dmg_rng(void) { return re15_engine_rand8(); }
  * re15_atan2_q12 IS the port of FUN_8001a6d4 (actor_locomotion.c). The player's raw
  * heading = rot_y(mesh) + 1024 (the port's standing -1024 mesh offset, used the same
  * way in stair_common.c / skeleton_common.c). The +0x34/+0x3c collision centre and
- * +0x6a heading map to the port's x/z/rot_y — a faithful mapping that is currently
- * UNOBSERVABLE (the port has no distinct front/back hurt clips), so this is the one
- * detail not yet runtime-pinned; it is derived from the disasm, not guessed. */
+ * +0x6a heading map to the port's x/z/rot_y. NOW OBSERVABLE: the game-step hit-flinch
+ * uses this to pick the directional hurt clip (front aca59=3 -> 0x9, back aca59=2 ->
+ * 0x8, @0x80035de0/f64), reproducing the exact FUN_8001a7a8 formula (bearing minus
+ * heading, +0x400-centred, split at 0x800) — derived from the disasm, not guessed. */
 static int hit_from_front(const re15_actor_t *p, int32_t src_x, int32_t src_z)
 {
     int32_t ang = re15_atan2_q12(p->z - src_z, p->x - src_x);
@@ -332,6 +333,46 @@ int re15_player_aim_target(int32_t radius, int32_t *tx, int32_t *tz)
     if (best < 0) return 0;
     *tx = g_actors[best].x; *tz = g_actors[best].z;
     return 1;
+}
+
+/* Public wrapper for the byte-true front/back hit test (FUN_8001a7a8): 1 if the source hit the
+ * player's FRONT hemisphere, else 0. Used by the game-step hit-flinch to pick the directional hurt
+ * clip (0x9 front / 0x8 back) when the live melee attacks apply hp directly (they don't route
+ * through re15_player_take_damage, which would have set +0x5 = this+2 itself). */
+int re15_player_hit_from_front(const re15_actor_t *p, int32_t sx, int32_t sz)
+{
+    return hit_from_front(p, sx, sz);
+}
+
+/* Nearest LIVE hostile actor to the player (or NULL) — the attacker identity for a contact hit.
+ * The live melee attacks (grab/bite/leap/dive) all apply damage on adjacency, so when the player
+ * takes a non-lethal hit the nearest alive, non-corpse enemy IS the one that struck (faithful-line
+ * attacker-ID; the front/back formula + clip + knockback it feeds are byte-true). Skips the player,
+ * dead bodies (state 7 corpse) and invulnerable NPCs (hp = -1). */
+const re15_actor_t *re15_nearest_hostile(const re15_actor_t *pl)
+{
+    int best = -1; uint32_t bd = 0x7fffffffu;
+    for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) {
+        const re15_actor_t *e = &g_actors[s];
+        if (!e->active) continue;
+        if (e->hp < 0) continue;            /* dead this frame / invulnerable NPC */
+        if (e->state == 7) continue;        /* corpse */
+        uint32_t d = (uint32_t)re15_enemy_player_dist(e, pl);
+        if (d < bd) { bd = d; best = s; }
+    }
+    return (best < 0) ? NULL : &g_actors[best];
+}
+
+/* Backward hit-knockback push delta (byte-true FUN_800245d8(0x800) @0x80035f18): the hurt handler
+ * shoves the player by rotating the step vector (mag,0,0) by Ry(facing + 0x800) — i.e. 180 deg
+ * BEHIND the facing — using the same RotMatrixY step the walker uses (actor_locomotion.c). The
+ * caller adds (*dx,*dz) to the player XZ (then clamps to the room walls) and decays mag by
+ * DAT_800acaf2 = 50 each frame (0xc8 -> 0x96 -> 0x64 -> 0x32 -> 0 over 4 frames). */
+void re15_player_knockback_delta(int16_t rot_y, int32_t mag, int32_t *dx, int32_t *dz)
+{
+    int32_t ang = ((int32_t)rot_y + 0x800) & 0xfff;
+    if (dx) *dx =  (int32_t)((re15_cos_q12(ang) * mag) >> 12);
+    if (dz) *dz = -(int32_t)((re15_sin_q12(ang) * mag) >> 12);
 }
 
 /* BLADE/HAND world point (byte-true: the melee slash passes *(0x800acbdc)+0x7b8 = the player's

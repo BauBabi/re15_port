@@ -165,22 +165,33 @@ void re15_game_step(const re15_game_ctx_t *c)
                                   * the victim placement at the end of the step; the normal branch
                                   * already pushed inline — never both, no same-tick double push) */
 
-    /* PLAYER HIT-FLINCH (#22, byte-true FUN_80031c44 -> state 2 -> FUN_80035af0 -> hurt clip 0xa
-     * @0x80035bd8): a non-lethal enemy hit routes the player command FSM to state 2 (HIT), which plays
-     * the flinch clip 0xa and returns to idle. UNBLOCKED THIS SESSION — the ported enemy AI now applies
-     * the damage (player.hp drops on a hit), which the audit (#22) cited as the missing trigger. Detect
-     * the drop here (before re15_enemy_ai_run_all re-damages at the end of the step; s_prev_hp updated
-     * pre-damage so the next tick sees the drop) and root the player in the flinch. Gated to plain
-     * gameplay — grabbed/dead/stair/aim take precedence (the exact 4-direction hit sub-FSM on
-     * DAT_800aca59 + the aim-interrupt are faithful-line). */
+    /* PLAYER HIT-FLINCH (#22, byte-true FUN_80031c44 -> state 2 -> FUN_80035af0 -> hurt sub-FSM): a
+     * non-lethal enemy hit routes the player command FSM to state 2 (HIT). FUN_80035af0 dispatches on
+     * the direction sub-state DAT_800aca59 via the jump table @0x800741a8: entry [2] (@0x80035de0)
+     * plays clip 0x8, entry [3] (@0x80035f64) plays clip 0x9 — the FRONT/BACK hurt anim, NOT the fixed
+     * clip 0xa the port used to force. Both entries also arm a BACKWARD KNOCKBACK: DAT_800acae0 = 0xc8
+     * (200, the step magnitude @0x80035e44/@0x80035fc8) decaying by DAT_800acaf2 = 0x32 (50) per frame
+     * (@0x80035f20), pushed via FUN_800245d8(0x800) = rotate (mag,0,0) by Ry(facing + 0x800). UNBLOCKED
+     * this session — the ported enemy AI now applies the damage. The live melee attacks write hp
+     * DIRECTLY (they don't route through re15_player_take_damage), so the direction is derived here from
+     * the attacker's position (re15_nearest_hostile -> re15_player_hit_from_front): front (aca59=3) ->
+     * clip 0x9, back (aca59=2) -> clip 0x8, no attacker (poison/environment) -> clip 0xa. Detect the
+     * drop here (before re15_enemy_ai_run_all re-damages at the end of the step; s_prev_hp updated
+     * pre-damage so the next tick sees the drop). Grabbed/dead/stair/aim take precedence. The exact
+     * clip 0x8/0x9/0xa frame length (flinch duration) is faithful-line (15). */
     static int     s_hit_flinch = 0;
+    static int32_t s_hit_kb     = 0;             /* DAT_800acae0 knockback budget (decays 50/frame) */
     static int16_t s_prev_hp    = 100;
     extern int re15_player_aim_active(void);     /* player_common.c — don't flinch mid-aim */
     if (c->rdt_ok && pl->hp < s_prev_hp && pl->hp >= 0 && s_hit_flinch == 0 &&
         !re15_player_is_dead() && !re15_player_is_grabbed() && !re15_stair_active() &&
         !re15_player_aim_active()) {
-        s_hit_flinch = 15;                       /* flinch duration (faithful-line; PL00 clip-0xa length) */
-        pl->motion = 0x0a; pl->anim_frame = 0; pl->anim_frac = 7;
+        const re15_actor_t *atk = re15_nearest_hostile(pl);      /* the enemy that struck (adjacent) */
+        uint8_t clip = 0x0a;                                     /* [0]/[1] fallback (@0x80035bd0) */
+        if (atk) clip = re15_player_hit_from_front(pl, atk->x, atk->z) ? 0x09 : 0x08;
+        s_hit_flinch = 15;                       /* flinch duration (faithful-line; clip 0x8/0x9/0xa length) */
+        s_hit_kb     = 0xc8;                      /* DAT_800acae0 = 200 (@0x80035e44) */
+        pl->motion = clip; pl->anim_frame = 0; pl->anim_frac = 7;
     }
     s_prev_hp = pl->hp;                           /* pre-damage baseline for the NEXT tick's drop check */
 
@@ -234,11 +245,27 @@ void re15_game_step(const re15_game_ctx_t *c)
          * room with no live zombie (ROOM1170/1240 boot) never enters it = no 1170 regression. */
         re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
     } else if (c->rdt_ok && s_hit_flinch > 0) {
-        /* HIT-FLINCH branch: root the player + play the flinch clip 0xa (same engine-driven skip as the
-         * stair/grab branches — no pad, no steer), keep the RVD cam scan running. When the clip plays
-         * out (timer -> 0) motion returns to idle so the normal tick resumes next frame. Unreachable
-         * unless a non-lethal hit landed, so a room with no combat never enters it = no 1170 regression. */
+        /* HIT-FLINCH branch: root the player + play the directional flinch clip (0x8/0x9/0xa, set at
+         * trigger; same engine-driven skip as the stair/grab branches — no pad, no steer), keep the RVD
+         * cam scan running. Each frame apply the BACKWARD KNOCKBACK (byte-true FUN_800245d8(0x800)
+         * @0x80035f18): shove the player along facing + 0x800 (= 180 deg, away from the front) by the
+         * current DAT_800acae0 magnitude — rotate (mag,0,0) by Ry(angle) exactly like the walker step
+         * (actor_locomotion.c) — then clamp to the room walls/objects so a shove into a wall stops. Then
+         * DAT_800acae0 -= DAT_800acaf2 (50), clamp at 0 (@0x80035f20) -> 200,150,100,50 over 4 frames.
+         * When the clip plays out (timer -> 0) motion returns to idle. Unreachable unless a non-lethal
+         * hit landed, so a room with no combat never enters it = no 1170 regression. */
         pl->anim_frame++;
+        if (s_hit_kb > 0) {
+            int32_t ox = pl->x, oz = pl->z, dx, dz;
+            re15_player_knockback_delta(pl->rot_y, s_hit_kb, &dx, &dz);    /* backward push @ facing+0x800 */
+            int32_t nx = pl->x + dx, nz = pl->z + dz;
+            re15_collision_ensure_band(pl->y);
+            re15_collision_constrain(c->rdt, ox, oz, &nx, &nz);
+            re15_collision_objects(&nx, &nz);
+            pl->x = nx; pl->z = nz;
+            s_hit_kb -= 0x32;                                              /* DAT_800acaf2 = 50 */
+            if (s_hit_kb < 0) s_hit_kb = 0;
+        }
         if (--s_hit_flinch == 0) pl->motion = 0;
         re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
     } else {
