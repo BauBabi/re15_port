@@ -266,6 +266,12 @@ target_include_directories(test_hit_reaction PRIVATE ${CMAKE_SOURCE_DIR}/include
 add_test(NAME unit_hit_reaction COMMAND test_hit_reaction)
 set_tests_properties(unit_hit_reaction PROPERTIES TIMEOUT 30)
 
+# --- Byte-true SCD Se_on VAB-bank selector (FUN_80045024: arg>>24 picks the bank; was ignored) ---
+add_executable(test_se_bank_routing test_se_bank_routing.c)
+target_include_directories(test_se_bank_routing PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_se_bank_routing COMMAND test_se_bank_routing)
+set_tests_properties(unit_se_bank_routing PROPERTIES TIMEOUT 30)
+
 # --- Byte-true RE1.5 camera LookAt (audit #3 — integer SquareRoot0 + division, no float/rounding) ---
 add_executable(test_camera_view test_camera_view.c)
 target_link_libraries(test_camera_view PRIVATE re15_engine re15_test_support)

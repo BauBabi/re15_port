@@ -478,6 +478,29 @@ void re15_audio_room_se(int se_id)
     SDL_UnlockAudioDevice(s_audio_dev);
 }
 
+/* Play a room SE from the snd0 bank (byte-true FUN_80045024 bank 2). Same EDT->prog/tone->VAG
+ * lookup as room_se (snd1), on the resident snd0 bank the footsteps also use. */
+void re15_audio_room_se_snd0(int se_id)
+{
+    if (!g_audio.initialized || !s_foot_loaded || se_id < 0) return;
+    int vag = re15_footstep_vag(s_foot_edt, &s_foot_vab, se_id);   /* EDT record -> program/tone -> VAG */
+    if (vag < 0 || vag >= RE15_VAB_MAX_SAMPLES || !s_foot_decoded[vag]) return;
+
+    int vol = (100 * 0x4000 / 127) >> 1;
+    SDL_LockAudioDevice(s_audio_dev);
+    int slot = -1;
+    for (int i = 0; i < MIXER_MAX_ACTIVE_SAMPLES; i++)
+        if (!s_active[i].active) { slot = i; break; }
+    if (slot < 0) { slot = s_next_slot; s_next_slot = (s_next_slot + 1) % MIXER_MAX_ACTIVE_SAMPLES; }
+    s_active[slot].pcm        = s_foot_decoded[vag];
+    s_active[slot].pcm_len    = s_foot_decoded_len[vag];
+    s_active[slot].pos        = 0;
+    s_active[slot].subpos     = 0;
+    s_active[slot].volume_q15 = vol;
+    s_active[slot].active     = 1;
+    SDL_UnlockAudioDevice(s_audio_dev);
+}
+
 /* Load + decode the resident WEAPON SE bank (bank1) for `weapon_id` from SOUND/ARMS%02X.EDH + .VB
  * (byte-true FUN_80043d8c parity: it loads the equipped-weapon DAT_800aca5d's ARMS bank into
  * 0x801fcd00). The .EDH = [EDT prefix @0][VH "pBAV" @pBAV_off][8-byte trailer]; pBAV_off = the u32
@@ -1517,11 +1540,17 @@ void re15_audio_tick(void)
         switch ((scd_audio_kind_t)evt.kind) {
             case SCD_AUDIO_SE_ON:
                 g_audio.events_se_on++;
-                if (s_vab_loaded && s_vag_count > 0) {
-                    int idx = (evt.sample_id - 1);
-                    if (idx < 0) idx = 0;
-                    idx %= s_vag_count;
-                    play_sample_pc(idx, evt.volume ? evt.volume : 100);
+                /* Byte-true FUN_80045024: the Se_on bank byte (evt.bank = the opcode's pc[1]) picks
+                 * the VAB bank; evt.sample_id (pc[2]) is the record index (bank_base + record*4 =
+                 * @0x80045140, NO -1). Route to the matching resident/room bank; a bank the port has
+                 * not loaded is skipped exactly as the original skips DAT_800b21ec[bank] == -1. (Was:
+                 * ignore the bank and play (sample_id-1) from a bring-up TEST VAB — a divergence.) */
+                switch (re15_audio_se_bank_kind(evt.bank)) {
+                    case RE15_SE_BANK_WEAPON: re15_audio_weapon_se(evt.sample_id);   break;
+                    case RE15_SE_BANK_SND0:   re15_audio_room_se_snd0(evt.sample_id);break;
+                    case RE15_SE_BANK_SND1:   re15_audio_room_se(evt.sample_id);     break;
+                    case RE15_SE_BANK_CORE:   re15_audio_core_se(evt.sample_id);     break;
+                    case RE15_SE_BANK_SKIP:   default: break;   /* bank 0/>=6 not resident -> skip */
                 }
                 break;
             case SCD_AUDIO_VOICE_ON:

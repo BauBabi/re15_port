@@ -103,6 +103,40 @@ void re15_audio_footstep(int foot, int sound_type);
  * from the resident RDT. Called C-side (e.g. the zombie death FSM frame 7). */
 void re15_audio_room_se(int se_id);
 
+/* Room SE from the snd0 bank (byte-true FUN_80045024 bank 2 = *(DAT_800ac778+8) = the RDT snd0
+ * bank, same EDT->prog/tone->VAG lookup as room_se on snd1). Bank 2 of the Se_on selector. */
+void re15_audio_room_se_snd0(int se_id);
+
+/* Byte-true Se_on VAB-bank selector (FUN_80045024 @0x80045028: bank = arg>>24, dispatch
+ * @0x80010e70, `sltiu 0x6` = banks 0..5). Maps the SCD Se_on bank byte to the port's loaded VAB:
+ *   0 -> SKIP   (resident in-RAM blob @0x801fdd00 — NOT loaded in the port; the original skips a
+ *                bank whose DAT_800b21ec[bank] handle == -1 @0x8004506c, so SKIP is byte-faithful)
+ *   1 -> WEAPON (ARMS, the equipped weapon @0x801fcd00 -> re15_audio_weapon_se)
+ *   2 -> SND0   (RDT snd0 bank -> re15_audio_room_se_snd0)
+ *   3 -> SND1   (RDT snd1 SE bank, the FUN_800453d0 path -> re15_audio_room_se)
+ *   4 -> CORE   (resident CORE @0x801fbd00 -> re15_audio_core_se)
+ *   5 -> SND1   (RDT snd1 bank, shares snd1 with bank 3)
+ *   >=6 -> SKIP  (invalid: `sltiu v0,v1,0x6; beq v0,zero,ret` @0x80045094). */
+typedef enum {
+    RE15_SE_BANK_SKIP = 0,
+    RE15_SE_BANK_WEAPON,
+    RE15_SE_BANK_SND0,
+    RE15_SE_BANK_SND1,
+    RE15_SE_BANK_CORE
+} re15_se_bank_kind_t;
+
+static inline re15_se_bank_kind_t re15_audio_se_bank_kind(unsigned bank)
+{
+    switch (bank) {
+        case 1:  return RE15_SE_BANK_WEAPON;
+        case 2:  return RE15_SE_BANK_SND0;
+        case 3:  return RE15_SE_BANK_SND1;
+        case 4:  return RE15_SE_BANK_CORE;
+        case 5:  return RE15_SE_BANK_SND1;
+        default: return RE15_SE_BANK_SKIP;   /* 0 (blob, not resident) + >=6 (invalid) */
+    }
+}
+
 /* WEAPON SE by id (byte-true FUN_80045024 bank1 core): play the equipped weapon's resident ARMS SE
  * bank (SOUND/ARMS%02X.EDH/.VB, bank selector 1) sound for `se_id`. This is the PLAYER-FIRE path —
  * the GUNSHOT is se_id 8 (FUN_80035538/FUN_80011f50 -> FUN_80045024(0x1080001)). The bank is loaded
