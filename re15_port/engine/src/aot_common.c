@@ -349,7 +349,14 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
              * launched from the wrong cwd so test.rdt wasn't found → demo
              * bytecode → empty pad), NOT this gate. From the correct cwd the
              * intro plays end-to-end with the gate in place. Gate RESTORED. */
-            if (inside && g_scd.cut_auto_enabled) {
+            /* FLOOR gate: the RVD zone's floor byte (entry+1, stored in a->band) must match the
+             * player's collision band, unless it is 0xFF (any floor). Only gated when a band is
+             * established (pb >= 0), mirroring the DOOR/GENERIC band gates. This byte is 0xFF across
+             * all STAGE1 rooms today, so the gate is currently inert there — it's the mechanism the
+             * original applies (a stacked-floor room would otherwise switch cut on the wrong floor). */
+            int cam_pb = re15_collision_debug_band();
+            int floor_ok = (a->band == 0xFF) || (cam_pb < 0) || ((int)a->band == cam_pb);
+            if (inside && g_scd.cut_auto_enabled && floor_ok) {
                 best_cam_id   = (int)a->event_id;   /* keep the LAST (highest-slot = lowest table index) */
                 a->was_inside = 1;
                 continue;    /* do NOT return — a later (higher-slot / lower table index) zone wins */

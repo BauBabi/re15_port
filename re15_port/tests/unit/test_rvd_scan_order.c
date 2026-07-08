@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include "re15_aot.h"
 #include "re15_scd.h"
+#include "re15_collision.h"   /* re15_collision_set_band — the CAM_SWITCH floor gate */
 
 /* g_scd is the shared VM state; the scan reads cut_auto_enabled + writes cam_id/cam_change_pending. */
 static void arm_scan(void)
@@ -75,6 +76,32 @@ int main(void)
         re15_aot_scan(X + 5000, Z + 5000, CAM_FROM);
         if (g_scd.cam_change_pending) { fprintf(stderr, "FAIL(4): outside the zone must not fire\n"); fail = 1; }
         else printf("  (4) outside the zone does not fire\n");
+    }
+
+    /* (5) FLOOR gate: the RVD zone's floor byte (a->band, from entry+1) must match the player's
+     *     collision band unless 0xFF. */
+    {
+        re15_collision_set_band(2);
+        /* (5a) mismatched floor -> no fire */
+        arm_scan();
+        re15_aot_set_cam_switch(63, X, Z, HW, HH, CAM_FROM, 5);
+        g_aot.slots[63].band = 4;                 /* zone floor 4, player on band 2 */
+        re15_aot_scan(X, Z, CAM_FROM);
+        if (g_scd.cam_change_pending) { fprintf(stderr, "FAIL(5a): wrong-floor zone must not fire (cam_id=%u)\n", g_scd.cam_id); fail = 1; }
+        /* (5b) matching floor -> fire */
+        arm_scan();
+        re15_aot_set_cam_switch(63, X, Z, HW, HH, CAM_FROM, 5);
+        g_aot.slots[63].band = 2;                 /* zone floor 2 == player band 2 */
+        re15_aot_scan(X, Z, CAM_FROM);
+        if (!g_scd.cam_change_pending || g_scd.cam_id != 5) { fprintf(stderr, "FAIL(5b): matching-floor zone must fire\n"); fail = 1; }
+        /* (5c) floor 0xFF -> fires on any band */
+        arm_scan();
+        re15_aot_set_cam_switch(63, X, Z, HW, HH, CAM_FROM, 5);
+        g_aot.slots[63].band = 0xFF;              /* any floor */
+        re15_aot_scan(X, Z, CAM_FROM);
+        if (!g_scd.cam_change_pending || g_scd.cam_id != 5) { fprintf(stderr, "FAIL(5c): floor 0xFF must fire on any band\n"); fail = 1; }
+        re15_collision_set_band(-1);              /* reset */
+        if (!fail) printf("  (5) floor gate: wrong floor blocked, matching floor + 0xFF fire\n");
     }
 
     if (fail) { printf("RVD-SCAN-ORDER: FAIL\n"); return 1; }

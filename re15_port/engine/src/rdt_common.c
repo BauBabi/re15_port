@@ -152,6 +152,7 @@ static void parse_zones(const uint8_t *data, size_t size, uint32_t zone_start,
         z->half_h   = ((int32_t)max_z - (int32_t)min_z) / 2;
         z->cam_from = camFrom;
         z->cam_to   = camTo;
+        z->floor    = p[1];   /* entry+1 floor byte (marker high byte) — the CAM_SWITCH floor gate */
 
         p += 20;
     }
@@ -451,6 +452,7 @@ int re15_rdt_apply_zones_as_aots(const re15_rdt_t *rdt, int slot_offset)
                 a->zs[k] = z->zs[k];
             }
             a->has_quad = 1;
+            a->band     = z->floor;   /* per-zone floor gate for the CAM_SWITCH scan (0xFF = any floor) */
             installed++;
         }
     }

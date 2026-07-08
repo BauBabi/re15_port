@@ -44,6 +44,9 @@ typedef struct {
     int32_t  half_h;
     uint8_t  cam_from;     /* source cut id */
     uint8_t  cam_to;       /* target cut id (0 → terminator-decorative) */
+    uint8_t  floor;        /* per-zone floor/band byte (RVD entry +1 = the marker's high byte); the
+                            * CAM_SWITCH scan fires only on this floor (0xFF = any). 0xFF across all
+                            * STAGE1 rooms today, so the gate is currently inert there. */
 } re15_rdt_zone_t;
 
 #define RE15_RDT_MAX_ZONES 64   /* [#32a] per-room RVD entry cap. FUN_80014230 @0x80014230
