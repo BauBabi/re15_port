@@ -2380,8 +2380,12 @@ int main(int argc, char *argv[])
              * where every actor stands on the −7200 floor). Player-only, matching
              * the PSX caller (player update FUN_80031c44). */
             if (player_visible) {
-                int32_t SH_HALF_X = 500;                /* a2 = 0x1F4 */
-                int32_t SH_HALF_Z = 600;                /* a3 = 0x258 */
+                /* Half-extents = descriptor +0xc/+0xe (= player entity+0xbc/+0xbe). RAM-CONFIRMED
+                 * 500/600 across every alive-player savestate (they grow ONLY at death = the blood
+                 * pool below); a workflow finder's "square ~400" claim was wrong — the savestate is
+                 * the arbiter. NOT a square. */
+                int32_t SH_HALF_X = 500;                /* entity+0xbc, RAM-confirmed */
+                int32_t SH_HALF_Z = 600;                /* entity+0xbe, RAM-confirmed */
                 /* DEATH BLOOD POOL (LAB_8003694c @0x800369bc-d8): the quad half-extents grow
                  * +0xc per death tick (live terminal 0x7ac/0x810 after ~122 ticks). */
                 if (re15_player_is_dead() && g_death_pool > 0) {
