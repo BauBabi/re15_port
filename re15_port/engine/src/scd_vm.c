@@ -362,6 +362,13 @@ void scd_vm_init(void)
 {
     memset(&g_scd, 0, sizeof(g_scd));   /* clears tick_count + all *_pending flags */
     g_scd.work_slot = -1;               /* Phase 4.5.9-F: no work entity at boot */
+    /* RVD auto-camera default = ON (byte-true INVERSE of DAT_800aca3c bit 0x100: the main loop
+     * @0x8001cce0-e4 SKIPS the RVD scan FUN_80014230 only when the bit is SET; zero-init = CLEAR
+     * = scan runs. Cut_chg SETS the bit @0x800402d4 -> port cut_auto_enabled=0; the room-(re)load
+     * chain FUN_800396fc masks the low 16 bits off @0x80039710-30 = auto ON at every room entry.)
+     * The old zero-default froze the camera on the entry cut for any room not entered through a
+     * door (e.g. RE15_START_ROOM). [audit wf_559c230f CUTSEL-AUTOSCAN-DEFAULT-INVERTED] */
+    g_scd.cut_auto_enabled = 1;
     memset((void *)s_event_handlers, 0, sizeof(s_event_handlers));  /* Phase 4.4.6.1 */
     register_opcodes();
     re15_game_state_init();             /* Phase 4.4.4: clear player state + flags */

@@ -301,9 +301,12 @@ static int test_same_room_teleport(void)
 
     place_player(0, 0);
 
-    /* DOOR-AOT mit dest_room=0 → Same-Room-Teleport. Spawn (400,0,-200),
-     * yaw 3072, Cut 5. Spawn darf NICHT (0,0,0) sein (aot_common.c:436 Guard). */
-    setup_door_aot(0, 0, 0, /*dest_stage*/0, /*dest_room*/0,
+    /* DOOR-AOT, deren dest zum AKTUELLEN Raum auflöst (0x1170: stage 0, room 0x17) →
+     * Same-Room-Teleport. Byte-true entscheidet AUSSCHLIESSLICH dest_id == current
+     * (audit wf_559c230f DOOR-DESTROOM-ZERO: dest_room==0 ist ein GÜLTIGES Ziel =
+     * ROOM_x00, kein Same-Room-Marker — der alte Test kodierte die widerlegte
+     * Semantik). Spawn (400,0,-200), yaw 3072, Cut 5; Spawn nicht (0,0,0) (Guard). */
+    setup_door_aot(0, 0, 0, /*dest_stage*/0, /*dest_room*/0x17,
                    400, 0, -200, 3072, 5);
 
     g_scd_action_held = 1; g_aot_action_pressed = 0;   /* byte-true: HOLD, not tap */
@@ -341,6 +344,28 @@ static int test_same_room_teleport(void)
     }
     if (!g_scd.cam_change_pending) {
         fprintf(stderr, "FAIL: g_scd.cam_change_pending should be set\n");
+        return 1;
+    }
+
+    /* REGRESSION (audit wf_559c230f DOOR-DESTROOM-ZERO): dest_room=0 ist ROOM_x00, KEIN
+     * Same-Room-Marker. Von 0x1170 aus muss ein dest_stage=0/dest_room=0-Door (= ROOM1000,
+     * die ROOM1050-Klasse) einen ECHTEN Raumwechsel queuen — der alte `dest_room != 0`-Guard
+     * teleportierte stattdessen in-room. */
+    test_reset_engine(0);
+    place_player(0, 0);
+    setup_door_aot(0, 0, 0, /*dest_stage*/0, /*dest_room*/0x00,
+                   650, 0, 50, 1024, 3);
+    g_scd_action_held = 1; g_aot_action_pressed = 0;
+    for (int _df = 0; _df < 9; _df++)
+        re15_aot_scan(g_actors[RE15_ACTOR_SLOT_PLAYER].x,
+                  g_actors[RE15_ACTOR_SLOT_PLAYER].z, 0xFF);
+    if (!g_room_change.pending) {
+        fprintf(stderr, "FAIL: dest_room=0 (ROOM1000) must queue a CROSS-room change\n");
+        return 1;
+    }
+    if ((g_room_change.room_id & 0xFFF0u) != 0x1000u) {
+        fprintf(stderr, "FAIL: dest_room=0 must resolve to ROOM1000, got %04x\n",
+                (unsigned)g_room_change.room_id);
         return 1;
     }
 

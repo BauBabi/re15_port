@@ -294,12 +294,14 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
          * Normale Lauf-Türen (echtes Rechteck) bleiben Cinematic-unterdrückt + Action-
          * gated. */
         int is_auto_door = 0;
-        if (a->type == RE15_AOT_TYPE_DOOR && a->half_w == 0 && a->half_h == 0
-            && g_aot.door_params[i].dest_room != 0) {
+        if (a->type == RE15_AOT_TYPE_DOOR && a->half_w == 0 && a->half_h == 0) {
             /* Ziel-Raum-ID byte-true (wie im Door-Fire-Handler): dest muss ein
              * ANDERER Raum sein — ein Null-Rechteck-„Tür", deren dest zum aktuellen
              * Raum auflöst, ist ein Same-Room-Teleport (z.B. ROOM1170 slot3) und darf
-             * NICHT als Auto-Advance ausgelöst werden. */
+             * NICHT als Auto-Advance ausgelöst werden. Raum-Index 0 ist ein GÜLTIGES
+             * Ziel (ROOM_x00; FUN_8001d600 liest struct+9 ohne ==0-Sonderfall) — der
+             * alte `dest_room != 0`-Vorfilter warf ROOM1000-Ziele weg.
+             * [audit wf_559c230f DOOR-DESTROOM-ZERO] */
             unsigned dd = (((unsigned)g_aot.door_params[i].dest_stage + 1u) << 12)
                         | ((unsigned)g_aot.door_params[i].dest_room << 4)
                         | (g_current_room_id & 0x000Fu);
@@ -517,10 +519,17 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
                  * carried over from the current room so we stay in the same scenario.
                  * VALIDATED: this formula resolves 563/567 cross-room doors game-wide to
                  * existing rooms (scripts/door_graph.py; the 4 misses are non-door scan
-                 * artifacts). dest_room 0 -> self/same-room teleport (falls through).
+                 * artifacts). Room INDEX 0 is a VALID destination (ROOM_x00): the warp
+                 * FUN_8001d600 reads the door struct dest bytes (+8 stage / +9 room) with
+                 * NO room==0 special case — the old `dest_room != 0` pre-filter threw
+                 * ROOM1050's three doors to ROOM1000 into the in-room-teleport branch
+                 * (wrong room + wrong camera + wrong spawn). The same-room-vs-cross-room
+                 * decision is carried SOLELY by dest_id != current (a genuine same-room
+                 * door resolves dest_id == current and falls through).
+                 * [audit wf_559c230f DOOR-DESTROOM-ZERO]
                  * The actual load runs after the scan (re15_room_apply_pending). SHARED
                  * (PC links room_common.c + a file RDT loader → PC doors work too). */
-                if (d->dest_room != 0) {
+                {
                     unsigned dest_id = (((unsigned)d->dest_stage + 1u) << 12)
                                      | ((unsigned)d->dest_room << 4)
                                      | (g_current_room_id & 0x000Fu);

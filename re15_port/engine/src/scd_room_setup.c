@@ -111,6 +111,10 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
 {
     memset(&g_scd, 0, sizeof(g_scd));   /* reset threads/props/cam/modes/audio-queue */
     g_scd.work_slot = -1;               /* (matches scd_vm_init) */
+    g_scd.cut_auto_enabled = 1;         /* RVD auto-camera ON at room entry (byte-true: the room-
+                                         * (re)load chain FUN_800396fc masks DAT_800aca3c's low 16
+                                         * bits off @0x80039710-30 = bit 0x100 CLEAR = scan runs;
+                                         * Cut_chg re-disables. wf_559c230f AUTOSCAN-DEFAULT) */
     /* Room re-entry re-inits the ENTITY pool. g_actors[] is a SEPARATE array from
      * g_scd (the memset above does NOT touch it), so boot-spawned NPCs would survive
      * the transition. The original clears all entities on room load; clear NPC slots
