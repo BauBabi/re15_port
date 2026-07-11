@@ -19,6 +19,7 @@
  *   80012ee8-efc  if (HP < 0) state=3 (death), +0x5=0, +0x6=0
  */
 #include "re15_damage.h"
+#include "re15_math.h"       /* re15_squareroot0 — the engine's ONLY sqrt (BIOS 0x80065f60) */
 #include "re15_skeleton.h"   /* re15_skel_compute_pose / re15_skel_bone_to_world / g_anim_pose_actor */
 #include "re15_esp.h"        /* re15_esp_fx_spawn — zombie gore effect (FUN_80106a44) */
 #include "re15_room.h"       /* g_current_room_id + g_room_change + re15_room_request_change (death continue) */
@@ -620,21 +621,15 @@ void re15_enemy_death_fx(re15_actor_t *e)
  *  resolver loop FUN_80012d60 runs against each enemy + the player.       *
  * ====================================================================== */
 
-/* BIOS SquareRoot0 (floor sqrt) — the original calls it @8002b740. Bit-by-bit
- * integer isqrt, identical to re15_collision.c's coll_isqrt: each combat /
- * collision / light / camera module keeps its own private copy, the established
- * port convention (the PSX inlines SquareRoot0 at every call site). */
+/* BIOS SquareRoot0 — the original calls it @0x8002b764 (hitbox FUN_8002b5d0),
+ * @0x80012848 (weapon cone FUN_800127fc) and @0x80117300 (enemy dist). It is the
+ * table APPROXIMATION, NOT floor(sqrt) — an exact isqrt diverges on ~82% of inputs
+ * and shifts the AI distance thresholds. Route through the shared byte-true replica
+ * on the low 32 bits (like the PSX mflo). Audit wf_f066b2ae. */
 static int32_t dmg_isqrt(int64_t x)
 {
     if (x <= 0) return 0;
-    uint64_t v = (uint64_t)x, res = 0, bit = (uint64_t)1 << 62;
-    while (bit > v) bit >>= 2;
-    while (bit) {
-        if (v >= res + bit) { v -= res + bit; res = (res >> 1) + bit; }
-        else res >>= 1;
-        bit >>= 2;
-    }
-    return (int32_t)res;
+    return (int32_t)re15_squareroot0((uint32_t)x);
 }
 
 /* CIRCULAR path of FUN_8002b5d0 (radius_min == radius_max @ hbdata+6/+0xa). The

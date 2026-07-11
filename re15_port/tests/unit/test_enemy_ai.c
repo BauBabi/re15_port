@@ -94,12 +94,12 @@ static int test_ai_tick(void)
 {
     /* Normal: dist gecacht (byte-true), INIT dispatcht → state 1. */
     re15_actor_t *e = fresh_enemy(0x47);
-    put_player(1200, 0);                       /* dx=1200, dz=0 → dist 1200 */
+    put_player(1200, 0);                       /* dx=1200, dz=0 → SquareRoot0(1200²)=1193 */
     e->x = 0; e->z = 0;
     re15_enemy_ai_set_paused(0);
     int r = re15_enemy_ai_tick(1);
     if (r != 1)            { fprintf(stderr, "FAIL: tick sollte dispatchen (1), war %d\n", r); return 1; }
-    if (e->ai_dist != 1200){ fprintf(stderr, "FAIL: tick dist@+0x1d0=1200, ist %u\n", e->ai_dist); return 1; }
+    if (e->ai_dist != 1193){ fprintf(stderr, "FAIL: tick dist@+0x1d0 SquareRoot0(1200²)=1193, ist %u\n", e->ai_dist); return 1; }
     if (e->state != RE15_AI_STATE_ACTIVE) { fprintf(stderr, "FAIL: tick INIT→state1, ist %d\n", e->state); return 1; }
 
     /* Per-Entity-Skip (grid_id & 0x20): Gate greift → kein Dispatch, kein dist-Update. */
@@ -467,12 +467,12 @@ static int test_exe_dispatch_and_tick(void)
     e = fresh_enemy(0x10);
     e->state = RE15_AI_STATE_ACTIVE; e->grid_id = 0; e->sub_state_1 = 0;
     e->x = 0; e->z = 0;
-    put_player(0, 2000);                          /* dist 2000 (>=1501), vorne (arc 0x4b0==0) */
+    put_player(0, 2000);                          /* dz=2000 → SquareRoot0(2000²)=1999 (>=1501), vorne (arc 0x4b0==0) */
     g_actors[0].hit_react = 0;
     re15_enemy_ai_set_paused(0);
     int r = re15_enemy_ai_tick(1);
     if (r != 1)            { fprintf(stderr, "FAIL: live tick dispatch (1), war %d\n", r); return 1; }
-    if (e->ai_dist != 2000){ fprintf(stderr, "FAIL: live tick dist=2000, ist %u\n", e->ai_dist); return 1; }
+    if (e->ai_dist != 1999){ fprintf(stderr, "FAIL: live tick dist SquareRoot0(2000²)=1999, ist %u\n", e->ai_dist); return 1; }
     if (e->sub_state_1 != 1) { fprintf(stderr, "FAIL: live tick→assess→+0x5=1, ist %d\n", e->sub_state_1); return 1; }
 
     printf("PASS: test_exe_dispatch_and_tick\n");
@@ -501,7 +501,7 @@ static int test_ai_step_chain(void)
     /* Frame 1: INIT läuft (state 0→1), dist gecacht. */
     re15_enemy_ai_step(s);
     if (e->state != RE15_AI_STATE_ACTIVE) { fprintf(stderr, "FAIL: chain INIT→ACTIVE, ist %d\n", e->state); return 1; }
-    if (e->ai_dist != 1200) { fprintf(stderr, "FAIL: chain dist=1200, ist %u\n", e->ai_dist); return 1; }
+    if (e->ai_dist != 1193) { fprintf(stderr, "FAIL: chain dist SquareRoot0(1200²)=1193, ist %u\n", e->ai_dist); return 1; }
 
     /* Frame 2: ACTIVE-Decision läuft (assess; bleibt aktiv). */
     re15_enemy_ai_step(s);
@@ -649,7 +649,7 @@ static int test_live_step_chain(void)
     /* Frame 1: live tick runs the live INIT (state 0->1), dist cached @+0x1d0, ai_timer=0x14. */
     re15_enemy_ai_live_step(s);
     if (e->state != RE15_AI_STATE_ACTIVE) { fprintf(stderr, "FAIL: live chain INIT->ACTIVE, ist %d\n", e->state); return 1; }
-    if (e->ai_dist != 1200)               { fprintf(stderr, "FAIL: live chain dist=1200, ist %u\n", e->ai_dist); return 1; }
+    if (e->ai_dist != 1193)               { fprintf(stderr, "FAIL: live chain dist SquareRoot0(1200²)=1193, ist %u\n", e->ai_dist); return 1; }
     if (e->ai_timer != 0x14)              { fprintf(stderr, "FAIL: live chain ai_timer=0x14, ist 0x%x\n", e->ai_timer); return 1; }
 
     /* Arm the attack + seed the windup so the next active frame hits 300 = fires the lunge.

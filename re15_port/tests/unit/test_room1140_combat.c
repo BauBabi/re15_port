@@ -521,16 +521,18 @@ int main(void)
         re15_actor_t *z = &g_actors[zslots[0]];
         if (z->hit_radius_min != 400) {   /* the spawn dim this whole bound depends on */
             fprintf(stderr, "FAIL: (12) zombie hit_radius_min must be 400, ist %u\n", z->hit_radius_min); fail = 1; }
-        /* in the band reach..R-1: dist 1399 (> reach 1000, < R 1400) -> MUST hit now */
+        /* Byte-true SquareRoot0 distance (NOT exact): z=1399 -> SquareRoot0(1399²)=1396, still
+         * < R=1400 -> MUST hit. (The BIOS sqrt is coarse near 1400: 1402²->1396, 1403²->1402,
+         * so R=1400 falls in the gap between placements.) */
         z->x = 0; z->z = 1399; z->hp = 60; z->hit_react = 0; z->state = RE15_AI_STATE_ACTIVE;
         if (re15_player_weapon_fire(2) != (zslots[0] + 1) || z->hp != (int16_t)(60 - 24)) {
-            fprintf(stderr, "FAIL: (12) zombie at dist 1399 (< reach+radius 1400) must be HIT, HP=%d\n", z->hp); fail = 1; }
-        /* at exactly R = 1400: strict dist < R -> MUST miss */
-        z->x = 0; z->z = 1400; z->hp = 60; z->hit_react = 0; z->state = RE15_AI_STATE_ACTIVE;
+            fprintf(stderr, "FAIL: (12) zombie at SquareRoot0(1399²)=1396 (< R 1400) must be HIT, HP=%d\n", z->hp); fail = 1; }
+        /* z=1403 -> SquareRoot0(1403²)=1402 >= R=1400: strict dist < R fails -> MUST miss. */
+        z->x = 0; z->z = 1403; z->hp = 60; z->hit_react = 0; z->state = RE15_AI_STATE_ACTIVE;
         if (re15_player_weapon_fire(2) != 0 || z->hp != 60) {
-            fprintf(stderr, "FAIL: (12) zombie at dist 1400 (== reach+radius, strict <) must MISS, hp=%d\n", z->hp); fail = 1; }
+            fprintf(stderr, "FAIL: (12) zombie at SquareRoot0(1403²)=1402 (>= R 1400, strict <) must MISS, hp=%d\n", z->hp); fail = 1; }
         if (!fail)
-            printf("  (12) byte-true reach: hit at dist 1399 (reach 1000 + radius 400), miss at 1400 (strict <)\n");
+            printf("  (12) byte-true reach: hit at SquareRoot0(1399²)=1396 (< R 1400), miss at 1402 (>= R, strict <)\n");
     }
 
     /* (13): the byte-true DEATH ANIMATION play-out (FUN_80107cb0). With the enemy model bank loaded,

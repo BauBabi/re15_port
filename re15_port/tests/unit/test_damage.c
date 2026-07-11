@@ -199,10 +199,11 @@ static int test_hitbox_overlap_circular(void)
     r = re15_hitbox_overlap(cx,cy,cz, rad,hgt, 1200,0,2000, ar);
     if (r != 0) { fprintf(stderr, "FAIL: hitbox D AABB-X-reject, war %d\n", r); return 1; }
 
-    /* E: Kreis-Kante strikt — dx=149 (dist 149 < 150) → 1; dx=150 (dist 150) → 0 */
-    r = re15_hitbox_overlap(cx,cy,cz, rad,hgt, 1149,0,2000, ar);
-    if (r != 1) { fprintf(stderr, "FAIL: hitbox E dist=149<150, war %d\n", r); return 1; }
+    /* E: Kreis-Kante strikt (byte-true SquareRoot0, NOT exact): dx=150 → SquareRoot0(150²)=149
+     * < R=150 → 1 (hit); dx=151 → SquareRoot0(151²)=150 == R → strict < fails → 0 (miss). */
     r = re15_hitbox_overlap(cx,cy,cz, rad,hgt, 1150,0,2000, ar);
+    if (r != 1) { fprintf(stderr, "FAIL: hitbox E dist=149<150, war %d\n", r); return 1; }
+    r = re15_hitbox_overlap(cx,cy,cz, rad,hgt, 1151,0,2000, ar);
     if (r != 0) { fprintf(stderr, "FAIL: hitbox E dist=150 (==R) muss strikt 0, war %d\n", r); return 1; }
 
     /* F: Y-Range strikt — dy=249 (<250) → 1; dy=250 (==h) → 0 */
@@ -343,10 +344,10 @@ static int test_zombie_ai_primitives(void)
     re15_actor_t p = {0};
     z.rot_y = -1024;                               /* faces +Z */
 
-    /* Distanz: Spieler bei (1200,0,0) → dx=1200,dz=0 → 1200. */
+    /* Distanz: Spieler bei (1200,0,0) → dx=1200,dz=0 → SquareRoot0(1200²)=1193 (byte-true, NOT 1200). */
     p.x = 1200; p.z = 0;
     int32_t d = re15_enemy_player_dist(&z, &p);
-    if (d != 1200) { fprintf(stderr, "FAIL: dist 1200, war %d\n", d); return 1; }
+    if (d != 1193) { fprintf(stderr, "FAIL: dist SquareRoot0(1200²)=1193, war %d\n", d); return 1; }
 
     /* Arc cone 0x2c8: Spieler VORNE (+Z) → 0 (im Frontkegel). */
     if (re15_ai_arc_test(&z, 0, 1000, 0x2c8) != 0) {
