@@ -99,6 +99,27 @@ int main(void)
     CHECK("ratan2(50,100) == 302",        (re15_ratan2(50, 100) & 0xfff) == 302);
     CHECK("ratan2(100,50) == 722",        (re15_ratan2(100, 50) & 0xfff) == 722);
 
+    /* --- byte-true GTE RTPS division (UNR reciprocal), values from the psx-spx algorithm --- */
+    printf("--- GTE division (UNR) ---\n");
+    CHECK("gte_divide(208,300) == 45438",   re15_gte_divide(208, 300) == 45438);
+    CHECK("gte_divide(208,600) == 22719",   re15_gte_divide(208, 600) == 22719);
+    CHECK("gte_divide(208,1000) == 13632 (UNR, exact=13631)", re15_gte_divide(208, 1000) == 13632);
+    CHECK("gte_divide(400,500) == 52429",   re15_gte_divide(400, 500) == 52429);
+    CHECK("gte_divide(100,101) == 64887",   re15_gte_divide(100, 101) == 64887);
+    CHECK("gte_divide overflow (H>=2*SZ3) saturates 0x1FFFF", re15_gte_divide(1000, 100) == 0x1FFFF);
+    CHECK("gte_divide div-by-0 saturates 0x1FFFF", re15_gte_divide(208, 0) == 0x1FFFF);
+    /* it must genuinely DIFFER from an exact divide (else the UNR replica is pointless) */
+    {
+        int diffs = 0, total = 0;
+        for (uint32_t sz = 200; sz < 4000; sz += 7) {
+            uint32_t unr = re15_gte_divide(208, sz);
+            uint32_t exact = (208u * 0x10000u + sz / 2) / sz;
+            if (unr <= 0x1FFFF) { total++; if (unr != exact) diffs++; }
+        }
+        printf("  info: UNR differs from exact on %d/%d (the hardware division inaccuracy)\n", diffs, total);
+        CHECK("UNR division inaccuracy is present (differs from exact)", diffs > 0);
+    }
+
     if (g_fail) { printf("MATH-PRIMITIVES: FAIL\n"); return 1; }
     printf("MATH-PRIMITIVES: all checks passed\n");
     return 0;

@@ -43,4 +43,9 @@ int32_t re15_ratan2(int32_t y, int32_t x);
  * rot_y = box heading. Circular (rx==rz) returns rx. */
 int32_t re15_ellipse_radius(int32_t rx, int32_t rz, int32_t rot_y, int32_t dz, int32_t dx);
 
+/* Byte-true GTE RTPS perspective-division reciprocal (psx-spx: the hardware Unsigned Newton-Raphson).
+ * n for sx = OFX + (IR1*n)>>16 (approximates H*0x10000/sz3, DELIBERATELY less accurate than an exact
+ * divide). h = GTE H (fov>>7), sz3 = u16 view-space z (MAC3>>12). Saturates to 0x1FFFF. */
+uint32_t re15_gte_divide(uint32_t h, uint32_t sz3);
+
 #endif /* RE15_MATH_H */
