@@ -115,6 +115,11 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
                                          * (re)load chain FUN_800396fc masks DAT_800aca3c's low 16
                                          * bits off @0x80039710-30 = bit 0x100 CLEAR = scan runs;
                                          * Cut_chg re-disables. wf_559c230f AUTOSCAN-DEFAULT) */
+    /* The SAME masking clears flag bank 1's LOW-16-value bits (aca3c &= 0xffff0000) — in the
+     * MSB-first model that is idx 16..31, incl. the LETTERBOX direction bit (idx 27, value 0x10)
+     * and the combat latch (idx 31): a cutscene room that left them set cannot leak bars/combat
+     * into the next room. (Byte-true @0x80039730; trace wf_bba41002 #21.) */
+    for (int fi = 16; fi < 32; fi++) re15_game_flag_set(1, (uint8_t)fi, 0);
     /* Room re-entry re-inits the ENTITY pool. g_actors[] is a SEPARATE array from
      * g_scd (the memset above does NOT touch it), so boot-spawned NPCs would survive
      * the transition. The original clears all entities on room load; clear NPC slots

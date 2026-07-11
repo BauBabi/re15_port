@@ -41,6 +41,16 @@ extern re15_fade_ch_t g_fade_ch[RE15_FADE_CHANNELS];
 
 void re15_fade_init(void);    /* boot park (LAB_80021138): config(ch, abr1, mask3, step 0x100,
                                * bucket 0) + kill -> all channels idle/invisible */
+
+/* CINEMATIC LETTERBOX counter (byte-true FUN_80021a0c, trace wf_bba41002 CONFIRMED): ONE u8
+ * counter DAT_800b5568 ramped ±0x10 per rendered frame within [0x00, 0xF0] — direction = a LIVE
+ * per-frame test of DAT_800aca3c bit 0x10 (@0x80021a24) = flag bank 1 idx 27 (SCD `Set(1,0x1b,op)`,
+ * 247 shipped sites). The counter IS the bars' RGB (two static POLY_F4s (0,0,320,24) +
+ * (0,216,320,240), code 0x2A semi-trans, DR_MODE ABR=2 SUBTRACTIVE -> pixel = bg - counter:
+ * the strips darken smoothly to black over 15 frames). Bars emit only when counter != 0 (and
+ * the PSX also suppresses during the room-load display blank, DAT_800aca38 bit 0x4000). */
+extern uint8_t g_letterbox_level;
+void re15_letterbox_tick(int cine_request);   /* once per rendered frame (PSX @0x80020f34) */
 void re15_fade_config(int ch, int abr, int rgb_mask, int16_t step, int ot_bucket); /* FUN_800217b0 */
 void re15_fade_kick(int ch, uint16_t value);                                       /* FUN_800216ec */
 void re15_fade_kill(int ch);                                                       /* FUN_80021764 */

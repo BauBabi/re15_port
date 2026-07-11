@@ -27,6 +27,9 @@ static int g_fail = 0;
 
 static void run_op(const uint8_t *bc)
 {
+    /* the previous run's thread parks ALIVE at the 0x02 sentinel — scd_thread_start refuses an
+     * occupied slot (rc=-1) and the tick would run the OLD thread into garbage. Free it first. */
+    g_scd.threads[TEST_SLOT].active = 0;
     scd_thread_start(TEST_SLOT, bc);
     scd_vm_tick();
 }
@@ -117,6 +120,28 @@ int main(void)
         CHECK("ramp down: first frame brightness 0xff", g_fade_ch[2].out_r == 0xFF);
         re15_fade_kill(2);
         CHECK("kill: done immediately", re15_fade_done(2) == 1);
+    }
+
+    /* LETTERBOX counter (FUN_80021a0c, trace wf_bba41002 #21): the SCD `Set(1,0x1b,1)` byte form
+     * (22 01 1b 01 — 247 shipped sites) sets flag(1,27) = the direction bit; the per-frame tick
+     * ramps the level ±0x10 within [0, 0xF0] (15 frames full open/close). */
+    {
+        scd_vm_init(); re15_aot_init();
+        g_letterbox_level = 0;
+        uint8_t bc_on[] = { 0x22, 0x01, 0x1b, 0x01, OP_EVT_NEXT };
+        run_op(bc_on);
+        CHECK("Set(1,0x1b,1): flag(1,27) set (the letterbox bit 0x10)", re15_game_flag_get(1, 27) == 1);
+        for (int f = 0; f < 3; f++) re15_letterbox_tick(re15_game_flag_get(1, 27));
+        CHECK("letterbox: 3 frames up -> level 0x30", g_letterbox_level == 0x30);
+        for (int f = 0; f < 20; f++) re15_letterbox_tick(re15_game_flag_get(1, 27));
+        CHECK("letterbox: clamps at 0xF0 (fully open)", g_letterbox_level == 0xF0);
+        uint8_t bc_off[] = { 0x22, 0x01, 0x1b, 0x00, OP_EVT_NEXT };
+        run_op(bc_off);
+        CHECK("Set(1,0x1b,0): flag(1,27) cleared", re15_game_flag_get(1, 27) == 0);
+        for (int f = 0; f < 15; f++) re15_letterbox_tick(re15_game_flag_get(1, 27));
+        CHECK("letterbox: 15 frames down -> level 0 (never underflows)", g_letterbox_level == 0);
+        re15_letterbox_tick(0);
+        CHECK("letterbox: stays 0 when closed", g_letterbox_level == 0);
     }
 
     if (g_fail) { printf("SCD-FLAG-FADE: FAIL\n"); return 1; }

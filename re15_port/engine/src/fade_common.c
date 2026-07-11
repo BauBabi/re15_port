@@ -69,6 +69,24 @@ void re15_fade_tick(void)
     }
 }
 
+/* CINEMATIC LETTERBOX counter (FUN_80021a0c, trace wf_bba41002 — every instruction verified):
+ *   up:   (DAT_800aca3c & 0x10) && cnt < 0xF0  -> cnt += 0x10   (lbu/sltiu 0xf0 @0x80021a40-54)
+ *   down: !(bit)               && cnt >= 0x10  -> cnt -= 0x10   (sltiu 0x10 @0x80021a68; the
+ *         decrement is `addiu +0xF0` with u8 wrap @0x80021a7c-80 — same result)
+ * 15 frames for a full open/close. The counter is an ENGINE global (persists across rooms;
+ * the room-load chain clears the DIRECTION bit instead — FUN_800396fc masks aca3c's low 16
+ * bits — so the bars ramp shut behind the load blank). */
+uint8_t g_letterbox_level = 0;
+
+void re15_letterbox_tick(int cine_request)
+{
+    if (cine_request) {
+        if (g_letterbox_level < 0xF0) g_letterbox_level = (uint8_t)(g_letterbox_level + 0x10);
+    } else {
+        if (g_letterbox_level >= 0x10) g_letterbox_level = (uint8_t)(g_letterbox_level - 0x10);
+    }
+}
+
 /* Boot park (LAB_80021138 @0x80021238-40 per channel): FUN_800217b0(ch|0x100, 0x100, 3, 0)
  * = ABR1 additive, step 0x100, mask 3 (G+B), bucket 0 — then FUN_80021764 (level=0xffff).
  * The defaults are never seen; every real user reconfigures first. NOT re-run on room load

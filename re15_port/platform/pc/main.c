@@ -21,6 +21,7 @@
 #include "re15_engine.h"
 #include "re15_tim.h"
 #include "re15_scd.h"
+#include "re15_fade.h"      /* fade channels + the letterbox counter (FUN_80021a0c) */
 #include "re15_md1.h"
 
 re15_engine_state_t g_engine;
@@ -1247,6 +1248,12 @@ int main(int argc, char *argv[])
              * by camera framing (cut 0x03), not a despawn — see the audit. */
             static int s_cine_was_active = 0;
             int cine_active = re15_game_flag_get(1, 27) || re15_game_flag_get(2, 7);
+            /* Byte-true LETTERBOX counter (FUN_80021a0c @0x80020f34, once per frame): ramps
+             * ±0x10 within [0, 0xF0] on the LIVE flag(1,27) bit — the bars' subtractive gray
+             * level the renderer draws (bg - level). Replaces the binary 24/0 bar toggle;
+             * the countdown below stays as the player_mode HANDOFF timer (its 15 decrements
+             * == the 15 level steps). Trace wf_bba41002 (#21). */
+            re15_letterbox_tick(re15_game_flag_get(1, 27));
             if (cine_active) {
                 g_scd.player_mode         = 2;    /* scripted */
                 g_scd.letterbox_countdown = -1;   /* bars held while scripted */
@@ -1647,14 +1654,9 @@ int main(int argc, char *argv[])
              * topmost building/window row that's visible during gameplay
              * (non-cutscene.png). Gate on the cinematic flags sub02 sets. */
             {
-                extern void re15_render_pc_set_letterbox(int h);
-                /* Letterbox is its OWN render FSM (PSX FUN_80020f8c PolyF4 quads +
-                 * FUN_80021a0c driver), orthogonal to player_mode. On while scripted
-                 * (countdown=-1) and during the close after Plc_ret; off at 0.
-                 * BO-round (Tier-3 #3): 24px = canonical PSX bar height (POLY_F4
-                 * y2 = 0x18; top 0..24, bottom 216..240), NOT the old 17px ablauf
-                 * measurement. */
-                re15_render_pc_set_letterbox(g_scd.letterbox_countdown != 0 ? 24 : 0);
+                /* Letterbox: now the byte-true FUN_80021a0c counter model — the renderer
+                 * reads g_letterbox_level directly (ticked above on the live flag(1,27));
+                 * the old binary set_letterbox(24/0) toggle is superseded (#21). */
 
                 /* BO-round: ramp the cinematic fade-in (alpha 255→0 over 15 frames =
                  * canonical FUN_80021a0c ±0x10/frame). PSX fades in from black. */

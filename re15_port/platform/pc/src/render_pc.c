@@ -637,18 +637,26 @@ void re15_render_end_frame(void)
         SDL_SetRenderDrawBlendMode(s_renderer, SDL_BLENDMODE_BLEND);
     }
 
-    /* #1B (2026-07-02): cinematic letterbox — black bars top+bottom during cutscenes.
-     * Drawn BEFORE the subtitle overlay so the cinematic subtitle sits ON the black bar
-     * (text OVER bars), byte-true to the PSX original where the letterbox POLY_F4 quads
-     * (FUN_80020f8c) are behind the text primitives in the OT. Was drawn AFTER the text,
-     * which covered/clipped the subtitle. Bars still occlude BG + 3D (composited earlier);
-     * s_letterbox_h=0 during gameplay (no bars). */
-    if (s_letterbox_h > 0) {
-        SDL_SetRenderDrawColor(s_renderer, 0, 0, 0, 255);
-        SDL_Rect top = { 0, 0, SCREEN_XRES, s_letterbox_h };
-        SDL_Rect bot = { 0, SCREEN_YRES - s_letterbox_h, SCREEN_XRES, s_letterbox_h };
+    /* Cinematic LETTERBOX — byte-true FUN_80021a0c (#21, trace wf_bba41002): two static
+     * POLY_F4 strips (0,0)-(320,24) + (0,216)-(320,240) whose RGB = the ±0x10/frame counter
+     * (g_letterbox_level), code 0x2A semi-trans + DR_MODE ABR=2 SUBTRACTIVE -> pixel =
+     * background - level: the bars RAMP smoothly to black over 15 frames instead of popping
+     * opaque. OT bucket 4: over the SCD fade (bucket 7, drawn above) and UNDER the subtitle
+     * overlay (drawn after) — text sits ON the bars, byte-true. Bars emit only when the
+     * counter != 0 (@0x80021b20). The old binary s_letterbox_h path is superseded (the
+     * legacy setter remains a no-op shim for the PSX-side main). */
+    if (g_letterbox_level != 0) {
+        SDL_BlendMode bm = SDL_ComposeCustomBlendMode(   /* ABR2: dst - src per channel */
+            SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_REV_SUBTRACT,
+            SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_ADD);
+        SDL_SetRenderDrawBlendMode(s_renderer, bm);
+        SDL_SetRenderDrawColor(s_renderer, g_letterbox_level, g_letterbox_level,
+                               g_letterbox_level, 255);
+        SDL_Rect top = { 0, 0, SCREEN_XRES, 24 };
+        SDL_Rect bot = { 0, SCREEN_YRES - 24, SCREEN_XRES, 24 };
         SDL_RenderFillRect(s_renderer, &top);
         SDL_RenderFillRect(s_renderer, &bot);
+        SDL_SetRenderDrawBlendMode(s_renderer, SDL_BLENDMODE_BLEND);
     }
 
     /* Subtitle overlay ON TOP of the 3D + foreground AND the letterbox bars (drawn after
