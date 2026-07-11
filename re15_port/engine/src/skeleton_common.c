@@ -412,10 +412,13 @@ int re15_skel_compute_pose(const re15_emd_skeleton_t *skel,
              * hiding this bug.
              *
              * AX-round 2026-05-28: tested revert (= trans = kf only) but
-             * user reports Elliot becomes mis-positioned. Keeping AL fix
-             * — the 25-37% size mismatch vs ablauf must come from another
-             * source (camera projection, viewport scaling, or PSX-side
-             * factor we're missing). 50-agent RE follow-up dispatched. */
+             * user reports Elliot becomes mis-positioned. Keeping AL fix.
+             * The 25-37% size mismatch vs ablauf was the CAMERA-PROJECTION
+             * z-error of the old FLOAT LookAt — RESOLVED by the integer
+             * setupCameraLookAtMatrix rewrite (camera_common.c). Audit
+             * wf_afe47fe0 (2026-07-11) confirmed fov→H (fov>>7), the RTPS
+             * formula (160+H·x/z), and the model-scale (identity) are all
+             * factor-1.0 byte-true — no residual size factor remains here. */
             memcpy(poses[b].rot, local_rot, sizeof(local_rot));
             /* Root translation = keyframe px/py/pz ONLY (FUN_8001f3bc.c:28-37
              * assigns, does NOT add the EMR bind). The bind bone[0] is the

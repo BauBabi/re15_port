@@ -2,26 +2,20 @@
  * RE1.5 Rebuilt — Camera math (Phase 4.5.8.1, 2026-05-19).
  *
  * Target-agnostic view-matrix builder + bundled ROOM1100 test cuts.
- * Pure C, NO libm dependency — PSn00bSDK is freestanding (no math.h).
- * Float ops + division are provided by libgcc on both targets; we
- * implement sqrt locally via 8-iteration Newton-Raphson.
  *
- * Algorithm = direct port of RE2's FUN_80076cb0:
- *   forward = (target - pos) / |target - pos|
- *   sp = -forward.y                 (sin pitch; pitch = -asin(fy), PSX +Y down)
- *   cp = sqrt(fx² + fz²)            (cos pitch = sqrt(1-fy²))
- *   sy = fx / cp                    (sin yaw; yaw = atan2(fx, fz))
- *   cy = fz / cp                    (cos yaw)
- *   M  = R_pitch * R_yaw
- *   t  = -M * pos
+ * ⚠️ HISTORY: this once built the matrix in FLOAT (a `forward=(target-pos)/|..|`
+ * cross-product LookAt + Newton-Raphson sqrt + Q12_ROUND). That was NOT byte-true and
+ * has been REPLACED — see re15_camera_build_view below. The byte-true implementation is
+ * the pure-INTEGER RE1.5 setupCameraLookAtMatrix (FUN_80053ca4 @0x80053ca4):
+ *   dist  = SquareRoot0(dx²+dy²+dz²);  horiz = SquareRoot0(dx²+dz²)   (the BIOS table sqrt)
+ *   sin/cos of pitch+yaw = TRUNCATING integer division (component*4096)/dist   (no float, no rounding)
+ *   V = Rx(pitch) · Ry(yaw) via per-product-truncated GTE MulMatrix; t = V·(-pos) via ApplyMatrixLV.
+ * fov→H = fov>>7 (fov_to_screen_dist); the projection sx=160+H·x/z is byte-true (audit wf_afe47fe0
+ * confirmed fov→H, the RTPS formula, and the model-scale are all factor-1.0 byte-true — the historical
+ * "25-37% character-size mismatch" was THIS float LookAt's z-error and is resolved by the integer form).
  *
- * Avoids asin/atan2 by reading sp/cp/sy/cy directly off the normalized
- * forward vector. Avoids libm by inlining sqrt. Called ONCE per cut
- * change, never per frame — performance non-critical.
- *
- * The composed matrix is stored Q12 (0x1000 = 1.0), matching the Q12
- * convention from skeleton_common.c so the renderer can mul view × bone
- * with the same Q12_MUL helpers.
+ * The matrix is Q12 (0x1000 = 1.0), matching skeleton_common.c so the renderer mul's view × bone
+ * with the same Q12 helpers. Called ONCE per cut change, never per frame.
  */
 
 #include <stdint.h>
