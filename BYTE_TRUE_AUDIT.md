@@ -234,6 +234,11 @@ Multi-Agent-Audit: 20 Subsysteme, 123 WRONG/MISSING-Verdachtsfälle, **104 adver
 ### #20 · HIGH · REPAIR · audio-vab
 **ADPCM-Predictor-Reset bei Loop-Flag (0x04) entfernen (Hardware-DiskontinuitÃ¤t)**
 
+> ✅ **ERLEDIGT** (Status nachgetragen 2026-07-11) — der `if(flags&0x04){state1=0;state2=0;}`-Block
+> ist entfernt; vab_common.c (~Z.290) trägt den byte-true `[#20]`-Kommentar: Flag-Bit 0x04 = NUR
+> Adress-Kopie ins Repeat-Register (psx-spx; pcsx-redux spu.cc:618 setzt nur pLoop), state1/state2
+> laufen kontinuierlich über die Block-Grenze.
+
 - **Ort:** `re15_port/engine/src/vab_common.c:291-294 (if(flags&0x04){state1=0;state2=0;})`
 - **RE-Beleg:** psx-spx soundprocessingunitspu.md:128-141 (Flag-Bit2=nur Copy-address-to-repeat-reg, KEIN Reset). vag2wav.c:150-177 (s_1/s_2 nie per Flag resettet). RE1.5 legt Loop-Marker auf Block 1 -> Port reiÃŸt Predictor-Kette an Block0->1.
 - **Fix:** if(flags&0x04){...}-Block ersatzlos entfernen. Predictor-State nur einmal pro VAG am Decode-Start (f=0) auf 0 (geschieht schon L248-249). Loop-Start-Adresse separat erfassen ohne Predictor-Einfluss.
