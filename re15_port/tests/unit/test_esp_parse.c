@@ -298,6 +298,30 @@ int main(void)
                 if (!dfail) printf("  (D3) PASS: splatter seeds the 3 streams from the rows (no RNG)\n");
             }
 
+            /* === the ROW VM (stage 2): multi-phase ballistics — blood st0 runs routine 3
+             * (countdown 7), then ADVANCES to row 1 which RE-SEEDS the velocity to (60,14,0)
+             * (@CORE00 0x96c). The old single-phase model kept the spawn velocity forever. */
+            {
+                re15_esp_fx_reset();
+                re15_esp_fx_splatter(NULL, 0x00, 1, 0, 0, 0, 30000);   /* floor far away */
+                re15_esp_fx_t *f0 = (re15_esp_fx_t *)re15_esp_fx_get(0);
+                int vfail = 0;
+                if (!f0) { vfail = 1; }
+                else {
+                    for (int t = 0; t < 8 && f0->active; t++) re15_esp_fx_tick(NULL);   /* 7 decrements + the 0-check tick */
+                    /* after the 7-count the advance re-seeded row 1: accel (-2,8,0), drift base
+                     * (60,14,0) + the integration steps already applied by the ticks. */
+                    if (f0->row_cursor != 1) { fprintf(stderr, "FAIL: (D4) st0 must advance to row 1 after the 7-count, cursor=%d\n", f0->row_cursor); vfail = 1; }
+                    /* the re-seed itself is exact: the drift right AFTER the advance tick is
+                     * row1.drift + one accel step = (60-2, 14+8) = (58, 22). */
+                    if (f0->active && (f0->drift_x != 58 || f0->drift_y != 22)) {
+                        fprintf(stderr, "FAIL: (D4) row-1 re-seed drift must be (58,22) post-accel, got (%d,%d)\n",
+                                f0->drift_x, f0->drift_y); vfail = 1; }
+                }
+                if (!vfail) printf("  (D4) PASS: blood st0 multi-phase ballistics (7-count -> row-1 velocity re-seed)\n");
+                else dfail = 1;
+            }
+
             re15_esp_fx_reset();
             re15_esp_set_global_bank(NULL);
             free(gbuf);

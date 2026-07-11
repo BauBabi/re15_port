@@ -141,10 +141,22 @@ typedef struct {
      * RNG-spread initial drift, integrated position offset xlat, floor bounce (routine 12). Draw
      * adds xlat to the anchor. phys==0 = a normal (non-splatter) fx = the existing cell-cycle. */
     uint8_t  phys;         /* 1 = run the drift/gravity integration (slot+0x6c bit5==0) */
-    int16_t  accel_x, accel_y, accel_z;   /* slot+0x08/0a/0c (gravity: y=+8 down, live-confirmed) */
-    int16_t  drift_x, drift_y, drift_z;   /* slot+0x10/12/14 (velocity; routine 11 RNG spread)    */
+    int16_t  accel_x, accel_y, accel_z;   /* slot+0x08/0a/0c (ROW constants — trace wf_a18487d9)  */
+    int16_t  drift_x, drift_y, drift_z;   /* slot+0x10/12/14 (velocity; row-seeded)               */
     int32_t  xlat_x, xlat_y, xlat_z;      /* slot+0x34/38/3c s32 (accumulated fall offset)         */
     int32_t  floor_y;      /* the bounce plane (routine 12 room_coll → collapsed to a floor clamp) */
+    /* ===== the ROW VM (stage 2, blood subset — trace wf_a18487d9): the active 40-byte row copy
+     * (identity copy @0x80019908-44 / FUN_800174e4), the stream row list, and the flags byte
+     * (+0x6c: bit0 active, bit1 visible, bit4 ABE, bit5 freeze-physics, bit6 freeze-frame).
+     * routineA (row u16 +0x00) dispatches per tick; supported subset: 0 noop, 3 countdown-then-
+     * flags, 4 two-phase freeze-stagger, 5 anim-set. A row ADVANCE re-copies the next row =
+     * re-seeds accel/velocity mid-flight (the multi-phase ballistics). rows_base==NULL = the
+     * legacy fx (no VM). */
+    const uint8_t *rows_base;   /* stream rows (points into the bank's raw ESP; borrowed) */
+    uint8_t  row_count;         /* rows in this stream */
+    uint8_t  row_cursor;        /* slot+0x6f */
+    uint8_t  row[40];           /* the active row copy (slot+0x00..0x27) */
+    uint8_t  flags;             /* slot+0x6c */
 } re15_esp_fx_t;
 
 void           re15_esp_fx_reset(void);

@@ -331,6 +331,82 @@ re15_esp_fx_t *re15_esp_fx_spawn(const re15_esp_t *bank, uint8_t effect_id, uint
     return re15_esp_fx_spawn_ex(bank, effect_id, sub_index, 0x1000, x, y, z, param);
 }
 
+/* ===== the ROW VM (stage 2, blood subset — trace wf_a18487d9) ==============================
+ * Row helpers: identity-copy row `idx` into the slot (the spawner row-0 copy @0x80019908-44
+ * and the advance FUN_800174e4 both do the same 40-byte copy) — accel/velocity/selectors are
+ * RE-SEEDED on every advance (each row = one ballistic phase). */
+static uint16_t row_u16(const uint8_t *r, int off) { return (uint16_t)(r[off] | (r[off+1] << 8)); }
+
+static void esp_fx_row_load(re15_esp_fx_t *f, int idx)
+{
+    if (!f->rows_base || idx < 0 || idx >= f->row_count) return;
+    const uint8_t *r = f->rows_base + idx * ESP_ROW_BYTES;
+    memcpy(f->row, r, ESP_ROW_BYTES);
+    f->accel_x = (int16_t)row_u16(r, 0x08);   /* +0x08/0a/0c */
+    f->accel_y = (int16_t)row_u16(r, 0x0a);
+    f->accel_z = (int16_t)row_u16(r, 0x0c);
+    f->drift_x = (int16_t)row_u16(r, 0x10);   /* +0x10/12/14 */
+    f->drift_y = (int16_t)row_u16(r, 0x12);
+    f->drift_z = (int16_t)row_u16(r, 0x14);
+}
+
+/* FUN_800174e4: cursor++ (slot+0x6f), copy the next row (no terminator — the data ends on a
+ * gate-less noop row). */
+static void esp_fx_row_advance(re15_esp_fx_t *f)
+{
+    if (!f->rows_base) return;
+    if (f->row_cursor + 1 >= f->row_count) return;   /* past the list: hold (data never does this) */
+    f->row_cursor++;
+    esp_fx_row_load(f, f->row_cursor);
+}
+
+/* The loop-1 routineA dispatch (FUN_80019e20 @0x80019e84-9c) — the BLOOD subset:
+ *   0  noop (@0x80017248 jr-ra)
+ *   3  countdown row[0x16]; at 0: flags := row[0x0e], advance if row[0x26] (@0x80017348-...)
+ *   4  two-phase freeze: flags := row[0x0e] (e.g. 0x61 = bit5 physics-freeze), countdown
+ *      row[0x16]; at 0: flags := row[0x1e] (release), advance if row[0x26] (@0x800173a4-...)
+ *   5  anim-record index := row[0x0e], advance if row[0x26] (@0x80017430-...)
+ * Unsupported selectors (the muzzle/shell/room chains — stage 3) act as noop here; the
+ * physics/anim layers still run them faithfully enough for the ballistic droplets. */
+static void esp_fx_dispatch(re15_esp_fx_t *f)
+{
+    if (!f->rows_base) return;
+    uint16_t A = row_u16(f->row, 0x00);
+    switch (A) {
+        case 0: break;
+        case 3: {
+            uint16_t cnt = row_u16(f->row, 0x16);
+            if (cnt != 0) { cnt--; f->row[0x16] = (uint8_t)cnt; f->row[0x17] = (uint8_t)(cnt >> 8); }
+            else {
+                f->flags = f->row[0x0e];
+                if (row_u16(f->row, 0x26)) esp_fx_row_advance(f);
+                else { f->row[0] = 0; f->row[1] = 0; }   /* hold as noop */
+            }
+            break;
+        }
+        case 4: {
+            f->flags = f->row[0x0e];                     /* phase-1 flags (0x61 = frozen) */
+            uint16_t cnt = row_u16(f->row, 0x16);
+            if (cnt != 0) { cnt--; f->row[0x16] = (uint8_t)cnt; f->row[0x17] = (uint8_t)(cnt >> 8); }
+            else {
+                f->flags = f->row[0x1e];                 /* phase-2 flags (release, 0x03) */
+                if (row_u16(f->row, 0x26)) esp_fx_row_advance(f);
+                else { f->row[0] = 0; f->row[1] = 0; }
+            }
+            break;
+        }
+        case 5: {
+            f->frame = (int16_t)((f->row[0x0e]) - 1);    /* anim idx := row[0x0e]; -1: the tick's
+                                                          * frame++ lands ON it */
+            f->timer = 0;
+            if (row_u16(f->row, 0x26)) esp_fx_row_advance(f);
+            else { f->row[0] = 0; f->row[1] = 0; }
+            break;
+        }
+        default: break;                                  /* stage-3 selectors: noop for now */
+    }
+}
+
 /* Byte-true blood/gore SPLATTER — CORRECTED per trace wf_a18487d9 (adversarially verified):
  * blood id 0 is a set of PURE BALLISTIC STREAMS with per-stream ROW CONSTANTS — one spawner call
  * allocates one slot per STREAM, each seeded with ITS row-0 accel/velocity straight from the ESP
@@ -355,17 +431,16 @@ void re15_esp_fx_splatter(const re15_esp_t *bank, uint8_t effect_id, int n,
         if (streams > 0) {
             for (int s = 0; s < streams; s++) {
                 int nrows = 0;
-                const uint8_t *row = re15_esp_row_stream(rb, ei, 0, s, &nrows);
-                if (!row || nrows <= 0) continue;
+                const uint8_t *rows = re15_esp_row_stream(rb, ei, 0, s, &nrows);
+                if (!rows || nrows <= 0) continue;
                 re15_esp_fx_t *f = re15_esp_fx_spawn_ex(bank, effect_id, 0, 0x1000, x, y, z, 0);
                 if (!f) return;                 /* pool full */
-                f->phys    = 1;
-                f->accel_x = (int16_t)(row[0x08] | (row[0x09] << 8));   /* row +0x08/0a/0c */
-                f->accel_y = (int16_t)(row[0x0a] | (row[0x0b] << 8));
-                f->accel_z = (int16_t)(row[0x0c] | (row[0x0d] << 8));
-                f->drift_x = (int16_t)(row[0x10] | (row[0x11] << 8));   /* row +0x10/12/14 */
-                f->drift_y = (int16_t)(row[0x12] | (row[0x13] << 8));
-                f->drift_z = (int16_t)(row[0x14] | (row[0x15] << 8));
+                f->phys      = 1;
+                f->flags     = 0x03;            /* spawner init (@0x800197b4-d0): active+visible */
+                f->rows_base = rows;
+                f->row_count = (uint8_t)(nrows > 255 ? 255 : nrows);
+                f->row_cursor = 0;
+                esp_fx_row_load(f, 0);          /* row-0 copy: accel/velocity/selectors */
                 f->xlat_x = f->xlat_y = f->xlat_z = 0;
                 f->floor_y = floor_y;
             }
@@ -397,10 +472,16 @@ void re15_esp_fx_tick(const re15_esp_t *bank)
         re15_esp_fx_t *f = &s_esp_fx[i];
         if (!f->active) continue;
 
+        /* ROW-VM DISPATCH (stage 2 blood subset — FUN_80019e20 loop 1): run the row's routineA
+         * BEFORE the physics, exactly like the PSX tick order. An advance re-seeds accel/velocity
+         * = the multi-phase ballistics (blood st0 switches to (60,14,0) after its 7-tick count). */
+        if (f->rows_base) esp_fx_dispatch(f);
+
         /* PHYSICS (byte-exact tick @0x8001a2f0, gated flags bit5==0): the position offset xlat
          * (s32) integrates the drift velocity, which itself accelerates by gravity — LIVE-confirmed
-         * against mzd_stage1_hit_effect.sav. Draw adds xlat to the anchor. */
-        if (f->phys) {
+         * against mzd_stage1_hit_effect.sav. Draw adds xlat to the anchor. The row-VM freeze bit
+         * (flags bit5, e.g. the sub-2 stagger rows' 0x61) pauses the integration. */
+        if (f->phys && !(f->rows_base && (f->flags & 0x20))) {
             f->xlat_x += f->drift_x;                 /* xlat[0x34] += drift[0x10] */
             f->xlat_y += f->drift_y;                 /* xlat[0x38] += drift[0x12] */
             f->xlat_z += f->drift_z;                 /* xlat[0x3c] += drift[0x14] */
