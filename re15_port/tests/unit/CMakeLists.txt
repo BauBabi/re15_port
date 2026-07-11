@@ -335,6 +335,13 @@ target_include_directories(test_anim_pose_order PRIVATE ${CMAKE_SOURCE_DIR}/incl
 add_test(NAME unit_anim_pose_order COMMAND test_anim_pose_order)
 set_tests_properties(unit_anim_pose_order PROPERTIES TIMEOUT 30)
 
+# --- Byte-true ADPCM END-flag/shift-clamp + EDT layering/water mask (audio audit wf_1db9c802) ---
+add_executable(test_audio_decode test_audio_decode.c)
+target_link_libraries(test_audio_decode PRIVATE re15_engine re15_test_support)
+target_include_directories(test_audio_decode PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_audio_decode COMMAND test_audio_decode)
+set_tests_properties(unit_audio_decode PROPERTIES TIMEOUT 30)
+
 # --- Byte-true RE1.5 camera LookAt (audit #3 — integer SquareRoot0 + division, no float/rounding) ---
 add_executable(test_camera_view test_camera_view.c)
 target_link_libraries(test_camera_view PRIVATE re15_engine re15_test_support)

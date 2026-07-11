@@ -87,8 +87,19 @@ const re15_vab_tone_t *re15_vab_find_tone(const re15_vab_t *vab,
 
 /* Footstep EDT resolver (byte-true FUN_80045630): map a floor.flr sound_type
  * to a 0-based sample index in `vab` (snd0) via the room's 128-byte EDT table
- * (snd0.edt). Returns -1 if the slot is empty or points at another bank. */
+ * (snd0.edt). Returns -1 if the slot is empty or points at another bank.
+ * The 0x80 water bit is masked off (FUN_80045630 @0x80045718 `andi 0x7f` — a
+ * water floor still steps; the splash fx branch is separate). */
 int re15_footstep_vag(const uint8_t *edt, const re15_vab_t *vab, int sound_type);
+
+/* SE-record LAYER resolver (byte-true FUN_80045024 @0x8004516c `srl s3,v1,5` /
+ * FUN_800453d0 @0x8004548c): EDT record byte3 bits 5-7 = the count of ADDITIONAL
+ * consecutive tones keyed on with the base tone (byte2>>4) — e.g. the handgun
+ * GUNSHOT (ARMS record 0 = 00 00 13 30) keys tone1+tone2 = VAG2+VAG3 layered.
+ * Fills out_vags[] with 0-based sample indices (first = the base tone), stops at
+ * an empty tone slot or max_out; returns the layer count (0 = empty record). */
+int re15_edt_resolve_layers(const uint8_t *edt, const re15_vab_t *vab,
+                            int se_id, int *out_vags, int max_out);
 
 /* Parse a VH (header) blob. Computes sample offsets + sizes by walking
  * the VAG size table. Returns 0 on success, negative on error:

@@ -448,57 +448,51 @@ static int load_room_se_vab_pc(void)
     return 0;
 }
 
-/* Play a room SE by id (byte-true FUN_800453d0 core, PC path). The per-room SE table
- * (snd1 EDT, DAT_800ac778+0x14) maps se_id → program+tone → VAG (identical to the footstep
- * lookup, re15_footstep_vag). We resolve the VAG and mix it into the SE voices. The exact
- * pitch (record byte0) + SPU voice/pan (byte3) are FAITHFUL-LINE (the VAG selection + play
- * is byte-true; the fine voice params are the deferred SPU-driver detail). Used by the C-driven
- * combat (e.g. the zombie death groan, FUN_80107cb0 frame 7 -> func_0x800453d0(rng&1?8:5)). */
-void re15_audio_room_se(int se_id)
+/* Activate one mixer voice per resolved SE LAYER (byte-true FUN_80045024 @0x8004516c /
+ * FUN_800453d0 @0x8004548c: EDT record byte3 bits 5-7 = extra consecutive tones keyed on with
+ * the base tone — the handgun gunshot is TWO layered VAGs. audit wf_1db9c802 AUD-EDT-LAYER-B3HI.
+ * Per-tone volume/pan stay the documented faithful-line deferral (flat 100 here). */
+static void se_play_layers(const uint8_t *edt, const re15_vab_t *vab,
+                           int16_t *const *decoded, const int *decoded_len, int se_id)
 {
-    if (!g_audio.initialized || !s_se_loaded || se_id < 0 || se_id >= 0x19) return;
-    int vag = re15_footstep_vag(s_se_edt, &s_se_vab, se_id);   /* EDT record -> program/tone -> VAG */
-    if (vag < 0 || vag >= RE15_VAB_MAX_SAMPLES || !s_se_decoded[vag]) return;
-
-    int tvol = 100;                                            /* default; per-tone vol is the refinement */
-    int vol  = (tvol * 0x4000 / 127) >> 1;
-    if (vol > 0x4000) vol = 0x4000; if (vol < 0) vol = 0;
-
+    int vags[8];
+    int n = re15_edt_resolve_layers(edt, vab, se_id, vags, 8);
+    if (n <= 0) return;
+    int vol = (100 * 0x4000 / 127) >> 1;
     SDL_LockAudioDevice(s_audio_dev);
-    int slot = -1;
-    for (int i = 0; i < MIXER_MAX_ACTIVE_SAMPLES; i++)
-        if (!s_active[i].active) { slot = i; break; }
-    if (slot < 0) { slot = s_next_slot; s_next_slot = (s_next_slot + 1) % MIXER_MAX_ACTIVE_SAMPLES; }
-    s_active[slot].pcm        = s_se_decoded[vag];
-    s_active[slot].pcm_len    = s_se_decoded_len[vag];
-    s_active[slot].pos        = 0;
-    s_active[slot].subpos     = 0;
-    s_active[slot].volume_q15 = vol;
-    s_active[slot].active     = 1;
+    for (int k = 0; k < n; k++) {
+        int vag = vags[k];
+        if (vag < 0 || vag >= RE15_VAB_MAX_SAMPLES || !decoded[vag]) continue;
+        int slot = -1;
+        for (int i = 0; i < MIXER_MAX_ACTIVE_SAMPLES; i++)
+            if (!s_active[i].active) { slot = i; break; }
+        if (slot < 0) { slot = s_next_slot; s_next_slot = (s_next_slot + 1) % MIXER_MAX_ACTIVE_SAMPLES; }
+        s_active[slot].pcm        = decoded[vag];
+        s_active[slot].pcm_len    = decoded_len[vag];
+        s_active[slot].pos        = 0;
+        s_active[slot].subpos     = 0;
+        s_active[slot].volume_q15 = vol;
+        s_active[slot].active     = 1;
+    }
     SDL_UnlockAudioDevice(s_audio_dev);
 }
 
+/* Play a room SE by id (byte-true FUN_800453d0 core, PC path). The per-room SE table
+ * (snd1 EDT, DAT_800ac778+0x14) maps se_id → program+tone(+layers) → VAG(s). The exact
+ * pitch (record byte0) + SPU voice/pan (byte3 low bits) are FAITHFUL-LINE. Used by the
+ * C-driven combat (e.g. the zombie death groan, FUN_80107cb0 frame 7 -> 800453d0(rng&1?8:5)). */
+void re15_audio_room_se(int se_id)
+{
+    if (!g_audio.initialized || !s_se_loaded || se_id < 0 || se_id >= 0x19) return;
+    se_play_layers(s_se_edt, &s_se_vab, s_se_decoded, s_se_decoded_len, se_id);
+}
+
 /* Play a room SE from the snd0 bank (byte-true FUN_80045024 bank 2). Same EDT->prog/tone->VAG
- * lookup as room_se (snd1), on the resident snd0 bank the footsteps also use. */
+ * layering as room_se (snd1), on the resident snd0 bank the footsteps also use. */
 void re15_audio_room_se_snd0(int se_id)
 {
     if (!g_audio.initialized || !s_foot_loaded || se_id < 0) return;
-    int vag = re15_footstep_vag(s_foot_edt, &s_foot_vab, se_id);   /* EDT record -> program/tone -> VAG */
-    if (vag < 0 || vag >= RE15_VAB_MAX_SAMPLES || !s_foot_decoded[vag]) return;
-
-    int vol = (100 * 0x4000 / 127) >> 1;
-    SDL_LockAudioDevice(s_audio_dev);
-    int slot = -1;
-    for (int i = 0; i < MIXER_MAX_ACTIVE_SAMPLES; i++)
-        if (!s_active[i].active) { slot = i; break; }
-    if (slot < 0) { slot = s_next_slot; s_next_slot = (s_next_slot + 1) % MIXER_MAX_ACTIVE_SAMPLES; }
-    s_active[slot].pcm        = s_foot_decoded[vag];
-    s_active[slot].pcm_len    = s_foot_decoded_len[vag];
-    s_active[slot].pos        = 0;
-    s_active[slot].subpos     = 0;
-    s_active[slot].volume_q15 = vol;
-    s_active[slot].active     = 1;
-    SDL_UnlockAudioDevice(s_audio_dev);
+    se_play_layers(s_foot_edt, &s_foot_vab, s_foot_decoded, s_foot_decoded_len, se_id);
 }
 
 /* Load + decode the resident WEAPON SE bank (bank1) for `weapon_id` from SOUND/ARMS%02X.EDH + .VB
@@ -600,21 +594,7 @@ void re15_audio_core_se(int se_id)
     if (!g_audio.initialized) return;
     if (!s_core_loaded && load_core_se_vab_pc() != 0) return;
     if (se_id < 0 || se_id >= s_core_edt_count) return;
-    int vag = re15_footstep_vag(s_core_edt, &s_core_vab, se_id);
-    if (vag < 0 || vag >= RE15_VAB_MAX_SAMPLES || !s_core_decoded[vag]) return;
-    int vol = (100 * 0x4000 / 127) >> 1;
-    SDL_LockAudioDevice(s_audio_dev);
-    int slot = -1;
-    for (int i = 0; i < MIXER_MAX_ACTIVE_SAMPLES; i++)
-        if (!s_active[i].active) { slot = i; break; }
-    if (slot < 0) { slot = s_next_slot; s_next_slot = (s_next_slot + 1) % MIXER_MAX_ACTIVE_SAMPLES; }
-    s_active[slot].pcm        = s_core_decoded[vag];
-    s_active[slot].pcm_len    = s_core_decoded_len[vag];
-    s_active[slot].pos        = 0;
-    s_active[slot].subpos     = 0;
-    s_active[slot].volume_q15 = vol;
-    s_active[slot].active     = 1;
-    SDL_UnlockAudioDevice(s_audio_dev);
+    se_play_layers(s_core_edt, &s_core_vab, s_core_decoded, s_core_decoded_len, se_id);
 }
 
 /* Play a WEAPON SE by id (byte-true FUN_80045024 bank1 core, PC path). The equipped weapon's ARMS
@@ -624,25 +604,9 @@ void re15_audio_core_se(int se_id)
 void re15_audio_weapon_se(int se_id)
 {
     if (!g_audio.initialized || !s_weap_loaded || se_id < 0 || se_id >= s_weap_edt_count) return;
-    int vag = re15_footstep_vag(s_weap_edt, &s_weap_vab, se_id);   /* EDT record -> program/tone -> VAG */
-    if (vag < 0 || vag >= RE15_VAB_MAX_SAMPLES || !s_weap_decoded[vag]) return;
-
-    int tvol = 100;                                            /* default; per-tone vol is the refinement */
-    int vol  = (tvol * 0x4000 / 127) >> 1;
-    if (vol > 0x4000) vol = 0x4000; if (vol < 0) vol = 0;
-
-    SDL_LockAudioDevice(s_audio_dev);
-    int slot = -1;
-    for (int i = 0; i < MIXER_MAX_ACTIVE_SAMPLES; i++)
-        if (!s_active[i].active) { slot = i; break; }
-    if (slot < 0) { slot = s_next_slot; s_next_slot = (s_next_slot + 1) % MIXER_MAX_ACTIVE_SAMPLES; }
-    s_active[slot].pcm        = s_weap_decoded[vag];
-    s_active[slot].pcm_len    = s_weap_decoded_len[vag];
-    s_active[slot].pos        = 0;
-    s_active[slot].subpos     = 0;
-    s_active[slot].volume_q15 = vol;
-    s_active[slot].active     = 1;
-    SDL_UnlockAudioDevice(s_audio_dev);
+    /* LAYERED (byte-true): ARMS record 0 (the gunshot) = 00 00 13 30 -> byte3 0x30 = 1 extra tone,
+     * so the original keys VAG2 AND VAG3 simultaneously; every ARMS bank layers record 0. */
+    se_play_layers(s_weap_edt, &s_weap_vab, s_weap_decoded, s_weap_decoded_len, se_id);
 }
 
 /* Re-prime bank1 to `weapon_id`'s ARMS bank (byte-true FUN_80043d8c parity) — the weapon-select
@@ -926,20 +890,25 @@ static void ss_decode_vab(ss_seq_t *s, const uint8_t *vb, int vb_sz)
         if (!pcm) continue;
         s->vag_pcm[i] = pcm;
         s->vag_len[i] = re15_vag_adpcm_decode(vb + off, sz, pcm, cap);
-        /* PSX VAG loop semantics (psx-spx): flag bit2 (0x04)=loop-start (the
-         * repeat address); the END block's bit0 (0x01)=loop-end. The voice only
-         * KEEPS looping if bit1 (0x02, repeat) is also set there — bit0 without
-         * bit1 = play-once-then-mute. So a VAG is one-shot UNLESS some block
-         * carries the repeat flag. (Old code looped on the mere presence of a
-         * 0x04 start → one-shot samples like VAG0 repeated forever = the
-         * "elements repeat / break" artefact.) */
-        int loop_start = -1, repeats = 0;
+        /* PSX VAG loop semantics (psx-spx soundprocessingunitspu.md:103-141; audit wf_1db9c802
+         * AUD-ADPCM-END-FLAG): the voice loops IFF the END block ITSELF (first block with bit
+         * 0x01) also carries bit 0x02 (Code 3 = End+Repeat); Code 1 (bit0 without bit1) =
+         * End+Mute -> one-shot. The loop start = the LAST block with bit 0x04 at/before the END
+         * block (default block 0). The old scan looked at EVERY block: one-shot VAGs are followed
+         * by a dummy looper block (flags 0x07 — bits 0x02|0x04!) inside the extent, so 4174/4175
+         * VAGs were classified as looping and a held BGM note re-looped a one-shot sample where
+         * hardware mutes at the Code-1 END. (The decoder now also STOPS at the END block, so the
+         * looper block is never part of the PCM.) */
+        int loop_start = 0, repeats = 0;
         for (uint32_t b = 0; b + 16 <= sz; b += 16) {
             uint8_t fl = vb[off + b + 1];
-            if ((fl & 0x04) && loop_start < 0) loop_start = (int)(b / 16) * 28;
-            if (fl & 0x02) repeats = 1;             /* sustaining loop */
+            if (fl & 0x04) loop_start = (int)(b / 16) * 28;   /* last 0x04 so far */
+            if (fl & 0x01) {                                   /* the END block decides */
+                repeats = (fl & 0x02) ? 1 : 0;
+                break;
+            }
         }
-        s->vag_loop[i] = repeats ? (loop_start >= 0 ? loop_start : 0) : -1;
+        s->vag_loop[i] = repeats ? loop_start : -1;
     }
 }
 
@@ -1588,7 +1557,16 @@ void re15_audio_footstep(int foot, int sound_type)
     int vag = re15_footstep_vag(s_foot_edt, &s_foot_vab, sound_type);
     if (vag < 0 || !s_foot_decoded[vag]) return;
 
-    int tvol = s_foot_vab.tones[s_foot_edt[sound_type * 4 + 2] >> 4].vol;
+    /* Tone volume with the PROGRAM stride (byte-true FUN_80045630 @0x800457dc walks
+     * VH + prog*0x200 + 0x820 + tone*0x20 — the old read omitted prog*16, so any prog!=0
+     * record (ROOM11A0 recs 1-4/6/8/9 = prog 1) read a foreign tone's volume.
+     * [audit wf_1db9c802 AUD-FOOT-VOL-STRIDE] The 0x80 water bit is masked like the resolver. */
+    int st   = sound_type & 0x7f;
+    int prog = s_foot_edt[st * 4 + 1] & 0x7f;
+    int tone = s_foot_edt[st * 4 + 2] >> 4;
+    int tvol = 0;
+    if (prog < RE15_VAB_PROGRAM_COUNT && tone < RE15_VAB_TONES_PER_PROGRAM)
+        tvol = s_foot_vab.tones[prog * RE15_VAB_TONES_PER_PROGRAM + tone].vol;
     if (!tvol) tvol = 100;
     int vol = (tvol * 0x4000 / 127) >> 1;
     if (vol > 0x4000) vol = 0x4000;

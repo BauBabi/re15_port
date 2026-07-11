@@ -161,7 +161,15 @@ int re15_vab_parse(const uint8_t *vh_data, size_t vh_size, re15_vab_t *out)
 int re15_footstep_vag(const uint8_t *edt, const re15_vab_t *vab, int sound_type)
 {
     if (edt == NULL || vab == NULL) return -1;
-    if (sound_type < 0 || sound_type > 0x7f) return -1;
+    if (sound_type < 0) return -1;
+    /* WATER floors carry bit 0x80 on the FLR sound type — the original MASKS it and still
+     * plays the record (FUN_80045630 @0x80045718 `andi v0,s0,0x7f`; the 0x80 branch only adds
+     * a splash fx before joining the play path @0x800456ac-d8). The old `> 0x7f` reject made
+     * every water-floor footstep (ROOM1260 etc.) fully SILENT. The wet -3 / DAT_800aca3c&0x4000
+     * ->9 / NPC-type -8 index modifiers (@0x800456dc/0x80045790/0x80045730) need subsystem state
+     * the port lacks (wet timer / that flag / NPC footsteps) — wired when those exist.
+     * [audit wf_1db9c802 AUD-FOOT-WATER-IDX] */
+    sound_type &= 0x7f;
 
     const uint8_t *e = edt + (size_t)sound_type * 4;
     if (e[2] == 0 && e[3] == 0) return -1;        /* empty EDT slot          */
@@ -178,6 +186,37 @@ int re15_footstep_vag(const uint8_t *edt, const re15_vab_t *vab, int sound_type)
     int vag1 = vab->tones[prog * RE15_VAB_TONES_PER_PROGRAM + tone].vag_index;  /* program prog, 1-based */
     if (vag1 <= 0 || vag1 > vab->vag_count) return -1;
     return vag1 - 1;
+}
+
+/* SE-record LAYERS (byte-true FUN_80045024 @0x8004516c `lbu v1,3(a0); srl s3,v1,5` + the layering
+ * loop keying tone+1.. on voice+1..; FUN_800453d0 @0x8004548c the same with the voice<=7 guard):
+ * record byte3 bits 5-7 = extra consecutive tones layered onto the base tone. ALL 24 ARMS banks
+ * layer record 0 (the gunshot, byte3 0x30/0x36/0x20 = 1 extra), plus room-SE records (ROOM1170
+ * snd0 rec 10) and CORE10-13 rec 0. [audit wf_1db9c802 AUD-EDT-LAYER-B3HI] */
+int re15_edt_resolve_layers(const uint8_t *edt, const re15_vab_t *vab,
+                            int se_id, int *out_vags, int max_out)
+{
+    if (edt == NULL || vab == NULL || out_vags == NULL || max_out <= 0) return 0;
+    if (se_id < 0) return 0;
+    se_id &= 0x7f;
+
+    const uint8_t *e = edt + (size_t)se_id * 4;
+    if (e[2] == 0 && e[3] == 0) return 0;         /* empty EDT slot */
+
+    int prog = e[1] & 0x7f;
+    if (prog >= RE15_VAB_PROGRAM_COUNT) return 0;
+    int base_tone = e[2] >> 4;
+    int extra     = e[3] >> 5;                    /* byte3 bits 5-7 (@0x8004516c srl 5) */
+
+    int n = 0;
+    for (int k = 0; k <= extra && n < max_out; k++) {
+        int tone = base_tone + k;                 /* consecutive tones (decompile lines 119-141) */
+        if (tone >= RE15_VAB_TONES_PER_PROGRAM) break;
+        int vag1 = vab->tones[prog * RE15_VAB_TONES_PER_PROGRAM + tone].vag_index;
+        if (vag1 <= 0 || vag1 > vab->vag_count) break;   /* empty tone slot ends the stack */
+        out_vags[n++] = vag1 - 1;
+    }
+    return n;
 }
 
 /* PSX note2pitch LUT (DAT_80077520) — one octave of 2^(x/12) in Q12 (0x1000=1.0×),
@@ -255,11 +294,17 @@ int re15_vag_adpcm_decode(const uint8_t *adpcm_data, size_t adpcm_size,
     for (size_t f = 0; f < frames; f++) {
         const uint8_t *frame = adpcm_data + f * 16;
         int header = frame[0];
-        /* frame[1] (Flags) wird nicht mehr gelesen — Loop-Start-Bit ist kein Reset [#20] */
+        int flags  = frame[1];   /* bit0 = Loop End (block IS voiced, then stop/jump); bit2 =
+                                  * Loop Start (address copy only, NO predictor reset [#20]) */
 
         int filter = (header >> 4) & 0x0F;
         int shift  = header & 0x0F;
         if (filter > 4) filter = 4;
+        /* Reserved shift values 13..15 act as shift 9 on hardware (psx-spx cdromformat.md:780+788;
+         * soundprocessingunitspu.md:119 same semantics for SPU-ADPCM) — applying them literally
+         * attenuated ~19x. One shipped frame (a BGM/SUB bank) carries shift 13.
+         * [audit wf_1db9c802 AUD-ADPCM-SHIFT-CLAMP] */
+        if (shift > 12) shift = 9;
         int c0 = s_filter_coef0[filter];
         int c1 = s_filter_coef1[filter];
 
@@ -292,6 +337,16 @@ int re15_vag_adpcm_decode(const uint8_t *adpcm_data, size_t adpcm_size,
          * spu.cc:618 setzt nur pLoop) — KEIN Predictor-Reset. state1/state2 laufen
          * kontinuierlich ueber die Block-Grenze; der fruehere Reset erzeugte eine
          * falsche ADPCM-Diskontinuitaet. [#20] */
+
+        /* LOOP END (flag bit 0x01, psx-spx soundprocessingunitspu.md:103-141): the END block is
+         * the LAST voiced block — after it the SPU jumps to the repeat address; Code 1 (End+Mute,
+         * no bit 0x02) releases with Env=0000h = SILENCE. One-shot VAGs are followed by a dummy
+         * looper block (hdr 00, flags 07, data 0x77 x14 = 28 samples of +28672!) INSIDE the
+         * size-table extent — 4142/4175 shipped VAGs carry it. Decoding past the END block
+         * appended that +28672 DC pulse to virtually every SE (and up to ~0.76 s of foreign
+         * audio for ARMS00's mid-extent ENDs). Stop after voicing the END block.
+         * [audit wf_1db9c802 AUD-ADPCM-END-FLAG] */
+        if (flags & 0x01) break;
     }
 
     return (int)pcm_pos;
