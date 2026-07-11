@@ -802,27 +802,45 @@ static const uint8_t *wav_find_data(const uint8_t *b, int sz,
 }
 
 /* Load the room's decoded clip for a voice id and cache it, resampled to the
- * mixer rate (44100). RE1.5 keys voice by the Message_on id (the r<room>_m<id>.xa
- * naming); on PC the bytes come from synchro/STAGE1/room1170/main<id>.wav.
- * Returns 1 if a clip exists for this id. */
-static int re15_voice_load_clip(int voice_id)
+ * mixer rate (44100). RE1.5 keys voice by (room, Message_on id) — the r<room>_m<id>.xa
+ * naming; on PC the bytes come from synchro/STAGE<n>/room<id>/main<id>.wav.
+ * The cache is keyed per ROOM (invalidated on room change) so ROOM1150 (Irons),
+ * ROOM1240 (intro) and ROOM10D0 get THEIR lines instead of ROOM1170's (the old
+ * hardcode served room1170 clips — or silence — everywhere). Returns 1 if a clip
+ * exists for this (room, id). */
+static uint16_t s_voice_room = 0;      /* the room the clip cache belongs to */
+
+static int re15_voice_load_clip(uint16_t room, int voice_id)
 {
     if (voice_id < 0 || voice_id >= VOICE_MAX_MSG) return 0;
+    if (s_voice_room != room) {        /* room changed -> drop the whole cache */
+        for (int i = 0; i < VOICE_MAX_MSG; i++) {
+            free(s_voice_clip[i].pcm);
+            s_voice_clip[i].pcm = NULL; s_voice_clip[i].len = 0; s_voice_clip[i].tried = 0;
+        }
+        s_voice_room = room;
+    }
     if (s_voice_clip[voice_id].tried) return s_voice_clip[voice_id].pcm != NULL;
     s_voice_clip[voice_id].tried = 1;
-    /* TODO multi-room: the RE2 voice table keys on room+channel; only ROOM1170
-     * is implemented, so the path is fixed here. */
-    static const char *dirs[] = {
-        "../../../../synchro/STAGE1/room1170/",
-        "../../../synchro/STAGE1/room1170/",
-        "../../synchro/STAGE1/room1170/",
-        "synchro/STAGE1/room1170/",
-        NULL
-    };
-    uint8_t *wav = NULL; int wsz = 0; char path[160];
-    for (int i = 0; dirs[i] && !wav; i++) {
-        snprintf(path, sizeof path, "%smain%02d.wav", dirs[i], voice_id);
+    /* room id packs (stage+1)<<12 | room<<4 | variant: 0x1170 -> STAGE1/room1170. */
+    char reldir[64];
+    snprintf(reldir, sizeof reldir, "synchro/STAGE%u/room%04X/",
+             (unsigned)(room >> 12), (unsigned)room);
+    static const char *prefix[] = { "../../../../", "../../../", "../../", "", NULL };
+    uint8_t *wav = NULL; int wsz = 0; char path[200];
+    for (int i = 0; prefix[i] && !wav; i++) {
+        snprintf(path, sizeof path, "%s%smain%02d.wav", prefix[i], reldir, voice_id);
         wav = re15_asset_read_file(path, &wsz);
+    }
+    /* the synchro dirs are lower-case "room1170" on disk; retry lower-hex if the
+     * upper-hex probe missed (case-sensitive mounts). */
+    if (!wav) {
+        snprintf(reldir, sizeof reldir, "synchro/STAGE%u/room%04x/",
+                 (unsigned)(room >> 12), (unsigned)room);
+        for (int i = 0; prefix[i] && !wav; i++) {
+            snprintf(path, sizeof path, "%s%smain%02d.wav", prefix[i], reldir, voice_id);
+            wav = re15_asset_read_file(path, &wsz);
+        }
     }
     int rate, ch, bits, dbytes;
     const uint8_t *data = wav_find_data(wav, wsz, &rate, &ch, &bits, &dbytes);
@@ -884,7 +902,7 @@ static int re15_voice_load_clip(int voice_id)
 static void re15_voice_play(uint16_t room, int voice_id)
 {
     if (!g_audio.initialized) return;
-    if (!re15_voice_load_clip(voice_id)) return;    /* no clip for this id → silent */
+    if (!re15_voice_load_clip(room, voice_id)) return;   /* no clip for this (room, id) → silent */
     /* RE2 addresses a voice by (file, channel); model file = room low byte,
      * channel = voice id (the r<room>_m<id> key). */
     re15_xa_set_filter((uint8_t)(room & 0xFF), (uint8_t)voice_id);
@@ -1671,9 +1689,10 @@ void re15_audio_tick(void)
                 }
                 break;
             case SCD_AUDIO_VOICE_ON:
-                /* RE2-style voice: route through the re15_voice manager →
-                 * re15_xa stream. Room fixed to 0x1170 (only room implemented). */
-                re15_voice_play(0x1170, evt.sample_id);
+                /* RE2-style voice: route through the re15_voice manager → re15_xa stream,
+                 * keyed on the CURRENT room (synchro has clips for 1170/1150/1240/10D0 —
+                 * the old 0x1170 hardcode served room1170 lines everywhere). */
+                re15_voice_play((uint16_t)g_current_room_id, evt.sample_id);
                 break;
             case SCD_AUDIO_SEQ_CTL:
                 /* 0x54 SsSeq slot control + the vol/pan payload (part=sample_id, vol=raw_w0,
