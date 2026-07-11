@@ -2032,7 +2032,27 @@ static int op_aot_set(scd_thread_t *t)
          * sub_scd[eventId]. AOTs with eventId==0xFF (no event, e.g. room1170 slot-5) keep
          * the prior type/act behaviour untouched. */
         uint8_t ev = long_form ? t->pc[25] : t->pc[17];   /* eventId (+8 in the long form) */
-        if (ev == 0) {
+        if (type == 1) {
+            /* sce=1 MESSAGE (byte-true LAB_80043084: FUN_80027e68(0,0x300, u16@0 = room-msg
+             * index, u16@2<<16 = pause bits); 427 shipped zones, ALL flags 0x31 action+forward).
+             * These carry pause 0xFFFF at pc[16..17], so the old ev-heuristic (ev==0xFF) fell
+             * through to `type` = port enum 1 = DOOR with zero door_params = INERT: no examine
+             * text fired anywhere from a direct Aot_set. [wf_f536e1ee divergence #3] */
+            uint8_t msg = long_form ? t->pc[22] : t->pc[14];   /* payload u16@0 low byte */
+            re15_aot_set(slot, RE15_AOT_TYPE_MESSAGE, msg, cx, cz, hw, hh);
+        } else if (type == 4) {
+            /* sce=4 FLAG_CHG (byte-true LAB_80043120: table 0x80074664[u16@0=group], bit u16@2
+             * MSB-first, on/off u16@4; idempotent per-frame for the AUTO variants). 30 shipped
+             * zones (2x action, 4x auto-player, 10x auto-ENEMY, 8x both pools) — the old
+             * heuristic installed them as EXAMINE_WORKVAR (flag never set + work_vars[0]
+             * corruption on action). [wf_f536e1ee divergence #4] */
+            re15_aot_set(slot, RE15_AOT_TYPE_FLAG_CHG, 0, cx, cz, hw, hh);
+            if (slot >= 0 && slot < RE15_AOT_MAX) {
+                g_aot.flag_params[slot].group = long_form ? t->pc[22] : t->pc[14];
+                g_aot.flag_params[slot].bit   = long_form ? t->pc[24] : t->pc[16];
+                g_aot.flag_params[slot].on    = (long_form ? t->pc[26] : t->pc[18]) ? 1 : 0;
+            }
+        } else if (ev == 0) {
             /* eventId==0 is NOT an event sub (sub_scd[0]=init is never an AOT target). It's an
              * EXAMINE→work-var AOT (ROOM1150 slot-2 type-5 over Irons): on the action examine
              * the scan writes work_vars[0]=its index (=slot) + flags a one-shot sub01 re-poll,

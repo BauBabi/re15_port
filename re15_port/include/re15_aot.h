@@ -63,6 +63,7 @@
  * type so it is NOT routed through the action-press GENERIC branch. */
 #define RE15_AOT_TYPE_AUTO_EVENT  6
 #define RE15_AOT_TYPE_EXAMINE_WORKVAR  7   /* examine→work_vars[0]=index (ev==0 Aot_set) */
+#define RE15_AOT_TYPE_FLAG_CHG    8   /* sce=4 flag set/clear (LAB_80043120) — wf_f536e1ee step 4 */
 
 typedef struct {
     uint8_t  active;      /* 0 = slot free, 1 = active */
@@ -124,6 +125,14 @@ typedef struct {
                                 * doors (and vice-versa) — band crossing only via a stair. */
 } re15_aot_door_params_t;
 
+/* sce=4 FLAG_CHG payload (byte-true LAB_80043120: bitarray table 0x80074664[u16@0=group],
+ * bit u16@2 (MSB-first 0x80000000>>bit), on/off u16@4) — wf_f536e1ee step 4. */
+typedef struct {
+    uint8_t  group;       /* flag zone (the ptr-table index)  */
+    uint8_t  bit;         /* MSB-first bit index               */
+    uint8_t  on;          /* 1 = set, 0 = clear                */
+} re15_aot_flag_params_t;
+
 typedef struct {
     uint8_t  item_type;
     uint8_t  amount;
@@ -137,6 +146,7 @@ typedef struct {
     re15_aot_t              slots[RE15_AOT_MAX];
     re15_aot_door_params_t  door_params[RE15_AOT_MAX];
     re15_aot_item_params_t  item_params[RE15_AOT_MAX];
+    re15_aot_flag_params_t  flag_params[RE15_AOT_MAX];
 
     /* Edge-trigger state: set when an AOT fires, cleared by consumer or
      * after N frames of HUD display. */

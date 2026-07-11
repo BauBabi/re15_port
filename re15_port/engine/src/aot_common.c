@@ -424,7 +424,8 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
          * (centre-hit -> work_var[1], forward-hit -> work_var[0]). */
         int gen_reach = 0, gen_fwd_hit = 0;
         if (a->type == RE15_AOT_TYPE_GENERIC || a->type == RE15_AOT_TYPE_MESSAGE ||
-            a->type == RE15_AOT_TYPE_EXAMINE_WORKVAR) {
+            a->type == RE15_AOT_TYPE_EXAMINE_WORKVAR ||
+            (a->type == RE15_AOT_TYPE_FLAG_CHG && (a->sce_flags & 0x10))) {
             uint8_t fl = a->sce_flags;
             if ((fl == 0 || (fl & 0x40)) && inside) gen_reach = 1;      /* centre first */
             if (!gen_reach && (fl == 0 || (fl & 0x20))) {               /* forward 620 exact */
@@ -445,10 +446,40 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
          * their own door_params band; stair/cam are handled/skipped earlier — so this covers the event
          * types (GENERIC/AUTO_EVENT/MESSAGE/EXAMINE), whose band is now populated from Aot_set pc[4]. */
         if (a->type == RE15_AOT_TYPE_GENERIC || a->type == RE15_AOT_TYPE_AUTO_EVENT ||
-            a->type == RE15_AOT_TYPE_MESSAGE || a->type == RE15_AOT_TYPE_EXAMINE_WORKVAR) {
+            a->type == RE15_AOT_TYPE_MESSAGE || a->type == RE15_AOT_TYPE_EXAMINE_WORKVAR ||
+            a->type == RE15_AOT_TYPE_FLAG_CHG) {
             int pb = re15_collision_debug_band();
             if (pb >= 0 && !(a->band & 0x80) && (int)a->band != pb) {
                 gen_reach = 0; inside = 0;   /* band mismatch -> gate the fire this frame */
+            }
+        }
+        /* sce=4 FLAG_CHG (wf_f536e1ee step 3+4): the 3-POOL test per the record's pool-mask bits
+         * (byte-true FUN_800436a8: player mask 1 / every active enemy mask 2 / every object mask
+         * 4). 10 shipped zones are enemy-ONLY (0x42, e.g. the ROOM1030 zombie-window flags) — the
+         * player walking through must NOT set them; a zombie inside must. Auto variants fire
+         * every frame (idempotent flag write); action variants (0x31) go through gen_reach. */
+        int flag_pool_inside = 0;
+        if (a->type == RE15_AOT_TYPE_FLAG_CHG && !(a->sce_flags & 0x10)) {
+            uint8_t pm = (uint8_t)(a->sce_flags & 0x07);
+            if (pm == 0) pm = 0x01;                                 /* legacy: player */
+            if ((pm & 0x01) && inside) flag_pool_inside = 1;
+            if (!flag_pool_inside && (pm & 0x02)) {                 /* any active enemy */
+                for (int es = RE15_ACTOR_SLOT_PLAYER + 1; es < RE15_ACTOR_MAX && !flag_pool_inside; es++) {
+                    if (!g_actors[es].active) continue;
+                    int in2 = a->has_quad
+                            ? re15_aot_point_in_quad(g_actors[es].x, g_actors[es].z, a->xs, a->zs)
+                            : ((abs_i32(g_actors[es].x - a->x) <= a->half_w) &&
+                               (abs_i32(g_actors[es].z - a->z) <= a->half_h));
+                    if (in2) flag_pool_inside = 1;
+                }
+            }
+            if (!flag_pool_inside && (pm & 0x04)) {                 /* any active prop object */
+                for (int ps = 0; ps < (int)g_scd.prop_count && !flag_pool_inside; ps++) {
+                    if (!g_scd.props[ps].active) continue;
+                    int in3 = (abs_i32(g_scd.props[ps].x - a->x) <= a->half_w) &&
+                              (abs_i32(g_scd.props[ps].z - a->z) <= a->half_h);
+                    if (in3) flag_pool_inside = 1;
+                }
             }
         }
         /* DOOR 9-frame press-and-HOLD accumulator (byte-true FUN_8002bd44, obj+0x8C @0x8002bf60):
@@ -468,7 +499,8 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
         int is_action = (a->type == RE15_AOT_TYPE_DOOR ||
                          a->type == RE15_AOT_TYPE_GENERIC ||
                          a->type == RE15_AOT_TYPE_MESSAGE ||
-                         a->type == RE15_AOT_TYPE_EXAMINE_WORKVAR);
+                         a->type == RE15_AOT_TYPE_EXAMINE_WORKVAR ||
+                         (a->type == RE15_AOT_TYPE_FLAG_CHG && (a->sce_flags & 0x10)));
         int fire = is_auto_door
                        /* Auto-Advance-Tür: das Rechteck ist ein (0,0)-Sentinel (nie
                         * positions-erreichbar) → KEIN Forward-Reach/Action-Press. Feuert,
@@ -480,6 +512,10 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
                        ? (in_cinematic && scd_idle && scd_ran && !msg_block && !action_fired)
                  : (a->type == RE15_AOT_TYPE_DOOR)
                        ? (a->door_hold == 9 && !msg_block && !action_fired)   /* opens on the 9th held frame */
+                 : (a->type == RE15_AOT_TYPE_FLAG_CHG)
+                       ? ((a->sce_flags & 0x10)
+                              ? (gen_reach && g_aot_action_pressed && !msg_block && !action_fired)
+                              : flag_pool_inside)                     /* auto: every frame, idempotent */
                  : (a->type == RE15_AOT_TYPE_GENERIC || a->type == RE15_AOT_TYPE_MESSAGE ||
                     a->type == RE15_AOT_TYPE_EXAMINE_WORKVAR)
                        ? (gen_reach && g_aot_action_pressed && !msg_block && !action_fired)
@@ -667,6 +703,15 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
                  * no teleport. target_cut packed in event_id field. */
                 g_scd.cam_id              = a->event_id;
                 g_scd.cam_change_pending  = 1;
+                break;
+            }
+            case RE15_AOT_TYPE_FLAG_CHG: {
+                /* sce=4 (LAB_80043120): flag table 0x80074664[group], MSB-first bit, on/off.
+                 * Idempotent — the auto variants re-write every frame inside (byte-true; the
+                 * script may clear the flag while the entity stays inside -> re-assert). */
+                const re15_aot_flag_params_t *fp = &g_aot.flag_params[i];
+                if (fp->group < RE15_FLAG_ZONES)
+                    re15_game_flag_set(fp->group, fp->bit, fp->on);
                 break;
             }
             case RE15_AOT_TYPE_MESSAGE: {

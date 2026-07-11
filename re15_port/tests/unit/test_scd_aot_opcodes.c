@@ -161,7 +161,9 @@ static void test_aot_set(void)
      * pc[17]=0xF8 (v2.z high byte) — the OLD code read that as the event (dead) and installed a garbage
      * rect from the first two vertices. Fixed: install the quad + read eventId at pc[25]. pc += 28. */
     uint8_t bc_poly[29] = {
-        0x2C, 0x07, 0x01, 0x80,             /* slot=7, type=1, flags=0x80 (LONG, bit0x10 clear->AUTO) */
+        0x2C, 0x07, 0x03, 0x80,             /* slot=7, type=3 (EVENT, wie ROOM1090 @0x2336 `2C..03 B1`),
+                                             * flags=0x80 (LONG, bit0x10 clear -> AUTO). (sce=1 ist jetzt
+                                             * byte-true MESSAGE — wf_f536e1ee div #3 — separater Case.) */
         0x00, 0x00,                          /* band, pad */
         0x64, 0x00, 0x14, 0x05,             /* v0=(100,1300) */
         0x3A, 0x07, 0x66, 0x08,             /* v1=(1850,2150) */
@@ -217,6 +219,38 @@ static void test_aot_set(void)
         TEST_ASSERT_EQ("geom 0x51: centre-only does NOT fire from the forward pos", -1, g_scd.work_vars[1]);
         re15_aot_scan(620, 0, 0xFF);            /* stand INSIDE -> centre hit */
         TEST_ASSERT_EQ("geom 0x51: centre hit stamps work_var[1]=slot", 3, g_scd.work_vars[1]);
+    }
+
+    /* sce=1 -> MESSAGE (div #3: 427 shipped examine zones were inert invalid-spawn DOORs) +
+     * sce=4 -> FLAG_CHG (div #4) incl. the ENEMY-pool gating (0x42 zones: the player must NOT
+     * set the flag; an enemy inside must). [wf_f536e1ee steps 3+4] */
+    {
+        setup_vm();
+        uint8_t bc_msg[21] = {
+            0x2C, 0x08, 0x01, 0x31,  0x00, 0x00,          /* sce=1, flags 0x31 (action+forward) */
+            0x00, 0x00, 0x00, 0x00,  0xC8, 0x00, 0xC8, 0x00,
+            0x07, 0x00, 0xFF, 0xFF,                        /* msg index 7; pause 0xFFFF (the old
+                                                            * ev=0xFF heuristic trap) */
+            0x00, 0x00, OP_EVT_NEXT };
+        run_one_opcode(bc_msg);
+        TEST_ASSERT_EQ("sce=1: installs as MESSAGE (not DOOR)", RE15_AOT_TYPE_MESSAGE, g_aot.slots[8].type);
+        TEST_ASSERT_EQ("sce=1: msg index from payload u16@0", 7, g_aot.slots[8].event_id);
+
+        setup_vm();
+        uint8_t bc_flag[21] = {
+            0x2C, 0x09, 0x04, 0x42,  0x80, 0x00,          /* sce=4, flags 0x42 = AUTO + ENEMY pool;
+                                                            * band 0x80 = any floor */
+            0x00, 0x00, 0x00, 0x00,  0xC8, 0x00, 0xC8, 0x00,   /* rect um (100,100) */
+            0x05, 0x00, 0x21, 0x00,                        /* group 5, bit 0x21 */
+            0x01, 0x00, OP_EVT_NEXT };                     /* on = 1 */
+        run_one_opcode(bc_flag);
+        TEST_ASSERT_EQ("sce=4: installs as FLAG_CHG", RE15_AOT_TYPE_FLAG_CHG, g_aot.slots[9].type);
+        g_actors[RE15_ACTOR_SLOT_PLAYER].active = 1;
+        re15_aot_scan(100, 100, 0xFF);                     /* PLAYER inside the enemy-only zone */
+        TEST_ASSERT_EQ("sce=4 0x42: the player does NOT set the enemy flag", 0, re15_game_flag_get(5, 0x21));
+        g_actors[3].active = 1; g_actors[3].x = 100; g_actors[3].z = 100;   /* an enemy inside */
+        re15_aot_scan(-5000, -5000, 0xFF);                 /* player far away */
+        TEST_ASSERT_EQ("sce=4 0x42: an ENEMY inside sets the flag", 1, re15_game_flag_get(5, 0x21));
     }
 
     TEST_OK("Aot_set (0x2C)");
