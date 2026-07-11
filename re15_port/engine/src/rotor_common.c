@@ -16,6 +16,7 @@
  */
 #include <stdint.h>
 #include "re15_audio.h"
+#include "re15_math.h"   /* re15_squareroot0 — the BIOS sqrt FUN_80045a64 actually uses */
 
 /* RE1.5 SE pan + distance-attenuation tables, extracted CONTIGUOUS from PSX.EXE
  * (SE_PAN @0x80074728, SE_ATTEN @0x800747a8 = +0x80). [0..127] = SE_PAN curve
@@ -83,11 +84,11 @@ static int rotor_azimuth(int p1, int p2, int p3, int p4) {
     return (base - a) & 0xfff;
 }
 
+/* FUN_80045a64's radius is a NESTED BIOS SquareRoot0 (jal 0x80065f60 @0x80045b04/0x80045b34),
+ * NOT an exact sqrt — SquareRoot0 UNDER-estimates floor(sqrt) (#16). The PSX passes the low 32 bits
+ * of the mult (mflo) to SquareRoot0, so truncate to u32 then route through the byte-true replica. */
 static uint32_t rotor_isqrt(uint64_t x) {
-    uint64_t r = 0, b = 1ULL << 42;
-    while (b > x) b >>= 2;
-    while (b) { if (x >= r + b) { x -= r + b; r = (r >> 1) + b; } else r >>= 1; b >>= 2; }
-    return (uint32_t)r;
+    return re15_squareroot0((uint32_t)x);
 }
 
 /* Compute the rotor L/R volume (0..0x7f) — see re15_audio.h. DISTANCE: dist(cam,heli)
