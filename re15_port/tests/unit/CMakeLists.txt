@@ -328,6 +328,13 @@ target_include_directories(test_collision_layers PRIVATE ${CMAKE_SOURCE_DIR}/inc
 add_test(NAME unit_collision_layers COMMAND test_collision_layers)
 set_tests_properties(unit_collision_layers PROPERTIES TIMEOUT 30)
 
+# --- Byte-true pose-then-advance ordering + 0x8000 marker skip (skeleton/anim audit wf_8a6bd306) ---
+add_executable(test_anim_pose_order test_anim_pose_order.c)
+target_link_libraries(test_anim_pose_order PRIVATE re15_engine re15_test_support)
+target_include_directories(test_anim_pose_order PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_anim_pose_order COMMAND test_anim_pose_order)
+set_tests_properties(unit_anim_pose_order PROPERTIES TIMEOUT 30)
+
 # --- Byte-true RE1.5 camera LookAt (audit #3 — integer SquareRoot0 + division, no float/rounding) ---
 add_executable(test_camera_view test_camera_view.c)
 target_link_libraries(test_camera_view PRIVATE re15_engine re15_test_support)

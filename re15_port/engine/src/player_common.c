@@ -263,6 +263,37 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
 
     re15_actor_t *p = &g_actors[RE15_ACTOR_SLOT_PLAYER];
 
+    /* CLIP ADVANCE — MOVED to the TOP of the tick (audit KF-1/ADV-BLEND-1, byte-true ordering).
+     * FUN_8001f3bc poses the CURRENT counters then POST-advances them (+0x95 ++ @0x8001f610-63c,
+     * +0x8f -- @0x8001f5b0-b4). The port splits pose (render, after game_step) from advance (here),
+     * so "pose-then-advance" must map to "advance-then-(FSM read/seed)-then-pose": a fresh clip
+     * seeded LATER in this same tick survives to the render (slot 0 with frac 7 = the byte-true
+     * 87.5% first blend frame — it used to be advanced away to slot 1/frac 6 before ever rendering),
+     * and next tick's FSM reads the post-advance counter exactly like the original's handlers do.
+     * This mirrors the already-correct enemy ordering (re15_actors_anim_advance @game_step:491 runs
+     * BEFORE the AI seeds in run_all @:499). SCD Plc_motion seeds (scd_vm_tick, before game_step)
+     * are consumed identically at either position.
+     *
+     * Rate: FULL-RATE (1 keyframe per 30 Hz frame) — a "half-rate" divider citing FUN_80030660 bit
+     * 0x10 was tried + REVERTED; DAT_800acc18 bit 0x10 is NEVER set (only `xori 0x20` toggle +
+     * `sh zero` clear), so the half-rate path is dead and the original advances every frame. */
+    if (p->motion_init_delay > 0) {
+        /* State-4 init hold (PSX +0x4=4): render keyframe 0 once WITHOUT advancing
+         * the clip or consuming the FRAC crossfade (the original decrements +0x8f
+         * INSIDE FUN_8001f3bc as it advances +0x95 — consuming it during the hold
+         * would drop the frac=7 first blend frame). */
+        p->motion_init_delay--;
+    } else {
+        p->anim_frame++;
+        if (p->anim_frac > 0) p->anim_frac--;
+        /* W-bank clips are ONE-SHOTS (raise/hold/recoil hold their terminal pose): clamp after
+         * the advance so the render's %fc wrap can never replay them. Uses LAST tick's clip
+         * state — byte-true, since this advance logically belongs to the END of the last tick. */
+        if (p->motion == RE15_MOTION_AIM_W && aim_cur_fc() > 0 &&
+            p->anim_frame > aim_cur_fc() - 1)
+            p->anim_frame = (uint16_t)(aim_cur_fc() - 1);
+    }
+
     /* BL-round 2026-05-29: player-mode FSM input gate. While SCRIPTED
      * (player_mode==2, the cinematic) the SCD owns the actor — ignore PAD
      * MOVEMENT only (PSX gates input on player_mode≠0). CRITICAL: the anim_frame
@@ -584,39 +615,8 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
             p->anim_frac = 7;
         }
     }
-    /* Phase 4.5.13-A: advance anim_frame every tick (not only on input) so
-     * non-walk animations (wave, idle, etc.) play their full cycle. The
-     * renderer divides anim_frame by 2 for 30Hz playback (main.c:400).
-     *
-     * BD-round 2026-05-28: respect motion_init_delay (PSX state=4→state=1
-     * 1-tick FSM). On the first tick after Plc_motion, anim_frame stays
-     * at 0 — visible as a "freeze" pose before animation begins. User-
-     * verified in ablauf F217020-21 (Elliot freeze after fade-in). */
-    /* FULL-RATE clip advance (1 keyframe per 30 Hz frame). NOTE 2026-06-17: a "half-rate"
-     * divider (every-other-frame, citing FUN_80030660 bit 0x10) was tried + REVERTED — the
-     * disasm shows DAT_800acc18 bit 0x10 is NEVER set (the only writes are `xori 0x20` toggle
-     * @80030c8 + `sh zero` clear @8003197c), so the half-rate path is DEAD and the original
-     * advances the player clip EVERY frame = full rate (kneel = 25 keyframes / 25 game-frames,
-     * = the user's ~51 capture-frames @60fps). (The ROOM1150 kneel "too fast" was NEVER a rate
-     * or crossfade issue — it was the wrong animation BANK: RBJ settle-clip vs PL00.EDD clip 11,
-     * RESOLVED 2026-06-18, see anim_select_common.c anim_use_pl00.) */
-    if (p->motion_init_delay > 0) {
-        /* State-4 init hold (PSX +0x4=4): render keyframe 0 once WITHOUT advancing
-         * the clip or consuming the FRAC crossfade. The original seeds +0x8f=7 on
-         * the play frame and decrements it INSIDE FUN_8001f3bc as it advances +0x95;
-         * decrementing here too would drop the frac=7 (12.5%) first blend frame and
-         * front-load the fold. Hold frac during the init frame. */
-        p->motion_init_delay--;
-    } else {
-        p->anim_frame++;
-        if (p->anim_frac > 0) p->anim_frac--;
-        /* W-bank clips are ONE-SHOTS (raise/hold/recoil hold their terminal pose): clamp after
-         * the advance so the render's %fc wrap can never replay them. Per-clip lengths (the
-         * platform feeds the equipped bank's EDD frame counts via set_aim_clip_lens). */
-        if (p->motion == RE15_MOTION_AIM_W && aim_cur_fc() > 0 &&
-            p->anim_frame > aim_cur_fc() - 1)
-            p->anim_frame = (uint16_t)(aim_cur_fc() - 1);
-    }
+    /* (The per-tick clip advance runs at the TOP of this function — see the KF-1/ADV-BLEND-1
+     * ordering note there: advance-then-seed-then-pose == the original's pose-then-post-advance.) */
     /* NPC anim advance MOVED OUT to re15_actors_anim_advance() (called UNCONDITIONALLY from
      * game_step). It used to live here inside re15_player_tick, which is SKIPPED in the grabbed/
      * dead/stair/menu branches — so the moment the player was grabbed, EVERY zombie's animation

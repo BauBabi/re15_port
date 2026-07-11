@@ -63,6 +63,19 @@ int re15_compute_actor_kf(const re15_emd_animation_t *anim,
     } else {
         slot = (int)cur;
     }
+    /* 0x8000 MARKER frames are NEVER posed as a keyframe (byte-true FUN_8001f314 @0x8001f370-f37c:
+     * `andi 0x8000; bne` routes any marker frame to FUN_8001f8b4, whose forward loop @0x8001f9e8-fa0c
+     * scans past every marker — wrapping to 0 at frame_count — and poses the next REAL frame; the
+     * marker's low 12 bits are a GTE blend WEIGHT for a root lerp there, NOT a keyframe index). The
+     * port used to pose `marker & 0xFFF` as a keyframe from the LOOP/forward branches — a garbage pose
+     * for one tick at the loop seam (e.g. EM013 zombie-girl clip 31, marker at frame 67). Skip in the
+     * playback direction with wrap, exactly like f8b4; the weight-lerp interp frame itself is a
+     * faithful-line deferral (the skip poses the frame f8b4 lands on). */
+    if (anim->frames[clip->first_frame + slot] & 0x8000u) {
+        int fc = clip->frame_count;
+        for (int n = 0; n < fc && (anim->frames[clip->first_frame + slot] & 0x8000u); n++)
+            slot = reverse ? (slot + fc - 1) % fc : (slot + 1) % fc;
+    }
     int kf = (int)(anim->frames[clip->first_frame + slot] & 0xFFFu);
     if (kf >= skel->keyframe_count)
         kf = skel->keyframe_count > 0 ? skel->keyframe_count - 1 : 0;

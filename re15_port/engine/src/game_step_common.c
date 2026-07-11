@@ -191,6 +191,9 @@ void re15_game_step(const re15_game_ctx_t *c)
         s_hit_flinch = 15;                       /* flinch duration (faithful-line; clip 0x8/0x9/0xa length) */
         s_hit_kb     = 0xc8;                      /* DAT_800acae0 = 200 (@0x80035e44) */
         pl->motion = clip; pl->anim_frame = 0; pl->anim_frac = 7;
+        pl->motion_init_delay = 1;               /* seed tick renders frame 0 (byte-true pose-then-advance:
+                                                  * the flinch branch below would otherwise ++ it away
+                                                  * before the first render — audit KF-1 class) */
     }
     s_prev_hp = pl->hp;                           /* pre-damage baseline for the NEXT tick's drop check */
 
@@ -253,7 +256,8 @@ void re15_game_step(const re15_game_ctx_t *c)
          * DAT_800acae0 -= DAT_800acaf2 (50), clamp at 0 (@0x80035f20) -> 200,150,100,50 over 4 frames.
          * When the clip plays out (timer -> 0) motion returns to idle. Unreachable unless a non-lethal
          * hit landed, so a room with no combat never enters it = no 1170 regression. */
-        pl->anim_frame++;
+        if (pl->motion_init_delay > 0) pl->motion_init_delay--;   /* seed tick: render frame 0 first */
+        else pl->anim_frame++;
         if (s_hit_kb > 0) {
             int32_t ox = pl->x, oz = pl->z, dx, dz;
             re15_player_knockback_delta(pl->rot_y, s_hit_kb, &dx, &dz);    /* backward push @ facing+0x800 */
