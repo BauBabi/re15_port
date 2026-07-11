@@ -1942,6 +1942,13 @@ static int32_t re15_body_isqrt(int64_t v)
 int re15_body_push(const re15_actor_t *pusher, int32_t r_pusher,
                    re15_actor_t *pushee, int32_t r_pushee)
 {
+    /* entity+0x0 FLAG GATES (byte-true FUN_8002aec4 @0x8002af04-af30): bit 0x2 on EITHER actor or
+     * bit 0x4 on the PUSHEE skips the pair entirely. (The third gate — bit 0x1000 on BOTH = the
+     * grab-pair freeze — is a word bit the port models via the state checks at the call sites.)
+     * The port only ever sets flags=0x01 today, but Member_set (id 6) can script-write the byte,
+     * so the gates are live mechanism, not dead code. */
+    if ((pusher->flags | pushee->flags) & 0x2) return 0;
+    if (pushee->flags & 0x4) return 0;
     /* Full 32-bit delta (byte-true FUN_8002aec4 @0x8002af8c): the original reads the two positions
      * with `lh` (s16) and takes their `subu` difference — it does NOT truncate the DIFFERENCE to s16.
      * Room coords are s16-range so the delta fits, and the fast-reject + isqrt handle the full width;
@@ -1954,6 +1961,30 @@ int re15_body_push(const re15_actor_t *pusher, int32_t r_pusher,
     int32_t dist = re15_body_isqrt((int64_t)dx * dx + (int64_t)dz * dz);
     int32_t pen  = R - dist;
     if (pen < 1) return 0;                                    /* @aec4: pen<1 -> no hit */
+    /* Y BAND GATE (byte-true @0x8002b1f0-b228, evaluated AFTER the XZ circle test — trace
+     * wf_518cceff, adversarially CONFIRMED): the push requires STRICT
+     *     -(hA + hB) < dy < +(hA + hB)
+     * with dy = (B.y + ofsB.y) - (A.y + ofsA.y), h = the +0x78 box[+8] half-heights
+     * (port hit_height) and ofs.y = the +0x7c Y centre offsets (port hit_offset_y) —
+     * bodies stacked vertically (an enemy above/below a ledge) never push each other.
+     * Gated to pairs that CARRY heights: a 0-height actor has no +0x78 box and is never
+     * in the original's push loop (the port's callers already skip hit_radius_min==0).
+     * Flat-room safety (verified): same-floor actors give |dy| ~ tens vs hsum ~ 2970. */
+    int32_t hsum = (int32_t)pusher->hit_height + (int32_t)pushee->hit_height;
+    if (hsum > 0) {
+        int32_t dy = (pushee->y + pushee->hit_offset_y) - (pusher->y + pusher->hit_offset_y);
+        if (!(-hsum < dy && dy < hsum)) return 0;
+    }
+    /* DATA-DEAD original branches (documented, not ported — trace wf_518cceff):
+     *  - ANISOTROPIC ellipse radius (@0x8002af68-b160): when box[6] != box[10] the effective
+     *    radius blends box[6] (along facing) toward box[10] (lateral) by the bearing-vs-yaw
+     *    angle via libgte rsin/rcos. EVERY shipped box is circular (radius_min == radius_max,
+     *    the @0x8002af68 beq skips the block), so the circular path here is byte-identical.
+     *  - ANTI-TUNNELING crossing ejection (@0x8002b268-b40c): when the pushee's PREVIOUS-frame
+     *    Y (+0x42) was OUTSIDE the height band (vertical entry this frame), a per-axis
+     *    old-X/old-Z crossing test ejects by 2*radius. Unreachable on same-floor actors
+     *    (old dy is inside the band whenever new dy is); needs the +0x40/42/44 prev-pos
+     *    writer RE'd before it can be placed byte-true. */
     pushee->x += dx * pen / (dist + 1);
     pushee->z += dz * pen / (dist + 1);
     return 1;

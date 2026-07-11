@@ -14,6 +14,7 @@
  */
 #include "re15_anim_select.h"
 #include "re15_enemy.h"     /* generic enemy registry (re15_enemy_find) */
+#include "re15_skeleton.h"  /* g_anim_kf_tween — the 0x8000 marker tween side channel */
 
 /* Per-actor keyframe lookup: motion + anim_frame -> skeleton keyframe index,
  * against the SELECTED anim/skel. (reverse playback, walk loop, freeze-on-end
@@ -63,18 +64,32 @@ int re15_compute_actor_kf(const re15_emd_animation_t *anim,
     } else {
         slot = (int)cur;
     }
-    /* 0x8000 MARKER frames are NEVER posed as a keyframe (byte-true FUN_8001f314 @0x8001f370-f37c:
-     * `andi 0x8000; bne` routes any marker frame to FUN_8001f8b4, whose forward loop @0x8001f9e8-fa0c
-     * scans past every marker — wrapping to 0 at frame_count — and poses the next REAL frame; the
-     * marker's low 12 bits are a GTE blend WEIGHT for a root lerp there, NOT a keyframe index). The
-     * port used to pose `marker & 0xFFF` as a keyframe from the LOOP/forward branches — a garbage pose
-     * for one tick at the loop seam (e.g. EM013 zombie-girl clip 31, marker at frame 67). Skip in the
-     * playback direction with wrap, exactly like f8b4; the weight-lerp interp frame itself is a
-     * faithful-line deferral (the skip poses the frame f8b4 lands on). */
+    /* 0x8000 MARKER frames are TWEENs, never posed as a keyframe (byte-true FUN_8001f314
+     * @0x8001f370-f37c routes them to FUN_8001f8b4; trace wf_518cceff adversarially CONFIRMED):
+     * the original poses  ((0x1000-w)*A + w*B) >> 12  for the root translation AND every bone
+     * angle, where A = the last REAL frame posed (== the bracketing real frame BEFORE the marker),
+     * B = the next REAL frame in playback direction, w = marker & 0xfff. The reverse path
+     * complements w (@0x8001f940-f948), which yields the SAME absolute pose — so resolve it
+     * direction-independently: A = first real frame scanning BACKWARD (wrap), B = first real
+     * scanning FORWARD (wrap), w = fraction toward B. Arm the g_anim_kf_tween side channel with
+     * (A, w) and return B; the next re15_skel_compute_pose performs the lerp (root GPF12/GPL12 +
+     * per-bone FUN_80020510). Shipped markers: EM013 clip 31 (w=0x27) + EM02B clip 6 (5x w=0x800). */
+    g_anim_kf_tween.active = 0;
     if (anim->frames[clip->first_frame + slot] & 0x8000u) {
-        int fc = clip->frame_count;
-        for (int n = 0; n < fc && (anim->frames[clip->first_frame + slot] & 0x8000u); n++)
-            slot = reverse ? (slot + fc - 1) % fc : (slot + 1) % fc;
+        int fc     = clip->frame_count;
+        int w      = (int)(anim->frames[clip->first_frame + slot] & 0x0FFFu);
+        int before = slot, after = slot;
+        for (int n = 0; n < fc && (anim->frames[clip->first_frame + before] & 0x8000u); n++)
+            before = (before + fc - 1) % fc;
+        for (int n = 0; n < fc && (anim->frames[clip->first_frame + after] & 0x8000u); n++)
+            after = (after + 1) % fc;
+        int kf_from = (int)(anim->frames[clip->first_frame + before] & 0xFFFu);
+        if (kf_from >= skel->keyframe_count)
+            kf_from = skel->keyframe_count > 0 ? skel->keyframe_count - 1 : 0;
+        g_anim_kf_tween.active  = 1;
+        g_anim_kf_tween.kf_from = kf_from;
+        g_anim_kf_tween.weight  = w;
+        slot = after;
     }
     int kf = (int)(anim->frames[clip->first_frame + slot] & 0xFFFu);
     if (kf >= skel->keyframe_count)

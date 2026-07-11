@@ -72,4 +72,16 @@ void re15_skel_bone_to_world(const int32_t trans[3], int16_t yaw,
  * query). void* to avoid an re15_actor.h dependency in this header. */
 extern void *g_anim_pose_actor;
 
+/* 0x8000 MARKER TWEEN (byte-true FUN_8001f8b4, trace wf_518cceff CONFIRMED): a marker anim frame
+ * is a TWEEN — the original poses  ((0x1000-w)*A + w*B) >> 12  for the ROOT translation (GTE
+ * GPF12/GPL12 @0x8001fa78-fae0) AND every bone angle (hidden-$a3 w -> FUN_8001fb94 ->
+ * FUN_80020510 shortest-path lerp), where A = the last REAL frame posed, B = the next REAL frame
+ * in playback direction, w = marker & 0xfff (complemented in reverse @0x8001f940-f948, which is
+ * the SAME absolute pose — w always means "fraction toward the LATER bracketing frame").
+ * Side channel in the g_anim_pose_actor pattern: re15_compute_actor_kf sets it whenever the
+ * resolved slot is a marker (kf_from = the bracketing-BEFORE real frame's keyframe; the returned
+ * kf = the bracketing-AFTER one); the next re15_skel_compute_pose consumes AND clears it. */
+typedef struct { int active; int kf_from; int weight; } re15_kf_tween_t;
+extern re15_kf_tween_t g_anim_kf_tween;
+
 #endif /* RE15_SKELETON_H */

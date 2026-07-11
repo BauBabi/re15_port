@@ -21,6 +21,7 @@
 #include "re15_aot.h"
 #include "re15_emd.h"
 #include "re15_anim_select.h"
+#include "re15_skeleton.h"   /* g_anim_kf_tween + re15_skel_compute_pose (the tween consumer) */
 
 int main(void)
 {
@@ -57,8 +58,10 @@ int main(void)
         if (!fail) printf("  (A) player seed renders slot 0/frac 7 first; sequence (0,7),(1,6),(2,5)\n");
     }
 
-    /* (B) the 0x8000 marker is never posed: LOOP wraps forward to frame 0, plain-forward skips, the
-     *     HOLD-LAST backward scan is unchanged, reverse playback skips backward. */
+    /* (B) the 0x8000 marker is a TWEEN, never posed as a keyframe (FUN_8001f8b4): the kf query
+     *     returns the bracketing-AFTER real frame and arms g_anim_kf_tween with the bracketing-
+     *     BEFORE frame + the marker's weight; the HOLD-LAST backward scan is unchanged; the pose
+     *     is direction-independent (reverse arms the same tween). */
     {
         re15_emd_animation_t anim; memset(&anim, 0, sizeof anim);
         re15_emd_skeleton_t  skel; memset(&skel, 0, sizeof skel);
@@ -66,29 +69,69 @@ int main(void)
         anim.clip_count = 1; anim.frame_count = 4;
         anim.clips[0].first_frame = 0; anim.clips[0].frame_count = 4;
         anim.frames[0] = 5; anim.frames[1] = 6; anim.frames[2] = 7;
-        anim.frames[3] = 0x8000u | 0x0FFFu;                       /* terminal marker, garbage kf bits */
+        anim.frames[3] = 0x8000u | 0x0027u;                       /* marker, w=0x27 (the EM013 value) */
 
         re15_actor_t a; memset(&a, 0, sizeof a);
 
         int kf = re15_compute_actor_kf(&anim, &skel, &a, /*loop*/0, /*cur=*/3);   /* LOOP seam on the marker */
-        if (kf != 5) { fprintf(stderr, "FAIL(B1): LOOP marker slot must wrap to frame 0 (kf 5), got %d\n", kf); fail = 1; }
+        if (kf != 5) { fprintf(stderr, "FAIL(B1a): LOOP marker must return the AFTER frame (kf 5), got %d\n", kf); fail = 1; }
+        if (!g_anim_kf_tween.active || g_anim_kf_tween.kf_from != 7 || g_anim_kf_tween.weight != 0x27) {
+            fprintf(stderr, "FAIL(B1b): tween must be {active, from kf 7, w 0x27}, got {%d,%d,%#x}\n",
+                    g_anim_kf_tween.active, g_anim_kf_tween.kf_from, (unsigned)g_anim_kf_tween.weight);
+            fail = 1;
+        }
 
         a.motion = 0;
         kf = re15_compute_actor_kf(&anim, &skel, &a, /*no override*/-1, 3);       /* plain-forward on the marker */
-        if (kf != 5) { fprintf(stderr, "FAIL(B2): forward marker slot must skip (kf 5), got %d\n", kf); fail = 1; }
+        if (kf != 5 || !g_anim_kf_tween.active) { fprintf(stderr, "FAIL(B2): forward marker must tween to kf 5, got %d act=%d\n", kf, g_anim_kf_tween.active); fail = 1; }
 
         kf = re15_compute_actor_kf(&anim, &skel, &a, -1, 10);                     /* HOLD-LAST (cur > fc) */
-        if (kf != 7) { fprintf(stderr, "FAIL(B3): hold-last must keep the last REAL frame (kf 7), got %d\n", kf); fail = 1; }
+        if (kf != 7 || g_anim_kf_tween.active) { fprintf(stderr, "FAIL(B3): hold-last must keep kf 7 with NO tween, got %d act=%d\n", kf, g_anim_kf_tween.active); fail = 1; }
 
         a.anim_flags = 0x80;                                                      /* reverse playback */
         kf = re15_compute_actor_kf(&anim, &skel, &a, 0, 0);                       /* rev slot = fc-1 = marker */
-        if (kf != 7) { fprintf(stderr, "FAIL(B4): reverse marker slot must skip backward (kf 7), got %d\n", kf); fail = 1; }
+        if (kf != 5 || !g_anim_kf_tween.active || g_anim_kf_tween.kf_from != 7) {
+            fprintf(stderr, "FAIL(B4): reverse marker must arm the SAME absolute tween (kf 5, from 7), got %d from %d\n", kf, g_anim_kf_tween.kf_from); fail = 1; }
 
         a.anim_flags = 0;
         kf = re15_compute_actor_kf(&anim, &skel, &a, 0, 1);                       /* non-marker sanity */
-        if (kf != 6) { fprintf(stderr, "FAIL(B5): non-marker slot must be unchanged (kf 6), got %d\n", kf); fail = 1; }
+        if (kf != 6 || g_anim_kf_tween.active) { fprintf(stderr, "FAIL(B5): non-marker must be kf 6 with NO tween, got %d act=%d\n", kf, g_anim_kf_tween.active); fail = 1; }
 
-        if (!fail) printf("  (B) 0x8000 markers never posed: LOOP wraps, forward/reverse skip, hold-last intact\n");
+        if (!fail) printf("  (B) 0x8000 marker arms the tween (after-kf returned, before-kf + w in the channel)\n");
+    }
+
+    /* (C) compute_pose consumes the tween: root translation = ((0x1000-w)*A + w*B) >> 12, and the
+     *     side channel is CLEARED after the pose (one-shot). Synthetic 1-bone skel, 2 keyframes with
+     *     known root positions, w = 0x800 -> exact midpoint (the EM02B shipped value). */
+    {
+        static uint8_t kfdata[40];                                /* 2 keyframes x 20 bytes */
+        memset(kfdata, 0, sizeof kfdata);
+        /* kf0 root = (100, 200, 300); kf1 root = (300, 400, 500) (LE s16 @+0/+2/+4; angles zeroed) */
+        kfdata[0] = 100; kfdata[2] = 200; kfdata[4] = 44; kfdata[5] = 1;          /* 300 = 0x12C */
+        kfdata[20] = 44; kfdata[21] = 1; kfdata[22] = 0x90; kfdata[23] = 1;       /* 300, 400 = 0x190 */
+        kfdata[24] = 0xF4; kfdata[25] = 1;                                        /* 500 = 0x1F4 */
+        re15_emd_skeleton_t skel; memset(&skel, 0, sizeof skel);
+        skel.bone_count = 1; skel.bone_parent[0] = -1;
+        skel.keyframe_size_bytes = 20; skel.keyframe_count = 2;
+        skel.keyframe_data = kfdata; skel.keyframe_data_size = sizeof kfdata;
+
+        re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+        g_anim_pose_actor = NULL;                                  /* no crossfade */
+        g_anim_kf_tween.active = 1; g_anim_kf_tween.kf_from = 0; g_anim_kf_tween.weight = 0x800;
+        re15_skel_compute_pose(&skel, /*kf=*/1, poses);
+        if (poses[0].trans[0] != 200 || poses[0].trans[1] != 300 || poses[0].trans[2] != 400) {
+            fprintf(stderr, "FAIL(C1): tween w=0x800 root must be the midpoint (200,300,400), got (%d,%d,%d)\n",
+                    poses[0].trans[0], poses[0].trans[1], poses[0].trans[2]);
+            fail = 1;
+        }
+        if (g_anim_kf_tween.active) { fprintf(stderr, "FAIL(C2): compute_pose must CLEAR the tween channel\n"); fail = 1; }
+        re15_skel_compute_pose(&skel, 1, poses);                   /* no tween -> plain kf1 root */
+        if (poses[0].trans[0] != 300 || poses[0].trans[1] != 400 || poses[0].trans[2] != 500) {
+            fprintf(stderr, "FAIL(C3): without the tween the plain kf1 root must pose (300,400,500), got (%d,%d,%d)\n",
+                    poses[0].trans[0], poses[0].trans[1], poses[0].trans[2]);
+            fail = 1;
+        }
+        if (!fail) printf("  (C) compute_pose lerps the root at w=0x800 to the midpoint + clears the channel\n");
     }
 
     if (fail) { printf("ANIM-POSE-ORDER: FAIL\n"); return 1; }

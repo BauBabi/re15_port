@@ -156,6 +156,10 @@ static void mat3_from_euler(int ax, int ay, int az, int32_t m[9])
  * NULL = no blend (pose QUERY, e.g. the stair foot-position probe). */
 void *g_anim_pose_actor = NULL;
 
+/* 0x8000 marker TWEEN side channel (FUN_8001f8b4) — set by re15_compute_actor_kf, consumed +
+ * cleared by the next re15_skel_compute_pose. See re15_skeleton.h. */
+re15_kf_tween_t g_anim_kf_tween = {0, 0, 0};
+
 /* Byte-true shortest-arc 12-bit angle lerp (FUN_80020510 + LoadAverageShort12):
  * mask prev to 12 bits, unwrap cur to within ±0x800 of prev, then
  * out = (prev*wp + cur*(0x1000-wp)) >> 12  (wp = prev weight = 0x200*frac). */
@@ -174,6 +178,16 @@ int re15_skel_compute_pose(const re15_emd_skeleton_t *skel,
 {
     if (!skel || !poses) return -1;
     if (skel->bone_count <= 0 || skel->bone_count > RE15_EMD_MAX_BONES) return -2;
+
+    /* 0x8000 MARKER TWEEN (FUN_8001f8b4): consume + clear the side channel armed by the preceding
+     * re15_compute_actor_kf. When active, `keyframe_index` is the bracketing-AFTER real frame (B)
+     * and tween.kf_from the bracketing-BEFORE one (A); the pose below lerps A->B at weight w for
+     * the root AND every bone angle, exactly like the original's GPF12/GPL12 + FUN_80020510 pass.
+     * Applied to the RAW keyframe values FIRST, then the FRAC crossfade blends on top — the same
+     * two-stage order as f8b4's blend-active branch (FUN_8001ffd8 @0x8001fb38). */
+    re15_kf_tween_t tween = g_anim_kf_tween;
+    g_anim_kf_tween.active = 0;
+    int tw = tween.active ? (tween.weight & 0xfff) : 0;   /* w = fraction toward THIS keyframe (B) */
 
     /* FRAC crossfade state (FUN_8001f3bc): blend from the actor's previously
      * rendered pose into this keyframe over anim_frac frames. wp/wc = prev/current
@@ -222,6 +236,14 @@ int re15_skel_compute_pose(const re15_emd_skeleton_t *skel,
      * eating zombies and room1150 floating Irons. Read the per-frame root. */
     int16_t kf_px = 0, kf_py = 0, kf_pz = 0;
     re15_emd_get_keyframe_position(skel, keyframe_index, &kf_px, &kf_py, &kf_pz);
+    if (tween.active) {
+        /* marker ROOT lerp (GTE GPF12/GPL12 @0x8001fa78-fae0): root = ((0x1000-w)*A + w*B) >> 12 */
+        int16_t fx = 0, fy = 0, fz = 0;
+        re15_emd_get_keyframe_position(skel, tween.kf_from, &fx, &fy, &fz);
+        kf_px = (int16_t)(((int)fx * (0x1000 - tw) + (int)kf_px * tw) >> 12);
+        kf_py = (int16_t)(((int)fy * (0x1000 - tw) + (int)kf_py * tw) >> 12);
+        kf_pz = (int16_t)(((int)fz * (0x1000 - tw) + (int)kf_pz * tw) >> 12);
+    }
 
     /* ROOM1150 KNEEL root-Y — RESOLVED 2026-06-17 (FK-measured, ablauf4-verified): there is
      * NO root-py override here, and that is CORRECT (byte-true). Earlier rounds chased a "pop"
@@ -260,6 +282,15 @@ int re15_skel_compute_pose(const re15_emd_skeleton_t *skel,
         /* Local Euler angles for this bone in this keyframe. */
         int16_t ax = 0, ay = 0, az = 0;
         re15_emd_get_keyframe_angles(skel, keyframe_index, b, &ax, &ay, &az);
+        if (tween.active) {
+            /* marker ANGLE lerp (hidden-$a3 w -> FUN_8001fb94 -> FUN_80020510 shortest-path):
+             * angle = ((0x1000-w)*A + w*B) >> 12 == blend_angle12(A, B, wp = 0x1000-w). */
+            int16_t fax = 0, fay = 0, faz = 0;
+            re15_emd_get_keyframe_angles(skel, tween.kf_from, b, &fax, &fay, &faz);
+            ax = re15_blend_angle12(fax, ax, 0x1000 - tw);
+            ay = re15_blend_angle12(fay, ay, 0x1000 - tw);
+            az = re15_blend_angle12(faz, az, 0x1000 - tw);
+        }
 
         /* Per-bone angle crossfade (FUN_80020510): blend the keyframe angle toward
          * the prior rendered angle, then snapshot the result as prev for next frame.

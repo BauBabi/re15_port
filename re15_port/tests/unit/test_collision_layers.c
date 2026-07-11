@@ -88,6 +88,42 @@ int main(void)
         if (!fail) printf("  (4) body-push: far pair rejected (full delta), close pair pushed\n");
     }
 
+    /* (5) body-push Y BAND GATE (byte-true FUN_8002aec4 @0x8002b1f0-b228, trace wf_518cceff):
+     *     strict -(hA+hB) < dy < +(hA+hB) with the hit_height half-heights + hit_offset_y centre
+     *     offsets. Vertically separated bodies never push; same-floor bodies still push; a pair
+     *     with NO heights keeps the ungated behaviour (no +0x78 box = never in the push loop). */
+    {
+        re15_actor_t A, B; memset(&A, 0, sizeof A); memset(&B, 0, sizeof B);
+        A.hit_height = 1530; B.hit_height = 1440;                 /* hsum = 2970 */
+        A.x = 0; A.z = 0; B.x = 500; B.z = 0;                     /* XZ overlap (R=850) */
+        B.y = 4000;                                               /* dy=4000 >= 2970 -> outside the band */
+        if (re15_body_push(&A, 450, &B, 400) != 0 || B.x != 500) {
+            fprintf(stderr, "FAIL(5a): vertically separated pair (dy=4000, hsum=2970) must NOT push\n"); fail = 1; }
+        B.y = 1000;                                               /* inside the band */
+        if (re15_body_push(&A, 450, &B, 400) != 1) {
+            fprintf(stderr, "FAIL(5b): in-band pair (dy=1000) must push\n"); fail = 1; }
+        /* offsets participate: dy = (B.y+ofsB.y)-(A.y+ofsA.y) */
+        B.x = 500; B.y = 2000; B.hit_offset_y = -1440; A.hit_offset_y = -1530;   /* dy = 560-(-1530)... */
+        int32_t dy = (B.y + B.hit_offset_y) - (A.y + A.hit_offset_y);            /* = 2090 < 2970 */
+        int pushed = re15_body_push(&A, 450, &B, 400);
+        if (!((dy < 2970 && pushed == 1) || (dy >= 2970 && pushed == 0))) {
+            fprintf(stderr, "FAIL(5c): offset-adjusted dy=%d must gate consistently (pushed=%d)\n", dy, pushed); fail = 1; }
+        if (!fail) printf("  (5) Y band gate: dy=4000 blocked, dy=1000 pushes, offsets participate\n");
+    }
+
+    /* (6) entity+0x0 flag gates (@0x8002af04-af30): bit 0x2 on either or bit 0x4 on the pushee skips. */
+    {
+        re15_actor_t A, B; memset(&A, 0, sizeof A); memset(&B, 0, sizeof B);
+        A.x = 0; A.z = 0; B.x = 500; B.z = 0;
+        B.flags = 0x04;
+        if (re15_body_push(&A, 450, &B, 400) != 0) { fprintf(stderr, "FAIL(6a): pushee flags&0x4 must skip\n"); fail = 1; }
+        B.flags = 0x01; A.flags = 0x02;
+        if (re15_body_push(&A, 450, &B, 400) != 0) { fprintf(stderr, "FAIL(6b): pusher flags&0x2 must skip\n"); fail = 1; }
+        A.flags = 0x01;
+        if (re15_body_push(&A, 450, &B, 400) != 1) { fprintf(stderr, "FAIL(6c): plain visible pair must push\n"); fail = 1; }
+        if (!fail) printf("  (6) flag gates: 0x4 pushee + 0x2 either skip; visible pair pushes\n");
+    }
+
     if (fail) { printf("COLLISION-LAYERS: FAIL\n"); return 1; }
     printf("COLLISION-LAYERS: all checks passed\n");
     return 0;
