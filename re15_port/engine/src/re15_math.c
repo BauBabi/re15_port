@@ -248,3 +248,21 @@ int32_t re15_ratan2(int32_t y, int32_t x)
     if (sy) v1 = -v1;                              /* y < 0 : reflect across +X */
     return v1;
 }
+
+/* Anisotropic-ellipse directional radius. Shared by the body-push (FUN_8002aec4 @0x8002afb8-b05c)
+ * and the attack-hitbox sector test (FUN_8002b5d0 @0x8002b65c) -- byte-identical code in both.
+ * The effective radius of a box (rx = box[+6] along heading, rz = box[+0xa] lateral) toward a point
+ * at delta (dx,dz) from the box CENTRE, given the box heading rot_y. Circular (rx==rz) -> rx.
+ *   rel = ratan2(dz,dx) - rot_y, folded to a [0,0x400] triangle wave;
+ *   rz<rx: eff = rz + (rx-rz)*rcos(s4)/4096   ;   else: eff = rx + (rz-rx)*rsin(s4)/4096 */
+int32_t re15_ellipse_radius(int32_t rx, int32_t rz, int32_t rot_y, int32_t dz, int32_t dx)
+{
+    if (rx == rz || rz <= 0) return rx;             /* circular box, or a port actor with no lateral radius */
+    int32_t rel = (re15_ratan2(dz, dx) - rot_y) & 0xfff;
+    int32_t s4 = (rel < 0x400) ? rel
+               : (rel < 0x800) ? 0x800 - rel
+               : (rel < 0xc00) ? rel - 0x800
+                               : 0x1000 - rel;
+    if (rz < rx) return rz + (int32_t)(((int64_t)(rx - rz) * re15_rcos(s4)) >> 12);
+    return rx + (int32_t)(((int64_t)(rz - rx) * re15_rsin(s4)) >> 12);
+}

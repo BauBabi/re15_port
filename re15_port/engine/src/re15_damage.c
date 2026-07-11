@@ -674,19 +674,23 @@ int re15_hitbox_overlap(int32_t cx, int32_t cy, int32_t cz,
 }
 
 /* FUN_8002b5d0 wrapper over a port actor: read its hitbox dims (the +0x78 struct)
- * + local offset (+0x7c) and run the overlap test. Circular path is byte-true; the
- * angular-SECTOR case (hit_radius_min != hit_radius_max) needs the BIOS ratan2 +
- * rsin/rcos directional-reach interpolation (@8002b65c) which the port hasn't yet
- * ported — it is DEFERRED and routed through the circular path on radius_min as a
- * documented placeholder (never reached in-game today: enemy hitbox values aren't
- * wired yet and the AI attack trigger is deferred). */
+ * + local offset (+0x7c) and run the overlap test. The angular-SECTOR case
+ * (hit_radius_min != hit_radius_max, e.g. the alligator's 2200/800 box) blends the
+ * directional reach by the attack's bearing vs the target heading via the BIOS
+ * ratan2 + rsin/rcos (@0x8002b65c) — byte-identical to the body-push ellipse, so it
+ * routes through the shared re15_ellipse_radius. Circular boxes take radius_min directly
+ * (the beq @0x8002b61c). */
 int re15_hitbox_test(const re15_actor_t *target, const re15_attack_box_t *atk)
 {
     if (!target || !atk) return 0;
     int32_t cx = target->x + target->hit_offset_x;          /* +0x34 + offset[0] */
     int32_t cy = target->y + target->hit_offset_y;          /* +0x38 + offset[1] */
     int32_t cz = target->z + target->hit_offset_z;          /* +0x3c + offset[2] */
-    int32_t radius = target->hit_radius_min;                /* == hit_radius_max (circular) */
+    /* eff radius: circular -> radius_min; sector -> ellipse toward the attack point (@0x8002b65c). */
+    int32_t radius = re15_ellipse_radius((int32_t)target->hit_radius_min,
+                                         (int32_t)target->hit_radius_max,
+                                         (int32_t)target->rot_y,
+                                         atk->z - cz, atk->x - cx);
     return re15_hitbox_overlap(cx, cy, cz, radius, target->hit_height,
                                atk->x, atk->y, atk->z, atk->radius);
 }

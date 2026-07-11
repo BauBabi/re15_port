@@ -218,6 +218,29 @@ static int test_hitbox_overlap_circular(void)
     return 0;
 }
 
+/* SECTOR path (FUN_8002b5d0 @0x8002b65c): a non-circular target (alligator 2200/800) is HARDER to
+ * hit at its flanks than a circular 2200 box would be. re15_hitbox_test blends the reach by the
+ * attack bearing vs the target heading via the byte-true BIOS ratan2/rsin/rcos ellipse (wf_8b1360d4). */
+static int test_hitbox_sector_alligator(void)
+{
+    re15_actor_t ag;
+    memset(&ag, 0, sizeof ag);
+    ag.x = 0; ag.y = 0; ag.z = 0; ag.rot_y = 0;                    /* heading 0 = +X */
+    ag.hit_radius_min = 2200; ag.hit_radius_max = 800; ag.hit_height = 720;
+    ag.hit_offset_x = 0; ag.hit_offset_y = -720; ag.hit_offset_z = 0;   /* centre (0,-720,0) */
+
+    /* FRONT (+X), dist 1400, atk r=100: bearing 0 -> eff=2200 -> R=2300 -> HIT. */
+    re15_attack_box_t front = { 1400, -720, 0, 100 };
+    if (re15_hitbox_test(&ag, &front) != 1) {
+        fprintf(stderr, "FAIL: alligator FRONT attack (dist 1400) must HIT (eff 2200)\n"); return 1; }
+    /* FLANK (+Z), dist 1400, atk r=100: bearing 0x400 -> eff=800 -> R=900 -> MISS (circular 2200 would HIT). */
+    re15_attack_box_t flank = { 0, -720, 1400, 100 };
+    if (re15_hitbox_test(&ag, &flank) != 0) {
+        fprintf(stderr, "FAIL: alligator FLANK attack (dist 1400) must MISS (eff 800, was a circular hit)\n"); return 1; }
+    printf("PASS: test_hitbox_sector_alligator (front hit / flank miss)\n");
+    return 0;
+}
+
 /* Hitbox-Helfer: einem Slot eine zirkuläre Hitbox + Position geben. */
 static void set_hitbox(re15_actor_t *a, int32_t x, int32_t z, uint16_t rad)
 {
@@ -503,6 +526,7 @@ int main(void)
     failures += test_damage_table_bytes();
     failures += test_enemy_take_damage();
     failures += test_hitbox_overlap_circular();
+    failures += test_hitbox_sector_alligator();
     failures += test_resolve_attack();
     failures += test_enemy_attack();
     failures += test_enemy_lunge();

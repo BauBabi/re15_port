@@ -38,4 +38,9 @@ int32_t re15_rsin(int32_t a);
 int32_t re15_rcos(int32_t a);
 int32_t re15_ratan2(int32_t y, int32_t x);
 
+/* Anisotropic-ellipse directional radius (FUN_8002aec4 body-push / FUN_8002b5d0 hitbox sector).
+ * rx = along-heading radius (box[+6]), rz = lateral (box[+0xa]); (dz,dx) = point - box centre;
+ * rot_y = box heading. Circular (rx==rz) returns rx. */
+int32_t re15_ellipse_radius(int32_t rx, int32_t rz, int32_t rot_y, int32_t dz, int32_t dx);
+
 #endif /* RE15_MATH_H */

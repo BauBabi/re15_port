@@ -1949,15 +1949,8 @@ static int32_t re15_body_isqrt(int64_t v)
 static int32_t body_eff_radius(const re15_actor_t *a, int32_t rx, int32_t ox, int32_t oz)
 {
     int32_t rz = (int32_t)a->hit_radius_max;
-    if (rz <= 0 || rz == rx) return rx;                                  /* circular / no lateral radius */
-    int32_t bearing = re15_ratan2((int32_t)oz - a->z, (int32_t)ox - a->x);
-    int32_t rel = (bearing - (int32_t)a->rot_y) & 0xfff;
-    int32_t s4 = (rel < 0x400) ? rel
-               : (rel < 0x800) ? 0x800 - rel
-               : (rel < 0xc00) ? rel - 0x800
-                               : 0x1000 - rel;
-    if (rz < rx) return rz + (int32_t)(((int64_t)(rx - rz) * re15_rcos(s4)) >> 12);
-    return rx + (int32_t)(((int64_t)(rz - rx) * re15_rsin(s4)) >> 12);
+    if (rz <= 0) return rx;                                              /* no lateral radius (scalar-only caller) */
+    return re15_ellipse_radius(rx, rz, (int32_t)a->rot_y, (int32_t)oz - a->z, (int32_t)ox - a->x);
 }
 
 int re15_body_push(const re15_actor_t *pusher, int32_t r_pusher,
