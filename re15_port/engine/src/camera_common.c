@@ -26,6 +26,7 @@
 
 #include <stdint.h>
 #include "re15_camera.h"
+#include "re15_math.h"       /* re15_squareroot0 — the engine's ONLY sqrt (BIOS 0x80065f60) */
 
 #define ONE_Q12     0x1000
 
@@ -111,9 +112,12 @@ int re15_camera_build_view(const re15_camera_cut_t *cut,
     int32_t dx = cut->target_x - cut->pos_x;
     int32_t dy = cut->target_y - cut->pos_y;
     int32_t dz = cut->target_z - cut->pos_z;
-    int32_t dist  = (int32_t)cam_isqrt((uint32_t)((int64_t)dx*dx + (int64_t)dy*dy + (int64_t)dz*dz));
+    /* dist + horiz via the BIOS SquareRoot0 (FUN_80053ca4 jal 0x80053d60 + 0x80053dd8 -> 0x80065f60),
+     * NOT an exact isqrt — the table approximation feeds the normalized sin/cos, so it is part of the
+     * byte-true camera (pixel-shift). Audit wf_f066b2ae. */
+    int32_t dist  = (int32_t)re15_squareroot0((uint32_t)((int64_t)dx*dx + (int64_t)dy*dy + (int64_t)dz*dz));
     if (dist == 0) return -2;                                   /* pos == target -> degenerate (the original traps) */
-    int32_t horiz = (int32_t)cam_isqrt((uint32_t)((int64_t)dx*dx + (int64_t)dz*dz));
+    int32_t horiz = (int32_t)re15_squareroot0((uint32_t)((int64_t)dx*dx + (int64_t)dz*dz));
     /* pitch: sin_p = (pos.y - target.y)*4096/dist = -dy*4096/dist; cos_p = horiz*4096/dist (sVar1/uVar7) */
     int32_t sp = (int16_t)(int32_t)(((int64_t)(-dy) * 4096) / dist);
     int32_t cp = (int16_t)(int32_t)(((int64_t)horiz * 4096) / dist);

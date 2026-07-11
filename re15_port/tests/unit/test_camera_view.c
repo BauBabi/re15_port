@@ -11,16 +11,12 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "re15_camera.h"
+#include "re15_math.h"       /* the REAL BIOS SquareRoot0 (0x80065f60) FUN_80053ca4 calls */
 
-/* copy of camera_common.c's cam_isqrt (== the port's SquareRoot0 stand-in) so the comparison
- * isolates the matrix construction, not the sqrt. */
-static uint32_t isq(uint32_t x)
-{
-    uint32_t r = 0, b = 1UL << 30;
-    while (b > x) b >>= 2;
-    while (b) { if (x >= r + b) { x -= r + b; r = (r >> 1) + b; } else r >>= 1; b >>= 2; }
-    return r;
-}
+/* The reference uses the SAME BIOS SquareRoot0 as the port (verified independently against the
+ * PSX bytes in test_squareroot0), so this comparison isolates the MATRIX construction, not the
+ * sqrt. FUN_80053ca4 calls SquareRoot0 @0x80053d60 + 0x80053dd8 for dist/horiz. */
+static uint32_t isq(uint32_t x) { return re15_squareroot0(x); }
 
 /* independent transliteration of FUN_80053ca4.c (byte-true reference). */
 static int ref_build(const re15_camera_cut_t *c, int32_t rot[9], int32_t trans[3])
