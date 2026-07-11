@@ -63,6 +63,39 @@ int main(void)
         else printf("  (2) LONE: maggot still closes on the player, dist %d->%d (attack range reachable)\n", d0, d1);
     }
 
+    /* (3) ANISOTROPIC ELLIPSE (alligator 0x23, box 2200 along heading / 800 lateral): the byte-true
+     * FUN_8002aec4 blends the effective radius by bearing-vs-heading (audit wf_8b1360d4). At the
+     * alligator's FLANK effA=800 -> R=1250, so a player 1400 away is NOT pushed; the SAME 1400 in
+     * FRONT gives effA=2200 -> R=2650 and IS pushed. The old circular port used R=2650 all around
+     * and wrongly ejected the player off the sides. */
+    {
+        memset(g_actors, 0, sizeof g_actors);
+        re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        pl->active = 1; pl->type = 0; pl->hp = 100;
+        pl->hit_height = 1530;                       /* so the Y band trivially passes at y=0 */
+        re15_actor_t *ag = &g_actors[1];
+        ag->active = 1; ag->type = 0x23; ag->state = 1; ag->x = 0; ag->z = 0; ag->rot_y = 0; /* heading 0 = +X */
+        re15_enemy_apply_hitbox(ag, 0x23);
+        if (ag->hit_radius_min != 2200 || ag->hit_radius_max != 800) {
+            fprintf(stderr, "FAIL(3): alligator box must be 2200/800, got %u/%u\n",
+                    ag->hit_radius_min, ag->hit_radius_max); fail = 1; }
+        /* FLANK: player perpendicular to heading (+Z), dist 1400 -> rel=0x400, rcos=0 -> effA=800, R=1250 < 1400 */
+        pl->x = 0; pl->z = 1400;
+        int32_t sx = pl->x, sz = pl->z;
+        re15_body_push(ag, (int32_t)ag->hit_radius_min, pl, 450);
+        if (pl->x != sx || pl->z != sz) {
+            fprintf(stderr, "FAIL(3): alligator FLANK must NOT push (eff 800), (%d,%d)->(%d,%d)\n",
+                    sx, sz, pl->x, pl->z); fail = 1; }
+        else printf("  (3) ELLIPSE flank: player at the alligator side (dist 1400) NOT pushed (eff 800)\n");
+        /* FRONT: player along heading (+X), dist 1400 -> rel=0, rcos=4096 -> effA=2200, R=2650 > 1400 -> push */
+        pl->x = 1400; pl->z = 0;
+        int32_t fx = pl->x;
+        re15_body_push(ag, (int32_t)ag->hit_radius_min, pl, 450);
+        if (pl->x <= fx) {
+            fprintf(stderr, "FAIL(3): alligator FRONT must push out (eff 2200, R 2650), x stayed %d\n", pl->x); fail = 1; }
+        else printf("  (3) ELLIPSE front: player ahead (dist 1400) pushed out (eff 2200, R 2650)\n");
+    }
+
     if (fail) { printf("ENEMY-BODY-PUSH: FAIL\n"); return 1; }
     printf("ENEMY-BODY-PUSH: all checks passed\n");
     return 0;

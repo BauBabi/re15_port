@@ -26,4 +26,16 @@
  * Output: the table-approximated integer square root (NOT exact floor(sqrt)). */
 uint32_t re15_squareroot0(uint32_t x);
 
+/* Byte-true PsyQ BIOS trig. Angle unit 4096 = 360deg (Q12); results Q12 (4096 = 1.0).
+ * These are NOT the game's rotation trig (re15_sin_q12/cos_q12 / re15_atan2_q12): those use
+ * a DIFFERENT table (DAT_800794c4) that diverges by up to ~9 Q12 off-axis, and the game atan2
+ * uses a quarter-resolution table + the 0=+Z convention. These reproduce the BIOS functions the
+ * body-push anisotropic ellipse (FUN_8002aec4) calls.
+ *   rsin   @0x800683e8 (core 0x80068424, table 0x8007db04)
+ *   rcos   @0x80068348  (rcos(a) = rsin(|a| + 90deg))
+ *   ratan2 @0x80065de0 (table 0x80078cc0): angle of (x,y) CCW from +X, 0..4095. */
+int32_t re15_rsin(int32_t a);
+int32_t re15_rcos(int32_t a);
+int32_t re15_ratan2(int32_t y, int32_t x);
+
 #endif /* RE15_MATH_H */

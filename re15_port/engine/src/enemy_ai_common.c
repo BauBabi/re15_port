@@ -1940,6 +1940,26 @@ static int32_t re15_body_isqrt(int64_t v)
     return (int32_t)re15_squareroot0((uint32_t)v);
 }
 
+/* Anisotropic-ellipse effective radius toward (ox,oz), byte-true FUN_8002aec4 @0x8002af58-b05c.
+ * rx = box[+6] (along-heading, hit_radius_min), rz = box[+0xa] (lateral, hit_radius_max). For a
+ * circular box (rx==rz — the @0x8002af68 beq skip) it is just rx; only the alligator (0x23) differs.
+ *   bearing = ratan2(dz,dx) (0=+X); rel = bearing - rot_y folded to a [0,0x400] triangle wave;
+ *   rz<rx: eff = rz + (rx-rz)*rcos(s4)/4096   (full rx along heading, rz perpendicular)
+ *   else : eff = rx + (rz-rx)*rsin(s4)/4096 */
+static int32_t body_eff_radius(const re15_actor_t *a, int32_t rx, int32_t ox, int32_t oz)
+{
+    int32_t rz = (int32_t)a->hit_radius_max;
+    if (rz <= 0 || rz == rx) return rx;                                  /* circular / no lateral radius */
+    int32_t bearing = re15_ratan2((int32_t)oz - a->z, (int32_t)ox - a->x);
+    int32_t rel = (bearing - (int32_t)a->rot_y) & 0xfff;
+    int32_t s4 = (rel < 0x400) ? rel
+               : (rel < 0x800) ? 0x800 - rel
+               : (rel < 0xc00) ? rel - 0x800
+                               : 0x1000 - rel;
+    if (rz < rx) return rz + (int32_t)(((int64_t)(rx - rz) * re15_rcos(s4)) >> 12);
+    return rx + (int32_t)(((int64_t)(rz - rx) * re15_rsin(s4)) >> 12);
+}
+
 int re15_body_push(const re15_actor_t *pusher, int32_t r_pusher,
                    re15_actor_t *pushee, int32_t r_pushee)
 {
@@ -1957,7 +1977,10 @@ int re15_body_push(const re15_actor_t *pusher, int32_t r_pusher,
      * like the original" comment mis-read the position `lh` as a delta truncation). */
     int32_t dx = pushee->x - pusher->x;
     int32_t dz = pushee->z - pusher->z;
-    int32_t R  = r_pusher + r_pushee;
+    /* R = the two effective radii toward each other (byte-true @0x8002b164 radSum). For circular
+     * boxes this is r_pusher + r_pushee; for the alligator (0x23) the ellipse blends by bearing. */
+    int32_t R  = body_eff_radius(pusher, r_pusher, pushee->x, pushee->z)
+               + body_eff_radius(pushee, r_pushee, pusher->x, pusher->z);
     if (dx > R || dx < -R || dz > R || dz < -R) return 0;     /* fast reject (aec4 pre-tests) */
     int32_t dist = re15_body_isqrt((int64_t)dx * dx + (int64_t)dz * dz);
     int32_t pen  = R - dist;
@@ -1976,11 +1999,10 @@ int re15_body_push(const re15_actor_t *pusher, int32_t r_pusher,
         int32_t dy = (pushee->y + pushee->hit_offset_y) - (pusher->y + pusher->hit_offset_y);
         if (!(-hsum < dy && dy < hsum)) return 0;
     }
-    /* DATA-DEAD original branches (documented, not ported — trace wf_518cceff):
-     *  - ANISOTROPIC ellipse radius (@0x8002af68-b160): when box[6] != box[10] the effective
-     *    radius blends box[6] (along facing) toward box[10] (lateral) by the bearing-vs-yaw
-     *    angle via libgte rsin/rcos. EVERY shipped box is circular (radius_min == radius_max,
-     *    the @0x8002af68 beq skips the block), so the circular path here is byte-identical.
+    /* ANISOTROPIC ellipse radius (@0x8002af68-b160) is now PORTED above (body_eff_radius) — it is
+     * NOT data-dead: the alligator (0x23) box is {..,2200,720,800}, box[+6] != box[+0xa] (audit
+     * wf_8b1360d4 refuted the old "every shipped box is circular" note). Still DATA-DEAD (documented,
+     * not ported — trace wf_518cceff):
      *  - ANTI-TUNNELING crossing ejection (@0x8002b268-b40c): when the pushee's PREVIOUS-frame
      *    Y (+0x42) was OUTSIDE the height band (vertical entry this frame), a per-axis
      *    old-X/old-Z crossing test ejects by 2*radius. Unreachable on same-floor actors

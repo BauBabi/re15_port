@@ -911,7 +911,14 @@ void re15_enemy_apply_hitbox(re15_actor_t *a, uint8_t type)
                                                 * state-swapped to box C @0x80118dec (200,1440,200)) */
         default:   return;                      /* unverified type → no hitbox (no guessing) */
     }
-    a->hit_radius_min = a->hit_radius_max = r;
+    /* box[+6] = along-heading radius (hit_radius_min), box[+0xa] = lateral (hit_radius_max).
+     * Every shipped box is circular EXCEPT the alligator (0x23): box @0x80118b98 = {..,2200,720,800},
+     * so box[+6]=2200 != box[+0xa]=800 — the body-push anisotropic-ellipse branch (FUN_8002aec4
+     * @0x8002af68) is REACHABLE there (audit wf_8b1360d4). */
+    uint16_t rz = r;
+    if (type == 0x23) rz = 800;
+    a->hit_radius_min = r;
+    a->hit_radius_max = rz;
     a->hit_height     = h;
     a->hit_offset_x   = 0;
     a->hit_offset_y   = (int16_t)(-(int32_t)h);   /* +0x7c local offset = (0, -height, 0) */

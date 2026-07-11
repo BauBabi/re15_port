@@ -74,7 +74,32 @@ int main(void)
         CHECK("no OOB / all results in the expected band across 2^0..2^30", ok);
     }
 
-    if (g_fail) { printf("SQUAREROOT0: FAIL\n"); return 1; }
-    printf("SQUAREROOT0: all checks passed\n");
+    /* --- byte-true BIOS trig (rsin/rcos/ratan2), values verified vs the disassembled cores --- */
+    printf("--- BIOS trig ---\n");
+    CHECK("rsin(0) == 0",          re15_rsin(0) == 0);
+    CHECK("rsin(0x100) == 1567",   re15_rsin(0x100) == 1567);
+    CHECK("rsin(0x200) == 2896",   re15_rsin(0x200) == 2896);
+    CHECK("rsin(0x400) == 4096",   re15_rsin(0x400) == 4096);
+    CHECK("rsin(0x555) == 3548",   re15_rsin(0x555) == 3548);   /* BIOS reflects the exact quarter (game=3545) */
+    CHECK("rsin(0x800) == 0",      re15_rsin(0x800) == 0);
+    CHECK("rsin(0xC00) == -4096",  re15_rsin(0xC00) == -4096);
+    CHECK("rsin(-0x100) == -1567", re15_rsin(-0x100) == -1567);
+    CHECK("rcos(0) == 4096",       re15_rcos(0) == 4096);
+    CHECK("rcos(0x100) == 3784",   re15_rcos(0x100) == 3784);   /* game biased cos = 3782 */
+    CHECK("rcos(0x200) == 2896",   re15_rcos(0x200) == 2896);
+    CHECK("rcos(0x400) == 0",      re15_rcos(0x400) == 0);
+    CHECK("rcos(0x555) == -2046",  re15_rcos(0x555) == -2046);
+    CHECK("rcos(0x800) == -4096",  re15_rcos(0x800) == -4096);
+    /* ratan2(y,x): angle of (x,y) CCW from +X, 0..4095 */
+    CHECK("ratan2(0,100) == 0 (+X)",      (re15_ratan2(0, 100) & 0xfff) == 0);
+    CHECK("ratan2(100,0) == 0x400 (+Y)",  (re15_ratan2(100, 0) & 0xfff) == 0x400);
+    CHECK("ratan2(0,-100) == 0x800 (-X)", (re15_ratan2(0, -100) & 0xfff) == 0x800);
+    CHECK("ratan2(-100,0) == 0xC00 (-Y)", (re15_ratan2(-100, 0) & 0xfff) == 0xC00);
+    CHECK("ratan2(100,100) == 0x200 (45)",(re15_ratan2(100, 100) & 0xfff) == 0x200);
+    CHECK("ratan2(50,100) == 302",        (re15_ratan2(50, 100) & 0xfff) == 302);
+    CHECK("ratan2(100,50) == 722",        (re15_ratan2(100, 50) & 0xfff) == 722);
+
+    if (g_fail) { printf("MATH-PRIMITIVES: FAIL\n"); return 1; }
+    printf("MATH-PRIMITIVES: all checks passed\n");
     return 0;
 }
