@@ -19,32 +19,35 @@ int re15_inv_grant(uint8_t type, uint8_t amount)
 {
     if (type == 0 || amount == 0) return -1;
 
-    /* Pass 1: stack onto an existing same-id slot (RE2 ammo stacks). No 255 clamp
-     * — the byte-true slot write is a raw qty write; a single pickup-merge never exceeds a
-     * uint8 in practice. (The grant-level merge wrapper was not disasm-pinned. NOTE: the earlier
-     * "FUN_8006947c" citation was WRONG — that is sys.c GPU code, not an inventory writer; the real
-     * writers are FUN_8004a1f0/FUN_8004dc4c/FUN_8004e214 on DAT_800b10ac. See RE15_INVENTORY_SUBSYSTEM.md §2.4.) */
-    for (int i = 0; i < RE15_INV_MAX_SLOTS; i++) {
-        if (g_inv.slots[i].id == type) {
-            g_inv.slots[i].qty               = (uint8_t)(g_inv.slots[i].qty + amount);
-            g_inv.last_pickup_type           = type;
-            g_inv.last_pickup_amount         = amount;
-            g_inv.last_pickup_display_frames = HUD_PICKUP_DISPLAY_FRAMES;
-            return 0;
-        }
+    /* World-item pickup = the byte-true INSERT FUN_8004dc4c (@0x8004dc4c, disasm-verified
+     * wf_6eea7fa1). It does NOT stack onto an existing same-id slot and does NOT read/clamp the
+     * max_stack table (DAT_80074da8) — same-id MERGING and max_stack clamping exist ONLY in the menu
+     * combine/reload paths (FUN_8004a0cc/FUN_8004e054/FUN_8004ebdc), never on world pickup. Inventory-
+     * full is gated upstream (FUN_8001db28 case5: FUN_8004df2c()==0xff refuses the pickup). */
+    int free_slot = -1;
+    for (int i = 0; i < RE15_INV_MAX_SLOTS; i++)
+        if (g_inv.slots[i].id == 0) { free_slot = i; break; }
+    if (free_slot < 0) return -1;                          /* full -> the pickup is refused upstream */
+
+    if ((uint8_t)(type - 0x0e) < 6) {
+        /* WIDE weapon (0x0e..0x13 = flamethrower / 3× grenade-launcher / rocket / MC51): 2-cell
+         * front-shift. Slots 0..7 move to 2..9 (old 8/9 dropped, slot 10 stays), then slots 0 and 1
+         * take the weapon with the L/R display flags 1/2, and the equipped-slot index bumps by 2 so
+         * it keeps tracking its weapon (@0x8004dc88, FUN_8004ea6c). */
+        for (int i = 7; i >= 0; i--) g_inv.slots[i + 2] = g_inv.slots[i];
+        g_inv.slots[0].id = type; g_inv.slots[0].qty = amount; g_inv.slots[0].flags = 1;
+        g_inv.slots[1].id = type; g_inv.slots[1].qty = amount; g_inv.slots[1].flags = 2;
+        re15_inv_set_equipped_slot(re15_inv_equipped_slot() + 2);
+    } else {
+        /* everything else = 1 cell in the first FREE slot (raw qty, flags 0). */
+        g_inv.slots[free_slot].id    = type;
+        g_inv.slots[free_slot].qty   = amount;
+        g_inv.slots[free_slot].flags = 0;
     }
-    /* Pass 2: place in first free slot (raw slot write, DAT_800b10ac 4-byte stride). */
-    for (int i = 0; i < RE15_INV_MAX_SLOTS; i++) {
-        if (g_inv.slots[i].id == 0) {
-            g_inv.slots[i].id     = type;
-            g_inv.slots[i].qty    = amount;
-            g_inv.last_pickup_type           = type;
-            g_inv.last_pickup_amount         = amount;
-            g_inv.last_pickup_display_frames = HUD_PICKUP_DISPLAY_FRAMES;
-            return 0;
-        }
-    }
-    return -1;   /* inventory full */
+    g_inv.last_pickup_type           = type;
+    g_inv.last_pickup_amount         = amount;
+    g_inv.last_pickup_display_frames = HUD_PICKUP_DISPLAY_FRAMES;
+    return 0;
 }
 
 /* Byte-true STAGE1 briefing loadout (mzd_stage1_briefing.sav, DAT_800b10ac 4-byte slots). */

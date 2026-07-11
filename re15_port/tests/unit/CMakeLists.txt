@@ -371,6 +371,13 @@ target_include_directories(test_rotmatrix PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_rotmatrix COMMAND test_rotmatrix)
 set_tests_properties(unit_rotmatrix PROPERTIES TIMEOUT 30)
 
+# --- Byte-true world-item pickup INSERT (no auto-stack, wide-weapon front-shift; audit wf_6eea7fa1) ---
+add_executable(test_inv_grant test_inv_grant.c)
+target_link_libraries(test_inv_grant PRIVATE re15_engine re15_test_support)
+target_include_directories(test_inv_grant PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_inv_grant COMMAND test_inv_grant)
+set_tests_properties(unit_inv_grant PROPERTIES TIMEOUT 30)
+
 # --- Byte-true PsyQ BIOS SquareRoot0 table replica (0x80065f60 — the engine's ONLY sqrt, NOT floor) ---
 add_executable(test_squareroot0 test_squareroot0.c)
 target_link_libraries(test_squareroot0 PRIVATE re15_engine re15_test_support)
