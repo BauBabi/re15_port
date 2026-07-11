@@ -211,12 +211,14 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy)
         if (!re15_render_pc_dbg_slot_loaded(slot)) continue;   /* that bank's texture not loaded */
         re15_render_pc_bind_tim_slot(slot);
         /* SPLATTER physics offset (byte-true xlat): a physics particle draws at anchor + xlat. */
-        float wx = (float)(f->x + f->xlat_x);
-        float wy = (float)(f->y + f->xlat_y);
-        float wz = (float)(f->z + f->xlat_z);
-        float vx = (cam->rot[0]*wx + cam->rot[1]*wy + cam->rot[2]*wz) / 4096.0f + cam->trans[0];
-        float vy = (cam->rot[3]*wx + cam->rot[4]*wy + cam->rot[5]*wz) / 4096.0f + cam->trans[1];
-        float vz = (cam->rot[6]*wx + cam->rot[7]*wy + cam->rot[8]*wz) / 4096.0f + cam->trans[2];
+        /* byte-true integer GTE RTPS (same path as the character mesh + shadows):
+         * view = (rot·world)>>12 + trans, no float. rot is int32 Q12, trans int32. */
+        int32_t wx = f->x + f->xlat_x;
+        int32_t wy = f->y + f->xlat_y;
+        int32_t wz = f->z + f->xlat_z;
+        int32_t vx = (int32_t)(((int64_t)cam->rot[0]*wx + (int64_t)cam->rot[1]*wy + (int64_t)cam->rot[2]*wz) >> 12) + cam->trans[0];
+        int32_t vy = (int32_t)(((int64_t)cam->rot[3]*wx + (int64_t)cam->rot[4]*wy + (int64_t)cam->rot[5]*wz) >> 12) + cam->trans[1];
+        int32_t vz = (int32_t)(((int64_t)cam->rot[6]*wx + (int64_t)cam->rot[7]*wy + (int64_t)cam->rot[8]*wz) >> 12) + cam->trans[2];
         /* RE15_FX_LOG: per-particle draw decision trace (debug harness) */
         {
             FILE *fl = pc_fx_log_handle();
@@ -230,9 +232,15 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy)
                 fflush(fl);
             }
         }
-        if (vz < 1.0f) continue;                      /* behind / on the camera plane */
-        float proj = (float)cam->fov_screen_dist / vz;
-        int sx = cx + RNDI(vx * proj), sy = cy + RNDI(vy * proj);
+        if (vz < 64) continue;                        /* H28 near-clip (also guards gte_divide) */
+        /* byte-true GTE RTPS centre: IR1/IR2 sat s16, SZ3 sat u16, UNR reciprocal, IR·n>>16
+         * (truncation, not RNDI). Matches the mesh/shadow projection exactly. */
+        int32_t _ir1 = vx > 0x7FFF ? 0x7FFF : (vx < -0x8000 ? -0x8000 : vx);
+        int32_t _ir2 = vy > 0x7FFF ? 0x7FFF : (vy < -0x8000 ? -0x8000 : vy);
+        uint32_t _sz3 = (uint32_t)(vz > 0xFFFF ? 0xFFFF : vz);
+        uint32_t _n = re15_gte_divide((uint32_t)cam->fov_screen_dist, _sz3);
+        int sx = cx + (int)(((int64_t)_ir1 * (int64_t)_n) >> 16);
+        int sy = cy + (int)(((int64_t)_ir2 * (int64_t)_n) >> 16);
         /* ===== BYTE-TRUE SPRITE BUILD (FUN_800534c4, arbitrated wf_efa45868-e53) =============
          * anim record = {u8 coord_start, u8 n_sprites, u8 duration, u8 S}: byte0 = the FIRST
          * coord-cell index (NOT frame%count!), byte1 = quads this frame, byte3 = S = the SxS UV
