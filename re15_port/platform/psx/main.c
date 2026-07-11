@@ -636,12 +636,10 @@ int main(int argc, const char **argv)
             int a_kf = re15_compute_actor_kf(aanim, askel, a, av.clip_override,
                                              (uint32_t)a->anim_frame);
             /* RE1.5 character floor shadow (FUN_8001b064): subtractive blob quad
-             * under this actor, oriented by the CAMERA yaw (active cut forward).
-             * Emitted before the mesh; the OT depth-sorts it onto the floor so the
-             * figure occludes its own feet. Off-stage actors self-cull (otz<near). */
-            mesh_psx_render_actor_shadow(/*z*/ 3, &cam_view, a->x, a->y, a->z,
-                active_cuts[cam_active_cut].target_x - active_cuts[cam_active_cut].pos_x,
-                active_cuts[cam_active_cut].target_z - active_cuts[cam_active_cut].pos_z);
+             * under this actor, oriented by the ACTOR's rot_y (RotMatrixY(entity+0x6a); RE'd
+             * wf_13911cba — not the camera yaw). Emitted before the mesh; the OT depth-sorts it
+             * onto the floor so the figure occludes its own feet. Off-stage actors self-cull. */
+            mesh_psx_render_actor_shadow(/*z*/ 3, &cam_view, a->x, a->y, a->z, a->rot_y);
             /* Byte-true FRAC crossfade: tell re15_skel_compute_pose which actor this
              * body is so it can blend the new clip in from the actor's prior pose. */
             g_anim_pose_actor = a;

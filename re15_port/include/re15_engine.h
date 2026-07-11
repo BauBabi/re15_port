@@ -206,7 +206,7 @@ void mesh_psx_set_camera_fov(const re15_camera_view_t *view);
  * BG and before/with the meshes; the OT depth-sorts it under the character. */
 void mesh_psx_render_actor_shadow(int z_bucket, const re15_camera_view_t *view,
                                   int32_t wx, int32_t wy, int32_t wz,
-                                  int32_t fwd_x, int32_t fwd_z);
+                                  int16_t rot_y);
 extern int re15_shadow_tpage;   /* getTPage(2,2,..) — 16bpp + ABR2 subtractive */
 extern int re15_shadow_ok;
 

@@ -1007,22 +1007,21 @@ void mesh_psx_render_prop(int z_bucket,
 }
 
 /* RE1.5 CHARACTER FLOOR SHADOW — POLY_FT4 subtractive (ABR=2) blob quad.
- * Recipe RE'd from FUN_8001b064/FUN_8001af5c (2026-06-03): half-extents
- * ±500 X / ±600 Z, centered on the actor at floor Y, rotated by the CAMERA
- * yaw (RotMatrixY(cam+0x6a)), projected via the GTE (RotAverage4 analogue),
- * textured with the TEX.TIM blob (here a self-contained 16bpp+STP slot since
- * the PSX build has no resident TEX.TIM), prim RGB 0x808080 neutral — the
- * darkening is purely the ABR-2 subtractive blend of the blob. */
+ * Recipe RE'd from FUN_8001b064/FUN_8001af5c: half-extents ±500 X / ±600 Z, centered on the actor at
+ * floor Y, rotated by the ACTOR's rot_y (RotMatrixY(actor entity+0x6a); RE'd wf_13911cba — NOT the
+ * camera yaw, that was a misread of DAT_800ac784=actor), projected via the GTE (RotAverage4 analogue),
+ * textured with the TEX.TIM blob (here a self-contained 16bpp+STP slot since the PSX build has no
+ * resident TEX.TIM), prim RGB 0x808080 neutral — the darkening is purely the ABR-2 subtractive blend. */
 void mesh_psx_render_actor_shadow(int z_bucket, const re15_camera_view_t *view,
                                   int32_t wx, int32_t wy, int32_t wz,
-                                  int32_t fwd_x, int32_t fwd_z)
+                                  int16_t rot_y)
 {
     if (!view || !s_gte_initialized || !re15_shadow_ok) return;
 
-    /* camera-yaw rotation R_y(cam) from the normalised cut forward (XZ) — SHARED
-     * with the PC build via re15_camera_yaw_matrix (sin=fwd_x/len, cos=fwd_z/len). */
+    /* byte-true actor-yaw rotation R_y(rot_y) via the trig LUT — RotMatrixY(actor rot_y), SHARED with
+     * the PC build via re15_camera_yaw_matrix_angle. */
     int32_t cam_rot[9];
-    re15_camera_yaw_matrix(fwd_x, fwd_z, cam_rot);
+    re15_camera_yaw_matrix_angle(rot_y, cam_rot);
     int32_t wpos[3] = { wx, wy, wz };
 
     int32_t crot[9], ctrans[3];

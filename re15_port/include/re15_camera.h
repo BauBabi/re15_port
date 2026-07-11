@@ -96,7 +96,9 @@ void re15_camera_compose_view_bone(const re15_camera_view_t *view,
  * (sin = fwd_x/len, cos = fwd_z/len, Q12). SHARED by the character-shadow code on
  * both ports (integer isqrt — no soft-float). Degenerate (len<1) → identity yaw.
  * Feed out_rot to re15_camera_compose_view_bone as the bone rotation. */
-void re15_camera_yaw_matrix(int32_t fwd_x, int32_t fwd_z, int32_t out_rot[9]);
+/* Build RotY(yaw) from an ANGLE via the game trig LUT — byte-true to RE1.5 RotMatrixY (0x800659d0).
+ * Used by the character-shadow code (FUN_8001b064 = RotMatrixY(actor.rot_y)) on both ports. */
+void re15_camera_yaw_matrix_angle(int16_t yaw, int32_t out_rot[9]);
 
 /* Bundled test data: ROOM1100 (extracted from
  * extracted/PSX/STAGE1/room1100/camera.json). 13 cuts in the actual

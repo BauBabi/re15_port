@@ -1645,18 +1645,10 @@ int main(int argc, char *argv[])
             re15_rotor_drive(&active_cuts[active_cut_idx]);
             if (g_scd.player_mode != 2) re15_audio_rotor_silence();
 
-            /* Shadow orientation = the CAMERA Y-angle (RE1.5 FUN_8001b064 uses
-             * RotMatrixY(cam+0x6a), NOT the actor facing). A 500×600 floor quad
-             * rotated by the actor's yaw swings off-screen-axis so one foot falls
-             * outside it; rotating by the camera yaw keeps it screen-aligned over
-             * the figure. Build RotY(cam_yaw) from the cut forward vector. */
-            /* Camera-yaw RotY from the cut forward — SHARED with the PSX shadow via
-             * re15_camera_yaw_matrix (integer isqrt; was a double sqrt here). */
-            int32_t sh_cam_yaw_rot[9];
-            re15_camera_yaw_matrix(
-                active_cuts[active_cut_idx].target_x - active_cuts[active_cut_idx].pos_x,
-                active_cuts[active_cut_idx].target_z - active_cuts[active_cut_idx].pos_z,
-                sh_cam_yaw_rot);
+            /* Shadow orientation is built PER-ACTOR at each shadow draw below via
+             * re15_camera_yaw_matrix_angle(actor.rot_y) — byte-true RotMatrixY(actor rot_y), the
+             * mechanism RE1.5 FUN_8001b064 actually uses (RE'd wf_13911cba). The former camera-yaw
+             * form (built here from the cut forward) was a misread of DAT_800ac784=actor, now gone. */
 
             /* BJ-round 2026-05-29: cinematic letterbox. PSX cutscenes (the intro)
              * draw ~17px black bars top+bottom (measured from ablauf 217030:
@@ -2413,7 +2405,12 @@ int main(int argc, char *argv[])
                  * one foot. Floor Y = model_pos_y (the −7200 helipad floor). */
                 int32_t sh_world[3] = { model_pos_x, model_pos_y, model_pos_z };
                 int32_t sh_rot[9], sh_trans[3];
-                re15_camera_compose_view_bone(&cam_view, sh_cam_yaw_rot, sh_world,
+                /* byte-true: RotMatrixY(PLAYER rot_y) via the trig LUT — FUN_8001b064 @0x8001b0e4
+                 * builds the shadow orientation from the ACTOR's entity+0x6a, not the camera yaw
+                 * (RE'd wf_13911cba; the "camera yaw" note was a misread of DAT_800ac784=actor). */
+                int32_t sh_actor_yaw[9];
+                re15_camera_yaw_matrix_angle(g_actors[RE15_ACTOR_SLOT_PLAYER].rot_y, sh_actor_yaw);
+                re15_camera_compose_view_bone(&cam_view, sh_actor_yaw, sh_world,
                                               sh_rot, sh_trans);
                 int32_t sbm[9], sbt[3];   /* Q12 (byte-true integer RTPS) */
                 for (int i = 0; i < 9; i++) sbm[i] = sh_rot[i];
@@ -2946,9 +2943,9 @@ int main(int argc, char *argv[])
                  * actor gets one. Actor-position center + CAMERA-yaw rotation
                  * (same corrected scheme as the player). */
                 {
-                    int32_t nfs = re15_sin_q12((int)npc->rot_y);
-                    int32_t nfc = re15_cos_q12((int)npc->rot_y);
-                    int32_t nyaw[9] = { nfc, 0, nfs,  0, 0x1000, 0,  -nfs, 0, nfc };
+                    /* byte-true actor-yaw shadow matrix = RotMatrixY(npc->rot_y) via the trig LUT. */
+                    int32_t nyaw[9];
+                    re15_camera_yaw_matrix_angle(npc->rot_y, nyaw);
                     /* CORPSE BLOOD POOL (root-state-7 sub0/1, FUN_80109554 @0x801095e8-614 +
                      * @0x80109710-24): the shadow recolors 0x00ffff38 (subtractive dark red) and
                      * its half-extents grow +8/frame for the 0x5a pool budget (600/700 base ->
@@ -2979,8 +2976,10 @@ int main(int argc, char *argv[])
                     };
                     int32_t nsh_world[3] = { npc->x, npc->y, npc->z };
                     int32_t nsh_rot[9], nsh_trans[3];
-                    (void)nyaw;   /* shadow uses CAMERA yaw, not actor facing (FUN_8001b064) */
-                    re15_camera_compose_view_bone(&cam_view, sh_cam_yaw_rot, nsh_world,
+                    /* byte-true: RotMatrixY(ACTOR rot_y) via the trig LUT (FUN_8001b064 @0x8001b0e4
+                     * uses entity+0x6a, NOT the camera yaw — RE'd wf_13911cba). nyaw above IS that
+                     * matrix; the old camera-yaw was the port author's misread of DAT_800ac784. */
+                    re15_camera_compose_view_bone(&cam_view, nyaw, nsh_world,
                                                   nsh_rot, nsh_trans);
                     int32_t nm[9], nt[3];   /* Q12 (byte-true integer RTPS) */
                     for (int i = 0; i < 9; i++) nm[i] = nsh_rot[i];

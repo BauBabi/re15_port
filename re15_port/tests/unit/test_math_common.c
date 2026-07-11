@@ -136,10 +136,9 @@ static int pinhole_project(int32_t x3d, int32_t y3d, int32_t z3d,
  * alte re15_rot_matrix_y-Matrix [cos 0 sin; 0 1 0; -sin 0 cos] in Q12. */
 static void build_rot_y(int angle, int32_t out[9])
 {
-    int32_t s = (int32_t)re15_sin_q12(angle);
-    int32_t c = (int32_t)re15_cos_q12(angle);
-    /* len der Forward-XZ ist ~Q12_ONE (sin²+cos²≈1), sy=s/len≈s, cy=c/len≈c. */
-    re15_camera_yaw_matrix(s, c, out);
+    /* byte-true RotMatrixY(angle) via the trig LUT (re15_camera_yaw_matrix_angle) — now exact
+     * sin/cos from the LUT, no isqrt normalize. */
+    re15_camera_yaw_matrix_angle((int16_t)angle, out);
 }
 
 /* --- sin/cos Grundwerte --- */

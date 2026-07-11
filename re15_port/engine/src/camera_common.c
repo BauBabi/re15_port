@@ -341,47 +341,19 @@ void re15_camera_animator_to_cut(const re15_camera_animator_t *anim,
     out_cut->target_z = anim->cam_target[2];
 }
 
-/* Integer sqrt (floor) — for the shadow-yaw normalize.
- *
- * KNOWN NON-BYTE-TRUE (RE'd 2026-07-12, workflow wf_873262f1): the PSX character shadow
- * (FUN_8001b064) does NOT normalize a forward vector and uses NO sqrt at all. It builds the shadow
- * quad orientation with RotMatrixY((short)*(entity+0x6a)) @0x8001b0e4 → RotMatrixY 0x800659d0, which
- * reads rsin/rcos from the 4096-entry trig LUT (DAT_800794c4) — the SAME LUT the port already has as
- * re15_sin_q12/cos_q12. And the angle is the ACTOR's rot_y (entity+0x6a; the quad is placed at
- * entity+0x34/+0x3c), NOT the camera yaw. So the byte-true shadow is: RotY(actor.rot_y) via the trig
- * LUT, quad half-extents from the shadow descriptor (param_1+8/+0xa/+0xc/+0xe), projected by
- * RotAverage4. The port's re15_camera_yaw_matrix (camera-forward vector → cam_isqrt normalize →
- * sin=fwd_x/len,cos=fwd_z/len) is a PORT-ONLY construct: wrong angle source AND wrong mechanism.
- * A full byte-true rewrite (actor rot_y + LUT + descriptor extents) is deferred — the port chose the
- * camera-yaw form to keep the quad screen-aligned, which likely masks a shadow-quad-EXTENT mismatch;
- * fixing it needs the descriptor geometry + a visual parity pass, not just swapping the sqrt. */
-static uint32_t cam_isqrt(uint32_t x)
+/* Build the RotY(yaw) matrix from an ANGLE via the game trig LUT — byte-true to RE1.5's RotMatrixY
+ * (0x800659d0), which reads DAT_800794c4[yaw&0xfff] = (cos<<16)|sin (Q12) and writes
+ *   [ cos   0   sin ]
+ *   [  0  0x1000  0 ]
+ *   [-sin   0   cos ]
+ * The character shadow (FUN_8001b064 @0x8001b0e4) calls RotMatrixY(ACTOR rot_y = entity+0x6a) — the
+ * actor's own facing, NO sqrt, NO camera vector. re15_sin_q12/re15_cos_q12 ARE that LUT. Feed out_rot
+ * to re15_camera_compose_view_bone. (RE'd wf_13911cba; replaces the old forward-vector normalize +
+ * cam_isqrt, a port-only construct with the wrong angle source AND a sqrt the PSX never does.) */
+void re15_camera_yaw_matrix_angle(int16_t yaw, int32_t out_rot[9])
 {
-    uint32_t r = 0, b = 1UL << 30;
-    while (b > x) b >>= 2;
-    while (b) {
-        if (x >= r + b) { x -= r + b; r = (r >> 1) + b; }
-        else            { r >>= 1; }
-        b >>= 2;
-    }
-    return r;
-}
-
-/* Build the camera-yaw RotY matrix R_y from a forward vector's XZ projection
- * (sin = fwd_x/len, cos = fwd_z/len, Q12 with 0x1000 = 1.0) — SHARED by the
- * character-shadow code on both ports (the PSX inlined this via sh_isqrt, the
- * PC via a double sqrt; identical math, was duplicated). Degenerate forward
- * (len < 1) → identity yaw. Feed out_rot to re15_camera_compose_view_bone. */
-void re15_camera_yaw_matrix(int32_t fwd_x, int32_t fwd_z, int32_t out_rot[9])
-{
-    int32_t len = (int32_t)cam_isqrt((uint32_t)((int64_t)fwd_x * fwd_x +
-                                                (int64_t)fwd_z * fwd_z));
-    int32_t sy, cy;
-    if (len < 1) { sy = 0; cy = 0x1000; }
-    else {
-        sy = (int32_t)(((int64_t)fwd_x << 12) / len);
-        cy = (int32_t)(((int64_t)fwd_z << 12) / len);
-    }
+    int32_t sy = re15_sin_q12((int)yaw);
+    int32_t cy = re15_cos_q12((int)yaw);
     out_rot[0] =  cy; out_rot[1] = 0;      out_rot[2] = sy;
     out_rot[3] =  0;  out_rot[4] = 0x1000; out_rot[5] = 0;
     out_rot[6] = -sy; out_rot[7] = 0;      out_rot[8] = cy;
