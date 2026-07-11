@@ -7,6 +7,7 @@
  */
 
 #include "re15_light.h"
+#include "re15_math.h"   /* re15_squareroot0 — the BIOS sqrt the falloff actually uses */
 #include <string.h>
 /* RE2-CANONICAL integer sqrt. RE2's lighting (FUN_80053fc0 / FUN_800542dc) uses
  * libgte SquareRoot0 + VectorNormal — pure INTEGER, NO soft-float. The R3000 has
@@ -162,11 +163,13 @@ void re15_light_setup_actor(const re15_light_cut_t *cut,
                 /* Light effectively off — skip contribution. */
                 continue;
             }
-            /* All-integer falloff, mirroring RE2 FUN_80053fc0:
-             *   dist = SquareRoot0(dx²+dz²); atten = range - dist (clamp >0);
-             *   colour_out = colour_byte * atten / range.
-             * (XZ-only distance; was double — now integer, no soft-float.) */
-            int32_t dist  = (int32_t)re15_isqrt((uint32_t)((int64_t)dx*dx + (int64_t)dz*dz));
+            /* All-integer falloff, byte-true to RE1.5 FUN_80053fc0 (@0x80053fc0):
+             *   lVar4 = SquareRoot0(local_38*local_38 + local_30*local_30)  (dx²+dz², XZ-only)
+             *   atten = range - dist (clamp >0);  colour_out = colour_byte * atten / range.
+             * FUN_80053fc0 calls the BIOS SquareRoot0 (0x80065f60), NOT an exact sqrt — it
+             * UNDER-estimates floor(sqrt) (#16), so the port's exact re15_isqrt was a byte-true
+             * divergence in the light distance attenuation. Fixed to re15_squareroot0. */
+            int32_t dist  = (int32_t)re15_squareroot0((uint32_t)((int64_t)dx*dx + (int64_t)dz*dz));
             int32_t atten = range - dist;
             if (atten <= 0) {
                 /* Out of range — no contribution. */
