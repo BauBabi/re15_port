@@ -124,7 +124,6 @@ static void re15_gameover_fsm_tick(void)
     }
 }
 
-static int s_bang_delay = 0;   /* gunshot-bang scheduler (the muzzle fx row-1 SE, 2nd tick) */
 
 void re15_game_step(const re15_game_ctx_t *c)
 {
@@ -333,18 +332,17 @@ void re15_game_step(const re15_game_ctx_t *c)
                     re15_player_weapon_fire(eq_item);     /* FUN_80011f50 resolve (per-item dmg/reach) */
                     re15_ammo_consume();                  /* FUN_8004eae4 @0x80033888 (after damage,
                                                            * return unchecked for the handgun) */
-                    s_bang_delay = 1;                     /* the BANG is effect-data-driven: the muzzle
-                                                           * slot's descriptor ROW 1 (routine 9
-                                                           * @0x80017654, 2nd tick) plays
-                                                           * FUN_80045024(0x01000001) = ARMS record 0
-                                                           * POSITIONAL — scheduled one tick out */
-                    /* discharge fx (byte-true ids 2/3/4 from CORE00.ESP; anchor faithful-line) */
+                    /* discharge fx (byte-true ids 2/3/4 from CORE00.ESP; anchor faithful-line).
+                     * The MUZZLE runs the ROW VM (stage 3b): st0 R8 (show + chain the 0x02040bb8
+                     * secondary flash) -> R9 (the positional BANG, ARMS record 0, on the slot's
+                     * 2nd tick — DATA-driven now; the s_bang_delay scheduler is gone) -> hold;
+                     * st1 R10 (show + anim). */
                     int32_t fcos = re15_cos_q12((int)pl->rot_y);
                     int32_t fsin = re15_sin_q12((int)pl->rot_y);
                     int32_t gy   = pl->y - 2083;          /* measured aim hand-bone height (b13) */
-                    re15_esp_fx_spawn_ex(re15_esp_global_bank(), 2, 0, 0x0800,  /* MUZZLE 0x02000800 {0x8c,0x25d,0} */
+                    re15_esp_fx_spawn_rows(re15_esp_global_bank(), 2, 0, 0x0800,  /* MUZZLE 0x02000800 */
                         pl->x + ( fcos * 0x25d >> 12), gy,
-                        pl->z + (-fsin * 0x25d >> 12), (int16_t)pl->rot_y);
+                        pl->z + (-fsin * 0x25d >> 12), gy + 2083);
                     re15_esp_fx_spawn_ex(re15_esp_global_bank(), 3, 0, 0x0c00,  /* SMOKE 0x03000c00 {0x91,0x1f4,-25} */
                         pl->x + ( fcos * 0x1f4 >> 12), gy - 25,
                         pl->z + (-fsin * 0x1f4 >> 12), (int16_t)pl->rot_y);
@@ -371,16 +369,8 @@ void re15_game_step(const re15_game_ctx_t *c)
          * equivalent. (Routine 9 also writes the noise global 0x800b5358=1 — consumer un-RE'd,
          * deferred.) The old immediate re15_audio_weapon_se(8) was the WRONG record (8 = the
          * knife-draw/flesh-hit SE). */
-        if (s_bang_delay > 0 && --s_bang_delay == 0) {
-            re15_audio_weapon_se(0);                      /* 0x01000001 -> ARMS record 0 */
-            /* routine 8 also CHAINS the secondary flash: FUN_800199d4(0x02040bb8) = fx id 2
-             * sub 4 scale 0xbb8, one tick after the primary muzzle (same anchor). */
-            int32_t fcos2 = re15_cos_q12((int)pl->rot_y);
-            int32_t fsin2 = re15_sin_q12((int)pl->rot_y);
-            re15_esp_fx_spawn_ex(re15_esp_global_bank(), 2, 4, 0x0bb8,   /* 0x02040bb8 */
-                pl->x + ( fcos2 * 0x25d >> 12), pl->y - 2083,
-                pl->z + (-fsin2 * 0x25d >> 12), (int16_t)pl->rot_y);
-        }
+        /* (The BANG + the secondary flash are DATA-driven by the muzzle slot's rows now
+         * — routine 9/8 in the row VM; the 1-tick scheduler block is deleted.) */
         /* (The shell casing is now ejected INLINE at discharge — see the one-shot above — matching
          * the handgun handler @0x800337bc; the old 0x040d1000-at-recoil watcher was a mis-ported
          * different-weapon effect and has been removed.) */

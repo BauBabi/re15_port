@@ -426,9 +426,36 @@ static void esp_fx_dispatch(re15_esp_fx_t *f)
             f->row[0x02] = 0x0c; f->row[0x03] = 0;       /* B := 12 (@0x80017774) */
             break;
         }
-        default: break;                                  /* stage-3 selectors: noop for now */
+        case 8: {   /* @0x800175ec: flags := row[0x0e] (0x93 = anchor-placement show); tpage |=
+                     * row[0x16] (render-side ABR, stage 3c); CHILD spawn cat 2 FIXED (lui 0x200
+                     * @0x80017624), sub = row[0x1e], scale = row[0x26] — the 0x02040bb8 secondary
+                     * flash; advance UNCONDITIONAL. */
+            f->flags = f->row[0x0e];
+            re15_esp_fx_spawn_rows(f->bank, 2, f->row[0x1e], row_u16(f->row, 0x26),
+                                   f->x, f->y, f->z, f->floor_y);
+            esp_fx_row_advance(f);
+            break;
+        }
+        case 9: {   /* @0x80017654 (self-verified): the positional BANG — FUN_80045024(0x01000001,
+                     * &world_pos) + noise latch 0x800b5358 := 1 + advance UNCONDITIONAL. */
+            if (re15_esp_bang_hook) re15_esp_bang_hook();
+            esp_fx_row_advance(f);
+            break;
+        }
+        case 10: {  /* @0x800176b0: flags := row[0x0e]; tpage |= row[0x16] + clut += row[0x1e]<<6
+                     * (render-side CLUT fade, stage 3c); anim := row[0x26]; advance UNCONDITIONAL. */
+            f->flags = f->row[0x0e];
+            f->frame = (int16_t)(f->row[0x26] - 1); f->timer = 0;
+            esp_fx_row_advance(f);
+            break;
+        }
+        default: break;                                  /* stage-3c selectors: noop for now */
     }
 }
+
+/* Platform SE hook: the gunshot BANG (routine 9 = FUN_80045024(0x01000001) = ARMS record 0,
+ * fired on the muzzle slot's SECOND tick — replaces the game_step s_bang_delay scheduler). */
+void (*re15_esp_bang_hook)(void) = NULL;
 
 /* The MAIN-loop routineB dispatch (@0x8001a2b4-d4). Supported: 12 = the floor bounce
  * (@0x8001779c), collapsed to the port's floor_y plane (the PSX probes room_coll per tick; the

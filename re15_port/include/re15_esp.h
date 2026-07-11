@@ -180,6 +180,8 @@ int re15_esp_fx_spawn_rows(const re15_esp_t *bank, uint8_t effect_id, uint8_t su
                            uint16_t scale16, int32_t x, int32_t y, int32_t z, int32_t floor_y);
 /** Platform SE hook: the shell-clink (FUN_80045024(0x01020001) = ARMS record 2). */
 extern void (*re15_esp_shell_clink_hook)(void);
+/** Platform SE hook: the gunshot BANG (routine 9, ARMS record 0, muzzle tick 2). */
+extern void (*re15_esp_bang_hook)(void);
 /** Per-frame anim advance (byte-true FUN_80019e20 frame timer); despawns ended particles. */
 void           re15_esp_fx_tick(const re15_esp_t *bank);
 /** Read slot `i` (for the draw/tests); returns NULL if inactive/out-of-range. */

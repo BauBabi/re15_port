@@ -681,10 +681,12 @@ static void re15_bgm_dump_wav(const char *path, int stage, int room, int seconds
 
 /* Shell-clink SE (row-VM B=12 first floor contact - FUN_80045024(0x01020001) = ARMS record 2). */
 static void pc_shell_clink(void) { re15_audio_weapon_se(2); }
+static void pc_bang(void)        { re15_audio_weapon_se(0); }   /* R9: FUN_80045024(0x01000001) */
 
 void re15_audio_init(void)
 {
     re15_esp_shell_clink_hook = pc_shell_clink;   /* the row-VM shell bounce SE */
+    re15_esp_bang_hook        = pc_bang;          /* the row-VM muzzle bang (tick 2) */
     /* Diagnostic: RE15_BGM_DUMP=<wav> renders the room's MAIN BGM offline (exact
      * synth path) for A/B vs the PSX capture, then exits. No SDL device needed. */
     const char *dump = getenv("RE15_BGM_DUMP");
