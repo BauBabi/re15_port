@@ -26,6 +26,7 @@
                              * @0x8010062c jal 0x8003b0a4, runs per tick after the state handler) */
 #include "re15_room.h"      /* g_room_rdt + g_current_room_id (em-status stage zone) */
 #include "re15_scd.h"       /* re15_game_flag_get/set — the em-status kill-flag persistence */
+#include "re15_math.h"     /* re15_squareroot0 — the engine's ONLY sqrt (BIOS 0x80065f60) */
 #include "re15_damage.h"   /* re15_enemy_player_dist, re15_ai_arc_test, re15_engine_rand8,
                             * re15_enemy_apply_hitbox */
 #include "re15_skeleton.h" /* re15_sin_q12 / re15_cos_q12 — forward-walk root-motion step (8.19) */
@@ -1932,11 +1933,11 @@ static void re15_enemy_footlock_step(int slot, re15_actor_t *e)
 static int32_t re15_body_isqrt(int64_t v)
 {
     if (v <= 0) return 0;
-    int64_t r = v, last = 0;
-    /* Newton, converges in <8 iters for our <2^32 magnitudes; exactness beyond the original's
-     * SquareRoot0 rounding is immaterial (the push is a per-frame relaxation). */
-    for (int i = 0; i < 24 && r != last; i++) { last = r; r = (r + v / r) >> 1; }
-    return (int32_t)r;
+    /* The body push (FUN_8002aec4) computes dist via BIOS SquareRoot0 at 0x8002b1d8 (jal 0x80065f60)
+     * on dx²+dz² (the ratan2/rsin/rcos above it is the ellipse radius-in-direction, DATA-DEAD since
+     * every shipped box is circular). NOT floor(sqrt) — route through the byte-true replica on the
+     * low 32 bits like the PSX mflo. Audit wf_f066b2ae (corrects the earlier "immaterial" note). */
+    return (int32_t)re15_squareroot0((uint32_t)v);
 }
 
 int re15_body_push(const re15_actor_t *pusher, int32_t r_pusher,
@@ -3730,8 +3731,11 @@ static void re15_spider_ai_tick(int slot)
         e->y = (int32_t)e->spider_home_y - step * ((int)e->spider_phase - 1);  /* +0x38 = +0x1d6 - step*(phase-1) @0x80116494 */
     } else if (e->state == 1) {                          /* SOLID: -2 contact stagger on body overlap */
         int32_t dx = e->x - pl->x, dz = e->z - pl->z;
-        int32_t rc = (int32_t)e->hit_radius_min + RE15_BODY_R_PLAYER;   /* aec4 body-contact standoff (was 600, below the push standoff -> never fired; audit wf_555f18eb Part B) */
-        if ((int64_t)dx*dx + (int64_t)dz*dz <= (int64_t)rc*rc && pl->hit_react == 0) {  /* body box (0x8002aec4) @0x80116370 */
+        int32_t rc = (int32_t)e->hit_radius_min + RE15_BODY_R_PLAYER;   /* aec4 body-contact standoff */
+        /* @0x80116368: the -2 is gated on FUN_8002aec4's RETURN (a body-push happened), i.e. an actual
+         * OVERLAP: pen = R - SquareRoot0(dx²+dz²) > 0. Byte-true = the SAME SquareRoot0 the push uses,
+         * strict '<', NOT an inclusive Euclidean dx²+dz²<=rc² (audit wf_f066b2ae / wf_8b1360d4). */
+        if ((int32_t)re15_squareroot0((uint32_t)((int64_t)dx*dx + (int64_t)dz*dz)) < rc && pl->hit_react == 0) {
             pl->hit_react |= 1;                          /* DAT_800aca58=2 stagger marker is byte-true but the
                                                           * port keys the hit-react gate off +0x93 (faithful) */
             if (pl->hp >= 4) pl->hp = (int16_t)(pl->hp - 2);  /* player.hp -= 2 (floor: never below 2) @0x801163c8 */
