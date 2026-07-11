@@ -26,6 +26,7 @@
 #include "re15_engine.h"
 #include "re15_skeleton.h"   /* re15_sin_q12 / re15_cos_q12 for Dir_set */
 #include "re15_aot.h"        /* Phase 4.4.6: AOT trigger ops */
+#include "re15_fade.h"       /* the screen-fade channel engine (SCD 0x56 config / 0x57 kick) */
 #include "re15_inventory.h"  /* Phase 4.4.7 */
 #include "re15_actor.h"      /* Phase 4.4.8 */
 #include "re15_esp.h"        /* Phase ESP-C: op-0x3a effect particle spawn */
@@ -300,7 +301,6 @@ static void register_opcodes(void)
     extern int op_weapon_chg(scd_thread_t *t);
     extern int op_plc_cnt(scd_thread_t *t);
     extern int op_member_calc(scd_thread_t *t);
-    extern int op_member_calc2(scd_thread_t *t);
     extern int op_kage_set(scd_thread_t *t);
     extern int op_cut_be_set(scd_thread_t *t);
     extern int op_xa_vol(scd_thread_t *t);
@@ -317,7 +317,12 @@ static void register_opcodes(void)
     s_op_table[0x5A]                  = op_weapon_chg;
     s_op_table[0x5B]                  = op_plc_cnt;
     s_op_table[0x55]                  = op_member_calc;
-    s_op_table[0x56]                  = op_member_calc2;
+    {
+        extern int op_fade_config(scd_thread_t *t);
+        s_op_table[0x56]              = op_fade_config;   /* RE1.5 0x56 = fade-channel CONFIG
+                                                           * (@0x80042a58 -> FUN_800217b0), not
+                                                           * RE2 Member_calc2 */
+    }
     /* [#34] 0x5F/0x60/0x61/0x62/0x63: RE2 imports — do NOT exist in RE1.5.
      * Dispatch table PTR_LAB_800744a8 ends at 0x5E; leaving them unregistered routes
      * them to op_unknown (= RE1.5 default LAB_8003f1d8 pc+=1, return 1). The op_kage_set/
@@ -369,6 +374,8 @@ void scd_vm_init(void)
      * The old zero-default froze the camera on the entry cut for any room not entered through a
      * door (e.g. RE15_START_ROOM). [audit wf_559c230f CUTSEL-AUTOSCAN-DEFAULT-INVERTED] */
     g_scd.cut_auto_enabled = 1;
+    re15_fade_init();                   /* boot-park the fade channels (LAB_80021138); room
+                                         * loads do NOT reset them (engine globals) */
     memset((void *)s_event_handlers, 0, sizeof(s_event_handlers));  /* Phase 4.4.6.1 */
     register_opcodes();
     re15_game_state_init();             /* Phase 4.4.4: clear player state + flags */
@@ -1390,9 +1397,11 @@ static int op_se_on(scd_thread_t *t)
  * then the state is correctly decoded but visually unconsumed (ROOM11F0/11F1 + ROOM3080). */
 static int op_fade_adjust(scd_thread_t *t)
 {
-    uint8_t  ch   = t->pc[1];
-    uint16_t step = (uint16_t)scd_read_le_s16(&t->pc[2]);
-    if (ch < RE15_SCD_FADE_CHANNELS) g_scd.fade_step[ch] = step;
+    /* CORRECTED semantics (trace wf_2c73ab52, self-verified @0x800216ec): the u16 is the START
+     * LEVEL, not the step — FUN_800216ec writes it to the channel level only when the configured
+     * step (0x56) is 0 (static overlay, brightness = level>>7); with a nonzero step the value is
+     * IGNORED and the ramp auto-starts at 0 / 0x7fff. All shipped SCD fades are static pulses. */
+    re15_fade_kick(t->pc[1], (uint16_t)scd_read_le_s16(&t->pc[2]));
     t->pc += 4;
     return 1;
 }
@@ -3272,7 +3281,17 @@ int op_plc_cnt(scd_thread_t *t)           { t->pc += 4; return 1; }
 int op_member_calc(scd_thread_t *t)       { t->pc += 6; return 1; }
 /* Member_calc2 (0x56) — RE1.5 = 6 bytes (disasm LAB_80042a58 reads b@1/b@2/b@3/h@4,
  * PC+=6; retail RE2 = 4). */
-int op_member_calc2(scd_thread_t *t)      { t->pc += 6; return 1; }
+/* (0x56) — byte-true FADE-CHANNEL CONFIG (handler @0x80042a58, trace wf_2c73ab52 self-verified):
+ * `ori a3,7` bucket, ch=pc[1] | ABR=pc[2]<<8 (`lbu 2; sll 8; or`), rgb mask=pc[3], step=lh pc[4]
+ * -> jal FUN_800217b0, PC+=6. The old "Member_calc2" name was the RE2 carryover for the same
+ * 6-byte length; the handler is the fade config that precedes every scripted 0x57 fade
+ * (ROOM11F0/11F1 @0x174a, ROOM3080 @0x81e: `56 00 02 07 00 00` = ch0 subtractive white static). */
+int op_fade_config(scd_thread_t *t)
+{
+    re15_fade_config(t->pc[1], t->pc[2], t->pc[3], scd_read_le_s16(&t->pc[4]), 7);
+    t->pc += 6;
+    return 1;
+}
 /* Kage_set (0x60) — 14 bytes. Shadow volume config. */
 int op_kage_set(scd_thread_t *t)          { t->pc += 14; return 1; }
 /* Cut_be_set (0x61) — 4 bytes. Camera transition config. */

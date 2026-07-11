@@ -185,12 +185,9 @@ typedef struct {
     uint8_t  cam_arg3;
     uint8_t  cam_id_prev;          /* for Cut_old (0x2A)                  */
     uint8_t  cut_auto_enabled;     /* set by Cut_auto (0x3C)              */
-    /* SCREEN-FADE channel steps (byte-true opcode 0x57 @0x80042ab4 -> FUN_800216ec: write the
-     * u16 LE step into fade channel ch of the 0x44-stride array @DAT_800b5458; the fade engine
-     * FUN_80021880 does level += step, brightness = level>>7). Decoded correctly here; RENDER
-     * consumption = the fade/letterbox session (#21). audit wf_1db9c802 AUDIO-OP57-IS-FADE. */
-#define RE15_SCD_FADE_CHANNELS 8
-    uint16_t fade_step[RE15_SCD_FADE_CHANNELS];
+    /* (The screen-fade channels live in the dedicated engine module re15_fade.h — ENGINE
+     * globals @DAT_800b5458 that persist across room loads, not per-room SCD state. SCD 0x56 =
+     * config -> re15_fade_config, 0x57 = kick -> re15_fade_kick. Trace wf_2c73ab52.) */
     /* Phase 8.6 — the port repr of DAT_800aca3c & 1 ("combat active"), the gate the LIVE
      * STAGE1 zombie attack-ARM (overlay FUN_8010ab2c @0x8010a4f0 `andi v0,v0,0x1`) checks
      * before committing a lunge. Byte-true semantics (RE'd 2026-06-29, two agents + raw

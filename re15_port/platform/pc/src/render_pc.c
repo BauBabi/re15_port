@@ -21,6 +21,7 @@
 #include "re15_pri.h"           /* shared sprite.pri depth model (re15_pri_mask_camera_z) */
 #include "re15_msg.h"           /* shared .msg text layout walk (re15_msg_layout) */
 #include "re15_tim.h"           /* re15_tim_t — the YOU DIED game-over graphic */
+#include "re15_fade.h"          /* the screen-fade channel engine (SCD 0x56/0x57, FUN_80021880) */
 #include "shadow_blob_data.h"   /* RE1.5 char shadow blob, extracted from TEX.TIM */
 
 #define WINDOW_SCALE 4
@@ -611,6 +612,30 @@ void re15_render_end_frame(void)
     s_dbg_last_min_sy       = s_dbg_min_sy;
     s_dbg_last_max_sy       = s_dbg_max_sy;
     s_textri_count = 0;  /* reset queue for next frame */
+
+    /* SCREEN-FADE channels (byte-true FUN_80021880, trace wf_2c73ab52): tick once per rendered
+     * frame (the PSX calls it after the game tick, before present @0x80020f44), then draw the
+     * active channels' full-screen semi-transparent tiles. OT placement: channels 0-2 target
+     * the top OT drawn LAST = over BG+3D, and the SCD bucket 7 sits UNDER the letterbox
+     * (bucket 4) + UI -> draw here, after the scene and before the bars. Channel 3 targets the
+     * BACKGROUND OT (behind the scene) — no shipped SCD user; skipped (documented). ABR blend:
+     * 2 = B - F subtractive (the shipped ROOM11F0/11F1/3080 flicker), 1 = B + F additive;
+     * modes 0/3 have no shipped SCD user and fall back to subtractive-darken semantics. */
+    re15_fade_tick();
+    for (int fch = 0; fch < 3; fch++) {
+        const re15_fade_ch_t *fc = &g_fade_ch[fch];
+        if (!fc->drawn || (fc->out_r == 0 && fc->out_g == 0 && fc->out_b == 0)) continue;
+        SDL_BlendMode bm;
+        if (fc->abr == 1) bm = SDL_BLENDMODE_ADD;
+        else bm = SDL_ComposeCustomBlendMode(   /* ABR2: dst - src per channel */
+                 SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_REV_SUBTRACT,
+                 SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_ADD);
+        SDL_SetRenderDrawBlendMode(s_renderer, bm);
+        SDL_SetRenderDrawColor(s_renderer, fc->out_r, fc->out_g, fc->out_b, 255);
+        SDL_Rect full = { 0, 0, SCREEN_XRES, SCREEN_YRES };
+        SDL_RenderFillRect(s_renderer, &full);
+        SDL_SetRenderDrawBlendMode(s_renderer, SDL_BLENDMODE_BLEND);
+    }
 
     /* #1B (2026-07-02): cinematic letterbox — black bars top+bottom during cutscenes.
      * Drawn BEFORE the subtitle overlay so the cinematic subtitle sits ON the black bar
