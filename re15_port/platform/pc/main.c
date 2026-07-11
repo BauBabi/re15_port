@@ -2407,21 +2407,22 @@ int main(int argc, char *argv[])
                 int32_t sh_rot[9], sh_trans[3];
                 re15_camera_compose_view_bone(&cam_view, sh_cam_yaw_rot, sh_world,
                                               sh_rot, sh_trans);
-                float sbm[9], sbt[3];
-                for (int i = 0; i < 9; i++) sbm[i] = (float)sh_rot[i];
-                for (int i = 0; i < 3; i++) sbt[i] = (float)sh_trans[i];
+                int32_t sbm[9], sbt[3];   /* Q12 (byte-true integer RTPS) */
+                for (int i = 0; i < 9; i++) sbm[i] = sh_rot[i];
+                for (int i = 0; i < 3; i++) sbt[i] = sh_trans[i];
                 int sx[4], sy[4], sok = 1;
                 for (int v = 0; v < 4; v++) {
-                    float _x = (float)sh_corner[v][0];
-                    float _y = (float)sh_corner[v][1];
-                    float _z = (float)sh_corner[v][2];
-                    float _vx = (_x*sbm[0] + _y*sbm[1] + _z*sbm[2]) / 4096.0f + sbt[0];
-                    float _vy = (_x*sbm[3] + _y*sbm[4] + _z*sbm[5]) / 4096.0f + sbt[1];
-                    float _vz = (_x*sbm[6] + _y*sbm[7] + _z*sbm[8]) / 4096.0f + sbt[2];
-                    if (_vz < 64.0f) { sok = 0; break; }   /* H28 near-clip */
-                    float _proj = screen_dist / _vz;
-                    sx[v] = cx + RNDI(_vx * _proj);
-                    sy[v] = cy + RNDI(_vy * _proj);
+                    int32_t _x = sh_corner[v][0], _y = sh_corner[v][1], _z = sh_corner[v][2];
+                    int32_t _vx = (int32_t)(((int64_t)_x*sbm[0] + (int64_t)_y*sbm[1] + (int64_t)_z*sbm[2]) >> 12) + sbt[0];
+                    int32_t _vy = (int32_t)(((int64_t)_x*sbm[3] + (int64_t)_y*sbm[4] + (int64_t)_z*sbm[5]) >> 12) + sbt[1];
+                    int32_t _vz = (int32_t)(((int64_t)_x*sbm[6] + (int64_t)_y*sbm[7] + (int64_t)_z*sbm[8]) >> 12) + sbt[2];
+                    if (_vz < 64) { sok = 0; break; }   /* H28 near-clip */
+                    int32_t _ir1 = _vx > 0x7FFF ? 0x7FFF : (_vx < -0x8000 ? -0x8000 : _vx);
+                    int32_t _ir2 = _vy > 0x7FFF ? 0x7FFF : (_vy < -0x8000 ? -0x8000 : _vy);
+                    uint32_t _sz3 = _vz > 0xFFFF ? 0xFFFFu : (uint32_t)_vz;
+                    uint32_t _n = re15_gte_divide((uint32_t)cam_view.fov_screen_dist, _sz3);
+                    sx[v] = cx + (int)(((int64_t)_ir1 * (int64_t)_n) >> 16);
+                    sy[v] = cy + (int)(((int64_t)_ir2 * (int64_t)_n) >> 16);
                 }
                 if (sok) {
                     if (re15_player_is_dead() && g_death_pool > 0)
@@ -2973,19 +2974,22 @@ int main(int argc, char *argv[])
                     (void)nyaw;   /* shadow uses CAMERA yaw, not actor facing (FUN_8001b064) */
                     re15_camera_compose_view_bone(&cam_view, sh_cam_yaw_rot, nsh_world,
                                                   nsh_rot, nsh_trans);
-                    float nm[9], nt[3];
-                    for (int i = 0; i < 9; i++) nm[i] = (float)nsh_rot[i];
-                    for (int i = 0; i < 3; i++) nt[i] = (float)nsh_trans[i];
+                    int32_t nm[9], nt[3];   /* Q12 (byte-true integer RTPS) */
+                    for (int i = 0; i < 9; i++) nm[i] = nsh_rot[i];
+                    for (int i = 0; i < 3; i++) nt[i] = nsh_trans[i];
                     int nsx[4], nsy[4], nok = 1;
                     for (int v = 0; v < 4; v++) {
-                        float _x = (float)nsh_c[v][0], _y = (float)nsh_c[v][1], _z = (float)nsh_c[v][2];
-                        float _vx = (_x*nm[0] + _y*nm[1] + _z*nm[2]) / 4096.0f + nt[0];
-                        float _vy = (_x*nm[3] + _y*nm[4] + _z*nm[5]) / 4096.0f + nt[1];
-                        float _vz = (_x*nm[6] + _y*nm[7] + _z*nm[8]) / 4096.0f + nt[2];
-                        if (_vz < 64.0f) { nok = 0; break; }
-                        float _proj = (float)cam_view.fov_screen_dist / _vz;
-                        nsx[v] = cx + RNDI(_vx * _proj);
-                        nsy[v] = cy + RNDI(_vy * _proj);
+                        int32_t _x = nsh_c[v][0], _y = nsh_c[v][1], _z = nsh_c[v][2];
+                        int32_t _vx = (int32_t)(((int64_t)_x*nm[0] + (int64_t)_y*nm[1] + (int64_t)_z*nm[2]) >> 12) + nt[0];
+                        int32_t _vy = (int32_t)(((int64_t)_x*nm[3] + (int64_t)_y*nm[4] + (int64_t)_z*nm[5]) >> 12) + nt[1];
+                        int32_t _vz = (int32_t)(((int64_t)_x*nm[6] + (int64_t)_y*nm[7] + (int64_t)_z*nm[8]) >> 12) + nt[2];
+                        if (_vz < 64) { nok = 0; break; }
+                        int32_t _ir1 = _vx > 0x7FFF ? 0x7FFF : (_vx < -0x8000 ? -0x8000 : _vx);
+                        int32_t _ir2 = _vy > 0x7FFF ? 0x7FFF : (_vy < -0x8000 ? -0x8000 : _vy);
+                        uint32_t _sz3 = _vz > 0xFFFF ? 0xFFFFu : (uint32_t)_vz;
+                        uint32_t _n = re15_gte_divide((uint32_t)cam_view.fov_screen_dist, _sz3);
+                        nsx[v] = cx + (int)(((int64_t)_ir1 * (int64_t)_n) >> 16);
+                        nsy[v] = cy + (int)(((int64_t)_ir2 * (int64_t)_n) >> 16);
                     }
                     if (nok) {
                         if (corpse_pool)
