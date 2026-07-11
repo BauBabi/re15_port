@@ -32,20 +32,14 @@
 #include "re15_actor.h"
 #include "re15_room.h"
 #include "re15_damage.h"     /* re15_engine_rand8 */
+#include "re15_math.h"       /* re15_squareroot0 — the BIOS sqrt the nav cost actually uses */
 
-/* BIOS SquareRoot0 (floor sqrt) — private copy per module (the established port convention;
- * the PSX inlines it at every call site). Identical to dmg_isqrt / coll_isqrt. */
-static uint32_t nav_isqrt(uint32_t x)
-{
-    uint32_t v = x, res = 0, bit = 1u << 30;
-    while (bit > v) bit >>= 2;
-    while (bit) {
-        if (v >= res + bit) { v -= res + bit; res = (res >> 1) + bit; }
-        else res >>= 1;
-        bit >>= 2;
-    }
-    return res;
-}
+/* Per-segment nav cost sqrt. RE1.5's DFS path cost (FUN_8003a524) computes each segment length via
+ * BIOS SquareRoot0 (jal 0x80065f60 @0x8003a6e8 and @0x8003a728), then SUMS them and picks the
+ * cheapest path by `slt`. SquareRoot0 is the 192-entry table approximation that UNDER-estimates
+ * floor(sqrt) (#16) — the old EXACT bit-by-bit isqrt here (despite its "BIOS SquareRoot0" comment)
+ * diverged and could FLIP which path the DFS selects. Route through the byte-true replica. */
+static uint32_t nav_isqrt(uint32_t x) { return re15_squareroot0(x); }
 
 /* ---- node accessors (nodes base = re15_rdt_t.blocks, stride 12, LE) ------------------- */
 static const uint8_t *nav_tbl(void)   { return g_room_rdt_ok ? g_room_rdt.blocks : 0; }

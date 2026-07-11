@@ -24,33 +24,8 @@
 
 #define ONE_Q12     0x1000
 
-/* Newton-Raphson square root, freestanding-safe (no libm).
- *
- * Phase 4.5.10-K: the original "8 iters from r=x/2+1" was BROKEN for
- * large inputs. For x=6.37e8 (Cut 1 ROOM1170 forward len_sq), the
- * initial guess of 3.18e8 vs true sqrt of 25246 needs ~17 iters of
- * approximate halving before Newton's quadratic convergence kicks in.
- * 8 iters left r≈1.18e6 → forward vec normalized 47x too small →
- * camera matrix rows 1-2 collapsed → Leon projected way off-screen.
- *
- * Fix: scale x into [1, 4) first so initial guess is always close, then
- * 4 Newton iterations are plenty. Each shift corresponds to multiplying
- * sqrt by 2 (×0.25 of x ⇒ ÷2 of sqrt). */
-static float my_sqrtf(float x)
-{
-    if (x <= 0.0f) return 0.0f;
-    int shift = 0;
-    while (x > 4.0f) { x *= 0.25f; shift += 1; }
-    while (x < 1.0f) { x *=  4.0f; shift -= 1; }
-    /* Now x in [1, 4) → sqrt(x) in [1, 2). Initial guess midpoint. */
-    float r = (x + 1.0f) * 0.5f;
-    for (int i = 0; i < 4; i++) {
-        r = (r + x / r) * 0.5f;
-    }
-    while (shift > 0) { r *= 2.0f; shift -= 1; }
-    while (shift < 0) { r *= 0.5f; shift += 1; }
-    return r;
-}
+/* (the float Newton-Raphson my_sqrtf is gone — the only caller, the orbit-radius init, now uses the
+ * byte-true re15_squareroot0; the view matrix is integer SquareRoot0 via re15_camera_build_view.) */
 
 /* GTE screen-distance proxy. RE1.5 RID stores a raw fixed-point fov value
  * (typically 26684 for ROOM1100). RE2 feeds (fov >> 7) into gte_ldH —
@@ -281,8 +256,13 @@ void re15_camera_animator_init(re15_camera_animator_t *anim,
      * the first frame produces cam.x = rcos(yaw)*r + tgt.x = cam_pos.x. */
     int32_t dx = cut->pos_x - cut->target_x;
     int32_t dz = cut->pos_z - cut->target_z;
-    double  rr = (double)dx * (double)dx + (double)dz * (double)dz;
-    anim->dist_residual   = (int32_t)my_sqrtf((float)rr);
+    /* Orbit radius = SquareRoot0(dx²+dz²): RE1.5's cut-init (FUN_80015850 @0x8001538c) uses the BIOS
+     * table sqrt (jal 0x80065f60), NOT a float Newton-Raphson — SquareRoot0 UNDER-estimates
+     * floor(sqrt) (#16). Low-32-bit mult arg (mflo), like the console. NOTE: presently vestigial —
+     * the per-frame orbit rebuild (cam.x = rcos(yaw)*r + tgt.x) is SKIPPED in this port (see
+     * re15_camera_animator_tick); this keeps the radius byte-true for when the orbit is re-enabled. */
+    uint32_t rr = (uint32_t)((int64_t)dx * dx + (int64_t)dz * dz);
+    anim->dist_residual   = (int32_t)re15_squareroot0(rr);
     anim->y_dist_residual = 0;
     anim->dist_step       = 0;
     anim->y_dist_step     = 0;
