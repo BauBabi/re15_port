@@ -2837,6 +2837,11 @@ static int op_item_aot_set(scd_thread_t *t)
         /* AOT stays uninstalled (record type=0 in the original) */
     } else {
         re15_aot_set_item_tk((int)slot, cx, cz, hw, hh, item_t, amount, tk_bit);
+        if (slot < RE15_AOT_MAX) {
+            g_aot.slots[slot].sce_flags = t->pc[3];   /* 0x31 forward / 0x51 centre (all shipped
+                                                       * items are ACTION-gated — wf_f536e1ee #5) */
+            g_aot.slots[slot].band      = t->pc[4];
+        }
     }
     /* PC-Vorschub konditional pc[3]&0x80: 30 vs 22. Byte-true: LAB_80040644 @0x8004065c
      * `lbu v0,0x3(a2)`; @0x80040664 `andi 0x80`; @0x80040668 `beq` -> +0x1e(30)/+0x16(22)

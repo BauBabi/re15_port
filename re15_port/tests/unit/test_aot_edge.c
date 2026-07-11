@@ -13,7 +13,8 @@
 #include <stdint.h>
 #include "re15_actor.h"
 #include "re15_aot.h"
-#include "re15_room.h"   /* g_room_change — the DOOR fire observable */
+#include "re15_room.h"
+#include "re15_inventory.h"   /* g_room_change — the DOOR fire observable */
 
 int main(void)
 {
@@ -26,12 +27,27 @@ int main(void)
 
     printf("=== #14 AOT edge-removal: AUTO zone fires EVERY frame inside, not just on entry ===\n");
 
-    /* (1) ITEM (type 2): fires on inside + self-disables (a->active=0 = the Item_aot_reset equivalent) */
-    re15_aot_set(0, RE15_AOT_TYPE_ITEM, 5, 1000, 1000, 500, 500);
-    re15_aot_scan(1000, 1000, 0xFF);                 /* player inside the item rect */
+    /* (1) ITEM: ACTION-gated (wf_f536e1ee step 5 — all 162 shipped items carry flags bit 0x10
+     * SET; the old walk-in level trigger was divergence #1). Walk-in does NOT take it; the
+     * action press inside does (then self-disables); a FULL inventory refuses + keeps it alive. */
+    re15_aot_set_item(0, 1000, 1000, 500, 500, 0x15, 1);
+    g_aot_action_pressed = 0;
+    re15_aot_scan(1000, 1000, 0xFF);                 /* inside, NO press -> stays */
+    if (g_aot.slots[0].active != 1) {
+        fprintf(stderr, "FAIL(1a): ITEM must NOT fire on walk-in (action-gated)\n"); fail = 1; }
+    for (int fs = 0; fs < RE15_INV_MAX_SLOTS; fs++)  /* fill the inventory */
+        re15_inv_grant((uint8_t)(0x40 + fs), 1);
+    g_aot_action_pressed = 1;
+    re15_aot_scan(1000, 1000, 0xFF);                 /* press, but FULL -> refused, stays */
+    if (g_aot.slots[0].active != 1) {
+        fprintf(stderr, "FAIL(1b): a FULL inventory must keep the item AOT alive\n"); fail = 1; }
+    re15_inv_init();                                  /* make room */
+    g_aot_action_pressed = 1;
+    re15_aot_scan(1000, 1000, 0xFF);                 /* press inside -> take + self-disable */
     if (g_aot.slots[0].active != 0) {
-        fprintf(stderr, "FAIL(1): ITEM must self-disable (active=0) after firing while inside\n"); fail = 1; }
-    else printf("  (1) ITEM: fired on inside + self-disabled (active=0) = fires once\n");
+        fprintf(stderr, "FAIL(1c): ITEM must fire on ACTION press + self-disable\n"); fail = 1; }
+    g_aot_action_pressed = 0;
+    if (!fail) printf("  (1) ITEM: action-gated take (walk-in no, full refused, press takes)\n");
 
     /* (2) AUTO_EVENT (type 6): fires EVERY frame inside. The OLD edge gated the 2nd scan (was_inside=1);
      * the byte-true no-edge scan fires again. (No self-disabling sub runs in this unit harness, so the

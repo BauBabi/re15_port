@@ -424,7 +424,7 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
          * (centre-hit -> work_var[1], forward-hit -> work_var[0]). */
         int gen_reach = 0, gen_fwd_hit = 0;
         if (a->type == RE15_AOT_TYPE_GENERIC || a->type == RE15_AOT_TYPE_MESSAGE ||
-            a->type == RE15_AOT_TYPE_EXAMINE_WORKVAR ||
+            a->type == RE15_AOT_TYPE_EXAMINE_WORKVAR || a->type == RE15_AOT_TYPE_ITEM ||
             (a->type == RE15_AOT_TYPE_FLAG_CHG && (a->sce_flags & 0x10))) {
             uint8_t fl = a->sce_flags;
             if ((fl == 0 || (fl & 0x40)) && inside) gen_reach = 1;      /* centre first */
@@ -500,6 +500,7 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
                          a->type == RE15_AOT_TYPE_GENERIC ||
                          a->type == RE15_AOT_TYPE_MESSAGE ||
                          a->type == RE15_AOT_TYPE_EXAMINE_WORKVAR ||
+                         a->type == RE15_AOT_TYPE_ITEM ||
                          (a->type == RE15_AOT_TYPE_FLAG_CHG && (a->sce_flags & 0x10)));
         int fire = is_auto_door
                        /* Auto-Advance-Tür: das Rechteck ist ein (0,0)-Sentinel (nie
@@ -512,6 +513,11 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
                        ? (in_cinematic && scd_idle && scd_ran && !msg_block && !action_fired)
                  : (a->type == RE15_AOT_TYPE_DOOR)
                        ? (a->door_hold == 9 && !msg_block && !action_fired)   /* opens on the 9th held frame */
+                 : (a->type == RE15_AOT_TYPE_ITEM)
+                       /* ITEM = ACTION-gated (wf_f536e1ee #5: all 162 shipped items carry flags
+                        * bit 0x10 SET — the sce9 handler runs from the press-edge scan only;
+                        * the old walk-in level trigger hoovered items silently). */
+                       ? (gen_reach && g_aot_action_pressed && !msg_block && !action_fired)
                  : (a->type == RE15_AOT_TYPE_FLAG_CHG)
                        ? ((a->sce_flags & 0x10)
                               ? (gen_reach && g_aot_action_pressed && !msg_block && !action_fired)
@@ -684,7 +690,12 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
                 /* Built-in ITEM behavior: grant + pickup SFX + one-shot
                  * deactivate (RE2 Item_aot_reset equivalent). */
                 const re15_aot_item_params_t *p = &g_aot.item_params[i];
-                re15_inv_grant(p->item_type, p->amount);
+                if (re15_inv_grant(p->item_type, p->amount) != 0) {
+                    /* INVENTORY FULL (byte-true: the pickup FSM's full-branch shows the system
+                     * message and does NOT disable the AOT @FUN_8001db28 — the item stays;
+                     * the modal 'You got'/zoom presentation is a faithful-line deferral). */
+                    break;
+                }
                 /* TAKEN-BIT (byte-true FUN_8004ef90(DAT_800b1078, payload[2]) on pickup confirm
                  * @0x8001e0xx; zone 9 = ptr-table 0x80074664[9]): the item stays gone on room
                  * re-entry — op_item_aot_set re-checks it at install (@0x800406d4).
