@@ -1586,29 +1586,56 @@ int main(int argc, char *argv[])
                         (unsigned)active_cuts[active_cut_idx].pri_offset, pri_n, has_fg);
             }
             re15_camera_view_t cam_view;
-            /* DEATH CAMERA (byte-true game-over sub 2, @0x8001547c-e4 + the per-frame glide
-             * FUN_80015850): once g_death_cam arms, the CURRENT cut is rewritten to orbit the
-             * corpse — target = corpse + {0x1f4, 0xbb8, 0x1f4}; the camera then GLIDES (live:
-             * crane-up ~-100 y/tick with the target locked on the corpse). Faithful-line glide:
-             * ease the cut copy toward the orbit pose each death frame. */
+            /* BYTE-TRUE DEATH-CAMERA ORBIT (per-frame FUN_80015850 + init FUN_80015284, RE'd
+             * wf_32d97217). On death the camera CUTS to a corpse-orbiting pose and slowly circles it:
+             *   cam.x = (rcos(yaw)*radius)>>12 + corpse.x ;  cam.z = (rsin(yaw)*radius)>>12 + corpse.z
+             *   yaw = (yaw - yaw_step) & 0xfff ;  radius -= dist_step ;  cam.y -= y_step   (PSX-down: cranes UP)
+             * with the look-at easing toward the (live) corpse: XZ /60, Y toward corpse.y-400 /20.
+             * radius seeds to the room-cam→corpse distance and dollies to 3300 over 3 frames
+             * (dist_step=(r-3300)/3, then frozen). Uses the BIOS rcos/rsin/SquareRoot0 the ROM uses
+             * (0x80068348/0x800683e8/0x80065f60). The STEADY orbit (yaw=0x80, yaw_step=0xc=12,
+             * radius=3300, dist_step=0, y_step=100) is byte-true VERIFIED against the death savestates:
+             * yaw=(128-12*frame)&0xfff → frame 108 = 2928, matching RAM (0x800b525c) at counter 109.
+             * DEFERRED (FLAG B): the ~3-frame fly-in SPIN (yaw_step=900 + a yaw seeded from the corpse
+             * model's facing point P+0x5b4/0x5bc via ratan2-0xd2c) — that seed has no port equivalent,
+             * so we start on the settle angle: the dramatic cut + orbit are byte-true, only the brief
+             * initial spin is omitted. Replaces the old fabricated {0x1f4,0xbb8,0x1f4}+drift glide. */
             re15_camera_cut_t death_cut;
             const re15_camera_cut_t *view_cut = &active_cuts[active_cut_idx];
             {
-                static int s_dc_on = 0; static re15_camera_cut_t s_dc;
+                static int s_dc_on = 0, s_dc_updates = 0;
+                static re15_camera_cut_t s_dc;
+                static int32_t s_dc_radius, s_dc_yaw, s_dc_yaw_step, s_dc_dist_step, s_dc_y_step;
                 if (g_death_cam) {
                     re15_actor_t *dcp = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-                    if (!s_dc_on) { s_dc = *view_cut; s_dc_on = 1; }   /* seed from the live cut */
-                    s_dc.target_x = dcp->x + 0x1f4;                     /* cut +0x1c/+0x1e/+0x20 */
-                    s_dc.target_y = dcp->y + 0xbb8;
-                    s_dc.target_z = dcp->z + 0x1f4;
-                    s_dc.pos_y   -= 100;                                /* the live crane-up */
-                    if (s_dc.pos_y < dcp->y - 9600) s_dc.pos_y = dcp->y - 9600;  /* live span ~9.5k */
-                    s_dc.pos_x   += (dcp->x - s_dc.pos_x) / 32;         /* gentle drift over the corpse */
-                    s_dc.pos_z   += (dcp->z - s_dc.pos_z) / 32;
+                    if (!s_dc_on) {                                    /* INIT (path A), once */
+                        s_dc = *view_cut;                             /* seed cam.xyz + fov from the room cut */
+                        int32_t rdx = s_dc.pos_x - dcp->x, rdz = s_dc.pos_z - dcp->z;
+                        s_dc_radius    = (int32_t)re15_squareroot0((uint32_t)(rdx*rdx + rdz*rdz));
+                        s_dc_dist_step = (s_dc_radius - 3300) / 3;    /* dolly radius to 3300 over 3 frames */
+                        s_dc_yaw       = 0x80;                        /* 128 settle start (fly-in spin deferred) */
+                        s_dc_yaw_step  = 0xc;                         /* 12/frame steady orbit */
+                        s_dc_y_step    = 0x64;                        /* 100/frame crane (path B) */
+                        s_dc.target_x  = dcp->x;                      /* look-at seed = corpse (no offset) */
+                        s_dc.target_z  = dcp->z;
+                        s_dc.target_y  = dcp->y - 400;
+                        s_dc_updates   = 0;
+                        s_dc_on = 1;
+                    }
+                    /* PER-FRAME UPDATE (FUN_80015850) */
+                    s_dc_radius -= s_dc_dist_step;
+                    s_dc.pos_y  -= s_dc_y_step;
+                    s_dc.pos_x   = ((re15_rcos(s_dc_yaw) * s_dc_radius) >> 12) + dcp->x;
+                    s_dc.pos_z   = ((re15_rsin(s_dc_yaw) * s_dc_radius) >> 12) + dcp->z;
+                    s_dc_yaw     = (s_dc_yaw - s_dc_yaw_step) & 0xfff;
+                    s_dc.target_x += (dcp->x - s_dc.target_x) / 60;   /* look-at ease /60 XZ */
+                    s_dc.target_z += (dcp->z - s_dc.target_z) / 60;
+                    s_dc.target_y += (dcp->y - (s_dc.target_y + 400)) / 20;  /* /20 Y, +400 head */
+                    if (++s_dc_updates >= 3) s_dc_dist_step = 0;      /* freeze radius at 3300 (path B) */
                     death_cut = s_dc;
                     view_cut  = &death_cut;
                 } else if (s_dc_on) {
-                    s_dc_on = 0;                                        /* revive/reload -> normal cam */
+                    s_dc_on = 0; s_dc_updates = 0;                    /* revive/reload -> normal cam */
                 }
             }
             re15_camera_build_view(view_cut, &cam_view);
