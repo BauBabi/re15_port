@@ -44,6 +44,7 @@ static inline int RNDI(float f) {
 #include "re15_emd.h"
 #include "re15_skeleton.h"
 #include "re15_camera.h"
+#include "re15_math.h"      /* re15_gte_divide — byte-true GTE RTPS perspective divide */
 #include "re15_light.h"
 #include "re15_player.h"
 #include "re15_aot.h"
@@ -2315,10 +2316,10 @@ int main(int argc, char *argv[])
              * + world-unit translation, float copies for in-macro math).
              * Set inside the mesh loop below by re15_camera_compose_
              * view_bone. */
-            float bone_m[9] = {4096,0,0,  0,4096,0,  0,0,4096};
-            float bone_t[3] = {0, 0, 0};
+            int32_t bone_m[9] = {4096,0,0,  0,4096,0,  0,0,4096};   /* Q12 view×bone (was float; byte-true RTPS) */
+            int32_t bone_t[3] = {0, 0, 0};
             /* bone-11 composed matrix capture (the weapon-in-hand attach bone) */
-            float   wpn_bone_m[9], wpn_bone_t[3];
+            int32_t wpn_bone_m[9], wpn_bone_t[3];
             int32_t wpn_yawed[9];
             int     wpn_bone_valid = 0;
 
@@ -2332,19 +2333,23 @@ int main(int argc, char *argv[])
  * pixels, producing exploded triangles + wraparound + CLUT smear. Near
  * plane bumped from 1 to 64 to also kill the GTE-overflow case noted in
  * bugfix_psx_canonical_pipeline_2026_05_18. */
+/* Byte-true GTE RTPS (integer, replaces the old float divide+transform — the last pixel-shift
+ * source): view = (bone_m·v)>>12 + bone_t; IR1/IR2 sat s16, SZ3 sat u16; sx = OFX + (IR·n)>>16
+ * with n = the GTE UNR divide (re15_gte_divide). H = fov_screen_dist. */
 #define PROJECT_VERT(vp, out_sx, out_sy, out_wz) do { \
-                float _x = (float)(vp)->x; \
-                float _y = (float)(vp)->y; \
-                float _z = (float)(vp)->z; \
-                float _vx = (_x*bone_m[0] + _y*bone_m[1] + _z*bone_m[2]) / 4096.0f + bone_t[0]; \
-                float _vy = (_x*bone_m[3] + _y*bone_m[4] + _z*bone_m[5]) / 4096.0f + bone_t[1]; \
-                float _vz = (_x*bone_m[6] + _y*bone_m[7] + _z*bone_m[8]) / 4096.0f + bone_t[2]; \
-                if (_vz < 64.0f) { (out_wz) = -1.0f; (out_sx) = 0; (out_sy) = 0; } \
+                int32_t _x = (vp)->x, _y = (vp)->y, _z = (vp)->z; \
+                int32_t _vx = (int32_t)(((int64_t)_x*bone_m[0] + (int64_t)_y*bone_m[1] + (int64_t)_z*bone_m[2]) >> 12) + bone_t[0]; \
+                int32_t _vy = (int32_t)(((int64_t)_x*bone_m[3] + (int64_t)_y*bone_m[4] + (int64_t)_z*bone_m[5]) >> 12) + bone_t[1]; \
+                int32_t _vz = (int32_t)(((int64_t)_x*bone_m[6] + (int64_t)_y*bone_m[7] + (int64_t)_z*bone_m[8]) >> 12) + bone_t[2]; \
+                if (_vz < 64) { (out_wz) = -1.0f; (out_sx) = 0; (out_sy) = 0; } \
                 else { \
-                    float _proj = screen_dist / _vz; \
-                    (out_sx) = cx + RNDI(_vx * _proj); \
-                    (out_sy) = cy + RNDI(_vy * _proj); \
-                    (out_wz) = _vz; \
+                    int32_t _ir1 = _vx > 0x7FFF ? 0x7FFF : (_vx < -0x8000 ? -0x8000 : _vx); \
+                    int32_t _ir2 = _vy > 0x7FFF ? 0x7FFF : (_vy < -0x8000 ? -0x8000 : _vy); \
+                    uint32_t _sz3 = _vz > 0xFFFF ? 0xFFFFu : (uint32_t)_vz; \
+                    uint32_t _n = re15_gte_divide((uint32_t)cam_view.fov_screen_dist, _sz3); \
+                    (out_sx) = cx + (int)(((int64_t)_ir1 * (int64_t)_n) >> 16); \
+                    (out_sy) = cy + (int)(((int64_t)_ir2 * (int64_t)_n) >> 16); \
+                    (out_wz) = (float)_vz; \
                 } \
             } while (0)
 
@@ -2568,10 +2573,10 @@ int main(int argc, char *argv[])
                 int32_t combined_trans[3];
                 re15_camera_compose_view_bone(&cam_view, yawed_rot, bone_world_trans,
                                                combined_rot, combined_trans);
-                for (int k = 0; k < 9; k++) bone_m[k] = (float)combined_rot[k];
-                bone_t[0] = (float)combined_trans[0];
-                bone_t[1] = (float)combined_trans[1];
-                bone_t[2] = (float)combined_trans[2];
+                for (int k = 0; k < 9; k++) bone_m[k] = combined_rot[k];
+                bone_t[0] = combined_trans[0];
+                bone_t[1] = combined_trans[1];
+                bone_t[2] = combined_trans[2];
                 /* save bone 11's COMPOSED matrix for the weapon-in-hand draw below */
                 if (bi == 11) {
                     for (int k = 0; k < 9; k++) { wpn_bone_m[k] = bone_m[k]; wpn_yawed[k] = yawed_rot[k]; }
@@ -3152,9 +3157,9 @@ int main(int argc, char *argv[])
                     re15_camera_compose_view_bone(&cam_view, nyawed_rot, nbone_world_trans,
                                                    ncomb_rot, ncomb_trans);
 
-                    float nbone_m[9], nbone_t[3];
-                    for (int i = 0; i < 9; i++) nbone_m[i] = (float)ncomb_rot[i];
-                    for (int i = 0; i < 3; i++) nbone_t[i] = (float)ncomb_trans[i];
+                    int32_t nbone_m[9], nbone_t[3];   /* Q12 view×bone (byte-true integer RTPS) */
+                    for (int i = 0; i < 9; i++) nbone_m[i] = ncomb_rot[i];
+                    for (int i = 0; i < 3; i++) nbone_t[i] = ncomb_trans[i];
 
                     /* AK-round F950 dump (2026-05-26): Elliot's root bone view-
                      * space + projected screen for cut 2 framing diagnosis. */
@@ -3195,15 +3200,18 @@ int main(int argc, char *argv[])
                         };
                         int ok = 1;
                         for (int v = 0; v < 3; v++) {
-                            float _x = (float)vp[v]->x, _y = (float)vp[v]->y, _z = (float)vp[v]->z;
-                            float _vx = (_x*nbone_m[0] + _y*nbone_m[1] + _z*nbone_m[2]) / 4096.0f + nbone_t[0];
-                            float _vy = (_x*nbone_m[3] + _y*nbone_m[4] + _z*nbone_m[5]) / 4096.0f + nbone_t[1];
-                            float _vz = (_x*nbone_m[6] + _y*nbone_m[7] + _z*nbone_m[8]) / 4096.0f + nbone_t[2];
-                            if (_vz < 64.0f) { ok = 0; break; } /* BO: H28 near-plane (was 1.0) */
-                            float _proj = (float)cam_view.fov_screen_dist / _vz;
-                            ax[v] = (float)(cx + RNDI(_vx * _proj));
-                            ay[v] = (float)(cy + RNDI(_vy * _proj));
-                            wz[v] = _vz;
+                            int32_t _x = vp[v]->x, _y = vp[v]->y, _z = vp[v]->z;
+                            int32_t _vx = (int32_t)(((int64_t)_x*nbone_m[0] + (int64_t)_y*nbone_m[1] + (int64_t)_z*nbone_m[2]) >> 12) + nbone_t[0];
+                            int32_t _vy = (int32_t)(((int64_t)_x*nbone_m[3] + (int64_t)_y*nbone_m[4] + (int64_t)_z*nbone_m[5]) >> 12) + nbone_t[1];
+                            int32_t _vz = (int32_t)(((int64_t)_x*nbone_m[6] + (int64_t)_y*nbone_m[7] + (int64_t)_z*nbone_m[8]) >> 12) + nbone_t[2];
+                            if (_vz < 64) { ok = 0; break; } /* BO: H28 near-plane (was 1.0) */
+                            int32_t _ir1 = _vx > 0x7FFF ? 0x7FFF : (_vx < -0x8000 ? -0x8000 : _vx);
+                            int32_t _ir2 = _vy > 0x7FFF ? 0x7FFF : (_vy < -0x8000 ? -0x8000 : _vy);
+                            uint32_t _sz3 = _vz > 0xFFFF ? 0xFFFFu : (uint32_t)_vz;
+                            uint32_t _n = re15_gte_divide((uint32_t)cam_view.fov_screen_dist, _sz3);
+                            ax[v] = (float)(cx + (int)(((int64_t)_ir1 * (int64_t)_n) >> 16));
+                            ay[v] = (float)(cy + (int)(((int64_t)_ir2 * (int64_t)_n) >> 16));
+                            wz[v] = (float)_vz;
                         }
                         if (!ok) continue;
                         const re15_md1_tri_uv_t *uv = &nm->triangle_uvs[ti];
@@ -3253,15 +3261,18 @@ int main(int argc, char *argv[])
                         };
                         int ok = 1;
                         for (int v = 0; v < 4; v++) {
-                            float _x = (float)vp[v]->x, _y = (float)vp[v]->y, _z = (float)vp[v]->z;
-                            float _vx = (_x*nbone_m[0] + _y*nbone_m[1] + _z*nbone_m[2]) / 4096.0f + nbone_t[0];
-                            float _vy = (_x*nbone_m[3] + _y*nbone_m[4] + _z*nbone_m[5]) / 4096.0f + nbone_t[1];
-                            float _vz = (_x*nbone_m[6] + _y*nbone_m[7] + _z*nbone_m[8]) / 4096.0f + nbone_t[2];
-                            if (_vz < 64.0f) { ok = 0; break; } /* BO: H28 near-plane (was 1.0) */
-                            float _proj = (float)cam_view.fov_screen_dist / _vz;
-                            ax[v] = (float)(cx + RNDI(_vx * _proj));
-                            ay[v] = (float)(cy + RNDI(_vy * _proj));
-                            wz[v] = _vz;
+                            int32_t _x = vp[v]->x, _y = vp[v]->y, _z = vp[v]->z;
+                            int32_t _vx = (int32_t)(((int64_t)_x*nbone_m[0] + (int64_t)_y*nbone_m[1] + (int64_t)_z*nbone_m[2]) >> 12) + nbone_t[0];
+                            int32_t _vy = (int32_t)(((int64_t)_x*nbone_m[3] + (int64_t)_y*nbone_m[4] + (int64_t)_z*nbone_m[5]) >> 12) + nbone_t[1];
+                            int32_t _vz = (int32_t)(((int64_t)_x*nbone_m[6] + (int64_t)_y*nbone_m[7] + (int64_t)_z*nbone_m[8]) >> 12) + nbone_t[2];
+                            if (_vz < 64) { ok = 0; break; } /* BO: H28 near-plane (was 1.0) */
+                            int32_t _ir1 = _vx > 0x7FFF ? 0x7FFF : (_vx < -0x8000 ? -0x8000 : _vx);
+                            int32_t _ir2 = _vy > 0x7FFF ? 0x7FFF : (_vy < -0x8000 ? -0x8000 : _vy);
+                            uint32_t _sz3 = _vz > 0xFFFF ? 0xFFFFu : (uint32_t)_vz;
+                            uint32_t _n = re15_gte_divide((uint32_t)cam_view.fov_screen_dist, _sz3);
+                            ax[v] = (float)(cx + (int)(((int64_t)_ir1 * (int64_t)_n) >> 16));
+                            ay[v] = (float)(cy + (int)(((int64_t)_ir2 * (int64_t)_n) >> 16));
+                            wz[v] = (float)_vz;
                         }
                         if (!ok) continue;
                         const re15_md1_quad_uv_t *uv = &nm->quad_uvs[qi];
