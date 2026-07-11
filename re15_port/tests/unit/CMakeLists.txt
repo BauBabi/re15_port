@@ -371,6 +371,13 @@ target_include_directories(test_rotmatrix PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_rotmatrix COMMAND test_rotmatrix)
 set_tests_properties(unit_rotmatrix PROPERTIES TIMEOUT 30)
 
+# --- Byte-true PsyQ BIOS SquareRoot0 table replica (0x80065f60 — the engine's ONLY sqrt, NOT floor) ---
+add_executable(test_squareroot0 test_squareroot0.c)
+target_link_libraries(test_squareroot0 PRIVATE re15_engine re15_test_support)
+target_include_directories(test_squareroot0 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_squareroot0 COMMAND test_squareroot0)
+set_tests_properties(unit_squareroot0 PROPERTIES TIMEOUT 30)
+
 # --- Melee reach through the body-push standoff (audit wf_555f18eb Part B — the "harmless enemy" bug) ---
 add_executable(test_enemy_attack_reach test_enemy_attack_reach.c)
 target_link_libraries(test_enemy_attack_reach PRIVATE re15_engine re15_test_support)

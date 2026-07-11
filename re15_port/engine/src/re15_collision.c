@@ -27,25 +27,12 @@
  */
 #include "re15_collision.h"
 #include "re15_scd.h"        /* g_scd.props — the Obj_model_set object list */
+#include "re15_math.h"       /* re15_squareroot0 — the engine's ONLY sqrt (BIOS 0x80065f60) */
 #ifndef RE15_PLATFORM_PC
 #include <stdio.h>
 #endif
 
 #define PR 450
-
-/* integer sqrt == the BIOS SquareRoot0 the original calls (floor(sqrt)). */
-static int32_t coll_isqrt(int64_t x)
-{
-    if (x <= 0) return 0;
-    uint64_t v = (uint64_t)x, res = 0, bit = (uint64_t)1 << 62;
-    while (bit > v) bit >>= 2;
-    while (bit) {
-        if (v >= res + bit) { v -= res + bit; res = (res >> 1) + bit; }
-        else res >>= 1;
-        bit >>= 2;
-    }
-    return (int32_t)res;
-}
 
 /* FUN_8003b068: 2-bit quadrant from sign(pos - ceiling) (origin = 0). */
 static int quadrant_of(int32_t px, int32_t pz, int16_t ceil_x, int16_t ceil_z)
@@ -113,7 +100,11 @@ static int push_circle(const re15_sca_entry_t *e, int32_t *lx, int32_t *lz, int3
     int32_t cr = (int32_t)e->width >> 1;
     int32_t dx = *lx - ((int32_t)e->x + cr);
     int32_t dz = *lz - ((int32_t)e->z + cr);
-    int32_t dist = coll_isqrt((int64_t)dx * dx + (int64_t)dz * dz);
+    /* dist via the BIOS SquareRoot0 (0x8003d724 jal 0x80065f60) — NOT an exact
+     * floor(sqrt). The PSX passes the low 32 bits of the mult (mflo), so mask to
+     * u32; the table approximation under-estimates by ±(1..N) and that reaches the
+     * committed push (pen, denom, and the pen<1 gate). Audit wf_f066b2ae. */
+    int32_t dist = (int32_t)re15_squareroot0((uint32_t)((int64_t)dx * dx + (int64_t)dz * dz));
     int32_t pen  = (cr + (r & 0xffff)) - dist;
     if (pen < 1) return 0;
     int32_t denom = dist + 1;
