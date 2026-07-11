@@ -3454,9 +3454,9 @@ int main(int argc, char *argv[])
                         int32_t comb_trans[3];
                         re15_camera_compose_view_bone(&cam_view, prot_q12, world_trans,
                                                        comb_rot, comb_trans);
-                        float bm[9], bt[3];
-                        for (int i = 0; i < 9; i++) bm[i] = (float)comb_rot[i];
-                        for (int i = 0; i < 3; i++) bt[i] = (float)comb_trans[i];
+                        int32_t bm[9], bt[3];   /* Q12 view×bone — byte-true integer RTPS (was float) */
+                        for (int i = 0; i < 9; i++) bm[i] = comb_rot[i];
+                        for (int i = 0; i < 3; i++) bt[i] = comb_trans[i];
 
                         /* Textured rendering using bound prop TIM slot. */
                         for (int ti = 0; ti < hm->triangle_count; ti++) {
@@ -3472,14 +3472,17 @@ int main(int argc, char *argv[])
                                 &hm->tri_vertices[tr->v2],
                             };
                             for (int v = 0; v < 3; v++) {
-                                float _x = (float)vp[v]->x, _y = (float)vp[v]->y, _z = (float)vp[v]->z;
-                                float _vx = (_x*bm[0] + _y*bm[1] + _z*bm[2]) / 4096.0f + bt[0];
-                                float _vy = (_x*bm[3] + _y*bm[4] + _z*bm[5]) / 4096.0f + bt[1];
-                                float _vz = (_x*bm[6] + _y*bm[7] + _z*bm[8]) / 4096.0f + bt[2];
-                                if (_vz < 64.0f) { ok = 0; break; }  /* H28 near-clip */
-                                float _proj = (float)cam_view.fov_screen_dist / _vz;
-                                ax[v] = cx + RNDI(_vx * _proj);
-                                ay[v] = cy + RNDI(_vy * _proj);
+                                int32_t _x = vp[v]->x, _y = vp[v]->y, _z = vp[v]->z;
+                                int32_t _vx = (int32_t)(((int64_t)_x*bm[0] + (int64_t)_y*bm[1] + (int64_t)_z*bm[2]) >> 12) + bt[0];
+                                int32_t _vy = (int32_t)(((int64_t)_x*bm[3] + (int64_t)_y*bm[4] + (int64_t)_z*bm[5]) >> 12) + bt[1];
+                                int32_t _vz = (int32_t)(((int64_t)_x*bm[6] + (int64_t)_y*bm[7] + (int64_t)_z*bm[8]) >> 12) + bt[2];
+                                if (_vz < 64) { ok = 0; break; }  /* H28 near-clip */
+                                int32_t _ir1 = _vx>0x7FFF?0x7FFF:(_vx<-0x8000?-0x8000:_vx);
+                                int32_t _ir2 = _vy>0x7FFF?0x7FFF:(_vy<-0x8000?-0x8000:_vy);
+                                uint32_t _sz3 = (uint32_t)(_vz>0xFFFF?0xFFFF:_vz);
+                                uint32_t _n = re15_gte_divide((uint32_t)cam_view.fov_screen_dist, _sz3);
+                                ax[v] = cx + (int)(((int64_t)_ir1*(int64_t)_n)>>16);
+                                ay[v] = cy + (int)(((int64_t)_ir2*(int64_t)_n)>>16);
                                 wz_avg += (int)_vz;
                             }
                             if (!ok) continue;
@@ -3526,14 +3529,17 @@ int main(int argc, char *argv[])
                             };
                             int ok = 1;
                             for (int v = 0; v < 4; v++) {
-                                float _x = (float)vp[v]->x, _y = (float)vp[v]->y, _z = (float)vp[v]->z;
-                                float _vx = (_x*bm[0] + _y*bm[1] + _z*bm[2]) / 4096.0f + bt[0];
-                                float _vy = (_x*bm[3] + _y*bm[4] + _z*bm[5]) / 4096.0f + bt[1];
-                                float _vz = (_x*bm[6] + _y*bm[7] + _z*bm[8]) / 4096.0f + bt[2];
-                                if (_vz < 64.0f) { ok = 0; break; }  /* H28 near-clip */
-                                float _proj = (float)cam_view.fov_screen_dist / _vz;
-                                ax[v] = cx + RNDI(_vx * _proj);
-                                ay[v] = cy + RNDI(_vy * _proj);
+                                int32_t _x = vp[v]->x, _y = vp[v]->y, _z = vp[v]->z;
+                                int32_t _vx = (int32_t)(((int64_t)_x*bm[0] + (int64_t)_y*bm[1] + (int64_t)_z*bm[2]) >> 12) + bt[0];
+                                int32_t _vy = (int32_t)(((int64_t)_x*bm[3] + (int64_t)_y*bm[4] + (int64_t)_z*bm[5]) >> 12) + bt[1];
+                                int32_t _vz = (int32_t)(((int64_t)_x*bm[6] + (int64_t)_y*bm[7] + (int64_t)_z*bm[8]) >> 12) + bt[2];
+                                if (_vz < 64) { ok = 0; break; }  /* H28 near-clip */
+                                int32_t _ir1 = _vx>0x7FFF?0x7FFF:(_vx<-0x8000?-0x8000:_vx);
+                                int32_t _ir2 = _vy>0x7FFF?0x7FFF:(_vy<-0x8000?-0x8000:_vy);
+                                uint32_t _sz3 = (uint32_t)(_vz>0xFFFF?0xFFFF:_vz);
+                                uint32_t _n = re15_gte_divide((uint32_t)cam_view.fov_screen_dist, _sz3);
+                                ax[v] = cx + (int)(((int64_t)_ir1*(int64_t)_n)>>16);
+                                ay[v] = cy + (int)(((int64_t)_ir2*(int64_t)_n)>>16);
                                 wz_avg += (int)_vz;
                             }
                             if (!ok) continue;
@@ -3578,18 +3584,21 @@ int main(int argc, char *argv[])
                     continue;
                 }
 
-                /* Other props (helicopter parts, lights) — small markers. */
-                float fx = (float)g_scd.props[pi].x;
-                float fy = (float)g_scd.props[pi].y;
-                float fz = (float)g_scd.props[pi].z;
-                float vx = (cam_view.rot[0]*fx + cam_view.rot[1]*fy + cam_view.rot[2]*fz) / 4096.0f + cam_view.trans[0];
-                float vy = (cam_view.rot[3]*fx + cam_view.rot[4]*fy + cam_view.rot[5]*fz) / 4096.0f + cam_view.trans[1];
-                float vz = (cam_view.rot[6]*fx + cam_view.rot[7]*fy + cam_view.rot[8]*fz) / 4096.0f + cam_view.trans[2];
-                if (vz < 1.0f) continue;
-                float proj = (float)cam_view.fov_screen_dist / vz;
-                int sx_p = cx + RNDI(vx * proj);
-                int sy_p = cy + RNDI(vy * proj);
-                int sz = (int)(2000.0f * proj);
+                /* Other props (helicopter parts, lights) — small markers. NOTE: the mustard tile
+                 * below is a PORT PLACEHOLDER for props with no MD1 mesh, not a byte-true render;
+                 * only its centre projection is made uniform with the integer GTE RTPS. */
+                int32_t fx = g_scd.props[pi].x, fy = g_scd.props[pi].y, fz = g_scd.props[pi].z;
+                int32_t vx = (int32_t)(((int64_t)cam_view.rot[0]*fx + (int64_t)cam_view.rot[1]*fy + (int64_t)cam_view.rot[2]*fz) >> 12) + cam_view.trans[0];
+                int32_t vy = (int32_t)(((int64_t)cam_view.rot[3]*fx + (int64_t)cam_view.rot[4]*fy + (int64_t)cam_view.rot[5]*fz) >> 12) + cam_view.trans[1];
+                int32_t vz = (int32_t)(((int64_t)cam_view.rot[6]*fx + (int64_t)cam_view.rot[7]*fy + (int64_t)cam_view.rot[8]*fz) >> 12) + cam_view.trans[2];
+                if (vz < 64) continue;
+                int32_t _ir1 = vx>0x7FFF?0x7FFF:(vx<-0x8000?-0x8000:vx);
+                int32_t _ir2 = vy>0x7FFF?0x7FFF:(vy<-0x8000?-0x8000:vy);
+                uint32_t _sz3 = (uint32_t)(vz>0xFFFF?0xFFFF:vz);
+                uint32_t _n = re15_gte_divide((uint32_t)cam_view.fov_screen_dist, _sz3);
+                int sx_p = cx + (int)(((int64_t)_ir1*(int64_t)_n)>>16);
+                int sy_p = cy + (int)(((int64_t)_ir2*(int64_t)_n)>>16);
+                int sz = (int)(((int64_t)2000 * _n) >> 16);
                 if (sz < 8) sz = 8;
                 if (sz > 80) sz = 80;
                 re15_render_tile(sx_p - sz/8, sy_p - sz/8, sz/4, sz/4, 0, 200, 180, 50);
