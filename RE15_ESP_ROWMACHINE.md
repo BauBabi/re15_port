@@ -1,5 +1,17 @@
 # RE1.5 ESP Descriptor-Row Effect Machine — byte-true RE (port STAGED)
 
+> ## ⚠️ KORREKTUREN (Trace wf_a18487d9, 2026-07-11, adversariell verifiziert — überschreiben Teile unten)
+> 1. **Die Routine-Tabelle @0x80071d40 hat 48 EINTRÄGE, nicht 20** (0..47 → 0x80017248..0x80019234; 44-47 jr-ra-Stubs). Selektoren 20-47 sind gültige Opcodes (High-Level-Effekt-Programme, z.B. 25 = Acid-Drip mit Player-Damage-Probe FUN_80012d60(500)); „Rows mit Werten >19 = Daten-Rows" ist WIDERLEGT (3372 war ein Row-Alignment-Fehlparse: euler.z @+0x24). JEDE Row wird ausgeführt.
+> 2. **Routine 6 ist TOTER CODE** (0 jal-Caller im ganzen EXE, keine shipped Row selektiert 6, kein Handler armiert 6). „Waffen-Rows selektieren Routine 6" und „Routine 6 = die fehlende Physik" sind FALSCH. +0x40/44/48 = der STATISCHE Anchor-Space-Spawn-Offset (Init aus Spawn-arg a3, Draw via ApplyMatrix, an Children weitergereicht) — nie per-Frame integriert.
+> 3. **Der EINZIGE Physik-Pfad = die tick-accel-Kette** (0x08→0x10→0x34, gated flags bit5): accel + Initial-Velocity sind **ROW-KONSTANTEN** (Blut id0: accel FE FF 08 00 @CORE00 0x94C = (-2,8,0); Hülse +10 @0x190A). „accel/drift per RNG" ist WIDERLEGT — Routine 11s RNG-Spread gehört zur PATRONENHÜLSE (id 4), nicht zum Blut; Blut id 0 = pure ballistische Streams ohne RNG.
+> 4. **Row-Block-Layout korrigiert:** base → u16 STREAMS (= Slots pro Trigger, ein Slot pro Stream, REVERSE zugewiesen), je Stream u16 nrows (+pad) + nrows×40B-Rows. (sub>>3)*0x40 = CLUT-Seed-Addend auf slot+0x32, KEIN Row-Pointer-Addend. Row-Advance FUN_800174e4 = Identity-40B-Copy (Cursor +0x6f, Row-Basis slot+0x80), KEIN Terminator (Daten-programmiertes noop-Ende; Tod via Anim-Record 0/0 oder flags:=0).
+> 5. **Fade AUFGELÖST — kein Alpha-Byte:** (a) CLUT-Row-Step slot[0x32] += row[0x1e]<<6 (Routine 10 = Paletten-Fade), (b) TPAGE-ABR-OR slot[0x30] |= row[0x16] (R8/10/17), (c) ABE via flags bit4 (Prim-Code 0x2C+((flags>>3)&2)), (d) scale16-Ramps (Einträge 34/35 ±0x100). FUN_800534c4 schreibt NIE das RGB-Wort.
+> 6. **Blut-Kette korrigiert:** „Parent→Routine-2→Routine-11" war ein Fehlparse (die ‚02 00 00 00' war der Stream-Header nrows=2). Sichtbares Chunk-Gore = ROOM-Bank id 5 (Routine 19: 5× Child-Spawn cat7, scale=rand+0xC00, yaw=rand*682) → id 7 Chunks (B=36 Floor-Test → 37 Land-Splat anim 6). Routine 11/12 = NUR Hülsen (id 4); Routine 13 = NUR Room-Drips (11A0/1260); Routine 17 = id 8 + Spider-Rooms.
+> 7. Handgun-Kette: Muzzle st0 R8 (show 0x93, Child 0x02040bb8) → R9 (BANG SE 0x01000001!) → hold; st1 R10. Hülse: R16 (2-Tick-Freeze) → R11 (RNG) → B=12 (Bounce: Floor-Change=Klink-SE+Z-Reflect, Flat=gate, 2. Flat-Kontakt=Kill). Rest-Lücken: R28/R30-Body, R39-States 1/2, Room-Ambient 24/41/42.
+>
+> **Port-Status Stage 1 (2026-07-11):** Row-Block-Accessor (re15_esp_row_streams/_stream) + Blut-Splatter auf Row-Konstanten umgestellt (test_esp_parse D2/D3). Stage 2 offen: der volle Two-Loop-Dispatch + Routine-Bodies + Muzzle/Shell/Bang-Rewire (s_bang_delay-Löschung).
+
+
 Der spielweite Effekt-Treiber: der `model_inst_pool` @`0x800a73b8` (96 Slots × 0x84 B), der
 Spawner `FUN_80019700`, der Tick `FUN_80019e20`, die Routine-Tabelle `PTR_LAB_80071d40`
 (Handler @`0x80017248`–`0x80017ed8`) und der Row-Advance `FUN_800174e4`. **Treibt ALLE Effekte**

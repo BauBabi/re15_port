@@ -164,6 +164,74 @@ int re15_esp_parse_global(const uint8_t *raw, size_t size, re15_esp_t *out)
     return esp_parse_core(raw, size, 0, ptr_end, 0, 0, out, 1);
 }
 
+/* ===== the ROW BLOCK (the row-machine data — trace wf_a18487d9, adversarially verified) =====
+ *
+ * rowblk = body + 8 + count_a*8 + count_b*4 (= coord_end; loader @0x800194c0-e0 computes
+ * ((count_a*2 + count_b + 2) << 2)). Layout (spawner FUN_80019700 @0x80019728-88):
+ *   8 x u16 sub-offset table @rowblk;  base = rowblk + lhu(rowblk + (sub&7)*2) * 4;
+ *   u16 STREAMS @base (+2 pad) — the number of SLOTS spawned per trigger (one slot per
+ *   stream, assigned in REVERSE; outer loop @0x800199a8-ac);
+ *   per stream: u16 nrows (+2 pad), then nrows x 40-byte ROWS (skip stride nrows*40+4
+ *   @0x800198c0-e0). Note: the (sub>>3)*0x40 addend shifts the CLUT seed (slot+0x32), it is
+ *   NOT a row-pointer addend (@0x8001987c-88).
+ * Row fields (identity-copied to slot +0x00..0x27 at spawn @0x80019908-44 and by every row
+ * advance FUN_800174e4): +0x00/+0x02 routine selectors A/B (the 48-entry table @0x80071d40),
+ * +0x04/06 sprite w/h, +0x08/0a/0c ACCEL (the tick physics constant — file bytes, e.g. blood
+ * (-2,8,0) @CORE00 0x94C), +0x0e param/flags, +0x10/12/14 initial VELOCITY, +0x16 param,
+ * +0x18/1a/1c angvel, +0x1e param, +0x20/22/24 euler, +0x26 advance gate. */
+
+#define ESP_ROW_BYTES 40
+
+static const uint8_t *esp_rowblk(const re15_esp_t *esp, int eff_idx, uint32_t *out_len)
+{
+    if (!esp || !esp->raw || eff_idx < 0 || eff_idx >= esp->id_count) return NULL;
+    const re15_esp_eff_t *e = &esp->eff[eff_idx];
+    /* NOTE: e->eff_end = eff_start + (count_a*2 + count_b + 2)*4 = exactly the ROW BLOCK START
+     * (the loader formula @0x800194c0-e0 — the parser's "body end" EXCLUDES the rows). The row
+     * block extends from there to the next body; bound the accessors by the file size (every
+     * read below is length-checked, and the shipped in-file counts terminate the walk). */
+    uint32_t off = e->eff_end;
+    if (off + 16u > esp->raw_size) return NULL;
+    if (out_len) *out_len = (uint32_t)esp->raw_size - off;
+    return esp->raw + off;
+}
+
+int re15_esp_row_streams(const re15_esp_t *esp, int eff_idx, int sub)
+{
+    uint32_t len = 0;
+    const uint8_t *blk = esp_rowblk(esp, eff_idx, &len);
+    if (!blk) return -1;
+    uint32_t sub_off = (uint32_t)(blk[(sub & 7) * 2] | (blk[(sub & 7) * 2 + 1] << 8));
+    uint32_t base    = sub_off * 4u;
+    if (base + 4u > len) return -1;
+    return (int)(blk[base] | (blk[base + 1] << 8));
+}
+
+const uint8_t *re15_esp_row_stream(const re15_esp_t *esp, int eff_idx, int sub,
+                                   int stream, int *out_nrows)
+{
+    uint32_t len = 0;
+    const uint8_t *blk = esp_rowblk(esp, eff_idx, &len);
+    if (out_nrows) *out_nrows = 0;
+    if (!blk) return NULL;
+    uint32_t sub_off = (uint32_t)(blk[(sub & 7) * 2] | (blk[(sub & 7) * 2 + 1] << 8));
+    uint32_t base    = sub_off * 4u;
+    if (base + 4u > len) return NULL;
+    int streams = (int)(blk[base] | (blk[base + 1] << 8));
+    if (stream < 0 || stream >= streams) return NULL;
+    uint32_t p = base + 4u;                              /* first stream header */
+    for (int s = 0; s < stream; s++) {
+        if (p + 4u > len) return NULL;
+        uint32_t nr = (uint32_t)(blk[p] | (blk[p + 1] << 8));
+        p += 4u + nr * ESP_ROW_BYTES;                    /* skip stride nrows*40+4 (@0x800198c0-e0) */
+    }
+    if (p + 4u > len) return NULL;
+    uint32_t nr = (uint32_t)(blk[p] | (blk[p + 1] << 8));
+    if (p + 4u + nr * ESP_ROW_BYTES > len) return NULL;
+    if (out_nrows) *out_nrows = (int)nr;
+    return blk + p + 4u;
+}
+
 /* ===== Phase ESP-C: EFF clip record accessors ========================================== */
 
 int re15_esp_anim(const re15_esp_t *esp, int eff_idx, int i, re15_esp_anim_t *out)
@@ -263,29 +331,58 @@ re15_esp_fx_t *re15_esp_fx_spawn(const re15_esp_t *bank, uint8_t effect_id, uint
     return re15_esp_fx_spawn_ex(bank, effect_id, sub_index, 0x1000, x, y, z, param);
 }
 
-/* Byte-true blood/gore SPLATTER (RE15_ESP_ROWMACHINE.md; the parent→routine-2→routine-11 chain
- * collapsed into n physics children). Physics = the tick @0x8001a2f0 (drift += accel; xlat +=
- * drift, gated flags bit5==0) + routine 11 @0x80017718 RNG drift spread; accel.y = 8 (gravity,
- * live-confirmed mzd_stage1_hit_effect.sav accel=[-3,8,0]). Floor bounce = routine 12 (room_coll)
- * collapsed to a plane clamp with a damped drift.y flip. accel.x = small RNG (faithful-line: the
- * live -2/-3 source is a not-yet-mapped row constant; the ground-truth magnitude is used). */
+/* Byte-true blood/gore SPLATTER — CORRECTED per trace wf_a18487d9 (adversarially verified):
+ * blood id 0 is a set of PURE BALLISTIC STREAMS with per-stream ROW CONSTANTS — one spawner call
+ * allocates one slot per STREAM, each seeded with ITS row-0 accel/velocity straight from the ESP
+ * file (sub 0 = 3 streams: accel (-2,8,0)/(-3,8,0)/(-3,8,0), drift (74,-70,0)/(69,-46,-16)/
+ * (64,-56,18) — file bytes @CORE00 0x94C/0x9A0/0x9F4). There is NO RNG on blood: the old
+ * `accel_x = rand&3-1` / routine-11 seeding was a mis-attribution — routine 11's RNG spread
+ * belongs to the SHELL CASING (CORE00 id 4), not blood (the live -2/-3 accel mix = the per-stream
+ * data, not randomness). Floor handling stays the collapsed plane clamp (the chunk-gore chain
+ * id5->id7 routine 36/37 is the room-bank path, stage 2). `n` = TRIGGER count (the overlay gore
+ * setup fires 0x2000 twice = 2 triggers x 3 streams = the 6 live slots). Falls back to the old
+ * RNG spread only when the bank carries no row block (defensive). */
 void re15_esp_fx_splatter(const re15_esp_t *bank, uint8_t effect_id, int n,
                           int32_t x, int32_t y, int32_t z, int32_t floor_y)
 {
+    /* resolve the row bank exactly like spawn_ex (room first, then the global CORE00) */
+    const re15_esp_t *rb = bank;
+    int ei = re15_esp_find_id(rb, effect_id);
+    if (ei < 0) { rb = re15_esp_global_bank(); ei = re15_esp_find_id(rb, effect_id); }
+    int streams = (ei >= 0) ? re15_esp_row_streams(rb, ei, 0) : -1;
+
     for (int k = 0; k < n; k++) {
-        /* scale 0x1000 = visible DROPLETS (faithful-line: the exact child scale is a routine-2
-         * child-spawn param, not yet mapped; 0x1000 reads as distinct droplets, not one gore blob). */
-        re15_esp_fx_t *f = re15_esp_fx_spawn_ex(bank, effect_id, 0, 0x1000, x, y, z, 0);
-        if (!f) return;                 /* pool full */
-        f->phys    = 1;
-        f->accel_x = (int16_t)((re15_engine_rand8() & 3) - 1);   /* small (live -2..-3 magnitude) */
-        f->accel_y = 8;                 /* gravity down (+Y = down; live-confirmed) */
-        f->accel_z = 0;
-        f->drift_x = (int16_t)(-(re15_engine_rand8() & 0x0a));    /* routine 11: -= rand&0xa   */
-        f->drift_y = (int16_t)(-(re15_engine_rand8() & 0x14));    /*             -= rand&0x14   */
-        f->drift_z = (int16_t)( (re15_engine_rand8() & 0x14));    /*             += rand&0x14   */
-        f->xlat_x = f->xlat_y = f->xlat_z = 0;
-        f->floor_y = floor_y;
+        if (streams > 0) {
+            for (int s = 0; s < streams; s++) {
+                int nrows = 0;
+                const uint8_t *row = re15_esp_row_stream(rb, ei, 0, s, &nrows);
+                if (!row || nrows <= 0) continue;
+                re15_esp_fx_t *f = re15_esp_fx_spawn_ex(bank, effect_id, 0, 0x1000, x, y, z, 0);
+                if (!f) return;                 /* pool full */
+                f->phys    = 1;
+                f->accel_x = (int16_t)(row[0x08] | (row[0x09] << 8));   /* row +0x08/0a/0c */
+                f->accel_y = (int16_t)(row[0x0a] | (row[0x0b] << 8));
+                f->accel_z = (int16_t)(row[0x0c] | (row[0x0d] << 8));
+                f->drift_x = (int16_t)(row[0x10] | (row[0x11] << 8));   /* row +0x10/12/14 */
+                f->drift_y = (int16_t)(row[0x12] | (row[0x13] << 8));
+                f->drift_z = (int16_t)(row[0x14] | (row[0x15] << 8));
+                f->xlat_x = f->xlat_y = f->xlat_z = 0;
+                f->floor_y = floor_y;
+            }
+        } else {
+            /* no row block resolvable (synthetic bank): keep the previous behaviour */
+            re15_esp_fx_t *f = re15_esp_fx_spawn_ex(bank, effect_id, 0, 0x1000, x, y, z, 0);
+            if (!f) return;
+            f->phys    = 1;
+            f->accel_x = (int16_t)((re15_engine_rand8() & 3) - 1);
+            f->accel_y = 8;
+            f->accel_z = 0;
+            f->drift_x = (int16_t)(-(re15_engine_rand8() & 0x0a));
+            f->drift_y = (int16_t)(-(re15_engine_rand8() & 0x14));
+            f->drift_z = (int16_t)( (re15_engine_rand8() & 0x14));
+            f->xlat_x = f->xlat_y = f->xlat_z = 0;
+            f->floor_y = floor_y;
+        }
     }
 }
 

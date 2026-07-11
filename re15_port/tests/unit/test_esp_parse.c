@@ -251,6 +251,53 @@ int main(void)
             if (!fx5 || fx5->eff_idx >= 0) {
                 fprintf(stderr, "FAIL: (D) effect-05 should be unresolved (not in CORE00/NULL room)\n"); dfail = 1; }
 
+            /* === the ROW BLOCK (trace wf_a18487d9, file-byte ground truth): blood id 0 sub 0 =
+             * 3 STREAMS of pure ballistic row constants — st0 row0 @0x944: A=3 B=0,
+             * accel=(-2,8,0) @0x94C, drift=(74,-70,0); st1 accel=(-3,8,0) drift=(69,-46,-16). */
+            {
+                int streams = re15_esp_row_streams(&gesp, i0, 0);
+                if (streams != 3) { fprintf(stderr, "FAIL: (D2) id0 sub0 must have 3 streams, got %d\n", streams); dfail = 1; }
+                int nr = 0;
+                const uint8_t *r = re15_esp_row_stream(&gesp, i0, 0, 0, &nr);
+                if (!r || nr != 2) { fprintf(stderr, "FAIL: (D2) st0 must have 2 rows, got %d\n", nr); dfail = 1; }
+                if (r) {
+                    int16_t A  = (int16_t)(r[0] | (r[1] << 8));
+                    int16_t ax = (int16_t)(r[0x08] | (r[0x09] << 8));
+                    int16_t ay = (int16_t)(r[0x0a] | (r[0x0b] << 8));
+                    int16_t dx = (int16_t)(r[0x10] | (r[0x11] << 8));
+                    int16_t dy = (int16_t)(r[0x12] | (r[0x13] << 8));
+                    if (A != 3 || ax != -2 || ay != 8 || dx != 74 || dy != -70) {
+                        fprintf(stderr, "FAIL: (D2) st0 row0 A=%d accel=(%d,%d) drift=(%d,%d) (exp 3,(-2,8),(74,-70))\n",
+                                A, ax, ay, dx, dy); dfail = 1; }
+                }
+                const uint8_t *r1 = re15_esp_row_stream(&gesp, i0, 0, 1, &nr);
+                if (r1) {
+                    int16_t ax = (int16_t)(r1[0x08] | (r1[0x09] << 8));
+                    int16_t dz = (int16_t)(r1[0x14] | (r1[0x15] << 8));
+                    if (ax != -3 || dz != -16) {
+                        fprintf(stderr, "FAIL: (D2) st1 row0 accel.x=%d drift.z=%d (exp -3,-16)\n", ax, dz); dfail = 1; }
+                } else { fprintf(stderr, "FAIL: (D2) st1 unreadable\n"); dfail = 1; }
+                if (!dfail) printf("  (D2) PASS: id0 sub0 rows = 3 ballistic streams (accel/drift file constants)\n");
+            }
+
+            /* === SPLATTER seeding (the corrected blood spawn): one trigger = 3 slots with the
+             * per-stream ROW constants, NO RNG (the old rand-seed was the shell's routine 11). */
+            {
+                re15_esp_fx_reset();
+                re15_esp_fx_splatter(NULL, 0x00, 1, 100, 200, 300, 5000);
+                if (re15_esp_fx_count() != 3) {
+                    fprintf(stderr, "FAIL: (D3) 1 trigger must spawn 3 stream slots, got %d\n",
+                            re15_esp_fx_count()); dfail = 1; }
+                const re15_esp_fx_t *f0 = re15_esp_fx_get(0);
+                if (!f0 || f0->accel_x != -2 || f0->accel_y != 8 ||
+                    f0->drift_x != 74 || f0->drift_y != -70 || !f0->phys) {
+                    fprintf(stderr, "FAIL: (D3) slot0 must carry st0 row constants (-2,8)/(74,-70)\n"); dfail = 1; }
+                const re15_esp_fx_t *f1 = re15_esp_fx_get(1);
+                if (!f1 || f1->accel_x != -3 || f1->drift_z != -16) {
+                    fprintf(stderr, "FAIL: (D3) slot1 must carry st1 row constants (-3, z -16)\n"); dfail = 1; }
+                if (!dfail) printf("  (D3) PASS: splatter seeds the 3 streams from the rows (no RNG)\n");
+            }
+
             re15_esp_fx_reset();
             re15_esp_set_global_bank(NULL);
             free(gbuf);

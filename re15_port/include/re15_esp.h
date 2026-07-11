@@ -102,6 +102,17 @@ int re15_esp_parse_global(const uint8_t *raw, size_t size, re15_esp_t *out);
 void              re15_esp_set_global_bank(const re15_esp_t *bank);
 const re15_esp_t *re15_esp_global_bank(void);
 
+/* ===== the ROW BLOCK (the row-machine data — trace wf_a18487d9, adversarially verified) =====
+ * rowblk = EFF body + 8 + count_a*8 + count_b*4 (= coord_end). Layout (FUN_80019700
+ * @0x80019728-88): 8 x u16 sub-offset table; base = rowblk + off*4; u16 STREAMS @base = the
+ * number of SLOTS spawned per trigger; per stream: u16 nrows (+2 pad) + nrows x 40-byte rows.
+ * Row fields (identity-copied to slot +0x00..0x27): +0x00/02 routine selectors A/B (48-entry
+ * table @0x80071d40), +0x04/06 w/h, +0x08/0a/0c ACCEL, +0x0e param/flags, +0x10/12/14 initial
+ * VELOCITY, +0x16 param, +0x18/1a/1c angvel, +0x1e param, +0x20/22/24 euler, +0x26 gate. */
+int re15_esp_row_streams(const re15_esp_t *esp, int eff_idx, int sub);   /* streams or <0 */
+const uint8_t *re15_esp_row_stream(const re15_esp_t *esp, int eff_idx, int sub,
+                                   int stream, int *out_nrows);          /* rows base or NULL */
+
 /* ===== Phase ESP-C: the op-0x3a effect PARTICLE pool ====================================
  *
  * The model_inst-pool effect sprites (PSX DAT_800a73b8, spawned by op 0x3a -> FUN_80019700,
