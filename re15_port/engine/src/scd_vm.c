@@ -2059,7 +2059,10 @@ static int op_aot_set(scd_thread_t *t)
         /* #14(c): pc[4] is the runtime AOT band for EVERY Aot_set type (same field the stair reads as
          * `chain` and the door as its band). Store it so the scan's generic band-gate (byte-true
          * FUN_80042cac: (band&0x80) || player_band==band) can keep a wrong-floor event AOT from firing. */
-        if (slot >= 0 && slot < RE15_AOT_MAX) g_aot.slots[slot].band = t->pc[4];
+        if (slot >= 0 && slot < RE15_AOT_MAX) {
+            g_aot.slots[slot].band      = t->pc[4];
+            g_aot.slots[slot].sce_flags = t->pc[3];   /* record[1] test bits (wf_f536e1ee step 2) */
+        }
         /* LONG form: install the 4-vertex polygon so the AOT scan uses point-in-quad (FUN_80014368)
          * instead of the AABB fallback (mirrors the RVD quad install in rdt_common.c). */
         if (long_form && slot >= 0 && slot < RE15_AOT_MAX) {

@@ -53,6 +53,7 @@
 #include <string.h>
 #include "re15_scd.h"
 #include "re15_aot.h"
+#include "re15_actor.h"
 #include "re15_audio.h"
 
 /* Evt_next (0x02): 1-Byte-Yield-Opcode. Folgt jedem getesteten Opcode als
@@ -181,6 +182,42 @@ static void test_aot_set(void)
     TEST_ASSERT_EQ("Aot_set LONG: v2.z=-2000", -2000, g_aot.slots[7].zs[2]);
     TEST_ASSERT_EQ("Aot_set LONG: eventId=2 (pc[25], not pc[17]=0xF8)", 2, g_aot.slots[7].event_id);
     TEST_ASSERT_EQ("Aot_set LONG: Typ AUTO_EVENT", RE15_AOT_TYPE_AUTO_EVENT, g_aot.slots[7].type);
+
+    /* BYTE-TRUE ACTION GEOMETRY (wf_f536e1ee step 2): record[1] 0x40 = CENTRE test first
+     * (stamps work_var[1]), 0x20 = FORWARD 620-point vs the EXACT rect (stamps work_var[0]).
+     * A 0x21 zone (forward-only) must NOT fire from centre-inside; a 0x51 zone (centre-only)
+     * must NOT fire from the forward position. */
+    {
+        setup_vm();
+        /* forward-only examine (flags 0x21), rect centre (620,0) half (100,100): the player at
+         * (0,0) rot 0 has his FORWARD point at (620,0) = inside; his CENTRE is outside. */
+        uint8_t bc_fwd[21] = {
+            0x2C, 0x02, 0x05, 0x21,  0x00, 0x00,
+            0x08, 0x02, 0x00, 0x00,             /* rect_x=520 LE, rect_z=0 */
+            0xC8, 0x00, 0xC8, 0x00,             /* w=200, d=200 -> centre (620,100)? no: cz=0+100 */
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, OP_EVT_NEXT };
+        /* use z centred: rect_z = -100 so cz = 0 */
+        bc_fwd[8] = 0x9C; bc_fwd[9] = 0xFF;     /* rect_z = -100 LE */
+        run_one_opcode(bc_fwd);
+        g_actors[RE15_ACTOR_SLOT_PLAYER].active = 1;
+        g_actors[RE15_ACTOR_SLOT_PLAYER].rot_y  = 0;
+        g_scd.work_vars[0] = -1;
+        g_aot_action_pressed = 1;
+        re15_aot_scan(0, 0, 0xFF);              /* centre outside, forward (620,0) inside */
+        TEST_ASSERT_EQ("geom 0x21: forward-620 hit stamps work_var[0]=slot", 2, g_scd.work_vars[0]);
+        /* centre-only zone (0x51) at the same rect must NOT fire from this position */
+        setup_vm();
+        bc_fwd[3] = 0x51; bc_fwd[1] = 0x03;
+        run_one_opcode(bc_fwd);
+        g_actors[RE15_ACTOR_SLOT_PLAYER].active = 1;
+        g_actors[RE15_ACTOR_SLOT_PLAYER].rot_y  = 0;
+        g_scd.work_vars[1] = -1;
+        g_aot_action_pressed = 1;
+        re15_aot_scan(0, 0, 0xFF);
+        TEST_ASSERT_EQ("geom 0x51: centre-only does NOT fire from the forward pos", -1, g_scd.work_vars[1]);
+        re15_aot_scan(620, 0, 0xFF);            /* stand INSIDE -> centre hit */
+        TEST_ASSERT_EQ("geom 0x51: centre hit stamps work_var[1]=slot", 3, g_scd.work_vars[1]);
+    }
 
     TEST_OK("Aot_set (0x2C)");
 }

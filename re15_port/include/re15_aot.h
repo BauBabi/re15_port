@@ -78,6 +78,11 @@ typedef struct {
      * RVD). has_quad=0 → use x/z + half_w/half_h AABB (DOOR/ITEM/GENERIC).
      * Trapezoidal RVD zones cannot be safely approximated by AABB — see
      * [[bugfix_AQ_round_rvd_point_in_quad_2026_05_26]]. */
+    uint8_t  sce_flags;   /* raw record[1] (= Aot_set pc[3]) — byte-true FUN_80042bac test bits
+                           * (wf_f536e1ee step 2): 0x40 = CENTRE test first (stamps work_var[1]),
+                           * 0x20 = FORWARD 620-point vs the EXACT rect/quad (stamps work_var[0]),
+                           * 0x10 = action-scan-only, low 3 bits = pool mask. 0 = legacy install
+                           * (synthetic/tests) -> both tests. */
     uint8_t  has_quad;
     /* STAIR (2026-06-07): the runtime AOT band = Aot_set `chain` operand pc[4]
      * (entry+0x82 in the original) = the platform this stair end sits on

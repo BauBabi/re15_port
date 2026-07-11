@@ -46,6 +46,7 @@ int re15_aot_set(int slot, uint8_t type, uint8_t event_id,
     a->type            = type;
     a->event_id        = event_id;
     a->was_inside      = 0;
+    a->sce_flags       = 0;      /* installers with real record flags override (op_aot_set pc[3]) */
     a->cam_from_filter = 0xFF;   /* default = no filter; CAM_SWITCH overrides */
     a->x               = cx;
     a->z               = cz;
@@ -414,14 +415,28 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
          * ahead of his facing within ±900 of the AOT centre). (Globalization 2026-06-13:
          * GENERIC = action-triggered event-runner → scd_event_fire(event_id) →
          * sub_scd[event_id]; the switch's sub Aot_resets itself so it won't re-trigger.) */
-        int gen_reach = inside;
-        if ((a->type == RE15_AOT_TYPE_GENERIC || a->type == RE15_AOT_TYPE_MESSAGE ||
-             a->type == RE15_AOT_TYPE_EXAMINE_WORKVAR) && !gen_reach) {
-            int ry = (int)g_actors[RE15_ACTOR_SLOT_PLAYER].rot_y;
-            int32_t c = re15_cos_q12(ry), s = re15_sin_q12(ry);
-            int32_t fx = player_x + (int32_t)((563 * c) >> 12);
-            int32_t fz = player_z - (int32_t)((563 * s) >> 12);
-            gen_reach = (abs_i32(fx - a->x) <= 900) && (abs_i32(fz - a->z) <= 900);
+        /* BYTE-TRUE ACTION GEOMETRY (wf_f536e1ee step 2, FUN_80042bac): per the record flag
+         * byte — CENTRE test (bit 0x40, @0x80042ea8) tried FIRST, then the FORWARD point =
+         * entity pos + rotate((620,0)) by yaw (ori 0x26c @0x80042bd0, FUN_8004f008) tested
+         * against the AOT's EXACT rect (FUN_80042b64) or quad (bit 0x20, @0x80042ef8) — NOT
+         * the old ±900-around-centre transplant. sce_flags==0 (legacy/synthetic installs)
+         * keeps both tests. The hit KIND is tracked for the byte-true work_var stamps
+         * (centre-hit -> work_var[1], forward-hit -> work_var[0]). */
+        int gen_reach = 0, gen_fwd_hit = 0;
+        if (a->type == RE15_AOT_TYPE_GENERIC || a->type == RE15_AOT_TYPE_MESSAGE ||
+            a->type == RE15_AOT_TYPE_EXAMINE_WORKVAR) {
+            uint8_t fl = a->sce_flags;
+            if ((fl == 0 || (fl & 0x40)) && inside) gen_reach = 1;      /* centre first */
+            if (!gen_reach && (fl == 0 || (fl & 0x20))) {               /* forward 620 exact */
+                int ry = (int)g_actors[RE15_ACTOR_SLOT_PLAYER].rot_y;
+                int32_t c = re15_cos_q12(ry), s = re15_sin_q12(ry);
+                int32_t fx = player_x + (int32_t)((620 * c) >> 12);
+                int32_t fz = player_z - (int32_t)((620 * s) >> 12);
+                int hit = a->has_quad
+                        ? re15_aot_point_in_quad(fx, fz, a->xs, a->zs)
+                        : ((abs_i32(fx - a->x) <= a->half_w) && (abs_i32(fz - a->z) <= a->half_h));
+                if (hit) { gen_reach = 1; gen_fwd_hit = 1; }
+            }
         }
         /* #14(c) GENERIC band-gate (byte-true FUN_80042cac @0x80042cac): the scan tests the AOT's band
          * byte BEFORE the geometry — a wrong-FLOOR event AOT does not fire. (band & 0x80) = ignore-band;
@@ -483,6 +498,13 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
                        : inside;
         if (fire) {
             if (is_action) action_fired = 1;   /* one action handler per press (byte-true) */
+            /* WORK_VAR stamps (byte-true FUN_80042bac: centre-hit @0x80042ea8 -> DAT_800b0fd2 =
+             * work_var[1], forward-hit @0x80042ef8 -> DAT_800b0fd0 = work_var[0], value = slot;
+             * consumed by the 0x58/0x59 indexed flag ops — catalog #19). Doors keep their own
+             * (object-probe) path; the examine handler's work_vars[0] write below stays. */
+            if (a->type == RE15_AOT_TYPE_GENERIC || a->type == RE15_AOT_TYPE_MESSAGE ||
+                a->type == RE15_AOT_TYPE_EXAMINE_WORKVAR)
+                g_scd.work_vars[gen_fwd_hit ? 0 : 1] = (int16_t)i;
             /* Edge: just entered. (2026-06-03: removed the invented 90-frame
              * HUD echo — last_event_* had no readers in either build.) */
             switch (a->type) {
