@@ -72,8 +72,8 @@ static int op_case     (scd_thread_t *t);
 static int op_default  (scd_thread_t *t);
 static int op_end_switch(scd_thread_t *t);
 static int op_se_on    (scd_thread_t *t);
-static int op_sce_bgmtbl_set(scd_thread_t *t);
-static int op_xa_on    (scd_thread_t *t);
+static int op_fade_adjust(scd_thread_t *t);   /* 0x57 — fade-channel step (was mis-named Sce_bgmtbl_set) */
+static int op_flag_set2  (scd_thread_t *t);   /* 0x59 — indexed flag SET/CLEAR/TOGGLE (was mis-named Xa_on) */
 static int op_se_vol   (scd_thread_t *t);
 /* Phase 4.4.4 */
 static int op_ck       (scd_thread_t *t);
@@ -222,8 +222,8 @@ static void register_opcodes(void)
     s_op_table[SCD_OP_END_SWITCH] = op_end_switch;
     /* Phase 4.4.3: audio */
     s_op_table[SCD_OP_SE_ON]          = op_se_on;
-    s_op_table[SCD_OP_SCE_BGMTBL_SET] = op_sce_bgmtbl_set;
-    s_op_table[SCD_OP_XA_ON]          = op_xa_on;
+    s_op_table[SCD_OP_SCE_BGMTBL_SET] = op_fade_adjust;   /* RE1.5 0x57 = fade step, not BGM table */
+    s_op_table[SCD_OP_XA_ON]          = op_flag_set2;     /* RE1.5 0x59 = indexed flag write, not XA */
     s_op_table[SCD_OP_SE_VOL]         = op_se_vol;
     /* Phase 4.4.4: flags + player state */
     s_op_table[SCD_OP_CK]             = op_ck;
@@ -1373,32 +1373,46 @@ static int op_se_on(scd_thread_t *t)
     return 1;
 }
 
-/* (0x57) — RE1.5 = 4 bytes (disasm-verified: jump table 0x80074604 → LAB_80042ab4 →
- * FUN_800216ec, PC+=4). This is NOT retail-RE2's Sce_bgmtbl_set (8 bytes) — that
- * opcode/meaning is RE2-only; RE1.5's 0x57 is an unidentified 4-byte op. We read its
- * 3 operand bytes into the (no-op counter) BGM event and advance 4. The RE1.5 room
- * BGM table is resolved natively (ported PSX.EXE SS_BGMTBL), not via this opcode. */
-static int op_sce_bgmtbl_set(scd_thread_t *t)
+/* (0x57) — byte-true IDENTIFIED (audit wf_1db9c802 AUDIO-OP57-IS-FADE-NOT-BGM): the handler
+ * @0x80042ab4 reads ch = pc[1] (lbu) and step = ONE u16 LE @pc[2..3] (lhu) and calls
+ * FUN_800216ec(ch, step, 0, NULL) = write `step` into fade channel `ch` of the 0x44-stride
+ * SCREEN-FADE array @DAT_800b5458 (the fade engine FUN_80021880: level += step, brightness =
+ * level>>7 — a VISUAL op, not audio; the old "Sce_bgmtbl_set" name was RE2-only and the u16
+ * was split into two wrong byte fields). PC += 4. The port stores the decoded step in the
+ * g_scd fade-channel model; RENDER consumption is the fade/letterbox session (#21) — until
+ * then the state is correctly decoded but visually unconsumed (ROOM11F0/11F1 + ROOM3080). */
+static int op_fade_adjust(scd_thread_t *t)
 {
-    scd_audio_event_t evt = {0};
-    evt.kind      = SCD_AUDIO_BGMTBL_SET;
-    evt.bank      = t->pc[1];
-    evt.sample_id = t->pc[2];
-    evt.raw_w0    = (uint16_t)t->pc[3];
-    enqueue_audio(&evt);
+    uint8_t  ch   = t->pc[1];
+    uint16_t step = (uint16_t)scd_read_le_s16(&t->pc[2]);
+    if (ch < RE15_SCD_FADE_CHANNELS) g_scd.fade_step[ch] = step;
     t->pc += 4;
     return 1;
 }
-
-/* 0x59 — Xa_on (4 bytes). Start XA stream. Args: +1 track_id, +2 vol, +3 flag */
-static int op_xa_on(scd_thread_t *t)
+/* 0x59 — byte-true LAB_8003fe90 (@0x800744a8[0x59] -> 0x8003fe90) is an INDEXED FLAG-BANK
+ * BIT SET/CLEAR/TOGGLE, NOT Xa_on (an RE2 misattribution; the handler has zero XA/CD/SPU
+ * interaction — audit wf_1db9c802 AUDIO-OP59-NOT-XA). It is the WRITE sibling of the 0x58
+ * check (op_flag_ck2): idx = work_vars[pc[2]] (lhu @0x8003feb8, DAT_800b0fd0), bank = pc[1]
+ * (pointer table @0x80074664 via pc[1]*4 lw @0x8003fed0), word = (s16)idx >> 5 (sll16/sra21
+ * @0x8003fed4-dc), mask = 0x80000000 >> (idx & 0x1f) (lui 0x8000 @0x8003fe94 + srlv);
+ * pc[3] == 1 -> SET (or/sw @0x8003ff3c-4c), 0 -> CLEAR (nor/and @0x8003ff24-38),
+ * 7 -> TOGGLE (xor @0x8003ff50-5c). PC += 4. The old op_xa_on queued a spurious XA audio
+ * event and silently dropped ROOM1030/1031's scripted flag write. Same word-range guard as
+ * op_flag_ck2 (the port flag model covers idx 0..255 per zone, the identical MSB-first
+ * convention). */
+static int op_flag_set2(scd_thread_t *t)
 {
-    scd_audio_event_t evt = {0};
-    evt.kind      = SCD_AUDIO_XA_ON;
-    evt.sample_id = t->pc[1];
-    evt.volume    = t->pc[2];
-    evt.raw_w0    = (uint16_t)t->pc[3];
-    enqueue_audio(&evt);
+    uint8_t bank = t->pc[1];
+    int16_t raw  = g_scd.work_vars[t->pc[2]];
+    int     word = (int)raw >> 5;
+    uint8_t op   = t->pc[3];
+    if (word >= 0 && word < RE15_FLAG_WORDS_ZONE && bank < RE15_FLAG_ZONES) {
+        uint8_t idx = (uint8_t)raw;
+        if      (op == 1) re15_game_flag_set(bank, idx, 1);
+        else if (op == 0) re15_game_flag_set(bank, idx, 0);
+        else if (op == 7) re15_game_flag_set(bank, idx, re15_game_flag_get(bank, idx) ? 0 : 1);
+        /* other op values: no write (the original's switch falls through) */
+    }
     t->pc += 4;
     return 1;
 }
