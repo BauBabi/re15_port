@@ -354,9 +354,12 @@ void re15_game_step(const re15_game_ctx_t *c)
                      * muzzle 0x02000800 + smoke 0x03000c00 above come from. The old code deferred a
                      * 0x040d1000 (id 4 sub 0xd) to a recoil-frame watcher, but that 0x040d1000-at-recoil
                      * is a DIFFERENT weapon handler (@0x80033680), never the handgun's — a mis-port. */
-                    re15_esp_fx_spawn_ex(re15_esp_global_bank(), 4, 0, 0x0800,  /* SHELL 0x04000800 {0x91,0x109,-50} */
+                    /* ROW-VM driven (stage 3, trace wf_a18487d9): R16 2-tick eject hold ->
+                     * R11 RNG spread on the row seed (-35,-50,-140) -> gravity (0,10,0) +
+                     * B=12 floor bounce (clink SE; kill on the 2nd contact). floor = gy. */
+                    re15_esp_fx_spawn_rows(re15_esp_global_bank(), 4, 0, 0x0800,  /* SHELL 0x04000800 */
                         pl->x + ( fcos * 0x109 >> 12), gy - 50,
-                        pl->z + (-fsin * 0x109 >> 12), (int16_t)pl->rot_y);
+                        pl->z + (-fsin * 0x109 >> 12), gy);
                 }
             }
             g_aot_action_pressed = 0;         /* aiming blocks the door/stair action (no doors while aiming) */

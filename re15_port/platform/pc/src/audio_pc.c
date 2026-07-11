@@ -27,7 +27,8 @@
 #include "re15_audio.h"
 #include "re15_scd.h"
 #include "re15_vab.h"
-#include "re15_room.h"     /* g_room_rdt — footstep snd0 VAB sliced from the room RDT */
+#include "re15_room.h"
+#include "re15_esp.h"     /* re15_esp_shell_clink_hook */     /* g_room_rdt — footstep snd0 VAB sliced from the room RDT */
 
 extern uint8_t *re15_asset_read_file(const char *path, int *out_size);
 
@@ -678,8 +679,12 @@ static void play_sample_pc(int vag_index, int scd_volume)
 
 static void re15_bgm_dump_wav(const char *path, int stage, int room, int seconds);
 
+/* Shell-clink SE (row-VM B=12 first floor contact - FUN_80045024(0x01020001) = ARMS record 2). */
+static void pc_shell_clink(void) { re15_audio_weapon_se(2); }
+
 void re15_audio_init(void)
 {
+    re15_esp_shell_clink_hook = pc_shell_clink;   /* the row-VM shell bounce SE */
     /* Diagnostic: RE15_BGM_DUMP=<wav> renders the room's MAIN BGM offline (exact
      * synth path) for A/B vs the PSX capture, then exits. No SDL device needed. */
     const char *dump = getenv("RE15_BGM_DUMP");

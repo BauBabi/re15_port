@@ -174,6 +174,12 @@ re15_esp_fx_t *re15_esp_fx_spawn(const re15_esp_t *bank, uint8_t effect_id, uint
  *  drift.z += rand&0x14) + floor bounce. (RE15_ESP_ROWMACHINE.md; LIVE-confirmed.) */
 void re15_esp_fx_splatter(const re15_esp_t *bank, uint8_t effect_id, int n,
                           int32_t x, int32_t y, int32_t z, int32_t floor_y);
+/** Spawn the (effect_id, sub) row streams as ROW-VM slots (one per stream). Returns the count.
+ *  The SHELL (id 4 sub 0) chains R16 2-tick freeze -> R11 RNG spread -> B=12 floor bounce. */
+int re15_esp_fx_spawn_rows(const re15_esp_t *bank, uint8_t effect_id, uint8_t sub,
+                           uint16_t scale16, int32_t x, int32_t y, int32_t z, int32_t floor_y);
+/** Platform SE hook: the shell-clink (FUN_80045024(0x01020001) = ARMS record 2). */
+extern void (*re15_esp_shell_clink_hook)(void);
 /** Per-frame anim advance (byte-true FUN_80019e20 frame timer); despawns ended particles. */
 void           re15_esp_fx_tick(const re15_esp_t *bank);
 /** Read slot `i` (for the draw/tests); returns NULL if inactive/out-of-range. */

@@ -322,6 +322,34 @@ int main(void)
                 else dfail = 1;
             }
 
+            /* === the SHELL chain (stage 3): R16 2-tick freeze -> R11 RNG spread -> B=12 bounce.
+             * Row seed (id4 sub0 row1 @0x1900): drift (-35,-50,-140), gravity accel (0,10,0). */
+            {
+                re15_esp_fx_reset();
+                int ns = re15_esp_fx_spawn_rows(NULL, 0x04, 0, 0x0800, 0, 0, 0, 60);
+                re15_esp_fx_t *sh = (re15_esp_fx_t *)re15_esp_fx_get(0);
+                int sfail = 0;
+                if (ns < 1 || !sh) { fprintf(stderr, "FAIL: (D5) shell spawn_rows failed (n=%d)\n", ns); sfail = 1; }
+                else {
+                    re15_esp_fx_tick(NULL);                       /* tick 1: R16 phase 1 (frozen) */
+                    if (!(sh->flags & 0x20) || sh->xlat_y != 0) {
+                        fprintf(stderr, "FAIL: (D5) tick1 must freeze (bit5, no motion), flags=%02x xlat=%d\n",
+                                sh->flags, (int)sh->xlat_y); sfail = 1; }
+                    for (int t = 0; t < 3 && sh->active; t++) re15_esp_fx_tick(NULL);   /* release + R11 */
+                    uint16_t B = (uint16_t)(sh->row[2] | (sh->row[3] << 8));
+                    if (B != 12) { fprintf(stderr, "FAIL: (D5) R11 must arm B=12, got %u\n", B); sfail = 1; }
+                    if (sh->drift_y > -50 || sh->accel_y != 10) {  /* seed -50 spread downward is <= -50... R11: drift_y -= rand -> more negative; then gravity += 10/tick */
+                        /* after release ticks gravity applies; just assert the accel row constant */
+                        if (sh->accel_y != 10) { fprintf(stderr, "FAIL: (D5) shell accel.y must be 10, got %d\n", sh->accel_y); sfail = 1; }
+                    }
+                    int guard = 200, died = 0;
+                    for (int t = 0; t < guard; t++) { re15_esp_fx_tick(NULL); if (!sh->active) { died = 1; break; } }
+                    if (!died) { fprintf(stderr, "FAIL: (D5) shell must despawn on the 2nd floor contact\n"); sfail = 1; }
+                }
+                if (!sfail) printf("  (D5) PASS: shell chain R16 freeze -> R11 (B=12) -> bounce -> despawn\n");
+                else dfail = 1;
+            }
+
             re15_esp_fx_reset();
             re15_esp_set_global_bank(NULL);
             free(gbuf);

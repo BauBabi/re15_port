@@ -403,8 +403,82 @@ static void esp_fx_dispatch(re15_esp_fx_t *f)
             else { f->row[0] = 0; f->row[1] = 0; }
             break;
         }
+        case 16: {  /* @0x80017b80: 2-phase freeze — flags := row[0x0e] (0x63 = bit5+bit6 frozen);
+                     * countdown row[0x16]; at 0: flags := row[0x1e], anim := row[0x26],
+                     * advance UNCONDITIONAL. The shell's 2-tick eject hold. */
+            uint16_t cnt = row_u16(f->row, 0x16);
+            if (cnt != 0) {
+                f->flags = f->row[0x0e];
+                cnt--; f->row[0x16] = (uint8_t)cnt; f->row[0x17] = (uint8_t)(cnt >> 8);
+            } else {
+                f->flags = f->row[0x1e];
+                f->frame = (int16_t)(f->row[0x26] - 1); f->timer = 0;
+                esp_fx_row_advance(f);
+            }
+            break;
+        }
+        case 11: {  /* @0x80017718: RNG velocity spread ON TOP of the row seed (the SHELL eject —
+                     * NOT blood), then A := 0, B := 12 (the floor bounce). Runs once. */
+            f->drift_x = (int16_t)(f->drift_x - (re15_engine_rand8() & 0x0a));
+            f->drift_y = (int16_t)(f->drift_y - (re15_engine_rand8() & 0x14));
+            f->drift_z = (int16_t)(f->drift_z + (re15_engine_rand8() & 0x14));
+            f->row[0x00] = 0;    f->row[0x01] = 0;       /* A := 0 (@0x80017780) */
+            f->row[0x02] = 0x0c; f->row[0x03] = 0;       /* B := 12 (@0x80017774) */
+            break;
+        }
         default: break;                                  /* stage-3 selectors: noop for now */
     }
+}
+
+/* The MAIN-loop routineB dispatch (@0x8001a2b4-d4). Supported: 12 = the floor bounce
+ * (@0x8001779c), collapsed to the port's floor_y plane (the PSX probes room_coll per tick; the
+ * plane loses only the ledge/wall Z-reflect branch — documented): airborne = nothing; FIRST flat
+ * contact = clink SE + gate := 1 + snap + drift.x/=2, z/=2, y := -(y/3) (the 0x55555556 div-3
+ * idiom @0x80017924); SECOND contact (gate set) = kill (@0x800178b0). The gate lives in the row
+ * copy's +0x26 (REPURPOSED as runtime state — byte-true). */
+static void esp_fx_dispatch_b(re15_esp_fx_t *f)
+{
+    if (!f->rows_base) return;
+    if (row_u16(f->row, 0x02) != 12) return;
+    if (f->y + f->xlat_y < f->floor_y) return;           /* airborne */
+    if (row_u16(f->row, 0x26)) { f->active = 0; return; }/* 2nd flat contact -> despawn */
+    f->row[0x26] = 1; f->row[0x27] = 0;                  /* bounce-once gate (@0x800178ec) */
+    f->xlat_y  = f->floor_y - f->y;                      /* snap onto the floor (@0x8001791c) */
+    f->drift_x = (int16_t)(f->drift_x / 2);
+    f->drift_z = (int16_t)(f->drift_z / 2);
+    f->drift_y = (int16_t)(-(f->drift_y / 3));
+    if (re15_esp_shell_clink_hook) re15_esp_shell_clink_hook();   /* SE 0x01020001 (platform) */
+}
+
+/* Platform SE hook for the shell clink (FUN_80045024(0x01020001) = ARMS bank record 2; the
+ * shotgun-shell 0x01090001 variant is a stage-3 refinement). NULL = silent (engine tests). */
+void (*re15_esp_shell_clink_hook)(void) = NULL;
+
+/* Spawn the (effect_id, sub) row streams as ROW-VM slots — one slot per stream (the byte-true
+ * spawner allocation; trace wf_a18487d9). Returns the number of slots spawned. */
+int re15_esp_fx_spawn_rows(const re15_esp_t *bank, uint8_t effect_id, uint8_t sub,
+                           uint16_t scale16, int32_t x, int32_t y, int32_t z, int32_t floor_y)
+{
+    const re15_esp_t *rb = bank;
+    int ei = re15_esp_find_id(rb, effect_id);
+    if (ei < 0) { rb = re15_esp_global_bank(); ei = re15_esp_find_id(rb, effect_id); }
+    int streams = (ei >= 0) ? re15_esp_row_streams(rb, ei, sub) : -1;
+    int spawned = 0;
+    for (int s = 0; s < streams; s++) {
+        int nrows = 0;
+        const uint8_t *rows = re15_esp_row_stream(rb, ei, sub, s, &nrows);
+        if (!rows || nrows <= 0) continue;
+        re15_esp_fx_t *f = re15_esp_fx_spawn_ex(bank, effect_id, sub, scale16, x, y, z, 0);
+        if (!f) break;
+        f->phys = 1; f->flags = 0x03;
+        f->rows_base = rows; f->row_count = (uint8_t)(nrows > 255 ? 255 : nrows);
+        f->row_cursor = 0;
+        esp_fx_row_load(f, 0);
+        f->xlat_x = f->xlat_y = f->xlat_z = 0;
+        f->floor_y = floor_y;
+        spawned++;
+    }
+    return spawned;
 }
 
 /* Byte-true blood/gore SPLATTER — CORRECTED per trace wf_a18487d9 (adversarially verified):
@@ -475,7 +549,11 @@ void re15_esp_fx_tick(const re15_esp_t *bank)
         /* ROW-VM DISPATCH (stage 2 blood subset — FUN_80019e20 loop 1): run the row's routineA
          * BEFORE the physics, exactly like the PSX tick order. An advance re-seeds accel/velocity
          * = the multi-phase ballistics (blood st0 switches to (60,14,0) after its 7-tick count). */
-        if (f->rows_base) esp_fx_dispatch(f);
+        if (f->rows_base) {
+            esp_fx_dispatch(f);                  /* loop-1 routineA */
+            esp_fx_dispatch_b(f);                /* main-loop routineB (the shell bounce) */
+            if (!f->active) continue;            /* B may despawn (2nd floor contact) */
+        }
 
         /* PHYSICS (byte-exact tick @0x8001a2f0, gated flags bit5==0): the position offset xlat
          * (s32) integrates the drift velocity, which itself accelerates by gravity — LIVE-confirmed
