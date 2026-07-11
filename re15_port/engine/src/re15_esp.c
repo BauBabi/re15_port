@@ -297,6 +297,13 @@ const re15_esp_fx_t *re15_esp_fx_get(int i)
     return &s_esp_fx[i];
 }
 
+int re15_esp_fx_visible(const re15_esp_fx_t *f)
+{
+    if (!f) return 0;
+    if (!f->rows_base) return 1;          /* legacy fx: no flags model -> always drawn */
+    return (f->flags & 0x02) ? 1 : 0;     /* row-VM: byte-true visible bit (slot+0x6c bit1) */
+}
+
 re15_esp_fx_t *re15_esp_fx_spawn_ex(const re15_esp_t *bank, uint8_t effect_id, uint8_t sub_index,
                                     uint16_t scale16,
                                     int32_t x, int32_t y, int32_t z, int16_t param)

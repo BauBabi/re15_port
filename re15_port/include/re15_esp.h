@@ -187,6 +187,12 @@ void           re15_esp_fx_tick(const re15_esp_t *bank);
 /** Read slot `i` (for the draw/tests); returns NULL if inactive/out-of-range. */
 const re15_esp_fx_t *re15_esp_fx_get(int i);
 
+/** Byte-true DRAW-VISIBLE gate (FUN_80053240.c:30: the sprite draws iff flags bit0 active AND
+ *  bit1 visible). Row-VM particles carry the flags byte (slot+0x6c) the routines poke — a frozen/
+ *  staggered droplet (routine-4 flags 0x61 / routine-15 0x65 = no bit1) is INVISIBLE until it is
+ *  released (flags 0x03/0x13). Legacy fx (no row VM, flags==0) are always visible. */
+int re15_esp_fx_visible(const re15_esp_fx_t *f);
+
 /** Bind the room's parsed ESP as the active bank for op-0x3a spawns (set at room load, NULL on
  *  unload). op_sce_espr_on + the per-frame fx tick read it via re15_esp_room_bank(). */
 void              re15_esp_set_room_bank(const re15_esp_t *bank);

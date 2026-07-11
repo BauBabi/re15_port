@@ -350,6 +350,33 @@ int main(void)
                 else dfail = 1;
             }
 
+            /* === the flags VISIBLE gate (byte-true FUN_80053240 flags bit1): a frozen/staggered
+             * row-VM particle (routine-4 stagger flags 0x61 = no bit1) is NOT drawn until it is
+             * released (0x03). Legacy fx (no row VM) are always visible. Blood id0 sub2 = the
+             * 6-stream spray: streams 1-5 start staggered (routine 4, flags 0x61 frozen). */
+            {
+                re15_esp_fx_reset();
+                int ns2 = re15_esp_fx_spawn_rows(NULL, 0x00, 2, 0x1000, 0, 0, 0, 30000);
+                int vfail = 0;
+                if (ns2 < 2) { fprintf(stderr, "FAIL: (D6) id0 sub2 must spawn the spray, got %d\n", ns2); vfail = 1; }
+                else {
+                    int found_hidden = 0, found_shown = 0;
+                    re15_esp_fx_tick(NULL);
+                    for (int k = 0; k < RE15_ESP_FX_MAX; k++) {
+                        const re15_esp_fx_t *f = re15_esp_fx_get(k);
+                        if (!f) continue;
+                        if (re15_esp_fx_visible(f)) found_shown = 1; else found_hidden = 1;
+                    }
+                    if (!found_hidden) { fprintf(stderr, "FAIL: (D6) a staggered stream (flags 0x61) must be HIDDEN on tick 1\n"); vfail = 1; }
+                    if (!found_shown)  { fprintf(stderr, "FAIL: (D6) the lead stream (flags 0x13) must be VISIBLE\n"); vfail = 1; }
+                }
+                re15_esp_fx_reset();
+                re15_esp_fx_t *lg = re15_esp_fx_spawn(NULL, 0x00, 0, 0, 0, 0, 0);
+                if (lg && !re15_esp_fx_visible(lg)) { fprintf(stderr, "FAIL: (D6) legacy fx must always be visible\n"); vfail = 1; }
+                if (!vfail) printf("  (D6) PASS: flags-visible gate (staggered stream hidden, lead shown, legacy visible)\n");
+                else dfail = 1;
+            }
+
             re15_esp_fx_reset();
             re15_esp_set_global_bank(NULL);
             free(gbuf);

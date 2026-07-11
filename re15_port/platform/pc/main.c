@@ -193,6 +193,7 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy)
     for (int i = 0; i < RE15_ESP_FX_MAX; i++) {
         const re15_esp_fx_t *f = re15_esp_fx_get(i);
         if (!f) continue;
+        if (!re15_esp_fx_visible(f)) continue;   /* byte-true flags bit1 gate (frozen/staggered = hidden) */
         /* Each particle animates from ITS OWN resolved bank: the room ESP (RDT-TIM slot 19) or the
          * GLOBAL bank CORE00.ESP, whose sheets live only in VRAM -> the byte-true extracted TIMs.
          * Global ids have per-id sheets (0 blood / 2 muzzle / 3 smoke / 4 shell) in slots 20-23. */
