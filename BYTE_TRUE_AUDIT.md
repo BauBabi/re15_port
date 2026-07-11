@@ -247,6 +247,12 @@ Multi-Agent-Audit: 20 Subsysteme, 123 WRONG/MISSING-Verdachtsfälle, **104 adver
 ### #21 · HIGH · REPAIR · render-pc-parity
 **Letterbox-Balken halbtransparent counter-gerampt + Subtitle-Layer-Reihenfolge zuletzt**
 
+> ✅ **ERLEDIGT (2026-07-11, Trace wf_bba41002):** der DAT_800b5568-Counter (±0x10/Frame, 0x00-0xF0,
+> Richtung = live flag(1,27) via SCD Set(1,0x1b), 247 Sites) + die zwei 24px-POLY_F4-Balken mit RGB=Counter
+> und ABR2-SUBTRAKTIV (bg−cnt) sind byte-true portiert (re15_fade.h/fade_common.c + render_pc REV_SUBTRACT).
+> Subtitle-über-Balken war schon seit 2026-07-02 korrekt. + Room-Load-Clear von Bank-1 idx 16-31 (@0x80039730).
+> Visueller Look: beim nächsten Spielstart gegenprüfen (Mechanik unit-getestet).
+
 > 🔶 **RE'T + DEFERRED (Befund 2026-06-29, VISUELL):** Byte-true ist EIN Counter DAT_800b5568 (±0x10/Frame, 0x00-0xF0)
 > der via FUN_80021a0c sowohl die DrawEnv-BG als auch die PolyF4-Overlays (Letterbox + Fade) treibt, mit STP=1
 > (PSX-Semi-Transparenz). Der Port hat Fade (s_fade_alpha) + Letterbox (s_letterbox_h, OPAKE FillRect-Balken) GETRENNT
