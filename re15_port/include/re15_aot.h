@@ -122,6 +122,10 @@ typedef struct {
 typedef struct {
     uint8_t  item_type;
     uint8_t  amount;
+    uint8_t  taken_bit;   /* payload[2] (pc[18]/pc[26]) — the DAT_800b1078 taken-bit index
+                           * (flag zone 9 = ptr-table 0x80074664[9] @0x80074688). Set on pickup
+                           * (FUN_8004ef90); re-checked at INSTALL (@0x800406d4) so taken items
+                           * do not respawn on room re-entry. [wf_f536e1ee #14-step-1] */
 } re15_aot_item_params_t;
 
 typedef struct {
@@ -169,6 +173,10 @@ int  re15_aot_set_door(int slot, int32_t cx, int32_t cz,
 int  re15_aot_set_item(int slot, int32_t cx, int32_t cz,
                         int32_t half_w, int32_t half_h,
                         uint8_t item_type, uint8_t amount);
+/* + the taken-bit index (payload[2]); re15_aot_set_item keeps 0 = no persistence. */
+int re15_aot_set_item_tk(int slot, int32_t cx, int32_t cz,
+                         int32_t half_w, int32_t half_h,
+                         uint8_t item_type, uint8_t amount, uint8_t taken_bit);
 
 /* Place a STAIR-type AOT (SCD Aot_set type 12/13). The rect is the stair zone;
  * `down_end` mirrors the SCD data0 byte (1 = the type-13/"up" end, 0 = the

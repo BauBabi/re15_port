@@ -2798,11 +2798,23 @@ static int op_item_aot_set(scd_thread_t *t)
     int      long_form = (t->pc[3] & 0x80) != 0;
     uint8_t  item_t = long_form ? t->pc[22] : t->pc[14];   /* LE low byte = item type */
     uint8_t  amount = long_form ? t->pc[24] : t->pc[16];   /* LE low byte = amount */
+    /* TAKEN-BIT persistence (byte-true @0x800406d4-0x80040718, catalog wf_f536e1ee #14-step-1):
+     * the installer re-checks FUN_8004efe4(DAT_800b1078 = flag zone 9, bit = payload[2] =
+     * pc[18]/pc[26]) — taken -> the AOT installs DISABLED and the prop object[pc[20]/pc[28]]
+     * is hidden (flags=0x80000000). Without this every taken item respawned on room re-entry. */
+    uint8_t  tk_bit = long_form ? t->pc[26] : t->pc[18];
+    uint8_t  tk_prop = long_form ? t->pc[28] : t->pc[20];
     int32_t cx = (int32_t)rect_x + (int32_t)rect_w / 2;
     int32_t cz = (int32_t)rect_z + (int32_t)rect_d / 2;
     int32_t hw = (int32_t)(rect_w < 0 ? -rect_w : rect_w) / 2;
     int32_t hh = (int32_t)(rect_d < 0 ? -rect_d : rect_d) / 2;
-    re15_aot_set_item((int)slot, cx, cz, hw, hh, item_t, amount);
+    if (tk_bit && re15_game_flag_get(9, tk_bit)) {
+        if (tk_prop < g_scd.prop_count)
+            g_scd.props[tk_prop].active = 0;               /* hide the pickup prop */
+        /* AOT stays uninstalled (record type=0 in the original) */
+    } else {
+        re15_aot_set_item_tk((int)slot, cx, cz, hw, hh, item_t, amount, tk_bit);
+    }
     /* PC-Vorschub konditional pc[3]&0x80: 30 vs 22. Byte-true: LAB_80040644 @0x8004065c
      * `lbu v0,0x3(a2)`; @0x80040664 `andi 0x80`; @0x80040668 `beq` -> +0x1e(30)/+0x16(22)
      * (ghidra1_V2.txt). [BYTE_TRUE_AUDIT #5] */

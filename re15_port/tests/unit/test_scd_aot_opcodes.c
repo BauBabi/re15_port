@@ -320,6 +320,31 @@ static void test_item_aot_set(void)
     TEST_ASSERT_EQ("Item_aot_set LONG: item_type=0x15 (pc[22], not decoy pc[14])", 0x15, g_aot.item_params[6].item_type);
     TEST_ASSERT_EQ("Item_aot_set LONG: amount=30 (pc[24], not decoy pc[16])", 0x1e, g_aot.item_params[6].amount);
 
+    /* TAKEN-BIT persistence (byte-true @0x800406d4, catalog wf_f536e1ee): the installer
+     * re-checks flag zone 9 bit pc[18] — taken -> the AOT stays uninstalled (no respawn on
+     * room re-entry); the grant path sets it. */
+    {
+        setup_vm();
+        uint8_t bc_tk[23] = {
+            0x50, 0x07, 0x02, 0x00,
+            0x00, 0x00, 0x00, 0x01,             /* rect_x */
+            0x00, 0x02, 0x00, 0x03,             /* rect_z, rect_w */
+            0x00, 0x04, 0x15, 0x00,             /* rect_d; item 0x15 */
+            0x1e, 0x00, 0x2a, 0x00,             /* amount 30; taken-bit pc[18] = 0x2a */
+            0x00, 0x00,
+            OP_EVT_NEXT
+        };
+        run_one_opcode(bc_tk);
+        TEST_ASSERT_EQ("Item taken-bit: fresh install carries the bit", 0x2a, g_aot.item_params[7].taken_bit);
+        TEST_ASSERT_EQ("Item taken-bit: AOT live on fresh install", 1, g_aot.slots[7].active);
+        /* simulate the pickup grant (the aot_common grant path sets zone-9 bit) */
+        re15_game_flag_set(9, 0x2a, 1);
+        setup_vm();                             /* room re-entry: AOTs cleared, flags persist... */
+        re15_game_flag_set(9, 0x2a, 1);         /* (setup_vm clears flags; re-assert the taken bit) */
+        run_one_opcode(bc_tk);
+        TEST_ASSERT_EQ("Item taken-bit: re-install is SUPPRESSED (no respawn)", 0, g_aot.slots[7].active);
+    }
+
     TEST_OK("Item_aot_set (0x50)");
 }
 

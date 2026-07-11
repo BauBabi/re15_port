@@ -75,11 +75,19 @@ int re15_aot_set_item(int slot, int32_t cx, int32_t cz,
                        int32_t half_w, int32_t half_h,
                        uint8_t item_type, uint8_t amount)
 {
+    return re15_aot_set_item_tk(slot, cx, cz, half_w, half_h, item_type, amount, 0);
+}
+
+int re15_aot_set_item_tk(int slot, int32_t cx, int32_t cz,
+                         int32_t half_w, int32_t half_h,
+                         uint8_t item_type, uint8_t amount, uint8_t taken_bit)
+{
     int rc = re15_aot_set(slot, RE15_AOT_TYPE_ITEM, 0, cx, cz, half_w, half_h);
     if (rc != 0) return rc;
     re15_aot_item_params_t *p = &g_aot.item_params[slot];
     p->item_type = item_type;
     p->amount    = amount;
+    p->taken_bit = taken_bit;
     return 0;
 }
 
@@ -619,6 +627,11 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
                  * deactivate (RE2 Item_aot_reset equivalent). */
                 const re15_aot_item_params_t *p = &g_aot.item_params[i];
                 re15_inv_grant(p->item_type, p->amount);
+                /* TAKEN-BIT (byte-true FUN_8004ef90(DAT_800b1078, payload[2]) on pickup confirm
+                 * @0x8001e0xx; zone 9 = ptr-table 0x80074664[9]): the item stays gone on room
+                 * re-entry — op_item_aot_set re-checks it at install (@0x800406d4).
+                 * [wf_f536e1ee #14-step-1] */
+                if (p->taken_bit) re15_game_flag_set(9, p->taken_bit, 1);
                 /* BO-round 2026-05-29 (hack audit): removed the fabricated item-
                  * pickup SFX {bank2,sample2,vol0x50,pan0x40} — same as the door:
                  * the real pickup sound is the room SCD's own Se_on (room1190/
