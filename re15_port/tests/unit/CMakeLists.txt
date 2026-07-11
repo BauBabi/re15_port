@@ -342,6 +342,14 @@ target_include_directories(test_audio_decode PRIVATE ${CMAKE_SOURCE_DIR}/include
 add_test(NAME unit_audio_decode COMMAND test_audio_decode)
 set_tests_properties(unit_audio_decode PROPERTIES TIMEOUT 30)
 
+# --- Byte-true dialog FSM buttons + cadence (msg audit wf_6aad95ad) ---
+add_executable(test_msg_dialog test_msg_dialog.c)
+target_link_libraries(test_msg_dialog PRIVATE re15_engine re15_test_support)
+target_include_directories(test_msg_dialog PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_msg_dialog COMMAND test_msg_dialog)
+set_tests_properties(unit_msg_dialog PROPERTIES TIMEOUT 30)
+
+
 # --- Byte-true SCD 0x59 indexed flag write + 0x57 fade step (were mis-named Xa_on/Sce_bgmtbl_set) ---
 add_executable(test_scd_flag_fade test_scd_flag_fade.c)
 target_link_libraries(test_scd_flag_fade PRIVATE re15_engine re15_test_support)

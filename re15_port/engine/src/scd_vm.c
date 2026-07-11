@@ -120,6 +120,7 @@ void scd_register_current_rdt(const re15_rdt_t *rdt) { s_current_rdt = rdt; }
 /* Per-frame controller press-EDGE mask, published by re15_game_step (game_step_common.c)
  * each frame. Read by the YES/NO message cursor in op_message_on (UP/DOWN toggle). */
 uint16_t g_scd_pad_edge = 0;
+uint16_t g_scd_pad_held = 0;   /* full held pad word — dialog CROSS fast-forward (wf_6aad95ad) */
 
 /* Per-frame HELD action-button (Square) state, published by re15_game_step. Read by the
  * dialog FSM's fast-forward (op_message_on TYPING state — holding speeds the typewriter). */

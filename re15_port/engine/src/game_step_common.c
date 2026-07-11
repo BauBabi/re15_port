@@ -147,6 +147,10 @@ void re15_game_step(const re15_game_ctx_t *c)
      * EDGE (advance/confirm); this is the LEVEL (held). */
     extern uint8_t g_scd_action_held;
     g_scd_action_held = (c->pad_current & RE15_PAD_BIT_SQUARE) ? 1 : 0;
+    /* Full HELD word for the dialog FSM's CROSS fast-forward (byte-true FUN_80028134 @0x80028214
+     * reads the held pad & 0x4000 = CROSS, not the Square action-held). [audit wf_6aad95ad] */
+    extern uint16_t g_scd_pad_held;
+    g_scd_pad_held = c->pad_current;
 
     /* (Plc_neck head-look FSM is computed inside re15_skel_compute_pose at the head bone —
      * it needs the root bone matrix there to get the look angle in the correct frame. The

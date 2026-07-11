@@ -352,18 +352,24 @@ void re15_dialog_open(int msg_id, int blocking)
  * dismissed; a YES/NO confirm writes the answer to flag (12,31). */
 static void re15_dialog_step(void)
 {
-    extern uint8_t  g_aot_action_pressed;
-    extern uint8_t  g_scd_action_held;
     extern uint16_t g_scd_pad_edge;
-    const uint16_t PAD_LEFT = 0x0080, PAD_RIGHT = 0x0020;
+    extern uint16_t g_scd_pad_held;
+    /* Byte-true dialog buttons (FUN_80028134, audit wf_6aad95ad): the YES/NO CONFIRM + the
+     * typewriter FAST-FORWARD are CROSS (0x4000, @0x80028570/@0x80028214); the YES/NO cursor
+     * TOGGLE is the face-button mask 0x3000 (@0x800285b8) — NOT the D-pad Left/Right the port
+     * read, and DISTINCT from the port's gameplay action (SQUARE, g_aot_action_pressed). NOTE:
+     * the PSX reads a config-REMAPPED logical pad word (table @0x80073e1c); the port feeds the
+     * raw physical word (re15_player.h: TRIANGLE 0x1000, CIRCLE 0x2000, CROSS 0x4000), so 0x3000
+     * = TRIANGLE|CIRCLE here — the exact remapped physical toggle bit is a deferred remap-model. */
+    const uint16_t TOGGLE_MASK = 0x3000, CROSS = 0x4000;
 
     int rlen = 0;
     const unsigned char *raw = re15_msg_get_raw((int)g_scd.message_id, &rlen);
     if (!raw || rlen <= 0) { g_scd.message_active = 0; return; }
 
-    int act_edge = g_aot_action_pressed ? 1 : 0;
-    int act_held = g_scd_action_held ? 1 : 0;
-    int lr_edge  = (g_scd_pad_edge & (PAD_LEFT | PAD_RIGHT)) != 0;
+    int act_edge = (g_scd_pad_edge & CROSS) != 0;              /* CROSS = confirm       */
+    int act_held = (g_scd_pad_held & CROSS) != 0;              /* CROSS held = fast-fwd */
+    int lr_edge  = (g_scd_pad_edge & TOGGLE_MASK) != 0;        /* face buttons = toggle */
     /* [#36a] page-wait (andi 0xc000 @0x80028458) and end-wait (andi 0xc000
      * @0x80028698) dismiss on EITHER action button, fresh press. g_scd_pad_edge is
      * the standard PSX logical pad word (Cross=0x4000, Square=0x8000). */
@@ -371,9 +377,13 @@ static void re15_dialog_step(void)
 
     switch (g_scd.message_fsm) {
     case 0: {  /* TYPING */
-        int dec = (act_held && g_scd.message_scroll < 4) ? 4 : 1;   /* button = fast-forward */
+        int fast_fwd = (act_held && g_scd.message_scroll < 4);      /* CROSS held = fast-forward */
+        int dec = fast_fwd ? 4 : 1;
         if (g_scd.message_timer > dec) { g_scd.message_timer = (uint16_t)(g_scd.message_timer - dec); break; }
         g_scd.message_timer = 0;
+        /* Byte-true reveal budget (FUN_80028134 s2 @0x80028238/@0x80028434): fast-forward reveals
+         * TWO printable glyphs per frame, normal one. (wf_6aad95ad MSG-FF-REVEAL-COUNT.) */
+        int budget = fast_fwd ? 2 : 1;
         for (;;) {
             if (g_scd.message_parse >= rlen) { g_scd.message_fsm = 6; break; }
             unsigned char b = raw[g_scd.message_parse];
@@ -419,8 +429,9 @@ static void re15_dialog_step(void)
                 g_scd.message_scroll = a; g_scd.message_parse += 2; continue;
             }
             if (b == 0x08) { g_scd.message_parse++; continue; }   /* newline (render breaks) */
-            g_scd.message_parse++;          /* reveal one glyph, then wait scroll frames */
-            g_scd.message_timer = g_scd.message_scroll;
+            g_scd.message_parse++;          /* reveal one glyph */
+            if (--budget > 0) continue;     /* fast-forward: reveal a 2nd printable glyph this frame */
+            g_scd.message_timer = g_scd.message_scroll;   /* then wait scroll frames */
             break;
         }
         break;
@@ -428,7 +439,9 @@ static void re15_dialog_step(void)
     case 1:  /* PAGE_WAIT — down-arrow, advance on a fresh action press */
         g_scd.message_blink--;
         if (dismiss_edge) { g_scd.message_parse += 2; g_scd.message_page = g_scd.message_parse;
-                        g_scd.message_fsm = 0; g_scd.message_timer = g_scd.message_scroll; }  /* [#36a/e] */
+                        g_scd.message_fsm = 0; g_scd.message_timer = 1; }  /* byte-true PAGE_WAIT timer =
+                        * 1<<s1 = 1 (@0x80028494), NOT scroll — the first glyph of a button-advanced page
+                        * appears one frame sooner. (wf_6aad95ad MSG-PAGEWAIT-FIRST-GLYPH-TIMER.) */
         break;
     case 2:  /* PAGE_TIMED */
         if (g_scd.message_timer > 1) g_scd.message_timer--;

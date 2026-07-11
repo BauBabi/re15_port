@@ -25,7 +25,9 @@
 #define RE15_PAD_LEFT     0x0080
 #define RE15_PAD_L1       0x0400   /* Q  = "L1" — reserved (currently unused) */
 #define RE15_PAD_R1       0x0800   /* E  = "R1" — AIM / raise the weapon (hold; game_step + player aim FSM) */
-#define RE15_PAD_CROSS    0x4000   /* Shift = "X" — RUN modifier (held) */
+#define RE15_PAD_TRIANGLE 0x1000   /* C = the YES/NO dialog cursor toggle (shares the DBG_NEXT bit) */
+#define RE15_PAD_CIRCLE   0x2000   /* V = ditto (shares DBG_PREV); dialog toggle mask = 0x3000       */
+#define RE15_PAD_CROSS    0x4000   /* Shift = "X" — RUN modifier (held) + dialog CONFIRM/fast-forward */
 #define RE15_PAD_SQUARE   0x8000   /* Enter = "Square" — ACTION button */
 /* Phase 4.5.13-RE2 H5 (2026-05-21): motion-debug keys */
 #define RE15_PAD_SELECT   0x0001   /* Tab    = toggle motion-debug-lock */
@@ -120,6 +122,11 @@ void re15_input_tick(void)
         if (keys[SDL_SCANCODE_LSHIFT] || keys[SDL_SCANCODE_RSHIFT]) bits |= RE15_PAD_CROSS;
         /* ACTION = Enter (mapped to the SQUARE bit the action gate reads). */
         if (keys[SDL_SCANCODE_RETURN] || keys[SDL_SCANCODE_KP_ENTER]) bits |= RE15_PAD_SQUARE;
+        /* YES/NO dialog cursor toggle = the face-button mask 0x3000 (byte-true FUN_80028134
+         * @0x800285b8) — bind C/V so the ROOM1130 shutter prompt etc. are reachable on keyboard.
+         * (The CONFIRM is CROSS = Shift; the dialog reads these via g_scd_pad_edge.) */
+        if (keys[SDL_SCANCODE_C])         bits |= RE15_PAD_TRIANGLE;
+        if (keys[SDL_SCANCODE_V])         bits |= RE15_PAD_CIRCLE;
         if (keys[SDL_SCANCODE_Q])         bits |= RE15_PAD_L1;
         if (keys[SDL_SCANCODE_E])         bits |= RE15_PAD_R1;
         /* START = I (user-chosen PC binding, 2026-07-02): opens the inventory/weapon-select menu.
