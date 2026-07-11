@@ -120,6 +120,46 @@ int main(void)
         CHECK("UNR division inaccuracy is present (differs from exact)", diffs > 0);
     }
 
+    /* --- byte-true libgte VectorNormal (0x80066a30, recip-sqrt table @0x8007d4d8) --- */
+    printf("--- VectorNormal (GTE reciprocal-sqrt normalize) ---\n");
+    {
+        int32_t o[3];
+        /* Known-answer values hand-traced through the exact GTE algorithm (SQR|v|² -> LZCR
+         * exponent -> table[mantissa-64] -> GPF -> srav). These are DELIBERATELY not exactly
+         * 4096 — the GTE table approximation is what the console produces. */
+        re15_vector_normal(100, 0, 0, o);
+        CHECK("VN(100,0,0) == (4098,0,0) NOT 4096", o[0]==4098 && o[1]==0 && o[2]==0);
+        re15_vector_normal(0, 200, 0, o);
+        CHECK("VN(0,200,0) == (0,4098,0)", o[0]==0 && o[1]==4098 && o[2]==0);
+        re15_vector_normal(300, 400, 0, o);
+        CHECK("VN(300,400,0) == (2457,3276,0)", o[0]==2457 && o[1]==3276 && o[2]==0);
+        re15_vector_normal(1, 0, 0, o);
+        CHECK("VN(1,0,0) == (4096,0,0)", o[0]==4096 && o[1]==0 && o[2]==0);
+        re15_vector_normal(-100, 0, 0, o);   /* srav floors negatives: -262300>>6 = -4099 */
+        CHECK("VN(-100,0,0) == (-4099,0,0) (arith shift floor)", o[0]==-4099 && o[1]==0 && o[2]==0);
+        re15_vector_normal(0, 0, 0, o);
+        CHECK("VN(0,0,0) == (0,0,0) (degenerate guard)", o[0]==0 && o[1]==0 && o[2]==0);
+
+        /* Property: result magnitude is ~4096 (Q12 unit) across a sweep, and it genuinely
+         * DIFFERS from an exact normalize on some inputs (else the table replica is pointless). */
+        int mag_ok = 1, diffs = 0, total = 0;
+        for (int32_t vx = -500; vx <= 500; vx += 53)
+            for (int32_t vz = 16; vz <= 500; vz += 53) {
+                re15_vector_normal(vx, 0, vz, o);
+                double mag = sqrt((double)o[0]*o[0] + (double)o[2]*o[2]);
+                if (mag < 4096*0.985 || mag > 4096*1.015) { mag_ok = 0;
+                    printf("  FAIL: VN(%d,0,%d) |out|=%.1f out of band\n", vx, vz, mag); }
+                double len = sqrt((double)vx*vx + (double)vz*vz);
+                int ex0 = (int)((double)vx*4096/len);
+                total++;
+                if (o[0] != ex0) diffs++;
+            }
+        CHECK("VN magnitude ~4096 across the sweep", mag_ok);
+        printf("  info: VN differs from exact normalize on %d/%d (the GTE table approximation)\n",
+               diffs, total);
+        CHECK("VN approximation is present (differs from exact)", diffs > 0);
+    }
+
     if (g_fail) { printf("MATH-PRIMITIVES: FAIL\n"); return 1; }
     printf("MATH-PRIMITIVES: all checks passed\n");
     return 0;

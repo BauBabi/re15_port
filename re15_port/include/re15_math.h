@@ -48,4 +48,10 @@ int32_t re15_ellipse_radius(int32_t rx, int32_t rz, int32_t rot_y, int32_t dz, i
  * divide). h = GTE H (fov>>7), sz3 = u16 view-space z (MAC3>>12). Saturates to 0x1FFFF. */
 uint32_t re15_gte_divide(uint32_t h, uint32_t sz3);
 
+/* Byte-true libgte VectorNormal (0x80066a30): normalize (vx,vy,vz) to a Q12 unit vector
+ * (magnitude ~4096) via the GTE reciprocal-sqrt table @0x8007d4d8. RE1.5 lighting uses this for
+ * the light-direction unit vector (FUN_800542dc). It is DELIBERATELY approximate (e.g. (100,0,0)
+ * -> (4098,0,0)), neither exact nor SquareRoot0. Components truncated to s16 (the GTE IR width). */
+void re15_vector_normal(int32_t vx, int32_t vy, int32_t vz, int32_t out[3]);
+
 #endif /* RE15_MATH_H */

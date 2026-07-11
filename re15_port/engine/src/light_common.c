@@ -9,30 +9,10 @@
 #include "re15_light.h"
 #include "re15_math.h"   /* re15_squareroot0 — the BIOS sqrt the falloff actually uses */
 #include <string.h>
-/* RE2-CANONICAL integer sqrt. RE2's lighting (FUN_80053fc0 / FUN_800542dc) uses
- * libgte SquareRoot0 + VectorNormal — pure INTEGER, NO soft-float. The R3000 has
- * no FPU, so every `double` op is a libgcc soft-float call (a double divide ≈
- * ~1000 cycles); the old per-light double-sqrt + divides cost ~17-20ms/frame.
- * This bit-by-bit integer isqrt + all-integer light math removes that entirely.
- * (PC build is identical via a thin libm wrapper.) */
-#ifdef PSN00BSDK
-static uint32_t re15_isqrt(uint32_t x)
-{
-    uint32_t res = 0;
-    uint32_t bit = 1u << 30;
-    while (bit > x) bit >>= 2;
-    while (bit) {
-        uint32_t t = res + bit;
-        if (x >= t) { x -= t; res = (res >> 1) + bit; }
-        else        { res >>= 1; }
-        bit >>= 2;
-    }
-    return res;
-}
-#else
-#include <math.h>
-static uint32_t re15_isqrt(uint32_t x) { return (uint32_t)sqrt((double)x); }
-#endif
+/* All lighting sqrt/normalize is now byte-true integer via re15_math.c: the per-light distance
+ * falloff uses re15_squareroot0 (BIOS SquareRoot0, FUN_80053fc0) and the light-direction normalize
+ * uses re15_vector_normal (libgte VectorNormal's GTE reciprocal-sqrt, FUN_800542dc). The old exact
+ * re15_isqrt (double sqrt / bit-by-bit) is gone — it was byte-true for NEITHER site. No soft-float. */
 
 uint8_t          g_re15_light_tint[3]   = {255, 255, 255};
 re15_light_set_t g_re15_room_lights;
@@ -117,19 +97,15 @@ static void mat3_T_apply_q12(const int32_t M[9],
     out[2] = (int32_t)(((int64_t)M[2]*vx + (int64_t)M[5]*vy + (int64_t)M[8]*vz) >> 12);
 }
 
-/* Normalize an int32 vector to Q12 unit (magnitude 4096). All-integer — mirrors
- * RE2's VectorNormal (FUN_800542dc), no soft-float. */
+/* Normalize an int32 vector to Q12 unit (magnitude ~4096) — byte-true to RE1.5's light-direction
+ * normalize, which is libgte VectorNormal (FUN_800542dc @0x800542f8), a GTE reciprocal-sqrt with
+ * its own 192-entry table @0x8007d4d8. It is DELIBERATELY approximate ((100,0,0)->(4098,0,0)); the
+ * old exact isqrt+divide here was a sub-Q12 divergence. re15_vector_normal replicates it bit-for-bit
+ * (see re15_math.c). Components are s16 (the GTE IR width) — light dirs are always s16-range. */
 static void vec3_normalize_q12(int32_t x, int32_t y, int32_t z,
                                int32_t out[3])
 {
-    int32_t len = (int32_t)re15_isqrt((uint32_t)((int64_t)x*x + (int64_t)y*y + (int64_t)z*z));
-    if (len < 1) {
-        out[0] = out[1] = out[2] = 0;
-        return;
-    }
-    out[0] = (int32_t)(((int64_t)x << 12) / len);
-    out[1] = (int32_t)(((int64_t)y << 12) / len);
-    out[2] = (int32_t)(((int64_t)z << 12) / len);
+    re15_vector_normal(x, y, z, out);
 }
 
 void re15_light_setup_actor(const re15_light_cut_t *cut,

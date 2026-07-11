@@ -306,3 +306,60 @@ uint32_t re15_gte_divide(uint32_t h, uint32_t sz3)
     n = (uint32_t)(((uint64_t)n * d + 0x8000) >> 16);
     return n > 0x1FFFF ? 0x1FFFF : n;
 }
+
+/* ===== byte-true libgte VectorNormal (entry 0x80066a30 -> core 0x80066a8c) =====
+ * RE1.5 lighting normalizes each light DIRECTION to a Q12 unit vector via libgte VectorNormal
+ * (FUN_800542dc calls it @0x800542f8), NOT SquareRoot0 and NOT an exact normalize. VectorNormal is
+ * a GTE reciprocal-sqrt: GTE SQR |v|^2 (sf=0) -> LZCS/LZCR exponent -> a 192-entry reciprocal-sqrt
+ * mantissa table @0x8007d4d8 -> GTE GPF scale (sf=0) -> srav by the exponent. It is DELIBERATELY
+ * approximate: e.g. re15_vector_normal(100,0,0) = (4098,0,0), NOT exactly (4096,0,0) -- the port
+ * previously normalized with an exact isqrt+divide, a sub-Q12 light-direction divergence.
+ * The table is extracted VERBATIM from the EXE; it differs from round(4096/sqrt((64+i)/64)) on
+ * 99/192 entries (the hardware's own rounding, like the SquareRoot0 table). */
+static const int16_t re15_recip_sqrt_tab[192] = {
+     4096, 4064, 4033, 4003, 3973, 3944, 3916, 3888, 3861, 3835, 3809, 3783, 3758, 3734, 3710, 3686,
+     3663, 3640, 3618, 3596, 3575, 3554, 3533, 3513, 3493, 3473, 3454, 3435, 3416, 3397, 3379, 3361,
+     3344, 3327, 3310, 3293, 3276, 3260, 3244, 3228, 3213, 3197, 3182, 3167, 3153, 3138, 3124, 3110,
+     3096, 3082, 3069, 3055, 3042, 3029, 3016, 3003, 2991, 2978, 2966, 2954, 2942, 2930, 2919, 2907,
+     2896, 2885, 2873, 2862, 2852, 2841, 2830, 2820, 2809, 2799, 2789, 2779, 2769, 2759, 2749, 2740,
+     2730, 2721, 2711, 2702, 2693, 2684, 2675, 2666, 2657, 2649, 2640, 2631, 2623, 2615, 2606, 2598,
+     2590, 2582, 2574, 2566, 2558, 2550, 2543, 2535, 2528, 2520, 2513, 2505, 2498, 2491, 2484, 2477,
+     2469, 2462, 2456, 2449, 2442, 2435, 2428, 2422, 2415, 2409, 2402, 2396, 2389, 2383, 2377, 2371,
+     2364, 2358, 2352, 2346, 2340, 2334, 2328, 2322, 2317, 2311, 2305, 2299, 2294, 2288, 2283, 2277,
+     2272, 2266, 2261, 2255, 2250, 2245, 2239, 2234, 2229, 2224, 2219, 2214, 2209, 2204, 2199, 2194,
+     2189, 2184, 2179, 2174, 2170, 2165, 2160, 2155, 2151, 2146, 2142, 2137, 2133, 2128, 2124, 2119,
+     2115, 2110, 2106, 2102, 2097, 2093, 2089, 2084, 2080, 2076, 2072, 2068, 2064, 2060, 2056, 2052,
+};
+
+/* GTE LZCS/LZCR: count of leading zeros (x>=0) or leading ones (x<0); 1..31, or 32 for x==0. */
+static int32_t re15_gte_lzc(int32_t x)
+{
+    uint32_t u = (x < 0) ? ~(uint32_t)x : (uint32_t)x;
+    if (u == 0) return 32;
+    int32_t n = 0;
+    while (!(u & 0x80000000u)) { u <<= 1; n++; }
+    return n;
+}
+
+void re15_vector_normal(int32_t vx, int32_t vy, int32_t vz, int32_t out[3])
+{
+    /* MTC2 into IR1/IR2/IR3 -- 16-bit signed GTE regs (light dirs are s16-range). */
+    int32_t ir1 = (int16_t)vx, ir2 = (int16_t)vy, ir3 = (int16_t)vz;
+    /* GTE SQR sf=0: MAC_i = IR_i^2; v0 = |v|^2 as a 32-bit GPR sum (wraps like the console). */
+    uint32_t sq = (uint32_t)(ir1 * ir1) + (uint32_t)(ir2 * ir2) + (uint32_t)(ir3 * ir3);
+    int32_t v0 = (int32_t)sq;
+    if (v0 == 0) { out[0] = out[1] = out[2] = 0; return; }  /* degenerate; the ROM would index table[-64] */
+    /* LZCS/LZCR -> exponent; v1 forced even (and v1,v1,-2). */
+    int32_t v1 = re15_gte_lzc(v0) & ~1;
+    int32_t t6 = (31 - v1) >> 1;                            /* sra: srav amount applied to the result */
+    int32_t t3 = v1 - 24;
+    int32_t t4 = (t3 < 0) ? (int32_t)((uint32_t)v0 >> (24 - v1))    /* srav: mantissa into [64,255] */
+                          : (int32_t)((uint32_t)v0 << (v1 - 24));   /* sllv */
+    int32_t idx = t4 - 64;
+    if (idx < 0) idx = 0; else if (idx > 191) idx = 191;   /* defensive; normalized mantissa is [64,255] */
+    int32_t recip = re15_recip_sqrt_tab[idx];              /* IR0 = 1/sqrt mantissa, Q12 */
+    /* GTE GPF sf=0: MAC_i = IR0 * IR_i; then srav by the exponent (arithmetic, floors negatives). */
+    out[0] = (recip * ir1) >> t6;
+    out[1] = (recip * ir2) >> t6;
+    out[2] = (recip * ir3) >> t6;
+}
