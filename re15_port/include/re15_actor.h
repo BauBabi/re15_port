@@ -70,6 +70,9 @@ typedef struct {
                             * On death-commit the enemy sets the em-status flag[em_flag_id] so it does
                             * not respawn on room re-entry (the spawn gate GETs it). 0xFF = never persist. */
     uint16_t status_flags; /* RE2/RE1.5 +0x98 (Member id 17, lhu) — bit0x2 = bleed/poison */
+    int16_t  water_y;      /* +0x88 — the sce=8 water-level stamp (LAB_8004330c re-stamps it every
+                            * frame the entity is inside a water zone; wade/ripple FX consumer is
+                            * presentation-side). 0 = no water. [wf_f536e1ee step 4] */
     /* Attack-hitbox dimensions — FUN_8002b5d0 reads these via target+0x78 (the
      * dim struct: radius_min@+6, height@+8, radius_max@+10) and target+0x7c (the
      * local centre offset). radius_min==radius_max → circular hitbox; else angular

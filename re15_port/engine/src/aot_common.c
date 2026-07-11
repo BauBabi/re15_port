@@ -458,6 +458,38 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
          * 4). 10 shipped zones are enemy-ONLY (0x42, e.g. the ROOM1030 zombie-window flags) — the
          * player walking through must NOT set them; a zombie inside must. Auto variants fire
          * every frame (idempotent flag write); action variants (0x31) go through gen_reach. */
+        /* sce=7/8 ENV zones (WATER/RAMP — wf_f536e1ee step 4): per-ENTITY application during the
+         * pool walk (the original stamps each pool entity inside, every frame). No fire dispatch. */
+        if (a->type == RE15_AOT_TYPE_WATER || a->type == RE15_AOT_TYPE_RAMP) {
+            uint8_t pm = (uint8_t)(a->sce_flags & 0x07);
+            if (pm == 0) pm = 0x07;                              /* shipped water = 0x47 all pools */
+            for (int es = 0; es < RE15_ACTOR_MAX; es++) {
+                if (!g_actors[es].active) continue;
+                if (es == RE15_ACTOR_SLOT_PLAYER) { if (!(pm & 0x01)) continue; }
+                else                              { if (!(pm & 0x02)) continue; }
+                int32_t ex = g_actors[es].x, ez = g_actors[es].z;
+                int in2 = a->has_quad
+                        ? re15_aot_point_in_quad(ex, ez, a->xs, a->zs)
+                        : ((abs_i32(ex - a->x) <= a->half_w) && (abs_i32(ez - a->z) <= a->half_h));
+                if (!in2) continue;
+                if (a->type == RE15_AOT_TYPE_WATER) {
+                    g_actors[es].water_y = g_aot.env_params[i].p0;   /* +0x88 stamp (LAB_8004330c) */
+                } else {
+                    const re15_aot_env_params_t *ep = &g_aot.env_params[i];
+                    if (ep->p1 != 0) {
+                        int32_t dist;
+                        switch (ep->p0 & 3) {                        /* reference edge (LAB_800431cc) */
+                            case 0:  dist = ex - (a->x - a->half_w); break;   /* x1     */
+                            case 1:  dist = (a->z + a->half_h) - ez; break;   /* z1 + h */
+                            case 2:  dist = (a->x + a->half_w) - ex; break;   /* x1 + w */
+                            default: dist = ez - (a->z - a->half_h); break;   /* z1     */
+                        }
+                        g_actors[es].y = (int32_t)((dist / ep->p1) + 1) * ep->p2;   /* -> +0x38 */
+                    }
+                }
+            }
+            continue;                                             /* env zones: no fire dispatch */
+        }
         int flag_pool_inside = 0;
         if (a->type == RE15_AOT_TYPE_FLAG_CHG && !(a->sce_flags & 0x10)) {
             uint8_t pm = (uint8_t)(a->sce_flags & 0x07);

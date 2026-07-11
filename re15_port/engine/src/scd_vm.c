@@ -2052,6 +2052,23 @@ static int op_aot_set(scd_thread_t *t)
                 g_aot.flag_params[slot].bit   = long_form ? t->pc[24] : t->pc[16];
                 g_aot.flag_params[slot].on    = (long_form ? t->pc[26] : t->pc[18]) ? 1 : 0;
             }
+        } else if (type == 8) {
+            /* sce=8 WATER (LAB_8004330c): entity+0x88 = u16@0 per frame, all 3 pools —
+             * 32 zones (STAGE1 sewers 11A0/11A1/1260/1261 + STAGE2). [wf_f536e1ee step 4] */
+            re15_aot_set(slot, RE15_AOT_TYPE_WATER, 0, cx, cz, hw, hh);
+            if (slot < RE15_AOT_MAX)
+                g_aot.env_params[slot].p0 = long_form ? scd_read_le_s16(&t->pc[22])
+                                                      : scd_read_le_s16(&t->pc[14]);
+        } else if (type == 7) {
+            /* sce=7 STAIR-RAMP Y (LAB_800431cc): mode u16@0, step u16@2, height u16@4 —
+             * 4 zones (ROOM5060/5061). */
+            re15_aot_set(slot, RE15_AOT_TYPE_RAMP, 0, cx, cz, hw, hh);
+            if (slot < RE15_AOT_MAX) {
+                int b = long_form ? 22 : 14;
+                g_aot.env_params[slot].p0 = scd_read_le_s16(&t->pc[b]);
+                g_aot.env_params[slot].p1 = scd_read_le_s16(&t->pc[b + 2]);
+                g_aot.env_params[slot].p2 = scd_read_le_s16(&t->pc[b + 4]);
+            }
         } else if (ev == 0) {
             /* eventId==0 is NOT an event sub (sub_scd[0]=init is never an AOT target). It's an
              * EXAMINE→work-var AOT (ROOM1150 slot-2 type-5 over Irons): on the action examine

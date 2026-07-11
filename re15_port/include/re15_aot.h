@@ -64,6 +64,10 @@
 #define RE15_AOT_TYPE_AUTO_EVENT  6
 #define RE15_AOT_TYPE_EXAMINE_WORKVAR  7   /* examine→work_vars[0]=index (ev==0 Aot_set) */
 #define RE15_AOT_TYPE_FLAG_CHG    8   /* sce=4 flag set/clear (LAB_80043120) — wf_f536e1ee step 4 */
+#define RE15_AOT_TYPE_WATER       9   /* sce=8 water-level stamp (LAB_8004330c): entity+0x88 = u16@0
+                                       * per frame, ALL 3 pools (flags 0x47) — 32 zones (sewers) */
+#define RE15_AOT_TYPE_RAMP       10   /* sce=7 stair-ramp Y driver (LAB_800431cc): Y from the rect
+                                       * edge distance -> entity Y. 4 zones, ROOM5060/5061. */
 
 typedef struct {
     uint8_t  active;      /* 0 = slot free, 1 = active */
@@ -133,6 +137,9 @@ typedef struct {
     uint8_t  on;          /* 1 = set, 0 = clear                */
 } re15_aot_flag_params_t;
 
+/* sce=7/8 environment-zone payload (WATER: p0 = water Y; RAMP: p0 = mode, p1 = step, p2 = height). */
+typedef struct { int16_t p0, p1, p2; } re15_aot_env_params_t;
+
 typedef struct {
     uint8_t  item_type;
     uint8_t  amount;
@@ -147,6 +154,7 @@ typedef struct {
     re15_aot_door_params_t  door_params[RE15_AOT_MAX];
     re15_aot_item_params_t  item_params[RE15_AOT_MAX];
     re15_aot_flag_params_t  flag_params[RE15_AOT_MAX];
+    re15_aot_env_params_t   env_params[RE15_AOT_MAX];
 
     /* Edge-trigger state: set when an AOT fires, cleared by consumer or
      * after N frames of HUD display. */

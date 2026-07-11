@@ -251,6 +251,21 @@ static void test_aot_set(void)
         g_actors[3].active = 1; g_actors[3].x = 100; g_actors[3].z = 100;   /* an enemy inside */
         re15_aot_scan(-5000, -5000, 0xFF);                 /* player far away */
         TEST_ASSERT_EQ("sce=4 0x42: an ENEMY inside sets the flag", 1, re15_game_flag_get(5, 0x21));
+
+        /* sce=8 WATER (wf_f536e1ee step 4): stamps entity+0x88 = the water Y every frame inside;
+         * all 3 pools (the shipped sewer zones are 0x47). */
+        setup_vm();
+        uint8_t bc_water[21] = {
+            0x2C, 0x0A, 0x08, 0x47,  0x80, 0x00,          /* sce=8, flags 0x47 all-pools, band any */
+            0x00, 0x00, 0x00, 0x00,  0xC8, 0x00, 0xC8, 0x00,
+            0x9C, 0xF9, 0x00, 0x00,                        /* water Y = -1636 (LE) @payload u16@0 */
+            0x00, 0x00, OP_EVT_NEXT };
+        run_one_opcode(bc_water);
+        TEST_ASSERT_EQ("sce=8: installs as WATER", RE15_AOT_TYPE_WATER, g_aot.slots[10].type);
+        g_actors[RE15_ACTOR_SLOT_PLAYER].active = 1;
+        g_actors[RE15_ACTOR_SLOT_PLAYER].water_y = 0;
+        re15_aot_scan(100, 100, 0xFF);                     /* player inside -> stamped */
+        TEST_ASSERT_EQ("sce=8: player water_y stamped = -1636", -1636, g_actors[RE15_ACTOR_SLOT_PLAYER].water_y);
     }
 
     TEST_OK("Aot_set (0x2C)");
