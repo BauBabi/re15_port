@@ -136,12 +136,25 @@ int re15_vab_parse(const uint8_t *vh_data, size_t vh_size, re15_vab_t *out)
             tn->pitch_shift = vh_data[off + 5];
             tn->min_note    = vh_data[off + 6];
             tn->max_note    = vh_data[off + 7];
+            tn->pbmin       = vh_data[off + 0x0c]; /* VagAtr pbmin/pbmax — the per-TONE pitch-bend
+                                                    * ranges SpuVmPBVoice scales by (@0x80057ea8 /
+                                                    * @0x80057e44). [wf_1db9c802 PBMINMAX] */
+            tn->pbmax       = vh_data[off + 0x0d];
             tn->adsr1       = read_u16_le(vh_data + off + 0x10);
             tn->adsr2       = read_u16_le(vh_data + off + 0x12);
             tn->vag_index   = read_u16_le(vh_data + off + 0x16);
         }
     }
     out->tones_loaded = (tone_segments > 0) ? 1 : 0;
+
+    /* Per-program master vol/pan (ProgAtr table @0x20, stride 16: +1 mvol, +4 mpan — PSYQ
+     * LIBSND.H). Runtime-writable via Sce_bgm_control (0x54) payload (FUN_80044da4 writes
+     * vol-1/pan-1 into these); note-ons re-read them. [wf_1db9c802 SEQCTL-VOLPAN] */
+    for (int p = 0; p < RE15_VAB_PROGRAM_COUNT; p++) {
+        int poff = RE15_VAB_HEADER_SIZE + p * RE15_VAB_PROGRAM_ENTRY_SIZE;
+        out->prog_mvol[p] = ((size_t)(poff + 4) < vh_size) ? vh_data[poff + 1] : 127;
+        out->prog_mpan[p] = ((size_t)(poff + 4) < vh_size) ? vh_data[poff + 4] : 64;
+    }
     return 0;
 }
 
@@ -248,6 +261,24 @@ uint16_t re15_vab_note2pitch(int midi_note, int center_note, int pitch_shift)
     uint32_t p    = (octave >= 0) ? (base << octave) : (base >> (-octave));
     if (p > 0x3FFF) p = 0x3FFF;                            /* SPU_CH_FREQ ceiling */
     return (uint16_t)p;
+}
+
+/* ALL matching tones (byte-true SpuVmKeyOn @0x800585e4-866c: collect every tone with
+ * min<=note<=max, then key EACH on its own voice — stacked/chorus instruments; the loop is
+ * bounded by ProgAtr.tones, equivalently filtered here by vag_index!=0 on well-formed banks).
+ * [audit wf_1db9c802 AUD-VH-TONELAYER] */
+int re15_vab_match_tones(const re15_vab_t *vab, int program, int note,
+                         const re15_vab_tone_t **out, int max_out)
+{
+    if (!vab || !vab->tones_loaded || !out || max_out <= 0) return 0;
+    if (program < 0 || program >= RE15_VAB_PROGRAM_COUNT) return 0;
+    int n = 0;
+    for (int t = 0; t < RE15_VAB_TONES_PER_PROGRAM && n < max_out; t++) {
+        const re15_vab_tone_t *tn = &vab->tones[program * RE15_VAB_TONES_PER_PROGRAM + t];
+        if (tn->vag_index == 0) continue;                  /* empty slot */
+        if (note >= tn->min_note && note <= tn->max_note) out[n++] = tn;
+    }
+    return n;
 }
 
 const re15_vab_tone_t *re15_vab_find_tone(const re15_vab_t *vab, int program, int note)

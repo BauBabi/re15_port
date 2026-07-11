@@ -190,13 +190,17 @@ typedef struct {
     int             env_count;      /* output samples until the next envelope step */
     uint16_t        adsr1, adsr2;   /* SPU ADSR registers (from the VAB tone) */
     uint8_t         chan, note;
+    uint8_t         pbmin, pbmax;   /* per-TONE pitch-bend ranges (VagAtr +0xc/+0xd) — SpuVmPBVoice
+                                     * scales the bend PER VOICE by these; 0 = pitch pinned.
+                                     * [audit wf_1db9c802 BGM-PITCHBEND-PBMINMAX] */
+    int             bend_q16;       /* per-voice bend multiplier (Q16, 0x10000 = none) */
 } ss_voice_t;
 
 /* One independent SsSeq instance = one VAB soundfont + one SEQ being played.
  * RE2 plays the room's MAIN and SUB tracks SIMULTANEOUSLY (FUN_80044564 +
  * FUN_80044774), so we run two instances and sum them. For ROOM1170 that is
  * MAIN32 (the music) + SUB_15 (the secondary/rotor-ambience layer). */
-typedef struct {
+typedef struct ss_seq_s {
     re15_vab_t     vab;
     int            vab_ok;
     int16_t       *vag_pcm [RE15_VAB_MAX_SAMPLES];
@@ -214,14 +218,33 @@ typedef struct {
     int            loop;
     uint8_t        prog[SS_CHANNELS];
     int            cvol[SS_CHANNELS];      /* CC7 channel volume 0..127     */
-    int            bend_q16[SS_CHANNELS];  /* pitch-bend mult (Q16, 0x10000=none) */
+    int            bend_deflect[SS_CHANNELS]; /* pitch-bend MSB-64 (byte-true _SsSetPitchBend
+                                            * @0x8005ef04 reads ONE 7-bit byte; the per-voice
+                                            * pbmin/pbmax scale it — wf_1db9c802 PBMINMAX) */
+    uint8_t        bank[SS_CHANNELS];      /* CC0 bank select (byte-true _SsSetControlChange
+                                            * case 0 -> seq+0x4c: rebinds the tone lookup to the
+                                            * bank's VAB — MAIN id 5 / SUB id 6. wf_1db9c802
+                                            * BGM-CC0-VAB-BANKCHANGE) */
+    /* Sony in-track loop (CC99 NRPN 0x14 start / 0x1e jump, CC6 count — byte-true
+     * _SsContNrpn2/_SsContDataEntry; notes SUSTAIN across the jump. wf_1db9c802 LOOP-NRPN) */
+    int            loop_cursor;     /* saved read offset (after the CC99-20 event), -1 = unset */
+    int            loop_armed;      /* CC99-20 seen (CC6 then sets the count) */
+    int            loop_count;      /* remaining jumps; -1 or 0x7f = infinite */
+    int            skip_next_dt;    /* force the post-jump delta to 0 (Sony forces delta 0) */
+    int            vab_id;          /* SsVabOpenHead id: MAIN = 5, SUB = 6 (FUN_80044564/44774) */
+    struct ss_seq_s *tone_src;      /* tone/VAG source instance (SUB SEQ1 shares the SUB bank) */
     ss_voice_t     voice[SS_MAX_VOICES];
     int            mvol;            /* per-layer master volume (Q15)       */
     int            mvol_l, mvol_r;  /* per-layer L/R master (rotor pan; =mvol if no pan) */
 } ss_seq_t;
 
 static ss_seq_t s_ss_main;          /* MAIN<nn> music track                */
-static ss_seq_t s_ss_sub;           /* SUB_<nn> secondary/ambience track   */
+static ss_seq_t s_ss_sub;           /* SUB_<nn> secondary/ambience track (SEQ0) */
+static ss_seq_t s_ss_sub2;          /* SUB_<nn> SECOND sequence (SEQ1) — a real third SsSeq handle
+                                     * (FUN_80044774 opens BOTH: @0x8004494c SEQ0 + @0x8004498c
+                                     * SEQ1 at seq_base + *(file_end-8); the SCD 0x54 slot 2
+                                     * addresses it. Shares the SUB VAB via tone_src.
+                                     * [audit wf_1db9c802 BGM-SUB-SECOND-SEQ] */
 static int      s_ss_rate = 44100;
 static int      s_ss_sub_base_mvol = 0x1a00;  /* SUB layer base vol (rotor gating scales this) */
 
@@ -972,31 +995,62 @@ static void ss_all_voices_release(ss_seq_t *s) {
 }
 
 /* note-on: channel program + note → VAB tone → allocate a synth voice. */
+/* Per-voice pitch-bend multiplier (byte-true SpuVmPBVoice @0x80057d70): deflect = the bend
+ * MSB - 64; up (>=0) scales by the tone's pbmax/63 (@0x80057e44), down by pbmin/64
+ * (@0x80057ea8 >>6); range 0 pins the pitch to the base note. */
+static int ss_bend_q16(int deflect, int pbmin, int pbmax)
+{
+    if (deflect == 0) return 0x10000;
+    double semis = (deflect >= 0) ? (double)deflect * (double)pbmax / 63.0
+                                  : (double)deflect * (double)pbmin / 64.0;
+    if (semis == 0.0) return 0x10000;
+    return (int)(pow(2.0, semis / 12.0) * 65536.0 + 0.5);
+}
+
 static void ss_note_on(ss_seq_t *s, int chan, int note, int vel)
 {
-    const re15_vab_tone_t *t = re15_vab_find_tone(&s->vab, s->prog[chan], note);
-    if (!t) return;
-    int vi = (int)t->vag_index - 1;                 /* vag_index is 1-based */
-    if (vi < 0 || vi >= s->vab.vag_count || !s->vag_pcm[vi] || s->vag_len[vi] <= 0) return;
-    int slot = -1, q = 0x7fffffff;
-    for (int i = 0; i < SS_MAX_VOICES; i++) {
-        if (!s->voice[i].active) { slot = i; break; }
-        if (s->voice[i].env_level < q) { q = s->voice[i].env_level; slot = i; }  /* steal quietest */
+    /* TONE SOURCE: CC0 bank select rebinds the lookup to the MAIN bank (byte-true
+     * _SsSetControlChange case 0 -> seq+0x4c, consumed by _SsNoteOn `lh a1,76(s0)` as the
+     * key-on vab id — MAIN=5). SUB SEQ1 shares the SUB bank via tone_src. */
+    ss_seq_t *src = s->tone_src ? s->tone_src : s;
+    if (s->bank[chan] == 5 && src != &s_ss_main && s_ss_main.vab_ok) src = &s_ss_main;
+
+    /* ALL matching tones are keyed, one voice each (byte-true SpuVmKeyOn @0x800585e4-866c —
+     * stacked/chorus instruments; the port used to key only the first match). */
+    const re15_vab_tone_t *tn[8];
+    int nt = re15_vab_match_tones(&src->vab, s->prog[chan], note, tn, 8);
+    for (int k = 0; k < nt; k++) {
+        const re15_vab_tone_t *t = tn[k];
+        int vi = (int)t->vag_index - 1;             /* vag_index is 1-based */
+        if (vi < 0 || vi >= src->vab.vag_count || !src->vag_pcm[vi] || src->vag_len[vi] <= 0)
+            continue;
+        int slot = -1, q = 0x7fffffff;
+        for (int i = 0; i < SS_MAX_VOICES; i++) {
+            if (!s->voice[i].active) { slot = i; break; }
+            if (s->voice[i].env_level < q) { q = s->voice[i].env_level; slot = i; }  /* steal quietest */
+        }
+        ss_voice_t *v = &s->voice[slot];
+        v->pcm = src->vag_pcm[vi]; v->pcm_len = src->vag_len[vi]; v->loop_start = src->vag_loop[vi];
+        v->phase = 0;
+        uint16_t pitch = re15_vab_note2pitch(note, t->center_note, t->pitch_shift);
+        v->step = (uint32_t)pitch << 4;             /* Q16: pitch 0x1000 = 1.0 */
+        /* volume chain incl. the RUNTIME-writable program mvol + VAB master vol (the 0x54
+         * Sce_bgm_control payload writes these — FUN_80044da4; note-ons re-read them.
+         * wf_1db9c802 SEQCTL-VOLPAN). */
+        int vol = (int)t->vol * vel / 127;
+        vol = vol * s->cvol[chan] / 127;
+        vol = vol * (int)src->vab.prog_mvol[s->prog[chan]] / 127;
+        vol = vol * (int)src->vab.master_volume / 127;
+        int q15 = vol * 0x7fff / 127;
+        int pan = t->pan; if (pan < 0) pan = 64; if (pan > 127) pan = 127;
+        if (pan >= 56 && pan <= 72) { v->vol_l = q15; v->vol_r = q15; }
+        else { v->vol_l = q15 * (127 - pan) / 127; v->vol_r = q15 * pan / 127; }
+        v->adsr1 = t->adsr1; v->adsr2 = t->adsr2;   /* real SPU ADSR from the VAB tone */
+        v->env_level = 0; v->env_phase = 0; v->env_count = 0;   /* start in attack */
+        v->pbmin = t->pbmin; v->pbmax = t->pbmax;
+        v->bend_q16 = ss_bend_q16(s->bend_deflect[chan], t->pbmin, t->pbmax);
+        v->chan = (uint8_t)chan; v->note = (uint8_t)note; v->active = 1;
     }
-    ss_voice_t *v = &s->voice[slot];
-    v->pcm = s->vag_pcm[vi]; v->pcm_len = s->vag_len[vi]; v->loop_start = s->vag_loop[vi];
-    v->phase = 0;
-    uint16_t pitch = re15_vab_note2pitch(note, t->center_note, t->pitch_shift);
-    v->step = (uint32_t)pitch << 4;                 /* Q16: pitch 0x1000 = 1.0 */
-    int vol = (int)t->vol * vel / 127;
-    vol = vol * s->cvol[chan] / 127;
-    int q15 = vol * 0x7fff / 127;
-    int pan = t->pan; if (pan < 0) pan = 64; if (pan > 127) pan = 127;
-    if (pan >= 56 && pan <= 72) { v->vol_l = q15; v->vol_r = q15; }
-    else { v->vol_l = q15 * (127 - pan) / 127; v->vol_r = q15 * pan / 127; }
-    v->adsr1 = t->adsr1; v->adsr2 = t->adsr2;       /* real SPU ADSR from the VAB tone */
-    v->env_level = 0; v->env_phase = 0; v->env_count = 0;   /* start in attack */
-    v->chan = (uint8_t)chan; v->note = (uint8_t)note; v->active = 1;
 }
 
 static void ss_note_off(ss_seq_t *s, int chan, int note) {
@@ -1033,16 +1087,43 @@ static void ss_fire_event(ss_seq_t *s) {
         s->prog[ch] = s->seq[s->cursor++];
     } else if (typ == 0xD0) {            /* channel pressure (1 byte) — ignored */
         s->cursor++;
-    } else if (typ == 0xE0) {            /* pitch bend (2 bytes, 14-bit, ±2 semitones) */
-        int lo = s->seq[s->cursor++];
-        int hi = s->seq[s->cursor++];
-        int bend = (lo & 0x7f) | ((hi & 0x7f) << 7);     /* 0..0x3fff, center 0x2000 */
-        double semis = ((double)(bend - 0x2000) / 8192.0) * 2.0;  /* range ±2 */
-        s->bend_q16[ch] = (int)(pow(2.0, semis / 12.0) * 65536.0 + 0.5);
+    } else if (typ == 0xE0) {            /* pitch bend — value = the MSB ONLY (byte-true
+                                          * _SsSetPitchBend @0x8005ef04 reads one 7-bit byte,
+                                          * center 64; the LSB is stream-skipped). Per-voice
+                                          * scaling by the tone's pbmin/pbmax. */
+        s->cursor++;                     /* LSB: consumed, ignored */
+        int msb = s->seq[s->cursor++] & 0x7f;
+        s->bend_deflect[ch] = msb - 64;
+        for (int i = 0; i < SS_MAX_VOICES; i++)
+            if (s->voice[i].active && s->voice[i].chan == ch)
+                s->voice[i].bend_q16 = ss_bend_q16(s->bend_deflect[ch],
+                                                   s->voice[i].pbmin, s->voice[i].pbmax);
     } else if (typ == 0xA0 || typ == 0xB0) {
         int d1 = s->seq[s->cursor++];
         int d2 = s->seq[s->cursor++];
-        if (typ == 0xB0 && d1 == 7) s->cvol[ch] = d2;     /* CC7 channel volume */
+        if (typ == 0xB0) {
+            if (d1 == 7)  s->cvol[ch] = d2;           /* CC7 channel volume */
+            else if (d1 == 0) s->bank[ch] = (uint8_t)d2;  /* CC0 bank select (-> seq+0x4c) */
+            else if (d1 == 99) {                      /* Sony NRPN loop markers (_SsContNrpn2) */
+                if (d2 == 0x14) {                     /* LOOP START: save the post-event cursor */
+                    s->loop_cursor = s->cursor;
+                    s->loop_armed  = 1;
+                } else if (d2 == 0x1e && s->loop_cursor >= 0) {   /* LOOP JUMP */
+                    int jump = 1;
+                    if (s->loop_count >= 0 && s->loop_count != 0x7f) {
+                        if (s->loop_count > 0) s->loop_count--;
+                        else jump = 0;                /* finite count exhausted */
+                    }
+                    if (jump) {
+                        s->cursor       = s->loop_cursor;   /* notes SUSTAIN across the jump */
+                        s->skip_next_dt = 1;                /* Sony forces the post-jump delta 0 */
+                    }
+                }
+            } else if (d1 == 6 && s->loop_armed) {    /* CC6 Data Entry = loop count (0x7f inf) */
+                s->loop_count = d2;
+                s->loop_armed = 0;
+            }
+        }
     } else if (st == 0xFF) {
         int meta = s->seq[s->cursor++];
         int len  = s->seq[s->cursor++];
@@ -1051,7 +1132,9 @@ static void ss_fire_event(ss_seq_t *s) {
                           (s->seq[s->cursor+1] << 8) | s->seq[s->cursor+2]);
         s->cursor += len;
         if (meta == 0x2F) {                          /* end of track */
-            if (s->loop) { s->cursor = SS_SEQ_HDR; s->rstatus = 0; ss_all_voices_release(s); }
+            /* whole-file wrap = the fallback only (the in-track CC99 loop is the normal path);
+             * byte-true _SsGetMetaEvent's loop branch restarts WITHOUT keying voices off. */
+            if (s->loop) { s->cursor = SS_SEQ_HDR; s->rstatus = 0; }
             else s->playing = 0;
         }
     } else if (st == 0xF0 || st == 0xF7) {
@@ -1069,6 +1152,7 @@ static void ss_advance(ss_seq_t *s, int frames) {
         s->accum -= (double)s->pending_dt;
         ss_fire_event(s);
         s->pending_dt = ss_vlq(s);
+        if (s->skip_next_dt) { s->pending_dt = 0; s->skip_next_dt = 0; }   /* post-loop-jump delta 0 */
     }
 }
 
@@ -1078,9 +1162,10 @@ static void ss_mix(ss_seq_t *s, int16_t *out, int frames) {
     for (int i = 0; i < SS_MAX_VOICES; i++) {
         ss_voice_t *v = &s->voice[i];
         if (!v->active || !v->pcm) continue;
-        /* per-channel pitch-bend applied to the base step (Q16 × Q16 → Q16). */
+        /* per-VOICE pitch-bend applied to the base step (Q16 × Q16 → Q16) — the bend deflect is
+         * scaled by each voice's own tone pbmin/pbmax (SpuVmPBVoice). */
         uint32_t eff_step = (uint32_t)(((uint64_t)v->step *
-                              (uint32_t)s->bend_q16[v->chan]) >> 16);
+                              (uint32_t)(v->bend_q16 ? v->bend_q16 : 0x10000)) >> 16);
         for (int f = 0; f < frames; f++) {
             int idx = (int)(v->phase >> 16);
             if (idx >= v->pcm_len) {
@@ -1169,6 +1254,7 @@ static void re15_ss_render_bgm(int16_t *out, int frames) {
     memset(bgm, 0, (size_t)frames * 2 * sizeof(int16_t));
     ss_mix(&s_ss_main, bgm, frames);
     ss_mix(&s_ss_sub,  bgm, frames);
+    ss_mix(&s_ss_sub2, bgm, frames);   /* the SUB bank's SECOND sequence (SCD slot 2) */
     static int s_rev_held_l = 0, s_rev_held_r = 0, s_rev_phase = 0;
     for (int f = 0; f < frames; f++) {
         int dryL = bgm[f*2+0], dryR = bgm[f*2+1];
@@ -1208,8 +1294,11 @@ static void re15_ss_play(ss_seq_t *s, int loop) {
     SDL_LockAudioDevice(s_audio_dev);
     ss_all_voices_off(s);
     for (int i = 0; i < SS_CHANNELS; i++) {
-        s->prog[i] = 0; s->cvol[i] = 100; s->bend_q16[i] = 0x10000;
+        s->prog[i] = 0; s->cvol[i] = 100;
+        s->bend_deflect[i] = 0;                       /* bend MSB-64, per-voice scaled */
+        s->bank[i] = (uint8_t)s->vab_id;              /* CC0 default = the own bank id */
     }
+    s->loop_cursor = -1; s->loop_armed = 0; s->loop_count = 0x7f; s->skip_next_dt = 0;
     s->cursor = SS_SEQ_HDR; s->rstatus = 0; s->accum = 0;
     s->pending_dt = ss_vlq(s);
     s->loop = loop; s->playing = 1;
@@ -1287,11 +1376,17 @@ static int re15_bgm_load_track(ss_seq_t *s, const char *name, int slot) {
     return rc;
 }
 
-/* Init the play state for a loaded instance (no SDL lock — caller holds it / offline). */
+/* Init the play state for a loaded instance (no SDL lock — caller holds it / offline).
+ * An instance with tone_src (SUB SEQ1) has no own VAB — the source's counts. */
 static void ss_start(ss_seq_t *s, int loop) {
-    if (!s->vab_ok || !s->seq) { s->playing = 0; return; }
+    if ((!s->vab_ok && !s->tone_src) || !s->seq) { s->playing = 0; return; }
     ss_all_voices_off(s);
-    for (int i = 0; i < SS_CHANNELS; i++) { s->prog[i]=0; s->cvol[i]=100; s->bend_q16[i]=0x10000; }
+    for (int i = 0; i < SS_CHANNELS; i++) {
+        s->prog[i] = 0; s->cvol[i] = 100;
+        s->bend_deflect[i] = 0;
+        s->bank[i] = (uint8_t)s->vab_id;
+    }
+    s->loop_cursor = -1; s->loop_armed = 0; s->loop_count = 0x7f; s->skip_next_dt = 0;
     s->cursor = SS_SEQ_HDR; s->rstatus = 0; s->accum = 0;
     s->pending_dt = ss_vlq(s);
     s->loop = loop; s->playing = 1;
@@ -1382,6 +1477,7 @@ static void re15_amb_mix(int16_t *out, int frames) {
 static void re15_bgm_play_room(int stage, int room) {
     int main_ok = re15_bgm_load_track(&s_ss_main, "MAIN", re15_bgm_for_room(stage, room)) == 0;
     int sub_ok  = re15_bgm_load_track(&s_ss_sub,  "SUB_", re15_bgm_sub_for_room(stage, room)) == 0;
+    s_ss_main.vab_id = 5; s_ss_sub.vab_id = 6;   /* SsVabOpenHead ids (FUN_80044564/FUN_80044774) */
     re15_amb_load_rotor(stage, room);
     SDL_LockAudioDevice(s_audio_dev);
     if (main_ok) ss_start(&s_ss_main, 1);
@@ -1393,6 +1489,34 @@ static void re15_bgm_play_room(int stage, int room) {
          * drone through the pre-arrival open. The sequence keeps looping; we toggle
          * its master vol on PLAY/STOP so resumes are seamless (no restart pop). */
         s_ss_sub.mvol = s_ss_sub.mvol_l = s_ss_sub.mvol_r = 0;
+    }
+    /* SUB SEQ1 — the bank's SECOND sequence, a real third SsSeq handle (byte-true FUN_80044774
+     * opens BOTH: SEQ0 @0x8004494c + SEQ1 @0x8004498c at seq_base + *(file_end-8); the SCD 0x54
+     * slot 2 addresses it — audit wf_1db9c802 BGM-SUB-SECOND-SEQ). The extracted SUB .seq blob
+     * contains both back-to-back; locate the second pQES and open it sharing the SUB VAB
+     * (tone_src). Starts MUTED like SEQ0 (audible only via the 0x54 op). */
+    s_ss_sub2.playing = 0;
+    if (sub_ok && s_ss_sub.seq) {
+        for (int off = SS_SEQ_HDR; off + SS_SEQ_HDR < s_ss_sub.seq_len; off++) {
+            if (s_ss_sub.seq[off] == 'p' && s_ss_sub.seq[off+1] == 'Q' &&
+                s_ss_sub.seq[off+2] == 'E' && s_ss_sub.seq[off+3] == 'S') {
+                int len2 = s_ss_sub.seq_len - off;
+                uint8_t *sc = (uint8_t *)malloc((size_t)len2);
+                if (sc) {
+                    memcpy(sc, s_ss_sub.seq + off, (size_t)len2);
+                    free((void *)(uintptr_t)s_ss_sub2.seq);
+                    s_ss_sub2.seq = sc; s_ss_sub2.seq_len = len2;
+                    s_ss_sub2.ppqn     = (sc[8] << 8) | sc[9];
+                    s_ss_sub2.tempo_us = (uint32_t)((sc[10] << 16) | (sc[11] << 8) | sc[12]);
+                    if (s_ss_sub2.ppqn <= 0)     s_ss_sub2.ppqn = 48;
+                    if (s_ss_sub2.tempo_us == 0) s_ss_sub2.tempo_us = 500000;
+                    s_ss_sub2.vab_ok = 0; s_ss_sub2.tone_src = &s_ss_sub; s_ss_sub2.vab_id = 6;
+                    ss_start(&s_ss_sub2, 1);
+                    s_ss_sub2.mvol = s_ss_sub2.mvol_l = s_ss_sub2.mvol_r = 0;
+                }
+                break;
+            }
+        }
     }
     if (s_amb.pcm) s_amb.active = 1;
     SDL_UnlockAudioDevice(s_audio_dev);
@@ -1477,12 +1601,18 @@ void re15_audio_rotor_silence(void)
  * sustained drone, with no restart pop). This is the canonical, 1:1 PSX rotor
  * on/off: ROOM1170's sub02 plays slot 1 at the heli-arrival + sky-view cuts and
  * stops it during Leon's dialogue close-ups. */
-void re15_audio_seq_ctl(int slot, int op)
+/* Full Sce_bgm_control (0x54) semantics (byte-true @0x800429b4-e8 packs FIVE operand bytes;
+ * FUN_80044da4 consumes: slot = pc[1] indexes THREE seq handles (0 MAIN / 1 SUB SEQ0 / 2 SUB
+ * SEQ1, @0x800b52ae+slot*8), op = pc[2]; pc[4]!=0 writes vol-1 into the slot's in-RAM VAB
+ * master mvol (part pc[3]==0, VabHdr+0x18) or ProgAtr[pc[3]-1].mvol (+1, stride 16); pc[5]
+ * likewise for pan (+0x19 / +4). Note-ons re-read those — audit wf_1db9c802
+ * SCD-BGMCTL-OPERAND-PAYLOAD + AUDIO-SEQCTL-VOLPAN-FIELDS. */
+static void ss_seq_ctl_ex(int slot, int op, int part, int vol, int pan)
 {
-    if (!g_audio.initialized) return;
-    ss_seq_t *s = (slot == 0) ? &s_ss_main : (slot == 1) ? &s_ss_sub : NULL;
+    ss_seq_t *s = (slot == 0) ? &s_ss_main : (slot == 1) ? &s_ss_sub
+                : (slot == 2) ? &s_ss_sub2 : NULL;
     if (!s) return;
-    int base = (slot == 1) ? s_ss_sub_base_mvol : 0x1a00; /* MAIN inits to 0x1a00 */
+    int base = (slot >= 1) ? s_ss_sub_base_mvol : 0x1a00; /* MAIN inits to 0x1a00 */
     SDL_LockAudioDevice(s_audio_dev);
     switch (op) {
         case 1:   /* SsSeqSetVol + SsSeqPlay (loop) → audible */
@@ -1496,7 +1626,25 @@ void re15_audio_seq_ctl(int slot, int op)
             break;
         default: break;
     }
+    /* the vol/pan payload writes hit the slot's VAB header/program attrs (SUB SEQ1 shares the
+     * SUB bank via tone_src); ROOM1090 mutes MAIN program 0 mid-script this way (vol byte 1 ->
+     * write 0), ROOM11F0/11F1 scale the master. */
+    re15_vab_t *vab = s->tone_src ? &s->tone_src->vab : &s->vab;
+    if (vol) {
+        if (part == 0) vab->master_volume = (uint8_t)(vol - 1);
+        else if (part - 1 < RE15_VAB_PROGRAM_COUNT) vab->prog_mvol[part - 1] = (uint8_t)(vol - 1);
+    }
+    if (pan) {
+        if (part == 0) vab->master_pan = (uint8_t)(pan - 1);
+        else if (part - 1 < RE15_VAB_PROGRAM_COUNT) vab->prog_mpan[part - 1] = (uint8_t)(pan - 1);
+    }
     SDL_UnlockAudioDevice(s_audio_dev);
+}
+
+void re15_audio_seq_ctl(int slot, int op)
+{
+    if (!g_audio.initialized) return;
+    ss_seq_ctl_ex(slot, op, 0, 0, 0);
 }
 
 void re15_audio_tick(void)
@@ -1528,8 +1676,9 @@ void re15_audio_tick(void)
                 re15_voice_play(0x1170, evt.sample_id);
                 break;
             case SCD_AUDIO_SEQ_CTL:
-                /* 0x54 SsSeq slot control — the canonical rotor on/off. */
-                re15_audio_seq_ctl(evt.bank, evt.volume);
+                /* 0x54 SsSeq slot control + the vol/pan payload (part=sample_id, vol=raw_w0,
+                 * pan=pan — the FIVE operand bytes FUN_80044da4 consumes). */
+                ss_seq_ctl_ex(evt.bank, evt.volume, evt.sample_id, (int)evt.raw_w0, evt.pan);
                 break;
             case SCD_AUDIO_BGMTBL_SET: g_audio.events_bgm++;     break;
             case SCD_AUDIO_XA_ON:      g_audio.events_xa_on++;   break;

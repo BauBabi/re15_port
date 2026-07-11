@@ -90,6 +90,50 @@ int main(void)
         else printf("  (4) water floor 0x97 resolves (masked to 0x17), no longer silent\n");
     }
 
+    /* (5) VH tone LAYERING + pbmin/pbmax + ProgAtr mvol parse (BGM synth inputs — audit
+     *     AUD-VH-TONELAYER + BGM-PITCHBEND-PBMINMAX + SEQCTL-VOLPAN): a program with TWO tones
+     *     whose ranges contain the note must match BOTH (SpuVmKeyOn collects all matches);
+     *     VagAtr +0xc/+0xd (pbmin/pbmax) and ProgAtr +1 (mvol) must parse. */
+    {
+        static uint8_t vh[32 + 128*16 + 512 + 512];
+        memset(vh, 0, sizeof vh);
+        vh[0]='p'; vh[1]='B'; vh[2]='A'; vh[3]='V';       /* magic */
+        vh[18] = 1;                                        /* program_count = 1 */
+        vh[20] = 2;                                        /* tone_count */
+        vh[22] = 2;                                        /* vag_count */
+        vh[24] = 127; vh[25] = 64;                         /* master vol/pan */
+        int prog0 = 32;                                    /* ProgAtr @0x20, stride 16 */
+        vh[prog0 + 0] = 2;                                 /* tones */
+        vh[prog0 + 1] = 99;                                /* mvol */
+        vh[prog0 + 4] = 64;                                /* mpan */
+        int tone_base = 32 + 128*16;                       /* tone table (prog 0 segment) */
+        /* tone 0: full range, vag 1, pb 6/12 */
+        vh[tone_base + 0*32 + 2] = 120;                    /* vol */
+        vh[tone_base + 0*32 + 6] = 0;   vh[tone_base + 0*32 + 7] = 127;   /* min/max */
+        vh[tone_base + 0*32 + 0x0c] = 6; vh[tone_base + 0*32 + 0x0d] = 12; /* pbmin/pbmax */
+        vh[tone_base + 0*32 + 0x16] = 1;                   /* vag_index 1 */
+        /* tone 1: full range, vag 2, pb 0/0 (pinned) */
+        vh[tone_base + 1*32 + 2] = 100;
+        vh[tone_base + 1*32 + 6] = 0;   vh[tone_base + 1*32 + 7] = 127;
+        vh[tone_base + 1*32 + 0x16] = 2;
+        int szt = tone_base + 512;                         /* VAG size table */
+        vh[szt + 2] = 2; vh[szt + 4] = 2;                  /* entries 1/2 = 16 bytes each */
+
+        re15_vab_t vab;
+        int rc = re15_vab_parse(vh, sizeof vh, &vab);
+        if (rc != 0) { fprintf(stderr, "FAIL(5a): synthetic VH must parse (rc=%d)\n", rc); fail = 1; }
+        const re15_vab_tone_t *tn[8];
+        int n = re15_vab_match_tones(&vab, 0, 60, tn, 8);
+        if (n != 2) { fprintf(stderr, "FAIL(5b): note 60 must match BOTH stacked tones, got %d\n", n); fail = 1; }
+        if (n == 2 && (tn[0]->pbmin != 6 || tn[0]->pbmax != 12 || tn[1]->pbmax != 0)) {
+            fprintf(stderr, "FAIL(5c): pbmin/pbmax must parse (6/12 + 0/0), got %d/%d + %d\n",
+                    tn[0]->pbmin, tn[0]->pbmax, tn[1]->pbmax);
+            fail = 1;
+        }
+        if (vab.prog_mvol[0] != 99) { fprintf(stderr, "FAIL(5d): ProgAtr mvol must parse (99), got %d\n", vab.prog_mvol[0]); fail = 1; }
+        if (!fail) printf("  (5) VH: 2 stacked tones match, pbmin/pbmax 6/12 + pinned, prog mvol 99\n");
+    }
+
     if (fail) { printf("AUDIO-DECODE: FAIL\n"); return 1; }
     printf("AUDIO-DECODE: all checks passed\n");
     return 0;

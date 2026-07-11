@@ -3202,10 +3202,20 @@ int op_sce_espr_control(scd_thread_t *t)
  * "Sce_espr_control2" label (Java extractor) was wrong and has been corrected. */
 int op_sce_bgm_control(scd_thread_t *t)
 {
+    /* FULL payload (byte-true @0x800429b4-e8: the handler packs FIVE operand bytes
+     * pc[1]<<28|pc[2]<<24|pc[3]<<16|pc[4]<<8|pc[5] for FUN_80044da4): pc[3] = part
+     * (0 = VAB master, else program part-1), pc[4] = volume+1, pc[5] = pan+1 — nonzero
+     * bytes write vol-1/pan-1 into the slot's VAB mvol/mpan (VabHdr+0x18/+0x19 or
+     * ProgAtr+1/+4), which note-ons re-read. The old producer dropped pc[3..5], so
+     * ROOM1090's program mute + ROOM11F0/11F1's master scale never happened.
+     * [audit wf_1db9c802 SCD-BGMCTL-OPERAND-PAYLOAD] */
     scd_audio_event_t evt = {0};
-    evt.kind   = SCD_AUDIO_SEQ_CTL;
-    evt.bank   = t->pc[1];   /* sequence slot */
-    evt.volume = t->pc[2];   /* control op */
+    evt.kind      = SCD_AUDIO_SEQ_CTL;
+    evt.bank      = t->pc[1];   /* sequence slot (0 MAIN / 1 SUB SEQ0 / 2 SUB SEQ1) */
+    evt.volume    = t->pc[2];   /* control op */
+    evt.sample_id = t->pc[3];   /* part selector */
+    evt.raw_w0    = (uint16_t)t->pc[4];   /* volume byte (vol-1 written when nonzero) */
+    evt.pan       = t->pc[5];   /* pan byte (pan-1 written when nonzero) */
     enqueue_audio(&evt);
     t->pc += 6;
     return 1;

@@ -51,6 +51,8 @@ typedef struct {
     uint8_t  pitch_shift;  /* +5  fine-tune (1/128 semitone)    */
     uint8_t  min_note;     /* +6  lowest MIDI note for this tone */
     uint8_t  max_note;     /* +7  highest MIDI note             */
+    uint8_t  pbmin;        /* +0xc  pitch-bend DOWN range, semitones (SpuVmPBVoice @0x80057ea8 >>6) */
+    uint8_t  pbmax;        /* +0xd  pitch-bend UP range, semitones (@0x80057e44 /63); 0 = pinned */
     uint16_t adsr1;        /* +0x10 SPU ADSR1 register value    */
     uint16_t adsr2;        /* +0x12 SPU ADSR2 register value    */
     uint16_t vag_index;    /* +0x16 1-based VAG index in VB body */
@@ -73,6 +75,11 @@ typedef struct {
     int               vb_total_bytes;   /* sum of all sample sizes      */
     re15_vab_tone_t   tones[RE15_VAB_TOTAL_TONES]; /* [prog*16 + tone]   */
     int               tones_loaded;     /* 1 if the tone table parsed   */
+    /* Per-program master vol/pan (ProgAtr @0x20, stride 16: +1 mvol, +4 mpan — PSYQ LIBSND.H).
+     * RUNTIME-WRITABLE: the SCD Sce_bgm_control (0x54) payload writes vol-1/pan-1 into these
+     * (FUN_80044da4 lines 35-61) and note-ons re-read them. [audit wf_1db9c802 SEQCTL-VOLPAN] */
+    uint8_t           prog_mvol[RE15_VAB_PROGRAM_COUNT];
+    uint8_t           prog_mpan[RE15_VAB_PROGRAM_COUNT];
 } re15_vab_t;
 
 /* Canonical SPU pitch from a tone's center-note/shift + the played MIDI note
@@ -84,6 +91,13 @@ uint16_t re15_vab_note2pitch(int midi_note, int center_note, int pitch_shift);
  * Returns NULL if none / tones not loaded. */
 const re15_vab_tone_t *re15_vab_find_tone(const re15_vab_t *vab,
                                           int program, int note);
+
+/* ALL tones of `program` whose [min,max] range contains `note` (byte-true SpuVmKeyOn
+ * @0x800585e4-866c: the key-on COLLECTS every matching tone and keys EACH on its own voice —
+ * stacked/chorus instruments). Fills out[] with tone pointers, returns the count.
+ * [audit wf_1db9c802 AUD-VH-TONELAYER] */
+int re15_vab_match_tones(const re15_vab_t *vab, int program, int note,
+                         const re15_vab_tone_t **out, int max_out);
 
 /* Footstep EDT resolver (byte-true FUN_80045630): map a floor.flr sound_type
  * to a 0-based sample index in `vab` (snd0) via the room's 128-byte EDT table
