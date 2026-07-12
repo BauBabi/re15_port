@@ -19,9 +19,9 @@ it and strike it through (move to "verified").
 |---|---|---|---|---|
 | U1 | **Plc_neck s16 read** (operands as 4×s16 LE, not u8<<4) | scd_vm.c op_plc_neck | ROOM1170 has no Plc_neck | A room where an SCD fires Plc_neck (head-look) — head turns to the right target, no 360° flip |
 | U2 | **Neck sign-mask fix** (signed-12bit restore vs `&0x0FFF`) | skeleton_common.c:191 | Dead path in intro (lookat_y/x=0) | Same Plc_neck room — negative neck offset doesn't wrap to ~+360° |
-| U3 | **RUN motion → W01 sentinel 100** (no-overlay catalog; was aliased to WALK clip 19) | re15_to_re2.c:199 | ROOM1170 uses the rbj overlay branch, not this | A gameplay room where Leon RUNs without an rbj overlay → real run animation (not walk) |
+| ~~U3~~ | ~~**RUN motion → W01 sentinel 100**~~ ✅ VERIFIED 2026-07-12 | re15_to_re2.c:199 | — | ROOM1140: Leon runs (X+fwd) with **mo=100** (RUN sentinel, not walk) at **~200/frame** (RUN=0xC8), walls at x=−5118. Byte-true. |
 | U4 | **Ifel_ck non-Ck condition eval** (Member_cmp real / Sce_key_ck+Cmp conservative-FALSE) | scd_vm.c scd_eval_condition | Intro is Ck-only (Ck path IS verified); the 483 non-Ck branches are in other rooms | A room with Member_cmp/Sce_key_ck/Cmp Ifel_ck — branch taken iff the real condition holds |
-| U5 | **mode7/8 backward-walk speed 70** (was placeholder 96) | actor_locomotion.c:77-78 | Intro uses walk(4)/run(5)/turn(9), not mode 7/8 | A scene with a backward-walk Plc_dest (mode 7/8) |
+| ~~U5~~ | ~~**mode7/8 backward-walk speed 70**~~ ✅ VERIFIED 2026-07-12 | actor_locomotion.c:77-78 | — | ROOM1140: Leon walks backward (D) at a measured **69.7/frame** (F69→F70 dx=−69,dz=−10 → \|v\|=70) = disasm 0x46=70. Byte-true. |
 | U6 | **work-slot leak fix on op_member_set2/add_aspeed/plc_rot** (per-thread) | scd_vm.c | Intro path didn't hit these three ops cross-thread | A multi-thread scene using Member_set2 / Add_aspeed / Plc_rot under concurrent Work_set |
 | U7 | **Door/Item SFX fabrication REMOVED** (was {bank2,sample2,vol0x60/0x50,pan0x40}) | aot_common.c door/item handlers | Intro has no doors/item pickups | A room with a door / item pickup — the sound must come from the room SCD's Se_on (currently silent: our door is C-driven, so the canonical SCD-event-sub→Se_on path is a FOLLOW-UP — wire AOT event_sub_id → fire the sub) |
 | U8 | **VAB tone ADSR** (real tone+0x10/0x12 envelope vs dummy 0x00FF/0x0000) | audio_psx.c play_sample | audio_psx.c is the PSX-target SPU path — NOT in the PC build (PC uses audio_pc.c SDL); not even build-compiled here | A PSX build + audio: SFX have proper attack/decay/release, not flat full-volume |
@@ -34,7 +34,10 @@ it and strike it through (move to "verified").
 > (PSX SPU path) is untested/unbuilt-here.
 
 ## ✅ Move here once runtime-verified (date + how)
-_(empty — fill as rooms are reached)_
+- **U3 — RUN motion sentinel 100** (2026-07-12): ROOM1140 live, Leon runs (X+fwd) → state-log `mo=100`
+  (RUN sentinel = W01 clip 0, NOT walk clip) at ~200/frame (RUN=0xC8=200); walls at x=−5118.
+- **U5 — backward-walk speed 70** (2026-07-12): ROOM1140 live, Leon walks backward (D) → measured
+  69.7/frame (F69→F70 dx=−69, dz=−10 → |v|=70), matching the disasm mode-7/8 constant 0x46=70.
 
 ## How I maintain this
 - Every canonical fix I apply that the intro doesn't exercise → add a 🔴 row.
