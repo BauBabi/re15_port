@@ -2180,28 +2180,29 @@ static int op_aot_reset(scd_thread_t *t)
  * entities live in a separate room table we haven't ported yet). This
  * stops sub02's `Work_set(2,..); Member_set(12,-30208)` from sinking the
  * player below the floor. */
-static int op_work_set(scd_thread_t *t)
+/* Zero the 6 per-thread velocity/accel slots (thread+0x158..+0x163) — the entry clear shared by
+ * Work_set (0x2E, LAB_80040d2c @0x80040d2c-40) and the indirect 0x53 (LAB_80040e18 @0x80040e18-30).
+ * Verified 2026-06-09: byte-correct for a Work_set→Add_speed without an intervening Speed_set. */
+static void scd_work_clear(scd_thread_t *t)
 {
-    uint8_t kind = t->pc[1];
-    uint8_t idx  = t->pc[2];
-    /* Byte-true (LAB_80040d2c): Work_set ZEROES the 6 per-thread velocity slots
-     * (thread+0x158..+0x163) on entry. (Verified 2026-06-09; previously omitted —
-     * inert for ROOM1170 because Speed_set always rewrites a slot before Add_speed
-     * reads it, but now byte-correct for a Work_set→Add_speed without Speed_set.) */
     for (int _v = 0; _v < 6; _v++) { t->vel[_v] = 0; t->accel[_v] = 0; }
-    /* I-round (2026-05-24): write to PER-THREAD work_slot (per F11
-     * canon, RE1.5 stores at thread+0x154 not global). g_scd.work_slot
-     * also updated for backward-compat readers — to be migrated. */
+}
+
+/* Bind the PER-THREAD work entity (thread+0x154, per F11 canon) by selector `kind`, index `idx` —
+ * the shared body of Work_set (0x2E) and the indirect 0x53. Also runs scd_work_clear.
+ *   kind 1 → player;  kind 2 → NPC actor (idx+1, e.g. Work_set(2,0)=Elliot before Plc_motion);
+ *   kind 3 → prop by OBJ_ID (strictly the prop pool — Work_set(3,0) must NOT capture actor idx+1,
+ *            which floated the helipad fixture as a spurious box);  else → unbound (-1).
+ * g_scd.work_slot mirrors for backward-compat readers. */
+static void scd_work_bind(scd_thread_t *t, uint8_t kind, uint8_t idx)
+{
+    scd_work_clear(t);
     t->work_prop_idx = -1;
     g_scd.work_prop_idx = -1;
     if (kind == 1) {
         t->work_slot = RE15_ACTOR_SLOT_PLAYER;
         g_scd.work_slot = RE15_ACTOR_SLOT_PLAYER;
     } else if (kind == 2) {
-        /* kind=2 = NPC actor (idx+1 -> actor slot). Sub02 uses
-         * Work_set(2,0) before Plc_motion to animate Elliot (NPC slot 0
-         * -> actor 1). Previously kind=2 was a no-op, so all Plc_motion
-         * fell through to Leon. */
         int slot = (int)idx + 1;
         if (slot < RE15_ACTOR_MAX && g_actors[slot].active) {
             t->work_slot = (int8_t)slot;
@@ -2211,17 +2212,6 @@ static int op_work_set(scd_thread_t *t)
             g_scd.work_slot = -1;
         }
     } else if (kind == 3) {
-        /* kind=3 = PROP (obj_id lookup). Sub04-08 + sub12-13 + sub02's
-         * fixture-hide block use `Work_set(3, N)` where N is the OBJ_ID
-         * of the target prop. Sub04 Work_set(3,3) -> rotor; sub06
-         * Work_set(3,2) -> body; sub02 Work_set(3,0) -> obj 0x00 fixture.
-         *
-         * AS-followup 2026-05-26: previously the `kind == 2 || kind == 3`
-         * branch first tried g_actors[idx+1]. For Work_set(3, 0) this
-         * captured Elliot (actor slot 1, active during cinematic) and
-         * routed Member_set(-31000) to Elliot's actor instead of obj
-         * 0x00's prop -- leaving the helipad fixture floating in the
-         * cut-6 sky-view as a spurious "box". Now strictly prop-pool. */
         t->work_slot = -1;
         g_scd.work_slot = -1;
         for (int i = 0; i < g_scd.prop_count; i++) {
@@ -2235,6 +2225,12 @@ static int op_work_set(scd_thread_t *t)
         t->work_slot = -1;
         g_scd.work_slot = -1;     /* room / object entities → no actor route */
     }
+}
+
+static int op_work_set(scd_thread_t *t)
+{
+    /* Byte-true LAB_80040d2c — Work_set binds by the DIRECT index pc[2] (cf. 0x53 = indirect). */
+    scd_work_bind(t, t->pc[1], t->pc[2]);
     t->pc += 3;
     return 1;
 }
@@ -3326,9 +3322,28 @@ int op_sce_bgm_control(scd_thread_t *t)
     t->pc += 6;
     return 1;
 }
-/* Sce_fade_set (0x53) — RE1.5 = 3 bytes (disasm LAB_80040e18: clears 6-word fade
- * struct @actor+0x158, reads b@1/b@2, PC+=3; retail RE2 = 6). */
-int op_sce_fade_set(scd_thread_t *t)      { t->pc += 3; return 1; }
+/* (0x53) — 3 bytes. MISLABELED "Sce_fade_set": the RE1.5 handler LAB_80040e18 is NOT a fade — it is
+ * an INDIRECT Work_set, byte-for-byte identical to Work_set (0x2E, 0x80040d2c) EXCEPT the entity
+ * index is read indirectly: idx = (s16)work_vars[pc[2]] (`lh 0x800b0fd0+pc[2]*2` @0x80040e58), where
+ * Work_set uses pc[2] directly. sel=pc[1] (lbu +1 @0x80040e40). It clears the 6 vel/accel words then
+ * binds the per-thread work entity: sel 1→player(0x800ACA54), 2→enemy[idx×0x1F4], 3→obj[idx×0x94],
+ * 5→*(effect_ptr_tbl[idx]); sel 0/4/other take `j 0x80040f08` with NO store (work entity UNCHANGED,
+ * only the vel clear applies). RE'd + self-verified 2026-07-12 (wf_9143c15b; the tool annotates the
+ * player store 0x800ACA54 as 0x800aba84 — a lui+addiu bug: v1 is reloaded to 0x800b0fd0 @0x80040e5c).
+ * Emitted instruction-aligned in ROOM1030 (5×, sel=2, ids work_vars[4/5]=0); ROOM1140/1150 have zero
+ * aligned 0x53. sel==5 (effect/sprite-ptr pool @0x800B23F4) has no port equivalent → left unbound
+ * (faithful residual). Was a pure PC-advance stub. */
+int op_sce_fade_set(scd_thread_t *t)
+{
+    uint8_t sel = t->pc[1];                       /* lbu 1(pc) @0x80040e40 */
+    int16_t idx = g_scd.work_vars[t->pc[2]];      /* lh work_vars[pc[2]] @0x80040e58 (signed) */
+    if (sel == 1 || sel == 2 || sel == 3)         /* store paths; sel 0/4/5/other: no rebind */
+        scd_work_bind(t, sel, (uint8_t)idx);      /* clears vel/accel + binds the indirect entity */
+    else
+        scd_work_clear(t);                        /* sel 0/4/5: only the unconditional vel clear */
+    t->pc += 3;                                   /* @0x80040e44 */
+    return 1;
+}
 /* Sce_shake_on (0x5C) — RE1.5 = 4 bytes (disasm LAB_80042a10; retail RE2 = 3). */
 int op_sce_shake_on(scd_thread_t *t)      { t->pc += 4; return 1; }
 /* Plc_rot (0x58) — 4 bytes. NOTE: the "Plc_rot/rotate" name is from retail RE2;
@@ -3365,8 +3380,28 @@ int op_flag_ck2(scd_thread_t *t)
 }
 /* (0x5A) — RE1.5 = 6 bytes (disasm LAB_80041474; retail RE2 Weapon_chg = 2). */
 int op_weapon_chg(scd_thread_t *t)        { t->pc += 6; return 1; }
-/* (0x5B) — RE1.5 = 4 bytes (disasm LAB_800414e0; retail RE2 Plc_cnt = 2). */
-int op_plc_cnt(scd_thread_t *t)           { t->pc += 4; return 1; }
+/* (0x5B) — 4 bytes [0x5B, op, field_idx, var_idx]. byte-true LAB_800414e0 (self-verified 2026-07-12,
+ * wf_9143c15b): a work-ENTITY member read-modify-write. dest = FUN_80041554(work_entity=thread+0x154,
+ * pc[2]) resolves member offset (sltiu pc[2],0x14 → the SAME 0..19 field map as Member_set FUN_8004116c);
+ * operand = (s16)work_vars[pc[3]] (`lh 0x800b0fd0+pc[3]*2` @0x80041524); FUN_80040140(op=pc[1], dest,
+ * operand) applies the shared 12-op ALU (= scd_work_alu) as a 16-bit RMW → work_entity.member[pc[2]]
+ * OP= work_vars[pc[3]]. Returns 1 (NOT a predicate). Was a pure PC-advance stub. Per-thread work_slot
+ * like Member_set2. (Field-semantic model: the port get/set_member is the faithful 0..19 mapping; the
+ * PSX 16-bit RMW's high-half/neighbor-byte nuance is absorbed by modelling fields semantically.) */
+int op_plc_cnt(scd_thread_t *t)
+{
+    uint8_t op        = t->pc[1];   /* ALU operator (a0 → FUN_80040140 @0x80041528) */
+    uint8_t field_idx = t->pc[2];   /* work-entity member index 0..19 (FUN_80041554 @0x800414f8) */
+    uint8_t var_idx   = t->pc[3];   /* work_vars operand index (lh @0x80041524) */
+    int8_t  ws = (t->work_slot >= 0) ? t->work_slot : g_scd.work_slot;   /* thread+0x154 target */
+    if (ws >= 0 && field_idx < 0x14) {                                    /* sltiu a1,0x14 @0x80041554 */
+        int16_t cur = (int16_t)re15_actor_get_member((int)ws, field_idx);
+        scd_work_alu(op, &cur, g_scd.work_vars[var_idx]);                 /* (s16) operand */
+        re15_actor_set_member((int)ws, field_idx, (int32_t)cur);
+    }
+    t->pc += 4;                                                           /* @0x80041538 */
+    return 1;                                                             /* ori v0,1 @0x80041534 */
+}
 /* Member_calc (0x55) — 6 bytes (RE1.5 == RE2). */
 int op_member_calc(scd_thread_t *t)       { t->pc += 6; return 1; }
 /* Member_calc2 (0x56) — RE1.5 = 6 bytes (disasm LAB_80042a58 reads b@1/b@2/b@3/h@4,

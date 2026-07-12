@@ -817,6 +817,67 @@ static int test_evt_exec_direct_slot(void)
 }
 
 /* =========================================================================
+ * 0x53 (mislabeled "Sce_fade_set") — byte-true INDIRECT Work_set (LAB_80040e18): binds the
+ * per-thread work entity by idx = work_vars[pc[2]] (vs Work_set's direct pc[2]); sel 1/2/3 bind,
+ * sel 0/4/5 leave the work slot UNCHANGED (only the vel clear applies).
+ * ========================================================================= */
+static int test_scd_indirect_workset(void)
+{
+    /* sel=2 (NPC actor), id=7 → idx=work_vars[7]=0 → g_actors[0+1] = slot 1. */
+    scd_vm_init();
+    g_actors[1].active = 1;
+    g_scd.work_vars[7] = 0;
+    uint8_t bc[] = { 0x53, 0x02, 0x07, SCD_OP_EVT_END };
+    g_scd.threads[0].active = 0;
+    scd_thread_start(0, bc);
+    g_scd.threads[0].vel[2] = 999;                 /* must be cleared */
+    scd_vm_tick();
+    if (g_scd.threads[0].work_slot != 1) {
+        fprintf(stderr, "FAIL: 0x53 sel=2 should bind g_actors[work_vars[7]+1]=1, got %d\n",
+                g_scd.threads[0].work_slot); return 1; }
+    if (g_scd.threads[0].vel[2] != 0) {
+        fprintf(stderr, "FAIL: 0x53 must clear vel/accel\n"); return 1; }
+
+    /* sel=0 → NO rebind (work entity unchanged), only the vel clear. */
+    scd_vm_init();
+    uint8_t bc0[] = { 0x53, 0x00, 0x07, SCD_OP_EVT_END };
+    g_scd.threads[0].active = 0;
+    scd_thread_start(0, bc0);
+    g_scd.threads[0].work_slot = 5;                /* pre-existing binding */
+    g_scd.threads[0].vel[0]    = 777;
+    scd_vm_tick();
+    if (g_scd.threads[0].work_slot != 5) {
+        fprintf(stderr, "FAIL: 0x53 sel=0 must leave work_slot unchanged, got %d\n",
+                g_scd.threads[0].work_slot); return 1; }
+    if (g_scd.threads[0].vel[0] != 0) {
+        fprintf(stderr, "FAIL: 0x53 sel=0 must still clear vel\n"); return 1; }
+    printf("PASS: test_scd_indirect_workset\n");
+    return 0;
+}
+
+/* =========================================================================
+ * Plc_cnt (0x5B) — byte-true work-entity member RMW (LAB_800414e0): member[pc[2]] OP= work_vars[pc[3]]
+ * via the shared 12-op ALU on the per-thread work slot. Was a PC-advance stub.
+ * ========================================================================= */
+static int test_scd_plc_cnt_rmw(void)
+{
+    scd_vm_init();
+    g_actors[1].active = 1;
+    re15_actor_set_member(1, 4, 100);              /* field 4 = rot_y = 100 */
+    g_scd.work_vars[9] = 5;                         /* ALU operand */
+    /* Work_set(2,0) → bind slot 1; Plc_cnt(op=0 ADD, field=4, var=9): rot_y += 5 → 105. */
+    uint8_t bc[] = { 0x2E, 0x02, 0x00, 0x5B, 0x00, 0x04, 0x09, SCD_OP_EVT_END };
+    g_scd.threads[0].active = 0;
+    scd_thread_start(0, bc);
+    scd_vm_tick();
+    if (re15_actor_get_member(1, 4) != 105) {
+        fprintf(stderr, "FAIL: 0x5B ADD: rot_y 100 + work_vars[9]=5 should be 105, got %d\n",
+                (int)re15_actor_get_member(1, 4)); return 1; }
+    printf("PASS: test_scd_plc_cnt_rmw\n");
+    return 0;
+}
+
+/* =========================================================================
  * Flr_set (0x38) — byte-true runtime SCA-entry mutation (LAB_800417ac). Same
  * region_table[region+1][index] addressing as Sca_id_set(0x37)/Sca_floor_set(0x39)
  * = sca_entry_at(), but with region=pc[2]/index=pc[3] and it writes the four
@@ -1210,6 +1271,8 @@ int main(void)
     failures += test_evt_chain_reinit();
     failures += test_evt_exec_direct_slot();
     failures += test_flr_set_mutates();
+    failures += test_scd_indirect_workset();
+    failures += test_scd_plc_cnt_rmw();
     failures += test_goto_block_unwind();
     failures += test_gosub_block_isolation();
     failures += test_ck_set_flags();
