@@ -3259,16 +3259,23 @@ int op_evt_chain(scd_thread_t *t)
     return 1;
 }
 
-/* (0x52) — RE1.5 = 4 bytes. byte-true LAB_8004295c is a FLAG-AND CONDITION CHECK predicate
- * (NOT a sprite control; RE2's Sce_espr_control is a different opcode): param=pc[1], mask=u16@pc[2];
- * cond = (mask & DAT_800ac76c) != 0 ? param : (param^1); PC+=4. Same shape as Sce_key_ck (0x51) but
- * on flag word DAT_800ac76c. We don't model DAT_800ac76c yet → state 0 (no flag) → cond = param^1.
- * Cross-check 2026-06-30: was a `return 1` stub (always ran the If body); now a byte-true predicate. */
+/* (0x52) — RE1.5 = 4 bytes. byte-true LAB_8004295c is a PAD-AND CONDITION CHECK predicate
+ * (NOT a sprite control; RE2's Sce_espr_control is a different opcode): param=pc[1], mask=LE u16
+ * @pc[2]; cond = (mask & DAT_800ac76c) != 0 ? param : (param^1); PC+=4. It is instruction-for-
+ * instruction identical to Sce_key_ck (0x51 @0x80042920) except the source word is DAT_800ac76c —
+ * the PRESSED-EDGE (newly-pressed) sibling of 0x51's held DAT_800ac768. Both are the logical/remapped
+ * pad output words the dialog FSM reads (wf_6aad95ad: 768=held, 76c=pressed); the port publishes
+ * 76c as g_scd_pad_edge = pad_pressed (game_step_common.c:152). So the mask is applied to the real
+ * press-edge. (Earlier this hard-coded the no-press case `param^1`; now byte-true. No-input still
+ * yields param^1 — regression-free without live input.) */
 int op_sce_espr_control(scd_thread_t *t)
 {
-    uint8_t param = t->pc[1];
+    extern uint16_t g_scd_pad_edge;
+    uint8_t  param = t->pc[1];
+    uint16_t mask  = (uint16_t)(t->pc[2] | (t->pc[3] << 8));   /* LE u16 @pc[2] */
+    int      cond  = (mask & g_scd_pad_edge) != 0 ? (param != 0) : ((param ^ 1) != 0);
     t->pc += 4;
-    return (param ^ 1) ? SCD_R_CONTINUE : SCD_R_IF_FALSE;   /* no-flag: param^1 */
+    return cond ? SCD_R_CONTINUE : SCD_R_IF_FALSE;
 }
 /* Sce_bgm_control (0x54) — 6 bytes [op, slot, ctl, _, _, _]. The PSX handler
  * (jump-table idx 0x54 → FUN_80044da4) is the SsSeq software-sequencer slot

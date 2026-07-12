@@ -16,7 +16,9 @@
 #include "re15_scd.h"
 
 extern int op_sce_key_ck(scd_thread_t *t);
+extern int op_sce_espr_control(scd_thread_t *t);   /* 0x52 — pressed-edge sibling of 0x51 */
 extern uint16_t g_scd_pad_held;
+extern uint16_t g_scd_pad_edge;
 
 /* scd_vm.c dispatcher codes: #define SCD_R_CONTINUE 1 / SCD_R_IF_FALSE 3. */
 #define R_TRUE  1
@@ -32,6 +34,15 @@ static int keyck(uint8_t param, uint16_t mask, uint16_t held)
     scd_thread_t th; memset(&th, 0, sizeof th); th.pc = bc;
     g_scd_pad_held = held;
     return op_sce_key_ck(&th);
+}
+
+/* 0x52 = the pressed-EDGE sibling: identical predicate on g_scd_pad_edge. */
+static int esprck(uint8_t param, uint16_t mask, uint16_t edge)
+{
+    uint8_t bc[4] = { 0x52, param, (uint8_t)(mask & 0xff), (uint8_t)(mask >> 8) };
+    scd_thread_t th; memset(&th, 0, sizeof th); th.pc = bc;
+    g_scd_pad_edge = edge;
+    return op_sce_espr_control(&th);
 }
 
 int main(void)
@@ -64,6 +75,14 @@ int main(void)
         op_sce_key_ck(&th);
         CHECK("PC advanced 4", th.pc == bc + 4);
     }
+
+    /* ---- 0x52 pressed-edge sibling (op_sce_espr_control, LAB_8004295c) ---- */
+    printf("--- 0x52 pressed-edge predicate: (mask & DAT_800ac76c=g_scd_pad_edge) ---\n");
+    CHECK("0x52 CROSS press-edge, param=1 -> TRUE",          esprck(1, 0x4000, 0x4000) == R_TRUE);
+    CHECK("0x52 no press-edge, param=1 -> FALSE (param^1)",  esprck(1, 0x4000, 0x0000) == R_FALSE);
+    CHECK("0x52 START(0x08) edge, mask 0x00f0 -> FALSE",     esprck(1, 0x00f0, 0x0008) == R_FALSE);
+    CHECK("0x52 UP(0x10) edge, mask 0x00f0 -> TRUE",         esprck(1, 0x00f0, 0x0010) == R_TRUE);
+    CHECK("0x52 no-input default param=0 -> TRUE (unchanged)", esprck(0, 0xffff, 0x0000) == R_TRUE);
 
     if (g_fail) { printf("SCD-KEY-CK: FAIL\n"); return 1; }
     printf("SCD-KEY-CK: all checks passed\n");
