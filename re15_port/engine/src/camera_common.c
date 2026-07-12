@@ -207,33 +207,12 @@ const int re15_camera_room1100_cut_count =
  * inline below — same algorithm as actor_locomotion.c's atan2_q12. */
 
 #include "re15_skeleton.h"   /* re15_sin_q12 / re15_cos_q12              */
+#include "re15_actor.h"      /* re15_atan2_q12 — the byte-true catan bearing (shared) */
 
-#ifdef _MSC_VER
-#  include <stdlib.h>        /* abs                                     */
-#else
-#  include <stdlib.h>
-#endif
-
-/* atan2 in PSX angle units (4096 = 360°). yaw=0 → +Z forward. Mirrors
- * actor_locomotion.c::atan2_q12. */
-static int16_t cam_atan2_q12(int32_t dz, int32_t dx)
-{
-    if (dx == 0 && dz == 0) return 0;
-    int32_t abs_dx = abs(dx);
-    int32_t abs_dz = abs(dz);
-    int16_t a;
-    if (abs_dz >= abs_dx) {
-        int16_t a45 = (int16_t)((abs_dx * 512) / (abs_dz ? abs_dz : 1));
-        a = (dx >= 0) ? a45 : (int16_t)-a45;
-        if (dz < 0) a = (int16_t)(2048 - a);
-    } else {
-        int16_t a45 = (int16_t)((abs_dz * 512) / (abs_dx ? abs_dx : 1));
-        a = (dz >= 0) ? (int16_t)(1024 - a45)
-                      : (int16_t)(1024 + a45);
-        if (dx < 0) a = (int16_t)-a;
-    }
-    return (int16_t)(a & 0x0FFF);
-}
+/* (The old inline cam_atan2_q12 used the `num*512/den` linear-in-tangent approximation — even coarser
+ * than the removed ATAN256 LUT, up to ~4° error. It now routes through the byte-true catan bearing
+ * re15_atan2_q12. This animator is presently dead code, but the duplicate divergent atan2 was a
+ * landmine if re-enabled; unified so there is ONE byte-true heading in the engine.) */
 
 void re15_camera_animator_init(re15_camera_animator_t *anim,
                                 const re15_camera_cut_t *cut,
@@ -266,7 +245,7 @@ void re15_camera_animator_init(re15_camera_animator_t *anim,
     anim->y_dist_residual = 0;
     anim->dist_step       = 0;
     anim->y_dist_step     = 0;
-    anim->yaw_q12         = cam_atan2_q12(dz, dx);
+    anim->yaw_q12         = re15_atan2_q12(dz, dx);   /* byte-true catan bearing (was cam_atan2_q12 approx) */
     anim->yaw_step        = 0;
 
     anim->mode            = 0x40;
