@@ -1612,10 +1612,10 @@ int main(int argc, char *argv[])
                         s_dc = *view_cut;                             /* seed cam.xyz + fov from the room cut */
                         int32_t rdx = s_dc.pos_x - dcp->x, rdz = s_dc.pos_z - dcp->z;
                         s_dc_radius    = (int32_t)re15_squareroot0((uint32_t)(rdx*rdx + rdz*rdz));
-                        s_dc_dist_step = (s_dc_radius - 3300) / 3;    /* dolly radius to 3300 over 3 frames */
-                        s_dc_yaw       = 0x80;                        /* 128 settle start (fly-in spin deferred) */
+                        s_dc_dist_step = (s_dc_radius - 3300) / 3;    /* PHASE A: dolly radius to 3300 in 3 frames */
+                        s_dc_y_step    = (s_dc.pos_y - (dcp->y - 400)) / 3;  /* PHASE A: dolly cam.y to corpse.y-400 */
+                        s_dc_yaw       = 0x80;                        /* 128 settle start (fly-in spin deferred, FLAG B) */
                         s_dc_yaw_step  = 0xc;                         /* 12/frame steady orbit */
-                        s_dc_y_step    = 0x64;                        /* 100/frame crane (path B) */
                         s_dc.target_x  = dcp->x;                      /* look-at seed = corpse (no offset) */
                         s_dc.target_z  = dcp->z;
                         s_dc.target_y  = dcp->y - 400;
@@ -1631,7 +1631,10 @@ int main(int argc, char *argv[])
                     s_dc.target_x += (dcp->x - s_dc.target_x) / 60;   /* look-at ease /60 XZ */
                     s_dc.target_z += (dcp->z - s_dc.target_z) / 60;
                     s_dc.target_y += (dcp->y - (s_dc.target_y + 400)) / 20;  /* /20 Y, +400 head */
-                    if (++s_dc_updates >= 3) s_dc_dist_step = 0;      /* freeze radius at 3300 (path B) */
+                    if (++s_dc_updates >= 3) {                        /* PHASE B (settle) after the 3-frame dolly */
+                        s_dc_dist_step = 0;                           /* freeze radius at ~3300 */
+                        s_dc_y_step    = 0x64;                        /* 100/frame steady crane-up */
+                    }
                     death_cut = s_dc;
                     view_cut  = &death_cut;
                 } else if (s_dc_on) {
