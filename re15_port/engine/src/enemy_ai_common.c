@@ -4013,14 +4013,14 @@ static void re15_npc_sub_walk(re15_actor_t *e)
     if (e->sub_state_2 == 1 &&                               /* RUN: turn-to-face (@0x80051214) */
         re15_ai_arc_test(e, e->steer_x, e->steer_z, 0x15e) == 0)
         e->sub_state_2 = 2;                                  /* aligned (arc 350) -> walk-straight (@0x80051230) */
-    /* NOTE: the FORWARD TRANSLATION is deliberately NOT applied here. The obvious theory — arm the
-     * executor's anim_flags&1 root-motion and let it advance the walk clip's keyframe displacement — was
-     * DATA-REFUTED: EM040 clip 5 carries a CONSTANT sx=383 across all 20 frames (dumped from the loaded
-     * bank), so it has ZERO frame-to-frame root delta = an in-place step animation. The NPC therefore
-     * translates via a separate FIXED-SPEED mechanism (the walk INIT loads a per-type speed into +0x8c;
-     * cf. the player's 75/frame walk) that is not yet RE'd — a dynamic-only frontier. Steering is
-     * byte-true; the forward step is honestly deferred rather than faked with a no-op clip delta. */
-    re15_enemy_steer_point(e, e->steer_x, e->steer_z, re15_npc_type_cone(e->type));  /* @0x80051264 yaw-slew */
+    re15_enemy_steer_point(e, e->steer_x, e->steer_z, re15_npc_type_cone(e->type));  /* @0x80051264/133c yaw-slew */
+    /* WALK-STRAIGHT (phase 2 only): the forward TRANSLATION is pos_advance (FUN_800245d8) with a0=0
+     * (@0x80051344-48: `jal pos_advance; addu a0,zero,zero`) — move +0x8c (crow_speed = the per-type walk
+     * param loaded by INIT) along rot_y. It is NOT clip root-motion: EM040 clip 5 carries a CONSTANT
+     * sx=383 across all 20 keyframes (dumped from the loaded bank) = zero frame delta = an in-place step.
+     * The turn-to-face phase (1) has no pos_advance (@0x800512cc jumps to exit) so it pivots in place. */
+    if (e->sub_state_2 == 2)
+        re15_dog_advance(e, e->crow_speed);                  /* pos_advance(a0=0): +0x8c fwd along rot_y */
     re15_npc_anim(e);
 }
 
