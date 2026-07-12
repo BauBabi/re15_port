@@ -5064,16 +5064,20 @@ void re15_enemy_ai_run_all(int combat_active)
                 e->x = nx; e->z = nz;
             }
         }
-        else if (t == 0x40 || t == 0x42 || t == 0x45 || t == 0x47 || t == 0x49 || t == 0x4b) {
-            /* STAGE1 NPC family (0x40 Irons / 0x42 / 0x45 / 0x47 Annette / 0x49 / 0x4b) — all six
-             * are invulnerable cutscene actors that SHARE the same EXE behaviour lib (INIT
-             * @0x8011c6dc → HP=-1 + idle clip 2 → shared executor state 4 @0x80050be8; Wave-1). The
-             * dispatch was previously wired for 0x40 ONLY, so the other five spawned stuck at state 0
-             * / motion 0 (a T-pose, and never invulnerable) — confirmed in ROOM11B0 (0x42/0x4b at
-             * st=0 mo=0 while 0x40 reached st=4 mo=2). re15_npc_ai_tick is type-agnostic (driven by
-             * state/grid), so routing all six is byte-true to the shared lib. The walk/look/dialogue
-             * VM stays Wave-2 deferred. (0x4d, a STAGE6 type, is NOT included — unconfirmed as an NPC
-             * vs an enemy; left for the STAGE6 overlay RE.) */
+        else if (t == 0x40 || t == 0x42 || t == 0x45 || t == 0x47 || t == 0x49 || t == 0x4b ||
+                 t == 0x4d) {
+            /* NPC family — invulnerable cutscene actors that SHARE the same EXE behaviour lib (INIT →
+             * HP=-1 + idle clip 2 → shared executor state 4 @0x80050be8 + shared watcher states [6-11]
+             * @0x8004f2xx). STAGE1: 0x40 Irons / 0x42 / 0x45 / 0x47 Annette / 0x49 / 0x4b. STAGE6 adds
+             * 0x4d — the STAGE6 overlay registers its root @0x801017a0 (dispatch @0x80072ce0), which is
+             * byte-for-byte the NPC root pattern (pause gate → look helper 0x8001bd60 → nav-steer
+             * 0x80039e7c → +0x4 state dispatch) and whose state table @0x80102794 has the IDENTICAL
+             * EXE-shared entries ([4]=0x80050be8, [6-11]=0x8004fxxx) as the STAGE1 NPCs; its INIT
+             * @0x80101918 sets entity+0x9a = -1 (invulnerable). re15_npc_ai_tick is type-agnostic
+             * (state/grid-driven), so routing all seven is byte-true to the shared lib.
+             * The dispatch was previously wired for 0x40 ONLY, so the others spawned stuck at state 0 /
+             * motion 0 (a T-pose, never invulnerable) — confirmed in ROOM11B0 (0x42/0x4b st=0 mo=0 vs
+             * 0x40 st=4 mo=2) and ROOM6000 (0x4d st=0). The walk/look/dialogue VM stays Wave-2 deferred. */
             re15_npc_ai_tick(s);
         }
         else if (t == 0x13) {   /* ZOMBIE GIRL (type 0x13) — nav-pathing zombie variant (Wave 1).
