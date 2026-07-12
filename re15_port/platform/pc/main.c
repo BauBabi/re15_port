@@ -3042,6 +3042,15 @@ int main(int argc, char *argv[])
                 const re15_actor_t *npc = &g_actors[npc_i];
                 if (!npc->active) continue;
 
+                /* Load the enemy model the moment the actor is ACTIVE — BEFORE the region-quad cull
+                 * below, so an OFF-SCREEN actor still gets its EMD into the shared registry. The AI's
+                 * root-motion (re15_clip_root_motion*) reads that bank regardless of visibility, and the
+                 * PSX loads the model at Sce_em_set SPAWN (not lazily on first draw) — so a walking actor
+                 * outside the current camera cut must still have its keyframes. (Was gated after the cull
+                 * at the old site below; a culled off-screen enemy then had bank=NULL and froze.) */
+                if (npc->type && npc->type != 0x47 && !re15_enemy_find(npc->type))
+                    pc_enemy_load(npc->type);
+
                 /* BO-round (Tier-3): canonical per-cut REGION-QUAD cull, same as
                  * the prop path (PSX FUN_8002c18c → FUN_80014368). Replaces the
                  * BH-round |x|<25000 teleport-hide proxy: Elliot at the off-stage
@@ -3125,13 +3134,8 @@ int main(int argc, char *argv[])
                     }
                 }
 
-                /* GENERIC ENEMY (globalization 2026-06-13; em21 folded 2026-06-14f): first
-                 * time an actor of a non-player, non-Elliot type appears (INCLUDING the
-                 * type-0x21 crows), lazy-load its EM<NN>.EMD into the shared registry; the
-                 * selector then routes it to its own model (av.pc_tex_slot = its slot). */
-                if (npc->active && npc->type && npc->type != 0x47
-                    && !re15_enemy_find(npc->type))
-                    pc_enemy_load(npc->type);
+                /* (enemy-model load moved ABOVE the region cull — see the pc_enemy_load call right
+                 * after the !npc->active guard; visibility-independent so off-screen AI has its bank.) */
 
                 /* SHARED anim selection (unify 2026-06-06) — same view-model as the
                  * player + the PSX build (anim_select_common.c). is_player=0 enables

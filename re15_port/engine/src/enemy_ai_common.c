@@ -4013,6 +4013,13 @@ static void re15_npc_sub_walk(re15_actor_t *e)
     if (e->sub_state_2 == 1 &&                               /* RUN: turn-to-face (@0x80051214) */
         re15_ai_arc_test(e, e->steer_x, e->steer_z, 0x15e) == 0)
         e->sub_state_2 = 2;                                  /* aligned (arc 350) -> walk-straight (@0x80051230) */
+    /* NOTE: the FORWARD TRANSLATION is deliberately NOT applied here. The obvious theory — arm the
+     * executor's anim_flags&1 root-motion and let it advance the walk clip's keyframe displacement — was
+     * DATA-REFUTED: EM040 clip 5 carries a CONSTANT sx=383 across all 20 frames (dumped from the loaded
+     * bank), so it has ZERO frame-to-frame root delta = an in-place step animation. The NPC therefore
+     * translates via a separate FIXED-SPEED mechanism (the walk INIT loads a per-type speed into +0x8c;
+     * cf. the player's 75/frame walk) that is not yet RE'd — a dynamic-only frontier. Steering is
+     * byte-true; the forward step is honestly deferred rather than faked with a no-op clip delta. */
     re15_enemy_steer_point(e, e->steer_x, e->steer_z, re15_npc_type_cone(e->type));  /* @0x80051264 yaw-slew */
     re15_npc_anim(e);
 }
@@ -4046,6 +4053,12 @@ static void re15_npc_executor(re15_actor_t *e)
      * The gate + wiring are kept byte-true; the delta form self-skips on a non-advancing/ wrapped frame.
      * Channel 1 (@0x80050c94: `if (anim_flags & 2) FUN_800369f8(0,1)`) is a second segment — deferred. */
     if (e->anim_flags & 1) {
+        /* Byte-true executor gate (@0x80050c6c): apply channel-0 clip root-motion. NOTE the NPC's own
+         * clips are IN-PLACE — EM040 clip 5 carries a CONSTANT sx=383 across all 20 frames (verified by
+         * dumping bank->anim/anim_loco keyframe speeds), so the frame-to-frame delta is 0 and this is a
+         * no-op for the NPC walk. The NPC forward translation therefore comes from a DIFFERENT mechanism
+         * (a fixed-speed step, not clip root-motion) that is not yet RE'd — see re15_npc_sub_walk. The
+         * gate is kept byte-true for actors whose clips DO carry per-frame root translation. */
         re15_enemy_bank_t *bank = re15_enemy_find(e->type);
         if (bank) re15_clip_root_motion_delta(e, &bank->skel, &bank->anim,
                                               (int)e->motion, (int)e->anim_frame, fr_prev);
