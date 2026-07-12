@@ -14,7 +14,8 @@
  *   (0x6c @0x8001e338). Screen = 320x240 -> centre (160,108).
  */
 #include "re15_item_modal.h"
-#include "re15_math.h"       /* re15_rcos / re15_rsin (byte-true BIOS trig, Q12) */
+#include "re15_math.h"       /* re15_rcos — BIOS trig for the state-4 flip (FUN_80068348)            */
+#include "re15_skeleton.h"   /* re15_sin_q12 / re15_cos_q12 — GAME rotation trig for the zoom rotate */
 #include "re15_inventory.h"  /* re15_inv_grant + g_inv (grant) + re15_item_name (prompt length)     */
 #include "re15_aot.h"        /* g_aot — deactivate the item AOT on confirm                          */
 #include "re15_scd.h"        /* re15_game_flag_set — the taken-bit (zone 9)                         */
@@ -62,13 +63,15 @@ static int inv_free_slot(void)
 }
 
 /* FUN_8001e1c8 mode 0 (state 2 zoom): sx = cornerX*17/(f630+1), sy = cornerY*17/(f630+1), then rotate
- * (sx,sy) by `angle` (FUN_8004f008 = a Y-axis RotMatrix applied to the 3D point {sx,_,sy}, which is
- * algebraically a planar 2D rotation of (sx,sy)), then +160 / +108. MIPS `div` truncates toward zero,
- * which C integer division matches. */
+ * (sx,sy) by `angle` (FUN_8004f008 -> RotMatrix 0x80068098 = a Y-axis matrix, algebraically a planar
+ * 2D rotation of (sx,sy)), then +160 / +108. The RotMatrix reads the GAME rotation trig table
+ * DAT_800794c4 (re15_sin_q12/re15_cos_q12), NOT the BIOS rsin/rcos (@0x8007db04) — the two differ by
+ * up to 9 Q12 (byte-true trig-source; the state-4 FLIP below DOES use BIOS rcos = FUN_80068348). MIPS
+ * `div` truncates toward zero, which C integer division matches. */
 static void quad_scale_rotate(int num, int den, int angle)
 {
-    int32_t c = re15_rcos(angle & 0xfff);   /* Q12 */
-    int32_t s = re15_rsin(angle & 0xfff);
+    int32_t c = re15_cos_q12(angle & 0xfff);   /* GAME rotation trig (DAT_800794c4 via 0x80068098) */
+    int32_t s = re15_sin_q12(angle & 0xfff);
     for (int i = 0; i < 4; i++) {
         int32_t sx = (int32_t)s_corner_x[i] * num / den;
         int32_t sy = (int32_t)s_corner_y[i] * num / den;
