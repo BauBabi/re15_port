@@ -3368,12 +3368,20 @@ int op_sce_key_ck(scd_thread_t *t)
     /* byte-true predicate LAB_80042920: param=pc[1], mask=LE u16 @pc[2]; cond = (mask &
      * DAT_800ac768) != 0 ? param : (param^1); PC+=4. The `bne v1,zero` takes the key-pressed
      * branch (delay slot `addu v0,a1` = param); the no-key fall-through is `xori v0,a1,0x1` =
-     * param^1. We don't model the per-frame action register DAT_800ac768 yet → state 0 (no key)
-     * → cond = param^1 (NOT param — the prior comment/return had this inverted; cross-check
-     * 2026-06-30). Return it as the dispatch boolean (FALSE pops the If block-stack). */
-    uint8_t param = t->pc[1];
+     * param^1. DAT_800ac768 = the per-frame HELD (logical/remapped) pad register — the SAME word
+     * the dialog FSM reads as `& 0x4000 = CROSS` (wf_6aad95ad), published to the VM as
+     * g_scd_pad_held = pad_current (game_step_common.c:163) in the exact PSX bit convention
+     * (re15_player.h: CROSS 0x4000 / SQUARE 0x8000 / D-pad 0x10-0x80). So the mask is applied
+     * directly. (Earlier this hard-coded the no-key case `param^1` because g_scd_pad_held did not
+     * yet exist; now it is byte-true. No-input still yields param^1 — the common case — so nothing
+     * changes unless a mask button is actually held that frame; e.g. ROOM1080's 8 per-frame
+     * `Ifel_ck{Sce_key_ck(1,<bit>)}` input-poll predicates now respond to the pad.) */
+    extern uint16_t g_scd_pad_held;
+    uint8_t  param = t->pc[1];
+    uint16_t mask  = (uint16_t)(t->pc[2] | (t->pc[3] << 8));   /* LE u16 @pc[2] */
+    int      cond  = (mask & g_scd_pad_held) != 0 ? (param != 0) : ((param ^ 1) != 0);
     t->pc += 4;
-    return (param ^ 1) ? SCD_R_CONTINUE : SCD_R_IF_FALSE;   /* no-key: param^1 */
+    return cond ? SCD_R_CONTINUE : SCD_R_IF_FALSE;
 }
 /* (0x5E) — RE1.5 = 4 bytes (disasm LAB_80042b04; retail RE2 Keep_Item_ck = 2). */
 int op_keep_item_ck(scd_thread_t *t)      { t->pc += 4; return 1; }

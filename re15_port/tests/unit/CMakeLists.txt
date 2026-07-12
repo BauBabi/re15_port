@@ -357,6 +357,12 @@ target_include_directories(test_scd_flag_fade PRIVATE ${CMAKE_SOURCE_DIR}/includ
 add_test(NAME unit_scd_flag_fade COMMAND test_scd_flag_fade)
 set_tests_properties(unit_scd_flag_fade PROPERTIES TIMEOUT 30)
 
+add_executable(test_scd_key_ck test_scd_key_ck.c)
+target_link_libraries(test_scd_key_ck PRIVATE re15_engine re15_test_support)
+target_include_directories(test_scd_key_ck PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_scd_key_ck COMMAND test_scd_key_ck)
+set_tests_properties(unit_scd_key_ck PROPERTIES TIMEOUT 30)
+
 # --- Byte-true RE1.5 camera LookAt (audit #3 — integer SquareRoot0 + division, no float/rounding) ---
 add_executable(test_camera_view test_camera_view.c)
 target_link_libraries(test_camera_view PRIVATE re15_engine re15_test_support)
