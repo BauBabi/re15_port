@@ -29,13 +29,16 @@ int     re15_menu_cursor(void)  { return s_cursor; }
 uint8_t re15_menu_disp_id(int i)  { return (i >= 0 && i < s_count) ? g_inv.slots[s_disp_slot[i]].id  : 0; }
 uint8_t re15_menu_disp_qty(int i) { return (i >= 0 && i < s_count) ? g_inv.slots[s_disp_slot[i]].qty : 0; }
 
-/* Snapshot the occupied g_inv slots into the compacted display list (matches the game's compaction). */
+/* Byte-true (audit wf_1c0e60d8): the inventory MENU is a FIXED capacity-cell grid — FUN_800487b0 bounds
+ * the cursor by the CAPACITY byte 0x800b0fbc (=10 for Leon, a per-character constant), NOT the occupied
+ * count, and the free-slot scanner FUN_8004df2c loops [0,capacity). Items sit at their fixed g_inv slots
+ * and EMPTY cells are shown + cursor-reachable. The port previously COMPACTED the occupied slots ("matches
+ * the game's compaction" — that belief was WRONG), which diverged after a heal-use left a gap. Identity-map
+ * the 10 grid cells to slots 0..9. (Capacity is Leon's 10; a per-character capacity would parameterize this.) */
 static void rebuild_display(void)
 {
-    s_count = 0;
-    for (int i = 0; i < RE15_INV_MAX_SLOTS && s_count < MENU_MAX_CELLS; i++)
-        if (g_inv.slots[i].id != 0)
-            s_disp_slot[s_count++] = (uint8_t)i;
+    s_count = MENU_MAX_CELLS;                              /* fixed capacity grid, not the occupied count */
+    for (int i = 0; i < MENU_MAX_CELLS; i++) s_disp_slot[i] = (uint8_t)i;
 }
 
 void re15_menu_toggle(void)

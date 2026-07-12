@@ -43,11 +43,17 @@ int main(void)
     re15_player_set_equipped_weapon(1);          /* equipped = the knife (briefing default) */
     if (re15_menu_is_open()) { fprintf(stderr, "FAIL: menu must start closed\n"); fail = 1; }
 
-    /* (1) OPEN: toggle -> open, count == 3 occupied slots, cursor snaps to the equipped weapon (id 1 -> index 0). */
+    /* (1) OPEN: toggle -> open. Byte-true (audit wf_1c0e60d8): the menu is a FIXED capacity-cell grid
+     * (count == 10, NOT the occupied count — FUN_800487b0 bounds the cursor by the 0x800b0fbc capacity),
+     * items at their fixed slots (0=knife,1=handgun,2=bullets, 3..9 empty), cursor snaps to the equipped
+     * weapon (id 1 -> slot 0). Empty cells 3..9 are cursor-reachable but have no id/action. */
     re15_menu_toggle();
     if (!re15_menu_is_open()) { fprintf(stderr, "FAIL: (1) toggle must open the menu\n"); fail = 1; }
-    if (re15_menu_count() != 3) {
-        fprintf(stderr, "FAIL: (1) count must be 3 (briefing items), ist %d\n", re15_menu_count()); fail = 1; }
+    if (re15_menu_count() != 10) {
+        fprintf(stderr, "FAIL: (1) count must be 10 (fixed capacity grid), ist %d\n", re15_menu_count()); fail = 1; }
+    if (re15_menu_disp_id(0) != 0x01 || re15_menu_disp_id(3) != 0x00) {
+        fprintf(stderr, "FAIL: (1) fixed grid: slot0=knife(1) slot3=empty(0), ist 0x%02x/0x%02x\n",
+                re15_menu_disp_id(0), re15_menu_disp_id(3)); fail = 1; }
     if (re15_menu_disp_id(re15_menu_cursor()) != 0x01) {
         fprintf(stderr, "FAIL: (1) cursor must snap to the equipped item 1 (knife), ist id 0x%02x\n",
                 re15_menu_disp_id(re15_menu_cursor())); fail = 1; }
@@ -66,10 +72,12 @@ int main(void)
     if (re15_menu_cursor() != 0) { fprintf(stderr, "FAIL: (3) LEFT from 1 -> 0, ist %d\n", re15_menu_cursor()); fail = 1; }
     re15_menu_tick(RE15_PAD_BIT_DOWN);           /* 0 -> 2 (bullets), row below */
     if (re15_menu_cursor() != 2) { fprintf(stderr, "FAIL: (3) DOWN from 0 -> 2, ist %d\n", re15_menu_cursor()); fail = 1; }
-    for (int i = 0; i < 6; i++) re15_menu_tick(RE15_PAD_BIT_DOWN);    /* clamp (count 3, no row below 2) */
-    if (re15_menu_cursor() != 2) { fprintf(stderr, "FAIL: (3) DOWN must clamp at 2, ist %d\n", re15_menu_cursor()); fail = 1; }
-    re15_menu_tick(RE15_PAD_BIT_UP);             /* 2 -> 0 */
-    for (int i = 0; i < 6; i++) re15_menu_tick(RE15_PAD_BIT_UP);      /* clamp at 0 */
+    for (int i = 0; i < 6; i++) re15_menu_tick(RE15_PAD_BIT_DOWN);    /* byte-true: DOWN traverses the FULL
+                                                                      * capacity grid into the empty cells;
+                                                                      * clamps at 8 (8+2=10 not < 10), NOT
+                                                                      * at the last occupied item. */
+    if (re15_menu_cursor() != 8) { fprintf(stderr, "FAIL: (3) DOWN must clamp at 8 (grid end), ist %d\n", re15_menu_cursor()); fail = 1; }
+    for (int i = 0; i < 6; i++) re15_menu_tick(RE15_PAD_BIT_UP);      /* 8 -> 0, clamp at 0 */
     if (re15_menu_cursor() != 0) { fprintf(stderr, "FAIL: (3) UP must clamp at 0, ist %d\n", re15_menu_cursor()); fail = 1; }
 
     /* (4) EQUIP a WEAPON: cursor to the handgun (index 1, id 3), SQUARE -> equipped == 3 AND the menu closes. */

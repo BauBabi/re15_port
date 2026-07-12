@@ -1445,6 +1445,7 @@ int main(int argc, char *argv[])
                 if (c >= n) continue;
                 if (c == cur) re15_render_tile(cx - 1, cy - 1, 42, 32, 3, 40, 40, 120);  /* cursor */
                 uint8_t id = re15_menu_disp_id(c);
+                if (id == 0) continue;                     /* EMPTY grid cell: cursor drawn, no icon/name */
                 if (!re15_pc_draw_item_icon(cx, cy, id)) {
                     char t[8]; snprintf(t, sizeof t, "%02X", id);
                     re15_debug_text(cx + 2, cy + 2, 0, t);
@@ -1453,8 +1454,9 @@ int main(int argc, char *argv[])
                 if (q > 0) { char t[8]; snprintf(t, sizeof t, "%d", q); re15_debug_text(cx + 22, cy + 20, 0, t); }
             }
 
-            /* selected item name + controls */
-            if (n > 0) {
+            /* selected item name + controls (only for a NON-empty cursor cell — an empty grid slot is
+             * cursor-reachable but shows no name/action) */
+            if (n > 0 && re15_menu_disp_id(cur) != 0) {
                 uint8_t id = re15_menu_disp_id(cur);
                 const char *ty = re15_item_is_weapon(id) ? "WEAPON"
                                : re15_item_is_ammo(id)   ? "AMMO" : "ITEM";
