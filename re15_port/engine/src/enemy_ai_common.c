@@ -33,6 +33,7 @@
 #include "re15_actor.h"    /* re15_atan2_q12 — heading toward the player for the approach/walk */
 #include "re15_anim_select.h" /* re15_compute_actor_kf — current keyframe for the walk root-motion */
 #include "re15_emd.h"      /* re15_emd_get_keyframe_speed — the walk clip's per-frame root translation */
+#include <stdlib.h>        /* getenv — RE15_NPC_TURN_TEST diagnostic seed */
 
 /* Engine-wide AI freeze = DAT_800aca40 & 0x20000000 (FUN_8011d6d4 gate). */
 static int s_ai_paused = 0;
@@ -3956,9 +3957,74 @@ static int re15_npc_anim(re15_actor_t *e)     /* POST-inc +0x95, wrap at the rea
     return done;
 }
 
+/* ===== NPC shared executor sub-VM (@0x80076ca0, driven by state[4] 0x80050be8) — Wave 2 (phase 1) =====
+ * Byte-true (RE wf_65933e19 + self-verified disasm). Reuses re15_ai_arc_test (0x8001ab9c, 0=aligned) and
+ * re15_enemy_steer_point (0x8001aac4, yaw-slew). The per-type TURN cone is @0x80076c41. */
+static const uint8_t s_npc_turn_cone[16] =    /* @0x80076c41 byte[(type-0x40)*2] (0x40=0x60, 0x4b=0x50) */
+    { 0x60,0x60,0x60,0x60,0x60,0x60,0x60,0x60,0x60,0x60,0x60,0x50,0x50,0x60,0x60,0x50 };
+static uint8_t re15_npc_type_cone(uint8_t type)
+    { int i = (int)type - 0x40; if (i < 0 || i > 15) i = 0; return s_npc_turn_cone[i]; }
+
+/* subs 0-3: idle-pose (a 2-layer looping idle FSM on +0x6, no move/turn). The port's faithful-line is the
+ * clip-2 hold — the byte-true anim_set-loop folds to "advance a real looping idle clip". */
+static void re15_npc_sub_idle(re15_actor_t *e)
+{
+    if (e->motion < 24 && s_irons_clip_len[e->motion] <= 1) re15_npc_clip(e, 2);
+    re15_npc_anim(e);
+}
+
+/* sub 9: TURN / look-at IN PLACE (@0x80051cf8). Slews rot_y toward the steer point (+0x1bc/+0x1be) at
+ * cone[type]/step; on alignment hands +0x5 to sub 6 (event-reach). NO position advance. */
+static void re15_npc_sub_turn(re15_actor_t *e)
+{
+    if (e->sub_state_2 > 1) return;                          /* >1 -> exit (@0x80051d20) */
+    if (e->sub_state_2 == 0) {                               /* INIT (@0x80051d2c-5c) */
+        e->sub_state_2 = 1; e->motion = 5; e->anim_frame = 0; e->anim_frac = 7;
+    }
+    uint8_t cone = re15_npc_type_cone(e->type);              /* @0x80076c41 */
+    if (re15_ai_arc_test(e, e->steer_x, e->steer_z, cone) == 0) {   /* ALIGNED (@0x80051d90-98) */
+        e->sub_state_1 = 6; e->sub_state_2 = 0;              /* -> sub 6 event-reach (@0x80051dac/dbc) */
+        if (e->anim_flags & 4) { e->sub_state_1 = 9; e->sub_state_2 = 2; }   /* re-arm (@0x80051df4) */
+    }
+    re15_enemy_steer_point(e, e->steer_x, e->steer_z, cone); /* yaw-slew (@0x80051e44) */
+    re15_npc_anim(e);                                        /* advance the turn clip (motion 5) */
+}
+
+/* Executor sub-dispatch: sub_library[+0x5] (@0x80076ca0). Phase-1 slice = idle (0-3) + turn (9); the
+ * walk-to-target subs 4/5/7/8 and the event-reach sub 6 fold to idle for now (phases 3/5). */
+static void re15_npc_sub_dispatch(re15_actor_t *e)
+{
+    switch (e->sub_state_1) {
+    case 9: re15_npc_sub_turn(e); break;
+    default: re15_npc_sub_idle(e); break;   /* 0-3 idle; 4/5/7/8 walk + 6 event-reach = deferred */
+    }
+}
+
+/* STATE[4] EXECUTOR @0x80050be8: HALF-RATE gate then sub-dispatch then toggle 0x20 (+ root-motion, phase 3).
+ * Gate (self-verified @0x80050c00-c0c): dispatch iff !((anim_flags&0x10) && (anim_flags&0x20)) — skip ONLY
+ * when both bits are set; the 0x10-clear path always dispatches. 0x20 toggles each executor tick. */
+static void re15_npc_executor(re15_actor_t *e)
+{
+    uint16_t f = e->anim_flags;
+    if (!((f & 0x10) && (f & 0x20))) re15_npc_sub_dispatch(e);   /* @0x80050c00-c34 */
+    e->anim_flags ^= 0x20;                                        /* @0x80050c50 */
+    /* root-motion (@0x80050c78/ca0, FUN_800369f8 walk displacement -> +0x34/+0x3c) is deferred to the
+     * walk phase (subs 4/5/7/8 not ported) — a no-op here (idle/turn have no displacement). */
+}
+
 static void re15_npc_ai_tick(int slot)
 {
     re15_actor_t *e = &g_actors[slot];
+
+    /* RE15_NPC_TURN_TEST: contrived verification of sub 9 — force the NPC into the turn sub aimed at the
+     * LIVE player each tick (the STAGE1 NPCs park off-screen, so this seeds an observable look-at). */
+    { static int s_tt = -1; if (s_tt < 0) s_tt = getenv("RE15_NPC_TURN_TEST") ? 1 : 0;
+      if (s_tt && e->state != 0) {
+          re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+          e->steer_x = (int16_t)pl->x; e->steer_z = (int16_t)pl->z;   /* live player as the steer target */
+          if (e->state != 4) { e->state = 4; e->sub_state_2 = 0; }     /* enter the executor (INIT the sub) */
+          e->sub_state_1 = 9; e->anim_flags |= 0x10;                   /* force the turn sub (half-rate) */
+      } }
 
     switch (e->state) {
     case 0:   /* INIT 0x8011c6dc: idle pose, INVULNERABLE, -> state 1 (or the shared executor) */
@@ -3970,8 +4036,11 @@ static void re15_npc_ai_tick(int slot)
         e->sub_state_2 = 0; e->sub_state_3 = 0;
         break;
 
-    case 4:   /* shared executor 0x80050be8: dispatch +0x5 -> the idle-pose leaf (wave 1: animate the pose).
-               * The walk/turn/watch behaviour VM (@0x80076ca0 subs 4/5/7/8/9 + states [6]/[7]) = wave 2. */
+    case 4:   /* shared executor 0x80050be8: the sub-VM (@0x80076ca0, dispatch on +0x5) — Wave-2 phase 1:
+               * idle-pose (subs 0-3) + turn/look-at (sub 9). Walk (4/5/7/8) + watchers = later phases. */
+        re15_npc_executor(e);
+        break;
+
     case 1:   /* Irons overlay state 1 = idle/scripted (wave 2) -> hold the idle pose */
     default:  /* all other NPC states (watchers / overlay) = wave 2 -> hold the idle pose */
         if (e->motion < 24 && s_irons_clip_len[e->motion] <= 1) re15_npc_clip(e, 2);  /* keep a real looping idle clip */
