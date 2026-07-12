@@ -3401,8 +3401,28 @@ int op_flag_ck2(scd_thread_t *t)
     t->pc += 4;
     return cond ? SCD_R_CONTINUE : SCD_R_IF_FALSE;
 }
-/* (0x5A) — RE1.5 = 6 bytes (disasm LAB_80041474; retail RE2 Weapon_chg = 2). */
-int op_weapon_chg(scd_thread_t *t)        { t->pc += 6; return 1; }
+/* (0x5A) — 6 bytes. MISLABELED "Weapon_chg" (RE2 2-byte name): the RE1.5 handler LAB_80041474 is a
+ * work-entity member RMW with an IMMEDIATE operand — the sibling of 0x5B (Plc_cnt), which takes the
+ * operand from work_vars. Self-verified 2026-07-12 (wf_9143c15b caught its own "benign" misclass):
+ *   s1 = lhu @pc[2] (@0x80041494); op = s1&0xff = pc[2] (andi @0x800414a4); field = s1>>8 = pc[3]
+ *   (srl @0x800414a0); value = (s16)lh @pc[4] (@0x80041498). dest = FUN_80041554(work_entity, field)
+ *   = the SAME 0..19 field resolver as Member_set/0x5B; FUN_80040140(op, dest, value) = scd_work_alu
+ *   16-bit RMW → member[pc[3]] OP= (s16)pc[4..5]. Returns 1 (not a predicate); pc+=6. pc[1] unused.
+ * Writes position/rotation/flags the game READS (render/collision) — was a PC-advance stub. */
+int op_weapon_chg(scd_thread_t *t)
+{
+    uint8_t op        = t->pc[2];   /* op_selector = (lhu pc+2) & 0xff */
+    uint8_t field_idx = t->pc[3];   /* member_index = (lhu pc+2) >> 8 */
+    int16_t value     = (int16_t)((uint16_t)t->pc[4] | ((uint16_t)t->pc[5] << 8));   /* lh pc+4 */
+    int8_t  ws = (t->work_slot >= 0) ? t->work_slot : g_scd.work_slot;
+    if (ws >= 0 && field_idx < 0x14) {
+        int16_t cur = (int16_t)re15_actor_get_member((int)ws, field_idx);
+        scd_work_alu(op, &cur, value);
+        re15_actor_set_member((int)ws, field_idx, (int32_t)cur);
+    }
+    t->pc += 6;
+    return 1;
+}
 /* (0x5B) — 4 bytes [0x5B, op, field_idx, var_idx]. byte-true LAB_800414e0 (self-verified 2026-07-12,
  * wf_9143c15b): a work-ENTITY member read-modify-write. dest = FUN_80041554(work_entity=thread+0x154,
  * pc[2]) resolves member offset (sltiu pc[2],0x14 → the SAME 0..19 field map as Member_set FUN_8004116c);

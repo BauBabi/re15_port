@@ -873,7 +873,17 @@ static int test_scd_plc_cnt_rmw(void)
     if (re15_actor_get_member(1, 4) != 105) {
         fprintf(stderr, "FAIL: 0x5B ADD: rot_y 100 + work_vars[9]=5 should be 105, got %d\n",
                 (int)re15_actor_get_member(1, 4)); return 1; }
-    printf("PASS: test_scd_plc_cnt_rmw\n");
+
+    /* 0x5A (mislabeled Weapon_chg) = member RMW with IMMEDIATE operand: member[pc[3]] OP(pc[2])=
+     * (s16)pc[4..5]. Work_set(2,0)→slot1; 0x5A op=0 ADD field=4(rot_y) value=7 → 105+7=112. */
+    uint8_t bc2[] = { 0x2E, 0x02, 0x00, 0x5A, 0x00, 0x00, 0x04, 0x07, 0x00, SCD_OP_EVT_END };
+    g_scd.threads[0].active = 0;
+    scd_thread_start(0, bc2);
+    scd_vm_tick();
+    if (re15_actor_get_member(1, 4) != 112) {
+        fprintf(stderr, "FAIL: 0x5A ADD-immediate: rot_y 105 + 7 should be 112, got %d\n",
+                (int)re15_actor_get_member(1, 4)); return 1; }
+    printf("PASS: test_scd_plc_cnt_rmw (0x5B work-var + 0x5A immediate)\n");
     return 0;
 }
 
