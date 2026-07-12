@@ -22,6 +22,7 @@
 #include "re15_msg.h"           /* shared .msg text layout walk (re15_msg_layout) */
 #include "re15_tim.h"           /* re15_tim_t — the YOU DIED game-over graphic */
 #include "re15_fade.h"          /* the screen-fade channel engine (SCD 0x56/0x57, FUN_80021880) */
+#include "re15_item_icon.h"     /* re15_item_icon_pixel — the item-get modal quad texture (U11) */
 #include "shadow_blob_data.h"   /* RE1.5 char shadow blob, extracted from TEX.TIM */
 
 #define WINDOW_SCALE 4
@@ -52,6 +53,20 @@ typedef struct { SDL_Vertex v[6]; } shadow_quad_t;
 #define SHADOW_QUAD_MAX 16
 static shadow_quad_t s_shadow_quads[SHADOW_QUAD_MAX];
 static int           s_shadow_quad_count = 0;
+
+/* ── Item-get pickup MODAL overlay (byte-true FUN_8001db28) ─────────────────
+ * The picked-up item's icon zooming/spinning/flipping in, drawn as a textured
+ * quad ON TOP of the frozen 3D scene (after the meshes in end_frame — the game
+ * is paused underneath, NOT cleared). The 4 screen corners come from the FSM
+ * (item_modal_common.c), which already did the byte-true scale/rotate/flip; the
+ * texture is the 40×30 ITEMALL icon (re15_item_icon_pixel) built once per item
+ * type. Items without a captured palette get a flat card (faithful-line). */
+#define ITEM_MODAL_TW 40
+#define ITEM_MODAL_TH 30
+static int          s_item_modal_on = 0;
+static int          s_item_modal_x[4], s_item_modal_y[4];
+static SDL_Texture *s_item_modal_tex = NULL;
+static int          s_item_modal_tex_type = -1;
 
 /* BJ-round 2026-05-29: CINEMATIC LETTERBOX bars.
  * RE2/RE1.5 cutscenes (the intro etc.) draw black bars at the top & bottom of
@@ -473,6 +488,47 @@ void re15_render_begin_frame(void)
     s_text_overlay_used = 0;
 }
 
+/* Build (or rebuild on type change) the 40×30 ABGR item-icon texture for the modal quad. */
+static void item_modal_build_tex(uint8_t type)
+{
+    if (s_item_modal_tex && s_item_modal_tex_type == (int)type) return;
+    if (!s_item_modal_tex) {
+        s_item_modal_tex = SDL_CreateTexture(s_renderer, SDL_PIXELFORMAT_ABGR8888,
+                                             SDL_TEXTUREACCESS_STATIC, ITEM_MODAL_TW, ITEM_MODAL_TH);
+        if (s_item_modal_tex) SDL_SetTextureBlendMode(s_item_modal_tex, SDL_BLENDMODE_BLEND);
+    }
+    if (!s_item_modal_tex) return;
+    uint32_t px[ITEM_MODAL_TW * ITEM_MODAL_TH];
+    int have = re15_item_icon_available(type);
+    for (int v = 0; v < ITEM_MODAL_TH; v++) {
+        for (int u = 0; u < ITEM_MODAL_TW; u++) {
+            uint8_t r = 0, g = 0, b = 0;
+            uint32_t c;
+            if (have && re15_item_icon_pixel(type, u, v, &r, &g, &b))
+                c = 0xFF000000u | ((uint32_t)b << 16) | ((uint32_t)g << 8) | r;  /* ABGR opaque */
+            else if (!have)
+                c = 0xFF604840u;   /* flat card for un-iconned items (faithful-line placeholder) */
+            else
+                c = 0x00000000u;   /* the icon's own transparent pixel */
+            px[v * ITEM_MODAL_TW + u] = c;
+        }
+    }
+    SDL_UpdateTexture(s_item_modal_tex, NULL, px, ITEM_MODAL_TW * (int)sizeof(uint32_t));
+    s_item_modal_tex_type = (int)type;
+}
+
+/* Main-loop hook: set the current-frame item-modal quad (4 screen corners TL,TR,BL,BR), or clear it
+ * (on=0). Drawn in end_frame after the 3D meshes. `face` is ignored — front/back share the icon
+ * (the reverse-side texture row has no port equivalent; faithful-line). */
+void re15_render_pc_item_modal(int on, const int *cx, const int *cy, uint8_t type, int face)
+{
+    (void)face;
+    s_item_modal_on = on;
+    if (!on) return;
+    for (int i = 0; i < 4; i++) { s_item_modal_x[i] = cx[i]; s_item_modal_y[i] = cy[i]; }
+    item_modal_build_tex(type);
+}
+
 void re15_render_end_frame(void)
 {
     /* Step 1: blit the software framebuffer (2D primitives) onto the renderer.
@@ -612,6 +668,28 @@ void re15_render_end_frame(void)
     s_dbg_last_min_sy       = s_dbg_min_sy;
     s_dbg_last_max_sy       = s_dbg_max_sy;
     s_textri_count = 0;  /* reset queue for next frame */
+
+    /* Step 2.5: ITEM-GET pickup MODAL — the zooming/spinning/flipping item quad, ON TOP of the frozen
+     * 3D scene (byte-true FUN_8001db28; gameplay is paused underneath). 2 triangles from the 4 screen
+     * corners (TL,TR,BL,BR) with UV 0..1, sampled from the item-icon texture. The corners already carry
+     * the byte-true scale/rotate/flip (item_modal_common.c) — SDL maps the texture affinely, so the
+     * spin (state 2) and the coin-flip Y-inversion (state 4) render for free. */
+    if (s_item_modal_on && s_item_modal_tex) {
+        static const int   idx[6] = { 0, 1, 2, 1, 3, 2 };   /* TL,TR,BL + TR,BR,BL */
+        static const float uvx[4] = { 0.f, 1.f, 0.f, 1.f };
+        static const float uvy[4] = { 0.f, 0.f, 1.f, 1.f };
+        SDL_Color white = { 255, 255, 255, 255 };
+        SDL_Vertex mv[6];
+        for (int k = 0; k < 6; k++) {
+            int c = idx[k];
+            mv[k].position.x  = (float)s_item_modal_x[c];
+            mv[k].position.y  = (float)s_item_modal_y[c];
+            mv[k].color       = white;
+            mv[k].tex_coord.x = uvx[c];
+            mv[k].tex_coord.y = uvy[c];
+        }
+        SDL_RenderGeometry(s_renderer, s_item_modal_tex, mv, 6, NULL, 0);
+    }
 
     /* SCREEN-FADE channels (byte-true FUN_80021880, trace wf_2c73ab52): tick once per rendered
      * frame (the PSX calls it after the game tick, before present @0x80020f44), then draw the

@@ -59,6 +59,7 @@ static inline int RNDI(float f) {
 #include "re15_game_step.h"   /* SHARED per-frame interpreter step (PSX+PC) */
 #include "re15_menu.h"        /* re15_menu_* — inventory/weapon-select overlay (8.20) */
 #include "re15_item_icon.h"   /* re15_item_icon_* — byte-true ITEMALL grid icons (8.22) */
+#include "re15_item_modal.h"  /* re15_item_modal_* — item-get zoom/flip pickup presentation (U11) */
 #include "re15_damage.h"      /* re15_player_equipped_weapon (ARMS CONTROL panel, 8.23) */
 
 /* Draw a byte-true 40×30 ITEMALL icon at (x,y) over the paused inventory (pixel-wise; transparent
@@ -1225,8 +1226,19 @@ int main(int argc, char *argv[])
         /* SCD VM ticks at the AH-round 30Hz (pre-BE: tuned timing). At
          * 30fps target SCD ticks every frame. At 60fps target (env override),
          * SCD ticks every 2nd frame so SCD remains 30Hz. */
-        if (target_fps == 30 || (g_engine.frame_count & 1) == 0) {
+        if ((target_fps == 30 || (g_engine.frame_count & 1) == 0) && re15_item_modal_active()) {
+            /* ITEM-GET MODAL: while the pickup zoom/flip presentation runs, the byte-true freeze
+             * (g_pauseflags|=0xff000000) halts the SCD subsystem + walkers + fx here (and game_step
+             * early-returns for player/enemy/anim). Advance ONLY the modal FSM at 30 Hz; rendering
+             * (incl. the modal quad) keeps running. */
+            re15_item_modal_tick();
+        } else if (target_fps == 30 || (g_engine.frame_count & 1) == 0) {
             scd_vm_tick();
+            /* RE15_ITEM_MODAL_TEST: debug — force-start the item-get pickup MODAL once (frame 40) to
+             * visually verify the zoom/spin/flip presentation. Overlays don't show in the autoshot BMP
+             * (SDL_RenderReadPixels captures only RenderCopy'd textures) — verify via an ffmpeg video. */
+            if (getenv("RE15_ITEM_MODAL_TEST") && g_engine.frame_count == 40)
+                re15_item_modal_start(0x15, 50, 0, -1);   /* H.GUN BULLETS (has a captured icon) */
             /* RE15_FORCE_SPLAT: debug — throw one byte-true blood splatter burst at the player at
              * F30 to visually verify the physics (gravity + RNG spread + floor bounce). */
             if (getenv("RE15_FORCE_SPLAT") && g_engine.frame_count == 30) {
@@ -3684,6 +3696,34 @@ int main(int argc, char *argv[])
         if (re15_menu_is_open()) {
             extern void re15_render_pc_clear_textris(void);
             re15_render_pc_clear_textris();
+        }
+
+        /* ITEM-GET MODAL overlay: hand the current-frame item quad to the renderer. It is drawn
+         * AFTER the 3D meshes in end_frame (see re15_render_pc_item_modal) so the zooming/flipping
+         * item box floats ABOVE the frozen scene (the game is paused underneath — NOT cleared, unlike
+         * the full-screen inventory). Byte-true FUN_8001db28; the box art is the 40×30 ITEMALL icon
+         * scaled onto the 112×72 quad (faithful-line — the exact modal TIM is not byte-traced). */
+        {
+            extern void re15_render_pc_item_modal(int on, const int *cx, const int *cy,
+                                                  uint8_t type, int face);
+            int mqx[4], mqy[4], mface = 0; uint8_t mtype = 0;
+            int mdraw = re15_item_modal_quad(mqx, mqy, &mtype, &mface);
+            if (mdraw) re15_render_pc_item_modal(1, mqx, mqy, mtype, mface);
+            else       re15_render_pc_item_modal(0, NULL, NULL, 0, 0);
+            /* RE15_MODAL_LOG: FILE trace of the live modal FSM (stderr goes to the void for the SDL
+             * exe) — proves the presentation ticks in the running game with the right progression. */
+            {
+                static FILE *ml = NULL; static int mli = 0;
+                if (!mli) { mli = 1; const char *p = getenv("RE15_MODAL_LOG"); if (p && *p) ml = fopen(p, "w"); }
+                if (ml && re15_item_modal_active()) {
+                    fprintf(ml, "F%u state=%u f630=%d draw=%d type=0x%02x face=%d",
+                            g_engine.frame_count, re15_item_modal_state(), re15_item_modal_frame(),
+                            mdraw, mtype, mface);
+                    if (mdraw) fprintf(ml, " quad TL(%d,%d) TR(%d,%d) BL(%d,%d) BR(%d,%d)",
+                                       mqx[0],mqy[0], mqx[1],mqy[1], mqx[2],mqy[2], mqx[3],mqy[3]);
+                    fprintf(ml, "\n"); fflush(ml);
+                }
+            }
         }
 
         re15_render_end_frame();

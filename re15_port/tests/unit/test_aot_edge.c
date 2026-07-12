@@ -15,6 +15,7 @@
 #include "re15_aot.h"
 #include "re15_room.h"
 #include "re15_inventory.h"   /* g_room_change — the DOOR fire observable */
+#include "re15_item_modal.h"  /* item pickup starts the deferred zoom/flip modal (FUN_8001db28) */
 
 int main(void)
 {
@@ -27,27 +28,43 @@ int main(void)
 
     printf("=== #14 AOT edge-removal: AUTO zone fires EVERY frame inside, not just on entry ===\n");
 
-    /* (1) ITEM: ACTION-gated (wf_f536e1ee step 5 — all 162 shipped items carry flags bit 0x10
-     * SET; the old walk-in level trigger was divergence #1). Walk-in does NOT take it; the
-     * action press inside does (then self-disables); a FULL inventory refuses + keeps it alive. */
+    /* (1) ITEM: ACTION-gated (wf_f536e1ee step 5 — all 162 shipped items carry flags bit 0x10 SET;
+     * the old walk-in level trigger was divergence #1). Walk-in does NOT take it. The action press
+     * inside STARTS the deferred pickup MODAL (byte-true FUN_8001db28) — the grant + AOT self-disable
+     * happen at the modal's END (gated on inventory-room; a FULL inventory shrinks away and LEAVES the
+     * item in the world, @0x8001e0ec). The FSM itself is covered by test_item_modal; here we check the
+     * AOT-scan wiring. */
     re15_aot_set_item(0, 1000, 1000, 500, 500, 0x15, 1);
+    re15_inv_init();
     g_aot_action_pressed = 0;
-    re15_aot_scan(1000, 1000, 0xFF);                 /* inside, NO press -> stays */
-    if (g_aot.slots[0].active != 1) {
+    re15_aot_scan(1000, 1000, 0xFF);                 /* inside, NO press -> stays, no modal */
+    if (g_aot.slots[0].active != 1 || re15_item_modal_active()) {
         fprintf(stderr, "FAIL(1a): ITEM must NOT fire on walk-in (action-gated)\n"); fail = 1; }
+
     for (int fs = 0; fs < RE15_INV_MAX_SLOTS; fs++)  /* fill the inventory */
         re15_inv_grant((uint8_t)(0x40 + fs), 1);
     g_aot_action_pressed = 1;
-    re15_aot_scan(1000, 1000, 0xFF);                 /* press, but FULL -> refused, stays */
+    re15_aot_scan(1000, 1000, 0xFF);                 /* press, FULL -> modal STARTS */
+    g_aot_action_pressed = 0;
+    if (!re15_item_modal_active()) {
+        fprintf(stderr, "FAIL(1b): ACTION press must START the pickup modal\n"); fail = 1; }
+    while (re15_item_modal_active()) re15_item_modal_tick();   /* run the modal to completion */
     if (g_aot.slots[0].active != 1) {
-        fprintf(stderr, "FAIL(1b): a FULL inventory must keep the item AOT alive\n"); fail = 1; }
+        fprintf(stderr, "FAIL(1b): a FULL inventory must keep the item AOT alive (item stays)\n"); fail = 1; }
+
     re15_inv_init();                                  /* make room */
     g_aot_action_pressed = 1;
-    re15_aot_scan(1000, 1000, 0xFF);                 /* press inside -> take + self-disable */
-    if (g_aot.slots[0].active != 0) {
-        fprintf(stderr, "FAIL(1c): ITEM must fire on ACTION press + self-disable\n"); fail = 1; }
+    re15_aot_scan(1000, 1000, 0xFF);                 /* press inside -> modal STARTS */
     g_aot_action_pressed = 0;
-    if (!fail) printf("  (1) ITEM: action-gated take (walk-in no, full refused, press takes)\n");
+    while (re15_item_modal_active()) re15_item_modal_tick();   /* completion -> grant + self-disable */
+    if (g_aot.slots[0].active != 0) {
+        fprintf(stderr, "FAIL(1c): the modal must self-disable the item AOT on completion\n"); fail = 1; }
+    {
+        int got = 0;
+        for (int s = 0; s < RE15_INV_MAX_SLOTS; s++) if (g_inv.slots[s].id == 0x15) got = 1;
+        if (!got) { fprintf(stderr, "FAIL(1c): the modal must GRANT the item on completion\n"); fail = 1; }
+    }
+    if (!fail) printf("  (1) ITEM: action-gated pickup MODAL (walk-in no, full leaves item, press grants+disables)\n");
 
     /* (2) AUTO_EVENT (type 6): fires EVERY frame inside. The OLD edge gated the 2nd scan (was_inside=1);
      * the byte-true no-edge scan fires again. (No self-disabling sub runs in this unit harness, so the

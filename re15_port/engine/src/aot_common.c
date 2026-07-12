@@ -28,6 +28,7 @@
                               * SHARED now (room_common.c) — both ports queue the
                               * cross-room change; only the RDT LOADER (CD vs file)
                               * differs, behind the re15_room_apply_pending ctx. */
+#include "re15_item_modal.h" /* item pickup PRESENTATION modal (FUN_8001db28) — deferred grant */
 
 re15_aot_state_t g_aot;
 uint8_t g_aot_action_pressed = 0;   /* set per-frame by the main loop (door action gate) */
@@ -719,26 +720,18 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
                 return;
             }
             case RE15_AOT_TYPE_ITEM: {
-                /* Built-in ITEM behavior: grant + pickup SFX + one-shot
-                 * deactivate (RE2 Item_aot_reset equivalent). */
+                /* Byte-true item-pickup PRESENTATION (arming LAB_80043328 @0x80043328 -> the FSM
+                 * FUN_8001db28): DON'T grant here — start a freeze-the-game zoom/flip MODAL that
+                 * defers the grant to its END. The modal does the re15_inv_grant INSERT
+                 * (FUN_8004dc4c), sets the zone-9 taken-bit (FUN_8004ef90 @0x8001e0d0), and
+                 * deactivates THIS AOT on confirm — all gated on inventory-room (a FULL inventory
+                 * plays the shrink-away and LEAVES the item in the world @0x8001e0ec). The AOT stays
+                 * active during the modal (the game is frozen, so it never re-scans). See
+                 * re15_item_modal.h. WAS: an immediate silent grant with no presentation — the
+                 * divergence this closes (U11). The pickup SE is the room's own SCD Se_on (already
+                 * SCD-driven), never a fabricated value (door/item hack audit BO-round 2026-05-29). */
                 const re15_aot_item_params_t *p = &g_aot.item_params[i];
-                if (re15_inv_grant(p->item_type, p->amount) != 0) {
-                    /* INVENTORY FULL (byte-true: the pickup FSM's full-branch shows the system
-                     * message and does NOT disable the AOT @FUN_8001db28 — the item stays;
-                     * the modal 'You got'/zoom presentation is a faithful-line deferral). */
-                    break;
-                }
-                /* TAKEN-BIT (byte-true FUN_8004ef90(DAT_800b1078, payload[2]) on pickup confirm
-                 * @0x8001e0xx; zone 9 = ptr-table 0x80074664[9]): the item stays gone on room
-                 * re-entry — op_item_aot_set re-checks it at install (@0x800406d4).
-                 * [wf_f536e1ee #14-step-1] */
-                if (p->taken_bit) re15_game_flag_set(9, p->taken_bit, 1);
-                /* BO-round 2026-05-29 (hack audit): removed the fabricated item-
-                 * pickup SFX {bank2,sample2,vol0x50,pan0x40} — same as the door:
-                 * the real pickup sound is the room SCD's own Se_on (room1190/
-                 * sub02 Se_on(2,10) etc.), not a hardcoded value. Canonical SFX
-                 * is the SCD-sub follow-up. */
-                a->active = 0;
+                re15_item_modal_start(p->item_type, p->amount, p->taken_bit, i);
                 break;
             }
             case RE15_AOT_TYPE_CAM_SWITCH: {

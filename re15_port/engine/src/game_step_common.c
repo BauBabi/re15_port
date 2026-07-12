@@ -21,6 +21,7 @@
 #include "re15_esp.h"           /* re15_esp_fx_spawn — the discharge muzzle/smoke/shell fx (ids 2/3/4) */
 #include "re15_inventory.h"     /* re15_ammo_* — the byte-true magazine/reload model (FUN_8004ea6c/eae4) */
 #include "re15_skeleton.h"      /* re15_sin_q12/re15_cos_q12 — the muzzle forward offset */
+#include "re15_item_modal.h"    /* item-get pickup modal — freezes gameplay while presenting */
 
 /* GAME-OVER / death presentation — REWRITTEN 2026-07-05 to the byte-true model (full raw RE of
  * LAB_8003694c + the game-over FSM FUN_8001500c/@0x80071d10, live-verified vs 92 DuckStation
@@ -128,6 +129,15 @@ static void re15_gameover_fsm_tick(void)
 void re15_game_step(const re15_game_ctx_t *c)
 {
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+
+    /* ITEM-GET MODAL FREEZE (byte-true FUN_8001db28: g_pauseflags |= 0xff000000): while the pickup
+     * zoom/flip presentation runs, the WHOLE game step is frozen — player move, collision, AOT scan,
+     * enemy AI, model anim (re15_actors_anim_advance below), SCD-event dispatch all halt. Only the
+     * modal FSM (ticked at 30 Hz from the platform loop) + rendering advance. The modal is armed from
+     * inside re15_aot_scan on the TRIGGER frame (its tail still runs that frame, byte-true), then this
+     * gate takes over from the next tick. Unreachable outside an item pickup = no room regression. */
+    if (re15_item_modal_active()) return;
+
     if (s_go_on && !re15_player_is_dead())
         re15_gameover_fsm_reset();                       /* continue-reload revived the player */
 
