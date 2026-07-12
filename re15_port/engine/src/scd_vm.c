@@ -1823,6 +1823,12 @@ static int op_plc_neck(scd_thread_t *t)
      * mode 0 (0x92, no 0x04/08) = release/reset → re15_neck_update eases the head forward. */
     static const uint8_t mode_bits[5] = { 0x12, 0x04, 0x08, 0x2a, 0x58 };
     p->neck_flags = (uint8_t)(0x80 | (mode < 5 ? mode_bits[mode] : 0));
+    /* RE15_NECK_LOG: prove op 0x41 fires + its target/mode (SDL stderr → void). */
+    { static FILE *nl = NULL; static int nli = 0;
+      if (!nli) { nli = 1; const char *pp = getenv("RE15_NECK_LOG"); if (pp && *pp) nl = fopen(pp, "w"); }
+      if (nl) { fprintf(nl, "PLC_NECK mode=%u tgt=(%d,%d,%d) speed=%d flags=0x%02x\n",
+                        mode, p->neck_tx, p->neck_ty, p->neck_tz, p->neck_speed, p->neck_flags);
+                fflush(nl); } }
     t->pc += 10;
     return 1;
 }

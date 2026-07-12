@@ -17,6 +17,8 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>    /* RE15_NECK_TRACE diagnostics */
+#include <stdlib.h>   /* getenv */
 #include "re15_skeleton.h"
 #include "re15_emd.h"
 #include "re15_actor.h"     /* g_actors for Plc_neck head-look */
@@ -369,6 +371,12 @@ int re15_skel_compute_pose(const re15_emd_skeleton_t *skel,
             if      (dY >  stepY) a->neck_yaw = (int16_t)(a->neck_yaw + stepY);
             else if (dY < -stepY) a->neck_yaw = (int16_t)(a->neck_yaw - stepY);
             else                  a->neck_yaw = (int16_t)resY;
+            /* RE15_NECK_TRACE: prove the head-look SLEW is smooth + sign-restored (U2:
+             * no 0x0FFF wrap to ~+360°). Emits tgt/res/neck_yaw per frame. */
+            { static FILE *nt = NULL; static int nti = 0;
+              if (!nti) { nti = 1; const char *pp = getenv("RE15_NECK_TRACE"); if (pp && *pp) nt = fopen(pp, "w"); }
+              if (nt && active) { fprintf(nt, "tgt_yaw=%d resY=%d neck_yaw=%d (step=%d)\n",
+                                          (int)tgt_yaw, (int)resY, (int)a->neck_yaw, (int)stepY); fflush(nt); } }
             int32_t dP = (((resP - (int32_t)a->neck_pitch) + 0x800) & 0xFFF) - 0x800;
             if      (dP >  stepP) a->neck_pitch = (int16_t)(a->neck_pitch + stepP);
             else if (dP < -stepP) a->neck_pitch = (int16_t)(a->neck_pitch - stepP);
