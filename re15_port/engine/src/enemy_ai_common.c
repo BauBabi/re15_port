@@ -4024,14 +4024,33 @@ static void re15_npc_sub_walk(re15_actor_t *e)
     re15_npc_anim(e);
 }
 
-/* Executor sub-dispatch: sub_library[+0x5] (@0x80076ca0): idle (0-3), walk-to-target (4/5/7/8), turn (9).
- * Event-reach sub 6 folds to idle for now (phase 5). */
+/* sub 6: EVENT-REACH (@0x800517f0). A 4-phase +0x6 FSM that plays clip 1 (the 32-frame arrival/gesture)
+ * ONCE, then settles into clip 2 (the idle loop). This is what a STATIONARY NPC actually animates — the
+ * INIT seeds +0x5=6 for a +0x9&0x40 spawn, so Chief Irons & co. run THIS, not a bare idle hold. Phases:
+ *   0 setup clip 1 (motion=1, anim_frac=7) -> falls through to play; 1 play clip 1, last frame -> phase 2;
+ *   2 setup clip 2 idle (motion=2) -> falls through to play; 3 play clip 2 idle loop. Advance = anim_set
+ *   returning 1 at clip end (re15_npc_anim's `done`). */
+static void re15_npc_sub_event_reach(re15_actor_t *e)
+{
+    switch (e->sub_state_2) {
+    case 0: e->motion = 1; e->anim_frame = 0; e->anim_frac = 7; e->sub_state_2 = 1;  /* @0x80051844 setup clip 1 */
+        /* fall through: same tick plays clip 1 (@0x80051878) */
+    case 1: if (re15_npc_anim(e)) e->sub_state_2 = 2; break;                          /* @0x80051878 play; done -> 2 */
+    case 2: e->motion = 2; e->anim_frame = 0; e->anim_frac = 7; e->sub_state_2 = 3;  /* @0x800518b4 setup clip 2 idle */
+        /* fall through: same tick plays clip 2 (@0x800518dc) */
+    default: re15_npc_anim(e); break;                                                 /* @0x800518dc idle loop */
+    }
+}
+
+/* Executor sub-dispatch: sub_library[+0x5] (@0x80076ca0): idle (0-3), walk-to-target (4/5/7/8),
+ * event-reach (6 = the stationary NPC's clip1->idle), turn (9). */
 static void re15_npc_sub_dispatch(re15_actor_t *e)
 {
     switch (e->sub_state_1) {
     case 4: case 5: case 7: case 8: re15_npc_sub_walk(e); break;
+    case 6: re15_npc_sub_event_reach(e); break;
     case 9: re15_npc_sub_turn(e); break;
-    default: re15_npc_sub_idle(e); break;   /* 0-3 idle; 6 event-reach = deferred */
+    default: re15_npc_sub_idle(e); break;   /* 0-3 idle */
     }
 }
 
