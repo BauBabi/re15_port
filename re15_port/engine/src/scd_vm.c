@@ -1506,11 +1506,10 @@ static int op_set(scd_thread_t *t)
  *   [op, register, x(2), y(2), z(2)]  (each s16 LE — corrected 2026-06-08;
  *   the old "_be" labels were the disproven all-BE assumption, see below)
  *
- * `register`: pc[1] selects the target actor.
- *   == 0 → player (g_actors[RE15_ACTOR_SLOT_PLAYER])
- *   != 0 → non-player actor — currently no-op (deferred until per-thread
- *          actor binding is wired). Critically we MUST NOT clobber the
- *          player when scripts target NPCs / work entities.
+ * TARGET: byte-true LAB_80041048 writes X/Y/Z to the WORK ENTITY (thread+0x154, selected by the
+ * preceding Work_set) — pc[1] is NOT read as a target register (the old "pc[1]==0→player, else
+ * no-op" model was disproven 2026-06-09; re-confirmed by the stub-opcode audit wf_9143c15b). The
+ * impl below routes to work_slot (actor) or work_prop_idx (prop). See the body comment.
  *
  * Endianness: LITTLE-ENDIAN s16 (R3000 `lh`). The earlier "BE" claim was
  * CIRCULAR — it only confirmed BE *reads* x=17106, never that 17106 is the
