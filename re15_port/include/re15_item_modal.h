@@ -52,6 +52,11 @@ int re15_item_modal_quad(int out_x[4], int out_y[4], uint8_t *out_type, int *out
  * "YOU CAN'T CARRY ANY MORE ITEMS" line. *out_type = the item id (for the name). */
 int re15_item_modal_prompt(uint8_t *out_type, int *out_choice);
 
+/* Typewriter reveal: the number of prompt glyphs shown so far (1 per 2 frames). The renderer clamps
+ * each prompt line to this budget. `_ready` = the text has fully revealed (Yes/No is now selectable). */
+int re15_item_modal_reveal(void);
+int re15_item_modal_prompt_ready(void);
+
 /* Inspection (tests): the raw state byte (0..8, mirrors DAT_80072d3b) + counters. */
 uint8_t re15_item_modal_state(void);
 int     re15_item_modal_frame(void);   /* DAT_8008f630 */

@@ -37,6 +37,14 @@ static void run_to_prompt(int *out_zoom, int *out_flip)
     if (out_flip) *out_flip = flip;
 }
 
+/* Tick (no input) through the typewriter until the prompt has fully revealed (Yes/No selectable). */
+static void run_reveal(void)
+{
+    int guard = 0;
+    while (re15_item_modal_active() && !re15_item_modal_prompt_ready() && guard++ < 400)
+        re15_item_modal_tick(0);
+}
+
 int main(void)
 {
     printf("=== byte-true item-get modal + Yes/No message box (wq41xdnn2 + wf_9e42f4cb) ===\n");
@@ -54,13 +62,21 @@ int main(void)
         CHECK("flip ran 9 frames",  flip == 9);
         CHECK("reached the message box (state 6)", re15_item_modal_state() == 6);
         CHECK("prompt = Yes/No take-prompt (1)", re15_item_modal_prompt(NULL, NULL) == 1);
+        CHECK("typewriter starts un-revealed", re15_item_modal_reveal() == 0 && !re15_item_modal_prompt_ready());
 
-        /* state 6 is PLAYER-GATED: no input -> holds indefinitely, item still not granted. */
-        for (int i = 0; i < 30; i++) re15_item_modal_tick(0);
-        CHECK("state 6 HOLDS without input", re15_item_modal_active() && re15_item_modal_state() == 6);
-        CHECK("still not granted while the prompt is up", !inv_has(0x15));
+        /* TYPEWRITER: the text types out (2 frames/glyph); the game HOLDS in state 6 the whole time and
+         * accepts no confirm — feeding CROSS during typing must NOT grant. */
+        int guard = 0;
+        while (re15_item_modal_active() && !re15_item_modal_prompt_ready() && guard++ < 400) {
+            re15_item_modal_tick(0x4000);             /* CROSS held during typing -> ignored */
+            if (inv_has(0x15)) break;                 /* must never happen mid-typing */
+        }
+        CHECK("typewriter revealed the prompt while state 6 held", re15_item_modal_prompt_ready()
+              && re15_item_modal_state() == 6);
+        CHECK("CROSS was IGNORED during typing (not granted yet)", !inv_has(0x15));
+        CHECK("reveal reached the full text (>= 30 glyphs)", re15_item_modal_reveal() >= 30);
 
-        re15_item_modal_tick(0x4000);                 /* CROSS confirm (Yes) */
+        re15_item_modal_tick(0x4000);                 /* now the text is up -> CROSS confirms Yes */
         CHECK("CROSS(Yes) grants + ends the modal", !re15_item_modal_active() && inv_has(0x15));
     }
 
@@ -70,6 +86,7 @@ int main(void)
         re15_item_modal_start(0x15, 50, 0, -1);
         run_to_prompt(NULL, NULL);
         CHECK("No-path: take-prompt up", re15_item_modal_prompt(NULL, NULL) == 1);
+        run_reveal();                                 /* type the text out first */
         re15_item_modal_tick(0x1000 | 0x4000);        /* TRIANGLE toggle -> No, CROSS confirm */
         int saw_shrink = 0, guard = 0;
         while (re15_item_modal_active() && guard++ < 200) {
@@ -87,6 +104,7 @@ int main(void)
         re15_item_modal_start(0x24, 1, 0, -1);
         run_to_prompt(NULL, NULL);
         CHECK("full: can't-carry prompt (2)", re15_item_modal_prompt(NULL, NULL) == 2);
+        run_reveal();                                 /* type the text out first */
         re15_item_modal_tick(0x4000);                 /* any confirm dismisses */
         int saw_shrink = 0, guard = 0;
         while (re15_item_modal_active() && guard++ < 200) {

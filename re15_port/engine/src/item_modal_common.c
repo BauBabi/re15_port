@@ -15,9 +15,16 @@
  */
 #include "re15_item_modal.h"
 #include "re15_math.h"       /* re15_rcos / re15_rsin (byte-true BIOS trig, Q12) */
-#include "re15_inventory.h"  /* re15_inv_grant + g_inv (the deferred grant = FUN_8004dc4c INSERT)  */
+#include "re15_inventory.h"  /* re15_inv_grant + g_inv (grant) + re15_item_name (prompt length)     */
 #include "re15_aot.h"        /* g_aot — deactivate the item AOT on confirm                          */
 #include "re15_scd.h"        /* re15_game_flag_set — the taken-bit (zone 9)                         */
+#include <string.h>          /* strlen — the typewriter glyph count                                 */
+
+/* Prompt line lengths (must match the render strings in platform/pc/main.c). "WILL YOU TAKE THE" = 17
+ * glyphs; the can't-carry line "YOU CAN'T CARRY ANY" + "MORE ITEMS" = 29. The take-prompt total adds
+ * the item name + the trailing ".". */
+#define ITEM_MODAL_TAKE_PREFIX 17
+#define ITEM_MODAL_FULL_GLYPHS 29
 
 /* ---- byte-true corner tables (FUN_8001e1c8 @0x80072d3c / @0x80072d44) ---- */
 static const int16_t s_corner_x[4] = { -56, +56, -56, +56 };
@@ -40,6 +47,11 @@ static int     s_grant    = -1;     /* DAT_8008f62c (free slot, -1 = full)  */
 static int     s_prompt   = 0;
 static int     s_choice   = 0;
 static int     s_msg_no   = 0;
+/* typewriter reveal (byte-true FUN_80028134: 1 glyph per 2<<bVar2 frames; bVar2 = (DAT_800b5456==0);
+ * the briefing savestate has DAT_800b5456=2 -> 2 frames/glyph). Confirm is gated until fully revealed. */
+static int     s_reveal       = 0;
+static int     s_reveal_total = 0;
+static int     s_reveal_timer = 0;
 
 /* current-frame quad (screen space), recomputed each tick */
 static int  s_qx[4], s_qy[4];
@@ -116,6 +128,9 @@ void re15_item_modal_start(uint8_t item_type, uint8_t amount, uint8_t taken_bit,
     s_prompt   = 0;
     s_choice   = 0;
     s_msg_no   = 0;
+    s_reveal   = 0;
+    s_reveal_total = 0;
+    s_reveal_timer = 0;
 }
 
 int re15_item_modal_active(void) { return s_state != 0; }
@@ -177,6 +192,10 @@ void re15_item_modal_tick(uint16_t pad_edge)
             s_prompt  = (s_grant < 0) ? 2 : 1;   /* 2 = can't-carry, 1 = Yes/No take-prompt */
             s_choice  = 0;                        /* default Yes (DAT_800b8520 bit0 = 0) */
             s_msg_no  = 0;
+            s_reveal       = 0;                   /* start the typewriter */
+            s_reveal_timer = 2;                   /* 2 frames/glyph (DAT_800b8524 = 2<<0) */
+            s_reveal_total = (s_prompt == 2) ? ITEM_MODAL_FULL_GLYPHS
+                                             : ITEM_MODAL_TAKE_PREFIX + (int)strlen(re15_item_name(s_type)) + 1;
             s_state   = 6;
             return;
 
@@ -185,6 +204,11 @@ void re15_item_modal_tick(uint16_t pad_edge)
                   * reads DAT_800ac76c: & 0x3000 toggles Yes/No (DAT_800b8520 ^= 1), & 0x4000 confirms;
                   * the full-prompt just waits for & 0xc000. */
             s_visible = 1;
+            if (s_reveal < s_reveal_total) {                      /* TYPEWRITER: 1 glyph / 2 frames — no
+                                                                  * input accepted until fully revealed */
+                if (--s_reveal_timer <= 0) { s_reveal++; s_reveal_timer = 2; }
+                return;
+            }
             if (s_prompt == 2) {                                  /* can't-carry: any confirm dismisses */
                 if (!(pad_edge & 0xc000)) return;                 /* DAT_800ac76c & 0xc000 (CROSS/SQUARE) */
                 s_prompt = 0; s_state = 7; again = 1; break;
@@ -247,3 +271,6 @@ int re15_item_modal_prompt(uint8_t *out_type, int *out_choice)
     if (out_choice) *out_choice = s_choice;
     return s_prompt;   /* 1 = "WILL YOU TAKE THE X." Yes/No, 2 = "YOU CAN'T CARRY ANY MORE ITEMS" */
 }
+
+int re15_item_modal_reveal(void)       { return s_reveal; }
+int re15_item_modal_prompt_ready(void) { return s_prompt != 0 && s_reveal >= s_reveal_total; }

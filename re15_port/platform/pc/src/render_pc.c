@@ -1631,13 +1631,16 @@ void re15_render_pc_cursor(int x, int y)
 
 /* ASCII text into the TOP text-overlay layer (Layer 5, above the 3D scene + the modal quad) — the
  * 6×8 debug font but composited ON TOP, for the item-get modal's "WILL YOU TAKE THE X." prompt
- * (re15_debug_text goes to the framebuffer = under the meshes, which the frozen scene would cover). */
-void re15_render_pc_text_overlay(int x, int y, const char *text)
+ * (re15_debug_text goes to the framebuffer = under the meshes, which the frozen scene would cover).
+ * `_n` draws at most `n` characters (the typewriter budget) and returns how many it drew (so a caller
+ * can carry the remaining budget to the next line). n < 0 draws nothing. */
+int re15_render_pc_text_overlay_n(int x, int y, const char *text, int n)
 {
-    if (!text) return;
-    int cx = x, cy = y;
-    while (*text) {
+    if (!text || n <= 0) return 0;
+    int cx = x, cy = y, drawn = 0;
+    while (*text && drawn < n) {
         unsigned char c = (unsigned char) *text++;
+        drawn++;
         if (c == '\n') { cx = x; cy += 9; continue; }
         if (c < 0x20 || c >= 0x80) c = '?';
         const uint8_t *glyph = s_font6x8[c - 0x20];
@@ -1653,6 +1656,12 @@ void re15_render_pc_text_overlay(int x, int y, const char *text)
         if (cx + 6 > SCREEN_XRES) { cx = x; cy += 9; }
     }
     s_text_overlay_used = 1;
+    return drawn;
+}
+
+void re15_render_pc_text_overlay(int x, int y, const char *text)
+{
+    re15_render_pc_text_overlay_n(x, y, text, text ? (int)strlen(text) : 0);
 }
 
 /* Dialog page-break indicator: a small DOWN-pointing triangle (byte-true FUN_80028134

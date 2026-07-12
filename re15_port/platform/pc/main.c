@@ -3741,18 +3741,23 @@ int main(int argc, char *argv[])
          * — the exact prompt glyphs live in BSS @0x800c4fc6; the MECHANISM is byte-true). */
         {
             extern void re15_render_pc_text_overlay(int x, int y, const char *text);
+            extern int  re15_render_pc_text_overlay_n(int x, int y, const char *text, int n);
             extern void re15_render_pc_cursor(int x, int y);
             uint8_t ptype = 0; int pchoice = 0;
             int prompt = re15_item_modal_prompt(&ptype, &pchoice);
+            int reveal = re15_item_modal_reveal();   /* typewriter budget (2 frames/glyph) */
             if (prompt == 1) {
-                re15_render_pc_text_overlay(34, 174, "WILL YOU TAKE THE");
-                re15_render_pc_text_overlay(34, 184, re15_item_name(ptype));
-                re15_render_pc_text_overlay(190, 200, "YES");
-                re15_render_pc_text_overlay(234, 200, "NO");
-                re15_render_pc_cursor(pchoice ? 224 : 180, 201);   /* ▶ on the current choice */
+                int used = re15_render_pc_text_overlay_n(34, 174, "WILL YOU TAKE THE", reveal);
+                char l2[48]; snprintf(l2, sizeof l2, "%s.", re15_item_name(ptype));
+                re15_render_pc_text_overlay_n(34, 184, l2, reveal - used);
+                if (re15_item_modal_prompt_ready()) {         /* Yes/No only after the text types out */
+                    re15_render_pc_text_overlay(190, 200, "YES");
+                    re15_render_pc_text_overlay(234, 200, "NO");
+                    re15_render_pc_cursor(pchoice ? 224 : 180, 201);   /* ▶ on the current choice */
+                }
             } else if (prompt == 2) {
-                re15_render_pc_text_overlay(34, 180, "YOU CAN'T CARRY ANY");
-                re15_render_pc_text_overlay(34, 190, "MORE ITEMS");
+                int used = re15_render_pc_text_overlay_n(34, 180, "YOU CAN'T CARRY ANY", reveal);
+                re15_render_pc_text_overlay_n(34, 190, "MORE ITEMS", reveal - used);
             }
         }
 
