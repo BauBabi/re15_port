@@ -3182,7 +3182,13 @@ static re15_sca_entry_t *sca_entry_at(uint8_t region, uint8_t index);   /* defin
  * selector byte): region = pc[2] (lbu +2), index = pc[3] (lbu +3), and it writes four halfwords of
  * the 12-byte entry: entry+0 = u16@pc[8] (width), +2 = u16@pc[10] (density), +4 = s16@pc[4] (x),
  * +6 = s16@pc[6] (z) — `sh a3,0 / sh a2,2 / sh t0,4 / sh t1,6` @0x800417f8-804. So it repositions/
- * resizes a collision shape at runtime (type/u0/u1/floor untouched). Was a PC-only stub. */
+ * resizes a collision shape at runtime (type/u0/u1/floor untouched). Was a PC-only stub.
+ * NOTE (RE15_FLR_LOG live sweep 2026-07-12): does NOT fire on plain room LOAD in any tested STAGE1
+ * room (1000/1010/1080/1110/1130/1140/1190/11E0/1260 + *1 scenario-B variants) — it is EVENT-
+ * triggered (a sub_scd run on a puzzle/door event), like siblings 0x37/0x39. The offline SCD-walker's
+ * per-room 0x38 counts are DESYNC false-positives (0x38 bytes in data regions), so the live effect is
+ * unconfirmed; the logic is byte-true to LAB_800417ac and unit-tested via the real dispatch
+ * (test_flr_set_mutates). */
 int op_flr_set(scd_thread_t *t)
 {
     re15_sca_entry_t *e = sca_entry_at(t->pc[2], t->pc[3]);   /* region=pc[2], index=pc[3] */
