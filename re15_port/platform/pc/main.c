@@ -1952,11 +1952,15 @@ int main(int argc, char *argv[])
                      * door-open audio is a room-SCD Se_on — see aot_common.c). */
                     /* Kick the exact PSX fade tween (FUN_800217b0(0x200,-6144,7,0) + FUN_800216ec):
                      * ch0, abr2 subtractive, rgb_mask7, step -0x1800 → level 0x7FFF; render_pc's
-                     * re15_fade_tick ramps darkness = level>>7 (0xFF→0xCF→0x9F→0x6F→0x3F→0x0F→done) and
-                     * draws the subtractive overlay, so the new room emerges from black over 6 frames.
-                     * (Channel curve confirmed byte-true; the overlay renders on-screen — the autoshot's
-                     * RenderReadPixels-after-present just cannot capture SDL custom-blend fill overlays,
-                     * only RenderCopy'd textures, so the fade is not visible in autoshot BMPs.) */
+                     * re15_fade_tick ramps darkness = level>>7 (0xFF→0xCF→0x9F→0x6F→0x3F→0x0F→done) over
+                     * 6 frames so the new room emerges from black. Channel curve confirmed byte-true
+                     * (instrumented: out 255→207→…→15). BYTE-TRUE + renders on the PSX GPU. KNOWN PC gap:
+                     * render_pc's fade overlay is an SDL_RenderFillRect — and this port's FillRect
+                     * overlays (ALL the g_fade_ch fades + the letterbox) do NOT reach the composited
+                     * frame on this PC backend (RenderCopy'd textures do; a full-screen FillRect after
+                     * them leaves the pixels unchanged, verified — even a plain alpha-black fill).
+                     * So on PC the door still LOOKS instant until that pre-existing FillRect-overlay
+                     * render bug is fixed; the fade logic here is correct + shows on PSX. */
                     re15_fade_config(0, 2, 7, (int16_t)-0x1800, 0);
                     re15_fade_kick(0, 0);
 
