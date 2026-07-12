@@ -120,6 +120,20 @@ int main(void)
         drain();
     }
 
+    /* ---- (7) Red Medicine (0x25) is NOT heal-usable alone (byte-true `beq a0,0x25` exclusion) ---- */
+    {
+        re15_inv_init();
+        g_inv.slots[0].id = 0x25; g_inv.slots[0].qty = 1;
+        PL()->hp = 40;
+        CHECK("Red Medicine (0x25) is not a heal item", !re15_item_use_is_heal(0x25));
+        re15_item_use_start(0x25, 0);
+        CHECK("Red: USE not started (inert alone)", !re15_item_use_active());
+        CHECK("Red: HP + slot untouched", PL()->hp == 40 && g_inv.slots[0].id == 0x25);
+        /* the real medicines around it ARE usable */
+        CHECK("Green (0x24) IS a heal item", re15_item_use_is_heal(0x24));
+        CHECK("Blue (0x26) IS a heal item",  re15_item_use_is_heal(0x26));
+    }
+
     if (g_fail) { printf("ITEM-USE: FAIL\n"); return 1; }
     printf("ITEM-USE: all checks passed\n");
     return 0;

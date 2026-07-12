@@ -31,7 +31,11 @@ static int     s_slot  = -1;
 static int     s_choice = 0;     /* 0=Yes, 1=No (DAT_800b8520 bit0) */
 static int     s_reveal = 0, s_reveal_total = 0, s_reveal_timer = 0;
 
-int re15_item_use_is_heal(uint8_t id) { return id >= 0x22 && id <= 0x2e; }
+/* Heal-usable = id in [0x22,0x2e] EXCEPT Red Medicine (0x25). Byte-true classifier @0x8004aa64:
+ * `sltiu (id-0x22),0xe` (herb range) AND `beq a0,0x25` (Red excluded) -> heal-execute state 3; Red
+ * alone falls to the inert state 6 (@0x8004ab6c) — it is NOT a straight heal (RE1.5 wf_159c5115).
+ * (RE1.5 has NO herb-combine to make Red useful; the mixes 0x27-0x2e are pre-placed data items.) */
+int re15_item_use_is_heal(uint8_t id) { return id >= 0x22 && id <= 0x2e && id != 0x25; }
 int re15_item_use_active(void)        { return s_state != 0; }
 int re15_item_use_reveal(void)        { return s_reveal; }
 /* Ready only in the WAIT states (2 = "use?", 4 = "used") — NOT the transient state 1/3 (before
