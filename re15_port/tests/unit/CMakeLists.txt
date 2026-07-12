@@ -378,6 +378,13 @@ target_include_directories(test_inv_grant PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_inv_grant COMMAND test_inv_grant)
 set_tests_properties(unit_inv_grant PROPERTIES TIMEOUT 30)
 
+# --- Byte-true PsyQ BIOS catan CORDIC (0x800658fc) + walker bearing (FUN_8001a6d4; was a LUT approx) ---
+add_executable(test_catan test_catan.c)
+target_link_libraries(test_catan PRIVATE re15_engine re15_test_support)
+target_include_directories(test_catan PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_catan COMMAND test_catan)
+set_tests_properties(unit_catan PROPERTIES TIMEOUT 30)
+
 # --- Byte-true PsyQ BIOS SquareRoot0 table replica (0x80065f60 — the engine's ONLY sqrt, NOT floor) ---
 add_executable(test_squareroot0 test_squareroot0.c)
 target_link_libraries(test_squareroot0 PRIVATE re15_engine re15_test_support)

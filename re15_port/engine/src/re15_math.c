@@ -249,6 +249,24 @@ int32_t re15_ratan2(int32_t y, int32_t x)
     return v1;
 }
 
+/* PsyQ BIOS catan (0x800658fc): a 12-iteration CORDIC vectoring arctan. Input = a Q12 tangent (the
+ * walker heading passes (dz<<12)/dx); returns the angle atan2(input, 4096) in 4096-per-360deg units
+ * (~[-0x400, 0x400]). The CORDIC constants @0x80078c90 = atan(2^-i) in Q12 = {511,302,159,81,41,20,
+ * 10,5,3,1,0,0}, verbatim. This is the GAME'S OWN arctan (FUN_8001a6d4 = the enemy/stair heading calls
+ * it); its integer rounding is byte-true — it differs from an ideal atan by up to ~6 Q12 units
+ * (e.g. catan(0)=1, catan(4096)=511 not 512), which a float or downsampled LUT would smooth away. */
+int32_t re15_catan(int32_t a)
+{
+    static const int32_t T[12] = { 511, 302, 159, 81, 41, 20, 10, 5, 3, 1, 0, 0 };
+    int32_t x = 0x1000, y = a, angle = 0;
+    for (int i = 0; i < 12; i++) {
+        int32_t xs = x >> i, ys = y >> i;              /* arithmetic shift (srav), OLD x/y */
+        if (y >= 0) { x += ys; y -= xs; angle += T[i]; }
+        else        { x -= ys; y += xs; angle -= T[i]; }
+    }
+    return angle;
+}
+
 /* Anisotropic-ellipse directional radius. Shared by the body-push (FUN_8002aec4 @0x8002afb8-b05c)
  * and the attack-hitbox sector test (FUN_8002b5d0 @0x8002b65c) -- byte-identical code in both.
  * The effective radius of a box (rx = box[+6] along heading, rz = box[+0xa] lateral) toward a point

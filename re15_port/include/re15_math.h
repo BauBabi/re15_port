@@ -38,6 +38,10 @@ int32_t re15_rsin(int32_t a);
 int32_t re15_rcos(int32_t a);
 int32_t re15_ratan2(int32_t y, int32_t x);
 
+/* PsyQ BIOS catan (0x800658fc): 12-iteration CORDIC arctan. Input = Q12 tangent, returns the angle
+ * atan2(input, 4096) in 4096-per-360deg units. The game's own heading arctan (FUN_8001a6d4). */
+int32_t re15_catan(int32_t a);
+
 /* Anisotropic-ellipse directional radius (FUN_8002aec4 body-push / FUN_8002b5d0 hitbox sector).
  * rx = along-heading radius (box[+6]), rz = lateral (box[+0xa]); (dz,dx) = point - box centre;
  * rot_y = box heading. Circular (rx==rz) returns rx. */

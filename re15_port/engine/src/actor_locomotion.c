@@ -47,6 +47,7 @@
 
 #include "re15_actor.h"
 #include "re15_skeleton.h"   /* re15_sin_q12 / re15_cos_q12 */
+#include "re15_math.h"       /* re15_catan — byte-true BIOS arctan (walker heading) */
 #include "re15_scd.h"        /* re15_game_flag_set */
 #include "re15_emd.h"
 #include "re15_to_re2.h"     /* re15_to_re2_plc_dest_clip (BO Tier-3 A2) */
@@ -115,54 +116,25 @@
 #define PLC_YAW_SLEW_RUN_S2  0x48   /* run state-2 slew (ghidra1:125625) — walk uses 0x30 */
 #define PLC_ARRIVAL_RUN      300    /* 0x12c — run arrival radius (LAB_80030e5c) */
 
-/* atan(i/256) in 4096-units (4096=360°): slope [0,1] → angle [0,0x200] (0..45°).
- * A faithful integer arctan LUT (the equivalent of the BIOS `catan` that the
- * original heading code FUN_8001a6d4 calls) — replaces the old `num*512/den`
- * linear-in-tangent octant approximation, which peaked at ~4° error near 22.5°. */
-static const unsigned short ATAN256[257] = {
-      0,  3,  5,  8, 10, 13, 15, 18, 20, 23, 25, 28, 31, 33, 36, 38,
-     41, 43, 46, 48, 51, 53, 56, 58, 61, 63, 66, 69, 71, 74, 76, 79,
-     81, 84, 86, 89, 91, 94, 96, 99,101,104,106,108,111,113,116,118,
-    121,123,126,128,131,133,136,138,140,143,145,148,150,152,155,157,
-    160,162,164,167,169,172,174,176,179,181,183,186,188,190,193,195,
-    197,200,202,204,207,209,211,214,216,218,220,223,225,227,229,232,
-    234,236,238,241,243,245,247,249,252,254,256,258,260,262,265,267,
-    269,271,273,275,277,279,282,284,286,288,290,292,294,296,298,300,
-    302,304,306,308,310,312,314,316,318,320,322,324,326,328,330,332,
-    334,336,338,340,342,344,346,347,349,351,353,355,357,359,360,362,
-    364,366,368,370,371,373,375,377,379,380,382,384,386,387,389,391,
-    393,394,396,398,399,401,403,405,406,408,410,411,413,415,416,418,
-    419,421,423,424,426,428,429,431,432,434,435,437,439,440,442,443,
-    445,446,448,449,451,452,454,455,457,458,460,461,463,464,466,467,
-    469,470,471,473,474,476,477,479,480,481,483,484,486,487,488,490,
-    491,492,494,495,496,498,499,500,502,503,504,506,507,508,509,511,
-    512,
-};
-
-/* atan2 in PSX angle units (4096 = 360°). Returns angle measured CW from
- * +Z axis (so yaw=0 → +Z forward, matches renderer's mat3_rot_y in
- * skeleton_common.c). Uses the ATAN256 LUT → faithful (sub-0.5° vs the real
- * arctan), matching the BIOS catan the original walker (FUN_8001a6d4) used. */
+/* atan2 in PSX angle units (4096 = 360°). Returns yaw measured CW from +Z (so yaw=0 → +Z forward,
+ * matches renderer's mat3_rot_y). BYTE-TRUE to the game's walker heading FUN_8001a6d4(0,0,dx,dz): it
+ * builds the bearing from the PsyQ BIOS `catan` (re15_catan, the 12-iter CORDIC @0x800658fc), NOT a
+ * float/LUT arctan. The port's `+Z-zero` convention = the game's raw output + 0x400 (verified: game
+ * yields 0 for +X, the port wants 0x400). The old port-generated ATAN256 LUT diverged from the game's
+ * catan on 302/360 directions by up to 6 Q12 units (~0.53°) — a real steering divergence, now byte-
+ * true (the game's own catan rounding, e.g. catan(0)=1 → +X yaw is 0x3ff not 0x400). Audit: the
+ * SquareRoot0-class insight — the game's approximate math must be replicated, not smoothed. */
 static int16_t atan2_q12(int32_t dz, int32_t dx)
 {
-    if (dx == 0 && dz == 0) return 0;
-    int32_t abs_dx = abs(dx);
-    int32_t abs_dz = abs(dz);
-    int32_t num, den;
-    int16_t a;
-    if (abs_dz >= abs_dx) {
-        num = abs_dx; den = abs_dz;                                   /* ratio in [0,1] */
-        int16_t a45 = (int16_t)ATAN256[den ? (num * 256) / den : 0]; /* 0..512 */
-        a = (dx >= 0) ? a45 : (int16_t)-a45;
-        if (dz < 0) a = (int16_t)(2048 - a);
-    } else {
-        num = abs_dz; den = abs_dx;
-        int16_t a45 = (int16_t)ATAN256[den ? (num * 256) / den : 0];
-        a = (dz >= 0) ? (int16_t)(1024 - a45)
-                      : (int16_t)(1024 + a45);
-        if (dx < 0) a = (int16_t)-a;
+    uint32_t a = 0x400;                                 /* FUN_8001a6d4 uVar1 */
+    if (dz > 0) a = 0xc00;                              /* if (0 < Δz) */
+    if (dx != 0) {                                      /* iVar4 = Δx != 0 */
+        int32_t ratio = (int32_t)(((int64_t)dz * 0x1000) / dx);  /* catan arg = (Δz<<12)/Δx, trunc */
+        int32_t at    = (int16_t)re15_catan(ratio);    /* (short)iVar2 */
+        int32_t q     = (dx < 0) ? 0x800 : 0;
+        a = (uint32_t)((q - at) & 0xfff);
     }
-    return (int16_t)(a & 0x0FFF);
+    return (int16_t)((a + 0x400) & 0xfff);              /* + the port's +Z-zero convention offset */
 }
 
 /* Public wrapper: yaw (Q12, 0 = +Z) from a world XZ delta. The stair traversal
