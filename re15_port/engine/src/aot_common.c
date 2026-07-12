@@ -495,6 +495,13 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
                     }
                 }
             }
+            /* DEFERRED (audit wf_1c0e60d8 #5, LOW): the original FUN_800436a8 runs FUN_80042bac a THIRD
+             * time over the OBJECT/prop pool (mask 0x04), so a prop inside a water/ramp rect is stamped
+             * too. Not ported because it is a no-op / negligible here: (a) WATER stamps prop+0x88, but the
+             * port's prop struct has no water_y and NOTHING consumes a prop water level (only actor render
+             * reads +0x88); (b) RAMP would set prop.y, but props rarely overlap a ramp trigger (prop Y is
+             * SCD-set) AND the byte-true per-prop band gate needs the prop's +0x82 floor band, which the
+             * port's prop struct does not carry. A full port would add both fields + a prop-pool pass here. */
             continue;                                             /* env zones: no fire dispatch */
         }
         int flag_pool_inside = 0;
