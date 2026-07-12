@@ -3962,8 +3962,9 @@ static int re15_npc_anim(re15_actor_t *e)     /* POST-inc +0x95, wrap at the rea
  * re15_enemy_steer_point (0x8001aac4, yaw-slew). The per-type TURN cone is @0x80076c41. */
 static const uint8_t s_npc_turn_cone[16] =    /* @0x80076c41 byte[(type-0x40)*2] (0x40=0x60, 0x4b=0x50) */
     { 0x60,0x60,0x60,0x60,0x60,0x60,0x60,0x60,0x60,0x60,0x60,0x50,0x50,0x60,0x60,0x50 };
-static uint8_t re15_npc_type_cone(uint8_t type)
-    { int i = (int)type - 0x40; if (i < 0 || i > 15) i = 0; return s_npc_turn_cone[i]; }
+static uint8_t re15_npc_tbl(const uint8_t *t, uint8_t type)   /* byte[(type-0x40)], clamp to 0..15 */
+    { int i = (int)type - 0x40; if (i < 0 || i > 15) i = 0; return t[i]; }
+static uint8_t re15_npc_type_cone(uint8_t type) { return re15_npc_tbl(s_npc_turn_cone, type); }
 
 /* subs 0-3: idle-pose (a 2-layer looping idle FSM on +0x6, no move/turn). The port's faithful-line is the
  * clip-2 hold — the byte-true anim_set-loop folds to "advance a real looping idle clip". */
@@ -3990,13 +3991,40 @@ static void re15_npc_sub_turn(re15_actor_t *e)
     re15_npc_anim(e);                                        /* advance the turn clip (motion 5) */
 }
 
-/* Executor sub-dispatch: sub_library[+0x5] (@0x80076ca0). Phase-1 slice = idle (0-3) + turn (9); the
- * walk-to-target subs 4/5/7/8 and the event-reach sub 6 fold to idle for now (phases 3/5). */
+/* per-type WALK param @0x80076c00 byte[(type-0x40)*2] — INIT writes it to +0x8c (sh, halfword). */
+static const uint8_t s_npc_walk_param[16] =
+    { 0x4b,0x4b,0x4b,0x4b,0x46,0x46,0x46,0x46,0x4b,0x4b,0x4b,0x32,0x32,0x46,0x46,0x32 };
+
+/* subs 4/5/7/8: WALK-to-target (@0x80051148). A 3-phase FSM on +0x6 (sub_state_2), disasm-verified:
+ *   0 INIT (@0x80051198): +0x8c = walk_param, motion=5, anim_frac=7, sub_state_2=1 — falls through to RUN.
+ *   1 RUN / turn-to-face (@0x80051200): arc_test(steer, 0x15e=350); aligned -> sub_state_2=2; steer + anim.
+ *   2 ARRIVED / walk-straight (@0x800512d4): aligned, advance forward; steer + anim.
+ * The FORWARD DISPLACEMENT is the executor's root-motion channel 0 (anim_flags&1 → FUN_800369f8), NOT this
+ * sub: verified that NEITHER the walk nor turn sub writes +0x1c4 (anim_flags) — the bit is armed by the
+ * un-RE'd anim/clip-set path. So this sub is byte-true for the STEERING; the movement plugs into the
+ * executor gate once that arming (+ the room's EM model, re15_enemy_find(type)) is present. Deferred. */
+static void re15_npc_sub_walk(re15_actor_t *e)
+{
+    if (e->sub_state_2 > 2) return;                          /* >2 -> exit (@0x80051190) */
+    if (e->sub_state_2 == 0) {                               /* INIT (@0x80051198) -> falls through to RUN */
+        e->crow_speed  = (int16_t)re15_npc_tbl(s_npc_walk_param, e->type);  /* +0x8c walk param (sh) */
+        e->sub_state_2 = 1; e->motion = 5; e->anim_frame = 0; e->anim_frac = 7;
+    }
+    if (e->sub_state_2 == 1 &&                               /* RUN: turn-to-face (@0x80051214) */
+        re15_ai_arc_test(e, e->steer_x, e->steer_z, 0x15e) == 0)
+        e->sub_state_2 = 2;                                  /* aligned (arc 350) -> walk-straight (@0x80051230) */
+    re15_enemy_steer_point(e, e->steer_x, e->steer_z, re15_npc_type_cone(e->type));  /* @0x80051264 yaw-slew */
+    re15_npc_anim(e);
+}
+
+/* Executor sub-dispatch: sub_library[+0x5] (@0x80076ca0): idle (0-3), walk-to-target (4/5/7/8), turn (9).
+ * Event-reach sub 6 folds to idle for now (phase 5). */
 static void re15_npc_sub_dispatch(re15_actor_t *e)
 {
     switch (e->sub_state_1) {
+    case 4: case 5: case 7: case 8: re15_npc_sub_walk(e); break;
     case 9: re15_npc_sub_turn(e); break;
-    default: re15_npc_sub_idle(e); break;   /* 0-3 idle; 4/5/7/8 walk + 6 event-reach = deferred */
+    default: re15_npc_sub_idle(e); break;   /* 0-3 idle; 6 event-reach = deferred */
     }
 }
 
@@ -4005,25 +4033,40 @@ static void re15_npc_sub_dispatch(re15_actor_t *e)
  * when both bits are set; the 0x10-clear path always dispatches. 0x20 toggles each executor tick. */
 static void re15_npc_executor(re15_actor_t *e)
 {
-    uint16_t f = e->anim_flags;
-    if (!((f & 0x10) && (f & 0x20))) re15_npc_sub_dispatch(e);   /* @0x80050c00-c34 */
+    int fr_prev = (int)e->anim_frame;   /* the sub's re15_npc_anim advances anim_frame below */
+    if (!((e->anim_flags & 0x10) && (e->anim_flags & 0x20))) re15_npc_sub_dispatch(e);   /* @0x80050c00-c34 */
     e->anim_flags ^= 0x20;                                        /* @0x80050c50 */
-    /* root-motion (@0x80050c78/ca0, FUN_800369f8 walk displacement -> +0x34/+0x3c) is deferred to the
-     * walk phase (subs 4/5/7/8 not ported) — a no-op here (idle/turn have no displacement). */
+    /* root-motion channel 0 (@0x80050c6c-78): `if (anim_flags & 1) FUN_800369f8(0,0)` mode 0 =
+     * re15_clip_root_motion_delta — the current clip's per-frame keyframe root translation, rotated by
+     * rot_y, into +0x34/+0x3c. Byte-true GATE (disasm-verified). Two things must be present for the NPC
+     * to actually displace, and BOTH are deferred (documented in re15_npc_sub_walk):
+     *   (1) anim_flags&1 armed — set by the un-RE'd anim/clip-set path, NOT any executor sub;
+     *   (2) the NPC's EM bank loaded — re15_enemy_find(type) is NULL in the loadable rooms (the NPC
+     *       renders via def_skel there), so there is no skeleton to read the keyframe from.
+     * The gate + wiring are kept byte-true; the delta form self-skips on a non-advancing/ wrapped frame.
+     * Channel 1 (@0x80050c94: `if (anim_flags & 2) FUN_800369f8(0,1)`) is a second segment — deferred. */
+    if (e->anim_flags & 1) {
+        re15_enemy_bank_t *bank = re15_enemy_find(e->type);
+        if (bank) re15_clip_root_motion_delta(e, &bank->skel, &bank->anim,
+                                              (int)e->motion, (int)e->anim_frame, fr_prev);
+    }
 }
 
 static void re15_npc_ai_tick(int slot)
 {
     re15_actor_t *e = &g_actors[slot];
 
-    /* RE15_NPC_TURN_TEST: contrived verification of sub 9 — force the NPC into the turn sub aimed at the
-     * LIVE player each tick (the STAGE1 NPCs park off-screen, so this seeds an observable look-at). */
-    { static int s_tt = -1; if (s_tt < 0) s_tt = getenv("RE15_NPC_TURN_TEST") ? 1 : 0;
+    /* RE15_NPC_TURN_TEST / RE15_NPC_WALK_TEST: contrived verification of the executor sub-VM (the STAGE1
+     * NPCs park off-screen, so this seeds an observable behaviour). TURN = force sub 9 aimed at the LIVE
+     * player. WALK = force sub 4 toward the live player (the NPC steers to face it; the forward advance is
+     * the executor's deferred root-motion channel, so the position holds until that arming is RE'd). */
+    { static int s_tt = -2;
+      if (s_tt == -2) s_tt = getenv("RE15_NPC_WALK_TEST") ? 4 : (getenv("RE15_NPC_TURN_TEST") ? 9 : 0);
       if (s_tt && e->state != 0) {
           re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
           e->steer_x = (int16_t)pl->x; e->steer_z = (int16_t)pl->z;   /* live player as the steer target */
           if (e->state != 4) { e->state = 4; e->sub_state_2 = 0; }     /* enter the executor (INIT the sub) */
-          e->sub_state_1 = 9; e->anim_flags |= 0x10;                   /* force the turn sub (half-rate) */
+          e->sub_state_1 = (uint8_t)s_tt; e->anim_flags |= 0x10;       /* force the turn(9)/walk(4) sub */
       } }
 
     switch (e->state) {
