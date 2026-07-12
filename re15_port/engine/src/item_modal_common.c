@@ -18,13 +18,7 @@
 #include "re15_inventory.h"  /* re15_inv_grant + g_inv (grant) + re15_item_name (prompt length)     */
 #include "re15_aot.h"        /* g_aot — deactivate the item AOT on confirm                          */
 #include "re15_scd.h"        /* re15_game_flag_set — the taken-bit (zone 9)                         */
-#include <string.h>          /* strlen — the typewriter glyph count                                 */
-
-/* Prompt line lengths (must match the render strings in platform/pc/main.c). "WILL YOU TAKE THE" = 17
- * glyphs; the can't-carry line "YOU CAN'T CARRY ANY" + "MORE ITEMS" = 29. The take-prompt total adds
- * the item name + the trailing ".". */
-#define ITEM_MODAL_TAKE_PREFIX 17
-#define ITEM_MODAL_FULL_GLYPHS 29
+#include "re15_item_prompt.h"/* re15_item_prompt_walk — byte-true prompt glyph count (typewriter total) */
 
 /* ---- byte-true corner tables (FUN_8001e1c8 @0x80072d3c / @0x80072d44) ---- */
 static const int16_t s_corner_x[4] = { -56, +56, -56, +56 };
@@ -194,8 +188,7 @@ void re15_item_modal_tick(uint16_t pad_edge)
             s_msg_no  = 0;
             s_reveal       = 0;                   /* start the typewriter */
             s_reveal_timer = 2;                   /* 2 frames/glyph (DAT_800b8524 = 2<<0) */
-            s_reveal_total = (s_prompt == 2) ? ITEM_MODAL_FULL_GLYPHS
-                                             : ITEM_MODAL_TAKE_PREFIX + (int)strlen(re15_item_name(s_type)) + 1;
+            s_reveal_total = re15_item_prompt_walk(s_prompt, s_type, 0, 0, 0);  /* byte-true glyph count */
             s_state   = 6;
             return;
 

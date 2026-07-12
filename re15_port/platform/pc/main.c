@@ -3746,18 +3746,20 @@ int main(int argc, char *argv[])
             uint8_t ptype = 0; int pchoice = 0;
             int prompt = re15_item_modal_prompt(&ptype, &pchoice);
             int reveal = re15_item_modal_reveal();   /* typewriter budget (2 frames/glyph) */
-            if (prompt == 1) {
-                int used = re15_render_pc_text_overlay_n(34, 174, "WILL YOU TAKE THE", reveal);
-                char l2[48]; snprintf(l2, sizeof l2, "%s.", re15_item_name(ptype));
-                re15_render_pc_text_overlay_n(34, 184, l2, reveal - used);
-                if (re15_item_modal_prompt_ready()) {         /* Yes/No only after the text types out */
-                    re15_render_pc_text_overlay(190, 200, "YES");
-                    re15_render_pc_text_overlay(234, 200, "NO");
-                    re15_render_pc_cursor(pchoice ? 224 : 180, 201);   /* ▶ on the current choice */
+            if (prompt) {
+                /* Byte-true GAME-FONT render: replay the prompt's own glyph bytes (BSS scripts + name
+                 * blob) through the TEX.TIM message font — "Will you take the <Item>." / "You can't
+                 * carry any more items", exact font + Title-Case, typewritered to `reveal` glyphs. */
+                extern void re15_render_pc_item_prompt(int x, int y, int prompt_type, uint8_t item_id, int reveal);
+                re15_render_pc_item_prompt(34, 180, prompt, ptype, reveal);
+                if (prompt == 1 && re15_item_modal_prompt_ready()) {  /* Yes/No only after the text types out */
+                    static const unsigned char yes_g[3] = { 0x35, 0x41, 0x4f };  /* "Yes" (game glyphs) */
+                    static const unsigned char no_g[2]  = { 0x2a, 0x4b };         /* "No"                */
+                    extern int re15_render_pc_msg_text(int x, int y, const unsigned char *raw, int len);
+                    re15_render_pc_msg_text(190, 202, yes_g, 3);
+                    re15_render_pc_msg_text(234, 202, no_g,  2);
+                    re15_render_pc_cursor(pchoice ? 224 : 180, 203);  /* ▶ on the current choice */
                 }
-            } else if (prompt == 2) {
-                int used = re15_render_pc_text_overlay_n(34, 180, "YOU CAN'T CARRY ANY", reveal);
-                re15_render_pc_text_overlay_n(34, 190, "MORE ITEMS", reveal - used);
             }
         }
 

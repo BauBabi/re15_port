@@ -23,6 +23,7 @@
 #include "re15_tim.h"           /* re15_tim_t — the YOU DIED game-over graphic */
 #include "re15_fade.h"          /* the screen-fade channel engine (SCD 0x56/0x57, FUN_80021880) */
 #include "re15_itps.h"          /* re15_itps_pixel — the item-get modal quad picture (ITPS.ITP, U11) */
+#include "re15_item_prompt.h"   /* re15_item_prompt_walk — replay the prompt glyphs in the game font */
 #include "shadow_blob_data.h"   /* RE1.5 char shadow blob, extracted from TEX.TIM */
 
 #define WINDOW_SCALE 4
@@ -1662,6 +1663,27 @@ int re15_render_pc_text_overlay_n(int x, int y, const char *text, int n)
 void re15_render_pc_text_overlay(int x, int y, const char *text)
 {
     re15_render_pc_text_overlay_n(x, y, text, text ? (int)strlen(text) : 0);
+}
+
+/* Item-get prompt in the GAME TEX.TIM font — byte-true glyph replay. The engine walk
+ * (re15_item_prompt_walk) yields the prompt's own glyph bytes (from the BSS scripts + name blob) in
+ * stream order; we draw the first `reveal` of them (typewriter) via the real message-font blitter at
+ * (x,y). The Yes/No + cursor are drawn by the caller once the text is fully revealed. */
+typedef struct { int x, penx, peny; } pc_prompt_pen_t;
+static void pc_prompt_glyph_cb(void *v, unsigned char code, int attr, int newline)
+{
+    pc_prompt_pen_t *p = (pc_prompt_pen_t *)v;
+    if (newline) { p->penx = p->x; p->peny += 13; return; }   /* drop a line */
+    if (code != 0x00) re15_msgfont_glyph(p->penx, p->peny, code, attr);   /* 0x00 = blank space */
+    int w = s_msgfont_w[code];
+    p->penx += (w > 0) ? w : 6;                               /* space / unmeasured -> fixed advance */
+}
+void re15_render_pc_item_prompt(int x, int y, int prompt_type, uint8_t item_id, int reveal)
+{
+    re15_msgfont_ensure();
+    if (!s_msgfont_ok) return;
+    pc_prompt_pen_t p = { x, x, y };
+    re15_item_prompt_walk(prompt_type, item_id, reveal, pc_prompt_glyph_cb, &p);
 }
 
 /* Dialog page-break indicator: a small DOWN-pointing triangle (byte-true FUN_80028134
