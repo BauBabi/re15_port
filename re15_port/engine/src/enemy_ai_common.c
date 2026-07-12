@@ -5064,8 +5064,16 @@ void re15_enemy_ai_run_all(int combat_active)
                 e->x = nx; e->z = nz;
             }
         }
-        else if (t == 0x40) {   /* CHIEF IRONS (type 0x40) — invulnerable NPC cutscene actor (Wave 1:
-                                 * INIT + idle pose). The walk/look/dialogue VM = wave 2. */
+        else if (t == 0x40 || t == 0x42 || t == 0x45 || t == 0x47 || t == 0x49 || t == 0x4b) {
+            /* STAGE1 NPC family (0x40 Irons / 0x42 / 0x45 / 0x47 Annette / 0x49 / 0x4b) — all six
+             * are invulnerable cutscene actors that SHARE the same EXE behaviour lib (INIT
+             * @0x8011c6dc → HP=-1 + idle clip 2 → shared executor state 4 @0x80050be8; Wave-1). The
+             * dispatch was previously wired for 0x40 ONLY, so the other five spawned stuck at state 0
+             * / motion 0 (a T-pose, and never invulnerable) — confirmed in ROOM11B0 (0x42/0x4b at
+             * st=0 mo=0 while 0x40 reached st=4 mo=2). re15_npc_ai_tick is type-agnostic (driven by
+             * state/grid), so routing all six is byte-true to the shared lib. The walk/look/dialogue
+             * VM stays Wave-2 deferred. (0x4d, a STAGE6 type, is NOT included — unconfirmed as an NPC
+             * vs an enemy; left for the STAGE6 overlay RE.) */
             re15_npc_ai_tick(s);
         }
         else if (t == 0x13) {   /* ZOMBIE GIRL (type 0x13) — nav-pathing zombie variant (Wave 1).
