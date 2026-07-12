@@ -3173,12 +3173,25 @@ int op_cut_old(scd_thread_t *t)
     return 1;
 }
 
-/* Flr_set (0x38) — 12 bytes (war fälschlich 3). Byte-true: dispatch table
- * 0x80074588→LAB_800417ac, `addiu a1,a1,0xc` @0x800417f0 = +12 (ghidra1_V2.txt;
- * Handler liest 4 Halbwörter Floor/SCA). Voll-Semantik = 2. Runde; dieser Stub
- * hält nur den PC byte-genau in Sync. [BYTE_TRUE_AUDIT #4] */
+static re15_sca_entry_t *sca_entry_at(uint8_t region, uint8_t index);   /* defined below */
+
+/* Flr_set (0x38) — 12 bytes. Byte-true LAB_800417ac (dispatch table 0x80074588; `addiu a1,a1,0xc`
+ * @0x800417f0 = +12). RE'd 2026-07-12 from the raw handler: it MUTATES a live SCA collision entry
+ * — the same region_table[region+1][index] addressing as its siblings Sca_id_set (0x37 → u0) and
+ * Sca_floor_set (0x39 → floor), i.e. sca_entry_at(). Operand layout (pc[1] is NOT read — a reserved
+ * selector byte): region = pc[2] (lbu +2), index = pc[3] (lbu +3), and it writes four halfwords of
+ * the 12-byte entry: entry+0 = u16@pc[8] (width), +2 = u16@pc[10] (density), +4 = s16@pc[4] (x),
+ * +6 = s16@pc[6] (z) — `sh a3,0 / sh a2,2 / sh t0,4 / sh t1,6` @0x800417f8-804. So it repositions/
+ * resizes a collision shape at runtime (type/u0/u1/floor untouched). Was a PC-only stub. */
 int op_flr_set(scd_thread_t *t)
 {
+    re15_sca_entry_t *e = sca_entry_at(t->pc[2], t->pc[3]);   /* region=pc[2], index=pc[3] */
+    if (e) {
+        e->width   = (uint16_t)(t->pc[8]  | (t->pc[9]  << 8));   /* +0 = u16 @pc[8]  */
+        e->density = (uint16_t)(t->pc[10] | (t->pc[11] << 8));   /* +2 = u16 @pc[10] */
+        e->x       = (int16_t)((uint16_t)(t->pc[4] | (t->pc[5] << 8)));   /* +4 = s16 @pc[4] */
+        e->z       = (int16_t)((uint16_t)(t->pc[6] | (t->pc[7] << 8)));   /* +6 = s16 @pc[6] */
+    }
     t->pc += 12;
     return 1;
 }

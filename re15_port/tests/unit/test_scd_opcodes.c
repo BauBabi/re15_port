@@ -817,6 +817,54 @@ static int test_evt_exec_direct_slot(void)
 }
 
 /* =========================================================================
+ * Flr_set (0x38) — byte-true runtime SCA-entry mutation (LAB_800417ac). Same
+ * region_table[region+1][index] addressing as Sca_id_set(0x37)/Sca_floor_set(0x39)
+ * = sca_entry_at(), but with region=pc[2]/index=pc[3] and it writes the four
+ * geometry halfwords: +0 width=u16@pc[8], +2 density=u16@pc[10], +4 x=s16@pc[4],
+ * +6 z=s16@pc[6] (type/u0/u1/floor untouched). Was a PC-only stub before.
+ * ========================================================================= */
+static int test_flr_set_mutates(void)
+{
+    /* mock SCA: region0 = 3 entries (flat 0..2), region1 = 2 entries (flat 3..4). */
+    static re15_sca_entry_t sca[5] = {
+        {100, 200, 10, 20, 1, 0xAA, 0xBB, 5},
+        {101, 201, 11, 21, 1, 0xAA, 0xBB, 5},
+        {102, 202, 12, 22, 1, 0xAA, 0xBB, 5},
+        {103, 203, 13, 23, 3, 0xCC, 0xDD, 7},   /* region1[0] = flat 3 */
+        {104, 204, 14, 24, 3, 0xCC, 0xDD, 7},   /* region1[1] = flat 4 */
+    };
+    re15_rdt_t rdt; memset(&rdt, 0, sizeof(rdt));
+    rdt.sca = sca; rdt.sca_count = 5; rdt.sca_rgn[0] = 3; rdt.sca_rgn[1] = 2;
+
+    /* Flr_set region=1 index=1 (→ flat 4): x=-1000, z=2000, width=555, density=666.
+     * pc[1] is the reserved/unread selector byte. */
+    uint8_t bc[13];
+    bc[0] = 0x38; bc[1] = 0x00; bc[2] = 1; bc[3] = 1;
+    write_le16(bc + 4,  (uint16_t)(int16_t)-1000);   /* x  @pc[4] */
+    write_le16(bc + 6,  2000);                        /* z  @pc[6] */
+    write_le16(bc + 8,  555);                         /* width   @pc[8]  */
+    write_le16(bc + 10, 666);                         /* density @pc[10] */
+    bc[12] = SCD_OP_EVT_END;
+
+    scd_vm_init();
+    scd_register_current_rdt(&rdt);
+    scd_thread_start(0, bc);
+    scd_vm_tick();
+    scd_register_current_rdt(NULL);
+
+    re15_sca_entry_t *e = &sca[4];   /* region1 index1 = cumulative 3 + 1 */
+    if (!(e->width == 555 && e->density == 666 && e->x == -1000 && e->z == 2000)) {
+        fprintf(stderr, "FAIL: test_flr_set_mutates: entry not updated (w=%u d=%u x=%d z=%d)\n",
+                e->width, e->density, e->x, e->z); return 1; }
+    if (!(e->type == 3 && e->u0 == 0xCC && e->u1 == 0xDD && e->floor == 7)) {
+        fprintf(stderr, "FAIL: test_flr_set_mutates: type/u0/u1/floor must be untouched\n"); return 1; }
+    if (sca[3].width != 103 || sca[0].width != 100) {
+        fprintf(stderr, "FAIL: test_flr_set_mutates: wrong entry mutated (region indexing)\n"); return 1; }
+    printf("PASS: test_flr_set_mutates\n");
+    return 0;
+}
+
+/* =========================================================================
  * Test [#17]: Goto (0x17) byte-true block-unwind + Gosub (0x18) per-frame block
  * isolation. Empirical scan of all RE1.5 SCDs: 15/22 Gotos use pc[1]!=0xFF (real
  * out-of-block unwind), 124/278 Gosubs fire from INSIDE an open If-block. The old
@@ -1161,6 +1209,7 @@ int main(void)
     failures += test_switch_case_break();
     failures += test_evt_chain_reinit();
     failures += test_evt_exec_direct_slot();
+    failures += test_flr_set_mutates();
     failures += test_goto_block_unwind();
     failures += test_gosub_block_isolation();
     failures += test_ck_set_flags();
