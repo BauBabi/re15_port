@@ -187,7 +187,10 @@ int re15_item_is_weapon(uint8_t id) { return id < 0x15; }              /* 0x00..
 int re15_item_is_ammo(uint8_t id)   { return id >= 0x15 && id < 0x22; }/* 0x15..0x21                          */
 int re15_item_is_key(uint8_t id)    { return id >= 0x22; }             /* max_stack 1, outside the icon bound  */
 
-/* Byte-true item name catalog 0x00..0x21 (DAT_800c4a28 string blob, decoded). */
+/* Byte-true item name catalog 0x00..0x2f (DAT_800c4a28 glyph blob, decoded via the item-prompt font
+ * map). The HUD uses this ASCII form (port convention: caps for the 6x8 debug font); the byte-true
+ * Title-Case glyphs the GAME draws come from the blob directly in the prompt (item_prompt_common.c).
+ * Heal items 0x22..0x2e are the First Aid / medicine set the item-USE flow consumes (see re15_item_use). */
 static const char *const s_item_names[] = {
     "",               "COMBAT KNIFE",   "PIPE",           "BROWNING HP",      /* 0x00..0x03 */
     "SIG P228",       "BERETTA M93R",   "GLOCK 18",       "SUPER REDHAWK",    /* 0x04..0x07 */
@@ -197,7 +200,10 @@ static const char *const s_item_names[] = {
     "COLT PYTHON",    "H. GUN BULLETS", "SHOTGUN SHELLS", "MAGNUM BULLETS",   /* 0x14..0x17 */
     "FLAME FUEL",     "EXPLOSIVE RND",  "ACID ROUNDS",    "INCEND. ROUNDS",   /* 0x18..0x1b */
     "REMOTE DETON.",  "EMPTY SHELLS",   "NITRO CAPSULE",  "ACID CAPSULE",     /* 0x1c..0x1f */
-    "INCEND. CAPSULE","MEMORY CARD",                                          /* 0x20..0x21 */
+    "INCEND. CAPSULE","MEMORY CARD",    "FIRST AID SPRAY","ANTIDOTE SPRAY",   /* 0x20..0x23 */
+    "GREEN MEDICINE", "RED MEDICINE",   "BLUE MEDICINE",  "G.R MEDICINE MIX", /* 0x24..0x27 */
+    "G.G MEDICINE MIX","G.B MEDICINE MIX","G.G.R MED. MIX","G.G.G MED. MIX",  /* 0x28..0x2b */
+    "G.G.B MED. MIX", "G.R.R MED. MIX", "G.R.B MED. MIX", "NUT",              /* 0x2c..0x2f */
 };
 const char *re15_item_name(uint8_t id)
 {
