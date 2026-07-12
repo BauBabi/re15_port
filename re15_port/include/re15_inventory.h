@@ -63,6 +63,7 @@ void re15_inv_load_briefing(void);
 int  re15_inv_equipped_slot(void);
 void re15_inv_set_equipped_slot(int s);
 int  re15_inv_find_item(uint8_t id);        /* FUN_8004dfec: slot or -1                     */
+void re15_inv_remove_slot(int slot);        /* clear a slot (item-USE consume @0x8004aef0)  */
 int  re15_ammo_mag_nonzero(void);           /* FUN_8004ea6c: equipped slot qty != 0         */
 int  re15_ammo_consume(void);               /* FUN_8004eae4: qty--; pre-decrement bool      */
 int  re15_ammo_reserve_slot(void);          /* FUN_8004eb70: ammo slot >0, or 0 (slot-0 quirk!) */

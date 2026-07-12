@@ -50,6 +50,18 @@ int re15_inv_grant(uint8_t type, uint8_t amount)
     return 0;
 }
 
+/* Clear an inventory slot (byte-true item-USE consume @0x8004aef0-af28: DAT_800b10ac[slot] id/qty/flag
+ * = 0). Used by the heal-USE FSM (item_use_common.c). The follow-on compaction FUN_8004dadc is
+ * faithful-line-deferred — the menu display re-compacts occupied slots on the next rebuild. */
+void re15_inv_remove_slot(int slot)
+{
+    if (slot >= 0 && slot < RE15_INV_MAX_SLOTS) {
+        g_inv.slots[slot].id    = 0;
+        g_inv.slots[slot].qty   = 0;
+        g_inv.slots[slot].flags = 0;
+    }
+}
+
 /* Byte-true STAGE1 briefing loadout (mzd_stage1_briefing.sav, DAT_800b10ac 4-byte slots). */
 void re15_inv_load_briefing(void)
 {

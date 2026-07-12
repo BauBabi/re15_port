@@ -61,6 +61,7 @@ static inline int RNDI(float f) {
 #include "re15_item_icon.h"   /* re15_item_icon_* — byte-true ITEMALL grid icons (8.22) */
 #include "re15_item_modal.h"  /* re15_item_modal_* — item-get zoom/flip pickup presentation (U11) */
 #include "re15_itps.h"        /* re15_itps_set_data — the per-item modal picture sheet (ITPS.ITP, U11) */
+#include "re15_item_use.h"    /* re15_item_use_* — the inventory heal-USE flow ("Will you use the X?") */
 #include "re15_damage.h"      /* re15_player_equipped_weapon (ARMS CONTROL panel, 8.23) */
 
 /* Draw a byte-true 40×30 ITEMALL icon at (x,y) over the paused inventory (pixel-wise; transparent
@@ -1247,6 +1248,13 @@ int main(int argc, char *argv[])
              * (SDL_RenderReadPixels captures only RenderCopy'd textures) — verify via an ffmpeg video. */
             if (getenv("RE15_ITEM_MODAL_TEST") && g_engine.frame_count == 40)
                 re15_item_modal_start(0x15, 50, 0, -1);   /* H.GUN BULLETS (ITPS picture id 0x15) */
+            /* RE15_ITEM_USE_TEST: debug — seed a Green Medicine as the only item + open the inventory
+             * at frame 40 to visually verify the heal-USE prompt. Then SQUARE (start USE) + CROSS (Yes). */
+            if (getenv("RE15_ITEM_USE_TEST") && g_engine.frame_count == 40) {
+                re15_inv_init();
+                g_inv.slots[0].id = 0x24; g_inv.slots[0].qty = 1;   /* Green Medicine, only item */
+                re15_menu_toggle();                                  /* open (cursor snaps to slot 0) */
+            }
             /* RE15_FORCE_SPLAT: debug — throw one byte-true blood splatter burst at the player at
              * F30 to visually verify the physics (gravity + RNG spread + floor bounce). */
             if (getenv("RE15_FORCE_SPLAT") && g_engine.frame_count == 30) {
@@ -1450,9 +1458,31 @@ int main(int argc, char *argv[])
                 uint8_t id = re15_menu_disp_id(cur);
                 const char *ty = re15_item_is_weapon(id) ? "WEAPON"
                                : re15_item_is_ammo(id)   ? "AMMO" : "ITEM";
-                char line[64];
-                snprintf(line, sizeof line, "%s [%s]  Enter=equip Shift=close", re15_item_name(id), ty);
+                const char *act = re15_item_is_weapon(id) ? "Enter=equip"
+                                : re15_item_use_is_heal(id) ? "Enter=use" : "";
+                char line[72];
+                snprintf(line, sizeof line, "%s [%s]  %s Shift=close", re15_item_name(id), ty, act);
                 re15_debug_text(158, 224, 0, line);
+            }
+
+            /* Item-USE prompt ("Will you use the X?" Yes/No, then "You have used the X") over the grid —
+             * byte-true glyph replay in the game font (script 4/5), same layer as the pickup modal. */
+            {
+                extern void re15_render_pc_item_prompt(int x, int y, int prompt_type, uint8_t item_id, int reveal);
+                extern void re15_render_pc_cursor(int x, int y);
+                extern int  re15_render_pc_msg_text(int x, int y, const unsigned char *raw, int len);
+                uint8_t uid = 0; int uch = 0;
+                int up = re15_item_use_prompt(&uid, &uch);
+                if (up) {
+                    re15_render_pc_item_prompt(34, 180, up, uid, re15_item_use_reveal());   /* 4=use, 5=used */
+                    if (up == 4 && re15_item_use_prompt_ready()) {
+                        static const unsigned char yes_g[3] = { 0x35, 0x41, 0x4f };  /* "Yes" */
+                        static const unsigned char no_g[2]  = { 0x2a, 0x4b };         /* "No"  */
+                        re15_render_pc_msg_text(190, 202, yes_g, 3);
+                        re15_render_pc_msg_text(234, 202, no_g,  2);
+                        re15_render_pc_cursor(uch ? 224 : 180, 203);
+                    }
+                }
             }
         }
 

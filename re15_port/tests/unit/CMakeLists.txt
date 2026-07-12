@@ -399,6 +399,13 @@ target_include_directories(test_enemy_attack_reach PRIVATE ${CMAKE_SOURCE_DIR}/i
 add_test(NAME unit_enemy_attack_reach COMMAND test_enemy_attack_reach)
 set_tests_properties(unit_enemy_attack_reach PROPERTIES TIMEOUT 30)
 
+# --- Byte-true inventory item-USE (heal) flow (wf_13443da6): "Will you use the X?" -> heal + consume ---
+add_executable(test_item_use test_item_use.c)
+target_link_libraries(test_item_use PRIVATE re15_engine re15_test_support)
+target_include_directories(test_item_use PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_item_use COMMAND test_item_use)
+set_tests_properties(unit_item_use PROPERTIES TIMEOUT 30)
+
 # --- Byte-true item-get "You got X" pickup MODAL (FUN_8001db28): zoom/flip FSM + deferred grant (U11) ---
 add_executable(test_item_modal test_item_modal.c)
 target_link_libraries(test_item_modal PRIVATE re15_engine re15_test_support)

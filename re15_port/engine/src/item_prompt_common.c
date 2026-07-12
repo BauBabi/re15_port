@@ -13,8 +13,14 @@ int re15_item_prompt_walk(int prompt_type, uint8_t item_id, int max_glyphs,
 {
     const unsigned char *s;
     int slen;
-    if (prompt_type == 2) { s = re15_item_prompt_script_full; slen = (int)sizeof re15_item_prompt_script_full; }
-    else                  { s = re15_item_prompt_script_take; slen = (int)sizeof re15_item_prompt_script_take; }
+    /* dispatch key: 1=take, 2=can't-carry, 4="Will you use the X?", 5="You have used the X" (the BSS
+     * indices are 0/1/4/2 respectively — the port key 5 maps to BSS script[2] since key 2 is taken). */
+    switch (prompt_type) {
+        case 2:  s = re15_item_prompt_script_full; slen = (int)sizeof re15_item_prompt_script_full; break;
+        case 4:  s = re15_item_prompt_script_use;  slen = (int)sizeof re15_item_prompt_script_use;  break;
+        case 5:  s = re15_item_prompt_script_used; slen = (int)sizeof re15_item_prompt_script_used; break;
+        default: s = re15_item_prompt_script_take; slen = (int)sizeof re15_item_prompt_script_take; break;
+    }
 
     int total = 0, attr = 0;
     for (int i = 0; i < slen; i++) {

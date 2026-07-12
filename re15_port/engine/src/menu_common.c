@@ -14,6 +14,7 @@
 #include "re15_damage.h"     /* re15_player_equipped_weapon / re15_player_set_equipped_weapon */
 #include "re15_audio.h"      /* re15_audio_prime_weapon (re-load the ARMS SE bank on equip) */
 #include "re15_inventory.h"  /* g_inv, re15_item_is_weapon */
+#include "re15_item_use.h"   /* heal-USE sub-flow ("Will you use the X?") */
 
 #define MENU_MAX_CELLS 10    /* 2 cols × 5 rows (DAT_80076274) */
 
@@ -54,6 +55,18 @@ void re15_menu_tick(uint16_t pad_pressed)
 {
     if (!s_open || s_count <= 0) { if (s_open && s_count <= 0 && (pad_pressed & (RE15_PAD_BIT_START|RE15_PAD_BIT_CROSS))) s_open = 0; return; }
 
+    /* A heal-USE prompt (started on SQUARE below) OWNS the pad while it runs (byte-true: USE is a
+     * sub-state of the inventory FSM). When it ends (consumed on Yes, or declined on No), re-compact
+     * the grid so a consumed item disappears live and the cursor stays in range. */
+    if (re15_item_use_active()) {
+        re15_item_use_tick(pad_pressed);
+        if (!re15_item_use_active()) {
+            rebuild_display();
+            if (s_cursor >= s_count) s_cursor = (s_count > 0) ? s_count - 1 : 0;
+        }
+        return;
+    }
+
     /* byte-true column-major 2-wide grid nav (FUN_800487b0), no wrap. even = left col, odd = right col. */
     if ((pad_pressed & RE15_PAD_BIT_RIGHT) && (s_cursor & 1) == 0 && s_cursor < s_count - 1) s_cursor++;
     if ((pad_pressed & RE15_PAD_BIT_LEFT)  && (s_cursor & 1) != 0 && s_cursor > 0)           s_cursor--;
@@ -69,8 +82,10 @@ void re15_menu_tick(uint16_t pad_pressed)
                                                         * resolve the MAGAZINE through it */
             re15_audio_prime_weapon(id);               /* re-load its ARMS SE bank (@0x800466c4)   */
             s_open = 0;                                /* equip closes the menu                    */
+        } else if (re15_item_use_is_heal(id)) {        /* the classifier's default USE branch (0x22..0x2e) */
+            re15_item_use_start(id, s_disp_slot[s_cursor]);   /* "Will you use the X?" -> heal + consume */
         }
-        /* SQUARE on a non-weapon (ammo/key) is a no-op here (USE/COMBINE = deferred sub-actions) */
+        /* SQUARE on other non-weapons (ammo/key) is a no-op here (COMBINE/key = deferred sub-actions) */
     } else if (pad_pressed & RE15_PAD_BIT_CROSS) {
         s_open = 0;                                    /* cancel (START handled by re15_menu_toggle) */
     }
