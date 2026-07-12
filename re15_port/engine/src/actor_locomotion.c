@@ -223,15 +223,21 @@ void re15_actor_step_walk(re15_actor_t *a)
         return;   /* no position advance during the align state */
     }
 
-    /* STATE 2 — ACTIVE: finer slew (0x48 run / 0x30 walk) + advance below. */
+    /* STATE 2 — ACTIVE: finer slew (0x48 run / 0x30 walk) + advance below. Mode-9 (turn-in-place) is a
+     * special case: its handler @0x80031360 slews a CONSTANT 0x60 with NO state-2 slow-down (@0x80031440
+     * `ori a2,0x60`), so keep 0x60 here instead of the walk 0x30. (audit wf_4e8af27f) */
     int16_t slew_s2 = (a->walk_mode == 0x05) ? PLC_YAW_SLEW_RUN_S2
+                    : (a->walk_mode == 0x09) ? PLC_YAW_SLEW_INIT
                                              : PLC_YAW_SLEW_ACTIVE;
     int16_t step  = (delta >  slew_s2) ?  slew_s2
                   : (delta < -slew_s2) ? -slew_s2
                   :  delta;
     a->rot_y = (int16_t)(((int32_t)a->rot_y + step) & 0x0FFF);
 
-    int yaw_aligned = (delta >= -PLC_YAW_ARRIVAL && delta <= PLC_YAW_ARRIVAL);
+    /* Mode-9 arrival cone = 0x60 (@0x800313d4 `ori a2,0x60`), NOT the port-invented 0x20 (which made the
+     * scripted turn-in-place fire ~3x too tightly aligned). (audit wf_4e8af27f) */
+    int16_t arrival_cone = (a->walk_mode == 0x09) ? 0x60 : PLC_YAW_ARRIVAL;
+    int yaw_aligned = (delta >= -arrival_cone && delta <= arrival_cone);
 
     /* Translate forward at per-mode speed EVERY tick — the real engine's
      * walker (FUN_800245d8) doesn't gate translation on yaw alignment.

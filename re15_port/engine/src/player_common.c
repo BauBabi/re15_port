@@ -535,11 +535,13 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
                         if (p->hp < IDLE_HP_CAUTION) { s_idle_phase = 4; s_idle_timer = IDLE_FC_HURT; }
                         else { s_idle_phase = 2; s_idle_timer = re15_idle_rand(s_frame_ctr) + 0x3c; }
                         break;
-                    default: /* 4 = injured: replays clip 22/23; recover (HP>=50) -> neutral */
-                        if (p->hp >= IDLE_HP_CAUTION) {
-                            s_idle_phase = 0;
-                            s_idle_timer = (re15_idle_rand(s_frame_ctr) & 0x1f) + 0x5a;
-                        } else { s_idle_timer = IDLE_FC_HURT; }
+                    default: /* 4 = injured: TERMINAL — replays clip 22/23 forever. Byte-true (audit
+                        * wf_4e8af27f): idle sub-state-10 handler @0x800322b8 is JUST an anim_set + jr ra
+                        * (no HP load, no slti, no phase/timer write) — it does NOT recover to neutral on
+                        * HP>=50. The injured idle is only LEFT by an EXTERNAL reset: any movement sets
+                        * s_idle_phase=-1, and damage/action reset the FSM elsewhere. The old HP>=50
+                        * recovery branch here was port-invented. Just re-arm the loop timer. */
+                        s_idle_timer = IDLE_FC_HURT;
                         break;
                 }
             }
