@@ -22,7 +22,7 @@
 #include "re15_msg.h"           /* shared .msg text layout walk (re15_msg_layout) */
 #include "re15_tim.h"           /* re15_tim_t — the YOU DIED game-over graphic */
 #include "re15_fade.h"          /* the screen-fade channel engine (SCD 0x56/0x57, FUN_80021880) */
-#include "re15_item_icon.h"     /* re15_item_icon_pixel — the item-get modal quad texture (U11) */
+#include "re15_itps.h"          /* re15_itps_pixel — the item-get modal quad picture (ITPS.ITP, U11) */
 #include "shadow_blob_data.h"   /* RE1.5 char shadow blob, extracted from TEX.TIM */
 
 #define WINDOW_SCALE 4
@@ -55,14 +55,14 @@ static shadow_quad_t s_shadow_quads[SHADOW_QUAD_MAX];
 static int           s_shadow_quad_count = 0;
 
 /* ── Item-get pickup MODAL overlay (byte-true FUN_8001db28) ─────────────────
- * The picked-up item's icon zooming/spinning/flipping in, drawn as a textured
- * quad ON TOP of the frozen 3D scene (after the meshes in end_frame — the game
- * is paused underneath, NOT cleared). The 4 screen corners come from the FSM
- * (item_modal_common.c), which already did the byte-true scale/rotate/flip; the
- * texture is the 40×30 ITEMALL icon (re15_item_icon_pixel) built once per item
- * type. Items without a captured palette get a flat card (faithful-line). */
-#define ITEM_MODAL_TW 40
-#define ITEM_MODAL_TH 30
+ * The picked-up item's 112×72 picture zooming/spinning/flipping in, drawn as a
+ * textured quad ON TOP of the frozen 3D scene (after the meshes in end_frame —
+ * the game is paused underneath, NOT cleared). The 4 screen corners come from
+ * the FSM (item_modal_common.c), which already did the byte-true scale/rotate/
+ * flip; the texture is the byte-true per-item ITPS.ITP picture (re15_itps_pixel,
+ * id×0x3000, 8-bit+CLUT) built once per item type. */
+#define ITEM_MODAL_TW RE15_ITPS_W   /* 112 */
+#define ITEM_MODAL_TH RE15_ITPS_H   /*  72 */
 static int          s_item_modal_on = 0;
 static int          s_item_modal_x[4], s_item_modal_y[4];
 static SDL_Texture *s_item_modal_tex = NULL;
@@ -488,7 +488,7 @@ void re15_render_begin_frame(void)
     s_text_overlay_used = 0;
 }
 
-/* Build (or rebuild on type change) the 40×30 ABGR item-icon texture for the modal quad. */
+/* Build (or rebuild on type change) the 112×72 ABGR item-picture texture (ITPS.ITP) for the modal quad. */
 static void item_modal_build_tex(uint8_t type)
 {
     if (s_item_modal_tex && s_item_modal_tex_type == (int)type) return;
@@ -499,17 +499,17 @@ static void item_modal_build_tex(uint8_t type)
     }
     if (!s_item_modal_tex) return;
     uint32_t px[ITEM_MODAL_TW * ITEM_MODAL_TH];
-    int have = re15_item_icon_available(type);
+    int have = re15_itps_available(type);
     for (int v = 0; v < ITEM_MODAL_TH; v++) {
         for (int u = 0; u < ITEM_MODAL_TW; u++) {
             uint8_t r = 0, g = 0, b = 0;
             uint32_t c;
-            if (have && re15_item_icon_pixel(type, u, v, &r, &g, &b))
+            if (have && re15_itps_pixel(type, u, v, &r, &g, &b))
                 c = 0xFF000000u | ((uint32_t)b << 16) | ((uint32_t)g << 8) | r;  /* ABGR opaque */
             else if (!have)
-                c = 0xFF604840u;   /* flat card for un-iconned items (faithful-line placeholder) */
+                c = 0xFF604840u;   /* flat card if ITPS.ITP is missing (asset guard) */
             else
-                c = 0x00000000u;   /* the icon's own transparent pixel */
+                c = 0x00000000u;   /* the picture's own transparent pixel (CLUT entry 0) */
             px[v * ITEM_MODAL_TW + u] = c;
         }
     }
@@ -518,7 +518,7 @@ static void item_modal_build_tex(uint8_t type)
 }
 
 /* Main-loop hook: set the current-frame item-modal quad (4 screen corners TL,TR,BL,BR), or clear it
- * (on=0). Drawn in end_frame after the 3D meshes. `face` is ignored — front/back share the icon
+ * (on=0). Drawn in end_frame after the 3D meshes. `face` is ignored — front/back share the picture
  * (the reverse-side texture row has no port equivalent; faithful-line). */
 void re15_render_pc_item_modal(int on, const int *cx, const int *cy, uint8_t type, int face)
 {
@@ -1626,6 +1626,32 @@ void re15_render_pc_cursor(int x, int y)
     re15_msgfont_ensure();
     if (!s_msgfont_ok) return;
     re15_msgfont_glyph(x, y, 0x02, 0);
+    s_text_overlay_used = 1;
+}
+
+/* ASCII text into the TOP text-overlay layer (Layer 5, above the 3D scene + the modal quad) — the
+ * 6×8 debug font but composited ON TOP, for the item-get modal's "WILL YOU TAKE THE X." prompt
+ * (re15_debug_text goes to the framebuffer = under the meshes, which the frozen scene would cover). */
+void re15_render_pc_text_overlay(int x, int y, const char *text)
+{
+    if (!text) return;
+    int cx = x, cy = y;
+    while (*text) {
+        unsigned char c = (unsigned char) *text++;
+        if (c == '\n') { cx = x; cy += 9; continue; }
+        if (c < 0x20 || c >= 0x80) c = '?';
+        const uint8_t *glyph = s_font6x8[c - 0x20];
+        for (int row = 0; row < 8; row++) {
+            uint8_t bits = glyph[row];
+            for (int col = 0; col < 5; col++) {
+                int ox = cx + col, oy = cy + row;
+                if ((bits & (1 << (4 - col))) && ox >= 0 && ox < SCREEN_XRES && oy >= 0 && oy < SCREEN_YRES)
+                    s_text_overlay[oy * SCREEN_XRES + ox] = 0xFFFFFFFFu;   /* white opaque (RGBA) */
+            }
+        }
+        cx += 6;
+        if (cx + 6 > SCREEN_XRES) { cx = x; cy += 9; }
+    }
     s_text_overlay_used = 1;
 }
 

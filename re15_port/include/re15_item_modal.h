@@ -3,16 +3,23 @@
  *
  * Byte-true port of FUN_8001db28 (@0x8001db28, state byte DAT_80072d3b, jump table @0x800106b4) —
  * the hardcoded item-pickup presentation. On pickup the game FREEZES (g_pauseflags |= 0xff000000),
- * the picked item's icon ZOOMS+SPINS in (17 frames), FLIPS like a coin (9 frames), the item is
- * GRANTED (deferred to the end, gated on inventory-room), and — on a FULL inventory — the box
- * SHRINKS away (17 frames) with NO grant (the item stays in the world). There is NO "You got the X"
- * TEXT anywhere in the FSM (image-only, like RE2 retail — proven: zero Fnt/MSG calls in the 260-instr
- * disasm, workflow wq41xdnn2). RE'd + arbitrated 2026-07-12 (3 finders + self-verified against the
- * bytes; the exact per-frame corner math is FUN_8001e1c8 scale/rotate + FUN_8004f008 2D-rotate).
+ * the picked item's PICTURE ZOOMS+SPINS in (17 frames), FLIPS like a coin (9 frames), then a MESSAGE
+ * BOX opens — "WILL YOU TAKE THE <item>." (Yes/No) if there's room, or "YOU CAN'T CARRY ANY MORE
+ * ITEMS" when full — and the item is GRANTED only on Yes (deferred to state 7, gated on
+ * inventory-room). On a FULL inventory or a "No" the box SHRINKS away (17 frames) and the item stays
+ * in the world. RE'd 2026-07-12 (workflows wq41xdnn2 + wf_9e42f4cb, disasm-verified).
  *
- * Faithful-line gaps (flagged, NOT byte-traced): the exact modal TIM (the port reuses the 40×30
- * ITEMALL icon scaled onto the 112×72 quad); the pickup SE (DAT_800b8523→SE not traced — silent,
- * NOT fabricated); the state-5/6 fade-out timing (the port's load/fade DMA gates are 1-frame).
+ * The picture is the per-item 112×72 TIM at byte offset `item_id × 0x3000` in ITEM/ITPS.ITP (file id
+ * 0x2a — see re15_itps.h), NOT the 40×30 ITEMALL icon. There is NO pickup SE anywhere in the modal
+ * (adversarial full-jal audit @0x8001db28–0x8001e4b0: zero Se_on/SPU — the click is the room's own SCD
+ * Se_on). CORRECTION: an earlier note claimed "image-only, no text" — WRONG. The modal DOES show the
+ * Yes/No take-prompt; FUN_80027e68 (a1=0x100) is the message-box opener, not a fade (wf_9e42f4cb).
+ *
+ * Faithful-line (flagged): the exact prompt GLYPHS + typewriter cadence + the terminal-wait frame
+ * count live in BSS @0x800c4fc6 (past the EXE image) — savestate-derived, not statically byte-true;
+ * the port renders the savestate-decoded strings ("WILL YOU TAKE THE" / "YOU CAN'T CARRY ANY MORE
+ * ITEMS" + re15_item_name) in the debug font. The MECHANISM (message box, Yes/No, player-gated
+ * dismiss, No -> item stays) IS byte-true.
  */
 #ifndef RE15_ITEM_MODAL_H
 #define RE15_ITEM_MODAL_H
@@ -25,10 +32,12 @@
  * confirm; `taken_bit` = the zone-9 flag payload to set on confirm (0 = none). */
 void re15_item_modal_start(uint8_t item_type, uint8_t amount, uint8_t taken_bit, int aot_slot);
 
-/* Advance the FSM one 30 Hz game tick (one FUN_8001db28 dispatch). Call ONLY while active, from the
- * 30 Hz gameplay tick — the caller must FREEZE the rest of gameplay while active (byte-true
- * g_pauseflags |= 0xff000000: player move, enemy AI, SCD/event, model anim all halt). */
-void re15_item_modal_tick(void);
+/* Advance the FSM one 30 Hz game tick (one FUN_8001db28 dispatch). `pad_edge` = the newly-pressed pad
+ * bits this tick (DAT_800ac76c) — read only by the message-box wait (state 6): & 0x3000 toggles Yes/No,
+ * & 0x4000 confirms, & 0xc000 dismisses the can't-carry line. Call ONLY while active, from the 30 Hz
+ * gameplay tick — the caller must FREEZE the rest of gameplay while active (byte-true g_pauseflags |=
+ * 0xff000000: player move, enemy AI, SCD/event, model anim all halt). */
+void re15_item_modal_tick(uint16_t pad_edge);
 
 /* Non-zero while the modal is presenting (== DAT_80072d3b != 0). */
 int re15_item_modal_active(void);
@@ -37,6 +46,11 @@ int re15_item_modal_active(void);
  * the item quad for the CURRENT frame + the item type + the visible face (0=front, 1=back). Returns 0
  * when no quad should be drawn this frame (idle / init / the 1-frame grant tail). */
 int re15_item_modal_quad(int out_x[4], int out_y[4], uint8_t *out_type, int *out_face);
+
+/* RENDER query for the message box (states 5/6). Returns 0 if no prompt is up, else 1 = the
+ * "WILL YOU TAKE THE <item>." Yes/No prompt (fills *out_choice: 0=Yes, 1=No), or 2 = the
+ * "YOU CAN'T CARRY ANY MORE ITEMS" line. *out_type = the item id (for the name). */
+int re15_item_modal_prompt(uint8_t *out_type, int *out_choice);
 
 /* Inspection (tests): the raw state byte (0..8, mirrors DAT_80072d3b) + counters. */
 uint8_t re15_item_modal_state(void);

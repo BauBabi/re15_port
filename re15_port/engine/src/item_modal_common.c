@@ -33,6 +33,14 @@ static uint8_t s_taken    = 0;      /* zone-9 taken-bit payload             */
 static int     s_aot_slot = -1;     /* g_aot slot to deactivate on confirm  */
 static int     s_grant    = -1;     /* DAT_8008f62c (free slot, -1 = full)  */
 
+/* state-5/6 MESSAGE BOX (byte-true FUN_80027e68 a1=0x100 + FUN_80028134 VM): the pickup is NOT silent —
+ * it opens a text prompt. s_prompt: 0=none, 1="WILL YOU TAKE THE <item>." Yes/No, 2="YOU CAN'T CARRY ANY
+ * MORE ITEMS" (inventory full). s_choice: 0=Yes, 1=No (mirrors the DAT_800b8520 bit-0 toggle). s_msg_no
+ * carries the "No" result into case 7 (@0x8001e068 andi 0x1 -> state 8). */
+static int     s_prompt   = 0;
+static int     s_choice   = 0;
+static int     s_msg_no   = 0;
+
 /* current-frame quad (screen space), recomputed each tick */
 static int  s_qx[4], s_qy[4];
 static int  s_face      = 0;        /* 0=front, 1=back (coin-flip reverse)  */
@@ -105,13 +113,16 @@ void re15_item_modal_start(uint8_t item_type, uint8_t amount, uint8_t taken_bit,
     s_f634     = 0;
     s_visible  = 0;
     s_face     = 0;
+    s_prompt   = 0;
+    s_choice   = 0;
+    s_msg_no   = 0;
 }
 
 int re15_item_modal_active(void) { return s_state != 0; }
 uint8_t re15_item_modal_state(void) { return s_state; }
 int re15_item_modal_frame(void) { return (int)s_f630; }
 
-void re15_item_modal_tick(void)
+void re15_item_modal_tick(uint16_t pad_edge)
 {
     int again = 1;
     while (again) {
@@ -158,23 +169,36 @@ void re15_item_modal_tick(void)
             }
             break;
 
-        case 5:  /* GRANT-CHECK + SE (@0x8001df14): pre-check the free slot (FUN_8004df2c), play the
-                  * pickup SE, then state=6 (returns — the fade gate runs next tick). */
-            s_grant = inv_free_slot();
-            /* Pickup SE (DAT_800b8523 -> FUN_80027e68) is NOT byte-traced; left silent (NOT fabricated
-             * — a room-SCD Se_on is the real source, per the aot_common door/item audit). */
-            s_state = 6;
+        case 5:  /* GRANT-CHECK + OPEN MESSAGE BOX (@0x8001df14): pre-check the free slot (FUN_8004df2c),
+                  * then FUN_80027e68(a1=0x100) opens the item prompt — script[0] "WILL YOU TAKE THE
+                  * <item>." Yes/No if there's room, script[1] "YOU CAN'T CARRY ANY MORE ITEMS" if full
+                  * (a2 = weapon/slot branch @0x8001df40-df48). NOT a fade, NOT audio. state=6. */
+            s_grant   = inv_free_slot();
+            s_prompt  = (s_grant < 0) ? 2 : 1;   /* 2 = can't-carry, 1 = Yes/No take-prompt */
+            s_choice  = 0;                        /* default Yes (DAT_800b8520 bit0 = 0) */
+            s_msg_no  = 0;
+            s_state   = 6;
             return;
 
-        case 6:  /* FADE GATE (@0x8001dffc): PSX waits for the fade byte (DAT_800b8520 & 0x80) to clear.
-                  * No fade wired on the port -> the gate is clear immediately; FALL THROUGH to state 7. */
-            s_state = 7;
-            again   = 1;
-            break;
+        case 6:  /* MESSAGE-BOX WAIT (@0x8001dffc gate: while DAT_800b8520 & 0x80): the item picture keeps
+                  * drawing; dismiss on PLAYER INPUT (not a timer). The message VM (FUN_80028134 sub-4/5)
+                  * reads DAT_800ac76c: & 0x3000 toggles Yes/No (DAT_800b8520 ^= 1), & 0x4000 confirms;
+                  * the full-prompt just waits for & 0xc000. */
+            s_visible = 1;
+            if (s_prompt == 2) {                                  /* can't-carry: any confirm dismisses */
+                if (!(pad_edge & 0xc000)) return;                 /* DAT_800ac76c & 0xc000 (CROSS/SQUARE) */
+                s_prompt = 0; s_state = 7; again = 1; break;
+            }
+            if (pad_edge & 0x3000) s_choice ^= 1;                 /* TRIANGLE/CIRCLE toggle -> No-flag ^=1 */
+            if (!(pad_edge & 0x4000)) return;                     /* wait for CROSS confirm */
+            s_msg_no = s_choice;                                  /* No selected -> case7 leaves the item */
+            s_prompt = 0; s_state = 7; again = 1; break;
 
-        case 7:  /* INSERT / DONE (@0x8001e048): full inventory -> state 8 (no grant, item stays);
-                  * else INSERT (FUN_8004dc4c) + taken-bit + deactivate the AOT, state=0 (DONE). */
-            if (s_grant < 0 || re15_inv_grant(s_type, s_amount) != 0) {
+        case 7:  /* INSERT / DONE (@0x8001e048): full inventory OR "No" -> state 8 (no grant, item stays);
+                  * else INSERT (FUN_8004dc4c) + taken-bit + deactivate the AOT, state=0 (DONE). The
+                  * byte-true gate is `if ((char)DAT_8008f62c < 0 || (DAT_800b8520 & 1)) -> state 8`
+                  * (@0x8001e054 bltz + @0x8001e068 andi 0x1) — the second term is the Yes/No "No". */
+            if (s_grant < 0 || s_msg_no || re15_inv_grant(s_type, s_amount) != 0) {
                 s_f630  = 0;         /* @0x8001e0f0 */
                 s_f634  = 0;         /* @0x8001e0f8 */
                 s_state = 8;         /* sb 8,DAT_80072d3b @0x8001e100 (state 8 runs next tick) */
@@ -214,4 +238,12 @@ int re15_item_modal_quad(int out_x[4], int out_y[4], uint8_t *out_type, int *out
     if (out_type) *out_type = s_type;
     if (out_face) *out_face = s_face;
     return 1;
+}
+
+int re15_item_modal_prompt(uint8_t *out_type, int *out_choice)
+{
+    if (s_prompt == 0) return 0;
+    if (out_type)   *out_type   = s_type;
+    if (out_choice) *out_choice = s_choice;
+    return s_prompt;   /* 1 = "WILL YOU TAKE THE X." Yes/No, 2 = "YOU CAN'T CARRY ANY MORE ITEMS" */
 }

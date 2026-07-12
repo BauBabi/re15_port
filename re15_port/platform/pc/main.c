@@ -60,6 +60,7 @@ static inline int RNDI(float f) {
 #include "re15_menu.h"        /* re15_menu_* — inventory/weapon-select overlay (8.20) */
 #include "re15_item_icon.h"   /* re15_item_icon_* — byte-true ITEMALL grid icons (8.22) */
 #include "re15_item_modal.h"  /* re15_item_modal_* — item-get zoom/flip pickup presentation (U11) */
+#include "re15_itps.h"        /* re15_itps_set_data — the per-item modal picture sheet (ITPS.ITP, U11) */
 #include "re15_damage.h"      /* re15_player_equipped_weapon (ARMS CONTROL panel, 8.23) */
 
 /* Draw a byte-true 40×30 ITEMALL icon at (x,y) over the paused inventory (pixel-wise; transparent
@@ -1001,6 +1002,13 @@ int main(int argc, char *argv[])
         uint8_t *ipix = pc_read_shared("DATA/ITEMALL.PIX", &isz);
         if (ipix) re15_itemall_set_pix(ipix, isz);   /* buffer intentionally kept for the program's life */
     }
+    /* Item-get modal per-item PICTURE sheet (ITEM/ITPS.ITP, U11) — same cwd-independent root as the
+     * icons. The modal draws the 112×72 TIM at id×0x3000 (re15_itps_pixel). */
+    {
+        int psz = 0;
+        uint8_t *ipic = pc_read_shared("ITEM/ITPS.ITP", &psz);
+        if (ipic) re15_itps_set_data(ipic, psz);     /* kept for the program's life */
+    }
     scd_register_room_events(rdt_ok ? &rdt : NULL);
 
     /* AW-round 2026-05-28: pre-parse ROOM1170 .msg files for canonical
@@ -1230,15 +1238,15 @@ int main(int argc, char *argv[])
             /* ITEM-GET MODAL: while the pickup zoom/flip presentation runs, the byte-true freeze
              * (g_pauseflags|=0xff000000) halts the SCD subsystem + walkers + fx here (and game_step
              * early-returns for player/enemy/anim). Advance ONLY the modal FSM at 30 Hz; rendering
-             * (incl. the modal quad) keeps running. */
-            re15_item_modal_tick();
+             * (incl. the modal quad) keeps running. The pad EDGE drives the state-6 Yes/No prompt. */
+            re15_item_modal_tick((uint16_t)g_engine.pad_pressed);
         } else if (target_fps == 30 || (g_engine.frame_count & 1) == 0) {
             scd_vm_tick();
             /* RE15_ITEM_MODAL_TEST: debug — force-start the item-get pickup MODAL once (frame 40) to
              * visually verify the zoom/spin/flip presentation. Overlays don't show in the autoshot BMP
              * (SDL_RenderReadPixels captures only RenderCopy'd textures) — verify via an ffmpeg video. */
             if (getenv("RE15_ITEM_MODAL_TEST") && g_engine.frame_count == 40)
-                re15_item_modal_start(0x15, 50, 0, -1);   /* H.GUN BULLETS (has a captured icon) */
+                re15_item_modal_start(0x15, 50, 0, -1);   /* H.GUN BULLETS (ITPS picture id 0x15) */
             /* RE15_FORCE_SPLAT: debug — throw one byte-true blood splatter burst at the player at
              * F30 to visually verify the physics (gravity + RNG spread + floor bounce). */
             if (getenv("RE15_FORCE_SPLAT") && g_engine.frame_count == 30) {
@@ -3701,8 +3709,8 @@ int main(int argc, char *argv[])
         /* ITEM-GET MODAL overlay: hand the current-frame item quad to the renderer. It is drawn
          * AFTER the 3D meshes in end_frame (see re15_render_pc_item_modal) so the zooming/flipping
          * item box floats ABOVE the frozen scene (the game is paused underneath — NOT cleared, unlike
-         * the full-screen inventory). Byte-true FUN_8001db28; the box art is the 40×30 ITEMALL icon
-         * scaled onto the 112×72 quad (faithful-line — the exact modal TIM is not byte-traced). */
+         * the full-screen inventory). Byte-true FUN_8001db28; the box art is the per-item 112×72
+         * picture from ITEM/ITPS.ITP (re15_itps_pixel, id×0x3000). */
         {
             extern void re15_render_pc_item_modal(int on, const int *cx, const int *cy,
                                                   uint8_t type, int face);
@@ -3723,6 +3731,28 @@ int main(int argc, char *argv[])
                                        mqx[0],mqy[0], mqx[1],mqy[1], mqx[2],mqy[2], mqx[3],mqy[3]);
                     fprintf(ml, "\n"); fflush(ml);
                 }
+            }
+        }
+
+        /* ITEM-GET MODAL message box (states 5/6, byte-true FUN_80027e68 a1=0x100 → the message VM):
+         * "WILL YOU TAKE THE <item>." with a Yes/No cursor when there's room, or "YOU CAN'T CARRY ANY
+         * MORE ITEMS" when full. Box origin (34,180) is byte-true (DAT_800b8534=0x22 / 8536=0xb4); the
+         * text glyphs + item name are savestate-decoded strings in the 6×8 overlay font (faithful-line
+         * — the exact prompt glyphs live in BSS @0x800c4fc6; the MECHANISM is byte-true). */
+        {
+            extern void re15_render_pc_text_overlay(int x, int y, const char *text);
+            extern void re15_render_pc_cursor(int x, int y);
+            uint8_t ptype = 0; int pchoice = 0;
+            int prompt = re15_item_modal_prompt(&ptype, &pchoice);
+            if (prompt == 1) {
+                re15_render_pc_text_overlay(34, 174, "WILL YOU TAKE THE");
+                re15_render_pc_text_overlay(34, 184, re15_item_name(ptype));
+                re15_render_pc_text_overlay(190, 200, "YES");
+                re15_render_pc_text_overlay(234, 200, "NO");
+                re15_render_pc_cursor(pchoice ? 224 : 180, 201);   /* ▶ on the current choice */
+            } else if (prompt == 2) {
+                re15_render_pc_text_overlay(34, 180, "YOU CAN'T CARRY ANY");
+                re15_render_pc_text_overlay(34, 190, "MORE ITEMS");
             }
         }
 

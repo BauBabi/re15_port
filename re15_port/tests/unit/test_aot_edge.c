@@ -48,7 +48,7 @@ int main(void)
     g_aot_action_pressed = 0;
     if (!re15_item_modal_active()) {
         fprintf(stderr, "FAIL(1b): ACTION press must START the pickup modal\n"); fail = 1; }
-    while (re15_item_modal_active()) re15_item_modal_tick();   /* run the modal to completion */
+    while (re15_item_modal_active()) re15_item_modal_tick(0x4000);   /* CROSS dismisses the can't-carry box */
     if (g_aot.slots[0].active != 1) {
         fprintf(stderr, "FAIL(1b): a FULL inventory must keep the item AOT alive (item stays)\n"); fail = 1; }
 
@@ -56,7 +56,7 @@ int main(void)
     g_aot_action_pressed = 1;
     re15_aot_scan(1000, 1000, 0xFF);                 /* press inside -> modal STARTS */
     g_aot_action_pressed = 0;
-    while (re15_item_modal_active()) re15_item_modal_tick();   /* completion -> grant + self-disable */
+    while (re15_item_modal_active()) re15_item_modal_tick(0x4000);   /* CROSS(Yes) -> grant + self-disable */
     if (g_aot.slots[0].active != 0) {
         fprintf(stderr, "FAIL(1c): the modal must self-disable the item AOT on completion\n"); fail = 1; }
     {

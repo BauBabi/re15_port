@@ -28,7 +28,7 @@ it and strike it through (move to "verified").
 | U9 | **VAB pitch (note2pitch + LUT) — FOUNDATION only** | vab_common.c (helpers built+verified); audio_psx.c pitch NOT yet wired (kept 22050) | note2pitch/LUT/tone-table are build-verified, but the consumer pitch wiring is uncertain (play_sample gets a VAG index not the Se_on note; 22050 implies a per-bank base the LUT doesn't encode) | A PSX build + audio + the Se_on→note + bank→program plumbing RE'd; then SPU_CH_FREQ = note2pitch(note,center,shift) scaled by the bank base |
 
 | U10 | **pri_common.c square-mask `(size>>4)*8`** (was raw byte = 2× too big) | pri_common.c:95 | sprite.pri overdraw is currently DISABLED in the engine | A room with sprite.pri foreground masks + overdraw re-enabled — square occluders are the right size (not 2×) |
-| ~~U11~~ | ~~**Item-get "You got X" MODAL**~~ ✅ VERIFIED 2026-07-12 | item_modal_common.c (FUN_8001db28) | — | Live: `RE15_ITEM_MODAL_TEST=1` force-starts the modal (frame 40); the `RE15_MODAL_LOG` + autoshot show the byte-true 8-state FSM run — 17-frame zoom-spin (17×→1× + rotate), 9-frame coin-flip (delta=rcos·36>>12, collapses to a line mid-flip), grant DEFERRED to state 7. The autoshot BMPs (`SDL_RenderReadPixels` captures the `SDL_RenderGeometry` quad) confirm the rotated/flipping textured item card on screen. There is NO "You got the X" text (image-only, proven: 0 Fnt/MSG calls). Freeze via game_step early-return + the 30 Hz tick gate. ctest `unit_item_modal` (17/17) + `unit_aot_edge` updated. Faithful-line (flagged): the exact modal TIM (uses the 40×30 ITEMALL icon scaled onto the 112×72 quad), the pickup SE (silent, not traced), the fade-out timing (1-frame gates). |
+| ~~U11~~ | ~~**Item-get modal + "WILL YOU TAKE THE X?" Yes/No box**~~ ✅ VERIFIED 2026-07-12 | item_modal_common.c + itps_common.c (FUN_8001db28) | — | Live (`RE15_ITEM_MODAL_TEST=1` + `RE15_MODAL_LOG` + autoshot): byte-true 8-state FSM — 17f zoom-spin, 9f coin-flip, then a MESSAGE BOX "WILL YOU TAKE THE ⟨item⟩." with a Yes/No cursor (or "YOU CAN'T CARRY ANY MORE ITEMS" when full), grant DEFERRED to state 7 and gated on **Yes** (@0x8001e068 andi 0x1 = No-flag → item stays). The picture is the per-item **112×72 TIM from ITEM/ITPS.ITP** at id×0x3000 (NOT the 40×30 icon) — autoshot shows the real "TONY's ARMS" ammo-box photo + the Yes/No prompt. NO pickup SE (adversarial full-jal audit @0x8001db28–0x8001e4b0 = byte-true silent). Freeze via game_step early-return + 30 Hz tick gate; state 6 is PLAYER-GATED. ctest `unit_item_modal` (19/19) + `unit_aot_edge`. **CORRECTION:** the earlier "image-only, no text" was WRONG (FUN_80027e68 = the message-box opener, not a fade — wf_9e42f4cb). Faithful-line (flagged): the exact prompt GLYPHS + typewriter cadence + terminal-wait N live in BSS @0x800c4fc6 (savestate-derived) — the port renders the decoded strings + re15_item_name in the 6×8 font, text shown instantly (no typewriter). |
 
 > NOTE: U8/U9's groundwork (re15_vab_tone_t + tone-table parse + the 192-u16 pitch LUT + re15_vab_note2pitch
 > + re15_vab_find_tone in vab_common.c) IS build-verified in the PC build. Only the audio_psx.c CONSUMER
@@ -39,11 +39,12 @@ it and strike it through (move to "verified").
   (RUN sentinel = W01 clip 0, NOT walk clip) at ~200/frame (RUN=0xC8=200); walls at x=−5118.
 - **U5 — backward-walk speed 70** (2026-07-12): ROOM1140 live, Leon walks backward (D) → measured
   69.7/frame (F69→F70 dx=−69, dz=−10 → |v|=70), matching the disasm mode-7/8 constant 0x46=70.
-- **U11 — item-get "You got X" MODAL** (2026-07-12): built as `item_modal_common.c` (byte-true FUN_8001db28,
-  workflow wq41xdnn2). Live-verified via `RE15_ITEM_MODAL_TEST=1` + `RE15_MODAL_LOG` + autoshot: the 8-state
-  FSM runs (17f zoom-spin → 9f coin-flip → deferred grant); the autoshot captures the rotated/flipping
-  textured item card (`SDL_RenderReadPixels` reads the `SDL_RenderGeometry` quad, so overlays capture here —
-  unlike FillRect fades). No "You got X" text (image-only). ctest `unit_item_modal` 17/17.
+- **U11 — item-get modal + Yes/No box** (2026-07-12): `item_modal_common.c` + `itps_common.c` (byte-true
+  FUN_8001db28, workflows wq41xdnn2 + wf_9e42f4cb). Live-verified via `RE15_ITEM_MODAL_TEST=1` +
+  `RE15_MODAL_LOG` + autoshot: 8-state FSM (17f zoom-spin → 9f coin-flip → "WILL YOU TAKE THE ⟨item⟩." Yes/No
+  box → grant on Yes). The autoshot captures the per-item ITPS.ITP 112×72 photo + the prompt text
+  (`SDL_RenderReadPixels` reads the `SDL_RenderGeometry` quad + the text-overlay). ctest `unit_item_modal`
+  19/19. CORRECTION of the earlier "image-only, no text" claim — the modal DOES show the take-prompt.
 
 ## How I maintain this
 - Every canonical fix I apply that the intro doesn't exercise → add a 🔴 row.
