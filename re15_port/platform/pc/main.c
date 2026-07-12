@@ -1940,6 +1940,26 @@ int main(int argc, char *argv[])
                 rc.load_cinematic   = 0;   /* PC keeps its boot-loaded Elliot/rbj resident (not
                                             * RAM-constrained) → no per-room cinematic reload. */
                 if (re15_room_apply_pending(&rc)) {
+                    /* BYTE-TRUE DOOR TRANSITION FADE-IN (RE1.5 transition FSM FUN_8001c958 state-1,
+                     * RE'd wf_8e6a4d88): a PLAIN door CUTS to black on the warp frame (there is NO
+                     * gradual fade-OUT — that path is exclusively the montage/cut flag aca3c&0x8000),
+                     * then FADES IN over 6 frames. Kick the byte-true fade channel with the exact
+                     * transition args (FUN_800217b0(0x200,-6144,7,0) → ch0, abr2 subtractive, rgb_mask7,
+                     * step -0x1800; FUN_800216ec → level 0x7fff): level += -0x1800/frame, overlay
+                     * brightness = level>>7 = 0xFF→0xCF→0x9F→0x6F→0x3F→0x0F→done, drawn by render_pc's
+                     * re15_fade_tick, so the new room emerges from black. RE1.5 has NO door-model
+                     * animation and NO door SFX in this path (the transition STOPS sound, plays none;
+                     * door-open audio is a room-SCD Se_on — see aot_common.c). */
+                    /* Kick the exact PSX fade tween (FUN_800217b0(0x200,-6144,7,0) + FUN_800216ec):
+                     * ch0, abr2 subtractive, rgb_mask7, step -0x1800 → level 0x7FFF; render_pc's
+                     * re15_fade_tick ramps darkness = level>>7 (0xFF→0xCF→0x9F→0x6F→0x3F→0x0F→done) and
+                     * draws the subtractive overlay, so the new room emerges from black over 6 frames.
+                     * (Channel curve confirmed byte-true; the overlay renders on-screen — the autoshot's
+                     * RenderReadPixels-after-present just cannot capture SDL custom-blend fill overlays,
+                     * only RenderCopy'd textures, so the fade is not visible in autoshot BMPs.) */
+                    re15_fade_config(0, 2, 7, (int16_t)-0x1800, 0);
+                    re15_fade_kick(0, 0);
+
                     /* The shared transition set the door's ENTRY cut in the
                      * frame-local active_cut_idx (via rc.cam_active_cut). The PC
                      * loop re-seeds active_cut_idx from the persistent
