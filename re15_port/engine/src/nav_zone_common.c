@@ -136,7 +136,10 @@ void re15_nav_pathfind(const re15_actor_t *e, uint8_t start, uint8_t goal,
     if (!nav_tbl() || start >= (uint8_t)nav_count() || goal >= (uint8_t)nav_count()) return;
     uint16_t A[16];                                      /* remaining-neighbor mask / depth */
     uint16_t B[16];                                      /* visited mask */
-    uint32_t C[16];                                      /* accumulated cost */
+    uint16_t C[16];                                      /* accumulated cost — u16 byte-true (FUN_8003a524
+                                                          * stores each hop via `sh`, truncating mod 65536
+                                                          * @0x8003a840; the port had u32 = no wrap. Dormant
+                                                          * in shipped zone graphs but byte-exact now). */
     int16_t  Dx[16], Dz[16];                             /* per-depth waypoint */
     uint8_t  E[16];                                      /* zone id / depth */
     A[0] = N_LINKS(NODE(start));

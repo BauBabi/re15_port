@@ -31,11 +31,13 @@ static int     s_slot  = -1;
 static int     s_choice = 0;     /* 0=Yes, 1=No (DAT_800b8520 bit0) */
 static int     s_reveal = 0, s_reveal_total = 0, s_reveal_timer = 0;
 
-/* Heal-usable = id in [0x22,0x2e] EXCEPT Red Medicine (0x25). Byte-true classifier @0x8004aa64:
- * `sltiu (id-0x22),0xe` (herb range) AND `beq a0,0x25` (Red excluded) -> heal-execute state 3; Red
- * alone falls to the inert state 6 (@0x8004ab6c) — it is NOT a straight heal (RE1.5 wf_159c5115).
- * (RE1.5 has NO herb-combine to make Red useful; the mixes 0x27-0x2e are pre-placed data items.) */
-int re15_item_use_is_heal(uint8_t id) { return id >= 0x22 && id <= 0x2e && id != 0x25; }
+/* Heal-usable = id in [0x22,0x2f] EXCEPT Red Medicine (0x25). Byte-true classifier @0x8004aa64:
+ * `sltiu (id-0x22),0xe` (@0x8004ab48; 0xe=14 -> id-0x22 < 14 -> id in [0x22,0x2f] INCLUSIVE) AND
+ * `beq a0,0x25` (Red excluded) -> heal-execute state 3; Red alone falls to the inert state 6
+ * (@0x8004ab6c). 0x2f ("NUT") IS admitted and has its own absolute HP=77 handler in apply (see below) —
+ * the port previously capped at 0x2e (off-by-one) so 0x2f was inert. (RE1.5 has NO herb-combine to make
+ * Red useful; the mixes 0x27-0x2e are pre-placed data items.) */
+int re15_item_use_is_heal(uint8_t id) { return id >= 0x22 && id <= 0x2f && id != 0x25; }
 int re15_item_use_active(void)        { return s_state != 0; }
 int re15_item_use_reveal(void)        { return s_reveal; }
 /* Ready only in the WAIT states (2 = "use?", 4 = "used") — NOT the transient state 1/3 (before
@@ -45,6 +47,10 @@ int re15_item_use_prompt_ready(void)  { return (s_state == 2 || s_state == 4) &&
 static void apply_heal(uint8_t id)
 {
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (id == 0x2f) { pl->hp = 77; return; }          /* 0x2f "NUT": absolute HP=0x4d=77, the substate-0
+                                                       * FALL-THROUGH default @0x8004ae98 (`ori 0x4d; sh
+                                                       * player.hp`) — index 13 is the NULL substate slot,
+                                                       * so it must NOT index the 13-entry s_heal add-table. */
     const re15_heal_t *h = &s_heal[id - 0x22];        /* addiu s1,v0,-0x22 @0x8004ae08 */
     if (h->set) pl->hp = 100;                          /* sh s0 (=0x64) — absolute full heal */
     else        pl->hp = (int16_t)(pl->hp + h->add);   /* raw add, NO clamp (Green @90 -> 140) */

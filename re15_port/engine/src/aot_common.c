@@ -468,6 +468,12 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
                 if (!g_actors[es].active) continue;
                 if (es == RE15_ACTOR_SLOT_PLAYER) { if (!(pm & 0x01)) continue; }
                 else                              { if (!(pm & 0x02)) continue; }
+                /* PER-ENTITY band gate (byte-true FUN_80042bac @0x80042cac-ccc, runs for EVERY sce AOT
+                 * BEFORE geometry): unless the AOT band ignores it (bit 0x80), require this entity's own
+                 * floor band (+0x82) == the AOT band. An actor inside the rect but on a mismatched floor
+                 * must NOT get water_y/ramp-Y stamped. (The GENERIC gate above uses the PLAYER band; here
+                 * each pooled entity is gated by its OWN band.) */
+                if (!(a->band & 0x80) && g_actors[es].floor != a->band) continue;
                 int32_t ex = g_actors[es].x, ez = g_actors[es].z;
                 int in2 = a->has_quad
                         ? re15_aot_point_in_quad(ex, ez, a->xs, a->zs)
