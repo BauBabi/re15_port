@@ -3655,10 +3655,14 @@ static void re15_dog_ai_tick(int slot)
  * solid + deals a -2 contact stagger. STATE[1] is a stationary brain that paces web-spit SPRITE effects
  * (NO locomotion — exhaustive-scan confirmed). The -2 CONTACT is the spider's ONLY player damage.
  * LIVE-VERIFIED byte-true (ROOM1090 savestate): type 0x26, state 1, hitbox 600/720, variant behaviour.
- * CORRECTION (byte-verified via the collision-instance readers): STATE[1]'s "hit-codes" (0x12/0x22/0x23
- * armed via 0x80019d50) are NOT damage — inst+0 is a DISPATCH INDEX into @0x80071d40, and table[0x12] =
- * 0x80017c8c is a PARTICLE/SPRITE handler (the web-spit visual); there is NO player.hp write in the whole
- * effect region 0x80017600-0x80018000. So the spider is gameplay-COMPLETE (the -2 contact IS the damage).
+ * CORRECTION (byte-verified via the collision-instance readers + RE wf_5d64f47e): STATE[1]'s "hit-codes"
+ * (0x12/0x22/0x23 armed via 0x80019d50) are NOT damage — inst+0 is a DISPATCH INDEX into the routine table
+ * @0x80071d40, and the spider selects only VISUAL routines (table[0x12] = 0x80017c8c = the web-spit
+ * PARTICLE/SPRITE handler). The table DOES also hold model-instance DAMAGE routines — idx25 @0x80017fa4 and
+ * idx31 @0x8001854c call the player-damage resolver FUN_80012d60 (@0x80018008, radius 500, per-type table
+ * @0x8006f418) — but the spider NEVER arms those, so it is gameplay-COMPLETE via the -2 contact alone. (The
+ * earlier "no hp write in region 0x80017600-0x80018000" wording was imprecise: the damage routines exist in
+ * the table; the spider simply doesn't use them, and no port enemy arms idx25/31 via 0x55 either.)
  * The only remaining wave-2 item is PRESENTATION: the exact web-spit sprite choreography (the port already
  * spawns a telegraph fx below as a faithful approximation). */
 static void re15_spider_ai_tick(int slot)
