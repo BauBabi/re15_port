@@ -130,8 +130,10 @@ uint8_t g_scd_action_held = 0;
  * Lets `op_unknown` advance PC safely past unimplemented opcodes instead
  * of killing the thread on first unknown. 0 = unregistered (treat as
  * 1-byte for defensive advance, matching disassembler line 760). 0xFF
- * = dynamic-size opcode (only 0x2D Obj_model_set today) — handled with
- * its declared static size (38) as a safe fallback. */
+ * = dynamic-size opcode (only 0x2D Obj_model_set today) — op_unknown
+ * delegates it to op_obj_model_set (the real FIXED 34-byte advance,
+ * LAB_80040914). Size-table audit 2026-07-12: every fixed-size entry
+ * matches its handler's PC-advance (no desync). */
 static const uint8_t s_opcode_sizes[256] = {
     [0x00] = 1,  [0x01] = 2,  [0x02] = 1,  [0x03] = 4,
     [0x04] = 4,  [0x05] = 2,  [0x06] = 4,  [0x07] = 4,
@@ -2980,7 +2982,7 @@ static int op_unknown(scd_thread_t *t)
     if (size == 0xFF) {
         /* Dynamic opcodes — route to specialized handler. */
         if (op == 0x2D) return op_obj_model_set(t);
-        size = 38;                  /* fallback */
+        size = 34;                  /* dead fallback (0x2D is the only 0xFF and delegates above) */
     }
     t->pc += size;
     return 1;                       /* keep thread alive, continue next opcode */

@@ -43,16 +43,12 @@ static int16_t fov_to_screen_dist(uint16_t fov)
      * GTE-faithful. AL-round added bone_rel_pos[0] lift in skeleton_
      * common.c so characters render at authored height.
      *
-     * The remaining 150-floor below is a stale workaround from before
-     * those fixes — it inflates cut 6 (H=84) to 150 = 1.79× projection
-     * boost, breaking cross-cut consistency. PSX RE2 uses no lower
-     * clamp; its only clamp is the upper one in FUN_8003458c:44-46:
-     *   if (H > 208) H -= 128;
-     * which is part of the per-frame camera animator (not ported yet).
-     *
-     * TODO: remove the 150 floor + add the PSX upper-clamp after visual
-     * A/B verification on cuts 0/2/6 vs. ablauf. Pending that, the
-     * floor stays to avoid regression on cut 6's H=84. */
+     * (The 150-floor lower clamp was REMOVED in the AY-round below — PSX RE2
+     * has NO lower clamp.) An UPPER clamp `if (H > 208) H -= 128` reportedly
+     * lives in the per-frame camera ANIMATOR (a DEATH-CAM-only path in RE1.5,
+     * so it does not affect the static gameplay RID cuts here); its exact home
+     * is unconfirmed — the earlier "FUN_8003458c:44-46" cite does NOT match that
+     * function's disasm, so it is left unported pending a correct trace. */
     /* AY-round 2026-05-28: REMOVE 150 lower floor.
      * Per 50-agent RE consensus (Q1/Q14/Q22/Q27): PSX RE2 has NO lower clamp.
      * Only upper clamp `if (H > 208) H -= 128` (FUN_8003458c animator).
