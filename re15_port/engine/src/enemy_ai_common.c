@@ -5063,6 +5063,28 @@ uint8_t re15_em_status_zone(void)
     return (stage0 < 3) ? 7 : 8;
 }
 
+/* FUN_8001b38c (@0x8001b38c, called by the zombie root each tick): per-frame ANIM-SFX. Reads the CURRENT
+ * clip frame's packed u32 (entity+0x168 word0 in the original), takes the top 10 bits (>>22) as a sound
+ * bitmask, and for each set bit N plays room-SE N via FUN_800453d0 (= re15_audio_room_se). EM10/EM11 carry
+ * these flags in the LOCO bank (bit 1 = SE 1 footstep, ~2/walk-cycle) and the action bank (SE 0/1/3 at the
+ * hurt/attack/lie clips) — verified by dumping frames[]>>22. Byte-true bank selection = the render's: the
+ * STAGE1 walk states (state 1, sub_state_1 in {0x13,2,7}) pose the loco bank, everyone else the action bank. */
+static void re15_enemy_anim_sfx(const re15_actor_t *e)
+{
+    re15_enemy_bank_t *b = re15_enemy_find(e->type);
+    if (!b || !b->ok) return;
+    const re15_emd_animation_t *A = &b->anim;
+    if (e->state == 1 && (e->sub_state_1 == 0x13 || e->sub_state_1 == 2 || e->sub_state_1 == 7)
+        && b->loco_ok && (int)e->motion < b->anim_loco.clip_count)
+        A = &b->anim_loco;                                  /* the walk states play the loco clip (main.c:3166) */
+    if ((int)e->motion >= A->clip_count) return;
+    const re15_emd_clip_t *c = &A->clips[e->motion];
+    if (c->frame_count <= 0) return;
+    uint32_t sfx = A->frames[c->first_frame + (e->anim_frame % c->frame_count)] >> 22;  /* top 10 = SFX mask */
+    for (int bit = 0; sfx; bit++, sfx >>= 1)
+        if (sfx & 1u) re15_audio_room_se(bit);              /* FUN_800453d0(bit): SE id == bit index */
+}
+
 void re15_enemy_ai_run_all(int combat_active)
 {
     re15_enemy_ai_set_combat_active(combat_active);
@@ -5094,6 +5116,7 @@ void re15_enemy_ai_run_all(int combat_active)
              * 1170 contain only 0x10/0x11/0x16, so their combat is unchanged. */
             int32_t sweep_ox = e->x, sweep_oz = e->z;    /* pre-dispatch pos (wall-sweep origin) */
             re15_enemy_ai_live_step(s);
+            re15_enemy_anim_sfx(e);        /* FUN_8001b38c: per-frame clip-flag SFX (footsteps/attack) */
             re15_enemy_hurt_fx(e);      /* FUN_80105a8c/FUN_80105b7c hurt -> effect-0 hit blood (visible) */
             re15_enemy_gore_tick(e);    /* FUN_80106a44 +0x93&2 -> gore effect spawn */
             re15_enemy_gore_setup(e);   /* FUN_80106edc sub_state_1==0x58 -> effect-5 gore setup */
