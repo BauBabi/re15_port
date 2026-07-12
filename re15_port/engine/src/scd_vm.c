@@ -3076,23 +3076,46 @@ int op_sce_espr_on(scd_thread_t *t)
 {
     uint8_t effect_id = t->pc[2];
     uint8_t sub_index = t->pc[3];
+    uint8_t owner_cat = t->pc[4];   /* andi a0,a1,0xff @0x80041888 — owner category 0..5 */
+    uint8_t owner_idx = t->pc[5];   /* a1>>8 @0x800418d4 — owner index within the category array */
     int16_t ox = (int16_t)((uint16_t)t->pc[8]  | ((uint16_t)t->pc[9]  << 8));
     int16_t oy = (int16_t)((uint16_t)t->pc[10] | ((uint16_t)t->pc[11] << 8));
     int16_t oz = (int16_t)((uint16_t)t->pc[12] | ((uint16_t)t->pc[13] << 8));
     int16_t param = (int16_t)((uint16_t)t->pc[14] | ((uint16_t)t->pc[15] << 8));
 
-    int8_t ws = (t->work_slot >= 0) ? t->work_slot : g_scd.work_slot;
+    /* Byte-true owner-transform base (FUN_80041864 category table @0x80010db4, self-verified
+     * 2026-07-12): cat0 = the IDENTITY matrix @0x80072d4c → ABSOLUTE (base 0); cat1 = player
+     * position (0x800aca74 = player+0x20); cat2 = enemy[idx].pos (0x800acc4c + idx*0x1F4 = the SAME
+     * enemy array Work_set sel 2 uses, +0x20) → g_actors[idx+1] (enemy[0]=g_actors[1]); cat3 =
+     * obj[idx].pos (0x800b3fb8 + idx*0x94) → the prop pool. Every espr base = the Work_set entity
+     * base + 0x20 (the position field). The OLD stub ignored pc[4]/pc[5] and used the work-slot
+     * actor for ALL categories — wrong for cat0 (should be absolute) and cat1 (player) when the
+     * running entity isn't the player. RESIDUAL (as before): the PSX also ROTATES the local offset
+     * by the owner matrix; re15_esp_fx_spawn is position-only, so we translate only (faithful-line). */
     int32_t bx = 0, by = 0, bz = 0;
-    if (ws >= 0 && ws < RE15_ACTOR_MAX) {
-        bx = g_actors[ws].x; by = g_actors[ws].y; bz = g_actors[ws].z;
+    switch (owner_cat) {
+    case 0: break;                                             /* absolute — base (0,0,0) */
+    case 1:                                                    /* player */
+        bx = g_actors[RE15_ACTOR_SLOT_PLAYER].x;
+        by = g_actors[RE15_ACTOR_SLOT_PLAYER].y;
+        bz = g_actors[RE15_ACTOR_SLOT_PLAYER].z; break;
+    case 2: {                                                  /* enemy[idx] = g_actors[idx+1] */
+        int slot = (int)owner_idx + 1;
+        if (slot > 0 && slot < RE15_ACTOR_MAX && g_actors[slot].active) {
+            bx = g_actors[slot].x; by = g_actors[slot].y; bz = g_actors[slot].z; }
+        break; }
+    case 3:                                                    /* prop pool obj[idx] (direct index) */
+        if (owner_idx < g_scd.prop_count && g_scd.props[owner_idx].active) {
+            bx = g_scd.props[owner_idx].x; by = g_scd.props[owner_idx].y; bz = g_scd.props[owner_idx].z; }
+        break;
+    default: {                                                 /* cat4/5: work-slot fallback (as before) */
+        int8_t ws = (t->work_slot >= 0) ? t->work_slot : g_scd.work_slot;
+        if (ws >= 0 && ws < RE15_ACTOR_MAX) {
+            bx = g_actors[ws].x; by = g_actors[ws].y; bz = g_actors[ws].z; }
+        break; }
     }
     re15_esp_fx_spawn(re15_esp_room_bank(), effect_id, sub_index,
                       bx + ox, by + oy, bz + oz, param);
-
-    { static int s_n = 0; if (s_n++ < 12)
-        fprintf(stderr, "[esp] op 0x3a fire #%d: id=0x%02x sub=%u off=(%d,%d,%d) ws=%d\n",
-                s_n, effect_id, sub_index, ox, oy, oz, (int)ws); }
-
     t->pc += 16;
     return 1;
 }

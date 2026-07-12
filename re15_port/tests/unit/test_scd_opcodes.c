@@ -1064,44 +1064,50 @@ static int test_cut_replace_live_switch(void)
     return fail;
 }
 
-/* op_sce_espr_on (0x3a) — spawn an effect particle into the op-0x3a fx pool. pc[2]=effect-id,
- * pc[3]=sub-index, pc[8/10/12]=LE s16 local offset (added to the work-slot actor world pos),
- * pc[14]=param. (FUN_80041864 operand map -> FUN_80019700; owner = work-slot actor, faithful-line.) */
+/* op_sce_espr_on (0x3a) — spawn an effect particle. pc[2]=effect-id, pc[3]=sub-index, pc[4]=owner
+ * CATEGORY, pc[5]=owner INDEX, pc[8/10/12]=LE s16 local offset, pc[14]=param. Byte-true owner base
+ * (FUN_80041864 table @0x80010db4, self-verified): cat0=absolute, cat1=player, cat2=enemy[idx]=
+ * g_actors[idx+1], cat3=prop[idx]. The offset is ADDED to that base (translation-only; rotation is a
+ * disclosed residual). */
+static int fx_at(const char *tag, uint8_t cat, uint8_t idx, int32_t ex, int32_t ey, int32_t ez)
+{
+    uint8_t bc[18]; memset(bc, 0, sizeof(bc));
+    bc[0] = 0x3a; bc[2] = 0x05; bc[3] = 0x02; bc[4] = cat; bc[5] = idx;
+    write_le16(&bc[8], (uint16_t)100); write_le16(&bc[10], (uint16_t)200);
+    write_le16(&bc[12], (uint16_t)300); write_le16(&bc[14], (uint16_t)0x55);
+    bc[16] = SCD_OP_EVT_END;
+    re15_esp_fx_reset();
+    g_scd.threads[0].active = 0;
+    scd_thread_start(0, bc);
+    scd_vm_tick();
+    const re15_esp_fx_t *f = re15_esp_fx_get(0);
+    if (re15_esp_fx_count() != 1 || !f || f->effect_id != 0x05 || f->sub_index != 0x02 ||
+        f->param != 0x55 || f->x != ex || f->y != ey || f->z != ez) {
+        fprintf(stderr, "FAIL: sce_espr_on %s: count=%d", tag, re15_esp_fx_count());
+        if (f) fprintf(stderr, " xyz=(%ld,%ld,%ld) want=(%ld,%ld,%ld)",
+                       (long)f->x, (long)f->y, (long)f->z, (long)ex, (long)ey, (long)ez);
+        fprintf(stderr, "\n"); re15_esp_fx_reset(); return 1;
+    }
+    re15_esp_fx_reset();
+    return 0;
+}
+
 static int test_sce_espr_on_spawn(void)
 {
     int fail = 0;
-    uint8_t bc[18];
-    memset(bc, 0, sizeof(bc));
-    bc[0] = 0x3a;                        /* op */
-    bc[2] = 0x05;                        /* effect-id */
-    bc[3] = 0x02;                        /* sub-index */
-    write_le16(&bc[8],  (uint16_t)100);  /* ox */
-    write_le16(&bc[10], (uint16_t)200);  /* oy */
-    write_le16(&bc[12], (uint16_t)300);  /* oz */
-    write_le16(&bc[14], (uint16_t)0x55); /* param */
-    bc[16] = SCD_OP_EVT_END;
-
-    re15_esp_fx_reset();
     re15_esp_set_room_bank(NULL);        /* unresolved bank: spawn still records the fields */
     scd_vm_init();
     g_actors[RE15_ACTOR_SLOT_PLAYER].x = 1000;
     g_actors[RE15_ACTOR_SLOT_PLAYER].y = 2000;
     g_actors[RE15_ACTOR_SLOT_PLAYER].z = 3000;
-    scd_thread_start(0, bc);
-    g_scd.work_slot = RE15_ACTOR_SLOT_PLAYER;   /* owner = player */
-    scd_vm_tick();
+    g_actors[1].active = 1;              /* enemy[0] = g_actors[1] */
+    g_actors[1].x = 500; g_actors[1].y = 600; g_actors[1].z = 700;
 
-    const re15_esp_fx_t *f = re15_esp_fx_get(0);
-    if (re15_esp_fx_count() != 1 || !f ||
-        f->effect_id != 0x05 || f->sub_index != 0x02 || f->param != 0x55 ||
-        f->x != 1100 || f->y != 2200 || f->z != 3300) {
-        fprintf(stderr, "FAIL: sce_espr_on spawn: count=%d", re15_esp_fx_count());
-        if (f) fprintf(stderr, " id=%u sub=%u xyz=(%ld,%ld,%ld) param=%d",
-                       f->effect_id, f->sub_index, (long)f->x, (long)f->y, (long)f->z, f->param);
-        fprintf(stderr, "\n"); fail = 1;
-    }
-    re15_esp_fx_reset();
-    if (!fail) printf("PASS: test_sce_espr_on_spawn (0x3a -> fx at owner+offset, id/sub/param)\n");
+    fail |= fx_at("cat0 absolute", 0, 0,  100,  200,  300);   /* base (0,0,0) + offset */
+    fail |= fx_at("cat1 player",   1, 0, 1100, 2200, 3300);   /* player pos + offset */
+    fail |= fx_at("cat2 enemy+1",  2, 0,  600,  800, 1000);   /* g_actors[0+1] pos + offset */
+
+    if (!fail) printf("PASS: test_sce_espr_on_spawn (0x3a byte-true owner category cat0/1/2)\n");
     return fail;
 }
 
