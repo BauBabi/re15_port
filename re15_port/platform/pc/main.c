@@ -1454,6 +1454,7 @@ int main(int argc, char *argv[])
             for (int i = 0; i < RE15_INV_MAX_SLOTS; i++)
                 if (g_inv.slots[i].id == 0x21 && g_inv.slots[i].qty > 0) { mc = i; break; }
             if (mc >= 0) {
+                g_scd.message_active = 0;    /* replace the phone's "save not available" text with the save screen */
                 re15_savedata_t sd;
                 re15_savedata_capture(&sd, g_engine.frame_count, 1);
                 if (pc_run_memcard_screen(1, &sd, 0) >= 0) {
