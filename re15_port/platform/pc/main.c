@@ -115,6 +115,7 @@ static void re15_pc_ecg(int x, int y, int w, int h, int hp, unsigned phase)
 #include "re15_room_spawns.h" /* GENERATED per-room entry spawn (inbound-door landing spot) */
 #include "re15_anim_select.h"  /* SHARED actor bank/clip selection view-model */
 #include "re15_esp.h"          /* Phase ESP-C: op-0x3a effect-sprite bank + particle pool */
+#include "re15_gameflow.h"     /* FE-0.2 top-level mode machine (BOOT/TITLE/INGAME/GAMEOVER) */
 
 #define RE15_TIM_SLOT_EFFECT 19   /* effect-sprite TIM render slot (0..18 used by chars/props) */
 #define RE15_TIM_SLOT_EFFECT_GLOBAL 20 /* GLOBAL effect bank (CORE00.ESP) sprite sheet — effect-id 0
@@ -514,6 +515,39 @@ int main(int argc, char *argv[])
 
     re15_render_init();
     re15_input_init();
+
+    /* FE-0.3 / FE-1.3 — top-level mode machine: de-hardcode the boot-into-a-room.
+     * RE15_START_ROOM=<hex> keeps the debug fast-path (straight into that room, INGAME —
+     * every parity/room-probe harness preserved); otherwise boot to the TITLE screen. */
+    {
+        const char *sr_env = getenv("RE15_START_ROOM");
+        re15_gameflow_init((sr_env && *sr_env) ? (int)strtoul(sr_env, 0, 16) : -1);
+    }
+    if (re15_gameflow_mode() == RE15_MODE_TITLE) {
+        /* BOOT TITLE (FE-1.3): DATA/TITLEU.TIM + blinking PRESS START, until START = NEW GAME.
+         * NEW GAME falls through to the normal boot of the intro (ROOM1240 = 0x1240 = start_room). */
+        extern void re15_render_pc_show_title(const re15_tim_t *tim);
+        extern void re15_render_pc_hide_title(void);
+        extern void re15_render_pc_screenshot(const char *path);
+        re15_tim_t s_boot_title = {0};
+        { int tsz = 0; uint8_t *tb = pc_read_shared("DATA/TITLEU.TIM", &tsz);
+          if (tb) re15_tim_parse(tb, tsz, &s_boot_title); }
+        const char *t_shot = getenv("RE15_TITLE_SHOT");   /* debug: dump the title frame + auto-advance */
+        unsigned tblink = 0;
+        while (re15_gameflow_mode() == RE15_MODE_TITLE) {
+            re15_render_begin_frame();
+            re15_input_tick();                       /* SDL_QUIT -> exit(0) inside; refreshes pad */
+            re15_render_background_gradient(8, 8, 16, 0, 0, 0);
+            if (s_boot_title.pixels) re15_render_pc_show_title(&s_boot_title);
+            if (tblink++ & 0x20) re15_debug_text(122, 200, 0, "PRESS START");
+            re15_render_end_frame();
+            if (t_shot && tblink == 10) { re15_render_pc_screenshot(t_shot); re15_gameflow_new_game(0); }
+            if (g_engine.pad_pressed & 0x0800)       /* START -> NEW GAME -> INGAME (ROOM1240 intro) */
+                re15_gameflow_new_game(0);
+        }
+        re15_render_pc_hide_title();
+    }
+
     /* RNG SESSION ENTROPY (interactive runs only): the original FUN_8001af20 state evolves from
      * boot across ALL callers (idle timers/SEs/other rooms) -> each playthrough sees different
      * behavior rolls. The port's fixed-seed xorshift + a fixed draw count made every roll IDENTICAL
