@@ -217,15 +217,14 @@ void re15_actor_anim_select(const re15_actor_t *a, int is_player,
      * stay. Applies to the player AND Elliot. */
     int m = (int)a->motion;
     if (banks->w01_ok && (m == 105 || m == 100)) {
-        /* Walk -> W01 clip5, Run -> W01 clip0 (PL00W01 weapon track). Audit wf_2ff80cc7 claimed run->clip5
-         * — REFUTED: it traced the SCRIPTED Plc_dest RUN handler 0x80030d28 (clip5 run-toward-target loop,
-         * clip0 at arc-aligned arrival), but the dispatch table @0x80073e30 shows [0..3] = the REAL-TIME
-         * move subs (0x80050cb8..) and only [4..9] (0x80030af0..) = the scripted Plc_dest walker, so
-         * 0x80030d28 is NOT this sentinel-100 real-time run. The real-time move cmd-FSM 0x800318f8 sets
-         * player+0x94 = 0 at entry (@0x80031924) — CONSISTENT with the port's clip 0 + analyze_w01_clips.py
-         * (clip0=energetic 111deg run) + U3. Kept clip 0 (the audit's scripted-handler read does not apply).
-         * The full cmd-FSM steady-state clip sequence (it also writes clip 1 @0x80031c10) is a deeper open
-         * question, but nothing here contradicts clip 0; a definitive walk/run re-RE is a separate task. */
+        /* Walk -> W01 clip5, Run -> W01 clip0 (PL00W01 weapon track). BYTE-TRUE, definitively RE'd
+         * (wf_9970157f): the real-time move cmd (cmd 1, 0x80031de8) two-pass-dispatches on submode byte
+         * 0x800aca59 via table @0x80073ff0: [1] = WALK executor 0x80032498 writes player+0x94 = 5
+         * (@0x800324e8 `ori 0x5; sb`) at speed 0x4b=75; [2] = RUN executor 0x80032778 (a SEPARATE fn)
+         * writes player+0x94 = 0 (@0x8003280c `sb zero`) at speed 0xc8=200. So walk=clip5/run=clip0 is
+         * exact — this port map matches. (audit wf_2ff80cc7 claimed run->clip5 but traced the SCRIPTED
+         * Plc_dest walker 0x80030d28 @0x80073e30[5], NOT this real-time run executor — refuted.) Both read
+         * the same weapon bank ptr 0x800acbc8 (FUN_80036b68 loads PL00Wxx when weapon 0x800aca5d!=0). */
         out->skel = banks->w01_skel;
         out->anim = banks->w01_anim;
         out->clip_override = (m == 105) ? 5 : 0;
