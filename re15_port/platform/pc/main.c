@@ -1843,18 +1843,10 @@ int main(int argc, char *argv[])
                 if (q > 0) { char t[8]; snprintf(t, sizeof t, "%d", q); re15_debug_text(cx + 22, cy + 20, 0, t); }
             }
 
-            /* selected item name + controls (only for a NON-empty cursor cell — an empty grid slot is
-             * cursor-reachable but shows no name/action) */
-            if (n > 0 && re15_menu_disp_id(cur) != 0) {
-                uint8_t id = re15_menu_disp_id(cur);
-                const char *ty = re15_item_is_weapon(id) ? "WEAPON"
-                               : re15_item_is_ammo(id)   ? "AMMO" : "ITEM";
-                const char *act = re15_item_is_weapon(id) ? "Enter=equip"
-                                : re15_item_use_is_heal(id) ? "Enter=use" : "";
-                char line[72];
-                snprintf(line, sizeof line, "%s [%s]  %s Shift=close", re15_item_name(id), ty, act);
-                re15_debug_text(158, 224, 0, line);
-            }
+            /* (No selected-item name/control-hint line: the RE1.5 status screen has no such text —
+             * it is a pre-rendered background TIM with baked labels, and the PC-keyboard hints the
+             * port used to print here ("Enter=equip / Shift=close") were both invented AND wrong
+             * (equip is SQUARE, close is START/cancel — menu_common.c). Removed, audit F3.) */
 
             /* Item-USE prompt ("Will you use the X?" Yes/No, then "You have used the X") over the grid —
              * byte-true glyph replay in the game font (script 4/5), same layer as the pickup modal. */
