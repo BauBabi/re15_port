@@ -348,6 +348,12 @@ target_include_directories(test_xa_decode PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_xa_decode COMMAND test_xa_decode)
 set_tests_properties(unit_xa_decode PROPERTIES TIMEOUT 30)
 
+add_executable(test_savedata test_savedata.c)
+target_link_libraries(test_savedata PRIVATE re15_engine re15_test_support)
+target_include_directories(test_savedata PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_savedata COMMAND test_savedata)
+set_tests_properties(unit_savedata PROPERTIES TIMEOUT 30)
+
 # --- Byte-true dialog FSM buttons + cadence (msg audit wf_6aad95ad) ---
 add_executable(test_msg_dialog test_msg_dialog.c)
 target_link_libraries(test_msg_dialog PRIVATE re15_engine re15_test_support)
