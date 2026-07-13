@@ -217,13 +217,15 @@ void re15_actor_anim_select(const re15_actor_t *a, int is_player,
      * stay. Applies to the player AND Elliot. */
     int m = (int)a->motion;
     if (banks->w01_ok && (m == 105 || m == 100)) {
-        /* Walk -> W01 clip5, Run -> W01 clip0 (PL00W01 weapon track). NOTE (audit wf_2ff80cc7): the
-         * SCRIPTED Plc_dest RUN handler 0x80030d28 keeps clip 5 in its run-toward-target LOOP and sets
-         * clip 0 only at ARC-ALIGNED arrival (@0x800313.. arc_test -> +0x94=0). The audit read that as
-         * "run==clip5" — but this sentinel (100) is the REAL-TIME run, whose clip is set by the cmd-FSM
-         * (0x800318f8, NOT the Plc_dest handler), and the prior data analysis (analyze_w01_clips.py:
-         * clip0=energetic 111deg run, clip5=44deg walk) + U3 live-verify keep it clip 0. Kept clip 0
-         * pending a cmd-FSM trace + live visual A/B (do not flip on the scripted-handler read alone). */
+        /* Walk -> W01 clip5, Run -> W01 clip0 (PL00W01 weapon track). Audit wf_2ff80cc7 claimed run->clip5
+         * — REFUTED: it traced the SCRIPTED Plc_dest RUN handler 0x80030d28 (clip5 run-toward-target loop,
+         * clip0 at arc-aligned arrival), but the dispatch table @0x80073e30 shows [0..3] = the REAL-TIME
+         * move subs (0x80050cb8..) and only [4..9] (0x80030af0..) = the scripted Plc_dest walker, so
+         * 0x80030d28 is NOT this sentinel-100 real-time run. The real-time move cmd-FSM 0x800318f8 sets
+         * player+0x94 = 0 at entry (@0x80031924) — CONSISTENT with the port's clip 0 + analyze_w01_clips.py
+         * (clip0=energetic 111deg run) + U3. Kept clip 0 (the audit's scripted-handler read does not apply).
+         * The full cmd-FSM steady-state clip sequence (it also writes clip 1 @0x80031c10) is a deeper open
+         * question, but nothing here contradicts clip 0; a definitive walk/run re-RE is a separate task. */
         out->skel = banks->w01_skel;
         out->anim = banks->w01_anim;
         out->clip_override = (m == 105) ? 5 : 0;
