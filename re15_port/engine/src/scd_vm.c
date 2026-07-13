@@ -1797,16 +1797,19 @@ static int op_plc_dest(scd_thread_t *t)
  * `Plc_neck(4, 3, 0, 0, 0, 15360)` to make Leon look at the helicopter
  * while delivering "Hey!" line. We stash the target angle on the player
  * actor's lookat field so the render path can apply it as bone[3] (head)
- * rotation. The full per-bone neck FSM lives in PSX.EXE; for the
- * cinematic we approximate via static look-at angles.                  */
+ * rotation. The per-bone neck FSM is now ported BYTE-TRUE (FUN_80037358 +
+ * FUN_8003790c) per-frame in skeleton_common.c:311-386; the static-lookat
+ * store here just feeds it the world look-at target.                  */
 static int op_plc_neck(scd_thread_t *t)
 {
     /* BO-round 2026-05-29 (hack audit): the operands are four s16 halfwords
      * (yaw, pitch, roll, speed) read by lhu on PSX (LAB_80041e98). The old
      * code split the FIRST s16 into two u8 "angles" (<<4) and mis-aligned the
-     * rest — a fabricated conversion. Read proper s16 (LE = PSX lhu). The full
-     * damped-spring neck FSM (FUN_80024e40) is a Tier-3 port; here we keep the
-     * static-lookat store (renderer applies lookat_y as bone-3 head yaw).
+     * rest — a fabricated conversion. Read proper s16 (LE = PSX lhu). The head-look
+     * neck FSM is now ported BYTE-TRUE in skeleton_common.c:311-386 — the REAL
+     * head-look is FUN_80037358 + FUN_8003790c (NOT FUN_80024e40, which is a
+     * SEPARATE spring secondary-motion chain); we store the world look-at
+     * target here and the skeleton slews the head bone per-frame.
      * NOTE: ROOM1170 does not use Plc_neck, so this is dead code for the intro. */
     /* BYTE-TRUE (2026-06-16, FUN_80024e40 RE): the operands are a WORLD LOOK-AT TARGET
      * (x,y,z) at +0x160/162/164, NOT raw angles; the mode picks +0x1b8 flag bits. We STORE
@@ -3072,7 +3075,7 @@ int op_add_aspeed(scd_thread_t *t)
  *   pc[8/10/12] = local offset (LE s16, added to the owner-transform position)   pc[14] = param
  * Owner-transform: the original snapshots a2[0..7] (the owner's matrix) into the slot; the port
  * uses the work-slot actor's world position (the entity running this script) + the local offset.
- * The exact owner-category -> actor mapping is faithful-line (work-slot), flagged for refinement.
+ * The owner-category -> actor mapping is BYTE-TRUE (self-verified 2026-07-12; per-category base + RotY rotation, commit ee01665b) — see the switch below.
  * Anim/draw run from the room bank via re15_esp_fx_tick / the platform draw. */
 int op_sce_espr_on(scd_thread_t *t)
 {

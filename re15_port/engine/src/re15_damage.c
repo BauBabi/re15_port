@@ -3,8 +3,10 @@
  *
  * Byte-true port of the PLAYER branch of FUN_80012d60 (the unified hit/damage
  * resolver). Every constant here cites the RE1.5 PSX.EXE disassembly
- * (ghidra1_V2.txt) — see re15_damage.h for the subsystem overview and the
- * deferred in-game trigger (enemy attack-action FSM + actor hitbox test).
+ * (ghidra1_V2.txt) — see re15_damage.h for the subsystem overview. The in-game
+ * trigger (enemy attack-action FSM + actor hitbox test) is now WIRED: the hitbox test is
+ * re15_hitbox_test (:660/:690) and the live enemy attack FSM is the @0x8011f7b4 family
+ * (enemy_ai_common.c).
  *
  * Instruction map of the player branch (ghidra1_V2.txt):
  *   80012e24-e30  if (player+0x93 & 1)  -> skip (one hit per attack window)
@@ -146,9 +148,11 @@ int re15_player_take_damage(re15_actor_t *p, uint8_t attack_type,
  * 0xff000000 | 0x00ffff38), then per frame (sub-state 1) advances a death camera and counts the timer
  * down to sub-state 2 = game over. It NEVER reads the pad — the player is frozen for the whole death
  * sequence. The port models the byte-true CORE: "the player is dead -> input frozen -> the 120-frame
- * death sequence runs", and game_step freezes the player (skip player_tick) while dead. DEFERRED
- * (cited, the port has no fade/game-over infra): the colour fade + death camera (@0x8003694c), the
- * zombie-grabbed eaten-animation FSM (@0x8010a28c), and the game-over screen (sub-state 2). */
+ * death sequence runs", and game_step freezes the player (skip player_tick) while dead. IMPLEMENTED
+ * since (2026-07-05): the colour fade + white flash + death camera + YOU DIED fly-in + game-over
+ * screen are the parallel game-over FSM (game_step_common.c re15_gameover_fsm_tick :68-126,
+ * live-verified), and the zombie-grabbed eaten-animation FSM (@0x8010a28c) is the grab-victim
+ * FSM (enemy_ai_common.c :497-528). STILL DEFERRED: only the BGM decrescendo + title-tail audio stop. */
 #define RE15_DEATH_SEQ_FRAMES 0x78   /* @0x8003694c INIT: DAT_800acaf2 = 0x78 (120) death-fade timer */
 static int s_death_seq = -1;         /* -1 = not in the death sequence; >=0 = frames left (120..0) */
 
@@ -165,7 +169,7 @@ int re15_player_death_tick(void)
     if (!re15_player_is_dead()) { s_death_seq = -1; return -1; }   /* alive -> not in the sequence */
     if (s_death_seq < 0) s_death_seq = RE15_DEATH_SEQ_FRAMES;      /* first dead frame = INIT (seed 120) */
     else if (s_death_seq > 0) s_death_seq--;                       /* sub-state 1: count the fade timer down */
-    return s_death_seq;   /* 0 = the death sequence is complete -> game over (deferred presentation) */
+    return s_death_seq;   /* 0 = the death sequence is complete -> game over (game_step_common.c re15_gameover_fsm_tick presents fade/YOU-DIED/death-cam) */
 }
 
 /* RE-style CONTINUE — fired by game_step when the death sequence completes (re15_player_death_tick
@@ -175,7 +179,7 @@ int re15_player_death_tick(void)
  * we do the RE "continue" = RELOAD THE CURRENT ROOM fresh: queue a room change to g_current_room_id at
  * its entry spawn; the main loop's re15_room_apply_pending re-inits the actors (re15_actor_init restores
  * player HP=100 -> re15_player_is_dead() clears -> the death branch exits) and the SCD respawns the
- * zombies at their feeding poses. The fade + "YOU DIED" presentation stays DEFERRED (no port infra).
+ * zombies at their feeding poses. The fade + "YOU DIED" presentation is the parallel game-over FSM (game_step_common.c re15_gameover_fsm_tick :68-126; g_death_flyin/g_death_fade/g_death_cam).
  * FL: the exact continue-vs-title routing is the missing subsystem; a current-room reload is the
  * faithful functional stand-in (the death handler never leaves the room by itself). */
 void re15_player_continue_reload(void)
@@ -213,7 +217,7 @@ void re15_player_continue_reload(void)
  *   crit: (weapon_id==7) || (weapon_id==8 && dist<3000) -> +0x93|=0x40; if (+0x93&0x40 && type<0x20)
  *         HP = -1     (instant kill, @0x800124fc-0x8001251c)
  *   +0x4 = (HP >= 0) ? 2 (HURT) : 3 (DEATH)   (@0x80012520)
- *   +0x6 = DAT_8006f410[heading>>0x1d]  (the hit-direction clip — deferred, anim detail)
+ *   +0x6 = DAT_8006f410[heading>>0x1d]  (the hit-direction clip — IMPLEMENTED :487-494 via re15_player_aim_elevation)
  * The damaged enemy then runs the zombie HURT/DEATH state (re15_enemy_ai_live_hurt/death).
  *
  * BYTE-TRUE TABLES (dumped from PSX.EXE): the zombie damage row (enemy types 0x10/0x11/0x16 are all
@@ -236,10 +240,10 @@ void re15_player_continue_reload(void)
  * the port measures from the player and keeps re15_ai_arc_test(player, ex,ez, 0x400) (front hemisphere)
  * as the directional stand-in for both the aim point and the camera line-of-fire geometry block
  * (FUN_80011f50 @0x80012280-0x80012370 = DAT_800ac784 camera + DAT_800aca88/8c/90 aim ray + FUN_8001bf04,
- * none of which the port has). DEFERRED (each needs absent infra, do NOT guess): the hit-direction clip
- * +0x6 = DAT_8006f410[heading>>0x1d] = {7,0,1,7,2,0,0,0} (needs DAT_800acaec/aim-Z, anim detail), the
- * per-type damage rows for non-zombies, the equipped-weapon source DAT_800aca5d (inventory), and the
- * aim/fire input FSM. The aim-mode alternate reach row (@+0x58, DAT_800aca5c&4) is byte-IDENTICAL to the
+ * none of which the port has). IMPLEMENTED since: the hit-direction clip
+ * +0x6 = DAT_8006f410[heading>>0x1d] = {7,0,1,7,2,...} (:487-494 via re15_player_aim_elevation) and the
+ * per-type non-zombie damage rows (s_wpn_dmg_* @:251-280) are ported. STILL DEFERRED: the
+ * equipped-weapon source DAT_800aca5d (inventory) and the aim/fire input FSM. The aim-mode alternate reach row (@+0x58, DAT_800aca5c&4) is byte-IDENTICAL to the
  * base row -> nothing to port. Returns the hit enemy slot+1 (0 = no target in cone/reach). */
 
 /* PER-TYPE per-weapon damage table (byte-true @0x8006e0d0: dmg = u16[type*0x58 + weapon*4], 22 weapons/
@@ -609,7 +613,8 @@ void re15_enemy_hurt_fx(re15_actor_t *e)
  * the global CORE00.ESP bank) = the same universal hit/blood fx as the hurt spawn. Called from
  * re15_enemy_ai_live_death at those two points. Position = the actor world pos (the frame-35 bone
  * offset DAT_8011f784[entity+8]*0xac is the deferred refinement, faithful-line). Frame 7 death SE
- * (func_0x800453d0) is the deferred audio side. */
+ * (func_0x800453d0 = re15_audio_room_se) IS implemented in re15_enemy_ai_live_death
+ * (enemy_ai_common.c :2487-2488, death-groan SE rng 5/8). */
 void re15_enemy_death_fx(re15_actor_t *e)
 {
     if (!e || !e->active) return;
@@ -641,9 +646,10 @@ static int32_t dmg_isqrt(int64_t x)
 
 /* CIRCULAR path of FUN_8002b5d0 (radius_min == radius_max @ hbdata+6/+0xa). The
  * angular-SECTOR path (radius interpolated over the target's facing via the BIOS
- * ratan2 + rsin/rcos) is DEFERRED: the port has only the catan-based atan2
- * (re15_atan2_q12 = FUN_8001a6d4), not the BIOS ratan2 the sector branch calls
- * @8002b65c — porting that is a separate byte-true step. Symmetric hitboxes
+ * ratan2 + rsin/rcos, @8002b65c) is now IMPLEMENTED in the wrapper re15_hitbox_test
+ * (:697-700): it computes the effective radius via re15_ellipse_radius (re15_math.c
+ * :276) + the BIOS re15_ratan2 (re15_math.c :233), so this overlap primitive stays
+ * circular by design (it takes a precomputed radius). Symmetric hitboxes
  * (the common case) take this circular branch directly @8002b6fc.
  *
  * (cx,cy,cz) = the target hitbox centre = target world pos (+0x34/+0x38/+0x3c)
@@ -784,8 +790,11 @@ int re15_resolve_attack(const re15_attack_box_t *atk, uint8_t attack_type,
  *   - the FUN_8001c6e8 room-collision secondary trigger (the `sVar2 <= Y` OR-branch),
  *   - the on-hit SE (FUN_800199d4 / FUN_80045024) + attacker state-reset + the
  *     +0x6e = 0xd next-action transition (@80018030-98),
- *   - the AI DECISION that enters this action (range/state) — lives in the STAGE1
- *     overlay, address not yet RE'd; both agents recommend a room1140 savestate. */
+ *   - the AI DECISION that enters this action IS now RE'd: the live handler
+ *     FUN_80101224 @0x8011f7b4[1] + the decide vtable FUN_80101b64/de4/2058
+ *     (enemy_ai_common.c :2097-2281 + re15_ai_dispatch_decision). The lunge-ARM
+ *     FUN_8010ab2c is DORMANT here (DAT_800aca3c&1 never set), so the in-game
+ *     attack is the GRAB, not this lunge. */
 int re15_enemy_attack(int attacker_slot)
 {
     if (attacker_slot < 0 || attacker_slot >= RE15_ACTOR_MAX) return 0;
@@ -943,7 +952,7 @@ void re15_enemy_apply_hitbox(re15_actor_t *a, uint8_t type)
  *  confirmed (the SAME condition appears verbatim in FUN_80101b64 /        *
  *  FUN_80101de4 / FUN_80102058): dist<2000 && arc!=0 → state word 0x701    *
  *  (the attack-commit state), and dist<4000 && arc==0 → 0x201 (approach,   *
- *  FUN_80101c7c). Open (next phases): the 0x701→FUN_80017fa4 lunge chain    *
+ *  FUN_80101c7c). Now IMPLEMENTED (live @0x8011f7b4): the 0x701→FUN_80017fa4 lunge chain    *
  *  (the action sequence + the attack-point), the movement AI, the tick.    *
  *  Caveat: re15_ai_arc_test carries the documented +1024 angle-convention   *
  *  note — the thresholds/structure are byte-true; the arc orientation wants *
@@ -986,8 +995,9 @@ int re15_ai_arc_test(const re15_actor_t *e, int32_t px, int32_t pz, int cone)
  * dist = re15_enemy_player_dist (the AI's cached +0x1d0). Returns 1 when the zombie
  * commits the attack this frame. The companion approach transition (FUN_80101c7c) is
  * dist<4000 && arc==0 → 0x201. NOTE: the 0x701→FUN_80017fa4 lunge chain (action
- * sequence + attack-point) and the arc's +1024 convention are the open items — the
- * threshold/structure here are byte-true (3-handler-confirmed). */
+ * sequence + attack-point) is IMPLEMENTED (re15_enemy_lunge_begin/tick + the live
+ * @0x8011f7b4 family in enemy_ai_common.c); only the arc's +1024 convention is still
+ * open — the threshold/structure here are byte-true (3-handler-confirmed). */
 int re15_enemy_should_attack(const re15_actor_t *e, const re15_actor_t *player)
 {
     if (!e || !player) return 0;

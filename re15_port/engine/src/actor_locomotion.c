@@ -61,8 +61,9 @@
  *   Handler 0x80030AF0 forward-walk: 0x4B (75) state-0, 0x60 (96) state-1
  *   Handler 0x80030D28 run:          0xC8 (200) state-0, 0x60 (96) state-1
  *   Handler 0x80031080 backward:     0x46 (70), yaw-offset -48
- * We use the state-1 (steady-state) values since cinematic transitions
- * are state-1 from the get-go in our simplified model.                  */
+ * SUPERSEDED by the AG-round below: the 0x60 'state-1' value is the yaw-slew RATE, not a
+ * steady-state speed — the code uses PLC_STEP_WALK=75 / PLC_STEP_RUN=200, and the walker is a
+ * full 3-state align/active FSM (walk_fsm 0/1/2, L177/208/216), not a one-state model.                  */
 /* AG-round (2026-05-26): canonical PSX walker speeds per agent E1's
  * ghidra1_V2 disasm of mode handlers 0x80030AF0 (walk) and 0x80030D28 (run):
  *   mode 4 WALK: motion_id=0x4B → speed=75 written to actor+0x8C

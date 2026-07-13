@@ -250,7 +250,7 @@ int re15_rdt_parse(const uint8_t *data, size_t size, re15_rdt_t *out)
     /* SCA collision block (offset 0x20). Header (24 B): ceilingX u16, ceilingZ
      * u16, count[5] u32; then sum(counts) entries of 12 B each (lib_sca v1.5 =
      * "BH2 prototype"). The 5 counts are the per-quadrant partition; we parse
-     * them all contiguously and (for now) test against all. sca aliases the
+     * them all contiguously; the resolver tests only the actor's quadrant partition (re15_collision.c L556-562), not all cells. sca aliases the
      * resident buffer. */
     out->sca = NULL; out->sca_count = 0; out->ceiling_x = 0; out->ceiling_z = 0;
     out->sca_rgn[0] = out->sca_rgn[1] = out->sca_rgn[2] = out->sca_rgn[3] = out->sca_rgn[4] = 0;

@@ -1648,10 +1648,11 @@ int main(int argc, char *argv[])
              * (0x80068348/0x800683e8/0x80065f60). The STEADY orbit (yaw=0x80, yaw_step=0xc=12,
              * radius=3300, dist_step=0, y_step=100) is byte-true VERIFIED against the death savestates:
              * yaw=(128-12*frame)&0xfff → frame 108 = 2928, matching RAM (0x800b525c) at counter 109.
-             * DEFERRED (FLAG B): the ~3-frame fly-in SPIN (yaw_step=900 + a yaw seeded from the corpse
-             * model's facing point P+0x5b4/0x5bc via ratan2-0xd2c) — that seed has no port equivalent,
-             * so we start on the settle angle: the dramatic cut + orbit are byte-true, only the brief
-             * initial spin is omitted. Replaces the old fabricated {0x1f4,0xbb8,0x1f4}+drift glide. */
+             * FLY-IN (FLAG B RESOLVED, savestate-derived — implemented in the INIT block below, s_dc_yaw /
+             * s_dc_yaw_step): the ~3-frame fly-in SPIN (yaw_step=0x384=900 + a yaw seeded from the corpse
+             * model's facing point P+0x5b4/0x5bc via ratan2-0xd2c) IS reproduced — the seed reduces to
+             * (-rot_y - 0xd2c) & 0xfff (=710·forward(rot_y), verified 3/3 death saves) and swings at
+             * 900/frame for 3 frames before settling, so the cut + fly-in spin + orbit are all byte-true. Replaces the old fabricated {0x1f4,0xbb8,0x1f4}+drift glide. */
             re15_camera_cut_t death_cut;
             const re15_camera_cut_t *view_cut = &active_cuts[active_cut_idx];
             {
@@ -1987,8 +1988,10 @@ int main(int argc, char *argv[])
              * room_common.c): a door to a DIFFERENT room queued g_room_change in
              * the scan above. Identical LOGIC to PSX; the PC ARCH callbacks are
              * a FILE RDT loader + a no-op render reset + the BG decode. (The BG
-             * cut names are still room1170-hardcoded — room-aware BG/model asset
-             * loading is the separate multi-room TODO; the destination RDT,
+             * cut names are now room-aware (bg_pc.c re15_bg_room_prefix builds "room%04x" from
+             * g_current_room_id; re15_bg_load_cut bg_pc.c:262-264), and per-room props
+             * (pc_load_room_prop_set) + the cinematic/enemy model bank (per-dest_room RBJ reload +
+             * re15_apply_room_cinematic below) reload too; the destination RDT,
              * collision, SCD + spawn already switch correctly.) */
             {
                 extern int  re15_room_load(unsigned);
@@ -3781,8 +3784,10 @@ int main(int argc, char *argv[])
         /* ITEM-GET MODAL message box (states 5/6, byte-true FUN_80027e68 a1=0x100 → the message VM):
          * "WILL YOU TAKE THE <item>." with a Yes/No cursor when there's room, or "YOU CAN'T CARRY ANY
          * MORE ITEMS" when full. Box origin (34,180) is byte-true (DAT_800b8534=0x22 / 8536=0xb4); the
-         * text glyphs + item name are savestate-decoded strings in the 6×8 overlay font (faithful-line
-         * — the exact prompt glyphs live in BSS @0x800c4fc6; the MECHANISM is byte-true). */
+         * text glyphs + item name render in the real TEX.TIM message font via byte-true glyph replay
+         * (re15_render_pc_item_prompt, render_pc.c:1681, using re15_msgfont_glyph; the prompt's own
+         * glyph bytes come from the BSS scripts @0x800c4fc6 + name blob) — byte-true end-to-end, no
+         * longer a 6×8-overlay faithful-line. */
         {
             extern void re15_render_pc_text_overlay(int x, int y, const char *text);
             extern int  re15_render_pc_text_overlay_n(int x, int y, const char *text, int n);

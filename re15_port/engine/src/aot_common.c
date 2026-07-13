@@ -6,7 +6,7 @@
  * exactly once even when the player loiters inside.
  *
  * RE2 has rect AND circle AOT shapes (per FUN_80051088.c flag bit 0x80).
- * We only implement rect for now — covers all of Aot_set / Door_aot_set
+ * We implement rect AND the 4-vertex quad (has_quad / re15_aot_point_in_quad, L188) — covers all of Aot_set / Door_aot_set
  * / Item_aot_set in the extracted RE1.5 scripts. Circle can be added
  * when something actually uses it.
  */

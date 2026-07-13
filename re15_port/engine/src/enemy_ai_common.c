@@ -130,7 +130,7 @@ int re15_enemy_ai_tick(int slot)
 
     /* cache dist @+0x1d0 (byte-true: 16-bit-wrapped ΔX/ΔZ, SquareRoot0). */
     e->ai_dist = (uint32_t)re15_enemy_player_dist(e, &g_actors[RE15_ACTOR_SLOT_PLAYER]);
-    /* func_0x8001bd60(-10,20) / func_0x80039e7c(&player,0,0) setup helpers — deferred. */
+    /* func_0x8001bd60(-10,20) setup helper — deferred. func_0x80039e7c(&player,0,0) steer-writer is RESOLVED, IMPLEMENTED as re15_nav_update_steer (live tick @L2517/2523). */
 
     /* main-state dispatch (*PTR_FUN_801217a0[entity+0x4])(). */
     switch (e->state) {
@@ -461,7 +461,8 @@ void re15_enemy_ai_set_combat_active(int v) { s_live_combat_active = v ? 1 : 0; 
  * player simply FREEZES at its grab-commit position (pad ignored). Any port-vs-PSX hold-distance gap is just
  * different commit distances, not a divergence. The Y-reference DAT_800acc0e (=-floor*1800) is set by cmd5
  * @0x80036880 and IS modeled; the devour-collapse root-motion drag (~600u) is modeled (see below, ~L523).
- * DEFERRED (cited): only the per-type grabbed bone POSE/anim (victim-set bank2 keyframes), the struggle-escape
+ * The per-type grabbed bone POSE/anim (victim-set bank2 keyframes) is IMPLEMENTED (@L497-803). DEFERRED
+ * (cited): the struggle-escape
  * (sub-step 5 @0x80102968, anim-gated + the bit-0x2 check), and the cmd-6 "being-approached" walk command. */
 /* MASH-ESCAPE input (byte-true FUN_80037024 @0x80037024, raw disasm): returns 1 when the press-EDGE
  * pad register (0x800ac762) has ANY D-pad direction (bits 4-7) or face button (bits 12-15) set —
@@ -813,8 +814,8 @@ void re15_player_victim_reset(void) { g_player_victim = 0; g_player_victim_type 
  *   +0x1bc/+0x1be = player X/Z snapshot        (sh @0x8010071c/734 — a "last-seen" ref)
  *   +0x0 |= 0x40000000  (lifecycle flag word — no port repr)   @0x80100750
  *   +0x9c = 0x14 (20)   -> ai_timer            (sh @0x80100760)
- * DEFERRED (cited): the player-pos snapshot (+0x1bc/+0x1be, consumed by the deferred movement
- * decision), the RNG seed (FUN_8001af20 @0x80100774), and the two const GTE vectors copied from
+ * The player-pos snapshot (+0x1bc/+0x1be) is IMPLEMENTED (init @L829-830, per-tick steer refresh
+ * @L2523). DEFERRED (cited): the RNG seed (FUN_8001af20 @0x80100774), and the two const GTE vectors copied from
  * 0x80100004/0x80100014 (model-pool matrix setup). This is the LIVE analog of FUN_8011d84c. */
 void re15_enemy_ai_live_init(int slot)
 {
@@ -1012,10 +1013,10 @@ static void re15_enemy_ai_live_feeding(re15_actor_t *e)
  * FAITHFUL-LINE: the port has no zombie grab anim, so the anim-gated sub-step advances ([1]/[3]/[5]/
  * [7]) and the bite LOOP COUNT (anim-gated) are stand-ins — the port applies one -5 bite per grab
  * cycle (the engage re-commits the grab while the player stays in range, so the damage repeats over
- * cycles). DEFERRED (cited): the player-grabbed pose/lock FSM (the player command register
- * 0x800aca58 = cmd 5 -> LAB_80036834, which pins + animates the player) + the player+0x93|=1 grabbed
- * flag (port-field-aliased to the hit-guard) + the grab motion +0x94 + the grab-link globals
- * 0x800acbcc/d0 — those are the player subsystem + the anim layer. The byte-true -10/-5 HP damage +
+ * cycles). IMPLEMENTED (was cited DEFERRED): the player-grabbed pose/lock FSM (cmd 5 -> LAB_80036834) —
+ * the PIN is s_player_grabbed @L1027 (game_step reads re15_player_is_grabbed) and the ANIMATION is the
+ * grab-victim FSM @L497-803 (Leon driven off the zombie's bank-2 grab-link globals 0x800acbcc/d0, grab
+ * motion +0x94); the +0x93|=1 grabbed flag is port-field-aliased to the hit-guard. The byte-true -10/-5 HP damage +
  * the sub-step structure + the exit ARE ported. Uses sub_state_2 (+0x6), ai_timer (+0x9c). */
 static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
 {
@@ -1135,7 +1136,7 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
                     if (player->hp < 0) player->state = 7;
                 }
                 /* TWO byte-true counters (D3/D5 disasm of FUN_80102548 [3]):
-                 *  +0x9c ESCAPE window: -= 1 + 5*mash-presses (FUN_80037024; mash deferred = -1/tick);
+                 *  +0x9c ESCAPE window: -= 1 + 5*mash-presses (FUN_80037024; mash IMPLEMENTED via re15_mash_pressed @L1154);
                  *      goes NEGATIVE -> THROW-OFF [4] (the player breaks free ALIVE).
                  *  +0x9e KILL counter: -1 per tick; WAS 0 (or player hp<0) -> the DEVOUR handoff
                  *      +0x4 word = ((+0x5)+2)<<8|1 (face 3->5, behind 4->6; @word-write in [3]) — the
@@ -1591,7 +1592,7 @@ static void re15_enemy_ai_live_pushoff(re15_actor_t *e, re15_actor_t *player)
  * frame it rotates the heading toward the player by the arc_test(player, 0x80) residual (the
  * @0x80102ecc-0x80102ee4 path: `entity+0x6a += arc_test`), i.e. ±0x80 (~7deg) per frame toward the
  * player, 0 once within the ±0x80 cone. NO translation (the turn state stands and pivots; the only
- * forward locomotion is the deferred anim-root-motion walk in the +0x5=5/6 states). The companion
+ * forward locomotion is the anim-root-motion walk in the +0x5=5/6 devour states, IMPLEMENTED @L2059-2095). The companion
  * DECIDE half f840[7] (re15_ai_dispatch_decision case 7) commits the GRAB as soon as the heading is
  * within the wider ±0x200 grab cone — so the zombie turns until it faces the player, then grabs.
  * (The within-±0x80 fine slew FUN_8001a8f8(player,0x201) @0x80102e90 is moot here: the ±0x200 grab
@@ -2103,7 +2104,8 @@ static void re15_enemy_ai_live_devour(re15_actor_t *e, const re15_actor_t *playe
  * the post-attack recovery: +0x4 word = 0x1503 (state 3 / +0x5=0x15) + the recovery action
  * +0x94 = 0xb (or 0x1f if +0x9 & 0x80) (@0x80101508-0x8010155c). Returns 1 on the frame the lunge
  * fires. The DECISION that ARMS the attack (+0x1d8 |= 0x100 + seeds +0x1da) is the unarmed-path
- * movement/decision tail (FUN_80101224 @0x80101560+, jal FUN_8001bc08) — DEFERRED; when not armed
+ * movement/decision tail (FUN_80101224 @0x80101560+, jal FUN_8001bc08). The LOS-probe half is
+ * IMPLEMENTED (re15_enemy_los_probe @L2113-2121); only the ATTACK-ARM itself is DEFERRED (dormant). When not armed
  * this returns 0 (no windup). The +0x0 & 0x1000 freeze bit has no port repr (omitted). */
 int re15_enemy_ai_live_active(int slot)
 {
@@ -2130,8 +2132,8 @@ int re15_enemy_ai_live_active(int slot)
          * parallel, not live" label was WRONG — it IS the live decision graph for type 0x10/0x11).**
          * It commits the attack (state word 0x701 -> +0x5=7) when the player is in range/off-arc.
          * The briefing zombies SPAWN in the non-0 sub-modes (+0x9 & 0xf = 6 feeding / 8 lying); the
-         * feeding handler is the dist-gated WAKE-UP that transitions them to combat (sub 0). DEFERRED
-         * (cited): the FUN_8001bc08 sensor + the +0x1d8 update, and the ATTACK-ARM (+0x1d8 |= 0x100 +
+         * feeding handler is the dist-gated WAKE-UP that transitions them to combat (sub 0). The FUN_8001bc08 sensor + the +0x1d8 update are IMPLEMENTED
+         * (re15_enemy_los_probe @L2113-2121). DEFERRED (cited): the ATTACK-ARM (+0x1d8 |= 0x100 +
          * the +0x1da windup seed; FUN_8010ab2c) — which is DORMANT in this prototype (DAT_800aca3c & 1
          * is never set, savestate-proven), so the in-game attack is the GRAB the engage brain commits
          * (8.8), not the lunge. */
@@ -2145,8 +2147,9 @@ int re15_enemy_ai_live_active(int slot)
                  *   +0x5 = 7   -> the TURN-to-face (FUN_80102dc8): rotate toward the player so the
                  *                 decide's grab-commit (the ±0x200 cone) can fire (8.9).
                  *   +0x5 = 2   -> the ENGAGE idle-track ANIMATE clip (+0x1d4 variant, 8.13 below).
-                 * (The grab/turn/engage animate clips are ported [8.13]; the +0x5=0/1 search anim +0x5=5/6
-                 * forward walk are RE'd byte-true [search clip 0/1, walk clip +0x5+4] but NOT reached
+                 * (The grab/turn/engage animate clips are ported [8.13]; the +0x5=5/6 forward walk
+                 * [walk clip +0x5+4] IS IMPLEMENTED as the DEVOUR-FINISH animate re15_enemy_ai_live_devour
+                 * @L2059-2095. The +0x5=0/1 search anim [search clip 0/1] is RE'd byte-true but NOT reached
                  * live by ROOM1140 m0 (engage/turn/grab only) -> deferred. The lunge-arm FUN_8010ab2c is a
                  * SEPARATE dispatch @0x80120208[+0x4=6] and is DORMANT — DAT_800aca3c&1 is never set,
                  * 8.7 — so it is not wired here; +0x5=7 is the TURN state, not the arm.) */
@@ -2436,7 +2439,7 @@ void re15_enemy_ai_live_hurt(int slot)
  * Ported byte-true onto the port's shared anim playback (player_common.c advances every actor's
  * anim_frame + holds the last keyframe): set motion 0x1f, then hold state DEATH until the death clip
  * has played out (anim_frame reaches its last frame, read from the loaded model bank), then -> CORPSE.
- * FAITHFUL-LINE: the death SE (frame 7) + the gore spawn (frame 35) are the deferred presentation.
+ * IMPLEMENTED: the death SE (frame 7) + the gore spawn (frame 35) fire in re15_enemy_ai_live_death phase 1 (@L2487-2490).
  * Headless / model-not-loaded fallback: with no bank the clip length is unknown -> go straight to
  * CORPSE (the prior behaviour, no regression). */
 /* FSM-CLOCK clip-end signal — the byte-true FUN_8001f3bc/FUN_8001f8b4 RETURN contract, the piece
@@ -2501,7 +2504,7 @@ void re15_enemy_ai_live_death(int slot)
  * entry the per-frame loop FUN_8001a50c dispatches each frame. Byte-true core (the live analog of
  * re15_enemy_ai_tick / FUN_8011d6d4): the pause gate (g_pauseflags & 0x20000000) + the per-entity
  * skip gate (+0x9 & 0x20), cache the player distance @+0x1d0 (same SquareRoot0(16-bit ΔX²+ΔZ²)),
- * then dispatch the main state @0x8011f7b4[entity+0x4] (INIT/ACTIVE ported; [2]/[3]/[4] deferred).
+ * then dispatch the main state @0x8011f7b4[entity+0x4] (INIT/ACTIVE/HURT[2]/DEATH[3] ported @L2532-2533, CORPSE[7] @L2534; only [4] idle deferred).
  * The post-dispatch attack-point (FUN_80104178 -> the port atk_pt skeleton map, re15_damage.c) +
  * the collision/render helpers (FUN_8002b498/aec4/b544/FUN_8003b0a4) are other subsystems, not run
  * here. Returns 1 if dispatched, 0 if a gate skipped it. */
@@ -3799,9 +3802,10 @@ static void re15_spider_ai_tick(int slot)
  * dispatches +0x4 via @0x801213c8 (16 states), then the shared body-push + SCA wall-clamp tail. STATE[1]
  * 0x80117254 is a two-table brain (A decision + B movement on +0x5): idle-wander (clip 0x16) -> CHASE
  * (yaw-slew + crawl toward the player) -> GRAB/bite (-6/-12) / LEAP (ballistic). WAVE 1: INIT + idle +
- * chase + killable (death clip 0xe -> corpse clip 0xa). DEFERRED to wave 2: the bite/heavy-bite/leap
- * attacks (0x80118270/854c/908, direct -6/-12 + grab handshake + ballistic pounce), the exact crawl
- * speed (move-helper 0x8011bf50), and the far ballistic states [2-7]. */
+ * chase + killable (death clip 0xe -> corpse clip 0xa). WAVE 2 IMPLEMENTED: the bite/heavy-bite/leap
+ * attacks (0x80118270/854c/908, direct -6/-12 + grab handshake + ballistic pounce) are cases 5/6/7
+ * @L3884-3910. DEFERRED: only the exact crawl speed (move-helper 0x8011bf50; port uses re15_dog_advance) and
+ * any remaining special far-states routed to the wave-2 default (@L3964). */
 static const uint8_t s_maggot_clip_len[29] =   /* EM027 clip frame-counts, byte-true (CDEMD0.EMS idx 12, dir[1]) */
     { 78,20,15,70,78,39,24,12,25,25,40,40,100,40,70,90,35,20,25,40,40,21,58,30,50,40,70,30,52 };
 static void re15_maggot_clip(re15_actor_t *e, uint8_t c) { e->motion = c; e->anim_frame = 0; e->anim_frac = 7; }
@@ -3973,9 +3977,10 @@ static void re15_maggot_ai_tick(int slot)
  * actors (HP = -1) that idle-pose, walk (nav-steer), look-at the player, and (Katherine) trigger dialogue.
  * They share a common EXE behaviour library: state [4] 0x80050be8 = a nested sub-dispatcher on +0x5
  * (@0x80076ca0: idle-pose 0-3 / walk-to-target 4/5/7/8 / turn-look 9), states [6]/[7] = event-watchers.
- * WAVE 1: the Irons (0x40) INIT + the idle-pose hold (the NPC stands + animates, invulnerable). DEFERRED
- * to wave 2 (need an NPC-active savestate): the walk-to-target + look-at + dialogue behaviour VM, the
- * per-NPC overlay states, and the other 5 NPC types. */
+ * WAVE 1: the Irons (0x40) INIT + the idle-pose hold (the NPC stands + animates, invulnerable). WAVE 2
+ * IMPLEMENTED: the walk-to-target (re15_npc_sub_walk @L4036) + look-at (re15_npc_sub_turn @L4009), both
+ * dispatched by re15_npc_sub_dispatch @L4080-4082, and all 7 NPC types (0x40/42/45/47/49/4b/4d) routed to
+ * re15_npc_ai_tick @L5264-5278. DEFERRED to wave 2: the dialogue behaviour VM + the per-NPC overlay states. */
 static const uint8_t s_irons_clip_len[24] =   /* EM040 (Chief Irons) clip frame-counts (CDEMD0.EMS idx 18, dir[1]) */
     { 34,32,50,26,20,20,50,1,1,1,1,25,1,1,1,1,1,10,25,1,1,1,30,30 };
 static void re15_npc_clip(re15_actor_t *e, uint8_t c) { e->motion = c; e->anim_frame = 0; e->anim_frac = 7; }
@@ -4032,7 +4037,9 @@ static const uint8_t s_npc_walk_param[16] =
  * The FORWARD DISPLACEMENT is the executor's root-motion channel 0 (anim_flags&1 → FUN_800369f8), NOT this
  * sub: verified that NEITHER the walk nor turn sub writes +0x1c4 (anim_flags) — the bit is armed by the
  * un-RE'd anim/clip-set path. So this sub is byte-true for the STEERING; the movement plugs into the
- * executor gate once that arming (+ the room's EM model, re15_enemy_find(type)) is present. Deferred. */
+ * executor gate once that arming is present. SUPERSEDED (@L4047-4053): the byte-true forward TRANSLATION
+ * is actually pos_advance(a0=0) (FUN_800245d8), IMPLEMENTED @L4052-4053 — NOT the root-motion channel; so
+ * this sub's walk-straight forward step IS ported. */
 static void re15_npc_sub_walk(re15_actor_t *e)
 {
     if (e->sub_state_2 > 2) return;                          /* >2 -> exit (@0x80051190) */
@@ -4159,9 +4166,8 @@ static void re15_npc_ai_tick(int slot)
  * NAV-PATHING female-zombie variant that REUSES the standard zombie's combat machinery: her active brain
  * (0x8010b274) dispatches the SAME phase handlers (engage 0x80102058, GRAB 0x80102548 = cmd5 + player.hp
  * -=10) and shares the zombie corpse-settle (state 7 = 0x80109554). WAVE 1: INIT (HP 50-81) + nav-chase
- * (clip 26) + the grab (-10, pins the player via the shared victim FSM) + killable (-> corpse). DEFERRED to
- * wave 2: the exact mode-dispatch (+0x9&0xf @0x80120230), the lunge-arm timer choreography, the repeated
- * grab bites. */
+ * (clip 26) + the grab (-10, pins the player via the shared victim FSM) + killable (-> corpse). The repeated grab bites (HELD BITE-LOOP -5/clip) are IMPLEMENTED @L4212-4216. DEFERRED to
+ * wave 2: the exact mode-dispatch (+0x9&0xf @0x80120230) and the lunge-arm timer choreography. */
 static const uint8_t s_zgirl_clip_len[42] =   /* EM013 clip frame-counts (CDEMD0.EMS idx 3, dir[3]) */
     { 14,30,26,14,30,26,3,3,3,65,65,55,1,55,1,40,40,60,98,98,5,5,138,17,1,85,79,19,15,21,25,68,2,1,64,1,65,3,3,68,89,59 };
 static void re15_zgirl_clip(re15_actor_t *e, uint8_t c) { e->motion = c; e->anim_frame = 0; e->anim_frac = 7; }

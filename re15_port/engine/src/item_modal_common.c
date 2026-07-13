@@ -4,7 +4,7 @@
  * The hardcoded RE1.5 item-pickup presentation (state byte DAT_80072d3b, 9-case jump table
  * @0x800106b4). Ported from the raw disasm (workflow wq41xdnn2, 3 finders + self-verified). Every
  * behavioural constant cites its address. Shared PC+PSX (engine tier). See re15_item_modal.h for the
- * flow + the faithful-line ledger.
+ * flow. The modal is byte-true END-TO-END: the Yes/No prompt renders in the real TEX.TIM game font (re15_render_pc_item_prompt, render_pc.c L1681); the only residual is that the prompt strings are savestate-derived from BSS @0x800c4fc6.
  *
  * FLOW (normal): 1 INIT -> 2 ZOOM-IN (17f) -> 3 gate -> 4 FLIP (9f) -> 5 grant-check+SE -> 6 fade gate
  *   -> 7 INSERT (state=0 DONE).   FULL-inventory: state 7 branches -> 8 SHRINK-away (17f, no grant).

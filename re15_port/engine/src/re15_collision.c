@@ -121,7 +121,7 @@ static int push_circle(const re15_sca_entry_t *e, int32_t *lx, int32_t *lz, int3
  * 8003d7e8/8003d930; resolved to our origin=0 frame (player abs = *lx/*lz, like
  * push_rect). ROOM1170 has NO type 8/9 cells (zero regression); other rooms with
  * type 8 (8 rooms) / type 9 (6 rooms) need in-game verification. The actual slope
- * push-out (types 2/4/5/6/7) stays DEFERRED — see [[slope_collision_deferred_2026_06_09]]. */
+ * push-out (types 2/4/5/6/7) is now IMPLEMENTED byte-true (push_diag2..7, dispatched re15_collision.c L575-579; RE workflow wf_b5520814). */
 static int push_caps8(const re15_sca_entry_t *e, int32_t *lx, int32_t *lz,
                       int32_t prevx, int32_t prevz, int32_t r)
 {

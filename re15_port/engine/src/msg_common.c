@@ -360,7 +360,7 @@ static void re15_dialog_step(void)
      * read, and DISTINCT from the port's gameplay action (SQUARE, g_aot_action_pressed). NOTE:
      * the PSX reads a config-REMAPPED logical pad word (table @0x80073e1c); the port feeds the
      * raw physical word (re15_player.h: TRIANGLE 0x1000, CIRCLE 0x2000, CROSS 0x4000), so 0x3000
-     * = TRIANGLE|CIRCLE here — the exact remapped physical toggle bit is a deferred remap-model. */
+     * = TRIANGLE|CIRCLE here — the port's g_scd_pad_edge = pad_pressed IS this logical remapped word (DAT_800ac76c) at RE1.5's default config, so the direct bind is byte-true (game_step_common.c:152; scd_vm.c:3320-3326; audit wf_6aad95ad resolved the remap — no remap-model needed). */
     const uint16_t TOGGLE_MASK = 0x3000, CROSS = 0x4000;
 
     int rlen = 0;

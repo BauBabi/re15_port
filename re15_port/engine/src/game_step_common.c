@@ -261,8 +261,9 @@ void re15_game_step(const re15_game_ctx_t *c)
          * the pad — so the player cannot steer or walk away while held (he takes the repeated -5
          * bites). The port pins the player exactly as the stair traversal does (engine-driven, the
          * player does NOT steer): SKIP re15_player_tick + collision + the door-start scan. The player
-         * holds his current XZ (the exact grab-pin pose/offset DAT_800acc0e = -floor*1800 is the
-         * deferred anim layer). The grabbing zombie's hitbox + the bite damage are applied by
+         * holds his current XZ (byte-verified 2026-07-13: there is NO XZ pin/pull, the player simply freezes; the
+         * grabbed-Y reference DAT_800acc0e = -floor*1800 IS modeled (enemy_ai_common.c:458-463).
+         * Still deferred: only the per-type grabbed bone POSE/anim). The grabbing zombie's hitbox + the bite damage are applied by
          * re15_enemy_ai_run_all at the END of this step (same slot as the lunge). The RVD camera cut
          * scan KEEPS running (byte-true: the per-frame cam scan is ungated by the player's state), so
          * the cut still frames the grab. This branch is unreachable unless a live zombie grabs, so a
@@ -324,8 +325,9 @@ void re15_game_step(const re15_game_ctx_t *c)
          * so the spawns anchor at the actor + the MEASURED aim-pose hand-bone height (pose-dump
          * shots/pose_aim.txt.leon b13 y=-2083) + the cited local offsets along facing (faithful-
          * line position, byte-true ids/offsets). There is NO direct shot SE in the discharge path —
-         * the bang is driven by the spawned ESP effect's data; until the port's fx tick drives
-         * audio, re15_audio_weapon_se(8) (ARMS bank VAG 4) stands in for it (faithful-line,
+         * the bang is driven by the spawned ESP effect's data; the port's fx tick NOW drives it: ROW VM routine 9 (re15_esp.c:446)
+         * -> re15_esp_bang_hook -> pc_bang (audio_pc.c:684) = ARMS record 0 (the old
+         * re15_audio_weapon_se(8) stand-in was the WRONG record;
          * RE15_COMBAT_SE_SUBSYSTEM.md §3). Aiming suppresses g_aot_action_pressed (no door/stair
          * while the weapon is raised). 1170-SAFE: needs R1+Square input; hits only live zombies. */
         if (c->rdt_ok && (c->pad_current & RE15_PAD_BIT_R1)) {
@@ -388,8 +390,9 @@ void re15_game_step(const re15_game_ctx_t *c)
         /* GUNSHOT BANG (byte-true wf_efa45868-e53): the muzzle effect's 40-byte descriptor ROW
          * script fires it on the slot's SECOND tick — row1 u16[0]=9 -> routine 9 @0x80017654 ->
          * FUN_80045024(0x01000001, &slot_worldpos) = ARMS bank record 0, positional. The port's
-         * fx layer has no descriptor rows (deferred); this 1-tick scheduler is the observable
-         * equivalent. (Routine 9 also writes the noise global 0x800b5358=1 — consumer un-RE'd,
+         * fx layer NOW drives this from the ESP ROW VM: routine 9 @re15_esp.c:446 (rows loaded by
+         * esp_fx_row_load @341, spawned by re15_esp_fx_spawn_rows @491) fires the bang on the slot's
+         * 2nd tick; the old 1-tick scheduler is deleted. (Routine 9 also writes the noise global 0x800b5358=1 — consumer un-RE'd,
          * deferred.) The old immediate re15_audio_weapon_se(8) was the WRONG record (8 = the
          * knife-draw/flesh-hit SE). */
         /* (The BANG + the secondary flash are DATA-driven by the muzzle slot's rows now
@@ -501,8 +504,8 @@ void re15_game_step(const re15_game_ctx_t *c)
      * combat_active = g_scd.combat_active = the byte-true DAT_800aca3c & 1 latch the attack-arm
      * (FUN_8010ab2c) gates on; held, cleared on room load (see re15_scd.h). The briefing zombies
      * spawn in the feeding/lying sub-modes (grid_id & 0xf != 0), so the combat decision brain is
-     * not even entered yet — they tick (INIT->ACTIVE) but do not attack until the deferred
-     * feeding->combat wake-up handler runs. Verified in a real room by test_room1140_combat. */
+     * not even entered yet — they tick (INIT->ACTIVE) but do not attack until the byte-true
+     * feeding->combat wake-up handler runs (re15_enemy_ai_live_feeding, enemy_ai_common.c:970). Verified in a real room by test_room1140_combat. */
     /* NPC ANIMATION ADVANCE — byte-true independent of the player command FSM (FUN_8001a50c per-type
      * handler, NOT gated by @0x80073f90). Runs UNCONDITIONALLY here, so it fires in the grabbed/dead/
      * stair/menu branches too (it used to sit inside re15_player_tick, which those branches skip →

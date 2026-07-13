@@ -328,7 +328,9 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
         /* AIM (Phase 8.14, faithful-line of the action-8 aim FSM @0x80035810): hold R1 to aim.
          * The original aim state ROOTS the player (no walk/run translation) while keeping the gun
          * up; turning (rot_y, above) stays allowed. Disable forward/back move so want_motion below
-         * picks the aim pose, not walk/idle. (The exact 3-level command FSM + the raise clip 17 +
+         * picks the aim pose, not walk/idle. (The raise IS implemented (gun clip 6 / melee draw clip 0xD @L432-436) and the 3-level
+         * elevation command FSM too (holds 8/10/12 @L451-454, recoils 7/9/11 @L218/466) — clip-17 was
+         * re-identified as the box-push, NOT the aim raise. Only the +
          * aim-elevation pitch are deferred; the held aim pose + the fire recoil are byte-true.) */
         /* R1 released -> LOWER (sub 3, BOTH machines — gun @0x80033c74 / melee @0x80035424 are
          * structurally identical: clip 6 REVERSED (f314 a2=1), elevation cleared, no SE; exit
