@@ -3670,7 +3670,27 @@ static void re15_dog_ai_tick(int slot)
  * earlier "no hp write in region 0x80017600-0x80018000" wording was imprecise: the damage routines exist in
  * the table; the spider simply doesn't use them, and no port enemy arms idx25/31 via 0x55 either.)
  * The only remaining wave-2 item is PRESENTATION: the exact web-spit sprite choreography (the port already
- * spawns a telegraph fx below as a faithful approximation). */
+ * spawns a telegraph fx below as a faithful approximation).
+ * WEB-SPIT byte-true RE (workflow wf_b95101b2, 2026-07-13 — corrects two earlier assumptions):
+ *  - The "attack workstruct" *(0x800b52c4) is a CURSOR into the 96*0x84 EFFECT/SPRITE POOL @0x800a73b8 (the
+ *    shared fx pool). Driver FUN_80019e20 walks all 96 slots and per active slot (+0x6c&1) dispatches
+ *    routine_table[u16 +0x00] (0x80071d40) AND a secondary routine_table[u16 +0x02] in the draw pass.
+ *  - The spider emits ONE mouth-anchored web sprite per sub-cycle: brain 0x80116d00 -> FUN_80019700 with
+ *    a0=(0x1003<<16|counter<<8) large / (0x0803..) small => part id 0x10/0x08, tag 3, anchored at the mouth
+ *    transform *(entity+0x188)+64; arm 0x80116c68 -> FUN_80019d50(a2=0x12). +0x00 alternates 0x22 (animate:
+ *    +0x72 sprite-frame += 0x100) during emission and 0x12 (0x80017c8c) in flight; +0x02 = 0x24 (room-collide
+ *    +0x28/+0x2a/+0x2c -> on hit set +0x02=0x25, zero velocity = stick/expire).
+ *  - CORRECTION A: tick 0x80017c8c is a PURE velocity oscillator (advance +0x04/+0x06 by +0x1e/+0x26 for 10
+ *    frames, then negate +0x0e/+0x1e/+0x26 & reload timer=10) — NO rng, NO angle, NO spawn/draw. The rng /
+ *    +0xc00 / jal 0x800199d4 emit is the NEXT entry 0x13 (0x80017d08), which the spider NEVER arms.
+ *  - CORRECTION B: NOT a ballistic projectile. Registrar FUN_80019700 zeros pos +0x34/+0x38/+0x3c but never
+ *    writes velocity +0x10/+0x12/+0x14 or the oscillator vel fields; only hit-code 0x11 (field-init 0x80017c00)
+ *    would, and the spider never arms 0x11 => stationary mouth-anchored sprite ("stationärer Web-Spitter").
+ *  - HONEST RESIDUAL (faithful-line boundary): because 0x11 is never armed, the 0x12 oscillator reads
+ *    UNINITIALIZED pool memory for +0x04/+0x06/+0x1e/+0x26 — whether the wobble is visibly nonzero is NOT
+ *    statically determinable; it needs a ROOM1090 DuckStation savestate of the mouth slot mid-spit. A full
+ *    byte-true SPRITE port also needs the web-glob sprite (part 0x10/0x08 sub 3) from its bank + the mouth
+ *    anchor + the +0x00/+0x02 dual dispatch. The placeholder below is a defensible faithful-line until then. */
 static void re15_spider_ai_tick(int slot)
 {
     re15_actor_t *e  = &g_actors[slot];
