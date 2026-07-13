@@ -1862,6 +1862,13 @@ int main(int argc, char *argv[])
                      * Port: straight to the title screen (the FL attract chain: disclaimer/FMV are
                      * not ported). */
                     s_in_title = 1;
+                    /* byte-true audio stop (FUN_80043958 = SsSeqStop over every active SEQ handle,
+                     * @0x80015810-38): silence the 3 BGM/SEQ layers (0 MAIN / 1 SUB SEQ0 / 2 SUB SEQ1)
+                     * so the death music does not keep playing under the title. re15_audio_seq_ctl op
+                     * 2 = SsSeqStop (the same ctl the 0x54 Sce_bgm_control opcode uses). */
+                    re15_audio_seq_ctl(0, 2);
+                    re15_audio_seq_ctl(1, 2);
+                    re15_audio_seq_ctl(2, 2);
                     re15_render_pc_hide_gameover();
                     re15_render_pc_set_gameover_flyin(-1);
                     re15_render_pc_set_black_bg(0);
