@@ -32,6 +32,8 @@
 #include "re15_esp.h"        /* Phase ESP-C: op-0x3a effect particle spawn */
 #include "re15_damage.h"     /* re15_enemy_apply_hitbox — wire the spawned enemy's +0x78 hitbox */
 #include "re15_msg.h"        /* re15_msg_is_choice — YES/NO vs plain Message_on gating */
+#include "re15_savepoint.h"  /* FE-4: phone save-point registry + pending signal */
+#include "re15_room.h"       /* g_current_room_id (save-point room match) */
 #include "re15_to_re2.h"     /* RE1.5 → RE2 adapter layer */
 
 scd_vm_t g_scd;
@@ -1145,6 +1147,11 @@ static void msg_show(scd_thread_t *t)
     g_scd.message_arg2   = t->pc[2];
     g_scd.message_arg3   = t->pc[3];
     g_scd.message_active = 1;
+    /* FE-4: examining a PHONE save-point shows its "You can save your progress"
+     * message; flag it so the platform opens the save flow (gated on the MEMORY
+     * CARD item). One-shot; the platform clears it. */
+    if (re15_savepoint_is(g_current_room_id, t->pc[1]))
+        re15_savepoint_set_pending(1);
     /* NOTE: the dialogue voiceover is NO LONGER queued here. msg_show is shared by the
      * plain-subtitle path AND the YES/NO query prompt (the ROOM1130 switch), and a UI
      * prompt must NOT speak. Voice is queued ONLY by the plain-subtitle caller, gated to
