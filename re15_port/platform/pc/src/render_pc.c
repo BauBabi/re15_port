@@ -85,6 +85,9 @@ static SDL_Texture  *s_gameover_tex = NULL;   /* YOU DIED graphic (YOUDIED.TIM),
 static int           s_gameover_w = 0, s_gameover_h = 0, s_gameover_show = 0;
 static SDL_Texture  *s_title_tex = NULL;      /* TITLE screen (TITLEU.TIM 320x240 16bpp) */
 static int           s_title_show = 0;
+static SDL_Texture  *s_fmv_tex = NULL;        /* STR movie frame (FE-3, updated per frame) */
+static int           s_fmv_show = 0;
+static int           s_fmv_w = 0, s_fmv_h = 0;
 static uint32_t      rgb555_to_argb8888(uint16_t c);   /* fwd (defined with the TIM converters) */
 
 /* Phase 4.5.5: textured-triangle layer.
@@ -771,6 +774,13 @@ void re15_render_end_frame(void)
         SDL_RenderFillRect(s_renderer, &full);
     }
 
+    /* STR MOVIE frame (FE-3) — full-screen, OVER everything. The opening CAPCOM.STR plays before the
+     * title; each decoded frame is uploaded to s_fmv_tex and drawn 1:1 to the 320x240 screen. */
+    if (s_fmv_show && s_fmv_tex) {
+        SDL_Rect full = { 0, 0, SCREEN_XRES, SCREEN_YRES };
+        SDL_RenderCopy(s_renderer, s_fmv_tex, NULL, &full);
+    }
+
     /* TITLE screen (TITLEU.TIM) — full-screen, OVER everything. Byte-true tail of the death sequence
      * (YOU DIED -> title) and the boot front-end. Drawn before YOU DIED so a mid-death title wins. */
     if (s_title_show && s_title_tex) {
@@ -905,6 +915,30 @@ void re15_render_pc_show_title(const re15_tim_t *tim)
 }
 
 void re15_render_pc_hide_title(void) { s_title_show = 0; }
+
+/* STR MOVIE (FE-3): upload one decoded 320x240 RGBA8888 frame and mark it shown.
+ * Unlike the title (cached once), the texture is (re)created on size change and
+ * UPDATED every call so successive movie frames present. rgba layout matches the
+ * framebuffer: 0xRRGGBBAA. Call re15_render_pc_hide_fmv() when the movie ends. */
+void re15_render_pc_show_fmv(const uint32_t *rgba, int w, int h)
+{
+    if (!s_renderer || !rgba || w <= 0 || h <= 0) return;
+    if (s_fmv_tex && (w != s_fmv_w || h != s_fmv_h)) {
+        SDL_DestroyTexture(s_fmv_tex);
+        s_fmv_tex = NULL;
+    }
+    if (!s_fmv_tex) {
+        s_fmv_tex = SDL_CreateTexture(s_renderer, SDL_PIXELFORMAT_RGBA8888,
+                                      SDL_TEXTUREACCESS_STATIC, w, h);
+        s_fmv_w = w; s_fmv_h = h;
+    }
+    if (s_fmv_tex) {
+        SDL_UpdateTexture(s_fmv_tex, NULL, rgba, w * (int)sizeof(uint32_t));
+        s_fmv_show = 1;
+    }
+}
+
+void re15_render_pc_hide_fmv(void) { s_fmv_show = 0; }
 
 /* BJ-round 2026-05-29: set cinematic letterbox bar height (px, in 320x240
  * space). 0 = no bars (gameplay). The main loop sets this each frame based on

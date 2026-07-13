@@ -116,6 +116,7 @@ static void re15_pc_ecg(int x, int y, int w, int h, int hp, unsigned phase)
 #include "re15_anim_select.h"  /* SHARED actor bank/clip selection view-model */
 #include "re15_esp.h"          /* Phase ESP-C: op-0x3a effect-sprite bank + particle pool */
 #include "re15_gameflow.h"     /* FE-0.2 top-level mode machine (BOOT/TITLE/INGAME/GAMEOVER) */
+#include "re15_str.h"          /* FE-3 STR/MDEC opening-movie demux+decode (CAPCOM.STR) */
 
 #define RE15_TIM_SLOT_EFFECT 19   /* effect-sprite TIM render slot (0..18 used by chars/props) */
 #define RE15_TIM_SLOT_EFFECT_GLOBAL 20 /* GLOBAL effect bank (CORE00.ESP) sprite sheet — effect-id 0
@@ -523,6 +524,57 @@ int main(int argc, char *argv[])
         const char *sr_env = getenv("RE15_START_ROOM");
         re15_gameflow_init((sr_env && *sr_env) ? (int)strtoul(sr_env, 0, 16) : -1);
     }
+    /* FE-3 — opening CAPCOM.STR movie, played before the title on a normal boot (not the
+     * RE15_START_ROOM debug fast-path). Byte-true STR/MDEC demux (re15_str.c) + the port's
+     * byte-true BSS MDEC decoder. Skippable with START/CROSS. RE15_NO_FMV=1 skips it;
+     * RE15_FMV_SHOT="<frame>:<path.bmp>" dumps that decoded frame then exits (verification). */
+    if (re15_gameflow_mode() == RE15_MODE_TITLE && !getenv("RE15_NO_FMV")) {
+        extern void re15_render_pc_show_fmv(const uint32_t *rgba, int w, int h);
+        extern void re15_render_pc_hide_fmv(void);
+        extern void re15_render_pc_screenshot(const char *path);
+        int msz = 0;
+        uint8_t *mbuf = pc_read_shared("MOVIE/CAPCOM.STR", &msz);
+        re15_str_t movie = {0};
+        if (mbuf && re15_str_open(&movie, mbuf, (size_t) msz) == 0) {
+            uint32_t *frame_rgba = (uint32_t *) malloc((size_t) movie.width * movie.height * 4);
+            const char *fmv_shot = getenv("RE15_FMV_SHOT");
+            int  shot_frame = -1; char shot_path[256] = {0};
+            if (fmv_shot) sscanf(fmv_shot, "%d:%255s", &shot_frame, shot_path);
+            /* STR cadence (byte-true, per the RE1.5 STR-player RE): CAPCOM.STR is authored at
+             * ~30fps (525 video frames over 17.55s at 2x CD = 29.92fps; avg 5.01 sectors/frame
+             * at 150 sectors/s). The PSX player (FUN_80029cd8) is CD-stream-paced with one buffer
+             * flip per frame (FUN_8002a1b8, one VSync) — there is NO hardcoded hold constant. At
+             * the port's 30fps timebase that is one video frame per port frame, throttled to the
+             * 33ms budget (same SDL_Delay pacing as the main game loop). */
+            const uint32_t fmv_budget_ms = 1000u / 30u;
+            uint32_t fmv_last = 0;
+            int skipped = 0;
+            for (int f = 0; f < movie.num_frames && frame_rgba && !skipped; f++) {
+                if (re15_str_decode(&movie, f, frame_rgba) != 0) continue;
+                re15_render_begin_frame();
+                re15_input_tick();
+                re15_render_pc_show_fmv(frame_rgba, movie.width, movie.height);
+                re15_render_end_frame();
+                if (fmv_shot && f == shot_frame) {
+                    re15_render_pc_screenshot(shot_path);
+                    exit(0);                                /* one-shot verification probe */
+                }
+                /* Skip = raw START edge (byte-true: FUN_80029cd8:24 tests raw pad bit 0x800). */
+                if (g_engine.pad_pressed & RE15_PAD_BIT_START) skipped = 1;
+                /* Pace to 30fps (matches the authored rate + the main loop's throttle). */
+                {
+                    uint32_t now = SDL_GetTicks();
+                    if (fmv_last != 0 && now - fmv_last < fmv_budget_ms)
+                        SDL_Delay(fmv_budget_ms - (now - fmv_last));
+                    fmv_last = SDL_GetTicks();
+                }
+            }
+            free(frame_rgba);
+            re15_render_pc_hide_fmv();
+        }
+        free(mbuf);
+    }
+
     if (re15_gameflow_mode() == RE15_MODE_TITLE) {
         /* BOOT TITLE (FE-1.3): DATA/TITLEU.TIM + blinking PRESS START, until START = NEW GAME.
          * NEW GAME falls through to the normal boot of the intro (ROOM1240 = 0x1240 = start_room). */
