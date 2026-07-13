@@ -43,4 +43,8 @@ int re15_memcard_load(const char *path, int slot, re15_savedata_t *sd);
 int re15_memcard_list(const char *path, int used[RE15_SAVE_SLOTS],
                       char titles[RE15_SAVE_SLOTS][RE15_MC_TITLE_LEN]);
 
+/* Highest save_count across all slots (0 if none) — the RE1.5 global save counter
+ * (DAT_800b0fbd) is incremented per save; the next save is this + 1. */
+int re15_memcard_max_save_count(const char *path);
+
 #endif /* RE15_MEMCARD_H */

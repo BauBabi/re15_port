@@ -88,6 +88,8 @@ static int           s_title_show = 0;
 static SDL_Texture  *s_fmv_tex = NULL;        /* STR movie frame (FE-3, updated per frame) */
 static int           s_fmv_show = 0;
 static int           s_fmv_w = 0, s_fmv_h = 0;
+static SDL_Texture  *s_card_tex = NULL;       /* FE-4 memory-card BG (DATA/TYPE00.TIM 320x240) */
+static int           s_card_show = 0;
 static uint32_t      rgb555_to_argb8888(uint16_t c);   /* fwd (defined with the TIM converters) */
 
 /* Phase 4.5.5: textured-triangle layer.
@@ -781,6 +783,20 @@ void re15_render_end_frame(void)
         SDL_RenderCopy(s_renderer, s_fmv_tex, NULL, &full);
     }
 
+    /* FE-4 MEMORY-CARD screen: full-screen BG (DATA/TYPE00.TIM), the byte-true dim panel behind
+     * the slot list (FUN_80026b30: GP0(0x62) 50%% mono rect RGB(0x20) at (18,52) 286x102), then the
+     * slot/label text overlay ON TOP. */
+    if (s_card_show && s_card_tex) {
+        SDL_Rect full = { 0, 0, SCREEN_XRES, SCREEN_YRES };
+        SDL_RenderCopy(s_renderer, s_card_tex, NULL, &full);
+        SDL_SetRenderDrawBlendMode(s_renderer, SDL_BLENDMODE_BLEND);
+        SDL_SetRenderDrawColor(s_renderer, 0x20, 0x20, 0x20, 128);
+        SDL_Rect panel = { 18, 52, 286, 102 };
+        SDL_RenderFillRect(s_renderer, &panel);
+        if (s_text_overlay_used && s_text_overlay_tex)
+            SDL_RenderCopy(s_renderer, s_text_overlay_tex, NULL, NULL);
+    }
+
     /* TITLE screen (TITLEU.TIM) — full-screen, OVER everything. Byte-true tail of the death sequence
      * (YOU DIED -> title) and the boot front-end. Drawn before YOU DIED so a mid-death title wins. */
     if (s_title_show && s_title_tex) {
@@ -939,6 +955,27 @@ void re15_render_pc_show_fmv(const uint32_t *rgba, int w, int h)
 }
 
 void re15_render_pc_hide_fmv(void) { s_fmv_show = 0; }
+
+/* FE-4 MEMORY-CARD screen background (DATA/TYPE00.TIM, 320x240 16bpp RGB555 — the byte-true
+ * "MEMORY CARD BG", CD file 0x23). Cached once (static art), drawn full-screen while shown. */
+void re15_render_pc_show_cardbg(const re15_tim_t *tim)
+{
+    if (!s_renderer || !tim || !tim->pixels || tim->bpp != 16) return;
+    if (!s_card_tex) {
+        int n = tim->width * tim->height;
+        if (n <= 0) return;
+        uint32_t *rgba = (uint32_t *) malloc((size_t)n * 4);
+        if (!rgba) return;
+        for (int i = 0; i < n; i++)
+            rgba[i] = 0xff000000u | (rgb555_to_argb8888(tim->pixels[i]) & 0xffffffu);
+        s_card_tex = SDL_CreateTexture(s_renderer, SDL_PIXELFORMAT_ARGB8888,
+                                       SDL_TEXTUREACCESS_STATIC, tim->width, tim->height);
+        if (s_card_tex) SDL_UpdateTexture(s_card_tex, NULL, rgba, tim->width * 4);
+        free(rgba);
+    }
+    s_card_show = 1;
+}
+void re15_render_pc_hide_cardbg(void) { s_card_show = 0; }
 
 /* BJ-round 2026-05-29: set cinematic letterbox bar height (px, in 320x240
  * space). 0 = no bars (gameplay). The main loop sets this each frame based on

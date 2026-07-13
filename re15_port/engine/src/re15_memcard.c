@@ -109,6 +109,25 @@ int re15_memcard_load(const char *path, int slot, re15_savedata_t *sd) {
     return 0;
 }
 
+int re15_memcard_max_save_count(const char *path) {
+    static uint8_t img[RE15_MCR_BYTES];
+    int maxc = 0;
+    if (mc_read_image(path, img)) return 0;
+    for (int slot = 0; slot < RE15_SAVE_SLOTS; slot++) {
+        int blk = slot + 1;
+        const uint8_t *dir = img + blk * RE15_MC_FRAME;
+        const uint8_t *b   = img + blk * RE15_MC_BLOCK;
+        if ((rd32(dir) & 0xF0) == 0x50 && b[0] == 'S' && b[1] == 'C') {
+            re15_savedata_t tmp;
+            memcpy(&tmp, b + 0x100, sizeof(tmp));
+            if (tmp.magic == RE15_SAVE_MAGIC && tmp.checksum == re15_savedata_checksum(&tmp)
+                && (int)tmp.save_count > maxc)
+                maxc = (int)tmp.save_count;
+        }
+    }
+    return maxc;
+}
+
 int re15_memcard_list(const char *path, int used[RE15_SAVE_SLOTS],
                       char titles[RE15_SAVE_SLOTS][RE15_MC_TITLE_LEN]) {
     static uint8_t img[RE15_MCR_BYTES];
