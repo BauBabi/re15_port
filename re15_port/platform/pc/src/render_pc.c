@@ -816,17 +816,6 @@ void re15_render_end_frame(void)
         SDL_RenderFillRect(s_renderer, &panel);
         if (s_text_overlay_used && s_text_overlay_tex)
             SDL_RenderCopy(s_renderer, s_text_overlay_tex, NULL, NULL);
-        /* the selection cursor: a small right-pointing white triangle (the RE1.5 card screen
-         * FUN_80026be8 draws a cursor sprite; a filled ▶ is the byte-true equivalent marker). */
-        if (s_card_cur_show) {
-            SDL_Vertex cv[3];
-            for (int k = 0; k < 3; k++) { cv[k].color.r = cv[k].color.g = cv[k].color.b = cv[k].color.a = 255;
-                                          cv[k].tex_coord.x = cv[k].tex_coord.y = 0; }
-            cv[0].position.x = (float)s_card_cur_x;       cv[0].position.y = (float)(s_card_cur_y + 1);
-            cv[1].position.x = (float)s_card_cur_x;       cv[1].position.y = (float)(s_card_cur_y + 11);
-            cv[2].position.x = (float)(s_card_cur_x + 8);  cv[2].position.y = (float)(s_card_cur_y + 6);
-            SDL_RenderGeometry(s_renderer, NULL, cv, 3, NULL, 0);
-        }
     }
 
     /* TITLE screen (TITLEU.TIM) — full-screen, OVER everything. Byte-true tail of the death sequence
@@ -835,10 +824,23 @@ void re15_render_end_frame(void)
         SDL_Rect full = { 0, 0, SCREEN_XRES, SCREEN_YRES };
         SDL_RenderCopy(s_renderer, s_title_tex, NULL, &full);
         /* FE-1.4: with the title up, re-composite the text overlay ON TOP of the title art so the
-         * title MENU (NEW GAME/CONTINUE/OPTION) is visible. No-op during the death->title tail (the
+         * title MENU (NEW GAME/LOAD DATA/CONFIG) is visible. No-op during the death->title tail (the
          * overlay is empty there), so that path is unchanged. */
         if (s_text_overlay_used && s_text_overlay_tex)
             SDL_RenderCopy(s_renderer, s_text_overlay_tex, NULL, NULL);
+    }
+
+    /* Selection cursor (▶): a small filled white triangle shared by the card screen AND the title
+     * menu (the RE1.5 originals draw a cursor sprite; a filled ▶ is the byte-true equivalent marker).
+     * Drawn after the card/title composite so it sits on top of whichever screen positioned it. */
+    if (s_card_cur_show) {
+        SDL_Vertex cv[3];
+        for (int k = 0; k < 3; k++) { cv[k].color.r = cv[k].color.g = cv[k].color.b = cv[k].color.a = 255;
+                                      cv[k].tex_coord.x = cv[k].tex_coord.y = 0; }
+        cv[0].position.x = (float)s_card_cur_x;        cv[0].position.y = (float)(s_card_cur_y + 1);
+        cv[1].position.x = (float)s_card_cur_x;        cv[1].position.y = (float)(s_card_cur_y + 11);
+        cv[2].position.x = (float)(s_card_cur_x + 8);  cv[2].position.y = (float)(s_card_cur_y + 6);
+        SDL_RenderGeometry(s_renderer, NULL, cv, 3, NULL, 0);
     }
 
     /* GAME-OVER (YOU DIED) — drawn OVER the death fade. The graphic (YOUDIED.TIM) is centred on the

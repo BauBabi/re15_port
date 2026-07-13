@@ -799,53 +799,58 @@ int main(int argc, char *argv[])
         extern void re15_render_pc_show_title(const re15_tim_t *tim);
         extern void re15_render_pc_hide_title(void);
         extern void re15_render_pc_screenshot(const char *path);
-        extern void re15_render_pc_text_overlay(int x, int y, const char *text);  /* -> text overlay (over title) */
+        extern int  re15_render_pc_game_text(int x, int y, const char *str, int attr);  /* real TEX.TIM font */
+        extern void re15_render_pc_card_cursor(int x, int y, int show);                 /* the shared ▶ cursor */
         re15_tim_t s_boot_title = {0};
         { int tsz = 0; uint8_t *tb = pc_read_shared("DATA/TITLEU.TIM", &tsz);
           if (tb) re15_tim_parse(tb, tsz, &s_boot_title); }
         const char *t_shot = getenv("RE15_TITLE_SHOT");   /* debug: dump the title/menu frame + auto-advance */
         unsigned tblink = 0;
-        int menu_open = 0, cursor = 0;                    /* FE-1.4: PRESS START -> menu */
+        int cursor = 0;   /* 0=NEW GAME 1=LOAD DATA 2=CONFIG — the byte-true 3-item TITLE.BIN menu */
+        /* The real RE1.5 title menu (TITLE.BIN dispatcher FUN_80101f7c): a 3-item menu whose labels
+         * are the sprite strings @0x80/0x8c/0x98 = "NEW GAME"/"LOAD DATA"/"CONFIG" (NOT the port's old
+         * RE2-guess "CONTINUE"/"OPTION"). It is shown immediately (no invented "PRESS START" gate). */
+        static const char *TITLE_ITEMS[3] = { "NEW GAME", "LOAD DATA", "CONFIG" };
         while (re15_gameflow_mode() == RE15_MODE_TITLE) {
             re15_render_begin_frame();
             re15_input_tick();                       /* SDL_QUIT -> exit(0) inside; refreshes pad */
             re15_render_background_gradient(8, 8, 16, 0, 0, 0);
             if (s_boot_title.pixels) re15_render_pc_show_title(&s_boot_title);
             uint16_t pp = g_engine.pad_pressed;
-            if (getenv("RE15_CONTINUE_TEST")) {              /* debug: auto-drive title -> CONTINUE */
-                if (tblink == 8)  { menu_open = 1; cursor = 1; }
-                if (tblink == 16) pp |= RE15_PAD_BIT_CROSS;  /* confirm CONTINUE -> load screen */
+            if (getenv("RE15_CONTINUE_TEST")) {              /* debug: auto-drive title -> LOAD DATA */
+                if (tblink == 8)  cursor = 1;
+                if (tblink == 16) pp |= RE15_PAD_BIT_CROSS;  /* confirm LOAD DATA -> load screen */
             }
-            if (!menu_open) {
-                if (tblink & 0x20) re15_render_pc_text_overlay(122, 200, "PRESS START");
-                if (pp & RE15_PAD_BIT_START) menu_open = 1;   /* START (0x0008) opens the menu */
-            } else {
-                /* FE-1.4 title menu. Layout RE2-referenced (the RE1.5 prototype title is thin);
-                 * CONTINUE + OPTION are stubbed until FE-4 (memory-card save/load) / FE-6 (options). */
-                re15_render_pc_text_overlay(132, 172, cursor == 0 ? "> NEW GAME" : "  NEW GAME");
-                re15_render_pc_text_overlay(132, 186, cursor == 1 ? "> CONTINUE" : "  CONTINUE");
-                re15_render_pc_text_overlay(132, 200, cursor == 2 ? "> OPTION"   : "  OPTION");
-                if (pp & RE15_PAD_BIT_UP)    cursor = (cursor + 2) % 3;
-                if (pp & RE15_PAD_BIT_DOWN)  cursor = (cursor + 1) % 3;
-                if (pp & RE15_PAD_BIT_CROSS) {
-                    if (cursor == 0) re15_gameflow_new_game(0);   /* NEW GAME -> INGAME (ROOM1240 intro) */
-                    else if (cursor == 1) {                       /* CONTINUE -> FE-4 load screen */
-                        uint16_t resume_room = 0;
-                        if (pc_run_memcard_screen(0, NULL, &resume_room) >= 0) {
-                            /* loaded into s_resume_sd; enter INGAME at the saved room, then the
-                             * game loop applies s_resume_sd after the room + player are set up. */
-                            s_resume_pending        = 1;
-                            g_gameflow.character     = s_resume_sd.character;
-                            g_gameflow.start_room    = resume_room;
-                            g_gameflow.enter_ingame  = 1;
-                            g_gameflow.mode          = RE15_MODE_INGAME;   /* exits the title loop */
-                        }
+            /* Draw the 3 items in the real game font at the byte-true geometry (x=0x20, rows
+             * 0x85/0x99/0xad, 20px pitch); highlight the active row with the shared ▶ cursor. */
+            for (int i = 0; i < 3; i++)
+                re15_render_pc_game_text(32, 133 + i * 20, TITLE_ITEMS[i], 0);
+            re15_render_pc_card_cursor(20, 133 + cursor * 20, 1);
+
+            if (pp & RE15_PAD_BIT_UP)    cursor = (cursor + 2) % 3;
+            if (pp & RE15_PAD_BIT_DOWN)  cursor = (cursor + 1) % 3;
+            /* confirm = any of the four face buttons OR Start (byte-true mask 0x8f0 @0x800bc762) */
+            uint16_t confirm = pp & (RE15_PAD_BIT_CROSS | RE15_PAD_BIT_SQUARE |
+                                     RE15_PAD_BIT_TRIANGLE | RE15_PAD_BIT_CIRCLE | RE15_PAD_BIT_START);
+            if (confirm) {
+                if (cursor == 0) re15_gameflow_new_game(0);   /* NEW GAME -> INGAME (ROOM1240 intro) */
+                else if (cursor == 1) {                       /* LOAD DATA -> FE-4 memory-card load screen */
+                    uint16_t resume_room = 0;
+                    if (pc_run_memcard_screen(0, NULL, &resume_room) >= 0) {
+                        /* loaded into s_resume_sd; enter INGAME at the saved room, then the
+                         * game loop applies s_resume_sd after the room + player are set up. */
+                        s_resume_pending        = 1;
+                        g_gameflow.character     = s_resume_sd.character;
+                        g_gameflow.start_room    = resume_room;
+                        g_gameflow.enter_ingame  = 1;
+                        g_gameflow.mode          = RE15_MODE_INGAME;   /* exits the title loop */
                     }
-                    /* cursor 2 OPTION (FE-6): stay for now. */
                 }
+                /* cursor 2 = CONFIG: the original opens a config sub-overlay (key remap / sound /
+                 * monitor / language); deferred (FE-6) — selecting it is a no-op for now. */
             }
             re15_render_end_frame();
-            if (t_shot && tblink == 10) menu_open = 1;                    /* debug: open the menu for the shot */
+            re15_render_pc_card_cursor(0, 0, 0);   /* clear so the ▶ never bleeds into gameplay */
             if (t_shot && tblink == 22) { re15_render_pc_screenshot(t_shot); re15_gameflow_new_game(0); }
             tblink++;
         }
