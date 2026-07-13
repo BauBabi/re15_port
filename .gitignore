@@ -78,3 +78,4 @@ re15_port/**/*.pdb
 
 # stray logs
 debug.log
+re15_card.mcr

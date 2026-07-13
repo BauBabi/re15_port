@@ -118,6 +118,9 @@ static void re15_pc_ecg(int x, int y, int w, int h, int hp, unsigned phase)
 #include "re15_gameflow.h"     /* FE-0.2 top-level mode machine (BOOT/TITLE/INGAME/GAMEOVER) */
 #include "re15_str.h"          /* FE-3 STR/MDEC opening-movie demux+decode (CAPCOM.STR) */
 #include "re15_xa.h"           /* FE-3 CD-XA ADPCM opening-movie audio decode */
+#include "re15_savedata.h"     /* FE-4 game-state save block */
+#include "re15_memcard.h"      /* FE-4 byte-true PSX .mcr backend */
+#include "re15_savepoint.h"    /* FE-4 phone save-point pending signal */
 
 #define RE15_TIM_SLOT_EFFECT 19   /* effect-sprite TIM render slot (0..18 used by chars/props) */
 #define RE15_TIM_SLOT_EFFECT_GLOBAL 20 /* GLOBAL effect bank (CORE00.ESP) sprite sheet — effect-id 0
@@ -506,6 +509,72 @@ static void pc_load_room_prop_set(const re15_rdt_t *rdt, re15_md1_t md1[6], int 
     }
 }
 
+/* ── FE-4 memory-card save/load ────────────────────────────────────────────── */
+#define RE15_CARD_PATH "re15_card.mcr"      /* the PSX card image, next to the CWD */
+
+/* Deferred resume: CONTINUE loads a save block here + arms the flag; the game loop
+ * applies it AFTER the room + player have been set up, so the saved state wins over
+ * the new-game briefing defaults. */
+static re15_savedata_t s_resume_sd;
+static int             s_resume_pending = 0;
+
+/* The memory-card slot screen — a blocking modal (like the title). save_mode:
+ * 1 = save *sd to the chosen slot; 0 = load the chosen slot into s_resume_sd and
+ * return its resume room in *out_room (NOT restored yet — the game loop defers it).
+ * Returns the chosen slot (0..4), or -1 on cancel/failure. */
+static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint16_t *out_room)
+{
+    extern void re15_render_pc_text_overlay(int x, int y, const char *text);
+    int  used[RE15_SAVE_SLOTS];
+    char titles[RE15_SAVE_SLOTS][RE15_MC_TITLE_LEN];
+    re15_memcard_list(RE15_CARD_PATH, used, titles);
+    int cursor = 0, result = -1, running = 1;
+    int auto_drive = getenv("RE15_CARD_AUTO") != NULL;   /* debug: screenshot + confirm slot 0 */
+    const char *card_shot = getenv("RE15_CARD_SHOT");
+    unsigned af = 0;
+    while (running) {
+        re15_render_begin_frame();
+        re15_input_tick();
+        re15_render_background_gradient(0, 0, 24, 0, 0, 0);
+        re15_render_pc_text_overlay(110, 40, save_mode ? "SAVE" : "LOAD");
+        for (int i = 0; i < RE15_SAVE_SLOTS; i++) {
+            char line[80];
+            const char *cur = (cursor == i) ? ">" : " ";
+            if (used[i]) snprintf(line, sizeof line, "%s CARD %d   %s", cur, i + 1, titles[i]);
+            else         snprintf(line, sizeof line, "%s CARD %d   -- NO DATA --", cur, i + 1);
+            re15_render_pc_text_overlay(70, 76 + i * 16, line);
+        }
+        re15_render_pc_text_overlay(56, 76 + RE15_SAVE_SLOTS * 16 + 12,
+                                    save_mode ? "CROSS = save     TRIANGLE = cancel"
+                                              : "CROSS = load     TRIANGLE = cancel");
+        re15_render_end_frame();
+        uint16_t pp = g_engine.pad_pressed;
+        if (auto_drive) {
+            extern void re15_render_pc_screenshot(const char *path);
+            if (card_shot && af == 3) re15_render_pc_screenshot(card_shot);
+            if (af == 6) pp |= RE15_PAD_BIT_CROSS;     /* auto-confirm the (cursor 0) slot */
+            af++;
+        }
+        if (pp & RE15_PAD_BIT_UP)   cursor = (cursor + RE15_SAVE_SLOTS - 1) % RE15_SAVE_SLOTS;
+        if (pp & RE15_PAD_BIT_DOWN) cursor = (cursor + 1) % RE15_SAVE_SLOTS;
+        if (pp & (RE15_PAD_BIT_TRIANGLE | RE15_PAD_BIT_CIRCLE)) {
+            running = 0;                                    /* cancel */
+        } else if (pp & RE15_PAD_BIT_CROSS) {
+            if (save_mode) {
+                if (re15_memcard_save(RE15_CARD_PATH, cursor, sd, "BIOHAZARD 1.5") == 0) {
+                    result = cursor; running = 0;
+                }
+            } else if (used[cursor]) {
+                if (re15_memcard_load(RE15_CARD_PATH, cursor, &s_resume_sd) == 0) {
+                    if (out_room) *out_room = s_resume_sd.room;
+                    result = cursor; running = 0;
+                }
+            }
+        }
+    }
+    return result;
+}
+
 int main(int argc, char *argv[])
 {
     (void) argc; (void) argv;
@@ -632,6 +701,10 @@ int main(int argc, char *argv[])
             re15_render_background_gradient(8, 8, 16, 0, 0, 0);
             if (s_boot_title.pixels) re15_render_pc_show_title(&s_boot_title);
             uint16_t pp = g_engine.pad_pressed;
+            if (getenv("RE15_CONTINUE_TEST")) {              /* debug: auto-drive title -> CONTINUE */
+                if (tblink == 8)  { menu_open = 1; cursor = 1; }
+                if (tblink == 16) pp |= RE15_PAD_BIT_CROSS;  /* confirm CONTINUE -> load screen */
+            }
             if (!menu_open) {
                 if (tblink & 0x20) re15_render_pc_text_overlay(122, 200, "PRESS START");
                 if (pp & RE15_PAD_BIT_START) menu_open = 1;   /* START (0x0008) opens the menu */
@@ -645,7 +718,19 @@ int main(int argc, char *argv[])
                 if (pp & RE15_PAD_BIT_DOWN)  cursor = (cursor + 1) % 3;
                 if (pp & RE15_PAD_BIT_CROSS) {
                     if (cursor == 0) re15_gameflow_new_game(0);   /* NEW GAME -> INGAME (ROOM1240 intro) */
-                    /* cursor 1 CONTINUE (needs FE-4 save) / cursor 2 OPTION (FE-6): stay for now. */
+                    else if (cursor == 1) {                       /* CONTINUE -> FE-4 load screen */
+                        uint16_t resume_room = 0;
+                        if (pc_run_memcard_screen(0, NULL, &resume_room) >= 0) {
+                            /* loaded into s_resume_sd; enter INGAME at the saved room, then the
+                             * game loop applies s_resume_sd after the room + player are set up. */
+                            s_resume_pending        = 1;
+                            g_gameflow.character     = s_resume_sd.character;
+                            g_gameflow.start_room    = resume_room;
+                            g_gameflow.enter_ingame  = 1;
+                            g_gameflow.mode          = RE15_MODE_INGAME;   /* exits the title loop */
+                        }
+                    }
+                    /* cursor 2 OPTION (FE-6): stay for now. */
                 }
             }
             re15_render_end_frame();
@@ -723,7 +808,10 @@ int main(int argc, char *argv[])
     /* RE15_START_ROOM=1150 boots a different room's RDT (debug: render the room1150 Irons
      * kneel cutscene to compare frame-exact vs ablauf4). Default = the ROOM1170 intro. */
     const char *start_room = getenv("RE15_START_ROOM");
-    unsigned boot_room = (start_room && *start_room) ? (unsigned)strtoul(start_room, 0, 16) : 0x1240;
+    /* FE-4: default boot room = g_gameflow.start_room (0x1240 new-game, or the CONTINUE
+     * resume room) instead of a hardcoded 0x1240; RE15_START_ROOM still overrides for debug. */
+    unsigned boot_room = (start_room && *start_room) ? (unsigned)strtoul(start_room, 0, 16)
+                                                     : (unsigned)g_gameflow.start_room;
     /* Asset-Pfad-Konsolidierung (2026-07-02): der Boot-Room-RDT kommt aus dem CD-Layout
      * STAGE{N}/ROOM%04X.RDT (N = room_id>>12), NICHT mehr aus der entfernten flachen RDT/-Struktur.
      * Identische Auflösung wie re15_room_load (room_pc.c) für die Cross-Room-Transitions. */
@@ -1337,7 +1425,45 @@ int main(int argc, char *argv[])
      * the "for(;;) → unreachable return" + "no return from non-void"
      * compiler warning split between MSVC and gcc. */
     volatile int running = 1;
+
+    /* FE-4 CONTINUE resume: the room (boot_room = resume room) + player + briefing
+     * inventory are now set up; apply the loaded save OVER them so the saved
+     * player/inventory/story-flags win. Done once, before the first frame. */
+    if (s_resume_pending) {
+        uint16_t rr = 0;
+        re15_savedata_restore(&s_resume_sd, &rr);
+        s_resume_pending = 0;
+        fprintf(stderr, "[save] CONTINUE: resumed in room %04x (hp=%d)\n", rr, g_actors[0].hp);
+    }
+
+    /* debug: RE15_SAVE_TEST drops a MEMORY CARD in inventory + fires a save-point this
+     * frame, so the save flow can be exercised without navigating to a phone. */
+    if (getenv("RE15_SAVE_TEST")) {
+        for (int i = 0; i < RE15_INV_MAX_SLOTS; i++)
+            if (g_inv.slots[i].id == 0) { g_inv.slots[i].id = 0x21; g_inv.slots[i].qty = 2; break; }
+        re15_savepoint_set_pending(1);
+    }
+
     while (running) {
+        /* FE-4 phone SAVE (outside the game frame): a save-point phone was examined?
+         * gate on the MEMORY CARD item (0x21, RE1.5's ink-ribbon equivalent) — if held,
+         * open the save screen and consume one card on a successful save. */
+        if (re15_savepoint_pending()) {
+            re15_savepoint_set_pending(0);
+            int mc = -1;
+            for (int i = 0; i < RE15_INV_MAX_SLOTS; i++)
+                if (g_inv.slots[i].id == 0x21 && g_inv.slots[i].qty > 0) { mc = i; break; }
+            if (mc >= 0) {
+                re15_savedata_t sd;
+                re15_savedata_capture(&sd, g_engine.frame_count, 1);
+                if (pc_run_memcard_screen(1, &sd, 0) >= 0) {
+                    if (--g_inv.slots[mc].qty == 0) { g_inv.slots[mc].id = 0; g_inv.slots[mc].flags = 0; }
+                    fprintf(stderr, "[save] saved (room %04x); MEMORY CARD consumed\n", g_current_room_id);
+                }
+            }
+            /* no MEMORY CARD -> the phone message already informed the player */
+        }
+
         re15_render_begin_frame();
         re15_input_tick();
 
