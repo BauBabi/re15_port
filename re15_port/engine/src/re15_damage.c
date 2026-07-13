@@ -104,13 +104,16 @@ int re15_player_take_damage(re15_actor_t *p, uint8_t attack_type,
     /* HP -= dmg (@80012e44-e64). HP is s16; the death test below is SIGNED. */
     p->hp = (int16_t)(p->hp - dmg);
 
-    /* type<2 → hit SE + bleed/poison roll (@80012e68-eb8). The SE (FUN_800453d0(10))
-     * is DEFERRED until the SE-id table is wired; the bleed roll is byte-true. Both RNG draws are
+    /* type<2 → hit SE + bleed/poison roll (@80012e68-eb8). The SE plays FIRST (@0x80012e70
+     * `jal FUN_800453d0` delay-slot `ori a0,0xa` = SE #10), THEN the bleed roll. re15_audio_room_se IS
+     * FUN_800453d0 (verified: the maggot bite Se(6) @0x80118474 = `jal 0x800453d0`). Both RNG draws are
      * UNCONDITIONAL in the original: two back-to-back `jal FUN_8001af20` @0x80012e78/e80, THEN the two
      * `&1` results are AND'd @0x80012e88-90. A short-circuit `&&` would skip the 2nd draw when the 1st
      * is even, consuming ONE rng value where the PSX consumes TWO — and re15_engine_rand8 is the
      * SHARED engine stream (bleed AND AI decisions), so dropping a draw desyncs everything downstream. */
     if (type < 2) {
+        extern void re15_audio_room_se(int idx);
+        re15_audio_room_se(10);                /* hit SE #10 @0x80012e70 — plays before the bleed roll */
         uint32_t r1 = dmg_rng() & 1;
         uint32_t r2 = dmg_rng() & 1;           /* draw BOTH, unconditionally, before testing */
         if (r1 && r2)

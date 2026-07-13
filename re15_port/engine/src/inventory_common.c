@@ -50,15 +50,36 @@ int re15_inv_grant(uint8_t type, uint8_t amount)
     return 0;
 }
 
+/* FUN_8004dadc @0x8004dadc — post-USE slot compaction: FUN_8004df2c finds the first FREE (id==0)
+ * slot, then every slot after it shifts DOWN one to close the hole (@0x8004db3c-dba8 copies
+ * slot[s0] -> slot[s0-1]), and the equipped-slot index decrements if it pointed past the hole
+ * (@0x8004dbac-dbc8: `bne equipped,s0` else `equipped--`). The original bounds the shift with the
+ * live count byte @0x800b0fbc; the port scans its fixed slots and clears the vacated tail. */
+void re15_inv_compact(void)
+{
+    int f = -1;
+    for (int i = 0; i < RE15_INV_MAX_SLOTS; i++)
+        if (g_inv.slots[i].id == 0) { f = i; break; }
+    if (f < 0 || f >= RE15_INV_MAX_SLOTS - 1) return;      /* no hole (or the hole is already last) */
+    for (int i = f; i < RE15_INV_MAX_SLOTS - 1; i++)
+        g_inv.slots[i] = g_inv.slots[i + 1];               /* shift the tail down to close the hole */
+    g_inv.slots[RE15_INV_MAX_SLOTS - 1].id    = 0;         /* clear the now-duplicated last slot    */
+    g_inv.slots[RE15_INV_MAX_SLOTS - 1].qty   = 0;
+    g_inv.slots[RE15_INV_MAX_SLOTS - 1].flags = 0;
+    { int eq = re15_inv_equipped_slot();                   /* equipped-- iff it pointed past the hole */
+      if (eq != 0x80 && eq > f) re15_inv_set_equipped_slot(eq - 1); }
+}
+
 /* Clear an inventory slot (byte-true item-USE consume @0x8004aef0-af28: DAT_800b10ac[slot] id/qty/flag
- * = 0). Used by the heal-USE FSM (item_use_common.c). The follow-on compaction FUN_8004dadc is
- * faithful-line-deferred — the menu display re-compacts occupied slots on the next rebuild. */
+ * = 0), then run the post-USE compaction FUN_8004dadc (@0x8004aef0 zeroes, then jal FUN_8004dadc).
+ * Used by the heal-USE FSM (item_use_common.c). */
 void re15_inv_remove_slot(int slot)
 {
     if (slot >= 0 && slot < RE15_INV_MAX_SLOTS) {
         g_inv.slots[slot].id    = 0;
         g_inv.slots[slot].qty   = 0;
         g_inv.slots[slot].flags = 0;
+        re15_inv_compact();                                /* close the hole (byte-true FUN_8004dadc) */
     }
 }
 
