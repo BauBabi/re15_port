@@ -1147,14 +1147,6 @@ static void msg_show(scd_thread_t *t)
     g_scd.message_arg2   = t->pc[2];
     g_scd.message_arg3   = t->pc[3];
     g_scd.message_active = 1;
-    /* FE-4: examining a PHONE save-point shows its "You can save your progress"
-     * message; flag it so the platform opens the save flow (gated on the MEMORY
-     * CARD item). One-shot; the platform clears it. */
-    if (re15_savepoint_is(g_current_room_id, t->pc[1]))
-        re15_savepoint_set_pending(1);
-    if (getenv("RE15_MSG_LOG"))
-        fprintf(stderr, "[msg] room=%04x id=%d savepoint=%d\n",
-                g_current_room_id, t->pc[1], re15_savepoint_is(g_current_room_id, t->pc[1]));
     /* NOTE: the dialogue voiceover is NO LONGER queued here. msg_show is shared by the
      * plain-subtitle path AND the YES/NO query prompt (the ROOM1130 switch), and a UI
      * prompt must NOT speak. Voice is queued ONLY by the plain-subtitle caller, gated to
@@ -1174,6 +1166,9 @@ static void msg_show(scd_thread_t *t)
  * msg_show: a plain subtitle that auto-dismisses after its own duration. */
 void re15_scd_show_message(uint8_t index)
 {
+    /* FE-4: EXAMINE-AOT direct message path — same save-point check as op_message_on. */
+    if (re15_savepoint_is(g_current_room_id, index))
+        re15_savepoint_set_pending(1);
     /* EXAMINE / MESSAGE-AOT line (e.g. the ROOM1130 back-door "It's not necessary to go
      * back") → the SAME byte-true typewriter FSM as dialog, NON-blocking: it types out and
      * waits for the action button (or its own end-hold) to dismiss. No voiceover. */
@@ -1215,6 +1210,17 @@ static int op_message_on(scd_thread_t *t)
 {
     extern uint8_t g_aot_action_pressed;
     uint8_t arg2 = t->pc[2];
+
+    /* FE-4: a PHONE save-point message ("You can save your progress with this") — flag it so the
+     * platform opens the save flow (gated on the MEMORY CARD item). Placed HERE (the single entry
+     * for the Message_on opcode) not in msg_show, because msg_show only runs for the full-text
+     * cinematic rooms {0x1170,0x1240}; every other room's message (incl. the phones) takes the
+     * plain typewriter path (re15_dialog_open) below, which bypasses msg_show. */
+    if (re15_savepoint_is(g_current_room_id, t->pc[1]))
+        re15_savepoint_set_pending(1);
+    if (getenv("RE15_MSG_LOG"))
+        fprintf(stderr, "[msg] room=%04x id=%d savepoint=%d\n",
+                g_current_room_id, t->pc[1], re15_savepoint_is(g_current_room_id, t->pc[1]));
 
     /* YES/NO QUERY: a selection prompt that BLOCKS the SCD thread until the player confirms.
      * BYTE-TRUE TRIGGER (RE'd 2026-06-14 from FUN_80027e68 / FUN_80028134): the YES/NO state

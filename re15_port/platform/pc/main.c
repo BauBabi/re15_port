@@ -552,7 +552,8 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
         if (auto_drive) {
             extern void re15_render_pc_screenshot(const char *path);
             if (card_shot && af == 3) re15_render_pc_screenshot(card_shot);
-            if (af == 6) pp |= RE15_PAD_BIT_CROSS;     /* auto-confirm the (cursor 0) slot */
+            { const char *hd = getenv("RE15_CARD_HOLD"); unsigned hold = hd ? (unsigned)atoi(hd) : 6;
+              if (af == hold) pp |= RE15_PAD_BIT_CROSS; }   /* auto-confirm the (cursor 0) slot */
             af++;
         }
         if (pp & RE15_PAD_BIT_UP)   cursor = (cursor + RE15_SAVE_SLOTS - 1) % RE15_SAVE_SLOTS;
