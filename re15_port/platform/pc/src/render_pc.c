@@ -368,16 +368,20 @@ int re15_render_pc_dbg_max_sy(void)          { return s_dbg_last_max_sy; }
 
 void re15_render_init(void)
 {
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_GAMECONTROLLER) != 0) {
         fprintf(stderr, "SDL_Init failed: %s\n", SDL_GetError());
         exit(1);
     }
 
+    /* Resizable window; RE15_FULLSCREEN=1 starts in (desktop) fullscreen for the Steam Deck / a TV.
+     * The logical render size (below) letterboxes the 4:3 320x240 image to fill any panel size. */
+    Uint32 win_flags = SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE;
+    if (getenv("RE15_FULLSCREEN")) win_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
     s_window = SDL_CreateWindow(
         "RE1.5 Rebuilt — PC",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         SCREEN_XRES * WINDOW_SCALE, SCREEN_YRES * WINDOW_SCALE,
-        SDL_WINDOW_SHOWN);
+        win_flags);
     if (!s_window) {
         fprintf(stderr, "SDL_CreateWindow failed: %s\n", SDL_GetError());
         exit(1);
@@ -428,6 +432,17 @@ void re15_render_init(void)
             SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE,  SDL_BLENDOPERATION_ADD);          /* A: keep dst */
         SDL_SetTextureBlendMode(s_shadow_tex, s_shadow_blend);
     }
+}
+
+/* Toggle windowed <-> (desktop) fullscreen. Bound to F11 / Alt+Enter (event loop below) and to a
+ * SELECT+START controller combo (input_pc.c). Desktop fullscreen + the logical render size scales
+ * and letterboxes the 4:3 320x240 image to fill any panel (e.g. the Steam Deck's 1280x800). */
+void re15_render_pc_toggle_fullscreen(void)
+{
+    if (!s_window) return;
+    int is_fs = (SDL_GetWindowFlags(s_window) & SDL_WINDOW_FULLSCREEN_DESKTOP) ? 1 : 0;
+    SDL_SetWindowFullscreen(s_window, is_fs ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
+    SDL_ShowCursor(is_fs ? SDL_ENABLE : SDL_DISABLE);   /* hide the pointer while fullscreen */
 }
 
 /* Queue one shadow quad (4 projected floor corners in the FUN_8001af5c order:
@@ -483,7 +498,12 @@ void re15_render_begin_frame(void)
     while (SDL_PollEvent(&e)) {
         if (e.type == SDL_QUIT) {
             exit(0);
+        } else if (e.type == SDL_KEYDOWN &&
+                   (e.key.keysym.sym == SDLK_F11 ||
+                    (e.key.keysym.sym == SDLK_RETURN && (e.key.keysym.mod & KMOD_ALT)))) {
+            re15_render_pc_toggle_fullscreen();     /* F11 / Alt+Enter */
         }
+        /* CONTROLLERDEVICEADDED/REMOVED are pumped here; input_pc.c lazily (re)opens the pad. */
     }
 
     /* Clear framebuffer to background color (matches PSX setRGB0 / isbg=1) */

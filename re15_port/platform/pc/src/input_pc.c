@@ -105,6 +105,68 @@ static void script_parse_once(void)
             env, ticks, fps, s_script_start);
 }
 
+/* ==== GAMEPAD (SDL game controller) — Steam Deck / Xbox-style pad -> PSX pad bits ==============
+ * The port's pad word IS the PSX digital-pad bitmask, so a controller maps 1:1 by POSITION (the
+ * same correspondence a PSX emulator uses): A=Cross, B=Circle, X=Square, Y=Triangle; the
+ * shoulders/triggers = L1/R1/L2/R2; the stick clicks = L3/R3; and the D-pad + left analog stick =
+ * the four digital directions (RE1.5 tank controls). It works in EVERY screen because all input
+ * flows through g_engine.pad_* — no screen reads the keyboard/controller directly.
+ *
+ * In-game (RE1.5): X/Square = ACTION, A/Cross = RUN + menu-confirm, B/Y = dialog cancel toggle,
+ * RB/R1 = AIM, Start = inventory. SELECT+START held together toggles fullscreen. */
+static SDL_GameController *s_pad = NULL;
+
+static void pad_ensure_open(void)
+{
+    if (s_pad && !SDL_GameControllerGetAttached(s_pad)) {   /* dropped -> release */
+        SDL_GameControllerClose(s_pad);
+        s_pad = NULL;
+    }
+    if (!s_pad) {                                           /* (re)open the first controller present */
+        int n = SDL_NumJoysticks();
+        for (int i = 0; i < n; i++)
+            if (SDL_IsGameController(i)) { s_pad = SDL_GameControllerOpen(i); if (s_pad) break; }
+    }
+}
+
+static uint16_t pad_read_bits(void)
+{
+    pad_ensure_open();
+    if (!s_pad) return 0;
+    SDL_GameController *c = s_pad;
+    uint16_t b = 0;
+    #define BTN(sdlbtn, bit) do { if (SDL_GameControllerGetButton(c, (sdlbtn))) b |= (uint16_t)(bit); } while (0)
+    BTN(SDL_CONTROLLER_BUTTON_A,             RE15_PAD_CROSS);      /* confirm / RUN            */
+    BTN(SDL_CONTROLLER_BUTTON_B,             RE15_PAD_CIRCLE);     /* dialog cancel toggle     */
+    BTN(SDL_CONTROLLER_BUTTON_X,             RE15_PAD_SQUARE);     /* ACTION                   */
+    BTN(SDL_CONTROLLER_BUTTON_Y,             RE15_PAD_TRIANGLE);   /* dialog cancel toggle     */
+    BTN(SDL_CONTROLLER_BUTTON_BACK,          RE15_PAD_SELECT);
+    BTN(SDL_CONTROLLER_BUTTON_START,         RE15_PAD_START);      /* inventory                */
+    BTN(SDL_CONTROLLER_BUTTON_LEFTSHOULDER,  RE15_PAD_L1);
+    BTN(SDL_CONTROLLER_BUTTON_RIGHTSHOULDER, RE15_PAD_R1);         /* AIM                      */
+    BTN(SDL_CONTROLLER_BUTTON_DPAD_UP,       RE15_PAD_UP);
+    BTN(SDL_CONTROLLER_BUTTON_DPAD_DOWN,     RE15_PAD_DOWN);
+    BTN(SDL_CONTROLLER_BUTTON_DPAD_LEFT,     RE15_PAD_LEFT);
+    BTN(SDL_CONTROLLER_BUTTON_DPAD_RIGHT,    RE15_PAD_RIGHT);
+    BTN(SDL_CONTROLLER_BUTTON_LEFTSTICK,     0x0002);              /* L3 (PSX bit 0x0002)      */
+    BTN(SDL_CONTROLLER_BUTTON_RIGHTSTICK,    0x0004);              /* R3 (PSX bit 0x0004)      */
+    #undef BTN
+    /* analog triggers -> L2/R2 (past a half-press) */
+    if (SDL_GameControllerGetAxis(c, SDL_CONTROLLER_AXIS_TRIGGERLEFT)  > 16000) b |= 0x0100;  /* L2 */
+    if (SDL_GameControllerGetAxis(c, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) > 16000) b |= 0x0200;  /* R2 */
+    /* left analog stick -> digital directions (tank controls), ~40%% deadzone */
+    {
+        const int DZ = 13000;
+        int lx = SDL_GameControllerGetAxis(c, SDL_CONTROLLER_AXIS_LEFTX);
+        int ly = SDL_GameControllerGetAxis(c, SDL_CONTROLLER_AXIS_LEFTY);
+        if (ly < -DZ) b |= RE15_PAD_UP;
+        if (ly >  DZ) b |= RE15_PAD_DOWN;
+        if (lx < -DZ) b |= RE15_PAD_LEFT;
+        if (lx >  DZ) b |= RE15_PAD_RIGHT;
+    }
+    return b;
+}
+
 void re15_input_init(void) { /* SDL init is global, nothing per-input */ }
 
 void re15_input_tick(void)
@@ -139,6 +201,22 @@ void re15_input_tick(void)
          * change rooms. L2/R2 are unmapped/unused, so no collision. */
         if (keys[SDL_SCANCODE_LEFTBRACKET])  bits |= 0x0100;   /* L2 = prev room */
         if (keys[SDL_SCANCODE_RIGHTBRACKET]) bits |= 0x0200;   /* R2 = next room */
+    }
+
+    /* GAMEPAD: OR the Steam Deck / Xbox-style controller bits into the same pad word (before the
+     * scripted override, exactly like the keyboard) so a controller drives every screen. */
+    bits |= pad_read_bits();
+
+    /* SELECT+START held together = toggle fullscreen (the controller equivalent of F11); consume the
+     * two bits while the combo is held so it does not also open the inventory / motion-debug. */
+    {
+        static int s_fs_prev = 0;
+        int combo = ((bits & RE15_PAD_SELECT) && (bits & RE15_PAD_START)) ? 1 : 0;
+        if (combo) {
+            if (!s_fs_prev) { extern void re15_render_pc_toggle_fullscreen(void); re15_render_pc_toggle_fullscreen(); }
+            bits &= (uint16_t)~(RE15_PAD_SELECT | RE15_PAD_START);
+        }
+        s_fs_prev = combo;
     }
 
     /* SCRIPTED-INPUT OVERRIDE (parity run): replace the live keyboard bits with the fixed
