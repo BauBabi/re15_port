@@ -776,6 +776,11 @@ void re15_render_end_frame(void)
     if (s_title_show && s_title_tex) {
         SDL_Rect full = { 0, 0, SCREEN_XRES, SCREEN_YRES };
         SDL_RenderCopy(s_renderer, s_title_tex, NULL, &full);
+        /* FE-1.4: with the title up, re-composite the text overlay ON TOP of the title art so the
+         * title MENU (NEW GAME/CONTINUE/OPTION) is visible. No-op during the death->title tail (the
+         * overlay is empty there), so that path is unchanged. */
+        if (s_text_overlay_used && s_text_overlay_tex)
+            SDL_RenderCopy(s_renderer, s_text_overlay_tex, NULL, NULL);
     }
 
     /* GAME-OVER (YOU DIED) — drawn OVER the death fade. The graphic (YOUDIED.TIM) is centred on the
