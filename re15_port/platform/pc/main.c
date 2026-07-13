@@ -1436,12 +1436,13 @@ int main(int argc, char *argv[])
         fprintf(stderr, "[save] CONTINUE: resumed in room %04x (hp=%d)\n", rr, g_actors[0].hp);
     }
 
-    /* debug: RE15_SAVE_TEST drops a MEMORY CARD in inventory + fires a save-point this
-     * frame, so the save flow can be exercised without navigating to a phone. */
-    if (getenv("RE15_SAVE_TEST")) {
+    /* debug: RE15_GIVE_CARD drops a MEMORY CARD in inventory; RE15_SAVE_TEST also fires a
+     * save-point this frame (exercise the save flow without navigating to a phone). GIVE_CARD
+     * alone lets a REAL phone examine be tested (walk onto the phone AOT + press SQUARE). */
+    if (getenv("RE15_SAVE_TEST") || getenv("RE15_GIVE_CARD")) {
         for (int i = 0; i < RE15_INV_MAX_SLOTS; i++)
             if (g_inv.slots[i].id == 0) { g_inv.slots[i].id = 0x21; g_inv.slots[i].qty = 2; break; }
-        re15_savepoint_set_pending(1);
+        if (getenv("RE15_SAVE_TEST")) re15_savepoint_set_pending(1);
     }
 
     while (running) {

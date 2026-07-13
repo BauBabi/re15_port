@@ -1152,6 +1152,9 @@ static void msg_show(scd_thread_t *t)
      * CARD item). One-shot; the platform clears it. */
     if (re15_savepoint_is(g_current_room_id, t->pc[1]))
         re15_savepoint_set_pending(1);
+    if (getenv("RE15_MSG_LOG"))
+        fprintf(stderr, "[msg] room=%04x id=%d savepoint=%d\n",
+                g_current_room_id, t->pc[1], re15_savepoint_is(g_current_room_id, t->pc[1]));
     /* NOTE: the dialogue voiceover is NO LONGER queued here. msg_show is shared by the
      * plain-subtitle path AND the YES/NO query prompt (the ROOM1130 switch), and a UI
      * prompt must NOT speak. Voice is queued ONLY by the plain-subtitle caller, gated to
