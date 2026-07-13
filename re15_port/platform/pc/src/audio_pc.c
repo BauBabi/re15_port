@@ -733,6 +733,15 @@ void re15_audio_init(void)
 
     if (g_audio.initialized) return;   /* idempotent: the FE-3 movie inits audio early */
 
+    /* Headless / no-audio-device escape: RE15_NOAUDIO skips the SDL audio device entirely. Needed
+     * because SDL_OpenAudioDevice(NULL,...) can BLOCK when the session has no usable audio endpoint
+     * (e.g. a disconnected RDP session), which would hang the whole boot before the game loop. All
+     * re15_audio_* calls no-op while g_audio stays uninitialised. */
+    if (getenv("RE15_NOAUDIO")) {
+        fprintf(stderr, "[audio] RE15_NOAUDIO set -> audio disabled\n");
+        return;
+    }
+
     if (SDL_InitSubSystem(SDL_INIT_AUDIO) < 0) {
         fprintf(stderr, "[audio] SDL_InitSubSystem(AUDIO) failed: %s\n",
                 SDL_GetError());

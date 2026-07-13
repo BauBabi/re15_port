@@ -1550,11 +1550,11 @@ int main(int argc, char *argv[])
     /* debug: RE15_GIVE_CARD drops a MEMORY CARD in inventory; RE15_SAVE_TEST also fires a
      * save-point this frame (exercise the save flow without navigating to a phone). GIVE_CARD
      * alone lets a REAL phone examine be tested (walk onto the phone AOT + press SQUARE). */
-    if (getenv("RE15_SAVE_TEST") || getenv("RE15_GIVE_CARD")) {
+    if (getenv("RE15_GIVE_CARD")) {   /* debug: drop a MEMORY CARD so the consume-per-save path is exercised */
         for (int i = 0; i < RE15_INV_MAX_SLOTS; i++)
             if (g_inv.slots[i].id == 0) { g_inv.slots[i].id = 0x21; g_inv.slots[i].qty = 2; break; }
-        if (getenv("RE15_SAVE_TEST")) re15_savepoint_set_pending(1);
     }
+    if (getenv("RE15_SAVE_TEST")) re15_savepoint_set_pending(1);   /* fire a save-point this frame (card not required) */
 
     while (running) {
         /* FE-4 phone SAVE (outside the game frame): a save-point phone was examined?
@@ -1562,20 +1562,22 @@ int main(int argc, char *argv[])
          * open the save screen and consume one card on a successful save. */
         if (re15_savepoint_pending()) {
             re15_savepoint_set_pending(0);
+            /* Examining a save-point phone ALWAYS opens the save screen (replacing the dormant RE1.5
+             * "you can save your progress with this — save is not available in this preview" flavor
+             * message). The MEMORY CARD (0x21, RE1.5's ink-ribbon equivalent) is consumed per save WHEN
+             * held; but since the accessible RE1.5 content has no card pickup, saving is not hard-gated
+             * on it (otherwise the whole feature is unreachable). */
+            g_scd.message_active = 0;                 /* suppress the flavor message, open the menu */
             int mc = -1;
             for (int i = 0; i < RE15_INV_MAX_SLOTS; i++)
                 if (g_inv.slots[i].id == 0x21 && g_inv.slots[i].qty > 0) { mc = i; break; }
-            if (mc >= 0) {
-                g_scd.message_active = 0;    /* replace the phone's "save not available" text with the save screen */
-                re15_savedata_t sd;
-                int scount = re15_memcard_max_save_count(RE15_CARD_PATH) + 1;   /* byte-true: DAT_800b0fbd++ */
-                re15_savedata_capture(&sd, g_engine.frame_count, (uint16_t)scount);
-                if (pc_run_memcard_screen(1, &sd, 0) >= 0) {
-                    if (--g_inv.slots[mc].qty == 0) { g_inv.slots[mc].id = 0; g_inv.slots[mc].flags = 0; }
-                    fprintf(stderr, "[save] saved (room %04x); MEMORY CARD consumed\n", g_current_room_id);
-                }
+            re15_savedata_t sd;
+            int scount = re15_memcard_max_save_count(RE15_CARD_PATH) + 1;   /* byte-true: DAT_800b0fbd++ */
+            re15_savedata_capture(&sd, g_engine.frame_count, (uint16_t)scount);
+            if (pc_run_memcard_screen(1, &sd, 0) >= 0) {
+                if (mc >= 0 && --g_inv.slots[mc].qty == 0) { g_inv.slots[mc].id = 0; g_inv.slots[mc].flags = 0; }
+                fprintf(stderr, "[save] saved (room %04x); card=%s\n", g_current_room_id, mc >= 0 ? "consumed" : "none");
             }
-            /* no MEMORY CARD -> the phone message already informed the player */
         }
 
         re15_render_begin_frame();
