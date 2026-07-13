@@ -3092,32 +3092,50 @@ int op_sce_espr_on(scd_thread_t *t)
      * obj[idx].pos (0x800b3fb8 + idx*0x94) → the prop pool. Every espr base = the Work_set entity
      * base + 0x20 (the position field). The OLD stub ignored pc[4]/pc[5] and used the work-slot
      * actor for ALL categories — wrong for cat0 (should be absolute) and cat1 (player) when the
-     * running entity isn't the player. RESIDUAL (as before): the PSX also ROTATES the local offset
-     * by the owner matrix; re15_esp_fx_spawn is position-only, so we translate only (faithful-line). */
-    int32_t bx = 0, by = 0, bz = 0;
+     * running entity isn't the player. BYTE-TRUE ROTATION (savestate-verified 2026-07-13): the effect
+     * draws under the owner's WORLD matrix @+0x20 — FUN_80019700 (@0x800197f8-5c) copies that matrix
+     * into the inst +0x4c..+0x68, and the player's +0x20 matrix reads as the standard RotY(rot_y)
+     * [cos,0,sin][0,1,0][-sin,0,cos] with the actor position as translation (rot_y=4000 -> M=[4051,0,-601]
+     * [0,4096,0][601,0,4051], cos=4051 sin=-601). So world = ownerpos + RotY(owner.rot_y)*offset. cat0
+     * (identity matrix @0x80072d4c) = absolute, NO rotation. Actors (cat1/2/default) are RotY-only; cat3
+     * props also carry rot_x/z (RotY here is byte-true when those are 0, else closer than no-rotate). */
+    int32_t bx = 0, by = 0, bz = 0, brot = 0; int rotate = 0;
     switch (owner_cat) {
-    case 0: break;                                             /* absolute — base (0,0,0) */
+    case 0: break;                                             /* absolute / identity — no rotation */
     case 1:                                                    /* player */
         bx = g_actors[RE15_ACTOR_SLOT_PLAYER].x;
         by = g_actors[RE15_ACTOR_SLOT_PLAYER].y;
-        bz = g_actors[RE15_ACTOR_SLOT_PLAYER].z; break;
+        bz = g_actors[RE15_ACTOR_SLOT_PLAYER].z;
+        brot = g_actors[RE15_ACTOR_SLOT_PLAYER].rot_y; rotate = 1; break;
     case 2: {                                                  /* enemy[idx] = g_actors[idx+1] */
         int slot = (int)owner_idx + 1;
         if (slot > 0 && slot < RE15_ACTOR_MAX && g_actors[slot].active) {
-            bx = g_actors[slot].x; by = g_actors[slot].y; bz = g_actors[slot].z; }
+            bx = g_actors[slot].x; by = g_actors[slot].y; bz = g_actors[slot].z;
+            brot = g_actors[slot].rot_y; rotate = 1; }
         break; }
     case 3:                                                    /* prop pool obj[idx] (direct index) */
         if (owner_idx < g_scd.prop_count && g_scd.props[owner_idx].active) {
-            bx = g_scd.props[owner_idx].x; by = g_scd.props[owner_idx].y; bz = g_scd.props[owner_idx].z; }
+            bx = g_scd.props[owner_idx].x; by = g_scd.props[owner_idx].y; bz = g_scd.props[owner_idx].z;
+            brot = g_scd.props[owner_idx].rot_y; rotate = 1; }
         break;
     default: {                                                 /* cat4/5: work-slot fallback (as before) */
         int8_t ws = (t->work_slot >= 0) ? t->work_slot : g_scd.work_slot;
         if (ws >= 0 && ws < RE15_ACTOR_MAX) {
-            bx = g_actors[ws].x; by = g_actors[ws].y; bz = g_actors[ws].z; }
+            bx = g_actors[ws].x; by = g_actors[ws].y; bz = g_actors[ws].z;
+            brot = g_actors[ws].rot_y; rotate = 1; }
         break; }
     }
-    re15_esp_fx_spawn(re15_esp_room_bank(), effect_id, sub_index,
-                      bx + ox, by + oy, bz + oz, param);
+    int32_t wx, wy, wz;
+    if (rotate) {   /* world = ownerpos + RotY(rot_y)*offset (GTE-accumulate then >>12, sf=1) */
+        int32_t cs = re15_cos_q12((int)(brot & 0xfff));
+        int32_t sn = re15_sin_q12((int)(brot & 0xfff));
+        wx = bx + ((cs * (int32_t)ox + sn * (int32_t)oz) >> 12);   /* row0: cos*ox + sin*oz */
+        wy = by + (int32_t)oy;                                     /* row1: oy (RotY leaves Y) */
+        wz = bz + ((-sn * (int32_t)ox + cs * (int32_t)oz) >> 12);  /* row2: -sin*ox + cos*oz */
+    } else {
+        wx = bx + (int32_t)ox; wy = by + (int32_t)oy; wz = bz + (int32_t)oz;   /* cat0 identity */
+    }
+    re15_esp_fx_spawn(re15_esp_room_bank(), effect_id, sub_index, wx, wy, wz, param);
     t->pc += 16;
     return 1;
 }
