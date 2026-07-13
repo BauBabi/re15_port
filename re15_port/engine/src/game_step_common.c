@@ -201,7 +201,10 @@ void re15_game_step(const re15_game_ctx_t *c)
         const re15_actor_t *atk = re15_nearest_hostile(pl);      /* the enemy that struck (adjacent) */
         uint8_t clip = 0x0a;                                     /* [0]/[1] fallback (@0x80035bd0) */
         if (atk) clip = re15_player_hit_from_front(pl, atk->x, atk->z) ? 0x09 : 0x08;
-        s_hit_flinch = 15;                       /* flinch duration (faithful-line; clip 0x8/0x9/0xa length) */
+        s_hit_flinch = (clip == 0x0a) ? 20 : 22; /* byte-true clip play-out = PL00.EDD frame_count (clip 0x8=22,
+                                                  * 0x9=22, 0xa=20; 1 tick/frame, no 0x8000 tween frames). The
+                                                  * original ends the hurt FSM when anim_set FUN_8001f314 reaches
+                                                  * the clip's EDD count (aca5a 1->2), NOT a fixed 15. */
         s_hit_kb     = 0xc8;                      /* DAT_800acae0 = 200 (@0x80035e44) */
         pl->motion = clip; pl->anim_frame = 0; pl->anim_frac = 7;
         pl->motion_init_delay = 1;               /* seed tick renders frame 0 (byte-true pose-then-advance:

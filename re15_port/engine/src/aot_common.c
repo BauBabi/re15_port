@@ -705,13 +705,15 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
                     (0x1000u | ((unsigned)d->dest_room << 4)) == g_current_room_id)
                     g_scd_pending_scenario = (int)d->target_cut;
                 /* BO-round 2026-05-29 (hack audit): removed the fabricated door
-                 * SFX {bank2,sample2,vol0x60,pan0x40}. PSX door sound is NOT a
-                 * fixed value — it comes from the room's own SCD Se_on, fired by
-                 * the door's event sub (verified: room1040/sub02 Se_on(2,12)/
-                 * (2,10); DOOR0001 Se_on(0,0)/(0,1) — all room-specific). Our
-                 * door is C-driven (simplified), so the canonical SCD-sub-driven
-                 * SFX is a follow-up (wire AOT event_sub_id → fire the sub →
-                 * its Se_on). No fabricated value is correct here. */
+                 * SFX {bank2,sample2,vol0x60,pan0x40}. NON-ISSUE / byte-true SILENT
+                 * (RE wf_4a2da55b): the door AOT SCE handler FUN_800430bc @0x800430bc
+                 * (SCE-table[2] @0x8007469c) only sets transition-state DAT_800b5359=1
+                 * + freezes and runs NO sub; the per-AOT dispatcher FUN_80042bac invokes
+                 * exactly that one handler (no 2nd dispatch); and the transition FSM
+                 * FUN_8001c958 state-1 STOPS sound (FUN_80061fc0(-1)). So there is NO
+                 * door event_sub that plays a Se_on — the room1040 Se_on(2,12)/(2,10) are
+                 * the ROOM script's own cues, not door-triggered. The door is correctly
+                 * silent; the earlier "wire the event_sub" follow-up was a phantom. */
                 /* Phase 4.5.12: door teleport invalidates remaining AOT
                  * checks this frame AND any door zones the player just
                  * landed in — the player just jumped to a new location

@@ -2662,9 +2662,12 @@ static int op_sce_em_set(scd_thread_t *t)
          * (+0x4) is initialised to 0 (INIT). The earlier `state = behavior` was a pre-AI-RE
          * mis-map: with the enemy AI now dispatching the main state on +0x4 (PTR_FUN_801217a0)
          * and the sub-mode on +0x9, behavior-in-+0x4 would mis-dispatch every spawned enemy.
-         * (The pc[18]!=0 -> state=4 "spawn straight to IDLE" variant is a deferred nuance; the
-         * room1140 briefing roster has pc[18]=0 -> state 0. The spawn pose still comes from the
-         * `behavior` arg below, so this re-mapping does not change the existing pose result.) */
+         * (The pc[18..19]!=0 "spawn straight to IDLE" variant is DEFERRED — LATENT in STAGE1 (every
+         * roster has pc[18]=0 -> state 0). Full byte-true spec (@0x800425a4-e8, RE wf_4a2da55b): read
+         * `lh pc[18]` (s2=pc+2, so lh 16(s2)=pc[18]); if !=0 -> +0x4=4, +0x5=(pc[19]-1)&0xff,
+         * +0x6=0, +0x7=0, +0x94=pc[18]&0xff (motion, NOT the spawn_action pose), +0x1c4=pc[14] (u16
+         * anim_flags). This alternate REPLACES the normal state/motion setup, so wiring it means a
+         * conditional restructure of this handler — deferred until a stage authors pc[18]!=0.) */
         a->grid_id = behavior;   /* +0x9 (sub-dispatch + pose-sel + flags) */
         a->state   = 0;          /* +0x4 = INIT */
         a->repath_timer = (uint8_t)(slot & 7);   /* +0x91 = spawn_index & 7 (@0x80042244) — staggers
@@ -3013,19 +3016,12 @@ int op_aot_on(scd_thread_t *t)
 /* Cut_auto (0x3C) — 2 bytes [op, flag]. Toggle automatic cut switching. */
 int op_cut_auto(scd_thread_t *t)
 {
-    /* flag = 0 disable auto-cuts, 1 enable.
-     *
-     * Auto-cut logic DOES exist (AN-round): re15_aot_scan() scans the player
-     * position against the RVD CAM_SWITCH zones every frame. NOTE: that scan
-     * currently fires the zones UNCONDITIONALLY (it does NOT consult this
-     * flag) — a deliberate AN-round choice, because ROOM1170's RVD camera
-     * auto-switch "MUST fire during the cinematic" and sub02's Cut_auto(1)
-     * runs late in the SCD chain (after the deferred sub00 spawn).
-     *
-     * Canonical TODO: PSX gates the per-frame RVD scan on this flag. Wiring
-     * re15_aot_scan to skip CAM_SWITCH when !cut_auto_enabled is the canonical
-     * behavior, but it changes cut-switch timing and needs a visual playtest
-     * of the ROOM1170 intro before enabling (see audit_memory_vs_code_2026_05_29). */
+    /* flag = 1 enable auto-cuts, else disable. Byte-true LAB @0x800403ac: flag==1 CLEARs bit 0x100 of
+     * DAT_800aca3c (mask 0xFFFFFEFF), else SETs it (inverse convention — clear = enabled). This IS wired
+     * byte-true: op_cut_auto stores g_scd.cut_auto_enabled, and the RVD CAM_SWITCH scan already GATES on
+     * it (aot_common.c:372 `if (inside && g_scd.cut_auto_enabled && floor_ok)`). The earlier "scan fires
+     * UNCONDITIONALLY / canonical TODO" note was STALE — the gate was since added (freshness audit
+     * wf_40eb900f + tier-1 RE wf_4a2da55b confirmed the gate is present + byte-true). No change needed. */
     g_scd.cut_auto_enabled = t->pc[1];
     t->pc += 2;
     return 1;
