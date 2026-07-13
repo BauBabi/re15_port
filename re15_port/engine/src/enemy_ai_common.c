@@ -2392,7 +2392,12 @@ void re15_enemy_ai_live_hurt(int slot)
                                                         * (needed by the weapon_fire latch/recursion) */
         s_wander_mag[slot2] = (uint8_t)((re15_engine_rand8() & 0x1f) + 8);   /* +0x9e */
         {
-            const uint8_t *tbl = (re15_enemy_live_count() >= 5) ? s_zbehavior_5plus : s_zbehavior_lt5;
+            /* byte-true: BOTH re-roll sites read the MONOTONIC spawn counter DAT_800aca4e (never
+             * decremented), not the live count — hurt-recovery @0x80105ea4 `lbu 0x800aca4e; sltiu 0x5`
+             * is identical to the engage re-roll @0x801022c4. The port used the DECREMENTING live count
+             * here, so a 5+-spawn room fell to the docile <5 table after kills. (audit wf_27ae1ea7;
+             * completes the engage-only C6 fix from 4a3220d6.) */
+            const uint8_t *tbl = (re15_enemy_spawn_count() >= 5) ? s_zbehavior_5plus : s_zbehavior_lt5;
             uint8_t beh = tbl[re15_engine_rand8() & 0x1f];                    /* +0x1de */
             if (beh == 2) e->sub_state_1 = 0x13;
             s_gait_variant[slot2] = beh;

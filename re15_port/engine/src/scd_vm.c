@@ -2690,6 +2690,11 @@ static int op_sce_em_set(scd_thread_t *t)
         a->rot_x  = 0;
         a->rot_y  = dir;
         a->rot_z  = 0;
+        a->floor  = t->pc[4];   /* byte-true: Sce_em_set seeds the enemy FLOOR/BAND +0x82 from spawn byte
+                                 * pc[4] (@0x800421c8 `lbu v0,2(pc+2)` = pc[4]; @0x800421d0 `sb v0,0x82`).
+                                 * The port left it struct-zero, so band-gated AI/collision (e.g. the WATER/
+                                 * RAMP env-stamp gate, and any per-floor event AOT) read the wrong band for
+                                 * a non-floor-0 enemy. (audit wf_27ae1ea7) */
         /* hp=100 is harmless nominal init. Sce_em_set (0x44) carries NO hp
          * field — the `hp` struct member is RE2 +0x1C2 (Member ID 0x13), a
          * SEPARATE field written only via Member_set, not by this opcode.
