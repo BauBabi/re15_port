@@ -30,6 +30,14 @@ typedef struct {
     int      enter_ingame;  /* one-shot request: the platform should (re)enter INGAME by loading
                              * `start_room` this frame, then clear it. Set by NEW GAME / CONTINUE. */
     int      character;     /* 0 = Leon (PL00), 1 = Elza (PL01) — the char-select result. */
+    int      boot_movie;    /* the CAPCOM.STR opening-logo gate = DAT_800aca38 bit 0x8000, tested
+                             * one-shot at the main-loop front (main.c:20 / 0x80020c28) and cleared
+                             * on play (& ~0x8000 @0x80020c48). In the shipped RE1.5 MZD build this
+                             * bit is DORMANT — NOTHING sets it (exhaustive PSX.EXE + STAGE1-6.BIN +
+                             * DEBUG.BIN scan; 7 savestates read 0; SYSTEM.CNF BOOT=PSX.EXE = single-
+                             * EXE boot, no shell) — so the logo never auto-plays; the disc boots
+                             * straight to the front-end. Modelled faithfully: default 0 (dormant).
+                             * The byte-true movie player runs iff this is armed. */
 } re15_gameflow_t;
 
 extern re15_gameflow_t g_gameflow;

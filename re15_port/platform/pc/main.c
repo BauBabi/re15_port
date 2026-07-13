@@ -527,11 +527,17 @@ int main(int argc, char *argv[])
         const char *sr_env = getenv("RE15_START_ROOM");
         re15_gameflow_init((sr_env && *sr_env) ? (int)strtoul(sr_env, 0, 16) : -1);
     }
-    /* FE-3 — opening CAPCOM.STR movie, played before the title on a normal boot (not the
-     * RE15_START_ROOM debug fast-path). Byte-true STR/MDEC demux (re15_str.c) + the port's
-     * byte-true BSS MDEC decoder. Skippable with START/CROSS. RE15_NO_FMV=1 skips it;
-     * RE15_FMV_SHOT="<frame>:<path.bmp>" dumps that decoded frame then exits (verification). */
-    if (re15_gameflow_mode() == RE15_MODE_TITLE && !getenv("RE15_NO_FMV")) {
+    /* FE-3 — the CAPCOM.STR opening logo. The player (re15_str.c video + re15_xa.c audio) is
+     * byte-true, but the RE1.5 MZD build's gate for it (DAT_800aca38 bit 0x8000) is DORMANT:
+     * nothing anywhere sets that bit, so the disc boots straight to the front-end WITHOUT the
+     * logo (RE-verified: single caller FUN_80029cd8, exhaustive no-writer scan, 7 savestates,
+     * SYSTEM.CNF single-EXE boot). We model that faithfully — g_gameflow.boot_movie defaults 0
+     * (dormant). RE15_BOOT_MOVIE=1 ARMS the gate (the "if bit 0x8000 were set" path) to play the
+     * byte-true logo; the gate is a one-shot, cleared on play exactly like @0x80020c48.
+     * RE15_FMV_SHOT="<frame>:<path.bmp>" dumps a decoded video frame then exits (verification). */
+    if (getenv("RE15_BOOT_MOVIE") || getenv("RE15_FMV_SHOT")) g_gameflow.boot_movie = 1;   /* arm */
+    if (re15_gameflow_mode() == RE15_MODE_TITLE && g_gameflow.boot_movie) {
+        g_gameflow.boot_movie = 0;                                    /* one-shot clear (byte-true) */
         extern void re15_render_pc_show_fmv(const uint32_t *rgba, int w, int h);
         extern void re15_render_pc_hide_fmv(void);
         extern void re15_render_pc_screenshot(const char *path);

@@ -27,7 +27,8 @@ void re15_gameflow_init(int debug_room)
         g_gameflow.start_room   = RE15_NEWGAME_ROOM;
         g_gameflow.enter_ingame = 0;
     }
-    g_gameflow.character = 0;             /* Leon (PL00) */
+    g_gameflow.character   = 0;           /* Leon (PL00) */
+    g_gameflow.boot_movie  = 0;           /* dormant, byte-true to the MZD build (see header) */
 }
 
 void re15_gameflow_new_game(int character)
