@@ -27,6 +27,8 @@
 #include "re15_room.h"       /* g_current_room_id + g_room_change + re15_room_request_change (death continue) */
 #include "re15_room_list.h"  /* re15_room_ids[] / RE15_ROOM_COUNT — current-room index for the continue spawn */
 #include "re15_room_spawns.h"/* re15_room_spawns[] — the current room's entry spawn for the continue-reload */
+#include "re15_enemy.h"      /* re15_enemy_find — the per-type EMD bank (skel/anim) for the gore-bone pose */
+#include "re15_anim_select.h"/* re15_compute_actor_kf — motion+frame -> keyframe for the gore-bone pose */
 
 /* DAT_8006f418 — ghidra1_V2.txt:223455-223478 (11×s16 LE). */
 const int16_t re15_damage_table[11] = {
@@ -571,6 +573,35 @@ void re15_enemy_gore_tick(re15_actor_t *e)
  * model_inst init, and the func_0x800453d0(9) sound are NOT modelled in the port -> flagged-skipped.
  * Fires once the AI puts the zombie in sub_state_1==0x58 (the transition INTO this state is the next
  * brick, C3_RENDER_DESIGN.md §2e). */
+/* GORE-BONE world position (byte-true FUN_80106edc @0x80106ff8-0x80107030): the gore effects spawn at
+ * the model_inst bone matrix (entity+0x188 + LAB_8011f784[type]*0xac, +0x40 = translation), NOT the
+ * actor root. LAB_8011f784 (STAGE1.BIN @0x8011f784, byte-indexed by type): zombies 0x10-0x12/0x15-0x1a
+ * = bone 14, zombie-girl/writhers 0x13/0x14/0x1b-0x1e = bone 8. Reproduce it: pose the enemy's skeleton
+ * at its current keyframe in QUERY mode (g_anim_pose_actor=NULL, crossfade preserved — same as
+ * re15_enemy_update_attack_point) and rotate the bone's model-local translation into world via
+ * re15_skel_bone_to_world (the render-loop RotY math). Falls back to the actor root if no bank/skel. */
+static const uint8_t s_gore_bone[0x30] = {
+    0,0,76,255,0,0,144,1,180,0,144,1,120,247,17,128,  /* 0x00-0x0f: non-enemy types (unused) */
+    14,14,14, 8, 8,14,14,14,14,14,14, 8, 8, 8, 8, 0,  /* 0x10-0x1f: zombies=14, zgirl/writhers=8 */
+    0, 7, 8,14, 2, 4, 9,13, 0, 7, 8,14, 1, 5,10,11,   /* 0x20-0x2f */
+};
+static void re15_enemy_gore_bone_pos(const re15_actor_t *e, int32_t out[3])
+{
+    out[0] = e->x; out[1] = e->y; out[2] = e->z;      /* fallback = actor root */
+    if (e->type >= 0x30) return;
+    int bone = (int)s_gore_bone[e->type];
+    re15_enemy_bank_t *b = re15_enemy_find(e->type);
+    if (!b || b->skel.bone_count <= 0 || bone < 0 || bone >= b->skel.bone_count) return;
+    int kf = re15_compute_actor_kf(&b->anim, &b->skel, e, -1, e->anim_frame);
+    re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+    void *save = g_anim_pose_actor;
+    g_anim_pose_actor = NULL;                          /* QUERY: don't mutate the crossfade blend */
+    int rv = re15_skel_compute_pose(&b->skel, kf, poses);
+    g_anim_pose_actor = save;
+    if (rv != 0) return;
+    re15_skel_bone_to_world(poses[bone].trans, e->rot_y, e->x, e->y, e->z, out);
+}
+
 void re15_enemy_gore_setup(re15_actor_t *e)
 {
     if (!e || !e->active) return;
@@ -583,9 +614,11 @@ void re15_enemy_gore_setup(re15_actor_t *e)
     e->hit_react   |= 0x1;                    /* entity+0x93 |= 1 */
     e->sub_state_3  = 1;                      /* entity+7 = 1 (run the setup once) */
     const re15_esp_t *bank = re15_esp_room_bank();
-    re15_esp_fx_spawn_ex(bank, 0, 0, 0x2000, e->x, e->y, e->z, (int16_t)e->rot_y);  /* a0=0x2000 */
-    re15_esp_fx_spawn_ex(bank, 0, 0, 0x2000, e->x, e->y, e->z, (int16_t)e->rot_y);  /* a0=0x2000 */
-    re15_esp_fx_spawn_ex(bank, 5, 0, 0x2800, e->x, e->y, e->z, (int16_t)e->rot_y);  /* a0=0x5002800 */
+    int32_t g[3];
+    re15_enemy_gore_bone_pos(e, g);          /* byte-true model_inst bone (LAB_8011f784[type]), not the root */
+    re15_esp_fx_spawn_ex(bank, 0, 0, 0x2000, g[0], g[1], g[2], (int16_t)e->rot_y);  /* a0=0x2000 */
+    re15_esp_fx_spawn_ex(bank, 0, 0, 0x2000, g[0], g[1], g[2], (int16_t)e->rot_y);  /* a0=0x2000 */
+    re15_esp_fx_spawn_ex(bank, 5, 0, 0x2800, g[0], g[1], g[2], (int16_t)e->rot_y);  /* a0=0x5002800 */
 }
 
 /* Zombie HURT hit-effect — byte-true: the master-table hurt dispatch FUN_80105a8c (entity+4==2)
