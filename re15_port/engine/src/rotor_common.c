@@ -108,7 +108,10 @@ void re15_rotor_compute_pan(const int32_t cam_eye[3], const int32_t cam_tgt[3],
     int64_t ady = (int64_t)cam_eye[1] - heli_pos[1];         /* @0x80045af4 */
     if (ady < 0) ady = -ady;                                 /* |cam.y-heli.y| @0x80045af8-b00 */
     int64_t rxz = rotor_isqrt((uint64_t)(dx*dx + dz*dz));    /* SquareRoot0(dx²+dz²) @0x80045b04 */
-    int64_t dyt = (int64_t)cam_eye[1] - heli_pos[1] - ady;   /* cam.y-|cam.y-heli.y| @0x80045b20 */
+    int64_t dyt = (int64_t)cam_eye[1] - ady;   /* cam.y - |cam.y-heli.y|: @0x80045b18 `lw v1,8(s2)`
+                                                 * (cam_eye[1]) then @0x80045b20 `subu v1,v1,s0` (- ady),
+                                                 * NO extra `- heli_pos[1]` (audit wf_8cc15b53; the old
+                                                 * code contradicted its own comment). */
     uint32_t r  = rotor_isqrt((uint64_t)(dyt*dyt + rxz*rxz));/* SquareRoot0(dyt²+rxz²) @0x80045b34/b38 */
     int di = (int)(r / 250); if (di > 0x7f) di = 0x7f;
 

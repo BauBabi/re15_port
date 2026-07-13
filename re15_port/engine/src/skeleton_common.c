@@ -22,6 +22,7 @@
 #include "re15_skeleton.h"
 #include "re15_emd.h"
 #include "re15_actor.h"     /* g_actors for Plc_neck head-look */
+#include "re15_math.h"      /* re15_squareroot0 — the BIOS sqrt approx for the neck-pitch horiz dist */
 
 /* Q12 helpers — int32 intermediates to avoid overflow during multiply.
  *
@@ -346,10 +347,10 @@ int re15_skel_compute_pose(const re15_emd_skeleton_t *skel,
                 int32_t dz = (int32_t)a->neck_tz - oz;
                 int32_t dy = oy - (int32_t)a->neck_ty;
                 uint32_t h2 = (uint32_t)(dx*dx + dz*dz);
-                uint32_t horiz = 0; { uint32_t bb = 1u<<30, xx = h2, rr = 0;  /* int sqrt */
-                    while (bb > xx) bb >>= 2;
-                    while (bb) { if (xx >= rr+bb){ xx -= rr+bb; rr = (rr>>1)+bb; } else rr >>= 1; bb >>= 2; }
-                    horiz = rr; }
+                /* byte-true: FUN_8003790c @0x80037968 calls the BIOS SquareRoot0 approximation (GTE-LZCR
+                 * + 192-entry table @0x8007d984, drops low bits / underestimates), NOT an exact sqrt —
+                 * the port already ships the byte-true replica (audit wf_8cc15b53). */
+                uint32_t horiz = re15_squareroot0(h2);
                 /* worldYaw/worldPitch in mesh-facing convention (= re15_atan2_q12(a,b)-1024,
                  * which equals FUN_8003790c's 0x1000-catan(a<<12/b)-quadrant form). */
                 int32_t wYaw = ((int32_t)re15_atan2_q12(dz, dx) - 1024) & 0xFFF;

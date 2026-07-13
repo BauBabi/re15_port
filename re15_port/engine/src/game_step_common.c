@@ -214,6 +214,12 @@ void re15_game_step(const re15_game_ctx_t *c)
         re15_menu_tick(c->pad_pressed);
         g_aot_action_pressed = 0;
         re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
+        /* BYTE-TRUE MENU FREEZE (audit wf_8cc15b53): opening the inventory sets g_pauseflags |= 0xff000000
+         * (@0x8001cde0), which halts the player FSM (bit 0x80000000), the enemy tick (FUN_80100424 skips on
+         * 0x20000000 @0x8010043c), the anim advance, and the effect/lunge driver (FUN_80019e20 on
+         * 0x10000000). The port kept enemy AI ticking + animating + lunging/grabbing while the menu was up.
+         * Freeze the rest here — the player is frozen so the camera/aot scan above are idempotent. */
+        return;
     } else if (c->rdt_ok && re15_stair_active()) {
         /* Engine-driven stair traversal (action-triggered): auto-walk Leon
          * up/down + force the stair clip + sink/raise Y. The player does NOT

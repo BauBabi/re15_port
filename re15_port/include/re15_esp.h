@@ -122,7 +122,10 @@ const uint8_t *re15_esp_row_stream(const re15_esp_t *esp, int eff_idx, int sub,
  * low byte; 0xff = loop back to anim.desc low byte; 0/0 = end -> despawn). This is the port's
  * particle pool; the GPU draw (project + textri quad w/ the coord cell) is the platform side. */
 
-#define RE15_ESP_FX_MAX 16
+#define RE15_ESP_FX_MAX 96   /* byte-true: FUN_80019700 spawn scan caps at 0x60=96 (sltiu @0x8001978c),
+                              * pool @0x800a73b8 stride 0x84 spans 96 slots (0x3180/0x84). Was 16 → the
+                              * port silently dropped op-0x3a effects / blood past the 16th live particle
+                              * (audit wf_8cc15b53). s_esp_fx[] scales linearly; spawn/tick loop 0..MAX. */
 
 typedef struct {
     uint8_t  active;

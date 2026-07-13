@@ -611,7 +611,10 @@ void re15_esp_fx_tick(const re15_esp_t *bank)
         }
 
         if (f->timer == 0) {
-            f->frame++;
+            if (!(f->flags & 0x40)) f->frame++;   /* freeze-frame bit6 (@0x8001a3a8 lbu +0x6c; andi 0x40;
+                                                   * bne skip): a frozen droplet HOLDS its frame — re-read
+                                                   * the current record + re-arm the timer, do not advance
+                                                   * (audit wf_8cc15b53). */
             re15_esp_anim_t a;
             if (f->eff_idx < 0 || re15_esp_anim(f->bank, f->eff_idx, f->frame, &a) != 0) {
                 f->active = 0;            /* no bank / ran past the records */

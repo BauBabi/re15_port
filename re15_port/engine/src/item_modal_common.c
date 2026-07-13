@@ -53,11 +53,16 @@ static int  s_qx[4], s_qy[4];
 static int  s_face      = 0;        /* 0=front, 1=back (coin-flip reverse)  */
 static int  s_visible   = 0;        /* draw the quad this frame?            */
 
-/* First free inventory slot, or -1 (byte-true pre-check FUN_8004df2c @0x8001df14; a slot exists iff
- * some slot id == 0 — the same scan re15_inv_grant does before the INSERT). */
+#define INV_CAPACITY 10   /* the live grid CAPACITY byte 0x800b0fbc (Leon = 10 = 2x5); a non-Leon char
+                           * would parameterize this. The port's g_inv array is 11 slots but only 10 are
+                           * the usable grid (audit wf_1c0e60d8/wf_8cc15b53). */
+
+/* First free inventory slot, or -1 (byte-true pre-check FUN_8004df2c @0x8001df14: loop [0, *0x800b0fbc)
+ * = [0,10), a slot exists iff some slot id == 0). Was [0,11) — the port would grant an 11th over-capacity
+ * item into the off-grid slot 10. */
 static int inv_free_slot(void)
 {
-    for (int i = 0; i < RE15_INV_MAX_SLOTS; i++)
+    for (int i = 0; i < INV_CAPACITY; i++)
         if (g_inv.slots[i].id == 0) return i;
     return -1;
 }
@@ -186,6 +191,13 @@ void re15_item_modal_tick(uint16_t pad_edge)
                   * <item>." Yes/No if there's room, script[1] "YOU CAN'T CARRY ANY MORE ITEMS" if full
                   * (a2 = weapon/slot branch @0x8001df40-df48). NOT a fade, NOT audio. state=6. */
             s_grant   = inv_free_slot();
+            /* WIDE WEAPON (id 0x0e-0x13) needs a 2-cell front-shift (FUN_8004dc4c); the original state-5
+             * weapon branch (@0x8001df40 `addiu -14; sltiu 6` gates id in [0x0e,0x13]; then reads the
+             * capacity 0x800b0fbc @0x8001df54) REFUSES with "can't carry" when the only free slot is the
+             * LAST cell — no room for the shift. Byte-true: force can't-carry unless the free slot leaves
+             * room, i.e. s_grant < capacity-1. (audit wf_8cc15b53) */
+            if (s_type >= 0x0e && s_type <= 0x13 && s_grant >= INV_CAPACITY - 1)
+                s_grant = -1;
             s_prompt  = (s_grant < 0) ? 2 : 1;   /* 2 = can't-carry, 1 = Yes/No take-prompt */
             s_choice  = 0;                        /* default Yes (DAT_800b8520 bit0 = 0) */
             s_msg_no  = 0;
