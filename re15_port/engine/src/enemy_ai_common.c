@@ -455,9 +455,14 @@ void re15_enemy_ai_set_combat_active(int v) { s_live_combat_active = v ? 1 : 0; 
  * cleared at the top of re15_enemy_ai_run_all). That is a faithful stand-in for the deferred
  * player grabbed-FSM release that avoids a permanent soft-lock: when the engage stops re-committing
  * the grab (player out of the ±0x4b0 cone / different floor / mid-hit), no zombie is in grab state
- * → the player is free. DEFERRED (cited): the per-type grabbed POSE/anim, the exact XZ/Y pin
- * (DAT_800acc0e), the struggle-escape (sub-step 5 @0x80102968, anim-gated + the bit-0x2 check),
- * and the cmd-6 "being-approached" walk command (coupled to the deferred forward-walk). */
+ * → the player is free. GRAB-PIN CLARIFIED (byte-verified 2026-07-13): there is NO player-XZ "pin/pull"
+ * during a grab — a ghidra-wide scan for player-XZ writes (0x800aca88/0x800aca90) across the grab handlers
+ * (devour-FSM 0x8010a28c, grabbed-handler cmd5 0x80036834, grab-face state 0x8011f840[3]) is EMPTY: the
+ * player simply FREEZES at its grab-commit position (pad ignored). Any port-vs-PSX hold-distance gap is just
+ * different commit distances, not a divergence. The Y-reference DAT_800acc0e (=-floor*1800) is set by cmd5
+ * @0x80036880 and IS modeled; the devour-collapse root-motion drag (~600u) is modeled (see below, ~L523).
+ * DEFERRED (cited): only the per-type grabbed bone POSE/anim (victim-set bank2 keyframes), the struggle-escape
+ * (sub-step 5 @0x80102968, anim-gated + the bit-0x2 check), and the cmd-6 "being-approached" walk command. */
 /* MASH-ESCAPE input (byte-true FUN_80037024 @0x80037024, raw disasm): returns 1 when the press-EDGE
  * pad register (0x800ac762) has ANY D-pad direction (bits 4-7) or face button (bits 12-15) set —
  * mask 0xf0f0. The port's pad bits mirror the PSX layout 1:1, so the mask applies unchanged to
