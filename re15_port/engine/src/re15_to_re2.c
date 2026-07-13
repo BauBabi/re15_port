@@ -76,8 +76,11 @@ int re15_to_re2_plc_dest_clip(int mode, int with_rbj_overlay)
          * clip 0 = RE15_MOTION_RUN(->100), NICHT WALK(clip 5->105). [#23] */
         return re15_to_re2_resolve_motion(RE15_MOTION_RUN, with_rbj_overlay);
     case 0x09:
-        /* TURN — keep current clip while rotating in place. */
-        return -1;
+        /* TURN-in-place: the mode-9 handler @0x80031360 forces the loco clip on state-0 entry
+         * (@0x800313a0 `ori 0x5; sb entity+0x94` = clip 5, the same clip the mode-4 WALK handler sets) —
+         * it does NOT keep the prior clip. So render the WALK clip (5) while pivoting; mode_to_speed(9) =
+         * PLC_STEP_TURN = 0 keeps it in-place (no advance). (audit wf_2ff80cc7) */
+        return re15_to_re2_resolve_motion(RE15_MOTION_WALK, with_rbj_overlay);
     default:
         return -1;
     }

@@ -217,7 +217,13 @@ void re15_actor_anim_select(const re15_actor_t *a, int is_player,
      * stay. Applies to the player AND Elliot. */
     int m = (int)a->motion;
     if (banks->w01_ok && (m == 105 || m == 100)) {
-        /* Walk -> W01 clip5, Run -> W01 clip0 (PL00W01 weapon track). */
+        /* Walk -> W01 clip5, Run -> W01 clip0 (PL00W01 weapon track). NOTE (audit wf_2ff80cc7): the
+         * SCRIPTED Plc_dest RUN handler 0x80030d28 keeps clip 5 in its run-toward-target LOOP and sets
+         * clip 0 only at ARC-ALIGNED arrival (@0x800313.. arc_test -> +0x94=0). The audit read that as
+         * "run==clip5" — but this sentinel (100) is the REAL-TIME run, whose clip is set by the cmd-FSM
+         * (0x800318f8, NOT the Plc_dest handler), and the prior data analysis (analyze_w01_clips.py:
+         * clip0=energetic 111deg run, clip5=44deg walk) + U3 live-verify keep it clip 0. Kept clip 0
+         * pending a cmd-FSM trace + live visual A/B (do not flip on the scripted-handler read alone). */
         out->skel = banks->w01_skel;
         out->anim = banks->w01_anim;
         out->clip_override = (m == 105) ? 5 : 0;

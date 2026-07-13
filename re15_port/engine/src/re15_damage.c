@@ -469,7 +469,11 @@ retry_after_latch:
      * of 0xd (FUN_80106c18 reads (s8)+0x93>>7). a780 = headings within +-0x400. */
     {
         const re15_actor_t *pl2 = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-        if (((((int32_t)pl2->rot_y - (int32_t)e->rot_y) + 0x400) & 0xfff) < 0x800)
+        /* byte-true FUN_8001a780 @0x8001a788-94: `lh v0,106(enemy); lh v1,106(player); subu v0,v0,v1` =
+         * (enemy.heading - PLAYER.heading), +0x400, &0xfff, slti <0x800. The port had the subtraction
+         * reversed (player - enemy), flipping the ±0x400/0xc00 boundary = the front/back fall latch on the
+         * ±90° shot. (audit wf_2ff80cc7) */
+        if (((((int32_t)e->rot_y - (int32_t)pl2->rot_y) + 0x400) & 0xfff) < 0x800)
             e->hit_react |= 0x80;
     }
     /* crit/headshot (@0x800124fc-0x8001251c): weapon 7, or weapon 8 within 3000 -> instant kill (type<0x20). */
