@@ -1805,9 +1805,10 @@ int main(int argc, char *argv[])
                         int bxs = re15_inv_find_item(0x15);
                         int box = (bxs >= 0) ? g_inv.slots[bxs].qty : -1;
                         fprintf(s_state_log,
-                                "F%u pad=%04x PL(%d,%d,rot=%d,hp=%d) mo=%d ac=%d fx=%d mg=%d bx=%d sl=%d%d%d%d",
+                                "F%u pad=%04x PL(%d,%d,rot=%d,hp=%d) pst=%d ps1=%d ps2=%d mo=%d ac=%d fx=%d mg=%d bx=%d sl=%d%d%d%d",
                                 g_engine.frame_count, g_engine.pad_current,
                                 pl->x, pl->z, pl->rot_y, pl->hp,
+                                pl->state, pl->sub_state_1, pl->sub_state_2,
                                 pl->motion, re15_player_aim_clip(), re15_esp_fx_count(), mag, box,
                                 re15_render_pc_dbg_slot_loaded(20), re15_render_pc_dbg_slot_loaded(21),
                                 re15_render_pc_dbg_slot_loaded(22), re15_render_pc_dbg_slot_loaded(23));
