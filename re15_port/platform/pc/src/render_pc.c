@@ -90,6 +90,7 @@ static int           s_fmv_show = 0;
 static int           s_fmv_w = 0, s_fmv_h = 0;
 static SDL_Texture  *s_card_tex = NULL;       /* FE-4 memory-card BG (DATA/TYPE00.TIM 320x240) */
 static int           s_card_show = 0;
+static int           s_card_cur_x = 0, s_card_cur_y = 0, s_card_cur_show = 0;  /* card cursor (▶) */
 static uint32_t      rgb555_to_argb8888(uint16_t c);   /* fwd (defined with the TIM converters) */
 
 /* Phase 4.5.5: textured-triangle layer.
@@ -795,6 +796,17 @@ void re15_render_end_frame(void)
         SDL_RenderFillRect(s_renderer, &panel);
         if (s_text_overlay_used && s_text_overlay_tex)
             SDL_RenderCopy(s_renderer, s_text_overlay_tex, NULL, NULL);
+        /* the selection cursor: a small right-pointing white triangle (the RE1.5 card screen
+         * FUN_80026be8 draws a cursor sprite; a filled ▶ is the byte-true equivalent marker). */
+        if (s_card_cur_show) {
+            SDL_Vertex cv[3];
+            for (int k = 0; k < 3; k++) { cv[k].color.r = cv[k].color.g = cv[k].color.b = cv[k].color.a = 255;
+                                          cv[k].tex_coord.x = cv[k].tex_coord.y = 0; }
+            cv[0].position.x = (float)s_card_cur_x;       cv[0].position.y = (float)(s_card_cur_y + 1);
+            cv[1].position.x = (float)s_card_cur_x;       cv[1].position.y = (float)(s_card_cur_y + 11);
+            cv[2].position.x = (float)(s_card_cur_x + 8);  cv[2].position.y = (float)(s_card_cur_y + 6);
+            SDL_RenderGeometry(s_renderer, NULL, cv, 3, NULL, 0);
+        }
     }
 
     /* TITLE screen (TITLEU.TIM) — full-screen, OVER everything. Byte-true tail of the death sequence
@@ -975,7 +987,10 @@ void re15_render_pc_show_cardbg(const re15_tim_t *tim)
     }
     s_card_show = 1;
 }
-void re15_render_pc_hide_cardbg(void) { s_card_show = 0; }
+void re15_render_pc_hide_cardbg(void) { s_card_show = 0; s_card_cur_show = 0; }
+
+/* Position the card-screen selection cursor (▶). show=0 hides it (e.g. blink-off). */
+void re15_render_pc_card_cursor(int x, int y, int show) { s_card_cur_x = x; s_card_cur_y = y; s_card_cur_show = show; }
 
 /* BJ-round 2026-05-29: set cinematic letterbox bar height (px, in 320x240
  * space). 0 = no bars (gameplay). The main loop sets this each frame based on
@@ -1760,6 +1775,60 @@ void re15_render_pc_item_prompt(int x, int y, int prompt_type, uint8_t item_id, 
     if (!s_msgfont_ok) return;
     pc_prompt_pen_t p = { x, x, y };
     re15_item_prompt_walk(prompt_type, item_id, reveal, pc_prompt_glyph_cb, &p);
+}
+
+/* FE-4: draw an ASCII string in the RE1.5 GAME font (TEX.TIM msgfont — code = char byte,
+ * the same font/glyph path as the item prompt), attr = colour palette 0..7. Writes to the
+ * text overlay. Returns the pixel advance (for centering). Space (0x20) advances only. */
+/* The RE1.5 game-font atlas is ASCII shifted by -0x24 (atlas[code] = char(code+0x24)); space is a
+ * pure advance (not in the atlas). Map an ASCII byte -> atlas glyph code, or -1 for space/unmapped. */
+static int re15_msgfont_code(unsigned char c) { return (c >= 0x24 && c <= 0xFF) ? (int)c - 0x24 : -1; }
+
+int re15_render_pc_game_text(int x, int y, const char *str, int attr)
+{
+    re15_msgfont_ensure();
+    if (!s_msgfont_ok || !str) return 0;
+    int penx = x;
+    for (const unsigned char *pp = (const unsigned char *)str; *pp; pp++) {
+        int code = re15_msgfont_code(*pp);
+        if (code < 0) { penx += 8; continue; }               /* space / unmapped -> advance only */
+        re15_msgfont_glyph(penx, y, code, attr);
+        int w = s_msgfont_w[code];
+        penx += (w > 0) ? w : 12;
+    }
+    return penx - x;
+}
+
+/* FE-4: draw a run of RAW RE1.5 sysmes atlas codes (byte 0x00 = space advance, else the glyph
+ * code directly — the byte-true encoding used by the save-slot title idx 0x18/0x19, whose counter
+ * delimiter (0x38) and apostrophe (0x3A) are not reachable through the ASCII path). Returns width. */
+int re15_render_pc_game_codes(int x, int y, const uint8_t *codes, int n, int attr)
+{
+    re15_msgfont_ensure();
+    if (!s_msgfont_ok || !codes) return 0;
+    int penx = x;
+    for (int k = 0; k < n; k++) {
+        int code = codes[k];
+        if (code == 0x00) { penx += 8; continue; }           /* space -> advance only */
+        re15_msgfont_glyph(penx, y, code, attr);
+        int w = s_msgfont_w[code];
+        penx += (w > 0) ? w : 12;
+    }
+    return penx - x;
+}
+
+/* Width of an ASCII string in the game font (for centering) without drawing. */
+int re15_render_pc_game_text_width(const char *str)
+{
+    re15_msgfont_ensure();
+    if (!str) return 0;
+    int w = 0;
+    for (const unsigned char *pp = (const unsigned char *)str; *pp; pp++) {
+        int code = re15_msgfont_code(*pp);
+        if (code < 0) { w += 8; continue; }
+        w += (s_msgfont_ok && s_msgfont_w[code] > 0) ? s_msgfont_w[code] : 12;
+    }
+    return w;
 }
 
 /* Dialog page-break indicator: a small DOWN-pointing triangle (byte-true FUN_80028134

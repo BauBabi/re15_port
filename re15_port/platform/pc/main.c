@@ -527,9 +527,33 @@ static int             s_resume_pending = 0;
 static int pc_do_save(int slot, const re15_savedata_t *sd)
 {
     char title[RE15_MC_TITLE_LEN];
-    snprintf(title, sizeof title, "BIOHAZARD %s /%02d/",
-             sd->character ? "ELZA" : "LEON", sd->save_count % 100);
+    /* On-card BIOS title = DAT_800107cc/f8 template "BIO HAZARD <Leon|Elza> /NN/" (what a PSX card
+     * manager shows). The in-game slot list instead reconstructs the sysmes "<Leon|Elza> /NN/". */
+    snprintf(title, sizeof title, "BIO HAZARD %s /%02d/",
+             sd->character ? "Elza" : "Leon", sd->save_count % 100);
     return re15_memcard_save(RE15_CARD_PATH, slot, sd, title) == 0;
+}
+
+/* Build the byte-true RE1.5 slot title as raw sysmes atlas codes (idx 0x17 template, DEBUG.BIN
+ * @0x6046): "<Leon|Elza> \NN\  Irons' Office" — name + 0x38-delimited save counter + the (stubbed,
+ * FUN_80026e4c returns 0) room name "Irons' Office" (apostrophe = atlas 0x3A). The leading control
+ * bytes 0x05/0x06/0x07 are the name-colour selector — omitted here (rendered in the default palette). */
+static int pc_slot_title_codes(uint8_t *tc, int character, int count)
+{
+    static const uint8_t leon[] = { 0x28, 0x41, 0x4b, 0x4a };                       /* "Leon" */
+    static const uint8_t elza[] = { 0x21, 0x48, 0x56, 0x3d };                       /* "Elza" */
+    static const uint8_t room[] = { 0x25,0x4e,0x4b,0x4a,0x4f, 0x3a, 0x00, 0x2b,0x42,0x42,0x45,0x3f,0x41 }; /* "Irons' Office" */
+    int n = 0;
+    const uint8_t *nm = character ? elza : leon;
+    for (int k = 0; k < 4; k++)  tc[n++] = nm[k];
+    tc[n++] = 0x00;                                    /* space */
+    tc[n++] = 0x38;                                    /* counter delimiter glyph */
+    tc[n++] = (uint8_t)(0x0c + (count / 10) % 10);     /* tens digit ('0' = atlas 0x0c) */
+    tc[n++] = (uint8_t)(0x0c + count % 10);            /* ones digit */
+    tc[n++] = 0x38;                                    /* counter delimiter glyph */
+    tc[n++] = 0x00; tc[n++] = 0x00;                    /* gap */
+    for (int k = 0; k < 13; k++) tc[n++] = room[k];
+    return n;
 }
 
 /* The byte-true RE1.5 memory-card SAVE/LOAD screen (FUN_80025c00 / FUN_80026658), adapted for
@@ -540,9 +564,12 @@ static int pc_do_save(int slot, const re15_savedata_t *sd)
  * chosen slot (0..4) or -1 on cancel/exit. */
 static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint16_t *out_room)
 {
-    extern void re15_render_pc_text_overlay(int x, int y, const char *text);
+    extern int  re15_render_pc_game_text(int x, int y, const char *str, int attr);   /* RE1.5 game font */
+    extern int  re15_render_pc_game_text_width(const char *str);
+    extern int  re15_render_pc_game_codes(int x, int y, const uint8_t *codes, int n, int attr);
     extern void re15_render_pc_show_cardbg(const re15_tim_t *tim);
     extern void re15_render_pc_hide_cardbg(void);
+    extern void re15_render_pc_card_cursor(int x, int y, int show);
     extern void re15_render_pc_hide_title(void);
     extern void re15_render_pc_screenshot(const char *path);
     re15_render_pc_hide_title();   /* CONTINUE opens this from the title loop — the card BG must win */
@@ -558,6 +585,17 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
     int  used[RE15_SAVE_SLOTS];
     char titles[RE15_SAVE_SLOTS][RE15_MC_TITLE_LEN];
     re15_memcard_list(RE15_CARD_PATH, used, titles);
+    /* In-game slot label = byte-true RE1.5 sysmes idx 0x17 template (FUN_80026658), reconstructed
+     * from each slot's savedata (character + save counter) — NOT the on-card BIOS title. */
+    int slot_char[RE15_SAVE_SLOTS], slot_cnt[RE15_SAVE_SLOTS];
+    for (int i = 0; i < RE15_SAVE_SLOTS; i++) {
+        slot_char[i] = 0; slot_cnt[i] = 0;
+        if (used[i]) {
+            re15_savedata_t sl;
+            if (re15_memcard_load(RE15_CARD_PATH, i, &sl) == 0) { slot_char[i] = sl.character; slot_cnt[i] = sl.save_count % 100; }
+            else used[i] = 0;
+        }
+    }
 
     enum { ST_LIST, ST_OVERWRITE, ST_RESULT } st = ST_LIST;
     int cursor = 0, ow = 1 /* default No (byte-true) */, result = -1, running = 1;
@@ -573,22 +611,30 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
         if (s_card_bg.pixels) re15_render_pc_show_cardbg(&s_card_bg);
         else re15_render_background_gradient(0, 0, 24, 0, 0, 0);
 
-        re15_render_pc_text_overlay(160 - 13 * 3, 24, "MEMORY CARD 1");    /* header centered y=24 */
-        for (int i = 0; i < RE15_SAVE_SLOTS; i++)                          /* 5 slots x=41 y=56+20i */
-            re15_render_pc_text_overlay(41, 56 + i * 20, used[i] ? titles[i] : "    NO  DATA");
-        re15_render_pc_text_overlay(41, 156, save_mode ? "SAVE           EXIT"                 /* row 5 = EXIT */
-                                                       : "LOAD           EXIT");
-        if (st == ST_LIST && !(blink & 0x10))                             /* blinking cursor */
-            re15_render_pc_text_overlay(30, 56 + cursor * 20, ">");
+        /* All text in the RE1.5 GAME font (TEX.TIM), attr 0; centered via glyph width. Strings are
+         * the byte-true RE1.5 sysmes (DEBUG.BIN @0x5fd9): idx2 "Memory Card 1" header, idx0/1
+         * "Do not save/load" exit, idx0x10 "NO DATA", idx8 "Overwrite?", idx9/0xa Yes/No,
+         * idx0x11 "Access error", idx0x15 "Fail in save". */
+        re15_render_pc_game_text(160 - re15_render_pc_game_text_width("Memory Card 1") / 2, 24, "Memory Card 1", 0);
+        for (int i = 0; i < RE15_SAVE_SLOTS; i++) {                        /* 5 slots x=41 y=56+20i */
+            if (used[i]) { uint8_t tc[48]; int tn = pc_slot_title_codes(tc, slot_char[i], slot_cnt[i]);
+                           re15_render_pc_game_codes(41, 56 + i * 20, tc, tn, 0); }
+            else re15_render_pc_game_text(41, 56 + i * 20, "NO DATA", 0);  /* sysmes idx 0x0f */
+        }
+        re15_render_pc_game_text(41, 156, save_mode ? "Do not save" : "Do not load", 0);  /* row 5 = exit */
 
         if (st == ST_OVERWRITE) {
-            re15_render_pc_text_overlay(160 - 10 * 3, 178, "Overwrite?");
-            re15_render_pc_text_overlay(139, 196, "Yes");
-            re15_render_pc_text_overlay(139, 214, "No");
-            if (!(blink & 0x10)) re15_render_pc_text_overlay(123, 196 + ow * 18, ">");
+            re15_render_pc_game_text(160 - re15_render_pc_game_text_width("Overwrite?") / 2, 178, "Overwrite?", 0);
+            re15_render_pc_game_text(139, 196, "Yes", 0);
+            re15_render_pc_game_text(139, 214, "No", 0);
         } else if (st == ST_RESULT && msg) {
-            re15_render_pc_text_overlay(160 - (int)strlen(msg) * 3, 196, msg);
+            re15_render_pc_game_text(160 - re15_render_pc_game_text_width(msg) / 2, 196, msg, 0);
         }
+
+        /* the ▶ selection cursor (render_pc draws a filled white triangle at this position) */
+        if (st == ST_LIST)           re15_render_pc_card_cursor(30, 56 + cursor * 20, !(blink & 0x10));
+        else if (st == ST_OVERWRITE) re15_render_pc_card_cursor(123, 196 + ow * 18, !(blink & 0x10));
+        else                         re15_render_pc_card_cursor(0, 0, 0);
         re15_render_end_frame();
         blink++;
 
@@ -611,13 +657,13 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
                 if (cursor == RE15_SAVE_SLOTS) running = 0;               /* EXIT row */
                 else if (save_mode) {                                    /* SAVE */
                     if (used[cursor]) { st = ST_OVERWRITE; ow = 1; blink = 0; }
-                    else if (pc_do_save(cursor, sd)) { result = cursor; msg = "Complete"; st = ST_RESULT; }
-                    else { msg = "Fail in save"; st = ST_RESULT; }
+                    else if (pc_do_save(cursor, sd)) { result = cursor; running = 0; }  /* no completion msg (byte-true) */
+                    else { msg = "Fail in save"; st = ST_RESULT; }       /* sysmes idx 0x15 */
                 } else {                                                 /* LOAD */
-                    if (!used[cursor]) { msg = "No Data"; st = ST_RESULT; }
+                    if (!used[cursor]) { msg = "NO DATA"; st = ST_RESULT; }            /* sysmes idx 0x10 */
                     else if (re15_memcard_load(RE15_CARD_PATH, cursor, &s_resume_sd) == 0) {
                         if (out_room) *out_room = s_resume_sd.room; result = cursor; running = 0;
-                    } else { msg = "Access error"; st = ST_RESULT; }
+                    } else { msg = "Access error"; st = ST_RESULT; }     /* sysmes idx 0x11 */
                 }
             }
         } else if (st == ST_OVERWRITE) {
@@ -625,9 +671,8 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
             if (cancel) { st = ST_LIST; blink = 0; }
             else if (ok) {
                 if (ow == 0) {                                           /* Yes -> overwrite */
-                    if (pc_do_save(cursor, sd)) { result = cursor; msg = "Complete"; }
-                    else msg = "Fail in save";
-                    st = ST_RESULT;
+                    if (pc_do_save(cursor, sd)) { result = cursor; running = 0; }  /* byte-true: no completion msg */
+                    else { msg = "Fail in save"; st = ST_RESULT; }
                 } else { st = ST_LIST; blink = 0; }                      /* No */
             }
         } else {                                                         /* ST_RESULT */
