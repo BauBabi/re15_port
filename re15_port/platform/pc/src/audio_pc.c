@@ -157,6 +157,22 @@ typedef struct {
 } re15_xa_stream_t;
 static re15_xa_stream_t s_xa;      /* the single streaming voice channel       */
 
+/* FE-3 opening-movie (CD-XA) audio: the decoded STR soundtrack, mixed like the
+ * s_xa voice but STEREO and pre-resampled to the device rate. Separate from
+ * s_xa because a movie is stereo + full-length and must not disturb the mono
+ * SCD voice channel. Owns its resampled PCM buffer. */
+static struct {
+    int16_t *pcm;      /* interleaved stereo S16 at the device rate (owned)     */
+    int      frames;   /* stereo frame count                                    */
+    int      pos;      /* playback cursor (device-rate frames) — the movie clock*/
+    int      active;
+    int      cd_vol;  /* CdMix CD->SPU per-channel gain / 128; byte-true movie
+                       * steady state CdlATV = {0x64,0,0x64,0} = 100/128 (FUN_8002acac
+                       * stereo branch; FUN_8002ac84(100)). 'out = in*cd_vol>>7'.     */
+} s_fmv_audio;
+static int s_dev_freq = 44100;     /* actual device rate (from SDL have.freq)   */
+static FILE *s_audio_cap = NULL;   /* RE15_AUDIO_CAP=<raw>: dump mixed output (verify) */
+
 /* re15_voice — decoded-clip cache, keyed by voice id (RE2 voice-table role). */
 typedef struct { int16_t *pcm; int len; int tried; } re15_voice_clip_t;
 static re15_voice_clip_t s_voice_clip[VOICE_MAX_MSG];
@@ -347,10 +363,29 @@ static void audio_callback(void *userdata, Uint8 *stream, int len)
         }
     }
 
+    /* FE-3: the opening-movie CD-XA soundtrack (stereo, device-rate). Mixed with
+     * the CdMix gain (cd_vol), which the caller ramps for the byte-true fade. */
+    if (s_fmv_audio.active && s_fmv_audio.pcm) {
+        for (int f = 0; f < frames; f++) {
+            if (s_fmv_audio.pos >= s_fmv_audio.frames) { s_fmv_audio.active = 0; break; }
+            int32_t l = s_fmv_audio.pcm[s_fmv_audio.pos * 2 + 0];
+            int32_t r = s_fmv_audio.pcm[s_fmv_audio.pos * 2 + 1];
+            s_fmv_audio.pos++;
+            int32_t L = (int32_t)out[f * 2 + 0] + ((l * (int32_t)s_fmv_audio.cd_vol) >> 7);
+            int32_t R = (int32_t)out[f * 2 + 1] + ((r * (int32_t)s_fmv_audio.cd_vol) >> 7);
+            if (L >  32767) L =  32767; else if (L < -32768) L = -32768;
+            if (R >  32767) R =  32767; else if (R < -32768) R = -32768;
+            out[f * 2 + 0] = (int16_t)L;
+            out[f * 2 + 1] = (int16_t)R;
+        }
+    }
+
     /* RE2-style BGM: MAIN + SUB SsSeq layers + reverb send. */
     re15_ss_render_bgm(out, frames);
     /* Looping room ambience (helicopter rotor) — dry, after the BGM reverb. */
     re15_amb_mix(out, frames);
+
+    if (s_audio_cap) fwrite(stream, 1, (size_t)len, s_audio_cap);   /* RE15_AUDIO_CAP verify hook */
 }
 
 /* Try to load the bundled test VAB from disk. The PC asset path uses
@@ -696,6 +731,8 @@ void re15_audio_init(void)
         exit(0);
     }
 
+    if (g_audio.initialized) return;   /* idempotent: the FE-3 movie inits audio early */
+
     if (SDL_InitSubSystem(SDL_INIT_AUDIO) < 0) {
         fprintf(stderr, "[audio] SDL_InitSubSystem(AUDIO) failed: %s\n",
                 SDL_GetError());
@@ -717,6 +754,9 @@ void re15_audio_init(void)
                 SDL_GetError());
         return;
     }
+
+    s_dev_freq = (have.freq > 0) ? have.freq : 44100;   /* actual device rate */
+    { const char *cap = getenv("RE15_AUDIO_CAP"); if (cap && *cap) s_audio_cap = fopen(cap, "wb"); }
 
     /* Unpause — callback fires immediately. */
     SDL_PauseAudioDevice(s_audio_dev, 0);
@@ -770,6 +810,60 @@ static void re15_xa_read_s(const int16_t *pcm, int pcm_len)
     s_xa.subpos  = 0;
     s_xa.active  = (pcm && pcm_len > 0) ? 1 : 0;
     SDL_UnlockAudioDevice(s_audio_dev);
+}
+
+/* ── FE-3 opening-movie audio: play the decoded CD-XA soundtrack ──────────────
+ * src = interleaved stereo S16 at src_rate (37800 for CAPCOM.STR). We resample
+ * to the device rate ONCE here (linear — adequate, and matches the voice path
+ * which pre-resamples at load rather than in the callback) into an owned buffer.
+ * cd_vol = the CdMix CD->SPU gain (0x3FFF full, == re15_xa_init / CD_initvol).
+ * The natural fade-in/out is baked into the ADPCM data itself. */
+void re15_fmv_audio_start(const int16_t *src, int src_frames, int src_rate, int cd_vol)
+{
+    if (!src || src_frames <= 0 || src_rate <= 0) return;
+    /* out_frames = src_frames * dev / src (round up so the tail is not clipped). */
+    long long of = (long long)src_frames * s_dev_freq;
+    int out_frames = (int)((of + src_rate - 1) / src_rate);
+    int16_t *buf = (int16_t *) malloc((size_t)out_frames * 2 * sizeof(int16_t));
+    if (!buf) return;
+    /* linear resample per channel; step in Q16 to avoid float drift. */
+    uint64_t step = ((uint64_t)src_rate << 16) / (uint64_t)s_dev_freq;
+    uint64_t acc  = 0;
+    for (int i = 0; i < out_frames; i++) {
+        int   si = (int)(acc >> 16);
+        int   fr = (int)(acc & 0xFFFF);
+        int   s1 = (si < src_frames) ? si : src_frames - 1;
+        int   s2 = (si + 1 < src_frames) ? si + 1 : src_frames - 1;
+        for (int ch = 0; ch < 2; ch++) {
+            int a = src[s1 * 2 + ch], b = src[s2 * 2 + ch];
+            buf[i * 2 + ch] = (int16_t)(a + (((b - a) * fr) >> 16));
+        }
+        acc += step;
+    }
+    SDL_LockAudioDevice(s_audio_dev);
+    if (s_fmv_audio.pcm) free(s_fmv_audio.pcm);
+    s_fmv_audio.pcm     = buf;
+    s_fmv_audio.frames  = out_frames;
+    s_fmv_audio.pos     = 0;
+    s_fmv_audio.cd_vol = cd_vol;
+    s_fmv_audio.active  = 1;
+    SDL_UnlockAudioDevice(s_audio_dev);
+}
+
+void re15_fmv_audio_stop(void)
+{
+    SDL_LockAudioDevice(s_audio_dev);
+    s_fmv_audio.active = 0;
+    if (s_fmv_audio.pcm) { free(s_fmv_audio.pcm); s_fmv_audio.pcm = NULL; }
+    SDL_UnlockAudioDevice(s_audio_dev);
+}
+
+/* Movie clock: seconds of audio played so far (device-rate cursor / dev freq).
+ * -1 when not playing. The FMV video loop follows this so audio is the master. */
+double re15_fmv_audio_time(void)
+{
+    if (!s_fmv_audio.active || s_dev_freq <= 0) return -1.0;
+    return (double)s_fmv_audio.pos / (double)s_dev_freq;
 }
 
 /* ── re15_voice: SCD-facing voice manager (RE2 Xa_on(0x59)-handler role) ──── */

@@ -117,6 +117,7 @@ static void re15_pc_ecg(int x, int y, int w, int h, int hp, unsigned phase)
 #include "re15_esp.h"          /* Phase ESP-C: op-0x3a effect-sprite bank + particle pool */
 #include "re15_gameflow.h"     /* FE-0.2 top-level mode machine (BOOT/TITLE/INGAME/GAMEOVER) */
 #include "re15_str.h"          /* FE-3 STR/MDEC opening-movie demux+decode (CAPCOM.STR) */
+#include "re15_xa.h"           /* FE-3 CD-XA ADPCM opening-movie audio decode */
 
 #define RE15_TIM_SLOT_EFFECT 19   /* effect-sprite TIM render slot (0..18 used by chars/props) */
 #define RE15_TIM_SLOT_EFFECT_GLOBAL 20 /* GLOBAL effect bank (CORE00.ESP) sprite sheet — effect-id 0
@@ -516,6 +517,8 @@ int main(int argc, char *argv[])
 
     re15_render_init();
     re15_input_init();
+    re15_audio_init();   /* FE-3: open the audio device early so the opening movie has sound
+                          * (idempotent — the later call in the game-init path is a no-op). */
 
     /* FE-0.3 / FE-1.3 — top-level mode machine: de-hardcode the boot-into-a-room.
      * RE15_START_ROOM=<hex> keeps the debug fast-path (straight into that room, INGAME —
@@ -537,20 +540,47 @@ int main(int argc, char *argv[])
         re15_str_t movie = {0};
         if (mbuf && re15_str_open(&movie, mbuf, (size_t) msz) == 0) {
             uint32_t *frame_rgba = (uint32_t *) malloc((size_t) movie.width * movie.height * 4);
+            extern void   re15_fmv_audio_start(const int16_t *src, int src_frames, int src_rate, int cd_vol);
+            extern void   re15_fmv_audio_stop(void);
+            extern double re15_fmv_audio_time(void);
             const char *fmv_shot = getenv("RE15_FMV_SHOT");
             int  shot_frame = -1; char shot_path[256] = {0};
             if (fmv_shot) sscanf(fmv_shot, "%d:%255s", &shot_frame, shot_path);
-            /* STR cadence (byte-true, per the RE1.5 STR-player RE): CAPCOM.STR is authored at
-             * ~30fps (525 video frames over 17.55s at 2x CD = 29.92fps; avg 5.01 sectors/frame
-             * at 150 sectors/s). The PSX player (FUN_80029cd8) is CD-stream-paced with one buffer
-             * flip per frame (FUN_8002a1b8, one VSync) — there is NO hardcoded hold constant. At
-             * the port's 30fps timebase that is one video frame per port frame, throttled to the
-             * 33ms budget (same SDL_Delay pacing as the main game loop). */
+
+            /* Decode the movie's CD-XA soundtrack up-front (the whole STR is in RAM) and start it.
+             * The PSX has the CD controller auto-decode XA into the SPU CD-input at CD_initvol
+             * (0x3FFF); the port software-decodes (re15_xa.c) and mixes at the same gate. */
+            int16_t *apcm = NULL; int aframes = 0, arate = 0, achans = 0;
+            int have_audio = 0;
+            if (!fmv_shot && re15_xa_decode_movie(mbuf, (size_t) msz, &apcm, &aframes, &arate, &achans) == 0) {
+                /* byte-true movie CD->SPU gain = 100/128 (CdlATV {0x64,0,0x64,0}, FUN_8002acac
+                 * stereo branch fed by FUN_8002ac84(100)); the fades are instant gates. */
+                re15_fmv_audio_start(apcm, aframes, arate, 100);
+                have_audio = (re15_fmv_audio_time() >= 0.0);
+            }
+
+            /* Cadence (byte-true): on PSX the CD streams audio continuously and video frames
+             * present as they arrive (FUN_8002a630) — AUDIO is the master clock. So we present
+             * video frame f when the audio playback position reaches f/30 s (the authored ~30fps:
+             * 525 frames / 17.55s = 29.92fps). If audio is unavailable, fall back to a fixed 30fps
+             * SDL_Delay timer (same as the main loop). Skip = raw START (FUN_80029cd8:24, bit 0x800). */
             const uint32_t fmv_budget_ms = 1000u / 30u;
             uint32_t fmv_last = 0;
             int skipped = 0;
             for (int f = 0; f < movie.num_frames && frame_rgba && !skipped; f++) {
                 if (re15_str_decode(&movie, f, frame_rgba) != 0) continue;
+                if (have_audio) {
+                    /* wait until the audio clock reaches this frame (audio = master) */
+                    double frame_time = (double) f / 30.0;
+                    for (;;) {
+                        double t = re15_fmv_audio_time();
+                        if (t < 0.0 || t >= frame_time) break;   /* audio ended, or reached frame */
+                        if (g_engine.pad_pressed & RE15_PAD_BIT_START) { skipped = 1; break; }
+                        re15_input_tick();
+                        SDL_Delay(2);
+                    }
+                    if (skipped) break;
+                }
                 re15_render_begin_frame();
                 re15_input_tick();
                 re15_render_pc_show_fmv(frame_rgba, movie.width, movie.height);
@@ -559,16 +589,18 @@ int main(int argc, char *argv[])
                     re15_render_pc_screenshot(shot_path);
                     exit(0);                                /* one-shot verification probe */
                 }
-                /* Skip = raw START edge (byte-true: FUN_80029cd8:24 tests raw pad bit 0x800). */
                 if (g_engine.pad_pressed & RE15_PAD_BIT_START) skipped = 1;
-                /* Pace to 30fps (matches the authored rate + the main loop's throttle). */
-                {
-                    uint32_t now = SDL_GetTicks();
+                if (have_audio) {
+                    if (re15_fmv_audio_time() < 0.0) break;  /* audio finished -> end the movie */
+                } else {
+                    uint32_t now = SDL_GetTicks();           /* no audio: fixed 30fps timer */
                     if (fmv_last != 0 && now - fmv_last < fmv_budget_ms)
                         SDL_Delay(fmv_budget_ms - (now - fmv_last));
                     fmv_last = SDL_GetTicks();
                 }
             }
+            re15_fmv_audio_stop();
+            if (apcm) free(apcm);
             free(frame_rgba);
             re15_render_pc_hide_fmv();
         }
