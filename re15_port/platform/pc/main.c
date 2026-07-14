@@ -2506,20 +2506,24 @@ int main(int argc, char *argv[])
                     }
                 }
             }
-            /* PC-ONLY DEV TOOL (NOT gameplay; architecture-irrelevant): the
-             * motion-lock + PL00 clip cycler. Applied AFTER the shared step so
-             * it overrides SCD/Plc_motion for visual clip identification.
-             * Tab=lock, PageUp/PageDown=cycle. */
+            /* PC-ONLY DEV TOOL (NOT gameplay; architecture-irrelevant): the motion-lock + PL00 clip
+             * cycler. Applied AFTER the shared step so it overrides SCD/Plc_motion for visual clip
+             * identification. GATED behind RE15_MOTION_DEBUG — it reads SELECT (0x0001) and the
+             * TRIANGLE/CIRCLE bits (0x1000/0x2000), which are now the real Select and △/○ face
+             * buttons, so left ungated it would hijack them during normal play (△/○ would cycle the
+             * player animation). */
             {
+                static int  s_motion_dev  = -1;
+                if (s_motion_dev < 0) s_motion_dev = getenv("RE15_MOTION_DEBUG") ? 1 : 0;
                 static int  s_motion_lock = 0;
                 static int  s_locked_clip = 0;
-                if (g_engine.pad_pressed & 0x0001 /* SELECT/Tab */) {
+                if (s_motion_dev && (g_engine.pad_pressed & 0x0001 /* SELECT/Tab */)) {
                     s_motion_lock = !s_motion_lock;
                     s_locked_clip = (int)g_actors[RE15_ACTOR_SLOT_PLAYER].motion;
                 }
                 int cyc = 0;
-                if      (g_engine.pad_pressed & 0x1000 /* PageUp   */) cyc = +1;
-                else if (g_engine.pad_pressed & 0x2000 /* PageDown */) cyc = -1;
+                if      (s_motion_dev && (g_engine.pad_pressed & 0x1000 /* PageUp   */)) cyc = +1;
+                else if (s_motion_dev && (g_engine.pad_pressed & 0x2000 /* PageDown */)) cyc = -1;
                 if (cyc && anim.clip_count > 0) {
                     if (s_motion_lock) {
                         s_locked_clip += cyc;

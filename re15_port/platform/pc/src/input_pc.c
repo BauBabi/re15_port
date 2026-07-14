@@ -176,31 +176,38 @@ void re15_input_tick(void)
     const Uint8 *keys = SDL_GetKeyboardState(NULL);
     uint16_t bits = 0;
     if (keys) {
+        /* ==== PSX-controller-EQUIVALENT keyboard layout =================================
+         * Each key drives the SAME PSX pad bit the controller does, so keyboard and pad play
+         * identically. D-pad on the left (arrows / WASD), the four ◇○✕□ face buttons + the
+         * shoulders on the right of the board:
+         *
+         *   ↑ ↓ ← →  /  W A S D   = D-pad          (tank: ↑ forward, ↓ back, ← → turn)
+         *   Shift                 = ✕ Cross        (RUN, held  +  menu confirm / dialog fast-forward)
+         *   Space / Enter         = □ Square       (ACTION: examine / grab / fire)
+         *   E                     = R1             (AIM, held)
+         *   Q                     = L1
+         *   C                     = △ Triangle     (dialog cursor / cancel)
+         *   V                     = ○ Circle       (dialog cursor / cancel)
+         *   I                     = Start          (inventory / weapon-select)
+         *   Tab                   = Select
+         *   [  ]                  = L2 / R2         (also the dev room-browser: prev / next room)
+         *   F11 / Alt+Enter       = toggle fullscreen (window is the default)
+         * (Tell me if you want any key different — this is a single lookup table to edit.) */
         if (keys[SDL_SCANCODE_UP]    || keys[SDL_SCANCODE_W]) bits |= RE15_PAD_UP;
         if (keys[SDL_SCANCODE_RIGHT] || keys[SDL_SCANCODE_D]) bits |= RE15_PAD_RIGHT;
         if (keys[SDL_SCANCODE_DOWN]  || keys[SDL_SCANCODE_S]) bits |= RE15_PAD_DOWN;
         if (keys[SDL_SCANCODE_LEFT]  || keys[SDL_SCANCODE_A]) bits |= RE15_PAD_LEFT;
-        /* RUN = Shift held (mapped to the CROSS bit the shared player FSM reads). */
-        if (keys[SDL_SCANCODE_LSHIFT] || keys[SDL_SCANCODE_RSHIFT]) bits |= RE15_PAD_CROSS;
-        /* ACTION = Enter (mapped to the SQUARE bit the action gate reads). */
-        if (keys[SDL_SCANCODE_RETURN] || keys[SDL_SCANCODE_KP_ENTER]) bits |= RE15_PAD_SQUARE;
-        /* YES/NO dialog cursor toggle = the face-button mask 0x3000 (byte-true FUN_80028134
-         * @0x800285b8) — bind C/V so the ROOM1130 shutter prompt etc. are reachable on keyboard.
-         * (The CONFIRM is CROSS = Shift; the dialog reads these via g_scd_pad_edge.) */
-        if (keys[SDL_SCANCODE_C])         bits |= RE15_PAD_TRIANGLE;
-        if (keys[SDL_SCANCODE_V])         bits |= RE15_PAD_CIRCLE;
-        if (keys[SDL_SCANCODE_Q])         bits |= RE15_PAD_L1;
-        if (keys[SDL_SCANCODE_E])         bits |= RE15_PAD_R1;
-        /* START = I (user-chosen PC binding, 2026-07-02): opens the inventory/weapon-select menu.
-         * PSX Start (bit 0x0008); inert until the inventory screen consumes it. */
-        if (keys[SDL_SCANCODE_I])         bits |= RE15_PAD_START;
-        /* DEV room-browser (globalization 2026-06-13): [ = prev room, ] = next room.
-         * Cycles through every room in the shared tree (re15_room_list.h). Uses the
-         * FREE L2/R2 bits (0x0100/0x0200) — NOT 0x4000/0x8000, which are CROSS (=RUN,
-         * the sprint key Shift) and SQUARE (=ACTION), so the old binding made sprinting
-         * change rooms. L2/R2 are unmapped/unused, so no collision. */
-        if (keys[SDL_SCANCODE_LEFTBRACKET])  bits |= 0x0100;   /* L2 = prev room */
-        if (keys[SDL_SCANCODE_RIGHTBRACKET]) bits |= 0x0200;   /* R2 = next room */
+        if (keys[SDL_SCANCODE_LSHIFT] || keys[SDL_SCANCODE_RSHIFT]) bits |= RE15_PAD_CROSS;    /* ✕ Run / OK   */
+        if (keys[SDL_SCANCODE_SPACE] || keys[SDL_SCANCODE_RETURN] ||
+            keys[SDL_SCANCODE_KP_ENTER])                            bits |= RE15_PAD_SQUARE;   /* □ Action     */
+        if (keys[SDL_SCANCODE_E])         bits |= RE15_PAD_R1;        /* R1 Aim                             */
+        if (keys[SDL_SCANCODE_Q])         bits |= RE15_PAD_L1;        /* L1                                 */
+        if (keys[SDL_SCANCODE_C])         bits |= RE15_PAD_TRIANGLE;  /* △ (dialog toggle / cancel, 0x3000) */
+        if (keys[SDL_SCANCODE_V])         bits |= RE15_PAD_CIRCLE;    /* ○                                  */
+        if (keys[SDL_SCANCODE_I])         bits |= RE15_PAD_START;     /* Start = inventory                  */
+        if (keys[SDL_SCANCODE_TAB])       bits |= RE15_PAD_SELECT;    /* Select                             */
+        if (keys[SDL_SCANCODE_LEFTBRACKET])  bits |= 0x0100;         /* L2 (dev: prev room)                */
+        if (keys[SDL_SCANCODE_RIGHTBRACKET]) bits |= 0x0200;         /* R2 (dev: next room)                */
     }
 
     /* GAMEPAD: OR the Steam Deck / Xbox-style controller bits into the same pad word (before the
