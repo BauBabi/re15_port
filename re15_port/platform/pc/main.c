@@ -815,11 +815,14 @@ static int pc_run_player_select(void)
     static re15_tim_t s_sel_bg = {0};
     if (!s_sel_bg.pixels) { int sz = 0; uint8_t *b = pc_read_shared("DATA/SELECTH.TIM", &sz);
                             if (b) re15_tim_parse(b, sz, &s_sel_bg); }   /* one-time; buffer kept */
-    /* Load Leon(PL00) + Elza(PL01) once (TIM slots 20/21, free during the front-end). */
+    /* Load Leon(PL00) + Elza(PL08) once (TIM slots 20/21, free during the front-end).
+     * BYTE-TRUE model ids (loader FUN_80101720 + CD dir @0x8006f43c): Leon = the resident PL00
+     * (buffer 0x801bd814); Elza = CD file-id 0x44 whose dir-entry size (182928) is EXACTLY PL08.PLD.
+     * (PL01 is Leon in a red POLICE costume — the wrong "different-costume Leon" I mis-loaded before.) */
     static pselect_model_t s_leon = {0}, s_elza = {0}; static int s_models_loaded = 0;
     if (!s_models_loaded) { s_models_loaded = 1;
         pselect_load_model(&s_leon, "PLD/PL00.MD1", "PLD/PL00.EDD", "PLD/PL00.EMR", "PLD/PL00.TIM", 20);
-        pselect_load_model(&s_elza, "PLD/PL01.MD1", "PLD/PL01.EDD", "PLD/PL01.EMR", "PLD/PL01.TIM", 21); }
+        pselect_load_model(&s_elza, "PLD/PL08.MD1", "PLD/PL08.EDD", "PLD/PL08.EMR", "PLD/PL08.TIM", 21); }
     /* Byte-true camera (wf_0aab308c): global view R=diag(4104,4096,4104), TR=(0,0,20039), H=1000. */
     re15_camera_view_t cam = {0};
     cam.rot[0] = 4104; cam.rot[4] = 4096; cam.rot[8] = 4104;
@@ -835,6 +838,10 @@ static int pc_run_player_select(void)
     unsigned frames = 0;
     const char *ps_shot = getenv("RE15_PSELECT_SHOT");
     int auto_drive = getenv("RE15_PSELECT_AUTO") != NULL;
+    /* 30fps cap: the idle clip 2 advances +0x95 by 1 PER FRAME (FUN_8001f314 POST-inc), so the
+     * scene MUST run at the PSX 30Hz cadence or the animation plays far too fast (the game loop
+     * caps the same way). Without this the models twitch / cycle wrong. */
+    uint32_t ps_last = SDL_GetTicks();
     while (re15_gameflow_mode() == RE15_MODE_TITLE) {
         if (pulse < 0x80) { pulse += 8; if (pulse > 0x80) pulse = 0x80; }
         re15_render_begin_frame();
@@ -843,8 +850,9 @@ static int pc_run_player_select(void)
         re15_render_pc_player_select(&s_sel_bg, sel, pulse);
         /* the two live 3D models (queued as textri; flushed OVER the SELECTH backdrop in end_frame).
          * Leon left / Elza right, byte-true POS (Y=0x7f4=2036), rot_y 0x404, idle clip 2. */
-        pselect_render_model(&s_leon, -1568, 2036, 0, 0x404, frames, &cam);
-        pselect_render_model(&s_elza,  1568, 2036, 0, 0x404, frames, &cam);
+        { const char *cv=getenv("RE15_PSELECT_CUR"); uint32_t acur = cv ? (uint32_t)atoi(cv) : frames;
+          pselect_render_model(&s_leon, -1568, 2036, 0, 0x404, acur, &cam);
+          pselect_render_model(&s_elza,  1568, 2036, 0, 0x404, acur, &cam); }
         { int br = fade_level >> 7; re15_render_pc_set_title_fade(br > 255 ? 255 : (br < 0 ? 0 : br)); }
         re15_render_end_frame();
         { const char *af = getenv("RE15_PSELECT_SHOT_AF"); unsigned sf = af ? (unsigned)atoi(af) : 40;
@@ -866,6 +874,10 @@ static int pc_run_player_select(void)
                 fading_out = 1;   /* CONFIRM -> fade to black -> hand off to the game */
         }
         frames++;
+        /* 30fps cap (byte-true PSX 30Hz cadence) so the idle clip advances 1 frame/tick, not
+         * uncapped -> the models animated far too fast without this (game loop caps @4431). */
+        { uint32_t now = SDL_GetTicks(); uint32_t el = now - ps_last;
+          if (el < 33) SDL_Delay(33 - el); ps_last = SDL_GetTicks(); }
     }
     re15_render_pc_set_title_fade(0);
     re15_render_pc_hide_player_select();
