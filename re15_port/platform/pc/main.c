@@ -686,6 +686,53 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
     return result;
 }
 
+/* PLAYER-SELECT scene — "PLEASE SELECT MAIN CAST" (byte-true TITLE.BIN task @0x80101094; full spec
+ * in RE15_PLAYER_SELECT_DRAW.md). Runs after NEW-GAME confirm; returns the chosen character
+ * (0=Leon, 1=Elza) = DAT_800aca5c>>2. This FOUNDATION does the byte-true state machine, input and
+ * highlight crossfade over the SELECTH.TIM backdrop; the live PL00/PL01 3D models, the SELECTH3
+ * name/profile SPRT overlays and the idle->zoom camera lerp are layered on in the next increments.
+ *  - INPUT (sub1 @0x80101258): TOGGLE Leon<->Elza = D-pad L/R (mask 0xa000), GATED on the pulse
+ *    scene+0x32e>=0x80 (16-frame debounce, @0x801012ac); CONFIRM = any face button or Start
+ *    (mask 0x8f0, @0x80101268). Pad word @0x800ac762 is byte-swapped in the original; the port pad
+ *    is already normalised so LEFT/RIGHT + face/START map 1:1.
+ *  - PULSE (@0x8010080c): scene+0x32e init 0x80, +8/frame clamp 0x80, reset 0 on toggle. */
+static int pc_run_player_select(void)
+{
+    extern void re15_render_pc_player_select(const re15_tim_t *bg, int sel, int pulse);
+    extern void re15_render_pc_hide_player_select(void);
+    extern void re15_render_pc_screenshot(const char *path);
+    static re15_tim_t s_sel_bg = {0};
+    if (!s_sel_bg.pixels) { int sz = 0; uint8_t *b = pc_read_shared("DATA/SELECTH.TIM", &sz);
+                            if (b) re15_tim_parse(b, sz, &s_sel_bg); }   /* one-time; buffer kept */
+    int sel = 0;        /* scene+0x394: Leon default (@0x801011f8) */
+    int pulse = 0x80;   /* scene+0x32e: init 0x80 (@0x80100548) -> first toggle is instant */
+    int confirmed = 0;
+    unsigned frames = 0;
+    const char *ps_shot = getenv("RE15_PSELECT_SHOT");
+    int auto_drive = getenv("RE15_PSELECT_AUTO") != NULL;
+    while (re15_gameflow_mode() == RE15_MODE_TITLE && !confirmed) {
+        /* pulse ramp happens in the render fn (0x80100654 -> 0x8010080c) before input each frame */
+        if (pulse < 0x80) { pulse += 8; if (pulse > 0x80) pulse = 0x80; }
+        re15_render_begin_frame();
+        re15_input_tick();
+        re15_render_background_gradient(0, 0, 0, 0, 0, 0);
+        re15_render_pc_player_select(&s_sel_bg, sel, pulse);
+        re15_render_end_frame();
+        if (ps_shot && frames == 20) re15_render_pc_screenshot(ps_shot);
+
+        uint16_t pp = g_engine.pad_pressed;
+        if (auto_drive) { if (frames == 12) pp |= RE15_PAD_BIT_RIGHT;      /* -> Elza */
+                          if (frames == 40) pp |= RE15_PAD_BIT_CROSS; }    /* confirm */
+        if ((pp & (RE15_PAD_BIT_LEFT | RE15_PAD_BIT_RIGHT)) && pulse >= 0x80) { sel ^= 1; pulse = 0; }
+        if (pp & (RE15_PAD_BIT_CROSS | RE15_PAD_BIT_SQUARE | RE15_PAD_BIT_TRIANGLE |
+                  RE15_PAD_BIT_CIRCLE | RE15_PAD_BIT_START))
+            confirmed = 1;
+        frames++;
+    }
+    re15_render_pc_hide_player_select();
+    return sel;
+}
+
 int main(int argc, char *argv[])
 {
     (void) argc; (void) argv;
@@ -814,6 +861,11 @@ int main(int argc, char *argv[])
         const char *t_shot = getenv("RE15_TITLE_SHOT");   /* debug: dump the title/menu frame + auto-advance */
         unsigned tblink = 0;
         int cursor = 0;   /* 0=NEW GAME 1=LOAD GAME 2=OPTION — byte-true 3-item menu (TITLE.BIN FUN_80102b00) */
+        if (getenv("RE15_PSELECT_TEST")) {   /* debug: jump straight into the LEON/ELZA player-select */
+            int ch = pc_run_player_select();
+            fprintf(stderr, "[pselect] returned character %d (%s)\n", ch, ch ? "Elza" : "Leon");
+            exit(0);
+        }
         /* The real RE1.5 title menu, VISUALLY verified against the PSX (shots/psx_title_a.png): the 3 rows
          * NEW GAME / LOAD GAME / OPTION + the CAPCOM copyright are SPRITES from DATA/TMOJI.TIM, drawn at
          * x=0x20, y=0x85/0x99/0xad (draw code FUN_801027a0, descriptor 0x801028ac); the active row uses the
@@ -840,7 +892,10 @@ int main(int argc, char *argv[])
             uint16_t confirm = pp & (RE15_PAD_BIT_CROSS | RE15_PAD_BIT_SQUARE |
                                      RE15_PAD_BIT_TRIANGLE | RE15_PAD_BIT_CIRCLE | RE15_PAD_BIT_START);
             if (confirm) {
-                if (cursor == 0) re15_gameflow_new_game(0);   /* NEW GAME -> INGAME (ROOM1240 intro) */
+                if (cursor == 0) {                            /* NEW GAME -> LEON/ELZA player-select -> INGAME */
+                    int ch = pc_run_player_select();          /* "PLEASE SELECT MAIN CAST" (@0x80101094) */
+                    re15_gameflow_new_game(ch);               /* ch = DAT_800aca5c>>2 (0=Leon,1=Elza) */
+                }
                 else if (cursor == 1) {                       /* LOAD GAME -> FE-4 memory-card load screen */
                     uint16_t resume_room = 0;
                     if (pc_run_memcard_screen(0, NULL, &resume_room) >= 0) {

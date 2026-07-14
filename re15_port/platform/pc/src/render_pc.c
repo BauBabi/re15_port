@@ -86,6 +86,10 @@ static SDL_Texture  *s_gameover_tex = NULL;   /* YOU DIED graphic (YOUDIED.TIM),
 static int           s_gameover_w = 0, s_gameover_h = 0, s_gameover_show = 0;
 static SDL_Texture  *s_title_tex = NULL;      /* TITLE screen (TITLEU.TIM 320x240 16bpp) */
 static int           s_title_show = 0;
+static SDL_Texture  *s_select_tex = NULL;     /* PLAYER-SELECT bg (SELECTH.TIM 320x240 16bpp) */
+static int           s_select_show = 0;
+static int           s_select_sel = 0;        /* 0=Leon,1=Elza (scene+0x394) */
+static int           s_select_pulse = 0x80;   /* highlight ramp counter scene+0x32e (0..0x80) */
 static SDL_Texture  *s_fmv_tex = NULL;        /* STR movie frame (FE-3, updated per frame) */
 static int           s_fmv_show = 0;
 static int           s_fmv_w = 0, s_fmv_h = 0;
@@ -852,6 +856,28 @@ void re15_render_end_frame(void)
             SDL_RenderCopy(s_renderer, s_text_overlay_tex, NULL, NULL);
     }
 
+    /* PLAYER-SELECT scene (TITLE.BIN task @0x80101094): SELECTH.TIM bg re-blit full-screen + the two
+     * half-screen highlight TILEs. Leon = left half, Elza = right half, tile rect (x, y=40, w=160,
+     * h=200) @0x801004f8. The pulse counter scene+0x32e drives a byte-true grayscale crossfade
+     * (@0x80100860/0x80100898): SELECTED dim = (-0x80-counter)&0xff (0x80->0x00 = brightens), OTHER
+     * = counter (0x00->0x80 = dims). Drawn here as a semi-transparent black dim overlay (the exact
+     * PSX ABR blend rate still to be confirmed from VRAM; the brightness FORMULA is byte-true). */
+    if (s_select_show && s_select_tex) {
+        SDL_Rect full = { 0, 0, SCREEN_XRES, SCREEN_YRES };
+        SDL_RenderCopy(s_renderer, s_select_tex, NULL, &full);
+        int c = s_select_pulse & 0xff;
+        int dim_sel = (-0x80 - c) & 0xff;
+        int dim_oth = c & 0xff;
+        int leon_dim = (s_select_sel == 0) ? dim_sel : dim_oth;
+        int elza_dim = (s_select_sel == 1) ? dim_sel : dim_oth;
+        int hx = SCREEN_XRES / 2, ty = SCREEN_YRES * 40 / 240;
+        SDL_Rect lr = { 0, ty, hx, SCREEN_YRES - ty };
+        SDL_Rect rr = { hx, ty, SCREEN_XRES - hx, SCREEN_YRES - ty };
+        SDL_SetRenderDrawBlendMode(s_renderer, SDL_BLENDMODE_BLEND);
+        SDL_SetRenderDrawColor(s_renderer, 0, 0, 0, (Uint8) leon_dim); SDL_RenderFillRect(s_renderer, &lr);
+        SDL_SetRenderDrawColor(s_renderer, 0, 0, 0, (Uint8) elza_dim); SDL_RenderFillRect(s_renderer, &rr);
+    }
+
     /* byte-true title MENU: the NEW GAME / LOAD GAME / OPTION sprites + copyright, from TMOJI.TIM.
      * The original (FUN_801027a0) draws each sprite as a DOUBLE EXPOSURE: a subtractive copy (abr=2,
      * E1=0xe10000d5) at Y+1 = a soft shadow, then an ADDITIVE copy (abr=1, E1=0xe10000b5) at Y = the
@@ -1021,6 +1047,34 @@ void re15_render_pc_show_title(const re15_tim_t *tim)
 }
 
 void re15_render_pc_hide_title(void) { s_title_show = 0; }
+
+/* PLAYER-SELECT scene bg + highlight state (TITLE.BIN task @0x80101094). bg = SELECTH.TIM (16bpp
+ * 320x240, "PLEASE SELECT MAIN CAST" header + rooftop(Leon)/debris-room(Elza) baked in; id 0x1d,
+ * re-blit full-screen each frame @FUN_80043870). sel = scene+0x394 (0=Leon,1=Elza); pulse =
+ * scene+0x32e (0..0x80) drives the half-screen TILE crossfade drawn in end_frame. */
+void re15_render_pc_player_select(const re15_tim_t *bg, int sel, int pulse_counter)
+{
+    if (s_renderer && bg && bg->pixels && bg->bpp == 16 && !s_select_tex) {
+        int n = bg->width * bg->height;
+        if (n > 0) {
+            uint32_t *rgba = (uint32_t *) malloc((size_t) n * 4);
+            if (rgba) {
+                for (int i = 0; i < n; i++)
+                    rgba[i] = 0xff000000u | (rgb555_to_argb8888(bg->pixels[i]) & 0xffffffu);
+                s_select_tex = SDL_CreateTexture(s_renderer, SDL_PIXELFORMAT_ARGB8888,
+                                                 SDL_TEXTUREACCESS_STATIC, bg->width, bg->height);
+                if (s_select_tex) SDL_UpdateTexture(s_select_tex, NULL, rgba, bg->width * 4);
+                free(rgba);
+            }
+        }
+    }
+    s_select_sel = sel; s_select_pulse = pulse_counter; s_select_show = 1;
+}
+void re15_render_pc_hide_player_select(void)
+{
+    s_select_show = 0;
+    if (s_select_tex) { SDL_DestroyTexture(s_select_tex); s_select_tex = NULL; }
+}
 
 /* ---- FE-1: byte-true title MENU sprites (DATA/TMOJI.TIM) ------------------------------------
  * The 3 menu rows + the copyright are GPU SPRITES, not font text (RE'd from TITLE.BIN: menu
