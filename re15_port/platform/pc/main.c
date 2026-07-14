@@ -849,6 +849,9 @@ static int pc_run_player_select(void)
         re15_render_end_frame();
         { const char *af = getenv("RE15_PSELECT_SHOT_AF"); unsigned sf = af ? (unsigned)atoi(af) : 40;
           if (ps_shot && frames == sf) re15_render_pc_screenshot(ps_shot); }
+        { const char *ser = getenv("RE15_PSELECT_SERIES");   /* frame-series dump for the video compare */
+          if (ser) { if (frames < 60) { char pb[512]; snprintf(pb, sizeof pb, "%s/f%03u.png", ser, frames);
+                                         re15_render_pc_screenshot(pb); } else break; } }
 
         if (!fading_out) { fade_level -= 0x400; if (fade_level < 0) fade_level = 0; }   /* fade-in */
         else { fade_level += 0x400; if (fade_level >= 0x7fff) break; }                  /* fade-out -> exit */

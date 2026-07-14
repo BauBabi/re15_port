@@ -880,9 +880,24 @@ void re15_render_end_frame(void)
         int hx = SCREEN_XRES / 2, ty = SCREEN_YRES * 40 / 240;
         SDL_Rect lr = { 0, ty, hx, SCREEN_YRES - ty };
         SDL_Rect rr = { hx, ty, SCREEN_XRES - hx, SCREEN_YRES - ty };
-        SDL_SetRenderDrawBlendMode(s_renderer, SDL_BLENDMODE_BLEND);
-        SDL_SetRenderDrawColor(s_renderer, 0, 0, 0, (Uint8) leon_dim); SDL_RenderFillRect(s_renderer, &lr);
-        SDL_SetRenderDrawColor(s_renderer, 0, 0, 0, (Uint8) elza_dim); SDL_RenderFillRect(s_renderer, &rr);
+        /* byte-true ABR2 SUBTRACTIVE (dst - grayscale): SUBTRACT the tile value from the framebuffer
+         * (bg + model), so the non-selected half's dark room + model go to BLACK (the PSX semi-trans
+         * TILE @0x801004f8). The SDL software renderer doesn't support custom blend -> fall back to a
+         * black BLEND overlay (proportional dim) for headless captures; the accelerated renderer (the
+         * normal run) does the exact subtractive. */
+        SDL_BlendMode sub = SDL_ComposeCustomBlendMode(
+            SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_REV_SUBTRACT,
+            SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_ADD);
+        if (SDL_SetRenderDrawBlendMode(s_renderer, sub) == 0) {
+            SDL_SetRenderDrawColor(s_renderer, (Uint8) leon_dim, (Uint8) leon_dim, (Uint8) leon_dim, 255);
+            SDL_RenderFillRect(s_renderer, &lr);
+            SDL_SetRenderDrawColor(s_renderer, (Uint8) elza_dim, (Uint8) elza_dim, (Uint8) elza_dim, 255);
+            SDL_RenderFillRect(s_renderer, &rr);
+        } else {
+            SDL_SetRenderDrawBlendMode(s_renderer, SDL_BLENDMODE_BLEND);
+            SDL_SetRenderDrawColor(s_renderer, 0, 0, 0, (Uint8) leon_dim); SDL_RenderFillRect(s_renderer, &lr);
+            SDL_SetRenderDrawColor(s_renderer, 0, 0, 0, (Uint8) elza_dim); SDL_RenderFillRect(s_renderer, &rr);
+        }
     }
 
     /* byte-true title MENU: the NEW GAME / LOAD GAME / OPTION sprites + copyright, from TMOJI.TIM.
