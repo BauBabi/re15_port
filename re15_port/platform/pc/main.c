@@ -724,9 +724,11 @@ static void pselect_load_model(pselect_model_t *m, const char *md1p, const char 
     }
     re15_tim_t tim = {0}; int tsz = 0; uint8_t *tb = pc_read_shared(timp, &tsz);
     if (tb && re15_tim_parse(tb, tsz, &tim) == 0) re15_render_pc_upload_tim_slot(&tim, tim_slot);
-    /* EQUIPPED WEAPON (W03 handgun): the weapon mesh + texture live in the weapon PLW, drawn as
-     * extra parts on the hand bone (same mechanism as the in-game weapon-in-hand, main.c ~3609).
-     * PLW sections: [2] = weapon MD1 (de[2]..de[3]), [3] = weapon TIM (de[3]..diroff). */
+    /* EQUIPPED WEAPON (W03 handgun): the hand+gun mesh is PLW section [2] (de[2]..de[3]), drawn on
+     * bone 11 at render time. It is textured from the character's BODY skin TIM (all its tris read
+     * page 0x81 / clut 0x7840 = the same tpage as the body's hand mesh) — the PLW's own dir[3] TIM
+     * is NOT referenced by this mesh, so we don't upload it. (void)wpn_tim_slot. */
+    (void)wpn_tim_slot;
     if (wpn_plw) {
         int psz = 0; uint8_t *plw = pc_read_shared(wpn_plw, &psz);   /* stays resident (MD1 borrows) */
         if (plw && psz >= 16) {
@@ -736,19 +738,23 @@ static void pselect_load_model(pselect_model_t *m, const char *md1p, const char 
                 for (int k = 0; k < 4; k++)
                     de[k] = (uint32_t)(plw[diroff+4*k] | (plw[diroff+4*k+1]<<8) |
                                        (plw[diroff+4*k+2]<<16) | ((uint32_t)plw[diroff+4*k+3]<<24));
-            if (de[3] > de[2] && re15_md1_parse(plw + de[2], (int)(de[3] - de[2]), &m->wpn_md1) == 0) {
+            if (de[3] > de[2] && re15_md1_parse(plw + de[2], (int)(de[3] - de[2]), &m->wpn_md1) == 0)
                 m->wpn_ok = 1;
-                re15_tim_t wtim = {0};
-                if (diroff > de[3] && re15_tim_parse(plw + de[3], (int)(diroff - de[3]), &wtim) == 0)
-                    re15_render_pc_upload_tim_slot(&wtim, wpn_tim_slot);
-            }
         }
     }
     m->ok = 1;
-    if (getenv("RE15_PSELECT_DIAG"))
+    if (getenv("RE15_PSELECT_DIAG")) {
         fprintf(stderr, "PSELECT LOAD base=%s kf=%s: md1.mesh=%d edd.clip=%d emr.bone=%d emr.kf=%d\n",
                 base_emrp, kf_emrp ? kf_emrp : "(none)", m->md1.mesh_count, m->anim.clip_count,
                 m->skel.bone_count, m->skel.keyframe_count);
+        if (m->wpn_ok && m->wpn_md1.mesh_count > 0) {
+            const re15_md1_mesh_t *wm = &m->wpn_md1.meshes[0];
+            fprintf(stderr, "  WPN mesh: tris=%d quads=%d tvtx=%d page=0x%x (body page 0x%x)\n",
+                    wm->triangle_count, wm->quad_count, wm->tri_vertex_count,
+                    wm->triangle_count>0 ? wm->triangle_uvs[0].page : 0,
+                    m->md1.mesh_count>11 && m->md1.meshes[11].triangle_count>0 ? m->md1.meshes[11].triangle_uvs[0].page : 0);
+        }
+    }
 }
 
 static void pselect_render_model(const pselect_model_t *m, int32_t px, int32_t py, int32_t pz,
@@ -805,18 +811,15 @@ static void pselect_render_model(const pselect_model_t *m, int32_t px, int32_t p
         int32_t bwt[3] = { yt[0] + px, yt[1] + py, yt[2] + pz };
         int32_t bm[9], bt[3];
         re15_camera_compose_view_bone(cam, yr, bwt, bm, bt);
-        /* EQUIPPED WEAPON (byte-true RE complete, render pending): the original's part[11] at bone 11
-         * is a hand+gun mesh REPLACING the plain hand. All of the RE is verified against the live
-         * savestate — attach bone = 11; the port's bone-11 world matrix is byte-identical to the
-         * original's part[11] matrix (@+0x40 rot [2 204 4088]/[523 4048 -205]/[-4060 522 -18],
-         * trans (-2118,385,-66)); the weapon mesh = PL04W03.PLW dir[2] (verts match the savestate
-         * 6/6, shared weapon buffer for both characters); TIM = PL04W03 dir[3] (28x32 8bpp @VRAM
-         * 512,0). NOT yet drawn: the weapon TIM is page-relative (UV u=126 + tpage pxo=128 = 254)
-         * and the port's per-slot texture upload places the small TIM at x=0, so the UVs miss it and
-         * it renders untextured. Needs the tim-slot pipeline to honour the weapon's VRAM tpage
-         * offset before enabling — until then draw the plain hand so the model isn't broken. */
-        /* TEST: weapon at bone 11 uses the BODY skin texture (its UVs match the body page/clut). */
-        int wpn_here = (getenv("RE15_PSELECT_WPN") && bi == 11 && m->wpn_ok && m->wpn_md1.mesh_count > 0);
+        /* EQUIPPED WEAPON (byte-true, verified against the live original savestate): at bone 11 the
+         * hand+gun mesh REPLACES the plain hand. Attach = bone 11 — the port's bone-11 world matrix
+         * is byte-identical to the original's part[11] matrix (@+0x40 rot [2 204 4088]/[523 4048
+         * -205]/[-4060 522 -18], trans (-2118,385,-66)). Mesh = PL04W03.PLW dir[2] (verts match the
+         * savestate 6/6; a shared weapon buffer, so BOTH characters use PL04W03). The mesh is
+         * textured entirely from the character's BODY skin TIM — every tri/quad reads page 0x81 /
+         * clut 0x7840, the SAME tpage as body mesh 11 — so it binds m->tim_slot (NOT the separate
+         * PLW dir[3] gun TIM, which this mesh does not reference). Both characters carry it. */
+        int wpn_here = (bi == 11 && m->wpn_ok && m->wpn_md1.mesh_count > 0);
         const re15_md1_mesh_t *mesh = wpn_here ? &m->wpn_md1.meshes[0] : &m->md1.meshes[bi];
         re15_render_pc_bind_tim_slot(m->tim_slot);
 #define PSV(vp, ox, oy, owz) do { \
