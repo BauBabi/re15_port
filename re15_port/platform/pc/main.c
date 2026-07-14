@@ -790,7 +790,25 @@ static void pselect_render_model(const pselect_model_t *m, int32_t px, int32_t p
     int32_t yaw[9]; re15_camera_yaw_matrix_angle(rot_y, yaw);
     int nb = m->skel.bone_count; if (nb > m->md1.mesh_count) nb = m->md1.mesh_count;
     const int cx = 160, cy = 120;    /* OFX/OFY */
-    const uint8_t C = 0x80;          /* flat tint (SetColorMatrix 0.5 + base 0x808080); NCCT lighting TBD */
+    const uint8_t C = 0x80;          /* neutral fallback tint when a mesh part lacks per-vertex normals */
+    /* NCCT PER-VERTEX LIGHTING (byte-true, workflow wf_244f0842): the player-select models are GTE
+     * NCCT-lit (front-end draw FUN_8001e8c8 → FUN_800254a0, GTE cmd 0x4b18043f), NOT flat. Light set
+     * read live from the scene @0x80190088: 3 lights color (128,128,128), ambient/BackColor (76,76,86),
+     * positions L0(-4600,-4000,-23200)/L1(-99,-2000,-29200)/L2(2000,2000,2000), ranges 20000/10000/
+     * 20000, LCM 0.5, base CODE 0x80. Rendering flat 0x80 was ~2x too bright, so the unselected char
+     * (after the -0x80 subtractive overlay) wasn't dark enough. Same pipeline for both characters —
+     * only the mirrored world-X (Leon -1568 / Elza +1568) changes the light direction. */
+    static const re15_light_cut_t s_ps_cut = {
+        1, {1,1,1}, {{128,128,128},{128,128,128},{128,128,128}}, {76,76,86},
+        {{-4600,-4000,-23200},{-99,-2000,-29200},{2000,2000,2000}}, {20000,10000,20000} };
+    re15_actor_lightctx_t lctx_world;
+    { int32_t apos[3] = { px, py, pz }; re15_light_setup_actor(&s_ps_cut, apos, NULL, &lctx_world); }
+    /* NCCT gated OFF by default (RE15_PSELECT_NCCT): the light DATA is byte-true, but the port's
+     * positional/directional falloff underestimates these far-away (-Z 23k) lights vs the original
+     * GTE — it renders the SELECTED char too dark (region 8.5 vs orig 34.2), while flat 0x80 already
+     * matches the selected char (35.5 vs 34.2). Needs the falloff/frame calibrated before enabling;
+     * flat is the correct default meanwhile. The unselected-char residual (7.2 vs 2.3) is the target. */
+    int ncct_on = getenv("RE15_PSELECT_NCCT") != NULL;
     /* EQUIPPED WEAPON (byte-true, workflow wf_8837a549 + user-corrected): the player-select draws the
      * model through ONE shared skeleton-part pass (FUN_8001e8c8 walks model+0x188 parts); the
      * equipped weapon is part[11] = a HAND+GUN mesh (35 verts) that REPLACES the plain right-hand
@@ -811,6 +829,10 @@ static void pselect_render_model(const pselect_model_t *m, int32_t px, int32_t p
         int32_t bwt[3] = { yt[0] + px, yt[1] + py, yt[2] + pz };
         int32_t bm[9], bt[3];
         re15_camera_compose_view_bone(cam, yr, bwt, bm, bt);
+        /* rotate the world light context into THIS bone's frame (yr = R_y(yaw)×pose.rot = the bone's
+         * world rotation), so a RAW bone-local vertex normal shades as L_world·N_world (byte-true
+         * per-bone SetLightMatrix, FUN_8001e9ec). */
+        re15_actor_lightctx_t lctx; re15_light_ctx_rotate_for_bone(&lctx_world, yr, &lctx);
         /* EQUIPPED WEAPON (byte-true, verified against the live original savestate): at bone 11 the
          * hand+gun mesh REPLACES the plain hand. Attach = bone 11 — the port's bone-11 world matrix
          * is byte-identical to the original's part[11] matrix (@+0x40 rot [2 204 4088]/[523 4048
@@ -851,8 +873,16 @@ static void pselect_render_model(const pselect_model_t *m, int32_t px, int32_t p
             const re15_md1_tri_uv_t *uv = &mesh->triangle_uvs[ti];
             int pxo = (int)((uv->page & 0xF) * 128);
             int avgz = (int)((wz0 + wz1 + wz2) * (1.0f/3.0f));
+            uint8_t r0,g0,b0,r1,g1,b1,r2,g2,b2;
+            if (ncct_on && mesh->tri_normals && t->n0 < (uint32_t)mesh->tri_normal_count &&
+                t->n1 < (uint32_t)mesh->tri_normal_count && t->n2 < (uint32_t)mesh->tri_normal_count) {
+                const re15_md1_vertex_t *nn0=&mesh->tri_normals[t->n0], *nn1=&mesh->tri_normals[t->n1], *nn2=&mesh->tri_normals[t->n2];
+                re15_light_shade_vertex(&lctx, nn0->x,nn0->y,nn0->z, &r0,&g0,&b0);
+                re15_light_shade_vertex(&lctx, nn1->x,nn1->y,nn1->z, &r1,&g1,&b1);
+                re15_light_shade_vertex(&lctx, nn2->x,nn2->y,nn2->z, &r2,&g2,&b2);
+            } else { r0=r1=r2=C; g0=g1=g2=C; b0=b1=b2=C; }
             re15_render_textured_tri_lit(sx0,sy0,(int)uv->u0+pxo,(int)uv->v0, sx1,sy1,(int)uv->u1+pxo,(int)uv->v1,
-                sx2,sy2,(int)uv->u2+pxo,(int)uv->v2, 0,(int)uv->clut,avgz, C,C,C,C,C,C,C,C,C);
+                sx2,sy2,(int)uv->u2+pxo,(int)uv->v2, 0,(int)uv->clut,avgz, r0,g0,b0,r1,g1,b1,r2,g2,b2);
         }
         for (int qi = 0; qi < mesh->quad_count; qi++) {
             const re15_md1_quad_t *q = &mesh->quads[qi];
@@ -868,10 +898,20 @@ static void pselect_render_model(const pselect_model_t *m, int32_t px, int32_t p
             const re15_md1_quad_uv_t *uv = &mesh->quad_uvs[qi];
             int pxo = (int)((uv->page & 0xF) * 128);
             int az1 = (int)((wz0+wz1+wz3)*(1.0f/3.0f)), az2 = (int)((wz0+wz3+wz2)*(1.0f/3.0f));
+            uint8_t qr0,qg0,qb0,qr1,qg1,qb1,qr2,qg2,qb2,qr3,qg3,qb3;
+            if (ncct_on && mesh->quad_normals && q->n0 < (uint32_t)mesh->quad_normal_count && q->n1 < (uint32_t)mesh->quad_normal_count &&
+                q->n2 < (uint32_t)mesh->quad_normal_count && q->n3 < (uint32_t)mesh->quad_normal_count) {
+                const re15_md1_vertex_t *m0=&mesh->quad_normals[q->n0], *m1=&mesh->quad_normals[q->n1],
+                                        *m2=&mesh->quad_normals[q->n2], *m3=&mesh->quad_normals[q->n3];
+                re15_light_shade_vertex(&lctx, m0->x,m0->y,m0->z, &qr0,&qg0,&qb0);
+                re15_light_shade_vertex(&lctx, m1->x,m1->y,m1->z, &qr1,&qg1,&qb1);
+                re15_light_shade_vertex(&lctx, m2->x,m2->y,m2->z, &qr2,&qg2,&qb2);
+                re15_light_shade_vertex(&lctx, m3->x,m3->y,m3->z, &qr3,&qg3,&qb3);
+            } else { qr0=qr1=qr2=qr3=C; qg0=qg1=qg2=qg3=C; qb0=qb1=qb2=qb3=C; }
             re15_render_textured_tri_lit(sx0,sy0,(int)uv->u0+pxo,(int)uv->v0, sx1,sy1,(int)uv->u1+pxo,(int)uv->v1,
-                sx3,sy3,(int)uv->u3+pxo,(int)uv->v3, 0,(int)uv->clut,az1, C,C,C,C,C,C,C,C,C);
+                sx3,sy3,(int)uv->u3+pxo,(int)uv->v3, 0,(int)uv->clut,az1, qr0,qg0,qb0,qr1,qg1,qb1,qr3,qg3,qb3);
             re15_render_textured_tri_lit(sx0,sy0,(int)uv->u0+pxo,(int)uv->v0, sx3,sy3,(int)uv->u3+pxo,(int)uv->v3,
-                sx2,sy2,(int)uv->u2+pxo,(int)uv->v2, 0,(int)uv->clut,az2, C,C,C,C,C,C,C,C,C);
+                sx2,sy2,(int)uv->u2+pxo,(int)uv->v2, 0,(int)uv->clut,az2, qr0,qg0,qb0,qr3,qg3,qb3,qr2,qg2,qb2);
         }
 #undef PSV
 #undef PSBF
