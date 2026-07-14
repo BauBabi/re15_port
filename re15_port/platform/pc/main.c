@@ -803,12 +803,13 @@ static void pselect_render_model(const pselect_model_t *m, int32_t px, int32_t p
         {{-4600,-4000,-23200},{-99,-2000,-29200},{2000,2000,2000}}, {20000,10000,20000} };
     re15_actor_lightctx_t lctx_world;
     { int32_t apos[3] = { px, py, pz }; re15_light_setup_actor(&s_ps_cut, apos, NULL, &lctx_world); }
-    /* NCCT gated OFF by default (RE15_PSELECT_NCCT): the light DATA is byte-true, but the port's
-     * positional/directional falloff underestimates these far-away (-Z 23k) lights vs the original
-     * GTE — it renders the SELECTED char too dark (region 8.5 vs orig 34.2), while flat 0x80 already
-     * matches the selected char (35.5 vs 34.2). Needs the falloff/frame calibrated before enabling;
-     * flat is the correct default meanwhile. The unselected-char residual (7.2 vs 2.3) is the target. */
-    int ncct_on = getenv("RE15_PSELECT_NCCT") != NULL;
+    /* NCCT ON by default (disable for A/B with RE15_PSELECT_NO_NCCT). Byte-true: the models ARE GTE
+     * NCCT-lit; this darkens the UNSELECTED character to the original's near-black level (region ~0.8
+     * vs orig 2.3; flat left it far too bright at 7.2) while the selected char stays clearly lit.
+     * A minor residual remains — the selected char is ~0.8x the original's front brightness because
+     * only L2 (the -Z light) faces the camera-side of the model in the port's frame while the GTE
+     * appears to catch more; a follow-up can close that, but this is the byte-true mechanism. */
+    int ncct_on = getenv("RE15_PSELECT_NO_NCCT") == NULL;
     /* EQUIPPED WEAPON (byte-true, workflow wf_8837a549 + user-corrected): the player-select draws the
      * model through ONE shared skeleton-part pass (FUN_8001e8c8 walks model+0x188 parts); the
      * equipped weapon is part[11] = a HAND+GUN mesh (35 verts) that REPLACES the plain right-hand
