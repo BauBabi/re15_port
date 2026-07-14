@@ -700,35 +700,53 @@ static int pc_run_player_select(void)
 {
     extern void re15_render_pc_player_select(const re15_tim_t *bg, int sel, int pulse);
     extern void re15_render_pc_hide_player_select(void);
+    extern void re15_render_pc_hide_title(void);
+    extern void re15_render_pc_hide_title_menu(void);
+    extern void re15_render_pc_set_title_fade(int a);
     extern void re15_render_pc_screenshot(const char *path);
+    /* The menu confirm REPLACES the title task with this one (FUN_80029ba4 @0x80102c9c), so the
+     * NEW GAME / LOAD GAME / OPTION menu + the title art STOP being drawn entirely. */
+    re15_render_pc_hide_title_menu();
+    re15_render_pc_hide_title();
     static re15_tim_t s_sel_bg = {0};
     if (!s_sel_bg.pixels) { int sz = 0; uint8_t *b = pc_read_shared("DATA/SELECTH.TIM", &sz);
                             if (b) re15_tim_parse(b, sz, &s_sel_bg); }   /* one-time; buffer kept */
     int sel = 0;        /* scene+0x394: Leon default (@0x801011f8) */
     int pulse = 0x80;   /* scene+0x32e: init 0x80 (@0x80100548) -> first toggle is instant */
-    int confirmed = 0;
+    /* FADE-IN: sub0 kicks fade ch0 abr2-subtractive step -0x400 with level 0x7fff (FUN_800217b0
+     * @0x8010121c + FUN_800216ec @0x80101240) -> brightness (level>>7) ramps 0xff->0 over 32 frames.
+     * FADE-OUT on confirm (the zoom sub3..sub7 fade-to-black; the live zoom is the next increment). */
+    int fade_level = 0x7fff;   /* brightness = fade_level>>7 */
+    int fading_out = 0;
     unsigned frames = 0;
     const char *ps_shot = getenv("RE15_PSELECT_SHOT");
     int auto_drive = getenv("RE15_PSELECT_AUTO") != NULL;
-    while (re15_gameflow_mode() == RE15_MODE_TITLE && !confirmed) {
-        /* pulse ramp happens in the render fn (0x80100654 -> 0x8010080c) before input each frame */
+    while (re15_gameflow_mode() == RE15_MODE_TITLE) {
         if (pulse < 0x80) { pulse += 8; if (pulse > 0x80) pulse = 0x80; }
         re15_render_begin_frame();
         re15_input_tick();
         re15_render_background_gradient(0, 0, 0, 0, 0, 0);
         re15_render_pc_player_select(&s_sel_bg, sel, pulse);
+        { int br = fade_level >> 7; re15_render_pc_set_title_fade(br > 255 ? 255 : (br < 0 ? 0 : br)); }
         re15_render_end_frame();
-        if (ps_shot && frames == 20) re15_render_pc_screenshot(ps_shot);
+        { const char *af = getenv("RE15_PSELECT_SHOT_AF"); unsigned sf = af ? (unsigned)atoi(af) : 40;
+          if (ps_shot && frames == sf) re15_render_pc_screenshot(ps_shot); }
+
+        if (!fading_out) { fade_level -= 0x400; if (fade_level < 0) fade_level = 0; }   /* fade-in */
+        else { fade_level += 0x400; if (fade_level >= 0x7fff) break; }                  /* fade-out -> exit */
 
         uint16_t pp = g_engine.pad_pressed;
-        if (auto_drive) { if (frames == 12) pp |= RE15_PAD_BIT_RIGHT;      /* -> Elza */
-                          if (frames == 40) pp |= RE15_PAD_BIT_CROSS; }    /* confirm */
-        if ((pp & (RE15_PAD_BIT_LEFT | RE15_PAD_BIT_RIGHT)) && pulse >= 0x80) { sel ^= 1; pulse = 0; }
-        if (pp & (RE15_PAD_BIT_CROSS | RE15_PAD_BIT_SQUARE | RE15_PAD_BIT_TRIANGLE |
-                  RE15_PAD_BIT_CIRCLE | RE15_PAD_BIT_START))
-            confirmed = 1;
+        if (auto_drive) { if (frames == 40) pp |= RE15_PAD_BIT_RIGHT;      /* -> Elza (after fade-in) */
+                          if (frames == 70) pp |= RE15_PAD_BIT_CROSS; }    /* confirm */
+        if (!fading_out && fade_level == 0) {   /* input active once faded in (sub1 idle) */
+            if ((pp & (RE15_PAD_BIT_LEFT | RE15_PAD_BIT_RIGHT)) && pulse >= 0x80) { sel ^= 1; pulse = 0; }
+            if (pp & (RE15_PAD_BIT_CROSS | RE15_PAD_BIT_SQUARE | RE15_PAD_BIT_TRIANGLE |
+                      RE15_PAD_BIT_CIRCLE | RE15_PAD_BIT_START))
+                fading_out = 1;   /* CONFIRM -> fade to black -> hand off to the game */
+        }
         frames++;
     }
+    re15_render_pc_set_title_fade(0);
     re15_render_pc_hide_player_select();
     return sel;
 }
@@ -853,6 +871,7 @@ int main(int argc, char *argv[])
         extern void re15_render_pc_screenshot(const char *path);
         extern void re15_render_pc_title_menu(const re15_tim_t *tmoji, int cursor);   /* byte-true TMOJI sprites */
         extern void re15_render_pc_hide_title_menu(void);
+        extern void re15_render_pc_set_title_fade(int a);   /* front-end fade (menu->player-select) */
         re15_tim_t s_boot_title = {0}, s_tmoji = {0};
         { int tsz = 0; uint8_t *tb = pc_read_shared("DATA/TITLEU.TIM", &tsz);
           if (tb) re15_tim_parse(tb, tsz, &s_boot_title); }
@@ -892,7 +911,19 @@ int main(int argc, char *argv[])
             uint16_t confirm = pp & (RE15_PAD_BIT_CROSS | RE15_PAD_BIT_SQUARE |
                                      RE15_PAD_BIT_TRIANGLE | RE15_PAD_BIT_CIRCLE | RE15_PAD_BIT_START);
             if (confirm) {
-                if (cursor == 0) {                            /* NEW GAME -> LEON/ELZA player-select -> INGAME */
+                if (cursor == 0) {                            /* NEW GAME -> fade out menu -> player-select */
+                    /* byte-true: the menu confirm fades to black (0x80102ccc) then REPLACES the task
+                     * with the player-select (FUN_80029ba4 @0x80102c9c). Fade the menu out (32f, rate
+                     * 8/frame) drawing the title + menu each frame, then hand off. */
+                    for (int f = 8; f <= 256; f += 8) {
+                        re15_render_begin_frame();
+                        re15_input_tick();
+                        re15_render_background_gradient(8, 8, 16, 0, 0, 0);
+                        if (s_boot_title.pixels) re15_render_pc_show_title(&s_boot_title);
+                        re15_render_pc_title_menu(&s_tmoji, cursor);
+                        re15_render_pc_set_title_fade(f > 255 ? 255 : f);
+                        re15_render_end_frame();
+                    }
                     int ch = pc_run_player_select();          /* "PLEASE SELECT MAIN CAST" (@0x80101094) */
                     re15_gameflow_new_game(ch);               /* ch = DAT_800aca5c>>2 (0=Leon,1=Elza) */
                 }
