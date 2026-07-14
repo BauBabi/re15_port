@@ -89,6 +89,8 @@ static int           s_title_show = 0;
 static SDL_Texture  *s_select_tex = NULL;     /* PLAYER-SELECT bg (SELECTH.TIM 320x240 16bpp) */
 static int           s_select_show = 0;
 static int           s_select_sel = 0;        /* 0=Leon,1=Elza (scene+0x394) */
+static SDL_Texture  *s_selecth3_tex = NULL;   /* PLAYER-SELECT name/profile text atlas (SELECTH3.TIM 256x256 8bpp) */
+static int           s_pselect_text_show = 0;
 static int           s_select_pulse = 0x80;   /* highlight ramp counter scene+0x32e (0..0x80) */
 static SDL_Texture  *s_fmv_tex = NULL;        /* STR movie frame (FE-3, updated per frame) */
 static int           s_fmv_show = 0;
@@ -864,6 +866,30 @@ void re15_render_end_frame(void)
             SDL_RenderCopy(s_renderer, s_text_overlay_tex, NULL, NULL);
     }
 
+    /* PLAYER-SELECT name/profile TEXT (SELECTH3.TIM atlas, groups B+C) — drawn OVER the models and
+     * BEFORE the dim TILEs so the unselected side's text dims with its model (byte-true, §render_pc
+     * re15_render_pc_pselect_text). Rects verbatim from TITLE.BIN @0x80102624 / @0x8010265c. Logical
+     * render size is 320x240 so the coords are used directly. */
+    if (s_pselect_text_show && s_selecth3_tex) {
+        /* IDLE state draws only the 2 NAMES + 2 PROFILE blocks (verified byte-true against the PSX
+         * framebuffer). The 2 subtitle sprites (Group B rows 1/3, "from police department" /
+         * "from college dormitory" at screen y=216) are set up by the same @0x80102624 loop but are
+         * CONFIRM-ONLY: their blocks are moved on-screen by the zoom animator 0x80100a50, which is
+         * gated on scene+0x15c state 2/3 (the confirm-zoom) — in the idle state they are not shown
+         * (native has nothing at y=216 there). They render with the zoom (next increment). */
+        static const struct { int x, y, w, h, u, v; } ps_text[4] = {
+            {  16,  48, 136, 24,  0,   0 },   /* B0 Leon name   UV(0,0)   136x24 */
+            { 168,  48, 136, 24,  0,  48 },   /* B2 Elza name   UV(0,48)  136x24 */
+            {  24, 168, 120, 48,  0,  88 },   /* C0 Leon PROFILE screen(24,168)  UV(0,88)  120x48 */
+            { 176, 168, 120, 48,  0, 136 },   /* C1 Elza PROFILE screen(176,168) UV(0,136) 120x48 */
+        };
+        for (int i = 0; i < 4; i++) {
+            SDL_Rect src = { ps_text[i].u, ps_text[i].v, ps_text[i].w, ps_text[i].h };
+            SDL_Rect dst = { ps_text[i].x, ps_text[i].y, ps_text[i].w, ps_text[i].h };
+            SDL_RenderCopy(s_renderer, s_selecth3_tex, &src, &dst);
+        }
+    }
+
     /* PLAYER-SELECT scene (TITLE.BIN task @0x80101094): SELECTH.TIM bg re-blit full-screen + the two
      * half-screen highlight TILEs. Leon = left half, Elza = right half, tile rect (x, y=40, w=160,
      * h=200) @0x801004f8. The pulse counter scene+0x32e drives a byte-true grayscale crossfade
@@ -1097,7 +1123,47 @@ void re15_render_pc_player_select(const re15_tim_t *bg, int sel, int pulse_count
 void re15_render_pc_hide_player_select(void)
 {
     s_select_show = 0;
+    s_pselect_text_show = 0;
     if (s_select_tex) { SDL_DestroyTexture(s_select_tex); s_select_tex = NULL; }
+    if (s_selecth3_tex) { SDL_DestroyTexture(s_selecth3_tex); s_selecth3_tex = NULL; }
+}
+
+/* PLAYER-SELECT name/profile TEXT overlays (byte-true TITLE.BIN task @0x80101094, RE15_PLAYER_SELECT_DRAW.md
+ * groups B+C). The text is a PRE-RENDERED atlas: SELECTH3.TIM (id 0x1f, 8bpp 256x256 + 256-CLUT) with the
+ * name colours (Leon "L" blue / Elza "E" red) and the green sub-labels BAKED IN — no runtime font draw,
+ * no CLUT swap (verified: SELECT/SELECTH2 are unused, my earlier "3 variants" note was wrong). Index 0 =
+ * transparent. The 6 sprites' src UV + screen XY are read verbatim from TITLE.BIN:
+ *   Group B (names+subtitles) @0x80102624, 6B/entry [x,y,w,h,u,v]
+ *   Group C (PROFILE blocks)  @0x8010265c, [x,y,u,v] u16 + const 120x48
+ * Drawn OVER the 3D models but BEFORE the half-screen dim TILEs, so the unselected side's text dims with
+ * the model (byte-true: the dim tile is a semi-transparent subtractive rect covering the whole half). */
+void re15_render_pc_pselect_text(const re15_tim_t *atlas, int sel)
+{
+    (void)sel;   /* which side is selected is handled by the dim overlay, not the text */
+    if (s_renderer && atlas && atlas->pixels && atlas->bpp == 8 && !s_selecth3_tex) {
+        int W = atlas->width, H = atlas->height;   /* 256x256 */
+        if (W > 0 && H > 0) {
+            uint32_t *rgba = (uint32_t *) malloc((size_t) W * H * 4);
+            if (rgba) {
+                const uint8_t *idx = (const uint8_t *) atlas->pixels;
+                for (int i = 0; i < W * H; i++) {
+                    uint8_t p = idx[i];
+                    if (p == 0) { rgba[i] = 0; continue; }   /* index 0 = transparent */
+                    uint16_t c = (p < atlas->clut_entries) ? atlas->clut[p] : 0;
+                    uint32_t r = ((c) & 31) << 3, g = ((c >> 5) & 31) << 3, b = ((c >> 10) & 31) << 3;
+                    rgba[i] = 0xFF000000u | (r << 16) | (g << 8) | b;
+                }
+                s_selecth3_tex = SDL_CreateTexture(s_renderer, SDL_PIXELFORMAT_ARGB8888,
+                                                   SDL_TEXTUREACCESS_STATIC, W, H);
+                if (s_selecth3_tex) {
+                    SDL_UpdateTexture(s_selecth3_tex, NULL, rgba, W * 4);
+                    SDL_SetTextureBlendMode(s_selecth3_tex, SDL_BLENDMODE_BLEND);
+                }
+                free(rgba);
+            }
+        }
+    }
+    s_pselect_text_show = 1;
 }
 
 /* ---- FE-1: byte-true title MENU sprites (DATA/TMOJI.TIM) ------------------------------------

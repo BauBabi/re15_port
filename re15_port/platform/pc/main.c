@@ -950,9 +950,14 @@ static int pc_run_player_select(void)
      * NEW GAME / LOAD GAME / OPTION menu + the title art STOP being drawn entirely. */
     re15_render_pc_hide_title_menu();
     re15_render_pc_hide_title();
+    extern void re15_render_pc_pselect_text(const re15_tim_t *atlas, int sel);
     static re15_tim_t s_sel_bg = {0};
     if (!s_sel_bg.pixels) { int sz = 0; uint8_t *b = pc_read_shared("DATA/SELECTH.TIM", &sz);
                             if (b) re15_tim_parse(b, sz, &s_sel_bg); }   /* one-time; buffer kept */
+    /* SELECTH3.TIM = the byte-true name/profile TEXT atlas (8bpp 256x256, colours baked in). */
+    static re15_tim_t s_sel_txt = {0};
+    if (!s_sel_txt.pixels) { int sz = 0; uint8_t *b = pc_read_shared("DATA/SELECTH3.TIM", &sz);
+                             if (b) re15_tim_parse(b, sz, &s_sel_txt); }
     /* Load Leon(PL00) + Elza(PL08) once (TIM slots 20/21, free during the front-end).
      * BYTE-TRUE model ids (loader FUN_80101720 + CD dir @0x8006f43c): Leon = the resident PL00
      * (buffer 0x801bd814); Elza = CD file-id 0x44 whose dir-entry size (182928) is EXACTLY PL08.PLD.
@@ -1002,6 +1007,7 @@ static int pc_run_player_select(void)
         re15_input_tick();
         re15_render_background_gradient(0, 0, 0, 0, 0, 0);
         re15_render_pc_player_select(&s_sel_bg, sel, pulse);
+        re15_render_pc_pselect_text(&s_sel_txt, sel);   /* name/profile text overlays (groups B+C) */
         /* the two live 3D models (queued as textri; flushed OVER the SELECTH backdrop in end_frame).
          * Leon left / Elza right, byte-true POS (Y=0x7f4=2036), rot_y 0x404, idle clip 2. */
         { const char *cv=getenv("RE15_PSELECT_CUR"); uint32_t acur = cv ? (uint32_t)atoi(cv) : frames;
