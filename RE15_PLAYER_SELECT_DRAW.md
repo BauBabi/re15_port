@@ -52,3 +52,18 @@ Port des LEON/ELZA-Player-Selects. Scene-Struct-Base **`0x80190000`** (Ptr @0x80
 - Der exakte Sin/Cos-Rotations-Patch (@0x800aca34-Index) → wie die Block-A/B-Werte in die Modell-/SPRT-Transform-Matrix eingehen (Kamera-Rendering-Detail).
 - CD-file-id 0x2c/0x44 → PL00/PL01-Zuordnung bestätigen (Port nutzt eh die PLD-Dateinamen).
 - Idle-Clip-2-Frame-Count (aus PL00/PL01 clip-table zur Laufzeit).
+
+## MODELL-KAMERA + TRANSFORM (byte-true, Workflow wf_0aab308c, savestate-verifiziert)
+
+**Projektion (einmal in der Szenen-Prologue @0x8010109c, konstant):** `InitGeom()` (0x80066c40) + `SetGeomScreen(H=1000)` (0x80066c30, @0x801010a4 a0=0x3e8) + `SetGeomOffset(OFX=160, OFY=120)` (0x80066d60, @0x801010b0 a0=0xa0/a1=0x78). → `screen_x = 1000·Xview/Zview + 160`, `screen_y = 1000·Yview/Zview + 120`. (Zoom kommt aus der View-Matrix, NICHT H.)
+
+**Globale View-Matrix @DAT_800b5288 (savestate sub_newgame.sav):** R = rows [4104,0,0][0,4096,0][0,0,4104] (≈Identity, 4104/4096=1.00195 auf X/Z; Q12), TR = (0,0,20039). = Kamera bei Welt (0,0,-20000), Blick +Z. (4104/20039 statt 4096/20000 = LookAt-Approx-Normalize-Overshoot; measured matrix verbatim nehmen.)
+
+**Modelle (Actor-Base 0x800acc2c, stride 0x1f4; Loop FUN_80101bf0 idx0=Leon/idx1=Elza):**
+- Leon PL00 @0x800acc2c: POS +0x34/38/3c = (-1568, 2036, 0)=(-0x620,0x7f4,0); rot SVECTOR +0x68 = {vx=0, vy=0x404, vz=0} (pure Y-Yaw, vy überlappt rot_y@+0x6a); part-count +0x83 = 17; Idle-Clip +0x94 = 2.
+- Elza PL01 @0x800ace20: POS (+1568, 2036, 0); rot {0,0x404,0}; part-count 21; Clip 2.
+- model-root MATRIX +0x20 = RotMatrix(+0x68) = [[-25,0,4096][0,4096,0][-4096,0,-25]] (cos(0x404)=-25, sin(0x404)=4096 via LUT DAT_800794c4); MATRIX.t überlappt POS (PsyQ MATRIX.t @+0x14 = actor+0x34).
+
+**Transform-Kette (FUN_8001e8c8 → FUN_8001e9ec pro Part):** RotMatrix(+0x68 → +0x20 mit t=POS) → bone-compose(part+0x6c parent = entity+0x20 für root, part+0x18 local → part+0x40 world, FUN_80022da0) → compose(globale viewMat 0x800b5288 × part+0x40 → sp+16, FUN_80022da0) → SetRotMatrix(sp+16) + SetTransMatrix(sp+16.t) → gte_RotTransPers pro Vertex. Lighting FUN_80053fc0(POS) + SetLightMatrix(0x80076d14) + SetColorMatrix(0x80076d34, alle 2048=0.5). Idle: ScaleMatrix SKIP (flag bit 0x800 aus).
+
+**Port-Plan:** cam_view.rot = [4104,0,0,0,4096,0,0,0,4104], cam_view.trans = (0,0,20039), cam_view.fov_screen_dist = 1000, Center (160,120). 2 Actors an POS ∓1568/2036/0, rot_y 0x404, motion=clip 2 → re15_skel_compute_pose → re15_camera_compose_view_bone → PROJECT_VERT → queue_textri (die vorhandene Actor-Mesh-Render-Kette).

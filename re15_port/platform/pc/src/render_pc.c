@@ -629,6 +629,14 @@ void re15_render_end_frame(void)
     }
     s_shadow_quad_count = 0;
 
+    /* PLAYER-SELECT backdrop (SELECTH.TIM) — drawn as the BACKGROUND here, BEFORE the 3D models
+     * (textri, Step 2 below) so Leon(PL00)/Elza(PL01) render ON TOP of the rooftop/debris scene.
+     * The half-screen highlight TILEs + the transition fade draw LATER (over the models). */
+    if (s_select_show && s_select_tex) {
+        SDL_Rect full = { 0, 0, SCREEN_XRES, SCREEN_YRES };
+        SDL_RenderCopy(s_renderer, s_select_tex, NULL, &full);
+    }
+
     /* Step 2: flush textured triangles ON TOP of the framebuffer copy.
      * SDL_RenderGeometry takes an interleaved vertex array (no indices = each
      * group of 3 vertices is one triangle). We pass our queue as a flat array
@@ -863,8 +871,7 @@ void re15_render_end_frame(void)
      * = counter (0x00->0x80 = dims). Drawn here as a semi-transparent black dim overlay (the exact
      * PSX ABR blend rate still to be confirmed from VRAM; the brightness FORMULA is byte-true). */
     if (s_select_show && s_select_tex) {
-        SDL_Rect full = { 0, 0, SCREEN_XRES, SCREEN_YRES };
-        SDL_RenderCopy(s_renderer, s_select_tex, NULL, &full);
+        /* (the SELECTH backdrop is drawn earlier, before the 3D models; here = the highlight tiles.) */
         int c = s_select_pulse & 0xff;
         int dim_sel = (-0x80 - c) & 0xff;
         int dim_oth = c & 0xff;

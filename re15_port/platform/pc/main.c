@@ -686,6 +686,110 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
     return result;
 }
 
+/* PLAYER-SELECT 3D MODELS (Leon PL00 left / Elza PL01 right) — byte-true camera + transform
+ * (RE15_PLAYER_SELECT_DRAW.md, workflow wf_0aab308c, savestate-verified). Self-contained render:
+ * reuses the port's pose (re15_compute_actor_kf/re15_skel_compute_pose) + camera-compose + textri
+ * building blocks, with NO game-state coupling. Camera (wide idle shot): projection H=1000, screen
+ * center (160,120); global view R=diag(4104,4096,4104), TR=(0,0,20039). Models at world POS
+ * (Leon -1568 / Elza +1568, Y=2036, Z=0), rot_y 0x404, idle clip 2. Both drawn every frame. */
+typedef struct { re15_md1_t md1; re15_emd_skeleton_t skel; re15_emd_animation_t anim; int tim_slot; int ok; } pselect_model_t;
+
+static void pselect_load_model(pselect_model_t *m, const char *md1p, const char *eddp,
+                               const char *emrp, const char *timp, int tim_slot)
+{
+    extern void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
+    memset(m, 0, sizeof *m); m->tim_slot = tim_slot;
+    int sz = 0;
+    uint8_t *mb = pc_read_shared(md1p, &sz); if (!mb || re15_md1_parse(mb, sz, &m->md1) != 0) return;
+    uint8_t *eb = pc_read_shared(eddp, &sz); if (!eb || re15_emd_parse_animation(eb, sz, &m->anim) != 0) return;
+    uint8_t *rb = pc_read_shared(emrp, &sz); if (!rb || re15_emd_parse_skeleton(rb, sz, &m->skel) != 0) return;
+    re15_tim_t tim = {0}; int tsz = 0; uint8_t *tb = pc_read_shared(timp, &tsz);
+    if (tb && re15_tim_parse(tb, tsz, &tim) == 0) re15_render_pc_upload_tim_slot(&tim, tim_slot);
+    m->ok = 1;
+}
+
+static void pselect_render_model(const pselect_model_t *m, int32_t px, int32_t py, int32_t pz,
+                                 int16_t rot_y, uint32_t frame, const re15_camera_view_t *cam)
+{
+    extern void re15_render_pc_bind_tim_slot(int slot);
+    if (!m->ok || m->anim.clip_count <= 0 || m->md1.mesh_count <= 0) return;
+    re15_actor_t a; memset(&a, 0, sizeof a);
+    a.motion = 2; a.anim_frame = (int32_t)frame; a.rot_y = rot_y;
+    int kf = re15_compute_actor_kf(&m->anim, &m->skel, &a, 2, frame);   /* idle clip 2 (actor+0x94) */
+    re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+    if (re15_skel_compute_pose(&m->skel, kf, poses) != 0) return;
+    re15_render_pc_bind_tim_slot(m->tim_slot);
+    int32_t yaw[9]; re15_camera_yaw_matrix_angle(rot_y, yaw);
+    int nb = m->skel.bone_count; if (nb > m->md1.mesh_count) nb = m->md1.mesh_count;
+    const int cx = 160, cy = 120;    /* OFX/OFY */
+    const uint8_t C = 0x80;          /* flat tint (SetColorMatrix 0.5 + base 0x808080); NCCT lighting TBD */
+    for (int bi = 0; bi < nb; bi++) {
+        const re15_skel_pose_t *p = &poses[bi];
+        int32_t yr[9], yt[3];
+        for (int r = 0; r < 3; r++) for (int c = 0; c < 3; c++) {
+            int64_t s = 0; for (int k = 0; k < 3; k++) s += (int64_t)yaw[r*3+k] * (int64_t)p->rot[k*3+c];
+            yr[r*3+c] = (int32_t)(s >> 12); }
+        for (int r = 0; r < 3; r++) {
+            int64_t s = 0; for (int k = 0; k < 3; k++) s += (int64_t)yaw[r*3+k] * (int64_t)p->trans[k];
+            yt[r] = (int32_t)(s >> 12); }
+        int32_t bwt[3] = { yt[0] + px, yt[1] + py, yt[2] + pz };
+        int32_t bm[9], bt[3];
+        re15_camera_compose_view_bone(cam, yr, bwt, bm, bt);
+        const re15_md1_mesh_t *mesh = &m->md1.meshes[bi];
+#define PSV(vp, ox, oy, owz) do { \
+        int32_t _x=(vp)->x,_y=(vp)->y,_z=(vp)->z; \
+        int32_t _vx=(int32_t)(((int64_t)_x*bm[0]+(int64_t)_y*bm[1]+(int64_t)_z*bm[2])>>12)+bt[0]; \
+        int32_t _vy=(int32_t)(((int64_t)_x*bm[3]+(int64_t)_y*bm[4]+(int64_t)_z*bm[5])>>12)+bt[1]; \
+        int32_t _vz=(int32_t)(((int64_t)_x*bm[6]+(int64_t)_y*bm[7]+(int64_t)_z*bm[8])>>12)+bt[2]; \
+        if(_vz<64){(owz)=-1.0f;(ox)=0;(oy)=0;} else { \
+            int32_t _i1=_vx>0x7FFF?0x7FFF:(_vx<-0x8000?-0x8000:_vx); \
+            int32_t _i2=_vy>0x7FFF?0x7FFF:(_vy<-0x8000?-0x8000:_vy); \
+            uint32_t _s3=_vz>0xFFFF?0xFFFFu:(uint32_t)_vz; \
+            uint32_t _n=re15_gte_divide((uint32_t)cam->fov_screen_dist,_s3); \
+            (ox)=cx+(int)(((int64_t)_i1*(int64_t)_n)>>16); \
+            (oy)=cy+(int)(((int64_t)_i2*(int64_t)_n)>>16); \
+            (owz)=(float)_vz; } } while(0)
+#define PSBF(ax,ay,bx,by,ccx,ccy) (((long long)((bx)-(ax))*((ccy)-(ay)) - (long long)((by)-(ay))*((ccx)-(ax))) <= 0)
+        for (int ti = 0; ti < mesh->triangle_count; ti++) {
+            const re15_md1_triangle_t *t = &mesh->triangles[ti];
+            if (t->v0 >= (uint32_t)mesh->tri_vertex_count || t->v1 >= (uint32_t)mesh->tri_vertex_count ||
+                t->v2 >= (uint32_t)mesh->tri_vertex_count) continue;
+            int sx0,sy0,sx1,sy1,sx2,sy2; float wz0,wz1,wz2;
+            PSV(&mesh->tri_vertices[t->v0],sx0,sy0,wz0);
+            PSV(&mesh->tri_vertices[t->v1],sx1,sy1,wz1);
+            PSV(&mesh->tri_vertices[t->v2],sx2,sy2,wz2);
+            if (wz0 < 0 || wz1 < 0 || wz2 < 0) continue;
+            if (PSBF(sx0,sy0,sx1,sy1,sx2,sy2)) continue;
+            const re15_md1_tri_uv_t *uv = &mesh->triangle_uvs[ti];
+            int pxo = (int)((uv->page & 0xF) * 128);
+            int avgz = (int)((wz0 + wz1 + wz2) * (1.0f/3.0f));
+            re15_render_textured_tri_lit(sx0,sy0,(int)uv->u0+pxo,(int)uv->v0, sx1,sy1,(int)uv->u1+pxo,(int)uv->v1,
+                sx2,sy2,(int)uv->u2+pxo,(int)uv->v2, 0,(int)uv->clut,avgz, C,C,C,C,C,C,C,C,C);
+        }
+        for (int qi = 0; qi < mesh->quad_count; qi++) {
+            const re15_md1_quad_t *q = &mesh->quads[qi];
+            if (q->v0 >= (uint32_t)mesh->quad_vertex_count || q->v1 >= (uint32_t)mesh->quad_vertex_count ||
+                q->v2 >= (uint32_t)mesh->quad_vertex_count || q->v3 >= (uint32_t)mesh->quad_vertex_count) continue;
+            int sx0,sy0,sx1,sy1,sx2,sy2,sx3,sy3; float wz0,wz1,wz2,wz3;
+            PSV(&mesh->quad_vertices[q->v0],sx0,sy0,wz0);
+            PSV(&mesh->quad_vertices[q->v1],sx1,sy1,wz1);
+            PSV(&mesh->quad_vertices[q->v2],sx2,sy2,wz2);
+            PSV(&mesh->quad_vertices[q->v3],sx3,sy3,wz3);
+            if (wz0 < 0 || wz1 < 0 || wz2 < 0 || wz3 < 0) continue;
+            if (PSBF(sx0,sy0,sx1,sy1,sx2,sy2)) continue;
+            const re15_md1_quad_uv_t *uv = &mesh->quad_uvs[qi];
+            int pxo = (int)((uv->page & 0xF) * 128);
+            int az1 = (int)((wz0+wz1+wz3)*(1.0f/3.0f)), az2 = (int)((wz0+wz3+wz2)*(1.0f/3.0f));
+            re15_render_textured_tri_lit(sx0,sy0,(int)uv->u0+pxo,(int)uv->v0, sx1,sy1,(int)uv->u1+pxo,(int)uv->v1,
+                sx3,sy3,(int)uv->u3+pxo,(int)uv->v3, 0,(int)uv->clut,az1, C,C,C,C,C,C,C,C,C);
+            re15_render_textured_tri_lit(sx0,sy0,(int)uv->u0+pxo,(int)uv->v0, sx3,sy3,(int)uv->u3+pxo,(int)uv->v3,
+                sx2,sy2,(int)uv->u2+pxo,(int)uv->v2, 0,(int)uv->clut,az2, C,C,C,C,C,C,C,C,C);
+        }
+#undef PSV
+#undef PSBF
+    }
+}
+
 /* PLAYER-SELECT scene — "PLEASE SELECT MAIN CAST" (byte-true TITLE.BIN task @0x80101094; full spec
  * in RE15_PLAYER_SELECT_DRAW.md). Runs after NEW-GAME confirm; returns the chosen character
  * (0=Leon, 1=Elza) = DAT_800aca5c>>2. This FOUNDATION does the byte-true state machine, input and
@@ -711,6 +815,16 @@ static int pc_run_player_select(void)
     static re15_tim_t s_sel_bg = {0};
     if (!s_sel_bg.pixels) { int sz = 0; uint8_t *b = pc_read_shared("DATA/SELECTH.TIM", &sz);
                             if (b) re15_tim_parse(b, sz, &s_sel_bg); }   /* one-time; buffer kept */
+    /* Load Leon(PL00) + Elza(PL01) once (TIM slots 20/21, free during the front-end). */
+    static pselect_model_t s_leon = {0}, s_elza = {0}; static int s_models_loaded = 0;
+    if (!s_models_loaded) { s_models_loaded = 1;
+        pselect_load_model(&s_leon, "PLD/PL00.MD1", "PLD/PL00.EDD", "PLD/PL00.EMR", "PLD/PL00.TIM", 20);
+        pselect_load_model(&s_elza, "PLD/PL01.MD1", "PLD/PL01.EDD", "PLD/PL01.EMR", "PLD/PL01.TIM", 21); }
+    /* Byte-true camera (wf_0aab308c): global view R=diag(4104,4096,4104), TR=(0,0,20039), H=1000. */
+    re15_camera_view_t cam = {0};
+    cam.rot[0] = 4104; cam.rot[4] = 4096; cam.rot[8] = 4104;
+    cam.trans[0] = 0; cam.trans[1] = 0; cam.trans[2] = 20039;
+    cam.fov_screen_dist = 1000;
     int sel = 0;        /* scene+0x394: Leon default (@0x801011f8) */
     int pulse = 0x80;   /* scene+0x32e: init 0x80 (@0x80100548) -> first toggle is instant */
     /* FADE-IN: sub0 kicks fade ch0 abr2-subtractive step -0x400 with level 0x7fff (FUN_800217b0
@@ -727,6 +841,10 @@ static int pc_run_player_select(void)
         re15_input_tick();
         re15_render_background_gradient(0, 0, 0, 0, 0, 0);
         re15_render_pc_player_select(&s_sel_bg, sel, pulse);
+        /* the two live 3D models (queued as textri; flushed OVER the SELECTH backdrop in end_frame).
+         * Leon left / Elza right, byte-true POS (Y=0x7f4=2036), rot_y 0x404, idle clip 2. */
+        pselect_render_model(&s_leon, -1568, 2036, 0, 0x404, frames, &cam);
+        pselect_render_model(&s_elza,  1568, 2036, 0, 0x404, frames, &cam);
         { int br = fade_level >> 7; re15_render_pc_set_title_fade(br > 255 ? 255 : (br < 0 ? 0 : br)); }
         re15_render_end_frame();
         { const char *af = getenv("RE15_PSELECT_SHOT_AF"); unsigned sf = af ? (unsigned)atoi(af) : 40;
