@@ -387,8 +387,14 @@ void re15_render_init(void)
         exit(1);
     }
 
-    s_renderer = SDL_CreateRenderer(s_window, -1,
-        SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    /* RE15_SOFTWARE_RENDER forces SDL's CPU rasteriser instead of the GPU. Needed to capture a
+     * CORRECT framebuffer in a headless / disconnected-session context, where the accelerated
+     * renderer has no real display surface and produces a black/garbled image — this is what
+     * broke visual-verification screenshots. Slower, but pixel-correct, and no VSYNC stall. */
+    Uint32 rflags = getenv("RE15_SOFTWARE_RENDER")
+                        ? SDL_RENDERER_SOFTWARE
+                        : (SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    s_renderer = SDL_CreateRenderer(s_window, -1, rflags);
     if (!s_renderer) {
         fprintf(stderr, "SDL_CreateRenderer failed: %s\n", SDL_GetError());
         exit(1);

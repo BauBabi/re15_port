@@ -169,6 +169,15 @@ static uint16_t pad_read_bits(void)
 
 void re15_input_init(void) { /* SDL init is global, nothing per-input */ }
 
+/* ==== DEBUG FUNCTION KEYS (F1-F12) — a channel SEPARATE from the gameplay pad word ============
+ * Debug tools bind ONLY to the function keys, never to the game keys, so they can never collide
+ * with play. Edge-detected (press this frame). Read with re15_input_debug_fkey(n), n = 1..12. */
+static uint16_t s_dbg_cur = 0, s_dbg_pressed = 0;   /* bit (n-1) = F<n> */
+int re15_input_debug_fkey(int n)
+{
+    return (n >= 1 && n <= 12) ? (int)((s_dbg_pressed >> (n - 1)) & 1u) : 0;
+}
+
 void re15_input_tick(void)
 {
     g_engine.pad_previous = g_engine.pad_current;
@@ -190,9 +199,11 @@ void re15_input_tick(void)
          *   V                     = ○ Circle       (dialog cursor / cancel)
          *   I                     = Start          (inventory / weapon-select)
          *   Tab                   = Select
-         *   [  ]                  = L2 / R2         (also the dev room-browser: prev / next room)
+         *   [  ]                  = L2 / R2
          *   F11 / Alt+Enter       = toggle fullscreen (window is the default)
-         * (Tell me if you want any key different — this is a single lookup table to edit.) */
+         * ALL debug is on the FUNCTION keys only — never the game keys: F1/F2 = prev/next room,
+         * F3 = motion-lock, F4/F5 = clip cycle (F3-F5 need RE15_MOTION_DEBUG). See re15_input_debug_fkey.
+         * (Tell me if you want any game key different — this is a single lookup table to edit.) */
         if (keys[SDL_SCANCODE_UP]    || keys[SDL_SCANCODE_W]) bits |= RE15_PAD_UP;
         if (keys[SDL_SCANCODE_RIGHT] || keys[SDL_SCANCODE_D]) bits |= RE15_PAD_RIGHT;
         if (keys[SDL_SCANCODE_DOWN]  || keys[SDL_SCANCODE_S]) bits |= RE15_PAD_DOWN;
@@ -206,8 +217,19 @@ void re15_input_tick(void)
         if (keys[SDL_SCANCODE_V])         bits |= RE15_PAD_CIRCLE;    /* ○                                  */
         if (keys[SDL_SCANCODE_I])         bits |= RE15_PAD_START;     /* Start = inventory                  */
         if (keys[SDL_SCANCODE_TAB])       bits |= RE15_PAD_SELECT;    /* Select                             */
-        if (keys[SDL_SCANCODE_LEFTBRACKET])  bits |= 0x0100;         /* L2 (dev: prev room)                */
-        if (keys[SDL_SCANCODE_RIGHTBRACKET]) bits |= 0x0200;         /* R2 (dev: next room)                */
+        if (keys[SDL_SCANCODE_LEFTBRACKET])  bits |= 0x0100;         /* L2                                 */
+        if (keys[SDL_SCANCODE_RIGHTBRACKET]) bits |= 0x0200;         /* R2                                 */
+    }
+
+    /* F1-F12 -> the debug channel (edge-detected), completely OFF the gameplay pad word above. */
+    {
+        static const int FK[12] = { SDL_SCANCODE_F1, SDL_SCANCODE_F2, SDL_SCANCODE_F3, SDL_SCANCODE_F4,
+                                    SDL_SCANCODE_F5, SDL_SCANCODE_F6, SDL_SCANCODE_F7, SDL_SCANCODE_F8,
+                                    SDL_SCANCODE_F9, SDL_SCANCODE_F10, SDL_SCANCODE_F11, SDL_SCANCODE_F12 };
+        uint16_t dbg = 0;
+        if (keys) for (int i = 0; i < 12; i++) if (keys[FK[i]]) dbg |= (uint16_t)(1u << i);
+        s_dbg_pressed = (uint16_t)(dbg & ~s_dbg_cur);
+        s_dbg_cur = dbg;
     }
 
     /* GAMEPAD: OR the Steam Deck / Xbox-style controller bits into the same pad word (before the

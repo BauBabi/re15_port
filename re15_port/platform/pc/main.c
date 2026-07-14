@@ -2336,17 +2336,18 @@ int main(int argc, char *argv[])
                             (unsigned)s_goto_id, (unsigned)g_engine.frame_count);
                 }
             }
-            /* DEV ROOM-BROWSER (globalization 2026-06-13): [ / ] cycle through every
+            /* DEV ROOM-BROWSER (globalization 2026-06-13): F1 / F2 cycle through every
              * room in the shared tree (re15_room_list.h) by queuing a g_room_change —
              * the SAME consume path below then loads it (RDT + render reset + props +
              * scd_room_reenter + BG + light + msg, all from the RDT). Lets us load ANY
              * of the 240 rooms and see how far it gets. Guarded so it never overrides a
              * door-queued change. Spawn (0,0,0)/cut 0 — may land in a wall, fine for a
-             * browse. PC-only (PSX would need every room on the disc). */
+             * browse. PC-only, on the FUNCTION keys so it never touches the game keys. */
             {
+                extern int re15_input_debug_fkey(int n);
                 int rsel = 0;
-                if      (g_engine.pad_pressed & 0x0200) rsel = +1;   /* R2 = ] next room */
-                else if (g_engine.pad_pressed & 0x0100) rsel = -1;   /* L2 = [ prev room */
+                if      (re15_input_debug_fkey(2)) rsel = +1;   /* F2 = next room */
+                else if (re15_input_debug_fkey(1)) rsel = -1;   /* F1 = prev room */
                 if (rsel && !g_room_change.pending) {
                     int idx = 0;
                     for (int i = 0; i < RE15_ROOM_COUNT; i++)
@@ -2513,17 +2514,18 @@ int main(int argc, char *argv[])
              * buttons, so left ungated it would hijack them during normal play (△/○ would cycle the
              * player animation). */
             {
+                extern int re15_input_debug_fkey(int n);
                 static int  s_motion_dev  = -1;
                 if (s_motion_dev < 0) s_motion_dev = getenv("RE15_MOTION_DEBUG") ? 1 : 0;
                 static int  s_motion_lock = 0;
                 static int  s_locked_clip = 0;
-                if (s_motion_dev && (g_engine.pad_pressed & 0x0001 /* SELECT/Tab */)) {
+                if (s_motion_dev && re15_input_debug_fkey(3)) {   /* F3 = lock toggle */
                     s_motion_lock = !s_motion_lock;
                     s_locked_clip = (int)g_actors[RE15_ACTOR_SLOT_PLAYER].motion;
                 }
                 int cyc = 0;
-                if      (s_motion_dev && (g_engine.pad_pressed & 0x1000 /* PageUp   */)) cyc = +1;
-                else if (s_motion_dev && (g_engine.pad_pressed & 0x2000 /* PageDown */)) cyc = -1;
+                if      (s_motion_dev && re15_input_debug_fkey(5)) cyc = +1;   /* F5 = clip + */
+                else if (s_motion_dev && re15_input_debug_fkey(4)) cyc = -1;   /* F4 = clip - */
                 if (cyc && anim.clip_count > 0) {
                     if (s_motion_lock) {
                         s_locked_clip += cyc;
