@@ -93,6 +93,7 @@ static int           s_card_show = 0;
 static int           s_card_cur_x = 0, s_card_cur_y = 0, s_card_cur_show = 0;  /* card cursor (▶) */
 static SDL_Texture  *s_tmoji[4][2];    /* FE-1 title-menu sprites [row 0-2 + copyright][0 white,1 blue] */
 static int           s_tmoji_built = 0, s_tmoji_show = 0, s_tmoji_cursor = 0;
+static int           s_tmoji_pulse_ctr = 0, s_tmoji_pulse_val = 0x80;   /* highlight pulse (FUN_801028ec) */
 static uint32_t      rgb555_to_argb8888(uint16_t c);   /* fwd (defined with the TIM converters) */
 
 /* Phase 4.5.5: textured-triangle layer.
@@ -837,15 +838,28 @@ void re15_render_end_frame(void)
             SDL_RenderCopy(s_renderer, s_text_overlay_tex, NULL, NULL);
     }
 
-    /* byte-true title MENU: the NEW GAME / LOAD GAME / OPTION sprites + copyright, drawn from
-     * TMOJI.TIM over the title art (see re15_render_pc_title_menu). Active row white, others blue. */
+    /* byte-true title MENU: the NEW GAME / LOAD GAME / OPTION sprites + copyright, from TMOJI.TIM.
+     * The original (FUN_801027a0) draws each sprite as a DOUBLE EXPOSURE: a subtractive copy (abr=2,
+     * E1=0xe10000d5) at Y+1 = a soft shadow, then an ADDITIVE copy (abr=1, E1=0xe10000b5) at Y = the
+     * glow — so the letters blend with the eye behind them (semi-transparent), not opaque. We match it:
+     * subtractive shadow first, additive glow over. (Index 0 decoded to RGBA 0 → no-op in both blends.) */
     if (s_tmoji_show && s_tmoji_built) {
-        static const int ITEM_Y[3] = { 0x85, 0x99, 0xad };   /* 133 / 153 / 173 */
-        for (int i = 0; i < 3; i++) {
-            SDL_Texture *tex = s_tmoji[i][(i == s_tmoji_cursor) ? 0 : 1];   /* 0=white active, 1=blue */
-            if (tex) { SDL_Rect dst = { 0x20, ITEM_Y[i], 256, 16 }; SDL_RenderCopy(s_renderer, tex, NULL, &dst); }
+        static const int ITEM_Y[4] = { 0x85, 0x99, 0xad, 0xc8 };   /* 3 rows @133/153/173 + copyright @200 */
+        for (int i = 0; i < 4; i++) {
+            int active = (i < 3 && i == s_tmoji_cursor);
+            SDL_Texture *tex = (i < 3) ? s_tmoji[i][active ? 0 : 1] : s_tmoji[3][0];
+            if (!tex) continue;
+            int h = (i < 3) ? 16 : 20;
+            /* active row: modulate by the pulse (0x80..0xBE -> 200..255; the white CLUT already keeps
+             * it brighter than the blue inactive rows — SDL colour-mod can't exceed 1.0x additive). */
+            int mod = active ? (200 + (s_tmoji_pulse_val - 0x80) * 55 / 0x3e) : 255;
+            if (mod > 255) mod = 255;
+            SDL_SetTextureColorMod(tex, (Uint8) mod, (Uint8) mod, (Uint8) mod);
+            SDL_Rect shadow = { 0x20, ITEM_Y[i] + 1, 256, h };
+            SDL_Rect glow   = { 0x20, ITEM_Y[i],     256, h };
+            SDL_SetTextureBlendMode(tex, s_shadow_blend);   SDL_RenderCopy(s_renderer, tex, NULL, &shadow); /* abr2 */
+            SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_ADD); SDL_RenderCopy(s_renderer, tex, NULL, &glow);   /* abr1 */
         }
-        if (s_tmoji[3][0]) { SDL_Rect dst = { 0x20, 0xc8, 256, 20 }; SDL_RenderCopy(s_renderer, s_tmoji[3][0], NULL, &dst); }
     }
 
     /* Selection cursor (▶): a small filled white triangle shared by the card screen AND the title
@@ -1029,6 +1043,10 @@ void re15_render_pc_title_menu(const re15_tim_t *tmoji, int cursor)
     }
     s_tmoji_cursor = cursor;
     s_tmoji_show   = 1;
+    /* advance the active-row brightness pulse — byte-true triangle wave (FUN_801028ec @0x80102944):
+     * base 0x80, +2 for the first 0x1f frames then -2, reset to 0x80 every 0x3c (60) frames. */
+    if (s_tmoji_pulse_ctr < 0x1f) s_tmoji_pulse_val += 2; else s_tmoji_pulse_val -= 2;
+    if (++s_tmoji_pulse_ctr >= 0x3c) { s_tmoji_pulse_ctr = 0; s_tmoji_pulse_val = 0x80; }
 }
 void re15_render_pc_hide_title_menu(void) { s_tmoji_show = 0; }
 
