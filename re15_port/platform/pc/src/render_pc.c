@@ -377,14 +377,27 @@ void re15_render_init(void)
         exit(1);
     }
 
-    /* Resizable window; RE15_FULLSCREEN=1 starts in (desktop) fullscreen for the Steam Deck / a TV.
-     * The logical render size (below) letterboxes the 4:3 320x240 image to fill any panel size. */
+    /* WINDOWED by default, at the largest integer scale that FITS the screen (<=90% of the usable
+     * desktop) — so a big monitor gets scale 4 but a small one shrinks instead of covering the whole
+     * display and reading as "fullscreen". RE15_WINDOW_SCALE=<1..8> forces a scale; RE15_FULLSCREEN
+     * opts into real (desktop) fullscreen (Steam Deck / TV). The logical render size letterboxes the
+     * 4:3 320x240 image to any panel. */
+    int scale = WINDOW_SCALE;
+    SDL_Rect ub;
+    if (SDL_GetDisplayUsableBounds(0, &ub) == 0) {
+        while (scale > 1 && (SCREEN_XRES * scale > ub.w * 9 / 10 || SCREEN_YRES * scale > ub.h * 9 / 10))
+            scale--;
+    }
+    { const char *ws = getenv("RE15_WINDOW_SCALE"); if (ws && *ws) { int s = atoi(ws); if (s >= 1 && s <= 8) scale = s; } }
     Uint32 win_flags = SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE;
     if (getenv("RE15_FULLSCREEN")) win_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+    fprintf(stderr, "[window] %s %dx%d\n",
+            (win_flags & SDL_WINDOW_FULLSCREEN_DESKTOP) ? "FULLSCREEN (RE15_FULLSCREEN set)" : "windowed",
+            SCREEN_XRES * scale, SCREEN_YRES * scale);
     s_window = SDL_CreateWindow(
         "RE1.5 Rebuilt — PC",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        SCREEN_XRES * WINDOW_SCALE, SCREEN_YRES * WINDOW_SCALE,
+        SCREEN_XRES * scale, SCREEN_YRES * scale,
         win_flags);
     if (!s_window) {
         fprintf(stderr, "SDL_CreateWindow failed: %s\n", SDL_GetError());
