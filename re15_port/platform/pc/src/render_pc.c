@@ -91,6 +91,8 @@ static int           s_fmv_w = 0, s_fmv_h = 0;
 static SDL_Texture  *s_card_tex = NULL;       /* FE-4 memory-card BG (DATA/TYPE00.TIM 320x240) */
 static int           s_card_show = 0;
 static int           s_card_cur_x = 0, s_card_cur_y = 0, s_card_cur_show = 0;  /* card cursor (▶) */
+static SDL_Texture  *s_tmoji[4][2];    /* FE-1 title-menu sprites [row 0-2 + copyright][0 white,1 blue] */
+static int           s_tmoji_built = 0, s_tmoji_show = 0, s_tmoji_cursor = 0;
 static uint32_t      rgb555_to_argb8888(uint16_t c);   /* fwd (defined with the TIM converters) */
 
 /* Phase 4.5.5: textured-triangle layer.
@@ -829,11 +831,21 @@ void re15_render_end_frame(void)
     if (s_title_show && s_title_tex) {
         SDL_Rect full = { 0, 0, SCREEN_XRES, SCREEN_YRES };
         SDL_RenderCopy(s_renderer, s_title_tex, NULL, &full);
-        /* FE-1.4: with the title up, re-composite the text overlay ON TOP of the title art so the
-         * title MENU (NEW GAME/LOAD DATA/CONFIG) is visible. No-op during the death->title tail (the
-         * overlay is empty there), so that path is unchanged. */
+        /* FE-1.4: re-composite the text overlay ON TOP of the title art (used by the death->title
+         * tail; the front-end menu is now TMOJI sprites below, not overlay text). */
         if (s_text_overlay_used && s_text_overlay_tex)
             SDL_RenderCopy(s_renderer, s_text_overlay_tex, NULL, NULL);
+    }
+
+    /* byte-true title MENU: the NEW GAME / LOAD GAME / OPTION sprites + copyright, drawn from
+     * TMOJI.TIM over the title art (see re15_render_pc_title_menu). Active row white, others blue. */
+    if (s_tmoji_show && s_tmoji_built) {
+        static const int ITEM_Y[3] = { 0x85, 0x99, 0xad };   /* 133 / 153 / 173 */
+        for (int i = 0; i < 3; i++) {
+            SDL_Texture *tex = s_tmoji[i][(i == s_tmoji_cursor) ? 0 : 1];   /* 0=white active, 1=blue */
+            if (tex) { SDL_Rect dst = { 0x20, ITEM_Y[i], 256, 16 }; SDL_RenderCopy(s_renderer, tex, NULL, &dst); }
+        }
+        if (s_tmoji[3][0]) { SDL_Rect dst = { 0x20, 0xc8, 256, 20 }; SDL_RenderCopy(s_renderer, s_tmoji[3][0], NULL, &dst); }
     }
 
     /* Selection cursor (▶): a small filled white triangle shared by the card screen AND the title
@@ -971,6 +983,54 @@ void re15_render_pc_show_title(const re15_tim_t *tim)
 }
 
 void re15_render_pc_hide_title(void) { s_title_show = 0; }
+
+/* ---- FE-1: byte-true title MENU sprites (DATA/TMOJI.TIM) ------------------------------------
+ * The 3 menu rows + the copyright are GPU SPRITES, not font text (RE'd from TITLE.BIN: menu
+ * handler FUN_80102b00, sprite draw FUN_801027a0, descriptor table 0x801028ac). TMOJI.TIM is an
+ * 8-bit 256x256 sheet (image VRAM 320,256; 256-entry CLUT VRAM 0,511). Rows are 256x16 strips:
+ * v=16 "NEW GAME", v=32 "LOAD GAME", v=48 "OPTION"; the copyright is 256x20 at v=82. The ACTIVE
+ * row is sampled through the WHITE sub-palette (CLUT base 0, orig clut 0x7fc0); the others through
+ * BLUE (CLUT base 192, orig clut 0x7fcc) — the exact CLUT-swap the original does. Screen positions
+ * from the draw code: x=0x20, y=0x85/0x99/0xad; copyright (0x20,0xc8). (The original's semi-
+ * transparent double-exposure glow + the 60-frame highlight pulse are not yet reproduced — the
+ * strips are drawn opaque; a follow-up.) */
+static const struct { int v, h; } s_tmoji_src[4] = { {16,16}, {32,16}, {48,16}, {82,20} };
+
+static SDL_Texture *tmoji_strip(const re15_tim_t *t, int v, int h, int clut_base)
+{
+    const int W = 256;
+    uint32_t *rgba = (uint32_t *) malloc((size_t) W * h * 4);
+    if (!rgba) return NULL;
+    const uint8_t *idx = (const uint8_t *) t->pixels;   /* 8-bit indices */
+    for (int y = 0; y < h; y++) {
+        for (int x = 0; x < W; x++) {
+            uint8_t p = (v + y < t->height && x < t->width) ? idx[(v + y) * t->width + x] : 0;
+            if (p == 0) { rgba[y * W + x] = 0; continue; }              /* index 0 = transparent */
+            int ci = clut_base + p;
+            uint16_t c = (ci < t->clut_entries) ? t->clut[ci] : 0;
+            uint32_t r = ((c) & 31) << 3, g = ((c >> 5) & 31) << 3, b = ((c >> 10) & 31) << 3;
+            rgba[y * W + x] = 0xFF000000u | (r << 16) | (g << 8) | b;   /* ARGB8888 */
+        }
+    }
+    SDL_Texture *tex = SDL_CreateTexture(s_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, W, h);
+    if (tex) { SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND); SDL_UpdateTexture(tex, NULL, rgba, W * 4); }
+    free(rgba);
+    return tex;
+}
+
+void re15_render_pc_title_menu(const re15_tim_t *tmoji, int cursor)
+{
+    if (!s_tmoji_built && tmoji && tmoji->pixels && tmoji->clut && tmoji->bpp == 8) {
+        s_tmoji_built = 1;
+        for (int i = 0; i < 4; i++) {
+            s_tmoji[i][0] = tmoji_strip(tmoji, s_tmoji_src[i].v, s_tmoji_src[i].h, 0);     /* white */
+            s_tmoji[i][1] = tmoji_strip(tmoji, s_tmoji_src[i].v, s_tmoji_src[i].h, 192);   /* blue  */
+        }
+    }
+    s_tmoji_cursor = cursor;
+    s_tmoji_show   = 1;
+}
+void re15_render_pc_hide_title_menu(void) { s_tmoji_show = 0; }
 
 /* STR MOVIE (FE-3): upload one decoded 320x240 RGBA8888 frame and mark it shown.
  * Unlike the title (cached once), the texture is (re)created on size change and
