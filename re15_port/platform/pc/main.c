@@ -707,15 +707,16 @@ int main(int argc, char *argv[])
         const char *sr_env = getenv("RE15_START_ROOM");
         re15_gameflow_init((sr_env && *sr_env) ? (int)strtoul(sr_env, 0, 16) : -1);
     }
-    /* FE-3 — the CAPCOM.STR opening logo. The player (re15_str.c video + re15_xa.c audio) is
-     * byte-true, but the RE1.5 MZD build's gate for it (DAT_800aca38 bit 0x8000) is DORMANT:
-     * nothing anywhere sets that bit, so the disc boots straight to the front-end WITHOUT the
-     * logo (RE-verified: single caller FUN_80029cd8, exhaustive no-writer scan, 7 savestates,
-     * SYSTEM.CNF single-EXE boot). We model that faithfully — g_gameflow.boot_movie defaults 0
-     * (dormant). RE15_BOOT_MOVIE=1 ARMS the gate (the "if bit 0x8000 were set" path) to play the
-     * byte-true logo; the gate is a one-shot, cleared on play exactly like @0x80020c48.
-     * RE15_FMV_SHOT="<frame>:<path.bmp>" dumps a decoded video frame then exits (verification). */
-    if (getenv("RE15_BOOT_MOVIE") || getenv("RE15_FMV_SHOT")) g_gameflow.boot_movie = 1;   /* arm */
+    /* FE-3 — the CAPCOM.STR opening (re15_str.c video + re15_xa.c audio, byte-true). It is the WHOLE
+     * boot intro: the "This game contains scenes of explicit violence and gore." disclaimer over a
+     * lab scene (~frame 80-300), then the CAPCOM logo (~frame 320-500) — CAPTURE-VERIFIED against the
+     * real MZD disc (shots/boot_seq.png = BIOS -> disclaimer -> CAPCOM -> title; shots/capcom_frames.png
+     * = the decoded movie). The EXE main-loop plays it via gate DAT_800aca38 bit 0x8000 @main.c:20
+     * (one-shot, cleared @0x80020c48). My earlier "dormant" was for the un-modded prototype EXE where
+     * nothing sets that bit — but the MZD build the port targets sets it on boot and DOES play the
+     * intro. So it plays on every title boot (default ON); RE15_NO_INTRO skips it for quick iteration,
+     * RE15_FMV_SHOT="<frame>:<path.bmp>" dumps one decoded frame then exits. */
+    g_gameflow.boot_movie = getenv("RE15_NO_INTRO") ? 0 : 1;
     if (re15_gameflow_mode() == RE15_MODE_TITLE && g_gameflow.boot_movie) {
         g_gameflow.boot_movie = 0;                                    /* one-shot clear (byte-true) */
         extern void re15_render_pc_show_fmv(const uint32_t *rgba, int w, int h);
@@ -742,7 +743,11 @@ int main(int argc, char *argv[])
                 /* byte-true movie CD->SPU gain = 100/128 (CdlATV {0x64,0,0x64,0}, FUN_8002acac
                  * stereo branch fed by FUN_8002ac84(100)); the fades are instant gates. */
                 re15_fmv_audio_start(apcm, aframes, arate, 100);
-                have_audio = (re15_fmv_audio_time() >= 0.0);
+                /* Audio is the master clock ONLY when the SDL audio device is actually running; with
+                 * RE15_NOAUDIO (or a session with no audio endpoint) the mixer callback never fires, so
+                 * the clock would stay 0 and the frame-wait below would hang forever — fall back to the
+                 * fixed 30fps timer in that case. */
+                have_audio = g_audio.initialized && (re15_fmv_audio_time() >= 0.0);
             }
 
             /* Cadence (byte-true): on PSX the CD streams audio continuously and video frames
@@ -851,9 +856,12 @@ int main(int argc, char *argv[])
                 /* cursor 2 = OPTION: the original opens a config sub-overlay (key remap / sound /
                  * monitor / language, FUN_801025f0); deferred (FE-6) — selecting it is a no-op for now. */
             }
+            { extern void re15_render_pc_set_title_fade(int a);   /* fade in from the CAPCOM intro */
+              re15_render_pc_set_title_fade(tblink < 20 ? 255 - (int)tblink * 13 : 0); }
             re15_render_end_frame();
             re15_render_pc_hide_title_menu();   /* stop drawing the menu sprites once the title yields */
-            if (t_shot && tblink == 22) { re15_render_pc_screenshot(t_shot); re15_gameflow_new_game(0); }
+            { unsigned t_af = 22; const char *afe = getenv("RE15_TITLE_SHOT_AF"); if (afe) t_af = (unsigned)atoi(afe);
+              if (t_shot && tblink == t_af) { re15_render_pc_screenshot(t_shot); re15_gameflow_new_game(0); } }
             tblink++;
         }
         re15_render_pc_hide_title();

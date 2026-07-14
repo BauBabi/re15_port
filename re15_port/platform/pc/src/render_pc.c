@@ -78,6 +78,7 @@ static int          s_item_modal_tex_type = -1;
  * frame (= cinematic active ? ~17 : 0) via re15_render_pc_set_letterbox(). */
 static int           s_letterbox_h = 0;
 static uint8_t       s_fade_alpha = 0;   /* BN-round: cinematic fade-in overlay (255=black .. 0=none) */
+static uint8_t       s_title_fade = 0;   /* front-end fade: black OVER the title/menu (movie -> title) */
 static uint8_t       s_white_alpha = 0;  /* YOU-DIED chain: ADDITIVE white overlay (FUN_80021880 ABR1) */
 static int           s_black_bg = 0;     /* YOU-DIED chain: flat-black background (FUN_80021634(2,0)) */
 static int           s_go_flyin = -1;    /* YOU DIED letter fly-in tick 0..50 (-1 = classic full draw) */
@@ -862,6 +863,15 @@ void re15_render_end_frame(void)
         }
     }
 
+    /* front-end fade OVER the title + menu (the CAPCOM intro -> title fade-in). Drawn last so it
+     * covers the title art, the logo and the sprites. */
+    if (s_title_fade > 0) {
+        SDL_SetRenderDrawBlendMode(s_renderer, SDL_BLENDMODE_BLEND);
+        SDL_SetRenderDrawColor(s_renderer, 0, 0, 0, s_title_fade);
+        SDL_Rect full = { 0, 0, SCREEN_XRES, SCREEN_YRES };
+        SDL_RenderFillRect(s_renderer, &full);
+    }
+
     /* Selection cursor (▶): a small filled white triangle shared by the card screen AND the title
      * menu (the RE1.5 originals draw a cursor sprite; a filled ▶ is the byte-true equivalent marker).
      * Drawn after the card/title composite so it sits on top of whichever screen positioned it. */
@@ -915,6 +925,7 @@ void re15_render_end_frame(void)
 
 /* BN-round 2026-05-29: cinematic fade-in overlay alpha (0=none, 255=black).
  * Main loop ramps it 255→0 over the room-entry fade window. */
+void re15_render_pc_set_title_fade(int a) { s_title_fade = (a < 0) ? 0 : (a > 255) ? 255 : (uint8_t)a; }
 void re15_render_pc_set_fade(int a)
 {
     if (a < 0) a = 0;
