@@ -695,17 +695,38 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
 typedef struct { re15_md1_t md1; re15_emd_skeleton_t skel; re15_emd_animation_t anim; int tim_slot; int ok; } pselect_model_t;
 
 static void pselect_load_model(pselect_model_t *m, const char *md1p, const char *eddp,
-                               const char *emrp, const char *timp, int tim_slot)
+                               const char *base_emrp, const char *kf_emrp, const char *timp, int tim_slot)
 {
     extern void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
     memset(m, 0, sizeof *m); m->tim_slot = tim_slot;
     int sz = 0;
     uint8_t *mb = pc_read_shared(md1p, &sz); if (!mb || re15_md1_parse(mb, sz, &m->md1) != 0) return;
     uint8_t *eb = pc_read_shared(eddp, &sz); if (!eb || re15_emd_parse_animation(eb, sz, &m->anim) != 0) return;
-    uint8_t *rb = pc_read_shared(emrp, &sz); if (!rb || re15_emd_parse_skeleton(rb, sz, &m->skel) != 0) return;
+    /* The skeleton HIERARCHY + bind pose come from the BASE PLD EMR (a full EMR: header @0x64
+     * bones-table / @0xb0 keyframes). The weapon PLW EMR is KEYFRAME-ONLY (8-byte header + N*80
+     * keyframes, NO bone table) and shares the base skeleton — byte-true to the original, which
+     * keeps Leon's resident PL00.PLD skeleton (@0x801bd814) and points model+0x170 at the weapon
+     * keyframes. Parsing the keyframe-only PLW EMR as a full EMR read the hierarchy out of its
+     * 8-byte header → garbage parents → the folded/flying skeleton. So: parse base for the
+     * skeleton, then OVERRIDE the keyframe block with the weapon EMR's keyframes. */
+    uint8_t *rb = pc_read_shared(base_emrp, &sz); if (!rb || re15_emd_parse_skeleton(rb, sz, &m->skel) != 0) return;
+    if (kf_emrp) {
+        int ksz = 0; uint8_t *kb = pc_read_shared(kf_emrp, &ksz);
+        if (kb && ksz > 8) {
+            int koff = kb[2] | (kb[3] << 8);   /* weapon EMR header @2 = keyframes_offset (= 8) */
+            int kfs  = m->skel.keyframe_size_bytes > 0 ? m->skel.keyframe_size_bytes : 80;
+            m->skel.keyframe_data      = kb + koff;
+            m->skel.keyframe_data_size = (size_t)(ksz - koff);
+            m->skel.keyframe_count     = (ksz - koff) / kfs;
+        }
+    }
     re15_tim_t tim = {0}; int tsz = 0; uint8_t *tb = pc_read_shared(timp, &tsz);
     if (tb && re15_tim_parse(tb, tsz, &tim) == 0) re15_render_pc_upload_tim_slot(&tim, tim_slot);
     m->ok = 1;
+    if (getenv("RE15_PSELECT_DIAG"))
+        fprintf(stderr, "PSELECT LOAD base=%s kf=%s: md1.mesh=%d edd.clip=%d emr.bone=%d emr.kf=%d\n",
+                base_emrp, kf_emrp ? kf_emrp : "(none)", m->md1.mesh_count, m->anim.clip_count,
+                m->skel.bone_count, m->skel.keyframe_count);
 }
 
 static void pselect_render_model(const pselect_model_t *m, int32_t px, int32_t py, int32_t pz,
@@ -714,10 +735,30 @@ static void pselect_render_model(const pselect_model_t *m, int32_t px, int32_t p
     extern void re15_render_pc_bind_tim_slot(int slot);
     if (!m->ok || m->anim.clip_count <= 0 || m->md1.mesh_count <= 0) return;
     re15_actor_t a; memset(&a, 0, sizeof a);
-    a.motion = 2; a.anim_frame = (int32_t)frame; a.rot_y = rot_y;
-    int kf = re15_compute_actor_kf(&m->anim, &m->skel, &a, 2, frame);   /* idle clip 2 (actor+0x94) */
+    /* BYTE-TRUE idle clip = model+0x94 = 2. Verified against the LIVE player-select savestate
+     * (mzd_after_flow.sav): both model structs read model->0x94 = 2, ->0x95 (anim_frame) = 37,
+     * ->0x6a rot = 1028. FUN_8001f314 (@0x8001f324 `lbu v0,148(t0)`) reads the clip from
+     * g_entity->0x94; TITLE.BIN never writes +0x94 (the EXE model spawn seeds it to 2). The
+     * original renders clip 2 as an upright arms-down idle — the port's clip-2 contortion is a
+     * POSE-computation bug, NOT a wrong clip. */
+    int clip = 2;   /* RE15_PSELECT_CLIP overrides for the clip sweep */
+    { const char *cc = getenv("RE15_PSELECT_CLIP"); if (cc) clip = atoi(cc); }
+    a.motion = (int16_t)clip; a.anim_frame = (int32_t)frame; a.rot_y = rot_y;
+    /* QUERY mode: re15_skel_compute_pose reads g_anim_pose_actor for the FRAC crossfade + the
+     * player head-look; the player-select is a standalone render (no game actor), so force NULL =
+     * raw keyframe pose, no crossfade, no head-look (same as the enemy_ai/damage pose queries).
+     * Leaving it at a stale in-game pointer blended the idle against a foreign skeleton. */
+    extern void *g_anim_pose_actor; void *save_gpa = g_anim_pose_actor; g_anim_pose_actor = NULL;
+    int kf = re15_compute_actor_kf(&m->anim, &m->skel, &a, clip, frame);
     re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
-    if (re15_skel_compute_pose(&m->skel, kf, poses) != 0) return;
+    if (re15_skel_compute_pose(&m->skel, kf, poses) != 0) { g_anim_pose_actor = save_gpa; return; }
+    g_anim_pose_actor = save_gpa;
+    if (getenv("RE15_PSELECT_DIAG") && frame == 37) {
+        fprintf(stderr, "PSELECT POSE tim%d kf=%d bones=%d root.trans=(%d,%d,%d) b8.trans=(%d,%d,%d) b6=(%d,%d,%d)\n",
+                m->tim_slot, kf, m->skel.bone_count,
+                (int)poses[0].trans[0],(int)poses[0].trans[1],(int)poses[0].trans[2],
+                (int)poses[8].trans[0],(int)poses[8].trans[1],(int)poses[8].trans[2],
+                (int)poses[6].trans[0],(int)poses[6].trans[1],(int)poses[6].trans[2]); }
     re15_render_pc_bind_tim_slot(m->tim_slot);
     int32_t yaw[9]; re15_camera_yaw_matrix_angle(rot_y, yaw);
     int nb = m->skel.bone_count; if (nb > m->md1.mesh_count) nb = m->md1.mesh_count;
@@ -821,8 +862,20 @@ static int pc_run_player_select(void)
      * (PL01 is Leon in a red POLICE costume — the wrong "different-costume Leon" I mis-loaded before.) */
     static pselect_model_t s_leon = {0}, s_elza = {0}; static int s_models_loaded = 0;
     if (!s_models_loaded) { s_models_loaded = 1;
-        pselect_load_model(&s_leon, "PLD/PL00.MD1", "PLD/PL00.EDD", "PLD/PL00.EMR", "PLD/PL00.TIM", 20);
-        pselect_load_model(&s_elza, "PLD/PL08.MD1", "PLD/PL08.EDD", "PLD/PL08.EMR", "PLD/PL08.TIM", 21); }
+        /* BYTE-TRUE anim source: the resident Leon in the player-select uses the WEAPON-variant
+         * animation, NOT PL00.PLD's base EDD. Verified against the live savestate: the model's
+         * anim table @0x801d7708 == PL00W03.EDD byte-for-byte (14 clips, clip2 = 52 frames ping-
+         * ponging keyframes 38-51) and its skeleton @0x801d7bc0 == PL00W03.EMR. The base PL00.EDD
+         * (24 clips, clip2 = keyframes 68+) is a DIFFERENT animation set → posed the wrong keyframe
+         * (46 vs 105) → the folded/lying model. Body mesh + texture stay PL00 (PLW carries only the
+         * weapon mesh). W03 = the handgun stance (Leon holds the pistol in the idle, as in the original). */
+        pselect_load_model(&s_leon, "PLD/PL00.MD1", "PLD/PL00W03.EDD", "PLD/PL00.EMR", "PLD/PL00W03.EMR", "PLD/PL00.TIM", 20);
+        /* BYTE-TRUE right character = ELZA = PL04 (blonde, red "RACCOON" biker suit), NOT PL08/Jill.
+         * The live savestate's right model (g_entity 0x800ace20) reads: anim EDD @0x801460f4 ==
+         * PL04W03.EDD and skeleton EMR @0x80146688 == PL04W03.EMR (both byte-verified). The MZD disc's
+         * player-select CD id 0x44 loads PL04, not the prototype's PL08 — that is why my earlier
+         * "right = PL08" (proto-disc directory) rendered Jill. Elza also holds the W03 handgun idle. */
+        pselect_load_model(&s_elza, "PLD/PL04.MD1", "PLD/PL04W03.EDD", "PLD/PL04.EMR", "PLD/PL04W03.EMR", "PLD/PL04.TIM", 21); }
     /* Byte-true camera (wf_0aab308c): global view R=diag(4104,4096,4104), TR=(0,0,20039), H=1000. */
     re15_camera_view_t cam = {0};
     cam.rot[0] = 4104; cam.rot[4] = 4096; cam.rot[8] = 4104;
