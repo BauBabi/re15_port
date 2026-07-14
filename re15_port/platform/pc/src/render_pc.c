@@ -889,11 +889,13 @@ void re15_render_end_frame(void)
             SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_REV_SUBTRACT,
             SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_ADD);
         if (SDL_SetRenderDrawBlendMode(s_renderer, sub) == 0) {
+            if (getenv("RE15_PSELECT_DIAG")) { static int once=0; if(!once){once=1; fprintf(stderr,"PSELECT DIM: SUBTRACT path (leon_dim=%d elza_dim=%d)\n",leon_dim,elza_dim);} }
             SDL_SetRenderDrawColor(s_renderer, (Uint8) leon_dim, (Uint8) leon_dim, (Uint8) leon_dim, 255);
             SDL_RenderFillRect(s_renderer, &lr);
             SDL_SetRenderDrawColor(s_renderer, (Uint8) elza_dim, (Uint8) elza_dim, (Uint8) elza_dim, 255);
             SDL_RenderFillRect(s_renderer, &rr);
         } else {
+            if (getenv("RE15_PSELECT_DIAG")) { static int once=0; if(!once){once=1; fprintf(stderr,"PSELECT DIM: FALLBACK blend path (elza_dim=%d)\n",elza_dim);} }
             SDL_SetRenderDrawBlendMode(s_renderer, SDL_BLENDMODE_BLEND);
             SDL_SetRenderDrawColor(s_renderer, 0, 0, 0, (Uint8) leon_dim); SDL_RenderFillRect(s_renderer, &lr);
             SDL_SetRenderDrawColor(s_renderer, 0, 0, 0, (Uint8) elza_dim); SDL_RenderFillRect(s_renderer, &rr);

@@ -692,13 +692,15 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
  * building blocks, with NO game-state coupling. Camera (wide idle shot): projection H=1000, screen
  * center (160,120); global view R=diag(4104,4096,4104), TR=(0,0,20039). Models at world POS
  * (Leon -1568 / Elza +1568, Y=2036, Z=0), rot_y 0x404, idle clip 2. Both drawn every frame. */
-typedef struct { re15_md1_t md1; re15_emd_skeleton_t skel; re15_emd_animation_t anim; int tim_slot; int ok; } pselect_model_t;
+typedef struct { re15_md1_t md1; re15_emd_skeleton_t skel; re15_emd_animation_t anim; int tim_slot; int ok;
+                 re15_md1_t wpn_md1; int wpn_ok; int wpn_tim_slot; } pselect_model_t;
 
 static void pselect_load_model(pselect_model_t *m, const char *md1p, const char *eddp,
-                               const char *base_emrp, const char *kf_emrp, const char *timp, int tim_slot)
+                               const char *base_emrp, const char *kf_emrp, const char *timp, int tim_slot,
+                               const char *wpn_plw, int wpn_tim_slot)
 {
     extern void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
-    memset(m, 0, sizeof *m); m->tim_slot = tim_slot;
+    memset(m, 0, sizeof *m); m->tim_slot = tim_slot; m->wpn_tim_slot = wpn_tim_slot;
     int sz = 0;
     uint8_t *mb = pc_read_shared(md1p, &sz); if (!mb || re15_md1_parse(mb, sz, &m->md1) != 0) return;
     uint8_t *eb = pc_read_shared(eddp, &sz); if (!eb || re15_emd_parse_animation(eb, sz, &m->anim) != 0) return;
@@ -722,6 +724,26 @@ static void pselect_load_model(pselect_model_t *m, const char *md1p, const char 
     }
     re15_tim_t tim = {0}; int tsz = 0; uint8_t *tb = pc_read_shared(timp, &tsz);
     if (tb && re15_tim_parse(tb, tsz, &tim) == 0) re15_render_pc_upload_tim_slot(&tim, tim_slot);
+    /* EQUIPPED WEAPON (W03 handgun): the weapon mesh + texture live in the weapon PLW, drawn as
+     * extra parts on the hand bone (same mechanism as the in-game weapon-in-hand, main.c ~3609).
+     * PLW sections: [2] = weapon MD1 (de[2]..de[3]), [3] = weapon TIM (de[3]..diroff). */
+    if (wpn_plw) {
+        int psz = 0; uint8_t *plw = pc_read_shared(wpn_plw, &psz);   /* stays resident (MD1 borrows) */
+        if (plw && psz >= 16) {
+            uint32_t diroff = (uint32_t)(plw[0] | (plw[1]<<8) | (plw[2]<<16) | ((uint32_t)plw[3]<<24));
+            uint32_t de[4] = {0};
+            if (diroff + 16 <= (uint32_t)psz)
+                for (int k = 0; k < 4; k++)
+                    de[k] = (uint32_t)(plw[diroff+4*k] | (plw[diroff+4*k+1]<<8) |
+                                       (plw[diroff+4*k+2]<<16) | ((uint32_t)plw[diroff+4*k+3]<<24));
+            if (de[3] > de[2] && re15_md1_parse(plw + de[2], (int)(de[3] - de[2]), &m->wpn_md1) == 0) {
+                m->wpn_ok = 1;
+                re15_tim_t wtim = {0};
+                if (diroff > de[3] && re15_tim_parse(plw + de[3], (int)(diroff - de[3]), &wtim) == 0)
+                    re15_render_pc_upload_tim_slot(&wtim, wpn_tim_slot);
+            }
+        }
+    }
     m->ok = 1;
     if (getenv("RE15_PSELECT_DIAG"))
         fprintf(stderr, "PSELECT LOAD base=%s kf=%s: md1.mesh=%d edd.clip=%d emr.bone=%d emr.kf=%d\n",
@@ -759,11 +781,18 @@ static void pselect_render_model(const pselect_model_t *m, int32_t px, int32_t p
                 (int)poses[0].trans[0],(int)poses[0].trans[1],(int)poses[0].trans[2],
                 (int)poses[8].trans[0],(int)poses[8].trans[1],(int)poses[8].trans[2],
                 (int)poses[6].trans[0],(int)poses[6].trans[1],(int)poses[6].trans[2]); }
-    re15_render_pc_bind_tim_slot(m->tim_slot);
     int32_t yaw[9]; re15_camera_yaw_matrix_angle(rot_y, yaw);
     int nb = m->skel.bone_count; if (nb > m->md1.mesh_count) nb = m->md1.mesh_count;
     const int cx = 160, cy = 120;    /* OFX/OFY */
     const uint8_t C = 0x80;          /* flat tint (SetColorMatrix 0.5 + base 0x808080); NCCT lighting TBD */
+    /* EQUIPPED WEAPON (byte-true, workflow wf_8837a549 + user-corrected): the player-select draws the
+     * model through ONE shared skeleton-part pass (FUN_8001e8c8 walks model+0x188 parts); the
+     * equipped weapon is part[11] = a HAND+GUN mesh (35 verts) that REPLACES the plain right-hand
+     * mesh (23 verts) — so the character's hand is drawn INCLUDING the weapon. BOTH characters carry
+     * it (user: "sowohl Leon als auch Elza haben ihre Hand inklusive Waffe" — the savestate that
+     * showed only Leon armed was a transient load state). So at bone 11, draw the weapon MD1
+     * (PLW dir[2]) with the weapon TIM (PLW dir[3]) using bone 11's own composed matrix, each
+     * character its own PLW (Leon PL00W03 / Elza PL04W03) — same slot-per-tri queue as in-game. */
     for (int bi = 0; bi < nb; bi++) {
         const re15_skel_pose_t *p = &poses[bi];
         int32_t yr[9], yt[3];
@@ -776,7 +805,20 @@ static void pselect_render_model(const pselect_model_t *m, int32_t px, int32_t p
         int32_t bwt[3] = { yt[0] + px, yt[1] + py, yt[2] + pz };
         int32_t bm[9], bt[3];
         re15_camera_compose_view_bone(cam, yr, bwt, bm, bt);
-        const re15_md1_mesh_t *mesh = &m->md1.meshes[bi];
+        /* EQUIPPED WEAPON (byte-true RE complete, render pending): the original's part[11] at bone 11
+         * is a hand+gun mesh REPLACING the plain hand. All of the RE is verified against the live
+         * savestate — attach bone = 11; the port's bone-11 world matrix is byte-identical to the
+         * original's part[11] matrix (@+0x40 rot [2 204 4088]/[523 4048 -205]/[-4060 522 -18],
+         * trans (-2118,385,-66)); the weapon mesh = PL04W03.PLW dir[2] (verts match the savestate
+         * 6/6, shared weapon buffer for both characters); TIM = PL04W03 dir[3] (28x32 8bpp @VRAM
+         * 512,0). NOT yet drawn: the weapon TIM is page-relative (UV u=126 + tpage pxo=128 = 254)
+         * and the port's per-slot texture upload places the small TIM at x=0, so the UVs miss it and
+         * it renders untextured. Needs the tim-slot pipeline to honour the weapon's VRAM tpage
+         * offset before enabling — until then draw the plain hand so the model isn't broken. */
+        /* TEST: weapon at bone 11 uses the BODY skin texture (its UVs match the body page/clut). */
+        int wpn_here = (getenv("RE15_PSELECT_WPN") && bi == 11 && m->wpn_ok && m->wpn_md1.mesh_count > 0);
+        const re15_md1_mesh_t *mesh = wpn_here ? &m->wpn_md1.meshes[0] : &m->md1.meshes[bi];
+        re15_render_pc_bind_tim_slot(m->tim_slot);
 #define PSV(vp, ox, oy, owz) do { \
         int32_t _x=(vp)->x,_y=(vp)->y,_z=(vp)->z; \
         int32_t _vx=(int32_t)(((int64_t)_x*bm[0]+(int64_t)_y*bm[1]+(int64_t)_z*bm[2])>>12)+bt[0]; \
@@ -869,13 +911,17 @@ static int pc_run_player_select(void)
          * (24 clips, clip2 = keyframes 68+) is a DIFFERENT animation set → posed the wrong keyframe
          * (46 vs 105) → the folded/lying model. Body mesh + texture stay PL00 (PLW carries only the
          * weapon mesh). W03 = the handgun stance (Leon holds the pistol in the idle, as in the original). */
-        pselect_load_model(&s_leon, "PLD/PL00.MD1", "PLD/PL00W03.EDD", "PLD/PL00.EMR", "PLD/PL00W03.EMR", "PLD/PL00.TIM", 20);
+        /* WEAPON MESH = PL04W03.PLW dir[2] for BOTH characters (byte-true: the live savestate's Leon
+         * part[11] weapon vertices match PL04W03 6/6, NOT PL00W03 — the player-select shares one weapon
+         * buffer and PL04 is loaded last, so both models' hand+gun mesh is PL04W03's). Leon's body/anim
+         * stays PL00/PL00W03; only the displayed weapon geometry is PL04W03. */
+        pselect_load_model(&s_leon, "PLD/PL00.MD1", "PLD/PL00W03.EDD", "PLD/PL00.EMR", "PLD/PL00W03.EMR", "PLD/PL00.TIM", 20, "PLD/PL04W03.PLW", 22);
         /* BYTE-TRUE right character = ELZA = PL04 (blonde, red "RACCOON" biker suit), NOT PL08/Jill.
          * The live savestate's right model (g_entity 0x800ace20) reads: anim EDD @0x801460f4 ==
          * PL04W03.EDD and skeleton EMR @0x80146688 == PL04W03.EMR (both byte-verified). The MZD disc's
          * player-select CD id 0x44 loads PL04, not the prototype's PL08 — that is why my earlier
          * "right = PL08" (proto-disc directory) rendered Jill. Elza also holds the W03 handgun idle. */
-        pselect_load_model(&s_elza, "PLD/PL04.MD1", "PLD/PL04W03.EDD", "PLD/PL04.EMR", "PLD/PL04W03.EMR", "PLD/PL04.TIM", 21); }
+        pselect_load_model(&s_elza, "PLD/PL04.MD1", "PLD/PL04W03.EDD", "PLD/PL04.EMR", "PLD/PL04W03.EMR", "PLD/PL04.TIM", 21, "PLD/PL04W03.PLW", 23); }
     /* Byte-true camera (wf_0aab308c): global view R=diag(4104,4096,4104), TR=(0,0,20039), H=1000. */
     re15_camera_view_t cam = {0};
     cam.rot[0] = 4104; cam.rot[4] = 4096; cam.rot[8] = 4104;
@@ -904,6 +950,7 @@ static int pc_run_player_select(void)
         /* the two live 3D models (queued as textri; flushed OVER the SELECTH backdrop in end_frame).
          * Leon left / Elza right, byte-true POS (Y=0x7f4=2036), rot_y 0x404, idle clip 2. */
         { const char *cv=getenv("RE15_PSELECT_CUR"); uint32_t acur = cv ? (uint32_t)atoi(cv) : frames;
+          /* both characters carry the equipped weapon (hand+gun mesh at bone 11) */
           pselect_render_model(&s_leon, -1568, 2036, 0, 0x404, acur, &cam);
           pselect_render_model(&s_elza,  1568, 2036, 0, 0x404, acur, &cam); }
         { int br = fade_level >> 7; re15_render_pc_set_title_fade(br > 255 ? 255 : (br < 0 ? 0 : br)); }
