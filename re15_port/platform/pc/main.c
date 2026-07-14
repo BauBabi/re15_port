@@ -821,7 +821,9 @@ static void pselect_render_model(const pselect_model_t *m, int32_t px, int32_t p
          * PLW dir[3] gun TIM, which this mesh does not reference). Both characters carry it. */
         int wpn_here = (bi == 11 && m->wpn_ok && m->wpn_md1.mesh_count > 0);
         const re15_md1_mesh_t *mesh = wpn_here ? &m->wpn_md1.meshes[0] : &m->md1.meshes[bi];
-        re15_render_pc_bind_tim_slot(m->tim_slot);
+        /* The shared PL04W03 hand+gun mesh is textured from PL04's skin TIM (the gun art lives in
+         * PL04.TIM, slot 21) for BOTH characters — Leon's own body TIM (slot 20) has no gun there. */
+        re15_render_pc_bind_tim_slot(wpn_here ? 21 : m->tim_slot);
 #define PSV(vp, ox, oy, owz) do { \
         int32_t _x=(vp)->x,_y=(vp)->y,_z=(vp)->z; \
         int32_t _vx=(int32_t)(((int64_t)_x*bm[0]+(int64_t)_y*bm[1]+(int64_t)_z*bm[2])>>12)+bt[0]; \
