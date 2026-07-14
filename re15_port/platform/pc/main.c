@@ -791,24 +791,33 @@ static void pselect_render_model(const pselect_model_t *m, int32_t px, int32_t p
     int nb = m->skel.bone_count; if (nb > m->md1.mesh_count) nb = m->md1.mesh_count;
     const int cx = 160, cy = 120;    /* OFX/OFY */
     const uint8_t C = 0x80;          /* neutral fallback tint when a mesh part lacks per-vertex normals */
-    /* NCCT PER-VERTEX LIGHTING (byte-true, workflow wf_244f0842): the player-select models are GTE
-     * NCCT-lit (front-end draw FUN_8001e8c8 → FUN_800254a0, GTE cmd 0x4b18043f), NOT flat. Light set
-     * read live from the scene @0x80190088: 3 lights color (128,128,128), ambient/BackColor (76,76,86),
-     * positions L0(-4600,-4000,-23200)/L1(-99,-2000,-29200)/L2(2000,2000,2000), ranges 20000/10000/
-     * 20000, LCM 0.5, base CODE 0x80. Rendering flat 0x80 was ~2x too bright, so the unselected char
-     * (after the -0x80 subtractive overlay) wasn't dark enough. Same pipeline for both characters —
-     * only the mirrored world-X (Leon -1568 / Elza +1568) changes the light direction. */
+    /* NCCT PER-VERTEX LIGHTING — BYTE-TRUE, verified end-to-end against the live original
+     * (mzd_after_flow.sav, 2026-07-14). The player-select models are GTE NCCT-lit (front-end draw
+     * FUN_8001e8c8 → FUN_800254a0, GTE cmd 0x4b18043f), NOT flat. The cut below is read
+     * FIELD-FOR-FIELD from the scene light struct @0x80190088 (NOT guessed/calibrated):
+     *   global_scale=1, type_flags=(1,1,1) directional, colors all (128,128,128),
+     *   ambient/BackColor (76,76,86), positions L0(-4600,-4000,-23200)/L1(-99,-2000,-29200)/
+     *   L2(2000,2000,2000), ranges 20000/10000/20000.
+     * Cross-checked against the FINAL GTE matrices in RAM: LLM @0x80076d14 =
+     *   {786,684,3964 / 14,281,4089 / -2365,-2365,-2365}  — which is exactly
+     *   -normalize(position) per light, i.e. re15_light_setup_actor reproduces the GTE LLM to ±1;
+     *   LCM @0x80076d34 = 2048 = colour 128<<4 for all 3 lights. So light DATA + NCCT MATH are byte-true.
+     * (A one-time WRONG Z-negation experiment was reverted: the positions above are the byte-true ones.)
+     * Verified visually at native 320×240 vs the PSX framebuffer: Leon clearly lit, Elza near-black.
+     * The only remaining brightness delta vs a DuckStation *capture* is a GLOBAL ~7/255 framebuffer-
+     * precision offset (settings DitheringMode=TrueColor round-to-nearest vs the port's <<3 truncate)
+     * that shifts the un-lit static backdrop by the SAME amount as the lit model — an engine-wide
+     * texture-precision matter, not a player-select lighting difference. Same pipeline for both
+     * characters; only the mirrored world-X (Leon -1568 / Elza +1568) changes the light direction. */
     static const re15_light_cut_t s_ps_cut = {
         1, {1,1,1}, {{128,128,128},{128,128,128},{128,128,128}}, {76,76,86},
         {{-4600,-4000,-23200},{-99,-2000,-29200},{2000,2000,2000}}, {20000,10000,20000} };
     re15_actor_lightctx_t lctx_world;
     { int32_t apos[3] = { px, py, pz }; re15_light_setup_actor(&s_ps_cut, apos, NULL, &lctx_world); }
     /* NCCT ON by default (disable for A/B with RE15_PSELECT_NO_NCCT). Byte-true: the models ARE GTE
-     * NCCT-lit; this darkens the UNSELECTED character to the original's near-black level (region ~0.8
-     * vs orig 2.3; flat left it far too bright at 7.2) while the selected char stays clearly lit.
-     * A minor residual remains — the selected char is ~0.8x the original's front brightness because
-     * only L2 (the -Z light) faces the camera-side of the model in the port's frame while the GTE
-     * appears to catch more; a follow-up can close that, but this is the byte-true mechanism. */
+     * NCCT-lit; the selected char is clearly lit and the UNSELECTED char is near-black — matching the
+     * PSX framebuffer (verified at native 320×240: Leon lit, Elza near-black; the earlier "too bright"
+     * apparent gap was a mis-aligned crop between the 1024-wide capture and the 640-wide render). */
     int ncct_on = getenv("RE15_PSELECT_NO_NCCT") == NULL;
     /* EQUIPPED WEAPON (byte-true, workflow wf_8837a549 + user-corrected): the player-select draws the
      * model through ONE shared skeleton-part pass (FUN_8001e8c8 walks model+0x188 parts); the
