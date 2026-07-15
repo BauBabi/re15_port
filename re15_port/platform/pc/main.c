@@ -938,9 +938,28 @@ static void pselect_render_model(const pselect_model_t *m, int32_t px, int32_t p
  *    (mask 0x8f0, @0x80101268). Pad word @0x800ac762 is byte-swapped in the original; the port pad
  *    is already normalised so LEFT/RIGHT + face/START map 1:1.
  *  - PULSE (@0x8010080c): scene+0x32e init 0x80, +8/frame clamp 0x80, reset 0 on toggle. */
+/* CONFIRM-ZOOM byte-true helpers (TITLE.BIN sub3-7). idiv40 = the exact trunc-toward-zero /40 used by
+ * both the SPRT animator (@0x80100ac4) and the pan setup (magic 0x66666667, sra 4). */
+static inline int32_t re15_idiv40(int32_t x)
+{
+    int32_t q = (int32_t)(((int64_t)x * (int64_t)0x66666667) >> 32);
+    return (q >> 4) - (x >> 31);
+}
+/* Fade driver 0x8010026c (keyed on cz_c7): phase 0 → arm busy (c4=1); phase 1 → ramp c6 += 4 until it
+ * wraps 0 after 64 ticks then latch 0xff; phase 2+ → release (c4=0). c6 = the sub4 fade level. */
+static void re15_cz_fade_tick(int *c4, int *c6, int *c7)
+{
+    if (*c7 == 0)      { *c4 = 1; *c7 = 1; }
+    else if (*c7 == 1) { *c6 = (*c6 + 4) & 0xff; if (*c6 == 0) { *c6 = 0xff; *c7 = 2; } }
+    else               { *c4 = 0; }
+}
+
 static int pc_run_player_select(void)
 {
     extern void re15_render_pc_player_select(const re15_tim_t *bg, int sel, int pulse);
+    extern void re15_render_pc_pselect_dim(int level);
+    extern void re15_render_pc_pselect_slide(int sel, int nx, int ny, int sx, int sy);
+    extern void re15_render_pc_pselect_groupa(int on);
     extern void re15_render_pc_hide_player_select(void);
     extern void re15_render_pc_hide_title(void);
     extern void re15_render_pc_hide_title_menu(void);
@@ -990,10 +1009,25 @@ static int pc_run_player_select(void)
     int sel = 0;        /* scene+0x394: Leon default (@0x801011f8) */
     int pulse = 0x80;   /* scene+0x32e: init 0x80 (@0x80100548) -> first toggle is instant */
     /* FADE-IN: sub0 kicks fade ch0 abr2-subtractive step -0x400 with level 0x7fff (FUN_800217b0
-     * @0x8010121c + FUN_800216ec @0x80101240) -> brightness (level>>7) ramps 0xff->0 over 32 frames.
-     * FADE-OUT on confirm (the zoom sub3..sub7 fade-to-black; the live zoom is the next increment). */
+     * @0x8010121c + FUN_800216ec @0x80101240) -> brightness (level>>7) ramps 0xff->0 over 32 frames. */
     int fade_level = 0x7fff;   /* brightness = fade_level>>7 */
-    int fading_out = 0;
+    /* CONFIRM-ZOOM FSM (TITLE.BIN LEVEL-2 scene+0x392, sub3-7). cz = -1 idle, 0..5 the FSM state.
+     * sub3(1f init) -> sub4(65f 2D-layer fade via the c4/c6/c7 driver) -> sub5(1f pan/dolly setup) ->
+     * sub6(41f: pan selected char world-X->0, spin rot_y+=8, camera dolly pos.z += quadratic accum,
+     * rebuild LookAt) -> sub7(60f hold + 32f fade-to-black) -> handoff. */
+    int cz = -1;                          /* -1 = idle input phase; 0..5 = confirm LEVEL-2 state */
+    int cz_c4 = 0, cz_c6 = 0, cz_c7 = 0;  /* fade driver 0x8010026c (busy / ramp level / phase) */
+    int cz_396 = 0;                       /* shared counter scene+0x396 */
+    int32_t cz_panvel = 0, cz_accel = 0, cz_accum = 0;  /* model pan vel (scene+0), accel04 (+4), cam-z accum (+0x74) */
+    int32_t pan_x[2]  = { -1568, 1568 };  /* selected char world-X (field+0x34); pans toward 0 */
+    int32_t pan_ry[2] = { 0x404, 0x404 }; /* selected char rot_y (field+0x6a); += 8/frame */
+    int32_t blk_x[4], blk_y[4], blk_dx[4] = {0}, blk_dy[4] = {0};  /* SPRT name/sub blocks, 16.16 */
+    int elza_alive = 1;                   /* the unselected char is disabled at the sub4->sub5 edge */
+    int cz_black = 0;                      /* sub7 fade-to-black brightness (0..255, +8/frame) */
+    /* seed SPRT blocks from the byte-true idle positions (@0x80102624): blk0/2 = names, blk1/3 = subs */
+    { static const int bx[4] = {16,24,168,176}, by[4] = {48,216,48,216};
+      for (int i=0;i<4;i++){ blk_x[i]=bx[i]<<16; blk_y[i]=by[i]<<16; } }
+    static const int32_t cz_target[4][2] = { {11<<16,20<<16},{176<<16,208<<16},{11<<16,20<<16},{176<<16,208<<16} };
     unsigned frames = 0;
     const char *ps_shot = getenv("RE15_PSELECT_SHOT");
     int auto_drive = getenv("RE15_PSELECT_AUTO") != NULL;
@@ -1003,36 +1037,69 @@ static int pc_run_player_select(void)
     uint32_t ps_last = SDL_GetTicks();
     while (re15_gameflow_mode() == RE15_MODE_TITLE) {
         if (pulse < 0x80) { pulse += 8; if (pulse > 0x80) pulse = 0x80; }
+        /* ---- CONFIRM-ZOOM FSM step (byte-true LEVEL-2 sub3-7; runs BEFORE the render like the original
+         * dispatch order sub2 -> renderers). Advances the state + counters + pan/dolly/slide. ---- */
+        if (cz == 0) {                               /* sub3 START-ZOOM (once): arm the fade driver */
+            cz_c6 = 0; re15_cz_fade_tick(&cz_c4, &cz_c6, &cz_c7); cz = 1;
+        } else if (cz == 1) {                        /* sub4 ZOOM-LOOP: fade the 2D layer over 64f */
+            re15_cz_fade_tick(&cz_c4, &cz_c6, &cz_c7);
+            if (cz_c4 == 0) { elza_alive = 0; cz_396 = 0; cz = 2; }   /* fade done: disable other char, arm pan/anim */
+        } else if (cz == 2) {                        /* sub5 PAN-SETUP + animator SETUP (once) */
+            cz_panvel = re15_idiv40(pan_x[sel]); cz_accel = 0x14; cz_accum = 0; cz_396 = 40;
+            { int b0 = sel ? 2 : 0; for (int k = 0; k < 2; k++) { int b = b0 + k;
+                blk_dx[b] = re15_idiv40(cz_target[b][0] - blk_x[b]);
+                blk_dy[b] = re15_idiv40(cz_target[b][1] - blk_y[b]); } }
+            cz = 3;
+        } else if (cz == 3) {                        /* sub6 PAN (41f): model to centre + spin + camera dolly + slide */
+            pan_x[sel] -= cz_panvel; pan_ry[sel] += 8;
+            cz_accum += cz_accel; cz_accel += 0xA;
+            { int b0 = sel ? 2 : 0; for (int k = 0; k < 2; k++) { int b = b0 + k; blk_x[b] += blk_dx[b]; blk_y[b] += blk_dy[b]; } }
+            { int c = cz_396; cz_396--; if (c == 0) { cz_396 = 60; cz = 4; } }
+        } else if (cz == 4) {                        /* sub7 FADE: 60f hold, then fade-to-black */
+            int c = cz_396; cz_396--; if (c == 0) cz = 5;
+        } else if (cz == 5) {                        /* handoff: ramp the fade-to-black (32f @ +8/frame) */
+            cz_black += 8; if (cz_black > 255) cz_black = 255;
+        }
+        /* camera DOLLY (sub6+): pos.z = -20000 + accum; view (LookAt) keeps R constant, TR.z = R[8]*(-pos.z)/4096
+         * (FUN_80053ca4). accum grows quadratically -> ease-in zoom 20039 -> ~11000 (~1.82x). */
+        if (cz >= 3) cam.trans[2] = (int32_t)(((int64_t)4104 * (20000 - cz_accum)) >> 12);
+        int cz_dim = (cz == 1) ? cz_c6 : (cz >= 2 ? 255 : 0);   /* sub4 ramp; then backdrop fully black */
+
         re15_render_begin_frame();
         re15_input_tick();
         re15_render_background_gradient(0, 0, 0, 0, 0, 0);
         re15_render_pc_player_select(&s_sel_bg, sel, pulse);
         re15_render_pc_pselect_text(&s_sel_txt, sel);   /* name/profile text overlays (groups B+C) */
-        /* the two live 3D models (queued as textri; flushed OVER the SELECTH backdrop in end_frame).
-         * Leon left / Elza right, byte-true POS (Y=0x7f4=2036), rot_y 0x404, idle clip 2. */
+        if (cz_dim) re15_render_pc_pselect_dim(cz_dim);
+        if (cz >= 2) re15_render_pc_pselect_groupa(0);   /* stop the half-screen dim once the char pans to centre */
+        if (cz >= 3) { int b0 = sel ? 2 : 0;             /* sub6: the sliding name+subtitle rows */
+            re15_render_pc_pselect_slide(sel, blk_x[b0] >> 16, blk_y[b0] >> 16, blk_x[b0+1] >> 16, blk_y[b0+1] >> 16); }
+        /* the live 3D models: the SELECTED char pans (pan_x/pan_ry); the unselected is drawn until sub4 disables it. */
         { const char *cv=getenv("RE15_PSELECT_CUR"); uint32_t acur = cv ? (uint32_t)atoi(cv) : frames;
-          /* both characters carry the equipped weapon (hand+gun mesh at bone 11) */
-          pselect_render_model(&s_leon, -1568, 2036, 0, 0x404, acur, &cam);
-          pselect_render_model(&s_elza,  1568, 2036, 0, 0x404, acur, &cam); }
-        { int br = fade_level >> 7; re15_render_pc_set_title_fade(br > 255 ? 255 : (br < 0 ? 0 : br)); }
+          if (sel == 0 || elza_alive) pselect_render_model(&s_leon, pan_x[0], 2036, 0, (int16_t)pan_ry[0], acur, &cam);
+          if (sel == 1 || elza_alive) pselect_render_model(&s_elza, pan_x[1], 2036, 0, (int16_t)pan_ry[1], acur, &cam); }
+        { int br = fade_level >> 7; if (br > 255) br = 255; if (br < 0) br = 0;
+          if (cz_black > br) br = cz_black;   /* sub7 fade-to-black wins over the initial fade-in */
+          re15_render_pc_set_title_fade(br); }
         re15_render_end_frame();
         { const char *af = getenv("RE15_PSELECT_SHOT_AF"); unsigned sf = af ? (unsigned)atoi(af) : 40;
           if (ps_shot && frames == sf) re15_render_pc_screenshot(ps_shot); }
         { const char *ser = getenv("RE15_PSELECT_SERIES");   /* frame-series dump for the video compare */
-          if (ser) { if (frames < 60) { char pb[512]; snprintf(pb, sizeof pb, "%s/f%03u.png", ser, frames);
+          if (ser) { unsigned lim = getenv("RE15_PSELECT_SERIES_N") ? (unsigned)atoi(getenv("RE15_PSELECT_SERIES_N")) : 60;
+                     if (frames < lim) { char pb[512]; snprintf(pb, sizeof pb, "%s/f%03u.png", ser, frames);
                                          re15_render_pc_screenshot(pb); } else break; } }
 
-        if (!fading_out) { fade_level -= 0x400; if (fade_level < 0) fade_level = 0; }   /* fade-in */
-        else { fade_level += 0x400; if (fade_level >= 0x7fff) break; }                  /* fade-out -> exit */
+        if (cz < 0) { fade_level -= 0x400; if (fade_level < 0) fade_level = 0; }   /* fade-in (idle only) */
+        if (cz == 5 && cz_black >= 255) break;   /* confirm fade-to-black complete -> hand off to the game */
 
         uint16_t pp = g_engine.pad_pressed;
-        if (auto_drive) { if (frames == 40) pp |= RE15_PAD_BIT_RIGHT;      /* -> Elza (after fade-in) */
-                          if (frames == 70) pp |= RE15_PAD_BIT_CROSS; }    /* confirm */
-        if (!fading_out && fade_level == 0) {   /* input active once faded in (sub1 idle) */
+        if (auto_drive) { if (frames == 40 && getenv("RE15_PSELECT_AUTO_SWITCH")) pp |= RE15_PAD_BIT_RIGHT;  /* -> Elza */
+                          if (frames == 70) pp |= RE15_PAD_BIT_CROSS; }    /* confirm (default = Leon) */
+        if (cz < 0 && fade_level == 0) {   /* input active once faded in (sub1 idle) */
             if ((pp & (RE15_PAD_BIT_LEFT | RE15_PAD_BIT_RIGHT)) && pulse >= 0x80) { sel ^= 1; pulse = 0; }
             if (pp & (RE15_PAD_BIT_CROSS | RE15_PAD_BIT_SQUARE | RE15_PAD_BIT_TRIANGLE |
                       RE15_PAD_BIT_CIRCLE | RE15_PAD_BIT_START))
-                fading_out = 1;   /* CONFIRM -> fade to black -> hand off to the game */
+                cz = 0;   /* CONFIRM -> start the confirm-zoom FSM (sub3) */
         }
         frames++;
         /* 30fps cap (byte-true PSX 30Hz cadence) so the idle clip advances 1 frame/tick, not

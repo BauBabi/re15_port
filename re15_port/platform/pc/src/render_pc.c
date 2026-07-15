@@ -91,6 +91,12 @@ static int           s_select_show = 0;
 static int           s_select_sel = 0;        /* 0=Leon,1=Elza (scene+0x394) */
 static SDL_Texture  *s_selecth3_tex = NULL;   /* PLAYER-SELECT name/profile text atlas (SELECTH3.TIM 256x256 8bpp) */
 static int           s_pselect_text_show = 0;
+/* CONFIRM-ZOOM overlays (TITLE.BIN sub3-7): sub4 fades the 2D layer (backdrop + idle text) to black;
+ * sub5/6 slide the selected char's name+subtitle SPRT rows toward the target rect. Reset each frame in
+ * re15_render_pc_player_select and re-set by the confirm FSM. */
+static int           s_pselect_dim = 0;       /* 0=full, 255=black: black overlay over backdrop + colour-mod on idle text */
+static int           s_slide_show = 0, s_slide_sel = 0, s_slide_nx, s_slide_ny, s_slide_sx, s_slide_sy;
+static int           s_pselect_groupa = 1;    /* apply the Group-A half-screen dim (1=idle/sub4; 0 once the char pans) */
 static int           s_select_pulse = 0x80;   /* highlight ramp counter scene+0x32e (0..0x80) */
 static SDL_Texture  *s_fmv_tex = NULL;        /* STR movie frame (FE-3, updated per frame) */
 static int           s_fmv_show = 0;
@@ -637,6 +643,19 @@ void re15_render_end_frame(void)
     if (s_select_show && s_select_tex) {
         SDL_Rect full = { 0, 0, SCREEN_XRES, SCREEN_YRES };
         SDL_RenderCopy(s_renderer, s_select_tex, NULL, &full);
+        /* CONFIRM sub4: fade the BACKDROP to black here (BEFORE the models) so the selected char still
+         * renders full-bright over it. Byte-true ABR2 SUBTRACTIVE (backdrop - level) like the RE1.5 fade
+         * engine (FUN_800217b0/21880) — clips to black faster + non-uniformly than an alpha blend, which
+         * matches the original's ~40-frame backdrop fade (a linear alpha blend was visibly too slow). */
+        if (s_pselect_dim > 0) {
+            SDL_BlendMode sub = SDL_ComposeCustomBlendMode(
+                SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_REV_SUBTRACT,
+                SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_ADD);
+            if (SDL_SetRenderDrawBlendMode(s_renderer, sub) != 0)
+                SDL_SetRenderDrawBlendMode(s_renderer, SDL_BLENDMODE_BLEND);   /* SW fallback = alpha blend */
+            SDL_SetRenderDrawColor(s_renderer, (Uint8) s_pselect_dim, (Uint8) s_pselect_dim, (Uint8) s_pselect_dim, 255);
+            SDL_RenderFillRect(s_renderer, &full);
+        }
     }
 
     /* Step 2: flush textured triangles ON TOP of the framebuffer copy.
@@ -883,11 +902,27 @@ void re15_render_end_frame(void)
             {  24, 168, 120, 48,  0,  88 },   /* C0 Leon PROFILE screen(24,168)  UV(0,88)  120x48 */
             { 176, 168, 120, 48,  0, 136 },   /* C1 Elza PROFILE screen(176,168) UV(0,136) 120x48 */
         };
-        for (int i = 0; i < 4; i++) {
+        /* CONFIRM sub4: fade the idle text ~2x faster than the backdrop (the profile-card colour fade is
+         * scene+0x26a over 32 frames vs the backdrop's ~64) — colour-mod toward black. */
+        int td = s_pselect_dim * 2; if (td > 255) td = 255;
+        Uint8 tm = (Uint8)(255 - td);
+        SDL_SetTextureColorMod(s_selecth3_tex, tm, tm, tm);
+        if (s_pselect_dim < 255) for (int i = 0; i < 4; i++) {
             SDL_Rect src = { ps_text[i].u, ps_text[i].v, ps_text[i].w, ps_text[i].h };
             SDL_Rect dst = { ps_text[i].x, ps_text[i].y, ps_text[i].w, ps_text[i].h };
             SDL_RenderCopy(s_renderer, s_selecth3_tex, &src, &dst);
         }
+        /* CONFIRM sub5/6: the sliding NAME row (full bright, over the faded idle text). The subtitle row
+         * (blk1/blk3) is NOT drawn — the original shows only the name during the confirm-zoom (same as
+         * the idle, where the subtitle is never visible either; its block slides but is not rendered). */
+        if (s_slide_show) {
+            SDL_SetTextureColorMod(s_selecth3_tex, 255, 255, 255);
+            int nv = s_slide_sel ? 48 : 0;
+            SDL_Rect nsrc = { 0, nv, 136, 24 }, ndst = { s_slide_nx, s_slide_ny, 136, 24 };
+            SDL_RenderCopy(s_renderer, s_selecth3_tex, &nsrc, &ndst);
+            (void) s_slide_sx; (void) s_slide_sy;
+        }
+        SDL_SetTextureColorMod(s_selecth3_tex, 255, 255, 255);
     }
 
     /* PLAYER-SELECT scene (TITLE.BIN task @0x80101094): SELECTH.TIM bg re-blit full-screen + the two
@@ -896,7 +931,7 @@ void re15_render_end_frame(void)
      * (@0x80100860/0x80100898): SELECTED dim = (-0x80-counter)&0xff (0x80->0x00 = brightens), OTHER
      * = counter (0x00->0x80 = dims). Drawn here as a semi-transparent black dim overlay (the exact
      * PSX ABR blend rate still to be confirmed from VRAM; the brightness FORMULA is byte-true). */
-    if (s_select_show && s_select_tex) {
+    if (s_select_show && s_select_tex && s_pselect_groupa) {
         /* (the SELECTH backdrop is drawn earlier, before the 3D models; here = the highlight tiles.) */
         int c = s_select_pulse & 0xff;
         int dim_sel = (-0x80 - c) & 0xff;
@@ -1119,6 +1154,19 @@ void re15_render_pc_player_select(const re15_tim_t *bg, int sel, int pulse_count
         }
     }
     s_select_sel = sel; s_select_pulse = pulse_counter; s_select_show = 1;
+    s_pselect_dim = 0; s_slide_show = 0; s_pselect_groupa = 1;   /* reset confirm overlays; the FSM re-sets them */
+}
+/* CONFIRM-ZOOM: sub4 backdrop/idle-text fade level (0..255). */
+void re15_render_pc_pselect_dim(int level) { s_pselect_dim = level < 0 ? 0 : level > 255 ? 255 : level; }
+/* CONFIRM-ZOOM: turn the idle Group-A half-screen dim off once the selected char starts panning to centre
+ * (else the right-half dim would darken the char as it crosses screen centre). */
+void re15_render_pc_pselect_groupa(int on) { s_pselect_groupa = on; }
+/* CONFIRM-ZOOM: sub5/6 name+subtitle slide — draw the SELECTED char's two SPRT rows at (nx,ny)/(sx,sy).
+ * Leon rows = atlas UV(0,0)/(8,26); Elza rows = UV(0,48)/(8,74). */
+void re15_render_pc_pselect_slide(int sel, int nx, int ny, int sx, int sy)
+{
+    s_slide_show = 1; s_slide_sel = sel;
+    s_slide_nx = nx; s_slide_ny = ny; s_slide_sx = sx; s_slide_sy = sy;
 }
 void re15_render_pc_hide_player_select(void)
 {
