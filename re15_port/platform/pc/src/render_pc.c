@@ -87,6 +87,16 @@ static int           s_gameover_w = 0, s_gameover_h = 0, s_gameover_show = 0;
 static SDL_Texture  *s_title_tex = NULL;      /* TITLE screen (TITLEU.TIM 320x240 16bpp) */
 static SDL_Texture  *s_config_tex = NULL;     /* OPTIONS/CONFIG screen (C_BACK2.TIM 320x240 16bpp) */
 static int           s_config_show = 0, s_config_tab = 0;
+/* OPTIONS sub-screen layers (byte-true FSM @0x8002dde4). pc_run_config repopulates these each frame;
+ * end_frame composites: backdrop -> CONFIG.TIM tile overlay -> semi-transparent highlight rects -> text.
+ * The tile overlay carries the picker "TYPE A B C"/"EDIT" and SOUND boxes (opaque, cover the baked tabs);
+ * the highlight rects are the flat semi-transparent TILEs (blue 0x000080 cursor / yellow 0xc0c000 EDIT). */
+static uint32_t      s_cfg_ov[SCREEN_XRES * SCREEN_YRES];
+static SDL_Texture  *s_cfg_ov_tex = NULL;
+static int           s_cfg_ov_used = 0;
+#define CFG_RECT_MAX 8
+static struct { int x, y, w, h; uint8_t r, g, b, a; } s_cfg_rects[CFG_RECT_MAX];
+static int           s_cfg_rect_n = 0;
 static int           s_title_show = 0;
 static SDL_Texture  *s_select_tex = NULL;     /* PLAYER-SELECT bg (SELECTH.TIM 320x240 16bpp) */
 static int           s_select_show = 0;
@@ -887,20 +897,33 @@ void re15_render_end_frame(void)
             SDL_RenderCopy(s_renderer, s_text_overlay_tex, NULL, NULL);
     }
 
-    /* OPTIONS/CONFIG screen (C_BACK2.TIM full-screen backdrop) + the selected-tab highlight bar. */
+    /* OPTIONS/CONFIG screen: backdrop -> CONFIG.TIM tile overlay -> semi-transparent highlight rects ->
+     * text overlay (byte-true layering of the config task @0x8002dde4). */
     if (s_config_show && s_config_tex) {
         SDL_Rect full = { 0, 0, SCREEN_XRES, SCREEN_YRES };
         SDL_RenderCopy(s_renderer, s_config_tex, NULL, &full);
-        /* CONFIG/SOUND/EXIT tab highlight (positions from C_BACK2.TIM top bar): a semi-transparent
-         * bright bar over the active tab. */
-        static const SDL_Rect s_tabs[3] = { {150,7,44,15}, {197,7,44,15}, {244,7,42,15} };
-        int t = (s_config_tab < 0) ? 0 : (s_config_tab > 2 ? 2 : s_config_tab);
-        SDL_SetRenderDrawBlendMode(s_renderer, SDL_BLENDMODE_ADD);
-        SDL_SetRenderDrawColor(s_renderer, 40, 40, 40, 255);
-        SDL_RenderFillRect(s_renderer, &s_tabs[t]);
+        /* CONFIG.TIM tile overlay (picker "TYPE A B C"/"EDIT", SOUND boxes) — opaque, covers baked tabs. */
+        if (s_cfg_ov_used) {
+            if (!s_cfg_ov_tex) {
+                s_cfg_ov_tex = SDL_CreateTexture(s_renderer, SDL_PIXELFORMAT_RGBA8888,
+                                                 SDL_TEXTUREACCESS_STREAMING, SCREEN_XRES, SCREEN_YRES);
+                if (s_cfg_ov_tex) SDL_SetTextureBlendMode(s_cfg_ov_tex, SDL_BLENDMODE_BLEND);
+            }
+            if (s_cfg_ov_tex) {
+                SDL_UpdateTexture(s_cfg_ov_tex, NULL, s_cfg_ov, SCREEN_XRES * 4);
+                SDL_RenderCopy(s_renderer, s_cfg_ov_tex, NULL, NULL);
+            }
+        }
+        /* Selected-item highlight: the flat semi-transparent TILE (blue 0x000080 / yellow 0xc0c000),
+         * GPU ABE mode 0 = 50/50 blend -> SDL BLEND with the stored alpha. */
         SDL_SetRenderDrawBlendMode(s_renderer, SDL_BLENDMODE_BLEND);
-        /* the action-label text (game font) is written to the text overlay by pc_run_config; re-blit it
-         * HERE, over the backdrop (the earlier overlay blit above is under this backdrop). */
+        for (int i = 0; i < s_cfg_rect_n; i++) {
+            SDL_Rect rr = { s_cfg_rects[i].x, s_cfg_rects[i].y, s_cfg_rects[i].w, s_cfg_rects[i].h };
+            SDL_SetRenderDrawColor(s_renderer, s_cfg_rects[i].r, s_cfg_rects[i].g, s_cfg_rects[i].b, s_cfg_rects[i].a);
+            SDL_RenderFillRect(s_renderer, &rr);
+        }
+        /* the action-label / STEREO-MONO text (game font) is written to the text overlay by pc_run_config;
+         * re-blit it HERE, over the backdrop (the earlier overlay blit above is under this backdrop). */
         if (s_text_overlay_used && s_text_overlay_tex)
             SDL_RenderCopy(s_renderer, s_text_overlay_tex, NULL, NULL);
     }
@@ -1178,6 +1201,47 @@ void re15_render_pc_hide_config(void)
 {
     s_config_show = 0;
     if (s_config_tex) { SDL_DestroyTexture(s_config_tex); s_config_tex = NULL; }
+}
+
+/* Clear the OPTIONS sub-screen tile + highlight layers — call once at the top of each config frame. */
+void re15_render_pc_config_clear(void)
+{
+    s_cfg_rect_n = 0;
+    if (s_cfg_ov_used) { memset(s_cfg_ov, 0, sizeof(s_cfg_ov)); s_cfg_ov_used = 0; }
+}
+
+/* Queue a semi-transparent filled highlight/cover rect (320-space logical coords, a = alpha 0..255). */
+void re15_render_pc_config_rect(int x, int y, int w, int h, uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+{
+    if (s_cfg_rect_n >= CFG_RECT_MAX) return;
+    s_cfg_rects[s_cfg_rect_n].x = x; s_cfg_rects[s_cfg_rect_n].y = y;
+    s_cfg_rects[s_cfg_rect_n].w = w; s_cfg_rects[s_cfg_rect_n].h = h;
+    s_cfg_rects[s_cfg_rect_n].r = r; s_cfg_rects[s_cfg_rect_n].g = g;
+    s_cfg_rects[s_cfg_rect_n].b = b; s_cfg_rects[s_cfg_rect_n].a = a;
+    s_cfg_rect_n++;
+}
+
+/* Blit an 8bpp CONFIG.TIM sub-region (su,sv,w,h) into the config tile overlay at (dx,dy). idx 0 =
+ * transparent. Byte-true source for the picker "TYPE A B C" (uv 0,192 50x24) / "EDIT" (uv 0,216 48x16)
+ * and the SOUND label boxes (uv 0,232 88x18) — the opaque tiles that cover the baked CONFIG/SOUND tabs. */
+void re15_render_pc_config_tile(const re15_tim_t *t, int su, int sv, int w, int h, int dx, int dy)
+{
+    if (!t || t->bpp != 8 || !t->has_clut || !t->pixels) return;
+    const uint8_t *src = (const uint8_t *) t->pixels;
+    for (int y = 0; y < h; y++) {
+        int sy = sv + y, oy = dy + y;
+        if (sy < 0 || sy >= t->height || (unsigned) oy >= (unsigned) SCREEN_YRES) continue;
+        for (int x = 0; x < w; x++) {
+            int sx = su + x, ox = dx + x;
+            if (sx < 0 || sx >= t->width || (unsigned) ox >= (unsigned) SCREEN_XRES) continue;
+            uint8_t idx = src[sy * t->width + sx];
+            if (!idx) continue;   /* index 0 = transparent (STP) */
+            uint16_t c = t->clut[idx];   /* RGB555 -> RGBA8888 (R high, opaque), matching the overlay texture */
+            uint32_t r = ((c >> 0) & 0x1F) << 3, g = ((c >> 5) & 0x1F) << 3, b = ((c >> 10) & 0x1F) << 3;
+            s_cfg_ov[oy * SCREEN_XRES + ox] = (r << 24) | (g << 16) | (b << 8) | 0xFFu;
+            s_cfg_ov_used = 1;
+        }
+    }
 }
 
 /* PLAYER-SELECT scene bg + highlight state (TITLE.BIN task @0x80101094). bg = SELECTH.TIM (16bpp
@@ -2076,6 +2140,26 @@ int re15_render_pc_msg_text(int x, int y, const unsigned char *raw, int len)
     return 1;
 }
 
+/* OPTIONS config text: draw literal game-font glyph CODES (not .msg control-coded bytes) at (x,y) with a
+ * fixed colour attribute. The config screen (FUN_8002ffb8 / FUN_80028ec4) draws each label glyph directly
+ * with a per-glyph CLUT, so button symbols like ✕ (code 0x08) or □ (0x09) must NOT be re-interpreted as
+ * .msg newline/control codes. attr = the TEX CLUT colour row: 0 = normal (0x7810), 3 = dim (0x7990,
+ * the byte-true "Not set" dim). Returns the pen x after the last glyph. */
+int re15_render_pc_config_text(int x, int y, const unsigned char *codes, int len, int attr)
+{
+    re15_msgfont_ensure();
+    if (!s_msgfont_ok || !codes) return x;
+    int penx = x;
+    for (int i = 0; i < len; i++) {
+        unsigned char c = codes[i];
+        if (c != 0x00) re15_msgfont_glyph(penx, y, c, attr);   /* 0x00 = blank space */
+        int w = s_msgfont_w[c];
+        penx += (w > 0) ? w : 6;
+    }
+    s_text_overlay_used = 1;
+    return penx;
+}
+
 /* YES/NO selection cursor — the REAL filled right-pointing triangle the original draws
  * ("Will you push it?  ▶ Yes   No", verified vs screenshot). It is a 16×16 glyph in the
  * SAME TEX.TIM font we already load (font code 0x02 = atlas cell (2,0), TEX.TIM (288,32),
@@ -2149,9 +2233,25 @@ void re15_render_pc_item_prompt(int x, int y, int prompt_type, uint8_t item_id, 
 /* FE-4: draw an ASCII string in the RE1.5 GAME font (TEX.TIM msgfont — code = char byte,
  * the same font/glyph path as the item prompt), attr = colour palette 0..7. Writes to the
  * text overlay. Returns the pixel advance (for centering). Space (0x20) advances only. */
-/* The RE1.5 game-font atlas is ASCII shifted by -0x24 (atlas[code] = char(code+0x24)); space is a
- * pure advance (not in the atlas). Map an ASCII byte -> atlas glyph code, or -1 for space/unmapped. */
-static int re15_msgfont_code(unsigned char c) { return (c >= 0x24 && c <= 0xFF) ? (int)c - 0x24 : -1; }
+/* ASCII -> RE1.5 TEX.TIM game-font atlas glyph code (decoded from the font grid, shots/texfont_grid.png).
+ * The atlas is NOT a flat ASCII-0x24 shift: letters are (A-Z@0x1D, a-z@0x3D), but the digits split
+ * around a gap (0-3 @0x0B..0x0E, then 4-9 @0x10..0x15) and the punctuation lives in its own cells
+ * (.=0x57 ,=0x18 /=0x38 …). The old flat "-0x24" mangled digits 0-3 (off by one) and every symbol
+ * (e.g. '/' -> 0x0B = a ▼ down-arrow). Returns -1 for space/unmapped (advance only). */
+static int re15_msgfont_code(unsigned char c)
+{
+    if (c >= 'A' && c <= 'Z') return 0x1D + (c - 'A');
+    if (c >= 'a' && c <= 'z') return 0x3D + (c - 'a');
+    if (c >= '0' && c <= '3') return 0x0B + (c - '0');
+    if (c >= '4' && c <= '9') return 0x10 + (c - '4');
+    switch (c) {
+        case '.': return 0x57; case ',': return 0x18; case '/': return 0x38;
+        case '(': return 0x37; case ')': return 0x39; case '\'': return 0x3A;
+        case '-': return 0x3B; case ':': return 0x16; case ';': return 0x17;
+        case '!': return 0x1A; case '?': return 0x1B;
+    }
+    return -1;   /* space / unmapped -> advance only */
+}
 
 int re15_render_pc_game_text(int x, int y, const char *str, int attr)
 {

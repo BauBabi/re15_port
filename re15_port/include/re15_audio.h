@@ -89,6 +89,10 @@ void re15_audio_seq_ctl(int slot, int op);
  * Safe to call on a never-initialized engine (no-op). */
 void re15_audio_shutdown(void);
 
+/* OPTIONS SOUND screen: set the output mode. mono != 0 collapses the final stereo mix to mono
+ * (byte-true FUN_80043c00 CD-audio cross-mix matrix + mono flag). */
+void re15_audio_set_mono(int mono);
+
 /* Player FOOTSTEP SE (byte-true FUN_80045630). Called from re15_game_step on a
  * foot-plant (re15_actor_footstep) during walk/run: `foot` = 7 (left) / 4 (right),
  * `sound_type` = the floor.flr region material (re15_rdt_floor_sound). The backend

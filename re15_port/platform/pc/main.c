@@ -1134,10 +1134,15 @@ static const uint16_t k_pad_remap[3][16] = {
     /* B */ { 0x0010,0x0020,0x0040,0x0080, 0x0010,0x0040, 0x2000,0x2000, 0x0800,0x4000,0x0800,0x0400, 0x0080,0x0020,0x2000,0x4000 },
     /* C */ { 0x0010,0x0800,0x0040,0x0400, 0x0010,0x0040, 0x2000,0x2000, 0x0200,0x4000,0x0800,0x0400, 0x0080,0x0020,0x2000,0x4000 },
 };
+static void pc_edit_build_remap(uint16_t remap[16]);   /* fwd — type 3 (EDIT) builds its remap from d08 */
 static uint16_t pc_pad_config(uint16_t p)
 {
-    if (s_config_type <= 0 || s_config_type > 2) return p;   /* TYPE A = identity */
-    const uint16_t *TA = k_pad_remap[0], *TT = k_pad_remap[s_config_type];
+    if (s_config_type <= 0) return p;   /* TYPE A = identity */
+    const uint16_t *TA = k_pad_remap[0];
+    const uint16_t *TT;
+    uint16_t edit_remap[16];
+    if (s_config_type <= 2) TT = k_pad_remap[s_config_type];
+    else { pc_edit_build_remap(edit_remap); TT = edit_remap; }     /* TYPE 3 = EDIT custom map */
     uint16_t cfg = 0; for (int i = 0; i < 16; i++) cfg |= TA[i];   /* buttons the config owns */
     uint16_t out = (uint16_t)(p & ~cfg);                          /* non-config buttons pass through */
     for (int i = 0; i < 16; i++) if (TT[i] & p) out |= TA[i];     /* fire TYPE-A physical bit i when TYPE-T's button is held */
@@ -1159,14 +1164,31 @@ static int pc_font_code(char c)
     return 0x00;
 }
 
-/* CONFIG action labels — byte-true (workflow wf_df9c864a). The MAIN grid FUN_8002ffb8 draws, per box i,
- * the string/glyph for id = preset[type][i] at box position DAT_80073d2c[i] (+ per-id x-nudge, +1 y).
- * The strings are DEBUG.BIN-resident glyph-code strings (embedded here); id 7 = "Not set" (dimmed);
- * id 0x0e-0x11 / 0x12-0x19 = button-legend glyphs. Plus 4 fixed labels (Upper/Lower Attack, Confirm,
- * Cancel). Changing the TYPE preset re-labels the boxes (a different id lands in each box). */
+/* Live per-box action-code array (byte-true DAT_80073d08): the active preset A/B/C (copied in by the
+ * picker) or the EDIT custom map. pc_config_draw_labels + the ingame remap read this. */
+static unsigned char s_config_d08[16] = {0x07,0x07,0x00,0x03,0x02,0x01,0x07,0x06,0x07,0x04,0x07,0x05,0x0e,0x0f,0x15,0x17};
+/* The 3 preset code tables (byte-true DAT_80073cd8, copied into d08 on TYPE A/B/C confirm). */
+static const unsigned char s_config_preset[3][16] = {
+    {0x07,0x07,0x00,0x03,0x02,0x01,0x07,0x06,0x07,0x04,0x07,0x05,0x0e,0x0f,0x15,0x17},  /* A */
+    {0x07,0x07,0x00,0x03,0x02,0x01,0x07,0x06,0x07,0x07,0x04,0x05,0x0e,0x0f,0x16,0x17},  /* B */
+    {0x07,0x03,0x00,0x07,0x07,0x01,0x06,0x02,0x07,0x07,0x04,0x05,0x0e,0x0f,0x16,0x17},  /* C */
+};
+/* SOUND setting: 1 = stereo, 0 = mono (byte-true scene S[7] / persisted DAT_800b0fce; default stereo). */
+static int s_config_sound = 1;
+
+/* the 16 grid-slot / action-label box positions (DAT_80073d2c) — shared by the labels + the EDIT slot cursor. */
+static const struct { int x, y; } k_cfg_box[16] = {
+    {31,52},{31,71},{46,91},{9,111},{84,111},{46,131},{217,52},{217,71},
+    {203,91},{164,111},{239,111},{203,131},{137,182},{137,200},{281,182},{281,200} };
+
+/* CONFIG action labels — byte-true (grid FUN_8002ffb8). Per box i, draw the string/glyph for
+ * id = DAT_80073d08[i] (s_config_d08) at box position DAT_80073d2c[i] (+ per-id x-nudge, +1 y), rendered
+ * with the game font (FUN_80028ec4) using CLUT 0x7810 (normal, attr 0) except id 7 = "Not set" which
+ * uses CLUT 0x7990 (dim, attr 3). id<0x12 = CONFIG.TIM icon (msg-font approximation); id>=0x12 = font
+ * string. Plus 4 fixed labels (Upper/Lower Attack, Confirm, Cancel). */
 static void pc_config_draw_labels(void)
 {
-    extern int re15_render_pc_msg_text(int x, int y, const unsigned char *raw, int len);
+    extern int re15_render_pc_config_text(int x, int y, const unsigned char *codes, int len, int attr);
     static const char *STR[0x0c] = {
         "Forward", "Backward", "L. Turn", "R. Turn", "OK/Attack", "Run", "Aim", "Not set",
         "Upper Attack", "Lower Attack", "Confirm", "Cancel" };
@@ -1174,28 +1196,159 @@ static void pc_config_draw_labels(void)
      * mapped here to the TEX.TIM msg-font button glyphs (△0x06 ○0x07 ✕0x08 □0x09). The confirm/cancel
      * legend (ids 0x15/0x16 = □, 0x17 = ✕) is what actually shows for TYPE A/B/C. */
     static const unsigned char SPR[8] = { 0x06,0x07,0x06,0x09,0x09,0x08,0x07,0x08 };   /* id 0x12..0x19 */
-    static const struct { int x, y; } POS[16] = {
-        {31,52},{31,71},{46,91},{9,111},{84,111},{46,131},{217,52},{217,71},
-        {203,91},{164,111},{239,111},{203,131},{137,182},{137,200},{281,182},{281,200} };
     static const int NUDGE[0x12] = { 0x16,0x16,0x0f,0x0f,0x02,0x09,0x0f,0x0f, 0,0,0,0,0,0,0,0,0,0 };
-    static const unsigned char PRESET[3][16] = {   /* DAT_80073cd8 + type*0x10 (selector ids per box) */
-        {0x07,0x07,0x00,0x03,0x02,0x01,0x07,0x06,0x07,0x04,0x07,0x05,0x0e,0x0f,0x15,0x17},
-        {0x07,0x07,0x00,0x03,0x02,0x01,0x07,0x06,0x07,0x07,0x04,0x05,0x0e,0x0f,0x16,0x17},
-        {0x07,0x03,0x00,0x07,0x07,0x01,0x06,0x02,0x07,0x07,0x04,0x05,0x0e,0x0f,0x16,0x17} };
-    const unsigned char *ids = PRESET[(s_config_type >= 0 && s_config_type < 3) ? s_config_type : 0];
     unsigned char buf[24];
     for (int i = 0; i < 16; i++) {
-        int id = ids[i];
-        int x = POS[i].x + (id < 0x12 ? NUDGE[id] : 0), y = POS[i].y + 1, n = 0;
+        int id = s_config_d08[i];
+        int x = k_cfg_box[i].x + (id < 0x12 ? NUDGE[id] : 0), y = k_cfg_box[i].y + 1, n = 0;
+        int attr = (id == 7) ? 3 : 0;   /* "Not set" -> dim CLUT 0x7990 (attr 3), else normal 0x7810 (attr 0) */
         if (id < 0x0c)       { for (const char *p = STR[id]; *p && n < 24; p++) buf[n++] = (unsigned char)pc_font_code(*p); }
         else if (id < 0x12)  { buf[n++] = (unsigned char)(0x98 - (id - 0x0e)); }   /* 0x0e→0x98 .. 0x11→0x95 */
         else if (id <= 0x19) { buf[n++] = SPR[id - 0x12]; }
-        if (n) re15_render_pc_msg_text(x, y, buf, n);
+        if (n) re15_render_pc_config_text(x, y, buf, n, attr);
     }
     static const struct { int x, y, id; } FIX[4] = { {30,183,8},{30,201,9},{174,183,10},{174,201,11} };
     for (int k = 0; k < 4; k++) {
         int n = 0; for (const char *p = STR[FIX[k].id]; *p && n < 24; p++) buf[n++] = (unsigned char)pc_font_code(*p);
-        re15_render_pc_msg_text(FIX[k].x, FIX[k].y, buf, n);
+        re15_render_pc_config_text(FIX[k].x, FIX[k].y, buf, n, 0);
+    }
+}
+
+/* OPTIONS screen state machine — byte-true (EXE task @0x8002dde4). Screens:
+ *   TOP    : CONFIG(0)/SOUND(1)/EXIT(2)            LEFT/RIGHT wrap 0..2      (FUN_8002e774)
+ *   PICKER : TYPE A(0)/B(1)/C(2)/EDIT(3)/EXIT(4)   LEFT/RIGHT wrap 0..4      (FUN_8002e980)
+ *   SOUND  : Stereo/Mono                           UP|DOWN toggles           (FUN_8002f0d4)
+ *   EDIT   : 16-slot grid + panel A/B                                        (FUN_8002ebbc)
+ * confirm = Square|Circle (raw 0xa0), cancel = Cross (raw 0x40) — RE1.5 config convention. Positions:
+ * DAT_80073d6c (top) / DAT_80073d78 (picker), y=24; blue cursor TILE RGB(0,0,0x80) @50% ABE, 48x16
+ * (top/EDIT/EXIT) or 16x16 (TYPE A/B/C). */
+enum { CFG_TOP = 0, CFG_PICKER, CFG_SOUND, CFG_EDIT };
+static const int k_cfg_top_x[3]  = { 147, 198, 248 };            /* DAT_80073d6c.x (y=24) */
+static const int k_cfg_pick_x[5] = { 147, 164, 181, 198, 248 }; /* DAT_80073d78.x (y=24) */
+
+/* EDIT custom-remap screen (FUN_8002ebbc). s_edit_phase: 0=slot-select, 1=panel A (basic action), 2=panel B
+ * (special code). Slot-grid nav = byte-true jump-table transitions (0x80010a30/a70/aa8/ae8); panels + assign
+ * dedup + remap rebuild all byte-true (workflow wf_abeec930). Panel GLYPHS are the game-font approximation
+ * (action names / button symbols) — the exact CONFIG.TIM streams need a dynamic ligature-table dump. */
+static int s_edit_phase = 0, s_edit_slot = 0, s_edit_code = 0;   /* scene S[3]/S[5]/S[6] */
+static const uint8_t k_edit_up[16]    = {13,0,1,2,2,3,15,6,7,8,8,9,5,12,11,14};
+static const uint8_t k_edit_down[16]  = {1,2,3,5,5,12,7,8,9,11,11,14,13,0,15,6};
+static const uint8_t k_edit_right[16] = {6,7,8,10,3,11,0,1,2,4,9,5,14,15,12,13};
+static const uint8_t k_edit_left[16]  = {6,7,8,4,9,11,0,1,2,10,3,5,14,15,12,13};
+static const uint8_t k_editA_x[8] = {34,34,26,26,13,21,26,26};   /* panel A x-offs DAT_80073d8c */
+static const uint8_t k_editA_y[8] = {55,71,87,103,119,135,151,167}; /* panel A y DAT_80073d94-ish */
+static const uint8_t k_editB_up[12]   = {5,0,1,2,3,4,11,6,7,8,9,10};
+static const uint8_t k_editB_down[12] = {1,2,3,4,5,0,7,8,9,10,11,6};
+static const uint8_t k_editB_lr[12]   = {6,7,8,9,10,11,0,1,2,3,4,5};
+/* per-grid-slot physical mask (DAT_80073c88) + special-code masks (0x80073c84 + code*2, code 14..25),
+ * both in the EXE's standard PSX-SIO order; converted to the port's RE15_PAD_BIT order at remap-build. */
+static const uint16_t k_box_mask[16]     = {0x0001,0x0004,0x1000,0x8000,0x2000,0x4000,0x0002,0x0008,0x0010,0x0080,0x0020,0x0040,0x1000,0x4000,0x2000,0x8000};
+static const uint16_t k_special_mask[12] = {0x1000,0x4000,0x2000,0x8000,0x0004,0x0001,0x0010,0x0080,0x0020,0x0040,0x0008,0x0002}; /* code 14..25 */
+
+/* EDIT assign — panel A (basic codes 0..7, swap-dedup over grid slots 0..11; code 7 = "Not set", no
+ * dedup / duplicates allowed). Byte-true FUN_8002f714. */
+static void pc_edit_assign_a(void)
+{
+    int newcode = s_edit_code;                          /* 0..7 */
+    if (newcode == 7) { s_config_d08[s_edit_slot] = 7; return; }
+    int old = s_config_d08[s_edit_slot];
+    for (int i = 11; i >= 0; --i) if (s_config_d08[i] == newcode) s_config_d08[i] = (unsigned char)old;
+    s_config_d08[s_edit_slot] = (unsigned char)newcode;
+}
+/* EDIT assign — panel B (special code = cursor+14, swap-dedup over slots 12..15, first match). FUN_8002f7e8. */
+static void pc_edit_assign_b(void)
+{
+    int newcode = s_edit_code + 14;                     /* 14..25 */
+    int old = s_config_d08[s_edit_slot];
+    for (int i = 12; i < 16; ++i) if (s_config_d08[i] == newcode) { s_config_d08[i] = (unsigned char)old; break; }
+    s_config_d08[s_edit_slot] = (unsigned char)newcode;
+}
+/* Build the EDIT custom remap[16] (logical action -> physical port-pad mask) from s_config_d08, byte-true
+ * rebuild loop @0x8002e5d0 (code->action LUT 0x80010a10). The box/special masks are the EXE's standard
+ * PSX-SIO bits; byte-swapped to the port's RE15_PAD_BIT order (matches k_pad_remap exactly for A). The
+ * fixed actions {10..13} are seeded from TYPE A (the byte-true rebuild leaves them 0 — they are engine
+ * defaults not exposed by the editor). */
+static void pc_edit_build_remap(uint16_t remap[16])
+{
+    for (int i = 0; i < 16; i++) remap[i] = k_pad_remap[0][i];   /* seed non-editable actions from TYPE A */
+    for (int slot = 0; slot < 16; slot++) {
+        int c = s_config_d08[slot];
+        if (c >= 7) continue;
+        uint16_t m = (uint16_t)(((k_box_mask[slot] & 0xFF) << 8) | (k_box_mask[slot] >> 8));
+        switch (c) {
+            case 0: remap[0] = m; break;
+            case 1: remap[2] = m; break;
+            case 2: remap[1] = m; break;
+            case 3: remap[3] = m; break;
+            case 4: remap[7] = m; remap[6] = m; break;
+            case 5: remap[9] = m; break;
+            case 6: remap[8] = m; break;
+        }
+    }
+    static const int spdst[4] = { 4, 5, 14, 15 };
+    for (int k = 0; k < 4; k++) {
+        int code = s_config_d08[12 + k];
+        if (code >= 14 && code <= 25) {
+            uint16_t sm = k_special_mask[code - 14];
+            remap[spdst[k]] = (uint16_t)(((sm & 0xFF) << 8) | (sm >> 8));
+        }
+    }
+}
+
+/* Draw the current sub-screen's CONFIG.TIM tiles + selected-item highlight + text over the backdrop
+ * (called after re15_render_pc_config_clear + the backdrop + the 16 action labels). */
+static void pc_config_draw_overlay(const re15_tim_t *tim, int screen, int cur)
+{
+    extern void re15_render_pc_config_rect(int x, int y, int w, int h, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+    extern void re15_render_pc_config_tile(const re15_tim_t *t, int su, int sv, int w, int h, int dx, int dy);
+    extern int  re15_render_pc_config_text(int x, int y, const unsigned char *codes, int len, int attr);
+    if (screen == CFG_TOP) {
+        re15_render_pc_config_rect(k_cfg_top_x[cur], 24, 48, 16, 0, 0, 0x80, 128);   /* blue tab cursor @50% */
+    } else if (screen == CFG_PICKER) {
+        /* opaque CONFIG.TIM tiles cover the baked CONFIG/SOUND: "TYPE A B C" then "EDIT" ("EXIT" stays baked). */
+        re15_render_pc_config_tile(tim, 0, 192, 50, 24, 147, 16);
+        re15_render_pc_config_tile(tim, 0, 216, 48, 16, 198, 24);
+        re15_render_pc_config_rect(k_cfg_pick_x[cur], 24, (cur < 3) ? 16 : 48, 16, 0, 0, 0x80, 128);
+    } else if (screen == CFG_SOUND) {
+        /* SOUND label boxes (CONFIG.TIM uv 0,232 88x18) + STEREO/MONO text; current setting -> dim CLUT
+         * 0x7990 (attr 3), other -> normal 0x7810 (attr 0). Tab cursor stays on SOUND (198). */
+        re15_render_pc_config_tile(tim, 0, 232, 88, 18, 116, 51);
+        re15_render_pc_config_tile(tim, 0, 232, 88, 18, 116, 70);
+        re15_render_pc_config_rect(k_cfg_top_x[1], 24, 48, 16, 0, 0, 0x80, 128);
+        /* Current setting -> BRIGHT (attr 0 / CLUT 0x7810), the other -> DIM (attr 3 / 0x7990). Verified
+         * against the PSX SOUND screen (STEREO current = bright 177, MONO = dim 132). */
+        { unsigned char b[8]; int n = 0; const char *s = "STEREO"; for (const char *p = s; *p; p++) b[n++] = (unsigned char)pc_font_code(*p);
+          re15_render_pc_config_text(119, 53, b, n, s_config_sound ? 0 : 3); }
+        { unsigned char b[8]; int n = 0; const char *s = "MONO";   for (const char *p = s; *p; p++) b[n++] = (unsigned char)pc_font_code(*p);
+          re15_render_pc_config_text(131, 71, b, n, s_config_sound ? 3 : 0); }
+    } else if (screen == CFG_EDIT) {
+        /* slot-select YELLOW cursor (0xc0c000 @50%) at the selected grid box: w=72 for the 12 basic slots,
+         * 16 for the 4 special slots (FUN_8002f518). */
+        re15_render_pc_config_rect(k_cfg_box[s_edit_slot].x, k_cfg_box[s_edit_slot].y,
+                                   (s_edit_slot < 12) ? 72 : 16, 16, 0xc0, 0xc0, 0x00, 128);
+        if (s_edit_phase == 1) {
+            /* Panel A — 8 basic actions on the side opposite the selected box (base x = slot<6 ? 187 : 37).
+             * Glyphs = game-font action names (approximation of the CONFIG.TIM streams); id 7 "Not set" dim. */
+            int s2 = (s_edit_slot < 6) ? 0xbb : 0x25;
+            static const char *AN[8] = { "Forward","Backward","L. Turn","R. Turn","OK/Attack","Run","Aim","Not set" };
+            for (int i = 0; i < 8; i++) {
+                unsigned char b[16]; int n = 0; for (const char *p = AN[i]; *p && n < 16; p++) b[n++] = (unsigned char)pc_font_code(*p);
+                re15_render_pc_config_text(s2 + k_editA_x[i], k_editA_y[i], b, n, (i == 7) ? 3 : 0);
+            }
+            re15_render_pc_config_rect(s2 + 12, s_edit_code * 16 + 54, 72, 16, 0xc0, 0xc0, 0x00, 128);   /* row cursor */
+        } else if (s_edit_phase == 2) {
+            /* Panel B — 12 special-button symbols, 2col x 6row (left col x=199, right col x=215, y=54..134).
+             * Glyphs = closest game-font button symbols (face buttons + letters) for codes 14..25. */
+            static const unsigned char BSYM[12] = { 0x06,0x08,0x07,0x09, 'R','S','U','L','R','D','T','L' };
+            for (int i = 0; i < 12; i++) {
+                int bx = (i < 6) ? 199 : 215, by = ((i < 6) ? i : (i - 6)) * 16 + 54;
+                unsigned char g = BSYM[i];
+                unsigned char b = (g < 0x20) ? g : (unsigned char)pc_font_code((char)g);
+                re15_render_pc_config_text(bx, by, &b, 1, 0);
+            }
+            int bx = (s_edit_code < 6) ? 199 : 215, by = ((s_edit_code < 6) ? s_edit_code : (s_edit_code - 6)) * 16 + 54;
+            re15_render_pc_config_rect(bx, by, 16, 16, 0xc0, 0xc0, 0x00, 128);   /* cell cursor */
+        }
     }
 }
 
@@ -1206,14 +1359,24 @@ static void pc_run_config(void)
     extern void re15_render_pc_hide_title(void);
     extern void re15_render_pc_hide_title_menu(void);
     extern void re15_render_pc_set_title_fade(int a);
+    extern void re15_render_pc_config_clear(void);
+    extern void re15_render_pc_config_rect(int x, int y, int w, int h, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+    extern void re15_render_pc_config_tile(const re15_tim_t *t, int su, int sv, int w, int h, int dx, int dy);
+    extern int  re15_render_pc_config_text(int x, int y, const unsigned char *codes, int len, int attr);
+    extern void re15_audio_set_mono(int mono);
     re15_render_pc_hide_title_menu();
     re15_render_pc_hide_title();
-    static re15_tim_t s_cfg_bg = {0};
+    static re15_tim_t s_cfg_bg = {0};      /* C_BACK2.TIM backdrop (OPTIONS title + tabs + controller) */
     if (!s_cfg_bg.pixels) { int sz = 0; uint8_t *b = pc_read_shared("DATA/C_BACK2.TIM", &sz);
                             if (b) re15_tim_parse(b, sz, &s_cfg_bg); }
-    extern int re15_render_pc_msg_text(int x, int y, const unsigned char *raw, int len);
-    int tab = 0;               /* 0=CONFIG 1=SOUND 2=EXIT (top tabs) */
-    int type = s_config_type;  /* live preset A/B/C being edited (committed on EXIT) */
+    static re15_tim_t s_cfg_tim = {0};     /* CONFIG.TIM 8bpp icon/tile sheet (picker + SOUND tiles) */
+    if (!s_cfg_tim.pixels) { int sz = 0; uint8_t *b = pc_read_shared("DATA/CONFIG.TIM", &sz);
+                             if (b) re15_tim_parse(b, sz, &s_cfg_tim); }
+
+    /* keep the live label array in sync with the active preset A/B/C on entry (EDIT keeps its custom map). */
+    if (s_config_type >= 0 && s_config_type <= 2) memcpy(s_config_d08, s_config_preset[s_config_type], 16);
+
+    int screen = CFG_TOP, cur = 0;
     int fade_level = 0x7fff;   /* brightness = fade_level>>7; fade IN from black */
     int fading_out = 0;
     uint32_t last = SDL_GetTicks();
@@ -1221,13 +1384,11 @@ static void pc_run_config(void)
         re15_render_begin_frame();
         re15_input_tick();
         re15_render_background_gradient(0, 0, 0, 0, 0, 0);
-        re15_render_pc_config(&s_cfg_bg, tab);
-        pc_config_draw_labels();
-        /* preset indicator "TYPE A/B/C" (the port's simplified selector; the byte-true preset
-         * sub-screen FUN_8002fb94 is a refinement). Cycle with Up/Down in the CONFIG tab. */
-        { unsigned char t[6]; t[0]=pc_font_code('T'); t[1]=pc_font_code('Y'); t[2]=pc_font_code('P');
-          t[3]=pc_font_code('E'); t[4]=pc_font_code(' '); t[5]=(unsigned char)pc_font_code('A'+type);
-          re15_render_pc_msg_text(126, 20, t, 6); }
+        re15_render_pc_config_clear();
+        re15_render_pc_config(&s_cfg_bg, 0);   /* backdrop */
+        pc_config_draw_labels();               /* 16 action labels (+ "Not set" dim) */
+        pc_config_draw_overlay(&s_cfg_tim, screen, cur);
+
         { int br = fade_level >> 7; re15_render_pc_set_title_fade(br > 255 ? 255 : (br < 0 ? 0 : br)); }
         re15_render_end_frame();
 
@@ -1236,16 +1397,50 @@ static void pc_run_config(void)
 
         if (!fading_out && fade_level == 0) {
             uint16_t pp = g_engine.pad_pressed;
-            if (pp & RE15_PAD_BIT_LEFT)  { if (--tab < 0) tab = 2; }
-            if (pp & RE15_PAD_BIT_RIGHT) { if (++tab > 2) tab = 0; }
-            if (tab == 0) {   /* CONFIG tab: Up/Down cycles the TYPE A/B/C preset */
-                if (pp & RE15_PAD_BIT_UP)   { if (--type < 0) type = 2; }
-                if (pp & RE15_PAD_BIT_DOWN) { if (++type > 2) type = 0; }
+            int confirm = (pp & (RE15_PAD_BIT_SQUARE | RE15_PAD_BIT_CIRCLE)) != 0;   /* raw 0xa0 */
+            int cancel  = (pp & RE15_PAD_BIT_CROSS) != 0;                            /* raw 0x40 */
+            if (screen == CFG_TOP) {
+                if (pp & RE15_PAD_BIT_LEFT)  { if (--cur < 0) cur = 2; }
+                if (pp & RE15_PAD_BIT_RIGHT) { if (++cur > 2) cur = 0; }
+                if (confirm) {
+                    if (cur == 0)      { screen = CFG_PICKER; cur = 0; }   /* CONFIG -> preset picker (cursor 0) */
+                    else if (cur == 1) { screen = CFG_SOUND; }             /* SOUND  -> sound screen */
+                    else               { fading_out = 1; }                 /* EXIT   -> leave config */
+                }
+            } else if (screen == CFG_PICKER) {
+                if (pp & RE15_PAD_BIT_LEFT)  { if (--cur < 0) cur = 4; }
+                if (pp & RE15_PAD_BIT_RIGHT) { if (++cur > 4) cur = 0; }
+                if (cancel) { screen = CFG_TOP; cur = 0; }                 /* Cross -> back to top (CONFIG) */
+                else if (confirm) {
+                    if (cur <= 2)      { s_config_type = cur; memcpy(s_config_d08, s_config_preset[cur], 16); }  /* apply preset + relabel */
+                    else if (cur == 3) { screen = CFG_EDIT; s_edit_phase = 0; s_edit_slot = 0; s_config_type = 3; }  /* EDIT custom */
+                    else               { screen = CFG_TOP; cur = 0; }      /* EXIT -> back to top */
+                }
+            } else if (screen == CFG_SOUND) {
+                if (pp & (RE15_PAD_BIT_UP | RE15_PAD_BIT_DOWN)) s_config_sound ^= 1;   /* raw 0x5000 toggle */
+                if (confirm)     { re15_audio_set_mono(!s_config_sound); screen = CFG_TOP; cur = 1; }  /* save+apply */
+                else if (cancel) { screen = CFG_TOP; cur = 1; }           /* back to top (SOUND), no save */
+            } else if (screen == CFG_EDIT) {
+                if (s_edit_phase == 0) {   /* slot-select: byte-true grid-jump LUTs, confirm -> panel, cancel -> picker */
+                    if (pp & RE15_PAD_BIT_UP)    s_edit_slot = k_edit_up[s_edit_slot];
+                    if (pp & RE15_PAD_BIT_DOWN)  s_edit_slot = k_edit_down[s_edit_slot];
+                    if (pp & RE15_PAD_BIT_LEFT)  s_edit_slot = k_edit_left[s_edit_slot];
+                    if (pp & RE15_PAD_BIT_RIGHT) s_edit_slot = k_edit_right[s_edit_slot];
+                    if (confirm) { s_edit_code = 0; s_edit_phase = (s_edit_slot < 12) ? 1 : 2; }
+                    else if (cancel) { screen = CFG_PICKER; cur = 3; }
+                } else if (s_edit_phase == 1) {   /* panel A: 8 basic actions, UP/DOWN wrap [0,7] */
+                    if (pp & RE15_PAD_BIT_UP)   s_edit_code = (s_edit_code + 7) & 7;
+                    if (pp & RE15_PAD_BIT_DOWN) s_edit_code = (s_edit_code + 1) & 7;
+                    if (confirm) { pc_edit_assign_a(); s_edit_phase = 0; }
+                    else if (cancel) { s_edit_phase = 0; }
+                } else {   /* panel B: 12 special codes, 2col x 6row */
+                    if (pp & RE15_PAD_BIT_UP)    s_edit_code = k_editB_up[s_edit_code];
+                    if (pp & RE15_PAD_BIT_DOWN)  s_edit_code = k_editB_down[s_edit_code];
+                    if (pp & (RE15_PAD_BIT_LEFT | RE15_PAD_BIT_RIGHT)) s_edit_code = k_editB_lr[s_edit_code];
+                    if (confirm) { pc_edit_assign_b(); s_edit_phase = 0; }
+                    else if (cancel) { s_edit_phase = 0; }
+                }
             }
-            /* Confirm on the EXIT tab, or any Cancel (Triangle/Circle) → commit + leave. */
-            if (((pp & (RE15_PAD_BIT_CROSS | RE15_PAD_BIT_START)) && tab == 2) ||
-                (pp & (RE15_PAD_BIT_TRIANGLE | RE15_PAD_BIT_CIRCLE)))
-                { s_config_type = type; fading_out = 1; }   /* commit the preset */
         }
         { uint32_t now = SDL_GetTicks(); uint32_t el = now - last; if (el < 33) SDL_Delay(33 - el); last = SDL_GetTicks(); }
     }
@@ -1390,14 +1585,26 @@ int main(int argc, char *argv[])
         if (getenv("RE15_CONFIG_TEST")) {    /* debug: jump straight into the OPTIONS/config screen */
             const char *cs = getenv("RE15_CONFIG_SHOT");
             if (cs) { extern void re15_render_pc_config(const re15_tim_t *bg, int tab);
+                      extern void re15_render_pc_config_clear(void);
                       extern void re15_render_pc_screenshot(const char *path);
                       static re15_tim_t bg = {0}; int sz=0; uint8_t *b = pc_read_shared("DATA/C_BACK2.TIM",&sz);
                       if (b) re15_tim_parse(b,sz,&bg);
-                      (void)sz;
-                      int ctab = atoi(getenv("RE15_CONFIG_TAB")?getenv("RE15_CONFIG_TAB"):"0");
+                      static re15_tim_t tim = {0}; int tsz=0; uint8_t *tb = pc_read_shared("DATA/CONFIG.TIM",&tsz);
+                      if (tb) re15_tim_parse(tb,tsz,&tim);
+                      (void)sz; (void)tsz;
+                      /* RE15_CONFIG_TAB selects the screen for the shot: 0/1/2 = top menu cursor CONFIG/SOUND/EXIT,
+                       * 3 = preset picker, 4 = SOUND, 5 = EDIT slot-select, 6 = EDIT panel A, 7 = EDIT panel B.
+                       * RE15_CONFIG_CUR = picker cursor / EDIT slot; RE15_CONFIG_CODE = EDIT panel cursor. */
+                      int t = atoi(getenv("RE15_CONFIG_TAB")?getenv("RE15_CONFIG_TAB"):"0");
+                      int screen = (t <= 2) ? CFG_TOP : (t == 3 ? CFG_PICKER : (t == 4 ? CFG_SOUND : CFG_EDIT));
+                      int cur = (t <= 2) ? t : atoi(getenv("RE15_CONFIG_CUR")?getenv("RE15_CONFIG_CUR"):"0");
+                      if (t >= 5) { s_config_type = 3; s_edit_phase = t - 5; s_edit_slot = cur;
+                                    s_edit_code = atoi(getenv("RE15_CONFIG_CODE")?getenv("RE15_CONFIG_CODE"):"0"); }
                       for (int f=0; f<4; f++) {   /* render a few frames so the shot reads a presented buffer, not stale black */
                           re15_render_begin_frame(); re15_render_background_gradient(0,0,0,0,0,0);
-                          re15_render_pc_config(&bg, ctab); pc_config_draw_labels(); re15_render_end_frame(); }
+                          re15_render_pc_config_clear();
+                          re15_render_pc_config(&bg, 0); pc_config_draw_labels();
+                          pc_config_draw_overlay(&tim, screen, cur); re15_render_end_frame(); }
                       re15_render_pc_screenshot(cs); exit(0); }
             pc_run_config(); exit(0);
         }

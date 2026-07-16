@@ -172,6 +172,8 @@ static struct {
 } s_fmv_audio;
 static int s_dev_freq = 44100;     /* actual device rate (from SDL have.freq)   */
 static FILE *s_audio_cap = NULL;   /* RE15_AUDIO_CAP=<raw>: dump mixed output (verify) */
+static int   s_audio_mono = 0;     /* OPTIONS SOUND: 1 = mono (collapse final mix), 0 = stereo */
+void re15_audio_set_mono(int mono) { s_audio_mono = mono ? 1 : 0; }
 
 /* re15_voice — decoded-clip cache, keyed by voice id (RE2 voice-table role). */
 typedef struct { int16_t *pcm; int len; int tried; } re15_voice_clip_t;
@@ -384,6 +386,16 @@ static void audio_callback(void *userdata, Uint8 *stream, int len)
     re15_ss_render_bgm(out, frames);
     /* Looping room ambience (helicopter rotor) — dry, after the BGM reverb. */
     re15_amb_mix(out, frames);
+
+    /* OPTIONS SOUND = Mono: collapse the final stereo mix to mono. Byte-true FUN_80043c00 installs the
+     * CD-audio cross-mix matrix {0x3f,0x3f,0x3f,0x3f} (= (L+R)/2 to both channels) + software flag
+     * 0x800b2678 for mono; here we apply the equivalent to the whole final mix. */
+    if (s_audio_mono) {
+        for (int f = 0; f < frames; f++) {
+            int32_t m = ((int32_t)out[f * 2 + 0] + (int32_t)out[f * 2 + 1]) / 2;
+            out[f * 2 + 0] = (int16_t)m; out[f * 2 + 1] = (int16_t)m;
+        }
+    }
 
     if (s_audio_cap) fwrite(stream, 1, (size_t)len, s_audio_cap);   /* RE15_AUDIO_CAP verify hook */
 }
