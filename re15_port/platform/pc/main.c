@@ -1119,33 +1119,29 @@ static int pc_run_player_select(void)
  * fade-in/out, and the tab cursor; the per-button action LABELS (game-font strings drawn by the
  * printf-style FUN_800279c8 at the DAT_80073d2c slot positions) and the functional A/B/C/EDIT remap
  * (tables @0x80073dbc/ddc/dfc verified from RAM) are the next increments. Returns when EXIT/Cancel. */
-/* Controller-config preset (OPTIONS TYPE A/B/C). 0 = TYPE A = the byte-true default; the port's SDL
- * bindings + game readers already encode TYPE A, so TYPE A is IDENTITY here (guaranteed no regression).
- * B/C apply the byte-true table differences (tables @0x80073dbc/ddc/dfc). The port input is a physical
- * PSX-bit model, so the effect is a physical permutation:
- *   A vs B: differ only at logical bits 6,7,14 (Left↔Right) = the tank-turn direction → invert turn.
- *   A vs C: additionally bits 1,3,8 reassign face/stick buttons (Circle→Start, Square→R3, Start→L3).
- * Applied INGAME only (the front-end reads raw). */
+/* Controller-config preset (OPTIONS TYPE A/B/C), byte-true (workflow wf_df9c864a + FUN_80030444, tables
+ * @0x80073dbc/ddc/dfc). The runtime remap BUILDS a 16-bit logical action word from the raw pad
+ * (logical bit i set iff REMAP[type][i] & raw), which the game reads. The port's game readers already
+ * encode TYPE A's physical layout, so we build the logical word then re-express it into TYPE A's
+ * physical bits (out |= REMAP[A][i] for each set logical bit), keeping the non-config buttons
+ * (dialog Circle, menu Start, …) as pass-through. TYPE A is therefore IDENTITY (no regression).
+ *   A vs B: bits 6,7,14 (ACTION/ATTACK) SQUARE→CIRCLE — the attack button moves to Circle (NOT a turn swap).
+ *   A vs C: + tank-turn onto the shoulders (i1 Right→R1, i3 Left→L1) + Aim/Ready R1→R2 (i8).
+ * Tables are in the PORT's SIO/RE15_PAD_BIT order (the EXE's PsyQ-order hex is byte-swapped). INGAME only. */
 static int s_config_type = 0;
+static const uint16_t k_pad_remap[3][16] = {
+    /* A */ { 0x0010,0x0020,0x0040,0x0080, 0x0010,0x0040, 0x8000,0x8000, 0x0800,0x4000,0x0800,0x0400, 0x0080,0x0020,0x8000,0x4000 },
+    /* B */ { 0x0010,0x0020,0x0040,0x0080, 0x0010,0x0040, 0x2000,0x2000, 0x0800,0x4000,0x0800,0x0400, 0x0080,0x0020,0x2000,0x4000 },
+    /* C */ { 0x0010,0x0800,0x0040,0x0400, 0x0010,0x0040, 0x2000,0x2000, 0x0200,0x4000,0x0800,0x0400, 0x0080,0x0020,0x2000,0x4000 },
+};
 static uint16_t pc_pad_config(uint16_t p)
 {
-    if (s_config_type <= 0) return p;                 /* TYPE A = identity */
-    /* B & C: invert the tank-turn — swap d-pad Left(0x80) ↔ Right(0x20). */
-    uint16_t L = p & RE15_PAD_BIT_LEFT, R = p & RE15_PAD_BIT_RIGHT;
-    p = (p & ~(uint16_t)(RE15_PAD_BIT_LEFT | RE15_PAD_BIT_RIGHT))
-        | (uint16_t)(L ? RE15_PAD_BIT_RIGHT : 0) | (uint16_t)(R ? RE15_PAD_BIT_LEFT : 0);
-    if (s_config_type == 2) {
-        /* TYPE C: reassign the action buttons per the byte-true table diff (i=1 Circle→Start,
-         * i=3 Square→R3, i=8 Start→L3). Best-effort on the port's physical model (opt-in). */
-        uint16_t o = p;
-        p &= ~(uint16_t)(RE15_PAD_BIT_CIRCLE | RE15_PAD_BIT_SQUARE | RE15_PAD_BIT_START | 0x0002u | 0x0004u);
-        if (o & RE15_PAD_BIT_START) p |= RE15_PAD_BIT_CIRCLE;   /* Circle action ← Start */
-        if (o & RE15_PAD_BIT_SQUARE) p |= 0x0004u;              /* R3 (unused→Square's action moves) */
-        if (o & 0x0004u) p |= RE15_PAD_BIT_SQUARE;              /* Square action ← R3 */
-        if (o & 0x0002u) p |= RE15_PAD_BIT_START;               /* Start action ← L3 */
-        if (o & RE15_PAD_BIT_CIRCLE) p |= 0x0002u;              /* L3 (Circle's other role) */
-    }
-    return p;
+    if (s_config_type <= 0 || s_config_type > 2) return p;   /* TYPE A = identity */
+    const uint16_t *TA = k_pad_remap[0], *TT = k_pad_remap[s_config_type];
+    uint16_t cfg = 0; for (int i = 0; i < 16; i++) cfg |= TA[i];   /* buttons the config owns */
+    uint16_t out = (uint16_t)(p & ~cfg);                          /* non-config buttons pass through */
+    for (int i = 0; i < 16; i++) if (TT[i] & p) out |= TA[i];     /* fire TYPE-A physical bit i when TYPE-T's button is held */
+    return out;
 }
 
 /* ASCII -> TEX.TIM game-font glyph code (decoded from the font grid, shots/texfont_grid.png):
@@ -1163,31 +1159,44 @@ static int pc_font_code(char c)
     return 0x00;
 }
 
-/* Action labels (TYPE A default mapping) in the C_BACK2 boxes, drawn with the TEX.TIM game font.
- * Positions matched to the PSX framebuffer (stage_saves/mzd_options.sav); the byte-true position table
- * + the runtime string source are a follow-up. */
+/* CONFIG action labels — byte-true (workflow wf_df9c864a). The MAIN grid FUN_8002ffb8 draws, per box i,
+ * the string/glyph for id = preset[type][i] at box position DAT_80073d2c[i] (+ per-id x-nudge, +1 y).
+ * The strings are DEBUG.BIN-resident glyph-code strings (embedded here); id 7 = "Not set" (dimmed);
+ * id 0x0e-0x11 / 0x12-0x19 = button-legend glyphs. Plus 4 fixed labels (Upper/Lower Attack, Confirm,
+ * Cancel). Changing the TYPE preset re-labels the boxes (a different id lands in each box). */
 static void pc_config_draw_labels(void)
 {
     extern int re15_render_pc_msg_text(int x, int y, const unsigned char *raw, int len);
-    static const struct { int x, y; const char *s; } L[] = {
-        { 30, 32, "Not set" },  { 226, 32, "Not set" },
-        { 30, 49, "Not set" },  { 226, 49, "Aim" },
-        { 62, 65, "Forward" },  { 226, 65, "Not set" },
-        { 10, 85, "R. Turn" },  { 90, 85, "L. Turn" }, { 148, 85, "OK/Attack" }, { 232, 85, "Not set" },
-        { 62, 103, "Backward" },{ 196, 103, "Run" },
-        { 24, 182, "Upper Attack" }, { 150, 182, "Confirm" },
-        { 24, 199, "Lower Attack" }, { 150, 199, "Cancel" },
-    };
-    for (unsigned i = 0; i < sizeof(L)/sizeof(L[0]); i++) {
-        unsigned char codes[24]; int n = 0;
-        for (const char *p = L[i].s; *p && n < (int)sizeof(codes); p++) codes[n++] = (unsigned char)pc_font_code(*p);
-        re15_render_pc_msg_text(L[i].x, L[i].y, codes, n);
+    static const char *STR[0x0c] = {
+        "Forward", "Backward", "L. Turn", "R. Turn", "OK/Attack", "Run", "Aim", "Not set",
+        "Upper Attack", "Lower Attack", "Confirm", "Cancel" };
+    /* id 0x12-0x19 = button-legend symbols. The EXE draws them via FUN_800279c8's own symbol atlas;
+     * mapped here to the TEX.TIM msg-font button glyphs (△0x06 ○0x07 ✕0x08 □0x09). The confirm/cancel
+     * legend (ids 0x15/0x16 = □, 0x17 = ✕) is what actually shows for TYPE A/B/C. */
+    static const unsigned char SPR[8] = { 0x06,0x07,0x06,0x09,0x09,0x08,0x07,0x08 };   /* id 0x12..0x19 */
+    static const struct { int x, y; } POS[16] = {
+        {31,52},{31,71},{46,91},{9,111},{84,111},{46,131},{217,52},{217,71},
+        {203,91},{164,111},{239,111},{203,131},{137,182},{137,200},{281,182},{281,200} };
+    static const int NUDGE[0x12] = { 0x16,0x16,0x0f,0x0f,0x02,0x09,0x0f,0x0f, 0,0,0,0,0,0,0,0,0,0 };
+    static const unsigned char PRESET[3][16] = {   /* DAT_80073cd8 + type*0x10 (selector ids per box) */
+        {0x07,0x07,0x00,0x03,0x02,0x01,0x07,0x06,0x07,0x04,0x07,0x05,0x0e,0x0f,0x15,0x17},
+        {0x07,0x07,0x00,0x03,0x02,0x01,0x07,0x06,0x07,0x07,0x04,0x05,0x0e,0x0f,0x16,0x17},
+        {0x07,0x03,0x00,0x07,0x07,0x01,0x06,0x02,0x07,0x07,0x04,0x05,0x0e,0x0f,0x16,0x17} };
+    const unsigned char *ids = PRESET[(s_config_type >= 0 && s_config_type < 3) ? s_config_type : 0];
+    unsigned char buf[24];
+    for (int i = 0; i < 16; i++) {
+        int id = ids[i];
+        int x = POS[i].x + (id < 0x12 ? NUDGE[id] : 0), y = POS[i].y + 1, n = 0;
+        if (id < 0x0c)       { for (const char *p = STR[id]; *p && n < 24; p++) buf[n++] = (unsigned char)pc_font_code(*p); }
+        else if (id < 0x12)  { buf[n++] = (unsigned char)(0x98 - (id - 0x0e)); }   /* 0x0e→0x98 .. 0x11→0x95 */
+        else if (id <= 0x19) { buf[n++] = SPR[id - 0x12]; }
+        if (n) re15_render_pc_msg_text(x, y, buf, n);
     }
-    /* the CONFIRM=Square / CANCEL=Cross button icons at the bottom-right (font glyphs 0x09=square,
-     * 0x08=cross). */
-    { unsigned char sq = 0x09, cr = 0x08;
-      re15_render_pc_msg_text(288, 182, &sq, 1);
-      re15_render_pc_msg_text(288, 199, &cr, 1); }
+    static const struct { int x, y, id; } FIX[4] = { {30,183,8},{30,201,9},{174,183,10},{174,201,11} };
+    for (int k = 0; k < 4; k++) {
+        int n = 0; for (const char *p = STR[FIX[k].id]; *p && n < 24; p++) buf[n++] = (unsigned char)pc_font_code(*p);
+        re15_render_pc_msg_text(FIX[k].x, FIX[k].y, buf, n);
+    }
 }
 
 static void pc_run_config(void)
