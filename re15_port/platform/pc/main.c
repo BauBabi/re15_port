@@ -1348,13 +1348,18 @@ static void pc_config_draw_overlay(const re15_tim_t *tim, int screen, int cur)
                 {216,119, 6}, {216,135, 4},                                 /* R1 R2 */
                 {200,119, 5}, {200,135, 3} };                               /* L1 L2 */
             re15_render_pc_config_tile_ov(tim, 88, 0, 40, 150, 0xbb + 4, 31);   /* KEY box fixed @ s4=0xbb */
-            /* 4 header labels (FUN_80028ec4 streams 0x80073b18+{104,108,112,116} = glyphs 0x1e/0x20/0x1f/0x21
-             * = B/D/C/E) at x=200, y=55/71/87/103. */
-            static const struct { int y; unsigned char g; } HDR[4] = { {55,0x1e},{71,0x20},{87,0x1f},{103,0x21} };
-            for (int i = 0; i < 4; i++)
-                re15_render_pc_config_text(200, HDR[i].y, &HDR[i].g, 1, 0);
             for (int i = 0; i < 8; i++)
                 re15_render_pc_config_text(BICON[i].x, BICON[i].y, &BICON[i].g, 1, 0);
+            /* Byte-true extra glyphs from the overlay prim buffer (mzd_edit_panelB.sav, 0x800c7000 code-0x7c
+             * SPRTs, uv->msg-font code): the "R1 O8!?KQW" debug string overlaid on the two "Not set" boxes
+             * (rows y55/y87) + the header letters D@(200,87) / E@(200,119). Glyphs: R1=0x06, O=0x0c, 8=0x14,
+             * !?=0x1c, K=0x27, Q=0x2d, W=0x33, D=0x20, E=0x21. */
+            static const struct { short x, y; unsigned char g; } PBX[] = {
+                {219,55,0x06},{232,55,0x0c},{244,55,0x14},{256,55,0x1c},{268,55,0x27},{280,55,0x2d},{292,55,0x33},
+                {200,87,0x20},{219,87,0x06},{232,87,0x0c},{244,87,0x14},{256,87,0x1c},{268,87,0x27},{280,87,0x2d},{292,87,0x33},
+                {200,119,0x21} };
+            for (int i = 0; i < (int)(sizeof(PBX)/sizeof(PBX[0])); i++)
+                re15_render_pc_config_text(PBX[i].x, PBX[i].y, &PBX[i].g, 1, 0);
             int bx = (s_edit_code < 6) ? 200 : 216, by = ((s_edit_code < 6) ? s_edit_code : (s_edit_code - 6)) * 16 + 55;
             re15_render_pc_config_rect_ov(bx, by, 16, 16, 0, 0, 0x80, 128);
         }
