@@ -1112,6 +1112,55 @@ static int pc_run_player_select(void)
     return sel;
 }
 
+/* OPTIONS / controller-CONFIG screen (byte-true EXE task @0x8002dde4, RE workflow wf_ff4bebb2 +
+ * RE_15_Quellcode_V2/FUN_8002dfb0). Entered from the title menu OPTION item (TITLE.BIN FUN_801025f0 →
+ * FUN_80029a98(1,0x8002dde4)). This FOUNDATION renders the byte-true C_BACK2.TIM backdrop (the OPTIONS
+ * title, the CONFIG/SOUND/EXIT tabs, the DualShock graphic + the label boxes are baked in), the
+ * fade-in/out, and the tab cursor; the per-button action LABELS (game-font strings drawn by the
+ * printf-style FUN_800279c8 at the DAT_80073d2c slot positions) and the functional A/B/C/EDIT remap
+ * (tables @0x80073dbc/ddc/dfc verified from RAM) are the next increments. Returns when EXIT/Cancel. */
+static void pc_run_config(void)
+{
+    extern void re15_render_pc_config(const re15_tim_t *bg, int tab);
+    extern void re15_render_pc_hide_config(void);
+    extern void re15_render_pc_hide_title(void);
+    extern void re15_render_pc_hide_title_menu(void);
+    extern void re15_render_pc_set_title_fade(int a);
+    re15_render_pc_hide_title_menu();
+    re15_render_pc_hide_title();
+    static re15_tim_t s_cfg_bg = {0};
+    if (!s_cfg_bg.pixels) { int sz = 0; uint8_t *b = pc_read_shared("DATA/C_BACK2.TIM", &sz);
+                            if (b) re15_tim_parse(b, sz, &s_cfg_bg); }
+    int tab = 0;               /* 0=CONFIG 1=SOUND 2=EXIT (top tabs) */
+    int fade_level = 0x7fff;   /* brightness = fade_level>>7; fade IN from black */
+    int fading_out = 0;
+    uint32_t last = SDL_GetTicks();
+    while (re15_gameflow_mode() == RE15_MODE_TITLE) {
+        re15_render_begin_frame();
+        re15_input_tick();
+        re15_render_background_gradient(0, 0, 0, 0, 0, 0);
+        re15_render_pc_config(&s_cfg_bg, tab);
+        { int br = fade_level >> 7; re15_render_pc_set_title_fade(br > 255 ? 255 : (br < 0 ? 0 : br)); }
+        re15_render_end_frame();
+
+        if (!fading_out) { fade_level -= 0x400; if (fade_level < 0) fade_level = 0; }
+        else { fade_level += 0x400; if (fade_level >= 0x7fff) break; }
+
+        if (!fading_out && fade_level == 0) {
+            uint16_t pp = g_engine.pad_pressed;
+            if (pp & RE15_PAD_BIT_LEFT)  { if (--tab < 0) tab = 2; }
+            if (pp & RE15_PAD_BIT_RIGHT) { if (++tab > 2) tab = 0; }
+            /* Confirm on the EXIT tab, or any Cancel (Triangle/Circle) → leave the screen. */
+            if (((pp & (RE15_PAD_BIT_CROSS | RE15_PAD_BIT_START)) && tab == 2) ||
+                (pp & (RE15_PAD_BIT_TRIANGLE | RE15_PAD_BIT_CIRCLE)))
+                fading_out = 1;
+        }
+        { uint32_t now = SDL_GetTicks(); uint32_t el = now - last; if (el < 33) SDL_Delay(33 - el); last = SDL_GetTicks(); }
+    }
+    re15_render_pc_set_title_fade(0);
+    re15_render_pc_hide_config();
+}
+
 int main(int argc, char *argv[])
 {
     (void) argc; (void) argv;
@@ -1246,6 +1295,20 @@ int main(int argc, char *argv[])
             fprintf(stderr, "[pselect] returned character %d (%s)\n", ch, ch ? "Elza" : "Leon");
             exit(0);
         }
+        if (getenv("RE15_CONFIG_TEST")) {    /* debug: jump straight into the OPTIONS/config screen */
+            const char *cs = getenv("RE15_CONFIG_SHOT");
+            if (cs) { extern void re15_render_pc_config(const re15_tim_t *bg, int tab);
+                      extern void re15_render_pc_screenshot(const char *path);
+                      static re15_tim_t bg = {0}; int sz=0; uint8_t *b = pc_read_shared("DATA/C_BACK2.TIM",&sz);
+                      if (b) re15_tim_parse(b,sz,&bg);
+                      (void)sz;
+                      int ctab = atoi(getenv("RE15_CONFIG_TAB")?getenv("RE15_CONFIG_TAB"):"0");
+                      for (int f=0; f<4; f++) {   /* render a few frames so the shot reads a presented buffer, not stale black */
+                          re15_render_begin_frame(); re15_render_background_gradient(0,0,0,0,0,0);
+                          re15_render_pc_config(&bg, ctab); re15_render_end_frame(); }
+                      re15_render_pc_screenshot(cs); exit(0); }
+            pc_run_config(); exit(0);
+        }
         /* The real RE1.5 title menu, VISUALLY verified against the PSX (shots/psx_title_a.png): the 3 rows
          * NEW GAME / LOAD GAME / OPTION + the CAPCOM copyright are SPRITES from DATA/TMOJI.TIM, drawn at
          * x=0x20, y=0x85/0x99/0xad (draw code FUN_801027a0, descriptor 0x801028ac); the active row uses the
@@ -1300,8 +1363,10 @@ int main(int argc, char *argv[])
                         g_gameflow.mode          = RE15_MODE_INGAME;   /* exits the title loop */
                     }
                 }
-                /* cursor 2 = OPTION: the original opens a config sub-overlay (key remap / sound /
-                 * monitor / language, FUN_801025f0); deferred (FE-6) — selecting it is a no-op for now. */
+                else if (cursor == 2) {                       /* OPTION -> controller-CONFIG screen */
+                    pc_run_config();                          /* byte-true EXE task @0x8002dde4 (foundation) */
+                    if (s_boot_title.pixels) re15_render_pc_show_title(&s_boot_title);   /* restore title art */
+                }
             }
             { extern void re15_render_pc_set_title_fade(int a);   /* fade in from the CAPCOM intro */
               re15_render_pc_set_title_fade(tblink < 20 ? 255 - (int)tblink * 13 : 0); }

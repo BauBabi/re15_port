@@ -85,6 +85,8 @@ static int           s_go_flyin = -1;    /* YOU DIED letter fly-in tick 0..50 (-
 static SDL_Texture  *s_gameover_tex = NULL;   /* YOU DIED graphic (YOUDIED.TIM), converted once */
 static int           s_gameover_w = 0, s_gameover_h = 0, s_gameover_show = 0;
 static SDL_Texture  *s_title_tex = NULL;      /* TITLE screen (TITLEU.TIM 320x240 16bpp) */
+static SDL_Texture  *s_config_tex = NULL;     /* OPTIONS/CONFIG screen (C_BACK2.TIM 320x240 16bpp) */
+static int           s_config_show = 0, s_config_tab = 0;
 static int           s_title_show = 0;
 static SDL_Texture  *s_select_tex = NULL;     /* PLAYER-SELECT bg (SELECTH.TIM 320x240 16bpp) */
 static int           s_select_show = 0;
@@ -885,6 +887,20 @@ void re15_render_end_frame(void)
             SDL_RenderCopy(s_renderer, s_text_overlay_tex, NULL, NULL);
     }
 
+    /* OPTIONS/CONFIG screen (C_BACK2.TIM full-screen backdrop) + the selected-tab highlight bar. */
+    if (s_config_show && s_config_tex) {
+        SDL_Rect full = { 0, 0, SCREEN_XRES, SCREEN_YRES };
+        SDL_RenderCopy(s_renderer, s_config_tex, NULL, &full);
+        /* CONFIG/SOUND/EXIT tab highlight (positions from C_BACK2.TIM top bar): a semi-transparent
+         * bright bar over the active tab. */
+        static const SDL_Rect s_tabs[3] = { {150,7,44,15}, {197,7,44,15}, {244,7,42,15} };
+        int t = (s_config_tab < 0) ? 0 : (s_config_tab > 2 ? 2 : s_config_tab);
+        SDL_SetRenderDrawBlendMode(s_renderer, SDL_BLENDMODE_ADD);
+        SDL_SetRenderDrawColor(s_renderer, 40, 40, 40, 255);
+        SDL_RenderFillRect(s_renderer, &s_tabs[t]);
+        SDL_SetRenderDrawBlendMode(s_renderer, SDL_BLENDMODE_BLEND);
+    }
+
     /* PLAYER-SELECT name/profile TEXT (SELECTH3.TIM atlas, groups B+C) — drawn OVER the models and
      * BEFORE the dim TILEs so the unselected side's text dims with its model (byte-true, §render_pc
      * re15_render_pc_pselect_text). Rects verbatim from TITLE.BIN @0x80102624 / @0x8010265c. Logical
@@ -1132,6 +1148,33 @@ void re15_render_pc_show_title(const re15_tim_t *tim)
 }
 
 void re15_render_pc_hide_title(void) { s_title_show = 0; }
+
+/* OPTIONS/CONFIG screen (EXE task @0x8002dde4). bg = C_BACK2.TIM (16bpp 320x240 — the OPTIONS title,
+ * the CONFIG/SOUND/EXIT tabs, the controller graphic + the label boxes are all baked in). tab = the
+ * selected top tab (0=CONFIG 1=SOUND 2=EXIT); a highlight bar is drawn over it. */
+void re15_render_pc_config(const re15_tim_t *bg, int tab)
+{
+    if (s_renderer && bg && bg->pixels && bg->bpp == 16 && !s_config_tex) {
+        int n = bg->width * bg->height;
+        if (n > 0) {
+            uint32_t *rgba = (uint32_t *) malloc((size_t) n * 4);
+            if (rgba) {
+                for (int i = 0; i < n; i++)
+                    rgba[i] = 0xff000000u | (rgb555_to_argb8888(bg->pixels[i]) & 0xffffffu);
+                s_config_tex = SDL_CreateTexture(s_renderer, SDL_PIXELFORMAT_ARGB8888,
+                                                 SDL_TEXTUREACCESS_STATIC, bg->width, bg->height);
+                if (s_config_tex) SDL_UpdateTexture(s_config_tex, NULL, rgba, bg->width * 4);
+                free(rgba);
+            }
+        }
+    }
+    s_config_show = 1; s_config_tab = tab;
+}
+void re15_render_pc_hide_config(void)
+{
+    s_config_show = 0;
+    if (s_config_tex) { SDL_DestroyTexture(s_config_tex); s_config_tex = NULL; }
+}
 
 /* PLAYER-SELECT scene bg + highlight state (TITLE.BIN task @0x80101094). bg = SELECTH.TIM (16bpp
  * 320x240, "PLEASE SELECT MAIN CAST" header + rooftop(Leon)/debris-room(Elza) baked in; id 0x1d,
