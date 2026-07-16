@@ -1119,6 +1119,35 @@ static int pc_run_player_select(void)
  * fade-in/out, and the tab cursor; the per-button action LABELS (game-font strings drawn by the
  * printf-style FUN_800279c8 at the DAT_80073d2c slot positions) and the functional A/B/C/EDIT remap
  * (tables @0x80073dbc/ddc/dfc verified from RAM) are the next increments. Returns when EXIT/Cancel. */
+/* Controller-config preset (OPTIONS TYPE A/B/C). 0 = TYPE A = the byte-true default; the port's SDL
+ * bindings + game readers already encode TYPE A, so TYPE A is IDENTITY here (guaranteed no regression).
+ * B/C apply the byte-true table differences (tables @0x80073dbc/ddc/dfc). The port input is a physical
+ * PSX-bit model, so the effect is a physical permutation:
+ *   A vs B: differ only at logical bits 6,7,14 (Left↔Right) = the tank-turn direction → invert turn.
+ *   A vs C: additionally bits 1,3,8 reassign face/stick buttons (Circle→Start, Square→R3, Start→L3).
+ * Applied INGAME only (the front-end reads raw). */
+static int s_config_type = 0;
+static uint16_t pc_pad_config(uint16_t p)
+{
+    if (s_config_type <= 0) return p;                 /* TYPE A = identity */
+    /* B & C: invert the tank-turn — swap d-pad Left(0x80) ↔ Right(0x20). */
+    uint16_t L = p & RE15_PAD_BIT_LEFT, R = p & RE15_PAD_BIT_RIGHT;
+    p = (p & ~(uint16_t)(RE15_PAD_BIT_LEFT | RE15_PAD_BIT_RIGHT))
+        | (uint16_t)(L ? RE15_PAD_BIT_RIGHT : 0) | (uint16_t)(R ? RE15_PAD_BIT_LEFT : 0);
+    if (s_config_type == 2) {
+        /* TYPE C: reassign the action buttons per the byte-true table diff (i=1 Circle→Start,
+         * i=3 Square→R3, i=8 Start→L3). Best-effort on the port's physical model (opt-in). */
+        uint16_t o = p;
+        p &= ~(uint16_t)(RE15_PAD_BIT_CIRCLE | RE15_PAD_BIT_SQUARE | RE15_PAD_BIT_START | 0x0002u | 0x0004u);
+        if (o & RE15_PAD_BIT_START) p |= RE15_PAD_BIT_CIRCLE;   /* Circle action ← Start */
+        if (o & RE15_PAD_BIT_SQUARE) p |= 0x0004u;              /* R3 (unused→Square's action moves) */
+        if (o & 0x0004u) p |= RE15_PAD_BIT_SQUARE;              /* Square action ← R3 */
+        if (o & 0x0002u) p |= RE15_PAD_BIT_START;               /* Start action ← L3 */
+        if (o & RE15_PAD_BIT_CIRCLE) p |= 0x0002u;              /* L3 (Circle's other role) */
+    }
+    return p;
+}
+
 /* ASCII -> TEX.TIM game-font glyph code (decoded from the font grid, shots/texfont_grid.png):
  * A-Z @0x1D, a-z @0x3D, 0-3 @0x0B, 4-9 @0x10, space=0, + the punctuation the config labels use. */
 static int pc_font_code(char c)
@@ -1173,7 +1202,9 @@ static void pc_run_config(void)
     static re15_tim_t s_cfg_bg = {0};
     if (!s_cfg_bg.pixels) { int sz = 0; uint8_t *b = pc_read_shared("DATA/C_BACK2.TIM", &sz);
                             if (b) re15_tim_parse(b, sz, &s_cfg_bg); }
+    extern int re15_render_pc_msg_text(int x, int y, const unsigned char *raw, int len);
     int tab = 0;               /* 0=CONFIG 1=SOUND 2=EXIT (top tabs) */
+    int type = s_config_type;  /* live preset A/B/C being edited (committed on EXIT) */
     int fade_level = 0x7fff;   /* brightness = fade_level>>7; fade IN from black */
     int fading_out = 0;
     uint32_t last = SDL_GetTicks();
@@ -1183,6 +1214,11 @@ static void pc_run_config(void)
         re15_render_background_gradient(0, 0, 0, 0, 0, 0);
         re15_render_pc_config(&s_cfg_bg, tab);
         pc_config_draw_labels();
+        /* preset indicator "TYPE A/B/C" (the port's simplified selector; the byte-true preset
+         * sub-screen FUN_8002fb94 is a refinement). Cycle with Up/Down in the CONFIG tab. */
+        { unsigned char t[6]; t[0]=pc_font_code('T'); t[1]=pc_font_code('Y'); t[2]=pc_font_code('P');
+          t[3]=pc_font_code('E'); t[4]=pc_font_code(' '); t[5]=(unsigned char)pc_font_code('A'+type);
+          re15_render_pc_msg_text(126, 20, t, 6); }
         { int br = fade_level >> 7; re15_render_pc_set_title_fade(br > 255 ? 255 : (br < 0 ? 0 : br)); }
         re15_render_end_frame();
 
@@ -1193,10 +1229,14 @@ static void pc_run_config(void)
             uint16_t pp = g_engine.pad_pressed;
             if (pp & RE15_PAD_BIT_LEFT)  { if (--tab < 0) tab = 2; }
             if (pp & RE15_PAD_BIT_RIGHT) { if (++tab > 2) tab = 0; }
-            /* Confirm on the EXIT tab, or any Cancel (Triangle/Circle) → leave the screen. */
+            if (tab == 0) {   /* CONFIG tab: Up/Down cycles the TYPE A/B/C preset */
+                if (pp & RE15_PAD_BIT_UP)   { if (--type < 0) type = 2; }
+                if (pp & RE15_PAD_BIT_DOWN) { if (++type > 2) type = 0; }
+            }
+            /* Confirm on the EXIT tab, or any Cancel (Triangle/Circle) → commit + leave. */
             if (((pp & (RE15_PAD_BIT_CROSS | RE15_PAD_BIT_START)) && tab == 2) ||
                 (pp & (RE15_PAD_BIT_TRIANGLE | RE15_PAD_BIT_CIRCLE)))
-                fading_out = 1;
+                { s_config_type = type; fading_out = 1; }   /* commit the preset */
         }
         { uint32_t now = SDL_GetTicks(); uint32_t el = now - last; if (el < 33) SDL_Delay(33 - el); last = SDL_GetTicks(); }
     }
@@ -2729,8 +2769,9 @@ int main(int argc, char *argv[])
                 gctx.w01_anim    = &w01_anim;   /* walk-source = footstep flags */
                 gctx.cam_view    = &cam_view;
                 gctx.active_cut  = active_cut_idx;
-                gctx.pad_current = (uint16_t)g_engine.pad_current;
-                gctx.pad_pressed = (uint16_t)g_engine.pad_pressed;
+                /* apply the OPTIONS controller preset (TYPE A = identity → byte-true default). */
+                gctx.pad_current = pc_pad_config((uint16_t)g_engine.pad_current);
+                gctx.pad_pressed = pc_pad_config((uint16_t)g_engine.pad_pressed);
                 re15_game_step(&gctx);
             }
             /* PARITY STATE-LOG (RE15_STATE_LOG=path): append per-tick player pose + each live
