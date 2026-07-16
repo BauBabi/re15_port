@@ -1337,8 +1337,12 @@ static void pc_config_draw_overlay(const re15_tim_t *tim, int screen, int cur)
              * side opposite the selected box: right (s2=187) for slots 0..5, left (37) for 6..11. Byte-true
              * cursor = flat blue TILE 72x16 @ (s2+12, code*16+54). */
             int s2 = (s_edit_slot < 6) ? 0xbb : 0x25;
-            re15_render_pc_config_tile_ov(tim, 0, 48, 88, 143, s2 - 8, 31);
-            re15_render_pc_config_rect_ov(s2 + 12, s_edit_code * 16 + 54, 72, 16, 0, 0, 0x80, 128);
+            /* ACT box = 2 CONFIG.TIM tiles (byte-true, scene prim scan mzd_edit_panelA.sav): top uv(0,48)
+             * 96x48 @(s2,35) = "ACT" header + first rows; bottom uv(0,80) 96x112 @(s2,83) = lower rows. */
+            re15_render_pc_config_tile_ov(tim, 0, 48, 96, 48, s2, 35);
+            re15_render_pc_config_tile_ov(tim, 0, 80, 96, 112, s2, 83);
+            /* row cursor = the BRIGHT-blue TILE RGB(0,0,0xc0) @50% (SETUP tile 3), 72x16 @ (s2+12,code*16+54). */
+            re15_render_pc_config_rect_ov(s2 + 12, s_edit_code * 16 + 54, 72, 16, 0, 0, 0xc0, 128);
         } else if (s_edit_phase == 2) {
             /* Panel B — the "KEY" box (CONFIG.TIM uv 88,0) + 8 assignable special-button glyphs at the
              * byte-true screen positions (prim-buffer scan of FUN_8002fb94's SPRTs: all clut 0x7810, 16x16,
@@ -1364,8 +1368,9 @@ static void pc_config_draw_overlay(const re15_tim_t *tim, int screen, int cur)
                 {200,119,0x21} };
             for (int i = 0; i < (int)(sizeof(PBX)/sizeof(PBX[0])); i++)
                 re15_render_pc_config_text(PBX[i].x, PBX[i].y, &PBX[i].g, 1, 0);
-            int bx = (s_edit_code < 6) ? 200 : 216, by = ((s_edit_code < 6) ? s_edit_code : (s_edit_code - 6)) * 16 + 55;
-            re15_render_pc_config_rect_ov(bx, by, 16, 16, 0, 0, 0x80, 128);
+            /* cell cursor = BRIGHT-blue TILE RGB(0,0,0xc0) @50% (SETUP tile 3), 16x16 @ (199/215, code*16+54). */
+            int bx = (s_edit_code < 6) ? 199 : 215, by = ((s_edit_code < 6) ? s_edit_code : (s_edit_code - 6)) * 16 + 54;
+            re15_render_pc_config_rect_ov(bx, by, 16, 16, 0, 0, 0xc0, 128);
         }
     }
 }
