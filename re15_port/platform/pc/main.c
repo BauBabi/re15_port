@@ -1235,8 +1235,6 @@ static const uint8_t k_edit_up[16]    = {13,0,1,2,2,3,15,6,7,8,8,9,5,12,11,14};
 static const uint8_t k_edit_down[16]  = {1,2,3,5,5,12,7,8,9,11,11,14,13,0,15,6};
 static const uint8_t k_edit_right[16] = {6,7,8,10,3,11,0,1,2,4,9,5,14,15,12,13};
 static const uint8_t k_edit_left[16]  = {6,7,8,4,9,11,0,1,2,10,3,5,14,15,12,13};
-static const uint8_t k_editA_x[8] = {34,34,26,26,13,21,26,26};   /* panel A x-offs DAT_80073d8c */
-static const uint8_t k_editA_y[8] = {55,71,87,103,119,135,151,167}; /* panel A y DAT_80073d94-ish */
 static const uint8_t k_editB_up[12]   = {5,0,1,2,3,4,11,6,7,8,9,10};
 static const uint8_t k_editB_down[12] = {1,2,3,4,5,0,7,8,9,10,11,6};
 static const uint8_t k_editB_lr[12]   = {6,7,8,9,10,11,0,1,2,3,4,5};
@@ -1301,6 +1299,8 @@ static void pc_config_draw_overlay(const re15_tim_t *tim, int screen, int cur)
 {
     extern void re15_render_pc_config_rect(int x, int y, int w, int h, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
     extern void re15_render_pc_config_tile(const re15_tim_t *t, int su, int sv, int w, int h, int dx, int dy);
+    extern void re15_render_pc_config_tile_ov(const re15_tim_t *t, int su, int sv, int w, int h, int dx, int dy);
+    extern void re15_render_pc_config_rect_ov(int x, int y, int w, int h, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
     extern int  re15_render_pc_config_text(int x, int y, const unsigned char *codes, int len, int attr);
     if (screen == CFG_TOP) {
         re15_render_pc_config_rect(k_cfg_top_x[cur], 24, 48, 16, 0, 0, 0x80, 128);   /* blue tab cursor @50% */
@@ -1322,32 +1322,38 @@ static void pc_config_draw_overlay(const re15_tim_t *tim, int screen, int cur)
         { unsigned char b[8]; int n = 0; const char *s = "MONO";   for (const char *p = s; *p; p++) b[n++] = (unsigned char)pc_font_code(*p);
           re15_render_pc_config_text(131, 71, b, n, s_config_sound ? 3 : 0); }
     } else if (screen == CFG_EDIT) {
+        /* EDIT is a sub-state of the KEY/picker screen, so the picker bar stays visible with EDIT
+         * highlighted (the "TYPE A B C" + "EDIT" tiles over the baked tabs, blue cursor on EDIT). */
+        re15_render_pc_config_tile(tim, 0, 192, 50, 24, 147, 16);
+        re15_render_pc_config_tile(tim, 0, 216, 48, 16, 198, 24);
+        re15_render_pc_config_rect(k_cfg_pick_x[3], 24, 48, 16, 0, 0, 0x80, 128);
         /* slot-select YELLOW cursor (0xc0c000 @50%) at the selected grid box: w=72 for the 12 basic slots,
          * 16 for the 4 special slots (FUN_8002f518). */
         re15_render_pc_config_rect(k_cfg_box[s_edit_slot].x, k_cfg_box[s_edit_slot].y,
                                    (s_edit_slot < 12) ? 72 : 16, 16, 0xc0, 0xc0, 0x00, 128);
         if (s_edit_phase == 1) {
-            /* Panel A — 8 basic actions on the side opposite the selected box (base x = slot<6 ? 187 : 37).
-             * Glyphs = game-font action names (approximation of the CONFIG.TIM streams); id 7 "Not set" dim. */
+            /* Panel A = the "ACT" box (CONFIG.TIM uv 0,48) with 8 empty rows + a BLUE row cursor (this
+             * prototype does not render row glyphs — the action is the row position). The panel sits on the
+             * side opposite the selected box: right (s2=187) for slots 0..5, left (37) for 6..11. Byte-true
+             * cursor = flat blue TILE 72x16 @ (s2+12, code*16+54). */
             int s2 = (s_edit_slot < 6) ? 0xbb : 0x25;
-            static const char *AN[8] = { "Forward","Backward","L. Turn","R. Turn","OK/Attack","Run","Aim","Not set" };
-            for (int i = 0; i < 8; i++) {
-                unsigned char b[16]; int n = 0; for (const char *p = AN[i]; *p && n < 16; p++) b[n++] = (unsigned char)pc_font_code(*p);
-                re15_render_pc_config_text(s2 + k_editA_x[i], k_editA_y[i], b, n, (i == 7) ? 3 : 0);
-            }
-            re15_render_pc_config_rect(s2 + 12, s_edit_code * 16 + 54, 72, 16, 0xc0, 0xc0, 0x00, 128);   /* row cursor */
+            re15_render_pc_config_tile_ov(tim, 0, 48, 88, 143, s2 - 8, 31);
+            re15_render_pc_config_rect_ov(s2 + 12, s_edit_code * 16 + 54, 72, 16, 0, 0, 0x80, 128);
         } else if (s_edit_phase == 2) {
-            /* Panel B — 12 special-button symbols, 2col x 6row (left col x=199, right col x=215, y=54..134).
-             * Glyphs = closest game-font button symbols (face buttons + letters) for codes 14..25. */
-            static const unsigned char BSYM[12] = { 0x06,0x08,0x07,0x09, 'R','S','U','L','R','D','T','L' };
+            /* Panel B — the "KEY" box (CONFIG.TIM uv 88,0) + 12 special-button icons in a 2col x 6row grid
+             * (left col x=199, right col x=215, y=54..134) + BLUE cell cursor. The 16x16 button-icon tiles
+             * live in CONFIG.TIM row0/row1 (L2 L1 up left right down / R2 R1 tri sq cir cross). */
+            static const struct { int u, v; } ICON[12] = {   /* codes 14..25 (best-effort mapping) */
+                {32,16},{80,16},{64,16},{48,16},   /* tri cross circle square */
+                {32,0},{48,0},{64,0},{80,0},        /* up left right down */
+                {16,0},{0,0},{16,16},{0,16} };      /* L1 L2 R1 R2 */
+            re15_render_pc_config_tile_ov(tim, 88, 0, 40, 150, 0xbb + 4, 31);   /* KEY box fixed @ s4=0xbb (right) */
             for (int i = 0; i < 12; i++) {
                 int bx = (i < 6) ? 199 : 215, by = ((i < 6) ? i : (i - 6)) * 16 + 54;
-                unsigned char g = BSYM[i];
-                unsigned char b = (g < 0x20) ? g : (unsigned char)pc_font_code((char)g);
-                re15_render_pc_config_text(bx, by, &b, 1, 0);
+                re15_render_pc_config_tile_ov(tim, ICON[i].u, ICON[i].v, 16, 16, bx, by);
             }
             int bx = (s_edit_code < 6) ? 199 : 215, by = ((s_edit_code < 6) ? s_edit_code : (s_edit_code - 6)) * 16 + 54;
-            re15_render_pc_config_rect(bx, by, 16, 16, 0xc0, 0xc0, 0x00, 128);   /* cell cursor */
+            re15_render_pc_config_rect_ov(bx, by, 16, 16, 0, 0, 0x80, 128);
         }
     }
 }

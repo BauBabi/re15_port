@@ -1244,6 +1244,42 @@ void re15_render_pc_config_tile(const re15_tim_t *t, int su, int sv, int w, int 
     }
 }
 
+/* EDIT-panel variants that write into the TOP text-overlay layer (drawn last, OVER the 16 config labels) —
+ * the opaque "ACT" box occludes the labels behind it, and the blue row cursor blends over the box. */
+void re15_render_pc_config_tile_ov(const re15_tim_t *t, int su, int sv, int w, int h, int dx, int dy)
+{
+    if (!t || t->bpp != 8 || !t->has_clut || !t->pixels) return;
+    const uint8_t *src = (const uint8_t *) t->pixels;
+    for (int y = 0; y < h; y++) {
+        int sy = sv + y, oy = dy + y;
+        if (sy < 0 || sy >= t->height || (unsigned) oy >= (unsigned) SCREEN_YRES) continue;
+        for (int x = 0; x < w; x++) {
+            int sx = su + x, ox = dx + x;
+            if (sx < 0 || sx >= t->width || (unsigned) ox >= (unsigned) SCREEN_XRES) continue;
+            uint8_t idx = src[sy * t->width + sx];
+            if (!idx) continue;
+            uint16_t c = t->clut[idx];
+            uint32_t r = ((c >> 0) & 0x1F) << 3, g = ((c >> 5) & 0x1F) << 3, b = ((c >> 10) & 0x1F) << 3;
+            s_text_overlay[oy * SCREEN_XRES + ox] = (r << 24) | (g << 16) | (b << 8) | 0xFFu;
+            s_text_overlay_used = 1;
+        }
+    }
+}
+void re15_render_pc_config_rect_ov(int x, int y, int w, int h, uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+{
+    for (int py = 0; py < h; py++) {
+        int oy = y + py; if ((unsigned) oy >= (unsigned) SCREEN_YRES) continue;
+        for (int px = 0; px < w; px++) {
+            int ox = x + px; if ((unsigned) ox >= (unsigned) SCREEN_XRES) continue;
+            uint32_t e = s_text_overlay[oy * SCREEN_XRES + ox];
+            int er = (e >> 24) & 0xFF, eg = (e >> 16) & 0xFF, eb = (e >> 8) & 0xFF;
+            int nr = (r * a + er * (255 - a)) / 255, ng = (g * a + eg * (255 - a)) / 255, nb = (b * a + eb * (255 - a)) / 255;
+            s_text_overlay[oy * SCREEN_XRES + ox] = ((uint32_t) nr << 24) | ((uint32_t) ng << 16) | ((uint32_t) nb << 8) | 0xFFu;
+            s_text_overlay_used = 1;
+        }
+    }
+}
+
 /* PLAYER-SELECT scene bg + highlight state (TITLE.BIN task @0x80101094). bg = SELECTH.TIM (16bpp
  * 320x240, "PLEASE SELECT MAIN CAST" header + rooftop(Leon)/debris-room(Elza) baked in; id 0x1d,
  * re-blit full-screen each frame @FUN_80043870). sel = scene+0x394 (0=Leon,1=Elza); pulse =
