@@ -1340,19 +1340,17 @@ static void pc_config_draw_overlay(const re15_tim_t *tim, int screen, int cur)
             re15_render_pc_config_tile_ov(tim, 0, 48, 88, 143, s2 - 8, 31);
             re15_render_pc_config_rect_ov(s2 + 12, s_edit_code * 16 + 54, 72, 16, 0, 0, 0x80, 128);
         } else if (s_edit_phase == 2) {
-            /* Panel B — the "KEY" box (CONFIG.TIM uv 88,0) + 12 special-button icons in a 2col x 6row grid
-             * (left col x=199, right col x=215, y=54..134) + BLUE cell cursor. The 16x16 button-icon tiles
-             * live in CONFIG.TIM row0/row1 (L2 L1 up left right down / R2 R1 tri sq cir cross). */
-            static const struct { int u, v; } ICON[12] = {   /* codes 14..25 (best-effort mapping) */
-                {32,16},{80,16},{64,16},{48,16},   /* tri cross circle square */
-                {32,0},{48,0},{64,0},{80,0},        /* up left right down */
-                {16,0},{0,0},{16,16},{0,16} };      /* L1 L2 R1 R2 */
-            re15_render_pc_config_tile_ov(tim, 88, 0, 40, 150, 0xbb + 4, 31);   /* KEY box fixed @ s4=0xbb (right) */
-            for (int i = 0; i < 12; i++) {
-                int bx = (i < 6) ? 199 : 215, by = ((i < 6) ? i : (i - 6)) * 16 + 54;
-                re15_render_pc_config_tile_ov(tim, ICON[i].u, ICON[i].v, 16, 16, bx, by);
-            }
-            int bx = (s_edit_code < 6) ? 199 : 215, by = ((s_edit_code < 6) ? s_edit_code : (s_edit_code - 6)) * 16 + 54;
+            /* Panel B — the "KEY" box (CONFIG.TIM uv 88,0) + 8 assignable special-button glyphs at the
+             * byte-true screen positions (prim-buffer scan of FUN_8002fb94's SPRTs: all clut 0x7810, 16x16,
+             * V=32, U=48..160 = msg-font glyph codes 3..10 = L2/R2/L1/R1/△/○/✕/□). + BLUE cursor. */
+            static const struct { int x, y; unsigned char g; } BICON[8] = {
+                {216, 55, 7}, {216, 71,10}, {216, 87, 8}, {216,103, 9},   /* △ □ ○ ✕ */
+                {216,119, 6}, {216,135, 4},                                 /* R1 R2 */
+                {200,119, 5}, {200,135, 3} };                               /* L1 L2 */
+            re15_render_pc_config_tile_ov(tim, 88, 0, 40, 150, 0xbb + 4, 31);   /* KEY box fixed @ s4=0xbb */
+            for (int i = 0; i < 8; i++)
+                re15_render_pc_config_text(BICON[i].x, BICON[i].y, &BICON[i].g, 1, 0);
+            int bx = (s_edit_code < 6) ? 200 : 216, by = ((s_edit_code < 6) ? s_edit_code : (s_edit_code - 6)) * 16 + 55;
             re15_render_pc_config_rect_ov(bx, by, 16, 16, 0, 0, 0x80, 128);
         }
     }
