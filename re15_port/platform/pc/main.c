@@ -1347,7 +1347,11 @@ static void pc_config_draw_overlay(const re15_tim_t *tim, int screen, int cur)
                 {216, 55, 7}, {216, 71,10}, {216, 87, 8}, {216,103, 9},   /* △ □ ○ ✕ */
                 {216,119, 6}, {216,135, 4},                                 /* R1 R2 */
                 {200,119, 5}, {200,135, 3} };                               /* L1 L2 */
-            re15_render_pc_config_tile_ov(tim, 88, 0, 40, 150, 0xbb + 4, 31);   /* KEY box fixed @ s4=0xbb */
+            /* KEY box = 2 CONFIG.TIM SPRTs (byte-true, scene prim scan @0x80190148): left half
+             * uv(96,0) 32x128 @(187,35) = "KE" + left cell column; right half uv(96,128) 24x128 @(219,35)
+             * = "Y" + right cell column. */
+            re15_render_pc_config_tile_ov(tim, 96,   0, 32, 128, 187, 35);
+            re15_render_pc_config_tile_ov(tim, 96, 128, 24, 128, 219, 35);
             for (int i = 0; i < 8; i++)
                 re15_render_pc_config_text(BICON[i].x, BICON[i].y, &BICON[i].g, 1, 0);
             /* Byte-true extra glyphs from the overlay prim buffer (mzd_edit_panelB.sav, 0x800c7000 code-0x7c
