@@ -899,6 +899,10 @@ void re15_render_end_frame(void)
         SDL_SetRenderDrawColor(s_renderer, 40, 40, 40, 255);
         SDL_RenderFillRect(s_renderer, &s_tabs[t]);
         SDL_SetRenderDrawBlendMode(s_renderer, SDL_BLENDMODE_BLEND);
+        /* the action-label text (game font) is written to the text overlay by pc_run_config; re-blit it
+         * HERE, over the backdrop (the earlier overlay blit above is under this backdrop). */
+        if (s_text_overlay_used && s_text_overlay_tex)
+            SDL_RenderCopy(s_renderer, s_text_overlay_tex, NULL, NULL);
     }
 
     /* PLAYER-SELECT name/profile TEXT (SELECTH3.TIM atlas, groups B+C) — drawn OVER the models and

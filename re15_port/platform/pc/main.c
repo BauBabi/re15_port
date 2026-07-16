@@ -1119,6 +1119,48 @@ static int pc_run_player_select(void)
  * fade-in/out, and the tab cursor; the per-button action LABELS (game-font strings drawn by the
  * printf-style FUN_800279c8 at the DAT_80073d2c slot positions) and the functional A/B/C/EDIT remap
  * (tables @0x80073dbc/ddc/dfc verified from RAM) are the next increments. Returns when EXIT/Cancel. */
+/* ASCII -> TEX.TIM game-font glyph code (decoded from the font grid, shots/texfont_grid.png):
+ * A-Z @0x1D, a-z @0x3D, 0-3 @0x0B, 4-9 @0x10, space=0, + the punctuation the config labels use. */
+static int pc_font_code(char c)
+{
+    if (c >= 'A' && c <= 'Z') return 0x1D + (c - 'A');
+    if (c >= 'a' && c <= 'z') return 0x3D + (c - 'a');
+    if (c >= '0' && c <= '3') return 0x0B + (c - '0');
+    if (c >= '4' && c <= '9') return 0x10 + (c - '4');
+    switch (c) { case ' ': return 0x00; case '.': return 0x57; case ',': return 0x18;
+                 case '/': return 0x38; case '(': return 0x37; case ')': return 0x39;
+                 case '\'': return 0x3A; case '-': return 0x3B; case ':': return 0x16;
+                 case ';': return 0x17; case '!': return 0x1A; case '?': return 0x1B; }
+    return 0x00;
+}
+
+/* Action labels (TYPE A default mapping) in the C_BACK2 boxes, drawn with the TEX.TIM game font.
+ * Positions matched to the PSX framebuffer (stage_saves/mzd_options.sav); the byte-true position table
+ * + the runtime string source are a follow-up. */
+static void pc_config_draw_labels(void)
+{
+    extern int re15_render_pc_msg_text(int x, int y, const unsigned char *raw, int len);
+    static const struct { int x, y; const char *s; } L[] = {
+        { 30, 32, "Not set" },  { 226, 32, "Not set" },
+        { 30, 49, "Not set" },  { 226, 49, "Aim" },
+        { 62, 65, "Forward" },  { 226, 65, "Not set" },
+        { 10, 85, "R. Turn" },  { 90, 85, "L. Turn" }, { 148, 85, "OK/Attack" }, { 232, 85, "Not set" },
+        { 62, 103, "Backward" },{ 196, 103, "Run" },
+        { 24, 182, "Upper Attack" }, { 150, 182, "Confirm" },
+        { 24, 199, "Lower Attack" }, { 150, 199, "Cancel" },
+    };
+    for (unsigned i = 0; i < sizeof(L)/sizeof(L[0]); i++) {
+        unsigned char codes[24]; int n = 0;
+        for (const char *p = L[i].s; *p && n < (int)sizeof(codes); p++) codes[n++] = (unsigned char)pc_font_code(*p);
+        re15_render_pc_msg_text(L[i].x, L[i].y, codes, n);
+    }
+    /* the CONFIRM=Square / CANCEL=Cross button icons at the bottom-right (font glyphs 0x09=square,
+     * 0x08=cross). */
+    { unsigned char sq = 0x09, cr = 0x08;
+      re15_render_pc_msg_text(288, 182, &sq, 1);
+      re15_render_pc_msg_text(288, 199, &cr, 1); }
+}
+
 static void pc_run_config(void)
 {
     extern void re15_render_pc_config(const re15_tim_t *bg, int tab);
@@ -1140,6 +1182,7 @@ static void pc_run_config(void)
         re15_input_tick();
         re15_render_background_gradient(0, 0, 0, 0, 0, 0);
         re15_render_pc_config(&s_cfg_bg, tab);
+        pc_config_draw_labels();
         { int br = fade_level >> 7; re15_render_pc_set_title_fade(br > 255 ? 255 : (br < 0 ? 0 : br)); }
         re15_render_end_frame();
 
@@ -1305,7 +1348,7 @@ int main(int argc, char *argv[])
                       int ctab = atoi(getenv("RE15_CONFIG_TAB")?getenv("RE15_CONFIG_TAB"):"0");
                       for (int f=0; f<4; f++) {   /* render a few frames so the shot reads a presented buffer, not stale black */
                           re15_render_begin_frame(); re15_render_background_gradient(0,0,0,0,0,0);
-                          re15_render_pc_config(&bg, ctab); re15_render_end_frame(); }
+                          re15_render_pc_config(&bg, ctab); pc_config_draw_labels(); re15_render_end_frame(); }
                       re15_render_pc_screenshot(cs); exit(0); }
             pc_run_config(); exit(0);
         }
