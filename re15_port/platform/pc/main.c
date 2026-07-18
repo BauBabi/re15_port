@@ -1613,6 +1613,11 @@ int main(int argc, char *argv[])
         free(mbuf);
     }
 
+    /* FE-5.3 mode-cycle: on death the game loop sets mode=TITLE and exits; control jumps back
+     * HERE (after boot/FMV, before the title menu) so the REAL title menu runs — its CONTINUE
+     * reloads a card save via the FE-4.3 path, NEW GAME restarts. Reuses byte-true code rather
+     * than the old inline "reload-the-current-room" death stand-in. */
+re_title:;
     if (re15_gameflow_mode() == RE15_MODE_TITLE) {
         /* BOOT TITLE (FE-1.3): DATA/TITLEU.TIM + blinking PRESS START, until START = NEW GAME.
          * NEW GAME falls through to the normal boot of the intro (ROOM1240 = 0x1240 = start_room). */
@@ -2490,6 +2495,12 @@ int main(int argc, char *argv[])
         re15_render_begin_frame();
         re15_input_tick();
 
+        /* DEBUG: RE15_KILL_AT=<frame> drops the player's HP to 0 at that frame to exercise the
+         * death FSM + FE-5.3 death->TITLE mode-cycle deterministically (no combat-path tuning). */
+        { static int s_kill_at = -2;
+          if (s_kill_at == -2) { const char *k = getenv("RE15_KILL_AT"); s_kill_at = k ? atoi(k) : -1; }
+          if (s_kill_at >= 0 && (int)g_engine.frame_count == s_kill_at) g_actors[RE15_ACTOR_SLOT_PLAYER].hp = -1; }  /* dead = hp<0 */
+
         /* Phase 4.5.6.4: paint cached MDEC BG into the software
          * framebuffer (replaces the gradient when an asset loaded).
          * Match PSX flow: BG first, meshes/HUD layer on top. */
@@ -3121,17 +3132,17 @@ int main(int argc, char *argv[])
                 extern void re15_render_pc_hide_gameover(void);
                 extern void re15_render_pc_show_title(const re15_tim_t *tim);
                 extern void re15_render_pc_hide_title(void);
-                static re15_tim_t s_youdied = {0}; static re15_tim_t s_title = {0};
-                static int s_yd_tried = 0, s_tt_tried = 0, s_in_title = 0;
+                static re15_tim_t s_youdied = {0};
+                static int s_yd_tried = 0;
                 /* THE BYTE-TRUE YOU-DIED CHAIN (game_step FSM drives; this block only renders):
                  * white additive flash + heartbeat pulses (g_death_white), flat-black background
                  * (g_death_blackbg), YOU DIED letters flying in over 50 frames (g_death_flyin),
-                 * the sub-6 exit fade-to-black (g_death_fade), then the title flow. */
+                 * the sub-6 exit fade-to-black (g_death_fade), then the mode-cycle to TITLE. */
                 if (re15_player_is_dead() || g_gameover_active) {
                     re15_render_pc_set_fade(g_death_fade);
                     re15_render_pc_set_white_fade(g_death_white);
                     re15_render_pc_set_black_bg(g_death_blackbg);
-                    if (g_death_flyin >= 0 && !s_in_title) {
+                    if (g_death_flyin >= 0) {
                         if (!s_yd_tried) { s_yd_tried = 1; int ysz = 0;
                             uint8_t *yb = pc_read_shared("DATA/YOUDIED.TIM", &ysz);
                             if (yb) re15_tim_parse(yb, ysz, &s_youdied); }
@@ -3141,17 +3152,14 @@ int main(int argc, char *argv[])
                         }
                     }
                 }
-                if (g_gameover_active && !s_in_title) {
-                    /* sub-6 ctr 0x6d reached: the original stops all audio and leaves the in-game
-                     * module to the attract/title flow (@0x80015810-38, main-loop gate @0x8001d1e8).
-                     * Port: straight to the title screen (the FL attract chain: disclaimer/FMV are
-                     * not ported). */
-                    s_in_title = 1;
-                    /* byte-true audio stop (FUN_80043958 = SsSeqStop over every active SEQ handle,
-                     * @0x80015810-38): silence the 3 BGM/SEQ layers (0 MAIN / 1 SUB SEQ0 / 2 SUB SEQ1)
-                     * so the death music does not keep playing under the title. re15_audio_seq_ctl op
-                     * 2 = SsSeqStop (the same ctl the 0x54 Sce_bgm_control opcode uses). */
-                    re15_audio_seq_ctl(0, 2);
+                if (g_gameover_active) {
+                    /* FE-5.3: the YOU-DIED presentation completed (sub-6 ctr 0x6d). The original stops
+                     * all audio and leaves the in-game module for the attract/title flow (@0x80015810-38,
+                     * gate @0x8001d1e8). Byte-true: hand off to the TITLE MENU via the mode-cycle — set
+                     * mode=TITLE and break the game loop; main() jumps back to re_title, where CONTINUE
+                     * reloads the last card save (FE-4.3) and NEW GAME restarts. (Replaces the old inline
+                     * "reload-the-current-room" stand-in.) */
+                    re15_audio_seq_ctl(0, 2);    /* SsSeqStop the 3 BGM/SEQ layers (FUN_80043958) */
                     re15_audio_seq_ctl(1, 2);
                     re15_audio_seq_ctl(2, 2);
                     re15_render_pc_hide_gameover();
@@ -3159,19 +3167,13 @@ int main(int argc, char *argv[])
                     re15_render_pc_set_black_bg(0);
                     re15_render_pc_set_white_fade(0);
                     re15_render_pc_set_fade(0);
-                }
-                if (s_in_title) {
-                    /* TITLE (byte-true tail: YOU DIED -> title). Square (NEW GAME) = the RE continue
-                     * = reload the current room. */
-                    if (!s_tt_tried) { s_tt_tried = 1; int tsz = 0;
-                        uint8_t *tb = pc_read_shared("DATA/TITLEU.TIM", &tsz);
-                        if (tb) re15_tim_parse(tb, tsz, &s_title); }
-                    if (s_title.pixels) re15_render_pc_show_title(&s_title);
-                    if (g_engine.pad_pressed & 0x8000) {              /* SQUARE = NEW GAME */
-                        s_in_title = 0;
-                        re15_render_pc_hide_title();
-                        re15_player_continue_reload();                /* queue the current-room reload */
-                    }
+                    /* Reset the world to a fresh-boot base: NEW GAME (re15_gameflow_new_game doesn't
+                     * clear these) starts clean; CONTINUE applies its save over the clean base. The
+                     * death FSM self-clears when the re-entered game revives the player (game_step:142). */
+                    memset(&g_inv,  0, sizeof g_inv);
+                    memset(&g_game, 0, sizeof g_game);
+                    g_gameflow.mode = RE15_MODE_TITLE;
+                    running = 0;
                 }
             }
             /* DEBUG: per-tick kneel trace — find the exact frames + camera cut where Leon
@@ -5263,5 +5265,9 @@ int main(int argc, char *argv[])
         }
         g_engine.frame_count++;
     }
+    /* FE-5.3: the death FSM set mode=TITLE and broke the game loop — go back to the title menu
+     * (YOU DIED -> TITLE). CONTINUE there reloads the last card save; NEW GAME restarts. Any other
+     * exit (SDL_QUIT calls exit() directly) falls through to a normal return. */
+    if (re15_gameflow_mode() == RE15_MODE_TITLE) goto re_title;
     return 0;
 }
