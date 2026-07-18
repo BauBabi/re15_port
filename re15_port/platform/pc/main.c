@@ -650,11 +650,15 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
             { const char *sa = getenv("RE15_CARD_SHOT_AF"); unsigned saf = sa ? (unsigned)atoi(sa) : 3;
               if (card_shot && af == saf) re15_render_pc_screenshot(card_shot); }
             { const char *hd = getenv("RE15_CARD_HOLD"); unsigned hold = hd ? (unsigned)atoi(hd) : 6;
-              if (af == hold || af == hold + 20) pp |= RE15_PAD_BIT_CROSS; }   /* open, then confirm/dismiss */
+              if (af == hold || af == hold + 20) pp |= RE15_PAD_BIT_SQUARE; }   /* open, then confirm/dismiss */
             af++;
         }
-        uint16_t ok     = pp & (RE15_PAD_BIT_CROSS | RE15_PAD_BIT_START);
-        uint16_t cancel = pp & (RE15_PAD_BIT_TRIANGLE | RE15_PAD_BIT_CIRCLE);
+        /* Byte-true confirm/cancel (FUN_80025c00 cases 1/2/6 + k_pad_remap[0]): the FSM checks the
+         * config-remapped action bit 14 = SQUARE (0x8000) and START to PROCEED/confirm, and action
+         * bit 15 = CROSS (0x4000) to go BACK/cancel (CROSS → iVar6=0). RE1.5 uses the Japanese menu
+         * convention here (○/□ family confirm, ✕ cancel) — the inverse of the western dialog/FF path. */
+        uint16_t ok     = pp & (RE15_PAD_BIT_SQUARE | RE15_PAD_BIT_START);
+        uint16_t cancel = pp & RE15_PAD_BIT_CROSS;
 
         /* Byte-true cursor navigation (FUN_80025c00): read the HELD pad (DAT_800ac760, raw
          * PadRead layout) with a 19/5-frame auto-repeat — up = UP, down = DOWN | SELECT
