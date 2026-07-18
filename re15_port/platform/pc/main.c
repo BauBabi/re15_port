@@ -607,6 +607,7 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
     int cursor = 0, ow = 1 /* default No (byte-true) */, result = -1, running = 1;
     const char *msg = 0;
     unsigned blink = 0;
+    int nav_delay = 0;   /* FUN_80025c00 auto-repeat: 0x13 initial, 0x05 repeat (local_40) */
     int auto_drive = getenv("RE15_CARD_AUTO") != NULL;
     const char *card_shot = getenv("RE15_CARD_SHOT");
     unsigned af = 0;
@@ -638,7 +639,7 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
         }
 
         /* the ▶ selection cursor (render_pc draws a filled white triangle at this position) */
-        if (st == ST_LIST)           re15_render_pc_card_cursor(30, 56 + cursor * 20, !(blink & 0x10));
+        if (st == ST_LIST)           re15_render_pc_card_cursor(25, 56 + cursor * 20, !(blink & 0x10));  /* FUN_80026be8(0x19,row*0x14+0x38) */
         else if (st == ST_OVERWRITE) re15_render_pc_card_cursor(123, 196 + ow * 18, !(blink & 0x10));
         else                         re15_render_pc_card_cursor(0, 0, 0);
         re15_render_end_frame();
@@ -655,9 +656,21 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
         uint16_t ok     = pp & (RE15_PAD_BIT_CROSS | RE15_PAD_BIT_START);
         uint16_t cancel = pp & (RE15_PAD_BIT_TRIANGLE | RE15_PAD_BIT_CIRCLE);
 
+        /* Byte-true cursor navigation (FUN_80025c00): read the HELD pad (DAT_800ac760, raw
+         * PadRead layout) with a 19/5-frame auto-repeat — up = UP, down = DOWN | SELECT
+         * (0x4100 = PADLdown | PADselect, so SELECT also steps down). A fresh press steps
+         * immediately + arms the 0x13 initial delay; while held, repeat every 0x05 frames. */
+        uint16_t held    = g_engine.pad_current;
+        uint16_t nav_msk = RE15_PAD_BIT_UP | RE15_PAD_BIT_DOWN | RE15_PAD_BIT_SELECT;
+        int nav_step = 0;
+        if ((pp & nav_msk) == 0 && nav_delay != 0) { nav_delay--; }
+        else { nav_delay = (pp & nav_msk) ? 0x13 : 0x05; nav_step = 1; }
+        int nav_up   = nav_step && (held & RE15_PAD_BIT_UP);
+        int nav_down = nav_step && (held & (RE15_PAD_BIT_DOWN | RE15_PAD_BIT_SELECT));
+
         if (st == ST_LIST) {
-            if (pp & RE15_PAD_BIT_UP)   { cursor = (cursor + RE15_SAVE_SLOTS) % (RE15_SAVE_SLOTS + 1); blink = 0; }
-            if (pp & RE15_PAD_BIT_DOWN) { cursor = (cursor + 1) % (RE15_SAVE_SLOTS + 1); blink = 0; }
+            if (nav_up)   { cursor = (cursor + RE15_SAVE_SLOTS) % (RE15_SAVE_SLOTS + 1); blink = 0; }
+            if (nav_down) { cursor = (cursor + 1) % (RE15_SAVE_SLOTS + 1); blink = 0; }
             if (cancel) running = 0;
             else if (ok) {
                 if (cursor == RE15_SAVE_SLOTS) running = 0;               /* EXIT row */
@@ -673,7 +686,7 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
                 }
             }
         } else if (st == ST_OVERWRITE) {
-            if (pp & (RE15_PAD_BIT_UP | RE15_PAD_BIT_DOWN)) { ow ^= 1; blink = 0; }
+            if (nav_up || nav_down) { ow ^= 1; blink = 0; }
             if (cancel) { st = ST_LIST; blink = 0; }
             else if (ok) {
                 if (ow == 0) {                                           /* Yes -> overwrite */
