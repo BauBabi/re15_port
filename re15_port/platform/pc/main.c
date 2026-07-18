@@ -2472,6 +2472,14 @@ int main(int argc, char *argv[])
             if (s_save_counter == 0) s_save_counter = (uint16_t)re15_memcard_max_save_count(RE15_CARD_PATH);
             int scount = (int)s_save_counter + 1;
             re15_savedata_capture(&sd, g_engine.frame_count, (uint16_t)scount);
+            /* Byte-true: the card (RE1.5's ink-ribbon) consumed by THIS save is part of the saved
+             * state — reflect the decrement in the CAPTURED block so reloading doesn't hand it back
+             * (the live inventory is decremented on success below). Recompute the checksum. */
+            if (mc >= 0) {
+                if (sd.inv[mc].qty > 0) sd.inv[mc].qty--;
+                if (sd.inv[mc].qty == 0) { sd.inv[mc].id = 0; sd.inv[mc].flags = 0; }
+                sd.checksum = re15_savedata_checksum(&sd);
+            }
             if (pc_run_memcard_screen(1, &sd, 0) >= 0) {
                 s_save_counter = (uint16_t)scount;   /* persist for the next save */
                 if (mc >= 0 && --g_inv.slots[mc].qty == 0) { g_inv.slots[mc].id = 0; g_inv.slots[mc].flags = 0; }
