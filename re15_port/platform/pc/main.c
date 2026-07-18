@@ -517,6 +517,10 @@ static void pc_load_room_prop_set(const re15_rdt_t *rdt, re15_md1_t md1[6], int 
  * the new-game briefing defaults. */
 static re15_savedata_t s_resume_sd;
 static int             s_resume_pending = 0;
+/* Persistent save number (RE1.5 DAT_800b0fbd): restored from the loaded save on CONTINUE (case 9
+ * copies it inside the save region), then carried forward per save — so a load-then-save continues
+ * the counter from the loaded save, not max-across-slots+1. 0 = "not yet seeded from a load". */
+static uint16_t        s_save_counter = 0;
 
 /* The memory-card slot screen — a blocking modal (like the title). save_mode:
  * 1 = save *sd to the chosen slot; 0 = load the chosen slot into s_resume_sd and
@@ -683,10 +687,14 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
                     else if (pc_do_save(cursor, sd)) { result = cursor; running = 0; }  /* no completion msg (byte-true) */
                     else { msg = "Fail in save"; st = ST_RESULT; }       /* sysmes idx 0x15 */
                 } else {                                                 /* LOAD */
-                    if (!used[cursor]) { msg = "NO DATA"; st = ST_RESULT; }            /* sysmes idx 0x10 */
+                    /* Empty slot -> sysmes 0x14 "There are no files" (FUN_80025c00 case7: empty
+                     * marker 5 -> unaff_s1=3 -> state 0xc -> idx unaff_s1+0x11=0x14); the LIST already
+                     * labels empty slots "NO DATA" (0x10). Load I/O failure -> sysmes 0x17 "Fail in
+                     * load" (case9: unaff_s1=6 -> idx 0x17), not "Access error" (0x12, card-level). */
+                    if (!used[cursor]) { msg = "There are no files"; st = ST_RESULT; }
                     else if (re15_memcard_load(RE15_CARD_PATH, cursor, &s_resume_sd) == 0) {
                         if (out_room) *out_room = s_resume_sd.room; result = cursor; running = 0;
-                    } else { msg = "Access error"; st = ST_RESULT; }     /* sysmes idx 0x11 */
+                    } else { msg = "Fail in load"; st = ST_RESULT; }
                 }
             }
         } else if (st == ST_OVERWRITE) {
@@ -2388,6 +2396,7 @@ int main(int argc, char *argv[])
         uint16_t rr = 0;
         re15_savedata_restore(&s_resume_sd, &rr);
         s_resume_pending = 0;
+        s_save_counter = s_resume_sd.save_count;   /* DAT_800b0fbd restored from the loaded save */
         /* Re-prime the ARMS SE bank to the restored weapon: the room-init primed the default
          * (bank1), and re15_player_set_equipped_weapon (in restore) sets the weapon id but not the
          * cached SE bank — so a save with a gun equipped would fire the wrong SE without this. */
@@ -2457,9 +2466,14 @@ int main(int argc, char *argv[])
             for (int i = 0; i < RE15_INV_MAX_SLOTS; i++)
                 if (g_inv.slots[i].id == 0x21 && g_inv.slots[i].qty > 0) { mc = i; break; }
             re15_savedata_t sd;
-            int scount = re15_memcard_max_save_count(RE15_CARD_PATH) + 1;   /* byte-true: DAT_800b0fbd++ */
+            /* Next save number = persistent counter + 1 (DAT_800b0fbd++). Seed from the card's
+             * max on the first save of a fresh (non-CONTINUE) session; a CONTINUE already seeded it
+             * from the loaded save above, so a load-then-save continues that counter. */
+            if (s_save_counter == 0) s_save_counter = (uint16_t)re15_memcard_max_save_count(RE15_CARD_PATH);
+            int scount = (int)s_save_counter + 1;
             re15_savedata_capture(&sd, g_engine.frame_count, (uint16_t)scount);
             if (pc_run_memcard_screen(1, &sd, 0) >= 0) {
+                s_save_counter = (uint16_t)scount;   /* persist for the next save */
                 if (mc >= 0 && --g_inv.slots[mc].qty == 0) { g_inv.slots[mc].id = 0; g_inv.slots[mc].flags = 0; }
                 fprintf(stderr, "[save] saved (room %04x); card=%s\n", g_current_room_id, mc >= 0 ? "consumed" : "none");
             }
