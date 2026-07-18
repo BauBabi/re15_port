@@ -2466,7 +2466,15 @@ re_title:;
              * message). The MEMORY CARD (0x21, RE1.5's ink-ribbon equivalent) is consumed per save WHEN
              * held; but since the accessible RE1.5 content has no card pickup, saving is not hard-gated
              * on it (otherwise the whole feature is unreachable). */
-            g_scd.message_active = 0;                 /* suppress the flavor message, open the menu */
+            /* FULLY dismiss the flavor message (same reset as the msg-FSM DONE state,
+             * msg_common.c:467). Clearing ONLY message_active leaves message_display_frames > 0,
+             * which msg_block (player_common.c:306) gates the player on — so after the save screen
+             * closed, Leon stayed frozen forever (msg_tick no longer runs to count it down). */
+            g_scd.message_active         = 0;         /* suppress the flavor message, open the menu */
+            g_scd.message_select         = 0;
+            g_scd.message_fsm_active     = 0;
+            g_scd.message_display_frames = 0;
+            g_scd.message_query          = 0;
             int mc = -1;
             for (int i = 0; i < RE15_INV_MAX_SLOTS; i++)
                 if (g_inv.slots[i].id == 0x21 && g_inv.slots[i].qty > 0) { mc = i; break; }
