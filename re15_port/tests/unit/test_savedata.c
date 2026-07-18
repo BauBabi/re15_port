@@ -15,6 +15,8 @@
 #include "re15_actor.h"
 #include "re15_room.h"
 #include "re15_gameflow.h"
+#include "re15_collision.h"   /* band re-derive on restore */
+#include "re15_damage.h"      /* equipped weapon id round-trip */
 
 int main(void)
 {
@@ -23,19 +25,20 @@ int main(void)
     remove(mcr);
     printf("=== FE-4 save/load round-trip + .mcr format ===\n");
 
-    /* 1. distinctive live game-state */
+    /* 1. distinctive live game-state (Y = -3600 -> collision band 2, non-default) */
     memset(&g_actors[0], 0, sizeof g_actors[0]);
-    g_actors[0].x = 12345; g_actors[0].y = -678; g_actors[0].z = 9999;
+    g_actors[0].x = 12345; g_actors[0].y = -3600; g_actors[0].z = 9999;
     g_actors[0].rot_y = 0x0400; g_actors[0].hp = 87; g_actors[0].status_flags = 0x2;
     g_current_room_id = 0x1150;
     g_gameflow.character = 1;
     memset(&g_inv, 0, sizeof g_inv);
     g_inv.slots[0].id = 0x03; g_inv.slots[0].qty = 15;   /* BROWNING HP */
     g_inv.slots[1].id = 0x21; g_inv.slots[1].qty = 2;    /* MEMORY CARD */
-    re15_inv_set_equipped_slot(0);
+    re15_player_set_equipped_weapon(0x03);               /* weapon id 3 + slot 0 */
     memset(&g_game, 0, sizeof g_game);
     re15_game_flag_set(3, 17, 1);
     re15_game_flag_set(5, 200, 1);
+    int want_band = re15_collision_band_from_y(-3600);   /* = 2 */
 
     /* 2. capture + save to slot 2 */
     re15_savedata_t sd;
@@ -44,11 +47,13 @@ int main(void)
         fprintf(stderr, "FAIL(save): write failed\n"); fail = 1;
     }
 
-    /* 3. clobber the live state */
+    /* 3. clobber the live state (incl. weapon id + collision band) */
     memset(&g_actors[0], 0, sizeof g_actors[0]);
     g_current_room_id = 0; g_gameflow.character = 0;
     memset(&g_inv, 0, sizeof g_inv);
     memset(&g_game, 0, sizeof g_game);
+    re15_player_set_equipped_weapon(0x01);   /* knife (the stale default a bad restore leaves) */
+    re15_collision_set_band(7);              /* wrong band */
 
     /* 4. load + restore */
     re15_savedata_t ld;
@@ -57,7 +62,7 @@ int main(void)
     else if (re15_savedata_restore(&ld, &room) != 0) { fprintf(stderr, "FAIL(restore)\n"); fail = 1; }
 
     /* 5. verify the restored state */
-    if (g_actors[0].x != 12345 || g_actors[0].y != -678 || g_actors[0].z != 9999 ||
+    if (g_actors[0].x != 12345 || g_actors[0].y != -3600 || g_actors[0].z != 9999 ||
         g_actors[0].rot_y != 0x0400 || g_actors[0].hp != 87 || g_actors[0].status_flags != 2) {
         fprintf(stderr, "FAIL(player): got x=%d hp=%d rot=%d\n",
                 g_actors[0].x, g_actors[0].hp, g_actors[0].rot_y); fail = 1;
@@ -67,7 +72,13 @@ int main(void)
     if (g_inv.slots[0].id != 0x03 || g_inv.slots[0].qty != 15 ||
         g_inv.slots[1].id != 0x21 || g_inv.slots[1].qty != 2) { fprintf(stderr, "FAIL(inv)\n"); fail = 1; }
     if (!re15_game_flag_get(3, 17) || !re15_game_flag_get(5, 200)) { fprintf(stderr, "FAIL(flags)\n"); fail = 1; }
-    if (!fail) printf("  round-trip: player/room/char/inv/flags all restored\n");
+    if (re15_player_equipped_weapon() != 0x03) {
+        fprintf(stderr, "FAIL(weapon): got %d, want 3\n", re15_player_equipped_weapon()); fail = 1; }
+    if (re15_inv_equipped_slot() != 0) {
+        fprintf(stderr, "FAIL(equip-slot): got %d\n", re15_inv_equipped_slot()); fail = 1; }
+    if (re15_collision_debug_band() != want_band) {
+        fprintf(stderr, "FAIL(band): got %d, want %d\n", re15_collision_debug_band(), want_band); fail = 1; }
+    if (!fail) printf("  round-trip: player/room/char/inv/flags/weapon/band all restored\n");
 
     /* 6. empty slot -> -1 */
     if (re15_memcard_load(mcr, 0, &ld) != -1) { fprintf(stderr, "FAIL(empty): slot 0 should be empty\n"); fail = 1; }

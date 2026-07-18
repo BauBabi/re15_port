@@ -25,7 +25,7 @@
 #include "re15_inventory.h"  /* re15_inv_slot_t / RE15_INV_MAX_SLOTS             */
 
 #define RE15_SAVE_MAGIC    0x35314552u   /* "RE15" little-endian                 */
-#define RE15_SAVE_VERSION  1
+#define RE15_SAVE_VERSION  2             /* v2: + weapon_id (equipped weapon round-trip) */
 
 /* The captured game-state. Fields are ordered u32 → u16 → u8 → arrays to avoid
  * implicit padding, so the layout (and thus the checksum) is deterministic. */
@@ -42,7 +42,11 @@ typedef struct {
     int16_t  player_hp;        /* g_actors[0].hp   (RE1.5 +0x1ba)                 */
     uint16_t player_status;    /* g_actors[0].status_flags (RE1.5 +0x98)          */
     uint8_t  character;        /* g_gameflow.character (RE1.5 DAT_800aca5c bit0)  */
-    uint8_t  equipped_slot;    /* re15_inv_equipped_slot()                        */
+    uint8_t  equipped_slot;    /* re15_inv_equipped_slot()  (DAT_800b25c8)        */
+    uint8_t  weapon_id;        /* re15_player_equipped_weapon() (DAT_800aca5d) —
+                                * the ACTIVE weapon id; separate global from the
+                                * slot index, drives the in-hand mesh/fire/aim/SE */
+    uint8_t  reserved[3];      /* keep inv[]/flags[] 4-aligned (deterministic sum) */
     re15_inv_slot_t inv[RE15_INV_MAX_SLOTS];                     /* 11 × 4 bytes  */
     uint32_t flags[RE15_FLAG_ZONES][RE15_FLAG_WORDS_ZONE];       /* g_game.flags  */
     uint32_t checksum;         /* additive checksum over all preceding bytes      */
