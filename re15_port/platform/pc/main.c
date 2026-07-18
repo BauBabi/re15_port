@@ -604,7 +604,7 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
     }
 
     enum { ST_LIST, ST_OVERWRITE, ST_RESULT } st = ST_LIST;
-    int cursor = 0, ow = 1 /* default No (byte-true) */, result = -1, running = 1;
+    int cursor = 0, ow = 0 /* overwrite cursor defaults to Yes/top (FUN_80025c00 case7: uVar8=0) */, result = -1, running = 1;
     const char *msg = 0;
     unsigned blink = 0;
     int nav_delay = 0;   /* FUN_80025c00 auto-repeat: 0x13 initial, 0x05 repeat (local_40) */
@@ -679,7 +679,7 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
             else if (ok) {
                 if (cursor == RE15_SAVE_SLOTS) running = 0;               /* EXIT row */
                 else if (save_mode) {                                    /* SAVE */
-                    if (used[cursor]) { st = ST_OVERWRITE; ow = 1; blink = 0; }
+                    if (used[cursor]) { st = ST_OVERWRITE; ow = 0; blink = 0; }  /* default Yes (FUN_80025c00) */
                     else if (pc_do_save(cursor, sd)) { result = cursor; running = 0; }  /* no completion msg (byte-true) */
                     else { msg = "Fail in save"; st = ST_RESULT; }       /* sysmes idx 0x15 */
                 } else {                                                 /* LOAD */
@@ -2388,6 +2388,13 @@ int main(int argc, char *argv[])
         uint16_t rr = 0;
         re15_savedata_restore(&s_resume_sd, &rr);
         s_resume_pending = 0;
+        /* Re-prime the ARMS SE bank to the restored weapon: the room-init primed the default
+         * (bank1), and re15_player_set_equipped_weapon (in restore) sets the weapon id but not the
+         * cached SE bank — so a save with a gun equipped would fire the wrong SE without this. */
+        { extern void re15_audio_prime_weapon(int weapon_id);
+          extern int  re15_player_equipped_weapon(void);
+          int wid = re15_player_equipped_weapon();
+          if (wid >= 1) re15_audio_prime_weapon(wid); }
         fprintf(stderr, "[save] CONTINUE: resumed in room %04x (hp=%d)\n", rr, g_actors[0].hp);
     }
 
