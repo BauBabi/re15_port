@@ -534,10 +534,12 @@ static int pc_do_save(int slot, const re15_savedata_t *sd)
     return re15_memcard_save(RE15_CARD_PATH, slot, sd, title) == 0;
 }
 
-/* Build the byte-true RE1.5 slot title as raw sysmes atlas codes (idx 0x17 template, DEBUG.BIN
- * @0x6046): "<Leon|Elza> \NN\  Irons' Office" — name + 0x38-delimited save counter + the (stubbed,
- * FUN_80026e4c returns 0) room name "Irons' Office" (apostrophe = atlas 0x3A). The leading control
- * bytes 0x05/0x06/0x07 are the name-colour selector — omitted here (rendered in the default palette). */
+/* Build the byte-true RE1.5 slot title as raw sysmes atlas codes. Template DEBUG.BIN @0x617f
+ * (verified verbatim): 05 07 "Leon" 05 00 38 0c 0c 38 ...  /  05 06 "Elza" 05 00 38 0c 0c 38 ...
+ * "Irons' Office" (apostrophe = atlas 0x3A; room stubbed, FUN_80026e4c returns 0). The 0x05 op is
+ * the colour selector (`attr = next_byte & 7`, cf. msg_common.c:537): Leon = 07 (attr 7, blue
+ * 32,80,232), Elza = 06 (attr 6, red 152,0,72), 05 00 resets the counter/room to the default
+ * palette. re15_render_pc_game_codes interprets the embedded 0x05 ops. */
 static int pc_slot_title_codes(uint8_t *tc, int character, int count)
 {
     static const uint8_t leon[] = { 0x28, 0x41, 0x4b, 0x4a };                       /* "Leon" */
@@ -545,7 +547,9 @@ static int pc_slot_title_codes(uint8_t *tc, int character, int count)
     static const uint8_t room[] = { 0x25,0x4e,0x4b,0x4a,0x4f, 0x3a, 0x00, 0x2b,0x42,0x42,0x45,0x3f,0x41 }; /* "Irons' Office" */
     int n = 0;
     const uint8_t *nm = character ? elza : leon;
+    tc[n++] = 0x05; tc[n++] = character ? 0x06 : 0x07; /* name colour: Elza=06 (red), Leon=07 (blue) */
     for (int k = 0; k < 4; k++)  tc[n++] = nm[k];
+    tc[n++] = 0x05; tc[n++] = 0x00;                    /* reset to default palette */
     tc[n++] = 0x00;                                    /* space */
     tc[n++] = 0x38;                                    /* counter delimiter glyph */
     tc[n++] = (uint8_t)(0x0c + (count / 10) % 10);     /* tens digit ('0' = atlas 0x0c) */

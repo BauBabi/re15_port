@@ -2313,6 +2313,7 @@ int re15_render_pc_game_codes(int x, int y, const uint8_t *codes, int n, int att
     int penx = x;
     for (int k = 0; k < n; k++) {
         int code = codes[k];
+        if (code == 0x05 && k + 1 < n) { attr = codes[++k] & 7; continue; }  /* colour op: next byte & 7 = palette (byte-true, cf. msg_common.c:537) */
         if (code == 0x00) { penx += 8; continue; }           /* space -> advance only */
         re15_msgfont_glyph(penx, y, code, attr);
         int w = s_msgfont_w[code];
