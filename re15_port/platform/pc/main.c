@@ -2359,6 +2359,21 @@ int main(int argc, char *argv[])
      * loop until sub11 ends (mirrors the PSX keystone; the door-3 self-reentry the
      * original uses for that handoff is the not-yet-built multi-room mechanism). */
 
+    /* FE-4 CONTINUE resume — apply the loaded save NOW, BEFORE main00 ticks. main00
+     * registers doors/AOTs, spawns Sce_em enemies and branches on story flags (Ck),
+     * so the saved g_game.flags + character MUST be in place before scd_vm_tick or the
+     * room initialises against new-game defaults (wrong doors/enemies/events/camera).
+     * The restore overwrites the new-game scaffolding (forced intro flags, default
+     * spawn/hp/band set above) with the saved state; the AOT-settle below then primes
+     * edge-state from the SAVED player position. (New game: s_resume_pending == 0 → no
+     * change to the intro path.) */
+    if (s_resume_pending) {
+        uint16_t rr = 0;
+        re15_savedata_restore(&s_resume_sd, &rr);
+        s_resume_pending = 0;
+        fprintf(stderr, "[save] CONTINUE: resumed in room %04x (hp=%d)\n", rr, g_actors[0].hp);
+    }
+
     /* Phase 4.5.12: prime AOT edge-state from spawn pos so door zones
      * the player materializes inside don't auto-trigger on frame 1.
      * (Tick the SCD VM once first so main00's Door_aot_set / Aot_set
@@ -2390,16 +2405,8 @@ int main(int argc, char *argv[])
      * the "for(;;) → unreachable return" + "no return from non-void"
      * compiler warning split between MSVC and gcc. */
     volatile int running = 1;
-
-    /* FE-4 CONTINUE resume: the room (boot_room = resume room) + player + briefing
-     * inventory are now set up; apply the loaded save OVER them so the saved
-     * player/inventory/story-flags win. Done once, before the first frame. */
-    if (s_resume_pending) {
-        uint16_t rr = 0;
-        re15_savedata_restore(&s_resume_sd, &rr);
-        s_resume_pending = 0;
-        fprintf(stderr, "[save] CONTINUE: resumed in room %04x (hp=%d)\n", rr, g_actors[0].hp);
-    }
+    /* (FE-4 CONTINUE resume is applied above, before scd_vm_tick, so main00 initialises
+     * the room from the saved story flags — not new-game defaults.) */
 
     /* debug: RE15_GIVE_CARD drops a MEMORY CARD in inventory; RE15_SAVE_TEST also fires a
      * save-point this frame (exercise the save flow without navigating to a phone). GIVE_CARD
