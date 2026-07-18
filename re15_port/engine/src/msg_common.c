@@ -365,7 +365,9 @@ static void re15_dialog_step(void)
 
     int rlen = 0;
     const unsigned char *raw = re15_msg_get_raw((int)g_scd.message_id, &rlen);
-    if (!raw || rlen <= 0) { g_scd.message_active = 0; return; }
+    if (!raw || rlen <= 0) {   /* empty/invalid message: fully dismiss so msg_block can't stick (see :467) */
+        g_scd.message_active = 0; g_scd.message_display_frames = 0; g_scd.message_query = 0; return;
+    }
 
     int act_edge = (g_scd_pad_edge & CROSS) != 0;              /* CROSS = confirm       */
     int act_held = (g_scd_pad_held & CROSS) != 0;              /* CROSS held = fast-fwd */
