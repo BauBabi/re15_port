@@ -2501,6 +2501,14 @@ re_title:;
           if (s_kill_at == -2) { const char *k = getenv("RE15_KILL_AT"); s_kill_at = k ? atoi(k) : -1; }
           if (s_kill_at >= 0 && (int)g_engine.frame_count == s_kill_at) g_actors[RE15_ACTOR_SLOT_PLAYER].hp = -1; }  /* dead = hp<0 */
 
+        /* FE-5.1/5.2: track the START-menu pause/inventory in the FE-0 mode machine. The status/
+         * inventory screen (re15_menu_toggle) freezes the world — byte-true inline behavior in
+         * re15_game_step is unchanged; the mode now reflects it (INVENTORY while up, INGAME while
+         * playing). The death block below sets TITLE + exits, which supersedes this. */
+        { extern int re15_menu_is_open(void);
+          if (re15_gameflow_mode() != RE15_MODE_TITLE)
+              g_gameflow.mode = re15_menu_is_open() ? RE15_MODE_INVENTORY : RE15_MODE_INGAME; }
+
         /* Phase 4.5.6.4: paint cached MDEC BG into the software
          * framebuffer (replaces the gradient when an asset loaded).
          * Match PSX flow: BG first, meshes/HUD layer on top. */
