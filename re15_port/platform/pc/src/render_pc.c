@@ -2278,8 +2278,7 @@ static int re15_msgfont_code(unsigned char c)
 {
     if (c >= 'A' && c <= 'Z') return 0x1D + (c - 'A');
     if (c >= 'a' && c <= 'z') return 0x3D + (c - 'a');
-    if (c >= '0' && c <= '3') return 0x0B + (c - '0');
-    if (c >= '4' && c <= '9') return 0x10 + (c - '4');
+    if (c >= '0' && c <= '9') return 0x0C + (c - '0');   /* digits contiguous 0x0c..0x15 (0x0b=down-arrow) */
     switch (c) {
         case '.': return 0x57; case ',': return 0x18; case '/': return 0x38;
         case '(': return 0x37; case ')': return 0x39; case '\'': return 0x3A;

@@ -571,8 +571,10 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
     extern void re15_render_pc_hide_cardbg(void);
     extern void re15_render_pc_card_cursor(int x, int y, int show);
     extern void re15_render_pc_hide_title(void);
+    extern void re15_render_pc_hide_title_menu(void);
     extern void re15_render_pc_screenshot(const char *path);
-    re15_render_pc_hide_title();   /* CONTINUE opens this from the title loop — the card BG must win */
+    re15_render_pc_hide_title();        /* CONTINUE opens this from the title loop — the card BG must win */
+    re15_render_pc_hide_title_menu();   /* also hide the TMOJI menu sprites (NEW GAME/LOAD GAME/OPTION) */
 
     /* "MEMORY CARD BG" = DATA/TYPE00.TIM (CD file 0x23): a pre-rendered PC/CRT terminal desk
      * (RE1.5's save point is a computer). Full-screen 320x240; loaded once. */
@@ -1150,13 +1152,12 @@ static uint16_t pc_pad_config(uint16_t p)
 }
 
 /* ASCII -> TEX.TIM game-font glyph code (decoded from the font grid, shots/texfont_grid.png):
- * A-Z @0x1D, a-z @0x3D, 0-3 @0x0B, 4-9 @0x10, space=0, + the punctuation the config labels use. */
+ * A-Z @0x1D, a-z @0x3D, 0-9 @0x0C (contiguous; 0x0b=down-arrow), space=0, + config-label punctuation. */
 static int pc_font_code(char c)
 {
     if (c >= 'A' && c <= 'Z') return 0x1D + (c - 'A');
     if (c >= 'a' && c <= 'z') return 0x3D + (c - 'a');
-    if (c >= '0' && c <= '3') return 0x0B + (c - '0');
-    if (c >= '4' && c <= '9') return 0x10 + (c - '4');
+    if (c >= '0' && c <= '9') return 0x0C + (c - '0');
     switch (c) { case ' ': return 0x00; case '.': return 0x57; case ',': return 0x18;
                  case '/': return 0x38; case '(': return 0x37; case ')': return 0x39;
                  case '\'': return 0x3A; case '-': return 0x3B; case ':': return 0x16;
