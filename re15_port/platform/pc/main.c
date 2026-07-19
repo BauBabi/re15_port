@@ -611,7 +611,11 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
     int cursor = 0, ow = 0 /* overwrite cursor defaults to Yes/top (FUN_80025c00 case7: uVar8=0) */, result = -1, running = 1;
     const char *msg = 0;
     unsigned blink = 0;
-    int nav_delay = 0;   /* FUN_80025c00 auto-repeat: 0x13 initial, 0x05 repeat (local_40) */
+    /* FUN_80025c00 auto-repeat counter (local_40): 0x13 initial, 0x05 repeat. Arm the 0x13 initial
+     * delay on entry so a direction HELD from gameplay (walking onto the phone, no fresh press) does
+     * NOT step the cursor on frame 1 — only a FRESH press does. (The original steps a held direction
+     * via the local_40==0 auto-repeat; the initial delay debounces the carried-over hold.) */
+    int nav_delay = 0x13;
     int auto_drive = getenv("RE15_CARD_AUTO") != NULL;
     const char *card_shot = getenv("RE15_CARD_SHOT");
     unsigned af = 0;
