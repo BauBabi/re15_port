@@ -624,7 +624,7 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
         re15_render_begin_frame();
         re15_input_tick();
         if (s_card_bg.pixels) re15_render_pc_show_cardbg(&s_card_bg);
-        else re15_render_background_gradient(0, 0, 24, 0, 0, 0);
+        else re15_render_background_gradient(0, 0, 0, 0, 0, 0);   /* card BG missing -> BLACK, not blue */
 
         /* All text in the RE1.5 GAME font (TEX.TIM), attr 0; centered via glyph width. Strings are
          * the byte-true RE1.5 sysmes (DEBUG.BIN @0x5fd9): idx2 "Memory Card 1" header, idx0/1
@@ -2527,7 +2527,10 @@ re_title:;
         if (re15_bg_is_loaded()) {
             re15_bg_blit(0, 0);
         } else {
-            re15_render_background_gradient(60, 80, 140, 20, 30, 60);
+            /* No room MDEC background yet (room-load gap / the LOAD->resume transition): the original
+             * is CUT-to-black + fade-in (see reai-v2-door-transition), so a not-yet-loaded BG is BLACK,
+             * not the old bright-blue dev placeholder that flashed blue "beim Laden". */
+            re15_render_background_gradient(0, 0, 0, 0, 0, 0);
         }
 
         /* PRE-INTRO → HELIPAD handoff: once main00's narrator (sub11, in event slot
