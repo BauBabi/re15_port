@@ -717,6 +717,30 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
             }
         }
     }
+    /* LOAD chosen: FADE the card screen out to black before the room loads. Byte-true: the original
+     * fades out, loads the room, then fades it in (reai-v2-door-transition) — the port previously
+     * cut straight to the title's blue-ish backdrop ("nach Auswahl vor dem Laden blau"). Re-render the
+     * (now static) card screen with a ramping black overlay, ending on full black. */
+    if (!save_mode && result >= 0) {
+        extern void re15_render_pc_set_fade(int a);
+        for (int fa = 0; fa <= 256; fa += 24) {
+            re15_render_begin_frame();
+            re15_input_tick();
+            if (s_card_bg.pixels) re15_render_pc_show_cardbg(&s_card_bg);
+            else re15_render_background_gradient(0, 0, 0, 0, 0, 0);
+            re15_render_pc_game_text(160 - re15_render_pc_game_text_width("Memory Card 1") / 2, 24, "Memory Card 1", 0);
+            for (int i = 0; i < RE15_SAVE_SLOTS; i++) {
+                if (used[i]) { uint8_t tc[48]; int tn = pc_slot_title_codes(tc, slot_char[i], slot_cnt[i]);
+                               re15_render_pc_game_codes(41, 56 + i * 20, tc, tn, 0); }
+                else re15_render_pc_game_text(41, 56 + i * 20, "NO DATA", 0);
+            }
+            re15_render_pc_game_text(41, 156, "Do not load", 0);
+            re15_render_pc_set_fade(fa > 255 ? 255 : fa);
+            re15_render_end_frame();
+        }
+        /* hold on black so the title loop's last render + the room-load gap stay black, not blue */
+        re15_render_pc_set_fade(255);
+    }
     re15_render_pc_hide_cardbg();
     return result;
 }
