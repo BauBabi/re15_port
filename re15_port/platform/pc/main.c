@@ -717,13 +717,14 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
             }
         }
     }
-    /* LOAD chosen: FADE the card screen out to black before the room loads. Byte-true: the original
-     * fades out, loads the room, then fades it in (reai-v2-door-transition) — the port previously
-     * cut straight to the title's blue-ish backdrop ("nach Auswahl vor dem Laden blau"). Re-render the
-     * (now static) card screen with a ramping black overlay, ending on full black. */
+    /* LOAD chosen: byte-true card-screen FADE-OUT to black (FUN_80026594 @0x800265a0-e8): the exit
+     * kicks fade channel 0 with step 0x1800, ramping level 0 -> 0x8000 (done bit15) while polling —
+     * re15_fade_tick brightness = level>>7 (fade_common.c:63), so the overlay steps 0,48,96,144,192,
+     * 240 over exactly 6 frames, then @0x800265ec holds a static 0x7fff (>>7 = 255 = full black). The
+     * room's SCD fades it back in. (The port previously flashed the title's blue-ish backdrop.) */
     if (!save_mode && result >= 0) {
         extern void re15_render_pc_set_fade(int a);
-        for (int fa = 0; fa <= 256; fa += 24) {
+        for (int level = 0; !(level & 0x8000); level += 0x1800) {   /* step 0x1800, done at bit15 */
             re15_render_begin_frame();
             re15_input_tick();
             if (s_card_bg.pixels) re15_render_pc_show_cardbg(&s_card_bg);
@@ -735,11 +736,10 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
                 else re15_render_pc_game_text(41, 56 + i * 20, "NO DATA", 0);
             }
             re15_render_pc_game_text(41, 156, "Do not load", 0);
-            re15_render_pc_set_fade(fa > 255 ? 255 : fa);
+            re15_render_pc_set_fade(level >> 7);                     /* byte-true brightness = level>>7 */
             re15_render_end_frame();
         }
-        /* hold on black so the title loop's last render + the room-load gap stay black, not blue */
-        re15_render_pc_set_fade(255);
+        re15_render_pc_set_fade(255);   /* @0x800265ec: static 0x7fff hold -> full black until the room fades in */
     }
     re15_render_pc_hide_cardbg();
     return result;
