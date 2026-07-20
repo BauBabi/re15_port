@@ -22,6 +22,14 @@
 #include "re15_inventory.h"
 #include "font_width.h"          /* per-glyph advance u8 @0x800c4416 (DEBUG.BIN, vendored) */
 #include "gen/inv_name_bank.inc" /* item-name bank @0x800c495c/4a28 + digraph pairs @0x800c4438 */
+#include "gen/inv_desc_bank.inc" /* item-desc bank @0x800c50de (wave 4; entry idx = item id) */
+
+const uint8_t *re15_inv_desc_entry(int id)
+{
+    if (id < 0 || id >= RE15_INV_DESC_NIDS) return 0;
+    return re15_inv_desc_blob + re15_inv_desc_off[id];
+}
+int re15_inv_desc_nids(void) { return RE15_INV_DESC_NIDS; }
 
 /* ---- little-endian blob readers (blob = verbatim PSX.EXE image bytes) ---- */
 static uint16_t bu16(uint32_t addr)
@@ -97,6 +105,12 @@ void re15_inv_screen_open(void)
     g_inv_screen.wipe_v = 0x20;
     g_inv_screen.wipe_h = 0x6a;
     g_inv_screen.name_item = -1;
+    g_inv_screen.msg_entry = -1;
+    /* wave 4: the CHECK-slid layout registers at their init values (FUN_800460b8 /
+     * LAB_80049524 register block — same source as the #define bases below) */
+    g_inv_screen.arms_x   = ARMS_BX;   /* DAT_800b25d8 = 126 */
+    g_inv_screen.cond_x   = ECG_BX;    /* DAT_800b25e4 = 13  */
+    g_inv_screen.idcard_x = ID_BX;     /* DAT_800b25f0 = 14  */
     g7_label_reset();                  /* prim arenas rebuilt at init -> template label */
     re15_inv_screen_sync_equip();
 }
@@ -293,26 +307,69 @@ const uint8_t re15_inv_cantuse_text[RE15_INV_CANTUSE_GLYPHS] = {
     0x45,0x50,0x00,0x44,0x41,0x4e,0x41,0x57
 };
 
-static void emit_cantuse(emit_t *e, int reveal)
+static void emit_msg(emit_t *e, const re15_inv_screen_t *st)
 {
-    /* Position (0x18,0xa8) = FUN_80027e68 a0=0x00a80018 (@0x8004b2d8-b2ec): DAT_800b8534
-     * :=x=0x18, 8536:=y=0xa8. Emitted by the msg VM into the shared text ring
-     * (FUN_80028868); pen advance = (&DAT_800c4416)[code] (FUN_80028868:55 — the same
-     * DEBUG.BIN width table as the name print). Plain glyph text only, no window box
-     * (VM state 5 draws nothing extra). Glyph cell uv mapping as the shared 16x16 font
-     * atlas (u=(code&0xf)<<4, v=((code>>4)<<4)+0x20 — the FUN_80028c1c cell formula
-     * @0x80028d04-3c; the ring emitter draws the same atlas). OPEN: the msg-ring glyph
-     * CLUT was not separately disasm'd — using TEX.TIM CLUT row 0 (0x7810), the palette
-     * the name print uses at this exact screen position. */
-    int x = 0x18, i;
-    if (reveal > RE15_INV_CANTUSE_GLYPHS) reveal = RE15_INV_CANTUSE_GLYPHS;
-    for (i = 0; i < reveal && e->n < e->max; i++) {
-        uint8_t code = re15_inv_cantuse_text[i];
+    /* Generalized msg-slice emitter (wave 4; supersedes the wave-3 cant-use-only path —
+     * entry 0 of the same bank IS the cant-use text). Position (msg_x,msg_y) =
+     * DAT_800b8534/8536 (FUN_80027e68 a0 = y<<16|x). Emitted by the msg VM into the
+     * shared text ring (FUN_80028868); per code: 0x00 = space (pen += width[0], emitter
+     * LAB_80028bc8), 0x08 = NEWLINE (x := 8534, y += 0x10 — FUN_80028868 case 8:
+     * `uVar11 = 8534 | ((y>>16)+0x10)<<16`), glyphs = 16x16 atlas cell u=(code&0xf)<<4,
+     * v=((code>>4)<<4)+0x20 (prim word 0x64808080, clut default 0x7810 = TEX.TIM CLUT
+     * row 0 — FUN_80028868 `uVar12 = 0x7810`; the bank uses no 05 color controls),
+     * pen advance = (&DAT_800c4416)[code]. Only the current PAGE is drawn (display
+     * start DAT_800b8528 resets on the page-wait confirm — VM state 2). */
+    const uint8_t *s = re15_inv_desc_entry(st->msg_entry);
+    int x, y, i, left = st->msg_reveal;
+    if (!s) return;
+    x = st->msg_x; y = st->msg_y; i = st->msg_page_off;
+    while (left > 0 && e->n < e->max) {
+        uint8_t c = s[i];
+        if (c == 0x01 || c == 0x02) break;            /* end / page break (safety) */
+        if (c == 0x08) { x = st->msg_x; y += 0x10; i++; continue; }
+        if (c == 0x00) { x += re15_font_width[0]; i++; left--; continue; }
         sprt(e, RE15_INV_PAGE_FONT4, RE15_INV_CLUT_TEXROW0,
-             x, 0xa8, 16, 16, (code & 0xf) << 4, ((code >> 4) << 4) + 0x20,
+             x, y, 16, 16, (c & 0xf) << 4, ((c >> 4) << 4) + 0x20,
              128, 128, 128, 0);
-        x += re15_font_width[code];
+        x += re15_font_width[c];
+        i++; left--;
     }
+    /* PAGE-WAIT arrow (VM state 2 @FUN_80028134 case 2: blink (8525&0x30)!=0 ->
+     * FUN_800c69bc(8536,...) pos = ((y+44)<<16)|0x6d (8542==0, savestate) +
+     * FUN_800279c8(pos, 0x80, "\x2f") -> debug-text drawer FUN_80029214: 8x8 SPRT
+     * (prim 0x74808080), cell u=(0x2f-0x20)%32*8=120, v=(0x2f-0x20)/32*8=0, clut
+     * ((0x80&0x30)>>3)+0x1e0 -> row 0 = 0x7810). */
+    if (st->msg_arrow)
+        sprt(e, RE15_INV_PAGE_FONT4, RE15_INV_CLUT_TEXROW0,
+             0x6d, st->msg_y + 44, 8, 8, 120, 0, 128, 128, 128, 0);
+}
+
+/* wave 4: POLY_G4 navy gradient box (DEBUG.BIN 0x800c6b84; corner colors in the
+ * rasterizer — prim words @0x800c6bd0/6bdc/6be8/6bf4). */
+static void gbox(emit_t *e, int x, int y, int w, int h)
+{
+    re15_inv_op_t *o;
+    if (e->n >= e->max) return;
+    o = &e->ops[e->n++];
+    memset(o, 0, sizeof *o);
+    o->kind = RE15_INV_OP_GBOX;
+    o->x = (int16_t)x; o->y = (int16_t)y; o->w = (int16_t)w; o->h = (int16_t)h;
+}
+
+/* wave 4: CHECK examine-panel chrome element (DEBUG.BIN 0x800c6aac): 24-byte packet
+ * {hdr, DR_MODE 0xe100001d (4bpp texpage (832,256)), SPRT 0x64808080, xy, uv+clut,
+ * wh} with uv/clut/wh from the table @0x800c6b64 + idx*8:
+ *   [0] uvclut 0x7c104800 wh 0x001f00c9  -> uv(0,0x48) 201x31  (top cap)
+ *   [1] uvclut 0x7c106700 wh 0x000800c9  -> uv(0,0x67) 201x8   (frame row)
+ *   [2] uvclut 0x7c106f00 wh 0x000600c9  -> uv(0,0x6f) 201x6   (box gap band)
+ *   [3] uvclut 0x7c107d00 wh 0x000a00c9  -> uv(0,0x7d) 201x10  (bottom cap)
+ * clut 0x7c10 = VRAM (256,496) = TEX.TIM CLUT-block row 16 for all entries. */
+static void exam_elem(emit_t *e, int idx, int x, int y)
+{
+    static const uint8_t ev[4] = { 0x48, 0x67, 0x6f, 0x7d };
+    static const uint8_t eh[4] = { 0x1f, 0x08, 0x06, 0x0a };
+    sprt(e, RE15_INV_PAGE_EXAM4, RE15_INV_CLUT_TEXROW16,
+         x, y, 0xc9, eh[idx], 0, ev[idx], 128, 128, 128, 0);
 }
 
 /* g7 element-0 label prim MEMORY (wave 3): the original writes the label uv into the
@@ -339,18 +396,40 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
      * (offset 0 -> first byte 0x07) draws nothing. */
     if (st->name_item >= 0) emit_name(&e, st->name_item);
 
-    /* ---- 0b. cant-use message (wave 3): text-ring glyphs, same topmost text layer as
-     * the name print (OT depth class 0 chain @0x800b829c). Drawn while the msg VM is
-     * active (8520&0x80), typewritered to msg_reveal glyphs; occupies the bottom strip
-     * (24,168) left empty by the slid-out tab/command clusters (25ea=25ee=264). The
-     * name print never coexists (the grid tail doesn't run in ITEM state 5). */
-    if (st->msg_reveal > 0) emit_cantuse(&e, st->msg_reveal);
+    /* ---- 0b. msg-slice text (wave 3 cant-use = entry 0; wave 4 CHECK desc = entry id):
+     * text-ring glyphs, same topmost text layer as the name print (OT depth class chain
+     * @0x800b829c). Drawn while the msg VM is active (8520&0x80), typewritered to
+     * msg_reveal tick-codes of the current page; + the page-wait blink arrow. The
+     * name print never coexists (the grid tail doesn't run in ITEM states 5/9). */
+    if (st->msg_entry >= 0 && (st->msg_reveal > 0 || st->msg_arrow)) emit_msg(&e, st);
 
     /* ---- 1. FUN_80047648(0): chrome group 0, absolute xy, always drawn ---- */
     master_row(0, &clut_idx, &count, &tmpl);
     for (i = 0; i < count; i++) {
         tmpl_row(tmpl, i, &x, &y, &w, &h, &u, &v);
         sprt(&e, RE15_INV_PAGE_TEX4, clut_idx, x, y, w, h, u, v, 128, 128, 128, 0);
+    }
+
+    /* ---- 1b. WAVE 4: CHECK examine panel (DEBUG.BIN draw hook 0x800c6228, called from
+     * the trampoline 0x800c6c58 AFTER groups 1-11 -> its prims sit ABOVE the sliding
+     * panels/ECG in the shared OT bucket (0x800aa6d8 + parity<<12, getter 0x800c750c ==
+     * the group tail @0x8004866c parity<<12) but BELOW group 0 (earlier AddPrim =
+     * topmost). Emission = the AddPrim order of 0x800c69f0 at base (exam_x, exam_y):
+     *   elem0 top cap @(X,Y); PHOTO 112x72 @(X+45,Y+43) (prim 0x800c6944-84: SPRT
+     *   0x64808080, uv(0,0), clut 0x7a40=(0,489), wh 0x00480070, DR_MODE 0xe100009d =
+     *   8bpp texpage (832,256)); gradient boxes @(X+4,Y+31) 193x95 and @(X+4,Y+132)
+     *   193x50 (0x800c6a24-48); 19 frame rows @(X, Y+31+i*8) (loop 0x800c6a4c-6c,
+     *   s2=0x13); elem2 @(X,Y+126); elem3 @(X,Y+182). */
+    if (st->exam_visible) {
+        int X = st->exam_x, Y = st->exam_y;
+        exam_elem(&e, 0, X, Y);
+        sprt(&e, RE15_INV_PAGE_PHOTO8, RE15_INV_CLUT_PHOTO,
+             X + 45, Y + 43, 112, 72, 0, 0, 128, 128, 128, 0);
+        gbox(&e, X + 4, Y + 31, 0xc1, 0x5f);
+        gbox(&e, X + 4, Y + 132, 0xc1, 0x32);
+        for (i = 0; i < 0x13; i++) exam_elem(&e, 1, X, Y + 31 + i * 8);
+        exam_elem(&e, 2, X, Y + 126);
+        exam_elem(&e, 3, X, Y + 182);
     }
 
     /* ---- 2. FUN_80048a44(cond, lines): 32 vertical ABE LineF2 ---- */
@@ -375,7 +454,7 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
             if (e.n >= e.max) break;
             o = &e.ops[e.n++];
             o->kind = RE15_INV_OP_LINE; o->page = 0; o->clut = 0; o->abe = 1;
-            o->x = (int16_t)(st->ecg_sweep - (i + 1) + ECG_BX - 0x12);
+            o->x = (int16_t)(st->ecg_sweep - (i + 1) + st->cond_x - 0x12);  /* 25e4 live (CHECK slide) */
             o->y = (int16_t)y0; o->w = o->x; o->h = (int16_t)y1;
             /* per-channel fade only where the mask bit is set @0x80048b54-c04 */
             o->r = (uint8_t)((mask & 1) ? (br - fade) : br);
@@ -392,7 +471,7 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
             for (i = 0; i < 32 && e.n < e.max; i++) {
                 re15_inv_op_t *o = &e.ops[e.n++];
                 o->kind = RE15_INV_OP_LINE; o->page = 0; o->clut = 0; o->abe = 1;
-                o->x = (int16_t)((int)st->wipe_v - i - 1 + ECG_BX - 0x12);
+                o->x = (int16_t)((int)st->wipe_v - i - 1 + st->cond_x - 0x12);
                 o->y = (int16_t)(ECG_BY + 0x22);
                 o->w = o->x; o->h = (int16_t)(ECG_BY + 0x46);
                 o->r = 0x10; o->g = (uint8_t)~(i * 8); o->b = 0x10;
@@ -401,9 +480,9 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
             for (i = 0; i < 32 && e.n < e.max; i++) {
                 re15_inv_op_t *o = &e.ops[e.n++];
                 o->kind = RE15_INV_OP_LINE; o->page = 0; o->clut = 0; o->abe = 1;
-                o->x = (int16_t)(ECG_BX + 0x0c);
+                o->x = (int16_t)(st->cond_x + 0x0c);
                 o->y = (int16_t)(ECG_BY + (int)st->wipe_h - i);
-                o->w = (int16_t)(ECG_BX + 0x59); o->h = o->y;
+                o->w = (int16_t)(st->cond_x + 0x59); o->h = o->y;
                 o->r = 0x10; o->g = 0x10; o->b = (uint8_t)(i * 8);
             }
         }
@@ -428,17 +507,17 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
     master_row(2, &clut_idx, &count, &tmpl);
     tmpl_row(tmpl, 0, &x, &y, &w, &h, &u, &v);
     /* prim0: v += cond*16, clut = DAT_800b2610[clut_idx + cond] @0x800479ec-a0c */
-    sprt(&e, RE15_INV_PAGE_TEX4, clut_idx + st->cond, x + ECG_BX, y + ECG_BY, w, h,
+    sprt(&e, RE15_INV_PAGE_TEX4, clut_idx + st->cond, x + st->cond_x, y + ECG_BY, w, h,
          u, v + st->cond * 16, 128, 128, 128, 0);
     /* prim1: LED, clut = DAT_800b261c (=idx 6), rgb = glow DAT_800b2602 @0x8004797c-9e8 */
     tmpl_row(tmpl, 1, &x, &y, &w, &h, &u, &v);
-    sprt(&e, RE15_INV_PAGE_TEX4, 6, x + ECG_BX, y + ECG_BY, w, h, u, v,
+    sprt(&e, RE15_INV_PAGE_TEX4, 6, x + st->cond_x, y + ECG_BY, w, h, u, v,
          st->ecg_glow, st->ecg_glow, st->ecg_glow, 0);
     /* g3 ARMS (case 3 @0x80047a84-af0): prims 4+ add the slide DAT_800b2608 to y */
     master_row(3, &clut_idx, &count, &tmpl);
     for (i = 0; i < count; i++) {
         tmpl_row(tmpl, i, &x, &y, &w, &h, &u, &v);
-        sprt(&e, RE15_INV_PAGE_TEX4, clut_idx, x + ARMS_BX,
+        sprt(&e, RE15_INV_PAGE_TEX4, clut_idx, x + st->arms_x,   /* 25d8 live (CHECK slide) */
              y + ARMS_BY + (i >= 4 ? st->arms_slide : 0), w, h, u, v, 128, 128, 128, 0);
     }
     /* g4 ID header: case 4 @0x80047af4-b24 positions it but SKIPS AddPrim (j 0x80048680)
@@ -524,7 +603,7 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
      * the "portrait" label was wrong — this is TEX art uv(128,0) 112x72) */
     master_row(10, &clut_idx, &count, &tmpl);
     tmpl_row(tmpl, 0, &x, &y, &w, &h, &u, &v);
-    sprt(&e, RE15_INV_PAGE_TEX4, clut_idx, x + ECG_BX, y + ECG_BY, w, h, u, v,
+    sprt(&e, RE15_INV_PAGE_TEX4, clut_idx, x + st->cond_x, y + ECG_BY, w, h, u, v,
          128, 128, 128, 0);
     /* g11 screws (case 0xb @0x80048010-38): drawn only when DAT_800b25c0 word ==
      * 0x010100 (MAP mode) — never in wave 1. */
@@ -548,7 +627,7 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
      * pair10 rgb = DAT_800b25cd, x = 25d8+0x18, y = 25da+2608+0x58; build uv (40,90)
      * = icon-cache cell 10 = the static ST_00 diagonal knife (Q3) ---- */
     sprt(&e, RE15_INV_PAGE_ICON8, RE15_INV_CLUT_ST00_ROW0,
-         ARMS_BX + 0x18, ARMS_BY + st->arms_slide + 0x58, 40, 30, 40, 90,
+         st->arms_x + 0x18, ARMS_BY + st->arms_slide + 0x58, 40, 30, 40, 90,
          st->arms_rgb, st->arms_rgb, st->arms_rgb, 1);
 
     /* ---- 7. equipped-weapon icon in the equip box (FUN_80049a5c L51-92): uv from the
@@ -586,13 +665,13 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
     /* ---- 8. equip-box 80x30 backdrop (pair13, FUN_80049a5c L94-97): ALWAYS drawn at
      * (25d8+5, 25da+0x20); build uv (0,120) = ST_00 static band rows 120-149 ---- */
     sprt(&e, RE15_INV_PAGE_ICON8, RE15_INV_CLUT_ST00_ROW0,
-         ARMS_BX + 5, ARMS_BY + 0x20, 80, 30, 0, 120, 128, 128, 128, 1);
+         st->arms_x + 5, ARMS_BY + 0x20, 80, 30, 0, 120, 128, 128, 128, 1);
 
     /* ---- 9. ID card (pair14, FUN_80049a5c L98-100 + FUN_80049a5c tail @0x8004a018-44):
      * (25f0,25f2)=(14,26), 128x63, uv (0,150) = STPIC pixel rows 0-62, STPIC clut
      * (blocker Q2) ---- */
     sprt(&e, RE15_INV_PAGE_ICON8, RE15_INV_CLUT_STPIC,
-         ID_BX, ID_BY, 128, 63, 0, 150, 128, 128, 128, 1);
+         st->idcard_x, ID_BY, 128, 63, 0, 150, 128, 128, 128, 1);
 
     /* ---- 10. 48 background tiles (FUN_80046a1c L199-236 + FUN_80049a5c L101-106):
      * 8 cols x 6 rows of 40x40 at (col*40, 12+row*40), uv (0,213) = STPIC rows 63-102

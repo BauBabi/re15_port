@@ -223,15 +223,166 @@ int main(void)
     }
 
     /* (12) command nav (@0x8004a458-4fc): Left->1 CHECK; confirm dispatch [1]
-     * (@0x8004a558-64): 25d6:=0 + 25c2:=9; the wave-3 CHECK stub returns per its
-     * terminal contract @0x800c683c-50: 25c2:=4 + 25d6:=1. */
+     * (@0x8004a558-64): 25d6:=0 + 25c2:=9 = the WAVE-4 examine FSM FUN_800c6630
+     * (DEBUG.BIN, sub-state = 25d6, table @0x800c6864). Cursor = Browning (id 3,
+     * desc entry 3 = the 2-PAGE description — exercises the page-wait). */
     frame(RE15_PAD_BIT_LEFT, RE15_PAD_BIT_LEFT);
     CHECK(g_inv_screen.action_dir == 1, "(12) cmd Left -> 25d6=1");
     frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
     CHECK(g_inv_screen.item_state == 9, "(12) confirm CHECK -> 25c2=9");
+    CHECK(g_inv_screen.action_dir == 0, "(12) dispatch [1] pre-writes 25d6=0 (@0x8004a55c)");
+
+    /* (12a) sub-state 0 @0x800c6664-66bc: 7 frames — panels 25d8/25dc/25e4/25f0 -=36
+     * (@0x800c6688-66b4) while 25ee +=14 (@0x800c6684/66bc; slti 251 @0x800c667c). */
+    {
+        int k;
+        for (k = 1; k <= 7; k++) {
+            frame(0, 0);
+            CHECK(g_inv_screen.act_base_y == 166 + 14 * k &&
+                  g_inv_screen.arms_x   == 126 - 36 * k &&
+                  g_inv_screen.equip_x  == 0x96 - 36 * k &&
+                  g_inv_screen.cond_x   == 13 - 36 * k &&
+                  g_inv_screen.idcard_x == 14 - 36 * k,
+                  "(12a) slide f%d: 25ee=%d 25d8=%d 25dc=%d 25e4=%d 25f0=%d",
+                  k, g_inv_screen.act_base_y, g_inv_screen.arms_x, g_inv_screen.equip_x,
+                  g_inv_screen.cond_x, g_inv_screen.idcard_x);
+            CHECK(g_inv_screen.exam_visible == 0, "(12a) photo not yet visible");
+        }
+    }
+    /* (12b) slide done (25ee=264): photo load frame @0x800c66c0-6700 — id = helper
+     * 0x800c6600 (Browning = 3), struct @0x800c6220 := {1,-207,26}, 25d6:=1. */
     frame(0, 0);
-    CHECK(g_inv_screen.item_state == 4 && g_inv_screen.action_dir == 1,
-          "(12) CHECK stub -> 25c2=4 + 25d6=1 (@0x800c683c-50)");
+    CHECK(g_inv_screen.exam_visible == 1 && g_inv_screen.exam_x == -207 &&
+          g_inv_screen.exam_y == 26 && g_inv_screen.exam_item == 3 &&
+          g_inv_screen.action_dir == 1,
+          "(12b) photo init {1,-207,26} + id 3 + 25d6=1 (@0x800c66d0-66f8), x=%d d6=%d",
+          g_inv_screen.exam_x, g_inv_screen.action_dir);
+
+    /* (12c) sub-state 1 @0x800c6704-675c: x += 22/frame (delay-slot store @0x800c671c);
+     * 10 frames -207 -> +13; the x==13 frame ALSO opens the desc msg (@0x800c6728-3c:
+     * FUN_80027e68(0x00a00013, 0x8400, id, 0xff000000)) and sets 25d6=2. */
+    {
+        int k;
+        for (k = 1; k <= 9; k++) {
+            frame(0, 0);
+            CHECK(g_inv_screen.exam_x == -207 + 22 * k,
+                  "(12c) slide-in f%d: x=%d != %d", k, g_inv_screen.exam_x, -207 + 22 * k);
+            CHECK(!re15_menu_msg_active(), "(12c) msg not yet open at f%d", k);
+        }
+        frame(0, 0);
+        CHECK(g_inv_screen.exam_x == 13 && g_inv_screen.action_dir == 2,
+              "(12c) x lands 13 (ori 0xd @0x800c6710) + 25d6=2, x=%d", g_inv_screen.exam_x);
+        CHECK(re15_menu_msg_active() && g_inv_screen.msg_entry == 3 &&
+              g_inv_screen.msg_x == 0x13 && g_inv_screen.msg_y == 0xa0,
+              "(12c) desc msg open: entry 3 at (0x13,0xa0) (@0x800c6728-3c)");
+    }
+    /* (12d) typewriter page 1 (VM FUN_80028134 case 1, menu pacing 8525=2/8524=4):
+     * the open frame's own VM tick took 8525 2->1 (the flush runs the VM the same
+     * frame), the 2nd tick reveals glyph 1, then 4 frames/glyph; entry 3 page 1 =
+     * 27 tick-codes ("Manufactured by FN, / Belgium." — 0x08 newline is free). */
+    CHECK(g_inv_screen.msg_reveal == 0, "(12d) no glyph on the open frame");
+    frame(0, 0);
+    CHECK(g_inv_screen.msg_reveal == 1, "(12d) first glyph on the 2nd VM tick, reveal=%d",
+          g_inv_screen.msg_reveal);
+    { int n = 0; while (g_inv_screen.msg_reveal < 27 && n++ < 200) frame(0, 0); }
+    CHECK(g_inv_screen.msg_reveal == 27,
+          "(12d) page 1 = 27 tick-codes (bank entry 3), reveal=%d", g_inv_screen.msg_reveal);
+    /* 4 frames later the advance hits the 02 00 control -> VM state 2 PAGE-WAIT;
+     * the arrow blinks from the NEXT wait frame ((8525&0x30)!=0, count 0-1=0xff). */
+    idle(4);
+    CHECK(re15_menu_msg_active() && g_inv_screen.msg_reveal == 27,
+          "(12d) page-wait holds the full page 1");
+    CHECK(g_inv_screen.msg_arrow == 0, "(12d) arrow not yet on the entry frame");
+    frame(0, 0);
+    CHECK(g_inv_screen.msg_arrow == 1, "(12d) arrow on (count 0xff & 0x30)");
+    idle(47);                                   /* counts 0xfe..0xd0 stay visible */
+    CHECK(g_inv_screen.msg_arrow == 1, "(12d) arrow still on at count 0xd0");
+    frame(0, 0);                                /* count 0xcf -> bits 4-5 clear */
+    CHECK(g_inv_screen.msg_arrow == 0, "(12d) arrow blinks off at count 0xcf");
+    /* (12e) page-wait confirm (edge & 0xc000): display start := past the 02 00
+     * (= computed from the SHIPPED bank stream, not hand-typed), reveal reset,
+     * next glyph after 2 frames (8525 := 1<<1). Page 2 = 29 tick-codes. */
+    {
+        const uint8_t *s3 = re15_inv_desc_entry(3);
+        int off = 0;
+        while (s3[off] != 0x02) off++;
+        off += 2;
+        frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+        CHECK(g_inv_screen.msg_page_off == off && g_inv_screen.msg_reveal == 0,
+              "(12e) page restart: 8528 := past 02 00 (off %d, is %d)",
+              off, g_inv_screen.msg_page_off);
+        frame(0, 0); frame(0, 0);
+        CHECK(g_inv_screen.msg_reveal == 1, "(12e) page-2 first glyph after 2f");
+        { int n = 0; while (g_inv_screen.msg_reveal < 29 && n++ < 200) frame(0, 0); }
+        CHECK(g_inv_screen.msg_reveal == 29, "(12e) page 2 = 29 tick-codes, reveal=%d",
+              g_inv_screen.msg_reveal);
+        idle(4);                                /* advance hits 01 00 -> state 5 */
+        CHECK(re15_menu_msg_active(), "(12e) PRESS-WAIT holds (no auto-dismiss)");
+    }
+    /* (12f) dismiss (state 5, edge & 0xc000 -> 8520&=0x7f); the CHECK FSM's msg-gone
+     * poll fires SE(4,5) + 25d6=3 the NEXT frame (@0x800c6760-67b0); then 10 frames
+     * x -= 22 back to -207 (@0x800c67b8-67e8: photo cleared + 25d6=4). */
+    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    CHECK(!re15_menu_msg_active(), "(12f) dismissed on the confirm edge");
+    CHECK(g_inv_screen.action_dir == 2, "(12f) FSM still in sub-state 2 this frame");
+    frame(0, 0);
+    CHECK(g_inv_screen.action_dir == 3, "(12f) msg-gone poll -> 25d6=3 (@0x800c67a4-b0)");
+    {
+        int k;
+        for (k = 1; k <= 9; k++) {
+            frame(0, 0);
+            CHECK(g_inv_screen.exam_x == 13 - 22 * k,
+                  "(12f) spin-out f%d: x=%d", k, g_inv_screen.exam_x);
+            CHECK(g_inv_screen.exam_visible == 1, "(12f) photo visible until -207");
+        }
+        frame(0, 0);
+        CHECK(g_inv_screen.exam_x == -207 && g_inv_screen.exam_visible == 0 &&
+              g_inv_screen.action_dir == 4,
+              "(12f) x=-207 -> visible=0 + 25d6=4 (@0x800c67d4-e0)");
+    }
+    /* (12g) sub-state 4 @0x800c67ec-6850: 7 frames panels += 36 / 25ee -= 14; the
+     * 25ee==166 frame exits with 25c2=4 + 25d6=1 (@0x800c683c-50). */
+    {
+        int k;
+        for (k = 1; k <= 7; k++) {
+            frame(0, 0);
+            CHECK(g_inv_screen.act_base_y == 264 - 14 * k &&
+                  g_inv_screen.arms_x   == -126 + 36 * k &&
+                  g_inv_screen.equip_x  == 0x96 - 252 + 36 * k &&
+                  g_inv_screen.cond_x   == -239 + 36 * k &&
+                  g_inv_screen.idcard_x == -238 + 36 * k,
+                  "(12g) slide-back f%d: 25ee=%d 25d8=%d", k,
+                  g_inv_screen.act_base_y, g_inv_screen.arms_x);
+            CHECK(g_inv_screen.item_state == 9, "(12g) still in CHECK during the slide");
+        }
+        frame(0, 0);
+        CHECK(g_inv_screen.item_state == 4 && g_inv_screen.action_dir == 1,
+              "(12g) exit contract 25c2=4 + 25d6=1 (@0x800c6844/6850)");
+        CHECK(g_inv_screen.arms_x == 126 && g_inv_screen.equip_x == 0x96 &&
+              g_inv_screen.cond_x == 13 && g_inv_screen.idcard_x == 14,
+              "(12g) panel registers restored exactly (are %d/%d/%d/%d)",
+              g_inv_screen.arms_x, g_inv_screen.equip_x, g_inv_screen.cond_x,
+              g_inv_screen.idcard_x);
+    }
+    /* (12h) desc bank id-keying (gen/inv_desc_bank.inc == DEBUG.BIN @0x800c50de):
+     * entry 0 == the wave-3 cant-use bytes; knife 0x01 = "A combat knife." ('A'=0x1d
+     * @0x800c5186); Green 0x24 = "Medicine derived..." ('M'=0x29 @0x800c5908). */
+    {
+        const uint8_t *s0 = re15_inv_desc_entry(0);
+        const uint8_t *s1 = re15_inv_desc_entry(1);
+        const uint8_t *sg = re15_inv_desc_entry(0x24);
+        int i, ok = 1;
+        for (i = 0; i < RE15_INV_CANTUSE_GLYPHS; i++)
+            if (s0[i] != re15_inv_cantuse_text[i]) ok = 0;
+        CHECK(ok && s0[RE15_INV_CANTUSE_GLYPHS] == 0x01,
+              "(12h) bank entry 0 == cant-use text + 01-terminator");
+        CHECK(s1[0] == 0x1d && s1[1] == 0x00 && s1[2] == 0x3f,
+              "(12h) knife desc starts 'A c' (0x1d 0x00 0x3f @0x800c5186)");
+        CHECK(sg[0] == 0x29 && sg[1] == 0x41 && sg[2] == 0x40,
+              "(12h) Green desc starts 'Med' (0x29 0x41 0x40 @0x800c5908)");
+        CHECK(re15_inv_desc_entry(0x47) != 0 && re15_inv_desc_entry(0x48) == 0,
+              "(12h) bank spans exactly ids 0x00..0x47 (72 entries @0x800c50de)");
+    }
 
     /* (13) USE on the Browning = the byte-true SWAP anim (wave 3, state 5 @0x8004a674 ->
      * FUN_8004aa24): knife equipped (slot 0, id 1) != Browning (id 3) and 25c8 != 0x80
@@ -548,7 +699,11 @@ int main(void)
       while (g_inv_screen.msg_reveal < RE15_INV_CANTUSE_GLYPHS && n++ < 200) frame(0, 0); }
     CHECK(g_inv_screen.msg_reveal == RE15_INV_CANTUSE_GLYPHS,
           "(22) all 22 glyphs typed (DEBUG.BIN entry-0 byte count)");
-    idle(3);
+    /* Byte-true terminator cadence (wave-4 VM alignment): the last glyph reloads
+     * 8525=4; the 01 00 -> state-5 transition happens on the 4th frame after it, and
+     * an edge pressed ON that transition frame is LOST (the state-5 dismiss check
+     * @0x8002868c only runs on a LATER VM invocation; press edges don't persist). */
+    idle(4);
     CHECK(re15_menu_msg_active(), "(22) PRESS-WAIT holds (VM state 5, no auto-dismiss)");
     frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);        /* cancel edge dismisses too */
     CHECK(!re15_menu_msg_active(),
@@ -571,6 +726,7 @@ int main(void)
     CHECK(re15_menu_msg_active(), "(23) message up");
     { int n = 0;
       while (g_inv_screen.msg_reveal < RE15_INV_CANTUSE_GLYPHS && n++ < 200) frame(0, 0); }
+    idle(4);                                    /* terminator -> VM state 5 (see (22)) */
     frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
     CHECK(!re15_menu_msg_active(), "(23) dismissed on the confirm edge");
     frame(0, 0);

@@ -321,43 +321,102 @@ static void command_select(uint16_t pressed)
 int re15_menu_item_c3(void) { return s_c3; }
 int re15_menu_item_c4(void) { return s_c4; }
 
-/* ---- cant-use message mini-FSM (the msg-VM slice for the ONE menu message) --------
- * Open = FUN_80027e68(a0=0x00a80018, a1=0x8400, a2=0, a3=0) @0x8004b2d8-b2f8: 8534/36
- * = (0x18,0xa8), 8522=a1&0x80=0 (NO Yes/No), string = desc-bank entry 0 (DEBUG.BIN
- * @0x800c50de+0x90 = "You can't use it here."), 8520:=0x80 (active). Ticked per
- * RENDERED frame by the msg VM FUN_80028134 (single caller = the present-chain fn
- * FUN_80010000 via FUN_800280b4 — runs while task 0 is suspended); the port ticks it
- * once per menu frame at the end of menu_task_step (same 1-tick/frame cadence).
- * Typewriter (status screen, DAT_800b5456==0 -> s1=1 @0x80028148/0x80028168): first
- * glyph after 8525 = 1<<1 = 2 frames, then 8524 = 2<<1 = 4 frames/glyph
- * (@0x80028194-281c4). Terminator 01 00 -> VM state 5 PRESS-WAIT. FAST-FORWARD is
- * structurally impossible (held-CROSS FF @0x800281ec-f4 gated on 8522!=0). DISMISS
- * (state 5 @0x8002868c-86d0): virtual EDGE word & 0xc000 (CROSS confirm OR SQUARE
- * cancel) -> input eat DAT_800ac768:=0xffff (virtual HELD word — no menu held-reader
- * consumes it, the grid d-pad repeat reads the RAW held word, so no port action),
- * 8520 &= 0x7f. NO auto-dismiss, NO SE on dismiss (no jal 0x80045024 in the block). */
-static uint8_t s_msg_active = 0;   /* DAT_800b8520 bit 0x80 */
-static uint8_t s_msg_reveal = 0;   /* glyphs revealed (0..22) */
-static uint8_t s_msg_timer  = 0;   /* 8525/8524 countdown */
+/* ---- msg-slice VM (waves 3+4) — FUN_80028134 states 1/2/5 for the desc bank -------
+ * Open = FUN_80027e68(a0 = y<<16|x, a1=0x8400, a2=entry, a3): 8534/36 = (x,y), string
+ * = desc bank @0x800c50de + u16[bank + entry*2] (a1&0xc00==0x400 path), 8520:=0x80
+ * (active). Wave-3 caller: cant-use (0x00a80018, entry 0) @0x8004b2d8; wave-4 caller:
+ * CHECK desc (0x00a00013, entry = item id) @0x800c6728-3c. Ticked per RENDERED frame
+ * by the msg VM FUN_80028134 (single caller = the present-chain fn FUN_80010000 via
+ * FUN_800280b4 — runs while task 0 is suspended); the port ticks it once per menu
+ * frame at the end of menu_task_step (same 1-tick/frame cadence).
+ * Typewriter (status screen, DAT_800b5456==0 -> bVar2=1 @FUN_80028134 case 0): first
+ * glyph after 8525 = 1<<1 = 2 frames, then 8524 = 2<<1 = 4 frames/glyph; ONE
+ * tick-code (0x00 space or glyph 0x0c..0xf7, LAB_80028434) per expiry, controls
+ * processed for free in the same expiry (the joined_r0x80028258 loop). Controls in
+ * this bank (generator-asserted census): 01 00 -> VM state 5 PRESS-WAIT; 02 00 ->
+ * VM state 2 PAGE-WAIT; 08 = newline (emitter-side only). FAST-FORWARD stays
+ * structurally impossible: the held-CROSS FF @0x80028220-30 needs 8524 < 4, but the
+ * menu runs 8524 = 4 — even with the CHECK flow's 8522:=1 (@0x800c6744-48) the
+ * cadence is IDENTICAL (the 8525==1 early-advance @0x80028228 lands on the same
+ * frames), so 8522 is modeled as a no-op.
+ * PAGE-WAIT (state 2 @FUN_80028134 case 2): blink countdown 8525-- per frame, arrow
+ * drawn while (8525 & 0x18<<1 = 0x30) != 0; virtual EDGE & 0xc000 -> input eat
+ * ac768:=0xffff, state 1, display start 8528 := current 852c (page restart),
+ * 8525 := 1<<1 = 2. DISMISS (state 5 @0x8002868c-86d0): virtual EDGE & 0xc000 ->
+ * input eat, 8520 &= 0x7f. NO auto-dismiss, NO SE inside the VM (the CHECK FSM
+ * plays SE(4,5) itself on the msg-gone poll @0x800c6798). */
+static uint8_t  s_msg_active = 0;   /* DAT_800b8520 bit 0x80 */
+static uint8_t  s_msg_state  = 0;   /* DAT_800b8521: 1 typing / 2 page-wait / 5 press-wait */
+static uint8_t  s_msg_count  = 0;   /* DAT_800b8525 countdown (typing + blink) */
+static uint16_t s_msg_cur    = 0;   /* DAT_800b852c - entry base (next unrevealed byte) */
 
 int re15_menu_msg_active(void) { return s_msg_active; }
 
-static void msg_open(void)
+static void msg_open(int entry, int x, int y)
 {
     s_msg_active = 1;              /* 8520 := 0x80 */
-    s_msg_reveal = 0;
-    s_msg_timer  = 2;              /* 8525 = 1<<1 (first glyph after 2 frames) */
+    s_msg_state  = 1;              /* case 0 -> 1 on the first tick (falls through) */
+    s_msg_count  = 2;              /* 8525 = 1<<1 (first glyph after 2 frames) */
+    s_msg_cur    = 0;
+    g_inv_screen.msg_entry    = (int16_t)entry;
+    g_inv_screen.msg_x        = (int16_t)x;    /* DAT_800b8534 */
+    g_inv_screen.msg_y        = (int16_t)y;    /* DAT_800b8536 */
+    g_inv_screen.msg_page_off = 0;             /* DAT_800b8528 = string start */
+    g_inv_screen.msg_reveal   = 0;
+    g_inv_screen.msg_arrow    = 0;
 }
 
 static void msg_vm_tick(uint16_t pressed)
 {
-    if (!s_msg_active) { g_inv_screen.msg_reveal = 0; return; }
-    if (s_msg_reveal < RE15_INV_CANTUSE_GLYPHS) {
-        if (--s_msg_timer == 0) { s_msg_reveal++; s_msg_timer = 4; }  /* 8524 = 2<<1 */
-    } else if (pressed & (RE15_PAD_BIT_CROSS | RE15_PAD_BIT_SQUARE)) {
-        s_msg_active = 0;          /* 8520 &= 0x7f @0x800286c4 (edge test andi 0xc000) */
+    const uint8_t *s;
+    if (!s_msg_active) { g_inv_screen.msg_reveal = 0; g_inv_screen.msg_arrow = 0; return; }
+    s = re15_inv_desc_entry(g_inv_screen.msg_entry);
+    if (!s) { s_msg_active = 0; g_inv_screen.msg_reveal = 0; return; }
+    switch (s_msg_state) {
+    case 1:                                   /* typewriter (case 1 @0x800281dc+) */
+        s_msg_count--;                        /* 8525-- (delay-slot store @0x800281f8) */
+        if ((int8_t)s_msg_count >= 1) break;  /* advance when (char)8525 < 1 */
+        for (;;) {                            /* LAB_80028250 + control loop */
+            uint8_t c = s[s_msg_cur];
+            if (c == 0x01) { s_msg_state = 5; break; }        /* 01 00 -> state 5 */
+            if (c == 0x02) {                                  /* 02 00 -> state 2; the
+                                                               * VM pointer advances
+                                                               * PAST the control */
+                s_msg_cur += 2;
+                s_msg_state = 2;
+                break;
+            }
+            if (c == 0x08) { s_msg_cur++; continue; }         /* newline: free */
+            s_msg_cur++;                                      /* space/glyph = 1 tick */
+            g_inv_screen.msg_reveal++;
+            s_msg_count = 4;                                  /* reload 8524 = 2<<1 */
+            break;
+        }
+        break;
+    case 2:                                   /* PAGE-WAIT */
+        if (pressed & (RE15_PAD_BIT_CROSS | RE15_PAD_BIT_SQUARE)) {  /* 76c & 0xc000 */
+            s_msg_state = 1;
+            g_inv_screen.msg_page_off = s_msg_cur;   /* 8528 := 852c (page restart) */
+            g_inv_screen.msg_reveal = 0;
+            g_inv_screen.msg_arrow = 0;
+            s_msg_count = 2;                         /* 8525 := 1<<1 */
+        } else {
+            s_msg_count--;                           /* blink countdown (u8 wrap) */
+            g_inv_screen.msg_arrow = (uint8_t)((s_msg_count & 0x30) != 0);
+        }
+        break;
+    case 5:                                   /* PRESS-WAIT */
+        if (pressed & (RE15_PAD_BIT_CROSS | RE15_PAD_BIT_SQUARE)) {
+            s_msg_active = 0;                 /* 8520 &= 0x7f @0x800286c4 */
+            g_inv_screen.msg_reveal = 0;
+            g_inv_screen.msg_arrow = 0;
+            g_inv_screen.msg_entry = -1;
+        }
+        break;
+    default:
+        s_msg_active = 0;
+        break;
     }
-    g_inv_screen.msg_reveal = s_msg_active ? s_msg_reveal : 0;
 }
 
 /* [0] classifier @0x8004aa64 — exact branch order (id = inv[25bd*4].id @0x800b10ac). */
@@ -558,8 +617,9 @@ static void state5_cantuse(void)
         else                               s_c4 = 1;   /* ori 1 -> 25c4 */
         break;
     case 1:                                       /* message open @0x8004b2d8-b2f8: jal
-                                                   * FUN_80027e68(0x00a80018,0x8400,0,0) */
-        msg_open();
+                                                   * FUN_80027e68(0x00a80018,0x8400,0,0)
+                                                   * = desc-bank entry 0 at (0x18,0xa8) */
+        msg_open(0, 0x18, 0xa8);
         s_c4 = 2;
         break;
     case 2:                                       /* wait (8520 & 0x80)==0 @0x8004b2fc-b324 */
@@ -570,6 +630,103 @@ static void state5_cantuse(void)
         s_c3 = 0; s_c4 = 0;
         break;
     default:
+        break;
+    }
+}
+
+/* ---------------------------------------------------------------------------------- */
+/* ITEM state 9 (CHECK/EXAMINE) — WAVE 4: per-frame jal FUN_800c6630 @0x8004a6e8.      */
+/* DEBUG.BIN module (maps 1:1 @0x800c0000; file==RAM byte-verified vs mzd_inv_open.sav */
+/* for 0x800c6630+0x300 / 0x800c6220 / 0x800c0258 this wave). FUN_800c6630 dispatches  */
+/* on DAT_800b25d6 (lbu @0x800c6640 — the command-cursor byte DOUBLES as the CHECK     */
+/* sub-state; the command dispatch [1] pre-writes 25d6=0 @0x8004a55c) via the 5-entry  */
+/* jump table @0x800c6864 = {0x800c6664, 0x800c6704, 0x800c6760, 0x800c67b8,           */
+/* 0x800c67ec}. Byte-true byproduct: the g5 command-highlight prim keeps drawing at    */
+/* button-table[25d6] while 25d6 cycles 0..4 (offscreen with the cluster at 25ee=264   */
+/* until the state-4 slide-in, where it briefly rides the center-logo cell 4).         */
+/* ---------------------------------------------------------------------------------- */
+static void state9_check(void)
+{
+    switch (g_inv_screen.action_dir) {            /* 25d6 = the CHECK sub-state */
+    case 0:
+        /* @0x800c6664-66bc: while 25ee < 251 (slti 251 @0x800c667c): the four panel-x
+         * registers 25d8/25dc/25e4/25f0 -= 36 (lhu 0/4/12/24(t0=0x800b25d8), addiu
+         * -36, sh @0x800c6688-66b4) AND 25ee += 14 (delay-slot sh @0x800c66bc) — the
+         * left half of the screen slides off while the command cluster slides out.
+         * Else @0x800c66c0-6700: id = helper 0x800c6600 (cursor==0xA -> 1, else
+         * inv[25bd*4].id @0x800c6604-24); jal 0x800c6878(id) = ITPS block load: CD
+         * sectors (base 0x1740 = {u16@0x8006f590,u8@0x8006f592}) + id*6 @0x800c68b0-bc
+         * -> buffer *(0x800ac77c), then TIM upload 0x800c0258 (OpenTIM/ReadTIM
+         * 0x8006bbbc/bbcc + LoadImage 0x80068c88 of the block's EMBEDDED crect/prect
+         * + DrawSync @0x800c0270-2ac); photo struct @0x800c6220 := {1, -207, 26}
+         * (@0x800c66d0-66ec); 25d6 := 1 (@0x800c66f0-f8). */
+        if (g_inv_screen.act_base_y < 251) {
+            g_inv_screen.arms_x   -= 36;          /* 25d8 @0x800c6698/66a8 */
+            g_inv_screen.equip_x  -= 36;          /* 25dc @0x800c669c/66ac */
+            g_inv_screen.cond_x   -= 36;          /* 25e4 @0x800c66a0/66b0 */
+            g_inv_screen.idcard_x -= 36;          /* 25f0 @0x800c66a4/66b4 */
+            g_inv_screen.act_base_y += 14;        /* 25ee @0x800c6684/66bc */
+        } else {
+            uint8_t cur = g_inv_screen.item_cursor;
+            uint8_t id = (cur == 0x0a) ? 1 : g_inv.slots[cur].id;  /* 0x800c6600 */
+            g_inv_screen.exam_item = id;
+            g_inv_screen.exam_upload_seq++;       /* the 0x800c6878 load+upload event
+                                                   * (rasterizer honors the embedded
+                                                   * rects -> id-0x24 stale quirk)   */
+            g_inv_screen.exam_visible = 1;        /* sh 1 @0x800c66e4 */
+            g_inv_screen.exam_x = -207;           /* addiu -207 @0x800c66d4/66e8 */
+            g_inv_screen.exam_y = 26;             /* ori 0x1a @0x800c66d8/66ec */
+            g_inv_screen.action_dir = 1;          /* sb 1 -> 25d6 @0x800c66f0-f8 */
+        }
+        break;
+    case 1:
+        /* @0x800c6704-675c: x += 22 EVERY frame (delay-slot sh @0x800c671c); when the
+         * new x == 13 (ori 0xd @0x800c6710; -207 + 22*10 = 13 -> 10 frames): open the
+         * desc message FUN_80027e68(a0=0x00a00013 -> (0x13,0xa0), a1=0x8400, a2=id
+         * from helper @0x800c6720-24, a3=0xff000000) @0x800c6728-3c; then 8522 := 1
+         * (@0x800c6740-48 — FF enable, cadence-dead at menu pacing, see the VM header);
+         * 25d6 := 2 (@0x800c674c-54). */
+        g_inv_screen.exam_x += 22;
+        if (g_inv_screen.exam_x == 13) {
+            msg_open(g_inv_screen.exam_item, 0x13, 0xa0);
+            g_inv_screen.action_dir = 2;
+        }
+        break;
+    case 2:
+        /* @0x800c6760-67b4: while (8520 & 0x80) stay (@0x800c6760-70); on msg gone:
+         * SE(4,5) (lui a0,0x405 @0x800c6798 + jal 0x80045024) + 25d6 := 3
+         * (@0x800c67a4-b0). The virtual-edge block @0x800c6780-6790 (lw ac76c &
+         * 0xc000) is DEAD code — skipped by `j 0x800c6798` @0x800c6778. */
+        if (s_msg_active) break;
+        se4(5);
+        g_inv_screen.action_dir = 3;
+        break;
+    case 3:
+        /* @0x800c67b8-67e8: x -= 22 EVERY frame (delay-slot sh @0x800c67d0); when the
+         * new x == -207 (@0x800c67c4-cc): photo visible := 0 (sh zero @0x800c67d4) +
+         * 25d6 := 4 (@0x800c67d8-e0). */
+        g_inv_screen.exam_x -= 22;
+        if (g_inv_screen.exam_x == -207) {
+            g_inv_screen.exam_visible = 0;
+            g_inv_screen.action_dir = 4;
+        }
+        break;
+    case 4:
+    default:
+        /* @0x800c67ec-6850: if 25ee == 0xa6=166 (@0x800c67f8-fc): EXIT — 25c2 := 4
+         * (command stage, sb @0x800c6844) + 25d6 := 1 (CHECK re-highlighted, sb
+         * @0x800c6850); else the four x regs += 36 (@0x800c6804-6830) and 25ee -= 14
+         * (delay-slot addiu -14 @0x800c6800 / sh @0x800c6838). */
+        if (g_inv_screen.act_base_y == 0xa6) {
+            g_inv_screen.item_state = 4;
+            g_inv_screen.action_dir = 1;
+        } else {
+            g_inv_screen.arms_x   += 36;
+            g_inv_screen.equip_x  += 36;
+            g_inv_screen.cond_x   += 36;
+            g_inv_screen.idcard_x += 36;
+            g_inv_screen.act_base_y -= 14;
+        }
         break;
     }
 }
@@ -649,11 +806,10 @@ static void item_mode(uint16_t pressed, uint16_t held)
         if (g_inv_screen.act_base_y < 251) g_inv_screen.act_base_y += 14;
         else                               g_inv_screen.item_state = 2;
         break;
-    case 9:  /* CHECK: byte-true = per-frame jal FUN_800c6630 @0x8004a6e8 (photo spin
-              * + description) — WAVE-3 stub via its terminal contract @0x800c683c-50:
-              * 25c2:=4 (command stage) + 25d6:=1 (CHECK re-highlighted). */
-        g_inv_screen.item_state = 4;
-        g_inv_screen.action_dir = 1;
+    case 9:  /* CHECK: per-frame jal FUN_800c6630 @0x8004a6e8 (WAVE 4 — panel slide,
+              * ITPS photo slide-in, desc message, exit 25c2=4 + 25d6=1). Pad-free
+              * here: the only input is the msg-VM page/dismiss edge in msg_vm_tick. */
+        state9_check();
         break;
     default:
         g_inv_screen.item_state = 1;
@@ -687,9 +843,10 @@ static void phase0_init(void)
     s_c3 = 0;                              /* master task zeroing @0x80046050-6c (25c3;
                                             * 25c4 is NOT in that list — the terminal
                                             * invariant keeps it 0) */
-    s_msg_active = 0; s_msg_reveal = 0;    /* (port hygiene: the menu message cannot
-                                            * survive a close — it must be dismissed to
-                                            * leave state 5; guards the debug toggle) */
+    s_msg_active = 0; s_msg_state = 0; s_msg_cur = 0;  /* (port hygiene: the menu message
+                                            * cannot survive a close — it must be
+                                            * dismissed to leave state 5/9; guards the
+                                            * debug toggle) */
     g_inv_screen.msg_reveal = 0;
     /* fade-in arm @0x800496c4-704: FUN_800217b0(0x200,-0x1800,7,0) + FUN_800216ec
      * (value ignored, level:=0x7fff) — ~6 drawn frames while the menu draws. */
@@ -900,9 +1057,11 @@ void re15_menu_toggle(void)
         s_alive = 0; s_phase = 0; s_substate = 0; s_p0_entered = 0; s_close_sub = 0;
         s_request = 0; s_latch = 0; s_stage = 0;
         s_c3 = 0; s_c4 = 0;
-        s_msg_active = 0; s_msg_reveal = 0;
+        s_msg_active = 0; s_msg_state = 0; s_msg_cur = 0;
         g_inv_screen.item_state = 0;
         g_inv_screen.name_item = -1;
         g_inv_screen.msg_reveal = 0;
+        g_inv_screen.msg_arrow = 0;
+        g_inv_screen.exam_visible = 0;
     }
 }

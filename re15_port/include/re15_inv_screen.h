@@ -25,16 +25,30 @@ enum {
     RE15_INV_OP_LINE = 1,   /* untextured ABE LineF2, axis-aligned: endpoints
                              * (x,y) -> (w,h); vertical (x==w) = ECG trace +
                              * wipe mode 1, horizontal (y==h) = wipe mode 2    */
-    RE15_INV_OP_TILE = 2    /* flat rect (reserved; not emitted in wave 1)     */
+    RE15_INV_OP_TILE = 2,   /* flat rect (reserved; not emitted in wave 1)     */
+    RE15_INV_OP_GBOX = 3    /* wave 4: POLY_G4 navy gradient box (CHECK panel
+                             * interior, DEBUG.BIN 0x800c6b84: prim code 0x38
+                             * @0x800c6bd0 opaque gouraud quad behind DR_MODE
+                             * 0xe1000260 @0x800c6bc4; rect = (x,y)+(w,h)).
+                             * Corner colors are the byte-true constants
+                             * @0x800c6bd0/6bdc/6be8/6bf4 (rasterizer-side).   */
 };
 
 enum {
     RE15_INV_PAGE_TEX4  = 0,  /* 4bpp page VRAM (704,256) = DATA/TEX.TIM cols 0-63hw   */
     RE15_INV_PAGE_ICON8 = 1,  /* 8bpp page VRAM (640,256) = composed icon cache + card */
-    RE15_INV_PAGE_FONT4 = 2   /* 4bpp message-font page = TEX.TIM texel cols 256-511
+    RE15_INV_PAGE_FONT4 = 2,  /* 4bpp message-font page = TEX.TIM texel cols 256-511
                                * (glyph rows at v=32.., font_atlas_psx.h region) — the
                                * tpage of the text-ring DR_MODE the name print inherits
                                * (FUN_80028c1c glyphs; wave 2)                          */
+    RE15_INV_PAGE_EXAM4 = 3,  /* wave 4: 4bpp texpage 0x1d = VRAM (832,256) = TEX.TIM
+                               * texel cols 512-767 (halfword cols 128+) — the CHECK
+                               * panel chrome art (DR_MODE 0xe100001d @0x800c6af0;
+                               * element uv/wh table @0x800c6b64)                       */
+    RE15_INV_PAGE_PHOTO8 = 4  /* wave 4: 8bpp texpage 0x9d = VRAM (832,256) 112x72
+                               * window — the ITPS photo the CHECK loader 0x800c6878
+                               * uploads over the TEX.TIM region (prim @0x800c6944-84:
+                               * SPRT uv(0,0) 112x72 clut 0x7a40=(0,489))               */
 };
 
 /* clut selector: 0..7 = DAT_800b2610[0..7] = ids 0x7a10..0x7bd0 = TEX.TIM CLUT rows
@@ -48,7 +62,16 @@ enum {
     /* 10 = TEX.TIM CLUT row 0 at VRAM (256,480) = clut id 0x7810 — the grid-mode item-NAME
      * glyph palette (FUN_80028c1c @0x80028cb8-c0: clut = ((flags&0x30)<<3)|0x7810, grid
      * flags=1 -> row 0). Wave 2. */
-    RE15_INV_CLUT_TEXROW0 = 10
+    RE15_INV_CLUT_TEXROW0 = 10,
+    /* wave 4: 11 = TEX.TIM CLUT row 16 at VRAM (256,496) = clut id 0x7c10 — the CHECK
+     * panel chrome palette (element table @0x800c6b64 clut halfword 0x7c10; TEX.TIM's
+     * CLUT block is (256,480) 32x24, so row 496-480=16 ships in the same asset;
+     * savestate-VRAM verified resident at (256,496) while the menu is open).
+     * 12 = the ITPS photo CLUT (0,489) — DYNAMIC: uploaded only by the CHECK/pickup
+     * TIM upload 0x800c0258 (LoadImage of the block's embedded crect); zero before
+     * the first upload (savestate: row (0,489) all-0 in the idle screen). */
+    RE15_INV_CLUT_TEXROW16 = 11,
+    RE15_INV_CLUT_PHOTO = 12
 };
 
 typedef struct {
@@ -100,21 +123,60 @@ typedef struct {
     int16_t name_item;      /* grid-frame ITEM-NAME print: -1 = FUN_80028c1c NOT called this
                              * frame; else the a3 id passed by the grid tail @0x800c65a8-d8
                              * (cursor==0xA -> 1; empty slot -> 0 = empty string, no draw)  */
-    /* ---- wave 3 ---- */
-    uint8_t msg_reveal;     /* cant-use message "You can't use it here." (c3=6 @0x8004b250):
-                             * 0 = message not up; else the typewriter reveal = number of
-                             * glyphs of re15_inv_cantuse_text to draw at (0x18,0xa8)
-                             * (FUN_80027e68 a0=0x00a80018 @0x8004b2d8-b2ec). Maintained by
-                             * the menu msg mini-FSM (menu_common.c msg_vm_tick).           */
+    /* ---- wave 3 (generalized in wave 4 to the full desc-bank msg slice) ---- */
+    uint8_t msg_reveal;     /* typewriter reveal = number of TICK-consuming codes (0x00
+                             * space + glyphs 0x0c..0xf7) of the current PAGE to draw.
+                             * 0 = nothing revealed yet. Maintained by the menu msg
+                             * mini-FSM (menu_common.c msg_vm_tick = FUN_80028134 slice). */
+    /* ---- wave 4 (CHECK/examine — DEBUG.BIN FUN_800c6630, file==RAM verified) ---- */
+    int16_t msg_entry;      /* desc-bank entry (= ITEM ID; FUN_80027e68 a1&0xc00==0x400:
+                             * ptr = 0x800c50de + u16[bank + entry*2]). -1 = no message.
+                             * Cant-use (wave 3) = entry 0 (@0x8004b2d8 a2=0); CHECK desc
+                             * = cursor id (@0x800c6734 a2 from helper 0x800c6600).       */
+    int16_t msg_x, msg_y;   /* DAT_800b8534/8536 (FUN_80027e68 a0 = y<<16|x): cant-use
+                             * (0x18,0xa8) @0x8004b2d8; CHECK desc (0x13,0xa0) = a0
+                             * 0x00a00013 @0x800c6728-2c.                                 */
+    uint16_t msg_page_off;  /* display start = byte offset of the current PAGE within the
+                             * entry (DAT_800b8528; reset past the 02 00 control on the
+                             * page-wait confirm — VM state 2 @FUN_80028134 case 2)       */
+    uint8_t msg_arrow;      /* 1 = draw the page-wait arrow this frame (VM state 2 blink
+                             * (8525 & 0x30)!=0; glyph = debug-text char 0x2f = 8x8 font
+                             * cell u=(0x2f-0x20)%32*8=120 v=0 @FUN_80029214, at
+                             * (0x6d, msg_y+44) — FUN_800c69bc with 8542==0)              */
+    uint16_t exam_visible;  /* [0x800c6220] examine panel/photo visible flag (sh 1
+                             * @0x800c66e4, cleared @0x800c67d4)                          */
+    int16_t exam_x;         /* [0x800c6222] panel base x: init -207 @0x800c66d4, +22/f to
+                             * +13 (@0x800c6714 addiu 22; terminal cmp 0xd @0x800c6710),
+                             * spin-out -22/f back to -207 (@0x800c67c8/67c4)             */
+    int16_t exam_y;         /* [0x800c6224] panel base y = 26 (ori 0x1a @0x800c66d8)      */
+    uint8_t exam_item;      /* the ITPS block id given to the loader 0x800c6878 (cursor
+                             * item id, or 1 if cursor==0xA — helper 0x800c6600)          */
+    uint8_t exam_upload_seq;/* increments per CHECK photo load (0x800c6878 = CD read
+                             * id*6 sectors @0x1740 + TIM upload 0x800c0258) — the
+                             * rasterizer re-uploads its photo VRAM window on change,
+                             * honoring the block's EMBEDDED rects (the id-0x24 block
+                             * ships prect (0,0)/crect (0,480) -> the (832,256) window
+                             * and (0,489) clut keep their STALE content, byte-true)      */
+    int16_t arms_x;         /* DAT_800b25d8 x (126 idle; CHECK slide -36/f @0x800c6698,
+                             * back +36/f @0x800c6814)                                    */
+    int16_t cond_x;         /* DAT_800b25e4 x (13 idle; -36/f @0x800c66a0)                */
+    int16_t idcard_x;       /* DAT_800b25f0 x (14 idle; -36/f @0x800c66a4)                */
 } re15_inv_screen_t;
 
 /* DEBUG.BIN description-bank entry 0 = "You can't use it here." — string ptr resolve
  * FUN_80027e68 (a1&0xc00==0x400): 0x800c50de + u16[0x800c50de + 0*2] (= off 0x90); glyph
  * codes re-read from shared_assets/PSX/BIN/DEBUG.BIN file offset 0x50de+0x90 this wave:
  * 35 4b 51 00 3f 3d 4a 3a 50 00 51 4f 41 00 45 50 00 44 41 4e 41 57, terminated by the
- * msg-VM end-control 01 00 (code 1 operand 0 -> VM state 5 = PRESS-WAIT). 22 glyphs. */
+ * msg-VM end-control 01 00 (code 1 operand 0 -> VM state 5 = PRESS-WAIT). 22 glyphs.
+ * (Wave 4: the whole 72-entry bank is vendored in gen/inv_desc_bank.inc; entry 0 == this.) */
 #define RE15_INV_CANTUSE_GLYPHS 22
 extern const uint8_t re15_inv_cantuse_text[RE15_INV_CANTUSE_GLYPHS];
+
+/* Wave 4: desc-bank access (gen/inv_desc_bank.inc, DEBUG.BIN @0x800c50de). Returns the
+ * entry's byte stream (codes as documented in the .inc header), or NULL if id is outside
+ * 0..RE15_INV_DESC_NIDS-1. The stream is terminated by the 01 00 end control. */
+const uint8_t *re15_inv_desc_entry(int id);
+int re15_inv_desc_nids(void);
 
 /* The live screen state (engine-owned). */
 extern re15_inv_screen_t g_inv_screen;

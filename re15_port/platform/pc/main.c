@@ -2567,6 +2567,20 @@ re_title:;
         if (getenv("RE15_INV_CMD_SHOT") &&
             (g_engine.frame_count == 31 || g_engine.frame_count == 45))
             g_engine.pad_pressed |= RE15_PAD_BIT_CROSS;
+        /* RE15_INV_CHECK_SHOT=1 (wave 4): CROSS F31 (ITEM) + CROSS F45 (grid confirm ->
+         * command stage from F53) + LEFT F54 (25d6=1 CHECK) + CROSS F56 (dispatch [1]
+         * @0x8004a558-64: 25d6=0 + 25c2=9). CHECK FSM: slide-out F57-63 (panels -36/f,
+         * 25ee 166->264), photo load + struct init F64, panel slide-in F65-74 (+22/f,
+         * x=13 + desc-msg open at F74), typewriter 2f + 4f/glyph (knife entry 1 = 15
+         * ticks -> complete at F132), PRESS-WAIT after; shot at F140 = the settled
+         * examine screen (photo + full desc). */
+        if (getenv("RE15_INV_CHECK_SHOT")) {
+            if (g_engine.frame_count == 31 || g_engine.frame_count == 45 ||
+                g_engine.frame_count == 56)
+                g_engine.pad_pressed |= RE15_PAD_BIT_CROSS;
+            if (g_engine.frame_count == 54)
+                g_engine.pad_pressed |= RE15_PAD_BIT_LEFT;
+        }
 
         /* FE-5.1/5.2: track the START-menu pause/inventory in the FE-0 mode machine. The status/
          * inventory screen (re15_menu_toggle) freezes the world — byte-true inline behavior in
@@ -2798,7 +2812,8 @@ re_title:;
             g_inv_screen.cond = (uint8_t)re15_inv_screen_condition(
                 plr->hp, (plr->status_flags & 2) ? 1 : 0);
             if (getenv("RE15_INV_SHOT") && !getenv("RE15_INV_SHOT_LIVE")
-                && !getenv("RE15_INV_GRID_SHOT") && !getenv("RE15_INV_CMD_SHOT")) {
+                && !getenv("RE15_INV_GRID_SHOT") && !getenv("RE15_INV_CMD_SHOT")
+                && !getenv("RE15_INV_CHECK_SHOT")) {
                 /* mzd_inv_open.sav DISPLAYED frame: tab-select, tab=FILE(3), highlight 0,
                  * ECG sweep 0x60 / LED glow 0x18 (two ticks behind the stored RAM values
                  * 0x62/0x20 — double-buffer flip lag, solved from both fb halves). */
@@ -5167,7 +5182,9 @@ re_title:;
                * GRID from F39 — capture well inside grid mode. */
               if (getenv("RE15_INV_GRID_SHOT")) s_inv_shot_frame = 50;
               /* command-stage shot (wave 3): 2nd CROSS at F45, state 4 from F53. */
-              if (getenv("RE15_INV_CMD_SHOT"))  s_inv_shot_frame = 60; }
+              if (getenv("RE15_INV_CMD_SHOT"))  s_inv_shot_frame = 60;
+              /* CHECK/examine shot (wave 4): settled photo + full knife desc. */
+              if (getenv("RE15_INV_CHECK_SHOT")) s_inv_shot_frame = 140; }
           if (s_inv_shot && *s_inv_shot && g_engine.frame_count == s_inv_shot_frame) {
               extern void re15_render_pc_screenshot(const char *path);
               re15_render_pc_screenshot(s_inv_shot);
