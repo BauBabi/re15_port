@@ -2552,9 +2552,14 @@ re_title:;
         /* DEBUG: RE15_INV_SHOT=<path> — wave-1 acceptance harness: force-open the status
          * screen at frame 30 (briefing loadout = the mzd_inv_open.sav items); the render
          * block puts the screen into the savestate's acceptance state; the shot is taken
-         * after end_frame at frame 34, then exit. */
+         * after end_frame at frame 34, then exit.
+         * RE15_INV_GRID_SHOT=1 (wave 2): additionally inject a CROSS edge at frame 31 —
+         * the tab-select ITEM confirm — so the live FSM runs the entry slide (7 frames,
+         * +14/frame @0x8004a394) into GRID mode; the shot is taken at frame 50 instead. */
         if (getenv("RE15_INV_SHOT") && g_engine.frame_count == 30 && !re15_menu_is_open())
             re15_menu_toggle();
+        if (getenv("RE15_INV_GRID_SHOT") && g_engine.frame_count == 31)
+            g_engine.pad_pressed |= RE15_PAD_BIT_CROSS;
 
         /* FE-5.1/5.2: track the START-menu pause/inventory in the FE-0 mode machine. The status/
          * inventory screen (re15_menu_toggle) freezes the world — byte-true inline behavior in
@@ -2609,6 +2614,15 @@ re_title:;
              * early-returns for player/enemy/anim). Advance ONLY the modal FSM at 30 Hz; rendering
              * (incl. the modal quad) keeps running. The pad EDGE drives the state-6 Yes/No prompt. */
             re15_item_modal_tick((uint16_t)g_engine.pad_pressed);
+        } else if ((target_fps == 30 || (g_engine.frame_count & 1) == 0)
+                   && re15_menu_gameplay_frozen()) {
+            /* STATUS SCREEN (wave 2): gameplay is FULLY SUSPENDED while the menu is open or
+             * a menu transition runs — the original suspends the whole gameplay TASK
+             * (status|=0x40, FUN_80029bf8(0) @0x800460bc), whose tail contains the SCD
+             * dispatch, the walkers and the effect driver (@0x8001cdec-ce58) — so the SCD
+             * VM / walker steps / esp fx below must NOT tick (the port's old "SCD keeps
+             * running under the menu" model was the spec-flagged divergence). The menu FSM
+             * itself ticks inside re15_game_step (re15_menu_fsm_tick). */
         } else if (target_fps == 30 || (g_engine.frame_count & 1) == 0) {
             scd_vm_tick();
             /* RE15_ITEM_MODAL_TEST: debug — force-start the item-get pickup MODAL once (frame 40) to
@@ -2757,40 +2771,29 @@ re_title:;
             }
         }
 
-        /* INVENTORY / STATUS SCREEN — Wave 1 byte-true rebuild (spec shots/inv_plan.md +
-         * shots/inv_wave1_blockers.md; RE1.5-EXE). The engine builds the original per-frame
-         * display list (draw chain FUN_80049a5c @0x80049a5c, group animator FUN_80047648
-         * @0x80047648, ECG FUN_80048a44 @0x80048a44, qty digits FUN_80048f28 @0x80048f28 —
-         * geometry/uv/cluts verbatim from the embedded PSX.EXE blob re15_inv_ui_tables.c)
-         * and inv_render_pc.c rasterizes it with the fb-calibrated PSX pixel pipeline.
-         *
-         * The port's menu logic today IS the ITEM grid (tab/FSM = wave 2), so the live
-         * screen renders in ITEM-grid mode: tabs slid offscreen (DAT_800b25ea = 0x108
-         * post-slide, FUN_8004a0cc state 0 slide target >0xfa), highlight DAT_800b25ca=1,
-         * grid cursor g8 on the menu cursor. RE15_INV_SHOT instead forces the acceptance
-         * state of stage_saves/mzd_inv_open.sav (tab-select mode, cursor on FILE). */
-        static int s_inv_was_open = 0;
-        if (!re15_menu_is_open()) s_inv_was_open = 0;
+        /* INVENTORY / STATUS SCREEN — wave 1 display list + wave 2 LIVE FSM (specs
+         * shots/inv_plan.md + shots/inv_wave2_spec.md; RE1.5-EXE + DEBUG.BIN). The FSM
+         * (menu_common.c, ticked inside re15_game_step) owns ALL the original's screen
+         * registers in g_inv_screen (tab 25bc / cursors 25bd-be / dim 25ca / slides
+         * 25ea 25ee / item state 25c2 / name print); this block only refreshes the
+         * per-frame DERIVED values (ECG advance, condition classifier) and rasterizes.
+         * The open/close fades render via the shared fade channel 0 in end_frame
+         * (FUN_800217b0(0x200,±0x1800,7,0) — armed by the FSM). RE15_INV_SHOT forces
+         * the mzd_inv_open.sav acceptance state (tab-select, cursor on FILE). */
         if (re15_menu_is_open()) {
             re15_actor_t *plr = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-            if (!s_inv_was_open) re15_inv_screen_open();   /* FUN_800460b8 open init */
-            s_inv_was_open = 1;
-            re15_inv_screen_ecg_tick();                    /* FUN_80048a44 sweep/glow advance */
-            g_inv_screen.equipped_slot = (uint8_t)re15_inv_equipped_slot();
-            g_inv_screen.item_cursor   = (uint8_t)re15_menu_cursor();
-            g_inv_screen.second_cursor = g_inv_screen.item_cursor;  /* 25be := bd each frame
-                                                                     * (FUN_800c62a0 tail) */
-            /* condition = the SCREEN classifier FUN_8004ed6c (thresholds 80/20 @0x800112b4/b5)
-             * — NOT the idle-anim 50/30; poison bit @0x800acaec&2 has no port source yet. */
-            g_inv_screen.cond = (uint8_t)re15_inv_screen_condition(plr->hp, 0);
-            g_inv_screen.highlight  = 1;
-            g_inv_screen.tab        = 0;
-            g_inv_screen.tab_base_y = 0x108;
-            if (getenv("RE15_INV_SHOT") && !getenv("RE15_INV_SHOT_LIVE")) {
+            re15_inv_screen_ecg_tick();                    /* FUN_80048a44 sweep/glow/wipe advance */
+            /* condition = STATELESS per-frame recompute (FUN_8004ed6c, called from the
+             * draw path @0x80049a7c/@0x800479f0/@0x80047a08 — never cached): thresholds
+             * 80/20 @0x800112b4/b5; poison = DAT_800acaec bit 2 (the same bit the heal
+             * cure clears @0x8004af8c) = the port's player status_flags & 2. */
+            g_inv_screen.cond = (uint8_t)re15_inv_screen_condition(
+                plr->hp, (plr->status_flags & 2) ? 1 : 0);
+            if (getenv("RE15_INV_SHOT") && !getenv("RE15_INV_SHOT_LIVE")
+                && !getenv("RE15_INV_GRID_SHOT")) {
                 /* mzd_inv_open.sav DISPLAYED frame: tab-select, tab=FILE(3), highlight 0,
                  * ECG sweep 0x60 / LED glow 0x18 (two ticks behind the stored RAM values
-                 * 0x62/0x20 — double-buffer flip lag, solved from both fb halves).
-                 * RE15_INV_SHOT_LIVE=1 keeps the live ITEM-grid state instead. */
+                 * 0x62/0x20 — double-buffer flip lag, solved from both fb halves). */
                 g_inv_screen.tab = 3; g_inv_screen.highlight = 0;
                 g_inv_screen.tab_base_y = 0xa6;
                 g_inv_screen.item_cursor = 0; g_inv_screen.second_cursor = 0;
@@ -2802,9 +2805,6 @@ re_title:;
                 int inv_n = re15_inv_screen_build(&g_inv_screen, s_inv_ops, RE15_INV_MAX_OPS);
                 re15_inv_render_pc_draw(s_inv_ops, inv_n);
             }
-            /* OPEN (wave 2): the grid-mode item-name print (FUN_80028c1c at (0x18,0xa8),
-             * called per frame from the grid handler @0x800c65a8) and the open/close fades
-             * (FUN_800217b0) are not rendered yet. */
 
             /* Item-USE prompt ("Will you use the X?" Yes/No, then "You have used the X") over the grid —
              * byte-true glyph replay in the game font (script 4/5), same layer as the pickup modal. */
@@ -3235,6 +3235,15 @@ re_title:;
                     fprintf(stderr, "[walk] F%u cut=%d mo=%d | pl pos=(%d,%d,%d) rot=%d\n",
                             (unsigned)g_engine.frame_count, active_cut_idx, (int)pl->motion,
                             (int)pl->x, (int)pl->y, (int)pl->z, (int)pl->rot_y);
+                /* RE15_INV_DBG: per-frame status-screen FSM probe (wave-2 bring-up). */
+                if (getenv("RE15_INV_DBG"))
+                    fprintf(stderr, "[invdbg] F%u stage=%d open=%d phase=%d sub=%d frozen=%d "
+                            "fade0(lvl=%04x step=%d drawn=%d out=%d) bg=%d\n",
+                            (unsigned)g_engine.frame_count, re15_menu_stage(), re15_menu_is_open(),
+                            re15_menu_phase(), re15_menu_substate(), re15_menu_gameplay_frozen(),
+                            (unsigned)g_fade_ch[0].level, (int)g_fade_ch[0].step,
+                            (int)g_fade_ch[0].drawn, (int)g_fade_ch[0].out_r,
+                            re15_bg_is_loaded());
                 /* RE15_MOTRACE: log player motion/af/flags/player_mode EVERY frame (find which
                  * clip drives the standing arm-gesture before the kneel). */
                 if (getenv("RE15_MOTRACE"))
@@ -5157,8 +5166,12 @@ re_title:;
          * (re15_render_pc_screenshot writes BMP regardless of the extension; set
          * RE15_AUTOSHOT_SMALL=1 for a native 320x240 dump). */
         { static const char *s_inv_shot = NULL; static int s_inv_shot_init = 0;
-          if (!s_inv_shot_init) { s_inv_shot = getenv("RE15_INV_SHOT"); s_inv_shot_init = 1; }
-          if (s_inv_shot && *s_inv_shot && g_engine.frame_count == 34) {
+          static uint32_t s_inv_shot_frame = 34;
+          if (!s_inv_shot_init) { s_inv_shot = getenv("RE15_INV_SHOT"); s_inv_shot_init = 1;
+              /* grid-mode shot (wave 2): CROSS injected at F31, entry slide F32-38,
+               * GRID from F39 — capture well inside grid mode. */
+              if (getenv("RE15_INV_GRID_SHOT")) s_inv_shot_frame = 50; }
+          if (s_inv_shot && *s_inv_shot && g_engine.frame_count == s_inv_shot_frame) {
               extern void re15_render_pc_screenshot(const char *path);
               re15_render_pc_screenshot(s_inv_shot);
               fprintf(stderr, "[inv] acceptance shot -> %s\n", s_inv_shot);

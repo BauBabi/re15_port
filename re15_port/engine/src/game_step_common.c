@@ -56,6 +56,12 @@ int g_death_glow    = 0;   /* the spotlight-backdrop brightness (starts saturate
 static int s_go_sub = 0, s_go_ctr = 0, s_go_lap = 0, s_go_on = 0;
 static int32_t s_go_lvl = 0, s_go_rate = 0;
 
+/* PLAYER HIT-FLINCH state (hoisted to file scope so the status-screen open gate below
+ * can read it — see the flinch block in re15_game_step for the full byte-true story). */
+static int     s_hit_flinch = 0;
+static int32_t s_hit_kb     = 0;             /* DAT_800acae0 knockback budget (decays 50/frame) */
+static int16_t s_prev_hp    = 100;
+
 static void re15_gameover_fsm_reset(void)
 {
     s_go_sub = s_go_ctr = s_go_lap = s_go_on = 0;
@@ -167,13 +173,27 @@ void re15_game_step(const re15_game_ctx_t *c)
      * it needs the root bone matrix there to get the look angle in the correct frame. The
      * old re15_neck_update body-relative slew is retired to avoid double-slewing.) */
 
-    /* INVENTORY / weapon-select menu (Phase 8.20): START (PC: I) toggles it. START is owned by the
-     * toggle (not re15_menu_tick), so open+tick on the same frame does not immediately close it. While
-     * OPEN, gameplay is PAUSED — tick the menu input, keep the RVD camera scan (like the grabbed branch)
-     * and clear the action edge (no doors/stairs while the menu is up), then SKIP player_tick + collision
-     * + fire. Byte-true open trigger = the state-1 START poll @0x8001cd68; the inline pause mirrors the
-     * stair/dead/grabbed skip (the workflow OVERTURNED the "PSX thread-scheduler pause" as unproven). */
-    if (c->rdt_ok && (c->pad_pressed & RE15_PAD_BIT_START)) re15_menu_toggle();
+    /* STATUS/INVENTORY SCREEN (wave 2, byte-true): the gameplay-tail START poll
+     * @0x8001cd64-cde8 — raw START press-edge sets the sticky open request; the latch is
+     * gated on the player hit-react byte u8 @0x800acae7 (player base 0x800aca54 + 0x93)
+     * == 0. The port's hit-react equivalents are the flinch/grabbed/death branches (the
+     * hurt-FSM states this file models; OPEN: the original's exact +0x93 write sites
+     * beyond the hurt FSM were not traced — spec cites only the ==0 gate). Once latched,
+     * the transition FSM (DAT_800b5359 stages) + the menu task run INSTEAD of the whole
+     * gameplay step: the original SUSPENDS task 0 (status|=0x40, FUN_80029bf8(0) as the
+     * FIRST menu-init op @0x800460bc) — no player/enemy/SCD/AOT scan/action driver runs
+     * while the menu is open (spec: the port's old "menu tick + AOT scan" model was the
+     * flagged divergence — closed here). The pad globals above stay written so a
+     * lingering timed/paged message (stage-1 wait @0x8001c9c8) can still be advanced by
+     * the platform-side msg tick. */
+    if (c->rdt_ok)
+        re15_menu_start_poll(c->pad_pressed,
+                             (s_hit_flinch == 0 && !re15_player_is_grabbed() &&
+                              !re15_player_is_dead()) ? 1 : 0);
+    if (re15_menu_gameplay_frozen()) {
+        re15_menu_fsm_tick(c->pad_pressed, c->pad_current);
+        return;
+    }
     int grabbed_branch = 0;      /* the grabbed-pin branch ran this tick (its body push happens AFTER
                                   * the victim placement at the end of the step; the normal branch
                                   * already pushed inline — never both, no same-tick double push) */
@@ -192,9 +212,6 @@ void re15_game_step(const re15_game_ctx_t *c)
      * drop here (before re15_enemy_ai_run_all re-damages at the end of the step; s_prev_hp updated
      * pre-damage so the next tick sees the drop). Grabbed/dead/stair/aim take precedence. The exact
      * clip 0x8/0x9/0xa frame length (flinch duration) is faithful-line (15). */
-    static int     s_hit_flinch = 0;
-    static int32_t s_hit_kb     = 0;             /* DAT_800acae0 knockback budget (decays 50/frame) */
-    static int16_t s_prev_hp    = 100;
     extern int re15_player_aim_active(void);     /* player_common.c — don't flinch mid-aim */
     if (c->rdt_ok && pl->hp < s_prev_hp && pl->hp >= 0 && s_hit_flinch == 0 &&
         !re15_player_is_dead() && !re15_player_is_grabbed() && !re15_stair_active() &&
@@ -214,17 +231,7 @@ void re15_game_step(const re15_game_ctx_t *c)
     }
     s_prev_hp = pl->hp;                           /* pre-damage baseline for the NEXT tick's drop check */
 
-    if (c->rdt_ok && re15_menu_is_open()) {
-        re15_menu_tick(c->pad_pressed);
-        g_aot_action_pressed = 0;
-        re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
-        /* BYTE-TRUE MENU FREEZE (audit wf_8cc15b53): opening the inventory sets g_pauseflags |= 0xff000000
-         * (@0x8001cde0), which halts the player FSM (bit 0x80000000), the enemy tick (FUN_80100424 skips on
-         * 0x20000000 @0x8010043c), the anim advance, and the effect/lunge driver (FUN_80019e20 on
-         * 0x10000000). The port kept enemy AI ticking + animating + lunging/grabbing while the menu was up.
-         * Freeze the rest here — the player is frozen so the camera/aot scan above are idempotent. */
-        return;
-    } else if (c->rdt_ok && re15_stair_active()) {
+    if (c->rdt_ok && re15_stair_active()) {
         /* Engine-driven stair traversal (action-triggered): auto-walk Leon
          * up/down + force the stair clip + sink/raise Y. The player does NOT
          * steer — SKIP player_tick + collision (the 0x4000-latch behaviour) —

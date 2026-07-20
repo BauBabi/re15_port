@@ -20,6 +20,8 @@
 #include "re15_inv_screen.h"
 #include "re15_inv_ui.h"
 #include "re15_inventory.h"
+#include "font_width.h"          /* per-glyph advance u8 @0x800c4416 (DEBUG.BIN, vendored) */
+#include "gen/inv_name_bank.inc" /* item-name bank @0x800c495c/4a28 + digraph pairs @0x800c4438 */
 
 /* ---- little-endian blob readers (blob = verbatim PSX.EXE image bytes) ---- */
 static uint16_t bu16(uint32_t addr)
@@ -62,27 +64,50 @@ static uint8_t bu8(uint32_t addr) { return *RE15_INV_PTR(addr); }
 
 re15_inv_screen_t g_inv_screen;
 
+void re15_inv_screen_sync_equip(void)
+{
+    /* LAB_80049524 @0x800495e8-0x8004961c: 25cd/2608 by equipped-or-not */
+    int eq = re15_inv_equipped_slot();
+    if (eq == 0x80) { g_inv_screen.arms_rgb = 0x80; g_inv_screen.arms_slide = -55; }
+    else            { g_inv_screen.arms_rgb = 0x3e; g_inv_screen.arms_slide = 0;   }
+    /* @0x80049620-0x800496dc: 25dc/25de from the equipped slot's kind byte */
+    g_inv_screen.equip_x = 0x96; g_inv_screen.equip_y = 0x3a;
+    if (eq != 0x80) {
+        uint8_t kind = g_inv.slots[eq & 0x0f].flags;
+        if (kind == 1) g_inv_screen.equip_x = 0x82;   /* @0x80049688 */
+        if (kind == 2) g_inv_screen.equip_x = 0xaa;   /* @0x800496c8 */
+    }
+    g_inv_screen.equipped_slot = (uint8_t)eq;
+}
+
 void re15_inv_screen_open(void)
 {
     memset(&g_inv_screen, 0, sizeof g_inv_screen);
     /* FUN_800460b8 @0x800460b8: cursors bc/bd/be=0, 25ca=0, sweep 2600=0x20,
-     * glow 2602=0, phase 2603=0 */
+     * glow 2602=0, phase 2603=0; wipe 25d4=0 @0x8004645c */
     g_inv_screen.ecg_sweep = 0x20;
     g_inv_screen.tab_base_y = 0xa6;    /* DAT_800b25ea init @0x800495b0 */
     g_inv_screen.act_base_y = 0x108;   /* DAT_800b25ee init @0x800495c8 */
-    {   /* LAB_80049524 @0x800495e8-0x8004961c: 25cd/2608 by equipped-or-not */
-        int eq = re15_inv_equipped_slot();
-        if (eq == 0x80) { g_inv_screen.arms_rgb = 0x80; g_inv_screen.arms_slide = -55; }
-        else            { g_inv_screen.arms_rgb = 0x3e; g_inv_screen.arms_slide = 0;   }
-        /* @0x80049620-0x800496dc: 25dc/25de from the equipped slot's kind byte */
-        g_inv_screen.equip_x = 0x96; g_inv_screen.equip_y = 0x3a;
-        if (eq != 0x80) {
-            uint8_t kind = g_inv.slots[eq & 0x0f].flags;
-            if (kind == 1) g_inv_screen.equip_x = 0x82;   /* @0x80049688 */
-            if (kind == 2) g_inv_screen.equip_x = 0xaa;   /* @0x800496c8 */
-        }
-        g_inv_screen.equipped_slot = (uint8_t)eq;
-    }
+    /* wipe cursors parked at their steady-state values (the renderer's self-reset writes
+     * 25fe:=0x20 / 25fc:=0x6a on wipe completion, FUN_80048a44.c:61-125; the dedicated
+     * init-site store was not separately traced — OPEN, live savestate shows the parked
+     * values). */
+    g_inv_screen.wipe_v = 0x20;
+    g_inv_screen.wipe_h = 0x6a;
+    g_inv_screen.name_item = -1;
+    re15_inv_screen_sync_equip();
+}
+
+void re15_inv_screen_heal_wipe(uint8_t id)
+{
+    /* ECG sweep restart DAT_800b2600 = 0x20 @0x8004b038 (heal sub-step c4==2 common). */
+    g_inv_screen.ecg_sweep = 0x20;
+    /* Wipe dispatch @0x8004ae24-ae68 via table @0x80010f84, index id-0x22 (sltiu 0xd —
+     * ids outside 0x22..0x2e, e.g. 0x2f NUT, get no wipe): [1]=0x23 Antidote / [4]=0x26
+     * Blue -> 25d4=2 (@0x8004ae78); [12]=0x2e G+R+B -> none (jumps to the c4++ tail,
+     * byte-true prototype inconsistency); [0],[2],[3],[5..11] -> 25d4=1 (@0x8004ae8c). */
+    if (id == 0x23 || id == 0x26) { g_inv_screen.wipe_mode = 2; g_inv_screen.wipe_h = 0x6a; }
+    else if (id >= 0x22 && id <= 0x2d) { g_inv_screen.wipe_mode = 1; g_inv_screen.wipe_v = 0x20; }
 }
 
 void re15_inv_screen_ecg_tick(void)
@@ -95,6 +120,17 @@ void re15_inv_screen_ecg_tick(void)
     else                                       g_inv_screen.ecg_glow = (uint8_t)(g_inv_screen.ecg_glow - 4);
     g_inv_screen.ecg_phase++;
     if ((int8_t)g_inv_screen.ecg_phase >= 0x40) g_inv_screen.ecg_phase = 0;
+    /* Condition-change WIPE cursor advance (FUN_80048a44 wipe modes, FUN_80048a44.c:61-125,
+     * self-clear @0x80048eec): mode 1 = 25fe +3/frame from 0x20, >=0x80 -> reset 0x20 +
+     * 25d4:=0 (32 frames); mode 2 = 25fc -2/frame from 0x6a, <=0x22 -> reset 0x6a +
+     * 25d4:=0 (36 frames). Advanced here (once per drawn frame) like the sweep above. */
+    if (g_inv_screen.wipe_mode == 1) {
+        g_inv_screen.wipe_v = (uint8_t)(g_inv_screen.wipe_v + 3);
+        if (g_inv_screen.wipe_v >= 0x80) { g_inv_screen.wipe_v = 0x20; g_inv_screen.wipe_mode = 0; }
+    } else if (g_inv_screen.wipe_mode == 2) {
+        g_inv_screen.wipe_h = (uint8_t)(g_inv_screen.wipe_h - 2);
+        if (g_inv_screen.wipe_h <= 0x22) { g_inv_screen.wipe_h = 0x6a; g_inv_screen.wipe_mode = 0; }
+    }
 }
 
 int re15_inv_screen_condition(int hp, int poisoned)
@@ -199,11 +235,65 @@ static void emit_digits(emit_t *e, const re15_inv_screen_t *st, int slot, int eq
     }
 }
 
+/* ---- grid-mode ITEM-NAME print (wave 2) --------------------------------------------
+ * FUN_80028c1c @0x80028c1c, called ONLY from the grid tail @0x800c65a8-65d8 as
+ * (x=0x18, y=0xa8, flags=1, id). String resolve FUN_80028840 @0x80028844:
+ * ptr = 0x800c4a28 + u16[0x800c495c + id*2]. Stream decoder FUN_80013160 @0x80013160
+ * (decompile RE_15_Quellcode_V2/FUN_80013160.c): pending u16 @0x800c44b6 (0xffff = none)
+ * returned first (advances the string); direct codes (c+0xa0)&0xff > 0x58 pass through;
+ * else digraph pair @0x800c44b8/b9 + (c-0xa0)*2 — first half returned WITHOUT advancing,
+ * second stashed as pending. Loop ends on decoded code 7 (@0x80028ce4-ce8). */
+static uint16_t s_name_pending = 0xffff;   /* DAT_800c44b6 (file init value 0xffff) */
+
+static int name_next_code(const uint8_t **pp)
+{
+    unsigned c;
+    if (s_name_pending != 0xffff) {
+        c = s_name_pending; s_name_pending = 0xffff; (*pp)++;
+        return (int)c;
+    }
+    c = **pp;
+    if (((c + 0xa0) & 0xff) > 0x58) { (*pp)++; return (int)c; }
+    {
+        int idx = ((int)c - 0xa0) * 2 + RE15_INV_NAME_DIGRAPH_BIAS;
+        s_name_pending = re15_inv_name_digraph[idx + 1];
+        return re15_inv_name_digraph[idx];
+    }
+}
+
+static void emit_name(emit_t *e, int id)
+{
+    const uint8_t *p;
+    int x = 0x18, code, guard = 64;              /* a0=0x18 @0x800c65ac; guard = port safety */
+    if (id < 0 || id >= RE15_INV_NAME_NIDS) return;
+    p = re15_inv_name_blob + re15_inv_name_off[id];
+    while ((code = name_next_code(&p)) != 7 && guard-- > 0) {   /* terminator @0x80028ce4-ce8 */
+        /* 16x16 SPRT, prim word 0x7c808080 (rgb neutral) @0x80028d14-1c; glyph cell
+         * u=(code&0xf)<<4, v=((code>>4)<<4)+0x20 @0x80028d04-3c on the message-FONT
+         * page (TEX.TIM texel cols 256-511, font_atlas_psx.h region y[32..128]);
+         * clut row 0 (0x7810) @0x80028cb8-c0 (flags=1). */
+        sprt(e, RE15_INV_PAGE_FONT4, RE15_INV_CLUT_TEXROW0,
+             x, 0xa8, 16, 16, (code & 0xf) << 4, ((code >> 4) << 4) + 0x20,
+             128, 128, 128, 0);
+        x += re15_font_width[code & 0xff];       /* advance @0x80028d78-94 */
+        if (e->n >= e->max) break;
+    }
+}
+
 int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max_ops)
 {
     emit_t e; int i, clut_idx, count; uint32_t tmpl;
     int x, y, w, h, u, v;
     e.ops = ops; e.n = 0; e.max = max_ops;
+
+    /* ---- 0. grid-mode ITEM NAME (wave 2): emitted FIRST = TOPMOST. The original's
+     * glyphs go through the shared text-ring OT-slot chain @0x800b829c (depth class 1),
+     * drawn over the screen prims (OPEN: the exact OT-slot depth ordering of the text
+     * chain was not decoded — the name region (24,168)+ overlaps no screen prim, so the
+     * relative order is not observable; spec Task D open question). name_item is set
+     * per frame by the grid handler tail only (@0x800c659c-65d8); id 0 = empty string
+     * (offset 0 -> first byte 0x07) draws nothing. */
+    if (st->name_item >= 0) emit_name(&e, st->name_item);
 
     /* ---- 1. FUN_80047648(0): chrome group 0, absolute xy, always drawn ---- */
     master_row(0, &clut_idx, &count, &tmpl);
@@ -241,9 +331,31 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
             o->g = (uint8_t)((mask & 2) ? (bg - fade) : bg);
             o->b = (uint8_t)((mask & 4) ? (bb - fade) : bb);
         }
-        /* condition-change wipe prims (DAT_800b25d4=1/2, @0x80048cc0+) not emitted:
-         * the wipe only runs on a condition change, which cannot occur while the
-         * screen is open in wave 1 (no damage while paused). */
+        /* condition-change WIPE prims (DAT_800b25d4=1/2, FUN_80048a44 @0x80048cc0+;
+         * heal-use feedback, wave 2). Mode 1 = 32 VERTICAL LineF2 sweeping right:
+         * x = 25fe-i-1 + 25e4 - 0x12, y from 25e6+0x22 to 25e6+0x46, rgb
+         * (0x10, ~(i*8), 0x10). Mode 2 = 32 HORIZONTAL lines sweeping up:
+         * x from 25e4+0xc to 25e4+0x59, y = 25e6 + 25fc - i, rgb (0x10,0x10,i*8).
+         * (FUN_80048a44.c:61-125; cursor advance in re15_inv_screen_ecg_tick.) */
+        if (st->wipe_mode == 1) {
+            for (i = 0; i < 32 && e.n < e.max; i++) {
+                re15_inv_op_t *o = &e.ops[e.n++];
+                o->kind = RE15_INV_OP_LINE; o->page = 0; o->clut = 0; o->abe = 1;
+                o->x = (int16_t)((int)st->wipe_v - i - 1 + ECG_BX - 0x12);
+                o->y = (int16_t)(ECG_BY + 0x22);
+                o->w = o->x; o->h = (int16_t)(ECG_BY + 0x46);
+                o->r = 0x10; o->g = (uint8_t)~(i * 8); o->b = 0x10;
+            }
+        } else if (st->wipe_mode == 2) {
+            for (i = 0; i < 32 && e.n < e.max; i++) {
+                re15_inv_op_t *o = &e.ops[e.n++];
+                o->kind = RE15_INV_OP_LINE; o->page = 0; o->clut = 0; o->abe = 1;
+                o->x = (int16_t)(ECG_BX + 0x0c);
+                o->y = (int16_t)(ECG_BY + (int)st->wipe_h - i);
+                o->w = (int16_t)(ECG_BX + 0x59); o->h = o->y;
+                o->r = 0x10; o->g = 0x10; o->b = (uint8_t)(i * 8);
+            }
+        }
     }
 
     /* ---- 3. FUN_800c6c58 (DEBUG.BIN @0x800c6c58): FUN_80047648(g) for g=1..11 ---- */

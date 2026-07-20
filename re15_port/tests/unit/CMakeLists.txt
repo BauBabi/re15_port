@@ -167,6 +167,14 @@ target_include_directories(test_weapon_select PRIVATE ${CMAKE_SOURCE_DIR}/includ
 add_test(NAME unit_weapon_select COMMAND test_weapon_select)
 set_tests_properties(unit_weapon_select PROPERTIES TIMEOUT 30)
 
+# --- Wave 2: the byte-true status-screen FSM (open stages / tab FSM / ITEM slides ±14 /
+#     grid nav w/ auto-repeat 15/4 / command stage / close commit) — shots/inv_wave2_spec.md ---
+add_executable(test_inv_fsm test_inv_fsm.c)
+target_link_libraries(test_inv_fsm PRIVATE re15_engine re15_test_support)
+target_include_directories(test_inv_fsm PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_inv_fsm COMMAND test_inv_fsm)
+set_tests_properties(unit_inv_fsm PROPERTIES TIMEOUT 30)
+
 # --- Inventory item ICON decode (Phase 8.22 — item_icon_common.c, byte-true ITEMALL.PIX) ---
 add_executable(test_item_icon test_item_icon.c)
 target_link_libraries(test_item_icon PRIVATE re15_engine re15_test_support)

@@ -49,10 +49,18 @@ extern void re15_pc_put_pixel(int x, int y, uint32_t rgba);
 /* ---- decoded assets (lazy, once) ---- */
 static int      s_ready = 0;        /* 0 = not tried, 1 = ok, -1 = failed */
 static uint8_t  s_tex4[256][256];   /* 4bpp texel indices */
+static uint8_t  s_font4[128][256];  /* message-FONT page: TEX.TIM texel cols 256-511,
+                                     * rows 0-127 (glyph cells at v=32.., 16x16 —
+                                     * the grid item-NAME print, wave 2) */
 static uint8_t  s_icon8[256][256];  /* 8bpp texel indices (u 0-127 used) */
-static uint16_t s_clut[10][256];    /* [0..7]=UI 16-entry, [8]=ST_00 row0, [9]=STPIC */
+static uint16_t s_clut[11][256];    /* [0..7]=UI 16-entry, [8]=ST_00 row0, [9]=STPIC,
+                                     * [10]=TEX.TIM CLUT row 0 (256,480) id 0x7810 —
+                                     * the grid item-NAME font (wave 2) */
 static uint8_t *s_itemall = NULL;   /* ITEMALL.PIX raw (72 x 1200B 40x30 tiles) */
 static int      s_itemall_size = 0;
+static uint8_t *s_itps = NULL;      /* ITEM/ITPS.ITP raw — wide-weapon 80x30 icons at
+                                     * block(id*0x3000)+0x21A0 (wave 2)               */
+static int      s_itps_size = 0;
 
 static uint8_t *load_cd(const char *rel, int *size)
 {
@@ -88,9 +96,21 @@ static int inv_assets_init(void)
                 uint8_t bb = px[y * pitch + (u >> 1)];
                 s_tex4[y][u] = (u & 1) ? (bb >> 4) : (bb & 0xF);
             }
+        /* message-FONT page = TEX.TIM texel columns 256-511 (font_atlas_psx.h region;
+         * glyph cells at v=32.. — the name print's byte-true uv lands here) */
+        memset(s_font4, 0, sizeof s_font4);
+        for (y = 0; y < 128 && y < tim.height; y++)
+            for (u = 0; u < 256 && 256 + u < tim.width; u++) {
+                int vx = 256 + u;
+                uint8_t bb = px[y * pitch + (vx >> 1)];
+                s_font4[y][u] = (vx & 1) ? (bb >> 4) : (bb & 0xF);
+            }
         /* UI cluts = CLUT rows 8..15, entries 0..15 of each 32-entry row (Q4 F) */
         for (r = 0; r < 8; r++)
             memcpy(s_clut[r], tim.clut + (8 + r) * 32, 16 * sizeof(uint16_t));
+        /* TEX CLUT row 0 (VRAM (256,480) = clut id 0x7810) — the item-NAME glyph
+         * palette (FUN_80028c1c @0x80028cb8-c0: ((flags&0x30)<<3)|0x7810, flags=1). */
+        memcpy(s_clut[10], tim.clut, 16 * sizeof(uint16_t));
     }
     free(buf);
 
@@ -132,6 +152,13 @@ static int inv_assets_init(void)
     s_itemall = load_cd("DATA/ITEMALL.PIX", &s_itemall_size);
     if (!s_itemall) { fprintf(stderr, "[inv] ITEMALL.PIX missing\n"); return s_ready; }
 
+    /* ITEM/ITPS.ITP: 72 x 0x3000 blocks; the wide-weapon (ids 0x0e-0x13) 80x30 8bpp
+     * icon sits at block+0x21A0 (0x960 bytes, row-major) — the pickup grant passes
+     * a2 = *(0x800ac77c)+0x21A0 into FUN_8004dc4c @0x8001e0b8-c8, uploaded once via
+     * FUN_800492b8 mode 1 (w=0x28hw=80px, h=0x1e @0x80049318-6c). Optional: only
+     * needed once a wide weapon is carried. */
+    s_itps = load_cd("ITEM/ITPS.ITP", &s_itps_size);
+
     s_ready = 1;
     return s_ready;
 }
@@ -146,9 +173,22 @@ static void inv_compose_cells(void)
     for (k = 0; k < 10; k++) {
         int tile = re15_inv_screen_cache_tile(k);
         int u0 = (k % 3) * 40, v0 = (k / 3) * 30, r;
-        if (tile == -2) tile = 0;   /* OPEN: wide-weapon 80x30 icon (ITPS blk+0x21A0,
-                                     * FUN_800492b8 mode 1) — no wide weapon exists in
-                                     * the wave-1 acceptance state; blank until wired */
+        if (tile == -2) {
+            /* wide weapon (kind 1/2): the 80x30 icon from the item's ITPS block+0x21A0
+             * (FUN_800492b8 mode 1, single upload at the HEAD cell covering cells k and
+             * k+1 — LoadImage w=0x28hw @0x80049318-6c; the two ordinary 40x30 cell SPRTs
+             * then show the halves seamlessly). kind==2 (tail) is covered by the head's
+             * upload -> skip. */
+            uint8_t kind = g_inv.slots[k].flags;
+            uint8_t id = g_inv.slots[k].id;
+            if (kind == 1 && s_itps &&
+                ((int)id * 0x3000 + 0x21A0 + 80 * 30) <= s_itps_size) {
+                const uint8_t *src = s_itps + (int)id * 0x3000 + 0x21A0;
+                for (r = 0; r < 30; r++)
+                    memcpy(&s_icon8[v0 + r][u0], src + r * 80, 80);
+            }
+            continue;
+        }
         if (tile < 0 || (tile + 1) * 1200 > s_itemall_size) tile = 0;
         for (r = 0; r < 30; r++)
             memcpy(&s_icon8[v0 + r][u0], s_itemall + tile * 1200 + r * 40, 40);
@@ -177,15 +217,30 @@ static int blend_ch(int d5, int f8)  /* abr0 with replicated dst expansion */
 static void raster_op(const re15_inv_op_t *o)
 {
     if (o->kind == RE15_INV_OP_LINE) {
-        int y0 = o->y, y1 = o->h, x = o->x, y;
-        if (y1 < y0) { int t = y0; y0 = y1; y1 = t; }
-        for (y = y0; y <= y1; y++) {   /* endpoints inclusive (fb-verified spans) */
-            uint16_t d;
-            if ((unsigned)x >= INV_XRES || (unsigned)y >= INV_YRES) continue;
-            d = s_fb5[y][x];
-            s_fb5[y][x] = (uint16_t)(blend_ch(d & 31, o->r)
-                                     | (blend_ch((d >> 5) & 31, o->g) << 5)
-                                     | (blend_ch((d >> 10) & 31, o->b) << 10));
+        /* axis-aligned ABE LineF2: (x,y)->(w,h). Vertical (ECG trace / wipe mode 1)
+         * or horizontal (wipe mode 2, wave 2). Endpoints inclusive (fb-verified). */
+        if (o->y != o->h) {
+            int y0 = o->y, y1 = o->h, x = o->x, y;
+            if (y1 < y0) { int t = y0; y0 = y1; y1 = t; }
+            for (y = y0; y <= y1; y++) {
+                uint16_t d;
+                if ((unsigned)x >= INV_XRES || (unsigned)y >= INV_YRES) continue;
+                d = s_fb5[y][x];
+                s_fb5[y][x] = (uint16_t)(blend_ch(d & 31, o->r)
+                                         | (blend_ch((d >> 5) & 31, o->g) << 5)
+                                         | (blend_ch((d >> 10) & 31, o->b) << 10));
+            }
+        } else {
+            int x0 = o->x, x1 = o->w, y = o->y, x;
+            if (x1 < x0) { int t = x0; x0 = x1; x1 = t; }
+            for (x = x0; x <= x1; x++) {
+                uint16_t d;
+                if ((unsigned)x >= INV_XRES || (unsigned)y >= INV_YRES) continue;
+                d = s_fb5[y][x];
+                s_fb5[y][x] = (uint16_t)(blend_ch(d & 31, o->r)
+                                         | (blend_ch((d >> 5) & 31, o->g) << 5)
+                                         | (blend_ch((d >> 10) & 31, o->b) << 10));
+            }
         }
     } else if (o->kind == RE15_INV_OP_SPRT) {
         const uint16_t *clut = s_clut[o->clut];
@@ -194,7 +249,9 @@ static void raster_op(const re15_inv_op_t *o)
             int v = (o->v + py) & 255;
             for (pxx = 0; pxx < o->w; pxx++) {
                 int u = (o->u + pxx) & 255;
-                uint8_t t = (o->page == RE15_INV_PAGE_TEX4) ? s_tex4[v][u] : s_icon8[v][u];
+                uint8_t t = (o->page == RE15_INV_PAGE_TEX4)  ? s_tex4[v][u]
+                          : (o->page == RE15_INV_PAGE_FONT4) ? s_font4[v & 127][u]
+                          :                                    s_icon8[v][u];
                 uint16_t c = clut[t];
                 int t5r, t5g, t5b;
                 if (c == 0) continue;                 /* CLUT value 0 = transparent */

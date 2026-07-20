@@ -1,13 +1,21 @@
 /**
  * @file test_weapon_select.c
- * @brief Phase 8.20 — the inventory / weapon-select menu LOGIC (menu_common.c).
+ * @brief Inventory classification + the byte-true EQUIP-at-CLOSE commit (wave 2).
  *
- * Headless test of the engine-side menu FSM (open/close, cursor nav, EQUIP). The render half
- * (re15_menu_render, PC main loop) is not exercised here. Byte-true anchors: EQUIP sets the
- * equipped weapon (DAT_800aca5d) exactly as the game's equip-commit @0x80046688; START is owned
- * by re15_menu_toggle (open+tick on one frame must NOT self-close). See RE15_INVENTORY_SUBSYSTEM.md.
+ * Wave-2 REWRITE: the old test asserted the port's INVENTED menu behavior (SQUARE =
+ * immediate equip + menu close; START owned by a toggle). The RE'd original
+ * (spec shots/inv_wave2_spec.md) works differently and the assertions moved:
+ *   - equip in-menu only changes the equip RECORD DAT_800b25c8 (grid confirm ->
+ *     command stage -> USE @0x8004a674);
+ *   - the PLAYER weapon DAT_800aca5d is committed at the CLOSE phase (@0x80046654-88:
+ *     0x80 -> id 1 knife) iff the equipped id changed vs the open snapshot
+ *     DAT_800b25ce (@0x800465f4-661c);
+ *   - START closes (25bf++ @0x800499d0-a18 / @0x800c6560-98), it does not toggle.
+ * The full FSM walk lives in test_inv_fsm.c; this test keeps the classification
+ * checks + drives the equip commit through the DEBUG toggle (instant open/close).
  */
 #include "re15_menu.h"
+#include "re15_inv_screen.h"
 #include "re15_damage.h"     /* re15_player_equipped_weapon / re15_player_set_equipped_weapon */
 #include "re15_player.h"     /* RE15_PAD_BIT_* */
 #include "re15_inventory.h"  /* re15_inv_load_briefing / re15_item_is_weapon / g_inv */
@@ -16,7 +24,7 @@
 int main(void)
 {
     int fail = 0;
-    printf("=== weapon-select menu (Phase 8.20) ===\n");
+    printf("=== weapon-select / equip commit (wave 2) ===\n");
 
     /* (0) byte-true STAGE1 briefing loadout: knife (id 1) + handgun (id 3, 15) + h.gun bullets
      * (id 0x15, 50), savestate-confirmed (DAT_800b10ac). Classification = id-range gate. */
@@ -39,79 +47,54 @@ int main(void)
         printf("  (0) briefing: KNIFE(1)+BROWNING HP(3,x15)+H.GUN BULLETS(0x15,x50); "
                "weapon=id<0x15, ammo 0x15..0x21, key>=0x22\n");
 
-    /* The menu is g_inv-driven: display list = [0:KNIFE(1), 1:BROWNING HP(3), 2:H.GUN BULLETS(0x15)]. */
-    re15_player_set_equipped_weapon(1);          /* equipped = the knife (briefing default) */
+    re15_inv_set_equipped_slot(0);       /* DAT_800b25c8 = 0 (knife, briefing default)  */
+    re15_player_set_equipped_weapon(1);  /* DAT_800aca5d = 1                            */
     if (re15_menu_is_open()) { fprintf(stderr, "FAIL: menu must start closed\n"); fail = 1; }
 
-    /* (1) OPEN: toggle -> open. Byte-true (audit wf_1c0e60d8): the menu is a FIXED capacity-cell grid
-     * (count == 10, NOT the occupied count — FUN_800487b0 bounds the cursor by the 0x800b0fbc capacity),
-     * items at their fixed slots (0=knife,1=handgun,2=bullets, 3..9 empty), cursor snaps to the equipped
-     * weapon (id 1 -> slot 0). Empty cells 3..9 are cursor-reachable but have no id/action. */
+    /* (1) DEBUG toggle-open (harness path): instant phase-1 tab-select; the open snapshot
+     * DAT_800b25ce (@0x8004649c) records the equipped id (knife 1). */
     re15_menu_toggle();
-    if (!re15_menu_is_open()) { fprintf(stderr, "FAIL: (1) toggle must open the menu\n"); fail = 1; }
-    if (re15_menu_count() != 10) {
-        fprintf(stderr, "FAIL: (1) count must be 10 (fixed capacity grid), ist %d\n", re15_menu_count()); fail = 1; }
-    if (re15_menu_disp_id(0) != 0x01 || re15_menu_disp_id(3) != 0x00) {
-        fprintf(stderr, "FAIL: (1) fixed grid: slot0=knife(1) slot3=empty(0), ist 0x%02x/0x%02x\n",
-                re15_menu_disp_id(0), re15_menu_disp_id(3)); fail = 1; }
-    if (re15_menu_disp_id(re15_menu_cursor()) != 0x01) {
-        fprintf(stderr, "FAIL: (1) cursor must snap to the equipped item 1 (knife), ist id 0x%02x\n",
-                re15_menu_disp_id(re15_menu_cursor())); fail = 1; }
+    if (!re15_menu_is_open() || re15_menu_phase() != 1) {
+        fprintf(stderr, "FAIL: (1) toggle must open into the run phase\n"); fail = 1; }
+    if (g_inv_screen.tab != 0 || g_inv_screen.item_cursor != 0) {
+        fprintf(stderr, "FAIL: (1) init cursors: tab=0, grid cursor=0 (@0x800463e0-f8)\n"); fail = 1; }
 
-    /* (2) START is owned by the toggle, NOT the tick: ticking START while open must NOT close it. */
-    re15_menu_tick(RE15_PAD_BIT_START);
-    if (!re15_menu_is_open()) { fprintf(stderr, "FAIL: (2) tick(START) must not close the menu\n"); fail = 1; }
+    /* (2) change the equip RECORD (as the USE bridge does: 25c8 := cursor slot) — the
+     * PLAYER weapon must NOT change while the menu is open (commit @0x80046688 is in
+     * the close phase). */
+    re15_inv_set_equipped_slot(1);       /* the Browning slot */
+    re15_inv_screen_sync_equip();
+    if (re15_player_equipped_weapon() != 1) {
+        fprintf(stderr, "FAIL: (2) DAT_800aca5d must stay 1 while the menu is open\n"); fail = 1; }
 
-    /* (3) NAV byte-true 2-col grid (column-major): from 0, RIGHT->1 (handgun), LEFT->0; DOWN 0->2 (bullets);
-     * clamps at the last item + at 0 (no wrap). */
-    re15_menu_tick(RE15_PAD_BIT_RIGHT);
-    if (re15_menu_cursor() != 1 || re15_menu_disp_id(1) != 0x03) {
-        fprintf(stderr, "FAIL: (3) RIGHT from 0 -> 1 (handgun 3), cursor=%d id=0x%02x\n",
-                re15_menu_cursor(), re15_menu_disp_id(1)); fail = 1; }
-    re15_menu_tick(RE15_PAD_BIT_LEFT);
-    if (re15_menu_cursor() != 0) { fprintf(stderr, "FAIL: (3) LEFT from 1 -> 0, ist %d\n", re15_menu_cursor()); fail = 1; }
-    re15_menu_tick(RE15_PAD_BIT_DOWN);           /* 0 -> 2 (bullets), row below */
-    if (re15_menu_cursor() != 2) { fprintf(stderr, "FAIL: (3) DOWN from 0 -> 2, ist %d\n", re15_menu_cursor()); fail = 1; }
-    for (int i = 0; i < 6; i++) re15_menu_tick(RE15_PAD_BIT_DOWN);    /* byte-true: DOWN traverses the FULL
-                                                                      * capacity grid into the empty cells;
-                                                                      * clamps at 8 (8+2=10 not < 10), NOT
-                                                                      * at the last occupied item. */
-    if (re15_menu_cursor() != 8) { fprintf(stderr, "FAIL: (3) DOWN must clamp at 8 (grid end), ist %d\n", re15_menu_cursor()); fail = 1; }
-    for (int i = 0; i < 6; i++) re15_menu_tick(RE15_PAD_BIT_UP);      /* 8 -> 0, clamp at 0 */
-    if (re15_menu_cursor() != 0) { fprintf(stderr, "FAIL: (3) UP must clamp at 0, ist %d\n", re15_menu_cursor()); fail = 1; }
-
-    /* (4) EQUIP a WEAPON: cursor to the handgun (index 1, id 3), SQUARE -> equipped == 3 AND the menu closes. */
-    re15_menu_tick(RE15_PAD_BIT_RIGHT);          /* -> 1 (handgun) */
-    re15_menu_tick(RE15_PAD_BIT_SQUARE);
-    if (re15_menu_is_open()) { fprintf(stderr, "FAIL: (4) EQUIP (SQUARE) must close the menu\n"); fail = 1; }
+    /* (3) toggle-close: the equip-changed check (25ce vs inv[25c8].id @0x800465f4-661c)
+     * fires -> commit DAT_800aca5d = 3 (@0x80046654-88). */
+    re15_menu_toggle();
+    if (re15_menu_is_open()) { fprintf(stderr, "FAIL: (3) toggle must close\n"); fail = 1; }
     if (re15_player_equipped_weapon() != 0x03) {
-        fprintf(stderr, "FAIL: (4) EQUIP handgun must set equipped=3, ist %d\n", re15_player_equipped_weapon()); fail = 1; }
+        fprintf(stderr, "FAIL: (3) close commit must set equipped=3, ist %d\n",
+                re15_player_equipped_weapon()); fail = 1; }
 
-    /* (5) EQUIP a NON-weapon is a NO-OP: cursor to the bullets (index 2, ammo), SQUARE -> equipped UNCHANGED,
-     * menu stays open (ammo is not equippable). */
-    re15_menu_toggle();                          /* re-open (cursor snaps to the equipped handgun = index 1) */
-    re15_menu_tick(RE15_PAD_BIT_LEFT);           /* 1 -> 0 */
-    re15_menu_tick(RE15_PAD_BIT_DOWN);           /* 0 -> 2 (bullets, ammo) */
-    if (re15_menu_disp_id(re15_menu_cursor()) != 0x15) {
-        fprintf(stderr, "FAIL: (5) cursor must be on the bullets (0x15), ist id 0x%02x\n",
-                re15_menu_disp_id(re15_menu_cursor())); fail = 1; }
-    int eq_before = re15_player_equipped_weapon();
-    re15_menu_tick(RE15_PAD_BIT_SQUARE);
-    if (!re15_menu_is_open()) { fprintf(stderr, "FAIL: (5) SQUARE on ammo must NOT close (not equippable)\n"); fail = 1; }
-    if (re15_player_equipped_weapon() != eq_before) {
-        fprintf(stderr, "FAIL: (5) SQUARE on ammo must not change the equipped weapon\n"); fail = 1; }
+    /* (4) unchanged close: open + close without touching 25c8 -> no commit (compare
+     * equal @0x800465f4 -> branch to the common teardown @0x800466cc). */
+    re15_player_set_equipped_weapon(3);
+    re15_menu_toggle();
+    re15_menu_toggle();
+    if (re15_player_equipped_weapon() != 3) {
+        fprintf(stderr, "FAIL: (4) unchanged equip must not re-commit\n"); fail = 1; }
 
-    /* (5b) CANCEL: CROSS closes without changing the equipped weapon. */
-    re15_menu_tick(RE15_PAD_BIT_CROSS);
-    if (re15_menu_is_open() || re15_player_equipped_weapon() != eq_before) {
-        fprintf(stderr, "FAIL: (5b) CROSS must cancel/close without changing the weapon\n"); fail = 1; }
+    /* (5) nothing-equipped commit quirk: 25c8=0x80 -> DAT_800aca5d := 1 (the knife;
+     * @0x80046668-6c 'bne 0x80 / ori v0,1'). */
+    re15_menu_toggle();
+    re15_inv_set_equipped_slot(0x80);
+    re15_inv_screen_sync_equip();
+    re15_menu_toggle();
+    if (re15_player_equipped_weapon() != 1) {
+        fprintf(stderr, "FAIL: (5) unequip close must map 0x80 -> weapon id 1, ist %d\n",
+                re15_player_equipped_weapon()); fail = 1; }
 
-    /* (6) tick while closed is a no-op (defensive). */
-    re15_menu_tick(RE15_PAD_BIT_SQUARE | RE15_PAD_BIT_DOWN);
-    if (re15_menu_is_open()) { fprintf(stderr, "FAIL: (6) tick while closed must not open\n"); fail = 1; }
-
-    if (fail) { fprintf(stderr, "\nINVENTORY MENU TEST FAILED\n"); return 1; }
-    printf("PASS: g_inv inventory menu (byte-true classification + catalog; 2-col grid nav; "
-           "equip weapons only [id<0x15]; ammo/cancel no-op)\n");
+    if (fail) { fprintf(stderr, "\nWEAPON-SELECT TEST FAILED\n"); return 1; }
+    printf("PASS: classification + byte-true equip-at-close commit (25c8 record in-menu, "
+           "DAT_800aca5d commit @0x80046688 at close; 0x80 -> knife 1)\n");
     return 0;
 }

@@ -1,43 +1,59 @@
 /*
- * RE1.5 Rebuilt — Inventory menu (Phase 8.20/8.21, 2026-07-02).
+ * RE1.5 Rebuilt — the STATUS/INVENTORY screen FSM (wave 2, spec shots/inv_wave2_spec.md).
  *
- * The g_inv-driven inventory screen: press START (PC: I) to open a paused overlay showing the
- * carried items in the byte-true 2-col × 5-row grid; move the cursor with the D-pad (byte-true
- * column-major ±1-parity / ±2 nav, FUN_800487b0), SQUARE = EQUIP the selected WEAPON (id < 0x15;
- * sets DAT_800aca5d + re-primes its ARMS SE bank) and close, CROSS = close.
+ * Byte-true port of the original's screen life-cycle (all RE1.5-EXE unless noted):
+ *   - OPEN trigger: raw START press-edge sets the request (@0x8001cd64-74), latched when the
+ *     player hit-react byte @0x800acae7 == 0 (@0x8001cd94-cdb8); the gameplay task then runs
+ *     the transition-stage FSM on DAT_800b5359 (jump table @0x8001069c): stage 1 = screen
+ *     fade-out FUN_800217b0(0x200,+0x1800,7,0) (@0x8001ca64-88), stage 2 = hold-black +
+ *     2-frame yield + menu-task spawn (@0x8001ca98-cb4c); stages 3-5 = the close-side
+ *     gameplay fade-in (@0x8001cbb8-cc94).
+ *   - MASTER menu task LAB_8004603c: phase byte DAT_800b25bf -> table @0x80074bdc
+ *     {0=init FUN_800460b8, 1=run FUN_80046500, 2=close FUN_80046540}.
+ *   - RUN phase, screen 0 (LAB_8004974c): sub-state DAT_800b25c1 {0=tab select, 1=MAP,
+ *     2=FILE, 3=ITEM FUN_8004a0cc}; the ITEM mode runs its own FSM on DAT_800b25c2
+ *     (slides ±14/frame, grid nav = DEBUG.BIN 0x800c62a0, command stage).
+ *   - Gameplay is FULLY SUSPENDED while the menu is open: FUN_80029bf8(0) sets task-0
+ *     status |= 0x40 as the FIRST init op (@0x800460bc-c4) — no player/enemy/SCD/AOT/
+ *     effects run until FUN_80029c2c(0) resumes at close (@0x8004677c).
  *
- * This is the LOGIC half (engine-side, testable headless); the RENDER half is platform-side
- * (re15_menu_render in the PC main loop, reading the getters below + re15_item_name / g_inv).
- *
- * BYTE-TRUE grounding (RE15_INVENTORY_SUBSYSTEM.md):
- *  - Open on the newly-pressed START edge (state-1 poll @0x8001cd68); pause = an inline game_step gate.
- *  - Grid: 2 cols {4,44} × 5 rows {32,62,92,122,152} (DAT_80076274), panel origin (215,26); 10 cells.
- *  - Cursor nav column-major 2-wide (FUN_800487b0): Right +1 (even & <count-1), Left -1 (odd & >0),
- *    Down +2 (row below exists), Up -2 (>=2); no wrap.
- *  - EQUIP = DAT_800aca5d = item id then FUN_80043d8c (@0x80046688/@0x800466c4); gated to weapons (id<0x15).
+ * The screen STATE lives in g_inv_screen (re15_inv_screen.h) — this module IS the
+ * original's byte-register writer (25bc tab / 25bd cursor / 25ca dim / 25ea 25ee slides…);
+ * the per-frame display list is built from it by re15_inv_screen_build.
  */
 #ifndef RE15_MENU_H
 #define RE15_MENU_H
 
 #include <stdint.h>
 
-/* Is the inventory open this frame? (game_step pauses gameplay while true.) */
+/* Menu task alive (master phases 0..2) — the screen is DRAWN (incl. during its own
+ * fade-in/fade-out). The platform draws the inventory instead of the scene while true. */
 int  re15_menu_is_open(void);
 
-/* Toggle open/closed — call on the START press-edge. On open it snapshots the occupied g_inv slots
- * into the display list and snaps the cursor to the currently-equipped weapon if present. START is
- * owned by the toggle (NOT re15_menu_tick). */
+/* Gameplay fully suspended: open-request latched, transition stages 1-5, or menu open.
+ * game_step returns immediately (only the FSM ticks) and the platform 30Hz block
+ * (SCD VM / walkers / fx) is gated on this — the byte-true task-suspension model
+ * (@0x800460bc task0 |= 0x40; pauseflags |= 0xff000000 during the fades @0x8001cdd4). */
+int  re15_menu_gameplay_frozen(void);
+
+/* The gameplay-tail START poll (@0x8001cd64-cde8). Call once per normal gameplay frame
+ * BEFORE the frozen check. `hit_react_ok` = the port's hit-react gate (the original
+ * gates on u8 @0x800acae7 == 0). The request is STICKY (@0x8001cd7c ori 0x8000): a
+ * START pressed during a hit-react opens the menu when the gate clears. */
+void re15_menu_start_poll(uint16_t pad_pressed, int hit_react_ok);
+
+/* Advance the transition stages + the menu task one frame (the per-vsync task step).
+ * pad_pressed = press-edge word, pad_held = held word (the grid nav reads HELD gated
+ * by the D-pad auto-repeat tick, FUN_80030444/DEBUG.BIN 0x800c62c0). */
+void re15_menu_fsm_tick(uint16_t pad_pressed, uint16_t pad_held);
+
+/* DEBUG (harnesses only): instant open at tab-select / instant close+commit, skipping
+ * the fades and transition stages. RE15_INV_SHOT / RE15_ITEM_USE_TEST. */
 void re15_menu_toggle(void);
 
-/* Per-frame menu input (only acts while open): the byte-true D-pad grid nav, SQUARE = equip the
- * selected weapon (+ re-prime ARMS) and close, CROSS = close. Pass the port's pad_pressed (edge). */
-void re15_menu_tick(uint16_t pad_pressed);
-
-/* Getters for the platform renderer. The display list is the occupied g_inv slots, compacted into
- * grid cells 0..count-1 (column-major: even = left col, odd = right col). */
-int     re15_menu_count(void);        /* number of displayed items (occupied slots, <= 10) */
-int     re15_menu_cursor(void);       /* selected display index 0..count-1                  */
-uint8_t re15_menu_disp_id(int i);     /* item id at display index i (0 = none)              */
-uint8_t re15_menu_disp_qty(int i);    /* quantity at display index i                        */
+/* Introspection (tests / state log). */
+int  re15_menu_stage(void);      /* DAT_800b5359 mirror (0 = normal gameplay)      */
+int  re15_menu_phase(void);      /* DAT_800b25bf (0 init / 1 run / 2 close)        */
+int  re15_menu_substate(void);   /* DAT_800b25c1 (0 tabs / 1 map / 2 file / 3 item) */
 
 #endif /* RE15_MENU_H */

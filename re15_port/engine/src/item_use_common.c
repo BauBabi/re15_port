@@ -9,6 +9,7 @@
 #include "re15_item_prompt.h"   /* re15_item_prompt_walk — glyph count (typewriter total) */
 #include "re15_inventory.h"     /* g_inv + re15_inv_remove_slot */
 #include "re15_actor.h"         /* g_actors[PLAYER].hp / status_flags */
+#include "re15_inv_screen.h"    /* re15_inv_screen_heal_wipe — ECG wipe + sweep restart (wave 2) */
 
 /* Heal jump table @0x80010fbc (13 words), ids 0x22..0x2e. set=1 -> HP = 100 (absolute `sh s0`,
  * s0=0x64 @0x8004ae14); else HP += add (raw, NO ceiling clamp @0x8004afb0/afe0/afac/b014). cure=1 ->
@@ -97,6 +98,11 @@ void re15_item_use_tick(uint16_t pad_edge)
         case 3:  /* APPLY heal + consume the slot (byte-true @0x8004aee4-af2c), open "used" (script 5). */
             apply_heal(s_id);
             re15_inv_remove_slot(s_slot);                              /* zero id/qty/flags @0x8004aef0 */
+            /* ECG heal feedback (wave 2): sweep restart @0x8004b038 + the condition-change
+             * wipe per the @0x80010f84 table (green sweep / blue wipe / none for 0x2e).
+             * (Byte-true ORDER note: the original runs the wipe BEFORE the consume — heal
+             * sub-steps c4 0->1 wait ->2; the port arms it at consume — WAVE 3.) */
+            re15_inv_screen_heal_wipe(s_id);
             s_reveal       = 0;
             s_reveal_timer = 2;
             s_reveal_total = re15_item_prompt_walk(5, s_id, 0, 0, 0);

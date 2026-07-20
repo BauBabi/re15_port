@@ -22,13 +22,19 @@
 
 enum {
     RE15_INV_OP_SPRT = 0,   /* textured sprite (SPRT)                          */
-    RE15_INV_OP_LINE = 1,   /* untextured ABE LineF2 (vertical: x,y -> x,y2)   */
+    RE15_INV_OP_LINE = 1,   /* untextured ABE LineF2, axis-aligned: endpoints
+                             * (x,y) -> (w,h); vertical (x==w) = ECG trace +
+                             * wipe mode 1, horizontal (y==h) = wipe mode 2    */
     RE15_INV_OP_TILE = 2    /* flat rect (reserved; not emitted in wave 1)     */
 };
 
 enum {
     RE15_INV_PAGE_TEX4  = 0,  /* 4bpp page VRAM (704,256) = DATA/TEX.TIM cols 0-63hw   */
-    RE15_INV_PAGE_ICON8 = 1   /* 8bpp page VRAM (640,256) = composed icon cache + card */
+    RE15_INV_PAGE_ICON8 = 1,  /* 8bpp page VRAM (640,256) = composed icon cache + card */
+    RE15_INV_PAGE_FONT4 = 2   /* 4bpp message-font page = TEX.TIM texel cols 256-511
+                               * (glyph rows at v=32.., font_atlas_psx.h region) — the
+                               * tpage of the text-ring DR_MODE the name print inherits
+                               * (FUN_80028c1c glyphs; wave 2)                          */
 };
 
 /* clut selector: 0..7 = DAT_800b2610[0..7] = ids 0x7a10..0x7bd0 = TEX.TIM CLUT rows
@@ -38,7 +44,11 @@ enum {
 enum {
     RE15_INV_CLUT_UI0 = 0,
     RE15_INV_CLUT_ST00_ROW0 = 8,
-    RE15_INV_CLUT_STPIC = 9
+    RE15_INV_CLUT_STPIC = 9,
+    /* 10 = TEX.TIM CLUT row 0 at VRAM (256,480) = clut id 0x7810 — the grid-mode item-NAME
+     * glyph palette (FUN_80028c1c @0x80028cb8-c0: clut = ((flags&0x30)<<3)|0x7810, grid
+     * flags=1 -> row 0). Wave 2. */
+    RE15_INV_CLUT_TEXROW0 = 10
 };
 
 typedef struct {
@@ -78,6 +88,18 @@ typedef struct {
     int16_t equip_x, equip_y; /* DAT_800b25dc/25de: equip-box icon position, set by
                              * kind of the equipped slot: kind0=(0x96,0x3a),
                              * 1=(0x82,0x3a), 2=(0xaa,0x3a) (LAB_80049524 @0x80049620) */
+    /* ---- wave 2 ---- */
+    uint8_t wipe_mode;      /* DAT_800b25d4: ECG condition-change wipe. 0=off; 1=GREEN sweep
+                             * (heal FSM @0x8004ae8c); 2=BLUE vertical wipe (@0x8004ae78).
+                             * Trigger table @0x80010f84 (ids 0x22..0x2e): [1]=0x23 / [4]=0x26
+                             * -> 2; [12]=0x2e -> none; others -> 1. Cleared by the renderer. */
+    uint8_t wipe_v;         /* DAT_800b25fe: mode-1 sweep cursor 0x20..0x80, +3/frame
+                             * (FUN_80048a44.c:61-125; 32 frames)                          */
+    uint8_t wipe_h;         /* DAT_800b25fc: mode-2 line cursor 0x6a..0x22, -2/frame
+                             * (36 frames)                                                 */
+    int16_t name_item;      /* grid-frame ITEM-NAME print: -1 = FUN_80028c1c NOT called this
+                             * frame; else the a3 id passed by the grid tail @0x800c65a8-d8
+                             * (cursor==0xA -> 1; empty slot -> 0 = empty string, no draw)  */
 } re15_inv_screen_t;
 
 /* The live screen state (engine-owned). */
@@ -98,11 +120,25 @@ void re15_inv_screen_ecg_tick(void);
  * hp >= 20 (@0x800112b5) -> 1 Caution; else 2 Danger. */
 int re15_inv_screen_condition(int hp, int poisoned);
 
+/* Re-derive the equip-panel registers from the CURRENT equipped slot (the LAB_80049524
+ * @0x800495e8-0x800496dc rules: 25cd/2608 by equipped-or-not; 25dc/25de by the slot's
+ * kind byte). Called by open() and by the wave-2 USE equip bridge after DAT_800b25c8
+ * changes (the byte-true swap-anim FSM that maintains these live is WAVE 3). */
+void re15_inv_screen_sync_equip(void);
+
+/* Arm the heal-use ECG feedback (wave 2): the ECG sweep reset DAT_800b2600=0x20
+ * (@0x8004b038, heal sub-step c4==2 common) + the condition-change wipe per the
+ * per-heal-item table @0x80010f84 (see wipe_mode above). Called by the item-USE FSM
+ * at heal apply/consume. (Byte-true ORDER divergence, WAVE 3: the original runs the
+ * wipe BEFORE the consume — c4 0->1 wait ->2; the port arms it AT consume.) */
+void re15_inv_screen_heal_wipe(uint8_t id);
+
 /* Which ITEMALL.PIX tile the composed 8bpp icon page holds at cache cell 0..9:
  * tile = g_inv.slots[cell].id (identity map, Q3/report C byte-compare; empty = tile 0
  * blank). Cells 10/11 are ST_00-static (returns -1). Wide weapons (kind 1/2) are NOT
- * ITEMALL tiles (80x30 from ITPS blk+0x21A0) — returns -2 for those cells (OPEN:
- * no wide weapon exists in the wave-1 acceptance state). */
+ * ITEMALL tiles — returns -2; the rasterizer composes the 80x30 icon from the item's
+ * ITPS block +0x21A0 (FUN_800492b8 mode 1, pickup src @0x8001e0b8-c8; wave 2 closes
+ * wave 1's OPEN). */
 int re15_inv_screen_cache_tile(int cell);
 
 /* Build one frame's display list from `st` + g_inv. Returns the op count.

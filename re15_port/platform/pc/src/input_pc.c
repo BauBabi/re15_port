@@ -62,6 +62,7 @@ static uint16_t script_bit_for(char c)
         case 'X': case 'x': return RE15_PAD_CROSS;
         case 'A': case 'a': return RE15_PAD_SQUARE;
         case 'M': case 'm': return RE15_PAD_R1;
+        case 'S': case 's': return RE15_PAD_START;  /* status-screen open/close (wave 2) */
         case 'W': case 'w': default: return 0;   /* wait / unknown -> no bit */
     }
 }

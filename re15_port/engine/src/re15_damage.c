@@ -295,8 +295,9 @@ static const uint16_t s_player_wpn_reach[22] = {
  * which the inventory-weapon-select RE (RE15_INVENTORY_SUBSYSTEM.md §2.2) showed is a PER-CHARACTER
  * static table read `table[DAT_800aca5c]` @0x800c00d4 (char 0..14 -> 1, char 15 -> 0), NOT an inventory
  * dereference (that function lives in the DEBUG.BIN overlay @0x800C0000, all-?? in the EXE dump —
- * disassembled from savestate RAM). The in-game equip (menu SQUARE) overwrites it via re15_menu_tick ->
- * re15_player_set_equipped_weapon (byte-true equip-commit @0x80046688). Default 1 = the pristine entry. */
+ * disassembled from savestate RAM). The in-game equip overwrites it at the status-screen CLOSE
+ * (menu_common.c close_phase -> re15_player_set_equipped_weapon; byte-true equip-commit @0x80046688 —
+ * the run-phase USE only changes the equip RECORD DAT_800b25c8). Default 1 = the pristine entry. */
 static int s_player_weapon = 1;   /* RE-CORRECTED twice: aca5d = the inventory ITEM id. The byte-true
                                    * GAME-START equip = ITEM 1 = the COMBAT KNIFE (briefing loadout,
                                    * savestate-confirmed: mzd_stage1_briefing.sav DAT_800aca5d==1;
