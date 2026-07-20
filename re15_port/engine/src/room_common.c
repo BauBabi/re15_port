@@ -15,6 +15,7 @@
 #include "re15_rdt.h"
 #include "re15_actor.h"
 #include "re15_enemy.h"   /* re15_enemy_reset on room change */
+#include "re15_savepoint.h"   /* re15_savepoint_reset on room change */
 #include "re15_scd.h"
 #include "re15_camera.h"
 #include "re15_light.h"
@@ -45,6 +46,7 @@ int re15_room_apply_pending(const re15_room_apply_ctx_t *c)
 {
     if (!g_room_change.pending) return 0;
     g_room_change.pending = 0;
+    re15_savepoint_reset();   /* new room: drop any save cooldown/pending from the old room */
 
     /* (1) ARCH: load the destination ROOM####.RDT (CD on PSX / file on PC) into
      * g_room_rdt. Abort the transition if it fails (player stays put). */

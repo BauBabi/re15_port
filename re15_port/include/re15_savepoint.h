@@ -44,4 +44,9 @@ void re15_savepoint_set_cooldown(int frames);   /* arm the debounce (frames > 0)
 void re15_savepoint_cooldown_tick(void);        /* decrement once per game frame */
 int  re15_savepoint_cooling(void);              /* 1 while the debounce is active */
 
+/* Clear the pending request + cooldown. Called on a room change so a save in the
+ * previous room can't suppress (cooldown) or spuriously fire (stale pending) a
+ * save-point in the newly-entered room. */
+void re15_savepoint_reset(void);
+
 #endif /* RE15_SAVEPOINT_H */

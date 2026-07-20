@@ -1220,16 +1220,27 @@ static int op_message_on(scd_thread_t *t)
     extern uint8_t g_aot_action_pressed;
     uint8_t arg2 = t->pc[2];
 
-    /* FE-4: a PHONE save-point message ("You can save your progress with this") — flag it so the
-     * platform opens the save flow (gated on the MEMORY CARD item). Placed HERE (the single entry
-     * for the Message_on opcode) not in msg_show, because msg_show only runs for the full-text
-     * cinematic rooms {0x1170,0x1240}; every other room's message (incl. the phones) takes the
-     * plain typewriter path (re15_dialog_open) below, which bypasses msg_show. */
-    if (re15_savepoint_is(g_current_room_id, t->pc[1]) && !re15_savepoint_cooling())
-        re15_savepoint_set_pending(1);
+    /* FE-4: a PHONE save-point message ("You can save your progress with this. Save is not available
+     * in this preview") — the port REPLACES it with the working save MENU, so open the menu and DO
+     * NOT display the message at all. Return here (advancing past the 4-byte Message_on) so the
+     * typewriter dialog below never runs — otherwise this SCD-thread path (GENERIC AOT → sub →
+     * Message_on) shows the dormant "not available" flavor text while the direct MESSAGE-AOT path
+     * (re15_scd_show_message) opens the menu, which is exactly the "sometimes menu, sometimes
+     * message" split the user sees. During the re-examine cooldown, suppress the message too (skip
+     * silently) — no flicker, no dormant text. Placed HERE (the single Message_on entry) because
+     * msg_show only runs for the full-text cinematic rooms {0x1170,0x1240}; the phones take the
+     * plain typewriter path (re15_dialog_open) below. */
+    if (re15_savepoint_is(g_current_room_id, t->pc[1])) {
+        if (!re15_savepoint_cooling())
+            re15_savepoint_set_pending(1);
+        if (getenv("RE15_MSG_LOG"))
+            fprintf(stderr, "[msg] room=%04x id=%d SAVEPOINT (menu, message suppressed)\n",
+                    g_current_room_id, t->pc[1]);
+        t->pc += 4;   /* skip the flavor message — the save menu is its replacement */
+        return 1;
+    }
     if (getenv("RE15_MSG_LOG"))
-        fprintf(stderr, "[msg] room=%04x id=%d savepoint=%d\n",
-                g_current_room_id, t->pc[1], re15_savepoint_is(g_current_room_id, t->pc[1]));
+        fprintf(stderr, "[msg] room=%04x id=%d savepoint=0\n", g_current_room_id, t->pc[1]);
 
     /* YES/NO QUERY: a selection prompt that BLOCKS the SCD thread until the player confirms.
      * BYTE-TRUE TRIGGER (RE'd 2026-06-14 from FUN_80027e68 / FUN_80028134): the YES/NO state
