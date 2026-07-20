@@ -43,4 +43,24 @@ extern const unsigned char re15_inv_ui_blob[RE15_INV_UI_BLOB_SIZE];
 #define RE15_INV_OFF(addr) ((unsigned)((addr) - RE15_INV_UI_BLOB_BASE))
 #define RE15_INV_PTR(addr) (&re15_inv_ui_blob[RE15_INV_OFF(addr)])
 
+/* ---- MAP wave: second verbatim region [0x800762A0, 0x80076C00) ----
+ *   @0x800762A0 the 14 room-rect LISTS (stride-12 {u16 x,y,w,h; u8 u@+8; u8 v@+10},
+ *               FUN_80046fd8 @0x8004731c-60, walk @0x800473bc/@0x800473c8);
+ *               contiguous, list 13 @0x80076834 + 12 == the pair table (self-closing)
+ *   @0x80076840 per-map-page room-rect PAIR table, 14 x {u16 count, u16 pad, u32 ptr}
+ *               (FUN_80046fd8 @0x80047048-70: lhu 0x80076840+page*8 / lw 0x80076844+)
+ *   @0x800768B0 marker scale rows stride 8 {u16 x_off, y_off, x_scale, z_scale},
+ *               index DAT_800b260d = global room-slot 0..105 (FUN_800473f8
+ *               @0x800474e8/0x80047518/0x80047444/0x8004747c; builder FUN_80046fd8
+ *               @0x80047000-0c/0x8004707c-88; max slot = stage-6 base 98 @0x8004c044
+ *               + bound 8 @0x8004bf7c) */
+#define RE15_INV_MAP_BLOB_BASE 0x800762A0u
+#define RE15_INV_MAP_BLOB_END  0x80076C00u
+#define RE15_INV_MAP_BLOB_SIZE (RE15_INV_MAP_BLOB_END - RE15_INV_MAP_BLOB_BASE)
+
+extern const unsigned char re15_inv_map_blob[RE15_INV_MAP_BLOB_SIZE];
+
+#define RE15_INV_MAP_OFF(addr) ((unsigned)((addr) - RE15_INV_MAP_BLOB_BASE))
+#define RE15_INV_MAP_PTR(addr) (&re15_inv_map_blob[RE15_INV_MAP_OFF(addr)])
+
 #endif /* RE15_INV_UI_H */

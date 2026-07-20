@@ -29,6 +29,7 @@
 #include "re15_damage.h"     /* re15_player_equipped_weapon / set */
 #include "re15_actor.h"      /* player hp / status_flags (wave-3 heal) */
 #include "re15_fade.h"
+#include "re15_room.h"       /* g_current_room_id — the MAP entry init reads stage/room */
 
 /* wave-5 blob readers (little-endian, PSX-address keyed) */
 static uint8_t  tu8(uint32_t addr) { return *RE15_INV_PTR(addr); }
@@ -593,11 +594,94 @@ static void wave5_tests(void)
     CHECK(!re15_menu_is_open(), "(34) closed");
 }
 
+/* ====================== MAP wave unit tests (no session) ============================ */
+static void wavemap_tests(void)
+{
+    int16_t mx, my;
+
+    /* (M1) per-stage init tables (FUN_8004b568/b8a0/b9d4/bc9c/bdd4/bf70, dispatch
+     * @0x80074c0c). Every case: 260d = room + stage base {0,38,50,65,77,98}
+     * (@0x8004b5ac../@0x8004b9c0/@0x8004bc88/@0x8004bdc0/@0x8004bf5c/@0x8004c044);
+     * page tails cited per branch in re15_inv_map_stage_init. */
+    static const struct { int st, rm, room, page; } cases[] = {
+        { 0,  0,   0,  2 }, { 0, 11,  11,  2 },     /* @0x8004b680-684 */
+        { 0, 12,  12,  3 }, { 0, 17,  17,  3 },     /* @0x8004b6f4-6f8 */
+        { 0, 18,  18,  4 }, { 0, 20,  20,  4 }, { 0, 22, 22, 4 },  /* @0x8004b754-758 */
+        { 0, 23,  23,  5 },                         /* @0x8004b764-768 */
+        { 0, 24,  24,  0 }, { 0, 29,  29,  0 },     /* sb zero @0x8004b7dc */
+        { 0, 30,  30,  1 }, { 0, 37,  37,  1 },     /* @0x8004b884-88c */
+        { 1,  0,  38,  6 }, { 1,  9,  47,  6 },     /* @0x8004b990-994 */
+        { 1, 10,  48, 13 }, { 1, 11,  49, 13 },     /* @0x8004b9b4 (page 0xd) */
+        { 2,  0,  50,  7 }, { 2, 31,  81,  7 },     /* @0x8004bc7c */
+        { 3,  0,  65,  8 }, { 3, 11,  76,  8 },     /* @0x8004bdb4 */
+        { 4,  0,  77,  9 }, { 4, 11,  88,  9 },     /* @0x8004bf50 via @0x8004bea8 */
+        { 4, 12,  89, 10 }, { 4, 14,  91, 10 },     /* @0x8004bee4 */
+        { 4, 15,  92, 11 }, { 4, 16,  93, 11 },     /* @0x8004bf08 */
+        { 4, 17,  94,  9 }, { 4, 20,  97,  9 },     /* table [17..20] -> 9 */
+        { 5,  0,  98, 12 }, { 5,  7, 105, 12 },     /* @0x8004c038-44 */
+    };
+    unsigned i;
+    for (i = 0; i < sizeof cases / sizeof cases[0]; i++) {
+        re15_inv_map_stage_init(cases[i].st, cases[i].rm);
+        CHECK(re15_inv_map_room() == cases[i].room && re15_inv_map_page() == cases[i].page,
+              "(M1) stage %d room %d -> slot %d page %d, are %d/%d",
+              cases[i].st, cases[i].rm, cases[i].room, cases[i].page,
+              re15_inv_map_room(), re15_inv_map_page());
+    }
+
+    /* (M2) STALE quirk: out-of-range rooms return WITHOUT writing (stage-1 bound
+     * sltiu 0x26 @0x8004b574 -> jr @0x8004b898; likewise 0xc/0x20/0xc/0x15/0x8). */
+    re15_inv_map_stage_init(0, 20);                  /* known state: 20/4 */
+    re15_inv_map_stage_init(0, 0x26);
+    CHECK(re15_inv_map_room() == 20 && re15_inv_map_page() == 4,
+          "(M2) stage-1 room 0x26 leaves 260d/260e stale (@0x8004b578/0x8004b898)");
+    re15_inv_map_stage_init(1, 12);
+    re15_inv_map_stage_init(4, 0x15);
+    re15_inv_map_stage_init(5, 8);
+    CHECK(re15_inv_map_room() == 20 && re15_inv_map_page() == 4,
+          "(M2) out-of-range rooms of stages 2/5/6 also leave them stale");
+
+    /* (M3) page-0xd CD file id overruns the 13-entry table @0x80074c4c: u16[13] = 0
+     * (bytes @0x80074c66, inside the region-1 blob — byte-true OOB read). */
+    {
+        const unsigned char *p = RE15_INV_PTR(0x80074c4cu + 13u * 2u);
+        CHECK((p[0] | (p[1] << 8)) == 0, "(M3) file-id table overrun u16[13] == 0");
+        p = RE15_INV_PTR(0x80074c4cu);
+        CHECK((p[0] | (p[1] << 8)) == 12, "(M3) file-id table[0] == 12 (MAP01.PIX)");
+    }
+
+    /* (M4) marker formula (FUN_800473f8 @0x8004741c-0x80047528; the settled DISPLAYED
+     * path — the builder's (world+25000)/scale div @0x80047010-14 is overwritten
+     * before every AddPrim). Scale row 2 @0x800768C0 = {100,136,2287,2287}:
+     *   world (0,0):        t=(320000*2287)>>20=697, +5=702, /10=70 -> mx=170;
+     *                       my=trunc(-702/10)+136 = -70+136 = 66.
+     *   world (-32000,..):  t=0+5=5, /10=0 -> mx=100 / my=136.
+     *   world (-40000,..):  (-80000*2287)>>20 = floor(-174.48) = -175 (arithmetic
+     *                       shift), +5=-170, trunc(/10)=-17 -> mx=83;
+     *                       y: -(-170)=170, /10=17 -> my=153. */
+    re15_inv_map_marker(0, 0, 2, &mx, &my);
+    CHECK(mx == 170 && my == 66, "(M4) row2 world(0,0) -> (170,66), is (%d,%d)", mx, my);
+    re15_inv_map_marker(-32000, -32000, 2, &mx, &my);
+    CHECK(mx == 100 && my == 136, "(M4) row2 world(-32000) -> offsets (100,136), is (%d,%d)",
+          mx, my);
+    re15_inv_map_marker(-40000, -40000, 2, &mx, &my);
+    CHECK(mx == 83 && my == 153, "(M4) row2 world(-40000) -> (83,153) — floor-shift + "
+          "trunc-div mix, is (%d,%d)", mx, my);
+    /* placeholder row 0 {0,0,1,1} (@0x800768B0): everything collapses to (0,0) */
+    re15_inv_map_marker(0, 0, 0, &mx, &my);
+    CHECK(mx == 0 && my == 0, "(M4) row0 placeholder -> (0,0), is (%d,%d)", mx, my);
+
+    /* restore the session state (ROOM1140) for any later consumer */
+    re15_inv_map_stage_init(0, 20);
+}
+
 int main(void)
 {
     printf("=== status-screen FSM (wave 2, spec shots/inv_wave2_spec.md) ===\n");
 
     re15_fade_init();
+    g_current_room_id = 0x1140;          /* stage 0 room 0x14 (lh 0x800b0fe0/0fe2) */
+    wavemap_tests();                     /* MAP-wave unit block (tables + marker math) */
     re15_inv_load_briefing();            /* knife(1)/browning(3,15)/bullets(0x15,50) */
     re15_inv_set_equipped_slot(0);       /* DAT_800b25c8 = 0 (knife equipped; savestate 25c8=0) */
     re15_player_set_equipped_weapon(1);  /* DAT_800aca5d = 1 */
@@ -645,14 +729,126 @@ int main(void)
     frame(RE15_PAD_BIT_UP, RE15_PAD_BIT_UP);
     CHECK(g_inv_screen.tab == 0, "(4) Up -> ITEM(0) (@0x800498a4-b8), is %d", g_inv_screen.tab);
 
-    /* (5) L1 = instant MAP launch (tab=1 AND 25c1=1, @0x8004980c-30); the wave-3 MAP
-     * stub returns to tab-select next frame per the exit contract @0x8004c2c4-304
-     * (25ca=0, 25c1=0), tab KEPT. */
+    /* (5) MAP wave — L1 = instant MAP launch (tab=1 AND 25c1=1, @0x8004980c-30; jumps
+     * to the entry dispatch @0x8004997c: per-stage init + CD-load spawn). Then the
+     * FUN_8004c058 4-state FSM: 25-frame slide-out (sltiu 0x19 @0x8004c0bc) ->
+     * upload+arena frame (c2 0->1 @0x8004c204-210) -> interactive -> cancel ->
+     * 25-frame reverse -> exit contract @0x8004c2f0-304. */
     frame(RE15_PAD_BIT_L1, RE15_PAD_BIT_L1);
     CHECK(g_inv_screen.tab == 1 && re15_menu_substate() == 1, "(5) L1 -> tab=1 + 25c1=1");
+    /* entry init for ROOM1140 = stage 0, room 0x14=20: FUN_8004b568 case 20 (rooms
+     * 18-22 tail @0x8004b754-758) -> 260d=20, 260e=4 */
+    CHECK(re15_inv_map_room() == 20 && re15_inv_map_page() == 4,
+          "(5) ROOM1140 entry init -> 260d=20 260e=4 (@0x8004b754-758), are %d/%d",
+          re15_inv_map_room(), re15_inv_map_page());
+    /* slide-out: 25 frames, deltas @0x8004c0c8-154 (25e0+15, 25e6+9, 25e4-9, 25de-7,
+     * 25da-7, 25f0-8, 25ea+7). Bases: 25e0=215, 25e6=82, 25e4=13, 25de=0x3a (knife
+     * equipped, kind 0), 25da=26, 25f0=14, 25ea=166. */
     frame(0, 0);
+    CHECK(g_inv_screen.list_x == 230 && g_inv_screen.ecg_y == 91 &&
+          g_inv_screen.cond_x == 4 && g_inv_screen.equip_y == 0x3a - 7 &&
+          g_inv_screen.arms_y == 19 && g_inv_screen.idcard_x == 6 &&
+          g_inv_screen.tab_base_y == 173,
+          "(5) slide frame 1 deltas (@0x8004c0c8-154): %d/%d/%d/%d/%d/%d/%d",
+          g_inv_screen.list_x, g_inv_screen.ecg_y, g_inv_screen.cond_x,
+          g_inv_screen.equip_y, g_inv_screen.arms_y, g_inv_screen.idcard_x,
+          g_inv_screen.tab_base_y);
+    CHECK(g_inv_screen.item_state == 0, "(5) still sliding: 25c2=0");
+    idle(24);
+    CHECK(g_inv_screen.list_x == 215 + 25 * 15 && g_inv_screen.ecg_y == 82 + 25 * 9 &&
+          g_inv_screen.cond_x == 13 - 25 * 9 && g_inv_screen.equip_y == 0x3a - 25 * 7 &&
+          g_inv_screen.arms_y == 26 - 25 * 7 && g_inv_screen.idcard_x == 14 - 25 * 8 &&
+          g_inv_screen.tab_base_y == 166 + 25 * 7,
+          "(5) slide end after 25 frames (25*{15,9,-9,-7,-7,-8,7})");
+    CHECK(g_inv_screen.item_state == 0, "(5) c2 still 0 on the last slide frame");
+    /* upload frame: c2 0->1 (@0x8004c1c4/0x8004c204-210), c3=0 (@0x8004c1cc); the
+     * draw gate (word==0x00010100 @0x80049bb4-cc) turns on THIS frame and the marker
+     * is recomputed (FUN_800473f8) — room slot 20 scale row @0x800768B0+160 =
+     * {0,0,1,1} (raw dump), player world (0,0): t=(32000*10*1)>>20=0, +5=5, /10=0
+     * -> mx=0; t2 likewise, negated (-5/10=0) -> my=0. */
+    frame(0, 0);
+    CHECK(g_inv_screen.item_state == 1 && re15_menu_item_c3() == 0,
+          "(5) upload frame -> 25c2=1 + 25c3=0 (@0x8004c204-210/0x8004c1cc)");
+    CHECK(g_inv_screen.substate == 1, "(5) substate mirror for the draw gate");
+    CHECK(g_inv_screen.map_marker_x == 0 && g_inv_screen.map_marker_y == 0,
+          "(5) marker for slot-20 row {0,0,1,1} at world (0,0) = (0,0), is (%d,%d)",
+          g_inv_screen.map_marker_x, g_inv_screen.map_marker_y);
+    /* display list while the gate is on: the MAP set (marker on TEX4 + 2 fixed
+     * sprites + page-4 rect count 7 on the MAP page) + the 4 g11 screws. */
+    {
+        static re15_inv_op_t ops[RE15_INV_MAX_OPS];
+        int n = re15_inv_screen_build(&g_inv_screen, ops, RE15_INV_MAX_OPS);
+        int i, nmap = 0, nscrew = 0, have_marker = 0, have_s1 = 0, have_s2 = 0;
+        for (i = 0; i < n; i++) {
+            if (ops[i].kind != RE15_INV_OP_SPRT) continue;
+            if (ops[i].page == RE15_INV_PAGE_MAP4) {
+                nmap++;
+                CHECK(ops[i].clut == RE15_INV_CLUT_TEXROW21,
+                      "(5) MAP-page op clut must be row 21 (0x7d50 @0x800473cc)");
+                if (ops[i].x == 0x1e && ops[i].y == 0x1e && ops[i].w == 0x58 &&
+                    ops[i].h == 0x20 && ops[i].u == 0 && ops[i].v == 0) have_s1 = 1;
+                if (ops[i].x == 0x10e && ops[i].y == 0x28 && ops[i].w == 0x20 &&
+                    ops[i].h == 0x30 && ops[i].u == 0x60 && ops[i].v == 0) have_s2 = 1;
+            }
+            if (ops[i].page == RE15_INV_PAGE_TEX4 && ops[i].w == 8 && ops[i].h == 8 &&
+                ops[i].u == 224 && ops[i].v == 128 && ops[i].clut == 6)
+                have_marker = 1;
+            if (ops[i].page == RE15_INV_PAGE_TEX4 && ops[i].w == 16 && ops[i].h == 16 &&
+                ops[i].u == 112)
+                nscrew++;
+        }
+        CHECK(nmap == 2 + 7, "(5) MAP-page ops = 2 sprites + 7 page-4 rects "
+              "(count @0x80076840+4*8), is %d", nmap);
+        CHECK(have_s1 && have_s2, "(5) fixed sprites (30,30)88x32 uv(0,0) + "
+              "(270,40)32x48 uv(96,0) (@0x80047204-2c0)");
+        CHECK(have_marker, "(5) marker quad 8x8 uv(224,128) clut 6 on the TEX page "
+              "(@0x80047130-50/@0x8004714c)");
+        CHECK(nscrew == 4, "(5) 4 g11 screws uv(112,..) (case 0xb @0x80048010-38, "
+              "tmpl @0x80075630), is %d", nscrew);
+        /* gate OFF -> no MAP set, no screws (word check @0x80049bb4-cc/@0x8004801c-2c) */
+        {
+            re15_inv_screen_t off = g_inv_screen;
+            off.item_state = 0;
+            n = re15_inv_screen_build(&off, ops, RE15_INV_MAX_OPS);
+            for (i = 0, nmap = 0, nscrew = 0; i < n; i++) {
+                if (ops[i].page == RE15_INV_PAGE_MAP4) nmap++;
+                if (ops[i].page == RE15_INV_PAGE_TEX4 && ops[i].kind == RE15_INV_OP_SPRT &&
+                    ops[i].w == 16 && ops[i].h == 16 && ops[i].u == 112) nscrew++;
+            }
+            CHECK(nmap == 0 && nscrew == 0, "(5) gate off -> no map ops/screws");
+        }
+    }
+    /* interactive: only virtual cancel 0x8000 (@0x8004c1d0-e0) or raw L1 0x4
+     * (@0x8004c1e8-f8) do anything; other pads are dead (no pan/step). */
+    frame(RE15_PAD_BIT_UP, RE15_PAD_BIT_UP);
+    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    CHECK(g_inv_screen.item_state == 1, "(5) Up/CROSS dead in interactive state");
+    frame(RE15_PAD_BIT_L1, RE15_PAD_BIT_L1);      /* L1 toggles out too (@0x8004c1f4) */
+    CHECK(g_inv_screen.item_state == 2, "(5) L1 -> c2=2 (reverse slide)");
+    /* reverse slide 25 frames (deltas mirrored @0x8004c240-2b8) -> exit contract */
+    idle(25);
+    CHECK(g_inv_screen.list_x == 215 && g_inv_screen.ecg_y == 82 &&
+          g_inv_screen.cond_x == 13 && g_inv_screen.equip_y == 0x3a &&
+          g_inv_screen.arms_y == 26 && g_inv_screen.idcard_x == 14 &&
+          g_inv_screen.tab_base_y == 166,
+          "(5) reverse slide restores all bases exactly");
+    CHECK(g_inv_screen.item_state == 2, "(5) c2 still 2 on the last reverse frame");
+    frame(0, 0);
+    CHECK(re15_menu_substate() == 0 && g_inv_screen.tab == 1 &&
+          g_inv_screen.item_state == 0 && re15_menu_item_c3() == 0 &&
+          g_inv_screen.highlight == 0,
+          "(5) exit contract @0x8004c2f0-304: 25ca=0 25c1=0 25c2=0 25c3=0, tab kept");
+    /* re-enter via tab confirm (25c1=1 @0x80049968-78 + the same entry dispatch),
+     * cancel out via SQUARE during interactive (@0x8004c1d0-e0) */
+    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    CHECK(re15_menu_substate() == 1, "(5) tab-1 confirm re-enters MAP");
+    idle(26);
+    CHECK(g_inv_screen.item_state == 1, "(5) interactive after slide+upload");
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
+    CHECK(g_inv_screen.item_state == 2, "(5) virtual cancel -> c2=2");
+    idle(26);
     CHECK(re15_menu_substate() == 0 && g_inv_screen.tab == 1,
-          "(5) MAP stub must return to tab-select with tab kept");
+          "(5) second session exits clean");
 
     /* (6) confirm ITEM: Up -> tab 0; virtual CROSS -> 25ca=1 (@0x800498e4-f4, the ONE
      * set-to-1 site), cursors reset (@0x800498f8-918), 25c1=3 (@0x80049960-64),

@@ -45,6 +45,19 @@ static uint32_t bu32(uint32_t addr)
 }
 static uint8_t bu8(uint32_t addr) { return *RE15_INV_PTR(addr); }
 
+/* ---- region-2 readers (MAP blob [0x800762A0, 0x80076C00), re15_inv_ui.h) ---- */
+static uint16_t mu16(uint32_t addr)
+{
+    const unsigned char *p = RE15_INV_MAP_PTR(addr);
+    return (uint16_t)(p[0] | (p[1] << 8));
+}
+static uint32_t mu32(uint32_t addr)
+{
+    const unsigned char *p = RE15_INV_MAP_PTR(addr);
+    return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24);
+}
+static uint8_t mu8(uint32_t addr) { return *RE15_INV_MAP_PTR(addr); }
+
 /* ---- table bases (all inside the blob) ---- */
 #define MASTER_TBL   0x80074A8Cu  /* stride 0xC {clut_idx u16, count u16, tmpl u32, buf u32} */
 #define CELL_TBL     0x80076274u  /* 11 x {s16 x, s16 y} grid cells (+ entry 10 Std-Arms)    */
@@ -73,6 +86,13 @@ static uint8_t bu8(uint32_t addr) { return *RE15_INV_PTR(addr); }
 re15_inv_screen_t g_inv_screen;
 
 static void g7_label_reset(void);   /* wave 3: forget the frozen g7 label face (see below) */
+
+/* MAP wave — DAT_800b260d / DAT_800b260e: PERSISTENT globals (BSS initial 0). The menu
+ * init never writes them; the ONLY writers in the whole EXE are the six per-stage inits
+ * (ghidra xref scan, wave-3 spec: "No other writer of 260e exists"). A MAP entry in an
+ * out-of-range room keeps the previous values (stale-previous, byte-true). */
+static uint8_t s_map_room = 0;
+static uint8_t s_map_page = 0;
 
 void re15_inv_screen_sync_equip(void)
 {
@@ -111,6 +131,15 @@ void re15_inv_screen_open(void)
     g_inv_screen.arms_x   = ARMS_BX;   /* DAT_800b25d8 = 126 */
     g_inv_screen.cond_x   = ECG_BX;    /* DAT_800b25e4 = 13  */
     g_inv_screen.idcard_x = ID_BX;     /* DAT_800b25f0 = 14  */
+    /* MAP wave: the remaining slid base registers (same init block LAB_80049524 /
+     * FUN_800460b8 register writes as the #define bases) */
+    g_inv_screen.list_x   = LIST_BX;   /* DAT_800b25e0 = 215 */
+    g_inv_screen.ecg_y    = ECG_BY;    /* DAT_800b25e6 = 82  */
+    g_inv_screen.arms_y   = ARMS_BY;   /* DAT_800b25da = 26  */
+    /* MAP page/room-slot mirrors of the PERSISTENT globals 260d/260e (the menu init
+     * writes neither — stale-previous across opens, byte-true) */
+    g_inv_screen.map_room = s_map_room;
+    g_inv_screen.map_page = s_map_page;
     g7_label_reset();                  /* prim arenas rebuilt at init -> template label */
     re15_inv_screen_sync_equip();
 }
@@ -158,6 +187,130 @@ int re15_inv_screen_condition(int hp, int poisoned)
     if (hp >= 80) return 0;
     if (hp >= 20) return 1;
     return 2;
+}
+
+/* ==================================================================================== */
+/* MAP wave — per-stage entry inits + the per-frame marker formula                      */
+/* ==================================================================================== */
+
+uint8_t re15_inv_map_room(void) { return s_map_room; }
+uint8_t re15_inv_map_page(void) { return s_map_page; }
+
+void re15_inv_map_stage_init(int stage, int room)
+{
+    /* Dispatch table @0x80074c0c = {0x8004b568, 0x8004b8a0, 0x8004b9d4, 0x8004bc9c,
+     * 0x8004bdd4, 0x8004bf70}, indexed by the 0-based stage (lh DAT_800b0fe0), called
+     * at MAP entry @0x8004997c-98 (both the tab-1 confirm and the L1 instant launch
+     * @0x8004980c-30 j 0x8004997c). Each init switches on the 0-based room index
+     * (lh DAT_800b0fe2) via its own jump table; every in-range case chain ends in a
+     * tail that writes 260e (page) and 260d (room + per-stage base). */
+    switch (stage) {
+    case 0:
+        /* FUN_8004b568: bound sltiu 0x26 @0x8004b574 (out-of-range: jr @0x8004b898,
+         * NO write); jump table @0x8001103c (38 entries, fall-through stub chains);
+         * 260d = the raw room index (every stub: lbu 0x800b0fe2 -> sb 0x800b260d,
+         * e.g. @0x8004b5a0-ac; join @0x8004b894). Page tails: rooms 0-11 -> 2
+         * (@0x8004b680-684), 12-17 -> 3 (@0x8004b6f4-6f8), 18-22 -> 4 (@0x8004b754-758),
+         * 23 -> 5 (@0x8004b764-768), 24-29 -> 0 (sb zero -> 260e @0x8004b7dc, own exit
+         * @0x8004b7e8), 30-37 -> 1 (@0x8004b884 + join @0x8004b888-894). */
+        if ((unsigned)room >= 0x26) return;
+        s_map_room = (uint8_t)room;
+        if      (room <= 11) s_map_page = 2;
+        else if (room <= 17) s_map_page = 3;
+        else if (room <= 22) s_map_page = 4;
+        else if (room == 23) s_map_page = 5;
+        else if (room <= 29) s_map_page = 0;
+        else                 s_map_page = 1;
+        return;
+    case 1:
+        /* FUN_8004b8a0: bound sltiu 0xc @0x8004b8ac; table @0x800110d4; join
+         * @0x8004b9b8-c8: 260e = v1, 260d = room + 38 (addiu +38 @0x8004b9c0).
+         * Tails: rooms 0-9 -> 6 (@0x8004b990-994), 10-11 -> 0xd (@0x8004b9b4).
+         * NOTE page 0xd's CD file id overruns the 13-entry table @0x80074c4c:
+         * u16[13] = 0 (bytes @0x80074c66, in-blob) -> CD file 0 (byte-true quirk). */
+        if ((unsigned)room >= 0xc) return;
+        s_map_room = (uint8_t)(room + 38);
+        s_map_page = (room <= 9) ? 6 : 0xd;
+        return;
+    case 2:
+        /* FUN_8004b9d4: bound sltiu 0x20 @0x8004b9e0; table @0x80011104 (all 32 cases
+         * fall through); single tail @0x8004bc74-90: page 7 (ori v1,7 @0x8004bc7c),
+         * 260d = room + 50 (addiu +50 @0x8004bc88). */
+        if ((unsigned)room >= 0x20) return;
+        s_map_room = (uint8_t)(room + 50);
+        s_map_page = 7;
+        return;
+    case 3:
+        /* FUN_8004bc9c: bound sltiu 0xc @0x8004bca8; table @0x80011184; single tail:
+         * page 8 (ori v1,8 @0x8004bdb4, sb @0x8004bdbc), 260d = room + 65
+         * (addiu +65 @0x8004bdc0). */
+        if ((unsigned)room >= 0xc) return;
+        s_map_room = (uint8_t)(room + 65);
+        s_map_page = 8;
+        return;
+    case 4:
+        /* FUN_8004bdd4: bound sltiu 0x15 @0x8004bde0; table @0x800111b4; join
+         * @0x8004bf54-64: 260e = v1, 260d = room + 77 (addiu +77 @0x8004bf5c).
+         * Tails: rooms 12-14 -> 0xa (cases 12/13 stubs @0x8004beb0/bec4 fall into the
+         * case-14 tail @0x8004bed8-ee4 ori v1,0xa), 15-16 -> 0xb (case-15 stub
+         * @0x8004bee8 falls into case-16 tail @0x8004befc-f08 ori v1,0xb), all others
+         * -> 9 (rooms 0-7 chain @0x8004be08-bea4 ends j 0x8004bf0c @0x8004bea8; rooms
+         * 8-11 and 17-20 map onto the same stubs 0x8004bf0c/bf20/bf34/bf48 per the
+         * table; final tail ori v1,9 @0x8004bf50). */
+        if ((unsigned)room >= 0x15) return;
+        s_map_room = (uint8_t)(room + 77);
+        if      (room >= 12 && room <= 14) s_map_page = 0xa;
+        else if (room == 15 || room == 16) s_map_page = 0xb;
+        else                               s_map_page = 9;
+        return;
+    case 5:
+        /* FUN_8004bf70: bound sltiu 0x8 @0x8004bf7c; table @0x8001120c (8 consecutive
+         * stubs); tail @0x8004c030-4c: page 0xc (ori v1,0xc @0x8004c038), 260d =
+         * room + 98 (addiu +98 @0x8004c044). */
+        if ((unsigned)room >= 0x8) return;
+        s_map_room = (uint8_t)(room + 98);
+        s_map_page = 0xc;
+        return;
+    default:
+        /* The dispatch table @0x80074c0c has exactly 6 entries; the stage register is
+         * only ever written 0..5 by the room setup (@0x8001d808). */
+        return;
+    }
+}
+
+void re15_inv_map_marker(int32_t world_x, int32_t world_z, uint8_t room_slot,
+                         int16_t *mx, int16_t *my)
+{
+    /* FUN_800473f8 @0x8004741c-0x80047528 (raw MIPS, settles the wave-3 flagged
+     * discrepancy): THIS formula is the displayed one — it rewrites the marker quad's
+     * xy every gated frame (stores @0x80047568/757c/7590/75a8 x, @0x80047584/7598/
+     * 75b0/75c4 y) BEFORE the AddPrim @0x800475d8, so the builder FUN_80046fd8's
+     * (world+25000)/scale DIV result (@0x80047010-14, parked in DAT_800b2604/2606
+     * @0x80047098/@0x80047124) is never displayed (2604 has zero readers outside the
+     * builder itself, ghidra xref list).
+     *   x: t = mflo((world_x+32000)*10 * x_scale) sra 20 (@0x80047428-5c: addiu 32000,
+     *      *5<<1, mult, mflo, sra 20 — 32-bit wrapping product, arithmetic shift);
+     *      t += 5 (@0x80047460); t /= 10 (magic 0x66666667 @0x80047450-54, mfhi sra 2
+     *      minus sign bit @0x80047488/0x800474d0-d8 = C truncation toward zero);
+     *      t += x_off (lh SIGNED @0x800474e8).
+     *   y: t2 likewise from world_z * z_scale (@0x8004746c-a8), t2 += 5 (@0x800474ac),
+     *      NEGATED (subu zero @0x800474b0), /10 (@0x800474b4/0x80047500-508),
+     *      += y_off (lhu @0x80047518); stored to DAT_800b2606 (@0x80047528). */
+    uint32_t row  = 0x800768B0u + (uint32_t)room_slot * 8u;
+    int16_t  xoff = (int16_t)mu16(row);          /* lh  @0x800474e8 */
+    uint16_t yoff = mu16(row + 2u);              /* lhu @0x80047518 */
+    uint16_t xscl = mu16(row + 4u);              /* lhu @0x80047444 */
+    uint16_t zscl = mu16(row + 6u);              /* lhu @0x8004747c */
+    int32_t t, t2;
+    t  = (int32_t)((uint32_t)(world_x + 32000) * 10u * xscl) >> 20;  /* sra @0x8004745c */
+    t += 5;                                                          /* @0x80047460 */
+    t  = t / 10;                                                     /* @0x80047464-d8 */
+    *mx = (int16_t)(t + xoff);
+    t2  = (int32_t)((uint32_t)(world_z + 32000) * 10u * zscl) >> 20; /* sra @0x800474a8 */
+    t2 += 5;                                                         /* @0x800474ac */
+    t2  = -t2;                                                       /* @0x800474b0 */
+    t2  = t2 / 10;                                                   /* @0x800474b4-508 */
+    *my = (int16_t)(t2 + (int32_t)yoff);
 }
 
 /* ---- WAVE 5: icon-cache cell art override (see re15_inv_screen.h for the model +
@@ -285,8 +438,9 @@ static void emit_digits(emit_t *e, const re15_inv_screen_t *st, int slot, int eq
         if (di == 2 && hund == 0) continue;         /* @0x800490d8-e4 */
         if (di == 1 && tens == 0 && hund == 0) continue;  /* @0x800490ec-108 */
         if (!equip_mode) {
-            /* @0x80049138-180: cell table + list base, y+20 */
-            x = bs16(CELL_TBL + (uint32_t)slot * 4u) + LIST_BX + sx;
+            /* @0x80049138-180: cell table + list base 25e0/25e2 LIVE (lhu 0(s6) =
+             * DAT_800b25e0 @0x80049148, ghidra-resolved), y+20 */
+            x = bs16(CELL_TBL + (uint32_t)slot * 4u) + st->list_x + sx;
             y = bs16(CELL_TBL + (uint32_t)slot * 4u + 2u) + LIST_BY + 20;
         } else {
             /* @0x80049184-1e0: equip panel 25dc/25de (kind2: x-40) */
@@ -499,8 +653,9 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
             if (gate >= 0x4d) continue;
             idx = (int)st->ecg_sweep - i;
             /* x = sweep-(i+1) + base_x - 0x12 @0x80048c34-44; y0 = wave[idx].y+base_y;
-             * y1 = y0 + wave[idx].h @0x80048c48-94 (wave entry = {s16 y, s16 h}) */
-            y0 = ECG_BY + bs16(wavetbl + (uint32_t)idx * 4u);
+             * y1 = y0 + wave[idx].h @0x80048c48-94 (wave entry = {s16 y, s16 h});
+             * base_y = 25e6 live (MAP slide +9/f @0x8004c0f4) */
+            y0 = st->ecg_y + bs16(wavetbl + (uint32_t)idx * 4u);
             y1 = y0 + bs16(wavetbl + (uint32_t)idx * 4u + 2u);
             fade = (i * 8) & 0xff;                     /* sll a0,i,3 @0x80048b68 */
             if (e.n >= e.max) break;
@@ -524,8 +679,8 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                 re15_inv_op_t *o = &e.ops[e.n++];
                 o->kind = RE15_INV_OP_LINE; o->page = 0; o->clut = 0; o->abe = 1;
                 o->x = (int16_t)((int)st->wipe_v - i - 1 + st->cond_x - 0x12);
-                o->y = (int16_t)(ECG_BY + 0x22);
-                o->w = o->x; o->h = (int16_t)(ECG_BY + 0x46);
+                o->y = (int16_t)(st->ecg_y + 0x22);
+                o->w = o->x; o->h = (int16_t)(st->ecg_y + 0x46);
                 o->r = 0x10; o->g = (uint8_t)~(i * 8); o->b = 0x10;
             }
         } else if (st->wipe_mode == 2) {
@@ -533,7 +688,7 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
                 re15_inv_op_t *o = &e.ops[e.n++];
                 o->kind = RE15_INV_OP_LINE; o->page = 0; o->clut = 0; o->abe = 1;
                 o->x = (int16_t)(st->cond_x + 0x0c);
-                o->y = (int16_t)(ECG_BY + (int)st->wipe_h - i);
+                o->y = (int16_t)(st->ecg_y + (int)st->wipe_h - i);
                 o->w = (int16_t)(st->cond_x + 0x59); o->h = o->y;
                 o->r = 0x10; o->g = 0x10; o->b = (uint8_t)(i * 8);
             }
@@ -551,26 +706,27 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
             tmpl_row(tmpl, i, &x, &y, &w, &h, &u, &v);
             if (CAPACITY == 10 && i >= 7) { y += 8 * n8; n8++; }
             if (CAPACITY == 10 && i == 1) { y += 56; v += 32; }
-            sprt(&e, RE15_INV_PAGE_TEX4, clut_idx, x + LIST_BX, y + LIST_BY, w, h, u, v,
-                 128, 128, 128, 0);
+            sprt(&e, RE15_INV_PAGE_TEX4, clut_idx, x + st->list_x, y + LIST_BY, w, h, u, v,
+                 128, 128, 128, 0);   /* 25e0 live (MAP slide +15/f @0x8004c0e0) */
         }
     }
     /* g2 CONDITION word + pulse LED (case 2 @0x80047970-0x80047a80) */
     master_row(2, &clut_idx, &count, &tmpl);
     tmpl_row(tmpl, 0, &x, &y, &w, &h, &u, &v);
     /* prim0: v += cond*16, clut = DAT_800b2610[clut_idx + cond] @0x800479ec-a0c */
-    sprt(&e, RE15_INV_PAGE_TEX4, clut_idx + st->cond, x + st->cond_x, y + ECG_BY, w, h,
+    sprt(&e, RE15_INV_PAGE_TEX4, clut_idx + st->cond, x + st->cond_x, y + st->ecg_y, w, h,
          u, v + st->cond * 16, 128, 128, 128, 0);
     /* prim1: LED, clut = DAT_800b261c (=idx 6), rgb = glow DAT_800b2602 @0x8004797c-9e8 */
     tmpl_row(tmpl, 1, &x, &y, &w, &h, &u, &v);
-    sprt(&e, RE15_INV_PAGE_TEX4, 6, x + st->cond_x, y + ECG_BY, w, h, u, v,
+    sprt(&e, RE15_INV_PAGE_TEX4, 6, x + st->cond_x, y + st->ecg_y, w, h, u, v,
          st->ecg_glow, st->ecg_glow, st->ecg_glow, 0);
-    /* g3 ARMS (case 3 @0x80047a84-af0): prims 4+ add the slide DAT_800b2608 to y */
+    /* g3 ARMS (case 3 @0x80047a84-af0): prims 4+ add the slide DAT_800b2608 to y;
+     * base y = 25da live (MAP slide -7/f @0x8004c130) */
     master_row(3, &clut_idx, &count, &tmpl);
     for (i = 0; i < count; i++) {
         tmpl_row(tmpl, i, &x, &y, &w, &h, &u, &v);
         sprt(&e, RE15_INV_PAGE_TEX4, clut_idx, x + st->arms_x,   /* 25d8 live (CHECK slide) */
-             y + ARMS_BY + (i >= 4 ? st->arms_slide : 0), w, h, u, v, 128, 128, 128, 0);
+             y + st->arms_y + (i >= 4 ? st->arms_slide : 0), w, h, u, v, 128, 128, 128, 0);
     }
     /* g4 ID header: case 4 @0x80047af4-b24 positions it but SKIPS AddPrim (j 0x80048680)
      * — not drawn. */
@@ -637,7 +793,7 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
         for (i = 0; i < count; i++) {
             tmpl_row(tmpl, base8 + i, &x, &y, &w, &h, &u, &v);
             sprt(&e, RE15_INV_PAGE_TEX4, clut_idx,
-                 bs16(CELL_TBL + (uint32_t)st->item_cursor * 4u) + x + LIST_BX,
+                 bs16(CELL_TBL + (uint32_t)st->item_cursor * 4u) + x + st->list_x,
                  bs16(CELL_TBL + (uint32_t)st->item_cursor * 4u + 2u) + y + LIST_BY,
                  w, h, u, v, 128, 128, 128, 0);
         }
@@ -651,7 +807,7 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
             int jy = (i == 0) ? (int8_t)st->comb_d1 : (int8_t)st->comb_d3;
             tmpl_row(tmpl, base9 + i, &x, &y, &w, &h, &u, &v);
             sprt(&e, RE15_INV_PAGE_TEX4, clut_idx,
-                 bs16(CELL_TBL + (uint32_t)st->second_cursor * 4u) + x + LIST_BX + jx,
+                 bs16(CELL_TBL + (uint32_t)st->second_cursor * 4u) + x + st->list_x + jx,
                  bs16(CELL_TBL + (uint32_t)st->second_cursor * 4u + 2u) + y + LIST_BY + jy,
                  w, h, u, v, 128, 128, 128, 0);
         }
@@ -660,22 +816,75 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
      * the "portrait" label was wrong — this is TEX art uv(128,0) 112x72) */
     master_row(10, &clut_idx, &count, &tmpl);
     tmpl_row(tmpl, 0, &x, &y, &w, &h, &u, &v);
-    sprt(&e, RE15_INV_PAGE_TEX4, clut_idx, x + st->cond_x, y + ECG_BY, w, h, u, v,
+    sprt(&e, RE15_INV_PAGE_TEX4, clut_idx, x + st->cond_x, y + st->ecg_y, w, h, u, v,
          128, 128, 128, 0);
-    /* g11 screws (case 0xb @0x80048010-38): drawn only when DAT_800b25c0 word ==
-     * 0x010100 (MAP mode) — never in wave 1. */
+    /* g11 map screws (case 0xb @0x80048010-38): AddPrim ONLY when the packed word
+     * word(25c0)&0xffffff == 0x00010100 (beq -> draw tail 0x8004866c @0x8004802c, else
+     * skip tail 0x80048684 @0x80048034). No per-frame xy/uv write — the build-time
+     * arena values stay (FUN_800467a8 writes the RAW template @0x80046860-74, code
+     * 0x64 opaque): 4 x 16x16 screws at (16,120)/(280,120)/(155,24)/(155,200),
+     * uv (112,56/72/40/88), master row 11 @0x80074B14 {clut 4, count 4,
+     * tmpl @0x80075630}. */
+    if (st->substate == 1 && st->item_state == 1) {
+        master_row(11, &clut_idx, &count, &tmpl);
+        for (i = 0; i < count; i++) {
+            tmpl_row(tmpl, i, &x, &y, &w, &h, &u, &v);
+            sprt(&e, RE15_INV_PAGE_TEX4, clut_idx, x, y, w, h, u, v, 128, 128, 128, 0);
+        }
+    }
 
     /* ---- 4. qty digits: 10 grid slots + equipped echo (FUN_80049a5c @0x80049ae0-b74) */
     for (i = 0; i < 10; i++) emit_digits(&e, st, i, 0);
     if (st->equipped_slot != 0x80)
         emit_digits(&e, st, st->equipped_slot & 0x0f, 1);
 
-    /* ---- 5. icon cells 0..9 (FUN_80048704 @0x80048704: xy = cell table + list base,
-     * AddPrim while slot < capacity; build-time geometry FUN_80046a1c: 40x30 code 0x66,
-     * uv = icon-uv table entry i, clut = ST_00 row 0) ---- */
+    /* ---- 4b. MAP content (FUN_80049a5c draw gate @0x80049bb4-cc: lw word(25c0) &
+     * 0xffffff == 0x00010100 -> jal FUN_800473f8 @0x80049bcc + AddPrim of the DR_MODE
+     * packet @0x800b2650 (tpage 0x17 = the 4bpp MAP page (448,256)) @0x80049bf4).
+     * FUN_800473f8 AddPrims the marker quad FIRST (@0x800475d8), then the count+2
+     * static prims (2 fixed sprites + count room rects, loop @0x800475f8-61c) — this
+     * AddPrim position (after the digit rows, before the icon cells @0x80049bfc+)
+     * puts the map set BELOW digits/ECG/chrome and ABOVE icons/card/backdrop. */
+    if (st->substate == 1 && st->item_state == 1) {
+        /* marker: POLY_FT4 code 0x2e (@0x80047130-34), 8x8 around the per-frame centre
+         * (+-4: builder @0x8004715c-71f0, per-frame rewrite @0x80047554-75c4), uv
+         * (224,128)-(232,136) with its own tpage 0x1b = the TEX page (sh 0x1b
+         * @0x8004714c) + clut DAT_800b261c = 0x7b90 = UI row 6 (@0x80047144-50);
+         * rgb = the 2602 pulse (@0x80047540-6c). */
+        sprt(&e, RE15_INV_PAGE_TEX4, 6,
+             st->map_marker_x - 4, st->map_marker_y - 4, 8, 8, 224, 128,
+             st->ecg_glow, st->ecg_glow, st->ecg_glow, 1);
+        /* fixed sprite 1: SPRT code 0x66 at (30,30) 88x32 uv(0,0), clut 0x7d50
+         * (@0x80047204-268: ori 0x1e/0x1e wh 0x58/0x20, sh t4 clut @0x80047250) */
+        sprt(&e, RE15_INV_PAGE_MAP4, RE15_INV_CLUT_TEXROW21,
+             0x1e, 0x1e, 0x58, 0x20, 0, 0, 128, 128, 128, 1);
+        /* fixed sprite 2: (270,40) 32x48 uv(96,0) (@0x8004726c-2c0: ori 0x10e/0x28,
+         * wh 0x20/0x30, u 0x60, sh t4 clut @0x800472c0) */
+        sprt(&e, RE15_INV_PAGE_MAP4, RE15_INV_CLUT_TEXROW21,
+             0x10e, 0x28, 0x20, 0x30, 0x60, 0, 128, 128, 128, 1);
+        /* room rects: pair table @0x80076840[page] {count, list ptr} (@0x80047048-70),
+         * stride-12 entries {x,y,w,h,u@+8,v@+10} (@0x8004731c-60), SPRT code 0x64|2
+         * (@0x800472fc-318), clut 0x7d50 (@0x800473cc), sampling the MAP page. */
+        {
+            int cnt = (int)mu16(0x80076840u + (uint32_t)st->map_page * 8u);
+            uint32_t lp = mu32(0x80076844u + (uint32_t)st->map_page * 8u);
+            for (i = 0; i < cnt; i++) {
+                uint32_t a = lp + (uint32_t)i * 12u;
+                sprt(&e, RE15_INV_PAGE_MAP4, RE15_INV_CLUT_TEXROW21,
+                     (int16_t)mu16(a), (int16_t)mu16(a + 2u),
+                     (int16_t)mu16(a + 4u), (int16_t)mu16(a + 6u),
+                     mu8(a + 8u), mu8(a + 10u), 128, 128, 128, 1);
+            }
+        }
+    }
+
+    /* ---- 5. icon cells 0..9 (FUN_80048704 @0x80048704: xy = cell table + list base
+     * 25e0/25e2 LIVE (lhu @0x80048748/@0x8004876c), AddPrim while slot < capacity;
+     * build-time geometry FUN_80046a1c: 40x30 code 0x66, uv = icon-uv table entry i,
+     * clut = ST_00 row 0) ---- */
     for (i = 0; i < 10 && i < CAPACITY; i++)
         sprt(&e, RE15_INV_PAGE_ICON8, RE15_INV_CLUT_ST00_ROW0,
-             bs16(CELL_TBL + (uint32_t)i * 4u) + LIST_BX,
+             bs16(CELL_TBL + (uint32_t)i * 4u) + st->list_x,
              bs16(CELL_TBL + (uint32_t)i * 4u + 2u) + LIST_BY,
              40, 30, (int)bu16(ICON_UV_TBL + (uint32_t)i * 4u),
              (int)bu16(ICON_UV_TBL + (uint32_t)i * 4u + 2u), 128, 128, 128, 1);
@@ -684,7 +893,7 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
      * pair10 rgb = DAT_800b25cd, x = 25d8+0x18, y = 25da+2608+0x58; build uv (40,90)
      * = icon-cache cell 10 = the static ST_00 diagonal knife (Q3) ---- */
     sprt(&e, RE15_INV_PAGE_ICON8, RE15_INV_CLUT_ST00_ROW0,
-         st->arms_x + 0x18, ARMS_BY + st->arms_slide + 0x58, 40, 30, 40, 90,
+         st->arms_x + 0x18, st->arms_y + st->arms_slide + 0x58, 40, 30, 40, 90,
          st->arms_rgb, st->arms_rgb, st->arms_rgb, 1);
 
     /* ---- 7. equipped-weapon icon in the equip box (FUN_80049a5c L51-92): uv from the
@@ -722,7 +931,7 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
     /* ---- 8. equip-box 80x30 backdrop (pair13, FUN_80049a5c L94-97): ALWAYS drawn at
      * (25d8+5, 25da+0x20); build uv (0,120) = ST_00 static band rows 120-149 ---- */
     sprt(&e, RE15_INV_PAGE_ICON8, RE15_INV_CLUT_ST00_ROW0,
-         st->arms_x + 5, ARMS_BY + 0x20, 80, 30, 0, 120, 128, 128, 128, 1);
+         st->arms_x + 5, st->arms_y + 0x20, 80, 30, 0, 120, 128, 128, 128, 1);
 
     /* ---- 9. ID card (pair14, FUN_80049a5c L98-100 + FUN_80049a5c tail @0x8004a018-44):
      * (25f0,25f2)=(14,26), 128x63, uv (0,150) = STPIC pixel rows 0-62, STPIC clut

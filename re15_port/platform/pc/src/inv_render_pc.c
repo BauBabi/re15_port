@@ -37,6 +37,8 @@
 #include <stdint.h>
 
 #include "re15_inv_screen.h"
+#include "re15_inv_ui.h"     /* MAP wave: CD file-id table u16 @0x80074c4c[page] (region-1
+                              * blob; the loader 0x8004c328 @0x8004c344-50) */
 #include "re15_inventory.h"
 #include "re15_tim.h"
 
@@ -58,7 +60,12 @@ static uint8_t  s_exam4[256][256];  /* wave 4: 4bpp texpage 0x1d = VRAM (832,256
                                      * sample v=0x48..0x87, savestate-VRAM verified
                                      * resident at (832,328+) while the menu is open) */
 static uint8_t  s_icon8[256][256];  /* 8bpp texel indices (u 0-127 used) */
-static uint16_t s_clut[13][256];    /* [0..7]=UI 16-entry, [8]=ST_00 row0, [9]=STPIC,
+static uint8_t  s_map4[256][256];   /* MAP wave: 4bpp texpage 0x17 = VRAM (448,256) —
+                                     * the MAP0x.PIX floor plan (raw 32768 B = 64hw x
+                                     * 256 rows, upload rect @0x8004c1a0-b0; loaded
+                                     * synchronously off g_inv_screen.map_page)       */
+static int      s_map_loaded = -1;  /* CD file id resident in s_map4 (-1 = none)      */
+static uint16_t s_clut[14][256];    /* [0..7]=UI 16-entry, [8]=ST_00 row0, [9]=STPIC,
                                      * [10]=TEX.TIM CLUT row 0 (256,480) id 0x7810 —
                                      * the grid item-NAME font (wave 2);
                                      * [11]=TEX.TIM CLUT row 16 (256,496) id 0x7c10 —
@@ -67,7 +74,10 @@ static uint16_t s_clut[13][256];    /* [0..7]=UI 16-entry, [8]=ST_00 row0, [9]=S
                                      * zero until the first CHECK/pickup upload
                                      * (savestate: row (0,489) all-0 on the idle
                                      * screen; CLUT 0 = transparent -> the photo
-                                     * window is invisible before a valid upload) */
+                                     * window is invisible before a valid upload);
+                                     * [13]=TEX.TIM CLUT row 21 (256,501) id 0x7d50 —
+                                     * the MAP page palette (GetClut(0x100,0x1f5)
+                                     * @0x80046fdc-fe8, MAP wave) */
 /* wave 4: the photo VRAM window = halfwords (832..887, 256..327) as 8bpp 112x72 —
  * texpage 0x9d of the photo prim @0x800c6944-84. Initial content = the TEX.TIM data
  * that the menu-open upload put there (byte cols 256..367 of each row); the CHECK
@@ -160,6 +170,11 @@ static int inv_assets_init(void)
          * 32x24 covers rows 480..503). */
         if (tim.clut_entries >= 17 * 32)
             memcpy(s_clut[11], tim.clut + 16 * 32, 16 * sizeof(uint16_t));
+        /* MAP wave: TEX CLUT row 21 (VRAM (256,501) = clut id 0x7d50 =
+         * GetClut(0x100,0x1f5) @0x80046fdc-fe8) — the palette of the map fixed
+         * sprites and room-rect SPRTs (same 32x24 CLUT block, row 501-480=21). */
+        if (tim.clut_entries >= 22 * 32)
+            memcpy(s_clut[13], tim.clut + 21 * 32, 16 * sizeof(uint16_t));
         /* [12] photo CLUT starts ZERO (savestate (0,489) idle census). */
         memset(s_clut[12], 0, 256 * sizeof(uint16_t));
         s_photo_seq = 0;
@@ -302,6 +317,42 @@ static void photo_upload_check(void)
             memcpy(s_photo_px[y], b + 12 + y * 112, 112);
 }
 
+/* ---- MAP wave: keep the MAP page in sync with g_inv_screen.map_page ----------------
+ * Original flow: the entry-spawned task 0x8004c328 CD-loads file id u16 @0x80074c4c
+ * [DAT_800b260e] to 0x801a8000 (jal 0x80013b60 @0x8004c354), and FUN_8004c058 uploads
+ * it into the VRAM rect (448,256,64,256) after the slide (@0x8004c198-b0). Ids 12..24
+ * name MAP01.PIX..MAP0D.PIX (13 files, DATA/); page 0xd's id read overruns the table
+ * -> u16[13] = 0 (bytes @0x80074c66) = CD file 0 (identity unresolved — OPEN; the
+ * port renders a black page for non-MAP ids). A MAP0x.PIX is headerless raw VRAM data:
+ * 32768 B = 64 halfwords x 256 rows = 256x256 4bpp texels. */
+static void map_page_check(void)
+{
+    const unsigned char *p;
+    int id, y, u;
+    uint8_t *buf; int sz;
+    char rel[32];
+    if (!(g_inv_screen.substate == 1 && g_inv_screen.item_state == 1)) return;
+    p = RE15_INV_PTR(0x80074c4cu + (uint32_t)g_inv_screen.map_page * 2u);
+    id = p[0] | (p[1] << 8);
+    if (id == s_map_loaded) return;
+    s_map_loaded = id;
+    memset(s_map4, 0, sizeof s_map4);
+    if (id < 12 || id > 24) {
+        fprintf(stderr, "[inv] map page %d -> CD file id %d (not a MAP PIX; black page)\n",
+                g_inv_screen.map_page, id);
+        return;
+    }
+    snprintf(rel, sizeof rel, "DATA/MAP%02X.PIX", id - 11);   /* id 12 -> MAP01 .. 24 -> MAP0D */
+    buf = load_cd(rel, &sz);
+    if (!buf) { fprintf(stderr, "[inv] %s missing\n", rel); return; }
+    for (y = 0; y < 256 && y * 128 + 127 < sz; y++)
+        for (u = 0; u < 256; u++) {
+            uint8_t bb = buf[y * 128 + (u >> 1)];
+            s_map4[y][u] = (u & 1) ? (bb >> 4) : (bb & 0xF);
+        }
+    free(buf);
+}
+
 /* ---- rasterizer (pipeline calibrated against the savestate fb — header comment) ---- */
 static uint16_t s_fb5[INV_YRES][INV_XRES];   /* 5:5:5 packed r|g<<5|b<<10 */
 
@@ -388,6 +439,7 @@ static void raster_op(const re15_inv_op_t *o)
                 uint8_t t = (o->page == RE15_INV_PAGE_TEX4)   ? s_tex4[v][u]
                           : (o->page == RE15_INV_PAGE_FONT4)  ? s_font4[v & 127][u]
                           : (o->page == RE15_INV_PAGE_EXAM4)  ? s_exam4[v][u]
+                          : (o->page == RE15_INV_PAGE_MAP4)   ? s_map4[v][u]
                           : (o->page == RE15_INV_PAGE_PHOTO8) ?
                                 ((v < 72 && u < 112) ? s_photo_px[v][u] : 0)
                           :                                     s_icon8[v][u];
@@ -492,6 +544,7 @@ int re15_inv_render_pc_draw(const re15_inv_op_t *ops, int n)
     }
     inv_compose_cells();
     photo_upload_check();             /* wave 4: consume a pending CHECK photo upload */
+    map_page_check();                 /* MAP wave: sync the MAP PIX page (0x8004c328) */
     memset(s_fb5, 0, sizeof s_fb5);   /* cleared draw buffer (screen fully covered) */
     for (i = n - 1; i >= 0; i--) raster_op(&ops[i]);   /* back-to-front */
     {   /* software-framebuffer BMP dump (display-session independent) */

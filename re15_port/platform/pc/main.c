@@ -2582,6 +2582,13 @@ re_title:;
             if (g_engine.frame_count == 54)
                 g_engine.pad_pressed |= RE15_PAD_BIT_LEFT;
         }
+        /* RE15_INV_MAP_SHOT=1 (MAP wave): L1 at F31 = the instant MAP launch
+         * (@0x8004980c-30: tab=1 + 25c1=1 + entry init/CD-load dispatch). FUN_8004c058:
+         * slide-out F32-56 (25 frames @0x8004c0bc), upload+arena F57 (c2=1), interactive
+         * after; shot at F75 = the settled map viewer (page per the current room's
+         * stage init; ROOM1140 -> page 4 = MAP05.PIX, marker at the slot-20 row). */
+        if (getenv("RE15_INV_MAP_SHOT") && g_engine.frame_count == 31)
+            g_engine.pad_pressed |= RE15_PAD_BIT_L1;
         /* RE15_INV_MIX_SHOT=1 (wave 5): seed Green 0x24 + Red 0x25 at F40 + open; CROSS
          * F41 (tab ITEM confirm -> entry slide F42-48, GRID F50) + CROSS F50 (grid
          * confirm on the Green -> 25d6=0 + 25c2=3, slide-in F51-57, state 4 F58) +
@@ -2841,7 +2848,8 @@ re_title:;
                 plr->hp, (plr->status_flags & 2) ? 1 : 0);
             if (getenv("RE15_INV_SHOT") && !getenv("RE15_INV_SHOT_LIVE")
                 && !getenv("RE15_INV_GRID_SHOT") && !getenv("RE15_INV_CMD_SHOT")
-                && !getenv("RE15_INV_CHECK_SHOT") && !getenv("RE15_INV_MIX_SHOT")) {
+                && !getenv("RE15_INV_CHECK_SHOT") && !getenv("RE15_INV_MIX_SHOT")
+                && !getenv("RE15_INV_MAP_SHOT")) {
                 /* mzd_inv_open.sav DISPLAYED frame: tab-select, tab=FILE(3), highlight 0,
                  * ECG sweep 0x60 / LED glow 0x18 (two ticks behind the stored RAM values
                  * 0x62/0x20 — double-buffer flip lag, solved from both fb halves). */
@@ -5214,7 +5222,9 @@ re_title:;
               /* CHECK/examine shot (wave 4): settled photo + full knife desc. */
               if (getenv("RE15_INV_CHECK_SHOT")) s_inv_shot_frame = 140;
               /* EXCHANGE/mix shot (wave 5): settled grid with the G.R mix result. */
-              if (getenv("RE15_INV_MIX_SHOT"))  s_inv_shot_frame = 100; }
+              if (getenv("RE15_INV_MIX_SHOT"))  s_inv_shot_frame = 100;
+              /* MAP shot (MAP wave): slide F32-56, upload F57, interactive after. */
+              if (getenv("RE15_INV_MAP_SHOT"))  s_inv_shot_frame = 75; }
           if (s_inv_shot && *s_inv_shot && g_engine.frame_count == s_inv_shot_frame) {
               extern void re15_render_pc_screenshot(const char *path);
               re15_render_pc_screenshot(s_inv_shot);

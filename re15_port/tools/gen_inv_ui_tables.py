@@ -29,6 +29,23 @@
 #   @0x80076244  item-icon UV table
 #   @0x80076274  item grid CELL table (11 x s16 pair: 10 cells x{4,44} y 32..152
 #                pitch 30 + entry 10 = (-66,88) = the Standard-Arms box)
+#
+# SECOND region [0x800762A0, 0x80076C00) - the MAP-tab data (MAP wave, FUN_8004c058
+# family; all bounds from raw disasm this wave). Contiguous sub-tables:
+#   @0x800762A0  the 14 room-rect LISTS (stride-12 entries {u16 x,y,w,h; u8 u @+8;
+#                u8 v @+10} per FUN_80046fd8 @0x8004731c-60, walk stride
+#                @0x800473bc/@0x800473c8). List 13 @0x80076834 (count 1) ends EXACTLY
+#                at the pair table 0x80076840 (self-closing).
+#   @0x80076840  per-map-page room-rect PAIR table, 14 x {u16 count, u16 pad, u32 ptr}
+#                (reader FUN_80046fd8 @0x80047048-70: lhu 0x80076840+page*8 = count,
+#                lw 0x80076844+page*8 = list ptr)
+#   @0x800768B0  marker scale rows, stride 8 {u16 x_off, y_off, x_scale, z_scale}
+#                indexed by DAT_800b260d = the global room-slot index 0..105
+#                (marker math FUN_800473f8 @0x800474e8/@0x80047518/@0x80047444/
+#                @0x8004747c; builder FUN_80046fd8 @0x80047000-0c/@0x8004707c-88).
+#                106 rows: max 260d = stage-6 base 98 (@0x8004c044 addiu +98) + room
+#                bound 8 (@0x8004bf7c sltiu 0x8) - 1 = 105; the bytes at 0x80076C00
+#                are ASCII text of the NEXT data blob (region end proven by content).
 import struct, sys, os
 
 EXE   = 'info/Re1.5/PSX.EXE'
@@ -36,12 +53,19 @@ BASE  = 0x80074A8C           # panel master table (first byte of the region)
 END   = 0x800762A0           # EXACT end: grid cell table 0x80076274 + 11*4 = 0x2C bytes
 FOFF  = 0x800 + (BASE - 0x80010000)
 SIZE  = END - BASE
+BASE2 = 0x800762A0           # first rect list (== region-1 END: the tables are adjacent)
+END2  = 0x80076C00           # EXACT end: scale row 105 @0x800768B0 + 106*8
+FOFF2 = 0x800 + (BASE2 - 0x80010000)
+SIZE2 = END2 - BASE2
 OUT   = 're15_port/engine/src/re15_inv_ui_tables.c'
 
 with open(EXE, 'rb') as f:
     f.seek(FOFF)
     blob = f.read(SIZE)
+    f.seek(FOFF2)
+    blob2 = f.read(SIZE2)
 assert len(blob) == SIZE, 'short read'
+assert len(blob2) == SIZE2, 'short read (region 2)'
 
 def u16(addr):
     o = addr - BASE
@@ -55,6 +79,12 @@ def u32(addr):
 def bts(addr, n):
     o = addr - BASE
     return blob[o:o+n]
+def m16(addr):
+    o = addr - BASE2
+    return struct.unpack_from('<H', blob2, o)[0]
+def m32(addr):
+    o = addr - BASE2
+    return struct.unpack_from('<I', blob2, o)[0]
 
 # ---- self-checks: the byte-exact values spot-checked in-session (2026-07-20) ----
 # cell table @0x80076274: (4,32),(44,32),...,(44,152), entry 10 = (-66,88)
@@ -78,6 +108,32 @@ assert all(BASE <= p < END for p in ecg_ptrs), 'ECG waveform target outside blob
 assert ecg_ptrs[5] + 0x1B8 == 0x80076214, 'waveform region no longer self-closing'
 print('inv-ui blob self-check OK (%d bytes)' % SIZE, file=sys.stderr)
 
+# ---- region-2 self-checks (raw values dumped in-session, MAP wave 2026-07-21) ----
+# pair table @0x80076840: 14 x {u16 count, pad, u32 ptr} (reader @0x80047048-70)
+map_cnt = [m16(0x80076840 + i*8) for i in range(14)]
+map_ptr = [m32(0x80076844 + i*8) for i in range(14)]
+assert map_cnt == [7, 10, 11, 10, 7, 2, 11, 14, 15, 15, 4, 4, 8, 1], map_cnt
+assert map_ptr == [0x800762A0, 0x800762F4, 0x8007636C, 0x800763F0, 0x80076468,
+                   0x800764BC, 0x800764D4, 0x80076558, 0x8007660C, 0x800766C0,
+                   0x80076774, 0x800767A4, 0x800767D4, 0x80076834], \
+    [hex(p) for p in map_ptr]
+# every list (stride-12 entries) lies inside region 2; the lists run contiguously and
+# list 13 ends exactly at the pair table (self-closing)
+assert all(BASE2 <= p and p + c*12 <= 0x80076840 for c, p in zip(map_cnt, map_ptr)), \
+    'rect list outside region 2'
+assert map_ptr[13] + map_cnt[13]*12 == 0x80076840, 'lists no longer close into pair table'
+# lists are ascending and non-overlapping (one shipped 12-byte gap after list 7:
+# 0x80076558 + 14*12 = 0x80076600, list 8 starts 0x8007660C)
+assert all(map_ptr[i] + map_cnt[i]*12 <= map_ptr[i+1] for i in range(13)), \
+    'rect lists overlap'
+# marker scale rows @0x800768B0 stride 8: row 0 = {0,0,1,1}, row 2 = {100,136,2287,2287},
+# row 101 (stage-6) = {243,137,2161,2304}; page-4 list entry 0 = {127,137,16,16,168,40}
+assert [m16(0x800768B0 + i*2) for i in range(4)] == [0, 0, 1, 1]
+assert [m16(0x800768C0 + i*2) for i in range(4)] == [100, 136, 2287, 2287]
+assert [m16(0x800768B0 + 101*8 + i*2) for i in range(4)] == [243, 137, 2161, 2304]
+assert [m16(0x80076468 + i*2) for i in range(6)] == [127, 137, 16, 16, 168, 40]
+print('inv-map blob self-check OK (%d bytes)' % SIZE2, file=sys.stderr)
+
 with open(OUT, 'w', newline='\n') as f:
     f.write('/* re15_inv_ui_tables.c - VERBATIM RE1.5 status/inventory-screen UI data region\n'
             ' * [0x%08X, 0x%08X) of PSX.EXE (%d bytes).\n'
@@ -88,6 +144,15 @@ with open(OUT, 'w', newline='\n') as f:
     f.write('const unsigned char re15_inv_ui_blob[RE15_INV_UI_BLOB_SIZE] = {\n')
     for i in range(0, SIZE, 16):
         row = ','.join('0x%02x' % b for b in blob[i:i+16])
+        f.write('    ' + row + ',\n')
+    f.write('};\n')
+    f.write('\n/* MAP-tab data region [0x%08X, 0x%08X) (%d bytes): 14 room-rect lists\n'
+            ' * @0x800762A0 + per-page pair table @0x80076840 + 106 marker scale rows\n'
+            ' * @0x800768B0 (all verbatim; see the generator header for citations). */\n'
+            % (BASE2, END2, SIZE2))
+    f.write('const unsigned char re15_inv_map_blob[RE15_INV_MAP_BLOB_SIZE] = {\n')
+    for i in range(0, SIZE2, 16):
+        row = ','.join('0x%02x' % b for b in blob2[i:i+16])
         f.write('    ' + row + ',\n')
     f.write('};\n')
 print('wrote %s' % OUT, file=sys.stderr)

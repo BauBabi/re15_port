@@ -1,5 +1,10 @@
 /*
- * menu_common.c — the byte-true RE1.5 STATUS/INVENTORY screen FSM (waves 2+3+5).
+ * menu_common.c — the byte-true RE1.5 STATUS/INVENTORY screen FSM (waves 2+3+5 + MAP).
+ *
+ * MAP wave: the in-status MAP tab (sub-state 25c1==1) is the FUN_8004c058 4-state
+ * runner (slide/interactive/reverse/restore) + the per-stage entry inits @0x80074c0c
+ * (room jump tables -> DAT_800b260d/260e) + the FUN_80046fd8/FUN_800473f8 draw set
+ * (re15_inv_screen.c); all raw-MIPS cited inline this wave (re15_disasm.py session).
  *
  * Spec: shots/inv_wave2_spec.md (RE workflow wf_e8e48d36, 4 reports, citations complete)
  * + shots/inv_wave3_spec.md (wf_cbdbc8a1 — the ITEM state-5 USE dispatcher/classifier,
@@ -45,6 +50,9 @@
 #include "re15_audio.h"         /* re15_audio_core_se (SE bank 4) + prime_weapon */
 #include "re15_fade.h"          /* the byte-true fade channel engine (FUN_800217b0 family) */
 #include "re15_scd.h"           /* g_scd.message_fsm_active — the stage-1 message-idle gate */
+#include "re15_room.h"          /* g_current_room_id — the MAP per-stage init reads the
+                                 * stage/room registers lh DAT_800b0fe0/0fe2 (@0x8004997c
+                                 * / FUN_8004b568 head) */
 
 #define CAPACITY 10             /* DAT_800b0fbc (lbu @0x800c63e0; live 0x0a) */
 
@@ -111,6 +119,24 @@ void re15_menu_start_poll(uint16_t pad_pressed, int hit_react_ok)
 }
 
 /* ---------------------------------------------------------------------------------- */
+/* MAP entry (both entry paths land at the dispatch @0x8004997c-98: per-stage init     */
+/* call [0x80074c0c + stage*4] + CD-load task spawn 0x80029a98(2, 0x8004c328)          */
+/* @0x8004999c-a8; the loader reads file id u16 @0x80074c4c[260e] -> 0x801a8000 —      */
+/* port: the PC rasterizer loads the PIX synchronously off g_inv_screen.map_page,      */
+/* the CD-busy poll @0x8004c184-90 never blocks).                                      */
+/* ---------------------------------------------------------------------------------- */
+static void map_entry(void)
+{
+    unsigned rid = g_current_room_id;
+    /* stage = lh DAT_800b0fe0 (0-based; ROOM1140 -> 0), room = lh DAT_800b0fe2
+     * (ROOM1140 -> 0x14) — the room-setup writer @0x8001d808 derives them from the
+     * room id nibbles. */
+    re15_inv_map_stage_init((int)((rid >> 12) & 0xfu) - 1, (int)((rid >> 4) & 0xffu));
+    g_inv_screen.map_room = re15_inv_map_room();
+    g_inv_screen.map_page = re15_inv_map_page();
+}
+
+/* ---------------------------------------------------------------------------------- */
 /* TAB-SELECT (run sub-state 0, LAB_8004974c @0x80049800-49a18)                        */
 /* ---------------------------------------------------------------------------------- */
 static void tab_select(uint16_t pressed)
@@ -123,7 +149,10 @@ static void tab_select(uint16_t pressed)
     if (pressed & RE15_PAD_BIT_L1) {            /* raw 0x4 @0x8004980c-30 */
         g_inv_screen.tab = 1;
         s_substate = 1;                         /* instant MAP launch — SKIPS the
-                                                 * confirm path's common resets */
+                                                 * confirm path's common resets
+                                                 * (25bd/be/c2/c3 NOT reset) */
+        map_entry();                            /* j 0x8004997c @0x8004982c = the same
+                                                 * init+CD-load dispatch as the confirm */
         return;
     }
     if (pressed & RE15_PAD_BIT_R1) {            /* raw 0x8 @0x80049834-4c */
@@ -151,9 +180,11 @@ static void tab_select(uint16_t pressed)
             s_c3 = 0;
             switch (g_inv_screen.tab) {         /* dispatch @0x8004991c-58 */
             case 0: s_substate = 3; return;     /* ITEM: 25c1=3 @0x80049960-64 */
-            case 1: s_substate = 1; return;     /* MAP: 25c1=1 @0x80049968-78 (+ per-stage
-                                                 * entry @0x80074c0c[stage] + CD-load task
-                                                 * 0x8004c328 — WAVE-3 stub, see below) */
+            case 1:                             /* MAP: 25c1=1 @0x80049968-78 */
+                s_substate = 1;
+                map_entry();                    /* dispatch @0x8004997c-98 + spawn
+                                                 * @0x8004999c-a8 */
+                return;
             case 2:                             /* EXIT @0x800499b4-c4 */
                 g_inv_screen.highlight = 0;     /* sb zero,13(a0) = 25ca */
                 s_phase = 2;                    /* 25bf++ -> close phase */
@@ -1248,6 +1279,69 @@ static void close_phase(void)
     s_stage = 4;
 }
 
+/* ---------------------------------------------------------------------------------- */
+/* MAP-in-status runner (FUN_8004c058 @0x8004c058, per-frame from LAB_8004974c         */
+/* @0x80049a1c). Sub-FSM on 25c2 (g_inv_screen.item_state) with frame counter 25c3    */
+/* (s_c3) — the SAME bytes the ITEM FSM uses (s1 = 0x800b25c2 @0x8004c060-64).        */
+/* States: 0 slide-out / 1 interactive / 2 reverse slide / >=3 no-op (@0x8004c098).   */
+/* ---------------------------------------------------------------------------------- */
+static void map_mode(uint16_t pressed)
+{
+    switch (g_inv_screen.item_state) {
+    case 0:
+        if (s_c3 < 0x19) {                      /* sltiu 0x19 @0x8004c0bc — 25 frames */
+            g_inv_screen.list_x     += 15;      /* 25e0 @0x8004c0e0-e8  */
+            g_inv_screen.ecg_y      += 9;       /* 25e6 @0x8004c0f4-fc  */
+            g_inv_screen.cond_x     -= 9;       /* 25e4 @0x8004c108-110 */
+            g_inv_screen.equip_y    -= 7;       /* 25de @0x8004c11c-124 */
+            g_inv_screen.arms_y     -= 7;       /* 25da @0x8004c130-138 */
+            g_inv_screen.idcard_x   -= 8;       /* 25f0 @0x8004c144-14c */
+            g_inv_screen.tab_base_y += 7;       /* 25ea @0x8004c154 + join @0x8004c2b4-b8 */
+            s_c3++;                             /* sb a0,1(s1) @0x8004c2c0 */
+            return;
+        }
+        /* Slide done: StoreImage rect (448,256,64,256) -> 0x801a0000 (@0x8004c158-78)
+         * + DrawSync (@0x8004c17c), CD-busy poll DAT_800b2a24 (@0x8004c184-90, retries
+         * the frame while the 0x8004c328 load runs), LoadImage of the map gfx from
+         * 0x801a8000 into the same rect (@0x8004c198-b0) + DrawSync, then the prim
+         * arena build FUN_80046fd8 (@0x8004c1bc). Port: the PC rasterizer keeps the
+         * MAP page as its own texture (loaded synchronously off map_page) — the VRAM
+         * round-trip is state-free here and the busy poll never blocks. */
+        g_inv_screen.item_state++;              /* c2 0->1 @0x8004c1c4 + 0x8004c204-210 */
+        s_c3 = 0;                               /* sb zero,1(s1) @0x8004c1cc */
+        return;
+    case 1:
+        /* interactive: virtual cancel edge 0x8000 (lw 0x800ac76c @0x8004c1d0-e0) OR
+         * raw L1 edge 0x4 (lhu 0x800ac762 @0x8004c1e8-f8) -> c2++ (@0x8004c200-210).
+         * NO other input: no pan, no room step — a static viewer. */
+        if ((pressed & RE15_PAD_BIT_SQUARE) || (pressed & RE15_PAD_BIT_L1))
+            g_inv_screen.item_state++;
+        return;
+    case 2:
+        if (s_c3 < 0x19) {                      /* sltiu 0x19 @0x8004c21c */
+            g_inv_screen.list_x     -= 15;      /* 25e0 @0x8004c240-248 */
+            g_inv_screen.ecg_y      -= 9;       /* 25e6 @0x8004c254-25c */
+            g_inv_screen.cond_x     += 9;       /* 25e4 @0x8004c268-270 */
+            g_inv_screen.equip_y    += 7;       /* 25de @0x8004c27c-284 */
+            g_inv_screen.arms_y     += 7;       /* 25da @0x8004c290-298 */
+            g_inv_screen.idcard_x   += 8;       /* 25f0 @0x8004c2a4-2ac */
+            g_inv_screen.tab_base_y -= 7;       /* 25ea @0x8004c2b0-2b8 */
+            s_c3++;                             /* sb a0,1(s1) @0x8004c2c0 */
+            return;
+        }
+        /* Exit: LoadImage restore of the saved rect from 0x801a0000 (@0x8004c2c4-e4)
+         * + DrawSync (state-free in the port texture model), then the verified exit
+         * contract @0x8004c2f0-304: 25ca=0, 25c1=0, 25c2=0, 25c3=0 (tab kept). */
+        g_inv_screen.highlight = 0;             /* sb zero 25ca @0x8004c2f4 */
+        s_substate = 0;                         /* sb zero 25c1 @0x8004c2fc */
+        g_inv_screen.item_state = 0;            /* sb zero 0(s1) @0x8004c300 */
+        s_c3 = 0;                               /* sb zero 1(s1) @0x8004c304 */
+        return;
+    default:
+        return;                                 /* j 0x8004c308 (@0x8004c098/0x8004c0ac) */
+    }
+}
+
 static void menu_task_dispatch(uint16_t pressed, uint16_t held)
 {
     switch (s_phase) {
@@ -1263,15 +1357,7 @@ static void menu_task_dispatch(uint16_t pressed, uint16_t held)
          * then the draw chain (built platform-side from g_inv_screen). */
         switch (s_substate) {
         case 0: tab_select(pressed); break;
-        case 1:
-            /* MAP-in-status (FUN_8004c058): 25-frame register slide + VRAM save +
-             * map-gfx CD upload + interactive L1-toggle — a separate screen, WAVE-3
-             * STUB: return immediately per the byte-true exit contract @0x8004c2c4-304
-             * (25ca=0, 25c1=0, 25c2=0, 25c3=0). */
-            g_inv_screen.highlight = 0;
-            g_inv_screen.item_state = 0;
-            s_substate = 0;
-            break;
+        case 1: map_mode(pressed); break;       /* jal 0x8004c058 @0x80049a1c */
         case 2:
             /* FILE screen (DEBUG.BIN FUN_800c6ca0): 30-frame slide + 3-page viewer —
              * WAVE-3 STUB: return immediately per the exit contract @0x800c6f74-8c
@@ -1300,6 +1386,18 @@ static void menu_task_step(uint16_t pressed, uint16_t held)
     /* the pad-refresh auto-repeat tick runs EVERY frame (FUN_80030444) */
     repeat_update(pressed, held);
     menu_task_dispatch(pressed, held);
+    /* MAP wave: the draw-side gate mirror + per-frame marker. The draw chain runs
+     * AFTER the run sub-state in the same frame (jal 0x80049a5c @0x80049a44), so the
+     * gate word(25c0)&0xffffff==0x00010100 (@0x80049bb4-cc) already sees c2=1 on the
+     * upload frame, and FUN_800473f8 (@0x80049bcc) recomputes the marker from the LIVE
+     * player world X/Z (lw 0x800aca88/0x800aca90 @0x8004741c/0x8004746c) before every
+     * AddPrim — modeled by refreshing the marker fields after the FSM step. */
+    g_inv_screen.substate = s_substate;
+    if (s_substate == 1 && g_inv_screen.item_state == 1)
+        re15_inv_map_marker(g_actors[RE15_ACTOR_SLOT_PLAYER].x,
+                            g_actors[RE15_ACTOR_SLOT_PLAYER].z,
+                            g_inv_screen.map_room,
+                            &g_inv_screen.map_marker_x, &g_inv_screen.map_marker_y);
     /* The msg VM (FUN_80028134) has EXACTLY ONE caller — the present-chain fn
      * FUN_80010000 (via FUN_800280b4, gated on 8520&0x80 @0x800280c8-d4), which runs
      * from the frame FLUSH (0x80020f3c <- FUN_80020bb0 <- 0x800544e8) — i.e. once per

@@ -45,10 +45,17 @@ enum {
                                * texel cols 512-767 (halfword cols 128+) — the CHECK
                                * panel chrome art (DR_MODE 0xe100001d @0x800c6af0;
                                * element uv/wh table @0x800c6b64)                       */
-    RE15_INV_PAGE_PHOTO8 = 4  /* wave 4: 8bpp texpage 0x9d = VRAM (832,256) 112x72
+    RE15_INV_PAGE_PHOTO8 = 4, /* wave 4: 8bpp texpage 0x9d = VRAM (832,256) 112x72
                                * window — the ITPS photo the CHECK loader 0x800c6878
                                * uploads over the TEX.TIM region (prim @0x800c6944-84:
                                * SPRT uv(0,0) 112x72 clut 0x7a40=(0,489))               */
+    RE15_INV_PAGE_MAP4  = 5   /* MAP wave: 4bpp texpage 0x17 = VRAM (448,256) — the
+                               * MAP0x.PIX floor-plan page. Upload rect (448,256,64,256)
+                               * @0x8004c1a0-b0 (LoadImage from 0x801a8000); DR_MODE
+                               * packet @0x800b2650 tpage 0x17 built by SetDrawMode in
+                               * FUN_800460b8 @0x8004631c-38 (new-GPU path; GetGraphType
+                               * @0x80068948 in {1,2} would select the old encoding 0x27),
+                               * AddPrim'd at the draw gate @0x80049bf4.               */
 };
 
 /* clut selector: 0..7 = DAT_800b2610[0..7] = ids 0x7a10..0x7bd0 = TEX.TIM CLUT rows
@@ -71,7 +78,12 @@ enum {
      * TIM upload 0x800c0258 (LoadImage of the block's embedded crect); zero before
      * the first upload (savestate: row (0,489) all-0 in the idle screen). */
     RE15_INV_CLUT_TEXROW16 = 11,
-    RE15_INV_CLUT_PHOTO = 12
+    RE15_INV_CLUT_PHOTO = 12,
+    /* MAP wave: 13 = TEX.TIM CLUT row 21 at VRAM (256,501) = clut id 0x7d50 —
+     * GetClut(0x100,0x1f5) @0x80046fdc-fe8 (jal 0x8006b3d8 a0=0x100 a1=0x1f5),
+     * the palette of BOTH map fixed sprites (sh t4 @0x80047250/0x800472c0) and
+     * every room-rect SPRT (sh t4 @0x800473cc). */
+    RE15_INV_CLUT_TEXROW21 = 13
 };
 
 typedef struct {
@@ -161,6 +173,33 @@ typedef struct {
                              * back +36/f @0x800c6814)                                    */
     int16_t cond_x;         /* DAT_800b25e4 x (13 idle; -36/f @0x800c66a0)                */
     int16_t idcard_x;       /* DAT_800b25f0 x (14 idle; -36/f @0x800c66a4)                */
+    /* ---- MAP wave (FUN_8004c058 4-state FSM + FUN_80046fd8/FUN_800473f8 draw) ---- */
+    uint8_t substate;       /* DAT_800b25c1 mirror (menu_common s_substate) — the map
+                             * draw gate is the packed-word check word(25c0)&0xffffff
+                             * == 0x00010100, i.e. 25c0==0 && 25c1==1 && 25c2==1
+                             * (@0x80049bb4-cc; g11 repeats it @0x8004801c-2c)          */
+    int16_t list_x;         /* DAT_800b25e0: ITEM-LIST base x (215 idle; MAP slide
+                             * +15/f @0x8004c0e0; live-read by g1/g8/g9/digits/icons —
+                             * FUN_80048f28 @0x80049148 lhu 0(s6)=25e0, FUN_80048704
+                             * @0x80048748)                                             */
+    int16_t ecg_y;          /* DAT_800b25e6: ECG base y (82 idle; MAP slide +9/f
+                             * @0x8004c0f4; consumed by the ECG trace/wipes/g2/g10)     */
+    int16_t arms_y;         /* DAT_800b25da: ARMS base y (26 idle; MAP slide -7/f
+                             * @0x8004c130; ARMS draw y = 25da + 2608 + 0x58
+                             * @0x80049c90)                                             */
+    uint8_t map_room;       /* DAT_800b260d: global room-slot 0..105 = marker scale-row
+                             * index (per-stage inits @0x80074c0c; PERSISTENT — menu
+                             * init never writes it, out-of-range rooms keep the stale
+                             * previous value)                                          */
+    uint8_t map_page;       /* DAT_800b260e: map page 0..13 = rect-list index + CD file
+                             * id index (u16 @0x80074c4c[page]; loader 0x8004c328)      */
+    int16_t map_marker_x;   /* the per-frame FUN_800473f8 marker centre (x lives only in
+                             * t0 @0x800474f4-addu; y is stored to DAT_800b2606
+                             * @0x80047528) — recomputed every gated frame BEFORE the
+                             * quad AddPrim, so the builder's div-formula value
+                             * (@0x80047010-14, stored to 2604/2606 @0x80047098/
+                             * @0x80047124) is dead for display                         */
+    int16_t map_marker_y;
     /* ---- wave 5 (EXCHANGE/combine) ---- */
     uint8_t comb_d0, comb_d1, comb_d2, comb_d3;
                             /* DAT_800b25d0-d3: the g9 second-cursor jitter pulse, written
@@ -250,6 +289,26 @@ void re15_inv_icon_blank(int cell);                 /* FUN_8004947c(cell)       
 void re15_inv_icon_freeze_tile(int cell, int tile); /* no-repaint id change (reload-full)    */
 void re15_inv_icon_reset(void);                     /* inventory (re)init                    */
 int  re15_inv_screen_cache_mix_pic(int cell);       /* 0 = none, else MIXITEM pic 1..14      */
+
+/* ---- MAP wave ---------------------------------------------------------------------- */
+/* Per-stage MAP entry init (dispatch table @0x80074c0c = {0x8004b568, 0x8004b8a0,
+ * 0x8004b9d4, 0x8004bc9c, 0x8004bdd4, 0x8004bf70}, called at MAP entry @0x8004997c-98).
+ * Writes the PERSISTENT globals 260d (room-slot) / 260e (page) per the decoded room
+ * jump tables; out-of-range rooms RETURN WITHOUT WRITING (stale-previous, byte-true).
+ * stage = 0-based (lh DAT_800b0fe0), room = 0-based index (lh DAT_800b0fe2). */
+void re15_inv_map_stage_init(int stage, int room);
+uint8_t re15_inv_map_room(void);   /* DAT_800b260d (persistent; BSS initial 0) */
+uint8_t re15_inv_map_page(void);   /* DAT_800b260e (persistent; BSS initial 0) */
+
+/* The per-frame marker formula of FUN_800473f8 (raw-verified @0x8004741c-0x80047528;
+ * this — NOT the builder FUN_80046fd8's (world+25000)/scale div @0x80047010-14 — is
+ * what the screen shows, because it rewrites the quad before every AddPrim):
+ *   t  = (s32)((world+32000)*10*scale) >> 20   (32-bit wrapping mult, arithmetic shift)
+ *   mx = (t + 5)/10 + x_off                    (signed magic-/10, truncation toward 0)
+ *   my = (-(t2 + 5))/10 + y_off                (z axis negated @0x800474b0)
+ * scale row = re15_inv_map_blob @0x800768B0 + room_slot*8 {x_off,y_off,x_scale,z_scale}. */
+void re15_inv_map_marker(int32_t world_x, int32_t world_z, uint8_t room_slot,
+                         int16_t *mx, int16_t *my);
 
 /* Build one frame's display list from `st` + g_inv. Returns the op count.
  * ops[0] = TOPMOST (original AddPrim order); rasterize in reverse. */
