@@ -2454,10 +2454,12 @@ re_title:;
      * spawn/hp/band set above) with the saved state; the AOT-settle below then primes
      * edge-state from the SAVED player position. (New game: s_resume_pending == 0 → no
      * change to the intro path.) */
+    int s_resume_cut = -1;   /* >=0 → apply the saved camera cut after room-init (below) */
     if (s_resume_pending) {
         uint16_t rr = 0;
         re15_savedata_restore(&s_resume_sd, &rr);
         s_resume_pending = 0;
+        s_resume_cut   = (int)s_resume_sd.camera_cut;   /* restore the save-time framing/background */
         s_save_counter = s_resume_sd.save_count;   /* DAT_800b0fbd restored from the loaded save */
         /* Re-prime the ARMS SE bank to the restored weapon: the room-init primed the default
          * (bank1), and re15_player_set_equipped_weapon (in restore) sets the weapon id but not the
@@ -2488,6 +2490,17 @@ re_title:;
         scd_thread_start(1, rdt.sub_scd[0]);
         s_sub00_spawned = 1;
         re15_audio_start_room_bgm(0, 0x17);
+    }
+
+    /* FE-4 CONTINUE: restore the SAVE-TIME camera cut LAST — after the room default (cam_id=0
+     * above) and after main00/sub00, either of which may issue its own Cut_chg. On a load there
+     * is no door to set the entry cut and the player is teleported (not walked) to the saved
+     * position, so the per-frame RVD transition scan does not fire to correct cut 0 → the saved
+     * position renders under the wrong camera + wrong background. Re-asserting the stored cut is
+     * the load-path equivalent of the door's target_cut. (New game: s_resume_cut < 0 → untouched.) */
+    if (s_resume_cut >= 0) {
+        g_scd.cam_id             = (uint8_t)s_resume_cut;
+        g_scd.cam_change_pending = 1;
     }
 
     g_engine.frame_count = 0;
@@ -2555,10 +2568,17 @@ re_title:;
                 if (mc >= 0 && --g_inv.slots[mc].qty == 0) { g_inv.slots[mc].id = 0; g_inv.slots[mc].flags = 0; }
                 fprintf(stderr, "[save] saved (room %04x); card=%s\n", g_current_room_id, mc >= 0 ? "consumed" : "none");
             }
+            /* Arm the re-examine debounce: the menu just closed while Leon still stands on the
+             * phone AOT, so the very next action press would re-open it (the menu↔room flicker).
+             * The original blocks re-examine for the phone message's display duration via msg_block;
+             * reinstate exactly that window (90f default, scd_vm.c msg_show), scoped to the examine
+             * only (movement stays free — the user rejected a post-save freeze). */
+            re15_savepoint_set_cooldown(90);
         }
 
         re15_render_begin_frame();
         re15_input_tick();
+        re15_savepoint_cooldown_tick();   /* FE-4: age the re-examine debounce one game frame */
 
         /* DEBUG: RE15_KILL_AT=<frame> drops the player's HP to 0 at that frame to exercise the
          * death FSM + FE-5.3 death->TITLE mode-cycle deterministically (no combat-path tuning). */
@@ -3177,13 +3197,14 @@ re_title:;
                         int bxs = re15_inv_find_item(0x15);
                         int box = (bxs >= 0) ? g_inv.slots[bxs].qty : -1;
                         fprintf(s_state_log,
-                                "F%u pad=%04x PL(%d,%d,rot=%d,hp=%d) pst=%d ps1=%d ps2=%d mo=%d ac=%d fx=%d mg=%d bx=%d sl=%d%d%d%d",
+                                "F%u pad=%04x PL(%d,%d,rot=%d,hp=%d) pst=%d ps1=%d ps2=%d mo=%d ac=%d fx=%d mg=%d bx=%d sl=%d%d%d%d cam=%d",
                                 g_engine.frame_count, g_engine.pad_current,
                                 pl->x, pl->z, pl->rot_y, pl->hp,
                                 pl->state, pl->sub_state_1, pl->sub_state_2,
                                 pl->motion, re15_player_aim_clip(), re15_esp_fx_count(), mag, box,
                                 re15_render_pc_dbg_slot_loaded(20), re15_render_pc_dbg_slot_loaded(21),
-                                re15_render_pc_dbg_slot_loaded(22), re15_render_pc_dbg_slot_loaded(23));
+                                re15_render_pc_dbg_slot_loaded(22), re15_render_pc_dbg_slot_loaded(23),
+                                (int)g_scd.cam_id);
                     }
                     for (int si = 1; si < RE15_ACTOR_MAX; si++) {
                         re15_actor_t *e = &g_actors[si];

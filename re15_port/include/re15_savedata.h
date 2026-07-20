@@ -25,7 +25,10 @@
 #include "re15_inventory.h"  /* re15_inv_slot_t / RE15_INV_MAX_SLOTS             */
 
 #define RE15_SAVE_MAGIC    0x35314552u   /* "RE15" little-endian                 */
-#define RE15_SAVE_VERSION  2             /* v2: + weapon_id (equipped weapon round-trip) */
+#define RE15_SAVE_VERSION  3             /* v2: + weapon_id; v3: + camera cut (restore the
+                                          * save-time framing/background — reuses a reserved
+                                          * byte, so v2 saves stay layout+checksum compatible
+                                          * and load with cut 0 = the room's default). */
 
 /* The captured game-state. Fields are ordered u32 → u16 → u8 → arrays to avoid
  * implicit padding, so the layout (and thus the checksum) is deterministic. */
@@ -46,7 +49,11 @@ typedef struct {
     uint8_t  weapon_id;        /* re15_player_equipped_weapon() (DAT_800aca5d) —
                                 * the ACTIVE weapon id; separate global from the
                                 * slot index, drives the in-hand mesh/fire/aim/SE */
-    uint8_t  reserved[3];      /* keep inv[]/flags[] 4-aligned (deterministic sum) */
+    uint8_t  camera_cut;       /* g_scd.cam_id at save time — the active fixed-camera cut.
+                                * The cut also selects the room's background image, so WITHOUT
+                                * restoring it a load frames the saved position under the room's
+                                * default cut 0 (wrong camera + wrong background). v3 field. */
+    uint8_t  reserved[2];      /* keep inv[]/flags[] 4-aligned (deterministic sum) */
     re15_inv_slot_t inv[RE15_INV_MAX_SLOTS];                     /* 11 × 4 bytes  */
     uint32_t flags[RE15_FLAG_ZONES][RE15_FLAG_WORDS_ZONE];       /* g_game.flags  */
     uint32_t checksum;         /* additive checksum over all preceding bytes      */

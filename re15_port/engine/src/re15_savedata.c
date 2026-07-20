@@ -42,6 +42,7 @@ void re15_savedata_capture(re15_savedata_t *out, uint32_t playtime, uint16_t sav
     out->character     = (uint8_t)g_gameflow.character;
     out->equipped_slot = (uint8_t)re15_inv_equipped_slot();
     out->weapon_id     = (uint8_t)re15_player_equipped_weapon();   /* DAT_800aca5d */
+    out->camera_cut    = (uint8_t)g_scd.cam_id;                    /* active fixed-camera cut */
 
     memcpy(out->inv,   g_inv.slots, sizeof(out->inv));
     memcpy(out->flags, g_game.flags, sizeof(out->flags));

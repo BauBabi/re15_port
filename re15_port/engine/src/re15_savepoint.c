@@ -31,3 +31,10 @@ int re15_savepoint_is(unsigned room_id, uint8_t msg_id)
 static int s_savepoint_pending = 0;
 int  re15_savepoint_pending(void)        { return s_savepoint_pending; }
 void re15_savepoint_set_pending(int on)  { s_savepoint_pending = on ? 1 : 0; }
+
+/* Re-examine debounce (see the header). Reinstates the original's msg_block-based
+ * re-examine block for the port's menu-instead-of-message save-point. */
+static int s_savepoint_cooldown = 0;
+void re15_savepoint_set_cooldown(int frames) { s_savepoint_cooldown = frames > 0 ? frames : 0; }
+void re15_savepoint_cooldown_tick(void)      { if (s_savepoint_cooldown > 0) s_savepoint_cooldown--; }
+int  re15_savepoint_cooling(void)            { return s_savepoint_cooldown > 0; }
