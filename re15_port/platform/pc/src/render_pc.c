@@ -384,6 +384,16 @@ int re15_render_pc_dbg_textri_count(void)    { return s_dbg_last_textri_count; }
  * overlay (the inventory) so the meshes, which end_frame draws ON TOP of the framebuffer, don't
  * cover it. Call after the scene render + overlay draw, before re15_render_end_frame. */
 void re15_render_pc_clear_textris(void)      { s_textri_count = 0; }
+/* Full-screen status/inventory present (wave 1): the PSX screen task draws its own OT and
+ * NOTHING of the frozen scene — besides the tri queue, the character-shadow blobs (layer 2)
+ * and the room PRI overdraw rects (mask pass) must be dropped too, or they composite ON TOP
+ * of the software-framebuffer screen. */
+void re15_render_pc_clear_scene_overlays(void)
+{
+    s_textri_count = 0;
+    s_shadow_quad_count = 0;
+    s_pri_rect_count = 0;
+}
 /* Per-tri vertex alpha for SUBSEQUENTLY queued tris (PSX ABE semi-transparency: the effect
  * sprites draw ABR0 = 0.5*back + 0.5*front -> alpha 128 with SDL BLEND). Reset to 255 after. */
 static int s_tri_alpha = 255;

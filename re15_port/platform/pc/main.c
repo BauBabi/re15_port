@@ -64,49 +64,10 @@ static inline int RNDI(float f) {
 #include "re15_item_use.h"    /* re15_item_use_* — the inventory heal-USE flow ("Will you use the X?") */
 #include "re15_damage.h"      /* re15_player_equipped_weapon (ARMS CONTROL panel, 8.23) */
 
-/* Draw a byte-true 40×30 ITEMALL icon at (x,y) over the paused inventory (pixel-wise; transparent
- * skipped). Returns 1 if drawn, 0 if the item has no captured palette (caller can text-fallback). */
-static int re15_pc_draw_item_icon(int x, int y, uint8_t id)
-{
-    if (!re15_item_icon_available(id)) return 0;
-    for (int iv = 0; iv < 30; iv++)
-        for (int iu = 0; iu < 40; iu++) {
-            uint8_t pr, pg, pb;
-            if (re15_item_icon_pixel(id, iu, iv, &pr, &pg, &pb))
-                re15_render_tile(x + iu, y + iv, 1, 1, 0, pr, pg, pb);
-        }
-    return 1;
-}
-
-/* FAITHFUL-LINE inventory chrome (the byte-true window-frame builder FUN_800467a8 is deferred): a
- * beveled blue panel — dark fill + a lighter top/left edge + darker bottom/right edge (the RE1.5
- * status-screen panel look). z=4 (behind the content). */
-static void re15_pc_panel(int x, int y, int w, int h)
-{
-    re15_render_tile(x, y, w, h, 4, 32, 48, 96);              /* fill   */
-    re15_render_tile(x, y, w, 1, 4, 96, 128, 200);            /* top    */
-    re15_render_tile(x, y, 1, h, 4, 96, 128, 200);            /* left   */
-    re15_render_tile(x, y + h - 1, w, 1, 4, 12, 20, 48);      /* bottom */
-    re15_render_tile(x + w - 1, y, 1, h, 4, 12, 20, 48);      /* right  */
-}
-
-/* FAITHFUL-LINE ECG heart-rate trace (the byte-true waveform generator is deferred): a green scrolling
- * heartbeat across the CONDITION panel. `hp` picks the beat shape (Fine = steady, Danger = erratic);
- * `phase` scrolls it. Draws into a wxh box at (x,y). */
-static void re15_pc_ecg(int x, int y, int w, int h, int hp, unsigned phase)
-{
-    int mid = y + h / 2;
-    for (int c = 0; c < w; c++) {
-        int t = (c + (int)phase) % 40;         /* one beat per 40 px */
-        int dy = 0;
-        if      (t == 8)  dy = -1;
-        else if (t == 9)  dy = (hp >= 50 ? -h / 3 : -h / 2);   /* R spike (taller when injured) */
-        else if (t == 10) dy = (hp >= 30 ? h / 4 : h / 2);     /* S dip */
-        else if (t == 11) dy = -1;
-        else if (hp < 30 && (t == 20 || t == 28)) dy = -(h / 4) + (c & 1);  /* erratic extra beats */
-        re15_render_tile(x + c, mid + dy, 1, 1, 0, 64, 224, 96);
-    }
-}
+/* (Wave 1 inventory rebuild: the former FAITHFUL-LINE helpers re15_pc_panel/re15_pc_ecg/
+ * re15_pc_draw_item_icon are gone — the status screen is now the byte-true display list of
+ * re15_inv_screen.c (engine) rasterized by inv_render_pc.c; see re15_inv_screen.h.) */
+#include "re15_inv_screen.h"  /* byte-true status-screen display list (wave 1) */
 #include "re15_room.h"        /* SHARED cross-room transition (re15_room_apply_pending) */
 #include "re15_enemy.h"       /* generic enemy-model registry (re15_enemy_find/alloc/reset) */
 #include "re15_enemy_ai.h"    /* re15_player_victim_state/type — Leon's grab-victim render override */
@@ -2588,6 +2549,13 @@ re_title:;
           if (s_kill_at == -2) { const char *k = getenv("RE15_KILL_AT"); s_kill_at = k ? atoi(k) : -1; }
           if (s_kill_at >= 0 && (int)g_engine.frame_count == s_kill_at) g_actors[RE15_ACTOR_SLOT_PLAYER].hp = -1; }  /* dead = hp<0 */
 
+        /* DEBUG: RE15_INV_SHOT=<path> — wave-1 acceptance harness: force-open the status
+         * screen at frame 30 (briefing loadout = the mzd_inv_open.sav items); the render
+         * block puts the screen into the savestate's acceptance state; the shot is taken
+         * after end_frame at frame 34, then exit. */
+        if (getenv("RE15_INV_SHOT") && g_engine.frame_count == 30 && !re15_menu_is_open())
+            re15_menu_toggle();
+
         /* FE-5.1/5.2: track the START-menu pause/inventory in the FE-0 mode machine. The status/
          * inventory screen (re15_menu_toggle) freezes the world — byte-true inline behavior in
          * re15_game_step is unchanged; the mode now reflects it (INVENTORY while up, INGAME while
@@ -2789,75 +2757,54 @@ re_title:;
             }
         }
 
-        /* INVENTORY / STATUS SCREEN (Phase 8.23). The real RE1.5 inventory is a 3-column status screen
-         * (framebuffer ground truth = stage_saves/mzd_inv_open.sav): LEFT = ID card + CONDITION/ECG +
-         * ITEM/MAP/FILE/EXIT tabs; CENTER = ARMS CONTROL (equipped weapon); RIGHT = ITEM LIST (the 2-col
-         * item grid). Chrome = faithful-line panels (the byte-true window-frame builder FUN_800467a8 is
-         * deferred); the ITEM-LIST + equipped-weapon ICONS + the grid POSITIONS (cells @217/257,58+row*30)
-         * + the CONDITION text are byte-true. See RE15_INVENTORY_SUBSYSTEM.md §3. */
+        /* INVENTORY / STATUS SCREEN — Wave 1 byte-true rebuild (spec shots/inv_plan.md +
+         * shots/inv_wave1_blockers.md; RE1.5-EXE). The engine builds the original per-frame
+         * display list (draw chain FUN_80049a5c @0x80049a5c, group animator FUN_80047648
+         * @0x80047648, ECG FUN_80048a44 @0x80048a44, qty digits FUN_80048f28 @0x80048f28 —
+         * geometry/uv/cluts verbatim from the embedded PSX.EXE blob re15_inv_ui_tables.c)
+         * and inv_render_pc.c rasterizes it with the fb-calibrated PSX pixel pipeline.
+         *
+         * The port's menu logic today IS the ITEM grid (tab/FSM = wave 2), so the live
+         * screen renders in ITEM-grid mode: tabs slid offscreen (DAT_800b25ea = 0x108
+         * post-slide, FUN_8004a0cc state 0 slide target >0xfa), highlight DAT_800b25ca=1,
+         * grid cursor g8 on the menu cursor. RE15_INV_SHOT instead forces the acceptance
+         * state of stage_saves/mzd_inv_open.sav (tab-select mode, cursor on FILE). */
+        static int s_inv_was_open = 0;
+        if (!re15_menu_is_open()) s_inv_was_open = 0;
         if (re15_menu_is_open()) {
-            static unsigned s_inv_frame = 0; s_inv_frame++;   /* ECG scroll phase */
-            int n = re15_menu_count(), cur = re15_menu_cursor();
             re15_actor_t *plr = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-            uint8_t eqw = (uint8_t)re15_player_equipped_weapon();
-            re15_render_tile(0, 0, SCREEN_XRES, SCREEN_YRES, 5, 20, 28, 64);   /* screen background */
-
-            /* ---- LEFT column: ID card + CONDITION + tabs ---- */
-            re15_pc_panel(8, 6, 144, 84);
-            re15_render_tile(14, 22, 40, 54, 3, 12, 12, 32);                   /* photo (placeholder) */
-            re15_debug_text(64, 12, 0, "POLICE");
-            re15_debug_text(60, 26, 0, "Leon.S.kennedy");
-            re15_pc_panel(8, 94, 144, 66);
-            re15_debug_text(14, 98, 0, "CONDITION");
-            re15_debug_text(18, 118, 0, "ECG");
-            re15_pc_ecg(46, 112, 100, 22, plr->hp, s_inv_frame / 2);          /* FL heart-rate trace */
-            {   /* byte-true condition thresholds (idle-FSM @0x8003206c: <0x32 caution, <0x1e danger) */
-                const char *cond = plr->hp >= 50 ? "FINE" : plr->hp >= 30 ? "CAUTION" : "DANGER";
-                re15_debug_text(48, 138, 0, cond);
+            if (!s_inv_was_open) re15_inv_screen_open();   /* FUN_800460b8 open init */
+            s_inv_was_open = 1;
+            re15_inv_screen_ecg_tick();                    /* FUN_80048a44 sweep/glow advance */
+            g_inv_screen.equipped_slot = (uint8_t)re15_inv_equipped_slot();
+            g_inv_screen.item_cursor   = (uint8_t)re15_menu_cursor();
+            g_inv_screen.second_cursor = g_inv_screen.item_cursor;  /* 25be := bd each frame
+                                                                     * (FUN_800c62a0 tail) */
+            /* condition = the SCREEN classifier FUN_8004ed6c (thresholds 80/20 @0x800112b4/b5)
+             * — NOT the idle-anim 50/30; poison bit @0x800acaec&2 has no port source yet. */
+            g_inv_screen.cond = (uint8_t)re15_inv_screen_condition(plr->hp, 0);
+            g_inv_screen.highlight  = 1;
+            g_inv_screen.tab        = 0;
+            g_inv_screen.tab_base_y = 0x108;
+            if (getenv("RE15_INV_SHOT") && !getenv("RE15_INV_SHOT_LIVE")) {
+                /* mzd_inv_open.sav DISPLAYED frame: tab-select, tab=FILE(3), highlight 0,
+                 * ECG sweep 0x60 / LED glow 0x18 (two ticks behind the stored RAM values
+                 * 0x62/0x20 — double-buffer flip lag, solved from both fb halves).
+                 * RE15_INV_SHOT_LIVE=1 keeps the live ITEM-grid state instead. */
+                g_inv_screen.tab = 3; g_inv_screen.highlight = 0;
+                g_inv_screen.tab_base_y = 0xa6;
+                g_inv_screen.item_cursor = 0; g_inv_screen.second_cursor = 0;
+                g_inv_screen.ecg_sweep = 0x60; g_inv_screen.ecg_glow = 0x18;
             }
-            {   static const char *tabs[4] = { "ITEM", "MAP", "FILE", "EXIT" };
-                for (int i = 0; i < 4; i++) {
-                    int tx = 66 + (i & 1) * 48, ty = 168 + (i >> 1) * 18;
-                    if (i == 0) re15_render_tile(tx - 4, ty - 2, 44, 12, 3, 48, 72, 140);  /* ITEM = active tab */
-                    re15_debug_text(tx, ty, 0, tabs[i]);
-                } }
-
-            /* ---- CENTER: ARMS CONTROL ---- Equip Arms = the equipped weapon's 40×30 grid icon, native
-             * (BYTE-TRUE, inventory-composite-icon-re workflow: ITEMALL tile==id reproduces the Equip box
-             * with ZERO mismatch, same tile+CLUT as ITEM LIST — the equip icon is NOT the 88×136 composite).
-             * "Standard Arms" IS the larger composite (descriptor @0x80074a8c, a separate 4-bit-atlas
-             * subsystem) — shown as the grid icon = FAITHFUL-LINE (its atlas was unresolvable from the
-             * capture; deferred). */
-            re15_pc_panel(156, 6, 52, 152);
-            re15_debug_text(158, 8, 0, "ARMS");
-            re15_debug_text(160, 24, 0, "EQUIP");
-            if (!re15_pc_draw_item_icon(160, 44, eqw))
-                re15_debug_text(168, 52, 0, "--");
-            re15_debug_text(158, 96, 0, "STD ARMS");   /* FL: real Standard-Arms art is the 88×136 composite */
-            re15_pc_draw_item_icon(160, 112, eqw);
-
-            /* ---- RIGHT: ITEM LIST (byte-true 2-col grid, cells @217/257,58+row*30) ---- */
-            re15_pc_panel(212, 6, 104, 152);
-            re15_debug_text(214, 8, 0, "ITEM LIST");
-            for (int c = 0; c < 10; c++) {
-                int cx = 217 + ((c & 1) ? 40 : 0);
-                int cy = 58 + (c >> 1) * 30;
-                if (c >= n) continue;
-                if (c == cur) re15_render_tile(cx - 1, cy - 1, 42, 32, 3, 40, 40, 120);  /* cursor */
-                uint8_t id = re15_menu_disp_id(c);
-                if (id == 0) continue;                     /* EMPTY grid cell: cursor drawn, no icon/name */
-                if (!re15_pc_draw_item_icon(cx, cy, id)) {
-                    char t[8]; snprintf(t, sizeof t, "%02X", id);
-                    re15_debug_text(cx + 2, cy + 2, 0, t);
-                }
-                uint8_t q = re15_menu_disp_qty(c);
-                if (q > 0) { char t[8]; snprintf(t, sizeof t, "%d", q); re15_debug_text(cx + 22, cy + 20, 0, t); }
+            {
+                static re15_inv_op_t s_inv_ops[RE15_INV_MAX_OPS];
+                extern int re15_inv_render_pc_draw(const re15_inv_op_t *ops, int n);
+                int inv_n = re15_inv_screen_build(&g_inv_screen, s_inv_ops, RE15_INV_MAX_OPS);
+                re15_inv_render_pc_draw(s_inv_ops, inv_n);
             }
-
-            /* (No selected-item name/control-hint line: the RE1.5 status screen has no such text —
-             * it is a pre-rendered background TIM with baked labels, and the PC-keyboard hints the
-             * port used to print here ("Enter=equip / Shift=close") were both invented AND wrong
-             * (equip is SQUARE, close is START/cancel — menu_common.c). Removed, audit F3.) */
+            /* OPEN (wave 2): the grid-mode item-name print (FUN_80028c1c at (0x18,0xa8),
+             * called per frame from the grid handler @0x800c65a8) and the open/close fades
+             * (FUN_800217b0) are not rendered yet. */
 
             /* Item-USE prompt ("Will you use the X?" Yes/No, then "You have used the X") over the grid —
              * byte-true glyph replay in the game font (script 4/5), same layer as the pickup modal. */
@@ -5136,12 +5083,13 @@ re_title:;
             pc_draw_effects(&cam_view, cx, cy);
         }
 
-        /* INVENTORY on top (Phase 8.26): the overlay above is drawn into the framebuffer, but end_frame
-         * draws the queued 3D meshes (textured-tri queue) ON TOP of the framebuffer — which would cover
-         * the inventory. When the menu is open, discard those meshes so the full-screen inventory shows. */
+        /* INVENTORY on top (Phase 8.26 / wave 1): the screen is drawn into the framebuffer, but
+         * end_frame composites the queued 3D meshes, character-shadow blobs AND the room PRI
+         * overdraw rects ON TOP of the framebuffer — the PSX screen task draws none of the frozen
+         * scene, so drop all three while the menu is open. */
         if (re15_menu_is_open()) {
-            extern void re15_render_pc_clear_textris(void);
-            re15_render_pc_clear_textris();
+            extern void re15_render_pc_clear_scene_overlays(void);
+            re15_render_pc_clear_scene_overlays();
         }
 
         /* ITEM-GET MODAL overlay: hand the current-frame item quad to the renderer. It is drawn
@@ -5204,6 +5152,18 @@ re_title:;
         }
 
         re15_render_end_frame();
+
+        /* RE15_INV_SHOT continuation: capture the presented acceptance frame + exit
+         * (re15_render_pc_screenshot writes BMP regardless of the extension; set
+         * RE15_AUTOSHOT_SMALL=1 for a native 320x240 dump). */
+        { static const char *s_inv_shot = NULL; static int s_inv_shot_init = 0;
+          if (!s_inv_shot_init) { s_inv_shot = getenv("RE15_INV_SHOT"); s_inv_shot_init = 1; }
+          if (s_inv_shot && *s_inv_shot && g_engine.frame_count == 34) {
+              extern void re15_render_pc_screenshot(const char *path);
+              re15_render_pc_screenshot(s_inv_shot);
+              fprintf(stderr, "[inv] acceptance shot -> %s\n", s_inv_shot);
+              exit(0);
+          } }
 
         /* AH-round: 30 FPS cap. SDL2 VSync runs at the monitor refresh
          * (60/144/etc) which makes our engine run at non-PSX speeds.
