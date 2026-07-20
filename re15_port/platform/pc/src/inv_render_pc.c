@@ -78,6 +78,15 @@ static uint8_t  s_photo_px[72][112];
 static uint8_t  s_photo_seq = 0;    /* last consumed g_inv_screen.exam_upload_seq */
 static uint8_t *s_itemall = NULL;   /* ITEMALL.PIX raw (72 x 1200B 40x30 tiles) */
 static int      s_itemall_size = 0;
+static uint8_t *s_mixitem = NULL;   /* wave 5: MIXITEM.PIX raw — 16800 B = exactly
+                                     * 14 x 1200B (40x30 8bpp) tiles = pic ids 1-14
+                                     * (CD file id 0x19: size table @0x8006f43c +
+                                     * 0x19*8 = 0x41a0; loaded by the EXCHANGE
+                                     * executor jal 0x80013b60(0x19, 0x801a0000, 0)
+                                     * @0x8004e174; result tile at (pic-1)*1200
+                                     * @0x8004e224-38). Same ST_00-row-0 CLUT as the
+                                     * other cells (the cell SPRT's clut).           */
+static int      s_mixitem_size = 0;
 static uint8_t *s_itps = NULL;      /* ITEM/ITPS.ITP raw — wide-weapon 80x30 icons at
                                      * block(id*0x3000)+0x21A0 (wave 2)               */
 static int      s_itps_size = 0;
@@ -195,6 +204,11 @@ static int inv_assets_init(void)
     s_itemall = load_cd("DATA/ITEMALL.PIX", &s_itemall_size);
     if (!s_itemall) { fprintf(stderr, "[inv] ITEMALL.PIX missing\n"); return s_ready; }
 
+    /* DATA/MIXITEM.PIX (wave 5): headerless 14 x 1200B (40x30 8bpp) combine-result
+     * tiles, pic ids 1-14 (see the s_mixitem note above). */
+    s_mixitem = load_cd("DATA/MIXITEM.PIX", &s_mixitem_size);
+    if (!s_mixitem) fprintf(stderr, "[inv] MIXITEM.PIX missing\n");
+
     /* ITEM/ITPS.ITP: 72 x 0x3000 blocks; the wide-weapon (ids 0x0e-0x13) 80x30 8bpp
      * icon sits at block+0x21A0 (0x960 bytes, row-major) — the pickup grant passes
      * a2 = *(0x800ac77c)+0x21A0 into FUN_8004dc4c @0x8001e0b8-c8, uploaded once via
@@ -216,6 +230,18 @@ static void inv_compose_cells(void)
     for (k = 0; k < 10; k++) {
         int tile = re15_inv_screen_cache_tile(k);
         int u0 = (k % 3) * 40, v0 = (k / 3) * 30, r;
+        {   /* wave 5: MIXITEM override — the EXCHANGE executor uploaded the combine
+             * result tile (pic-1)*1200 into this cell (FUN_800492b8 @0x8004e240 et al.;
+             * engine-side event state re15_inv_screen_cache_mix_pic). Decoded with the
+             * same ST_00 row-0 CLUT the cell SPRT selects. */
+            int pic = re15_inv_screen_cache_mix_pic(k);
+            if (pic > 0 && s_mixitem && pic * 1200 <= s_mixitem_size) {
+                const uint8_t *src = s_mixitem + (pic - 1) * 1200;
+                for (r = 0; r < 30; r++)
+                    memcpy(&s_icon8[v0 + r][u0], src + r * 40, 40);
+                continue;
+            }
+        }
         if (tile == -2) {
             /* wide weapon (kind 1/2): the 80x30 icon from the item's ITPS block+0x21A0
              * (FUN_800492b8 mode 1, single upload at the HEAD cell covering cells k and

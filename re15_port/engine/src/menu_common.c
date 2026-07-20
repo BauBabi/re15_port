@@ -1,10 +1,14 @@
 /*
- * menu_common.c — the byte-true RE1.5 STATUS/INVENTORY screen FSM (waves 2+3).
+ * menu_common.c — the byte-true RE1.5 STATUS/INVENTORY screen FSM (waves 2+3+5).
  *
  * Spec: shots/inv_wave2_spec.md (RE workflow wf_e8e48d36, 4 reports, citations complete)
  * + shots/inv_wave3_spec.md (wf_cbdbc8a1 — the ITEM state-5 USE dispatcher/classifier,
  * the equip/unequip/swap per-step anim tables, the prompt-less heal sub-FSM and the
  * cant-use message path, all raw-MIPS cited)
+ * + shots/inv_wave5_spec.md (EXCHANGE/combine pair engine: state 7 @0x8004b33c, second
+ * cursor FUN_80048904, matcher FUN_8004e900, executor FUN_8004e054 actions 0-6, the
+ * 17-step result-anim walker @0x80010ff4 — select-sub cancel path + all step bodies
+ * re-disassembled this wave, cites inline)
  * + fresh file disasm of the DEBUG.BIN grid handler 0x800c62a0-0x800c65fc (byte-identical
  * to the mzd_inv_open.sav RAM module; DEBUG.BIN maps @0x800c0000) and of the EXE command
  * stage @0x8004a458-0x8004a700 (re15_disasm.py, wave-2 session).
@@ -30,6 +34,9 @@
 #include <string.h>
 #include "re15_menu.h"
 #include "re15_inv_screen.h"    /* g_inv_screen — the original's 25xx screen registers */
+#include "re15_inv_ui.h"        /* wave 5: the embedded EXE blob — combine pair lists
+                                 * @0x80074C88.. + per-item prop table @0x80074DA8
+                                 * (matcher FUN_8004e900 / executor FUN_8004e054 data) */
 #include "re15_inventory.h"     /* g_inv, equip slot 25c8, compaction FUN_8004dadc */
 #include "re15_item_use.h"      /* heal classifier gate + applier table @0x80010fbc (wave 3) */
 #include "re15_actor.h"         /* g_actors[PLAYER].hp — the heal 0x2f direct write */
@@ -731,6 +738,337 @@ static void state9_check(void)
     }
 }
 
+/* ---------------------------------------------------------------------------------- */
+/* ITEM state 7 (EXCHANGE/combine) — WAVE 5, spec shots/inv_wave5_spec.md.             */
+/* Byte-true state 7 = per-frame jal FUN_8004b33c (@0x8004a6ac): dispatcher            */
+/* @0x8004b33c-64 does jalr PTR[0x80074c44 + 25c3*4]; table @0x80074c44 =              */
+/* {[0]=0x8004b37c select, [1]=0x8004b408 result-anim walker} (bytes '7c b3 04 80     */
+/* 08 b4 04 80'). c3 is 0 on entry (terminal invariant), so the select sub runs first. */
+/* All pair/prop data is read from the EMBEDDED EXE blob (re15_inv_ui.h) at its        */
+/* original addresses — nothing is re-typed.                                           */
+/* ---------------------------------------------------------------------------------- */
+#define X_PROP_TBL 0x80074DA8u   /* per-item prop table, stride 12: {cap u32 @+0,
+                                  * pair_ptr u32 @+4, kind u8 @+8, pair_count u8 @+9}
+                                  * (matcher reads +4/+9 @0x8004e9d8/@0x8004e9e8;
+                                  * executor reads +0 @0x8004e338/@0x8004e444) */
+static uint8_t  xu8(uint32_t addr) { return *RE15_INV_PTR(addr); }
+static uint32_t xu32(uint32_t addr)
+{
+    const unsigned char *p = RE15_INV_PTR(addr);
+    return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16)
+         | ((uint32_t)p[3] << 24);
+}
+
+/* Matcher outputs (globals in the original, read back by the executor):
+ * s_x_result = DAT_800b25d5 (sb @0x8004ea18), s_x_pic = DAT_800b260c (sb @0x8004ea28). */
+static uint8_t s_x_result = 0;
+static uint8_t s_x_pic = 0;
+
+/* Second-cursor mover FUN_80048904 @0x80048904 (jal from the select sub @0x8004b384).
+ * Gated on the D-pad auto-repeat tick (bgez DAT_800aca38 @0x80048910 returns when
+ * bit 31 — the FUN_80030444 fire flag — is clear; port mirror = s_rep_fire), then reads
+ * the HELD word DAT_800ac760 (@0x8004891c). Pure 2-column bounds moves on 25be, NO
+ * item/occupancy restriction and NO SE (zero jal in the fn). The reject paths differ:
+ * RIGHT at the cap bound falls THROUGH to the LEFT check (@0x8004894c beq ->
+ * 0x80048970) and LEFT at 0 falls to the DOWN check (@0x80048998 beq -> 0x800489b4),
+ * while the odd/even rejects consume the frame (@0x80048954/@0x800489a0). */
+static void second_cursor_move(uint16_t held)
+{
+    uint8_t *cur = &g_inv_screen.second_cursor;
+    if (!s_rep_fire) return;                     /* bgez aca38 @0x80048910 */
+    if (held & RE15_PAD_BIT_RIGHT) {             /* andi 0x2000 @0x80048924 */
+        if (*cur < CAPACITY - 1) {               /* slt cur,cap-1 @0x80048948 (cap =
+                                                  * lbu 0x800b0fbc @0x8004893c) */
+            if (*cur & 1) return;                /* odd rejects+consumes @0x80048950-54 */
+            (*cur)++;                            /* @0x80048964-6c */
+            return;
+        }
+        /* cur >= cap-1: falls through to LEFT (@0x8004894c) */
+    }
+    if (held & RE15_PAD_BIT_LEFT) {              /* andi 0x8000 @0x8004897c */
+        if (*cur != 0) {                         /* 0 falls through to DOWN @0x80048998 */
+            if (!(*cur & 1)) return;             /* even rejects+consumes @0x800489a0 */
+            (*cur)--;                            /* @0x800489a8-b0 + sb @0x80048a38 */
+            return;
+        }
+    }
+    if (held & RE15_PAD_BIT_DOWN) {              /* andi 0x4000 @0x800489c0 */
+        if (*cur == CAPACITY - 2) return;        /* beq cap-2 @0x800489e4 */
+        if (*cur == CAPACITY - 1) return;        /* beq cap-1 @0x800489ec */
+        *cur += 2;                               /* @0x800489f4-a04 */
+        return;
+    }
+    if (held & RE15_PAD_BIT_UP) {                /* delay andi 0x1000 @0x800489c8;
+                                                  * beq @0x80048a08 */
+        if (*cur < 2) return;                    /* sltiu 2 @0x80048a20 */
+        *cur -= 2;                               /* addiu 254 @0x80048a34 + sb @0x80048a38 */
+    }
+}
+
+/* Matcher FUN_8004e900 @0x8004e900: kind-byte normalization (+2==2 -> slot-1
+ * @0x8004e910-38 for 25bd, @0x8004e948-7c for 25be), same-slot reject (@0x8004e98c),
+ * empty-partner reject (idB==0 @0x8004e9bc), prop-row lookup by the FIRST cursor's
+ * item id (idA*12: pair_count @+9 lbu 0x80074db1+ @0x8004e9d8, pair_ptr @+4 lw
+ * 0x80074dac+ @0x8004e9e8; count==0 -> 0 @0x8004e9ec; first partner byte 0 -> 0
+ * @0x8004e9f4-ea04), then a linear 4-byte {partner,result,action,pic} scan for
+ * partner==idB (@0x8004ea38-5c). On match: result -> 25d5 (@0x8004ea18), pic -> 260c
+ * (@0x8004ea28), RETURN the action byte (@0x8004ea2c). No item-class check. */
+static int exchange_match(void)
+{
+    int a = g_inv_screen.item_cursor;
+    int b = g_inv_screen.second_cursor;
+    uint8_t idA, idB, cnt, i;
+    uint32_t plist;
+    if (g_inv.slots[a].flags == 2) a -= 1;       /* @0x8004e910-38 */
+    if (g_inv.slots[b].flags == 2) b -= 1;       /* @0x8004e948-7c */
+    if (a == b) return 0;                        /* beq @0x8004e98c */
+    idB = g_inv.slots[b].id;                     /* lbu 0x800b10ac+b*4 @0x8004e9a8 */
+    idA = g_inv.slots[a].id;                     /* lbu 0x800b10ac+a*4 @0x8004e9b8 */
+    if (idB == 0) return 0;                      /* beq @0x8004e9bc */
+    cnt   = xu8(X_PROP_TBL + (uint32_t)idA * 12u + 9u);
+    plist = xu32(X_PROP_TBL + (uint32_t)idA * 12u + 4u);   /* PSX address in the blob */
+    if (cnt == 0) return 0;                      /* beq @0x8004e9ec */
+    if (xu8(plist) == 0) return 0;               /* @0x8004e9f4-ea04 */
+    for (i = 0; i < cnt; i++) {                  /* @0x8004ea38-5c, stride 4 */
+        if (xu8(plist + (uint32_t)i * 4u) == idB) {
+            s_x_result = xu8(plist + (uint32_t)i * 4u + 1u);  /* -> 25d5 @0x8004ea18 */
+            s_x_pic    = xu8(plist + (uint32_t)i * 4u + 3u);  /* -> 260c @0x8004ea28 */
+            return xu8(plist + (uint32_t)i * 4u + 2u);        /* action  @0x8004ea2c */
+        }
+    }
+    return 0;                                    /* fall-out @0x8004ea60 */
+}
+
+/* Executor FUN_8004e054 @0x8004e054 — the six-action pair engine. Head registers
+ * (@0x8004e054-160): s2 = id[RAW 25bd], s1 = id[RAW 25be] (@0x8004e0a4/@0x8004e0c4);
+ * s4/s3 = kind-normalized 25bd/25be (@0x8004e0c8-11c); total s0 = qty[s3n] + qty[s4n]
+ * (@0x8004e13c-160). pic!=0 && action!=0 -> CD-load file 0x19 to 0x801a0000
+ * (jal 0x80013b60 @0x8004e174; id 0x19 = 16800 bytes @0x8006f43c+0x19*8 == exactly
+ * MIXITEM.PIX — platform side loads the file lazily, engine no-op). Then jr
+ * @0x80011298[action] (sltiu 7 @0x8004e180; >=7 returns 0). RETURNS the action byte
+ * (every tail is `andi v0,s5,0xff` -> the caller's !=0 gate == action!=0). */
+/* Shared reload body (the action-2 @0x8004e320 / action-3 @0x8004e42c mirror pair;
+ * action 5 jumps into exactly these bodies @0x8004e670/@0x8004e678). dst = the merge
+ * target slot, src = the emptied slot, cap_id = the RAW id whose prop cap gates. */
+static void x_reload(int dst, int src, uint8_t cap_id, int total)
+{
+    uint8_t cap = xu8(X_PROP_TBL + (uint32_t)cap_id * 12u);   /* prop[+0] lbu
+                                                  * @0x8004e338 / @0x8004e444 */
+    if (cap < total) {                           /* sltu @0x8004e340 / @0x8004e44c ->
+                                                  * PARTIAL @0x8004e3e4 / @0x8004e4f0 */
+        g_inv.slots[dst].qty = cap;              /* @0x8004e3f4 / @0x8004e500 */
+        g_inv.slots[src].qty = (uint8_t)(total - cap);   /* @0x8004e410-420 /
+                                                  * @0x8004e51c-52c (ids UNCHANGED)      */
+    } else {                                     /* FULL @0x8004e34c / @0x8004e458 */
+        if (g_inv.slots[dst].id != s_x_result)   /* GLOCK 18 -> 0x04 quirk @0x80074c99:
+                                                  * the id byte changes with NO icon call
+                                                  * in this branch (no jal in 0x8004e34c-
+                                                  * e3e0) -> the cell art freezes         */
+            re15_inv_icon_freeze_tile(dst, g_inv.slots[dst].id);
+        g_inv.slots[dst].id = s_x_result;        /* @0x8004e370 / @0x8004e47c */
+        g_inv.slots[dst].qty = (uint8_t)(g_inv.slots[dst].qty
+                                         + g_inv.slots[src].qty);  /* @0x8004e398-3a8 /
+                                                  * @0x8004e4a4-4b4 */
+        g_inv.slots[src].id = 0;                 /* @0x8004e3b8 / @0x8004e4c4 */
+        g_inv.slots[src].qty = 0;                /* @0x8004e3c8 / @0x8004e4d4 */
+        g_inv.slots[src].flags = 0;              /* @0x8004e3d8 / @0x8004e4e4 */
+        re15_inv_icon_blank(src);                /* j 0x8004e310 -> jal 0x8004947c (a0 =
+                                                  * the cleared slot @0x8004e3e0/@0x8004e4ec) */
+    }
+}
+
+static int exchange_exec(int action)
+{
+    int an = g_inv_screen.item_cursor;           /* s4 = norm 25bd */
+    int bn = g_inv_screen.second_cursor;         /* s3 = norm 25be */
+    uint8_t idA_raw = g_inv.slots[an].id;        /* s2 */
+    uint8_t idB_raw = g_inv.slots[bn].id;        /* s1 */
+    int total;
+    if (g_inv.slots[an].flags == 2) an -= 1;     /* @0x8004e0c8-e0dc */
+    if (g_inv.slots[bn].flags == 2) bn -= 1;     /* @0x8004e100-11c */
+    total = (int)g_inv.slots[bn].qty + (int)g_inv.slots[an].qty;  /* addu s0 @0x8004e160 */
+
+    switch (action & 0xff) {                     /* jump table @0x80011298 [0..6] */
+    case 0:                                      /* [0] @0x8004e318: return action (=0) */
+    default:
+        break;
+    case 1: {                                    /* [1] @0x8004e1ac MIX-MERGE */
+        int lower = (an < bn) ? an : bn;         /* sltu @0x8004e1b4 picks the branch */
+        int other = (an < bn) ? bn : an;
+        g_inv.slots[lower].qty = (uint8_t)(g_inv.slots[lower].qty
+                                           + g_inv.slots[other].qty);  /* @0x8004e1e8-1f8
+                                                  * / @0x8004e27c-28c */
+        g_inv.slots[lower].id = s_x_result;      /* 25d5 -> id[lower] @0x8004e214/@0x8004e2a8 */
+        re15_inv_icon_mix_upload(lower, s_x_pic);/* jal 0x800492b8(lower,0,buf+(pic-1)*1200)
+                                                  * @0x8004e240/@0x8004e2d4 */
+        g_inv.slots[other].id = 0;               /* @0x8004e2ec */
+        g_inv.slots[other].qty = 0;              /* @0x8004e2fc */
+        g_inv.slots[other].flags = 0;            /* @0x8004e30c */
+        re15_inv_icon_blank(other);              /* jal 0x8004947c @0x8004e310 (a0 = the
+                                                  * cleared slot @0x8004e24c/@0x8004e2dc) */
+        break;
+    }
+    case 2:                                      /* [2] @0x8004e320 RELOAD into A (cap
+                                                  * from prop[s2] = id at RAW 25bd)      */
+        x_reload(an, bn, idA_raw, total);
+        break;
+    case 3:                                      /* [3] @0x8004e42c RELOAD into B (mirror;
+                                                  * cap from prop[s1] = id at RAW 25be)  */
+        x_reload(bn, an, idB_raw, total);
+        break;
+    case 4: {                                    /* [4] @0x8004e538 SWAP+TRANSFORM —
+                                                  * DORMANT: the only action-4 pairs are
+                                                  * the GL orphans @0x80074cb8/bc whose
+                                                  * owners 0x0f-0x11 have pair_count==0
+                                                  * (prop rows read from the blob) —
+                                                  * unreachable via the shipped data.    */
+        uint8_t sid = g_inv.slots[bn].id;        /* old B triple saved sp+16/17/18
+                                                  * @0x8004e54c-588 */
+        uint8_t sqty = g_inv.slots[bn].qty;
+        uint8_t skind = g_inv.slots[bn].flags;
+        g_inv.slots[bn].id = s_x_result;         /* @0x8004e598 */
+        g_inv.slots[bn].qty = g_inv.slots[an].qty;    /* @0x8004e5a8-5bc */
+        g_inv.slots[bn].flags = g_inv.slots[an].flags;/* @0x8004e5cc-5e0 */
+        re15_inv_icon_mix_upload(bn, s_x_pic);   /* jal 0x800492b8 @0x8004e60c */
+        /* A <- old B triple with NO icon op for A -> A's cell art stays (freeze) */
+        re15_inv_icon_freeze_tile(an, idA_raw);
+        g_inv.slots[an].id = sid;                /* @0x8004e628 */
+        g_inv.slots[an].qty = sqty;              /* @0x8004e640 */
+        g_inv.slots[an].flags = skind;           /* @0x8004e658 */
+        break;
+    }
+    case 5:                                      /* [5] @0x8004e664 SELF-STACK: delegates
+                                                  * to the WHOLE action-2 body when norm A
+                                                  * is the lower slot (bne @0x8004e670 ->
+                                                  * 0x8004e324, delay slot replicates the
+                                                  * first action-2 instr; cap from
+                                                  * prop[s2]) else the action-3 body
+                                                  * (j @0x8004e678 -> 0x8004e430, cap
+                                                  * from prop[s1]). Return stays 5.      */
+        if (an < bn) x_reload(an, bn, idA_raw, total);
+        else         x_reload(bn, an, idB_raw, total);
+        break;
+    case 6: {                                    /* [6] @0x8004e680 CRAFTING */
+        int lo, hi;
+        uint8_t qlo, qhi;
+        if (bn < an) { lo = bn; hi = an; }       /* swap s4<->s3 @0x8004e688-698 */
+        else         { lo = an; hi = bn; }
+        qlo = g_inv.slots[lo].qty;               /* lbu @0x8004e6b8 */
+        qhi = g_inv.slots[hi].qty;               /* lbu @0x8004e6c8 */
+        if (qlo == qhi) {                        /* bne @0x8004e6d0 -> EQUAL @0x8004e6d8 */
+            g_inv.slots[lo].id = s_x_result;     /* @0x8004e6f0 (qty[lo] UNCHANGED) */
+            re15_inv_icon_mix_upload(lo, s_x_pic);   /* jal 0x800492b8 @0x8004e71c */
+            g_inv.slots[hi].id = 0;              /* @0x8004e730 */
+            g_inv.slots[hi].qty = 0;             /* @0x8004e740 */
+            g_inv.slots[hi].flags = 0;           /* @0x8004e750 */
+            re15_inv_icon_blank(hi);             /* jal 0x8004947c @0x8004e754 (a0=s3) */
+        } else if (qhi < qlo) {                  /* delay sltu @0x8004e6d4; taken branch
+                                                  * @0x8004e76c: the LOWER stack is bigger */
+            g_inv.slots[hi].id = g_inv.slots[lo].id;      /* leftover takes the source id
+                                                  * @0x8004e778/@0x8004e798 */
+            g_inv.slots[hi].qty = (uint8_t)(qlo - qhi);   /* @0x8004e7bc-7cc */
+            re15_inv_icon_copy(lo, hi);          /* jal 0x80049390(lo,hi) @0x8004e7d0 —
+                                                  * the leftover cell gets the source art */
+            g_inv.slots[lo].qty = qhi;           /* s0 = the pre-overwrite qty[hi] (min)
+                                                  * @0x8004e7b8/@0x8004e7f0 */
+            g_inv.slots[lo].id = s_x_result;     /* @0x8004e800 */
+            re15_inv_icon_mix_upload(lo, s_x_pic);   /* jal 0x800492b8 @0x8004e82c */
+        } else {                                 /* qhi > qlo @0x8004e83c */
+            g_inv.slots[lo].flags = 0;           /* sb zero kind[lo] @0x8004e858 — only
+                                                  * this branch writes a kind (byte-true
+                                                  * asymmetry, do not converge)          */
+            g_inv.slots[lo].id = s_x_result;     /* @0x8004e868 (qty[lo] stays = min) */
+            re15_inv_icon_mix_upload(lo, s_x_pic);   /* jal 0x800492b8 @0x8004e894 */
+            g_inv.slots[hi].qty = (uint8_t)(qhi - qlo);   /* @0x8004e8a8-8d0 (id[hi]
+                                                  * unchanged)                           */
+        }
+        break;
+    }
+    }
+    return action & 0xff;                        /* tail @0x8004e8d8: v0 = andi s5,0xff */
+}
+
+/* State-7 sub [0] = select @0x8004b37c (fresh disasm this wave): per frame
+ *   jal 0x80048904 (second-cursor mover) @0x8004b384;
+ *   CANCEL first: lw DAT_800ac76c @0x8004b390; andi 0x8000 @0x8004b398; bne ->
+ *     0x8004b3f0 with delay `ori v0,zero,0x6` @0x8004b3a0 -> sb 6 -> 25c2 @0x8004b3f0-f4
+ *     (state 6 slide-out). NO SE anywhere in 0x8004b37c-b404 (zero jal 0x80045024 —
+ *     the EXCHANGE cancel/confirm are SILENT, unlike the command stage's SE(4,5)/(4,6));
+ *   CONFIRM: andi 0x4000 @0x8004b3a4; beq -> exit @0x8004b3a8; jal 0x8004e900 (matcher)
+ *     @0x8004b3b0; jal 0x8004e054(a0 = action & 0xff) @0x8004b3b8-bc; the EXECUTOR's
+ *     return (== the action, tail @0x8004e8d8) gates: !=0 -> jal 0x8004dadc (compaction)
+ *     @0x8004b3cc, 25c4:=0 @0x8004b3dc, 25c3:=1 @0x8004b3e4 (result anim); ==0 (no
+ *     pair / same-slot / empty) -> sb 6 -> 25c2 @0x8004b3c4-c8 + 0x8004b3f0-f4. */
+static void state7_select(uint16_t pressed, uint16_t held)
+{
+    second_cursor_move(held);                    /* jal 0x80048904 @0x8004b384 */
+    if (pressed & RE15_PAD_BIT_SQUARE) {         /* cancel BEFORE confirm @0x8004b398 */
+        g_inv_screen.item_state = 6;             /* @0x8004b3f0-f4 (silent) */
+        return;
+    }
+    if (pressed & RE15_PAD_BIT_CROSS) {          /* @0x8004b3a4 */
+        int action = exchange_match();           /* jal 0x8004e900 @0x8004b3b0 */
+        int ret = exchange_exec(action);         /* jal 0x8004e054 @0x8004b3b8 */
+        if (ret != 0) {                          /* bne @0x8004b3c4 */
+            re15_inv_compact();                  /* jal 0x8004dadc @0x8004b3cc (also
+                                                  * shifts/blanks the icon cells)        */
+            g_inv_screen.equipped_slot =         /* port mirror refresh (the compaction
+                                                  * may shift the one 25c8 byte)         */
+                (uint8_t)re15_inv_equipped_slot();
+            s_c4 = 0;                            /* sb zero -> 25c4 @0x8004b3dc */
+            s_c3 = 1;                            /* sb 1 -> 25c3 @0x8004b3e4 */
+        } else {
+            g_inv_screen.item_state = 6;         /* @0x8004b3f0-f4 */
+        }
+    }
+}
+
+/* State-7 sub [1] = result-anim walker @0x8004b408 (fresh disasm this wave): guard
+ * sltiu c4,0x11 @0x8004b414; jr [0x80010ff4 + c4*4] — table bytes = [0..7]=0x8004b43c
+ * GROW, [8..15]=0x8004b4a8 SHRINK, [16]=0x8004b524 TERMINAL (17 entries, 1 step =
+ * 1 frame, each step increments c4 itself). */
+static void state7_result_anim(void)
+{
+    if (s_c4 >= 0x11) return;                    /* sltiu 0x11 @0x8004b414 */
+    if (s_c4 <= 7) {
+        /* GROW @0x8004b43c-b4a4: d0+1 (sb @0x8004b47c), d1+1 (@0x8004b484),
+         * d2-1 (@0x8004b48c), d3-1 (@0x8004b494), c4+1 (@0x8004b49c) */
+        g_inv_screen.comb_d0++;
+        g_inv_screen.comb_d1++;
+        g_inv_screen.comb_d2--;
+        g_inv_screen.comb_d3--;
+        s_c4++;
+    } else if (s_c4 <= 15) {
+        /* SHRINK @0x8004b4a8-b520: 25be := 25bd (lbu @0x8004b4d4, sb @0x8004b4f0 —
+         * the 2nd cursor snaps onto the cursor EVERY shrink frame), d0-1 (@0x8004b4f8),
+         * d1-1 (@0x8004b500), d2+1 (@0x8004b508), d3+1 (@0x8004b510), c4+1 (@0x8004b518) */
+        g_inv_screen.second_cursor = g_inv_screen.item_cursor;
+        g_inv_screen.comb_d0--;
+        g_inv_screen.comb_d1--;
+        g_inv_screen.comb_d2++;
+        g_inv_screen.comb_d3++;
+        s_c4++;
+    } else {
+        /* TERMINAL @0x8004b524-b55c: 25c2:=6 (@0x8004b52c), c4:=0 (@0x8004b534),
+         * c3:=0 (@0x8004b53c), d0..d3:=0 (@0x8004b544/b54c/b554/b55c) */
+        g_inv_screen.item_state = 6;
+        s_c4 = 0; s_c3 = 0;
+        g_inv_screen.comb_d0 = 0; g_inv_screen.comb_d1 = 0;
+        g_inv_screen.comb_d2 = 0; g_inv_screen.comb_d3 = 0;
+    }
+}
+
+/* The per-frame state-7 body (jal FUN_8004b33c @0x8004a6ac): jalr PTR[0x80074c44 +
+ * 25c3*4] (@0x8004b33c-64; table bytes '7c b3 04 80 08 b4 04 80'). */
+static void state7_exchange(uint16_t pressed, uint16_t held)
+{
+    switch (s_c3) {
+    case 0:  state7_select(pressed, held); break;  /* [0] @0x8004b37c */
+    case 1:  state7_result_anim();         break;  /* [1] @0x8004b408 */
+    default: break;                                /* unreachable (terminal invariant) */
+    }
+}
+
 /* The per-frame state-5 body (jal FUN_8004aa24 @0x8004a674). */
 static void state5_use(void)
 {
@@ -796,10 +1134,11 @@ static void item_mode(uint16_t pressed, uint16_t held)
         if (g_inv_screen.act_base_y < 251) g_inv_screen.act_base_y += 14;
         else                               g_inv_screen.item_state = 1;
         break;
-    case 7:  /* EXCHANGE: byte-true = per-frame jal FUN_8004b33c @0x8004a6ac (combine
-              * flow) — WAVE-5 stub: return to the command stage. (FUN_8004b33c's own
-              * exit contract not RE'd — spec Task-C open question.) */
-        g_inv_screen.item_state = 4;
+    case 7:  /* EXCHANGE: byte-true per-frame jal FUN_8004b33c @0x8004a6ac — WAVE 5
+              * (the combine pair engine; sub-dispatch on 25c3 via @0x80074c44).
+              * Entry keeps 25be at its grid-mirror value (== 25bd) and c3/c4 at 0
+              * (terminal invariant) — the select sub runs first. */
+        state7_exchange(pressed, held);
         break;
     case 8:  /* EXIT slide-out @0x8004a6bc-6d8: 25ee +14 while <251 -> 264, then
               * state 2 (tab-cluster slide-back + tab select). */

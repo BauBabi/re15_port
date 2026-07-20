@@ -5,6 +5,10 @@
  */
 #include <string.h>
 #include "re15_inventory.h"
+#include "re15_inv_screen.h"   /* wave 5: icon-cache cell art maintenance (the original's
+                                * FUN_80049390 copies / FUN_8004947c blanks are part of the
+                                * slot ops FUN_8004dadc/FUN_8004dc4c — see the disasm cites
+                                * at the call sites below) */
 
 #define HUD_PICKUP_DISPLAY_FRAMES 90   /* 1.5 s at 60 fps */
 
@@ -13,6 +17,7 @@ re15_inventory_t g_inv;
 void re15_inv_init(void)
 {
     memset(&g_inv, 0, sizeof(g_inv));
+    re15_inv_icon_reset();
 }
 
 int re15_inv_grant(uint8_t type, uint8_t amount)
@@ -33,16 +38,24 @@ int re15_inv_grant(uint8_t type, uint8_t amount)
         /* WIDE weapon (0x0e..0x13 = flamethrower / 3× grenade-launcher / rocket / MC51): 2-cell
          * front-shift. Slots 0..7 move to 2..9 (old 8/9 dropped, slot 10 stays), then slots 0 and 1
          * take the weapon with the L/R display flags 1/2, and the equipped-slot index bumps by 2 so
-         * it keeps tracking its weapon (@0x8004dc88, FUN_8004ea6c). */
-        for (int i = 7; i >= 0; i--) g_inv.slots[i + 2] = g_inv.slots[i];
+         * it keeps tracking its weapon (@0x8004dc88, FUN_8004ea6c). The original moves the icon
+         * cells along (FUN_8004dc4c: 8x jal 0x80049390 @0x8004dc98-de3c) and uploads the wide icon
+         * over cells 0/1 (jal 0x800492b8 @0x8004df08) — mirrored on the override layer (wave 5). */
+        for (int i = 7; i >= 0; i--) {
+            g_inv.slots[i + 2] = g_inv.slots[i];
+            re15_inv_icon_copy(i, i + 2);
+        }
         g_inv.slots[0].id = type; g_inv.slots[0].qty = amount; g_inv.slots[0].flags = 1;
         g_inv.slots[1].id = type; g_inv.slots[1].qty = amount; g_inv.slots[1].flags = 2;
+        re15_inv_icon_blank(0); re15_inv_icon_blank(1);   /* fresh upload = identity art */
         re15_inv_set_equipped_slot(re15_inv_equipped_slot() + 2);
     } else {
-        /* everything else = 1 cell in the first FREE slot (raw qty, flags 0). */
+        /* everything else = 1 cell in the first FREE slot (raw qty, flags 0). The insert
+         * uploads the item's icon (FUN_800492b8 @0x8004df08) = identity art. */
         g_inv.slots[free_slot].id    = type;
         g_inv.slots[free_slot].qty   = amount;
         g_inv.slots[free_slot].flags = 0;
+        re15_inv_icon_blank(free_slot);
     }
     g_inv.last_pickup_type           = type;
     g_inv.last_pickup_amount         = amount;
@@ -61,11 +74,18 @@ void re15_inv_compact(void)
     for (int i = 0; i < RE15_INV_MAX_SLOTS; i++)
         if (g_inv.slots[i].id == 0) { f = i; break; }
     if (f < 0 || f >= RE15_INV_MAX_SLOTS - 1) return;      /* no hole (or the hole is already last) */
-    for (int i = f; i < RE15_INV_MAX_SLOTS - 1; i++)
+    for (int i = f; i < RE15_INV_MAX_SLOTS - 1; i++) {
+        re15_inv_icon_copy(i + 1, i);                      /* icon cell s0 -> s0-1 per shifted slot
+                                                            * (jal 0x80049390 @0x8004db30, a0=s0
+                                                            * a1=s0-1 @0x8004db24-2c) — wave 5      */
         g_inv.slots[i] = g_inv.slots[i + 1];               /* shift the tail down to close the hole */
+    }
     g_inv.slots[RE15_INV_MAX_SLOTS - 1].id    = 0;         /* clear the now-duplicated last slot    */
     g_inv.slots[RE15_INV_MAX_SLOTS - 1].qty   = 0;
     g_inv.slots[RE15_INV_MAX_SLOTS - 1].flags = 0;
+    re15_inv_icon_blank(9);                                /* final blank of the vacated last cell
+                                                            * (jal 0x8004947c @0x8004dbec, a0 =
+                                                            * count-1 with count @0x800b0fbc = 10)  */
     { int eq = re15_inv_equipped_slot();                   /* equipped-- iff it pointed past the hole */
       if (eq != 0x80 && eq > f) re15_inv_set_equipped_slot(eq - 1); }
 }

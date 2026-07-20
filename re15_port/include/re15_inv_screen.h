@@ -161,6 +161,15 @@ typedef struct {
                              * back +36/f @0x800c6814)                                    */
     int16_t cond_x;         /* DAT_800b25e4 x (13 idle; -36/f @0x800c66a0)                */
     int16_t idcard_x;       /* DAT_800b25f0 x (14 idle; -36/f @0x800c66a4)                */
+    /* ---- wave 5 (EXCHANGE/combine) ---- */
+    uint8_t comb_d0, comb_d1, comb_d2, comb_d3;
+                            /* DAT_800b25d0-d3: the g9 second-cursor jitter pulse, written
+                             * ONLY by the combine result-anim walker @0x8004b408 (grow
+                             * steps 0-7: d0/d1 +1, d2/d3 -1 @0x8004b468-494; shrink steps
+                             * 8-15 reversed @0x8004b4d8-b510; terminal zeroes @0x8004b544-
+                             * b55c; menu-init zeroing @0x8004646c-84). Consumed by the g9
+                             * prim build SIGN-EXTENDED (sll 24/sra 24 @0x80047e98-eb8):
+                             * prim0 += (s8)d0/(s8)d1, prim1 += (s8)d2/(s8)d3.             */
 } re15_inv_screen_t;
 
 /* DEBUG.BIN description-bank entry 0 = "You can't use it here." — string ptr resolve
@@ -215,8 +224,32 @@ void re15_inv_screen_heal_wipe(uint8_t id);
  * blank). Cells 10/11 are ST_00-static (returns -1). Wide weapons (kind 1/2) are NOT
  * ITEMALL tiles — returns -2; the rasterizer composes the 80x30 icon from the item's
  * ITPS block +0x21A0 (FUN_800492b8 mode 1, pickup src @0x8001e0b8-c8; wave 2 closes
- * wave 1's OPEN). */
+ * wave 1's OPEN). WAVE 5: a FROZEN cell (reload-full id change with no VRAM write —
+ * see re15_inv_icon_freeze_tile) returns its frozen ITEMALL tile instead of the id. */
 int re15_inv_screen_cache_tile(int cell);
+
+/* ---- WAVE 5: the icon-cache VRAM page as an EVENT-DRIVEN per-cell art state --------
+ * The original icon page (VRAM (640,256)+, cells 0-9) is written ONLY by
+ *   FUN_800492b8 (upload at grant/spawn/EXCHANGE-mix), FUN_80049390 (cell-to-cell
+ *   MoveImage: RECT from a0=src cell, dest xy from a1=dst cell @0x80049448/0x80049460 ->
+ *   jal 0x80068d50 @0x8004945c) and FUN_8004947c (blank: MoveImage from the static
+ *   blank RECT {0x2a8,0x15a,0x14,0x1e} = (680,346) 40x30 @0x80049498-b4 to cell a0).
+ * The slot ops keep it coherent: compaction FUN_8004dadc copies cell s0 -> s0-1 per
+ * shifted slot (@0x8004db30) + blanks the last (@0x8004dbec); the pickup insert
+ * FUN_8004dc4c copies 8 cells on the wide-weapon front shift (@0x8004dc98-de3c) and
+ * uploads the new icon (@0x8004df08). The port models this as a per-cell override on
+ * top of the identity recomposition: 0 = identity (ITEMALL[slot id] — every grant
+ * uploads exactly that), 1..14 = MIXITEM.PIX tile pic (EXCHANGE executor uploads
+ * (pic-1)*1200 @0x8004e224-44/e5f4-610/e700-720/e810-830/e87c-898), 0x80|tile =
+ * frozen ITEMALL tile (reload-full changes the id byte with NO icon call in
+ * 0x8004e34c-e3e0 / 0x8004e458-e4ec -> the cell keeps its old art; only the GLOCK 18
+ * pair 06->04 @0x80074c98 actually diverges). */
+void re15_inv_icon_mix_upload(int cell, int pic);   /* FUN_800492b8(cell,0,MIX+(pic-1)*1200) */
+void re15_inv_icon_copy(int src, int dst);          /* FUN_80049390(a0=src, a1=dst)          */
+void re15_inv_icon_blank(int cell);                 /* FUN_8004947c(cell)                    */
+void re15_inv_icon_freeze_tile(int cell, int tile); /* no-repaint id change (reload-full)    */
+void re15_inv_icon_reset(void);                     /* inventory (re)init                    */
+int  re15_inv_screen_cache_mix_pic(int cell);       /* 0 = none, else MIXITEM pic 1..14      */
 
 /* Build one frame's display list from `st` + g_inv. Returns the op count.
  * ops[0] = TOPMOST (original AddPrim order); rasterize in reverse. */

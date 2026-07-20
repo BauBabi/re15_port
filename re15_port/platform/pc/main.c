@@ -2556,7 +2556,8 @@ re_title:;
          * RE15_INV_GRID_SHOT=1 (wave 2): additionally inject a CROSS edge at frame 31 —
          * the tab-select ITEM confirm — so the live FSM runs the entry slide (7 frames,
          * +14/frame @0x8004a394) into GRID mode; the shot is taken at frame 50 instead. */
-        if (getenv("RE15_INV_SHOT") && g_engine.frame_count == 30 && !re15_menu_is_open())
+        if (getenv("RE15_INV_SHOT") && !getenv("RE15_INV_MIX_SHOT") &&
+            g_engine.frame_count == 30 && !re15_menu_is_open())
             re15_menu_toggle();
         if (getenv("RE15_INV_GRID_SHOT") && g_engine.frame_count == 31)
             g_engine.pad_pressed |= RE15_PAD_BIT_CROSS;
@@ -2580,6 +2581,33 @@ re_title:;
                 g_engine.pad_pressed |= RE15_PAD_BIT_CROSS;
             if (g_engine.frame_count == 54)
                 g_engine.pad_pressed |= RE15_PAD_BIT_LEFT;
+        }
+        /* RE15_INV_MIX_SHOT=1 (wave 5): seed Green 0x24 + Red 0x25 at F40 + open; CROSS
+         * F41 (tab ITEM confirm -> entry slide F42-48, GRID F50) + CROSS F50 (grid
+         * confirm on the Green -> 25d6=0 + 25c2=3, slide-in F51-57, state 4 F58) +
+         * RIGHT F59 (25d6=3 EXCHANGE) + CROSS F61 (dispatch [3] @0x8004a570: 25c2=7) +
+         * RIGHT F63 pressed+held (second cursor FUN_80048904: 0 -> 1 = the Red) +
+         * CROSS F65 (confirm: matcher pair 0x24+0x25 -> result 0x27 pic 1 @0x80074d54,
+         * executor action 1 mix-merge into slot 0 + compaction; result anim c3=1 runs
+         * F66-82: grow F66-73, shrink F74-81, terminal F82 -> state 6 -> GRID F90).
+         * Shot at F100 = the settled grid with G.R MEDICINE MIX (MIXITEM tile 1 art +
+         * qty 2 + name print). */
+        if (getenv("RE15_INV_MIX_SHOT")) {
+            if (g_engine.frame_count == 40 && !re15_menu_is_open()) {
+                re15_inv_init();
+                g_inv.slots[0].id = 0x24; g_inv.slots[0].qty = 1;   /* GREEN MEDICINE */
+                g_inv.slots[1].id = 0x25; g_inv.slots[1].qty = 1;   /* RED MEDICINE   */
+                re15_menu_toggle();
+            }
+            if (g_engine.frame_count == 41 || g_engine.frame_count == 50 ||
+                g_engine.frame_count == 61 || g_engine.frame_count == 65)
+                g_engine.pad_pressed |= RE15_PAD_BIT_CROSS;
+            if (g_engine.frame_count == 59)
+                g_engine.pad_pressed |= RE15_PAD_BIT_RIGHT;
+            if (g_engine.frame_count == 63) {
+                g_engine.pad_pressed |= RE15_PAD_BIT_RIGHT;
+                g_engine.pad_current |= RE15_PAD_BIT_RIGHT;
+            }
         }
 
         /* FE-5.1/5.2: track the START-menu pause/inventory in the FE-0 mode machine. The status/
@@ -2813,7 +2841,7 @@ re_title:;
                 plr->hp, (plr->status_flags & 2) ? 1 : 0);
             if (getenv("RE15_INV_SHOT") && !getenv("RE15_INV_SHOT_LIVE")
                 && !getenv("RE15_INV_GRID_SHOT") && !getenv("RE15_INV_CMD_SHOT")
-                && !getenv("RE15_INV_CHECK_SHOT")) {
+                && !getenv("RE15_INV_CHECK_SHOT") && !getenv("RE15_INV_MIX_SHOT")) {
                 /* mzd_inv_open.sav DISPLAYED frame: tab-select, tab=FILE(3), highlight 0,
                  * ECG sweep 0x60 / LED glow 0x18 (two ticks behind the stored RAM values
                  * 0x62/0x20 — double-buffer flip lag, solved from both fb halves). */
@@ -5184,7 +5212,9 @@ re_title:;
               /* command-stage shot (wave 3): 2nd CROSS at F45, state 4 from F53. */
               if (getenv("RE15_INV_CMD_SHOT"))  s_inv_shot_frame = 60;
               /* CHECK/examine shot (wave 4): settled photo + full knife desc. */
-              if (getenv("RE15_INV_CHECK_SHOT")) s_inv_shot_frame = 140; }
+              if (getenv("RE15_INV_CHECK_SHOT")) s_inv_shot_frame = 140;
+              /* EXCHANGE/mix shot (wave 5): settled grid with the G.R mix result. */
+              if (getenv("RE15_INV_MIX_SHOT"))  s_inv_shot_frame = 100; }
           if (s_inv_shot && *s_inv_shot && g_engine.frame_count == s_inv_shot_frame) {
               extern void re15_render_pc_screenshot(const char *path);
               re15_render_pc_screenshot(s_inv_shot);

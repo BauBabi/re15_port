@@ -160,6 +160,55 @@ int re15_inv_screen_condition(int hp, int poisoned)
     return 2;
 }
 
+/* ---- WAVE 5: icon-cache cell art override (see re15_inv_screen.h for the model +
+ * citations). 0 = identity; 1..14 = MIXITEM pic; 0x80|tile = frozen ITEMALL tile. */
+static uint8_t s_icon_ovr[10];
+
+void re15_inv_icon_reset(void) { memset(s_icon_ovr, 0, sizeof s_icon_ovr); }
+
+void re15_inv_icon_mix_upload(int cell, int pic)
+{
+    /* FUN_800492b8(cell, 0, 0x801a0000 + (pic-1)*1200) — the EXCHANGE executor's
+     * result-tile upload (a2 math sll2+add/sll4-sub/sll4 = (pic-1)*1200 @0x8004e224-38
+     * et al.). pic is always 1..14 in the shipped pair data (every action-1/4/6 pair
+     * carries a nonzero pic byte; pic==0 exists only on the action-2/3/5 reload pairs,
+     * which never reach an upload site). */
+    if (cell >= 0 && cell <= 9) s_icon_ovr[cell] = (uint8_t)(pic & 0x7f);
+}
+
+void re15_inv_icon_copy(int src, int dst)
+{
+    /* FUN_80049390(a0=src, a1=dst): MoveImage of the 40x30 cell rect (RECT built from
+     * a0 @0x80049448/0x80049460, dest xy from a1 @0x800493f4-408) — the destination
+     * cell now shows the source cell's CURRENT art, so the override value moves with
+     * it (identity stays identity because the slot bytes are copied by the same ops). */
+    if (src >= 0 && src <= 9 && dst >= 0 && dst <= 9) s_icon_ovr[dst] = s_icon_ovr[src];
+}
+
+void re15_inv_icon_blank(int cell)
+{
+    /* FUN_8004947c(cell): MoveImage from the static blank rect (680,346) 40x30
+     * (@0x80049494-b4: {0x2a8,0x15a,0x14,0x1e}) — always paired with the slot's
+     * id:=0 write, so identity (empty -> ITEMALL tile 0 = blank) re-holds. */
+    if (cell >= 0 && cell <= 9) s_icon_ovr[cell] = 0;
+}
+
+void re15_inv_icon_freeze_tile(int cell, int tile)
+{
+    /* Reload-full writes the id byte (@0x8004e370/@0x8004e47c) with ZERO icon calls in
+     * its branch (no jal in 0x8004e34c-e3e0 / 0x8004e458-e4ec) — the cell keeps the OLD
+     * art. Freeze the identity cell at its pre-change tile; an already-overridden cell
+     * keeps its override (== "no VRAM write"). */
+    if (cell >= 0 && cell <= 9 && s_icon_ovr[cell] == 0)
+        s_icon_ovr[cell] = (uint8_t)(0x80 | (tile & 0x7f));
+}
+
+int re15_inv_screen_cache_mix_pic(int cell)
+{
+    if (cell < 0 || cell > 9) return 0;
+    return (s_icon_ovr[cell] != 0 && !(s_icon_ovr[cell] & 0x80)) ? s_icon_ovr[cell] : 0;
+}
+
 int re15_inv_screen_cache_tile(int cell)
 {
     if (cell < 0 || cell > 9) return -1;      /* cells 10/11 = ST_00 static art (Q3) */
@@ -168,6 +217,9 @@ int re15_inv_screen_cache_tile(int cell)
         uint8_t kind = g_inv.slots[cell].flags;
         if (kind == 1 || kind == 2) return -2; /* wide weapon: 80x30 from ITPS blk+0x21A0
                                                 * (FUN_800492b8 mode1) — OPEN in wave 1 */
+        if (s_icon_ovr[cell] & 0x80)           /* wave 5: frozen art (reload-full id
+                                                * change without a VRAM write)          */
+            return s_icon_ovr[cell] & 0x7f;
         return id;                             /* identity map incl. 0x15 (Q3 byte-proof);
                                                 * empty slot -> tile 0 = blank navy */
     }
@@ -591,11 +643,16 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
         }
         master_row(9, &clut_idx, &count, &tmpl);
         for (i = 0; i < count; i++) {
-            /* jitter regs DAT_800b25d0-d3 = 0 outside the combine flow */
+            /* wave 5: jitter regs DAT_800b25d0-d3 (combine result-anim pulse), added
+             * SIGN-EXTENDED per prim (case 9 sll 24/sra 24 @0x80047e98-eb8: prim0 +=
+             * (s8)25d0/(s8)25d1, prim1 += (s8)25d2/(s8)25d3 @0x80047f88-9c); 0 outside
+             * the combine flow (init zeroing @0x8004646c-84 + walker terminal). */
+            int jx = (i == 0) ? (int8_t)st->comb_d0 : (int8_t)st->comb_d2;
+            int jy = (i == 0) ? (int8_t)st->comb_d1 : (int8_t)st->comb_d3;
             tmpl_row(tmpl, base9 + i, &x, &y, &w, &h, &u, &v);
             sprt(&e, RE15_INV_PAGE_TEX4, clut_idx,
-                 bs16(CELL_TBL + (uint32_t)st->second_cursor * 4u) + x + LIST_BX,
-                 bs16(CELL_TBL + (uint32_t)st->second_cursor * 4u + 2u) + y + LIST_BY,
+                 bs16(CELL_TBL + (uint32_t)st->second_cursor * 4u) + x + LIST_BX + jx,
+                 bs16(CELL_TBL + (uint32_t)st->second_cursor * 4u + 2u) + y + LIST_BY + jy,
                  w, h, u, v, 128, 128, 128, 0);
         }
     }

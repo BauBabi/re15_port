@@ -21,11 +21,24 @@
 #include <string.h>
 #include "re15_menu.h"
 #include "re15_inv_screen.h"
+#include "re15_inv_ui.h"     /* wave 5: the embedded EXE blob (pair lists @0x80074C88..,
+                              * prop table @0x80074DA8) — the tests drive the FULL
+                              * combine graph from the shipped bytes, nothing re-typed */
 #include "re15_inventory.h"
 #include "re15_player.h"     /* RE15_PAD_BIT_* */
 #include "re15_damage.h"     /* re15_player_equipped_weapon / set */
 #include "re15_actor.h"      /* player hp / status_flags (wave-3 heal) */
 #include "re15_fade.h"
+
+/* wave-5 blob readers (little-endian, PSX-address keyed) */
+static uint8_t  tu8(uint32_t addr) { return *RE15_INV_PTR(addr); }
+static uint32_t tu32(uint32_t addr)
+{
+    const unsigned char *p = RE15_INV_PTR(addr);
+    return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16)
+         | ((uint32_t)p[3] << 24);
+}
+#define T_PROP 0x80074DA8u   /* prop table stride 12 {cap,pair_ptr,kind,pair_count} */
 
 static int fails = 0;
 #define CHECK(cond, ...) do { if (!(cond)) { fprintf(stderr, "FAIL: " __VA_ARGS__); \
@@ -53,6 +66,531 @@ static void use_confirm(void)
     frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
     idle(8);
     frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+}
+
+/* ====================== WAVE 5 helpers (spec shots/inv_wave5_spec.md) ================ */
+/* Fresh debug-open with the CURRENT g_inv seed -> ITEM -> GRID (cursor 0). */
+static void w5_open_to_grid(void)
+{
+    re15_inv_set_equipped_slot(0x80);            /* nothing equipped (25c8) */
+    re15_inv_set_prev_equip_slot(0x80);
+    re15_menu_toggle();
+    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);   /* tab ITEM confirm */
+    idle(8);                                     /* entry slide -> GRID */
+}
+/* From GRID with the cursor placed: grid confirm (25d6=0 + 25c2=3) -> command slide-in
+ * -> RIGHT (25d6=3 EXCHANGE @0x8004a458-47c) -> CROSS (dispatch [3] @0x8004a570:
+ * 25c2=7; 25be keeps its grid-mirror value, c3/c4 = 0 by the terminal invariant). */
+static void w5_enter_exchange(void)
+{
+    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    idle(8);
+    frame(RE15_PAD_BIT_RIGHT, RE15_PAD_BIT_RIGHT);
+    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    CHECK(g_inv_screen.item_state == 7, "(w5) EXCHANGE confirm -> 25c2=7 (@0x8004a570)");
+}
+/* Finish a successful combine: 17-step anim (grow 8 + shrink 8 + terminal
+ * @0x80010ff4) -> state 6 -> slide-out -> GRID; then close the debug session. */
+static void w5_finish_and_close(void)
+{
+    idle(17);
+    CHECK(g_inv_screen.item_state == 6 && re15_menu_item_c3() == 0 && re15_menu_item_c4() == 0,
+          "(w5) result-anim terminal -> 25c2=6 + c3/c4=0 (@0x8004b524-b55c)");
+    idle(8);
+    CHECK(g_inv_screen.item_state == 1, "(w5) slide-out -> GRID");
+    re15_menu_toggle();
+}
+/* One state-7 second-cursor move: a fresh d-pad press edge (auto-repeat fire). */
+static void w5_second_move(uint16_t dir)
+{
+    frame(dir, dir);
+}
+
+static void wave5_tests(void)
+{
+    int i, oi;
+
+    /* (24) FULL herb mix graph, table-driven from the embedded blob: owners
+     * 0x24..0x29, pair lists @0x80074d54-...a7 (pair_ptr/pair_count read from the prop
+     * rows +4/+9 exactly like the matcher @0x8004e9d8/@0x8004e9e8). Expected counts
+     * {6,4,3,3,3,2} = the spec table; every pair is action 1 = MIX-MERGE
+     * (@0x8004e1ac): result id + count A+B into the LOWER slot, other slot cleared,
+     * MIXITEM tile pic, then compaction (@0x8004b3cc) shifts the knife filler down. */
+    {
+        static const uint8_t owners[6] = { 0x24, 0x25, 0x26, 0x27, 0x28, 0x29 };
+        static const uint8_t exp_cnt[6] = { 6, 4, 3, 3, 3, 2 };
+        int pairs_seen = 0;
+        for (oi = 0; oi < 6; oi++) {
+            uint8_t  cnt   = tu8(T_PROP + (uint32_t)owners[oi] * 12u + 9u);
+            uint32_t plist = tu32(T_PROP + (uint32_t)owners[oi] * 12u + 4u);
+            CHECK(cnt == exp_cnt[oi], "(24) owner %02x pair_count %d (blob +9), is %d",
+                  owners[oi], exp_cnt[oi], cnt);
+            for (i = 0; i < cnt; i++) {
+                uint8_t partner = tu8(plist + (uint32_t)i * 4u);
+                uint8_t result  = tu8(plist + (uint32_t)i * 4u + 1u);
+                uint8_t act     = tu8(plist + (uint32_t)i * 4u + 2u);
+                uint8_t pic     = tu8(plist + (uint32_t)i * 4u + 3u);
+                CHECK(act == 1, "(24) herb pair %02x+%02x action must be 1, is %d",
+                      owners[oi], partner, act);
+                pairs_seen++;
+                re15_inv_init();
+                g_inv.slots[0].id = owners[oi]; g_inv.slots[0].qty = 1;
+                g_inv.slots[1].id = partner;    g_inv.slots[1].qty = 2;
+                g_inv.slots[2].id = 0x01;       g_inv.slots[2].qty = 0;  /* knife filler */
+                w5_open_to_grid();
+                w5_enter_exchange();
+                w5_second_move(RE15_PAD_BIT_RIGHT);          /* 2nd cursor 0 -> 1 */
+                CHECK(g_inv_screen.second_cursor == 1, "(24) 2nd cursor on the partner");
+                frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);   /* confirm = mix NOW */
+                CHECK(g_inv.slots[0].id == result && g_inv.slots[0].qty == 3,
+                      "(24) %02x+%02x -> %02x qty 1+2=3 in the LOWER slot "
+                      "(@0x8004e1e8-214), got %02x q%d", owners[oi], partner, result,
+                      g_inv.slots[0].id, g_inv.slots[0].qty);
+                CHECK(g_inv.slots[1].id == 0x01,
+                      "(24) other slot cleared + compaction shifted the knife down "
+                      "(@0x8004e2ec-30c + @0x8004b3cc), slot1=%02x", g_inv.slots[1].id);
+                CHECK(g_inv.slots[2].id == 0, "(24) tail slot vacated by the compaction");
+                CHECK(re15_inv_screen_cache_mix_pic(0) == pic,
+                      "(24) MIXITEM tile pic %d uploaded to the result cell "
+                      "(@0x8004e224-44), is %d", pic, re15_inv_screen_cache_mix_pic(0));
+                CHECK(re15_menu_item_c3() == 1 && re15_menu_item_c4() == 0,
+                      "(24) confirm arms the result anim (25c3=1 @0x8004b3e4)");
+                w5_finish_and_close();
+            }
+        }
+        CHECK(pairs_seen == 21, "(24) the herb graph has 21 pairs total, saw %d", pairs_seen);
+        /* the asymmetric-pic quirk pinned on the shipped bytes: 0x24+0x27 -> 0x2a pic 7
+         * (@0x80074d60) vs 0x27+0x24 -> 0x2a pic 4 (@0x80074d8c) — same result id,
+         * different tile; ported as-is. */
+        CHECK(tu8(0x80074d60u) == 0x27 && tu8(0x80074d61u) == 0x2a && tu8(0x80074d63u) == 7,
+              "(24) blob @0x80074d60 = {27,2a,01,07}");
+        CHECK(tu8(0x80074d8cu) == 0x24 && tu8(0x80074d8du) == 0x2a && tu8(0x80074d8fu) == 4,
+              "(24) blob @0x80074d8c = {24,2a,01,04}");
+    }
+
+    /* (24b) LOWER-slot rule with the cursor on the HIGHER slot: owner at slot 2,
+     * partner at slot 0 -> the merge lands in slot 0 (sltu picks the branch
+     * @0x8004e1b4/@0x8004e250). */
+    re15_inv_init();
+    g_inv.slots[0].id = 0x25; g_inv.slots[0].qty = 2;    /* RED (partner) */
+    g_inv.slots[1].id = 0x01; g_inv.slots[1].qty = 0;    /* knife */
+    g_inv.slots[2].id = 0x24; g_inv.slots[2].qty = 1;    /* GREEN (owner, cursor) */
+    w5_open_to_grid();
+    frame(RE15_PAD_BIT_DOWN, RE15_PAD_BIT_DOWN); idle(1);    /* cursor 0 -> 2 */
+    CHECK(g_inv_screen.item_cursor == 2, "(24b) cursor on the Green at slot 2");
+    w5_enter_exchange();
+    w5_second_move(RE15_PAD_BIT_UP);                     /* 2nd cursor 2 -> 0 */
+    CHECK(g_inv_screen.second_cursor == 0, "(24b) 2nd cursor on the Red at slot 0");
+    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    CHECK(g_inv.slots[0].id == 0x27 && g_inv.slots[0].qty == 3,
+          "(24b) G(slot2)+R(slot0) -> 0x27 qty 3 in slot 0 (the LOWER slot), got %02x q%d",
+          g_inv.slots[0].id, g_inv.slots[0].qty);
+    CHECK(g_inv.slots[1].id == 0x01 && g_inv.slots[2].id == 0,
+          "(24b) slot 2 cleared; knife stays at slot 1 (hole was after it)");
+    w5_finish_and_close();
+
+    /* (25) the 17-step result-anim walker @0x80010ff4 register-exact (fresh disasm):
+     * steps 0-7 = 0x8004b43c GROW (d0/d1 +1, d2/d3 -1, c4++ @0x8004b468-49c); steps
+     * 8-15 = 0x8004b4a8 SHRINK (25be := 25bd EVERY frame @0x8004b4f0, deltas reversed
+     * @0x8004b4d8-b518); step 16 = 0x8004b524 TERMINAL (25c2=6, c3/c4=0, d0-d3=0).
+     * Peak = +-8 at step 8. G+G -> 0x28 (pair @0x80074d58 {24,28,01,02}). */
+    re15_inv_init();
+    g_inv.slots[0].id = 0x24; g_inv.slots[0].qty = 1;
+    g_inv.slots[1].id = 0x24; g_inv.slots[1].qty = 1;
+    w5_open_to_grid();
+    w5_enter_exchange();
+    w5_second_move(RE15_PAD_BIT_RIGHT);
+    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    CHECK(g_inv.slots[0].id == 0x28 && g_inv.slots[0].qty == 2,
+          "(25) G+G -> 0x28 qty 2 (pair @0x80074d58)");
+    CHECK(re15_inv_screen_cache_mix_pic(0) == 2, "(25) MIXITEM pic 2");
+    CHECK(g_inv_screen.comb_d0 == 0 && g_inv_screen.comb_d2 == 0,
+          "(25) jitter still 0 on the confirm frame (walker starts next frame)");
+    for (i = 1; i <= 8; i++) {                           /* GROW steps 0..7 */
+        frame(0, 0);
+        CHECK(g_inv_screen.comb_d0 == i && g_inv_screen.comb_d1 == i &&
+              g_inv_screen.comb_d2 == (uint8_t)-i && g_inv_screen.comb_d3 == (uint8_t)-i,
+              "(25) grow step %d: d0/d1=+%d d2/d3=-%d (@0x8004b468-494), got %d/%d",
+              i - 1, i, i, g_inv_screen.comb_d0, (int8_t)g_inv_screen.comb_d2);
+        CHECK(re15_menu_item_c4() == i, "(25) c4 == %d", i);
+        CHECK(g_inv_screen.second_cursor == 1,
+              "(25) 2nd cursor NOT snapped during grow (no 25be write in 0x8004b43c)");
+    }
+    for (i = 1; i <= 8; i++) {                           /* SHRINK steps 8..15 */
+        frame(0, 0);
+        CHECK(g_inv_screen.comb_d0 == 8 - i &&
+              g_inv_screen.comb_d2 == (uint8_t)-(8 - i),
+              "(25) shrink step %d: d0=%d (@0x8004b4d8-b510), got %d",
+              7 + i, 8 - i, g_inv_screen.comb_d0);
+        CHECK(g_inv_screen.second_cursor == g_inv_screen.item_cursor,
+              "(25) 25be := 25bd every shrink frame (@0x8004b4f0)");
+    }
+    frame(0, 0);                                         /* step 16 terminal */
+    CHECK(g_inv_screen.item_state == 6 && re15_menu_item_c3() == 0 &&
+          re15_menu_item_c4() == 0 && g_inv_screen.comb_d0 == 0 &&
+          g_inv_screen.comb_d1 == 0 && g_inv_screen.comb_d2 == 0 &&
+          g_inv_screen.comb_d3 == 0,
+          "(25) terminal: 25c2=6 + c3/c4=0 + d0-d3=0 (@0x8004b524-b55c)");
+    idle(8);
+    re15_menu_toggle();
+
+    /* (26) RELOAD cap clamp, both directions (actions 2/3 @0x8004e320/@0x8004e42c;
+     * cap = prop[+0] of the id at the RAW cursor slot: s2 @0x8004e338 / s1 @0x8004e444).
+     * Browning 0x03: cap 15, pair {15,03,02,00} @0x80074c8c; ammo 0x15 owns the mirror
+     * pair {03,03,03,00} @0x80074cd0 (action 3). */
+    CHECK(tu8(T_PROP + 0x03 * 12u) == 15, "(26) prop[0x03].cap == 15 (blob)");
+    /* weapon-first FULL: 10+5 = 15 <= 15 */
+    re15_inv_init();
+    g_inv.slots[0].id = 0x03; g_inv.slots[0].qty = 10;
+    g_inv.slots[1].id = 0x15; g_inv.slots[1].qty = 5;
+    w5_open_to_grid();
+    w5_enter_exchange();
+    w5_second_move(RE15_PAD_BIT_RIGHT);
+    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    CHECK(g_inv.slots[0].id == 0x03 && g_inv.slots[0].qty == 15 && g_inv.slots[1].id == 0,
+          "(26) weapon-first FULL reload: qty 15, box deleted (@0x8004e34c-3e0), got %02x q%d",
+          g_inv.slots[0].id, g_inv.slots[0].qty);
+    CHECK(re15_menu_item_c3() == 1, "(26) action 2 != 0 -> the anim runs");
+    w5_finish_and_close();
+    /* weapon-first PARTIAL: 10+50 = 60 > 15 -> mag=15, box=45, ids unchanged */
+    re15_inv_init();
+    g_inv.slots[0].id = 0x03; g_inv.slots[0].qty = 10;
+    g_inv.slots[1].id = 0x15; g_inv.slots[1].qty = 50;
+    w5_open_to_grid();
+    w5_enter_exchange();
+    w5_second_move(RE15_PAD_BIT_RIGHT);
+    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    CHECK(g_inv.slots[0].qty == 15 && g_inv.slots[1].qty == 45 &&
+          g_inv.slots[0].id == 0x03 && g_inv.slots[1].id == 0x15,
+          "(26) weapon-first PARTIAL: mag=cap 15, box=rest 45, NO id write "
+          "(@0x8004e3e4-420), got q%d/q%d", g_inv.slots[0].qty, g_inv.slots[1].qty);
+    CHECK(re15_menu_item_c3() == 1, "(26) partial also animates (returns 2)");
+    w5_finish_and_close();
+    /* ammo-first PARTIAL (action 3, cap from prop[s1] = the weapon @0x8004e444) */
+    re15_inv_init();
+    g_inv.slots[0].id = 0x15; g_inv.slots[0].qty = 50;
+    g_inv.slots[1].id = 0x03; g_inv.slots[1].qty = 10;
+    w5_open_to_grid();
+    w5_enter_exchange();
+    w5_second_move(RE15_PAD_BIT_RIGHT);
+    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    CHECK(g_inv.slots[1].qty == 15 && g_inv.slots[0].qty == 45,
+          "(26) ammo-first PARTIAL: weapon=15, box=45 (@0x8004e4f0-52c), got q%d/q%d",
+          g_inv.slots[1].qty, g_inv.slots[0].qty);
+    w5_finish_and_close();
+    /* ammo-first FULL: 5+10 = 15 -> weapon takes 15, ammo slot deleted + compaction
+     * shifts the weapon into slot 0 */
+    re15_inv_init();
+    g_inv.slots[0].id = 0x15; g_inv.slots[0].qty = 5;
+    g_inv.slots[1].id = 0x03; g_inv.slots[1].qty = 10;
+    w5_open_to_grid();
+    w5_enter_exchange();
+    w5_second_move(RE15_PAD_BIT_RIGHT);
+    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    CHECK(g_inv.slots[0].id == 0x03 && g_inv.slots[0].qty == 15 && g_inv.slots[1].id == 0,
+          "(26) ammo-first FULL: weapon q15 compacted into slot 0 (@0x8004e458-4ec + "
+          "@0x8004b3cc), got %02x q%d", g_inv.slots[0].id, g_inv.slots[0].qty);
+    w5_finish_and_close();
+    /* wide-weapon kind-2 normalization (matcher @0x8004e910-38 / executor @0x8004e0c8-11c):
+     * FLAMETHROWER 0x0e (cells 0/1, kind 1/2) + FLAME FUEL 0x18; cursor on the TAIL
+     * cell 1 -> normalized to 0. Pair {18,0e,02,00} @0x80074ca8, cap prop[0x0e]=100. */
+    re15_inv_init();
+    g_inv.slots[0].id = 0x0e; g_inv.slots[0].qty = 40; g_inv.slots[0].flags = 1;
+    g_inv.slots[1].id = 0x0e; g_inv.slots[1].qty = 40; g_inv.slots[1].flags = 2;
+    g_inv.slots[2].id = 0x18; g_inv.slots[2].qty = 60;
+    w5_open_to_grid();
+    frame(RE15_PAD_BIT_RIGHT, RE15_PAD_BIT_RIGHT); idle(1);  /* cursor 0 -> 1 (tail) */
+    CHECK(g_inv_screen.item_cursor == 1, "(26w) cursor on the tail cell");
+    w5_enter_exchange();
+    w5_second_move(RE15_PAD_BIT_LEFT);                   /* 2nd 1 -> 0 */
+    w5_second_move(RE15_PAD_BIT_DOWN);                   /* 2nd 0 -> 2 (the fuel) */
+    CHECK(g_inv_screen.second_cursor == 2, "(26w) 2nd cursor on the fuel");
+    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    CHECK(g_inv.slots[0].qty == 100 && g_inv.slots[0].id == 0x0e,
+          "(26w) FULL into the NORMALIZED head slot: 40+60=100=cap (@0x8004e910-38), q%d",
+          g_inv.slots[0].qty);
+    CHECK(g_inv.slots[1].qty == 40,
+          "(26w) the tail cell's qty byte is NOT written (only the head slot), q%d",
+          g_inv.slots[1].qty);
+    CHECK(g_inv.slots[2].id == 0, "(26w) fuel deleted");
+    w5_finish_and_close();
+
+    /* (27) THE GLOCK-18 QUIRK: pair @0x80074c98 = {15,04,02,00} — the reload RESULT
+     * byte is 0x04 SIG P228 (@0x80074c99), not 0x06. A full reload TRANSFORMS the
+     * GLOCK into a SIG; the icon cell keeps the GLOCK art (no icon call in the full
+     * branch 0x8004e34c-e3e0). The ammo-side list @0x80074ccc has NO 0x06 partner
+     * (partners {15,03,04,05,04,0c,13}) -> bullets-first on a GLOCK = NO action. */
+    CHECK(tu8(0x80074c98u) == 0x15 && tu8(0x80074c99u) == 0x04 &&
+          tu8(0x80074c9au) == 0x02,
+          "(27) blob @0x80074c98 = {15,04,02} (the shipped quirk bytes)");
+    re15_inv_init();
+    g_inv.slots[0].id = 0x06; g_inv.slots[0].qty = 1;    /* GLOCK 18 */
+    g_inv.slots[1].id = 0x15; g_inv.slots[1].qty = 5;
+    w5_open_to_grid();
+    w5_enter_exchange();
+    w5_second_move(RE15_PAD_BIT_RIGHT);
+    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    CHECK(g_inv.slots[0].id == 0x04 && g_inv.slots[0].qty == 6,
+          "(27) GLOCK full reload -> id 0x04 SIG P228 qty 6 (@0x80074c99 via "
+          "@0x8004e370), got %02x q%d", g_inv.slots[0].id, g_inv.slots[0].qty);
+    CHECK(re15_inv_screen_cache_tile(0) == 0x06,
+          "(27) the icon cell keeps the GLOCK art (no repaint in 0x8004e34c-e3e0), "
+          "tile %d", re15_inv_screen_cache_tile(0));
+    w5_finish_and_close();
+    {   /* ammo-side asymmetry: no 0x06 in the 0x15 partner list (blob scan) */
+        uint8_t  cnt   = tu8(T_PROP + 0x15 * 12u + 9u);
+        uint32_t plist = tu32(T_PROP + 0x15 * 12u + 4u);
+        int found = 0;
+        for (i = 0; i < cnt; i++) if (tu8(plist + (uint32_t)i * 4u) == 0x06) found = 1;
+        CHECK(cnt == 7 && !found,
+              "(27) ammo list @0x80074ccc: 7 partners, none == 0x06 (the quirk's mirror)");
+    }
+    re15_inv_init();
+    g_inv.slots[0].id = 0x15; g_inv.slots[0].qty = 5;
+    g_inv.slots[1].id = 0x06; g_inv.slots[1].qty = 1;
+    w5_open_to_grid();
+    w5_enter_exchange();
+    w5_second_move(RE15_PAD_BIT_RIGHT);
+    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    CHECK(g_inv_screen.item_state == 6 && g_inv.slots[0].id == 0x15 &&
+          g_inv.slots[0].qty == 5 && g_inv.slots[1].id == 0x06,
+          "(27) bullets-first on the GLOCK: NO pair -> 25c2=6, nothing mutated "
+          "(@0x8004ea38-5c scan miss -> @0x8004b3f0)");
+    idle(8);
+    re15_menu_toggle();
+
+    /* (28) SELF-STACK (action 5 @0x8004e664): pair {15,15,05,00} @0x80074ccc;
+     * delegates to the action-2 body when norm A < norm B (@0x8004e670) else the
+     * action-3 body (@0x8004e678); cap = the ammo's own 250. */
+    re15_inv_init();
+    g_inv.slots[0].id = 0x15; g_inv.slots[0].qty = 30;
+    g_inv.slots[1].id = 0x15; g_inv.slots[1].qty = 40;
+    w5_open_to_grid();
+    w5_enter_exchange();
+    w5_second_move(RE15_PAD_BIT_RIGHT);
+    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    CHECK(g_inv.slots[0].id == 0x15 && g_inv.slots[0].qty == 70 && g_inv.slots[1].id == 0,
+          "(28) self-stack A-lower: 30+40=70 into slot 0, other deleted, got q%d",
+          g_inv.slots[0].qty);
+    CHECK(re15_menu_item_c3() == 1, "(28) action 5 != 0 -> anim");
+    w5_finish_and_close();
+    /* partial self-stack over the 250 cap */
+    re15_inv_init();
+    g_inv.slots[0].id = 0x15; g_inv.slots[0].qty = 200;
+    g_inv.slots[1].id = 0x15; g_inv.slots[1].qty = 100;
+    w5_open_to_grid();
+    w5_enter_exchange();
+    w5_second_move(RE15_PAD_BIT_RIGHT);
+    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    CHECK(g_inv.slots[0].qty == 250 && g_inv.slots[1].qty == 50,
+          "(28) partial self-stack: 250 cap + 50 rest (cap @0x80074da8+0x15*12), got %d/%d",
+          g_inv.slots[0].qty, g_inv.slots[1].qty);
+    w5_finish_and_close();
+    /* cursor on the HIGHER slot -> the action-3 body (merge into B = the lower) */
+    re15_inv_init();
+    g_inv.slots[0].id = 0x15; g_inv.slots[0].qty = 30;
+    g_inv.slots[1].id = 0x15; g_inv.slots[1].qty = 40;
+    w5_open_to_grid();
+    frame(RE15_PAD_BIT_RIGHT, RE15_PAD_BIT_RIGHT); idle(1);  /* cursor 0 -> 1 */
+    w5_enter_exchange();
+    w5_second_move(RE15_PAD_BIT_LEFT);                   /* 2nd 1 -> 0 */
+    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    CHECK(g_inv.slots[0].qty == 70 && g_inv.slots[1].id == 0,
+          "(28) self-stack B-lower (@0x8004e678 -> action-3 body): 70 into slot 0, got q%d",
+          g_inv.slots[0].qty);
+    w5_finish_and_close();
+
+    /* (29) CRAFTING (action 6 @0x8004e680) — equal-count pairs table-driven over ALL
+     * shipped action-6 pairs (owners 0x1c-0x20: detonator/shells + capsules ->
+     * grenades 0x09-0x0b pics 9-11 / GL rounds 0x19-0x1b pics 12-14). */
+    {
+        int crafts = 0;
+        for (oi = 0x1c; oi <= 0x20; oi++) {
+            uint8_t  cnt   = tu8(T_PROP + (uint32_t)oi * 12u + 9u);
+            uint32_t plist = tu32(T_PROP + (uint32_t)oi * 12u + 4u);
+            for (i = 0; i < cnt; i++) {
+                uint8_t partner = tu8(plist + (uint32_t)i * 4u);
+                uint8_t result  = tu8(plist + (uint32_t)i * 4u + 1u);
+                uint8_t act     = tu8(plist + (uint32_t)i * 4u + 2u);
+                uint8_t pic     = tu8(plist + (uint32_t)i * 4u + 3u);
+                if (act != 6) continue;
+                crafts++;
+                re15_inv_init();
+                g_inv.slots[0].id = (uint8_t)oi; g_inv.slots[0].qty = 2;
+                g_inv.slots[1].id = partner;     g_inv.slots[1].qty = 2;
+                w5_open_to_grid();
+                w5_enter_exchange();
+                w5_second_move(RE15_PAD_BIT_RIGHT);
+                frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+                CHECK(g_inv.slots[0].id == result && g_inv.slots[0].qty == 2 &&
+                      g_inv.slots[1].id == 0,
+                      "(29) craft equal %02x+%02x -> %02x qty 2, other deleted "
+                      "(@0x8004e6d8-758), got %02x q%d", oi, partner, result,
+                      g_inv.slots[0].id, g_inv.slots[0].qty);
+                CHECK(re15_inv_screen_cache_mix_pic(0) == pic,
+                      "(29) MIXITEM pic %d (@0x8004e71c)", pic);
+                w5_finish_and_close();
+            }
+        }
+        CHECK(crafts == 12, "(29) 12 shipped action-6 pairs (3+3+2+2+2), saw %d", crafts);
+    }
+    /* unequal, LOWER stack bigger (qty_lo > qty_hi @0x8004e76c-834): result=min into
+     * the lower slot, the leftover takes the SOURCE id in the higher slot + the source
+     * cell art (icon copy @0x8004e7d0). */
+    re15_inv_init();
+    g_inv.slots[0].id = 0x1c; g_inv.slots[0].qty = 5;    /* REMOTE DETON. */
+    g_inv.slots[1].id = 0x1e; g_inv.slots[1].qty = 2;    /* NITRO CAPSULE */
+    w5_open_to_grid();
+    w5_enter_exchange();
+    w5_second_move(RE15_PAD_BIT_RIGHT);
+    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    CHECK(g_inv.slots[0].id == 0x09 && g_inv.slots[0].qty == 2,
+          "(29u) lower gets {result, min=2} (@0x8004e7f0/@0x8004e800), got %02x q%d",
+          g_inv.slots[0].id, g_inv.slots[0].qty);
+    CHECK(g_inv.slots[1].id == 0x1c && g_inv.slots[1].qty == 3,
+          "(29u) leftover 5-2=3 keeps the SOURCE id 0x1c in the higher slot "
+          "(@0x8004e798/@0x8004e7cc), got %02x q%d", g_inv.slots[1].id, g_inv.slots[1].qty);
+    CHECK(re15_inv_screen_cache_mix_pic(0) == 9 && re15_inv_screen_cache_mix_pic(1) == 0,
+          "(29u) MIXITEM on the lower; the leftover cell got the source-cell COPY "
+          "(identity art, @0x8004e7d0)");
+    w5_finish_and_close();
+    /* unequal, HIGHER stack bigger (qty_hi > qty_lo @0x8004e83c-8d0): result=min into
+     * the lower (kind[lo]:=0 @0x8004e858 — the one-branch-only write), higher keeps
+     * its id with the difference. */
+    re15_inv_init();
+    g_inv.slots[0].id = 0x1c; g_inv.slots[0].qty = 2;
+    g_inv.slots[1].id = 0x1e; g_inv.slots[1].qty = 5;
+    w5_open_to_grid();
+    w5_enter_exchange();
+    w5_second_move(RE15_PAD_BIT_RIGHT);
+    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    CHECK(g_inv.slots[0].id == 0x09 && g_inv.slots[0].qty == 2 &&
+          g_inv.slots[0].flags == 0,
+          "(29u2) lower {result, min=2, kind 0} (@0x8004e858-868), got %02x q%d f%d",
+          g_inv.slots[0].id, g_inv.slots[0].qty, g_inv.slots[0].flags);
+    CHECK(g_inv.slots[1].id == 0x1e && g_inv.slots[1].qty == 3,
+          "(29u2) higher keeps its id with 5-2=3 (@0x8004e8a8-8d0), got %02x q%d",
+          g_inv.slots[1].id, g_inv.slots[1].qty);
+    w5_finish_and_close();
+
+    /* (30) NO PAIR -> state 6 (executor returns 0 -> sb 6 @0x8004b3f0-f4): knife has
+     * pair_count 0 (prop row 0x01). */
+    re15_inv_init();
+    g_inv.slots[0].id = 0x01; g_inv.slots[0].qty = 0;
+    g_inv.slots[1].id = 0x03; g_inv.slots[1].qty = 15;
+    w5_open_to_grid();
+    w5_enter_exchange();
+    w5_second_move(RE15_PAD_BIT_RIGHT);
+    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    CHECK(g_inv_screen.item_state == 6 && re15_menu_item_c3() == 0,
+          "(30) knife+browning: no pair -> 25c2=6, no anim (pair_count 0 @prop 0x01)");
+    CHECK(g_inv.slots[0].id == 0x01 && g_inv.slots[1].id == 0x03,
+          "(30) inventory untouched");
+    idle(8);
+    re15_menu_toggle();
+
+    /* (31) SAME-SLOT + EMPTY-partner rejects (matcher @0x8004e98c / @0x8004e9bc). */
+    re15_inv_init();
+    g_inv.slots[0].id = 0x24; g_inv.slots[0].qty = 1;
+    w5_open_to_grid();
+    w5_enter_exchange();
+    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);       /* 2nd == cursor == 0 */
+    CHECK(g_inv_screen.item_state == 6 && g_inv.slots[0].id == 0x24,
+          "(31) same-slot confirm -> 25c2=6, Green intact (@0x8004e98c)");
+    idle(8);
+    w5_enter_exchange();
+    w5_second_move(RE15_PAD_BIT_RIGHT);                  /* 2nd -> 1 (EMPTY) */
+    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    CHECK(g_inv_screen.item_state == 6 && g_inv.slots[0].id == 0x24,
+          "(31) empty-partner confirm -> 25c2=6 (idB==0 @0x8004e9bc)");
+    idle(8);
+    re15_menu_toggle();
+
+    /* (32) DORMANT ACTION 4: the swap+transform pairs @0x80074cb8/bc ship in the data
+     * ({1a,10,04,0c}/{1b,11,04,0c}) but their owners 0x10/0x11 — like all orphan-pair
+     * owners 0x09-0x0b/0x0f/0x13 — have pair_count 0; and NO reachable list (rows
+     * 0x00-0x47) contains an action-4 pair. */
+    CHECK(tu8(0x80074cb8u) == 0x1a && tu8(0x80074cb9u) == 0x10 &&
+          tu8(0x80074cbau) == 0x04 && tu8(0x80074cbbu) == 0x0c,
+          "(32) orphan pair @0x80074cb8 = {1a,10,04,0c} present in the data");
+    CHECK(tu8(0x80074cbcu) == 0x1b && tu8(0x80074cbdu) == 0x11 &&
+          tu8(0x80074cbeu) == 0x04, "(32) orphan pair @0x80074cbc = {1b,11,04,..}");
+    {
+        static const uint8_t orphan_owners[7] = { 0x09, 0x0a, 0x0b, 0x0f, 0x10, 0x11, 0x13 };
+        int id, a4 = 0;
+        for (i = 0; i < 7; i++)
+            CHECK(tu8(T_PROP + (uint32_t)orphan_owners[i] * 12u + 9u) == 0,
+                  "(32) owner %02x pair_count must be 0 (dormant)", orphan_owners[i]);
+        for (id = 0; id <= 0x47; id++) {
+            uint8_t  cnt   = tu8(T_PROP + (uint32_t)id * 12u + 9u);
+            uint32_t plist = tu32(T_PROP + (uint32_t)id * 12u + 4u);
+            for (i = 0; i < cnt; i++)
+                if (tu8(plist + (uint32_t)i * 4u + 2u) == 4) a4 = 1;
+        }
+        CHECK(!a4, "(32) no REACHABLE pair carries action 4 — dormant by data");
+    }
+
+    /* (33) second-cursor nav FUN_80048904 (fresh disasm): held word gated by the
+     * auto-repeat tick (bgez aca38 @0x80048910); RIGHT +1 only from even below cap-1
+     * (@0x80048924-6c), LEFT -1 only from odd (@0x8004897c-b0), DOWN +2 except cap-2/
+     * cap-1 (@0x800489c0-a04), UP -2 except <2 (@0x80048a08-38); NO wrap, NO occupancy
+     * check, NO SE. */
+    re15_inv_init();
+    g_inv.slots[0].id = 0x24; g_inv.slots[0].qty = 1;    /* only ONE item — moves are
+                                                          * occupancy-free */
+    w5_open_to_grid();
+    w5_enter_exchange();
+    frame(0, 0);                                         /* settle one state-7 frame */
+    w5_second_move(RE15_PAD_BIT_RIGHT);
+    CHECK(g_inv_screen.second_cursor == 1, "(33) RIGHT 0->1 (even+below cap)");
+    w5_second_move(RE15_PAD_BIT_RIGHT);
+    CHECK(g_inv_screen.second_cursor == 1, "(33) RIGHT from odd rejected (@0x80048950)");
+    w5_second_move(RE15_PAD_BIT_DOWN);
+    CHECK(g_inv_screen.second_cursor == 3, "(33) DOWN 1->3");
+    w5_second_move(RE15_PAD_BIT_DOWN);
+    w5_second_move(RE15_PAD_BIT_DOWN);
+    CHECK(g_inv_screen.second_cursor == 7, "(33) DOWN 3->5->7");
+    w5_second_move(RE15_PAD_BIT_LEFT);
+    CHECK(g_inv_screen.second_cursor == 6, "(33) LEFT 7->6 (odd)");
+    w5_second_move(RE15_PAD_BIT_LEFT);
+    CHECK(g_inv_screen.second_cursor == 6, "(33) LEFT from even rejected (@0x800489a0)");
+    w5_second_move(RE15_PAD_BIT_DOWN);
+    CHECK(g_inv_screen.second_cursor == 8, "(33) DOWN 6->8 (cap-2 reached)");
+    w5_second_move(RE15_PAD_BIT_DOWN);
+    CHECK(g_inv_screen.second_cursor == 8, "(33) DOWN from cap-2 rejected (@0x800489e4)");
+    w5_second_move(RE15_PAD_BIT_RIGHT);
+    CHECK(g_inv_screen.second_cursor == 9, "(33) RIGHT 8->9");
+    w5_second_move(RE15_PAD_BIT_DOWN);
+    CHECK(g_inv_screen.second_cursor == 9, "(33) DOWN from cap-1 rejected (@0x800489ec)");
+    w5_second_move(RE15_PAD_BIT_UP);
+    CHECK(g_inv_screen.second_cursor == 7, "(33) UP 9->7");
+    {   /* auto-repeat cadence: edge, then held — repeats at f16 then every 5
+         * (the same FUN_80030444 tick that gates the grid, config (0xf000,15,4)) */
+        int f;
+        w5_second_move(RE15_PAD_BIT_UP);                 /* 7 -> 5 (edge) */
+        CHECK(g_inv_screen.second_cursor == 5, "(33r) UP edge 7->5");
+        for (f = 1; f <= 15; f++) frame(0, RE15_PAD_BIT_UP);
+        CHECK(g_inv_screen.second_cursor == 5, "(33r) no repeat before f16");
+        frame(0, RE15_PAD_BIT_UP);
+        CHECK(g_inv_screen.second_cursor == 3, "(33r) first repeat at f16 (delay 15)");
+        for (f = 0; f < 4; f++) frame(0, RE15_PAD_BIT_UP);
+        CHECK(g_inv_screen.second_cursor == 3, "(33r) no repeat before +5");
+        frame(0, RE15_PAD_BIT_UP);
+        CHECK(g_inv_screen.second_cursor == 1, "(33r) repeat every 5 (rate 4)");
+        idle(1);
+        w5_second_move(RE15_PAD_BIT_UP);
+        CHECK(g_inv_screen.second_cursor == 1, "(33) UP from <2 rejected (@0x80048a20)");
+    }
+    /* (34) CANCEL: virtual SQUARE -> 25c2=6, SILENT (checked BEFORE confirm
+     * @0x8004b398-3a0; zero SE calls in 0x8004b37c-b404 — fresh disasm). */
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
+    CHECK(g_inv_screen.item_state == 6 && re15_menu_item_c3() == 0,
+          "(34) EXCHANGE cancel -> 25c2=6 (@0x8004b3f0-f4)");
+    CHECK(g_inv.slots[0].id == 0x24, "(34) nothing consumed on cancel");
+    idle(8);
+    CHECK(g_inv_screen.item_state == 1, "(34) back in GRID");
+    re15_menu_toggle();
+    CHECK(!re15_menu_is_open(), "(34) closed");
 }
 
 int main(void)
@@ -736,10 +1274,20 @@ int main(void)
     re15_menu_toggle();                                     /* close the debug session */
     CHECK(!re15_menu_is_open(), "(23) closed");
 
+    /* ====================== WAVE 5 (spec shots/inv_wave5_spec.md) ====================== */
+    /* EXCHANGE/combine: command dispatch [3] @0x8004a570 -> 25c2=7; state 7 = per-frame
+     * FUN_8004b33c (sub table @0x80074c44: [0]=0x8004b37c select, [1]=0x8004b408 result
+     * anim). All expectations below come from the EMBEDDED blob (pair lists / prop rows)
+     * and the fresh wave-5 disasm cited in menu_common.c. */
+    wave5_tests();
+
     if (fails) { fprintf(stderr, "\nINV FSM TEST: %d FAILURES\n", fails); return 1; }
     printf("PASS: status-screen FSM byte-true (open stages + tab FSM + ITEM slides "
            "+/-14 + grid nav w/ auto-repeat 15/4 + command stage + close commit; "
            "wave 3: equip/unequip/swap per-step anims + 25c9 stale-gate 0x5c quirk + "
-           "prompt-less heal (+25 Green) + cant-use message)\n");
+           "prompt-less heal (+25 Green) + cant-use message; "
+           "wave 5: EXCHANGE pair engine — full 21-pair herb graph + 12 crafts + "
+           "reload clamps both directions + self-stack + GLOCK 06->04 quirk + "
+           "17-step result anim + 2nd-cursor nav + dormant action 4)\n");
     return 0;
 }
