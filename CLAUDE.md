@@ -11,6 +11,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## RE-Disziplin (hart)
 
+### ⛔ STOP-GATE — das hier ZUERST, bei JEDER Verhaltens-/Render-/Timing-/State-Änderung
+
+Diese Regel existiert, weil ich genau hier WIEDERHOLT versagt habe (2026-07: Card-Fade `fa+=24` = geratene Framezahl; „blau→schwarz" ohne den Übergangs-Mechanismus zu RE'en; ein Message-Clear-„Fix", der den Spieler-Freeze gegen ein Save-Menü-Flackern tauschte, weil die Examine/`msg_block`-Interaktion NICHT zu Ende disassembliert war). Der Nutzer weist — zu Recht — JEDE Änderung ohne Disasm-Zitat zurück und ist massiv genervt vom Raten. „Nicht mehr blau" ≠ byte-true.
+
+**Auslöser:** ein Report „X ist falsch / nicht wie im Original / immer noch nicht korrekt", ODER jede Konstante/Rate/Dauer/Farbe/Frame-Zahl/Reihenfolge, die Rendering, Timing oder Game-State betrifft.
+
+**Pflicht-Reihenfolge — NICHT abkürzen, egal wie „klar" das Symptom scheint:**
+1. **MESSEN/REPRODUZIEREN**, was tatsächlich passiert (Log/Screenshot/Savestate-RAM). NICHT modellieren, NICHT vermuten — wenn mein Kopf-Modell sagt „kann nicht sein", ist das Modell falsch, also reproduzieren.
+2. **Die verantwortliche ORIGINAL-Funktion disassemblieren** (`re15_disasm.py` / `ghidra1_V2.txt` / `RE_15_Quellcode_*` / RE2-Vergleich `ghidra_re2_Leon.txt`). Die **Adresse + die exakten Instruktionen/Bytes im Chat POSTEN, BEVOR** ich eine Zeile Fix-Code vorschlage.
+3. **Erst dann** implementieren — JEDE Konstante trägt im Code-Kommentar UND in der Commit-Message ihre `@0x…`-Adresse (oder Datei-Byte-Offset). Konstante ohne `@0x…` = Rate-Defekt = kommt nicht rein.
+4. **Verifizieren** durch erneutes Messen gegen die Disasm-Werte (nicht gegen „sieht besser aus").
+
+**Mechanismus nicht gefunden = NICHT fertig.** Weiter-RE'en (andere Xrefs, Caller/Callee, RE2, Savestate-RAM). NIE die Lücke mit einer Zahl nach Gefühl oder einem als byte-true verkauften Platzhalter füllen.
+
+**Guess-Tells — schreibe/denke ich das, SOFORT STOP + RE:** „plausibel", „sieht richtig aus", „nicht mehr blau/kein X mehr", runde Zahl nach Gefühl (6/11/32 Frames), „interim/for now/tunable", „faithful-line" als Ersatz für einen Beleg, „das Symptom ist weg".
+
+**Selbst-Check vor JEDEM Edit einer Verhaltens-Konstante:** „Kann ich JETZT die `@0x…`-Adresse zeigen?" Nein → nicht schreiben. **Nutzer-Hebel:** für jede Konstante das `@0x…`-Zitat verlangen; fehlt es → zurückweisen. (Siehe Memory `reai-v2-re-gate`.)
+
+---
+
 Beim byte-true Reverse Engineering gelten diese Regeln verbindlich und überschreiben jedes Default-Verhalten:
 
 - Jede verhaltens-/format-relevante Konstante (Clip-Index, Offset, Threshold, Distanz, Flag) MUSS eine Disassembly-Adresse oder einen Datei-Byte-Offset zitieren. Kein Beleg → kommt nicht in den Code, wird **nicht** als "interim/tunable/approximiert" verkauft.
