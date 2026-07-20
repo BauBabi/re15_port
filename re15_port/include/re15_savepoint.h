@@ -49,4 +49,12 @@ int  re15_savepoint_cooling(void);              /* 1 while the debounce is activ
  * save-point in the newly-entered room. */
 void re15_savepoint_reset(void);
 
+/* The camera cut latched at the EXAMINE action (in the AOT scan, BEFORE the phone's
+ * SCD sub runs its Cut_chg to the interaction close-up). The save block stores THIS
+ * — the stable gameplay framing — not the transient close-up that is active a couple
+ * of frames later when the save-point handler samples the live cut. Byte-true: the
+ * original loads the gameplay perspective, not the desk close-up. -1 = unset. */
+void re15_savepoint_set_cut(int cut);   /* latch at the examine action fire */
+int  re15_savepoint_saved_cut(void);    /* the latched gameplay cut, or -1 */
+
 #endif /* RE15_SAVEPOINT_H */

@@ -17,6 +17,7 @@
 #endif
 #include "re15_aot.h"
 #include "re15_scd.h"        /* g_game (player pos), g_scd (cam, audio queue) */
+#include "re15_savepoint.h"  /* latch the gameplay cut at a save-phone examine */
 #include "re15_inventory.h"
 #include "re15_audio.h"      /* audio event kinds for door/pickup SFX */
 #include "re15_actor.h"      /* Phase 4.5.9-D: player = g_actors[0] */
@@ -591,8 +592,15 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
              * consumed by the 0x58/0x59 indexed flag ops — catalog #19). Doors keep their own
              * (object-probe) path; the examine handler's work_vars[0] write below stays. */
             if (a->type == RE15_AOT_TYPE_GENERIC || a->type == RE15_AOT_TYPE_MESSAGE ||
-                a->type == RE15_AOT_TYPE_EXAMINE_WORKVAR)
+                a->type == RE15_AOT_TYPE_EXAMINE_WORKVAR) {
                 g_scd.work_vars[gen_fwd_hit ? 0 : 1] = (int16_t)i;
+                /* Latch the GAMEPLAY cut NOW — before this examine's SCD sub (fired below)
+                 * can Cut_chg to an interaction close-up (the phone/computer save objects do
+                 * Cut_chg(N)+Message_on). If this examine turns out to be a save-point, the
+                 * save block stores THIS cut, so a load restores the gameplay framing, not the
+                 * transient close-up. Harmless for non-save examines (only read on save). */
+                re15_savepoint_set_cut((int)g_scd.cam_id);
+            }
             /* Edge: just entered. (2026-06-03: removed the invented 90-frame
              * HUD echo — last_event_* had no readers in either build.) */
             switch (a->type) {

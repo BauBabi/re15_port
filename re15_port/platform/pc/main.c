@@ -2555,6 +2555,12 @@ re_title:;
             if (s_save_counter == 0) s_save_counter = (uint16_t)re15_memcard_max_save_count(RE15_CARD_PATH);
             int scount = (int)s_save_counter + 1;
             re15_savedata_capture(&sd, g_engine.frame_count, (uint16_t)scount);
+            /* Store the GAMEPLAY cut latched when the phone was examined (before its sub's Cut_chg to
+             * the desk close-up), not the live cut sampled here — which is the transient close-up. The
+             * original loads the gameplay perspective, not the close-up. re15_savedata_capture seeded
+             * camera_cut from the live cam_id; override with the latched cut + recompute the checksum. */
+            { int gc = re15_savepoint_saved_cut();
+              if (gc >= 0) { sd.camera_cut = (uint8_t)gc; sd.checksum = re15_savedata_checksum(&sd); } }
             /* Byte-true: the card (RE1.5's ink-ribbon) consumed by THIS save is part of the saved
              * state — reflect the decrement in the CAPTURED block so reloading doesn't hand it back
              * (the live inventory is decremented on success below). Recompute the checksum. */
