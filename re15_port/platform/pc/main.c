@@ -564,6 +564,27 @@ static int pc_slot_title_codes(uint8_t *tc, int character, int count)
     return n;
 }
 
+/* Render the STATIC card screen (BG + header + 5-slot list + exit row) — shared by the byte-true
+ * fade-IN on open (FUN_800264e8) and fade-OUT on close (FUN_80026594). The interactive main loop
+ * draws its own copy plus the cursor/overwrite/result sub-screens. */
+static void pc_draw_card_static(const re15_tim_t *bg, const int used[],
+                                const int slot_char[], const int slot_cnt[], int save_mode)
+{
+    extern void re15_render_pc_show_cardbg(const re15_tim_t *tim);
+    extern int  re15_render_pc_game_text(int x, int y, const char *str, int attr);
+    extern int  re15_render_pc_game_text_width(const char *str);
+    extern int  re15_render_pc_game_codes(int x, int y, const uint8_t *codes, int n, int attr);
+    if (bg->pixels) re15_render_pc_show_cardbg(bg);
+    else            re15_render_background_gradient(0, 0, 0, 0, 0, 0);
+    re15_render_pc_game_text(160 - re15_render_pc_game_text_width("Memory Card 1") / 2, 24, "Memory Card 1", 0);
+    for (int i = 0; i < RE15_SAVE_SLOTS; i++) {
+        if (used[i]) { uint8_t tc[48]; int tn = pc_slot_title_codes(tc, slot_char[i], slot_cnt[i]);
+                       re15_render_pc_game_codes(41, 56 + i * 20, tc, tn, 0); }
+        else re15_render_pc_game_text(41, 56 + i * 20, "NO DATA", 0);
+    }
+    re15_render_pc_game_text(41, 156, save_mode ? "Do not save" : "Do not load", 0);
+}
+
 /* The byte-true RE1.5 memory-card SAVE/LOAD screen (FUN_80025c00 / FUN_80026658), adapted for
  * the PC single-card backend: the "MEMORY CARD BG" (DATA/TYPE00.TIM) full-screen, the dim panel
  * (drawn in render_pc), a header, the 5-slot list + an EXIT row, the SAVE/LOAD label, a blinking
@@ -619,6 +640,22 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
     int auto_drive = getenv("RE15_CARD_AUTO") != NULL;
     const char *card_shot = getenv("RE15_CARD_SHOT");
     unsigned af = 0;
+
+    /* Byte-true card-screen FADE-IN on open (FUN_800264e8 @0x8002653c: fade channel step -0x1800,
+     * level 0x7fff ramping down, brightness level>>7 = 255,207,159,111,63,15 over 6 frames, then
+     * clear). Mirror of the exit fade-out. (af starts at 0 in the main loop below, so the auto-drive
+     * screenshot/confirm timing is unaffected.) */
+    {
+        extern void re15_render_pc_set_fade(int a);
+        for (int level = 0x7FFF; !(level & 0x8000); level -= 0x1800) {
+            re15_render_begin_frame();
+            re15_input_tick();
+            pc_draw_card_static(&s_card_bg, used, slot_char, slot_cnt, save_mode);
+            re15_render_pc_set_fade(level >> 7);
+            re15_render_end_frame();
+        }
+        re15_render_pc_set_fade(0);
+    }
 
     while (running) {
         re15_render_begin_frame();
@@ -727,15 +764,7 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
         for (int level = 0; !(level & 0x8000); level += 0x1800) {   /* step 0x1800, done at bit15 */
             re15_render_begin_frame();
             re15_input_tick();
-            if (s_card_bg.pixels) re15_render_pc_show_cardbg(&s_card_bg);
-            else re15_render_background_gradient(0, 0, 0, 0, 0, 0);
-            re15_render_pc_game_text(160 - re15_render_pc_game_text_width("Memory Card 1") / 2, 24, "Memory Card 1", 0);
-            for (int i = 0; i < RE15_SAVE_SLOTS; i++) {
-                if (used[i]) { uint8_t tc[48]; int tn = pc_slot_title_codes(tc, slot_char[i], slot_cnt[i]);
-                               re15_render_pc_game_codes(41, 56 + i * 20, tc, tn, 0); }
-                else re15_render_pc_game_text(41, 56 + i * 20, "NO DATA", 0);
-            }
-            re15_render_pc_game_text(41, 156, "Do not load", 0);
+            pc_draw_card_static(&s_card_bg, used, slot_char, slot_cnt, save_mode);
             re15_render_pc_set_fade(level >> 7);                     /* byte-true brightness = level>>7 */
             re15_render_end_frame();
         }
