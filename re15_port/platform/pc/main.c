@@ -61,7 +61,7 @@ static inline int RNDI(float f) {
 #include "re15_item_icon.h"   /* re15_item_icon_* — byte-true ITEMALL grid icons (8.22) */
 #include "re15_item_modal.h"  /* re15_item_modal_* — item-get zoom/flip pickup presentation (U11) */
 #include "re15_itps.h"        /* re15_itps_set_data — the per-item modal picture sheet (ITPS.ITP, U11) */
-#include "re15_item_use.h"    /* re15_item_use_* — the inventory heal-USE flow ("Will you use the X?") */
+#include "re15_item_use.h"    /* heal classifier gate + applier table (wave 3: prompt-less direct heal) */
 #include "re15_damage.h"      /* re15_player_equipped_weapon (ARMS CONTROL panel, 8.23) */
 
 /* (Wave 1 inventory rebuild: the former FAITHFUL-LINE helpers re15_pc_panel/re15_pc_ecg/
@@ -2560,6 +2560,13 @@ re_title:;
             re15_menu_toggle();
         if (getenv("RE15_INV_GRID_SHOT") && g_engine.frame_count == 31)
             g_engine.pad_pressed |= RE15_PAD_BIT_CROSS;
+        /* RE15_INV_CMD_SHOT=1 (wave 3): CROSS at F31 (tab ITEM confirm -> entry slide
+         * F32-38, GRID F39) + CROSS at F45 (grid confirm on the cursor slot -> 25d6=0 +
+         * 25c2=3, command slide-in F46-52, state 4 from F53); shot at F60 = the command
+         * stage with the g7 label (cursor 0 == equipped 0 -> unequip face uv(0x10,0xa0)). */
+        if (getenv("RE15_INV_CMD_SHOT") &&
+            (g_engine.frame_count == 31 || g_engine.frame_count == 45))
+            g_engine.pad_pressed |= RE15_PAD_BIT_CROSS;
 
         /* FE-5.1/5.2: track the START-menu pause/inventory in the FE-0 mode machine. The status/
          * inventory screen (re15_menu_toggle) freezes the world — byte-true inline behavior in
@@ -2631,7 +2638,8 @@ re_title:;
             if (getenv("RE15_ITEM_MODAL_TEST") && g_engine.frame_count == 40)
                 re15_item_modal_start(0x15, 50, 0, -1);   /* H.GUN BULLETS (ITPS picture id 0x15) */
             /* RE15_ITEM_USE_TEST: debug — seed a Green Medicine as the only item + open the inventory
-             * at frame 40 to visually verify the heal-USE prompt. Then SQUARE (start USE) + CROSS (Yes). */
+             * at frame 40 to visually verify the DIRECT heal (wave 3: confirm -> USE -> green ECG wipe
+             * -> consume; NO prompt — spec inv_wave3_spec.md heal flow @0x8004adcc). */
             if (getenv("RE15_ITEM_USE_TEST") && g_engine.frame_count == 40) {
                 re15_inv_init();
                 g_inv.slots[0].id = 0x24; g_inv.slots[0].qty = 1;   /* Green Medicine, only item */
@@ -2790,7 +2798,7 @@ re_title:;
             g_inv_screen.cond = (uint8_t)re15_inv_screen_condition(
                 plr->hp, (plr->status_flags & 2) ? 1 : 0);
             if (getenv("RE15_INV_SHOT") && !getenv("RE15_INV_SHOT_LIVE")
-                && !getenv("RE15_INV_GRID_SHOT")) {
+                && !getenv("RE15_INV_GRID_SHOT") && !getenv("RE15_INV_CMD_SHOT")) {
                 /* mzd_inv_open.sav DISPLAYED frame: tab-select, tab=FILE(3), highlight 0,
                  * ECG sweep 0x60 / LED glow 0x18 (two ticks behind the stored RAM values
                  * 0x62/0x20 — double-buffer flip lag, solved from both fb halves). */
@@ -2806,25 +2814,12 @@ re_title:;
                 re15_inv_render_pc_draw(s_inv_ops, inv_n);
             }
 
-            /* Item-USE prompt ("Will you use the X?" Yes/No, then "You have used the X") over the grid —
-             * byte-true glyph replay in the game font (script 4/5), same layer as the pickup modal. */
-            {
-                extern void re15_render_pc_item_prompt(int x, int y, int prompt_type, uint8_t item_id, int reveal);
-                extern void re15_render_pc_cursor(int x, int y);
-                extern int  re15_render_pc_msg_text(int x, int y, const unsigned char *raw, int len);
-                uint8_t uid = 0; int uch = 0;
-                int up = re15_item_use_prompt(&uid, &uch);
-                if (up) {
-                    re15_render_pc_item_prompt(34, 180, up, uid, re15_item_use_reveal());   /* 4=use, 5=used */
-                    if (up == 4 && re15_item_use_prompt_ready()) {
-                        static const unsigned char yes_g[3] = { 0x35, 0x41, 0x4f };  /* "Yes" */
-                        static const unsigned char no_g[2]  = { 0x2a, 0x4b };         /* "No"  */
-                        re15_render_pc_msg_text(190, 202, yes_g, 3);
-                        re15_render_pc_msg_text(234, 202, no_g,  2);
-                        re15_render_pc_cursor(uch ? 224 : 180, 203);
-                    }
-                }
-            }
+            /* WAVE 3: the invented "Will you use the X?" Yes/No prompt overlay was REMOVED —
+             * the original heal flow (classifier c3=3 -> FUN_8004adcc @0x8004adcc-0x8004b070)
+             * has NO prompt and NO message (spec inv_wave3_spec.md "PORT DIVERGENCE 2"); the
+             * only feedback is the ECG condition wipe + sweep reset, which render through the
+             * display list above. The cant-use message ("You can't use it here.", c3=6
+             * @0x8004b250) also renders inside the display list (g_inv_screen.msg_reveal). */
         }
 
         /* Phase 4.4.3: drain audio queue (consumes events without HUD). */
@@ -5170,7 +5165,9 @@ re_title:;
           if (!s_inv_shot_init) { s_inv_shot = getenv("RE15_INV_SHOT"); s_inv_shot_init = 1;
               /* grid-mode shot (wave 2): CROSS injected at F31, entry slide F32-38,
                * GRID from F39 — capture well inside grid mode. */
-              if (getenv("RE15_INV_GRID_SHOT")) s_inv_shot_frame = 50; }
+              if (getenv("RE15_INV_GRID_SHOT")) s_inv_shot_frame = 50;
+              /* command-stage shot (wave 3): 2nd CROSS at F45, state 4 from F53. */
+              if (getenv("RE15_INV_CMD_SHOT"))  s_inv_shot_frame = 60; }
           if (s_inv_shot && *s_inv_shot && g_engine.frame_count == s_inv_shot_frame) {
               extern void re15_render_pc_screenshot(const char *path);
               re15_render_pc_screenshot(s_inv_shot);

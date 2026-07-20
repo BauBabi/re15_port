@@ -1,15 +1,19 @@
-/* test_item_use.c — byte-true inventory item-USE (heal) flow (RE'd wf_13443da6).
+/* test_item_use.c — the status-screen heal classifier gate + applier table (wave 3,
+ * spec shots/inv_wave3_spec.md).
  *
- * RE1.5 has NO USE/CHECK/COMBINE sub-menu: confirm on a usable heal item (0x22..0x2e) opens the
- * "Will you use the X?" Yes/No prompt (entry[22]@0x8004b250); on Yes it applies the heal (table
- * @0x80010fbc) + consumes the slot (@0x8004aef0), then shows "You have used the X" (script[2]).
- * Byte-true quirks preserved: NO ceiling clamp on additive heals, consume even at full HP, First Aid
- * heals to 100 but doesn't cure poison. Models the modal's Yes/No input (0x4000=CROSS, 0x1000=toggle).
+ * WAVE-3 REWRITE — WHY the old prompt-flow assertions were removed: the previous test
+ * asserted a 5-state "Will you use the X?" Yes/No + "You have used the X" FSM that was a
+ * port INVENTION (spec "PORT DIVERGENCE 2"). The original heal flow (classifier c3=3 ->
+ * FUN_8004adcc) has NO prompt, NO message and NO pad reads: the full disasm
+ * @0x8004adcc-0x8004b070 contains no jal 0x80027e68 (message opener) and its only wait
+ * is the 25d4 wipe poll. The byte-true c4 sub-FSM (wipe-arm -> wait -> consume+apply)
+ * is exercised end-to-end in test_inv_fsm.c; THIS test pins the applier table
+ * @0x80010fbc entry-by-entry (incl. the Green +25 fix @0x8004af78) and the classifier
+ * gate @0x8004ab48-ab60.
  */
 #include <stdio.h>
 #include <stdint.h>
 #include "re15_item_use.h"
-#include "re15_inventory.h"
 #include "re15_actor.h"
 
 static int g_fail = 0;
@@ -18,123 +22,60 @@ static int g_fail = 0;
 
 static re15_actor_t *PL(void) { return &g_actors[RE15_ACTOR_SLOT_PLAYER]; }
 
-/* Tick (no input) through the typewriter until the prompt has fully revealed. */
-static void reveal(void)
+/* apply `id` with the player primed to hp/poisoned, return the resulting hp */
+static int apply_at(uint8_t id, int hp, int poisoned)
 {
-    int g = 0;
-    while (re15_item_use_active() && !re15_item_use_prompt_ready() && g++ < 400) re15_item_use_tick(0);
-}
-
-/* Drive the USE FSM to idle (reveal each message + confirm/dismiss) so the next test starts clean. */
-static void drain(void)
-{
-    int g = 0;
-    while (re15_item_use_active() && g++ < 800)
-        re15_item_use_tick(re15_item_use_prompt_ready() ? 0x4000 : 0);
+    PL()->hp = (int16_t)hp;
+    PL()->status_flags = poisoned ? 0x2 : 0;
+    re15_item_use_apply(id);
+    return PL()->hp;
 }
 
 int main(void)
 {
-    printf("=== byte-true item-USE (heal) flow (wf_13443da6) ===\n");
+    printf("=== heal classifier gate + applier table @0x80010fbc (wave 3) ===\n");
 
-    /* ---- (1) Green Medicine end-to-end: HP 40 -> 90, consumed ---- */
-    {
-        re15_inv_init();
-        g_inv.slots[0].id = 0x24; g_inv.slots[0].qty = 1;   /* Green Medicine */
-        PL()->hp = 40;
-        re15_item_use_start(0x24, 0);
-        CHECK("classifier -> USE prompt (4)", re15_item_use_prompt(NULL, NULL) == 4);
-        reveal();
-        CHECK("HP unchanged while the prompt is up", PL()->hp == 40);
-        re15_item_use_tick(0x4000);                          /* CROSS = Yes */
-        CHECK("Yes -> HP += 50 (Green Medicine)", PL()->hp == 90);
-        CHECK("advances to the 'used' message (5)", re15_item_use_prompt(NULL, NULL) == 5);
-        CHECK("slot consumed on Yes", g_inv.slots[0].id == 0);
-        reveal();
-        re15_item_use_tick(0xc000);                          /* dismiss the used-message */
-        CHECK("USE done, back to the grid", !re15_item_use_active());
-    }
+    /* ---- classifier gate @0x8004aa64: sltiu (id-0x22),0xe && id!=0x25 ---- */
+    CHECK("0x21 (ammo bound) is NOT heal-usable",  !re15_item_use_is_heal(0x21));
+    CHECK("0x22 First Aid IS heal-usable",          re15_item_use_is_heal(0x22));
+    CHECK("0x24 Green IS heal-usable",              re15_item_use_is_heal(0x24));
+    CHECK("0x25 Red is EXCLUDED (beq a0,0x25 @0x8004ab54)", !re15_item_use_is_heal(0x25));
+    CHECK("0x26 Blue IS heal-usable",               re15_item_use_is_heal(0x26));
+    CHECK("0x2f NUT IS admitted (idx 13 special)",  re15_item_use_is_heal(0x2f));
+    CHECK("0x30 (first key/doc) is NOT",            !re15_item_use_is_heal(0x30));
 
-    /* ---- (2) No declines: HP + slot unchanged, item stays ---- */
-    {
-        re15_inv_init();
-        g_inv.slots[0].id = 0x24; g_inv.slots[0].qty = 1;
-        PL()->hp = 40;
-        re15_item_use_start(0x24, 0);
-        reveal();
-        re15_item_use_tick(0x1000 | 0x4000);                 /* toggle to No + confirm */
-        CHECK("No -> HP unchanged", PL()->hp == 40);
-        CHECK("No -> item NOT consumed", g_inv.slots[0].id == 0x24);
-        CHECK("No -> USE aborted", !re15_item_use_active());
-    }
+    /* ---- applier table @0x80010fbc (s0=100 @0x8004ae14) ---- */
+    CHECK("0x22 First Aid: hp := 100 absolute (sh s0 @0x8004afe4)", apply_at(0x22, 10, 0) == 100);
+    CHECK("0x22 First Aid does NOT cure poison",
+          (apply_at(0x22, 10, 1) == 100) && (PL()->status_flags & 0x2) != 0);
+    CHECK("0x23 Antidote: hp += 25 AND cure (@0x8004af60 -> srl s0,2 + &=0xfffd)",
+          apply_at(0x23, 50, 1) == 75 && (PL()->status_flags & 0x2) == 0);
+    /* THE WAVE-3 FIX: Green Medicine 0x24 = +25, NOT the invented +50. Raw bytes:
+     * entry[2] -> 0x8004af68 with delay-slot `srl v0,s0,2` @0x8004af78 (0x00101082,
+     * shamt 2 = 100>>2 = 25); the +50 entries use `srl s0,1` (@0x8004afa4). */
+    CHECK("0x24 Green: hp += 25 (srl v0,s0,2 @0x8004af78 — NOT +50)", apply_at(0x24, 40, 0) == 65);
+    CHECK("0x24 Green does not cure", (apply_at(0x24, 40, 1) == 65) && (PL()->status_flags & 0x2) != 0);
+    CHECK("0x26 Blue: cure ONLY, hp unchanged (@0x8004af7c)",
+          apply_at(0x26, 42, 1) == 42 && (PL()->status_flags & 0x2) == 0);
+    CHECK("0x27 G+R: hp += 50 (srl s0,1 @0x8004afa4)", apply_at(0x27, 40, 0) == 90);
+    CHECK("0x28 G+G: hp += 50",                        apply_at(0x28, 40, 0) == 90);
+    CHECK("0x29 G+B: hp += 25 + cure",
+          apply_at(0x29, 40, 1) == 65 && (PL()->status_flags & 0x2) == 0);
+    CHECK("0x2a G+G+R: hp := 100 absolute",            apply_at(0x2a, 3, 0) == 100);
+    CHECK("0x2b G+G+G: hp += 75 (100>>1 + 100>>2 @0x8004afbc)", apply_at(0x2b, 20, 0) == 95);
+    CHECK("0x2c G+G+B: hp += 50 + cure",
+          apply_at(0x2c, 40, 1) == 90 && (PL()->status_flags & 0x2) == 0);
+    CHECK("0x2d G+R+R: hp := 100 absolute",            apply_at(0x2d, 3, 0) == 100);
+    CHECK("0x2e G+R+B: hp += 50 + cure",
+          apply_at(0x2e, 40, 1) == 90 && (PL()->status_flags & 0x2) == 0);
+    CHECK("0x2f NUT: hp := 77 absolute (idx>=0xd @0x8004b028)", apply_at(0x2f, 3, 0) == 77);
 
-    /* ---- (3) byte-true NO ceiling clamp: HP 90 + Green -> 140 (not 100, @0x8004afb0) ---- */
-    {
-        re15_inv_init();
-        g_inv.slots[0].id = 0x24; g_inv.slots[0].qty = 1;
-        PL()->hp = 90;
-        re15_item_use_start(0x24, 0);
-        reveal();
-        re15_item_use_tick(0x4000);
-        CHECK("no clamp: HP 90 + Green = 140 (byte-true overheal)", PL()->hp == 140);
-        drain();
-    }
-
-    /* ---- (4) First Aid Spray (0x22): absolute HP = 100 (sh s0 @0x8004afe4) ---- */
-    {
-        re15_inv_init();
-        g_inv.slots[0].id = 0x22; g_inv.slots[0].qty = 1;
-        PL()->hp = 10;
-        re15_item_use_start(0x22, 0);
-        reveal();
-        re15_item_use_tick(0x4000);
-        CHECK("First Aid: HP 10 -> 100 (absolute)", PL()->hp == 100);
-        CHECK("First Aid consumed", g_inv.slots[0].id == 0);
-        drain();
-    }
-
-    /* ---- (5) consume even at full HP (state 2 unconditional): HP 100 + Green -> 150, consumed ---- */
-    {
-        re15_inv_init();
-        g_inv.slots[0].id = 0x24; g_inv.slots[0].qty = 1;
-        PL()->hp = 100;
-        re15_item_use_start(0x24, 0);
-        reveal();
-        re15_item_use_tick(0x4000);
-        CHECK("full-HP: still overheals to 150", PL()->hp == 150);
-        CHECK("full-HP: still consumed", g_inv.slots[0].id == 0);
-        drain();
-    }
-
-    /* ---- (6) cure item (Antidote 0x23): HP += 25 AND poison bit 0x2 cleared (@0x8004af8c) ---- */
-    {
-        re15_inv_init();
-        g_inv.slots[0].id = 0x23; g_inv.slots[0].qty = 1;
-        PL()->hp = 50;
-        PL()->status_flags = 0x2;                            /* poisoned */
-        re15_item_use_start(0x23, 0);
-        reveal();
-        re15_item_use_tick(0x4000);
-        CHECK("Antidote: HP += 25", PL()->hp == 75);
-        CHECK("Antidote: poison (bit 0x2) cured", (PL()->status_flags & 0x2) == 0);
-        drain();
-    }
-
-    /* ---- (7) Red Medicine (0x25) is NOT heal-usable alone (byte-true `beq a0,0x25` exclusion) ---- */
-    {
-        re15_inv_init();
-        g_inv.slots[0].id = 0x25; g_inv.slots[0].qty = 1;
-        PL()->hp = 40;
-        CHECK("Red Medicine (0x25) is not a heal item", !re15_item_use_is_heal(0x25));
-        re15_item_use_start(0x25, 0);
-        CHECK("Red: USE not started (inert alone)", !re15_item_use_active());
-        CHECK("Red: HP + slot untouched", PL()->hp == 40 && g_inv.slots[0].id == 0x25);
-        /* the real medicines around it ARE usable */
-        CHECK("Green (0x24) IS a heal item", re15_item_use_is_heal(0x24));
-        CHECK("Blue (0x26) IS a heal item",  re15_item_use_is_heal(0x26));
-    }
+    /* ---- byte-true NO-clamp quirk (@0x8004afa8-b0: raw addu+sh) ---- */
+    CHECK("no ceiling clamp: hp 90 + Green = 115",     apply_at(0x24, 90, 0) == 115);
+    CHECK("no ceiling clamp: hp 100 + G+R = 150",      apply_at(0x27, 100, 0) == 150);
 
     if (g_fail) { printf("ITEM-USE: FAIL\n"); return 1; }
-    printf("ITEM-USE: all checks passed\n");
+    printf("ITEM-USE: all checks passed (applier table @0x80010fbc byte-true incl. "
+           "Green +25 @0x8004af78)\n");
     return 0;
 }

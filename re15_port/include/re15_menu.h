@@ -55,5 +55,10 @@ void re15_menu_toggle(void);
 int  re15_menu_stage(void);      /* DAT_800b5359 mirror (0 = normal gameplay)      */
 int  re15_menu_phase(void);      /* DAT_800b25bf (0 init / 1 run / 2 close)        */
 int  re15_menu_substate(void);   /* DAT_800b25c1 (0 tabs / 1 map / 2 file / 3 item) */
+int  re15_menu_item_c3(void);    /* DAT_800b25c3 (state-5 flow selector: 0 classifier /
+                                  * 1 equip / 2 unequip / 3 heal / 5 swap / 6 message —
+                                  * dispatch table @0x80074c28, wave 3)               */
+int  re15_menu_item_c4(void);    /* DAT_800b25c4 (per-flow step/frame counter)       */
+int  re15_menu_msg_active(void); /* DAT_800b8520 & 0x80 (cant-use message up)        */
 
 #endif /* RE15_MENU_H */

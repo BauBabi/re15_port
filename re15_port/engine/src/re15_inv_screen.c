@@ -64,6 +64,8 @@ static uint8_t bu8(uint32_t addr) { return *RE15_INV_PTR(addr); }
 
 re15_inv_screen_t g_inv_screen;
 
+static void g7_label_reset(void);   /* wave 3: forget the frozen g7 label face (see below) */
+
 void re15_inv_screen_sync_equip(void)
 {
     /* LAB_80049524 @0x800495e8-0x8004961c: 25cd/2608 by equipped-or-not */
@@ -95,17 +97,18 @@ void re15_inv_screen_open(void)
     g_inv_screen.wipe_v = 0x20;
     g_inv_screen.wipe_h = 0x6a;
     g_inv_screen.name_item = -1;
+    g7_label_reset();                  /* prim arenas rebuilt at init -> template label */
     re15_inv_screen_sync_equip();
 }
 
 void re15_inv_screen_heal_wipe(uint8_t id)
 {
-    /* ECG sweep restart DAT_800b2600 = 0x20 @0x8004b038 (heal sub-step c4==2 common). */
-    g_inv_screen.ecg_sweep = 0x20;
     /* Wipe dispatch @0x8004ae24-ae68 via table @0x80010f84, index id-0x22 (sltiu 0xd —
      * ids outside 0x22..0x2e, e.g. 0x2f NUT, get no wipe): [1]=0x23 Antidote / [4]=0x26
-     * Blue -> 25d4=2 (@0x8004ae78); [12]=0x2e G+R+B -> none (jumps to the c4++ tail,
-     * byte-true prototype inconsistency); [0],[2],[3],[5..11] -> 25d4=1 (@0x8004ae8c). */
+     * Blue -> 25d4=2 (@0x8004ae70); [12]=0x2e G+R+B -> none (jumps to the c4++ tail,
+     * byte-true prototype inconsistency); [0],[2],[3],[5..11] -> 25d4=1 (@0x8004ae84).
+     * (WAVE 3: the ECG sweep reset 2600:=0x20 @0x8004b038 moved to the heal c4==2 exit
+     * in menu_common.c — the original arms the wipe at c4==0, BEFORE the consume.) */
     if (id == 0x23 || id == 0x26) { g_inv_screen.wipe_mode = 2; g_inv_screen.wipe_h = 0x6a; }
     else if (id >= 0x22 && id <= 0x2d) { g_inv_screen.wipe_mode = 1; g_inv_screen.wipe_v = 0x20; }
 }
@@ -280,6 +283,47 @@ static void emit_name(emit_t *e, int id)
     }
 }
 
+/* ---- cant-use message "You can't use it here." (wave 3) ----------------------------
+ * DEBUG.BIN desc-bank entry 0, resolved by FUN_80027e68 (a1&0xc00==0x400 path): ptr =
+ * 0x800c50de + u16[0x800c50de] (= off 0x90). Bytes re-read from shared_assets/PSX/BIN/
+ * DEBUG.BIN @0x50de+0x90 this wave (terminator 01 00 = msg-VM end-mode -> state 5
+ * PRESS-WAIT; 0x3a = apostrophe glyph, 0x57 = period glyph, chr = code+0x24). */
+const uint8_t re15_inv_cantuse_text[RE15_INV_CANTUSE_GLYPHS] = {
+    0x35,0x4b,0x51,0x00,0x3f,0x3d,0x4a,0x3a,0x50,0x00,0x51,0x4f,0x41,0x00,
+    0x45,0x50,0x00,0x44,0x41,0x4e,0x41,0x57
+};
+
+static void emit_cantuse(emit_t *e, int reveal)
+{
+    /* Position (0x18,0xa8) = FUN_80027e68 a0=0x00a80018 (@0x8004b2d8-b2ec): DAT_800b8534
+     * :=x=0x18, 8536:=y=0xa8. Emitted by the msg VM into the shared text ring
+     * (FUN_80028868); pen advance = (&DAT_800c4416)[code] (FUN_80028868:55 — the same
+     * DEBUG.BIN width table as the name print). Plain glyph text only, no window box
+     * (VM state 5 draws nothing extra). Glyph cell uv mapping as the shared 16x16 font
+     * atlas (u=(code&0xf)<<4, v=((code>>4)<<4)+0x20 — the FUN_80028c1c cell formula
+     * @0x80028d04-3c; the ring emitter draws the same atlas). OPEN: the msg-ring glyph
+     * CLUT was not separately disasm'd — using TEX.TIM CLUT row 0 (0x7810), the palette
+     * the name print uses at this exact screen position. */
+    int x = 0x18, i;
+    if (reveal > RE15_INV_CANTUSE_GLYPHS) reveal = RE15_INV_CANTUSE_GLYPHS;
+    for (i = 0; i < reveal && e->n < e->max; i++) {
+        uint8_t code = re15_inv_cantuse_text[i];
+        sprt(e, RE15_INV_PAGE_FONT4, RE15_INV_CLUT_TEXROW0,
+             x, 0xa8, 16, 16, (code & 0xf) << 4, ((code >> 4) << 4) + 0x20,
+             128, 128, 128, 0);
+        x += re15_font_width[code];
+    }
+}
+
+/* g7 element-0 label prim MEMORY (wave 3): the original writes the label uv into the
+ * PERSISTENT prim buffer and SKIPS the update while 25c2 in {5,6} (addiu -5; sltiu 2
+ * @0x80047d14-28) — the label keeps showing its LAST face through the anim/slide-out.
+ * The port rebuilds the op list per frame, so the last computed face lives here.
+ * 0xff = not yet computed (arena template default; unreachable in states 5/6 since the
+ * command stage always runs state 4 first). */
+static uint8_t s_g7_u = 0xff, s_g7_v = 0xff;
+static void g7_label_reset(void) { s_g7_u = 0xff; s_g7_v = 0xff; }
+
 int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max_ops)
 {
     emit_t e; int i, clut_idx, count; uint32_t tmpl;
@@ -294,6 +338,13 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
      * per frame by the grid handler tail only (@0x800c659c-65d8); id 0 = empty string
      * (offset 0 -> first byte 0x07) draws nothing. */
     if (st->name_item >= 0) emit_name(&e, st->name_item);
+
+    /* ---- 0b. cant-use message (wave 3): text-ring glyphs, same topmost text layer as
+     * the name print (OT depth class 0 chain @0x800b829c). Drawn while the msg VM is
+     * active (8520&0x80), typewritered to msg_reveal glyphs; occupies the bottom strip
+     * (24,168) left empty by the slid-out tab/command clusters (25ea=25ee=264). The
+     * name print never coexists (the grid tail doesn't run in ITEM state 5). */
+    if (st->msg_reveal > 0) emit_cantuse(&e, st->msg_reveal);
 
     /* ---- 1. FUN_80047648(0): chrome group 0, absolute xy, always drawn ---- */
     master_row(0, &clut_idx, &count, &tmpl);
@@ -417,17 +468,27 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
         sprt(&e, RE15_INV_PAGE_TEX4, clut_idx, x + TAB_BX, y + st->tab_base_y, w, h, u, v,
              c, c, c, 0);
     }
-    /* g7 action cluster (case 7 @0x80047d08-dd0): prim0 label swap when item_state not
-     * 5/6: cursor id<0x15 -> uv(0x10,0x90) EQUIP else (0x68,0xc0) USE; cursor==equipped
-     * -> (0x10,0xa0) */
+    /* g7 action cluster (case 7 @0x80047d08-dd0): prim0 label swap — the uv UPDATE is
+     * SKIPPED while item_state (25c2) is 5 or 6 (addiu -5; sltiu 2 @0x80047d14-28): the
+     * persistent prim keeps its LAST face through the anim/slide (wave-3 freeze memory).
+     * Update rule: cursor id<0x15 -> uv(0x10,0x90) EQUIP face (sltiu 0x15 @0x80047d54)
+     * else (0x68,0xc0) USE face; THEN overridden if cursor-slot == equip-slot (SLOT
+     * equality @0x80047d7c-d90) -> (0x10,0xa0) unequip face. Byte-true MISMATCH corner:
+     * a second copy of the equipped weapon id shows the plain EQUIP label (slot compare)
+     * but USE on it UNEQUIPS (the classifier's ID compare @0x8004aadc) — do not "fix". */
     master_row(7, &clut_idx, &count, &tmpl);
     for (i = 0; i < count; i++) {
         tmpl_row(tmpl, i, &x, &y, &w, &h, &u, &v);
-        if (i == 0 && (uint8_t)(st->item_state - 5) >= 2) {
-            uint8_t cid = g_inv.slots[st->item_cursor].id;
-            if (cid < 0x15) { u = 0x10; v = 0x90; }
-            else            { u = 0x68; v = 0xc0; }
-            if (st->item_cursor == st->equipped_slot) { u = 0x10; v = 0xa0; }
+        if (i == 0) {
+            if ((uint8_t)(st->item_state - 5) >= 2) {
+                uint8_t cid = g_inv.slots[st->item_cursor].id;
+                if (cid < 0x15) { u = 0x10; v = 0x90; }
+                else            { u = 0x68; v = 0xc0; }
+                if (st->item_cursor == st->equipped_slot) { u = 0x10; v = 0xa0; }
+                s_g7_u = (uint8_t)u; s_g7_v = (uint8_t)v;    /* remember the written prim */
+            } else if (s_g7_u != 0xff) {
+                u = s_g7_u; v = s_g7_v;                      /* frozen: last written face */
+            }
         }
         sprt(&e, RE15_INV_PAGE_TEX4, clut_idx, x + ACT_BX, y + st->act_base_y, w, h, u, v,
              128, 128, 128, 0);

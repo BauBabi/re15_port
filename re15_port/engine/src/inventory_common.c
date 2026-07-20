@@ -90,6 +90,9 @@ void re15_inv_load_briefing(void)
     g_inv.slots[0].id = 0x01; g_inv.slots[0].qty = 0;   /* COMBAT KNIFE (the equipped weapon, DAT_800aca5d==1) */
     g_inv.slots[1].id = 0x03; g_inv.slots[1].qty = 15;  /* BROWNING HP (handgun, 15-round clip)                */
     g_inv.slots[2].id = 0x15; g_inv.slots[2].qty = 50;  /* H. GUN BULLETS (ammo)                               */
+    /* game-start equip-history init: DAT_800b25c9 := 0x80 @0x80045fe0 (the same init that
+     * writes 25c8:=0 @0x80045fec; savestate mzd_inv_open.sav confirms 25c9==0x80 live). */
+    re15_inv_set_prev_equip_slot(0x80);
 }
 
 /* ====================================================================== *
@@ -104,6 +107,14 @@ void re15_inv_load_briefing(void)
 static uint8_t s_equipped_slot = 0;   /* byte-true start: knife = slot 0 */
 int  re15_inv_equipped_slot(void)      { return s_equipped_slot; }
 void re15_inv_set_equipped_slot(int s) { s_equipped_slot = (uint8_t)s; }
+
+/* DAT_800b25c9 — previous equip slot (wave 3; see re15_inventory.h). BSS initial 0; the
+ * game-start init writes 0x80 (@0x80045fe0, hooked into re15_inv_load_briefing); the only
+ * other writers are the equip step-5 commit (@0x8004abe0) and the swap step-0 commit
+ * (@0x8004b0e8) in menu_common.c. */
+static uint8_t s_prev_equip_slot = 0;
+int  re15_inv_prev_equip_slot(void)      { return s_prev_equip_slot; }
+void re15_inv_set_prev_equip_slot(int s) { s_prev_equip_slot = (uint8_t)s; }
 
 /* FUN_8004dfec @0x8004dfec — find-inventory-slot-by-item-id: linear scan comparing the id byte
  * @0x800b10ac+i*4, return slot or -1. (Its Ghidra decompile "return 0xffffffff" is WRONG —

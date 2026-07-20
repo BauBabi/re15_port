@@ -62,6 +62,16 @@ void re15_inv_load_briefing(void);
  * slot (handgun -> item 0x15). Equipped SLOT index = DAT_800b25c8 (0x80 = none). */
 int  re15_inv_equipped_slot(void);
 void re15_inv_set_equipped_slot(int s);
+
+/* DAT_800b25c9 — the PREVIOUS equip slot (wave 3, spec shots/inv_wave3_spec.md). Written by
+ * EXACTLY three sites (ghidra1_V2 xref list: 8004abe0/8004ac80(lbu)/8004b0e8/8004b1ec(lbu)):
+ * game-start init := 0x80 (@0x80045fe0, together with 25c8:=0 @0x80045fec — modeled in
+ * re15_inv_load_briefing), equip-anim step-5 commit (@0x8004abe0) and swap-anim step-0 commit
+ * (@0x8004b0e8). NO menu-init writer exists (BSS initial 0). It gates the equip/swap gun-rgb
+ * fade (`if 25c9==0x80 then 25cd-=6` @0x8004ac88/@0x8004b1ec) — history-dependently (the
+ * stale-25c9 cd=0x5c quirk, spec fact "25c9 quirk"). */
+int  re15_inv_prev_equip_slot(void);
+void re15_inv_set_prev_equip_slot(int s);
 int  re15_inv_find_item(uint8_t id);        /* FUN_8004dfec: slot or -1                     */
 void re15_inv_remove_slot(int slot);        /* clear a slot (item-USE consume @0x8004aef0)  */
 void re15_inv_compact(void);                /* FUN_8004dadc post-USE slot compaction (also

@@ -1,10 +1,13 @@
 /*
- * menu_common.c — the byte-true RE1.5 STATUS/INVENTORY screen FSM (wave 2).
+ * menu_common.c — the byte-true RE1.5 STATUS/INVENTORY screen FSM (waves 2+3).
  *
  * Spec: shots/inv_wave2_spec.md (RE workflow wf_e8e48d36, 4 reports, citations complete)
+ * + shots/inv_wave3_spec.md (wf_cbdbc8a1 — the ITEM state-5 USE dispatcher/classifier,
+ * the equip/unequip/swap per-step anim tables, the prompt-less heal sub-FSM and the
+ * cant-use message path, all raw-MIPS cited)
  * + fresh file disasm of the DEBUG.BIN grid handler 0x800c62a0-0x800c65fc (byte-identical
  * to the mzd_inv_open.sav RAM module; DEBUG.BIN maps @0x800c0000) and of the EXE command
- * stage @0x8004a458-0x8004a700 (re15_disasm.py, this session).
+ * stage @0x8004a458-0x8004a700 (re15_disasm.py, wave-2 session).
  *
  * This module is the original's state-byte writer:
  *   s_stage    = DAT_800b5359 (gameplay transition stage 0..5, jump table @0x8001069c)
@@ -28,7 +31,8 @@
 #include "re15_menu.h"
 #include "re15_inv_screen.h"    /* g_inv_screen — the original's 25xx screen registers */
 #include "re15_inventory.h"     /* g_inv, equip slot 25c8, compaction FUN_8004dadc */
-#include "re15_item_use.h"      /* heal-USE sub-flow (wave-3 bridge in state 5) */
+#include "re15_item_use.h"      /* heal classifier gate + applier table @0x80010fbc (wave 3) */
+#include "re15_actor.h"         /* g_actors[PLAYER].hp — the heal 0x2f direct write */
 #include "re15_player.h"        /* RE15_PAD_BIT_* */
 #include "re15_damage.h"        /* re15_player_set_equipped_weapon (close-phase commit) */
 #include "re15_audio.h"         /* re15_audio_core_se (SE bank 4) + prime_weapon */
@@ -50,6 +54,10 @@ static uint8_t s_stage2_sub = 0;   /* stage-2 micro-step (hold-black armed?)    
 static uint8_t s_hold     = 0;     /* FUN_80029ac8(2) 2-vsync yield counter           */
 static uint8_t s_p0_entered = 0;   /* phase-0 init ran (the init body runs once)      */
 static uint8_t s_close_sub  = 0;   /* close-phase micro-step                          */
+static uint8_t s_c3 = 0;           /* DAT_800b25c3 — state-5 flow selector (wave 3;
+                                    * zeroed by the master task @0x80046050-6c)       */
+static uint8_t s_c4 = 0;           /* DAT_800b25c4 — flow step counter (written only
+                                    * by the flows; terminals restore 0)              */
 
 /* D-pad auto-repeat (FUN_80030444 bit31-of-aca38 tick; config FUN_80030640(0xf000,0xf,4)
  * @0x800460cc-d8 = raw-layout d-pad mask + delay 15 + rate 4 -> press edge moves, first
@@ -133,6 +141,7 @@ static void tab_select(uint16_t pressed)
             g_inv_screen.item_cursor = 0;
             g_inv_screen.second_cursor = 0;
             g_inv_screen.item_state = 0;
+            s_c3 = 0;
             switch (g_inv_screen.tab) {         /* dispatch @0x8004991c-58 */
             case 0: s_substate = 3; return;     /* ITEM: 25c1=3 @0x80049960-64 */
             case 1: s_substate = 1; return;     /* MAP: 25c1=1 @0x80049968-78 (+ per-stage
@@ -228,11 +237,14 @@ static void grid(uint16_t pressed, uint16_t held)
         } else if (re15_inv_equipped_slot() != 0x80) {
             /* VESTIGIAL direct-unequip @0x800c64d4-6534 — unreachable in the shipped
              * MZD build (the only nav route to 0xA is the patched-dead LEFT jump).
-             * Kept shape-true: SE(4,0xa), 25c2=5, 25c3=2 (the equip-anim FSM entry,
-             * WAVE 3), 25cd=0x3e, cursors restored, name tail SKIPPED (j 0x800c65f0). */
+             * Kept shape-true: SE(4,0xa), 25c2=5, 25c3=2 (UNEQUIP-anim entry @0x800c650c),
+             * 25c4=0 (@0x800c6518), 25cd=0x3e, cursors restored, name tail SKIPPED
+             * (j 0x800c65f0). */
             se4(6);
             se4(0x0a);
             g_inv_screen.item_state = 5;
+            s_c3 = 2;                                    /* @0x800c650c */
+            s_c4 = 0;                                    /* @0x800c6518 */
             g_inv_screen.arms_rgb = 0x3e;                /* 25cd @0x800c6520 */
             *cur = s_saved_cursor;                       /* @0x800c6524 */
             g_inv_screen.second_cursor = s_saved_cursor; /* @0x800c652c */
@@ -293,52 +305,293 @@ static void command_select(uint16_t pressed)
 }
 
 /* ---------------------------------------------------------------------------------- */
-/* ITEM state 5 (USE) — WAVE-3 BRIDGE.                                                */
-/* Byte-true state 5 = per-frame jal FUN_8004aa24 (@0x8004a674), the id-classifier     */
-/* chain with its own sub-FSM on 25c3 (equip/unequip swap anims, heal wipe-wait c4,    */
-/* key-item handlers) — NOT yet RE-ported. The bridge keeps the port's existing        */
-/* working features reachable at the byte-true call site:                              */
-/*   - WEAPON (classifier weapon gate `sltiu id,0x15` @0x8004aa64): equip = the equip  */
-/*     RECORD 25c8 := cursor slot; USE on the already-equipped item = unequip          */
-/*     (classifier c3=2; 25c8 := 0x80). The PLAYER-side weapon commit happens at       */
-/*     CLOSE (@0x80046688), not here — byte-true. The swap ANIM (25c2=5 sub-states)    */
-/*     is WAVE 3.                                                                     */
-/*   - HEAL (0x22..0x2f, @0x8004ab48): the port's item_use prompt FSM (item_use_       */
-/*     common.c; arms the ECG wipe via re15_inv_screen_heal_wipe on consume).          */
-/*   - other ids: nothing.                                                            */
-/* All exits return to state 6 (slide back to the grid) = the heal flow's byte-true    */
-/* exit (master state 6 @0x8004b038 tail).                                            */
+/* ITEM state 5 (USE) — WAVE 3, spec shots/inv_wave3_spec.md.                          */
+/* Byte-true state 5 = per-frame jal FUN_8004aa24 (@0x8004a674): dispatcher            */
+/* @0x8004aa24-aa60 does jalr PTR[0x80074c28 + 25c3*4]. Table @0x80074c28:             */
+/*   [0]=0x8004aa64 classifier   [1]=0x8004ab88 equip anim   [2]=0x8004ad10 unequip    */
+/*   [3]=0x8004adcc heal         [4]=0x8004b074 nop (jr ra)  [5]=0x8004b07c swap       */
+/*   [6]=0x8004b250 cant-use msg [7]=0x8004b37c (vestigial — no c3:=7 writer)          */
+/* Terminal invariant: EVERY flow resets c3=0 AND c4=0 before leaving state 5, so the  */
+/* classifier always runs first on re-entry (verified per-terminal in the spec).       */
+/* Register mirrors: 25c3=s_c3, 25c4=s_c4 (declared in the state block above),         */
+/* 25c8=re15_inv_equipped_slot (+g_inv_screen mirror), 25c9=re15_inv_prev_equip_slot,  */
+/* 25cd=arms_rgb, 2608=arms_slide, 25dc/25de=equip_x/equip_y, 25d4=wipe_mode,          */
+/* 25ee=act_base_y.                                                                    */
 /* ---------------------------------------------------------------------------------- */
-static void use_bridge(uint16_t pressed)
+int re15_menu_item_c3(void) { return s_c3; }
+int re15_menu_item_c4(void) { return s_c4; }
+
+/* ---- cant-use message mini-FSM (the msg-VM slice for the ONE menu message) --------
+ * Open = FUN_80027e68(a0=0x00a80018, a1=0x8400, a2=0, a3=0) @0x8004b2d8-b2f8: 8534/36
+ * = (0x18,0xa8), 8522=a1&0x80=0 (NO Yes/No), string = desc-bank entry 0 (DEBUG.BIN
+ * @0x800c50de+0x90 = "You can't use it here."), 8520:=0x80 (active). Ticked per
+ * RENDERED frame by the msg VM FUN_80028134 (single caller = the present-chain fn
+ * FUN_80010000 via FUN_800280b4 — runs while task 0 is suspended); the port ticks it
+ * once per menu frame at the end of menu_task_step (same 1-tick/frame cadence).
+ * Typewriter (status screen, DAT_800b5456==0 -> s1=1 @0x80028148/0x80028168): first
+ * glyph after 8525 = 1<<1 = 2 frames, then 8524 = 2<<1 = 4 frames/glyph
+ * (@0x80028194-281c4). Terminator 01 00 -> VM state 5 PRESS-WAIT. FAST-FORWARD is
+ * structurally impossible (held-CROSS FF @0x800281ec-f4 gated on 8522!=0). DISMISS
+ * (state 5 @0x8002868c-86d0): virtual EDGE word & 0xc000 (CROSS confirm OR SQUARE
+ * cancel) -> input eat DAT_800ac768:=0xffff (virtual HELD word — no menu held-reader
+ * consumes it, the grid d-pad repeat reads the RAW held word, so no port action),
+ * 8520 &= 0x7f. NO auto-dismiss, NO SE on dismiss (no jal 0x80045024 in the block). */
+static uint8_t s_msg_active = 0;   /* DAT_800b8520 bit 0x80 */
+static uint8_t s_msg_reveal = 0;   /* glyphs revealed (0..22) */
+static uint8_t s_msg_timer  = 0;   /* 8525/8524 countdown */
+
+int re15_menu_msg_active(void) { return s_msg_active; }
+
+static void msg_open(void)
+{
+    s_msg_active = 1;              /* 8520 := 0x80 */
+    s_msg_reveal = 0;
+    s_msg_timer  = 2;              /* 8525 = 1<<1 (first glyph after 2 frames) */
+}
+
+static void msg_vm_tick(uint16_t pressed)
+{
+    if (!s_msg_active) { g_inv_screen.msg_reveal = 0; return; }
+    if (s_msg_reveal < RE15_INV_CANTUSE_GLYPHS) {
+        if (--s_msg_timer == 0) { s_msg_reveal++; s_msg_timer = 4; }  /* 8524 = 2<<1 */
+    } else if (pressed & (RE15_PAD_BIT_CROSS | RE15_PAD_BIT_SQUARE)) {
+        s_msg_active = 0;          /* 8520 &= 0x7f @0x800286c4 (edge test andi 0xc000) */
+    }
+    g_inv_screen.msg_reveal = s_msg_active ? s_msg_reveal : 0;
+}
+
+/* [0] classifier @0x8004aa64 — exact branch order (id = inv[25bd*4].id @0x800b10ac). */
+static void state5_classifier(void)
 {
     uint8_t cur = g_inv_screen.item_cursor;
-    uint8_t id;
-
-    if (re15_item_use_active()) {                 /* heal prompt owns the pad */
-        re15_item_use_tick(pressed);
-        if (!re15_item_use_active()) {
-            /* heal done (consumed or declined) -> state 6. A consume already ran the
-             * compaction (FUN_8004dadc inside re15_inv_remove_slot) + the ECG wipe. */
-            g_inv_screen.item_state = 6;
+    uint8_t id  = g_inv.slots[cur].id;
+    if (id < 0x15) {                              /* WEAPON gate sltiu id,0x15 @0x8004aa90
+                                                   * (id!=0 guaranteed: grid confirm gates
+                                                   * id @0x800c64b4 before state 3) */
+        int eq = re15_inv_equipped_slot();
+        /* equipped-id read @0x8004aac4: lbu inv[25c8*4]. For 25c8==0x80 this is the
+         * OUT-of-inventory byte @0x800b12ac (base+0x200), read BEFORE the 0x80 check —
+         * byte-true as coded. Live value = 0x00 (mzd_inv_open.sav, measured this wave);
+         * the cursor id is never 0 here, so the compare can never match on that path. */
+        uint8_t eq_id = (eq == 0x80) ? 0x00 : g_inv.slots[eq & 0x0f].id;
+        s_c4 = 0;                                 /* sb zero->25c4 @0x8004aaa8 (ALL weapon
+                                                   * outcomes) */
+        if (eq_id == id) {                        /* ID equality bne @0x8004aadc (NOT slot
+                                                   * equality — settles the report split) */
+            s_c3 = 2;                             /* UNEQUIP @0x8004aaec */
+            g_inv_screen.arms_rgb = 0x3e;         /* 25cd @0x8004aaf8 */
+        } else if (eq == 0x80) {                  /* delay-slot ori v0,0x80 @0x8004aae0;
+                                                   * bne a0,v0 @0x8004ab04 */
+            g_inv_screen.arms_rgb = 0x80;         /* 25cd @0x8004ab14 */
+            s_c3 = 1;                             /* EQUIP @0x8004ab20 */
+        } else {
+            g_inv_screen.arms_rgb = 0x3e;         /* 25cd @0x8004ab2c-38 */
+            s_c3 = 5;                             /* SWAP @0x8004ab3c */
         }
         return;
     }
+    if ((uint8_t)(id - 0x22) < 0xe && id != 0x25) {  /* sltiu 0xe @0x8004ab48; beq 0x25
+                                                      * @0x8004ab54 (Red excluded) */
+        s_c3 = 3;                                 /* HEAL @0x8004ab60 — c4 NOT reset here
+                                                   * (relies on the terminal invariant) */
+        return;
+    }
+    s_c3 = 6;                                     /* cant-use @0x8004ab6c-ab74 (ammo
+                                                   * 0x15-0x21, Red 0x25, ids >= 0x30) */
+    s_c4 = 0;                                     /* @0x8004ab7c */
+}
 
-    id = g_inv.slots[cur].id;
-    if (id != 0 && id < 0x15) {                   /* WEAPON gate sltiu 0x15 @0x8004aa64 */
-        int eq = re15_inv_equipped_slot();
-        if (eq == cur) re15_inv_set_equipped_slot(0x80);  /* unequip (classifier c3=2) */
-        else           re15_inv_set_equipped_slot(cur);   /* equip record 25c8 := slot */
-        re15_inv_screen_sync_equip();             /* ARMS panel regs (LAB_80049524 rules;
-                                                   * the live swap-anim updates = WAVE 3) */
+/* [1] EQUIP anim walker @0x8004ab88 (12-step fn-pointer table @0x80010f24: steps 0-4 and
+ * 6-10 -> tick 0x8004ac7c, step 5 -> commit 0x8004abbc falling into the tick, step 11 ->
+ * terminal 0x8004acec; 1 step = 1 frame, each step increments c4 itself). */
+static void state5_equip_anim(void)
+{
+    if (s_c4 >= 0x0c) return;                     /* guard sltiu v0,c4,0xc @0x8004ab94 */
+    if (s_c4 == 11) {                             /* terminal @0x8004acec-ad04 */
+        g_inv_screen.item_state = 6;              /* 25c2 := 6 (slide back to grid) */
+        s_c3 = 0; s_c4 = 0;
+        return;
+    }
+    if (s_c4 == 5) {                              /* commit @0x8004abbc-ac78 */
+        uint8_t cur = g_inv_screen.item_cursor;
+        uint8_t old = (uint8_t)re15_inv_equipped_slot();
+        re15_inv_set_equipped_slot(cur);          /* 25c8 := 25bd @0x8004abd0 */
+        re15_inv_set_prev_equip_slot(old);        /* 25c9 := old 25c8 @0x8004abe0 (=0x80
+                                                   * on this path — equip needs empty) */
+        g_inv_screen.equipped_slot = cur;         /* (port mirror of the one 25c8 byte) */
+        {   /* ammo-counter regs by the NEW slot's kind byte 0x800b10ae[slot*4] */
+            uint8_t kind = g_inv.slots[cur].flags;
+            if (kind == 0)      { g_inv_screen.equip_x = 0x96; g_inv_screen.equip_y = 0x35; } /* @0x8004ac04-14 */
+            else if (kind == 1) { g_inv_screen.equip_x = 0x82; g_inv_screen.equip_y = 0x2f; } /* @0x8004ac34-48 */
+            else                { g_inv_screen.equip_x = 0xaa; g_inv_screen.equip_y = 0x2f; } /* @0x8004ac64-78 */
+        }
+        /* falls THROUGH into the common tick */
+    }
+    /* common tick @0x8004ac7c-ace8: the cd fade is gated on the STALE 25c9 (the 3-writer
+     * global) — after swap->unequip within a session, steps 0-4 skip the decrement and
+     * the terminal cd is 0x5c instead of 0x3e (byte-true history quirk, must reproduce). */
+    if (re15_inv_prev_equip_slot() == 0x80)       /* lbu 25c9; bne 0x80 @0x8004ac88 */
+        g_inv_screen.arms_rgb = (uint8_t)(g_inv_screen.arms_rgb + 250); /* 25cd += 250
+                                                   * (u8 wrap = -6) @0x8004ac9c-aca4 */
+    g_inv_screen.arms_slide += 5;                 /* 2608 += 5 @0x8004acc4/acd0 */
+    g_inv_screen.equip_y    += 1;                 /* 25de += 1 @0x8004acc8/acd8 (terminal
+                                                   * lands 0x3b kind0 — one MORE than the
+                                                   * reopen rest 0x3a; byte-true, persists
+                                                   * until the next screen open) */
+    s_c4++;                                       /* @0x8004acc0/ace0 */
+}
+
+/* [2] UNEQUIP anim walker @0x8004ad10 (table @0x80010f54: steps 0-4,6-10 -> tick
+ * 0x8004ad50, step 5 -> 0x8004ad44, step 11 -> terminal 0x8004ada8). */
+static void state5_unequip_anim(void)
+{
+    if (s_c4 >= 0x0c) return;                     /* sltiu 0xc @0x8004ad1c */
+    if (s_c4 == 11) {                             /* terminal @0x8004ada8-adc0 */
         g_inv_screen.item_state = 6;
+        s_c3 = 0; s_c4 = 0;
         return;
     }
-    if (re15_item_use_is_heal(id)) {              /* heal branch @0x8004ab48 */
-        re15_item_use_start(id, cur);
+    if (s_c4 == 5) {                              /* @0x8004ad44-ad4c: ori 0x80 -> 25c8
+                                                   * (equipped slot cleared MID-anim) */
+        re15_inv_set_equipped_slot(0x80);
+        g_inv_screen.equipped_slot = 0x80;
+    }
+    /* tick @0x8004ad50-ada4 — UNCONDITIONAL (no 25c9 gate; exact mirror of equip) */
+    g_inv_screen.arms_rgb = (uint8_t)(g_inv_screen.arms_rgb + 6);  /* 25cd += 6 @0x8004ad64-68 */
+    s_c4++;                                       /* @0x8004ad7c-84 */
+    g_inv_screen.arms_slide -= 5;                 /* 2608 -= 5 @0x8004ad88/ad94 */
+    g_inv_screen.equip_y    -= 1;                 /* 25de -= 1 @0x8004ad8c/ad9c */
+}
+
+/* [5] SWAP inline walker @0x8004b07c (no table: slti c4,11 @0x8004b08c; c4==0 -> commit
+ * 0x8004b0c4 falling into the tick, c4 1-10 -> tick 0x8004b184, c4==11 -> terminal
+ * 0x8004b234). NO 2608 write anywhere (the gun does not slide in a swap). */
+static void state5_swap_anim(void)
+{
+    if (s_c4 == 11) {                             /* terminal @0x8004b234-b244 */
+        g_inv_screen.item_state = 6;
+        s_c3 = 0; s_c4 = 0;
         return;
     }
-    g_inv_screen.item_state = 6;                  /* ammo/key handlers: WAVE 3 */
+    if (s_c4 > 11) return;                        /* slti fallthrough (unreachable) */
+    if (s_c4 == 0) {                              /* commit @0x8004b0c4-b180 */
+        uint8_t cur = g_inv_screen.item_cursor;
+        uint8_t old = (uint8_t)re15_inv_equipped_slot();
+        re15_inv_set_equipped_slot(cur);          /* 25c8 := 25bd @0x8004b0d8 */
+        re15_inv_set_prev_equip_slot(old);        /* 25c9 := old slot @0x8004b0e8 (!=0x80:
+                                                   * swap requires something equipped) */
+        g_inv_screen.equipped_slot = cur;
+        {   /* NEW slot kind: NOTE kind0 = (0xac,0x3a) here vs equip's (0x96,0x35)! */
+            uint8_t kind = g_inv.slots[cur].flags;
+            if (kind == 0)      { g_inv_screen.equip_x = 0xac; g_inv_screen.equip_y = 0x3a; } /* @0x8004b108-11c */
+            else if (kind == 1) { g_inv_screen.equip_x = 0x82; g_inv_screen.equip_y = 0x2f; } /* @0x8004b13c-150 */
+            else                { g_inv_screen.equip_x = 0xaa; g_inv_screen.equip_y = 0x2f; } /* @0x8004b16c-180 */
+        }
+        /* falls into the tick */
+    }
+    /* tick @0x8004b184-b228 (c4 0..10): reads the kind of the CURRENT 25c8 */
+    {
+        int eq = re15_inv_equipped_slot();        /* lbu kind of 25c8 @0x8004b188-b1a0 */
+        uint8_t kind = g_inv.slots[eq & 0x0f].flags;
+        if (kind == 0) g_inv_screen.equip_x -= 2; /* 25dc -= 2 @0x8004b1b4-b1c4 (0xac ->
+                                                   * 0x96 after 11 ticks = resting) */
+        else           g_inv_screen.equip_y += 1; /* 25de += 1 @0x8004b1d4-b1e4 */
+    }
+    /* shared cd guard — DEAD in a legal swap (step 0 always wrote 25c9 != 0x80 first),
+     * kept exactly as coded @0x8004b1ec-b210. */
+    if (re15_inv_prev_equip_slot() == 0x80)
+        g_inv_screen.arms_rgb = (uint8_t)(g_inv_screen.arms_rgb + 250);
+    s_c4++;                                       /* @0x8004b218-b228 */
+}
+
+/* [3] HEAL @0x8004adcc — NO prompt, NO message; 3-substate sub-FSM on c4 (s0=100
+ * @0x8004ae14, s1=id-0x22 latched from the cursor slot at fn entry each frame). */
+static void state5_heal(void)
+{
+    uint8_t cur = g_inv_screen.item_cursor;
+    uint8_t id  = g_inv.slots[cur].id;
+    switch (s_c4) {
+    case 0:                                       /* wipe-arm @0x8004ae48-aea0 */
+        if ((uint8_t)(id - 0x22) < 0xd) {
+            /* per-ITEM wipe-type table @0x80010f84 (ported: 0x23/0x26 -> mode 2,
+             * 0x2e -> none, others -> mode 1) — the wipe runs BEFORE the consume. */
+            re15_inv_screen_heal_wipe(id);
+        } else {
+            /* idx >= 0xd (only 0x2f NUT reachable): hp := 0x4d = 77 immediately,
+             * NO wipe (@0x8004ae98-aea0: ori 0x4d; sh -> 0x800acaee = player hp). */
+            g_actors[RE15_ACTOR_SLOT_PLAYER].hp = 0x4d;
+        }
+        s_c4++;                                   /* common tail @0x8004aea4-aebc */
+        break;
+    case 1:                                       /* wipe wait @0x8004aec0-aedc: lbu 25d4;
+                                                   * bne stay (renderer FUN_80048a44 self-
+                                                   * clears after 32/36 frames) */
+        if (g_inv_screen.wipe_mode != 0) break;
+        s_c4 = 2;                                 /* sb 2 -> 25c4 */
+        break;
+    case 2:                                       /* consume + apply + exit @0x8004aee4-b070 */
+        re15_inv_remove_slot(cur);                /* zero id/qty/kind @0x800b10ac/ad/ae +
+                                                   * cursor*4 (@0x8004aee4-af28) + the
+                                                   * compaction jal FUN_8004dadc @0x8004af2c */
+        g_inv_screen.equipped_slot =              /* (port mirror refresh — the compaction
+                                                   * may shift the equip slot; the original
+                                                   * has the ONE 25c8 byte) */
+            (uint8_t)re15_inv_equipped_slot();
+        re15_item_use_apply(id);                  /* applier table @0x80010fbc (id latched
+                                                   * BEFORE the zeroing — s1 from fn entry) */
+        g_inv_screen.ecg_sweep = 0x20;            /* ECG sweep reset 2600:=0x20 @0x8004b038 */
+        s_c3 = 0; s_c4 = 0;                       /* @0x8004b044-b050 */
+        g_inv_screen.item_state = 6;              /* 25c2 := 6 @0x8004b058 (slide to grid) */
+        break;
+    default:
+        break;
+    }
+}
+
+/* [6] cant-use message @0x8004b250 — 3-substate mini-FSM on c4. */
+static void state5_cantuse(void)
+{
+    switch (s_c4) {
+    case 0:                                       /* slide the command cluster OUT bottom
+                                                   * @0x8004b2a0-b2d4: lh 25ee; slti 251 */
+        if (g_inv_screen.act_base_y < 251) g_inv_screen.act_base_y += 14; /* addiu 14 */
+        else                               s_c4 = 1;   /* ori 1 -> 25c4 */
+        break;
+    case 1:                                       /* message open @0x8004b2d8-b2f8: jal
+                                                   * FUN_80027e68(0x00a80018,0x8400,0,0) */
+        msg_open();
+        s_c4 = 2;
+        break;
+    case 2:                                       /* wait (8520 & 0x80)==0 @0x8004b2fc-b324 */
+        if (s_msg_active) break;
+        g_inv_screen.item_state = 1;              /* 25c2 := 1 — GRID directly (the command
+                                                   * stage does NOT return; the cluster is
+                                                   * already out at 264) */
+        s_c3 = 0; s_c4 = 0;
+        break;
+    default:
+        break;
+    }
+}
+
+/* The per-frame state-5 body (jal FUN_8004aa24 @0x8004a674). */
+static void state5_use(void)
+{
+    switch (s_c3) {                               /* jalr PTR[0x80074c28 + c3*4] */
+    case 0: state5_classifier();   break;         /* [0] @0x8004aa64 */
+    case 1: state5_equip_anim();   break;         /* [1] @0x8004ab88 */
+    case 2: state5_unequip_anim(); break;         /* [2] @0x8004ad10 */
+    case 3: state5_heal();         break;         /* [3] @0x8004adcc */
+    case 4: break;                                /* [4] @0x8004b074 = pure `jr ra` no-op —
+                                                   * dead/reserved (no c3:=4 setter found;
+                                                   * spec open question)                   */
+    case 5: state5_swap_anim();    break;         /* [5] @0x8004b07c */
+    case 6: state5_cantuse();      break;         /* [6] @0x8004b250 */
+    case 7: break;                                /* [7] @0x8004b37c = the EXCHANGE sub-0 fn
+                                                   * (state-7 table @0x80074c44 overlap) —
+                                                   * vestigial here, no c3:=7 writer        */
+    default: break;
+    }
 }
 
 /* ---------------------------------------------------------------------------------- */
@@ -376,7 +629,10 @@ static void item_mode(uint16_t pressed, uint16_t held)
         command_select(pressed);
         break;
     case 5:
-        use_bridge(pressed);                      /* byte-true: jal FUN_8004aa24 @0x8004a674 */
+        state5_use();                             /* byte-true: jal FUN_8004aa24 @0x8004a674
+                                                   * (pad-free — the only input in state 5
+                                                   * is the msg-VM dismiss, which lives in
+                                                   * msg_vm_tick like the original's flush) */
         break;
     case 6:  /* cancel slide-out @0x8004a684-6a8: 25ee +14 while <251 -> 264, then
               * state 1 (back to GRID, not tab-select). */
@@ -428,6 +684,13 @@ static void phase0_init(void)
     s_substate = 0;
     s_saved_cursor = 0;                    /* DAT_800b25d7 (live init value 0) */
     s_close_sub = 0;
+    s_c3 = 0;                              /* master task zeroing @0x80046050-6c (25c3;
+                                            * 25c4 is NOT in that list — the terminal
+                                            * invariant keeps it 0) */
+    s_msg_active = 0; s_msg_reveal = 0;    /* (port hygiene: the menu message cannot
+                                            * survive a close — it must be dismissed to
+                                            * leave state 5; guards the debug toggle) */
+    g_inv_screen.msg_reveal = 0;
     /* fade-in arm @0x800496c4-704: FUN_800217b0(0x200,-0x1800,7,0) + FUN_800216ec
      * (value ignored, level:=0x7fff) — ~6 drawn frames while the menu draws. */
     re15_fade_config(0, 2, 7, (int16_t)-0x1800, 0);
@@ -475,6 +738,7 @@ static void close_phase(void)
      * pacing restore (no port divider), zero 25bf/25c0/25c1/25c2/25c3, aca3c&=~0x200;
      * FUN_80029c2c(0) resume + FUN_80029afc self-kill @0x8004677c-84. */
     s_phase = 0; s_substate = 0; s_p0_entered = 0; s_close_sub = 0;
+    s_c3 = 0;                              /* 25c3 in the teardown zero list @0x80046748-6c */
     g_inv_screen.item_state = 0;
     g_inv_screen.name_item = -1;
     s_alive = 0;
@@ -488,13 +752,8 @@ static void close_phase(void)
     s_stage = 4;
 }
 
-static void menu_task_step(uint16_t pressed, uint16_t held)
+static void menu_task_dispatch(uint16_t pressed, uint16_t held)
 {
-    /* name print is queued per-frame by the grid tail only (@0x800c659c) */
-    g_inv_screen.name_item = -1;
-    /* the pad-refresh auto-repeat tick runs EVERY frame (FUN_80030444) */
-    repeat_update(pressed, held);
-
     switch (s_phase) {
     case 0:
         if (!s_p0_entered) { s_p0_entered = 1; phase0_init(); }
@@ -536,6 +795,22 @@ static void menu_task_step(uint16_t pressed, uint16_t held)
         s_phase = 0;
         return;
     }
+}
+
+static void menu_task_step(uint16_t pressed, uint16_t held)
+{
+    /* name print is queued per-frame by the grid tail only (@0x800c659c) */
+    g_inv_screen.name_item = -1;
+    /* the pad-refresh auto-repeat tick runs EVERY frame (FUN_80030444) */
+    repeat_update(pressed, held);
+    menu_task_dispatch(pressed, held);
+    /* The msg VM (FUN_80028134) has EXACTLY ONE caller — the present-chain fn
+     * FUN_80010000 (via FUN_800280b4, gated on 8520&0x80 @0x800280c8-d4), which runs
+     * from the frame FLUSH (0x80020f3c <- FUN_80020bb0 <- 0x800544e8) — i.e. once per
+     * rendered frame AFTER the task step, while task 0 stays suspended. So the message
+     * types out / accepts dismissal here, and the c4==2 poll sees a dismissal on the
+     * FOLLOWING frame (byte cadence). */
+    if (s_alive) msg_vm_tick(pressed);
 }
 
 /* ---------------------------------------------------------------------------------- */
@@ -624,7 +899,10 @@ void re15_menu_toggle(void)
         }
         s_alive = 0; s_phase = 0; s_substate = 0; s_p0_entered = 0; s_close_sub = 0;
         s_request = 0; s_latch = 0; s_stage = 0;
+        s_c3 = 0; s_c4 = 0;
+        s_msg_active = 0; s_msg_reveal = 0;
         g_inv_screen.item_state = 0;
         g_inv_screen.name_item = -1;
+        g_inv_screen.msg_reveal = 0;
     }
 }

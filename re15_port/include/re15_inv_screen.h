@@ -100,7 +100,21 @@ typedef struct {
     int16_t name_item;      /* grid-frame ITEM-NAME print: -1 = FUN_80028c1c NOT called this
                              * frame; else the a3 id passed by the grid tail @0x800c65a8-d8
                              * (cursor==0xA -> 1; empty slot -> 0 = empty string, no draw)  */
+    /* ---- wave 3 ---- */
+    uint8_t msg_reveal;     /* cant-use message "You can't use it here." (c3=6 @0x8004b250):
+                             * 0 = message not up; else the typewriter reveal = number of
+                             * glyphs of re15_inv_cantuse_text to draw at (0x18,0xa8)
+                             * (FUN_80027e68 a0=0x00a80018 @0x8004b2d8-b2ec). Maintained by
+                             * the menu msg mini-FSM (menu_common.c msg_vm_tick).           */
 } re15_inv_screen_t;
+
+/* DEBUG.BIN description-bank entry 0 = "You can't use it here." — string ptr resolve
+ * FUN_80027e68 (a1&0xc00==0x400): 0x800c50de + u16[0x800c50de + 0*2] (= off 0x90); glyph
+ * codes re-read from shared_assets/PSX/BIN/DEBUG.BIN file offset 0x50de+0x90 this wave:
+ * 35 4b 51 00 3f 3d 4a 3a 50 00 51 4f 41 00 45 50 00 44 41 4e 41 57, terminated by the
+ * msg-VM end-control 01 00 (code 1 operand 0 -> VM state 5 = PRESS-WAIT). 22 glyphs. */
+#define RE15_INV_CANTUSE_GLYPHS 22
+extern const uint8_t re15_inv_cantuse_text[RE15_INV_CANTUSE_GLYPHS];
 
 /* The live screen state (engine-owned). */
 extern re15_inv_screen_t g_inv_screen;
@@ -126,11 +140,12 @@ int re15_inv_screen_condition(int hp, int poisoned);
  * changes (the byte-true swap-anim FSM that maintains these live is WAVE 3). */
 void re15_inv_screen_sync_equip(void);
 
-/* Arm the heal-use ECG feedback (wave 2): the ECG sweep reset DAT_800b2600=0x20
- * (@0x8004b038, heal sub-step c4==2 common) + the condition-change wipe per the
- * per-heal-item table @0x80010f84 (see wipe_mode above). Called by the item-USE FSM
- * at heal apply/consume. (Byte-true ORDER divergence, WAVE 3: the original runs the
- * wipe BEFORE the consume — c4 0->1 wait ->2; the port arms it AT consume.) */
+/* Arm the heal condition-change WIPE per the per-heal-item table @0x80010f84 (see
+ * wipe_mode above): [1]=0x23 / [4]=0x26 -> mode 2 (blue), [12]=0x2e -> none, all others
+ * -> mode 1 (green). WAVE 3: called by the heal sub-FSM at c4==0 (@0x8004ae48-ae68 —
+ * the wipe runs BEFORE the consume; the wave-2 arm-at-consume divergence is closed).
+ * The ECG sweep reset DAT_800b2600=0x20 (@0x8004b038) belongs to the c4==2 exit tail
+ * and is now written there by menu_common.c — NOT here. */
 void re15_inv_screen_heal_wipe(uint8_t id);
 
 /* Which ITEMALL.PIX tile the composed 8bpp icon page holds at cache cell 0..9:
