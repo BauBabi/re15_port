@@ -36,7 +36,11 @@ void re15_audio_start_room_bgm(int stage, int room)
  * not linked into test binaries). enemy_ai_common.c's death FSM calls re15_audio_room_se. */
 void re15_audio_room_se(int se_id) { (void)se_id; }
 void re15_audio_weapon_se(int se_id) { (void)se_id; }
-void re15_audio_core_se(int se_id) { (void)se_id; }
+/* FILE wave: spy on the CORE00-bank SE calls (FUN_80045024 bank 4) so the FSM tests
+ * can assert the byte-cited call sites (SE(4,4)/(4,5)/(4,6)/(4,8)). */
+int g_test_core_se_last = -1;
+int g_test_core_se_count = 0;
+void re15_audio_core_se(int se_id) { g_test_core_se_last = se_id; g_test_core_se_count++; }
 void re15_audio_prime_weapon(int weapon_id) { (void)weapon_id; }
 
 /* Real asset reader for tests (the engine's item_icon_common.c reads ITEMALL.PIX through this; the PC

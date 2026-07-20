@@ -1,10 +1,19 @@
 /*
- * menu_common.c — the byte-true RE1.5 STATUS/INVENTORY screen FSM (waves 2+3+5 + MAP).
+ * menu_common.c — the byte-true RE1.5 STATUS/INVENTORY screen FSM (waves 2+3+5 + MAP
+ * + FILE).
  *
  * MAP wave: the in-status MAP tab (sub-state 25c1==1) is the FUN_8004c058 4-state
  * runner (slide/interactive/reverse/restore) + the per-stage entry inits @0x80074c0c
  * (room jump tables -> DAT_800b260d/260e) + the FUN_80046fd8/FUN_800473f8 draw set
  * (re15_inv_screen.c); all raw-MIPS cited inline this wave (re15_disasm.py session).
+ *
+ * FILE wave: the in-status FILE tab (sub-state 25c1==2) is the DEBUG.BIN runner
+ * FUN_800c6ca0 @0x800c6ca0 (dispatch @0x800c6fe8 on 25c2): 30-frame enter/exit slides,
+ * the 3-page row list (masks @0x800c6c98, names 0x48-0x65, highlight 0x800c742c), the
+ * embedded 7-page "Operation Report" reader (@0x800ccd34, selection-INDEPENDENT — every
+ * row opens the same document @0x800c704c-70) with the 22-frame page-turn animation
+ * (driver 0x800c77bc) and corner arrows (0x800c7528/0x800c7670). All raw bytes
+ * disassembled from shared_assets/PSX/BIN/DEBUG.BIN this wave (file==RAM proven).
  *
  * Spec: shots/inv_wave2_spec.md (RE workflow wf_e8e48d36, 4 reports, citations complete)
  * + shots/inv_wave3_spec.md (wf_cbdbc8a1 — the ITEM state-5 USE dispatcher/classifier,
@@ -1342,6 +1351,214 @@ static void map_mode(uint16_t pressed)
     }
 }
 
+/* ---------------------------------------------------------------------------------- */
+/* FILE-in-status runner (DEBUG.BIN FUN_800c6ca0 @0x800c6ca0, per-frame from            */
+/* LAB_8004974c; file==RAM proven). Dispatch table @0x800c6fe8[25c2] (8 entries):       */
+/*   0 = enter slide 0x800c6cd4   1 = list 0x800c6d70 (inner dispatch @0x800c7008:     */
+/*       {0 page level 0x800c6dbc, 1 row select via 0x800c6ec8 -> 0x800c7010})         */
+/*   2 = exit slide 0x800c6ed8    3 = reader 0x800c6f90                                */
+/*   4..7 = page-turn anim 0x800c6fb0 (25c2 := driver 0x800c77bc(25c2))                */
+/* Frame counter = the shared 25c3 (byte 1(a1), a1=0x800b25c2 @0x800c6ca8-cac).        */
+/* All input = RAW edge word DAT_800ac762 (byte-swapped layout: CROSS=0x40,            */
+/* SQUARE=0x80, R1=0x8, d-pad 0x1000/2000/4000/8000) -> port canonical bits.           */
+/* ---------------------------------------------------------------------------------- */
+static uint16_t s_file_bob_ctr = 0;   /* u16 @0x800c75fc (bob counter)                 */
+static uint16_t s_file_bob_off = 0;   /* u16 @0x800c75fe (bob offset)                  */
+
+/* Page-turn driver 0x800c77bc: a0 = 25c2 (4..7), returns the next 25c2; mutates the
+ * reader page [0x800c6c97], phase u16 @0x800c78a4 and text x s16 @0x800c78a6.
+ * Phase < 10 (sltiu 0xa @0x800c77d4): states 4/5 x += 28 (@0x800c77f0), states 6/7
+ * x -= 28 (@0x800c77fc), phase++ (@0x800c77e4/0x800c7808). Phase >= 10: state 4 ->
+ * page-- (u8 wrap @0x800c7854-58) + x=-240 (@0x800c785c) + state 5 (@0x800c7864);
+ * state 6 -> page++ + x=0x140=320 (@0x800c7868-70) + state 7 (@0x800c7878); states
+ * 5/7 -> state 3 (@0x800c787c); all phase-complete paths zero the phase (@0x800c7880).
+ * Net curve (fwd): x 0xc -> -268 over 10 frames (old page slides LEFT), snap 320,
+ * 320 -> 40 over 10 frames (new page slides IN) — landing exactly on the reader's
+ * fixed x=0x28; bwd mirrored via 0x44 / -240. */
+static int file_anim_step(int state)
+{
+    if (g_inv_screen.file_anim_phase < 10) {
+        if (state >= 4) {
+            if (state < 6)      g_inv_screen.file_text_x += 28;
+            else if (state < 8) g_inv_screen.file_text_x -= 28;
+        }
+        g_inv_screen.file_anim_phase++;
+        return state;
+    }
+    g_inv_screen.file_anim_phase = 0;
+    if (state == 4) {
+        g_inv_screen.file_reader_page--;         /* u8 wrap (andi 0xff @0x800c7858) */
+        g_inv_screen.file_text_x = -240;
+        return 5;
+    }
+    if (state == 6) {
+        g_inv_screen.file_reader_page++;
+        g_inv_screen.file_text_x = 320;
+        return 7;
+    }
+    if (state == 5 || state == 7)
+        return 3;
+    return state;                                /* other: keep (j 0x800c7884)     */
+}
+
+static void file_mode(uint16_t pressed)
+{
+    switch (g_inv_screen.item_state) {
+    case 0:
+        /* enter slide @0x800c6cd4-6d6c: 30 frames (sltiu 0x1e @0x800c6cdc). Every
+         * slide frame zeroes [0x800c6c94..6c97] (sw zero @0x800c6cec = sub-state,
+         * page, row, reader page). */
+        if (s_c3 < 0x1e) {
+            g_inv_screen.file_sub = 0;
+            g_inv_screen.file_page = 0;
+            g_inv_screen.file_row = 0;
+            g_inv_screen.file_reader_page = 0;
+            g_inv_screen.list_x     -= 15;      /* 25e0 @0x800c6d08-10 */
+            g_inv_screen.ecg_y      -= 9;       /* 25e6 @0x800c6d1c-24 */
+            g_inv_screen.arms_x     -= 7;       /* 25d8 @0x800c6d30-38 */
+            g_inv_screen.equip_x    -= 7;       /* 25dc @0x800c6d44-4c */
+            g_inv_screen.tab_base_y += 7;       /* 25ea @0x800c6d58 + tail @0x800c6f60 */
+            g_inv_screen.idcard_y   -= 8;       /* 25f2 @0x800c6d60 + tail @0x800c6f68 */
+            s_c3++;                             /* sb a0,1(a1) @0x800c6f70 (shared tail) */
+            return;
+        }
+        s_c3 = 0;                               /* sb zero,1(a1) @0x800c6d6c */
+        g_inv_screen.item_state++;              /* 0 -> 1 via the ++ tail @0x800c6e14-20 */
+        return;
+
+    case 1:
+        /* list: rows/title/highlight drawn build-side (jals @0x800c6d70-8c); inner
+         * dispatch @0x800c6d94-b8 on [0x800c6c94]. */
+        if (g_inv_screen.file_sub == 0) {
+            /* page level 0x800c6dbc — branch-chain priority LEFT > RIGHT > SQUARE >
+             * CROSS/R1 (@0x800c6dc8-df8). */
+            if (pressed & RE15_PAD_BIT_LEFT) {            /* raw 0x8000 @0x800c6dc8 */
+                if (g_inv_screen.file_page == 0) g_inv_screen.file_page = 2;
+                else g_inv_screen.file_page--;            /* bgez wrap @0x800c6e3c-48 */
+                se4(4);                                   /* @0x800c6e50-58 */
+            } else if (pressed & RE15_PAD_BIT_RIGHT) {    /* raw 0x2000 @0x800c6dd4 */
+                g_inv_screen.file_page++;
+                if (g_inv_screen.file_page >= 3) g_inv_screen.file_page = 0;
+                se4(4);                                   /* sltiu 3 @0x800c6e78-84; SE @0x800c6e8c */
+            } else if (pressed & RE15_PAD_BIT_SQUARE) {   /* raw 0x80 @0x800c6de0 */
+                se4(6);                                   /* @0x800c6ea0-a8 */
+                g_inv_screen.file_sub = 1;                /* @0x800c6eac-b4 */
+                g_inv_screen.file_row = 0;                /* @0x800c6ebc */
+            } else if ((pressed & RE15_PAD_BIT_CROSS) ||  /* raw 0x40 @0x800c6dec */
+                       (pressed & RE15_PAD_BIT_R1)) {     /* raw 0x8  @0x800c6df4-f8 */
+                se4(5);                                   /* @0x800c6e00-08 */
+                g_inv_screen.item_state++;                /* 1 -> 2 @0x800c6e14-20 */
+            }
+        } else {
+            /* row select 0x800c7010 — priority CROSS > SQUARE > DOWN > UP
+             * (@0x800c7020-3c). The visibility mask is NOT checked: SQUARE on any
+             * row (name or underscores) opens the reader. */
+            if (pressed & RE15_PAD_BIT_CROSS) {           /* raw 0x40 @0x800c7020-24 */
+                se4(5);                                   /* @0x800c707c-84 */
+                g_inv_screen.file_sub = 0;                /* @0x800c7088-8c */
+            } else if (pressed & RE15_PAD_BIT_SQUARE) {   /* raw 0x80 @0x800c7028-2c */
+                se4(6);                                   /* @0x800c704c-54 */
+                g_inv_screen.item_state = 3;              /* 25c2=3 @0x800c7058-60 */
+                g_inv_screen.file_reader_page = 0;        /* @0x800c7064-68 */
+                s_file_bob_ctr = 0;                       /* sw zero 0x800c75fc */
+                s_file_bob_off = 0;                       /*   @0x800c706c-70   */
+                g_inv_screen.file_bob_off = 0;
+            } else if (pressed & RE15_PAD_BIT_DOWN) {     /* raw 0x4000 @0x800c7030-34 */
+                se4(4);                                   /* @0x800c7098-a0 */
+                g_inv_screen.file_row++;                  /* sltiu 0xa wrap @0x800c70b4-c4 */
+                if (g_inv_screen.file_row >= 10) g_inv_screen.file_row = 0;
+            } else if (pressed & RE15_PAD_BIT_UP) {       /* raw 0x1000 @0x800c7038-3c */
+                se4(4);                                   /* @0x800c70d0-d8 */
+                if (g_inv_screen.file_row == 0) g_inv_screen.file_row = 9;
+                else g_inv_screen.file_row--;             /* bgez wrap @0x800c70ec-f8 */
+            }
+        }
+        return;
+
+    case 2:
+        /* exit slide @0x800c6ed8-6f70: 30 frames, exact reverse deltas; then the
+         * verified exit contract @0x800c6f74-8c. */
+        if (s_c3 < 0x1e) {                      /* sltiu 0x1e @0x800c6ee0 */
+            g_inv_screen.list_x     += 15;      /* 25e0 @0x800c6f04-0c */
+            g_inv_screen.ecg_y      += 9;       /* 25e6 @0x800c6f18-20 */
+            g_inv_screen.arms_x     += 7;       /* 25d8 @0x800c6f2c-34 */
+            g_inv_screen.equip_x    += 7;       /* 25dc @0x800c6f40-48 */
+            g_inv_screen.tab_base_y -= 7;       /* 25ea @0x800c6f54 + @0x800c6f60 */
+            g_inv_screen.idcard_y   += 8;       /* 25f2 @0x800c6f58 + @0x800c6f68 */
+            s_c3++;                             /* sb a0,1(a1) @0x800c6f70 */
+            return;
+        }
+        g_inv_screen.highlight = 0;             /* sb zero 25ca @0x800c6f78 */
+        s_substate = 0;                         /* sb zero 25c1 @0x800c6f80 */
+        g_inv_screen.item_state = 0;            /* sb zero 0(a1) @0x800c6f84 */
+        s_c3 = 0;                               /* sb zero 1(a1) @0x800c6f8c */
+        return;
+
+    case 3: {
+        /* reader @0x800c6f90-a8: text (build-side) + arrows 0x800c7528 + input
+         * 0x800c7110. The arrow drawer draws with the CURRENT bob offset, THEN
+         * updates the counter (@0x800c75ac-e4: ==0x1e -> off=4, ==0x3c -> reset,
+         * else ++) — modeled by latching the drawn value first. */
+        g_inv_screen.file_bob_off = s_file_bob_off;
+        if (s_file_bob_ctr == 0x1e)      { s_file_bob_off = 4; s_file_bob_ctr++; }
+        else if (s_file_bob_ctr == 0x3c) { s_file_bob_ctr = 0; s_file_bob_off = 0; }
+        else                             s_file_bob_ctr++;
+        /* input 0x800c7110 (s0 = end = u16[0x800ccd34]>>1 = 7 @0x800c7124-30) —
+         * priority CROSS > SQUARE > LEFT > RIGHT (@0x800c712c-4c). */
+        {
+            int end = 7;   /* s0 = u16 @0x800ccd34 (=0xe) >> 1 (@0x800c7124-30);
+                            * the doc header is static DEBUG.BIN data (gen census) */
+            uint8_t *pg = &g_inv_screen.file_reader_page;
+            if (pressed & RE15_PAD_BIT_CROSS) {           /* raw 0x40 @0x800c712c-34 */
+                se4(5);                                   /* @0x800c7170-78 */
+                g_inv_screen.item_state = 1;              /* 25c2=1 @0x800c717c-84 */
+            } else if (pressed & RE15_PAD_BIT_SQUARE) {   /* raw 0x80 @0x800c7138-3c */
+                if (*pg == end) {                         /* bne skip @0x800c7168 */
+                    se4(5);
+                    g_inv_screen.item_state = 1;          /* falls into @0x800c7170 */
+                }
+            } else if (pressed & RE15_PAD_BIT_LEFT) {     /* raw 0x8000 @0x800c7140-44 */
+                if (*pg == end) {                         /* beq @0x800c7210 */
+                    (*pg)--;                              /* @0x800c7228 */
+                    se4(4);                               /* @0x800c722c-34 */
+                } else if (*pg == 0) {
+                    *pg = 0;                              /* sb zero @0x800c7224 (no SE) */
+                } else {
+                    g_inv_screen.item_state = 4;          /* 25c2=4 @0x800c7240-48 */
+                    g_inv_screen.file_anim_phase = 0;     /* sh zero 78a4 @0x800c7258 */
+                    g_inv_screen.file_text_x = 0x44;      /* sh 0x44 78a6 @0x800c7254-5c */
+                    se4(8);                               /* @0x800c7260-68 */
+                }
+            } else if (pressed & RE15_PAD_BIT_RIGHT) {    /* raw 0x2000 @0x800c7148-4c */
+                if (*pg + 1 == end) {                     /* beq t1,s0 @0x800c71a4 */
+                    (*pg)++;                              /* -> the END position @0x800c71e8 */
+                    se4(4);                               /* @0x800c71ec-f4 */
+                } else if (*pg == end) {                  /* t1==end+1 @0x800c71ac -> close
+                                                           * check @0x800c715c -> @0x800c7170 */
+                    se4(5);
+                    g_inv_screen.item_state = 1;
+                } else {
+                    g_inv_screen.item_state = 6;          /* 25c2=6 @0x800c71b4-bc */
+                    g_inv_screen.file_anim_phase = 0;     /* sh zero 78a4 @0x800c71cc */
+                    g_inv_screen.file_text_x = 0xc;       /* sh 0xc 78a6 @0x800c71c8-d0 */
+                    se4(8);                               /* @0x800c71d4-dc */
+                }
+            }
+        }
+        return;
+    }
+
+    case 4: case 5: case 6: case 7:
+        /* @0x800c6fb0-c4: 25c2 := driver(25c2); the text is drawn at the driver's
+         * s16 @0x800c78a6 (build-side, lh @0x800c6fc8-d0). */
+        g_inv_screen.item_state = (uint8_t)file_anim_step(g_inv_screen.item_state);
+        return;
+
+    default:
+        return;
+    }
+}
+
 static void menu_task_dispatch(uint16_t pressed, uint16_t held)
 {
     switch (s_phase) {
@@ -1358,14 +1575,7 @@ static void menu_task_dispatch(uint16_t pressed, uint16_t held)
         switch (s_substate) {
         case 0: tab_select(pressed); break;
         case 1: map_mode(pressed); break;       /* jal 0x8004c058 @0x80049a1c */
-        case 2:
-            /* FILE screen (DEBUG.BIN FUN_800c6ca0): 30-frame slide + 3-page viewer —
-             * WAVE-3 STUB: return immediately per the exit contract @0x800c6f74-8c
-             * (25ca=0, 25c1=0, 25c2=0, 25c3=0). */
-            g_inv_screen.highlight = 0;
-            g_inv_screen.item_state = 0;
-            s_substate = 0;
-            break;
+        case 2: file_mode(pressed); break;      /* DEBUG.BIN FUN_800c6ca0 (FILE wave) */
         case 3: item_mode(pressed, held); break;
         default: s_substate = 0; break;
         }

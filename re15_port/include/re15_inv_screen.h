@@ -25,7 +25,11 @@ enum {
     RE15_INV_OP_LINE = 1,   /* untextured ABE LineF2, axis-aligned: endpoints
                              * (x,y) -> (w,h); vertical (x==w) = ECG trace +
                              * wipe mode 1, horizontal (y==h) = wipe mode 2    */
-    RE15_INV_OP_TILE = 2,   /* flat rect (reserved; not emitted in wave 1)     */
+    RE15_INV_OP_TILE = 2,   /* FILE wave: untextured TILE 0x62 under DR_MODE
+                             * 0xe1000440 = ABR 2 SUBTRACTIVE (the FILE selection
+                             * highlight, DEBUG.BIN 0x800c742c: packet words
+                             * 0x04000000/0xe1000440/0x62202020) — rect (x,y)+(w,h),
+                             * dst -= rgb per channel                          */
     RE15_INV_OP_GBOX = 3    /* wave 4: POLY_G4 navy gradient box (CHECK panel
                              * interior, DEBUG.BIN 0x800c6b84: prim code 0x38
                              * @0x800c6bd0 opaque gouraud quad behind DR_MODE
@@ -83,7 +87,17 @@ enum {
      * GetClut(0x100,0x1f5) @0x80046fdc-fe8 (jal 0x8006b3d8 a0=0x100 a1=0x1f5),
      * the palette of BOTH map fixed sprites (sh t4 @0x80047250/0x800472c0) and
      * every room-rect SPRT (sh t4 @0x800473cc). */
-    RE15_INV_CLUT_TEXROW21 = 13
+    RE15_INV_CLUT_TEXROW21 = 13,
+    /* FILE wave: the FUN_80028ec4 text palettes — clut = 0x7810 | (a3&0x30)<<3
+     * (@0x80028f5c-64) = TEX.TIM CLUT rows 0/2/4/6 at VRAM (256,480/482/484/486):
+     * a3=0 -> row 0 (= RE15_INV_CLUT_TEXROW0), 0x10 title -> row 2 (0x7890),
+     * 0x20 reader footer -> row 4 (0x7910), 0x30 hidden-row underscores -> row 6
+     * (0x7990). (The 05 inline-palette control adds (op&3)<<7|(op&4)<<4 —
+     * @0x8002903c-5c — no 05 codes exist in the vendored FILE data, generator
+     * census.) */
+    RE15_INV_CLUT_TEXROW2 = 14,
+    RE15_INV_CLUT_TEXROW4 = 15,
+    RE15_INV_CLUT_TEXROW6 = 16
 };
 
 typedef struct {
@@ -97,7 +111,10 @@ typedef struct {
     uint8_t r, g, b;      /* color/modulation (neutral = 128,128,128) */
 } re15_inv_op_t;
 
-#define RE15_INV_MAX_OPS 256
+/* FILE wave: the reader pages are glyph-heavy (page 1 = ~250 SPRT_16 glyphs; the
+ * row list = up to 9 x 21 underscore glyphs + names + the full main chain), so the
+ * cap grew from 256. Arrays are static at every call site. */
+#define RE15_INV_MAX_OPS 768
 
 /* Screen state — mirrors the original globals it is built from (all RE1.5-EXE). */
 typedef struct {
@@ -200,6 +217,31 @@ typedef struct {
                              * (@0x80047010-14, stored to 2604/2606 @0x80047098/
                              * @0x80047124) is dead for display                         */
     int16_t map_marker_y;
+    /* ---- FILE wave (DEBUG.BIN FUN_800c6ca0 @0x800c6ca0, dispatch @0x800c6fe8) ---- */
+    int16_t idcard_y;       /* DAT_800b25f2: ID-card base y (26 idle, init FUN_800460b8;
+                             * FILE enter slide -8/f @0x800c6d60, exit +8/f @0x800c6f58) */
+    uint8_t file_sub;       /* [0x800c6c94] list sub-state: 0 = page level, 1 = row
+                             * select (inner dispatch @0x800c7008; SQUARE sets 1
+                             * @0x800c6eac-b4). Zeroed every enter-slide frame by the
+                             * word store @0x800c6cec (covers 6c94..6c97).             */
+    uint8_t file_page;      /* [0x800c6c95] list page 0..2 (LEFT/RIGHT wrap
+                             * @0x800c6e2c-98)                                         */
+    uint8_t file_row;       /* [0x800c6c96] row cursor 0..9 (UP/DOWN wrap
+                             * @0x800c7098-70fc)                                       */
+    uint8_t file_reader_page; /* [0x800c6c97] reader page 0..7 (7 = the one-past-last
+                             * END position — SQUARE/RIGHT close there @0x800c715c-70/
+                             * @0x800c71ac; the text drawer clamps to 6 @0x800c7628-34) */
+    uint16_t file_anim_phase; /* u16 @0x800c78a4: page-turn phase 0..10 (driver
+                             * 0x800c77bc: two 10-frame halves)                        */
+    int16_t file_text_x;    /* s16 @0x800c78a6: reader text x during the turn (input
+                             * seeds 0xc fwd / 0x44 bwd @0x800c71c8-d0/0x800c7254-5c;
+                             * +-28/frame @0x800c77f0/77fc; mid-turn snap 320/-240
+                             * @0x800c7870/0x800c785c; drawn via lh @0x800c6fcc)       */
+    uint16_t file_bob_off;  /* u16 @0x800c75fe as DRAWN this frame (the arrow drawer
+                             * 0x800c7528 draws with the pre-update offset, then
+                             * updates the 60-frame bob @0x800c75ac-e4: counter 0x1e ->
+                             * off 4, 0x3c -> reset; reader open zeroes both via the
+                             * word store @0x800c7070)                                 */
     /* ---- wave 5 (EXCHANGE/combine) ---- */
     uint8_t comb_d0, comb_d1, comb_d2, comb_d3;
                             /* DAT_800b25d0-d3: the g9 second-cursor jitter pulse, written

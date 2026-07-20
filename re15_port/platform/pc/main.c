@@ -2582,6 +2582,20 @@ re_title:;
             if (g_engine.frame_count == 54)
                 g_engine.pad_pressed |= RE15_PAD_BIT_LEFT;
         }
+        /* RE15_INV_FILE_SHOT=1 (FILE wave): R1 at F31 = the instant FILE launch
+         * (@0x80049834-4c: tab=3 + 25c1=2). FUN_800c6ca0: enter slide F32-61 (30
+         * frames @0x800c6cdc), transition F62 (25c2=1), list after; shot at F75 =
+         * the page-0 row list ("Files": row 0 Chris' Diary, rows 1-9 underscores,
+         * title highlight box).
+         * RE15_INV_FILE_DOC_SHOT=1: additionally SQUARE F70 (row select @0x800c6ea0)
+         * + SQUARE F72 (open reader @0x800c704c: 25c2=3, page 0); shot at F85 = the
+         * reader title card ("Operation Report" centered, footer 1/7, right arrow). */
+        if ((getenv("RE15_INV_FILE_SHOT") || getenv("RE15_INV_FILE_DOC_SHOT")) &&
+            g_engine.frame_count == 31)
+            g_engine.pad_pressed |= RE15_PAD_BIT_R1;
+        if (getenv("RE15_INV_FILE_DOC_SHOT") &&
+            (g_engine.frame_count == 70 || g_engine.frame_count == 72))
+            g_engine.pad_pressed |= RE15_PAD_BIT_SQUARE;
         /* RE15_INV_MAP_SHOT=1 (MAP wave): L1 at F31 = the instant MAP launch
          * (@0x8004980c-30: tab=1 + 25c1=1 + entry init/CD-load dispatch). FUN_8004c058:
          * slide-out F32-56 (25 frames @0x8004c0bc), upload+arena F57 (c2=1), interactive
@@ -2849,7 +2863,8 @@ re_title:;
             if (getenv("RE15_INV_SHOT") && !getenv("RE15_INV_SHOT_LIVE")
                 && !getenv("RE15_INV_GRID_SHOT") && !getenv("RE15_INV_CMD_SHOT")
                 && !getenv("RE15_INV_CHECK_SHOT") && !getenv("RE15_INV_MIX_SHOT")
-                && !getenv("RE15_INV_MAP_SHOT")) {
+                && !getenv("RE15_INV_MAP_SHOT") && !getenv("RE15_INV_FILE_SHOT")
+                && !getenv("RE15_INV_FILE_DOC_SHOT")) {
                 /* mzd_inv_open.sav DISPLAYED frame: tab-select, tab=FILE(3), highlight 0,
                  * ECG sweep 0x60 / LED glow 0x18 (two ticks behind the stored RAM values
                  * 0x62/0x20 — double-buffer flip lag, solved from both fb halves). */
@@ -5224,7 +5239,10 @@ re_title:;
               /* EXCHANGE/mix shot (wave 5): settled grid with the G.R mix result. */
               if (getenv("RE15_INV_MIX_SHOT"))  s_inv_shot_frame = 100;
               /* MAP shot (MAP wave): slide F32-56, upload F57, interactive after. */
-              if (getenv("RE15_INV_MAP_SHOT"))  s_inv_shot_frame = 75; }
+              if (getenv("RE15_INV_MAP_SHOT"))  s_inv_shot_frame = 75;
+              /* FILE shots (FILE wave): slide F32-61, list from F63; reader from F72. */
+              if (getenv("RE15_INV_FILE_SHOT")) s_inv_shot_frame = 75;
+              if (getenv("RE15_INV_FILE_DOC_SHOT")) s_inv_shot_frame = 85; }
           if (s_inv_shot && *s_inv_shot && g_engine.frame_count == s_inv_shot_frame) {
               extern void re15_render_pc_screenshot(const char *path);
               re15_render_pc_screenshot(s_inv_shot);

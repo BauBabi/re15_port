@@ -65,7 +65,7 @@ static uint8_t  s_map4[256][256];   /* MAP wave: 4bpp texpage 0x17 = VRAM (448,2
                                      * 256 rows, upload rect @0x8004c1a0-b0; loaded
                                      * synchronously off g_inv_screen.map_page)       */
 static int      s_map_loaded = -1;  /* CD file id resident in s_map4 (-1 = none)      */
-static uint16_t s_clut[14][256];    /* [0..7]=UI 16-entry, [8]=ST_00 row0, [9]=STPIC,
+static uint16_t s_clut[17][256];    /* [0..7]=UI 16-entry, [8]=ST_00 row0, [9]=STPIC,
                                      * [10]=TEX.TIM CLUT row 0 (256,480) id 0x7810 —
                                      * the grid item-NAME font (wave 2);
                                      * [11]=TEX.TIM CLUT row 16 (256,496) id 0x7c10 —
@@ -77,7 +77,12 @@ static uint16_t s_clut[14][256];    /* [0..7]=UI 16-entry, [8]=ST_00 row0, [9]=S
                                      * window is invisible before a valid upload);
                                      * [13]=TEX.TIM CLUT row 21 (256,501) id 0x7d50 —
                                      * the MAP page palette (GetClut(0x100,0x1f5)
-                                     * @0x80046fdc-fe8, MAP wave) */
+                                     * @0x80046fdc-fe8, MAP wave);
+                                     * [14..16]=TEX.TIM CLUT rows 2/4/6 (256,482/484/
+                                     * 486) ids 0x7890/0x7910/0x7990 — the FUN_80028ec4
+                                     * text palettes (clut = 0x7810|(a3&0x30)<<3
+                                     * @0x80028f5c-64: title 0x10 / footer 0x20 /
+                                     * dimmed underscores 0x30; FILE wave) */
 /* wave 4: the photo VRAM window = halfwords (832..887, 256..327) as 8bpp 112x72 —
  * texpage 0x9d of the photo prim @0x800c6944-84. Initial content = the TEX.TIM data
  * that the menu-open upload put there (byte cols 256..367 of each row); the CHECK
@@ -175,6 +180,11 @@ static int inv_assets_init(void)
          * sprites and room-rect SPRTs (same 32x24 CLUT block, row 501-480=21). */
         if (tim.clut_entries >= 22 * 32)
             memcpy(s_clut[13], tim.clut + 21 * 32, 16 * sizeof(uint16_t));
+        /* FILE wave: TEX CLUT rows 2/4/6 (ids 0x7890/0x7910/0x7990) — the FUN_80028ec4
+         * a3-flag text palettes (0x10 title / 0x20 footer / 0x30 underscores). */
+        memcpy(s_clut[14], tim.clut + 2 * 32, 16 * sizeof(uint16_t));
+        memcpy(s_clut[15], tim.clut + 4 * 32, 16 * sizeof(uint16_t));
+        memcpy(s_clut[16], tim.clut + 6 * 32, 16 * sizeof(uint16_t));
         /* [12] photo CLUT starts ZERO (savestate (0,489) idle census). */
         memset(s_clut[12], 0, 256 * sizeof(uint16_t));
         s_photo_seq = 0;
@@ -429,6 +439,26 @@ static void raster_op(const re15_inv_op_t *o)
                 px_opaque(o->x + pxx, o->y + py, r8 >> 3, g8 >> 3, b8 >> 3);
             }
         }
+    } else if (o->kind == RE15_INV_OP_TILE) {
+        /* FILE wave: untextured TILE 0x62 under DR_MODE 0xe1000440 = ABR 2 SUBTRACTIVE
+         * (the selection highlight, DEBUG.BIN 0x800c742c: words 0x04000000/0xe1000440/
+         * 0x62202020) — per channel out5 = max(0, dst5 - src5), src = rgb>>3. */
+        int py, pxx;
+        for (py = 0; py < o->h; py++)
+            for (pxx = 0; pxx < o->w; pxx++) {
+                int x = o->x + pxx, y = o->y + py;
+                uint16_t d;
+                int r5, g5, b5;
+                if ((unsigned)x >= INV_XRES || (unsigned)y >= INV_YRES) continue;
+                d = s_fb5[y][x];
+                r5 = (d & 31) - (o->r >> 3);
+                g5 = ((d >> 5) & 31) - (o->g >> 3);
+                b5 = ((d >> 10) & 31) - (o->b >> 3);
+                if (r5 < 0) r5 = 0;
+                if (g5 < 0) g5 = 0;
+                if (b5 < 0) b5 = 0;
+                s_fb5[y][x] = (uint16_t)(r5 | (g5 << 5) | (b5 << 10));
+            }
     } else if (o->kind == RE15_INV_OP_SPRT) {
         const uint16_t *clut = s_clut[o->clut];
         int py, pxx;
@@ -465,7 +495,6 @@ static void raster_op(const re15_inv_op_t *o)
             }
         }
     }
-    /* RE15_INV_OP_TILE: reserved, not emitted in wave 1 */
 }
 
 /* debug: RE15_INV_FB_SHOT=<path.bmp> + RE15_INV_FB_SHOT_AT=<inv-frame> — dump the pure

@@ -675,6 +675,371 @@ static void wavemap_tests(void)
     re15_inv_map_stage_init(0, 20);
 }
 
+/* ====================== FILE wave (DEBUG.BIN FUN_800c6ca0 @0x800c6ca0) =============== */
+/* All addresses = DEBUG.BIN (maps 1:1 @0x800c0000, file==RAM). SE spy = test_support. */
+extern int g_test_core_se_last;
+extern int g_test_core_se_count;
+#include "font_width.h"          /* @0x800c4416 — the center-control width sums */
+
+#define FILEDOC_PAGES 7          /* u16 @0x800ccd34 = 0xe -> >>1 = 7 (@0x800c7124-30) */
+
+static void fframe(uint16_t p) { frame(p, p); }
+
+/* run one full page-turn animation after its input frame: 10 slide frames + commit +
+ * 10 slide frames + return-to-3 frame = 22 (driver 0x800c77bc). */
+static void file_turn_settle(void) { idle(22); }
+
+static void file_wave_tests(void)
+{
+    int i, se0;
+
+    /* (F1) fresh debug-open at tab-select; R1 = the instant FILE launch
+     * (@0x80049834-4c: tab=3 + 25c1=2, NO common resets, no SE). */
+    re15_inv_set_equipped_slot(0x80);       /* equip regs at the kind-0 defaults */
+    re15_inv_set_prev_equip_slot(0x80);
+    re15_menu_toggle();
+    re15_inv_screen_sync_equip();
+    se0 = g_test_core_se_count;
+    fframe(RE15_PAD_BIT_R1);
+    CHECK(g_inv_screen.tab == 3 && re15_menu_substate() == 2,
+          "(F1) R1 -> tab=3 + 25c1=2 (@0x80049834-4c)");
+    CHECK(g_inv_screen.item_state == 0, "(F1) 25c2=0 (enter slide)");
+    CHECK(g_test_core_se_count == se0, "(F1) tab launch is SILENT (no SE site)");
+
+    /* (F2) enter slide: 30 frames (sltiu 0x1e @0x800c6cdc), deltas @0x800c6d08-60:
+     * 25e0-15, 25e6-9, 25d8-7, 25dc-7, 25ea+7, 25f2-8; every slide frame zeroes
+     * [0x800c6c94..97] (sw zero @0x800c6cec). Bases: 215/82/126/0x96/166/26. */
+    fframe(0);
+    CHECK(g_inv_screen.list_x == 200 && g_inv_screen.ecg_y == 73 &&
+          g_inv_screen.arms_x == 119 && g_inv_screen.equip_x == 0x96 - 7 &&
+          g_inv_screen.tab_base_y == 173 && g_inv_screen.idcard_y == 18,
+          "(F2) slide frame 1 deltas: %d/%d/%d/%d/%d/%d",
+          g_inv_screen.list_x, g_inv_screen.ecg_y, g_inv_screen.arms_x,
+          g_inv_screen.equip_x, g_inv_screen.tab_base_y, g_inv_screen.idcard_y);
+    idle(29);
+    CHECK(g_inv_screen.list_x == 215 - 30 * 15 && g_inv_screen.ecg_y == 82 - 30 * 9 &&
+          g_inv_screen.arms_x == 126 - 30 * 7 && g_inv_screen.equip_x == 0x96 - 30 * 7 &&
+          g_inv_screen.tab_base_y == 166 + 30 * 7 && g_inv_screen.idcard_y == 26 - 30 * 8,
+          "(F2) slide end after 30 frames (30*{-15,-9,-7,-7,+7,-8})");
+    CHECK(g_inv_screen.item_state == 0, "(F2) 25c2 still 0 on the last slide frame");
+    fframe(0);
+    CHECK(g_inv_screen.item_state == 1 && re15_menu_item_c3() == 0,
+          "(F2) transition frame -> 25c2=1 + 25c3=0 (@0x800c6d64-6e20)");
+    CHECK(g_inv_screen.file_sub == 0 && g_inv_screen.file_page == 0 &&
+          g_inv_screen.file_row == 0 && g_inv_screen.file_reader_page == 0,
+          "(F2) [0x800c6c94..97] zeroed by the slide (sw zero @0x800c6cec)");
+
+    /* (F3) page nav @0x800c6dbc: RIGHT wraps 0->1->2->0 (sltiu 3 @0x800c6e78-84),
+     * LEFT wraps 0->2 (bgez @0x800c6e3c-48); each with SE(4,4). */
+    se0 = g_test_core_se_count;
+    fframe(RE15_PAD_BIT_RIGHT);
+    CHECK(g_inv_screen.file_page == 1, "(F3) Right -> page 1 (@0x800c6e64-88)");
+    CHECK(g_test_core_se_count == se0 + 1 && g_test_core_se_last == 4,
+          "(F3) SE(4,4) (lui 0x404 @0x800c6e8c)");
+    fframe(RE15_PAD_BIT_RIGHT); fframe(RE15_PAD_BIT_RIGHT);
+    CHECK(g_inv_screen.file_page == 0, "(F3) Right x3 wraps to 0");
+    fframe(RE15_PAD_BIT_LEFT);
+    CHECK(g_inv_screen.file_page == 2 && g_test_core_se_last == 4,
+          "(F3) Left wraps 0 -> 2 (@0x800c6e3c-48) + SE(4,4)");
+    fframe(RE15_PAD_BIT_RIGHT);                 /* back to page 0 for (F4) */
+    CHECK(g_inv_screen.file_page == 0, "(F3) back on page 0");
+
+    /* (F4) list display list, page 0 (mask 0x0001 @0x800c6c98): row 0 = the name
+     * (12 glyphs "Chris' Diary", a3=0 -> clut row 0), rows 1-9 = 21 underscores each
+     * (a3=0x30 -> clut row 6), title "Files" 5 glyphs (a3=0x10 -> clut row 2), the
+     * 19x19 tab icon uv(0x72,0x8e) clut @0x800c7420[0]=0x7a90=UI2, the page-level
+     * highlight TILE (0x11,0x19) 140x26 (@0x800c7480-98). */
+    {
+        static re15_inv_op_t ops[RE15_INV_MAX_OPS];
+        int n = re15_inv_screen_build(&g_inv_screen, ops, RE15_INV_MAX_OPS);
+        int n_name = 0, n_us = 0, n_title = 0, n_icon = 0, n_tile = 0;
+        for (i = 0; i < n; i++) {
+            if (ops[i].kind == RE15_INV_OP_TILE) {
+                n_tile++;
+                CHECK(ops[i].x == 0x11 && ops[i].y == 0x19 &&
+                      ops[i].w == 0x8c && ops[i].h == 0x1a &&
+                      ops[i].r == 0x20 && ops[i].abe == 1,
+                      "(F4) page-level highlight (17,25) 140x26 subtractive rgb 0x20 "
+                      "(@0x800c7464-98)");
+            }
+            if (ops[i].kind != RE15_INV_OP_SPRT) continue;
+            if (ops[i].page == RE15_INV_PAGE_FONT4) {
+                if (ops[i].clut == RE15_INV_CLUT_TEXROW0) n_name++;
+                if (ops[i].clut == RE15_INV_CLUT_TEXROW6) n_us++;
+                if (ops[i].clut == RE15_INV_CLUT_TEXROW2) n_title++;
+            }
+            if (ops[i].page == RE15_INV_PAGE_TEX4 && ops[i].w == 0x13 &&
+                ops[i].h == 0x13 && ops[i].u == 0x72 && ops[i].v == 0x8e) {
+                n_icon++;
+                CHECK(ops[i].x == 0x12 && ops[i].y == 0x1a && ops[i].clut == 2,
+                      "(F4) tab icon at (18,26) clut UI2=0x7a90 (@0x800c73b8-f0/7420)");
+            }
+        }
+        CHECK(n_name == 12, "(F4) row 0 'Chris' Diary' = 12 glyphs clut row 0, is %d", n_name);
+        CHECK(n_us == 9 * 21, "(F4) 9 hidden rows x 21 underscores clut row 6 "
+              "(@0x800c7916, a3=0x30 @0x800c731c), is %d", n_us);
+        CHECK(n_title == 5, "(F4) title 'Files' = 5 glyphs clut row 2 (a3=0x10 "
+              "@0x800c729c), is %d", n_title);
+        CHECK(n_icon == 1, "(F4) exactly one tab icon");
+        CHECK(n_tile == 1, "(F4) exactly one highlight TILE");
+    }
+    /* page 1 (mask 0xffff): all 10 rows are names; rows 0x59-0x5b carry the '&'
+     * digraph 0x64 -> SIGNED pair-table read @0x800c4440 = codes {9,8} -> the
+     * FUN_80028ec4 printer runs CENTER (eating 2 raw bytes) + NEWLINE — the row
+     * bleeds one 16px line DOWN (byte-true quirk; @0x800131c0-c4 + @0x80028fe8).
+     * Row 7 (id 0x59) sits at y=0x35+7*16=0xc5 -> its tail lands at y=0xd5. */
+    fframe(RE15_PAD_BIT_RIGHT);                 /* page 1 */
+    {
+        static re15_inv_op_t ops[RE15_INV_MAX_OPS];
+        int n = re15_inv_screen_build(&g_inv_screen, ops, RE15_INV_MAX_OPS);
+        int n_us = 0, bleed = 0;
+        for (i = 0; i < n; i++) {
+            if (ops[i].kind != RE15_INV_OP_SPRT || ops[i].page != RE15_INV_PAGE_FONT4)
+                continue;
+            if (ops[i].clut == RE15_INV_CLUT_TEXROW6) n_us++;
+            if (ops[i].clut == RE15_INV_CLUT_TEXROW0 && ops[i].y == 0xc5 + 0x10) bleed++;
+        }
+        CHECK(n_us == 0, "(F4) page 1 mask 0xffff -> no underscores, is %d", n_us);
+        CHECK(bleed > 0, "(F4) '&' digraph newline-bleed at y=0xd5 present (row 0x59)");
+    }
+    fframe(RE15_PAD_BIT_LEFT);                  /* back to page 0 */
+
+    /* (F5) row select @0x800c7010: SQUARE enters (SE(4,6) + sub=1 + row=0
+     * @0x800c6ea0-bc); DOWN/UP wrap 10 (@0x800c7098-70fc) with SE(4,4); CROSS backs
+     * out (SE(4,5) + sub=0 @0x800c707c-8c). The mask is NOT checked. */
+    fframe(RE15_PAD_BIT_SQUARE);
+    CHECK(g_inv_screen.file_sub == 1 && g_inv_screen.file_row == 0 &&
+          g_test_core_se_last == 6,
+          "(F5) SQUARE -> row select + SE(4,6) (@0x800c6ea0-bc)");
+    fframe(RE15_PAD_BIT_DOWN); fframe(RE15_PAD_BIT_DOWN); fframe(RE15_PAD_BIT_DOWN);
+    CHECK(g_inv_screen.file_row == 3 && g_test_core_se_last == 4,
+          "(F5) Down x3 -> row 3 + SE(4,4)");
+    {   /* row-level highlight bar (0x2b, 0x34+row*16) 154x16 (@0x800c749c-c0) */
+        static re15_inv_op_t ops[RE15_INV_MAX_OPS];
+        int n = re15_inv_screen_build(&g_inv_screen, ops, RE15_INV_MAX_OPS);
+        int ok = 0;
+        for (i = 0; i < n; i++)
+            if (ops[i].kind == RE15_INV_OP_TILE &&
+                ops[i].x == 0x2b && ops[i].y == 0x34 + 3 * 16 &&
+                ops[i].w == 0x9a && ops[i].h == 0x10) ok = 1;
+        CHECK(ok, "(F5) row-3 highlight bar (43,100) 154x16");
+    }
+    for (i = 0; i < 7; i++) fframe(RE15_PAD_BIT_DOWN);
+    CHECK(g_inv_screen.file_row == 0, "(F5) Down wraps 9 -> 0 (sltiu 0xa @0x800c70b4-c4)");
+    fframe(RE15_PAD_BIT_UP);
+    CHECK(g_inv_screen.file_row == 9, "(F5) Up wraps 0 -> 9 (bgez @0x800c70ec-f8)");
+    fframe(RE15_PAD_BIT_CROSS);
+    CHECK(g_inv_screen.file_sub == 0 && g_test_core_se_last == 5,
+          "(F5) CROSS -> back to page level + SE(4,5) (@0x800c707c-8c)");
+
+    /* (F6) reader open: SQUARE (rows) + SQUARE (open @0x800c704c-70: SE(4,6), 25c2=3,
+     * reader page 0, bob word zeroed). Selection-INDEPENDENT: any row opens the one
+     * embedded document. */
+    fframe(RE15_PAD_BIT_SQUARE);
+    fframe(RE15_PAD_BIT_SQUARE);
+    CHECK(g_inv_screen.item_state == 3 && g_inv_screen.file_reader_page == 0 &&
+          g_test_core_se_last == 6,
+          "(F6) reader open: 25c2=3 + page 0 + SE(4,6) (@0x800c704c-70)");
+    /* one reader frame: page-0 display list = 5 newlines then the CENTERED title line
+     * (control 9 op 0x78 @doc: x = 0x28 + 0x78 - width('Operation Report')/2, glyphs
+     * at y = 0x20 + 5*16 = 0xa0), footer '1/7' (3 glyphs clut row 4, y=0xd2, centered
+     * on 0xa0 @0x800c778c-98), right arrow only (page 0: no left @0x800c7554) at
+     * (0x11c, 0x70) uv(0x70,0x48) clut UI7 (type 1 @0x800c7594). */
+    fframe(0);
+    {
+        static const uint8_t title_codes[16] = {   /* doc bytes @0x800ccd45-54 */
+            0x2b,0x4c,0x41,0x4e,0x3d,0x50,0x45,0x4b,0x4a,0x00,
+            0x2e,0x41,0x4c,0x4b,0x4e,0x50 };
+        static re15_inv_op_t ops[RE15_INV_MAX_OPS];
+        int n = re15_inv_screen_build(&g_inv_screen, ops, RE15_INV_MAX_OPS);
+        int wsum = 0, x_exp, n_txt = 0, n_foot = 0, n_arrow_l = 0, n_arrow_r = 0;
+        int first_x = -1, first_y = -1;
+        for (i = 0; i < 16; i++) wsum += re15_font_width[title_codes[i]];
+        x_exp = 0x28 + 0x78 - wsum / 2;
+        for (i = 0; i < n; i++) {
+            if (ops[i].kind != RE15_INV_OP_SPRT) continue;
+            if (ops[i].page == RE15_INV_PAGE_FONT4) {
+                if (ops[i].clut == RE15_INV_CLUT_TEXROW0) {
+                    if (n_txt == 0) { first_x = ops[i].x; first_y = ops[i].y; }
+                    n_txt++;
+                }
+                if (ops[i].clut == RE15_INV_CLUT_TEXROW4) n_foot++;
+            }
+            if (ops[i].page == RE15_INV_PAGE_TEX4 && ops[i].w == 16 && ops[i].h == 16) {
+                if (ops[i].u == 0x70 && ops[i].v == 0x38) n_arrow_l++;
+                if (ops[i].u == 0x70 && ops[i].v == 0x48) {
+                    n_arrow_r++;
+                    CHECK(ops[i].x == 0x11c && ops[i].y == 0x70 && ops[i].clut == 7,
+                          "(F6) right arrow (0x11c,0x70) clut UI7=0x7bd0 (type 1 "
+                          "@0x800c7594/@0x800c7734)");
+                }
+            }
+        }
+        CHECK(n_txt == 16, "(F6) page 0 = 16 title glyphs, is %d", n_txt);
+        CHECK(first_y == 0x70, "(F6) title line y = 0x20+5*16 = 0x70 (controls 08 x5), "
+              "is %d", first_y);
+        CHECK(first_x == x_exp, "(F6) CENTER control x = 0x28+0x78-w/2 = %d "
+              "(@0x80028fe8-9010), is %d", x_exp, first_x);
+        CHECK(n_foot == 3, "(F6) footer '1/7' = 3 glyphs clut row 4 (@0x800c7744), is %d",
+              n_foot);
+        CHECK(n_arrow_l == 0 && n_arrow_r == 1,
+              "(F6) page 0: right arrow only (@0x800c7554 gate)");
+    }
+
+    /* (F7) bob cycle @0x800c75ac-e4: offset 0 for the first 31 reader frames (counter
+     * hits 0x1e on frame 31 AFTER drawing), 4 from frame 32, reset after 0x3c. */
+    idle(29);                                    /* frames 2..30 of state 3 */
+    CHECK(g_inv_screen.file_bob_off == 0, "(F7) bob offset 0 through frame 30");
+    fframe(0);                                   /* frame 31: draws 0, then off=4 */
+    CHECK(g_inv_screen.file_bob_off == 0, "(F7) frame 31 still draws offset 0");
+    fframe(0);                                   /* frame 32 */
+    CHECK(g_inv_screen.file_bob_off == 4, "(F7) frame 32 draws offset 4 (ctr 0x1e hit)");
+
+    /* (F8) forward page turn @0x800c7190-71e0 + driver 0x800c77bc: RIGHT on page 0
+     * (0+1 != end) -> 25c2=6, phase 0, x=0xc, SE(4,8). Then 10 frames x -= 28
+     * (@0x800c77fc), commit frame: page 1 + x=320 + state 7 (@0x800c7868-78), 10
+     * frames x -= 28 -> 40, return frame -> state 3 (@0x800c787c). */
+    se0 = g_test_core_se_count;
+    fframe(RE15_PAD_BIT_RIGHT);
+    CHECK(g_inv_screen.item_state == 6 && g_inv_screen.file_anim_phase == 0 &&
+          g_inv_screen.file_text_x == 0xc,
+          "(F8) fwd turn armed: 25c2=6, regs {0,0xc} (@0x800c71b4-d0)");
+    CHECK(g_test_core_se_count == se0 + 1 && g_test_core_se_last == 8,
+          "(F8) SE(4,8) (lui 0x408 @0x800c71d4)");
+    fframe(0);
+    CHECK(g_inv_screen.item_state == 6 && g_inv_screen.file_text_x == 0xc - 28 &&
+          g_inv_screen.file_anim_phase == 1,
+          "(F8) slide frame 1: x=-16 (x-=28 @0x800c77fc), is x=%d",
+          g_inv_screen.file_text_x);
+    idle(9);
+    CHECK(g_inv_screen.file_text_x == 0xc - 280 && g_inv_screen.file_anim_phase == 10 &&
+          g_inv_screen.item_state == 6, "(F8) half 1 done: x=-268 phase 10");
+    fframe(0);
+    CHECK(g_inv_screen.item_state == 7 && g_inv_screen.file_reader_page == 1 &&
+          g_inv_screen.file_text_x == 320 && g_inv_screen.file_anim_phase == 0,
+          "(F8) commit: page++ + x=0x140 + state 7 (@0x800c7868-78)");
+    idle(10);
+    CHECK(g_inv_screen.file_text_x == 320 - 280 && g_inv_screen.item_state == 7,
+          "(F8) half 2 done: x=40 (= the reader rest x 0x28)");
+    fframe(0);
+    CHECK(g_inv_screen.item_state == 3 && g_inv_screen.file_anim_phase == 0,
+          "(F8) return frame -> state 3 (@0x800c787c-80)");
+
+    /* (F9) backward turn: LEFT on page 1 -> 25c2=4, x=0x44, SE(4,8); commit: page 0 +
+     * x=-240 + state 5 (@0x800c7854-64); settle to state 3. */
+    fframe(RE15_PAD_BIT_LEFT);
+    CHECK(g_inv_screen.item_state == 4 && g_inv_screen.file_text_x == 0x44 &&
+          g_test_core_se_last == 8,
+          "(F9) bwd turn armed: 25c2=4, x=0x44 (@0x800c7240-5c) + SE(4,8)");
+    idle(10);
+    CHECK(g_inv_screen.file_text_x == 0x44 + 280, "(F9) half 1: x=68+280 (x+=28 @0x800c77f0)");
+    fframe(0);
+    CHECK(g_inv_screen.item_state == 5 && g_inv_screen.file_reader_page == 0 &&
+          g_inv_screen.file_text_x == -240,
+          "(F9) commit: page-- + x=-240 + state 5 (@0x800c7854-64)");
+    idle(10);
+    CHECK(g_inv_screen.file_text_x == 40, "(F9) half 2 lands on x=40");
+    fframe(0);
+    CHECK(g_inv_screen.item_state == 3, "(F9) back in the reader");
+    /* LEFT on page 0: sb zero only, NO SE, NO anim (@0x800c7218-24). */
+    se0 = g_test_core_se_count;
+    fframe(RE15_PAD_BIT_LEFT);
+    CHECK(g_inv_screen.item_state == 3 && g_inv_screen.file_reader_page == 0 &&
+          g_test_core_se_count == se0,
+          "(F9) Left at page 0 = dead write (sb zero @0x800c7224, no SE)");
+
+    /* (F10) END position: page can reach 7 = one-past-last (@0x800c71a4/71e8); the
+     * drawer clamps to 6 (@0x800c7628-34) and the footer shows 7/7; right arrow type 2
+     * (clut 0x7b50=UI5 @0x800c7580-84). SQUARE closes ONLY there (@0x800c715c-68);
+     * RIGHT there closes too (t1==end+1 @0x800c71ac). */
+    for (i = 0; i < 5; i++) {                    /* pages 1..5 via 5 fwd turns */
+        fframe(RE15_PAD_BIT_RIGHT); file_turn_settle();
+    }
+    CHECK(g_inv_screen.file_reader_page == 5, "(F10) on page 5 after 5 fwd turns, is %d",
+          g_inv_screen.file_reader_page);
+    fframe(RE15_PAD_BIT_RIGHT); file_turn_settle();
+    CHECK(g_inv_screen.file_reader_page == 6 && g_inv_screen.item_state == 3,
+          "(F10) page 6 (last text page)");
+    se0 = g_test_core_se_count;
+    fframe(RE15_PAD_BIT_RIGHT);                  /* 6+1 == end -> page=7, SE(4,4), NO anim */
+    CHECK(g_inv_screen.file_reader_page == 7 && g_inv_screen.item_state == 3 &&
+          g_test_core_se_last == 4 && g_test_core_se_count == se0 + 1,
+          "(F10) Right on page 6 -> END position 7 + SE(4,4), no anim (@0x800c71e8-f4)");
+    {   /* end-position display: text clamped to page 6, footer '7/7', arrow type 2 */
+        static re15_inv_op_t ops[RE15_INV_MAX_OPS];
+        int n = re15_inv_screen_build(&g_inv_screen, ops, RE15_INV_MAX_OPS);
+        int ok2 = 0, okl = 0;
+        for (i = 0; i < n; i++) {
+            if (ops[i].kind != RE15_INV_OP_SPRT) continue;
+            if (ops[i].page == RE15_INV_PAGE_TEX4 && ops[i].w == 16 && ops[i].h == 16) {
+                if (ops[i].u == 0x70 && ops[i].v == 0x48 && ops[i].clut == 5) ok2 = 1;
+                if (ops[i].u == 0x70 && ops[i].v == 0x38) okl = 1;
+            }
+        }
+        CHECK(ok2, "(F10) end-position right arrow clut UI5=0x7b50 (type 2 "
+              "@0x800c7580-84/@0x800c7734)");
+        CHECK(okl, "(F10) left arrow present (page != 0 @0x800c7554)");
+    }
+    fframe(RE15_PAD_BIT_LEFT);                   /* end -> page-- + SE(4,4), no anim */
+    CHECK(g_inv_screen.file_reader_page == 6 && g_inv_screen.item_state == 3 &&
+          g_test_core_se_last == 4,
+          "(F10) Left at END -> page 6 direct (@0x800c7228-34)");
+    fframe(RE15_PAD_BIT_RIGHT);                  /* back to END */
+    fframe(RE15_PAD_BIT_SQUARE);                 /* SQUARE at END closes */
+    CHECK(g_inv_screen.item_state == 1 && g_test_core_se_last == 5,
+          "(F10) SQUARE at END -> close + SE(4,5) (@0x800c715c-84)");
+    /* SQUARE elsewhere is dead: reopen, SQUARE on page 0 -> still reading */
+    fframe(RE15_PAD_BIT_SQUARE);                 /* rows */
+    fframe(RE15_PAD_BIT_SQUARE);                 /* reader, page 0 */
+    se0 = g_test_core_se_count;
+    fframe(RE15_PAD_BIT_SQUARE);
+    CHECK(g_inv_screen.item_state == 3 && g_test_core_se_count == se0,
+          "(F10) SQUARE off the END position is dead (bne @0x800c7168)");
+    fframe(RE15_PAD_BIT_CROSS);                  /* CROSS closes from anywhere */
+    CHECK(g_inv_screen.item_state == 1 && g_test_core_se_last == 5,
+          "(F10) CROSS closes the reader + SE(4,5) (@0x800c7170-84)");
+
+    /* (F11) exit. BYTE-TRUE: the reader close writes ONLY 25c2 (@0x800c7170-84) —
+     * [0x800c6c94] stays 1, so the list returns at the ROW-SELECT level; the first
+     * CROSS backs out to page level (@0x800c707c-8c), the second exits. Exit =
+     * SE(4,5) + 25c2=2 (@0x800c6e00-20); 30-frame reverse slide restores every base;
+     * exit contract @0x800c6f74-8c (25ca=0, 25c1=0, 25c2=0, 25c3=0, tab kept). */
+    CHECK(g_inv_screen.file_sub == 1,
+          "(F11) after reader close the list is at ROW level (6c94 untouched)");
+    fframe(RE15_PAD_BIT_CROSS);
+    CHECK(g_inv_screen.file_sub == 0 && g_inv_screen.item_state == 1,
+          "(F11) CROSS -> back to page level first");
+    fframe(RE15_PAD_BIT_CROSS);
+    CHECK(g_inv_screen.item_state == 2 && g_test_core_se_last == 5,
+          "(F11) CROSS -> exit slide + SE(4,5)");
+    idle(30);                                    /* 30 slide frames (sltiu 0x1e) */
+    CHECK(g_inv_screen.item_state == 2, "(F11) still sliding on frame 30");
+    fframe(0);                                   /* contract frame @0x800c6f74-8c */
+    CHECK(re15_menu_substate() == 0 && g_inv_screen.item_state == 0 &&
+          re15_menu_item_c3() == 0 && g_inv_screen.highlight == 0 &&
+          g_inv_screen.tab == 3,
+          "(F11) exit contract @0x800c6f74-8c: 25ca=0 25c1=0 25c2=0 25c3=0, tab kept");
+    CHECK(g_inv_screen.list_x == 215 && g_inv_screen.ecg_y == 82 &&
+          g_inv_screen.arms_x == 126 && g_inv_screen.equip_x == 0x96 &&
+          g_inv_screen.tab_base_y == 166 && g_inv_screen.idcard_y == 26,
+          "(F11) reverse slide restores all bases exactly");
+
+    /* (F12) R1 also closes the list (the 0x8 branch @0x800c6df4-df8 falls into the
+     * CROSS close @0x800c6e00); tab-3 confirm re-enters (25c1=2 @0x800499c8-cc). */
+    fframe(RE15_PAD_BIT_CROSS);                  /* tab-3 confirm re-enters FILE */
+    CHECK(re15_menu_substate() == 2, "(F12) tab-3 confirm re-enters FILE (@0x800499c8-cc)");
+    idle(31);                                    /* slide + transition -> list */
+    CHECK(g_inv_screen.item_state == 1, "(F12) list after slide");
+    fframe(RE15_PAD_BIT_R1);
+    CHECK(g_inv_screen.item_state == 2 && g_test_core_se_last == 5,
+          "(F12) R1 closes too (@0x800c6df4-6e20)");
+    idle(31);                                    /* 30 slides + contract frame */
+    CHECK(re15_menu_substate() == 0 && g_inv_screen.tab == 3,
+          "(F12) second session exits clean");
+    re15_menu_toggle();                          /* close the debug session */
+    CHECK(!re15_menu_is_open(), "(F12) closed");
+}
+
 int main(void)
 {
     printf("=== status-screen FSM (wave 2, spec shots/inv_wave2_spec.md) ===\n");
@@ -1477,6 +1842,9 @@ int main(void)
      * and the fresh wave-5 disasm cited in menu_common.c. */
     wave5_tests();
 
+    /* ====================== FILE wave (DEBUG.BIN FUN_800c6ca0) ======================== */
+    file_wave_tests();
+
     if (fails) { fprintf(stderr, "\nINV FSM TEST: %d FAILURES\n", fails); return 1; }
     printf("PASS: status-screen FSM byte-true (open stages + tab FSM + ITEM slides "
            "+/-14 + grid nav w/ auto-repeat 15/4 + command stage + close commit; "
@@ -1484,6 +1852,9 @@ int main(void)
            "prompt-less heal (+25 Green) + cant-use message; "
            "wave 5: EXCHANGE pair engine — full 21-pair herb graph + 12 crafts + "
            "reload clamps both directions + self-stack + GLOCK 06->04 quirk + "
-           "17-step result anim + 2nd-cursor nav + dormant action 4)\n");
+           "17-step result anim + 2nd-cursor nav + dormant action 4; "
+           "FILE wave: 30f slides + 3-page list w/ masks + row select + reader open + "
+           "22f page-turn curve + END-position closes + SE(4,4/5/6/8) sites + exit "
+           "contract)\n");
     return 0;
 }

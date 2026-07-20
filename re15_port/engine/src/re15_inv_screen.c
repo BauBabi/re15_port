@@ -23,6 +23,9 @@
 #include "font_width.h"          /* per-glyph advance u8 @0x800c4416 (DEBUG.BIN, vendored) */
 #include "gen/inv_name_bank.inc" /* item-name bank @0x800c495c/4a28 + digraph pairs @0x800c4438 */
 #include "gen/inv_desc_bank.inc" /* item-desc bank @0x800c50de (wave 4; entry idx = item id) */
+#include "gen/inv_file_doc.inc"  /* FILE wave: 7-page document @0x800ccd34 + row names
+                                  * 0x48-0x65 + masks/bases/titles/underscores (census-
+                                  * asserted; tools/gen_inv_file_doc.py) */
 
 const uint8_t *re15_inv_desc_entry(int id)
 {
@@ -131,6 +134,9 @@ void re15_inv_screen_open(void)
     g_inv_screen.arms_x   = ARMS_BX;   /* DAT_800b25d8 = 126 */
     g_inv_screen.cond_x   = ECG_BX;    /* DAT_800b25e4 = 13  */
     g_inv_screen.idcard_x = ID_BX;     /* DAT_800b25f0 = 14  */
+    g_inv_screen.idcard_y = ID_BY;     /* DAT_800b25f2 = 26 (25f0=0xe,25f2=0x1a in the
+                                        * FUN_800460b8 register block — FILE wave: the
+                                        * FILE slide moves 25f2 @0x800c6d60/0x800c6f58) */
     /* MAP wave: the remaining slid base registers (same init block LAB_80049524 /
      * FUN_800460b8 register writes as the #define bases) */
     g_inv_screen.list_x   = LIST_BX;   /* DAT_800b25e0 = 215 */
@@ -550,6 +556,180 @@ static void emit_msg(emit_t *e, const re15_inv_screen_t *st)
              0x6d, st->msg_y + 44, 8, 8, 120, 0, 128, 128, 128, 0);
 }
 
+/* ==================================================================================== */
+/* FILE wave — the FUN_800c6ca0 screen's draw set (DEBUG.BIN, file==RAM).               */
+/* ==================================================================================== */
+
+/* Line-width sum = DEBUG.BIN 0x800c0214 (called by the printer's center/right controls
+ * @0x80028fe8/0x80029014 and the footer @0x800c7784): walks the RAW bytes (NO digraph
+ * decode), sums (&0x800c4416)[byte], stops on 7 / 8 / 1 (@0x800c0224-38). */
+static int file_line_width(const uint8_t *p)
+{
+    int wsum = 0;
+    while (*p != 7 && *p != 8 && *p != 1)
+        wsum += re15_font_width[*p++];
+    return wsum;
+}
+
+/* Byte-true FUN_80028ec4 @0x80028ec4 (raw-verified this wave) — the glyph-code text
+ * printer the FILE screen uses for rows/title/reader/footer. Per decoded code
+ * (FUN_80013160 digraph stream @0x80028f6c, shared pending s_name_pending):
+ *   7 / 1        end (@0x80028f88-90)
+ *   8            newline: y += 0x10, x = x0 (@0x80028fdc-e4)
+ *   9            center: u16 LE operand (lbu 0(s2)/1(s2) @0x80028ff4-9000, s2 += 2),
+ *                x = x0 + op - width(rest)/2 (@0x80028fe8-9010)
+ *   10 (0x0a)    right-align: x = x0 + op - width(rest) (@0x80029014-38)
+ *   5            inline palette op (1 byte @0x8002903c-5c) — absent from the vendored
+ *                FILE data (generator census); operand skipped, clut kept
+ *   0xfb         nothing (@0x80028fc0-c4); 0xfc -> x += 7 (@0x80029060-70)
+ *   else         glyph: SPRT_16 prim 0x7c808080 (@0x8002909c-a0), u=(c&0xf)<<4
+ *                (@0x800290d0-d8), v=((c>>4)<<4)+0x20 (@0x8002908c-98), clut = t8,
+ *                x += width[c] (@0x8002910c-24). Code 0 (space) IS a glyph (blank
+ *                cell (0,0x20), width 4) — it falls through the control chain.
+ * clut = 0x7810 | (a3&0x30)<<3 (@0x80028f5c-64) -> TEX.TIM CLUT rows 0/2/4/6.
+ * BYTE-TRUE QUIRK (rows 0x59-0x5b '&'): digraph byte 0x64 indexes the pair table
+ * SIGNED (@0x800131c0-c4) into width bytes @0x800c4440 = codes {9,8} -> the printer
+ * runs them as CENTER (consuming the next 2 RAW bytes as the operand, desyncing the
+ * pending) + NEWLINE. Reproduced exactly by sharing the raw pointer between the
+ * digraph decoder and the operand reads. */
+static void emit_text(emit_t *e, int x0, int y0, const uint8_t *p, int flags)
+{
+    int clut = ((flags & 0x30) == 0x00) ? RE15_INV_CLUT_TEXROW0
+             : ((flags & 0x30) == 0x10) ? RE15_INV_CLUT_TEXROW2
+             : ((flags & 0x30) == 0x20) ? RE15_INV_CLUT_TEXROW4
+             :                            RE15_INV_CLUT_TEXROW6;
+    int x = x0, y = y0, code, guard = 512;      /* guard = port safety only */
+    while (guard-- > 0 && e->n < e->max) {
+        code = name_next_code(&p);              /* FUN_80013160 @0x80028f6c */
+        if (code == 7 || code == 1) break;
+        if (code <= 10) {
+            if (code == 8) { y += 0x10; x = x0; continue; }
+            if (code == 9) {
+                int op = p[0] | (p[1] << 8); p += 2;
+                x = x0 + op - file_line_width(p) / 2;
+                continue;
+            }
+            if (code == 10) {
+                int op = p[0] | (p[1] << 8); p += 2;
+                x = x0 + op - file_line_width(p);
+                continue;
+            }
+            if (code == 5) { p += 1; continue; }
+            /* 0,2,3,4,6 fall through to the glyph draw (@0x80028fb8) */
+        } else if (code == 0xfb) {
+            continue;
+        } else if (code == 0xfc) {
+            x += 7;
+            continue;
+        }
+        sprt(e, RE15_INV_PAGE_FONT4, clut, x, y, 16, 16,
+             (code & 0xf) << 4, (((code >> 4) << 4) + 0x20) & 0xff,
+             128, 128, 128, 0);
+        x += re15_font_width[code & 0xff];
+    }
+}
+
+/* Reader footer "page/total" = DEBUG.BIN 0x800c7744: number formatter 0x800c78a8
+ * (tens+0xc only when nonzero @0x800c78bc-c8, ones+0xc @0x800c78d0-d4), separator
+ * glyph 0x38 (@0x800c775c-60), terminator 7 (@0x800c7778-7c); centered x =
+ * 0xa0 - width/2 (jal 0x800c0214 @0x800c7784 + srl/subu @0x800c778c-94), y = 0xd2,
+ * a3 = 0x20 (@0x800c7798-a8). page = the CLAMPED reader page (caller s0). */
+static void emit_file_footer(emit_t *e, int page_clamped, int total)
+{
+    uint8_t buf[8];
+    int n = 0, v;
+    v = page_clamped + 1;                       /* a1 = s0+1 @0x800c774c */
+    if (v >= 10) buf[n++] = (uint8_t)(v / 10 + 0xc);
+    buf[n++] = (uint8_t)(v % 10 + 0xc);
+    buf[n++] = 0x38;
+    v = total;                                  /* a1 = u16[0xcd34]>>1 @0x800c7768-74 */
+    if (v >= 10) buf[n++] = (uint8_t)(v / 10 + 0xc);
+    buf[n++] = (uint8_t)(v % 10 + 0xc);
+    buf[n++] = 0x07;
+    emit_text(e, 0xa0 - file_line_width(buf) / 2, 0xd2, buf, 0x20);
+}
+
+/* Reader page text = DEBUG.BIN 0x800c7600: page clamped to count-1 (slt/addiu
+ * @0x800c7628-34), text = base + u16[base + page*2] (@0x800c7638-48), printed at
+ * (x, 0x20) a3=0 (@0x800c7644-50), then the footer (jal 0x800c7744 @0x800c7654). */
+static void emit_file_reader(emit_t *e, const re15_inv_screen_t *st, int x)
+{
+    int pg = st->file_reader_page;
+    if (pg >= RE15_INV_FILEDOC_PAGES) pg = RE15_INV_FILEDOC_PAGES - 1;
+    emit_text(e, x, 0x20, re15_inv_filedoc_blob + re15_inv_filedoc_off[pg], 0);
+    emit_file_footer(e, pg, RE15_INV_FILEDOC_PAGES);
+}
+
+/* Corner arrows = DEBUG.BIN 0x800c7528 (draw part) + glyph drawer 0x800c7670:
+ * 16x16 SPRTs, DR_MODE 0xe100001b = the 4bpp TEX page (@0x800c76b0-b8), prim
+ * 0x64808080 (@0x800c76bc-c4), uv+clut from the type table @0x800c7734 =
+ * {0x7bd03870, 0x7bd04870, 0x7b504870, 0x7b104870}: type0 (left, page>0
+ * @0x800c7554-70) uv(0x70,0x38) clut 0x7bd0 = UI row 15 = selector 7; right arrow
+ * ALWAYS at x=0x11c+off (@0x800c7598-a8) with type 2 when page==end / 3 when
+ * page==end-1 / else 1 (@0x800c7580-94) -> cluts 0x7b50=UI5 / 0x7b10=UI4 / 0x7bd0=UI7,
+ * all uv(0x70,0x48). off = the bob offset drawn BEFORE the counter update. */
+static void emit_file_arrows(emit_t *e, const re15_inv_screen_t *st)
+{
+    int end = RE15_INV_FILEDOC_PAGES;           /* s0 = u16[0xcd34]>>1 @0x800c7544-50 */
+    int off = (int)st->file_bob_off;
+    int pg = st->file_reader_page;
+    if (pg != 0)
+        sprt(e, RE15_INV_PAGE_TEX4, 7, 0x14 - off, 0x70, 16, 16,
+             0x70, 0x38, 128, 128, 128, 0);
+    sprt(e, RE15_INV_PAGE_TEX4,
+         (pg == end) ? 5 : (pg == end - 1) ? 4 : 7,
+         0x11c + off, 0x70, 16, 16, 0x70, 0x48, 128, 128, 128, 0);
+}
+
+/* FILE list (state 1) draw set, in the original per-frame call order @0x800c6d70-8c:
+ * rows 0x800c72b8 -> title 0x800c727c (+ tab icon 0x800c7374) -> highlight 0x800c742c.
+ * Rows: 10 lines at x=0x2c, y=0x35+row*16 (@0x800c7300/0x800c733c); visibility mask
+ * u16 @0x800c6c98[page] (lhu @0x800c72f0), bit set -> name FUN_80028840(base+row)
+ * printed a3=0 (@0x800c7320-28), clear -> the 21-underscore string a3=0x30
+ * (@0x800c7310-1c). Title: table @0x800c78e4[page] at (0x2c,0x1f) a3=0x10
+ * (@0x800c7284-9c). Tab icon: 19x19 SPRT at (0x12,0x1a) uv(0x72,0x8e) (@0x800c73b8-f0:
+ * xy word 0x001a0012, wh 0x00130013), clut @0x800c7420[page] = {0x7a90,0x7ad0,0x7b10}
+ * = UI rows 10/11/12 = selectors 2/3/4. Highlight: subtractive TILE rgb 0x20
+ * (@0x800c7464-6c): page level box (0x11,0x19) 140x26 (@0x800c7480-98), row level
+ * (0x2b, 0x34+row*16) 154x16 (@0x800c749c-c0; sll row,20 = +y). AddPrim order icon ->
+ * highlight prepends into the bucket @0x800aa6a8 (getter 0x800c74f0) => highlight
+ * drawn FIRST = behind the icon; the text ring draws topmost (wave-2 model). */
+static void emit_file_list(emit_t *e, const re15_inv_screen_t *st)
+{
+    int pg = st->file_page;
+    uint16_t mask;
+    int base, row;
+    if (pg > 2) pg = 2;                          /* port safety; original indexes raw */
+    mask = re15_inv_file_mask[pg];
+    base = re15_inv_file_rowbase[pg];
+    for (row = 0; row < 10; row++) {
+        int y = 0x35 + row * 16;
+        if (mask & (1u << row))
+            emit_text(e, 0x2c, y,
+                      re15_inv_file_name_blob +
+                      re15_inv_file_name_off[base + row - 0x48], 0);
+        else
+            emit_text(e, 0x2c, y, re15_inv_file_underscores, 0x30);
+    }
+    emit_text(e, 0x2c, 0x1f,
+              re15_inv_file_title_blob + re15_inv_file_title_off[pg], 0x10);
+    sprt(e, RE15_INV_PAGE_TEX4, 2 + pg, 0x12, 0x1a, 0x13, 0x13,
+         0x72, 0x8e, 128, 128, 128, 0);
+    if (e->n < e->max) {
+        re15_inv_op_t *o = &e->ops[e->n++];
+        memset(o, 0, sizeof *o);
+        o->kind = RE15_INV_OP_TILE;
+        o->abe = 1;
+        o->r = o->g = o->b = 0x20;               /* TILE word 0x62202020 @0x800c7464-6c */
+        if (st->file_sub == 0) {
+            o->x = 0x11; o->y = 0x19; o->w = 0x8c; o->h = 0x1a;   /* @0x800c7480-98 */
+        } else {
+            o->x = 0x2b; o->y = (int16_t)(0x34 + st->file_row * 16);
+            o->w = 0x9a; o->h = 0x10;                              /* @0x800c749c-c0 */
+        }
+    }
+}
+
 /* wave 4: POLY_G4 navy gradient box (DEBUG.BIN 0x800c6b84; corner colors in the
  * rasterizer — prim words @0x800c6bd0/6bdc/6be8/6bf4). */
 static void gbox(emit_t *e, int x, int y, int w, int h)
@@ -608,6 +788,26 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
      * msg_reveal tick-codes of the current page; + the page-wait blink arrow. The
      * name print never coexists (the grid tail doesn't run in ITEM states 5/9). */
     if (st->msg_entry >= 0 && (st->msg_reveal > 0 || st->msg_arrow)) emit_msg(&e, st);
+
+    /* ---- 0c. FILE screen content (FILE wave, 25c1==2): the FUN_800c6ca0 runner draws
+     * its own prims per state — state 1 list @0x800c6d70-8c (rows/title/icon/highlight),
+     * state 3 reader @0x800c6f90-a4 (text 0x800c7600 at x=0x28 + arrows 0x800c7528),
+     * states 4-7 page-turn @0x800c6fb0-d4 (text at the driver's s16 @0x800c78a6, NO
+     * arrows). States 0/2 (slides) draw no FILE content — the main chain below keeps
+     * running every frame (LAB_8004974c draws AFTER the sub-state dispatch), its panels
+     * slid offscreen by the 25e0/25e6/25d8/25dc/25ea/25f2 deltas. The FILE prims go to
+     * the near bucket @0x800aa6a8 (getter 0x800c74f0) / the text ring @0x800b829c —
+     * both above the main-chain content (wave-2 topmost-text model). */
+    if (st->substate == 2) {
+        if (st->item_state == 1) {
+            emit_file_list(&e, st);
+        } else if (st->item_state == 3) {
+            emit_file_reader(&e, st, 0x28);      /* a0=0x28 @0x800c6f94 */
+            emit_file_arrows(&e, st);
+        } else if (st->item_state >= 4 && st->item_state <= 7) {
+            emit_file_reader(&e, st, st->file_text_x);  /* lh 78a6 @0x800c6fc8-d0 */
+        }
+    }
 
     /* ---- 1. FUN_80047648(0): chrome group 0, absolute xy, always drawn ---- */
     master_row(0, &clut_idx, &count, &tmpl);
@@ -935,9 +1135,9 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
 
     /* ---- 9. ID card (pair14, FUN_80049a5c L98-100 + FUN_80049a5c tail @0x8004a018-44):
      * (25f0,25f2)=(14,26), 128x63, uv (0,150) = STPIC pixel rows 0-62, STPIC clut
-     * (blocker Q2) ---- */
+     * (blocker Q2). 25f2 LIVE (FILE wave: enter slide -8/f @0x800c6d60). ---- */
     sprt(&e, RE15_INV_PAGE_ICON8, RE15_INV_CLUT_STPIC,
-         st->idcard_x, ID_BY, 128, 63, 0, 150, 128, 128, 128, 1);
+         st->idcard_x, st->idcard_y, 128, 63, 0, 150, 128, 128, 128, 1);
 
     /* ---- 10. 48 background tiles (FUN_80046a1c L199-236 + FUN_80049a5c L101-106):
      * 8 cols x 6 rows of 40x40 at (col*40, 12+row*40), uv (0,213) = STPIC rows 63-102
