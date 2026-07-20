@@ -1168,14 +1168,14 @@ void re15_scd_show_message(uint8_t index)
 {
     /* FE-4: EXAMINE-AOT direct message path — same save-point check as op_message_on. A
      * save-point phone opens the save MENU instead of the flavor message: request the menu
-     * (unless the re-examine debounce is cooling) and DON'T open a dialog. Opening the
-     * typewriter dialog here was the freeze source — re15_dialog_open arms a wait-for-button
-     * FSM (message_fsm_active, msg_common.c:496) that the modal menu then hides, leaving Leon
-     * frozen behind it until dismissed; and the platform had to force-clear it, which reopened
-     * the msg_block re-examine gate → the menu↔room flicker. Skipping the dialog closes both. */
+     * and DON'T open a dialog. Opening the typewriter dialog here was the freeze source —
+     * re15_dialog_open arms a wait-for-button FSM (message_fsm_active, msg_common.c:496) that
+     * the modal menu then hides, leaving Leon frozen behind it until dismissed; and the
+     * platform had to force-clear it, which reopened the msg_block re-examine gate → the
+     * menu↔room flicker. Skipping the dialog closes both. (No re-examine cooldown: the AOT
+     * fires on a fresh action-button EDGE only, so each deliberate press = one menu open.) */
     if (re15_savepoint_is(g_current_room_id, index)) {
-        if (!re15_savepoint_cooling())
-            re15_savepoint_set_pending(1);
+        re15_savepoint_set_pending(1);
         return;
     }
     /* EXAMINE / MESSAGE-AOT line (e.g. the ROOM1130 back-door "It's not necessary to go
@@ -1226,13 +1226,12 @@ static int op_message_on(scd_thread_t *t)
      * typewriter dialog below never runs — otherwise this SCD-thread path (GENERIC AOT → sub →
      * Message_on) shows the dormant "not available" flavor text while the direct MESSAGE-AOT path
      * (re15_scd_show_message) opens the menu, which is exactly the "sometimes menu, sometimes
-     * message" split the user sees. During the re-examine cooldown, suppress the message too (skip
-     * silently) — no flicker, no dormant text. Placed HERE (the single Message_on entry) because
-     * msg_show only runs for the full-text cinematic rooms {0x1170,0x1240}; the phones take the
-     * plain typewriter path (re15_dialog_open) below. */
+     * message" split the user sees. Placed HERE (the single Message_on entry) because msg_show
+     * only runs for the full-text cinematic rooms {0x1170,0x1240}; the phones take the plain
+     * typewriter path (re15_dialog_open) below. (No re-examine cooldown: the examine AOT fires
+     * on a fresh action-button EDGE only, so each deliberate press = one menu open.) */
     if (re15_savepoint_is(g_current_room_id, t->pc[1])) {
-        if (!re15_savepoint_cooling())
-            re15_savepoint_set_pending(1);
+        re15_savepoint_set_pending(1);
         if (getenv("RE15_MSG_LOG"))
             fprintf(stderr, "[msg] room=%04x id=%d SAVEPOINT (menu, message suppressed)\n",
                     g_current_room_id, t->pc[1]);

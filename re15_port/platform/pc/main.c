@@ -2574,17 +2574,13 @@ re_title:;
                 if (mc >= 0 && --g_inv.slots[mc].qty == 0) { g_inv.slots[mc].id = 0; g_inv.slots[mc].flags = 0; }
                 fprintf(stderr, "[save] saved (room %04x); card=%s\n", g_current_room_id, mc >= 0 ? "consumed" : "none");
             }
-            /* Arm the re-examine debounce: the menu just closed while Leon still stands on the
-             * phone AOT, so the very next action press would re-open it (the menu↔room flicker).
-             * The original blocks re-examine for the phone message's display duration via msg_block;
-             * reinstate exactly that window (90f default, scd_vm.c msg_show), scoped to the examine
-             * only (movement stays free — the user rejected a post-save freeze). */
-            re15_savepoint_set_cooldown(90);
+            /* No post-save re-examine cooldown: the examine fires only on a fresh action-button
+             * EDGE (a held button cannot re-fire), so each DELIBERATE press re-opens the menu with
+             * no dead period. (A prior 90f cooldown swallowed clicks within ~3s of closing the menu.) */
         }
 
         re15_render_begin_frame();
         re15_input_tick();
-        re15_savepoint_cooldown_tick();   /* FE-4: age the re-examine debounce one game frame */
 
         /* DEBUG: RE15_KILL_AT=<frame> drops the player's HP to 0 at that frame to exercise the
          * death FSM + FE-5.3 death->TITLE mode-cycle deterministically (no combat-path tuning). */

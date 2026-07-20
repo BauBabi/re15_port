@@ -5,6 +5,7 @@
  * only legitimate per-port divergence is architecture (render/input/audio/IO),
  * which stays in each main.c.
  */
+#include <stdio.h>              /* fprintf — the dropped-event diagnostic below */
 #include "re15_game_step.h"
 #include "re15_actor.h"
 #include "re15_aot.h"
@@ -481,9 +482,17 @@ void re15_game_step(const re15_game_ctx_t *c)
 
     /* Dispatch any AOT event fired this frame to its SCD handler (the handler
      * may set cam_change_pending (Cut_chg), enqueue audio (Se_on), or arm a
-     * subtitle (Message_on) — each consumed downstream by the port). */
+     * subtitle (Message_on) — each consumed downstream by the port). A full
+     * event-slot pool drops the event (scd_event_fire returns <0, same as the
+     * original's free-slot scan) — DIAGNOSE it loudly instead of silently: a
+     * dropped examine (e.g. the save phone) looks like a dead button. */
     if (g_aot.fired_event_id_this_frame != 0) {
-        scd_event_fire(g_aot.fired_event_id_this_frame);
+        if (scd_event_fire(g_aot.fired_event_id_this_frame) < 0) {
+#ifdef RE15_PLATFORM_PC
+            fprintf(stderr, "[scd] WARN: event %u DROPPED (no free event slot)\n",
+                    (unsigned)g_aot.fired_event_id_this_frame);
+#endif
+        }
     }
 
     /* ===== Phase 8.6 — the LIVE STAGE1 zombie AI pass ==================================

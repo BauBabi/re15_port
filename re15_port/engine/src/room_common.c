@@ -46,7 +46,7 @@ int re15_room_apply_pending(const re15_room_apply_ctx_t *c)
 {
     if (!g_room_change.pending) return 0;
     g_room_change.pending = 0;
-    re15_savepoint_reset();   /* new room: drop any save cooldown/pending from the old room */
+    re15_savepoint_reset();   /* new room: drop any stale save pending/latched-cut from the old room */
 
     /* (1) ARCH: load the destination ROOM####.RDT (CD on PSX / file on PC) into
      * g_room_rdt. Abort the transition if it fails (player stays put). */

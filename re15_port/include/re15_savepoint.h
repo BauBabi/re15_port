@@ -29,24 +29,14 @@ int re15_savepoint_is(unsigned room_id, uint8_t msg_id);
 int  re15_savepoint_pending(void);
 void re15_savepoint_set_pending(int on);
 
-/* Re-examine debounce. BYTE-TRUE rationale: in the original, examining the phone
- * shows Message_on(msg) → message_display_frames>0 → msg_block (player_common.c:306)
- * → the examine AOT is gated on !msg_block (aot_common.c:573), so the phone cannot
- * re-fire while its message is on screen (the default message duration is 90 frames,
- * scd_vm.c msg_show `dur = 90`). The port shows the save MENU instead of that message,
- * so it carries no message_display_frames — WITHOUT this cooldown every fresh action
- * press while standing on the phone re-opens the menu (the "menu↔room flicker" bug).
- * The cooldown reinstates exactly that debounce window, but scoped to the re-examine
- * (it does NOT gate movement — the modal menu already served as the interaction, and
- * the user explicitly rejected a post-save movement freeze). Set on menu close, ticked
- * once per game frame, checked by the save-point Message_on paths. */
-void re15_savepoint_set_cooldown(int frames);   /* arm the debounce (frames > 0) */
-void re15_savepoint_cooldown_tick(void);        /* decrement once per game frame */
-int  re15_savepoint_cooling(void);              /* 1 while the debounce is active */
-
-/* Clear the pending request + cooldown. Called on a room change so a save in the
- * previous room can't suppress (cooldown) or spuriously fire (stale pending) a
- * save-point in the newly-entered room. */
+/* Clear the pending request + latched cut. Called on a room change so a stale
+ * pending (or cut) from the previous room can't leak into the newly-entered room.
+ * NOTE: there is deliberately NO post-save re-examine cooldown — the examine fires
+ * only on a fresh action-button EDGE (a held button can't re-fire), so every
+ * DELIBERATE press re-opens the menu (RE2 typewriter behaviour) with no dead period.
+ * An earlier 90-frame cooldown swallowed clicks made within ~3s of closing the menu
+ * ("sometimes it opens, sometimes not"); it was a workaround for the message-clear
+ * flicker that no longer exists (save phones now skip the flavor dialog entirely). */
 void re15_savepoint_reset(void);
 
 /* The camera cut latched at the EXAMINE action (in the AOT scan, BEFORE the phone's

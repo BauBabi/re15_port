@@ -37,16 +37,9 @@ static int s_savepoint_pending = 0;
 int  re15_savepoint_pending(void)        { return s_savepoint_pending; }
 void re15_savepoint_set_pending(int on)  { s_savepoint_pending = on ? 1 : 0; }
 
-/* Re-examine debounce (see the header). Reinstates the original's msg_block-based
- * re-examine block for the port's menu-instead-of-message save-point. */
-static int s_savepoint_cooldown = 0;
-void re15_savepoint_set_cooldown(int frames) { s_savepoint_cooldown = frames > 0 ? frames : 0; }
-void re15_savepoint_cooldown_tick(void)      { if (s_savepoint_cooldown > 0) s_savepoint_cooldown--; }
-int  re15_savepoint_cooling(void)            { return s_savepoint_cooldown > 0; }
-
 /* Gameplay cut latched at the examine action (see the header). */
 static int s_savepoint_cut = -1;
 void re15_savepoint_set_cut(int cut)  { s_savepoint_cut = cut; }
 int  re15_savepoint_saved_cut(void)   { return s_savepoint_cut; }
 
-void re15_savepoint_reset(void) { s_savepoint_cooldown = 0; s_savepoint_pending = 0; s_savepoint_cut = -1; }
+void re15_savepoint_reset(void) { s_savepoint_pending = 0; s_savepoint_cut = -1; }
