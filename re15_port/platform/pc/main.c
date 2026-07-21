@@ -3219,7 +3219,17 @@ re_title:;
                  * dark-hold FUN_80021a0c @0x80021a0c drawn in an OT bucket under the subtitle. */
                 {
                     extern void re15_render_pc_set_scene_black(int on);
-                    re15_render_pc_set_scene_black(s_preintro && !s_intro_faded);
+                    /* Gate on the ROOM1170 first-visit narrator window, NOT the global s_intro_faded
+                     * one-shot: the ROOM1240 pre-intro montage cycles Cut_chg(0..8) and so sets
+                     * s_intro_faded=1 BEFORE 1170 is ever entered — leaving the narrator un-blacked in
+                     * a real new game (only the RE15_START_ROOM=1170 debug boot, which has no prior
+                     * cut-0, escaped it). The narrator runs from 1170 entry until sub11's Aot_on(3)
+                     * fires the helipad self-reenter (game_step latches g_scd_self_reenter_fired) — so
+                     * !g_scd_self_reenter_fired is exactly the narrator duration. s_preintro (an event
+                     * thread active at entry) is set only on the first visit (main00 Ck(3,125,0) spawns
+                     * sub11); a later re-entry has no narrator -> s_preintro 0 -> no black. */
+                    re15_render_pc_set_scene_black(g_current_room_id == 0x1170 &&
+                                                   s_preintro && !g_scd_self_reenter_fired);
                 }
             }
             /* Action-button press edge (Square = Enter on PC). */
