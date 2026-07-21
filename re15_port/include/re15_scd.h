@@ -421,6 +421,9 @@ extern int     g_scd_self_reenter_fired;
 /* 1 if actor `slot` is currently the Work_set-bound work-entity of an active SCD thread (the SCD
  * owns its animation via Plc_dest/Plc_motion — the enemy brain must yield). */
 int            re15_scd_slot_event_controlled(int slot);
+/* 1 if `room_id` uses the all-at-once full-text pre-intro NARRATOR (the "we barricaded ourselves"
+ * captions) — the rooms {0x1170,0x1240} whose narration plays on the held cut-to-black fade. */
+int            re15_room_full_text(unsigned room_id);
 
 /* SCD opcode constants (subset for Phase 4.4) */
 #define SCD_OP_NOP        0x00

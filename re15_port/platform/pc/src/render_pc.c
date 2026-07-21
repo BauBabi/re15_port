@@ -844,13 +844,12 @@ void re15_render_end_frame(void)
         SDL_SetRenderDrawBlendMode(s_renderer, SDL_BLENDMODE_BLEND);
     }
 
-    /* Pre-intro NARRATOR-ON-BLACK: full-screen black drawn UNDER the subtitle (immediately
-     * before the subtitle overlay below). Byte-true to the original: sub11's narrator plays on
-     * the cut-to-black held from the 1240->1170 transition — the helipad BG07 (Cut_chg 7) + Leon
-     * stay hidden until the sub02 cinematic (Cut_chg 0) fades in. The engine's full-screen
-     * dark-hold FUN_80021a0c @0x80021a0c draws in an OT bucket UNDER the subtitle, so the
-     * narration reads on black. (s_fade_alpha, the cinematic fade-in, draws LAST/over the text
-     * and so cannot serve as this under-text black — hence a dedicated layer here.) */
+    /* Pre-intro NARRATOR-ON-BLACK: the GLOBAL engine fade FUN_80021a0c @0x80021a0c held at full
+     * black (RAM-verified DAT_800b5568=0xf0, dir DAT_800aca3c&0x10=1 — stage_saves/narrator_orig.sav),
+     * drawn in an OT bucket UNDER the subtitle so the pre-intro narration reads on it. At level 0xf0
+     * the fade is fully opaque black, which we draw here as a full-screen fill immediately BEFORE the
+     * subtitle overlay (byte-true bucket order). The cinematic fade-IN (level 0xf0->0) is the separate
+     * s_fade_alpha ramp drawn LAST — this held-black layer hands off to it at the reveal. */
     if (s_scene_black) {
         SDL_SetRenderDrawBlendMode(s_renderer, SDL_BLENDMODE_NONE);
         SDL_SetRenderDrawColor(s_renderer, 0, 0, 0, 255);

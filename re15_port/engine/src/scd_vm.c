@@ -1243,7 +1243,7 @@ static int re15_room_has_voice(unsigned room_id)
  * from a path absent from ghidra1_V2.txt (DEBUG.BIN @0x800C0000, savestate-only). Byte-true closure
  * needs a live ROOM1240 pre-intro savestate to read DAT_800b8521/8524/852c — see RE15_ROOM_FIXES.md #1A.
  * Separate from re15_room_has_voice: 1240's narrator has NO VOICE##.VAG, so it must NOT queue voice. */
-static int re15_room_full_text(unsigned room_id)
+int re15_room_full_text(unsigned room_id)
 {
     static const unsigned ft[] = { 0x1170, 0x1240 };
     for (unsigned k = 0; k < sizeof(ft)/sizeof(ft[0]); k++)

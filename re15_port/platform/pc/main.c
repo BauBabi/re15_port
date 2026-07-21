@@ -3209,26 +3209,27 @@ re_title:;
                     }
                 }
 
-                /* NARRATOR-ON-BLACK (byte-true): hold the screen black UNDER the subtitle while
-                 * the first-visit pre-intro narrator (sub11) runs. The 1240->1170 transition cuts
-                 * to black; the black is HELD through the narrator and lifts only when the helipad
-                 * cinematic (first cut 0) begins its fade-in — s_intro_faded flips there, so the
-                 * black hands straight off to the s_fade_alpha 255->0 ramp. Duration = sub11's own
-                 * SCD Sleeps (no invented frame count); gate = the first visit (s_preintro), the
-                 * same condition that spawns sub11 (mainScd Ck(3,125,0)). Original = full-screen
-                 * dark-hold FUN_80021a0c @0x80021a0c drawn in an OT bucket under the subtitle. */
+                /* NARRATOR-ON-BLACK — byte-true, RAM-VERIFIED (2026-07-21, original new-game savestate
+                 * stage_saves/narrator_orig.sav): the pre-intro narration reads on black because the
+                 * GLOBAL engine fade FUN_80021a0c @0x80021a0c is HELD at full black. Measured at TWO
+                 * points of the real pre-intro (ROOM1170 cut 2 @~105s AND cut 7/narrator @~140s):
+                 *   DAT_800b5568 (fade level) = 0xf0   (max = full black; ramps +/-0x10/frame)
+                 *   DAT_800aca3c & 0x10       = 1      (fade direction = to-black, HELD)
+                 *   DAT_800aca40 & 0x20000000 = 0      (NOT the AI-freeze), backdrop mode = 0 (NOT a
+                 *                                        flat backdrop) — ruling out both prior theories.
+                 * So the black is the door-transition cut-to-black held across the whole pre-intro
+                 * narration; it ramps in (fade-in) only at the reveal (sub02 Plc_ret -> player_mode 1).
+                 * The fade draws in an OT bucket UNDER the subtitle, so the narration reads on it.
+                 * The port models the HELD phase as a full-screen black under the subtitle (below),
+                 * handing off to the existing s_fade_alpha ramp at the cinematic. This is ROOM-AGNOSTIC
+                 * (a global fade, not a 1170 special case): gate on the full-text-narrator property
+                 * (re15_room_full_text = the pre-intro rooms {0x1170,0x1240}) + the pre-cinematic
+                 * window (s_preintro set at the first-visit narrator; !g_scd_self_reenter_fired = before
+                 * the sub02 helipad reenter). NOT g_current_room_id==0x1170 (that was a room-ID hack)
+                 * and NOT the global s_intro_faded one-shot (polluted by ROOM1240's Cut_chg(0..8)). */
                 {
                     extern void re15_render_pc_set_scene_black(int on);
-                    /* Gate on the ROOM1170 first-visit narrator window, NOT the global s_intro_faded
-                     * one-shot: the ROOM1240 pre-intro montage cycles Cut_chg(0..8) and so sets
-                     * s_intro_faded=1 BEFORE 1170 is ever entered — leaving the narrator un-blacked in
-                     * a real new game (only the RE15_START_ROOM=1170 debug boot, which has no prior
-                     * cut-0, escaped it). The narrator runs from 1170 entry until sub11's Aot_on(3)
-                     * fires the helipad self-reenter (game_step latches g_scd_self_reenter_fired) — so
-                     * !g_scd_self_reenter_fired is exactly the narrator duration. s_preintro (an event
-                     * thread active at entry) is set only on the first visit (main00 Ck(3,125,0) spawns
-                     * sub11); a later re-entry has no narrator -> s_preintro 0 -> no black. */
-                    re15_render_pc_set_scene_black(g_current_room_id == 0x1170 &&
+                    re15_render_pc_set_scene_black(re15_room_full_text(g_current_room_id) &&
                                                    s_preintro && !g_scd_self_reenter_fired);
                 }
             }
