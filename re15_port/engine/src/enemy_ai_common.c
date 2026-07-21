@@ -4138,6 +4138,22 @@ static void re15_npc_ai_tick(int slot)
           e->sub_state_1 = (uint8_t)s_tt; e->anim_flags |= 0x10;       /* force the turn(9)/walk(4) sub */
       } }
 
+    /* GLOBAL AI-freeze gate — byte-true to the SHARED root FUN_8011c654 @0x8011c654 line 19, the SAME
+     * gate read by 108 enemy/NPC/object roots and by the port's generic enemy tick (L128-129/2516-2517):
+     *   skip the +0x4 state dispatch iff (DAT_800aca40 & 0x20000000) || (entity+0x9 & 0x20).
+     * This is engine-wide, NOT room-specific — the two shipped freeze engines are:
+     *   (a) s_ai_paused = the GLOBAL message/modal freeze DAT_800aca40&0x20000000 (set by a Message_on
+     *       whose flag halfword has bit 0x2000 @0x800404f4->FUN_80027e68 @0x80027ed0, or the item modal
+     *       FUN_8001db28; cleared by FUN_80028134). [Currently a dead stub in the port — see the
+     *       message-FSM gap — but wired here byte-true so NPCs freeze the instant it is driven.]
+     *   (b) grid_id & 0x20 = the PER-ENTITY skip, set by SCD Member_set(12, val&0x20) after Work_set(2,N)
+     *       (@0x800410b8->FUN_8004116c case 0xc; value 0x30 freezes, 0x10 unfreezes) — LIVE in shipped
+     *       content (ROOM1141/11C0 combat intros). The port's decode (re15_actor_set_member case 12 ->
+     *       grid_id) + read here are byte-true, so an NPC frozen this way now yields correctly.
+     * The ROOM1170 intro Elliot uses NEITHER (his Plc_dest walk is a routine-REDIRECT, handled by the
+     * case-4 walk_active/scd-event proxy below), so this gate leaves his behaviour unchanged. */
+    if (s_ai_paused || (e->grid_id & RE15_AI_GRID_SKIP)) return;
+
     switch (e->state) {
     case 0:   /* INIT 0x8011c6dc: idle pose, INVULNERABLE, -> state 1 (or the shared executor) */
         e->hp = -1;                                       /* +0x9a = -1 (no HP / invulnerable) @0x8011c744 */
