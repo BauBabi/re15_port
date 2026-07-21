@@ -354,14 +354,20 @@ static void re15_dialog_step(void)
 {
     extern uint16_t g_scd_pad_edge;
     extern uint16_t g_scd_pad_held;
-    /* Byte-true dialog buttons (FUN_80028134, audit wf_6aad95ad): the YES/NO CONFIRM + the
-     * typewriter FAST-FORWARD are CROSS (0x4000, @0x80028570/@0x80028214); the YES/NO cursor
-     * TOGGLE is the face-button mask 0x3000 (@0x800285b8) — NOT the D-pad Left/Right the port
-     * read, and DISTINCT from the port's gameplay action (SQUARE, g_aot_action_pressed). NOTE:
-     * the PSX reads a config-REMAPPED logical pad word (table @0x80073e1c); the port feeds the
-     * raw physical word (re15_player.h: TRIANGLE 0x1000, CIRCLE 0x2000, CROSS 0x4000), so 0x3000
-     * = TRIANGLE|CIRCLE here — the port's g_scd_pad_edge = pad_pressed IS this logical remapped word (DAT_800ac76c) at RE1.5's default config, so the direct bind is byte-true (game_step_common.c:152; scd_vm.c:3320-3326; audit wf_6aad95ad resolved the remap — no remap-model needed). */
-    const uint16_t TOGGLE_MASK = 0x3000, CROSS = 0x4000;
+    /* Byte-true dialog buttons (FUN_80028134): CONFIRM + typewriter FAST-FORWARD read
+     * VIRTUAL bit 0x4000 (@0x80028570 edge DAT_800ac76c / @0x80028214 held
+     * DAT_800ac768); the YES/NO cursor TOGGLE is virtual mask 0x3000 (@0x800285b8).
+     * WAVE-6 FINDING 4 (corrects wf_6aad95ad's identity-default claim): the virtual
+     * word is built by FUN_80030444 @0x800304b8-e4 from the preset table
+     * PTR_DAT_80073e1c[DAT_800b0fcc]; MZD preset 0 @0x80073dbc maps
+     *   virtual 0x4000 <- RAW SQUARE (0x0080)      [confirm / fast-forward]
+     *   virtual 0x8000 <- RAW CROSS  (0x0040)      [the other 0xc000 dismiss bit]
+     *   virtual 0x1000/0x2000 <- RAW d-pad LEFT/RIGHT  [the 0x3000 toggle]
+     * g_scd_pad_edge/held now carry the VIRTUAL words (re15_pad_virtual_word in
+     * game_step_common.c), so the masks below are byte-true; PHYSICALLY the confirm
+     * is SQUARE and the toggle the d-pad — not CROSS / TRIANGLE|CIRCLE as previously
+     * labeled. */
+    const uint16_t TOGGLE_MASK = 0x3000, CONFIRM_BIT = 0x4000;
 
     int rlen = 0;
     const unsigned char *raw = re15_msg_get_raw((int)g_scd.message_id, &rlen);
@@ -369,17 +375,16 @@ static void re15_dialog_step(void)
         g_scd.message_active = 0; g_scd.message_display_frames = 0; g_scd.message_query = 0; return;
     }
 
-    int act_edge = (g_scd_pad_edge & CROSS) != 0;              /* CROSS = confirm       */
-    int act_held = (g_scd_pad_held & CROSS) != 0;              /* CROSS held = fast-fwd */
-    int lr_edge  = (g_scd_pad_edge & TOGGLE_MASK) != 0;        /* face buttons = toggle */
+    int act_edge = (g_scd_pad_edge & CONFIRM_BIT) != 0;        /* virt 0x4000 = confirm (raw SQUARE) */
+    int act_held = (g_scd_pad_held & CONFIRM_BIT) != 0;        /* held = fast-forward   */
+    int lr_edge  = (g_scd_pad_edge & TOGGLE_MASK) != 0;        /* virt menu-L/R = toggle (raw d-pad) */
     /* [#36a] page-wait (andi 0xc000 @0x80028458) and end-wait (andi 0xc000
-     * @0x80028698) dismiss on EITHER action button, fresh press. g_scd_pad_edge is
-     * the standard PSX logical pad word (Cross=0x4000, Square=0x8000). */
+     * @0x80028698) dismiss on EITHER virtual action bit (raw SQUARE or CROSS). */
     int dismiss_edge = (g_scd_pad_edge & (0x4000u | 0x8000u)) != 0;
 
     switch (g_scd.message_fsm) {
     case 0: {  /* TYPING */
-        int fast_fwd = (act_held && g_scd.message_scroll < 4);      /* CROSS held = fast-forward */
+        int fast_fwd = (act_held && g_scd.message_scroll < 4);      /* confirm (raw SQUARE) held = fast-forward */
         int dec = fast_fwd ? 4 : 1;
         if (g_scd.message_timer > dec) { g_scd.message_timer = (uint16_t)(g_scd.message_timer - dec); break; }
         g_scd.message_timer = 0;

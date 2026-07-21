@@ -64,9 +64,9 @@ static void idle(int n) { while (n-- > 0) frame(0, 0); }
  * state-4 confirm on USE (SE(4,6) + 25c2=5 via table [0] @0x8004a550). */
 static void use_confirm(void)
 {
-    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
     idle(8);
-    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
 }
 
 /* ====================== WAVE 5 helpers (spec shots/inv_wave5_spec.md) ================ */
@@ -76,7 +76,7 @@ static void w5_open_to_grid(void)
     re15_inv_set_equipped_slot(0x80);            /* nothing equipped (25c8) */
     re15_inv_set_prev_equip_slot(0x80);
     re15_menu_toggle();
-    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);   /* tab ITEM confirm */
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);   /* tab ITEM confirm */
     idle(8);                                     /* entry slide -> GRID */
 }
 /* From GRID with the cursor placed: grid confirm (25d6=0 + 25c2=3) -> command slide-in
@@ -84,10 +84,10 @@ static void w5_open_to_grid(void)
  * 25c2=7; 25be keeps its grid-mirror value, c3/c4 = 0 by the terminal invariant). */
 static void w5_enter_exchange(void)
 {
-    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
     idle(8);
     frame(RE15_PAD_BIT_RIGHT, RE15_PAD_BIT_RIGHT);
-    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
     CHECK(g_inv_screen.item_state == 7, "(w5) EXCHANGE confirm -> 25c2=7 (@0x8004a570)");
 }
 /* Finish a successful combine: 17-step anim (grow 8 + shrink 8 + terminal
@@ -142,7 +142,7 @@ static void wave5_tests(void)
                 w5_enter_exchange();
                 w5_second_move(RE15_PAD_BIT_RIGHT);          /* 2nd cursor 0 -> 1 */
                 CHECK(g_inv_screen.second_cursor == 1, "(24) 2nd cursor on the partner");
-                frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);   /* confirm = mix NOW */
+                frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);   /* confirm = mix NOW */
                 CHECK(g_inv.slots[0].id == result && g_inv.slots[0].qty == 3,
                       "(24) %02x+%02x -> %02x qty 1+2=3 in the LOWER slot "
                       "(@0x8004e1e8-214), got %02x q%d", owners[oi], partner, result,
@@ -182,7 +182,7 @@ static void wave5_tests(void)
     w5_enter_exchange();
     w5_second_move(RE15_PAD_BIT_UP);                     /* 2nd cursor 2 -> 0 */
     CHECK(g_inv_screen.second_cursor == 0, "(24b) 2nd cursor on the Red at slot 0");
-    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
     CHECK(g_inv.slots[0].id == 0x27 && g_inv.slots[0].qty == 3,
           "(24b) G(slot2)+R(slot0) -> 0x27 qty 3 in slot 0 (the LOWER slot), got %02x q%d",
           g_inv.slots[0].id, g_inv.slots[0].qty);
@@ -201,7 +201,7 @@ static void wave5_tests(void)
     w5_open_to_grid();
     w5_enter_exchange();
     w5_second_move(RE15_PAD_BIT_RIGHT);
-    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
     CHECK(g_inv.slots[0].id == 0x28 && g_inv.slots[0].qty == 2,
           "(25) G+G -> 0x28 qty 2 (pair @0x80074d58)");
     CHECK(re15_inv_screen_cache_mix_pic(0) == 2, "(25) MIXITEM pic 2");
@@ -247,7 +247,7 @@ static void wave5_tests(void)
     w5_open_to_grid();
     w5_enter_exchange();
     w5_second_move(RE15_PAD_BIT_RIGHT);
-    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
     CHECK(g_inv.slots[0].id == 0x03 && g_inv.slots[0].qty == 15 && g_inv.slots[1].id == 0,
           "(26) weapon-first FULL reload: qty 15, box deleted (@0x8004e34c-3e0), got %02x q%d",
           g_inv.slots[0].id, g_inv.slots[0].qty);
@@ -260,7 +260,7 @@ static void wave5_tests(void)
     w5_open_to_grid();
     w5_enter_exchange();
     w5_second_move(RE15_PAD_BIT_RIGHT);
-    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
     CHECK(g_inv.slots[0].qty == 15 && g_inv.slots[1].qty == 45 &&
           g_inv.slots[0].id == 0x03 && g_inv.slots[1].id == 0x15,
           "(26) weapon-first PARTIAL: mag=cap 15, box=rest 45, NO id write "
@@ -274,7 +274,7 @@ static void wave5_tests(void)
     w5_open_to_grid();
     w5_enter_exchange();
     w5_second_move(RE15_PAD_BIT_RIGHT);
-    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
     CHECK(g_inv.slots[1].qty == 15 && g_inv.slots[0].qty == 45,
           "(26) ammo-first PARTIAL: weapon=15, box=45 (@0x8004e4f0-52c), got q%d/q%d",
           g_inv.slots[1].qty, g_inv.slots[0].qty);
@@ -287,7 +287,7 @@ static void wave5_tests(void)
     w5_open_to_grid();
     w5_enter_exchange();
     w5_second_move(RE15_PAD_BIT_RIGHT);
-    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
     CHECK(g_inv.slots[0].id == 0x03 && g_inv.slots[0].qty == 15 && g_inv.slots[1].id == 0,
           "(26) ammo-first FULL: weapon q15 compacted into slot 0 (@0x8004e458-4ec + "
           "@0x8004b3cc), got %02x q%d", g_inv.slots[0].id, g_inv.slots[0].qty);
@@ -306,7 +306,7 @@ static void wave5_tests(void)
     w5_second_move(RE15_PAD_BIT_LEFT);                   /* 2nd 1 -> 0 */
     w5_second_move(RE15_PAD_BIT_DOWN);                   /* 2nd 0 -> 2 (the fuel) */
     CHECK(g_inv_screen.second_cursor == 2, "(26w) 2nd cursor on the fuel");
-    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
     CHECK(g_inv.slots[0].qty == 100 && g_inv.slots[0].id == 0x0e,
           "(26w) FULL into the NORMALIZED head slot: 40+60=100=cap (@0x8004e910-38), q%d",
           g_inv.slots[0].qty);
@@ -330,7 +330,7 @@ static void wave5_tests(void)
     w5_open_to_grid();
     w5_enter_exchange();
     w5_second_move(RE15_PAD_BIT_RIGHT);
-    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
     CHECK(g_inv.slots[0].id == 0x04 && g_inv.slots[0].qty == 6,
           "(27) GLOCK full reload -> id 0x04 SIG P228 qty 6 (@0x80074c99 via "
           "@0x8004e370), got %02x q%d", g_inv.slots[0].id, g_inv.slots[0].qty);
@@ -352,7 +352,7 @@ static void wave5_tests(void)
     w5_open_to_grid();
     w5_enter_exchange();
     w5_second_move(RE15_PAD_BIT_RIGHT);
-    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
     CHECK(g_inv_screen.item_state == 6 && g_inv.slots[0].id == 0x15 &&
           g_inv.slots[0].qty == 5 && g_inv.slots[1].id == 0x06,
           "(27) bullets-first on the GLOCK: NO pair -> 25c2=6, nothing mutated "
@@ -369,7 +369,7 @@ static void wave5_tests(void)
     w5_open_to_grid();
     w5_enter_exchange();
     w5_second_move(RE15_PAD_BIT_RIGHT);
-    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
     CHECK(g_inv.slots[0].id == 0x15 && g_inv.slots[0].qty == 70 && g_inv.slots[1].id == 0,
           "(28) self-stack A-lower: 30+40=70 into slot 0, other deleted, got q%d",
           g_inv.slots[0].qty);
@@ -382,7 +382,7 @@ static void wave5_tests(void)
     w5_open_to_grid();
     w5_enter_exchange();
     w5_second_move(RE15_PAD_BIT_RIGHT);
-    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
     CHECK(g_inv.slots[0].qty == 250 && g_inv.slots[1].qty == 50,
           "(28) partial self-stack: 250 cap + 50 rest (cap @0x80074da8+0x15*12), got %d/%d",
           g_inv.slots[0].qty, g_inv.slots[1].qty);
@@ -395,7 +395,7 @@ static void wave5_tests(void)
     frame(RE15_PAD_BIT_RIGHT, RE15_PAD_BIT_RIGHT); idle(1);  /* cursor 0 -> 1 */
     w5_enter_exchange();
     w5_second_move(RE15_PAD_BIT_LEFT);                   /* 2nd 1 -> 0 */
-    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
     CHECK(g_inv.slots[0].qty == 70 && g_inv.slots[1].id == 0,
           "(28) self-stack B-lower (@0x8004e678 -> action-3 body): 70 into slot 0, got q%d",
           g_inv.slots[0].qty);
@@ -422,7 +422,7 @@ static void wave5_tests(void)
                 w5_open_to_grid();
                 w5_enter_exchange();
                 w5_second_move(RE15_PAD_BIT_RIGHT);
-                frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+                frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
                 CHECK(g_inv.slots[0].id == result && g_inv.slots[0].qty == 2 &&
                       g_inv.slots[1].id == 0,
                       "(29) craft equal %02x+%02x -> %02x qty 2, other deleted "
@@ -444,7 +444,7 @@ static void wave5_tests(void)
     w5_open_to_grid();
     w5_enter_exchange();
     w5_second_move(RE15_PAD_BIT_RIGHT);
-    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
     CHECK(g_inv.slots[0].id == 0x09 && g_inv.slots[0].qty == 2,
           "(29u) lower gets {result, min=2} (@0x8004e7f0/@0x8004e800), got %02x q%d",
           g_inv.slots[0].id, g_inv.slots[0].qty);
@@ -464,7 +464,7 @@ static void wave5_tests(void)
     w5_open_to_grid();
     w5_enter_exchange();
     w5_second_move(RE15_PAD_BIT_RIGHT);
-    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
     CHECK(g_inv.slots[0].id == 0x09 && g_inv.slots[0].qty == 2 &&
           g_inv.slots[0].flags == 0,
           "(29u2) lower {result, min=2, kind 0} (@0x8004e858-868), got %02x q%d f%d",
@@ -482,7 +482,7 @@ static void wave5_tests(void)
     w5_open_to_grid();
     w5_enter_exchange();
     w5_second_move(RE15_PAD_BIT_RIGHT);
-    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
     CHECK(g_inv_screen.item_state == 6 && re15_menu_item_c3() == 0,
           "(30) knife+browning: no pair -> 25c2=6, no anim (pair_count 0 @prop 0x01)");
     CHECK(g_inv.slots[0].id == 0x01 && g_inv.slots[1].id == 0x03,
@@ -495,13 +495,13 @@ static void wave5_tests(void)
     g_inv.slots[0].id = 0x24; g_inv.slots[0].qty = 1;
     w5_open_to_grid();
     w5_enter_exchange();
-    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);       /* 2nd == cursor == 0 */
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);       /* 2nd == cursor == 0 */
     CHECK(g_inv_screen.item_state == 6 && g_inv.slots[0].id == 0x24,
           "(31) same-slot confirm -> 25c2=6, Green intact (@0x8004e98c)");
     idle(8);
     w5_enter_exchange();
     w5_second_move(RE15_PAD_BIT_RIGHT);                  /* 2nd -> 1 (EMPTY) */
-    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
     CHECK(g_inv_screen.item_state == 6 && g_inv.slots[0].id == 0x24,
           "(31) empty-partner confirm -> 25c2=6 (idB==0 @0x8004e9bc)");
     idle(8);
@@ -584,7 +584,7 @@ static void wave5_tests(void)
     }
     /* (34) CANCEL: virtual SQUARE -> 25c2=6, SILENT (checked BEFORE confirm
      * @0x8004b398-3a0; zero SE calls in 0x8004b37c-b404 — fresh disasm). */
-    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
+    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
     CHECK(g_inv_screen.item_state == 6 && re15_menu_item_c3() == 0,
           "(34) EXCHANGE cancel -> 25c2=6 (@0x8004b3f0-f4)");
     CHECK(g_inv.slots[0].id == 0x24, "(34) nothing consumed on cancel");
@@ -1026,7 +1026,8 @@ static void file_wave_tests(void)
 
     /* (F12) R1 also closes the list (the 0x8 branch @0x800c6df4-df8 falls into the
      * CROSS close @0x800c6e00); tab-3 confirm re-enters (25c1=2 @0x800499c8-cc). */
-    fframe(RE15_PAD_BIT_CROSS);                  /* tab-3 confirm re-enters FILE */
+    fframe(RE15_PAD_BIT_SQUARE);                 /* tab-3 confirm (virtual 0x4000 <- raw
+                                                  * SQUARE, wave-6 f4) re-enters FILE */
     CHECK(re15_menu_substate() == 2, "(F12) tab-3 confirm re-enters FILE (@0x800499c8-cc)");
     idle(31);                                    /* slide + transition -> list */
     CHECK(g_inv_screen.item_state == 1, "(F12) list after slide");
@@ -1186,7 +1187,7 @@ int main(void)
     /* interactive: only virtual cancel 0x8000 (@0x8004c1d0-e0) or raw L1 0x4
      * (@0x8004c1e8-f8) do anything; other pads are dead (no pan/step). */
     frame(RE15_PAD_BIT_UP, RE15_PAD_BIT_UP);
-    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
     CHECK(g_inv_screen.item_state == 1, "(5) Up/CROSS dead in interactive state");
     frame(RE15_PAD_BIT_L1, RE15_PAD_BIT_L1);      /* L1 toggles out too (@0x8004c1f4) */
     CHECK(g_inv_screen.item_state == 2, "(5) L1 -> c2=2 (reverse slide)");
@@ -1205,11 +1206,11 @@ int main(void)
           "(5) exit contract @0x8004c2f0-304: 25ca=0 25c1=0 25c2=0 25c3=0, tab kept");
     /* re-enter via tab confirm (25c1=1 @0x80049968-78 + the same entry dispatch),
      * cancel out via SQUARE during interactive (@0x8004c1d0-e0) */
-    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
     CHECK(re15_menu_substate() == 1, "(5) tab-1 confirm re-enters MAP");
     idle(26);
     CHECK(g_inv_screen.item_state == 1, "(5) interactive after slide+upload");
-    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
+    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
     CHECK(g_inv_screen.item_state == 2, "(5) virtual cancel -> c2=2");
     idle(26);
     CHECK(re15_menu_substate() == 0 && g_inv_screen.tab == 1,
@@ -1219,7 +1220,7 @@ int main(void)
      * set-to-1 site), cursors reset (@0x800498f8-918), 25c1=3 (@0x80049960-64),
      * ITEM state 0 = entry slide. */
     frame(RE15_PAD_BIT_UP, RE15_PAD_BIT_UP);
-    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
     CHECK(re15_menu_substate() == 3, "(6) CROSS on ITEM -> 25c1=3, is %d", re15_menu_substate());
     CHECK(g_inv_screen.highlight == 1, "(6) 25ca must be 1 (dim flag)");
     CHECK(g_inv_screen.item_state == 0, "(6) 25c2 must be 0 (entry slide)");
@@ -1294,7 +1295,7 @@ int main(void)
     frame(RE15_PAD_BIT_DOWN, RE15_PAD_BIT_DOWN); idle(1);   /* 0 -> 2 */
     frame(RE15_PAD_BIT_DOWN, RE15_PAD_BIT_DOWN); idle(1);   /* 2 -> 4 (empty) */
     CHECK(g_inv_screen.item_cursor == 4, "(10) cursor on empty cell 4");
-    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
     CHECK(g_inv_screen.item_state == 1, "(10) confirm on empty must stay in GRID");
 
     /* (11) grid confirm on the Browning (slot 1): 25d6:=0 + 25c2:=3 (@0x800c64c0-c8),
@@ -1303,7 +1304,7 @@ int main(void)
     frame(RE15_PAD_BIT_UP, RE15_PAD_BIT_UP); idle(1);       /* 2 -> 0 */
     frame(RE15_PAD_BIT_RIGHT, RE15_PAD_BIT_RIGHT);          /* 0 -> 1 (Browning) */
     CHECK(g_inv_screen.item_cursor == 1, "(11) cursor on Browning");
-    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
     CHECK(g_inv_screen.item_state == 3 && g_inv_screen.action_dir == 0,
           "(11) confirm -> 25c2=3 + 25d6=0, are %d/%d",
           g_inv_screen.item_state, g_inv_screen.action_dir);
@@ -1327,7 +1328,7 @@ int main(void)
      * desc entry 3 = the 2-PAGE description — exercises the page-wait). */
     frame(RE15_PAD_BIT_LEFT, RE15_PAD_BIT_LEFT);
     CHECK(g_inv_screen.action_dir == 1, "(12) cmd Left -> 25d6=1");
-    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
     CHECK(g_inv_screen.item_state == 9, "(12) confirm CHECK -> 25c2=9");
     CHECK(g_inv_screen.action_dir == 0, "(12) dispatch [1] pre-writes 25d6=0 (@0x8004a55c)");
 
@@ -1406,7 +1407,7 @@ int main(void)
         int off = 0;
         while (s3[off] != 0x02) off++;
         off += 2;
-        frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+        frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
         CHECK(g_inv_screen.msg_page_off == off && g_inv_screen.msg_reveal == 0,
               "(12e) page restart: 8528 := past 02 00 (off %d, is %d)",
               off, g_inv_screen.msg_page_off);
@@ -1421,7 +1422,7 @@ int main(void)
     /* (12f) dismiss (state 5, edge & 0xc000 -> 8520&=0x7f); the CHECK FSM's msg-gone
      * poll fires SE(4,5) + 25d6=3 the NEXT frame (@0x800c6760-67b0); then 10 frames
      * x -= 22 back to -207 (@0x800c67b8-67e8: photo cleared + 25d6=4). */
-    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
     CHECK(!re15_menu_msg_active(), "(12f) dismissed on the confirm edge");
     CHECK(g_inv_screen.action_dir == 2, "(12f) FSM still in sub-state 2 this frame");
     frame(0, 0);
@@ -1492,7 +1493,7 @@ int main(void)
      * NEVER touched (no gun slide in a swap); terminal at c4==11 (@0x8004b234-44). */
     frame(RE15_PAD_BIT_UP, RE15_PAD_BIT_UP);                /* 25d6 -> 0 USE */
     CHECK(g_inv_screen.action_dir == 0, "(13) cmd Up -> 25d6=0");
-    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
     CHECK(g_inv_screen.item_state == 5, "(13) confirm USE -> 25c2=5");
     frame(0, 0);                                            /* frame 1: classifier */
     CHECK(re15_menu_item_c3() == 5 && re15_menu_item_c4() == 0,
@@ -1531,7 +1532,7 @@ int main(void)
 
     /* (14) grid cancel (virtual SQUARE @0x800c6538-58): 25c2=2 exit slide 264->166,
      * then 25ca=0 + 25c1=0 (@0x8004a3d4-418) — back to tab select, tab kept (0). */
-    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
+    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
     CHECK(g_inv_screen.item_state == 2, "(14) cancel -> 25c2=2");
     idle(8);
     CHECK(re15_menu_substate() == 0 && g_inv_screen.highlight == 0 &&
@@ -1547,7 +1548,7 @@ int main(void)
      * gameplay fade-in stages 3-5 (@0x8001cbb8-cc94) -> stage 0. */
     frame(RE15_PAD_BIT_DOWN, RE15_PAD_BIT_DOWN);
     CHECK(g_inv_screen.tab == 2, "(15) Down -> EXIT tab");
-    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
     CHECK(re15_menu_phase() == 2, "(15) EXIT confirm -> phase 2 (close)");
     CHECK(re15_menu_is_open(), "(15) the screen keeps drawing during the close fade");
     idle(12);                                               /* arm+6 fade + done + 2 hold + commit */
@@ -1565,7 +1566,7 @@ int main(void)
     frame(RE15_PAD_BIT_START, 0);                           /* re-open */
     idle(40);
     CHECK(re15_menu_is_open() && re15_menu_phase() == 1, "(16) re-open reaches the run phase");
-    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);          /* ITEM */
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);          /* ITEM */
     idle(8);                                                /* entry slide */
     CHECK(g_inv_screen.item_state == 1, "(16) in GRID");
     frame(RE15_PAD_BIT_START, RE15_PAD_BIT_START);
@@ -1580,7 +1581,7 @@ int main(void)
     re15_inv_set_equipped_slot(0);
     re15_player_set_equipped_weapon(1);
     re15_menu_toggle();
-    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);          /* tab ITEM confirm */
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);          /* tab ITEM confirm */
     idle(8);                                                /* entry slide -> GRID */
     CHECK(g_inv_screen.item_state == 1, "(17) reopen reaches GRID");
     CHECK(re15_inv_prev_equip_slot() == 0x80,
@@ -1791,7 +1792,7 @@ int main(void)
     idle(4);
     CHECK(g_inv_screen.msg_reveal == 2,
           "(22) then 4 frames/glyph (8524=2<<1), reveal=%d", g_inv_screen.msg_reveal);
-    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);          /* confirm DURING typing */
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);          /* confirm DURING typing */
     CHECK(re15_menu_msg_active(),
           "(22) no dismiss and no FF while typing (FF gate 8522==0 @0x800281ec-f4)");
     { int n = 0;
@@ -1804,7 +1805,7 @@ int main(void)
      * @0x8002868c only runs on a LATER VM invocation; press edges don't persist). */
     idle(4);
     CHECK(re15_menu_msg_active(), "(22) PRESS-WAIT holds (VM state 5, no auto-dismiss)");
-    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);        /* cancel edge dismisses too */
+    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);        /* cancel edge dismisses too */
     CHECK(!re15_menu_msg_active(),
           "(22) dismissed on the cancel edge (&0xc000 @0x8002868c-86d0, no SE)");
     frame(0, 0);                                            /* c4==2 poll sees the clear */
@@ -1826,7 +1827,7 @@ int main(void)
     { int n = 0;
       while (g_inv_screen.msg_reveal < RE15_INV_CANTUSE_GLYPHS && n++ < 200) frame(0, 0); }
     idle(4);                                    /* terminator -> VM state 5 (see (22)) */
-    frame(RE15_PAD_BIT_CROSS, RE15_PAD_BIT_CROSS);
+    frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
     CHECK(!re15_menu_msg_active(), "(23) dismissed on the confirm edge");
     frame(0, 0);
     CHECK(g_inv_screen.item_state == 1 && re15_menu_item_c3() == 0 && re15_menu_item_c4() == 0,

@@ -7,6 +7,8 @@
  */
 #include <stdio.h>              /* fprintf — the dropped-event diagnostic below */
 #include "re15_game_step.h"
+#include "re15_engine.h"        /* re15_pad_virtual_word — the virtual pad-word builder
+                                 * (pad_common.c; wave-6 finding 4) */
 #include "re15_actor.h"
 #include "re15_aot.h"
 #include "re15_collision.h"
@@ -152,11 +154,13 @@ void re15_game_step(const re15_game_ctx_t *c)
      * door AOT scan below. */
     g_aot_action_pressed = (c->pad_pressed & RE15_PAD_BIT_SQUARE) ? 1 : 0;
 
-    /* Expose the full per-frame press EDGE mask to the SCD VM so the YES/NO message
-     * cursor (op_message_on) can read UP/DOWN to toggle the choice — the original
-     * dialog FSM (FUN_80028134) reads the newly-pressed pad (DAT_800ac76c). */
+    /* Expose the per-frame VIRTUAL press-edge word to the SCD VM / dialog FSM — the
+     * original reads the config-REMAPPED edge word DAT_800ac76c (FUN_80030444 tail
+     * sw @0x8003057c), NOT the raw pad. Wave-6 finding 4: the previous identity feed
+     * (g_scd_pad_edge = pad_pressed) delivered virtual confirm 0x4000 on physical
+     * CROSS; per the preset-0 table @0x80073dbc[14] it is RAW SQUARE (0x0080). */
     extern uint16_t g_scd_pad_edge;
-    g_scd_pad_edge = c->pad_pressed;
+    g_scd_pad_edge = re15_pad_virtual_word(c->pad_pressed);
 
     /* HELD action-button state (Square) for the dialog FSM's fast-forward: the original
      * (FUN_80028134 state 1) reads DAT_800ac768 (held pad) — holding the button makes the
@@ -164,10 +168,11 @@ void re15_game_step(const re15_game_ctx_t *c)
      * EDGE (advance/confirm); this is the LEVEL (held). */
     extern uint8_t g_scd_action_held;
     g_scd_action_held = (c->pad_current & RE15_PAD_BIT_SQUARE) ? 1 : 0;
-    /* Full HELD word for the dialog FSM's CROSS fast-forward (byte-true FUN_80028134 @0x80028214
-     * reads the held pad & 0x4000 = CROSS, not the Square action-held). [audit wf_6aad95ad] */
+    /* Full HELD word for the dialog FSM's fast-forward: FUN_80028134 @0x80028214 reads the
+     * VIRTUAL held pad DAT_800ac768 & 0x4000 — virtual 0x4000 <- RAW SQUARE (@0x80073dbc[14],
+     * wave-6 finding 4; the old "= CROSS" label was wrong). */
     extern uint16_t g_scd_pad_held;
-    g_scd_pad_held = c->pad_current;
+    g_scd_pad_held = re15_pad_virtual_word(c->pad_current);
 
     /* (Plc_neck head-look FSM is computed inside re15_skel_compute_pose at the head bone —
      * it needs the root bone matrix there to get the look angle in the correct frame. The

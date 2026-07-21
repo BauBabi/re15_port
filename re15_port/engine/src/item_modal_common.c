@@ -209,8 +209,10 @@ void re15_item_modal_tick(uint16_t pad_edge)
 
         case 6:  /* MESSAGE-BOX WAIT (@0x8001dffc gate: while DAT_800b8520 & 0x80): the item picture keeps
                   * drawing; dismiss on PLAYER INPUT (not a timer). The message VM (FUN_80028134 sub-4/5)
-                  * reads DAT_800ac76c: & 0x3000 toggles Yes/No (DAT_800b8520 ^= 1), & 0x4000 confirms;
-                  * the full-prompt just waits for & 0xc000. */
+                  * reads the VIRTUAL edge DAT_800ac76c: & 0x3000 toggles Yes/No (DAT_800b8520 ^= 1),
+                  * & 0x4000 confirms; the full-prompt waits for & 0xc000. Wave-6 finding 4: pad_edge
+                  * IS the virtual word (caller: re15_pad_virtual_word) — virtual 0x3000 <- RAW d-pad
+                  * LEFT/RIGHT, 0x4000 <- RAW SQUARE, 0x8000 <- RAW CROSS (@0x80073dbc[12..15]). */
             s_visible = 1;
             if (s_reveal < s_reveal_total) {                      /* TYPEWRITER: 1 glyph / 2 frames — no
                                                                   * input accepted until fully revealed */
@@ -218,11 +220,11 @@ void re15_item_modal_tick(uint16_t pad_edge)
                 return;
             }
             if (s_prompt == 2) {                                  /* can't-carry: any confirm dismisses */
-                if (!(pad_edge & 0xc000)) return;                 /* DAT_800ac76c & 0xc000 (CROSS/SQUARE) */
+                if (!(pad_edge & 0xc000)) return;                 /* virtual 0xc000 (raw SQUARE/CROSS) */
                 s_prompt = 0; s_state = 7; again = 1; break;
             }
-            if (pad_edge & 0x3000) s_choice ^= 1;                 /* TRIANGLE/CIRCLE toggle -> No-flag ^=1 */
-            if (!(pad_edge & 0x4000)) return;                     /* wait for CROSS confirm */
+            if (pad_edge & 0x3000) s_choice ^= 1;                 /* virt menu-L/R (raw d-pad) toggle -> No-flag ^=1 */
+            if (!(pad_edge & 0x4000)) return;                     /* wait for virtual confirm (raw SQUARE) */
             s_msg_no = s_choice;                                  /* No selected -> case7 leaves the item */
             s_prompt = 0; s_state = 7; again = 1; break;
 

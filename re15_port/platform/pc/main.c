@@ -659,12 +659,14 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
               if (af == hold || af == hold + 20) pp |= RE15_PAD_BIT_SQUARE; }   /* open, then confirm/dismiss */
             af++;
         }
-        /* Byte-true confirm/cancel (FUN_80025c00 cases 1/2/6 + k_pad_remap[0]): the FSM checks the
-         * config-remapped action bit 14 = SQUARE (0x8000) and START to PROCEED/confirm, and action
-         * bit 15 = CROSS (0x4000) to go BACK/cancel (CROSS → iVar6=0). RE1.5 uses the Japanese menu
-         * convention here (○/□ family confirm, ✕ cancel) — the inverse of the western dialog/FF path. */
-        uint16_t ok     = pp & (RE15_PAD_BIT_SQUARE | RE15_PAD_BIT_START);
-        uint16_t cancel = pp & RE15_PAD_BIT_CROSS;
+        /* Byte-true confirm/cancel (FUN_80025c00 cases 1/2/6): the FSM checks the VIRTUAL edge
+         * word (DAT_800ac76c) bit 0x4000 (= remap-entry 14 <- RAW SQUARE @0x80073dbc[14]) plus
+         * raw START to PROCEED/confirm, and virtual 0x8000 (= entry 15 <- RAW CROSS) to go
+         * BACK/cancel. Same □-confirm/✕-cancel convention as every other virtual-word menu
+         * (wave-6 finding 4 unified the label; behavior here was already correct). */
+        uint16_t vp     = re15_pad_virtual_word(pp);
+        uint16_t ok     = (uint16_t)((vp & 0x4000) | (pp & RE15_PAD_BIT_START));
+        uint16_t cancel = (uint16_t)(vp & 0x8000);
 
         /* Byte-true cursor navigation (FUN_80025c00): read the HELD pad (DAT_800ac760, raw
          * PadRead layout) with a 19/5-frame auto-repeat — up = UP, down = DOWN | SELECT
@@ -2553,23 +2555,25 @@ re_title:;
          * screen at frame 30 (briefing loadout = the mzd_inv_open.sav items); the render
          * block puts the screen into the savestate's acceptance state; the shot is taken
          * after end_frame at frame 34, then exit.
-         * RE15_INV_GRID_SHOT=1 (wave 2): additionally inject a CROSS edge at frame 31 —
-         * the tab-select ITEM confirm — so the live FSM runs the entry slide (7 frames,
-         * +14/frame @0x8004a394) into GRID mode; the shot is taken at frame 50 instead. */
+         * RE15_INV_GRID_SHOT=1 (wave 2): additionally inject a SQUARE edge at frame 31 —
+         * the tab-select ITEM confirm (VIRTUAL 0x4000 <- RAW SQUARE, @0x80073dbc[14];
+         * wave-6 finding 4 flipped these injections from CROSS) — so the live FSM runs
+         * the entry slide (7 frames, +14/frame @0x8004a394) into GRID mode; the shot is
+         * taken at frame 50 instead. */
         if (getenv("RE15_INV_SHOT") && !getenv("RE15_INV_MIX_SHOT") &&
             g_engine.frame_count == 30 && !re15_menu_is_open())
             re15_menu_toggle();
         if (getenv("RE15_INV_GRID_SHOT") && g_engine.frame_count == 31)
-            g_engine.pad_pressed |= RE15_PAD_BIT_CROSS;
-        /* RE15_INV_CMD_SHOT=1 (wave 3): CROSS at F31 (tab ITEM confirm -> entry slide
-         * F32-38, GRID F39) + CROSS at F45 (grid confirm on the cursor slot -> 25d6=0 +
+            g_engine.pad_pressed |= RE15_PAD_BIT_SQUARE;
+        /* RE15_INV_CMD_SHOT=1 (wave 3): SQUARE at F31 (tab ITEM confirm -> entry slide
+         * F32-38, GRID F39) + SQUARE at F45 (grid confirm on the cursor slot -> 25d6=0 +
          * 25c2=3, command slide-in F46-52, state 4 from F53); shot at F60 = the command
          * stage with the g7 label (cursor 0 == equipped 0 -> unequip face uv(0x10,0xa0)). */
         if (getenv("RE15_INV_CMD_SHOT") &&
             (g_engine.frame_count == 31 || g_engine.frame_count == 45))
-            g_engine.pad_pressed |= RE15_PAD_BIT_CROSS;
-        /* RE15_INV_CHECK_SHOT=1 (wave 4): CROSS F31 (ITEM) + CROSS F45 (grid confirm ->
-         * command stage from F53) + LEFT F54 (25d6=1 CHECK) + CROSS F56 (dispatch [1]
+            g_engine.pad_pressed |= RE15_PAD_BIT_SQUARE;
+        /* RE15_INV_CHECK_SHOT=1 (wave 4): SQUARE F31 (ITEM) + SQUARE F45 (grid confirm ->
+         * command stage from F53) + LEFT F54 (25d6=1 CHECK) + SQUARE F56 (dispatch [1]
          * @0x8004a558-64: 25d6=0 + 25c2=9). CHECK FSM: slide-out F57-63 (panels -36/f,
          * 25ee 166->264), photo load + struct init F64, panel slide-in F65-74 (+22/f,
          * x=13 + desc-msg open at F74), typewriter 2f + 4f/glyph (knife entry 1 = 15
@@ -2578,7 +2582,7 @@ re_title:;
         if (getenv("RE15_INV_CHECK_SHOT")) {
             if (g_engine.frame_count == 31 || g_engine.frame_count == 45 ||
                 g_engine.frame_count == 56)
-                g_engine.pad_pressed |= RE15_PAD_BIT_CROSS;
+                g_engine.pad_pressed |= RE15_PAD_BIT_SQUARE;
             if (g_engine.frame_count == 54)
                 g_engine.pad_pressed |= RE15_PAD_BIT_LEFT;
         }
@@ -2603,12 +2607,13 @@ re_title:;
          * stage init; ROOM1140 -> page 4 = MAP05.PIX, marker at the slot-20 row). */
         if (getenv("RE15_INV_MAP_SHOT") && g_engine.frame_count == 31)
             g_engine.pad_pressed |= RE15_PAD_BIT_L1;
-        /* RE15_INV_MIX_SHOT=1 (wave 5): seed Green 0x24 + Red 0x25 at F40 + open; CROSS
-         * F41 (tab ITEM confirm -> entry slide F42-48, GRID F50) + CROSS F50 (grid
-         * confirm on the Green -> 25d6=0 + 25c2=3, slide-in F51-57, state 4 F58) +
-         * RIGHT F59 (25d6=3 EXCHANGE) + CROSS F61 (dispatch [3] @0x8004a570: 25c2=7) +
+        /* RE15_INV_MIX_SHOT=1 (wave 5): seed Green 0x24 + Red 0x25 at F40 + open; SQUARE
+         * F41 (tab ITEM confirm, virtual 0x4000 <- RAW SQUARE -> entry slide F42-48,
+         * GRID F50) + SQUARE F50 (grid confirm on the Green -> 25d6=0 + 25c2=3, slide-in
+         * F51-57, state 4 F58) +
+         * RIGHT F59 (25d6=3 EXCHANGE) + SQUARE F61 (dispatch [3] @0x8004a570: 25c2=7) +
          * RIGHT F63 pressed+held (second cursor FUN_80048904: 0 -> 1 = the Red) +
-         * CROSS F65 (confirm: matcher pair 0x24+0x25 -> result 0x27 pic 1 @0x80074d54,
+         * SQUARE F65 (confirm: matcher pair 0x24+0x25 -> result 0x27 pic 1 @0x80074d54,
          * executor action 1 mix-merge into slot 0 + compaction; result anim c3=1 runs
          * F66-82: grow F66-73, shrink F74-81, terminal F82 -> state 6 -> GRID F90).
          * Shot at F100 = the settled grid with G.R MEDICINE MIX (MIXITEM tile 1 art +
@@ -2622,7 +2627,7 @@ re_title:;
             }
             if (g_engine.frame_count == 41 || g_engine.frame_count == 50 ||
                 g_engine.frame_count == 61 || g_engine.frame_count == 65)
-                g_engine.pad_pressed |= RE15_PAD_BIT_CROSS;
+                g_engine.pad_pressed |= RE15_PAD_BIT_SQUARE;
             if (g_engine.frame_count == 59)
                 g_engine.pad_pressed |= RE15_PAD_BIT_RIGHT;
             if (g_engine.frame_count == 63) {
@@ -2682,8 +2687,10 @@ re_title:;
             /* ITEM-GET MODAL: while the pickup zoom/flip presentation runs, the byte-true freeze
              * (g_pauseflags|=0xff000000) halts the SCD subsystem + walkers + fx here (and game_step
              * early-returns for player/enemy/anim). Advance ONLY the modal FSM at 30 Hz; rendering
-             * (incl. the modal quad) keeps running. The pad EDGE drives the state-6 Yes/No prompt. */
-            re15_item_modal_tick((uint16_t)g_engine.pad_pressed);
+             * (incl. the modal quad) keeps running. The state-6 prompt reads the VIRTUAL edge word
+             * DAT_800ac76c (wave-6 finding 4): build it from the config-normalized physical edge
+             * (pc_pad_config -> re15_pad_virtual_word, table @0x80073dbc via FUN_80030444). */
+            re15_item_modal_tick(re15_pad_virtual_word(pc_pad_config((uint16_t)g_engine.pad_pressed)));
         } else if ((target_fps == 30 || (g_engine.frame_count & 1) == 0)
                    && re15_menu_gameplay_frozen()) {
             /* STATUS SCREEN (wave 2): gameplay is FULLY SUSPENDED while the menu is open or

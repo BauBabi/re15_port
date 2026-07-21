@@ -1,8 +1,8 @@
 /* test_msg_dialog.c — byte-true dialog FSM buttons + cadence (audit wf_6aad95ad).
  *
- * (1) YES/NO toggle on the FACE buttons (0x3000), not the D-pad L/R (@0x800285b8).
- * (2) YES/NO confirm on CROSS (0x4000), not SQUARE (@0x80028570).
- * (3) fast-forward on CROSS held (@0x80028214) reveals TWO glyphs/frame (s2=2 @0x80028238).
+ * (1) YES/NO toggle on VIRTUAL mask 0x3000 (@0x800285b8) = raw d-pad L/R (@0x80073dbc[12..13]).
+ * (2) YES/NO confirm on VIRTUAL 0x4000 (@0x80028570) = raw SQUARE (@0x80073dbc[14], wave-6 f4).
+ * (3) fast-forward on virtual 0x4000 held (@0x80028214) reveals TWO glyphs/frame (s2=2 @0x80028238).
  * (4) PAGE_WAIT first-glyph timer = 1 (@0x80028494), not scroll.
  */
 #include <stdio.h>
@@ -49,13 +49,13 @@ int main(void)
         tick(0x1000, 0);                       /* TRIANGLE toggles back */
         CHECK("toggle: TRIANGLE (0x1000) flips the cursor", g_scd.message_choice == c0);
 
-        tick(0x8000, 0);                       /* SQUARE must NOT confirm (still selecting) */
-        CHECK("confirm: SQUARE does NOT confirm", g_scd.message_fsm == 3);
-        tick(0x4000, 0);                       /* CROSS confirms */
-        CHECK("confirm: CROSS (0x4000) confirms (fsm leaves SELECT)", g_scd.message_fsm != 3);
+        tick(0x8000, 0);                       /* virtual cancel-bit must NOT confirm (still selecting) */
+        CHECK("confirm: virtual 0x8000 does NOT confirm", g_scd.message_fsm == 3);
+        tick(0x4000, 0);                       /* virtual confirm (raw SQUARE) confirms */
+        CHECK("confirm: virtual 0x4000 (raw SQUARE) confirms (fsm leaves SELECT)", g_scd.message_fsm != 3);
     }
 
-    /* --- (3): fast-forward reveals TWO glyphs per frame on CROSS held --- */
+    /* --- (3): fast-forward reveals TWO glyphs per frame on virtual-0x4000 held --- */
     {
         scd_vm_init(); re15_aot_init();
         uint8_t blob[] = { 0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30, 0x01, 0x00 };   /* 8 glyphs */
@@ -65,9 +65,9 @@ int main(void)
         for (int i = 0; i < 4 && g_scd.message_fsm != 0; i++) tick(0, 0);
         g_scd.message_timer = 0;
         uint16_t p0 = g_scd.message_parse;
-        tick(0x4000, 0x4000);                  /* CROSS held -> fast-forward -> 2 glyphs this frame */
+        tick(0x4000, 0x4000);                  /* confirm-bit held -> fast-forward -> 2 glyphs this frame */
         int delta = (int)g_scd.message_parse - (int)p0;
-        CHECK("fast-forward (CROSS held) reveals 2 glyphs/frame", delta == 2);
+        CHECK("fast-forward (confirm-bit held) reveals 2 glyphs/frame", delta == 2);
         /* control: no button -> 1 glyph */
         g_scd.message_timer = 0;
         uint16_t p1 = g_scd.message_parse;
@@ -83,7 +83,7 @@ int main(void)
         re15_dialog_open(9, 1);
         for (int i = 0; i < 8 && g_scd.message_fsm != 1; i++) tick(0, 0);   /* run to PAGE_WAIT */
         CHECK("dialog reaches PAGE_WAIT (fsm 1)", g_scd.message_fsm == 1);
-        tick(0x4000, 0);                       /* dismiss the page with CROSS */
+        tick(0x4000, 0);                       /* dismiss the page (virtual 0x4000) */
         CHECK("PAGE_WAIT completion sets the first-glyph timer to 1", g_scd.message_timer == 1);
     }
 

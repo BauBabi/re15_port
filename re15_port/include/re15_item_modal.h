@@ -32,9 +32,10 @@
  * confirm; `taken_bit` = the zone-9 flag payload to set on confirm (0 = none). */
 void re15_item_modal_start(uint8_t item_type, uint8_t amount, uint8_t taken_bit, int aot_slot);
 
-/* Advance the FSM one 30 Hz game tick (one FUN_8001db28 dispatch). `pad_edge` = the newly-pressed pad
- * bits this tick (DAT_800ac76c) — read only by the message-box wait (state 6): & 0x3000 toggles Yes/No,
- * & 0x4000 confirms, & 0xc000 dismisses the can't-carry line. Call ONLY while active, from the 30 Hz
+/* Advance the FSM one 30 Hz game tick (one FUN_8001db28 dispatch). `pad_edge` = the newly-pressed
+ * VIRTUAL pad word this tick (DAT_800ac76c — build with re15_pad_virtual_word(), wave-6 finding 4)
+ * — read only by the message-box wait (state 6): & 0x3000 (raw d-pad L/R) toggles Yes/No, & 0x4000
+ * (raw SQUARE) confirms, & 0xc000 dismisses the can't-carry line. Call ONLY while active, from the 30 Hz
  * gameplay tick — the caller must FREEZE the rest of gameplay while active (byte-true g_pauseflags |=
  * 0xff000000: player move, enemy AI, SCD/event, model anim all halt). */
 void re15_item_modal_tick(uint16_t pad_edge);

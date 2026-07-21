@@ -18,12 +18,13 @@
  *   CLUTs: UI 0-7 = TEX.TIM CLUT rows 8-15 (VRAM (256,488..495), ids 0x7a10..0x7bd0);
  *          ST_00 CLUT row 0 (VRAM (0,484)); STPIC's own CLUT (VRAM (0,485)) (Q4).
  *
- * Pixel pipeline — calibrated against the savestate framebuffers of
- * stage_saves/mzd_inv_open.sav (both flip buffers, see shots/inv_plan.md wave-1 log):
+ * Pixel pipeline — GPU-exact against the CURRENT ground-truth renderer (DuckStation
+ * software rasterizer, gpu_sw_rasterizer.inl; wave-6 fix pass — the earlier "+52"
+ * modulation rounding matched only the pre-drift wave-1 idle capture, see mod5()):
  *   - 15-bit (5:5:5) framebuffer, cleared to black (the status screen covers it fully);
- *   - opaque textured: out5 = min(31, (t5*mod + 52) >> 7)
- *     (the rounding constant is pinned to [52,55] by the LED pixels at (25,108) under
- *      glow 0x18/0x1c and the Standard-Arms 0x3e-dimmed knife edge pixels);
+ *   - opaque textured: out5 = (min(255, (t5*mod8) >> 4)) >> 3  (truncating — ShadePixel
+ *     dither-LUT index (t5*m)>>4 with the dither-off LUT cell DM[2][3]=0; verified
+ *     1170/1170 vs the fresh grid/cmd savestate fbs on the 0x3e-modulated box);
  *   - CLUT value 0x0000 = transparent; texel STP bit + ABE would blend (no STP=1
  *     texels exist in these assets — every SPRT texel lands opaque);
  *   - untextured ABE LineF2 (ECG trace): out5 = (((d5<<3)|(d5>>2)) + f8) >> 4
@@ -313,9 +314,17 @@ static void photo_upload_check(void)
     clen = (uint32_t)b[8] | ((uint32_t)b[9] << 8) | ((uint32_t)b[10] << 16);
     cx = b[12] | (b[13] << 8); cy = b[14] | (b[15] << 8);
     if (cx == 0 && cy == 489) {                               /* crect (0,489) 256x1 */
+        /* CLUT DATA starts at +20 (TIM clut block: len u32 @+8 [self-inclusive],
+         * rect 4xu16 @+12..19, entries @+20). The wave-4 code read from +16 = the
+         * rect's w/h halfwords -> every entry shifted by 2 (wave-6 finding 2, the
+         * noisy photo). Ground truth: knife block (ITPS id 1) crect (0,489) 256x1,
+         * entry0 = 0x8000 (black, STP=1, 256/256 STP set, 0 zero entries); the
+         * check savestate VRAM row (0,489) == block bytes from +20 (256/256) and
+         * the fb photo == clut-direct opaque draw (8064/8064 px, prim 0x64808080
+         * @0x800c6958, uv(0,0) clut 0x7a40 @0x800c6970-78, rgb 0x80 = identity). */
         int i;
         for (i = 0; i < 256; i++)
-            s_clut[12][i] = (uint16_t)(b[16 + i * 2] | (b[17 + i * 2] << 8));
+            s_clut[12][i] = (uint16_t)(b[20 + i * 2] | (b[21 + i * 2] << 8));
     }
     b += 8 + clen;
     plen = (uint32_t)b[0] | ((uint32_t)b[1] << 8) | ((uint32_t)b[2] << 16);
@@ -371,10 +380,161 @@ static void px_opaque(int x, int y, int r5, int g5, int b5)
     if ((unsigned)x >= INV_XRES || (unsigned)y >= INV_YRES) return;
     s_fb5[y][x] = (uint16_t)(r5 | (g5 << 5) | (b5 << 10));
 }
+
+/* ---- wave-6 fix (finding 3): GPU-exact shaded (Gouraud) triangle + 4x4 dither -------
+ * The CHECK panel background is NOT a smooth bilinear gradient: the PSX draws the two
+ * POLY_G4 boxes (code 0x38 @0x800c6bd0 byte3; DR_MODE word 0xE1000260 @0x800c6bc4-cc
+ * = texpage attr with DITHER bit9 SET) through the GPU's per-triangle DDA + 4x4
+ * ordered dither -- the "dotted" pattern of zoom_checkbg_psx.png IS the dither.
+ * Model = DuckStation's software rasterizer (the ground-truth captures' GPU),
+ * gpu_sw_rasterizer.inl: ATTRIB_SHIFT=12/ATTRIB_POST_SHIFT=12 color steppers with
+ * +half init, s64 edge steppers makefp/makestep, quad split (v0,v1,v2)+(v2,v1,v3)
+ * (gpu_sw.cpp DrawPolygon), dither = clamp8(c8 + DM[y&3][x&3]) >> 3.
+ * VERIFIED byte-exact vs stage_saves/inv_states/psx_inv_check.sav framebuffer:
+ * 12686/12686 clean gbox px (both boxes, both parities' fb) before porting. */
+static const int8_t k_dither[4][4] = {
+    { -4,  0, -3,  1 }, {  2, -2,  3, -1 }, { -3,  1, -4,  0 }, {  3, -1,  2, -2 }
+};
+
+typedef struct { int32_t x, y, r, g, b; } gvert_t;
+
+static void px_dither8(int x, int y, int r8, int g8, int b8)
+{
+    int d = k_dither[y & 3][x & 3];
+    int r = r8 + d, g = g8 + d, b = b8 + d;
+    if (r < 0) r = 0; else if (r > 255) r = 255;
+    if (g < 0) g = 0; else if (g > 255) g = 255;
+    if (b < 0) b = 0; else if (b > 255) b = 255;
+    px_opaque(x, y, r >> 3, g >> 3, b >> 3);
+}
+
+static int64_t g_cdiv(int64_t a, int64_t b)   /* C-style trunc-toward-zero division */
+{
+    int64_t q = (a < 0 ? -a : a) / (b < 0 ? -b : b);
+    return ((a < 0) == (b < 0)) ? q : -q;
+}
+static int64_t g_makefp(int32_t x) { return ((int64_t)x << 32) + ((1LL << 32) - (1 << 11)); }
+static int64_t g_makestep(int32_t dx, int32_t dy)
+{
+    int64_t num = ((int64_t)dx << 32) + ((dx < 0) ? -(dy - 1) : ((dx > 0) ? (dy - 1) : 0));
+    return g_cdiv(num, dy);
+}
+
+/* One shaded triangle, scalar port of gpu_sw_rasterizer.inl DrawTriangle/DrawSpan
+ * (shading on, texture off, transparency off). */
+static void gtri_shaded(gvert_t v0, gvert_t v1, gvert_t v2)
+{
+    gvert_t *v[3];
+    unsigned tl;
+    int32_t det;
+    uint32_t drdx, dgdx, dbdx, drdy, dgdy, dbdy, baser, baseg, baseb;
+    int64_t base_coord, base_step, bcu, bcl;
+    int rfi, ofi, right_facing;
+    unsigned vo, vp;
+    struct { int64_t sx[2], stx[2]; int32_t sy, ey; int ud; } tp[2];
+    int i;
+    gvert_t t;
+
+    v[0] = &v0; v[1] = &v1; v[2] = &v2;
+    if (v[1]->x <= v[0]->x) tl = (v[2]->x <= v[1]->x) ? 4 : 2;
+    else if (v[2]->x < v[0]->x) tl = 4;
+    else tl = 1;
+    if (v[2]->y < v[1]->y) { t = *v[2]; *v[2] = *v[1]; *v[1] = t;
+        tl = ((tl >> 1) & 0x2) | ((tl << 1) & 0x4) | (tl & 0x1); }
+    if (v[1]->y < v[0]->y) { t = *v[1]; *v[1] = *v[0]; *v[0] = t;
+        tl = ((tl >> 1) & 0x1) | ((tl << 1) & 0x2) | (tl & 0x4); }
+    if (v[2]->y < v[1]->y) { t = *v[2]; *v[2] = *v[1]; *v[1] = t;
+        tl = ((tl >> 1) & 0x2) | ((tl << 1) & 0x4) | (tl & 0x1); }
+    tl >>= 1;
+    if (v[0]->y == v[2]->y) return;
+
+    base_coord = g_makefp(v[0]->x);
+    base_step  = g_makestep(v[2]->x - v[0]->x, v[2]->y - v[0]->y);
+    bcu = (v[1]->y == v[0]->y) ? 0 : g_makestep(v[1]->x - v[0]->x, v[1]->y - v[0]->y);
+    bcl = (v[2]->y == v[1]->y) ? 0 : g_makestep(v[2]->x - v[1]->x, v[2]->y - v[1]->y);
+    vo = (tl != 0) ? 1 : 0;
+    vp = (tl == 2) ? 3 : 0;
+    right_facing = (v[1]->y == v[0]->y) ? (v[1]->x > v[0]->x) : (bcu > base_step);
+    rfi = right_facing ? 1 : 0;
+    ofi = right_facing ? 0 : 1;
+
+    tp[vo].sy = v[0 ^ vo]->y;      tp[vo].ey = v[1 ^ vo]->y;
+    tp[vo ^ 1].sy = v[1 ^ vp]->y;  tp[vo ^ 1].ey = v[2 ^ vp]->y;
+    tp[vo].sx[rfi] = g_makefp(v[0 ^ vo]->x);
+    tp[vo].stx[rfi] = bcu;
+    tp[vo].sx[ofi] = base_coord + ((int64_t)(v[vo]->y - v[0]->y) * base_step);
+    tp[vo].stx[ofi] = base_step;
+    tp[vo].ud = (vo != 0);
+    tp[vo ^ 1].sx[rfi] = g_makefp(v[1 ^ vp]->x);
+    tp[vo ^ 1].stx[rfi] = bcl;
+    tp[vo ^ 1].sx[ofi] = base_coord + ((int64_t)(v[1 ^ vp]->y - v[0]->y) * base_step);
+    tp[vo ^ 1].stx[ofi] = base_step;
+    tp[vo ^ 1].ud = (vp != 0);
+
+#define GDET(A, B) (((int64_t)(v[1]->A - v[0]->A) * (v[2]->B - v[1]->B)) \
+                  - ((int64_t)(v[2]->A - v[1]->A) * (v[1]->B - v[0]->B)))
+    det = (int32_t)GDET(x, y);
+    if (det == 0) return;
+    drdx = (uint32_t)g_cdiv(GDET(r, y) * 4096, det) << 12;
+    dgdx = (uint32_t)g_cdiv(GDET(g, y) * 4096, det) << 12;
+    dbdx = (uint32_t)g_cdiv(GDET(b, y) * 4096, det) << 12;
+    drdy = (uint32_t)g_cdiv(GDET(x, r) * 4096, det) << 12;
+    dgdy = (uint32_t)g_cdiv(GDET(x, g) * 4096, det) << 12;
+    dbdy = (uint32_t)g_cdiv(GDET(x, b) * 4096, det) << 12;
+#undef GDET
+    baser = ((((uint32_t)v[tl]->r << 12) + (1u << 11)) << 12)
+            - drdx * (uint32_t)v[tl]->x - drdy * (uint32_t)v[tl]->y;
+    baseg = ((((uint32_t)v[tl]->g << 12) + (1u << 11)) << 12)
+            - dgdx * (uint32_t)v[tl]->x - dgdy * (uint32_t)v[tl]->y;
+    baseb = ((((uint32_t)v[tl]->b << 12) + (1u << 11)) << 12)
+            - dbdx * (uint32_t)v[tl]->x - dbdy * (uint32_t)v[tl]->y;
+
+    for (i = 0; i < 2; i++) {
+        int64_t lx = tp[i].sx[0], rx = tp[i].sx[1];
+        int32_t cy = tp[i].sy;
+        int32_t ey = tp[i].ey;
+        int32_t xs, xb, x;
+#define GSPAN() do { \
+            xs = (int32_t)((uint64_t)lx >> 32); \
+            xb = (int32_t)((uint64_t)rx >> 32); \
+            for (x = xs; x < xb; x++) \
+                px_dither8(x, cy, \
+                    (int)((uint32_t)(baser + drdx * (uint32_t)x + drdy * (uint32_t)cy) >> 24), \
+                    (int)((uint32_t)(baseg + dgdx * (uint32_t)x + dgdy * (uint32_t)cy) >> 24), \
+                    (int)((uint32_t)(baseb + dbdx * (uint32_t)x + dbdy * (uint32_t)cy) >> 24)); \
+        } while (0)
+        if (tp[i].ud) {
+            while (cy > ey) {
+                cy--; lx -= tp[i].stx[0]; rx -= tp[i].stx[1];
+                GSPAN();
+            }
+        } else {
+            while (cy < ey) {
+                GSPAN();
+                cy++; lx += tp[i].stx[0]; rx += tp[i].stx[1];
+            }
+        }
+#undef GSPAN
+    }
+}
 static int mod5(int t5, int m)
 {
-    int v = (t5 * m + 52) >> 7;      /* rounding constant pinned to [52,55] */
-    return v > 31 ? 31 : v;
+    /* WAVE-6 FINDING-1 RESOLUTION: the "+52 rounding constant" (wave 1) was calibrated
+     * against the OLD mzd_inv_open.sav framebuffer — which a since-changed DuckStation
+     * build had rendered with rounded modulation. The CURRENT ground-truth renderer
+     * (gpu_sw_rasterizer.inl ShadePixel: `(u16(texel5) * u16(color8)) >> 4`, dither-LUT
+     * index with dither off = matrix[2][3] = 0, then >>3) TRUNCATES. Proven from the
+     * savestates: the fresh grid/cmd fbs match trunc on 1170/1170 Standard-Arms texels
+     * while the old idle fb matches +52 — with byte-identical prim (rgb 0x3e), CLUT
+     * (0,484) and art in ALL saves, and DAT_800b25cd's complete writer set only ever
+     * producing {0x3e, 0x80, ±6 steps} (@0x800495e8-618, @0x8004a624-34, @0x8004a8b0,
+     * @0x8004ab14/30, @0x8004ad58-68, @0x8004ac90-a4, @0x8004b1fc, DEBUG.BIN
+     * @0x800c6510-20). There is NO in-game dim mechanism — the wave-6 "finding 1"
+     * 649-px class was capture-session drift. Only m=0x3e texels are affected
+     * (m=0x80/0x40 are rounding-invariant), so MAP/FILE/CHECK stay pixel-exact. */
+    int v = (t5 * m) >> 4;           /* 8-bit modulated color, truncating */
+    if (v > 255) v = 255;
+    return v >> 3;
 }
 static int blend_ch(int d5, int f8)  /* abr0 with replicated dst expansion */
 {
@@ -411,34 +571,24 @@ static void raster_op(const re15_inv_op_t *o)
             }
         }
     } else if (o->kind == RE15_INV_OP_GBOX) {
-        /* wave 4: POLY_G4 gouraud quad (DEBUG.BIN 0x800c6b84, code 0x38 = opaque
-         * untextured gouraud quad @0x800c6bd0; DR_MODE 0xe1000260 @0x800c6bc4 sets
-         * the dither bit — PSX 4x4 ordered dithering of the interpolation is NOT
-         * modeled, documented open item). Byte-true corner colors:
+        /* wave 4 + wave-6 fix (finding 3): POLY_G4 gouraud quad (DEBUG.BIN builder
+         * 0x800c6b84: tag len 9 @0x800c6bbc-c0, embedded DR_MODE word 0xE1000260
+         * @0x800c6bc4-cc = DITHER bit9 SET, code 0x38 opaque @0x800c6bd0 byte3).
+         * Byte-true corner colors:
          *   c0 TL (0x00,0x10,0x7b) @0x800c6bd0 (lui 0x387b + addiu 0x1000)
          *   c1 TR (0x08,0x00,0x4a) @0x800c6bdc (lui 0x4a + addiu 8)
          *   c2 BL (0x08,0x00,0x52) @0x800c6be8 (lui 0x52 + addiu 8)
          *   c3 BR (0x00,0x10,0x5a) @0x800c6bf4 (lui 0x5a + addiu 0x1000)
-         * Vertices @0x800c6c00-24: (x,y),(x+w,y),(x,y+h),(x+w,y+h). */
-        static const int cr[4] = { 0x00, 0x08, 0x08, 0x00 };
-        static const int cg[4] = { 0x10, 0x00, 0x00, 0x10 };
-        static const int cb[4] = { 0x7b, 0x4a, 0x52, 0x5a };
-        int py, pxx;
-        for (py = 0; py < o->h; py++) {
-            for (pxx = 0; pxx < o->w; pxx++) {
-                /* GPU gouraud: linear interpolation across the quad's two triangles;
-                 * for an axis-aligned quad with corner colors this equals bilinear. */
-                int fx = (o->w > 1) ? (pxx * 256) / (o->w - 1) : 0;
-                int fy = (o->h > 1) ? (py * 256) / (o->h - 1) : 0;
-                int r8 = ((cr[0] * (256 - fx) + cr[1] * fx) * (256 - fy)
-                          + (cr[2] * (256 - fx) + cr[3] * fx) * fy) >> 16;
-                int g8 = ((cg[0] * (256 - fx) + cg[1] * fx) * (256 - fy)
-                          + (cg[2] * (256 - fx) + cg[3] * fx) * fy) >> 16;
-                int b8 = ((cb[0] * (256 - fx) + cb[1] * fx) * (256 - fy)
-                          + (cb[2] * (256 - fx) + cb[3] * fx) * fy) >> 16;
-                px_opaque(o->x + pxx, o->y + py, r8 >> 3, g8 >> 3, b8 >> 3);
-            }
-        }
+         * Vertices @0x800c6c00-24: (x,y),(x+w,y),(x,y+h),(x+w,y+h). Rendered via the
+         * GPU-exact triangle DDA + dither (gtri_shaded above; quad split (v0,v1,v2)
+         * + (v2,v1,v3) per gpu_sw.cpp; 12686/12686 px savestate-verified). */
+        gvert_t v0, v1, v2, v3;
+        v0.x = o->x;        v0.y = o->y;        v0.r = 0x00; v0.g = 0x10; v0.b = 0x7b;
+        v1.x = o->x + o->w; v1.y = o->y;        v1.r = 0x08; v1.g = 0x00; v1.b = 0x4a;
+        v2.x = o->x;        v2.y = o->y + o->h; v2.r = 0x08; v2.g = 0x00; v2.b = 0x52;
+        v3.x = o->x + o->w; v3.y = o->y + o->h; v3.r = 0x00; v3.g = 0x10; v3.b = 0x5a;
+        gtri_shaded(v0, v1, v2);
+        gtri_shaded(v2, v1, v3);
     } else if (o->kind == RE15_INV_OP_TILE) {
         /* FILE wave: untextured TILE 0x62 under DR_MODE 0xe1000440 = ABR 2 SUBTRACTIVE
          * (the selection highlight, DEBUG.BIN 0x800c742c: words 0x04000000/0xe1000440/

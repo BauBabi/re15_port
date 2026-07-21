@@ -453,3 +453,10 @@ target_compile_definitions(test_room1150_itembox PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_room1150_itembox COMMAND test_room1150_itembox)
 set_tests_properties(unit_room1150_itembox PROPERTIES TIMEOUT 30)
+
+# --- Wave-6 finding 4: VIRTUAL pad-word builder (FUN_80030444, preset-0 table @0x80073dbc) ---
+add_executable(test_pad_remap test_pad_remap.c)
+target_link_libraries(test_pad_remap PRIVATE re15_engine re15_test_support)
+target_include_directories(test_pad_remap PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_pad_remap COMMAND test_pad_remap)
+set_tests_properties(unit_pad_remap PROPERTIES TIMEOUT 30)

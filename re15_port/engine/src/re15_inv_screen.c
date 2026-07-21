@@ -1089,9 +1089,16 @@ int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int m
              40, 30, (int)bu16(ICON_UV_TBL + (uint32_t)i * 4u),
              (int)bu16(ICON_UV_TBL + (uint32_t)i * 4u + 2u), 128, 128, 128, 1);
 
-    /* ---- 6. Standard-Arms box art: FUN_80049a5c @0x80049a90-... (decompile L45-50):
-     * pair10 rgb = DAT_800b25cd, x = 25d8+0x18, y = 25da+2608+0x58; build uv (40,90)
-     * = icon-cache cell 10 = the static ST_00 diagonal knife (Q3) ---- */
+    /* ---- 6. Standard-Arms box art: FUN_80049a5c decompile L45-50 (@0x80049c44-60
+     * lbu 0x800b25cd -> prim rgb): pair10 rgb = DAT_800b25cd, x = 25d8+0x18,
+     * y = 25da+2608+0x58; build uv (40,90) = icon-cache cell 10 = the static ST_00
+     * diagonal knife (Q3). WAVE-6 FINDING-1 RESOLVED: there is NO grid/command dim of
+     * this sprite — the prim (code 0x66, rgb 0x3e), CLUT (0,484, STP=0) and art are
+     * byte-identical across idle/grid/cmd savestates, and 25cd's complete writer set
+     * is {0x3e, 0x80, ±6 pulse} (@0x800495e8-618/@0x8004a624-34/@0x8004a8b0/
+     * @0x8004ab14-30/@0x8004ad58-68/@0x8004ac90-a4/@0x8004b1fc, DEBUG.BIN
+     * @0x800c6510-20). The apparent 649-px "dim" was modulation-rounding drift
+     * between capture sessions — see mod5() in inv_render_pc.c. ---- */
     sprt(&e, RE15_INV_PAGE_ICON8, RE15_INV_CLUT_ST00_ROW0,
          st->arms_x + 0x18, st->arms_y + st->arms_slide + 0x58, 40, 30, 40, 90,
          st->arms_rgb, st->arms_rgb, st->arms_rgb, 1);

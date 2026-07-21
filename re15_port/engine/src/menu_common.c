@@ -37,9 +37,11 @@
  * Pad-word mapping (the port uses the PSn00bSDK bit layout, re15_player.h): the original
  * reads the byte-swapped raw words DAT_800ac762 (edge) / DAT_800ac760 (held) — START=0x800,
  * L1=0x4, R1=0x8, Up/Right/Down/Left=0x1000/0x2000/0x4000/0x8000 — and the config-remapped
- * VIRTUAL edge DAT_800ac76c — confirm=0x4000 (CROSS), cancel=0x8000 (SQUARE). Port bits:
- * START=0x8, L1=0x400, R1=0x800, d-pad=0x00f0, CROSS=0x4000, SQUARE=0x8000. The port has a
- * single (config-remapped) pad word, used for both the raw and the virtual reads.
+ * VIRTUAL edge DAT_800ac76c — confirm=0x4000 <- RAW SQUARE, cancel=0x8000 <- RAW CROSS
+ * (preset-0 table @0x80073dbc[14..15] via FUN_80030444; wave-6 finding 4 — the old
+ * "0x4000=CROSS/0x8000=SQUARE" labels came from the identity-feed misread). Port bits:
+ * START=0x8, L1=0x400, R1=0x800, d-pad=0x00f0, CROSS=0x4000, SQUARE=0x8000. Raw reads use
+ * the physical word directly; virtual reads go through re15_pad_virtual_word().
  *
  * SEs: FUN_80045024(bank<<24 | id<<16) — every SE in this flow is bank 4 (CORE00 resident)
  * -> re15_audio_core_se(id). The tab-select FSM itself is SILENT (EXE-wide jal scan:
@@ -55,6 +57,7 @@
 #include "re15_item_use.h"      /* heal classifier gate + applier table @0x80010fbc (wave 3) */
 #include "re15_actor.h"         /* g_actors[PLAYER].hp — the heal 0x2f direct write */
 #include "re15_player.h"        /* RE15_PAD_BIT_* */
+#include "re15_engine.h"        /* re15_pad_virtual_word (wave-6 finding 4) */
 #include "re15_damage.h"        /* re15_player_set_equipped_weapon (close-phase commit) */
 #include "re15_audio.h"         /* re15_audio_core_se (SE bank 4) + prime_weapon */
 #include "re15_fade.h"          /* the byte-true fade channel engine (FUN_800217b0 family) */
@@ -174,9 +177,11 @@ static void tab_select(uint16_t pressed)
     if (pressed & RE15_PAD_BIT_DOWN)  { g_inv_screen.tab = 2; return; }  /* @0x80049888-9c */
     if (pressed & RE15_PAD_BIT_UP)    { g_inv_screen.tab = 0; return; }  /* @0x800498a4-b8 */
 
-    /* CONFIRM = virtual CROSS 0x4000 (@0x800498c0-cc). NO sound effect on any confirm
+    /* CONFIRM = VIRTUAL 0x4000 (@0x800498c0-cc reads DAT_800ac76c) <- RAW SQUARE per
+     * the preset-0 remap @0x80073dbc[14] (wave-6 finding 4: the previous physical-
+     * CROSS bind came from the identity-feed misread). NO sound effect on any confirm
      * path (spec fact: zero FUN_80045024 sites in this FSM). */
-    if (pressed & RE15_PAD_BIT_CROSS) {
+    if (re15_pad_virtual_word(pressed) & 0x4000) {
         if (g_inv_screen.tab != 4) {            /* guard @0x800498d4-dc (25bc shared with
                                                  * the standalone MAP screen's FSM) */
             /* 25ca dim flag: 1 iff tab==0, else 0 (@0x800498e4-f4 — the ONE set-to-1
@@ -204,9 +209,10 @@ static void tab_select(uint16_t pressed)
         /* tab==4: falls through to the cancel poll (@0x800498d4 beq -> 0x800499d0) */
     }
 
-    /* CANCEL poll: raw START edge OR virtual cancel 0x8000 -> 25bf++ (@0x800499d0-a18).
-     * No SE, no 25ca write. */
-    if ((pressed & RE15_PAD_BIT_START) || (pressed & RE15_PAD_BIT_SQUARE))
+    /* CANCEL poll: raw START edge (lhu 0x800ac762 & 0x800 @0x800499d4-dc) OR VIRTUAL
+     * cancel 0x8000 (lw 0x800ac76c @0x800499ec) <- RAW CROSS (@0x80073dbc[15]) ->
+     * 25bf++ (@0x800499d0-a18). No SE, no 25ca write. */
+    if ((pressed & RE15_PAD_BIT_START) || (re15_pad_virtual_word(pressed) & 0x8000))
         s_phase = 2;
 }
 
@@ -268,9 +274,10 @@ static void grid(uint16_t pressed, uint16_t held)
         }
     }
 
-    /* CONFIRM: virtual CROSS 0x4000 (@0x800c6470-78). SE(4,6) plays BEFORE the id
-     * check (@0x800c6484) — also on an empty cell. */
-    if (pressed & RE15_PAD_BIT_CROSS) {
+    /* CONFIRM: VIRTUAL 0x4000 (@0x800c6470-78 reads DAT_800ac76c) <- RAW SQUARE
+     * (@0x80073dbc[14], wave-6 finding 4). SE(4,6) plays BEFORE the id check
+     * (@0x800c6484) — also on an empty cell. */
+    if (re15_pad_virtual_word(pressed) & 0x4000) {
         if (*cur != 0x0a) {
             uint8_t id = g_inv.slots[*cur].id;           /* lbu (s1+cur*4), s1=0x800b10ac
                                                           * inherited from FUN_8004a0cc
@@ -299,8 +306,9 @@ static void grid(uint16_t pressed, uint16_t held)
         } else {
             se4(6);
         }
-    } else if (pressed & RE15_PAD_BIT_SQUARE) {
-        /* CANCEL: virtual 0x8000 @0x800c6538-58: 25c2=2 (set BEFORE the SE) + SE(4,5). */
+    } else if (re15_pad_virtual_word(pressed) & 0x8000) {
+        /* CANCEL: VIRTUAL 0x8000 @0x800c6538-58 <- RAW CROSS (@0x80073dbc[15]):
+         * 25c2=2 (set BEFORE the SE) + SE(4,5). */
         g_inv_screen.item_state = 2;                     /* @0x800c6548 */
         se4(5);
     } else if (pressed & RE15_PAD_BIT_START) {
@@ -328,12 +336,13 @@ static void command_select(uint16_t pressed)
     else if (pressed & RE15_PAD_BIT_DOWN)  { g_inv_screen.action_dir = 2; se4(4); return; }
     else if (pressed & RE15_PAD_BIT_UP)    { g_inv_screen.action_dir = 0; se4(4); return; }
 
-    /* CONFIRM: virtual 0x4000 @0x8004a504-14 -> SE(4,6) @0x8004a51c + jr via table
+    /* CONFIRM: VIRTUAL 0x4000 @0x8004a504-14 (lw 0x800ac76c @0x8004a508) <- RAW
+     * SQUARE (@0x80073dbc[14], wave-6 finding 4) -> SE(4,6) @0x8004a51c + jr via table
      * @0x8004a73c[25d6]: [0]->25c2=5 (USE @0x8004a550), [1]->25d6=0 + 25c2=9 (CHECK
      * @0x8004a558-64), [2]->25c2=8 (EXIT @0x8004a568-6c), [3]->25c2=7 (EXCHANGE
      * @0x8004a570), [4]-> the cancel check @0x8004a648 (guard for the CHECK flow's
      * 25d6 byte reuse). */
-    if (pressed & RE15_PAD_BIT_CROSS) {
+    if (re15_pad_virtual_word(pressed) & 0x4000) {
         se4(6);
         switch (g_inv_screen.action_dir) {
         case 0: g_inv_screen.item_state = 5; return;
@@ -343,9 +352,9 @@ static void command_select(uint16_t pressed)
         default: break;                        /* [4] falls to the cancel check */
         }
     }
-    /* CANCEL: virtual 0x8000 @0x8004a648-58 -> SE(4,5) @0x8004a660 + 25c2=6
-     * (slide the cluster back out, return to GRID). */
-    if (pressed & RE15_PAD_BIT_SQUARE) {
+    /* CANCEL: VIRTUAL 0x8000 @0x8004a648-58 <- RAW CROSS (@0x80073dbc[15]) ->
+     * SE(4,5) @0x8004a660 + 25c2=6 (slide the cluster back out, return to GRID). */
+    if (re15_pad_virtual_word(pressed) & 0x8000) {
         se4(5);
         g_inv_screen.item_state = 6;
     }
@@ -441,7 +450,9 @@ static void msg_vm_tick(uint16_t pressed)
         }
         break;
     case 2:                                   /* PAGE-WAIT */
-        if (pressed & (RE15_PAD_BIT_CROSS | RE15_PAD_BIT_SQUARE)) {  /* 76c & 0xc000 */
+        /* VIRTUAL 76c & 0xc000 = either action button (set-equal to raw CROSS|SQUARE
+         * under preset 0 @0x80073dbc[14..15] — routed via the virtual word anyway). */
+        if (re15_pad_virtual_word(pressed) & 0xc000) {
             s_msg_state = 1;
             g_inv_screen.msg_page_off = s_msg_cur;   /* 8528 := 852c (page restart) */
             g_inv_screen.msg_reveal = 0;
@@ -453,7 +464,7 @@ static void msg_vm_tick(uint16_t pressed)
         }
         break;
     case 5:                                   /* PRESS-WAIT */
-        if (pressed & (RE15_PAD_BIT_CROSS | RE15_PAD_BIT_SQUARE)) {
+        if (re15_pad_virtual_word(pressed) & 0xc000) {   /* VIRTUAL 76c & 0xc000 */
             s_msg_active = 0;                 /* 8520 &= 0x7f @0x800286c4 */
             g_inv_screen.msg_reveal = 0;
             g_inv_screen.msg_arrow = 0;
@@ -1042,11 +1053,13 @@ static int exchange_exec(int action)
 static void state7_select(uint16_t pressed, uint16_t held)
 {
     second_cursor_move(held);                    /* jal 0x80048904 @0x8004b384 */
-    if (pressed & RE15_PAD_BIT_SQUARE) {         /* cancel BEFORE confirm @0x8004b398 */
+    if (re15_pad_virtual_word(pressed) & 0x8000) {   /* VIRTUAL cancel BEFORE confirm
+                                                      * @0x8004b398 <- RAW CROSS */
         g_inv_screen.item_state = 6;             /* @0x8004b3f0-f4 (silent) */
         return;
     }
-    if (pressed & RE15_PAD_BIT_CROSS) {          /* @0x8004b3a4 */
+    if (re15_pad_virtual_word(pressed) & 0x4000) {   /* VIRTUAL confirm @0x8004b3a4
+                                                      * <- RAW SQUARE (@0x80073dbc[14]) */
         int action = exchange_match();           /* jal 0x8004e900 @0x8004b3b0 */
         int ret = exchange_exec(action);         /* jal 0x8004e054 @0x8004b3b8 */
         if (ret != 0) {                          /* bne @0x8004b3c4 */
@@ -1320,10 +1333,11 @@ static void map_mode(uint16_t pressed)
         s_c3 = 0;                               /* sb zero,1(s1) @0x8004c1cc */
         return;
     case 1:
-        /* interactive: virtual cancel edge 0x8000 (lw 0x800ac76c @0x8004c1d0-e0) OR
-         * raw L1 edge 0x4 (lhu 0x800ac762 @0x8004c1e8-f8) -> c2++ (@0x8004c200-210).
+        /* interactive: VIRTUAL cancel edge 0x8000 (lw 0x800ac76c @0x8004c1d0-e0)
+         * <- RAW CROSS (@0x80073dbc[15], wave-6 finding 4) OR raw L1 edge 0x4
+         * (lhu 0x800ac762 @0x8004c1e8-f8) -> c2++ (@0x8004c200-210).
          * NO other input: no pan, no room step — a static viewer. */
-        if ((pressed & RE15_PAD_BIT_SQUARE) || (pressed & RE15_PAD_BIT_L1))
+        if ((re15_pad_virtual_word(pressed) & 0x8000) || (pressed & RE15_PAD_BIT_L1))
             g_inv_screen.item_state++;
         return;
     case 2:

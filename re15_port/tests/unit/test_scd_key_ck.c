@@ -3,8 +3,8 @@
  * LAB_80042920: param=pc[1], mask=LE u16 @pc[2]; cond = (mask & DAT_800ac768) != 0 ? param
  * : (param^1); PC+=4. DAT_800ac768 = the per-frame HELD (logical/remapped) pad register, which
  * the port publishes to the VM as g_scd_pad_held = pad_current (game_step_common.c:163) in the
- * exact PSX bit convention (re15_player.h: CROSS 0x4000 / SQUARE 0x8000 / D-pad 0x10-0x80 — the
- * same word the dialog FSM reads as & 0x4000 = CROSS, audit wf_6aad95ad). The op returns the
+ * VIRTUAL (config-remapped) bit convention (wave-6 f4: virt 0x4000 <- raw SQUARE, 0x8000 <- raw
+ * CROSS per @0x80073dbc via FUN_80030444 — the same word the dialog FSM reads). The op returns the
  * dispatcher boolean the enclosing Ifel_ck consumes: CONTINUE(1)=predicate TRUE (run the If body),
  * IF_FALSE(3)=predicate FALSE (pop the block). The no-input case stays param^1 (byte-identical to
  * the prior hard-coded behavior), so only an actually-held mask button changes anything — e.g.
@@ -50,9 +50,9 @@ int main(void)
     printf("=== byte-true Sce_key_ck (0x51): (mask & DAT_800ac768) ? param : param^1 ===\n");
 
     /* param=1: held mask bit -> TRUE (param); not held -> FALSE (param^1 = 0). */
-    CHECK("CROSS(0x4000) held, param=1 -> TRUE",              keyck(1, 0x4000, 0x4000) == R_TRUE);
-    CHECK("CROSS not held, param=1 -> FALSE (no-key=param^1)", keyck(1, 0x4000, 0x0000) == R_FALSE);
-    CHECK("wrong button held (SQUARE) vs CROSS mask -> FALSE", keyck(1, 0x4000, 0x8000) == R_FALSE);
+    CHECK("virt 0x4000 held, param=1 -> TRUE",                keyck(1, 0x4000, 0x4000) == R_TRUE);
+    CHECK("virt 0x4000 not held, param=1 -> FALSE (no-key=param^1)", keyck(1, 0x4000, 0x0000) == R_FALSE);
+    CHECK("wrong virt bit held (0x8000) vs 0x4000 mask -> FALSE", keyck(1, 0x4000, 0x8000) == R_FALSE);
 
     /* param=0 inverts the sense: held -> FALSE (param), not held -> TRUE (param^1 = 1). */
     CHECK("DOWN(0x40) held, param=0 -> FALSE",                keyck(0, 0x0040, 0x0040) == R_FALSE);
@@ -78,7 +78,7 @@ int main(void)
 
     /* ---- 0x52 pressed-edge sibling (op_sce_espr_control, LAB_8004295c) ---- */
     printf("--- 0x52 pressed-edge predicate: (mask & DAT_800ac76c=g_scd_pad_edge) ---\n");
-    CHECK("0x52 CROSS press-edge, param=1 -> TRUE",          esprck(1, 0x4000, 0x4000) == R_TRUE);
+    CHECK("0x52 virt-0x4000 press-edge, param=1 -> TRUE",    esprck(1, 0x4000, 0x4000) == R_TRUE);
     CHECK("0x52 no press-edge, param=1 -> FALSE (param^1)",  esprck(1, 0x4000, 0x0000) == R_FALSE);
     CHECK("0x52 START(0x08) edge, mask 0x00f0 -> FALSE",     esprck(1, 0x00f0, 0x0008) == R_FALSE);
     CHECK("0x52 UP(0x10) edge, mask 0x00f0 -> TRUE",         esprck(1, 0x00f0, 0x0010) == R_TRUE);

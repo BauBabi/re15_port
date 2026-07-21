@@ -38,6 +38,15 @@ typedef struct {
 
 extern re15_engine_state_t g_engine;
 
+/* VIRTUAL (config-remapped) pad word from a physical bit mask — byte-true model of
+ * FUN_80030444 @0x800304b8-e4 with the MZD default preset-0 table @0x80073dbc
+ * (virtual confirm 0x4000 <- RAW SQUARE, cancel 0x8000 <- RAW CROSS, menu-L/R
+ * 0x1000/0x2000 <- RAW d-pad LEFT/RIGHT; wave-6 finding 4). All table entries are
+ * single physical bits, so feeding a press-edge mask returns the exact virtual edge
+ * word (DAT_800ac76c) and feeding the held mask the virtual held word (DAT_800ac768).
+ * Implemented in game_step_common.c. */
+uint16_t re15_pad_virtual_word(uint16_t phys);
+
 /* Subsystem init prototypes */
 void re15_input_init(void);
 void re15_input_tick(void);

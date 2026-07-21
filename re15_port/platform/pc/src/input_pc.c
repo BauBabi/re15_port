@@ -25,10 +25,13 @@
 #define RE15_PAD_LEFT     0x0080
 #define RE15_PAD_L1       0x0400   /* Q  = "L1" — reserved (currently unused) */
 #define RE15_PAD_R1       0x0800   /* E  = "R1" — AIM / raise the weapon (hold; game_step + player aim FSM) */
-#define RE15_PAD_TRIANGLE 0x1000   /* C = the YES/NO dialog cursor toggle (shares the DBG_NEXT bit) */
-#define RE15_PAD_CIRCLE   0x2000   /* V = ditto (shares DBG_PREV); dialog toggle mask = 0x3000       */
-#define RE15_PAD_CROSS    0x4000   /* Shift = "X" — RUN modifier (held) + dialog CONFIRM/fast-forward */
-#define RE15_PAD_SQUARE   0x8000   /* Enter = "Square" — ACTION button */
+#define RE15_PAD_TRIANGLE 0x1000   /* C = Triangle (shares the DBG_NEXT bit) */
+#define RE15_PAD_CIRCLE   0x2000   /* V = Circle (shares DBG_PREV) */
+#define RE15_PAD_CROSS    0x4000   /* Shift = "X" — RUN modifier (held) + menu/dialog CANCEL
+                                    * (virtual 0x8000 <- raw CROSS @0x80073dbc[15], wave-6 f4) */
+#define RE15_PAD_SQUARE   0x8000   /* Enter = "Square" — ACTION + menu/dialog CONFIRM/fast-forward
+                                    * (virtual 0x4000 <- raw SQUARE @0x80073dbc[14]); the YES/NO
+                                    * toggle is d-pad L/R (virtual 0x3000), NOT Triangle/Circle */
 /* Phase 4.5.13-RE2 H5 (2026-05-21): motion-debug keys */
 #define RE15_PAD_SELECT   0x0001   /* Tab    = toggle motion-debug-lock */
 #define RE15_PAD_START    0x0008   /* I      = open the inventory/weapon-select (== engine RE15_PAD_BIT_START) */
@@ -113,8 +116,9 @@ static void script_parse_once(void)
  * the four digital directions (RE1.5 tank controls). It works in EVERY screen because all input
  * flows through g_engine.pad_* — no screen reads the keyboard/controller directly.
  *
- * In-game (RE1.5): X/Square = ACTION, A/Cross = RUN + menu-confirm, B/Y = dialog cancel toggle,
- * RB/R1 = AIM, Start = inventory. SELECT+START held together toggles fullscreen. */
+ * In-game (RE1.5): X/Square = ACTION + menu/dialog CONFIRM, A/Cross = RUN + menu/dialog CANCEL
+ * (virtual remap @0x80073dbc, wave-6 finding 4), d-pad L/R = YES/NO toggle, RB/R1 = AIM,
+ * Start = inventory. SELECT+START held together toggles fullscreen. */
 static SDL_GameController *s_pad = NULL;
 
 static void pad_ensure_open(void)

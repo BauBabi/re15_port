@@ -4,7 +4,8 @@
  * (9f), then opens a MESSAGE BOX — "WILL YOU TAKE THE <item>." (Yes/No) if there's room, or "YOU CAN'T
  * CARRY ANY MORE ITEMS" when full — and grants the item ONLY on Yes (deferred to state 7, @0x8001e068
  * andi 0x1 = the "No" flag). state 6 is PLAYER-GATED (dismiss on input, not a timer). RE'd workflows
- * wq41xdnn2 + wf_9e42f4cb. Pad edges: 0x3000 toggle Yes/No, 0x4000 CROSS confirm, 0xc000 dismiss.
+ * wq41xdnn2 + wf_9e42f4cb. VIRTUAL pad edges (wave-6 f4): 0x3000 (raw d-pad L/R) toggle Yes/No,
+ * 0x4000 (raw SQUARE) confirm, 0xc000 dismiss.
  */
 #include <stdio.h>
 #include <string.h>
@@ -49,7 +50,7 @@ int main(void)
 {
     printf("=== byte-true item-get modal + Yes/No message box (wq41xdnn2 + wf_9e42f4cb) ===\n");
 
-    /* ---- (1) NORMAL: zoom/flip -> take-prompt HOLDS for input -> CROSS(Yes) grants at the end ---- */
+    /* ---- (1) NORMAL: zoom/flip -> take-prompt HOLDS for input -> confirm(Yes) grants at the end ---- */
     {
         re15_inv_init();
         re15_item_modal_start(0x15, 50, 0, -1);       /* H.GUN BULLETS x50 */
@@ -65,19 +66,19 @@ int main(void)
         CHECK("typewriter starts un-revealed", re15_item_modal_reveal() == 0 && !re15_item_modal_prompt_ready());
 
         /* TYPEWRITER: the text types out (2 frames/glyph); the game HOLDS in state 6 the whole time and
-         * accepts no confirm — feeding CROSS during typing must NOT grant. */
+         * accepts no confirm — feeding the confirm bit during typing must NOT grant. */
         int guard = 0;
         while (re15_item_modal_active() && !re15_item_modal_prompt_ready() && guard++ < 400) {
-            re15_item_modal_tick(0x4000);             /* CROSS held during typing -> ignored */
+            re15_item_modal_tick(0x4000);             /* confirm bit during typing -> ignored */
             if (inv_has(0x15)) break;                 /* must never happen mid-typing */
         }
         CHECK("typewriter revealed the prompt while state 6 held", re15_item_modal_prompt_ready()
               && re15_item_modal_state() == 6);
-        CHECK("CROSS was IGNORED during typing (not granted yet)", !inv_has(0x15));
+        CHECK("confirm was IGNORED during typing (not granted yet)", !inv_has(0x15));
         CHECK("reveal reached the full text (>= 30 glyphs)", re15_item_modal_reveal() >= 30);
 
-        re15_item_modal_tick(0x4000);                 /* now the text is up -> CROSS confirms Yes */
-        CHECK("CROSS(Yes) grants + ends the modal", !re15_item_modal_active() && inv_has(0x15));
+        re15_item_modal_tick(0x4000);                 /* text is up -> virtual confirm = Yes */
+        CHECK("confirm(Yes) grants + ends the modal", !re15_item_modal_active() && inv_has(0x15));
     }
 
     /* ---- (2) "No": toggle to No then confirm -> item NOT taken, box shrinks away ---- */
@@ -87,7 +88,7 @@ int main(void)
         run_to_prompt(NULL, NULL);
         CHECK("No-path: take-prompt up", re15_item_modal_prompt(NULL, NULL) == 1);
         run_reveal();                                 /* type the text out first */
-        re15_item_modal_tick(0x1000 | 0x4000);        /* TRIANGLE toggle -> No, CROSS confirm */
+        re15_item_modal_tick(0x1000 | 0x4000);        /* virt menu-L toggle -> No, then confirm */
         int saw_shrink = 0, guard = 0;
         while (re15_item_modal_active() && guard++ < 200) {
             if (re15_item_modal_state() == 8) saw_shrink++;

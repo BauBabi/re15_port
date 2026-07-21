@@ -3359,11 +3359,13 @@ int op_evt_chain(scd_thread_t *t)
  * (NOT a sprite control; RE2's Sce_espr_control is a different opcode): param=pc[1], mask=LE u16
  * @pc[2]; cond = (mask & DAT_800ac76c) != 0 ? param : (param^1); PC+=4. It is instruction-for-
  * instruction identical to Sce_key_ck (0x51 @0x80042920) except the source word is DAT_800ac76c —
- * the PRESSED-EDGE (newly-pressed) sibling of 0x51's held DAT_800ac768. Both are the logical/remapped
- * pad output words the dialog FSM reads (wf_6aad95ad: 768=held, 76c=pressed); the port publishes
- * 76c as g_scd_pad_edge = pad_pressed (game_step_common.c:152). So the mask is applied to the real
- * press-edge. (Earlier this hard-coded the no-press case `param^1`; now byte-true. No-input still
- * yields param^1 — regression-free without live input.) */
+ * the PRESSED-EDGE (newly-pressed) sibling of 0x51's held DAT_800ac768. Both are the VIRTUAL
+ * (config-remapped) words built by FUN_80030444 @0x800304b8-e4 from the preset table
+ * @0x80073dbc — script masks are VIRTUAL-space (wave-6 finding 4: 0x4000 <- raw SQUARE,
+ * 0x8000 <- raw CROSS, 0x1000/0x2000 <- raw d-pad L/R). The port publishes 76c as
+ * g_scd_pad_edge = re15_pad_virtual_word(pad_pressed) (game_step_common.c), so the mask is
+ * applied to the real virtual press-edge. (No-input still yields param^1 — regression-free
+ * without live input.) */
 int op_sce_espr_control(scd_thread_t *t)
 {
     extern uint16_t g_scd_pad_edge;
@@ -3530,11 +3532,12 @@ int op_sce_key_ck(scd_thread_t *t)
     /* byte-true predicate LAB_80042920: param=pc[1], mask=LE u16 @pc[2]; cond = (mask &
      * DAT_800ac768) != 0 ? param : (param^1); PC+=4. The `bne v1,zero` takes the key-pressed
      * branch (delay slot `addu v0,a1` = param); the no-key fall-through is `xori v0,a1,0x1` =
-     * param^1. DAT_800ac768 = the per-frame HELD (logical/remapped) pad register — the SAME word
-     * the dialog FSM reads as `& 0x4000 = CROSS` (wf_6aad95ad), published to the VM as
-     * g_scd_pad_held = pad_current (game_step_common.c:163) in the exact PSX bit convention
-     * (re15_player.h: CROSS 0x4000 / SQUARE 0x8000 / D-pad 0x10-0x80). So the mask is applied
-     * directly. (Earlier this hard-coded the no-key case `param^1` because g_scd_pad_held did not
+     * param^1. DAT_800ac768 = the per-frame HELD VIRTUAL (config-remapped) pad word built by
+     * FUN_80030444 @0x800304b8-e4 from the preset table @0x80073dbc — script masks are
+     * VIRTUAL-space (wave-6 finding 4: 0x4000 <- raw SQUARE, 0x8000 <- raw CROSS, d-pad
+     * virt 0x1/0x2/0x4/0x8 + 0x10/0x20 + menu-L/R 0x1000/0x2000 <- raw d-pad). Published as
+     * g_scd_pad_held = re15_pad_virtual_word(pad_current) (game_step_common.c). So the mask is
+     * applied directly. (Earlier this hard-coded the no-key case `param^1` because g_scd_pad_held did not
      * yet exist; now it is byte-true. No-input still yields param^1 — the common case — so nothing
      * changes unless a mask button is actually held that frame; e.g. ROOM1080's 8 per-frame
      * `Ifel_ck{Sce_key_ck(1,<bit>)}` input-poll predicates now respond to the pad.) */
