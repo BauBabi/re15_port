@@ -68,6 +68,15 @@
                                        * per frame, ALL 3 pools (flags 0x47) — 32 zones (sewers) */
 #define RE15_AOT_TYPE_RAMP       10   /* sce=7 stair-ramp Y driver (LAB_800431cc): Y from the rect
                                        * edge distance -> entity Y. 4 zones, ROOM5060/5061. */
+/* sce=0 NONE (aot_sce_census d7376834): the record is REGISTERED (installers @0x80040580/
+ * 0x80040608/0x800406d0 store pc+2 unconditionally) but INERT — handler table entry [0]
+ * @0x8004305C only RESTORES the work-var latch from the snapshot 0x800bbde8/0x800bbeec
+ * (undoing the scan's pre-dispatch stamp), and the ACTION scan skips sce-0 records outright
+ * (@0x80042f48-50 `lbu v0,0(s0); beq v0,zero,+loop` — no dispatch, press NOT consumed).
+ * 74 shipped fresh sce-0 installs (37 doors, of which 21 are NEVER retyped = permanently
+ * dead); a live Aot_reset (0x46) can RETYPE the slot later (re15_aot_retype). The port's
+ * scan skips this type entirely — geometry/params stay stored for the retype. */
+#define RE15_AOT_TYPE_NONE       11
 
 typedef struct {
     uint8_t  active;      /* 0 = slot free, 1 = active */
@@ -223,9 +232,19 @@ void re15_aot_reset(int slot);
  * `msg_index` = the .msg index shown on action. Used by Aot_reset(slot, sce=1, msg). */
 void re15_aot_set_message(int slot, uint8_t msg_index);
 
-/* Aot_reset sce>=2: re-assert an existing slot as a GENERIC action-event AOT, keeping its
- * event_id + rect (byte-true LAB_80040738 re-type — never clears). See aot_common.c. */
-void re15_aot_reassert_event(int slot);
+/* Aot_reset (0x46) = FULL RETYPE (byte-true LAB_80040738): rec[0] = new sce (@0x80040764),
+ * rec[1] = (old_flags & 0x80) + pc[3] (@0x8004076c-78), payload halfwords +0xC/+0xE/+0x10
+ * (or +0x14.. for a polygon record — old flags bit 0x80, @0x80040774-84) = pc[4..9]
+ * (@0x80040788-a8). rec[2] (the band byte) is NOT written — band preserved. Maps the new
+ * sce + 3 payload halfwords onto the port's typed slot params. See aot_common.c. */
+void re15_aot_retype(int slot, uint8_t sce, uint8_t flags,
+                     uint16_t p0, uint16_t p1, uint16_t p2);
+
+/* Aot_on (0x47) fire-now (byte-true LAB_800407bc): dispatch the slot's sce handler ONCE
+ * immediately — `jalr PTR_8007469c[rec[0]]` @0x8004082c with a0 = the record payload
+ * (@0x80040804/808) — bypassing every geometry/band/action test. All 73 shipped uses
+ * target sce-2 doors (66) or sce-9 items (7) [aot_sce_census d7376834]. */
+void re15_aot_fire_slot(int slot);
 /* Cut_replace(a,b): swap cut ids a<->b in the live CAM_SWITCH AOTs (companion to the
  * RVD-zone swap in op_cut_replace). */
 void re15_aot_cut_replace(uint8_t a, uint8_t b);

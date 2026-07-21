@@ -428,7 +428,19 @@ static void test_item_aot_set(void)
         setup_vm();                             /* room re-entry: AOTs cleared, flags persist... */
         re15_game_flag_set(9, 0x2a, 1);         /* (setup_vm clears flags; re-assert the taken bit) */
         run_one_opcode(bc_tk);
-        TEST_ASSERT_EQ("Item taken-bit: re-install is SUPPRESSED (no respawn)", 0, g_aot.slots[7].active);
+        /* BYTE-TRUE UPDATE (aot_sce_census fix 1): a taken item does NOT stay uninstalled —
+         * the installer stores the record unconditionally (@0x800406d0 `sw v0,0(s0)`) and
+         * RETYPES it to sce 0 in place (@0x800406f4 `sb zero,0(v0)`): registered + INERT
+         * (handler[0] @0x8004305C). The old assert `active == 0` encoded the divergent
+         * "stays uninstalled" model, which broke a later Aot_reset sce=9 re-arm of a taken
+         * item (ROOM1190 sub10). Respawn is still suppressed: type NONE never fires. */
+        TEST_ASSERT_EQ("Item taken-bit: re-install is registered", 1, g_aot.slots[7].active);
+        TEST_ASSERT_EQ("Item taken-bit: re-install is INERT (sce 0 @0x800406f4)",
+                       RE15_AOT_TYPE_NONE, g_aot.slots[7].type);
+        /* the params survive for a script re-arm (Aot_reset sce=9, census rooms 1190/40A0) */
+        re15_aot_retype(7, 9, 0x31, 0x15, 30, 0x2a);
+        TEST_ASSERT_EQ("Item taken-bit: Aot_reset sce=9 re-arms the taken slot",
+                       RE15_AOT_TYPE_ITEM, g_aot.slots[7].type);
     }
 
     TEST_OK("Item_aot_set (0x50)");
@@ -453,6 +465,11 @@ static void test_door_aot_set(void)
     memset(bytecode, 0, sizeof(bytecode));
     bytecode[0]  = 0x3B;
     bytecode[1]  = 0x02;            /* slot = 2 */
+    bytecode[2]  = 0x02;            /* sce = 2 (LIVE door — record[0], the byte the scan
+                                     * dispatches on @0x80042f74; all 607 shipped live
+                                     * doors install sce 2, aot_sce_census). The old
+                                     * bytecode left pc[2]=0, which byte-true is an INERT
+                                     * install — see the sce-0 case below. */
     /* rect_w (pc[10..11], LE) != 0 ist nicht nötig — re15_aot_set_door
      * installiert die AOT unabhängig davon. */
     bytecode[24] = 0x03;           /* target_cut = 3 */
@@ -465,6 +482,18 @@ static void test_door_aot_set(void)
     TEST_ASSERT_EQ("Door_aot_set: Slot 2 aktiv", 1, g_aot.slots[2].active);
     TEST_ASSERT_EQ("Door_aot_set: Typ DOOR", RE15_AOT_TYPE_DOOR, g_aot.slots[2].type);
     TEST_ASSERT_EQ("Door_aot_set: target_cut", 3, g_aot.door_params[2].target_cut);
+
+    /* sce = 0 -> the door installs REGISTERED but INERT (aot_sce_census fix 1: handler[0]
+     * @0x8004305C = latch-restore no-op; action scan skips sce-0 @0x80042f48-50). The
+     * door_params must survive for a later Aot_reset sce=2 arm (16 shipped retypes). */
+    setup_vm();
+    bytecode[1] = 0x04;             /* slot = 4 */
+    bytecode[2] = 0x00;             /* sce = 0 (inert placeholder, 37 shipped) */
+    n = run_one_opcode(bytecode);
+    TEST_ASSERT_EQ("Door_aot_set sce=0: Opcode-Größe = 32", 32, n);
+    TEST_ASSERT_EQ("Door_aot_set sce=0: registriert", 1, g_aot.slots[4].active);
+    TEST_ASSERT_EQ("Door_aot_set sce=0: Typ NONE (inert)", RE15_AOT_TYPE_NONE, g_aot.slots[4].type);
+    TEST_ASSERT_EQ("Door_aot_set sce=0: door_params gespeichert", 3, g_aot.door_params[4].target_cut);
 
     TEST_OK("Door_aot_set (0x3B)");
 }

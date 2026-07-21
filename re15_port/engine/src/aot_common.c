@@ -153,22 +153,97 @@ void re15_aot_set_message(int slot, uint8_t msg_index)
     a->was_inside = 0;
 }
 
-/* Aot_reset sce>=2 (action EVENT AOT): byte-true LAB_80040738 RE-TYPES the slot WITHOUT
- * clearing it — re-assert it as a GENERIC action-event AOT, KEEPING its existing event_id
- * + rect from the prior Aot_set. ROOM1140 sub00 installs the painting examine (slot 5 =
- * GENERIC, event 3); its sub01 runs Aot_reset(5, sce=3) every frame, which must KEEP the
- * painting firing sub03 ("A beautiful painting … Will you push it?"). Our old op_aot_reset
- * cleared every sce!=1 slot → the painting was installed then instantly wiped → no text.
- * The original never clears: sce selects the new behaviour (0=inert SCE_AUTO/disabled,
- * 1=message, >=2=event), the rect is preserved. */
-void re15_aot_reassert_event(int slot)
+/* Aot_reset (0x46) = FULL RETYPE (byte-true LAB_80040738, aot_sce_census fix 2):
+ *   rec[0] = pc[2]                       @0x80040764  `sb v0,0(a1)`   (the new sce)
+ *   rec[1] = (rec[1] & 0x80) + pc[3]     @0x8004076c-78 (flags replaced, polygon bit kept)
+ *   payload +0/+2/+4 = pc[4..9] (3 LE halfwords)  @0x80040788-a8 (`lhu 4/6/8(a2)` →
+ *     `sh 0/2/4(v1)`; v1 = rec+0x14 for a polygon record / rec+0xC else, @0x80040774-84)
+ *   rec[2] (band) is NOT written → band preserved.
+ * The record STAYS registered — the new sce selects the handler (PTR_8007469c). Census
+ * (d7376834): 384 uses = 188 disable (sce 0), 82 message, 67 event rewrites, 32 door
+ * spawn-updates, 8 item re-arms, 5 sce-5, 2 flag writes. Payload layouts per sce from the
+ * handler table (census §2):
+ *   sce 1 MESSAGE @0x80043084: msg u16@+0            → event_id
+ *   sce 2 DOOR    @0x800430BC: the payload IS the door record's next_pos block — the 3
+ *         written halfwords are next_pos_x/y/z (Door_aot_set pc[14..19] = rec+0xC..0x11);
+ *         dest stage/room (+8/+9), yaw (+6), cut (+0xA) lie BEYOND the written window and
+ *         keep their install values (all 32 shipped retypes target 0x3B-installed slots).
+ *   sce 3 EVENT   @0x800430F0: FUN_8003ee3c(cond u16@+0, sub u8@+3) → sub = p1>>8
+ *   sce 4 FLAG    @0x80043120: group u16@+0, bit u16@+2, on u16@+4
+ *   sce 5 marker  @0x8004318C: NOP handler (payload unused) → EXAMINE_WORKVAR
+ *   sce 7 RAMP / 8 WATER: env p0/p1/p2
+ *   sce 9 ITEM    @0x80043328: type u16@+0, amount u16@+2, taken-bit u16@+4
+ * Old port behaviour (sce>=2 → GENERIC keeping OLD params) kept stale payloads — the
+ * census fix this replaces. */
+void re15_aot_retype(int slot, uint8_t sce, uint8_t flags,
+                     uint16_t p0, uint16_t p1, uint16_t p2)
 {
     if (slot < 0 || slot >= RE15_AOT_MAX) return;
     re15_aot_t *a = &g_aot.slots[slot];
-    a->active     = 1;
-    a->type       = RE15_AOT_TYPE_GENERIC;
+    a->active     = 1;                 /* the record exists — sce alone decides liveness */
     a->was_inside = 0;
-    /* event_id + rect kept from the prior Aot_set. */
+    a->sce_flags  = (uint8_t)((a->sce_flags & 0x80) | flags);   /* @0x8004076c-78 */
+    /* a->band untouched — Aot_reset never writes rec[2]. */
+    switch (sce) {
+    case 0:
+        a->type = RE15_AOT_TYPE_NONE;             /* handler[0] @0x8004305C = inert */
+        break;
+    case 1:
+        a->type     = RE15_AOT_TYPE_MESSAGE;
+        a->event_id = (uint8_t)p0;                /* msg u16@+0 (LAB_80043084) */
+        break;
+    case 2:
+        a->type      = RE15_AOT_TYPE_DOOR;
+        a->door_hold = 0;
+        g_aot.door_params[slot].spawn_x = (int16_t)p0;   /* next_pos_x (payload+0) */
+        g_aot.door_params[slot].spawn_y = (int16_t)p1;   /* next_pos_y (payload+2) */
+        g_aot.door_params[slot].spawn_z = (int16_t)p2;   /* next_pos_z (payload+4) */
+        /* dest_stage/dest_room/target_cut/spawn_yaw/band keep their Door_aot_set values
+         * (they live beyond the 3 written halfwords). */
+        break;
+    case 3:
+        /* action-vs-auto per the NEW flags bit 0x10 (the scan's `(flags&0x10)==param_3`
+         * gate, FUN_80042bac): census retype-to-3 = 58× 0x31 action + 9× 0x41 auto. */
+        a->type     = (flags & 0x10) ? RE15_AOT_TYPE_GENERIC : RE15_AOT_TYPE_AUTO_EVENT;
+        a->event_id = (uint8_t)(p1 >> 8);         /* sub u8@payload+3 (@0x80043100) */
+        break;
+    case 4:
+        a->type = RE15_AOT_TYPE_FLAG_CHG;
+        g_aot.flag_params[slot].group = (uint8_t)p0;
+        g_aot.flag_params[slot].bit   = (uint8_t)p1;
+        g_aot.flag_params[slot].on    = p2 ? 1 : 0;
+        break;
+    case 5:
+        a->type     = RE15_AOT_TYPE_EXAMINE_WORKVAR;
+        a->event_id = (uint8_t)slot;              /* handler NOP — effect = the scan latch */
+        break;
+    case 7:
+        a->type = RE15_AOT_TYPE_RAMP;
+        g_aot.env_params[slot].p0 = (int16_t)p0;
+        g_aot.env_params[slot].p1 = (int16_t)p1;
+        g_aot.env_params[slot].p2 = (int16_t)p2;
+        break;
+    case 8:
+        a->type = RE15_AOT_TYPE_WATER;
+        g_aot.env_params[slot].p0 = (int16_t)p0;
+        break;
+    case 9:
+        a->type = RE15_AOT_TYPE_ITEM;
+        g_aot.item_params[slot].item_type = (uint8_t)p0;   /* type u16@+0  */
+        g_aot.item_params[slot].amount    = (uint8_t)p1;   /* amount u16@+2 */
+        g_aot.item_params[slot].taken_bit = (uint8_t)p2;   /* tk-bit u16@+4 */
+        break;
+    case 12:
+    case 13:
+        a->type     = RE15_AOT_TYPE_STAIR;
+        a->event_id = (uint8_t)p0;                /* data0 (down/up end) */
+        break;
+    default:
+        /* sce 6/10/11 = dormant handlers, NEVER shipped as retype targets either
+         * (census sce_counts). Registered-inert is the safe mapping. */
+        a->type = RE15_AOT_TYPE_NONE;
+        break;
+    }
 }
 
 static int abs_i32(int32_t v) { return v < 0 ? -v : v; }
@@ -218,6 +293,207 @@ void re15_aot_settle_at(int32_t player_x, int32_t player_z)
         int inside = (abs_i32(player_x - a->x) <= a->half_w) &&
                      (abs_i32(player_z - a->z) <= a->half_h);
         a->was_inside = (uint8_t)inside;
+    }
+}
+
+/* Shared DOOR fire — the sce-2 handler chain (handler[2] @0x800430BC stores the record
+ * payload into DAT_800ac9a8 + sets transition-state DAT_800b5359=1; the warp FUN_8001d600
+ * then reads next_pos @payload+0/+2/+4, yaw +6, dest stage/room +8/+9, cut +0xA). Called
+ * from BOTH the scan's action fire and Aot_on fire-now (jalr @0x8004082c — the original
+ * fires the SAME handler either way). Returns 1 = door consumed (cross-room load queued
+ * or same-room teleport applied), 0 = skipped (invalid all-zero-spawn guard). */
+static int aot_fire_door(int i)
+{
+    re15_aot_t *a = &g_aot.slots[i];
+    const re15_aot_door_params_t *d = &g_aot.door_params[i];
+    /* Auto-Advance-/Intro-Tür-Erkennung (Null-Rechteck, dest != aktueller Raum) — für
+     * den Spawn-Override unten (gleiches Kriterium wie im Scan). */
+    int is_auto_door = 0;
+    if (a->half_w == 0 && a->half_h == 0) {
+        unsigned dd = (((unsigned)d->dest_stage + 1u) << 12)
+                    | ((unsigned)d->dest_room << 4)
+                    | (g_current_room_id & 0x000Fu);
+        is_auto_door = (dd != g_current_room_id);
+    }
+#ifndef RE15_PLATFORM_PC
+    printf("[AOT] DOOR slot=%d destroom=%u cut=%u spawn=(%d,%d)\n",
+           i, d->dest_room, d->target_cut, d->spawn_x, d->spawn_z);
+#endif
+    /* I3-round guard (2026-05-24): skip if spawn is (0,0,0)
+     * — invalid door, would teleport Leon into the floor.
+     * Was causing Leon's Y to become 0 mid-cinematic. */
+    if (d->spawn_x == 0 && d->spawn_y == 0 && d->spawn_z == 0) {
+#ifdef RE15_PLATFORM_PC
+        fprintf(stderr, "[aot] DOOR slot=%d SKIPPED (spawn=0,0,0 - invalid)\n", i);
+#endif
+        return 0;
+    }
+#ifdef RE15_PLATFORM_PC
+    fprintf(stderr, "[aot] DOOR FIRE slot=%d rect=(%d,%d,hw=%d,hh=%d) target_cut=%u spawn=(%d,%d,%d)\n",
+            i, a->x, a->z, a->half_w, a->half_h,
+            d->target_cut, d->spawn_x, d->spawn_y, d->spawn_z);
+#endif
+    /* Cross-room door (multi-room): if the destination resolves to a
+     * DIFFERENT room, queue a room load instead of an in-room cut+pos
+     * teleport. BYTE-TRUE dest RDT id (globalization 2026-06-13):
+     *   dest_id = ((dest_stage+1) << 12) | (dest_room << 4) | variant
+     * dest_stage (Door_aot_set pc[22]) is 0-BASED (0=STAGE1) — the old
+     * `0x1000|(room<<4)` HARDCODED stage 1 and mis-loaded every CROSS-STAGE
+     * door (e.g. ROOM5130 door1 dest_stage=5 -> ROOM6020, not ROOM1020).
+     * The variant nibble (scenario/player, low bit of the room id) is
+     * carried over from the current room so we stay in the same scenario.
+     * VALIDATED: this formula resolves 563/567 cross-room doors game-wide to
+     * existing rooms (scripts/door_graph.py; the 4 misses are non-door scan
+     * artifacts). Room INDEX 0 is a VALID destination (ROOM_x00): the warp
+     * FUN_8001d600 reads the door struct dest bytes (+8 stage / +9 room) with
+     * NO room==0 special case — the old `dest_room != 0` pre-filter threw
+     * ROOM1050's three doors to ROOM1000 into the in-room-teleport branch
+     * (wrong room + wrong camera + wrong spawn). The same-room-vs-cross-room
+     * decision is carried SOLELY by dest_id != current (a genuine same-room
+     * door resolves dest_id == current and falls through).
+     * [audit wf_559c230f DOOR-DESTROOM-ZERO]
+     * The actual load runs after the scan (re15_room_apply_pending). SHARED
+     * (PC links room_common.c + a file RDT loader → PC doors work too). */
+    {
+        unsigned dest_id = (((unsigned)d->dest_stage + 1u) << 12)
+                         | ((unsigned)d->dest_room << 4)
+                         | (g_current_room_id & 0x000Fu);
+        if (dest_id != g_current_room_id) {
+            int32_t sx = d->spawn_x, sy = d->spawn_y, sz = d->spawn_z;
+            int16_t syaw = d->spawn_yaw_4096;
+            int     scut = (int)d->target_cut;
+            /* INTRO-AUTO-TÜR: ihre Null-Rechteck-„next-pos" trägt KEINE echte
+             * Ziel-Spawn-Position — sie ist der EIGENE Spawn des Quellraums
+             * (z.B. 1240: -26214,0,-3861, Y=0). Den Intro-Raum stattdessen an
+             * SEINEM korrekten Eintritts-Spawn betreten (re15_room_spawns),
+             * sonst landet der Spieler auf der falschen Ebene/Band (Y aus dem
+             * Quellraum). Normale Lauf-Türen behalten ihren echten Spawn. */
+            if (is_auto_door) {
+                for (int ri = 0; ri < RE15_ROOM_COUNT; ri++) {
+                    if (re15_room_ids[ri] == dest_id) {
+                        const re15_room_spawn_t *rs = &re15_room_spawns[ri];
+                        sx = rs->x; sy = rs->y; sz = rs->z;
+                        syaw = rs->yaw; scut = rs->cut;
+                        break;
+                    }
+                }
+            }
+            re15_room_request_change(dest_id, sx, sy, sz, syaw, scut);
+            a->was_inside = 1;
+            return 1;
+        }
+    }
+    g_scd.cam_id              = d->target_cut;
+    g_scd.cam_change_pending  = 1;
+    /* Phase 4.5.9-D: player is g_actors[0]. */
+    g_actors[RE15_ACTOR_SLOT_PLAYER].x     = d->spawn_x;
+    g_actors[RE15_ACTOR_SLOT_PLAYER].y     = d->spawn_y;
+    g_actors[RE15_ACTOR_SLOT_PLAYER].z     = d->spawn_z;
+    g_actors[RE15_ACTOR_SLOT_PLAYER].rot_y = d->spawn_yaw_4096;
+    /* Floor band for the destination from the door spawn Y
+     * (band = -(Y/0x708)). NOTE (2026-06-07): for ROOM1170 every spawn
+     * Y=-7200 -> band 4, so a same-room door keeps band 4. door6 (the
+     * outdoor return) sits inside a band-4 SCA cell which push-out treats
+     * as a wall, so door6 is currently NOT reachable on foot — see
+     * re_object_collision_and_door_return: the outdoor band needs the
+     * same-room re-stamp the original does (open, needs an outdoor
+     * savestate to pin). */
+    re15_collision_set_band(re15_collision_band_from_y(d->spawn_y));
+    /* SELF-room door (dest == current room): re-enter ROOM1170 in the door's
+     * entry SCENARIO (= target_cut). This re-runs main00+sub00 (memset clears
+     * the actor/prop pool → Elliot + heli despawn) and sub00 dispatches sub15
+     * on work_vars[10]=scenario. Byte-true (2026-06-09 RE, generalized from the
+     * old door-0-only special case):
+     *   door 0 (target_cut 11) → sub00 case 11 → sub14 (courtyard dialog);
+     *   door 6 (target_cut 0, courtyard→helipad return) → sub00 case 0 → sub15,
+     *     whose ELSE branch ((4,242) cleared by sub02, (3,125) still set) spawns
+     *     the 7 type-0x21 crows on the now-empty helipad. */
+    if (d->dest_room != 0 &&
+        (0x1000u | ((unsigned)d->dest_room << 4)) == g_current_room_id)
+        g_scd_pending_scenario = (int)d->target_cut;
+    /* BO-round 2026-05-29 (hack audit): removed the fabricated door
+     * SFX {bank2,sample2,vol0x60,pan0x40}. NON-ISSUE / byte-true SILENT
+     * (RE wf_4a2da55b): the door AOT SCE handler FUN_800430bc @0x800430bc
+     * (SCE-table[2] @0x8007469c) only sets transition-state DAT_800b5359=1
+     * + freezes and runs NO sub; the per-AOT dispatcher FUN_80042bac invokes
+     * exactly that one handler (no 2nd dispatch); and the transition FSM
+     * FUN_8001c958 state-1 STOPS sound (FUN_80061fc0(-1)). So there is NO
+     * door event_sub that plays a Se_on — the room1040 Se_on(2,12)/(2,10) are
+     * the ROOM script's own cues, not door-triggered. The door is correctly
+     * silent; the earlier "wire the event_sub" follow-up was a phantom. */
+    /* Phase 4.5.12: door teleport invalidates remaining AOT
+     * checks this frame AND any door zones the player just
+     * landed in — the player just jumped to a new location
+     * and shouldn't immediately trip the next door whose
+     * rect happens to contain that destination. Mark this
+     * door (we just entered it) AND every other door whose
+     * rect contains the new position as was_inside, so they
+     * only re-fire if the player walks out and back in. */
+    a->was_inside = 1;
+    for (int j = 0; j < RE15_AOT_MAX; j++) {
+        if (j == i) continue;
+        re15_aot_t *b = &g_aot.slots[j];
+        if (!b->active) continue;
+        if (b->type != RE15_AOT_TYPE_DOOR) continue;
+        int b_inside = (abs_i32(d->spawn_x - b->x) <= b->half_w) &&
+                       (abs_i32(d->spawn_z - b->z) <= b->half_h);
+        if (b_inside) b->was_inside = 1;
+    }
+    return 1;
+}
+
+/* Aot_on (0x47) fire-now — byte-true LAB_800407bc: resolve the record
+ * (DAT_800ac9b0[pc[1]] @0x800407cc-ec), take its payload (rec+0x14 polygon /
+ * rec+0xC rect, @0x800407f4-808) and `jalr PTR_8007469c[rec[0]]` @0x8004082c —
+ * the handler runs ONCE, with NO geometry/band/pool/action test. Census
+ * (d7376834): all 73 shipped uses target sce-2 DOOR slots (66, e.g. ROOM1240
+ * sub02/03 slot 0 = the intro handoff, ROOM1080 sub07-10) or sce-9 ITEM slots
+ * (7, e.g. ROOM1051 sub03 slot 12 = a scripted grant). Mapping per port type: */
+void re15_aot_fire_slot(int slot)
+{
+    if (slot < 0 || slot >= RE15_AOT_MAX) return;
+    re15_aot_t *a = &g_aot.slots[slot];
+    switch (a->type) {
+    case RE15_AOT_TYPE_DOOR:
+        /* handler[2] @0x800430BC — the same door fire the scan produces. */
+        a->door_hold = 0;
+        (void)aot_fire_door(slot);
+        break;
+    case RE15_AOT_TYPE_ITEM: {
+        /* handler[9] @0x80043328 arms the pickup FSM (latch 0x80072d3b, rec →
+         * 0x800aca30) = the port's item modal. Forced pickup, no geometry. */
+        const re15_aot_item_params_t *p = &g_aot.item_params[slot];
+        re15_item_modal_start(p->item_type, p->amount, p->taken_bit, slot);
+        break;
+    }
+    case RE15_AOT_TYPE_GENERIC:
+    case RE15_AOT_TYPE_AUTO_EVENT:
+        /* handler[3] @0x800430F0: FUN_8003ee3c(cond, sub) — run the sub NOW.
+         * (Not via fired_event_id_this_frame: the scan resets that field at its
+         * start, which would swallow a mid-tick fire.) */
+        (void)scd_event_fire(a->event_id);
+        break;
+    case RE15_AOT_TYPE_MESSAGE: {
+        /* handler[1] @0x80043084: FUN_80027e68(0,0x300,msg,…). */
+        extern void re15_scd_show_message(uint8_t index);
+        re15_scd_show_message(a->event_id);
+        break;
+    }
+    case RE15_AOT_TYPE_FLAG_CHG: {
+        /* handler[4] @0x80043120: bank table 0x80074664, MSB-first bit. */
+        const re15_aot_flag_params_t *fp = &g_aot.flag_params[slot];
+        if (fp->group < RE15_FLAG_ZONES)
+            re15_game_flag_set(fp->group, fp->bit, fp->on);
+        break;
+    }
+    default:
+        /* NONE (handler[0] = latch-restore only), sce-5 marker (handler[5]
+         * @0x8004318C = pure NOP — Aot_on on a marker does NOTHING because the
+         * effect lives in the scan's latch, which Aot_on bypasses), STAIR /
+         * WATER / RAMP (handlers take the pool ENTITY as 2nd arg — Aot_on
+         * passes only the payload, and no shipped Aot_on targets them),
+         * CAM_SWITCH (port-internal RVD type, not an SCD record): no-op. */
+        break;
     }
 }
 
@@ -295,6 +571,14 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
         /* STAIR zones are owned by stair_common.c (action-triggered band
          * transition) — never fire them as a generic event here. */
         if (a->type == RE15_AOT_TYPE_STAIR) continue;
+        /* sce-0 NONE records are REGISTERED but INERT (aot_sce_census fix 1): the
+         * original ACTION scan skips them outright (@0x80042f48-50 `lbu v0,0(s0);
+         * beq v0,zero` -> loop-continue, press NOT consumed) and the AUTO scan's
+         * handler[0] @0x8004305C only restores the work-var latch from the snapshot
+         * 0x800bbde8/eec = net no-op. 21 shipped sce-0 doors are permanently dead
+         * (e.g. ROOM1250 slots 0-2, 1180 slot 4, 5070 slots 1-2) — they must be
+         * dead in the port too. A later Aot_reset can retype the slot live. */
+        if (a->type == RE15_AOT_TYPE_NONE) continue;
         /* INTRO-HANDOFF / AUTO-ADVANCE-TÜR: ein cross-room DOOR-AOT mit
          * degeneriertem (0×0) Rechteck am Player-Spawn ist eine Auto-Advance-Tür
          * (z.B. ROOM1240-Pre-Intro → ROOM1170). Das Original gated Türen NICHT an
@@ -505,6 +789,65 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
              * port's prop struct does not carry. A full port would add both fields + a prop-pool pass here. */
             continue;                                             /* env zones: no fire dispatch */
         }
+        /* sce-5 AUTO markers (aot_sce_census fix 4): a marker whose flags bit 0x10 is
+         * CLEAR runs in the per-frame AUTO scan (FUN_800436a8 param_3=0), which walks the
+         * pools by the record's mask bits (player 1 / enemies 2 / OBJECTS 4 — the object
+         * pool @0x800b3f98 stride 0x94, loop @0x80043768-b4) and performs the flag-selected
+         * geometry test per entity: CENTRE (bit 0x40) hit -> work_vars[1] = slot
+         * (@0x80042ee4 `sh s2-1,0x800b0fd2`), FORWARD-620 (bit 0x20) hit -> work_vars[0] =
+         * slot (@0x80042f3c `sh s2-1,0x800b0fd0`). handler[5] @0x8004318C is a pure NOP —
+         * the latch IS the effect (box-on-zone detectors; scripts poll via Cmp/0x59).
+         * NOTHING clears the work-var latch when the entity leaves (FUN_800436a8 clears
+         * only entity+0xB per frame @0x8004371c/0x80043788) — scripts reset-then-poll.
+         * Per-entity band gate @0x80042cac: entity band (+0x82) == rec[2] unless bit 0x80.
+         * Census: 142 installs 0x44 (centre+objects), 8x 0x21 (fwd+player), 8x 0x41
+         * (centre+player); + 0x42 retypes (centre+enemies). The ACTION variants (0x31 etc.)
+         * fall through to the examine path below. sce_flags==0 = legacy/synthetic install
+         * -> action path (unchanged). */
+        if (a->type == RE15_AOT_TYPE_EXAMINE_WORKVAR &&
+            a->sce_flags != 0 && !(a->sce_flags & 0x10)) {
+            uint8_t pm = (uint8_t)(a->sce_flags & 0x07);
+            for (int es = 0; es < RE15_ACTOR_MAX; es++) {           /* player + enemy pools */
+                if (!g_actors[es].active) continue;
+                if (es == RE15_ACTOR_SLOT_PLAYER) { if (!(pm & 0x01)) continue; }
+                else                              { if (!(pm & 0x02)) continue; }
+                if (!(a->band & 0x80) && g_actors[es].floor != a->band) continue;
+                int32_t ex = g_actors[es].x, ez = g_actors[es].z;
+                if (a->sce_flags & 0x40) {                          /* CENTRE test */
+                    int in2 = a->has_quad
+                            ? re15_aot_point_in_quad(ex, ez, a->xs, a->zs)
+                            : ((abs_i32(ex - a->x) <= a->half_w) &&
+                               (abs_i32(ez - a->z) <= a->half_h));
+                    if (in2) g_scd.work_vars[1] = (int16_t)i;
+                }
+                if (a->sce_flags & 0x20) {                          /* FORWARD-620 test */
+                    int ry = (int)g_actors[es].rot_y;
+                    int32_t c = re15_cos_q12(ry), s = re15_sin_q12(ry);
+                    int32_t fx = ex + (int32_t)((620 * c) >> 12);
+                    int32_t fz = ez - (int32_t)((620 * s) >> 12);
+                    int in2 = a->has_quad
+                            ? re15_aot_point_in_quad(fx, fz, a->xs, a->zs)
+                            : ((abs_i32(fx - a->x) <= a->half_w) &&
+                               (abs_i32(fz - a->z) <= a->half_h));
+                    if (in2) g_scd.work_vars[0] = (int16_t)i;
+                }
+            }
+            if (pm & 0x04) {                                        /* OBJECT pool (props) */
+                for (int ps = 0; ps < (int)g_scd.prop_count; ps++) {
+                    if (!g_scd.props[ps].active) continue;
+                    if (!(a->band & 0x80) && g_scd.props[ps].band != a->band) continue;
+                    if (a->sce_flags & 0x40) {                      /* shipped 0x44 = centre */
+                        int in3 = a->has_quad
+                                ? re15_aot_point_in_quad(g_scd.props[ps].x, g_scd.props[ps].z,
+                                                         a->xs, a->zs)
+                                : ((abs_i32(g_scd.props[ps].x - a->x) <= a->half_w) &&
+                                   (abs_i32(g_scd.props[ps].z - a->z) <= a->half_h));
+                        if (in3) g_scd.work_vars[1] = (int16_t)i;
+                    }
+                }
+            }
+            continue;                                               /* marker: no fire dispatch */
+        }
         int flag_pool_inside = 0;
         if (a->type == RE15_AOT_TYPE_FLAG_CHG && !(a->sce_flags & 0x10)) {
             uint8_t pm = (uint8_t)(a->sce_flags & 0x07);
@@ -609,138 +952,13 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
                                      * button can't re-fire before the room actually changes (the
                                      * original sets 8 and relies on the transition state; resetting
                                      * to 0 is the safe equivalent — the door is gone after the pass) */
-                /* Built-in DOOR behavior: target cut + spawn pos +
-                 * door SFX. Mirrors RE2's FUN_8003a9f4 door-pass code:
-                 * Cut_chg + Pos_set + door-open audio queued. */
-                const re15_aot_door_params_t *d = &g_aot.door_params[i];
-#ifndef RE15_PLATFORM_PC
-                printf("[AOT] DOOR slot=%d destroom=%u cut=%u spawn=(%d,%d) P=(%d,%d)\n",
-                       i, d->dest_room, d->target_cut, d->spawn_x, d->spawn_z,
-                       player_x, player_z);
-#endif
-                /* I3-round guard (2026-05-24): skip if spawn is (0,0,0)
-                 * — invalid door, would teleport Leon into the floor.
-                 * Was causing Leon's Y to become 0 mid-cinematic. */
-                if (d->spawn_x == 0 && d->spawn_y == 0 && d->spawn_z == 0) {
-#ifdef RE15_PLATFORM_PC
-                    fprintf(stderr, "[aot] DOOR slot=%d SKIPPED (spawn=0,0,0 - invalid)\n", i);
-#endif
-                    a->was_inside = inside;
+                /* Fire body extracted to aot_fire_door() — shared with Aot_on
+                 * fire-now (both dispatch the SAME sce-2 handler @0x800430BC). */
+                if (!aot_fire_door(i)) {
+                    a->was_inside = (uint8_t)inside;   /* invalid spawn — keep scanning */
                     break;
                 }
-#ifdef RE15_PLATFORM_PC
-                fprintf(stderr, "[aot] DOOR FIRE slot=%d rect=(%d,%d,hw=%d,hh=%d) target_cut=%u spawn=(%d,%d,%d) player=(%d,%d)\n",
-                        i, a->x, a->z, a->half_w, a->half_h,
-                        d->target_cut, d->spawn_x, d->spawn_y, d->spawn_z,
-                        player_x, player_z);
-#endif
-                /* Cross-room door (multi-room): if the destination resolves to a
-                 * DIFFERENT room, queue a room load instead of an in-room cut+pos
-                 * teleport. BYTE-TRUE dest RDT id (globalization 2026-06-13):
-                 *   dest_id = ((dest_stage+1) << 12) | (dest_room << 4) | variant
-                 * dest_stage (Door_aot_set pc[22]) is 0-BASED (0=STAGE1) — the old
-                 * `0x1000|(room<<4)` HARDCODED stage 1 and mis-loaded every CROSS-STAGE
-                 * door (e.g. ROOM5130 door1 dest_stage=5 -> ROOM6020, not ROOM1020).
-                 * The variant nibble (scenario/player, low bit of the room id) is
-                 * carried over from the current room so we stay in the same scenario.
-                 * VALIDATED: this formula resolves 563/567 cross-room doors game-wide to
-                 * existing rooms (scripts/door_graph.py; the 4 misses are non-door scan
-                 * artifacts). Room INDEX 0 is a VALID destination (ROOM_x00): the warp
-                 * FUN_8001d600 reads the door struct dest bytes (+8 stage / +9 room) with
-                 * NO room==0 special case — the old `dest_room != 0` pre-filter threw
-                 * ROOM1050's three doors to ROOM1000 into the in-room-teleport branch
-                 * (wrong room + wrong camera + wrong spawn). The same-room-vs-cross-room
-                 * decision is carried SOLELY by dest_id != current (a genuine same-room
-                 * door resolves dest_id == current and falls through).
-                 * [audit wf_559c230f DOOR-DESTROOM-ZERO]
-                 * The actual load runs after the scan (re15_room_apply_pending). SHARED
-                 * (PC links room_common.c + a file RDT loader → PC doors work too). */
-                {
-                    unsigned dest_id = (((unsigned)d->dest_stage + 1u) << 12)
-                                     | ((unsigned)d->dest_room << 4)
-                                     | (g_current_room_id & 0x000Fu);
-                    if (dest_id != g_current_room_id) {
-                        int32_t sx = d->spawn_x, sy = d->spawn_y, sz = d->spawn_z;
-                        int16_t syaw = d->spawn_yaw_4096;
-                        int     scut = (int)d->target_cut;
-                        /* INTRO-AUTO-TÜR: ihre Null-Rechteck-„next-pos" trägt KEINE echte
-                         * Ziel-Spawn-Position — sie ist der EIGENE Spawn des Quellraums
-                         * (z.B. 1240: -26214,0,-3861, Y=0). Den Intro-Raum stattdessen an
-                         * SEINEM korrekten Eintritts-Spawn betreten (re15_room_spawns),
-                         * sonst landet der Spieler auf der falschen Ebene/Band (Y aus dem
-                         * Quellraum). Normale Lauf-Türen behalten ihren echten Spawn. */
-                        if (is_auto_door) {
-                            for (int ri = 0; ri < RE15_ROOM_COUNT; ri++) {
-                                if (re15_room_ids[ri] == dest_id) {
-                                    const re15_room_spawn_t *rs = &re15_room_spawns[ri];
-                                    sx = rs->x; sy = rs->y; sz = rs->z;
-                                    syaw = rs->yaw; scut = rs->cut;
-                                    break;
-                                }
-                            }
-                        }
-                        re15_room_request_change(dest_id, sx, sy, sz, syaw, scut);
-                        a->was_inside = 1;
-                        return;
-                    }
-                }
-                g_scd.cam_id              = d->target_cut;
-                g_scd.cam_change_pending  = 1;
-                /* Phase 4.5.9-D: player is g_actors[0]. */
-                g_actors[RE15_ACTOR_SLOT_PLAYER].x     = d->spawn_x;
-                g_actors[RE15_ACTOR_SLOT_PLAYER].y     = d->spawn_y;
-                g_actors[RE15_ACTOR_SLOT_PLAYER].z     = d->spawn_z;
-                g_actors[RE15_ACTOR_SLOT_PLAYER].rot_y = d->spawn_yaw_4096;
-                /* Floor band for the destination from the door spawn Y
-                 * (band = -(Y/0x708)). NOTE (2026-06-07): for ROOM1170 every spawn
-                 * Y=-7200 -> band 4, so a same-room door keeps band 4. door6 (the
-                 * outdoor return) sits inside a band-4 SCA cell which push-out treats
-                 * as a wall, so door6 is currently NOT reachable on foot — see
-                 * re_object_collision_and_door_return: the outdoor band needs the
-                 * same-room re-stamp the original does (open, needs an outdoor
-                 * savestate to pin). */
-                re15_collision_set_band(re15_collision_band_from_y(d->spawn_y));
-                /* SELF-room door (dest == current room): re-enter ROOM1170 in the door's
-                 * entry SCENARIO (= target_cut). This re-runs main00+sub00 (memset clears
-                 * the actor/prop pool → Elliot + heli despawn) and sub00 dispatches sub15
-                 * on work_vars[10]=scenario. Byte-true (2026-06-09 RE, generalized from the
-                 * old door-0-only special case):
-                 *   door 0 (target_cut 11) → sub00 case 11 → sub14 (courtyard dialog);
-                 *   door 6 (target_cut 0, courtyard→helipad return) → sub00 case 0 → sub15,
-                 *     whose ELSE branch ((4,242) cleared by sub02, (3,125) still set) spawns
-                 *     the 7 type-0x21 crows on the now-empty helipad. */
-                if (d->dest_room != 0 &&
-                    (0x1000u | ((unsigned)d->dest_room << 4)) == g_current_room_id)
-                    g_scd_pending_scenario = (int)d->target_cut;
-                /* BO-round 2026-05-29 (hack audit): removed the fabricated door
-                 * SFX {bank2,sample2,vol0x60,pan0x40}. NON-ISSUE / byte-true SILENT
-                 * (RE wf_4a2da55b): the door AOT SCE handler FUN_800430bc @0x800430bc
-                 * (SCE-table[2] @0x8007469c) only sets transition-state DAT_800b5359=1
-                 * + freezes and runs NO sub; the per-AOT dispatcher FUN_80042bac invokes
-                 * exactly that one handler (no 2nd dispatch); and the transition FSM
-                 * FUN_8001c958 state-1 STOPS sound (FUN_80061fc0(-1)). So there is NO
-                 * door event_sub that plays a Se_on — the room1040 Se_on(2,12)/(2,10) are
-                 * the ROOM script's own cues, not door-triggered. The door is correctly
-                 * silent; the earlier "wire the event_sub" follow-up was a phantom. */
-                /* Phase 4.5.12: door teleport invalidates remaining AOT
-                 * checks this frame AND any door zones the player just
-                 * landed in — the player just jumped to a new location
-                 * and shouldn't immediately trip the next door whose
-                 * rect happens to contain that destination. Mark this
-                 * door (we just entered it) AND every other door whose
-                 * rect contains the new position as was_inside, so they
-                 * only re-fire if the player walks out and back in. */
-                a->was_inside = 1;
-                for (int j = 0; j < RE15_AOT_MAX; j++) {
-                    if (j == i) continue;
-                    re15_aot_t *b = &g_aot.slots[j];
-                    if (!b->active) continue;
-                    if (b->type != RE15_AOT_TYPE_DOOR) continue;
-                    int b_inside = (abs_i32(d->spawn_x - b->x) <= b->half_w) &&
-                                   (abs_i32(d->spawn_z - b->z) <= b->half_h);
-                    if (b_inside) b->was_inside = 1;
-                }
-                return;
+                return;   /* door consumed — stop the scan this frame */
             }
             case RE15_AOT_TYPE_ITEM: {
                 /* Byte-true item-pickup PRESENTATION (arming LAB_80043328 @0x80043328 -> the FSM
@@ -783,10 +1001,12 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
                 break;
             }
             case RE15_AOT_TYPE_EXAMINE_WORKVAR:
-                /* Action-examine of an ev==0 AOT: write this AOT's index (stored in event_id =
-                 * its slot) into work_vars[0] + flag a one-shot sub01 re-poll (scd_vm_tick).
-                 * Fires NO sub directly. ROOM1150 slot-2 → work_vars[0]=2 → sub01 → sub03. */
-                g_scd.work_vars[0] = (int16_t)a->event_id;
+                /* ACTION sce-5 marker/examine (handler[5] @0x8004318C = NOP): the effect is
+                 * the scan's pre-dispatch latch alone — work_vars[0] (forward hit @0x80042f3c)
+                 * or work_vars[1] (centre hit @0x80042ee4) = slot, already written by the
+                 * generic stamp above. Fires NO sub directly; the one-shot sub01 re-poll is
+                 * the port's stand-in for the room's work-var poll.
+                 * ROOM1150 slot-2 (flags 0x31 = forward) → work_vars[0]=2 → sub01 → sub03. */
                 g_scd.examine_poll_pending = 1;
                 break;
             default:

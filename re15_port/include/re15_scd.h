@@ -308,6 +308,11 @@ typedef struct {
                                 * branches: ==3 → FUN_8003e64c sprite-grid, !=3 →
                                 * mesh + quad cull). ALL room1170 props = type 0.
                                 * (NOT pc[4] — that is the +0x82 BAND field.) */
+        uint8_t  band;         /* the prop's FLOOR band = Obj_model_set pc[4] → pool+0x82
+                                * (byte-true LAB_80040914 @0x8004096c-74 `lbu v0,4(a2);
+                                * sb v0,130(a1)`). Read by the AOT scan's per-entity band
+                                * gate (@0x80042cac) in the OBJECT-pool pass (the sce-5
+                                * box-on-zone markers, aot_sce_census fix 4). */
         int32_t  x, y, z;
         /* Full Euler rotation. ROOM1170 sub15 Obj_model_set 0x04 (tail
          * rotor) mounts the rotor with rot_x=1024 (Q12 90°) so its local

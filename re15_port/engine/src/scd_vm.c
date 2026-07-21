@@ -2101,7 +2101,27 @@ static int op_aot_set(scd_thread_t *t)
          * sub_scd[eventId]. AOTs with eventId==0xFF (no event, e.g. room1170 slot-5) keep
          * the prior type/act behaviour untouched. */
         uint8_t ev = long_form ? t->pc[25] : t->pc[17];   /* eventId (+8 in the long form) */
-        if (type == 1) {
+        if (type == 0) {
+            /* sce=0 INERT install (aot_sce_census fix 1): the record is registered
+             * (installer stores pc+2 unconditionally @0x80040580) but handler[0]
+             * @0x8004305C is a latch-restore no-op and the ACTION scan skips sce-0
+             * records (@0x80042f48-50). 35 shipped 0x2C installs — most carry a
+             * PRE-LOADED event payload {0xFF,0x18,sub} (e.g. ROOM1150 slot 1 sub04,
+             * ROOM2030 slots 4-7) waiting for an Aot_reset retype to arm them; the old
+             * ev=pc[17] heuristic ARMED them at install (they fired their subs live).
+             * Register with geometry + band so a later re15_aot_retype can arm. */
+            re15_aot_set(slot, RE15_AOT_TYPE_NONE, 0, cx, cz, hw, hh);
+        } else if (type == 5) {
+            /* sce=5 marker/examine (aot_sce_census fix 4): handler[5] @0x8004318C is a
+             * pure NOP — the effect is the SCAN's work-var latch (centre -> work_vars[1]
+             * @0x80042ee4, forward -> work_vars[0] @0x80042f3c; value = slot). Route by
+             * sce, NOT by the ev byte: the payload is unused by the handler, and the 8
+             * shipped ROOM1190/1191 installs carry payload 0xFF80 @+2 (pc[17]=0xFF) which
+             * the old ev-heuristic mis-installed as port-enum 5 = MESSAGE (garbage msg 0);
+             * the 142 auto 0x44 installs were mis-typed as player-action examines. The
+             * scan branches action (flags bit 0x10) vs per-frame AUTO pool latch. */
+            re15_aot_set(slot, RE15_AOT_TYPE_EXAMINE_WORKVAR, (uint8_t)slot, cx, cz, hw, hh);
+        } else if (type == 1) {
             /* sce=1 MESSAGE (byte-true LAB_80043084: FUN_80027e68(0,0x300, u16@0 = room-msg
              * index, u16@2<<16 = pause bits); 427 shipped zones, ALL flags 0x31 action+forward).
              * These carry pause 0xFFFF at pc[16..17], so the old ev-heuristic (ev==0xFF) fell
@@ -2189,30 +2209,25 @@ static int op_aot_set(scd_thread_t *t)
 
 static int op_aot_reset(scd_thread_t *t)
 {
-    /* Aot_reset(slot, sce, sat, d0_lo, d0_hi, d2_lo, d2_hi, d4_lo, d4_hi) — 10 bytes.
-     * Byte-true (LAB_80040738): it RE-TYPES the existing AOT slot by its `sce` byte and
-     * overwrites the slot's SCE-data — it NEVER blanket-clears (the rect is preserved). The
-     * `sce` value selects the new behaviour:
-     *   sce==0 → inert SCE_AUTO (no action trigger) = effectively DISABLED. ROOM1130 sub02
-     *            ends the roller-door switch with Aot_reset(4, 0, …) so it can't re-fire.
-     *   sce==1 → EXAMINE/MESSAGE AOT: keep the rect, show .msg index = pc[4..5] LE on action
-     *            (no room change). ROOM1130 sub01 = Aot_reset(3, 1, 0x31, 1, 0, …) → the
-     *            back-door (→1170) becomes a permanent "It's not necessary to go back".
-     *   sce>=2 → action EVENT AOT: re-assert as GENERIC, KEEP the slot's existing event_id +
-     *            rect from the prior Aot_set. ROOM1140 sub01 = Aot_reset(5, 3, …) keeps the
-     *            painting examine (sub00 installed slot 5 = event 3) firing sub03
-     *            ("Will you push it?"). Our old code wrongly cleared every sce!=1 here, so
-     *            the painting was installed by sub00 then instantly wiped by sub01 → no text. */
-    int     slot = (int)t->pc[1];
-    uint8_t sce  = t->pc[2];
-    if (sce == 1) {
-        uint16_t msg = (uint16_t)(t->pc[4] | (t->pc[5] << 8));
-        re15_aot_set_message(slot, (uint8_t)msg);
-    } else if (sce == 0) {
-        re15_aot_reset(slot);
-    } else {
-        re15_aot_reassert_event(slot);
-    }
+    /* Aot_reset(slot, sce, flags, p0_lo, p0_hi, p1_lo, p1_hi, p2_lo, p2_hi, _) — 10 bytes
+     * (@0x800407ac `addiu v0,a2,10`). FULL RETYPE, byte-true LAB_80040738 (aot_sce_census
+     * fix 2): rec[0]=pc[2] (@0x80040764), rec[1]=(rec[1]&0x80)+pc[3] (@0x8004076c-78),
+     * payload halfwords +0/+2/+4 = pc[4..9] (@0x80040788-a8). It NEVER clears the record —
+     * the new sce selects the handler AND the 3 payload halfwords replace the old params:
+     *   sce 0 → inert (ROOM1130 sub02 Aot_reset(4,0,…) kills the roller switch; 188 uses)
+     *   sce 1 → MESSAGE msg=p0 (ROOM1130 sub01 Aot_reset(3,1,0x31,{1,0xFFFF,0}); 82 uses)
+     *   sce 2 → DOOR re-arm + next_pos_x/y/z = p0/p1/p2 (32 uses, e.g. ROOM1140 sub02
+     *           slot 1 arms the sce-0 door with spawn (-21937,0,-25713))
+     *   sce 3 → EVENT sub = p1>>8 (payload byte +3; 67 uses, e.g. ROOM1140 sub01
+     *           Aot_reset(5,3,0x31,{0xFF,0x1805,0}) re-points the painting to sub05)
+     *   sce 9 → ITEM re-arm {type=p0, amount=p1, tk_bit=p2} (8 uses, rooms 1190/40A0)
+     *   sce 4/5/7/8 → flag / marker / ramp / water params.
+     * The old port code kept the OLD params for every sce>=2 (re15_aot_reassert_event) —
+     * the census divergence this replaces. */
+    re15_aot_retype((int)t->pc[1], t->pc[2], t->pc[3],
+                    (uint16_t)(t->pc[4] | (t->pc[5] << 8)),
+                    (uint16_t)(t->pc[6] | (t->pc[7] << 8)),
+                    (uint16_t)(t->pc[8] | (t->pc[9] << 8)));
     t->pc += 10;
     return 1;
 }
@@ -2860,6 +2875,16 @@ static int op_door_aot_set(scd_thread_t *t)
         /* pc[4] = the door object's BAND (obj[0x82]); the original gates the door
          * interaction on player_band == obj[0x82] (FUN_8002bd44 @0x8002bf38). */
         g_aot.door_params[slot].band       = t->pc[4];
+        g_aot.slots[slot].sce_flags        = t->pc[3];  /* record[1] — bit 0x80 preserved
+                                                         * across Aot_reset (@0x8004076c) */
+        /* sce = pc[2] (record[0], the byte the scan dispatches on @0x80042f74/9c).
+         * sce==0 -> the door installs REGISTERED but INERT (aot_sce_census fix 1:
+         * 37 shipped sce-0 doors; 16 are armed later by Aot_reset sce=2, 21 are
+         * permanently dead — e.g. ROOM1250 slots 0-2, 1180 slot 4, 5070 slots 1-2).
+         * door_params stay stored so the retype arms a working door. The old code
+         * never read pc[2] and armed every install. */
+        if (t->pc[2] == 0)
+            g_aot.slots[slot].type = RE15_AOT_TYPE_NONE;
     }
     /* PC-Vorschub konditional pc[3]&0x80: 4P-Tür (40 B) vs Standard (32 B). Byte-true:
      * LAB_800405bc @0x80040618 `lbu v0,0x3(v1)`; @0x80040620 `andi 0x80`; @0x80040624 `beq`
@@ -2921,17 +2946,27 @@ static int op_item_aot_set(scd_thread_t *t)
     int32_t cz = (int32_t)rect_z + (int32_t)rect_d / 2;
     int32_t hw = (int32_t)(rect_w < 0 ? -rect_w : rect_w) / 2;
     int32_t hh = (int32_t)(rect_d < 0 ? -rect_d : rect_d) / 2;
-    if (tk_bit && re15_game_flag_get(9, tk_bit)) {
-        if (tk_prop < g_scd.prop_count)
-            g_scd.props[tk_prop].active = 0;               /* hide the pickup prop */
-        /* AOT stays uninstalled (record type=0 in the original) */
-    } else {
-        re15_aot_set_item_tk((int)slot, cx, cz, hw, hh, item_t, amount, tk_bit);
-        if (slot < RE15_AOT_MAX) {
-            g_aot.slots[slot].sce_flags = t->pc[3];   /* 0x31 forward / 0x51 centre (all shipped
-                                                       * items are ACTION-gated — wf_f536e1ee #5) */
-            g_aot.slots[slot].band      = t->pc[4];
+    /* Register ALWAYS (the installer stores rec=pc+2 unconditionally @0x800406d0) with
+     * geometry + item params, then decide liveness by the record's sce byte:
+     *   - sce = pc[2] == 0 -> INERT install (aot_sce_census fix 1: 2 shipped, ROOM1190/
+     *     1191 sub13 slot 5 {0x37,1,tk 136} — armed later by sub10's Aot_reset sce=9).
+     *   - taken-bit set -> the installer RETYPES the record to sce 0 in place
+     *     (@0x800406f4 `sb zero,0(v0)`) + hides the prop (pool flag |= 0x80000000
+     *     @0x800406f8-718). The record STAYS registered/retypeable — the old port code
+     *     left the slot uninstalled, which broke a later re-arm of a taken item. */
+    re15_aot_set_item_tk((int)slot, cx, cz, hw, hh, item_t, amount, tk_bit);
+    if (slot < RE15_AOT_MAX) {
+        g_aot.slots[slot].sce_flags = t->pc[3];   /* 0x31 forward / 0x51 centre (all shipped
+                                                   * items are ACTION-gated — wf_f536e1ee #5) */
+        g_aot.slots[slot].band      = t->pc[4];
+        int inert = (t->pc[2] == 0);
+        if (tk_bit && re15_game_flag_get(9, tk_bit)) {
+            if (tk_prop < g_scd.prop_count)
+                g_scd.props[tk_prop].active = 0;           /* hide the pickup prop */
+            inert = 1;                                     /* @0x800406f4 rec[0]=0 */
         }
+        if (inert)
+            g_aot.slots[slot].type = RE15_AOT_TYPE_NONE;
     }
     /* PC-Vorschub konditional pc[3]&0x80: 30 vs 22. Byte-true: LAB_80040644 @0x8004065c
      * `lbu v0,0x3(a2)`; @0x80040664 `andi 0x80`; @0x80040668 `beq` -> +0x1e(30)/+0x16(22)
@@ -2999,6 +3034,11 @@ static int op_obj_model_set(scd_thread_t *t)
         g_scd.props[i].active = 1;
         g_scd.props[i].obj_id = obj_id;
         g_scd.props[i].obj_type = obj_type;
+        g_scd.props[i].band   = t->pc[4];   /* FLOOR band -> pool+0x82 (byte-true
+                                             * LAB_80040914 @0x8004096c-74 `lbu v0,4(a2);
+                                             * sb v0,130(a1)`) — read by the AOT scan's
+                                             * per-entity band gate in the OBJECT-pool
+                                             * pass (sce-5 markers, @0x80042cac) */
         g_scd.props[i].x = (int32_t)px;
         g_scd.props[i].y = (int32_t)py;
         g_scd.props[i].z = (int32_t)pz;
@@ -3063,12 +3103,21 @@ static int op_unknown(scd_thread_t *t)
  * for the cinematic flow to progress without missing visible behavior.
  *=========================================================================*/
 
-/* Aot_on (0x47) — 2 bytes [op, slot]. Activate AOT trigger. */
+/* Aot_on (0x47) — 2 bytes [op, slot]. FIRE-NOW, byte-true LAB_800407bc (aot_sce_census
+ * fix 3): resolve the record (DAT_800ac9b0[pc[1]] @0x800407cc-ec) and `jalr
+ * PTR_8007469c[rec[0]]` @0x8004082c with a0 = the record payload (@0x80040804/808) — the
+ * slot's sce handler runs ONCE immediately, bypassing every geometry/band/action test.
+ * NOT an "activate" opcode (the old port behaviour, which only set active=1 and left the
+ * fire to the geometry scan). 73 shipped uses, all on sce-2 doors (66 — incl. ROOM1240
+ * sub02/sub03 slot 0: `47 00` is the LAST opcode before Evt_end = the intro→ROOM1170
+ * handoff; ROOM1080 sub07-10; ROOM4020…) or sce-9 items (7 — scripted grants, e.g.
+ * ROOM1051 sub03 slot 12). Dispatch per port type in re15_aot_fire_slot(). */
 int op_aot_on(scd_thread_t *t)
 {
     uint8_t slot = t->pc[1];
     if (slot < RE15_AOT_MAX) {
         g_aot.slots[slot].active = 1;
+        re15_aot_fire_slot((int)slot);
     }
     t->pc += 2;
     return 1;
