@@ -4150,6 +4150,17 @@ static void re15_npc_ai_tick(int slot)
 
     case 4:   /* shared executor 0x80050be8: the sub-VM (@0x80076ca0, dispatch on +0x5) — Wave-2 phase 1:
                * idle-pose (subs 0-3) + turn/look-at (sub 9). Walk (4/5/7/8) + watchers = later phases. */
+        /* Byte-true gate (NPC root FUN_8011c654 @0x8011c654 line 19): the original skips its +0x4
+         * state dispatch while the engine AI-freeze DAT_800aca40 & 0x20000000 is set — i.e. while a
+         * scripted cutscene owns the actor, so the SCD alone drives its animation. In ROOM1170's
+         * intro (sub02) Elliot is an SCD work-entity walked by Plc_dest; the byte-true walker
+         * re15_actor_step_walk owns his clip (RUN 100 / arrive 105). walk_active is the port's signal
+         * that the Plc_dest walker owns this actor — yield to it, else this stub executor's
+         * event-reach sub (re15_npc_sub_event_reach) overwrites the walk clip with idle 1/2 EVERY
+         * frame while the walker advances his position: he glides across the helipad in an idle pose
+         * (the "float"). Stationary cutscene NPCs (Irons ROOM11B0 etc.) have walk_active==0 so they
+         * still run the executor (idle clip 2) — this gate only yields during a scripted walk. */
+        if (e->walk_active) break;
         re15_npc_executor(e);
         break;
 
