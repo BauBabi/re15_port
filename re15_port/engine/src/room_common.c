@@ -49,6 +49,8 @@ int re15_room_apply_pending(const re15_room_apply_ctx_t *c)
     g_room_change.pending = 0;
     re15_savepoint_reset();   /* new room: drop any stale save pending/latched-cut from the old room */
     re15_itembox_reset();     /* likewise the box-screen pending (save-phone precedent) */
+    g_scd_self_reenter_fired = 0;  /* new room: re-arm the intro self-reenter latch (a genuine
+                                    * later re-entry must be able to run its own door scenario) */
 
     /* (1) ARCH: load the destination ROOM####.RDT (CD on PSX / file on PC) into
      * g_room_rdt. Abort the transition if it fails (player stays put). */

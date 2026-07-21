@@ -45,6 +45,15 @@ scd_vm_t g_scd;
  * loop (scd_room_reenter + clear). -1 = none. */
 int g_scd_pending_scenario = -1;
 
+/* Latched to 1 by the game-step self-room scenario consume (the BYTE-TRUE intro handoff:
+ * ROOM1170 sub11 @file 0x16d0 Aot_on(3) → door 3 → this reenter → sub15 Ck(4,242,1) → Elliot).
+ * The intro must fire EXACTLY ONE self-reenter (the original's single Aot_on(3)); the PC-side
+ * hand-deferred sub00-spawn fallback (main.c) checks this so it can no longer fire a redundant
+ * SECOND reenter — which, because sub02 @file 0x142c Set(4,242)=0 has cleared the Elliot gate by
+ * then, would take sub15's ELSE branch @file 0x1886 and spawn the 7 crows (type 0x21) mid-intro.
+ * Reset to 0 on every room entry (re15_room_apply_pending) so a genuine later re-entry re-arms. */
+int g_scd_self_reenter_fired = 0;
+
 /* Forward-declare opcode handlers */
 typedef int (*scd_op_fn_t)(scd_thread_t *t);
 

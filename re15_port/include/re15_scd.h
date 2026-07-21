@@ -414,6 +414,10 @@ void           scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t
  * sub00 cutscene case has fired. -1 = none; else the scenario (e.g. 11 = outdoor →
  * sub14). The main loop performs the scd_room_reenter and clears it. */
 extern int     g_scd_pending_scenario;
+/* Latched when the game-step self-room scenario reenter has fired (the byte-true intro
+ * door-3 handoff). The PC hand-deferred sub00-spawn fallback checks it so it can't fire a
+ * redundant second reenter (which would spawn the intro crows). Reset on room entry. */
+extern int     g_scd_self_reenter_fired;
 
 /* SCD opcode constants (subset for Phase 4.4) */
 #define SCD_OP_NOP        0x00

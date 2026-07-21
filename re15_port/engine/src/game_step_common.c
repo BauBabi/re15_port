@@ -468,6 +468,11 @@ void re15_game_step(const re15_game_ctx_t *c)
         uint8_t entry_cut = g_scd.cam_id;
         g_scd_pending_scenario = -1;
         scd_room_reenter(c->rdt, pl->x, pl->z, sc);
+        /* Latch the byte-true intro handoff (ROOM1170 sub11 Aot_on(3) → door 3 → this reenter).
+         * The intro's single Aot_on(3) is the ONLY reenter the original performs; the PC
+         * hand-deferred fallback (main.c) checks this so it can no longer fire a redundant
+         * second reenter that would spawn the intro crows. */
+        g_scd_self_reenter_fired = 1;
         /* Door entry = GAMEPLAY → enable the RVD/CAM_SWITCH auto-camera so it FOLLOWS
          * the player between the section's camera cuts. scd_room_reenter's memset
          * cleared cut_auto_enabled, and a gameplay scenario (e.g. door 6 → sub15 crows)

@@ -2691,7 +2691,14 @@ re_title:;
          * sub11's flags persisting → main00 Ck(3,125,1)→BGM, sub00→sub15 Ck(4,242,1) →
          * Evt_exec(0x1802) helipad cinematic. (Replaces the hand-deferred sub00 spawn.)
          * Start the BGM bank first, then re-enter. Frame cap = safety. */
-        if (s_preintro && !s_sub00_spawned &&
+        /* FALLBACK ONLY: the byte-true intro handoff is sub11's Aot_on(3) → door 3 → the
+         * game-step self-room scenario reenter (which sets g_scd_self_reenter_fired). That is
+         * the SINGLE reenter the original performs. This hand-deferred block predates that path
+         * and must NOT fire a redundant SECOND reenter — after sub02 cleared (4,242), a second
+         * sub00→sub15 takes the ELSE branch and spawns the 7 intro crows (measured F900). So gate
+         * it on the latch: fire only if the faithful door-3 reenter has NOT already happened
+         * (pathological "door 3 never fired" safety net; frame cap kept as a last resort). */
+        if (s_preintro && !s_sub00_spawned && !g_scd_self_reenter_fired &&
             (!g_scd.threads[s_sub11_slot].active ||
              g_engine.frame_count >= (uint32_t)FRAME_AT_60(1800)) &&
             rdt_ok) {
@@ -2700,7 +2707,7 @@ re_title:;
             scd_room_reenter(&rdt,
                              g_actors[RE15_ACTOR_SLOT_PLAYER].x,
                              g_actors[RE15_ACTOR_SLOT_PLAYER].z, 0);  /* helipad scenario */
-            fprintf(stderr, "[scd] door-3 self-reentry: re-ran main00+sub00 at frame %d\n",
+            fprintf(stderr, "[scd] door-3 self-reentry FALLBACK: re-ran main00+sub00 at frame %d\n",
                     g_engine.frame_count);
         }
 
