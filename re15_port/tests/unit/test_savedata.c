@@ -17,6 +17,7 @@
 #include "re15_gameflow.h"
 #include "re15_collision.h"   /* band re-derive on restore */
 #include "re15_damage.h"      /* equipped weapon id round-trip */
+#include "re15_itembox.h"     /* v4: ITEM BOX contents in the save block */
 
 int main(void)
 {
@@ -38,6 +39,8 @@ int main(void)
     memset(&g_game, 0, sizeof g_game);
     re15_game_flag_set(3, 17, 1);
     re15_game_flag_set(5, 200, 1);
+    re15_itembox_init();                                 /* v4: box contents */
+    g_itembox.pages[1].slots[3].id = 0x24; g_itembox.pages[1].slots[3].qty = 2;
     int want_band = re15_collision_band_from_y(-3600);   /* = 2 */
 
     /* 2. capture + save to slot 2 */
@@ -52,6 +55,7 @@ int main(void)
     g_current_room_id = 0; g_gameflow.character = 0;
     memset(&g_inv, 0, sizeof g_inv);
     memset(&g_game, 0, sizeof g_game);
+    re15_itembox_init();                     /* clobber the box too */
     re15_player_set_equipped_weapon(0x01);   /* knife (the stale default a bad restore leaves) */
     re15_collision_set_band(7);              /* wrong band */
 
@@ -78,7 +82,10 @@ int main(void)
         fprintf(stderr, "FAIL(equip-slot): got %d\n", re15_inv_equipped_slot()); fail = 1; }
     if (re15_collision_debug_band() != want_band) {
         fprintf(stderr, "FAIL(band): got %d, want %d\n", re15_collision_debug_band(), want_band); fail = 1; }
-    if (!fail) printf("  round-trip: player/room/char/inv/flags/weapon/band all restored\n");
+    if (g_itembox.pages[1].slots[3].id != 0x24 || g_itembox.pages[1].slots[3].qty != 2) {
+        fprintf(stderr, "FAIL(box): v4 ITEM BOX not restored (got %02x q%d)\n",
+                g_itembox.pages[1].slots[3].id, g_itembox.pages[1].slots[3].qty); fail = 1; }
+    if (!fail) printf("  round-trip: player/room/char/inv/flags/weapon/band/box all restored\n");
 
     /* 6. empty slot -> -1 */
     if (re15_memcard_load(mcr, 0, &ld) != -1) { fprintf(stderr, "FAIL(empty): slot 0 should be empty\n"); fail = 1; }

@@ -454,6 +454,22 @@ target_compile_definitions(test_room1150_itembox PRIVATE
 add_test(NAME unit_room1150_itembox COMMAND test_room1150_itembox)
 set_tests_properties(unit_room1150_itembox PROPERTIES TIMEOUT 30)
 
+# --- ITEM BOX (RE1.5-hybrid): RE2 FUN_800703b8 transfer engine, table-driven over the
+#     14-quirk catalog (shots/itembox_spec.md §3/§7) + savedata v4 box round-trip/upgrade ---
+add_executable(test_itembox_transfer test_itembox_transfer.c)
+target_link_libraries(test_itembox_transfer PRIVATE re15_engine re15_test_support)
+target_include_directories(test_itembox_transfer PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_itembox_transfer COMMAND test_itembox_transfer)
+set_tests_properties(unit_itembox_transfer PROPERTIES TIMEOUT 30)
+
+# --- ITEM BOX screen FSM (menu substate 4): side split / EXIT row / page flip / swap /
+#     reject state-5 wait / shared close phase (shots/itembox_spec.md §2.3-2.4 + §6) ---
+add_executable(test_itembox_screen test_itembox_screen.c)
+target_link_libraries(test_itembox_screen PRIVATE re15_engine re15_test_support)
+target_include_directories(test_itembox_screen PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_itembox_screen COMMAND test_itembox_screen)
+set_tests_properties(unit_itembox_screen PROPERTIES TIMEOUT 30)
+
 # --- Wave-6 finding 4: VIRTUAL pad-word builder (FUN_80030444, preset-0 table @0x80073dbc) ---
 add_executable(test_pad_remap test_pad_remap.c)
 target_link_libraries(test_pad_remap PRIVATE re15_engine re15_test_support)

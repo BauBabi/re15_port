@@ -20,6 +20,7 @@
 #include "re15_inv_screen.h"
 #include "re15_inv_ui.h"
 #include "re15_inventory.h"
+#include "re15_itembox.h"        /* ITEM BOX subscreen (box_mode display list) */
 #include "font_width.h"          /* per-glyph advance u8 @0x800c4416 (DEBUG.BIN, vendored) */
 #include "gen/inv_name_bank.inc" /* item-name bank @0x800c495c/4a28 + digraph pairs @0x800c4438 */
 #include "gen/inv_desc_bank.inc" /* item-desc bank @0x800c50de (wave 4; entry idx = item id) */
@@ -767,10 +768,195 @@ static void exam_elem(emit_t *e, int idx, int x, int y)
 static uint8_t s_g7_u = 0xff, s_g7_v = 0xff;
 static void g7_label_reset(void) { s_g7_u = 0xff; s_g7_v = 0xff; }
 
+/* ==================================================================================== */
+/* ITEM BOX subscreen display list (shots/itembox_spec.md §6 — STATUS-SCREEN-STYLE      */
+/* composition, [DESIGN, non-canonical layout]: the original has NO box screen           */
+/* (itembox_verdict.md), so the panel placement here is invented; every ART/geometry     */
+/* PIPELINE is the campaign's byte-true one (chrome g0 @0x80075108, ITEM-LIST panel g1,  */
+/* cell table @0x80076274, cursor g8 templates, digit glyphs FUN_80048f28, name bank     */
+/* FUN_80028c1c, text printer FUN_80028ec4, backdrop tiles FUN_80046a1c). Emitted as a   */
+/* SEPARATE branch so the normal status-screen list stays bit-identical (idle pixel      */
+/* regression).                                                                          */
+/* ==================================================================================== */
+#define BOX_BX  24    /* [DESIGN] box panel base x — mirrors the ITEM-LIST panel
+                       * geometry (base 215) on the left half; cells at 28/68 */
+#define BOX_BY  26    /* [DESIGN] same base y as the ITEM LIST (LIST_BY)      */
+
+/* one box/inv icon cell via the ITEMTILE page (v = tile id; see the enum note) */
+static void box_cell_icon(emit_t *e, int x, int y, uint8_t id, uint8_t kind)
+{
+    (void)kind;   /* boxed-wide (kind 3) draws its ITEMALL 40x30 tile in the ONE
+                   * cell [DESIGN — RE2 draws a wide bright ROW (§2.5); the icon
+                   * grid has no wide rows, the single kept slot mirrors quirk 6's
+                   * "ONE slot" storage semantics]. Tile identity = ITEMALL[id]
+                   * (report-C byte-proof; empty id 0 = tile 0 blank navy). */
+    sprt(e, RE15_INV_PAGE_ITEMTILE, RE15_INV_CLUT_ST00_ROW0,
+         x, y, 40, 30, 0, id, 128, 128, 128, 1);
+}
+
+/* qty digits for a BOX slot — the FUN_80048f28 glyph geometry verbatim (8x8 SPRT
+ * code u=digit*8 v=0xf0 @0x80049214-28, x accumulator init 3 step 6 @0x80048f44/
+ * @0x80049230, leading-zero suppression @0x800490d8-108, y = cell+20, clut =
+ * DAT_800b2610[2 + prop8] @0x8004922c-4c with prop8 @0x80074DA8+id*12+8; the
+ * id >= 0x22 digit gate `sltiu id,0x22` @0x80049124) at the box cell position. */
+static void box_digits(emit_t *e, int cx, int cy, uint8_t id, uint8_t qty)
+{
+    int hund, tens, ones, sx, di;
+    if (id == 0 || id >= 0x22) return;
+    hund = qty / 100; tens = (qty % 100) / 10; ones = qty % 10;
+    sx = 3;
+    for (di = 2; di >= 0; di--) {
+        int dv = (di == 2) ? hund : (di == 1) ? tens : ones;
+        if (di == 2 && hund == 0) continue;
+        if (di == 1 && tens == 0 && hund == 0) continue;
+        sprt(e, RE15_INV_PAGE_TEX4,
+             2 + bu8(PROP_TBL + (uint32_t)id * 12u + 8u),
+             cx + sx, cy + 20, 8, 8, dv * 8, 0xf0, 128, 128, 128, 1);
+        sx += 6;
+    }
+}
+
+static int build_box_mode(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max_ops)
+{
+    emit_t e; int i, clut_idx, count; uint32_t tmpl;
+    int x, y, w, h, u, v;
+    e.ops = ops; e.n = 0; e.max = max_ops;
+
+    /* 0. hovered-item name caption (topmost; the campaign's byte-true name-bank
+     * print FUN_80028c1c at (0x18,0xa8) — set per tick by re15_itembox.c). */
+    if (st->name_item >= 0) emit_name(&e, st->name_item);
+
+    /* 0b. the reject message slice (desc-bank entry 0 through the shared msg VM —
+     * the RE1.5 cant-use infra standing in for RE2's box reject FUN_8002fe38). */
+    if (st->msg_entry >= 0 && (st->msg_reveal > 0 || st->msg_arrow)) emit_msg(&e, st);
+
+    /* 1. EXIT affordance [DESIGN]: the word "EXIT" in the byte-true FUN_80028ec4
+     * glyph printer (codes = chr-0x24: E=0x21 X=0x34 I=0x25 T=0x30, end 0x07);
+     * bright TEX row 0 when the EXIT row is selected, the dim row-6 palette
+     * (0x30 flag — the FILE hidden-row palette) otherwise. ≙ RE2's EXIT row with
+     * highlight 0x80/0x40 @§2.5. */
+    {
+        static const uint8_t k_exit[5] = { 0x21, 0x34, 0x25, 0x30, 0x07 };
+        emit_text(&e, 0x90, 0xd8, k_exit, (st->box_side == 2) ? 0x00 : 0x30);
+    }
+
+    /* 2. page indicator "N/4" [DESIGN §6] in the FILE-footer digit codes
+     * (digit = value+0xc, separator glyph 0x38 — the 0x800c7744 formatter). */
+    {
+        uint8_t buf[5];
+        buf[0] = (uint8_t)(st->box_page + 1 + 0xc);
+        buf[1] = 0x38;
+        buf[2] = (uint8_t)(4 + 0xc);
+        buf[3] = 0x07;
+        emit_text(&e, BOX_BX + 30, 0xb6, buf, 0x20);
+    }
+
+    /* 3. chrome group 0 (FUN_80047648(0) — absolute, always drawn) */
+    master_row(0, &clut_idx, &count, &tmpl);
+    for (i = 0; i < count; i++) {
+        tmpl_row(tmpl, i, &x, &y, &w, &h, &u, &v);
+        sprt(&e, RE15_INV_PAGE_TEX4, clut_idx, x, y, w, h, u, v, 128, 128, 128, 0);
+    }
+
+    /* 4. the two panels: the g1 ITEM-LIST chrome at the BOX base (left) and at
+     * the LIST base (right) — the same capacity-10 template fixups as the main
+     * screen (case 1 @0x800477e8-0x8004796c). */
+    master_row(1, &clut_idx, &count, &tmpl);
+    {
+        int side, n8;
+        for (side = 0; side < 2; side++) {
+            int bx = side ? LIST_BX : BOX_BX;
+            n8 = 0;
+            for (i = 0; i < count; i++) {
+                tmpl_row(tmpl, i, &x, &y, &w, &h, &u, &v);
+                if (CAPACITY == 10 && i >= 7) { y += 8 * n8; n8++; }
+                if (CAPACITY == 10 && i == 1) { y += 56; v += 32; }
+                sprt(&e, RE15_INV_PAGE_TEX4, clut_idx, x + bx, y + BOX_BY, w, h, u, v,
+                     128, 128, 128, 0);
+            }
+        }
+    }
+
+    /* 5. cursors (g8 pulsing-frame template, the wave-1 model): the INVENTORY
+     * cursor is always drawn (RE2 keeps the pulsing inv cursor visible while the
+     * box side is active, §2.4 tail FUN_80073350) + the BOX cell cursor when the
+     * box side is active. */
+    {
+        int base8 = 0;
+        uint8_t k8 = g_inv.slots[st->item_cursor].flags;
+        if (k8 == 1) base8 = 8; else if (k8 == 2) base8 = 0x10;  /* @0x800476f8-714 */
+        master_row(8, &clut_idx, &count, &tmpl);
+        for (i = 0; i < count; i++) {
+            tmpl_row(tmpl, base8 + i, &x, &y, &w, &h, &u, &v);
+            sprt(&e, RE15_INV_PAGE_TEX4, clut_idx,
+                 bs16(CELL_TBL + (uint32_t)st->item_cursor * 4u) + x + LIST_BX,
+                 bs16(CELL_TBL + (uint32_t)st->item_cursor * 4u + 2u) + y + LIST_BY,
+                 w, h, u, v, 128, 128, 128, 0);
+        }
+        if (st->box_side == 1) {
+            master_row(8, &clut_idx, &count, &tmpl);
+            for (i = 0; i < count; i++) {
+                tmpl_row(tmpl, i, &x, &y, &w, &h, &u, &v);   /* base 0 = 1-cell */
+                sprt(&e, RE15_INV_PAGE_TEX4, clut_idx,
+                     bs16(CELL_TBL + (uint32_t)st->box_cursor * 4u) + x + BOX_BX,
+                     bs16(CELL_TBL + (uint32_t)st->box_cursor * 4u + 2u) + y + BOX_BY,
+                     w, h, u, v, 128, 128, 128, 0);
+            }
+        }
+    }
+
+    /* 6. qty digits: inventory grid (the byte-true emit_digits path) + box cells */
+    for (i = 0; i < 10; i++) emit_digits(&e, st, i, 0);
+    for (i = 0; i < RE15_BOX_PAGE_SLOTS; i++) {
+        const re15_inv_slot_t *s = &g_itembox.pages[st->box_page].slots[i];
+        box_digits(&e,
+                   bs16(CELL_TBL + (uint32_t)i * 4u) + BOX_BX,
+                   bs16(CELL_TBL + (uint32_t)i * 4u + 2u) + BOX_BY,
+                   s->id, s->qty);
+    }
+
+    /* 7. icon cells: inventory 0..9 (the composed ICON8 cache, byte-true art) +
+     * box page cells 0..7 (ITEMTILE direct) + blank navy for cells 8/9 of the
+     * box panel (the 10-cell panel art shows 5 rows; the box page has 4 [DESIGN]). */
+    for (i = 0; i < 10 && i < CAPACITY; i++)
+        sprt(&e, RE15_INV_PAGE_ICON8, RE15_INV_CLUT_ST00_ROW0,
+             bs16(CELL_TBL + (uint32_t)i * 4u) + LIST_BX,
+             bs16(CELL_TBL + (uint32_t)i * 4u + 2u) + LIST_BY,
+             40, 30, (int)bu16(ICON_UV_TBL + (uint32_t)i * 4u),
+             (int)bu16(ICON_UV_TBL + (uint32_t)i * 4u + 2u), 128, 128, 128, 1);
+    for (i = 0; i < 10; i++) {
+        int cx = bs16(CELL_TBL + (uint32_t)i * 4u) + BOX_BX;
+        int cy = bs16(CELL_TBL + (uint32_t)i * 4u + 2u) + BOX_BY;
+        if (i < RE15_BOX_PAGE_SLOTS) {
+            const re15_inv_slot_t *s = &g_itembox.pages[st->box_page].slots[i];
+            box_cell_icon(&e, cx, cy, s->id, s->flags);
+        } else {
+            box_cell_icon(&e, cx, cy, 0, 0);   /* blank tile 0 */
+        }
+    }
+
+    /* 8. backdrop: the 48 navy tiles (FUN_80046a1c L199-236 geometry — same as
+     * the main screen sec 10; the ID card/ECG/ARMS panels are NOT drawn in box
+     * mode [DESIGN: their screen area holds the box panel]). */
+    {
+        int col, row;
+        for (col = 0; col < 8; col++)
+            for (row = 0; row < 6; row++)
+                sprt(&e, RE15_INV_PAGE_ICON8, RE15_INV_CLUT_STPIC,
+                     col * 40, 12 + row * 40, 40, 40, 0, 213, 128, 128, 128, 1);
+    }
+    return e.n;
+}
+
 int re15_inv_screen_build(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max_ops)
 {
     emit_t e; int i, clut_idx, count; uint32_t tmpl;
     int x, y, w, h, u, v;
+
+    /* ITEM BOX subscreen: a dedicated list — the normal status-screen list below
+     * stays bit-identical when box_mode == 0 (idle pixel regression). */
+    if (st->box_mode) return build_box_mode(st, ops, max_ops);
+
     e.ops = ops; e.n = 0; e.max = max_ops;
 
     /* ---- 0. grid-mode ITEM NAME (wave 2): emitted FIRST = TOPMOST. The original's

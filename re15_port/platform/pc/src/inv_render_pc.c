@@ -609,6 +609,33 @@ static void raster_op(const re15_inv_op_t *o)
                 if (b5 < 0) b5 = 0;
                 s_fb5[y][x] = (uint16_t)(r5 | (g5 << 5) | (b5 << 10));
             }
+    } else if (o->kind == RE15_INV_OP_SPRT && o->page == RE15_INV_PAGE_ITEMTILE) {
+        /* ITEM BOX cell (RE15_INV_PAGE_ITEMTILE, [DESIGN] — see the enum note):
+         * o->v = the tile id; w<=40 samples ITEMALL.PIX tile[v] (the byte-true
+         * 40x30 art of the identity icon map), w==80 samples the wide-weapon
+         * 80x30 icon at ITPS block v*0x3000+0x21A0 (FUN_800492b8 mode-1 source).
+         * Same ST_00-row-0 CLUT + opaque modulated pipeline as the icon cells. */
+        const uint16_t *clut = s_clut[o->clut];
+        int tile = o->v, py, pxx;
+        for (py = 0; py < o->h; py++)
+            for (pxx = 0; pxx < o->w; pxx++) {
+                uint8_t t;
+                uint16_t c;
+                if (o->w == 80) {
+                    if (!s_itps || tile * 0x3000 + 0x21A0 + 80 * 30 > s_itps_size)
+                        continue;
+                    t = s_itps[tile * 0x3000 + 0x21A0 + py * 80 + pxx];
+                } else {
+                    if (!s_itemall || (tile + 1) * 1200 > s_itemall_size)
+                        continue;
+                    t = s_itemall[tile * 1200 + py * 40 + pxx];
+                }
+                c = clut[t];
+                if (c == 0) continue;                 /* CLUT 0 = transparent */
+                px_opaque(o->x + pxx, o->y + py,
+                          mod5(c & 31, o->r), mod5((c >> 5) & 31, o->g),
+                          mod5((c >> 10) & 31, o->b));
+            }
     } else if (o->kind == RE15_INV_OP_SPRT) {
         const uint16_t *clut = s_clut[o->clut];
         int py, pxx;

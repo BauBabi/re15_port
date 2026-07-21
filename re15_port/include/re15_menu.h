@@ -51,6 +51,14 @@ void re15_menu_fsm_tick(uint16_t pad_pressed, uint16_t pad_held);
  * the fades and transition stages. RE15_INV_SHOT / RE15_ITEM_USE_TEST. */
 void re15_menu_toggle(void);
 
+/* ITEM BOX (RE1.5-hybrid, shots/itembox_spec.md §6 — substate 4 [DESIGN]):
+ * world-side open request (the box AOT examine; save-phone precedent) — runs the
+ * SHARED byte-true open transition (stage fade-out/hold-black/task spawn) and
+ * lands in the box subscreen instead of the tab select. */
+void re15_menu_request_box(void);
+/* DEBUG/harness: instant box-screen open (fades skipped; RE15_BOX_SHOT/tests). */
+void re15_menu_toggle_box(void);
+
 /* Introspection (tests / state log). */
 int  re15_menu_stage(void);      /* DAT_800b5359 mirror (0 = normal gameplay)      */
 int  re15_menu_phase(void);      /* DAT_800b25bf (0 init / 1 run / 2 close)        */

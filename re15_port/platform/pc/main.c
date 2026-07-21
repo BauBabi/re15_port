@@ -82,6 +82,7 @@ static inline int RNDI(float f) {
 #include "re15_savedata.h"     /* FE-4 game-state save block */
 #include "re15_memcard.h"      /* FE-4 byte-true PSX .mcr backend */
 #include "re15_savepoint.h"    /* FE-4 phone save-point pending signal */
+#include "re15_itembox.h"      /* ITEM BOX (RE1.5-hybrid): box-AOT pending signal + storage */
 
 #define RE15_TIM_SLOT_EFFECT 19   /* effect-sprite TIM render slot (0..18 used by chars/props) */
 #define RE15_TIM_SLOT_EFFECT_GLOBAL 20 /* GLOBAL effect bank (CORE00.ESP) sprite sheet — effect-id 0
@@ -2228,6 +2229,9 @@ re_title:;
      * across a room_unload -> scd_vm_init is a separate concern; the briefing/combat room boots
      * with this. Phase 2b: the full inventory screen renders g_inv + the item classification.) */
     re15_inv_load_briefing();
+    re15_itembox_init();   /* ITEM BOX starts empty (the RE1.5 new-game zero loop shape
+                            * FUN_8003e4f4 @0x8003e52c-554; a CONTINUE load overwrites
+                            * it from the v4 save block right after). */
     /* RE15_EQUIP=<item> (debug harness): equip an item at boot without the menu — input scripts
      * have no START/menu tokens, so deterministic gun probes (ammo chain, discharge fx) need this.
      * The byte-true default stays the briefing knife (aca5d=1, slot 0). */
@@ -2487,6 +2491,8 @@ re_title:;
             if (g_inv.slots[i].id == 0) { g_inv.slots[i].id = 0x21; g_inv.slots[i].qty = 2; break; }
     }
     if (getenv("RE15_SAVE_TEST")) re15_savepoint_set_pending(1);   /* fire a save-point this frame (card not required) */
+    if (getenv("RE15_BOX_TEST"))  re15_itembox_set_pending(1);     /* fire a box AOT this frame (exercise the full
+                                                                    * request -> stage freeze/fade -> box-screen path) */
 
     while (running) {
         /* FE-4 phone SAVE (outside the game frame): a save-point phone was examined?
@@ -2542,6 +2548,16 @@ re_title:;
              * no dead period. (A prior 90f cooldown swallowed clicks within ~3s of closing the menu.) */
         }
 
+        /* ITEM BOX (RE1.5-hybrid, default-on — the save-phone precedent): a safe-room
+         * box AOT was examined? The flavor message was suppressed at the SCD level
+         * (scd_vm.c intercept; RE15_BOX_PREVIEW_MSG=1 restores the shipped message
+         * byte-true) — open the box subscreen through the SHARED menu transition
+         * (freeze + stage fade-out/hold-black, menu_common.c re15_menu_request_box). */
+        if (re15_itembox_pending()) {
+            re15_itembox_set_pending(0);
+            re15_menu_request_box();
+        }
+
         re15_render_begin_frame();
         re15_input_tick();
 
@@ -2565,6 +2581,19 @@ re_title:;
             re15_menu_toggle();
         if (getenv("RE15_INV_GRID_SHOT") && g_engine.frame_count == 31)
             g_engine.pad_pressed |= RE15_PAD_BIT_SQUARE;
+        /* DEBUG: RE15_BOX_SHOT=1 — ITEM BOX acceptance harness: instant box-screen
+         * open at F30 (briefing loadout), confirm at F32 (inventory side -> box
+         * side), confirm at F34 (swap: cursor-0 item deposited into box page 0
+         * slot 0 via the RE2-ported transfer), auto-exit at F90. Combine with
+         * RE15_INV_FB_SHOT=shots/itembox_port.bmp [+RE15_INV_FB_SHOT_AT=<n>]
+         * for the software-framebuffer pixel dump. */
+        if (getenv("RE15_BOX_SHOT")) {
+            if (g_engine.frame_count == 30 && !re15_menu_is_open())
+                re15_menu_toggle_box();
+            if (g_engine.frame_count == 32 || g_engine.frame_count == 34)
+                g_engine.pad_pressed |= RE15_PAD_BIT_SQUARE;
+            if (g_engine.frame_count >= 90) running = 0;
+        }
         /* RE15_INV_CMD_SHOT=1 (wave 3): SQUARE at F31 (tab ITEM confirm -> entry slide
          * F32-38, GRID F39) + SQUARE at F45 (grid confirm on the cursor slot -> 25d6=0 +
          * 25c2=3, command slide-in F46-52, state 4 from F53); shot at F60 = the command

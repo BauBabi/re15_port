@@ -53,13 +53,23 @@ enum {
                                * window — the ITPS photo the CHECK loader 0x800c6878
                                * uploads over the TEX.TIM region (prim @0x800c6944-84:
                                * SPRT uv(0,0) 112x72 clut 0x7a40=(0,489))               */
-    RE15_INV_PAGE_MAP4  = 5   /* MAP wave: 4bpp texpage 0x17 = VRAM (448,256) — the
+    RE15_INV_PAGE_MAP4  = 5,  /* MAP wave: 4bpp texpage 0x17 = VRAM (448,256) — the
                                * MAP0x.PIX floor-plan page. Upload rect (448,256,64,256)
                                * @0x8004c1a0-b0 (LoadImage from 0x801a8000); DR_MODE
                                * packet @0x800b2650 tpage 0x17 built by SetDrawMode in
                                * FUN_800460b8 @0x8004631c-38 (new-GPU path; GetGraphType
                                * @0x80068948 in {1,2} would select the old encoding 0x27),
                                * AddPrim'd at the draw gate @0x80049bf4.               */
+    RE15_INV_PAGE_ITEMTILE = 6 /* ITEM BOX [DESIGN, non-canonical mechanism]: direct
+                               * item-tile sampling for BOX cells — `v` = the tile id,
+                               * `u` = 0; w<=40 samples ITEMALL.PIX tile[v] (the SAME
+                               * byte-true 40x30 art the identity icon cache uses,
+                               * report-C byte-proof), w==80 samples the wide-weapon
+                               * 80x30 icon at ITPS block v*0x3000+0x21A0
+                               * (FUN_800492b8 mode-1 source @0x8001e0b8-c8). CLUT =
+                               * ST_00 row 0, like every icon cell. The box cells
+                               * bypass the 10-cell VRAM cache because the original
+                               * has no box VRAM region (itembox_verdict.md).        */
 };
 
 /* clut selector: 0..7 = DAT_800b2610[0..7] = ids 0x7a10..0x7bd0 = TEX.TIM CLUT rows
@@ -242,6 +252,16 @@ typedef struct {
                              * updates the 60-frame bob @0x800c75ac-e4: counter 0x1e ->
                              * off 4, 0x3c -> reset; reader open zeroes both via the
                              * word store @0x800c7070)                                 */
+    /* ---- ITEM BOX (RE1.5-hybrid subscreen, shots/itembox_spec.md §6 — all four
+     * fields are [DESIGN] mirrors of the re15_itembox.c FSM, ≙ RE2's box screen
+     * registers: box_page/box_cursor ≙ scroll DAT_800d5c14 + the fixed scroll+2
+     * pick (§2.4 state 1), box_side ≙ panel DAT_800d5bf1 / state DAT_800d5bf2) */
+    uint8_t box_mode;       /* 1 = the box subscreen is up (menu substate 4) — gates
+                             * the dedicated box display list in the builder        */
+    uint8_t box_page;       /* current box page 0..3 (the dormant-array index:
+                             * @0x800b1444/1484/14a4/14c4)                          */
+    uint8_t box_cursor;     /* box-side cell cursor 0..7                            */
+    uint8_t box_side;       /* 0 = inventory side, 1 = box side, 2 = EXIT row       */
     /* ---- wave 5 (EXCHANGE/combine) ---- */
     uint8_t comb_d0, comb_d1, comb_d2, comb_d3;
                             /* DAT_800b25d0-d3: the g9 second-cursor jitter pulse, written

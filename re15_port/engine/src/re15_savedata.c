@@ -22,6 +22,31 @@ uint32_t re15_savedata_checksum(const re15_savedata_t *sd)
     return sum;
 }
 
+int re15_savedata_validate(re15_savedata_t *sd)
+{
+    if (!sd) return -1;
+    if (sd->magic != RE15_SAVE_MAGIC) return -1;
+    if (sd->version >= 4) {
+        return (sd->checksum == re15_savedata_checksum(sd)) ? 0 : -1;
+    }
+    if (sd->version == 2 || sd->version == 3) {
+        /* v2/v3 layout = the v4 struct WITHOUT box[]: its checksum word sits
+         * where box[] now starts. Validate the old extent, then upgrade in
+         * place: empty box (per the header note), version 4, fresh checksum. */
+        const uint8_t *p = (const uint8_t *)sd;
+        size_t old_ck_off = offsetof(re15_savedata_t, box);
+        uint32_t sum = 0, old_ck;
+        for (size_t i = 0; i < old_ck_off; i++) sum += p[i];
+        memcpy(&old_ck, p + old_ck_off, sizeof old_ck);
+        if (sum != old_ck) return -1;
+        memset(sd->box, 0, sizeof sd->box);
+        sd->version  = RE15_SAVE_VERSION;
+        sd->checksum = re15_savedata_checksum(sd);
+        return 0;
+    }
+    return -1;
+}
+
 void re15_savedata_capture(re15_savedata_t *out, uint32_t playtime, uint16_t save_count)
 {
     if (!out) return;
@@ -46,15 +71,19 @@ void re15_savedata_capture(re15_savedata_t *out, uint32_t playtime, uint16_t sav
 
     memcpy(out->inv,   g_inv.slots, sizeof(out->inv));
     memcpy(out->flags, g_game.flags, sizeof(out->flags));
+    re15_itembox_export(out->box);       /* v4 ITEM BOX contents (page*8+i) */
 
     out->checksum = re15_savedata_checksum(out);
 }
 
 int re15_savedata_restore(const re15_savedata_t *in, uint16_t *loaded_room)
 {
+    re15_savedata_t up;
     if (!in) return -1;
-    if (in->magic != RE15_SAVE_MAGIC) return -1;
-    if (in->checksum != re15_savedata_checksum(in)) return -1;
+    /* validate + v2/v3 -> v4 upgrade on a copy (v2/v3 load with an empty box) */
+    up = *in;
+    if (re15_savedata_validate(&up) != 0) return -1;
+    in = &up;
 
     re15_actor_t *pl = &g_actors[0];
     pl->x            = in->player_x;
@@ -84,6 +113,7 @@ int re15_savedata_restore(const re15_savedata_t *in, uint16_t *loaded_room)
     re15_player_set_equipped_weapon(in->weapon_id);
     re15_inv_set_equipped_slot(in->equipped_slot);
     memcpy(g_game.flags, in->flags, sizeof(g_game.flags));
+    re15_itembox_import(in->box);        /* v4 ITEM BOX contents survive load */
 
     if (loaded_room) *loaded_room = in->room;
     return 0;

@@ -65,6 +65,9 @@
 #include "re15_room.h"          /* g_current_room_id — the MAP per-stage init reads the
                                  * stage/room registers lh DAT_800b0fe0/0fe2 (@0x8004997c
                                  * / FUN_8004b568 head) */
+#include "re15_itembox.h"       /* ITEM BOX subscreen (substate 4 [DESIGN] — entered
+                                 * ONLY from the box AOT via re15_menu_request_box,
+                                 * never from the START tab select; itembox_spec.md §6) */
 
 #define CAPACITY 10             /* DAT_800b0fbc (lbu @0x800c63e0; live 0x0a) */
 
@@ -85,6 +88,11 @@ static uint8_t s_c3 = 0;           /* DAT_800b25c3 — state-5 flow selector (wa
                                     * zeroed by the master task @0x80046050-6c)       */
 static uint8_t s_c4 = 0;           /* DAT_800b25c4 — flow step counter (written only
                                     * by the flows; terminals restore 0)              */
+static uint8_t s_box_target = 0;   /* ITEM BOX open request [DESIGN]: the task spawns
+                                    * into substate 4 instead of the tab select. The
+                                    * open/close freeze+fade path is the SHARED stage
+                                    * FSM (the save-phone precedent: world-side
+                                    * trigger, byte-true menu transition mechanics). */
 
 /* D-pad auto-repeat (FUN_80030444 bit31-of-aca38 tick; config FUN_80030640(0xf000,0xf,4)
  * @0x800460cc-d8 = raw-layout d-pad mask + delay 15 + rate 4 -> press edge moves, first
@@ -1290,6 +1298,8 @@ static void close_phase(void)
     s_c3 = 0;                              /* 25c3 in the teardown zero list @0x80046748-6c */
     g_inv_screen.item_state = 0;
     g_inv_screen.name_item = -1;
+    g_inv_screen.box_mode = 0;             /* ITEM BOX teardown (≙ RE2 close 5c00:=0) */
+    s_box_target = 0;
     s_alive = 0;
     /* Task-0 resume continuation @0x8001cb50-74: aca3c &= ~(0x40|0x8000); 5359=3;
      * falls THROUGH into stage 3 @0x8001cbb8 in the same round (no unfaded frame):
@@ -1577,7 +1587,17 @@ static void menu_task_dispatch(uint16_t pressed, uint16_t held)
 {
     switch (s_phase) {
     case 0:
-        if (!s_p0_entered) { s_p0_entered = 1; phase0_init(); }
+        if (!s_p0_entered) {
+            s_p0_entered = 1;
+            phase0_init();
+            /* ITEM BOX target [DESIGN]: spawn straight into the box subscreen.
+             * The shared phase-0 init above already ran the compaction-on-open
+             * (re15_inv_compact — the RE1.5 menu-open site @0x800464a0 AND the
+             * RE2 box-open site FUN_80069714 @0x80068c60 = quirk 9) and took the
+             * equip snapshot (25ce — RE2's close-time weapon-model-reload driver,
+             * quirk 14). */
+            if (s_box_target) { s_substate = 4; re15_itembox_screen_open(); }
+        }
         /* fade-in loop @0x8004970c-2c: draw + vsync until FUN_8002178c(0)!=0 — input
          * is NOT processed while fading in. */
         if (!re15_fade_done(0)) return;
@@ -1591,6 +1611,14 @@ static void menu_task_dispatch(uint16_t pressed, uint16_t held)
         case 1: map_mode(pressed); break;       /* jal 0x8004c058 @0x80049a1c */
         case 2: file_mode(pressed); break;      /* DEBUG.BIN FUN_800c6ca0 (FILE wave) */
         case 3: item_mode(pressed, held); break;
+        case 4:                                 /* ITEM BOX [DESIGN §6] — RE2 FSM
+                                                 * shape (re15_itembox.c); returns
+                                                 * 1 on the exit request (RE2
+                                                 * panel 0 = exit start) -> the
+                                                 * shared close phase (fade-out +
+                                                 * equip commit).               */
+            if (re15_itembox_screen_tick(pressed, held)) s_phase = 2;
+            break;
         default: s_substate = 0; break;
         }
         return;
@@ -1697,6 +1725,49 @@ void re15_menu_fsm_tick(uint16_t pad_pressed, uint16_t pad_held)
 }
 
 /* ---------------------------------------------------------------------------------- */
+/* ITEM BOX open request (world-side trigger — the save-phone precedent).             */
+/* [DESIGN] The box AOT examine sets the pending signal (scd_vm.c intercept); the     */
+/* platform calls this, which runs the SHARED byte-true open transition (stage 1      */
+/* fade-out @0x8001ca64-88 -> stage 2 hold-black + task spawn @0x8001ca98-cb4c) and   */
+/* lands in substate 4 instead of the tab select. Freeze semantics identical to the   */
+/* START menu (task-0 suspension model @0x800460bc).                                  */
+/* ---------------------------------------------------------------------------------- */
+void re15_menu_request_box(void)
+{
+    if (s_alive || s_stage != 0) return;
+    s_box_target = 1;
+    s_latch = 1;
+    s_stage = 1;
+}
+
+/* Bridge for the box transfer reject (re15_itembox.c): open desc-bank entry 0
+ * ("You can't use it here.") at (0x18,0xa8) — the RE1.5 cant-use message infra
+ * (FUN_80027e68(0x00a80018,0x8400,0,0) @0x8004b2d8), standing in for RE2's box
+ * reject FUN_8002fe38(0xaf0010,0xe400,8,0) [RE1.5-adapted, itembox_spec.md §6].
+ * The box FSM's state 5 polls re15_menu_msg_active() (≙ DAT_800e873c bit 0x80). */
+void re15_menu_box_reject_msg(void)
+{
+    msg_open(0, 0x18, 0xa8);
+}
+
+/* DEBUG (harnesses/tests): instant box-screen open — full phase-0 init (equip
+ * snapshot + compaction-on-open) with the fades skipped; close via the normal
+ * EXIT path or re15_menu_toggle. */
+void re15_menu_toggle_box(void)
+{
+    if (!s_alive && s_stage == 0) {
+        phase0_init();
+        re15_fade_kill(0);
+        s_alive = 1;
+        s_p0_entered = 1;
+        s_phase = 1;
+        s_substate = 4;
+        s_box_target = 1;
+        re15_itembox_screen_open();
+    }
+}
+
+/* ---------------------------------------------------------------------------------- */
 /* DEBUG toggle (harnesses: RE15_INV_SHOT / RE15_ITEM_USE_TEST): instant open at        */
 /* tab-select (full phase-0 init, fades skipped) / instant close+commit.               */
 /* ---------------------------------------------------------------------------------- */
@@ -1718,6 +1789,8 @@ void re15_menu_toggle(void)
         s_alive = 0; s_phase = 0; s_substate = 0; s_p0_entered = 0; s_close_sub = 0;
         s_request = 0; s_latch = 0; s_stage = 0;
         s_c3 = 0; s_c4 = 0;
+        s_box_target = 0;
+        g_inv_screen.box_mode = 0;
         s_msg_active = 0; s_msg_state = 0; s_msg_cur = 0;
         g_inv_screen.item_state = 0;
         g_inv_screen.name_item = -1;

@@ -1,46 +1,32 @@
 /**
  * @file test_room1150_itembox.c
- * @brief Wave-6 closure (shots/inv_plan.md gap 18) — the MZD item box is a MESSAGE-ONLY
- *        examine AOT, parity-verified against the real ROOM1150.RDT bytes.
+ * @brief The ROOM1150 item-box AOT — SPLIT test (ITEM BOX campaign, itembox_spec.md §6):
+ *        DEFAULT = the box AOT OPENS THE BOX (the RE1.5-hybrid, default-on like the
+ *        functional save system): the shipped flavor Message_on(3) is suppressed at the
+ *        SCD level and the box-screen pending signal is raised instead.
+ *        RE15_BOX_PREVIEW_MSG=1 = the byte-true SHIPPED behavior (message-only AOT),
+ *        parity-verified against the real ROOM1150.RDT bytes exactly as before.
  *
- * SHIPPED MZD BEHAVIOUR (RDT ground truth, re-dumped this session from
+ * SHIPPED MZD BEHAVIOUR (RDT ground truth, re-dumped from
  * re15_port/shared_assets/PSX/STAGE1/ROOM1150.RDT):
  *
  *   - main00 (RDT+0xD5E, main_scd table @RDT+0x40 -> 0xD5C) installs the box AOT at
  *     record offset main00+0x70 (file offset 0xDCE):
  *       2C 05 03 31 00 00  F4 9D  C8 CE  40 06  E8 03  FF 00  18 07 00 00
- *     = Aot_set slot=5, sce=3, flags=0x31 (bit 0x10 SET -> ACTION scan, bit 0x20 ->
- *     forward-620 test, pool 1), band pc[4]=0, rect NW=(-25100,-12600) extent
- *     (1600,1000) -> centre (-24300,-12100) half (800,500), act pc[14]=0xFF,
- *     eventId pc[17]=0x07 -> fires sub_scd[7]. (Same "18 NN" event tail as the
- *     proven slot-6 Irons cutscene AOT -> sub08, re15_aot.h.)
+ *     = Aot_set slot=5, sce=3, flags=0x31, band 0, centre (-24300,-12100) half
+ *     (800,500), act 0xFF, eventId 0x07 -> fires sub_scd[7].
  *
  *   - sub07 (sub_scd table @RDT+0x44 -> 0xEA0, entry 7 off 0x258 -> file 0x10F8),
  *     14 bytes:  29 08 | 2B 03 FF FF | 02 00 | 2A 00 | 3C 01 | 01 00
- *     = Cut_chg(8) ; Message_on(msg 3, 0xFF, 0xFF) ; Evt_next ; Cut_old ; Nop ;
- *       Cut_auto(1) ; Evt_end.  NO item grant, NO door, NO box storage UI --
- *       the box only swings the camera to cut 8 and prints room message 3.
+ *     = Cut_chg(8) ; Message_on(msg 3) ; Evt_next ; Cut_old ; Nop ; Cut_auto(1) ;
+ *       Evt_end.  NO item grant, NO door — the shipped build only swings the camera
+ *       and prints room message 3 ("Itembox is not available in this preview.").
  *
- *   - message 3 (msg table @RDT+0x3C -> 0x12F8; off[3]=0x12E -> body @file 0x1426,
- *     44 bytes): 04 02 25 50 41 49 3E 4B 54 00 45 4F 00 4A 4B 50 00 3D 52 3D 45
- *                48 3D 3E 48 41 00 45 4A 08 50 44 45 4F 00 4C 4E 41 52 45 41 53
- *                57 01
- *     .msg glyph decode (char = code + 0x24, 0x00 = space, 0x08 = line break,
- *     0x01 = end):  "Itembox is not available in\nthis preview."
- *     (ROOM1150 msg 1 is the separate PHONE save-point text -- re15_savepoint.c
- *     maps {0x1150, msg 0x01}; msg 3 must NOT trigger the save flow.)
- *
- * The test loads the real RDT, brings the room up through its own SCD (main00+sub00,
- * exactly like test_room1140_combat), then fires the box examine the same way
- * game_step_common.c:496 does (action press -> re15_aot_scan -> scd_event_fire) and
- * asserts:
- *   (1) INSTALL  — slot 5 is a GENERIC action AOT, event 7, byte-true rect/flags/band.
- *   (2) MESSAGE  — sub07 raises room message id 3 (g_scd.message_active/message_id),
- *                  plain non-blocking dialog (no YES/NO query), and the camera does the
- *                  Cut_chg(8) -> Cut_old round trip ending with Cut_auto(1).
- *   (3) NOTHING ELSE — no inventory mutation, no pickup modal, no room change, no
- *                  save-point flow, and the AOT stays active (re-examinable).
- *   (4) RDT BYTES — the msg-3 body in the parsed message block == the 44 bytes above.
+ *   - The box campaign intercepts EXACTLY the Message_on: (0x1150, msg 3) is in the
+ *     re15_itembox_is registry (16 rooms game-wide, scanned like the savepoint set),
+ *     so the default fires re15_itembox_set_pending(1) and skips the message; the
+ *     camera ops still run byte-true. (ROOM1150 msg 1 is the separate PHONE
+ *     save-point — msg 3 must never trigger the save flow.)
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -50,6 +36,7 @@
 #include "re15_inventory.h"
 #include "re15_item_modal.h"
 #include "re15_savepoint.h"
+#include "re15_itembox.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -87,6 +74,30 @@ static const uint8_t k_msg3[] = {
     0x4E, 0x41, 0x52, 0x45, 0x41, 0x53, 0x57, 0x01
 };
 
+/* Fire the box examine exactly like the game loop (action press -> re15_aot_scan
+ * -> scd_event_fire; game_step_common.c:496-497) and run the sub to completion. */
+static int fire_examine(int *saw_cut8)
+{
+    extern uint8_t g_aot_action_pressed;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->active = 1;
+    pl->x = -24300 - 620; pl->z = -12100; pl->rot_y = 0;
+
+    g_aot.fired_event_id_this_frame = 0;
+    g_aot_action_pressed = 1;
+    re15_aot_scan(pl->x, pl->z, 0xFF);
+    g_aot_action_pressed = 0;
+
+    if (g_aot.fired_event_id_this_frame != 7) return -1;
+    if (scd_event_fire(7) < 0) return -2;
+    *saw_cut8 = 0;
+    for (int i = 0; i < 8; i++) {
+        scd_vm_tick();
+        if (g_scd.cam_id == 8) *saw_cut8 = 1;
+    }
+    return 0;
+}
+
 int main(void)
 {
     const char *path = RE15_ASSET_PSX_DIR "/STAGE1/ROOM1150.RDT";
@@ -103,9 +114,9 @@ int main(void)
     }
 
     int fail = 0;
-    printf("=== ROOM1150 item box = message-only AOT (inv_plan gap 18, wave 6) ===\n");
+    printf("=== ROOM1150 box AOT: DEFAULT box-open + flagged shipped-message ===\n");
 
-    /* (4) first — the RDT message bytes, independent of any VM state. */
+    /* (4) the RDT message bytes, independent of any VM state. */
     if (!rdt.messages || rdt.messages_size <= 0) {
         fprintf(stderr, "FAIL(4): no message block parsed\n"); fail = 1;
     } else {
@@ -121,12 +132,19 @@ int main(void)
         }
     }
 
+    /* (0) registry identity: (0x1150, msg 3) is a box point; the phone msg 1 is NOT. */
+    if (!re15_itembox_is(0x1150, 3) || re15_itembox_is(0x1150, 1)) {
+        fprintf(stderr, "FAIL(0): registry — (1150,3) must be a box point, (1150,1) not\n");
+        fail = 1;
+    } else printf("  (0) box registry: (0x1150, msg 3) yes / (0x1150, msg 1 = phone) no\n");
+
     /* Room bring-up: same minimal pattern as test_room1140_combat. */
     re15_actor_init();
     re15_aot_init();
     scd_vm_init();
     re15_inv_init();
     re15_savepoint_reset();
+    re15_itembox_reset();
     memset(&g_room_change, 0, sizeof g_room_change);
     g_current_room_id = 0x1150;
     scd_register_current_rdt(&rdt);
@@ -147,75 +165,46 @@ int main(void)
                     a->sce_flags, a->band); fail = 1;
         }
         if (a->x != -24300 || a->z != -12100 || a->half_w != 800 || a->half_h != 500) {
-            fprintf(stderr, "FAIL(1): slot5 rect centre=(%d,%d) half=(%d,%d) "
-                    "(want (-24300,-12100) (800,500))\n",
+            fprintf(stderr, "FAIL(1): slot5 rect centre=(%d,%d) half=(%d,%d)\n",
                     (int)a->x, (int)a->z, (int)a->half_w, (int)a->half_h); fail = 1;
         }
         if (!fail) printf("  (1) slot5 == Aot_set @main00+0x70: GENERIC ev=7 flags=0x31 "
                           "band=0 rect(-24300,-12100)+/-(800,500)\n");
     }
 
-    /* Snapshot the observables that must NOT change. */
     re15_inventory_t inv_before = g_inv;
     uint8_t cut_before = g_scd.cam_id;
 
-    /* (2) fire the examine exactly like the game loop: the player stands 620 units
-     * short of the rect centre facing +X (rot_y=0: forward point = pos + (620*cos)>>12
-     * on X, aot_common.c:434-441 — flags 0x31 has NO centre test, forward only),
-     * presses the action button, the scan fires GENERIC -> scd_event_fire(7)
-     * (game_step_common.c:496-497). */
+    /* ---- (2) DEFAULT: the box examine OPENS THE BOX (message suppressed) ---- */
     {
         extern void re15_collision_set_band(int band);
-        extern uint8_t g_aot_action_pressed;
-        re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-        pl->active = 1;
-        pl->x = -24300 - 620; pl->z = -12100; pl->rot_y = 0;
-        re15_collision_set_band(0);                 /* AOT band pc[4] = 0 */
-
-        g_aot.fired_event_id_this_frame = 0;
-        g_aot_action_pressed = 1;
-        re15_aot_scan(pl->x, pl->z, 0xFF);
-        g_aot_action_pressed = 0;
-
-        if (g_aot.fired_event_id_this_frame != 7) {
-            fprintf(stderr, "FAIL(2): examine did not fire event 7 (got %d)\n",
-                    g_aot.fired_event_id_this_frame); fail = 1;
-        } else if (scd_event_fire(7) < 0) {
-            fprintf(stderr, "FAIL(2): scd_event_fire(7) found no free slot\n"); fail = 1;
-        } else {
-            /* sub07 tick-by-tick: 29 08 (Cut_chg 8) + 2B 03 (Message_on 3) run on the
-             * first tick, then 02 00 (Evt_next) yields; 2A 00 (Cut_old) + 3C 01
-             * (Cut_auto 1) + 01 (Evt_end) complete on the next. Track the transient. */
-            int saw_cut8 = 0;
-            for (int i = 0; i < 8; i++) {
-                scd_vm_tick();
-                if (g_scd.cam_id == 8) saw_cut8 = 1;
-            }
-            if (!g_scd.message_active || g_scd.message_id != 3) {
-                fprintf(stderr, "FAIL(2): message active=%d id=%d (want active id=3)\n",
-                        g_scd.message_active, g_scd.message_id); fail = 1;
-            }
-            if (g_scd.message_query != 0) {
-                fprintf(stderr, "FAIL(2): plain message must not be a YES/NO query\n");
-                fail = 1;
-            }
-            if (!saw_cut8) {
-                fprintf(stderr, "FAIL(2): Cut_chg(8) close-up never observed\n"); fail = 1;
-            }
-            if (g_scd.cam_id != cut_before) {
-                fprintf(stderr, "FAIL(2): Cut_old did not restore the cut (cam=%d was %d)\n",
-                        g_scd.cam_id, cut_before); fail = 1;
-            }
-            if (!g_scd.cut_auto_enabled) {
-                fprintf(stderr, "FAIL(2): Cut_auto(1) tail must re-enable the auto scan\n");
-                fail = 1;
-            }
-            if (!fail) printf("  (2) sub07: Cut_chg(8) -> Message_on(3) plain -> Cut_old "
-                              "-> Cut_auto(1) (message id 3 live)\n");
+        re15_collision_set_band(0);
+        int saw_cut8 = 0;
+        int r = fire_examine(&saw_cut8);
+        if (r != 0) { fprintf(stderr, "FAIL(2): examine fire rc=%d\n", r); fail = 1; }
+        if (!re15_itembox_pending()) {
+            fprintf(stderr, "FAIL(2): DEFAULT must raise the box-screen pending signal\n");
+            fail = 1;
         }
+        if (g_scd.message_active) {
+            fprintf(stderr, "FAIL(2): DEFAULT must SUPPRESS the flavor message (got id %d)\n",
+                    g_scd.message_id); fail = 1;
+        }
+        if (!saw_cut8 || g_scd.cam_id != cut_before || !g_scd.cut_auto_enabled) {
+            fprintf(stderr, "FAIL(2): the sub07 camera ops must still run byte-true "
+                    "(cut8=%d cam=%d auto=%d)\n", saw_cut8, g_scd.cam_id,
+                    g_scd.cut_auto_enabled); fail = 1;
+        }
+        if (re15_savepoint_pending()) {
+            fprintf(stderr, "FAIL(2): msg 3 must NOT trigger the phone save flow\n");
+            fail = 1;
+        }
+        if (!fail) printf("  (2) DEFAULT: box pending raised, message suppressed, "
+                          "Cut_chg(8)->Cut_old->Cut_auto(1) intact\n");
+        re15_itembox_set_pending(0);
     }
 
-    /* (3) the box opens NOTHING else. */
+    /* (3) the examine mutates NOTHING else. */
     {
         if (memcmp(&inv_before, &g_inv, sizeof g_inv) != 0) {
             fprintf(stderr, "FAIL(3): inventory changed on box examine\n"); fail = 1;
@@ -226,15 +215,35 @@ int main(void)
         if (g_room_change.pending) {
             fprintf(stderr, "FAIL(3): room change queued on box examine\n"); fail = 1;
         }
-        if (re15_savepoint_pending()) {
-            fprintf(stderr, "FAIL(3): save flow triggered (msg 3 is NOT the 1150 phone "
-                    "save-point msg 1)\n"); fail = 1;
-        }
         if (!g_aot.slots[5].active) {
             fprintf(stderr, "FAIL(3): box AOT must stay active (re-examinable)\n"); fail = 1;
         }
-        if (!fail) printf("  (3) no grant, no modal, no room change, no save flow; AOT "
-                          "stays active\n");
+        if (!fail) printf("  (3) no grant, no modal, no room change; AOT stays active\n");
+    }
+
+    /* ---- (5) RE15_BOX_PREVIEW_MSG=1: the byte-true SHIPPED message behavior ---- */
+    {
+        static char envflag[] = "RE15_BOX_PREVIEW_MSG=1";
+        putenv(envflag);
+        int saw_cut8 = 0;
+        int r = fire_examine(&saw_cut8);
+        if (r != 0) { fprintf(stderr, "FAIL(5): re-examine rc=%d\n", r); fail = 1; }
+        if (!g_scd.message_active || g_scd.message_id != 3) {
+            fprintf(stderr, "FAIL(5): shipped mode: message active=%d id=%d (want id 3)\n",
+                    g_scd.message_active, g_scd.message_id); fail = 1;
+        }
+        if (g_scd.message_query != 0) {
+            fprintf(stderr, "FAIL(5): plain message must not be a YES/NO query\n"); fail = 1;
+        }
+        if (!saw_cut8 || g_scd.cam_id != cut_before || !g_scd.cut_auto_enabled) {
+            fprintf(stderr, "FAIL(5): shipped mode camera round trip broken\n"); fail = 1;
+        }
+        if (re15_itembox_pending()) {
+            fprintf(stderr, "FAIL(5): shipped mode must NOT raise the box pending\n");
+            fail = 1;
+        }
+        if (!fail) printf("  (5) RE15_BOX_PREVIEW_MSG=1: sub07 shows msg 3 byte-true "
+                          "(Cut_chg(8) -> Message_on(3) -> Cut_old -> Cut_auto(1))\n");
     }
 
     free(buf);

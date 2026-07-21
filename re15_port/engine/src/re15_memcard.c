@@ -103,8 +103,9 @@ int re15_memcard_load(const char *path, int slot, re15_savedata_t *sd) {
 
     re15_savedata_t tmp;
     memcpy(&tmp, b + 0x100, sizeof(tmp));
-    if (tmp.magic != RE15_SAVE_MAGIC) return -1;
-    if (tmp.checksum != re15_savedata_checksum(&tmp)) return -1;
+    /* validate + upgrade (v2/v3 blocks — pre-ITEM-BOX layout — load with an
+     * empty box; re15_savedata_validate handles both checksum positions). */
+    if (re15_savedata_validate(&tmp) != 0) return -1;
     *sd = tmp;
     return 0;
 }
@@ -120,8 +121,7 @@ int re15_memcard_max_save_count(const char *path) {
         if ((rd32(dir) & 0xF0) == 0x50 && b[0] == 'S' && b[1] == 'C') {
             re15_savedata_t tmp;
             memcpy(&tmp, b + 0x100, sizeof(tmp));
-            if (tmp.magic == RE15_SAVE_MAGIC && tmp.checksum == re15_savedata_checksum(&tmp)
-                && (int)tmp.save_count > maxc)
+            if (re15_savedata_validate(&tmp) == 0 && (int)tmp.save_count > maxc)
                 maxc = (int)tmp.save_count;
         }
     }
@@ -143,7 +143,7 @@ int re15_memcard_list(const char *path, int used[RE15_SAVE_SLOTS],
         if ((rd32(dir) & 0xF0) == 0x50 && b[0] == 'S' && b[1] == 'C') {
             re15_savedata_t tmp;
             memcpy(&tmp, b + 0x100, sizeof(tmp));
-            if (tmp.magic == RE15_SAVE_MAGIC && tmp.checksum == re15_savedata_checksum(&tmp)) {
+            if (re15_savedata_validate(&tmp) == 0) {
                 used[slot] = 1;
                 memcpy(titles[slot], b + 0x04, RE15_MC_TITLE_LEN);
                 titles[slot][RE15_MC_TITLE_LEN - 1] = 0;

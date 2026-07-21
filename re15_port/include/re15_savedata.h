@@ -23,12 +23,19 @@
 #include <stdint.h>
 #include "re15_scd.h"        /* RE15_FLAG_ZONES / RE15_FLAG_WORDS_ZONE + g_game  */
 #include "re15_inventory.h"  /* re15_inv_slot_t / RE15_INV_MAX_SLOTS             */
+#include "re15_itembox.h"    /* RE15_BOX_SLOTS — ITEM BOX contents (v4)          */
 
 #define RE15_SAVE_MAGIC    0x35314552u   /* "RE15" little-endian                 */
-#define RE15_SAVE_VERSION  3             /* v2: + weapon_id; v3: + camera cut (restore the
+#define RE15_SAVE_VERSION  4             /* v2: + weapon_id; v3: + camera cut (restore the
                                           * save-time framing/background — reuses a reserved
                                           * byte, so v2 saves stay layout+checksum compatible
-                                          * and load with cut 0 = the room's default). */
+                                          * and load with cut 0 = the room's default);
+                                          * v4: + box[32] (the ITEM BOX — RE1.5's dormant
+                                          * save block DOES serialize the four 8-slot arrays
+                                          * @0x800b1444/1484/14a4/14c4 wholesale inside the
+                                          * 0x1230-byte GSB memcpy @0x800261c4-d4, so box
+                                          * persistence is RE1.5-shaped; v2/v3 blocks load
+                                          * with an EMPTY box via the validate/upgrade path). */
 
 /* The captured game-state. Fields are ordered u32 → u16 → u8 → arrays to avoid
  * implicit padding, so the layout (and thus the checksum) is deterministic. */
@@ -56,11 +63,23 @@ typedef struct {
     uint8_t  reserved[2];      /* keep inv[]/flags[] 4-aligned (deterministic sum) */
     re15_inv_slot_t inv[RE15_INV_MAX_SLOTS];                     /* 11 × 4 bytes  */
     uint32_t flags[RE15_FLAG_ZONES][RE15_FLAG_WORDS_ZONE];       /* g_game.flags  */
+    re15_inv_slot_t box[RE15_BOX_SLOTS];   /* v4 ITEM BOX, page*8+i order (the 4
+                                            * dormant arrays @0x800b1444/1484/14a4/
+                                            * 14c4 flattened; inserted BEFORE the
+                                            * checksum, so the v2/v3 checksum word
+                                            * sits at offsetof(box) — the upgrade
+                                            * path reads it there).              */
     uint32_t checksum;         /* additive checksum over all preceding bytes      */
 } re15_savedata_t;
 
 /* Additive checksum over the whole struct except the trailing checksum word. */
 uint32_t re15_savedata_checksum(const re15_savedata_t *sd);
+
+/* Validate a raw loaded block IN PLACE, upgrading v2/v3 layouts to v4: checks
+ * magic; v4+ = the v4 checksum; v2/v3 = the OLD checksum word at offsetof(box)
+ * over the old extent, then zeroes box[] (older saves load with an empty box),
+ * stamps version 4 and recomputes the checksum. Returns 0 ok, -1 invalid. */
+int re15_savedata_validate(re15_savedata_t *sd);
 
 /* Capture the live game-state (g_game / g_actors[0] / g_inv / g_current_room_id /
  * g_gameflow) into *out, stamping magic/version/checksum. `playtime` = the frame

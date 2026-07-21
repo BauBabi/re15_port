@@ -33,6 +33,8 @@
 #include "re15_damage.h"     /* re15_enemy_apply_hitbox — wire the spawned enemy's +0x78 hitbox */
 #include "re15_msg.h"        /* re15_msg_is_choice — YES/NO vs plain Message_on gating */
 #include "re15_savepoint.h"  /* FE-4: phone save-point registry + pending signal */
+#include "re15_itembox.h"    /* ITEM BOX: safe-room box-AOT registry + pending signal
+                              * (save-phone precedent, shots/itembox_spec.md §6) */
 #include "re15_room.h"       /* g_current_room_id (save-point room match) */
 #include "re15_to_re2.h"     /* RE1.5 → RE2 adapter layer */
 
@@ -1178,6 +1180,15 @@ void re15_scd_show_message(uint8_t index)
         re15_savepoint_set_pending(1);
         return;
     }
+    /* ITEM BOX (RE1.5-hybrid, default-on like the save system): the safe-room box
+     * AOT's "Itembox is not available in this preview" message opens the BOX screen
+     * instead (same interception level as the save phone above). The byte-true
+     * shipped message behavior stays available under RE15_BOX_PREVIEW_MSG=1
+     * (test/dev flag; itembox_spec.md §6 trigger decision). */
+    if (!getenv("RE15_BOX_PREVIEW_MSG") && re15_itembox_is(g_current_room_id, index)) {
+        re15_itembox_set_pending(1);
+        return;
+    }
     /* EXAMINE / MESSAGE-AOT line (e.g. the ROOM1130 back-door "It's not necessary to go
      * back") → the SAME byte-true typewriter FSM as dialog, NON-blocking: it types out and
      * waits for the action button (or its own end-hold) to dismiss. No voiceover. */
@@ -1236,6 +1247,18 @@ static int op_message_on(scd_thread_t *t)
             fprintf(stderr, "[msg] room=%04x id=%d SAVEPOINT (menu, message suppressed)\n",
                     g_current_room_id, t->pc[1]);
         t->pc += 4;   /* skip the flavor message — the save menu is its replacement */
+        return 1;
+    }
+    /* ITEM BOX (RE1.5-hybrid, default-on): the box AOT's SCD sub fires Message_on
+     * with the "Itembox is not available in this preview" flavor text (e.g. ROOM1150
+     * sub07 -> msg 3) — suppress it and request the BOX screen, exactly like the save
+     * phone above. RE15_BOX_PREVIEW_MSG=1 = the byte-true shipped message instead. */
+    if (!getenv("RE15_BOX_PREVIEW_MSG") && re15_itembox_is(g_current_room_id, t->pc[1])) {
+        re15_itembox_set_pending(1);
+        if (getenv("RE15_MSG_LOG"))
+            fprintf(stderr, "[msg] room=%04x id=%d ITEMBOX (box screen, message suppressed)\n",
+                    g_current_room_id, t->pc[1]);
+        t->pc += 4;   /* skip the flavor message — the box screen is its replacement */
         return 1;
     }
     if (getenv("RE15_MSG_LOG"))
