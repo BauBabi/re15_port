@@ -54,6 +54,22 @@ int g_scd_pending_scenario = -1;
  * Reset to 0 on every room entry (re15_room_apply_pending) so a genuine later re-entry re-arms. */
 int g_scd_self_reenter_fired = 0;
 
+/* Is actor `slot` the work-entity of an active SCD thread right now? A cutscene binds an actor via
+ * Work_set (e.g. ROOM1170 sub02's Work_set(2,0) = Elliot) and then drives its animation with
+ * Plc_dest / Plc_motion. While that binding holds, the SCD OWNS the actor's clip — the enemy brain
+ * must not run (mirrors the original AI-freeze DAT_800aca40&0x20000000 during a scripted event). The
+ * NPC executor uses this to yield during BOTH the Plc_dest walk AND the Plc_motion gestures, so its
+ * idle-clip advance can't stomp the walk clip (float) nor wrap the gesture clip at the wrong EM040
+ * length (the arm-wave loop). */
+int re15_scd_slot_event_controlled(int slot)
+{
+    if (slot < 0) return 0;
+    for (int i = 0; i < SCD_THREAD_COUNT; i++)
+        if (g_scd.threads[i].active && (int)g_scd.threads[i].work_slot == slot)
+            return 1;
+    return 0;
+}
+
 /* Forward-declare opcode handlers */
 typedef int (*scd_op_fn_t)(scd_thread_t *t);
 

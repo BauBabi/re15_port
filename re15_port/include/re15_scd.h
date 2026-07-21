@@ -418,6 +418,9 @@ extern int     g_scd_pending_scenario;
  * door-3 handoff). The PC hand-deferred sub00-spawn fallback checks it so it can't fire a
  * redundant second reenter (which would spawn the intro crows). Reset on room entry. */
 extern int     g_scd_self_reenter_fired;
+/* 1 if actor `slot` is currently the Work_set-bound work-entity of an active SCD thread (the SCD
+ * owns its animation via Plc_dest/Plc_motion — the enemy brain must yield). */
+int            re15_scd_slot_event_controlled(int slot);
 
 /* SCD opcode constants (subset for Phase 4.4) */
 #define SCD_OP_NOP        0x00
