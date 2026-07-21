@@ -81,6 +81,8 @@ static uint8_t       s_fade_alpha = 0;   /* BN-round: cinematic fade-in overlay 
 static uint8_t       s_title_fade = 0;   /* front-end fade: black OVER the title/menu (movie -> title) */
 static uint8_t       s_white_alpha = 0;  /* YOU-DIED chain: ADDITIVE white overlay (FUN_80021880 ABR1) */
 static int           s_black_bg = 0;     /* YOU-DIED chain: flat-black background (FUN_80021634(2,0)) */
+static int           s_scene_black = 0;  /* pre-intro narrator: full-screen black UNDER the subtitle
+                                          * (original's FUN_80021a0c dark-hold in an OT bucket below the text) */
 static int           s_go_flyin = -1;    /* YOU DIED letter fly-in tick 0..50 (-1 = classic full draw) */
 static SDL_Texture  *s_gameover_tex = NULL;   /* YOU DIED graphic (YOUDIED.TIM), converted once */
 static int           s_gameover_w = 0, s_gameover_h = 0, s_gameover_show = 0;
@@ -842,6 +844,21 @@ void re15_render_end_frame(void)
         SDL_SetRenderDrawBlendMode(s_renderer, SDL_BLENDMODE_BLEND);
     }
 
+    /* Pre-intro NARRATOR-ON-BLACK: full-screen black drawn UNDER the subtitle (immediately
+     * before the subtitle overlay below). Byte-true to the original: sub11's narrator plays on
+     * the cut-to-black held from the 1240->1170 transition — the helipad BG07 (Cut_chg 7) + Leon
+     * stay hidden until the sub02 cinematic (Cut_chg 0) fades in. The engine's full-screen
+     * dark-hold FUN_80021a0c @0x80021a0c draws in an OT bucket UNDER the subtitle, so the
+     * narration reads on black. (s_fade_alpha, the cinematic fade-in, draws LAST/over the text
+     * and so cannot serve as this under-text black — hence a dedicated layer here.) */
+    if (s_scene_black) {
+        SDL_SetRenderDrawBlendMode(s_renderer, SDL_BLENDMODE_NONE);
+        SDL_SetRenderDrawColor(s_renderer, 0, 0, 0, 255);
+        SDL_Rect fullb = { 0, 0, SCREEN_XRES, SCREEN_YRES };
+        SDL_RenderFillRect(s_renderer, &fullb);
+        SDL_SetRenderDrawBlendMode(s_renderer, SDL_BLENDMODE_BLEND);
+    }
+
     /* Subtitle overlay ON TOP of the 3D + foreground AND the letterbox bars (drawn after
      * the character tris + sprite.pri overdraw so the actors' feet no longer cover the text,
      * and after the bars so the cinematic subtitle reads on the black bar — #1B). */
@@ -1122,6 +1139,10 @@ void re15_render_pc_set_white_fade(int a)
 /* Flat-BLACK background mode (byte-true FUN_80021634(2,0)): the pre-rendered room backdrop is
  * replaced by black; the 3D scene (the corpse + zombies) keeps rendering on top. */
 void re15_render_pc_set_black_bg(int on) { s_black_bg = on ? 1 : 0; }
+
+/* Pre-intro narrator-on-black: hold a full-screen black UNDER the subtitle while the first-visit
+ * ROOM1170 narrator (sub11) runs (byte-true FUN_80021a0c @0x80021a0c dark-hold below the text). */
+void re15_render_pc_set_scene_black(int on) { s_scene_black = on ? 1 : 0; }
 
 /* YOU DIED letter fly-in tick (byte-true FUN_80015a80: 4 letter quads glide (target-start)/0x32
  * over 50 frames). The port draws the YOUDIED.TIM in 4 horizontal strips gliding in from

@@ -3208,6 +3208,19 @@ re_title:;
                         re15_render_pc_set_fade(0);
                     }
                 }
+
+                /* NARRATOR-ON-BLACK (byte-true): hold the screen black UNDER the subtitle while
+                 * the first-visit pre-intro narrator (sub11) runs. The 1240->1170 transition cuts
+                 * to black; the black is HELD through the narrator and lifts only when the helipad
+                 * cinematic (first cut 0) begins its fade-in — s_intro_faded flips there, so the
+                 * black hands straight off to the s_fade_alpha 255->0 ramp. Duration = sub11's own
+                 * SCD Sleeps (no invented frame count); gate = the first visit (s_preintro), the
+                 * same condition that spawns sub11 (mainScd Ck(3,125,0)). Original = full-screen
+                 * dark-hold FUN_80021a0c @0x80021a0c drawn in an OT bucket under the subtitle. */
+                {
+                    extern void re15_render_pc_set_scene_black(int on);
+                    re15_render_pc_set_scene_black(s_preintro && !s_intro_faded);
+                }
             }
             /* Action-button press edge (Square = Enter on PC). */
             /* --- SHARED interpreter step (commons re15_game_step) ---
