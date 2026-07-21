@@ -444,3 +444,12 @@ target_link_libraries(test_item_modal PRIVATE re15_engine re15_test_support)
 target_include_directories(test_item_modal PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_item_modal COMMAND test_item_modal)
 set_tests_properties(unit_item_modal PROPERTIES TIMEOUT 30)
+
+# --- ROOM1150 item box = message-only AOT (inv_plan gap 18, wave 6): slot-5 Aot_set -> sub07 msg 3 ---
+add_executable(test_room1150_itembox test_room1150_itembox.c)
+target_link_libraries(test_room1150_itembox PRIVATE re15_engine re15_test_support)
+target_include_directories(test_room1150_itembox PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_room1150_itembox PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_room1150_itembox COMMAND test_room1150_itembox)
+set_tests_properties(unit_room1150_itembox PROPERTIES TIMEOUT 30)
