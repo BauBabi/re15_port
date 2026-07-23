@@ -54,6 +54,7 @@ static uint16_t s_script[RE15_SCRIPT_MAX_TICKS];
 static int      s_script_len   = 0;      /* number of scripted ticks, -1 = none */
 static int      s_script_start = 90;
 static int      s_script_init  = 0;
+static int      s_input_ticks  = 0;   /* rendered frames in ALL modes (front-end included) */
 
 static uint16_t script_bit_for(char c)
 {
@@ -254,11 +255,22 @@ void re15_input_tick(void)
     }
 
     /* SCRIPTED-INPUT OVERRIDE (parity run): replace the live keyboard bits with the fixed
-     * timeline for this frame. Keyed on g_engine.frame_count so it is deterministic; the
-     * pad_pressed/pad_released derivation below stays correct (it diffs bits vs pad_previous). */
+     * timeline for this frame. The pad_pressed/pad_released derivation below stays correct
+     * (it diffs bits vs pad_previous).
+     *
+     * Keyed on OUR OWN tick counter, not g_engine.frame_count: the front-end loops (title,
+     * char-select, load screen) render and poll input but never advance frame_count, so a
+     * frame_count-keyed script froze at its start index for the whole front-end and COULD NOT
+     * press a single button there. That is why every scripted run had to jump straight into a
+     * room via RE15_START_ROOM — and a room reached that way is NOT the state a real
+     * playthrough arrives in. This counter advances once per re15_input_tick(), i.e. once per
+     * rendered frame in EVERY mode, so a script can drive boot -> title -> NEW GAME -> the
+     * intro rooms exactly like a player (and like the DuckStation --path capture it mirrors).
+     * RE15_START_ROOM runs are unaffected: they skip the front-end, so tick == frame_count. */
     if (!s_script_init) script_parse_once();
+    s_input_ticks++;
     if (s_script_len > 0) {
-        int t = (int)g_engine.frame_count - s_script_start;
+        int t = s_input_ticks - 1 - s_script_start;
         bits = (t >= 0 && t < s_script_len) ? s_script[t] : 0;
     }
 

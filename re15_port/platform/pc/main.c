@@ -3646,6 +3646,26 @@ re_title:;
                 rc.load_cinematic   = 0;   /* PC keeps its boot-loaded Elliot/rbj resident (not
                                             * RAM-constrained) → no per-room cinematic reload. */
                 if (re15_room_apply_pending(&rc)) {
+                    /* RE-POINT THE RAW RDT BYTES AT THE NEW ROOM.
+                     * rc only carries the PARSED rdt + the cut table; the consumers that
+                     * parse sections straight out of the file (sprite.pri masks, camera FX
+                     * CAMF, room ESP) use this raw buffer. Without this they kept reading the
+                     * BOOT room's bytes with the NEW room's offsets — silently, because a
+                     * bogus offset just yields "no data". Invisible to every RE15_START_ROOM
+                     * harness (there boot room == the room under test), but in a real
+                     * playthrough ROOM1240 -> ROOM1170 it made every sprite.pri cut parse 0
+                     * masks: the helipad lamps and the container foreground occluded NOTHING.
+                     * (Found by scripting boot -> NEW GAME instead of jumping into the room.) */
+                    {
+                        extern const unsigned char *re15_room_pc_bytes(int *size);
+                        int nsz = 0;
+                        const unsigned char *nbuf = re15_room_pc_bytes(&nsz);
+                        if (nbuf && nsz > 0) {
+                            rdt_buf  = (uint8_t *)nbuf;
+                            rdt_size = nsz;
+                            pc_load_room_esp(rdt_buf, rdt_size, dest_room);
+                        }
+                    }
                     /* BYTE-TRUE DOOR TRANSITION FADE-IN (RE1.5 transition FSM FUN_8001c958 state-1,
                      * RE'd wf_8e6a4d88): a PLAIN door CUTS to black on the warp frame (there is NO
                      * gradual fade-OUT — that path is exclusively the montage/cut flag aca3c&0x8000),

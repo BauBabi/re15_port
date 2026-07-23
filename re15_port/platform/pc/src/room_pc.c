@@ -16,6 +16,7 @@ extern uint8_t *re15_asset_read_file(const char *path, int *out_size);
 
 /* Keeps the resident room's RDT bytes alive (g_room_rdt points into it). */
 static unsigned char *s_pc_room_buf = NULL;
+static int            s_pc_room_size = 0;
 
 int re15_room_load(unsigned room_id)
 {
@@ -60,10 +61,21 @@ int re15_room_load(unsigned room_id)
     }
     if (s_pc_room_buf) free(s_pc_room_buf);   /* free the previous room's bytes */
     s_pc_room_buf     = buf;
+    s_pc_room_size    = size;
     g_current_room_id = room_id;
     g_room_rdt_ok     = 1;
     fprintf(stderr, "[room] PC loaded room%04x.rdt (%d bytes)\n", room_id, size);
     return 0;
+}
+
+/* The RAW bytes of the room currently resident in g_room_rdt. main.c keeps its own
+ * rdt_buf/rdt_size for the consumers that parse sections straight out of the file
+ * (sprite.pri, camera FX, ESP); on a cross-room transition those MUST be re-pointed
+ * here, or they keep reading the BOOT room's bytes with the NEW room's offsets. */
+const unsigned char *re15_room_pc_bytes(int *size)
+{
+    if (size) *size = s_pc_room_size;
+    return s_pc_room_buf;
 }
 
 /* PC cross-room render reset (re15_room_apply_pending ctx callback): the PC BG
