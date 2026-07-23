@@ -92,19 +92,21 @@ static void build_door(uint8_t *bc, uint8_t slot, uint8_t sce)
     bc[32] = OP_EVT_NEXT;
 }
 
-/* Drive the door-fire path: player at the rect centre (forward point within the
- * FUN_8002d1e8 +-900 window), action HELD for `frames` scans (the 9-frame
- * press-and-hold accumulator, obj+0x8C @0x8002bf60). */
+/* Drive the door-fire path: player stands IN FRONT of the door rect [500..1500]x[1500..2500]
+ * (centre 1000,2000 half 500) facing +X, so the byte-true forward-620 point (x+620) lands
+ * INSIDE the rect; a SQUARE press-edge (g_aot_action_pressed) fires the door in ONE scan
+ * (FUN_80042bac ACTION scan -> sce-2 handler @0x800430bc — NOT the old box-push 9-hold). */
 static void scan_door_frames(int frames)
 {
+    extern uint8_t g_aot_action_pressed;
     g_actors[RE15_ACTOR_SLOT_PLAYER].active = 1;
-    g_actors[RE15_ACTOR_SLOT_PLAYER].x = 1000;
+    g_actors[RE15_ACTOR_SLOT_PLAYER].x = 600;    /* forward-620 -> (1220,2000), inside the rect */
     g_actors[RE15_ACTOR_SLOT_PLAYER].z = 2000;
     g_actors[RE15_ACTOR_SLOT_PLAYER].rot_y = 0;
-    g_scd_action_held = 1;
+    g_aot_action_pressed = 1;
     for (int f = 0; f < frames; f++)
-        re15_aot_scan(1000, 2000, 0xFF);
-    g_scd_action_held = 0;
+        re15_aot_scan(600, 2000, 0xFF);
+    g_aot_action_pressed = 0;
 }
 
 /* ===========================================================================

@@ -675,21 +675,25 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
          * Mesh faces +X at rot_y=0 so forward = (cos, -sin) (re15 walker convention). */
         int door_inside = inside;
         if (a->type == RE15_AOT_TYPE_DOOR) {
+            /* DOOR reach = the byte-true AOT ACTION-scan geometry (FUN_80042bac, audit
+             * wf_adabbc59 + DuckStation ground truth 2026-07-23): a door installs sce=2 with
+             * flags=0x31 (0x20 forward | 0x10 action | 0x01 player; NO 0x40 centre), so ONLY
+             * the FORWARD-620 test runs — a point 620 units ahead of the player's facing
+             * (rotate (620,0) by yaw, ori 0x26c @0x80042bd0) must lie inside the door's EXACT
+             * rect/quad (FUN_80042b64). This REPLACES the old 563/±900-around-centre reach,
+             * which was mis-transplanted from FUN_8002d1e8 @0x8002bf50 — the forward-reach of
+             * the BOX-PUSH updater FUN_8002bd44 (a DIFFERENT function; that whole 9-frame-hold
+             * path shoves a pushable box, it is NOT the door mechanism). */
             int ry = (int)g_actors[RE15_ACTOR_SLOT_PLAYER].rot_y;
             int32_t c = re15_cos_q12(ry), s = re15_sin_q12(ry);
-            int32_t fx = player_x + (int32_t)((563 * c) >> 12);
-            int32_t fz = player_z - (int32_t)((563 * s) >> 12);
-            door_inside = (abs_i32(fx - a->x) <= 900) && (abs_i32(fz - a->z) <= 900);
-            /* BAND GATE (byte-true FUN_8002bd44 @0x8002bf38-bf44): the original tests
-             * player_band (DAT_800acad6) == door object band (obj+0x82) BEFORE the
-             * forward-reach FUN_8002d1e8; mismatched bands skip the door entirely. The
-             * door band = Door_aot_set pc[4] (door_params.band): ROOM1170 door0/1/6=band4
-             * (courtyard), door4/5=band0 (pit). This is what keeps the floors separate —
-             * a band-4 courtyard player can NOT walk into a band-0 pit door (its rect is
-             * reachable in XZ because band-0 walls don't block a band-4 player, but the
-             * band gate stops the trigger). You must descend the stair onto band 0 first.
-             * Only gate when a collision band is established (>=0); a -1 (unknown) band
-             * room (no SCA / pre-band) keeps the old ungated behaviour. */
+            int32_t fx = player_x + (int32_t)((620 * c) >> 12);
+            int32_t fz = player_z - (int32_t)((620 * s) >> 12);
+            door_inside = a->has_quad
+                        ? re15_aot_point_in_quad(fx, fz, a->xs, a->zs)
+                        : ((abs_i32(fx - a->x) <= a->half_w) && (abs_i32(fz - a->z) <= a->half_h));
+            /* BAND GATE (byte-true FUN_80042cac): player floor-band (DAT_800acad6) == door
+             * band (door_params band, from Door_aot_set pc[4]) unless bit 0x80 / a pre-band
+             * (-1) room. Keeps floors separate (ROOM1170 courtyard band4 vs pit band0). */
             int pb = re15_collision_debug_band();
             if (pb >= 0 && (int)g_aot.door_params[i].band != pb && !is_auto_door)
                 door_inside = 0;
@@ -872,20 +876,6 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
                 }
             }
         }
-        /* DOOR 9-frame press-and-HOLD accumulator (byte-true FUN_8002bd44, obj+0x8C @0x8002bf60):
-         * the original opens a door only after the action button is HELD for 9 consecutive frames
-         * while the forward-reach + band both hold — NOT on a single tap-edge (which is what the port
-         * fired on). The counter resets to 0 the instant any condition fails. (The blocked-path
-         * variant that latches the counter at 10 via FUN_8003b558 is a faithful-line deferral — the
-         * port's collision already keeps the player out of a physically blocked doorway.) */
-        if (a->type == RE15_AOT_TYPE_DOOR) {
-            extern uint8_t g_scd_action_held;
-            if (door_inside && g_scd_action_held && !msg_block) {
-                if (a->door_hold < 9) a->door_hold++;
-            } else {
-                a->door_hold = 0;
-            }
-        }
         int is_action = (a->type == RE15_AOT_TYPE_DOOR ||
                          a->type == RE15_AOT_TYPE_GENERIC ||
                          a->type == RE15_AOT_TYPE_MESSAGE ||
@@ -902,7 +892,13 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
                         * Tür wird dort NICHT spurious ausgelöst. */
                        ? (in_cinematic && scd_idle && scd_ran && !msg_block && !action_fired)
                  : (a->type == RE15_AOT_TYPE_DOOR)
-                       ? (a->door_hold == 9 && !msg_block && !action_fired)   /* opens on the 9th held frame */
+                       /* SQUARE press-edge (byte-true: the 5 ground command-states [8..12] of the
+                        * player-cmd FSM @0x80073f90 test DAT_800ac76c & 0x80 = virtual edge = raw
+                        * SQUARE, then run the ACTION scan FUN_80042bac(kind=0x10) -> sce-2 handler
+                        * @0x800430bc = transition. A single press, NO hold. g_aot_action_pressed =
+                        * pad_pressed & SQUARE. DuckStation ground truth 2026-07-23: a Square tap at
+                        * the briefing door warped to room1130; a 3.5s forward walk-in did NOT.) */
+                       ? (door_inside && g_aot_action_pressed && !msg_block && !action_fired)
                  : (a->type == RE15_AOT_TYPE_ITEM)
                        /* ITEM = ACTION-gated (wf_f536e1ee #5: all 162 shipped items carry flags
                         * bit 0x10 SET — the sce9 handler runs from the press-edge scan only;

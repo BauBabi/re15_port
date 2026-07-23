@@ -59,7 +59,7 @@ extern uint8_t g_scd_action_held;   /* HELD action level (pad_current & SQUARE) 
  * auf (player_x + 563, player_z), trifft der Reach exakt.
  * ========================================================================= */
 
-#define DOOR_REACH_DIST  563   /* aot_common.c:366 — Forward-Reach-Distanz */
+#define DOOR_REACH_DIST  620   /* aot_common.c:366 — Forward-Reach-Distanz */
 
 /* Hilfs-Setup: Engine-Zustand in einen definierten Ausgangszustand bringen.
  * Leert AOT-Slots, SCD-VM, Actor-Pool, Room-Change-Queue und die
@@ -172,7 +172,7 @@ static int test_same_stage_room_change(void)
     setup_door_aot(0, 0, 0, dest_stage, dest_room,
                    100, -50, 200, 2048, 3);
 
-    g_scd_action_held = 1; g_aot_action_pressed = 0;   /* byte-true: HOLD, not tap */
+    g_aot_action_pressed = 1;   /* byte-true: SQUARE press-edge */
     for (int _df = 0; _df < 9; _df++)   /* door opens on the 9th held frame */
         re15_aot_scan(g_actors[RE15_ACTOR_SLOT_PLAYER].x,
                   g_actors[RE15_ACTOR_SLOT_PLAYER].z, 0xFF);
@@ -239,7 +239,7 @@ static int test_stage_change_transition(void)
     setup_door_aot(0, 0, 0, dest_stage, dest_room,
                    -300, 0, 500, 1024, 1);
 
-    g_scd_action_held = 1; g_aot_action_pressed = 0;   /* byte-true: HOLD, not tap */
+    g_aot_action_pressed = 1;   /* byte-true: SQUARE press-edge */
     for (int _df = 0; _df < 9; _df++)   /* door opens on the 9th held frame */
         re15_aot_scan(g_actors[RE15_ACTOR_SLOT_PLAYER].x,
                   g_actors[RE15_ACTOR_SLOT_PLAYER].z, 0xFF);
@@ -309,7 +309,7 @@ static int test_same_room_teleport(void)
     setup_door_aot(0, 0, 0, /*dest_stage*/0, /*dest_room*/0x17,
                    400, 0, -200, 3072, 5);
 
-    g_scd_action_held = 1; g_aot_action_pressed = 0;   /* byte-true: HOLD, not tap */
+    g_aot_action_pressed = 1;   /* byte-true: SQUARE press-edge */
     for (int _df = 0; _df < 9; _df++)   /* door opens on the 9th held frame */
         re15_aot_scan(g_actors[RE15_ACTOR_SLOT_PLAYER].x,
                   g_actors[RE15_ACTOR_SLOT_PLAYER].z, 0xFF);
@@ -355,7 +355,7 @@ static int test_same_room_teleport(void)
     place_player(0, 0);
     setup_door_aot(0, 0, 0, /*dest_stage*/0, /*dest_room*/0x00,
                    650, 0, 50, 1024, 3);
-    g_scd_action_held = 1; g_aot_action_pressed = 0;
+    g_aot_action_pressed = 1;   /* byte-true: SQUARE press-edge */
     for (int _df = 0; _df < 9; _df++)
         re15_aot_scan(g_actors[RE15_ACTOR_SLOT_PLAYER].x,
                   g_actors[RE15_ACTOR_SLOT_PLAYER].z, 0xFF);
@@ -429,7 +429,7 @@ static int test_band_mismatch_blocks_trigger(void)
     /* setup_door_aot setzt door_params.band = 0 (Pit). Player-Band 4 != 0 → Gate. */
     setup_door_aot(0, 0, 0, 0, 0x14, 100, 0, 200, 2048, 3);
 
-    g_scd_action_held = 1; g_aot_action_pressed = 0;   /* byte-true: HOLD, not tap */
+    g_aot_action_pressed = 1;   /* byte-true: SQUARE press-edge */
     for (int _df = 0; _df < 9; _df++)   /* door opens on the 9th held frame */
         re15_aot_scan(g_actors[RE15_ACTOR_SLOT_PLAYER].x,
                   g_actors[RE15_ACTOR_SLOT_PLAYER].z, 0xFF);
@@ -466,7 +466,7 @@ static int test_out_of_reach_no_trigger(void)
      * deutlich außerhalb von ±900 des Tür-Zentrums (563,0). */
     place_player(-5000, 0);
 
-    g_scd_action_held = 1; g_aot_action_pressed = 0;   /* byte-true: HOLD, not tap */
+    g_aot_action_pressed = 1;   /* byte-true: SQUARE press-edge */
     for (int _df = 0; _df < 9; _df++)   /* door opens on the 9th held frame */
         re15_aot_scan(g_actors[RE15_ACTOR_SLOT_PLAYER].x,
                   g_actors[RE15_ACTOR_SLOT_PLAYER].z, 0xFF);

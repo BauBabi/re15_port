@@ -142,7 +142,7 @@ static void setup_door_aot(int slot, int32_t range,
                            uint8_t dest_cut)
 {
     re15_aot_set_door(slot,
-                      /* cx, cz   */ 0, 0,
+                      /* cx, cz   */ 620, 0,   /* door centre AT the player's forward-620 point (faces +X) */
                       /* half_w/h */ range, range,
                       /* target_cut */ dest_cut,
                       spawn_x, spawn_y, spawn_z, spawn_yaw);
@@ -177,7 +177,7 @@ static int test_stage1_to_stage2_full(void)
     /* Spieler im Ursprung, Aktionstaste gedrückt. */
     g_actors[RE15_ACTOR_SLOT_PLAYER].x = 0;
     g_actors[RE15_ACTOR_SLOT_PLAYER].z = 0;
-    g_scd_action_held = 1; g_aot_action_pressed = 0;   /* byte-true: HOLD, not a tap edge */
+    g_aot_action_pressed = 1;   /* byte-true: SQUARE press-edge */
 
     /* AOT-Scan (active_cut beliebig — DOOR ignoriert cam_from-Filter). Byte-true: die Tür öffnet
      * erst nach 9 gehaltenen Frames (door_hold-Akkumulator, aot_common.c), nicht auf einer Edge. */
@@ -243,7 +243,7 @@ static int test_cross_stage_elza(void)
 
     g_actors[RE15_ACTOR_SLOT_PLAYER].x = 0;
     g_actors[RE15_ACTOR_SLOT_PLAYER].z = 0;
-    g_scd_action_held = 1; g_aot_action_pressed = 0;   /* byte-true: HOLD, not tap */
+    g_aot_action_pressed = 1;   /* byte-true: SQUARE press-edge */
     for (int _df = 0; _df < 9; _df++)   /* door opens on the 9th held frame */
         re15_aot_scan(0, 0, 0);
 
