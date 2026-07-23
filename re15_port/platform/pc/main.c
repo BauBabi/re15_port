@@ -3059,7 +3059,10 @@ re_title:;
                  * → overdraw off. */
                 extern int re15_pri_load_cut_atlas(int cut_idx);
                 int has_fg = re15_pri_load_cut_atlas(active_cut_idx);
-                if (has_fg && pri_n > 0) {
+                /* RE15_NO_PRI=1: measurement A/B — suppress the foreground overdraw
+                 * so a diff against the normal frame shows exactly which pixels the
+                 * sprite.pri masks paint, and onto what. */
+                if (has_fg && pri_n > 0 && !getenv("RE15_NO_PRI")) {
                     int sx[RE15_PRI_MAX_MASKS_PER_CUT], sy[RE15_PRI_MAX_MASKS_PER_CUT];
                     int dx[RE15_PRI_MAX_MASKS_PER_CUT], dy[RE15_PRI_MAX_MASKS_PER_CUT];
                     int pw[RE15_PRI_MAX_MASKS_PER_CUT], ph[RE15_PRI_MAX_MASKS_PER_CUT];
