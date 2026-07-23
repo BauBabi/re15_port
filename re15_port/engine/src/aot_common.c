@@ -872,14 +872,12 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
                 }
             }
         }
-        /* DOOR 9-frame walk-in-and-HOLD accumulator (byte-true FUN_8002bd44, obj+0x8C @0x8002bf60):
-         * the original opens a door only after the FORWARD/UP direction is HELD for 9 consecutive
-         * frames while the forward-reach + band both hold — i.e. by WALKING INTO the door, NOT a
-         * Square tap or hold. @0x8002bf24 gates the counter on DAT_800ac768 & 1 = virtual held bit 0
-         * = raw UP (remap table @0x80073dbc[0]=0x1000); g_scd_action_held now carries that bit
-         * (game_step_common.c). The counter resets to 0 the instant any condition fails. (The
-         * blocked-path variant that latches the counter at 10 via FUN_8003b558 is a faithful-line
-         * deferral — the port's collision already keeps the player out of a physically blocked doorway.) */
+        /* DOOR 9-frame press-and-HOLD accumulator (byte-true FUN_8002bd44, obj+0x8C @0x8002bf60):
+         * the original opens a door only after the action button is HELD for 9 consecutive frames
+         * while the forward-reach + band both hold — NOT on a single tap-edge (which is what the port
+         * fired on). The counter resets to 0 the instant any condition fails. (The blocked-path
+         * variant that latches the counter at 10 via FUN_8003b558 is a faithful-line deferral — the
+         * port's collision already keeps the player out of a physically blocked doorway.) */
         if (a->type == RE15_AOT_TYPE_DOOR) {
             extern uint8_t g_scd_action_held;
             if (door_inside && g_scd_action_held && !msg_block) {

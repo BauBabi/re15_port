@@ -59,8 +59,8 @@
 #include <string.h>
 #include <stdint.h>
 
-extern uint8_t g_scd_action_held;   /* HELD forward/UP level (virtual pad bit0 = raw UP, @0x8002bf24) —
-                                     * the byte-true door accumulator: walk INTO the door 9 frames. */
+extern uint8_t g_scd_action_held;   /* HELD action level (pad_current & SQUARE) — the byte-true door
+                                     * accumulator; a single edge no longer opens a door. */
 
 /* =========================================================================
  * Test-Konstanten

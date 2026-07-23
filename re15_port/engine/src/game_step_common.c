@@ -162,17 +162,12 @@ void re15_game_step(const re15_game_ctx_t *c)
     extern uint16_t g_scd_pad_edge;
     g_scd_pad_edge = re15_pad_virtual_word(c->pad_pressed);
 
-    /* DOOR-advance input HELD — the LEVEL that drives the door AOT's 9-frame open counter.
-     * BYTE-TRUE FUN_8002bd44 @0x8002bf24: the counter (obj+0x8C) only increments while
-     * `DAT_800ac768 & 1` is held; it is the VIRTUAL held word, and virtual bit 0 is mapped
-     * from RAW **UP** by the config remap table @0x80073dbc[0]=0x1000 (=UP). FUN_80030444
-     * @0x800304b8 builds the word: virtual bit i <- (raw_pad & table[i]). So a door opens by
-     * WALKING FORWARD into it (hold Up 9 frames while in reach+band) — the classic RE door,
-     * NOT a held Square. The old `& SQUARE` (commit 82bbc856) meant walking into a door did
-     * nothing → doors were "only rarely clickable". Using re15_pad_virtual_word keeps it
-     * config-remap-correct (byte-true DAT_800ac768). */
+    /* HELD action-button state (Square) for the dialog FSM's fast-forward: the original
+     * (FUN_80028134 state 1) reads DAT_800ac768 (held pad) — holding the button makes the
+     * typewriter timer fall 4× = speed up the writing. g_aot_action_pressed above is the
+     * EDGE (advance/confirm); this is the LEVEL (held). */
     extern uint8_t g_scd_action_held;
-    g_scd_action_held = (re15_pad_virtual_word(c->pad_current) & 0x1u) ? 1 : 0;
+    g_scd_action_held = (c->pad_current & RE15_PAD_BIT_SQUARE) ? 1 : 0;
     /* Full HELD word for the dialog FSM's fast-forward: FUN_80028134 @0x80028214 reads the
      * VIRTUAL held pad DAT_800ac768 & 0x4000 — virtual 0x4000 <- RAW SQUARE (@0x80073dbc[14],
      * wave-6 finding 4; the old "= CROSS" label was wrong). */
