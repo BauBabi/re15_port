@@ -439,16 +439,14 @@ extern uint16_t re15_pri_psx_clut;
 
 void re15_render_pri_sprites(const re15_pri_cut_t *pri)
 {
-    if (!re15_pri_psx_ok || !pri || pri->mask_count <= 0) return;
+    if (!re15_pri_psx_ok || !pri || pri->draw_count <= 0) return;
     render_buffer_t *buf = &s_ctx.buffers[s_ctx.active_buffer];
-    for (int i = 0; i < pri->mask_count; i++) {
+    for (int i = 0; i < pri->draw_count; i++) {
         const re15_pri_mask_t *m = &pri->masks[i];
         if (!has_room_for(sizeof(SPRT) + sizeof(DR_TPAGE))) break;
-        /* Per-mask OT bucket from the SHARED depth model (re15_pri.h): depth*2 (the
-         * original authors depth in its otz>>4 OT; our mesh buckets actors via otz>>3,
-         * render.c:21 → ×2). The PC port derives the matching camera-Z from the SAME
-         * model. Save-state-verified (RE15RBRNEXE_2): a fixture now occludes only an
-         * actor genuinely behind it, never Leon when he stands in front. */
+        /* Per-mask OT bucket from the SHARED depth model (re15_pri.h): the raw
+         * authored depth, x1 (@0x80039658 `sll a0,a0,2` = *4 BYTES = *1 WORD).
+         * Characters land at otz>>4 (@0x8002565c) in the SAME 1024-entry OT. */
         int z = RE15_PRI_MASK_OT_BUCKET(m->depth);
         if (z < 1)              z = 1;
         if (z >= OT_LENGTH - 1) z = OT_LENGTH - 2;

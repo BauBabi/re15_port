@@ -22,8 +22,7 @@
  *      if (p < 0) continue;   — backface (cross < 0 = facing away)
  *   4. gte_avsz3()            — average screen-Z of the 3 verts
  *      gte_stotz(&otz)        — read averaged Z
- *      if (otz < OTZ_NEAR_PLANE) continue;  — RE2 uses 8; we use the same
- *      if (otz > OTZ_FAR_CLAMP)  otz = OTZ_FAR_CLAMP;  — RE2 clamps to 0x1FFF
+ *      if (otz < 64) continue;   — byte-true RE1.5 @0x80025654 (no far clamp)
  *   5. bucket = OTZ_TO_BUCKET(otz, z_bucket)  — per-poly OT bucket placement
  *      (a static z_bucket lands every triangle in the same bucket → undefined
  *      LIFO draw order; per-poly OTZ restores painter's algorithm)
@@ -70,6 +69,7 @@
 #include "re15_camera.h"        /* view-matrix + view × bone compose */
 #include "re15_scd.h"           /* g_game.player_face_{sin,cos}_q12 */
 #include "re15_light.h"         /* #1c: per-actor NCCT shading */
+#include "re15_pri.h"           /* shared OT-bucket model (char = otz>>4) */
 
 /* #1c port (2026-06-01): per-actor light context. Set up once per actor in
  * mesh_psx_render_skeletal (eval_pos = actor's own world pos, canonical
@@ -253,14 +253,16 @@ extern void re15_render_textured_tri(int x0, int y0, int u0, int v0,
 #define OT_LENGTH                1024
 #define OT_BACKGROUND_BUCKET     (OT_LENGTH - 1)   /* deepest, drawn first */
 
-/* Per-poly OTZ gating, mirrors RE2's FUN_80027bec.c:
- *   - OTZ < 8: vertex too close to camera → drop the triangle. The GTE's
- *     perspective-divide saturated, so projected coords are garbage.
- *   - OTZ > 0x1FFF: vertex far away → clamp to keep the bucket index
- *     in a sane range. We don't drop these (they're behind-camera but
- *     still emitted to far OT bucket; the GPU then per-pixel clips). */
-#define OTZ_NEAR_PLANE_DROP   8
-#define OTZ_FAR_CLAMP         0x1FFF
+/* Per-poly OTZ gating — BYTE-TRUE to RE1.5 (not the RE2 analogy it used to be):
+ *   - NEAR DROP at otz < 64. FUN_800254a0 @0x80025654: `sra v0,v1,6` then
+ *     `beq v0,zero,<skip>` — the poly is dropped iff otz>>6 == 0, i.e. otz < 64.
+ *     (The old value 8 came from RE2's FUN_80027bec.)
+ *   - NO FAR CLAMP. The original has no sltiu/blez between the OTZ read and the
+ *     OT link in any of its 8 mesh drawers; otz>>4 spans the full 1024-entry OT
+ *     (otz up to 16383). The old 0x1FFF clamp compressed everything beyond
+ *     otz=8191 into the near half of the table. The bucket bound in
+ *     otz_to_bucket() remains as an out-of-range guard only. */
+#define OTZ_NEAR_PLANE_DROP   RE15_PRI_OTZ_NEAR_DROP    /* 64 @0x80025654 */
 
 /* GTE FLAG (cop2 control reg 31) — error/saturation bitmask.
  * Bit 31 is the master error bit (OR of bits 30..23 and 18..13). After
@@ -314,24 +316,23 @@ static int tri_within_psx_delta_limit(int sx0, int sy0,
  * [z_base, OT_BACKGROUND_BUCKET - 1] so mesh prims sit ABOVE the
  * background gradient but below any HUD layer.
  *
- * Phase 4.5.7.6 (2026-05-19): RE2-faithful bucket = OTZ >> 1.
- * Verified against RE2_Quellcode/FUN_8002d718.c:82-88 which does
- * `if (0x1fff < otz) otz = 0x1fff; ot_slot = ot + ((otz >> 1) & 0xffc)`
- * — the `& 0xffc` is the byte-offset form of `& 0x3FF` on the word
- * index, i.e. bucket = (OTZ >> 1) mod 1024. With OTZ clamped to 0x1FFF
- * upstream and OT_LENGTH=1024 this gives ~8 OTZ units per bucket,
- * matching RE2 exactly.
+ * BYTE-TRUE (RE1.5 PSX.EXE, wf_beffdbe5): the character/mesh poly OT WORD index
+ * is `otz >> 4`, identical in all 8 mesh drawers of the original —
+ * FUN_800254a0 @0x8002565c `sra v1,v1,0x4` then `sll v1,v1,0x2` (word→byte) and
+ * `addu v1,s0,v1` with s0 = OT base 0x800AA6D8 + frameflip*0x1000; the same
+ * sequence at 0x8002303c, 0x8002321c, 0x80023670, 0x800239ac, 0x80023e10,
+ * 0x80024294, 0x800258a8. There is NO bias, NO `& 0xffc`, NO upper clamp between
+ * the OTZ read and the OT link.
+ *
+ * The previous `otz >> 3` came from RE2's FUN_8002d718 — an ANALOGY, not RE1.5,
+ * and it is wrong for this game: it halved every character's bucket relative to
+ * the sprite.pri masks, which the original links at the raw depth (@0x80039658).
  *
  * z_base is the minimum bucket (closest to camera) — caller pins this
  * to keep meshes out of the BG/HUD reserved buckets. */
 static int otz_to_bucket(long otz, int z_base)
 {
-    /* 2026-06-01 (audit finding #44): RE2 FUN_8002d718 indexes a 1024-WORD OT by
-     * BYTE offset ((otz>>1)&0xffc); byte/4 = word index = otz>>3. We were doing
-     * otz>>1 as a WORD index (4× too coarse) → with otz clamped to 0x1FFF every
-     * poly with otz>=2044 collapsed into bucket 1022 → far-field z-fighting
-     * (arm-through-torso). otz is pre-clamped to 0x1FFF so otz>>3 = 0..1023. */
-    int bucket = (int)(otz >> 3);
+    int bucket = (int)RE15_PRI_CHAR_OT_BUCKET(otz);   /* otz>>4 @0x8002565c */
     if (bucket < z_base)                bucket = z_base;
     if (bucket >= OT_BACKGROUND_BUCKET) bucket = OT_BACKGROUND_BUCKET - 1;
     return bucket;
@@ -493,7 +494,6 @@ static void render_one_mesh_via_gte(const re15_md1_mesh_t *mesh, int mesh_idx,
             gte_avsz3();
             gte_stotz(&otz);
             if (otz < OTZ_NEAR_PLANE_DROP) continue;
-            if (otz > OTZ_FAR_CLAMP) otz = OTZ_FAR_CLAMP;
 
             /* --- Step 5: per-poly OT bucket. */
             int bucket = otz_to_bucket(otz, z_bucket);
@@ -636,7 +636,6 @@ static void render_one_mesh_via_gte(const re15_md1_mesh_t *mesh, int mesh_idx,
             gte_avsz4();
             gte_stotz(&otz);
             if (otz < OTZ_NEAR_PLANE_DROP) continue;
-            if (otz > OTZ_FAR_CLAMP) otz = OTZ_FAR_CLAMP;
 
             int bucket = otz_to_bucket(otz, z_bucket);
 
@@ -1054,8 +1053,7 @@ void mesh_psx_render_actor_shadow(int z_bucket, const re15_camera_view_t *view,
     long otz;
     gte_avsz4();
     gte_stotz(&otz);
-    if (otz < OTZ_NEAR_PLANE_DROP) return;          /* off-stage / behind camera */
-    if (otz > OTZ_FAR_CLAMP) otz = OTZ_FAR_CLAMP;
+    if (otz < OTZ_NEAR_PLANE_DROP) return;          /* otz<64 @0x80025654 */
     gte_stsxy(&xy3);
 
     POLY_FT4 *p = (POLY_FT4 *) re15_render_prim_alloc(sizeof(POLY_FT4));

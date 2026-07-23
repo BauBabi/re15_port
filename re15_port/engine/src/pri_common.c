@@ -72,7 +72,16 @@ int re15_pri_parse_section(const uint8_t *data, size_t data_size,
     int            grp_used = 0;
     int            out_count = 0;
 
-    for (int i = 0; i < (int)mask_count_decl; i++) {
+    /* BUILD BOUND = the sum of the GROUP counts, not the declared count. The
+     * original's build is a NESTED loop bounded purely by the group table (outer
+     * over groupCount @0x8003954c, inner over group[i].count @0x8003950c); the
+     * declared halfword is not a loop bound anywhere in FUN_800392d4. The two
+     * differ in real data: ROOM1210/ROOM1211 cut 4 declare 75 but the groups sum
+     * to 77 (and hdr[7]=77), so the original builds 77 where the port built 75. */
+    int build_total = 0;
+    for (int i = 0; i < (int)group_count; i++) build_total += (int)group_n[i];
+
+    for (int i = 0; i < build_total; i++) {
         if ((size_t)(mp - data) + 8 > data_size) break;
 
         uint8_t  srcX     = mp[0];
@@ -132,5 +141,10 @@ int re15_pri_parse_section(const uint8_t *data, size_t data_size,
     }
 
     out->mask_count = out_count;
+    /* DRAW COUNT: the original overwrites RDT header byte[0] with the declared
+     * count truncated to 8 bits (@0x80039358: `sb t2,0(a0)`, t2 = pri_header>>16)
+     * and the per-frame sprite emitter walks that many records. Build != draw. */
+    out->draw_count = (int)(mask_count_decl & 0xFF);
+    if (out->draw_count > out_count) out->draw_count = out_count;
     return out_count;
 }
