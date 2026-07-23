@@ -175,7 +175,7 @@ static SDL_Texture *s_bg_pri_texture = NULL;
 static SDL_Texture *s_pri_atlas_tex = NULL;
 static int          s_pri_atlas_w = 0, s_pri_atlas_h = 0;
 typedef struct { int src_x, src_y, dst_x, dst_y, w, h, depth; } re15_pri_rect_t;
-#define RE15_PRI_RECTS_MAX 64
+#define RE15_PRI_RECTS_MAX RE15_PRI_MAX_MASKS_PER_CUT  /* = 105, the data maximum */
 static re15_pri_rect_t s_pri_rects[RE15_PRI_RECTS_MAX];
 static int             s_pri_rect_count = 0;
 /* Player screen position + camera-space Z (set per frame). A mask is skipped ONLY if
@@ -1563,6 +1563,26 @@ void re15_render_pc_set_pri_rects(const int *src_x, const int *src_y,
         s_pri_rects[i].h     = h[i];
         s_pri_rects[i].depth = depth ? depth[i] : 0;
     }
+}
+
+/* MEASUREMENT PROBE: copy the active cut's mask depths out for the [pocc] trace. */
+int re15_render_pc_debug_pri(int *depths, int max)
+{
+    int n = s_pri_rect_count < max ? s_pri_rect_count : max;
+    for (int i = 0; i < n; i++) depths[i] = s_pri_rects[i].depth;
+    return (s_pri_atlas_tex && s_pri_rect_count > 0) ? n : 0;
+}
+
+/* MEASUREMENT PROBE: copy the active cut's mask rects out for the [poccscan] trace. */
+int re15_render_pc_debug_pri_rects(int *dx, int *dy, int *w, int *h, int *dep, int max)
+{
+    int n = s_pri_rect_count < max ? s_pri_rect_count : max;
+    for (int i = 0; i < n; i++) {
+        dx[i] = s_pri_rects[i].dst_x; dy[i] = s_pri_rects[i].dst_y;
+        w[i]  = s_pri_rects[i].w;     h[i]  = s_pri_rects[i].h;
+        dep[i] = s_pri_rects[i].depth;
+    }
+    return (s_pri_atlas_tex && s_pri_rect_count > 0) ? n : 0;
 }
 
 /* Set the player's on-screen position + camera-space Z for the sprite.pri depth gate

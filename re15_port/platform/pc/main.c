@@ -3064,7 +3064,8 @@ re_title:;
                     int dx[RE15_PRI_MAX_MASKS_PER_CUT], dy[RE15_PRI_MAX_MASKS_PER_CUT];
                     int pw[RE15_PRI_MAX_MASKS_PER_CUT], ph[RE15_PRI_MAX_MASKS_PER_CUT];
                     int pz[RE15_PRI_MAX_MASKS_PER_CUT];
-                    int n = pri.mask_count;
+                    /* DRAWN count, not BUILT count (@0x80039358) — see re15_pri.h. */
+                    int n = pri.draw_count;
                     if (n > RE15_PRI_MAX_MASKS_PER_CUT) n = RE15_PRI_MAX_MASKS_PER_CUT;
                     for (int m = 0; m < n; m++) {
                         sx[m] = pri.masks[m].srcX;          sy[m] = pri.masks[m].srcY;
@@ -3156,6 +3157,50 @@ re_title:;
              * foreground he stands in front of, without dropping foreground elsewhere. */
             {
                 re15_actor_t *plz = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+                /* MEASUREMENT: RE15_POCC_TP="frame,x,z,rot" — pin the player at a scanned
+                 * "behind the mask" world spot from a given frame on (post-intro), so the
+                 * port and the PSX original can be photographed at the SAME pose. */
+                {
+                    const char *tp = getenv("RE15_POCC_TP");
+                    int tf = 0, tx = 0, tz = 0, tr = 0;
+                    if (tp && sscanf(tp, "%d,%d,%d,%d", &tf, &tx, &tz, &tr) == 4
+                        && (int)g_engine.frame_count >= tf) {
+                        /* GLIDE from a LATCHED start, re-asserted every frame: the camera
+                         * cut comes from the path-dependent RVD auto-scan, so a hard teleport
+                         * lands in the wrong cut; and an incremental glide gets overwritten by
+                         * the game step. Interpolate from the latched start instead. */
+                        static int have_start = 0, sx0 = 0, sz0 = 0, f0 = 0;
+                        if (!have_start) {
+                            have_start = 1; sx0 = plz->x; sz0 = plz->z; f0 = (int)g_engine.frame_count;
+                        }
+                        {
+                            int dx = tx - sx0, dz = tz - sz0;
+                            int ad = (dx < 0 ? -dx : dx) + (dz < 0 ? -dz : dz);
+                            int steps = ad / 250 + 1;
+                            int k = (int)g_engine.frame_count - f0;
+                            if (k > steps) k = steps;
+                            plz->x = sx0 + (int)((long)dx * k / steps);
+                            plz->z = sz0 + (int)((long)dz * k / steps);
+                            if (k >= steps) plz->rot_y = (int16_t)tr;
+                        }
+                    }
+                }
+                /* MEASUREMENT: RE15_POCC_SWEEP="startframe" — step the player through a
+                 * floor grid (the GAME picks the cut via its own RVD logic), and report
+                 * every spot where he lands INSIDE an active mask rect. This is the honest
+                 * "can Leon stand behind a foreground element at all" census. */
+                {
+                    const char *sw = getenv("RE15_POCC_SWEEP");
+                    int sf = 0;
+                    if (sw && sscanf(sw, "%d", &sf) == 1 && (int)g_engine.frame_count >= sf) {
+                        const int X0 = -12000, X1 = 15000, Z0 = -10000, Z1 = 17000, STEP = 500;
+                        const int NX = (X1 - X0) / STEP + 1;
+                        int idx = ((int)g_engine.frame_count - sf) / 3;
+                        int gx = X0 + (idx % NX) * STEP;
+                        int gz = Z0 + (idx / NX) * STEP;
+                        if (gz <= Z1) { plz->x = gx; plz->z = gz; }
+                    }
+                }
                 long pvx = ((long)plz->x * cam_view.rot[0] + (long)plz->y * cam_view.rot[1]
                           + (long)plz->z * cam_view.rot[2]) / 4096 + cam_view.trans[0];
                 long pvy = ((long)plz->x * cam_view.rot[3] + (long)plz->y * cam_view.rot[4]
@@ -3168,6 +3213,96 @@ re_title:;
                     psy = 120 + (int)(pvy * cam_view.fov_screen_dist / pvz);
                 }
                 re15_render_pc_set_pri_player(psx, psy, (int)pvz);
+                /* MEASUREMENT PROBE (RE15_POCC=1): per-frame player camera-Z vs each
+                 * active pri mask's threshold — the ground-truth instrument for the
+                 * sprite.pri occlusion crossover. Pure logging, no behavior. */
+                /* RE15_POCC_SCAN: once per cut, back-project a floor grid to find the
+                 * world positions that land INSIDE a mask rect (= "player stands behind
+                 * the foreground element"), and report the camera-Z there. This is the
+                 * instrument that decides the mask-vs-character crossover empirically. */
+                if (getenv("RE15_POCC_SCAN")) {
+                    static int scanned_cut = -999;
+                    if (scanned_cut != active_cut_idx) {
+                        scanned_cut = active_cut_idx;
+                        extern int re15_render_pc_debug_pri_rects(int *dx, int *dy, int *w,
+                                                                  int *h, int *dep, int max);
+                        int rx[64], ry[64], rw[64], rh[64], rd[64];
+                        int rn = re15_render_pc_debug_pri_rects(rx, ry, rw, rh, rd, 64);
+                        for (int wx = -13000; wx <= 15000; wx += 200) {
+                            for (int wz = -11000; wz <= 17000; wz += 200) {
+                                long vx = ((long)wx * cam_view.rot[0] + (long)plz->y * cam_view.rot[1]
+                                         + (long)wz * cam_view.rot[2]) / 4096 + cam_view.trans[0];
+                                long vy = ((long)wx * cam_view.rot[3] + (long)plz->y * cam_view.rot[4]
+                                         + (long)wz * cam_view.rot[5]) / 4096 + cam_view.trans[1];
+                                long vz = ((long)wx * cam_view.rot[6] + (long)plz->y * cam_view.rot[7]
+                                         + (long)wz * cam_view.rot[8]) / 4096 + cam_view.trans[2];
+                                if (vz <= 64) continue;
+                                int ssx = 160 + (int)(vx * cam_view.fov_screen_dist / vz);
+                                int ssy = 120 + (int)(vy * cam_view.fov_screen_dist / vz);
+                                for (int r = 0; r < rn; r++) {
+                                    if (ssx >= rx[r] && ssx < rx[r] + rw[r] &&
+                                        ssy >= ry[r] && ssy < ry[r] + rh[r]) {
+                                        fprintf(stderr, "[poccscan] cut=%d world=(%d,%d) scr=(%d,%d) "
+                                                "vz=%ld maskdepth=%d k32=%d k64=%d occ32=%d occ64=%d\n",
+                                                active_cut_idx, wx, wz, ssx, ssy, vz, rd[r],
+                                                rd[r] * 32, rd[r] * 64,
+                                                (int)(vz > rd[r] * 32), (int)(vz > rd[r] * 64));
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                /* Sweep report: is the player's projected point inside an ACTIVE mask? */
+                if (getenv("RE15_POCC_SWEEP")) {
+                    extern int re15_render_pc_debug_pri_rects(int *dx, int *dy, int *w,
+                                                              int *h, int *dep, int max);
+                    int rx[64], ry[64], rw[64], rh[64], rd[64];
+                    int rn = re15_render_pc_debug_pri_rects(rx, ry, rw, rh, rd, 64);
+                    for (int r = 0; r < rn; r++) {
+                        if (pvz > 64 && psx >= rx[r] && psx < rx[r] + rw[r] &&
+                            psy >= ry[r] && psy < ry[r] + rh[r]) {
+                            fprintf(stderr, "[poccsweep] cut=%d world=(%d,%d) scr=(%d,%d) vz=%ld "
+                                    "maskdepth=%d k32=%d k64=%d occ32=%d occ64=%d floor=%d\n",
+                                    active_cut_idx, plz->x, plz->z, psx, psy, pvz, rd[r],
+                                    rd[r] * 32, rd[r] * 64,
+                                    (int)(pvz > rd[r] * 32), (int)(pvz > rd[r] * 64),
+                                    re15_collision_on_floor(&g_room_rdt, plz->x, plz->z));
+                            /* RE15_POCC_SHOT: photograph the qualifying spots so the
+                             * occlusion can be judged on PIXELS, not on the model. */
+                            const char *shot_cut = getenv("RE15_POCC_SHOT");
+                            if (shot_cut
+                                && (atoi(shot_cut) == 0 || atoi(shot_cut) == active_cut_idx)
+                                && re15_collision_on_floor(&g_room_rdt, plz->x, plz->z)) {
+                                extern void re15_render_pc_screenshot(const char *path);
+                                static int shot_n = 0;
+                                if (shot_n < 40 && ((int)g_engine.frame_count % 3) == 2) {
+                                    char pth[256];
+                                    snprintf(pth, sizeof pth,
+                                             "shots/occ_c%d_%d_%d.bmp",
+                                             active_cut_idx, plz->x, plz->z);
+                                    re15_render_pc_screenshot(pth);
+                                    shot_n++;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+                if (getenv("RE15_POCC")) {
+                    extern int re15_render_pc_debug_pri(int *depths, int max);
+                    int md[64];
+                    int mn = re15_render_pc_debug_pri(md, 64);
+                    fprintf(stderr, "[pocc] F%u cut=%d pl=(%d,%d,%d) vz=%ld scr=(%d,%d) masks=%d",
+                            (unsigned)g_engine.frame_count, active_cut_idx, plz->x, plz->y, plz->z,
+                            pvz, psx, psy, mn);
+                    for (int mi2 = 0; mi2 < mn; mi2++)
+                        fprintf(stderr, " | d=%d k32=%d k64=%d occ32=%d occ64=%d",
+                                md[mi2], md[mi2] * 32, md[mi2] * 64,
+                                (int)(pvz > md[mi2] * 32), (int)(pvz > md[mi2] * 64));
+                    fprintf(stderr, "\n");
+                }
             }
 
             /* Helicopter rotor (BGM SUB layer = SsSeq slot 1): on/off is driven by the
