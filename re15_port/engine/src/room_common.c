@@ -100,12 +100,31 @@ int re15_room_apply_pending(const re15_room_apply_ctx_t *c)
     pl->z = g_room_change.z;
     pl->rot_y = g_room_change.yaw_4096;
 
-    /* (7) Re-init the SCD VM for the new room (main00+sub00 of the new RDT). */
+    /* (7) Re-init the SCD VM for the new room (main00+sub00 of the new RDT). This runs
+     * main00 THROUGH its spawned sub's first yield — so a room whose main00 fires an
+     * Evt_exec that immediately issues a Cut_chg has that Cut_chg queued here. */
     scd_room_reenter(c->rdt, g_room_change.x, g_room_change.z, 0);
 
-    /* (8) The door's entry cut is authoritative — drop any cut the new room's
-     * SCD init queued so it can't override the framed view; rebuild the view. */
-    g_scd.cam_change_pending = 0;
+    /* (8) Camera precedence (byte-true, RE'd 2026-07-22 from the ROOM1170 pre-intro trace):
+     * the new room's SCD init may have issued its OWN Cut_chg — e.g. ROOM1170 main00 ->
+     * Evt_exec(0x180B)=sub11 (the pre-intro narrator) -> Cut_chg(7), whose cut 7 is a VOID
+     * camera that renders the black narrator backdrop. The ORIGINAL runs main00 AFTER the door
+     * cut, so that Cut_chg OVERRIDES the door entry cut and also turns the RVD auto-scan OFF
+     * (op_cut_chg -> cut_auto_enabled=0). The port previously ALWAYS dropped the SCD's cut
+     * (cam_change_pending=0) + forced cut_auto=1 below, so the CAM_SWITCH scan picked the
+     * player's helipad zone and the narration read over the helipad instead of the black cut 7.
+     * FIX: when the SCD init queued a DIFFERENT cut, HONOR it (keep cam_change_pending + the
+     * cut_auto=0 it set); only otherwise force the door's entry cut (frames the teleported
+     * player) + enable the gameplay auto-camera (steps 8b/12 below). */
+    int scd_queued_cut = (g_scd.cam_change_pending && (int)g_scd.cam_id != cut)
+                       ? (int)g_scd.cam_id : -1;
+    if (scd_queued_cut >= 0) {
+        cut = scd_queued_cut;          /* the scripted cut is authoritative; leave cam_change_pending=1
+                                        * so the main-loop cut block applies it + loads its BG */
+        *c->cam_active_cut = cut;
+    } else {
+        g_scd.cam_change_pending = 0;  /* no SCD cut -> the door's entry cut frames the spawn */
+    }
     re15_camera_build_view(&(*c->active_cuts)[cut], c->cam_view);
 
     /* (9) ARCH: stream the entry cut's BG now (the per-cut load only fires on a
@@ -124,8 +143,11 @@ int re15_room_apply_pending(const re15_room_apply_ctx_t *c)
     re15_msg_load_room_block(c->rdt->messages, c->rdt->messages_size);
 
     /* (12) A door entry is GAMEPLAY → enable the RVD/CAM_SWITCH auto-camera
-     * (scd_room_reenter memset-cleared g_scd.cut_auto). */
-    g_scd.cut_auto_enabled = 1;
+     * (scd_room_reenter memset-cleared g_scd.cut_auto). NOT when the SCD init locked a
+     * scripted cut (its Cut_chg set cut_auto=0): re-enabling the scan would let it override
+     * the scripted narrator cut 7 with the player's zone (the ROOM1170 pre-intro bug). */
+    if (scd_queued_cut < 0)
+        g_scd.cut_auto_enabled = 1;
 
     /* (13) New room floor band from the door spawn Y (-(Y/0x708)). */
     re15_collision_set_band(re15_collision_band_from_y(pl->y));

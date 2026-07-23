@@ -844,12 +844,14 @@ void re15_render_end_frame(void)
         SDL_SetRenderDrawBlendMode(s_renderer, SDL_BLENDMODE_BLEND);
     }
 
-    /* Pre-intro NARRATOR-ON-BLACK: the GLOBAL engine fade FUN_80021a0c @0x80021a0c held at full
-     * black (RAM-verified DAT_800b5568=0xf0, dir DAT_800aca3c&0x10=1 — stage_saves/narrator_orig.sav),
-     * drawn in an OT bucket UNDER the subtitle so the pre-intro narration reads on it. At level 0xf0
-     * the fade is fully opaque black, which we draw here as a full-screen fill immediately BEFORE the
-     * subtitle overlay (byte-true bucket order). The cinematic fade-IN (level 0xf0->0) is the separate
-     * s_fade_alpha ramp drawn LAST — this held-black layer hands off to it at the reveal. */
+    /* Pre-intro NARRATOR black — REDUNDANT, precise safety net (see the full RE in main.c ~L3214).
+     * The byte-true black is CAMERA-DRIVEN: ROOM1170 sub11 does Cut_chg(7), and cut 7's camera is a
+     * VOID camera (RDT @file 0x160, byte-identical to the ROOM1240 montage dummy camera) that looks
+     * away from the helipad geometry -> the near-clip drops all 3D, leaving the real black MDEC still
+     * BG07 (decodes to pure 0,0,0). So cut 7 already renders black with no fill. This s_scene_black
+     * fill is gated EXACTLY on room 0x1170 + cut 7 (main.c) = it only ever fires where the result is
+     * already black, and never on the ROOM1240 montage stills or the ROOM1170 helipad cinematic. It is
+     * a redundant guarantee, not the mechanism; safe to delete once a windowed capture confirms cut 7. */
     if (s_scene_black) {
         SDL_SetRenderDrawBlendMode(s_renderer, SDL_BLENDMODE_NONE);
         SDL_SetRenderDrawColor(s_renderer, 0, 0, 0, 255);

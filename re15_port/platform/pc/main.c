@@ -3209,28 +3209,36 @@ re_title:;
                     }
                 }
 
-                /* NARRATOR-ON-BLACK — byte-true, RAM-VERIFIED (2026-07-21, original new-game savestate
-                 * stage_saves/narrator_orig.sav): the pre-intro narration reads on black because the
-                 * GLOBAL engine fade FUN_80021a0c @0x80021a0c is HELD at full black. Measured at TWO
-                 * points of the real pre-intro (ROOM1170 cut 2 @~105s AND cut 7/narrator @~140s):
-                 *   DAT_800b5568 (fade level) = 0xf0   (max = full black; ramps +/-0x10/frame)
-                 *   DAT_800aca3c & 0x10       = 1      (fade direction = to-black, HELD)
-                 *   DAT_800aca40 & 0x20000000 = 0      (NOT the AI-freeze), backdrop mode = 0 (NOT a
-                 *                                        flat backdrop) — ruling out both prior theories.
-                 * So the black is the door-transition cut-to-black held across the whole pre-intro
-                 * narration; it ramps in (fade-in) only at the reveal (sub02 Plc_ret -> player_mode 1).
-                 * The fade draws in an OT bucket UNDER the subtitle, so the narration reads on it.
-                 * The port models the HELD phase as a full-screen black under the subtitle (below),
-                 * handing off to the existing s_fade_alpha ramp at the cinematic. This is ROOM-AGNOSTIC
-                 * (a global fade, not a 1170 special case): gate on the full-text-narrator property
-                 * (re15_room_full_text = the pre-intro rooms {0x1170,0x1240}) + the pre-cinematic
-                 * window (s_preintro set at the first-visit narrator; !g_scd_self_reenter_fired = before
-                 * the sub02 helipad reenter). NOT g_current_room_id==0x1170 (that was a room-ID hack)
-                 * and NOT the global s_intro_faded one-shot (polluted by ROOM1240's Cut_chg(0..8)). */
+                /* PRE-INTRO NARRATOR BLACK — the byte-true mechanism is a VOID CAMERA, not a fill.
+                 * RE'd 2026-07-22 (workflow wf_72a0fb3a + self-verified from the RDT):
+                 *   ROOM1170 main00 (RDT @file 0x12c8): Ck(3,125,==0) [first visit] -> Door_aot_set(3,
+                 *   dest 0x1170) + Evt_exec(0x180B) = sub11 (the narrator). sub11 does Cut_chg(7) +
+                 *   Message_on(8..11) + Set(3,125,1) (so it is once-only) + Aot_on(3) (self-reenter ->
+                 *   sub00 -> sub15 = Elliot 0x47 + the crate Obj_model_set(0x2D) props + sub02 helipad).
+                 *   ROOM1170 CUT 7's camera (RDT @file 0x160) is a VOID camera pos(-12834,-3114,-9774)
+                 *   tgt(-7794,-2196,-22446) — BYTE-IDENTICAL to the dummy camera all 9 ROOM1240 montage
+                 *   cuts share. It looks away from the helipad geometry (crates + player sit near
+                 *   origin/+Z = BEHIND this camera), so the per-vertex near-clip (wz<0 -> cull, ~L4327)
+                 *   drops the whole 3D scene; combined with the real black MDEC still BG07 (decodes to
+                 *   pure 0,0,0), cut 7 renders BLACK with NO fill needed. The crates+Elliot are not even
+                 *   spawned yet (0x2D + type 0x47 are only in sub15, after the narrator's self-reenter).
+                 * So the port ALREADY blacks the narrator via the correct per-cut camera + near-clip.
+                 * s_scene_black below is now a PRECISE, redundant safety net GATED EXACTLY ON the
+                 * RDT-verified narrator cut (room 0x1170 + cut 7): it can never bleed onto the ROOM1240
+                 * montage stills (room!=0x1170) nor the ROOM1170 helipad cinematic (sub02 = cut 0/2), and
+                 * it no longer depends on the fragile s_preintro latch (which report 1 suspected of being
+                 * 0 at runtime in the real new-game flow -> the old gate's failure mode). It is byte-true-
+                 * ALIGNED (its output == the void-camera black at exactly this cut). Drop it entirely once
+                 * a windowed/real-flow capture confirms the void camera near-clips the helipad on screen.
+                 * NB: gating on cut 7 only works because the REAL fix is in re15_room_apply_pending
+                 * (room_common.c): it used to clobber sub11's Cut_chg(7) on the 1240->1170 door
+                 * (cam_change_pending=0 + cut_auto_enabled=1), so cut 7 NEVER held in the real flow and the
+                 * CAM_SWITCH auto-scan picked the player's helipad zone (the narration read over the
+                 * helipad). apply_pending now honours a SCD-init Cut_chg, so cut 7 holds through the
+                 * narrator (headless-verified: sub11 messages 8-11 run at cut=7 cut_auto=0). */
                 {
                     extern void re15_render_pc_set_scene_black(int on);
-                    re15_render_pc_set_scene_black(re15_room_full_text(g_current_room_id) &&
-                                                   s_preintro && !g_scd_self_reenter_fired);
+                    re15_render_pc_set_scene_black(g_current_room_id == 0x1170 && active_cut_idx == 7);
                 }
             }
             /* Action-button press edge (Square = Enter on PC). */
@@ -4956,6 +4964,12 @@ re_title:;
                                      cam_has_region, cam_region_xs, cam_region_zs))
                     continue;
                 int oid = (int)g_scd.props[pi].obj_id;
+#ifdef RE15_PROP_TRACE
+                { static int pn=0; if((pn++%60)==0)
+                    fprintf(stderr,"[PROP] pi=%d oid=%d type=%d @(%d,%d,%d)  PL@(%d,%d)\n",
+                        pi, oid, (int)g_scd.props[pi].obj_type, g_scd.props[pi].x, g_scd.props[pi].y, g_scd.props[pi].z,
+                        g_actors[RE15_ACTOR_SLOT_PLAYER].x, g_actors[RE15_ACTOR_SLOT_PLAYER].z); }
+#endif
                 const re15_md1_t *prop_md1 = NULL;
                 int prop_md1_ok = 0;
                 if (oid >= 0 && oid < 6 && s_room_prop_ok[oid]) {
