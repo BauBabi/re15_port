@@ -3165,26 +3165,42 @@ re_title:;
                  * port and the PSX original can be photographed at the SAME pose. */
                 {
                     const char *tp = getenv("RE15_POCC_TP");
-                    int tf = 0, tx = 0, tz = 0, tr = 0;
-                    if (tp && sscanf(tp, "%d,%d,%d,%d", &tf, &tx, &tz, &tr) == 4
-                        && (int)g_engine.frame_count >= tf) {
-                        /* GLIDE from a LATCHED start, re-asserted every frame: the camera
-                         * cut comes from the path-dependent RVD auto-scan, so a hard teleport
-                         * lands in the wrong cut; and an incremental glide gets overwritten by
-                         * the game step. Interpolate from the latched start instead. */
-                        static int have_start = 0, sx0 = 0, sz0 = 0, f0 = 0;
-                        if (!have_start) {
-                            have_start = 1; sx0 = plz->x; sz0 = plz->z; f0 = (int)g_engine.frame_count;
+                    if (tp && *tp) {
+                        /* "frame,x,z,rot[;x,z,rot]..." — glide through WAYPOINTS from a
+                         * latched start at ~250 u/frame, holding the last. Waypoints matter:
+                         * the camera cut comes from the path-dependent RVD auto-scan (in the
+                         * original too), so reproducing a PSX route needs the same route. */
+                        int wx[8], wz[8], wr[8], nw = 0, tf = 0;
+                        tf = atoi(tp);
+                        /* c always points at the separator BEFORE a triple (',' for the
+                         * first, ';' for each following), so one sscanf form serves both. */
+                        const char *c = strchr(tp, ',');
+                        while (c && nw < 8) {
+                            int a = 0, b = 0, r = 0;
+                            if (sscanf(c + 1, "%d,%d,%d", &a, &b, &r) != 3) break;
+                            wx[nw] = a; wz[nw] = b; wr[nw] = r; nw++;
+                            c = strchr(c + 1, ';');
                         }
-                        {
-                            int dx = tx - sx0, dz = tz - sz0;
-                            int ad = (dx < 0 ? -dx : dx) + (dz < 0 ? -dz : dz);
-                            int steps = ad / 250 + 1;
+                        if (nw > 0 && (int)g_engine.frame_count >= tf) {
+                            static int have_start = 0, sx0 = 0, sz0 = 0, f0 = 0;
+                            if (!have_start) {
+                                have_start = 1; sx0 = plz->x; sz0 = plz->z;
+                                f0 = (int)g_engine.frame_count;
+                            }
                             int k = (int)g_engine.frame_count - f0;
-                            if (k > steps) k = steps;
-                            plz->x = sx0 + (int)((long)dx * k / steps);
-                            plz->z = sz0 + (int)((long)dz * k / steps);
-                            if (k >= steps) plz->rot_y = (int16_t)tr;
+                            int px = sx0, pz2 = sz0;
+                            for (int w = 0; w < nw; w++) {
+                                int dx = wx[w] - px, dz = wz[w] - pz2;
+                                int ad = (dx < 0 ? -dx : dx) + (dz < 0 ? -dz : dz);
+                                int steps = ad / 250 + 1;
+                                if (k <= steps) {
+                                    plz->x = px + (int)((long)dx * k / steps);
+                                    plz->z = pz2 + (int)((long)dz * k / steps);
+                                    break;
+                                }
+                                k -= steps; px = wx[w]; pz2 = wz[w];
+                                plz->x = px; plz->z = pz2; plz->rot_y = (int16_t)wr[w];
+                            }
                         }
                     }
                 }
