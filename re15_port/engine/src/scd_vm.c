@@ -2806,16 +2806,16 @@ static int op_sce_em_set(scd_thread_t *t)
           re15_enemy_spawn_count_inc(); }        /* DAT_800aca4e ++ (@0x80042558-60): the behavior-
                                                   * table pick counts SPAWNS, never decremented */
         a->motion = re15_enemy_spawn_action(type, behavior);  /* byte-true spawn pose */
-        /* BYTE-TRUE PLAYBACK MODE (RE'd from the FUN_80050cb8 phase FSM): anim-flags
-         * (entity+0x1c4) bit 0x04 = LOOP, CLEAR = play-once-then-HOLD-LAST. The enemy AI sets
-         * 0x04 for its continuous idle/walk/feeding states and leaves it clear for a downed /
-         * lie-down pose (which latches the phase to "done" = held). We replicate that init:
-         * loop unless the spawn action is a downed/settle clip (the lie-down family). */
-        {
-            uint8_t mo = a->motion;
-            int settle = (mo == 0x0C || mo == 0x0E || mo == 0x12 || mo == 0x13);
-            a->anim_flags = settle ? 0 : 0x04;
-        }
+        /* BYTE-TRUE anim-flags init: Sce_em_set (@0x8004216c) does `sh zero,452(s0)` = +0x1c4 = 0.
+         * The original spawns EVERY enemy/NPC with anim_flags = 0 (verified two ways: the disasm
+         * store, and the ROOM11B0 savestate where all 3 idle NPCs read +0x1c4 = 0x0000). The prior
+         * `settle ? 0 : 0x04` heuristic was a GUESS — it wrongly stamped LOOP(0x04) on every
+         * non-settle spawn, so an SCD Plc_motion pose (which the intro re-enter re-spawns AFTER the
+         * pose) got its LOOP bit set back on and looped instead of holding. The continuous idle/walk
+         * clips DON'T need the 0x04 bit to loop — their looping is driven by the sub-VM handler
+         * (e.g. sub 6 idle-FSM @0x800517f0), independent of +0x1c4 & 0x04; that bit ONLY gates the
+         * motion-FSM (sub 0 @0x80050cb8) play-once-HOLD. (audit wf_29b40e5d) */
+        a->anim_flags = 0;   /* +0x1c4 = 0 @0x8004216c */
         a->flags  = 0x01;          /* visible */
         a->x = (int32_t)x;
         a->y = (int32_t)y;
