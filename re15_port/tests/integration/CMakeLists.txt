@@ -25,3 +25,10 @@ target_link_libraries(test_headless_run PRIVATE re15_engine re15_test_support)
 target_include_directories(test_headless_run PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME integration_headless_run COMMAND test_headless_run)
 set_tests_properties(integration_headless_run PROPERTIES TIMEOUT 30)
+
+# --- Room-Probe-Sweep (roadmap S1-1 / RL-3): load+tick all 40 Leon STAGE1 rooms ---
+add_executable(test_room_probe_sweep test_room_probe_sweep.c)
+target_link_libraries(test_room_probe_sweep PRIVATE re15_engine re15_test_support)
+target_include_directories(test_room_probe_sweep PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME integration_room_probe_sweep COMMAND test_room_probe_sweep)
+set_tests_properties(integration_room_probe_sweep PROPERTIES TIMEOUT 60)
