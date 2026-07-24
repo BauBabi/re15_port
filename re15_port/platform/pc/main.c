@@ -3415,6 +3415,20 @@ re_title:;
                 /* apply the OPTIONS controller preset (TYPE A = identity → byte-true default). */
                 gctx.pad_current = pc_pad_config((uint16_t)g_engine.pad_current);
                 gctx.pad_pressed = pc_pad_config((uint16_t)g_engine.pad_pressed);
+                /* RL-4 per-room model-bank preload: load every model the room's roster needs BEFORE
+                 * the engine AI reads it. scd_vm_tick (above) spawns the roster via Sce_em_set; the
+                 * enemy AI inside re15_game_step then reads re15_enemy_find(type) for the byte-true EM
+                 * clip lengths / skeleton. The lazy render-loop loader (pc_enemy_load @NPC render)
+                 * runs AFTER this step, so without a pre-load the AI saw a NULL bank on the frames
+                 * before the actor first rendered and fell back to the EM040 (s_irons_clip_len) table.
+                 * Loading the roster here from the spawn table makes each bank resident the frame its
+                 * actor spawns. pc_enemy_load is idempotent (early-returns once re15_enemy_find hits).
+                 * Type 0x47 is EXCLUDED to match the NPC render loop's `!= 0x47` convention — it still
+                 * renders from the resident ELLIOT.MD1 bank (the not-yet-dropped hardcode), so pulling
+                 * EM47 into the registry here would give its AI the wrong (EM47) clip lengths. */
+                for (int _pi = 1; _pi < RE15_ACTOR_MAX; _pi++)
+                    if (g_actors[_pi].active && g_actors[_pi].type && g_actors[_pi].type != 0x47)
+                        pc_enemy_load(g_actors[_pi].type);
                 re15_game_step(&gctx);
             }
             /* PARITY STATE-LOG (RE15_STATE_LOG=path): append per-tick player pose + each live
