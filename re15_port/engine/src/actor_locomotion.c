@@ -224,7 +224,17 @@ void re15_actor_step_walk(re15_actor_t *a)
         return;   /* no position advance during the align state */
     }
 
-    /* STATE 2 — ACTIVE: finer slew (0x48 run / 0x30 walk) + advance below. Mode-9 (turn-in-place) is a
+    /* STATE 2 — ACTIVE: the actor is stepping, so the walk/run clip must ANIMATE. Byte-true to the WALK
+     * handler LAB_80030af0, whose state-2 branch advances the clip each frame via the anim processor
+     * FUN_8001f3bc (it only HOLDS/wraps-to-0 on the ARRIVAL branch @0x80030cc4). Clear the port's
+     * arrival-hold flag here so a CONSECUTIVE Plc_dest with the SAME clip re-animates: a mode-9 TURN
+     * arrives and sets anim_freeze=1 with motion 105, then the following mode-4 WALK re-uses clip 105 so
+     * re15_actor_set_motion (clears anim_freeze only on a motion CHANGE) leaves the stale freeze set ->
+     * the walk clip stays pinned at frame 0 = "Leon floats to Irons". The arrival branch below re-sets it
+     * once THIS walk arrives. (ROOM1150 sub08 intro; STOP-GATE reproduce: [walk] frz=1 while wact=1.) */
+    a->anim_freeze = 0;
+
+    /* finer slew (0x48 run / 0x30 walk) + advance below. Mode-9 (turn-in-place) is a
      * special case: its handler @0x80031360 slews a CONSTANT 0x60 with NO state-2 slow-down (@0x80031440
      * `ori a2,0x60`), so keep 0x60 here instead of the walk 0x30. (audit wf_4e8af27f) */
     int16_t slew_s2 = (a->walk_mode == 0x05) ? PLC_YAW_SLEW_RUN_S2

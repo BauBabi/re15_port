@@ -3522,9 +3522,9 @@ re_title:;
                             (int)pl->motion, (int)pl->anim_frame, (int)pl->anim_frac,
                             (int)pl->x, (int)pl->y, (int)pl->z, (int)pl->active, (int)pl->rot_y);
                 if ((g_engine.frame_count % 30u) == 0u)
-                    fprintf(stderr, "[walk] F%u cut=%d mo=%d | pl pos=(%d,%d,%d) rot=%d\n",
-                            (unsigned)g_engine.frame_count, active_cut_idx, (int)pl->motion,
-                            (int)pl->x, (int)pl->y, (int)pl->z, (int)pl->rot_y);
+                    fprintf(stderr, "[walk] F%u cut=%d mo=%d af=%d frz=%d | pl pos=(%d,%d,%d) rot=%d\n",
+                            (unsigned)g_engine.frame_count, active_cut_idx, (int)pl->motion, (int)pl->anim_frame,
+                            (int)pl->anim_freeze, (int)pl->x, (int)pl->y, (int)pl->z, (int)pl->rot_y);
                 /* RE15_INV_DBG: per-frame status-screen FSM probe (wave-2 bring-up). */
                 if (getenv("RE15_INV_DBG"))
                     fprintf(stderr, "[invdbg] F%u stage=%d open=%d phase=%d sub=%d frozen=%d "
