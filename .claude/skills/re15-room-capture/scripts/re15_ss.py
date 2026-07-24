@@ -34,10 +34,30 @@ def find_ram_base(blob):
         raise RuntimeError("PSX.EXE signature not found in savestate RAM")
     return pos - 0x10000  # offset of RAM 0x80000000
 
+def find_vram_base(blob):
+    """Find the blob offset of PSX VRAM pixel (0,0). BYTE-TRUE.
+
+    A DuckStation savestate is NOT [RAM][VRAM] contiguous: after the 2 MB main
+    RAM comes a GPU component whose register state precedes the framebuffer, so
+    VRAM does NOT start at ram_base+0x200000. It starts right after the length-
+    prefixed ASCII tag "GPU-VRAM" (u32 len=8 + the 8 chars). Using ram_base+
+    0x200000 reads 886 bytes (= 443 px) too early -> every VRAM pixel is X-shifted
+    by 443 and lands in GPU register state (this silently corrupted CLUT/texture
+    reads for months: it made shadow CLUTs read empty and 4bpp textures read as a
+    uniform-0xB pattern; verified 2026-07-24, savestate-source wf_08509e8a). Cross-
+    checked: at this base the shadow CLUT (272,503) matches TEX.TIM byte-for-byte.
+    Falls back to ram_base+0x200000 if the tag is absent (older/other formats)."""
+    pos = blob.find(b"GPU-VRAM")
+    if pos < 0:
+        return None
+    return pos + 8
+
 class Ram:
     def __init__(self, path):
         self.blob = decompress_sav(path)
         self.base = find_ram_base(self.blob)
+        # BYTE-TRUE VRAM base (GPU-VRAM tag). None -> use the legacy shifted offset.
+        self.vram_base = find_vram_base(self.blob)
     def _o(self, addr):
         return self.base + (addr - 0x80000000)
     def u8(self, a):  return self.blob[self._o(a)]
@@ -47,6 +67,11 @@ class Ram:
     def u32(self, a): return struct.unpack_from("<I", self.blob, self._o(a))[0]
     def s32(self, a): return struct.unpack_from("<i", self.blob, self._o(a))[0]
     def bytes(self, a, n): o = self._o(a); return self.blob[o:o+n]
+    def vpix(self, x, y):
+        """BYTE-TRUE 16-bit VRAM halfword at pixel (x,y) in the 1024x512 VRAM.
+        Use THIS (not ram_base+0x200000) for any CLUT/texture/framebuffer read."""
+        vb = self.vram_base if self.vram_base is not None else self.base + 0x200000
+        return struct.unpack_from("<H", self.blob, vb + (y * 1024 + x) * 2)[0]
 
 def write_png(path, w, h, rgb):
     def chunk(typ, data):
@@ -62,9 +87,18 @@ def write_png(path, w, h, rgb):
     png += chunk(b"IEND", b"")
     open(path, "wb").write(png)
 
-def vram_png(ram, path, vram_off=0x200000, w=1024, h=512):
-    """Decode the full PSX VRAM (16bpp 1555) to an RGB PNG."""
-    o = ram.base + vram_off
+def vram_png(ram, path, vram_off=0x200000, w=1024, h=512, true_base=False):
+    """Decode the full PSX VRAM (16bpp 1555) to an RGB PNG.
+
+    ⚠️ DEFAULT is the LEGACY offset ram.base+0x200000, which is X-shifted by +443 px
+    vs true VRAM (see find_vram_base). It is kept as the default ONLY so the display
+    crops already tuned to it (this file's x0=448 detection; parity_net's x=440 crop)
+    keep working. For a BYTE-TRUE VRAM image (correct texture/CLUT/framebuffer
+    coordinates) pass true_base=True, or read pixels via ram.vpix(x,y)."""
+    if true_base and ram.vram_base is not None:
+        o = ram.vram_base
+    else:
+        o = ram.base + vram_off
     blob = ram.blob
     rgb = bytearray(w*h*3)
     for i in range(w*h):
