@@ -32,3 +32,10 @@ target_link_libraries(test_room_probe_sweep PRIVATE re15_engine re15_test_suppor
 target_include_directories(test_room_probe_sweep PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME integration_room_probe_sweep COMMAND test_room_probe_sweep)
 set_tests_properties(integration_room_probe_sweep PROPERTIES TIMEOUT 60)
+
+# --- RVD camera-cut coverage (roadmap S1-1 / RL-5): validate every room's RVD table ---
+add_executable(test_rvd_coverage test_rvd_coverage.c)
+target_link_libraries(test_rvd_coverage PRIVATE re15_engine re15_test_support)
+target_include_directories(test_rvd_coverage PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME integration_rvd_coverage COMMAND test_rvd_coverage)
+set_tests_properties(integration_rvd_coverage PROPERTIES TIMEOUT 60)
