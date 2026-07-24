@@ -6,6 +6,7 @@
  * which stays in each main.c.
  */
 #include <stdio.h>              /* fprintf — the dropped-event diagnostic below */
+#include <stdlib.h>             /* getenv — RE15_STAIR_DEMO */
 #include "re15_game_step.h"
 #include "re15_engine.h"        /* re15_pad_virtual_word — the virtual pad-word builder
                                  * (pad_common.c; wave-6 finding 4) */
@@ -422,6 +423,31 @@ void re15_game_step(const re15_game_ctx_t *c)
             extern int re15_player_slash_window(void);
             if (re15_player_slash_window())
                 re15_player_weapon_fire(re15_player_equipped_weapon());
+        }
+        /* RE15_STAIR_DEMO=down|up: once, at a fixed frame, drop Leon INTO ROOM1170's
+         * {2,4} staircase on the matching band and fire the action, so the stair
+         * animation can be captured without the fragile long-range navigation.
+         * (down = band 4 zone slot 10; up = band 2 zone slot 9; player_in_zone fires
+         * the trigger regardless of facing.) Env-gated debug only. */
+        {
+            extern int32_t re15_sin_q12(int), re15_cos_q12(int);
+            const char *dm = getenv("RE15_STAIR_DEMO");
+            static int s_demo_done = 0;
+            if (dm && *dm && !s_demo_done && !re15_stair_active()
+                && (int)g_engine.frame_count >= 1500) {
+                s_demo_done = 1;
+                if (dm[0] == 'u' || dm[0] == 'U') {          /* ASCEND 2->4 */
+                    pl->x = -23295; pl->z = -26155; pl->y = -3600; pl->rot_y = 3959;
+                } else {                                     /* DESCEND 4->2 */
+                    pl->x = -20690; pl->z = -25595; pl->y = -7200; pl->rot_y = 1911;
+                }
+                re15_collision_set_band(re15_collision_band_from_y(pl->y));
+                g_scd.player_mode = 0;                       /* leave the intro cutscene gate (byte-true try_start bails at mode 2) */
+                g_aot_action_pressed = 1;                    /* fire the stair this frame */
+                fprintf(stderr, "[stairdemo] F%u placed %s at (%d,%d,%d) band=%d player_mode=%d\n",
+                        (unsigned)g_engine.frame_count, dm, pl->x, pl->y, pl->z,
+                        re15_collision_band_from_y(pl->y), (int)g_scd.player_mode);
+            }
         }
         /* A stair may START this frame: ACTION pressed while in/against a stair
          * zone. If so it consumes the action and we SKIP the door scan;

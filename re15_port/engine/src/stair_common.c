@@ -27,6 +27,8 @@
  * snapped once toward the paired (lower/upper) zone so he heads down the run.
  * No hardcoded savestate vector.
  * ==================================================================== */
+#include <stdio.h>             /* RE15_STAIR_DBG diagnostics */
+#include <stdlib.h>            /* getenv */
 #include "re15_stair.h"
 #include "re15_aot.h"          /* g_aot.slots — the stair zones */
 #include "re15_actor.h"        /* the player actor + re15_atan2_q12 */
@@ -325,6 +327,23 @@ int re15_stair_try_start(const re15_rdt_t *rdt, int action_pressed)
     int cur = re15_collision_debug_band();
     if (cur < 0) cur = re15_collision_band_from_y(p->y);
 
+    /* RE15_STAIR_DBG: one-time dump of every STAIR zone (find where to walk). */
+    if (getenv("RE15_STAIR_DBG")) {
+        static int dumped = 0;
+        if (!dumped) {
+            dumped = 1;
+            for (int i = 0; i < RE15_AOT_MAX; i++) {
+                const re15_aot_t *a = &g_aot.slots[i];
+                if (a->active && a->type == RE15_AOT_TYPE_STAIR)
+                    fprintf(stderr, "[stairzone] slot=%d pos=(%d,%d) band=%d event=%d hw=%d hh=%d\n",
+                            i, a->x, a->z, (int)a->band, (int)a->event_id,
+                            (int)a->half_w, (int)a->half_h);
+            }
+            fprintf(stderr, "[stairzone] player band=%d pos=(%d,%d,%d) rot=%d\n",
+                    cur, p->x, p->y, p->z, p->rot_y);
+        }
+    }
+
     /* Entry = the byte-true FUN_8002d474 test: a point 800u AHEAD of the player's
      * facing must lie in a stair zone (the player is BLOCKED by the wall outside
      * the rect, so "player in rect" never fires — that was the "nichts passiert"
@@ -434,6 +453,11 @@ int re15_stair_try_start(const re15_rdt_t *rdt, int action_pressed)
         p->motion     = (int16_t)s_motion;
     }
     p->anim_flags = 0;
+
+    if (getenv("RE15_STAIR_DBG"))
+        fprintf(stderr, "[stair] START dir=%s cur_band=%d target_band=%d clip5_turn=%s (res=0x%x)\n",
+                (s_motion == RE15_PLAYER_MOTION_STAIR_DOWN) ? "DOWN" : "UP",
+                cur, target, s_turn ? "YES" : "no (straight to gait)", res);
 
     s_active      = 1;
     s_finalize    = 0;
