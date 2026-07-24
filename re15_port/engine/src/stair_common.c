@@ -409,13 +409,27 @@ int re15_stair_try_start(const re15_rdt_t *rdt, int action_pressed)
     uint16_t res = (uint16_t)(((uint16_t)p->rot_y - tgt) & 0x0FFF);
     s_motion  = (target < cur) ? RE15_PLAYER_MOTION_STAIR_DOWN   /* 220 -> PL00 clip 21 */
                                : RE15_PLAYER_MOTION_STAIR_UP;     /* 221 -> PL00 clip 20 */
-    if (stair_turn_in_basin(res)) {
+    /* BYTE-TRUE ASYMMETRY (the two original handlers, verified): ASCEND and DESCEND
+     * do NOT share an entry.
+     *   DESCEND = mode 12 LAB_80038c60 sub-phase0 @0x80038cb0: sets clip 21 (0x15)
+     *     DIRECTLY (sb v0=0x15 -> DAT_800acae8) and steps straight into the gait —
+     *     there is NO clip-5 turn preamble when going DOWN.
+     *   ASCEND  = mode 11 LAB_80038850 sub-phase0 @0x800388ac: sets clip 5 first
+     *     (sb v0=5 -> DAT_800acae8), then sub-phase1 @0x800388c4 decays the heading
+     *     residual DAT_800acabe (@0x80038948 srl v0,v1,2 = res>>2) BEFORE handing to
+     *     the gait clip 20.
+     * A prior fix (536c3c48) wrongly played the clip-5 turn for BOTH directions — that
+     * fabricated a turn/"landing" animation before DESCENDING that the original never
+     * plays. Gate the preamble to ASCEND only. */
+    if (s_motion == RE15_PLAYER_MOTION_STAIR_UP && stair_turn_in_basin(res)) {
         s_turn_target = tgt;
         s_turn_res    = res;
         s_turn        = 1;
         p->motion     = (int16_t)RE15_PLAYER_MOTION_STAIR_TURN;   /* clip 5 first, then the step clip */
     } else {
-        p->rot_y      = (int16_t)tgt;                            /* out of basin -> instant snap (as before) */
+        /* DESCEND (byte-true, mode 12 @0x80038cb0) OR ascend out-of-basin: snap the
+         * heading and go STRAIGHT to the gait clip 21/20 — no turn animation. */
+        p->rot_y      = (int16_t)tgt;
         s_turn        = 0;
         p->motion     = (int16_t)s_motion;
     }
