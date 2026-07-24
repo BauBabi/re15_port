@@ -665,7 +665,11 @@ void re15_actors_anim_advance(void)
         re15_actor_t *a = &g_actors[i];
         if (!a->active) continue;
         if (a->state == RE15_AI_STATE_CORPSE) continue;   /* +0x4==7: corpse holds its fallen pose */
-        if (re15_type_self_advances_anim(a->type)) continue;  /* self-advancing tick owns +0x95 (dog/maggot/crow/…) */
+        /* self-advancing tick owns +0x95 (dog/maggot/crow/…) — EXCEPT when the SCD owns the
+         * clip (scd_anim_owned): then re15_npc_ai_tick has yielded, so no one else advances
+         * the frame — advance it here so a Plc_motion pose on a self-advancing NPC (e.g. 0x40
+         * Irons) plays instead of freezing at frame 0. */
+        if (re15_type_self_advances_anim(a->type) && !a->scd_anim_owned) continue;
         uint16_t mo = a->motion;
         /* These clips hold frame 0 for the SPAWN lie-down (a downed zombie stays flat). But clips
          * 0x12/0x13 are DUAL-USE: the KNOCKDOWN GET-UP (re15_enemy_ai_live_knockdown case 4 sets

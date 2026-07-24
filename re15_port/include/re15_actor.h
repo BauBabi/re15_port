@@ -255,7 +255,10 @@ typedef struct {
     uint8_t  walk_active;     /* 1 = walking toward dest                  */
     uint8_t  walk_mode;       /* hi-byte from Plc_dest: 0x05 RUN, 0x09 TURN */
     uint8_t  walk_flag_bit;   /* arrival flag bit in zone 5 (lo byte)     */
-    uint8_t  walk_pad;        /* (legacy, unused since BO walker FSM)      */
+    uint8_t  scd_anim_owned;  /* 1 = an SCD Plc_motion set this NPC's pose -> the NPC AI
+                               * tick yields (the byte-true AI-freeze proxy: the original
+                               * gates FUN_8011c654's dispatch on aca40&0x20000000 while a
+                               * cutscene owns the actor, so the SCD alone drives its clip). */
     uint8_t  walk_fsm;        /* BO Tier-3: PSX DAT_800aca5a 0=init 1=align 2=step */
     int16_t  walk_dest_x;
     int16_t  walk_dest_z;

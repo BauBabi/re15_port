@@ -33,6 +33,7 @@
 #include "re15_actor.h"    /* re15_atan2_q12 — heading toward the player for the approach/walk */
 #include "re15_anim_select.h" /* re15_compute_actor_kf — current keyframe for the walk root-motion */
 #include "re15_emd.h"      /* re15_emd_get_keyframe_speed — the walk clip's per-frame root translation */
+#include <stdio.h>
 #include <stdlib.h>        /* getenv — RE15_NPC_TURN_TEST diagnostic seed */
 
 /* Engine-wide AI freeze = DAT_800aca40 & 0x20000000 (FUN_8011d6d4 gate). */
@@ -4152,7 +4153,34 @@ static void re15_npc_ai_tick(int slot)
      *       grid_id) + read here are byte-true, so an NPC frozen this way now yields correctly.
      * The ROOM1170 intro Elliot uses NEITHER (his Plc_dest walk is a routine-REDIRECT, handled by the
      * case-4 walk_active/scd-event proxy below), so this gate leaves his behaviour unchanged. */
+    if (getenv("RE15_NPC_YIELD_DBG")) {
+        static int s_n = 0;
+        if ((s_n++ % 30) == 0)
+            fprintf(stderr, "[npcyield] slot=%d t=%02x st=%d mo=%d af=%d walk=%d scdown=%d grid=%02x aipause=%d\n",
+                    slot, e->type, e->state, e->motion, e->anim_frame, e->walk_active,
+                    re15_scd_slot_event_controlled(slot), e->grid_id, s_ai_paused);
+    }
+
     if (s_ai_paused || (e->grid_id & RE15_AI_GRID_SKIP)) return;
+
+    /* GLOBAL "the SCD owns this actor's animation" yield — the ROOM1170 Elliot fix
+     * (6b1bdd5f), generalized from the state-4 executor to the WHOLE state dispatch so
+     * it covers EVERY NPC state (INIT/idle-overlay/executor). While the SCD drives the
+     * clip — a Plc_dest walk (walk_active), a Plc_motion pose (scd_anim_owned), or an
+     * active work-bound thread (scd_slot_event_controlled) — skip the dispatch entirely
+     * so the SCD alone owns the clip and the shared re15_actors_anim_advance plays it
+     * (render HOLD-LAST at the REAL EMD length). This mirrors the byte-true root gate
+     * FUN_8011c654 @0x8011c654 (skip +0x4 dispatch while the aca40&0x20000000 cutscene
+     * freeze is set). Without it the INIT (state 0) resets the pose to idle clip 2 and
+     * the idle-overlay loops it at the wrong s_irons_clip_len — the "Irons/other NPCs
+     * lie/stand LOOPING the wrong animation" regression. Keep the actor INVULNERABLE
+     * (HP = -1, the INIT's byte-true +0x9a @0x8011c744). Non-SCD stationary NPCs (never
+     * Plc_dest/Plc_motion'd) fall through to the executor's idle clip 2, so 2c8d9a69's
+     * T-pose fix is preserved. */
+    if (e->walk_active || e->scd_anim_owned || re15_scd_slot_event_controlled(slot)) {
+        e->hp = -1;
+        return;
+    }
 
     switch (e->state) {
     case 0:   /* INIT 0x8011c6dc: idle pose, INVULNERABLE, -> state 1 (or the shared executor) */
@@ -4165,24 +4193,9 @@ static void re15_npc_ai_tick(int slot)
         break;
 
     case 4:   /* shared executor 0x80050be8: the sub-VM (@0x80076ca0, dispatch on +0x5) — Wave-2 phase 1:
-               * idle-pose (subs 0-3) + turn/look-at (sub 9). Walk (4/5/7/8) + watchers = later phases. */
-        /* Byte-true gate (NPC root FUN_8011c654 @0x8011c654 line 19): the original skips its +0x4
-         * state dispatch while the engine AI-freeze DAT_800aca40 & 0x20000000 is set — i.e. while a
-         * scripted cutscene owns the actor, so the SCD alone drives its animation. In ROOM1170's
-         * intro (sub02) Elliot is a Work_set-bound work-entity: the SCD walks him (Plc_dest -> the
-         * byte-true walker re15_actor_step_walk sets RUN 100 / arrive 105) and gestures (Plc_motion
-         * 15/20/16/17). While the SCD owns him, yield the whole executor:
-         *   - walk phase: else the event-reach sub overwrites the walk clip with idle 1/2 every frame
-         *     while the walker advances his position -> he glides in an idle pose (the "float");
-         *   - gesture phase: else re15_npc_anim wraps his anim_frame at the WRONG EM040 length
-         *     (s_irons_clip_len[17]=10 vs Elliot's real 30) -> the render cycles frames 0..9 -> the
-         *     arm-wave LOOPS instead of playing once and holding. With the executor yielded, the
-         *     shared re15_actors_anim_advance advances his frame monotonically and the render's
-         *     HOLD-LAST plays each gesture once then holds (byte-true).
-         * re15_scd_slot_event_controlled(slot) = an active SCD thread has Work_set this actor.
-         * Stationary cutscene NPCs (Irons ROOM11B0 etc.) are NOT work-bound -> executor still runs
-         * (idle clip 2), so 2c8d9a69's T-pose fix is preserved. */
-        if (e->walk_active || re15_scd_slot_event_controlled(slot)) break;
+               * idle-pose (subs 0-3) + turn/look-at (sub 9). Walk (4/5/7/8) + watchers = later phases.
+               * The SCD-owns-animation yield now lives at the top of this function (global, all states),
+               * so an NPC still in the executor without an SCD lock runs its idle pose here. */
         re15_npc_executor(e);
         break;
 

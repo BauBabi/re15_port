@@ -1730,6 +1730,14 @@ static int op_plc_motion(scd_thread_t *t)
      * original (it only lands in actor+0x05) but co-varies with it in all shipped data; clip 11
      * is deliberately authored in both banks (PL00.EDD=fold, RBJ=settle). */
     g_actors[slot].anim_use_pl00 = (entity != 0) ? 1 : 0;
+    /* An SCD Plc_motion took ownership of this NPC's clip -> mark it so re15_npc_ai_tick
+     * yields (the byte-true AI-freeze proxy). Persistent: the pose survives after the
+     * one-shot setter thread ends, exactly as the original's aca40-frozen NPC holds the
+     * SCD pose across the cutscene (else the NPC INIT/executor stomps it back to idle +
+     * loops at the wrong clip length — the "Irons lies looping the wrong anim" bug). Only
+     * marks non-player slots; the player is never NPC-ticked. */
+    if (slot != RE15_ACTOR_SLOT_PLAYER)
+        g_actors[slot].scd_anim_owned = 1;
     /* AP-round 2026-05-26 (per PSX disasm @0x80041b90): Plc_motion sets
      * state=4 which the FSM at 0x80050cdc translates to state=1 with
      * `sb zero, +0x95` (= anim_frame reset to 0). So a Plc_motion call
@@ -2771,6 +2779,10 @@ static int op_sce_em_set(scd_thread_t *t)
          * conditional restructure of this handler — deferred until a stage authors pc[18]!=0.) */
         a->grid_id = behavior;   /* +0x9 (sub-dispatch + pose-sel + flags) */
         a->state   = 0;          /* +0x4 = INIT */
+        a->scd_anim_owned = 0;   /* fresh NPC is not (yet) Plc_motion-driven: clear the port's
+                                  * SCD-pose-ownership latch so a reused actor slot never inherits a
+                                  * previous NPC's cutscene yield. (Port-only flag emulating the
+                                  * aca40 dispatch-freeze; the original has no per-slot analogue.) */
         a->repath_timer = (uint8_t)(slot & 7);   /* +0x91 = spawn_index & 7 (@0x80042244) — staggers
                                                   * the per-tick nav-DFS across the spawned enemies */
         { extern void re15_enemy_spawn_count_inc(void);
