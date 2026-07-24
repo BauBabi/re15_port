@@ -665,11 +665,15 @@ void re15_actors_anim_advance(void)
         re15_actor_t *a = &g_actors[i];
         if (!a->active) continue;
         if (a->state == RE15_AI_STATE_CORPSE) continue;   /* +0x4==7: corpse holds its fallen pose */
-        /* self-advancing tick owns +0x95 (dog/maggot/crow/…) — EXCEPT when the SCD owns the
-         * clip (scd_anim_owned): then re15_npc_ai_tick has yielded, so no one else advances
-         * the frame — advance it here so a Plc_motion pose on a self-advancing NPC (e.g. 0x40
-         * Irons) plays instead of freezing at frame 0. */
-        if (re15_type_self_advances_anim(a->type) && !a->scd_anim_owned) continue;
+        if (re15_type_self_advances_anim(a->type)) continue;  /* self-advancing tick owns +0x95 (dog/maggot/crow/…) */
+        /* NPC-family actors in the state-4 executor advance +0x95 via the executor's own sub-VM
+         * (re15_npc_sub_motion / re15_npc_anim = the byte-true anim_set path). The original has NO
+         * separate global advancer for a state-4 actor — anim_set is the sole stepper — so the generic
+         * advancer must NOT also step them (a double advance would defeat the motion-FSM's play-once
+         * HOLD, wrapping the pose instead of holding). Only 0x40 is self-advancing (skipped above); the
+         * other 6 NPC types (0x42/0x45/0x47/0x49/0x4b/0x4d) are gated here while in the executor. */
+        { uint8_t t = a->type;
+          if (a->state == 4 && (t==0x40||t==0x42||t==0x45||t==0x47||t==0x49||t==0x4b||t==0x4d)) continue; }
         uint16_t mo = a->motion;
         /* These clips hold frame 0 for the SPAWN lie-down (a downed zombie stays flat). But clips
          * 0x12/0x13 are DUAL-USE: the KNOCKDOWN GET-UP (re15_enemy_ai_live_knockdown case 4 sets

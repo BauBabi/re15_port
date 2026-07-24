@@ -4002,12 +4002,40 @@ static uint8_t re15_npc_tbl(const uint8_t *t, uint8_t type)   /* byte[(type-0x40
     { int i = (int)type - 0x40; if (i < 0 || i > 15) i = 0; return t[i]; }
 static uint8_t re15_npc_type_cone(uint8_t type) { return re15_npc_tbl(s_npc_turn_cone, type); }
 
-/* subs 0-3: idle-pose (a 2-layer looping idle FSM on +0x6, no move/turn). The port's faithful-line is the
+/* subs 1-3: idle-pose (a 2-layer looping idle FSM on +0x6, no move/turn). The port's faithful-line is the
  * clip-2 hold — the byte-true anim_set-loop folds to "advance a real looping idle clip". */
 static void re15_npc_sub_idle(re15_actor_t *e)
 {
     if (e->motion < 24 && s_irons_clip_len[e->motion] <= 1) re15_npc_clip(e, 2);
     re15_npc_anim(e);
+}
+
+/* sub 0: MOTION phase-FSM — byte-true port of 0x80050cb8 (the shared-executor sub-table[0]). This is the
+ * handler a Plc_motion pose lands on (Plc_motion @0x80041bc4 sets +0x5 = pc[1]; for the shipped poses
+ * pc[1]=0). It plays the +0x94 clip once and HOLDS the last frame, unless the LOOP flag +0x1c4 & 0x04 is
+ * set (then it replays). The phase lives in +0x6 (= sub_state_2): 0=init, 1=play, 2=held (@0x80050cc8
+ * dispatch; @0x80050da4 sets phase 2 at clip-end; @0x80050dc0-c8 gates LOOP on +0x1c4 & 0x04). The frame
+ * is advanced HERE (single advancer — re15_actors_anim_advance skips executor NPCs, see there), matching
+ * the original where anim_set is the sole stepper for a state-4 actor. */
+static void re15_npc_sub_motion(re15_actor_t *e)
+{
+    uint8_t c = e->motion; int fc = (c < 24) ? s_irons_clip_len[c] : 1; if (fc < 1) fc = 1;
+    switch (e->sub_state_2) {
+    case 0:   /* phase 0 init (@0x80050cec-d0c): +0x95=0, seed +0x8f crossfade, phase->1, then fall to play */
+        e->anim_frame = 0; e->anim_frac = 7; e->sub_state_2 = 1;
+        /* fallthrough — the original phase-0 branch continues into the phase-1 body @0x80050d34 */
+    case 1:   /* phase 1 play (@0x80050d34): advance the clip; at end latch phase 2 (HOLD) or replay (LOOP) */
+        if (e->anim_frame + 1 >= fc) {                       /* anim_set signals clip end (@0x80050d54) */
+            if (e->anim_flags & 0x04) { e->anim_frame = 0; e->sub_state_2 = 1; }  /* LOOP replay @0x80050dc8 */
+            else { e->anim_frame = (uint8_t)(fc - 1); e->sub_state_2 = 2; }         /* HOLD last frame @0x80050da4 */
+        } else {
+            e->anim_frame++;                                 /* +0x95++ */
+            if (e->anim_frac > 0) e->anim_frac--;
+        }
+        break;
+    case 2:   /* phase 2 held (@0x80050cdc exit): retain the last posed frame, no advance */
+        break;
+    }
 }
 
 /* sub 9: TURN / look-at IN PLACE (@0x80051cf8). Slews rot_y toward the steer point (+0x1bc/+0x1be) at
@@ -4085,10 +4113,11 @@ static void re15_npc_sub_event_reach(re15_actor_t *e)
 static void re15_npc_sub_dispatch(re15_actor_t *e)
 {
     switch (e->sub_state_1) {
+    case 0: re15_npc_sub_motion(e); break;   /* motion phase-FSM = Plc_motion pose (@0x80076ca0[0]=0x80050cb8) */
     case 4: case 5: case 7: case 8: re15_npc_sub_walk(e); break;
     case 6: re15_npc_sub_event_reach(e); break;
     case 9: re15_npc_sub_turn(e); break;
-    default: re15_npc_sub_idle(e); break;   /* 0-3 idle */
+    default: re15_npc_sub_idle(e); break;   /* 1-3 idle */
     }
 }
 
@@ -4156,28 +4185,24 @@ static void re15_npc_ai_tick(int slot)
     if (getenv("RE15_NPC_YIELD_DBG")) {
         static int s_n = 0;
         if ((s_n++ % 30) == 0)
-            fprintf(stderr, "[npcyield] slot=%d t=%02x st=%d mo=%d af=%d walk=%d scdown=%d grid=%02x aipause=%d\n",
-                    slot, e->type, e->state, e->motion, e->anim_frame, e->walk_active,
-                    re15_scd_slot_event_controlled(slot), e->grid_id, s_ai_paused);
+            fprintf(stderr, "[npcyield] slot=%d t=%02x st=%d sub=%d ph=%d mo=%d af=%d flags=0x%04x walk=%d grid=%02x\n",
+                    slot, e->type, e->state, e->sub_state_1, e->sub_state_2, e->motion, e->anim_frame,
+                    e->anim_flags, e->walk_active, e->grid_id);
     }
 
     if (s_ai_paused || (e->grid_id & RE15_AI_GRID_SKIP)) return;
 
-    /* GLOBAL "the SCD owns this actor's animation" yield — the ROOM1170 Elliot fix
-     * (6b1bdd5f), generalized from the state-4 executor to the WHOLE state dispatch so
-     * it covers EVERY NPC state (INIT/idle-overlay/executor). While the SCD drives the
-     * clip — a Plc_dest walk (walk_active), a Plc_motion pose (scd_anim_owned), or an
-     * active work-bound thread (scd_slot_event_controlled) — skip the dispatch entirely
-     * so the SCD alone owns the clip and the shared re15_actors_anim_advance plays it
-     * (render HOLD-LAST at the REAL EMD length). This mirrors the byte-true root gate
-     * FUN_8011c654 @0x8011c654 (skip +0x4 dispatch while the aca40&0x20000000 cutscene
-     * freeze is set). Without it the INIT (state 0) resets the pose to idle clip 2 and
-     * the idle-overlay loops it at the wrong s_irons_clip_len — the "Irons/other NPCs
-     * lie/stand LOOPING the wrong animation" regression. Keep the actor INVULNERABLE
-     * (HP = -1, the INIT's byte-true +0x9a @0x8011c744). Non-SCD stationary NPCs (never
-     * Plc_dest/Plc_motion'd) fall through to the executor's idle clip 2, so 2c8d9a69's
-     * T-pose fix is preserved. */
-    if (e->walk_active || e->scd_anim_owned || re15_scd_slot_event_controlled(slot)) {
+    /* SCD Plc_dest WALK yield (the ROOM1170 Elliot fix, 6b1bdd5f): while an SCD thread walks this
+     * actor (Plc_dest -> walk_active) or otherwise Work_set-owns it (scd_slot_event_controlled), skip
+     * the state dispatch so the SCD alone drives the walk clip (else the executor overwrites it every
+     * frame -> the "Elliot glides in an idle pose" float). Keep the actor INVULNERABLE (HP = -1, the
+     * INIT's byte-true +0x9a @0x8011c744).
+     * NOTE: a Plc_motion POSE is NOT yielded here — op_plc_motion now puts the NPC in the byte-true
+     * STATE 4 (executor @0x80041bb0, sub-VM re15_npc_sub_motion), so it dispatches state 4 below and
+     * the motion phase-FSM plays+holds the clip exactly like the original. The INIT (state 0) never
+     * runs to stomp +0x94, and 2c8d9a69's ROOM11B0 idle T-pose fix is unaffected (those NPCs are never
+     * Plc_motion'd -> they reach the executor's idle path). */
+    if (e->walk_active || re15_scd_slot_event_controlled(slot)) {
         e->hp = -1;
         return;
     }

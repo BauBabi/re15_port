@@ -1730,31 +1730,27 @@ static int op_plc_motion(scd_thread_t *t)
      * original (it only lands in actor+0x05) but co-varies with it in all shipped data; clip 11
      * is deliberately authored in both banks (PL00.EDD=fold, RBJ=settle). */
     g_actors[slot].anim_use_pl00 = (entity != 0) ? 1 : 0;
-    /* An SCD Plc_motion took ownership of this NPC's clip -> mark it so re15_npc_ai_tick yields the
-     * whole state dispatch (HP=-1) and the shared re15_actors_anim_advance plays the clip with render
-     * HOLD-LAST. This is a RESULT-EQUIVALENT PROXY (live-verified: ROOM1150 slot-1 holds motion 3, no
-     * loop), NOT the exact original mechanism.
-     *
-     * PROVEN byte-true mechanism (disasm + savestate + audit wf_29b40e5d) — the original does NOT
-     * freeze/yield: the Plc_motion opcode @0x80041b90 sets +0x4=4 (STATE=executor @0x80041bb0),
-     * +0x5=pc[1] (@0x80041bc4), +0x6=0 (phase @0x80041bb4). The NPC then runs the state-4 executor
-     * 0x80050be8 EVERY frame -> +0x5 sub-VM (table @0x80076ca0[0]=0x80050cb8 phase-FSM) which plays
-     * the clip via anim_set (0x8001f314) and, at clip-end, latches phase +0x6=2 = HOLD unless the LOOP
-     * flag +0x1c4 & 0x04 is set (@0x80050dc0). The INIT (state 0) never re-runs to stomp +0x94, which
-     * is why the pose holds. Savestate ground truth (mzd_stage1_npc.sav / ROOM11B0): a real NPC has
-     * state=4, grid bit0x20 clear, aca40 freeze clear -> it RUNS the executor, is not frozen.
-     *
-     * EXACT-MECHANISM REFACTOR DEFERRED (attempted 2026-07-24, reverted — regressed ROOM1150 to a
-     * loop): setting state=4 here + LOOP-gating re15_npc_anim hit two port-architecture blockers that
-     * need dedicated work: (1) DOUBLE-ADVANCE — the non-self-advancing NPC types (0x42/45/47/49/4b/4d)
-     * are stepped by BOTH re15_actors_anim_advance and the executor's re15_npc_anim; (2) the spawn
-     * (op_sce_em_set) seeds anim_flags = settle?0:0x04, so an NPC pose clip gets LOOP=0x04, and the
-     * intro double-reenter re-runs the spawn AFTER this Plc_motion, overriding flags back to 0x04 ->
-     * the executor loops the pose. Both must be resolved (byte-true spawn anim_flags for NPC poses +
-     * a single frame-advancer per executor NPC) before the state-4 path can replace this proxy.
-     * Only marks non-player slots; the player is never NPC-ticked. */
-    if (slot != RE15_ACTOR_SLOT_PLAYER)
-        g_actors[slot].scd_anim_owned = 1;
+    /* BYTE-TRUE Plc_motion actor retarget (opcode handler @0x80041b90, disasm + savestate +
+     * audit wf_29b40e5d): the original does NOT freeze/yield — it puts the actor in the shared
+     * STATE-4 EXECUTOR and lets it run EVERY frame:
+     *   @0x80041bb0  sb v1(=4),4(v0)    -> +0x4 (state)       = 4   (executor 0x80050be8)
+     *   @0x80041bc4  sb a2(=pc[1]),5(v0)-> +0x5 (sub_state_1) = pc[1]  (=0 for the shipped poses -> the
+     *                                       motion phase-FSM sub-table[0]=0x80050cb8 = re15_npc_sub_motion)
+     *   @0x80041bb4  sb zero,6(v0)      -> +0x6 (phase)       = 0
+     * The executor's motion-FSM plays +0x94 once and HOLDS (phase 2) OR breathe-LOOPS if the LOOP flag
+     * +0x1c4 & 0x04 is set (ROOM1150's SCD sets it via Plc_flg(0,4,0) -> the lying NPC's subtle idle
+     * loop, hardware-confirmed). Because the NPC is now in state 4, the INIT (state 0) never re-runs to
+     * stomp +0x94 back to idle-2 — the byte-true reason a posed NPC keeps its pose clip. (Replaced the
+     * earlier scd_anim_owned dispatch-yield proxy, which wrongly HELD ROOM1150's breathe-loop; the two
+     * blockers it hit are now fixed: spawn anim_flags=0 @0x8004216c, and the executor is the single
+     * frame-advancer via the re15_actors_anim_advance state-4 skip.)
+     * Player (slot 0) is not NPC-ticked — its Plc_motion gestures drive the player anim path — so only
+     * NPC slots are retargeted. */
+    if (slot != RE15_ACTOR_SLOT_PLAYER) {
+        g_actors[slot].state       = 4;        /* +0x4 = 4 (executor)          @0x80041bb0 */
+        g_actors[slot].sub_state_1 = entity;   /* +0x5 = pc[1] (sub)           @0x80041bc4 */
+        g_actors[slot].sub_state_2 = 0;        /* +0x6 = 0 (motion phase reset) @0x80041bb4 */
+    }
     /* AP-round 2026-05-26 (per PSX disasm @0x80041b90): Plc_motion sets
      * state=4 which the FSM at 0x80050cdc translates to state=1 with
      * `sb zero, +0x95` (= anim_frame reset to 0). So a Plc_motion call
@@ -2796,10 +2792,6 @@ static int op_sce_em_set(scd_thread_t *t)
          * conditional restructure of this handler — deferred until a stage authors pc[18]!=0.) */
         a->grid_id = behavior;   /* +0x9 (sub-dispatch + pose-sel + flags) */
         a->state   = 0;          /* +0x4 = INIT */
-        a->scd_anim_owned = 0;   /* fresh NPC is not (yet) Plc_motion-driven: clear the port's
-                                  * SCD-pose-ownership latch so a reused actor slot never inherits a
-                                  * previous NPC's cutscene yield. (Port-only flag emulating the
-                                  * aca40 dispatch-freeze; the original has no per-slot analogue.) */
         a->repath_timer = (uint8_t)(slot & 7);   /* +0x91 = spawn_index & 7 (@0x80042244) — staggers
                                                   * the per-tick nav-DFS across the spawned enemies */
         { extern void re15_enemy_spawn_count_inc(void);
