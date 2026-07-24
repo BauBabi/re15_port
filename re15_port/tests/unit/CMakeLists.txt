@@ -129,6 +129,13 @@ target_include_directories(test_npc_ai PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_npc_ai COMMAND test_npc_ai)
 set_tests_properties(unit_npc_ai PROPERTIES TIMEOUT 30)
 
+# --- NPC SCD-owns-animation yield — regression guard for 4cf6bead (byte-true gate FUN_8011c654) ---
+add_executable(test_npc_scd_pose test_npc_scd_pose.c)
+target_link_libraries(test_npc_scd_pose PRIVATE re15_engine re15_test_support)
+target_include_directories(test_npc_scd_pose PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_npc_scd_pose COMMAND test_npc_scd_pose)
+set_tests_properties(unit_npc_scd_pose PROPERTIES TIMEOUT 30)
+
 # --- Zombie Girl (type 0x13, EM013) nav-pathing zombie variant AI — Wave 1 (re15_zgirl_ai_tick) ---
 add_executable(test_zgirl_ai test_zgirl_ai.c)
 target_link_libraries(test_zgirl_ai PRIVATE re15_engine re15_test_support)
