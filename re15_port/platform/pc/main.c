@@ -4216,6 +4216,17 @@ re_title:;
                     sy[v] = cy + (int)(((int64_t)_ir2 * (int64_t)_n) >> 16);
                 }
                 if (sok) {
+                    if (getenv("RE15_SHADOW_DBG")) {
+                        int minx=sx[0],maxx=sx[0],miny=sy[0],maxy=sy[0];
+                        for (int v=1; v<4; v++){ if(sx[v]<minx)minx=sx[v]; if(sx[v]>maxx)maxx=sx[v];
+                            if(sy[v]<miny)miny=sy[v]; if(sy[v]>maxy)maxy=sy[v]; }
+                        fprintf(stderr, "[shadow] F%u cut=%d pl=(%d,%d) rot=%d halfXZ=(%d,%d) "
+                                "corners=(%d,%d)(%d,%d)(%d,%d)(%d,%d) bbox=%dx%d\n",
+                                (unsigned)g_engine.frame_count, active_cut_idx,
+                                g_actors[RE15_ACTOR_SLOT_PLAYER].x, g_actors[RE15_ACTOR_SLOT_PLAYER].z,
+                                g_actors[RE15_ACTOR_SLOT_PLAYER].rot_y, SH_HALF_X, SH_HALF_Z,
+                                sx[0],sy[0],sx[1],sy[1],sx[2],sy[2],sx[3],sy[3], maxx-minx, maxy-miny);
+                    }
                     if (re15_player_is_dead() && g_death_pool > 0)
                         /* BLOOD POOL (byte-true LAB_8003694c): the shadow quad turns dark-red
                          * (subtractive color 0x38/0xff/0xff @0x8003699c-b8) — the SIZE growth

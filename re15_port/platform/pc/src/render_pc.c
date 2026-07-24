@@ -654,7 +654,7 @@ void re15_render_end_frame(void)
     /* Step 1.5: RE1.5 character shadows — subtractive blob quads on the floor.
      * Drawn after the BG (darken the helipad) and before the character tris
      * (so the actor occludes its own feet). Matches PSX FUN_8001b064. */
-    if (s_shadow_tex && s_shadow_quad_count > 0) {
+    if (s_shadow_tex && s_shadow_quad_count > 0 && !getenv("RE15_NO_SHADOW")) {  /* A/B: suppress for isolation diff */
         for (int i = 0; i < s_shadow_quad_count; i++)
             SDL_RenderGeometry(s_renderer, s_shadow_tex,
                                s_shadow_quads[i].v, 6, NULL, 0);
