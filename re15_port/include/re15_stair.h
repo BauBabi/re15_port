@@ -57,6 +57,5 @@ void re15_stair_reset(void);
  * geometrically decay the heading residual `res` (u16, 0x1000=360deg) toward the nearest 0x400
  * cardinal — step=(res>>2)&0xff, +step if bit 0x200 set else -step — and set *aligned when the
  * exit gate (res & 0x3e0)==0 passes. Exposed for the regression test. */
-uint16_t re15_stair_turn_settle(uint16_t res, int *aligned);
 
 #endif /* RE15_STAIR_H */

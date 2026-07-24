@@ -56,9 +56,6 @@
  * anim_select_common.c. */
 #define RE15_PLAYER_MOTION_STAIR_DOWN 220
 #define RE15_PLAYER_MOTION_STAIR_UP   221
-/* PL00 clip 5 = the turn-in-place anim the stair TURN preamble plays (DAT_800acae8=5
- * @0x80038034, LAB_80037fd8) before the stepping gait. */
-#define RE15_PLAYER_MOTION_STAIR_TURN 222
 
 /* STANDBY motion the stair finalize hands back to (byte-true LAB_80038e50 sets
  * DAT_800acae8=2, the neutral standby clip). Matches the player idle FSM's

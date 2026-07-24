@@ -243,15 +243,14 @@ void re15_actor_anim_select(const re15_actor_t *a, int is_player,
         out->skel = banks->pl00_skel;
         out->anim = banks->pl00_anim;
         out->clip_override = (m == 213) ? 22 : 23;
-    } else if (banks->pl00_ok && (m == 220 || m == 221 || m == 222)) {
+    } else if (banks->pl00_ok && (m == 220 || m == 221)) {
         /* STAIR gait = PL00 clip 21 (DESCEND) / 20 (ASCEND) — USER-CONFIRMED the
          * correct stepping animation (the legs step; the clip carries NO body
          * translation, so re15_stair_tick drives the XZ travel + Y). (W01 clip 13
-         * was the knife-attack-ready anim — wrong.) 222 = the TURN-in-place preamble
-         * clip 5 (DAT_800acae8=5 @0x80038034) that plays before the stepping. */
+         * was the knife-attack-ready anim — wrong.) */
         out->skel = banks->pl00_skel;
         out->anim = banks->pl00_anim;
-        out->clip_override = (m == 220) ? 21 : (m == 221) ? 20 : 5;   /* 220 down=c21 / 221 up=c20 / 222 turn=c5 */
+        out->clip_override = (m == 220) ? 21 : 20;   /* 220 down=PL00 c21 / 221 up=c20 */
     } else if (m == 200) {
         /* IDLE neutral fallback when PL00W01 is unavailable: idle-bank clip 6
          * (1-frame static rest pose). */

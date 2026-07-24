@@ -75,33 +75,8 @@ static int     s_prev_sel = -1;
  * (the PSX applies acabe as an additive model yaw — coupling wf_6d36e2c6 hyp. B; +0x6a is NEVER
  * slewed there), so we carry the residual toward the explicit paired-zone target and write the
  * decayed heading into rot_y (representation swap, endpoint-identical). */
-static int      s_turn = 0;          /* DAT_800aca5b==1: the clip-5 turn is running */
-static uint16_t s_turn_target = 0;   /* endpoint heading (= the old instant-snap value) */
-static uint16_t s_turn_res = 0;      /* acabe-equivalent residual (rot_y - target), decays to 0 */
-
 int  re15_stair_active(void) { return s_active; }
-void re15_stair_reset(void)  { s_active = 0; s_finalize = 0; s_turn = 0; }
-
-/* One frame of the byte-true stair-turn heading SETTLE (LAB_80037fd8 @0x800380b0-f4): geometrically
- * decay the residual `res` (u16, 0x1000=360deg) toward the nearest 0x400 (90deg) grid boundary, and
- * report alignment. EXACT arithmetic: step = (res>>2)&0xff (unsigned srl @0x800380b8, byte cap); the
- * 0x200 bit (@0x800380b0) picks the rounding direction (set=+step round up, clear=-step round down);
- * the EXIT gate (@0x800380e8) fires when bits 5..9 (mask 0x3e0) are clear. Returns the new residual;
- * *aligned = 1 when the gate passes (the caller then snaps: acabe &= 0xff00, here res -> the target). */
-uint16_t re15_stair_turn_settle(uint16_t res, int *aligned)
-{
-    uint16_t step = (uint16_t)((res >> 2) & 0xff);
-    res = (res & 0x200) ? (uint16_t)(res + step) : (uint16_t)(res - step);
-    res &= 0x0FFF;                                  /* port wrap; the PSX render mask makes this identical */
-    if (aligned) *aligned = ((res & 0x3e0) == 0);
-    return res;
-}
-
-/* A residual only decays to the TARGET (0) inside the +-0x200 (+-45deg) convergence basin
- * [0xE00..0x1000) U [0..0x200); outside it the byte-true decay lands on a DIFFERENT 0x400 cardinal
- * (90deg off). The PSX never exercises the outside (the player physically walks in aligned); the
- * port's probe-ahead trigger normally keeps him in the basin, but if not we snap instantly. */
-static int stair_turn_in_basin(uint16_t res) { return (res < 0x200) || (res >= 0xE00); }
+void re15_stair_reset(void)  { s_active = 0; s_finalize = 0; }
 
 static int s_abs(int32_t v) { return v < 0 ? (int)-v : (int)v; }
 
@@ -205,30 +180,11 @@ void re15_stair_tick(const re15_rdt_t *rdt,
         return;
     }
 
-    /* TURN-to-face preamble (byte-true LAB_80037fd8 phase 0->1 settle): before the stepping gait,
-     * play clip 5 in place and decay the heading residual onto the run, then hand to the step gait.
-     * Runs one settle step per tick; returns until aligned. The port drives the mesh from rot_y (the
-     * PSX applies the residual as an additive render yaw and never slews +0x6a — coupling wf_6d36e2c6
-     * hyp. B; representation swap, endpoint-identical). */
-    if (s_turn) {
-        p->motion            = (int16_t)RE15_PLAYER_MOTION_STAIR_TURN;    /* clip 5 */
-        p->anim_flags       &= (uint16_t)~RE15_ANIM_REVERSE;
-        p->motion_init_delay = 0;
-        s_cursor++;                                                       /* anim_set +1/frame (FUN_8001f314) */
-        p->anim_frame = (uint16_t)(s_cursor % STAIR_CLIPLEN);            /* display cursor only */
-
-        int aligned = 0;
-        s_turn_res = re15_stair_turn_settle(s_turn_res, &aligned);       /* byte-true decay + gate */
-        p->rot_y   = (int16_t)((s_turn_target + s_turn_res) & 0x0FFF);   /* apply to the mesh yaw */
-        if (aligned) {
-            p->rot_y      = (int16_t)s_turn_target;    /* snap (acabe &= 0xff00 -> exact endpoint) */
-            s_turn        = 0;
-            s_cursor      = 0;                         /* stepping restarts at frame 0 */
-            p->motion     = (int16_t)s_motion;         /* clip 21/20 */
-            p->anim_frame = 0;
-        }
-        return;                                        /* one tick = one settle step */
-    }
+    /* NO turn-to-face preamble: the original plays the stepping gait immediately in
+     * BOTH directions (user-verified on real PSX 2026-07-24 — no turn/landing anim
+     * before descending OR ascending). The 536c3c48 clip-5 "turn" (and the 84ea3678
+     * ascend-only variant) was removed: my disasm of a mode-11 clip-5 ascend turn
+     * was contradictory/unreliable, so the hardware measurement is the arbiter. */
 
     /* PL00 clip 21 (down) / 20 (up) stepping gait. */
     if (p->motion != (int16_t)s_motion) p->motion = (int16_t)s_motion;
@@ -425,39 +381,28 @@ int re15_stair_try_start(const re15_rdt_t *rdt, int action_pressed)
     int32_t rdx = dest_zone->x - p->x, rdz = dest_zone->z - p->z;
     uint16_t tgt = (rdx || rdz) ? (uint16_t)((re15_atan2_q12(rdz, rdx) - 1024) & 0x0FFF)
                                 : (uint16_t)((uint16_t)p->rot_y & 0x0FFF);
-    uint16_t res = (uint16_t)(((uint16_t)p->rot_y - tgt) & 0x0FFF);
     s_motion  = (target < cur) ? RE15_PLAYER_MOTION_STAIR_DOWN   /* 220 -> PL00 clip 21 */
                                : RE15_PLAYER_MOTION_STAIR_UP;     /* 221 -> PL00 clip 20 */
-    /* BYTE-TRUE ASYMMETRY (the two original handlers, verified): ASCEND and DESCEND
-     * do NOT share an entry.
-     *   DESCEND = mode 12 LAB_80038c60 sub-phase0 @0x80038cb0: sets clip 21 (0x15)
-     *     DIRECTLY (sb v0=0x15 -> DAT_800acae8) and steps straight into the gait —
-     *     there is NO clip-5 turn preamble when going DOWN.
-     *   ASCEND  = mode 11 LAB_80038850 sub-phase0 @0x800388ac: sets clip 5 first
-     *     (sb v0=5 -> DAT_800acae8), then sub-phase1 @0x800388c4 decays the heading
-     *     residual DAT_800acabe (@0x80038948 srl v0,v1,2 = res>>2) BEFORE handing to
-     *     the gait clip 20.
-     * A prior fix (536c3c48) wrongly played the clip-5 turn for BOTH directions — that
-     * fabricated a turn/"landing" animation before DESCENDING that the original never
-     * plays. Gate the preamble to ASCEND only. */
-    if (s_motion == RE15_PLAYER_MOTION_STAIR_UP && stair_turn_in_basin(res)) {
-        s_turn_target = tgt;
-        s_turn_res    = res;
-        s_turn        = 1;
-        p->motion     = (int16_t)RE15_PLAYER_MOTION_STAIR_TURN;   /* clip 5 first, then the step clip */
-    } else {
-        /* DESCEND (byte-true, mode 12 @0x80038cb0) OR ascend out-of-basin: snap the
-         * heading and go STRAIGHT to the gait clip 21/20 — no turn animation. */
-        p->rot_y      = (int16_t)tgt;
-        s_turn        = 0;
-        p->motion     = (int16_t)s_motion;
-    }
+    /* NO clip-5 turn preamble in EITHER direction. USER-VERIFIED on real PSX
+     * (2026-07-24): the original plays no turn/landing animation before a stair
+     * descent OR ascent — the player snaps to the run and the stepping gait
+     * (clip 21 down / clip 20 up) begins immediately.
+     *
+     * History: 536c3c48 added a clip-5 "turn" for both directions (wrong); 84ea3678
+     * then gated it to ascend-only based on my disasm reading that the mode-11 ascend
+     * handler @0x800388ac plays clip 5 first. That disasm was UNRELIABLE — the stair
+     * sce handler (@0x8004305c, PTR_8007469c[0]) sets mode 11 in every branch and the
+     * mode-11/12 + aca5a/aca5b sub-phase structure did not resolve cleanly, so I could
+     * not prove clip 5 actually reaches the screen. The hardware measurement is the
+     * arbiter (lesson.txt): no turn either way. Snap + straight to the gait. */
+    p->rot_y  = (int16_t)tgt;
+    p->motion = (int16_t)s_motion;
     p->anim_flags = 0;
 
     if (getenv("RE15_STAIR_DBG"))
-        fprintf(stderr, "[stair] START dir=%s cur_band=%d target_band=%d clip5_turn=%s (res=0x%x)\n",
+        fprintf(stderr, "[stair] START dir=%s cur_band=%d target_band=%d (straight to gait, no turn)\n",
                 (s_motion == RE15_PLAYER_MOTION_STAIR_DOWN) ? "DOWN" : "UP",
-                cur, target, s_turn ? "YES" : "no (straight to gait)", res);
+                cur, target);
 
     s_active      = 1;
     s_finalize    = 0;
