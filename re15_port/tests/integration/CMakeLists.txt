@@ -46,3 +46,10 @@ target_link_libraries(test_door_traversal PRIVATE re15_engine re15_test_support)
 target_include_directories(test_door_traversal PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME integration_door_traversal COMMAND test_door_traversal)
 set_tests_properties(integration_door_traversal PROPERTIES TIMEOUT 60)
+
+# --- Door lock (roadmap S1-4 / PROG-1): locked-door MESSAGE vs open-door DOOR transition ---
+add_executable(test_door_lock test_door_lock.c)
+target_link_libraries(test_door_lock PRIVATE re15_engine re15_test_support)
+target_include_directories(test_door_lock PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME integration_door_lock COMMAND test_door_lock)
+set_tests_properties(integration_door_lock PROPERTIES TIMEOUT 30)
