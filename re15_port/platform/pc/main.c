@@ -2293,21 +2293,24 @@ re_title:;
         fprintf(stderr, "[light] RDT light block missing — neutral tint\n");
     }
 
-    /* DATA-DRIVEN intro (2026-06-04, keystone parity with the PSX build): set ONLY
-     * (3,193,1) — the flag sub03 would set on the (not-yet-implemented multi-room)
-     * PRIOR visit. With (3,193)=1 AND (3,125)=0, room1170 main00 itself fires
-     * Evt_exec(0x180B) → sub11 (the narrator) through the faithful op_evt_exec path;
-     * sub11 then sets (3,125)/(4,242)/(2,7) + Cut_chg(7) + its 4 narrator messages
-     * from its OWN bytecode. We no longer force (3,125)/(4,242) nor manually start
-     * the narrator. */
-    re15_game_flag_set(3, 193, 1);
-    /* Außenbereich door hub (2026-06-06): ROOM1170 main00 gates the whole outdoor
-     * door set behind `else` of `if(Ck(4,195,0))` — door 6 (return from the outdoor
-     * area to the helipad) + door 5 (→ROOM1140) + examine AOTs only register when
-     * (4,195)==1. Door 0 (helipad→outdoor) is always on, so (4,195)==0 makes the
-     * outdoor area a DEAD END. The original sets (4,195) in ROOM1140/sub02; we stage
-     * it (same pattern as (3,193)) so the return door 6 + on-foot door5→1140 exist. */
-    re15_game_flag_set(4, 195, 1);
+    /* [RL-1] Pre-stage ROOM1170's INTRO story flags — but ONLY on an intro-path boot (direct
+     * 0x1170 debug boot, or the new-game 0x1240 montage that hands into 0x1170). These are
+     * ROOM1170-specific: forcing them for a debug boot of ANY OTHER room is ROOM1170 residue
+     * (z4/195 is also read by ROOM1140 → its SCD would branch as if the intro had run). Gated
+     * so booting room X loads room X's own progression, zero ROOM1170 leak. (CONTINUE overwrites
+     * these with the saved flags below.) */
+    if (boot_room == 0x1170 || boot_room == 0x1240) {
+        /* DATA-DRIVEN intro (keystone parity): set ONLY (3,193,1) — the flag sub03 would set on
+         * the PRIOR visit. With (3,193)=1 AND (3,125)=0, room1170 main00 itself fires
+         * Evt_exec(0x180B) → sub11 (narrator) through op_evt_exec; sub11 then sets
+         * (3,125)/(4,242)/(2,7) + Cut_chg(7) + its 4 messages from its OWN bytecode. */
+        re15_game_flag_set(3, 193, 1);
+        /* Außenbereich door hub: room1170 main00 gates the whole outdoor door set behind the
+         * `else` of `if(Ck(4,195,0))` — door 6 (return to the helipad) + door 5 (→ROOM1140) +
+         * examines only register when (4,195)==1; door 0 (helipad→outdoor) is always on, so
+         * (4,195)==0 makes the outdoor area a DEAD END. The original sets it in ROOM1140/sub02. */
+        re15_game_flag_set(4, 195, 1);
+    }
 
     /* Phase 4.5.12-H: refined position from agent F1's precise reverse-
      * projection. F1 measured Leon as 65 native px (head-to-feet, not
@@ -2322,15 +2325,19 @@ re_title:;
      * (post-cinematic monologue), but helipad floor (cinematic surface) is
      * Y=-7200 per sub15 NPC spawns (Elliot, pilot, heli all at -7200).
      * Leon was floating 765 units above floor pre-fix. */
-    g_actors[RE15_ACTOR_SLOT_PLAYER].x      = 1272;
-    g_actors[RE15_ACTOR_SLOT_PLAYER].y      = -7200;
-    g_actors[RE15_ACTOR_SLOT_PLAYER].z      = 10898;
-    g_actors[RE15_ACTOR_SLOT_PLAYER].rot_y  = 0;
-    /* DEBUG room boot (RE15_START_ROOM != 1170): the hardcoded spawn above is the ROOM1170
-     * helipad (Y=-7200). For another room use ITS inbound-door spawn (re15_room_spawns) so
-     * Leon stands on that room's floor — room1150 floor is Y=0, so Leon was 7200 units below
-     * the cut and off-screen (the "missing Leon model"). */
-    if (boot_room != 0x1170) {
+    /* [RL-1] Per-room boot spawn — ONE keyed-off-the-room-id resolution, no ROOM1170 residue:
+     *   ROOM1170 is the helicopter INTRO; its spawn is a cinematic waypoint on sub02's Plc_dest
+     *   walk path (Y=-7200 helipad floor, see the AM-round derivation above) — NOT a door spawn,
+     *   so it is the one explicit special case. EVERY other room uses ITS inbound-door spawn from
+     *   the generated re15_room_spawns[] table — the SAME table the cross-room door transition
+     *   reads (room1150 floor Y=0 etc.), so boot and reload land the player identically. */
+    if (boot_room == 0x1170) {
+        g_actors[RE15_ACTOR_SLOT_PLAYER].x     = 1272;
+        g_actors[RE15_ACTOR_SLOT_PLAYER].y     = -7200;
+        g_actors[RE15_ACTOR_SLOT_PLAYER].z     = 10898;
+        g_actors[RE15_ACTOR_SLOT_PLAYER].rot_y = 0;
+        fprintf(stderr, "[boot] player spawn for ROOM1170 = (1272,-7200,10898) yaw=0 (intro waypoint)\n");
+    } else {
         int bidx = 0;
         for (int i = 0; i < RE15_ROOM_COUNT; i++)
             if (re15_room_ids[i] == boot_room) { bidx = i; break; }
@@ -2403,10 +2410,11 @@ re_title:;
      * already completed sub03+sub11 on prior visits". The real
      * sub00→sub15→sub02 chain then fires through the unmodified
      * disassembled bytecode (no opcode hacks, no script edits). */
-    re15_game_flag_set(3, 193, 1);   /* simulate sub03 already ran (prior visit) */
-    /* (3,125) and (4,242) are NO LONGER forced — sub11 sets them itself once main00
-     * Evt_execs it; sub00→sub15 then sees (4,242) and spawns the helipad cinematic
-     * (sub02). This is the keystone: the SCD data drives the progression. */
+    /* [RL-1] (3,193) is already pre-staged by the intro-gated block above (boot 0x1170/0x1240
+     * only) — no second unconditional set here, so a debug boot of another room stays clean.
+     * (3,125) and (4,242) are NOT forced — sub11 sets them itself once main00 Evt_execs it;
+     * sub00→sub15 then sees (4,242) and spawns the helipad cinematic (sub02). The SCD data
+     * drives the progression. */
 
     /* sub11 (narrator) is NOT spawned here — main00 itself fires Evt_exec(0x180B)
      * → sub11 (data-driven). sub00 (→sub15→sub02 helipad) is deferred to the main
