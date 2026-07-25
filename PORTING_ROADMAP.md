@@ -508,9 +508,9 @@ Measured state: all 80 STAGE1 RDTs exist and are in re15_room_ids[]; re15_room_s
 ### S1-1 — Universal room load + door-graph traversal (all 80 RDTs load; walk room→room)
 *Any STAGE1 room loads its own BG/camera-cuts/RDT/SCD/models/lighting from data (main.c de-hardcoded off ROOM1170), and the player can walk the real STAGE1 door graph between all 40 Leon rooms. This is the foundational breadth work everything downstream depends on.*
 
-- **[RL-1 · L · DEPTH]** De-hardcode the room-load path: extract the ROOM1170-specific boot (pc_load_room_prop_set, msg block, RBJ cinematic, spawn) into a single generic per-room loader keyed off the loaded RDT, so boot and cross-room reload share one code path.
+- ✅ **[RL-1 · L · DEPTH]** De-hardcode the room-load path: extract the ROOM1170-specific boot (pc_load_room_prop_set, msg block, RBJ cinematic, spawn) into a single generic per-room loader keyed off the loaded RDT, so boot and cross-room reload share one code path.
   - *Quelle:* re15_room_load (room_pc.c) + re15_room_apply_pending (room_common.c); main.c boot L584-1094 and cross-room reload L1987-2112 (currently duplicated/ROOM1170-biased).
-  - *Dep:* none  ·  *Akzeptanz:* Booting any of the 40 Leon rooms via RE15_START_ROOM loads that room's own BG/props/models/SCD/msg with zero ROOM1170 residue (verified by state-log + autoshot on 8 rooms).
+  - *Dep:* none  ·  *Akzeptanz:* ✅ DONE (bf6f3ccb) — 12 rooms each boot ROOM<r>.RDT + ROOM<r>.RBJ + their own spawn; the 2 residues (ROOM1170 hardcoded spawn + forced intro flags 3/193 & 4/195) are now keyed off the room id / gated on the intro path (boot 0x1170/0x1240). ROOM1140 boot reads Ck(4,195) got=0 (clean); ROOM1170 keeps its intro (flags got=1 + Cut_chg(7)).
 - ✅ **[RL-2 · M · BREADTH]** Build the STAGE1 door-graph table (per-room: door slot → dest stage/room/spawn xyz/yaw/cut) by parsing every RDT's Door_aot_set records; regenerate/commit the generator that already produced re15_room_spawns.h.
   - *Quelle:* Door_aot_set dest bytes pc[22]/pc[23] (re15_aot_door_params_t dest_stage/dest_room, re15_aot.h L111-114); the door_graph.py referenced in re15_room_spawns.h header.
   - *Dep:* RL-1  ·  *Akzeptanz:* A generated STAGE1 adjacency table where every door resolves to an existing room id and every non-boot room has ≥1 inbound door matching its re15_room_spawns[] entry.
