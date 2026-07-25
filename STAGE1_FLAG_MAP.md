@@ -97,6 +97,36 @@ count = 28, room11E0 "Prisons"); the original reads the offset table dynamically
 (examines, cutscenes). `op_ck`/`op_set` (the reader's own opcodes) were already byte-true (PROG-2);
 `0x5E op_keep_item_ck` is a stub but is NOT on any keycard path. Pinned by `integration_keydoor`.
 
+## PROG-3 keypad (dial-combination lock) — FSM logic byte-true; dial INPUT = open engine gap
+
+The reader (`sub20`) fires `Evt_exec(0x1811)`→`sub17` which starts a 4-digit DIAL lock (room1230
+Red Keycard, code 5632). RE'd byte-true (hand-disassembled `sub01.scd`, correcting the decompiler's
+desync — the confirm mask is `0x40` not "16384", and Member[15] compares small notch values 7..18
+not "1792"):
+
+- `sub17` init: `Cut_chg(9)` + `Message_on(0)` + `Set(5,0/1/2,1)` = keypad active.
+- `sub01` poll (per frame): dpad → `Evt_exec(sub02/03/04)` rotate dial; **confirm** =
+  `If Ck(5,1,1){ Work_set(3,0); If Member_cmp(member15==<notch>){ If Sce_key_ck(1,0x40){ Evt_exec(<digit sub>) }}}`.
+  Plus the WIN block: `If Ck(3,137,0)&Ck(5,13,1)&Ck(5,14,1)&Ck(5,15,1)&Ck(5,16,1) → Evt_exec(sub19)+Set(3,137,1)`.
+- digit subs (slot chain z5/7→8→5→4): `sub10→z5/13`, `sub11→z5/14`, `sub08→z5/15`, `sub07→z5/16`.
+- `sub19` win: `Aot_reset(6,sce=2 DOOR)` installs the door live + `Message_on(5)` "used".
+- `sub16` reset: clears all z5 on a wrong entry (skipped on win because the win Set(3,137,1) during
+  the digit sub's `Sleep(2)` makes its `Ck(3,137,0)` tail false).
+
+**VERIFIED byte-true** (`integration_keypad`): driving the 4 digit-confirm subs in slot order sets
+z5/13..16, the poll unlocks z3/137, and `main00` then installs the gated slot as a real DOOR. The
+confirm-input opcodes are byte-true (`op_sce_key_ck` reads `g_scd_pad_held`; `op_member_cmp`).
+
+**⚠ OPEN — dial INPUT is not player-completable in the port yet.** The confirm compares
+`Member[15]` (= actor+0x0b `member_0b`) of the `Work_set(3,0)` entity (the dial **prop**), but:
+(1) `member_0b`/the notch is **never written by any room1230 SCD op** — it is an ENGINE-side value
+derived from the dial's rotation (the EXE combination-lock handler), which the port does not
+implement; and (2) `op_member_cmp` reads only ACTOR members (`re15_actor_get_member`, work_slot≥0)
+and returns 0 for a prop-bound work entity. So `Member_cmp(15==notch)` is always false in the port →
+no confirm fires via the dpad. Closing this needs RE of the EXE dial-notch mechanic + a prop-member
+read path in `op_member_cmp` — a separate deeper task. (The FSM logic + reader reachability above are
+independent of this and are done.)
+
 ## Status
 
 - ✅ **Foundation**: flag store + `Ck`/`Set`/`0x58`/`0x59` byte-true (PROG-2); door lock = flag-gated

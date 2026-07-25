@@ -67,3 +67,10 @@ target_link_libraries(test_keydoor PRIVATE re15_engine re15_test_support)
 target_include_directories(test_keydoor PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME integration_keydoor COMMAND test_keydoor)
 set_tests_properties(integration_keydoor PROPERTIES TIMEOUT 30)
+
+# --- STAGE1 keycard keypad (dial-combination lock) FSM (roadmap S1-4 / PROG-3 deep) ---
+add_executable(test_keypad test_keypad.c)
+target_link_libraries(test_keypad PRIVATE re15_engine re15_test_support)
+target_include_directories(test_keypad PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME integration_keypad COMMAND test_keypad)
+set_tests_properties(integration_keypad PROPERTIES TIMEOUT 30)
