@@ -60,3 +60,10 @@ target_link_libraries(test_flag_census PRIVATE re15_engine re15_test_support)
 target_include_directories(test_flag_census PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME integration_flag_census COMMAND test_flag_census)
 set_tests_properties(integration_flag_census PROPERTIES TIMEOUT 30)
+
+# --- STAGE1 keycard door flip (roadmap S1-4 / PROG-4) ---
+add_executable(test_keydoor test_keydoor.c)
+target_link_libraries(test_keydoor PRIVATE re15_engine re15_test_support)
+target_include_directories(test_keydoor PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME integration_keydoor COMMAND test_keydoor)
+set_tests_properties(integration_keydoor PROPERTIES TIMEOUT 30)

@@ -89,8 +89,15 @@ typedef struct {
     size_t                   main_scd_size;
     int                      sub_scd_count;
     /* Phase 4.5.9-E: sub SCD scripts. Pointers into the source buffer;
-     * caller spawns them as concurrent threads via scd_thread_start. */
-#define RE15_RDT_MAX_SUB_SCD 16
+     * caller spawns them as concurrent threads via scd_thread_start.
+     * The original reads the offset table DYNAMICALLY (count = first_off/2, rdt_common.c:203)
+     * — there is NO 16-entry limit in RE1.5. The old cap of 16 (a wrong "ROOM1100 has 9 subs"
+     * guess) TRUNCATED the sub table and made sub16..N UNREACHABLE (Evt_exec/AOT-event dispatch
+     * `>= MAX -> fail`), which broke every STAGE1 keycard door: the card readers live in sub20
+     * (room10D0 Blue / room11E0 Yellow @sub20, room1230 Red @sub20) — event id 20 from the
+     * examine Aot_set(1,3,..,20,..). Max sub count observed across STAGE1-6 = 28 (room11E0/11E1
+     * "Prisons"); 32 = that max + headroom. [S1-4 PROG-3, audit wf_c78a98ec] */
+#define RE15_RDT_MAX_SUB_SCD 32
     const uint8_t           *sub_scd[RE15_RDT_MAX_SUB_SCD];
 
     /* SCA collision (room walkable/blocker geometry). Parsed from RDT offset

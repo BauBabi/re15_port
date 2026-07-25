@@ -69,6 +69,34 @@ The roadmap's PROG-1/3/4 task text encodes **RE2-retail** progression, which doe
 So PROG-3/4 must be derived from **this censused map**, not the RE2-retail ids. The plumbing that drives
 every gate here (flag store + `Ck`/`Set`/`0x59`) is byte-true + verified (PROG-2).
 
+## PROG-3 — keycard → door (byte-true, audit wf_c78a98ec)
+
+STAGE1 has real key-locked doors. The lock is the same flag-gated sce1↔sce2 swap; the key is a
+**zone-9 possession flag** the pickup modal sets, checked by the card-reader sub with `Ck(9,bit,1)`.
+
+| Room | Keycard (item id) | Possession check | Door unlock flag | Reader |
+|------|-------------------|------------------|------------------|--------|
+| **ROOM10D0** "Communication Room" | Blue Keycard (0x38) | `Ck(9,52,1)` | `Set(3,50,1)` → door `Ck(3,50,0)` | sub20 |
+| **ROOM11E0** "Prisons" | Yellow Keycard (0x39) | `Ck(9,138,1)` | `Set(3,139,1)` → door `Ck(3,139,0)` | sub20 |
+| **ROOM1230** "Weapon Storage" | Red Keycard (0x37) | `Ck(9,136,1)` | `Set(3,137,1)` → door `Ck(3,137,0)` | sub20 |
+| ROOM1100 | Minidisc Player | (EXE use-flow, Y/N) | `Set(4,232,1)` + z3/103 story-gate | sub07/sub02 |
+
+Reader flow (`sub20`, raw bytes verified): `Message_on(7)` "Will you operate?" Y/N → `Ck(12,31,0)`
+(the Yes latch) → `Ck(9,<bit>,1)` (possession) → has card: `Message_on(9)` "You've used…" +
+`Evt_exec(0x1811)` → keypad `sub17` → correct 4-digit → `Set(3,<door>,1)`; no card: `Message_on(8)`.
+
+**Zone 9 = engine possession bank** (item-taken bits), written ONLY by the pickup modal
+(`item_modal_common.c:241` `re15_game_flag_set(9, taken_bit, 1)` = FUN_8004ef90), never by SCD.
+Blue bit52 / Yellow bit138 / Red bit136 = the pickup `Item_aot_set` taken_bit.
+
+**THE REAL PROG-3 GAP (fixed):** the card readers are `sub20` (event id 20). `RE15_RDT_MAX_SUB_SCD`
+was **16**, so the sub table was truncated and `Evt_exec(20)`/AOT-event 20 returned −1 — the reader
+never ran, the unlock flag never set, the door could not open. Raised **16 → 32** (max STAGE1-6 sub
+count = 28, room11E0 "Prisons"); the original reads the offset table dynamically (`first_off/2`,
+`rdt_common.c:203`) with no 16-limit. This also unblocked every other sub16+ event across STAGE1-6
+(examines, cutscenes). `op_ck`/`op_set` (the reader's own opcodes) were already byte-true (PROG-2);
+`0x5E op_keep_item_ck` is a stub but is NOT on any keycard path. Pinned by `integration_keydoor`.
+
 ## Status
 
 - ✅ **Foundation**: flag store + `Ck`/`Set`/`0x58`/`0x59` byte-true (PROG-2); door lock = flag-gated
