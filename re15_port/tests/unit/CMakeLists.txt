@@ -385,6 +385,13 @@ target_include_directories(test_scd_flag_fade PRIVATE ${CMAKE_SOURCE_DIR}/includ
 add_test(NAME unit_scd_flag_fade COMMAND test_scd_flag_fade)
 set_tests_properties(unit_scd_flag_fade PROPERTIES TIMEOUT 30)
 
+# --- Flag store -> door/event gate (roadmap S1-4 / PROG-2) ---
+add_executable(test_flag_gate test_flag_gate.c)
+target_link_libraries(test_flag_gate PRIVATE re15_engine re15_test_support)
+target_include_directories(test_flag_gate PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_flag_gate COMMAND test_flag_gate)
+set_tests_properties(unit_flag_gate PROPERTIES TIMEOUT 30)
+
 add_executable(test_scd_key_ck test_scd_key_ck.c)
 target_link_libraries(test_scd_key_ck PRIVATE re15_engine re15_test_support)
 target_include_directories(test_scd_key_ck PRIVATE ${CMAKE_SOURCE_DIR}/include)
