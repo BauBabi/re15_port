@@ -335,6 +335,12 @@ typedef struct {
          * (matches the obj00.md1 mesh AABB ~{936,948,929}); obj01 (heli) = all-zero. */
         int16_t  box_cx, box_cy, box_cz;
         int16_t  box_hx, box_hy, box_hz;
+        /* member_0b (object +0xb): the combination-lock NOTCH. The AOT scan sets it to the
+         * sce=5 grid-cell slot this object is currently over (byte-true FUN_80042bac @0x80042f5c
+         * `sb v0=slot-1, 0xb(entity)`), and the keypad confirm reads it via Member_cmp(15==notch)
+         * on the Work_set(3,0) dial object. Read/written by op_member_cmp/op_member_set's prop
+         * path. [S1-4 PROG-3 keypad dial input] */
+        uint8_t  member_0b;
     } props[16];
     uint8_t  prop_count;
     /* When Work_set kind=3 selects a script slot that has NO active
@@ -375,6 +381,11 @@ extern re15_game_state_t g_game;
 void re15_game_state_init(void);
 int  re15_game_flag_get(uint8_t zone, uint8_t idx);     /* 0 or 1 */
 void re15_game_flag_set(uint8_t zone, uint8_t idx, int value);
+
+/* Object (prop) work-entity member access — Work_set kind 3. member 15 = member_0b = the
+ * combination-lock NOTCH (S1-4 PROG-3 keypad dial). */
+int32_t re15_prop_get_member(int prop_idx, uint8_t member_id);
+void    re15_prop_set_member(int prop_idx, uint8_t member_id, int32_t value);
 
 extern scd_vm_t g_scd;
 

@@ -155,6 +155,12 @@ void re15_game_step(const re15_game_ctx_t *c)
      * door AOT scan below. */
     g_aot_action_pressed = (c->pad_pressed & RE15_PAD_BIT_SQUARE) ? 1 : 0;
 
+    /* Keypad combination-lock dial: refresh every object's notch (member+0xb = the sce=5
+     * grid cell it is over) so the dpad-moved cursor's Member_cmp(15==notch) confirm reads
+     * the current cell. Byte-true FUN_80042bac per-entity member+0xb stamp (@0x80042f5c);
+     * no-op in rooms without sce=5 cells + objects. */
+    re15_object_notch_update();
+
     /* Expose the per-frame VIRTUAL press-edge word to the SCD VM / dialog FSM — the
      * original reads the config-REMAPPED edge word DAT_800ac76c (FUN_80030444 tail
      * sw @0x8003057c), NOT the raw pad. Wave-6 finding 4: the previous identity feed

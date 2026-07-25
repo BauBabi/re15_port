@@ -2650,6 +2650,39 @@ static int op_calc2(scd_thread_t *t)
     return SCD_R_CONTINUE;
 }
 
+/* Member get/set for an OBJECT work entity (Work_set kind 3 → prop pool). Byte-true to
+ * FUN_80041358/FUN_800410b8 reading `work_entity + <offset>`: the combination-lock dial uses
+ * member 15 = object+0xb = the NOTCH (which grid cell the cursor is over); position/rotation
+ * ids map to the prop's world fields so Add_speed-driven props read consistently. */
+int32_t re15_prop_get_member(int prop_idx, uint8_t member_id)
+{
+    if (prop_idx < 0 || prop_idx >= (int)(sizeof g_scd.props / sizeof g_scd.props[0])) return 0;
+    switch (member_id) {
+    case 0:  return g_scd.props[prop_idx].x;              /* +0x34 */
+    case 1:  return g_scd.props[prop_idx].y;              /* +0x38 */
+    case 2:  return g_scd.props[prop_idx].z;              /* +0x3c */
+    case 3:  return (int32_t)g_scd.props[prop_idx].rot_x; /* +0x68 */
+    case 4:  return (int32_t)g_scd.props[prop_idx].rot_y; /* +0x6a */
+    case 5:  return (int32_t)g_scd.props[prop_idx].rot_z; /* +0x6c */
+    case 15: return (int32_t)g_scd.props[prop_idx].member_0b;  /* +0x0b NOTCH */
+    default: return 0;
+    }
+}
+void re15_prop_set_member(int prop_idx, uint8_t member_id, int32_t value)
+{
+    if (prop_idx < 0 || prop_idx >= (int)(sizeof g_scd.props / sizeof g_scd.props[0])) return;
+    switch (member_id) {
+    case 0:  g_scd.props[prop_idx].x = value; break;
+    case 1:  g_scd.props[prop_idx].y = value; break;
+    case 2:  g_scd.props[prop_idx].z = value; break;
+    case 3:  g_scd.props[prop_idx].rot_x = (int16_t)value; break;
+    case 4:  g_scd.props[prop_idx].rot_y = (int16_t)value; break;
+    case 5:  g_scd.props[prop_idx].rot_z = (int16_t)value; break;
+    case 15: g_scd.props[prop_idx].member_0b = (uint8_t)value; break;  /* +0x0b NOTCH */
+    default: break;
+    }
+}
+
 /* Member_cmp (0x3E) — 6 bytes.
  *   [op, _reserved, member_id, cmp_op, value_be(2)]
  *
@@ -2662,9 +2695,16 @@ static int op_member_cmp(scd_thread_t *t)
      * (PSX lh), identisch zu Member_set @0x800410d4. War faelschlich BE. [#12] */
     int16_t  arg       = scd_read_le_s16(&t->pc[4]);
     int8_t   ws        = (t->work_slot >= 0) ? t->work_slot : g_scd.work_slot;
-    /* [#11] byte-true: RE1.5 Member id straight to the actor GET table (FUN_80041358). */
+    int8_t   wp        = (t->work_prop_idx >= 0) ? t->work_prop_idx : g_scd.work_prop_idx;
+    /* [#11] byte-true: RE1.5 Member id straight to the entity GET table (FUN_80041358) — the
+     * WORK ENTITY, which may be an actor (Work_set kind 1/2) OR an OBJECT (kind 3, e.g. the
+     * combination-lock dial). The original reads `*(byte*)(work_entity + 0xb)` for member 15
+     * regardless of entity kind; the port routes the object case to the prop pool so the keypad
+     * confirm `Member_cmp(15==notch)` reads the dial NOTCH (member_0b). [S1-4 PROG-3 keypad] */
     int32_t  cur       = (ws >= 0)
                        ? re15_actor_get_member((int)ws, member_id)
+                       : (wp >= 0 && wp < (int)g_scd.prop_count)
+                       ? re15_prop_get_member(wp, member_id)
                        : 0;
     int      result    = 0;
     switch (cmp_op) {                                    /* Operator-Tabelle LAB_80041290 @0x800412f8.. */

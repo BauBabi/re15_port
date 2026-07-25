@@ -280,6 +280,41 @@ int re15_aot_point_in_quad(int32_t px, int32_t pz,
     return 1;
 }
 
+/* Combination-lock NOTCH probe (byte-true FUN_80042bac @0x80042f5c `sb slot,0xb(entity)`):
+ * the AOT scan sets a scanned entity's member+0xb to the sce=5 grid-cell slot it is over. The
+ * keypad dial is exactly this — the cursor OBJECT (Work_set(3,0)) moves under the dpad, and each
+ * frame its notch = which sce=5 number-cell (Aot_set(slot,5,68,..) at slots 7..17 in room1230)
+ * contains it; the confirm reads it via `Member_cmp(member15==notch)`. Returns the grid-cell
+ * slot the point is over, or -1 if none. (The original stamps `s2-1` = the AOT slot index; a
+ * cell installed at Aot_set(7,..) is slot 7, matching the confirm's `Member_cmp(15==7)`.) */
+int re15_aot_object_notch(int32_t px, int32_t pz)
+{
+    int notch = -1;
+    for (int i = 0; i < RE15_AOT_MAX; i++) {
+        const re15_aot_t *a = &g_aot.slots[i];
+        if (!a->active || a->type != RE15_AOT_TYPE_EXAMINE_WORKVAR) continue;   /* sce=5 grid cell */
+        int inside = a->has_quad
+                   ? re15_aot_point_in_quad(px, pz, a->xs, a->zs)
+                   : ((abs_i32(px - a->x) <= a->half_w) && (abs_i32(pz - a->z) <= a->half_h));
+        if (inside) notch = i;   /* byte-true: the scan overwrites per slot, so the last hit wins */
+    }
+    return notch;
+}
+
+/* Per-frame OBJECT-pool notch pass (byte-true FUN_80042bac: the scan stamps member+0xb for every
+ * scanned entity, not just the player). Each active object's notch = the sce=5 grid cell it is over;
+ * an object over no cell keeps its last notch (@0x80042f5c only writes inside the hit branch). This
+ * is what lets the keypad dial cursor (an Obj_model_set prop moved by dpad Speed_set+Add_speed)
+ * feed its Member_cmp(15==notch) confirm. Called once per frame by re15_game_step. */
+void re15_object_notch_update(void)
+{
+    for (int i = 0; i < (int)g_scd.prop_count; i++) {
+        if (!g_scd.props[i].active) continue;
+        int notch = re15_aot_object_notch(g_scd.props[i].x, g_scd.props[i].z);
+        if (notch >= 0) g_scd.props[i].member_0b = (uint8_t)notch;
+    }
+}
+
 /* Phase 4.5.12: initialize edge-trigger state from a spawn position
  * without firing any AOT. Call after spawning the player and after
  * AOTs are registered, so doors the player materializes inside (e.g.

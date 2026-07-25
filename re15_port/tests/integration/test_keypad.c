@@ -127,8 +127,72 @@ int main(void)
            door_ty == RE15_AOT_TYPE_DOOR ? "DOOR open" : door_ty == RE15_AOT_TYPE_MESSAGE ? "MESSAGE locked" : "?");
     if (door_ty != RE15_AOT_TYPE_DOOR) { fprintf(stderr, "FAIL: unlocked door did not install as DOOR\n"); fail = 1; }
 
+    /* ---- Part 2: the dial INPUT read path (cursor over grid cell -> notch -> prop member -> confirm) ----
+     * The dpad moves the cursor OBJECT; each frame its member+0xb (notch) = the sce=5 grid-cell slot
+     * it is over (byte-true FUN_80042bac @0x80042f5c). The confirm reads it via Work_set(3,0) +
+     * Member_cmp(15==notch). Pre-fix the port returned 0 for a prop work entity, so no confirm fired. */
+    printf("\n  -- dial input read path (grid-cell notch -> prop member_0b -> Member_cmp) --\n");
+    enter_1230();                       /* fresh (z3/137=0 locked) -> sce=5 grid cells + dial prop install */
+
+    int cell_slot = -1; int32_t cx = 0, cz = 0;
+    for (int i = 0; i < RE15_AOT_MAX; i++)
+        if (g_aot.slots[i].active && g_aot.slots[i].type == RE15_AOT_TYPE_EXAMINE_WORKVAR) {
+            cell_slot = i; cx = g_aot.slots[i].x; cz = g_aot.slots[i].z; break;
+        }
+    printf("  grid cells: dial prop_count=%d, first sce=5 cell = slot %d @ (%d,%d)\n",
+           g_scd.prop_count, cell_slot, cx, cz);
+    if (cell_slot < 0) { fprintf(stderr, "FAIL: no sce=5 grid cell installed for the keypad\n"); fail = 1; }
+    else {
+        /* (a) the AOT scan's notch = the grid-cell slot the cursor is over */
+        int notch = re15_aot_object_notch(cx, cz);
+        printf("  re15_aot_object_notch(cell) = %d (expect slot %d)\n", notch, cell_slot);
+        if (notch != cell_slot) { fprintf(stderr, "FAIL: notch != the grid-cell slot the cursor is over\n"); fail = 1; }
+        /* off the grid -> no notch */
+        if (re15_aot_object_notch(1<<20, 1<<20) != -1) { fprintf(stderr, "FAIL: notch set while off the grid\n"); fail = 1; }
+
+        /* (b) the per-frame object pass sets the cursor prop's member_0b = the cell it's over
+         * (this is what re15_game_step calls each frame so the dpad-moved cursor's notch is live) */
+        g_scd.props[0].member_0b = 0;
+        g_scd.props[0].x = cx; g_scd.props[0].z = cz;   /* place the dial cursor on the cell */
+        re15_object_notch_update();
+        printf("  re15_object_notch_update: prop0.member_0b = %d (expect %d)\n", g_scd.props[0].member_0b, cell_slot);
+        if (g_scd.props[0].member_0b != (uint8_t)cell_slot) { fprintf(stderr, "FAIL: per-frame notch pass did not set the cursor notch\n"); fail = 1; }
+        if (re15_prop_get_member(0, 15) != notch) { fprintf(stderr, "FAIL: prop member 15 (notch) round-trip\n"); fail = 1; }
+
+        /* (c) the confirm reads it: Work_set(3,0) binds the dial prop, Member_cmp(15==notch) is TRUE
+         * (was always false pre-fix). Fragment: Work_set; If Member_cmp(15==notch){ Set(6,1,1) } EndIf. */
+        const uint8_t NN = (uint8_t)notch;
+        const uint8_t frag_hit[] = {
+            0x2E, 0x03, 0x00,               /* Work_set(3,0) -> bind dial prop 0 */
+            0x06, 0x00, 12, 0x00,           /* If (block_length 12 -> past EndIf)  */
+            0x3E, 0x00, 0x0F, 0x00, NN, 0x00, /* Member_cmp(member15 == notch)     */
+            0x22, 0x06, 0x01, 0x01,         /* Set(6,1,1) witness                  */
+            0x08, 0x00,                     /* EndIf                               */
+            0x02,                           /* Evt_next                            */
+        };
+        re15_game_flag_set(6, 1, 0);
+        g_scd.threads[SCD_EVENT_SLOT_FIRST].active = 0;
+        scd_thread_start(SCD_EVENT_SLOT_FIRST, frag_hit);
+        scd_vm_tick();
+        int hit = re15_game_flag_get(6, 1);
+        printf("  Work_set(3,0)+Member_cmp(15==%d) -> witness=%d (expect 1 = confirm accepts)\n", notch, hit);
+        if (!hit) { fprintf(stderr, "FAIL: dial confirm Member_cmp did not read the prop notch\n"); fail = 1; }
+
+        /* control: a WRONG notch must NOT confirm */
+        const uint8_t WN = (uint8_t)(notch == 5 ? 6 : 5);
+        uint8_t frag_miss[sizeof frag_hit];
+        memcpy(frag_miss, frag_hit, sizeof frag_hit);
+        frag_miss[11] = WN;                 /* Member_cmp value = a different notch */
+        re15_game_flag_set(6, 1, 0);
+        g_scd.threads[SCD_EVENT_SLOT_FIRST].active = 0;
+        scd_thread_start(SCD_EVENT_SLOT_FIRST, frag_miss);
+        scd_vm_tick();
+        if (re15_game_flag_get(6, 1)) { fprintf(stderr, "FAIL: confirm accepted a WRONG notch\n"); fail = 1; }
+    }
+
     free(g_buf);
     if (fail) { printf("KEYPAD: FAIL\n"); return 1; }
-    printf("KEYPAD: dial-lock FSM byte-true — 4 correct confirms set z5/13..16, poll unlocks z3/137, door opens\n");
+    printf("KEYPAD: dial FSM + INPUT byte-true — cursor notch=grid slot -> prop member_0b -> confirm accepts;\n"
+           "        4 confirms set z5/13..16, poll unlocks z3/137, door opens\n");
     return 0;
 }

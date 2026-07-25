@@ -266,6 +266,13 @@ void re15_aot_settle_at(int32_t player_x, int32_t player_z);
 int  re15_aot_point_in_quad(int32_t px, int32_t pz,
                             const int16_t xs[4], const int16_t zs[4]);
 
+/* Combination-lock NOTCH probe (FUN_80042bac @0x80042f5c): the sce=5 grid-cell slot the point
+ * (px,pz) is over, or -1. The keypad cursor's member+0xb = this each frame. */
+int  re15_aot_object_notch(int32_t px, int32_t pz);
+/* Per-frame object-pool notch pass: set every active prop's member_0b = the grid cell it is over.
+ * Called once per frame by re15_game_step so the keypad dial cursor's confirm reads the live cell. */
+void re15_object_notch_update(void);
+
 /* Byte-true per-prop visibility cull — SHARED by BOTH ports so the Obj_model_set
  * prop loop culls identically. Per FUN_8002c18c (object render/scan loop):
  *   type != 3 (the common path — INCLUDING every room1170 prop, which are ALL
