@@ -624,11 +624,36 @@ int main(void)
         if (z->hurt_clip < 2 || z->hurt_clip > 5) {
             fprintf(stderr, "FAIL: (14a) live_init hurt_clip must be in {2,3,4,5}, ist %d\n", z->hurt_clip); fail = 1; }
 
-        /* (b) the +0x9&0x80 SPECIAL branch (dormant collapse) HOLDS HURT — never recovers. */
+        /* (b) the +0x9&0x80 DOWNED flinch (router @0x80105a9c-ad8) — byte-true REWRITE (audit
+         * wf_827f186d zombie-live #2; the old test pinned the `return` stub = brick-forever).
+         * +0x5 NOT in {0x12,0x13} -> FUN_801068a0: phase 0 = clip 0x1e + +0x93|=1 (@0x801068fc/
+         * @0x80106958), playout, then phase 2 exits `sw 1,+0x4` -> ACTIVE subs 0 with the hit
+         * latch CLEARED (@0x80106a1c-20) — the downed zombie flinches and RECOVERS. */
         z->state = RE15_AI_STATE_HURT; z->grid_id = 0x80; z->sub_state_3 = 0; z->sub_state_1 = 3; z->hit_stun = 5;
-        for (int f = 0; f < 8; f++) re15_enemy_ai_live_hurt(zslots[0]);
-        if (z->state != RE15_AI_STATE_HURT) {
-            fprintf(stderr, "FAIL: (14b) +0x9&0x80 special branch must stay HURT, ist %d\n", z->state); fail = 1; }
+        z->hit_react = 0; z->motion = 0;
+        re15_enemy_ai_live_hurt(zslots[0]);                 /* phase 0: setup */
+        if (z->state != RE15_AI_STATE_HURT || z->motion != 0x1e || z->sub_state_3 != 1 || !(z->hit_react & 1)) {
+            fprintf(stderr, "FAIL: (14b) downed flinch phase0: clip 0x1e + latch, state=%d mo=%d +0x7=%d\n",
+                    z->state, z->motion, z->sub_state_3); fail = 1; }
+        re15_enemy_ai_live_hurt(zslots[0]);                 /* phase 1: playout (no bank -> clip done) */
+        re15_enemy_ai_live_hurt(zslots[0]);                 /* phase 2: exit word 0x1 */
+        if (z->state != RE15_AI_STATE_ACTIVE || z->sub_state_1 != 0 || (z->hit_react & 1)) {
+            fprintf(stderr, "FAIL: (14b) downed flinch must RECOVER to ACTIVE subs0 + latch clear, state=%d +0x5=%d hr=%d\n",
+                    z->state, z->sub_state_1, z->hit_react); fail = 1; }
+        /* prone variant (+0x5=0x12 -> FUN_80106a38): clip 37/38 (@0x80106a98-9c); and the
+         * +0x1dc==0x80 immediate-getup branch of the else path (@0x80106970-a0). */
+        z->state = RE15_AI_STATE_HURT; z->grid_id = 0x80; z->sub_state_3 = 0; z->sub_state_1 = 0x12; z->hit_stun = 5;
+        re15_enemy_ai_live_hurt(zslots[0]);
+        if (z->motion != 37 && z->motion != 38) {
+            fprintf(stderr, "FAIL: (14b) prone flinch clip must be 37/38, ist %d\n", z->motion); fail = 1; }
+        z->state = RE15_AI_STATE_HURT; z->grid_id = 0x80; z->sub_state_3 = 0; z->sub_state_1 = 3;
+        z->hit_stun = (int16_t)0x80;                        /* downed sentinel (knockdown [0]) */
+        re15_enemy_ai_live_hurt(zslots[0]);
+        if (z->state != RE15_AI_STATE_ACTIVE || z->sub_state_1 != 0x11 || z->sub_state_2 != 4) {
+            fprintf(stderr, "FAIL: (14b) +0x1dc==0x80 must route to immediate GET-UP (0x11[4]), state=%d +0x5=%d +0x6=%d\n",
+                    z->state, z->sub_state_1, z->sub_state_2); fail = 1; }
+        if (!fail) printf("  (14b) downed flinch: clip 0x1e/37-38, recovery to ACTIVE + latch clear, sentinel get-up\n");
+        z->grid_id = 0; z->sub_state_1 = 0; z->sub_state_2 = 0; z->sub_state_3 = 0; z->state = RE15_AI_STATE_ACTIVE;
 
         /* (c) the GUNSHOT path: pistol -> HURT with +0x5=weapon_id=2 (stun step @0x8011fe30[2] = -2);
          * the zombie staggers (motion=hurt_clip) then recovers to ACTIVE. */
