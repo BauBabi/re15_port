@@ -486,22 +486,22 @@ Measured state: all 80 STAGE1 RDTs exist and are in re15_room_ids[]; re15_room_s
 ### S1-0 — Front-End Shell (cold boot → title → new game → character select → intro handoff)
 *The exe boots to a TITLE screen instead of hard-loading a room; a player can start NEW GAME, pick a character (scenario suffix), be seeded a byte-true save record, and be handed into the STAGE1 pre-intro. The death→title→continue loop closes as a real state. RE15_START_ROOM stays as a debug bypass.*
 
-- **[FE-1 · M · BREADTH]** Add a top-level front-end state machine (BOOT → disclaimer/attract → TITLE) that owns the main loop before any room loads; today main.c L584 hard-sets boot_room=0x1240 and jumps straight into gameplay. Draw TITLEU.TIM (already loaded for the death path, main.c L1838-1840).
+- ✅ **[FE-1 · M · BREADTH]** Add a top-level front-end state machine (BOOT → disclaimer/attract → TITLE) that owns the main loop before any room loads; today main.c L584 hard-sets boot_room=0x1240 and jumps straight into gameplay. Draw TITLEU.TIM (already loaded for the death path, main.c L1838-1840).
   - *Quelle:* Attract/title chain @0x80015810-0x80015838 + main-loop gate @0x8001d1e8 (cited in main.c L1862); TITLEU.TIM (BIOHAZARD-2 logo, 320x240 16bpp). FUN_8003694c death-FSM already reaches title.
   - *Dep:* none  ·  *Akzeptanz:* Launching re15_pc.exe with NO RE15_START_ROOM shows the title screen first (autoshot); setting RE15_START_ROOM still bypasses to a room for debug.
-- **[FE-2 · S · BREADTH]** TITLE menu: NEW GAME / LOAD GAME / OPTION cursor + selection, using the .msg game font glyphs (not the debug font).
+- ✅ **[FE-2 · S · BREADTH]** TITLE menu: NEW GAME / LOAD GAME / OPTION cursor + selection, using the .msg game font glyphs (not the debug font).
   - *Quelle:* Title-menu FSM behind the @0x8001d1e8 gate; option glyph codes are the .msg charset (main.c L1374-1381 already decodes Yes/No option glyphs); FUN_80028868 TEX.TIM font renderer.
   - *Dep:* FE-1  ·  *Akzeptanz:* Cursor moves between the 3 options with the byte-true face-button convention; NEW GAME dispatches FE-4; LOAD dispatches SAVE-1.
-- **[FE-3 · M · BREADTH]** Character select → set the scenario suffix (Leon=0 / Elliot=1, the ROOMxxx0 vs ROOMxxx1 file convention) and select the player PLD, replacing the hardcoded test.*/elliot.* incbin choice.
+- ✅ **[FE-3 · M · BREADTH]** Character select → set the scenario suffix (Leon=0 / Elliot=1, the ROOMxxx0 vs ROOMxxx1 file convention) and select the player PLD, replacing the hardcoded test.*/elliot.* incbin choice.
   - *Quelle:* Char-select in the boot chain; room-file suffix convention (ROOM115_/PL00 vs PL01, information74.txt); PLD/ dir (PL00=Leon).
   - *Dep:* FE-2  ·  *Akzeptanz:* Selecting Leon boots the *0 rooms with PL00; a suffix-1 selection resolves *1 RDTs and PL01. Verified by the loaded RDT path + player model.
-- **[FE-4 · S · DEPTH]** New-game save-record init: seed start room/position/heading + the byte-true briefing loadout (knife + Browning HP 15 + 50 H.GUN BULLETS).
+- ✅ **[FE-4 · S · DEPTH]** New-game save-record init: seed start room/position/heading + the byte-true briefing loadout (knife + Browning HP 15 + 50 H.GUN BULLETS).
   - *Quelle:* FUN_80034a04 (new-game save-record init, defaults coords 0x17f4/0/0x6db5/0x400 — verify vs STAGE1 start); re15_inv_load_briefing (inventory_common.c L87, from mzd_stage1_briefing.sav).
   - *Dep:* FE-3  ·  *Akzeptanz:* NEW GAME seeds the byte-true start position + inventory (assert g_inv slots 0/1/2 = 0x01/0x03+15/0x15+50) with no debug env vars.
-- **[FE-5 · S · BREADTH]** Intro handoff: title/new-game → the existing ROOM1240 pre-intro montage → first playable room. Wire the montage as the real new-game entry, not a debug boot.
+- ✅ **[FE-5 · S · BREADTH]** Intro handoff: title/new-game → the existing ROOM1240 pre-intro montage → first playable room. Wire the montage as the real new-game entry, not a debug boot.
   - *Quelle:* ROOM1240 sub[2] Cut_chg(0..8)+Message_on montage (reai-v2-room-fixes #2, committed 2b7f77e6); the intro-handoff auto-door path already in aot_common.c L297-321.
   - *Dep:* FE-4  ·  *Akzeptanz:* NEW GAME plays the montage frame-set then hands control into the first playable room via the auto-advance door (no hang).
-- **[FE-6 · S · DEPTH]** Formalize death→title→continue as a front-end state (fold the ad-hoc s_in_title block main.c L1841-1879 into the FE state machine), including the SsSeqStop audio kill on entry.
+- ✅ **[FE-6 · S · DEPTH]** Formalize death→title→continue as a front-end state (fold the ad-hoc s_in_title block main.c L1841-1879 into the FE state machine), including the SsSeqStop audio kill on entry.
   - *Quelle:* FUN_8003694c HP<0 fade FSM + attract gate @0x80015810; re15_audio_seq_ctl(slot,2)=SsSeqStop (reai-v2-deferred-backlog Batch 3, Commit a53361a1).
   - *Dep:* FE-1  ·  *Akzeptanz:* YOU DIED → TITLE → NEW GAME reloads a clean run with no leftover death music or g_gameover state.
 
@@ -511,54 +511,54 @@ Measured state: all 80 STAGE1 RDTs exist and are in re15_room_ids[]; re15_room_s
 - **[RL-1 · L · DEPTH]** De-hardcode the room-load path: extract the ROOM1170-specific boot (pc_load_room_prop_set, msg block, RBJ cinematic, spawn) into a single generic per-room loader keyed off the loaded RDT, so boot and cross-room reload share one code path.
   - *Quelle:* re15_room_load (room_pc.c) + re15_room_apply_pending (room_common.c); main.c boot L584-1094 and cross-room reload L1987-2112 (currently duplicated/ROOM1170-biased).
   - *Dep:* none  ·  *Akzeptanz:* Booting any of the 40 Leon rooms via RE15_START_ROOM loads that room's own BG/props/models/SCD/msg with zero ROOM1170 residue (verified by state-log + autoshot on 8 rooms).
-- **[RL-2 · M · BREADTH]** Build the STAGE1 door-graph table (per-room: door slot → dest stage/room/spawn xyz/yaw/cut) by parsing every RDT's Door_aot_set records; regenerate/commit the generator that already produced re15_room_spawns.h.
+- ✅ **[RL-2 · M · BREADTH]** Build the STAGE1 door-graph table (per-room: door slot → dest stage/room/spawn xyz/yaw/cut) by parsing every RDT's Door_aot_set records; regenerate/commit the generator that already produced re15_room_spawns.h.
   - *Quelle:* Door_aot_set dest bytes pc[22]/pc[23] (re15_aot_door_params_t dest_stage/dest_room, re15_aot.h L111-114); the door_graph.py referenced in re15_room_spawns.h header.
   - *Dep:* RL-1  ·  *Akzeptanz:* A generated STAGE1 adjacency table where every door resolves to an existing room id and every non-boot room has ≥1 inbound door matching its re15_room_spawns[] entry.
-- **[RL-3 · M · DEPTH]** Room-probe sweep: load + tick (main00 + sub00) all 40 Leon RDTs N frames and assert no parse/SCD crash; log spawns + camera count per room.
+- ✅ **[RL-3 · M · DEPTH]** Room-probe sweep: load + tick (main00 + sub00) all 40 Leon RDTs N frames and assert no parse/SCD crash; log spawns + camera count per room.
   - *Quelle:* re15-room-probe skill (loads ROOM####.RDT into the C engine, runs SCD, ticks N frames, inspects g_actors+globals); rdt_common.c section parser.
   - *Dep:* RL-1  ·  *Akzeptanz:* A ctest that loads+ticks all 40 rooms with 0 crashes and produces a per-room spawn/camera manifest.
-- **[RL-4 · L · BREADTH]** Per-room model-bank resolution: load the correct enemy EMD + NPC PLW + player PLD per room from the RDT/spawn table instead of the fixed test/elliot incbin bank.
+- ✅ **[RL-4 · L · BREADTH]** Per-room model-bank resolution: load the correct enemy EMD + NPC PLW + player PLD per room from the RDT/spawn table instead of the fixed test/elliot incbin bank.
   - *Quelle:* RE2 lazy model-stream model (ASSET_LAYER_REWRITE §2.1-2.3); Sce_em_set type → EMD file (EMD/ dir); reai-v2-stage1-enemy-rooms room→type map.
   - *Dep:* RL-1  ·  *Akzeptanz:* Each enemy room shows the correct model: maggot EM in ROOM11C0, dog in 1190/1230, crow in 10C0, spider in 1090 (autoshot spot-check).
-- **[RL-5 · M · DEPTH]** Camera-cut (RVD) coverage per room: drive BG cut switching from each room's RVD table across all rooms, not just the tuned ones.
+- ✅ **[RL-5 · M · DEPTH]** Camera-cut (RVD) coverage per room: drive BG cut switching from each room's RVD table across all rooms, not just the tuned ones.
   - *Quelle:* RVD table @RDT+0x28 via FUN_80014230, gate DAT_800aca3c&0x100 (RE15_FUN_CATALOG 0x80042bac note); camera_common.c.
   - *Dep:* RL-1  ·  *Akzeptanz:* Walking a room switches BG cuts at the byte-true RVD boundaries; spot-check 5 rooms against a PSX capture (re15-parity-verify).
-- **[RL-6 · M · DEPTH]** Door-traversal integration: script a walk from ROOM1140 through ≥3 connected rooms via real doors, confirming spawn pos/cut/band each crossing.
+- ✅ **[RL-6 · M · DEPTH]** Door-traversal integration: script a walk from ROOM1140 through ≥3 connected rooms via real doors, confirming spawn pos/cut/band each crossing.
   - *Quelle:* Door graph RL-2; band gate FUN_8002bd44 @0x8002bf38 (aot_common.c L398-410); reai-v2-parity-oracle movement model.
   - *Dep:* RL-2,RL-4  ·  *Akzeptanz:* An RE15_INPUT_SCRIPT crosses ≥3 room boundaries; the arrival pos/yaw/cut at each equals the door-graph destination.
 
 ### S1-2 — HUD / Condition / Status screen (health, ECG, ammo, equipped weapon, ID card)
 *A byte-true status/condition screen: the Fine/Caution/Danger/Poison classification, the real ECG waveform (retire the faithful-line trace), the equipped-weapon icon + ammo readout, and the character ID-card panel.*
 
-- **[HUD-1 · S · DEPTH]** Byte-true condition classification (Fine/Caution/Danger, + poison state) from hp and the status word; wire it as the single source the status text + ECG read.
+- ✅ **[HUD-1 · S · DEPTH]** Byte-true condition classification (Fine/Caution/Danger, + poison state) from hp and the status word; wire it as the single source the status text + ECG read.
   - *Quelle:* Idle-FSM condition thresholds @0x8003206c (<0x32 caution, <0x1e danger — cited main.c L1414); DAT_800acaec player status word bit0x2 = bleed/poison (RE15_FUN_CATALOG).
   - *Dep:* none  ·  *Akzeptanz:* Condition text flips exactly at hp 49→caution and 29→danger; poison shows when bit0x2 set.
-- **[HUD-2 · M · DEPTH]** RE the ECG waveform generator and replace the admitted faithful-line trace (re15_pc_ecg, main.c L96/L1413) with the byte-true per-condition waveform.
+- ✅ **[HUD-2 · M · DEPTH]** RE the ECG waveform generator and replace the admitted faithful-line trace (re15_pc_ecg, main.c L96/L1413) with the byte-true per-condition waveform.
   - *Quelle:* Status-screen draw fn near @0x8003206c; RE the waveform table via the mzd_inv_open.sav framebuffer (re15-savestate-ghidra) since it is not in ghidra1_V2's covered range yet.
   - *Dep:* HUD-1  ·  *Akzeptanz:* The ECG trace pixel-matches the PSX status screen for Fine/Caution/Danger (framebuffer diff vs savestate).
-- **[HUD-3 · S · DEPTH]** Equipped-weapon icon + ammo (magazine/reserve) readout on the status screen.
+- ✅ **[HUD-3 · S · DEPTH]** Equipped-weapon icon + ammo (magazine/reserve) readout on the status screen.
   - *Quelle:* item_icon_common.c icon table; equipped slot DAT_800b25c8 (re15_inv_equipped_slot); FUN_8004ea6c magazine + FUN_8004eb70 reserve (inventory_common.c L130-182).
   - *Dep:* HUD-1  ·  *Akzeptanz:* The equipped weapon's icon + mag/reserve counts on the status screen match g_inv after equip/fire/reload.
-- **[HUD-4 · S · BREADTH]** ID-card / character portrait panel (STPIC_*.TIM) laid out per the inventory-screen ground truth.
+- ✅ **[HUD-4 · S · BREADTH]** ID-card / character portrait panel (STPIC_*.TIM) laid out per the inventory-screen ground truth.
   - *Quelle:* ITEM/STPIC_00..NN.TIM; layout from stage_saves/mzd_inv_open.sav (main.c L1393-1397 references LEFT = ID card + CONDITION/ECG).
   - *Dep:* HUD-1  ·  *Akzeptanz:* The correct portrait renders for the selected character in the status panel.
 
 ### S1-3 — Inventory / item interactions completion (combine, key-use, examine, item box)
 *Finish the inventory FSM beyond equip+heal-use: settle whether RE1.5 has COMBINE, add medicine-mix/menu-reload combine, key-item USE, item EXAMINE (ITPS model + description), and the item box.*
 
-- **[INV-1 · M · DEPTH]** RE the menu-confirm classification for non-weapon items to settle COMBINE-vs-no-op (currently SQUARE on ammo/key is a no-op, menu_common.c L91). Either implement COMBINE or byte-true-confirm the no-op and fix the comment.
+- ✅ **[INV-1 · M · DEPTH]** RE the menu-confirm classification for non-weapon items to settle COMBINE-vs-no-op (currently SQUARE on ammo/key is a no-op, menu_common.c L91). Either implement COMBINE or byte-true-confirm the no-op and fix the comment.
   - *Quelle:* Menu FSM confirm handler @0x80046670 (sets DAT_800aca5d equip); FUN_8004a0cc combine; reai-v2-deferred-backlog menu-combine note (decompile garbled → multi-level disasm).
   - *Dep:* none  ·  *Akzeptanz:* Disasm proves the RE1.5 menu action model; behavior + comment match the bytes (implemented, or confirmed no-op with citation).
-- **[INV-2 · M · BREADTH]** Item COMBINE: medicine mixing (Green+Green/Green+Red/etc → G.G / G.R MIX ids) and in-menu ammo reload.
+- ✅ **[INV-2 · M · BREADTH]** Item COMBINE: medicine mixing (Green+Green/Green+Red/etc → G.G / G.R MIX ids) and in-menu ammo reload.
   - *Quelle:* FUN_8004a0cc combine + FUN_8004e054/FUN_8004ebdc reload (cited inventory_common.c L26); medicine-mix result ids 0x24-0x2e (item name table inventory_common.c L224-227).
   - *Dep:* INV-1  ·  *Akzeptanz:* Combining Green(0x24)+Red(0x25) yields G.R MEDICINE MIX (0x27) byte-true; menu-reload merges ammo box→magazine.
-- **[INV-3 · M · BREADTH]** Key-item USE: using a key/tool item triggers its door-unlock/event (consume or flag per item).
+- ✅ **[INV-3 · M · BREADTH]** Key-item USE: using a key/tool item triggers its door-unlock/event (consume or flag per item). *(Menu key-use = byte-true "You can't use it here."; the actual STAGE1 door-unlock is the ROOM card-reader keypad, now completable end-to-end — PROG-3.)*
   - *Quelle:* Key-use branch of the menu FSM (id≥0x22 classifier @0x80049124); door lock check (PROG-1); flag store FUN_8004ef90.
   - *Dep:* INV-1,PROG-1  ·  *Akzeptanz:* Using the correct key on its door sets the unlock flag + consumes/keeps the item byte-true, and the door then opens.
-- **[INV-4 · M · BREADTH]** Item EXAMINE: rotate the per-item ITPS.ITP 112x72 model and show its description text (reuse the item-modal picture path).
+- ✅ **[INV-4 · M · BREADTH]** Item EXAMINE: rotate the per-item ITPS.ITP 112x72 model and show its description text (reuse the item-modal picture path).
   - *Quelle:* itps_common.c (id×0x3000 ITPS.ITP picture, already used by the pickup modal); examine/description text block; item_prompt_common.c glyph replay.
   - *Dep:* none  ·  *Akzeptanz:* Examining an inventory item shows its ITPS picture rotating + the byte-true description string.
-- **[INV-5 · L · BREADTH]** Item box: deposit/withdraw with the 8-visible cap in box mode and post-removal compaction.
+- ✅ **[INV-5 · L · BREADTH]** Item box: deposit/withdraw with the 8-visible cap in box mode and post-removal compaction.
   - *Quelle:* FUN_80068f9c box enter/exit (0x0e deposit/0x0f withdraw, count forced 8); FUN_80069714 compaction; FUN_80069668 free-slot; DAT_800d4a3c 11 slots (RE15_FUN_CATALOG save/item-box section).
   - *Dep:* INV-1  ·  *Akzeptanz:* Deposit/withdraw round-trips items through a persistent box; the visible count clamps to 8 in box mode and compacts on removal.
 
