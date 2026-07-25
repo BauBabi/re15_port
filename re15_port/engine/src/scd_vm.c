@@ -1491,6 +1491,16 @@ static int op_fade_adjust(scd_thread_t *t)
     t->pc += 4;
     return 1;
 }
+/* Runtime flag-op census (env RE15_FLAG_CENSUS): logs every Ck/Set/indexed flag op with the
+ * current room so the STAGE1 progression map is built from the byte-true VM (no offline SCD
+ * walker desync). READ = Ck/0x58 (gates a door/event), WRITE = Set/0x59 (sets a flag). */
+static int flag_census_on(void)
+{
+    static int c = -1;
+    if (c < 0) c = getenv("RE15_FLAG_CENSUS") ? 1 : 0;
+    return c;
+}
+
 /* 0x59 — byte-true LAB_8003fe90 (@0x800744a8[0x59] -> 0x8003fe90) is an INDEXED FLAG-BANK
  * BIT SET/CLEAR/TOGGLE, NOT Xa_on (an RE2 misattribution; the handler has zero XA/CD/SPU
  * interaction — audit wf_1db9c802 AUDIO-OP59-NOT-XA). It is the WRITE sibling of the 0x58
@@ -1510,6 +1520,9 @@ static int op_flag_set2(scd_thread_t *t)
     uint8_t op   = t->pc[3];
     if (word >= 0 && word < RE15_FLAG_WORDS_ZONE && bank < RE15_FLAG_ZONES) {
         uint8_t idx = (uint8_t)raw;
+        if (flag_census_on())
+            fprintf(stderr, "[flagcensus] room=%04X WRITE 0x59 bank=%d idx=%d op=%d\n",
+                    g_current_room_id, bank, idx, op);
         if      (op == 1) re15_game_flag_set(bank, idx, 1);
         else if (op == 0) re15_game_flag_set(bank, idx, 0);
         else if (op == 7) re15_game_flag_set(bank, idx, re15_game_flag_get(bank, idx) ? 0 : 1);
@@ -1558,6 +1571,9 @@ static int op_ck(scd_thread_t *t)
     uint8_t  idx   = t->pc[2];
     uint8_t  value = t->pc[3];
     int      got   = re15_game_flag_get(zone, idx);
+    if (flag_census_on())
+        fprintf(stderr, "[flagcensus] room=%04X READ  Ck   zone=%d idx=%d exp=%d got=%d\n",
+                g_current_room_id, zone, idx, value, got);
     /* byte-true LAB_8003fcf4: cond = (flag!=0) XOR (value==0)  (@0x8003fd48 `sltu`
      * = flag-Bool, @0x8003fd50 `xor` mit a1=(value==0)@0x8003fd30). Korrigiert den
      * value>=2-Fall; identisch zum alten (got==value) fuer value in {0,1}. [#19] */
@@ -1579,6 +1595,9 @@ static int op_set(scd_thread_t *t)
     uint8_t  zone = t->pc[1];
     uint8_t  idx  = t->pc[2];
     uint8_t  op   = t->pc[3];
+    if (flag_census_on())
+        fprintf(stderr, "[flagcensus] room=%04X WRITE Set  zone=%d idx=%d op=%d\n",
+                g_current_room_id, zone, idx, op);
     if      (op == 1) re15_game_flag_set(zone, idx, 1);                           /* OR     */
     else if (op == 0) re15_game_flag_set(zone, idx, 0);                           /* clear  */
     else if (op == 7) re15_game_flag_set(zone, idx, re15_game_flag_get(zone, idx) ? 0 : 1); /* toggle */

@@ -53,3 +53,10 @@ target_link_libraries(test_door_lock PRIVATE re15_engine re15_test_support)
 target_include_directories(test_door_lock PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME integration_door_lock COMMAND test_door_lock)
 set_tests_properties(integration_door_lock PROPERTIES TIMEOUT 30)
+
+# --- STAGE1 progression-flag census (roadmap S1-4 / PROG-3..5 foundation) ---
+add_executable(test_flag_census test_flag_census.c)
+target_link_libraries(test_flag_census PRIVATE re15_engine re15_test_support)
+target_include_directories(test_flag_census PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME integration_flag_census COMMAND test_flag_census)
+set_tests_properties(integration_flag_census PROPERTIES TIMEOUT 30)

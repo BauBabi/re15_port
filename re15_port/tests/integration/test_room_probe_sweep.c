@@ -26,6 +26,7 @@
 #include "re15_rdt.h"       /* re15_rdt_t, re15_rdt_parse, .cut_count/.main_scd/.sub_scd */
 #include "re15_scd.h"       /* scd_vm_init/_tick, scd_register_room_events, scd_room_reenter */
 #include "re15_actor.h"     /* g_actors, RE15_ACTOR_SLOT_PLAYER, RE15_ACTOR_MAX */
+#include "re15_room.h"      /* g_current_room_id */
 #include "re15_enemy_ai.h"  /* re15_enemy_ai_run_all */
 #include "re15_player.h"    /* re15_actors_anim_advance */
 
@@ -89,6 +90,7 @@ int main(void)
         /* (2) engine-side room init: full VM/actor/AOT reset, seed the player, register the
          * RDT's event handlers, then re-enter (starts init=main00 + main=sub00 and ticks once). */
         scd_vm_init();
+        g_current_room_id = rid;   /* dest-id / save-point / flag-census attribution */
         re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
         pl->active = 1; pl->type = 0; pl->x = 0; pl->y = 0; pl->z = 0; pl->hp = 100;
         scd_register_room_events(&rdt);

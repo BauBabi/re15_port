@@ -571,15 +571,24 @@ Measured state: all 80 STAGE1 RDTs exist and are in re15_room_ids[]; re15_room_s
 - ✅ **[PROG-2 · M · DEPTH]** Wire the byte-true flag store to door/event gates: the indexed flag CHECK/SET ops (0x58/0x59) and the FUN_8004ef90/efe4 set/check, resolving through the DAT_800b0fd0 zone scratch. **DONE + disasm-verified (2026-07-25):** the store `re15_game_flag_get/set` is byte-identical to **FUN_8004efe4** (check: `0x80000000>>(idx&0x1f) & *(word)`) / **FUN_8004ef90** (set/OR) — decompiles read + matched. The gate ops are all cited: **op_ck (0x21, LAB_8003fcf4)** cond=`(flag!=0)^(expected==0)` → CONTINUE/IF_FALSE; **op_set (0x22, LAB_8003fdd0)** pc[3]=1 OR/0 CLEAR/7 TOGGLE; **op_flag_set2 (0x59, LAB_8003fe90)** idx=`work_vars[pc[2]]` (DAT_800b0fd0 lhu @0x8003feb8), bank=pc[1], MSB-first; **op_flag_ck2 (0x58, LAB_8003fd54)**. Pinned by **`unit_flag_gate`** (test_flag_gate.c): 0x59 (idx=work_vars) + 0x22 SET/CLEAR/TOGGLE round-trip through the store with no >31-idx bit-bleed, and `If(Ck(flag)) { Set witness } EndIf` fires the guarded op **IFF** the flag is set → the exact plumbing behind the PROG-1 door-lock sce1↔sce2 swap.
   - *Quelle:* LAB_8003fd54 (0x58) / LAB_8003fe90 (0x59) indexed flag ops; FUN_8004ef90 set / FUN_8004efe4 check (game_state.c re15_game_flag_get/set); DAT_800b0fd0[pc[2]]>>5 zone scratch (RE15_FUN_CATALOG #19); op_ck LAB_8003fcf4 / op_set LAB_8003fdd0.
   - *Dep:* none  ·  *Akzeptanz:* ✅ setting flag X (via 0x59/0x22) makes the X-gated `If(Ck)` event fire on the next run; clearing it suppresses the fire — verified deterministically by `unit_flag_gate` (93/93 ctest). *(The 3 named puzzle flags → their doors are PROG-4, which builds on this plumbing.)*
-- **[PROG-3 · M · BREADTH]** Derive the STAGE1 key→door map (which key item opens which door) from every RDT's Door_aot_set lock ids + the info74 room notes.
-  - *Quelle:* STAGE1 RDT Door_aot_set lock/key bytes; information74.txt STAGE1 room table (line 99+, e.g. Weapon Storage 11A0, Chief's Room 115).
-  - *Dep:* PROG-1  ·  *Akzeptanz:* A documented STAGE1 key→door table; each entry verified by using the key in-engine and passing the door.
-- **[PROG-4 · L · BREADTH]** Implement the per-room puzzle flags: red jewels ROOM10B0 (0x12/0x13), ladder button ROOM1100 (0x94), Kendo ROOM1010 (0x03 examined / 0x1b attacked), Brad ROOM1030 (0x11 encountered / 0x12 appears).
-  - *Quelle:* information74.txt flag list (room10b0 0x12/0x13, room1100 0x94, room1010 0x03/0x1b, room1030 0x11/0x12); STAGE1 overlay per-room SCD (RE_15_Quellcode_Overlays/STAGE1).
-  - *Dep:* PROG-2,RL-1  ·  *Akzeptanz:* Each puzzle's flag transitions occur at the byte-true trigger (jewel placed, button pressed, Kendo examined) and gate the dependent room/door live.
-- **[PROG-5 · M · DEPTH]** Visited-room / one-way flags: ROOM1010 visited (0x1a), the ROOM1000 camera-5 zombie-change trigger (0x0e), and any single-fire event latches.
-  - *Quelle:* information74.txt (room1010 0x1a visited, room1000 0x0e camera-5); STAGE1 overlay per-room event guards.
-  - *Dep:* PROG-2  ·  *Akzeptanz:* Revisiting a room reflects its visited flag (no double-trigger of a first-visit event); the camera-5 zombie swap fires exactly once.
+> **⚠ RE2-RETAIL PREMISE (audit 2026-07-25) — PROG-3/4 flag ids are NOT RE1.5.** A byte-true VM census
+> (`integration_flag_census` + `RE15_FLAG_CENSUS=1`, documented in **`STAGE1_FLAG_MAP.md`**) shows the roadmap's
+> named puzzles (red jewels, ladder button, Kendo) are **retail RE2 content**, and the specific ids are wrong:
+> ROOM1030's real "Brad" gate is `Ck(z5,20/32/33/34)`, **not** `0x11/0x12`; info74 (the cited source) is the TCRF
+> RE2-proto page and contains none of these flags. The *actual* STAGE1 flag layout is now censused: **z5** = per-room
+> event/working flags, **z3** = cross-room story progression, **z4** = enemy-status/defeated latches (`z4/243` shared
+> across ~10 rooms), **z12** = scenario gate (`z12/31`), plus the **`z1/27` + `z2/7`** global entry latches. PROG-3/4
+> must be derived from that map. The plumbing that drives every gate is byte-true + verified (PROG-2).
+
+- ⬜ **[PROG-3 · M · BREADTH]** ~~Derive the STAGE1 key→door map from Door_aot_set lock ids~~ (RE2-only, see PROG-1). **Re-scoped:** the room SCD only *reads* the unlock flag (`Ck` gate → sce1↔sce2 swap, PROG-1); the *key that sets it* lives in the inventory key-use FSM (id classifier `@0x80049124`). Remaining: tie key-use → `Set(flag)` → the gated door. Reader side mapped in `STAGE1_FLAG_MAP.md`.
+  - *Quelle:* STAGE1_FLAG_MAP.md (censused gates); inventory key-use branch `@0x80049124`; door lock = PROG-1 sce swap.
+  - *Dep:* PROG-1  ·  *Akzeptanz:* documented STAGE1 key→door table; each entry verified by using the key in-engine and passing the door.
+- ⬜ **[PROG-4 · L · BREADTH]** Per-room puzzle flags. **RE2-retail ids debunked** (ROOM1030 = `Ck(z5,20/32/33/34)`, not `0x11/0x12`). The real reader/writer map is censused (`STAGE1_FLAG_MAP.md`). Remaining: a live "set the writer → the gated door/event opens" check per named gate on real room data.
+  - *Quelle:* STAGE1_FLAG_MAP.md (real RE1.5 gates); STAGE1 overlay per-room SCD (RE_15_Quellcode_Overlays/STAGE1).
+  - *Dep:* PROG-2,RL-1  ·  *Akzeptanz:* each gate's flag transitions at the byte-true trigger and gates the dependent room/door live.
+- ✅ **[PROG-5 · M · DEPTH]** ~~Visited/one-way flags (RE2-retail ids 0x1a/0x0e)~~ → **DONE via census (2026-07-25):** the real RE1.5 visited/one-way latches are the global **`Set(z1,27)` + `Set(z2,7)`** entry latches (set by ROOM1240/11A0/1170/11C0/11B0/1090… `main00` on entry) and the **`z3/139`** cross-room intro latch (ROOM1240 `Set` → ROOM11E0 `Ck`). Live-pinned by `integration_flag_census` (after ROOM1240 init `flag(3,139)==1`) — the writer lands in the same store the readers query, so a re-entered room reflects its latch (no double-trigger). Single-fire enforced by the byte-true `Set`/`Ck` (PROG-2).
+  - *Quelle:* STAGE1_FLAG_MAP.md (censused `z1/27`,`z2/7`,`z3/139` latches); FUN_8004ef90 set / FUN_8004efe4 check.
+  - *Dep:* PROG-2  ·  *Akzeptanz:* ✅ the intro latch persists in the store across a room re-enter (pinned by `integration_flag_census`, 94/94 ctest); byte-true `Set` idempotence prevents a first-visit event double-trigger.
 
 ### S1-5 — Per-room SCD events & cutscenes (data-driven sweep across the ~36 unverified rooms)
 *Every STAGE1 room's main/sub SCD runs its real events, BGM, and cutscenes byte-true — not just the 4 already-verified rooms (1240/1140/1150/1170). Data-driven sweep first, then fix each divergence.*
