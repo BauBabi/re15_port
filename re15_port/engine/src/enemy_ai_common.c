@@ -3300,15 +3300,38 @@ static void re15_crow_ai_tick(int slot)
 
 /* ============================================================================
  * DOG (Cerberus, type 0x20) — ground chase/lunge/bite AI. Byte-true port of the
- * 0x8010d7f8 family (RE15_DOG_AI.md; workflow wf_ccc60f69, adversarially verified).
- * Root dispatches +0x4 via @0x80120f74: [0]INIT [1]ACTIVE(brain) [2]HURT [3]DEATH
- * [7]CORPSE. ACTIVE is a dual-dispatch on +0x5 (decision @0x80120f94 / act @0x80120fd4):
- * sub 0 idle / 1 turn / 2 chase / 3 attack-range / 5 arm-grab / 6 snap / 7 low-HP lunge /
- * 4 pounce-lunge / 8 bite / 9-10 eaten-GRAB / 0xb died-in-grab / 0xc release / 13-14 reroute.
- * The dog shares the zombie steering/collision + take_damage (states 2/3/7 = receiving side).
- * COMPLETE byte-true: INIT + the full ACTIVE brain (all attack + eaten-GRAB + obstacle-reroute
- * sub-states) + HURT/DEATH/CORPSE + the state-4/5/6 pounce-kill machines A/B. Zero faithful-line
- * on the dog side; the player-eaten anim reuses the shared victim FSM (same as the zombie grab). */
+ * 0x8010d7f8 family (RE15_DOG_AI.md; wave 1 wf_ccc60f69, full re-audit wave
+ * wf_827f186d: 15 findings fixed against raw STAGE1.BIN disasm + the STAGE1_full
+ * decompiles — every constant below carries its @0x).
+ * Root FUN_8010d7f8 dispatches +0x4 via @0x80120f74: [0]INIT(0x8010d93c)
+ * [1]ACTIVE(0x8010dbcc) [2]HURT(0x801108f0) [3]DEATH(0x80110dc0)
+ * [4/5/6]SCRIPTED(0x80111350) [7]CORPSE(0x80111774).
+ * ACTIVE is a dual dispatch on +0x5: DECISION table @0x80120f94 (real entries:
+ * [0] idle 0x8010ddb8, [2] chase 0x8010e0c4, [3] attack-range 0x8010e568 — the
+ * rest are jr-ra stubs) THEN ACT table @0x80120fd4 (the act runs on the sub the
+ * decision just wrote — same frame). Subs: 0 idle / 1 turn / 2 chase / 3
+ * attack-range circle / 4 stationary bark chain / 5 arm-grab windup / 6 snap /
+ * 7 low-HP hop / 8 bite leap machine / 9-10 eaten-GRAB / 0xb died-in-grab /
+ * 0xc release / 13-14 obstacle reroute.
+ * The dog shares the zombie take_damage receiving side (states 2/3/7); the
+ * HURT/DEATH dispatchers re-dispatch on +0x5 = the weapon/reaction row
+ * (@0x80121018 / @0x80121070, 22 rows: 7-11/13-18/21 = the AIRBORNE variants).
+ * OPEN (documented, not faked):
+ *  - FUN_80012974(4000) in the root tail (@0x8010dd48) sets entity word0 flag
+ *    0x20000000 (proximity <4000, sltu @0x800129cc + or @0x800129ec) — the port
+ *    does not model the entity word0 flag bits (engine-wide flag word).
+ *  - +0x1c0 = 0x8000 hit-tween latch (hurt entries @0x80110a80/@0x80110c3c) —
+ *    no +0x1c0 reader/writer is modeled port-wide (also open for the zombie).
+ *  - FUN_80111870 skeletal root-motion assist (chase @0x8010e550, sub-7 hop
+ *    @0x8010f118): bone-matrix delta displacement on top of func_0x800245d8 —
+ *    the port's enemy walker is the 245d8 component only.
+ *  - reroute-13 aux +0xb0=0xc1c/0 (@0x80110440/@0x801104d0) — shadow-block aux
+ *    field of the af5c shadow descriptor, not modeled.
+ *  - entity word0 |= 2|0x40 at corpse entry (@0x801117cc/e8) — flag word, see
+ *    above.
+ *  - FUN_80037edc(id, 0x32) SE-tier accumulator (knockdown grunts @0x8010f360):
+ *    the port plays the tier's SE id directly (same stance as the crow screech).
+ */
 static const uint8_t s_dog_clip_len[28] =   /* EM020 clip frame-counts, byte-true (CDEMD0.EMS idx 7) */
     { 49,18,30,14,14,14,18,15,30,35,35,14,42,14,44,14,27,14,50,29,17,13,20,29,18,40,30,99 };
 
@@ -3326,6 +3349,16 @@ static void re15_dog_advance(re15_actor_t *e, int32_t sp)   /* pos_advance along
     e->x += (int32_t)(((int32_t)re15_cos_q12(e->rot_y) * sp) >> 12);
     e->z -= (int32_t)(((int32_t)re15_sin_q12(e->rot_y) * sp) >> 12);
 }
+/* func_0x800245d8(a0) — the BYTE-TRUE walker: the movement SPEED comes from entity+0x8c
+ * (`lhu v0,140(v0)` @0x800245f0) and a0 is a YAW OFFSET added to rot_y before RotMatrixY
+ * (`lh v0,106(v0); addu a0,v0,a0` @0x80024658-64). a0=0 forward, a0=0x800 = 180° rearward
+ * (the same convention as the player knockback @0x80035f18). (audit wf_827f186d dog #6/#10) */
+static void re15_dog_advance_ofs(re15_actor_t *e, int32_t yaw_ofs)
+{
+    int a = ((int)e->rot_y + (int)yaw_ofs) & 0xfff;
+    e->x += (int32_t)(((int32_t)re15_cos_q12((int16_t)a) * e->crow_speed) >> 12);
+    e->z -= (int32_t)(((int32_t)re15_sin_q12((int16_t)a) * e->crow_speed) >> 12);
+}
 /* arc-range test 0x8001a804: player within dist_thresh AND facing within yaw_tol (Q12). */
 static int re15_dog_arc(const re15_actor_t *e, const re15_actor_t *pl, int dth, int ytol)
 {
@@ -3338,18 +3371,131 @@ static int re15_dog_arc(const re15_actor_t *e, const re15_actor_t *pl, int dth, 
     int df = (((fb - (int)e->rot_y) + 0x800) & 0xfff) - 0x800;
     return (df >= -ytol && df <= ytol);
 }
+/* FUN_80111f0c(step, cap): ramp entity+0x8c UP toward cap (@0x80111f28-5c). */
+static void re15_dog_speed_ramp_up(re15_actor_t *e, int16_t step, int16_t cap)
+{
+    if (e->crow_speed < cap) {
+        e->crow_speed = (int16_t)(e->crow_speed + step);
+        if (e->crow_speed > cap) e->crow_speed = cap;
+    }
+}
+/* FUN_80111f6c(step, floor): ramp entity+0x8c DOWN toward floor. */
+static void re15_dog_speed_ramp_down(re15_actor_t *e, int16_t step, int16_t flo)
+{
+    if (e->crow_speed > flo) {
+        e->crow_speed = (int16_t)(e->crow_speed - step);
+        if (e->crow_speed < flo) e->crow_speed = flo;
+    }
+}
+/* FUN_80111fcc(turn): menace clip select from the 3-byte table @0x801210f8 = {5,3,4}
+ * (raw dump: 05 03 04): turn<0 -> clip 5, ==0 -> clip 3 (straight), >0 -> clip 4. Writes
+ * +0x94 ONLY when different — NO frame reset (@0x80111ff0-80112008). */
+static void re15_dog_clip_keep(re15_actor_t *e, int turn)
+{
+    uint8_t c = (turn < 0) ? 5 : (turn == 0) ? 3 : 4;
+    if (e->motion != c) e->motion = c;
+}
+/* +0x1da — the per-frame SCA wall-probe result the dog ROOT stores (FUN_8010d7f8 @0x8010d834:
+ * `+0x1da = FUN_8003b0a4(&+0x34, dim, 4)`, nonzero on wall contact). Port: the run_all wall
+ * clamp encodes the same contact into +0x90 (ai_contact bit0 + heading nibble), so "blocked
+ * last frame" = the +0x90 contact bits. (audit wf_827f186d dog #15) */
+static int re15_dog_blocked(const re15_actor_t *e) { return (e->ai_contact & 3) != 0; }
+/* func_0x80019700(0x2000, rot_y, bone-block, &DAT_80120f54) — the universal hit-blood burst
+ * (hurt @0x80110aa0 bone+0xec, airborne @0x80110c88 bone+0x40, bark-chain death @0x8010ebe0
+ * bone+0x2f0). Port: the same effect-0 spawn the zombie hurt fx uses (re15_damage.c
+ * re15_enemy_hurt_fx); position = actor world pos (bone offset = faithful-line). */
+static void re15_dog_blood(re15_actor_t *e)
+{
+    re15_esp_fx_spawn(re15_esp_room_bank(), 0, 0, e->x, e->y, e->z, (int16_t)e->rot_y);
+}
+/* DAT_800aca50 bit 0 — the dog PACK-ALERT bit: cleared by the dog INIT (`sh zero,0x800aca50`
+ * @0x8010db84), set by the bark step (@0x8010eb58 `ori v0,v0,1`), cleared again at bark step 4
+ * (@0x8010eb78-7c `andi 0xfffe`), read by the idle decision (@0x8010de60-84) and the chase
+ * decision (@0x8010e21c-240). NOTE: on the PSX this is the SAME global halfword the zombie
+ * throw-off mercy latch sets (port: s_grab_mercy_timer) — no shipped STAGE1 room mixes dogs
+ * with zombies, so the port keeps the dog's bit separate. (audit wf_827f186d dog #7) */
+static uint16_t s_dog_pack_alert;
+/* run_all clamp bypass for the reroute-13 leap burst: the original snaps the OLD-POS mirror
+ * +0x40/+0x42/+0x44 to the new position right after the func_0x800245d8(0) burst
+ * (@0x801104e0-0x8011052c) so the SCA sweep does NOT clamp the hop back off the obstacle.
+ * The port's equivalent sweep is the run_all constrain from the tick-start pos — this mask
+ * skips it for the burst frame. */
+static uint32_t s_dog_noclamp_mask;
+static int re15_dog_consume_noclamp(int slot)
+{
+    uint32_t b = 1u << (unsigned)slot;
+    int r = (s_dog_noclamp_mask & b) != 0;
+    s_dog_noclamp_mask &= ~b;
+    return r;
+}
+
+/* DAT_800aca58 — the PLAYER's +0x4 state:sub halfword (player block @0x800aca54). The dog
+ * wake/menace triggers test two state-1 sub-modes (audit wf_827f186d dog #7):
+ *  0x0201 = state 1 sub 2 = RUNNING — proven: the sub-2 handler LAB_80032604 loads the run
+ *    speed `lbu DAT_80073f24[..]` = 0xC8 (200) @0x800327e8 into the player speed word
+ *    (`sh a0,DAT_800acae0` @0x80032830) and selects clip 0 (`sb zero,DAT_800acae8`
+ *    @0x8003280c) — the RUN clip (port: W01 c0 = motion 100, game_step footstep block).
+ *  0x0701 = state 1 sub 7 = WEAPON-DRAWN/AIM — proven: stage-A [7] @0x80032e3c is `jr ra`
+ *    and stage-B [7] @0x80032e44 dispatches the weapon-pose table @0x80074030[aca5d]
+ *    (the aim FSM; port: re15_player_aim_active).
+ * The port player FSM does not mirror the aca58 word — these predicates read the port's own
+ * markers of exactly those two states. */
+static int re15_dog_player_running(void)
+{
+    return g_actors[RE15_ACTOR_SLOT_PLAYER].motion == 100;
+}
+static int re15_dog_player_aiming(void)
+{
+    extern int re15_player_aim_active(void);
+    return re15_player_aim_active();
+}
+
+/* The SCA cell the dog stands on — the original keeps a live pointer at entity+0x1b4 (floor
+ * resolver); the reroute commit latches its attr halfword `*(u16*)(cell+10)` (@0x8010e294-2a4).
+ * Port: point-in-rect scan on the dog's band (same unsigned idiom as
+ * re15_collision_floor_band_at); cell+10 = the aliased entry's u1|floor<<8 bytes. */
+static uint16_t re15_dog_sca_attr(const re15_actor_t *e)
+{
+    if (!g_room_rdt_ok || !g_room_rdt.sca) return 0;
+    for (int i = 0; i < g_room_rdt.sca_count; i++) {
+        const re15_sca_entry_t *c = &g_room_rdt.sca[i];
+        if ((c->floor >> 4) != e->floor) continue;
+        if ((uint32_t)(e->x - (int32_t)c->x) < (uint32_t)c->width &&
+            (uint32_t)(e->z - (int32_t)c->z) < (uint32_t)c->density)
+            return (uint16_t)((uint16_t)c->u1 | ((uint16_t)c->floor << 8));
+    }
+    return 0;
+}
+
+/* Shared reroute commit — chase decision @0x8010e254-2ec AND attack-range decision else-branch
+ * @0x8010e628-6c0 (identical gate; audit wf_827f186d dog #12):
+ *   needs +0x90 contact bits 0-1 (`andi +0x90,3` @0x8010e268) AND the escape heading within
+ *   ±0x200 of the current yaw (`(((+0x90&0xf0)<<4) - rot_y + 0x200) & 0xfff < 0x400`
+ *   @0x8010e274-28c); latches +0x1ea from the SCA cell (@0x8010e294-2a4) and +0x1e8 = +0x90&1
+ *   (@0x8010e2bc-c0); picks sub 13 (bit0=1) or 14 (bit0=0): `0xe - +0x1e8` @0x8010e2d4-dc,
+ *   `sh zero -> +0x6/+0x7`. OPEN: the +0x90 bit-0/1 contact CLASS comes from the SCA resolver
+ *   FUN_8003b0a4 (leap-over vs drop-edge, not RE'd); the port clamp writes bit 0 only, so the
+ *   port reaches sub 13 (13 = the byte-true bit0=1 selection). */
+static int re15_dog_try_reroute(re15_actor_t *e)
+{
+    if ((e->ai_contact & 3) == 0) return 0;                              /* @0x8010e268 */
+    int heading = ((int)(e->ai_contact & 0xf0)) << 4;
+    if ((((heading - (int)(int16_t)e->rot_y) + 0x200) & 0xfff) >= 0x400) /* @0x8010e274-28c */
+        return 0;
+    e->dog_reroute_sca = re15_dog_sca_attr(e);                           /* +0x1ea @0x8010e294-2a4 */
+    e->dog_reroute_dir = (uint16_t)(e->ai_contact & 1);                  /* +0x1e8 @0x8010e2bc-c0 */
+    e->sub_state_1 = (uint8_t)(0x0e - e->dog_reroute_dir);               /* 13/14  @0x8010e2d4-dc */
+    e->sub_state_2 = 0; e->sub_state_3 = 0;                              /* sh zero,+0x6 */
+    return 1;
+}
 
 /* ============================ DOG OBSTACLE-REROUTE (ACTIVE sub 13/14) ======================== *
- * Byte-true 0x801102dc (sub 13, leap-over) + 0x801105bc (sub 14, turn-around). Entered from the
- * CHASE decision when the dog is blocked: +0x5 = 0xe - (+0x90 & 1) -> sub 13 on wall contact, sub 14
- * otherwise (@0x8010e2b4/d4). Both read +0x90 (ai_contact) — the SCA resolver's wall byte, whose HIGH
- * nibble is the escape heading = (+0x90 & 0xf0) << 4 (16 directions) — turn to it, run forward over the
- * obstacle, return to CHASE (+0x5=2). The +0x90 low nibble/bit0 is cleared each frame by the resolver
- * (@0x8003b1dc) and set from the port's collision clamp (run_all, byte-true-equivalent: the same wall
- * normal the resolver encodes). The B[13]/B[14] pre-decision slots are empty jr-ra stubs. */
-static void re15_dog_reroute13(re15_actor_t *e)   /* 5-step @0x8010024c */
+ * Byte-true 0x801102dc (sub 13, leap OVER — UP one floor level) + 0x801105bc (sub 14, drop DOWN
+ * 1-4 levels). +0x82 is the FLOOR INDEX (not a counter) and both hops move y/+0x1ba by ±0x708
+ * per level (audit wf_827f186d dog #13). The B[13]/B[14] decision slots are jr-ra stubs. */
+static void re15_dog_reroute13(re15_actor_t *e, int slot)   /* FUN_801102dc */
 {
-    int heading = (((int)e->ai_contact & 0xf0) << 4) & 0xfff;   /* +0x90 hi-nibble -> escape yaw */
+    int heading = (((int)e->ai_contact & 0xf0) << 4) & 0xfff;   /* +0x90 hi-nibble, read FRESH (no latch in 13) */
     switch (e->sub_state_2) {
     case 0:                                             /* INIT 0x8011031c */
         e->motion = 0; e->anim_frame = 0; e->anim_frac = 7;     /* +0x94=0,+0x95=0,+0x8f=7 */
@@ -3372,37 +3518,39 @@ static void re15_dog_reroute13(re15_actor_t *e)   /* 5-step @0x8010024c */
         /* FALLTHROUGH to step 3 (byte-true @0x8011041c -> 0x80110420) */
         /* fall through */
     case 3:                                             /* RUN/LEAP forward 0x80110420 */
+        if (e->anim_frame == 0x12)                      /* frame 0x12: pre-arm the level hop @0x8011042c */
+            e->dog_floor_y = (int16_t)(e->dog_floor_y - 0x708);  /* +0x1ba -= 1800 @0x80110458 (+0xb0=0xc1c aux OPEN) */
         if (re15_dog_anim(e)) {                         /* run clip 9 done @0x8011047c */
-            e->crow_speed = 0xc1c;                      /* +0x8c = 3100 forward @0x801104c8 */
-            re15_dog_advance(e, e->crow_speed);         /* pos_advance @0x801104d4 (the far side) */
-            e->floor++;                                 /* +0x82 reroute counter @0x8011049c */
+            e->floor++;                                 /* +0x82 += 1 (FLOOR INDEX up) @0x80110498 */
+            e->y -= 0x708;                              /* +0x38 -= 1800 (one level UP) @0x801104b4 */
+            e->crow_speed = 0xc1c;                      /* +0x8c = 3100 @0x801104c8 */
+            re15_dog_advance_ofs(e, 0);                 /* func_0x800245d8(0) burst @0x801104d4 */
+            s_dog_noclamp_mask |= 1u << (unsigned)slot; /* old-pos snap +0x40/+0x42/+0x44 @0x801104e0-52c */
             e->sub_state_2 = 4;                         /* -> step 4 @0x80110534 */
         }
-        /* (byte-true also raises/drops +0x38/+0xb0/+0x1ba for the vertical hop; the port dog is
-         * flat-ground — the horizontal leap over the obstacle is the observable behaviour) */
         break;
     default:                                            /* RESET -> CHASE 0x80110538 (step 4) */
         e->motion = 0; e->anim_frame = 0; e->anim_frac = 0;     /* +0x94=0,+0x95=0,+0x8f=0 */
         re15_dog_anim(e);                               /* anim_set @0x8011057c */
         e->sub_state_1 = 2; e->sub_state_2 = 0;         /* +0x5=2 CHASE, +0x6=0 @0x80110590 */
-        e->ai_contact = (uint8_t)(e->ai_contact & 0xf0);/* consume the contact bit */
+        e->ai_contact = (uint8_t)(e->ai_contact & 0xf0);/* consume the contact bit (port clamp re-arms) */
         break;
     }
 }
 
-static void re15_dog_reroute14(re15_actor_t *e)   /* inline +0x6 FSM @0x801105bc, clip 0x0a */
+static void re15_dog_reroute14(re15_actor_t *e)   /* FUN_801105bc, clip 0x0a, drop 1-4 levels */
 {
-    int heading = (((int)e->ai_contact & 0xf0) << 4) & 0xfff;   /* target from latched wall byte (+0x9f) */
     switch (e->sub_state_2) {
     case 0:                                             /* INIT 0x80110610 */
         e->motion = 0; e->anim_frame = 0; e->anim_frac = 7;     /* +0x94=0,+0x95=0,+0x8f=7 */
+        e->dog_aux9f = (int8_t)e->ai_contact;           /* +0x9f = +0x90 LATCH @0x80110658 */
         e->sub_state_2 = 1;
-        /* +0x9f = +0x90 latch @0x80110658 (the escape heading is preserved in ai_contact hi-nibble) */
         /* FALLTHROUGH to phase 1 (byte-true @0x80110658 -> 0x8011065c) */
         /* fall through */
     case 1: {                                           /* TURN-SLEW 0x8011065c */
         re15_dog_anim(e);                               /* anim_set clip 0 @0x80110674 */
-        int delta = (16 + heading - (int)e->rot_y) & 0xfff;     /* 0x8001aa68(target, step 16) */
+        int heading = (((int)e->dog_aux9f & 0xf0) << 4) & 0xfff;   /* aa68(((s8)+0x9f&0xf0)<<4,0x10) */
+        int delta = (16 + heading - (int)e->rot_y) & 0xfff;
         int inc   = (delta < 32) ? 0 : (delta < 0x801 ? 16 : -16);
         e->rot_y  = (uint16_t)(((int)e->rot_y + inc) & 0xfff);  /* +0x6a += inc @0x801106b8 */
         if (inc != 0) break;                            /* still turning @0x801106b4 */
@@ -3411,15 +3559,33 @@ static void re15_dog_reroute14(re15_actor_t *e)   /* inline +0x6 FSM @0x801105bc
     }
     case 2:                                             /* SNAP + reroute clip 0x0a 0x801106d0 */
         e->motion = 0x0a; e->anim_frame = 0; e->anim_frac = 0;  /* +0x94=0x0a,+0x95=0,+0x8f=0 */
-        e->rot_y  = (uint16_t)heading;                  /* hard-snap +0x6a @0x80110714 */
+        e->rot_y  = (uint16_t)((((int)e->dog_aux9f & 0xf0) << 4) & 0xfff);  /* hard-snap @0x80110714 */
         e->sub_state_2 = 3;
         /* FALLTHROUGH to phase 3 (byte-true @0x80110724 -> 0x80110728) */
         /* fall through */
-    default:                                            /* RUN + settle -> CHASE 0x80110728 (phase 3) */
-        /* byte-true this is a scripted parabola driven by anim_frame milestones 0x0a/0x0e/0x13/0x14
-         * (@0x80110734+): forward at +0x8c=0x509 then 0x12c with a +0x38/+0x1ba/+0x9c vertical ease.
-         * The port dog is flat-ground — the observable is the forward run over the obstacle: */
-        if (e->anim_frame >= 0x0a) { e->crow_speed = 0x12c; re15_dog_advance(e, e->crow_speed); }  /* +0x8c=300 @0x80110858 */
+    default:                                            /* RUN + DROP -> CHASE 0x80110728 (phase 3) */
+        if (e->anim_frame == 0x0a) {                    /* frame 10 @0x80110734 */
+            e->anim_frac  = 7;                          /* +0x8f=7 @0x80110744 */
+            e->anim_frame = 0x0e;                       /* frame := 14 (skip 10-13) @0x80110754 */
+            {   /* drop ((+0x1ea & 0xc) >> 2) + 1 levels (do-while @0x80110774-b0) */
+                int n = (int)((e->dog_reroute_sca & 0xc) >> 2);
+                for (int i = 0; i <= n; i++) {
+                    e->dog_floor_y = (int16_t)(e->dog_floor_y + 0x708);  /* +0x1ba += 1800 */
+                    e->floor--;                                          /* +0x82 -= 1 */
+                }
+            }
+            e->crow_speed = 0x509;                      /* +0x8c = 1289 launch burst @0x801107c8 */
+            re15_dog_advance_ofs(e, 0);                 /* func_0x800245d8(0) @0x801107d4 */
+            e->y += 0x3f8;                              /* +0x38 += 1016 @0x801107e0 */
+            e->ai_timer = (int16_t)(e->dog_floor_y - e->y);   /* +0x9c = floor - y @0x80110804 */
+        }
+        if ((uint32_t)(e->anim_frame - 0x0e) < 6u) {    /* frames 14..19 @0x80110818 */
+            e->y += (e->ai_timer + (e->ai_timer < 0 ? 7 : 0)) >> 3;   /* y += +0x9c/8 @0x80110834 */
+            e->crow_speed = 300;                        /* +0x8c = 300 @0x80110848 */
+            re15_dog_advance_ofs(e, 0);                 /* @0x80110858 */
+        }
+        if (e->anim_frame == 0x14)                      /* frame 20: floor snap @0x80110878-88 */
+            e->y = e->dog_floor_y;
         if (re15_dog_anim(e)) {                         /* reroute clip 0x0a done @0x801108a8 */
             e->sub_state_1 = 2; e->sub_state_2 = 0;     /* +0x5=2 CHASE, +0x6=0 @0x801108bc */
             e->ai_contact = (uint8_t)(e->ai_contact & 0xf0);
@@ -3429,7 +3595,7 @@ static void re15_dog_reroute14(re15_actor_t *e)   /* inline +0x6 FSM @0x801105bc
 }
 
 /* ============================ DOG eaten-GRAB hold (ACTIVE sub 9 / sub 10) ==================== *
- * Byte-true 7-step FSM @0x8010020c (sub 9 GRAB) / @0x8010022c (sub 10 GRABVAR). The dog latches onto
+ * Byte-true 7-step FSM @0x8010f80c (sub 9 GRAB) / @0x8010fc60 (sub 10 GRABVAR). The dog latches onto
  * the player and plays the eat cadence: clip 0x17/0x1a (latch) -> 0x18 (eat/shake) -> 0x19 (release).
  * The PLAYER is pinned + animated by the shared victim FSM (aca58=5 = player cmd 5, the same command
  * the zombie grab issues; Leon animates from EM020's bank2). Struggle drain +0x9c (100, -= 1+100*mash);
@@ -3490,25 +3656,80 @@ static void re15_dog_grabhold(re15_actor_t *e, re15_actor_t *pl)
     }
 }
 
-/* STATE 4/5/6 (0x80111350) — the POUNCE-LAND + grid-0x40 player-kill cutscenes. Sub-dispatch on +0x5
- * (table @0x801210c8): [0/1] pounce-land (grid-0x43/0x42 gated), [4/5] kill machine A (0x80111984),
- * [10/11] kill machine B (0x80111cf0). Reached from the ACTIVE lunge (sub 4 -> state 5 when the dog's
- * hp>=0). Byte-true pounce-land for a grid-0x43 dog; a non-special dog routes safely back to chase. */
+/* STATE 4/5/6 (0x80111350) — the SCRIPTED dog states. Sub-dispatch on +0x5 (table @0x801210c8,
+ * raw dump): [0]=0x80111398 scripted pounce (grid-0x40 spawn), [1]=0x80111658 window hold
+ * (grid-0x41 spawn), [2]/[3]=0x80111764/6c stubs, [4/5]=0x80111984 kill machine A,
+ * [10/11]=0x80111cf0 kill machine B. ENTERED ONLY from INIT (grid 0x40 -> +0x4=4, grid 0x41 ->
+ * +0x4=0x104 @0x8010db88-b8) or the SCD — the ACTIVE lunge (sub 4) NEVER writes state 5 (its
+ * @0x8010eb88-bf0 transition is the inner step +0x6=5, audit wf_827f186d dog #2/#14). */
 static void re15_dog_state456(re15_actor_t *e, re15_actor_t *pl)
 {
     switch (e->sub_state_1) {
-    case 0: case 1:   /* POUNCE-LAND 0x80111398: leap arc (rise) -> land -> chase (grid-0x43/0x42 gated) */
-        if (e->sub_state_2 == 0) {
-            if (e->grid_id != 0x43 && e->grid_id != 0x42) { e->state = 1; re15_dog_sub(e, 2); break; }  /* @0x801113e8 gate: normal dog -> chase (safe) */
-            e->hit_react |= 3; re15_dog_clip(e, 0x14); e->crow_speed = 0xf0; re15_audio_room_se(2);  /* +0x93|=3, clip 0x14, +0x8c=0xf0 @0x801113d8 */
+    case 0:   /* FUN_80111398 — scripted pounce: WAIT for SCD grid 0x43, then leap + exit to chase */
+        switch (e->sub_state_2) {
+        case 0:
+            if (e->grid_id != 0x43) break;              /* gate: `bne +0x9,0x43 -> jr ra` WAIT @0x801113e4-ec */
+            e->hit_react |= 3;                          /* +0x93 |= 3 @0x801113f8 */
             e->sub_state_2 = 1;
-        } else if (e->sub_state_2 == 1) {                 /* LEAP: rise + lunge forward @0x80111458 */
-            if (e->anim_frame >= 0x0d) { e->crow_speed = (int16_t)(e->crow_speed + 6); re15_dog_advance(e, e->crow_speed); e->y -= 20; }  /* +0x38-=20 rise @0x801114dc */
-            if (re15_dog_anim(e)) { re15_dog_clip(e, 0x15); e->crow_timer = 0; e->sub_state_2 = 2; }   /* land pose clip 0x15 @0x801114f4 */
-        } else {                                          /* LAND -> back to chase @0x801115e0 */
-            e->y = 0;                                     /* +0x38 = +0x1ba floor (dog ground = 0) */
-            e->dog_atk_cd = 0x78; e->hit_react = 0;       /* +0x1d6=0x78, +0x93=0 */
-            e->state = 1; e->sub_state_1 = 2; e->sub_state_2 = 0;  /* +0x4=0x201 -> state 1 / sub 2 CHASE @0x8011162c */
+            re15_dog_clip(e, 0x14); e->crow_speed = 0xf0;   /* clip 0x14, +0x8c=0xf0 @0x80111410-24 */
+            re15_audio_room_se(5);                      /* Se(5): `ori a0,5` @0x8011142c + jal 453d0 @0x80111450 (audit #14) */
+            /* FALLTHROUGH (decompile case 0 -> case 1) */
+            /* fall through */
+        case 1:                                         /* LEAP: rise + lunge forward @0x80111458 */
+            if (re15_dog_anim(e)) e->sub_state_2 = 2;   /* f314 advance */
+            if (e->anim_frame > 0x0c) {
+                e->crow_speed = (int16_t)(e->crow_speed + 6);
+                re15_dog_advance_ofs(e, 0);             /* 245d8(0) @0x801114cc */
+                e->y -= 0x14;                           /* +0x38 -= 20 rise @0x801114dc */
+                e->dog_floor_y = 0;                     /* +0x1ba = 0 @0x801114f0 */
+            }
+            break;
+        case 2:
+            e->sub_state_2 = 3;
+            e->motion = 0x15; e->anim_frame = 5; e->anim_frac = 7;  /* land clip 0x15 FROM frame 5 @0x80111504-1c */
+            e->ai_timer = 0;                            /* +0x9c = 0 @0x80111528 */
+            /* fall through */
+        case 3:                                         /* ballistic settle @0x80111530 */
+            if (e->anim_frame < 2) {
+                re15_dog_advance_ofs(e, 0);             /* 245d8(0) @0x80111548 */
+            } else {
+                /* FUN_8001c1a4(+0x8c, 0, -0x1e, +0x1ba): forward rotate (speed,0,0) by Ry(rot_y)
+                 * (@0x8001c1f0/8001c20c) then y -= (a1 + a2*(+0x9c)) with +0x9c++ per call; lands
+                 * (y >= floor -> clamp + return!=0) -> +0x6=4 (@0x80111570). */
+                int32_t vy = 0 + (-0x1e) * (int32_t)e->ai_timer;
+                re15_dog_advance_ofs(e, 0);
+                e->y -= vy;
+                if (e->y >= (int32_t)e->dog_floor_y) { e->y = e->dog_floor_y; e->sub_state_2 = 4; }
+                else e->ai_timer++;
+            }
+            re15_dog_anim(e);                           /* f314 (return NOT phase-added) @0x801115a4 */
+            if (e->anim_frame == 0) e->anim_frame = 5;  /* loop land clip from frame 5 @0x801115c4-d4 */
+            break;
+        case 4:                                         /* land commit @0x801115e0 */
+            e->dog_atk_cd = 0x78;                       /* +0x1d6 = 0x78 @0x801115f0 */
+            e->floor = 0;                               /* +0x82 = 0 @0x80111600 */
+            e->hit_react = 0;                           /* +0x93 = 0 @0x80111610 */
+            e->grid_id = 0;                             /* grid CONSUMED: `sb zero,9` @0x8011161c (audit #14) */
+            e->state = 1; e->sub_state_1 = 2; e->sub_state_2 = 0; e->sub_state_3 = 0;  /* word 0x201 @0x8011162c */
+            e->y = e->dog_floor_y;                      /* +0x38 = +0x1ba @0x80111644 */
+            break;
+        default: break;
+        }
+        (void)pl;
+        break;
+
+    case 1:   /* FUN_80111658 — window-hold (grid-0x41 spawn): clip-8 pose at +300, wait grid 0x42 */
+        if (e->sub_state_2 == 0) {
+            e->sub_state_2 = 1;
+            e->motion = 8; e->anim_frame = 0; e->anim_frac = 0;   /* clip 8, +0x8f=0 @0x80111684-a4 */
+            re15_dog_anim(e);                                     /* one f314 @0x801116c8 */
+            /* +0xbc/+0xbe += 300 (@0x801116e8-fc): the shadow/pool descriptor offset pair (the
+             * dog sits raised in the kennel window) — the +0xb0 shadow block is not modeled (OPEN). */
+        } else if (e->sub_state_2 != 1) break;
+        if (e->grid_id == 0x42) {                        /* SCD release mark 'B' @0x8011170c-14 */
+            e->grid_id = 0;                              /* consumed @0x80111718 */
+            e->state = 1; e->sub_state_1 = 0x0c; e->sub_state_2 = 0; e->sub_state_3 = 0;  /* word 0xc01 @0x8011172c */
+            /* +0xbc/+0xbe -= 300 (@0x8011173c-50) — shadow pair, see above */
         }
         break;
 
@@ -3544,9 +3765,32 @@ static void re15_dog_state456(re15_actor_t *e, re15_actor_t *pl)
         re15_dog_anim(e);                                 /* the dog holds its pounce-land pose */
         break;
 
-    default:
-        e->state = 1; re15_dog_sub(e, 2);   /* unhandled -> chase */
+    default:  /* [2]/[3] = 0x80111764/0x8011176c stubs; [6..9] = NULL rows — inert WAIT
+               * (the old "-> chase" fallback was an invented route, audit wf_827f186d dog #14) */
         break;
+    }
+}
+
+/* HURT/DEATH shared bits (audit wf_827f186d dog #4/#5 + the verified grounded-death detour):
+ * both dispatchers FUN_801108f0 / FUN_80110dc0 run FALL PHYSICS first (airborne = y above
+ * +0x1ba: on the first frame (+0x7==0) FORCE the row +0x5=7 and seed +0x9c=floor-y
+ * (@0x80110928-2c / @0x80110df8-dfc), then y += +0x9c/12 per frame (0x2aaaaaab magic);
+ * grounded clamps y=floor), then dispatch table[+0x5]. Rows 7-11/13-18/21 = the AIRBORNE
+ * handlers (raw dumps @0x80121018 / @0x80121070). */
+static int re15_dog_row_airborne(int row)
+{
+    return (row >= 7 && row <= 11) || (row >= 13 && row <= 18) || row == 21;
+}
+static void re15_dog_fall_physics(re15_actor_t *e)
+{
+    if (e->y < (int32_t)e->dog_floor_y) {                 /* airborne (y above floor) */
+        if (e->sub_state_3 == 0) {
+            e->sub_state_1 = 7;                           /* force row 7 @0x80110928-2c */
+            e->ai_timer = (int16_t)(e->dog_floor_y - e->y);   /* +0x9c seed */
+        }
+        e->y += (int32_t)(e->ai_timer / 12);              /* y catch-up /12 @0x80110948-98 */
+    } else {
+        e->y = e->dog_floor_y;                            /* grounded clamp */
     }
 }
 
@@ -3556,109 +3800,203 @@ static void re15_dog_ai_tick(int slot)
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
 
     switch (e->state) {
-    case 0:   /* INIT 0x8010d93c: idle pose, seed steer-target, HP, -> ACTIVE */
-        re15_dog_clip(e, 1);                                  /* +0x94=1 idle clip @0x8010d960 */
+    case 0:   /* INIT FUN_8010d93c: idle pose, seed steer/HP/timers, grid-scripted start */
+        re15_dog_clip(e, 1); e->anim_frac = 0;                /* +0x94=1,+0x95=0,+0x96=0,+0x8f=0 @0x8010d954-98 */
         e->steer_x = (int16_t)pl->x; e->steer_z = (int16_t)pl->z;  /* +0x1bc/+0x1be @0x8010d9a8 */
-        e->ai_timer = 0; e->dog_atk_cd = 0; e->dog_pounce_cd = 0; e->dog_flags = 0;
+        e->ai_timer = 0; e->grab_kill_ctr = 0; e->dog_aux9f = 0;   /* +0x9c/+0x9e/+0x9f = 0 @0x8010da34-58 */
+        e->dog_atk_cd = 0; e->dog_pounce_cd = 0; e->dog_flags = 0; /* +0x1d6/+0x1e6/+0x1d0 = 0 @0x8010db18-7c */
+        e->dog_blocked_ctr = 0; e->dog_grab_armed = 0;             /* +0x1dc/+0x1e4 = 0 @0x8010db44-6c */
+        e->dog_floor_y = (int16_t)e->y;                            /* +0x1ba floor = spawn ground (port infra) */
         {   /* BYTE-TRUE HP (dog INIT @0x8010dae8-db0c): +0x9a = HPtable[type*0x20 + (rng&0xf)*2], the
              * SAME shared table @0x8011f034 as the zombie/maggot. Dog row @0x8011f434 (type 0x20). */
             static const uint16_t dog_hp[16] =
                 { 65, 85, 85, 69,105, 87, 73, 87,107, 77,111, 80, 93, 83, 97,103 };
             if (e->hp <= 0) e->hp = (int16_t)dog_hp[re15_engine_rand8() & 0xf];
         }
+        s_dog_pack_alert = 0;                                 /* `sh zero,0x800aca50` @0x8010db84 (audit #1) */
         e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* +0x4=1 @0x8010d950 */
+        if (e->grid_id == 0x40) {                             /* scripted pounce dog @0x8010db88-98 */
+            e->state = 4; e->sub_state_1 = 0;                 /* word +0x4 = 4 (audit #1) */
+        } else if (e->grid_id == 0x41) {                      /* window-hold dog @0x8010dba8-b8 */
+            e->state = 4; e->sub_state_1 = 1;                 /* word +0x4 = 0x104 (audit #1) */
+        }
         break;
 
-    case 1: {  /* ACTIVE 0x8010dbcc: perception -> decision[+0x5] -> act[+0x5] */
+    case 1: {  /* ACTIVE FUN_8010dbcc: perception -> DECISION[+0x5] -> ACT[+0x5] -> root tail */
         int los = re15_enemy_los_probe(slot, e, pl);          /* 0x8001bc08 @0x8010dbd4 */
         if (los != 2) { if (los) e->dog_flags |= 1; else e->dog_flags = (uint16_t)(e->dog_flags & ~1u); }  /* +0x1d0 bit0 sticky LOS */
-        e->dog_dist = (int16_t)re15_enemy_player_dist(e, pl); /* +0x1d4 @0x8010dc8c */
-        if (e->dog_atk_cd)    e->dog_atk_cd--;                /* +0x1d6 attack-cooldown @0x8010dd6c */
-        if (e->dog_pounce_cd) e->dog_pounce_cd--;             /* +0x1e6 pounce-cooldown */
+        e->dog_dist = (int16_t)re15_enemy_player_dist(e, pl); /* +0x1d4 (SquareRoot0) @0x8010dc8c */
 
+        /* ---- DECISION pass (@0x80120f94[+0x5]; only [0]/[2]/[3] are real) ---- */
         switch (e->sub_state_1) {
-        case 0:   /* IDLE (dec 0x8010ddb8 / act 0x8010dea0) */
-            if (e->dog_dist < 4000 && (e->dog_flags & 1)) re15_dog_sub(e, 1);   /* player close+LOS -> leave idle @0x8010ddcc */
-            if (e->sub_state_2 == 0) { e->ai_timer = (int16_t)(re15_engine_rand8() + 300); re15_dog_clip(e, 1); e->sub_state_2 = 1; }  /* +0x9c=rng+300 @0x8010dec0 */
+        case 0:   /* IDLE decision FUN_8010ddb8 (raw @0x8010ddb8-de98) */
+            if (e->dog_dist < 4000 && (e->dog_flags & 1)) { re15_dog_sub(e, 1); break; }   /* @0x8010ddcc-e4 */
+            if (e->dog_dist < 5000 && re15_dog_player_aiming())  { re15_dog_sub(e, 1); break; }  /* aca58==0x701 @0x8010de08-2c (audit #7) */
+            if (e->dog_dist < 6000 && re15_dog_player_running()) { re15_dog_sub(e, 1); break; }  /* aca58==0x201 @0x8010de38-5c (audit #7) */
+            if (s_dog_pack_alert & 1) re15_dog_sub(e, 1);                                        /* aca50&1 @0x8010de60-84 (audit #7) */
+            break;
+        case 2: { /* CHASE decision FUN_8010e0c4 */
+            int in_cone = (pl->hit_react == 0) && re15_dog_arc(e, pl, 2500, 192);   /* acae7==0 && a804(0x9c4,0xc0)<0 @0x8010e0d0-f8 */
+            if (in_cone) { re15_dog_sub(e, 3); break; }                              /* -> ATTACK-RANGE */
+            if (e->dog_dist < 5000 && re15_dog_player_aiming() && e->dog_blocked_ctr == 0)   /* 0x701 @0x8010e110-138 (audit #7) */
+                { re15_dog_sub(e, 3); break; }
+            if (e->dog_dist < 6000 && re15_dog_player_running() && e->dog_blocked_ctr == 0)  /* 0x201 @0x8010e148-178 (audit #7) */
+                { re15_dog_sub(e, 3); break; }
+            if (e->dog_pounce_cd == 0 && pl->hp > 0x50 && e->dog_dist > 7000 && (e->dog_flags & 1)) {  /* pounce gate @0x8010e194-1c8 */
+                uint32_t r1 = re15_engine_rand8(), r2 = re15_engine_rand8();   /* BOTH rng draws unconditional @0x8010e1d0/e1e0 */
+                if ((r1 & 1) && (r2 & 1)) { re15_dog_sub(e, 4); break; }       /* (r1&1)*(r2&1) @0x8010e1f4-218 */
+            }
+            if ((s_dog_pack_alert & 1) == 0) {           /* aca50&1 clear -> reroute-or-stay @0x8010e21c-24c */
+                re15_dog_try_reroute(e);                 /* AFTER the pounce roll (audit #12) */
+                break;
+            }
+            re15_dog_sub(e, 3);                          /* pack alert -> commit menace @0x8010e244 (audit #7) */
+            break;
+        }
+        case 3:   /* ATTACK-RANGE decision FUN_8010e568 */
+            if (e->dog_atk_cd == 0 && re15_dog_arc(e, pl, 3000, 384)) {   /* +0x1d6==0 && a804(3000,0x180)<0 @0x8010e574-90 */
+                uint8_t pick = 8;                          /* default BITE @0x8010e5ac */
+                if (pl->hit_react != 0) {                  /* `beq acae7,zero -> exit` @0x8010e5cc: escalation ONLY
+                                                            * while the player is hit-reacting (audit #11) */
+                    pick = 6;                              /* quick SNAP @0x8010e5e0 */
+                    if (pl->hp < 0x32) {                   /* acaee < 50 @0x8010e5e8-f4 */
+                        pick = 5;                          /* arm-grab windup @0x8010e608 */
+                        if (re15_engine_rand8() & 1) pick = 7;   /* low-HP hop @0x8010e624 */
+                    }
+                }
+                re15_dog_sub(e, pick);
+            } else {
+                re15_dog_try_reroute(e);                   /* identical reroute gate in the else-branch
+                                                            * @0x8010e628-6c0 (audit #12) */
+            }
+            break;
+        default: break;                                    /* all other decision rows are jr-ra stubs */
+        }
+
+        /* ---- ACT pass (@0x80120fd4[+0x5]) — runs on the sub the decision just wrote ---- */
+        switch (e->sub_state_1) {
+        case 0:   /* IDLE act FUN_8010dea0 */
+            if (e->sub_state_2 == 0) { e->ai_timer = (int16_t)(re15_engine_rand8() + 300); re15_dog_clip(e, 1); e->anim_frac = 0; e->sub_state_2 = 1; }  /* +0x9c=rng+300 @0x8010dec0 */
             else if (e->ai_timer == 0) re15_dog_sub(e, 1);   /* idle timeout -> leave idle @0x8010df34 */
             else e->ai_timer--;
             re15_dog_anim(e);
             break;
 
-        case 1:   /* TURN/REORIENT (act 0x8010df9c) */
+        case 1:   /* TURN/REORIENT act FUN_8010df9c */
             if (e->sub_state_2 == 0) { re15_dog_clip(e, 2); e->sub_state_2 = 1; }   /* clip 2 @0x8010df9c */
             if (re15_dog_anim(e)) re15_dog_sub(e, 2);         /* clip done -> CHASE @0x8010e06c */
             break;
 
-        case 2:   /* CHASE / APPROACH (dec 0x8010e0c4 / act 0x8010e304) */
-            if (pl->hit_react == 0 && re15_dog_arc(e, pl, 2500, 192)) { re15_dog_sub(e, 3); break; }  /* bite cone @0x8010e0e0 -> ATTACK-RANGE */
-            if (e->ai_contact & 1) { re15_dog_sub(e, (uint8_t)(0x0e - (e->ai_contact & 1))); break; }  /* blocked by a wall -> REROUTE (sub 13 leap / 14 turn) @0x8010e2b4/d4 */
-            /* POUNCE gate (@0x8010e194): cd==0 && player.hp>=81 && dist>=7001 && LOS && 1/4 -> sub 4 LUNGE */
-            if (e->dog_pounce_cd == 0 && pl->hp >= 81 && e->dog_dist >= 7001 && (e->dog_flags & 1)
-                && (re15_engine_rand8() & 1) && (re15_engine_rand8() & 1)) { re15_dog_sub(e, 4); break; }
-            if (e->sub_state_2 == 0) { re15_dog_clip(e, 0); e->sub_state_2 = 1; }   /* walk clip 0 @0x8010e324 */
-            re15_enemy_steer_point(e, pl->x, pl->z, 12);      /* yaw-slew toward player @0x8010e468 */
-            re15_dog_advance(e, 8);                           /* pos_advance speed 8 @0x8010e548 */
-            if (e->anim_frame == 0 || e->anim_frame == 0x1e) re15_audio_room_se(6);  /* footstep Se(6) @0x8010e4f8 */
-            re15_dog_anim(e);
-            break;
-
-        case 3:   /* ATTACK-RANGE / MENACE (dec 0x8010e568 / act 0x8010e6d4) */
-            if (e->dog_atk_cd == 0 && re15_dog_arc(e, pl, 3000, 384)) {   /* in commit cone @0x8010e590 -> pick the attack */
-                uint8_t pick = 8;                             /* default BITE @0x8010e5ac */
-                if (pl->hit_react != 0) pick = 6;             /* player already reacting -> quick SNAP @0x8010e5e0 */
-                if (pl->hp < 50) {                            /* weak player -> ARM the eaten grab @0x8010e608 */
-                    pick = 5;
-                    if (re15_engine_rand8() & 1) pick = 7;    /* + coin flip -> low-HP homing LUNGE @0x8010e624 */
-                }
-                re15_dog_sub(e, pick); break;
-            }
-            if (e->dog_dist >= 5000) { re15_dog_sub(e, 2); break; }   /* fell out of range -> CHASE */
-            if (e->sub_state_2 == 0) { re15_dog_clip(e, 3); e->sub_state_2 = 1; }   /* growl clip 3 @0x8010e6d4 */
-            re15_dog_anim(e);
-            break;
-
-        case 8:   /* BITE 0x8010f15c (clip 0x14): lunge forward + the -10 HP bite on connect */
-            if (e->sub_state_2 == 0) { re15_dog_clip(e, 0x14); re15_audio_room_se(5); e->dog_atk_cd = 0x78; e->crow_speed = 0; e->sub_state_2 = 1; }  /* Se(5) @0x8010f1fc; crow_speed = the +0x8c field */
-            if (e->anim_frame >= 13) {                        /* connect window @0x8010f254 (frame>=0xd) */
-                e->crow_speed = (int16_t)(e->crow_speed + 6);
-                re15_dog_advance(e, e->crow_speed);           /* lunge forward @0x8010f26c */
-                if (pl->hit_react == 0 && re15_dog_arc(e, pl, 2000, 384)) {   /* +0x93==0 @0x8010f294 & cone 2000/384 @0x8010f2a8 */
-                    pl->hp = (int16_t)(pl->hp - 10);          /* BITE: player.hp -= 10 @0x8010f2d0 */
-                    pl->hit_react |= 1;                       /* gate re-hit this bite */
-                    /* ESCALATE to the eaten GRAB (@0x8010f458): if the dog pre-armed (sub 5 windup) OR
-                     * the bite is LETHAL (hp-10 < 0) -> +0x5 = facing_aligned + 9 (sub 9 front / 10 behind).
-                     * So a lethal bite always eats you; a non-lethal bite only when the dog armed at hp<50. */
-                    if (e->dog_grab_armed != 0 || pl->hp < 0) {
-                        int facing = ((((int)pl->rot_y - (int)e->rot_y) + 0x400) & 0xfff) < 0x800 ? 1 : 0;  /* 0x8001a780 half-plane */
-                        re15_dog_sub(e, (uint8_t)(9 + facing));   /* +0x5=9/10, +0x6=0 @0x8010f47c */
-                        e->dog_grab_armed = 0;                    /* clear +0x1e4 @0x8010f4b4 */
-                        break;
-                    }
-                }
-            }
-            if (re15_dog_anim(e)) re15_dog_sub(e, 2);         /* clip done -> back to CHASE */
-            break;
-
-        case 4:   /* LUNGE / POUNCE (0x8010ea44, inner-jt @0x801001ac): windup -> leap -> land.
-                   * Byte-true windup (clip 0xb @0x8010ea9c, bark Se(2) @0x8010eb40, aim). The byte-true
-                   * land writes +0x4=5 -> state 5 (0x80111350 pounce-land, grid-0x43 gated): a special-
-                   * grid dog leaps + pins for the pounce-kill (machine A/B), a normal dog routes safely
-                   * back to chase (re15_dog_state456). Shot mid-leap (hp<0) -> DEATH. */
+        case 2:   /* CHASE act FUN_8010e304 (audit #6: speed roll + rng steer + wander mode) */
             if (e->sub_state_2 == 0) {
-                re15_dog_clip(e, 0x0b); e->dog_pounce_cd = 0x78;
-                re15_enemy_steer_point(e, pl->x, pl->z, 0x20);   /* aim at the player before the leap */
-                re15_audio_room_se(2);                           /* bark Se(2) @0x8010eb40 */
+                e->crow_speed = (int16_t)((re15_engine_rand8() & 7) + 10);  /* +0x8c=(rng&7)+10 @0x8010e32c-44 */
                 e->sub_state_2 = 1;
+                e->ai_timer = 0; e->grab_kill_ctr = 0;        /* +0x9c=0 / +0x9e=0 @0x8010e360-70 */
+                re15_dog_clip(e, 0);                          /* walk clip 0 @0x8010e378-98 */
             }
-            re15_dog_advance(e, 40);                             /* leap forward */
-            if (re15_dog_anim(e)) {                              /* step4 transition @0x8010eb88 (on the dog's hp) */
-                if (e->hp >= 0) { e->state = 5; e->sub_state_1 = 0; e->sub_state_2 = 0; }  /* -> state 5 POUNCE-LAND @0x8010eb8c */
-                else { e->state = 3; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 1; }  /* shot mid-leap -> DEATH @0x8010eb90 */
+            if (e->dog_blocked_ctr < 0x1f) {                  /* slti +0x1dc,31 @0x8010e3bc */
+                e->dog_yawrate = (int16_t)((re15_engine_rand8() & 0xf) + 1);   /* +0x1e2=(rng&0xf)+1 @0x8010e468-84 */
+                re15_enemy_steer_point(e, pl->x, pl->z, e->dog_yawrate);       /* a8f8(&player,+0x1e2) @0x8010e49c */
+            } else {                                          /* WANDER mode (blocked >= 31 frames) */
+                if (e->ai_timer == 0) {                       /* re-latch when +0x9c==0 @0x8010e3d0 */
+                    int t = (int)(int16_t)e->rot_y + ((re15_engine_rand8() & 1) ? 0x400 : -0x400);  /* rng&1 -> +-1024 @0x8010e3dc-f0 */
+                    e->dog_aux9f = (int8_t)(t & 0xff);        /* BYTE-TRUNCATED latch `sb` @0x8010e3f4 (quirk preserved) */
+                }
+                re15_slew_to_angle(e, (int)e->dog_aux9f, 0x20);   /* aa68((s8)+0x9f, 0x20); +0x6a += @0x8010e408-28 */
+                {
+                    int16_t old = e->ai_timer;
+                    e->ai_timer = (int16_t)(old + 1);         /* +0x9c++ (delay-slot store) @0x8010e454 */
+                    if (old >= 91) e->ai_timer = 0;           /* slti 91 wrap @0x8010e44c-64 */
+                }
+            }
+            re15_dog_anim(e);                                 /* f314 @0x8010e4c0 */
+            if (e->dog_pounce_cd) e->dog_pounce_cd--;         /* +0x1e6 ticks ONLY in the chase act @0x8010e4cc-e4e0 (audit #15) */
+            if (e->anim_frame == 0 || e->anim_frame == 0x1e) re15_audio_room_se(6);  /* footstep Se(6) @0x8010e4f8-538 */
+            /* FUN_80111870(0, +0x95<0x1e) root-motion assist @0x8010e550 — OPEN (see header) */
+            re15_dog_advance_ofs(e, 8);                       /* 245d8(8): speed=+0x8c, yaw OFFSET 8 @0x8010e548-54c (audit #6) */
+            break;
+
+        case 3: { /* ATTACK-RANGE act FUN_8010e6d4 — CIRCLING menace (audit #8) */
+            re15_dog_speed_ramp_up(e, 0x14, 0xf0);            /* FUN_80111f0c(0x14,0xf0) @0x8010e6e8 */
+            if (e->sub_state_2 == 0) {
+                e->crow_speed = (int16_t)((re15_engine_rand8() & 0x3f) + 0xf0);  /* +0x8c=(rng&0x3f)+240 @0x8010e714-24 */
+                e->sub_state_2 = 1;
+                e->ai_timer = 0;                              /* +0x9c=0 @0x8010e734 */
+                e->grab_kill_ctr = (int16_t)((re15_engine_rand8() & 0xf) + 0x40);  /* +0x9e=(rng&0xf)+0x40 turn rate @0x8010e748-58 */
+                e->dog_aux9f = 0;                             /* +0x9f=0 @0x8010e764 */
+                re15_dog_clip(e, 3);                          /* clip 3 @0x8010e76c-90 */
+            }
+            int sv;                                           /* a9cc turn direction (feeds the clip select) */
+            if (e->dog_blocked_ctr == 0 && e->dog_atk_cd == 0 && e->crow_speed >= 0xf0) {   /* @0x8010e7a4-c8 */
+                sv = re15_ai_arc_test(e, pl->x, pl->z, (int)e->grab_kill_ctr);   /* a9cc(&player,(s8)+0x9e) @0x8010e7f8 */
+                re15_enemy_steer_point(e, pl->x, pl->z, (int)e->grab_kill_ctr);  /* a8f8(&player,(s8)+0x9e) @0x8010e810 */
+            } else {
+                sv = re15_ai_arc_test(e, pl->x, pl->z, 0x10);                    /* a9cc(&player,0x10) @0x8010e824 */
+                if (re15_dog_blocked(e))                                          /* +0x1da != 0 @0x8010e838 */
+                    sv = re15_ai_arc_test(e, pl->x, pl->z, 0x40);                /* a9cc(&player,0x40) @0x8010e848 */
+                e->rot_y = (uint16_t)(((int)e->rot_y + sv) & 0xfff);             /* +0x6a += sv @0x8010e860-70 */
+            }
+            if (e->dog_dist < 5000) {                          /* turn-boost counter @0x8010e884-98 */
+                e->ai_timer++;
+                if (e->ai_timer > 0x3c) re15_enemy_steer_point(e, pl->x, pl->z, 0x40);   /* a8f8(0x40) after 61f @0x8010e8b0-c8 */
+            }
+            if (e->dog_flags == 0) {                           /* +0x1d0 == 0: LOS lost @0x8010e8e4 */
+                e->dog_aux9f = (int8_t)(e->dog_aux9f + 1);     /* +0x9f++ @0x8010e8f4-900 */
+                if (e->dog_aux9f == 6) re15_dog_speed_ramp_down(e, 0x1e, 200);   /* FUN_80111f6c(0x1e,200) @0x8010e90c-18 */
+                if (e->dog_blocked_ctr > 0x1e) {               /* blocked > 30 frames @0x8010e924-2c */
+                    re15_dog_sub(e, 2); e->sub_state_3 = 0;    /* -> CHASE (+0x5=2,+0x6=0,+0x7=0) @0x8010e93c-60;
+                                                                * the ONLY exit — NO dist>=5000 exit exists (audit #8) */
+                    break;
+                }
+            } else {
+                e->dog_aux9f = 0;                              /* +0x9f=0 @0x8010e96c */
+                e->crow_speed = 0xf0;                          /* +0x8c=0xf0 @0x8010e978 */
+                e->steer_x = (int16_t)pl->x; e->steer_z = (int16_t)pl->z;   /* +0x1bc/+0x1be = player @0x8010e984-9c */
+            }
+            re15_dog_clip_keep(e, sv);                         /* FUN_80111fcc(sv): {5,3,4} @0x8010e9a8 */
+            re15_dog_anim(e);                                  /* f314 @0x8010e9c4 */
+            if ((e->anim_frame % 7) == 6) re15_audio_room_se(6);   /* footstep frame%7==6 Se(6) @0x8010e9e0-a14 */
+            re15_dog_advance_ofs(e, 0);                        /* 245d8(0) at +0x8c=240..303 @0x8010ea1c (audit #8) */
+            break;
+        }
+
+        case 4:   /* STATIONARY BARK CHAIN FUN_8010ea44 (audit #2): 7-step inner FSM on +0x6
+                   * (jt @0x801001ac). The dog NEVER moves and NEVER enters state 5 from here. */
+            switch (e->sub_state_2) {
+            case 0:
+                e->sub_state_2 = 1;
+                re15_dog_clip(e, 0x0b); e->anim_flags = 0;    /* clip 0xb (+0x94=0xb,+0x95/96=0,+0x8f=7) @0x8010ea90-ad4 */
+                e->dog_pounce_cd = 0x3c;                      /* +0x1e6 = 0x3c (NOT 0x78) @0x8010eadc-eae4 (audit #2) */
+                if (re15_dog_anim(e)) e->sub_state_2++;       /* shared f314 tail @0x8010ec40 */
+                break;
+            case 2:
+                e->sub_state_2 = 3;
+                e->motion++; e->anim_frame = 0; e->anim_frac = 7;   /* clip 0xc (+0x94+1) @0x8010eb04-38 */
+                re15_audio_room_se(2);                        /* bark Se(2) @0x8010eb40-48 */
+                s_dog_pack_alert |= 1;                        /* aca50 |= 1 @0x8010eb58-5c (audit #7) */
+                if (re15_dog_anim(e)) e->sub_state_2++;
+                break;
+            case 4:
+                s_dog_pack_alert = (uint16_t)(s_dog_pack_alert & 0xfffe);   /* aca50 &= ~1 @0x8010eb78-7c */
+                if (e->hp < 0) {                              /* shot during the chain @0x8010eb88 */
+                    e->state = 3; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 1;  /* +0x4=3,+0x7=1 @0x8010eb98-bc8 */
+                    re15_dog_blood(e);                        /* 19700(0x2000, rot_y, bone+0x2f0) @0x8010ebe0 */
+                    break;
+                }
+                e->sub_state_2 = 5;                           /* +0x6=5 = INNER step (NOT +0x4=5!) @0x8010ebf0 (audit #2) */
+                e->motion++; e->anim_frame = 0; e->anim_frac = 7;   /* clip 0xd @0x8010ebf8-ec2c */
+                if (re15_dog_anim(e)) e->sub_state_2++;
+                break;
+            case 6:
+                e->sub_state_1 = 3; e->sub_state_2 = 0;       /* exit -> sub 3 ATTACK-RANGE @0x8010ec7c-88 (audit #2) */
+                break;
+            default:                                          /* steps 1/3/5 wait on the clip */
+                if (re15_dog_anim(e)) e->sub_state_2++;       /* +0x6 += f314 done @0x8010ec40-70 */
+                break;
             }
             break;
 
-        case 5:   /* WINDUP / arm-grab 0x8010ecb4 (inner @0x801001cc, clips 0x0f->0x10->0x11) */
+        case 5:   /* WINDUP / arm-grab FUN_8010ecb4 (inner @0x801001cc, clips 0x0f->0x10->0x11) */
             switch (e->sub_state_2) {
             case 0: re15_dog_clip(e, 0x0f); e->dog_grab_armed = 1; e->sub_state_2 = 1; break;  /* clip 0x0f + ARM +0x1e4=1 @0x8010ed54 */
             case 2: re15_dog_clip(e, 0x10); re15_audio_room_se(8); e->sub_state_2 = 3; break;  /* clip 0x10 + Se(8) @0x8010edb0 */
@@ -3668,23 +4006,140 @@ static void re15_dog_ai_tick(int slot)
             }
             break;
 
-        case 6:   /* SNAP (player-reacting) 0x8010ee90 (clip 0x12): a single quick growl-bite */
+        case 6:   /* SNAP (player-reacting) FUN_8010ee90 (clip 0x12): a single quick growl-bite */
             if (e->sub_state_2 == 0) { e->motion = 0x12; e->anim_frame = 0; e->anim_frac = 0; e->sub_state_2 = 1; }  /* clip 0x12, no blend @0x8010ef1c */
             else if (e->sub_state_2 == 1) {
                 if (e->anim_frame == 0x0a || e->anim_frame == 0x19 || e->anim_frame == 0x2d) re15_audio_room_se(0);  /* growl Se(0) @0x8010ef4c */
                 if (re15_dog_anim(e)) e->sub_state_2 = 2;
-            } else re15_dog_sub(e, 2);                        /* exit -> CHASE @0x8010ef90 (+0x5=2) */
+            } else re15_dog_sub(e, 3);                        /* exit -> ATTACK-RANGE: `ori v0,3` @0x8010eed0 (delay) ->
+                                                               * `sb v0,5` @0x8010ef90 (audit #9 — NOT chase) */
             break;
 
-        case 7:   /* LOW-HP LUNGE 0x8010efbc (clip 0x13): homing lunge with a <13-frame bite window */
-            if (e->anim_frame == 0 || e->anim_frame == 0x1b) re15_audio_room_se(6);   /* Se(6) @0x8010efe0 */
-            if (e->sub_state_2 == 0) { re15_dog_clip(e, 0x13); e->crow_speed = 0x14; e->sub_state_2 = 1; }  /* clip 0x13, +0x8c=0x14 @0x8010f070 */
-            else if (e->sub_state_2 == 1) {
-                e->dog_yawrate = (int16_t)((re15_engine_rand8() & 0xf) + 1);   /* +0x1e2 yaw jitter @0x8010f090 */
-                re15_enemy_steer_point(e, pl->x, pl->z, e->dog_yawrate);       /* homing yaw-slew @0x8010f0ac */
-                re15_dog_advance(e, 0x800);                                     /* pos_advance forward @0x8010f120 */
+        case 7:   /* LOW-HP HOP FUN_8010efbc (clip 0x13): yaw-homing 20-unit/frame REARWARD hop */
+            if (e->anim_frame == 0 || e->anim_frame == 0x1b) re15_audio_room_se(6);   /* Se(6) @0x8010efe0-f00c */
+            if (e->sub_state_2 == 0) {
+                e->sub_state_2 = 1;
+                e->motion = 0x13; e->anim_frame = 0;          /* clip 0x13 (+0x94/+0x95/+0x96; NO +0x8f write) @0x8010f038-64 */
+                e->crow_speed = 0x14;                         /* +0x8c = 20 (the SPEED) @0x8010f070-74 (audit #10) */
+            }
+            if (e->sub_state_2 == 1) {
+                e->dog_yawrate = (int16_t)((re15_engine_rand8() & 0xf) + 1);   /* +0x1e2 @0x8010f090-a4 */
+                re15_enemy_steer_point(e, pl->x, pl->z, e->dog_yawrate);       /* a8f8 homing @0x8010f0ac */
                 if (re15_dog_anim(e)) e->sub_state_2 = 2;
-            } else re15_dog_sub(e, 2);                        /* exit -> CHASE @0x8010f130 */
+                /* FUN_80111870(0, +0x95<0xd) root motion @0x8010f118 — OPEN (see header) */
+                re15_dog_advance_ofs(e, 0x800);               /* 245d8(0x800) = 180° REARWARD at +0x8c=20
+                                                               * @0x8010f120-124 (audit #10 — was a 0x800-speed charge) */
+            } else if (e->sub_state_2 == 2) {
+                re15_dog_sub(e, 3);                           /* exit -> sub 3: `ori v0,3` @0x8010f028 (delay) ->
+                                                               * `sb v0,5` @0x8010f130 (audit #9 — NOT chase) */
+            }
+            break;
+
+        case 8:   /* BITE FUN_8010f15c — the 7-phase leap machine (jt @0x801001ec; audit #3):
+                   * leap -> connect => knockdown-or-grab; whiff => land + 2nd window -> sub 3;
+                   * knockdown => recoil backward -> CHAINED attack pick 7/5/6. */
+            switch (e->sub_state_2) {
+            case 0:
+                e->sub_state_2 = 1;
+                re15_dog_clip(e, 0x14);                       /* clip 0x14 @0x8010f174-1c4 */
+                e->crow_speed = 0xf0;                         /* +0x8c = 240 (NO +0x1d6 write at start — audit #3) @0x8010f1f8-200 */
+                re15_audio_room_se(5);                        /* Se(5) @0x8010f1fc */
+                /* fall through */
+            case 1:
+                if (re15_dog_anim(e)) e->sub_state_2++;       /* f314(a2=+0x7) @0x8010f198-1e8 */
+                if (e->anim_frame > 0x0c) {                   /* leap window @0x8010f254 */
+                    e->crow_speed = (int16_t)(e->crow_speed + 6);   /* +0x8c += 6 @0x8010f25c-64 */
+                    re15_dog_advance_ofs(e, 0);               /* 245d8(0) @0x8010f26c */
+                    e->y -= 0xdc;                             /* +0x38 -= 220 rise @0x8010f27c-8c (audit #3) */
+                    if (pl->hit_react == 0 && re15_dog_arc(e, pl, 2000, 384)) {   /* acae7==0 @0x8010f294 && a804(2000,0x180) @0x8010f2a8 */
+                        pl->hp = (int16_t)(pl->hp - 10);      /* acaee -= 10 @0x8010f2c4-d0 */
+                        if (e->dog_grab_armed == 0 && pl->hp >= 0) {   /* +0x1e4==0 @0x8010f2dc && hp>=0 @0x8010f2e4 */
+                            /* KNOCKDOWN (audit #3): player cmd 2 (aca58=2 @0x8010f30c = the state-2
+                             * hit FSM the port's game_step HP-drop flinch models), aca59=facing+2
+                             * (@0x8010f314-24), aca5a=0 (@0x8010f330), acae7|=1 (@0x8010f338-44),
+                             * grunt SE via 37edc(PTR_80121010[(rng&1)+aca59*2],0x32) @0x8010f34c-60. */
+                            re15_audio_room_se(3);            /* Se(3) connect @0x8010f2ec-f4 */
+                            e->sub_state_2 = 5;               /* dog +0x6=5 recoil @0x8010f300 */
+                            pl->hit_react |= 1;               /* acae7 |= 1 */
+                            {
+                                static const uint8_t knock_se[4] = { 5, 7, 4, 6 };   /* bytes @0x80121014 (raw: 05 07 04 06) */
+                                int facing = ((((int)pl->rot_y - (int)e->rot_y) + 0x400) & 0xfff) < 0x800 ? 1 : 0;  /* a780(&player) */
+                                re15_audio_room_se(knock_se[(facing ? 2 : 0) + (re15_engine_rand8() & 1)]);  /* 37edc tier -> direct SE (OPEN, crow stance) */
+                            }
+                        } else {                              /* GRAB escalation LAB_8010f468 */
+                            int facing = ((((int)pl->rot_y - (int)e->rot_y) + 0x400) & 0xfff) < 0x800 ? 1 : 0;  /* a780 @0x8010f468 */
+                            re15_dog_sub(e, (uint8_t)(9 + facing));   /* +0x5=9/10, +0x6=0 @0x8010f47c-84 */
+                            e->y = e->dog_floor_y;            /* +0x38 = +0x1ba @0x8010f49c */
+                            e->dog_grab_armed = 0;            /* +0x1e4 = 0 @0x8010f4b4 */
+                        }
+                    }
+                }
+                break;
+            case 2:
+                e->sub_state_2 = 3;
+                re15_dog_clip(e, 0x15);                       /* land clip 0x15 @0x8010f4c8-508 */
+                e->ai_timer = (int16_t)(e->dog_floor_y - e->y);   /* +0x9c = floor - y @0x8010f518 */
+                /* fall through */
+            case 3:
+                if (e->anim_frame > 1) {                      /* @0x8010f52c */
+                    e->crow_speed = (int16_t)(e->crow_speed - 3);   /* +0x8c -= 3 @0x8010f534-40 */
+                    re15_dog_advance_ofs(e, 8);               /* 245d8(8) @0x8010f548 */
+                    e->y += (int32_t)(e->ai_timer / 11);      /* gravity return /11 @0x8010f558-7c */
+                    if (e->y > (int32_t)e->dog_floor_y) {     /* landed @0x8010f580 */
+                        e->y = e->dog_floor_y;
+                        e->sub_state_2 = 4;                   /* +0x6=4 @0x8010f590 */
+                    }
+                    e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_dog_anim(e));   /* +0x6 += f314 (LAB_8010f598) */
+                } else {                                      /* 2nd bite window (frames 0/1) @0x8010f5b0 */
+                    re15_dog_advance_ofs(e, 0);               /* 245d8(0) @0x8010f5b8 */
+                    if (pl->hit_react == 0 && re15_dog_arc(e, pl, 2000, 384)) {   /* @0x8010f5c0-d4 */
+                        pl->hp = (int16_t)(pl->hp - 10);
+                        if (e->dog_grab_armed == 0 && pl->hp >= 0) {   /* knockdown (no 37edc in window 2) */
+                            re15_audio_room_se(3);
+                            e->sub_state_2 = 5;
+                            pl->hit_react |= 1;
+                            e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_dog_anim(e));   /* goto LAB_8010f598 */
+                        } else {
+                            int facing = ((((int)pl->rot_y - (int)e->rot_y) + 0x400) & 0xfff) < 0x800 ? 1 : 0;
+                            re15_dog_sub(e, (uint8_t)(9 + facing));
+                            e->y = e->dog_floor_y; e->dog_grab_armed = 0;
+                        }
+                    } else {
+                        if (re15_dog_anim(e)) e->sub_state_2++;   /* LAB_8010f598 */
+                    }
+                }
+                break;
+            case 4:                                           /* whiff-land exit @0x8010f5e0 */
+                e->dog_atk_cd = 10;                           /* +0x1d6 = 0xa @0x8010f5e4 (audit #3) */
+                re15_dog_sub(e, 3);                           /* -> ATTACK-RANGE @0x8010f7c4 */
+                e->y = e->dog_floor_y;                        /* LAB_8010f7c8 */
+                break;
+            case 5:
+                e->sub_state_2 = 6;
+                e->motion = 0x16; e->anim_frame = 0; e->anim_frac = 0;   /* recoil clip 0x16, +0x8f=0 @0x8010f5f8-64c */
+                e->crow_speed = 0x78;                         /* +0x8c = 0x78 @0x8010f654 */
+                e->ai_timer = (int16_t)(e->dog_floor_y - e->y);   /* +0x9c @0x8010f668 */
+                /* fall through */
+            case 6:
+                if (re15_dog_anim(e)) e->sub_state_2++;       /* f314 @0x8010f680-6a8 */
+                if (e->anim_frame <= 0x10) {                  /* @0x8010f6bc */
+                    e->crow_speed = (int16_t)(e->crow_speed - 3);   /* +0x8c -= 3 @0x8010f6c4-dc */
+                    re15_dog_advance_ofs(e, 0x800);           /* 245d8(0x800) recoil BACKWARD @0x8010f6d0-e0 */
+                    e->y += (int32_t)(e->ai_timer / 14);      /* /0xe descent @0x8010f6e8-70c */
+                    if (e->y > (int32_t)e->dog_floor_y) e->y = e->dog_floor_y;   /* clamp @0x8010f720-38 */
+                }
+                break;
+            case 7: {                                         /* CHAINED attack pick @0x8010f75c */
+                e->dog_atk_cd = 0x14;                         /* +0x1d6 = 0x14 @0x8010f768 (audit #3) */
+                uint8_t pick = 7;                             /* +0x5=7 @0x8010f778 */
+                if (pl->hp < 0x32) pick = 5;                  /* acaee<50 -> 5 @0x8010f790-a0 */
+                if (re15_engine_rand8() & 1) pick = 6;        /* rng&1 -> 6 @0x8010f7a4-c4 */
+                re15_dog_sub(e, pick);                        /* LAB_8010f7c8: +0x6=0 */
+                e->y = e->dog_floor_y;
+                break;
+            }
+            default: break;
+            }
             break;
 
         case 9: case 10:   /* eaten-GRAB hold (7-step FSM 0x8010f80c/0x8010fc60): the dog eats the player */
@@ -3710,10 +4165,10 @@ static void re15_dog_ai_tick(int slot)
             else re15_dog_sub(e, 2);                          /* exit -> CHASE @0x801102b0 */
             break;
 
-        case 13:  /* OBSTACLE-REROUTE (leap-over, wall contact) -> CHASE */
-            re15_dog_reroute13(e);
+        case 13:  /* OBSTACLE-REROUTE 13: leap OVER (one level UP) -> CHASE */
+            re15_dog_reroute13(e, slot);
             break;
-        case 14:  /* OBSTACLE-REROUTE (turn-around) -> CHASE */
+        case 14:  /* OBSTACLE-REROUTE 14: drop DOWN (1-4 levels) -> CHASE */
             re15_dog_reroute14(e);
             break;
 
@@ -3721,33 +4176,161 @@ static void re15_dog_ai_tick(int slot)
             re15_dog_sub(e, 2);
             break;
         }
+
+        /* ---- root tail FUN_8010dbcc @0x8010dd48-ddb0 (runs AFTER the dispatch) ---- */
+        /* jal 0x80012974(4000) @0x8010dd48: entity word0 |= 0x20000000 when dist<4000 — OPEN (header) */
+        if (e->dog_atk_cd) e->dog_atk_cd--;                   /* +0x1d6 tick @0x8010dd5c-70 */
+        if (!re15_dog_blocked(e)) e->dog_blocked_ctr = 0;     /* +0x1da==0 -> +0x1dc=0 @0x8010dd80-8c */
+        else e->dog_blocked_ctr++;                            /* else +0x1dc++ @0x8010dd94-da4 (audit #15) */
         break;
     }
 
-    case 4: case 5: case 6:   /* POUNCE-LAND + grid-0x40 player-kill cutscenes (0x80111350) */
+    case 4: case 5: case 6:   /* SCRIPTED states (0x80111350): grid-0x40/0x41 dogs + kill machines */
         re15_dog_state456(e, pl);
         break;
 
-    case 2:   /* HURT 0x801108f0: flinch clip 6 -> recover (state 1) / death (state 3) */
-        if (e->sub_state_3 == 0) { re15_dog_clip(e, 6); re15_audio_room_se(1); e->sub_state_3 = 1; }  /* clip 6 + Se(1) @0x80110a3c */
-        else if (e->sub_state_3 == 1) { if (re15_dog_anim(e)) e->sub_state_3 = 2; }
-        else {
-            if (e->hp >= 0) { e->state = 1; re15_dog_sub(e, 2); e->sub_state_3 = 0; e->hit_react = 0; }  /* recover @0x80110b48 */
-            else { e->state = 3; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 1; }           /* death @0x80110b10 */
+    case 2: { /* HURT dispatcher FUN_801108f0 -> rows @0x80121018 (audit #4/#5) */
+        re15_dog_fall_physics(e);
+        if (!re15_dog_row_airborne(e->sub_state_1)) {
+            /* GROUNDED flinch FUN_801109e0 */
+            switch (e->sub_state_3) {
+            case 0:
+                e->sub_state_3 = 1;
+                re15_dog_clip(e, 6);                          /* clip 6 @0x80110a3c-70 */
+                re15_audio_room_se(1);                        /* Se(1) @0x80110a7c */
+                /* +0x1c0 = 0x8000 @0x80110a80 — OPEN (header) */
+                re15_dog_blood(e);                            /* 19700(0x2000, rot_y, bone+0xec) @0x80110a84-aa0 (audit #4) */
+                /* fall through */
+            case 1:
+                if (re15_dog_anim(e)) e->sub_state_3++;       /* f314 @0x80110ab0-dc */
+                break;
+            case 2:
+                e->y = e->dog_floor_y;                        /* @0x80110af4 */
+                if (e->hp < 0) {                              /* @0x80110b04 */
+                    e->state = 3; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 1;  /* death, +0x7=1 @0x80110b10-40 */
+                } else {
+                    e->state = 1; e->sub_state_1 = 7;         /* recover -> COUNTER-LUNGE sub 7:
+                                                               * `sb 1,+0x4` @0x80110b48 + `sb 7,+0x5` @0x80110b58 (audit #4) */
+                    e->sub_state_2 = 0; e->sub_state_3 = 0;
+                    e->hit_react = 0;                         /* +0x93 = 0 @0x80110b70 */
+                }
+                break;
+            default: break;
+            }
+        } else {
+            /* AIRBORNE knock-slide FUN_80110b9c (audit #5) */
+            switch (e->sub_state_3) {
+            case 0:
+                e->sub_state_3 = 1;
+                e->motion = 7; e->anim_frame = 0; e->anim_frac = 0;   /* clip 7, +0x8f=0 @0x80110bec-c14 */
+                e->crow_speed = 0x96;                         /* +0x8c = 0x96 @0x80110c34-38 */
+                /* +0x1c0 = 0x8000 @0x80110c3c — OPEN */
+                e->grab_kill_ctr = (int16_t)((re15_engine_rand8() + 0x2d) & 0x3f);   /* +0x9e @0x80110c48-5c */
+                re15_audio_room_se(1);                        /* Se(1) @0x80110c68 */
+                re15_dog_blood(e);                            /* 19700(0x2000, rot_y, bone+0x40) @0x80110c6c-88 */
+                /* fall through */
+            case 1:
+                if (re15_dog_anim(e)) e->sub_state_3++;       /* f314 @0x80110c98-cc0 */
+                e->crow_speed = (int16_t)(e->crow_speed - 2); /* +0x8c -= 2 @0x80110cd0-e0 */
+                re15_dog_advance_ofs(e, (1 - (e->hit_react & 0x80)) * 0x800);   /* 245d8((1-(+0x93&0x80))*0x800)
+                                                               * @0x80110ce4-f8 (both cases ≡ 0x800 mod 0x1000) */
+                if (e->sub_state_3 == 2) re15_audio_room_se(7);   /* Se(7) on 1->2 @0x80110d08-14 */
+                break;
+            case 2: {
+                e->y = e->dog_floor_y;                        /* @0x80110d34 */
+                int16_t old = e->grab_kill_ctr;
+                e->grab_kill_ctr = (int16_t)(old - 1);        /* +0x9e-- @0x80110d44-50 */
+                if (old == 0) {                               /* counter WAS 0 -> stand-up @0x80110d54 */
+                    e->state = 1; e->sub_state_1 = 0x0c;      /* recover -> sub 0xc stand-up @0x80110d60-78 */
+                    e->sub_state_2 = 0; e->sub_state_3 = 0;
+                    e->hit_react = 0;                         /* +0x93 = 0 @0x80110d90 */
+                }
+                break;
+            }
+            default: break;
+            }
+        }
+        break;
+    }
+
+    case 3: { /* DEATH dispatcher FUN_80110dc0 -> rows @0x80121070 (audit #5 + verified detour claim) */
+        re15_dog_fall_physics(e);
+        if (!re15_dog_row_airborne(e->sub_state_1)) {
+            /* GROUNDED death FUN_80111120 */
+            switch (e->sub_state_3) {
+            case 0:
+                /* fresh kill: kill flag AT DEATH ENTRY + DETOUR through the hurt flinch first
+                 * (unverified-claim VERIFIED: +0x93|=2 @0x8011113c-54, `sb 2,+0x4`+zero +0x5/+0x6/+0x7
+                 * @0x80111160-19c, jal 0x8004ef90(0x800b1038,+0x1c6) @0x801111b8-c4). */
+                e->hit_react |= 2;
+                if (e->em_flag_id != 0xFF)
+                    re15_game_flag_set(re15_em_status_zone(), e->em_flag_id, 1);   /* ef90(0x800b1038,+0x1c6) */
+                e->state = 2; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;
+                break;
+            case 1:
+                e->y = e->dog_floor_y;                        /* @0x801111d8 */
+                e->sub_state_3 = 2;
+                re15_dog_clip(e, 0x0e);                       /* collapse clip 0xe @0x801111f0-121c */
+                /* fall through */
+            case 2:
+                if (re15_dog_anim(e)) e->sub_state_3++;       /* f314 @0x80111228-50 */
+                if (e->sub_state_3 == 3) re15_audio_room_se(7);   /* Se(7) on 2->3 @0x80111260-6c */
+                break;
+            case 3:
+                e->state = 7; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* word +0x4=7 @0x80111284 */
+                break;
+            default: break;   /* the in-handler case-4 sink (@0x801112a0..) is unreachable — the live
+                               * corpse fade is the state-7 root (FUN_80111774), see CORPSE below */
+            }
+        } else {
+            /* AIRBORNE death FUN_80110eb0 */
+            switch (e->sub_state_3) {
+            case 0:
+                e->hit_react |= 2;                            /* +0x93 |= 2 @0x80110ed4-e0 */
+                e->sub_state_3 = 1;
+                e->motion = 7; e->anim_frame = 0; e->anim_frac = 0;   /* clip 7, +0x8f=0 @0x80110ef4-f20 */
+                e->crow_speed = 0x96;                         /* +0x8c = 0x96 @0x80110f40 */
+                /* +0x1c0 = 0x8000 — OPEN */
+                re15_audio_room_se(4);                        /* Se(4) @0x80110f50 */
+                re15_dog_blood(e);                            /* 19700(0x2000, rot_y, bone+0x40) @0x80110f54-70 */
+                if (e->em_flag_id != 0xFF)
+                    re15_game_flag_set(re15_em_status_zone(), e->em_flag_id, 1);   /* ef90(0x800b1038,+0x1c6)
+                                                               * AT DEATH ENTRY @0x80110f80-8c (audit #5) */
+                /* fall through */
+            case 1:
+                if (re15_dog_anim(e)) e->sub_state_3++;       /* f314 */
+                e->crow_speed = (int16_t)(e->crow_speed - 2); /* +0x8c -= 2 */
+                re15_dog_advance_ofs(e, (1 - (e->hit_react & 0x80)) * 0x800);   /* backward slide */
+                if (e->sub_state_3 == 2) re15_audio_room_se(7);   /* Se(7) on 1->2 */
+                break;
+            case 2:
+                e->y = e->dog_floor_y;
+                e->state = 7; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* word +0x4=7 */
+                break;
+            default: break;   /* in-handler case 3 sink unreachable — see CORPSE root */
+            }
+        }
+        break;
+    }
+
+    case 7:   /* CORPSE root FUN_80111774 (raw disasm): phase 0 seeds the fade, phase 1 runs it,
+               * phase 2 = inert. (verified corpse-fade part of the death-detour claim) */
+        if (e->sub_state_3 == 0) {
+            e->grab_kill_ctr = 0x5a;                          /* +0x9e = 90 fade frames @0x801117a0-a4 */
+            e->sub_state_3 = 1;                               /* +0x7 = 1 @0x801117b0-b4 */
+            /* entity word0 |= 2 (@0x801117cc) | 0x40 (@0x801117e8) — flag word OPEN (header) */
+        }
+        if (e->sub_state_3 == 1) {
+            /* +0xc4/+0xec = (old & 0xff000000) | 0xffff38 tint + pool +0xbc/+0xbe += 8/frame
+             * (@0x801117f0-834): the corpse blood-pool spread — render-side keyed on the state-7
+             * countdown, same presentation channel as the zombie corpse pool. */
+            int16_t old = e->grab_kill_ctr;
+            e->grab_kill_ctr = (int16_t)(old - 1);            /* +0x9e-- @0x80111844-54 */
+            if (old == 0) e->sub_state_3 = 2;                 /* WAS 0 -> phase 2 inert @0x80111850-64 */
         }
         break;
 
-    case 3:   /* DEATH 0x80110dc0: death clip 14 + yelp -> state 7 */
-        if (e->sub_state_3 <= 1) { re15_dog_clip(e, 0x0e); e->hit_react |= 2; e->sub_state_3 = 2; }   /* clip 14 @0x80111214 */
-        else if (e->sub_state_3 == 2) { if (re15_dog_anim(e)) { re15_audio_room_se(7); e->sub_state_3 = 3; } }  /* Se(7) yelp @0x801112a0 */
-        else { e->state = 7; e->sub_state_3 = 0; }            /* -> CORPSE @0x801112c0 */
-        break;
-
-    case 7:   /* CORPSE 0x80111774: settle/fade (render-side), then inert */
-        re15_dog_anim(e);
-        break;
-
-    default:  /* only states 0-7 exist as top-level (@0x80120f74); 8-11 are ACTIVE sub-handlers */
+    default:  /* only states 0-7 exist as top-level (@0x80120f74) */
         break;
     }
 }
@@ -5359,13 +5942,21 @@ void re15_enemy_ai_run_all(int combat_active)
                                  * Own branch: flies in 3D, NOT ground-clamped, no body-push. */
             re15_crow_ai_tick(s);
         }
-        else if (t == 0x20) {   /* DOG (Cerberus, type 0x20) — ground chase/bite AI (Wave 1).
+        else if (t == 0x20) {   /* DOG (Cerberus, type 0x20) — ground chase/bite AI.
                                  * Ground enemy: SCA wall-clamp after the tick (byte-true 0x8003b0a4). */
             int32_t dog_ox = e->x, dog_oz = e->z;
-            e->ai_contact = (uint8_t)(e->ai_contact & 0xf0);  /* the SCA resolver clears the contact bit each frame (@0x8003b1dc) */
             re15_dog_ai_tick(s);
             re15_enemy_body_push_tail(s, e);                  /* aec4+b544 body separation (dog root tail) */
-            if (g_room_rdt_ok && (e->x != dog_ox || e->z != dog_oz)) {
+            /* the SCA resolver clears the contact bit at ITS start (@0x8003b1dc), i.e. AFTER the AI
+             * dispatch in the same frame — so the AI reads LAST frame's +0x90 contact. The port used
+             * to clear BEFORE the tick, which zeroed bit0 for every AI read and killed the reroute
+             * gate + the +0x1dc blocked counter (audit wf_827f186d dog #12/#15). */
+            e->ai_contact = (uint8_t)(e->ai_contact & 0xf0);
+            if (re15_dog_consume_noclamp(s)) {
+                /* reroute-13 leap burst: the original snaps the old-pos mirror +0x40/+0x42/+0x44 to
+                 * the post-burst position (@0x801104e0-52c) so the SCA sweep does not clamp the hop
+                 * back off the obstacle — skip the port's sweep for this frame. */
+            } else if (g_room_rdt_ok && (e->x != dog_ox || e->z != dog_oz)) {
                 int32_t ix = e->x, iz = e->z;                 /* the AI's INTENDED position this frame */
                 int32_t nx = ix, nz = iz;
                 re15_collision_constrain_enemy(&g_room_rdt, dog_ox, dog_oz, &nx, &nz, e->hit_radius_min, e->y);

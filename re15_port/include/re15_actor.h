@@ -319,6 +319,21 @@ typedef struct {
     int16_t  dog_grab_armed; /* +0x1e4: grab-armed flag (set=1 by sub 5 windup @0x8010ed54; a bite
                               * then escalates to the eaten GRAB even when non-lethal). Cleared on
                               * grab entry @0x8010f4b4 / recover. */
+    int16_t  dog_blocked_ctr;/* +0x1dc: frames-blocked counter — root FUN_8010dbcc tail
+                              * @0x8010dd80-dda4: `+0x1da==0 -> +0x1dc=0 else +0x1dc++` (audit
+                              * wf_827f186d dog #15). Feeds the chase wake gates (@0x8010e130/e170),
+                              * the chase steer-vs-wander split (@0x8010e3bc slti 31) and the
+                              * menace LOS-loss exit (@0x8010e92c slti 31). */
+    uint16_t dog_reroute_dir;/* +0x1e8 = +0x90 & 1, latched at the reroute commit (@0x8010e2bc-c0) */
+    uint16_t dog_reroute_sca;/* +0x1ea = *(u16*)(*(+0x1b4)+10) — the standing SCA cell's attr
+                              * halfword, latched at the reroute commit (@0x8010e294-2a4); bits 2-3
+                              * = the reroute-14 drop-level count (@0x80110764). */
+    int8_t   dog_aux9f;      /* +0x9f byte: chase wander heading latch (sb @0x8010e3f4, read back
+                              * sign-extended lb @0x8010e404) / menace no-LOS counter (@0x8010e9xx)
+                              * / reroute-14 wall-byte latch (@0x80110658). */
+    int16_t  dog_floor_y;    /* +0x1ba: the dog's floor Y (ground level). The original's +0x1ba is
+                              * maintained by the engine floor probe; the port seeds it at INIT from
+                              * the spawn Y and moves it with the reroute level hops (+-0x708). */
 
     /* ---- Spider-Baby (type 0x26, EM026) — a STATIONARY web-spitter/ambush (RE15_SPIDER_AI.md).
      * Emerges vertically from its spawn point (spider_phase < 13 = intangible), then solid + a -2
