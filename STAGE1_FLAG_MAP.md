@@ -117,15 +117,20 @@ not "1792"):
 z5/13..16, the poll unlocks z3/137, and `main00` then installs the gated slot as a real DOOR. The
 confirm-input opcodes are byte-true (`op_sce_key_ck` reads `g_scd_pad_held`; `op_member_cmp`).
 
-**⚠ OPEN — dial INPUT is not player-completable in the port yet.** The confirm compares
-`Member[15]` (= actor+0x0b `member_0b`) of the `Work_set(3,0)` entity (the dial **prop**), but:
-(1) `member_0b`/the notch is **never written by any room1230 SCD op** — it is an ENGINE-side value
-derived from the dial's rotation (the EXE combination-lock handler), which the port does not
-implement; and (2) `op_member_cmp` reads only ACTOR members (`re15_actor_get_member`, work_slot≥0)
-and returns 0 for a prop-bound work entity. So `Member_cmp(15==notch)` is always false in the port →
-no confirm fires via the dpad. Closing this needs RE of the EXE dial-notch mechanic + a prop-member
-read path in `op_member_cmp` — a separate deeper task. (The FSM logic + reader reachability above are
-independent of this and are done.)
+**✅ dial INPUT implemented (d598ffc1).** The dial is a **cursor-on-grid**: the dpad moves an
+`Obj_model_set` cursor prop (`Speed_set`+`Add_speed`), and each frame its `member_0b` (the NOTCH) =
+the sce=5 grid-cell slot it is over. Two byte-true pieces were added:
+1. **`op_member_cmp`/`op_member_set` prop-member path** — the original `FUN_80041358` reads
+   `work_entity+0xb` for member 15 regardless of actor/prop; the port routed the `Work_set(3,0)`
+   (kind-3 prop) case to new `re15_prop_get_member`/`re15_prop_set_member` (member 15 = `member_0b`).
+   Pre-fix `Member_cmp(15==notch)` was always false (0 returned for a prop) → no confirm fired.
+2. **the NOTCH itself** — `re15_aot_object_notch` (byte-true `FUN_80042bac` @0x80042f5c
+   `sb slot,0xb(entity)` = the sce=5 grid slot the point is over) + `re15_object_notch_update`
+   (per-frame object-pool pass, called from `re15_game_step`).
+So a cursor over cell slot 7 gets `member_0b=7`, the confirm `Member_cmp(15==7)` accepts, the 4
+correct confirms set z5/13..16, the poll unlocks z3/137, the door opens. Pinned by `integration_keypad`.
+The dpad→cursor masks map byte-true via the virtual pad (@0x80073dbc): confirm 0x40←SQUARE. With the
+sub-cap fix (reader reachable), the STAGE1 keycard doors are completable end to end.
 
 ## Status
 
