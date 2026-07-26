@@ -1,11 +1,15 @@
 /* test_tyrant_ai.c — TYRANT boss (type 0x2b, EM02B, STAGE4/5) AI.
  *
- * Byte-true from workflow wf_5c34ffe7 (root 0x801118d0). A bipedal ground walk-chaser with two -10
- * melee attacks and grab-pins; a killable prototype Tyrant (HP pool 86..126 @0x80118b00). Asserts:
+ * Byte-true rebuild (audit wf_efd92a2c tyrant, root 0x80111a64, state table @0x8011a0b4). A bipedal
+ * ground walk-chaser: idle(sub0)->walk(sub1)->roar(sub2)->attack-decide(sub3) dual A/B dispatch, two
+ * -10 melee attacks and facing-based grab-pins; a killable prototype Tyrant (HP pool 86..126
+ * @0x80118b00). Asserts (driving the BYTE-TRUE subs, not the old "sub0==approach" stub):
  *   (1) INIT: state -> 1, HP in the pool {86..126}, clip 0.
- *   (2) CHASE: a distant player makes the Tyrant close in.
- *   (3) ATTACK: an aligned in-range player takes -10 (@0x80112898 / @0x80113ff8).
- *   (4) GRAB: chipping the player below 50 triggers a grab-PIN (sub 5, DAT_800aca58=5).
+ *   (2) CHASE: in the WALK regime (sub 1, B[1] 0x80112124) the Tyrant closes on the player.
+ *   (3) ATTACK1: from the sub-3 decide regime (A[3] 0x801123e8) an aligned <1800 player takes -10
+ *       (@0x80112898) — the byte-true trigger a804(1800,0x180), NOT the old dist<2501/±0x300.
+ *   (4) GRAB: chipping the player below 50 (slti 50 @0x801128ac) triggers a facing-based grab-PIN
+ *       (front sub 5 / rear sub 9, aca58=5; sub = facing*4+5 @0x801128c0-d0).
  *   (5) KILLABLE: a lethal hit -> DEATH -> CORPSE (state 7).
  */
 #include <stdio.h>
@@ -46,38 +50,44 @@ int main(void)
     if (e->hp < 86 || e->hp > 126) { fprintf(stderr, "FAIL(1): HP must be in the pool 86..126, got %d\n", e->hp); fail = 1; }
     printf("  (1) INIT: state->1 sub=%d, hp=%d (pool), clip=%d\n", e->sub_state_1, e->hp, e->motion);
 
-    /* (2) CHASE */
+    /* (2) CHASE: byte-true, sub 0 is IDLE (stands rng+59 frames @0x80111f04) then promotes to WALK
+     * sub 1. Drive the WALK regime (B[1] 0x80112124) directly and assert it closes on the player. */
+    e->state = 1; e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0; e->motion = 0; e->anim_frame = 0;
     int32_t c0 = xz_dist(e, pl);
-    for (int f = 0; f < 100; f++) { pl->hit_react = 0; re15_enemy_ai_run_all(0); }
+    for (int f = 0; f < 200; f++) { pl->hit_react = 0; re15_enemy_ai_run_all(0); }
     int32_t c1 = xz_dist(e, pl);
     if (c1 >= c0) { fprintf(stderr, "FAIL(2): Tyrant must close on the player, dist %d->%d\n", c0, c1); fail = 1; }
     printf("  (2) CHASE: dist %d->%d (closing)\n", c0, c1);
 
-    /* (3) ATTACK -10: aligned player just ahead within range */
-    e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;
-    pl->x = e->x; pl->z = e->z + 1500; pl->hp = 100; pl->hit_react = 0;
+    /* (3) ATTACK1 -10: from the sub-3 DECIDE regime (A[3]) an aligned player <1800 is bitten. */
+    e->state = 1; e->sub_state_1 = 3; e->sub_state_2 = 0; e->sub_state_3 = 0; e->motion = 0; e->anim_frame = 0;
+    e->birkin_hurt_cd = 0;                                               /* +0x1de cooldown clear */
+    pl->x = e->x; pl->z = e->z + 1500; pl->hp = 100; pl->hit_react = 0;  /* dist 1500 < 1800 */
     e->rot_y = (int16_t)(((int)re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0xfff);
     int16_t ahp0 = pl->hp; int hit = 0;
     for (int f = 0; f < 200; f++) {
         re15_enemy_ai_run_all(0);
         pl->hit_react = 0;
+        pl->x = e->x; pl->z = e->z + 1500;                              /* keep the player pinned in range/arc */
+        e->rot_y = (int16_t)(((int)re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0xfff);
         if (pl->hp <= ahp0 - 10) { hit = 1; break; }
     }
-    if (!hit) { fprintf(stderr, "FAIL(3): the Tyrant attack must deal -10, hp %d->%d\n", ahp0, pl->hp); fail = 1; }
-    printf("  (3) ATTACK: player hp %d->%d (-10 on connect)\n", ahp0, pl->hp);
+    if (!hit) { fprintf(stderr, "FAIL(3): the Tyrant ATTACK1 must deal -10, hp %d->%d (sub=%d)\n", ahp0, pl->hp, e->sub_state_1); fail = 1; }
+    printf("  (3) ATTACK1: player hp %d->%d (-10 on connect)\n", ahp0, pl->hp);
 
-    /* (4) GRAB: a low-HP player (<50 after a -10) drives ATTACK1 -> GRAB1 (pin). Drive it directly. */
-    e->state = 1; e->sub_state_1 = 4; e->sub_state_2 = 0; e->sub_state_3 = 0; e->motion = 4; e->anim_frame = 0;
+    /* (4) GRAB: a low-HP player (<50 after the -10) drives ATTACK1 -> facing grab (front sub 5 / rear
+     * sub 9). Drive B[4] directly; either grab sub, or the pin latch, counts. */
+    e->state = 1; e->sub_state_1 = 4; e->sub_state_2 = 0; e->sub_state_3 = 0; e->motion = 0x0c; e->anim_frame = 0;
     pl->x = e->x; pl->z = e->z + 1200; pl->hp = 55; pl->hit_react = 0;   /* 55 - 10 = 45 < 50 -> grab */
     e->rot_y = (int16_t)(((int)re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0xfff);
     int grabbed = 0;
     for (int f = 0; f < 120; f++) {
         re15_enemy_ai_run_all(0);
-        if (e->sub_state_1 == 5 || re15_player_is_grabbed()) grabbed = 1;
+        if (e->sub_state_1 == 5 || e->sub_state_1 == 9 || re15_player_is_grabbed()) grabbed = 1;
         pl->hit_react = 0;
         if (grabbed) break;
     }
-    if (!grabbed) { fprintf(stderr, "FAIL(4): chipping <50 must trigger the grab-PIN (sub 5); sub=%d hp=%d\n", e->sub_state_1, pl->hp); fail = 1; }
+    if (!grabbed) { fprintf(stderr, "FAIL(4): chipping <50 must trigger the grab-PIN (sub 5/9); sub=%d hp=%d\n", e->sub_state_1, pl->hp); fail = 1; }
     printf("  (4) GRAB: reached grab-PIN (sub=%d, player grabbed=%d)\n", e->sub_state_1, re15_player_is_grabbed());
 
     /* (5) KILLABLE */

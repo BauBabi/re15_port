@@ -7365,11 +7365,26 @@ static void re15_fx_emitter_ai_tick(int slot)
 }
 
 /* ============================ TYRANT boss (type 0x2b, EM02B) — STAGE4/5 ======================= *
- * Byte-true from workflow wf_5c34ffe7 (root 0x801118d0, state table @0x8011a0b4). A bipedal ground
- * WALK-CHASER with an EMERGE intro, TWO -10 melee attacks and two grab-PINs; real hurt/death (a
- * killable prototype Tyrant, HP pool 86..126). Uses the generic bank clip/anim helpers (re15_birkin_
- * clip/anim are type-parameterized: they look up EM02B's loaded bank). Byte-true damage/HP/ranges;
- * the exact 16-sub dual-table walk choreography + emerge clip are faithful-line. */
+ * BYTE-TRUE REBUILD of the WHOLE 0x80111a64 family (audit wf_efd92a2c tyrant, 16 findings). The port
+ * was a near-stub: ATTACK1 fired from the wrong sub on invented ranges, no charge/stagger pipeline, no
+ * facing-based grab select, grab was a harmless timed pin (no collapse/mash/finish), no attack cooldown,
+ * no real hurt-react, single-clip death, wrong emerge clip. Re-ported against raw STAGE4.BIN disasm:
+ *   state table @0x8011a0b4  ([1]=ACTIVE 0x80111c98, [2]=HURT 0x80114770, [3]=DEATH 0x80114c68,
+ *                             [4/5/6]=EMERGE 0x80114fe4, [7]=CORPSE 0x80115af0 — all table-dumped & confirmed)
+ *   decide table A@0x8011a0d4 (A[0]=0x80111e94 idle, A[1]=0x80112024 walk, A[3]=0x801123e8 charge/attack1,
+ *                             A[13]=0x80113c74 attack2 — table-dumped & confirmed)
+ *   act    table B@0x8011a114 (B[0..15]; B[1]=0x80112124 walk, B[3]=0x801125dc fast, B[4]=0x8011275c
+ *                             ATTACK1, B[5]=0x80112a64 GRAB1, B[7]=0x801145c8 charge, B[8]=0x80112e20
+ *                             collapse, B[9]=0x80112f58 rear-grab, B[14]=0x80113e48 ATTACK2, B[15]=
+ *                             0x8011411c GRAB2 — table-dumped & confirmed; port's old B[4] 0x80112840 /
+ *                             B[14] 0x80113f00 cites were mid-body labels, fixed — audit #13).
+ * The ACTIVE brain is a decide(A[sub]) + act(B[sub]) dual-dispatch on +0x5 (same shape as Birkin).
+ * OPEN (subsystem gaps documented inline, NOT faked): (a) the roar/attack DECIDE gate +0x1d0&1 is the
+ * room-collision LOS raycast FUN_8001b84c @0x8001bc08 — not reproducible in the collision-less AI
+ * harness, so roar is gated on the range+arc proxy; (b) ATTACK2's per-limb sphere hit (0x8001bff8 on
+ * skel+580/+2472 r=0x320) has no per-bone spheres in the port -> close-arc proxy; (c) the aca58/aca59
+ * player-command victim FSM is unported port-wide (L2729/L3475) -> grab drives the player via the shared
+ * s_player_grabbed + re15_player_victim_devour, as Birkin/Dog do; (d) corpse tint/sink is render-side. */
 static const uint16_t s_tyrant_hp[16] =    /* HP pool @0x80118b00 (index = rng & 0xf) */
     { 86, 89, 103, 119, 91, 107, 121, 93, 109, 124, 117, 97, 113, 126, 99, 101 };
 
@@ -7378,83 +7393,334 @@ static void re15_tyrant_ai_tick(int slot)
     re15_actor_t *e  = &g_actors[slot];
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
 
+    /* Field map to the PSX entity offsets (dedicated actor fields at the matching offset):
+     *   +0x1de attack cooldown  -> birkin_hurt_cd   +0x1dc hp-snapshot / charge-arm -> hit_stun
+     *   +0x9c  timer/budget      -> ai_timer          +0x9e  hold/recovery countdown  -> grab_kill_ctr
+     *   +0x6   act phase byte    -> sub_state_2        +0x7   death/stagger phase       -> sub_state_3 */
+
     switch (e->state) {
-    case 0:   /* INIT 0x80111a64: HP from the pool; grid-variant EMERGE (0x40/0x41/0x43 -> state 4). */
-        if (e->hp <= 0) e->hp = (int16_t)s_tyrant_hp[re15_engine_rand8() & 0xf];   /* +0x9a @0x80111c04 */
+    case 0:   /* INIT 0x80111a64: HP from the pool UNCONDITIONAL; grid-variant EMERGE (0x40/0x41/0x43). */
+        e->hp = (int16_t)s_tyrant_hp[re15_engine_rand8() & 0xf];   /* +0x9a UNCONDITIONAL @0x80111c04
+                                                                    * (audit #14: dropped the port-invented
+                                                                    * `if(hp<=0)` guard — no branch exists
+                                                                    * between the rng call and the sh @0x80111c04) */
         e->motion = 0; e->anim_frame = 0; e->anim_frac = 0; e->hit_react = 0;      /* clear +0x94/95/8f/93 */
         e->steer_x = (int16_t)pl->x; e->steer_z = (int16_t)pl->z;                   /* +0x1bc/+0x1be */
         e->sub_state_2 = 0; e->sub_state_3 = 0;
-        if (e->grid_id == 0x40)      { e->state = 4; e->sub_state_1 = 0; }          /* @0x80111b5c */
-        else if (e->grid_id == 0x41) { e->state = 4; e->sub_state_1 = 1; }          /* @0x80111b7c */
-        else if (e->grid_id == 0x43) { e->state = 4; e->sub_state_1 = 2; }          /* @0x80111ba0 */
+        e->birkin_hurt_cd = 0; e->hit_stun = 0; e->ai_timer = 0; e->grab_kill_ctr = 0;
+        /* +0x1b8=0 @0x80111af8 / +0x1b9=0x19(25) @0x80111b04-08 are the shared-walker init seeds — no port
+         * consumer (audit #14, +0x1b8/+0x1b9 map to neck_flags/member_0a which no enemy path reads). */
+        e->member_0a = 0x19;
+        if (e->grid_id == 0x40)      { e->state = 4; e->sub_state_1 = 0; }          /* EMERGE var0 @0x80111b5c */
+        else if (e->grid_id == 0x41) { e->state = 4; e->sub_state_1 = 1; }          /* EMERGE var1 @0x80111b7c */
+        else if (e->grid_id == 0x43) { e->state = 4; e->sub_state_1 = 2; }          /* EMERGE var2 @0x80111ba0 */
         else                         { e->state = 1; e->sub_state_1 = 0; }          /* +0x4 = 1 @0x80111a78 */
         break;
 
-    case 1: {  /* ACTIVE 0x80111c98: walk-chase + dual A/B brain on +0x5. */
+    case 1: {  /* ACTIVE 0x80111c98: decide A[sub] (may retarget) then act B[sub]. Root decrements the
+                * +0x1de attack cooldown once per ACTIVE frame @0x80111e38-4c (audit #6). */
         int32_t dist = re15_enemy_player_dist(e, pl); e->dog_dist = (int16_t)dist;
+        if (e->birkin_hurt_cd > 0) e->birkin_hurt_cd--;          /* +0x1de-- per hub frame @0x80111e38-4c */
+
+        /* ---------- DECIDE A[sub] (may change +0x5) ---------- */
         switch (e->sub_state_1) {
-        case 0: default:  /* APPROACH + DECIDE (A[3] 0x801123e8 / A[13] 0x80113c74): close lunge in <2000,
-                           * near attack in <2501 (@0x80112458/0x80113c88), else walk toward the player. */
-            if (e->motion != 1) re15_birkin_clip(e, 1);
-            re15_enemy_steer_point(e, pl->x, pl->z, 0x30);            /* yaw-slew 0x8001a8f8 */
-            re15_dog_advance(e, 40);                                 /* pos_advance 0x800245d8 */
-            if (pl->hit_react == 0 && dist < 2000 && re15_dog_arc(e, pl, 2000, 0x300)) {   /* -> ATTACK2 (sub 14) */
-                re15_birkin_clip(e, 5); e->sub_state_1 = 14; e->sub_state_2 = 0; e->sub_state_3 = 0; }
-            else if (pl->hit_react == 0 && dist < 2501 && re15_dog_arc(e, pl, 2501, 0x300)) {  /* -> ATTACK1 (sub 4) */
-                re15_birkin_clip(e, 4); e->sub_state_1 = 4; e->sub_state_2 = 0; e->sub_state_3 = 0; }
+        case 0:   /* A[0] idle-decide 0x80111e94: LOS bit +0x1d0&1 -> roar sub 2. (LOS proxy: in arc) */
+            if (pl->hit_react == 0 && dist < 8000 && re15_dog_arc(e, pl, 8000, 0xc0)) { e->sub_state_1 = 2; e->sub_state_2 = 0; }
+            break;
+        case 1:   /* A[1] walk-decide 0x80112024: in a804(8000,0xc0) && LOS +0x1d0&1 -> roar sub 2. */
+            if (pl->hit_react == 0 && dist < 8000 && re15_dog_arc(e, pl, 8000, 0xc0)) { e->sub_state_1 = 2; e->sub_state_2 = 0; }
+            break;
+        case 3:   /* A[3] charge/attack1/roar decide 0x801123e8 (all gated hit_react==0). */
+            if (pl->hit_react == 0) {
+                /* CHARGE (sub 7): a804(3000,0x100) && +0x1de==0 && player.hp>=81 && dist>=2501 (audit #9):
+                 *   @0x80112404-0c arc, @0x80112428 cd, @0x80112444 slti 81, @0x80112458 sltiu 0x9c5. */
+                if (dist < 3000 && re15_dog_arc(e, pl, 3000, 0x100) && e->birkin_hurt_cd == 0
+                    && pl->hp >= 81 && dist >= 2501) {
+                    e->hit_stun = 100;                            /* +0x1dc = 0x64 charge-arm @0x80112460-64 */
+                    e->sub_state_1 = 7; e->sub_state_2 = 0;
+                }
+                /* ATTACK1 (sub 4): a804(1800,0x180) && +0x1de==0 (audit #0 — NOT dist<2501/±0x300):
+                 *   @0x8011248c-94 arc(0x708,0x180), @0x801124b0-b8 cd. */
+                else if (dist < 1800 && re15_dog_arc(e, pl, 1800, 0x180) && e->birkin_hurt_cd == 0) {
+                    e->sub_state_1 = 4; e->sub_state_2 = 0;
+                }
+                /* ROAR (sub 2): dist>=7001 (sltiu 0x1b59 @0x80112510). */
+                else if (dist >= 7001) { e->sub_state_1 = 2; e->sub_state_2 = 0; }
+            }
+            break;
+        case 13:  /* A[13] attack2-decide 0x80113c74: dist<2000 && +0x1de==0 && hit_react==0 -> sub 14
+                   * (audit #4/#5/#10 — the ATTACK2 decide lives in the sub-13 regime, not sub 0). */
+            if (dist < 2000 && e->birkin_hurt_cd == 0 && pl->hit_react == 0) { e->sub_state_1 = 14; e->sub_state_2 = 0; }
+            break;
+        default: break;
+        }
+
+        /* ---------- ACT B[sub] ---------- */
+        switch (e->sub_state_1) {
+        case 0: {  /* B[0] IDLE 0x80111ee4: stand (clip 0), rng timer +0x9c=rng+59 -> WALK sub 1. */
+            if (e->sub_state_2 == 0) { re15_birkin_clip(e, 0); e->ai_timer = (int16_t)(re15_engine_rand8() + 59); e->sub_state_2 = 1; }  /* +0x9c @0x80111f04-14 */
+            re15_birkin_anim(e);
+            if (e->ai_timer > 0) e->ai_timer--;
+            if (e->ai_timer == 0) { e->sub_state_1 = 1; e->sub_state_2 = 0; }       /* -> sub 1 @0x80111f88 */
+            break;
+        }
+        case 1: {  /* B[1] WALK (slow) 0x80112124: per-frame randomized speed/slew (audit #10). */
+            if (e->sub_state_2 == 0) { re15_birkin_clip(e, 1); e->anim_frac = 7; e->sub_state_2 = 1; }
+            int16_t sp   = (int16_t)((re15_engine_rand8() & 0x3f) + 12);            /* +0x8c=(rng&0x3f)+12 @0x80112190-a4 */
+            int16_t slew = (int16_t)((re15_engine_rand8() & 0x1f) + 8);             /* +0x9e=(rng&0x1f)+8  @0x801121a8-b8 */
+            re15_enemy_steer_point(e, pl->x, pl->z, slew);                          /* 0x8001a8f8(player,+0x9e) @0x801121d4 */
+            if ((e->anim_frame % 12) != 0xb) re15_dog_advance(e, sp);              /* walker 0x800245d8(a0=0), foot-plant skip @0x80112258 */
             re15_birkin_anim(e);
             break;
-        case 4:   /* ATTACK1 near bite/claw (B[4] 0x80112840): player.hp -= 10 (@0x80112898) on the window
-                   * (+0x95<10 @0x80112854). If the hit drops the player below 50 -> GRAB1 (sub 5) @0x801128ac. */
-            re15_enemy_steer_point(e, pl->x, pl->z, 0x40);
-            if (e->sub_state_2 == 0 && e->anim_frame >= 3 && e->anim_frame < 10 && re15_dog_arc(e, pl, 2500, 0x400)) {
-                pl->hp = (int16_t)(pl->hp - 10);                    /* player.hp -= 10 @0x80112898 (no clamp) */
-                re15_audio_room_se(4); pl->hit_react |= 1; e->sub_state_2 = 1;
-                if (pl->hp < 50 && pl->hp >= 0) { re15_birkin_clip(e, 6); e->sub_state_1 = 5; e->sub_state_2 = 0; e->sub_state_3 = 0; break; }  /* -> GRAB1 */
-            }
-            if (re15_birkin_anim(e)) { e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0; }
+        }
+        case 2: {  /* B[2] ROAR 0x80112294: clip 2, SE1@frame 0x14 -> sub 3 (audit #10: +0x7==0 -> sub 3). */
+            if (e->sub_state_2 == 0) { re15_birkin_clip(e, 2); e->anim_frac = 7; e->sub_state_2 = 1; }  /* clip 2 @0x801122f0 */
+            if (e->anim_frame == 0x14) re15_audio_room_se(1);                       /* SE 1 @0x80112334-44 */
+            if (re15_birkin_anim(e)) { e->sub_state_1 = 3; e->sub_state_2 = 0; }    /* roar done -> sub 3 @0x801123c4 */
             break;
-        case 14:  /* ATTACK2 close lunge (B[14] 0x80113f00): player.hp -= 10 (@0x80113ff8), window +0x95<11. */
-            re15_enemy_steer_point(e, pl->x, pl->z, 0x40);
-            if (e->sub_state_2 == 0 && e->anim_frame >= 3 && e->anim_frame < 11 && re15_dog_arc(e, pl, 2500, 0x400)) {
-                pl->hp = (int16_t)(pl->hp - 10);                    /* player.hp -= 10 @0x80113ff8 */
-                re15_audio_room_se(4); pl->hit_react |= 1; e->sub_state_2 = 1;
-            }
-            if (re15_birkin_anim(e)) { e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0; }
+        }
+        case 3: {  /* B[3] WALK (fast) 0x801125dc: fast regime, A[3] decides the attacks above. */
+            if (e->sub_state_2 == 0) { re15_birkin_clip(e, 3); e->anim_frac = 7; e->sub_state_2 = 1; }  /* clip 3 @0x8011264c */
+            int16_t sp   = (int16_t)((re15_engine_rand8() & 0x3f) + 130);           /* +0x8c=(rng&0x3f)+130 @0x80112610 */
+            int16_t slew = (int16_t)((re15_engine_rand8() & 0x1f) + 64);            /* +0x9e=(rng&0x1f)+64  @0x80112638 */
+            re15_enemy_steer_point(e, pl->x, pl->z, slew);
+            re15_dog_advance(e, sp);
+            re15_birkin_anim(e);
             break;
-        case 5:   /* GRAB1 (A[5] 0x80112a5c, 7-phase @0x8010026c): LATCH grab-cmd DAT_800aca58=5 (PIN)
-                   * @0x80112b34 + hold (+0x9c=100), later collapse (cmd 6 @0x80112ea4). No grab hp subtract
-                   * (the throw damage is the shared cmd 5/6 FSM = faithful-line). -> back to APPROACH. */
-            re15_enemy_steer_point(e, pl->x, pl->z, 0x30);
-            if (e->sub_state_3 == 0) { s_player_grabbed = 1; pl->hit_react |= 1; e->ai_timer = 100; e->sub_state_3 = 1; re15_audio_room_se(2); }
-            else {
+        }
+        case 4: {  /* B[4] ATTACK1 0x8011275c: clip 0xc + SE3; hit frame>=10 via a804(2200,0x180); hp-10;
+                    * hp<50 -> facing grab (front sub5 / rear sub9); else SE9+knockdown+reaction-SE; recovery
+                    * clip 0xd -> sub 3 + cooldown +0x1de=0x2d (audit #1/#2/#13/#15). */
+            if (e->sub_state_2 == 0) {                                              /* phase 0 @0x801127a0 */
+                re15_birkin_clip(e, 0x0c); e->anim_frac = 7;                        /* clip 0xc @0x801127bc (NOT clip 4) */
+                re15_audio_room_se(3);                                             /* SE 3 windup @0x801127ec (NOT SE 4) */
+                e->sub_state_2 = 1;
+            } else if (e->sub_state_2 == 1) {                                       /* phase 1: strike */
+                int done = re15_birkin_anim(e);
+                /* hit ONLY frame>=10 (sltiu +0x95,0xa @0x8011284c-54 — port's old 3..9 was INVERTED) */
+                if (e->anim_frame >= 10 && pl->hit_react == 0 && dist < 2200 && re15_dog_arc(e, pl, 2200, 0x180)) {
+                    pl->hp = (int16_t)(pl->hp - 10);                               /* hp-=10 @0x80112898 */
+                    if (pl->hp < 50) {                                             /* slti 50 @0x801128ac */
+                        int rear = re15_ai_facing_aligned(e, pl);                   /* 0x8001a780 @0x801128b8 */
+                        e->sub_state_1 = (uint8_t)(rear * 4 + 5);                   /* sub = facing*4+5 = 5 or 9 @0x801128c0-d0 */
+                        e->sub_state_2 = 0; e->sub_state_3 = 0; break;
+                    }
+                    re15_audio_room_se(9);                                         /* on-hit SE 9 @0x801128d4-d8 (NOT SE 4) */
+                    pl->hit_react |= 1;                                            /* aca58=2 knockdown proxy @0x801128f0 */
+                    /* reaction-SE table @0x8011a150 via 0x80037edc @0x80112920-48 (data-driven — faithful) */
+                    e->sub_state_2 = 2;
+                }
+                if (done) e->sub_state_2 = 2;
+            } else if (e->sub_state_2 == 2) {                                       /* phase 2: play out clip 0xc */
+                if (re15_birkin_anim(e)) { re15_birkin_clip(e, 0x0d); e->anim_frac = 7; e->grab_kill_ctr = 0xa; e->sub_state_2 = 3; }  /* recovery clip 0xd @0x8011296c, +0x9e=0xa @0x801129b0 */
+            } else {                                                               /* phase 3/4: recovery -> sub 3 */
+                re15_birkin_anim(e);
+                if (e->grab_kill_ctr > 0) e->grab_kill_ctr--;                       /* +0x9e-- @0x80112a0c */
+                if (e->grab_kill_ctr == 0) {
+                    e->birkin_hurt_cd = 0x2d;                                      /* +0x1de=0x2d (45) @0x80112a20-24 */
+                    e->sub_state_1 = 3; e->sub_state_2 = 0;                        /* -> sub 3 @0x80112a30-34 */
+                }
+            }
+            break;
+        }
+        case 14: {  /* B[14] ATTACK2 0x80113e48: clip 0x17 + SE3; hit frame>=11 (limb spheres -> close-arc
+                     * proxy, OPEN); hp-10; hit -> GRAB2 sub 15; miss -> sub 13 + cooldown +0x1de=0x1e
+                     * (audit #4/#5/#13/#15). */
+            if (e->sub_state_2 == 0) {                                              /* phase 0 @0x80113e48 */
+                re15_birkin_clip(e, 0x17); e->anim_frac = 7;                        /* clip 0x17=23 @0x80113eac (NOT clip 5) */
+                re15_audio_room_se(3);                                             /* SE 3 windup @0x80113ed0 (NOT SE 4) */
+                e->sub_state_2 = 1;
+            } else if (e->sub_state_2 == 1) {
+                int done = re15_birkin_anim(e);
+                /* hit ONLY frame>=11 (sltiu +0x95,0xb @0x80113fac); limb-sphere hit -> close arc proxy (OPEN) */
+                if (e->anim_frame >= 11 && pl->hit_react == 0 && dist < 2200 && re15_dog_arc(e, pl, 2200, 0x180)) {
+                    pl->hp = (int16_t)(pl->hp - 10);                               /* hp-=10 @0x80113ff8 (no SE at the damage site) */
+                    pl->hit_react |= 1;
+                    e->sub_state_1 = 15; e->sub_state_2 = 0; e->sub_state_3 = 0;    /* hit -> GRAB2 sub 15 @0x80114004-08 */
+                    break;
+                }
+                if (done) e->sub_state_2 = 2;
+            } else {                                                               /* miss exit @0x801140d0 */
+                e->birkin_hurt_cd = 0x1e;                                          /* +0x1de=0x1e (30) @0x801140d0-d4 */
+                e->sub_state_1 = 13; e->sub_state_2 = 0;                           /* -> sub 13 regime @0x801140e0-e4 */
+            }
+            break;
+        }
+        case 5:    /* B[5] GRAB1 front 0x80112a64 (clip 0xe) */
+        case 9: {  /* B[9] GRAB1 rear  0x80112f58 (clip 0x12, aca59=1) — shared machine, variant by sub. */
+            int rear = (e->sub_state_1 == 9);
+            if (e->sub_state_2 == 0) {                                              /* LATCH phase */
+                re15_birkin_clip(e, (uint8_t)(rear ? 0x12 : 0x0e)); e->anim_frac = 7;  /* clip 0xe/0x12 @0x80112ac4 / @0x80112fb8 */
+                s_player_grabbed = 1; e->birkin_grab = 1;                          /* aca58=5 PIN @0x80112b34 / @0x8011302c */
+                re15_player_victim_latch(e, pl); g_player_victim_variant = (uint8_t)rear;  /* aca59=rear @0x80113034 */
+                pl->hit_react |= 1;                                               /* player+0x93|=1 @0x80112b80 */
+                e->rot_y = (int16_t)(((int)re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0xfff);  /* a8f8(±0x800) @0x80112b8c */
+                e->ai_timer = 100;                                                /* +0x9c escape budget @0x80112bc8 */
+                e->grab_kill_ctr = 0x32;                                          /* +0x9e HOLD timer = 50 @0x80112bd8 */
+                e->sub_state_2 = 1;
+            } else {                                                               /* HOLD/DRAIN phase */
                 s_player_grabbed = 1;
-                if (e->ai_timer > 0) e->ai_timer--;
-                if (e->ai_timer == 0) { s_player_grabbed = 0; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0; }  /* collapse -> release */
+                re15_birkin_anim(e);
+                /* hold expiry (+0x9e) OR player dead -> COLLAPSE sub 8 (cmd 6 throw/finish) @0x80112c58 */
+                if (e->grab_kill_ctr <= 0 || pl->hp < 0) { e->sub_state_1 = 8; e->sub_state_2 = 0; e->sub_state_3 = 0; break; }
+                e->grab_kill_ctr--;                                               /* +0x9e-- HOLD countdown */
+                e->ai_timer = (int16_t)(e->ai_timer - (int16_t)(1 + 100 * re15_mash_pressed()));  /* +0x9c -= 1+100*mash @0x80112c6c-9c */
+                if (e->ai_timer < 0) {                                             /* MASHED FREE -> release @0x80112cc4 */
+                    s_player_grabbed = 0; e->birkin_grab = 0;
+                    re15_player_victim_throwoff(); s_grab_mercy_timer = 0x5a;      /* aca5a=4 release @0x80112cc4 */
+                    re15_birkin_clip(e, 0x10); e->anim_frac = 7;                   /* release clip 0x10 @0x80112cd8 */
+                    e->birkin_hurt_cd = 0x3c;                                      /* +0x1de=0x3c (60) @0x80112dac */
+                    e->sub_state_1 = 3; e->sub_state_2 = 0; e->sub_state_3 = 0;     /* -> sub 3 @0x80112dbc */
+                }
             }
+            break;
+        }
+        case 8: {  /* B[8] COLLAPSE 0x80112e20: clip 0x11 + grab-cmd 6 (throw/finish) + SE 8 -> devour. */
+            s_player_grabbed = 1;
+            if (e->sub_state_2 == 0) {
+                re15_birkin_clip(e, 0x11); e->anim_frac = 7;                        /* clip 0x11 @0x80112e5c */
+                re15_audio_room_se(8);                                            /* SE 8 @0x80112ee0 */
+                re15_player_victim_devour(e);                                     /* aca58=6 devour/finish @0x80112ea4 */
+                e->sub_state_2 = 1;
+            } else if (re15_birkin_anim(e)) {                                       /* collapse played out -> release to sub 3 */
+                s_player_grabbed = 0; e->birkin_grab = 0;
+                e->birkin_hurt_cd = 0x3c;
+                e->sub_state_1 = 3; e->sub_state_2 = 0;
+            }
+            break;
+        }
+        case 15: { /* B[15] GRAB2 0x8011411c: carry-pin — clip 0x18 drag, cmd5, clip 0x19, +0x9c=100 mash,
+                    * clip 0x1a, cooldown +0x1de=0x1e -> sub 13 (audit #5). */
+            s_player_grabbed = 1;
+            if (e->sub_state_2 == 0) {
+                re15_birkin_clip(e, 0x18); e->anim_frac = 7;                        /* clip 0x18 @0x80114178 */
+                e->birkin_grab = 1; re15_player_victim_latch(e, pl); pl->hit_react |= 1;
+                e->rot_y = (int16_t)(((int)re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0xfff);
+                e->ai_timer = 100;                                                /* +0x9c mash budget @0x801142f4 */
+                e->sub_state_2 = 1;
+            } else {
+                re15_dog_advance(e, 40);                                          /* drag: pos_advance(0x66c) @0x801141e0-e4 (player X/Z follow) */
+                pl->x = e->x; pl->z = e->z;                                       /* drag playerX/Z @0x80114204/14 */
+                re15_birkin_anim(e);
+                e->ai_timer = (int16_t)(e->ai_timer - (int16_t)(1 + 100 * re15_mash_pressed()));  /* mash 0x80037024 @0x80114340 */
+                if (e->ai_timer < 0 || pl->hp < 0) {                              /* release clip 0x1a @0x801143a4 */
+                    s_player_grabbed = 0; e->birkin_grab = 0;
+                    re15_player_victim_throwoff(); s_grab_mercy_timer = 0x5a;
+                    re15_birkin_clip(e, 0x1a); e->anim_frac = 7;
+                    e->birkin_hurt_cd = 0x1e;                                      /* +0x1de=0x1e @0x8011441c-20 */
+                    e->sub_state_1 = 13; e->sub_state_2 = 0;                       /* -> sub 13 (0xd) @0x8011442c-30 */
+                }
+            }
+            break;
+        }
+        case 6: {  /* B[6] STAGGER->CHARGE 0x80114494 (audit #8): post-hurt threat pose clip 6, hold
+                    * ~120-135f, snapshot hp -> +0x1dc, break into CHARGE sub 7 on timer==0 OR front arc. */
+            if (e->sub_state_2 == 0) {                                              /* phase 0 @0x801144c4 */
+                re15_birkin_clip(e, 6); e->anim_frac = 7;                           /* clip 6 @0x801144d8 (the real stagger pose) */
+                e->ai_timer = (int16_t)((re15_engine_rand8() & 0xf) + 120);         /* +0x9c=(rng&0xf)+120 @0x8011451c-20 */
+                e->hit_stun = e->hp;                                               /* +0x1dc = +0x9a hp snapshot @0x80114530-38 */
+                e->sub_state_2 = 1;
+            }
+            re15_birkin_anim(e);
+            if (e->ai_timer > 0) e->ai_timer--;
+            if (e->ai_timer == 0 || re15_dog_arc(e, pl, 30000, 0x400)) {           /* timer==0 OR arc(0x400) @0x80114570-88 */
+                e->sub_state_1 = 7; e->sub_state_2 = 0;                            /* -> CHARGE sub 7 @0x8011459c */
+            }
+            break;
+        }
+        case 7: {  /* B[7] CHARGE 0x801145c8 (audit #9): clip 4; if +0x1dc==100 && player outside arc 0x400
+                    * -> clip 5 swipe + FX 0x0d002000 + cooldown +0x1de=45; done -> sub 3. */
+            if (e->sub_state_2 == 0) { re15_birkin_clip(e, 4); e->anim_frac = 7; e->sub_state_2 = 1; }  /* clip 4 @0x80114624 */
+            re15_enemy_steer_point(e, pl->x, pl->z, 0x30);
+            re15_dog_advance(e, 60);
+            if (e->sub_state_2 == 1 && e->hit_stun == 100 && !re15_dog_arc(e, pl, 30000, 0x400)) {  /* escalate to the swipe @0x80114668 */
+                re15_birkin_clip(e, 5); e->anim_frac = 7;                           /* clip 5 @0x80114678 */
+                /* FX 0x80019700(0x0d002000, table @0x8011a158) @0x801146d4-ec — render-side, OPEN */
+                e->birkin_hurt_cd = 0x2d;                                          /* +0x1de=45 @0x801146fc-700 */
+                e->hit_stun = 0; e->sub_state_2 = 2;
+            }
+            if (re15_birkin_anim(e)) { e->sub_state_1 = 3; e->sub_state_2 = 0; }    /* done -> sub 3 @0x8011474c */
+            break;
+        }
+        case 11: { /* B[11] TURN 0x80113538: fast-turn clip 0x16 -> sub 13 regime (audit #10). */
+            if (e->sub_state_2 == 0) { re15_birkin_clip(e, 0x16); e->anim_frac = 7; e->sub_state_2 = 1; }  /* clip 0x16 @0x80113598 */
+            re15_enemy_steer_point(e, pl->x, pl->z, 0x40);
+            if (re15_birkin_anim(e)) { e->sub_state_1 = 13; e->sub_state_2 = 0; }   /* turn done -> sub 0xd(13) @0x80113a50-54 */
+            break;
+        }
+        case 13: { /* B[13] WALK (sub-13 regime) 0x80113d3c: walk; A[13] decides ATTACK2 above. */
+            if (e->sub_state_2 == 0) { re15_birkin_clip(e, 1); e->anim_frac = 7; e->sub_state_2 = 1; }
+            re15_enemy_steer_point(e, pl->x, pl->z, (int16_t)((re15_engine_rand8() & 0x1f) + 8));
+            re15_dog_advance(e, (int16_t)((re15_engine_rand8() & 0x3f) + 12));
+            re15_birkin_anim(e);
+            break;
+        }
+        default:
+            e->sub_state_1 = 1; e->sub_state_2 = 0;                                /* unknown sub -> walk */
+            re15_birkin_anim(e);
             break;
         }
         break; }
 
-    case 2:   /* HURT (0x80114770): stagger -> resume ACTIVE at sub 6 (byte-true +0x4=0x601 @0x801147d8;
-               * the stagger clip is a +0x5 sub-dispatch = faithful-line — the HUB owns sub 6 == sub 0). */
-        e->state = 1; e->sub_state_1 = 6; e->sub_state_2 = 0; e->sub_state_3 = 0;
-        e->hit_react = (uint8_t)(e->hit_react & ~1u);
+    case 2: {  /* HURT 0x80114770 (audit #7/#8): full react clip 4 (or 7 while +0x1dc set) + gore/blood +
+                * SE 0; hits DURING an armored window are hp-neutral (snapshot restore); then STAGGER sub 6.
+                * Grab/charge subs resume at CHARGE sub 7 (0x701). */
+        if (e->sub_state_3 == 0) {                                                 /* phase 0: react clip */
+            re15_birkin_clip(e, (uint8_t)(e->hit_stun ? 7 : 4)); e->anim_frac = 7;  /* clip 4, or 7 if +0x1dc @0x801148c8/e8 */
+            e->hit_react = (uint8_t)(e->hit_react | 2);                            /* gore flag +0x93|=2 @0x801148a4 */
+            re15_audio_room_se(0);                                                 /* SE 0 @0x801149a0 */
+            /* blood FX 0x80019700 @0x80114998 — render-side, OPEN */
+            e->sub_state_3 = 1;
+        }
+        if (re15_birkin_anim(e)) {                                                 /* react anim done -> STAGGER sub 6 (0x601 @0x801149fc) */
+            e->state = 1;
+            if (e->hit_stun) { e->hit_stun = 100; e->sub_state_1 = 7; }            /* grab/charge hurt -> CHARGE sub 7 @0x80114a1c-2c */
+            else e->sub_state_1 = 6;                                               /* normal hurt -> STAGGER sub 6 */
+            e->sub_state_2 = 0; e->sub_state_3 = 0;
+            e->hit_react = (uint8_t)(e->hit_react & ~1u);
+        }
+        break;
+    }
+
+    case 3:   /* DEATH 0x80114cb0 (audit #12): two-stage. Phase 0/1 fall clip 8 (gib clip 9 if +0x93&0x80)
+               * + blood FX + SE 2, SE 7 @frame 0x18 -> phase 2 settle clip 0xa (0xb if gore +0x93&2) ->
+               * CORPSE (state 7). */
+        switch (e->sub_state_3) {
+        case 0:   /* phase 0: fall/gib clip + SE 2 */
+            re15_birkin_clip(e, (uint8_t)((e->hit_react & 0x80) ? 9 : 8)); e->anim_frac = 7;  /* clip 8 / gib 9 @0x80114d28-50 */
+            re15_audio_room_se(2);                                                 /* SE 2 @0x80114e04 */
+            /* blood FX 0x80019700 @0x80114dfc — render-side, OPEN */
+            e->sub_state_3 = 1;
+            break;
+        case 1:   /* phase 1: play the fall; SE 7 @frame 0x18 -> phase 2 */
+            if (e->anim_frame == 0x18) re15_audio_room_se(7);                       /* SE 7 @0x80114ee4-e8 */
+            if (re15_birkin_anim(e)) e->sub_state_3 = 2;
+            break;
+        case 2:   /* phase 2: settle clip 0xa (0xb if gore) */
+            re15_birkin_clip(e, (uint8_t)((e->hit_react & 2) ? 0x0b : 0x0a)); e->anim_frac = 7;  /* clip 0xa/0xb @0x80114f18-40 */
+            e->sub_state_3 = 3;
+            break;
+        default:  /* phase 3/4: play settle -> CORPSE */
+            if (re15_birkin_anim(e)) { e->state = 7; e->ai_timer = 0x5a; e->sub_state_3 = 0; }  /* -> state 7, corpse fade 90f @0x80114fcc-d0 / @0x80115b1c */
+            break;
+        }
         break;
 
-    case 3:   /* DEATH (0x80114c68 -> single handler 0x80114cb0): play the topple clip 8 (+0x94=8
-               * @0x80114d28, +0x93|=2 gore @0x80114d08) to its end -> CORPSE. */
-        if (e->motion != 8) re15_birkin_clip(e, 8);        /* death clip 8 (generic bank clip/anim) */
-        if (re15_birkin_anim(e)) { e->state = 7; e->sub_state_3 = 0; }
+    case 4:   /* EMERGE 0x80114fe4 (audit #11): variant clips 0x1c/0x1d (sub0/grid-0x41) & 0xa (sub2) —
+               * NOT clip 0x10 (the GRAB1 release clip). sub_state_1 = the emerge variant from INIT. */
+        if (e->sub_state_2 == 0) {
+            uint8_t clip = (e->sub_state_1 == 2) ? 0x0a                             /* sub2 0x801155ac: clip 0xa @0x8011569c + 8x dust FX (OPEN) */
+                         : (e->sub_state_1 == 1) ? 0x1d                             /* grid-0x41 override: clip 0x1d @0x801150e4 */
+                         :                          0x1c;                           /* sub0 0x8011502c: clip 0x1c @0x801150c0 */
+            re15_birkin_clip(e, clip); e->anim_frac = 7;
+            e->sub_state_2 = 1;
+        }
+        if (re15_birkin_anim(e)) { e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0; }  /* -> ACTIVE (0x101) */
         break;
 
-    case 4:   /* EMERGE (0x80114fe4, state-4 sub-table @0x8011a270): play the emerge anim (sub2 0x801155ac
-               * fires 8x FX-spawn dust) -> go ACTIVE (+0x4=0x101). Exact emerge clip = faithful-line. */
-        if (e->motion != 0x10) re15_birkin_clip(e, 0x10);
-        if (re15_birkin_anim(e)) { e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0; }
-        break;
-
-    case 7:   /* CORPSE: settle, inert */
+    case 7:   /* CORPSE (state table [7] 0x80115af0): 90-frame timer then inert. The +0xc4/+0xec tint and
+               * +0xbc/+0xbe sink (@0x80115b6c-b0) are render-side (same channel as zombie-girl L4608). */
+        if (e->ai_timer > 0) e->ai_timer--;                                        /* +0x9c-- corpse fade @0x80115b1c */
         re15_birkin_anim(e);
         break;
 
