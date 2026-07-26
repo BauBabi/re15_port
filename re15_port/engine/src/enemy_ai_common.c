@@ -6650,13 +6650,41 @@ static void re15_adult_spider_ai_tick(int slot)
 }
 
 /* ============================ COCKROACH (type 0x29, EM029) — STAGE3 ========================= *
- * Byte-true 0x80110b00 family (STAGE3.BIN; workflow wf_066cfe96-fc2, adversarially verified). A small
- * MAGGOT-LIKE ground creature: root 0x80110b00 dispatches +0x4 via @0x8011eca4 (16 states) -> shared
- * body-tail. The ACTIVE brain (state[1] 0x8011101c) is a two-table A/B brain (A decision @0x8011ecc4 +
- * B movement @0x8011ed04 on +0x5, like the maggot). It scurries TOWARD the player (no flee, no swarm) and
- * deals DIRECT player.hp damage: BITE -5 (clip 0x12 @0x80111f60) + HEAVY -10 (clip 0x13 @0x801122ac).
- * WAVE 1: INIT + idle/approach/scurry chase + bite/heavy + killable (HURT clip 7 / DEATH clip 0xe /
- * CORPSE). DEFERRED (cited): the exact scurry speed, the lunge sub-states 8/9, the -500 overwhelm attack. */
+ * THOROUGH byte-true rebuild of the 0x80110b00 family (STAGE3.BIN, overlay base 0x80100000; audit
+ * wf_efd92a2c cockroach). A small flying scurrier — NOT a "no-flee" maggot: after a survived hit it
+ * LEAPS/FLIES AWAY (subs 7/9). Root 0x80110b00 dispatches +0x4 via the 8-entry state table @0x8011eca4
+ * ([0]=INIT@0x80110c98 [1]=ACTIVE@0x8011101c [2]=HURT@0x80114790 [3]=DEATH@0x80114fb4 [4]=[5]=0x80115734
+ * [6]=0x80116228 [7]=CORPSE@0x80115a6c). The ACTIVE brain is a two-table A/B FSM: decide A[+0x5]@0x8011ecc4
+ * then act B[+0x5]@0x8011ed04. It deals DIRECT player.hp damage: BITE -5 (clip 0x12) + HEAVY -10 (clip 0x13).
+ *
+ * State word +0x4 = {state(+4), sub(+5), phase(+6=sub_state_2), sighted-flag(+7=sub_state_3)}. The +0x7
+ * SIGHTED/BLIND flag selects the walk clip (5 sighted / 4 blind), the root-motion window and the SE frames.
+ * The +0x1dc attack cooldown (dog_atk_cd) decrements ONCE per ACTIVE frame in the brain tail (@0x801111c4),
+ * NOT per-substate. LOS is a LATCHED bit (+0x1d0 roach_los): only a 0/1 probe verdict updates it (@0x8011105c).
+ *
+ * SPAWN behavior comes from the grid/behavior byte (+0x9 grid_id): beh&1 = DORMANT (spawn into state1 sub1
+ * sleep, wake to sub 2); beh&2 sets roach_beh2 (HURT-exit -> sub 5); INIT sets roach_esc(+0x1e3)=1 default,
+ * cleared by beh&4 (HURT-exit -> sub 9 fly-away). All shipped roaches (beh 0x00/0x61) keep esc=1 -> the
+ * DEFAULT post-hurt path is the sub-9 fly-away escape.
+ *
+ * HONEST-OPEN (subsystems the port lacks wholesale; exact bytes cited, never faked):
+ *  - Locator-bone root motion FUN_80115b68 drives the APPROACH (sub 3) forward speed (window 0x18 sighted /
+ *    0x29 blind); the port applies the byte-true per-frame clip root delta via the loaded EM029 bank
+ *    (re15_clip_root_motion_delta), which is exact IN-GAME but displaces nothing when the bank is absent —
+ *    exact approach speed is the locator subsystem. The SCURRY (sub 4) uses the byte-true additive +0x8c
+ *    speed (180-211/frame) via re15_dog_advance and is pixel-exact.
+ *  - Attack-box overlap 0x8001bff8 (skeletal part spheres: BITE part+1612 r=1000; HEAVY parts+1096/+1784
+ *    r=800) drives every connect; the port proxies it with re15_dog_arc (dist+cone), as at every other
+ *    melee site. The window frames, damage, lockout and SE ids are byte-true; only the hit geometry is a proxy.
+ *  - Flight subsystem (subs 7/8/9): the leap launch (+0x8c=(rng&0x1f)+200 @0x801124f8), airborne latch
+ *    (+0x1e0), wall-hit -> sub-9 handoff and the fly-then-land -> idle FSM ARE ported; the flight-MODEL swap
+ *    (+0x78 = @0x8011ec48 @0x80112e88), the ballistic helper 0x8001c1a4 (gravity -60) and the "flee to a
+ *    ROOM point" nav-steer (0x80019700 from @0x8011ec84) are render/nav subsystems -> forward crow_speed proxy.
+ *    The A[4] leap-escape extra gates (aca58==0x701 || +0x1d6==0 || 0x8001a9cc(0x20)==0 || 0x8001a780==0)
+ *    are the aca58 player-cmd / narrow-arc subsystems, proxied by los && far && rng&1.
+ *  - Blood/gore FX (0x80019700 @0x80115184/0x80114960) + the corpse colour-dim (+0xc4/+0xec masked
+ *    0xff000000|0x00ffff38, pool spread +0xbc/+0xbe) are render-side; the corpse flags |0x2|0x40 and the
+ *    0x5a fade counter ARE ported (audio SE calls ARE ported). */
 static const uint16_t s_roach_hp_row[16] =      /* HP table @0x8011d6e8 (base 0x8011d1c8 + 0x29*0x20) */
     { 81,109,97,83,99,113,87,101,117,89,91,103,121,93,105,95 };   /* hp = row[rng()&0xf] = 81-121 */
 static const uint8_t s_roach_clip_len[32] =     /* EM029 bank0 dir[1] EDD clip frame-counts (32 clips) */
@@ -6676,81 +6704,168 @@ static void re15_cockroach_ai_tick(int slot)
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
 
     switch (e->state) {
-    case 0:   /* INIT 0x80110c98: -> ACTIVE, HP row, idle clip 0x16, steer=player */
+    case 0:   /* INIT 0x80110c98/0x80110cbc: -> ACTIVE, HP row, idle clip 0x16, grid-nibble behavior */
         if (e->hp <= 0) e->hp = (int16_t)s_roach_hp_row[re15_engine_rand8() & 0xf];   /* +0x9a, HP 81-121 */
         e->motion = 0x16; e->anim_frame = 0; e->anim_frac = 0; e->hit_react = 0;      /* clip 0x16 @0x80111310 */
         e->steer_x = (int16_t)pl->x; e->steer_z = (int16_t)pl->z;
         e->ai_timer = 0; e->dog_atk_cd = 0; e->dog_dist = 0;
-        e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;
+        e->roach_los = 0; e->roach_air = 0; e->roach_fade = 0;
+        e->roach_esc  = 1;                                                            /* +0x1e3 = 1 default @0x80110e18 (sb a0,483; a0=1) */
+        if (e->grid_id & 4) e->roach_esc = 0;                                         /* cleared by beh&4 @0x80110e28-3c */
+        e->roach_beh2 = (uint8_t)((e->grid_id & 2) ? 1 : 0);                          /* +0x1e2 = beh&2 (HURT-exit sub 5) */
+        e->state = 1; e->sub_state_2 = 0; e->sub_state_3 = 0;
+        e->sub_state_1 = (uint8_t)((e->grid_id & 1) ? 1 : 0);                         /* beh&1 -> state1 SUB 1 dormant @0x80110cbc; else sub 0 */
         break;
 
-    case 1: {  /* ACTIVE two-table A/B brain 0x8011101c (A decision @0x8011ecc4 + B movement @0x8011ed04) */
-        int los = re15_enemy_los_probe(slot, e, pl);          /* 0x8001bc08 -> +0x1d0/+0x1d8 */
+    case 1: {  /* ACTIVE two-table A/B brain 0x8011101c (A decide @0x8011ecc4 + B act @0x8011ed04 on +0x5) */
+        int r = re15_enemy_los_probe(slot, e, pl);            /* 0x8001bc08 @0x8011101c -> +0x1d8 */
+        if ((r >> 1) == 0) e->roach_los = (uint8_t)(r & 1);   /* only a 0/1 verdict LATCHES +0x1d0 @0x8011105c-88 */
+        int los = e->roach_los;                               /* every decision reads the LATCHED bit @0x80111250 */
         int32_t dist = re15_enemy_player_dist(e, pl);         /* SquareRoot0 -> +0x1d4 */
         e->dog_dist = (int16_t)dist;
         switch (e->sub_state_1) {
-        case 0: case 1:  /* A[0/1] idle (clip 0x16) + decision @0x80111220 */
-            if ((dist < 5000 && los != 0) || dist < 3000) { re15_dog_sub(e, 3); break; }   /* -> APPROACH */
-            if (e->sub_state_2 == 0) { e->ai_timer = (int16_t)(re15_engine_rand8() + 0x3b); re15_roach_clip(e, 0x16); e->sub_state_2 = 1; }  /* idle timer rng+59 */
-            else if (e->ai_timer-- <= 0) { re15_dog_sub(e, 3); }
+        case 0:  /* A[0] idle 0x80111220 + B[0] 0x80111ee4: clip 0x16 */
+            if (e->dog_atk_cd == 0) {                                                 /* +0x1dc!=0 freezes ALL idle decisions @0x8011122c */
+                if (dist < 0x1388 && los)                       { re15_dog_sub(e, 3); e->sub_state_3 = 0; break; }   /* sighted engage @0x80111264 (+0x7=0) */
+                if (dist < 0x1770 && re15_dog_player_aiming())  { re15_dog_sub(e, 4); break; }                       /* aca58==0x701 -> SCURRY @0x80111280 */
+                if (dist < 0xbb8)                               { re15_dog_sub(e, 3); e->sub_state_3 = 1; break; }   /* blind close engage @0x801112e0 (+0x7=1) */
+                if (e->sub_state_2 == 0) { re15_roach_clip(e, 0x16); e->ai_timer = (int16_t)(re15_engine_rand8() + 0x3b); e->sub_state_2 = 1; }  /* idle timer rng+59 */
+                else if (--e->ai_timer <= 0) { re15_dog_sub(e, 3); e->sub_state_3 = 1; break; }                     /* timer expiry -> approach @0x801113d0 */
+            }
             re15_roach_anim(e);
             break;
-        case 3:  /* A[3] approach-walk (clip 4, steer only) + decision @0x801117d8 */
-            if (e->dog_atk_cd) e->dog_atk_cd--;               /* +0x1dc lockout */
-            if (e->dog_atk_cd == 0 && pl->hit_react == 0 && re15_dog_arc(e, pl, 3000, 0x180)) {  /* in range 3000/384 -> BITE */
+        case 1:  /* B[1] DORMANT sleep 0x80111500 (clip 0) + A[1] wake decision 0x80111404 */
+            if (e->sub_state_2 == 0) { re15_roach_clip(e, 0); e->sub_state_2 = 1; }   /* sleep clip 0 (sb zero,148 @0x80111554) */
+            if (dist < 0x1388 && los)                      { e->sub_state_3 = 0; re15_dog_sub(e, 2); break; }   /* wake sighted @0x80111404 (+0x7=0) */
+            if (dist < 0x1770 && re15_dog_player_aiming()) { e->sub_state_3 = 1; re15_dog_sub(e, 2); break; }   /* wake aim (+0x7=1) */
+            if (dist < 0xbb8)                              { e->sub_state_3 = 2; re15_dog_sub(e, 2); break; }   /* wake close (+0x7=2) */
+            re15_roach_anim(e);
+            break;
+        case 2: {  /* B[2] WAKE 0x801115fc: wake clip {3,2,1}[+0x7] + SE(3)@frame 0x1d -> approach sub 3 */
+            static const uint8_t wake_clip[3] = { 3, 2, 1 };                          /* @0x801116b4-c8 by +0x7 */
+            if (e->sub_state_2 == 0) { re15_roach_clip(e, wake_clip[e->sub_state_3 < 3 ? e->sub_state_3 : 0]); e->sub_state_2 = 1; }
+            if (e->sub_state_3 == 0 && e->anim_frame == 0x1d) re15_audio_room_se(3);  /* SE(3) @0x801116e0-fc (+0x7==0 variant) */
+            if (re15_roach_anim(e)) { re15_dog_sub(e, 3); e->sub_state_3 = 1; }        /* wake done -> approach @0x80111744-c4 */
+            break;
+        }
+        case 3: {  /* A[3] decide 0x801117d8 + B[3] APPROACH 0x80111910: clip 5 sighted / 4 blind, locator root-motion */
+            if (e->dog_atk_cd == 0 && pl->hit_react == 0 && re15_dog_arc(e, pl, 3000, 0x180)) {   /* in range -> BITE */
                 re15_roach_clip(e, 0x12); re15_dog_sub(e, 5); break; }
-            if (dist >= 6001 && los != 0) { re15_dog_sub(e, 4); break; }   /* far + LOS -> fast SCURRY */
-            if (e->sub_state_2 == 0) { re15_roach_clip(e, 4); e->sub_state_2 = 1; }
-            re15_enemy_steer_point(e, pl->x, pl->z, 0x20);    /* steer toward player (clip root-motion advance) */
-            re15_dog_advance(e, 30);                          /* faithful root-motion advance */
-            re15_roach_anim(e);
+            if (dist >= 6001 && los) { re15_dog_sub(e, 4); break; }                    /* far + LOS -> fast SCURRY */
+            if (e->sub_state_2 == 0) {
+                re15_roach_clip(e, 4);                                                 /* clip 4 (ori 0x4; sb 148 @0x8011193c) */
+                if (e->sub_state_3 == 0) re15_roach_clip(e, 5);                        /* clip 5 when +0x7==0 sighted @0x8011195c */
+                e->sub_state_2 = 1;
+            }
+            re15_enemy_steer_point(e, pl->x, pl->z, (int16_t)((re15_engine_rand8() & 0x1f) + 6));  /* turn = (rng&0x1f)+6 @0x801119a4 */
+            { int win = (e->sub_state_3 == 0) ? 0x18 : 0x29;                           /* root-motion / SE window @0x80111a18/64 */
+              if (e->anim_frame == 1 || e->anim_frame == (uint32_t)win) re15_audio_room_se(8); }  /* footstep SE(8) @0x80111a44-a8 */
+            { int fr_prev = (int)e->anim_frame;                                        /* locator root-motion 0x80115b68 (OPEN: exact speed = EM029 locator bank) */
+              re15_enemy_bank_t *bank = re15_enemy_find(e->type);
+              re15_roach_anim(e);
+              if (bank) re15_clip_root_motion_delta(e, &bank->skel, &bank->anim, (int)e->motion, (int)e->anim_frame, fr_prev); }
             break;
-        case 4:  /* A[4] fast forward scurry (clip 6, pos_advance @+0x8c) + decision @0x80111ac0 */
-            if (e->dog_atk_cd) e->dog_atk_cd--;
-            if (e->dog_atk_cd == 0 && pl->hit_react == 0 && re15_dog_arc(e, pl, 4000, 0xc0)) {   /* in range 4000/192 -> HEAVY */
+        }
+        case 4:  /* A[4] decide 0x80111ac0 + B[4] SCURRY 0x80111c08: clip 6, +0x8c re-rolled 180-211 EVERY frame */
+            if (e->dog_atk_cd == 0 && pl->hit_react == 0 && re15_dog_arc(e, pl, 4000, 0xc0)) {   /* in range -> HEAVY */
                 re15_roach_clip(e, 0x13); re15_dog_sub(e, 6); break; }
-            if (e->sub_state_2 == 0) { re15_roach_clip(e, 6); e->crow_speed = (int16_t)((re15_engine_rand8() & 0x1f) + 0xb4); e->sub_state_2 = 1; }  /* speed rng+180 @0x80111c08 */
-            re15_enemy_steer_point(e, pl->x, pl->z, 0x40);
-            re15_dog_advance(e, e->crow_speed >> 3);          /* pos_advance @speed +0x8c (faithful scale) */
+            if (los && dist >= 0x1771 && (re15_engine_rand8() & 1)) { re15_dog_sub(e, 7); break; }  /* leap-escape gate @0x80111b30-d0 (extra gates OPEN) */
+            if (e->sub_state_2 == 0) { re15_roach_clip(e, 6); e->sub_state_2 = 1; }
+            e->crow_speed = (int16_t)((re15_engine_rand8() & 0x1f) + 180);             /* +0x8c=180..211 re-rolled EVERY tick @0x80111c5c-78 */
+            re15_enemy_steer_point(e, pl->x, pl->z, (int16_t)((re15_engine_rand8() & 0x1f) + 64));  /* +0x9e=(rng&0x1f)+64 @0x80111c7c */
+            if (((int)e->anim_frame % 13) == 1) re15_audio_room_se(8);                 /* footstep SE(8) every 13th frame @0x80111d04-44 */
+            re15_dog_advance(e, e->crow_speed);                                        /* pos_advance +0x8c UNSHIFTED (walker @0x800245f0) @0x80111d48 */
             re15_roach_anim(e);
             break;
-        case 5:  /* B[5] BITE (clip 0x12): player.hp -= 5 on the damage window @0x80111d68 */
-            if (e->anim_frame >= 0x0c && e->anim_frame <= 0x0f && pl->hit_react == 0 && re15_dog_arc(e, pl, 2000, 0x180)) {
-                if (e->anim_frame == 0x0c) {
-                    pl->hp = (int16_t)(pl->hp - 5);           /* player.hp -= 5 @0x80111f60 */
-                    re15_audio_room_se(5); pl->hit_react |= 1; e->dog_atk_cd = 0x2d;   /* Se5 + lockout 45 @0x80111f74 */
+        case 5:  /* B[5] BITE 0x80111d68 (clip 0x12): part-box connect on ANY of frames 12-15 -> -5 */
+            if (e->anim_frame == 0x0b) re15_audio_room_se(9);                          /* windup SE(9) @0x80111e90-a0 */
+            if (e->anim_frame >= 0x0c && e->anim_frame <= 0x0f && pl->hit_react == 0
+                && re15_dog_arc(e, pl, 1000, 0x400)) {                                 /* box part+1612 radius 0x3e8=1000 (proxy) @0x80111eb8 */
+                pl->hp = (int16_t)(pl->hp - 5);                                        /* player.hp -= 5 @0x80111f60 */
+                re15_audio_room_se(5);                                                 /* SE(5) @0x80111f4c */
+                pl->hit_react |= 1; e->dog_atk_cd = 0x2d;                              /* lockout +0x1dc=0x2d */
+            }
+            if (re15_roach_anim(e)) { re15_dog_sub(e, 3); e->sub_state_3 = 1; if (e->dog_atk_cd == 0) e->dog_atk_cd = 0x14; }
+            break;
+        case 6:  /* B[6] HEAVY 0x80112044 (clip 0x13): window {21,22,23,24,33,34} -> -10; chains to BITE when in-arc */
+            if (e->anim_frame == 0x14) re15_audio_room_se(9);                          /* windup SE(9) @0x80112174-84 */
+            { int f = (int)e->anim_frame;
+              int in_window = (f >= 0x15 && f <= 0x18) || (f == 0x21) || (f == 0x22);  /* table @0x8011ed4c = {21,22,23,24,33,34} */
+              if (in_window && pl->hit_react == 0 && re15_dog_arc(e, pl, 800, 0x400)) {/* parts+1096/+1784 radius 0x320=800 (proxy) @0x801121e8/0x80112208 */
+                  pl->hp = (int16_t)(pl->hp - 10);                                     /* player.hp -= 10 @0x801122b4 */
+                  re15_audio_room_se(4);                                               /* SE(4) @0x80112290 (NOT 5) */
+                  pl->hit_react |= 1; e->dog_atk_cd = 0x2d;                            /* lockout 0x2d @0x801122bc */
+              } }
+            if (re15_roach_anim(e)) {                                                  /* B[6] phase 2 @0x8011232c */
+                if (pl->hit_react == 0 && e->dog_atk_cd == 0 && re15_dog_arc(e, pl, 4000, 0x180)) {
+                    re15_roach_clip(e, 0x12); re15_dog_sub(e, 5);                      /* still in arc & cd clear -> immediate follow-up BITE @0x80112374 */
+                } else {
+                    re15_dog_sub(e, 3); e->sub_state_3 = 1;
+                    if (e->dog_atk_cd == 0) e->dog_atk_cd = 0x14;                      /* cd=0x14 ONLY on the out-of-arc path @0x80112398 */
                 }
             }
-            if (re15_roach_anim(e)) { re15_dog_sub(e, 3); if (e->dog_atk_cd == 0) e->dog_atk_cd = 0x14; }
             break;
-        case 6:  /* HEAVY (clip 0x13): player.hp -= 10 @0x801122ac */
-            if (e->anim_frame >= 0x0c && e->anim_frame <= 0x11 && pl->hit_react == 0 && re15_dog_arc(e, pl, 2000, 0xc0)) {
-                if (e->anim_frame == 0x0c) {
-                    pl->hp = (int16_t)(pl->hp - 10);          /* player.hp -= 10 @0x801122ac */
-                    re15_audio_room_se(5); pl->hit_react |= 1; e->dog_atk_cd = 0x2d;
-                }
+        case 7:  /* B[7] LEAP-ESCAPE 0x801123fc: clip 0x14 launch; wall-hit -> flight sub 9 */
+            if (e->sub_state_2 == 0) { re15_roach_clip(e, 0x14); e->sub_state_2 = 1; }  /* clip 0x14 @0x80112460 */
+            if (e->anim_frame == 0xa) {                                                 /* launch frame @0x801124f8 */
+                e->crow_speed = (int16_t)((re15_engine_rand8() & 0x1f) + 200);          /* +0x8c=(rng&0x1f)+200 @0x801124f8 */
+                e->roach_air = 1; e->hit_react |= 1;                                    /* airborne +0x1e0=1 @0x8011250c, +0x93|=1 */
             }
-            if (re15_roach_anim(e)) { re15_dog_sub(e, 3); if (e->dog_atk_cd == 0) e->dog_atk_cd = 0x14; }
+            if (e->roach_air) re15_dog_advance(e, e->crow_speed);                       /* ballistic forward (OPEN: room-point steer 0x8001c1a4 gravity -60) */
+            if (e->roach_air && re15_dog_blocked(e)) { e->state = 2; re15_dog_sub(e, 9); e->roach_air = 0; break; }  /* wall-hit +0x93&0x40 -> state2 sub9 @0x8011254c-7c */
+            if (re15_roach_anim(e)) { re15_dog_sub(e, 9); }                             /* leap done -> flight sub 9 */
             break;
-        default:  /* reorient/lunge sub-states (7/8/9) = deferred -> resume the brain */
+        case 8:  /* B[8] LEAP variant 0x80112784 — same escape family (OPEN: exact variant divergence) */
+            if (e->sub_state_2 == 0) { re15_roach_clip(e, 0x14); e->sub_state_2 = 1; }
+            if (e->roach_air) re15_dog_advance(e, e->crow_speed);
+            if (re15_roach_anim(e)) { re15_dog_sub(e, 9); }
+            break;
+        case 9:  /* B[9] FLIGHT-ESCAPE 0x80112d48: clip 0xc take-off, fly, then land -> resume idle */
+            if (e->sub_state_2 == 0) { re15_roach_clip(e, 0x0c); e->sub_state_2 = 1; }  /* take-off clip 0xc @0x80112da0 */
+            if (e->anim_frame == 0x10) e->roach_air = 1;                                /* airborne +0x1e0=1 @0x80112e78 (OPEN: flight-model swap @0x8011ec48 -> +0x78) */
+            if (e->roach_air && e->crow_speed > 0) re15_dog_advance(e, e->crow_speed);  /* OPEN: flight nav/ballistic; forward crow_speed proxy */
+            if (re15_roach_anim(e)) { e->roach_air = 0; re15_dog_sub(e, 0); }           /* land -> resume idle */
+            break;
+        default:
             re15_dog_sub(e, 0); re15_roach_anim(e);
             break;
         }
+        if (e->dog_atk_cd) e->dog_atk_cd--;                                            /* +0x1dc-- ONCE per ACTIVE frame (brain tail @0x801111c4-d4) */
         break;
     }
 
-    case 2:   /* HURT 0x80114790: flinch clip 7 (12f) + Se(2) -> ACTIVE */
-        if (e->sub_state_3 == 0) { re15_roach_clip(e, 7); re15_audio_room_se(2); e->sub_state_3 = 1; }  /* @0x801148c4 */
-        else if (re15_roach_anim(e)) { e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0; e->hit_react = (uint8_t)(e->hit_react & ~1u); }
+    case 2:   /* HURT 0x80114790: flinch (clip 7, airborne clip 8) + Se(2) -> FLY-AWAY escape (sub 7/5/9) */
+        if (e->sub_state_3 == 0) {                                                    /* phase 0 @0x8011484c */
+            re15_roach_clip(e, e->roach_air ? 8 : 7); re15_audio_room_se(2);          /* flinch clip 7 / airborne 8 @0x80114a40 */
+            e->sub_state_3 = 1;                                                        /* OPEN: blood FX 0x80019700 @0x80114960 */
+        } else if (re15_roach_anim(e)) {                                              /* phase 2 recovery @0x801149ac */
+            e->hit_react = 0;                                                          /* clears the WHOLE +0x93 (sb zero,147 @0x801149ac), not just bit0 */
+            e->state = 1; e->sub_state_2 = 0; e->sub_state_3 = 0;
+            uint8_t nsub = 7;                                                          /* default sub=7 leap @0x801149c8 */
+            if (e->roach_beh2) nsub = 5;                                              /* sub=5 if +0x1e2 @0x801149fc-a0c */
+            if (e->roach_esc)  nsub = 9;                                              /* sub=9 fly-away if +0x1e3 @0x80114a1c-2c (default) */
+            e->sub_state_1 = nsub;
+        }
         break;
 
-    case 3:   /* DEATH 0x80114fb4: collapse clip 0xe (70f) + Se(7) -> CORPSE (state 7) */
-        if (e->sub_state_3 == 0) { re15_roach_clip(e, 0x0e); re15_audio_room_se(7); e->hit_react |= 2; e->sub_state_3 = 1; }  /* @0x801150e8 */
-        else if (re15_roach_anim(e)) { e->state = 7; e->sub_state_3 = 0; }
+    case 3:   /* DEATH 0x80114fb4: collapse clip 0xe (70f) + Se(7) + SE(1)@frame 0x3d -> CORPSE (state 7) */
+        if (e->sub_state_3 == 0) {                                                    /* phase 0 @0x801150e8 */
+            re15_roach_clip(e, 0x0e); re15_audio_room_se(7); e->hit_react |= 2;       /* clip 0xe @0x801150e8 (OPEN: blood 0x80019700 @0x80115184) */
+            e->sub_state_3 = 1;
+        } else {
+            if (e->anim_frame == 0x3d) re15_audio_room_se(1);                         /* SE(1) at frame 61 @0x80115230-40 */
+            if (re15_roach_anim(e)) { e->state = 7; e->sub_state_3 = 0; e->roach_fade = 0; }
+        }
         break;
 
-    case 7:   /* CORPSE 0x80115a6c: hold the final death pose, sink/fade, inert */
-        re15_roach_anim(e);
+    case 7:   /* CORPSE 0x80115a6c: flags|0x2|0x40, 0x5a fade counter, then inert */
+        if (e->sub_state_3 == 0) {                                                    /* phase 0 @0x80115a98 */
+            e->roach_fade = 0x5a;                                                      /* +0x9e=90 fade counter @0x80115a98 */
+            e->flags |= (uint8_t)(0x2 | 0x40);                                         /* entity flags |=0x2 @0x80115ac4, |=0x40 @0x80115ae0 (OPEN: colour dim +0xc4/+0xec) */
+            e->sub_state_3 = 1;
+        }
+        if (e->roach_fade > 0) { e->roach_fade--; re15_roach_anim(e); }               /* fade + pool spread (spread OPEN); expiry -> inert */
+        else e->sub_state_3 = 2;                                                       /* phase 2 inert — stop ticking @0x80115b58 */
         break;
 
     default:
@@ -7984,8 +8099,9 @@ void re15_enemy_ai_run_all(int combat_active)
                 e->x = nx; e->z = nz;
             }
         }
-        else if (t == 0x29) {   /* COCKROACH (type 0x29, EM029, STAGE3) — small maggot-like scurrier (Wave 1).
-                                 * Scurries toward the player + bites -> SCA wall-clamp after the tick. */
+        else if (t == 0x29) {   /* COCKROACH (type 0x29, EM029, STAGE3) — small FLYING scurrier. Root 0x80110b00
+                                 * dispatches +0x4 via the 8-entry table @0x8011eca4. Scurries toward the player +
+                                 * bites, and LEAPS/FLIES AWAY after a survived hit -> SCA wall-clamp after the tick. */
             int32_t rc_ox = e->x, rc_oz = e->z;
             re15_cockroach_ai_tick(s);
             re15_enemy_body_push_tail(s, e);

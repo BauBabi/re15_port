@@ -385,6 +385,16 @@ typedef struct {
                               * (aca58 is engine-global, and run_all clears s_player_grabbed each frame): set on
                               * a claw connect, re-asserts s_player_grabbed each tick so the HUB DECIDE grab-tail
                               * (which gates on aca58==5) is reachable; cleared on throw/HURT/death. */
+
+    /* ---- Cockroach (type 0x29, EM029) — byte-true 0x80110b00 family (STAGE3.BIN; audit wf_efd92a2c
+     * cockroach). Dedicated fields for the PSX offsets that overlap the shared work bytes above. The
+     * roach reuses dog_atk_cd(+0x1dc attack cooldown), crow_speed(+0x8c scurry speed), ai_timer(+0x9c idle
+     * timer), sub_state_2(+0x6 phase byte) and sub_state_3(+0x7 sighted/blind flag). */
+    uint8_t  roach_los;      /* +0x1d0 bit0: LATCHED LOS — only a 0/1 probe result updates it (@0x8011105c) */
+    uint8_t  roach_air;      /* +0x1e0: airborne latch (leap/flight subs 7/9) (@0x8011250c) */
+    uint8_t  roach_beh2;     /* +0x1e2: behavior&2 -> HURT-exit sub 5 (INIT clear @0x80110e2x; set by beh&2) */
+    uint8_t  roach_esc;      /* +0x1e3: default 1 (cleared by beh&4) -> HURT-exit sub 9 fly-away (@0x80110e18) */
+    int16_t  roach_fade;     /* +0x9e: corpse fade counter, seeded 0x5a (@0x80115a98) */
 } re15_actor_t;
 
 extern re15_actor_t g_actors[RE15_ACTOR_MAX];

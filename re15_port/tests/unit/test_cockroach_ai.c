@@ -46,20 +46,27 @@ int main(void)
     if (e->motion != 0x16) { fprintf(stderr, "FAIL(1): INIT idle clip must be 0x16, got %d\n", e->motion); fail = 1; }
     printf("  (1) INIT: state->1, hp=%d (row 81-121), clip=0x%x\n", e->hp, e->motion);
 
-    /* (2) CHASE toward the player */
+    /* (2) CHASE: engage nearby, then verify the byte-true SCURRY (sub 4, +0x8c speed 180-211/frame,
+     *     @0x80111c5c) closes on a player who flees past 6001 units. The approach walk (sub 3) uses
+     *     locator-bone root motion (0x80115b68) which displaces via the loaded EM029 bank in-game; the
+     *     unit test has no bank, so we exercise the bank-independent SCURRY movement here. */
+    pl->x = 0; pl->z = 4000; pl->hp = 100;
+    for (int f = 0; f < 40; f++) re15_enemy_ai_run_all(0);      /* idle -> engage sub 3, face the player */
+    pl->z = 9000;                                               /* player flees far -> sub-3 commits SCURRY (sub 4) */
     int32_t c0 = xz_dist(e, pl);
-    int chased = 0;
-    for (int f = 0; f < 120; f++) {
+    int chased = 0; int32_t cmin = c0;                         /* track the CLOSEST it got (scurry overshoots a static point) */
+    for (int f = 0; f < 200; f++) {
         re15_enemy_ai_run_all(0);
-        if (e->sub_state_1 == 3 || e->sub_state_1 == 4) chased = 1;
+        if (e->sub_state_1 == 4) chased = 1;
+        int32_t d = xz_dist(e, pl); if (d < cmin) cmin = d;
     }
-    int32_t c1 = xz_dist(e, pl);
-    if (!chased)  { fprintf(stderr, "FAIL(2): roach never entered approach/scurry (sub 3/4), sub=%d\n", e->sub_state_1); fail = 1; }
-    if (c1 >= c0) { fprintf(stderr, "FAIL(2): roach must close on the player, dist %d->%d\n", c0, c1); fail = 1; }
-    printf("  (2) CHASE: sub reached %d, dist %d->%d (closing)\n", e->sub_state_1, c0, c1);
+    if (!chased)        { fprintf(stderr, "FAIL(2): roach never entered the fast SCURRY (sub 4), sub=%d\n", e->sub_state_1); fail = 1; }
+    if (cmin >= c0 / 2) { fprintf(stderr, "FAIL(2): roach must close on the player, dist %d -> min %d\n", c0, cmin); fail = 1; }
+    printf("  (2) CHASE: SCURRY reached sub 4, dist %d -> closest %d (closing)\n", c0, cmin);
 
-    /* (2b) BITE: with the player just ahead in range the roach bites for -5 */
-    pl->x = e->x; pl->z = e->z + 1200; pl->hp = 100; pl->hit_react = 0;
+    /* (2b) BITE: with the player inside the bite box (part+1612 radius 1000, @0x80111eb8) the roach
+     *     bites for -5 on the window frames 12-15 (@0x80111f60, byte-true frames not the old single 0x0c). */
+    pl->x = e->x; pl->z = e->z + 900; pl->hp = 100; pl->hit_react = 0;
     e->rot_y = (int16_t)(((int)re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0xfff);  /* face the player */
     e->dog_atk_cd = 0;
     int16_t bp0 = pl->hp; int bit = 0;
