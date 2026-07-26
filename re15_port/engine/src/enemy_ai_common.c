@@ -2125,6 +2125,79 @@ static void re15_enemy_ai_live_devour(re15_actor_t *e, const re15_actor_t *playe
         re15_clip_root_motion_abs(e, &bank->skel, &bank->anim, (int)e->motion, (int)e->anim_frame);
 }
 
+/* ENGAGE animate — byte-true FUN_801021f8 (@0x8011f890[2], W1 disasm 2026-07-03): THE AWARE WALK.
+ * Factored out of re15_enemy_ai_live_active case 2 (pure code motion, audit wf_827f186d zombie-girl
+ * #1) because the ZOMBIE GIRL dispatches this SAME function twice: as her engage animate (girl
+ * animate table @0x801202a8[2] = 0x801021f8, byte-identical to the standard @0x8011f898) AND — via
+ * the 17-row girl DECIDE table's missing bounds check — as her +0x5=0x13 "decide" (@0x80120264 +
+ * 0x13*4 = 0x801202b0 = the animate table's own row [2] word = 0x801021f8). See the girl block. */
+static void re15_enemy_ai_live_engage_animate(int slot, re15_actor_t *e)
+{
+    /* Plays the per-zombie BANK0 walk clip +0x1d4 in {2,3,4,5} (seeded @0x80100774 / girl @0x8010ac58
+     * from @0x8011f7e4 — the port's hurt_clip field IS +0x1d4) with the SAME foot-lock translation as
+     * the 0x13 lurch, weaving toward the player via the 32-entry gait row (@0x8011f9f0 + variant*0x80). */
+    if (e->sub_state_2 == 0) {                       /* entry (+0x6==0 @0x80102204..) */
+        /* byte-true @0x801022b8-bc `lbu v1,9(v0); andi 0x7f; sb`: every fresh engage
+         * entry defensively clears the DOWNED bit — restores the standing HURT/DEATH
+         * routing after any downed episode. (audit wf_827f186d zombie-live #7) */
+        e->grid_id   &= (uint8_t)0x7f;
+        e->motion     = e->hurt_clip;                /* +0x94 = +0x1d4 (walk clip 2..5) */
+        e->anim_frame = (uint16_t)(re15_engine_rand8() & 0x1f);   /* +0x95 = rng&0x1f */
+        e->anim_frac  = 0xf;                          /* +0x8f */
+        e->anim_blend_rate = 0x100;                   /* walk-family f314 rate */
+        s_wander_mag[slot] = (uint8_t)((re15_engine_rand8() & 0xf) + 8); /* +0x9e = 8..23 */
+        if ((re15_engine_rand8() & 3) == 0)          /* 1-in-4 moan SE 4/5 */
+            re15_audio_room_se((re15_engine_rand8() & 1) ? 4 : 5);
+        const uint8_t *tbl = (re15_enemy_spawn_count() >= 5) ? s_zbehavior_5plus
+                                                             : s_zbehavior_lt5;
+        uint8_t beh = tbl[re15_engine_rand8() & 0x1f];   /* +0x1de = @0x8011faf0/fb00 */
+        s_gait_variant[slot] = beh;
+        s_wander_idx[slot] = (uint8_t)(re15_engine_rand8() & 0x1f);  /* +0x9f (32-row) */
+        s_wander_tmr[slot] = (int16_t)gait_tmr(beh, s_wander_idx[slot]);
+        s_zfoot_ok[slot] = 0;
+        e->sub_state_2 = 1;
+        if (beh == 2) {
+            /* roll==2 PASS-THROUGH frame (C5, @0x8010234c-5c has NO early exit): the
+             * SAME frame still seeds idx/tmr from the OVERLAPPED variant-2 row (the
+             * behavior tables as rows -> rot >= 256 at idx 0-3 = the heading SNAPS
+             * onto the steer point) and runs one steer + foot-lock with the engage
+             * clip; 0x13 takes over next frame. */
+            int16_t rot2 = gait_rot(2, s_wander_idx[slot]);
+            int16_t sv = (int16_t)((int16_t)s_wander_mag[slot] * rot2);
+            re15_enemy_steer_point(e, e->steer_x, e->steer_z, sv);
+            re15_enemy_footlock_step(slot, e);
+            e->sub_state_1 = 0x13; e->sub_state_2 = 0;
+            return;
+        }
+    }
+    /* per-frame walker: sVar7 = +0x9e * row[+0x9f].dir — SIGNED into the aac4 steer at
+     * the STEER SNAPSHOT +0x1bc/+0x1be (decompile FUN_801021f8:57): +1 rows pull toward
+     * the point, -1 rows wiggle AWAY = the authored drunken weave; the all-zero rows
+     * (roll 6/12) steer NOT AT ALL (dead straight — the old "straight at him" fallback
+     * was a live-homing bug). Live re-aim = the TURN state only. Segment timer ->
+     * advance the row index (wrap 0x1f) + random +-sVar7 jitter; then the foot-lock
+     * carries the body along the walk clip. */
+    {
+        uint8_t v = s_gait_variant[slot];
+        int16_t rot = gait_rot(v, s_wander_idx[slot]);   /* unbounded fetch (blob) */
+        int16_t sVar7 = (int16_t)((int16_t)s_wander_mag[slot] * rot);
+        re15_enemy_steer_point(e, e->steer_x, e->steer_z, sVar7);
+        {   /* the timer/idx block runs for EVERY variant (the original has no v<=1
+             * gate) — variant 6's zero rows expire per frame (1 rand draw/frame),
+             * variant 12 latches the 30260-frame snap segment: byte-true quirks. */
+            int16_t was = s_wander_tmr[slot];
+            s_wander_tmr[slot] = (int16_t)(was - 1);
+            if (was == 0) {
+                s_wander_idx[slot] = (uint8_t)((s_wander_idx[slot] + 1) & 0x1f);
+                s_wander_tmr[slot] = (int16_t)gait_tmr(v, s_wander_idx[slot]);
+                int16_t flip = (int16_t)(sVar7 - (int16_t)(re15_engine_rand8() & 1) * (int16_t)(sVar7 * 2));
+                e->rot_y = (int16_t)(((int32_t)e->rot_y + flip) & 0x0fff);
+            }
+        }
+        re15_enemy_footlock_step(slot, e);
+    }
+}
+
 /* FUN_80101224 (@0x8011f7b4[1], STAGE1.BIN) — the LIVE zombie ACTIVE handler. The ATTACK-WINDUP
  * half (byte-true): when the attack-arm bit (+0x1d8 & 0x100) is set and the freeze bit (+0x0 &
  * 0x1000) clear, the windup timer +0x1da counts down each frame; at == 0x12c (300) the original
@@ -2228,76 +2301,11 @@ int re15_enemy_ai_live_active(int slot)
                     /* EDGE-FALL (@0x8011f890[0xa]=FUN_801033c8): tumbles over the contact edge
                      * (the briefing-room pit) down one floor. */
                     re15_enemy_ai_live_edge_fall(e);
-                else if (e->sub_state_1 == 2) {
-                    /* ENGAGE animate (byte-true FUN_801021f8 @0x8011f890[2], W1 disasm 2026-07-03):
-                     * THE AWARE WALK — not a stationary tracker. Plays the per-zombie BANK0 walk clip
-                     * +0x1d4 in {2,3,4,5} (seeded @0x80100774 from @0x8011f7e4 — the port's hurt_clip
-                     * field IS +0x1d4) with the SAME foot-lock translation as the 0x13 lurch, weaving
-                     * toward the player via the 32-entry gait row (@0x8011f9f0 + variant*0x80). The
-                     * old port kept the engage STANDING and did all walking in 0x13/clip 1 — clip 1 is
-                     * the UNAWARE shamble (the state-1 wander uses it too) = the user-reported "walks
-                     * like he hasn't noticed Leon". */
-                    if (e->sub_state_2 == 0) {                       /* entry (+0x6==0 @0x80102204..) */
-                        /* byte-true @0x801022b8-bc `lbu v1,9(v0); andi 0x7f; sb`: every fresh engage
-                         * entry defensively clears the DOWNED bit — restores the standing HURT/DEATH
-                         * routing after any downed episode. (audit wf_827f186d zombie-live #7) */
-                        e->grid_id   &= (uint8_t)0x7f;
-                        e->motion     = e->hurt_clip;                /* +0x94 = +0x1d4 (walk clip 2..5) */
-                        e->anim_frame = (uint16_t)(re15_engine_rand8() & 0x1f);   /* +0x95 = rng&0x1f */
-                        e->anim_frac  = 0xf;                          /* +0x8f */
-                        e->anim_blend_rate = 0x100;                   /* walk-family f314 rate */
-                        s_wander_mag[slot] = (uint8_t)((re15_engine_rand8() & 0xf) + 8); /* +0x9e = 8..23 */
-                        if ((re15_engine_rand8() & 3) == 0)          /* 1-in-4 moan SE 4/5 */
-                            re15_audio_room_se((re15_engine_rand8() & 1) ? 4 : 5);
-                        const uint8_t *tbl = (re15_enemy_spawn_count() >= 5) ? s_zbehavior_5plus
-                                                                             : s_zbehavior_lt5;
-                        uint8_t beh = tbl[re15_engine_rand8() & 0x1f];   /* +0x1de = @0x8011faf0/fb00 */
-                        s_gait_variant[slot] = beh;
-                        s_wander_idx[slot] = (uint8_t)(re15_engine_rand8() & 0x1f);  /* +0x9f (32-row) */
-                        s_wander_tmr[slot] = (int16_t)gait_tmr(beh, s_wander_idx[slot]);
-                        s_zfoot_ok[slot] = 0;
-                        e->sub_state_2 = 1;
-                        if (beh == 2) {
-                            /* roll==2 PASS-THROUGH frame (C5, @0x8010234c-5c has NO early exit): the
-                             * SAME frame still seeds idx/tmr from the OVERLAPPED variant-2 row (the
-                             * behavior tables as rows -> rot >= 256 at idx 0-3 = the heading SNAPS
-                             * onto the steer point) and runs one steer + foot-lock with the engage
-                             * clip; 0x13 takes over next frame. */
-                            int16_t rot2 = gait_rot(2, s_wander_idx[slot]);
-                            int16_t sv = (int16_t)((int16_t)s_wander_mag[slot] * rot2);
-                            re15_enemy_steer_point(e, e->steer_x, e->steer_z, sv);
-                            re15_enemy_footlock_step(slot, e);
-                            e->sub_state_1 = 0x13; e->sub_state_2 = 0;
-                            break;
-                        }
-                    }
-                    /* per-frame walker: sVar7 = +0x9e * row[+0x9f].dir — SIGNED into the aac4 steer at
-                     * the STEER SNAPSHOT +0x1bc/+0x1be (decompile FUN_801021f8:57): +1 rows pull toward
-                     * the point, -1 rows wiggle AWAY = the authored drunken weave; the all-zero rows
-                     * (roll 6/12) steer NOT AT ALL (dead straight — the old "straight at him" fallback
-                     * was a live-homing bug). Live re-aim = the TURN state only. Segment timer ->
-                     * advance the row index (wrap 0x1f) + random +-sVar7 jitter; then the foot-lock
-                     * carries the body along the walk clip. */
-                    {
-                        uint8_t v = s_gait_variant[slot];
-                        int16_t rot = gait_rot(v, s_wander_idx[slot]);   /* unbounded fetch (blob) */
-                        int16_t sVar7 = (int16_t)((int16_t)s_wander_mag[slot] * rot);
-                        re15_enemy_steer_point(e, e->steer_x, e->steer_z, sVar7);
-                        {   /* the timer/idx block runs for EVERY variant (the original has no v<=1
-                             * gate) — variant 6's zero rows expire per frame (1 rand draw/frame),
-                             * variant 12 latches the 30260-frame snap segment: byte-true quirks. */
-                            int16_t was = s_wander_tmr[slot];
-                            s_wander_tmr[slot] = (int16_t)(was - 1);
-                            if (was == 0) {
-                                s_wander_idx[slot] = (uint8_t)((s_wander_idx[slot] + 1) & 0x1f);
-                                s_wander_tmr[slot] = (int16_t)gait_tmr(v, s_wander_idx[slot]);
-                                int16_t flip = (int16_t)(sVar7 - (int16_t)(re15_engine_rand8() & 1) * (int16_t)(sVar7 * 2));
-                                e->rot_y = (int16_t)(((int32_t)e->rot_y + flip) & 0x0fff);
-                            }
-                        }
-                        re15_enemy_footlock_step(slot, e);
-                    }
-                }
+                else if (e->sub_state_1 == 2)
+                    /* ENGAGE animate (byte-true FUN_801021f8 @0x8011f890[2]) — THE AWARE WALK,
+                     * factored into re15_enemy_ai_live_engage_animate (pure code motion; the zombie
+                     * girl shares it, audit wf_827f186d zombie-girl #1). */
+                    re15_enemy_ai_live_engage_animate(slot, e);
                 break;
             }
             case 5: case 6:   /* feeding (@0x8011f80c[5]/[6]=0x801018f8) -> the dist-gated wake-up */
@@ -2407,6 +2415,11 @@ void re15_enemy_ai_live_hurt(int slot)
      * and ported below as the same +0x7 phase machine the death/knockdown ports use. */
     if (e->grid_id & 0x80) {
         int prone = (e->sub_state_1 == 0x12 || e->sub_state_1 == 0x13);
+        /* ZOMBIE GIRL router (FUN_8010bf80 @0x8010bfa4-c4): her downed gate routes +0x5==2 ->
+         * FUN_80106a38 (prone flinch), ELSE -> FUN_801068a0 — the standard's {0x12,0x13} pair
+         * selector does not apply (raw disasm: `lbu v1,5(a1); beq v1,v0(=2),0x8010bfc4`).
+         * (audit wf_827f186d zombie-girl #4) */
+        if (e->type == 0x13) prone = (e->sub_state_1 == 2);
         switch (e->sub_state_3) {
         case 0:
             if (prone) {                                    /* FUN_80106a38 phase 0 (@0x80106a84) */
@@ -5683,22 +5696,101 @@ static void re15_npc_ai_tick(int slot)
     }
 }
 
-/* ============================ ZOMBIE GIRL (type 0x13, EM013 = ZOMBIE_GIRL) — Wave 1 ========== *
- * Byte-true 0x8010a8c8 family (RE15_ZOMBIEGIRL_AI.md; workflow wf_21e29175, adversarially verified). A
- * NAV-PATHING female-zombie variant that REUSES the standard zombie's combat machinery: her active brain
- * (0x8010b274) dispatches the SAME phase handlers (engage 0x80102058, GRAB 0x80102548 = cmd5 + player.hp
- * -=10) and shares the zombie corpse-settle (state 7 = 0x80109554). WAVE 1: INIT (HP 50-81) + nav-chase
- * (clip 26) + the grab (-10, pins the player via the shared victim FSM) + killable (-> corpse). The repeated grab bites (HELD BITE-LOOP -5/clip) are IMPLEMENTED @L4212-4216. DEFERRED to
- * wave 2: the exact mode-dispatch (+0x9&0xf @0x80120230) and the lunge-arm timer choreography. */
-static const uint8_t s_zgirl_clip_len[42] =   /* EM013 clip frame-counts (CDEMD0.EMS idx 3, dir[3]) */
-    { 14,30,26,14,30,26,3,3,3,65,65,55,1,55,1,40,40,60,98,98,5,5,138,17,1,85,79,19,15,21,25,68,2,1,64,1,65,3,3,68,89,59 };
-static void re15_zgirl_clip(re15_actor_t *e, uint8_t c) { e->motion = c; e->anim_frame = 0; e->anim_frac = 7; }
-static int re15_zgirl_anim(re15_actor_t *e)
+/* ============================ ZOMBIE GIRL (type 0x13, EM013 = ZOMBIE_GIRL) ==================== *
+ * BYTE-TRUE REWRITE (audit wf_827f186d zombie-girl #1 HIGH + #2 HIGH + #3/#4/#5 + #6/#7/#8): the
+ * shipped flat instant-aggro chase modeled the UNREACHABLE mode-1 nav walk (the clip-26 walk fn
+ * 0x8010be50 has exactly ONE reference in STAGE1.BIN = the mode-1 animate[0] pointer word
+ * @0x80120308; zero jal refs; no shipped room spawns mode 1 — SCD census: STAGE1 has 0 type-0x13
+ * spawns, STAGE4 ROOM4050/4051 spawn `44 00 13 00` = behavior byte 0x00 -> mode 0). The REAL brain:
+ *   root FUN_8010a8c8 (@0x80072bac[0x13]): pause gate @0x8010a8d0-e0, skip gate +0x9&0x20
+ *   @0x8010a8f4-900, dist cache +0x1d0 @0x8010a908-64 (SquareRoot0), mercy +0x1d5 tick + aca50&=
+ *   ~1 @0x8010a974-9b4, nav steer FUN_80039e7c(+0x1bc/+0x1be, +0x1d6, +0x1d8&8) @0x8010a9c0-e0 +
+ *   the &8 one-shot clear @0x8010a9f0-fc, then the STATE dispatch @0x80120208[+0x4] @0x8010aa0c-2c,
+ *   then the shared tail (0x8001b4e4 / attack-pt 0x80104178 / b498 / aec4+b544 / SCA b0a4 / SFX
+ *   0x8001b38c @0x8010aa80-aaf4 — the run_all t==0x13 branch).
+ * STATE TABLE @0x80120208: [0]=INIT 0x8010ab2c, [1]=ACTIVE 0x8010b274, [2]=HURT 0x8010bf80,
+ *   [3]=DEATH 0x8010c014, [4]=0x8010919c (idle, deferred port-wide), [7]=CORPSE 0x80109554 (the
+ *   SAME shared corpse settle as the standard zombie -> re15_enemy_corpse_settle).
+ * ACTIVE = mode dispatch @0x8010b694-b6b8 on +0x9&0xf via @0x80120230; mode 0 = FUN_8010b6d4 = the
+ *   STANDARD-ZOMBIE phase FSM: decide @0x80120264[+0x5] / animate @0x801202a8[+0x5], both tables
+ *   WORD-DIFF-VERIFIED byte-identical to the standard @0x8011f840/@0x8011f890 rows [0..0x10] except
+ *   row [0xa] = the girl FLOOR-DROP pair 0x8010bbe0/0x8010bbe8 (replaces the edge-fall) -> the port
+ *   REUSES the ported standard handlers (search/wander/engage/grab/devour/turn/charge/stagger/
+ *   pushoff/feeding/standup).
+ * HURT/DEATH masters @0x8012039c/@0x8012063c ([+0x5]*0x20+[+0x6]*4, FUN_8010bf80 @0x8010bfd4-ffc /
+ *   FUN_8010c014 @0x8010c048-70) are WORD-DIFF-VERIFIED identical to the standard masters
+ *   @0x8011fb90/@0x8011feac except weapon-row 1 dir 0/1 = NULL words (a jalr-0 crash lane in the
+ *   original — dormant, not reproduced); downed death routes to the SAME FUN_80107cb0 (@0x8010c038).
+ *   -> re15_enemy_ai_live_hurt / re15_enemy_ai_live_death (fixes #3 death-fall + corpse settle and
+ *   #4 no-flinch; the girl-specific downed-hurt router +0x5==2 gate is inside live_hurt).
+ * Anim advance: the girl now uses the SHARED per-frame advancer + clip banks like the standard
+ *   zombie (0x13 removed from re15_type_self_advances_anim). */
+
+/* Girl animate row [0x11] — the byte-true TABLE-OVERFLOW word: the girl decide/animate tables have
+ * 17 rows [0..0x10] and FUN_8010b6d4 has NO bounds check (@0x8010b718-38/@0x8010b740-6c), so
+ * +0x5=0x11 reads animate[0x11] = word @0x801202ec = 0x801035f8 = the mode-1 idle DECIDE (also
+ * mode-1 decide[0] @0x801202ec). Raw-disasm'd end-to-end: */
+static void re15_zgirl_overflow_row11(re15_actor_t *e, re15_actor_t *pl)
 {
-    uint8_t c = e->motion; int fc = (c < 42) ? s_zgirl_clip_len[c] : 1; if (fc < 1) fc = 1;
-    int done = (e->anim_frame + 1 >= fc);
-    e->anim_frame = (uint8_t)((e->anim_frame + 1) % fc);
-    return done;
+    /* if player.hit_react==0 (@0x8010360c-14) && dist +0x1d0 < 0x4b0 (@0x80103628-34) &&
+     * arc_test(player,0x200)==0 (@0x80103640-48) && player.floor == +0x82 (@0x80103650-68):
+     * +0x4 word = ((facing_aligned(0x8001a780)+1)<<8)|1 = 0x101/0x201 (@0x80103670-8c). */
+    if (pl->hit_react == 0 && e->ai_dist < 0x4b0u &&
+        re15_ai_arc_test(e, pl->x, pl->z, 0x200) == 0 && pl->floor == e->floor) {
+        int aligned = re15_ai_facing_aligned(e, pl);
+        re15_ai_set_state_word(e, (uint32_t)((aligned + 1) * 0x100) | 1u);
+    }
+    /* (+0x1c4 & 0x2000 @0x8010369c-a4) && !(+0x1d8 & 0x80 @0x801036b0-bc) -> word 0x601
+     * (@0x801036c0-c4). */
+    if ((e->anim_flags & 0x2000) && !(e->ai_flags & 0x80))
+        re15_ai_set_state_word(e, 0x601);
+}
+
+/* Girl FLOOR-DROP animate — byte-true FUN_8010bbe8 (girl animate table [0xa] @0x801202d0; the
+ * decide half 0x8010bbe0 @0x8012028c is `jr ra`). Her contact-roll replacement for the standard
+ * edge-fall 0x801033c8: walk INTO the contact heading, then drop one floor. */
+static void re15_zgirl_floor_drop(re15_actor_t *e)
+{
+    switch (e->sub_state_2) {
+        case 0:                                     /* @0x8010bc3c-7c */
+            e->sub_state_2 = 1;                     /* +0x6=1 @0x8010bc3c */
+            e->motion = 0x01; e->anim_frame = 0;    /* +0x94=1 @0x8010bc4c, +0x95=0 @0x8010bc5c */
+            e->anim_frac = 7;                       /* +0x8f=7 @0x8010bc78-7c (+0x96=0 @0x8010bc6c) */
+            e->anim_blend_rate = 0x200;             /* f314 a3=0x200 @0x8010bc94-98 */
+            /* fallthrough into [1] (@0x8010bc80) */
+        case 1: {                                   /* anim_set(+0x84,+0x16c,0,0x200) @0x8010bc94;
+                                                     * slew to the CONTACT heading ((+0x90&0xf0)<<4)
+                                                     * at 0x10/tick (0x8001aa68 @0x8010bcac-b8);
+                                                     * aligned (delta==0 @0x8010bcd4-d8) -> +0x6=2
+                                                     * (@0x8010bce8-f0). */
+            int heading = ((int)(e->ai_contact & 0xf0) << 4) & 0x0fff;
+            if (re15_slew_to_angle(e, heading, 0x10) == 0)
+                e->sub_state_2 = 2;
+            return;
+        }
+        case 2:                                     /* @0x8010bcf4-bd68 */
+            e->sub_state_2 = 3;                     /* +0x6=3 @0x8010bcf4-f8 */
+            e->motion = 0x16; e->anim_frame = 0;    /* +0x94=0x16 @0x8010bd04-08, +0x95=0 @0x8010bd18 */
+            e->anim_frac = 7;                       /* +0x8f=7 @0x8010bd34-38 (+0x96=0 @0x8010bd28) */
+            e->anim_blend_rate = 0x200;
+            e->speed_h = 0x474;                     /* +0x8c=0x474 @0x8010bd44-48 */
+            e->rot_y = (int16_t)((((int)(e->ai_contact & 0xf0) << 4)) & 0x0fff);
+                                                    /* +0x6a = (+0x90&0xf0)<<4 @0x8010bd58-68 */
+            /* fallthrough (@0x8010bd6c) */
+        case 3:
+            /* frame 0x46 (@0x8010bd78-80): +0xb0=0x474 fall velocity @0x8010bd88-8c + the ground-Y
+             * cache +0x1ba -= 1800 @0x8010bd9c-a8 (+0xb0 vel is deferred like the edge-fall's). */
+            if (re15_enemy_clip_done(e)) {          /* anim_set(+0x170,+0x174,0,0x200) done @0x8010bdc0-c8 */
+                e->floor = (uint8_t)(e->floor + 1); /* +0x82 += 1 @0x8010bddc-e8 */
+                e->y -= 0x708;                      /* +0x38 += -1800 @0x8010bdf8-be04 (literal bytes) */
+                e->sub_state_1 = 0;                 /* +0x5=0 @0x8010be14 */
+                e->sub_state_2 = 0;                 /* +0x6=0 @0x8010be24 */
+                /* +0xb0=0 @0x8010be34 + one func_0x800245d8(0) walker step @0x8010be30 — the
+                 * fall-velocity walker is deferred (same stance as the standard edge-fall port). */
+            }
+            return;
+        default: return;
+    }
 }
 
 static void re15_zgirl_ai_tick(int slot)
@@ -5706,60 +5798,159 @@ static void re15_zgirl_ai_tick(int slot)
     re15_actor_t *e  = &g_actors[slot];
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
 
-    switch (e->state) {
-    case 0:   /* INIT 0x8010ab2c: -> ACTIVE, HP 50-81, nav-walk pose, steer=player */
-        if (e->hp <= 0) e->hp = (int16_t)((re15_engine_rand8() & 0x1f) + 50);  /* +0x9a = (rng&0x1f)+50 @0x8010ac1c */
-        e->motion = 0x1a; e->anim_frame = 0; e->anim_frac = 7; e->hit_react = 0;  /* nav-walk clip 26 */
-        e->steer_x = (int16_t)pl->x; e->steer_z = (int16_t)pl->z;  /* +0x1bc/+0x1be = player @0x8010abc0 */
-        e->ai_timer = 0x14;                                   /* +0x9c = 20 @0x8010ac04 */
-        e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* +0x4=1 @0x8010aba8 */
+    /* root FUN_8010a8c8 preamble (see the header block for the @0x… map): */
+    if (s_ai_paused) return;                        /* g_pauseflags & 0x20000000 @0x8010a8d0-e0 */
+    if (e->grid_id & RE15_AI_GRID_SKIP) return;     /* +0x9 & 0x20 @0x8010a8f4-900 */
+    e->ai_dist = (uint32_t)re15_enemy_player_dist(e, pl);   /* +0x1d0 @0x8010a908-64 */
+    /* mercy +0x1d5 tick @0x8010a974-9b4 -> the global s_grab_mercy_timer (run_all) stands in;
+     * FUN_8001bd60(-10,0x14) @0x8010a9b8-bc (look aux) is unmodeled port-wide. */
+    re15_nav_update_steer(e, (int16_t)pl->x, (int16_t)pl->z,
+                          e->ai_wp_node, (int)(e->ai_flags & 8u));  /* FUN_80039e7c @0x8010a9c0-e0 */
+    e->ai_flags &= (uint16_t)~8u;                   /* the one-shot clear @0x8010a9f0-fc */
+
+    switch (e->state) {                             /* @0x80120208[+0x4] @0x8010aa0c-2c */
+    case 0:                                         /* INIT FUN_8010ab2c */
+        e->state = 1;                               /* +0x4=1 @0x8010aba4-a8 */
+        e->steer_x = (int16_t)pl->x;                /* +0x1bc = playerX @0x8010abb8-c0 */
+        e->steer_z = (int16_t)pl->z;                /* +0x1be = playerZ @0x8010abd0-d8 */
+        /* +0x0 |= 0x40000000 @0x8010abe8-f4 — render/lifecycle word unmodeled */
+        e->ai_timer = 0x14;                         /* +0x9c = 0x14 @0x8010ac00-08 */
+        e->hp = (int16_t)((re15_engine_rand8() & 0x1f) + 50);   /* +0x9a = (rng&0x1f)+50 @0x8010ac0c-1c */
+        /* +0x78 = dim word [0x8011f790] @0x8010ac28-34 — collision dims come from the spawn hitbox */
+        {   /* +0x1d4 walk/turn variant = @0x8011f7e4[rng&7] @0x8010ac38-58; table bytes dumped:
+             * {2,3,4,5,2,3,4,5} — the port's hurt_clip field IS +0x1d4 (engage/turn walk clip). */
+            static const uint8_t walk_variant[8] = { 2, 3, 4, 5, 2, 3, 4, 5 };  /* @0x8011f7e4 */
+            e->hurt_clip = walk_variant[re15_engine_rand8() & 7];
+        }
+        /* +0x1b8=0 @0x8010ac68 / +0x1b9=8 @0x8010ac74-78 (render words) + +0x1d5=0 @0x8010ac88
+         * (mercy, global stand-in) + +0x1d7=4 @0x8010aca4-a8 (SCA dim row) — unmodeled port-wide */
+        e->ai_flags = 0;                            /* +0x1d8 = 0 @0x8010ac98 */
+        re15_enemy_ai_live_arm(slot);               /* pool +0x5f8=0x60/+0x5fa=0x30/+0x5fc=0x390/
+                                                     * +0x5fe=0x138 @0x8010acbc-ace0 + the DAT_800aca3c
+                                                     * &1-gated lunge arm (+0x1d8|=0x100, |=(rng&1)<<9,
+                                                     * +0x1da=(rng&0xff)+(rng&0xff)+600) @0x8010ace8-
+                                                     * 0x8010ad6c — the same writes as the standard's
+                                                     * arm, so the shared port fn is exact here */
+        /* shadow FUN_8001af5c(0,0,0x258,0x2bc,0x00808080,+0xb0) @0x8010b00c-38 — shadow subsystem */
+        if (e->grid_id & 0x80) {                    /* spawn-pose decode, gated @0x8010b048-54 */
+            uint8_t sel = (uint8_t)(e->grid_id & 0xf);
+            if (sel == 4 || sel == 7 || sel == 9)   e->motion = 0x0c;   /* @0x8010b05c-84 */
+            if (sel == 5 || sel == 8 || sel == 0xa) e->motion = 0x0e;   /* @0x8010b0a0-c8 */
+            if (sel == 1 || sel == 3) { e->motion = 0x0c; e->sub_state_1 = 5; } /* @0x8010b0e4-b10c */
+            e->anim_frame = 0;                      /* +0x95=0 @0x8010b11c */
+            e->anim_frac  = 0;                      /* +0x8f=0 @0x8010b12c */
+            /* anim_set(+0x170,+0x174,0,0x200) @0x8010b144-48, then the LYING pose clip replaces
+             * the setup clip: */
+            if (sel == 4 || sel == 7 || sel == 9)   e->motion = 0x12;   /* @0x8010b164-8c */
+            if (sel == 5 || sel == 8 || sel == 0xa) e->motion = 0x14;   /* @0x8010b1a8-d0 */
+        } else if (e->grid_id == 0x06) {            /* whole +0x9 byte == 6 @0x8010b1e0-e8 */
+            e->motion = 0x27;                       /* +0x94=0x27 @0x8010b1f0-f4 */
+            /* +0x4 word = 0x00020c00 @0x8010b1ec-204: state 0 / +0x5=0xc / +0x6=2 (re-INITs!) */
+            re15_ai_set_state_word(e, 0x00020c00u);
+            e->anim_frame = 0; e->anim_frac = 0;    /* @0x8010b214/b224 */
+            e->grid_id = 0;                         /* +0x9 = 0 @0x8010b250 */
+        }
+        /* behavior byte 0x00 (ALL shipped spawns): neither branch taken -> +0x5/+0x6/+0x94 stay as
+         * spawned (sub 0 = search/idle: "she idles until woken"). */
         break;
 
-    case 1: {  /* ACTIVE brain 0x8010b274: nav-chase (nav-walk clip 26) -> engage/GRAB */
-        e->dog_dist = (int16_t)re15_enemy_player_dist(e, pl);
-        /* engage decider 0x80102058: player close (<1200) & aligned & not reacting -> GRAB (state 3) @0x80102128 */
-        if (pl->hit_react == 0 && re15_dog_arc(e, pl, 1200, 384)) { e->state = 3; e->sub_state_3 = 0; break; }
-        if (e->sub_state_2 == 0) { re15_zgirl_clip(e, 0x1a); e->sub_state_2 = 1; }   /* nav-walk clip 26 @0x8010be50 */
-        re15_enemy_steer_point(e, pl->x, pl->z, 0x10);        /* steer rate 0x10 (0x8001aac4) @0x8010bdec */
-        re15_dog_advance(e, 30);                              /* nav-walk forward (root-motion 0x8010c088) */
-        re15_zgirl_anim(e);
+    case 1: {                                       /* ACTIVE FUN_8010b274 */
+        /* ARMED lunge branch (@0x8010b288-b5a8, +0x1d8&0x100, skipped while +0x0&0x1000 @0x8010b29c-
+         * a8): +0x1da-- @0x8010b2b0-bc; ==0x12c -> the 8x body-part action-0x16 inject (8x jal
+         * 0x80019d50 over the LUT @0x8011f7a4, @0x8010b2dc-b554) = re15_enemy_lunge_begin; ==0 ->
+         * word 0x1503 @0x8010b570-74 + clip 0xb @0x8010b580-84 (0x1f when +0x9&0x80 @0x8010b594-5ac)
+         * and SKIP the dispatch this frame (j 0x8010b6c0); != 0 falls THROUGH to the LOS + mode
+         * dispatch (@0x8010b56c bne -> 0x8010b5b0). Armed only under DAT_800aca3c&1 (INIT
+         * @0x8010ace8-f4). The old flat chase played this DORMANT lunge lane's clip 0xb for every
+         * grab (audit zombie-girl #7 wrong-constant — the reachable grab clips are the shared
+         * (+0x5-3)*3 families via FUN_80102548). */
+        if (e->ai_flags & 0x100) {
+            e->ai_attack_timer = (int16_t)(e->ai_attack_timer - 1);
+            if (e->ai_attack_timer == 0x12c) re15_enemy_lunge_begin(slot);
+            if (e->ai_attack_timer == 0) {
+                re15_ai_set_state_word(e, 0x1503);
+                e->motion = (uint8_t)((e->grid_id & 0x80) ? 0x1f : 0x0b);
+                break;
+            }
+        }
+        /* LOS probe @0x8010b5b0-b600 — identical bytes to the standard ACTIVE's (@0x80101560-b0):
+         * (r&0xff)>>1==0 -> +0x1d8 = (+0x1d8 & 0xffef) | (r<<4). */
+        {
+            int r = re15_enemy_los_probe(slot, e, pl);
+            if ((r >> 1) == 0)
+                e->ai_flags = (uint16_t)((e->ai_flags & ~0x10u) | ((uint16_t)r << 4));
+        }
+        /* +0x0 lifecycle bits @0x8010b61c-4c/+0x9&0x80 variant @0x8010b664-84 + FUN_80012aa4(0xbb8)
+         * @0x8010b650-54 — the +0x0 render word / EXE aux are unmodeled port-wide (same stance as
+         * the standard root). */
+        if ((e->grid_id & 0x0f) != 0) break;        /* MODE dispatch @0x8010b694-b6b8 via @0x80120230:
+                                                     * only mode 0 (FUN_8010b6d4) ships — mode 1
+                                                     * (FUN_8010b784: tables @0x801202ec/@0x80120308,
+                                                     * clip-26 walk 0x8010be50 with speed FIELD
+                                                     * +0x8c=0x14 @0x8010be6c-70 — NOT a flat 30/tick
+                                                     * advance, audit #6 — and steer 0x10 via jal
+                                                     * 0x8001aac4 @0x8010bed8-dc, audit #8 citation
+                                                     * fix) has ZERO spawns game-wide; modes 2..0xc =
+                                                     * pose stubs @0x8010b800.. — all unrouted. */
+        /* FUN_8010b6d4 anim-interrupt: (+0x1c0 & 0x9fff) == 0x8001 -> +0x5=9, +0x6=0
+         * (@0x8010b6e4-b708). No +0x1c0 writer exists port-wide (documented OPEN, same as the
+         * standard zombie's stagger release) -> the interrupt cannot fire yet. */
+        {   /* DECIDE @0x80120264[+0x5] (@0x8010b718-38). Rows [0..0x10] == the standard f840 rows
+             * (word-diff: only [0xa] differs and BOTH are jr-ra stubs — girl 0x8010bbe0, standard
+             * 0x801033c0). NO bounds check -> +0x5 >= 0x11 reads PAST the 17-row table INTO the
+             * animate table @0x801202a8 (byte-true overflow): decide[0x11] = word @0x801202a8 =
+             * 0x80101d08 (search-stand ANIMATE), [0x12] = 0x80101ef0 (wander ANIMATE), [0x13] =
+             * 0x801021f8 (ENGAGE ANIMATE — the girl's post-hurt 0x13 'approach' IS the aware
+             * engage walk; she has NO 0x13 grab-commit decide, unlike the standard's 0x8010561c). */
+            uint8_t sub = e->sub_state_1;
+            if      (sub == 0x11) re15_enemy_ai_live_search_stand(e);
+            else if (sub == 0x12) re15_enemy_ai_live_wander(slot, e);
+            else if (sub == 0x13) re15_enemy_ai_live_engage_animate(slot, e);
+            else                  re15_ai_dispatch_decision(e, pl);
+        }
+        {   /* ANIMATE @0x801202a8[+0x5] (@0x8010b740-6c; +0x5 RE-READ after the decide, exactly as
+             * FUN_8010b6d4 does @0x8010b74c). Rows == the standard f890 rows except [0xa] = the girl
+             * FLOOR-DROP 0x8010bbe8; overflow rows [0x11] = word @0x801202ec = 0x801035f8 (the
+             * mode-1 idle decide) and [0x12]/[0x13] = 0x80103b8c (`jr ra` stub). */
+            uint8_t sub = e->sub_state_1;
+            if      (sub == 3 || sub == 4)      re15_enemy_ai_live_grab(e, pl);      /* [3]/[4]=0x80102548 */
+            else if (sub == 0x0c)               re15_enemy_ai_feeding_animate(e, pl);/* [0xc]=0x801048e8 */
+            else if (sub == 0x0d)               re15_enemy_ai_standup_animate(e);    /* [0xd]=0x80104a50 */
+            else if (sub == 7)                  re15_enemy_ai_live_turn(e, pl);      /* [7]=0x80102dc8 */
+            else if (sub == 5 || sub == 6)      re15_enemy_ai_live_devour(e, pl);    /* [5]/[6]=0x80102bd8 */
+            else if (sub == 0x0b)               re15_enemy_ai_live_pushoff(e, pl);   /* [0xb]=0x8010385c */
+            else if (sub == 8)                  re15_enemy_ai_live_charge(slot, e);  /* [8]=0x80103014 */
+            else if (sub == 0x12 || sub == 0x13) { /* overflow [0x12]/[0x13]=0x80103b8c = jr ra */ }
+            else if (sub == 0x11)               re15_zgirl_overflow_row11(e, pl);    /* overflow=0x801035f8 */
+            else if (sub == 0)                  re15_enemy_ai_live_search_stand(e);  /* [0]=0x80101d08 */
+            else if (sub == 1)                  re15_enemy_ai_live_wander(slot, e);  /* [1]=0x80101ef0 */
+            else if (sub == 9)                  re15_enemy_ai_live_contact_stagger(e);/* [9]=0x801031e4 */
+            else if (sub == 0x0a)               re15_zgirl_floor_drop(e);            /* [0xa]=0x8010bbe8 */
+            else if (sub == 2)                  re15_enemy_ai_live_engage_animate(slot, e); /* [2]=0x801021f8 */
+            /* rows [0xe]/[0xf]/[0x10] = 0x80109d98/0x80109e4c/0x80104f80 — identical to the
+             * standard's rows and unported there too (deferred port-wide). */
+        }
         break;
     }
 
-    case 3:   /* commit to attack GRAB 0x8010c014 (hp>=0) — OR take_damage DEATH (hp<0). The zgirl REUSES
-               * the standard zombie's grab FUN_80102548 byte-true: [0/2] IMPACT -10 then a HELD BITE-LOOP
-               * of -5 per clip cycle, gated by the kill (+0x9e=100) and escape (+0x9c=110) counters —
-               * NOT a single -10 then release. */
-        if (e->hp < 0) { e->state = 7; e->sub_state_3 = 0; break; }   /* lethal -> shared corpse */
-        s_player_grabbed = 1; re15_player_victim_latch(e, pl);        /* pin the player (cmd5 @0x80102640) */
-        if (e->sub_state_3 == 0) {                                    /* [0/2] commit + IMPACT */
-            re15_zgirl_clip(e, 0x0b);                                 /* lunge/grab clip 11 @0x8010b584 */
-            if (pl->hit_react == 0) { pl->hp = (int16_t)(pl->hp - 10); pl->hit_react |= 1; }  /* -10 @0x8010277c */
-            e->grab_kill_ctr = 100; e->ai_timer = 110;               /* +0x9e kill / +0x9c escape windows */
-            e->sub_state_3 = 1;
-        } else {                                                     /* [3] BITE-LOOP: -5 per clip cycle */
-            if (re15_zgirl_anim(e) && pl->hp >= 0) {                  /* one bite per grab-clip wrap @0x801027dc */
-                pl->hp = (int16_t)(pl->hp - 5);
-                if (pl->hp < 0) pl->state = 7;                        /* devoured -> player death */
-            }
-            if (--e->grab_kill_ctr <= 0 || pl->hp < 0) {             /* kill window ran out -> devour handoff */
-                pl->state = 7; e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0; break;
-            }
-            e->ai_timer = (int16_t)(e->ai_timer - (int16_t)(1 + 5 * re15_mash_pressed()));  /* escape drain @0x80037024 */
-            if (e->ai_timer < 0) { e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0; }  /* THROW-OFF (escape alive) */
-        }
+    case 2:   /* HURT FUN_8010bf80 -> masters @0x8012039c == standard @0x8011fb90 (see header);
+               * the girl downed router (+0x5==2 -> prone @0x8010bfa4-c4) is gated inside live_hurt.
+               * Fixes the same-frame no-op reset (audit zombie-girl #4). */
+        re15_enemy_ai_live_hurt(slot);
         break;
 
-    case 2:   /* HURT (take_damage +0x4=2) -> flinch -> resume the brain */
-        e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0; e->hit_react = (uint8_t)(e->hit_react & ~1u);
+    case 3:   /* DEATH FUN_8010c014 -> master @0x8012063c == standard @0x8011feac; downed -> the
+               * same FUN_80107cb0 (@0x8010c038). Death-fall clips + settle handoff via the shared
+               * port (audit zombie-girl #3). */
+        re15_enemy_ai_live_death(slot);
         break;
 
-    case 7:   /* CORPSE (shared zombie 0x80109554): settle, inert */
-        re15_zgirl_anim(e);
+    case 7:   /* CORPSE @0x80120208[7] = 0x80109554 — the SAME shared corpse settle (pool spread,
+               * creep, twitch, rest) as the standard zombie. */
+        re15_enemy_corpse_settle(e);
         break;
 
-    default:  /* the mode-dispatch attack/turn sub-states = wave 2 -> resume the brain */
-        e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0;
+    default:  /* [4] = 0x8010919c idle — deferred port-wide (same as the standard zombie). */
         break;
     }
 }
@@ -6824,12 +7015,38 @@ void re15_enemy_ai_run_all(int combat_active)
              * 0x40 st=4 mo=2) and ROOM6000 (0x4d st=0). The walk/look/dialogue VM stays Wave-2 deferred. */
             re15_npc_ai_tick(s);
         }
-        else if (t == 0x13) {   /* ZOMBIE GIRL (type 0x13) — nav-pathing zombie variant (Wave 1).
-                                 * Ground enemy: SCA wall-clamp after the tick like the dog/zombie. */
+        else if (t == 0x13) {   /* ZOMBIE GIRL (type 0x13) — the standard-zombie phase FSM on her own
+                                 * root FUN_8010a8c8 (audit wf_827f186d zombie-girl #1). Her root TAIL
+                                 * (@0x8010aa80-aaf4: b4e4 / attack-pt 0x80104178 / b498 contact clear /
+                                 * aec4+b544 body pushes / SCA b0a4 / SFX 0x8001b38c) is the SAME helper
+                                 * chain as the standard zombie root's -> mirror the standard branch
+                                 * (grab-pair push exemption included: she runs the shared FUN_80102548
+                                 * grab machine now). */
             int32_t zg_ox = e->x, zg_oz = e->z;
             re15_zgirl_ai_tick(s);
-            re15_enemy_body_push_tail(s, e);
-            if (g_room_rdt_ok && (e->x != zg_ox || e->z != zg_oz)) {
+            re15_enemy_anim_sfx(e);        /* FUN_8001b38c @0x8010aad8 */
+            re15_enemy_hurt_fx(e);         /* shared hurt handlers -> hit blood */
+            re15_enemy_gore_tick(e);       /* +0x93&2 -> gore effect spawn */
+            re15_enemy_gore_setup(e);      /* sub_state_1==0x58 -> effect-5 gore setup */
+            e->contact_flags = 0;          /* FUN_8002b498 @0x8010aa98 (after dispatch, before pushes) */
+            if (e->state != (uint8_t)RE15_AI_STATE_CORPSE && e->hit_radius_min != 0) {
+                re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+                int pair_frozen = (e->state == 1 && e->sub_state_1 >= 3 && e->sub_state_1 <= 6);
+                if (pl->hp >= 0 && !pair_frozen)
+                    if (re15_body_push(pl, RE15_BODY_R_PLAYER, e, (int32_t)e->hit_radius_min))
+                        e->contact_flags |= 1;
+                for (int o = RE15_ACTOR_SLOT_PLAYER + 1; o < RE15_ACTOR_MAX; o++) {
+                    if (o == s) continue;
+                    re15_actor_t *z2 = &g_actors[o];
+                    if (!z2->active || z2->hit_radius_min == 0) continue;
+                    if (z2->state == (uint8_t)RE15_AI_STATE_CORPSE) continue;
+                    if (re15_body_push(z2, (int32_t)z2->hit_radius_min, e, (int32_t)e->hit_radius_min)) {
+                        e->contact_flags |= 2;
+                        e->contact_slot   = (int8_t)o;
+                    }
+                }
+            }
+            if (g_room_rdt_ok && (e->x != zg_ox || e->z != zg_oz)) {   /* SCA b0a4 @0x8010aad0 */
                 int32_t nx = e->x, nz = e->z;
                 re15_collision_constrain_enemy(&g_room_rdt, zg_ox, zg_oz, &nx, &nz, e->hit_radius_min, e->y);
                 e->x = nx; e->z = nz;

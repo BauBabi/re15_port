@@ -650,7 +650,11 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
 static int re15_type_self_advances_anim(uint8_t t)
 {
     switch (t) {
-    case 0x13: case 0x1a: case 0x20: case 0x21: case 0x23: case 0x24:
+    /* 0x13 (zombie girl) REMOVED from the self-advance list (audit wf_827f186d zombie-girl #1):
+     * she now runs the SHARED standard-zombie phase handlers (girl mode-0 tables @0x80120264/
+     * @0x801202a8 are byte-identical to @0x8011f840/@0x8011f890 except row [0xa]) whose sub-FSMs
+     * clock on the GLOBAL advancer + re15_enemy_clip_done, exactly like types 0x10/0x11/0x16. */
+    case 0x1a: case 0x20: case 0x21: case 0x23: case 0x24:
     case 0x25: case 0x27: case 0x29: case 0x2b: case 0x2d: case 0x30:
     case 0x36: case 0x40:
         return 1;
