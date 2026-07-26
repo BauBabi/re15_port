@@ -49,6 +49,36 @@ wrong behavior (e.g. test_room1140_combat 14b, spider death). 96/96 ctest.
   sub-19 root-motion (needs the EDD 0x4000/0x2000 flag channel); executor rows [10..17] + [23]/[24]
   step-up; state-1 deep decide/act rows ≥3; +0x1c8/+0x1ca turn-rate stash (no consumer).
 
+## Boss / late-stage wave (2026-07-26) — audit wf_efd92a2c, fix waves wf_23c59f5e/wf_64bfa717/wf_46cb1c14
+
+A second campaign covering the 8 late-stage/boss types the STAGE1 sweep did NOT touch (the user asked
+about the Birkin boss). Same method: adversarial audit (8 finders vs raw STAGE2-5.BIN disasm, refuters)
+→ **107 claims, 66 first-round CONFIRMED, the rest verify-then-fixed** (adult-spider 25/25 + ivy 9/9
+confirmed in the fix wave after the first-round refuters died on a credit limit). **0 refuted overall.**
+Each type = one byte-true wave, ctest-green + committed. The two most surprising reversals were
+independently re-disassembled by the main loop before accepting.
+
+| Type | Commit | Headline divergence fixed |
+|------|--------|---------------------------|
+| **G-BIRKIN 0x30/0x36** | 78d2b2dc | **The boss had NO phase-2 mutation.** Root (0x80116230) forces state 0x601 at hp<100; sub-6 (@0x80117f80) is the mutation set-piece (HP reset 150, grid\|=0x10 = form-2 attacks/speed, ESP 0x1d) — the port's sub-6 was a no-op mislabeled "throw follow-up". Rebuilt the whole family: root low-HP driver, HURT super-armor (+0x1dc) + mutation-revive (+0x1dd&8→HP=50 @0x8011a3f0), DEATH morph-tail (wait grid&0xf==2 → clip 0xc → sub-11 run-off to (-22000,-12000)). Port boss no longer dies single-phase at 0/300. |
+| **TYRANT 0x2b** | bb32ae3c | 16 findings: missing rear-grab (facing-select sub 5/9), real GRAB1/2 budget+mash timers, ATTACK1 window (frame≥10 not inverted 3..9), stagger→charge pipeline, two-stage death. |
+| **COCKROACH 0x29** | 95d99f78 | Port had **NO flee/flight**: HURT→fly-away (subs 7/8/9), leap-launch, HEAVY window {21..24,33,34}, SCURRY speed 180-211 re-rolled/frame (was rolled once >>3 = 8× slow). The STAGE1-flagged "advance-30" **was invented** — removed. |
+| **ALLIGATOR 0x23** | 66e39ff3 | Port **INVENTED a "100-frame jaws-hold → unconditional pl->hp=-1 swallow"** — no such loop/write exists in 0x8010c448. Replaced with byte-true bite = KNOCKDOWN aca58=2 (eaten aca58=3 is bgez-gated on hp<0); restored the 11 missing sub-brains. (Model is a known data gap — AI only.) |
+| **WRITHER 0x1a** | 38b0a4b9 | Roster doc said "unkillable/harmless" — **WRONG**: INIT (0x8010c33c) installs a 300-radius damage box (+0x78) and writes NO HP → spawn HP=0 → any shot → real DEATH (clip 3 + gore) handler. Self-verified vs disasm. |
+| **DORMANT 0x22/24/2a/31-35/1c-1f** | 2d6e49a2 | 4 doc/routing corrections, 3 OPEN (kept stub/unrouted where byte-true). |
+| **ADULT-SPIDER 0x25** | 5afc5a2a | Port had **invented almost the entire ACTIVE brain** (dual-table A/B FSM @0x80118e44/e64). 24 findings fixed: ROAM/APPROACH cascades, GRAB-A pin (grid:=0), SPIT-7, SCAN latched ±0x18, stuck-ctr +0x1dc, INIT pose cluster, kill-flag; + a latent LOS-latch bug found in-flight. |
+| **IVY 0x2d** | f879c7c0 | Port had **invented an entire chase/grab/instant-kill/hurt engine by mis-reading the neighbouring 0x40 NPC root**. The shipped ivy is a **dormant, weapon-immune scripted PROP** — state table @0x8011a2c0 = only 2 code ptrs (INIT/ACTIVE), ACTIVE (0x801169b8) is flag-gated bone-sway with zero player-read, dmg row @0x8006f048 = all-zero. Self-verified vs STAGE4.BIN. Removed the invented engine + made it non-targetable. |
+
+**Honest-OPEN (documented in code with exact bytes, none faked):** the room-collision LOS raycasts
+(+0x1d0&1 / FUN_8001bc08) unavailable in the collision-less AI harness (range+arc proxies at every
+site); per-bone attack spheres (0x8001bff8) proxied by frame-window + arc; the aca58/aca59 player-
+command victim FSM is unported port-wide (grabs drive the player via the shared s_player_grabbed +
+devour); SCD-triggered set-pieces (Birkin death grid==2 morph, alligator submerge water-level); model-
+data gaps (alligator EM023 absent from CDEMD0.EMS) → clip lengths/root-motion proxied; render-side
+gore/tint/sink. Birkin/Tyrant/Ivy/Alligator have NO PSX savestate here (STAGE2-5) → not live-parity'd;
+their mechanics are pinned by the raw disasm + the type ctests. Fresh DuckStation captures via
+`re15-room-capture` would extend the live table.
+
 ## Live parity check vs PSX savestates (2026-07-26, post-campaign)
 
 Method per `re15-parity-verify`: same room, same walk, compare state trajectories (port
