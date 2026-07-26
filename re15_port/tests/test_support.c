@@ -35,6 +35,7 @@ void re15_audio_start_room_bgm(int stage, int room)
 /* Audio stubs for engine unit tests (the real impls live in the PC/PSX backends,
  * not linked into test binaries). enemy_ai_common.c's death FSM calls re15_audio_room_se. */
 void re15_audio_room_se(int se_id) { (void)se_id; }
+void re15_audio_room_se_snd0(int se_id) { (void)se_id; }   /* NPC sub-19 SE(2,7) (wf_827f186d npc #4) */
 void re15_audio_weapon_se(int se_id) { (void)se_id; }
 /* FILE wave: spy on the CORE00-bank SE calls (FUN_80045024 bank 4) so the FSM tests
  * can assert the byte-cited call sites (SE(4,4)/(4,5)/(4,6)/(4,8)). */
