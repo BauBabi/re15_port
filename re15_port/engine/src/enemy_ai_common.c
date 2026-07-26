@@ -7361,80 +7361,259 @@ static void re15_writher_ai_tick(int slot)
 }
 
 /* ============================ ALLIGATOR boss (type 0x23, EM023) — STAGE2 sewer ================ *
- * Byte-true from workflow wf_5c34ffe7 (root 0x8010c448, state table @0x80118bc8). A giant ground
- * WALK-CHASER whose ONE attack is a lunging GRAB-and-EAT (jaws). HP 300 (type row @0x801175dc = 16x
- * 300, RNG-invariant). The grab does NO chip hp write in the handler (the report's player.hp touches
- * are redundant self-stores); it latches the shared grab-command DAT_800aca58 = 2 (in-jaws) and
- * escalates to = 3 ("eaten"/swallow = death) — @0x8010d27c/@0x8010d288 (sub 3) and @0x8010e120/
- * @0x8010e130 (sub 9). So the port models the grab as a MASH-window jaws-hold that SWALLOWS (kills)
- * the player when the hold expires. Locomotion is the shared walker (steer 0x8001a804 + pos_advance
- * 0x800245d8); the exact directional walk-clip LUT (@0x80118d44) + dual-table decision choreography
- * are faithful-line (the grab mechanism + HP + ranges are byte-true). */
+ * BYTE-TRUE REBUILD of the WHOLE 0x8010c448 family (audit wf_efd92a2c alligator, 12 findings, 5 HIGH).
+ * The port was a near-stub that INVENTED a "grab -> 100-frame jaws-hold -> unconditional swallow-kill"
+ * — none of which exists on hardware. Re-ported against raw STAGE2.BIN disasm (overlays @0x80100000):
+ *   state table @0x80118bc8  ([1]=ACTIVE 0x8010c860, [2]=HURT 0x8010e570, [7]=CORPSE 0x8010eca4)
+ *   DECIDE table A@0x80118be8 (A[0]=0x8010cb04, A[2]=0x8010cd70, A[4]=0x8010d3a4, A[6]=0x8010da0c)
+ *   ACT    table B@0x80118c28 (B[3]=0x8010cfbc, B[4]=0x8010d684, B[5]=0x8010d868, B[6]=0x8010db50,
+ *                              B[7]=0x8010dc90, B[9]=0x8010df34)
+ *   connect-frame byte tables  @0x80118c68 = {19,20,21} (B[3]).
+ * The ACTIVE brain is a decide(A[sub]) + act(B[sub]) dual-dispatch on +0x5 (same shape as Birkin/
+ * Tyrant), and the ACTIVE tail decrements three cooldowns every frame (audit #7).
+ *
+ * HEADLINE (audit #0/#2): the bite does NOT pin-and-swallow. On connect the handler writes the
+ * engine-wide KNOCKDOWN player command DAT_800aca58=2 / aca59=facing+2 (byte-identical to the zombie
+ * @0x8010f30c and spider @0x8011638c knockdown) — the player is knocked down and RECOVERS. The player
+ * hp access at the bite sites is a lhu/sh SELF-STORE (zero damage); the aca58=3 "eaten" cmd @0x8010d2ac
+ * is bgez-gated on player.hp<0 (fires same-frame ONLY if already dead). There is NO hold loop and NO
+ * player.hp write anywhere in 0x8010c448..0x8010ee38 (full sweep). So the port models the bite as the
+ * shared hit_react|=1 knockdown latch (the aca58 player-command FSM is unported port-wide, L2729/L3475).
+ *
+ * Field map to the PSX entity offsets (reusing the matching dedicated actor fields):
+ *   +0x1dc lunge/re-attack cooldown -> hit_stun    +0x1e0 mode (0=land,1=water) -> dog_atk_cd
+ *   +0x1e2 roar cooldown            -> dog_yawrate  +0x1e3 aux cooldown          -> dog_pounce_cd
+ *   +0x9c  aim/misc timer           -> ai_timer     +0x9e  dwell/corpse timer    -> grab_kill_ctr
+ *   +0x1d0 LOS raycast bit          -> dog_flags b0 +0x1d4 cached dist           -> dog_dist
+ *   +0x1ba floor Y                  -> dog_floor_y  +0x9f  hit-direction latch   -> dog_aux9f
+ *   +0x6   act phase                -> sub_state_2  +0x7   phase/mode-2 rise      -> sub_state_3
+ *
+ * OPEN (subsystem gaps documented inline, NOT faked):
+ *   (a) +0x1d0&1 is the room-collision LOS raycast — not reproducible in the collision-less AI harness;
+ *       the water-idle hub / roar gate on an in-arc proxy for it.
+ *   (b) the JAW-BONE box hit (0x8001bff8 on skel+2644 box[0]=700/a2=800 for B[3]; skel+1612 for B[9])
+ *       has no per-bone spheres in the port (the alligator MODEL is a known data gap — absent from
+ *       CDEMD0.EMS) -> connect uses the {19,20,21}/{7..15} frame window + range/arc proxy; the 700/800
+ *       box constants + jaw bone are cited but proxied.
+ *   (c) clip root-motion (0x800245d8 reads +0x8c from the clip) + exact clip lengths are clip-data,
+ *       also part of the model gap -> movement uses re15_dog_advance proxy speeds and a frame-window
+ *       clip-end proxy (flagged); the submerge (sub 5) / water-rise (B[4] mode-2 Y-=50 clamp -1200)
+ *       depend on the room water level (+0x1e0 water zone) which the harness has no room for.
+ *   (d) corpse tint/fade (+0xc4/+0xec color, +0xbc/+0xbe +8/frame) is render-side; the flag/timer half
+ *       is ported. */
 static void re15_alligator_ai_tick(int slot)
 {
     re15_actor_t *e  = &g_actors[slot];
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
 
     switch (e->state) {
-    case 0:   /* INIT 0x8010c56c: HP 300, clip 4, state 1 sub 6, mode +0x1e0. Grid-odd = melee. */
-        if (e->hp <= 0) e->hp = 300;                 /* +0x9a from row @0x801175dc (16x300) @0x8010c6d4 */
-        e->motion = 4; e->anim_frame = 0; e->anim_frac = 7;   /* clip 4 @0x8010c590 */
+    case 0: {  /* INIT 0x8010c56c: HP 300 unconditional; +0x8f=0; default=water sub6, grid-odd=land sub0.
+                * (audit #9: default Y=-1200 / +0x1ba mirror / +0x1e0=1; grid-odd word 0x01000001 =
+                *  state1 sub0 sub3=1 / clip 0 / +0x1e0=0 / Y=-1800*floor; no INIT steer store.) */
+        if (e->hp <= 0) e->hp = 300;                 /* +0x9a row @0x801175dc (16x300) @0x8010c6d4 */
+        e->anim_frame = 0; e->anim_frac = 0;         /* +0x8f = 0 @0x8010c5b0 (was invented anim_frac=7, #9) */
         e->hit_react = 0; e->ai_timer = 0;
-        e->steer_x = (int16_t)pl->x; e->steer_z = (int16_t)pl->z;
-        if (e->grid_id & 1) { e->sub_state_1 = 0; e->dog_atk_cd = 0; }   /* grid-odd = melee (+0x1e0=0) @0x8010c620-region */
-        else                { e->sub_state_1 = 6; e->dog_atk_cd = 1; }   /* default = ranged/approach (+0x1e0=1, sub 6) */
+        e->hit_stun = 0; e->dog_yawrate = 0; e->dog_pounce_cd = 0; e->dog_flags = 0;  /* +0x1dc/+0x1e2/+0x1e3/+0x1d0 */
         e->sub_state_2 = 0; e->sub_state_3 = 0;
-        e->state = 1;                                /* +0x4 = 0x601 -> state 1 @0x8010c580 */
-        break;
-
-    case 1: {  /* ACTIVE 0x8010c860: walk-chase + decision hub (dist-gated). Dual A/B brain on +0x5. */
-        int32_t dist = re15_enemy_player_dist(e, pl);
-        e->dog_dist = (int16_t)dist;
-        switch (e->sub_state_1) {
-        case 6: case 0: default:   /* APPROACH / decision HUB (A[6] init 0x8010da0c / A[4] 0x8010d3a4):
-                                    * walk toward the player; when in jaws range + facing -> LUNGE-GRAB. */
-            if (e->motion != 4) { e->motion = 4; e->anim_frame = 0; }        /* directional walk clip (faithful) */
-            re15_enemy_steer_point(e, pl->x, pl->z, 0x40);                    /* yaw-slew 0x8001a8f8 */
-            re15_dog_advance(e, 48);                                         /* pos_advance 0x800245d8 */
-            e->anim_frame++;
-            if (pl->hit_react == 0 && dist < 3000 && re15_dog_arc(e, pl, 3000, 0x338)) {  /* commit range 0xbb8 @A[4] */
-                e->motion = 3; e->anim_frame = 0; e->sub_state_1 = 3; e->sub_state_2 = 0; e->sub_state_3 = 0; }
-            break;
-        case 3:   /* LUNGE-GRAB (B[3] 0x8010cfbc): lunge into the jaws-reach; on connect latch the grab
-                   * (DAT_800aca58=2) and hold -> SWALLOW (eaten) at hold-end. Reach 800 @0x8001bff8. */
-        case 9:   /* GRAB (B[9] 0x8010df34): the same jaws-grab, second site. Route through here. */
-            re15_enemy_steer_point(e, pl->x, pl->z, 0x30);
-            if (e->sub_state_3 == 0) {                       /* lunge windup: close into reach */
-                re15_dog_advance(e, 64);
-                if (e->anim_frame >= 3 && dist <= re15_body_contact_reach(e) && re15_dog_arc(e, pl, re15_body_contact_reach(e), 0x400) && !s_player_grabbed) {   /* jaws reach at body contact (was 1400 < push standoff 2650; audit wf_555f18eb Part B) */
-                    s_player_grabbed = 1; pl->hit_react |= 1;      /* grab latch cmd 2 (in-jaws) @0x8010d27c */
-                    e->ai_timer = 100;                             /* +0x1dc hold timer = 100 @0x8010d270 */
-                    e->sub_state_3 = 1; re15_audio_room_se(2);
-                }
-                if (++e->anim_frame >= 40) { e->sub_state_1 = 6; e->sub_state_2 = 0; e->sub_state_3 = 0; }  /* missed -> HUB */
-            } else {                                          /* JAWS HOLD -> swallow (eaten) at hold-end */
-                s_player_grabbed = 1;                          /* keep the player pinned */
-                if (e->ai_timer > 0) e->ai_timer--;
-                if (e->ai_timer == 0) {                        /* SWALLOW: eaten -> death (cmd 2 -> 3 @0x8010d288) */
-                    if (pl->hp >= 0) pl->hp = -1;              /* player.hp<0 -> DAT_800aca58=3 (eaten) */
-                    s_player_grabbed = 0;
-                    e->sub_state_1 = 6; e->sub_state_2 = 0; e->sub_state_3 = 0;
-                }
-            }
-            break;
+        if (e->grid_id & 1) {                        /* grid-odd (+0x9&1 @0x8010c750-758) = LAND melee */
+            e->motion = 0;                           /* clip 0 @0x8010c77c */
+            e->dog_atk_cd = 0;                       /* +0x1e0 = 0 (land) @0x8010c78c */
+            e->y = -1800 * (int32_t)e->floor;        /* Y = -1800*(+0x82) @0x8010c7a4-7bc */
+            e->dog_floor_y = (int16_t)e->y;
+            e->state = 1; e->sub_state_1 = 0; e->sub_state_3 = 1;   /* word 0x01000001 @0x8010c764-76c */
+        } else {                                     /* default = WATER ranged/approach */
+            e->motion = 4;                           /* clip 4 @0x8010c590 */
+            e->dog_atk_cd = 1;                       /* +0x1e0 = 1 (water) @0x8010c61c-620 */
+            e->y = -1200;                            /* Y = -1200 @0x8010c65c-660 */
+            e->dog_floor_y = -1200;                  /* +0x1ba mirror @0x8010c670-678 */
+            e->state = 1; e->sub_state_1 = 6;        /* word 0x601 = state1 sub6 @0x8010c578-580 */
         }
         break; }
 
-    case 2:   /* HURT (take_damage +0x4=2): flinch -> resume the approach/decision hub */
-        e->state = 1; e->sub_state_1 = 6; e->sub_state_2 = 0; e->sub_state_3 = 0;
+    case 1: {  /* ACTIVE 0x8010c860: decide A[sub] (may change +0x5) then act B[sub]; tail decrements
+                * the three cooldowns +0x1dc/+0x1e2/+0x1e3 every frame @0x8010c9d4-0x8010ca40 (audit #7). */
+        int32_t dist = re15_enemy_player_dist(e, pl);
+        e->dog_dist = (int16_t)dist;
+
+        /* LOS proxy (OPEN (a)): +0x1d0&1 is the room-collision has-LOS raycast (FUN_8001b84c), which
+         * the collision-less AI harness cannot run, so the bit stays 0 (LOS "unconfirmed"). With it 0
+         * the water-idle hub A[6] always elects the swim-chase (sub 4), and roar/submerge (which REQUIRE
+         * the bit) are gated off — the byte-true fallback when LOS is not established. */
+        e->dog_flags = (uint16_t)(e->dog_flags & ~1u);
+
+        /* ---------- DECIDE A[sub] (may retarget +0x5) ---------- */
+        switch (e->sub_state_1) {
+        case 0:   /* A[0] 0x8010cb04: promote out of idle. dist<0x1388(5000)+facing -> sub 1; dist<0xfa0(4000) -> sub 2. */
+            if ((uint32_t)dist < 0xfa0u)                                    e->sub_state_1 = 2;   /* @0x8010c... land-chase */
+            else if ((uint32_t)dist < 0x1388u && re15_dog_arc(e, pl, 0x1388, 0x400)) e->sub_state_1 = 1;
+            break;
+        case 1: case 2:   /* A[2] 0x8010cd70 land-chase: commit the lunge; frontal-hit -> sub 10 turn. */
+            if (pl->hit_react == 0 && re15_dog_arc(e, pl, 0x1770, 0x180) && e->hit_stun == 0) {  /* 0x8001a804(0x1770=6000,0x180) + +0x1dc==0 @0x8010ce34-64 (audit #4) */
+                e->sub_state_1 = 3; e->sub_state_2 = 0; e->sub_state_3 = 0; e->anim_frame = 0; e->motion = 3;
+            }
+            break;
+        case 4:   /* A[4] 0x8010d3a4 swim decide: commit lunge (same 6000/0x180/+0x1dc==0); sub-5 submerge
+                   * gate = dist<0xbb8(3000) && !(+0x1d0&1) @0x8010d4b4-d4 (audit #10, was mislabeled). */
+            if (pl->hit_react == 0 && re15_dog_arc(e, pl, 0x1770, 0x180) && e->hit_stun == 0) {  /* @0x8010d3e0-410 (audit #4) */
+                e->sub_state_1 = 3; e->sub_state_2 = 0; e->sub_state_3 = 0; e->anim_frame = 0; e->motion = 3;
+            } else if ((uint32_t)e->dog_dist < 0xbb8u && !(e->dog_flags & 1)) {
+                e->sub_state_1 = 5; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* sub 5 submerge @0x8010d4d4 */
+            }
+            break;
+        case 6:   /* A[6] 0x8010da0c water-idle decision HUB (audit #3): -> sub 5 grab-follow (aca58==0x701,
+                   * unported cmd FSM); else sub 4 swim-chase when NOT(dist 4000..6000 && LOS); else roar
+                   * sub 7 when dist<6000 && +0x1e2==0. NEVER walks/lunges directly. */
+            if (pl->hit_react == 0 && !((uint32_t)(dist - 4000) < 0x7d1u && (e->dog_flags & 1))) {
+                e->sub_state_1 = 4; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* -> swim-chase @0x8010dab0 */
+            } else if ((uint32_t)dist < 0x1770u && e->dog_yawrate == 0) {
+                e->sub_state_1 = 7; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* -> roar @0x8010da80/aa0 (+0x1e2==0) */
+            }
+            break;
+        default: break;
+        }
+
+        /* ---------- ACT B[sub] ---------- */
+        switch (e->sub_state_1) {
+        case 1: case 2:   /* land-chase locomotion (clip root-motion = model gap -> proxy advance). */
+            if (e->motion != 4) { e->motion = 4; e->anim_frame = 0; }
+            re15_enemy_steer_point(e, pl->x, pl->z, 0x40);
+            re15_dog_advance(e, 48);
+            e->anim_frame++;
+            break;
+
+        case 4: {  /* B[4] 0x8010d684 swim-chase: yaw-slew rng rate (rng&0x1f)+6 @0x8010d740-50; root-motion
+                    * advance @0x8010d848; mode-2 water-rise Y-=50 clamp -1200 -> mode 1 @0x8010d7e4-834
+                    * (OPEN (c): rise needs the room water level). Movement speed = clip root-motion proxy. */
+            int slew = (re15_engine_rand8() & 0x1f) + 6;
+            re15_enemy_steer_point(e, pl->x, pl->z, slew);
+            re15_dog_advance(e, 48);
+            e->anim_frame++;
+            break; }
+
+        case 3:   /* B[3] 0x8010cfbc LUNGE-GRAB: connect only on anim frames {19,20,21} (@0x80118c68) at the
+                   * jaw bone (box[0]=700/a2=800, OPEN (b)); on connect KNOCKDOWN (aca58=2 -> hit_react|=1),
+                   * +0x1dc=0x64; cmd3 "eaten" only if pl->hp already<0. Clip-end -> +0x1dc=0x2d if 0,
+                   * sub=(+0x1e0==0)?2:4 (audit #1/#8). */
+            re15_enemy_steer_point(e, pl->x, pl->z, 0x30);
+            if (dist > re15_body_contact_reach(e)) re15_dog_advance(e, 64); /* lunge close, halt at jaw contact */
+            if ((e->anim_frame == 19 || e->anim_frame == 20 || e->anim_frame == 21)   /* {19,20,21} @0x80118c68 */
+                && pl->hit_react == 0 && dist <= re15_body_contact_reach(e)
+                && re15_dog_arc(e, pl, re15_body_contact_reach(e), 0x400)) {  /* jaw box[0]=700/a2=800 sits on bone skel+2644 (+2644 FORWARD of center @0x8010d1dc) -> reaches from center by ~the body radius, proxied as body_contact_reach (audit #1 + wf_555f18eb Part B); OPEN (b) */
+                pl->hit_react |= 1;                                         /* KNOCKDOWN aca58=2/aca59=facing+2 @0x8010d27c (cmd FSM OPEN) */
+                e->hit_stun = 0x64;                                         /* +0x1dc = 100 @0x8010d26c-70 (audit #7) */
+                if (pl->hp < 0) { /* eaten cmd3 same-frame only if already dead @0x8010d2a0-ac */ }
+                e->sub_state_2 = 3;                                         /* -> recovery phase */
+            }
+            e->anim_frame++;
+            if (e->anim_frame > 21 || e->sub_state_2 == 3) {               /* clip-end proxy (OPEN (c): anim_set complete) */
+                if (e->hit_stun == 0) e->hit_stun = 0x2d;                   /* +0x1dc=0x2d if 0 @0x8010d33c-340 */
+                e->sub_state_1 = (e->dog_atk_cd == 0) ? 2 : 4;             /* sub=(+0x1e0==0)?2:4 @0x8010d350-364 */
+                e->sub_state_2 = 0; e->sub_state_3 = 0; e->anim_frame = 0;
+            }
+            break;
+
+        case 9:   /* B[9] 0x8010df34 GRAB (second site): window frames 7..15 (@0x8010e0cc-d0), jaw bone
+                   * skel+1612 (no 700 override); on connect KNOCKDOWN + +0x1dc=0x78; clip-end -> sub=4,
+                   * yaw+=0x800 (180 turn), +0x1dc=0x3c if 0 (audit #1/#8). */
+            re15_enemy_steer_point(e, pl->x, pl->z, 0x30);
+            if (dist > re15_body_contact_reach(e)) re15_dog_advance(e, 64); /* halt at jaw contact */
+            if (e->anim_frame >= 7 && e->anim_frame <= 15                   /* window 7..15 @0x8010e0cc-d0 */
+                && pl->hit_react == 0 && dist <= re15_body_contact_reach(e)
+                && re15_dog_arc(e, pl, re15_body_contact_reach(e), 0x400)) {  /* jaw bone skel+1612 (no 700 override), reach proxied as body_contact_reach; OPEN (b) */
+                pl->hit_react |= 1;                                         /* KNOCKDOWN @0x8010e120 (cmd FSM OPEN) */
+                e->hit_stun = 0x78;                                         /* +0x1dc = 120 @0x8010e110-14 (audit #7) */
+                if (pl->hp < 0) { /* eaten cmd3 @0x8010e154 gated on hp<0 */ }
+                e->sub_state_2 = 3;
+            }
+            e->anim_frame++;
+            if (e->anim_frame > 15 || e->sub_state_2 == 3) {               /* clip-end proxy */
+                e->rot_y = (int16_t)(((int)e->rot_y + 0x800) & 0xfff);     /* yaw += 2048 (180) @0x8010e014-020 */
+                if (e->hit_stun == 0) e->hit_stun = 0x3c;                   /* +0x1dc=0x3c if 0 @0x8010e038-040 */
+                e->sub_state_1 = 4; e->sub_state_2 = 0; e->sub_state_3 = 0; e->anim_frame = 0;
+            }
+            break;
+
+        case 5:   /* B[5] 0x8010d868 SUBMERGE: go under, resurface -> hub (OPEN (c): submerge/water-rise
+                   * choreography needs the room water level; no numeric body constant fabricated). */
+            e->sub_state_1 = 6; e->sub_state_2 = 0; e->sub_state_3 = 0;
+            break;
+
+        case 6:   /* B[6] 0x8010db50 idle-clip cycler: STATIONARY, dwell (rng&0x7f)+59 @0x8010db9c-b0.
+                   * (Reached only if A[6] left +0x5==6 this tick.) */
+            if (e->grab_kill_ctr <= 0)
+                e->grab_kill_ctr = (int16_t)((re15_engine_rand8() & 0x7f) + 59);  /* +0x9e dwell @0x8010db9c-b0 */
+            else e->grab_kill_ctr--;
+            e->motion = 6;                                                 /* clip 6 @0x8010dbf0 */
+            e->anim_frame++;
+            break;
+
+        case 7:   /* B[7] 0x8010dc90 ROAR: clip 0x14 once -> sub 6 + roar cooldown +0x1e2=0x78
+                   * @0x8010dcec/@0x8010dd7c (audit #5). Roar clip length = model gap -> frame proxy. */
+            e->motion = 0x14;
+            e->anim_frame++;
+            if (e->anim_frame >= 30) {                                     /* clip-end proxy (OPEN (c)) */
+                e->dog_yawrate = 0x78;                                     /* +0x1e2 = 120 @0x8010dd4c/dd7c */
+                e->sub_state_1 = 6; e->sub_state_2 = 0; e->sub_state_3 = 0; e->anim_frame = 0;
+            }
+            break;
+
+        case 8:   /* sub 8 = water-hurt turn-bite (entered from HURT water path @0x8010e988, audit #6):
+                   * turn toward the aimed direction (+0x9c) then commit the lunge. */
+            re15_enemy_steer_point(e, pl->x, pl->z, 0x40);
+            re15_dog_advance(e, 48);
+            e->anim_frame++;
+            if (pl->hit_react == 0 && re15_dog_arc(e, pl, 0x1770, 0x180) && e->hit_stun == 0) {
+                e->sub_state_1 = 9; e->sub_state_2 = 0; e->sub_state_3 = 0; e->anim_frame = 0;  /* water grab site */
+            }
+            break;
+
+        case 10:  /* sub 10 frontal-turn reaction (A[2]/A[4] @0x8010cdb0/d54c): latch hit-dir +0x9f, then
+                   * sub3=1 -> immediate lunge (audit #5). */
+            e->dog_aux9f = (int8_t)e->hit_react;                           /* +0x9f = hit-dir @0x8010d56c */
+            e->sub_state_3 = 1;                                            /* sub3=1 @0x8010d5a0 */
+            e->sub_state_1 = 3; e->sub_state_2 = 0; e->anim_frame = 0; e->motion = 3;
+            break;
+
+        case 0: default:  /* still idle (A[0] did not promote): hold */
+            break;
+        }
+
+        /* ---------- ACTIVE tail: decrement the three cooldowns every frame (audit #7 @0x8010c9d4-0x8010ca40) ---- */
+        if (e->hit_stun     > 0) e->hit_stun--;       /* +0x1dc lunge/re-attack cooldown */
+        if (e->dog_yawrate  > 0) e->dog_yawrate--;    /* +0x1e2 roar cooldown */
+        if (e->dog_pounce_cd > 0) e->dog_pounce_cd--; /* +0x1e3 aux cooldown */
+        break; }
+
+    case 2:   /* HURT 0x8010e570 (audit #6): +0x1e0!=0 (water) -> aimed turn-bite sub 8; else land flinch
+               * clip 0xa -> sub 2. NEVER resumes sub 6. */
+        if (e->dog_atk_cd != 0) {                     /* +0x1e0!=0 water @0x8010e580 -> 0x8010e91c */
+            e->ai_timer = (int16_t)(((int)pl->rot_y - (int)e->rot_y) & 0xfff);  /* +0x9c aim = (DAT_800acabe - yaw)&0xfff @0x8010e954-968 */
+            e->state = 1; e->sub_state_1 = 8;         /* state1 sub8 @0x8010e978-988 */
+        } else {                                      /* land flinch @0x8010e5d8: clip 0xa -> sub 2 */
+            e->hit_react = (uint8_t)(e->hit_react | 2);   /* +0x93 |= 2 @0x8010e630 */
+            e->motion = 0xa;                          /* clip 0xa @0x8010e64c-650 */
+            e->state = 1; e->sub_state_1 = 2;         /* phase2 -> state1 sub2 @0x8010e6f0/714 */
+        }
+        e->sub_state_2 = 0; e->sub_state_3 = 0;
         e->hit_react = (uint8_t)(e->hit_react & ~1u);
         break;
 
     case 3:   /* DEATH (take_damage +0x4=3): -> corpse. Exact death-topple clip = faithful-line. */
-        e->state = 7; e->sub_state_3 = 0;
+        e->state = 7; e->sub_state_2 = 0; e->sub_state_3 = 0;
         break;
 
-    case 7:   /* CORPSE: settle, inert */
+    case 7:   /* CORPSE 0x8010eca4 (audit #11): phase0 seeds +0x9e=0x5a, flags|=2, flags|=0x40; phase1
+               * fades (color/scale = render-side OPEN (d)), 90-frame countdown -> phase2 inert. */
+        if (e->sub_state_2 == 0) {
+            e->grab_kill_ctr = 0x5a;                  /* +0x9e = 90 @0x8010ecd0-d4 */
+            e->flags = (uint8_t)(e->flags | 2);       /* word0 |= 2 @0x8010ecfc-d00 */
+            e->flags = (uint8_t)(e->flags | 0x40);    /* word0 |= 0x40 @0x8010ed18-1c */
+            e->sub_state_2 = 1;                        /* phase +0x7=1 */
+        } else if (e->sub_state_2 == 1) {
+            /* color +0xc4/+0xec fade + scale +0xbc/+0xbe +=8/frame = render-side (OPEN (d)) */
+            if (e->grab_kill_ctr > 0) e->grab_kill_ctr--;   /* 90-frame countdown @0x8010ed74-90 */
+            else e->sub_state_2 = 2;                    /* -> inert */
+        }
         e->anim_frame++;
         break;
 

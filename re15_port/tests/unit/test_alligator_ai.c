@@ -1,11 +1,15 @@
 /* test_alligator_ai.c — ALLIGATOR boss (type 0x23, EM023, STAGE2 sewer) AI.
  *
- * Byte-true from workflow wf_5c34ffe7 (root 0x8010c448). A giant ground walk-chaser whose one attack
- * is a lunging GRAB-and-EAT (jaws): it latches the shared grab-cmd DAT_800aca58=2 (in-jaws) and
- * SWALLOWS (eaten -> death, cmd 3) when the hold expires. Asserts:
- *   (1) INIT: state -> 1, HP 300 (row @0x801175dc = 16x300), clip 4, sub 6 (ranged/approach).
+ * Byte-true rebuild (audit wf_efd92a2c alligator, root 0x8010c448). A giant water/ground chaser whose
+ * one attack is a lunging BITE. On connect it writes the engine-wide KNOCKDOWN player command
+ * DAT_800aca58=2 (byte-identical to the zombie/spider knockdown) — the player is knocked down and
+ * RECOVERS. There is NO jaws-hold and NO player.hp write (the hp access at the bite sites is a no-op
+ * self-store; the aca58=3 "eaten" cmd is bgez-gated on player.hp<0, i.e. only if already dead). The
+ * old "100-frame hold -> unconditional pl->hp=-1 swallow" was invented (audit #0/#2). Asserts:
+ *   (1) INIT: state -> 1, HP 300 (row @0x801175dc = 16x300), clip 4, sub 6 (water/approach).
  *   (2) CHASE: a distant player makes the alligator close in.
- *   (3) GRAB-EAT: a player in jaws range gets grabbed (pinned) and swallowed (killed).
+ *   (3) BITE = KNOCKDOWN: a player in bite range is knocked down (hit_react latched) but NOT pinned
+ *       and NOT killed (hp stays >= 0) — the player recovers.
  *   (4) KILLABLE: a lethal hit -> DEATH -> CORPSE (state 7).
  */
 #include <stdio.h>
@@ -55,20 +59,23 @@ int main(void)
     if (c1 >= c0) { fprintf(stderr, "FAIL(2): alligator must close on the player, dist %d->%d\n", c0, c1); fail = 1; }
     printf("  (2) CHASE: dist %d->%d (closing)\n", c0, c1);
 
-    /* (3) GRAB-EAT: put the player in jaws range, facing; the alligator grabs (pins) then swallows (kills) */
+    /* (3) BITE = KNOCKDOWN (audit #0/#2): a player in bite range facing the gator is KNOCKED DOWN
+     * (hit_react latched by the connect) but NOT pinned (no grab) and NOT killed (hp stays >= 0). */
     e->state = 1; e->sub_state_1 = 6; e->sub_state_2 = 0; e->sub_state_3 = 0;
+    e->hit_stun = 0;
     pl->x = e->x; pl->z = e->z + 1200; pl->hp = 100; pl->hit_react = 0;
     e->rot_y = (int16_t)(((int)re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0xfff);
-    int grabbed_seen = 0;
+    int knock_seen = 0, pinned_seen = 0;
     for (int f = 0; f < 200; f++) {
         re15_enemy_ai_run_all(0);
-        if (re15_player_is_grabbed()) grabbed_seen = 1;
-        pl->hit_react = 0;
-        if (pl->hp < 0) break;   /* swallowed */
+        if (pl->hit_react & 1) knock_seen = 1;      /* KNOCKDOWN latched this tick */
+        if (re15_player_is_grabbed()) pinned_seen = 1;
+        pl->hit_react = 0;                          /* player recovers from the knockdown */
     }
-    if (!grabbed_seen) { fprintf(stderr, "FAIL(3): the alligator never grabbed (pinned) the player\n"); fail = 1; }
-    if (pl->hp >= 0)   { fprintf(stderr, "FAIL(3): the jaws-hold must SWALLOW (kill) the player, hp=%d\n", pl->hp); fail = 1; }
-    printf("  (3) GRAB-EAT: player grabbed=%d, swallowed -> hp=%d\n", grabbed_seen, pl->hp);
+    if (!knock_seen)          { fprintf(stderr, "FAIL(3): the bite must KNOCK the player down (hit_react)\n"); fail = 1; }
+    if (pinned_seen)          { fprintf(stderr, "FAIL(3): the bite is a KNOCKDOWN, not a pin/grab\n"); fail = 1; }
+    if (pl->hp < 0)           { fprintf(stderr, "FAIL(3): the bite must NOT swallow/kill the player, hp=%d\n", pl->hp); fail = 1; }
+    printf("  (3) BITE=KNOCKDOWN: knocked=%d, pinned=%d, hp=%d (player recovers)\n", knock_seen, pinned_seen, pl->hp);
 
     /* (4) KILLABLE: a lethal hit -> DEATH -> CORPSE */
     pl->x = 0; pl->z = 30000;

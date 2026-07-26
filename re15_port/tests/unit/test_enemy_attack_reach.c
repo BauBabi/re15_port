@@ -103,7 +103,11 @@ int main(void)
         else if (grabbed)  printf("  (2) ADULT SPIDER: stagger-grab latches under the push (hp %d, byte-true 0 dmg)\n", pl->hp);
     }
 
-    /* (3) ALLIGATOR 0x23 — jaws grab-eat must reach + swallow through the 2650 standoff (was 1400). */
+    /* (3) ALLIGATOR 0x23 — the BITE must reach through the 2650 standoff. Byte-true rebuild
+     * (audit wf_efd92a2c alligator #0/#1/#2): connect is the jaw-bone box (skel+2644, +2644 FORWARD
+     * of the pushed-away body center -> reaches via re15_body_contact_reach) at anim frames {19,20,21},
+     * and it KNOCKS the player DOWN (aca58=2 -> hit_react latch), NOT a grab-swallow. The player is
+     * never pinned and never killed (the old "jaws-hold -> pl->hp=-1 swallow" was invented). */
     {
         memset(g_actors, 0, sizeof g_actors);
         re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
@@ -112,11 +116,12 @@ int main(void)
         e->active = 1; e->type = 0x23; e->state = 1; e->sub_state_1 = 6; e->hp = 300; e->x = 0; e->z = 0;
         re15_enemy_apply_hitbox(e, 0x23);
         e->rot_y = (int16_t)(((int)re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0xfff);
-        int grabbed = 0;
-        for (int f = 0; f < 300; f++) { step(); if (re15_player_is_grabbed()) grabbed = 1; pl->hit_react = 0; if (pl->hp < 0) break; }
-        if (!grabbed)    { fprintf(stderr, "FAIL(3): alligator never grabbed through the push (dist=%d)\n", xz_dist(e, pl)); fail = 1; }
-        if (pl->hp >= 0) { fprintf(stderr, "FAIL(3): the jaws-hold must swallow (kill) the player, hp=%d\n", pl->hp); fail = 1; }
-        else if (grabbed) printf("  (3) ALLIGATOR: jaws reach + swallow under the push (hp=%d)\n", pl->hp);
+        int knocked = 0, pinned = 0;
+        for (int f = 0; f < 300; f++) { step(); if (pl->hit_react & 1) knocked = 1; if (re15_player_is_grabbed()) pinned = 1; pl->hit_react = 0; }
+        if (!knocked)   { fprintf(stderr, "FAIL(3): alligator bite never landed through the push (dist=%d)\n", xz_dist(e, pl)); fail = 1; }
+        if (pinned)     { fprintf(stderr, "FAIL(3): the alligator bite is a KNOCKDOWN, not a pin/grab\n"); fail = 1; }
+        if (pl->hp < 0) { fprintf(stderr, "FAIL(3): the bite must NOT swallow/kill the player, hp=%d\n", pl->hp); fail = 1; }
+        if (!fail || knocked) printf("  (3) ALLIGATOR: bite (knockdown) reaches under the push, knocked=%d pinned=%d hp=%d\n", knocked, pinned, pl->hp);
     }
 
     /* (4) SPIDER-BABY 0x26 — REWRITTEN byte-true (audit wf_827f186d spider #3 + body-push claim):
