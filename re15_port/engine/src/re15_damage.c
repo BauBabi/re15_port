@@ -464,6 +464,16 @@ retry_after_latch:
         if (dist < best_dist) { best_dist = dist; best = s; }
     }
     if (best < 0) return 0;   /* no target in cone/reach */
+    /* CRIT-CLASS flag +0x93 |= 0x40 (byte-true FUN_80011f50 LAB_80012370, decompile lines 145-148:
+     * `+0x93 &= 1; if ((wpn==8 && dist<3000) || wpn==7) +0x93 |= 0x40`) — set BEFORE the bit0-latch
+     * branch, so it also lands on a hit-guarded target. Types < 0x20 die from it (the hp=-1 crit
+     * below, decompile line 170-172); types >= 0x20 carry the flag: the MAGGOT's airborne/pin
+     * handlers read bits (2|0x40) as the "shot down by magnum/close shotgun" knockout
+     * (@0x80118b1c-28 leap crash, @0x80118eb8-c4 finisher crash, @0x8011a890-98 pin abort).
+     * (audit wf_827f186d maggot #7) */
+    g_actors[best].hit_react = (uint8_t)(g_actors[best].hit_react & 0x1);   /* +0x93 &= 1 (line 145) */
+    if (weapon_id == 7 || (weapon_id == 8 && best_dist < 3000u))
+        g_actors[best].hit_react |= 0x40;
     if (g_actors[best].hit_react & 0x1) {            /* hit earlier in THIS attack window */
         g_actors[best].hit_react |= 0x2;             /* +0x93 |= 2 (@0x8001240c) */
         goto retry_after_latch;                      /* the @0x80012418 recursion (seek 2nd victim) */

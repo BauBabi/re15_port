@@ -4469,16 +4469,21 @@ static void re15_spider_ai_tick(int slot)
     }
 }
 
-/* ============================ MAGGOTS (type 0x27, EM027 = MAGGOTS_BABY) — Wave 1 ============= *
- * Byte-true 0x80116db8 family (RE15_MAGGOT_AI.md; workflow wf_f597f55d, adversarially verified). A
- * LARGE moving ground creature (1600x1440 body, HP 180 @0x8011f514, ~1.7 crawl): root 0x80116db8
- * dispatches +0x4 via @0x801213c8 (16 states), then the shared body-push + SCA wall-clamp tail. STATE[1]
- * 0x80117254 is a two-table brain (A decision + B movement on +0x5): idle-wander (clip 0x16) -> CHASE
- * (yaw-slew + crawl toward the player) -> GRAB/bite (-6/-12) / LEAP (ballistic). WAVE 1: INIT + idle +
- * chase + killable (death clip 0xe -> corpse clip 0xa). WAVE 2 IMPLEMENTED: the bite/heavy-bite/leap
- * attacks (0x80118270/854c/908, direct -6/-12 + grab handshake + ballistic pounce) are cases 5/6/7
- * @L3884-3910. DEFERRED: only the exact crawl speed (move-helper 0x8011bf50; port uses re15_dog_advance) and
- * any remaining special far-states routed to the wave-2 default (@L3964). */
+/* ============================ MAGGOTS (type 0x27, EM027 = MAGGOTS_BABY) — Wave 3 ============= *
+ * Byte-true 0x80116db8 family (RE15_MAGGOT_AI.md; wf_f597f55d + FULL re-port audit wf_827f186d).
+ * A LARGE moving ground creature (1600x1440 body, HP 180 @0x8011f514): root 0x80116db8 dispatches
+ * +0x4 via @0x801213c8, then body-push (0x8002aec4/0x8002b544) + SCA wall-clamp (FUN_8003b0a4 ->
+ * +0x1d6 @0x80116e64-84). STATE[1] 0x80117254 = two-table brain: A decision @0x801213e8 + B movement
+ * @0x80121428 on +0x5, then the UNCONDITIONAL timer tail (+0x1dc-- @0x801173f8-40c, +0x1e1--
+ * @0x8011741c-38). Subs: 0 idle-wander / 1 dormant (grid&1) / 2 rise / 3 CHASE / 4 SELECTOR /
+ * 5 BITE -6 / 6 HEAVY -12 / 7 LEAP / 8 mid-air FINISHER -600 / 15 REAR-UP PIN. States: 2 HURT
+ * (lanes @0x801214a8: 0-6 flinch, 7-8 air-hit, 9-11 crash), 3 DEATH (@0x80121500: 0-6 ground,
+ * 7-8 mid-air, 9 crash), 7 CORPSE fade 0x8011be54.
+ * OPEN (subsystem gaps, exact bytes documented at the sites): the Path-A ZONE leaps (A[4]
+ * @0x80117ecc-8011802c: FUN_8003b93c SCA-zone query for attr 0x10/0x20 + the FUN_8003b0a4 +0x90
+ * heading-nibble — the port has neither the zone query nor the b0a4 escape-heading writer), and
+ * the FUN_8011bf50/8011c024 locator matrices come from the model pool (port: recomputed from the
+ * EMR pose — see re15_maggot_footlock). */
 static const uint8_t s_maggot_clip_len[29] =   /* EM027 clip frame-counts, byte-true (CDEMD0.EMS idx 12, dir[1]) */
     { 78,20,15,70,78,39,24,12,25,25,40,40,100,40,70,90,35,20,25,40,40,21,58,30,50,40,70,30,52 };
 static void re15_maggot_clip(re15_actor_t *e, uint8_t c) { e->motion = c; e->anim_frame = 0; e->anim_frac = 7; }
@@ -4489,156 +4494,698 @@ static int re15_maggot_anim(re15_actor_t *e)   /* POST-inc +0x95, wrap at the re
     e->anim_frame = (uint8_t)((e->anim_frame + 1) % fc);
     return done;
 }
+/* hit-blood/gore burst func_0x80019700(0x2000, +0x6a, skel_part, &vec) — the maggot passes part
+ * +0x40 (death/hurt @0x8011b0bc-130 / @0x8011b854-8d0) or +0x244 (mid-air death @0x8011bb78) and a
+ * 4-word param vec @0x80121388[(+0x6&1)*0x20] (hurt/death, +0x6 = the take-damage hit-dir) or
+ * @0x801213a8 (shot-in-flight @0x8011a904-4c / @0x80118b94-bd0). Port: the effect-0 burst at the
+ * actor (same mapping as re15_dog_blood; bone offset + param vec = presentation-side). */
+static void re15_maggot_gore(re15_actor_t *e)
+{
+    re15_esp_fx_spawn(re15_esp_room_bank(), 0, 0, e->x, e->y, e->z, (int16_t)e->rot_y);
+}
+/* FUN_8001a9cc(&playerX, tol) — signed arc residue: 0 iff |bearing-rot_y| < tol (mod 0x1000),
+ * else +tol when the wrapped residue <= 0x800, -tol beyond (decompile FUN_8001a9cc.c). The A[3]
+ * rear-up gate proceeds on >= 0 (@0x80117ae4-ec: beq 0 -> proceed, blez -> skip). */
+static int re15_maggot_a9cc(const re15_actor_t *e, const re15_actor_t *pl, int tol)
+{
+    int fb = ((int)re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0xfff;
+    unsigned uv = (unsigned)((tol + (fb - (int)e->rot_y)) & 0xfff);
+    if (uv < (unsigned)(tol << 1)) return 0;
+    return (uv <= 0x800u) ? tol : -tol;
+}
+/* FUN_8001a780(player block) — heading alignment: 1 iff ((self.rot_y - player.rot_y) + 0x400)
+ * & 0xfff < 0x800 (both facing the same way), else 0 (@0x8001a788-94, re15_damage.c F2 cite). */
+static int re15_maggot_a780(const re15_actor_t *e, const re15_actor_t *pl)
+{
+    return ((((int)e->rot_y - (int)pl->rot_y) + 0x400) & 0xfff) < 0x800;
+}
+/* FUN_8011bf50(0, a1) / FUN_8011c024(0, a1) — the maggot's LOCATOR FOOT-PLANT root motion.
+ * Byte-true mechanism (raw disasm @0x8011bf50-8011c020 / @0x8011c024-8011c114): recompute the
+ * tracked locator bone's WORLD transform by chaining the entity matrix (+0x20) with the pool's
+ * per-bone local matrices, then move the ENTITY by the NEGATIVE of the locator's world delta
+ * vs the pool's stored last-rendered position: `+0x34 -= (m.tx - rec[84])` @0x8011bfd4-e8,
+ * `+0x3c -= (m.tz - rec[92])` @0x8011bfec-c008 — a planted foot stays world-fixed and the body
+ * crawls over it. The pool bone RECORD stride is 172 bytes (matrix +24, world t at +84/+88/+92):
+ * bf50 chains records 0 -> 12+3*a1 -> 13+3*a1 -> 14+3*a1 (block = a1*516+0x968, 516 = 3*172,
+ * 0x968 = 14*172) = TRACKED BONE 14+3*a1; c024 chains 0 -> 1 -> 4+4*a1 -> 5+4*a1 -> 6+4*a1
+ * (block = a1*688+0x408, 688 = 4*172, 0x408 = 6*172) = TRACKED BONE 6+4*a1.
+ * PORT: the pool matrix stack does not exist engine-side, so the two poses (frame, frame-1) are
+ * recomputed from the EMR via re15_skel_compute_pose + the keyframe root channel — the same
+ * authored data the pool matrices are built from. Self-skips without the loaded bank and on a
+ * clip change (the original pops there and lets the FRAC blend smooth it). */
+static void re15_maggot_footlock(re15_actor_t *e, int bone)
+{
+    static uint8_t s_prev_clip[RE15_ACTOR_MAX];
+    int slot = (int)(e - g_actors);
+    re15_enemy_bank_t *bank = re15_enemy_find(0x27);
+    if (!bank || !bank->ok) return;
+    const re15_emd_skeleton_t  *sk = &bank->skel;
+    const re15_emd_animation_t *an = &bank->anim;
+    int clip = e->motion;
+    if (clip < 0 || clip >= an->clip_count || bone < 0 || bone >= sk->bone_count) return;
+    const re15_emd_clip_t *c = &an->clips[clip];
+    if (c->frame_count <= 1) return;
+    if (slot >= 0 && slot < RE15_ACTOR_MAX) {
+        uint8_t pc = s_prev_clip[slot]; s_prev_clip[slot] = (uint8_t)clip;
+        if (pc != (uint8_t)clip) return;               /* clip change: stored prev = old clip -> skip the pop */
+    }
+    int s_now  = (int)e->anim_frame % c->frame_count;
+    int s_prev = (s_now + c->frame_count - 1) % c->frame_count;
+    int kf_n = (int)(an->frames[c->first_frame + s_now ] & 0xFFFu);
+    int kf_p = (int)(an->frames[c->first_frame + s_prev] & 0xFFFu);
+    static re15_skel_pose_t s_pose[RE15_EMD_MAX_BONES];
+    int32_t mn[3], mp[3], wn[3], wp[3];
+    int16_t rx, ry, rz;
+    if (re15_skel_compute_pose(sk, kf_n, s_pose)) return;
+    mn[0] = s_pose[bone].trans[0]; mn[1] = s_pose[bone].trans[1]; mn[2] = s_pose[bone].trans[2];
+    if (re15_emd_get_keyframe_position(sk, kf_n, &rx, &ry, &rz)) { mn[0] += rx; mn[2] += rz; }
+    if (re15_skel_compute_pose(sk, kf_p, s_pose)) return;
+    mp[0] = s_pose[bone].trans[0]; mp[1] = s_pose[bone].trans[1]; mp[2] = s_pose[bone].trans[2];
+    if (re15_emd_get_keyframe_position(sk, kf_p, &rx, &ry, &rz)) { mp[0] += rx; mp[2] += rz; }
+    re15_skel_bone_to_world(mn, e->rot_y, 0, 0, 0, wn);
+    re15_skel_bone_to_world(mp, e->rot_y, 0, 0, 0, wp);
+    e->x -= (wn[0] - wp[0]);                           /* @0x8011bfe4-e8 */
+    e->z -= (wn[2] - wp[2]);                           /* @0x8011c004-08 */
+}
+static void re15_maggot_bf50(re15_actor_t *e, int a1) { re15_maggot_footlock(e, 14 + 3 * a1); }
+static void re15_maggot_c024(re15_actor_t *e, int a1) { re15_maggot_footlock(e,  6 + 4 * a1); }
+/* FUN_8001c1a4(hspd, vimp, grav, floorY) — the shared ballistic step (raw disasm @0x8001c1a4):
+ * rotate (hspd,0,0) by rot_y and add to x/z (@0x8001c1e8-248), s1 = (s16)(vimp + grav * +0x9c),
+ * y -= s1 (@0x8001c258-7c); floor < y -> LAND: y = floor, return s1 (@0x8001c294-b4); else
+ * +0x9c++ and return 0 (@0x8001c2a0-b0). +0x9c is the airtime counter. */
+static int re15_maggot_ballistic(re15_actor_t *e, int hspd, int vimp, int grav)
+{
+    if (hspd) re15_dog_advance(e, hspd);
+    int32_t s1 = (int32_t)(int16_t)(vimp + grav * (int)e->ai_timer);
+    e->y -= s1;
+    if ((int32_t)e->dog_floor_y < e->y) { e->y = e->dog_floor_y; return (int)s1; }
+    e->ai_timer++;
+    return 0;
+}
 
 static void re15_maggot_ai_tick(int slot)
 {
     re15_actor_t *e  = &g_actors[slot];
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
 
+    if (e->grid_id & 0x20) return;                            /* root skip-tick gate @0x80116df4-f8 */
+
     switch (e->state) {
-    case 0:   /* INIT 0x80116f50: -> ACTIVE, HP 180, steer=player, variant from grid&1 */
-        if (e->hp <= 0) e->hp = 180;                          /* +0x9a=180 (HP tab @0x8011f514 row 0x27) */
+    case 0:   /* INIT 0x80116f50 */
+        if (e->hp <= 0) e->hp = 180;                          /* +0x9a=180 (HP tab @0x8011f034 row, rng col @0x801170cc-104) */
         e->motion = 0; e->anim_frame = 0; e->anim_frac = 0; e->hit_react = 0;  /* clear @0x80116f9c-fcc */
-        e->steer_x = (int16_t)pl->x; e->steer_z = (int16_t)pl->z;  /* +0x1bc/+0x1be = player @0x80116fe4/ffc */
+        e->steer_x = (int16_t)pl->x; e->steer_z = (int16_t)pl->z;  /* +0x1bc/+0x1be = player @0x80116fd0-ffc */
         e->state = 1;
-        e->sub_state_1 = (uint8_t)((e->grid_id & 1) ? 1 : 0);  /* +0x5 = 1 if +0x9&1 else 0 @0x80116f88 */
+        e->sub_state_1 = (uint8_t)((e->grid_id & 1) ? 1 : 0);  /* +0x5 = 1 if +0x9&1 (word 0x101 @0x80116f88-8c) */
         e->sub_state_2 = 0; e->sub_state_3 = 0;
+        e->ai_timer = 0;                                      /* +0x9c @0x8011702c */
+        e->grab_kill_ctr = 0;                                 /* +0x9e @0x8011703c */
+        e->dog_blocked_ctr = 0;                               /* +0x1dc attack lockout @0x8011705c */
+        e->mag_airborne = 0;                                  /* +0x1e0 @0x8011707c */
+        e->mag_pin_cd = 0;                                    /* +0x1e1 @0x8011708c */
+        e->mag_boost = 4;                                     /* +0x1e2 = 4 @0x80117098-9c */
+        e->mag_1e3 = 0;                                       /* +0x1e3 @0x801170ac */
+        e->dog_flags = 0;                                     /* +0x1d0 LOS latch */
+        e->dog_floor_y = (int16_t)e->y;                       /* +0x1ba floor Y (engine floor probe; port: spawn Y, dog convention) */
         break;
 
-    case 1: {  /* ACTIVE brain 0x80117254: LOS + dist -> decision(A)/move(B) on +0x5 */
-        int los = re15_enemy_los_probe(slot, e, pl);          /* 0x8001bc08 @0x8011725c */
+    case 1: {  /* ACTIVE brain 0x80117254 */
+        int los = re15_enemy_los_probe(slot, e, pl);          /* 0x8001bc08 -> +0x1d8 @0x8011725c-70 */
+        /* +0x1d0 bit0 = STICKY LOS latch, updated only when the probe verdict is 0/1
+         * (@0x80117288-c0: `if ((+0x1d8>>1)==0) { +0x1d0 &= ~1; +0x1d0 |= +0x1d8&1; }`) */
+        if ((los >> 1) == 0) e->dog_flags = (uint16_t)((e->dog_flags & ~1u) | (unsigned)(los & 1));
         int32_t dist = re15_enemy_player_dist(e, pl);         /* SquareRoot0 @0x80117300 */
-        e->dog_dist = (int16_t)dist;                          /* +0x1d4 dist cache */
+        e->dog_dist = (int16_t)dist;                          /* +0x1d4 @0x80117314 */
         switch (e->sub_state_1) {
-        case 0:   /* A[0] DECISION 0x80117484 + B[0] idle-wander 0x80117574 (clip 0x16) */
-            if (dist < 5000 && los != 0) { e->sub_state_1 = 3; e->sub_state_2 = 0; e->sub_state_3 = 0; break; }  /* dist<5000 & LOS -> CHASE @0x801174c4 */
-            if (dist < 3000) { e->sub_state_1 = 3; e->sub_state_2 = 0; e->sub_state_3 = 1; break; }  /* blind chase (dist<3000) @0x80117548 */
-            if (e->sub_state_2 == 0) { e->ai_timer = (int16_t)(re15_engine_rand8() + 59); re15_maggot_clip(e, 0x16); e->sub_state_2 = 1; }  /* +0x9c=rng+59, idle clip 0x16 @0x801175a4/c4 */
-            else if (e->ai_timer == 0) { e->sub_state_1 = 3; e->sub_state_2 = 0; e->sub_state_3 = 1; }  /* wander expiry -> CHASE @0x80117618 */
-            else e->ai_timer--;
-            re15_maggot_anim(e);
-            break;
-        case 3:   /* CHASE (A[3] 0x80117a3c decision / B[3] 0x80117c90 crawl) */
-            if (e->dog_atk_cd) e->dog_atk_cd--;               /* +0x1dc attack lockout (reused field) */
-            /* A[3] decision @0x80117a5c: player in range 3000 & cone 384 & lockout==0 -> BITE (+0x5=5). */
-            if (e->dog_atk_cd == 0 && re15_dog_arc(e, pl, 3000, 384)) { re15_maggot_clip(e, 0x12); re15_dog_sub(e, 5); break; }
-            /* A[3] tail @0x80117c54: player.hit_react==0 & dist>=6001 & LOS(+0x1d0&1) -> SELECTOR (+0x5=4).
-             * The maggot commits to a HEAVY approach when the player is FAR-but-visible (byte-true + live-
-             * verified: mzd_stage1_maggot_heavy.sav, the +0x5 3->4->6 escalation). */
-            if (pl->hit_react == 0 && dist >= 6001 && los != 0) { re15_maggot_clip(e, 6); re15_dog_sub(e, 4); break; }
-            if (e->sub_state_2 == 0) { re15_maggot_clip(e, 4); e->sub_state_2 = 1; }   /* crawl clip 4 (rng 4/5/7 = wave 2b) @0x80117cc0 */
-            re15_enemy_steer_point(e, pl->x, pl->z, 0x20);    /* yaw-slew toward player @0x80117d50 */
-            re15_dog_advance(e, 40);                          /* crawl forward (exact speed via 0x8011bf50 = wave 2b) */
+        case 0:   /* A[0] 0x80117484 + B[0] idle-wander 0x80117574 (clip 0x16) */
+            if (e->dog_blocked_ctr == 0) {                    /* +0x1dc!=0 -> NO decision @0x80117490-98 (audit wf_827f186d maggot #14) */
+                if (dist < 5000 && (e->dog_flags & 1)) { re15_dog_sub(e, 3); e->sub_state_3 = 0; break; }  /* @0x801174a8-cc */
+                if (dist < 6000 && re15_dog_player_aiming()) { re15_dog_sub(e, 4); e->sub_state_3 = 0; break; }  /* aca58==0x701 grab/aim-assist @0x801174e4-504 (#14; 0x701 = state1-sub7 aim, dog #7 proof) */
+                if (dist < 3000) { re15_dog_sub(e, 3); e->sub_state_3 = 1; break; }  /* blind @0x8011753c-68 */
+            }
+            if (e->sub_state_2 == 0) { e->ai_timer = (int16_t)(re15_engine_rand8() + 59); re15_maggot_clip(e, 0x16); e->sub_state_2 = 1; }  /* +0x9c=rng+59, clip 0x16 @0x801175a4-c8 */
+            {   /* unconditional -1 INCLUDING the seed tick (sh in the branch delay slot @0x801175f8-608);
+                 * transition at PRE-decrement 0 @0x80117618 -> period exactly rng+59 (audit #18) */
+                int16_t t = e->ai_timer; e->ai_timer = (int16_t)(t - 1);
+                if (t == 0) { re15_dog_sub(e, 3); e->sub_state_3 = 1; break; }
+            }
             re15_maggot_anim(e);
             break;
 
-        case 4:   /* SELECTOR (A[4] state[12] 0x80117e40 decide + B[4] crawl clip 6): close in, then HEAVY.
-                   * @0x80117e88 player.hit_react==0 & @0x80117e90 in range 4000 (a0=0xfa0) cone 192 (a1=0xc0)
-                   * & @0x80117eb0 +0x1dc lockout==0 -> +0x5=6 HEAVY (@0x80117ec4). LIVE-VERIFIED (the
-                   * selector persists, crawling clip 6, until in range -> heavy). The leap else-branch
-                   * (@0x80117f50/0x80118000/0x801180d8 -> +0x5=7, ballistic) = wave 2c. */
-            if (e->dog_atk_cd) e->dog_atk_cd--;
-            if (pl->hit_react == 0 && e->dog_atk_cd == 0 && re15_dog_arc(e, pl, 4000, 0xc0)) {
-                re15_maggot_clip(e, 0x13); re15_dog_sub(e, 6); e->sub_state_3 = 0; break;   /* -> HEAVY (clear connect-once) */
-            }
-            /* LEAP else-branch (far-ballistic path B @0x80118028, workflow wf_c1de93d6-bae CONFIRMED):
-             * player OUT of the heavy window but LOS(+0x1d0&1) & dist(+0x1d4)>=6001 (@0x8011806c) &
-             * aimed at player within +-32 (arc_test 0x8001a9cc @0x80118084) & the PLAYER facing the maggot
-             * (facing_aligned 0x8001a780==0 @0x801180bc: playerYaw vs maggotYaw > +-90deg) & rng&1 (~50%,
-             * @0x801180a8, bypassed if player action *(0x800aca58)==0x701). -> +0x5=7 LEAP (+0x7=0). */
-            if (dist >= 6001 && los != 0 && e->dog_atk_cd == 0
-                && re15_dog_arc(e, pl, 0x7fff, 0x20)                       /* arc_test: maggot aimed at player (+-32) */
-                && (((int)(pl->rot_y - e->rot_y) + 0x400) & 0xfff) >= 0x800 /* facing_aligned==0: player faces the maggot */
-                && (re15_engine_rand8() & 1)) {                            /* rng&1 coin-flip @0x801180a8 */
-                re15_maggot_clip(e, 0x14); re15_dog_sub(e, 7); break;      /* -> LEAP (sub 7) */
-            }
-            if (dist >= 12000) { re15_dog_sub(e, 3); break; }  /* lost the player -> back to CHASE (faithful: selector abandons a far target) */
-            re15_enemy_steer_point(e, pl->x, pl->z, 0x20);     /* crawl toward player (B[4]) */
-            re15_dog_advance(e, 40);
+        case 1:   /* A[1] 0x80117668 + B[1] 0x80117764 — grid&1 dormant spawn (clip 0), wakes to sub 2 */
+            if (dist < 5000 && (e->dog_flags & 1)) { re15_dog_sub(e, 2); e->sub_state_3 = 0; break; }  /* @0x80117674-9c */
+            if (dist < 6000 && re15_dog_player_aiming()) { re15_dog_sub(e, 2); e->sub_state_3 = 1; break; }  /* @0x801176cc-714 */
+            if (dist < 3000) { re15_dog_sub(e, 2); e->sub_state_3 = 2; break; }  /* @0x80117724-58 */
+            if (e->sub_state_2 == 0) { e->ai_timer = (int16_t)(re15_engine_rand8() + 59); e->sub_state_2 = 1; re15_maggot_clip(e, 0); }  /* clip 0 @0x80117784-d8 */
+            { int16_t t = e->ai_timer; e->ai_timer = (int16_t)(t - 1);
+              if (t == 0) { re15_dog_sub(e, 2); e->sub_state_3 = 2; break; } }   /* @0x801177f0-828 */
             re15_maggot_anim(e);
             break;
 
-        case 5:   /* BITE 0x80118270 (clip 0x12): -6 HP on the damage-window frames {0x0c-0x0f} */
-            if (e->anim_frame >= 0x0c && e->anim_frame <= 0x0f          /* damage window @0x80118400 (tab @0x8012146c) */
-                && pl->hit_react == 0 && re15_dog_arc(e, pl, re15_body_contact_reach(e), 384)) {   /* hitbox 0x8001bff8 (1000) @0x801183cc; connect at body contact (was 2000 < push standoff 2050; audit wf_555f18eb Part B) */
-                if (e->anim_frame == 0x0c) {                            /* connect once per bite */
-                    pl->hp = (int16_t)(pl->hp - 6);                     /* player.hp -= 6 @0x80118468 */
-                    re15_audio_room_se(6);                              /* Se(6) bite @0x80118474 */
-                    pl->hit_react |= 1; e->dog_atk_cd = 0x2d;           /* +0x1dc = 45 lockout @0x80118478 */
+        case 2:   /* B[2] 0x80117860 RISE/recover (A[2] @0x80117858 = jr ra). +0x7 selects the rise clip. */
+            switch (e->sub_state_2) {
+            case 0:
+                e->sub_state_2 = 1;
+                e->anim_frame = 0; e->anim_frac = 7;          /* @0x801178b4-cc */
+                e->motion = (int16_t)((e->sub_state_3 == 0) ? 3 : (e->sub_state_3 == 1) ? 2 : 1);  /* clips {3,2,1} @0x801178f4-792c */
+                /* fall through */
+            case 1:
+                if (e->sub_state_3 == 0 && e->anim_frame == 0x1d) re15_audio_room_se(4);   /* Se(4) @0x8011793c-60 */
+                if (re15_maggot_anim(e)) e->sub_state_2 = 2;
+                re15_maggot_bf50(e, 0);                       /* bf50(0,0) @0x80117988-98 */
+                break;
+            default:  /* exit @0x801179a8-7a28: +0x7 0->chase / 1->selector / 2->blind chase */
+                if (e->sub_state_3 == 1)      { re15_dog_sub(e, 4); e->sub_state_3 = 0; }
+                else if (e->sub_state_3 == 2) { re15_dog_sub(e, 3); e->sub_state_3 = 1; }
+                else                          { re15_dog_sub(e, 3); e->sub_state_3 = 0; }
+                break;
+            }
+            break;
+
+        case 3: {  /* CHASE — A[3] 0x80117a3c decide + B[3] 0x80117c90 crawl */
+            if (pl->hit_react == 0                            /* bite needs player NOT in hit-react @0x80117a54-5c (audit #15) */
+                && re15_dog_arc(e, pl, 3000, 384)             /* a804(0xbb8,0x180) @0x80117a60-74 */
+                && e->dog_blocked_ctr == 0) {                 /* +0x1dc @0x80117a88-90 */
+                re15_dog_sub(e, 5); e->sub_state_3 = 0;       /* BITE @0x80117a94-b8 (clip set by B[5] entry) */
+                /* REAR-UP upgrade (audit #1): the committed bite is OVERRIDDEN to sub 15 when the
+                 * player is in 2500/cone-256 and both locks are clear @0x80117ab4-b3c:
+                 * a9cc(player,0x20) -> +0x1da, proceed on >=0 (@0x80117ac0-ec), a804(0x9c4,0x100)
+                 * (@0x80117ae8-b04), +0x1d6==0 (@0x80117b18-20), +0x1e1==0 (@0x80117b28-30). */
+                if (re15_maggot_a9cc(e, pl, 0x20) >= 0
+                    && re15_dog_arc(e, pl, 2500, 256)
+                    && !re15_dog_blocked(e)                   /* +0x1d6 = FUN_8003b0a4 wall clamp (root @0x80116e64-84); port = run_all clamp contact */
+                    && e->mag_pin_cd == 0)
+                    e->sub_state_1 = 15;                      /* @0x80117b34-3c */
+                break;
+            }
+            /* decision tail @0x80117b40-c74 */
+            if (pl->hit_react != 0) {
+                if (dist < 3000 && (e->dog_flags & 1) && e->sub_state_3 != 0) { e->sub_state_2 = 0; e->sub_state_3 = 0; }  /* blind->sighted re-entry @0x80117b54-9c */
+            } else if (dist < 6001) {
+                if ((e->dog_flags & 1) && e->sub_state_3 != 0) { e->sub_state_2 = 0; e->sub_state_3 = 0; }  /* @0x80117bb4-c08 */
+            } else if (e->dog_flags & 1) {
+                re15_dog_sub(e, 4); e->sub_state_3 = 0; break;   /* far+LOS -> SELECTOR @0x80117c2c-74 */
+            }
+            /* B[3] crawl */
+            if (e->sub_state_2 == 0) {
+                e->sub_state_2 = 1;                           /* @0x80117cac-b0 */
+                re15_maggot_clip(e, 4);                       /* provisional clip 4 @0x80117cc0 */
+                if (e->sub_state_3 == 0) {                    /* SIGHTED -> clip 5 (audit #3; @0x80117cd8 bne +0x7; clip 5 delay-slot store @0x80117cdc-e4) */
+                    e->motion = 5;
+                    e->grab_kill_ctr = (int16_t)((re15_engine_rand8() & 0x1f) + 2);   /* +0x9e seed @0x80117ce8-cf8 */
                 }
             }
-            if (re15_maggot_anim(e)) { re15_dog_sub(e, 3); if (e->dog_atk_cd == 0) e->dog_atk_cd = 0x14; }  /* -> CHASE, lockout 20 @0x801184f0 */
-            break;
-
-        case 6:   /* HEAVY-BITE 0x8011854c (clip 0x13): the maggot LUNGES forward (move-helper 0x8011bf50
-                   * @0x80118664) closing the gap, then its dual-hitbox 800/800 (0x8001bff8 a2=0x320 ×2)
-                   * on the damage window (frame>=0x15 @0x80118650) -> player.hp -= 12 (@0x801187bc) +
-                   * Se(5) (@0x80118798) + grab-handshake (aca58/59/5a @0x801187d8). LIVE-VERIFIED
-                   * (-12: mzd_stage1_maggot_heavy.sav, HP 94->82). sub_state_3 = connect-once latch. */
-            re15_enemy_steer_point(e, pl->x, pl->z, 0x20);              /* keep facing the player */
-            re15_dog_advance(e, 40);                                    /* lunge forward (0x8011bf50) */
-            if (e->sub_state_3 == 0 && e->anim_frame >= 0x15            /* damage window @0x80118650 */
-                && pl->hit_react == 0 && re15_dog_arc(e, pl, re15_body_contact_reach(e), 0xc0)) {   /* dual-hitbox 800 (0x8001bff8); connect at body contact (was 1600 < push standoff 2050; audit wf_555f18eb Part B) */
-                pl->hp = (int16_t)(pl->hp - 12);                        /* player.hp -= 12 @0x801187bc */
-                re15_audio_room_se(5);                                  /* Se(5) heavy @0x80118798 */
-                pl->hit_react |= 1; e->dog_atk_cd = 0x2d; e->sub_state_3 = 1;   /* connect once */
+            {   /* fresh random slew 6-37 EVERY tick (audit #5) @0x80117d1c-34, a8f8 @0x80117d50 */
+                int slew = (int)(re15_engine_rand8() & 0x1f) + 6;
+                e->grab_kill_ctr = (int16_t)slew;
+                re15_enemy_steer_point(e, pl->x, pl->z, slew);
             }
-            if (re15_maggot_anim(e)) { re15_dog_sub(e, 3); e->sub_state_3 = 0; if (e->dog_atk_cd == 0) e->dog_atk_cd = 0x14; }  /* -> CHASE */
-            break;
+            re15_maggot_anim(e);
+            {   /* locator root-motion, window <0x18 (sighted clip 5) / <0x29 (blind clip 4)
+                 * @0x80117d90-e04; footstep Se(8) at frame 1 and the window frame @0x80117dc4-e2c */
+                int win = (e->sub_state_3 == 0) ? 0x18 : 0x29;
+                re15_maggot_bf50(e, ((int)e->anim_frame < win) ? 1 : 0);
+                if (e->anim_frame == 1 || (int)e->anim_frame == win) re15_audio_room_se(8);
+            }
+            break; }
 
-        case 7: {  /* LEAP 0x80118908 (clip 0x14): a 4-phase FSM on +0x6. A ballistic REPOSITION pounce
-                    * that deals ZERO damage (no player.hp write in the whole 260-instr handler - workflow
-                    * wf_c1de93d6-bae CONFIRMED); it closes the gap, lands, and returns to the SELECTOR so
-                    * the HEAVY then applies the -12. LIVE-VERIFIED (forced +0x5=7: impulse +0x8c=201 seeded,
-                    * maggot closed dist 10000->596, player HP untouched by the leap itself). */
-            if (e->sub_state_2 == 0) {                        /* phase 0/1: INIT + WINDUP (frames 0..9) */
-                if (e->motion != 0x14) { re15_maggot_clip(e, 0x14); e->crow_speed = (int16_t)((re15_engine_rand8() & 0x1f) + 180); }  /* @0x8011895c seed impulse */
-                re15_enemy_steer_point(e, pl->x, pl->z, 0x20);            /* slew facing toward the launch dir */
-                if (re15_maggot_anim(e) || e->anim_frame >= 0x0a) {       /* LAUNCH at frame 10 (@0x80118a3c) */
-                    e->sub_state_2 = 2;                                   /* +0x6=2 in-flight (@0x80118aa4) */
-                    e->crow_speed   = (int16_t)((re15_engine_rand8() & 0x1f) + 200);  /* re-roll impulse @0x80118a50 */
-                    e->ai_timer     = 0;                                 /* +0x9c airtime = 0 */
-                    e->crow_perch_h = (int16_t)e->y;                     /* cache ground-Y (+0x1ba) for the land */
+        case 4: {  /* SELECTOR — A[4] 0x80117e40 decide + B[4] 0x80118110 heavy-approach (clip 6) */
+            /* abort: player in hit-react + LOS -> CHASE @0x80117e44-70 -> 0x801180d4 (audit #10:
+             * there is NO distance-based abandon anywhere in A[4]) */
+            if (pl->hit_react != 0 && (e->dog_flags & 1)) { re15_dog_sub(e, 3); e->sub_state_3 = 0; break; }
+            if (pl->hit_react == 0 && re15_dog_arc(e, pl, 4000, 0xc0) && e->dog_blocked_ctr == 0) {
+                re15_dog_sub(e, 6); e->sub_state_3 = 0; break;   /* HEAVY @0x80117e88-ec4 (clip by B[6] entry) */
+            }
+            /* OPEN (subsystem gap, audit #11): the Path-A ZONE leaps @0x80117ecc-8011802c —
+             * +0x1e2!=0 (@0x80117ed4-dc, always 4) -> FUN_8003b93c(+0x34, hw+100, +0x82, a3=0x10)
+             * (@0x80117efc) then a3=0x20 (@0x80117f98, gated !(+0x1d0&1) @0x80117fbc); on a match the
+             * yaw window ((+0x90&0xf0)<<4 - +0x6a + 512)&0xfff < 1024 (@0x80117f20-38/0x80117fc8-e4)
+             * latches +0x9f=+0x90 (@0x80117f40/0x80117ff0) and commits +0x5=7 with +0x7=1 (attr 0x10,
+             * @0x80117f50-74) or +0x7=3 (attr 0x20 blind, @0x80118000-24; launch impulse 0x32a
+             * @0x80118a94-aa0, yaw snap (+0x9f&0xf0)<<4 + +0x82=1 @0x80118ac0-af0). The port has
+             * neither the b93c SCA-attr zone query nor the FUN_8003b0a4 +0x90 escape-heading writer
+             * (actor.h: port writer deferred) — the B[7] +0x7-variant launch code below is in place
+             * for when they land. */
+            /* Path-B far leap @0x80118028-8100 */
+            if ((e->dog_flags & 1)                            /* +0x1d0&1 @0x80118034-40 */
+                && !re15_dog_blocked(e)                       /* +0x1d6==0 @0x80118054-5c — the WALL-CLAMP gate, NOT +0x1dc (audit #15) */
+                && dist >= 6001                               /* @0x8011806c */
+                && re15_maggot_a9cc(e, pl, 0x20) == 0         /* aimed +-32 @0x80118084-8c */
+                && (re15_dog_player_aiming()                  /* aca58==0x701 bypasses the coin-flip @0x80118090-a0 (audit #15) */
+                    || (re15_engine_rand8() & 1))             /* rng&1 @0x801180a8-b4 */
+                && re15_maggot_a780(e, pl) == 0) {            /* player faces the maggot @0x801180bc-c4 */
+                re15_dog_sub(e, 7); e->sub_state_3 = 0; break;   /* @0x801180cc-f8 (clip by B[7] entry) */
+            }
+            /* B[4] heavy-approach (audit #4) */
+            if (e->sub_state_2 == 0) { e->sub_state_2 = 1; re15_maggot_clip(e, 6); }   /* clip 6 @0x80118128-60 */
+            e->crow_speed = (int16_t)((re15_engine_rand8() & 0x1f) + 180);   /* +0x8c = 180-211 per tick @0x80118164-80 */
+            {   int slew = (int)(re15_engine_rand8() & 0x1f) + 64;           /* +0x9e = 64-95 @0x80118184-94 */
+                if (dist < 2000) slew += 24;                                 /* +24 inside 2000 @0x801181a4-c4 */
+                e->grab_kill_ctr = (int16_t)slew;
+                re15_enemy_steer_point(e, pl->x, pl->z, slew);               /* a8f8 @0x801181e0 */
+            }
+            re15_maggot_anim(e);
+            if (((int)e->anim_frame % 13) == 1) re15_audio_room_se(8);       /* footstep every 13 @0x80118204-4c */
+            re15_dog_advance_ofs(e, 0);                                      /* 245d8(0) @0x80118250 */
+            break; }
+
+        case 5: {  /* BITE B[5] 0x80118270 (A[5] @0x80118268 = jr ra), clip 0x12, -6 */
+            switch (e->sub_state_2) {
+            case 0:
+                e->sub_state_2 = 1; re15_maggot_clip(e, 0x12);   /* @0x801182d4-304 */
+                /* fall through */
+            case 1:
+                if (re15_maggot_anim(e)) e->sub_state_2 = 2;     /* +0x6 += anim ret @0x80118308-40 */
+                re15_maggot_bf50(e, 0);                          /* bf50(0,0) @0x8011832c-40 */
+                if (e->anim_frame == 0x0b) re15_audio_room_se(9);   /* whoosh Se(9) @0x80118394-a8 (audit #17) */
+                if (pl->hit_react == 0
+                    && e->anim_frame >= 0x0c && e->anim_frame <= 0x0f   /* window = ANY of table {0c,0d,0e,0f} @0x8012146c, loop @0x80118400-28 (audit #17: no per-attack latch — hit_react gates) */
+                    && re15_dog_arc(e, pl, re15_body_contact_reach(e), 384)) {   /* bff8 part+0x64c r=0x3e8 @0x801183c4-d0; port mapping audit wf_555f18eb Part B */
+                    pl->hp = (int16_t)(pl->hp - 6);              /* @0x80118460-6c */
+                    e->dog_blocked_ctr = 0x2d;                   /* +0x1dc=45 @0x80118470-78 */
+                    re15_audio_room_se(6);                       /* Se(6) @0x80118474 (a0=6 @0x80118454) */
+                    pl->hit_react |= 1;                          /* @0x801184c0-d4. The stagger cmd aca58=2/aca59=facing+2 (hp<0 -> 3)
+                                                                  * @0x8011847c-b8 = the player-command FSM; port convention = hit_react (audit #17, dog/crow parity) */
                 }
-            } else {                                          /* phase 2: IN-FLIGHT ballistic arc (@0x80118b14) */
-                re15_crow_advance(e);                                     /* horizontal pounce at crow_speed */
-                int32_t s1 = 720 - 60 * (int32_t)e->ai_timer;            /* vert-vel +0x1d8=720, gravity -60 (0x8001c1a4) */
-                e->y -= s1;                                              /* +0x38 -= s1 (Y-down: rises then falls) */
-                e->ai_timer++;
+                break;
+            default:  /* exit @0x801184e0-8520: lockout 0x14 if clear, -> CHASE */
+                if (e->dog_blocked_ctr == 0) e->dog_blocked_ctr = 0x14;   /* @0x801184e0-f0 */
+                re15_dog_sub(e, 3); e->sub_state_3 = 0;
+                break;
+            }
+            break; }
+
+        case 6: {  /* HEAVY B[6] 0x8011854c (A[6] @0x80118544 = jr ra), clip 0x13, -12.
+                    * NO steer call exists in 0x8011854c-0x801188f8 (audit #9) — the lunge IS the
+                    * clip's locator root-motion. */
+            switch (e->sub_state_2) {
+            case 0:
+                e->sub_state_2 = 1; re15_maggot_clip(e, 0x13);   /* @0x801185b4-e4 */
+                /* fall through */
+            case 1:
+                if (re15_maggot_anim(e)) e->sub_state_2 = 2;     /* @0x801185e8-61c */
+                if ((int)e->anim_frame < 6)         re15_maggot_c024(e, 0);   /* frames <6: c024(0,0) @0x80118634-44 */
+                else if ((int)e->anim_frame < 0x15) re15_maggot_bf50(e, 1);   /* 6..0x14: bf50(0,1) — @0x80118650 `sltiu v0,v1,0x15` is the MOVE gate (audit #9 wrong-citation fix) */
+                else                                re15_maggot_bf50(e, 0);   /* >=0x15: bf50(0,0) @0x8011865c-68 */
+                if (e->anim_frame == 0x14) re15_audio_room_se(9);   /* Se(9) @0x80118678-8c */
+                if (pl->hit_react == 0) {
+                    int fr = (int)e->anim_frame;
+                    int inwin = (fr >= 0x15 && fr <= 0x18) || fr == 0x21 || fr == 0x22;   /* window table @0x80121470 = {15,16,17,18,21,22} (audit #9) — incl. the 2nd chomp; NO connect-once latch */
+                    if (inwin && re15_dog_arc(e, pl, re15_body_contact_reach(e), 0xc0)) { /* dual bff8 +0x448/+0x6f8 r=0x320 @0x801186f0-714; port mapping wf_555f18eb */
+                        pl->hp = (int16_t)(pl->hp - 12);         /* @0x801187b4-c0 */
+                        e->dog_blocked_ctr = 0x2d;               /* @0x801187c4-cc */
+                        re15_audio_room_se(5);                   /* Se(5) @0x801187c8 (a0=5 @0x80118798) */
+                        pl->hit_react |= 1;                      /* @0x80118814-28; aca58=2/facing+4 @0x801187d0-f8 = port convention */
+                    }
+                }
+                break;
+            default:  /* exit @0x80118834-8b8 (audit #8): re-BITE / SELECTOR / chase */
+                if (pl->hit_react == 0 && re15_dog_arc(e, pl, 4000, 384)) {   /* a804(0xfa0,0x180) @0x80118848-58 */
+                    if (e->dog_blocked_ctr == 0) { re15_dog_sub(e, 5); e->sub_state_3 = 0; break; }   /* chain re-BITE @0x8011887c-80 */
+                    re15_dog_sub(e, 3); e->sub_state_3 = 0; break;            /* @0x80118874-78 */
+                }
+                if (e->dog_blocked_ctr == 0) { e->dog_blocked_ctr = 0x14; re15_dog_sub(e, 4); e->sub_state_3 = 0; break; }   /* +0x1dc=0x14 -> SELECTOR @0x80118898-b0 */
+                re15_dog_sub(e, 3); e->sub_state_3 = 0;                       /* @0x801188b4 */
+                break;
+            }
+            break; }
+
+        case 7: {  /* LEAP B[7] 0x80118908 (A[7] @0x80118900 = jr ra), clip 0x14 — ballistic
+                    * REPOSITION pounce, 0 damage (wf_c1de93d6-bae). */
+            switch (e->sub_state_2) {
+            case 0:   /* entry @0x8011895c-89b4 */
+                e->sub_state_2 = 1;
+                re15_maggot_clip(e, 0x14);
+                e->crow_speed = (int16_t)((re15_engine_rand8() & 0x1f) + 180);   /* +0x8c windup crawl @0x80118994-a4 (audit #6) */
+                e->ai_timer = 0;                                                 /* +0x9c @0x801189b4 */
+                /* fall through */
+            case 1:   /* WINDUP @0x801189b8: frames 0-9 CRAWL FORWARD at +0x8c (245d8(0) @0x80118dbc, audit #6) */
+                if (e->sub_state_3 != 0) {                    /* zone variant: slew toward (+0x9f&0xf0)<<4 at 0x20 (0x8001aa68 @0x801189cc-a00) */
+                    int tgt = ((int)((uint8_t)e->dog_aux9f & 0xf0) << 4) & 0xfff;
+                    int df = (((tgt - (int)e->rot_y) + 0x800) & 0xfff) - 0x800;
+                    if (df >  0x20) df =  0x20;
+                    if (df < -0x20) df = -0x20;
+                    e->rot_y = (int16_t)(((int)e->rot_y + df) & 0xfff);
+                }
                 re15_maggot_anim(e);
-                if ((int32_t)e->ai_timer >= 25 || ((int32_t)e->ai_timer > 12 && e->y >= (int32_t)e->crow_perch_h)) {
-                    e->y = (int32_t)e->crow_perch_h;                     /* land: clamp back to ground */
-                    re15_dog_sub(e, 4);                                 /* recovery (+0x5=9 @0x80118b60) folded -> SELECTOR */
+                if (e->anim_frame == 0x0a) {                  /* LAUNCH at frame 10 @0x80118a2c-40 */
+                    e->sub_state_2 = 2;
+                    e->crow_speed = (int16_t)((re15_engine_rand8() & 0x1f) + 200   /* @0x80118a44-54 */
+                                              + (int)e->mag_boost * 10);           /* += +0x1e2*10 = +40 @0x80118a64-80 (audit #6) */
+                    if (e->sub_state_3 == 3) e->crow_speed = 0x32a;                /* blind zone leap @0x80118a94-aa0 */
+                    e->mag_airborne = 1;                                           /* +0x1e0=1 @0x80118aa4-b0 */
+                    if (e->sub_state_3 != 0) {                                     /* zone: yaw snap + floor byte @0x80118ab4-af0 */
+                        e->rot_y = (int16_t)((((int)((uint8_t)e->dog_aux9f & 0xf0)) << 4) & 0xfff);
+                        e->floor = 1;
+                    }
+                    e->hit_react |= 1;                                             /* self hit-guard (damage-immune in flight) @0x80118af4-b10 */
                 }
+                re15_dog_advance_ofs(e, 0);                   /* 245d8(0) @0x80118dbc (windup + launch tick) */
+                break;
+            case 2: {  /* IN-FLIGHT @0x80118b14 */
+                if ((e->hit_react & 0x02) && (e->hit_react & 0x40) && e->sub_state_3 == 0) {
+                    /* shot down by a crit-class weapon (magnum/close shotgun sets +0x93|=0x40,
+                     * FUN_80011f50 LAB_80012370) -> CRASH: state 2 sub 9 @0x80118b14-74 (audit #7) */
+                    e->ai_timer = 0;
+                    e->state = 2; e->sub_state_1 = 9; e->sub_state_2 = 3; e->sub_state_3 = 0;
+                    break;
+                }
+                if (e->hit_react & 0x02) {                    /* non-crit shot in flight: gore puff only @0x80118b78-bd0 */
+                    e->hit_react &= 0xfd; re15_maggot_gore(e);
+                }
+                re15_maggot_anim(e);
+                {   int vimp = 600 + (int)e->mag_boost * 30;  /* +0x1d8 = +0x1e2*30+600 = 720 @0x80118bf4-c18 */
+                    if (e->sub_state_3 == 3) vimp = 0x2d0;    /* @0x80118c1c-38 */
+                    if (re15_maggot_ballistic(e, e->crow_speed, vimp, -60) != 0) {   /* c1a4(+0x8c,vimp,-60,+0x1ba) @0x80118c3c-58 */
+                        e->sub_state_2 = 3;                   /* land @0x80118c64-70 */
+                        e->crow_speed = 100;                  /* +0x8c=0x64 @0x80118c7c-84 */
+                        re15_audio_room_se(2);                /* Se(2) @0x80118c80 */
+                        e->mag_airborne = 0; e->floor = 0; e->sub_state_3 = 0;
+                        e->hit_react = 0;                     /* +0x93=0 @0x80118cc4 */
+                        break;
+                    }
+                }
+                /* mid-air FINISHER commit @0x80118cc8-d68 (audit #7): frame 0x13, player.hp<50,
+                 * hit-react clear, a804(0x1388,0xc0), +0x1dc==0 -> sub 8 + Se(7) */
+                if (e->anim_frame == 0x13 && pl->hp < 50 && pl->hit_react == 0
+                    && re15_dog_arc(e, pl, 5000, 0xc0) && e->dog_blocked_ctr == 0) {
+                    re15_dog_sub(e, 8); e->sub_state_3 = 0;
+                    re15_audio_room_se(7);                    /* @0x80118d64-68 */
+                    break;
+                }
+                re15_dog_advance_ofs(e, 0);                   /* the flight DOUBLE-advance: c1a4 + 245d8(0) @0x80118dbc */
+                break; }
+            default:  /* phase 3 landing tail @0x80118d74-dc0: play out, slide at +0x8c=100, -> SELECTOR */
+                if (re15_maggot_anim(e)) { re15_dog_sub(e, 4); e->sub_state_3 = 0; }
+                else re15_dog_advance_ofs(e, 0);
+                break;
             }
-            break;
-        }
+            break; }
 
-        default:  /* sub 8/9 (mid-air finisher / landing-recovery) — brief anims that resolve back to the
-                   * selector; fold to the brain (no damage of their own) */
-            e->sub_state_1 = 0; e->sub_state_2 = 0;
+        case 8: {  /* mid-air FINISHER B[8] 0x80118ddc (A[8] @0x80118dd4 = jr ra), clip 0x15 (audit #7).
+                    * Entered mid-leap; +0x8c (flight speed) carries over — B[8] entry seeds none. */
+            switch (e->sub_state_2) {
+            case 0:   /* @0x80118e44-ea0 */
+                e->sub_state_2 = 1;
+                re15_maggot_clip(e, 0x15);
+                e->mag_airborne = 1;                          /* @0x80118e78-84 */
+                e->hit_react |= 1;                            /* @0x80118e88-a0 */
+                /* fall through */
+            case 1: {
+                if ((e->hit_react & 0x02) && (e->hit_react & 0x40) && e->sub_state_3 == 0) {
+                    /* crit-shot mid-finisher -> crash-DEATH lane: state 3 sub 9 @0x80118eb8-f0c */
+                    e->ai_timer = 0;
+                    e->state = 3; e->sub_state_1 = 9; e->sub_state_2 = 3; e->sub_state_3 = 0;
+                    break;
+                }
+                if (e->hit_react & 0x02) { e->hit_react &= 0xfd; re15_maggot_gore(e); }   /* @0x80118f10-64 */
+                re15_maggot_anim(e);
+                {   int vimp = 600 + (int)e->mag_boost * 30;  /* @0x80118f84-fa8 */
+                    if (e->sub_state_3 == 3) vimp = 0x2d0;    /* @0x80118fac-c8 */
+                    if (re15_maggot_ballistic(e, e->crow_speed, vimp, -60) != 0) {   /* @0x80118fcc-e8 */
+                        e->sub_state_2 = 2;                   /* land -> recovery @0x80118ff4-9000 */
+                        e->crow_speed = 100; re15_audio_room_se(2);
+                        e->mag_airborne = 0; e->floor = 0; e->sub_state_3 = 0;
+                        e->hit_react = 0;                     /* @0x80119054 */
+                        break;
+                    }
+                }
+                if (e->anim_frame == 7) re15_audio_room_se(9);   /* Se(9) @0x80119064-78 */
+                if (pl->hit_react == 0
+                    && (e->anim_frame == 8 || e->anim_frame == 9 || e->anim_frame == 0x0a)   /* window table @0x80121478 = {08,09,0a}, loop @0x80119120-5c */
+                    && re15_dog_arc(e, pl, re15_body_contact_reach(e), 0xc0)) {   /* dual bff8 +0x448/+0x6f8 r=0x320 @0x801190dc-9100 */
+                    pl->hp = (int16_t)(pl->hp - 600);         /* player.hp -= 600 @0x80119198-ac */
+                    e->dog_blocked_ctr = 0x12c;               /* +0x1dc=300 @0x801191b0-b8 */
+                    re15_audio_room_se(1);                    /* Se(1) @0x801191b4 (a0=1 @0x80119184) */
+                    s_player_grabbed = 1;
+                    re15_player_victim_devour(e);             /* aca58=6 (sw @0x801191c8-cc) + acbfc/acbcc/acbd0 victim banks @0x801191d8-9204 */
+                    pl->hit_react |= 1;                       /* @0x801191d0-fc */
+                }
+                break; }
+            default:  /* phase 2 recovery @0x80119210-5c: play out (245d8(0) while running) -> SELECTOR */
+                if (re15_maggot_anim(e)) { re15_dog_sub(e, 4); e->sub_state_3 = 0; }
+                else re15_dog_advance_ofs(e, 0);
+                break;
+            }
+            break; }
+
+        case 15: {  /* REAR-UP GRAB/PIN — A[15] 0x8011a878 + B[15] 0x8011a960, phases @0x801003cc
+                     * = {a9a8,aa24,abe8,acb4,ad10,ad98,add8,ae5c} (audit #1). */
+            /* A[15]: shot during the rear-up/pin */
+            if (e->hit_react & 0x02) {
+                if (e->hit_react & 0x40) {                    /* crit-shot -> abort to HURT air lane @0x8011a898-8fc */
+                    e->y = (int32_t)e->dog_floor_y;           /* restore ground @0x8011a8a4-ac */
+                    e->ai_timer = 0;                          /* +0x9c=0 @0x8011a8bc */
+                    e->state = 2; e->sub_state_1 = 7; e->sub_state_2 = 1; e->sub_state_3 = 0;   /* @0x8011a8c8-fc */
+                    if (g_player_victim == 1 || g_player_victim == 2) s_victim_phase = 4;   /* port: release the pin */
+                    break;
+                }
+                e->hit_react &= 0xfd; re15_maggot_gore(e);    /* gore puff @0x8011a900-4c */
+            }
+            switch (e->sub_state_2) {
+            case 0:   /* REAR-UP @0x8011a9a8 */
+                e->y = (int32_t)e->dog_floor_y + 1600;        /* +0x38 = +0x1ba + 0x640 @0x8011a9b4-c0 */
+                e->sub_state_2 = 1;
+                e->motion = 0x1c; e->anim_frame = 0; e->anim_frac = 0;   /* clip 0x1c, +0x8f=0 hard cut @0x8011a9dc-aa04 */
+                re15_audio_room_se(7);                        /* Se(7) @0x8011a9fc-aa00 */
+                e->hit_react |= 1;                            /* self hit-guard @0x8011aa14-20 */
+                /* fall through */
+            case 1: {  /* connect checks @0x8011aa24-abe4 */
+                re15_maggot_anim(e);
+                int connected = 0;
+                if (e->anim_frame == 4) {                     /* @0x8011aa4c-54 */
+                    if (re15_maggot_a780(e, pl) == 0          /* a780==0 gate @0x8011aa64-6c */
+                        && pl->hit_react == 0                 /* @0x8011aac0-cc */
+                        && re15_dog_arc(e, pl, 3000, 256))    /* a804(0xbb8,0x100) -> +0x1d8 @0x8011aaa0-bc */
+                        connected = 1;
+                } else if (e->anim_frame == 0x0f) {           /* @0x8011aafc-b04 */
+                    if (re15_maggot_a780(e, pl) != 0          /* a780!=0 gate @0x8011ab14-1c */
+                        && pl->hit_react == 0                 /* @0x8011ab7c-88 */
+                        && re15_dog_arc(e, pl, re15_body_contact_reach(e), 384))   /* bff8 part+0x39c r=0x320 @0x8011ab24-78; port mapping wf_555f18eb */
+                        connected = 1;
+                    if (!connected) {                         /* MISS -> phase 7 reverse-play @0x8011abb4-e4 */
+                        e->sub_state_2 = 7; e->anim_frame = 0x23;
+                        break;
+                    }
+                }
+                if (connected) e->sub_state_2 = 2;            /* @0x8011aba8-b0 */
+                break; }
+            case 2:   /* PIN latch @0x8011abe8 */
+                re15_audio_room_se(10);                       /* Se(10) @0x8011abe8-f8 */
+                e->sub_state_2 = 3;                           /* @0x8011abf4-fc */
+                s_player_grabbed = 1;                         /* aca58=5 @0x8011ac40-48 (+ entity/player flags|=0x1000 @0x8011ac2c-54) */
+                re15_player_victim_latch(e, pl);              /* player anchor 0x8001ac38 @0x8011ac18 + a8f8(player,0x800) yaw latch @0x8011acac-b0 */
+                g_player_victim_variant = (uint8_t)re15_maggot_a780(e, pl);   /* aca59 = a780 ret @0x8011ac50-68 */
+                pl->hit_react |= 1;                           /* @0x8011ac8c-aa0 */
+                if (re15_maggot_anim(e)) e->sub_state_2 = 4;  /* anim + (+0x6 += ret) @0x8011acd4-d0c */
+                break;
+            case 3:   /* RIDE @0x8011acb4: hold the pin (0x8001ad68 root-place) until clip 0x1c ends */
+                s_player_grabbed = 1;
+                if (re15_maggot_anim(e)) e->sub_state_2 = 4;
+                break;
+            case 4:   /* RELEASE init @0x8011ad10 */
+                e->hit_react = 0;                             /* +0x93=0 @0x8011ad1c */
+                e->y = (int32_t)e->dog_floor_y;               /* @0x8011ad2c-34 */
+                e->sub_state_2 = 5;                           /* @0x8011ad44 */
+                e->motion = 3; e->anim_frame = 0x16; e->anim_frac = 0;   /* clip 3 @frame 0x16 @0x8011ad50-78 */
+                re15_audio_room_se(4);                        /* Se(4) @0x8011ad60/74 */
+                s_victim_phase = 4;                           /* unpin: flags &= ~0x1000 @0x8011ad88-94 (port: victim release phase) */
+                /* fall through */
+            case 5:   /* release play-out @0x8011ad98 */
+                re15_maggot_anim(e);
+                if (e->anim_frame == 0x31) e->sub_state_2 = 6;   /* @0x8011adc0-d4 */
+                break;
+            case 6:   /* connect exit @0x8011add8: lockouts + hand off to the sub-2 recovery */
+                e->dog_blocked_ctr = 0x3c;                    /* +0x1dc=0x3c @0x8011ade0-e4 */
+                e->mag_pin_cd = 0xff;                         /* +0x1e1=0xff @0x8011adf0-f4 */
+                e->sub_state_1 = 2; e->sub_state_2 = 1; e->sub_state_3 = 0;   /* @0x8011ae04-24 */
+                e->motion = 3; e->anim_frame = 0x1d; e->anim_frac = 7;        /* clip 3 @frame 0x1d @0x8011ae30-58 */
+                break;
+            default:  /* 7: MISS reverse-play @0x8011ae5c (f314 a2=1) then restore -> CHASE */
+                if (e->anim_frame > 0) e->anim_frame--;
+                else {
+                    e->hit_react = 0;                         /* @0x8011ae8c */
+                    e->y = (int32_t)e->dog_floor_y;           /* @0x8011ae9c-a4 */
+                    e->motion = 6; e->anim_frame = 0; e->anim_frac = 0;   /* clip 6 @0x8011aeb0-d4 */
+                    e->dog_blocked_ctr = 0x1e;                /* +0x1dc=0x1e @0x8011aefc-f00 */
+                    e->mag_pin_cd = 0x5a;                     /* +0x1e1=0x5a @0x8011af0c-10 */
+                    re15_dog_sub(e, 3); e->sub_state_3 = 0;   /* @0x8011af1c-40 */
+                }
+                break;
+            }
+            break; }
+
+        default:  /* subs 9-14 (B @0x8011936c/971c/9a6c/9d0c/a1f8/a44c) — no shipped writer reaches
+                   * them (+0x1e3 stays 0, zone leaps OPEN); fold to the brain */
+            e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;
             break;
         }
+        /* brain TAIL (audit #16): the timers count down EVERY brain tick AFTER the A/B dispatch —
+         * +0x1dc @0x801173f8-40c, +0x1e1 @0x8011741c-38. (+0x1de blocked-frames counter
+         * @0x80117448-6c has no consumer in the shipped subs.) */
+        if (e->dog_blocked_ctr) e->dog_blocked_ctr--;
+        if (e->mag_pin_cd) e->mag_pin_cd--;
         break;
     }
 
-    case 2:   /* HURT ENTRY: shared take_damage sets +0x4=2. The maggot's state 2 is a ballistic special
-               * (leap-abort); for wave 1 flinch briefly then resume the brain. */
-        e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0; e->hit_react = (uint8_t)(e->hit_react & ~1u);
+    case 2: {  /* HURT root 0x8011af5c (audit #2). take_damage/weapon-fire left +0x5 = the weapon
+                * reaction lane, +0x6 = hit-dir, +0x7 = 0 (phase). */
+        if (e->mag_airborne) {                                /* ballistic settle c1a4(0,0,-50,+0x1ba) @0x8011af6c-88 */
+            if (re15_maggot_ballistic(e, 0, 0, -50) != 0) {
+                e->mag_airborne = 0;                          /* @0x8011afa0 */
+                re15_audio_room_se(2);                        /* Se(2) @0x8011af90/cc (+ box restore @0x80121368[+0x1e2] — port hitbox is static) */
+            }
+        }
+        if (e->sub_state_1 < 7) {                             /* lanes @0x801214a8: [0-6] = 0x8011b018 FLINCH */
+            switch (e->sub_state_3) {
+            case 0:
+                e->hit_react |= 2;                            /* @0x8011b064-70 */
+                e->sub_state_3 = 1;                           /* @0x8011b07c-80 */
+                e->motion = 7; e->anim_frame = 0; e->anim_frac = 7;   /* flinch clip 7 @0x8011b08c-90 */
+                re15_maggot_gore(e);                          /* vec @0x80121388[(+0x6&1)*0x20] @0x8011b0bc-130 */
+                re15_audio_room_se(3);                        /* Se(3) @0x8011b134-38 */
+                /* fall through */
+            case 1:
+                if (re15_maggot_anim(e)) e->sub_state_3 = 2;  /* @0x8011b13c-74 */
+                break;
+            default:  /* exit @0x8011b178-1d8: -> ACTIVE sub 7 = RETALIATION LEAP (sub 9 if +0x1e3) */
+                e->hit_react = 0;                             /* @0x8011b178 */
+                e->state = 1;                                 /* sb 1 @0x8011b188 */
+                e->sub_state_1 = (uint8_t)((e->mag_1e3 != 0) ? 9 : 7);   /* @0x8011b194-98 / @0x8011b1c8-d8 */
+                e->sub_state_2 = 0; e->sub_state_3 = 0;
+                break;
+            }
+        } else if (e->sub_state_1 < 9) {                      /* [7-8] = 0x8011b1ec AIR-HIT lane */
+            switch (e->sub_state_3) {
+            case 0:
+                e->hit_react |= 2; e->sub_state_3 = 1;        /* @0x8011b238-54 */
+                e->motion = (int16_t)((e->hit_react & 0x80) ? 9 : 8);   /* clip 8 @0x8011b260-64, 9 if front-latch @0x8011b274-8c */
+                e->anim_frame = 0; e->anim_frac = 7;
+                re15_maggot_gore(e); re15_audio_room_se(3);   /* @0x8011b2b0-334 */
+                /* fall through */
+            case 1:
+                if (re15_maggot_anim(e)) e->sub_state_3 = 2;  /* @0x8011b338-6c */
+                re15_maggot_bf50(e, (e->motion == 8) ? 0 : 1);   /* @0x8011b370-a0 */
+                break;
+            default:  /* @0x8011b3ac-ec */
+                e->hit_react = 0; e->state = 1; e->sub_state_1 = 7; e->sub_state_2 = 0; e->sub_state_3 = 0;
+                break;
+            }
+        } else {                                              /* [9-11] = 0x8011b400 CRASH lane, phases @0x801003ec */
+            switch (e->sub_state_3) {
+            case 0:
+                e->hit_react |= 2; e->sub_state_3 = 1;        /* @0x8011b44c-68 */
+                e->motion = (int16_t)((e->hit_react & 0x80) ? 0x0b : 0x0a);   /* @0x8011b474-9c */
+                e->anim_frame = 0; e->anim_frac = 7;
+                e->crow_speed = (int16_t)((re15_engine_rand8() & 0x1f) + 80);   /* +0x8c @0x8011b4c4-d4 */
+                e->ai_timer = 0;                              /* +0x9c=0 @0x8011b4e4 */
+                re15_maggot_gore(e); re15_audio_room_se(3);   /* @0x8011b4f0-56c */
+                /* fall through */
+            case 1:
+                if (re15_maggot_anim(e)) e->sub_state_3 = 2;  /* @0x8011b570-5a4 */
+                e->crow_speed = (int16_t)(0x50 - ((int)e->ai_timer << 2));   /* +0x8c = 0x50 - 4*+0x9c @0x8011b5b4-c8 */
+                re15_dog_advance_ofs(e, 0x800);               /* BACK-slide 245d8(0x800) @0x8011b5c4 */
+                if (e->hit_react & 0x80) re15_dog_advance_ofs(e, 0);   /* front-latch: extra 245d8(0) @0x8011b5d8-f0 */
+                break;
+            case 2:
+                e->sub_state_3 = 3;                           /* @0x8011b604-08 */
+                e->motion = (int16_t)((e->hit_react & 0x80) ? 0x11 : 0x10);   /* get-up @0x8011b614-3c */
+                e->anim_frame = 0; e->anim_frac = 7;
+                /* fall through */
+            case 3:
+                if (re15_maggot_anim(e)) e->sub_state_3 = 4;  /* @0x8011b660-98 */
+                break;
+            default:  /* @0x8011b69c-e8 */
+                e->hit_react = 0; e->state = 1; e->sub_state_1 = 7; e->sub_state_2 = 0; e->sub_state_3 = 0;
+                break;
+            }
+        }
+        break; }
+
+    case 3: {  /* DEATH root 0x8011b6fc: airborne settle @0x8011b70c-70, lanes @0x80121500 (audit #13) */
+        if (e->mag_airborne) {
+            if (re15_maggot_ballistic(e, 0, 0, -50) != 0) { e->mag_airborne = 0; re15_audio_room_se(2); }
+        }
+        if (e->sub_state_1 < 7) {                             /* [0-6] ground death 0x8011b7b8 */
+            switch (e->sub_state_3) {
+            case 0:
+                e->hit_react |= 2; e->sub_state_3 = 1;        /* @0x8011b804-20 */
+                e->motion = 0x0e; e->anim_frame = 0; e->anim_frac = 7;   /* clip 0xe @0x8011b82c-30 */
+                re15_maggot_gore(e);                          /* @0x8011b854-8d0 */
+                re15_audio_room_se(0);                        /* Se(0) @0x8011b8d4-d8 */
+                /* kill-flag persist 0x8004ef90(0x800b1038, +0x1c6) @0x8011b8e8-f4 — port: the run_all
+                 * em_flag commit */
+                /* fall through */
+            case 1:
+                if (re15_maggot_anim(e)) { e->sub_state_3 = 2; e->anim_frame = s_maggot_clip_len[0x0e] - 1; }  /* hold the fallen frame */
+                re15_maggot_bf50(e, 0);                       /* bf50(0,0) @0x8011b918-34 */
+                if (e->anim_frame == 0x3d) re15_audio_room_se(2);   /* frame-61 thud Se(2) @0x8011b944-58 */
+                break;
+            default:  /* @0x8011b964-88: settle gore + STATE WORD 7 */
+                re15_maggot_gore(e);
+                e->state = 7; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* sw 7 @0x8011b984-88 */
+                break;
+            }
+        } else if (e->sub_state_1 < 9) {                      /* [7-8] mid-air death 0x8011b998 */
+            switch (e->sub_state_3) {
+            case 0:
+                e->hit_react |= 2; e->sub_state_3 = 1;        /* @0x8011b9e4-a00 */
+                e->motion = (int16_t)((e->hit_react & 0x80) ? 0x0b : 0x0a);   /* clip 0xa/0xb @0x8011ba0c-38 */
+                e->anim_frame = 0; e->anim_frac = 7;
+                re15_maggot_gore(e); re15_audio_room_se(0);   /* @0x8011ba5c-ae0 */
+                /* fall through */
+            case 1:
+                if (re15_maggot_anim(e)) { e->sub_state_3 = 2; e->anim_frame = s_maggot_clip_len[e->motion & 0x1f] - 1; }
+                if (e->anim_frame == 0x13) re15_audio_room_se(2);   /* Se(2) @0x8011bb48-5c */
+                break;
+            default:  /* @0x8011bb68-88: gore(part +0x244) + state word 7 */
+                re15_maggot_gore(e);
+                e->state = 7; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;
+                break;
+            }
+        } else {                                              /* [9] crash-death 0x8011bb9c (crit-shot finisher) */
+            switch (e->sub_state_3) {
+            case 0:
+                e->hit_react |= 2; e->sub_state_3 = 1;        /* @0x8011bbe8-c04 */
+                e->motion = (int16_t)((e->hit_react & 0x80) ? 0x0b : 0x0a);   /* @0x8011bc10-38 */
+                e->anim_frame = 0; e->anim_frac = 7;
+                e->crow_speed = (int16_t)((re15_engine_rand8() & 0x1f) + 80);   /* @0x8011bc60-70 */
+                e->ai_timer = 0;                              /* @0x8011bc80 */
+                re15_maggot_gore(e); re15_audio_room_se(0);   /* @0x8011bc84-d08 */
+                /* fall through */
+            case 1:
+                if (re15_maggot_anim(e)) { e->sub_state_3 = 2; e->anim_frame = s_maggot_clip_len[e->motion & 0x1f] - 1; }
+                e->crow_speed = (int16_t)(0x50 - ((int)e->ai_timer << 2));   /* @0x8011bd70-84 */
+                re15_dog_advance_ofs(e, 0x800);               /* back-slide @0x8011bd80 */
+                if (e->hit_react & 0x80) re15_dog_advance_ofs(e, 0);   /* @0x8011bd94-ac */
+                break;
+            default:  /* @0x8011bdb8-d8 */
+                re15_maggot_gore(e);
+                e->state = 7; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;
+                break;
+            }
+        }
+        break; }
+
+    case 7:   /* CORPSE 0x8011be54 (audit #12): NO clip write — hold the death pose; 90-tick fade */
+        if (e->sub_state_3 == 0) {
+            e->grab_kill_ctr = 0x5a;                          /* +0x9e = 90 @0x8011be80-84 */
+            e->sub_state_3 = 1;                               /* @0x8011be90-94 */
+            e->flags |= 0x02;                                 /* @0x8011beac-b0 */
+            e->flags |= 0x40;                                 /* @0x8011bec8-cc */
+        }
+        if (e->sub_state_3 == 1) {
+            /* per tick: +0xc4/+0xec = (x & 0xff000000) | 0x00ffff38 corpse tint and pool spread
+             * +0xbc/+0xbe += 8 @0x8011bed0-bf14 — model-pool color/pool channel, render-side (the
+             * same channel as the zombie corpse pool, re15_enemy_corpse_settle) */
+            int16_t t = e->grab_kill_ctr; e->grab_kill_ctr = (int16_t)(t - 1);   /* unconditional dec @0x8011bf24-34 */
+            if (t == 0) e->sub_state_3 = 2;                   /* @0x8011bf38-44 */
+        }
+        /* +0x7 >= 2: fully inert @0x8011bf48 (frozen on the death clip's last frame) */
         break;
 
-    case 3:   /* DEATH 0x8011b6fc -> death-anim 0x8011b7b8: clip 0xe + gore + Se(0) -> corpse */
-        if (e->sub_state_3 == 0) { re15_maggot_clip(e, 0x0e); re15_audio_room_se(0); e->hit_react |= 2; e->sub_state_3 = 1; }  /* death clip 0xe @0x8011b830 */
-        else if (e->sub_state_3 == 1) { if (re15_maggot_anim(e)) e->sub_state_3 = 2; }
-        else { e->state = 7; e->sub_state_3 = 0; }            /* -> CORPSE */
-        break;
-
-    case 7:   /* CORPSE 0x8011b998: settle to the corpse pose (clip 0xa), inert */
-        if (e->motion != 0x0a) re15_maggot_clip(e, 0x0a);
-        re15_maggot_anim(e);
-        break;
-
-    default:  /* the ballistic far-states [2-7] (leap/special) = wave 2 -> resume the brain */
+    default:  /* states 4/5 (0x8011bdec — sub-dispatch @0x80121558, shipped entries are jr-ra stubs
+               * @0x8011be34-4c) and 6 (0x8011c598) have no STAGE1 writer -> resume the brain */
         e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0;
         break;
     }
@@ -6007,15 +6554,26 @@ void re15_enemy_ai_run_all(int combat_active)
                 e->x = nx; e->z = nz;
             }
         }
-        else if (t == 0x27) {   /* MAGGOTS (type 0x27) — large moving ground creature (Wave 1).
-                                 * Crawls toward the player -> SCA wall-clamp after the tick like the dog. */
+        else if (t == 0x27) {   /* MAGGOTS (type 0x27) — large moving ground creature.
+                                 * Root tail (@0x80116e28-84): body push (0x8002aec4/0x8002b544) then the
+                                 * SCA resolver FUN_8003b0a4(+0x34, dim+6, 4) whose result lands in +0x1d6
+                                 * (`sh v0,470(v1)` @0x80116e84) — the wall-clamp gate the rear-up
+                                 * (@0x80117b18) and the far-leap (@0x80118054) test. Port: the run_all
+                                 * clamp encodes the same contact into +0x90/ai_contact (dog #15 pattern);
+                                 * the AI reads LAST frame's contact (resolver clears at ITS start). */
             int32_t mag_ox = e->x, mag_oz = e->z;
             re15_maggot_ai_tick(s);
             re15_enemy_body_push_tail(s, e);
+            e->ai_contact = (uint8_t)(e->ai_contact & 0xf0);
             if (g_room_rdt_ok && (e->x != mag_ox || e->z != mag_oz)) {
-                int32_t nx = e->x, nz = e->z;
+                int32_t ix = e->x, iz = e->z;
+                int32_t nx = ix, nz = iz;
                 re15_collision_constrain_enemy(&g_room_rdt, mag_ox, mag_oz, &nx, &nz, e->hit_radius_min, e->y);
                 e->x = nx; e->z = nz;
+                if (nx != ix || nz != iz) {               /* clamp moved it = wall contact (+0x1d6 != 0) */
+                    int push = ((int)re15_atan2_q12(nz - iz, nx - ix) - 0x400) & 0xfff;
+                    e->ai_contact = (uint8_t)((((push >> 8) & 0xf) << 4) | 1);
+                }
             }
         }
         else if (t == 0x40 || t == 0x42 || t == 0x45 || t == 0x47 || t == 0x49 || t == 0x4b ||

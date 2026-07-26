@@ -335,6 +335,21 @@ typedef struct {
                               * maintained by the engine floor probe; the port seeds it at INIT from
                               * the spawn Y and moves it with the reroute level hops (+-0x708). */
 
+    /* ---- Maggot (type 0x27, EM027) — byte-true 0x80116db8 family work bytes (audit wf_827f186d).
+     * All four are INIT-cleared/-seeded by FUN_80116f50 (@0x8011707c/8c/98-9c/ac). */
+    uint8_t  mag_airborne;   /* +0x1e0: airborne latch — set 1 at leap LAUNCH (@0x80118ab0) / finisher
+                              * entry (@0x80118e84); gates the state-2/3 ballistic settle (@0x8011af6c,
+                              * @0x8011b70c); cleared on land (@0x80118c94) */
+    uint8_t  mag_pin_cd;     /* +0x1e1: rear-up/pin re-attempt lockout — 0xff on pin connect
+                              * (@0x8011adf4), 0x5a on miss (@0x8011af10); -1/brain tick (@0x8011741c-38);
+                              * ==0 gates the sub-15 upgrade (@0x80117b28-30) */
+    uint8_t  mag_boost;      /* +0x1e2 = 4 (INIT @0x80117098-9c, no other writer): leap impulse
+                              * += *10 (@0x80118a64-80), vert impulse 600+*30 (@0x80118c00-18),
+                              * collision-box index @0x80121368[.] (INIT @0x801171a0-c0) */
+    uint8_t  mag_1e3;        /* +0x1e3: hurt-exit variant — !=0 routes the flinch exit to sub 9
+                              * instead of the sub-7 leap (@0x8011b1c8-d8). ONLY writer in STAGE1.BIN
+                              * is the INIT clear (@0x801170ac) -> always 0 in shipped play. */
+
     /* ---- Spider-Baby (type 0x26, EM026) — a STATIONARY web-spitter/ambush (RE15_SPIDER_AI.md).
      * Emerges vertically from its spawn point (spider_phase < 13 = intangible), then solid + a -2
      * contact stagger. STATE[1] arms collision hit-codes + telegraph "web" fx; killable (hurt/death). */

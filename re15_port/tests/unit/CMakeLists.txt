@@ -107,6 +107,8 @@ set_tests_properties(unit_spider_ai PROPERTIES TIMEOUT 30)
 add_executable(test_maggot_ai test_maggot_ai.c)
 target_link_libraries(test_maggot_ai PRIVATE re15_engine re15_test_support)
 target_include_directories(test_maggot_ai PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_maggot_ai PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_maggot_ai COMMAND test_maggot_ai)
 set_tests_properties(unit_maggot_ai PROPERTIES TIMEOUT 30)
 
@@ -249,6 +251,8 @@ set_tests_properties(unit_aot_edge PROPERTIES TIMEOUT 30)
 add_executable(test_enemy_body_push test_enemy_body_push.c)
 target_link_libraries(test_enemy_body_push PRIVATE re15_engine re15_test_support)
 target_include_directories(test_enemy_body_push PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_enemy_body_push PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_enemy_body_push COMMAND test_enemy_body_push)
 set_tests_properties(unit_enemy_body_push PROPERTIES TIMEOUT 30)
 
@@ -437,6 +441,8 @@ set_tests_properties(unit_squareroot0 PROPERTIES TIMEOUT 30)
 add_executable(test_enemy_attack_reach test_enemy_attack_reach.c)
 target_link_libraries(test_enemy_attack_reach PRIVATE re15_engine re15_test_support)
 target_include_directories(test_enemy_attack_reach PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_enemy_attack_reach PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_enemy_attack_reach COMMAND test_enemy_attack_reach)
 set_tests_properties(unit_enemy_attack_reach PROPERTIES TIMEOUT 30)
 

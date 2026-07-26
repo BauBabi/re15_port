@@ -18,6 +18,34 @@
 #include "re15_actor.h"
 #include "re15_enemy_ai.h"
 #include "re15_damage.h"
+#include <stdlib.h>
+#include "re15_enemy.h"
+#include "re15_ems.h"
+#include "re15_emd.h"
+
+#ifndef RE15_ASSET_PSX_DIR
+#define RE15_ASSET_PSX_DIR "shared_assets/PSX"
+#endif
+/* The maggot moves via its LOCATOR foot-plant root motion (FUN_8011bf50, EMR-driven — audit
+ * wf_827f186d maggot #5): the harness must supply the EM027 bank (CDEMD0.EMS idx 12) the way
+ * the room loader does, or the crawl is inert and the reach/push assertions are vacuous. */
+static int load_maggot_bank_for_motion(void)
+{
+    FILE *f = fopen(RE15_ASSET_PSX_DIR "/EMD/CDEMD0.EMS", "rb");
+    if (!f) return 0;
+    fseek(f, 0, SEEK_END); long n = ftell(f); fseek(f, 0, SEEK_SET);
+    uint8_t *buf = (uint8_t *)malloc((size_t)n);
+    if (!buf || fread(buf, 1, (size_t)n, f) != (size_t)n) { fclose(f); free(buf); return 0; }
+    fclose(f);
+    size_t off, len;
+    if (re15_ems_get_entry(buf, (size_t)n, 12, &off, &len)) { free(buf); return 0; }
+    re15_enemy_bank_t *bank = re15_enemy_find(0x27);
+    if (!bank) bank = re15_enemy_alloc(0x27);
+    if (!bank) { free(buf); return 0; }
+    if (re15_emd_parse_loco_bank(buf + off, len, &bank->skel, &bank->anim)) { free(buf); return 0; }
+    bank->ok = 1; bank->buf = buf;
+    return 1;
+}
 
 extern int16_t re15_atan2_q12(int32_t, int32_t);
 extern int  re15_player_is_grabbed(void);
@@ -41,6 +69,7 @@ static void step(void) { re15_body_push_player(); re15_actors_anim_advance(); re
 int main(void)
 {
     int fail = 0;
+    if (!load_maggot_bank_for_motion()) fprintf(stderr, "WARN: EM027 bank missing - maggot locomotion inert\n");
     printf("=== enemy melee reach through the body-push standoff (audit wf_555f18eb Part B) ===\n");
 
     /* (1) MAGGOT 0x27 — bite/heavy must chip the player through the 2050 standoff (was 2000/1600). */
