@@ -1,9 +1,16 @@
-# RE1.5 Maggots (type 0x27, EM027 = MAGGOTS_BABY) — byte-true RE
+# RE1.5 "Maggots" = der GORILLA-BOSS (type 0x27, EM027) — byte-true RE
 
-Der Maggot = **Enemy-Typ 0x27** (Modell **EM027**, BioModels `EM027.EMD = MAGGOTS_BABY`, EMS-idx 12
-@0x1be000, **208 KB**, 29 Clips). Ein **großes, bewegendes Boden-Vieh** (1600×1440-Body, **HP 180**,
-Crawl-Speed ~1.7) mit dem **größten State-Automaten bisher (16 States)**. RE via Workflow **wf_f597f55d**
-(5 CLUSTER + 5 Refuter, adversarial verifiziert).
+**IDENTITÄT (korrigiert 2026-07-26, Nutzer + TCRF):** Typ 0x27 ist der **Parking-Garage-BOSS von
+ROOM11C0** („11C … Parking Garage B1", Leon) — TCRF/info74 nennt den Kampf wörtlich den **„Gorilla
+boss fight"** (`MAIN16.BGM` = „Gorilla Boss — Used during the gorilla boss fight in the parking
+lot"). Das Label „MAGGOTS_BABY" stammt aus BioModels (Fan-Benennung der EMD-Datei) und bleibt hier
+nur als Datei-/Code-Referenz stehen; Größe passt zum Boss: **208-KB-Modell, 29 Clips, 1600×1440-Body,
+16-State-Automat, REAR-UP-GRAB/PIN + LEAP**.
+
+Der „Maggot"/Gorilla-Boss = **Enemy-Typ 0x27** (Modell **EM027**, BioModels `EM027.EMD = MAGGOTS_BABY`,
+EMS-idx 12 @0x1be000, **208 KB**, 29 Clips). Ein **großes, bewegendes Boden-Vieh** (1600×1440-Body,
+**HP 180**, Crawl-Speed ~1.7) mit dem **größten State-Automaten bisher (16 States)**. RE via Workflow
+**wf_f597f55d** (5 CLUSTER + 5 Refuter, adversarial verifiziert).
 
 ## Dispatch (byte-verifiziert, STAGE1.BIN)
 
