@@ -235,13 +235,6 @@ void re15_audio_room_se(int se_id)
     (void)se_id;   /* TODO(psx): load snd1 to SPU + play_sample_from like re15_audio_footstep */
 }
 
-/* Room SE by id on the snd0 bank (Se_on bank selector 2 -> RDT snd0; FUN_80045024 dispatch
- * @0x80010e70). Same PSX SPU follow-up as re15_audio_room_se above. */
-void re15_audio_room_se_snd0(int se_id)
-{
-    (void)se_id;   /* TODO(psx): load snd0 to SPU + play like re15_audio_footstep */
-}
-
 /* Weapon SE by id (byte-true FUN_80045024 bank1 core) — the equipped weapon's ARMS bank. PSX SPU
  * path is a FOLLOW-UP: mirror FUN_80043d8c (load ARMS%02X.EDH/.VB into a reserved SPU region) before
  * play_sample_from can key it. Stub keeps the target buildable; audio_pc.c has the real impl. */

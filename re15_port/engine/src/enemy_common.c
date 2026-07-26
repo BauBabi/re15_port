@@ -88,13 +88,6 @@ void re15_apply_room_cinematic(const uint8_t *rbj, size_t rbj_size, unsigned roo
      * em45 (em45's own clips are all upright). Keep the em45 mesh+bind; replace kf+EDD. */
     static const struct { unsigned room; uint8_t type; int record; } s_room_rbj_enemy[] = {
         { 0x1150, 0x45, 1 },   /* Irons: animation.rbj RECORD 1 = prone wounded-breathing */
-        { 0x1211, 0x49, 1 },   /* ROOM1211 NPC (type 0x49, Sce_em_set `44 00 49 40` @RDT 0x1e36):
-                                * sub06 poses it with Work_set(2,0) + Plc_motion(0,28,0) +
-                                * Plc_flg(0,4,0)=LOOP — clip 28 exists ONLY in the room RBJ
-                                * RECORD 1 (RDT@0x5C, 29 clips, clip 28 = 2 frames, 15 bones —
-                                * re-parsed 2026-07-26), not in EM049 bank0 (24 clips). Rebind so
-                                * the executor motion FSM plays the real 2-frame loop instead of
-                                * collapsing to fc=1 (audit wf_827f186d npc #9). */
     };
     for (unsigned k = 0; k < sizeof(s_room_rbj_enemy)/sizeof(s_room_rbj_enemy[0]); k++) {
         if (s_room_rbj_enemy[k].room != room_id) continue;

@@ -670,16 +670,14 @@ void re15_actors_anim_advance(void)
         if (!a->active) continue;
         if (a->state == RE15_AI_STATE_CORPSE) continue;   /* +0x4==7: corpse holds its fallen pose */
         if (re15_type_self_advances_anim(a->type)) continue;  /* self-advancing tick owns +0x95 (dog/maggot/crow/…) */
-        /* NPC-family actors advance +0x95 EXCLUSIVELY inside their own tick handlers — the state-4
-         * executor sub-VM (re15_npc_sub_motion/gesture/walk...) AND now the state-1 watcher acts
-         * (0x8004f310/0x8004f4e0/0x8004f6f0, audit wf_827f186d npc #5): in the original, anim_set
-         * 0x8001f314 inside those handlers is the SOLE frame stepper for an NPC (there is no global
-         * advancer at all), and a state-1 mode-1 frame (watcher-only, no act row @0x801215ac[1]/
-         * @0x8012174c[1]=0x8004f100) advances NOTHING. So gate the whole family here in EVERY state
-         * (was state-4-only, which double-advanced the new state-1 acts). 0x40 is already in the
-         * self-advance list above. */
+        /* NPC-family actors in the state-4 executor advance +0x95 via the executor's own sub-VM
+         * (re15_npc_sub_motion / re15_npc_anim = the byte-true anim_set path). The original has NO
+         * separate global advancer for a state-4 actor — anim_set is the sole stepper — so the generic
+         * advancer must NOT also step them (a double advance would defeat the motion-FSM's play-once
+         * HOLD, wrapping the pose instead of holding). Only 0x40 is self-advancing (skipped above); the
+         * other 6 NPC types (0x42/0x45/0x47/0x49/0x4b/0x4d) are gated here while in the executor. */
         { uint8_t t = a->type;
-          if (t==0x42||t==0x45||t==0x47||t==0x49||t==0x4b||t==0x4d) continue; }
+          if (a->state == 4 && (t==0x40||t==0x42||t==0x45||t==0x47||t==0x49||t==0x4b||t==0x4d)) continue; }
         uint16_t mo = a->motion;
         /* These clips hold frame 0 for the SPAWN lie-down (a downed zombie stays flat). But clips
          * 0x12/0x13 are DUAL-USE: the KNOCKDOWN GET-UP (re15_enemy_ai_live_knockdown case 4 sets

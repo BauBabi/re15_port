@@ -1847,29 +1847,19 @@ static int op_plc_dest(scd_thread_t *t)
     int16_t  x         = scd_read_le_s16(&t->pc[4]);
     int16_t  z         = scd_read_le_s16(&t->pc[6]);
 
-    /* Plc_dest @0x80041be4, CORRECTED (audit wf_827f186d npc #1 HIGH — the previous
-     * "STASH-ONLY" note here was a WRONG CITATION; the handler plainly writes the state):
-     *   @0x80041bec-c0c  gate: if (entity+0x1c4 & 4) && (+0x5 == mode) SKIP the state reset
-     *                    (a LOOP-flagged walk already in this mode keeps running);
-     *   @0x80041c14-c20  else +0x4=4 (STATE 4 = shared executor 0x80050be8), +0x5=mode,
-     *                    +0x6=0, +0x7=0;
-     *   @0x80041c24      +0x1c3 = pc[3] (the zone-5 arrival-flag id);
-     *   @0x80041c38/c58  +0x1bc/+0x1be = pc[4..5]/pc[6..7] (steer x/z);
-     *   @0x80041c4c      +0x1c4 = 0 (`sh zero,452(a1)` — anim_flags cleared);
-     *   @0x80041c48-54   `lbu +0x8; sltiu 0x10; beq -> 0x80041d40`: type >= 0x10 (every NPC)
-     *                    takes the NPC branch — mode switch @0x80010de4 stashes a per-type
-     *                    turn-rate byte into +0x1c8 (mode 4=@0x80076c01, 5=@0x80076c81,
-     *                    7=@0x80076c21, 8=@0x80076c61, 9=@0x80076c41; mode 6 = none) and
-     *                    +0x1ca=0 (@0x80041e38) — no +0x1c8 consumer is ported, the executor
-     *                    subs re-read the tables directly.
-     *   type < 0x10 (the PLAYER) branches to the player clip-preselect switch @0x80010dcc
-     *   (tables @0x80073ea5/@0x80073f25 -> +0x1c8) — the player walk stays on the ported
-     *   per-frame walker FSM (state DAT_800aca59 -> table 0x80073e30: 4=WALK 0x80030af0,
-     *   5=RUN 0x80030d28, 9=TURN 0x80031360; re15_actor_step_walk in actor_locomotion.c).
-     * So for an NPC the opcode itself ARMS THE EXECUTOR: the executor walk/turn subs
-     * (enemy_ai_common.c) then drive per-type speed/clip/arrival — the old walk_active proxy
-     * routed NPCs through the PLAYER walker (flat 75/200, W01 clip sentinels, frame-0 freeze
-     * on arrival) and left the executor subs dead. */
+    /* Plc_dest @ 0x80041be4 is STASH-ONLY + clip pre-select (corrected by the
+     * 2026-06-09 deep-RE — the earlier "handlers write Speed 75/96/200 to +0x8c"
+     * note was WRONG): the opcode writes dest (+0x1bc/+0x1be), mode (+0x05), the
+     * completion-flag id (+0x1c3), and pre-selects the motion clip into +0x1c8 from
+     * a per-mode byte table — then RETURNS. The actual walking is a SEPARATE per-frame
+     * player FSM (state DAT_800aca59 = mode → table 0x80073e30: 4=WALK 0x80030af0,
+     * 5=RUN 0x80030d28, 9=TURN 0x80031360). The 75/96/200 literals are YAW TURN-RATES
+     * (a2 to FUN_8001aac4/ab9c), NOT speeds; the translation speed is actor+0x8c
+     * (MoveSpeed, authored outside Plc_dest) integrated by FUN_800245d8 as
+     * RotMatrixY(yaw)·(0,0,speed). Our re15_actor_step_walk (actor_locomotion.c) ports
+     * this: atan2 heading (FUN_8001a6d4) + fixed-rate yaw slew + arrival dist<100(WALK)/
+     * <300(RUN) + mode-9 rotate-in-place + completion-flag set. For our port we set the
+     * motion clip directly here by mode (RUN/WALK→walk clip, TURN→unchanged). */
     /* I2-round (2026-05-24): per-thread work_slot routing (same as Plc_motion,
      * per F11 PSX canon — Plc_dest @ 0x80041BE4 also reads thread+0x154).
      * Was hardcoded slot=PLAYER, so Elliot's scripted walk (sub02 first
@@ -1881,30 +1871,6 @@ static int op_plc_dest(scd_thread_t *t)
         slot = RE15_ACTOR_SLOT_PLAYER;
     } else {
         slot = reg;
-    }
-    if (slot >= 0 && slot < RE15_ACTOR_MAX && g_actors[slot].type >= 0x10) {
-        /* NPC branch (type >= 0x10, `sltiu v0,v0,0x10; beq v0,zero,0x80041d40` @0x80041c48-54):
-         * arm the SHARED EXECUTOR (audit wf_827f186d npc #1 HIGH + #2 HIGH — mode 6 now lands in
-         * the executor's sub-6 event-reach instead of a never-arriving walk-to-(0,0) statue). */
-        re15_actor_t *a = &g_actors[slot];
-        if (!((a->anim_flags & 0x04) && a->sub_state_1 == mode)) {   /* LOOP-continuation gate @0x80041bec-c0c */
-            a->state = 4; a->sub_state_1 = mode;                     /* +0x4=4/+0x5=mode @0x80041c14-18 */
-            a->sub_state_2 = 0; a->sub_state_3 = 0;                  /* +0x6=0/+0x7=0 @0x80041c1c-20 */
-        }
-        a->walk_flag_bit = flag_bit;      /* +0x1c3 @0x80041c24 (executor arrival-bit id)      */
-        a->steer_x = x; a->steer_z = z;   /* +0x1bc/+0x1be @0x80041c38/@0x80041c58              */
-        a->anim_flags = 0;                /* +0x1c4 = 0 (`sh zero,452`) @0x80041c4c — AFTER the
-                                           * continuation gate read, matching the insn order    */
-        a->walk_active = 0;               /* the proxy walker never drives an NPC (npc #1)      */
-        /* Port infra kept from the proxy era (R9): clear the arrival flag so the SCD's
-         * Ck(5,N) poll waits for THIS walk (zone-5 bits otherwise persist across walks). */
-        re15_game_flag_set(5, flag_bit, 0);
-#ifdef RE15_PLATFORM_PC
-        fprintf(stderr, "[scd] Plc_dest NPC(slot=%d mode=0x%02X dest=(%d,%d) flag=%d) -> executor state 4\n",
-                slot, mode, x, z, flag_bit);
-#endif
-        t->pc += 8;
-        return 1;
     }
     if (slot >= 0 && slot < RE15_ACTOR_MAX) {
         re15_actor_t *a = &g_actors[slot];

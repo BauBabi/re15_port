@@ -5565,63 +5565,15 @@ static void re15_maggot_ai_tick(int slot)
  * IMPLEMENTED: the walk-to-target (re15_npc_sub_walk @L4036) + look-at (re15_npc_sub_turn @L4009), both
  * dispatched by re15_npc_sub_dispatch @L4080-4082, and all 7 NPC types (0x40/42/45/47/49/4b/4d) routed to
  * re15_npc_ai_tick @L5264-5278. DEFERRED to wave 2: the dialogue behaviour VM + the per-NPC overlay states. */
-/* Per-type bank0 (dir[1]) EDD clip frame-counts, dumped from CDEMD0.EMS via the port's own
- * EMS/EDD parser mirror (re15_ems_get_entry + re15_emd_parse_animation layout; extraction
- * re-run 2026-07-26, EM040 row re-validated byte-identical to the previous s_irons table):
- *   EM040 (idx 18) == EM045 (20) == EM047 (21) == EM049 (22)  — byte-identical bank0 EDDs
- *   EM042 (idx 19) == EM04D (24)  — differ from EM040 ONLY at clip 3 (20 vs 26)
- *   EM04B (idx 23, Katherine)     — its own set (clip 0 = 28, clip 2 = 133, ...)
- * (audit wf_827f186d npc #9: the old single EM040 table was served for EVERY type.) */
-static const uint8_t s_npc_clip_len_em040[24] =   /* EM040/EM045/EM047/EM049 bank0 */
+static const uint8_t s_irons_clip_len[24] =   /* EM040 (Chief Irons) clip frame-counts (CDEMD0.EMS idx 18, dir[1]) */
     { 34,32,50,26,20,20,50,1,1,1,1,25,1,1,1,1,1,10,25,1,1,1,30,30 };
-static const uint8_t s_npc_clip_len_em042[24] =   /* EM042/EM04D bank0 (clip 3 = 20) */
-    { 34,32,50,20,20,20,50,1,1,1,1,25,1,1,1,1,1,10,25,1,1,1,30,30 };
-static const uint8_t s_npc_clip_len_em04b[24] =   /* EM04B Katherine bank0 */
-    { 28,28,133,30,20,38,2,2,2,2,2,2,2,2,2,2,2,45,31,2,2,2,2,2 };
 static void re15_npc_clip(re15_actor_t *e, uint8_t c) { e->motion = c; e->anim_frame = 0; e->anim_frac = 7; }
-/* Clip length for the NPC's CURRENT clip. Byte-true source = the ENTITY'S OWN anim channels:
- * every executor sub calls anim_set 0x8001f314 with the entity's channel pointers (+0x84/+0x16c
- * @0x80050e64-6c, +0x170/+0x174 @0x80051884-88, +0x178/+0x17c @0x800510ac-b4, +0x180/+0x184
- * @0x80050d40-48) — the frame count comes from the per-type loaded EDD bank, never a shared
- * table (audit wf_827f186d npc #9). Port: prefer the loaded bank (incl. a room-RBJ record
- * rebind — ROOM1211 RDT@0x5C record 1 = 29 clips, clip 28 = 2 frames, re-parsed 2026-07-26);
- * fall back to the per-type static rows above when no bank is resident. */
-static int re15_npc_clip_len(const re15_actor_t *e)
+static int re15_npc_anim(re15_actor_t *e)     /* POST-inc +0x95, wrap at the real EM040 clip length */
 {
-    re15_enemy_bank_t *b = re15_enemy_find(e->type);
-    if (b && b->ok && (int)e->motion < b->anim.clip_count &&
-        b->anim.clips[e->motion].frame_count > 0)
-        return b->anim.clips[e->motion].frame_count;
-    {
-        const uint8_t *t = (e->type == 0x42 || e->type == 0x4d) ? s_npc_clip_len_em042
-                         : (e->type == 0x4b)                    ? s_npc_clip_len_em04b
-                         :                                        s_npc_clip_len_em040;
-        return (e->motion < 24) ? (int)t[e->motion] : 1;
-    }
-}
-static int re15_npc_anim(re15_actor_t *e)     /* POST-inc +0x95, wrap at the real per-type clip length */
-{
-    int fc = re15_npc_clip_len(e); if (fc < 1) fc = 1;
+    uint8_t c = e->motion; int fc = (c < 24) ? s_irons_clip_len[c] : 1; if (fc < 1) fc = 1;
     int done = (e->anim_frame + 1 >= fc);
     e->anim_frame = (uint8_t)((e->anim_frame + 1) % fc);
     return done;
-}
-/* One anim_set step that HOLDS at the clip end (gesture/transfer FSMs latch their own phase) and
- * honors REVERSE playback (f314 a2 = anim_flags>>7, `srl a2,a2,0x7` @0x80050e74: bit 0x80 plays the
- * clip backwards — used explicitly with a2=1 by the sub-19 stand-up @0x80052b8c). Reverse runs the
- * frame counter fc-1 -> 0 (done at 0). */
-static int re15_npc_anim_step_dir(re15_actor_t *e, int rev)
-{
-    int fc = re15_npc_clip_len(e); if (fc < 1) fc = 1;
-    if (rev) {
-        if (e->anim_frame == 0 || (int)e->anim_frame >= fc) { e->anim_frame = (uint8_t)(fc - 1); }
-        else e->anim_frame--;
-        if (e->anim_frac > 0) e->anim_frac--;
-        return e->anim_frame == 0;
-    }
-    if ((int)e->anim_frame + 1 >= fc) { e->anim_frame = (uint8_t)(fc - 1); if (e->anim_frac > 0) e->anim_frac--; return 1; }
-    e->anim_frame++; if (e->anim_frac > 0) e->anim_frac--;
-    return 0;
 }
 
 /* ===== NPC shared executor sub-VM (@0x80076ca0, driven by state[4] 0x80050be8) — Wave 2 (phase 1) =====
@@ -5633,39 +5585,12 @@ static uint8_t re15_npc_tbl(const uint8_t *t, uint8_t type)   /* byte[(type-0x40
     { int i = (int)type - 0x40; if (i < 0 || i > 15) i = 0; return t[i]; }
 static uint8_t re15_npc_type_cone(uint8_t type) { return re15_npc_tbl(s_npc_turn_cone, type); }
 
-/* subs 1/2/3: GESTURE play-once-then-HOLD phase FSMs (audit wf_827f186d npc #3 — the old fold to a
- * forever-looping idle was a wrong transition). Byte-true 0x80050ddc (sub 1, channel +0x84/+0x16c),
- * 0x80050f00 (sub 2, +0x170/+0x174 @0x80050f88-94), 0x80051024 (sub 3, +0x178/+0x17c @0x800510ac-b8)
- * — three copies of the SAME FSM on different anim channels; the port's single anim channel folds
- * them (channel addresses cited for the record). Phases (+0x6):
- *   0 @0x80050e10: +0x6=1, +0x8f=7 @0x80050e20, +0x95=0 @0x80050e30; no-blend flags&0x40 kills the
- *     crossfade seed (+0x8f=0 @0x80050e48-54). Falls into the play body.
- *   1 @0x80050e58: anim_set(a2 = flags>>7 REVERSE @0x80050e74); if not done and flags&0x08 a SECOND
- *     anim_set per tick (dual-step @0x80050e94-b0); done -> +0x6=2 HOLD @0x80050ec8, then flags&0x04
- *     LOOP replays (+0x6=1 @0x80050ee0-ec).
- *   >=2: pure hold, NO anim call (exit @0x80050dfc-e00). */
-static void re15_npc_sub_gesture(re15_actor_t *e)
+/* subs 1-3: idle-pose (a 2-layer looping idle FSM on +0x6, no move/turn). The port's faithful-line is the
+ * clip-2 hold — the byte-true anim_set-loop folds to "advance a real looping idle clip". */
+static void re15_npc_sub_idle(re15_actor_t *e)
 {
-    int rev = (e->anim_flags & 0x80) != 0;                   /* f314 a2 = flags>>7 @0x80050e74 */
-    if (e->sub_state_2 >= 2) return;                         /* phase>=2 HOLD (@0x80050dfc-e00) */
-    if (e->sub_state_2 == 0) {
-        e->sub_state_2 = 1;                                  /* @0x80050e10 */
-        e->anim_frac   = 7;                                  /* +0x8f=7 @0x80050e20 */
-        e->anim_frame  = 0;                                  /* +0x95=0 @0x80050e30 */
-        if (e->anim_flags & 0x40) e->anim_frac = 0;          /* no-blend @0x80050e48-54 */
-    }
-    {
-        int done = re15_npc_anim_step_dir(e, rev);
-        if (!done && (e->anim_flags & 0x08))                 /* dual-step @0x80050e94-b0 */
-            done = re15_npc_anim_step_dir(e, rev);
-        if (done) {
-            e->sub_state_2 = 2;                              /* HOLD @0x80050ec8 */
-            if (e->anim_flags & 0x04) {                      /* LOOP replay @0x80050ee0-ec */
-                e->sub_state_2 = 1;
-                e->anim_frame  = (uint8_t)(rev ? (re15_npc_clip_len(e) - 1) : 0);
-            }
-        }
-    }
+    if (e->motion < 24 && s_irons_clip_len[e->motion] <= 1) re15_npc_clip(e, 2);
+    re15_npc_anim(e);
 }
 
 /* sub 0: MOTION phase-FSM — byte-true port of 0x80050cb8 (the shared-executor sub-table[0]). This is the
@@ -5677,7 +5602,7 @@ static void re15_npc_sub_gesture(re15_actor_t *e)
  * the original where anim_set is the sole stepper for a state-4 actor. */
 static void re15_npc_sub_motion(re15_actor_t *e)
 {
-    int fc = re15_npc_clip_len(e); if (fc < 1) fc = 1;   /* per-type/bank length (npc #9) */
+    uint8_t c = e->motion; int fc = (c < 24) ? s_irons_clip_len[c] : 1; if (fc < 1) fc = 1;
     switch (e->sub_state_2) {
     case 0:   /* phase 0 init (@0x80050cec-d0c): +0x95=0, seed +0x8f crossfade, phase->1, then fall to play */
         e->anim_frame = 0; e->anim_frac = 7; e->sub_state_2 = 1;
@@ -5707,245 +5632,45 @@ static void re15_npc_sub_turn(re15_actor_t *e)
     uint8_t cone = re15_npc_type_cone(e->type);              /* @0x80076c41 */
     if (re15_ai_arc_test(e, e->steer_x, e->steer_z, cone) == 0) {   /* ALIGNED (@0x80051d90-98) */
         e->sub_state_1 = 6; e->sub_state_2 = 0;              /* -> sub 6 event-reach (@0x80051dac/dbc) */
-        re15_game_flag_set(5, e->walk_flag_bit, 1);          /* arrival bit[+0x1c3] in the zone-5 array
-                                                              * @0x800b1028: jal 0x8004ef90 @0x80051dd8
-                                                              * (a0 lui/addiu 0x800b/4136 @0x80051dd0-d4;
-                                                              * zone base = 0x80074664[5], the SCD Ck(5,N)
-                                                              * array) (audit wf_827f186d npc #8) */
         if (e->anim_flags & 4) { e->sub_state_1 = 9; e->sub_state_2 = 2; }   /* re-arm (@0x80051df4) */
     }
     re15_enemy_steer_point(e, e->steer_x, e->steer_z, cone); /* yaw-slew (@0x80051e44) */
     re15_npc_anim(e);                                        /* advance the turn clip (motion 5) */
 }
 
-/* Per-type speed pair tables byte[(type-0x40)*2] — full dumps @0x80076c00-0x80076c9f (PSX.EXE,
- * re-dumped 2026-07-26; the odd byte of each pair is the STRAIGHT-steer cone = 0x30 in ALL 16
- * slots of @0x80076c01/@0x80076c21; the pivot cone table @0x80076c41 is s_npc_turn_cone above):
- *   walk  @0x80076c00 (sub 4):  4b/46/32  = 75/70/50
- *   back  @0x80076c20 (sub 7):  46/41/23  = 70/65/35
- *   creep @0x80076c60 (sub 8):  3c/37/1e  = 60/55/30
- *   run   @0x80076c80 (sub 5):  c8/d2/78  = 200/210/120   (audit wf_827f186d npc #7) */
+/* per-type WALK param @0x80076c00 byte[(type-0x40)*2] — INIT writes it to +0x8c (sh, halfword). */
 static const uint8_t s_npc_walk_param[16] =
     { 0x4b,0x4b,0x4b,0x4b,0x46,0x46,0x46,0x46,0x4b,0x4b,0x4b,0x32,0x32,0x46,0x46,0x32 };
-static const uint8_t s_npc_run_speed[16] =
-    { 0xc8,0xc8,0xc8,0xc8,0xd2,0xd2,0xd2,0xd2,0xc8,0xc8,0xc8,0x78,0x78,0xd2,0xd2,0x78 };
-static const uint8_t s_npc_back_speed[16] =
-    { 0x46,0x46,0x46,0x46,0x41,0x41,0x41,0x41,0x46,0x46,0x46,0x23,0x23,0x41,0x41,0x23 };
-static const uint8_t s_npc_creep_speed[16] =
-    { 0x3c,0x3c,0x3c,0x3c,0x37,0x37,0x37,0x37,0x3c,0x3c,0x3c,0x1e,0x1e,0x37,0x37,0x1e };
-#define RE15_NPC_CONE_STRAIGHT 0x30   /* @0x80076c01 pair-odd byte, 0x30 for ALL types (npc #6) */
 
-/* SquareRoot0 distance from the entity to its steer point (+0x1bc/+0x1be) — the walk subs'
- * arrival metric (`lw +0x34/+0x3c; lh +0x1bc/+0x1be; mult; jal 0x80065f60` @0x800513c4-f4). */
-static int re15_npc_steer_dist(const re15_actor_t *e)
-{
-    int32_t dx = e->x - (int32_t)e->steer_x, dz = e->z - (int32_t)e->steer_z;
-    return (int)re15_squareroot0((uint32_t)(dx * dx + dz * dz));
-}
-
-/* Shared walk-sub ARRIVAL (audit wf_827f186d npc #8): set the zone-5 arrival bit[+0x1c3] the SCD
- * Ck(5,N) polls (jal 0x8004ef90 with a0=0x800b1028 @0x80051414-18 sub4 / @0x80051780-84 sub5 /
- * @0x80051aac-b4 sub7 / @0x80051ca0-ac sub8; 0x800b1028 = zone table 0x80074664[5]), hand the NPC
- * to sub 6 event-reach (+0x5=6/+0x6=0), then the LOOP flag +0x1c4&4 re-arms the SAME walk sub at
- * phase 2 (@0x80051450-6c / @0x800517c0-d8 / @0x80051ad0-ec / @0x80051cc8-e4). */
-static void re15_npc_walk_arrive(re15_actor_t *e, uint8_t loop_sub)
-{
-    re15_game_flag_set(5, e->walk_flag_bit, 1);
-    e->sub_state_1 = 6; e->sub_state_2 = 0;
-    if (e->anim_flags & 0x04) { e->sub_state_1 = loop_sub; e->sub_state_2 = 2; }
-}
-
-/* subs 4 (WALK @0x80051148) + 5 (RUN @0x80051484): 3-phase FSMs on +0x6 — REWRITTEN byte-true
- * (audit wf_827f186d npc #6 #7 #8; the old single fold used the walk table + pivot cone for
- * everything and had NO arrival):
- *   0 INIT: +0x8c = speed table (walk @0x80076c00 @0x800511a8-bc / run @0x80076c80 @0x800514e4-f8),
- *     +0x6=1, clip 5 (+0x94=5 @0x800511d8-dc / @0x80051514-18), +0x95=0, +0x8f=7. Falls into 1.
- *   1 PIVOT: arc_test(steer,0x15e) @0x80051214-18/@0x80051550-54; aligned -> +0x6=2 (run ALSO
- *     switches to clip 0 @0x8005157c-9c); the SAME tick still runs the phase-1 body: steer with
- *     the TYPE cone @0x80076c41 (@0x80051254-64/@0x800515c0-cc) + anim, then exits (@0x800512cc).
- *   2 STRAIGHT: steer with cone 0x30 @0x80076c01 (@0x8005132c-3c / @0x80051698-a8 — the old
- *     comment's '@0x8005133c' type-cone citation was WRONG, npc #6), pos_advance(0) (@0x80051344-48
- *     / @0x800516b0-b4), obstruction probe jal 0x8002d7d8 -> +0x9f, nonzero -> recovery sub 0x12
- *     (@0x80051388-b4) / 0x16 (@0x800516d8-704), anim, then dist<100 (@0x800513f8) / dist<300
- *     (@0x80051764) -> arrival (bit + sub 6 + LOOP re-arm).
- * HONEST-OPEN: (a) the obstruction probe FUN_8002d7d8 (SCA forward probe at yaw+0x200-rounded
- * offset 800 + per-actor overlap FUN_8002da4c + step-height FUN_8001c6e8, returns 0/1/2) is a
- * collision-subsystem helper the port lacks — +0x9f stays 0 here, so the recovery diversion is
- * latent (the recovery FSM itself IS ported below); (b) the footstep FX jal 0x80045630 (gated on
- * the CURRENT EDD frame's flag word bit 0x4000 @0x8005127c-8c, SE 7/4 by bit 0x1000) needs the
- * per-frame EDD flag channel the port's anim layer does not expose — OPEN, presentation-only. */
+/* subs 4/5/7/8: WALK-to-target (@0x80051148). A 3-phase FSM on +0x6 (sub_state_2), disasm-verified:
+ *   0 INIT (@0x80051198): +0x8c = walk_param, motion=5, anim_frac=7, sub_state_2=1 — falls through to RUN.
+ *   1 RUN / turn-to-face (@0x80051200): arc_test(steer, 0x15e=350); aligned -> sub_state_2=2; steer + anim.
+ *   2 ARRIVED / walk-straight (@0x800512d4): aligned, advance forward; steer + anim.
+ * The FORWARD DISPLACEMENT is the executor's root-motion channel 0 (anim_flags&1 → FUN_800369f8), NOT this
+ * sub: verified that NEITHER the walk nor turn sub writes +0x1c4 (anim_flags) — the bit is armed by the
+ * un-RE'd anim/clip-set path. So this sub is byte-true for the STEERING; the movement plugs into the
+ * executor gate once that arming is present. SUPERSEDED (@L4047-4053): the byte-true forward TRANSLATION
+ * is actually pos_advance(a0=0) (FUN_800245d8), IMPLEMENTED @L4052-4053 — NOT the root-motion channel; so
+ * this sub's walk-straight forward step IS ported. */
 static void re15_npc_sub_walk(re15_actor_t *e)
 {
-    int run = (e->sub_state_1 == 5);
-    if (e->sub_state_2 > 2) return;                          /* >2 -> exit (@0x80051190 / @0x800514cc) */
-    if (e->sub_state_2 == 0) {                               /* INIT -> falls through to PIVOT */
-        e->crow_speed  = (int16_t)re15_npc_tbl(run ? s_npc_run_speed : s_npc_walk_param, e->type);
+    if (e->sub_state_2 > 2) return;                          /* >2 -> exit (@0x80051190) */
+    if (e->sub_state_2 == 0) {                               /* INIT (@0x80051198) -> falls through to RUN */
+        e->crow_speed  = (int16_t)re15_npc_tbl(s_npc_walk_param, e->type);  /* +0x8c walk param (sh) */
         e->sub_state_2 = 1; e->motion = 5; e->anim_frame = 0; e->anim_frac = 7;
     }
-    if (e->sub_state_2 == 1) {                               /* PIVOT (turn-to-face) */
-        if (re15_ai_arc_test(e, e->steer_x, e->steer_z, 0x15e) == 0) {
-            e->sub_state_2 = 2;                              /* aligned @0x80051230 / @0x8005156c */
-            if (run) { e->motion = 0; e->anim_frame = 0; e->anim_frac = 7; }   /* run clip 0 @0x8005157c-9c */
-        }
-        re15_enemy_steer_point(e, e->steer_x, e->steer_z,
-                               re15_npc_type_cone(e->type)); /* pivot cone @0x80076c41 @0x80051254-64 */
-        re15_npc_anim(e);                                    /* anim_set @0x800512c4 / @0x80051630 */
-        return;                                              /* @0x800512cc j exit */
-    }
-    /* phase 2 STRAIGHT */
-    re15_enemy_steer_point(e, e->steer_x, e->steer_z, RE15_NPC_CONE_STRAIGHT);  /* @0x80076c01 (0x30) */
-    re15_dog_advance_ofs(e, 0);                              /* pos_advance(0): +0x8c fwd @0x80051344-48 */
-    /* obstruction jal 0x8002d7d8 -> +0x9f -> sub 0x12/0x16 — OPEN (see header) */
-    re15_npc_anim(e);                                        /* anim_set @0x80051360 / @0x8005171c */
-    if (re15_npc_steer_dist(e) < (run ? 300 : 100))          /* slti 300 @0x80051764 / 100 @0x800513f8 */
-        re15_npc_walk_arrive(e, (uint8_t)(run ? 5 : 4));
-}
-
-/* subs 7 (BACK @0x80051908) + 8 (CREEP-BACK @0x80051b00): 2-phase backward walkers — the NPC
- * faces AWAY from the steer point (aac4 with a NEGATED cone: `lbu a2,@0x80076c21/@0x80076c01;
- * subu a2,zero,a2` @0x800519b8-c4 / @0x80051bb0-bc) and pos_advances REARWARD (a0=0x800
- * @0x800519c8-cc / @0x80051bc0-c4). NO pivot phase (@0x80051920/@0x80051b18: any +0x6!=0 runs the
- * body straight away). Clip 1 (+0x94=1 @0x8005196c / @0x80051b64), anim on channel +0x84/+0x16c
- * (@0x80051a20-24 / @0x80051c18-1c), arrival dist<100 (@0x80051a70 / @0x80051c68) -> bit + sub 6 +
- * LOOP re-arm (+0x5=7/8, +0x6=2). (audit wf_827f186d npc #7 — previously folded into sub 4.) */
-static void re15_npc_sub_walk_back(re15_actor_t *e)
-{
-    int creep = (e->sub_state_1 == 8);
-    if (e->sub_state_2 == 0) {
-        e->crow_speed  = (int16_t)re15_npc_tbl(creep ? s_npc_creep_speed : s_npc_back_speed, e->type);
-        e->sub_state_2 = 1; e->motion = 1; e->anim_frame = 0; e->anim_frac = 7;
-    }
-    re15_enemy_steer_point(e, e->steer_x, e->steer_z, -RE15_NPC_CONE_STRAIGHT);  /* negated 0x30 */
-    re15_dog_advance_ofs(e, 0x800);                          /* rearward pos_advance(0x800) */
+    if (e->sub_state_2 == 1 &&                               /* RUN: turn-to-face (@0x80051214) */
+        re15_ai_arc_test(e, e->steer_x, e->steer_z, 0x15e) == 0)
+        e->sub_state_2 = 2;                                  /* aligned (arc 350) -> walk-straight (@0x80051230) */
+    re15_enemy_steer_point(e, e->steer_x, e->steer_z, re15_npc_type_cone(e->type));  /* @0x80051264/133c yaw-slew */
+    /* WALK-STRAIGHT (phase 2 only): the forward TRANSLATION is pos_advance (FUN_800245d8) with a0=0
+     * (@0x80051344-48: `jal pos_advance; addu a0,zero,zero`) — move +0x8c (crow_speed = the per-type walk
+     * param loaded by INIT) along rot_y. It is NOT clip root-motion: EM040 clip 5 carries a CONSTANT
+     * sx=383 across all 20 keyframes (dumped from the loaded bank) = zero frame delta = an in-place step.
+     * The turn-to-face phase (1) has no pos_advance (@0x800512cc jumps to exit) so it pivots in place. */
+    if (e->sub_state_2 == 2)
+        re15_dog_advance(e, e->crow_speed);                  /* pos_advance(a0=0): +0x8c fwd along rot_y */
     re15_npc_anim(e);
-    if (re15_npc_steer_dist(e) < 100)
-        re15_npc_walk_arrive(e, (uint8_t)(creep ? 8 : 7));
-}
-
-/* Yaw snap-to-cardinal tick shared by subs 0x12/0x16/0x13 (@0x80052604-2c / @0x80052960-88):
- *   rot&0x200 ? rot += (rot>>2)&0xff : rot -= rot&0xff   (raw `sh` store, no &0xfff mask)
- * aligned when (rot & 0x3e0) == 0. Returns 1 when aligned AFTER the tick (@0x80052644-48). */
-static int re15_npc_yaw_snap_tick(re15_actor_t *e)
-{
-    uint16_t r = (uint16_t)e->rot_y;
-    if (r & 0x200) r = (uint16_t)(r + ((r >> 2) & 0xff));
-    else           r = (uint16_t)(r - (r & 0xff));
-    e->rot_y = (int16_t)r;
-    return (r & 0x3e0) == 0;
-}
-
-/* subs 0x12/0x16: WALK-RECOVERY / step-up FSM @0x80052508 (phase table @0x800112e4 = 0x80052548/
- * 0x80052598/0x80052688/0x800526c8/0x80052820) — the target of the walk subs' obstruction diversion
- * (audit wf_827f186d npc #4; latent until the 0x8002d7d8 probe is ported, see re15_npc_sub_walk):
- *   0: +0x8c=0x4b (75 @0x80052550-54), +0x6=1, clip 5, +0x95=0, +0x8f=7. Falls into 1.
- *   1: anim (@0x800525f0) + yaw snap-to-cardinal; aligned -> +0x6=2 (@0x80052650); then if the probe
- *      code +0x9f==2 (@0x80052660-68) -> +0x5 = (sub==0x12 ? 0x18 : 0x17) +0x6=0 (@0x80052678-84,
- *      @0x80052840) = the step-up FSM 0x80052c14 (subs 23/24) — OPEN (unreachable while +0x9f==0).
- *   2: +0x6=3, clip 2, +0x95=0, +0x8f=7 (@0x80052688-c4). Falls into 3.
- *   3: frame triggers on +0x95 (checked BEFORE the advance): 0x11 -> +0x93|=1 (@0x800526d4-f0);
- *      0x1d -> the STEP-UP: +0x8c=0x47c (@0x80052710-18), pos_advance(0) (@0x80052714), y-=1800
- *      (@0x80052728-34), floor-Y +0x1ba-=1800 (@0x80052744-50), floor byte +0x82+=1 (@0x80052760-6c)
- *      [+0x40/+0x42/+0x44 home-point refresh @0x80052770-b4 — no port mirror field, OPEN];
- *      0x25 -> +0x93&=0xfe (@0x800527c4-e0); anim done -> +0x6=4 (@0x800527f8-81c).
- *   4: +0x5 = (sub==0x12 ? 4 : 5), +0x6=0 (@0x80052820-50) — resume the walk. */
-static void re15_npc_sub_recover(re15_actor_t *e)
-{
-    switch (e->sub_state_2) {
-    case 0:
-        e->crow_speed = 0x4b;                                /* +0x8c=75 @0x80052550-54 */
-        e->sub_state_2 = 1; e->motion = 5; e->anim_frame = 0; e->anim_frac = 7;
-        /* fallthrough (@0x80052598) */
-    case 1:
-        re15_npc_anim(e);                                    /* anim_set @0x800525f0 */
-        if (re15_npc_yaw_snap_tick(e)) {
-            e->sub_state_2 = 2;                              /* @0x80052650 */
-            if (e->dog_aux9f == 2) {                         /* +0x9f probe code 2 @0x80052660-68 */
-                e->sub_state_1 = (uint8_t)((e->sub_state_1 == 0x12) ? 0x18 : 0x17);   /* @0x80052678-84 */
-                e->sub_state_2 = 0;                          /* @0x80052850 — step-up FSM 0x80052c14, OPEN */
-            }
-        }
-        break;
-    case 2:
-        e->sub_state_2 = 3; e->motion = 2; e->anim_frame = 0; e->anim_frac = 7;   /* clip 2 @0x80052688-c4 */
-        /* fallthrough (@0x800526c8) */
-    case 3:
-        if (e->anim_frame == 0x11) e->hit_react |= 1;        /* +0x93|=1 @0x800526d4-f0 */
-        if (e->anim_frame == 0x1d) {                         /* step-up burst @0x80052700-b4 */
-            e->crow_speed = 0x47c;                           /* +0x8c=1148 @0x80052710-18 */
-            re15_dog_advance_ofs(e, 0);                      /* pos_advance(0) @0x80052714 */
-            e->y -= 1800;                                    /* +0x38-=1800 @0x80052728-34 */
-            e->dog_floor_y = (int16_t)(e->dog_floor_y - 1800);   /* +0x1ba-=1800 @0x80052744-50 */
-            e->floor = (uint8_t)(e->floor + 1);              /* +0x82+=1 @0x80052760-6c */
-        }
-        if (e->anim_frame == 0x25) e->hit_react = (uint8_t)(e->hit_react & 0xfe);   /* @0x800527c4-e0 */
-        if (re15_npc_anim(e)) e->sub_state_2++;              /* +0x6 += done @0x800527f8-81c */
-        break;
-    case 4:
-        e->sub_state_1 = (uint8_t)((e->sub_state_1 == 0x12) ? 4 : 5);   /* @0x80052820-40 */
-        e->sub_state_2 = 0;                                  /* @0x80052850 */
-        break;
-    default: break;                                          /* sltiu 5 clamp @0x80052520-24 */
-    }
-}
-
-/* sub 0x13 (19): scripted GESTURE/TRANSFER FSM @0x80052864 (phase table @0x800112fc, 8 phases) —
- * SCD-invoked in shipped STAGE1 via Plc_dest(0,19,20,...) (ROOM11B0 sub06 +0x2a2, ROOM1171 sub02
- * +0x1da) (audit wf_827f186d npc #4):
- *   0: +0x6=1, clip 5, +0x95=0, +0x8f=7, +0x8c=0 (@0x800528a4-f0). Falls into 1.
- *   1: anim ch1 (@0x8005294c) + yaw snap-to-cardinal (@0x80052960-88); aligned -> +0x6=2
- *      (@0x800529a0-b0).
- *   2: +0x6=3, clip 0x11, +0x95=0, +0x8f=7 (@0x800529b4-f0). Falls into 3.
- *   3: anim ch0 -> +0x6 += done (@0x800529f4-a28); then a yaw-align tick while still misaligned
- *      (@0x80052a38-70).
- *   4: +0x6=5, clip 0x12, +0x95=0, +0x8f=7 (@0x80052a74-b0). Falls into 5.
- *   5: at +0x95==1 the positional SE jal 0x80045024(a0=0x2070000,&pos) = bank 2 (SND0) record 7
- *      (@0x80052ac0-dc); anim ch0 loop (@0x80052af4); [frame-flag 0x2000 root-motion
- *      jal 0x800369f8(0,0) @0x80052b18-28 — frame-flag channel OPEN]; WAIT for the zone-5
- *      bit[+0x1c3] (jal 0x8004efe4(0x800b1028) @0x80052b38-4c) -> +0x6=6, clip 0x11, +0x95=0
- *      (@0x80052b60-80).
- *   6: anim ch0 REVERSED (f314 a2=1 @0x80052b8c-98) -> +0x6 += done (@0x80052ba0-bc).
- *   7: SE(2,7) again (@0x80052bc8-d0), then +0x5=6/+0x6=0 -> sub 6 event-reach (@0x80052bdc-f0). */
-static void re15_npc_sub_transfer(re15_actor_t *e)
-{
-    switch (e->sub_state_2) {
-    case 0:
-        e->sub_state_2 = 1; e->motion = 5; e->anim_frame = 0; e->anim_frac = 7;   /* @0x800528a4-e0 */
-        e->crow_speed = 0;                                   /* +0x8c=0 @0x800528e4-f0 */
-        /* fallthrough (@0x800528f4) */
-    case 1:
-        re15_npc_anim(e);                                    /* anim_set ch1 @0x8005294c */
-        if (re15_npc_yaw_snap_tick(e)) e->sub_state_2 = 2;   /* @0x800529a0-b0 */
-        break;
-    case 2:
-        e->sub_state_2 = 3; e->motion = 0x11; e->anim_frame = 0; e->anim_frac = 7;   /* @0x800529b4-f0 */
-        /* fallthrough (@0x800529f4) */
-    case 3:
-        if (re15_npc_anim_step_dir(e, 0)) e->sub_state_2++;  /* +0x6 += done @0x80052a10-28 */
-        if (((uint16_t)e->rot_y & 0x3e0) != 0)               /* residual yaw-align @0x80052a38-44 */
-            (void)re15_npc_yaw_snap_tick(e);                 /* @0x80052a48-70 */
-        break;
-    case 4:
-        e->sub_state_2 = 5; e->motion = 0x12; e->anim_frame = 0; e->anim_frac = 7;   /* @0x80052a74-b0 */
-        /* fallthrough (@0x80052ab4) */
-    case 5:
-        if (e->anim_frame == 1)                              /* +0x95==1 @0x80052ac0-c8 */
-            re15_audio_room_se_snd0(7);                      /* SE(2,7) jal 0x80045024(0x2070000) @0x80052ad8 */
-        re15_npc_anim(e);                                    /* anim_set ch0 loop @0x80052af4 */
-        /* frame-flag 0x2000 root-motion @0x80052b18-28 — OPEN (see header) */
-        if (re15_game_flag_get(5, e->walk_flag_bit)) {       /* jal 0x8004efe4(0x800b1028,+0x1c3) @0x80052b44 */
-            e->sub_state_2 = 6;                              /* @0x80052b60 */
-            e->motion = 0x11; e->anim_frame = 0;             /* clip 0x11 @0x80052b70-80 */
-        }
-        break;
-    case 6:
-        if (re15_npc_anim_step_dir(e, 1)) e->sub_state_2 = 7;   /* REVERSE play @0x80052b8c-bc */
-        break;
-    case 7:
-        re15_audio_room_se_snd0(7);                          /* SE(2,7) @0x80052bc8-d0 */
-        e->sub_state_1 = 6; e->sub_state_2 = 0;              /* -> sub 6 @0x80052bdc-f0 */
-        break;
-    default: break;                                          /* sltiu 8 clamp @0x8005287c-80 */
-    }
 }
 
 /* sub 6: EVENT-REACH (@0x800517f0). A 4-phase +0x6 FSM that plays clip 1 (the 32-frame arrival/gesture)
@@ -5966,30 +5691,16 @@ static void re15_npc_sub_event_reach(re15_actor_t *e)
     }
 }
 
-/* Executor sub-dispatch — the FULL 25-pointer sub table @0x80076ca0 (dumped 2026-07-26; the
- * executor indexes it UNCLAMPED `lbu +0x5; sll 2; lw @0x80076ca0[i]; jalr` @0x80050c14-34):
- *   [0]=0x80050cb8 motion  [1]=0x80050ddc [2]=0x80050f00 [3]=0x80051024 gestures (ch0/ch1/ch2)
- *   [4]=0x80051148 walk    [5]=0x80051484 run   [6]=0x800517f0 event-reach
- *   [7]=0x80051908 back    [8]=0x80051b00 creep-back   [9]=0x80051cf8 turn
- *   [10..17]=0x80051ebc/0x80051fa8/0x80052038/0x80052124/0x80052210/0x800522a0/0x8005238c/
- *            0x8005241c — further gesture/pose variants, NOT SCD-invoked in shipped STAGE1
- *            (Plc_motion pc[1] in {0,1,2}; Plc_dest modes in {4,5,6,9,0x13}) — OPEN
- *   [18]=[22]=0x80052508 walk-recovery   [19]=0x80052864 transfer   [20]/[21]=jr-ra stubs
- *   @0x80052c04/@0x80052c0c   [23]=[24]=0x80052c14 step-up FSM (7 phases) — OPEN
- * (audit wf_827f186d npc #3 #4: subs 1-3 were folded to a forever-idle, 10-23 were absent). */
+/* Executor sub-dispatch: sub_library[+0x5] (@0x80076ca0): idle (0-3), walk-to-target (4/5/7/8),
+ * event-reach (6 = the stationary NPC's clip1->idle), turn (9). */
 static void re15_npc_sub_dispatch(re15_actor_t *e)
 {
     switch (e->sub_state_1) {
-    case 0: re15_npc_sub_motion(e); break;
-    case 1: case 2: case 3: re15_npc_sub_gesture(e); break;
-    case 4: case 5: re15_npc_sub_walk(e); break;
+    case 0: re15_npc_sub_motion(e); break;   /* motion phase-FSM = Plc_motion pose (@0x80076ca0[0]=0x80050cb8) */
+    case 4: case 5: case 7: case 8: re15_npc_sub_walk(e); break;
     case 6: re15_npc_sub_event_reach(e); break;
-    case 7: case 8: re15_npc_sub_walk_back(e); break;
     case 9: re15_npc_sub_turn(e); break;
-    case 0x12: case 0x16: re15_npc_sub_recover(e); break;
-    case 0x13: re15_npc_sub_transfer(e); break;
-    case 0x14: case 0x15: break;             /* jr-ra stubs @0x80052c04/@0x80052c0c */
-    default: break;                          /* [10..17] + [23]/[24] — OPEN (see table above) */
+    default: re15_npc_sub_idle(e); break;   /* 1-3 idle */
     }
 }
 
@@ -6021,54 +5732,6 @@ static void re15_npc_executor(re15_actor_t *e)
         if (bank) re15_clip_root_motion_delta(e, &bank->skel, &bank->anim,
                                               (int)e->motion, (int)e->anim_frame, fr_prev);
     }
-}
-
-/* ===== NPC overlay STATE 1 — the watcher machine (audit wf_827f186d npc #5) ================= *
- * The overlay state-1 handlers dispatch a MODE (+0x9 & 0xf) then a decide/act sub pair (+0x5),
- * all through dense per-type tables whose shared rows are EXE leaves:
- *   0x45-family (@0x8011d460): mode tab @0x8012174c ([0]=mode-0 machine 0x8011d4b4, [1]=0x8004f100
- *     watcher-only); mode-0 = decide @0x80121750[+0x5] THEN act @0x8012175c[+0x5] (re-read +0x5
- *     @0x8011d4f8). Rows (table dump @0x8012174c): decide [0]=0x8004f100 [1]=0x8004f3a4
- *     [2]=0x8004f5e8; act [0]=0x8004f310 [1]=0x8004f4e0 [2]=0x8004f6f0; decide[6]=0x80050cb8
- *     (@0x80121768, the executor motion FSM) with act[6]=0x80051024 (gesture ch2) — single-channel
- *     fold here runs the motion FSM only.
- *   0x40 Irons (@0x8011c884): an LOS/dist PRE-PASS first — jal 0x800509e4(0x3a98,buf,0x5dc,0)
- *     (scan all active type<0x40 actors, nearest dist) -> found: +0x1d0=dist via 0x8005070c,
- *     +0x9=1 (@0x8011c8c4-d8); none: +0x9=0 (@0x8011c8f4-904) — then mode tab @0x801215ac
- *     ([0]=0x8011c950 machine, [1]=0x8004f100), decide base @0x801215b0, act base @0x801215d0
- *     (same trio rows [0..2]; rows >=3 = deeper leaves 0x8004f7dc/0x8004fb3c/0x8004fd3c/
- *     0x8004ff90/0x800503a8 + acts 0x8004f9ec/0x8004fc2c/0x8004fe44/0x8004ffc0 — OPEN).
- * The decide trio is the already-ported re15_ai_exe_assess/search/turn; the act trio is below. */
-static void re15_npc_s1_act_idle(re15_actor_t *e)      /* 0x8004f310: idle-pose act */
-{
-    if (e->sub_state_2 >= 2) return;                   /* phase>=2 exit (@0x8004f330-38) */
-    if (e->sub_state_2 == 0) {                         /* @0x8004f340-74: +0x6=1, clip 2, +0x95=0, +0x8f=7 */
-        e->sub_state_2 = 1; e->motion = 2; e->anim_frame = 0; e->anim_frac = 7;
-    }
-    re15_npc_anim(e);                                  /* anim_set(+0x170/+0x174) @0x8004f38c */
-}
-static void re15_npc_s1_act_search(re15_actor_t *e)    /* 0x8004f4e0: walk toward the steer point */
-{
-    if (e->sub_state_2 >= 2) return;                   /* @0x8004f4f8-508 */
-    if (e->sub_state_2 == 0) {                         /* @0x8004f510-44: +0x6=1, clip 5 */
-        e->sub_state_2 = 1; e->motion = 5; e->anim_frame = 0; e->anim_frac = 7;
-    }
-    e->crow_speed = (int16_t)re15_npc_tbl(s_npc_walk_param, e->type);   /* +0x8c=@0x80076c00[t] @0x8004f548-78 (every tick) */
-    re15_enemy_steer_point(e, e->steer_x, e->steer_z, RE15_NPC_CONE_STRAIGHT);   /* @0x80076c01 @0x8004f57c-b0 */
-    re15_npc_anim(e);                                  /* anim_set @0x8004f5c8 */
-    re15_dog_advance_ofs(e, 0);                        /* pos_advance(0) @0x8004f5d0-d4 */
-}
-static void re15_npc_s1_act_turn(re15_actor_t *e, const re15_actor_t *pl)   /* 0x8004f6f0: track the player */
-{
-    if (e->sub_state_2 >= 2) return;                   /* @0x8004f708-18 */
-    if (e->sub_state_2 == 0) {                         /* @0x8004f720-54: +0x6=1, clip 5 */
-        e->sub_state_2 = 1; e->motion = 5; e->anim_frame = 0; e->anim_frac = 7;
-    }
-    {
-        int arc = re15_ai_arc_test(e, pl->x, pl->z, re15_npc_type_cone(e->type));   /* cone @0x80076c41 @0x8004f78c */
-        e->rot_y = (int16_t)((int)e->rot_y + arc);     /* +0x6a += arc (raw sh) @0x8004f7a0-ac */
-    }
-    re15_npc_anim(e);                                  /* anim_set(+0x170/+0x174) @0x8004f7c4 */
 }
 
 static void re15_npc_ai_tick(int slot)
@@ -6122,14 +5785,7 @@ static void re15_npc_ai_tick(int slot)
      * the motion phase-FSM plays+holds the clip exactly like the original. The INIT (state 0) never
      * runs to stomp +0x94, and 2c8d9a69's ROOM11B0 idle T-pose fix is unaffected (those NPCs are never
      * Plc_motion'd -> they reach the executor's idle path). */
-    /* BYTE-TRUE ROUTING CHANGE (audit wf_827f186d npc #1 HIGH): a state-4 NPC is NEVER yielded —
-     * the original's Plc_dest handler @0x80041be4 puts a type>=0x10 work entity STRAIGHT into the
-     * shared executor (state 4 + sub=mode, see op_plc_dest), and the executor is what walks it;
-     * there is no SCD-side proxy walker. The yield below therefore only guards the NON-executor
-     * states, where it stands in for the original's message/modal AI-freeze (DAT_800aca40 &
-     * 0x20000000 — s_ai_paused is still a dead stub, see the header above) while a cutscene
-     * thread owns the actor. */
-    if (e->state != 4 && (e->walk_active || re15_scd_slot_event_controlled(slot))) {
+    if (e->walk_active || re15_scd_slot_event_controlled(slot)) {
         e->hp = -1;
         return;
     }
@@ -6144,59 +5800,16 @@ static void re15_npc_ai_tick(int slot)
         e->sub_state_2 = 0; e->sub_state_3 = 0;
         break;
 
-    case 4:   /* shared executor 0x80050be8: the sub-VM (@0x80076ca0, dispatch on +0x5) — motion (0),
-               * gestures (1-3), walk/run (4/5), event-reach (6), back-walks (7/8), turn (9), recovery
-               * (0x12/0x16), transfer (0x13). NEVER yielded to an SCD proxy (audit wf_827f186d npc #1:
-               * Plc_dest itself arms this state — the executor IS the walker). */
+    case 4:   /* shared executor 0x80050be8: the sub-VM (@0x80076ca0, dispatch on +0x5) — Wave-2 phase 1:
+               * idle-pose (subs 0-3) + turn/look-at (sub 9). Walk (4/5/7/8) + watchers = later phases.
+               * The SCD-owns-animation yield now lives at the top of this function (global, all states),
+               * so an NPC still in the executor without an SCD lock runs its idle pose here. */
         re15_npc_executor(e);
         break;
 
-    case 1: { /* overlay STATE 1 — the watcher machine (audit wf_827f186d npc #5; header above) */
-        re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-        /* +0x1d0 player-dist cache: the NPC root writes it per frame (sw SquareRoot0 @0x8011d1e8),
-         * the Irons state-1 refreshes it via 0x8005070c (@0x8011c8c4/@0x8011c8f4). */
-        e->ai_dist = (uint32_t)re15_enemy_player_dist(e, pl);
-        if (e->type == 0x40) {
-            /* Irons LOS/dist pre-pass @0x8011c884-908: nearest active type<0x40 actor within
-             * a0=0x3a98 (jal 0x800509e4 @0x8011c898) -> +0x9=1 (@0x8011c8d8) else +0x9=0
-             * (@0x8011c904). Port fold: the player is the always-active type-0 candidate. */
-            e->grid_id = (e->ai_dist < 0x3a98u) ? 1 : 0;
-        }
-        switch (e->grid_id & 0x0f) {                     /* mode dispatch @0x8011c91c-38 / @0x8011d470-94 */
-        case 1:                                          /* mode tab [1] = 0x8004f100: watcher ONLY —
-                                                          * decisions run, NO act/anim this frame */
-            re15_ai_exe_assess(e, pl);
-            break;
-        case 0:                                          /* mode-0 machine 0x8011d4b4 / 0x8011c950 */
-            switch (e->sub_state_1) {                    /* DECIDE @0x80121750[+0x5] / @0x801215b0[+0x5] */
-            case 0: re15_ai_exe_assess(e, pl); break;    /* 0x8004f100 */
-            case 1: re15_ai_exe_search(e, pl); break;    /* 0x8004f3a4 */
-            case 2: re15_ai_exe_turn(e, pl);   break;    /* 0x8004f5e8 */
-            default: break;                              /* deeper decide rows (0x8004f7dc/0x8004fb3c/
-                                                          * 0x8004fd3c/0x8004ff90/0x800503a8 for 0x40;
-                                                          * executor-alias rows for 0x45-family) — OPEN */
-            }
-            switch (e->sub_state_1) {                    /* ACT @0x8012175c[+0x5] / @0x801215d0[+0x5]
-                                                          * (+0x5 RE-READ after decide @0x8011d4f8) */
-            case 0: re15_npc_s1_act_idle(e); break;      /* 0x8004f310 */
-            case 1: re15_npc_s1_act_search(e); break;    /* 0x8004f4e0 */
-            case 2: re15_npc_s1_act_turn(e, pl); break;  /* 0x8004f6f0 */
-            case 3: re15_npc_s1_act_idle(e); break;      /* 0x45-family decide[3]=0x8004f310 (idle) with
-                                                          * act[3]=0x80050cb8 motion FSM — single-channel
-                                                          * fold to the idle row (word @0x8012175c) */
-            case 6: re15_npc_sub_motion(e); break;       /* 0x45-family decide[6]=0x80050cb8 (@0x80121768)
-                                                          * + act[6]=0x80051024 gesture ch2 — fold to the
-                                                          * motion FSM (single channel) */
-            default: break;                              /* remaining rows differ per type — OPEN */
-            }
-            break;
-        default: break;                                  /* modes >1 have no shipped writer (+0x9 is only
-                                                          * ever set 0/1 by the state-1 pre-pass) */
-        }
-        break; }
-
-    default:  /* other NPC states (overlay event rows) — hold a looping idle pose (wave-2 remainder) */
-        if (re15_npc_clip_len(e) <= 1) re15_npc_clip(e, 2);  /* keep a real looping idle clip */
+    case 1:   /* Irons overlay state 1 = idle/scripted (wave 2) -> hold the idle pose */
+    default:  /* all other NPC states (watchers / overlay) = wave 2 -> hold the idle pose */
+        if (e->motion < 24 && s_irons_clip_len[e->motion] <= 1) re15_npc_clip(e, 2);  /* keep a real looping idle clip */
         re15_npc_anim(e);
         break;
     }
