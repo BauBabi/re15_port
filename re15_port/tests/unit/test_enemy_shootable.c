@@ -2,11 +2,12 @@
  *
  * Byte-true: FUN_80011f50 iterates all entities and tests each one's DAMAGE HITBOX (+0x78) — no per-type
  * whitelist. And the damage is per-type (@0x8006e0d0: dmg = u16[type*0x58 + weapon*4]) — a crow takes
- * 2/shot, a tyrant 16, an alligator/birkin 30, while the spider-baby/ivy/birkin-5 rows are all zero =
+ * 2/shot, a tyrant 16, an alligator/birkin 30, while the spider-baby/birkin-5 rows are all zero =
  * WEAPON-IMMUNE (targetable, but no gun damage). Asserts:
  *   (1) ALLIGATOR (0x23): shootable, pistol -30.
  *   (2) TYRANT (0x2b): shootable, pistol -16.
- *   (3) IVY (0x2d): TARGETABLE but WEAPON-IMMUNE (hit registers, 0 damage).
+ *   (3) IVY (0x2d): NOT targetable — the ivy INIT installs NO +0x78 box (the {450,1530} box @0x8011a2c8
+ *       belongs to the neighbouring type-0x40 NPC, audit wf_efd92a2c ivy #77), so auto-aim skips it.
  *   (4) WRITHER (0x1a): targetable via its 300-radius +0x78 box, KILLABLE in one hit (spawn HP=0).
  */
 #include <stdio.h>
@@ -48,12 +49,15 @@ int main(void)
         fprintf(stderr, "FAIL(2): TYRANT (0x2b) pistol must deal 16, dealt %d\n", dmg); fail = 1; }
     else printf("  (2) TYRANT (0x2b): shootable, pistol -%d\n", dmg);
 
-    /* (3) IVY: TARGETABLE (auto-aim selects it) but WEAPON-IMMUNE (row all-zero -> 0 damage) */
+    /* (3) IVY: NOT targetable — the ivy has NO +0x78 damage box (dormant weapon-immune prop). The old
+     * test pinned the inverse ("targetable but immune") which mis-attributed the type-0x40 NPC's
+     * {450,1530} box to the ivy (audit wf_efd92a2c ivy #77). apply_hitbox(0x2d) leaves radius 0, so
+     * auto-aim skips it (re15_damage.c: hit_radius_min<=0 -> not a valid target) -> fire selects nothing. */
     {
         int ret = fire_at(0x2d, 1200, &dmg);
-        if (ret != 2 || dmg != 0) {
-            fprintf(stderr, "FAIL(3): IVY (0x2d) must be targetable but weapon-immune, ret=%d dmg=%d\n", ret, dmg); fail = 1; }
-        else printf("  (3) IVY (0x2d): targetable but WEAPON-IMMUNE (hit registers, 0 damage)\n");
+        if (ret != 0 || g_actors[1].hit_radius_min != 0) {
+            fprintf(stderr, "FAIL(3): IVY (0x2d) must be non-targetable (no box), ret=%d box=%d\n", ret, g_actors[1].hit_radius_min); fail = 1; }
+        else printf("  (3) IVY (0x2d): NO box -> NOT a weapon/auto-aim target (dormant immune prop)\n");
     }
 
     /* (4) WRITHER (0x1a): byte-true KILLABLE — the INIT +0x78 box @0x8012091c makes it targetable, and

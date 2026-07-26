@@ -431,10 +431,11 @@ retry_after_latch:
         /* BYTE-TRUE target set: FUN_80011f50 iterates ALL entities and tests each one's DAMAGE HITBOX
          * (+0x78 present) — NOT a per-type whitelist. apply_hitbox gives a radius to every combat enemy
          * (zombies 0x10/0x11/0x12/0x16/0x18, dog 0x20, crow 0x21, spiders 0x25/0x26, maggot 0x27,
-         * cockroach 0x29, birkin 0x30/0x36, alligator 0x23, tyrant 0x2b, ivy 0x2d, zgirl 0x13, AND the
+         * cockroach 0x29, birkin 0x30/0x36, alligator 0x23, tyrant 0x2b, zgirl 0x13, AND the
          * writher 0x1a — its INIT installs a real 300-radius +0x78 box @0x8012091c, so it IS shootable:
          * spawn HP=0 + type<0x20 -> one hit kills, audit wf_efd92a2c writher #5); the truly non-combat
-         * types (fx-emitter 0x24 / stub 0x22 / NPC 0x40) get NO box and are excluded automatically.
+         * types (fx-emitter 0x24 / stub 0x22 / NPC 0x40 / IVY 0x2d) get NO box and are excluded
+         * automatically (the ivy is a dormant weapon-immune prop, audit wf_efd92a2c ivy #77).
          * So gate on the hitbox, which makes every ported enemy with a box shootable. */
         if (e->hit_radius_min <= 0) continue;   /* no damage hitbox -> not a valid auto-aim target */
         if (e->state == 7) continue;   /* RE15_AI_STATE_CORPSE — already a corpse (literal: avoid the AI-header dep) */
@@ -958,9 +959,11 @@ void re15_enemy_apply_hitbox(re15_actor_t *a, uint8_t type)
         case 0x2b: r = 800;  h = 1710; break;  /* TYRANT (EM02B, STAGE4/5) — byte-true box @0x8011a094 =
                                                 * {0,-1710,0,800,1710,800,0,-900}: x_max 800, y_max 1710
                                                 * (tall biped) — INIT +0x78 @0x80111c38 */
-        case 0x2d: r = 450;  h = 1530; break;  /* IVY plant-grappler (EM02D, STAGE4) — byte-true box
-                                                * @0x8011a2c8 = {0,-1530,0,450,1530,450}: x_max 450,
-                                                * y_max 1530 (humanoid) — SETUP +0x78 install */
+        /* IVY plant-grappler (EM02D, STAGE4) gets NO box: the {450,1530} data @0x8011a2c8 is consumed
+         * by the neighbouring type-0x40 NPC INIT 0x80116d20 (lw [0x8011a2d4]->+0x78 @0x80116d60-68), NOT
+         * the ivy — the ivy INIT 0x80116920 never writes +0x78. The ivy is weapon-immune (dmg row
+         * @0x8006f048 all-zero + INIT +0x93=3 hit-once guard) and is NOT a weapon/auto-aim target nor a
+         * body-push obstacle; it falls to `default: return` = no box (audit wf_efd92a2c ivy #77). */
         case 0x21: r = 200;  h = 180;  break;  /* CROW — byte-true from its +0x78 dim block
                                                 * @0x801210fc: hw[+6]=0xc8=200 (radius),
                                                 * hw[+8]=0xb4=180 (height), hw[+10]=200 (INIT

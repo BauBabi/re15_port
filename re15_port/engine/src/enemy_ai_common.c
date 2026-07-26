@@ -8234,76 +8234,78 @@ static void re15_tyrant_ai_tick(int slot)
 }
 
 /* ============================ IVY plant-grappler (type 0x2d, EM02D) — STAGE4 lab ============== *
- * Byte-true from workflow wf_5c34ffe7 (root 0x801168c4, state table @0x8011a2c0). A humanoid plant
- * grappler (HP 100 @0x80116954): nav-walks/chases on the shared EXE humanoid walker library, emerges/
- * idles with a procedural bone-sway, and its ONE attack is a GRAB -> EATEN-DEATH. The grab does NO
- * chip hp (the report found no player.hp subtract); it drives the player straight into the death FSM
- * via the shared grab-command DAT_800aca58 = 7 (instant kill, @0x80116858, the 5-stage grab VM
- * @0x801003c4). So the port models: INIT (HP 100) -> nav-chase -> GRAB (pin + eaten-death). Killable
- * (real hurt/death). The dual-table walk/look choreography + bone-sway are faithful-line. */
+ * Byte-true rebuild from audit wf_efd92a2c (root 0x801168c4; state table @0x8011a2c0 raw-read =
+ * EXACTLY two code pointers: INIT 0x80116920, ACTIVE 0x801169b8 — word[2] @0x8011a2c8 = 0xfa060000
+ * is DATA, so no state>=2 dispatch can exist without jalr'ing data).
+ *
+ * The shipped ivy is a DORMANT SCRIPTED PROP, NOT a combat enemy. The prior port INVENTED an entire
+ * nav-chase + grab-instakill + hurt/death/corpse machine by mis-reading the NEIGHBOURING type-0x40
+ * NPC root (0x80116be4, registered right after the ivy) as the ivy brain:
+ *   - The ivy chain (0x801168c4-0x80116bcc) makes ZERO walker (0x800245d8)/pathfind (0x800509e4) calls
+ *     and NEVER reads the player. The walker+pathfind-15000 chase is type-0x40 state-1 @0x80116ec8
+ *     (jal 0x800509e4, a0=0x3a98=15000) — every chase constant (steer 0x30, adv 40/48, dist 1400/900,
+ *     timer 60, miss-40) has no source in the ivy code (audit ivy #73/#78).
+ *   - ACTIVE 0x801169b8 dispatches on +0x5: sub 0 @0x80116a08 = DORMANT-until-flag — jal
+ *     0x8004efe4(0x800b1028,0x1f) = game-flag z5:31 test @0x80116a14; ONLY when set does it consume the
+ *     flag (jal 0x8004efb8 @0x80116a30) and sub++ @0x80116a34. NO player read, NO movement. sub 1
+ *     @0x80116a40 = clip-field reset (+0x94/+0x95/+0x8f=0), sub++, falls through into sub 2. sub 2
+ *     @0x80116a58 = procedural bone-sway (skeleton words of model inst lw 392(s0), keyed on +0x95 bands).
+ *     sub>=3 = `j 0x80116bcc` epilogue = inert forever (audit ivy #73).
+ *   - The grab VM (sw 7->0x800aca58 @0x80116858, driver 0x801165f4, 5 stages @0x801003c4) is ORPHANED
+ *     prototype code: unreachable — the ivy dispatch table never points at 0x801165f4 and STAGE4's
+ *     grabbed-cmd registrar never writes the 0x2d driver slot 0x800ac80c. The shipped ivy has NO attack;
+ *     0x80116850-58 is a lone store in dead code, not a grab latch (audit ivy #74/#79).
+ *   - TRIPLE weapon-immunity: dmg row @0x8006f048 (PSX.EXE, 0x8006e0d0+0x2d*0x58) verified ALL-ZERO;
+ *     INIT sets +0x93=3 (ori v0,3 @0x8011693c; sb v0,147(a1) @0x80116944) tripping the take_damage
+ *     hit-once guard (hit_react&1 -> early return); NO +0x78 damage box is ever installed — the
+ *     {450,1530} box @0x8011a2c8 is consumed by the type-0x40 NPC INIT 0x80116d20 (lw [0x8011a2d4]->
+ *     +0x78), NOT the ivy. So the ivy is never a weapon/auto-aim target nor a body-push obstacle, and the
+ *     engine never sets its state beyond 1 (audit ivy #75/#76/#77).
+ *   - The root 0x801168c4-0x8011691c is pause-gate + state jalr ONLY: NO collision/push/shadow/anim-SFX
+ *     tail (contrast the 0x40 root 0x80116be4 which calls them @0x80116c98-0x80116d08) (audit ivy #81).
+ *
+ * INIT side effects modeled: HP=0x64 UNCONDITIONAL @0x80116954, +0x93=3 @0x8011693c-44, clip 0
+ * @0x8011698c-94, +0x4=1 @0x80116988.  OPEN (render-side, HONEST — no port equivalent, same treatment
+ * as alligator/birkin): DAT_800acc0c:=1 @0x80116938 (shared-EXE animator secondary-motion pose switch),
+ * the anim_set 0x8001f314(a3=0x200) emerge pose @0x801169a0, and the sub-2 bone-sway skeleton program. */
 static void re15_ivy_ai_tick(int slot)
 {
-    re15_actor_t *e  = &g_actors[slot];
-    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_actor_t *e = &g_actors[slot];
 
     switch (e->state) {
-    case 0:   /* INIT 0x80116920: HP 100, clip 0, state 1 (ACTIVE). */
-        if (e->hp <= 0) e->hp = 100;              /* +0x9a = 0x64 @0x80116954 */
-        e->motion = 0; e->anim_frame = 0; e->anim_frac = 0; e->hit_react = 0;   /* clip 0 @0x8011698c */
-        e->steer_x = (int16_t)pl->x; e->steer_z = (int16_t)pl->z;
+    case 0:   /* INIT 0x80116920: HP 100 unconditional, +0x93=3 immunity guard, clip 0, state 1. */
+        e->hp = 100;                              /* +0x9a = 0x64 UNCONDITIONAL @0x80116954 (not `if hp<=0`) */
+        e->motion = 0; e->anim_frame = 0; e->anim_frac = 0;   /* clip 0 fields @0x8011698c-94 */
+        e->hit_react = 3;                         /* +0x93 = 3 @0x8011693c-44 = take_damage hit-once guard set */
         e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;
         e->state = 1;                             /* +0x4 = 1 @0x80116988 */
+        /* OPEN: DAT_800acc0c:=1 @0x80116938 + anim_set emerge @0x801169a0 (render-side). NO player read. */
         break;
 
-    case 1: {  /* ACTIVE 0x801169b8: nav-chase the player; in body-contact range -> GRAB. */
-        int32_t dist = re15_enemy_player_dist(e, pl); e->dog_dist = (int16_t)dist;
+    case 1:   /* ACTIVE 0x801169b8: dormant scripted prop — dispatch on +0x5. NO player read, NO movement. */
         switch (e->sub_state_1) {
-        case 0: default:   /* NAV-CHASE (walker 0x800245d8 + pathfind 0x800509e4(15000)) */
-            if (e->motion != 1) { e->motion = 1; e->anim_frame = 0; }
-            re15_enemy_steer_point(e, pl->x, pl->z, 0x30);
-            re15_dog_advance(e, 40);
-            e->anim_frame++;
-            if (pl->hit_react == 0 && dist < 1400 && re15_dog_arc(e, pl, 1400, 0x400)) {   /* body AABB 0x2c8 reach -> GRAB */
-                e->motion = 2; e->anim_frame = 0; e->sub_state_1 = 3; e->sub_state_2 = 0; e->sub_state_3 = 0; }
-            break;
-        case 3:   /* GRAB -> EATEN-DEATH (5-stage @0x801003c4): lunge to contact, latch the pin + drive the
-                   * player death FSM (DAT_800aca58=7 @0x80116858) — an instant kill (no chip damage). */
-            re15_enemy_steer_point(e, pl->x, pl->z, 0x30);
-            if (e->sub_state_3 == 0) {                       /* lunge into the grab */
-                re15_dog_advance(e, 48);
-                if (e->anim_frame >= 3 && dist < 900 && re15_dog_arc(e, pl, 900, 0x400) && !s_player_grabbed) {
-                    s_player_grabbed = 1; pl->hit_react |= 1;    /* grab latch @0x80116850-58 */
-                    re15_audio_room_se(2); e->ai_timer = 60; e->sub_state_3 = 1;
-                }
-                if (++e->anim_frame >= 40) { e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0; }  /* missed -> chase */
-            } else {                                          /* HOLD -> eaten (cmd 7) = player death */
-                s_player_grabbed = 1;
-                if (e->ai_timer > 0) e->ai_timer--;
-                if (e->ai_timer == 0) {                       /* EATEN-DEATH: DAT_800aca58=7 -> instant kill */
-                    if (pl->hp >= 0) pl->hp = -1;
-                    s_player_grabbed = 0;
-                    e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;
-                }
+        case 0:   /* sub 0 @0x80116a08: DORMANT until the room SCD sets game-flag z5:31. */
+            if (re15_game_flag_get(5, 31)) {                  /* jal 0x8004efe4(0x800b1028,0x1f) @0x80116a14 */
+                re15_game_flag_set(5, 31, 0);                 /* consume: jal 0x8004efb8 @0x80116a30 */
+                e->sub_state_1++;                             /* sb (+0x5)+1 @0x80116a34 */
             }
             break;
+        case 1:   /* sub 1 @0x80116a40: reset clip fields, advance — falls through into the sub-2 sway. */
+            e->sub_state_2 = 0; e->sub_state_3 = 0; e->anim_frame = 0;  /* +0x94/+0x95/+0x8f=0 @0x80116a44-4c */
+            e->sub_state_1++;                                 /* +0x5+1 @0x80116a54 (no branch -> 0x80116a58) */
+            /* fallthrough */
+        case 2:   /* sub 2 @0x80116a58: procedural bone-sway (render-side, stays at sub 2). */
+            /* OPEN (HONEST): +0x95-banded skeleton-word writes to model inst @0x80116a58-0x80116bc0. */
+            break;
+        default:  /* sub>=3 @0x80116bcc: inert forever. */
+            break;
         }
-        break; }
-
-    case 2:   /* HURT (take_damage +0x4=2): flinch -> resume the chase */
-        e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;
-        e->hit_react = (uint8_t)(e->hit_react & ~1u);
         break;
 
-    case 3:   /* DEATH (take_damage +0x4=3): -> corpse */
-        e->state = 7; e->sub_state_3 = 0;
-        break;
-
-    case 7:   /* CORPSE: settle, inert */
-        e->anim_frame++;
-        break;
-
-    default:
-        e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0;
+    default:  /* states >=2 are UNREACHABLE: the state table @0x8011a2c0 has no entry (word[2]=data) and
+               * the ivy is weapon-immune (+0x93=3 guard + no +0x78 box), so take_damage never promotes it
+               * past state 1. Keep it pinned to the dormant ACTIVE state rather than jalr'ing data. */
+        e->state = 1;
         break;
     }
 }
@@ -8628,16 +8630,11 @@ void re15_enemy_ai_run_all(int combat_active)
                 e->x = nx; e->z = nz;
             }
         }
-        else if (t == 0x2d) {   /* IVY plant-grappler (type 0x2d, EM02D, STAGE4) — nav-chasing humanoid +
-                                 * grab-instakill. SCA wall-clamp after the tick like the other walkers. */
-            int32_t iv_ox = e->x, iv_oz = e->z;
+        else if (t == 0x2d) {   /* IVY plant-grappler (type 0x2d, EM02D, STAGE4) — DORMANT scripted prop.
+                                 * The ivy root 0x801168c4 is pause-gate + state jalr ONLY: NO body-push,
+                                 * NO SCA wall-clamp, NO shadow/anim-SFX tail (audit wf_efd92a2c ivy #81).
+                                 * It never moves, so no collision pass is needed or byte-true. */
             re15_ivy_ai_tick(s);
-            re15_enemy_body_push_tail(s, e);
-            if (g_room_rdt_ok && (e->x != iv_ox || e->z != iv_oz)) {
-                int32_t nx = e->x, nz = e->z;
-                re15_collision_constrain_enemy(&g_room_rdt, iv_ox, iv_oz, &nx, &nz, e->hit_radius_min, e->y);
-                e->x = nx; e->z = nz;
-            }
         }
         /* type 0x22 (EM022, STAGE2 root 0x8010c080) is a VERIFIED STUB (wf_5c34ffe7): a scaffolded
          * state machine whose every dispatch leaf is a `jr ra` no-op — NO HP, NO clip, NO locomotion,
