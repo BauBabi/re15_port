@@ -49,6 +49,32 @@ wrong behavior (e.g. test_room1140_combat 14b, spider death). 96/96 ctest.
   sub-19 root-motion (needs the EDD 0x4000/0x2000 flag channel); executor rows [10..17] + [23]/[24]
   step-up; state-1 deep decide/act rows ≥3; +0x1c8/+0x1ca turn-rate stash (no consumer).
 
+## Live parity check vs PSX savestates (2026-07-26, post-campaign)
+
+Method per `re15-parity-verify`: same room, same walk, compare state trajectories (port
+`RE15_STATE_LOG` vs `re15_enemy_state.py` on the DuckStation saves). Results:
+
+| Check | PSX ground truth | Port live | Verdict |
+|-------|------------------|-----------|---------|
+| ROOM1140 entry roster | `room1140_entry.sav`: lyer 0x16 g=0x88 sub0 + 4 feeders sub 0xc, dists 7419/6122/7038/8748/8046 | 5/5 slots field-identical, **distances to the unit** | ✅ EXACT |
+| ROOM1140 combat chain | `mzd_stage1_walked.sav`: woken feeder → +0x5=6 devour, second at ENGAGE, player state 7 hp=−1 | wake at d=2974 (<3000 gate) → 13 → ENGAGE w/ aware-clip {2..5} → GRAB(4) → DEVOUR(6) → player pst=7 hp=−1; killer feeds corpse after | ✅ same chain, same end state |
+| **TURN slew (W1 headline fix)** | disasm: ±0x80/frame off-cone, one-time snap on cone entry | slot4 F212-218: rot 2507→3275 = **exactly +128/frame ×7**, snap+exit F219, approach F220 | ✅ rate byte-perfect |
+| Collision wall | skill-documented x=−5118 (both sides) | player stops at x=−5118 | ✅ |
+| ROOM1090 spiders | 7 spiders subs {0,1,2,4,3,3,4} = behavior nibble | 7/7 slot-for-slot sub+grid match | ✅ |
+| ROOM11C0 roster | NPC 0x42 **st=4 ss1=6 g=0x40** + 2 maggots g=0x30 | identical (the W7 scripted-start live) | ✅ (see LOW note) |
+| ROOM1190 dog | (no usable dog savestate — `mzd_stage1_dog.sav` is an NPC scene) | spawns **st=4 sub0 g=0x40** = the W2 scripted-start fix, stable | ✅ port-side |
+| ROOM10C0 crow | (no savestate) | perch brain cycles subs 0↔1↔2↔3, clips 0/1/2, rot micro-slew, no stuck state | ✅ port-side |
+
+**New LOW finding from the parity run:** frozen spawns (maggot g=0x30, freeze bit +0x9&0x20): PSX
+shows `+0x4=1` at spawn (INIT ran before the freeze gates the brain), the port holds `st=0` until
+unfreeze — an INIT-ordering difference under the freeze bit, no observable behavior delta after the
+SCD unfreeze. Settling it byte-true needs the gate placement in the root prologue disasm (does the
+freeze check sit before or after the state-0 INIT dispatch). Tracked open.
+
+The dive/grapple (crow) and bite/heavy (maggot) live paths need their SCD provocation events — their
+mechanics are pinned by test_crow_ai/test_maggot_ai + the wave disasm; fresh PSX captures via
+`re15-room-capture` would extend the table.
+
 **Regenerate the finding set:** the full verified JSON lives in the session scratchpad
 (`ai_divergences.json`, 81 entries with byte evidence per side); the audit/fix workflow scripts are
 under the session `workflows/scripts/` dir (`enemy-ai-divergence-audit-*.js`, `enemy-ai-fix-waves-*.js`).
