@@ -119,21 +119,31 @@ int main(void)
         else if (grabbed) printf("  (3) ALLIGATOR: jaws reach + swallow under the push (hp=%d)\n", pl->hp);
     }
 
-    /* (4) SPIDER-BABY 0x26 — stationary -2 contact must fire at the 1050 standoff (was 600). */
+    /* (4) SPIDER-BABY 0x26 — REWRITTEN byte-true (audit wf_827f186d spider #3 + body-push claim):
+     * the -2 IS the aec4 body-push RETURN (`jal 0x8002aec4` @0x80116368, `beq v0,zero,exit`
+     * @0x80116370) — it fires on a REAL overlap (a walking-in player penetrates before the
+     * player-side b544 push resolves) and is byte-true SILENT once the push-out has settled the
+     * pair at/over the standoff (pen<1 -> aec4 returns 0; both sides share the same SquareRoot0,
+     * whose underestimate makes the resolving push overshoot R). The old expectation here (-2 at
+     * the RESOLVED standoff) pinned the removed port-invented distance gate, not the original. */
     {
         memset(g_actors, 0, sizeof g_actors);
         re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
         pl->active = 1; pl->type = 0; pl->x = 3000; pl->z = 8000; pl->hp = 100;   /* far while it emerges */
+        re15_player_apply_hitbox(pl);   /* r 450 / h 1530 — the aec4 y-band (@0x8002b1f0-b228) must span
+                                         * the ACTIVE spider hanging at y = home_y - 20*(phase-1) ~ -800
+                                         * (unconditional pin @0x80116408-98, audit wf_827f186d spider #2) */
         re15_actor_t *s = &g_actors[1];
         s->active = 1; s->type = 0x26; s->state = 0; s->x = 3000; s->z = 3000; s->grid_id = 0x02;
         re15_enemy_apply_hitbox(s, 0x26);
         for (int f = 0; f < 140; f++) re15_enemy_ai_run_all(0);   /* emerge to SOLID (no player nearby) */
-        pl->x = s->x; pl->z = s->z + 400; pl->hp = 100; pl->hit_react = 0;   /* walk into the body */
-        int16_t hp0 = pl->hp; int hit = 0;
-        for (int f = 0; f < 80; f++) { step(); if (pl->hp < hp0) { hit = 1; break; } pl->hit_react = 0; }
-        if (!hit)               { fprintf(stderr, "FAIL(4): spider-baby contact never fired through the push (dist=%d)\n", xz_dist(s, pl)); fail = 1; }
-        else if (pl->hp != hp0 - 2) { fprintf(stderr, "FAIL(4): contact must be exactly -2, hp %d->%d\n", hp0, pl->hp); fail = 1; }
-        else printf("  (4) SPIDER-BABY: -2 contact fires at the standoff, hp %d->%d\n", hp0, pl->hp);
+        pl->x = s->x; pl->z = s->z + 400; pl->hp = 100; pl->hit_react = 0;   /* penetration frame (walk-in) */
+        re15_enemy_ai_run_all(0);        /* the spider's own tick sees the overlap -> aec4 ret != 0 -> -2 */
+        if (pl->hp != 98) { fprintf(stderr, "FAIL(4): -2 must land on the penetration frame (@0x801163c8-d0), hp=%d\n", pl->hp); fail = 1; }
+        /* now the game_step loop: the player-side push resolves the pair out of overlap = SOLID */
+        for (int f = 0; f < 20; f++) step();
+        if (xz_dist(s, pl) < 1049) { fprintf(stderr, "FAIL(4): the push must hold the player at the ~1050 standoff (solid body), dist=%d\n", xz_dist(s, pl)); fail = 1; }
+        if (!fail) printf("  (4) SPIDER-BABY: -2 on overlap (hp 100->%d), then pushed solid to dist=%d\n", pl->hp, xz_dist(s, pl));
     }
 
     if (fail) { printf("ENEMY-ATTACK-REACH: FAIL\n"); return 1; }

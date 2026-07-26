@@ -4595,8 +4595,13 @@ static void re15_dog_ai_tick(int slot)
  * @0x8006f418) — but the spider NEVER arms those, so it is gameplay-COMPLETE via the -2 contact alone. (The
  * earlier "no hp write in region 0x80017600-0x80018000" wording was imprecise: the damage routines exist in
  * the table; the spider simply doesn't use them, and no port enemy arms idx25/31 via 0x55 either.)
- * The only remaining wave-2 item is PRESENTATION: the exact web-spit sprite choreography (the port already
- * spawns a telegraph fx below as a faithful approximation).
+ * OPEN (audit wf_827f186d spider #6 — subsystem-scale PRESENTATION gap, exact bytes): the per-cycle
+ * model-instance hit-code choreography. Original arms via 0x80019d50(a0=part 8/0x10 by variant tables
+ * @0x8010031c/@0x80100334/@0x8010034c, a1=3, a3=*(+0x188)+64): STEP a2=0x22 @0x80116c4c-50, COMMIT
+ * a2=0x12 @0x80116cc8-cc, hurt-windup a2=0x23 @0x80116bd0-d4; the mouth sprite spawns via 0x80019700
+ * with a0=(phase<<8)|(0x0803../0x1003.. via table @0x80100364) a1=rot_y(+0x6a) a2=*(+0x188)+64
+ * a3=pose @0x80121248 @0x80116d44-88. The port has no model-instance arming subsystem — it spawns a
+ * generic telegraph fx at the roll site (below) and arms nothing; NOT approximated further.
  * WEB-SPIT byte-true RE (workflow wf_b95101b2, 2026-07-13 — corrects two earlier assumptions):
  *  - The "attack workstruct" *(0x800b52c4) is a CURSOR into the 96*0x84 EFFECT/SPRITE POOL @0x800a73b8 (the
  *    shared fx pool). Driver FUN_80019e20 walks all 96 slots and per active slot (+0x6c&1) dispatches
@@ -4627,10 +4632,20 @@ static void re15_spider_ai_tick(int slot)
     case 0:   /* INIT 0x801164b0: one-shot -> ACTIVE */
         if (e->hp <= 0) e->hp = 100;                      /* +0x9a=100 @0x801164f8 */
         e->hit_react = 0; e->motion = 0; e->anim_frame = 0; e->anim_frac = 0;  /* clear @0x801164ec-544 */
-        e->spider_phase = 0; e->spider_timer = 0;         /* +0x1d0..+0x1ec = 0 @0x80116594 (phase starts 0) */
-        e->spider_home_x = (int16_t)e->x; e->spider_home_y = (int16_t)e->y; e->spider_home_z = (int16_t)e->z;  /* cache spawn @0x801165fc-2c */
-        e->state = 1; e->sub_state_1 = variant;           /* +0x4=1 ACTIVE, +0x5 = +0x9 & 0x7f @0x80116690/ac */
+        e->spider_phase = 0; e->spider_timer = 0;         /* +0x1d0..+0x1ec = 0 (8-word loop @0x801165b0) */
+        e->spider_home_x = (int16_t)e->x;                 /* +0x1d8 = x (lhu +0x34; sh) @0x801165fc */
+        e->spider_home_z = (int16_t)e->z;                 /* +0x1da = z (lhu +0x3c; sh) @0x80116614 */
+        e->spider_home_y = (int16_t)e->y;                 /* +0x1d6 = y (lhu +0x38; sh) @0x8011662c */
+        e->state = 1; e->sub_state_1 = variant;           /* +0x4=1 @0x80116690, +0x5 = +0x9 & 0x7f @0x801166ac */
         e->sub_state_2 = 0; e->sub_state_3 = 0;
+        /* spawn/emergence fx 0x09031800, gated on !(grid&0x80): `andi v0,0x80; bne -> skip;
+         * lui a0,0x903; ori a0,0x1800; a3=pose @0x80121248; a2=*(+0x188)+0x40; a1=lh +0x6a;
+         * jal 0x80019700` @0x801166c4-e8. Port fx registrar = the ESP pool spawn (same model as
+         * the ACTIVE web telegraph below; exact part id/pose = the OPEN sprite subsystem).
+         * (audit wf_827f186d spider #7) */
+        if (!(e->grid_id & 0x80))
+            re15_esp_fx_spawn(re15_esp_room_bank(), 0, 0,
+                              e->x, e->y, e->z, (int16_t)e->rot_y);
         break;
 
     case 1: {  /* ACTIVE 0x801166fc: the stationary strike-arming brain (Behavior A/B on +0x6). */
@@ -4643,15 +4658,23 @@ static void re15_spider_ai_tick(int slot)
             e->spider_timer = (int16_t)((re15_engine_rand8() & 0x3f) + 16);  /* +0x1d4 = rng&0x3f+16 [16,79] @0x80116da0 */
             e->sub_state_2 = 1;
             break;
-        case 1:   /* +0x6==1: wind-up; on timer expiry arm a STEP strike (wave 2: hit-code 0x22) */
-            if (e->spider_timer > 0) { e->spider_timer--; break; }   /* +0x1d4-- @0x801167d4 */
+        case 1: { /* +0x6==1: wind-up; on timer expiry arm a STEP strike (hit-code 0x22 = OPEN below) */
+            uint16_t t = (uint16_t)e->spider_timer;
+            e->spider_timer = (int16_t)(t - 1);   /* +0x1d4-- ALWAYS stored (delay slot `sh v0,468`
+                                                   * @0x801167d4 / @0x801168ec — wraps 0->0xffff) */
+            if (t != 0) break;                    /* `bne v1,zero,exit` on the PRE-decrement value */
             if (e->spider_phase >= 0x30) break;                      /* budget exhausted -> hold @0x801167ec */
-            if (e->sub_state_1 < 3 && e->spider_phase < 8) { e->sub_state_2 = 3; break; }  /* A dead-abort @0x8011683c */
+            if (e->sub_state_1 < 3 && e->spider_phase < 8) { e->sub_state_2 = 3; break; }  /* A dead-abort @0x8011683c
+                                                   * (Behavior B @0x80116910 only SKIPS the 0x22 arm when phase<8) */
+            /* STEP arm FUN_80116bec: 0x80019d50(part 8/0x10 via table @0x80100334, a1=3, a2=0x22,
+             * a3=*(+0x188)+64) @0x80116c4c-50 — model-instance hit-code arming = OPEN (see header) */
             e->spider_phase++;                                       /* +0x1d0++ @0x8011681c */
             e->sub_state_2 = 2;
             break;
-        case 2:   /* +0x6==2: COMMIT strike (wave 2: hit-code 0x12) + re-roll the timer -> loop */
-            e->spider_timer = (int16_t)((re15_engine_rand8() & 0x3f) + 16);  /* @0x80116cec */
+        }
+        case 2:   /* +0x6==2: COMMIT strike FUN_80116c68 (hit-code 0x12 arm @0x80116cc8-cc = OPEN)
+                   * + unconditional timer re-roll -> loop */
+            e->spider_timer = (int16_t)((re15_engine_rand8() & 0x3f) + 16);  /* rng&0x3f+16 @0x80116cd4-ec */
             e->sub_state_2 = 1;
             break;
         default:  /* +0x6==3: Behavior-A dead sub-state (idle hold) */
@@ -4660,57 +4683,105 @@ static void re15_spider_ai_tick(int slot)
         break;
     }
 
-    case 2:   /* HURT ENTRY: the shared re15_enemy_take_damage sets +0x4=2 (hurt) generically; for the
-               * spider that state-table slot [2-4] trampolines to the +0x7 flinch 0x80116a04 -> route it. */
-        e->state = 10; e->sub_state_3 = 0;
-        break;
-    case 3:   /* DEATH ENTRY: take_damage sets +0x4=3 when hp<0; route to the spider gib-burst 0x80116870. */
-        e->state = 8; e->sub_state_2 = 0;
-        break;
-
-    case 8: case 9:   /* DEATH 0x80116870: gib burst -> corpse (+0x1d0 climbs to 0x30 then inert) */
-        if (e->sub_state_2 == 0) {
-            re15_esp_fx_spawn(re15_esp_room_bank(), 0, 0,
-                              e->x, e->y, e->z, (int16_t)e->rot_y);   /* gib burst @0x80116d84 */
-            e->spider_phase = (uint8_t)((re15_engine_rand8() & 0x3f) + 16);
-            e->sub_state_2 = 1;
-        } else if (e->spider_phase < 0x30) {
-            e->spider_phase++;                                       /* climb to the corpse latch @0x80116934 */
-        } else {
-            e->state = 7;                                           /* permanent inert corpse @0x80116904 */
-        }
-        break;
-
-    case 7:   /* CORPSE: inert */
-        break;
-
-    default:  /* states 10-15 = HURT 0x80116a04 (+0x7 3-frame one-shot -> reset to state 1) */
-        if (e->state >= 10 && e->state <= 15) {
-            switch (e->sub_state_3) {
-            case 0:  e->hit_react = 3; e->sub_state_3 = 1; break;     /* +0x93=3 hit-flash @0x80116a50 */
-            case 1:  e->sub_state_3 = 2; break;                      /* COMMIT clip 0x12 @0x80116b04 */
-            default: e->state = 1; e->sub_state_1 = variant;         /* RESET +0x4=0x10001 -> state 1 @0x80116b30 */
-                     e->sub_state_2 = 1; e->sub_state_3 = 0; e->hit_react = 0; break;
+    case 2: case 3: case 4:
+        /* HURT *AND* DEATH: state table @0x80121268 [2]=[3]=[4]=0x8011697c, which dispatches
+         * @0x80121290[+0x5] (`addiu at,at,4752` @0x8011699c) — ALL 6 entries = the flinch
+         * FUN_80116a04 (table dumped). The EXE damage writers only ever store 2 or 3
+         * (@0x8001252c/0x80012538, @0x80013018/0x80013020) and hp is read NOWHERE in
+         * 0x80116288-0x80116db4, so hp<0 (state 3) runs the SAME 3-phase flinch and resets to
+         * ACTIVE: the original spider is UNKILLABLE, never a corpse, always respawns. The port's
+         * former state-8/9 gib->corpse latch + state-7 kill-flag persist were invented — removed.
+         * (audit wf_827f186d spider #1) */
+        switch (e->sub_state_3) {                        /* +0x7 flinch phase */
+        case 0:
+            e->hit_react = 3;                            /* +0x93 = 3 hit-flash (sb @0x80116a50) */
+            if (e->spider_phase >= 8) {
+                /* windup arm FUN_80116b70 (`sltiu v0,v0,8; bne -> skip; jal 0x80116b70`
+                 * @0x80116a68-78): 0x80019d50(part 8/0x10 via table @0x8010031c, a1=3, a2=0x23,
+                 * a3=*(+0x188)+64) @0x80116bd0-d4 — model-instance hit-code arming = OPEN. */
+            } else if (variant < 3) {
+                /* flag bitset 0x8004ef90(a0=0x800b1028, a1=variant+29) @0x80116ac0-cc, gated
+                 * phase<8 && (+0x9&0x7f)<3 @0x80116a90/ab4 — bit (variant+29) of the shared
+                 * flag-array word @0x800b1028 (the port's s_crow_gflags, MSB-first). */
+                s_crow_gflags |= 0x80000000u >> ((unsigned)(variant + 29) & 0x1f);
             }
+            if (e->spider_phase >= 2)                    /* `sltiu v0,v0,2; bne -> skip` @0x80116ae4-e8 */
+                e->spider_phase--;                       /* +0x1d0-- floor 1 @0x80116af8-b00 */
+            e->sub_state_3++;                            /* +0x7++ @0x80116b18-28 */
+            break;
+        case 1:
+            /* COMMIT FUN_80116c68 (`jal 0x80116c68` @0x80116b04): 0x12 arm @0x80116cc8-cc (OPEN)
+             * + UNCONDITIONAL strike-timer re-roll — one rng draw, fresh [16,79] cadence.
+             * (audit wf_827f186d spider #5) */
+            e->spider_timer = (int16_t)((re15_engine_rand8() & 0x3f) + 16);  /* +0x1d4 @0x80116cd4-ec */
+            e->sub_state_3++;                            /* +0x7++ @0x80116b18-28 */
+            break;
+        case 2:
+            e->state = 1; e->sub_state_2 = 1; e->sub_state_3 = 0;  /* +0x4 word = 0x10001
+                                                          * (lui 0x1 @0x80116a44; ori 1 @0x80116b2c;
+                                                          * sw +0x4 @0x80116b30) */
+            e->sub_state_1 = variant;                    /* +0x5 = +0x9 & 0x7f restored @0x80116b40-4c */
+            e->hit_react = 0;                            /* +0x93 = 0 @0x80116b5c */
+            break;
+        default:                                         /* +0x7 >= 3: no-op exit (j @0x80116a34) */
+            break;
         }
+        break;
+
+    default:
+        /* states 5-9: table @0x80121268 [5-7]=0x80116758 (Behavior A) / [8-9]=0x80116870 (B) —
+         * the SAME words double as the ACTIVE variant table @0x8012127c[+0x5]. As ROOT states
+         * they are UNREACHABLE: exhaustive disasm 0x80116288-0x80116db4 shows exactly three +0x4
+         * writes (=1 @0x80116690, =0x10001 @0x801169d4 / @0x80116b30) and the EXE damage writes
+         * only 2/3 — no writer of 5..9 exists. (audit wf_827f186d spider #1) */
         break;
     }
 
-    /* --- root tail (@0x80116288): EMERGE gate (+0x1d0 < 13 intangible + vertical) + -2 contact --- */
-    if (e->spider_phase < 13) {                          /* EMERGE: intangible, vertical climb slaved to +0x1d0 */
-        int step = (e->grid_id & 0x80) ? 40 : 20;        /* step 40/20 @0x80116474/90 */
-        e->y = (int32_t)e->spider_home_y - step * ((int)e->spider_phase - 1);  /* +0x38 = +0x1d6 - step*(phase-1) @0x80116494 */
-    } else if (e->state == 1) {                          /* SOLID: -2 contact stagger on body overlap */
-        int32_t dx = e->x - pl->x, dz = e->z - pl->z;
-        int32_t rc = (int32_t)e->hit_radius_min + RE15_BODY_R_PLAYER;   /* aec4 body-contact standoff */
-        /* @0x80116368: the -2 is gated on FUN_8002aec4's RETURN (a body-push happened), i.e. an actual
-         * OVERLAP: pen = R - SquareRoot0(dx²+dz²) > 0. Byte-true = the SAME SquareRoot0 the push uses,
-         * strict '<', NOT an inclusive Euclidean dx²+dz²<=rc² (audit wf_f066b2ae / wf_8b1360d4). */
-        if ((int32_t)re15_squareroot0((uint32_t)((int64_t)dx*dx + (int64_t)dz*dz)) < rc && pl->hit_react == 0) {
-            pl->hit_react |= 1;                          /* DAT_800aca58=2 stagger marker is byte-true but the
-                                                          * port keys the hit-react gate off +0x93 (faithful) */
-            if (pl->hp >= 4) pl->hp = (int16_t)(pl->hp - 2);  /* player.hp -= 2 (floor: never below 2) @0x801163c8 */
+    /* --- root tail @0x80116304-498: runs after EVERY state dispatch (the tail never re-reads
+     * +0x4 — contact/damage/pins apply in ACTIVE, HURT and "DEATH" alike). Adversarial verify of
+     * the flagged claim wf_827f186d: the aec4 call IS there, but it pushes the SPIDER (pushee),
+     * not the player — the player-side solidity is the b544 pass (port: re15_body_push_player),
+     * which was never missing. What WAS missing: the emerge intangibility flags, the aec4-return
+     * -2 gating (any state, per overlap frame) and the unconditional home pins. --- */
+    e->contact_flags = 0;                                /* FUN_8002b498 contact clear @0x8011630c */
+    if (e->spider_phase < 13) {                          /* `sltiu v0,v0,0xd; bne` @0x80116328-2c:
+                                                          * EMERGING = intangible */
+        e->flags |= 0x02;                                /* +0x0 |= 2 @0x801163dc-e8 (aec4 skip-bit:
+                                                          * re15_body_push gate, so the player pass
+                                                          * walks through an emerging spider) */
+        e->flags |= 0x40;                                /* +0x0 |= 0x40 @0x801163ec-404 */
+    } else {
+        e->flags = (uint8_t)(e->flags & ~0x02u);         /* `addiu v1,-3; and` @0x80116330-40 */
+        e->flags = (uint8_t)(e->flags & ~0x40u);         /* `addiu v1,-65; and` @0x80116350-5c */
+        /* `jal 0x8002aec4` @0x80116368 with a0=0x800aca54 (player block, `addiu s0,s0,20`
+         * @0x8011634c) a1=entity: pushes the SPIDER out of the player — undone by the pins
+         * below — and its nonzero RETURN is the contact condition (`beq v0,zero,exit`
+         * @0x80116370). (audit wf_827f186d spider body-push claim: CONFIRMED, direction fixed) */
+        if (re15_body_push(pl, RE15_BODY_R_PLAYER, e, (int32_t)e->hit_radius_min)) {
+            if (pl->hit_react == 0) {                    /* `bne v0,zero` @0x80116384 gates ONLY the
+                                                          * stagger request, NOT the -2 */
+                /* player stagger command: aca58=2 @0x8011638c-90, aca59=a780(player)+2
+                 * @0x80116394-a4, aca5a=0 @0x801163a8-ac — the aca58 player-reaction cmd FSM is
+                 * the unported dispatcher (OPEN; same trio as the crow dive @0x80113b00-30). The
+                 * port-observable model is the hit_react latch the cmd-2 stagger holds. */
+                pl->hit_react |= 1;
+            }
+            if (pl->hp >= 4)                             /* `slti v0,v0,4; bne -> skip` @0x801163c0-c4 */
+                pl->hp = (int16_t)(pl->hp - 2);          /* -2 EVERY overlap tick, ANY state, NOT
+                                                          * hit_react-gated @0x801163c8-d0
+                                                          * (audit wf_827f186d spider #3) */
         }
+    }
+    /* home pins: UNCONDITIONAL — all three paths converge at 0x80116408 (beq @0x80116370,
+     * j @0x801163d4, emerge fall-through @0x80116404). x/z re-pinned every tick; y slaved to
+     * +0x1d0 in EVERY state: ACTIVE (phase 0x28/0x2c) holds y = home_y - step*(phase-1), each
+     * HURT phase-- visibly raises it one step. (audit wf_827f186d spider #2) */
+    e->x = e->spider_home_x;                             /* +0x34 = +0x1d8 (lh; sw) @0x80116414-1c */
+    e->z = e->spider_home_z;                             /* +0x3c = +0x1da (lh; sw) @0x8011642c-34 */
+    {
+        int step = (e->grid_id & 0x80) ? 40 : 20;        /* (phase-1)*5<<3 / <<2 @0x80116444-90 */
+        e->y = (int32_t)e->spider_home_y - step * ((int)e->spider_phase - 1);  /* +0x38 = +0x1d6 -
+                                                          * step*(phase-1) @0x80116494-98 */
     }
 }
 
