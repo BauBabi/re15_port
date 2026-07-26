@@ -1991,6 +1991,11 @@ re_title:;
                     elliot_md1.mesh_count, elliot_skel.bone_count, elliot_anim.clip_count);
         }
     }
+    /* Register Elliot's own cinematic EDD with the NPC motion executor so his Plc_motion GESTURE
+     * clips (ROOM1170 intro "Hey!" wave etc.) wrap anim_frame at THEIR real length, not the shared
+     * EM040/Irons table (which froze clips 15/16/20/25 on frame 0). Stable function-scope storage. */
+    { extern void re15_npc_set_elliot_anim(const re15_emd_animation_t *);
+      re15_npc_set_elliot_anim(&elliot_anim); }
 
     /* AD-round (2026-05-26): load PL00W01 (handgun weapon track) for the
      * RUN/WALK_FORWARD animation. PL00.EDD only has Walk_Backward / Damage

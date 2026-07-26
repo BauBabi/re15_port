@@ -5567,6 +5567,23 @@ static void re15_maggot_ai_tick(int slot)
  * re15_npc_ai_tick @L5264-5278. DEFERRED to wave 2: the dialogue behaviour VM + the per-NPC overlay states. */
 static const uint8_t s_irons_clip_len[24] =   /* EM040 (Chief Irons) clip frame-counts (CDEMD0.EMS idx 18, dir[1]) */
     { 34,32,50,26,20,20,50,1,1,1,1,25,1,1,1,1,1,10,25,1,1,1,30,30 };
+
+/* Elliot (0x47) is a ROOM cinematic actor whose Plc_motion GESTURE clips come from his OWN loaded
+ * EDD (PLD/ELLIOT.EDD → elliot_anim, 26 clips: clip 15 "Hey!"=20f, 16=30, 17=30, 20=25, 25=82 —
+ * dumped live via RE15_ELLIOT_CLIPDUMP 2026-07-26), NOT the shared EM040/Irons table (whose
+ * [15/16/20]=1 and out-of-range [25] froze his wave on frame 0). Byte-true: anim_set (0x8001f314)
+ * wraps anim_frame at the ENTITY'S OWN EDD clip count (channel +0x174), so the motion executor must
+ * read Elliot's real bank. The platform registers the loaded bank (stable function-scope storage). */
+static const re15_emd_animation_t *s_npc_elliot_anim = NULL;
+void re15_npc_set_elliot_anim(const re15_emd_animation_t *a) { s_npc_elliot_anim = a; }
+static int re15_npc_motion_clip_len(const re15_actor_t *e)
+{
+    if (e->type == 0x47 && s_npc_elliot_anim &&
+        (int)e->motion < s_npc_elliot_anim->clip_count &&
+        s_npc_elliot_anim->clips[e->motion].frame_count > 0)
+        return s_npc_elliot_anim->clips[e->motion].frame_count;
+    uint8_t c = e->motion; int fc = (c < 24) ? s_irons_clip_len[c] : 1; return (fc < 1) ? 1 : fc;
+}
 static void re15_npc_clip(re15_actor_t *e, uint8_t c) { e->motion = c; e->anim_frame = 0; e->anim_frac = 7; }
 static int re15_npc_anim(re15_actor_t *e)     /* POST-inc +0x95, wrap at the real EM040 clip length */
 {
@@ -5602,7 +5619,7 @@ static void re15_npc_sub_idle(re15_actor_t *e)
  * the original where anim_set is the sole stepper for a state-4 actor. */
 static void re15_npc_sub_motion(re15_actor_t *e)
 {
-    uint8_t c = e->motion; int fc = (c < 24) ? s_irons_clip_len[c] : 1; if (fc < 1) fc = 1;
+    int fc = re15_npc_motion_clip_len(e); if (fc < 1) fc = 1;   /* Elliot's own EDD length (0x47), else EM040 */
     switch (e->sub_state_2) {
     case 0:   /* phase 0 init (@0x80050cec-d0c): +0x95=0, seed +0x8f crossfade, phase->1, then fall to play */
         e->anim_frame = 0; e->anim_frac = 7; e->sub_state_2 = 1;
@@ -5785,10 +5802,18 @@ static void re15_npc_ai_tick(int slot)
      * the motion phase-FSM plays+holds the clip exactly like the original. The INIT (state 0) never
      * runs to stomp +0x94, and 2c8d9a69's ROOM11B0 idle T-pose fix is unaffected (those NPCs are never
      * Plc_motion'd -> they reach the executor's idle path). */
-    if (e->walk_active || re15_scd_slot_event_controlled(slot)) {
+    /* A Plc_motion POSE (state 4 / sub_state_1 == 0 = the motion phase-FSM) must NOT yield even while
+     * the SCD Work_set-owns the slot: re15_npc_sub_motion is the SOLE advancer of a state-4 pose clip,
+     * so yielding freezes it on frame 0. MEASURED (RE15_NPC_YIELD_DBG): the ROOM1170 Elliot "Hey!"
+     * wave sat at walk=0, st=4, sub=0, af=0 for the whole gesture because a Work_set(2,0) thread owned
+     * slot 1 → scd_slot_event_controlled=1 → yielded. A Plc_dest WALK still yields (walk_active=1, or
+     * the post-arrival gap where the SCD owns the slot but sub_state_1 != 0 = not the motion pose). */
+    int in_motion_pose = (e->state == 4 && e->sub_state_1 == 0);
+    if (e->walk_active || (re15_scd_slot_event_controlled(slot) && !in_motion_pose)) {
         e->hp = -1;
         return;
     }
+    if (in_motion_pose) e->hp = -1;   /* stay invulnerable while posing (the yield used to enforce this) */
 
     switch (e->state) {
     case 0:   /* INIT 0x8011c6dc: idle pose, INVULNERABLE, -> state 1 (or the shared executor) */
