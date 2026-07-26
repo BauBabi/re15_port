@@ -53,6 +53,23 @@ int main(void)
     if (pl->hp != hp0) { fprintf(stderr, "FAIL(4): emitter must deal NO damage, hp %d->%d\n", hp0, pl->hp); fail = 1; }
     printf("  (4) HARMLESS: player hp %d (unchanged)\n", pl->hp);
 
+    /* (5) DOMINANT SPAWN grid 0x05 = drift-only byte-true (audit wf_efd92a2c dormant #1): the +0x5
+     * dispatch table @0x80118d58[5] = 0x8011084c = `jr ra` NOP (raw-verified), so ~91% of ROOM20B0/20B1
+     * emitters run NO burst sequencer — only the drift/wrap. A grid-5 emitter must drift and stay harmless. */
+    memset(g_actors, 0, sizeof g_actors);
+    pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->active = 1; pl->type = 0; pl->x = 0; pl->y = 0; pl->z = 500; pl->hp = 100;
+    e = &g_actors[FS];
+    e->active = 1; e->type = 0x24; e->state = 0; e->grid_id = 0x05; e->x = 0; e->y = 0; e->z = 0;
+    re15_enemy_apply_hitbox(e, 0x24);
+    re15_enemy_ai_run_all(0);                       /* INIT */
+    if (e->state != 1) { fprintf(stderr, "FAIL(5): grid-5 INIT->ACTIVE expected state 1, got %d\n", e->state); fail = 1; }
+    int32_t g5x0 = e->x; int16_t g5hp0 = pl->hp;
+    for (int f = 0; f < 30; f++) re15_enemy_ai_run_all(0);
+    if (e->x >= g5x0)     { fprintf(stderr, "FAIL(5): grid-5 emitter must drift leftward, X %d->%d\n", g5x0, e->x); fail = 1; }
+    if (pl->hp != g5hp0)  { fprintf(stderr, "FAIL(5): grid-5 emitter must deal NO damage, hp %d->%d\n", g5hp0, pl->hp); fail = 1; }
+    printf("  (5) grid-5 (NOP leaf 0x8011084c): drift X %d->%d, hp %d (harmless)\n", g5x0, e->x, pl->hp);
+
     if (fail) { printf("FX-EMITTER: FAIL\n"); return 1; }
     printf("FX-EMITTER: all checks passed\n");
     return 0;

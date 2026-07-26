@@ -6907,9 +6907,15 @@ static void re15_cockroach_ai_tick(int slot)
  *  - rng per-bone writhe/breathe (0x8003a95c) + gore/blood FX (0x80019700, ESP 0x1c/0x1d/0x1e/0x1f via
  *    0x8004ef90) are skeleton/effect render-side, not modeled (audio SE calls ARE ported).
  *  - DEATH phase 3 WAITS for (grid&0xf)==2 — an EXTERNAL room-SCD morph trigger — then run-off sub-11
- *    hands the fight to FORM-3 (type 0x33). The AI FSM is faithful; the SCD grid-nibble=2 flip and the
- *    form-3 spawn are NOT wired -> the boss plays the collapse then HOLDS at phase 3 (gated on the SAME
- *    grid&0xf==2 field). OPEN until the STAGE3 room-SCD morph handoff is ported. */
+ *    hands the fight to a room-SCD-spawned next form. The AI FSM is faithful; the SCD grid-nibble=2 flip
+ *    and the next-form spawn are NOT wired -> the boss plays the collapse then HOLDS at phase 3 (gated on
+ *    the SAME grid&0xf==2 field). OPEN until the STAGE3 room-SCD morph handoff is ported.
+ *    NB (audit wf_efd92a2c dormant #2, wrong-citation): the morph target is NOT "type 0x33". In the RDT
+ *    Sce_em_set record [op,slot,type,grid], ROOM3070 @0x33ce = `44 00 30 33` and @0x340c = `44 00 30 10`
+ *    are BOTH type 0x30 — 0x33/0x10 are the grid bytes, not a type. Type 0x33 is unregistered game-wide:
+ *    EXE dispatch slot 0x33 @0x80072c78 = 0 and no overlay writes it (a jalr NULL). The only sibling type
+ *    sharing this root is 0x36 — STAGE3 registration @0x8011cec0 stores root 0x80116230 to slot 0x30
+ *    (sw @0x8011cf48 -> 0x80072c6c) AND slot 0x36 (sw @0x8011cf50 -> 0x80072c84), never 0x33 (raw-verified). */
 static void re15_birkin_clip(re15_actor_t *e, uint8_t c) { e->motion = c; e->anim_frame = 0; e->anim_frac = 7; }
 static int re15_birkin_anim(re15_actor_t *e)
 {
@@ -7191,7 +7197,7 @@ static void re15_birkin_ai_tick(int slot)
             }
             break;
         }
-        case 11: {  /* RUN-OFF 0x80119b50: run to the fixed morph point (-22000,-12000), freeze there (FORM-3 handoff) */
+        case 11: {  /* RUN-OFF 0x80119b50: run to the fixed morph point (-22000,-12000), freeze there (next-form handoff) */
             if (e->sub_state_2 == 0) {                 /* phase 0 @0x80119b78: clip 0xe, +0x1dd|=1, set the run-off point */
                 re15_birkin_clip(e, 0x0e); e->anim_frac = 7; e->sub_state_2 = 1;
                 e->birkin_flags |= 0x1;                                /* +0x1dd |= 1 run-off active @0x80119bcc (root now steers/dist vs the override) */
@@ -7203,7 +7209,8 @@ static void re15_birkin_ai_tick(int slot)
                 re15_birkin_anim(e);
                 if (dist < 0x1f4) e->sub_state_2 = 2;                  /* freeze when dist-to-point < 500 @0x80119c3c */
             }
-            /* phase 2 = frozen at the morph point; the FORM-3 (type 0x33) room-SCD handoff is OPEN */
+            /* phase 2 = frozen at the morph point; the next-form room-SCD morph handoff is OPEN (the target is
+             * NOT type 0x33 — that slot is unregistered @0x80072c78=0; see block header, audit dormant #2). */
             break;
         }
         default:
@@ -7672,11 +7679,29 @@ static void re15_alligator_ai_tick(int slot)
  * Byte-true from workflow wf_5c34ffe7 (root 0x8010ee9c). EM024 is NOT a combat enemy — it is a
  * scripted particle/swarm EMITTER (single-bone flat green billboard) used as room ambience. It has
  * NO HP, DISABLES its own collision at INIT (*+0x188 &= ~1 @0x8010efe4), and does ZERO player damage
- * (no player.hp write, no grab, no damage-entry, no hitbox anywhere in 0x8010ee9c..0x80110a00). Its
- * ACTIVE loop is an accelerating leftward X-DRIFT that wraps, plus a 3-level (+0x4/+0x5/+0x6) phase
- * sequencer firing timed particle bursts (0x80019700). The port models the byte-true gameplay:
- * INIT (no HP, state 1) + the X-drift/wrap; the particle-burst choreography is faithful-line (the
- * EM024 sprite belongs to the ESP/particle subsystem). */
+ * (no player.hp write, no grab, no damage-entry, no hitbox anywhere in 0x8010ee9c..0x80110a00 —
+ * full-range raw scan finds zero DAT_800aca58 / player-HP refs). Its ACTIVE loop (0x8010f020) caches
+ * the SquareRoot0 player dist to +0x1d4 (sh @0x8010f078), runs a per-frame +0x5 sub-dispatch BEFORE
+ * the drift (jalr @0x8010f0a8), then does an accelerating leftward X-DRIFT that wraps.
+ *
+ * PORT SCOPE (audit wf_efd92a2c dormant #1, missing-mechanism medium — BUT byte-true for the dominant
+ * spawn): the +0x5 dispatch table @0x80118d58 was raw-verified — [0]=0x8010f130, [1]=0x8010f3fc,
+ * [5]=[6]=[7]=0x8011084c. Leaf 0x8011084c is `jr ra; nop` = a NO-OP. ROOM20B0/20B1 (the ONLY EM024
+ * rooms, all-RDT Sce_em_set(0x44) scan) spawn overwhelmingly grid 0x05 (~32 of ~35 per loaded room),
+ * so ~91% of emitters dispatch the NOP leaf and run drift-only — for THEM the port's tick below is
+ * byte-true. INIT copies grid once to +0x5 (sb @0x8010f00c) and nothing else writes +0x5, so the
+ * finder's cited "grid-5 handler 0x80110338" is actually table index [4] (grid 4), which never spawns
+ * and is dead code. HONEST-OPEN (subsystem gap, NOT faked): only the 1x grid-0 + 2x grid-1 ambient
+ * emitters reach real handlers (grid-0 0x8010f130 -> +0x6 table @0x80118d88, grid-1 0x8010f3fc ->
+ * @0x80118d90) that fire timed particle bursts via helpers 0x801108cc/0x80110988 -> 0x80019700 (the
+ * EXE ESP/particle FX-spawn family) on a +0x6 tick budget. That is render-side ambience only (no
+ * player interaction) and belongs to the un-ported ESP/particle subsystem -> OPEN.
+ *
+ * INIT also flips a GLOBAL: DAT_800acc0c := 1 (ori v1,0x1 @0x8010ef28; sb v1,-13300(at) @0x8010ef34).
+ * Consumer EXE FUN_80024c30 (@0x80024ce0 lbu) skips a player secondary-motion pose add (+0x5f4) while
+ * bit 0 is set. That consumer chain (skeleton_common.c:311-313 spring secondary-motion) is itself
+ * un-ported, so the write has zero observable effect in the port today -> documented OPEN, not faked
+ * as a dead global (audit wf_efd92a2c dormant #3, missing-mechanism low). */
 static void re15_fx_emitter_ai_tick(int slot)
 {
     re15_actor_t *e  = &g_actors[slot];
@@ -7684,6 +7709,8 @@ static void re15_fx_emitter_ai_tick(int slot)
     (void)pl;
     switch (e->state) {
     case 0:   /* INIT 0x8010ef1c: no HP, disable own collision, drift timer 120 -> ACTIVE. */
+        /* NOTE: original also sets DAT_800acc0c:=1 @0x8010ef34 (player secondary-motion pose switch);
+         * its consumer chain is un-ported so the write is OPEN, not modeled (see block header, dormant #3). */
         e->hit_react = 1;                        /* +0x93 = 1 @0x8010ef58 */
         e->motion = 0; e->anim_frame = 0; e->anim_frac = 0;   /* clip 0 via FUN_8011089c @0x801108a8 */
         e->ai_timer = 0x78;                      /* +0x8c drift timer = 120 @0x8010ef6c */
@@ -7691,11 +7718,15 @@ static void re15_fx_emitter_ai_tick(int slot)
         e->sub_state_2 = 0; e->sub_state_3 = 0;
         e->state = 1;                            /* +0x4 = 1 @0x8010eff4 */
         break;
-    case 1:   /* ACTIVE 0x8010f020: accelerating leftward X-drift + timed FX bursts (faithful). No damage. */
+    case 1:   /* ACTIVE 0x8010f020: accelerating leftward X-drift. No damage. */
+        /* Original runs the +0x5 sub-dispatch (jalr @0x8010f0a8) BEFORE this drift: for grid-5 (~91% of
+         * spawns) it is the `jr ra` NOP @0x8011084c, so drift-only is byte-true here. The grid-0/grid-1
+         * particle-burst sequencer (0x80019700 ESP FX) is render-side ambience only -> OPEN (dormant #1).
+         * The +0x1d4 SquareRoot0 dist cache (sh @0x8010f078) feeds only that sequencer -> also OPEN. */
         e->ai_timer++;                           /* timer++ @0x8010f0c8 */
         e->x -= e->ai_timer;                     /* X -= timer @0x8010f0e8 */
         if (e->x < -25000) { e->x = 20000; e->ai_timer = 0xe1; }   /* wrap @0x8010f100-11c (0x4e20/0xe1) */
-        e->anim_frame++;                         /* the phase sequencer would fire 0x80019700 bursts here */
+        e->anim_frame++;                         /* clip frame advance (billboard); no burst modeled (OPEN) */
         break;
     default:
         e->state = 1;
@@ -8230,10 +8261,15 @@ void re15_enemy_ai_run_all(int combat_active)
         if (t == 0x10 || t == 0x11 || t == 0x16 || t == 0x12 || t == 0x18) { /* the STAGE1-5 zombie
              * variants that share the root FUN_80100424: 0x10/0x11/0x16 (briefing) plus 0x12 and 0x18,
              * which have real type-indexed HP rows (@0x8011f034+type*0x20: 0x12={71,91,105,..},
-             * 0x18={71,93,75,..}). Types 0x1c/0x1d/0x1e/0x1f are ALSO registered to this root but their
-             * HP rows are all-zero = unused registration slots, so they are deliberately NOT routed
-             * (a spawned one would be inert). Adding 0x12/0x18 is safe for the tested rooms: ROOM1140/
-             * 1170 contain only 0x10/0x11/0x16, so their combat is unchanged. */
+             * 0x18={71,93,75,..}). Types 0x1c/0x1d/0x1e/0x1f are ALSO registered to this root (STAGE1
+             * sw 0x80100424 -> 0x80072c1c/c20/c24/c28 @0x8011e88c-e8cc; STAGE3 raw-verified sw 0x80100510
+             * -> 0x80072c1c/c20 @0x8011cf00-cf08) but their HP rows @0x8011f034+type*0x20 are all-ZERO
+             * (base 0x8011f3b4..0x8011f433) and their EXE dmg rows @0x8006e0d0+type*0x58 are all-zero too
+             * = unused registration slots, so they are deliberately NOT routed (a spawned one would be a
+             * 0-HP walking zombie, weapon-immune, dying to the first hit — but there are 0 such spawns in
+             * all 240 shipped RDTs, byte-true census). Keeping them UNROUTED is the accepted byte-true
+             * decision (audit wf_efd92a2c dormant #4, reachable=NO). Adding 0x12/0x18 is safe for the
+             * tested rooms: ROOM1140/1170 contain only 0x10/0x11/0x16, so their combat is unchanged. */
             int32_t sweep_ox = e->x, sweep_oz = e->z;    /* pre-dispatch pos (wall-sweep origin) */
             re15_enemy_ai_live_step(s);
             re15_enemy_anim_sfx(e);        /* FUN_8001b38c: per-frame clip-flag SFX (footsteps/attack) */
@@ -8472,8 +8508,9 @@ void re15_enemy_ai_run_all(int combat_active)
         }
         /* type 0x22 (EM022, STAGE2 root 0x8010c080) is a VERIFIED STUB (wf_5c34ffe7): a scaffolded
          * state machine whose every dispatch leaf is a `jr ra` no-op — NO HP, NO clip, NO locomotion,
-         * NO attack, NO player.hp write. The registered-but-unimplemented pattern (like G-Birkin
-         * form-3 0x33). Byte-true = deliberately UNROUTED: it spawns and sits inert (its only real code
-         * is the shared cutscene model-draw aux, which the port's renderer already covers). */
+         * NO attack, NO player.hp write. The registered-but-unimplemented pattern (like the never-spawned
+         * unregistered type slot 0x33 @0x80072c78=0). Byte-true = deliberately UNROUTED: it spawns and sits
+         * inert (its only real code is the shared cutscene model-draw aux, which the port's renderer already
+         * covers). */
     }
 }
