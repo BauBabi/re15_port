@@ -145,7 +145,9 @@ Cruise/Dive-Decide, die ich zuerst allein scannte — daher die frühere Fehl-Sc
 
 ## FLIGHT-2-Dispatcher [4] — 0x80114e54 (Substate-Tabelle @0x80121220)
 
-Preamble: +0x82=signed-rng; +0x1ba=room_coll(a3=0x400); +0x1dc=dist; +0x1ec=0x800aca8c−+0x38;
+Preamble (⚠️ +0x82 korrigiert, audit wf_827f186d crow #15): +0x82 = −(+0x38 / 1800)
+(Root @0x80112128-54: mult 0x91a2b3c5; mfhi+addu; sra 10; Negation — der Höhen-Band-Byte,
+KEIN rng); +0x1ba=room_coll(a3=0x400); +0x1dc=dist; +0x1ec=0x800aca8c−+0x38;
 tick(a1=0x1d) & +0x5≠3 → 0x80115d74(a0=3). Substates (Nested-Step-Machine, keyed auf +0x6):
 `[0]Ascend 0x80114fb8` (vvel−120, Gravity+6, → sub1 wenn +0x1ec≥2001), `[1]Hover 0x80115130`
 (Oszillation: vvel negieren wenn +0x1ec<2000), `[2]Orient 0x801152e0` (clip8), `[3]Spin 0x801153ac`
@@ -233,8 +235,11 @@ der KI-Tick** (`run_all` gated auf 0x10/0x11/0x16, [enemy_ai_common.c:2457]).
    Strike/Grab-Animation), und der Port zeigt genau die. → **Präsentation vollständig** (Audio + Animation);
    kein fehlender Effekt-Layer.
 3. **✅ Wave 3 — Death + Corpse PORTIERT (Commit 6875b700, für volle Portierbarkeit STAGE3/5):**
-   - Root refresht `+0x1d4 = testbit(0x800b1028, 0x1f)` jeden Tick (@0x80112048); die DEATH-Promotion
-     (@0x80112050-8c) feuert, wenn eine state-4-grid&0x40-Krähe Bit 0x1f gesetzt sieht → state 3, Bit gecleart.
+   - ⚠️ KORRIGIERT (audit wf_827f186d crow #1): der Root schreibt `+0x1d4 = rng-Byte` JEDEN Tick —
+     @0x80112028 `jal 0x8001af20` (rng), Store @0x8011204c `sb v0,468` im DELAY-SLOT des
+     testbit-jal @0x80112048 (die alte Lesart „+0x1d4 = testbit" war ein Delay-Slot-Misread).
+     Das testbit(0x800b1028,0x1f)-Ergebnis gated NUR die DEATH-Promotion
+     (@0x80112050-98): state-4-grid&0x40-Krähe + Bit 0x1f → state 3, Bit gecleart.
    - **re15_crow_death (state 3, 0x801146d0):** INIT (Se(3), hp=−1, +0x1e8=0x26 Gravity), FALL (rot_z-Spin,
      Gravity in +0x38 integriert, Land bei Boden−400 → clip 0x0a + Se(5)), FINISH (Countdown → state 7).
      GIB-Lane (+0x5==7): Feder-Burst (re15_esp_fx_splatter, die 13 Kinder @0x80114a50 kollabiert) → state 7.

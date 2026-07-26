@@ -297,6 +297,15 @@ void     re15_player_victim_devour(const re15_actor_t *zombie);
  * passes its pad_pressed each tick; the grab's bite loop drains the escape window 1 + 5*mash. */
 void     re15_enemy_ai_set_pad_pressed(uint16_t edge_bits);
 
+/* DAT_800aca52 — the player-reaction latch word. Bit 0 = "player knocked down", SET by the EXE
+ * knockdown reaction handlers (@0x800334e8-0x80033504 `lhu aca52; ori v0,v0,1; sh aca52`, mirrored
+ * @0x800345c8) and CLEARED by the player's normal cmd handler (@0x80031c44 decompile:
+ * `DAT_800aca52 &= 0xfffe`) + the room init (FUN_8003ecec: `DAT_800aca52 = 0`). Read by the crow
+ * dive-decide path 2 (@0x80112700-38: bit0 && vert-err<5400 -> dive sub 4). The SETTERS live in the
+ * player knockdown command FSM, which the port has not ported yet (OPEN) — the latch is wired so the
+ * crow-side read is byte-true the moment a knockdown producer lands. (audit wf_827f186d crow #A) */
+extern uint16_t g_aca52_flags;
+
 /* ENTITY BODY COLLISION (byte-true FUN_8002aec4/FUN_8002b544): cylinder push-out — the PUSHEE is
  * moved out of the pusher's radius by pen/(dist+1) along the center line. re15_body_push_player =
  * the player-tick pass (player pushed out of every live enemy; call AFTER the player move, BEFORE

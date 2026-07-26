@@ -119,6 +119,78 @@ int main(void)
         printf("  (5) DEATH: bit-0x1f -> state 3 (fell from y=%d) -> state 7 CORPSE @y=%d\n", (int)dy0, (int)dc->y);
     }
 
+    /* (6) crow_mode (+0x1d4) is a FRESH RNG BYTE every root tick (@0x80112028 jal rng ->
+     *     @0x8011204c sb in the testbit delay slot) — NOT the testbit(0x800b1028,0x1f) result
+     *     the old port stored (always 0 in STAGE1). Assert it varies. (audit wf_827f186d crow #1) */
+    {
+        memset(g_actors, 0, sizeof g_actors);
+        pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        pl->active = 1; pl->type = 0; pl->x = 300; pl->y = 0; pl->z = 30000; pl->hp = 100;
+        re15_actor_t *rc = &g_actors[1];
+        rc->active = 1; rc->type = 0x21; rc->state = 0;
+        rc->x = 2000; rc->y = 700; rc->z = 300;
+        int distinct = 0; uint8_t seen0 = 0xff;
+        for (int f = 0; f < 32; f++) {
+            re15_enemy_ai_run_all(0);
+            if (seen0 == 0xff) seen0 = rc->crow_mode;
+            else if (rc->crow_mode != seen0) distinct = 1;
+        }
+        if (!distinct) { fprintf(stderr, "FAIL(6): crow_mode must be a per-tick RNG byte (@0x8011204c), stayed %d\n", seen0); fail = 1; }
+        else printf("  (6) MODE: +0x1d4 varies per tick (rng @0x80112028/0x8011204c)\n");
+    }
+
+    /* (7) PLAYER-DOWN dive path 2 (@0x80112700-38): with the 0x800aca52 bit-0 latch set and
+     *     vert-err<5400, a PATROL crow commits the dive (sub 4) on the next steer tick.
+     *     (audit wf_827f186d crow #A — raw-disasm CONFIRMED) */
+    {
+        memset(g_actors, 0, sizeof g_actors);
+        pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        pl->active = 1; pl->type = 0; pl->x = 300; pl->y = 0; pl->z = 30000; pl->hp = 100;
+        re15_actor_t *kc = &g_actors[1];
+        kc->active = 1; kc->type = 0x21; kc->state = 0;
+        kc->x = 2000; kc->y = 700; kc->z = 300;
+        re15_enemy_ai_run_all(0);                 /* INIT (player far: dist ring won't fire) */
+        g_aca52_flags |= 1;                       /* the knockdown latch (setter @0x800334fc) */
+        int dove = 0;
+        for (int f = 0; f < 8 && !dove; f++) {    /* patrol subs 0-3 -> path C fires */
+            re15_enemy_ai_run_all(0);
+            if (kc->sub_state_1 == 4) dove = 1;
+        }
+        g_aca52_flags = 0;
+        if (!dove) { fprintf(stderr, "FAIL(7): aca52 bit0 + vert<5400 must commit dive sub 4 (@0x80112734), sub=%d\n", kc->sub_state_1); fail = 1; }
+        else printf("  (7) PLAYER-DOWN: aca52 bit0 -> dive sub 4 (@0x80112700-38)\n");
+    }
+
+    /* (8) GLOBAL FREEZE GATE (@0x801120ec-124): skip the state dispatch iff paused &&
+     *     !(grid&0x20) — the crow's grid&0x20 is a freeze-EXEMPTION. NOTE the rng-mode write
+     *     @0x8011204c sits BEFORE the gate (a frozen crow still draws +0x1d4), so the frozen
+     *     observable is the ACTIVE sense: +0x1dc (crow_dist) goes STALE while frozen.
+     *     (audit wf_827f186d crow #7) */
+    {
+        extern void re15_enemy_ai_set_paused(int paused);
+        memset(g_actors, 0, sizeof g_actors);
+        pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        pl->active = 1; pl->type = 0; pl->x = 300; pl->y = 0; pl->z = 30000; pl->hp = 100;
+        re15_actor_t *fc = &g_actors[1];
+        fc->active = 1; fc->type = 0x21; fc->state = 0;
+        fc->x = 2000; fc->y = 700; fc->z = 300;
+        re15_enemy_ai_run_all(0);                 /* INIT */
+        re15_enemy_ai_run_all(0);                 /* first ACTIVE tick: dist ~29700 */
+        uint16_t d0 = fc->crow_dist;
+        pl->z = fc->z + 800; pl->x = fc->x;       /* move the player close... */
+        re15_enemy_ai_set_paused(1);              /* ...but freeze the world */
+        int stale = 1;
+        for (int f = 0; f < 4; f++) { re15_enemy_ai_run_all(0); if (fc->crow_dist != d0) stale = 0; }
+        if (!stale) { fprintf(stderr, "FAIL(8): frozen crow must skip the sense/dispatch (@0x80112120)\n"); fail = 1; }
+        fc->grid_id |= 0x20;                      /* freeze-EXEMPTION (@0x80112114-20) */
+        re15_enemy_ai_run_all(0);
+        int exempt_ran = (fc->crow_dist != d0);
+        re15_enemy_ai_set_paused(0);
+        fc->grid_id &= (uint8_t)~0x20;
+        if (!exempt_ran) { fprintf(stderr, "FAIL(8): grid&0x20 crow must RUN through the freeze (@0x80112114-20)\n"); fail = 1; }
+        if (stale && exempt_ran) printf("  (8) FREEZE: pause skips the dispatch, grid&0x20 exempts (@0x801120ec-124)\n");
+    }
+
     if (fail) { printf("CROW FLIGHT-BRAIN: FAIL\n"); return 1; }
     printf("CROW FLIGHT-BRAIN: all checks passed\n");
     return 0;

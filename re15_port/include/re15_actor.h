@@ -290,8 +290,18 @@ typedef struct {
     int16_t  crow_perch_h;   /* +0x1ea: target/perch height, seeded once at INIT (= spawn y) */
     int16_t  crow_vert_err;  /* +0x1ec: playerY - y, recomputed every ACTIVE tick            */
     int16_t  crow_vvel;      /* +0x1e4: vertical velocity, integrated into y each fly tick    */
-    uint8_t  crow_mode;      /* +0x1d4: mode/flags (low6 = |vvel|, bit0x80 = climb/descend)   */
-    int16_t  crow_dist;      /* +0x1dc: horizontal distance to the player (SquareRoot0)       */
+    uint8_t  crow_mode;      /* +0x1d4: a FRESH RNG byte every root tick (@0x80112028 jal rng ->
+                              * @0x8011204c sb v0,468 in the testbit-jal delay slot) — low6 = |vvel|,
+                              * bit0x80 = climb/descend, %60/%3/&1/&0x32 timers/dirs (audit wf_827f186d crow #1) */
+    uint16_t crow_dist;      /* +0x1dc: horizontal distance to the player (SquareRoot0). UNSIGNED:
+                              * every original consumer is `lhu 476` + sltiu (@0x80115e30/@0x801126c0/
+                              * @0x801126cc/@0x8011332c/@0x80113a94/@0x80114110/@0x8011352c/@0x8011468c;
+                              * 2x sh, 8x lhu, ZERO lh in 0x80111a00-0x80116400) (audit wf_827f186d crow #14) */
+    int16_t  crow_floor;     /* +0x1ba: floor-Y reference under the crow, refreshed EVERY root tick from
+                              * room_coll FUN_8001c6e8(&pos, dim[3], a2=8, a3=0x400) @0x80112158-84
+                              * (audit wf_827f186d crow #5) */
+    uint8_t  crow_wall;      /* +0x1d1: SCA wall-pass hit flag, root post-pass @0x801121f8-218
+                              * `0x8003b0a4(&+0x34, a1=dim[3]=200, a2=4)` -> sb 465 (audit wf_827f186d crow #B) */
     int16_t  crow_grav;      /* +0x1e8: vertical accel added to vvel each dive/fall tick       */
     int16_t  crow_speed;     /* +0x8c : horizontal move speed (per flight sub-state)           */
     uint8_t  crow_timer;     /* +0x1d5: sub-state countdown (climb-back / maneuver duration)   */

@@ -2664,7 +2664,14 @@ static uint16_t s_crow_flock;
  * (mask 0x4, tested by the dispatcher -> spin), 0x1e (mask 0x2, tested by dive-arm); 0x1f
  * (mask 0x1) = the death gate, set only in STAGE3/STAGE5. In STAGE1 only 0x1c is ever set. */
 static uint32_t s_crow_gflags;
-void re15_crow_flock_reset(void) { s_crow_flock = 0; s_crow_gflags = 0; }
+/* DAT_800aca52 — player-reaction latch word (bit 0 = player knocked down). Setters = the EXE
+ * knockdown handlers @0x800334e8-0x80033504 / @0x800345c8 `lhu aca52; ori v0,v0,1; sh` (the player
+ * knockdown command FSM — NOT PORTED YET, so bit 0 currently has no producer: OPEN). Cleared by the
+ * player normal handler (@0x80031c44 `DAT_800aca52 &= 0xfffe`, wired in game_step_common.c) and on
+ * room init (FUN_8003ecec `DAT_800aca52 = 0`, wired below). (audit wf_827f186d crow #A) */
+uint16_t g_aca52_flags;
+void re15_crow_flock_reset(void) { s_crow_flock = 0; s_crow_gflags = 0;
+                                   g_aca52_flags = 0; /* FUN_8003ecec: DAT_800aca52 = 0 on room init */ }
 /* the scripted "crows die" event trigger (STAGE3/STAGE5 set bit 0x1f of 0x800b1028 via
  * FUN_80118d00/80119514): the root then promotes every state-4 grid&0x40 crow to DEATH. */
 void re15_crow_death_event(void) { s_crow_gflags |= 0x1u; }
@@ -2725,21 +2732,79 @@ static void re15_crow_weave(re15_actor_t *e)
     else if (e->crow_bank == 2) e->rot_y = (int16_t)(e->rot_y - 80);   /* @0x80115ef0 */
 }
 
-/* crow screech — byte-true 0x801161e8: a vertical-distance-tiered vocalization. The original
- * layers several SE ids per tier via 0x80037edc; the crow room's SE bank holds its caws, so the
- * port plays the tier's primary caw through re15_audio_room_se (the same room-SE path the zombie
- * combat SEs use). Cited tier thresholds on +0x1ec: 1500 / 3000 / 3600. */
+/* crow screech — byte-true 0x801161e8: a vertical-distance-tiered vocalization on +0x1ec (lh),
+ * layered SE ids per tier via 0x80037edc (the SE volume args 0xa/0x28/8 are not modeled by
+ * re15_audio_room_se — id-only). Tier map re-verified against the raw bytes (audit wf_827f186d
+ * crow #8 — the old port map had SE5 in the <3600 band and an invented SE7 beyond 3600):
+ *   <1500  -> SE1+SE2            (@0x80116200 slti 1500; SE calls @0x80116208-1c)
+ *   <3000  -> SE3+SE4+SE6+SE5    (@0x80116220 slti 3000; SE calls @0x80116228-50, a0=5 @0x80116250)
+ *   <3600  -> SE0+SE7            (@0x80116254 slti 3600; SE0 vol-8 @0x8011625c-64, SE7 @0x80116268)
+ *   >=3600 -> SILENT             (@0x80116258 beq -> epilogue 0x80116278, no SE call) */
 static void re15_crow_screech(const re15_actor_t *e)
 {
     int16_t ve = e->crow_vert_err;
-    if      (ve < 1500) re15_audio_room_se(1);   /* @0x80116200/08 (nearest -> screech 1) */
-    else if (ve < 3000) re15_audio_room_se(3);   /* @0x80116220/28 (mid -> screech 3,4,6) */
-    else if (ve < 3600) re15_audio_room_se(5);   /* @0x80116254/60 (screech 5)            */
-    else                re15_audio_room_se(7);   /* @0x80116268    (far -> screech 7)      */
+    if      (ve < 1500) { re15_audio_room_se(1); re15_audio_room_se(2); }
+    else if (ve < 3000) { re15_audio_room_se(3); re15_audio_room_se(4);
+                          re15_audio_room_se(6); re15_audio_room_se(5); }
+    else if (ve < 3600) { re15_audio_room_se(0); re15_audio_room_se(7); }
+    /* >= 3600: silent (@0x80116258) */
+}
+
+/* room_coll FUN_8001c6e8 for the crow root (a0=&+0x34, a1=dim[3]=200, a2=8, a3=0x400) — the
+ * floor-Y reference under the crow (+0x1ba), refreshed EVERY root tick @0x80112158-84.
+ * Byte-true semantics (FUN_8001c6e8 decompile, RE_15_Quellcode_V2): scan SCA bands 7..0
+ * (a2=8, `uVar8 -= 0x1000` loop) for a cell CONTAINING (x,z) shrunk by r=200 per side
+ * (`x - (cell.x+r) < w - 2r` unsigned) whose attr matches `uVar8 == hw5 & 0xf002` (=> band ==
+ * floor>>4 AND u1 bit1 CLEAR) and `hw4 & 0x400` (=> u0 bit2 SET); on match return
+ * -(band+1)*1800 (`((uVar8>>12)+1) * -0x708`), else 0. GROUND-TRUTH CHECK (ROOM10C0.RDT):
+ * the SCA is all wall blockers (u0=0xff, bands 0..2) and NO cell contains the 3 crow spawns
+ * (em_set Y = 0) -> room_coll = 0 = spawn plane = perch over the open helipad, -(b+1)*1800
+ * over the wall strips — exactly the "don't land on walls" gate steer[7]/[8] implements.
+ * OPEN (sub-branch): the entity-overlap arm (`param_4 & 0x10000`==0 -> scan the actor pool
+ * @0x800b3f38 stride 0x94 via FUN_8002da4c, returning the standing entity's top Y
+ * `+0x1ba? = ent.y + height*-2`) is not ported — it only fires when the crow XZ-overlaps
+ * another actor's box. (audit wf_827f186d crow #5) */
+static int16_t re15_crow_room_coll(const re15_actor_t *e)
+{
+    if (!g_room_rdt_ok) return 0;                       /* no cells -> 0 (byte-true no-match) */
+    for (int b = 7; b >= 0; b--) {
+        for (int i = 0; i < g_room_rdt.sca_count; i++) {
+            const re15_sca_entry_t *c = &g_room_rdt.sca[i];
+            if ((c->floor >> 4) != b) continue;         /* hw5 & 0xf000 == band<<12 */
+            if (c->u1 & 0x02) continue;                 /* hw5 bit 1 must be clear (mask 0xf002) */
+            if (!(c->u0 & 0x04)) continue;              /* hw4 & 0x400 (a3 mask) */
+            if ((uint32_t)(e->x - ((int32_t)c->x + 200)) < (uint32_t)((int32_t)c->width   - 400) &&
+                (uint32_t)(e->z - ((int32_t)c->z + 200)) < (uint32_t)((int32_t)c->density - 400))
+                return (int16_t)(-(b + 1) * 1800);      /* ((band)+1) * -0x708 */
+        }
+    }
+    return 0;                                           /* `if (uVar8 == 0) return 0` */
+}
+
+/* FUN_80115f00 — the crow's PERCH-RETURN oracle (the way home after attacking), raw disasm
+ * @0x80115f10-58: `y < perch-1800 && +0x1ba == +0x1ea` -> sub 7 (descend-to-perch); else
+ * `+0x1d6 < 3` -> sub 5 (climb-out); else nothing. (audit wf_827f186d crow #4) */
+static void re15_crow_perch_return(re15_actor_t *e)
+{
+    if (e->y < e->crow_perch_h - 1800 &&                /* @0x80115f18 addiu -1800; slt */
+        e->crow_floor == e->crow_perch_h) {             /* @0x80115f28-30 lh 442 == a1(+0x1ea) */
+        re15_crow_sub(e, 7);                            /* @0x80115f58 a0=7 */
+        return;
+    }
+    if (e->crow_atk_ctr < 3) re15_crow_sub(e, 5);       /* @0x80115f44-58 sltiu 3 -> a0=5 */
 }
 
 /* the byte-true flat damage the crow deals: dive/strike -4, grab -8 (the player+0x93 hit
- * gate keeps it once-per-contact; on a lethal hit broadcast the KILL bit 0x2000 to the flock). */
+ * gate keeps it once-per-contact; on a lethal hit broadcast the KILL bit 0x2000 to the flock).
+ * PLAYER COMMANDS (audit wf_827f186d crow #2): each original hit also issues a player reaction
+ * command via 0x800aca58 — dive hit `sb 2` @0x80113b00 (+ dir aca59=facing+2 @0x80113b28,
+ * aca5a=0 @0x80113b30), grab `sb 5` @0x80113e48, lethal `sb 3` @0x80113b48 — dispatched through
+ * @0x80073f90[cmd] ([2]=0x80035af0 hit, [5]=0x80036834 grab, [3]=0x800366bc death). The port's
+ * player reaction = the hp-drop flinch detector + grab pin in game_step_common.c (cmd FSM
+ * itself = OPEN). The CRITICAL re-arm — the cmd-0 NORMAL handler prologue clearing +0x93
+ * every frame (@0x80031964 `sb zero,DAT_800acae7`, UNCONDITIONAL in LAB_800318f8) — is now
+ * wired in the game_step normal branch; without it one crow hit latched the player immune
+ * to ALL further damage forever. */
 static void re15_crow_hit_player(re15_actor_t *e, re15_actor_t *player, int dmg)
 {
     if (player->hit_react != 0) return;              /* +0x93 gate (once per contact)      */
@@ -2782,46 +2847,73 @@ static void re15_crow_steer(re15_actor_t *e, re15_actor_t *player)
     switch (e->sub_state_1) {
     case 0: case 1: case 2: case 3: {   /* DIVE-DECIDE 0x80112628 (4 commit paths, all evaluated;
                                          * NO early return — byte-true the last set_substate wins). */
-        if (e->crow_pturn != 0) {                                   /* (A) pending-turn */
+        if (e->crow_pturn != 0) {                                   /* (A) pending-turn @0x80112638-9c */
             e->crow_pturn = 0;
             e->rot_y = (int16_t)(e->rot_y + ((e->crow_mode & 1) ? 40 : -40));
             re15_crow_sub(e, (uint8_t)(e->crow_mode & 3));
         }
-        int ring = (e->grid_id < 0x80) ? 5000 : 10000;             /* (B) ring: grid<0x80 -> 5000 */
-        if (e->crow_dist < ring && e->crow_vert_err < 5400) re15_crow_sub(e, 4);
-        if ((s_crow_flock & 0x1000) && e->crow_vert_err < 5400)     /* (D) flock 0x1000 -> dive */
+        int ring = (e->grid_id < 0x80) ? 5000 : 10000;             /* (B) @0x801126b4 sltiu 0x80;
+                                                                    * 0x1388/0x2710 @0x801126c8/d4 */
+        if (e->crow_dist < ring && e->crow_vert_err < 5400) re15_crow_sub(e, 4);  /* @0x801126e8-f8 */
+        /* (C) PLAYER-DOWN latch @0x80112700-38: `lhu 0x800aca52; andi 1` -> `lh +0x1ec; slti 5400`
+         * -> `jal 0x80115d74(4)` — while the knockdown latch is set every patrol crow dives.
+         * (audit wf_827f186d crow #A — raw-disasm CONFIRMED; producer = knockdown FSM, OPEN) */
+        if ((g_aca52_flags & 1) && e->crow_vert_err < 5400) re15_crow_sub(e, 4);
+        /* (D) flock 0x1000 -> dive @0x8011273c-88: `andi 0x1000; beq zero->exit` then straight to
+         * the mod-3 pick — NO +0x1ec read in this path (the 5400 gates belong to paths B/C only;
+         * the old port gate here was invented — audit wf_827f186d crow #12). */
+        if (s_crow_flock & 0x1000)
             re15_crow_sub(e, (uint8_t)((e->crow_mode % 3) + 1));
         return;
     }
     case 5:   /* DIVE-END 0x80112bac: climbed >3600 above perch -> resume */
         if (e->y < e->crow_perch_h - 3600) re15_crow_sub(e, 9);
         return;
-    case 7: case 8:   /* 0x80112e4c / 0x801130fc: floor-ref (+0x1ba) != perch (+0x1ea) -> sub 5.
-                       * faithful-line: still airborne (y well above the perch/ground) -> abort. */
-        if (e->y < e->crow_perch_h - 400) re15_crow_sub(e, 5);
+    case 7: case 8:   /* 0x80112e4c / 0x801130fc: floor-ref (+0x1ba) != perch (+0x1ea) -> sub 5
+                       * (steer[7] @0x80112e5c-68, steer[8] @0x8011310c-18 `lh 442; lh 490; beq`)
+                       * — the "don't land on a wall strip" gate; fires ONLY where the terrain
+                       * under the crow differs from the spawn plane, never on the open floor
+                       * (the old y<perch-400 stand-in fired during every airborne descent).
+                       * (audit wf_827f186d crow #5) */
+        if (e->crow_floor != e->crow_perch_h) re15_crow_sub(e, 5);
         return;
     case 9: {   /* 0x8011325c: settle re-arm, then ATTACK-COMMIT */
-        if (e->crow_pturn != 0) {
+        if (e->crow_pturn != 0) {                       /* @0x8011326c-7c: clear +0x1d3 */
             e->crow_pturn = 0;
-            if ((e->crow_mode & 0xf) != 0) re15_crow_sub(e, 9);
-            else if (e->sub_state_1 != 6)  re15_crow_sub(e, 6);
+            if ((e->crow_mode & 0xf) != 0) re15_crow_sub(e, 9);   /* @0x80113294-a4 */
+            else if (e->crow_mode & 0x80)  re15_crow_perch_return(e);  /* @0x801132a8->2c0 jal
+                                                                        * 0x80115f00 (audit crow #4) */
+            else if (e->sub_state_1 != 6)  re15_crow_sub(e, 6);   /* @0x801132b0-b8 (+0x5!=6 -> 6) */
+            else                           re15_crow_perch_return(e);  /* +0x5==6 arm (@0x801132c0;
+                                                                        * dead in-context: +0x5==9) */
         }
+        if (e->crow_atk_ctr >= 3) re15_crow_perch_return(e);  /* @0x801132e4-f8 `lbu +0x1d6;
+                                                               * sltiu 3; miss -> jal 0x80115f00`
+                                                               * — the way home after 3 attacks
+                                                               * (audit wf_827f186d crow #4) */
         if (e->crow_parity != 0 && e->crow_armed != 0 &&
-            e->crow_dist < 10000 && e->crow_atk_ctr < 3) {          /* attack-commit */
+            e->crow_dist < 10000 && e->crow_atk_ctr < 3) {          /* attack-commit @0x8011330c-70 */
             re15_crow_sub(e, (e->grid_id & 0x80) ? 10 : 12);        /* downed->cruise, else grapple */
         }
         return;
     }
-    case 10:   /* 0x801134f8 */
-        if (e->crow_armed == 0)          { re15_crow_sub(e, 5); return; }
-        if (e->crow_dist < 2500)         { re15_crow_sub(e, 14); return; }
-        if (e->crow_vert_err >= 5401)    { re15_crow_sub(e, 5); e->crow_atk_ctr = 4; }
+    case 10:   /* 0x801134f8 — all three checks fall through to ONE epilogue @0x80113580; the
+                * LAST set_substate wins (set_substate 0x80115d74 is unconditional). The old
+                * early-return on dist<2500 skipped the vert-err override (audit wf_827f186d crow #11). */
+        if (e->crow_armed == 0)          re15_crow_sub(e, 5);       /* @0x80113508-1c */
+        if (e->crow_dist < 2500)         re15_crow_sub(e, 14);      /* @0x80113534-44 sltiu 0x9c4 */
+        if (e->crow_vert_err >= 5401)    { re15_crow_sub(e, 5); e->crow_atk_ctr = 4; }  /* @0x8011355c-7c */
         return;
-    case 11: {  /* 0x8011376c */
+    case 11: {  /* 0x8011376c — sequential like steer[10]: wall-abort, AABB, vert-err all evaluated */
+        if (e->crow_wall != 0) re15_crow_sub(e, 14);    /* @0x8011377c-90 `lbu +0x1d1; bne zero ->
+                                                         * jal 0x80115d74(0xe)` — dive-attack breaks
+                                                         * off into the bank-away on wall contact
+                                                         * (audit wf_827f186d crow #B, CONFIRMED) */
         int32_t adx = player->x - e->x, adz = player->z - e->z, ady = player->y - e->y;   /* AABB box */
         if (adx < 0) adx = -adx; if (adz < 0) adz = -adz; if (ady < 0) ady = -ady;
-        if (adx < 0xf00 && adz < 0xf00 && ady < 0x300) { re15_crow_sub(e, 14); return; }  /* 0x8001b9b4 */
-        if (e->crow_vert_err >= 5401)    { re15_crow_sub(e, 5); e->crow_atk_ctr = 4; }
+        if (adx < 0xf00 && adz < 0xf00 && ady < 0x300) re15_crow_sub(e, 14);  /* 0x8001b9b4 @0x8011379c-b0
+                                                         * (falls through to the vert check @0x801137b4) */
+        if (e->crow_vert_err >= 5401)    { re15_crow_sub(e, 5); e->crow_atk_ctr = 4; }  /* @0x801137c0-e8 */
         return;
     }
     case 12: case 13: case 15: case 16:   /* 0x80113c0c (shared) */
@@ -2882,44 +2974,63 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
         re15_crow_anim(e);
         return;
 
-    /* --- sub 6: CRUISE / oracle-driven climb-descend (altitude + yaw only) --- */
-    case 6:
+    /* --- sub 6: CRUISE / oracle-driven climb-descend (altitude + yaw only) ---
+     * move[6] 0x80112d34: the entry (+0x6==0 @0x80112d64-98) FALLS THROUGH into the main body
+     * @0x80112d9c the SAME tick, the timer decrements UNCONDITIONALLY in the branch delay slot
+     * (`addiu v1,a0,255; bne a0,zero; sb v1` @0x80112db0-b8 — 0 wraps to 255), the sub(9) call on
+     * expiry @0x80112dbc ALSO falls through to the steer/oracle/integrate, and the tick ends with
+     * anim_set f314 @0x80112e34 (was missing). (audit wf_827f186d crow #16) */
+    case 6: {
         if (e->sub_state_2 == 0) { re15_crow_clip(e, 6); e->crow_timer = (uint8_t)(e->crow_mode & 0x32); re15_audio_room_se(0); e->sub_state_2 = 1; }  /* Se(0) @0x80112d78 */
-        if (e->crow_timer == 0) { re15_crow_sub(e, 9); return; }
-        e->crow_timer--;
-        re15_enemy_steer_point(e, player->x, player->z, 0x32);
+        uint8_t t6 = e->crow_timer;
+        e->crow_timer = (uint8_t)(t6 - 1);                     /* unconditional, wraps @0x80112db8 */
+        if (t6 == 0) re15_crow_sub(e, 9);                      /* @0x80112dbc — NO return */
+        re15_enemy_steer_point(e, player->x, player->z, 0x32); /* a8f8(player,0x32) @0x80112dcc */
         e->crow_vvel = (int16_t)((e->crow_mode & 0x3f) * re15_crow_height_dir(e));
         e->y += e->crow_vvel;
+        re15_crow_anim(e);                                     /* f314 @0x80112e34 */
         return;
+    }
 
-    /* --- sub 7: CRASH-DIVE / BOUNCE --- */
+    /* --- sub 7: CRASH-DIVE / BOUNCE ---
+     * move[7] 0x80112e88: step0 (@0x80112edc-f1c) FALLS THROUGH into step1 @0x80112f20 the same
+     * tick; step1's timer decrements unconditionally (wraps 0->255, delay slot @0x80112f3c); the
+     * bounce gate measures the per-tick FLOOR ref @0x80113018-24 `lh +0x1ba; addiu -750`, not the
+     * spawn perch. (audit wf_827f186d crow #16 + #5) */
     case 7:
-        if (e->sub_state_2 == 0) { e->crow_speed = 140; e->crow_vvel = 0; re15_crow_clip(e, 5); e->crow_timer = 21; e->sub_state_2 = 1; }
-        else if (e->sub_state_2 == 1) {
-            if (e->crow_timer == 0) e->sub_state_2 = 2; else e->crow_timer--;
+        if (e->sub_state_2 == 0) { e->crow_speed = 140; e->crow_vvel = 0; re15_crow_clip(e, 5); e->crow_timer = 21; e->sub_state_2 = 1; }  /* @0x80112edc-f00 -> falls into step1 */
+        if (e->sub_state_2 == 1) {
+            uint8_t t7 = e->crow_timer;
+            e->crow_timer = (uint8_t)(t7 - 1);                 /* unconditional wrap @0x80112f3c */
+            if (t7 == 0) e->sub_state_2 = 2;                   /* @0x80112f4c-58 (falls through) */
             e->crow_speed = (int16_t)(e->crow_speed + 3);
             e->crow_vvel  = (int16_t)(e->crow_vvel + 8);
             e->y += e->crow_vvel; re15_crow_advance(e); re15_crow_anim(e);
         } else if (e->sub_state_2 == 2) {
             e->crow_vvel = (int16_t)(e->crow_vvel + 3);
             e->y += e->crow_vvel;
-            if (e->y > e->crow_perch_h - 750) { e->sub_state_2 = 3; e->crow_vvel = 0; e->crow_timer = 12; }
+            if (e->y > e->crow_floor - 750) { e->sub_state_2 = 3; e->crow_vvel = 0; e->crow_timer = 12; }  /* +0x1ba-750 @0x80113018-20 */
             re15_crow_weave(e); re15_crow_advance(e);
-        } else {   /* step 3: bounce */
+        } else if (e->sub_state_2 == 3) {   /* step 3: bounce */
             e->crow_speed = (int16_t)(e->crow_speed + 9);
             e->crow_vvel  = (int16_t)(e->crow_vvel - 9);
             e->y += e->crow_vvel;
-            if (e->crow_timer == 0) re15_crow_sub(e, 8); else e->crow_timer--;
-            re15_crow_advance(e);
+            uint8_t t7b = e->crow_timer;
+            e->crow_timer = (uint8_t)(t7b - 1);                /* unconditional wrap @0x801130d8 */
+            if (t7b == 0) re15_crow_sub(e, 8);                 /* @0x801130dc — falls to advance */
+            re15_crow_advance(e);                              /* @0x801130e4 */
         }
         return;
 
-    /* --- sub 8: DESCEND-AND-LAND (clamp to floor-400, anim end -> sub 0) --- */
+    /* --- sub 8: DESCEND-AND-LAND (clamp to FLOOR-400, anim end -> sub 0) ---
+     * move[8] 0x80113138: step0 (@0x80113168-98) FALLS THROUGH into the body @0x8011319c the
+     * same tick; the land clamp is `lh +0x1ba; addiu -400` @0x801131e4-fc — the floor under the
+     * crow, not the spawn perch. (audit wf_827f186d crow #16 + #5) */
     case 8:
-        if (e->sub_state_2 == 0) { re15_crow_clip(e, 7); e->crow_vvel = 0; e->sub_state_2 = 1; return; }
+        if (e->sub_state_2 == 0) { re15_crow_clip(e, 7); e->crow_vvel = 0; e->sub_state_2 = 1; }  /* no return — falls through */
         e->crow_vvel = (int16_t)(e->crow_vvel + 10);
         e->y += e->crow_vvel;
-        if (!(e->y < e->crow_perch_h - 400)) e->y = e->crow_perch_h - 400;   /* land clamp */
+        if (!(e->y < e->crow_floor - 400)) e->y = e->crow_floor - 400;   /* land clamp @0x801131e4-fc */
         if (re15_crow_anim(e)) { re15_crow_sub(e, 0); e->crow_diveflag = 0; e->crow_atk_ctr = 0; }
         return;
 
@@ -2974,47 +3085,90 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
             e->crow_speed = (int16_t)(e->crow_speed + e->crow_accel);
             e->crow_vvel  = (int16_t)(e->crow_vvel - 7);
             if (e->crow_dist < 600 && (uint16_t)(e->crow_vert_err - 1) < 3599 && player->hit_react == 0) {
-                e->crow_accel = -20;
+                e->crow_bank = 6;                            /* +0x1d7=6 post-hit latch @0x80113ad4-d8
+                                                              * `ori v0,6; sb v0,471` — suppresses the
+                                                              * weave re-latch (0x80115e44-4c skips on
+                                                              * ANY nonzero +0x1d7) for ~6 ticks
+                                                              * (audit wf_827f186d crow #13) */
+                e->crow_accel = -20;                         /* @0x80113ae4/aec */
                 re15_audio_room_se(4);                       /* Se(4) hit @0x80113ae8 */
-                re15_crow_hit_player(e, player, 4);          /* DIVE HIT: -4 HP @0x80113b04 */
+                re15_crow_hit_player(e, player, 4);          /* DIVE HIT: -4 HP @0x80113b04; player
+                                                              * cmd 2 @0x80113b00 + dir @0x80113b28 +
+                                                              * aca5a=0 @0x80113b30 (cmd FSM = OPEN) */
                 re15_crow_screech(e);                        /* 0x801161e8 @0x80113b7c */
             }
+            /* phase-2 tail @0x80113b90-bd0: nonzero +0x1d7 -> pose spawn 0x80019700(bank<<11,
+             * a3=0x8012110c NULL table = invisible, no port effect) + +0x1d7-- per tick
+             * (audit wf_827f186d crow #13) */
+            if (e->crow_bank != 0) e->crow_bank--;
         }
         e->y += e->crow_vvel;
         re15_crow_advance(e);
         return;
 
-    /* --- sub 12: GRAPPLE STRIKE (contact -> grab, -8 HP) --- */
+    /* --- sub 12: GRAPPLE STRIKE (contact -> grab, -8 HP) ---
+     * move[12] 0x80113c7c: step0 (@0x80113cac-d58) stores ONLY +0x8c speed / +0x1e4 vvel / +0x6
+     * step++ — NO +0x1d5 store (the old `timer = 30` was invented; the timeout @0x80113e68-78
+     * `lbu 469; addiu 255; bne; sb` decrements whatever +0x1d5 held on ENTRY, wrapping 0->255).
+     * step1's anim-wrap does `+0x6 -= 1` @0x80113d6c-8c — each completed flap cycle re-runs step0
+     * with the CURRENT mode/vert-err (fresh clip 3/4, speed 160/180, vvel sign).
+     * (audit wf_827f186d crow #10) */
     case 12:
         if (e->sub_state_2 == 0) {
             if (e->crow_mode & 1) { re15_crow_clip(e, 3); e->crow_speed = 160; }
             else                  { re15_crow_clip(e, 4); e->crow_speed = 180; }
             e->crow_vvel = (int16_t)(e->crow_mode & 0x3f);
             if (e->crow_vert_err < 2000) e->crow_vvel = (int16_t)(-e->crow_vvel);
-            e->crow_timer = 30; e->sub_state_2 = 1;
+            e->sub_state_2 = 1;                              /* NO timer write; step0 exits
+                                                              * (j 0x80113e84 @0x80113d50 — byte-true) */
             return;
         }
-        re15_crow_anim(e);
+        if (re15_crow_anim(e)) e->sub_state_2 = 0;           /* flap wrap -> +0x6-- @0x80113d6c-8c */
         e->y += e->crow_vvel;
         re15_enemy_steer_point(e, player->x, player->z, 0x32);
         re15_crow_advance(e);
         if (e->crow_contact) {                               /* +0x1d0 contact -> GRAB (@0x80113dd4) */
             e->crow_hs = 1;                                  /* +0x1d8=1 self-exempt @0x80113ddc */
             s_crow_flock = (uint16_t)((s_crow_flock & 0xfff) | 0x8000);   /* @0x80113dfc */
-            re15_crow_hit_player(e, player, 8);              /* GRAB: -8 HP @0x80113e34 */
+            re15_crow_hit_player(e, player, 8);              /* GRAB: -8 HP @0x80113e34; player cmd 5
+                                                              * @0x80113e48 (grabbed FSM = OPEN) */
             e->crow_struggle = 100;
             re15_crow_sub(e, 13);
-        } else if (e->crow_timer == 0) { re15_crow_sub(e, 5); } else e->crow_timer--;
+        } else {
+            uint8_t t12 = e->crow_timer;
+            e->crow_timer = (uint8_t)(t12 - 1);              /* leftover value, wraps @0x80113e70-78 */
+            if (t12 == 0) re15_crow_sub(e, 5);
+        }
         return;
 
     /* --- sub 13: GRAB-HOLD / FEEDING (peck, struggle drain, release -> sub 14) --- */
     case 13:
-        if (e->sub_state_2 == 0) { re15_crow_clip(e, 8); e->crow_atk_ctr++; e->crow_struggle = 100; re15_audio_room_se(2); e->crow_timer = 30; e->sub_state_2 = 1; }  /* Se(2) peck @0x80113f74 */
+        if (e->sub_state_2 == 0) {                           /* step0 0x80113ec4-fa4 */
+            re15_crow_clip(e, 8);                            /* @0x80113ec4-c8 */
+            e->crow_atk_ctr++;                               /* @0x80113ee0-e4 */
+            e->crow_struggle = 100;                          /* @0x80113ef0/ef8 (delay slot) */
+            re15_crow_screech(e);                            /* 0x801161e8 @0x80113ef4 — the entry
+                                                              * plays the distance-tiered screech AND
+                                                              * Se(2) (audit wf_827f186d crow #9) */
+            if (player->hp < 0) {                            /* lethal recheck @0x80113f08: cmd 3
+                                                              * @0x80113f20 (death FSM = OPEN) + KILL
+                                                              * broadcast @0x80113f24-30 + +0x1d8=1 */
+                s_crow_flock = (uint16_t)((s_crow_flock & 0xfff) | 0x2000);
+                e->crow_hs = 1;                              /* @0x80113f50 */
+            }
+            re15_audio_room_se(2);                           /* Se(2) @0x80113f74-78 */
+            e->crow_timer = 30;                              /* +0x1d5=0x1e @0x80113f84-88 */
+            e->sub_state_2 = 1;
+        }
         re15_crow_anim(e);
         if (e->crow_timer == 0) { e->crow_timer = 30; re15_audio_room_se(2); }  /* re-peck every 30f @0x8011400c */
         else e->crow_timer--;
         if ((e->crow_timer % 10) == 0) re15_audio_room_se(0);   /* chirp every 10f @0x80114060 */
-        e->crow_struggle = (int16_t)(e->crow_struggle - (1 + (re15_engine_rand8() % 3) * 3));
+        /* struggle drain = PAD-MASH driven, byte-true move[13] @0x80114068 `jal 0x80037024` ->
+         * @0x80114078-8c `+0x9c -= 1 + 3*ret` (drain 1 or 4): FUN_80037024 = pad word 0x800ac762
+         * & 0xf0f0 (any D-pad/face button) — mashing releases ~4x faster. The old RNG drain
+         * `1 + (rand8()%3)*3` was invented (audit wf_827f186d crow #6). */
+        e->crow_struggle = (int16_t)(e->crow_struggle - (1 + 3 * (re15_mash_pressed() ? 1 : 0)));
         if (e->crow_struggle < 0) {                          /* RELEASE */
             s_crow_flock = (uint16_t)((s_crow_flock & 0xfff) | 0x4000);
             e->crow_hs = 1;
@@ -3022,21 +3176,32 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
         }
         return;
 
-    /* --- sub 14: BANK / TURN-AROUND (regroup peel-off) --- */
+    /* --- sub 14: BANK / TURN-AROUND (regroup peel-off) ---
+     * move[14] 0x8011413c: step0 (@0x80114188-210) FALLS THROUGH into step1 @0x80114214 the same
+     * tick (yaw already rotates on the entry tick); both timers decrement unconditionally with
+     * wrap (@0x80114248-50 / @0x8011428c-94); the common tail ends with anim f314 @0x80114304
+     * (was missing). (audit wf_827f186d crow #16) */
     case 14:
         if (e->sub_state_2 == 0) {
-            re15_crow_clip(e, 4); re15_audio_room_se(0); e->crow_speed = 180; e->crow_timer = 32;  /* Se(0) screech @0x80114188 */
-            e->crow_yawrate = (e->crow_mode & 0x80) ? -60 : 60;
-            e->sub_state_2 = 1;
-        } else if (e->sub_state_2 == 1) {
-            e->rot_y = (int16_t)(e->rot_y + e->crow_yawrate);
-            if (e->crow_timer != 0) e->crow_timer--; else { e->sub_state_2 = 2; e->crow_timer = 90; }
-        } else {
-            if (e->crow_timer != 0) e->crow_timer--; else re15_crow_sub(e, 9);
+            re15_audio_room_se(0);                             /* Se(0) @0x80114188 */
+            re15_crow_clip(e, 4); e->crow_speed = 180; e->crow_timer = 32;   /* @0x80114190-b4 */
+            e->crow_yawrate = (e->crow_mode & 0x80) ? -60 : 60; /* +0x1de=0x3c, negate @0x801141e8-f4 */
+            e->sub_state_2 = 1;                                /* falls into step1 @0x80114214 */
+        }
+        if (e->sub_state_2 == 1) {
+            e->rot_y = (int16_t)(e->rot_y + e->crow_yawrate);  /* @0x80114220-30 */
+            uint8_t t14 = e->crow_timer;
+            e->crow_timer = (uint8_t)(t14 - 1);                /* unconditional wrap @0x80114250 */
+            if (t14 == 0) { e->sub_state_2 = 2; e->crow_timer = 90; }  /* @0x80114260-80 */
+        } else if (e->sub_state_2 == 2) {
+            uint8_t t14b = e->crow_timer;
+            e->crow_timer = (uint8_t)(t14b - 1);               /* unconditional wrap @0x80114294 */
+            if (t14b == 0) re15_crow_sub(e, 9);                /* @0x80114298 */
         }
         e->crow_vvel = (int16_t)((e->crow_mode & 0x3f) * re15_crow_height_dir(e));
         e->y += e->crow_vvel;
         re15_crow_advance(e);
+        re15_crow_anim(e);                                     /* f314 @0x80114304 */
         return;
 
     /* --- sub 15: HOMING DESCENT (coordinated swoop-in -> strike) --- */
@@ -3051,7 +3216,10 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
         if (re15_crow_anim(e)) e->sub_state_2 = 0;
         re15_enemy_steer_point(e, player->x, player->z, 0x32);
         e->y += e->crow_vvel;
-        if (e->crow_contact) { re15_crow_sub(e, 16); return; }      /* +0x1d0 contact -> STRIKE */
+        if (e->crow_contact) re15_crow_sub(e, 16);   /* +0x1d0 contact -> STRIKE (@0x80114464), then
+                                                      * pos_advance @0x8011446c runs REGARDLESS — the
+                                                      * contact tick still moves (audit wf_827f186d
+                                                      * crow #16; old return skipped the advance) */
         re15_crow_advance(e);
         return;
 
@@ -3066,15 +3234,21 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
         re15_crow_anim(e);
         return;
 
-    /* --- sub 17: FAST PLUNGE-TO-GROUND --- */
+    /* --- sub 17: FAST PLUNGE-TO-GROUND ---
+     * move[17] 0x80114594: step0 (@0x801145c4-f4) FALLS THROUGH into the body @0x801145f8 the
+     * same tick; the plunge stop + land gates measure the per-tick FLOOR ref (`lh +0x1ba;
+     * addiu -750` @0x80114634-40 and @0x801146a0-ac, the land commit is STRICT floor-750 < y).
+     * (audit wf_827f186d crow #16 + #5) */
     case 17:
-        if (e->sub_state_2 == 0) { re15_crow_clip(e, 3); e->crow_speed = 100; e->sub_state_2 = 1; return; }
-        re15_enemy_steer_point(e, player->x, player->z, 0x64);
-        e->crow_vvel = (int16_t)((e->crow_mode & 0x3f) + 48);
-        if (e->y < e->crow_perch_h - 750) e->y += e->crow_vvel;
-        re15_crow_advance(e);
-        re15_crow_anim(e);
-        if (e->crow_dist < 1000 && !(e->y < e->crow_perch_h - 750)) re15_crow_sub(e, 8);
+        if (e->sub_state_2 == 0) { re15_crow_clip(e, 3); e->crow_speed = 100; e->sub_state_2 = 1; }  /* no return — falls through */
+        re15_enemy_steer_point(e, player->x, player->z, 0x64);   /* a8f8(player,0x64) @0x80114600 */
+        e->crow_vvel = (int16_t)((e->crow_mode & 0x3f) + 48);    /* @0x8011461c-24 */
+        if (e->y < e->crow_floor - 750) e->y += e->crow_vvel;    /* @0x80114634-58 */
+        re15_crow_advance(e);                                    /* @0x8011465c */
+        re15_crow_anim(e);                                       /* f314 @0x80114678 */
+        if (e->crow_dist < 1000 && e->y > e->crow_floor - 750)   /* sltiu 0x3e8 @0x80114694;
+                                                                  * slt floor-750,y @0x801146a0-b0 */
+            re15_crow_sub(e, 8);
         return;
 
     default:
@@ -3187,8 +3361,10 @@ static void re15_crow_death(re15_actor_t *e)
         e->crow_speed = 60;                                          /* +0x8c=60 */
         e->crow_vvel = (int16_t)(e->crow_vvel + e->crow_grav);       /* gravity @0x80114894 */
         e->y += e->crow_vvel; re15_crow_advance(e);                  /* integrate @0x801148b4 */
-        if (e->y >= e->crow_perch_h - 400) {                         /* land: floor +0x1ba-400 (floor=perch, faithful-line) */
-            e->y = e->crow_perch_h - 400;
+        if (e->y >= e->crow_floor - 400) {                           /* land: `lh +0x1ba; addiu -400`
+                                                                      * @0x801148cc-e4 (audit wf_827f186d
+                                                                      * crow #5 — was the spawn perch) */
+            e->y = e->crow_floor - 400;
             re15_crow_clip(e, 0x0a); re15_audio_room_se(5);          /* land clip 0x0a + Se(5) @0x801148f4 */
             e->crow_timer = 11; e->sub_state_3 = 2;                  /* +0x1d5=11 */
         }
@@ -3220,13 +3396,35 @@ static void re15_crow_ai_tick(int slot)
     re15_actor_t *player = &g_actors[RE15_ACTOR_SLOT_PLAYER];
 
     /* --- ROOT pre-pass (0x80112020) --- */
-    e->crow_mode = (uint8_t)((s_crow_gflags & 0x1u) ? 1 : 0);   /* +0x1d4 = testbit(0x800b1028, 0x1f) */
-    /* DEATH promotion (@0x80112050-8c): a state-4 grid&0x40 crow dies when the scripted death bit
-     * 0x1f is set (STAGE3/5 only — byte-true unreachable in STAGE1). */
-    if (e->crow_mode && e->state == 4 && (e->grid_id & 0x40)) {
+    /* +0x1d4 = a FRESH RNG BYTE every root tick: @0x80112028 `jal 0x8001af20` (rng), stored
+     * @0x8011204c `sb v0,468(v1)` in the DELAY SLOT of the @0x80112048 testbit jal — v0 still
+     * holds the rng return there (only s0/a0/v1/a1 written in between). The old port read
+     * `crow_mode = testbit(0x800b1028,0x1f)` was a delay-slot misread (same error as
+     * RE15_CROW_AI.md:236) that zeroed every mode-derived speed/timer/dir in STAGE1.
+     * (audit wf_827f186d crow #1, HIGH) */
+    e->crow_mode = re15_engine_rand8();
+    /* DEATH promotion (@0x80112050-98): the testbit(0x800b1028,0x1f) result gates ONLY this —
+     * a state-4 grid&0x40 crow dies when the scripted death bit 0x1f is set (STAGE3/5 only). */
+    if ((s_crow_gflags & 0x1u) && e->state == 4 && (e->grid_id & 0x40)) {
         e->state = 3; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* +0x4=3, 0x80115d74(0) */
         s_crow_gflags &= ~0x1u;                                                     /* clearbit 0x1f @0x80112098 */
     }
+    /* @0x801120a0-e8: testbit(0x800b1028,0x1d) && player-cmd 0x800aca58==5 && 0x800aca5a<3 ->
+     * 0x800aca5a=3 (the FLIGHT-2 SPIN escalation of the GRABBED player command FSM). OPEN: the
+     * player command bytes aca58/aca59/aca5a are the unported player reaction dispatcher
+     * @0x80073f90 (see re15_crow_hit_player). */
+    /* GLOBAL FREEZE GATE @0x801120ec-124 (audit wf_827f186d crow #7): skip the state dispatch +
+     * post-pass iff (g_pauseflags & 0x20000000) && !(grid_id & 0x20) — NOTE the crow's grid&0x20
+     * is a freeze-EXEMPTION (`lbu +0x9; andi 0x20; beq zero -> skip` @0x80112114-20), NOT the
+     * zombie-style OR-skip. The frozen crow still draws its shadow (@0x8011221c-234, render-side). */
+    if (s_ai_paused && !(e->grid_id & 0x20)) return;
+    /* +0x82 = -(y/1800) @0x80112128-54 (mult 0x91a2b3c5; mfhi+addu; sra 10; negate) — the crow's
+     * altitude band byte, refreshed every unfrozen root tick (audit wf_827f186d crow #15). */
+    e->floor = (uint8_t)(-(e->y / 1800));
+    /* +0x1ba floor-Y refresh @0x80112158-84: room_coll FUN_8001c6e8(&+0x34, a1=dim[3]=200
+     * (lhu +0x78[6] @0x8011216c), a2=8, a3=0x400) every unfrozen root tick, ALL states
+     * (audit wf_827f186d crow #5). */
+    e->crow_floor = re15_crow_room_coll(e);
 
     switch (e->state) {
     case 0: {  /* INIT — FUN_80111a4c: count-flock, capture perch, lift off, enter ACTIVE */
@@ -3236,9 +3434,11 @@ static void re15_crow_ai_tick(int slot)
         s_crow_flock    = (uint16_t)(n << 4);        /* 0x800aca50 = count<<4 (@FUN_80111a4c) */
         e->crow_perch_h = (int16_t)e->y;             /* +0x1ea = spawn Y                      */
         e->y           -= 400;                       /* +0x38 -= 400 lift-off                 */
-        e->crow_mode    = 0;                          /* +0x1d4 = testbit(0x800b1028,0x1f) — byte-true 0
-                                                       * in STAGE1: bit 0x1f is set only by STAGE3/
-                                                       * STAGE5 handlers, never STAGE1 (root @0x80112048) */
+        e->crow_mode    = 0;                          /* +0x1d4 = 0: the INIT preamble clears the
+                                                       * flight block +0x1d0..+0x1ec (FUN_80111a4c);
+                                                       * the root pre-pass overwrites it with a fresh
+                                                       * rng byte every tick from the next tick on
+                                                       * (@0x80112028/0x8011204c) */
         e->crow_vvel = 0; e->crow_speed = 0; e->crow_atk_ctr = 0; e->crow_diveflag = 0;
         e->crow_armed   = 1;                          /* +0x1db = 1 — byte-true (FUN_80111a4c: grid&0x10
                                                        * -> 0, else -> 1; the ROOM10C0 crows have grid=0) */
@@ -3251,30 +3451,62 @@ static void re15_crow_ai_tick(int slot)
         break;
     }
 
-    case 1: {  /* ACTIVE (0x80112420): sense -> flock-dispatch -> steer -> move -> post-pass */
-        e->crow_parity = (uint8_t)(e->crow_parity ^ 1);              /* +0x1d2 = 0x8001bc08 & 1
-                                                                      * (the frame-parity/blink toggle
-                                                                      * @0x8011243c; NOT the ground
-                                                                      * floor-LOS — a crow is a flyer) */
-        e->crow_dist     = (int16_t)re15_enemy_player_dist(e, player);  /* +0x1dc SquareRoot0 */
+    case 1: {  /* ACTIVE (0x80112420): sense -> flock-dispatch -> steer -> move -> tail -> post-pass */
+        /* +0x1d2 = FUN_8001bc08() & 1 (@0x80112428 jal; @0x8011243c/0x80112454-58 andi 1 + sb):
+         * the amortized 16-tick LOS SENSOR — 1 ONLY on the phase-3 tick whose 4 staged probes
+         * (FOV cone ±0x5e8 vs facing + collision ray 0x8003dcc4(0xf00,0x300)) all passed, which
+         * also snapshots the player pos to +0x1bc/+0x1be. The old `crow_parity ^= 1` frame toggle
+         * was invented — it opened the steer[9] attack-commit every other frame regardless of
+         * facing/occlusion (audit wf_827f186d crow #3). Shares the byte-true probe the zombie
+         * root uses (re15_enemy_los_probe = the same FUN_8001bc08). */
+        e->crow_parity   = (uint8_t)(re15_enemy_los_probe(slot, e, player) & 1);
+        e->crow_dist     = (uint16_t)re15_enemy_player_dist(e, player); /* +0x1dc SquareRoot0, `sh 476`
+                                                                         * @0x801124ac; ALL consumers lhu
+                                                                         * (audit crow #14) */
         e->crow_vert_err = (int16_t)(player->y - e->y);                 /* +0x1ec (@0x801124cc) */
         if (s_crow_flock & 0xff00) re15_crow_flock_dispatch(e);        /* 0x80116068 */
+        int32_t crow_ox = e->x, crow_oz = e->z;                        /* pre-move pos for the wall sweep */
         re15_crow_steer(e, player);                                    /* steer[+0x5] */
         re15_crow_move(e, player);                                     /* move[+0x5]  */
+        /* --- ACTIVE tail (@0x80112560-0x80112614, audit wf_827f186d crow #15) --- */
+        /* OPEN (presentation-side): the vert-band proximity flags on the entity[0] WORD —
+         * `entity[0] &= 0x1fffffff` @0x80112560-70, then vert-err>=4001 -> jal 0x80012a0c(0x1770)
+         * (sets entity[0]|=0x80000000 when player-dist<6000 @0x80012a6c/84), <800 -> jal
+         * 0x80012974(0x1770) (|=0x20000000 @0x800129d4/ec), else |=0x40000000 @0x801125bc-c8.
+         * The port models only the LOW byte of +0x00 (re15_actor.flags) and has no EXE
+         * render/audio consumer of the top bits — not faked. Likewise OPEN: jal 0x80115f70
+         * @0x801125cc (altitude presentation helper: +0x9a = vert-err>=5200 ? -1 : 0 targetability
+         * latch @0x80115f88-9c, shadow scale +0xbc/+0xbe = clamp((y-floor)>>4+400, min 100)
+         * @0x80115fa0-e4, shadow tint from (y-floor)>>5+128 @0x80115fe8-...) — render-side
+         * shadow-pool fields the port draws from its own shadow path. */
+        if ((s_crow_flock & 0x800) && e->crow_armed == 0) {   /* re-arm one-shot @0x801125dc-614 */
+            s_crow_flock = (uint16_t)(s_crow_flock & 0xf0ff); /* @0x80112608-0c */
+            e->crow_armed = 1;                                /* @0x80112610-14 */
+        }
         /* ROOT post-pass body-push (aec4 @0x801121d4): crow pushed out of the player;
          * +0x1d0 = contact (the strike/grab connect the handlers read next tick). */
         e->crow_contact = (uint8_t)(re15_body_push(player, RE15_BODY_R_PLAYER, e,
                                                    (int32_t)e->hit_radius_min) ? 1 : 0);
+        /* ROOT post-pass WALL PASS (@0x801121f8-218): +0x1d1 = 0x8003b0a4(&+0x34, a1=dim[3]=200
+         * (lhu +0x78[6] @0x80112200), a2=4) — the SCA wall clamp; nonzero return = wall contact,
+         * consumed by the steer[11] dive-abort @0x8011377c-90. Port = the standard enemy wall
+         * clamp (re15_collision_constrain_enemy = the same 0x8003b0a4 pass, mask 4).
+         * (audit wf_827f186d crow #B, raw-disasm CONFIRMED) */
+        if (g_room_rdt_ok) {
+            int32_t nx = e->x, nz = e->z;
+            re15_collision_constrain_enemy(&g_room_rdt, crow_ox, crow_oz, &nx, &nz, 200, e->y);
+            e->crow_wall = (uint8_t)((nx != e->x || nz != e->z) ? 1 : 0);
+            e->x = nx; e->z = nz;
+        } else e->crow_wall = 0;
         /* GRAB-HOLD pins the player (byte-true move[12] @0x80113e48: 0x800aca58 = cmd 5 grabbed).
          * s_player_grabbed (cleared at the top of run_all) latches the pin for sub 13 = game_step
-         * skips re15_player_tick, exactly like the zombie grab. The crow releases via its own
-         * struggle drain (move[13]), not player mash — so the pin lifts when it leaves sub 13. */
+         * skips re15_player_tick, exactly like the zombie grab. */
         if (e->sub_state_1 == 13) s_player_grabbed = 1;
         break;
     }
 
     case 4: {  /* FLIGHT-2 (0x80114e54): preamble -> 0x1d-tick -> substate[+0x5] (the event crow) */
-        e->crow_dist     = (int16_t)re15_enemy_player_dist(e, player);  /* +0x1dc (@0x80114f1c) */
+        e->crow_dist     = (uint16_t)re15_enemy_player_dist(e, player); /* +0x1dc (sh @0x80114f1c) */
         e->crow_vert_err = (int16_t)(player->y - e->y);                 /* +0x1ec (@0x80114f40) */
         if ((s_crow_gflags & 0x4u) && e->sub_state_1 != 3)             /* testbit 0x1d (@0x80114f34) */
             re15_crow_sub(e, 3);                                        /* -> SPIN */

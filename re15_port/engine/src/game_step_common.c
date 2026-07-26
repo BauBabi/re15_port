@@ -315,6 +315,16 @@ void re15_game_step(const re15_game_ctx_t *c)
         if (--s_hit_flinch == 0) pl->motion = 0;
         re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
     } else {
+        /* NORMAL cmd-0 handler prologue (byte-true LAB_800318f8/FUN_80031c44): the original
+         * UNCONDITIONALLY re-arms the player hit gate every frame the player is back in NORMAL —
+         * @0x80031964 `sb zero,DAT_800acae7` (player+0x93) — and clears the knockdown latch bit —
+         * @0x80031c44 decompile: `DAT_800aca52 = DAT_800aca52 & 0xfffe`. Without the +0x93 re-arm
+         * ONE enemy hit (crow dive etc.) latched hit_react and blocked ALL later contact damage
+         * AND re15_player_take_damage (re15_damage.c gate) forever. The latch still holds through
+         * the flinch/grab/death branches above (they run INSTEAD of this one), exactly like the
+         * original's non-normal command states. (audit wf_827f186d crow #2, HIGH) */
+        pl->hit_react = 0;                       /* @0x80031964 */
+        g_aca52_flags = (uint16_t)(g_aca52_flags & 0xfffe);   /* @0x80031c44 */
         int32_t ox = pl->x, oz = pl->z;
         re15_player_tick(c->cam_view, c->pad_current);
         /* ENTITY BODY COLLISION (byte-true FUN_80031c44 order: cmd-FSM move -> FUN_8002b544 body
