@@ -2464,32 +2464,66 @@ void re15_enemy_ai_live_hurt(int slot)
     /* CLUSTER-F CORRECTED MODEL (raw @0x80105b7c/@0x80105b18): POISE +0x1dc is decremented ONCE PER
      * HIT (the @0x8011fe30 step dispatch @0x80105d28 sits INSIDE the +0x7==0 phase-0 block), persists
      * across hits (seeded (rand&3)+4 at INIT @0x8010082c, re-armed at get-up / stagger-9 exit), the
-     * stagger keeps the walk clip WITHOUT a frame reset (the recoil is a 4-frame torso bend, phases
-     * on +0x7), and the NORMAL exit is 0x10201 (engage, +0x6=1 = entry skipped) + an INLINE behavior
-     * re-roll — only a poise BREAK (+0x1dc<0) routes to the 0x11 KNOCKDOWN. */
+     * stagger keeps the walk clip WITHOUT a frame reset (the recoil is a torso bend, phased on +0x7),
+     * and the NORMAL exit is 0x10201 (engage, +0x6=1 = entry skipped) + an INLINE behavior
+     * re-roll — only a poise BREAK (+0x1dc<0) routes to the 0x11 KNOCKDOWN.
+     *
+     * TORSO-BEND CADENCE (audit wf_827f186d zombie-live ADDENDUM, re-disasm'd 2026-07-26 —
+     * CONFIRMED divergence, but with a CORRECTED count: the audit claimed 7 = 3+1+3; the raw
+     * disasm shows phase 2 FALLS THROUGH into the phase-3 body — no branch between @0x80105dd0
+     * and @0x80105dd4 — so its seed tick is already the 1st bend-up tick; the true total is
+     * 6 ticks after the hit tick, not 7, and not the port's old 5):
+     *   phase 0 (@0x80105be0-): +0x7=1, +0x9e=2 (@0x80105bf0), +0x9c=0 (@0x80105c00);
+     *   phase 1 (@0x80105d30-): spine +0x9c -= 0x80/frame (@0x80105d7c-84; the bone apply at
+     *     model+1204+100 via 0x80068098 @0x80105d80 = the deferred bone-bend layer), then the
+     *     +0x9e countdown (@0x80105d94-a4: `bne a0,zero` returns while it WAS nonzero, delay
+     *     slot always stores a0-1) -> 3 ticks, then +0x7=2 (@0x80105db8);
+     *   phase 2 (@0x80105dbc-dd0): +0x7=3, re-seed +0x9e=2, falls through;
+     *   phase 3 (@0x80105dd4-e48): spine +0x9c += 0x80/frame (@0x80105e20), same countdown
+     *     (@0x80105e38-48) -> 3 ticks total bend-up; the 3rd reaches the EXIT block @0x80105e4c. */
     if (e->sub_state_3 == 0) {                         /* phase 0 — once per HIT (+0x7 reset by damage) */
         e->hit_react  |= 0x1;                          /* +0x93 |= 1 */
         e->motion      = e->hurt_clip;                 /* +0x94 = +0x1d4 — NO +0x95 reset (walk phase
                                                         * continues; the recoil is the bend, not a clip) */
         e->speed_h     = 0x14;                         /* +0x8c = 0x14 */
         e->anim_frac   = 0;                            /* +0x8f = 0 */
-        e->sub_state_3 = 1;
+        e->sub_state_3 = 1;                            /* +0x7 = 1 @0x80105be0 */
+        e->grab_kill_ctr = 2;                          /* +0x9e = 2 @0x80105bf0 — bend-down countdown */
+        e->ai_timer    = 0;                            /* +0x9c = 0 @0x80105c00 — spine-bend accumulator */
         re15_audio_room_se(6);                         /* FUN_800453d0(6) */
         {                                              /* poise ONCE-per-hit (@0x8011fe30[+0x5]) */
             static const int8_t stun_step[12] = { 0, -2, -2, -3, -3, -3, -3, 0, 0, 0, 0, 0 };
             e->hit_stun = (int16_t)(e->hit_stun + (e->sub_state_1 < 12 ? stun_step[e->sub_state_1] : 0));
         }
-        return;
+        goto router_gate;
     }
-    if (e->sub_state_3 < 5) {                          /* the 4-frame torso-bend cadence (phases 1/3:
-                                                        * spine +-0x80/frame — bone-bend deferred; the
-                                                        * HOLD duration is the byte-true 4 ticks) */
-        e->sub_state_3++;
-        return;
+    if (e->sub_state_3 == 1) {                         /* phase 1 — bend DOWN (@0x80105d30) */
+        e->ai_timer = (int16_t)(e->ai_timer - 0x80);   /* +0x9c -= 0x80 @0x80105d7c-84 (bone apply deferred) */
+        {
+            int16_t was = e->grab_kill_ctr;            /* lbu +0x9e @0x80105d94 */
+            e->grab_kill_ctr = (int16_t)(was - 1);     /* delay slot ALWAYS stores -1 @0x80105da4 */
+            if (was != 0) goto router_gate;            /* bne a0,zero @0x80105da0 */
+        }
+        e->sub_state_3 = 2;                            /* +0x7 = 2 @0x80105db8 */
+        goto router_gate;
     }
-    /* exit gate (@0x80105b18): poise still >= 0 -> NORMAL stagger exit 0x10201 + inline re-roll
-     * (FUN_80105b7c phase 3); poise broken -> KNOCKDOWN 0x11. */
-    if (e->hit_stun >= 0) {
+    if (e->sub_state_3 == 2) {                         /* phase 2 — seed + FALL THROUGH (@0x80105dbc-dd0) */
+        e->sub_state_3   = 3;                          /* +0x7 = 3 @0x80105dc0 */
+        e->grab_kill_ctr = 2;                          /* +0x9e = 2 @0x80105dd0 */
+        /* no return: falls through into the phase-3 body (@0x80105dd0 -> @0x80105dd4) */
+    }
+    /* phase 3 body — bend UP (@0x80105dd4) */
+    e->ai_timer = (int16_t)(e->ai_timer + 0x80);       /* +0x9c += 0x80 @0x80105e20 */
+    {
+        int16_t was = e->grab_kill_ctr;                /* lbu +0x9e @0x80105e38 */
+        e->grab_kill_ctr = (int16_t)(was - 1);         /* delay slot ALWAYS stores -1 @0x80105e48 */
+        if (was != 0) goto router_gate;                /* bne a0,zero @0x80105e44 */
+    }
+    /* phase-3 completion -> the handler's UNCONDITIONAL exit block (@0x80105e4c: 0x10201 + inline
+     * re-roll). The poise check is NOT here — it is the ROUTER's gate (@0x80105b18), below, which
+     * runs EVERY tick (audit wf_827f186d zombie-live addendum: the old port only knocked down after
+     * the cadence; the router disasm shows the gate fires the same tick poise breaks). */
+    {
         int slot2 = (int)(e - g_actors);
         re15_ai_set_state_word(e, 0x10201u);           /* ACTIVE / +0x5=2 / +0x6=1 (entry SKIPPED) */
         e->hit_react &= (uint8_t)~0x1u;                /* +0x93 &= 0xfe (@0x80105f9c-fac): the hurt
@@ -2497,6 +2531,10 @@ void re15_enemy_ai_live_hurt(int slot)
                                                         * latch — the next shot/slash damages again
                                                         * (needed by the weapon_fire latch/recursion) */
         s_wander_mag[slot2] = (uint8_t)((re15_engine_rand8() & 0x1f) + 8);   /* +0x9e */
+        e->motion    = e->hurt_clip;                   /* +0x94 = +0x1d4 @0x80105e84-8c (exit re-arms the
+                                                        * walk clip — audit wf_827f186d zombie-live addendum,
+                                                        * missed exit write found in the cadence re-disasm) */
+        e->anim_frac = 7;                              /* +0x8f = 7 @0x80105e98-9c (dito) */
         {
             /* byte-true: BOTH re-roll sites read the MONOTONIC spawn counter DAT_800aca4e (never
              * decremented), not the live count — hurt-recovery @0x80105ea4 `lbu 0x800aca4e; sltiu 0x5`
@@ -2520,11 +2558,21 @@ void re15_enemy_ai_live_hurt(int slot)
             re15_ai_set_state_word(e, 0x801);
         if (re15_ai_facing_aligned(e, &g_actors[RE15_ACTOR_SLOT_PLAYER]))    /* a780 -> TURN */
             re15_ai_set_state_word(e, 0x701);
-        return;
+        /* falls into the router gate like the original (handler returns to @0x80105b18);
+         * hit_stun >= 0 is guaranteed on this path, so the gate is a no-op here. */
     }
-    e->state       = (uint8_t)RE15_AI_STATE_ACTIVE;    /* poise BROKEN -> KNOCKDOWN (@0x80105b48-68) */
-    e->sub_state_1 = 0x11;
-    e->sub_state_2 = 0;
+router_gate:
+    /* ROUTER exit gate (@0x80105b18-68), reached EVERY tick after the jalr'd handler (fallthrough
+     * from @0x80105b10): `lh +0x1dc; bgez -> return` (@0x80105b24-2c); poise BROKEN (< 0) and
+     * +0x9&0x80 clear (@0x80105b34-40; always clear on this path — the downed branch bypassed the
+     * gate via `j 0x80105b6c` @0x80105ad0/ae0) -> KNOCKDOWN: +0x4=1 (@0x80105b48), +0x5=0x11
+     * (@0x80105b58), +0x6=0 (@0x80105b68) — the SAME tick the poise step broke it, i.e. already on
+     * the phase-0 hit tick, NOT after the bend cadence. (audit wf_827f186d zombie-live addendum) */
+    if (e->hit_stun < 0) {
+        e->state       = (uint8_t)RE15_AI_STATE_ACTIVE;
+        e->sub_state_1 = 0x11;
+        e->sub_state_2 = 0;
+    }
 }
 
 /* DEATH — FUN_80106ba4 (@0x8011f7b4[3], STAGE1.BIN) -> FUN_80107cb0. The live zombie's death: a hit

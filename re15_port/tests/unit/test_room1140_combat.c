@@ -671,15 +671,48 @@ int main(void)
         if (z->state != RE15_AI_STATE_HURT || z->sub_state_1 != 2) {
             fprintf(stderr, "FAIL: (14c) shot -> HURT(2) + +0x5=weapon_id 2, state=%d +0x5=%d\n",
                     z->state, z->sub_state_1); fail = 1; }
-        re15_enemy_ai_live_tick(zslots[0]);   /* HURT phase 0: motion=hurt_clip=4, seed + decrement -2 */
-        if (z->motion != 4 || z->state != RE15_AI_STATE_HURT) {
-            fprintf(stderr, "FAIL: (14c) gunshot stagger plays motion=hurt_clip=4 + holds, motion=%d state=%d\n",
-                    z->motion, z->state); fail = 1; }
-        int gt = 0;                            /* step -2/frame, seed 4..7 -> recovers in <=4 frames */
-        while (z->state == RE15_AI_STATE_HURT && gt < 12) { re15_enemy_ai_live_tick(zslots[0]); gt++; }
+        re15_enemy_ai_live_tick(zslots[0]);   /* first HURT tick: phase 0 (poise 0-2=-2) + ROUTER gate */
+        if (z->motion != 4) {
+            fprintf(stderr, "FAIL: (14c) gunshot stagger plays motion=hurt_clip=4, motion=%d\n",
+                    z->motion); fail = 1; }
+        /* the ROUTER exit gate (@0x80105b18-68) runs EVERY tick after the jalr'd handler: poise
+         * broken (-2 < 0, `bgez @0x80105b2c` not taken) -> KNOCKDOWN 0x11 the SAME tick as phase 0,
+         * NOT after the bend cadence (audit wf_827f186d zombie-live addendum re-disasm). */
         if (z->state != RE15_AI_STATE_ACTIVE || z->sub_state_1 != 0x11) {
-            fprintf(stderr, "FAIL: (14c) gunshot HURT -> ACTIVE (+0x5=0x11), state=%d +0x5=%d\n",
+            fprintf(stderr, "FAIL: (14c) broken poise -> IMMEDIATE knockdown (+0x4=1 @0x80105b48, "
+                    "+0x5=0x11 @0x80105b58) on the hit tick, state=%d +0x5=%d\n",
                     z->state, z->sub_state_1); fail = 1; }
+
+        /* (d) the torso-bend CADENCE with poise intact (audit wf_827f186d zombie-live addendum,
+         * CONFIRMED with a corrected count): phase 0 seeds +0x9e=2 (@0x80105bf0) / +0x9c=0
+         * (@0x80105c00); 3 bend-down ticks (+0x9c -= 0x80 @0x80105d7c-84, countdown @0x80105d94-a4);
+         * phase 2 re-seeds +0x9e=2 (@0x80105dd0) and FALLS THROUGH into the phase-3 body (no branch
+         * between @0x80105dd0 and @0x80105dd4) so its tick is already the 1st bend-up tick; 3 bend-up
+         * ticks (+0x9c += 0x80 @0x80105e20, countdown @0x80105e38-48) reach the exit block
+         * @0x80105e4c -> exit 0x10201 on the 6TH tick after the hit tick. NOT the old port's 5 and
+         * NOT the audit's claimed 7 (the fallthrough disproves the separate transition tick). */
+        z->state = RE15_AI_STATE_HURT; z->grid_id = 0; z->sub_state_1 = 3; z->sub_state_2 = 0;
+        z->sub_state_3 = 0; z->hit_stun = 5; z->hurt_clip = 4; z->motion = 0; z->hit_react = 0;
+        re15_enemy_ai_live_hurt(zslots[0]);            /* hit tick: phase 0 (poise 5-3=2 >= 0) */
+        if (z->state != RE15_AI_STATE_HURT || z->motion != 4 || z->sub_state_3 != 1
+            || z->grab_kill_ctr != 2 || z->ai_timer != 0 || z->hit_stun != 2) {
+            fprintf(stderr, "FAIL: (14d) phase 0 must seed +0x7=1 (@0x80105be0) +0x9e=2 (@0x80105bf0) "
+                    "+0x9c=0 (@0x80105c00) + poise -3, state=%d mo=%d +0x7=%d +0x9e=%d +0x9c=%d stun=%d\n",
+                    z->state, z->motion, z->sub_state_3, z->grab_kill_ctr, z->ai_timer, z->hit_stun);
+            fail = 1; }
+        int ct = 0;
+        while (z->state == RE15_AI_STATE_HURT && ct < 12) { re15_enemy_ai_live_hurt(zslots[0]); ct++; }
+        if (ct != 6) {
+            fprintf(stderr, "FAIL: (14d) bend cadence must exit on the 6th tick (3+3, phase-2 "
+                    "fallthrough @0x80105dd0->dd4), ist %d\n", ct); fail = 1; }
+        if (z->state != RE15_AI_STATE_ACTIVE
+            || !(z->sub_state_1 == 2 || z->sub_state_1 == 0x13 || z->sub_state_1 == 7 || z->sub_state_1 == 8)) {
+            fprintf(stderr, "FAIL: (14d) cadence exit -> 0x10201 family (2/0x13/7/8), state=%d +0x5=%d\n",
+                    z->state, z->sub_state_1); fail = 1; }
+        if (z->motion != 4 || z->anim_frac != 7 || z->ai_timer != 0) {
+            fprintf(stderr, "FAIL: (14d) exit block re-arms +0x94=+0x1d4 (@0x80105e84-8c) + +0x8f=7 "
+                    "(@0x80105e98-9c), bend accumulator back to 0, mo=%d frac=%d +0x9c=%d\n",
+                    z->motion, z->anim_frac, z->ai_timer); fail = 1; }
         if (!fail)
             printf("  (14) HURT stagger: clip {2,3,4,5}; holds via the +0x1dc stun then ACTIVE(+0x5=0x11); "
                    "special +0x9&0x80 stays HURT; gunshot staggers\n");
