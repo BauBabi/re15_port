@@ -431,9 +431,11 @@ retry_after_latch:
         /* BYTE-TRUE target set: FUN_80011f50 iterates ALL entities and tests each one's DAMAGE HITBOX
          * (+0x78 present) — NOT a per-type whitelist. apply_hitbox gives a radius to every combat enemy
          * (zombies 0x10/0x11/0x12/0x16/0x18, dog 0x20, crow 0x21, spiders 0x25/0x26, maggot 0x27,
-         * cockroach 0x29, birkin 0x30/0x36, alligator 0x23, tyrant 0x2b, ivy 0x2d, zgirl 0x13); the
-         * non-combat types (writher 0x1a / fx-emitter 0x24 / stub 0x22 / NPC 0x40) get NO box and are
-         * excluded automatically. So gate on the hitbox, which makes every ported enemy shootable. */
+         * cockroach 0x29, birkin 0x30/0x36, alligator 0x23, tyrant 0x2b, ivy 0x2d, zgirl 0x13, AND the
+         * writher 0x1a — its INIT installs a real 300-radius +0x78 box @0x8012091c, so it IS shootable:
+         * spawn HP=0 + type<0x20 -> one hit kills, audit wf_efd92a2c writher #5); the truly non-combat
+         * types (fx-emitter 0x24 / stub 0x22 / NPC 0x40) get NO box and are excluded automatically.
+         * So gate on the hitbox, which makes every ported enemy with a box shootable. */
         if (e->hit_radius_min <= 0) continue;   /* no damage hitbox -> not a valid auto-aim target */
         if (e->state == 7) continue;   /* RE15_AI_STATE_CORPSE — already a corpse (literal: avoid the AI-header dep) */
         if ((e->hit_react & 0x3) == 0x3) continue;   /* already hit + re-touched this attack -> excluded */
@@ -969,6 +971,12 @@ void re15_enemy_apply_hitbox(re15_actor_t *a, uint8_t type)
         case 0x27: r = 1600; h = 1440; break;  /* MAGGOTS_BABY — byte-true from its +0x78 collision box
                                                 * @0x80121350 = {0,-1440,0,1600,1440,1600} (INIT
                                                 * 0x80116f50: +0x1e2=4 -> table[4] @0x80121368)  */
+        case 0x1a: r = 300;  h = 1440; break;  /* WRITHE-HAZARD (EM01A, STAGE1 ROOM1210/1211) — byte-true
+                                                * from INIT +0x78 = *(0x80120934) = box @0x8012091c =
+                                                * {0,-1440,0,300,1440,300} (radius 300) @0x8010c3bc-3c4.
+                                                * A real damage box: the writher is TARGETABLE (spawn HP=0,
+                                                * type<0x20 -> one damaging hit kills) and a solid 300-radius
+                                                * body-push obstacle (audit wf_efd92a2c writher #1/#5). */
         case 0x25: r = 1000; h = 900;  break;  /* ADULT SPIDER (EM025, STAGE2) — byte-true from its +0x78
                                                 * box A @0x80118dd4 = off(0,-900,0) half(1000,900,1000)
                                                 * (INIT 0x80110b6c: +0x78 = *(0x80118e04) = box A;

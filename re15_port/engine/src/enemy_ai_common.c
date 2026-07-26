@@ -7308,54 +7308,99 @@ static void re15_birkin_ai_tick(int slot)
     e->birkin_saved_ph2 = e->sub_state_2; e->birkin_saved_ph3 = e->sub_state_3;
 }
 
-/* ============================ ROOTED WRITHE-HAZARD (type 0x1a, EM01A) — STAGE1 ================ *
- * Byte-true from workflow wf_5c34ffe7 (root 0x8010c1ec, state table @0x8012093c). A ROOTED, ground-
- * emergent, segmented WRITHING contact-hazard: it NEVER walks/chases (zero steer 0x8001aac4 / yaw-slew
- * 0x8001a8f8 / atan2 0x8001a6d4 calls anywhere in 0x8010c014..0x8010d914), only bobs vertically and
- * rotates in place. It is UNKILLABLE — the handler sets NO HP (+0x9a) and has NO hurt/death/corpse
- * states. It does NO player damage — no write to player.hp (0x800acaee), no grab (DAT_800aca58), no
- * shared damage-entry (0x80012d60); it only arms the shared body-contact flag (+0x1b8 |= 0x12
- * @0x8010c2d8) which pushes the player out (0x8003b0a4). So the port models: INIT (record spawn pos +
- * rng writhe timers, NO HP) -> ACTIVE writhe: emerge from ground when buried (grid & 0x80 -> clip 0x1f
- * @0x80107d2c), else loop the in-place writhe clips 0/1/2 with rng-jittered timers. The exact 16-grid-
- * variant dual-table + 2D sub-brain writhe choreography is faithful-line (cosmetic; cited above). */
+/* ============================ WRITHE-HAZARD (type 0x1a, EM01A) — STAGE1 ROOM1210/1211 =========== *
+ * BYTE-TRUE REBUILD of the 0x8010c1ec family against raw STAGE1.BIN disasm (overlays @0x80100000,
+ * audit wf_efd92a2c writher). The prior port ("wf_5c34ffe7") sold this as an UNKILLABLE / harmless /
+ * zero-locomotion hazard — ALL THREE are false on hardware, and it invented a grid&0x80 emerge branch
+ * + an idle clip-cycle. State table @0x8012093c (read as 8 words):
+ *   [0]=INIT 0x8010c33c  [1]=ACTIVE 0x8010c488  [2]=HURT 0x8010d0f8  [3]=DEATH 0x8010d474
+ *   [4]=0x8010d768  [5]=0  [6]=0  [7]=CORPSE 0x8010d770 (= jr ra, inert)
+ * ACTIVE grid dispatch @0x8012095c[grid&0xf] -> dual A[sub]@0x80120968 + B[sub]@0x80120984 (0x8010c510).
+ *
+ * (#5, KILLABLE — verified here vs raw STAGE1.BIN) INIT installs a real 300-radius damage box
+ * +0x78 = *(0x80120934) = @0x8012091c = {0,-1440,0,300,1440,300} @0x8010c3bc-3c4 -> targetable by the
+ * weapon-fire scan (FUN_80011f50 tests every entity's +0x78, no whitelist). INIT writes NO HP (+0x9a)
+ * anywhere in 0x8010c33c-0x8010c484 -> spawn HP stays 0; type 0x1a<0x20 -> any damaging shot drives
+ * hp<0 -> DEATH (state 3) -> CORPSE (state 7). Death 0x8010d4c4: +0x7 phase machine — clip 3 (+0x94=3
+ * @0x8010d520), +0x8f=7 @0x8010d540, +0x93|=1 @0x8010d55c, gore 0x80019700(0x2000) @0x8010d578, play
+ * clip 3 via anim_set 0x8001f314 @0x8010d594, at completion +0x7->2 -> sw 7 into +0x4 @0x8010d5bc.
+ *
+ * (#1) Solid body-push obstacle: the ROOT arms +0x1b8|=0x12 @0x8010c2d8 and runs the push chain
+ * 0x8002b498/0x8002aec4(vs player block 0x800aca54)/0x8002b544(vs enemies)/0x8003b0a4(wall-clamp) EVERY
+ * unfrozen tick @0x8010c2e8-324. The 300-radius box the port installs makes re15_body_push_player
+ * (game_step) push the player out and re15_enemy_body_push_tail (dispatch) separate other enemies.
+ *
+ * (#2/#3) REMOVED the invented grid&0x80 emerge (the cited clip 0x1f @0x80107d2c lives in the ZOMBIE-
+ * GIRL root's code 0x80107cb0, unreachable from 0x8010c1ec — no +0x9 grid read in the writher INIT at
+ * all) and the idle clip 0->1->2 cycling. With the real rooms' grid 0x00: A[0] @0x8010c608 leaves
+ * sub 0, B[0] @0x8010c678 sets clip 0 ONCE @0x8010c6bc then only anim_set @0x8010c6f4 -> the unhit
+ * writher loops clip 0 forever, no clip changes, no movement. (rng&0x1f)+30 @0x8010c3fc seeds +0x1d0
+ * which only drives the post-hit sub2<->sub3 switch, never sub 0.
+ *
+ * (#4) INIT byte-true: +0x1bc/+0x1be=player @0x8010c368/380, flags|=0x40000000 @0x8010c390, +0x9c=0x14
+ * @0x8010c3ac, +0x78=box @0x8010c3c4, +0x1b8=0 @0x8010c3d4, +0x1b9=1 @0x8010c3e4, +0x1d0=(rng&0x1f)+30
+ * @0x8010c3fc, +0x1d2=(rng&3)+1 @0x8010c41c, part-block @0x8010c434-454 + shadow 0x8001af5c @0x8010c470.
+ * +0x8f=7 is a CLIP-START write (sub-brain / death @0x8010d540), NOT an INIT write.
+ *
+ * OPEN (latent — UNREACHABLE with the shipped grid-0x00 + HP-0 spawns; both ROOM1210/1211 = 10
+ * Sce_em_set(0x1a) records, grid byte 0x00): the 7-sub dual-brain writhe/submerge choreography —
+ * subs 1/2 translate via 0x800245d8 with +0x8c = 0x320/0x14/0xc8 @0x8010c7b4/7f4/85c; sub 3 Y-bobs
+ * +0x38=+0x9c±(int8)+0x9e @0x8010cc88; HURT flinch 0x8010d188 (clip 2 @0x8010d200, knockback
+ * pos_advance(0x800) @0x8010d2f8) decrements the +0x1d2 hit-counter, at <0 -> submerge sub 4 (clip 3
+ * @0x8010cea0); buried idle sub 5 dwell (rng&0xff)+30 @0x8010d044; re-emerge sub 6 -> sub 2 @0x8010cf60.
+ * Every one of those needs SURVIVING a hit (a 0-damage weapon row vs a HP-0 enemy) or a grid&0x1f in
+ * {1,2} spawn — neither occurs in the real rooms, so the reachable behavior is: clip-0 idle + body-push
+ * obstacle + one-hit death. The submerge cycle is documented, not invented. */
 static void re15_writher_ai_tick(int slot)
 {
     re15_actor_t *e  = &g_actors[slot];
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
 
     switch (e->state) {
-    case 0:   /* INIT 0x8010c33c: record player spawn pos (+0x1bc/+0x1be), timers, NO HP. -> ACTIVE. */
-        e->steer_x = (int16_t)pl->x; e->steer_z = (int16_t)pl->z;   /* +0x1bc/+0x1be @0x8010c368/380 */
-        e->ai_timer = 0x14;                                          /* +0x9c = 0x14 @0x8010c3ac */
-        e->anim_frac = 7;                                           /* +0x8f blend seed (writhe crossfade) */
-        e->sub_state_2 = 0; e->sub_state_3 = 0;
-        /* buried spawn (grid bit 0x80) emerges from the ground first (clip 0x1f), else writhe idle */
-        if (e->grid_id & 0x80) { e->motion = 0x1f; e->anim_frame = 0; e->sub_state_1 = 1; }  /* emerge @0x80107d2c */
-        else                   { e->motion = 0;    e->anim_frame = 0; e->sub_state_1 = 0; }
-        e->state = 1;                                               /* +0x4 = 1 @0x8010c350 */
+    case 0:   /* INIT 0x8010c33c: state->1, spawn seeds, NO HP write, NO grid&0x80 emerge. */
+        e->state = 1;                                              /* +0x4 = 1 @0x8010c350 */
+        e->steer_x = (int16_t)pl->x; e->steer_z = (int16_t)pl->z;  /* +0x1bc/+0x1be = player @0x8010c368/380 */
+        e->ai_timer = 0x14;                                        /* +0x9c = 0x14 @0x8010c3ac */
+        e->motion = 0; e->anim_frame = 0;                         /* clip 0 idle (B[0] +0x94=0 @0x8010c6bc) */
+        e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;/* grid 0 -> A[0] keeps sub 0 @0x8010c608 */
+        /* The 300-radius +0x78 box (@0x8010c3c4), flags|=0x40000000, +0x1b8/+0x1b9, the +0x1d0/+0x1d2
+         * rng seeds, the +0x188 part-block and the shadow (0x8001af5c) are engine bookkeeping; the port
+         * installs the box via re15_enemy_apply_hitbox(0x1a) at spawn and models the reachable idle +
+         * death only (the submerge seeds feed the OPEN latent cycle documented above). NO +0x9a set. */
         break;
 
-    case 1: {  /* ACTIVE writhe (0x8010c488): rooted — X/Z (+0x34/+0x3c) are NEVER advanced. Emerge if
-                * buried, then loop the in-place writhe clips with rng-jittered dwell timers. */
-        (void)pl;
-        if (e->sub_state_1 == 1) {          /* EMERGE from ground: play clip 0x1f once -> writhe idle */
-            if (++e->anim_frame >= 40) { e->sub_state_1 = 0; e->motion = 0; e->anim_frame = 0; }
-        } else {                            /* WRITHE: cycle the twitch clips 0/1/2 on a jittered timer */
-            if (e->ai_timer > 0) e->ai_timer--;
-            if (e->ai_timer == 0) {
-                e->ai_timer = (int16_t)((re15_engine_rand8() & 0x1f) + 30);   /* +0x1d0 = (rng&0x1f)+30 @0x8010c3fc */
-                e->motion = (uint8_t)((e->motion >= 2) ? 0 : e->motion + 1);  /* writhe clips 0/1/2 (faithful) */
-                e->anim_frame = 0; e->anim_frac = 7;
+    case 1:   /* ACTIVE 0x8010c488 -> A[0]/B[0]: grid-0 rooted idle. X/Z (+0x34/+0x3c) NEVER advanced;
+               * clip 0 looped by anim_set. No clip cycling, no emerge — those were invented (#2/#3). */
+        e->motion = 0;                                            /* B[0] +0x94=0 @0x8010c6bc */
+        e->anim_frame++;                                         /* clip-0 anim advances, looped @0x8010c6f4 */
+        break;
+
+    case 2:   /* HURT 0x8010d0f8 (LATENT: only reachable via a 0-damage weapon vs the HP-0 spawn). Flinch
+               * clip 2 @0x8010d200; the +0x1d2 hit-counter -> submerge sub 4 @0x8010d144 is OPEN (above).
+               * Resume the idle rather than invent the unmodeled submerge transition. */
+        e->motion = 2; e->anim_frac = 7;                         /* +0x94=2 flinch, +0x8f=7 clip-start blend */
+        if (re15_enemy_clip_done(e)) { e->state = 1; e->sub_state_1 = 0; }
+        else e->anim_frame++;
+        break;
+
+    case 3:   /* DEATH 0x8010d474 -> 0x8010d4c4 (+0x7 phase machine): clip 3 topple + gore -> CORPSE 7. (#5) */
+        if (e->sub_state_3 == 0) {                                /* +0x7==0 @0x8010d510: arm clip 3 + gore */
+            e->sub_state_3 = 1;                                   /* +0x7 = 1 @0x8010d510 */
+            e->motion = 3; e->anim_frame = 0;                     /* +0x94=3 @0x8010d520, +0x95=0 @0x8010d530 */
+            e->anim_frac = 7;                                     /* +0x8f=7 @0x8010d540 */
+            e->hit_react |= 1;                                    /* +0x93 |= 1 @0x8010d55c */
+            re15_enemy_death_fx(e);                               /* gore 0x80019700(0x2000) @0x8010d578 */
+        } else {                                                 /* +0x7==1 @0x8010d580: play clip 3 (anim_set) */
+            if (re15_enemy_clip_done(e)) {                        /* clip complete -> +0x7->2 @0x8010d5b0 */
+                e->state = 7; e->sub_state_1 = 0; e->sub_state_3 = 0;  /* sw 7 into +0x4 @0x8010d5bc */
             } else {
-                e->anim_frame++;            /* twitch anim advances in place */
+                e->anim_frame++;
             }
         }
-        break; }
+        break;
 
-    default:  /* UNKILLABLE: it has no hurt/death state. If the damage entry ever forced state 2/3,
-               * snap it back to writhing (byte-true: 0x1a can never leave the writhe machine). */
-        e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;
+    case 7:   /* CORPSE 0x8010d770 = jr ra: inert, no fade. */
+    default:  /* latent submerge states (4/5/6, OPEN above): freeze — no invented transition. */
         break;
     }
 }
@@ -8379,10 +8424,13 @@ void re15_enemy_ai_run_all(int combat_active)
                 e->x = nx; e->z = nz;
             }
         }
-        else if (t == 0x1a) {   /* ROOTED WRITHE-HAZARD (type 0x1a, EM01A) — anchored, unkillable, no
-                                 * damage. NO wall-clamp: it never advances X/Z, so there is nothing to
-                                 * constrain (byte-true: zero locomotion primitives in the handler). */
+        else if (t == 0x1a) {   /* WRITHE-HAZARD (type 0x1a, EM01A) — anchored, KILLABLE, solid 300-radius
+                                 * body obstacle. The root runs the push chain 0x8002b498/aec4/b544/b0a4
+                                 * every tick (@0x8010c2e8-324): re15_body_push_player (game_step) pushes
+                                 * the player out, body_push_tail here separates other enemies (audit
+                                 * wf_efd92a2c writher #1). NO wall-clamp: it never advances its own X/Z. */
             re15_writher_ai_tick(s);
+            re15_enemy_body_push_tail(s, e);                  /* b544 body separation (root tail @0x8010c300) */
         }
         else if (t == 0x23) {   /* ALLIGATOR boss (type 0x23, EM023, STAGE2) — giant ground walk-chaser +
                                  * grab-eat. SCA wall-clamp after the tick like the dog/zombie. */

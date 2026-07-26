@@ -7,7 +7,7 @@
  *   (1) ALLIGATOR (0x23): shootable, pistol -30.
  *   (2) TYRANT (0x2b): shootable, pistol -16.
  *   (3) IVY (0x2d): TARGETABLE but WEAPON-IMMUNE (hit registers, 0 damage).
- *   (4) WRITHER (0x1a, no hitbox): NOT targetable at all.
+ *   (4) WRITHER (0x1a): targetable via its 300-radius +0x78 box, KILLABLE in one hit (spawn HP=0).
  */
 #include <stdio.h>
 #include <string.h>
@@ -56,18 +56,22 @@ int main(void)
         else printf("  (3) IVY (0x2d): targetable but WEAPON-IMMUNE (hit registers, 0 damage)\n");
     }
 
-    /* (4) WRITHER (0x1a): no hitbox -> NOT targetable */
+    /* (4) WRITHER (0x1a): byte-true KILLABLE — the INIT +0x78 box @0x8012091c makes it targetable, and
+     * its spawn HP=0 (INIT writes no +0x9a) means one damaging shot -> hp<0 -> DEATH (audit wf_efd92a2c
+     * writher #5). The old test pinned the inverse ("no hitbox -> not targetable") = the wrong behavior. */
     {
         memset(g_actors, 0, sizeof g_actors);
         re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
         pl->active = 1; pl->type = 0; pl->x = 0; pl->z = 0; pl->rot_y = 0; pl->floor = 0; pl->hp = 100;
         re15_player_death_reset();
         re15_actor_t *e = &g_actors[1];
-        e->active = 1; e->type = 0x1a; e->state = 1; e->x = 0; e->z = 800; e->rot_y = 0;
+        e->active = 1; e->type = 0x1a; e->state = 1; e->x = 0; e->z = 800; e->rot_y = 0; e->hp = 0;
         re15_enemy_apply_hitbox(e, 0x1a);
-        if (re15_player_weapon_fire(2) != 0 || e->hit_radius_min != 0) {
-            fprintf(stderr, "FAIL(4): WRITHER (0x1a, no hitbox) must NOT be targetable\n"); fail = 1; }
-        else printf("  (4) WRITHER (0x1a): no hitbox -> correctly NOT targetable\n");
+        int ret = re15_player_weapon_fire(2);
+        if (ret == 0 || e->hit_radius_min != 300 || e->state != 3) {
+            fprintf(stderr, "FAIL(4): WRITHER (0x1a) must be targetable+killable, ret=%d box=%d hp=%d state=%d\n",
+                    ret, e->hit_radius_min, e->hp, e->state); fail = 1; }
+        else printf("  (4) WRITHER (0x1a): 300-box targetable, HP-0 spawn -> one hit -> DEATH (hp=%d state=%d)\n", e->hp, e->state);
     }
 
     if (fail) { printf("ENEMY-SHOOTABLE: FAIL\n"); return 1; }
