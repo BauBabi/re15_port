@@ -368,6 +368,23 @@ typedef struct {
     int16_t  spider_home_x;  /* +0x1d8: cached spawn X (u16) */
     int16_t  spider_home_y;  /* +0x1d6: cached spawn Y (u16) — the vertical emerge anchor */
     int16_t  spider_home_z;  /* +0x1da: cached spawn Z (u16) */
+
+    /* ---- G-Birkin BOSS (type 0x30/0x36, EM030/EM036) — byte-true 0x80116230 family (STAGE3.BIN).
+     * The shared boss root snapshots/decrements these each root tick; the ACT/HURT/DEATH sub-machines
+     * read them. Dedicated port fields for the PSX offsets that overlap the zombie/dog work bytes above
+     * (same pattern as the dog_ / crow_ / mag_ / spider_ groups). hit_stun already carries +0x1dc. */
+    uint8_t  birkin_flags;   /* +0x1dd: bit0(0x1)=run-off active (root steers to override pt), bit2(0x4)=
+                              * heave toggle (wounded, gates DECIDE mutate), bit3(0x8)=mutating (revive-guard) */
+    uint8_t  birkin_hurt_cd; /* +0x1de: HURT lockout countdown (set 9 on flinch @0x8011a0c4; at 0 clears +0x93&1) */
+    uint8_t  birkin_atk_cd;  /* +0x1df: lunge/tackle cooldown (sub-3 done 0x3c/abort 0x1e, sub-7 done 0xa) */
+    uint8_t  birkin_saved_state, birkin_saved_sub, birkin_saved_ph2, birkin_saved_ph3; /* +0x1d8 word snapshot
+                              * of +0x4 each root tick (@0x80116698); HURT/revive resume +0x4=*(+0x1d8) */
+    int16_t  birkin_runoff_x, birkin_runoff_z; /* +0x1d4/+0x1d6: death-morph run-off point (-22000,-12000) */
+    uint8_t  birkin_pause;   /* +0x9e: ACT[1] two-phase close-in pause countdown (0x5a) */
+    uint8_t  birkin_grab;    /* PORT-LOCAL persistent latch for the GLOBAL grab channel DAT_800aca58==5
+                              * (aca58 is engine-global, and run_all clears s_player_grabbed each frame): set on
+                              * a claw connect, re-asserts s_player_grabbed each tick so the HUB DECIDE grab-tail
+                              * (which gates on aca58==5) is reachable; cleared on throw/HURT/death. */
 } re15_actor_t;
 
 extern re15_actor_t g_actors[RE15_ACTOR_MAX];
