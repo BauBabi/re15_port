@@ -6461,20 +6461,33 @@ static void re15_zgirl_ai_tick(int slot)
     }
 }
 
-/* ============================ ADULT SPIDER (type 0x25, EM025 = SPIDER) — Wave 1 ============= *
- * Byte-true 0x801109e4 family (STAGE2.BIN; workflow wf_1f5685b3-a78, 12 agents adversarially verified).
- * The larger MOBILE counterpart to the ported 0x26 SPIDER_BABY. Root 0x801109e4 (pause-gate DAT_800aca40
- * &0x20000000, skip-gate +0x9&0x20) dispatches +0x4 via @0x80118e24 (16 states) -> shared body-tail
- * (0x8002b498 contact-clear, 0x8002aec4+0x8002b544 body-push, 0x8003b0a4 SCA-wall-clamp, 0x8001b064 box-
- * rebuild) — a ground creature like the maggot. The ACTIVE brain (state[1] 0x80110e50) is a DUAL-TABLE
- * A/B brain (grid-DECIDE @0x80118e44 by +0x9 gated on +0x5==0, substep-ACT @0x80118e64 by +0x6). Its
- * attack is a GRAB (latch DAT_800aca58=2 + a keep-alive clamp; NO direct player.hp write anywhere in
- * 0x801109e4-0x801158a0 — the shared player grab-FSM applies the damage). WAVE 1: INIT + chase + killable.
- * DEFERRED to wave 2 (needs a STAGE2 provoke via the repacker + the DAT_800aca58=2 player-FSM): the exact
- * grab damage/pin, the full grid/substep dispatch, the ceiling-drop variant, the exact chase speed. */
+/* ============================ ADULT SPIDER (type 0x25, EM025 = SPIDER) ====================== *
+ * BYTE-TRUE rebuild of the 0x801109e4 family (STAGE2.BIN, overlay base 0x80100000; audit wf_efd92a2c
+ * adult-spider — all 25 finder claims re-verified against RAW disasm, none refuted). Root 0x801109e4
+ * (pause-gate DAT_800aca40&0x20000000, skip-gate +0x9&0x20) dispatches +0x4 via the 16-entry state
+ * table @0x80118e24 -> shared body-tail (contact-clear/body-push/SCA-wall-clamp/box-rebuild). The
+ * ACTIVE brain (state[1] 0x80110e50) is a DUAL-TABLE A/B FSM: grid-DECIDE @0x80118e44 by +0x9 (ONLY
+ * when the commit-latch +0x5==0) then substep-ACT @0x80118e64 by +0x6 (ALWAYS). Its attack is a GRAB
+ * (latch DAT_800aca58=2 + keep-alive clamp; NO direct player.hp write anywhere — the shared player
+ * grab-FSM applies the damage).
+ *   DECIDE cascades (each matching branch overwrites +0x6, LAST wins): ROAM @0x80111040 (grid 0),
+ * APPROACH @0x80111240 (grid 1/5), ATTACK @0x80111488 (grid 2). NONE ever writes sub2=4 — CHASE is
+ * reached ONLY from SCAN-faced and HURT-recover (the old port's `else if(los)->CHASE` was invented).
+ * After a GRAB-A the brain resets grid:=0 @0x801126bc (ROAM family); GRAB-B re-rolls grid:=rng&1
+ * @0x80112a84. Field reuse: +0x5=sub_state_1, +0x6=sub_state_2, +0x7=sub_state_3(phase), +0x9c=ai_timer,
+ * +0x1d6=dog_atk_cd(lockout), +0x1d4=dog_dist, +0x8c=crow_speed, +0x1e6=speed_h(turn/scan latch),
+ * +0x1dc=ai_target_x(stuck ctr).
+ *   HONEST-OPEN (subsystem-scale, the port abstracts these): CLIMB/HOP/CEILING subs 9/10/12/13 and the
+ * GRAB-A wall/ceiling transit (SCA +0x90/+0x1b4 data, wall-helper 0x801118a8); the 9-phase AMBUSH wall-
+ * DROP trajectory (Y-descent/rot_x/floor) — only its trigger-gate is modeled; leg-dismember/debris
+ * (model-part pool, +0x93&0x40) and the blood/gore FX 0x80019700; CORPSE color-tint/sink and DEATH
+ * gore phases (render). The 0x80012aa4(4000) body-contact call @0x80110fd0 and +0x166=0xccc @0x80110df8
+ * (unidentified consumer) are not modeled. */
 static const uint16_t s_aspider_hp_row[16] =    /* HP table @0x8011761c = HPbase 0x8011717c + 0x25*0x20 */
     { 76,105,125,78,80,109,129,83,113,132,87,117,136,93,99,121 };   /* hp = row[rng()&0xf] @0x80110da0 */
-/* ROAM (grid 0) idle-next-substep table @0x80118ea4 [2 rows x 8, idx=(LOS&1)*8 + (rng&7)] (byte-true). */
+/* idle-next-substep table @0x80118ea4 [2 rows x 8, idx=(LOS&1)*8 + (rng&7)] (byte-true). NOTE: consumed
+ * ONLY by the grid-0 IDLE substep after its dwell timer @0x80111714-44 — NOT by the ROAM DECIDE (which is
+ * the 6-branch cascade @0x80111040). (audit wf_efd92a2c adult-spider #25) */
 static const uint8_t s_aspider_idle_next[16] =
     { 0x02,0x01,0x02,0x02,0x02,0x01,0x02,0x05,   /* row0 (no LOS) */
       0x0b,0x04,0x05,0x0b,0x03,0x05,0x04,0x04 }; /* row1 (LOS) */
@@ -6496,154 +6509,274 @@ static void re15_adult_spider_ai_tick(int slot)
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
 
     switch (e->state) {
-    case 0:   /* INIT 0x80110b6c: -> ACTIVE, HP row, clip 0x10, steer=player */
+    case 0:   /* INIT 0x80110b6c: -> ACTIVE/AMBUSH, HP row, clip 0x10, steer=player */
         if (e->hp <= 0) e->hp = (int16_t)s_aspider_hp_row[re15_engine_rand8() & 0xf];  /* +0x9a @0x80110da0 */
-        e->motion = 0x10; e->anim_frame = 0; e->anim_frac = 0; e->hit_react = 0;   /* clip 0x10 @0x80110b90 */
+        e->motion = 0x10; e->anim_frame = 0; e->anim_frac = 0; e->hit_react = 0;   /* clip 0x10 @0x80110b90, +0x8f=0 @0x80110bb0, +0x93=0 @0x80110bc0 */
         e->steer_x = (int16_t)pl->x; e->steer_z = (int16_t)pl->z;   /* +0x1bc/+0x1be = player @0x80110bd8/bf0 */
-        e->ai_timer = 0; e->dog_atk_cd = 0; e->dog_dist = 0;        /* clear +0x9c/+0x1dc lockout etc */
+        e->ai_timer = 0; e->dog_atk_cd = 0; e->dog_dist = 0; e->ai_target_x = 0;  /* clear +0x9c/+0x1d6/+0x1dc */
         e->sub_state_2 = 0; e->sub_state_3 = 0;
-        /* grid-branch (byte-true @0x80110b6c, ceiling-drop cluster CONFIRMED): grid 0x40 -> state 4 sub 0,
-         * grid 0x41 -> state 4 sub 1 (the AMBUSH cling-approach @0x80114ec8, 9-phase @0x8010027c) — the
-         * ROOM2060 ground spiders spawn grid 0x41; grid 2-0x1f -> ceiling-drop (y=-10800; unexercised);
-         * else -> ACTIVE. */
-        if (e->grid_id == 0x40 || e->grid_id == 0x41) {
-            e->state = 4; e->sub_state_1 = (uint8_t)(e->grid_id & 1);
-        } else {
-            if ((unsigned)((e->grid_id & 0xffu) - 2u) < 0x1eu) e->y = -10800;   /* ceiling-drop start (unexercised) */
-            e->state = 1; e->sub_state_1 = 0;
+        /* INIT pose-cluster (byte-true @0x80110c20-cc8): grid<2 -> rot_x/rot_z=0, Y=-1800*floor
+         * (@0x80110c34-74); grid 2..0x1f -> rot_x=0, rot_z(pitch)=0x800, Y=-10800, grid:=2 (ceiling-
+         * drop, @0x80110c84-cc8). @0x80110df8 +0x166=0xccc (unidentified consumer, no port field, OPEN). */
+        if ((e->grid_id & 0xf) < 2) {                                    /* grid<2 @0x80110c28 */
+            e->rot_x = 0; e->rot_z = 0; e->y = -1800 * (int32_t)e->floor;         /* @0x80110c54-74 */
+        } else if ((unsigned)((e->grid_id & 0xffu) - 2u) < 0x1eu) {      /* grid 2..0x1f @0x80110c90 */
+            e->rot_x = 0; e->rot_z = 0x800; e->y = -10800; e->grid_id = 2;        /* pitch + grid:=2 @0x80110cac-cc */
         }
+        /* grid 0x40 -> state 4 sub 0, grid 0x41 -> state 4 sub 1 (AMBUSH) @0x80110cd0-14; else ACTIVE. */
+        if (e->grid_id == 0x40)      { e->state = 4; e->sub_state_1 = 0; }   /* +0x4=0x004 @0x80110cf0 */
+        else if (e->grid_id == 0x41) { e->state = 4; e->sub_state_1 = 1; }   /* +0x4=0x104 @0x80110d14 */
+        else                         { e->state = 1; e->sub_state_1 = 0; }
         break;
 
-    case 1: {  /* ACTIVE brain 0x80110e50 — the byte-true TWO-TABLE driver (workflow wf_3467b541-a93,
-                * grid-DECIDE + substep-ACT adversarially CONFIRMED). Every frame: LOS + dist, then
-                * grid-DECIDE @0x80118e44[+0x9] (ONLY if the +0x5 commit-latch is 0), then substep-ACT
-                * @0x80118e64[+0x6] (ALWAYS). +0x5=commit-latch, +0x6=substep, +0x7=grab-step. */
-        int los = re15_enemy_los_probe(slot, e, pl) & 1;      /* +0x1d0 bit0 = clear LoS @0x80110e50 */
-        int32_t dist = re15_enemy_player_dist(e, pl);         /* SquareRoot0 -> +0x1d4 */
+    case 1: {  /* ACTIVE brain 0x80110e50 — DUAL-TABLE driver. Head: LOS(+0x1d0 bit0)+dist(+0x1d4). Then
+                * grid-DECIDE @0x80118e44[+0x9] ONLY if the commit-latch +0x5==0, then substep-ACT
+                * @0x80118e64[+0x6] ALWAYS. Tail: lockout-- and stuck-counter (byte-true @0x80110f8c). */
+        int p = re15_enemy_los_probe(slot, e, pl);            /* 0x8001bc08 -> +0x1e0 @0x80110e58 */
+        int los, rr; int32_t dist;
+        if (p != 2) e->member_0b = (uint8_t)(p & 1);          /* +0x1d0 bit0 LATCHED on verdict tick @0x80110e70-bc */
+        los  = e->member_0b & 1;
+        dist = re15_enemy_player_dist(e, pl);                 /* SquareRoot0 -> +0x1d4 @0x80110efc */
         e->dog_dist = (int16_t)dist;
-        if (e->dog_atk_cd) e->dog_atk_cd--;                   /* +0x1d6 post-grab lockout */
 
-        if (e->sub_state_1 == 0) {                            /* grid-DECIDE (grid fixed at spawn; no +0x9 write) */
+        if (e->sub_state_1 == 0) {                            /* grid-DECIDE gated on +0x5==0 @0x80110f20 */
             int grid = e->grid_id & 0xf;
-            if (grid == 1 || grid == 5) {                     /* APPROACH 0x80111240 */
-                if (e->dog_atk_cd == 0 && dist < 7500 && los) {          /* lunge-trigger @0x80111368 */
-                    e->sub_state_1 = 1; e->sub_state_2 = (uint8_t)(6 + (re15_engine_rand8() & 1)); e->sub_state_3 = 0;
-                } else if (los) { e->sub_state_1 = 1; e->sub_state_2 = 4; e->sub_state_3 = 0; }  /* else CHASE [4] */
-            } else if (grid == 2) {                           /* ATTACK 0x80111488 */
-                if (e->dog_atk_cd == 0 && dist < 3000) { e->sub_state_1 = 1; e->sub_state_2 = 8; e->sub_state_3 = 0; }
-                else if (los) { e->sub_state_1 = 1; e->sub_state_2 = 4; e->sub_state_3 = 0; }
-            } else {                                          /* ROAM 0x80111040: idle-next table @0x80118ea4 */
-                int idx = (los ? 8 : 0) + (re15_engine_rand8() & 7);
-                e->sub_state_1 = 1; e->sub_state_2 = s_aspider_idle_next[idx]; e->sub_state_3 = 0;
+            if (grid == 1 || grid == 5) {                     /* APPROACH 0x80111240 — 7-branch cascade */
+                int faced80  = re15_dog_arc(e, pl, 0x7fff, 0x80);   /* +0x1e2 = arc_test(0x80) @0x80111258 (==0 -> faced) */
+                if (los && re15_dog_arc(e, pl, 0x7fff, 0x100)) {}   /* +0x1e4 = arc_test(0x100) @0x80111270 (stored, no reachable consumer) */
+                /* 0x701-latch && NOT-faced80 && aca5a==2 -> TURN(3) @0x8011128c-dc: modeled without the
+                 * player-grab globals (aca58/aca5a not tracked in port) — OPEN, folded into the dist<8000 branch */
+                if (dist < 8000 && !faced80) { e->sub_state_1 = 1; e->sub_state_2 = 3; e->sub_state_3 = 0; }  /* not facing -> TURN @0x801112ec-320 */
+                if (e->dog_atk_cd == 0) {                     /* lockout gate @0x80111330 */
+                    if (dist < 7500 && los) {                 /* lunge-trigger @0x80111340-80 */
+                        e->sub_state_1 = 1; e->sub_state_2 = (uint8_t)(6 + (re15_engine_rand8() & 1)); e->sub_state_3 = 0;
+                    }
+                    if (dist < 6000 && faced80 && e->floor >= pl->floor) {   /* facing + close + floor-ok -> fixed SPIT(7) @0x80111384-e0 */
+                        e->sub_state_1 = 1; e->sub_state_2 = 7; e->sub_state_3 = 0;
+                    }
+                }
+                if (e->ai_target_x >= 31) { e->sub_state_1 = 1; e->sub_state_2 = 0xa; e->sub_state_3 = 0; }  /* stuck>=31 -> reroute(0xa) @0x80111440-70 */
+            } else if (grid == 2) {                           /* ATTACK 0x80111488 — 4-branch */
+                if (dist < 3000 && e->dog_atk_cd == 0) { e->sub_state_1 = 1; e->sub_state_2 = 8; e->sub_state_3 = 0; }  /* -> GRAB-B @0x8011149c-d0 */
+                else if (dist >= 5001) {                      /* dist>=5001 -> SCAN(2) @0x8011151c-4c */
+                    e->sub_state_1 = 1; e->sub_state_2 = 2; e->sub_state_3 = 0;
+                    if (!re15_dog_arc(e, pl, 0x7fff, 0x80)) { e->sub_state_2 = 0xb; }  /* + not-faced -> CREEP(0xb) @0x80111550-a4 */
+                }
+            } else {                                          /* ROAM 0x80111040 — 6-branch cascade (grid 0) */
+                if (dist < 6000 && !los) { e->sub_state_1 = 1; e->sub_state_2 = 3; e->sub_state_3 = 0; }  /* close, no LOS -> TURN(3) @0x80111058-88 */
+                if (e->dog_atk_cd == 0) {                      /* +0x1d6==0 gate @0x80111098 */
+                    if ((re15_engine_rand8() & 0xff) == 0 && los) { e->sub_state_1 = 1; e->sub_state_2 = 6; e->sub_state_3 = 0; }  /* rare LOS -> GRAB-A(6) @0x801110a8-ec */
+                    if (dist < 7000 && re15_dog_arc(e, pl, 0x7fff, 0x80) == 0 && e->floor >= pl->floor) {  /* not-faced + floor -> 6+rng&1 @0x80111104-64 */
+                        e->sub_state_1 = 1; e->sub_state_2 = (uint8_t)(6 + (re15_engine_rand8() & 1)); e->sub_state_3 = 0;
+                    }
+                }
+                if (e->ai_target_x >= 31) { e->sub_state_1 = 1; e->sub_state_2 = 0xa; e->sub_state_3 = 0; }  /* stuck>=31 -> 0xa @0x801111c4-f4 */
+                if (pl->hit_react & 1)    { e->sub_state_1 = 1; e->sub_state_2 = 0xb; e->sub_state_3 = 0; }  /* player mid-react -> CREEP(0xb) @0x801111f8-2c */
             }
         }
 
         switch (e->sub_state_2) {                             /* substep-ACT @0x80118e64[+0x6] */
-        case 2:   /* SCAN 0x80111c5c: clip 3, rot_y += ±0x18, wander timer -> re-decide */
-            if (e->motion != 3) { re15_aspider_clip(e, 3); e->ai_timer = (int16_t)(re15_engine_rand8() & 0x3f); }
-            e->rot_y = (int16_t)((e->rot_y + ((e->ai_timer & 1) ? 0x18 : -0x18)) & 0xfff);
-            if (los && re15_dog_arc(e, pl, 0x7fff, 0x40)) { e->sub_state_2 = 4; }   /* now facing -> CHASE @0x80111d5c */
-            else if (e->ai_timer-- <= 0) { e->sub_state_1 = 0; e->sub_state_2 = (uint8_t)(los ? 4 : 0); }  /* @0x80111da8 */
-            re15_aspider_anim(e);
-            break;
-        case 3: case 5:  /* TURN-to-face 0x80111e04/0x8011207c: clip 2, slew, -> CREEP/idle when faced */
-            if (e->motion != 2) re15_aspider_clip(e, 2);
-            re15_enemy_steer_point(e, pl->x, pl->z, (e->sub_state_2 == 3) ? 0x80 : 0x20);
-            if (re15_dog_arc(e, pl, 0x7fff, 0x40)) { e->sub_state_1 = 0; e->sub_state_2 = (uint8_t)(los ? 11 : 0); }  /* @0x80111f2c */
-            re15_aspider_anim(e);
-            break;
-        case 4:   /* CHASE 0x80112004: clip 2, +0x8c += 100/frame, steer 0x30, advance forward @0x80112064 */
-            if (e->motion != 2) { re15_aspider_clip(e, 2); e->crow_speed = 0; }
-            e->crow_speed = (int16_t)(e->crow_speed + 100);
-            re15_enemy_steer_point(e, pl->x, pl->z, 0x30);
-            re15_dog_advance(e, e->crow_speed >> 5);          /* faithful: pos_advance a0<<16 GTE (>>5 stand-in) */
-            if (e->dog_atk_cd == 0 && dist < 7500 && los) { e->sub_state_1 = 0; }  /* re-decide -> may lunge */
-            re15_aspider_anim(e);
-            break;
-        case 11:  /* CREEP 0x8011302c: clip 3, +0x8c -= 20/frame, steer 0x10, advance @0x8011308c */
-            if (e->motion != 3) { re15_aspider_clip(e, 3); e->crow_speed = 400; }
-            if (e->crow_speed > 20) e->crow_speed = (int16_t)(e->crow_speed - 20);
-            re15_enemy_steer_point(e, pl->x, pl->z, 0x10);
-            re15_dog_advance(e, e->crow_speed >> 5);
-            if (e->dog_atk_cd == 0 && dist < 3000 && los) { e->sub_state_1 = 0; }
-            re15_aspider_anim(e);
-            break;
-        case 6: case 7:  /* GRAB A 0x801120b8 (walking lunge-bite, +0x7 9-phase @0x8010019c). NON-DAMAGING. */
-            if (e->sub_state_3 == 0) { re15_aspider_clip(e, 8); e->sub_state_3 = 1; }        /* [0] clip 8 windup */
-            else if (e->sub_state_3 <= 2) {                                                   /* [1/2] windup adv @100 */
-                re15_dog_advance(e, 100 >> 5);
-                if (re15_aspider_anim(e)) { re15_aspider_clip(e, 0x0b); e->sub_state_3 = 3; } /* -> clip 0xb track */
-            } else if (e->sub_state_3 == 3) {                                                 /* [3] track: face player */
-                re15_enemy_steer_point(e, pl->x, pl->z, 0x40);
-                if (re15_dog_arc(e, pl, 0x7fff, 0x40)) e->sub_state_3 = 4;                    /* faced -> STRIKE */
-                re15_aspider_anim(e);
-            } else if (e->sub_state_3 == 4) {                                                 /* [4/5] STRIKE adv @300 */
-                re15_enemy_steer_point(e, pl->x, pl->z, 0x10);
-                re15_dog_advance(e, 300 >> 5);
-                if (pl->hit_react == 0 && re15_dog_arc(e, pl, re15_body_contact_reach(e), 0x100)) {  /* contact CONNECT @0x8011254c; body contact (was 900 < push standoff 1450; audit wf_555f18eb Part B) */
-                    re15_audio_room_se(2); s_player_grabbed = 1; pl->hit_react |= 1;
-                    if (pl->hp < 0) pl->hp = 1;                                               /* keep-alive clamp (NO damage) */
-                    re15_aspider_clip(e, 9); e->sub_state_3 = 6;                              /* -> recover */
-                } else if (re15_aspider_anim(e)) { re15_aspider_clip(e, 9); e->sub_state_3 = 6; }  /* miss -> recover */
-            } else {                                                                          /* [6/7] clip 9 recover */
-                re15_dog_advance(e, 100 >> 5);
-                if (re15_aspider_anim(e)) { e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0; e->dog_atk_cd = 0xf; }  /* [8] reset + lockout 15 */
-            }
-            break;
-        case 8:   /* GRAB B 0x801127f0 (ballistic LEAP grab, +0x7 5-phase @0x801001c4). NON-DAMAGING. */
-            if (e->sub_state_3 == 0) { re15_aspider_clip(e, 0); e->crow_perch_h = (int16_t)e->y; e->ai_timer = 0;
-                                       re15_enemy_steer_point(e, pl->x, pl->z, 0x40); e->sub_state_3 = 1; }  /* [0] launch */
-            else if (e->sub_state_3 == 1) {                                                   /* [1] leap parabola @0x80112884 */
-                e->y += 8 * (int32_t)e->ai_timer * (int32_t)e->ai_timer;   /* Y += 8*t^2 (Y-down) */
-                e->ai_timer++;
-                re15_dog_advance(e, 200 >> 5);                                                /* forward while airborne */
-                if (pl->hit_react == 0 && re15_dog_arc(e, pl, re15_body_contact_reach(e), 0x100)) {  /* CONNECT @0x801129cc; body contact (was 900 < push standoff 1450; audit wf_555f18eb Part B) */
-                    re15_audio_room_se(2); s_player_grabbed = 1; pl->hit_react |= 1;
-                    if (pl->hp < 0) pl->hp = 1;                                               /* keep-alive clamp (NO damage) */
+        case 0:   /* IDLE 0x801115e4: grid-0 idle-timer + idle_next; grid>=1 clip-0 hold */
+            if (e->motion != 0) re15_aspider_clip(e, 0);      /* clip 0 @0x80111670/8f=7 */
+            if ((e->grid_id & 0xf) == 0) {                    /* grid-0 idle @0x8011162c */
+                if (e->ai_timer == 0 && e->sub_state_3 == 0) {                       /* seed timer once */
+                    e->ai_timer = (int16_t)((re15_engine_rand8() & 0x3f) + (los ? 0 : 80));  /* +0x9c=(rng&0x3f)+(LOS?0:80) @0x80111690-c4 */
+                    e->sub_state_3 = 1;
                 }
-                if (e->y >= (int32_t)e->crow_perch_h) { e->y = (int32_t)e->crow_perch_h; re15_aspider_clip(e, 7); e->sub_state_3 = 2; }  /* land */
-            } else {                                                                          /* [2..4] clip 7 recover */
-                if (re15_aspider_anim(e)) { e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0; e->dog_atk_cd = 0xf; }
+                if (e->ai_timer > 0 && --e->ai_timer == 0) {                         /* expiry @0x801116f8 */
+                    e->sub_state_1 = 0;                                              /* +0x5=0 @0x80111710 */
+                    e->sub_state_2 = s_aspider_idle_next[(los ? 8 : 0) + (re15_engine_rand8() & 7)];  /* idle_next @0x80118ea4[(LOS)*8+(rng&7)] @0x80111714-44 */
+                    e->sub_state_3 = 0;
+                }
+            }                                                 /* grid>=1: clip-0 hold until DECIDE fires @0x80111768 */
+            re15_aspider_anim(e);
+            break;
+        case 1:   /* WALK 0x801117fc: clip 3, LOS-steer 0x10, +0x8c += 60, advance (grid2 = rear 0x800) */
+            if (e->motion != 3) re15_aspider_clip(e, 3);      /* clip 3 @0x80111808 */
+            if (los) re15_enemy_steer_point(e, pl->x, pl->z, 0x10);  /* rot += (LOS&1)*arc(0x10) @0x8011181c-50 */
+            e->crow_speed = (int16_t)(e->crow_speed + 60);    /* +0x8c += 60 @0x80111868 */
+            /* wall-helper 0x801118a8 (SCA-driven CLIMB transit) = OPEN */
+            re15_dog_advance(e, e->crow_speed >> 5);          /* pos_advance @0x80111890 (grid2 rear-0x800 offset = OPEN, ceiling only) */
+            re15_aspider_anim(e);
+            break;
+        case 2:   /* SCAN 0x80111c5c: clip 3, sweep step ±0x18 LATCHED once, faced(±0x18) -> CHASE */
+            if (e->sub_state_3 == 0) {                        /* phase 0 @0x80111c8c */
+                re15_aspider_clip(e, 3);                      /* clip 3 @0x80111c9c */
+                e->ai_timer  = (int16_t)(re15_engine_rand8() & 0x3f);          /* +0x9c=rng&0x3f @0x80111cc0 */
+                e->speed_h   = (int16_t)((e->ai_timer & 1) ? -0x18 : 0x18);    /* +0x1e6 latched ±0x18 ONCE @0x80111ce0-08 */
+                e->sub_state_3 = 1;
+            }
+            e->rot_y = (int16_t)((e->rot_y + e->speed_h) & 0xfff);            /* rot_y += latched step @0x80111d24 */
+            if (los && re15_dog_arc(e, pl, 0x7fff, (e->speed_h < 0 ? -e->speed_h : e->speed_h))) {  /* faced within ±0x18 -> CHASE(4) @0x80111d5c-90 */
+                e->sub_state_2 = 4; e->sub_state_3 = 0;
+            } else if (e->ai_timer > 0 && --e->ai_timer == 0) {              /* expiry @0x80111da8 */
+                e->sub_state_1 = 0; e->sub_state_2 = (uint8_t)(los ? 4 : 0); e->sub_state_3 = 0;  /* +0x5=0, +0x6=LOS?4:0 @0x80111dc0-e0 */
+            }
+            re15_aspider_anim(e);
+            break;
+        case 3: case 5: {  /* TURN 0x80111e04 (clip 2, win 0x80) / TURN-narrow 0x8011207c (clip 3, win 0x20) */
+            int win = (e->sub_state_2 == 3) ? 0x80 : 0x20;    /* +0x1e6 @0x80111e24 / @0x8011209c */
+            if (e->sub_state_3 == 0) {                        /* phase 0 @0x80111e8c */
+                re15_aspider_clip(e, (uint8_t)(e->sub_state_2 == 3 ? 2 : 3));  /* clip 2 (TURN) / 3 (narrow) @0x80111e18 / @0x80112090 */
+                e->ai_timer = (int16_t)((re15_engine_rand8() & 0x1f) + 80);    /* +0x9c=(rng&0x1f)+80 @0x80111ec0 */
+                e->sub_state_3 = 1;
+            } else if (e->sub_state_3 == 1) {                 /* phase 1: slew + exit test @0x80111ec8 */
+                int faced = re15_dog_arc(e, pl, 0x7fff, win);
+                re15_enemy_steer_point(e, pl->x, pl->z, win); /* rot += arc(win) toward player @0x80111f6c */
+                if ((e->ai_timer > 0 && --e->ai_timer == 0) || faced) e->sub_state_3 = 2;  /* timer==0 OR faced -> phase2 @0x80111f10-30 */
+            } else {                                          /* phase 2 @0x80111f84 */
+                e->sub_state_1 = 0; e->sub_state_2 = (uint8_t)(los ? 11 : 0); e->sub_state_3 = 0;  /* +0x5=0, +0x6=11*LOS @0x80111f84-b0 */
+                e->steer_x = (int16_t)pl->x; e->steer_z = (int16_t)pl->z;      /* +0x1bc/+0x1be=player @0x80111fc4-f0 */
+            }
+            re15_aspider_anim(e);
+            break;
+        }
+        case 4:   /* CHASE 0x80112004: clip 2, steer 0x30, +0x8c += 100, advance. NO exit (persists). */
+            if (e->motion != 2) re15_aspider_clip(e, 2);      /* clip 2 @0x80112028 */
+            re15_enemy_steer_point(e, pl->x, pl->z, 0x30);    /* rot += arc(0x30) @0x80112024-48 */
+            /* wall-helper 0x801118a8 = OPEN */
+            e->crow_speed = (int16_t)(e->crow_speed + 100);   /* +0x8c += 100 @0x80112060 */
+            re15_dog_advance(e, e->crow_speed >> 5);           /* pos_advance @0x80112064 */
+            re15_aspider_anim(e);
+            break;
+        case 11:  /* CREEP 0x8011302c: clip 3, steer 0x10, +0x8c -= 20 UNCONDITIONAL, advance. */
+            if (e->motion != 3) re15_aspider_clip(e, 3);      /* clip 3 @0x80113038 */
+            re15_enemy_steer_point(e, pl->x, pl->z, 0x10);    /* rot += arc(0x10) @0x8011304c-70 */
+            /* wall-helper 0x801118a8 = OPEN */
+            e->crow_speed = (int16_t)(e->crow_speed - 20);     /* +0x8c -= 20 every frame (no init/clamp) @0x80113088 */
+            re15_dog_advance(e, e->crow_speed >> 5);           /* pos_advance @0x8011308c */
+            re15_aspider_anim(e);
+            break;
+        case 6:   /* GRAB-A 0x801120b8 (walking lunge-bite, +0x7 9-phase @0x8010019c). NON-DAMAGING. */
+            if (e->sub_state_3 == 0) { re15_aspider_clip(e, 8); e->sub_state_3 = 1; }         /* [0] clip 8 windup @0x801122cc */
+            else if (e->sub_state_3 <= 2) {                                                    /* [1] advance @0x8011262c */
+                re15_dog_advance(e, 100 >> 5);
+                if (re15_aspider_anim(e)) { re15_aspider_clip(e, 0x0b); e->ai_timer = (int16_t)((re15_engine_rand8() & 0x1f) + 20); e->sub_state_3 = 3; }  /* -> clip 0xb track, timer=(rng&0x1f)+20 @0x80112310-64 */
+            } else if (e->sub_state_3 == 3) {                                                  /* [3] track: face; expiry->recover @0x80112368 */
+                re15_enemy_steer_point(e, pl->x, pl->z, 0x40);                                 /* arc(0x40) track @0x8011238c */
+                if (re15_dog_arc(e, pl, 0x7fff, 0x40)) e->sub_state_3 = 4;                     /* faced -> STRIKE @0x801123d8 */
+                else if (e->ai_timer > 0 && --e->ai_timer == 0) e->sub_state_3 = 6;            /* timer==0 -> recover @0x801123f8-410 */
+                re15_aspider_anim(e);
+            } else if (e->sub_state_3 == 4) {                                                  /* [4] enter STRIKE @0x80112418 */
+                re15_aspider_clip(e, 0x0b); e->ai_timer = (int16_t)((re15_engine_rand8() & 0x1f) + 10); e->sub_state_3 = 5;  /* clip 0xb, timer=(rng&0x1f)+10 @0x80112448-6c */
+            } else if (e->sub_state_3 == 5) {                                                  /* [5] STRIKE body @0x80112470 */
+                re15_enemy_steer_point(e, pl->x, pl->z, 0x10);                                 /* arc(0x10) @0x8011248c-b8 */
+                re15_dog_advance(e, 0x12c >> 5);                                               /* pos_advance(300) @0x801124c4 */
+                if ((e->ai_timer > 0 && --e->ai_timer == 0) || !re15_dog_arc(e, pl, 0x7fff, 0x200)) {  /* timer==0 OR lost cone(0x200) -> miss/recover @0x801124e8-510 */
+                    e->sub_state_3 = 6;
+                } else if (pl->hit_react == 0 && re15_dog_arc(e, pl, re15_body_contact_reach(e), 0x100)) {  /* CONNECT (+0x1d2 hitbox && !reacting) @0x80112514-40 */
+                    re15_audio_room_se(2); s_player_grabbed = 1; pl->hit_react |= 1;           /* SE 0x800453d0(2), aca58=2 @0x8011254c-58 */
+                    if (pl->hp < 0) pl->hp = 1;                                                /* keep-alive clamp (NO damage) @0x80112594-9c */
+                    e->sub_state_3 = 6;
+                }
+            } else if (e->sub_state_3 == 6 || e->sub_state_3 == 7) {                           /* [6] clip 9 recover @0x801125dc */
+                if (e->motion != 9) re15_aspider_clip(e, 9);                                   /* clip 9 @0x80112618 */
+                re15_dog_advance(e, 100 >> 5);                                                 /* pos_advance(100) @0x80112670 */
+                if (re15_aspider_anim(e)) e->sub_state_3 = 8;
+            } else {                                                                          /* [8] reset @0x80112680 */
+                e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;                    /* +0x5=0, +0x6=0 @0x8011268c-9c */
+                e->dog_atk_cd = 0xf; e->grid_id = 0;                                           /* +0x1d6=0xf, grid:=0 (ROAM family) @0x801126ac-bc */
             }
             break;
-        default:  /* feed/reroute/hold substeps (7/9/10/12/13) = cited mechanism -> resume the driver */
+        case 7:   /* SPIT 0x801126d4 (venom, distinct from GRAB-A): clip 0xc + FX + SE(4) -> CREEP + lockout */
+            if (e->sub_state_3 == 0) {                                                         /* phase 0 @0x80112720 */
+                re15_aspider_clip(e, 0x0c);                                                    /* clip 0xc @0x80112750 */
+                /* venom particle 0x80019700(0x0d002000,rot_y,bone+0x40,@0x80118ee8) @0x80112770 = OPEN (FX) */
+                re15_audio_room_se(4);                                                         /* SE 0x800453d0(4) @0x80112778 */
+                e->sub_state_3 = 1;
+            } else if (e->sub_state_3 == 1) {                                                  /* phase 1 @0x80112780 */
+                if (re15_aspider_anim(e)) e->sub_state_3 = 2;
+            } else {                                                                          /* phase 2 @0x801127bc */
+                e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0x0b; e->sub_state_3 = 0;   /* sh 1,4 (+0x5=0), +0x6=0xb CREEP @0x801127bc-cc */
+                e->dog_atk_cd = 0xf;                                                           /* +0x1d6=0xf @0x801127d8 */
+            }
+            break;
+        case 8:   /* GRAB-B 0x801127f0 (ballistic LEAP, +0x7 5-phase @0x801001c4). NON-DAMAGING. */
+            if (e->sub_state_3 == 0) { re15_aspider_clip(e, 0); e->ai_timer = 0; e->sub_state_3 = 1; }  /* [0] clip 0, timer 0, NO steer @0x80112834-80 */
+            else if (e->sub_state_3 == 1) {                                                    /* [1] parabola @0x80112884 */
+                e->y += 8 * (int32_t)e->ai_timer * (int32_t)e->ai_timer; e->ai_timer++;        /* Y += 8*t^2 @0x80112898-b4 */
+                e->rot_z = (int16_t)(e->rot_z + 341); if (e->rot_z >= 0) e->rot_z = 0;         /* rot_x(+0x6c) += 341 clamp 0 @0x801128c4-f0 */
+                { int32_t floor_y = -1800 * (int32_t)e->floor;                                 /* +0x1ba current floor @0x801128fc-04 */
+                  if (pl->hit_react == 0 && re15_dog_arc(e, pl, re15_body_contact_reach(e), 0x100)) {  /* CONNECT @0x8011299c-c0 */
+                      re15_audio_room_se(2); s_player_grabbed = 1; pl->hit_react |= 1;         /* SE(2), aca58=2 @0x801129c4-d4 */
+                      if (pl->hp < 0) pl->hp = 1;                                              /* keep-alive @0x80112a0c-14 */
+                  }
+                  if (floor_y < e->y) { e->y = floor_y; e->floor = (uint8_t)(-e->y / 1800); e->sub_state_3 = 2; }  /* land at floor, recompute +0x82 @0x80112900-70 */
+                }
+            } else if (e->sub_state_3 == 2) {                                                  /* [2] clip 7 + grid re-roll @0x80112a2c */
+                re15_aspider_clip(e, 7);                                                       /* clip 7 @0x80112a6c */
+                e->grid_id = (uint8_t)(re15_engine_rand8() & 1);                               /* grid := rng&1 @0x80112a70-84 */
+                e->sub_state_3 = 3;
+            } else if (e->sub_state_3 == 3) {                                                  /* [3] recover anim @0x80112a88 */
+                if (re15_aspider_anim(e)) e->sub_state_3 = 4;
+            } else {                                                                          /* [4] reset @0x80112ac4 */
+                e->sub_state_1 = 0; e->sub_state_2 = 0;                                        /* +0x5=0, +0x6=0 ONLY (no lockout, no grid keep) @0x80112ad0-e0 */
+            }
+            break;
+        default:  /* CLIMB/HOP/CEILING subs 9/10/12/13/14/15 = SCA-driven, subsystem-scale -> OPEN.
+                   * Minimal fallback: resume the driver so a spawned actor never wedges. */
             e->sub_state_1 = 0; e->sub_state_2 = (uint8_t)(los ? 4 : 0); e->sub_state_3 = 0;
             re15_aspider_anim(e);
             break;
         }
+
+        /* ACTIVE tail @0x80110f8c: lockout-- (AFTER decide) then stuck-counter += 1 if wall-blocked. */
+        if (e->dog_atk_cd) e->dog_atk_cd--;                   /* +0x1d6-- @0x80110fe4 (port: was at head, moved to tail) */
+        /* 0x80012aa4(4000) body-contact call (grid<2||grid==5) @0x80110fd0 = OPEN */
+        rr = re15_dog_blocked(e);                             /* +0x1da SCA wall-clamp proxy (ai_contact) */
+        e->ai_target_x = (int16_t)(rr ? e->ai_target_x + 1 : 0);  /* +0x1dc stuck counter @0x80110ffc-30 */
         break;
     }
 
-    case 4: {  /* AMBUSH 0x80114e18[+0x5]=0x80114ec8 (grid 0x40/0x41): a 9-phase +0x7 cling-approach maneuver
-                * (@0x8010027c) — clip 0x10 cling pose (@0x80114f34) + pos_advance @200 (0xc8 @0x80114fa8)
-                * toward the player; when the player is in LOS + range it hands off to the ACTIVE brain. */
-        if (e->motion != 0x10) re15_aspider_clip(e, 0x10);
-        re15_enemy_steer_point(e, pl->x, pl->z, 0x20);
-        re15_dog_advance(e, 0xc8 >> 5);                                /* pos_advance @200 @0x80114fb0 */
-        if ((re15_enemy_los_probe(slot, e, pl) & 1) && re15_enemy_player_dist(e, pl) < 4000) {
-            e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* -> ACTIVE brain */
+    case 4:   /* AMBUSH 0x80114e18[+0x5] (grid 0x40 -> 0x80114e60, grid 0x41 -> 0x80114ec8): CLING + HOLD
+               * until the grid is changed EXTERNALLY (SCD trigger), then drop. Both handlers do NOTHING
+               * while their spawn grid is unchanged. The 9-phase wall-DROP choreography (Y-descent/rot_x/
+               * SCA floor) and the grid-0x40 CLIMB descent are subsystem-scale -> OPEN. */
+        if (e->motion != 0x10) re15_aspider_clip(e, 0x10);    /* cling pose clip 0x10 @0x80114f34 */
+        if (e->sub_state_1 == 1) {                            /* grid-0x41 @0x80114ec8: phase 0 waits while grid==0x41 @0x80114f14 */
+            if (e->grid_id != 0x41) {                         /* externally triggered -> land into APPROACH */
+                e->grid_id = 5; e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;  /* grid:=5, exit sh 1,4 @0x80115244-a0 (drop = OPEN) */
+            }
+        } else {                                              /* grid-0x40 @0x80114e60: hold while grid==0x40 @0x80114e74 */
+            if (e->grid_id != 0x40) {                         /* externally triggered -> CLIMB(9) descent */
+                e->grid_id = 0; e->state = 1; e->sub_state_1 = 1; e->sub_state_2 = 9; e->sub_state_3 = 0;  /* grid:=0, sh 0x101,4, +0x6=9 @0x80114e7c-bc (CLIMB = OPEN) */
+            }
         }
         re15_aspider_anim(e);
         break;
-    }
 
-    case 2:   /* HURT 0x80113a0c: flinch clip 1 + blend 7 + Se(2) -> recover to ACTIVE */
-        if (e->sub_state_3 == 0) { re15_aspider_clip(e, 1); re15_audio_room_se(2); e->sub_state_3 = 1; }  /* @0x80113a0c */
-        else if (re15_aspider_anim(e)) { e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0;
-                                         e->sub_state_3 = 0; e->hit_react = (uint8_t)(e->hit_react & ~1u); }
+    case 2:   /* HURT 0x80113a0c: flinch clip 1 + Se(2); recover byte-true (@0x80113e84). +0xb0/+0x1ba
+               * reset @0x80113a2c and the blood FX 0x80019700 + leg-dismember (+0x93&0x40) = OPEN. */
+        if (e->sub_state_3 == 0) { re15_aspider_clip(e, 1); re15_audio_room_se(2); e->sub_state_3 = 1; }  /* flinch @0x80113a0c */
+        else if (re15_aspider_anim(e)) {                      /* recover @0x80113e84 */
+            int los; int pp = re15_enemy_los_probe(slot, e, pl);  /* +0x1d0 bit0 @0x80113f04 */
+            if (pp != 2) e->member_0b = (uint8_t)(pp & 1);
+            los = e->member_0b & 1;
+            e->state = 1; e->hit_react = 0;                   /* state=1, +0x93:=0 FULL clear @0x80113ef4 */
+            e->steer_x = (int16_t)pl->x; e->steer_z = (int16_t)pl->z;   /* +0x1bc/+0x1be=player @0x80113ec4-e4 */
+            if (los) { e->sub_state_1 = 1; e->sub_state_2 = 0xa; }      /* LOS -> +0x5=1, +0x6=0xa @0x80113f18-28 */
+            else     { e->sub_state_1 = 0; e->sub_state_2 = (uint8_t)(3 + (e->grid_id & 1)); }  /* else +0x6=3+(grid&1) @0x80113e9c-a4 */
+            e->sub_state_3 = 0;
+        }
         break;
 
-    case 3:   /* DEATH 0x80113f40: collapse clip 1 + gore (0x8004ef90) + Se(5) + kill-flag -> CORPSE (state 7) */
-        if (e->sub_state_3 == 0) { re15_aspider_clip(e, 1); re15_audio_room_se(5); e->hit_react |= 2; e->sub_state_3 = 1; }  /* @0x80113f40 */
-        else if (re15_aspider_anim(e)) { e->state = 7; e->sub_state_3 = 0; }
+    case 3:   /* DEATH 0x80113f40: entry kill-flag 0x8004ef90(0x800b1038,+0x1c6); collapse clip 1 + Se(5)
+               * -> CORPSE (state 7). The 2-stage gore (part-detach x2, phased FX) = OPEN (render). */
+        if (e->sub_state_3 == 0) {
+            re15_aspider_clip(e, 1); re15_audio_room_se(5); e->hit_react |= 2;
+            if (e->em_flag_id != 0xFF)
+                re15_game_flag_set(re15_em_status_zone(), e->em_flag_id, 1);  /* kill-flag persist @0x80113fa0-ac */
+            e->sub_state_3 = 1;
+        } else if (re15_aspider_anim(e)) { e->state = 7; e->sub_state_3 = 0; }
         break;
 
-    case 7:   /* CORPSE 0x801153d4: final clip 5, sink into the floor, inert (flags 0x2|0x40) */
-        if (e->motion != 5) re15_aspider_clip(e, 5);          /* @0x801153d4 */
+    case 7:   /* CORPSE 0x801153d4: settle clip 5, inert. Phased timer(0x5a)/flags(0x2|0x40)/color-tint/
+               * sink(+8/frame)/Se(9) @0x80115414-5cc = OPEN (render/cosmetic). */
+        if (e->motion != 5) re15_aspider_clip(e, 5);
         re15_aspider_anim(e);
         break;
 
-    default:  /* the grid/substep attack sub-states = wave 2 -> resume the brain */
+    default:  /* unreachable states -> resume the brain */
         e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 0;
         break;
     }

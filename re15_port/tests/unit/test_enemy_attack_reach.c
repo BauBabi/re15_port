@@ -87,20 +87,27 @@ int main(void)
         else printf("  (1) MAGGOT: lands damage under the push, hp=%d (dist=%d)\n", pl->hp, xz_dist(m, pl));
     }
 
-    /* (2) ADULT SPIDER 0x25 — non-damaging stagger-GRAB must still latch through the 1450 standoff. */
+    /* (2) ADULT SPIDER 0x25 — the walking lunge-bite GRAB-A (sub_state_2==6) is a non-damaging stagger-
+     * grab whose STRIKE connect must still latch THROUGH the 1450 body-push standoff. NOTE: byte-true, a
+     * facing APPROACH spider commits the FIXED venom SPIT(7) rather than GRAB-A at close range (audit
+     * wf_efd92a2c adult-spider #3/#5), so we FORCE the lunge sub to exercise the contact-reach path. */
     {
         memset(g_actors, 0, sizeof g_actors);
         re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
         pl->active = 1; pl->type = 0; pl->x = 0; pl->z = 1600; pl->hp = 100;
         re15_actor_t *e = &g_actors[1];
-        e->active = 1; e->type = 0x25; e->state = 1; e->sub_state_1 = 0; e->grid_id = 1; e->hp = 100; e->x = 0; e->z = 0;
+        e->active = 1; e->type = 0x25; e->state = 1; e->grid_id = 1; e->hp = 100; e->x = 0; e->z = 0;
+        e->sub_state_1 = 1; e->sub_state_2 = 6; e->sub_state_3 = 0;   /* FORCE GRAB-A (commit-latched) */
         re15_enemy_apply_hitbox(e, 0x25);
         e->rot_y = (int16_t)(((int)re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0xfff);
         int grabbed = 0; int16_t hp0 = pl->hp;
-        for (int f = 0; f < 240; f++) { step(); if (re15_player_is_grabbed()) { grabbed = 1; break; } pl->hit_react = 0; }
+        for (int f = 0; f < 240; f++) {
+            if (e->sub_state_2 != 6 && !grabbed) { e->sub_state_1 = 1; e->sub_state_2 = 6; e->sub_state_3 = 0; }  /* re-force between lunge cycles */
+            step(); if (re15_player_is_grabbed()) { grabbed = 1; break; } pl->hit_react = 0;
+        }
         if (!grabbed)      { fprintf(stderr, "FAIL(2): adult spider never grabbed through the push (dist=%d)\n", xz_dist(e, pl)); fail = 1; }
         if (pl->hp != hp0) { fprintf(stderr, "FAIL(2): the stagger-grab must deal 0 damage, hp %d->%d\n", hp0, pl->hp); fail = 1; }
-        else if (grabbed)  printf("  (2) ADULT SPIDER: stagger-grab latches under the push (hp %d, byte-true 0 dmg)\n", pl->hp);
+        else if (grabbed)  printf("  (2) ADULT SPIDER: GRAB-A latches under the push (hp %d, byte-true 0 dmg)\n", pl->hp);
     }
 
     /* (3) ALLIGATOR 0x23 — the BITE must reach through the 2650 standoff. Byte-true rebuild
