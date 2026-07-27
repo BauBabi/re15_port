@@ -4650,18 +4650,21 @@ re_title:;
                 }
             }
 
-            /* WEAPON-IN-HAND (room-fix #3, byte-true mechanism @0x800356f0-70: the DRAW
-             * anim-event attaches the equipped weapon's model as extra parts on the weapon
-             * bone; the port draws the equipped PLW's MD1 mesh with bone-11's composed
-             * matrix). Visible: melee once the knife is IN-HAND (the 0x4000 flag, persists
-             * across lower/raise); gun once equipped (faithful-line — the gun FSM's attach
-             * event is un-RE'd; classic-RE carry look). */
+            /* WEAPON-IN-HAND — byte-true (the in-hand weapon mesh attaches on the DRAW/RAISE anim-event
+             * @0x8003573c-48 (sw kine+0x76c/0x770/0x774/0x778), GATED @0x80035708-0c by an in-hand-mesh
+             * flag; it is NOT attached at equip/idle). The GUN's in-hand mesh (PLW dir[2] on bone 11)
+             * likewise rides the gun-track carry-set, which is only active while AIMING (savestate 3,
+             * motion 8/HOLD: acbc8=gun bank). So the gun is visible ONLY while the weapon is raised
+             * (aim FSM phase != NONE), NOT in idle — matching the original (equip + leave inventory ->
+             * empty hand until R1). The KNIFE stays in hand persistently (its 0x4000 DRAW latch). The
+             * old `gun once equipped` was over-showing the gun in idle. */
             {
                 extern int re15_player_equipped_weapon(void);
                 extern int re15_player_knife_in_hand(void);
+                extern int re15_player_aim_active(void);   /* aim FSM phase != NONE = weapon raised */
                 int eq = re15_player_equipped_weapon();
                 int wi = (eq >= 3) ? 1 : 0;
-                int vis = (eq >= 3) ? 1 : re15_player_knife_in_hand();
+                int vis = (eq >= 3) ? re15_player_aim_active() : re15_player_knife_in_hand();
                 if (vis && wpn_bone_valid && wpn_md1_ok[wi] && player_visible &&
                     re15_player_victim_state() == 0) {
                     re15_render_pc_bind_tim_slot(wi ? RE15_TIM_SLOT_WPN_GUN
