@@ -278,6 +278,13 @@ target_include_directories(test_aim_all_around PRIVATE ${CMAKE_SOURCE_DIR}/inclu
 add_test(NAME unit_aim_all_around COMMAND test_aim_all_around)
 set_tests_properties(unit_aim_all_around PROPERTIES TIMEOUT 30)
 
+# --- Regression: aim LOWER exit must not flash the injured-idle sentinel (the "land" bug) ---
+add_executable(test_aim_lower_exit test_aim_lower_exit.c)
+target_link_libraries(test_aim_lower_exit PRIVATE re15_engine re15_test_support)
+target_include_directories(test_aim_lower_exit PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_aim_lower_exit COMMAND test_aim_lower_exit)
+set_tests_properties(unit_aim_lower_exit PROPERTIES TIMEOUT 30)
+
 # --- Byte-true player HURT reaction: directional clip 0x8/0x9 + backward knockback (FUN_80035af0) ---
 add_executable(test_hit_reaction test_hit_reaction.c)
 target_link_libraries(test_hit_reaction PRIVATE re15_engine re15_test_support)

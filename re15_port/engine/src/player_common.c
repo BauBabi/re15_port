@@ -461,6 +461,17 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
                 aim_cur_fc() > 0 && p->anim_frame >= aim_cur_fc() - 1) {
                 s_player_aim_phase = RE15_AIM_NONE;                 /* LOWER done -> exit action-7 */
                 p->anim_flags &= (uint8_t)~RE15_ANIM_REVERSE;       /* (in-hand flag persists) */
+                /* LEAVE the aim sentinel THIS SAME tick. The exit clears phase→NONE, so the
+                 * render's aim override (main.c, gated on re15_player_aim_active()) stops
+                 * applying — but want_motion is still RE15_MOTION_AIM_W (=213) from above, and
+                 * 213 ALSO == RE15_MOTION_IDLE_HURT1, so anim_select would pose PL00 clip 22
+                 * (the INJURED-IDLE hunch) for this one frame. That hunched pose then seeds the
+                 * FRAC crossfade → Leon visibly bends forward and rises = the spurious "land
+                 * animation" (measured: exit-frame kfi=661, a PL00 keyframe, vs the weapon
+                 * bank's 248-kf range; every weapon). Drop to the idle sentinel now so the
+                 * render sees motion 200 (not the ambiguous 213) the instant the aim ends. */
+                want_motion = RE15_MOTION_IDLE;
+                s_idle_phase = -1;                                  /* clean idle-FSM (re)entry */
             }
             if (s_aim_recoil && aim_cur_fc() > 0 && p->anim_frame >= aim_cur_fc() - 1) {
                 s_aim_recoil = 0;                                   /* recoil/slash played out */
