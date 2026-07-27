@@ -4667,8 +4667,14 @@ re_title:;
                 int vis = (eq >= 3) ? re15_player_aim_active() : re15_player_knife_in_hand();
                 if (vis && wpn_bone_valid && wpn_md1_ok[wi] && player_visible &&
                     re15_player_victim_state() == 0) {
-                    re15_render_pc_bind_tim_slot(wi ? RE15_TIM_SLOT_WPN_GUN
-                                                    : RE15_TIM_SLOT_WPN_MELEE);
+                    /* The hand+gun (PLW dir[2]) mesh is textured ENTIRELY from the character's BODY skin
+                     * TIM — every tri reads page 0x81 / clut 0x7840, the SAME tpage as body mesh 11 — NOT
+                     * the separate PLW dir[3] gun TIM (which this mesh never references). The character-
+                     * select draw (verified) binds the skin TIM for exactly this reason (main.c:903-910).
+                     * The in-game body already bound the player skin at slot 0 (main.c:4318); bind it here
+                     * too. The old dir[3] bind (slots 24/25) sampled empty texels -> the gun was invisible
+                     * = the "empty hand while aiming" bug. */
+                    re15_render_pc_bind_tim_slot(0);
                     for (int k = 0; k < 9; k++) bone_m[k] = wpn_bone_m[k];
                     bone_t[0] = wpn_bone_t[0]; bone_t[1] = wpn_bone_t[1]; bone_t[2] = wpn_bone_t[2];
                     if (player_lit)
