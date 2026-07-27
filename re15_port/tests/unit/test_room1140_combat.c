@@ -1019,7 +1019,13 @@ int main(void)
         re15_player_set_equipped_weapon(3);
         if (re15_player_equipped_weapon() != 3) {
             fprintf(stderr, "FAIL: (19) set_equipped_weapon(3) must stick\n"); fail = 1; }
+        /* The GUN uses the byte-true FUN_80012574 forward STRIP (unbounded range), rotated by the
+         * PSX RotMatrix(0,rot_y,0) convention (out.x=cos*X+sin*Z): at rot_y=0 the aim points +X, so
+         * face rot_y=0xc00 (270deg) to aim the strip at the +Z zombie @(0,800). (The knife above uses
+         * the melee arc_test which reads +Z as forward at rot_y=0 — a separate convention.) */
+        pl->rot_y = 0xc00;
         re15_player_weapon_fire(re15_player_equipped_weapon());
+        pl->rot_y = 0;
         if (zt->hp != (int16_t)(60 - 5)) {
             fprintf(stderr, "FAIL: (19) handgun (item 3) must do 5 dmg (row 3 @0x8006e650), HP 60->%d\n", zt->hp); fail = 1; }
         re15_player_set_equipped_weapon(1);   /* restore the byte-true briefing default (knife) */

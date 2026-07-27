@@ -423,6 +423,48 @@ int re15_player_gunbone_world(int32_t ox, int32_t oy, int32_t oz, int32_t out[3]
     return 1;
 }
 
+/* Byte-true GUN hit-region — FUN_80012574 (@0x80012574), the predicate the weapon table @0x8006e548
+ * dispatches for guns (weapon 0/3-8). It is a forward STRIP that is UNBOUNDED in range: FUN_800126c8
+ * (@0x800126c8) tests the target against two semi-infinite triangles sharing apex V5 (the aim
+ * direction) via three cross products (FUN_80012944 = ax*bz-az*bx); the distance (SquareRoot0
+ * @0x800127a4) is computed ONLY AFTER the angular gate and compared to the min-dist accumulator
+ * @0x8008f5e0 — i.e. it selects the NEAREST in-strip target, it is NOT a range cap. Corners in the
+ * player-local frame (X = lateral, Z = forward), from FUN_80012574 @0x800125c4-64:
+ *   V1=(50, r+200)  V2=(50, -(r+200))  V3=(650, r+reach)  V4=(650, -(r+reach))  V5=(650, 0)
+ * each rotated by rot_y (FUN_8004f008 = RotMatrix(0,rot_y,0)); r = enemy hitbox radius (hbdata+6),
+ * reach = the per-weapon table @0x8006e5a0. Rotation convention matches the port's cos/sin
+ * (out.x=(c*X+s*Z)>>12, out.z=(-s*X+c*Z)>>12). VERIFIED against savestate 4: a zombie at dist 6695
+ * tests INSIDE the strip (the original hit it; the port's old reach+radius cap missed it). */
+static int64_t re15_wedge_cross(int32_t ax, int32_t az, int32_t bx, int32_t bz)
+{
+    return (int64_t)ax * bz - (int64_t)az * bx;   /* FUN_80012944 */
+}
+/* FUN_800126c8: enemy (relx,relz) inside the semi-infinite triangle (VA,VB,V5). */
+static int re15_wedge_tri(int32_t VAx, int32_t VAz, int32_t VBx, int32_t VBz,
+                          int32_t V5x, int32_t V5z, int32_t relx, int32_t relz)
+{
+    if (re15_wedge_cross(V5x, V5z, relx - VAx, relz - VAz) > 0) return 0;   /* @0x80012734 bgtz -> out */
+    if (re15_wedge_cross(V5x, V5z, relx - VBx, relz - VBz) < 0) return 0;   /* @0x80012758 bltz -> out */
+    if (re15_wedge_cross(VAx - VBx, VAz - VBz, relx - V5x, relz - V5z) > 0) return 0;  /* @0x8001278c bgtz */
+    return 1;
+}
+static int re15_gun_wedge_inside(const re15_actor_t *pl, int32_t ex, int32_t ez,
+                                 int32_t reach, int32_t radius)
+{
+    int32_t c = re15_cos_q12(pl->rot_y), s = re15_sin_q12(pl->rot_y);
+    int32_t Vx[5], Vz[5];
+    static const int32_t lx[5] = { 50, 50, 650, 650, 650 };
+    int32_t lz[5]; lz[0] = radius + 200; lz[1] = -(radius + 200);
+    lz[2] = radius + reach; lz[3] = -(radius + reach); lz[4] = 0;
+    for (int i = 0; i < 5; i++) {
+        Vx[i] = (int32_t)(( (int64_t)c * lx[i] + (int64_t)s * lz[i]) >> 12);
+        Vz[i] = (int32_t)((-(int64_t)s * lx[i] + (int64_t)c * lz[i]) >> 12);
+    }
+    int32_t relx = ex - pl->x, relz = ez - pl->z;
+    return re15_wedge_tri(Vx[0],Vz[0], Vx[1],Vz[1], Vx[4],Vz[4], relx, relz)    /* triangle (V1,V2,V5) */
+        || re15_wedge_tri(Vx[2],Vz[2], Vx[3],Vz[3], Vx[4],Vz[4], relx, relz);   /* triangle (V3,V4,V5) */
+}
+
 int re15_player_weapon_fire(int weapon_id)
 {
     if (weapon_id < 0 || weapon_id >= 22) return 0;
@@ -478,11 +520,20 @@ retry_after_latch:
          * knife range forward, byte-true). */
         int32_t ddx = e->x - ox, ddz = e->z - oz;
         uint32_t dist = (uint32_t)dmg_isqrt((int64_t)ddx*ddx + (int64_t)ddz*ddz);
-        /* byte-true cone tester FUN_800127fc/800128a0: R = reach + enemy hitbox radius (hbdata+6),
-         * hit iff strict dist < R (unsigned). The 400-unit zombie radius is part of the reach. */
-        uint32_t R = reach + ((uint32_t)e->hit_radius_min & 0xffffu);
-        if (dist >= R) continue;                                             /* out of (reach + radius) */
-        if (re15_ai_arc_test(pl, e->x, e->z, 0x400) != 0) continue;          /* not in front (faithful-line dir) */
+        /* GUNS (weapon 0/3-8 -> FUN_80012574 @0x8006e548): the byte-true forward STRIP, UNBOUNDED
+         * in range (re15_gun_wedge_inside; dist is only for the nearest-target min-select below, NOT
+         * a cap — proven vs savestate 4, a zombie hit at dist 6695). The old `dist >= reach+radius`
+         * cap was a decode error that limited guns to ~1400u = the "can't hit them" bug.
+         * MELEE (weapon 1/2 -> FUN_800127fc): the bounded cone tester R = reach + enemy radius. */
+        int is_gun_strip = (weapon_id == 0 || (weapon_id >= 3 && weapon_id <= 8));
+        if (is_gun_strip) {
+            if (!re15_gun_wedge_inside(pl, e->x, e->z, (int32_t)reach,
+                                       (int32_t)((uint32_t)e->hit_radius_min & 0xffffu))) continue;
+        } else {
+            uint32_t R = reach + ((uint32_t)e->hit_radius_min & 0xffffu);
+            if (dist >= R) continue;                                         /* out of (reach + radius) */
+            if (re15_ai_arc_test(pl, e->x, e->z, 0x400) != 0) continue;      /* not in front */
+        }
         if (dist < best_dist) { best_dist = dist; best = s; }
     }
     if (best < 0) return 0;   /* no target in cone/reach */
