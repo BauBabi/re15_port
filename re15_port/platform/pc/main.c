@@ -2050,13 +2050,17 @@ re_title:;
      * drawn as extra parts on the weapon bone (bone 11). The MESHES live in the PLW
      * containers: dir[2] = MD1 (1 mesh), dir[3] = TIM; PL00.MD1's meshes 15/16 are only the
      * empty attach slots). Slice + parse both class models; TIMs -> slots 24/25. */
-    re15_md1_t wpn_md1[2]; int wpn_md1_ok[2] = {0, 0};
-    for (int wi = 0; wi < 2; wi++) {
-        /* Byte-true (player-select main.c:1045-1049 + :908): the GUN in-hand mesh is the SHARED
-         * PL04W03.PLW dir[2] (Leon's live part[11] verts match PL04W03 6/6, NOT PL00W03), textured
-         * from PL04.TIM's weapon art at page 0x81 — NOT the PLW's own dir[3] TIM (which this mesh
-         * never references). The knife stays Leon's PL00W01 + its own dir[3]. */
-        const char *plw_name = wi ? "PLD/PL04W03.PLW" : "PLD/PL00W01.PLW";
+    /* IN-HAND WEAPON MESHES for EVERY weapon (byte-true): the equipped weapon aca5d indexes the
+     * SHARED weapon-character (PL04) hand+weapon mesh PL04W<aca5d>.PLW dir[2] — the file base table
+     * @0x800741e8 = {76,76,76,76,97,97,97,97} (char 0-3 -> PL00 carry-set base 76, char 4-7 -> PL04
+     * base 97 = the shared weapon geometry) and FUN_80036b68 loads base+aca5d; the DISPLAYED mesh is
+     * always PL04's (player-select @1045: Leon's part[11] verts match PL04W03 6/6, NOT PL00W03).
+     * Every one is textured from PL04.TIM (the shared weapon art), NOT the PLW's own dir[3]. Index
+     * by aca5d so the KNIFE(1)/HANDGUN(3)/SHOTGUN/MAGNUM/... each draw their correct model. */
+    #define RE15_WPN_MDL_MAX 21   /* PL04W00..PL04W14 */
+    re15_md1_t wpn_md1[RE15_WPN_MDL_MAX]; int wpn_md1_ok[RE15_WPN_MDL_MAX] = {0};
+    for (int wi = 0; wi < RE15_WPN_MDL_MAX; wi++) {
+        char plw_name[32]; snprintf(plw_name, sizeof plw_name, "PLD/PL04W%02X.PLW", wi);
         int psz = 0;
         uint8_t *plw = pc_read_shared(plw_name, &psz);   /* stays resident (MD1 borrows) */
         if (!plw || psz < 16) continue;
@@ -2067,23 +2071,18 @@ re_title:;
             de[k] = (uint32_t)(plw[diroff+4*k] | (plw[diroff+4*k+1]<<8) |
                                (plw[diroff+4*k+2]<<16) | ((uint32_t)plw[diroff+4*k+3]<<24));
         if (de[2] >= de[3] || de[3] > (uint32_t)psz) continue;
-        if (re15_md1_parse(plw + de[2], (int)(de[3] - de[2]), &wpn_md1[wi]) != 0) continue;
-        re15_tim_t wtim;
-        if (wi) {
-            /* GUN texture = PL04.TIM (the shared weapon art page 0x81), NOT PL04W03 dir[3] */
-            int tsz = 0; uint8_t *tb = pc_read_shared("PLD/PL04.TIM", &tsz);
-            if (tb && re15_tim_parse(tb, tsz, &wtim) == 0) {
-                re15_render_pc_upload_tim_slot(&wtim, RE15_TIM_SLOT_WPN_GUN);
-                wpn_md1_ok[1] = 1;
-            }
-        } else if (re15_tim_parse(plw + de[3], (int)(diroff - de[3]), &wtim) == 0) {
-            re15_render_pc_upload_tim_slot(&wtim, RE15_TIM_SLOT_WPN_MELEE);
-            wpn_md1_ok[0] = 1;
-        }
-        if (wpn_md1_ok[wi])
-            fprintf(stderr, "[wpn] %s: %d mesh(es), TIM %dx%d -> slot %d\n", plw_name,
-                    wpn_md1[wi].mesh_count, wtim.width, wtim.height,
-                    wi ? RE15_TIM_SLOT_WPN_GUN : RE15_TIM_SLOT_WPN_MELEE);
+        if (re15_md1_parse(plw + de[2], (int)(de[3] - de[2]), &wpn_md1[wi]) == 0)
+            wpn_md1_ok[wi] = 1;
+    }
+    /* PL04.TIM = the shared weapon art, bound (slot 25) for ALL in-hand meshes (they read its pages). */
+    {
+        int tsz = 0; uint8_t *tb = pc_read_shared("PLD/PL04.TIM", &tsz);
+        re15_tim_t ptim;
+        if (tb && re15_tim_parse(tb, tsz, &ptim) == 0)
+            re15_render_pc_upload_tim_slot(&ptim, RE15_TIM_SLOT_WPN_GUN);
+        int nloaded = 0; for (int wi = 0; wi < RE15_WPN_MDL_MAX; wi++) nloaded += wpn_md1_ok[wi];
+        fprintf(stderr, "[wpn] loaded %d/%d PL04W** meshes + PL04.TIM (%dx%d) -> slot %d\n",
+                nloaded, RE15_WPN_MDL_MAX, ptim.width, ptim.height, RE15_TIM_SLOT_WPN_GUN);
     }
 
     /* Elliot TIM into slot 1. */
@@ -4660,33 +4659,19 @@ re_title:;
                 }
             }
 
-            /* WEAPON-IN-HAND — byte-true (the in-hand weapon mesh attaches on the DRAW/RAISE anim-event
-             * @0x8003573c-48 (sw kine+0x76c/0x770/0x774/0x778), GATED @0x80035708-0c by an in-hand-mesh
-             * flag; it is NOT attached at equip/idle). The GUN's in-hand mesh (PLW dir[2] on bone 11)
-             * likewise rides the gun-track carry-set, which is only active while AIMING (savestate 3,
-             * motion 8/HOLD: acbc8=gun bank). So the gun is visible ONLY while the weapon is raised
-             * (aim FSM phase != NONE), NOT in idle — matching the original (equip + leave inventory ->
-             * empty hand until R1). The KNIFE stays in hand persistently (its 0x4000 DRAW latch). The
-             * old `gun once equipped` was over-showing the gun in idle. */
+            /* WEAPON-IN-HAND — byte-true: the equip commit FUN_80036b68 @0x80036c08 attaches the in-hand
+             * weapon mesh (kine+0x76c/770/774/778) UNCONDITIONALLY when aca5d!=0, so the EQUIPPED weapon
+             * (knife/handgun/shotgun/...) is in Leon's hand whenever equipped — not only while aiming
+             * (savestate 3: attach pointers all set). The displayed mesh is the shared PL04W<aca5d> dir[2]
+             * (player-select @1045), textured from PL04.TIM (slot 25). Index the mesh by aca5d. */
             {
                 extern int re15_player_equipped_weapon(void);
-                extern int re15_player_knife_in_hand(void);
-                extern int re15_player_aim_active(void);   /* aim FSM phase != NONE = weapon raised */
-                int eq = re15_player_equipped_weapon();
-                int wi = (eq >= 3) ? 1 : 0;
-                /* Byte-true: the equip commit FUN_80036b68 @0x80036c08 attaches the in-hand weapon mesh
-                 * (kine+0x76c/770/774/778) UNCONDITIONALLY when aca5d!=0 — so the gun is in Leon's hand
-                 * whenever EQUIPPED, not only while aiming (savestate 3: attach pointers all set). The
-                 * knife keeps its own DRAW latch (0x4000). (Reverts the mistaken aim-gate 6b850a7c.) */
-                int vis = (eq >= 3) ? 1 : re15_player_knife_in_hand();
-                if (vis && wpn_bone_valid && wpn_md1_ok[wi] && player_visible &&
+                int eq = re15_player_equipped_weapon();     /* aca5d = the equipped weapon id */
+                int wi = (eq >= 0 && eq < RE15_WPN_MDL_MAX) ? eq : 0;
+                int vis = wpn_md1_ok[wi];                    /* show whatever weapon is equipped */
+                if (vis && wpn_bone_valid && player_visible &&
                     re15_player_victim_state() == 0) {
-                    /* The in-hand mesh reads page 0x81 / clut 0x7840. The GUN's weapon art lives in
-                     * PL04.TIM (uploaded to slot 25 at boot, byte-true player-select main.c:908), the
-                     * knife in its own dir[3] (slot 24). (An earlier attempt bound slot 0 = Leon's body
-                     * skin, whose page 0x81 is the plain hand with NO gun art -> wrong gun texture.) */
-                    re15_render_pc_bind_tim_slot(wi ? RE15_TIM_SLOT_WPN_GUN
-                                                    : RE15_TIM_SLOT_WPN_MELEE);
+                    re15_render_pc_bind_tim_slot(RE15_TIM_SLOT_WPN_GUN);   /* slot 25 = PL04.TIM (shared) */
                     for (int k = 0; k < 9; k++) bone_m[k] = wpn_bone_m[k];
                     bone_t[0] = wpn_bone_t[0]; bone_t[1] = wpn_bone_t[1]; bone_t[2] = wpn_bone_t[2];
                     if (player_lit)
