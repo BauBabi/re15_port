@@ -1757,15 +1757,21 @@ re_title:;
         re15_render_pc_hide_title();
     }
 
-    /* RNG SESSION ENTROPY (interactive runs only): the original FUN_8001af20 state evolves from
-     * boot across ALL callers (idle timers/SEs/other rooms) -> each playthrough sees different
-     * behavior rolls. The port's fixed-seed xorshift + a fixed draw count made every roll IDENTICAL
-     * per run (e.g. the chair zombie ALWAYS rolled the slow 0x13 shamble). Seed from the wall clock
-     * unless a deterministic parity run is scripted (RE15_INPUT_SCRIPT / RE15_POSE_DUMP). */
-    {
+    /* RNG DETERMINISM — byte-true (2026-07-27, audit wf_228686ee, adversarially verified). The earlier
+     * comment here claimed the original RNG "evolves from boot -> each playthrough differs"; that premise
+     * is FALSE. RE1.5 has NO entropy source: the gameplay RNG state @0x800AC774 is a DEAD STORE — the
+     * whole-EXE xref is exactly one READ (lhu t1 @0x8001af28, t1 never used) + two WRITES (the RNG's own
+     * sw a0 @0x8001af48 and a constant 0x1c3 store @0x80031634 that nothing ever reads). FUN_8001af20
+     * hashes the CALLER's incidental a0 register (usually a fixed pointer, e.g. *attack_workstruct loaded
+     * @0x8001772c before jal @0x80017740), not the stored state. With fixed inputs every roll is
+     * DETERMINISTIC on real hardware — "the chair zombie always shambles" IS the byte-true behavior, not
+     * a defect to randomize away. The old wall-clock reseed (SDL_GetTicks^time) manufactured variation the
+     * console never exhibits and broke headless A/B reproducibility (identical draw count, differing state
+     * every run). Default now = deterministic (fixed compile-time seed 0x2545f491, the sole seed). Opt into
+     * per-launch variety only with RE15_RNG_ENTROPY (casual play, never a parity run). */
+    if (getenv("RE15_RNG_ENTROPY")) {
         extern void re15_damage_seed_rng(uint32_t seed);
-        if (!getenv("RE15_INPUT_SCRIPT") && !getenv("RE15_POSE_DUMP"))
-            re15_damage_seed_rng((uint32_t)SDL_GetTicks() ^ 0xA5F15A3Du ^ (uint32_t)time(NULL));
+        re15_damage_seed_rng((uint32_t)SDL_GetTicks() ^ 0xA5F15A3Du ^ (uint32_t)time(NULL));
     }
 
     /* BE-round REVERTED (2026-05-28): tried 60fps default + 60Hz SCD as
