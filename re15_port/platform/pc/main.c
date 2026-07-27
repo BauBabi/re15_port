@@ -2052,7 +2052,11 @@ re_title:;
      * empty attach slots). Slice + parse both class models; TIMs -> slots 24/25. */
     re15_md1_t wpn_md1[2]; int wpn_md1_ok[2] = {0, 0};
     for (int wi = 0; wi < 2; wi++) {
-        const char *plw_name = wi ? "PLD/PL00W03.PLW" : "PLD/PL00W01.PLW";
+        /* Byte-true (player-select main.c:1045-1049 + :908): the GUN in-hand mesh is the SHARED
+         * PL04W03.PLW dir[2] (Leon's live part[11] verts match PL04W03 6/6, NOT PL00W03), textured
+         * from PL04.TIM's weapon art at page 0x81 — NOT the PLW's own dir[3] TIM (which this mesh
+         * never references). The knife stays Leon's PL00W01 + its own dir[3]. */
+        const char *plw_name = wi ? "PLD/PL04W03.PLW" : "PLD/PL00W01.PLW";
         int psz = 0;
         uint8_t *plw = pc_read_shared(plw_name, &psz);   /* stays resident (MD1 borrows) */
         if (!plw || psz < 16) continue;
@@ -2063,17 +2067,23 @@ re_title:;
             de[k] = (uint32_t)(plw[diroff+4*k] | (plw[diroff+4*k+1]<<8) |
                                (plw[diroff+4*k+2]<<16) | ((uint32_t)plw[diroff+4*k+3]<<24));
         if (de[2] >= de[3] || de[3] > (uint32_t)psz) continue;
-        if (re15_md1_parse(plw + de[2], (int)(de[3] - de[2]), &wpn_md1[wi]) == 0) {
-            re15_tim_t wtim;
-            if (re15_tim_parse(plw + de[3], (int)(diroff - de[3]), &wtim) == 0) {
-                re15_render_pc_upload_tim_slot(&wtim, wi ? RE15_TIM_SLOT_WPN_GUN
-                                                         : RE15_TIM_SLOT_WPN_MELEE);
-                wpn_md1_ok[wi] = 1;
-                fprintf(stderr, "[wpn] %s: %d mesh(es), TIM %dx%d -> slot %d\n", plw_name,
-                        wpn_md1[wi].mesh_count, wtim.width, wtim.height,
-                        wi ? RE15_TIM_SLOT_WPN_GUN : RE15_TIM_SLOT_WPN_MELEE);
+        if (re15_md1_parse(plw + de[2], (int)(de[3] - de[2]), &wpn_md1[wi]) != 0) continue;
+        re15_tim_t wtim;
+        if (wi) {
+            /* GUN texture = PL04.TIM (the shared weapon art page 0x81), NOT PL04W03 dir[3] */
+            int tsz = 0; uint8_t *tb = pc_read_shared("PLD/PL04.TIM", &tsz);
+            if (tb && re15_tim_parse(tb, tsz, &wtim) == 0) {
+                re15_render_pc_upload_tim_slot(&wtim, RE15_TIM_SLOT_WPN_GUN);
+                wpn_md1_ok[1] = 1;
             }
+        } else if (re15_tim_parse(plw + de[3], (int)(diroff - de[3]), &wtim) == 0) {
+            re15_render_pc_upload_tim_slot(&wtim, RE15_TIM_SLOT_WPN_MELEE);
+            wpn_md1_ok[0] = 1;
         }
+        if (wpn_md1_ok[wi])
+            fprintf(stderr, "[wpn] %s: %d mesh(es), TIM %dx%d -> slot %d\n", plw_name,
+                    wpn_md1[wi].mesh_count, wtim.width, wtim.height,
+                    wi ? RE15_TIM_SLOT_WPN_GUN : RE15_TIM_SLOT_WPN_MELEE);
     }
 
     /* Elliot TIM into slot 1. */
@@ -4671,14 +4681,12 @@ re_title:;
                 int vis = (eq >= 3) ? 1 : re15_player_knife_in_hand();
                 if (vis && wpn_bone_valid && wpn_md1_ok[wi] && player_visible &&
                     re15_player_victim_state() == 0) {
-                    /* The hand+gun (PLW dir[2]) mesh is textured ENTIRELY from the character's BODY skin
-                     * TIM — every tri reads page 0x81 / clut 0x7840, the SAME tpage as body mesh 11 — NOT
-                     * the separate PLW dir[3] gun TIM (which this mesh never references). The character-
-                     * select draw (verified) binds the skin TIM for exactly this reason (main.c:903-910).
-                     * The in-game body already bound the player skin at slot 0 (main.c:4318); bind it here
-                     * too. The old dir[3] bind (slots 24/25) sampled empty texels -> the gun was invisible
-                     * = the "empty hand while aiming" bug. */
-                    re15_render_pc_bind_tim_slot(0);
+                    /* The in-hand mesh reads page 0x81 / clut 0x7840. The GUN's weapon art lives in
+                     * PL04.TIM (uploaded to slot 25 at boot, byte-true player-select main.c:908), the
+                     * knife in its own dir[3] (slot 24). (An earlier attempt bound slot 0 = Leon's body
+                     * skin, whose page 0x81 is the plain hand with NO gun art -> wrong gun texture.) */
+                    re15_render_pc_bind_tim_slot(wi ? RE15_TIM_SLOT_WPN_GUN
+                                                    : RE15_TIM_SLOT_WPN_MELEE);
                     for (int k = 0; k < 9; k++) bone_m[k] = wpn_bone_m[k];
                     bone_t[0] = wpn_bone_t[0]; bone_t[1] = wpn_bone_t[1]; bone_t[2] = wpn_bone_t[2];
                     if (player_lit)
