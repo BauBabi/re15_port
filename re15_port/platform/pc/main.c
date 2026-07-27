@@ -4365,8 +4365,10 @@ re_title:;
                  * frame (1-frame-stale vs the PSX in-frame pose pass — faithful-line). */
                 if (bi == 11) {
                     extern void re15_player_set_hand_world(int32_t x, int32_t y, int32_t z);
+                    extern void re15_player_set_hand_rot(const int32_t r[9]);
                     re15_player_set_hand_world(bone_world_trans[0], bone_world_trans[1],
                                                bone_world_trans[2]);
+                    re15_player_set_hand_rot(yawed_rot);   /* R_gunbone (WORLD rot) for the discharge-FX anchor */
                 }
                 /* CANONICAL per-bone light fold (2026-06-02): rotate the world
                  * light dirs into THIS bone's frame so the raw bone-local normals

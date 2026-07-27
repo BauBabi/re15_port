@@ -397,11 +397,30 @@ void re15_player_knockback_delta(int16_t rot_y, int32_t mag, int32_t *dx, int32_
  * position instead). The platform render feeds it per frame (1-frame stale, faithful-line). */
 static int32_t s_hand_world[3];
 static int     s_hand_valid = 0;
+static int32_t s_hand_rot[9];               /* bone-11 (gun-bone) WORLD rotation R_gunbone (Q12, row-major) */
+static int     s_hand_rot_valid = 0;
 static int32_t dmg_isqrt(int64_t x);        /* fwd (BIOS SquareRoot0 clone, defined below) */
 void re15_player_set_hand_world(int32_t x, int32_t y, int32_t z)
 {
     s_hand_world[0] = x; s_hand_world[1] = y; s_hand_world[2] = z;
     s_hand_valid = 1;
+}
+void re15_player_set_hand_rot(const int32_t r[9])
+{
+    for (int i = 0; i < 9; i++) s_hand_rot[i] = r[i];
+    s_hand_rot_valid = 1;
+}
+/* Byte-true FUN_80019e20 (@L70-75): the world position of a GUN-BONE-LOCAL offset {ox,oy,oz} =
+ * R_gunbone * offset + T_gunbone, where the gun-bone matrix is posebuf+0x7a4 (bone 11). The port
+ * feeds R (s_hand_rot = yawed_rot) + T (s_hand_world = kine+0x7b8) from the render each frame
+ * (1-frame stale, faithful-line). Returns 0 if the render hasn't posed bone 11 yet (leave out[]). */
+int re15_player_gunbone_world(int32_t ox, int32_t oy, int32_t oz, int32_t out[3])
+{
+    if (!s_hand_valid || !s_hand_rot_valid) return 0;
+    out[0] = (int32_t)(((int64_t)s_hand_rot[0]*ox + (int64_t)s_hand_rot[1]*oy + (int64_t)s_hand_rot[2]*oz) >> 12) + s_hand_world[0];
+    out[1] = (int32_t)(((int64_t)s_hand_rot[3]*ox + (int64_t)s_hand_rot[4]*oy + (int64_t)s_hand_rot[5]*oz) >> 12) + s_hand_world[1];
+    out[2] = (int32_t)(((int64_t)s_hand_rot[6]*ox + (int64_t)s_hand_rot[7]*oy + (int64_t)s_hand_rot[8]*oz) >> 12) + s_hand_world[2];
+    return 1;
 }
 
 int re15_player_weapon_fire(int weapon_id)
