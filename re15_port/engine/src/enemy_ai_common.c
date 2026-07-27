@@ -1135,6 +1135,16 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
                                                * circles the corpse). The old port did ONE -5 then released ->
                                                * ground the kill over re-grab cycles (~15s vs the true ~7.6s). */
             {
+                /* RENDER-LOOP the bite (user report: "the bite animation plays once then FREEZES;
+                 * in the original it plays the whole time"). The live zombie's clips loop via the
+                 * clip's TERMINAL MARKER (FUN_8001f314 wraps at clip-end — there is NO +0x1c4 loop-flag
+                 * write anywhere in the grab), but the port keeps anim_frame MONOTONIC (for the bite
+                 * damage gate) and renders with clip_override=-1, so re15_compute_actor_kf HOLD-LASTs
+                 * once af exceeds the clip length = the bite pose freezes while the anchor-placement
+                 * (which wraps af%fc) keeps sliding = the clip. Set the port's render loop-hint
+                 * +0x1c4&0x04 so re15_compute_actor_kf cycles slot = af % frame_count = the bite plays
+                 * continuously like the original. Cleared on both grab exits (devour / throw-off). */
+                e->anim_flags |= 0x04u;
                 /* -5 ONCE PER BITE-CLIP CYCLE (@0x801027dc, gated on func_0x8001f314's wrap return).
                  * anim_frame runs monotonically (the shared pass does not wrap it), so "clip wrap" =
                  * the loop slot hitting the clip's last frame — exactly one frame per cycle (original
@@ -1160,6 +1170,7 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
                 int16_t kc = e->grab_kill_ctr;
                 e->grab_kill_ctr = (int16_t)(kc - 1);
                 if (kc == 0 || player->hp < 0) {
+                    e->anim_flags &= (uint16_t)~0x04u;    /* leave the bite loop -> DEVOUR (play-once) */
                     re15_ai_set_state_word(e, ((uint32_t)(e->sub_state_1 + 2) << 8) | 1u);
                     break;
                 }
@@ -1168,6 +1179,7 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
                  * tick kill counter, breaks free ALIVE); no mash -> 110 > 100, devoured. */
                 e->ai_timer = (int16_t)(e->ai_timer - (int16_t)(1 + 5 * re15_mash_pressed()));
                 if (e->ai_timer < 0) {                   /* escape window ran out -> THROW-OFF (alive) */
+                    e->anim_flags &= (uint16_t)~0x04u;    /* leave the bite loop -> the fling/recovery clips play ONCE */
                     e->sub_state_2 = 4;
                 }
             }
