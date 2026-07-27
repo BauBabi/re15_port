@@ -4664,7 +4664,11 @@ re_title:;
                 extern int re15_player_aim_active(void);   /* aim FSM phase != NONE = weapon raised */
                 int eq = re15_player_equipped_weapon();
                 int wi = (eq >= 3) ? 1 : 0;
-                int vis = (eq >= 3) ? re15_player_aim_active() : re15_player_knife_in_hand();
+                /* Byte-true: the equip commit FUN_80036b68 @0x80036c08 attaches the in-hand weapon mesh
+                 * (kine+0x76c/770/774/778) UNCONDITIONALLY when aca5d!=0 — so the gun is in Leon's hand
+                 * whenever EQUIPPED, not only while aiming (savestate 3: attach pointers all set). The
+                 * knife keeps its own DRAW latch (0x4000). (Reverts the mistaken aim-gate 6b850a7c.) */
+                int vis = (eq >= 3) ? 1 : re15_player_knife_in_hand();
                 if (vis && wpn_bone_valid && wpn_md1_ok[wi] && player_visible &&
                     re15_player_victim_state() == 0) {
                     /* The hand+gun (PLW dir[2]) mesh is textured ENTIRELY from the character's BODY skin
