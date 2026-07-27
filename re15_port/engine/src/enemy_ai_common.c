@@ -2629,6 +2629,10 @@ void re15_enemy_ai_live_death(int slot)
             e->anim_frame = (uint16_t)(re15_engine_rand8() & 3);
             re15_audio_room_se(5);
         }
+        e->anim_frac = 0xf;                            /* +0x8f = 0xf pose-crossfade seed (STANDING
+                                                        * @0x80106cd8 / DOWNED @0x80107d4c, both `ori
+                                                        * v0,0xf; sb v0,143`) = the 15-frame blend into
+                                                        * the death-fall clip (audit #8). */
         e->anim_flags &= (uint16_t)~0x04u;             /* CLEAR LOOP: the death clip 0x1f plays ONCE + holds
                                                         * its fallen last frame (render clip_override=-1), it
                                                         * must NOT loop like the feeding/idle clip did (0x04 was
@@ -2637,15 +2641,32 @@ void re15_enemy_ai_live_death(int slot)
         re15_enemy_death_fx(e);                        /* death-start blood burst (@0x80107cf4 spawn) */
         return;
     }
-    if (e->sub_state_3 == 1) {                         /* phase 1 — play clip 0x1f to its end */
-        if (e->anim_frame == 7)                        /* +0x95 == 7 (@0x80107cf4): death groan SE (rng: 5 or 8) */
-            re15_audio_room_se((re15_engine_rand8() & 1) ? 5 : 8);
-        if (e->anim_frame == 35)                       /* +0x95 == 0x23 (@0x80107d94): frame-35 gore burst */
-            re15_enemy_death_fx(e);
-        if (!re15_enemy_clip_done(e)) return;          /* still playing death clip 0x1f (FSM-clock gate) */
+    if (e->sub_state_3 == 1) {                         /* phase 1 — play the death clip to its end */
+        if (e->grid_id & 0x80) {                       /* DOWNED death ONLY (FUN_80107cb0): the frame-7 SE
+                                                        * (@0x80107de8) + frame-35 gore (@0x80107e18) gates
+                                                        * live ONLY in the downed handler. The STANDING death
+                                                        * (FUN_80106c18) fired its single SE(5) + all gore
+                                                        * up-front in phase 0 and has NO per-frame SE/gore in
+                                                        * phase 1 — ungated, every shot zombie double-groaned
+                                                        * + double-sprayed blood (audit #4/#5). */
+            if (e->anim_frame == 7)                    /* +0x95 == 7 (@0x80107de8): death groan SE (rng 5/8) */
+                re15_audio_room_se((re15_engine_rand8() & 1) ? 5 : 8);
+            if (e->anim_frame == 35)                   /* +0x95 == 0x23 (@0x80107e18): frame-35 gore burst */
+                re15_enemy_death_fx(e);
+        }
+        if (!re15_enemy_clip_done(e)) return;          /* still playing the death clip (FSM-clock gate) */
         e->sub_state_3 = 2;
     }
-    e->state = (uint8_t)RE15_AI_STATE_CORPSE;          /* phase 2 — +0x4 = 7 (@0x80107ec8): the
+    /* phase 2 — settle to corpse, EXCEPT the STANDING 1/8 secondary death-throe (FUN_80106c18
+     * @0x80106e50: `jal rng; andi v0,0x7; bne v0,zero -> corpse`; on (rng&7)==0 it writes +0x6=4 /
+     * +0x7=0 @0x80106e60-70 and JUMPS past the corpse write -> re-enters phase 0 -> replays the fall
+     * clip = a visible extra death twitch). The downed handler has no such branch. (audit #9) */
+    if (!(e->grid_id & 0x80) && (re15_engine_rand8() & 7) == 0) {
+        e->sub_state_2 = 4;                            /* +0x6 = 4 (@0x80106e60) */
+        e->sub_state_3 = 0;                            /* +0x7 = 0 -> phase-0 re-entry next tick */
+        return;
+    }
+    e->state = (uint8_t)RE15_AI_STATE_CORPSE;          /* +0x4 = 7 (@0x80107ec8 / @0x80106e98): the
                                                         * halfword write zeroes +0x5 -> the settle
                                                         * FSM starts at INIT */
     e->sub_state_1 = 0; e->sub_state_2 = 0;
