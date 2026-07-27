@@ -3735,10 +3735,20 @@ re_title:;
                      * sonst nur beim Boot aktiv, weshalb das via-Tür eingetretene 1170
                      * zwar den Narrator zeigte, aber nie das Elliot/Pilot-Helipad-
                      * Cinematic startete. `rdt` ist hier bereits der neue Raum (1170). */
+                    /* Re-arm ONLY when entering the HELIPAD INTRO room (1170) — the sole room whose
+                     * main00 spawns the narrator sub11 into an event slot. For EVERY other room the
+                     * event slots hold ordinary sub00-spawned threads (e.g. ROOM1150's sub02/sub05
+                     * dialogue helpers); mistaking those for the narrator armed the door-3 F900
+                     * frame-cap fallback (above), which then re-ran main00+sub00 MID-CUTSCENE and
+                     * killed it — the Irons-office freeze after leaving+re-entering through the door
+                     * (measured: pmode stuck 2, cutscene thread gone at F900). Always RESET the latch;
+                     * only SET it for 1170. */
                     s_preintro = 0; s_sub11_slot = -1; s_sub00_spawned = 0;
-                    for (int s = SCD_EVENT_SLOT_FIRST; s <= SCD_EVENT_SLOT_LAST; s++) {
-                        if (g_scd.threads[s].active) {
-                            s_sub11_slot = s; s_preintro = 1; break;
+                    if (g_current_room_id == 0x1170) {
+                        for (int s = SCD_EVENT_SLOT_FIRST; s <= SCD_EVENT_SLOT_LAST; s++) {
+                            if (g_scd.threads[s].active) {
+                                s_sub11_slot = s; s_preintro = 1; break;
+                            }
                         }
                     }
                     g_engine.frame_count = 0;   /* Frame-Cap des Handoffs relativ zum Eintritt */
