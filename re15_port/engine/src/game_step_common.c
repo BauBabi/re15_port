@@ -398,9 +398,9 @@ void re15_game_step(const re15_game_ctx_t *c)
                     re15_esp_fx_spawn_rows(re15_esp_global_bank(), 2, 0, 0x0800,  /* MUZZLE 0x02000800 */
                         pl->x + ( fcos * 0x25d >> 12), gy,
                         pl->z + (-fsin * 0x25d >> 12), gy + 2083);
-                    re15_esp_fx_spawn_ex(re15_esp_global_bank(), 3, 0, 0x0c00,  /* SMOKE 0x03000c00 {0x91,0x1f4,-25} */
+                    re15_esp_fx_spawn_rows(re15_esp_global_bank(), 3, 0, 0x0c00,  /* SMOKE 0x03000c00 {0x91,0x1f4,-25} */
                         pl->x + ( fcos * 0x1f4 >> 12), gy - 25,
-                        pl->z + (-fsin * 0x1f4 >> 12), (int16_t)pl->rot_y);
+                        pl->z + (-fsin * 0x1f4 >> 12), gy + 2083);
                     /* SHELL EJECT (byte-true @0x8003383c-64 of the handgun one-shot @0x800337bc =
                      * item-dispatch [6]/[7]): id 4 sub 0 scale 0x800 = 0x04000800, spawned INLINE at
                      * discharge alongside muzzle+smoke (offset {0x91,0x109,-50}) — the SAME handler the
