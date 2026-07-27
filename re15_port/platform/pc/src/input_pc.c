@@ -23,18 +23,18 @@
 #define RE15_PAD_RIGHT    0x0020
 #define RE15_PAD_DOWN     0x0040
 #define RE15_PAD_LEFT     0x0080
-#define RE15_PAD_L1       0x0400   /* Q  = "L1" — reserved (currently unused) */
+#define RE15_PAD_L1       0x0400   /* Q  = "L1" (DuckStation Pad1) — reserved (currently unused) */
 #define RE15_PAD_R1       0x0800   /* E  = "R1" — AIM / raise the weapon (hold; game_step + player aim FSM) */
-#define RE15_PAD_TRIANGLE 0x1000   /* C = Triangle (shares the DBG_NEXT bit) */
-#define RE15_PAD_CIRCLE   0x2000   /* V = Circle (shares DBG_PREV) */
-#define RE15_PAD_CROSS    0x4000   /* Shift = "X" — RUN modifier (held) + menu/dialog CANCEL
+#define RE15_PAD_TRIANGLE 0x1000   /* I = Triangle (shares the DBG_NEXT bit) */
+#define RE15_PAD_CIRCLE   0x2000   /* L = Circle (shares DBG_PREV) */
+#define RE15_PAD_CROSS    0x4000   /* K (also Shift) = "X" — RUN modifier (held) + menu/dialog CANCEL
                                     * (virtual 0x8000 <- raw CROSS @0x80073dbc[15], wave-6 f4) */
-#define RE15_PAD_SQUARE   0x8000   /* Enter = "Square" — ACTION + menu/dialog CONFIRM/fast-forward
+#define RE15_PAD_SQUARE   0x8000   /* J = "Square" — ACTION + menu/dialog CONFIRM/fast-forward
                                     * (virtual 0x4000 <- raw SQUARE @0x80073dbc[14]); the YES/NO
                                     * toggle is d-pad L/R (virtual 0x3000), NOT Triangle/Circle */
 /* Phase 4.5.13-RE2 H5 (2026-05-21): motion-debug keys */
-#define RE15_PAD_SELECT   0x0001   /* Tab    = toggle motion-debug-lock */
-#define RE15_PAD_START    0x0008   /* I      = open the inventory/weapon-select (== engine RE15_PAD_BIT_START) */
+#define RE15_PAD_SELECT   0x0001   /* Backspace = toggle motion-debug-lock */
+#define RE15_PAD_START    0x0008   /* Enter  = open the inventory/weapon-select (== engine RE15_PAD_BIT_START) */
 #define RE15_PAD_DBG_NEXT 0x1000   /* PageUp   = clip +1 */
 #define RE15_PAD_DBG_PREV 0x2000   /* PageDown = clip -1 */
 
@@ -191,22 +191,24 @@ void re15_input_tick(void)
     const Uint8 *keys = SDL_GetKeyboardState(NULL);
     uint16_t bits = 0;
     if (keys) {
-        /* ==== PSX-controller-EQUIVALENT keyboard layout =================================
-         * Each key drives the SAME PSX pad bit the controller does, so keyboard and pad play
-         * identically. D-pad on the left (arrows / WASD), the four ◇○✕□ face buttons + the
-         * shoulders on the right of the board:
+        /* ==== Keyboard layout — MIRRORS the current DuckStation [Pad1] bindings ==========
+         * (settings.ini under %LOCALAPPDATA%/DuckStation, read 2026-07-26). The SAME physical
+         * key drives the SAME PSX pad bit in the port and in the original under DuckStation, so
+         * muscle memory transfers 1:1 for parity work. Movement = arrows (DuckStation D-pad) OR
+         * WASD (DuckStation left analog stick — equivalent for RE1.5's digital tank controls):
          *
-         *   ↑ ↓ ← →  /  W A S D   = D-pad          (tank: ↑ forward, ↓ back, ← → turn)
-         *   Shift                 = ✕ Cross        (RUN, held  +  menu confirm / dialog fast-forward)
-         *   Space / Enter         = □ Square       (ACTION: examine / grab / fire)
-         *   E                     = R1             (AIM, held)
-         *   Q                     = L1
-         *   C                     = △ Triangle     (dialog cursor / cancel)
-         *   V                     = ○ Circle       (dialog cursor / cancel)
-         *   I                     = Start          (inventory / weapon-select)
-         *   Tab                   = Select
-         *   [  ]                  = L2 / R2
-         *   F11 / Alt+Enter       = toggle fullscreen (window is the default)
+         *   ↑ ↓ ← →  /  W A S D   = D-pad / L-stick (tank: ↑ forward, ↓ back, ← → turn)
+         *   K   (also L/R-Shift)  = ✕ Cross        (RUN, held  +  menu confirm / dialog fast-forward)
+         *   J                     = □ Square       (ACTION: examine / grab / fire  +  menu confirm)
+         *   L                     = ○ Circle       (dialog cursor / cancel)
+         *   I                     = △ Triangle     (dialog cursor / cancel)
+         *   Q  /  E               = L1 / R1        (R1 = AIM, held)
+         *   1  /  3               = L2 / R2
+         *   2  /  4               = L3 / R3
+         *   Backspace             = Select
+         *   Enter                 = Start          (inventory / weapon-select)
+         *   F11 / Select+Start    = toggle fullscreen (window is the default)
+         * L-Shift is kept as an EXTRA ✕/Run key (unbound in DuckStation) — the iconic RE run key.
          * ALL debug is on the FUNCTION keys only — never the game keys: F1/F2 = prev/next room,
          * F3 = motion-lock, F4/F5 = clip cycle (F3-F5 need RE15_MOTION_DEBUG). See re15_input_debug_fkey.
          * (Tell me if you want any game key different — this is a single lookup table to edit.) */
@@ -214,17 +216,20 @@ void re15_input_tick(void)
         if (keys[SDL_SCANCODE_RIGHT] || keys[SDL_SCANCODE_D]) bits |= RE15_PAD_RIGHT;
         if (keys[SDL_SCANCODE_DOWN]  || keys[SDL_SCANCODE_S]) bits |= RE15_PAD_DOWN;
         if (keys[SDL_SCANCODE_LEFT]  || keys[SDL_SCANCODE_A]) bits |= RE15_PAD_LEFT;
-        if (keys[SDL_SCANCODE_LSHIFT] || keys[SDL_SCANCODE_RSHIFT]) bits |= RE15_PAD_CROSS;    /* ✕ Run / OK   */
-        if (keys[SDL_SCANCODE_SPACE] || keys[SDL_SCANCODE_RETURN] ||
-            keys[SDL_SCANCODE_KP_ENTER])                            bits |= RE15_PAD_SQUARE;   /* □ Action     */
-        if (keys[SDL_SCANCODE_E])         bits |= RE15_PAD_R1;        /* R1 Aim                             */
-        if (keys[SDL_SCANCODE_Q])         bits |= RE15_PAD_L1;        /* L1                                 */
-        if (keys[SDL_SCANCODE_C])         bits |= RE15_PAD_TRIANGLE;  /* △ (dialog toggle / cancel, 0x3000) */
-        if (keys[SDL_SCANCODE_V])         bits |= RE15_PAD_CIRCLE;    /* ○                                  */
-        if (keys[SDL_SCANCODE_I])         bits |= RE15_PAD_START;     /* Start = inventory                  */
-        if (keys[SDL_SCANCODE_TAB])       bits |= RE15_PAD_SELECT;    /* Select                             */
-        if (keys[SDL_SCANCODE_LEFTBRACKET])  bits |= 0x0100;         /* L2                                 */
-        if (keys[SDL_SCANCODE_RIGHTBRACKET]) bits |= 0x0200;         /* R2                                 */
+        if (keys[SDL_SCANCODE_K] || keys[SDL_SCANCODE_LSHIFT] || keys[SDL_SCANCODE_RSHIFT])
+                                          bits |= RE15_PAD_CROSS;    /* ✕ Run / OK   (DuckStation: K; L-Shift kept) */
+        if (keys[SDL_SCANCODE_J])         bits |= RE15_PAD_SQUARE;   /* □ Action     (DuckStation: J) */
+        if (keys[SDL_SCANCODE_L])         bits |= RE15_PAD_CIRCLE;   /* ○            (DuckStation: L) */
+        if (keys[SDL_SCANCODE_I])         bits |= RE15_PAD_TRIANGLE; /* △            (DuckStation: I) */
+        if (keys[SDL_SCANCODE_E])         bits |= RE15_PAD_R1;       /* R1 Aim       (DuckStation: E) */
+        if (keys[SDL_SCANCODE_Q])         bits |= RE15_PAD_L1;       /* L1           (DuckStation: Q) */
+        if (keys[SDL_SCANCODE_BACKSPACE]) bits |= RE15_PAD_SELECT;   /* Select       (DuckStation: Backspace) */
+        if (keys[SDL_SCANCODE_RETURN] || keys[SDL_SCANCODE_KP_ENTER])
+                                          bits |= RE15_PAD_START;    /* Start = inv  (DuckStation: Enter) */
+        if (keys[SDL_SCANCODE_1])         bits |= 0x0100;            /* L2           (DuckStation: 1) */
+        if (keys[SDL_SCANCODE_3])         bits |= 0x0200;            /* R2           (DuckStation: 3) */
+        if (keys[SDL_SCANCODE_2])         bits |= 0x0002;            /* L3           (DuckStation: 2) */
+        if (keys[SDL_SCANCODE_4])         bits |= 0x0004;            /* R3           (DuckStation: 4) */
     }
 
     /* F1-F12 -> the debug channel (edge-detected), completely OFF the gameplay pad word above. */
