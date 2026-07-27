@@ -1288,6 +1288,7 @@ static void re15_enemy_ai_live_wander(int slot, re15_actor_t *e)
     int16_t t = e->ai_timer;
     e->ai_timer = (int16_t)(t - 1);
     if (t == 0) { re15_ai_set_state_word(e, 0x0001); return; }   /* -> search-stand */
+    e->anim_flags |= 0x04u;                              /* LOOP the shamble clip (see engage_animate) */
     re15_enemy_steer_point(e, e->steer_x, e->steer_z, 8); /* aac4(+0x1bc,+0x1be,8) */
     re15_enemy_footlock_step(slot, e);
 }
@@ -1399,6 +1400,7 @@ static void re15_enemy_ai_live_knockdown(re15_actor_t *e)
         case 0:
             e->motion = 0x0b; e->anim_frame = 0;
             e->anim_frac = 0xf; e->anim_blend_rate = 0x100;
+            e->anim_flags &= (uint16_t)~0x04u;        /* HOLD-LAST lie-down/get-up (drop inherited walk LOOP) */
             e->hit_react |= 1;
             e->hit_stun = (int16_t)0x80;              /* +0x1dc = 0x80 downed sentinel */
             e->grid_id |= 0x80;                       /* +0x9 |= 0x80 (downed reroute) */
@@ -1484,6 +1486,7 @@ static void re15_enemy_ai_live_charge(int slot, re15_actor_t *e)
             re15_audio_room_se((re15_engine_rand8() & 1) ? 4 : 5);
         s_zfoot_ok[slot] = 0;
     }
+    e->anim_flags |= 0x04u;                       /* LOOP the arms-up charge walk (see engage_animate) */
     re15_enemy_steer_point(e, e->steer_x, e->steer_z, 0x40);   /* aac4(+0x1bc,+0x1be,0x40) */
     int16_t t = e->ai_timer;
     e->ai_timer = (int16_t)(t - 1);
@@ -2148,6 +2151,14 @@ static void re15_enemy_ai_live_engage_animate(int slot, re15_actor_t *e)
     /* Plays the per-zombie BANK0 walk clip +0x1d4 in {2,3,4,5} (seeded @0x80100774 / girl @0x8010ac58
      * from @0x8011f7e4 — the port's hurt_clip field IS +0x1d4) with the SAME foot-lock translation as
      * the 0x13 lurch, weaving toward the player via the 32-entry gait row (@0x8011f9f0 + variant*0x80). */
+    /* WALK LOOPS CONTINUOUSLY: the original advances the walk clip every tick via FUN_8001f314
+     * (@0x80102420), which WRAPS the frame counter at the clip's terminal 0x8000 marker (@0x8001f378)
+     * unconditionally — the arms-out walk never freezes. In the port the render loop is gated on the
+     * anim_flags 0x04 LOOP bit (anim_select_common.c:211); the live zombie spawns with anim_flags=0
+     * so its walk render HELD-LAST = frozen slide. Set the LOOP bit here so the render cycles the clip
+     * (foot-lock movement is unaffected — it always queries clip_override=motion). Cleared again by the
+     * play-once entries (hurt/death/grab-devour). */
+    e->anim_flags |= 0x04u;
     if (e->sub_state_2 == 0) {                       /* entry (+0x6==0 @0x80102204..) */
         /* byte-true @0x801022b8-bc `lbu v1,9(v0); andi 0x7f; sb`: every fresh engage
          * entry defensively clears the DOWNED bit — restores the standing HURT/DEATH
@@ -2419,6 +2430,7 @@ void re15_enemy_ai_live_hurt(int slot)
 {
     if (slot < 0 || slot >= RE15_ACTOR_MAX) return;
     re15_actor_t *e = &g_actors[slot];
+    e->anim_flags &= (uint16_t)~0x04u;    /* HOLD-LAST the play-once flinch (drop any inherited walk LOOP) */
 
     /* DOWNED/LYING flinch (router @0x80105a9c-ad8: `lbu +0x9; andi 0x80; beq zero -> normal`, then
      * +0x5 in {0x12,0x13} -> FUN_80106a38 (prone flinch clip 37/38), else -> FUN_801068a0 (clip 0x1e)).

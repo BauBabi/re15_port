@@ -447,7 +447,11 @@ int main(void)
                                           * 0xb (back-latch +0x93 bit0x80); clip 0x1f = the DOWNED path */
         if (zc->motion != 0x0d && zc->motion != 0x0b) {
             fprintf(stderr, "FAIL: standing death phase0 sets clip 0xd/0xb, ist %d\n", zc->motion); fail = 1; }
-        re15_enemy_ai_live_tick(zs);     /* phase 1->2 (no model bank -> straight to CORPSE state 7) */
+        /* phase 1->2 -> CORPSE. NOT always one tick: the byte-true STANDING death has a 1/8 secondary
+         * death-throe (FUN_80106c18 @0x80106e50, `rng&7==0`) that re-enters phase 0 for an extra fall
+         * twitch (enemy_ai_common death phase 2). Each phase-2 roll settles to corpse with p=7/8, so
+         * tick until it lands (bounded) instead of assuming a single transition. */
+        for (int f = 0; f < 24 && zc->state != RE15_AI_STATE_CORPSE; f++) re15_enemy_ai_live_tick(zs);
         if (zc->state != RE15_AI_STATE_CORPSE) {
             fprintf(stderr, "FAIL: DEATH -> CORPSE (state 7), ist %d\n", zc->state); fail = 1; }
 
@@ -498,7 +502,9 @@ int main(void)
         if ((front->motion != 0x0d && front->motion != 0x0b) || front->state != RE15_AI_STATE_DEATH) {
             fprintf(stderr, "FAIL: standing death phase0 clip 0xd/0xb + holds DEATH, motion=%d state=%d\n",
                     front->motion, front->state); fail = 1; }
-        re15_enemy_ai_live_tick(zslots[2]);   /* phase 1->2 (no model bank loaded -> straight to corpse) */
+        /* phase 1->2 -> CORPSE; tick until it settles (the 1/8 standing death-throe can re-enter
+         * phase 0 for an extra fall twitch — see the DEATH->CORPSE note above). */
+        for (int f = 0; f < 24 && front->state != RE15_AI_STATE_CORPSE; f++) re15_enemy_ai_live_tick(zslots[2]);
         if (front->state != RE15_AI_STATE_CORPSE) {
             fprintf(stderr, "FAIL: shot DEATH -> CORPSE (7), ist %d\n", front->state); fail = 1; }
         if (!fail)
