@@ -1420,10 +1420,11 @@ static void re15_enemy_ai_live_knockdown(re15_actor_t *e)
             if (--e->ai_timer <= 0) e->sub_state_2 = 4;
             re15_enemy_hold_last_frame(e);            /* lie still on the fallen frame */
             break;
-        case 4:
-            e->motion = 0x12; e->anim_frame = 0;      /* get-up clip */
-            e->anim_frac = 0xf;
-            e->sub_state_2 = 5;
+        case 4:                                       /* GET-UP (@0x8010532c, row [4] of @0x801000c4) */
+            e->motion = 0x12; e->anim_frame = 0;      /* +0x94 = 0x12 @0x80105338, +0x95 = 0 @0x80105348 */
+            e->anim_frac = 0xf;                       /* +0x8f = 0xf @0x80105368 */
+            e->sub_state_2 = 5;                       /* +0x6 = 5 @0x80105358 */
+            e->hit_react |= 1;                        /* +0x93 |= 1 @0x80105378-84 (was missing) */
             break;
         case 6:
             e->grid_id &= (uint8_t)0x7f;

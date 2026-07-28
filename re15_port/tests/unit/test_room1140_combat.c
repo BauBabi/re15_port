@@ -568,6 +568,33 @@ int main(void)
             printf("  (11b) downed zombie: level shot misses; DOWN-aimed hits inside 5000, misses beyond\n");
     }
 
+    /* (11c): hitting a zombie that is LYING DOWN makes it get up IMMEDIATELY — it must not finish a
+     * lie-timer first. BYTE-TRUE FUN_801068a0 (the downed flinch), @0x80106970-a0:
+     *   80106970: lh v1,476(a0)          (+0x1dc, SIGNED)
+     *   80106974: ori v0,zero,0x80
+     *   80106978: bne v1,v0,0x801069a4   (not the downed sentinel -> skip)
+     *   80106980: sb s0,4(a0)            +0x4 = 1     ACTIVE
+     *   80106990: sb v0,5(v1)            +0x5 = 0x11  KNOCKDOWN
+     *   801069a0: sb v0,6(v1)            +0x6 = 4     the GET-UP phase
+     * i.e. the hit short-circuits the lie timer straight into standing up. */
+    {
+        re15_actor_t *z = &g_actors[zslots[0]];
+        z->state = RE15_AI_STATE_ACTIVE; z->sub_state_1 = 0x11; z->sub_state_2 = 2; /* lying */
+        z->sub_state_3 = 0; z->grid_id = 0x80; z->hit_stun = (int16_t)0x80;
+        z->hp = 60; z->hit_react = 0; z->x = 0; z->z = 800;
+        re15_enemy_take_damage(z, 0);                 /* shot while down */
+        if (z->state != RE15_AI_STATE_HURT) {
+            fprintf(stderr, "FAIL: (11c) a hit puts the downed zombie in HURT first, state=%d\n", z->state);
+            fail = 1; }
+        re15_enemy_ai_live_hurt(zslots[0]);           /* the downed flinch phase 0 */
+        if (z->state != RE15_AI_STATE_ACTIVE || z->sub_state_1 != 0x11 || z->sub_state_2 != 4) {
+            fprintf(stderr, "FAIL: (11c) downed hit must short-circuit to the GET-UP phase "
+                            "(+0x4=1 +0x5=0x11 +0x6=4 @0x80106980-a0), state=%d +0x5=%d +0x6=%d stun=%d\n",
+                    z->state, z->sub_state_1, z->sub_state_2, (int)z->hit_stun); fail = 1; }
+        if (!fail)
+            printf("  (11c) hit while down -> immediate GET-UP (no lie timer)\n");
+    }
+
     /* (12): the BYTE-TRUE reach bound (cone tester FUN_800127fc/800128a0): R = reach + enemy hitbox
      * radius (hbdata+6 = hit_radius_min = 400 for zombies), hit iff strict dist < R. The pistol's table
      * reach is 1000, so the true effective range vs a zombie is 1000+400 = 1400 (strict). Pre-fix the

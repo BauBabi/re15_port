@@ -3492,9 +3492,11 @@ re_title:;
                     for (int si = 1; si < RE15_ACTOR_MAX; si++) {
                         re15_actor_t *e = &g_actors[si];
                         if (!e->active || e->type == 0) continue;
-                        fprintf(s_state_log, " [%d t=%02x st=%d ss1=%d g=%02x mo=%d af=%d d=%u @(%d,%d,r%d)]",
-                                si, e->type, e->state, e->sub_state_1, e->grid_id, e->motion,
-                                e->anim_frame, e->ai_dist, e->x, e->z, e->rot_y);
+                        fprintf(s_state_log, " [%d t=%02x st=%d ss1=%d ss2=%d ss3=%d g=%02x mo=%d af=%d "
+                                             "stun=%d d=%u @(%d,%d,r%d)]",
+                                si, e->type, e->state, e->sub_state_1, e->sub_state_2, e->sub_state_3,
+                                e->grid_id, e->motion, e->anim_frame, (int)e->hit_stun,
+                                e->ai_dist, e->x, e->z, e->rot_y);
                     }
                     fputc('\n', s_state_log); fflush(s_state_log);
                 }
