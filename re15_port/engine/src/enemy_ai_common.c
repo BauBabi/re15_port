@@ -2469,7 +2469,7 @@ void re15_enemy_ai_live_hurt(int slot)
                 e->anim_frame  = 0;                         /* +0x95=0 @0x80106aac */
                 e->anim_frac   = 4;                         /* +0x8f=4 @0x80106abc */
                 e->anim_blend_rate = 0x200;                 /* f314 a3=0x200 @0x80106b2c */
-                re15_enemy_death_fx(e);                     /* gore 0x80019700(0x2000,rot,pool+0x40) @0x80106ad8 */
+                re15_enemy_blood_at_bone(e, 0);             /* a2 = pool+0x40 = PART 0 @0x80106ad8 */
                 e->hit_react |= 1;                          /* +0x93|=1 @0x80106af4-fc */
                 if ((re15_engine_rand8() & 7) == 0)         /* 1/8 @0x80106b00-04 */
                     re15_audio_room_se(6);                  /* SE(6) @0x80106b0c-10 */
@@ -2479,7 +2479,7 @@ void re15_enemy_ai_live_hurt(int slot)
                 e->anim_frame  = 0;                         /* +0x95=0 @0x80106910 */
                 e->anim_frac   = 3;                         /* +0x8f=3 @0x8010691c-20 */
                 e->anim_blend_rate = 0x400;                 /* f314 a3=0x400 @0x801069bc */
-                re15_enemy_death_fx(e);                     /* gore 0x80019700(0x1500,rot,pool+0x4f4) @0x8010693c */
+                re15_enemy_blood_at_bone(e, 7);             /* a2 = pool+0x4f4 = 172*7+64 = PART 7 @0x8010693c */
                 e->hit_react |= 1;                          /* +0x93|=1 @0x80106958-60 */
                 re15_audio_room_se(6);                      /* SE(6) UNCONDITIONAL @0x80106954-5c */
                 if (e->hit_stun == (int16_t)0x80) {         /* +0x1dc==0x80 downed sentinel @0x80106970-78 */
@@ -2723,7 +2723,17 @@ void re15_enemy_ai_live_death(int slot)
                                                         * must NOT loop like the feeding/idle clip did (0x04 was
                                                         * set at spawn). Complements the state-7 corpse freeze. */
         e->sub_state_3 = 1;                            /* +0x7 = 1 (@0x80107d1c) */
-        re15_enemy_death_fx(e);                        /* death-start blood burst (@0x80107cf4 spawn) */
+        re15_enemy_death_fx(e);                        /* burst at the per-type GORE BONE (@0x80106d2c
+                                                        * standing / @0x80107cf4 downed) */
+        if (!(e->grid_id & 0x80)) {
+            /* STANDING death FUN_80106c18 fires TWO more bone-anchored bursts, gated on the hit zone
+             * +0x6 (s1 = 1 @0x80106c34):
+             *   @0x80106d48 bne +0x6,s1 -> @0x80106d5c/60 jal ; addiu a2,v0,64   = pool+64  = PART 0
+             *   @0x80106d78 bne +0x6,zero -> @0x80106d8c/90 jal ; addiu a2,a2,408 = pool+408 = PART 2
+             * (The downed death has no such pair.) */
+            if (e->sub_state_2 == 1)      re15_enemy_blood_at_bone(e, 0);
+            else if (e->sub_state_2 == 0) re15_enemy_blood_at_bone(e, 2);
+        }
         return;
     }
     if (e->sub_state_3 == 1) {                         /* phase 1 — play the death clip to its end */

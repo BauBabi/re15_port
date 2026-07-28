@@ -801,16 +801,44 @@ void re15_enemy_hurt_blood(re15_actor_t *e)
                          g[0], g[1], g[2], e->y);      /* floor = the actor's ground Y */
 }
 
+/* One blood burst anchored at ONE part's world transform — the shape every FUN_80019700 call in the
+ * zombie overlay has (a0 = 0x2000, a1 = +0x6a, a2 = model_pool + 172*part + 64). */
+void re15_enemy_blood_at_bone(re15_actor_t *e, int bone)
+{
+    if (!e || !e->active) return;
+    int32_t g[3];
+    re15_enemy_bone_world_pos(e, bone, g);
+    re15_esp_fx_spawn(re15_esp_room_bank(), 0 /*effect-id*/, 0 /*sub*/,
+                      g[0], g[1], g[2], (int16_t)e->rot_y);
+}
+
+/* DEATH blood — byte-true STANDING death FUN_80106c18 (self-disassembled 2026-07-28). Its phase-0
+ * fires up to THREE bursts, all bone-anchored, none at the actor root:
+ *   80106cb8: ori a0,zero,0x2000 ; 80106ce4-e8: a3 = 0x8012016c ; 80106cec-d00: bone = u8[0x8011f784+type]
+ *   80106d08-28: v0 = 172*bone + pool(+0x188)      (the x172 chain: 3,12,11,44,43,172)
+ *   80106d2c/30: jal 0x80019700 ; addiu a2,v0,64   -> ALWAYS: the per-type GORE BONE matrix
+ *   80106d40-48: lbu +0x6 ; bne v0,s1  (s1 = 1 @0x80106c34)
+ *   80106d5c/60: jal ; addiu a2,v0,64              -> zone 1: PART 0 matrix (pool + 64)
+ *   80106d78:    bne v0,zero
+ *   80106d8c/90: jal ; addiu a2,a2,408             -> zone 0: PART 2 matrix (pool + 408)
+ * (The same shape repeats in the other death variant @0x80107000-30.) The port spawned ONE burst at
+ * the actor origin = at the corpse's FEET; a gunshot death now bleeds at the gore bone AND part 0. */
 void re15_enemy_death_fx(re15_actor_t *e)
 {
     if (!e || !e->active) return;
+    int32_t g[3];
+    int gore = (e->type < 0x30) ? (int)s_gore_bone[e->type] : 0;   /* @0x8011f784[type] */
+    re15_enemy_bone_world_pos(e, gore, g);
     re15_esp_fx_spawn(re15_esp_room_bank(), 0 /*effect-id*/, 0 /*sub*/,
-                      e->x, e->y, e->z, (int16_t)e->rot_y);
+                      g[0], g[1], g[2], (int16_t)e->rot_y);        /* @0x80106d2c ALWAYS */
+    /* The two ZONE-GATED extra bursts (@0x80106d5c part 0 / @0x80106d8c part 2) belong to the STANDING
+     * death handler FUN_80106c18 specifically, not to every caller of this helper — they are emitted
+     * in re15_enemy_ai_live_death's standing branch. */
     /* BLOOD SPLATTER (byte-true parent→child chain, RE15_ESP_ROWMACHINE.md): the death burst
      * throws a spray of physics droplets (gravity + RNG spread + floor bounce) — the byte-true
      * blood spread that the single cycling sprite alone lacked. Floor = the actor's ground Y. */
     re15_esp_fx_splatter(re15_esp_room_bank(), 0 /*blood*/, 8,
-                         e->x, e->y - 1200, e->z, e->y);
+                         g[0], g[1], g[2], e->y);   /* from the gore bone, floor = ground Y */
 }
 
 /* ====================================================================== *
