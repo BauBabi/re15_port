@@ -4955,10 +4955,20 @@ re_title:;
                  * entity+0x84), NOT the 43-clip action bank. W1 disasm 2026-07-03: the ENGAGE (+0x5=2)
                  * IS the aware walk (bank0 clip +0x1d4 in {2..5} — the arms-out per-zombie walks),
                  * the 0x13 lurch plays bank0 clip 1, and the TURN (+0x5=7) pivots on the same +0x1d4
-                 * clip. Gate on state ACTIVE (a HURT zombie has +0x5 = the weapon id, which collides
-                 * with 2 — its stagger renders bank1 as before). motion carries the clip index. */
-                if (npc->state == 1 &&
-                    (npc->sub_state_1 == 0x13 || npc->sub_state_1 == 2 || npc->sub_state_1 == 7)) {
+                 * clip. motion carries the clip index.
+                 * HURT TOO (corrected 2026-07-28): the stagger handler FUN_80105B7C plays the SAME
+                 * bank — both of its animating phases load `lw a0,132(v0)` = entity+0x84 = bank0
+                 * (@0x80105d3c phase 1 / @0x80105de0 phase 3, each `jal 0x8001f314` anim_set with
+                 * a1 = +0x16c, a3 = 0x200), and phase 0 sets +0x94 = +0x1d4 = the very same walk
+                 * variant {2..5}. The old gate excluded state 2 on the assumption "+0x5 = weapon id
+                 * collides with 2" — savestate 4 refutes it (+0x5 = 3 = the equipped ITEM id), and the
+                 * exclusion made the stagger resolve clip 2..5 in the 43-clip ACTION bank = a
+                 * completely different animation. Measured: not one of that bank's 2401 keyframes
+                 * reproduces the original's part angles. Gate on the clip, not on +0x5.
+                 * (Downed/lying hits keep the action bank — those handlers set their own clips.) */
+                if ((npc->state == 1 &&
+                     (npc->sub_state_1 == 0x13 || npc->sub_state_1 == 2 || npc->sub_state_1 == 7))
+                    || (npc->state == 2 && !(npc->grid_id & 0x80))) {
                     re15_enemy_bank_t *lb = re15_enemy_find(npc->type);
                     if (lb && lb->loco_ok && (int)npc->motion < lb->anim_loco.clip_count) {
                         npc_skel = &lb->skel_loco;
@@ -4998,7 +5008,6 @@ re_title:;
                     : ((uint32_t)npc->anim_frame >> 1);
                 int npc_kf = re15_compute_actor_kf(npc_anim, npc_skel, npc,
                                                    av.clip_override, ncur);
-
                 re15_skel_pose_t npc_poses[RE15_EMD_MAX_BONES];
                 g_anim_pose_actor = npc;   /* FRAC crossfade for this NPC/enemy body */
                 if (re15_skel_compute_pose(npc_skel, npc_kf, npc_poses) != 0) continue;
