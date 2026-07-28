@@ -2445,10 +2445,16 @@ void re15_enemy_ai_live_hurt(int slot)
      * (audit wf_827f186d zombie-live #2, HIGH). Both handlers raw-disasm'd end-to-end (2026-07-26)
      * and ported below as the same +0x7 phase machine the death/knockdown ports use. */
     if (e->grid_id & 0x80) {
-        /* The play-once HOLD-LAST semantics stay ONLY here: these two downed handlers are ported as
-         * clip-playout machines (re15_enemy_clip_done), so they need it. The STANDING stagger must NOT
-         * clear it — see the LOOP note above re15_enemy_ai_live_hurt's phase 0. */
-        e->anim_flags &= (uint16_t)~0x04u;
+        /* NO anim-flag clear here either (corrected 2026-07-28): a store census over BOTH downed
+         * handlers — FUN_801068a0 @0x801068a0+90 and FUN_80106a38 @0x80106a38+90 — finds only
+         * +0x94 (clip @0x80106900 / @0x80106a9c), +0x95 = 0 (@0x80106910 / @0x80106aac) and +0x8f
+         * (@0x80106920 / @0x80106abc): NOT ONE store to +0x1c4. Same for the knockdown FUN_8010512c.
+         * The port used to force HOLD-LAST here, which froze the downed flinch on its last frame —
+         * the same defect that made the STANDING stagger look wrong. The phase machine does not need
+         * it: re15_enemy_clip_done() compares the actor's own anim_frame against the clip length and
+         * is independent of the LOOP bit. (These two handlers animate from the DEFAULT bank —
+         * `lw a0,368(v0)` / `lw a1,372(v0)` = +0x170/+0x174 @0x801069b0-b4 / @0x80106b20-24 — NOT the
+         * loco bank0 the standing stagger uses, which is why the render gate excludes downed hits.) */
         int prone = (e->sub_state_1 == 0x12 || e->sub_state_1 == 0x13);
         /* ZOMBIE GIRL router (FUN_8010bf80 @0x8010bfa4-c4): her downed gate routes +0x5==2 ->
          * FUN_80106a38 (prone flinch), ELSE -> FUN_801068a0 — the standard's {0x12,0x13} pair
@@ -2522,6 +2528,20 @@ void re15_enemy_ai_live_hurt(int slot)
                                                         * continues; the recoil is the bend, not a clip) */
         e->speed_h     = 0x14;                         /* +0x8c = 0x14 */
         e->anim_frac   = 0;                            /* +0x8f = 0 */
+        /* HIT BLOOD — phase 0 spawns it, gated on the hit ZONE +0x6 (self-disassembled):
+         *   80105c48: lbu v0,6(a2) ; 80105c50: bne v0,a1(=1),0x80105ca4
+         *   80105c54: ori a0,zero,0x2000 ; 80105c9c: jal 0x80019700 ; 80105ca0: addiu a2,s0,64
+         *      -> zone 1: spawn at the per-type gore bone (s0 = pool + 172*u8[0x8011f784+type])
+         *   80105cb0-b8: lbu v0,6(v1) ; bne v0,zero,0x80105ce4      (zone 0)
+         *   80105cbc: ori a0,zero,0x2000 ; 80105cd4: jal 0x80019700 ; 80105cd8: addiu a2,a2,408
+         *      -> zone 0: spawn at the fixed part
+         *   zone 2 (upward hit): NO spawn at all.
+         * The player GUNSHOT sets +0x6 = 1 (@0x800124ac, savestate 4 confirms +0x6=1), so a shot
+         * MUST bleed. The port had the spawn in re15_enemy_hurt_fx() behind `sub_state_3 != 0 ->
+         * return`, called AFTER the AI step had already advanced +0x7 to 1 — structurally dead, so
+         * a hit never bled. Same helper the downed flinch already uses (@0x8010693c/@0x80106ad8). */
+        if (e->sub_state_2 <= 1)
+            re15_enemy_death_fx(e);                    /* 0x80019700(0x2000, +0x6a, bone, 0x8011fe84) */
         e->sub_state_3 = 1;                            /* +0x7 = 1 @0x80105be0 */
         e->grab_kill_ctr = 2;                          /* +0x9e = 2 @0x80105bf0 — bend-down countdown */
         e->ai_timer    = 0;                            /* +0x9c = 0 @0x80105c00 — spine-bend accumulator */
@@ -8131,7 +8151,8 @@ void re15_enemy_ai_run_all(int combat_active)
             int32_t sweep_ox = e->x, sweep_oz = e->z;    /* pre-dispatch pos (wall-sweep origin) */
             re15_enemy_ai_live_step(s);
             re15_enemy_anim_sfx(e);        /* FUN_8001b38c: per-frame clip-flag SFX (footsteps/attack) */
-            re15_enemy_hurt_fx(e);      /* FUN_80105a8c/FUN_80105b7c hurt -> effect-0 hit blood (visible) */
+            /* (hit blood moved INTO re15_enemy_ai_live_hurt phase 0 — the byte-true spot,
+             * @0x80105c50-d8; the old call here could never fire, see the note there) */
             re15_enemy_gore_tick(e);    /* FUN_80106a44 +0x93&2 -> gore effect spawn */
             re15_enemy_gore_setup(e);   /* FUN_80106edc sub_state_1==0x58 -> effect-5 gore setup */
             /* CONTACT CLEAR — byte-true FUN_8002b498 position (@0x801005f4, AFTER the state
@@ -8291,7 +8312,7 @@ void re15_enemy_ai_run_all(int combat_active)
             int32_t zg_ox = e->x, zg_oz = e->z;
             re15_zgirl_ai_tick(s);
             re15_enemy_anim_sfx(e);        /* FUN_8001b38c @0x8010aad8 */
-            re15_enemy_hurt_fx(e);         /* shared hurt handlers -> hit blood */
+            /* (hit blood: see re15_enemy_ai_live_hurt phase 0 @0x80105c50-d8) */
             re15_enemy_gore_tick(e);       /* +0x93&2 -> gore effect spawn */
             re15_enemy_gore_setup(e);      /* sub_state_1==0x58 -> effect-5 gore setup */
             e->contact_flags = 0;          /* FUN_8002b498 @0x8010aa98 (after dispatch, before pushes) */
