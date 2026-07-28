@@ -503,16 +503,30 @@ retry_after_latch:
         if ((e->hit_react & 0x3) == 0x3) continue;   /* already hit + re-touched this attack -> excluded */
         /* ELEVATION-BAND gate (byte-true @0x800120d0-ec: candidate needs
          * enemy.word0 & player_word & 0xe0000000 != 0, player band = acaec<<16 ->
-         * UP bit31 / LEVEL bit30 / DOWN bit29). Savestate ground truth
-         * (mzd_stage1_briefing.sav): STANDING zombies carry 0x40000000 (bit30),
-         * the LYING feeder carries 0 -> unhittable (scripted). Port: band by
-         * spawn pose; up/down aim whiffs vs standing zombies = the original
-         * "down-aim is for crawlers" behavior. */
+         * UP bit31 / LEVEL bit30 / DOWN bit29).
+         *
+         * THE ENEMY BAND IS DRIVEN BY THE DOWNED FLAG (RE'd 2026-07-28, STAGE1.BIN):
+         *   801015f0-fc:  lw v0,0(a0) ; lui v1,0x4000 ; or v0,v0,v1 ; sw v0,0(a0)
+         *                 -> word0 |= 0x40000000  (LEVEL band on)     [also @0x80100744-50]
+         *   80101614-1c:  lbu v0,9(a1) ; andi v0,v0,0x80              (grid_id & 0x80 = DOWNED)
+         *   80101620:     beq v0,zero,0x80101640                      (not downed -> keep it)
+         *   80101624-3c:  lui v1,0xbfff ; ori v1,v1,0xffff ; lw v0,0(a1) ; and v0,v0,v1 ;
+         *                 sw v0,0(a1)   -> word0 &= ~0x40000000       (LEVEL band CLEARED)
+         * So ANY enemy lying down (grid_id & 0x80) loses its only band bit and can no longer be
+         * targeted at ALL — there is no DOWN-band replacement (the only other 0x2000-lui in the
+         * overlay, @0x80100430, is a g_pauseflags test, not a band). Savestate ground truth agrees:
+         * the scripted lying 0x16 carries word0 = 0x00000001 (band 000) while standing/feeding
+         * zombies carry 0x40000001 (band 010 = LEVEL), and the player aiming level is 0x40000000.
+         *
+         * The port used to special-case ONLY `type == 0x16 && downed`, i.e. it kept the LEVEL band on
+         * a zombie the player had SHOT DOWN — so a straight shot went on hitting a zombie lying on
+         * the floor, which the original refuses (user-verified against the original). Gate on the
+         * DOWNED FLAG, not on the type. */
         {
             extern int re15_player_aim_elevation(void);
             int elev = re15_player_aim_elevation();
             uint32_t pband = (elev > 0) ? 0x80000000u : (elev < 0) ? 0x20000000u : 0x40000000u;
-            uint32_t eband = (e->type == 0x16 && (e->grid_id & 0x80)) ? 0u : 0x40000000u;
+            uint32_t eband = (e->grid_id & 0x80) ? 0u : 0x40000000u;   /* @0x80101614-3c */
             if ((pband & eband) == 0) continue;
         }
         /* distance from the hit-test ORIGIN (0x800127fc measures POINT->target: lh 0(a2) vs

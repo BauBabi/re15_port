@@ -512,6 +512,42 @@ int main(void)
                    "lethal -> DEATH(motion 0x1f)->CORPSE(7)\n");
     }
 
+    /* (11b): a zombie LYING ON THE FLOOR (grid_id & 0x80) is NOT hittable by a LEVEL shot.
+     * BYTE-TRUE (STAGE1.BIN, RE'd 2026-07-28): the enemy's targeting band lives in word0 bit30 and the
+     * DOWNED flag clears it —
+     *   801015f0-fc  lw v0,0(a0) ; lui v1,0x4000 ; or v0,v0,v1 ; sw v0,0(a0)   -> band LEVEL on
+     *   80101614-1c  lbu v0,9(a1) ; andi v0,v0,0x80                            -> grid_id & 0x80?
+     *   80101620     beq v0,zero,0x80101640                                    -> not downed: keep
+     *   80101624-3c  lui v1,0xbfff ; ori v1,v1,0xffff ; and v0,v0,v1 ; sw v0,0(a1) -> band CLEARED
+     * and the shot's candidate gate @0x800120d0-ec requires (enemy.word0 & player.word0 & 0xe0000000).
+     * There is no DOWN-band replacement, so a downed enemy is untargetable at any aim elevation.
+     * (User-verified against the original; the port used to keep the band unless type==0x16.) */
+    {
+        for (int i = 0; i < nz; i++) {
+            re15_actor_t *z = &g_actors[zslots[i]];
+            z->state = RE15_AI_STATE_ACTIVE; z->x = 30000; z->z = 30000;
+            z->hp = 60; z->hit_react = 0; z->grid_id = 0; z->sub_state_1 = 0; z->sub_state_2 = 0;
+        }
+        pl->x = 0; pl->z = 0; pl->rot_y = 0; pl->hit_react = 0;
+        re15_actor_t *prone = &g_actors[zslots[1]];
+        prone->x = 0; prone->z = 800;              /* dead ahead, well inside the pistol strip */
+        prone->grid_id = 0x80;                     /* DOWNED/lying */
+        int16_t hp0 = prone->hp;
+        int hit_down = re15_player_weapon_fire(2);
+        if (hit_down != 0 || prone->hp != hp0 || prone->state != RE15_AI_STATE_ACTIVE) {
+            fprintf(stderr, "FAIL: (11b) LEVEL shot must MISS a downed zombie (grid_id&0x80 clears the "
+                            "LEVEL band @0x80101624-3c), hit=%d HP %d->%d state=%d\n",
+                    hit_down, hp0, prone->hp, prone->state); fail = 1; }
+        /* control: the very same zombie, standing, IS hit -> proves the miss is the band, not the geometry */
+        prone->grid_id = 0; prone->hit_react = 0;
+        int hit_up = re15_player_weapon_fire(2);
+        if (hit_up != (zslots[1] + 1) || prone->hp != (int16_t)(hp0 - 24)) {
+            fprintf(stderr, "FAIL: (11b) the SAME zombie standing must be hit (control), hit=%d HP %d->%d\n",
+                    hit_up, hp0, prone->hp); fail = 1; }
+        if (!fail)
+            printf("  (11b) downed zombie (grid&0x80) unhittable by a level shot; standing = hit\n");
+    }
+
     /* (12): the BYTE-TRUE reach bound (cone tester FUN_800127fc/800128a0): R = reach + enemy hitbox
      * radius (hbdata+6 = hit_radius_min = 400 for zombies), hit iff strict dist < R. The pistol's table
      * reach is 1000, so the true effective range vs a zombie is 1000+400 = 1400 (strict). Pre-fix the
