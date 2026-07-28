@@ -506,3 +506,10 @@ target_link_libraries(test_aot_sce_census PRIVATE re15_engine re15_test_support)
 target_include_directories(test_aot_sce_census PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_aot_sce_census COMMAND test_aot_sce_census)
 set_tests_properties(unit_aot_sce_census PROPERTIES TIMEOUT 30)
+
+# --- RE2-Zombie-KI (OPTIONS -> AI -> RE2) Unit-Test ---
+add_executable(test_re2_zombie_ai test_re2_zombie_ai.c)
+target_link_libraries(test_re2_zombie_ai PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_zombie_ai PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_re2_zombie_ai COMMAND test_re2_zombie_ai)
+set_tests_properties(unit_re2_zombie_ai PROPERTIES TIMEOUT 30)

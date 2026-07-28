@@ -170,6 +170,10 @@ typedef struct {
      * (@0x80105d7c-84 / @0x80105e20). The offset lands on the bone's vz euler — the SAME slot the
      * Plc_neck pitch uses (+0x64), see skeleton_common.c. bend_bone < 0 = inactive.
      * NOTE: only the INDEX 7 is proven (1204/172); the anatomical bone identity is not parsed. */
+    /* RE2-AI option (inactive while re15_ai_flavor()==RE15). RE2 struct offsets in the comments. */
+    uint8_t  re2z_gaitrow;      /* +0x16B RE2 gait row 0..31 into tbl @0x8010C924 */
+    uint8_t  re2z_gaitinit;     /* port-only: has the gait machine been seeded for this walk? */
+    uint16_t re2z_gaittmr;      /* +0x158 RE2 gait segment timer (frames left in this row)     */
     int16_t  hurt_bend_bone;    /* part index to bend, -1 = none */
     int16_t  hurt_bend_vz;      /* the PRE-update +0x9c applied this tick */
     /* Phase 4.5.13-RE2 F1: speed was at ID 27 (wrong) — correct ID is

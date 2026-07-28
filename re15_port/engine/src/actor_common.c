@@ -13,6 +13,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "re15_actor.h"
+#include "re15_ai_flavor.h"   /* re15_re2z_rng_reset (OPTIONS -> AI -> RE2) */
 #include "re15_engine.h"
 #include "re15_damage.h"   /* re15_player_apply_hitbox — wire the player's +0x78 hitbox */
 
@@ -27,6 +28,9 @@ void re15_actor_init(void)
     for (int i = 0; i < RE15_ACTOR_MAX; i++) g_actors[i].em_flag_id = 0xFF;
     /* No HURT torso-bend active (0 would mean "bend part 0"). */
     for (int i = 0; i < RE15_ACTOR_MAX; i++) g_actors[i].hurt_bend_bone = -1;
+    /* OPTIONS -> AI -> RE2: re-seed RE2's own PRNG (0xD2706CA4 @0x8002B908-1C) so the RE2 gait is
+     * reproducible per room, exactly like the RE1.5 side is (see reai-v2-rng-determinism). */
+    re15_re2z_rng_reset();
     /* Slot 0 = player, always active (RE2-pure). Main initialises x/y/z
      * from the room's spawn-entry data (stage-transition or fallback). */
     g_actors[RE15_ACTOR_SLOT_PLAYER].active = 1;

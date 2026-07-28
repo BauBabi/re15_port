@@ -53,6 +53,7 @@ static inline int RNDI(float f) {
 #include "re15_to_re2.h"
 #include "re15_rdt.h"
 #include "re15_actor.h"
+#include "re15_ai_flavor.h"
 #include "re15_pri.h"
 #include "re15_collision.h"
 #include "re15_stair.h"
@@ -1274,8 +1275,11 @@ static void pc_config_draw_labels(void)
  * confirm = Square|Circle (raw 0xa0), cancel = Cross (raw 0x40) — RE1.5 config convention. Positions:
  * DAT_80073d6c (top) / DAT_80073d78 (picker), y=24; blue cursor TILE RGB(0,0,0x80) @50% ABE, 48x16
  * (top/EDIT/EXIT) or 16x16 (TYPE A/B/C). */
-enum { CFG_TOP = 0, CFG_PICKER, CFG_SOUND, CFG_EDIT };
-static const int k_cfg_top_x[3]  = { 147, 198, 248 };            /* DAT_80073d6c.x (y=24) */
+enum { CFG_TOP = 0, CFG_PICKER, CFG_SOUND, CFG_EDIT, CFG_AI };
+/* PORT EXTENSION (no original): a 4th TOP entry "AI" that picks the zombie brain
+ * (RE1.5 byte-true default vs the RE2 retail brain). The three byte-true entries keep
+ * their exact DAT_80073d6c x positions; the new one is appended past EXIT. */
+static const int k_cfg_top_x[4]  = { 147, 198, 248, 292 };       /* [0..2] = DAT_80073d6c.x (y=24) */
 static const int k_cfg_pick_x[5] = { 147, 164, 181, 198, 248 }; /* DAT_80073d78.x (y=24) */
 
 /* EDIT custom-remap screen (FUN_8002ebbc). s_edit_phase: 0=slot-select, 1=panel A (basic action), 2=panel B
@@ -1355,7 +1359,19 @@ static void pc_config_draw_overlay(const re15_tim_t *tim, int screen, int cur)
     extern void re15_render_pc_config_rect_ov(int x, int y, int w, int h, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
     extern int  re15_render_pc_config_text(int x, int y, const unsigned char *codes, int len, int attr);
     if (screen == CFG_TOP) {
+        /* PORT EXTENSION: the 4th tab "AI" is not baked into CONFIG.TIM, so draw it as text. */
+        { unsigned char b[4]; int n = 0; for (const char *p = "AI"; *p; p++) b[n++] = (unsigned char)pc_font_code(*p);
+          re15_render_pc_config_text(k_cfg_top_x[3] + 12, 27, b, n, 0); }
         re15_render_pc_config_rect(k_cfg_top_x[cur], 24, 48, 16, 0, 0, 0x80, 128);   /* blue tab cursor @50% */
+    } else if (screen == CFG_AI) {
+        /* PORT EXTENSION — zombie-brain picker, laid out like the SOUND screen. */
+        re15_render_pc_config_tile(tim, 0, 232, 88, 18, 116, 51);
+        re15_render_pc_config_tile(tim, 0, 232, 88, 18, 116, 70);
+        re15_render_pc_config_rect(k_cfg_top_x[3], 24, 48, 16, 0, 0, 0x80, 128);
+        { unsigned char b[8]; int n = 0; for (const char *p = "RE1.5"; *p; p++) b[n++] = (unsigned char)pc_font_code(*p);
+          re15_render_pc_config_text(124, 53, b, n, (re15_ai_flavor() == RE15_AI_FLAVOR_RE15) ? 0 : 3); }
+        { unsigned char b[8]; int n = 0; for (const char *p = "RE2"; *p; p++) b[n++] = (unsigned char)pc_font_code(*p);
+          re15_render_pc_config_text(134, 71, b, n, (re15_ai_flavor() == RE15_AI_FLAVOR_RE2) ? 0 : 3); }
     } else if (screen == CFG_PICKER) {
         /* opaque CONFIG.TIM tiles cover the baked CONFIG/SOUND: "TYPE A B C" then "EDIT" ("EXIT" stays baked). */
         re15_render_pc_config_tile(tim, 0, 192, 50, 24, 147, 16);
@@ -1475,12 +1491,13 @@ static void pc_run_config(void)
             int confirm = (pp & (RE15_PAD_BIT_SQUARE | RE15_PAD_BIT_CIRCLE)) != 0;   /* raw 0xa0 */
             int cancel  = (pp & RE15_PAD_BIT_CROSS) != 0;                            /* raw 0x40 */
             if (screen == CFG_TOP) {
-                if (pp & RE15_PAD_BIT_LEFT)  { if (--cur < 0) cur = 2; }
-                if (pp & RE15_PAD_BIT_RIGHT) { if (++cur > 2) cur = 0; }
+                if (pp & RE15_PAD_BIT_LEFT)  { if (--cur < 0) cur = 3; }
+                if (pp & RE15_PAD_BIT_RIGHT) { if (++cur > 3) cur = 0; }
                 if (confirm) {
                     if (cur == 0)      { screen = CFG_PICKER; cur = 0; }   /* CONFIG -> preset picker (cursor 0) */
                     else if (cur == 1) { screen = CFG_SOUND; }             /* SOUND  -> sound screen */
-                    else               { fading_out = 1; }                 /* EXIT   -> leave config */
+                    else if (cur == 2) { fading_out = 1; }                 /* EXIT   -> leave config */
+                    else               { screen = CFG_AI; }                /* AI (port extension) */
                 }
             } else if (screen == CFG_PICKER) {
                 if (pp & RE15_PAD_BIT_LEFT)  { if (--cur < 0) cur = 4; }
@@ -1491,6 +1508,12 @@ static void pc_run_config(void)
                     else if (cur == 3) { screen = CFG_EDIT; s_edit_phase = 0; s_edit_slot = 0; s_config_type = 3; }  /* EDIT custom */
                     else               { screen = CFG_TOP; cur = 0; }      /* EXIT -> back to top */
                 }
+            } else if (screen == CFG_AI) {
+                /* PORT EXTENSION: pick the zombie brain. UP/DOWN toggles like the SOUND screen. */
+                if (pp & (RE15_PAD_BIT_UP | RE15_PAD_BIT_DOWN))
+                    re15_ai_flavor_set(re15_ai_flavor() == RE15_AI_FLAVOR_RE2
+                                       ? RE15_AI_FLAVOR_RE15 : RE15_AI_FLAVOR_RE2);
+                if (confirm || cancel) { screen = CFG_TOP; cur = 3; }
             } else if (screen == CFG_SOUND) {
                 if (pp & (RE15_PAD_BIT_UP | RE15_PAD_BIT_DOWN)) s_config_sound ^= 1;   /* raw 0x5000 toggle */
                 if (confirm)     { re15_audio_set_mono(!s_config_sound); screen = CFG_TOP; cur = 1; }  /* save+apply */

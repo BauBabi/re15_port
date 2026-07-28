@@ -18,6 +18,7 @@
  * (no tick side effects → no 1170 risk; same stance as re15_damage.c).
  */
 #include "re15_enemy_ai.h"
+#include "re15_ai_flavor.h"
 #include "re15_enemy.h"    /* re15_enemy_find — the loaded model bank (death-clip framecount) */
 #include "re15_audio.h"    /* re15_audio_room_se — zombie combat SEs on snd1 (func_0x800453d0):
                             * grab-start 4, grab-release 7 (FUN_80102548), death groan 5/8 (FUN_80107cb0 f7) */
@@ -40,7 +41,7 @@
 static int s_ai_paused = 0;
 void re15_enemy_ai_set_paused(int paused) { s_ai_paused = paused ? 1 : 0; }
 
-static void re15_enemy_steer_point(re15_actor_t *e, int32_t tx, int32_t tz, int slew);          /* fwd */
+void re15_enemy_steer_point(re15_actor_t *e, int32_t tx, int32_t tz, int slew);                 /* fwd */
 static void re15_enemy_footlock_step(int slot, re15_actor_t *e);                                /* fwd */
 static uint8_t s_zfoot_ok[RE15_ACTOR_MAX];                     /* tentative def (full def below) */
 static uint8_t s_wander_mag[RE15_ACTOR_MAX];                   /* tentative def (full def below) */
@@ -1721,7 +1722,7 @@ static int re15_enemy_live_count(void)
  *   delta = (slew + bearing - yaw) & 0xfff
  *   delta < 2*slew -> SNAP yaw=bearing; else yaw-=slew, and delta<0x801 -> yaw+=2*slew (short side).
  * slew==0 (the zero gait rows, roll 6/12) is a NO-OP = walk dead straight. */
-static void re15_enemy_steer_point(re15_actor_t *e, int32_t tx, int32_t tz, int slew)
+void re15_enemy_steer_point(re15_actor_t *e, int32_t tx, int32_t tz, int slew)
 {
     if (slew == 0) return;
     int bearing = ((int)re15_atan2_q12(tz - e->z, tx - e->x) - 0x400) & 0x0fff;
@@ -2205,7 +2206,19 @@ static void re15_enemy_ai_live_engage_animate(int slot, re15_actor_t *e)
         uint8_t v = s_gait_variant[slot];
         int16_t rot = gait_rot(v, s_wander_idx[slot]);   /* unbounded fetch (blob) */
         int16_t sVar7 = (int16_t)((int16_t)s_wander_mag[slot] * rot);
-        re15_enemy_steer_point(e, e->steer_x, e->steer_z, sVar7);
+        /* PORT OPTION (no original): with the RE2 AI flavor selected, the zombie's WALK TURN follows
+         * the RE2 gate instead of this authored weave — far away it still weaves (+8/-8 by the gait
+         * row's bit15), but inside 5001 it turns monotonically onto the player and inside 3000 it adds
+         * a second rate-16 turn. See enemy_ai_re2_zombie.c for the byte-true disasm citations. */
+        if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2z_owns_type(e->type)) {
+            /* The RE2 gait row (+0x16B) and its segment timer (+0x158) are owned by RE2's OWN gait
+             * machine (@0x80101A7C-AC init, @0x80101B2C-90 tick) driving RE2's OWN PRNG — feeding it
+             * from the RE1.5 wander index would be a cross-game guess, so it does not happen. */
+            re15_re2z_walk_turn(e, g_actors[RE15_ACTOR_SLOT_PLAYER].x,
+                                   g_actors[RE15_ACTOR_SLOT_PLAYER].z, e->ai_dist);
+        } else {
+            re15_enemy_steer_point(e, e->steer_x, e->steer_z, sVar7);
+        }
         {   /* the timer/idx block runs for EVERY variant (the original has no v<=1
              * gate) — variant 6's zero rows expire per frame (1 rand draw/frame),
              * variant 12 latches the 30260-frame snap segment: byte-true quirks. */
