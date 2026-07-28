@@ -171,6 +171,9 @@ static int aim_cur_fc(void)
 int  re15_player_aim_active(void) { return s_player_aim_phase != RE15_AIM_NONE; }
 int  re15_player_aim_clip(void)   { return s_aim_cur_clip; }
 int  re15_player_aim_elevation(void) { return s_aim_elev; }   /* -1 down / 0 level / +1 up */
+/* TEST HOOK ONLY (same stance as re15_player_set_aim_clip_len): force the aim elevation so the
+ * damage resolver's band gate can be exercised without driving the whole R1 + dpad aim FSM. */
+void re15_player_set_aim_elevation_for_test(int elev) { s_aim_elev = (elev > 0) ? 1 : (elev < 0) ? -1 : 0; }
 int  re15_player_knife_in_hand(void) { return s_knife_in_hand; }  /* 0x800aca54 bit 0x4000 */
 void re15_player_aim_reset(void)                              /* test/room-change clean slate */
 {

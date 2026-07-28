@@ -523,6 +523,7 @@ int main(void)
      * There is no DOWN-band replacement, so a downed enemy is untargetable at any aim elevation.
      * (User-verified against the original; the port used to keep the band unless type==0x16.) */
     {
+        extern void re15_player_set_aim_elevation_for_test(int elev);   /* player_common.c test hook */
         for (int i = 0; i < nz; i++) {
             re15_actor_t *z = &g_actors[zslots[i]];
             z->state = RE15_AI_STATE_ACTIVE; z->x = 30000; z->z = 30000;
@@ -544,8 +545,27 @@ int main(void)
         if (hit_up != (zslots[1] + 1) || prone->hp != (int16_t)(hp0 - 24)) {
             fprintf(stderr, "FAIL: (11b) the SAME zombie standing must be hit (control), hit=%d HP %d->%d\n",
                     hit_up, hp0, prone->hp); fail = 1; }
+        /* ...but the downed zombie is NOT immune in general: the strip is followed by the DOWN-adder
+         * (@0x80101630 a0=0x1388 -> FUN_80012974 @0x800129cc-f0: dist < 5000 -> word0 |= 0x20000000),
+         * so a DOWN-AIMED shot still kills it inside 5000 and only whiffs beyond. Measured in the
+         * original: downed @2307 = band DOWN, downed @5538/5752 = no band. */
+        prone->grid_id = 0x80; prone->hit_react = 0; prone->state = RE15_AI_STATE_ACTIVE;
+        prone->hp = 60; hp0 = prone->hp;
+        re15_player_set_aim_elevation_for_test(-1);              /* aim DOWN */
+        int hit_dn = re15_player_weapon_fire(2);
+        if (hit_dn != (zslots[1] + 1) || prone->hp != (int16_t)(hp0 - 24)) {
+            fprintf(stderr, "FAIL: (11b) DOWN-aimed shot must HIT a downed zombie within 5000 "
+                            "(@0x80101638 -> FUN_80012974), hit=%d HP %d->%d\n", hit_dn, hp0, prone->hp);
+            fail = 1; }
+        prone->z = 6000; prone->hp = 60; prone->hit_react = 0;   /* beyond 5000 -> no band at all */
+        prone->state = RE15_AI_STATE_ACTIVE;
+        int hit_far = re15_player_weapon_fire(2);
+        if (hit_far != 0 || prone->hp != 60) {
+            fprintf(stderr, "FAIL: (11b) downed zombie BEYOND 5000 has no band -> must miss even "
+                            "aiming down, hit=%d HP=%d\n", hit_far, prone->hp); fail = 1; }
+        re15_player_set_aim_elevation_for_test(0);               /* back to level */
         if (!fail)
-            printf("  (11b) downed zombie (grid&0x80) unhittable by a level shot; standing = hit\n");
+            printf("  (11b) downed zombie: level shot misses; DOWN-aimed hits inside 5000, misses beyond\n");
     }
 
     /* (12): the BYTE-TRUE reach bound (cone tester FUN_800127fc/800128a0): R = reach + enemy hitbox

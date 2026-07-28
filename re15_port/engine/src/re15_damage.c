@@ -512,21 +512,37 @@ retry_after_latch:
          *   80101620:     beq v0,zero,0x80101640                      (not downed -> keep it)
          *   80101624-3c:  lui v1,0xbfff ; ori v1,v1,0xffff ; lw v0,0(a1) ; and v0,v0,v1 ;
          *                 sw v0,0(a1)   -> word0 &= ~0x40000000       (LEVEL band CLEARED)
-         * So ANY enemy lying down (grid_id & 0x80) loses its only band bit and can no longer be
-         * targeted at ALL — there is no DOWN-band replacement (the only other 0x2000-lui in the
-         * overlay, @0x80100430, is a g_pauseflags test, not a band). Savestate ground truth agrees:
-         * the scripted lying 0x16 carries word0 = 0x00000001 (band 000) while standing/feeding
-         * zombies carry 0x40000001 (band 010 = LEVEL), and the player aiming level is 0x40000000.
+         * The strip is NOT the whole story: the very next instructions call the DOWN-adder
+         *   80101630: ori a0,zero,0x1388            (R = 5000)
+         *   80101638: jal 0x80012974
+         * and FUN_80012974 @0x800129c0-f0 does: dist = SquareRoot0(dx^2+dz^2) to the player;
+         *   800129cc: sltu s0,a1,s0    (dist < R?)   800129d4: lui a0,0x2000
+         *   800129ec: or v1,v1,a0 ; 800129f0: sw v1,0(v0)   -> word0 |= 0x20000000 (DOWN band)
+         * So a downed enemy loses LEVEL but GAINS the DOWN band while it is within 5000 units —
+         * i.e. it stays killable by a DOWN-aimed shot, and only becomes untargetable further away.
          *
-         * The port used to special-case ONLY `type == 0x16 && downed`, i.e. it kept the LEVEL band on
-         * a zombie the player had SHOT DOWN — so a straight shot went on hitting a zombie lying on
-         * the floor, which the original refuses (user-verified against the original). Gate on the
-         * DOWNED FLAG, not on the type. */
+         * MEASURED in the original (HASH-957757946319438E_resume.sav, player at -7663/-17629):
+         *   downed 0x10 grid 0x80 dist 2307 -> word0 0x20000001 (band DOWN)
+         *   downed 0x11 grid 0x80 dist 5538 -> word0 0x00000001 (no band)
+         *   downed 0x11 grid 0x80 dist 5752 -> word0 0x00000011 (no band)
+         *   standing 0x10 grid 0x00 dist 7075 -> word0 0x40000001 (band LEVEL)
+         *   scripted lying 0x16 grid 0x88 dist 7228 -> word0 0x00000001 (no band)
+         * The port used to keep LEVEL unless `type == 0x16 && downed`, so a zombie the player had SHOT
+         * DOWN still took straight shots (user-verified divergence). Gate on the DOWNED FLAG + range. */
         {
             extern int re15_player_aim_elevation(void);
             int elev = re15_player_aim_elevation();
             uint32_t pband = (elev > 0) ? 0x80000000u : (elev < 0) ? 0x20000000u : 0x40000000u;
-            uint32_t eband = (e->grid_id & 0x80) ? 0u : 0x40000000u;   /* @0x80101614-3c */
+            uint32_t eband;
+            if (e->grid_id & 0x80) {
+                /* The helpers measure from the PLAYER (0x800aca88/90 vs entity +0x34/+0x3c), not from
+                 * the melee blade origin, so use the player distance here regardless of weapon. */
+                int32_t bdx = e->x - pl->x, bdz = e->z - pl->z;
+                uint32_t bdist = (uint32_t)dmg_isqrt((int64_t)bdx*bdx + (int64_t)bdz*bdz);
+                eband = (bdist < 5000u) ? 0x20000000u : 0u;   /* @0x80101630-38 -> @0x800129cc-f0 */
+            } else {
+                eband = 0x40000000u;                          /* @0x801015f4-fc */
+            }
             if ((pband & eband) == 0) continue;
         }
         /* distance from the hit-test ORIGIN (0x800127fc measures POINT->target: lh 0(a2) vs
