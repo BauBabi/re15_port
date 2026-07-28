@@ -94,8 +94,9 @@ static inline int RNDI(float f) {
                                     * 0x02000800 @0x800337bc); ShowVRAM-extracted sheet. */
 #define RE15_TIM_SLOT_FX_SMOKE  22 /* global effect-id 3 — gun smoke (0x03000c00) */
 #define RE15_TIM_SLOT_FX_SHELL  23 /* global effect-id 4 — shell eject/debris (0x04000800) */
-#define RE15_TIM_SLOT_WPN_MELEE 24 /* PL00W01.PLW dir[3] — the knife-class in-hand model TIM */
-#define RE15_TIM_SLOT_WPN_GUN   25 /* PL00W03.PLW dir[3] — the handgun-class in-hand model TIM */
+#define RE15_TIM_SLOT_WPN_MELEE 24 /* RESERVED/unused: the in-hand weapon now textures from the */
+#define RE15_TIM_SLOT_WPN_GUN   25 /* character's own body-skin TIM (slot 0), page 0x81/clut-1 — */
+                                   /* NOT a separate PLW dir[3]/PL04 atlas (byte-true FUN_80036b68). */
 
 extern void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
 
@@ -2050,17 +2051,20 @@ re_title:;
      * drawn as extra parts on the weapon bone (bone 11). The MESHES live in the PLW
      * containers: dir[2] = MD1 (1 mesh), dir[3] = TIM; PL00.MD1's meshes 15/16 are only the
      * empty attach slots). Slice + parse both class models; TIMs -> slots 24/25. */
-    /* IN-HAND WEAPON MESHES for EVERY weapon (byte-true): the equipped weapon aca5d indexes the
-     * SHARED weapon-character (PL04) hand+weapon mesh PL04W<aca5d>.PLW dir[2] — the file base table
-     * @0x800741e8 = {76,76,76,76,97,97,97,97} (char 0-3 -> PL00 carry-set base 76, char 4-7 -> PL04
-     * base 97 = the shared weapon geometry) and FUN_80036b68 loads base+aca5d; the DISPLAYED mesh is
-     * always PL04's (player-select @1045: Leon's part[11] verts match PL04W03 6/6, NOT PL00W03).
-     * Every one is textured from PL04.TIM (the shared weapon art), NOT the PLW's own dir[3]. Index
-     * by aca5d so the KNIFE(1)/HANDGUN(3)/SHOTGUN/MAGNUM/... each draw their correct model. */
-    #define RE15_WPN_MDL_MAX 21   /* PL04W00..PL04W14 */
+    /* IN-HAND WEAPON MESHES for EVERY weapon (byte-true, RE'd via workflow wf_05bf645c + FUN_80036b68
+     * @0x80036b84): the equip loader reads charid DAT_800aca5c, indexes the file base table
+     * @0x800741e8 = {76,76,76,76,97,97,97,97} (char 0-3 -> base 76 = PL00 family = LEON; char 4-7 ->
+     * base 97 = PL04 family = ELZA), and loads CD file base+aca5d = the character's OWN PLW; the mesh
+     * is that PLW's dir[2] (hand+weapon). So Leon's handgun is PL00W03.PLW dir[2] — NOT the shared PL04
+     * geometry (PL04W03 vs PL00W03 = 0/35 verts). Each is textured from the CHARACTER'S OWN body-skin
+     * TIM (slot 0 = PL00.TIM for Leon), page 0x81 / clut 0x7840 -> slab 1 — NOT PL04.TIM. (The old
+     * "shared PL04W03 dir[2] + PL04.TIM slot 25" model drew ELZA'S dark-gun assets on Leon -> black gun;
+     * the char-select's PL04W03 buffer was a select-screen quirk, not the in-game per-character load.) */
+    #define RE15_WPN_MDL_MAX 21   /* W00..W14 for the current character's family */
+    const char *wpn_fam = (g_gameflow.character == 0) ? "PL00" : "PL04";  /* base_table charid split */
     re15_md1_t wpn_md1[RE15_WPN_MDL_MAX]; int wpn_md1_ok[RE15_WPN_MDL_MAX] = {0};
     for (int wi = 0; wi < RE15_WPN_MDL_MAX; wi++) {
-        char plw_name[32]; snprintf(plw_name, sizeof plw_name, "PLD/PL04W%02X.PLW", wi);
+        char plw_name[32]; snprintf(plw_name, sizeof plw_name, "PLD/%sW%02X.PLW", wpn_fam, wi);
         int psz = 0;
         uint8_t *plw = pc_read_shared(plw_name, &psz);   /* stays resident (MD1 borrows) */
         if (!plw || psz < 16) continue;
@@ -2074,15 +2078,13 @@ re_title:;
         if (re15_md1_parse(plw + de[2], (int)(de[3] - de[2]), &wpn_md1[wi]) == 0)
             wpn_md1_ok[wi] = 1;
     }
-    /* PL04.TIM = the shared weapon art, bound (slot 25) for ALL in-hand meshes (they read its pages). */
+    /* NO separate weapon TIM upload: the in-hand mesh reads its texture from the character's own
+     * body-skin TIM already resident in slot 0 (PL00.TIM for Leon @main.c:1907), the same slot the
+     * body binds @4327 — the gun art lives on page 0x81 / clut-1 of that skin atlas. */
     {
-        int tsz = 0; uint8_t *tb = pc_read_shared("PLD/PL04.TIM", &tsz);
-        re15_tim_t ptim;
-        if (tb && re15_tim_parse(tb, tsz, &ptim) == 0)
-            re15_render_pc_upload_tim_slot(&ptim, RE15_TIM_SLOT_WPN_GUN);
         int nloaded = 0; for (int wi = 0; wi < RE15_WPN_MDL_MAX; wi++) nloaded += wpn_md1_ok[wi];
-        fprintf(stderr, "[wpn] loaded %d/%d PL04W** meshes + PL04.TIM (%dx%d) -> slot %d\n",
-                nloaded, RE15_WPN_MDL_MAX, ptim.width, ptim.height, RE15_TIM_SLOT_WPN_GUN);
+        fprintf(stderr, "[wpn] loaded %d/%d %sW** in-hand meshes (textured from body-skin slot 0)\n",
+                nloaded, RE15_WPN_MDL_MAX, wpn_fam);
     }
 
     /* Elliot TIM into slot 1. */
@@ -4662,8 +4664,13 @@ re_title:;
             /* WEAPON-IN-HAND — byte-true: the equip commit FUN_80036b68 @0x80036c08 attaches the in-hand
              * weapon mesh (kine+0x76c/770/774/778) UNCONDITIONALLY when aca5d!=0, so the EQUIPPED weapon
              * (knife/handgun/shotgun/...) is in Leon's hand whenever equipped — not only while aiming
-             * (savestate 3: attach pointers all set). The displayed mesh is the shared PL04W<aca5d> dir[2]
-             * (player-select @1045), textured from PL04.TIM (slot 25). Index the mesh by aca5d. */
+             * (savestate 3: attach pointers all set). BYTE-TRUE ASSET SOURCE (equip loader FUN_80036b68
+             * @0x80036b84): the mesh is CD file base_table[charid]+aca5d = PL00W<aca5d> dir[2] for Leon
+             * (char 0-3, base 76) / PL04W<aca5d> for Elza (char 4-7, base 97); base_table @0x800741e8 =
+             * {76,76,76,76,97,97,97,97}. It is textured from the CHARACTER'S OWN body-skin TIM (slot 0 =
+             * PL00.TIM for Leon, the SAME slot the body binds @4327), page 0x81 / clut 0x7840 -> slab 1.
+             * (The earlier "shared PL04W03 dir[2] + PL04.TIM slot 25" model was Elza's assets on Leon:
+             * PL04W03 vs PL00W03 = 0/35 verts, and PL04.TIM slab-1 gun texels are dark -> the black gun.) */
             {
                 extern int re15_player_equipped_weapon(void);
                 int eq = re15_player_equipped_weapon();     /* aca5d = the equipped weapon id */
@@ -4671,7 +4678,7 @@ re_title:;
                 int vis = wpn_md1_ok[wi];                    /* show whatever weapon is equipped */
                 if (vis && wpn_bone_valid && player_visible &&
                     re15_player_victim_state() == 0) {
-                    re15_render_pc_bind_tim_slot(RE15_TIM_SLOT_WPN_GUN);   /* slot 25 = PL04.TIM (shared) */
+                    re15_render_pc_bind_tim_slot(0);   /* body-skin TIM (PL00.TIM for Leon); gun art page 0x81/clut-1 */
                     for (int k = 0; k < 9; k++) bone_m[k] = wpn_bone_m[k];
                     bone_t[0] = wpn_bone_t[0]; bone_t[1] = wpn_bone_t[1]; bone_t[2] = wpn_bone_t[2];
                     if (player_lit)
