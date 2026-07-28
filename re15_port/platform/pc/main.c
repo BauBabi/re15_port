@@ -1277,9 +1277,15 @@ static void pc_config_draw_labels(void)
  * (top/EDIT/EXIT) or 16x16 (TYPE A/B/C). */
 enum { CFG_TOP = 0, CFG_PICKER, CFG_SOUND, CFG_EDIT, CFG_AI };
 /* PORT EXTENSION (no original): a 4th TOP entry "AI" that picks the zombie brain
- * (RE1.5 byte-true default vs the RE2 retail brain). The three byte-true entries keep
- * their exact DAT_80073d6c x positions; the new one is appended past EXIT. */
-static const int k_cfg_top_x[4]  = { 147, 198, 248, 292 };       /* [0..2] = DAT_80073d6c.x (y=24) */
+ * (RE1.5 byte-true default vs the RE2 retail brain). The three byte-true entries keep their exact
+ * DAT_80073d6c x positions and are NOT moved — the OPTIONS panel is pixel-verified against the PSX
+ * and it ENDS at x=296 (EXIT is 248+48), so a 4th tab on that row would hang off the panel (it did:
+ * shots/_aitab_top2.png). The extension therefore lives in the free strip BELOW the bottom box
+ * (which ends at y=220), where it cannot disturb one byte-true pixel. */
+static const int k_cfg_top_x[3]  = { 147, 198, 248 };            /* DAT_80073d6c.x (y=24) */
+#define CFG_AI_X 14
+#define CFG_AI_Y 225
+#define CFG_AI_W 96
 static const int k_cfg_pick_x[5] = { 147, 164, 181, 198, 248 }; /* DAT_80073d78.x (y=24) */
 
 /* EDIT custom-remap screen (FUN_8002ebbc). s_edit_phase: 0=slot-select, 1=panel A (basic action), 2=panel B
@@ -1358,16 +1364,26 @@ static void pc_config_draw_overlay(const re15_tim_t *tim, int screen, int cur)
     extern void re15_render_pc_config_tile_ov(const re15_tim_t *t, int su, int sv, int w, int h, int dx, int dy);
     extern void re15_render_pc_config_rect_ov(int x, int y, int w, int h, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
     extern int  re15_render_pc_config_text(int x, int y, const unsigned char *codes, int len, int attr);
+    /* PORT EXTENSION — the "AI  <flavor>" row in the free strip under the bottom box (y=220..240).
+     * `lit` draws the same blue 50%-ABE cursor tile the byte-true tabs use, so it reads as one UI. */
+    void pc_config_draw_ai_row(int lit) {
+        if (lit) re15_render_pc_config_rect(CFG_AI_X, CFG_AI_Y, CFG_AI_W, 14, 0, 0, 0x80, 128);
+        unsigned char b[16]; int n = 0;
+        const char *s = (re15_ai_flavor() == RE15_AI_FLAVOR_RE2) ? "AI  RE2" : "AI  RE1.5";
+        for (const char *p = s; *p; p++) b[n++] = (unsigned char)pc_font_code(*p);
+        re15_render_pc_config_text(CFG_AI_X + 5, CFG_AI_Y + 2, b, n, 0);
+    }
     if (screen == CFG_TOP) {
-        /* PORT EXTENSION: the 4th tab "AI" is not baked into CONFIG.TIM, so draw it as text. */
-        { unsigned char b[4]; int n = 0; for (const char *p = "AI"; *p; p++) b[n++] = (unsigned char)pc_font_code(*p);
-          re15_render_pc_config_text(k_cfg_top_x[3] + 12, 27, b, n, 0); }
-        re15_render_pc_config_rect(k_cfg_top_x[cur], 24, 48, 16, 0, 0, 0x80, 128);   /* blue tab cursor @50% */
+        pc_config_draw_ai_row(cur == 3);          /* PORT EXTENSION, below the byte-true panel */
+        if (cur < 3)
+            re15_render_pc_config_rect(k_cfg_top_x[cur], 24, 48, 16, 0, 0, 0x80, 128); /* blue tab cursor @50% */
     } else if (screen == CFG_AI) {
-        /* PORT EXTENSION — zombie-brain picker, laid out like the SOUND screen. */
+        /* PORT EXTENSION — zombie-brain picker, laid out like the SOUND screen (same CONFIG.TIM
+         * label boxes at uv 0,232 88x18), with the row-below marker kept lit so it is obvious
+         * where this screen was entered from. */
         re15_render_pc_config_tile(tim, 0, 232, 88, 18, 116, 51);
         re15_render_pc_config_tile(tim, 0, 232, 88, 18, 116, 70);
-        re15_render_pc_config_rect(k_cfg_top_x[3], 24, 48, 16, 0, 0, 0x80, 128);
+        pc_config_draw_ai_row(1);
         { unsigned char b[8]; int n = 0; for (const char *p = "RE1.5"; *p; p++) b[n++] = (unsigned char)pc_font_code(*p);
           re15_render_pc_config_text(124, 53, b, n, (re15_ai_flavor() == RE15_AI_FLAVOR_RE15) ? 0 : 3); }
         { unsigned char b[8]; int n = 0; for (const char *p = "RE2"; *p; p++) b[n++] = (unsigned char)pc_font_code(*p);
@@ -1468,6 +1484,17 @@ static void pc_run_config(void)
     if (s_config_type >= 0 && s_config_type <= 2) memcpy(s_config_d08, s_config_preset[s_config_type], 16);
 
     int screen = CFG_TOP, cur = 0;
+    /* debug: start the INTERACTIVE options screen on a given tab, so a gdigrab capture of the REAL
+     * window can inspect a screen without depending on synthetic key injection (SDL does not see
+     * SendKeys). Same numbering as the RE15_CONFIG_SHOT path, plus 8 = the AI tab. */
+    { const char *pt = getenv("RE15_CONFIG_TAB");
+      if (pt && getenv("RE15_CONFIG_TEST")) {
+          int t = atoi(pt);
+          if (t <= 2)      { screen = CFG_TOP;    cur = t; }
+          else if (t == 3) { screen = CFG_PICKER; cur = 0; }
+          else if (t == 4) { screen = CFG_SOUND;  }
+          else if (t == 8) { screen = CFG_AI;     cur = 3; }
+      } }
     int fade_level = 0x7fff;   /* brightness = fade_level>>7; fade IN from black */
     int fading_out = 0;
     uint32_t last = SDL_GetTicks();
