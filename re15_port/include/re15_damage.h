@@ -66,6 +66,8 @@ void re15_enemy_gore_setup(re15_actor_t *e);
  * entry (state==2, sub_state_3==0) spawn effect-id 0 (the universal hit/blood fx from the global
  * CORE00.ESP bank) at the zombie + advance the phase. Called per live zombie in run_all. */
 void re15_enemy_hurt_fx(re15_actor_t *e);
+void re15_enemy_hurt_blood(re15_actor_t *e);   /* HURT phase-0 blood, bone-anchored */
+void re15_enemy_bone_world_pos(const re15_actor_t *e, int bone, int32_t out[3]);
 
 /* Zombie DEATH gore (death sub-FSM FUN_80107cb0): effect-id 0 blood burst at death-start and again
  * at anim_frame 35. Called from re15_enemy_ai_live_death at both points. */

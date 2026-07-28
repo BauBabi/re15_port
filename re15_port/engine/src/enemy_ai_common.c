@@ -2540,8 +2540,9 @@ void re15_enemy_ai_live_hurt(int slot)
          * MUST bleed. The port had the spawn in re15_enemy_hurt_fx() behind `sub_state_3 != 0 ->
          * return`, called AFTER the AI step had already advanced +0x7 to 1 — structurally dead, so
          * a hit never bled. Same helper the downed flinch already uses (@0x8010693c/@0x80106ad8). */
-        if (e->sub_state_2 <= 1)
-            re15_enemy_death_fx(e);                    /* 0x80019700(0x2000, +0x6a, bone, 0x8011fe84) */
+        re15_enemy_hurt_blood(e);                      /* 0x80019700(0x2000, +0x6a, part+0x40, 0x8011fe84)
+                                                        * — zone-gated + BONE-anchored (a2 = the part
+                                                        * matrix, @0x80105ca0 / @0x80105cd8) */
         e->sub_state_3 = 1;                            /* +0x7 = 1 @0x80105be0 */
         e->grab_kill_ctr = 2;                          /* +0x9e = 2 @0x80105bf0 — bend-down countdown */
         e->ai_timer    = 0;                            /* +0x9c = 0 @0x80105c00 — spine-bend accumulator */

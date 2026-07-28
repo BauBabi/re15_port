@@ -699,11 +699,12 @@ static const uint8_t s_gore_bone[0x30] = {
     14,14,14, 8, 8,14,14,14,14,14,14, 8, 8, 8, 8, 0,  /* 0x10-0x1f: zombies=14, zgirl/writhers=8 */
     0, 7, 8,14, 2, 4, 9,13, 0, 7, 8,14, 1, 5,10,11,   /* 0x20-0x2f */
 };
-static void re15_enemy_gore_bone_pos(const re15_actor_t *e, int32_t out[3])
+/* World position of ONE part of the enemy's posed skeleton (the original passes `part + 0x40`, the
+ * composed part MATRIX, whose translation is at +0x14 of it — see re15_enemy_hurt_blood). */
+void re15_enemy_bone_world_pos(const re15_actor_t *e, int bone, int32_t out[3])
 {
     out[0] = e->x; out[1] = e->y; out[2] = e->z;      /* fallback = actor root */
-    if (e->type >= 0x30) return;
-    int bone = (int)s_gore_bone[e->type];
+    if (!e) return;
     re15_enemy_bank_t *b = re15_enemy_find(e->type);
     if (!b || b->skel.bone_count <= 0 || bone < 0 || bone >= b->skel.bone_count) return;
     int kf = re15_compute_actor_kf(&b->anim, &b->skel, e, -1, e->anim_frame);
@@ -714,6 +715,14 @@ static void re15_enemy_gore_bone_pos(const re15_actor_t *e, int32_t out[3])
     g_anim_pose_actor = save;
     if (rv != 0) return;
     re15_skel_bone_to_world(poses[bone].trans, e->rot_y, e->x, e->y, e->z, out);
+}
+
+/* The gore/death anchor keeps its own per-type bone table (LAB_8011f784[type]). */
+static void re15_enemy_gore_bone_pos(const re15_actor_t *e, int32_t out[3])
+{
+    out[0] = e->x; out[1] = e->y; out[2] = e->z;
+    if (e->type >= 0x30) return;
+    re15_enemy_bone_world_pos(e, (int)s_gore_bone[e->type], out);
 }
 
 void re15_enemy_gore_setup(re15_actor_t *e)
@@ -762,6 +771,36 @@ void re15_enemy_hurt_fx(re15_actor_t *e)
  * offset DAT_8011f784[entity+8]*0xac is the deferred refinement, faithful-line). Frame 7 death SE
  * (func_0x800453d0 = re15_audio_room_se) IS implemented in re15_enemy_ai_live_death
  * (enemy_ai_common.c :2487-2488, death-groan SE rng 5/8). */
+/* HURT hit BLOOD — byte-true anchor (RE'd 2026-07-28). The stagger handler's phase 0 spawns it with
+ *   80105c54/cbc: ori a0,zero,0x2000          effect id
+ *   80105c74/ccc: lh a1,106(...)              rot_y (+0x6a)
+ *   80105ca0:     addiu a2,s0,64              s0 = model_pool + 172*u8[0x8011f784 + type]  (ZONE 1)
+ *   80105cd8:     addiu a2,a2,408             = model_pool + 172*2 + 64                    (ZONE 0)
+ *   80105c60/cc4: a3 = 0x8011fe84
+ * and FUN_80019700 treats a2 as a MATRIX POINTER: it stores it (`sw a2,116(t0)` @0x8001980c/181c)
+ * and copies 32 bytes out of it (`lw 0/4/8/12(a2)` @0x80019820-2c, `lw 16/20/24/28(a2)`
+ * @0x80019840-4c) — a PSX MATRIX (9 x int16 rot + pad + 3 x int32 trans at +0x14). part+0x40 is
+ * exactly that composed part matrix (its translation sits at part+0x54 = 0x40+0x14). So the blood is
+ * anchored at the BONE's world transform, NOT at the actor root:
+ *   zone 1 (the normal shot, +0x6 == 1) -> the per-type gore bone (zombies 0x10/0x11/0x16 = 14)
+ *   zone 0                              -> part 2
+ *   zone 2 (upward hit)                 -> no spawn at all (@0x80105cb8 bne v0,zero)
+ * The port spawned at the actor origin, which is why the user saw the blood in the wrong place. */
+void re15_enemy_hurt_blood(re15_actor_t *e)
+{
+    if (!e || !e->active) return;
+    if (e->sub_state_2 > 1) return;                    /* zone 2: the original spawns nothing */
+    int bone = (e->sub_state_2 == 1)
+                 ? ((e->type < 0x30) ? (int)s_gore_bone[e->type] : 0)   /* @0x8011f784[type] */
+                 : 2;                                                   /* @0x80105cd8: part 2 */
+    int32_t g[3];
+    re15_enemy_bone_world_pos(e, bone, g);
+    re15_esp_fx_spawn(re15_esp_room_bank(), 0 /*effect-id*/, 0 /*sub*/,
+                      g[0], g[1], g[2], (int16_t)e->rot_y);
+    re15_esp_fx_splatter(re15_esp_room_bank(), 0 /*blood*/, 8,
+                         g[0], g[1], g[2], e->y);      /* floor = the actor's ground Y */
+}
+
 void re15_enemy_death_fx(re15_actor_t *e)
 {
     if (!e || !e->active) return;
