@@ -227,6 +227,18 @@ int re15_render_pc_dbg_slot_loaded(int slot) {
     return s_tim_slots[slot].loaded;
 }
 
+/* Blit a small ARGB8888 patch into a loaded slot's texture at (dx,dy). Used to composite the
+ * equipped weapon's dir[3] TIM into the body-skin atlas at the spot the in-hand mesh samples
+ * (the original DMAs the weapon dir[3] to VRAM per-equip; FUN_80036b68). Clipped to the texture. */
+void re15_render_pc_blit_slot(int slot, const uint32_t *rgba, int w, int h, int dx, int dy) {
+    if (slot < 0 || slot >= RE15_TIM_SLOT_MAX || !rgba) return;
+    re15_tim_slot_t *s = &s_tim_slots[slot];
+    if (!s->loaded || !s->tex) return;
+    if (dx < 0 || dy < 0 || dx + w > s->w || dy + h > s->h) return;
+    SDL_Rect r = { dx, dy, w, h };
+    SDL_UpdateTexture(s->tex, &r, rgba, w * 4);
+}
+
 /* Phase 4.5.7.7 (2026-05-19): per-tri depth field for back-to-front sort.
  *
  * IMPORTANT: SDL_RenderGeometry reads a FLAT SDL_Vertex array (3 verts/tri,

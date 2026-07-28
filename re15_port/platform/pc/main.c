@@ -4661,16 +4661,59 @@ re_title:;
                 }
             }
 
+            /* WEAPON TEXTURE COMPOSITE (byte-true FUN_80036b68 @0x80036c08): the equip commit DMAs the
+             * equipped weapon's OWN dir[3] TIM (a 56x32 gun/knife sprite) into VRAM at the spot the in-hand
+             * mesh samples. The mesh (PL00W<aca5d> dir[2]) reads page 0x81 (x+128) / clut 0x7840 (slab 1,
+             * V+256) at u~72-127 / v~108-139, i.e. slot-0 texels (~200,~364). So we blit the current
+             * weapon's decoded dir[3] there, per-equip — WITHOUT it, the mesh samples the stale body-skin
+             * placeholder = the untextured knife/gun the user reported. (PL00.TIM/PL04.TIM do NOT bake the
+             * per-weapon art; each PLW carries its own dir[3], DMA'd on equip.) Re-blit only on aca5d change. */
+            {
+                extern int  re15_player_equipped_weapon(void);
+                extern void re15_render_pc_blit_slot(int slot, const uint32_t *rgba, int w, int h, int dx, int dy);
+                static int s_comp_wpn = -1;
+                int eqw = re15_player_equipped_weapon();
+                if (eqw != s_comp_wpn && eqw > 0 && eqw < RE15_WPN_MDL_MAX) {
+                    s_comp_wpn = eqw;
+                    const char *fam = (g_gameflow.character == 0) ? "PL00" : "PL04";
+                    char nm[32]; snprintf(nm, sizeof nm, "PLD/%sW%02X.PLW", fam, eqw);
+                    int psz = 0; uint8_t *plw = pc_read_shared(nm, &psz);
+                    if (plw && psz > 16) {
+                        uint32_t diroff = (uint32_t)(plw[0]|(plw[1]<<8)|(plw[2]<<16)|((uint32_t)plw[3]<<24));
+                        if (diroff + 16 <= (uint32_t)psz) {
+                            uint32_t de3 = (uint32_t)(plw[diroff+12]|(plw[diroff+13]<<8)|
+                                                     (plw[diroff+14]<<16)|((uint32_t)plw[diroff+15]<<24));
+                            re15_tim_t wt;
+                            if (de3 < (uint32_t)psz && re15_tim_parse(plw+de3,(int)(psz-de3),&wt)==0 &&
+                                wt.has_clut && wt.pixels && wt.clut && wt.bpp == 1) {
+                                int cw = wt.width, ch = wt.height;
+                                uint32_t *rgba = (uint32_t*)malloc((size_t)cw*ch*4);
+                                if (rgba) {
+                                    const uint8_t *src = (const uint8_t*)wt.pixels;   /* 8bpp indices */
+                                    for (int i = 0; i < cw*ch; i++) {
+                                        uint16_t c = wt.clut[src[i]];       /* dir[3]'s OWN 256-entry CLUT */
+                                        uint32_t R=(uint32_t)((c&0x1F)<<3), G=(uint32_t)(((c>>5)&0x1F)<<3), B=(uint32_t)(((c>>10)&0x1F)<<3);
+                                        rgba[i] = 0xFF000000u | (R<<16) | (G<<8) | B;
+                                    }
+                                    /* Blit at the texel the in-hand mesh's weapon prims sample: X = page-0x81
+                                     * base (0xF*128=128) + u_min(72) = 200; Y = clut-0x7840 slab-1 V-offset
+                                     * (1*256) + v_min(108) = 364. (All PL00W** hand+weapon meshes share this
+                                     * u72-127/v108-139 weapon footprint; the hand prims below sample skin.) */
+                                    re15_render_pc_blit_slot(0, rgba, cw, ch, 200, 364);
+                                    free(rgba);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             /* WEAPON-IN-HAND — byte-true: the equip commit FUN_80036b68 @0x80036c08 attaches the in-hand
              * weapon mesh (kine+0x76c/770/774/778) UNCONDITIONALLY when aca5d!=0, so the EQUIPPED weapon
              * (knife/handgun/shotgun/...) is in Leon's hand whenever equipped — not only while aiming
-             * (savestate 3: attach pointers all set). BYTE-TRUE ASSET SOURCE (equip loader FUN_80036b68
-             * @0x80036b84): the mesh is CD file base_table[charid]+aca5d = PL00W<aca5d> dir[2] for Leon
-             * (char 0-3, base 76) / PL04W<aca5d> for Elza (char 4-7, base 97); base_table @0x800741e8 =
-             * {76,76,76,76,97,97,97,97}. It is textured from the CHARACTER'S OWN body-skin TIM (slot 0 =
-             * PL00.TIM for Leon, the SAME slot the body binds @4327), page 0x81 / clut 0x7840 -> slab 1.
-             * (The earlier "shared PL04W03 dir[2] + PL04.TIM slot 25" model was Elza's assets on Leon:
-             * PL04W03 vs PL00W03 = 0/35 verts, and PL04.TIM slab-1 gun texels are dark -> the black gun.) */
+             * (savestate 3: attach pointers all set). The mesh = PL00W<aca5d> dir[2] (Leon; base_table
+             * @0x800741e8 = {76,76,76,76,97,97,97,97}, FUN_80036b68 @0x80036b84), textured via the dir[3]
+             * composite above at page 0x81 / clut 0x7840 -> slab 1 of the body-skin slot 0. */
             {
                 extern int re15_player_equipped_weapon(void);
                 int eq = re15_player_equipped_weapon();     /* aca5d = the equipped weapon id */
