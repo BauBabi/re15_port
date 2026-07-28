@@ -4670,20 +4670,20 @@ re_title:;
              * per-weapon art; each PLW carries its own dir[3], DMA'd on equip.) Re-blit only on aca5d change. */
             {
                 extern int  re15_player_equipped_weapon(void);
-                extern void re15_render_pc_blit_slot(int slot, const uint32_t *rgba, int w, int h, int dx, int dy);
-                /* Cache the decoded dir[3] and RE-BLIT EVERY FRAME (not once): a once-per-change composite
-                 * failed to stick in the save-load flow (the guard fired early in a context where slot 0
-                 * wasn't the gameplay skin, then blocked the real gameplay composite). Decoding only on a
-                 * (character,weapon) change keeps it cheap; the 56x32 blit each frame guarantees the mesh's
-                 * weapon prims always read the current weapon whenever it is drawn, regardless of flow. */
-                static uint32_t *s_wpn_rgba = NULL; static int s_wpn_w = 0, s_wpn_h = 0; static int s_wpn_key = -1;
+                extern void re15_render_pc_composite_slot0(const uint32_t *wpn, int ww, int wh, int dx, int dy);
+                /* On each (character,weapon) change, decode the equipped weapon's dir[3] sprite and REBUILD
+                 * slot 0 (body skin + weapon composited) via re15_render_pc_composite_slot0 — a fresh texture
+                 * upload, NOT a per-frame sub-rect update (hardware GL drivers drop those on a sampled STATIC
+                 * texture -> untextured weapon on the user's GPU while a software renderer showed it fine).
+                 * The weapon prims (u72-127/v108-139, page 0x81/clut 0x7840=slab1) sample slot-0 texel
+                 * (200,364); the hand prims below still read skin (weapon-only scratch region). */
+                static int s_wpn_key = -1;
                 int eqw = re15_player_equipped_weapon();
                 int key = (g_gameflow.character << 8) | (eqw & 0xFF);
                 if (eqw > 0 && eqw < RE15_WPN_MDL_MAX && key != s_wpn_key) {
                     const char *fam = (g_gameflow.character == 0) ? "PL00" : "PL04";
                     char nm[32]; snprintf(nm, sizeof nm, "PLD/%sW%02X.PLW", fam, eqw);
                     int psz = 0; uint8_t *plw = pc_read_shared(nm, &psz);
-                    int ok = 0;
                     if (plw && psz > 16) {
                         uint32_t diroff = (uint32_t)(plw[0]|(plw[1]<<8)|(plw[2]<<16)|((uint32_t)plw[3]<<24));
                         if (diroff + 16 <= (uint32_t)psz) {
@@ -4692,28 +4692,22 @@ re_title:;
                             re15_tim_t wt; int pr = (de3 < (uint32_t)psz) ? re15_tim_parse(plw+de3,(int)(psz-de3),&wt) : -1;
                             if (pr==0 && wt.has_clut && wt.pixels && wt.clut && wt.bpp == 8) {
                                 int cw = wt.width, ch = wt.height;
-                                uint32_t *nb = (uint32_t*)realloc(s_wpn_rgba, (size_t)cw*ch*4);
-                                if (nb) {
-                                    s_wpn_rgba = nb; s_wpn_w = cw; s_wpn_h = ch;
+                                uint32_t *rgba = (uint32_t*)malloc((size_t)cw*ch*4);
+                                if (rgba) {
                                     const uint8_t *src = (const uint8_t*)wt.pixels;   /* 8bpp indices */
                                     for (int i = 0; i < cw*ch; i++) {
                                         uint16_t c = wt.clut[src[i]];       /* dir[3]'s OWN 256-entry CLUT */
                                         uint32_t R=(uint32_t)((c&0x1F)<<3), G=(uint32_t)(((c>>5)&0x1F)<<3), B=(uint32_t)(((c>>10)&0x1F)<<3);
-                                        s_wpn_rgba[i] = 0xFF000000u | (R<<16) | (G<<8) | B;
+                                        rgba[i] = 0xFF000000u | (R<<16) | (G<<8) | B;
                                     }
-                                    ok = 1;
+                                    re15_render_pc_composite_slot0(rgba, cw, ch, 200, 364);
+                                    free(rgba);
+                                    s_wpn_key = key;   /* latch only on success; a transient early miss retries next frame */
                                 }
                             }
                         }
                     }
-                    if (ok) s_wpn_key = key;   /* only latch on SUCCESS so a transient early miss retries next frame */
                 }
-                /* Blit at the texel the in-hand mesh's weapon prims sample: X = page-0x81 base
-                 * (0xF*128=128) + u_min 72 = 200; Y = clut-0x7840 slab-1 V-offset (256) + v_min 108 = 364.
-                 * (All PL00W** hand+weapon meshes share the u72-127/v108-139 weapon footprint; the hand
-                 * prims below still sample skin — 200,364 is a weapon-only scratch area of the atlas.) */
-                if (s_wpn_rgba && eqw > 0)
-                    re15_render_pc_blit_slot(0, s_wpn_rgba, s_wpn_w, s_wpn_h, 200, 364);
             }
 
             /* WEAPON-IN-HAND — byte-true: the equip commit FUN_80036b68 @0x80036c08 attaches the in-hand

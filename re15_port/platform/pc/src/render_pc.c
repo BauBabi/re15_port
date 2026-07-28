@@ -158,6 +158,10 @@ typedef struct {
 } re15_tim_slot_t;
 static re15_tim_slot_t s_tim_slots[RE15_TIM_SLOT_MAX];
 static int             s_active_slot = 0;
+/* Slot-0 body-skin base RGBA, stashed at upload — the in-hand weapon composite rebuilds slot 0
+ * from this (base + weapon dir[3]) on equip via a fresh texture (driver-independent). */
+static uint32_t       *s_slot0_base_rgba = NULL;
+static int             s_slot0_base_w = 0, s_slot0_base_h = 0;
 
 /* Back-compat globals point at the active slot. Updated on bind. */
 static SDL_Texture *s_tim_texture     = NULL;
@@ -227,16 +231,32 @@ int re15_render_pc_dbg_slot_loaded(int slot) {
     return s_tim_slots[slot].loaded;
 }
 
-/* Blit a small ARGB8888 patch into a loaded slot's texture at (dx,dy). Used to composite the
- * equipped weapon's dir[3] TIM into the body-skin atlas at the spot the in-hand mesh samples
- * (the original DMAs the weapon dir[3] to VRAM per-equip; FUN_80036b68). Clipped to the texture. */
-void re15_render_pc_blit_slot(int slot, const uint32_t *rgba, int w, int h, int dx, int dy) {
-    if (slot < 0 || slot >= RE15_TIM_SLOT_MAX || !rgba) return;
-    re15_tim_slot_t *s = &s_tim_slots[slot];
-    if (!s->loaded || !s->tex) return;
-    if (dx < 0 || dy < 0 || dx + w > s->w || dy + h > s->h) return;
-    SDL_Rect r = { dx, dy, w, h };
-    SDL_UpdateTexture(s->tex, &r, rgba, w * 4);
+/* Rebuild slot 0 (the body-skin atlas) with the equipped weapon's dir[3] sprite composited in at
+ * (dx,dy). Called once per equip. Rather than sub-rect-updating the live STATIC texture (which some
+ * hardware GL drivers silently drop once the texture has been sampled -> untextured weapon), this
+ * copies the stashed base RGBA, blits the weapon patch, and DESTROYS+RECREATES the texture with a
+ * full upload — the same path the initial skin upload uses, so it's honored on every backend. */
+void re15_render_pc_composite_slot0(const uint32_t *wpn, int ww, int wh, int dx, int dy) {
+    if (!wpn || !s_slot0_base_rgba || !s_renderer) return;
+    int W = s_slot0_base_w, H = s_slot0_base_h;
+    if (dx < 0 || dy < 0 || dx + ww > W || dy + wh > H) return;
+    uint32_t *comp = (uint32_t *)malloc((size_t)W * H * 4);
+    if (!comp) return;
+    memcpy(comp, s_slot0_base_rgba, (size_t)W * H * 4);
+    for (int y = 0; y < wh; y++)
+        for (int x = 0; x < ww; x++)
+            comp[(dy + y) * W + (dx + x)] = wpn[y * ww + x];
+    re15_tim_slot_t *s = &s_tim_slots[0];
+    if (s->tex) SDL_DestroyTexture(s->tex);
+    s->tex = SDL_CreateTexture(s_renderer, SDL_PIXELFORMAT_ARGB8888,
+                               SDL_TEXTUREACCESS_STATIC, W, H);
+    if (s->tex) {
+        SDL_UpdateTexture(s->tex, NULL, comp, W * 4);
+        SDL_SetTextureBlendMode(s->tex, SDL_BLENDMODE_BLEND);
+        s->loaded = 1;
+    }
+    if (s_active_slot == 0) update_active_slot_globals();   /* refresh the bound-slot tex pointer */
+    free(comp);
 }
 
 /* Phase 4.5.7.7 (2026-05-19): per-tri depth field for back-to-front sort.
@@ -1803,6 +1823,16 @@ void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot)
         st->n_cluts     = n_cluts;
         st->clut_base_y = tim->clut_y;
         st->loaded      = 1;
+    }
+    /* Stash slot 0's decoded base RGBA (the body-skin atlas) so the in-hand weapon composite can
+     * REBUILD slot 0 from scratch on equip (base + weapon dir[3]) — a fresh texture + full upload
+     * is honored by all SDL backends, unlike a per-frame sub-rect SDL_UpdateTexture on a STATIC
+     * texture already rendered from (dropped by some hardware GL drivers -> untextured weapon). */
+    if (slot == 0) {
+        free(s_slot0_base_rgba);
+        s_slot0_base_rgba = (uint32_t *)malloc((size_t)n_pixels * 4);
+        if (s_slot0_base_rgba) { memcpy(s_slot0_base_rgba, rgba, (size_t)n_pixels * 4);
+                                 s_slot0_base_w = tex_w; s_slot0_base_h = tex_h; }
     }
     free(rgba);
     /* Re-bind active slot so globals stay current (no-op if same slot). */
