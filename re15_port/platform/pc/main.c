@@ -4680,18 +4680,17 @@ re_title:;
                 int eqw = re15_player_equipped_weapon();
                 int key = (g_gameflow.character << 8) | (eqw & 0xFF);
                 if (eqw > 0 && eqw < RE15_WPN_MDL_MAX && key != s_wpn_key) {
-                    s_wpn_key = key;
                     const char *fam = (g_gameflow.character == 0) ? "PL00" : "PL04";
                     char nm[32]; snprintf(nm, sizeof nm, "PLD/%sW%02X.PLW", fam, eqw);
                     int psz = 0; uint8_t *plw = pc_read_shared(nm, &psz);
+                    int ok = 0;
                     if (plw && psz > 16) {
                         uint32_t diroff = (uint32_t)(plw[0]|(plw[1]<<8)|(plw[2]<<16)|((uint32_t)plw[3]<<24));
                         if (diroff + 16 <= (uint32_t)psz) {
                             uint32_t de3 = (uint32_t)(plw[diroff+12]|(plw[diroff+13]<<8)|
                                                      (plw[diroff+14]<<16)|((uint32_t)plw[diroff+15]<<24));
-                            re15_tim_t wt;
-                            if (de3 < (uint32_t)psz && re15_tim_parse(plw+de3,(int)(psz-de3),&wt)==0 &&
-                                wt.has_clut && wt.pixels && wt.clut && wt.bpp == 1) {
+                            re15_tim_t wt; int pr = (de3 < (uint32_t)psz) ? re15_tim_parse(plw+de3,(int)(psz-de3),&wt) : -1;
+                            if (pr==0 && wt.has_clut && wt.pixels && wt.clut && wt.bpp == 8) {
                                 int cw = wt.width, ch = wt.height;
                                 uint32_t *nb = (uint32_t*)realloc(s_wpn_rgba, (size_t)cw*ch*4);
                                 if (nb) {
@@ -4702,10 +4701,12 @@ re_title:;
                                         uint32_t R=(uint32_t)((c&0x1F)<<3), G=(uint32_t)(((c>>5)&0x1F)<<3), B=(uint32_t)(((c>>10)&0x1F)<<3);
                                         s_wpn_rgba[i] = 0xFF000000u | (R<<16) | (G<<8) | B;
                                     }
+                                    ok = 1;
                                 }
                             }
                         }
                     }
+                    if (ok) s_wpn_key = key;   /* only latch on SUCCESS so a transient early miss retries next frame */
                 }
                 /* Blit at the texel the in-hand mesh's weapon prims sample: X = page-0x81 base
                  * (0xF*128=128) + u_min 72 = 200; Y = clut-0x7840 slab-1 V-offset (256) + v_min 108 = 364.
