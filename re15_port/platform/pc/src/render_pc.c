@@ -161,6 +161,7 @@ static int             s_active_slot = 0;
 /* Slot-0 body-skin base RGBA, stashed at upload — the in-hand weapon composite rebuilds slot 0
  * from this (base + weapon dir[3]) on equip via a fresh texture (driver-independent). */
 static uint32_t       *s_slot0_base_rgba = NULL;
+static unsigned        s_slot0_generation = 0;   /* bumps on every slot-0 (re)upload */
 static int             s_slot0_base_w = 0, s_slot0_base_h = 0;
 
 /* Back-compat globals point at the active slot. Updated on bind. */
@@ -236,12 +237,12 @@ int re15_render_pc_dbg_slot_loaded(int slot) {
  * hardware GL drivers silently drop once the texture has been sampled -> untextured weapon), this
  * copies the stashed base RGBA, blits the weapon patch, and DESTROYS+RECREATES the texture with a
  * full upload — the same path the initial skin upload uses, so it's honored on every backend. */
-void re15_render_pc_composite_slot0(const uint32_t *wpn, int ww, int wh, int dx, int dy) {
-    if (!wpn || !s_slot0_base_rgba || !s_renderer) return;
+int re15_render_pc_composite_slot0(const uint32_t *wpn, int ww, int wh, int dx, int dy) {
+    if (!wpn || !s_slot0_base_rgba || !s_renderer) return 0;   /* base not uploaded yet -> caller retries */
     int W = s_slot0_base_w, H = s_slot0_base_h;
-    if (dx < 0 || dy < 0 || dx + ww > W || dy + wh > H) return;
+    if (dx < 0 || dy < 0 || dx + ww > W || dy + wh > H) return 0;
     uint32_t *comp = (uint32_t *)malloc((size_t)W * H * 4);
-    if (!comp) return;
+    if (!comp) return 0;
     memcpy(comp, s_slot0_base_rgba, (size_t)W * H * 4);
     for (int y = 0; y < wh; y++)
         for (int x = 0; x < ww; x++)
@@ -257,7 +258,10 @@ void re15_render_pc_composite_slot0(const uint32_t *wpn, int ww, int wh, int dx,
     }
     if (s_active_slot == 0) update_active_slot_globals();   /* refresh the bound-slot tex pointer */
     free(comp);
+    return s->tex != NULL;
 }
+
+unsigned re15_render_pc_slot0_generation(void) { return s_slot0_generation; }
 
 /* Phase 4.5.7.7 (2026-05-19): per-tri depth field for back-to-front sort.
  *

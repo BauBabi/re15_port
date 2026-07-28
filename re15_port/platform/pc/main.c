@@ -4670,17 +4670,26 @@ re_title:;
              * per-weapon art; each PLW carries its own dir[3], DMA'd on equip.) Re-blit only on aca5d change. */
             {
                 extern int  re15_player_equipped_weapon(void);
-                extern void re15_render_pc_composite_slot0(const uint32_t *wpn, int ww, int wh, int dx, int dy);
+                extern int  re15_render_pc_composite_slot0(const uint32_t *wpn, int ww, int wh, int dx, int dy);
+                extern unsigned re15_render_pc_slot0_generation(void);
                 /* On each (character,weapon) change, decode the equipped weapon's dir[3] sprite and REBUILD
                  * slot 0 (body skin + weapon composited) via re15_render_pc_composite_slot0 — a fresh texture
                  * upload, NOT a per-frame sub-rect update (hardware GL drivers drop those on a sampled STATIC
                  * texture -> untextured weapon on the user's GPU while a software renderer showed it fine).
-                 * The weapon prims (u72-127/v108-139, page 0x81/clut 0x7840=slab1) sample slot-0 texel
-                 * (200,364); the hand prims below still read skin (weapon-only scratch region). */
-                static int s_wpn_key = -1;
+                 * TARGET TEXEL (re-derived from the mesh UVs, per-prim): each PL00W** dir[2] mesh has TWO
+                 * UV bands on page 0x81 — the HAND band at v108-157 (reads real skin) and the WEAPON band
+                 * at u72-126 / v224-251, a 56x28 region that exactly matches the 56x32 dir[3] sprite. So
+                 * the sprite belongs at X = page-0x81 base (0xF*128=128) + u_min 72 = 200, Y = clut-0x7840
+                 * slab-1 V-offset (256) + v_min 224 = 480. (An earlier composite used v_min 108 -> Y=364,
+                 * which patched the HAND band and left the blade/barrel reading stale skin = untextured.) */
+                static int s_wpn_key = -1; static unsigned s_wpn_gen = 0u;
                 int eqw = re15_player_equipped_weapon();
                 int key = (g_gameflow.character << 8) | (eqw & 0xFF);
-                if (eqw > 0 && eqw < RE15_WPN_MDL_MAX && key != s_wpn_key) {
+                unsigned gen = re15_render_pc_slot0_generation();
+                /* Re-composite when the weapon changes OR slot 0 was re-uploaded (which wipes the
+                 * baked-in weapon), and RETRY next frame whenever the composite could not apply yet
+                 * (e.g. the skin base is not uploaded at this point in the boot/resume order). */
+                if (eqw > 0 && eqw < RE15_WPN_MDL_MAX && (key != s_wpn_key || gen != s_wpn_gen)) {
                     const char *fam = (g_gameflow.character == 0) ? "PL00" : "PL04";
                     char nm[32]; snprintf(nm, sizeof nm, "PLD/%sW%02X.PLW", fam, eqw);
                     int psz = 0; uint8_t *plw = pc_read_shared(nm, &psz);
@@ -4700,9 +4709,10 @@ re_title:;
                                         uint32_t R=(uint32_t)((c&0x1F)<<3), G=(uint32_t)(((c>>5)&0x1F)<<3), B=(uint32_t)(((c>>10)&0x1F)<<3);
                                         rgba[i] = 0xFF000000u | (R<<16) | (G<<8) | B;
                                     }
-                                    re15_render_pc_composite_slot0(rgba, cw, ch, 200, 364);
+                                    if (re15_render_pc_composite_slot0(rgba, cw, ch, 200, 480)) {
+                                        s_wpn_key = key; s_wpn_gen = gen;   /* latch ONLY when it actually applied */
+                                    }
                                     free(rgba);
-                                    s_wpn_key = key;   /* latch only on success; a transient early miss retries next frame */
                                 }
                             }
                         }
