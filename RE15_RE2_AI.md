@@ -147,6 +147,25 @@ Messen mit: `RE15_AI_FLAVOR=re2` (headless-Umschalter, umgeht das Menü).
 
 ---
 
+### Dritter geteilter Helfer: der KEGEL-TEST
+
+RE2 `FUN_80015614` == RE1.5 `FUN_8001A9CC` == Port `re15_ai_arc_test` (in `re15_damage.c`).
+
+```
+bearing = FUN_800154AC(self+0x38, self+0x40, tx, tz)
+t       = (bearing - yaw@+0x76 + half) & 0xfff       @0x80015650/54/58
+if (t <  2*half) return 0;      @0x80015664/68/6c (+ Delay-Slot v0=0)   -> INNERHALB
+if (t <  0x801)  return +half;  @0x80015674/78     (+ Delay-Slot v0=half)
+else             return -half;  @0x80015680
+```
+RE1.5 dreht nur die Reihenfolge der beiden Vorzeichen-Instruktionen um (`subu` im Delay-Slot
+@0x8001AA40, `addu` am Sprungziel @0x8001AA50) — **gleiche** Semantik. Der Port-Code stimmt Zeile
+für Zeile: `u < 2*cone -> 0`, sonst `±cone` mit dem Umschlag bei `u > 0x800`.
+
+→ **Muster (dreimal in Folge bestätigt): bevor ich eine RE2-Hilfsfunktion nachbaue, prüfe ich, ob
+der Port sie über die RE1.5-Seite schon byte-true hat.** Bisher: Steer-Helfer, Bearing-Helfer,
+Kegel-Test — alle drei schon vorhanden.
+
 ## 🔜 W2 — Angriffs-Arbitrierung (Decision `@0x80101714`) — ANGEFANGEN, NICHT PORTIERT
 
 Der Anfang der Entscheidungsleiter ist gelesen; der Rest läuft gerade als Audit-Workflow
