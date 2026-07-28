@@ -163,6 +163,15 @@ typedef struct {
      *    (FUN_80105a8c exit gate @0x80105b18). */
     uint8_t  hurt_clip;         /* +0x1d4 — per-spawn stagger clip {2,3,4,5} */
     int16_t  hit_stun;          /* HURT-stun countdown (the +0x1dc-in-HURT semantic) */
+    /* HURT torso-bend (the visible RECOIL of a hit). The stagger handler does NOT switch clips — it
+     * bends one bone while the walk clip keeps playing: `lhu part+100; lhu ent+0x9c; addu; sh part+100`
+     * (@0x80105d54-64 bend-down / @0x80105df8-08 bend-up), where part = model_pool + 1204 = part index
+     * 7 (stride 172, @0x80105ba4). +0x9c ramps -0x80/tick for 3 ticks, then +0x80/tick for 3
+     * (@0x80105d7c-84 / @0x80105e20). The offset lands on the bone's vz euler — the SAME slot the
+     * Plc_neck pitch uses (+0x64), see skeleton_common.c. bend_bone < 0 = inactive.
+     * NOTE: only the INDEX 7 is proven (1204/172); the anatomical bone identity is not parsed. */
+    int16_t  hurt_bend_bone;    /* part index to bend, -1 = none */
+    int16_t  hurt_bend_vz;      /* the PRE-update +0x9c applied this tick */
     /* Phase 4.5.13-RE2 F1: speed was at ID 27 (wrong) — correct ID is
      * 0x16 (+0x1CC in RE2). Renamed for clarity; opcode 0x35 Speed_set
      * uses an indexed velocity vector (ID 0x17..0x1A), not this scalar. */

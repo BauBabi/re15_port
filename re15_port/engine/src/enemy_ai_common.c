@@ -2426,11 +2426,18 @@ void re15_enemy_ai_live_arm(int slot)
  *    every hit; the stun step for +0x5=2 is the byte-true @0x8011fe30[2] = -2.
  *  - The +0x9&0x80 SPECIAL collapse branch (fixed clip 30/37/38) is DORMANT for ROOM1140 (set only by
  *    the grab-stun seed) -> a documented stub that just holds HURT. */
+/* ⚠️ LOOP-BIT: the STANDING stagger must NOT touch anim_flags. A full store-census over the whole HURT
+ * region (@0x80105a8c-0x80106060, self-disassembled 2026-07-28) finds NOT ONE store to +0x1c4 — the
+ * original never changes the anim-playback flags while staggering, and its clip playback wraps
+ * unconditionally (@0x8001f610-3c). The port used to clear bit 0x04 here ("HOLD-LAST the play-once
+ * flinch"), which in anim_select_common.c:211 flips clip_override to -1 = play-once-HOLD-LAST — so the
+ * zombie's pose FROZE on its last walk frame for the entire hit reaction (and the bit was never
+ * restored on exit). That frozen pose is the "hit animation is wrong" the user reported. Savestate 4
+ * corroborates: the hit zombie has motion=2 with anim_frame=18 — a clip that is still running. */
 void re15_enemy_ai_live_hurt(int slot)
 {
     if (slot < 0 || slot >= RE15_ACTOR_MAX) return;
     re15_actor_t *e = &g_actors[slot];
-    e->anim_flags &= (uint16_t)~0x04u;    /* HOLD-LAST the play-once flinch (drop any inherited walk LOOP) */
 
     /* DOWNED/LYING flinch (router @0x80105a9c-ad8: `lbu +0x9; andi 0x80; beq zero -> normal`, then
      * +0x5 in {0x12,0x13} -> FUN_80106a38 (prone flinch clip 37/38), else -> FUN_801068a0 (clip 0x1e)).
@@ -2438,6 +2445,10 @@ void re15_enemy_ai_live_hurt(int slot)
      * (audit wf_827f186d zombie-live #2, HIGH). Both handlers raw-disasm'd end-to-end (2026-07-26)
      * and ported below as the same +0x7 phase machine the death/knockdown ports use. */
     if (e->grid_id & 0x80) {
+        /* The play-once HOLD-LAST semantics stay ONLY here: these two downed handlers are ported as
+         * clip-playout machines (re15_enemy_clip_done), so they need it. The STANDING stagger must NOT
+         * clear it — see the LOOP note above re15_enemy_ai_live_hurt's phase 0. */
+        e->anim_flags &= (uint16_t)~0x04u;
         int prone = (e->sub_state_1 == 0x12 || e->sub_state_1 == 0x13);
         /* ZOMBIE GIRL router (FUN_8010bf80 @0x8010bfa4-c4): her downed gate routes +0x5==2 ->
          * FUN_80106a38 (prone flinch), ELSE -> FUN_801068a0 — the standard's {0x12,0x13} pair
@@ -2515,14 +2526,24 @@ void re15_enemy_ai_live_hurt(int slot)
         e->grab_kill_ctr = 2;                          /* +0x9e = 2 @0x80105bf0 — bend-down countdown */
         e->ai_timer    = 0;                            /* +0x9c = 0 @0x80105c00 — spine-bend accumulator */
         re15_audio_room_se(6);                         /* FUN_800453d0(6) */
-        {                                              /* poise ONCE-per-hit (@0x8011fe30[+0x5]) */
-            static const int8_t stun_step[12] = { 0, -2, -2, -3, -3, -3, -3, 0, 0, 0, 0, 0 };
-            e->hit_stun = (int16_t)(e->hit_stun + (e->sub_state_1 < 12 ? stun_step[e->sub_state_1] : 0));
+        {   /* poise ONCE-per-hit. Table @0x8011fe30 has 21 entries (it starts exactly where the 21-row
+             * dispatch table 0x8011fb90 + 21*32 ends); [17..20] = 0x80105A2C = `addiu v0,v0,-1` = -1.
+             * The old 12-entry cut silently returned 0 for ids 12..20. */
+            static const int8_t stun_step[21] = { 0, -2, -2, -3, -3, -3, -3, 0, 0, 0, 0, 0,
+                                                  0, 0, 0, 0, 0, -1, -1, -1, -1 };
+            e->hit_stun = (int16_t)(e->hit_stun + (e->sub_state_1 < 21 ? stun_step[e->sub_state_1] : 0));
         }
-        goto router_gate;
+        /* NO return/goto: phase 0 FALLS THROUGH into the phase-1 body in the SAME tick. Raw bytes
+         * @0x80105d20: `lw v0,0(at)` / nop / `jalr v0` / nop(delay) / @0x80105d30 `lui v0,0x800b` —
+         * and @0x80105d30 IS the phase-1 branch target (@0x80105ba0 `beq v1,a1,0x80105d30`). There is
+         * no branch in between, so the poise step and the first bend tick share one frame: the whole
+         * stagger is 6 ticks after the hit, not 7. (Self-verified 2026-07-28.) */
     }
     if (e->sub_state_3 == 1) {                         /* phase 1 — bend DOWN (@0x80105d30) */
-        e->ai_timer = (int16_t)(e->ai_timer - 0x80);   /* +0x9c -= 0x80 @0x80105d7c-84 (bone apply deferred) */
+        e->hurt_bend_bone = 7;                         /* s0 = pool+1204, stride 172 (@0x80105ba4) */
+        e->hurt_bend_vz   = e->ai_timer;               /* part+100 += +0x9c BEFORE the ramp step
+                                                        * (@0x80105d54-64 precedes @0x80105d7c-84) */
+        e->ai_timer = (int16_t)(e->ai_timer - 0x80);   /* +0x9c -= 0x80 @0x80105d7c-84 */
         {
             int16_t was = e->grab_kill_ctr;            /* lbu +0x9e @0x80105d94 */
             e->grab_kill_ctr = (int16_t)(was - 1);     /* delay slot ALWAYS stores -1 @0x80105da4 */
@@ -2537,6 +2558,9 @@ void re15_enemy_ai_live_hurt(int slot)
         /* no return: falls through into the phase-3 body (@0x80105dd0 -> @0x80105dd4) */
     }
     /* phase 3 body — bend UP (@0x80105dd4) */
+    e->hurt_bend_bone = 7;                             /* s0 = pool+1204 (@0x80105ba4) */
+    e->hurt_bend_vz   = e->ai_timer;                   /* part+100 += +0x9c BEFORE the ramp step
+                                                        * (@0x80105df8-08 precedes @0x80105e20) */
     e->ai_timer = (int16_t)(e->ai_timer + 0x80);       /* +0x9c += 0x80 @0x80105e20 */
     {
         int16_t was = e->grab_kill_ctr;                /* lbu +0x9e @0x80105e38 */
@@ -2549,6 +2573,10 @@ void re15_enemy_ai_live_hurt(int slot)
      * the cadence; the router disasm shows the gate fires the same tick poise breaks). */
     {
         int slot2 = (int)(e - g_actors);
+        /* Stagger over -> stop bending. The original's +0x9c is the SAME field the gait timer reuses
+         * and the exit block overwrites it (@0x80105f8c), so no bend survives into ACTIVE. */
+        e->hurt_bend_bone = -1;
+        e->hurt_bend_vz   = 0;
         re15_ai_set_state_word(e, 0x10201u);           /* ACTIVE / +0x5=2 / +0x6=1 (entry SKIPPED) */
         e->hit_react &= (uint8_t)~0x1u;                /* +0x93 &= 0xfe (@0x80105f9c-fac): the hurt
                                                         * RECOVERY clears the once-per-attack hit
@@ -2586,6 +2614,16 @@ void re15_enemy_ai_live_hurt(int slot)
          * hit_stun >= 0 is guaranteed on this path, so the gate is a no-op here. */
     }
 router_gate:
+    /* FORWARD LURCH (@0x8010602c `jal 0x800245d8` with a0=0 — the stagger handler's common TAIL, i.e.
+     * it runs on EVERY phase's exit): FUN_800245d8 reads the per-tick speed +0x8c (@0x800245f0
+     * `lhu v0,140(v0)`) and writes the advanced world X/Z back (@0x800246e4 `sw v0,52(a0)` /
+     * @0x800246f8 `sw v0,60(a0)`). Phase 0 seeded +0x8c = 0x14 = 20 u/tick (@0x80105c10), and the
+     * savestate confirms it: ONLY the hit zombie carries +0x8c = 20 (the untouched ones have 0/210).
+     * The port set speed_h but never integrated it, so the zombie took the hit standing perfectly
+     * still. Same heading convention as the charge slide @L1500-1501. */
+    e->x += (int32_t)(((int32_t)re15_cos_q12(e->rot_y) * e->speed_h) >> 12);
+    e->z -= (int32_t)(((int32_t)re15_sin_q12(e->rot_y) * e->speed_h) >> 12);
+
     /* ROUTER exit gate (@0x80105b18-68), reached EVERY tick after the jalr'd handler (fallthrough
      * from @0x80105b10): `lh +0x1dc; bgez -> return` (@0x80105b24-2c); poise BROKEN (< 0) and
      * +0x9&0x80 clear (@0x80105b34-40; always clear on this path — the downed branch bypassed the
@@ -2596,6 +2634,8 @@ router_gate:
         e->state       = (uint8_t)RE15_AI_STATE_ACTIVE;
         e->sub_state_1 = 0x11;
         e->sub_state_2 = 0;
+        e->hurt_bend_bone = -1;   /* poise broke mid-stagger -> knockdown, drop the bend */
+        e->hurt_bend_vz   = 0;
     }
 }
 

@@ -25,6 +25,8 @@ void re15_actor_init(void)
     /* em_flag_id defaults to 0xFF (never-persist): a corpse reached without an op_sce_em_set spawn
      * must NOT set em-status flag 0. Sce_em_set overwrites it with pc[7] at spawn. */
     for (int i = 0; i < RE15_ACTOR_MAX; i++) g_actors[i].em_flag_id = 0xFF;
+    /* No HURT torso-bend active (0 would mean "bend part 0"). */
+    for (int i = 0; i < RE15_ACTOR_MAX; i++) g_actors[i].hurt_bend_bone = -1;
     /* Slot 0 = player, always active (RE2-pure). Main initialises x/y/z
      * from the room's spawn-entry data (stage-transition or fallback). */
     g_actors[RE15_ACTOR_SLOT_PLAYER].active = 1;

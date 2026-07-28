@@ -386,6 +386,15 @@ int re15_skel_compute_pose(const re15_emd_skeleton_t *skel,
             az = (int16_t)(az + a->neck_pitch); /* PITCH -> vz (+0x64), byte-true (NOT ax) */
         }
 
+        /* HURT torso-bend: the stagger handler adds the entity's +0x9c ramp onto ONE part's vz
+         * (`lhu v0,100(s0); lhu v1,156(ent); addu; sh v0,100(s0)` @0x80105d54-64 / @0x80105df8-08,
+         * s0 = model_pool+1204 = part 7 @0x80105ba4). Per-tick ADDITIVE, never accumulating: anim_set
+         * rewrites part+96..100 from part+120..124 every tick before the handler adds (@0x8001f54c-58),
+         * and the un-blended pose path is what runs here because the stagger holds +0x8f == 0
+         * (@0x8001f408/@0x8001f41c). Same vz slot as the neck pitch above. */
+        if (bact && bact->hurt_bend_bone >= 0 && b == (int)bact->hurt_bend_bone)
+            az = (int16_t)(az + bact->hurt_bend_vz);
+
         int32_t local_rot[9];
         mat3_from_euler((int)ax, (int)ay, (int)az, local_rot);
 

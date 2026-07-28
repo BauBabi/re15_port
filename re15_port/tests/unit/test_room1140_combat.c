@@ -695,20 +695,26 @@ int main(void)
          * phase 2 re-seeds +0x9e=2 (@0x80105dd0) and FALLS THROUGH into the phase-3 body (no branch
          * between @0x80105dd0 and @0x80105dd4) so its tick is already the 1st bend-up tick; 3 bend-up
          * ticks (+0x9c += 0x80 @0x80105e20, countdown @0x80105e38-48) reach the exit block
-         * @0x80105e4c -> exit 0x10201 on the 6TH tick after the hit tick. NOT the old port's 5 and
-         * NOT the audit's claimed 7 (the fallthrough disproves the separate transition tick). */
+         * @0x80105e4c.
+         * CORRECTED AGAIN 2026-07-28 (raw bytes, self-verified): phase 0 ALSO falls through — into the
+         * phase-1 body. @0x80105d20 `lw v0,0(at)` / nop / `jalr v0` / nop(delay-slot) / @0x80105d30
+         * `lui v0,0x800b`, and @0x80105d30 IS the phase-1 branch target (@0x80105ba0 `beq v1,a1,
+         * 0x80105d30`) — no branch in between. So the HIT TICK already performs the 1st bend-down:
+         * after it, +0x9e = 1 (seeded 2, decremented once) and +0x9c = -0x80, NOT 2/0. Total stagger =
+         * 6 ticks counting the hit tick => 5 further calls to reach the exit. */
         z->state = RE15_AI_STATE_HURT; z->grid_id = 0; z->sub_state_1 = 3; z->sub_state_2 = 0;
         z->sub_state_3 = 0; z->hit_stun = 5; z->hurt_clip = 4; z->motion = 0; z->hit_react = 0;
         re15_enemy_ai_live_hurt(zslots[0]);            /* hit tick: phase 0 (poise 5-3=2 >= 0) */
         if (z->state != RE15_AI_STATE_HURT || z->motion != 4 || z->sub_state_3 != 1
-            || z->grab_kill_ctr != 2 || z->ai_timer != 0 || z->hit_stun != 2) {
-            fprintf(stderr, "FAIL: (14d) phase 0 must seed +0x7=1 (@0x80105be0) +0x9e=2 (@0x80105bf0) "
-                    "+0x9c=0 (@0x80105c00) + poise -3, state=%d mo=%d +0x7=%d +0x9e=%d +0x9c=%d stun=%d\n",
+            || z->grab_kill_ctr != 1 || z->ai_timer != -0x80 || z->hit_stun != 2) {
+            fprintf(stderr, "FAIL: (14d) hit tick = phase 0 seed (+0x7=1 @0x80105be0, +0x9e=2 @0x80105bf0, "
+                    "+0x9c=0 @0x80105c00, poise -3) FALLING THROUGH into the 1st bend-down (+0x9e->1, "
+                    "+0x9c->-0x80), state=%d mo=%d +0x7=%d +0x9e=%d +0x9c=%d stun=%d\n",
                     z->state, z->motion, z->sub_state_3, z->grab_kill_ctr, z->ai_timer, z->hit_stun);
             fail = 1; }
         int ct = 0;
         while (z->state == RE15_AI_STATE_HURT && ct < 12) { re15_enemy_ai_live_hurt(zslots[0]); ct++; }
-        if (ct != 6) {
+        if (ct != 5) {
             fprintf(stderr, "FAIL: (14d) bend cadence must exit on the 6th tick (3+3, phase-2 "
                     "fallthrough @0x80105dd0->dd4), ist %d\n", ct); fail = 1; }
         if (z->state != RE15_AI_STATE_ACTIVE
