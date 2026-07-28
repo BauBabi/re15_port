@@ -4671,10 +4671,16 @@ re_title:;
             {
                 extern int  re15_player_equipped_weapon(void);
                 extern void re15_render_pc_blit_slot(int slot, const uint32_t *rgba, int w, int h, int dx, int dy);
-                static int s_comp_wpn = -1;
+                /* Cache the decoded dir[3] and RE-BLIT EVERY FRAME (not once): a once-per-change composite
+                 * failed to stick in the save-load flow (the guard fired early in a context where slot 0
+                 * wasn't the gameplay skin, then blocked the real gameplay composite). Decoding only on a
+                 * (character,weapon) change keeps it cheap; the 56x32 blit each frame guarantees the mesh's
+                 * weapon prims always read the current weapon whenever it is drawn, regardless of flow. */
+                static uint32_t *s_wpn_rgba = NULL; static int s_wpn_w = 0, s_wpn_h = 0; static int s_wpn_key = -1;
                 int eqw = re15_player_equipped_weapon();
-                if (eqw != s_comp_wpn && eqw > 0 && eqw < RE15_WPN_MDL_MAX) {
-                    s_comp_wpn = eqw;
+                int key = (g_gameflow.character << 8) | (eqw & 0xFF);
+                if (eqw > 0 && eqw < RE15_WPN_MDL_MAX && key != s_wpn_key) {
+                    s_wpn_key = key;
                     const char *fam = (g_gameflow.character == 0) ? "PL00" : "PL04";
                     char nm[32]; snprintf(nm, sizeof nm, "PLD/%sW%02X.PLW", fam, eqw);
                     int psz = 0; uint8_t *plw = pc_read_shared(nm, &psz);
@@ -4687,25 +4693,26 @@ re_title:;
                             if (de3 < (uint32_t)psz && re15_tim_parse(plw+de3,(int)(psz-de3),&wt)==0 &&
                                 wt.has_clut && wt.pixels && wt.clut && wt.bpp == 1) {
                                 int cw = wt.width, ch = wt.height;
-                                uint32_t *rgba = (uint32_t*)malloc((size_t)cw*ch*4);
-                                if (rgba) {
+                                uint32_t *nb = (uint32_t*)realloc(s_wpn_rgba, (size_t)cw*ch*4);
+                                if (nb) {
+                                    s_wpn_rgba = nb; s_wpn_w = cw; s_wpn_h = ch;
                                     const uint8_t *src = (const uint8_t*)wt.pixels;   /* 8bpp indices */
                                     for (int i = 0; i < cw*ch; i++) {
                                         uint16_t c = wt.clut[src[i]];       /* dir[3]'s OWN 256-entry CLUT */
                                         uint32_t R=(uint32_t)((c&0x1F)<<3), G=(uint32_t)(((c>>5)&0x1F)<<3), B=(uint32_t)(((c>>10)&0x1F)<<3);
-                                        rgba[i] = 0xFF000000u | (R<<16) | (G<<8) | B;
+                                        s_wpn_rgba[i] = 0xFF000000u | (R<<16) | (G<<8) | B;
                                     }
-                                    /* Blit at the texel the in-hand mesh's weapon prims sample: X = page-0x81
-                                     * base (0xF*128=128) + u_min(72) = 200; Y = clut-0x7840 slab-1 V-offset
-                                     * (1*256) + v_min(108) = 364. (All PL00W** hand+weapon meshes share this
-                                     * u72-127/v108-139 weapon footprint; the hand prims below sample skin.) */
-                                    re15_render_pc_blit_slot(0, rgba, cw, ch, 200, 364);
-                                    free(rgba);
                                 }
                             }
                         }
                     }
                 }
+                /* Blit at the texel the in-hand mesh's weapon prims sample: X = page-0x81 base
+                 * (0xF*128=128) + u_min 72 = 200; Y = clut-0x7840 slab-1 V-offset (256) + v_min 108 = 364.
+                 * (All PL00W** hand+weapon meshes share the u72-127/v108-139 weapon footprint; the hand
+                 * prims below still sample skin — 200,364 is a weapon-only scratch area of the atlas.) */
+                if (s_wpn_rgba && eqw > 0)
+                    re15_render_pc_blit_slot(0, s_wpn_rgba, s_wpn_w, s_wpn_h, 200, 364);
             }
 
             /* WEAPON-IN-HAND — byte-true: the equip commit FUN_80036b68 @0x80036c08 attaches the in-hand
