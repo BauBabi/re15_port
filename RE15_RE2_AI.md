@@ -249,14 +249,64 @@ Damit ist der Maskenunterschied **echt**: `0x15` (Bits 0,2,4) lässt Bit `0x2` a
 ein — Block E reagiert also auf eine Spieleraktion, auf die Block D nicht reagiert.
 **Welche** Aktionen die Bits 0 und 4 setzen, ist noch offen.
 
-### ⛔ Warum W2 NICHT portiert ist
+### ✅ VERDRAHTET (Commit `c1ef8e8e`)
 
-Jeder Angriffs-Block hängt an mindestens einem Feld, das der Port **nicht modelliert** und dessen
-Erzeuger außerhalb des Zombie-Overlays liegt: `self+0x1F4/+0x1F8` (Block A), `self+0x106` und
-`PL+0x1D3` (B/G/J), `self+0x1D4` und `self+0x110` (C), `0x800CFBF6` (D/E), `self+0x21A` (G),
-`PL+0x8` und `PL+0x156` (J/K). Mit genullten Feldern würde **nur Block G** feuern — der RE2-Zombie
-würde ausschließlich greifen und nie ausfallen. Das wäre kein Port der RE2-KI, sondern eine
-Karikatur davon. Deshalb: Spezifikation ja, Code nein, bis die Erzeuger belegt sind.
+Die Leiter **ersetzt** bei RE2-Flavor `re15_ai_decide_engage` vollständig — sie *ist* das Gegenstück
+zu `DECISION[1]`, nicht eine Ergänzung. Beleg, dass sie den Angriff auslöst
+(`RE15_RE2_TRACE=1`, Ausgabe in `debug.log`):
+
+```
+[re2z] gates d=1137 flo=0/0 claimed=0 g1=0 g2=1 -> COMMIT 0x00000301
+danach claimed=128  -> der Claim-Latch sperrt weitere Grabs, wie im Original
+```
+
+A/B ROOM1140, identisches Spieler-Skript `L14,U200`:
+
+| | Grab-Frame | nächste Distanz | Spieler-HP |
+|---|---|---|---|
+| RE1.5 | 725 | 726 | 70 |
+| RE2 | 685 | 284 | 75 |
+
+**Drei Fehlschläge, die nur die Messung aufgedeckt hat** (und die als Muster wichtig sind):
+1. Der erste Hook saß im **ANIMATE**-Teil statt im DECIDE-Teil → **0** Leiter-Commits; der Grab im
+   RE2-Lauf kam weiterhin aus dem RE1.5-Pfad. Hätte ich nur „RE2 greift an" gemessen, wäre der
+   Fehler unentdeckt geblieben.
+2. `stderr` geht per `freopen` nach `debug.log` — mein `2>`-Redirect zeigte 0 Zeilen.
+3. Der Verdacht „Distanz zu groß" war falsch: 43 von 75 Gate-Aufrufen lagen unter 1200.
+
+**Gate-Belegung:** gemappt sind `dist`, beide Kegel, `floor`, HP, der Claim-Latch und die zwei
+Sektor-Tests. Mit **belegter Null** gefüllt: `self+0x23E` (einziger Schreiber `@0x80104E2C` in
+EXECUTOR[14], nie betreten), `self+0x1F4/+0x1F8` (null Schreiber in EMZ0; Erzeuger `FUN_80065518`
+tickt nur Typen 64..91, Zombies sind `@0x8001B738-48` auf 16..31 geklemmt), `self+0x21A`
+(INIT löscht `@0x8010087C`). Nur `0x0301` wird angewandt.
+
+**Claim-Latch `PL+0x1D3` bit 0x80** — Mechanismus vollständig belegt: der Zombie **setzt** ihn an
+neun Stellen (`ori 0x80`, u.a. `@0x80101968`/`@0x801019B0`) und löscht ihn nie; das **Löschen** liegt
+auf der Spielerseite (`andi 0x7f` + `sb`, `@0x8003E844` und `@0x800630E0`). Port-Äquivalent:
+`s_player_grabbed`. ⚠️ Zwei vermeintliche Löscher im Overlay (`@0x801006C8` INIT, `@0x8010499C`)
+treffen das **eigene** Byte — in beiden Funktionen ist die Basis `a0 = self`; meine erste
+Registersuche mit 300-Instruktions-Fenster war dort falsch positiv.
+
+**Bekannte Abweichung:** das Original lässt den GRAB-Executor im **selben** Tick laufen
+(`0x8010118C` liest `+0x5` nach der Entscheidung neu, `@0x801011D0`); der Port startet ihn einen
+Frame später.
+
+### ⛔ Was an W2 noch NICHT portiert ist
+
+Es feuert derzeit **nur Block G** (der Seiten-Grab). Offen bleiben:
+
+* **Blöcke D und E** (`0x0C01`) — hängen an `0x800CFBF6`. Dessen drei Setzer sind
+  Animations-Start-Routinen des Spielers (`@0x8003CC80` Bit 0x2, `@0x8003D18C` Bit 0x4,
+  `@0x8003D6B4` Bit 0x2); **welche** Spieleraktion je Bit, ist noch offen. Bits `0x1` und `0x10`
+  werden nirgends gesetzt, Maske `0x15` reduziert sich also praktisch auf Bit `0x4`.
+* **Block C** (`0x0A01`) — `self+0x1D4 & 0xC000` und `self+0x110 & 1`.
+* **Blöcke B und J** (`0x0E01`) — testen `PL+0x1D3` als **ganzes Byte**; die unteren 7 Bit sind ein
+  spielerseitiger Countdown (`@0x8003BFF4-C008`), den der Port nicht führt. Mit 0 gefüttert würden
+  B/J **öfter** feuern als im Original — deshalb bleiben sie aus.
+* **Block A** kann in reinen Zombie-Räumen nie feuern (belegt), **Block K** nie, weil die
+  Spieler-HP im Port nie `-32768` wird.
+
+Diese Blöcke sind bewusst still statt geraten — jede Alternative hieße, ein Gate zu erfinden.
 
 **Nächste Xrefs**, in dieser Reihenfolge: (1) `0x8003CC70`/`0x8003D17C`/`0x8003D6A4` — welche
 Spieleraktion setzt welches Bit von `0x800CFBF6`; (2) `0x800CFBDC` (das Gate des Löschens);
