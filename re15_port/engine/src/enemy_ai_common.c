@@ -2743,6 +2743,11 @@ router_gate:
  * FUN_8001f8b4 unbounded &0x8000 keyframe scan. Factored out of the death handler (was inline). */
 static int re15_enemy_clip_done(const re15_actor_t *e)
 {
+    /* Clip-end = the frame index has reached the clip's last frame. This mirrors the original's
+     * anim_set return (@0x8001F624 `sltu (frame+1), frame_count` -> 0 while running, 1 at the end).
+     * It only works because re15_actors_anim_advance now keeps +0x95 INSIDE the clip's range the
+     * way the original does (@0x8001F63C resets it to 0 on wrap) — before that fix the index grew
+     * without bound and this test stayed TRUE forever once any clip had run out. */
     re15_enemy_bank_t *bank = re15_enemy_find(e->type);
     if (!bank || (int)e->motion >= bank->anim.clip_count) return 1;
     int frames = bank->anim.clips[e->motion].frame_count;

@@ -23,6 +23,7 @@
 #include "re15_scd.h"        /* g_scd.player_mode (BL-round input gate) */
 #include "re15_enemy_ai.h"
 #include "re15_esp.h"       /* re15_esp_fx_spawn — the weapon-7 speedloader drop */   /* RE15_AI_STATE_CORPSE — corpse-hold in re15_actors_anim_advance */
+#include "re15_enemy.h"     /* re15_enemy_find — the model bank supplies the clip length */
 
 /* Locomotion speeds = the RE1.5 per-direction speed bytes (FUN_80041BE4 mode
  * tables 0x80076cXX): WALK=0x4B(75), RUN=0xC8(200), BACK=0x3C(60). Translation is
@@ -706,7 +707,38 @@ void re15_actors_anim_advance(void)
         if (a->motion_init_delay > 0) {
             a->motion_init_delay--;
         } else {
-            a->anim_frame++;
+            /* BYTE-TRUE frame step — the original's anim_set (@0x8001F610-3C, self-disassembled):
+             *   8001f610: lbu   v0,149(v1)   ; +0x95 is a BYTE
+             *   8001f618: addiu v0,v0,1
+             *   8001f61c: sb    v0,149(v1)
+             *   8001f624: sltu  v0,v0,s4     ; (frame+1) < the clip's frame count ?
+             *   8001f628: bne   v0,zero,...  ;   YES -> return 0, keep running
+             *   8001f638: ori   v0,zero,0x1  ;   NO  -> return 1 (clip done) ...
+             *   8001f63c: sb    zero,149(v1) ;        ... AND +0x95 = 0
+             * The port used to do a bare `anim_frame++` on an unbounded uint16 and never reset it.
+             * Two measured consequences, both reported live:
+             *   - clip_done() (which only COMPARED frame >= fc-1) stayed TRUE forever once a clip had
+             *     run out, so every phase machine waiting on it advanced instantly;
+             *   - a newly selected clip inherits +0x95 (which IS byte-true — the standing stagger
+             *     writes +0x94 without touching +0x95, store-census over FUN_80105b7c 0x80105b7c-
+             *     0x80105e60 finds no +0x95 store at all), and with an out-of-range index the recoil
+             *     was "done" on its first tick and never played = "the zombie freezes oddly when shot".
+             * The wrap keeps +0x95 inside [0, fc-1] exactly like the original.
+             * HOLD-LAST branch: the original has no such branch — its caller simply stops calling
+             * anim_set once it returned 1. The port has a single global advancer, so a non-LOOP clip
+             * (anim_flags & 0x04 clear = play-once: death fall, lie-down, get-up) is pinned on its
+             * last frame instead, which is the port's long-standing emulation of that stop. */
+            re15_enemy_bank_t *bk = re15_enemy_find(a->type);
+            int fc = (bk && bk->ok && (int)a->motion < bk->anim.clip_count)
+                   ? bk->anim.clips[a->motion].frame_count : 0;
+            uint16_t nf = (uint16_t)(a->anim_frame + 1);
+            if (fc > 0 && (int)nf >= fc) {
+                a->anim_frame = (a->anim_flags & 0x04u)
+                              ? 0                                /* LOOP  -> @0x8001f63c +0x95 = 0 */
+                              : (uint16_t)(fc - 1);              /* play-once -> pin (port emulation) */
+            } else {
+                a->anim_frame = nf;
+            }
             if (a->anim_frac > 0) a->anim_frac--;
         }
     }

@@ -513,3 +513,8 @@ target_link_libraries(test_re2_zombie_ai PRIVATE re15_engine re15_test_support)
 target_include_directories(test_re2_zombie_ai PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_re2_zombie_ai COMMAND test_re2_zombie_ai)
 set_tests_properties(unit_re2_zombie_ai PROPERTIES TIMEOUT 30)
+
+# --- DIAGNOSE-Probe (kein ctest-Eintrag): Zombie-Treffer-Timeline ---
+add_executable(probe_zombie_hit probe_zombie_hit.c)
+target_link_libraries(probe_zombie_hit PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_zombie_hit PRIVATE ${CMAKE_SOURCE_DIR}/include)
