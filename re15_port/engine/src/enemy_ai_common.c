@@ -324,7 +324,7 @@ void re15_ai_decide_engage(re15_actor_t *e, const re15_actor_t *player)
     if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2z_owns_type(e->type)) {
         re15_re2z_decision_t rd;
         int committed = re15_re2z_walk_decide(e, player, re15_player_is_grabbed(), &rd);
-        if (getenv("RE15_RE2_TRACE") && e->ai_dist < 1500u) {
+        if (getenv("RE15_RE2_TRACE") && (committed || e->ai_dist < 1500u)) {
             re15_re2z_gates_t gg;
             re15_re2z_fill_gates(e, player, re15_player_is_grabbed(), &gg);
             fprintf(stderr, "[re2z] gates d=%u flo=%u/%u claimed=%u g1=%d g2=%d -> %s 0x%08x\n",

@@ -266,6 +266,39 @@ void re15_re2z_fill_gates(const re15_actor_t *e, const re15_actor_t *pl,
     g->g1_sector_hit = (re2z_sector(e, pl, ((int)e->rot_y + 256) & 0xfff, 256) == 0); /* @0x80101948 */
     g->g2_sector_hit = (re2z_sector(e, pl, ((int)e->rot_y - 256) & 0xfff, 256) == 0); /* @0x8010198c */
 
+    /* ---- 0x800CFBF6: the global that gates blocks D and E ------------------------------------
+     * RESOLVED (self-RE'd 2026-07-29). It is a PER-FRAME "what is the player doing right now"
+     * bitfield, not a persistent flag:
+     *   - It has exactly FOUR writers in the whole RE2 EXE. @0x8003BFF0 CLEARS bits 0..4
+     *     (`andi 0xffe0`) — gated on 0x800CFBDC >= 0 @0x8003BFC0, so "cleared every frame" is
+     *     wrong. The other three only ever OR a bit in.
+     *   - Bits 0x1 and 0x10 are NEVER set anywhere, so mask 0x15 (block D) reduces to bit 0x4 and
+     *     mask 0x17 (block E) to (0x2 | 0x4).
+     *   - The three setters are player SUB-STATE handlers, reached through the player's action
+     *     table: dispatcher @0x8003C5D4 indexes base 0x800A4084 by player+0x5, so
+     *         sub 1 = 0x8003CBDC -> `ori 0x2` @0x8003CC80
+     *         sub 2 = 0x8003D0E8 -> `ori 0x4` @0x8003D18C
+     *         sub 3 = 0x8003D5F4 -> `ori 0x2` @0x8003D6B4
+     *   - Which sub-state is which comes from the pad-driven selector @0x8003C650-C6C8:
+     *         virtual bit 0x1   (forward)  -> sub 1   word 0x101 @0x801017.. see @0x8003C6B0/B4
+     *         virtual bit 0x200 (run/cross)-> sub 2   word 0x201 @0x8003C6C0/C4
+     *         virtual bit 0x4   (backward) -> sub 3   word 0x301 @0x8003C6A0/A4
+     *         virtual bits 0xa  (turn L/R) -> sub 4   word 0x401 @0x8003C690/94  (sets NOTHING)
+     *     Bit meanings from the port's own virtual-pad table (pad_common.c:27-35, RE1.5
+     *     @0x80073dbc): bit0<-UP, bit2<-DOWN, bits1|3<-RIGHT|LEFT, bit9<-CROSS.
+     * => bit 0x2 means "the player is WALKING" (forward or backward) and bit 0x4 means "the player
+     *    is RUNNING". So block D (running only, from 3500, 25%) and block E (any movement, from
+     *    2500, 50%) are movement-reactive: standing still, neither can fire. That is the RE2
+     *    behaviour the folklore mistook for eyesight.
+     *
+     * ⚠️ PORT MAPPING, not a byte-true port of the field: the RE2 producer is RE2's player state
+     * machine, which the port does not implement. The port's equivalent movement state is the
+     * player motion sentinel (player_common.c:65-67: RUN = 100, WALK = 105, BACK = WALK + reverse),
+     * recomputed every tick exactly like the original's per-frame bits. */
+    if      (pl->motion == 100) g->global_cfbf6 = 0x04u;        /* RUN  -> @0x8003D18C */
+    else if (pl->motion == 105) g->global_cfbf6 = 0x02u;        /* WALK -> @0x8003CC80 / @0x8003D6B4 */
+    else                        g->global_cfbf6 = 0x00u;        /* idle/turn set NOTHING */
+
     /* ZERO, with the proof --------------------------------------------------------------------
      * self+0x23E: the ONLY writer is `sb v0,574(s0)` @0x80104E2C (value 60) inside EXECUTOR[14]
      *   = 0x80104D74, a substate the port never enters; INIT @0x8010065C does not touch it.
@@ -276,9 +309,6 @@ void re15_re2z_fill_gates(const re15_actor_t *e, const re15_actor_t *pl,
      *   0x20/0x40 lives in substates the port does not run.
      * OPEN (no proven producer in the port; the blocks they gate stay silent):
      *   self+0x1D4, self+0x110  (block C)
-     *   0x800CFBF6              (blocks D and E) — its three setters are player animation-start
-     *                            routines @0x8003CC80 / @0x8003D18C / @0x8003D6B4; bits 0x1 and
-     *                            0x10 are never set anywhere, so mask 0x15 reduces to bit 0x4.
      *   PL+0x8                  (the G/J fork; 0 keeps us on the G branch, which is what we want) */
 }
 
