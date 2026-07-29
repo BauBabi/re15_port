@@ -43,6 +43,101 @@ static int turn_delta(unsigned gaitrow, unsigned dist)
     return (((int)e.rot_y + 0x800) & 0xfff) - 0x800;
 }
 
+
+/* ---- W2: the attack-decision ladder @0x80101714 ------------------------------------------ */
+static re15_re2z_gates_t base_gates(void)
+{
+    re15_re2z_gates_t g;
+    for (unsigned i = 0; i < sizeof(g); i++) ((unsigned char *)&g)[i] = 0;
+    g.dist = 60000u;          /* far: below every distance gate's threshold is FALSE */
+    g.arc1024 = 1; g.arc512 = 1;   /* player OUTSIDE both cones */
+    g.pl_8 = 0;               /* take the G branch, not J */
+    g.pl_156 = 0;             /* K off */
+    return g;
+}
+
+static void test_ladder(void)
+{
+    re15_re2z_gates_t g; re15_re2z_decision_t d;
+
+    /* nothing fires -> +0x4 untouched (the original simply does not store) */
+    g = base_gates();
+    CHECK(re15_re2z_decide_walk(&g, &d) == 0 && d.wrote == 0 && d.rng_draws == 0,
+          "no block fires -> no store, no RNG draw");
+
+    /* --- A is the ONLY early exit (j 0x80101a1c @0x801017E0) -------------------------------- */
+    g = base_gates();
+    g.self_1f4 = 0x40000000u | 1999u; g.a_sector_hit = 1;
+    g.pl_156 = (int16_t)-32768; g.arc512 = 0; g.dist = 999u;   /* K would fire and would WIN... */
+    CHECK(re15_re2z_decide_walk(&g, &d) && d.word == 0x00000E01u && d.early_out == 1,
+          "block A must return BEFORE K can overwrite (@0x801017e0), got word 0x%08x early=%d",
+          d.word, d.early_out);
+    /* the 2000 bound is on the MASKED payload, not the raw word (@0x801017c0 after andi 0x3fffffff) */
+    g.self_1f4 = 0x40000000u | 2000u;
+    CHECK(!(re15_re2z_decide_walk(&g, &d) && d.early_out),
+          "block A payload 2000 must FAIL the sltiu 0x7d0 bound");
+
+    /* --- LAST WRITER WINS: C fires, then K overwrites it ------------------------------------ */
+    g = base_gates();
+    g.self_1d4 = (int16_t)0x4000; g.self_110 = 1u;             /* C -> 0x0A01 @0x80101858 */
+    g.pl_156 = (int16_t)-32768; g.arc512 = 0; g.dist = 999u;   /* K  -> 0x00060801 @0x80101a10 */
+    CHECK(re15_re2z_decide_walk(&g, &d) && d.word == 0x00060801u && d.set_10e_4000 == 1,
+          "K is the last writer and must beat C (got 0x%08x)", d.word);
+
+    /* C alone */
+    g = base_gates(); g.self_1d4 = (int16_t)0x8000; g.self_110 = 3u;
+    CHECK(re15_re2z_decide_walk(&g, &d) && d.word == 0x00000A01u, "C alone -> 0x0A01");
+    g.self_110 = 2u;   /* bit0 clear */
+    CHECK(!re15_re2z_decide_walk(&g, &d), "C needs self+0x110 bit0 (@0x8010184c)");
+
+    /* --- D and E are SEQUENTIAL: under 2500 BOTH gates run and BOTH draw -------------------- */
+    g = base_gates(); g.dist = 2499u; g.global_cfbf6 = 0x04u;  /* bit in BOTH masks */
+    re15_re2z_rng_reset();
+    re15_re2z_decide_walk(&g, &d);
+    CHECK(d.rng_draws == 2, "under 2500 both D and E must draw (got %d)", d.rng_draws);
+    /* between 2500 and 3500 only D draws */
+    g.dist = 2500u;
+    re15_re2z_rng_reset();
+    re15_re2z_decide_walk(&g, &d);
+    CHECK(d.rng_draws == 1, "at 2500 only D draws (sltiu 0x9c4 is STRICT), got %d", d.rng_draws);
+    /* at/above 3500 neither draws */
+    g.dist = 3500u;
+    re15_re2z_rng_reset();
+    re15_re2z_decide_walk(&g, &d);
+    CHECK(d.rng_draws == 0, "at 3500 neither draws (sltiu 0xdac is STRICT), got %d", d.rng_draws);
+    /* the mask difference is REAL: bit 0x2 is in 0x17 (E) but NOT in 0x15 (D) */
+    g = base_gates(); g.dist = 2000u; g.global_cfbf6 = 0x02u;
+    re15_re2z_rng_reset();
+    re15_re2z_decide_walk(&g, &d);
+    CHECK(d.rng_draws == 1, "global bit 0x2 must gate E only, not D (masks 0x15 vs 0x17), got %d",
+          d.rng_draws);
+    /* the cone gate: D/E need the player OUTSIDE +-1024 (arc != 0) */
+    g = base_gates(); g.dist = 2000u; g.global_cfbf6 = 0x04u; g.arc1024 = 0;
+    re15_re2z_rng_reset();
+    re15_re2z_decide_walk(&g, &d);
+    CHECK(d.rng_draws == 0, "inside the +-1024 cone D/E must not even draw (@0x80101868)");
+
+    /* --- G: two INDEPENDENT halves, and it claims the player -------------------------------- */
+    g = base_gates(); g.dist = 1199u; g.g1_sector_hit = 1;
+    CHECK(re15_re2z_decide_walk(&g, &d) && d.word == 0x00000301u && d.claim_player == 1,
+          "G1 -> 0x0301 + claims the player");
+    g.g1_sector_hit = 0; g.g2_sector_hit = 1;
+    CHECK(re15_re2z_decide_walk(&g, &d) && d.word == 0x00000301u,
+          "G2 fires independently of G1 (it is a fall-through, not an else)");
+    g.self_21a = 0x40u;                       /* G2 masked off */
+    CHECK(!re15_re2z_decide_walk(&g, &d), "self+0x21A bit 0x40 masks G2 (@0x80101974)");
+    g.pl_1d3 = 0x80u; g.self_21a = 0; g.g2_sector_hit = 1;
+    CHECK(!re15_re2z_decide_walk(&g, &d), "an already-claimed player blocks G (@0x80101908)");
+
+    /* --- the G/J fork: pl+0x8 == 15 takes J, and J skips the +0x106 test -------------------- */
+    g = base_gates(); g.pl_8 = 15; g.arc512 = 0; g.dist = 1999u;
+    CHECK(re15_re2z_decide_walk(&g, &d) && d.word == 0x00000E01u,
+          "pl+0x8==15 -> J fires with self+0x106 == pl+0x106 (B could not)");
+    g.pl_8 = 0;
+    CHECK(!re15_re2z_decide_walk(&g, &d),
+          "with pl+0x8 != 15 the same state must NOT fire (B needs 0x106 to DIFFER)");
+}
+
 int main(void)
 {
     /* ---- the flavor switch: RE1.5 is and stays the default ------------------------------ */

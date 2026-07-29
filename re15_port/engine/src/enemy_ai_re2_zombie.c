@@ -209,3 +209,103 @@ int re15_re2z_walk_turn(re15_actor_t *e, int32_t px, int32_t pz, uint32_t dist)
         re15_enemy_steer_point(e, px, pz, RE2Z_TURN_EXTRA);      /* @0x80101ca8/cac, a3 = 16 */
     return 1;
 }
+
+/* ============================================================================================
+ * W2 — THE ATTACK-DECISION LADDER, DECISION[1] = 0x80101714
+ *
+ * CALL CONTEXT @0x801011A8-EC: 0x8010118C does `lbu +5` -> DECISION[0x8010C88C] -> `lbu +5` AGAIN
+ * -> EXECUTOR[0x8010C8CC]. A store here therefore runs its executor THE SAME TICK.
+ *
+ * "LAST WRITER WINS" — self-verified, not assumed: in 0x80101714..0x80101A34 there are EXACTLY 9
+ * `sw ...,4(s0)` (0x801017E4, 82C, 858, 8A0, 8E4, 958, 99C, 9E4, A10) and EXACTLY 2 jumps —
+ * `j 0x80101a1c` @0x801017E0 (block A into the epilogue, the ONLY early exit) and `j 0x801019e8`
+ * @0x801019AC (G skips J). No instruction in the function READS +0x4, so sequential C is exact.
+ * If no block fires, +0x4 is left untouched — hence `wrote`.
+ *
+ * RNG DRAW COUNT IS ITSELF BEHAVIOUR: 0..2 draws per tick (D @0x80101888, E @0x801018D0), and only
+ * after their first three gates pass. Right order + wrong draw count = the whole sequence desyncs.
+ *
+ * Word -> bytes (LE): 0x0E01 -> sub 14; 0x0A01 -> 10; 0x0C01 -> 12; 0x0301 -> 3;
+ * 0x00060801 -> sub 8 with phase +0x6 = 6. Every `sw` ZEROES +0x6/+0x7 — load-bearing, because the
+ * executors dispatch on +0x6.
+ * ============================================================================================ */
+int re15_re2z_decide_walk(const re15_re2z_gates_t *g, re15_re2z_decision_t *out)
+{
+    if (!g || !out) return 0;
+    out->wrote = 0; out->word = 0; out->early_out = 0;
+    out->claim_player = 0; out->set_10e_4000 = 0; out->rng_draws = 0;
+
+    if (g->self_23e == 0) {                                   /* lbu 574(s0) @0x80101790, bne @0x8010179c */
+        /* --- A: the ONLY early return. j 0x80101a1c @0x801017E0, store in its delay slot ------ */
+        if ((g->self_1f4 & 0xC0000000u)                       /* @0x801017a0/ac/b0                 */
+            && (g->self_1f4 & 0x3FFFFFFFu) < 2000u            /* sltiu 0x7d0 @0x801017c0           */
+            && g->a_sector_hit) {                             /* FUN_80015714(...)==0 @0x801017d0  */
+            out->wrote = 1; out->word = 0x00000E01u; out->early_out = 1;
+            return 1;                                         /* sw @0x801017e4 (delay slot)       */
+        }
+        /* --- B: same word, but NO return — falls through into C ------------------------------ */
+        if (g->arc512 == 0                                    /* sll/bne @0x801017f4/f8            */
+            && g->dist < 2000u                                /* sltiu @0x801017fc (UNSIGNED)      */
+            && g->self_106 != g->pl_106                       /* beq-away @0x80101814              */
+            && g->pl_1d3 == 0) {                              /* bne @0x80101824 (the WHOLE byte)  */
+            out->wrote = 1; out->word = 0x00000E01u;          /* sw @0x8010182c                    */
+        }
+    }
+    /* --- C ------------------------------------------------------------------------------------ */
+    if ((g->self_1d4 & (int16_t)0xC000) != 0                  /* lh @0x80101830 / andi @0x80101838 */
+        && (g->self_110 & 1u) != 0) {                         /* lw @0x80101844 / andi @0x8010184c */
+        out->wrote = 1; out->word = 0x00000A01u;              /* sw @0x80101858                    */
+    }
+    /* --- D ------------------------------------------------------------------------------------ */
+    if (g->dist < 3500u                                       /* sltiu 0xdac @0x8010185c           */
+        && g->arc1024 != 0                                    /* beq-away @0x80101868 -> OUTSIDE   */
+        && (g->global_cfbf6 & 0x15u) != 0) {                  /* lhu @0x80101874 / andi @0x8010187c */
+        out->rng_draws++;                                     /* jal 0x80015FE8 @0x80101888        */
+        if ((re2z_rand() & 3u) == 0u) {                       /* andi @0x80101890 / bne @0x80101894 */
+            out->wrote = 1; out->word = 0x00000C01u;          /* sw @0x801018a0                    */
+        }
+    }
+    /* --- E: SEQUENTIAL with D, not a tier. @0x80101860 sends a FAILED D straight to E's own test
+     *        @0x801018a4, so below 2500 BOTH run and BOTH draw. ------------------------------- */
+    if (g->dist < 2500u                                       /* sltiu 0x9c4 @0x801018a4           */
+        && g->arc1024 != 0                                    /* beq-away @0x801018b0              */
+        && (g->global_cfbf6 & 0x17u) != 0) {                  /* andi @0x801018c4                  */
+        out->rng_draws++;                                     /* jal @0x801018d0                   */
+        if ((re2z_rand() & 1u) == 0u) {                       /* andi @0x801018d8 / bne @0x801018dc */
+            out->wrote = 1; out->word = 0x00000C01u;          /* sw @0x801018e4                    */
+        }
+    }
+    /* --- the G / J fork ----------------------------------------------------------------------- */
+    if (g->pl_8 != 15) {                                      /* lbu @0x801018e8 / beq @0x801018f0 */
+        /* --- G: the SIDE GRAB. Two INDEPENDENT halves; G1 falls THROUGH into G2. ------------- */
+        if (g->dist < 1200u                                   /* sltiu 0x4b0 @0x801018f4           */
+            && !(g->pl_1d3 & 0x80u)                           /* andi @0x80101908 / bne @0x8010190c */
+            && g->self_106 == g->pl_106) {                    /* bne-away @0x80101920              */
+            if (!(g->self_21a & 0x20u) && g->g1_sector_hit) { /* andi @0x80101930; jal @0x80101948 */
+                out->wrote = 1; out->word = 0x00000301u;      /* sw @0x80101958                    */
+                out->claim_player = 1;                        /* PL[0x1D3] |= 0x80 @0x80101968     */
+            }
+            if (!(g->self_21a & 0x40u) && g->g2_sector_hit) { /* andi @0x80101974; jal @0x8010198c */
+                out->wrote = 1; out->word = 0x00000301u;      /* sw @0x8010199c                    */
+                out->claim_player = 1;                        /* PL[0x1D3] |= 0x80 @0x801019b0     */
+            }
+        }
+        /* j 0x801019e8 @0x801019AC — the G branch ALWAYS skips J */
+    } else {
+        /* --- J: block B minus the +0x106 test ------------------------------------------------ */
+        if (g->self_23e == 0                                  /* lbu @0x801019b4 / bne @0x801019bc */
+            && g->arc512 == 0                                 /* sll/bne @0x801019c0/c4            */
+            && g->dist < 2000u                                /* sltiu @0x801019c8                 */
+            && g->pl_1d3 == 0) {                              /* bne @0x801019dc                   */
+            out->wrote = 1; out->word = 0x00000E01u;          /* sw @0x801019e4                    */
+        }
+    }
+    /* --- K: the LAST writer, so it beats every block above ------------------------------------ */
+    if (g->pl_156 == (int16_t)-32768                          /* lh 342(s1) @0x801019e8            */
+        && g->arc512 == 0                                     /* sll/bne @0x801019f4/f8            */
+        && g->dist < 1000u) {                                 /* sltiu 0x3e8 @0x801019fc           */
+        out->wrote = 1; out->word = 0x00060801u;              /* lui 0x6/ori 0x801/sw @0x80101a10  */
+        out->set_10e_4000 = 1;                                /* +0x10E |= 0x4000 @0x80101a08/14/18 */
+    }
+    return out->wrote;
+}
