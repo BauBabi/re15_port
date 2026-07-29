@@ -5018,9 +5018,10 @@ re_title:;
                  * completely different animation. Measured: not one of that bank's 2401 keyframes
                  * reproduces the original's part angles. Gate on the clip, not on +0x5.
                  * (Downed/lying hits keep the action bank — those handlers set their own clips.) */
-                if ((npc->state == 1 &&
-                     (npc->sub_state_1 == 0x13 || npc->sub_state_1 == 2 || npc->sub_state_1 == 7))
-                    || (npc->state == 2 && !(npc->grid_id & 0x80))) {
+                if (re15_actor_uses_loco_bank(npc)) {   /* THE single rule — enemy_ai_common.c;
+                                                        * re15_actor_clip_len() must agree with the
+                                                        * bank picked here or the frame clock
+                                                        * compares against the wrong clip */
                     re15_enemy_bank_t *lb = re15_enemy_find(npc->type);
                     if (lb && lb->loco_ok && (int)npc->motion < lb->anim_loco.clip_count) {
                         npc_skel = &lb->skel_loco;

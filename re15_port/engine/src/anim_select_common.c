@@ -15,6 +15,10 @@
 #include "re15_anim_select.h"
 #include "re15_enemy.h"     /* generic enemy registry (re15_enemy_find) */
 #include "re15_skeleton.h"  /* g_anim_kf_tween — the 0x8000 marker tween side channel */
+#include "re15_engine.h"    /* g_engine.frame_count — the POSE-STREAM trace timestamp */
+#include "re15_enemy_ai.h"  /* re15_actor_clip_len — the frame clock's view, for the cross-check */
+#include <stdio.h>
+#include <stdlib.h>
 
 /* Per-actor keyframe lookup: motion + anim_frame -> skeleton keyframe index,
  * against the SELECTED anim/skel. (reverse playback, walk loop, freeze-on-end
@@ -64,6 +68,27 @@ int re15_compute_actor_kf(const re15_emd_animation_t *anim,
     } else {
         slot = (int)cur;
     }
+    /* POSE-STREAM TRACE (RE15_ANIM_TRACE=<path>) — this is the ONLY place a pose is resolved, so a
+     * line here is the ground truth of "what was actually animated this frame". Two things are
+     * logged that a state log can never show: the RESOLVED frame slot (which is what the eye sees)
+     * and, side by side, the frame count the AI's clip clock would use for the same actor. The
+     * checker (tools/check_anim_trace.py) turns both into pass/fail:
+     *   - slot sequences of a looping clip must be a clean 0..fc-1 ramp; a mid-cycle jump is
+     *     exactly the "animations loop oddly" regression, caught automatically;
+     *   - fc_render must equal fc_clock for every single line, or the state machine is timing
+     *     against a different clip than the one on screen. */
+    { const char *tp = getenv("RE15_ANIM_TRACE");
+      if (tp) {
+          static FILE *tf = NULL; static int tried = 0;
+          if (!tried) { tried = 1; tf = fopen(tp, "w"); }
+          if (tf) fprintf(tf, "%u %d %d %d %d %d %u %d %d %d %d\n",
+                          (unsigned)g_engine.frame_count, (int)(a - g_actors), (int)a->type,
+                          (int)a->motion, clip_idx, clip->frame_count, (unsigned)cur, slot,
+                          re15_actor_clip_len(a),
+                          re15_actor_uses_loco_bank(a) ? 1 : 0, reverse,
+                          re15_actor_clip_len_legacy(a));
+      } }
+
     /* 0x8000 MARKER frames are TWEENs, never posed as a keyframe (byte-true FUN_8001f314
      * @0x8001f370-f37c routes them to FUN_8001f8b4; trace wf_518cceff adversarially CONFIRMED):
      * the original poses  ((0x1000-w)*A + w*B) >> 12  for the root translation AND every bone

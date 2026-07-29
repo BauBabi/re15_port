@@ -2741,11 +2741,64 @@ router_gate:
  * current clip has reached its last frame, 0 while still playing. GUARD: returns 1 (done) when the
  * bank/clip is unloaded or empty so the sub-state FSM never stalls (avoids a new hang) — never the
  * FUN_8001f8b4 unbounded &0x8000 keyframe scan. Factored out of the death handler (was inline). */
+/* ---- THE SINGLE BANK RULE -------------------------------------------------------------------
+ * A STAGE1 zombie poses from TWO different animation banks depending on its state, and the two
+ * consumers of that fact — the RENDERER (which picks the bank to pose) and the FRAME CLOCK (which
+ * compares anim_frame against "the clip length") — MUST agree. They used to encode the rule twice:
+ * the renderer inline in main.c, the clock implicitly by always taking the ACTION bank. For every
+ * loco-bank state that meant the state machine compared the frame index against a DIFFERENT clip's
+ * length. This is now the one definition; main.c calls it too, so they cannot drift apart.
+ *
+ * The rule itself is unchanged and stays as the renderer had it (W1 disasm 2026-07-03 + the
+ * 2026-07-28 stagger correction): the walking ENGAGE (+0x5=2), the 0x13 lurch, the TURN (+0x5=7)
+ * and the STANDING stagger (state 2 with +0x9 & 0x80 clear) pose the LOCOMOTION bank (entity+0x84,
+ * `lw a0,132(v0)` @0x80105d3c / @0x80105de0); every other state poses the 43-clip action bank
+ * (+0x170/+0x174). Downed/lying hits keep the action bank — those handlers set their own clips. */
+int re15_actor_uses_loco_bank(const re15_actor_t *a)
+{
+    if (!a) return 0;
+    return (a->state == 1 && (a->sub_state_1 == 0x13 || a->sub_state_1 == 2 || a->sub_state_1 == 7))
+        || (a->state == 2 && !(a->grid_id & 0x80));
+}
+
+/* The frame count of the clip this actor is ACTUALLY being posed from — same bank the renderer
+ * picks, same availability fallback. 0 = unknown (no bank / clip out of range). */
+/* The PRE-FIX clock: always the action bank. Kept so the pose-stream trace can log both clocks
+ * side by side and the checker can prove whether the bank rule actually mattered. */
+int re15_actor_clip_len_legacy(const re15_actor_t *a)
+{
+    if (!a) return 0;
+    re15_enemy_bank_t *b = re15_enemy_find(a->type);
+    if (!b || (int)a->motion >= b->anim.clip_count) return 0;
+    return b->anim.clips[a->motion].frame_count;
+}
+
+int re15_actor_clip_len(const re15_actor_t *a)
+{
+    if (!a) return 0;
+    re15_enemy_bank_t *b = re15_enemy_find(a->type);
+    if (!b) return 0;
+    if (re15_actor_uses_loco_bank(a) && b->loco_ok && (int)a->motion < b->anim_loco.clip_count)
+        return b->anim_loco.clips[a->motion].frame_count;
+    if ((int)a->motion < b->anim.clip_count)
+        return b->anim.clips[a->motion].frame_count;
+    return 0;
+}
+
 static int re15_enemy_clip_done(const re15_actor_t *e)
 {
-    re15_enemy_bank_t *bank = re15_enemy_find(e->type);
-    if (!bank || (int)e->motion >= bank->anim.clip_count) return 1;
-    int frames = bank->anim.clips[e->motion].frame_count;
+    /* RE15_CLIPDONE_LEGACY=1 restores the pre-fix behaviour (always the ACTION bank) so the two
+     * can be A/B'd in one build — the pose-stream checker then shows the bank-consistency
+     * violations appear/disappear without touching the code. */
+    int frames;
+    if (getenv("RE15_CLIPDONE_LEGACY")) {
+        re15_enemy_bank_t *bk = re15_enemy_find(e->type);
+        if (!bk || (int)e->motion >= bk->anim.clip_count) return 1;
+        frames = bk->anim.clips[e->motion].frame_count;
+    } else {
+        frames = re15_actor_clip_len(e);   /* the bank the RENDERER poses from, not always the
+                                            * action bank — see re15_actor_uses_loco_bank */
+    }
     if (frames <= 0) return 1;
     return (e->anim_frame >= frames - 1) ? 1 : 0;
 }

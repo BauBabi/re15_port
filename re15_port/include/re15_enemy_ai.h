@@ -277,6 +277,12 @@ void re15_enemy_ai_set_combat_active(int v);
  * grabbed pose/anim, the exact XZ/Y pin, and the struggle-escape are deferred (cited in the .c). */
 int re15_player_is_grabbed(void);
 
+/* THE single "which animation bank does this state pose from" rule — shared by the renderer and the
+ * animation frame clock so they cannot drift (see enemy_ai_common.c). */
+int re15_actor_uses_loco_bank(const re15_actor_t *a);
+int re15_actor_clip_len(const re15_actor_t *a);
+int re15_actor_clip_len_legacy(const re15_actor_t *a);
+
 /* LEON GRAB-VICTIM ANIMATION (byte-true state-5 struggle / state-6 collapse, see enemy_ai_common.c).
  * The grab animates Leon from the zombie's EMD bank 2 (grab-victim set) so he struggles then
  * collapses instead of freezing (the "no Leon reactions / death finish"). re15_player_victim_state():
