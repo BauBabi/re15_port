@@ -26,6 +26,8 @@
  * prop) collision is a SEPARATE pass below (FUN_8002cabc) for the helipad box.
  */
 #include "re15_collision.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include "re15_scd.h"        /* g_scd.props — the Obj_model_set object list */
 #include "re15_math.h"       /* re15_squareroot0 — the engine's ONLY sqrt (BIOS 0x80065f60) */
 #ifndef RE15_PLATFORM_PC
@@ -566,6 +568,10 @@ static void collision_constrain_impl(const re15_rdt_t *rdt,
         /* broad-phase: the actor (radius-inflated) overlaps the cell? */
         if ((unsigned)(*x - ((int32_t)e->x - r)) < (unsigned)((int32_t)e->width   + r * 2) &&
             (unsigned)(*z - ((int32_t)e->z - r)) < (unsigned)((int32_t)e->density + r * 2)) {
+            /* RE15_COLL_TRACE=1 — which cell actually pushed, and by how much. The paired-replay
+             * harness (tools/parity_run.py) showed the player clamped at x=-8132 in ROOM1140 while
+             * the PSX walks straight past; this names the cell responsible. */
+            int32_t bx = *x, bz = *z;
             if      (e->type == 1) push_rect(e, x, z, old_x, old_z, r);
             else if (e->type == 3) push_circle(e, x, z, r);
             else if (e->type == 8) push_caps8(e, x, z, old_x, old_z, r);   /* ⚠️ best-effort, unverified */
@@ -577,6 +583,15 @@ static void collision_constrain_impl(const re15_rdt_t *rdt,
             else if (e->type == 5) push_diag5(e, x, z, old_x, old_z, r);
             else if (e->type == 6) push_diag6(e, x, z, old_x, old_z, r);
             else if (e->type == 7) push_diag7(e, x, z, old_x, old_z, r);
+            if ((*x != bx || *z != bz) && getenv("RE15_COLL_TRACE")) {
+                static int n = 0;
+                if (n++ < 200)
+                    fprintf(stderr, "[coll] cell#%d typ=%d band=%d u0=%u rect=(%d,%d,%dx%d) "
+                                    "r=%d  (%d,%d)->(%d,%d)\n",
+                            i, e->type, (int)(e->floor >> 4), (unsigned)e->u0,
+                            (int)e->x, (int)e->z, (int)e->width, (int)e->density,
+                            (int)r, bx, bz, *x, *z);
+            }
         }
     }
 }
