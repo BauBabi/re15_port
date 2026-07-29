@@ -293,36 +293,53 @@ Frame später.
 
 ### ⛔ Was an W2 noch NICHT portiert ist
 
-Es feuert derzeit **nur Block G** (der Seiten-Grab). Offen bleiben:
+Nach der Blocker-Auflösung (2026-07-29) sieht die Leiter so aus:
 
-* **Blöcke D und E** (`0x0C01`) — hängen an `0x800CFBF6`. Dessen drei Setzer sind
-  Animations-Start-Routinen des Spielers (`@0x8003CC80` Bit 0x2, `@0x8003D18C` Bit 0x4,
-  `@0x8003D6B4` Bit 0x2); **welche** Spieleraktion je Bit, ist noch offen. Bits `0x1` und `0x10`
-  werden nirgends gesetzt, Maske `0x15` reduziert sich also praktisch auf Bit `0x4`.
-* **Block C** (`0x0A01`) — `self+0x1D4 & 0xC000` und `self+0x110 & 1`.
-* **Blöcke B und J** (`0x0E01`) — testen `PL+0x1D3` als **ganzes Byte**; die unteren 7 Bit sind ein
-  spielerseitiger Countdown (`@0x8003BFF4-C008`), den der Port nicht führt. Mit 0 gefüttert würden
-  B/J **öfter** feuern als im Original — deshalb bleiben sie aus.
-* **Block A** kann in reinen Zombie-Räumen nie feuern (belegt), **Block K** nie, weil die
-  Spieler-HP im Port nie `-32768` wird.
+| Block | Wort | Status | Beleg |
+|---|---|---|---|
+| **A** | `0x0E01` | **kann nie feuern** | `+0x1F4` hat **null** Schreiber in EMZ0; Erzeuger `FUN_80065518` tickt nur Typen 64..91, Zombies sind `@0x8001B738-48` auf 16..31 geklemmt |
+| **B** | `0x0E01` | Gate gelöst, Executor fehlt | braucht `PL+0x1D3 == 0` als **ganzes** Byte; untere 7 Bit = 15-Frame-Countdown, den der Grab-Executor setzt (`addiu v1,zero,15` @0x8010276C, `sb` @0x80102770) und die Spieler-Seite herunterzählt (@0x8003BFF4-C008) |
+| **C** | `0x0A01` | **inert mit RE1.5-Raumdaten** | `self+0x1D4` hat **keinen** Schreiber im Zombie-Overlay; alle EXE-Schreiber sind skript-/spawn-parametergetrieben (`lhu v0,2(a1)` @0x800570EC → `sh v0,468(v1)` @0x800570F4). RE1.5-Räume setzen RE2s Bits `0xC000` nie |
+| **D** | `0x0C01` | ✅ **feuert** | Filter aufgelöst (s.u.); rennen, ab 3500, 25% |
+| **E** | `0x0C01` | ✅ **feuert** | jede Bewegung, ab 2500, 50% |
+| **G** | `0x0301` | ✅ **feuert + wirkt** | verdrahtet auf den byte-true Grab des Ports |
+| **J** | `0x0E01` | wie B | zusätzlich `PL+0x8 == 15` |
+| **K** | `0x00060801` | **kann nie feuern** | braucht Spieler-HP `== -32768`; der einzige `-32768 → +0x156`-Store im ganzen Spiel (`@0x8010B730/38`) schreibt die HP eines **Gegners** |
 
-Diese Blöcke sind bewusst still statt geraten — jede Alternative hieße, ein Gate zu erfinden.
+### Der Filter `0x800CFBF6` — AUFGELÖST
 
-**Nächste Xrefs**, in dieser Reihenfolge: (1) `0x8003CC70`/`0x8003D17C`/`0x8003D6A4` — welche
-Spieleraktion setzt welches Bit von `0x800CFBF6`; (2) `0x800CFBDC` (das Gate des Löschens);
-(3) `self+0x106` Schreiber `@0x80036974` (`sign(v) - trunc(v/1800)` aus `FUN_8004FBA0`) — das
-riecht nach einer Etagen-/Höhenklasse und wäre im Port über `floor` abbildbar; (4) `self+0x110`
-Schreiber `FUN_8003567C` (`=0` @0x8003569C, sonst `FUN_8004C1BC` @0x800356D8), gerufen aus der
-Zombie-Wurzel `@0x80100638`.
+Kette vollständig selbst disassembliert:
 
-### Widerlegte Etiketten — nicht wieder einführen
+1. **Vier** Schreiber im gesamten RE2-EXE. `@0x8003BFF0` löscht Bits 0..4 (`andi 0xffe0`), **gegated**
+   auf `0x800CFBDC >= 0` `@0x8003BFC0`. Bits `0x1` und `0x10` werden **nirgends** gesetzt → Maske
+   `0x15` reduziert sich auf Bit `0x4`, Maske `0x17` auf `0x2|0x4`.
+2. Die drei Setzer sind **Spieler-Sub-State-Handler**: Dispatcher `@0x8003C5D4` indiziert die Basis
+   `0x800A4084` mit `player+0x5` → sub 1 = `0x8003CBDC` (`ori 0x2` @0x8003CC80),
+   sub 2 = `0x8003D0E8` (`ori 0x4` @0x8003D18C), sub 3 = `0x8003D5F4` (`ori 0x2` @0x8003D6B4).
+   Der zweite Dispatcher `@0x8003C19C` indiziert dieselbe Tabelle ab `0x800A4030` mit `player+0x4`
+   (dem State); die Sub-Tabelle überlappt sie ab Index 21.
+3. Welcher Sub-State was ist, steht im **pad-getriebenen** Selektor `@0x8003C650-C6C8`:
+   `0x1` vorwärts → sub 1, `0x200` rennen → sub 2, `0x4` rückwärts → sub 3, `0xa` drehen → sub 4
+   (setzt **nichts**). Bit-Bedeutung aus der virtuellen Pad-Tabelle des Ports
+   (`pad_common.c:27-35`, RE1.5 `@0x80073dbc`): bit0←UP, bit2←DOWN, bits1|3←RIGHT|LEFT, bit9←CROSS.
 
-* „`+0x223` ist ein Flinch-**Cooldown**" — Transkript und Schwellenformel stimmen, aber es gibt im
-  ganzen Overlay **keinen Timer-Schreiber**; der einzige Modifikator ist eine tabellengesteuerte
-  Subtraktion **pro Treffer** (`@0x801055C0-E8`, Tabelle `@0x8010CC33`). Rolle: UNBELEGT.
-* „`0x800CFBF6` wird jeden Frame gelöscht" — das Löschen hängt an einem Gate (s.o.).
-* „Substate 10 ist ein Angriff" — widerlegt; Ausstieg über eine 5-Phasen-FSM auf `+0x6` nach WALK.
-* „Der `±1300`-Kegeltest wird benutzt" — sein Ergebnis wird nachweislich verworfen.
+**→ Bit `0x2` heißt „der Spieler GEHT", Bit `0x4` heißt „der Spieler RENNT".** Block D reagiert nur
+auf Rennen, Block E auf jede Bewegung. **Stillstehen = kein D/E-Angriff.** Genau das ist das
+RE2-Verhalten, das die Folklore für Sehvermögen gehalten hat.
+
+⚠️ **Port-Mapping, kein byte-true Port des Feldes:** der Erzeuger ist RE2s Spieler-Zustandsmaschine,
+die der Port nicht hat. Abgebildet auf die Bewegungs-Sentinels (`player_common.c:65-67`: RUN=100,
+WALK=105, BACK=WALK+reverse), pro Tick neu berechnet wie die Original-Bits.
+
+**Gemessen** (`RE15_RE2_TRACE=1`, ROOM1140, `L14,U200`): **20 Commits** — 1× `0x0301` und
+**19× `0x0C01`**. Vorher: 1.
+
+### Was jetzt noch fehlt
+
+Nicht mehr die Entscheidung, sondern die **Ausführung**: `0x0C01` ist RE2-Substate 12, dessen
+Executor `0x80104748` nicht portiert ist, und `0x0E01` ist Substate 14 (`0x80104D74`). RE2-Clip-
+Indizes zeigen nicht auf RE1.5-Clips, und ein Mapping auf einen RE1.5-Substate wäre wieder eine
+Chimäre. Deshalb werden diese Worte verworfen statt falsch angewandt.
 
 ## 🔜 W3+ — Trefferreaktion (HURT `@0x80104F40`), Kriech-Variante (`@0x80101210`), State 8
 
