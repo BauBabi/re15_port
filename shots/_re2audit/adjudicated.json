@@ -1,0 +1,2640 @@
+{
+ "arb": [
+  {
+   "facts": [
+    {
+     "fact": "BLOCK B register map at 0x801017E8: s0=self (a0 param, @0x8010171c). s1=CONSTANT 0x800CFBF8 (lui 0x800d @0x80101794 + addiu -1032 @0x80101798) — a fixed global, NOT a parameter. s2=self+0x1F0 as a word (lw 496(s0) @0x80101744). s3=cone(+/-512) result. s4=cone(+/-1024) result.",
+     "citations": [
+      "addu s0,a0,zero @0x8010171c",
+      "addiu s1,s1,-1032 @0x80101798 -> 0x800cfbf8",
+      "lw s2,496(s0) @0x80101744"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Delay-slot truth for the cone results: jal 0x80015614 @0x80101748 uses a3=1024 (slot @0x8010174c); jal @0x80101768 uses a3=512 (@0x80101754) and its slot @0x8010176c captures the PREVIOUS (1024) result into s4; jal @0x80101788 uses a3=1300 (@0x80101774) and its slot @0x8010178c captures the 512 result into s3. s3 = +/-512 cone. The 1300 call's v0 is dead (clobbered @0x80101790).",
+     "citations": [
+      "addu s4,v0,zero @0x8010176c",
+      "addu s3,v0,zero @0x8010178c",
+      "lbu v0,574(s0) @0x80101790"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "FUN_80015614 returns 0 when the target is INSIDE +/-a3: slt v0,v1,(a3*2) @0x80015668; bne @0x8001566c with delay slot addu v0,zero,zero @0x80015670 (always runs) -> returns 0 on 'inside'. Otherwise returns +a3 or -a3 (@0x8001567c / @0x80015680). It reads self X@+0x38 (lh 56) and Z@+0x40 (lh 64).",
+     "citations": [
+      "slt v0,v1,v0 @0x80015668",
+      "addu v0,zero,zero @0x80015670",
+      "lh a0,56(s0) @0x80015638"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "BLOCK B gate 1 (self+0x23E==0) is REDUNDANT and must not be ported as an independent condition: the identical test already ran at lbu v0,574(s0) @0x80101790 / bne v0,zero,0x80101830 @0x8010179c, and the ONLY three branches reaching 0x801017E8 (@0x801017b0, @0x801017c4, @0x801017d8) are all downstream of it. +0x23E is guaranteed 0 on entry.",
+     "citations": [
+      "bne v0,zero,0x80101830 @0x8010179c",
+      "beq v0,zero,0x801017e8 @0x801017b0",
+      "bne v0,zero,0x801017e8 @0x801017d8",
+      "lbu v0,574(s0) @0x801017e8"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "BLOCK B gate 2: (int16_t)s3 == 0, i.e. player inside the +/-512 (+/-45deg, 4096=360deg) cone. sll v0,s3,16 @0x801017f4 is the DELAY SLOT of bne @0x801017f0 (runs before the branch is taken), then bne v0,zero,0x80101830 @0x801017f8. Only the low 16 bits are tested.",
+     "citations": [
+      "sll v0,s3,16 @0x801017f4 (bytes 00 14 13 00 = 0x00131400)",
+      "bne v0,zero,0x80101830 @0x801017f8 (0d 00 40 14)"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "BLOCK B gate 3: UNSIGNED compare self+0x1F0 < 2000. sltiu v0,s2,0x7d0 @0x801017fc (bytes d0 07 42 2e = 0x2e4207d0, op 0x0b SLTIU, rs=s2) is the delay slot of the bne above; beq v0,zero,0x80101830 @0x80101800 skips when >= 2000. Port with an unsigned compare — a negative +0x1F0 would fail the gate.",
+     "citations": [
+      "sltiu v0,s2,0x7d0 @0x801017fc",
+      "beq v0,zero,0x80101830 @0x80101800"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "BLOCK B gate 4 DECIDED FOR THE FINDER: the store requires self+0x106 != [0x800D0106]. lbu v1,262(s0) @0x80101808; lbu v0,262(s1) @0x8010180c; word at 0x80101814 = 0x10620006 (bytes 06 00 62 10) = BEQ rs=3(v1) rt=2(v0) off=6 -> 0x80101830, so EQUAL branches AWAY and skips the store. Refuter agreed on re-decode; there is no byte-level dispute.",
+     "citations": [
+      "lbu v1,262(s0) @0x80101808",
+      "lbu v0,262(s1) @0x8010180c",
+      "beq v1,v0,0x80101830 @0x80101814 (06 00 62 10)"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "BLOCK B gate 5: the WHOLE byte at 0x800D01D3 (s1+0x1D3) must be 0. lbu v0,467(s1) @0x8010181c; bne v0,zero,0x80101830 @0x80101824 (bytes 02 00 40 14). No masking — both the 0x80 latch and the low-7 value must be clear.",
+     "citations": [
+      "lbu v0,467(s1) @0x8010181c",
+      "bne v0,zero,0x80101830 @0x80101824"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "BLOCK B outcome: addiu v0,zero,3585 @0x80101828 (delay slot of the bne, always executes) then sw v0,4(s0) @0x8010182c — a 32-BIT store of 0x00000E01. Little-endian: +0x4=0x01, +0x5=0x0E, +0x6=0x00, +0x7=0x00. Zeroing +0x6 is load-bearing (phase byte); a port that writes only two bytes silently breaks the executor.",
+     "citations": [
+      "addiu v0,zero,3585 @0x80101828",
+      "sw v0,4(s0) @0x8010182c (04 00 02 ae = 0xae020004)"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "BLOCK B has NO early exit — it falls through to 0x80101830 and later blocks can overwrite +0x4 (last writer wins): sw v0,4(s0) @0x80101858 (0x0A01), @0x801018a0 and @0x801018e4 (0x0C01), @0x80101958 and @0x8010199c (0x0301). The port must keep evaluating blocks C..K after block B fires.",
+     "citations": [
+      "sw v0,4(s0) @0x80101858",
+      "sw v0,4(s0) @0x801018a0",
+      "sw v0,4(s0) @0x8010199c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "CORRECTION to the framing: the store at 0x801017E4 is NOT block B's — it is BLOCK A's, the function's ONLY early exit: j 0x80101a1c @0x801017e0 with delay slot sw v0,4(s0) @0x801017e4 (v0=3585 set in the delay slot @0x801017dc). 0x80101a1c is the pure epilogue (lw ra..jr ra @0x80101a38). Block A and block B write the SAME word 0x0E01 but only A returns.",
+     "citations": [
+      "j 0x80101a1c @0x801017e0",
+      "sw v0,4(s0) @0x801017e4",
+      "jr ra @0x80101a38"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Block A's gate (the early-exit path, for completeness): (self+0x1F4 & 0xC0000000)!=0 [lw v1,500(s0) @0x801017a4, lui v0,0xc000 @0x801017a0 = delay slot, and @0x801017ac, beq->skip @0x801017b0]; (self+0x1F4 & 0x3FFFFFFF) < 2000 [@0x801017b8-@0x801017c4]; FUN_80015714(self, lh self+0x1F8, 256)==0 [@0x801017cc-@0x801017d8].",
+     "citations": [
+      "lw v1,500(s0) @0x801017a4",
+      "sltiu v0,v0,0x7d0 @0x801017c0",
+      "lh a1,504(s0) @0x801017cc",
+      "jal 0x80015714 @0x801017d0"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "The state word's byte +0x5 is the sub-routine index: lbu v0,5(s0) @0x801011d0; sll v0,v0,2 @0x801011d8; lw v0,-14132(at) @0x801011e4 with at=0x8011<<16 -> table base 0x8010C8CC; jalr v0 @0x801011ec (a0=self, a1, a2 from the slot @0x801011f0). table[14] @0x8010c904 = 0x80104D74. So 0x0E01 => state=1, executor 0x80104D74.",
+     "citations": [
+      "lbu v0,5(s0) @0x801011d0",
+      "lw v0,-14132(at) @0x801011e4 -> 0x8010c8cc",
+      "table[14] @0x8010c904 -> 0x80104d74"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Executor 0x80104D74 branches on +0x6: phase 0 -> sw 0x000F0011 to +0x14C (@0x80104db4-bc), sb 1 to +0x6 (@0x80104dc4), sh 11 to +0x144 (@0x80104dcc). This is why block B's 32-bit store (which zeroes +0x6) is required to trigger the phase-0 init.",
+     "citations": [
+      "lbu v1,6(s0) @0x80104d90",
+      "sw v0,332(s0) @0x80104dbc",
+      "sb v0,6(s0) @0x80104dc4",
+      "sh v0,324(s0) @0x80104dcc"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Executor 0x80104D74 body contains NO translation/velocity write: at anim frame +0x14D==10 it fires jal 0x8001bf10 (sound, a0=0x0A001000) and jal 0x8005bd6c (a0=5); then jal 0x8002959c (a3=256); on nonzero return it does sw 1,4(s0) (=state 1/sub 0/phase 0) @0x80104e24 and sb 60,574(s0) (+0x23E=60) @0x80104e2c. The label \"forward lunge\" is UNPROVEN — call it \"sub-state 14, non-grabbing timed attack\".",
+     "citations": [
+      "lbu v1,333(s0) @0x80104dd0",
+      "jal 0x8001bf10 @0x80104df4",
+      "sw v0,4(s0) @0x80104e24",
+      "addiu v0,zero,60 @0x80104e28 / sb v0,574(s0) @0x80104e2c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "+0x106 is quantized in steps of 1800 with an inverted sign: the writer computes v0=FUN_8004fba0(self+0x84, 450, 16384) @0x8003692c, sign-extends 16 bits, signed-divides by the magic 0x91A2B3C5 with sra 10 @0x8003696c and stores sign(v0) - quot @0x80036974. Evaluated over -8000..8000 this is exactly byte = -trunc(v0/1800) (steps at +/-1800, 3600, 5400, 7200).",
+     "citations": [
+      "jal 0x8004fba0 @0x8003692c",
+      "lui a1,0x91a2 / ori a1,a1,0xb3c5 @0x80036934-38",
+      "sra v1,v1,10 @0x8003696c",
+      "subu a0,a0,v1 / sb a0,262(s0) @0x80036970-74"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "+0x106 role: a coarse height/level class derived from a 1800-unit quantization of a probe result (see the -trunc(v/1800) fact) and incremented by 1 on a path that simultaneously sets +0x1D3|=0x80 and +0x0|=0x8 at anim frame +0x14D==17. Name \"floor/elevation index\" remains INFERRED — no reader was found that proves the semantics.",
+     "citations": [
+      "addiu v0,v0,1 @0x8003ea50 / sb v0,262(s0) @0x8003ea60",
+      "ori v1,v1,0x80 @0x8003ea54 / sb v1,467(s0) @0x8003ea5c",
+      "lbu v1,333(s0) / addiu v0,zero,17 / bne @0x8003ea34-3c"
+     ],
+     "certainty": "INFERRED"
+    },
+    {
+     "fact": "The +0x106 polarity contrast is real and byte-verified: block G's grab (0x0301) requires the two bytes EQUAL — bne v1,v0,0x801019e8 @0x80101920 skips on DIFFER — while block B requires them to DIFFER. Same two loads (lbu 262(s0)/lbu 262(s1)) in both.",
+     "citations": [
+      "lbu v1,262(s0) @0x80101914",
+      "lbu v0,262(s1) @0x80101918",
+      "bne v1,v0,0x801019e8 @0x80101920"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "CORRECTION on the +0x1D3 evidence: the low-7 countdown decrement cited by the refuter operates on s0 = SELF (the zombie's own per-frame prologue, s0 = ticked entity), not on the 0x800CFBF8 struct block B reads. Only the 0x80 latch is proven to be written on 0x800D01D3, by this same overlay's grab paths. Treat 0x800D01D3's low-7 field as role UNPROVEN.",
+     "citations": [
+      "andi v0,v1,0x7f @0x8010048c / addiu v0,v1,-1 @0x80100494 / sb v0,467(s0) @0x80100498",
+      "ori v0,v0,0x80 @0x80101964 / sb v0,467(s1) @0x80101968",
+      "ori v0,v0,0x80 @0x801019a8 / sb v0,467(s1) @0x801019b0"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "+0x23E IS a self-decrementing counter reloaded to 60 by executor 14: lbu v0,574(s0) @0x80100470 / beq v0,zero,0x80100484 @0x80100478 with delay slot addiu v0,v0,-1 @0x8010047c / sb v0,574(s0) @0x80100480 (saturates at 0); reload sb 60 @0x80104e2c. Label \"60-tick post-attack cooldown\" is supported by these two sites.",
+     "citations": [
+      "beq v0,zero,0x80100484 @0x80100478 (02 00 40 10)",
+      "addiu v0,v0,-1 @0x8010047c / sb v0,574(s0) @0x80100480",
+      "addiu v0,zero,60 @0x80104e28"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "0x800CFBF8 role: proven only to be an entity-layout struct — the cone helper is fed the WORDS at 0x800CFC30 (=+0x38) and 0x800CFC38 (=+0x40), the same offsets FUN_80015614 reads as X/Z on self. \"PLAYER work struct\" is INFERRED, not proven in this slice. Port it as a fixed global base, never as a function argument.",
+     "citations": [
+      "lw a1,-976(a1) @0x80101724 -> 0x800cfc30",
+      "lw a2,-968(a2) @0x8010172c -> 0x800cfc38",
+      "lh a0,56(s0) / lh a1,64(s0) @0x80015638-3c"
+     ],
+     "certainty": "INFERRED"
+    }
+   ]
+  },
+  {
+   "facts": [
+    {
+     "fact": "BLOCK E is a straight-line guard chain; every failure jumps to 0x801018e8. Byte-verified: 801018a4 `c4 09 42 2e`, 801018a8 `0f 00 40 10`, 801018ac `00 14 14 00`, 801018b0 `0d 00 40 10`, 801018b4 `00 00 00 00`, 801018bc `f6 fb 42 94`, 801018c4 `17 00 42 30`, 801018c8 `07 00 40 10`, 801018d0 `fa 57 00 0c`, 801018d8 `01 00 42 30`, 801018dc `02 00 40 14`, 801018e0 `01 0c 02 24`, 801018e4 `04 00 02 ae`.",
+     "citations": [
+      "sltiu v0,s2,0x9c4 @0x801018a4",
+      "beq v0,zero,0x801018e8 @0x801018a8",
+      "sw v0,4(s0) @0x801018e4"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Real condition set (all must hold, in this order): (1) (u32)[self+0x1F0] < 2500; (2) (s16)s4 != 0; (3) [0x800CFBF6] & 0x17 != 0; (4) (FUN_80015FE8() & 1) == 0. Then `sw 0x00000C01, 4(s0)`. No other terms. Falls through to 0x801018e8 either way.",
+     "citations": [
+      "sltiu v0,s2,0x9c4 @0x801018a4",
+      "sll v0,s4,16 @0x801018ac + beq @0x801018b0",
+      "andi v0,v0,0x17 @0x801018c4 + beq @0x801018c8",
+      "andi v0,v0,0x1 @0x801018d8 + bne @0x801018dc"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Distance gate is UNSIGNED and the constant is 2500 = 0x9C4 (finder correct). s2 = [self+0x1F0], loaded once in the prologue: `lw s2,496(s0)` (bytes `f0 01 12 8e`).",
+     "citations": [
+      "sltiu v0,s2,0x9c4 @0x801018a4",
+      "lw s2,496(s0) @0x80101744"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "RNG gate polarity: `andi v0,v0,0x1` then `bne v0,zero,<skip>` — the attack fires only when bit0 of the return is ZERO. The delay slot 0x801018e0 `addiu v0,zero,3073` executes on both paths but v0 is dead when the branch is taken, so it is harmless.",
+     "citations": [
+      "andi v0,v0,0x1 @0x801018d8",
+      "bne v0,zero,0x801018e8 @0x801018dc",
+      "addiu v0,zero,3073 @0x801018e0 (delay slot)"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Cone polarity CONFIRMED as OUTSIDE. s4 is the return of the a3=1024 call (captured in the delay slot of the NEXT jal, bytes `21 a0 40 00` = addu s4,v0,zero). FUN_80015614 returns 0 when the target bearing is INSIDE +/-a3 (branch-taken path with delay slot `addu v0,zero,zero`), and +a3 / -a3 otherwise. So `beq` on s4 skips E => E requires OUTSIDE +/-1024.",
+     "citations": [
+      "addiu a3,zero,1024 @0x8010174c",
+      "addu s4,v0,zero @0x8010176c",
+      "slt v0,v1,v0 @0x80015668 / bne @0x8001566c / addu v0,zero,zero @0x80015670"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "The outcome is a 32-BIT store of 0x00000C01, not two byte writes: self+4=0x01, self+5=0x0C(12), self+6=0x00, self+7=0x00. A port that only assigns +4 and +5 leaves +6 stale and enters the wrong sub-phase.",
+     "citations": [
+      "addiu v0,zero,3073 @0x801018e0",
+      "sw v0,4(s0) @0x801018e4 (bytes `04 00 02 ae`)"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "self+5 = index into TWO parallel pointer tables, read per frame: DECISION @0x8010C88C then EXECUTOR @0x8010C8CC. +5 is RE-READ after the decision call, so the new sub-state 12 executes in the SAME frame. DECISION[1]=0x80101714 is the very function containing block E; EXECUTOR[12]=0x80104748, DECISION[12]=0x8010460C.",
+     "citations": [
+      "lbu v0,5(s0) @0x801011a8 -> lw v0,-14196(at)=0x8010c88c @0x801011bc",
+      "lbu v0,5(s0) @0x801011d0 -> lw v0,-14132(at)=0x8010c8cc @0x801011e4",
+      "table 0x8010c890 -> 0x80101714",
+      "table 0x8010c8fc -> 0x80104748"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "self+6 IS live and must be zeroed by the store: executor 12 (0x80104748) dispatches on it immediately — `lbu v1,6(s0)` then compares against 1, <2, 0, 2, 3.",
+     "citations": [
+      "lbu v1,6(s0) @0x80104770",
+      "beq v1,v0(1),0x8010482c @0x80104778",
+      "slti v0,v1,2 @0x80104780",
+      "beq v1,zero,0x801047b8 @0x8010478c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "self+4 = top-level routine index into the zombie's per-type table @0x8010C830. Value 1 -> 0x8010114c, which sub-dispatches on ([self+0x10E] & 0x3F) via table 0x8010C854 (entries 0 and 2 both = 0x8010118c, the +5 double-dispatch). Writing +4=1 keeps the zombie in that AI path. The generic/non-overlay equivalent is table 0x800A83B8 indexed by `lbu v0,4(s0)`.",
+     "citations": [
+      "table 0x8010c834 -> 0x8010114c",
+      "lhu v0,270(a0) @0x80101154 / andi 0x3f @0x8010115c / lw v0,-14252(at)=0x8010c854 @0x8010116c",
+      "lbu v0,4(s0) @0x8005d018 -> lw v0,-31816(at)=0x800a83b8 @0x8005d030"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "BLOCK D and BLOCK E are NESTED and CUMULATIVE, not a far/near ladder. D's gate is dist<3500 (0xDAC), a strict superset of E's 2500. D's store does NOT branch away — 0x801018a0 falls straight into 0x801018a4. So at dist<2500 BOTH blocks run and BOTH may draw the RNG; they write the identical word, so a double store is idempotent but the RNG advances twice.",
+     "citations": [
+      "sltiu v0,s2,0xdac @0x8010185c",
+      "sw v0,4(s0) @0x801018a0",
+      "sltiu v0,s2,0x9c4 @0x801018a4"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Port the two blocks sequentially, verbatim. The dist<2500 predicate is compiler-duplicated into 4 sites (three branch delay slots @0x8010186c, @0x80101884, @0x80101898 plus the fall-through @0x801018a4); all D failure paths land on 0x801018a4 or 0x801018a8 with the same predicate value. Sequential C `if(D){...} if(E){...}` reproduces all four paths exactly.",
+     "citations": [
+      "beq v0,zero,0x801018a4 @0x80101860",
+      "beq ...,0x801018a8 @0x80101868/@0x80101880/@0x80101894"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Mask relation: E uses 0x17, D uses 0x15 (bits 0,2,4). 0x17 = 0x15 | 0x02, so bit 0x02 is the ONLY bit that lets E pass while D's mask fails. Both read the same 16-bit global 0x800CFBF6 via lhu.",
+     "citations": [
+      "andi v0,v0,0x15 @0x8010187c",
+      "andi v0,v0,0x17 @0x801018c4",
+      "lhu v0,-1034(v0) @0x801018bc and @0x80101874"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "0x800CFBF6: 16-bit global, role UNPROVEN. Do NOT label it 'loud/quiet' or 'noise'. Only writers I can cite: `andi v1,v1,0xffe0` -> `sh v1,-1034(at)` @0x8003bff0 (clears bits 0-4) and `ori v0,v0,0x2` -> `sh v0,-1034(at)` @0x8003d6bc. Treat the mask test literally as a bitfield read.",
+     "citations": [
+      "lhu v1,-1034(v1) @0x8003bfd8 / andi 0xffe0 @0x8003bfe0 / sh @0x8003bff0",
+      "ori v0,v0,0x2 @0x8003d6b4 / sh @0x8003d6bc"
+     ],
+     "certainty": "UNPROVEN"
+    },
+    {
+     "fact": "RNG FUN_80015FE8: single global 16-bit state @0x800CE318, advanced exactly once per call (one lw @0x80015ff0, one sw @0x80016018). hi=(s>>7)&0xFF; lo=(hi+s)&0xFF; s=lo|(hi<<8); return lo (8-bit). Seeded 0xD2706CA4 at 0x8002b91c and 0x8003bcc4. Call count per tick is part of behaviour: D and E each consume one draw only if their first three gates pass.",
+     "citations": [
+      "addiu a0,a0,-7400 = 0x800ce318 @0x80015fec",
+      "srl v1,v0,7 @0x80015ff8 / addu v0,v1,v0 @0x80016000 / sll v1,v1,8 @0x80016008",
+      "lui v1,0xd270 / ori 0x6ca4 @0x8002b908 / sw v1,-7400(at) @0x8002b91c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Measured, not proven-uniform: simulating the proven generator from seed 0x6CA4 gives a 24312-long cycle with P(bit0==0)=12075/24312=49.667% (E) and P(&3==0)=6031/24312=24.807% (D). Composite over consecutive draws (D-then-E, both masks satisfied, dist<2500) = 15134/24312 = 62.25% — close to but not exactly the 5/8 independence estimate. Implement the mask, never a float probability.",
+     "citations": [
+      "andi v0,v0,0x1 @0x801018d8",
+      "andi v0,v0,0x3 @0x80101890",
+      "FUN_80015FE8 @0x80015fe8 (algorithm)"
+     ],
+     "certainty": "INFERRED"
+    },
+    {
+     "fact": "PORT TRAP: a near-identical block exists at 0x801013a4-0x801013d0 in a different decision function — same lhu 0x800CFBF6, same andi 0x17, same jal RNG, same 0x0C01 — but the RNG branch is `beq v0,zero,0x801013d4` (delay slot addiu v0,3073; store at 0x801013d0), i.e. it fires when bit0 != 0, the OPPOSITE of block E. Do not copy one implementation for both.",
+     "citations": [
+      "andi v0,v0,0x17 @0x801013b0",
+      "jal 0x80015fe8 @0x801013bc / andi 0x1 @0x801013c4 / beq v0,zero,0x801013d4 @0x801013c8",
+      "sw v0,4(s0) @0x801013d0"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "self+0x1F0 = 2D distance to the PLAYER: dist = sqrt_helper((self.x-pl.x)^2 + (self.z-pl.z)^2) with x@+0x38, z@+0x40; the reference struct is s2 = 0x800CFBF8 (`addiu s2,s3,14864`, same base+offset the player entry uses). Written once per frame in the entity walk.",
+     "citations": [
+      "lw v0,56(s0)/lw v1,56(s2) @0x800265a4",
+      "jal 0x8008d2f4 @0x800265d4 / sw v0,496(s0) @0x800265e0",
+      "addiu s2,s3,14864 @0x80026564"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "STALENESS caveat for the dist<2500 test: +0x1F0 is only refreshed when ([self+0x00] & 1) != 0 and ([self+0x10E] & 0x8000) == 0; otherwise the walk branches to 0x800265fc and the old value persists. A port that recomputes distance inline every tick diverges from the original on skipped frames.",
+     "citations": [
+      "lw v0,0(s0) @0x8002657c / andi 0x1 @0x80026584 / beq 0x800265fc @0x80026588",
+      "lhu v0,270(s0) @0x80026590 / andi 0x8000 @0x80026598 / bne 0x800265fc @0x8002659c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Sub-state 12's meaning (the turn-lunge attack that reaches into the grab) comes from analysis of executor 0x80104748, not from block E itself. Block E only proves the transition +5: 1 -> 12. Keep the numeric transition in the port; treat the name as documentation.",
+     "citations": [
+      "sw v0,4(s0) @0x801018e4",
+      "table 0x8010c8fc -> 0x80104748"
+     ],
+     "certainty": "INFERRED"
+    }
+   ],
+   "corrections": [
+    "FINDER WRONG: 'two-tier ladder: far+loud -> 25%, near -> 50%'. D is dist<3500 (`sltiu v0,s2,0xdac` @0x8010185c), a strict SUPERSET of E's 2500 (@0x801018a4). There is no far-only tier — the blocks are nested, and D falls through into E (no branch after `sw v0,4(s0)` @0x801018a0), so at dist<2500 both roll.",
+    "FINDER WRONG (over-claim): '50% RNG gate' stated as PROVEN. The bytes prove only `(rng()&1)==0` (andi @0x801018d8 + bne @0x801018dc). Simulating the proven generator over its 24312-step cycle from seed 0x6CA4 gives 49.667%, not exactly 1/2. Same for D's '25%' (24.807%).",
+    "FINDER INCOMPLETE (load-bearing): 'state=1, sub1=12' describes half of a 32-bit `sw` (@0x801018e4). The store also zeroes +6 and +7, and +6 is read immediately by executor 12 (`lbu v1,6(s0)` @0x80104770).",
+    "FINDER UNSOURCED: calling 0x800CFBF6's bits 'loud/quiet'. No cited writer establishes that. Field role stays UNPROVEN.",
+    "FINDER MINOR: the quoted transcript omits `801018c0: nop` between the lhu @0x801018bc and the andi @0x801018c4. No logic impact (load-delay filler).",
+    "REFUTER OVERSTATED: 'THE BLOCK HEAD IS 0x801018A8, NOT 0x801018A4.' 0x801018a4 is a genuine entry — it is the target of `beq v0,zero,0x801018a4` @0x80101860 (D's distance failure). Both 0x801018a4 and 0x801018a8 are entry points to the same predicate; the duplication is compiler artifact, and a sequential C translation reproduces all four paths.",
+    "REFUTER IMPRECISE: composite 'P = 1-(3/4)(1/2) = 5/8 = 62.5%' assumes independent uniform draws. Measured over consecutive draws of the actual generator: 15134/24312 = 62.25%. Both sides should stop quoting probabilities; port the masks.",
+    "BOTH SIDES CORRECT and I confirm from bytes: the s4 cone polarity (s4 != 0 = player OUTSIDE +/-1024; FUN_80015614 returns 0 INSIDE, delay slot `addu v0,zero,zero` @0x80015670), the delay-slot capture `addu s4,v0,zero` @0x8010176c (bytes `21 a0 40 00`) belonging to the jal @0x80101768 and therefore holding the a3=1024 result, mask 0x17 vs 0x15, and constant 0x9C4=2500."
+   ]
+  },
+  {
+   "facts": [
+    {
+     "fact": "Block J @0x801019B4 has exactly ONE inbound edge: `beq v1,v0,0x801019b4` @0x801018f0 (raw 10620030), where v1=*(u8*)0x800CFC00 (`lbu v1,8(s1)` @0x801018e8) and v0=15 (@0x801018ec). No fall-in exists: 0x801019ac is `j 0x801019e8` with delay slot 0x801019b0 `sb v0,467(s1)`. Full-binary branch scan of EMZ0.BIN finds no other instruction targeting 0x801019b4.",
+     "citations": [
+      "beq v1,v0,0x801019b4 @0x801018f0 (10620030)",
+      "lbu v1,8(s1) @0x801018e8",
+      "addiu v0,zero,15 @0x801018ec",
+      "j 0x801019e8 @0x801019ac"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Block J guard chain (delay slots resolved); each failure branches to block K @0x801019E8, never to the epilogue: self+0x23E != 0; (s3 & 0xFFFF) != 0; !(s2 <u 0x7D0); *(u8*)(0x800CFBF8+0x1D3) != 0. If all pass: `sw v0,4(s0)` @0x801019e4 with v0 = 0x00000E01.",
+     "citations": [
+      "lbu v0,574(s0) @0x801019b4",
+      "bne v0,zero,0x801019e8 @0x801019bc",
+      "bne v0,zero,0x801019e8 @0x801019c4",
+      "beq v0,zero,0x801019e8 @0x801019cc",
+      "lbu v0,467(s1) @0x801019d4 / bne @0x801019dc"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Block J's stored word 0x00000E01 (`addiu v0,zero,3585` @0x801019e0) decodes little-endian at self+0x4 as: +0x4 = 0x01, +0x5 = 0x0E (14), +0x6 = 0x00, +0x7 = 0x00. The li sits in the DELAY SLOT of `bne` @0x801019dc, so it executes even when the store is skipped (v0 is then dead).",
+     "citations": [
+      "addiu v0,zero,3585 @0x801019e0 (01 0e 02 24)",
+      "sw v0,4(s0) @0x801019e4 (04 00 02 ae)"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Delay slots inside J always execute: 0x801019c0 `sll v0,s3,16` and 0x801019c8 `sltiu v0,s2,0x7d0` — the distance compare is computed BEFORE the cone branch resolves. On entry, 0x801018f4 `sltiu v0,s2,0x4b0` also executes but its v0 is dead (clobbered by `lbu v0,574(s0)` @0x801019b4).",
+     "citations": [
+      "sll v0,s3,16 @0x801019c0 (00 14 13 00)",
+      "sltiu v0,s2,0x7d0 @0x801019c8 (d0 07 42 2e)",
+      "sltiu v0,s2,0x4b0 @0x801018f4"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Block J is block B @0x801017E8 minus exactly one test: `lbu v1,262(s0)` @0x80101808 / `lbu v0,262(s1)` @0x8010180c / `beq v1,v0,0x80101830` @0x80101814 (raw 10620006 = BEQ). B therefore REQUIRES self+0x106 != *(u8*)0x800CFCFE; J drops that requirement entirely. Both use 0x7D0 and 0x0E01.",
+     "citations": [
+      "beq v1,v0,0x80101830 @0x80101814 (06 00 62 10)",
+      "lbu v1,262(s0) @0x80101808",
+      "lbu v0,262(s1) @0x8010180c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "J's +0x1D3 test is a FULL-BYTE != 0 test with no masking (`lbu v0,467(s1)` @0x801019d4 + `bne v0,zero` @0x801019dc). Contrast the same field at @0x80101900 + `andi v0,v0,0x80` @0x80101908 + `bne` @0x8010190c, which tests only bit 0x80. Port both literally — they are not equivalent when the low 7 bits are non-zero.",
+     "citations": [
+      "lbu v0,467(s1) @0x801019d4 / bne @0x801019dc",
+      "lbu v0,467(s1) @0x80101900 / andi 0x80 @0x80101908 / bne @0x8010190c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Block J does NOT return. 0x801019e4 `sw v0,4(s0)` is immediately followed by block K's first instruction at 0x801019e8 with no intervening branch. An id-15 entity that satisfies J and then K's guards leaves with 0x00060801, not 0x00000E01.",
+     "citations": [
+      "sw v0,4(s0) @0x801019e4",
+      "lh v1,342(s1) @0x801019e8"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Block K guard chain, all failures branching to the epilogue @0x80101A1C: v1 = *(s16*)0x800CFD4E (`lh v1,342(s1)` @0x801019e8) must equal -32768 exactly; (s3 & 0xFFFF) must be 0; s2 must be <u 0x3E8 (1000). All three comparison operands are set in delay slots that always execute.",
+     "citations": [
+      "lh v1,342(s1) @0x801019e8 / addiu v0,zero,-32768 @0x801019ec / bne @0x801019f0",
+      "sll v0,s3,16 @0x801019f4 / bne @0x801019f8",
+      "sltiu v0,s2,0x3e8 @0x801019fc / beq @0x80101a00"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "CONFIRMED: block K writes BOTH fields, unconditionally, with no branch between them. (1) `sw v1,4(s0)` @0x80101a10 with v1 = 0x00060801, built by `lui v1,0x6` @0x80101a04 (the delay slot of the beq) + `ori v1,v1,0x801` @0x80101a0c. (2) `sh v0,270(s0)` @0x80101a18 with v0 = `lhu v0,270(s0)` @0x80101a08 ORed with 0x4000 @0x80101a14. So self+0x10E |= 0x4000 is real.",
+     "citations": [
+      "lui v1,0x6 @0x80101a04 (06 00 03 3c)",
+      "ori v1,v1,0x801 @0x80101a0c (01 08 63 34)",
+      "sw v1,4(s0) @0x80101a10 (04 00 03 ae)",
+      "lhu v0,270(s0) @0x80101a08 / ori v0,v0,0x4000 @0x80101a14 / sh v0,270(s0) @0x80101a18"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Block K's stored word 0x00060801 decodes little-endian at self+0x4 as: +0x4 = 0x01, +0x5 = 0x08, +0x6 = 0x06, +0x7 = 0x00.",
+     "citations": [
+      "lui v1,0x6 @0x80101a04 + ori v1,v1,0x801 @0x80101a0c",
+      "sw v1,4(s0) @0x80101a10"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "PRECEDENCE: the function stores to +0x4 nine times (0x801017e4, 0x8010182c, 0x80101858, 0x801018a0, 0x801018e4, 0x80101958, 0x8010199c, 0x801019e4, 0x80101a10). Only 0x801017e4 returns immediately — its `j 0x80101a1c` @0x801017e0 (raw 08040687) is the sole edge in the whole function that skips K. Every other path falls into K, which overwrites when its guards pass.",
+     "citations": [
+      "j 0x80101a1c @0x801017e0 (08040687) / sw v0,4(s0) @0x801017e4 (delay slot)",
+      "sw v1,4(s0) @0x80101a10"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "SAME-TICK DISPATCH: caller 0x8010118c reads sub1 `lbu v0,5(s0)` @0x801011a8 -> DECISION[sub1] table @0x8010c88c (entry [1] = 0x80101714 = this function), then RE-READS sub1 `lbu v0,5(s0)` @0x801011d0 -> EXECUTOR[sub1] table @0x8010c8cc. So J's sub1=14 runs executor 0x80104d74 and K's sub1=8 runs executor 0x80103b74 on the very tick the decision fires.",
+     "citations": [
+      "lbu v0,5(s0) @0x801011a8 / lw v0,-14196(at) @0x801011bc -> 0x8010c88c",
+      "lbu v0,5(s0) @0x801011d0 / lw v0,-14132(at) @0x801011e4 -> 0x8010c8cc",
+      "table[1]=0x80101714 @0x8010c890",
+      "exec[8]=0x80103b74 @0x8010c8ec, exec[14]=0x80104d74 @0x8010c904"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Register bindings this slice depends on: s0 = self (a0) @0x8010171c; s1 = 0x800CFBF8 (`lui s1,0x800d` @0x80101794 + `addiu s1,s1,-1032` @0x80101798); s2 = *(s32*)(self+0x1F0) (`lw s2,496(s0)` @0x80101744); s3 = return of the a3=512 cone call, captured in the DELAY SLOT `addu s3,v0,zero` @0x8010178c of the jal @0x80101788.",
+     "citations": [
+      "addu s0,a0,zero @0x8010171c",
+      "addiu s1,s1,-1032 @0x80101798 (f8 fb 31 26)",
+      "lw s2,496(s0) @0x80101744",
+      "addu s3,v0,zero @0x8010178c (delay slot of jal @0x80101788, a3=512 @0x80101754)"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "s3 == 0 means the 0x800CFBF8 target lies INSIDE self's +/-512 (of 4096) facing cone. FUN_80015614: `slt v0,v1,v0` @0x80015668 (v1 = wrapped delta & 0xFFF, v0 = 2*a3), `bne v0,zero,0x80015684` @0x8001566c with `addu v0,zero,zero` in the delay slot @0x80015670 -> returns 0; otherwise +a3 @0x8001567c or -a3 @0x80015680.",
+     "citations": [
+      "slt v0,v1,v0 @0x80015668",
+      "bne @0x8001566c / addu v0,zero,zero @0x80015670",
+      "addu v0,s1,zero @0x8001567c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "0x800CFD4E (= 0x800CFBF8 + 0x156), the halfword block K gates on, is a signed 16-bit HP quantity: `lhu v0,342(a2)` @0x80040248 / `subu a0,v0,a0` @0x80040250 / `sh a0,342(a2)` @0x8004025c with a2 = 0x800CFBF8 (`addiu a2,a2,-1032` @0x800401e0); on death it is clamped to 0 by `sh zero,342(a2)` @0x800402b0.",
+     "citations": [
+      "addiu a2,a2,-1032 @0x800401e0",
+      "lhu v0,342(a2) @0x80040248 / subu @0x80040250 / sh a0,342(a2) @0x8004025c",
+      "sh zero,342(a2) @0x800402b0"
+     ],
+     "certainty": "INFERRED"
+    },
+    {
+     "fact": "Block K's == -32768 gate is NOT producible by any HP writer I could find. Damage clamps to 0 (@0x800402b0). Heal adds then clamps to *(s16*)0x800CFD5A (`lh v1,-678(v1)` @0x80040324, `sh a0,-690(at)` @0x80040340). Restore copies 0x800CFD5A (`sh v0,-690(at)` @0x800591b8). Do NOT ship \"0x8000 = death sentinel\" as proven; treat K as gated by an unresolved external writer.",
+     "citations": [
+      "sh zero,342(a2) @0x800402b0",
+      "lh v1,-678(v1) @0x80040324 / sh a0,-690(at) @0x80040340",
+      "sh v0,-690(at) @0x800591b8"
+     ],
+     "certainty": "UNPROVEN"
+    },
+    {
+     "fact": "The only -32768 store to any +0x156 in EMZ0 writes the ZOMBIE's own field, not 0x800CFD4E: `addiu v1,zero,-32768` @0x8010b730 + `sh v1,342(s2)` @0x8010b738, s2 = a0 @0x8010b46c of root 0x8010b3c0 (dispatch `lbu v0,5(s0)` @0x8010b3d0, table 0x8010cf3c), and that root is registered into 0x800CE400+type*4 @0x80101120 from the zombie's own +0x8 (`lbu v0,8(s2)` @0x80101108).",
+     "citations": [
+      "addiu v1,zero,-32768 @0x8010b730 / sh v1,342(s2) @0x8010b738",
+      "addu s2,a0,zero @0x8010b46c",
+      "addiu v1,v1,-19520 @0x80101110 / sw v1,-7168(at) @0x80101120"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "self+0x23E (J's first guard) is a saturating per-frame countdown reloaded with 60: `addiu v0,zero,60` @0x80104e28 + `sb v0,574(s0)` @0x80104e2c (tail of EXECUTOR[14] = 0x80104d74); decremented once per frame by `lbu v0,574(s0)` @0x80100470 / `beq v0,zero,0x80100484` @0x80100478 / delay slot `addiu v0,v0,-1` @0x8010047c / `sb v0,574(s0)` @0x80100480.",
+     "citations": [
+      "addiu v0,zero,60 @0x80104e28 / sb v0,574(s0) @0x80104e2c",
+      "lbu v0,574(s0) @0x80100470 / beq @0x80100478 / addiu v0,v0,-1 @0x8010047c / sb @0x80100480"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "self+0x10E bit 0x4000 (set by K) is LIVE, not write-only. Tested `lhu`+`andi 0x4000`+`bne` at 0x8010050c/0x80100514/0x80100518, 0x8010381c/0x80103824/0x80103828, 0x80103c94/0x80103c9c/0x80103ca0. Cleared by `andi v1,v1,0xbfff` @0x80104f0c + `sh v1,270(s0)` @0x80104f10. Also set at 0x80102234/0x80102238 and 0x80103a4c/0x80103a50. Role of the bit: UNPROVEN.",
+     "citations": [
+      "andi v0,v0,0x4000 @0x80100514 / @0x80103824 / @0x80103c9c",
+      "andi v1,v1,0xbfff @0x80104f0c / sh v1,270(s0) @0x80104f10",
+      "ori v0,v0,0x4000 @0x80102234, @0x80103a4c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Observable effect of bit 0x4000 at two readers: @0x80103828 `bne` taken (bit set) jumps to 0x80103930 and SKIPS `sb v0,6(s0)` @0x80103834 (which would set +0x6 = 2); @0x80103ca0 taken jumps to 0x80103e24 and SKIPS `sb v0,6(s1)` @0x80103cac (+0x6 = 3). Bit set => +0x6 keeps its previous value at those sites.",
+     "citations": [
+      "bne v0,zero,0x80103930 @0x80103828 / addiu v0,zero,2 @0x8010382c / sb v0,6(s0) @0x80103834",
+      "bne v0,zero,0x80103e24 @0x80103ca0 / addiu v0,zero,3 @0x80103ca4 / sb v0,6(s1) @0x80103cac"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Names NOT to ship for this slice — emit as raw offsets, role UNPROVEN: +0x5 values 8 and 14 (\"devour\"/\"frontal lunge\"), +0x106 (\"floor\"), 0x800CFC00 = base+0x8 (\"character id\"), +0x1D3 (\"claim latch\"), +0x10E bit 0x4000. The only label attachments proven in this slice are 0x800CFD4E = HP and +0x23E = 60-frame countdown.",
+     "citations": [
+      "lbu v1,8(s1) @0x801018e8",
+      "lbu v0,467(s1) @0x801019d4",
+      "sh v0,270(s0) @0x80101a18"
+     ],
+     "certainty": "UNPROVEN"
+    }
+   ],
+   "corrections": [
+    "FINDER wrong: block J does not make 0x0E01 the only outcome for id 15. 0x801019e4 falls straight into K @0x801019e8 with no branch, and K's `sw v1,4(s0)` @0x80101a10 overwrites it with 0x00060801.",
+    "FINDER wrong: block K is not 'the LAST writer, wins over everything'. `j 0x80101a1c` @0x801017e0 (raw 08040687) returns from the block-A path with 0x0E01 already committed by its delay slot `sw v0,4(s0)` @0x801017e4, never reaching K. Verified as the ONLY such edge by scanning all 44 branches/jumps in 0x80101714..0x80101a3c.",
+    "FINDER wrong to ship '-32768 = HP sentinel' as PROVEN. +0x156 is HP (proven), but no writer of 0x8000 to 0x800CFD4E exists in PSX.EXE or any COMMON/BIN overlay; the damage path clamps to 0 @0x800402b0 and the heal path clamps to *(s16*)0x800CFD5A @0x80040340.",
+    "REFUTER wrong on a literal: he claimed the absolute form `sh rt,-690(at)` hits only MEM_CARD.BIN @0x80103B7C. PSX.EXE has three more after `lui at,0x800d`: 0x80040310, 0x80040340, 0x800591b8 (0x8002c088 uses `lui at,0x800e` -> 0x800DFD4E, unrelated). His conclusion (no 0x8000 writer) nevertheless survives.",
+    "REFUTER left 0x8010B464's a0 'UNRESOLVED'. It is resolvable: its root 0x8010b3c0 is registered into 0x800CE400+type*4 @0x80101120 using the zombie's own +0x8 (`lbu v0,8(s2)` @0x80101108), so `sh v1,342(s2)` @0x8010b738 writes the ZOMBIE's +0x156, not the player's 0x800CFD4E.",
+    "REFUTER right / FINDER wrong on polarity: the test block J drops is `beq v1,v0,0x80101830` @0x80101814 (raw 10620006 = BEQ), i.e. block B REQUIRES self+0x106 to DIFFER from *(u8*)0x800CFCFE. Describing J as 'B minus the floor test' as if a same-floor requirement were relaxed is backwards.",
+    "BOTH SIDES RIGHT that K also ORs 0x4000 into +0x10E — byte-confirmed: `lhu v0,270(s0)` @0x80101a08, `ori v0,v0,0x4000` @0x80101a14, `sh v0,270(s0)` @0x80101a18, with no branch between them and the `sw v1,4(s0)` @0x80101a10."
+   ]
+  },
+  {
+   "facts": [
+    {
+     "fact": "LADDER (9 stores, all `sw` of a 32-bit immediate to entity+0x4, base r16=self=a0): A=0x0E01(early-return), B=0x0E01, C=0x0A01, D=0x0C01, E=0x0C01, G1=0x0301, G2=0x0301, J=0x0E01, K=0x00060801. Every block except A falls through, so LAST WRITER WINS. Evaluate top-to-bottom, do NOT return after the first match.",
+     "citations": [
+      "sw v0,4(s0) @0x801017e4",
+      "@0x8010182c",
+      "@0x80101858",
+      "@0x801018a0",
+      "@0x801018e4",
+      "@0x80101958",
+      "@0x8010199c",
+      "@0x801019e4",
+      "sw v1,4(s0) @0x80101a10"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Complete store inventory of 0x80101714-0x80101a3c (scanned every word for op sb/sh/sw): 6 sp-relative prologue saves, the 9 `sw ..,4(s0)`, plus exactly 3 others: `sb v0,467(s1)` @0x80101968, `sb v0,467(s1)` @0x801019b0, `sh v0,270(s0)` @0x80101a18. No other memory is written by the function itself.",
+     "citations": [
+      "store scan 0x80101714..0x80101a3c EMZ0.BIN",
+      "0x80101968",
+      "0x801019b0",
+      "0x80101a18"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "LAST-WRITER-WINS is safe: no instruction in 0x80101714-0x80101a34 loads self+0x4..+0x7. (Overlay-wide scan for lb/lbu/lhu/lw with rs=s0 and imm in 4..7 returns hits at 0x801004cc, 0x8010061c, 0x801011a8, 0x801011d0, 0x8010122c... — none inside this function.) So no later guard sees an earlier store.",
+     "citations": [
+      "scan lb/lbu/lhu/lw rs=s0 imm 4..7 over EMZ0.BIN"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "BLOCK A is the ONLY early return: `j 0x80101a1c` @0x801017e0 with the store `sw v0,4(s0)` @0x801017e4 in its delay slot (store DOES execute, then return). The only other unconditional jump is intra-function `j 0x801019e8` @0x801019ac. 0x80101a1c is the epilogue (lw ra,36(sp) ... jr ra @0x80101a38).",
+     "citations": [
+      "j 0x80101a1c @0x801017e0",
+      "sw v0,4(s0) @0x801017e4",
+      "0x80101a1c epilogue"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "ENTRY GATE: `lbu v0,574(s0)` @0x80101790 then `bne v0,zero,0x80101830` @0x8010179c (bytes 24 00 40 14 = BNE rs=2,rt=0,off=0x24 -> 0x801017a0+144=0x80101830), delay slot `lui v0,0xc000` @0x801017a0. If self+0x23E != 0, BOTH block A and block B are skipped; the ladder starts at C.",
+     "citations": [
+      "bne @0x8010179c bytes 24 00 40 14",
+      "lbu v0,574(s0) @0x80101790"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Block B's own cooldown re-test is DEAD CODE: 0x801017e8 is reachable ONLY from block A's three failure branches (beq @0x801017b0, beq @0x801017c4, bne @0x801017d8), each of which already required self+0x23E==0. So `lbu v0,574(s0)` @0x801017e8 / `bne v0,zero,0x80101830` @0x801017f0 never branches. Port may drop it.",
+     "citations": [
+      "beq 0x801017e8 @0x801017b0",
+      "@0x801017c4",
+      "@0x801017d8",
+      "bne @0x801017f0 bytes 0f 00 40 14"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "REFUTER WAS RIGHT, FINDER WRONG: B and J are NOT mutually exclusive. B's store @0x8010182c precedes the player+0x8==15 test at `lbu v1,8(s1)` @0x801018e8 / `addiu v0,zero,15` @0x801018ec / `beq v1,v0,0x801019b4` @0x801018f0 (bytes 30 00 62 10, off=0x30 -> 0x801019b4). On a ==15 tick B and J can both fire; both store 0x0E01 so the final word is unchanged.",
+     "citations": [
+      "sw @0x8010182c",
+      "beq v1,v0,0x801019b4 @0x801018f0 bytes 30 00 62 10"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "B, C, D, E run on EVERY tick regardless of player+0x8. Only the G pair vs J is partitioned by `beq v1,v0,0x801019b4` @0x801018f0: fall-through (player+0x8 != 15) -> G-region 0x801018f4..0x801019b0; taken (==15) -> J at 0x801019b4. J's body is unreachable from G because `j 0x801019e8` @0x801019ac jumps over it.",
+     "citations": [
+      "beq @0x801018f0",
+      "j 0x801019e8 @0x801019ac bytes 7a 06 04 08"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "G-left and G-right are NOT exclusive with each other: G-left stores 0x0301 @0x80101958 and falls through to 0x8010196c, where G-right can store 0x0301 again @0x8010199c. Both also do player+0x1D3 |= 0x80 (@0x80101968, @0x801019b0). Order: +256 sector first (addiu a2,a2,256 @0x8010194c), then -256 (@0x80101990).",
+     "citations": [
+      "sw @0x80101958",
+      "0x8010196c",
+      "sw @0x8010199c",
+      "addiu a2,a2,256 @0x8010194c",
+      "addiu a2,a2,-256 @0x80101990"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "BLOCK D gate requires the ±1024 result s4 != 0: `sll v0,s4,16` @0x80101864 then `beq v0,zero,0x801018a8` @0x80101868 (bytes 0f 00 40 10 = BEQ, off=15 -> 0x8010186c+60=0x801018a8), and 0x801018a8 is PAST D's store @0x801018a0. Same in BLOCK E: `sll v0,s4,16` @0x801018ac / `beq v0,zero,0x801018e8` @0x801018b0 (0d 00 40 10).",
+     "citations": [
+      "beq @0x80101868 bytes 0f 00 40 10",
+      "beq @0x801018b0 bytes 0d 00 40 10"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "So the branch polarity is per-call-site, NOT a uniform 'skip unless inside'. In this function: 4 gates require the helper result ==0 (bne->skip) @0x801017d8, @0x801017f8, @0x80101950, @0x80101994, @0x801019c4, @0x801019f8; 2 gates require !=0 (beq->skip) @0x80101868, @0x801018b0. Read every consumer branch's opcode.",
+     "citations": [
+      "bne @0x801017f8",
+      "bne @0x80101950",
+      "beq @0x80101868",
+      "beq @0x801018b0"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "BLOCK D full guard, in order: s2<0xdac (`sltiu v0,s2,0xdac` @0x8010185c, `beq v0,zero,0x801018a4` @0x80101860) AND s4!=0 (@0x80101868) AND (u16 @0x800CFBF6 & 0x15)!=0 (`lhu` @0x80101874, `andi 0x15` @0x8010187c, `beq ->0x801018a8` @0x80101880) AND (PRNG@0x80015fe8 & 3)==0 (`andi v0,v0,0x3` @0x80101890, `bne ->0x801018a8` @0x80101894).",
+     "citations": [
+      "@0x8010185c",
+      "@0x80101868",
+      "@0x8010187c",
+      "jal 0x80015fe8 @0x80101888",
+      "@0x80101894"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "BLOCK E full guard: s2<0x9c4 (`sltiu` @0x801018a4, `beq ->0x801018e8` @0x801018a8) AND s4!=0 (@0x801018b0) AND (u16 @0x800CFBF6 & 0x17)!=0 (`lhu` @0x801018bc, `andi 0x17` @0x801018c4, `beq` @0x801018c8) AND (PRNG@0x80015fe8 & 1)==0 (`andi v0,v0,0x1` @0x801018d8, `bne ->0x801018e8` @0x801018dc).",
+     "citations": [
+      "@0x801018a4",
+      "@0x801018b0",
+      "@0x801018c4",
+      "jal 0x80015fe8 @0x801018d0",
+      "@0x801018dc"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "RNG CONSUMPTION IS CONDITIONAL — port must replicate call COUNT, not just outcome. `jal 0x80015fe8` @0x80101888 runs only after D's dist+cone+bitfield gates pass; `jal 0x80015fe8` @0x801018d0 only after E's. 0, 1 or 2 advances per tick. FUN_80015FE8 mutates the global 16-bit state (`lw v0,0(a0)`/`sw v1,0(a0)`, a0=0x800CE318).",
+     "citations": [
+      "jal @0x80101888",
+      "jal @0x801018d0",
+      "lui a0,0x800d/addiu a0,a0,-7400 @0x80015fe8-0x80015fec",
+      "sw v1,0(a0) @0x80016018"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "PRNG FUN_80015FE8 literal: v0=[0x800CE318]; v1=(v0>>7)&0xFF; v0=(v1+v0)&0xFF; new=v0|(v1<<8); store new&0xFFFF; RETURN v0 = ((seed>>7)+seed)&0xFF (0..255). Only the low byte is returned, so `&3` and `&1` are the low bits of that byte.",
+     "citations": [
+      "srl v1,v0,7 @0x80015ff8",
+      "andi v1,v1,0xff @0x80015ffc",
+      "addu v0,v1,v0 @0x80016000",
+      "andi v0,v0,0xff @0x80016004",
+      "sll v1,v1,8 @0x80016008",
+      "sw v1,0(a0) @0x80016018"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "G-pair SHARED preconditions (checked once, before either half): player+0x8 != 15 (@0x801018f0) AND s2<0x4b0 (`sltiu` @0x801018f4 delay slot, `beq ->0x801019e8` @0x801018f8, bytes 3b 00 40 10) AND (u8 s1+0x1D3 & 0x80)==0 (@0x80101908/`bne` @0x8010190c) AND self+0x106 == s1+0x106 (`bne v1,v0,0x801019e8` @0x80101920).",
+     "citations": [
+      "@0x801018f8 bytes 3b 00 40 10",
+      "andi 0x80 @0x80101908",
+      "bne @0x80101920"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Per-half G gates: left half runs only if (self+0x21A & 0x20)==0 (`lhu v0,538(s0)` @0x80101928, `andi 0x20` @0x80101930, `bne ->0x8010196c` @0x80101934) then FUN_80015758(self+0x38, s1+0x38, yaw+256, 256)==0 (`bne ->0x8010196c` @0x80101950). Right half: (self+0x21A & 0x40)==0 (@0x80101974/`bne ->0x801019e8` @0x80101978), yaw-256, `bne` @0x80101994.",
+     "citations": [
+      "andi 0x20 @0x80101930",
+      "bne @0x80101934",
+      "jal 0x80015758 @0x80101948",
+      "andi 0x40 @0x80101974",
+      "jal 0x80015758 @0x8010198c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "BLOCK J (only on player+0x8==15) guard = B's guard MINUS the +0x106 comparison: self+0x23E==0 (`bne` @0x801019bc) AND (s3<<16)==0 (`bne` @0x801019c4) AND s2<0x7d0 (`beq` @0x801019cc) AND u8 s1+0x1D3 == 0 whole byte (`bne` @0x801019dc); then `sw 0x0E01,4(s0)` @0x801019e4 and falls through to K.",
+     "citations": [
+      "@0x801019bc",
+      "@0x801019c4",
+      "sltiu v0,s2,0x7d0 @0x801019c8",
+      "@0x801019dc",
+      "sw @0x801019e4"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "BLOCK K is the last writer and beats everything except A: `lh v1,342(s1)` @0x801019e8 must equal -32768 (`addiu v0,zero,-32768` @0x801019ec, `bne v1,v0,0x80101a1c` @0x801019f0) AND (s3<<16)==0 (`bne ->0x80101a1c` @0x801019f8) AND s2<0x3e8 (`sltiu` @0x801019fc, `beq ->0x80101a1c` @0x80101a00). Stores 0x00060801 @0x80101a10.",
+     "citations": [
+      "lh v1,342(s1) @0x801019e8",
+      "bne @0x801019f0",
+      "bne @0x801019f8",
+      "sltiu v0,s2,0x3e8 @0x801019fc",
+      "sw v1,4(s0) @0x80101a10"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "BLOCK K has a SECOND effect a port must not omit: `lhu v0,270(s0)` @0x80101a08, `ori v0,v0,0x4000` @0x80101a14, `sh v0,270(s0)` @0x80101a18 -> self+0x10E |= 0x4000. Bit 0x4000 lies outside the 0x3F mask used by the state-1 sub-dispatch (`andi v0,v0,0x3f` @0x8010115c), so it does not redirect that dispatcher.",
+     "citations": [
+      "lhu/ori/sh @0x80101a08,@0x80101a14,@0x80101a18",
+      "andi v0,v0,0x3f @0x8010115c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "The three branches to 0x80101a1c at 0x801019f0 / 0x801019f8 / 0x80101a00 are NOT early returns in effect: they only skip block K, which is already the last block. Only 0x801017e0 short-circuits real work.",
+     "citations": [
+      "bne @0x801019f0",
+      "bne @0x801019f8",
+      "beq @0x80101a00",
+      "j @0x801017e0"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "BLOCK C: `lh v0,468(s0)` @0x80101830, `andi v0,v0,0xc000` @0x80101838, `beq v0,zero,0x80101860` @0x8010183c (bytes 08 00 40 10, off=8 -> 0x80101840+32) — note target is 0x80101860, not 0x8010185c. Second gate `lw v0,272(s0)` @0x80101844 / `andi v0,v0,0x1` @0x8010184c / `beq ->0x8010185c` @0x80101850; store 0x0A01 @0x80101858.",
+     "citations": [
+      "@0x8010183c bytes 08 00 40 10",
+      "lw v0,272(s0) @0x80101844",
+      "beq @0x80101850",
+      "sw @0x80101858"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "DELAY-SLOT VALUE FLOW across block boundaries (looks alarming, is benign): `beq ->0x80101860` @0x8010183c has delay `sltiu v0,s2,0xdac` @0x80101840 whose v0 is consumed by the beq at the TARGET; likewise `beq ->0x801018a8` @0x80101868 delay `sltiu v0,s2,0x9c4` @0x8010186c. The skipped 0x8010185c / 0x801018a4 recompute the identical compare, so structured ifs are equivalent.",
+     "citations": [
+      "@0x80101840",
+      "@0x8010185c",
+      "@0x8010186c",
+      "@0x801018a4",
+      "@0x80101884",
+      "@0x80101898"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Register bindings for the ladder's gates (delay slots resolved at byte level): `lw s2,496(s0)` @0x80101744 = self+0x1F0; s4 = return of the a3=1024 call (captured by `addu s4,v0,zero` @0x8010176c, itself the delay slot of the NEXT jal @0x80101768); s3 = return of the a3=512 call (`addu s3,v0,zero` @0x8010178c). Finder's assignment CORRECT.",
+     "citations": [
+      "lw s2,496(s0) @0x80101744",
+      "jal 0x80015614 @0x80101748 delay addiu a3,zero,1024 @0x8010174c",
+      "addu s4,v0,zero @0x8010176c",
+      "addu s3,v0,zero @0x8010178c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "s1 = 0x800CFBF8 (`lui s1,0x800d` @0x80101794 + `addiu s1,s1,-1032` @0x80101798). The disassembler's inline DAT annotations on s1-relative loads are WRONG (it prints 0x800d0106 / 0x800d01d3 / 0x800d0156 / 0x800d0008 using the bare lui base). Real: +0x106=0x800CFCFE, +0x1D3=0x800CFDCB, +0x156=0x800CFD4E, +0x8=0x800CFC00. The 0x800CFBF6 word is s1-2.",
+     "citations": [
+      "lui s1,0x800d @0x80101794",
+      "addiu s1,s1,-1032 @0x80101798",
+      "lhu v0,-1034(v0) @0x80101874"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "DISPATCH CONTEXT: self+0x4 indexes table 0x8010c830 (`lbu v0,4(s0)` @0x801004cc); entry[1]=0x8010114c. That routine sub-dispatches on (self+0x10E & 0x3F) via table 0x8010c854 -> 0x8010118c. 0x8010118c reads `lbu v0,5(s0)` @0x801011a8, calls DECISION table 0x8010c88c[+0x5]; entry[1] = 0x80101714. So this function is DECISION[substate 1].",
+     "citations": [
+      "lbu v0,4(s0) @0x801004cc",
+      "table 0x8010c830[1]=0x8010114c",
+      "table 0x8010c854[0]=0x8010118c",
+      "lbu v0,5(s0) @0x801011a8",
+      "table 0x8010c88c[1]=0x80101714"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "CRITICAL SAME-TICK EFFECT: the caller RE-READS the substate after the decision returns — `jalr v0` @0x801011c4 (decision), then `lbu v0,5(s0)` @0x801011d0, then EXECUTOR table 0x8010c8cc[+0x5] via `lw v0,-14132(at)` @0x801011e4 and `jalr v0` @0x801011ec. The substate this ladder picks executes ITS executor on the SAME tick, not the next.",
+     "citations": [
+      "jalr v0 @0x801011c4",
+      "lbu v0,5(s0) @0x801011d0",
+      "lw v0,-14132(at) @0x801011e4",
+      "jalr v0 @0x801011ec"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Field decomposition of the stored words (32-bit `sw`, little-endian, so +0x6/+0x7 are CLEARED by every store): 0x0E01 -> +0x4=1,+0x5=14; 0x0A01 -> +0x5=10; 0x0C01 -> +0x5=12; 0x0301 -> +0x5=3; 0x00060801 -> +0x4=1,+0x5=8,+0x6=6,+0x7=0. All nine leave +0x4=1, so the top-level state never changes here. Byte-granular readers of +0x5/+0x6 exist (e.g. @0x801011a8, @0x80104d90).",
+     "citations": [
+      "sw encodings 0xae020004/0xae030004",
+      "lui v1,0x6 @0x80101a04 + ori v1,v1,0x801 @0x80101a0c",
+      "lbu v0,5(s0) @0x801011a8",
+      "lbu v1,6(s0) @0x80104d90"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "PORT SHAPE (safe residue): run A..K top to bottom; `return` only inside A; let B..K overwrite state_word; call the PRNG exactly where D and E do; apply s1+0x1D3 |= 0x80 after each G store; apply self+0x10E |= 0x4000 after K's store. If no block fires, +0x4 keeps its previous value (no default write exists).",
+     "citations": [
+      "store scan 0x80101714..0x80101a3c",
+      "j 0x80101a1c @0x801017e0"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "UNPROVEN in this slice — keep as raw offsets, no names: self+0x23E, self+0x1F4, self+0x1F8, self+0x1D4, self+0x110, self+0x106, self+0x21A, self+0x10E, s1+0x8, s1+0x156, s1+0x1D3, and the u16 @0x800CFBF6. Their roles are not established by any writer/reader I disassembled inside 0x80101714-0x80101a34; only their gate polarity above is proven.",
+     "citations": [
+      "reads @0x80101790,@0x801017a4,@0x801017cc,@0x80101830,@0x80101844,@0x80101808,@0x80101928,@0x80101a08,@0x801018e8,@0x801019e8,@0x8010181c,@0x80101874"
+     ],
+     "certainty": "UNPROVEN"
+    }
+   ]
+  },
+  {
+   "facts": [
+    {
+     "fact": "BLOCK C literal @0x80101830 (s0=self via `addu s0,a0,zero`@0x8010171c): lh v0,468(s0); andi 0xc000; beq v0,zero,0x80101860; lw v0,272(s0); andi 0x1; beq v0,zero,0x8010185c; sw v0,4(s0). Store fires iff (self+0x1D4 & 0xC000)!=0 AND (self+0x110 & 1)!=0. No `j` after the store -> FALLS THROUGH into block D.",
+     "citations": [
+      "lh v0,468(s0) @0x80101830 = bytes d4 01 02 86",
+      "andi v0,v0,0xc000 @0x80101838 = 00 c0 42 30",
+      "beq v0,zero,0x80101860 @0x8010183c = 08 00 40 10",
+      "lw v0,272(s0) @0x80101844 = 10 01 02 8e",
+      "andi v0,v0,0x1 @0x8010184c = 01 00 42 30",
+      "sw v0,4(s0) @0x80101858 = 04 00 02 ae"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "BLOCK C delay slots (both non-nop, both ALWAYS execute): `sltiu v0,s2,0xdac`@0x80101840 is the slot of the beq@0x8010183c and pre-computes dist<3500 consumed by `beq v0,zero,0x801018a4`@0x80101860; `addiu v0,zero,2561`@0x80101854 is the slot of the beq@0x80101850 and IS the stored value. Only the `sw`@0x80101858 is conditional.",
+     "citations": [
+      "sltiu v0,s2,0xdac @0x80101840 = ac 0d 42 2e",
+      "addiu v0,zero,2561 @0x80101854 = 01 0a 02 24",
+      "fall-through recompute sltiu v0,s2,0xdac @0x8010185c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Block C's store is a 32-bit `sw` of 0x00000A01: little-endian it writes self+0x4=0x01, +0x5=0x0A(10), +0x6=0x00, +0x7=0x00. Porting it as two byte assignments leaves +0x6/+0x7 stale; +0x6 is a live dispatch input elsewhere (`lbu v1,6(s0)`@0x80104770 inside EXECUTOR[12]=0x80104748).",
+     "citations": [
+      "sw v0,4(s0) @0x80101858",
+      "addiu v0,zero,2561 @0x80101854",
+      "EXECUTOR table 0x8010C8CC[12] -> 0x80104748",
+      "lbu v1,6(s0) @0x80104770"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "self+0x1D4 has ZERO writers in EMZ0.BIN. Exhaustive offset-468 scan of the overlay returns only loads: 0x80101830 (lh, &0xC000), 0x80102098 (lh, &0xC000), 0x8010420C (lhu, &0x4000), 0x8010424C (lhu, &0xFFF as an angle), 0x80104E9C (lhu, &0x1). The port must treat +0x1D4 as EXE-supplied, overlay-read-only.",
+     "citations": [
+      "lh v0,468(s0) @0x80101830",
+      "lh v0,468(s0) @0x80102098",
+      "lhu a0,468(s1) @0x8010420c",
+      "lhu a1,468(s1) @0x8010424c",
+      "lhu v0,468(s0) @0x80104e9c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "self+0x1D4 writers in PSX.EXE that CANNOT set 0xC000: 9 per-type table arms all using `lbu` (value 0..255) then `sh ..,468(a1)` at 0x80056C60/C7C/C98/CB4/D04/D20/D3C/D58/D74. Plus 5 zero-stores at 0x8001B148, 0x80056BA4, 0x80056DCC, 0x800573E8, 0x80057A7C.",
+     "citations": [
+      "lbu v0,31081(at)=0x800a7969 @0x80056c58 -> sh v0,468(a1) @0x80056c60",
+      "lbu v0,31337(at)=0x800a7a69 @0x80056c74 -> sh @0x80056c7c",
+      "sh zero,468(s0) @0x8001b148",
+      "sh zero,468(v1) @0x80056ba4",
+      "sh zero,468(s0) @0x80057a7c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "self+0x1D4 writers that CAN set bits 0xC000 (all 16-bit): (1) `sh a2,468(a0)`@0x80055D90, an arm of a member-set jump table (delay slot of `j 0x80055e30`@0x80055d8c); (2) `sh v0,468(v1)`@0x800570F4 with v0 from `lhu v0,2(a1)`@0x800570EC (a script/param halfword) and v1 = *(a0+0x154)@0x800570E8; (3) `sh v0,468(v1)`@0x80080D90 (see next fact).",
+     "citations": [
+      "sh a2,468(a0) @0x80055d90",
+      "lhu v0,2(a1) @0x800570ec ; sh v0,468(v1) @0x800570f4",
+      "lw v1,340(a0) @0x800570e8"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "THIRD 0xC000-capable writer of +0x1D4 that both prior rounds missed/mis-dismissed: fn @~0x80080BFC is a bitmask-gated bulk field copy into the object pointed to by *[0x800AB21C]. Gate `andi v0,a1,0x400`@0x80080D74; body `lui v1,0x800b`/`lw v1,-19940(v1)`(=*[0x800AB21C])/`lhu v0,24(a0)`/`sh v0,468(v1)`. v1 is a LOADED POINTER, not an absolute address.",
+     "citations": [
+      "lw v1,-19940(v1) @0x80080d84 (= *[0x800AB21C])",
+      "lhu v0,24(a0) @0x80080d88",
+      "sh v0,468(v1) @0x80080d90",
+      "andi v0,a1,0x400 @0x80080d74",
+      "sibling: sh v0,464(v1) @0x80080d48, sh v0,470(v1) @0x80080db4"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "self+0x1D4 role is UNPROVEN — the read sites contradict any single interpretation. It is passed as the signed TURN-RATE arg a3 to FUN_80015558 (`lh a3,468(s0)`@0x80066B3C), used low-12 as an ABSOLUTE ANGLE arg a1 to FUN_80015714 (`andi a1,a1,0xfff`@0x80104258, rate a2=32), and tested as flags &0x4000 @0x80104214, &0x1 @0x80104EA4, &0xC000 @0x80101838/@0x801020A0. Emit as \"+0x1D4, role UNPROVEN\".",
+     "citations": [
+      "lh a3,468(s0) @0x80066b3c -> jal 0x80015558 @0x80066b40",
+      "lhu a1,468(s1) @0x8010424c ; andi a1,a1,0xfff @0x80104258 ; jal 0x80015714 @0x80104254",
+      "andi a0,a0,0x4000 @0x80104214",
+      "andi v0,v0,0x1 @0x80104ea4"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "NEXT XREF for +0x1D4 bits 0xC000: decode which member ID maps to offset 468 in the setter jump table reaching 0x80055D90 (getter twin arm @0x80056348 / `lh v0,468(a0)`@0x8005608C), and identify *[0x800AB21C] plus the caller of the 0x80080BFC copy routine. Nothing in either binary else can set 0x4000/0x8000.",
+     "citations": [
+      "sh a2,468(a0) @0x80055d90",
+      "lh v0,468(a0) @0x8005608c",
+      "lw v1,-19940(v1) @0x80080d84"
+     ],
+     "certainty": "INFERRED"
+    },
+    {
+     "fact": "self+0x110 IS written — exactly two entity-relative stores exist in both binaries, both in FUN_8003567C (s0=a0 @0x80035684): `sw zero,272(s0)`@0x8003569C is the DELAY SLOT of `bne v0,zero,0x800356ec`@0x80035698 and therefore runs UNCONDITIONALLY (+0x110 = 0 every call); `sw v0,272(s0)`@0x800356D8 then stores FUN_8004C1BC's return on the non-skipped path.",
+     "citations": [
+      "sw zero,272(s0) @0x8003569c = bytes 10 01 00 ae",
+      "bne v0,zero,0x800356ec @0x80035698 = 14 00 40 14",
+      "sw v0,272(s0) @0x800356d8 = 10 01 02 ae",
+      "jal 0x8004c1bc @0x800356d0 = 6f 30 01 0c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "FUN_8003567C skip conditions (either one leaves +0x110 == 0 for the frame): `lw v1,0(s0)`/`andi v0,v1,0x8`/`bne v0,zero,0x800356ec` (self+0x0 bit 3 set), or `lw v0,484(s0)`/`bne v0,zero,0x800356ec` (self+0x1E4 != 0). Otherwise self+0x0 &= ~0x4000 (@0x800356AC/B0/B4) and +0x110 = FUN_8004C1BC(self+0x84, (u16)self+0x90, 1<<self[+0x106], 0x01000000|a1).",
+     "citations": [
+      "andi v0,v1,0x8 @0x80035694",
+      "lw v0,484(s0) @0x800356a0 ; bne v0,zero,0x800356ec @0x800356a8",
+      "addiu v0,zero,-16385 @0x800356ac ; sw v0,0(s0) @0x800356b4",
+      "addiu a0,s0,132 @0x800356c0 ; lbu a2,262(s0) @0x800356c8 ; lhu a1,144(s0) @0x800356cc ; sllv a2,v0,a2 @0x800356d4",
+      "lui a3,0x100 @0x800356bc ; or a3,t0,a3 @0x800356c4"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "The zombie overlay itself drives +0x110: `addu a0,s0,zero`@0x80100634 / `jal 0x8003567c`@0x80100638 / delay slot `addiu a1,zero,1024`@0x8010063C, at the very END of the per-frame root FUN_801002C0. So +0x110 read at 0x80101844 is LAST FRAME's value. Role of the value is UNPROVEN; next xref = RE FUN_8004C1BC (globals 0x800D3908, 0x800C3B6C, 0x800CE324, 0x800CE330).",
+     "citations": [
+      "jal 0x8003567c @0x80100638 ; addiu a1,zero,1024 @0x8010063c",
+      "sw zero,14600(v0)=0x800d3908 @0x8004c20c",
+      "lw v0,-7388(v0)=0x800ce324 @0x8004c228",
+      "lw s3,-7376(s3)=0x800ce330 @0x8004c230"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Global AI-freeze gate in the zombie root: `lw v0,-1060(v0)`=[0x800CFBDC] @0x80100360, `lui v1,0x2000`, `and`, `bne v0,zero,0x80100640`@0x8010036C jumps to the function epilogue. When set, the +0x23E decrement, the +0x1D3 decrement, the state dispatch AND the 0x8003567C call (+0x110 update) are ALL skipped for that tick.",
+     "citations": [
+      "lw v0,-1060(v0) @0x80100360 (0x800CFBDC)",
+      "bne v0,zero,0x80100640 @0x8010036c = bytes b4 00 40 14",
+      "epilogue lw ra,36(sp) @0x80100640"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "0x800CFBF6 = 0x800CFBF8 - 2, where 0x800CFBF8 is the pad-driven entity: main loop s3=0x800CC1E8 (`addiu s3,s3,-15896`@0x800257D0), `addiu a0,s3,14864`@0x80025C5C = 0x800CFBF8, `jal 0x8003bfac`@0x80025C64. FUN_8003BFAC dispatches `lbu v0,4(s0)`@0x8003C188 through table 0x800A4030 (`jalr v0`@0x8003C1A4); entry [1]=0x8003C57C reads the controller words [0x800CE30C]@0x8003C580 and [0x800CE310]@0x8003C59C.",
+     "citations": [
+      "addiu s3,s3,-15896 @0x800257d0",
+      "addiu a0,s3,14864 @0x80025c5c ; jal 0x8003bfac @0x80025c64",
+      "lw v0,16432(at)=0x800a4030 @0x8003c19c ; jalr v0 @0x8003c1a4",
+      "lw a1,-7412(a1)=0x800ce30c @0x8003c580"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "0x800CE30C = held pad word, 0x800CE310 = press-edge: `xor v0,v0,a0` / `and v0,v0,a0` / `sw v0,-7408(at)`@0x80039384 computes (prev^cur)&cur into 0x800CE310; 0x800CE30C is the raw/held word (also masked `andi v0,v0,0x3c00`@0x8003921C on one path). Player DECISION table 0x800A4054 and EXECUTOR table 0x800A4084, both indexed by player+0x5.",
+     "citations": [
+      "sw v0,-7408(at) @0x80039384",
+      "xor v0,v0,a0 @0x8003936c ; and v0,v0,a0 @0x80039370",
+      "andi v0,v0,0x3c00 @0x8003921c ; sw v0,-7412(at) @0x80039224",
+      "lbu v0,5(s0) @0x8003c594 ; lw v0,16468(at)=0x800a4054 @0x8003c5ac",
+      "lw v0,16516(at)=0x800a4084 @0x8003c5d4"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "EMZ0.BIN NEVER writes 0x800CFBF6. Exhaustive scan (all mem ops with imm -1034, all `addiu ..,0xfbf6`, all stores with imm -2) finds only 6 reads: 0x80101338 (&0x15), 0x801013A8 (&0x17), 0x80101874 (&0x15), 0x801018BC (&0x17), 0x80101F18 (&0x04), 0x801020DC (&0x17). Port it as an engine-side global the zombie only samples.",
+     "citations": [
+      "lhu v0,-1034(v0) @0x80101338 ; andi v0,v0,0x15 @0x80101340",
+      "lhu @0x801013a8 ; andi v0,v0,0x17 @0x801013b0",
+      "lhu @0x80101874 ; andi v0,v0,0x15 @0x8010187c",
+      "lhu @0x801018bc ; andi v0,v0,0x17 @0x801018c4",
+      "lhu @0x80101f18 ; andi v0,v0,0x4 @0x80101f20",
+      "lhu @0x801020dc ; andi v0,v0,0x17 @0x801020e4"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "0x800CFBF6 low-5-bit clear is CONDITIONAL, not per-frame-unconditional: `lw v0,-1060(v0)`=[0x800CFBDC]@0x8003BFB0, `bltz v0,0x8003c1fc`@0x8003BFC0 whose DELAY SLOT is `sw ra,36(sp)`@0x8003BFC4 (NOT the `addiu a0,zero,-129`@0x8003BFC8, which belongs to an unrelated RMW of 0x800CFBD8). 0x8003C1FC is the epilogue. If [0x800CFBDC]<0 the bits stay stale.",
+     "citations": [
+      "lw v0,-1060(v0) @0x8003bfb0",
+      "bltz v0,0x8003c1fc @0x8003bfc0 ; sw ra,36(sp) @0x8003bfc4",
+      "lhu v1,-1034(v1) @0x8003bfd8 ; andi v1,v1,0xffe0 @0x8003bfe0 ; sh v1,-1034(at) @0x8003bff0",
+      "lw v0,-1064(v0)=0x800cfbd8 @0x8003bfd0 ; and v0,v0,a0 @0x8003bfdc ; sw v0,-1064(at) @0x8003bfe8"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "0x800CFBF6 complete writer inventory (PSX.EXE only). SET bit0x01: 0x800439A8, 0x80047EAC, 0x800483C4, 0x8004887C, 0x80048D00. SET 0x02: 0x8003CC80, 0x8003CCFC, 0x8003D6B4, 0x8003D83C, 0x8003E0F8, 0x8003F5E0, 0x80066B90, 0x80066CB0, 0x80066DB0, 0x80066EB8. SET 0x04: 0x8003D18C, 0x8003D208, 0x8003E8B0, 0x8003EC44, 0x8003F004, 0x8003F24C, 0x80063148, 0x80063500, 0x800637FC, 0x80066C80.",
+     "citations": [
+      "ori v0,v0,0x1 @0x800439a8 -> sh @0x800439ac",
+      "ori v1,v1,0x2 @0x8003cc80 -> sh @0x8003cc88",
+      "ori v1,v1,0x4 @0x8003d18c -> sh @0x8003d194",
+      "ori v0,v0,0x2 @0x80066b90 -> sh v0,0(v1) @0x80066b94",
+      "ori v0,v0,0x4 @0x80066c80 (delay slot of j 0x80066cb4)"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "0x800CFBF6 clear/set-multiple writers: `ori ..,0x18` (bits 3+4) at 0x800436CC and 0x80047A78; `andi v0,a0,0xffef` (clear bit 0x10) at 0x800436E8 gated by `lhu v0,270(s0)`/`andi 0xfff`/`bne v0,v1(=1)` i.e. runs iff (self+0x10E & 0xFFF)==1; `andi v0,v0,0xfffe` (clear bit 0x01) at 0x80044064; `andi v1,v1,0xffe0` (clear bits 0-4) at 0x8003BFE0.",
+     "citations": [
+      "ori a0,v0,0x18 @0x800436cc -> sh a0,0(a1) @0x800436d0",
+      "andi v0,a0,0xffef @0x800436e8 -> sh v0,0(a1) @0x800436ec",
+      "lhu v0,270(s0) @0x800436d4 ; bne v0,v1,0x800436f4 @0x800436e0",
+      "andi v0,v0,0xfffe @0x80044064 -> sh @0x8004406c",
+      "ori v0,v0,0x18 @0x80047a78 -> sh @0x80047a7c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "0x800CFBF6 is NOT provably player-exclusive. Zombie top state table 0x8010C830[4] = 0x80065C88 = the SAME function as player table 0x800A4030[4]. 0x80065C88 admits entity types 0x10..0x1F (`lbu v0,8(s0)`@0x80065D08, `addiu v0,v0,-16`, `sltiu v0,v0,0x10`) and dispatches `lbu v0,5(s0)` through table 0x800A8D90; [4]=0x80065E68, which does `jal 0x80066afc`@0x80065F28 (a0=self) -> `ori v0,v0,0x2`@0x80066B90 -> `sh v0,0(v1)`@0x80066B94, v1=0x800CFBF6.",
+     "citations": [
+      "EMZ0 table 0x8010C840 -> 0x80065c88",
+      "PSX.EXE table 0x800A4040 -> 0x80065c88",
+      "lbu v0,8(s0) @0x80065d08 ; addiu v0,v0,-16 @0x80065d10 ; sltiu v0,v0,0x10 @0x80065d14",
+      "lw v0,-29296(at)=0x800a8d90 @0x80065d5c ; jalr v0 @0x80065d64",
+      "jal 0x80066afc @0x80065f28 ; addu a0,s0,zero @0x80065f2c",
+      "addiu v1,v1,0xfbf6 @0x80066b84 ; ori v0,v0,0x2 @0x80066b90 ; sh v0,0(v1) @0x80066b94"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "0x800CFBF6 role: UNPROVEN. Do NOT name it \"player action class\" / \"noise\" / \"loud-quiet\". Port it as a raw 16-bit global with the writer set above and the masks 0x15 / 0x17 / 0x04 tested by the overlay. Next xref to resolve the bits: the ~13 writers of 0x800CFBDC (which gates the clear) and a savestate watch on 0x800CFBF6 across one player frame.",
+     "citations": [
+      "andi v0,v0,0x15 @0x8010187c",
+      "andi v0,v0,0x17 @0x801018c4",
+      "lw v0,-1060(v0)=0x800cfbdc @0x8003bfb0"
+     ],
+     "certainty": "UNPROVEN"
+    },
+    {
+     "fact": "Blocks D and E are NESTED and CUMULATIVE, not a two-tier ladder. D @0x80101860: dist<0xDAC(3500) && (short)s4!=0 && [0x800CFBF6]&0x15 && (rng()&3)==0 -> sw 0x0C01@0x801018A0, then FALLS THROUGH. E: dist<0x9C4(2500) && (short)s4!=0 && [0x800CFBF6]&0x17 && (rng()&1)==0 -> sw 0x0C01@0x801018E4. At dist<2500 BOTH roll. Emit both blocks sequentially; do not collapse.",
+     "citations": [
+      "sltiu v0,s2,0xdac @0x8010185c",
+      "andi v0,v0,0x15 @0x8010187c ; andi v0,v0,0x3 @0x80101890 ; bne v0,zero,0x801018a8 @0x80101894",
+      "sltiu v0,s2,0x9c4 @0x801018a4",
+      "andi v0,v0,0x17 @0x801018c4 ; andi v0,v0,0x1 @0x801018d8 ; bne v0,zero,0x801018e8 @0x801018dc",
+      "sw v0,4(s0) @0x801018a0 and @0x801018e4"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Block E's real join point is 0x801018A8, not 0x801018A4: three of D's failure branches (@0x80101868, @0x80101880, @0x80101894) target 0x801018A8 directly and each carries `sltiu v0,s2,0x9c4` in its DELAY SLOT (@0x8010186C, @0x80101884, @0x80101898); 0x801018A4 is only D's fall-through recompute. All four paths deliver the identical predicate.",
+     "citations": [
+      "beq v0,zero,0x801018a8 @0x80101868 ; sltiu v0,s2,0x9c4 @0x8010186c",
+      "beq v0,zero,0x801018a8 @0x80101880 ; sltiu @0x80101884",
+      "bne v0,zero,0x801018a8 @0x80101894 ; sltiu @0x80101898",
+      "sltiu v0,s2,0x9c4 @0x801018a4"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "RNG FUN_80015FE8 is byte-exact: a0=0x800CE318; v0=[a0]; v1=(v0>>7)&0xFF; v0=(v1+v0)&0xFF; v1=v1<<8; v0|=v1; [a0]=(v0&0xFFFF); return v0&0xFF. State is 16-bit, return is 8-bit. Replicate the call SEQUENCE exactly — the masks (&3, &1) are proven, the probabilities 1/4 and 1/2 are NOT (distribution unproven).",
+     "citations": [
+      "addiu a0,a0,-7400 = 0x800ce318 @0x80015fec",
+      "srl v1,v0,7 @0x80015ff8 ; andi v1,v1,0xff @0x80015ffc",
+      "addu v0,v1,v0 @0x80016000 ; andi v0,v0,0xff @0x80016004",
+      "sll v1,v1,8 @0x80016008 ; or v0,v0,v1 @0x8001600c",
+      "andi v1,v0,0xffff @0x80016010 ; sw v1,0(a0) @0x80016018",
+      "andi v0,v0,0xff @0x80016014 (return)"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "self+0x1F4 top 2 bits are a 2-BIT RANK CODE, not two independent flags. THREE stamping sites in FUN_80065518: `lui v1,0x4000`@0x80065788 (rank 1), `lui v1,0x8000`@0x800657E4 (rank 2), `lui v1,0xC000`@0x80065840 (rank 3), each OR'd and stored by `sw v0,500(a0)` @0x80065790/0x800657EC/0x80065848. The overlay does an EXACT compare `bne v0,v1(=0x40000000),0x80100320`@0x80100308.",
+     "citations": [
+      "lui v1,0x4000 @0x80065788 ; sw v0,500(a0) @0x80065790",
+      "lui v1,0x8000 @0x800657e4 ; sw v0,500(a0) @0x800657ec",
+      "lui v1,0xc000 @0x80065840 ; sw v0,500(a0) @0x80065848",
+      "lw v0,500(s0) @0x801002f8 ; lui v1,0xc000 @0x801002fc ; lui v1,0x4000 @0x80100304 ; bne v0,v1 @0x80100308"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "self+0x1F4 low 30 bits = isqrt(dx^2+dz^2) between candidate E (+0x38/+0x40) and reference R, written by `sw s2,500(s0)`@0x80065620 with s2 = return of `jal 0x8008d2f4`@0x8006560C. This store CLEARS the rank tags; it is downstream of two early-outs (`andi v0,v0,0x1`/`beq`@0x800655C0 on E+0x0, and `andi v0,v0,0xc000`/`bne`@0x800655D4 on E+0x10E), so skipped candidates KEEP last frame's +0x1F4 including stale rank.",
+     "citations": [
+      "lw v0,56(s0) @0x800655dc ; lw v1,56(s5) @0x800655e0 ; subu v0,v0,v1 @0x800655e8 ; mult @0x800655ec",
+      "jal 0x8008d2f4 @0x8006560c ; addu s2,v0,zero @0x80065618 ; sw s2,500(s0) @0x80065620",
+      "andi v0,v0,0x1 @0x800655bc ; beq v0,zero,0x80065704 @0x800655c0",
+      "andi v0,v0,0xc000 @0x800655d0 ; bne v0,zero,0x80065704 @0x800655d4"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "self+0x1F8 is a FORWARD bearing pointing AT R, not a reverse bearing. FUN_800154AC computes atan2 of (a2-a0, a3-a1) — first pair is the SOURCE (`subu s0,a2,a0`@0x800154C8, `subu a0,a3,a1`@0x800154DC). The call passes a0/a1 = R (s5), a2/a3 = candidate E, so the raw result is bearing(R->E); the `addiu v0,v0,2048` then `andi 0xfff` CANCELS the swapped order, yielding bearing(E->R).",
+     "citations": [
+      "subu s0,a2,a0 @0x800154c8 ; subu a0,a3,a1 @0x800154dc",
+      "lw a0,56(s5) @0x8006575c ; lw a1,64(s5) @0x80065760 ; lw a2,56(a3) @0x80065764 ; lw a3,64(a3) @0x80065768 ; jal 0x800154ac @0x8006576c",
+      "addiu v0,v0,2048 @0x8006579c ; andi v0,v0,0xfff @0x800657a0 ; sh v0,504(v1) @0x800657a4",
+      "lw v1,16(sp) @0x80065798 (base = candidate E)"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "BLOCK A @0x801017A4 literal: (self+0x1F4 & 0xC0000000)!=0 (rank != 0, any rank) AND ((self+0x1F4 & 0x3FFFFFFF) < 0x7D0 (2000)) AND FUN_80015714(self, (short)self+0x1F8, 256)==0 (self yaw within +/-256/4096 = +/-22.5 deg of the stored bearing) -> `sw 3585 (0x0E01), 4(s0)` then `j 0x80101a1c` — the ONLY early-exit outcome. Note the distance here is +0x1F4, NOT +0x1F0.",
+     "citations": [
+      "lui v0,0xc000 @0x801017a0 ; lw v1,500(s0) @0x801017a4 ; and @0x801017ac ; beq v0,zero,0x801017e8 @0x801017b0",
+      "lui v0,0x3fff @0x801017b4 ; ori v0,v0,0xffff @0x801017b8 ; and v0,v1,v0 @0x801017bc",
+      "sltiu v0,v0,0x7d0 @0x801017c0 = bytes d0 07 42 2c",
+      "lh a1,504(s0) @0x801017cc ; jal 0x80015714 @0x801017d0 ; addiu a2,zero,256 @0x801017d4",
+      "addiu v0,zero,3585 @0x801017dc ; j 0x80101a1c @0x801017e0 ; sw v0,4(s0) @0x801017e4"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "FUN_80015714(a0=ent, a1=abs angle, a2=half-window) returns 0 when ent's facing +0x76 is INSIDE the window: `lhu v0,118(a0)`; `subu a1,a1,v0`; `addu a1,a2,a1`; `andi a1,a1,0xfff`; `sll v0,a2,1`; `slt v0,a1,v0`; `bne v0,zero,0x80015750` with delay slot `addu v0,zero,zero`. Non-zero return is +a2 or -a2 (the turn direction).",
+     "citations": [
+      "lhu v0,118(a0) @0x80015714",
+      "subu a1,a1,v0 @0x8001571c ; addu a1,a2,a1 @0x80015720 ; andi a1,a1,0xfff @0x80015724",
+      "sll v0,a2,1 @0x80015730 ; slt v0,a1,v0 @0x80015734 ; bne v0,zero,0x80015750 @0x80015738 ; addu v0,zero,zero @0x8001573c",
+      "addu v0,a2,zero @0x80015748 ; subu v0,zero,a2 @0x8001574c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "R (the entity FUN_80065518 ranks around) is any entity whose type byte +0x8 == 69 (0x45) or 79 (0x4F): `lbu v1,8(a0)`@0x80060608, `addiu v0,zero,69`@0x8006060C, `beq v1,v0,0x80060620`@0x80060610, delay slot `addiu v0,zero,79`@0x80060614, `bne v1,v0,0x80060630`@0x80060618. Identity of 0x45/0x4F is UNPROVEN. FUN_80065518 is called only from 0x80060670 and 0x80063C0C.",
+     "citations": [
+      "lbu v1,8(a0) @0x80060608 ; addiu v0,zero,69 @0x8006060c ; beq @0x80060610 ; addiu v0,zero,79 @0x80060614 ; bne @0x80060618",
+      "jal 0x80065518 @0x80060670 and @0x80063c0c",
+      "addu s5,a0,zero @0x80065520"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "PORT HAZARD on +0x1F4/+0x1F8: the same bulk-copy routine that can write +0x1D4 also writes these with 16-BIT stores — `sh v0,500(v1)`@0x80080FFC and `sh v0,504(v1)`@0x8008104C, v1 = *[0x800AB21C]. A `sh` at +0x1F4 touches ONLY the low halfword of the 32-bit distance word, leaving the rank bits at +0x1F6 untouched. Next xref: identify *[0x800AB21C] and this routine's caller.",
+     "citations": [
+      "lw v1,-19940(v1) @0x80080ff0 ; lhu v0,56(a0) @0x80080ff4 ; sh v0,500(v1) @0x80080ffc",
+      "lw v1,-19940(v1) @0x80081040 ; lhu v0,60(a0) @0x80081044 ; sh v0,504(v1) @0x8008104c",
+      "sw zero,500(s0) @0x80057418 and @0x80057aac (the only other non-FUN_80065518 writes)"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "self+0x21A bits 0x20/0x40 gate exactly FIVE reader pairs, all the same idiom: bit 0x20 set skips the `a2 = self_yaw + 256` probe, bit 0x40 set skips the `a2 = self_yaw - 256` probe, both via `jal 0x80015758` with a0=self+0x38, a1=target+0x38, a3=256. Pairs: 0x80101928/0x8010196C, 0x80102148/0x8010218C, 0x80102F78/0x80102FC4, 0x801046A8/0x801046EC, 0x801059E0/0x80105A14.",
+     "citations": [
+      "lhu v0,538(s0) @0x80101928 ; andi v0,v0,0x20 @0x80101930 ; bne v0,zero,0x8010196c @0x80101934",
+      "addiu a2,a2,256 @0x8010194c (delay slot of jal 0x80015758 @0x80101948)",
+      "lhu v0,538(s0) @0x8010196c ; andi v0,v0,0x40 @0x80101974 ; bne v0,zero,0x801019e8 @0x80101978",
+      "addiu a2,a2,-256 @0x80101990 (delay slot of jal @0x8010198c)",
+      "all 10 jal 0x80015758 sites: 0x80101948,0x8010198c,0x80102168,0x801021ac,0x80102f98,0x80102fe4,0x801046c8,0x8010470c,0x80105a00,0x80105a38"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "self+0x21A bits 0x20/0x40 are TWO INDEPENDENT block latches, NOT a mutually-exclusive selector. Init `sh zero,538(s2)`@0x8010087C leaves both clear (both probes live). Writer (C) in the HURT handler is a pure ORI with NO clear: `ori v0,v0,0x40`@0x801052E4 (delay slot of `j 0x801052f8`) or `ori v0,v0,0x20`@0x801052F4, stored by `sh v0,538(s1)`@0x801052FC (delay slot of `jal 0x80015fe8`) -> both bits can end up set.",
+     "citations": [
+      "sh zero,538(s2) @0x8010087c",
+      "lhu v0,464(s1) @0x801052c0 ; andi v0,v0,0x80 @0x801052c8 ; beq v0,zero,0x801052e8 @0x801052cc",
+      "addiu s0,v1,2064 @0x801052dc ; j 0x801052f8 @0x801052e0 ; ori v0,v0,0x40 @0x801052e4",
+      "addiu s0,v1,1548 @0x801052f0 ; ori v0,v0,0x20 @0x801052f4",
+      "jal 0x80015fe8 @0x801052f8 ; sh v0,538(s1) @0x801052fc"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "self+0x21A exclusive writer A @0x80102A20 (inside EXECUTOR[3]=0x801025EC): `lhu v1,538(s1)`; `lbu v0,573(s1)`; `ori v1,v1,0x40`; `andi v0,v0,0x2`; `beq v0,zero,0x80102a44`; DELAY SLOT `sh v1,538(s1)`@0x80102A34 always stores the 0x40 version; if (self+0x23D & 2)!=0 it is overwritten by `andi v0,v1,0xffbf`/`ori v0,v0,0x20`/`sh v0,538(s1)`@0x80102A40.",
+     "citations": [
+      "lhu v1,538(s1) @0x80102a20 = 1a 02 23 96",
+      "lbu v0,573(s1) @0x80102a24 = 3d 02 22 92",
+      "ori v1,v1,0x40 @0x80102a28 = 40 00 63 34",
+      "beq v0,zero,0x80102a44 @0x80102a30 = 04 00 40 10 ; sh v1,538(s1) @0x80102a34 = 1a 02 23 a6",
+      "andi v0,v1,0xffbf @0x80102a38 = bf ff 62 30 ; ori v0,v0,0x20 @0x80102a3c ; sh v0,538(s1) @0x80102a40"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Writer A's driver +0x23D bit 1 is NOT persistent state — it is regenerated 4 instructions earlier from the RNG: `jal 0x80015910`@0x80102A00 whose result lands in `sb v0,573(s1)`@0x80102A0C (delay slot of `jal 0x80015fe8`@0x80102A08), then `lbu v1,573(s1)`@0x80102A10 / `andi v0,v0,0x2`@0x80102A14 (v0 = the 0x80015FE8 return) / `or` / `sb v1,573(s1)`@0x80102A1C.",
+     "citations": [
+      "addiu v0,zero,1 @0x801029fc ; jal 0x80015910 @0x80102a00 ; sb v0,572(s1) @0x80102a04",
+      "jal 0x80015fe8 @0x80102a08 ; sb v0,573(s1) @0x80102a0c",
+      "lbu v1,573(s1) @0x80102a10 ; andi v0,v0,0x2 @0x80102a14 ; or v1,v1,v0 @0x80102a18 ; sb v1,573(s1) @0x80102a1c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Writer A is preceded by a both-bits-clear gate and a TWO-CALL RNG gate: `andi v0,v0,0x60`@0x801029AC / `bne v0,zero,0x80102a48`@0x801029B0 (runs only if NEITHER 0x20 nor 0x40 is set), then `jal 0x80015fe8`@0x801029D4, `jal 0x80015fe8`@0x801029DC with delay slot `addu s0,v0,zero` (captures call#1), `andi v0,v0,0x3`@0x801029E4 (call#2), `srav s0,s0,v0`@0x801029E8, `andi s0,s0,0xf`, `bne s0,zero,0x80102a48`.",
+     "citations": [
+      "lhu v0,538(s1) @0x801029a4 ; andi v0,v0,0x60 @0x801029ac ; bne v0,zero,0x80102a48 @0x801029b0",
+      "jal 0x80015fe8 @0x801029d4 ; jal 0x80015fe8 @0x801029dc ; addu s0,v0,zero @0x801029e0",
+      "andi v0,v0,0x3 @0x801029e4 ; word 0x00508007 = srav s0,s0,v0 @0x801029e8 ; andi s0,s0,0xf @0x801029ec ; bne s0,zero @0x801029f0"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "self+0x21A exclusive writer B @0x80105E50 consumes THREE RNG calls, not one. Gates: `lbu v1,5(s4)`==11@0x80105E00/08; `andi v0,v0,0x1000`/`bne`@0x80105E18/1C; `jal 0x80015fe8`@0x80105E24 with `andi v0,v0,0x1`/`bne`@0x80105E2C/30. Then `jal`@0x80105E38 (call2), `jal`@0x80105E40 (call3) with DELAY SLOT `addu s0,v0,zero` capturing call2; `andi v0,v0,0x3`; `srav s0,s0,v0`@0x80105E4C; `andi s0,s0,0x1`.",
+     "citations": [
+      "lbu v1,5(s4) @0x80105e00 ; addiu v0,zero,11 @0x80105e04 ; bne v1,v0,0x80105f1c @0x80105e08",
+      "andi v0,v0,0x1000 @0x80105e18 ; bne v0,zero,0x80105f14 @0x80105e1c",
+      "jal 0x80015fe8 @0x80105e24 ; andi v0,v0,0x1 @0x80105e2c ; bne v0,zero,0x80105f14 @0x80105e30",
+      "jal @0x80105e38 ; jal @0x80105e40 ; addu s0,v0,zero @0x80105e44 = 21 80 40 00",
+      "andi v0,v0,0x3 @0x80105e48 = 03 00 42 30 ; srav s0,s0,v0 @0x80105e4c = 07 80 50 00"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Writer B store sequence: `lhu v1,538(s4)`@0x80105E50; `andi s0,s0,0x1`@0x80105E54; `ori v1,v1,0x20`@0x80105E58; `beq s0,zero,0x80105e70`@0x80105E5C; DELAY SLOT `sh v1,538(s4)`@0x80105E60 always stores the 0x20 version; if the selector bit is 1 it is overwritten via `andi v0,v1,0xffdf`@0x80105E64 / `ori v0,v0,0x40`@0x80105E68 / `sh v0,538(s4)`@0x80105E6C.",
+     "citations": [
+      "lhu v1,538(s4) @0x80105e50 = 1a 02 83 96",
+      "ori v1,v1,0x20 @0x80105e58 = 20 00 63 34",
+      "beq s0,zero,0x80105e70 @0x80105e5c = 04 00 00 12 ; sh v1,538(s4) @0x80105e60 = 1a 02 83 a6",
+      "andi v0,v1,0xffdf @0x80105e64 = df ff 62 30 ; ori v0,v0,0x40 @0x80105e68 ; sh v0,538(s4) @0x80105e6c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "self+0x21A bits 0x20/0x40 role: UNPROVEN. Nothing proves \"left/right shoulder\" or \"grab\". The only site tying a bit to anything physical is HURT, where the same branch that picks 0x40 vs 0x20 also selects data pointer +2064 vs +1548 off self+0x198, keyed on self+0x1D0 & 0x80. Emit as \"+0x21A bit 0x20 = probe(+256) blocked, bit 0x40 = probe(-256) blocked\".",
+     "citations": [
+      "lw v1,408(s1) @0x801052d4 ; addiu s0,v1,2064 @0x801052dc",
+      "lw v1,408(s1) @0x801052e8 ; addiu s0,v1,1548 @0x801052f0",
+      "lhu v0,464(s1) @0x801052c0 ; andi v0,v0,0x80 @0x801052c8"
+     ],
+     "certainty": "UNPROVEN"
+    },
+    {
+     "fact": "BLOCK G @0x801018E8 full literal: `lbu v1,8(s1)`==15 -> jump to block J (delay slot `sltiu v0,s2,0x4b0` = dist<1200); require dist<1200; require (player+0x1D3 & 0x80)==0; require self+0x106 == player+0x106; then the two +0x21A-gated cone probes. Each success does `sw 769 (0x0301), 4(s0)` and `ori 0x80` into player+0x1D3. The FIRST success FALLS THROUGH into the second probe; the SECOND jumps (`j 0x801019e8`@0x801019AC, store in the delay slot).",
+     "citations": [
+      "lbu v1,8(s1) @0x801018e8 = 08 00 23 92 ; beq v1,v0,0x801019b4 @0x801018f0 = 30 00 62 10",
+      "sltiu v0,s2,0x4b0 @0x801018f4 = b0 04 42 2e ; beq v0,zero,0x801019e8 @0x801018f8 = 3b 00 40 10",
+      "lbu v0,467(s1) @0x80101900 ; andi v0,v0,0x80 @0x80101908 ; bne v0,zero,0x801019e8 @0x8010190c = 36 00 40 14",
+      "lbu v1,262(s0) @0x80101914 ; lbu v0,262(s1) @0x80101918 ; bne v1,v0,0x801019e8 @0x80101920",
+      "addiu v0,zero,769 @0x80101954 ; sw v0,4(s0) @0x80101958 ; ori v0,v0,0x80 @0x80101964 ; sb v0,467(s1) @0x80101968",
+      "j 0x801019e8 @0x801019ac = 7a 06 04 08 ; sb v0,467(s1) @0x801019b0"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "self+0x23E: exactly TWO writers and SIX readers in EMZ0.BIN, none in PSX.EXE (exhaustive offset-574 scan of both). Writers: `sb v0,574(s0)`@0x80100480 (decrement) and `sb v0,574(s0)`@0x80104E2C (=60). Readers: 0x80100470, 0x80101790, 0x801017E8, 0x801019B4, 0x80101FF8, 0x80102050, 0x801021D4.",
+     "citations": [
+      "lbu v0,574(s0) @0x80100470 = 3e 02 02 92 ; sb v0,574(s0) @0x80100480 = 3e 02 02 a2",
+      "addiu v0,zero,60 @0x80104e28 = 3c 00 02 24 ; sb v0,574(s0) @0x80104e2c",
+      "readers @0x80101790, 0x801017e8, 0x801019b4 (DECISION[1]) and @0x80101ff8, 0x80102050, 0x801021d4 (DECISION[2])"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "self+0x23E decrement is floor-0 and skip-safe: `lbu v0,574(s0)`@0x80100470; `beq v0,zero,0x80100484`@0x80100478; DELAY SLOT `addiu v0,v0,-1`@0x8010047C (dead when taken); `sb v0,574(s0)`@0x80100480. No underflow. Located in the per-frame root FUN_801002C0 (s0 = a0 @0x801002C8), before the state dispatch `jalr v0`@0x801004E8 through table 0x8010C830 indexed by self+0x4.",
+     "citations": [
+      "addiu sp,sp,-40 @0x801002c0 ; addu s0,a0,zero @0x801002c8",
+      "beq v0,zero,0x80100484 @0x80100478 = 02 00 40 10 ; addiu v0,v0,-1 @0x8010047c = ff ff 42 24",
+      "lbu v0,4(s0) @0x801004cc ; lw v0,-14288(at)=0x8010c830 @0x801004e0 ; jalr v0 @0x801004e8 ; addu a0,s0,zero @0x801004ec"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "self+0x23E reload of 60 is CONDITIONAL on the anim call: `jal 0x8002959c`@0x80104E14 (a3=256), `beq v0,zero,0x80104e30`@0x80104E1C jumps to the epilogue; only on non-zero return do `sw v0(=1),4(s0)`@0x80104E24 and `sb 60,574(s0)`@0x80104E2C run. This is the tail of EXECUTOR[14] (table 0x8010C904 -> 0x80104D74); DECISION[14] (0x8010C8C4 -> 0x80104D6C) is just `jr ra`.",
+     "citations": [
+      "jal 0x8002959c @0x80104e14 = 67 a5 00 0c ; addiu a3,zero,256 @0x80104e18",
+      "beq v0,zero,0x80104e30 @0x80104e1c = 04 00 40 10 ; addiu v0,zero,1 @0x80104e20",
+      "sw v0,4(s0) @0x80104e24 = 04 00 02 ae",
+      "table 0x8010C904 -> 0x80104d74 ; 0x8010C8C4 -> 0x80104d6c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "self+0x23E blocks entry into state=1/sub1=14 from all SIX guard sites, each `lbu v0,574(s0)` + `bne v0,zero,<skip>` around a block ending in `addiu v0,zero,3585`/`sw v0,4(s0)` (0x0E01). DECISION[1]: load 0x80101790/bne 0x8010179C->0x80101830; load 0x801017E8/bne 0x801017F0->0x80101830; load 0x801019B4/bne 0x801019BC->0x801019E8. DECISION[2]: 0x80101FF8/0x80102004->0x80102098; 0x80102050/0x80102058->0x80102098; 0x801021D4/0x801021DC->0x80102208.",
+     "citations": [
+      "lbu v0,574(s0) @0x80101790 ; bne v0,zero,0x80101830 @0x8010179c",
+      "lbu v0,574(s0) @0x801017e8 ; bne v0,zero,0x80101830 @0x801017f0",
+      "lbu v0,574(s0) @0x801019b4 ; bne v0,zero,0x801019e8 @0x801019bc",
+      "sw v0,4(s0) @0x801017e4, @0x8010182c, @0x801019e4 with addiu v0,zero,3585 @0x801017dc/@0x80101828/@0x801019e0"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "self+0x23E has NO initializer anywhere: exhaustive scan of both binaries for any store at offset 574 returns only 0x80100480 and 0x80104E2C. The zombie spawn block explicitly clears +0x230/+0x231/+0x236/+0x239/+0x23A/+0x23B/+0x23C but NOT +0x23E. Spawn value is UNPROVEN. Next xref: the entity-slot allocator feeding FUN_8001AD3C (field-by-field init @0x8001B0A0-0x8001B15x, no memset).",
+     "citations": [
+      "sb zero,560(s2) @0x801008a4 ... sb zero,572(s2) @0x801008c0 (no 574)",
+      "sb zero,467(s0) @0x8001b130 ; sh zero,468(s0) @0x8001b148 (field-by-field, no bulk clear)"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "player+0x1D3 = 0x800CFDCB in the decision fn: s1 = 0x800CFBF8 via `lui s1,0x800d`@0x80101794 / `addiu s1,s1,-1032`@0x80101798. Reads: block B `lbu v0,467(s1)`@0x8010181C + `bne v0,zero,0x80101830`@0x80101824 (WHOLE byte must be 0); block G `lbu`@0x80101900 + `andi 0x80`@0x80101908 (only bit 0x80 must be clear); block J `lbu`@0x801019D4 + `bne`@0x801019DC (WHOLE byte must be 0).",
+     "citations": [
+      "lui s1,0x800d @0x80101794 ; addiu s1,s1,-1032 @0x80101798",
+      "lbu v0,467(s1) @0x8010181c ; bne v0,zero,0x80101830 @0x80101824",
+      "lbu v0,467(s1) @0x80101900 ; andi v0,v0,0x80 @0x80101908",
+      "lbu v0,467(s1) @0x801019d4 ; bne v0,zero,0x801019dc"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "+0x1D3 is a GENERIC PER-ENTITY byte, not a global arbiter. The zombie decrements its OWN +0x1D3 with code byte-identical to the player's: `lbu v1,467(s0)`@0x80100484 / `andi v0,v1,0x7f`@0x8010048C / `beq v0,zero,0x8010049c`@0x80100490 / delay `addiu v0,v1,-1`@0x80100494 / `sb v0,467(s0)`@0x80100498, with s0 = self. EMZ0 has ~45 +0x1D3 access sites on many different base registers; PSX.EXE has 44 `sb` sites.",
+     "citations": [
+      "zombie @0x80100484 bytes: d3 01 03 92 | 7f 00 62 30 | 02 00 40 10 | ff ff 62 24 | d3 01 02 a2",
+      "player @0x8003bff4 bytes: d3 01 03 92 | 7f 00 62 30 | 02 00 40 10 | ff ff 62 24 | d3 01 02 a2",
+      "zombie self-writes: lbu v0,467(s2)@0x80107850 / andi 0x7f@0x80107858 / sb@0x8010785c ; ori 0x80@0x8010a10c / sb@0x8010a110"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "The player's +0x1D3 decrement shares the gate that guards the 0x800CFBF6 clear: it sits AFTER `bltz v0,0x8003c1fc`@0x8003BFC0 in FUN_8003BFAC, so when [0x800CFBDC] < 0 neither the 0x800CFBF6 clear NOR the player's +0x1D3 decrement runs. The zombie's own +0x1D3 decrement is likewise skipped when [0x800CFBDC] & 0x20000000 (`bne`@0x8010036C).",
+     "citations": [
+      "bltz v0,0x8003c1fc @0x8003bfc0 ; sw ra,36(sp) @0x8003bfc4",
+      "lbu v1,467(s0) @0x8003bff4 ; sb v0,467(s0) @0x8003c008",
+      "bne v0,zero,0x80100640 @0x8010036c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "+0x1D3 low 7 bits are NOT a cooldown seeded by the grab. Every producer of a nonzero low-7 value DISCARDS the old low 7 and splices a field out of a data word: `andi a0,a0,0x80`@0x8004732C / `sb`@0x80047334 / `lw v0,4(a1)`@0x80047338 / `srl v0,v0,9`@0x80047340 / `andi v0,v0,0x7f`@0x80047344 / `or`/`sb`@0x8004734C. Same shape at 0x8004757C-0x8004759C and 0x80041AC4-0x80041AE8 (`srlv a0,a0,v1`).",
+     "citations": [
+      "andi a0,a0,0x80 @0x8004732c ; lw v0,4(a1) @0x80047338 ; srl v0,v0,9 @0x80047340 ; andi v0,v0,0x7f @0x80047344 ; sb a0,467(s1) @0x8004734c",
+      "andi a1,a1,0x80 @0x80041ac4 ; sb a1,467(t0) @0x80041ac8 ; srlv a0,a0,v1 @0x80041adc ; andi a0,a0,0x7f @0x80041ae0 ; sb a1,467(t0) @0x80041ae8"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "+0x1D3 role UNPROVEN — do NOT name it \"player is claimed\". Port it as a plain per-entity byte; the sharing between zombies falls out of them addressing the one player entity at 0x800CFBF8. Bit 0x80 is set/cleared by ~13 player-side routines unrelated to any grab (set: 0x8003E3C4, 0x8003EA5C, 0x8003ED70, 0x8003F4DC, 0x8003F6D8, 0x8003F844, 0x8003F964, 0x8003FCB8, 0x8003FFCC, 0x800402D0, 0x80051EB8, 0x80062EF8; clear via andi 0x7f: 0x8003E844, 0x8003EB3C, 0x8003EFDC).",
+     "citations": [
+      "sb v0,467(s0) @0x8003e3c4 ; sb v1,467(s0) @0x8003ea5c ; sb v0,467(s1) @0x8003f964",
+      "sb v1,467(a2) @0x800402d0 ; sb v0,467(v1) @0x80051eb8",
+      "whole-byte clears: 0x8001b130, 0x8003c248, 0x8003f748, 0x8003f8b4, 0x8003fa4c, 0x8003fbcc, 0x8003fe68, 0x8003fec4, 0x800573d4, 0x80057a68, 0x8005d610",
+      "generic member-set arm sb a2,467(a0) @0x80055e2c"
+     ],
+     "certainty": "UNPROVEN"
+    },
+    {
+     "fact": "NEXT XREF for +0x1D3 bit 0x80: none of the 11 whole-byte clears was tied to grab exit. Two of them run inside the zombie-relevant paths — EMZ0 `sb zero,467(s2)`@0x801006C8 (spawn) and `sb zero,467(s1)`@0x8010499C. To settle the release, watchpoint 0x800CFDCB in PCSX-Redux across a live block-G grab and record which PC clears it.",
+     "citations": [
+      "sb zero,467(s2) @0x801006c8 (EMZ0)",
+      "sb zero,467(s1) @0x8010499c (EMZ0)",
+      "sb zero,467(s1) @0x8003c248 (EXE)"
+     ],
+     "certainty": "UNPROVEN"
+    },
+    {
+     "fact": "DECISION[2] (fn 0x80101F7C) mirrors DECISION[1] with different thresholds: the +0x1D4&0xC000 / +0x110&1 gate at 0x80102098/0x801020AC writes the same 0x0A01 (`addiu v0,zero,2561`@0x801020BC / `sw v0,4(s0)`@0x801020C0) but its distance tier is 0xBB8 (3000) not 0xDAC (3500), and it has only ONE global-mask block (&0x17 @0x801020E4) plus a &0x04 test @0x80101F20. Block A's twin there is 0x8010200C/0x80102034.",
+     "citations": [
+      "lh v0,468(s0) @0x80102098 ; andi v0,v0,0xc000 @0x801020a0 ; sltiu v0,s2,0xbb8 @0x801020a8",
+      "lw v0,272(s0) @0x801020ac ; andi v0,v0,0x1 @0x801020b4",
+      "lhu v0,-1034(v0) @0x801020dc ; andi v0,v0,0x17 @0x801020e4",
+      "lw v1,500(s0) @0x8010200c ; lh a1,504(s0) @0x80102034"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "DECISION[0] (fn 0x80101294) uses the same two globals at a THIRD tier set: dist<0xBB8 (3000) with `andi 0x15`@0x80101340 plus `lhu v0,340(s0)`&0x800 and `rng&1`, and dist<0x7D0 (2000) with `andi 0x17`@0x801013B0. Same 0x0C01 outcome (`addiu v0,zero,3073`@0x80101374). Port all three decision functions separately; the mask/threshold pairing differs per sub1.",
+     "citations": [
+      "sltiu v0,s2,0xbb8 @0x80101320 ; beq v0,zero,0x8010137c @0x80101324",
+      "lhu v0,-1034(v0) @0x80101338 ; andi v0,v0,0x15 @0x80101340",
+      "lhu v0,340(s0) @0x8010134c ; andi v0,v0,0x800 @0x80101354",
+      "andi v0,v0,0x1 @0x80101368 ; addiu v0,zero,3073 @0x80101374 ; sw v0,4(s0) @0x80101378",
+      "lhu @0x801013a8 ; andi v0,v0,0x17 @0x801013b0"
+     ],
+     "certainty": "BYTES"
+    }
+   ]
+  }
+ ],
+ "other": [
+  {
+   "facts": [
+    {
+     "fact": "Dispatch: the upright ACTIVE handler reads +0x5, calls decision[0x8010C88C], then RE-READS +0x5 and calls executor[0x8010C8CC]. A decision that writes +0x4/+0x5 therefore runs the NEW executor in the SAME tick. Decision's return v0 is dead (clobbered by the re-read).",
+     "citations": [
+      "lbu v0,5(s0) @0x801011a8",
+      "jalr v0 @0x801011c4",
+      "lbu v0,5(s0) @0x801011d0",
+      "lw v0,-14132(at)=0x8010c8cc @0x801011e4",
+      "jalr v0 @0x801011ec"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Variant split: ACTIVE root dispatches (+0x10E & 0x3F) through table 0x8010C854 (alternating) -> even = 0x8010118C upright, odd = 0x80101210 crawl. Crawl uses its OWN tables 0x8010C90C/0x8010C918, whose index 1 is the SAME grab pair 0x801025E4/0x801025EC. So a crawling zombie runs the grab as sub_state_1 = 1, not 3.",
+     "citations": [
+      "lhu v0,270(a0)/andi v0,v0,0x3f @0x80101154-0x8010115c",
+      "lw v0,-14252(at)=0x8010c854 @0x8010116c",
+      "table[1]=0x801025e4 @0x8010c910",
+      "table[1]=0x801025ec @0x8010c91c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "DECISION[3], [10], [13], [14] are all two-instruction stubs: bytes 08 00 e0 03 (jr ra) + 00 00 00 00 (nop). Delay slot is a literal zero word. Port must still call them if the table is dense, but they do nothing.",
+     "citations": [
+      "0x801025e4",
+      "0x80104174",
+      "0x80104920",
+      "0x80104d6c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "SUBSTATE 12 executor = 0x80104748. Phase byte +0x6 dispatch: 0->0x801047B8, 1->0x8010482C, 2->0x80104884, 3->0x8010489C, anything else -> epilogue 0x80104900. Phase 0 FALLS THROUGH into phase 1 and phase 2 FALLS THROUGH into phase 3 in the same tick (no branch at 0x8010482C or 0x80104898).",
+     "citations": [
+      "lbu v1,6(s0) @0x80104770",
+      "beq v1,v0,0x8010482c @0x80104778",
+      "beq v1,zero,0x801047b8 @0x8010478c",
+      "beq v1,v0,0x80104884 @0x801047a0",
+      "beq v1,v0,0x8010489c @0x801047a8"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Substate 12 phase 0 writes +0x14C as a 32-bit word 0x00070019: clip byte +0x14C=0x19, frame +0x14D=0, +0x14E=0x07, +0x14F=0. The 0x00070000 half comes from the DELAY SLOT of the phase-0 branch. Then +0x6 = 1.",
+     "citations": [
+      "lui v0,0x7 @0x80104790 (delay of beq @0x8010478c)",
+      "ori v0,v0,0x19 @0x801047b8 (bytes 19 00 42 34)",
+      "sw v0,332(s0) @0x801047c0 (bytes 4c 01 02 ae)",
+      "sb v0,6(s0) @0x801047c8"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Substate 12 phase 0 rest: FUN_80015558(self, playerX=[0x800CFC30], playerZ=[0x800CFC38], 32); then +0x158 = FUN_80015614(self,px,pz,190), value in {0,+190,-190}, stored in a DELAY SLOT so it is written unconditionally; if +0x239==0 then FUN_8005BD6C(10,self) and +0x239=150; then +0x144 = 11.",
+     "citations": [
+      "jal 0x80015558 / addiu a3,zero,32 @0x801047dc",
+      "jal 0x80015614 / addiu a3,zero,190 @0x801047f8",
+      "sh v0,344(s0) @0x8010480c (delay of bne @0x80104808)",
+      "sb v0,569(s0)=150 @0x80104820",
+      "sh v0,324(s0)=11 @0x80104828"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Substate 12 phase 1: yaw(+0x76) = yaw + +0x158 EVERY tick, stored in the delay slot of the anim call (before it). Two independent routes to phase 2: (a) FUN_80015614(...,320)==0 -> clears +0x158 AND sets +0x6=2; (b) FUN_8002959c returns non-zero (clip 0x19 wrapped) -> sets +0x6=2 and does NOT clear +0x158.",
+     "citations": [
+      "addu v0,v0,v1 @0x80104868 / sh v0,118(s0) @0x80104870",
+      "jal 0x80015614 / addiu a3,zero,320 @0x80104838",
+      "bne v0,zero,0x80104854 @0x80104840",
+      "sh zero,344(s0) @0x8010484c / sb v0,6(s0) @0x80104850",
+      "beq v0,zero,0x80104900 @0x80104874 / sb v0(=2),6(s0) @0x80104880"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Substate 12 phase 2 writes +0x14C as the word 0x0007001B: clip 0x1B, frame 0, +0x14E=0x07; sets +0x6=3; then falls straight into phase 3 the same tick.",
+     "citations": [
+      "lui v0,0x7 @0x80104884",
+      "ori v0,v0,0x1b @0x80104888",
+      "sw v0,332(s0) @0x8010488c",
+      "addiu v0,zero,3 / sb v0,6(s0) @0x80104890-94"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Substate 12 phase 3 call order per tick: FUN_80015558(self,px,pz,32) -> FUN_80015E7C(self,a1,a2,0) -> FUN_8002959c(self,a1,a2,512) -> [clip-end exit] -> FUN_800152C8(self,0) -> [frame-25 exit]. Both exits still let the rest of the tick run.",
+     "citations": [
+      "jal 0x80015558/a3=32 @0x801048a4",
+      "jal 0x80015e7c/a3=0 @0x801048b8",
+      "jal 0x8002959c/a3=512 @0x801048cc",
+      "jal 0x800152c8/a1=0 @0x801048e4"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "The `+0x144 = 11` set in substate-12 phase 0 is a DEAD STORE for phase-3 motion: FUN_80015E7C rewrites +0x144/+0x146/+0x148 from the keyframe root-motion delta on every path (no early return; all paths converge at 0x80015FA8) BEFORE FUN_800152C8 reads +0x144. Phase-3 step = animation root motion, not 11.",
+     "citations": [
+      "sh v1,324(t0) @0x80015fd8",
+      "sh a0,326(t0) @0x80015fdc",
+      "sh a1,328(t0) @0x80015fe4 (delay of jr ra)",
+      "addiu a1,s1,324 @0x80015304 (800152C8 reads +0x144)"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "SUBSTATE 12 EXIT: exactly two sites, both store the 32-bit word 0x00000101 to +0x4 -> +0x4=1(ACTIVE), +0x5=1(WALK), +0x6=0, +0x7=0. (a) FUN_8002959c(...,512) returns non-zero = clip 0x1B wrapped; (b) +0x14D == 25 exactly. No timer, no frame budget anywhere in 0x80104748-0x801048FC.",
+     "citations": [
+      "beq v0,zero,0x801048e0 @0x801048d4 (bytes 02 00 40 10)",
+      "addiu v0,zero,257 @0x801048d8 (delay, 01 01 02 24)",
+      "sw v0,4(s0) @0x801048dc",
+      "lbu v1,333(s0)/addiu v0,zero,25/bne @0x801048ec-f4",
+      "sw v0,4(s0) @0x801048fc"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "FUN_8002959c returns 1 exactly when the clip WRAPS: its tail 0x80029614 does +0x14D+=1, compares against the clip frame count, returns 0 while below, else zeroes +0x14D and returns 1. So `beq v0,zero,skip` = 'store only on clip end'.",
+     "citations": [
+      "lbu v0,333(s2)/addiu v0,v0,1/sb v0,333(s2) @0x80029b28-34",
+      "sltu v0,v0,s3 @0x80029b3c",
+      "addu v0,zero,zero @0x80029b44 (delay, return 0)",
+      "sb zero,333(s2)/addiu v0,zero,1 @0x80029b48-4c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Substate 12 deals NO damage. The complete jal set of 0x80104748-0x801048FC is 0x80015558, 0x80015614, 0x8005BD6C, 0x8002959C, 0x80015E7C, 0x800152C8 — no call to the player-damage routine 0x800401D4 and no HP store.",
+     "citations": [
+      "jal list @0x801047dc,0x801047f8,0x80104814,0x8010486c,0x801048a4,0x801048b8,0x801048cc,0x801048e4"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "DECISION[12] @0x8010460C gate chain — a1 is seeded 0 in a delay slot and every failure jumps to 0x801046A0 (return): (1) +0x6==3; (2) u32 +0x1F0 < 0x514 (1300); (3) (player+0x1D3 @0x800CFDCB & 0x80)==0; (4) +0x14D < 11; (5) self+0x106 == [0x800CFCFE]; (6) a1 = ([0x800CFC00] ^ 0xF) != 0.",
+     "citations": [
+      "addu a1,zero,zero @0x80104638",
+      "sltiu v0,a0,0x514 @0x8010463c (bytes 14 05 82 2c)",
+      "andi v0,v0,0x80 @0x80104654",
+      "sltiu v0,v0,0xb @0x80104668 (bytes 0b 00 42 2c)",
+      "bne v1,v0,0x801046a0 @0x80104684",
+      "xori v0,v0,0xf / sltu a1,zero,v0 @0x80104698-9c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "DECISION[12] connect: two calls FUN_80015758(&self+0x38, &player+0x38, yaw+256 / yaw-256, halfwidth 256), the first skipped if +0x21A & 0x20, the second if +0x21A & 0x40. Return 0 (inside) -> +0x4 word = 0x00000301 AND player+0x1D3 |= 0x80. Each sector spans 2*hw = 512 = 45deg; union = +-512 = +-45deg around yaw.",
+     "citations": [
+      "andi v0,v0,0x20 @0x801046b0",
+      "addiu a3,zero,256 @0x801046c4",
+      "addiu a2,a2,256 @0x801046cc (delay)",
+      "addiu v0,zero,769 @0x801046d4 / sw v0,4(s0) @0x801046d8",
+      "andi v0,v0,0x40 @0x801046f4",
+      "addiu a3,zero,256 @0x80104708",
+      "addiu a2,a2,-256 @0x80104710"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "FUN_80015758(pa,pb,centre,hw) reads X at +0 and Z at +8 of each pointer, and returns 0 iff ((bearing(pa,pb) - centre + hw) & 0xFFF) < 2*hw. FUN_80015614(ent,tx,tz,tol) returns 0 iff inside +-tol, else +tol when the wrapped value < 0x801, else -tol.",
+     "citations": [
+      "andi v0,v0,0xfff / sll s0,s0,1 / sltu v0,v0,s0 / xori v0,v0,0x1 @0x800157ac-b8",
+      "slt v0,v1,v0 / bne @0x80015668-6c / addu v0,zero,zero @0x80015670",
+      "sltiu v0,v1,0x801 @0x80015674 / addu v0,s1,zero @0x8001567c / subu v0,zero,s1 @0x80015680"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "DECISION[12]'s connect store is a 32-bit `sw 0x00000301` to +0x4, so it also zeroes +0x6 and +0x7. Combined with the dispatcher re-reading +0x5, EXECUTOR[3] therefore begins at phase 0 in the SAME tick the reach connects.",
+     "citations": [
+      "addiu v0,zero,769 @0x801046d4 / sw v0,4(s0) @0x801046d8",
+      "lbu v0,5(s0) @0x801011d0"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "CORRECTION to the finder: substate 12 is NOT selected only when the player is outside +-1024. The immediate 0x0C01 is written at SEVEN sites (0x80101374, 0x801013CC, 0x8010189C, 0x801018E0, 0x80102100, 0x80105B08, 0x801060E0); DECISION[0] gates its 12-block on the tolerance-800 result, so 12 fires with the player inside +-90 deg.",
+     "citations": [
+      "addiu a3,zero,800 @0x801012d0 (bytes 20 03 07 24)",
+      "addu v1,v0,zero @0x801012ec",
+      "sll v0,v1,16 @0x80101328 / beq v0,zero,0x80101380 @0x8010132c",
+      "addiu v0,zero,3073 @0x80101374"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "CORRECTION: the finder's listing prints '8010185c: sltiu v0,s2,0x9c4'. The real bytes at 0x8010185C are ac 0d 42 2e = sltiu v0,s2,0xdac (3500). 0x9c4 (2500) lives at 0x801018A4. Block A = dist<3500 + (rand&3)==0; block B = dist<2500 + (rand&1)==0; both additionally require the tol-1024 result s4 != 0, and block A does not exit so block B still runs.",
+     "citations": [
+      "sltiu v0,s2,0xdac @0x8010185c",
+      "sll v0,s4,16 @0x80101864 (delay)",
+      "andi v0,v0,0x3 / bne @0x80101890-94",
+      "sltiu v0,s2,0x9c4 @0x801018a4",
+      "andi v0,v0,0x1 / bne @0x801018d8-dc"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "CORRECTION: annotations like 'lw a1,56(s3) ; 0x800D0038' from the disassembler are WRONG (it tracks only the lui half). Real base: lui 0x800d + addiu -1032 = 0x800CFBF8, so +56 = 0x800CFC30 (player X), +64 = 0x800CFC38 (player Z), +467 = 0x800CFDCB. Confirmed by the absolute-form loads in the same functions.",
+     "citations": [
+      "lui s3,0x800d / addiu s3,s3,-1032 @0x80104764-68",
+      "lw a1,-976(a1)=0x800cfc30 @0x801047d0",
+      "lui s1,0x800d / addiu s1,s1,-1032 @0x8010461c-20",
+      "lbu v0,-565(v0)=0x800cfdcb @0x8010464c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "SUBSTATE 3 executor = 0x801025EC. Preamble copies two 8-byte tables to the stack via LWL/LWR+SWL/SWR: 0x8010000C = 0B 0B 0E 0E 0B 0B 0E 0E -> sp+16 (grab clips); 0x80100014 = 10 14 01 05 10 1E 01 0A -> sp+64 (trigger frame, damage arg).",
+     "citations": [
+      "addiu a1,a1,12 = 0x8010000c @0x80102618",
+      "swl/swr v0,0x13/0x10(sp) @0x8010262c-30",
+      "addiu a1,a1,20 = 0x80100014 @0x80102640",
+      "swl/swr v0,0x43/0x40(sp) @0x80102654-58",
+      "bytes 0b 0b 0e 0e 0b 0b 0e 0e 10 14 01 05 10 1e 01 0a @0x8010000c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Substate 3 row index s5 = (+0x10E & 1) + ((type +0x8 == 23 || type == 17) ? 2 : 0); note the type-23 branch falls into the +2 add. Phase = +0x6, must be < 10, then jump through the 10-entry table @0x8010001C = {0x801026C0, 0x801027D8, 0x80102814, 0x80102838, 0x80102968, 0x801029A4, 0x80102BE8, 0x80102C30, 0x80102C60, 0x80102EB4}.",
+     "citations": [
+      "lhu v0,270(s1)/andi s5,v0,0x1 @0x8010266c-74",
+      "beq v1,23 @0x8010267c / bne v1,17 @0x80102688 / addiu s5,s5,2 @0x80102690",
+      "sltiu v0,v1,0xa @0x8010269c",
+      "lw v0,28(at)=0x8010001c @0x801026b0 / jr v0 @0x801026b8"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Substate 3 phase 0 @0x801026C0: clip = sp[16+2*s5] (0x0B upright, 0x0E crawl); +0x6 = 1; +0x14C word = 0x000F0000 + clip (an ADD, not an OR) so +0x14D=0 and +0x14E=0x0F; FUN_80015558(self, playerX, playerZ, 2048) snap-turn. Falls through into phase 1 the same tick.",
+     "citations": [
+      "lbu v1,16(v0) @0x801026cc",
+      "sb v0,6(s1)=1 @0x801026d4",
+      "lui v0,0xf @0x801026d8 / addu v1,v1,v0 @0x801026dc / sw v1,332(s1) @0x801026e0",
+      "jal 0x80015558 / addiu a3,zero,2048 @0x801026f4-f8"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Substate 3 phase 0 player handoff: player+0x1B4 = self (delay slot); player+0x4 word = (FUN_80015910(self,player) << 8) | 5; if (s5&1) player+0x5 += 2; player+0x1D3 |= 0x80; self+0x1D3 = 15; self+0x0 |= 0x1000; player+0x0 |= 0x1000; moan id 10/11 gated by +0x239 then +0x239 = 150; FUN_800395B8(20,0,250,0).",
+     "citations": [
+      "sw s1,436(s3) @0x80102710",
+      "sll v0,v0,8 / ori v0,v0,0x5 / sw v0,4(s3) @0x80102720-28",
+      "lbu v0,5(s3)/addiu v0,v0,2/sb v0,5(s3) @0x80102738-44",
+      "ori v0,v0,0x80 / sb v0,467(s3) @0x8010275c-60",
+      "addiu v1,zero,15 / sb v1,467(s1) @0x8010276c-70",
+      "sb v0,569(s1)=150 @0x801027c0"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Substate 3 phase 1 @0x801027D8 advances the phase ARITHMETICALLY: +0x6 = +0x6 + FUN_8002959c(self,a1,a2,256) return, i.e. 1 -> 2 exactly when the seize clip 0x0B/0x0E wraps. Then jumps to the epilogue.",
+     "citations": [
+      "jal 0x8002959c / addiu a3,zero,256 @0x801027f8-fc",
+      "lbu v1,6(s1) @0x80102800 / addu v1,v1,v0 @0x80102808",
+      "j 0x80102ebc @0x8010280c / sb v1,6(s1) @0x80102810 (delay)"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Substate 3 phase 2 @0x80102814: +0x6 = 3; +0x158 = 148; +0x14C written as the FULL WORD clip+1 = 0x0000000C (upright) / 0x0000000F (crawl) — this store clears +0x14D, +0x14E and +0x14F to 0 (unlike phase 0's 0x0F in +0x14E). Falls through into phase 3 the same tick.",
+     "citations": [
+      "sb v0,6(s1)=3 @0x80102824",
+      "addiu v0,zero,148 @0x80102828 (bytes 94 00 02 24)",
+      "sh v0,344(s1) @0x8010282c (bytes 58 01 22 a6)",
+      "addiu v1,v1,1 @0x80102830 / sw v1,332(s1) @0x80102834 (bytes 4c 01 23 ae)"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "MASH METER (substate 3 phase 3): initial 148 @0x80102828; per-tick drain 2 (addiu a0,a0,-2); per-input credit 5, built as v1 = ret<<2 then v1 += ret (=ret*5) and subtracted. new = (u16)+0x158 - 2 - 5*mash, stored back to +0x158. The finder's 148 / 2 / 5 are CORRECT — the refuter confirmed rather than disputed them.",
+     "citations": [
+      "addiu v0,zero,148 @0x80102828",
+      "sll v1,v0,2 @0x80102868 (80 18 02 00)",
+      "lhu a0,344(s1) @0x8010286c",
+      "addu v1,v1,v0 @0x80102870 (21 18 62 00)",
+      "addiu a0,a0,-2 @0x80102874 (fe ff 84 24)",
+      "subu a0,a0,v1 @0x80102878 (23 20 83 00)",
+      "sh a0,344(s1) @0x8010287c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Meter escape test: sll a0,a0,16 then bgez (bytes 04 00 81 04 = REGIMM rt=1, target 0x80102898). While the NEW value sign-extends >= 0 the hold continues; on negative it sets +0x6 = 4 on BOTH self and player. With no input the meter is 148,146,... and first goes negative (-2) on the 75th phase-3 tick.",
+     "citations": [
+      "sll a0,a0,16 @0x80102880",
+      "bgez a0,0x80102898 @0x80102884",
+      "sll v1,s5,1 @0x80102888 (delay, also builds the damage index)",
+      "addiu v0,zero,4 / sb v0,6(s1) @0x8010288c-90 / sb v0,6(s3) @0x80102894"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Mash predicate FUN_8001598C returns (([0x800CE310] & 0x34F) != 0) as 0/1. [0x800CE310] is written once, as (prev ^ cur) & cur from [0x800CE314] (prev) and [0x800CE30C] (cur) — a RISING EDGE word. So the credit is per new button press, not per held frame.",
+     "citations": [
+      "lw v0,-7408(v0)=0x800ce310 @0x80015990",
+      "andi v0,v0,0x34f @0x80015998 (4f 03 42 30)",
+      "sltu v0,zero,v0 @0x800159a0 (delay of jr ra)",
+      "xor v0,v0,a0 / and v0,v0,a0 @0x8003936c-70",
+      "sw v0,-7408(at) @0x80039384"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Substate 3 damage timing: the bite fires on exactly ONE frame, when +0x14D == sp[64+2*s5] = 16 (s5=0), 1 (s5=1), 16 (s5=2), 1 (s5=3). Both outcomes of the meter test fall into this compare, so escaping on the bite frame still takes the hit. Damage argument a0 = sp[64+2*s5+1] = 20 / 5 / 30 / 10; a1 = s5 & 1.",
+     "citations": [
+      "addiu v0,sp,64 / addu s0,v0,v1 @0x80102898-9c",
+      "lbu v1,333(s1) @0x801028a0 / lbu v0,0(s0) @0x801028a4",
+      "bne v1,v0,0x80102ebc @0x801028ac",
+      "lbu a0,1(s0) @0x801028f4",
+      "jal 0x800401d4 @0x801028f8 / andi a1,s5,0x1 @0x801028fc (delay)"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "CORRECTION: the table byte is only the ARGUMENT, not the HP delta. FUN_800401D4 scales a0 first: x1.5 if a0<41 AND ([0x800CFB74]&0x40 || playerHP>=121); then if [0x800D482A]==3, x5 if a0<30 else x2 if a0<60 (mutually exclusive via the j at 0x80040230). HP -= a0 is stored unconditionally in a delay slot at player+0x156 = 0x800CFD4E.",
+     "citations": [
+      "andi v0,v0,0x40 / bne @0x800401e4-e8",
+      "slti v0,a0,41 @0x800401ec",
+      "slti v0,v0,121 @0x800401fc",
+      "sra v0,a0,1 / addu a0,a0,v0 @0x8004020c-10",
+      "lh v1,18474(v1) @0x80040218 / addiu v0,zero,3 @0x8004021c",
+      "sll v0,a0,2/addu a0,a0,v0 @0x8004022c-34",
+      "sll a0,a0,1 @0x80040244",
+      "lhu v0,342(a2)/subu a0,v0,a0/sh a0,342(a2) @0x80040248-5c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "FUN_800401D4 return is an exclusive enum {0,1,2}, never a bitfield: 0 = survived; 1 = the killing blow (HP<0, HP set to 0, player+0x154 |= 0x1000); 2 = overkill (HP_new <= -15) or player+0x154 bit 0x1000 ALREADY set. For a1==1 (crawl) only 0 or 1 are reachable. Global 0x800D482A has readers only, no writer — role UNPROVEN.",
+     "citations": [
+      "bltz v0,0x800402a8 @0x80040264 / addu v0,zero,zero @0x80040268",
+      "bgez v0,0x800402e8 @0x80040284 / slti v0,v0,-14 @0x80040288",
+      "addiu v0,zero,2 @0x80040290 and @0x800402a4",
+      "addiu v0,zero,1 / sh zero,342(a2) @0x800402ac-b0",
+      "addu v0,zero,zero @0x800402e8"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "CORRECTION to the finder: the ordinary killing blow returns 1, takes the bit-0 branch (+0x6=4 on both actors, player+0x16A=1) and then falls into `andi v0,v1,0x2` which is 0 -> epilogue. sub_state_1 = 6 (0x0601) is reached ONLY on return 2. The finder's headline 'player death during the grab hands the zombie to sub 6' is false for a normal death.",
+     "citations": [
+      "andi v0,v1,0x1 @0x80102904 / beq v0,zero,0x80102920 @0x80102908",
+      "sb v0(=4),6(s1) @0x80102910 / sb v0,6(s3) @0x80102914 / sb v0(=1),362(s3) @0x8010291c",
+      "andi v0,v1,0x2 @0x80102920 / beq v0,zero,0x80102ebc @0x80102924"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Return-2 path: self+0x4 word = 0x00000601 stored in the DELAY SLOT of jal 0x80015910 (so before the call), then player+0x4 = (FUN_80015910(self,player) << 8) | 6 written absolutely to 0x800CFBFC, and [0x800CFB74] |= 0x100.",
+     "citations": [
+      "addiu v0,zero,1537 @0x80102930",
+      "jal 0x80015910 @0x80102934 / sw v0,4(a0) @0x80102938 (delay, a0=s1=self)",
+      "sll v0,v0,8 @0x8010293c / ori v0,v0,0x6 @0x80102948 / sw v0,-1028(at)=0x800cfbfc @0x80102950",
+      "ori v1,v1,0x100 / sw v1,-1164(at)=0x800cfb74 @0x80102954-5c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "SUBSTATE 3 EXIT — CORRECTION TO THE QUESTION'S PREMISE: substate 3 NEVER writes 0x0101. An immediate census of EMZ0.BIN finds zero `addiu rX,zero,257` inside 0x801025EC-0x80102EBC. Its terminal state-word stores are 0x00000001 (ACTIVE, sub 0) at phase 9, 0x00000501 (sub 5) in phase 8, 0x00000007 (root state 7) at phase 6, and 0x00000601 on return 2.",
+     "citations": [
+      "addiu v0,zero,1 / sw v0,4(s1) @0x80102eb4-b8 (bytes 01 00 02 24 04 00 22 ae)",
+      "addiu v0,zero,1281 @0x80102d24 / sw v0,4(s1) @0x80102d2c",
+      "addiu v0,zero,7 @0x80102bf0 / sw v0,4(s1) @0x80102bf4",
+      "sw v0,4(a0) @0x80102938"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Substate 3 phase chain after the bite: phase 4 @0x80102968 sets +0x6=5, +0x158=0, +0x16A=0 and +0x14C = clip + 0x00070002 (release clip 0x0D/0x10, +0x14E=0x07), then falls into phase 5. Upright phase 5 branches to 0x80102BD0 and sets +0x6=7 when +0x14D==7. Phase 7 sets +0x6=8 and falls into phase 8; phase 8 adds the clip-end return to +0x6, reaching phase 9.",
+     "citations": [
+      "lui a3,0x7/ori a3,a3,0x2 @0x80102968-6c",
+      "sb v0(=5),6(s1) @0x8010298c / sh zero,344(s1) @0x80102990 / addu v1,v1,a3 / sw v1,332(s1) @0x80102998-a0",
+      "beq v0,zero,0x80102bd0 @0x80102a7c / addu v1,v1,v0 / sb v1,6(s1) @0x80102a74-80",
+      "lbu v1,333(s1)/addiu v0,zero,7/sb v0,6(s1) @0x80102bd0-e4",
+      "addiu v0,zero,8 / sb v0,6(s1) @0x80102c58-5c",
+      "addu v1,v1,v0 / sb v1,6(s1) @0x80102c9c-a4"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Substate 3 (GRAB) is also entered directly from the WALK decision with the SAME two half-sector tests but range 0x4B0 = 1200 instead of 1300, and WITHOUT the +0x14D<11 and player+0x8!=15 gates. 0x0301 is written at eight sites total: 0x80101954, 0x80101998, 0x80102174, 0x801021B8, 0x801046D4, 0x80104718, 0x80105A0C, 0x80105A44.",
+     "citations": [
+      "sltiu v0,s2,0x4b0 @0x801018f4",
+      "andi v0,v0,0x80 / bne @0x80101908-0c",
+      "addiu a3,zero,256 / addiu a2,a2,256 @0x80101944-4c",
+      "addiu v0,zero,769 / sw v0,4(s0) @0x80101954-58",
+      "addiu a2,a2,-256 @0x80101990 / sw v0,4(s0) @0x8010199c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "SUBSTATE 10 (executor 0x8010417C): not an attack. Five-case FSM on +0x6 via table 0x801000E4 = {0x801041E4, 0x80104234, 0x80104280, 0x801042D4, 0x80104374}; no read of +0x1F0 and no damage call. It turns toward the angle in +0x1D4 at rate 32 (FUN_80015714), loops randomised clips for a counter of (rand&0x7F)+60 in +0x158, then case 4 writes +0x4 = 0x00000101 (WALK). Case 1 animates from (+0x108,+0x17C), case 3 from (+0x190,+0x194).",
+     "citations": [
+      "table 0x801000e4",
+      "addiu a2,zero,32 / jal 0x80015714 @0x80104250-54",
+      "andi v0,v0,0x7f / addiu v0,v0,60 / sh v0,344(s1) @0x801042c8-d0",
+      "bne v1,zero,0x8010437c @0x80104360 / sh v0,344(s1) @0x80104364",
+      "addiu v0,zero,257 / sw v0,4(s1) @0x80104374-78",
+      "lw a1,264(s1)/lw a2,380(s1) @0x80104238-3c",
+      "lw a1,400(s1)/lw a2,404(s1) @0x801042d8-dc"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "SUBSTATE 13 (executor 0x80104928): not an attack — an entity re-init. It stores state word = 1 (sub 0) in a delay slot, then +0x1D3=0, +0x1D0/+0x1CC/+0x1C8=0, +0x156 = halfword from table 0x8010C600[rand&0xF], +0x151/+0x152/+0x153 = 13, +0x21A = 0, +0x218 = byte from 0x801000F8 (all bytes 00 02 00 02 00 02 00 02), extents 500/-1500/1500, clip = 1; only when (+0x10E & 0x3F)==6 does it write 0x0101.",
+     "citations": [
+      "sw s0(=1),4(s1) @0x80104988 (delay of jal 0x80028794)",
+      "sb zero,467(s1) @0x8010499c",
+      "lhu v1,-14848(at)=0x8010c600 @0x801049b0 / sh v1,342(s1) @0x801049c8",
+      "addiu v0,zero,13 / sb @0x801049b4-c0",
+      "sh zero,538(s1) @0x801049dc",
+      "sb v0,536(s1) @0x801049ec",
+      "addiu v0,zero,257 @0x80104a90 / sw v0,4(s1) @0x80104a94"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "SUBSTATE 13 entry mechanism is UNPROVEN: the immediate 0x0D01 does not occur anywhere in EMZ0.BIN (full `addiu rX,zero,imm` census) and there is no jal/j to 0x80104928. It must be reached by some write to +0x5 not visible as a state-word immediate — do not guess it.",
+     "citations": [
+      "census of addiu rX,zero,0x0D01 over EMZ0.BIN = 0 hits",
+      "executor table [13] 0x8010c900 -> 0x80104928"
+     ],
+     "certainty": "INFERRED"
+    },
+    {
+     "fact": "SUBSTATE 14 (executor 0x80104D74): two phases only. Phase 0 writes +0x14C word 0x000F0011 (clip 0x11, +0x14E=0x0F), +0x6=1, +0x144=11, then falls through into phase 1. Phase 1 fires FUN_8001BF10(0x0A001000, yaw, [+0x198]+1448, 0) and FUN_8005BD6C(5, self) on the single frame +0x14D==10; on clip end it writes +0x4 word = 0x00000001 (sub 0, NOT 0x0101) and +0x23E = 60.",
+     "citations": [
+      "lui v0,0xf / ori v0,v0,0x11 / sw v0,332(s0) @0x80104db4-bc",
+      "sh v0(=11),324(s0) @0x80104dcc",
+      "lbu v1,333(s0)/addiu v0,zero,10/bne @0x80104dd0-d8",
+      "jal 0x8001bf10 / addiu a2,a2,1448 @0x80104df4-f8",
+      "addiu a0,zero,5 / jal 0x8005bd6c @0x80104dfc-e00",
+      "beq v0,zero,0x80104e30 @0x80104e1c / addiu v0,zero,1 @0x80104e20 / sw v0,4(s0) @0x80104e24",
+      "addiu v0,zero,60 / sb v0,574(s0) @0x80104e28-2c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Cooldown fields +0x239 and +0x23E are both decremented with a zero floor in one block (skip when already 0). Their per-frame cadence is INFERRED, not proven: the containing function 0x801002C0 has no static caller in EMZ0.BIN.",
+     "citations": [
+      "lbu v0,569(s0)/beq v0,zero/addiu v0,v0,-1/sb v0,569(s0) @0x8010045c-6c",
+      "lbu v0,574(s0)/beq v0,zero/addiu v0,v0,-1/sb v0,574(s0) @0x80100470-80"
+     ],
+     "certainty": "INFERRED"
+    },
+    {
+     "fact": "Field roles that remain UNPROVEN — emit as offsets, do not name them in the port: +0x106 (13 readers, zero writers in EMZ0.BIN; the finder's 'level' is unsourced), +0x1F0 (used as an unsigned magnitude compared to 1300/2500/3500 — 'distance' is inferred from usage only), +0x21A bits 0x20/0x40 (they gate the two half-sectors; the 'arm' naming is not proven), [0x800D482A], [0x800CFBF6], +0x198, +0x1D4, +0x1D6.",
+     "citations": [
+      "lbu v1,262(s0) @0x80104674",
+      "lw a0,496(s0) @0x80104630",
+      "lhu v0,538(s0) @0x801046a8 and @0x801046ec",
+      "lh v1,18474(v1) @0x80040218"
+     ],
+     "certainty": "UNPROVEN"
+    },
+    {
+     "fact": "The a3 argument to FUN_8002959c (256 in substates 10/14 and substate-3 phases 1/2/3, 512 in substate 12 and substate-3 phase 5/8) selects a code path inside the animator on its UPPER 16 bits only (`lui v0,0xffff; and v0,a3,v0; beq v0,zero`), so 256 and 512 take the SAME branch there. Its role is UNPROVEN — 'anim speed' is not supported by a cited reader.",
+     "citations": [
+      "lui v0,0xffff / and v0,a3,v0 / beq v0,zero,0x800295e4 @0x800295b8-c4",
+      "addiu a3,zero,512 @0x801048d0",
+      "addiu a3,zero,256 @0x8010285c"
+     ],
+     "certainty": "UNPROVEN"
+    }
+   ]
+  },
+  {
+   "corrections": [
+    "REFUTER WRONG (decisive): '+0x5 is never written by the EXE / no attack word is cited / must be UNKNOWN'. The EXE damage router writes it: `sb s5,5(s1)` @0x80047324 and @0x80047574, where s5 = a3 = the 4th arg (attack word). Bytes @0x80047324 = `05 00 35 a2` = 0xA2350005. The FINDER was right that the HURT row index is stamped from the attack word (= attack_word & 0xFF).",
+    "REFUTER WRONG: 'ent[+0x1D2] is UNKNOWN in meaning, definitely not proven to be a damage zone; base-3 packing not identified'. The EXE proves it exactly: `srl s6,s5,28` @0x80047114, `sll v1,s6,1` @0x80047310, `addu v1,v1,s6` @0x80047320 (=3*s6), `addu v0,v0,v1` @0x80047328, `sb v0,466(s1)` @0x80047330, with v0 = a 0/1/2 zone byte written @0x80047298/0x800472d4/0x8004730c. So +0x1D2 = zone + 3*(attack_word>>28). The FINDER was right.",
+    "REFUTER WRONG: 'FUN_800605ac has ZERO jal callers ... not established to run on zombies, and its base register is not proven to be the same struct'. It is TABLE-dispatched, not jal'd: table 0x800a83b8 indexed by ent[+0x4] at `lbu v0,4(s0)` @0x8005d018 / `lw v0,-31816(at)` @0x8005d030 / `jalr v0` @0x8005d038, and 0x800a83bc (index 1) = 0x800605ac. Base = entity is proven by +0x22A(554) and +0x8, cleared next to +0x223 @0x8005dc4c/0x8005dc50 with the same base that writes HP +0x156 @0x8005dc3c.",
+    "REFUTER WRONG (minor, but it changes ported constants): 'All other writers only SEED a random value: andi 0xf / addiu 16 (=16..31)'. Site @0x80100948 is `addiu v0,v0,32` -> +0x223 = 32..47 (`sb v0,547(s2)` @0x8010094c), and @0x8010602c is `addiu v0,v0,15` after `andi v0,v0,0x10` -> 15 or 31. Three distinct seed formulas, not one.",
+    "FINDER WRONG (byte-true data error): row 7 of the 2-D table. Col7 @0x8010ca58 = 0x80105438, NOT 0x801066fc/0x80105bc0. Row7 and row8 differ in exactly that one cell (0x8010ca7c = 0x80105bc0). The refuter was right.",
+    "FINDER WRONG: 'HURT is re-entered every frame while +0x4==2'. The dispatcher re-CALLS 0x80104F40 each frame; HURT resumes from persistent +0x5 (`lbu v0,5(s1)` @0x80104ff4) and +0x6 (`lbu v0,6(s1)` @0x8010505c). The refuter was right.",
+    "FINDER WRONG (polarity inverted): 'failing the gate ... only skips the +0x222 latch / ACTIVE-substate-5 shortcut. Execution still falls into the body'. It is the opposite: the branch TAKEN at @0x80105078 (value > thresh) goes to the body 0x80105168; the FALL-THROUGH (value <= thresh) is the arm that latches +0x222=1 and can return early with the routine word 0x00000501.",
+    "FINDER WRONG: '+0x7 = routine_3'. Independently confirmed: 0 lb/lbu/sb accesses at offset 7 in all of EMZ0.BIN (vs 104 at +0x5, 216 at +0x6). Refuter right; keep +0x7 as UNPROVEN.",
+    "BOTH INCOMPLETE: neither side stated the gate that guards the 2-D table at all. The 2-D executor table is reached ONLY when (ent[+0x21A] & 2) == 0 (`andi v0,v1,0x2` / `beq v0,zero,0x80105288` @0x80105170-0x80105174). If bit 1 is set, HURT runs the 0x8010517c-0x80105284 block and returns without ever touching 0x8010C940."
+   ],
+   "facts": [
+    {
+     "fact": "HURT entry = 0x80104F40, selected by ent[+0x4] loaded as a BYTE and used as a word index into table 0x8010C830. Table has 5 live entries: [0]=0x8010065C [1]=0x8010114C [2]=0x80104F40(HURT) [3]=0x80108250 [4]=0x80065C88(in PSX.EXE); [5]=0. Handler args a0=entity, a1=ent[+0x180], a2=ent[+0x184].",
+     "citations": [
+      "lbu v0,4(s0) @0x801004cc",
+      "lw v0,-14288(at) @0x801004e0 (at=0x80110000 -> 0x8010C830)",
+      "jalr v0 @0x801004e8 / delay addu a0,s0,zero @0x801004ec",
+      "lw a1,384(s0) @0x801004c8",
+      "lw a2,388(s0) @0x801004d0"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "HURT dispatches through TWO tables, split on ent[+0x10E] bit 0. Bit0 SET -> FLAT table 0x8010CBE8, stride 4, index ent[+0x5]. Bit0 CLEAR -> the gate path leading to the 2-D table. Byte-verified: 0x9624010E, 0x30820001, 0x10400009, 0x02402821, 0x92220005, 0x00021080, 0x8C22CBE8, 0x08041503.",
+     "citations": [
+      "lhu a0,270(s1) @0x80104fe0",
+      "andi v0,a0,0x1 @0x80104fe8",
+      "beq v0,zero,0x80105014 @0x80104fec / DELAY addu a1,s2,zero @0x80104ff0",
+      "lw v0,-13336(at) @0x80105008",
+      "j 0x8010540c @0x8010500c / DELAY addu a0,s1,zero @0x80105010"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Flat table @0x8010CBE8 (19 entries, index = ent[+0x5]): [0]=0x00000000 (NULL, no guard before the jalr), [1..18]=0x80107888 (all identical). [19]@0x8010CC34 = 0x230F0F09 = data, not a pointer -> table ends at index 18.",
+     "citations": [
+      "table 0x8010cbe8 dump",
+      "lw v0,-13336(at) @0x80105008",
+      "bytes 8010cc28: 88 78 10 80 88 78 10 80 88 78 10 80 09 0f 0f 23"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "2-D executor address = *(u32*)(0x8010C940 + 36*ent[+0x5] + 4*ent[+0x1D2]). Row stride is 9 words: sll v1,3 then addu v1 (=*9) then sll 2 (=*36). Called f(a0=entity, a1=s2, a2=s3) at a SHARED jalr with NO null check.",
+     "citations": [
+      "lbu v1,5(a0) @0x801053e0",
+      "addiu a2,a2,-14016 @0x801053e8 (=0x8010C940)",
+      "sll v0,v1,3 @0x801053ec / addu v0,v0,v1 @0x801053f0 / sll v0,v0,2 @0x801053f4",
+      "lbu v1,466(a0) @0x801053f8 / sll v1,v1,2 @0x80105400",
+      "lw v0,0(v1) @0x80105408 / jalr v0 @0x80105410 / DELAY addu a2,s3,zero @0x80105414"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "2-D table, rows 0..18 x 9 cols (short form 5438=0x80105438, 5bc0=0x80105bc0, 66fc=0x801066fc, 703c=0x8010703c, 7438=0x80107438, 7ef0=0x80107ef0, --=NULL). r0 @0x8010c940 is DATA (8032008c 803e0096 80480096 8046006e 804a0078 802200b4 8034006e 804200c8 804200b4) - never dispatch row 0. r1..r4 = 5438 5438 -- x3.",
+     "citations": [
+      "table 0x8010c940 @idx0-44",
+      "first real pointer @0x8010c964"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "2-D table rows 5..18: r5 @0x8010c9f4 all NULL; r6 @0x8010ca18 all NULL; r7 @0x8010ca3c = 7438 66fc -- | 7438 5bc0 -- | 7438 5438 --; r8 @0x8010ca60 = 7438 66fc -- | 7438 5bc0 -- | 7438 5bc0 --; r9 @0x8010ca84 = 7438 5bc0 5bc0 | 5438 x6; r10 @0x8010caa8 = 5bc0 5bc0 5bc0 | 5438 x6; r11 @0x8010cacc = same as r10.",
+     "citations": [
+      "table 0x8010c940 idx45-107",
+      "r7col7 @0x8010ca58 = 0x80105438",
+      "r8col7 @0x8010ca7c = 0x80105bc0"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "2-D table rows 12..18: r12 @0x8010caf0 = 7438 703c -- x3; r13 @0x8010cb14 = 5438 5438 -- x3; r14 @0x8010cb38 = same; r15 @0x8010cb5c = 7ef0 7ef0 -- x3; r16 @0x8010cb80 = 5438 5438 -- x3; r17 @0x8010cba4 all NULL; r18 @0x8010cbc8 = 7ef0 7ef0 -- x3. r18col8 == 0x8010CBE8 == flat[0] (both NULL, tables abut by one word). 63 NULL cells in rows 1..18.",
+     "citations": [
+      "table 0x8010c940 idx108-170"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "The 2-D table is reached ONLY when (ent[+0x21A] & 2) == 0. If bit1 is SET, HURT stamps routine word 0x00060501 (+0x4=1,+0x5=5,+0x6=6), sets ent[+0x16B]=1, runs a compare-chain on ent[+0x5] (10->0x80106128, 11->0x80106310, 9->0x8010640c, 14->0x80106510, 16->...) and returns via j 0x80105418 without dispatching any executor.",
+     "citations": [
+      "lhu v1,538(s1) @0x80105168",
+      "andi v0,v1,0x2 @0x80105170 / beq v0,zero,0x80105288 @0x80105174",
+      "lui v1,0x6 / ori v1,v1,0x501 / sw v1,4(s1) @0x8010517c-0x80105184",
+      "sb v0,363(s1) @0x8010518c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Entry into the dispatch stanza is multi-point, args pre-loaded in delay slots: `bne v0,zero,0x801053dc` @0x8010528c (delay addu a0,s1) when (ent[+0x21A]&0x60)!=0; `bgez v0,0x801053e0` @0x8010529c (delay addu a1,s2) when (s8)ent[+0x152]>=0; `beq v0,zero,0x801053d8` @0x801052b0 when (ent[+0x1D0]&0xC0)==0; else fall-through through the gore block.",
+     "citations": [
+      "andi v0,v1,0x60 @0x80105288",
+      "lb v0,338(s1) @0x80105294",
+      "lhu v0,464(s1) @0x801052a4 / andi v0,v0,0xc0 @0x801052ac",
+      "jal 0x8005bd6c @0x801052b8 with a0=9 (delay @0x801052b4)"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "+0x223 READER #1 (the gate). thresh v1 = 0 by default; if (ent[+0x10E] & 0x40) then thresh = (ent[+0x5]!=1) ? 0x17 : 0. Then: if ent[+0x6]!=0 -> body 0x80105168. Else if (s8)ent[+0x223] > thresh -> body 0x80105168. Else fall through to the +0x222 arm. `lb` = SIGNED. Bytes @0x8010506c = 82 22 02 23 -> 0x82220223.",
+     "citations": [
+      "andi v0,a0,0x40 @0x80105024 (delay slot, always runs)",
+      "beq v0,zero,0x8010505c @0x8010503c / DELAY addu v1,zero,zero @0x80105040",
+      "xori/sltu/subu/andi v1,v0,0x17 @0x8010504c-0x80105058",
+      "lbu v0,6(s1) @0x8010505c / bne v0,zero,0x80105168 @0x80105064",
+      "lb v0,547(s1) @0x8010506c / slt v0,v1,v0 @0x80105074 / bne v0,zero,0x80105168 @0x80105078 / DELAY addiu v1,zero,1 @0x8010507c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Gate FALL-THROUGH arm (value <= thresh): all three sub-paths set ent[+0x222]=1. If ent[+0x222]==1 OR ent[+0x5]==1 -> 0x801050a0: +0x222=1, routine word = 0x00000501 (+0x4=1,+0x5=5), +0x223 = (rng&0xf)+16, then a sound keyed on ent[+0x1D2]%3, then RETURN (j 0x80105418) - no executor runs. Otherwise -> 0x80105164: +0x222=1 then fall into the body.",
+     "citations": [
+      "lbu v0,546(s1) @0x80105080 / beq v0,v1,0x801050a0 @0x80105088",
+      "lbu v0,5(s1) @0x80105090 / bne v0,v1,0x80105164 @0x80105098",
+      "sb v0,546(s1) @0x801050a0",
+      "addiu v0,zero,1281 @0x801050a4 / jal 0x80015fe8 @0x801050a8 / DELAY sw v0,4(s1) @0x801050ac",
+      "andi v0,v0,0xf @0x801050c0 / addiu v0,v0,16 @0x801050c4 / sb v0,547(s1) @0x801050c8"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "+0x223 READER #2 (per-reaction subtraction, EMZ0). a0 = ent[+0x223] - tbl[0x8010CC33 + ent[+0x5]], stored UNCONDITIONALLY in the delay slot. Bytes verified: 9023CC33 (lbu v1,-13261(at)), 00832023 (subu a0,a0,v1), 1440000E (bne), A2240223 (sb a0,547(s1)).",
+     "citations": [
+      "lbu v0,5(s1) @0x801055c0 / lbu a0,547(s1) @0x801055c4",
+      "lbu v1,-13261(at) @0x801055d8 (at=0x80110000+ent[5] -> 0x8010CC33)",
+      "subu a0,a0,v1 @0x801055e0",
+      "bne v0,zero,0x80105624 @0x801055e8 / DELAY sb a0,547(s1) @0x801055ec"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Subtraction table @0x8010CC33 indexed by ent[+0x5], raw bytes 80 09 0f 0f 23 00 00 00 00 00 00 00 00 14 00 00 00 00 00 00 00: [0]=128 [1]=9 [2]=15 [3]=15 [4]=35 [5..12]=0 [13]=20 [14..20]=0. Index 0 aliases the low byte of the pointer 0x80107888 @0x8010CC30, so ent[+0x5]==0 is not a real entry. Next pointer table starts @0x8010CC48 (index 21).",
+     "citations": [
+      "bytes 8010cc30: 88 78 10 80 09 0f 0f 23 00 00 00 00 00 00 00 00",
+      "bytes 8010cc40: 14 00 00 00 00 00 00 00",
+      "table 0x8010cc48 -> 0x80108530"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "The subtraction runs exactly ONCE per stagger entry: it lives in the ent[+0x6]==0 arm of executor 0x80105438 (entered at 0x801054bc), and that arm sets ent[+0x6]=1 at 0x801055b0-0x801055b4 before falling into the subtraction block. No per-frame decrement of +0x223 exists anywhere in EMZ0.BIN.",
+     "citations": [
+      "lbu v1,6(s1) @0x80105478 / beq v1,zero,0x801054bc @0x80105490",
+      "addiu v0,zero,1 @0x801055b0 / sb v0,6(s1) @0x801055b4",
+      "full-overlay grep: only 547(reg) sites are 0x8010089c,0x8010094c,0x80102d48,0x80104034,0x801045e8,0x80104a18,0x8010506c,0x801050c8,0x801055c4,0x801055ec,0x80105620,0x80106010,0x80106030"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Conditional reseed right after the subtraction: skipped entirely if (ent[+0x10E] & 0x40)!=0. Otherwise, if the NEW (s8)+0x223 > 0 -> skip; if ent[+0x156] (HP) < 81 -> skip; else +0x223 = (rng&0xf)+16.",
+     "citations": [
+      "andi v0,v0,0x40 @0x801055e4 / bne v0,zero,0x80105624 @0x801055e8",
+      "sll v0,a0,24 @0x801055f0 / bgtz v0,0x80105624 @0x801055f4",
+      "lh v0,342(s1) @0x801055fc / slti v0,v0,81 @0x80105604 / bne v0,zero,0x80105624 @0x80105608",
+      "andi v0,v0,0xf @0x80105618 / addiu v0,v0,16 @0x8010561c / sb v0,547(s1) @0x80105620"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "+0x223 READER #3 (knockdown phase 2): if (s8)ent[+0x223] > 0 -> skip; else +0x223 = (rng&0x10)+15 (i.e. 15 or 31) AND ent[+0x222] = 0. The routine-word store `sw v0,4(s4)` sits in the DELAY SLOT of the bgtz so it always executes with v0=257=0x101.",
+     "citations": [
+      "lb v1,547(s4) @0x80106010 / bgtz v1,0x80106038 @0x80106018 / DELAY sw v0,4(s4) @0x8010601c",
+      "andi v0,v0,0x10 @0x80106028 / addiu v0,v0,15 @0x8010602c / sb v0,547(s4) @0x80106030",
+      "sb zero,546(s4) @0x80106034"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Complete list of +0x223 WRITERS in EMZ0.BIN (6 seed sites, 1 subtract, 1 conditional reseed): (rng&0xf)+16 @0x8010089c, 0x80102d48, 0x80104034, 0x801045e8, 0x80104a18, 0x801050c8, 0x80105620; (rng&0xf)+32 (=32..47) @0x8010094c; (rng&0x10)+15 (=15 or 31) @0x80106030; subtraction @0x801055ec. There is NO decrement and NO per-frame writer in the overlay.",
+     "citations": [
+      "addiu v0,v0,16 @0x80100898 / sb @0x8010089c",
+      "addiu v0,v0,32 @0x80100948 / sb @0x8010094c",
+      "addiu v0,v0,15 @0x8010602c / sb @0x80106030"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "+0x223 WRITERS in PSX.EXE: three unconditional zero-clears in reset blocks (`sb zero,547(...)` @0x8005dc4c, @0x8005de40, @0x8005e278) and one per-frame counter in FUN_800605ac. The struct base is proven to be the entity: the same block writes HP +0x156 @0x8005dc3c and +0x22A @0x8005dc50, and 0x8005e268 reads +0x10E from the same base.",
+     "citations": [
+      "sh v1,342(s1) @0x8005dc3c / sb zero,547(s1) @0x8005dc4c / sb zero,554(s1) @0x8005dc50",
+      "sb zero,547(a0) @0x8005de40",
+      "lhu v0,270(s1) @0x8005e268 / sb zero,547(s1) @0x8005e278"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "FUN_800605ac is the ONLY per-frame writer and it INCREMENTS, it does not decrement: if (ent[+0x0E] & 0x8000)==0 -> +0x223 = 0. Else v1 = (u8)(+0x223 + 1) & 0x7F; if v1 < 0x3D store v1 (delay slot, always executes); else store v1|0x80 (which makes the byte NEGATIVE for the signed `lb` gate). Range walk: 0..60 positive, 61..127 stored with bit7 set, then wraps to 0.",
+     "citations": [
+      "lhu v0,14(a0) @0x800605b4 / andi 0x8000 @0x800605bc / beq -> 0x800605f0 @0x800605c0",
+      "lbu v0,547(a0) @0x800605c8 / addiu v0,v0,1 @0x800605d0 / andi v1,v0,0x7f @0x800605d4",
+      "sltiu v0,v1,0x3d @0x800605d8 / bne v0,zero,0x800605f4 @0x800605dc / DELAY sb v1,547(a0) @0x800605e0",
+      "ori v0,v1,0x80 @0x800605e4 / sb v0,547(a0) @0x800605ec",
+      "sb zero,547(a0) @0x800605f0"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "FUN_800605ac is table-dispatched, not jal'd: EXE per-entity update FUN_8005cfc8 loads handler = tbl_0x800a83b8[ent[+0x4]] and jalr's it. 0x800a83bc (index 1) = 0x800605ac, [0]=0x8005d3cc, [2]=0x8005e360, [3]=0x8005e39c, [4]=0x80065c88. So +0x223 increments while ent[+0x4]==1 (the same state index HURT=2 lives in).",
+     "citations": [
+      "lbu v0,4(s0) @0x8005d018 / sll v0,v0,2 @0x8005d024",
+      "lw v0,-31816(at) @0x8005d030 (at=0x800b0000 -> 0x800a83b8)",
+      "jalr v0 @0x8005d038 / DELAY addu a0,s0,zero @0x8005d03c",
+      "table 0x800a83b8 dump"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "WHAT +0x223 PROVABLY IS: a signed byte that (a) is seeded to a random 15..47 at state entry, (b) is reduced per hit-reaction by a per-ent[+0x5] amount from tbl@0x8010CC33, (c) is incremented once per frame while ent[+0x4]==1 with bit7 forced on above 60, and (d) is compared as `> thresh(0 or 23)` to decide whether HURT runs the reaction body. Call it a signed hit-reaction budget; do NOT name it a cooldown - nothing counts down.",
+     "citations": [
+      "seeds @0x801050c8/0x8010094c/0x80106030",
+      "subtract @0x801055ec",
+      "increment @0x800605d0",
+      "gate @0x8010506c-0x80105078"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "UNPROVEN: whether FUN_8005cfc8 actually runs. Its address is written into 26+ RAM slots (0x800cff5c..0x800cffc8) by `lui v0,0x8006 / addiu v0,v0,-12344` @0x8005e41c-0x8005e420, but NO reader of that array exists in PSX.EXE or any COMMON/BIN overlay (searched lw imm 0xff5c/0xff58/0xff60 and all lui-resolved accesses). NEXT XREF: find the reader of 0x800cff5c (likely a lower array base + type*4) or trace the array in a savestate.",
+     "citations": [
+      "sw v0,-164(at) @0x8005e428 .. sw v0,-56(at) @0x8005e500",
+      "no jal 0x0c0173f2 and no pointer 0x8005cfc8 anywhere in info/re2leon (21598 files scanned)"
+     ],
+     "certainty": "UNPROVEN"
+    },
+    {
+     "fact": "STAGGER vs KNOCKDOWN, mechanism 1 (table cell): the 2-D cell IS 0x80105bc0 for (row,col) = (7,4), (8,4), (8,7), (9,1), (9,2), (10,0..2), (11,0..2). All other non-NULL cells in rows 1-16 are 0x80105438, 0x80107438, 0x801066fc, 0x8010703c or 0x80107ef0.",
+     "citations": [
+      "0x8010ca4c, 0x8010ca70, 0x8010ca7c, 0x8010ca88, 0x8010ca8c, 0x8010caa8-0x8010cab0, 0x8010cacc-0x8010cad4"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "STAGGER vs KNOCKDOWN, mechanism 2 (the decisive one): executor 0x80105438 immediately delegates to 0x80105bc0 when ent[+0x222]==1, and then exits. So a +0x222 latch upgrades EVERY 0x80105438 cell to the 0x80105bc0 behaviour without changing the table.",
+     "citations": [
+      "addiu a0,zero,1 @0x80105444",
+      "lbu v0,546(s1) @0x80105458 / bne v0,a0,0x80105478 @0x80105460",
+      "jal 0x80105bc0 @0x80105468 / DELAY addu a0,s1,zero @0x8010546c",
+      "j 0x80105ba0 @0x80105470"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "+0x222 complete xref. READERS: @0x80105080 (gate arm), @0x80105458 (0x80105438 -> 0x80105bc0 delegate), @0x80105f84 (knockdown phase 1, picks between two effect setups). WRITERS =1: @0x801050a0, @0x80105164. WRITER =0: @0x80106034 (knockdown phase 2 when +0x223<=0) plus zero-stores @0x80100884, 0x80100bec, 0x80102d90, 0x801032f4, 0x801040a4, 0x80104430, 0x801049e4.",
+     "citations": [
+      "lbu v0,546(s4) @0x80105f84 / bne v0,zero,0x80105fbc @0x80105f8c",
+      "sb v0,546(s1) @0x801050a0 and @0x80105164",
+      "sb zero,546(s4) @0x80106034"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "0x80105bc0 is a 4-phase machine on ent[+0x6]: 0 -> 0x80105c38 (init), 1 -> 0x80105f1c, 2 -> 0x80106010 (get-up), >=3 -> j 0x801060fc (exit). Phase 0 sets ent[+0x6]=1, ent[+0x15A]=10 and ent[+0x14C] = 0x00030004 - ((ent[+0x1D0]&0x20)?1:0).",
+     "citations": [
+      "lbu v1,6(s4) @0x80105bf8 / beq v1,v0(1),0x80105f1c @0x80105c00",
+      "slti v0,v1,2 @0x80105c08 / beq v1,zero,0x80105c38 @0x80105c14",
+      "beq v1,v0(2),0x80106010 @0x80105c28 / DELAY addiu v0,zero,257 @0x80105c2c",
+      "sb v0,6(s4) @0x80105c48 / sh v0(10),346(s4) @0x80105c50 / sw a1,332(s4) @0x80105c74"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "GET-UP PATH out of 0x80105bc0: phase 1 advances ent[+0x6] += (return of jal 0x8002959c) at 0x80105f50/0x80105f58, and decrements the counter ent[+0x15A] at 0x80105ffc-0x8010600c. When ent[+0x6] reaches 2 the phase-2 entry 0x80106010 UNCONDITIONALLY writes routine word 0x00000101 (+0x4=1 ACTIVE, +0x5=1) in the delay slot of the +0x223 test, then reseeds +0x223/clears +0x222 only if (s8)+0x223 <= 0.",
+     "citations": [
+      "jal 0x8002959c @0x80105f3c / lbu v1,6(s4) @0x80105f48 / addu v1,v1,v0 @0x80105f50 / sb v1,6(s4) @0x80105f58",
+      "lhu v0,346(s4) @0x80105ffc / addiu v0,v0,-1 @0x80106004 / sh v0,346(s4) @0x8010600c",
+      "addiu v0,zero,257 @0x80105c2c / sw v0,4(s4) @0x8010601c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "After the get-up stamp, 0x80106038-0x801060f8 can OVERWRITE the routine word: it does two range/LOS checks (jal 0x80015614 with a3=512 then a3=900 against globals 0x800cfc30/0x800cfc38) plus ent[+0x1F0]<0xFA0 / <0xBB8 distance tests, and on success writes 0x00000B01 (2817) or 0x00000C01 (3073) or 0x00000201 (513). Default is the already-stored 0x00000101.",
+     "citations": [
+      "jal 0x80015614 @0x8010604c (a3=512) / @0x801060c0 (a3=900)",
+      "lw v0,496(s4) @0x8010605c / sltiu v0,v0,0xfa0 @0x80106064",
+      "addiu v0,zero,2817 @0x80106098 / addiu v0,zero,3073 @0x801060e0 / addiu v0,zero,513 @0x801060f4 / sw v0,4(s4) @0x801060f8"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "ROW INDEX ent[+0x5] IS written by the PSX.EXE damage router as the low byte of the attack word: `sb s5,5(s1)` @0x80047324 (bytes A2350005) and @0x80047574, where s5 = a3 = the 4th argument of FUN_800470C0 (`addu s5,a3,zero` @0x800470e8). HURT itself never writes +0x5.",
+     "citations": [
+      "addu s5,a3,zero @0x800470e8",
+      "sb s5,5(s1) @0x80047324",
+      "sb s5,5(s1) @0x80047574"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "COLUMN INDEX ent[+0x1D2] = zone + 3*(attack_word >> 28). Proof: `srl s6,s5,28` @0x80047114 (bytes 0015B702), `sll v1,s6,1` @0x80047310, `addu v1,v1,s6` @0x80047320 (=3*s6), `lbu v0,466(s1)` @0x80047318 (the zone), `addu v0,v0,v1` @0x80047328, `sb v0,466(s1)` @0x80047330. Second identical site @0x80047540-0x80047580.",
+     "citations": [
+      "srl s6,s5,28 @0x80047114",
+      "addu v1,v1,s6 @0x80047320",
+      "addu v0,v0,v1 @0x80047328 / sb v0,466(s1) @0x80047330"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "ZONE (the 0..2 part of +0x1D2) is computed from the hit point vs entity height. Default 1. Whole block gated by (attack_word & 0x20000). a0 = (s16)ent[+0x98] >> 1. If ent[+0x3C] + a0 < hitrec[+4] -> zone = 0. Then, only if (ent[+0x00] & 0x10000000), if hitrec[+4] < ent[+0x3C] + 3*a0 -> zone = 2. hitrec = a0 arg of FUN_800470C0 (s4).",
+     "citations": [
+      "addiu v0,zero,1 @0x80047294 / sb v0,466(s1) @0x80047298",
+      "and v0,s5,0x20000 @0x800472a0 / beq v0,zero,0x80047314 @0x800472a4",
+      "lhu v0,152(s1) @0x800472ac / sra a0,v0,17 @0x800472b8",
+      "lw v0,60(s1) @0x800472bc / lw v1,4(s4) @0x800472c0 / slt v0,v0,v1 @0x800472c8 / sb zero,466(s1) @0x800472d4",
+      "and v0,v0,0x10000000 @0x800472e0 / slt v1,v1,v0 @0x80047300 / sb v0(2),466(s1) @0x8004730c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "HURT/DEATH selection (unchanged, byte-re-verified): post-damage HP halfword at +0x156 decides. `lh v1,342(s1)` @0x8004727c; `addiu v0,zero,2` @0x80047280; `bgez v1,0x80047294` @0x80047284 with `sw v0,4(s1)` @0x80047288 in the DELAY SLOT storing 2 unconditionally; HP<0 falls through to `addiu v0,zero,3` / `sw v0,4(s1)` @0x8004728c-0x80047290. Bytes 56 01 23 86 | 02 00 02 24 | 03 00 61 04 | 04 00 22 ae.",
+     "citations": [
+      "lh v1,342(s1) @0x8004727c",
+      "bgez v1,0x80047294 @0x80047284 / DELAY sw v0,4(s1) @0x80047288",
+      "second identical site @0x800474a0-0x800474b4"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Because the routine selector is a WORD store, `sw 2,4(s1)` also zeroes +0x5/+0x6/+0x7 - but only because the VALUE is 2. HURT itself stores 0x00000501 (`addiu v0,zero,1281` @0x801050a4, `sw v0,4(s1)` @0x801050ac in a jal delay slot) and 0x00060501 @0x80105184, i.e. the same word carries nonzero phase bytes.",
+     "citations": [
+      "addiu v0,zero,1281 @0x801050a4 / DELAY sw v0,4(s1) @0x801050ac",
+      "lui v1,0x6 / ori v1,v1,0x501 / sw v1,4(s1) @0x8010517c-0x80105184"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Stagger executor 0x80105438 exit routine words (all state 1): 0x301 @0x80105a10 and @0x80105a4c, 0x2817(0xB01) @0x80105ad4, 0x3073(0xC01) @0x80105b10, 0x513(0x201) @0x80105b2c, 0x257(0x101) @0x80105b40, 0x10101 @0x80105b50. Its phase byte ent[+0x6] is written at 0x801055b4 (=1), 0x80105864, 0x8010597c.",
+     "citations": [
+      "addiu v0,zero,769 @0x80105a0c / sw v0,4(s1) @0x80105a10",
+      "addiu v0,zero,2817 @0x80105acc / sw v0,4(s1) @0x80105ad4",
+      "addiu v0,zero,257 @0x80105b38 / sw v0,4(s1) @0x80105b40"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "+0x10E bit 0x40 (which raises the gate threshold from 0 to 23) is NOT set by EMZ0 init: 0x80100a34 writes 0x4002, 0x80100a88 writes 0x4004, 0x80100b34 ORs 0x2000. No `ori ...,0x40` before any `sh ...,270(...)` in EMZ0.BIN. NEXT XREF: the EXE spawn writers `sh a3,270(s1)` @0x800552b8 and @0x8004a7a4 (value comes from room enemy-list data) - needs a room-data or savestate read.",
+     "citations": [
+      "addiu v0,zero,16386 @0x80100a34 / sh v0,270(s2) @0x80100a38",
+      "addiu v0,zero,16388 @0x80100a88 / sh v0,270(s2) @0x80100a8c",
+      "sh a3,270(s1) @0x800552b8"
+     ],
+     "certainty": "UNPROVEN"
+    },
+    {
+     "fact": "UNPROVEN roles - emit as raw offsets: +0x10E bit0 (selects the flat table; the low 6 bits are a small enum tested `andi 0x3f` vs 7 @0x80100a6c-0x80100a70, so bit0 may just be that enum's LSB); +0x21A bits 0x2/0x10/0x60; +0x1D0 bits 0x20/0xC0; +0x152 (signed, gates the gore block); +0x0E bit 0x8000; +0x7 (zero accesses in the whole overlay). Behavioural names for 0x80105438 / 0x80105bc0 / 0x80107438 / 0x801066fc / 0x8010703c / 0x80107ef0 / 0x80107888 are NOT established.",
+     "citations": [
+      "andi v0,v0,0x3f @0x80100a6c / bne v0,v1(7) @0x80100a70",
+      "lb v0,338(s1) @0x80105294",
+      "grep EMZ0.BIN: 0 accesses at offset 7, 104 at +0x5, 216 at +0x6"
+     ],
+     "certainty": "UNPROVEN"
+    }
+   ]
+  },
+  {
+   "facts": [
+    {
+     "fact": "CRAWL ACTIVE root @0x80101210: lbu v0,5(s0) -> sll v0,v0,2 -> lw from base 0x8010C90C (decision), jalr; then lbu 5(s0) again -> lw from base 0x8010C918 (executor), jalr. NO mask on +0x5, NO bounds check (no slti/sltiu/beq between load and jalr). Both calls get a0=self,a1,a2. Structurally identical to upright root 0x8010118C which uses 0x8010C88C/0x8010C8CC.",
+     "citations": [
+      "lbu v0,5(s0) @0x8010122c",
+      "lw v0,-14068(at) =0x8010c90c @0x80101240",
+      "jalr v0 @0x80101248",
+      "lw v0,-14056(at) =0x8010c918 @0x80101268",
+      "jalr v0 @0x80101270"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Delay slots of the crawl root: 0x8010124C `addu s2,a2,zero` executes BEFORE the decision call (a2 stashed in s2); 0x80101274 `addu a2,s2,zero` executes BEFORE the executor call (a2 restored as 3rd arg). a0/a1 reloaded at 0x80101250/0x80101258. Finder's transcript correct.",
+     "citations": [
+      "addu s2,a2,zero @0x8010124c",
+      "addu a2,s2,zero @0x80101274",
+      "addu a0,s0,zero @0x80101250",
+      "addu a1,s1,zero @0x80101258"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "CRAWL decision table 0x8010C90C = 3 words: [0]=0x80102EE4 [1]=0x801025E4 [2]=0x80103A70. CRAWL executor table 0x8010C918 = 3 words: [0]=0x80103024 [1]=0x801025EC [2]=0x80103B48. Raw bytes @0x8010c90c: e4 2e 10 80 e4 25 10 80 70 3a 10 80 24 30 10 80 ec 25 10 80 48 3b 10 80.",
+     "citations": [
+      "bytes @0x8010c90c..0x8010c923"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "3-entry bound is PROVEN, not just adjacency: the next word 0x8010C924 = 0x803200BE is not a code pointer and is read as a HALFWORD array by three lhu sites (lui at,0x8011 + lhu with disp resolving to 0x8010C924). So the crawl executor table ends at 0x8010C920. Content/role of the 0x8010C924 u16 array: UNPROVEN (finder's \"gait table\" label uncited).",
+     "citations": [
+      "lhu v1 @0x80101ab4 (lui at,0x8011 @0x80101aac)",
+      "lhu v1 @0x80101b7c",
+      "lhu v0 @0x80101bd4",
+      "bytes @0x8010c924: be 00 32 80 96 00 40 80"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "CONFIRMED: crawl sub_state_1==1 IS upright sub_state_1==3. Upright decision[3] @0x8010C898 = 0x801025E4 == crawl decision[1] @0x8010C910; upright executor[3] @0x8010C8D8 = 0x801025EC == crawl executor[1] @0x8010C91C. Decision 0x801025E4 is a bare `jr ra`/`nop` stub; all work is in the executor 0x801025EC.",
+     "citations": [
+      "table 0x8010c898 / 0x8010c910",
+      "table 0x8010c8d8 / 0x8010c91c",
+      "jr ra @0x801025e4"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Shared handler 0x801025EC reads the CRAWL BIT itself: s5 = (+0x10E & 1) @0x8010266C-0x80102674; s5 += 2 if entity+0x8 == 23 or == 17 (@0x8010267C/0x80102688). It then dispatches its own phase machine on +0x6 (sltiu v1,0xa, table @0x8010001C, 10 entries) @0x8010269C-0x801026B8. So the shared attack body is parameterized by crawl-vs-upright, not duplicated.",
+     "citations": [
+      "lhu v0,270(s1) @0x8010266c",
+      "andi s5,v0,0x1 @0x80102674",
+      "beq v1,23 @0x8010267c / bne v1,17 @0x80102688",
+      "sltiu v0,v1,0xa @0x8010269c",
+      "lw v0,28(at) =0x8010001c @0x801026b0"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Shared handler phase 0 (0x801026C0): motion +0x14C = 0x000F0000 + tbl[s5*2] where tbl is an 8-byte copy of overlay data 0x8010000C = { 0B 0B 0E 0E 0B 0B 0E 0E } (lwl/lwr->swl/swr to sp+0x10 @0x8010261C-0x80102638). s5 even -> 0x0B, s5 odd (crawl) -> 0x0E. Also sets +0x6 = 1.",
+     "citations": [
+      "addiu a1,a1,12 =0x8010000c @0x80102618",
+      "sll v0,s5,1 / addu v0,sp,v0 / lbu v1,16(v0) @0x801026c4-0x801026cc",
+      "lui v0,0xf / addu v1,v1,v0 / sw v1,332(s1) @0x801026d8-0x801026e0",
+      "bytes @0x8010000c: 0b 0b 0e 0e 0b 0b 0e 0e"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Shared handler phase 0 grabs the player: player_work (0x800CFBF8) +0x1B4 = self (sw s1,436(s3) @0x80102710); player+0x4 word = (ret_of_0x80015910 << 8) | 5 (@0x80102720-0x80102728); then if crawl bit set, player+0x5 += 2 (@0x8010272C-0x80102744). I.e. crawlers select a different player-reaction sub_state, offset +2.",
+     "citations": [
+      "sw s1,436(s3) @0x80102710",
+      "sll v0,v0,8 / ori v0,v0,0x5 / sw v0,4(s3) @0x80102720-0x80102728",
+      "andi v0,s5,0x1 / beq @0x8010272c-0x80102730",
+      "lbu v0,5(s3) / addiu v0,v0,2 / sb v0,5(s3) @0x80102738-0x80102744"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "CRAWL SUB 0 = the pursuing/attack-seeking crawler. Decision 0x80102EE4 runs two 0x80015614 calls (a3=1024 then 256), then gates: [self+0x1F0] (read PRE-call @0x80102F0C) < 0x514(1300); player+0x1D3 & 0x80 == 0; self+0x106 == player+0x106. Two attack cones follow.",
+     "citations": [
+      "lw s0,496(s1) @0x80102f0c",
+      "sltiu s0,s0,0x514 @0x80102f3c",
+      "lbu v0,-565(v0)=0x800cfdcb / andi 0x80 @0x80102f4c-0x80102f58",
+      "lbu v1,262(s1) vs lbu v0,-770 =0x800cfcfe @0x80102f60-0x80102f70"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "CRAWL SUB 0 decision, two symmetric cones: (A) if (self+0x21A & 0x20)==0 call 0x80015758(&self+0x38, &player+0x38, (s16)self+0x76 + 256, 256); (B) if (self+0x21A & 0x40)==0 same with yaw - 256. Either returning 0 -> self+0x4 = 0x00000101 (state 1, sub_state_1 = 1 = the shared attack body) and player+0x1D3 |= 0x80.",
+     "citations": [
+      "lhu v0,538(s1)/andi 0x20/bne @0x80102f78-0x80102f84",
+      "addiu a2,a2,256 @0x80102f9c ; addiu a2,a2,-256 @0x80102fe8",
+      "addiu v0,zero,257 / sw v0,4(s1) @0x80102fa4-0x80102fa8 and @0x80102ff0-0x80102ff4",
+      "sb v0,467(s2) |0x80 @0x80102ff8-0x80103004"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "CRAWL SUB 0 executor 0x80103024: phase +0x6 == 0 -> +0x14C = 0x000F0005, +0x6 = 1, +0x158 = (rand()&7)+7, +0x14D = rand()&0xF (both via 0x80015FE8/0x80015E7C). Phase 1 (0x801030C0): if (s16)+0x144 >= 21 turn via 0x80015558(a3=24) and decrement +0x158; when +0x158 hits 0 reload it with (rand()&7)+7. Any other +0x6 -> 0x80103154.",
+     "citations": [
+      "lbu v1,6(s0)/beq/beq 1 @0x80103040-0x80103058",
+      "lui v0,0xf/ori 0x5/sw v0,332(s0) @0x80103064-0x8010306c",
+      "andi v0,v0,0x7/addiu v0,v0,7/sh v0,344(s0) @0x8010308c-0x80103098",
+      "slti v0,v0,21 @0x801030c8"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "CRAWL SUB 2 = the dormant/prone crawler. Executor 0x80103B48 is 8 instructions: if +0x6 == 0 then +0x6 = 1 and +0x14C = 23; else nothing. No movement, no turn, no anim step. Bytes: 06 00 82 90 | 00 00 00 00 | 04 00 40 14 | 01 00 02 24 | 06 00 82 a0 | 17 00 02 24 | 4c 01 82 ac | 08 00 e0 03.",
+     "citations": [
+      "bytes @0x80103b48..0x80103b67",
+      "sb v0,6(a0) @0x80103b58",
+      "addiu v0,zero,23 / sw v0,332(a0) @0x80103b5c-0x80103b60"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "CRAWL SUB 2 decision 0x80103A70 is the wake-up gate: 0x80015614(a3=1024) then (a3=512); requires (ret<<16)==0, [self+0x1F0] < 0x514(1300), player+0x1D3 & 0x80 == 0, (self+0x154 as u16) & 0x800 != 0, self+0x106 == player+0x106. On pass: self+0x4 = 0x101 (-> crawl sub 1, attack) and player+0x1D3 |= 0x80.",
+     "citations": [
+      "jal 0x80015614 a3=512 @0x80103ab4-0x80103ab8",
+      "sll v0,v0,16/bne @0x80103abc-0x80103ac0",
+      "sltiu v0,s1,0x514 @0x80103ac4",
+      "lhu v0,340(s0)/andi 0x800/beq @0x80103ae8-0x80103af4",
+      "addiu v0,zero,257/sw v0,4(s0) @0x80103b10-0x80103b14"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "VARIANT SELECT (upright vs crawl) @0x8010114C (= state root [1], ACTIVE): v0 = lhu(self+0x10E) (HALFWORD); v0 &= 0x3F; index table 0x8010C854 by v0*4; jalr. Delay slots are nop. NO bounds check, so an index >= 14 runs off the end into the upright decision table at 0x8010C88C.",
+     "citations": [
+      "lhu v0,270(a0) @0x80101154",
+      "andi v0,v0,0x3f @0x8010115c",
+      "lw v0,-14252(at) =0x8010c854 @0x8010116c",
+      "jalr v0 @0x80101174 (delay nop @0x80101178)"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Table 0x8010C854 = 14 words strictly alternating 0x8010118C (upright root, even index) / 0x80101210 (crawl root, odd index), [0]..[13]. [14] is 0x8010C88C = the upright decision table. So: (self+0x10E & 0x3F) ODD selects CRAWLING; EVEN selects upright. \"14 entries\" is an adjacency bound, NOT enforced by code.",
+     "citations": [
+      "table 0x8010c854..0x8010c888",
+      "0x8010c88c -> 0x80101294 (decision[0])"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "State root table is 0x8010C830, 9 entries indexed by lbu(self+0x4): [0]=0x8010065C INIT, [1]=0x8010114C ACTIVE, [2]=0x80104F40, [3]=0x80108250, [4]=0x80065C88 (in PSX.EXE), [5]=0x00000000, [6]=0x00000000, [7]=0x8010A440, [8]=0x80109CFC. States 5 and 6 are NULL -> jalr 0.",
+     "citations": [
+      "lbu v0,4(s0) @0x801004cc",
+      "lw v0,-14288(at) =0x8010c830 @0x801004e0",
+      "jalr v0 @0x801004e8 (delay addu a0,s0,zero @0x801004ec)",
+      "table 0x8010c830..0x8010c850"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "SCD spawn opcode 0x4D VERIFIED as a writer of +0x10E. Dispatch base 0x800A74C8 (lui s3,0x800a/addiu 29896 @0x80014070-74); slot [0x4D] @0x800A75FC = 0x80014BA4. Body: a0 = *(u32*)(0x800D4DD8 + rec[1]*4); rec[2] -> sb +0x8; rec[3] -> lbu then `sh v0,270(a0)` (zero-extended byte into a halfword). PC advances 22 bytes.",
+     "citations": [
+      "addiu s3,s3,29896 @0x80014074",
+      "word@0x800a75fc = 0x80014ba4",
+      "lbu v0,3(a1) @0x80014bdc ; sh v0,270(a0) @0x80014be4 (bytes 03 00 a2 90 | 00 00 00 00 | 0e 01 82 a4)",
+      "addiu v0,a1,22 @0x80014cac"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "BUT record[+3] is NOT the crawl choice for values 5 and 7: INIT rewrites the whole halfword. If (+0x10E & 0x3F)==5 -> +0x10E := 0x4002 (&0x3F = 2, EVEN = upright). If ==7 -> +0x10E := 0x4004 (&0x3F = 4, EVEN = upright). Both also set +0x156 = -1 and OR 0x4000 into *([self+0x198] + 1376) (DOUBLE deref).",
+     "citations": [
+      "bne v0,5 @0x80100a20 (delay addiu v0,zero,22 @0x80100a24)",
+      "addiu v0,zero,16386 / sh v0,270(s2) @0x80100a34-0x80100a38",
+      "addiu v0,zero,16388 / sh v0,270(s2) @0x80100a88-0x80100a8c",
+      "lw v1,408(s2) @0x80100a48 then lw/sw 1376(v1) @0x80100a54/0x80100a60"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "INIT picks the crawl SUBSTATE. a1 = 1 unconditionally (delay slot of bne @0x801009B4). Then: if (+0x10E & 0x3F) == 1 -> self+0x4 = 0x00000201 => state 1, sub_state_1 = 2 (dormant crawler). If == 3 -> self+0x4 = 1 (a1) => state 1, sub_state_1 = 0 (pursuing crawler). Both tests run AFTER the 5/7 remap and after the bit0 block.",
+     "citations": [
+      "bne v1,v0 @0x801009b4 delay addiu a1,zero,1 @0x801009b8 (bytes 03 00 62 14 | 01 00 05 24)",
+      "bne v0,a1 @0x80100b6c delay addiu v0,zero,513 @0x80100b70 ; sw v0,4(s2) @0x80100b74",
+      "bne v0,3 @0x80100b84 delay addu a0,s2,zero @0x80100b88 ; sw a1,4(s2) @0x80100b8c (bytes 02 00 43 14 | 21 20 40 02 | 04 00 45 ae)"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "INIT crawl block, gated on (+0x10E & 1) != 0 @0x80100AE8-0x80100AEC. It OVERRIDES extents already written by the generic path (0x80100958-0x80100994 wrote -1500/+1500/500...): +0x9A=+0x9C=+0x90=+0x92=200, +0x98=-350, +0x9E=350. Also +0x14C=23, +0x10E |= 0x2000, self+0x0 = (flags & 0xF3FFFFFF) | 0x04000000, and +0x156 halved with round-toward-zero. +0x1EE stays 500.",
+     "citations": [
+      "andi v0,v0,0x1 / beq @0x80100ae8-0x80100aec",
+      "sh 200 -> 154/156/144/146 @0x80100b04-0x80100b10",
+      "addiu -350 sh 152 @0x80100b14-0x80100b18 ; 350 sh 158 @0x80100b1c-0x80100b20",
+      "ori 0x2000 / sh 270 @0x80100b2c-0x80100b34 ; lui v0,0x400 / or / sw 0(s2) @0x80100b38-0x80100b44",
+      "sra16/srl31/addu/sra1 @0x80100b48-0x80100b5c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Member_set index 7 VERIFIED: helper 0x80055CB0 bounds-checks `sltiu v0,a1,0x2c` (44) @0x80055CB0 then jr through table 0x80011228. Entry [7] @0x80011244 = 0x80055D0C = `j 0x80055E30` + DELAY SLOT `sh a2,270(a0)`. Bytes 8c 57 01 08 | 0e 01 86 a4 (0xA486010E = SH a2,0x10E(a0)). Writes the FULL halfword, so it can set the low-6 variant.",
+     "citations": [
+      "sltiu v0,a1,0x2c @0x80055cb0",
+      "lw v0,4648(at) =0x80011228 @0x80055cc4",
+      "word@0x80011244 = 0x80055d0c",
+      "bytes @0x80055d0c: 8c 57 01 08 0e 01 86 a4"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "The Member_set target CAN be a zombie — the refuter was wrong to leave this UNPROVEN. Target = [work+0x154] (lw a0,340(s0) @0x80055C14). +0x154 is set by SCD opcode 0x2E (slot 0x2E of 0x800A74C8 = 0x80055904): [op][kind][s8 idx], PC+=3; kind 5 -> work+0x154 = *(u32*)(0x800D4DD8 + idx*4) @0x800559B0-0x800559C4 — the SAME enemy pointer array spawn opcode 0x4D writes into @0x80014BCC.",
+     "citations": [
+      "lw a0,340(s0) @0x80055c14",
+      "word@0x800a75a0 (slot 0x2E) = 0x80055904",
+      "sltiu v0,v1,0x5 @0x80055934 ; table 0x800111f0 [4]=0x800559b0",
+      "lw v0,19928(at) =0x800d4dd8 @0x800559bc",
+      "lw a0,19928(at) =0x800d4dd8 @0x80014bcc"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Member_set encodings: opcode 0x34 = 0x80055C00, [op][member u8][imm s16], PC += 4 (addiu v0,v0,4 @0x80055C30). Opcode 0x35 = 0x80055C50, different operand decode, also loads a0 from [work+0x154] @0x80055C64. Both funnel into 0x80055CB0.",
+     "citations": [
+      "word@0x800a7598 (slot 0x34) = 0x80055c00",
+      "lbu a1,1(v0)/lh a2,2(v0) @0x80055c18-0x80055c1c",
+      "addiu v0,v0,4 @0x80055c30",
+      "word@0x800a759c (slot 0x35) = 0x80055c50"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "YES — a LIVE standing zombie becomes a crawler, entirely inside state 1 (ACTIVE). Upright executor[11] = 0x8010439C (its ONLY xref in the overlay is the table word @0x8010C8F8 = 0x8010C8CC + 11*4; decision[11] @0x80104394 is a `jr ra` stub). At 0x80104588-0x80104598 it writes self+0x4 = 0x101 and self+0x10E = (old & 0xFFC0) | 1 -> ODD -> next ACTIVE tick dispatches through 0x80101210 (crawl).",
+     "citations": [
+      "only word 0x8010439c in EMZ0 is @0x8010c8f8",
+      "jr ra @0x80104394",
+      "lhu v0,270(s0) @0x80104588 ; sw v1,4(s0) @0x8010458c ; andi v0,v0,0xffc0 @0x80104590 ; ori v0,v0,0x1 @0x80104594 ; sh v0,270(s0) @0x80104598",
+      "bytes @0x80104588: 0e 01 02 96 04 00 03 ae c0 ff 42 30 01 00 42 34 0e 01 02 a6"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Gate for that live conversion (all must pass, else jump to 0x801045F0/0x801045BC): self+0x14D >= 0x12 (18); 0x80015614(self, [0x800CFC30], [0x800CFC38], 256) returns 0 in low 16 bits; self+0x1F0 < 0x708 (1800); player+0x1D3 (0x800CFDCB) & 0x80 == 0; self+0x106 == player+0x106 (0x800CFCFE). On pass it also sets player+0x1D3 |= 0x80. v1=257 is loaded in the delay slot @0x80104584.",
+     "citations": [
+      "lbu v0,333(s0)/sltiu v0,v0,0x12/bne @0x8010450c-0x80104518",
+      "sltiu v0,v0,0x708 @0x8010454c",
+      "andi v0,v0,0x80 / bne @0x80104564-0x80104568",
+      "bne v1,v0 @0x80104580 delay addiu v1,zero,257 @0x80104584 (bytes 1b 00 62 14 | 01 01 03 24)",
+      "ori 0x80 / sb -565 @0x801045a8-0x801045b0"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "How ACTIVE sub_state_1 = 11 is entered (both probabilistic, both write the state word 0x00000B01): (a) 0x80105ACC-0x80105AD4 — after 0x80015FE8, if (rand & 0xF) == 0 (1 in 16); the store sits in the delay slot of `j 0x80105BA0` so it always executes on the fall-through. (b) 0x80108224-0x80108228 — if (rand & 7) == 0 (1 in 8); `addiu v0,zero,2817` is the delay slot of the bne.",
+     "citations": [
+      "andi v0,v0,0xf / bne @0x80105ac0-0x80105ac4",
+      "addiu v0,zero,2817 @0x80105acc ; j 0x80105ba0 @0x80105ad0 ; sw v0,4(s1) @0x80105ad4",
+      "andi v0,v0,0x7 / bne @0x8010821c-0x80108220",
+      "addiu v0,zero,2817 @0x80108224 ; sw v0,4(s2) @0x80108228"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Three further runtime converters write the WHOLE halfword +0x10E = 8193 (0x2001) => low6 = 1 = CRAWL, keeping the 0x2000 flag: 0x80106B10 (fn 0x801066FC), 0x80107824 (fn 0x80107438), 0x801089B0 (fn 0x80108530). All three are reached only via sub-dispatch table words in 0x8010CA3C..0x8010CEC8 (3, 26 and 85 slots respectively) — i.e. from state roots 0x80104F40 and/or 0x80108250, never by direct jal.",
+     "citations": [
+      "addiu v0,zero,8193 / sh v0,270(a0) @0x80106b0c-0x80106b10",
+      "addiu v1,zero,8193 / sh v1,270(s2) @0x80107820-0x80107824",
+      "addiu v1,zero,8193 / sh v1,270(s1) @0x801089ac-0x801089b0",
+      "word 0x801066fc found only @0x8010ca40,0x8010ca64,0x8010cd24"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Substate chosen by those three converters (crawl domain {0,1,2} is never exceeded): 0x80106B3C `sw t2,4(a0)` with t2=1 (set @0x8010673C) -> sub 0. 0x8010784C: rand&1 != 0 -> 1 (sub 0), == 0 -> 513 (sub 2). 0x801089DC/0x801089D8: rand&7 != 0 -> 513 (sub 2, 7/8), == 0 -> s2 = 1 (sub 0, 1/8; s2 set @0x80108568, path enters via beq @0x80108594 before any reload).",
+     "citations": [
+      "sw t2,4(a0) @0x80106b3c ; addiu t2,zero,1 @0x8010673c",
+      "andi v0,v0,0x1/bne @0x8010783c-0x80107840 delay addiu v0,zero,1 @0x80107844 ; addiu v0,zero,513 @0x80107848 ; sw v0,4(s2) @0x8010784c",
+      "andi v0,v0,0x7/bne @0x801089c8-0x801089cc delay addiu v0,zero,513 @0x801089d0 ; sw s2,4(s1) @0x801089d8 ; sw v0,4(s1) @0x801089dc"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Complete census of +0x10E writers in EMZ0.BIN (19 sh sites). Whole-halfword (change the variant): 0x80100A38 (0x4002), 0x80100A8C (0x4004), 0x80104598 ((&0xFFC0)|1), 0x80106B10 / 0x80107824 / 0x801089B0 (0x2001), 0x80107A54 (value UNPROVEN). Bit-only (variant preserved): |0x2000 @0x80100B34,0x80102DC0,0x80103320,0x801040D0,0x80104470; |0x4000 @0x80101A18,0x80102238,0x80103A50; |0x80 @0x80106148; &0xDFFF @0x8010374C,0x80107EC8; &0xBFFF @0x80104F10.",
+     "citations": [
+      "scan of op=0x29,imm=270 over EMZ0.BIN",
+      "ori 0x2000 @0x80100b2c",
+      "andi v0,v0,0xdfff @0x80103744",
+      "ori v0,v0,0x80 @0x80106144",
+      "andi v1,v1,0xbfff @0x80104f0c"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "CORRECTION to the finder: bits 0x0400 and 0x8000 are NOT on +0x10E. Bits actually used on this halfword: 0x0001..0x003F (variant), 0x0040, 0x0080, 0x2000, 0x4000. The 0x8000 the finder saw is on +0x21A (lhu v0,538(s1) @0x80101CEC then andi 0x8000). 0x0400 came from `lui v0,0x400` = 0x04000000 stored to self+0x0 @0x80100B38-0x80100B44.",
+     "citations": [
+      "lhu v0,538(s1) @0x80101cec ; andi v0,v0,0x8000 @0x80101cf4",
+      "lui v0,0x400 @0x80100b38 ; sw a0,0(s2) @0x80100b44",
+      "andi v0,v0,0x40 @0x801055e4 ; andi v0,v0,0x80 @0x80101ce0"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "0x80109CFC is state root [8] (its only xref is the state-table word @0x8010C850). It is a pure dispatcher: lbu v0,5(a0); sll 2; lw from 0x8010CF18; jalr (delay = nop, so a0 = self is passed through unchanged). Nothing else.",
+     "citations": [
+      "word 0x80109cfc found only @0x8010c850",
+      "lbu v0,5(a0) @0x80109d04",
+      "lw v0,-12520(at) =0x8010cf18 @0x80109d18",
+      "jalr v0 @0x80109d20 delay nop @0x80109d24"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "Table 0x8010CF18 has exactly 11 entries [0..10]: 0x80109D38, 0x80109DB4, 0x80109E58, 0x8010A05C, 0x8010A240, 0x8010A9B8, 0x8010A9B8, 0x8010AF58, 0x8010AF58, 0x8010B464, 0x8010B464 (pairs 5/6, 7/8, 9/10 shared). Bound PROVEN: 0x8010CF44..0x8010CF48 are written as five individual BYTES (255,255,255,255,0), so they are a data variable, not slots. No bounds check at the root.",
+     "citations": [
+      "table 0x8010cf18..0x8010cf40",
+      "addiu v0,zero,255 @0x8010aab4 ; sb v0,-12476(at)=0x8010cf44 @0x8010aabc .. sb zero,-12472(at)=0x8010cf48 @0x8010aadc"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "State-8 handlers [2] (0x80109E58) and [3] (0x8010A05C) — and ONLY those two — resolve a second entity: s1 = *(u32*)(0x800CFE14 + (s16)(self+0x1DA)*4). Handler [2] then runs its own phase machine on +0x6 via table 0x8010016C (sltiu a0,0x5). CORRECTION to finder: handlers [0],[1],[4],[5/6],[7/8],[9/10] never read +0x1DA.",
+     "citations": [
+      "lh v0,474(s0) @0x80109e78 ; lw s1,-492(at)=0x800cfe14 @0x80109e90",
+      "lh v0,474(s0) @0x8010a0a4",
+      "sltiu v1,a0,0x5 @0x80109e84 ; lw v0,364(at)=0x8010016c @0x80109ea8",
+      "only two lh ...,474(...) sites in EMZ0.BIN"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "State-8 handler [2] hand-off block @0x80109F88-0x80109FF0 (literal stores): other+0x4 = 8196 (0x2004 => other state byte = 4, other+0x5 = 0x20); other+0x1B4 = self; other+0x188 = self+0x188; other+0x18C = self+0x18C; self+0x0 |= 0x1000; other+0x0 |= 0x1000; self+0x14C = 0x000F0018; self+0x6 = 3 (delay slot of jal 0x80015B94). Semantic label for this: UNPROVEN.",
+     "citations": [
+      "addiu v0,zero,8196 / sw v0,4(s1) @0x80109fb0-0x80109fb4",
+      "sw s0,436(s1) @0x80109fb8",
+      "sw v0,392(s1) @0x80109fc4 ; sw v0,396(s1) @0x80109fd0",
+      "ori 0x1000 sw 0(s0) @0x80109fdc-0x80109fe0 ; ori 0x1000 sw 0(s1) @0x80109fec-0x80109ff0",
+      "jal 0x80015b94 @0x80109fa8 delay sb v0,6(s0) @0x80109fac"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "State 8 cannot be ENTERED from inside EMZ0.BIN: there is not a single `sb rt,4(rs)`, and the only word-store to +0x4 whose low byte is 8 is 0x8010A038 (lui v0,0x2 / ori 0x308 => 0x00020308 = state 8, sub_state_1 = 3, +0x6 = 2), which is itself inside state-8 handler [2]. So the entry must come from outside the overlay (e.g. SCD Member_set member 2 -> `sb a2,4(a0)` @0x80055CE8).",
+     "citations": [
+      "scan: zero sb-to-offset-4 in EMZ0.BIN",
+      "lui v0,0x2 @0x8010a030 / ori v0,v0,0x308 @0x8010a034 / sw v0,4(s0) @0x8010a038",
+      "word@0x80011230 (member 2) = 0x80055ce4 -> sb a2,4(a0) @0x80055ce8"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "self+0x1B4 is NOT a stable backlink on a zombie: the overlay's own per-entity entry writes self+0x1B4 = 0x800CFBF8 (player work) every tick, immediately AFTER the state dispatch. Any +0x1B4 a zombie stores into itself is overwritten next frame; only stores into ANOTHER entity's +0x1B4 (0x80109FB8, 0x80102710) persist for that entity.",
+     "citations": [
+      "lui s2,0x800d / addiu s2,s2,-1032 =0x800cfbf8 @0x801002d0-0x801002d4",
+      "jalr v0 @0x801004e8 (state dispatch)",
+      "sw s2,436(s0) @0x80100500"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "0x800CFBF8 = the player work struct (port anchor). Proof: +0x38 = 0x800CFC30 and +0x40 = 0x800CFC38 are exactly the two globals the zombie loads as the aim target; and the crawl decision reaches 0x800CFDCB both absolutely (lbu -565) and as s2+467 with s2 = 0x800CFBF8. So 0x800CFDCB = player+0x1D3 and 0x800CFCFE = player+0x106.",
+     "citations": [
+      "lw a1,-976(a1)=0x800cfc30 / lw a2,-968(a2)=0x800cfc38 @0x801026e8-0x801026f0",
+      "lbu v0,-565(v0)=0x800cfdcb @0x80102f4c",
+      "lbu v0,467(s2) @0x80102ff8 with lui s2/addiu s2,-1032 @0x80102f34-0x80102f38"
+     ],
+     "certainty": "INFERRED"
+    },
+    {
+     "fact": "0x800CFBD8 bit 0x10000000 is READ-ONLY inside EMZ0.BIN — 4 load sites (0x801002E4, 0x801067E0, 0x801077C8, 0x80108964), each followed by `lui v1,0x1000` / and / branch, and ZERO stores. Its writer and meaning are UNPROVEN; do not port it as a \"one-crawler latch\".",
+     "citations": [
+      "lw v0,-1064(v0)=0x800cfbd8 @0x801002e4 ; lui v1,0x1000 @0x801002e8",
+      "lw @0x801067e0",
+      "lw @0x801077c8",
+      "lw @0x80108964",
+      "scan: no sw to 0x800cfbd8 in EMZ0.BIN"
+     ],
+     "certainty": "BYTES"
+    },
+    {
+     "fact": "TOOLING WARNING for whoever re-runs this: re2_disasm.py's right-hand address annotation propagates a stale `lui` base through intervening `lw`s. E.g. @0x80102F8C it prints `addiu a1,s2,56  0x800d0038` although s2 = 0x800CFBF8 there, so the true address is 0x800CFC30. Never cite that column; resolve the base register yourself.",
+     "citations": [
+      "addiu a1,s2,56 @0x80102f8c (annotated 0x800d0038, actual 0x800cfc30)",
+      "lui s2,0x800d / addiu s2,s2,-1032 @0x80102f34-0x80102f38"
+     ],
+     "certainty": "BYTES"
+    }
+   ],
+   "corrections": [
+    "REFUTER of Q2b (Member_set) was WRONG to call the target 'UNPROVEN' and to argue it cannot be the zombie. He only checked kind 4 (stride 504). Kind 5 @0x800559B0-0x800559C4 resolves work+0x154 = *(u32*)(0x800D4DD8 + idx*4) — the exact same enemy-work pointer array that spawn opcode 0x4D writes into @0x80014BCC. The finder's claim stands, with the qualification that SCD opcode 0x2E must first select kind=5.",
+    "FINDER Q2 was WRONG that 0x0400 and 0x8000 are bits of +0x10E. Neither mask is ever applied to a value loaded from +0x10E. 0x8000 belongs to +0x21A (@0x80101CEC/0x80101CF4); 0x0400 was a misread of `lui v0,0x400` = 0x04000000 stored to self+0x0 (@0x80100B38/0x80100B44). Real +0x10E bits: 0x3F variant, 0x40, 0x80, 0x2000, 0x4000.",
+    "FINDER Q2 prescription 'must be ported as a 14-entry table because a variant >= 14 would run off the end' is self-contradictory — the refuter was right. There IS no bounds check between `andi 0x3f` @0x8010115C and `jalr` @0x80101174, so the original genuinely indexes 0..63 into a 14-word table. A 14-entry C array does not reproduce that; port it as a raw base+index*4 read if you need bug-compatibility.",
+    "FINDER Q1b called the word at 0x8010C924 the 'gait table, already ported'. Unproven. All I can show is that it is NOT a pointer and is read as u16 (lhu) from 0x80101AB4 / 0x80101B7C / 0x80101BD4. Its role is UNPROVEN — but it does correctly bound the crawl executor table at 3 entries.",
+    "FINDER Q2a's file-offset derivation ('0x80014BA4 sits at file offset 0x97DFC') is wrong reasoning (0x97DFC is the offset of the TABLE SLOT), but the conclusion (opcode 0x4D) is right: word@0x800A75FC = 0x80014BA4, (0x800A75FC-0x800A74C8)/4 = 0x4D. Refuter correct on the reasoning, finder correct on the answer.",
+    "FINDER Q2c's core assertion (INIT remaps 5->0x4002 and 7->0x4004, flipping the crawl parity) is CORRECT and I re-verified the bytes. The refuter marked the whole finding refuted over side-labels; the remap itself must be kept. The refuter's own correction (a1 = 1 from the delay slot @0x801009B8, hence variant 1 -> sub 2 and variant 3 -> sub 0) is also correct and is the most port-critical fact in the whole INIT chain.",
+    "FINDER Q4b's 'global one-crawler latch' on 0x800CFBD8 bit 0x10000000 is INVENTED — I confirm the refuter: 4 loads, 0 stores in EMZ0.BIN. But Q4b's randomization reading IS correct: 0x8010783C-0x8010784C picks sub 0 (rand&1 != 0) or sub 2 (rand&1 == 0), and 0x801089C8-0x801089DC picks sub 2 (7/8) or sub 0 (1/8).",
+    "FINDER Q3 'every handler resolves a PARTNER entity' is FALSE — only handlers [2] (lh 474 @0x80109E78) and [3] (@0x8010A0A4) read +0x1DA; those are the only two such loads in the whole overlay. Refuter correct.",
+    "FINDER Q3 '+0x4 is only settable by Member_set member 2' is FALSE (EMZ0 has 100+ `sw ...,4(...)`), but the narrower true statement survives and matters: no code in EMZ0.BIN ever sets its OWN state byte to 8 except the state-8 self-transition @0x8010A038, so state 8 must be entered from outside the overlay.",
+    "REFUTER of Q4a is right that the 0x80106B10 conversion is NOT unconditional (four +0x231 latch escapes at 0x801067B0/0x8010681C plus a 1-in-4 PRNG gate when +0x4 == 3), and right that 0x801066FC is not exclusively 'HURT': its three table slots are 0x8010CA40, 0x8010CA64 and 0x8010CD24, the last of which sits in the death-root table block."
+   ]
+  }
+ ]
+}

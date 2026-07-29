@@ -166,40 +166,119 @@ für Zeile: `u < 2*cone -> 0`, sonst `±cone` mit dem Umschlag bei `u > 0x800`.
 der Port sie über die RE1.5-Seite schon byte-true hat.** Bisher: Steer-Helfer, Bearing-Helfer,
 Kegel-Test — alle drei schon vorhanden.
 
-## 🔜 W2 — Angriffs-Arbitrierung (Decision `@0x80101714`) — ANGEFANGEN, NICHT PORTIERT
+## ✅ W2 — Angriffs-Arbitrierung `@0x80101714` — VOLLSTÄNDIG SPEZIFIZIERT, BEWUSST NICHT PORTIERT
 
-Der Anfang der Entscheidungsleiter ist gelesen; der Rest läuft gerade als Audit-Workflow
-(`wf_a22318c3-be8`). Was bisher aus den Bytes steht:
+Zwei Workflows (`wf_a22318c3-be8` Fund + adversariale Gegenprüfung, `wf_16a84529-3e0` Adjudikation).
+**Von 65 Behauptungen der ersten Runde überlebten nur 12** — fast alle Widerlegungen betrafen nicht
+das Transkript, sondern die *Deutung* (siehe „Widerlegte Etiketten" unten). Die folgende Leiter habe
+ich danach **selbst** nachdisassembliert; die mit ✔ markierten Punkte sind von mir persönlich
+gegengeprüft, nicht bloß von Agenten berichtet.
 
+### Aufruf-Kontext
+
+`0x8010118C`: `lbu +5` → DECISION[`0x8010C88C`] → **`lbu +5` erneut** → EXECUTOR[`0x8010C8CC`]
+(@0x801011A8-EC). Ein Schreiber auf `+0x4` lässt seinen Executor also **im selben Tick** laufen.
+
+### Die Leiter
+
+```c
+s32 s2 = self[0x1F0];                        // Distanz          ✔ lw s2,496(s0) @0x80101744
+s32 s4 = arc(self, PL.x, PL.z, 1024);        // jal @0x80101748, a3 @0x8010174c, gefangen @0x8010176c
+s32 s3 = arc(self, PL.x, PL.z,  512);        // jal @0x80101768, a3 @0x80101754, gefangen @0x8010178c
+         arc(self, PL.x, PL.z, 1300);        // jal @0x80101788 — ERGEBNIS TOT (v0 zerstört @0x80101790)
+// arc() == re15_ai_arc_test: 0 == INNERHALB des Kegels
+
+if (self[0x23E] == 0) {                      // ✔ lbu v0,574(s0) @0x80101790 / bne @0x8010179c
+  /* A */ u32 d = self[0x1F4];
+  if ((d & 0xC0000000) && (d & 0x3FFFFFFF) < 2000        // @0x801017a0/ac/b0, sltiu 0x7d0 @0x801017c0
+      && FUN_80015714(self, (s16)self[0x1F8], 256) == 0) // @0x801017cc-d8
+      { self[4] = 0x00000E01; return; }      // ✔ EINZIGER Früh-Ausstieg: j 0x80101a1c @0x801017e0,
+                                             //   Store im Delay-Slot @0x801017e4
+  /* B */ if ((s16)s3 == 0 && (u32)s2 < 2000             // @0x801017f4/f8, sltiu @0x801017fc
+           && self[0x106] != PL[0x106]                   // beq-weg @0x80101814
+           && PL[0x1D3] == 0)                            // bne @0x80101824
+      self[4] = 0x00000E01;                              // @0x80101828/2c  (KEIN return)
+}
+/* C */ if ((self[0x1D4] & 0xC000) && (self[0x110] & 1))
+     self[4] = 0x00000A01;                               // @0x80101854/58
+/* D */ if ((u32)s2 < 3500 && (s16)s4 != 0               // sltiu 0xdac @0x8010185c, beq-weg @0x80101868
+         && (*(u16*)0x800CFBF6 & 0x15) && (rand() & 3) == 0)
+     self[4] = 0x00000C01;                               // @0x8010189c/a0
+/* E */ if ((u32)s2 < 2500 && (s16)s4 != 0               // sltiu 0x9c4 @0x801018a4
+         && (*(u16*)0x800CFBF6 & 0x17) && (rand() & 1) == 0)
+     self[4] = 0x00000C01;                               // @0x801018e0/e4
+// ✔ D und E sind SEQUENZIELL, nicht gestaffelt: @0x80101860 springt bei Miss nach 0x801018a4 =
+//   Es genau. Unter 2500 laufen BEIDE und ziehen BEIDE eine Zufallszahl.
+
+if (PL[0x8] != 15) {                                     // @0x801018e8-f0
+  /* G */ if ((u32)s2 < 1200 && !(PL[0x1D3] & 0x80) && self[0x106] == PL[0x106]) {
+      if (!(self[0x21A] & 0x20) && FUN_80015758(self+0x38, PL+0x38, yaw+256, 256) == 0)
+          { self[4] = 0x00000301; PL[0x1D3] |= 0x80; }   // @0x80101954/58, @0x80101964/68
+      if (!(self[0x21A] & 0x40) && FUN_80015758(self+0x38, PL+0x38, yaw-256, 256) == 0)
+          { self[4] = 0x00000301; PL[0x1D3] |= 0x80; }   // @0x80101998/9c, @0x801019a8/b0
+  }                                                       // ✔ j 0x801019e8 @0x801019ac (überspringt J)
+} else {
+  /* J */ if (self[0x23E] == 0 && (s16)s3 == 0 && (u32)s2 < 2000 && PL[0x1D3] == 0)
+      self[4] = 0x00000E01;                               // @0x801019e0/e4   (= B ohne den 0x106-Test)
+}
+/* K */ if (PL[0x156] == -32768 && (s16)s3 == 0 && (u32)s2 < 1000) {  // ✔ @0x801019e8-a00
+     self[4]     = 0x00060801;                            // ✔ lui 0x6 / ori 0x801 / sw @0x80101a10
+     self[0x10E] |= 0x4000;                               // ✔ lhu/ori/sh @0x80101a08/14/18
+}
 ```
-80101830: lh    v0,468(s0)      ; +0x1D4
-80101838: andi  v0,v0,0xc000    ; bits 14|15
-8010183c: beq   v0,zero,0x80101860
-80101844: lw    v0,272(s0)      ; +0x110
-8010184c: andi  v0,v0,0x1
-80101854: addiu v0,zero,2561    ; 0x0A01 -> state=1 sub1=10
-80101858: sw    v0,4(s0)
-8010185c: sltiu v0,s2,0xdac     ; Distanz < 3500
-80101874: lhu   v0,[0x800cfbf6] ; globaler Zustand, & 0x15  (muss != 0 sein)
-80101888: jal   0x80015fe8      ; rand, verlangt (rand & 3) == 0   = 1-von-4
-8010189c: addiu v0,zero,3073    ; 0x0C01 -> sub1=12
-801018a0: sw    v0,4(s0)
-801018a4: sltiu v0,s2,0x9c4     ; Distanz < 2500
-801018c4: andi  v0,v0,0x17      ; weiterer globaler Filter
-801018d0: jal   0x80015fe8      ; rand, & 1
-```
 
-Also: **gestaffelte Distanzbänder (3500 / 2500) mit Wahrscheinlichkeits-Gates**, die verschiedene
-Angriffs-Substates wählen. Genau das liest sich im Spiel als „der greift entschlossener an".
+**✔ „Letzter Schreiber gewinnt" ist bewiesen, nicht angenommen:** im Bereich 0x80101714–0x80101A34
+gibt es exakt **9** `sw …,4(s0)` (0x801017E4, 82C, 858, 8A0, 8E4, 958, 99C, 9E4, A10) und exakt
+**zwei** Sprünge — `j 0x80101a1c` @0x801017E0 (Block A in den Epilog) und `j 0x801019e8` @0x801019AC
+(G überspringt J). Keine Instruktion der Funktion *liest* `+0x4`, also ist sequenzielles C exakt.
+Feuert kein Block, bleibt `+0x4` unberührt.
 
-Offen und **nicht** zu raten: was `s2`/`s4` beim Eintritt sind (s2 vermutlich die Distanz — beweisen),
-was `0x800CFBF6` ist und was die Bits `0x15`/`0x17` bedeuten, und was die Substates 10/12 tun
-(Executor `0x8010417C` bzw. `0x80104748`).
+**Die Zahl der RNG-Ziehungen ist selbst Verhalten:** 0–2 pro Tick (D @0x80101888, E @0x801018D0),
+und nur nachdem die jeweils ersten drei Gates passiert sind. Wer die Reihenfolge portiert, aber die
+Ziehungen falsch zählt, desynchronisiert die gesamte Folge.
+
+**Wort → Bytes (LE):** `0x0E01`→sub 14, `0x0A01`→10, `0x0C01`→12, `0x0301`→3, `0x00060801`→sub 8,
+Phase `+0x6`=6. Jeder `sw` **nullt `+0x6`/`+0x7`** — tragend, weil die Executors auf `+0x6` dispatchen.
+
+### Der globale Filter `0x800CFBF6` (selbst aufgelöst)
+
+5 Schreiber, alle in der EXE: `@0x8003BFF0` löscht Bits 0..4 (`andi 0xffe0`, **gegated** auf
+`0x800CFBDC >= 0` @0x8003BFC0 — die Behauptung „wird jeden Frame gelöscht" war deshalb falsch),
+Bit `0x2` wird gesetzt @0x8003CC80 und @0x8003D6B4, Bit `0x4` @0x8003D18C.
+Damit ist der Maskenunterschied **echt**: `0x15` (Bits 0,2,4) lässt Bit `0x2` aus, `0x17` schließt es
+ein — Block E reagiert also auf eine Spieleraktion, auf die Block D nicht reagiert.
+**Welche** Aktionen die Bits 0 und 4 setzen, ist noch offen.
+
+### ⛔ Warum W2 NICHT portiert ist
+
+Jeder Angriffs-Block hängt an mindestens einem Feld, das der Port **nicht modelliert** und dessen
+Erzeuger außerhalb des Zombie-Overlays liegt: `self+0x1F4/+0x1F8` (Block A), `self+0x106` und
+`PL+0x1D3` (B/G/J), `self+0x1D4` und `self+0x110` (C), `0x800CFBF6` (D/E), `self+0x21A` (G),
+`PL+0x8` und `PL+0x156` (J/K). Mit genullten Feldern würde **nur Block G** feuern — der RE2-Zombie
+würde ausschließlich greifen und nie ausfallen. Das wäre kein Port der RE2-KI, sondern eine
+Karikatur davon. Deshalb: Spezifikation ja, Code nein, bis die Erzeuger belegt sind.
+
+**Nächste Xrefs**, in dieser Reihenfolge: (1) `0x8003CC70`/`0x8003D17C`/`0x8003D6A4` — welche
+Spieleraktion setzt welches Bit von `0x800CFBF6`; (2) `0x800CFBDC` (das Gate des Löschens);
+(3) `self+0x106` Schreiber `@0x80036974` (`sign(v) - trunc(v/1800)` aus `FUN_8004FBA0`) — das
+riecht nach einer Etagen-/Höhenklasse und wäre im Port über `floor` abbildbar; (4) `self+0x110`
+Schreiber `FUN_8003567C` (`=0` @0x8003569C, sonst `FUN_8004C1BC` @0x800356D8), gerufen aus der
+Zombie-Wurzel `@0x80100638`.
+
+### Widerlegte Etiketten — nicht wieder einführen
+
+* „`+0x223` ist ein Flinch-**Cooldown**" — Transkript und Schwellenformel stimmen, aber es gibt im
+  ganzen Overlay **keinen Timer-Schreiber**; der einzige Modifikator ist eine tabellengesteuerte
+  Subtraktion **pro Treffer** (`@0x801055C0-E8`, Tabelle `@0x8010CC33`). Rolle: UNBELEGT.
+* „`0x800CFBF6` wird jeden Frame gelöscht" — das Löschen hängt an einem Gate (s.o.).
+* „Substate 10 ist ein Angriff" — widerlegt; Ausstieg über eine 5-Phasen-FSM auf `+0x6` nach WALK.
+* „Der `±1300`-Kegeltest wird benutzt" — sein Ergebnis wird nachweislich verworfen.
 
 ## 🔜 W3+ — Trefferreaktion (HURT `@0x80104F40`), Kriech-Variante (`@0x80101210`), State 8
 
-Noch nicht angefasst. Die Vermutung „Flinch-Cooldown bei `+0x223`" ist ein **unbelegtes Gerücht** und
-muss aus den Instruktionen bewiesen oder verworfen werden.
+Nur Leads, **alle** Erstbefunde widerlegt. Belegt ist bisher: die Kriech-Variante nutzt **eigene**
+Tabellen (`0x8010C90C` Decision / `0x8010C918` Executor) mit nur **drei** Einträgen, und
+`sub_state_1 == 1` teilt sich den Handler mit der aufrechten Variante.
 
 ---
 
