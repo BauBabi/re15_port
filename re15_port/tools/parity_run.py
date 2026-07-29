@@ -36,7 +36,14 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", ".."))
 sys.path.insert(0, os.path.join(REPO, ".claude", "skills", "re15-savestate-ghidra", "scripts"))
 
-PLAYER_POS_CACHE = 0x800ACA88      # player x/z position cache (memory: reai-v2-savestate-repacker)
+PLAYER_BASE = 0x800ACA54           # player entity struct base
+PLAYER_YAW  = 0x800ACABE           # PLAYER_BASE + 0x6a = rot_y (4096 = 360), compares 1:1 to
+                                   # the port's actor.rot_y (re15_actor.h:57)
+PLAYER_POS  = 0x800ACA88           # = MATRIX.t[0..2] of the entity MATRIX at +0x20 (NOT a
+                                   # separate "position cache"): +0x20 is a PsyQ MATRIX, so
+                                   # 0x800ACA74 is m[0][0] = COS(yaw) and must never be read as
+                                   # an angle. Reading it as one produced a phantom "spawn-yaw
+                                   # divergence" (4051 vs -96) that does not exist.
 ENEMY_BASE, ENEMY_STRIDE = 0x800ACC2C, 0x1F4
 
 
@@ -47,7 +54,9 @@ def s32(v):
 def read_psx(path):
     import re15_ss
     r = re15_ss.Ram(path)
-    out = {"player": {"x": s32(r.u32(PLAYER_POS_CACHE)), "z": s32(r.u32(PLAYER_POS_CACHE + 8))},
+    yaw = r.u16(PLAYER_YAW); yaw = yaw - (1 << 16) if yaw >= (1 << 15) else yaw
+    out = {"player": {"x": s32(r.u32(PLAYER_POS)), "z": s32(r.u32(PLAYER_POS + 8)),
+                      "rot": yaw},
            "enemies": []}
     for i in range(8):
         b = ENEMY_BASE + i * ENEMY_STRIDE
