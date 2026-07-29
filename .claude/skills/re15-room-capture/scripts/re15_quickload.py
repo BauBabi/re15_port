@@ -65,6 +65,24 @@ def main():
                                                      #      the pistol w2) -> no muzzle, no ranged hit, effect pool stays 0.
                                                      # To capture an ESP effect: use a GUN-equipped gameplay room AND a
                                                      # PERSISTENT effect (blood/death-gore), or save ON the effect frame.
+    ap.add_argument("--script", default="")   # FRAME-EXACT input, e.g. "R60,U120" — counts are FRAMES.
+                                              # Unlike --path (wall-clock holds) this pauses the
+                                              # emulator and steps it ONE FRAME AT A TIME with the
+                                              # FrameAdvance hotkey while the pad holds that frame's
+                                              # bits, so a 60-frame token really is 60 frames.
+                                              # WHY: --path is NOT frame-exact and the error is huge —
+                                              # a nominal 2.00s hold of R (=60 frames) moved the
+                                              # player yaw (0x800ACABE) by 323 units, about 3.4
+                                              # frames' worth. The port meanwhile gets its
+                                              # RE15_INPUT_SCRIPT frame-exactly, so the two sides
+                                              # were fed DIFFERENT input and every difference looked
+                                              # like a port bug (it produced two phantom root causes).
+                                              # Requires in settings.ini [Hotkeys]:
+                                              #   FrameAdvance = SDL-0/+LeftTrigger
+                                              #   TogglePause  = SDL-0/+RightTrigger
+                                              # (controller, NOT keyboard — the frontend filters
+                                              # injected keystrokes; same reason Save/Screenshot are
+                                              # on shoulder buttons.)
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
     T0 = time.monotonic()
@@ -123,6 +141,38 @@ def main():
                 # POST-PATH SETTLE: stand still (no input) so a woken zombie can approach + GRAB the
                 # (stationary) player before the save — needed to capture a mid-grab / struggle frame.
                 log("AFTER settle %.0fs (let a zombie reach + grab)" % args.after); time.sleep(args.after)
+        if args.script:
+            # FRAME-EXACT stepping. Runs on the SAME proven navigation above — rebuilding that
+            # navigation in a separate script is exactly how the first attempt failed (its menu taps
+            # used 0.06s gaps instead of the 0.30-0.60s this driver uses, so the room never loaded
+            # and the capture came back with an empty enemy roster).
+            SMAP = {"U": B.XUSB_GAMEPAD_DPAD_UP, "D": B.XUSB_GAMEPAD_DPAD_DOWN,
+                    "L": B.XUSB_GAMEPAD_DPAD_LEFT, "R": B.XUSB_GAMEPAD_DPAD_RIGHT,
+                    "X": B.XUSB_GAMEPAD_A, "A": B.XUSB_GAMEPAD_X,
+                    "M": B.XUSB_GAMEPAD_RIGHT_SHOULDER}
+            def trig(which, hold=0.035, gap=0.035):
+                (gp.left_trigger if which == "L" else gp.right_trigger)(value=255); gp.update()
+                time.sleep(hold)
+                (gp.left_trigger if which == "L" else gp.right_trigger)(value=0); gp.update()
+                time.sleep(gap)
+            log("PAUSE (TogglePause)"); trig("R", 0.08, 0.60)
+            held = set()
+            for tok in args.script.split(","):
+                tok = tok.strip()
+                if not tok: continue
+                i = len(tok)
+                while i > 0 and tok[i-1].isdigit(): i -= 1
+                letters, n = tok[:i].upper(), int(tok[i:] or "1")
+                want = {SMAP[c] for c in letters if c in SMAP}
+                for b in held - want: gp.release_button(button=b)
+                for b in want - held: gp.press_button(button=b)
+                held = want; gp.update(); time.sleep(0.10)
+                log("SCRIPT %-4s x%d frames" % (letters or "W", n))
+                for _ in range(n): trig("L")
+            for b in held: gp.release_button(button=b)
+            gp.update(); time.sleep(0.2)
+            log("UNPAUSE"); trig("R", 0.08, 0.40)
+
         if args.fire > 0:
             # Hold R1 (aim) then tap Square (fire) N times. R1 = right shoulder; Square = XUSB_X
             # in this pad mapping (the same button the menu LOAD used). The aim/raise needs a beat
