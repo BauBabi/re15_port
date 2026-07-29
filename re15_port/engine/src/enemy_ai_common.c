@@ -306,6 +306,36 @@ int re15_ai_facing_aligned(const re15_actor_t *e, const re15_actor_t *other)
 void re15_ai_decide_engage(re15_actor_t *e, const re15_actor_t *player)
 {
     if (!e || !player) return;
+
+    /* PORT OPTION (no original): with the RE2 AI flavor selected, THIS is the function RE2 replaces.
+     * re15_ai_decide_engage is the RE1.5 DECIDE half for the walking engage substates (f840[2] and
+     * f840[0x13]); RE2's counterpart is DECISION[1] @0x80101714, dispatched from 0x8010118C through
+     * the table @0x8010C88C. So the RE2 ladder runs INSTEAD of the RE1.5 decision, not alongside it —
+     * running both would be a chimera, and the RE1.5 arm would keep committing grabs the RE2 ladder
+     * did not choose (measured: it did exactly that, which is why this moved here).
+     *
+     * Today the ladder can only ever commit 0x0301 = the side GRAB; every other block is gated on a
+     * field with no proven producer in the port and is filled with a proven zero rather than a guess
+     * (see re15_re2z_fill_gates). 0x0301 maps 1:1 onto the port's own byte-true grab: RE1.5 commits
+     * with the same sub_state_1 = 3 (@case 7 below), so the RE2 DECISION drives the port's existing,
+     * already byte-true grab EXECUTOR. Words other than 0x0301 are ignored on purpose — RE2's
+     * sub_states 10/12/14 mean different things in RE1.5, so applying them would corrupt the state
+     * machine instead of porting anything. */
+    if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2z_owns_type(e->type)) {
+        re15_re2z_decision_t rd;
+        int committed = re15_re2z_walk_decide(e, player, re15_player_is_grabbed(), &rd);
+        if (getenv("RE15_RE2_TRACE") && e->ai_dist < 1500u) {
+            re15_re2z_gates_t gg;
+            re15_re2z_fill_gates(e, player, re15_player_is_grabbed(), &gg);
+            fprintf(stderr, "[re2z] gates d=%u flo=%u/%u claimed=%u g1=%d g2=%d -> %s 0x%08x\n",
+                    gg.dist, gg.self_106, gg.pl_106, gg.pl_1d3, gg.g1_sector_hit, gg.g2_sector_hit,
+                    committed ? "COMMIT" : "none", rd.word);
+        }
+        if (committed && rd.word == 0x00000301u)
+            re15_ai_set_state_word(e, rd.word);            /* sw @0x80101958 / @0x8010199c */
+        return;                                            /* RE2's ladder is the WHOLE decision */
+    }
+
     uint8_t contact = e->ai_contact;                       /* bVar1 = entity+0x90 */
 
     /* contact-direction gate: (bVar1&0xf0)*0x10 = the packed contact heading; relative to
@@ -2216,6 +2246,16 @@ static void re15_enemy_ai_live_engage_animate(int slot, re15_actor_t *e)
              * from the RE1.5 wander index would be a cross-game guess, so it does not happen. */
             re15_re2z_walk_turn(e, g_actors[RE15_ACTOR_SLOT_PLAYER].x,
                                    g_actors[RE15_ACTOR_SLOT_PLAYER].z, e->ai_dist);
+            /* RE2's own attack DECISION (DECISION[1] @0x80101714) runs on the same tick as the walk,
+             * because 0x8010118C dispatches decision-then-executor (@0x801011A8-EC). Today the ladder
+             * can only ever commit 0x0301 = the side GRAB: every other block is gated on a field with
+             * no proven producer in the port, and those gates are filled with proven zeros rather
+             * than guesses (see re15_re2z_fill_gates). 0x0301 maps 1:1 onto the port's own byte-true
+             * grab entry — RE1.5 commits the grab with the same sub_state_1 = 3 (@enemy_ai_common
+             * case 7), so the RE2 decision drives the port's existing, already byte-true grab. Any
+             * other word is IGNORED on purpose: RE2's sub_states 10/12/14 mean different things in
+             * RE1.5, so applying them would corrupt the state machine rather than port anything. */
+            /* (the RE2 attack DECISION lives in re15_ai_decide_engage — this is the ANIMATE half) */
         } else {
             re15_enemy_steer_point(e, e->steer_x, e->steer_z, sVar7);
         }

@@ -26,6 +26,7 @@
 #include "re15_actor.h"
 #include "re15_ai_flavor.h"
 #include "re15_skeleton.h"   /* re15_sin_q12 / re15_cos_q12 */
+#include "re15_damage.h"     /* re15_ai_arc_test — the RE1.5 twin of RE2 FUN_80015614 */
 
 /* ---- the flavor switch itself ------------------------------------------------------------- */
 
@@ -208,6 +209,86 @@ int re15_re2z_walk_turn(re15_actor_t *e, int32_t px, int32_t pz, uint32_t dist)
     if (dist < RE2Z_DIST_CLOSE)
         re15_enemy_steer_point(e, px, pz, RE2Z_TURN_EXTRA);      /* @0x80101ca8/cac, a3 = 16 */
     return 1;
+}
+
+/* FUN_80015758(a0=ptrA, a1=ptrB, a2=ang, a3=half) — the SECTOR test block G uses twice.
+ * Self-disassembled 2026-07-29:
+ *   80015778: lh a0,0(v0)    ; A.x  (the callers pass self+0x38 / PL+0x38, so X is at +0, Z at +8)
+ *   8001577c: lh a1,8(v0)    ; A.z
+ *   80015780: lh a2,0(v1)    ; B.x
+ *   80015784: lh a3,8(v1)    ; B.z
+ *   80015788: jal 0x800154ac ; bearing(A -> B)
+ *   8001579c: subu v0,v0,s1  ; bearing - ang
+ *   800157a8: addu v0,v0,s0  ;         + half
+ *   800157ac: andi v0,v0,0xfff
+ *   800157b0: sll  s0,s0,1   ; 2*half
+ *   800157b4: sltu v0,v0,s0
+ *   800157b8: xori v0,v0,0x1 ; RETURN !(t < 2*half)  ->  0 == INSIDE the sector
+ * Same family as FUN_80015614/FUN_8001A9CC, but the cone is centred on an ARBITRARY angle instead
+ * of the actor's own yaw — which is exactly why block G can test two half-sectors either side. */
+static int re2z_sector(const re15_actor_t *a, const re15_actor_t *b, int ang, int half)
+{
+    /* the port's mesh-yaw convention carries a +0x400 offset (re15_damage.c re15_ai_arc_test) */
+    int bearing = ((int)re15_atan2_q12(b->z - a->z, b->x - a->x) - 0x400) & 0xfff;
+    unsigned t  = (unsigned)((bearing - ang + half) & 0xfff);
+    return !(t < (unsigned)(half << 1));          /* 0 == inside */
+}
+
+/* Fill the ladder's gate struct from PORT state. Every field is one of:
+ *   MAPPED   — a port quantity that provably is the same thing
+ *   ZERO     — provably zero for a zombie the port actually runs (cited)
+ *   OPEN     — no proven producer in the port yet; left 0, and the block it gates cannot fire.
+ * The OPEN ones are why this returns 0x0301 and nothing else today. RE15_RE2_AI.md tracks them. */
+void re15_re2z_fill_gates(const re15_actor_t *e, const re15_actor_t *pl,
+                          int player_claimed, re15_re2z_gates_t *g)
+{
+    for (unsigned i = 0; i < sizeof(*g); i++) ((unsigned char *)g)[i] = 0;
+    if (!e || !pl) return;
+
+    /* MAPPED ------------------------------------------------------------------------------- */
+    g->dist    = e->ai_dist;                                    /* +0x1F0        @0x80101744 */
+    g->arc1024 = re15_ai_arc_test(e, pl->x, pl->z, 1024);       /* a3 = 1024     @0x8010174c */
+    g->arc512  = re15_ai_arc_test(e, pl->x, pl->z,  512);       /* a3 = 512      @0x80101754 */
+    /* the third arc (half 1300, jal @0x80101788) is NOT computed: its v0 is destroyed by
+     * `lbu v0,574(s0)` @0x80101790 before any reader, and the whole call chain
+     * FUN_80015614 -> FUN_800154AC -> catan is store-free, so omitting it is observable nowhere. */
+    g->self_106 = e->floor;                                     /* +0x106        @0x80101808 */
+    g->pl_106   = pl->floor;                                    /*               @0x8010180c */
+    /* PL+0x1D3 bit 0x80 = the "this actor is claimed" latch. Mechanism fully proven: the zombie
+     * SETS it in nine places (e.g. @0x80101968 / @0x801019B0) and never clears it; the CLEAR lives
+     * on the player side (`andi 0x7f` + sb, @0x8003E844 and @0x800630E0). The port's equivalent
+     * latch is s_player_grabbed (set on grab commit, cleared on release), so it maps 1:1.
+     * The LOW SEVEN BITS are a player-side countdown the port does not model — that is why only
+     * G (which tests bit 0x80 alone) is wired, while B and J (which test the WHOLE byte == 0)
+     * are not. */
+    g->pl_156  = pl->hp;                                        /* +0x156        @0x801019e8 */
+    g->pl_1d3  = player_claimed ? 0x80u : 0u;                   /*               @0x80101908 */
+    g->g1_sector_hit = (re2z_sector(e, pl, ((int)e->rot_y + 256) & 0xfff, 256) == 0); /* @0x80101948 */
+    g->g2_sector_hit = (re2z_sector(e, pl, ((int)e->rot_y - 256) & 0xfff, 256) == 0); /* @0x8010198c */
+
+    /* ZERO, with the proof --------------------------------------------------------------------
+     * self+0x23E: the ONLY writer is `sb v0,574(s0)` @0x80104E2C (value 60) inside EXECUTOR[14]
+     *   = 0x80104D74, a substate the port never enters; INIT @0x8010065C does not touch it.
+     * self+0x1F4/+0x1F8: ZERO writers anywhere in EMZ0.BIN — the producer is FUN_80065518 in the
+     *   em/NPC family, which only ticks entity types 64..91. Zombies are clamped to 16..31 by the
+     *   overlay loader @0x8001B738-48, so block A cannot fire in a zombie-only room.
+     * self+0x21A: INIT clears it (`sh zero,538(s2)` @0x8010087C) and every writer of bits
+     *   0x20/0x40 lives in substates the port does not run.
+     * OPEN (no proven producer in the port; the blocks they gate stay silent):
+     *   self+0x1D4, self+0x110  (block C)
+     *   0x800CFBF6              (blocks D and E) — its three setters are player animation-start
+     *                            routines @0x8003CC80 / @0x8003D18C / @0x8003D6B4; bits 0x1 and
+     *                            0x10 are never set anywhere, so mask 0x15 reduces to bit 0x4.
+     *   PL+0x8                  (the G/J fork; 0 keeps us on the G branch, which is what we want) */
+}
+
+/* Run the RE2 walk decision for this tick and report the state word it commits, if any. */
+int re15_re2z_walk_decide(const re15_actor_t *e, const re15_actor_t *pl,
+                          int player_claimed, re15_re2z_decision_t *out)
+{
+    re15_re2z_gates_t g;
+    re15_re2z_fill_gates(e, pl, player_claimed, &g);
+    return re15_re2z_decide_walk(&g, out);
 }
 
 /* ============================================================================================

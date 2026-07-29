@@ -68,4 +68,11 @@ typedef struct {
 
 int re15_re2z_decide_walk(const re15_re2z_gates_t *g, re15_re2z_decision_t *out);
 
+/* Fill the gates from PORT state, then run the ladder. `player_claimed` is the port's equivalent of
+ * PL+0x1D3 bit 0x80 (re15_player_is_grabbed). */
+void re15_re2z_fill_gates(const re15_actor_t *e, const re15_actor_t *pl,
+                          int player_claimed, re15_re2z_gates_t *g);
+int  re15_re2z_walk_decide(const re15_actor_t *e, const re15_actor_t *pl,
+                           int player_claimed, re15_re2z_decision_t *out);
+
 #endif /* RE15_AI_FLAVOR_H */
