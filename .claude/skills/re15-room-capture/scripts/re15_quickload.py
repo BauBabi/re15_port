@@ -33,6 +33,8 @@ import vgamepad as vg
 
 DUCK = r"C:\Users\mjoedicke\AppData\Local\Programs\DuckStation\duckstation-qt-x64-ReleaseLTCG.exe"
 CUE  = r"C:\Users\mjoedicke\Downloads\ePSXe2018\Biohazard 1.5 (MZD Mod) Update 25-01-2025.cue"
+SLOT1  = os.path.join(r"C:\Users\mjoedicke\AppData\Local\DuckStation\savestates",
+                      "HASH-957757946319438E_1.sav")
 RESUME = r"C:\Users\mjoedicke\AppData\Local\DuckStation\savestates\HASH-957757946319438E_resume.sav"
 IMG = "duckstation-qt-x64-ReleaseLTCG.exe"
 B = vg.XUSB_BUTTON
@@ -86,6 +88,7 @@ def main():
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
     T0 = time.monotonic()
+    script_saved = False
 
     gp = vg.VX360Gamepad()
     time.sleep(3.0)
@@ -155,7 +158,12 @@ def main():
                 time.sleep(hold)
                 (gp.left_trigger if which == "L" else gp.right_trigger)(value=0); gp.update()
                 time.sleep(gap)
-            log("PAUSE (TogglePause)"); trig("R", 0.08, 0.60)
+            # No explicit pause needed: DuckStation's FrameAdvance pauses on its first use and then
+            # steps one frame per press. TogglePause could not be made to work from the virtual pad
+            # (tried +RightTrigger and LeftShoulder), FrameAdvance can — so the run stays paused from
+            # the first step onward and is captured with the save hotkey, never via SaveStateOnExit
+            # (which does not fire while paused).
+            log("STEP (FrameAdvance pausiert implizit beim ersten Druck)")
             held = set()
             for tok in args.script.split(","):
                 tok = tok.strip()
@@ -171,7 +179,38 @@ def main():
                 for _ in range(n): trig("L")
             for b in held: gp.release_button(button=b)
             gp.update(); time.sleep(0.2)
-            log("UNPAUSE"); trig("R", 0.08, 0.40)
+            # EXPLICIT save WHILE STILL PAUSED. SaveStateOnExit does NOT fire when the emulator is
+            # paused at shutdown — proven: the run reported "resume nicht neu geschrieben". Saving here
+            # also keeps the captured state EXACT: unpausing first would let ~15 uncontrolled frames
+            # run before the save, which defeats the whole point of frame-exact stepping.
+            # SaveSelectedSaveState is on SDL-0/LeftShoulder (controller, since the frontend filters
+            # injected keystrokes) and writes slot 1 -> <HASH>_1.sav.
+            # A plain tap does NOT work while paused: DuckStation processes hotkeys inside its frame
+            # loop, so with the emulator paused the press is never seen (measured — slot 1 kept its
+            # days-old timestamp). So HOLD the save button and drive ONE FrameAdvance: that frame
+            # processes the input, the save fires, and exactly one extra frame is spent — which the
+            # port side can match by adding one frame to its script.
+            # CAPTURE. SaveSelectedSaveState does NOT fire while the emulator is paused (measured:
+            # slot 1 kept its days-old timestamp across three attempts, with a plain tap AND with the
+            # button held across a FrameAdvance) — DuckStation services hotkeys inside the frame loop.
+            # So UNPAUSE and let SaveStateOnExit do it, which is the path already proven by the
+            # --path runs. Cost, stated openly: the ~0.4s between unpause and process exit is
+            # uncontrolled (~12 frames) with NO input held, so the capture is frame-exact up to that
+            # idle tail. The port side matches it by appending the same idle frames; anything tighter
+            # needs a hotkey that works while paused, which this build does not appear to offer.
+            # CAPTURE while paused: HOLD the save hotkey (RightTrigger) and drive ONE FrameAdvance.
+            # That frame is the only one DuckStation services input on, so the save fires there.
+            log("SAVE slot1 (hold RT + 1 frame)")
+            slot1_m = os.path.getmtime(SLOT1) if os.path.exists(SLOT1) else 0
+            gp.right_trigger(value=255); gp.update(); time.sleep(0.15)
+            trig("L", 0.05, 0.35)
+            gp.right_trigger(value=0); gp.update(); time.sleep(1.0)
+            for _ in range(20):
+                if os.path.exists(SLOT1) and os.path.getmtime(SLOT1) > slot1_m:
+                    log("SAVE ok"); script_saved = True; break
+                time.sleep(0.5)
+            if not script_saved:
+                log("FAIL: Slot-1-Savestate wurde nicht geschrieben"); sys.exit(4)
 
         if args.fire > 0:
             # Hold R1 (aim) then tap Square (fire) N times. R1 = right shoulder; Square = XUSB_X
@@ -197,9 +236,26 @@ def main():
         time.sleep(0.5)
         if proc.poll() is not None: break
     time.sleep(2.0)
+    if script_saved:
+        # The frame-exact path already wrote an EXACT paused-state savestate; the resume file
+        # is irrelevant (it is not even written when the emulator exits paused).
+        shutil.copy2(SLOT1, args.out)
+        log("DONE (slot1) -> %s (%d bytes)" % (args.out, os.path.getsize(args.out)))
+        return
+    fresh = False
     for _ in range(30):
-        if os.path.exists(RESUME) and os.path.getmtime(RESUME) > resume_mtime: break
+        if os.path.exists(RESUME) and os.path.getmtime(RESUME) > resume_mtime:
+            fresh = True; break
         time.sleep(0.5)
+    if not fresh:
+        # HARD FAIL instead of silently copying a STALE resume file. This bit hard once: a --script
+        # run came back with active_count=0 and a nonsense player position, which read like a broken
+        # capture of the room — it was actually an untouched resume state from an earlier session,
+        # because SaveStateOnExit had not fired. A capture tool that quietly returns old data is
+        # worse than one that crashes.
+        log("FAIL: SaveStateOnExit hat %s NICHT neu geschrieben — kein frischer Zustand." % RESUME)
+        log("      (Passiert u.a., wenn der Emulator beim Schliessen noch PAUSIERT war.)")
+        sys.exit(3)
     shutil.copy2(RESUME, args.out)
     log("DONE -> %s (%d bytes)" % (args.out, os.path.getsize(args.out)))
 
