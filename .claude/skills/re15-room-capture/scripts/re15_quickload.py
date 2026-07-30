@@ -85,6 +85,12 @@ def main():
                                               # (controller, NOT keyboard — the frontend filters
                                               # injected keystrokes; same reason Save/Screenshot are
                                               # on shoulder buttons.)
+    ap.add_argument("--save-hotkey", action="store_true")   # DIAGNOSTIC: after --path (emulator
+                                              # RUNNING, never paused) tap the save hotkey and report
+                                              # whether slot 1 was written. This separates "the
+                                              # binding/pad is broken" from "hotkeys do not fire while
+                                              # PAUSED" — the two hypotheses left for the frame-exact
+                                              # capture. Run it with a trivial --path so it is quick.
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
     T0 = time.monotonic()
@@ -153,11 +159,15 @@ def main():
                     "L": B.XUSB_GAMEPAD_DPAD_LEFT, "R": B.XUSB_GAMEPAD_DPAD_RIGHT,
                     "X": B.XUSB_GAMEPAD_A, "A": B.XUSB_GAMEPAD_X,
                     "M": B.XUSB_GAMEPAD_RIGHT_SHOULDER}
-            def trig(which, hold=0.035, gap=0.035):
-                (gp.left_trigger if which == "L" else gp.right_trigger)(value=255); gp.update()
-                time.sleep(hold)
-                (gp.left_trigger if which == "L" else gp.right_trigger)(value=0); gp.update()
-                time.sleep(gap)
+            # Shoulder BUTTONS, not trigger axes: the axis bindings (SDL-0/+LeftTrigger) never fired
+            # — measured with the emulator RUNNING as well as paused, so it was the binding and not
+            # the pause. Shoulder buttons are the pattern this config already used successfully
+            # (Screenshot / ToggleMediaCapture were bound that way), and the skill notes them as the
+            # reliable ones while L3/R3 are not.
+            def trig(which, hold=0.06, gap=0.06):
+                b = B.XUSB_GAMEPAD_LEFT_SHOULDER if which == "L" else B.XUSB_GAMEPAD_RIGHT_SHOULDER
+                gp.press_button(button=b); gp.update(); time.sleep(hold)
+                gp.release_button(button=b); gp.update(); time.sleep(gap)
             # No explicit pause needed: DuckStation's FrameAdvance pauses on its first use and then
             # steps one frame per press. TogglePause could not be made to work from the virtual pad
             # (tried +RightTrigger and LeftShoulder), FrameAdvance can — so the run stays paused from
@@ -202,15 +212,24 @@ def main():
             # That frame is the only one DuckStation services input on, so the save fires there.
             log("SAVE slot1 (hold RT + 1 frame)")
             slot1_m = os.path.getmtime(SLOT1) if os.path.exists(SLOT1) else 0
-            gp.right_trigger(value=255); gp.update(); time.sleep(0.15)
-            trig("L", 0.05, 0.35)
-            gp.right_trigger(value=0); gp.update(); time.sleep(1.0)
+            gp.press_button(button=B.XUSB_GAMEPAD_RIGHT_SHOULDER); gp.update(); time.sleep(0.15)
+            trig("L", 0.06, 0.35)
+            gp.release_button(button=B.XUSB_GAMEPAD_RIGHT_SHOULDER); gp.update(); time.sleep(1.0)
             for _ in range(20):
                 if os.path.exists(SLOT1) and os.path.getmtime(SLOT1) > slot1_m:
                     log("SAVE ok"); script_saved = True; break
                 time.sleep(0.5)
             if not script_saved:
                 log("FAIL: Slot-1-Savestate wurde nicht geschrieben"); sys.exit(4)
+
+        if args.save_hotkey:
+            log("SAVE-HOTKEY-TEST (Emulator LAEUFT, nicht pausiert)")
+            slot1_m = os.path.getmtime(SLOT1) if os.path.exists(SLOT1) else 0
+            gp.press_button(button=B.XUSB_GAMEPAD_RIGHT_SHOULDER); gp.update(); time.sleep(0.20)
+            gp.release_button(button=B.XUSB_GAMEPAD_RIGHT_SHOULDER); gp.update(); time.sleep(1.5)
+            ok = os.path.exists(SLOT1) and os.path.getmtime(SLOT1) > slot1_m
+            log("ERGEBNIS: Slot 1 %s" % ("GESCHRIEBEN -> Binding und Pad sind in Ordnung, das Problem ist ausschliesslich der PAUSIERTE Zustand"
+                                         if ok else "NICHT geschrieben -> Binding oder Pad ist das Problem, nicht die Pause"))
 
         if args.fire > 0:
             # Hold R1 (aim) then tap Square (fire) N times. R1 = right shoulder; Square = XUSB_X
