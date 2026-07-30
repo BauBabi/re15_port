@@ -99,6 +99,7 @@ for _ = 1, 8 do q_tap(PAD.X, 3, 60 * 2) end        -- skip intro dialog/movies
 local qi, qleft = 0, 0
 local frame, live, live_at = 0, false, -1
 local stage, jump_at = 1, -1
+local snap, snap_at, diff_at = nil, -1, -1
 local seg, seg_left, script_done = 0, 0, false
 
 -- The callback body runs inside pcall and any error is written to the LOG. Without this an error
@@ -109,7 +110,15 @@ local seg, seg_left, script_done = 0, 0, false
 local function on_vsync()
   mem = PCSX.getMemPtr()          -- fresh every frame, see the note above
   frame = frame + 1
-  if not live and u8(ACTIVE_CNT) > 0 then
+  -- READINESS. active_count > 0 alone is NOT "the player has control": it is also true during
+  -- cutscenes, and that is exactly what went wrong — stage 1 fired inside the intro sequence, where
+  -- Select opens no debug menu. Proof from the RAM diff: across the 16 Left presses not a single
+  -- u16 in 0x800A0000-0x800B4000 moved by 16, i.e. the JUMP cursor never existed. The player state
+  -- at that moment was hp=-7200 at (-31000,31000) — plainly not free gameplay. So require a SANE
+  -- player HP as well; a cutscene actor does not have one.
+  local php = s16(PLAYER_BASE + 0x1ba)
+  local ready = u8(ACTIVE_CNT) > 0 and php > 0 and php <= 200
+  if not live and ready then
     if stage == 1 then
       -- Stage 1: gameplay reached (the opening area). NOW the debug menu exists, so queue the JUMP
       -- and go back to waiting — the run is only "live" for measurement once the TARGET room loads.
@@ -119,7 +128,9 @@ local function on_vsync()
       q_wait(90)
       q_tap(PAD.SELECT, 4, 90)                      -- DEBUG MENU
       q_tap(PAD.D, 3, 60)                           -- -> JUMP line
+      snap_at = frame + 200                         -- snapshot the RAM once the JUMP line is up
       for _ = 1, JLEFT do q_tap(PAD.L, 3, 24) end   -- JUMP numbers are HEX; 16 steps = 0x114
+      diff_at = frame + 200 + JLEFT * 27 + 30       -- ... and diff it after the steps
       q_tap(PAD.A, 4, 60 * 15)                      -- Square = LOAD the room
       log:write(string.format("# f%d GAMEPLAY (act=%d) -> debug JUMP, %d steps left\n",
                               frame, u8(ACTIVE_CNT), JLEFT)); log:flush()
@@ -131,6 +142,31 @@ local function on_vsync()
       release_all()
       log:write(string.format("# f%d ROOM LIVE (act=%d)\n", frame, u8(ACTIVE_CNT))); log:flush()
     end
+  end
+
+  -- FIND THE JUMP CURSOR instead of guessing it. The DuckStation skill solves the same problem with
+  -- --menushot (look at the menu rather than count steps); the equivalent here is to snapshot RAM
+  -- while the JUMP line is up, snapshot again after the Left steps, and report every u16 that moved
+  -- by exactly the number of steps. That IS the menu's room variable, and once it is known the run
+  -- can verify the target before pressing Square instead of inferring it from the outcome.
+  if snap_at > 0 and frame == snap_at then
+    snap = {}
+    for a = 0x800A0000, 0x800B4000, 2 do snap[a] = u16(a) end
+    log:write(string.format("# f%d RAM-Snapshot fuer die JUMP-Cursor-Suche\n", frame)); log:flush()
+  elseif diff_at > 0 and frame == diff_at and snap then
+    local hits = 0
+    for a = 0x800A0000, 0x800B4000, 2 do
+      local d = u16(a) - snap[a]
+      if d == -JLEFT or d == JLEFT then
+        hits = hits + 1
+        if hits <= 12 then
+          log:write(string.format("# JUMP-Kandidat 0x%08x: %d -> %d (delta %+d)\n",
+                                  a, snap[a], u16(a), d))
+        end
+      end
+    end
+    log:write(string.format("# f%d Kandidaten gesamt: %d\n", frame, hits)); log:flush()
+    snap = nil
   end
 
   if not live then
