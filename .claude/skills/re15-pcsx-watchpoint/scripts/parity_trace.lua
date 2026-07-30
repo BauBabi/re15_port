@@ -117,7 +117,8 @@ local function on_vsync()
   -- at that moment was hp=-7200 at (-31000,31000) — plainly not free gameplay. So require a SANE
   -- player HP as well; a cutscene actor does not have one.
   local php = s16(PLAYER_BASE + 0x1ba)
-  local ready = u8(ACTIVE_CNT) > 0 and php > 0 and php <= 200
+  local ready = u8(ACTIVE_CNT) > 0   -- Select oeffnet das Debug-Menue laut Nutzer JEDERZEIT,
+                                   -- auch waehrend des Intros; die HP-Huerde war unnoetig
   if not live and ready then
     if stage == 1 then
       -- Stage 1: gameplay reached (the opening area). NOW the debug menu exists, so queue the JUMP
@@ -128,9 +129,9 @@ local function on_vsync()
       q_wait(90)
       q_tap(PAD.SELECT, 4, 90)                      -- DEBUG MENU
       q_tap(PAD.D, 3, 60)                           -- -> JUMP line
-      snap_at = frame + 200                         -- snapshot the RAM once the JUMP line is up
+      snap_at = frame + 250                         -- snapshot the RAM once the JUMP line is up
       for _ = 1, JLEFT do q_tap(PAD.L, 3, 24) end   -- JUMP numbers are HEX; 16 steps = 0x114
-      diff_at = frame + 200 + JLEFT * 27 + 30       -- ... and diff it after the steps
+      diff_at = frame + 250 + JLEFT * 27 + 45       -- ... and diff it after the steps
       q_tap(PAD.A, 4, 60 * 15)                      -- Square = LOAD the room
       log:write(string.format("# f%d GAMEPLAY (act=%d) -> debug JUMP, %d steps left\n",
                               frame, u8(ACTIVE_CNT), JLEFT)); log:flush()
@@ -149,19 +150,24 @@ local function on_vsync()
   -- while the JUMP line is up, snapshot again after the Left steps, and report every u16 that moved
   -- by exactly the number of steps. That IS the menu's room variable, and once it is known the run
   -- can verify the target before pressing Square instead of inferring it from the outcome.
+  -- BYTE-wise and wider. The first attempt scanned u16 on EVEN addresses only and found nothing —
+  -- but a room index is very likely a byte, and a u16 at an odd address is invisible to that scan
+  -- too. "0 candidates" therefore did not prove the menu was closed; it proved my scan was too
+  -- narrow. (The user confirms Select opens the debug menu at any time, including during the intro,
+  -- so the menu WAS reachable and my conclusion from the empty result was wrong.)
   if snap_at > 0 and frame == snap_at then
     snap = {}
-    for a = 0x800A0000, 0x800B4000, 2 do snap[a] = u16(a) end
-    log:write(string.format("# f%d RAM-Snapshot fuer die JUMP-Cursor-Suche\n", frame)); log:flush()
+    for a = 0x80090000, 0x800C0000 - 1 do snap[a] = u8(a) end
+    log:write(string.format("# f%d Byte-Snapshot 0x80090000-0x800C0000\n", frame)); log:flush()
   elseif diff_at > 0 and frame == diff_at and snap then
     local hits = 0
-    for a = 0x800A0000, 0x800B4000, 2 do
-      local d = u16(a) - snap[a]
+    for a = 0x80090000, 0x800C0000 - 1 do
+      local d = u8(a) - snap[a]
       if d == -JLEFT or d == JLEFT then
         hits = hits + 1
-        if hits <= 12 then
+        if hits <= 20 then
           log:write(string.format("# JUMP-Kandidat 0x%08x: %d -> %d (delta %+d)\n",
-                                  a, snap[a], u16(a), d))
+                                  a, snap[a], u8(a), d))
         end
       end
     end
