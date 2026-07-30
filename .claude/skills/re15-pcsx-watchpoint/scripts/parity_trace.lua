@@ -24,6 +24,10 @@ local LOGP   = os.getenv("RE15_PT_LOG")    or "C:/workspace/git/reAi_v2/shots/pc
 local SCRIPT = os.getenv("RE15_PT_SCRIPT") or "W90"
 local START  = tonumber(os.getenv("RE15_PT_START") or "90")
 local JLEFT  = tonumber(os.getenv("RE15_PT_LEFT")  or "16")
+-- Der JUMP-Cursor, per RAM-Diff lokalisiert (4 Bytes fielen ueber die 16 Links-Presses um exakt 16).
+-- Ueberschreibbar, damit die Kandidaten ohne Code-Aenderung durchprobiert werden koennen.
+local CURSOR = tonumber(os.getenv("RE15_PT_CURSOR") or "0x800AAAF8")
+local TARGET = tonumber(os.getenv("RE15_PT_TARGET") or "20")   -- 0x14 = ROOM1140 (0x114) low byte
 
 local PLAYER_BASE = 0x800ACA54
 local PLAYER_YAW  = 0x800ACABE   -- base + 0x6a = rot_y (4096 = 360). NOT 0x800ACA74: that is
@@ -100,6 +104,7 @@ local qi, qleft = 0, 0
 local frame, live, live_at = 0, false, -1
 local stage, jump_at = 1, -1
 local snap, snap_at, diff_at = nil, -1, -1
+local seek, seek_next, seek_steps, seek_release = false, -1, 0, -1
 local seg, seg_left, script_done = 0, 0, false
 
 -- The callback body runs inside pcall and any error is written to the LOG. Without this an error
@@ -129,10 +134,15 @@ local function on_vsync()
       q_wait(90)
       q_tap(PAD.SELECT, 4, 90)                      -- DEBUG MENU
       q_tap(PAD.D, 3, 60)                           -- -> JUMP line
-      snap_at = frame + 250                         -- snapshot the RAM once the JUMP line is up
-      for _ = 1, JLEFT do q_tap(PAD.L, 3, 24) end   -- JUMP numbers are HEX; 16 steps = 0x114
-      diff_at = frame + 250 + JLEFT * 27 + 45       -- ... and diff it after the steps
-      q_tap(PAD.A, 4, 60 * 15)                      -- Square = LOAD the room
+      -- NO fixed step count any more. 16 steps was calibrated for the DuckStation base state, where
+      -- the JUMP list sits on room 0x124 (0x124 - 16 = 0x114). This run arrives via NEW GAME, so the
+      -- list starts elsewhere and 16 steps land elsewhere — a fixed count is wrong in principle, no
+      -- matter how exactly it is executed. Instead: CLOSED LOOP on the cursor variable that the RAM
+      -- diff located (four bytes fell by exactly 16 across the 16 presses; CURSOR picks which one).
+      seek = true
+      seek_next = frame + 260
+      log:write(string.format("# f%d SEEK: Cursor 0x%08x -> Ziel %d\n", frame, CURSOR, TARGET))
+      log:flush()
       log:write(string.format("# f%d GAMEPLAY (act=%d) -> debug JUMP, %d steps left\n",
                               frame, u8(ACTIVE_CNT), JLEFT)); log:flush()
       jump_at = frame
@@ -175,7 +185,35 @@ local function on_vsync()
     snap = nil
   end
 
-  if not live then
+  -- SEEK: read the cursor, tap toward the target, read again. Ends with Square. Every step is
+  -- logged, so if CURSOR is the wrong byte the log shows it immediately (no convergence) instead of
+  -- the run silently loading some other room — which is exactly how the fixed count fooled me.
+  if seek and frame >= seek_next then
+    local cur = u8(CURSOR)
+    if cur == TARGET then
+      seek = false
+      release_all()
+      q_tap(PAD.A, 4, 60 * 15)                      -- Square = LOAD the room
+      log:write(string.format("# f%d SEEK ok: Cursor=%d -> LADEN\n", frame, cur)); log:flush()
+    elseif seek_steps > 120 then
+      seek = false
+      log:write(string.format("# f%d SEEK ABBRUCH nach %d Schritten, Cursor=%d (Adresse falsch?)\n",
+                              frame, seek_steps, cur)); log:flush()
+    else
+      seek_steps = seek_steps + 1
+      local dir = (cur > TARGET) and PAD.L or PAD.R
+      release_all(); press(dir)
+      seek_release = frame + 3
+      seek_next    = frame + 27
+      if seek_steps <= 40 then
+        log:write(string.format("# f%d seek %d: Cursor=%d %s\n",
+                                frame, seek_steps, cur, (dir == PAD.L) and "L" or "R")); log:flush()
+      end
+    end
+  end
+  if seek_release > 0 and frame == seek_release then release_all(); seek_release = -1 end
+
+  if not live and not seek then
     -- navigation phase: consume the queue, one frame per entry-frame
     if qleft <= 0 then
       qi = qi + 1
