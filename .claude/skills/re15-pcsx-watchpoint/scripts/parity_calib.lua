@@ -71,7 +71,14 @@ function PT_CAL_TICK(frame)
   else
     local hits, first = 0, nil
     for a = C.lo, C.hi do
-      if C.B[a] - C.A[a] == -C.n and PT.u8(a) - C.B[a] == -C.n then
+      -- NICHT auf delta == -N testen. Das war der eigentliche Fehler: es setzt voraus, dass der
+      -- Wert ein fortlaufender Zaehler ist. Die JUMP-Liste ist aber eine Liste von RAUM-IDs — Links
+      -- springt zum vorherigen EINTRAG, und die IDs sind nicht lueckenlos. Nach N Druecken ist die
+      -- Differenz also irgendetwas, nur nicht -N; der Detektor konnte nie anschlagen, egal wie gut
+      -- die Eingabe ankommt. Richtiges Kriterium: der Wert faellt in BEIDEN Intervallen (monoton),
+      -- und zwar plausibel weit (nicht 1 Bit Rauschen, nicht ueber den halben Wertebereich).
+      local d1, d2 = C.B[a] - C.A[a], PT.u8(a) - C.B[a]
+      if d1 < 0 and d2 < 0 and d1 > -120 and d2 > -120 then
         hits = hits + 1
         first = first or a
         if hits <= 8 then
