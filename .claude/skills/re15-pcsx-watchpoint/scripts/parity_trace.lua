@@ -83,7 +83,21 @@ end
 -- statt wie zuvor das ganze Chunk am Uebersetzen zu hindern (kein Logfile, keine Meldung).
 PT_HOLD = tonumber(os.getenv("RE15_PT_HOLD") or "12")
 PT_GAP  = tonumber(os.getenv("RE15_PT_GAP")  or "30")
-PT = { u8 = u8, log = log, press = press, release = release_all, padL = 7, padD = 6 }
+PT = { u8 = u8, log = log, press = press, release = release_all,
+       padL = 7, padD = 6, padSel = 0, padSq = 15 }
+-- Das ROSTER ist die objektive Abbruchbedingung der Raum-Suche: ROOM1140 hat genau die
+-- Typen 16,10,10,11,11. Damit braucht die Suche KEINE Cursor-Adresse und keinen Zielwert.
+PT.roster = function()
+  local n, sig = 0, ""
+  for i = 0, 7 do
+    local b = 0x800ACC2C + i * 0x1F4
+    if bit.band(u32(b), 1) ~= 0 then
+      n = n + 1
+      sig = sig .. ((n > 1) and "," or "") .. string.format("%02x", u8(b + 8))
+    end
+  end
+  return n, sig
+end
 if os.getenv("RE15_PT_CALIB") then
   local ok, err = pcall(dofile, (os.getenv("RE15_PT_CALIBFILE")
                                  or "C:/workspace/git/reAi_v2/.claude/skills/re15-pcsx-watchpoint/scripts/parity_calib.lua"))
