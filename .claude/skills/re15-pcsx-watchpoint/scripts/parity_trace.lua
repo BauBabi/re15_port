@@ -78,6 +78,17 @@ local function set_held(letters)
   for b in pairs(want) do press(b) end
 end
 
+-- BRUECKE fuer die optionale Kalibrierung (parity_calib.lua). Sie liegt in einer EIGENEN Datei und
+-- wird per pcall(dofile) geladen: ein Syntaxfehler dort ist dadurch FANGBAR und landet im Log,
+-- statt wie zuvor das ganze Chunk am Uebersetzen zu hindern (kein Logfile, keine Meldung).
+PT = { u8 = u8, log = log, press = press, release = release_all, padL = 7 }
+if os.getenv("RE15_PT_CALIB") then
+  local ok, err = pcall(dofile, (os.getenv("RE15_PT_CALIBFILE")
+                                 or "C:/workspace/git/reAi_v2/.claude/skills/re15-pcsx-watchpoint/scripts/parity_calib.lua"))
+  log:write(string.format("# Kalibrierung geladen: ok=%s err=%s\n", tostring(ok), tostring(err)))
+  log:flush()
+end
+
 -- A tap is expressed in FRAMES, not seconds: hold for `on` frames, then stay off for `off`. The
 -- DuckStation driver needed 0.30-0.60s gaps and was still unreliable; here the menu sees an exact
 -- number of frames, which is why short taps suffice and cannot auto-repeat by accident.
@@ -139,10 +150,14 @@ local function on_vsync()
       -- list starts elsewhere and 16 steps land elsewhere — a fixed count is wrong in principle, no
       -- matter how exactly it is executed. Instead: CLOSED LOOP on the cursor variable that the RAM
       -- diff located (four bytes fell by exactly 16 across the 16 presses; CURSOR picks which one).
-      seek = true
-      seek_next = frame + 260
-      log:write(string.format("# f%d SEEK: Cursor 0x%08x -> Ziel %d\n", frame, CURSOR, TARGET))
-      log:flush()
+      if PT_CAL_START then
+        PT_CAL_START(frame, tonumber(os.getenv("RE15_PT_CALIB") or "8"))
+      else
+        seek = true
+        seek_next = frame + 260
+        log:write(string.format("# f%d SEEK: Cursor 0x%08x -> Ziel %d\n", frame, CURSOR, TARGET))
+        log:flush()
+      end
       log:write(string.format("# f%d GAMEPLAY (act=%d) -> debug JUMP, %d steps left\n",
                               frame, u8(ACTIVE_CNT), JLEFT)); log:flush()
       jump_at = frame
@@ -188,6 +203,8 @@ local function on_vsync()
   -- SEEK: read the cursor, tap toward the target, read again. Ends with Square. Every step is
   -- logged, so if CURSOR is the wrong byte the log shows it immediately (no convergence) instead of
   -- the run silently loading some other room — which is exactly how the fixed count fooled me.
+  local cal_busy = PT_CAL_TICK and PT_CAL_TICK(frame) or false
+
   if seek and frame >= seek_next then
     local cur = u8(CURSOR)
     if cur == TARGET then
@@ -213,7 +230,7 @@ local function on_vsync()
   end
   if seek_release > 0 and frame == seek_release then release_all(); seek_release = -1 end
 
-  if not live and not seek then
+  if not live and not seek and not cal_busy then
     -- navigation phase: consume the queue, one frame per entry-frame
     if qleft <= 0 then
       qi = qi + 1
