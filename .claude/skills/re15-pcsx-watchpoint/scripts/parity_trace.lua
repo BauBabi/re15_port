@@ -81,6 +81,8 @@ end
 -- BRUECKE fuer die optionale Kalibrierung (parity_calib.lua). Sie liegt in einer EIGENEN Datei und
 -- wird per pcall(dofile) geladen: ein Syntaxfehler dort ist dadurch FANGBAR und landet im Log,
 -- statt wie zuvor das ganze Chunk am Uebersetzen zu hindern (kein Logfile, keine Meldung).
+PT_HOLD = tonumber(os.getenv("RE15_PT_HOLD") or "12")
+PT_GAP  = tonumber(os.getenv("RE15_PT_GAP")  or "30")
 PT = { u8 = u8, log = log, press = press, release = release_all, padL = 7, padD = 6 }
 if os.getenv("RE15_PT_CALIB") then
   local ok, err = pcall(dofile, (os.getenv("RE15_PT_CALIBFILE")

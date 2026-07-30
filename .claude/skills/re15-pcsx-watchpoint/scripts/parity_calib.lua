@@ -45,7 +45,9 @@ function PT_CAL_TICK(frame)
   if C.press > 0 then                      -- laufende Tastenfolge abarbeiten
     C.press = C.press - 1
     PT.release(); PT.press(C.dir)
-    C.rel, C.nxt = frame + 3, frame + 27
+    -- Haltedauer: 3 Frames reichten dem Menue offenbar nicht. HOLD ist konfigurierbar,
+    -- damit "zu kurz gedrueckt" von "Richtung erreicht das Menue gar nicht" trennbar ist.
+    C.rel, C.nxt = frame + (PT_HOLD or 12), frame + (PT_GAP or 30)
     return true
   end
 
