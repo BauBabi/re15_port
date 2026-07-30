@@ -91,14 +91,14 @@ q_tap(PAD.X, 3, 60 * 12)                           -- NEW GAME
 q_tap(PAD.X, 3, 60 * 4)                            -- character confirm (Leon)
 q_tap(PAD.X, 3, 60 * 20)                           -- into the room
 for _ = 1, 8 do q_tap(PAD.X, 3, 60 * 2) end        -- skip intro dialog/movies
-q_wait(60 * 5)
-q_tap(PAD.SELECT, 4, 90)                           -- DEBUG MENU
-q_tap(PAD.D, 3, 60)                                -- -> JUMP line
-for _ = 1, JLEFT do q_tap(PAD.L, 3, 24) end        -- step rooms (JUMP numbers are HEX; 16 = 0x114)
-q_tap(PAD.A, 4, 60 * 12)                           -- Square = LOAD room
+-- The debug JUMP is NOT queued here. Pressing Select on a fixed frame fired while the intro was
+-- still running, where it opens no debug menu — the run then ended up in the opening area (one NPC
+-- t=0x45, player hp=0) instead of ROOM1140. The JUMP is therefore triggered by the EVENT "gameplay
+-- is actually live" (see stage 2 below), not by a frame count.
 
 local qi, qleft = 0, 0
 local frame, live, live_at = 0, false, -1
+local stage, jump_at = 1, -1
 local seg, seg_left, script_done = 0, 0, false
 
 -- The callback body runs inside pcall and any error is written to the LOG. Without this an error
@@ -110,9 +110,27 @@ local function on_vsync()
   mem = PCSX.getMemPtr()          -- fresh every frame, see the note above
   frame = frame + 1
   if not live and u8(ACTIVE_CNT) > 0 then
-    live = true; live_at = frame
-    release_all()
-    log:write(string.format("# f%d ROOM LIVE (act=%d)\n", frame, u8(ACTIVE_CNT))); log:flush()
+    if stage == 1 then
+      -- Stage 1: gameplay reached (the opening area). NOW the debug menu exists, so queue the JUMP
+      -- and go back to waiting — the run is only "live" for measurement once the TARGET room loads.
+      stage = 2
+      queue, qi, qleft = {}, 0, 0
+      release_all()
+      q_wait(90)
+      q_tap(PAD.SELECT, 4, 90)                      -- DEBUG MENU
+      q_tap(PAD.D, 3, 60)                           -- -> JUMP line
+      for _ = 1, JLEFT do q_tap(PAD.L, 3, 24) end   -- JUMP numbers are HEX; 16 steps = 0x114
+      q_tap(PAD.A, 4, 60 * 15)                      -- Square = LOAD the room
+      log:write(string.format("# f%d GAMEPLAY (act=%d) -> debug JUMP, %d steps left\n",
+                              frame, u8(ACTIVE_CNT), JLEFT)); log:flush()
+      jump_at = frame
+    elseif stage == 2 and frame > jump_at + 60 * 20 then
+      -- Stage 2: the target room is up (guarded by a delay so the roster of the OLD room, which is
+      -- still resident while the JUMP runs, cannot be mistaken for the new one).
+      live = true; live_at = frame
+      release_all()
+      log:write(string.format("# f%d ROOM LIVE (act=%d)\n", frame, u8(ACTIVE_CNT))); log:flush()
+    end
   end
 
   if not live then
