@@ -81,7 +81,7 @@ end
 -- BRUECKE fuer die optionale Kalibrierung (parity_calib.lua). Sie liegt in einer EIGENEN Datei und
 -- wird per pcall(dofile) geladen: ein Syntaxfehler dort ist dadurch FANGBAR und landet im Log,
 -- statt wie zuvor das ganze Chunk am Uebersetzen zu hindern (kein Logfile, keine Meldung).
-PT = { u8 = u8, log = log, press = press, release = release_all, padL = 7 }
+PT = { u8 = u8, log = log, press = press, release = release_all, padL = 7, padD = 6 }
 if os.getenv("RE15_PT_CALIB") then
   local ok, err = pcall(dofile, (os.getenv("RE15_PT_CALIBFILE")
                                  or "C:/workspace/git/reAi_v2/.claude/skills/re15-pcsx-watchpoint/scripts/parity_calib.lua"))
@@ -144,7 +144,7 @@ local function on_vsync()
       release_all()
       q_wait(90)
       q_tap(PAD.SELECT, 4, 90)                      -- DEBUG MENU
-      q_tap(PAD.D, 3, 60)                           -- -> JUMP line
+      -- KEIN festes Down mehr: welche Menuezeile JUMP ist, sucht parity_calib.lua selbst.
       -- NO fixed step count any more. 16 steps was calibrated for the DuckStation base state, where
       -- the JUMP list sits on room 0x124 (0x124 - 16 = 0x114). This run arrives via NEW GAME, so the
       -- list starts elsewhere and 16 steps land elsewhere — a fixed count is wrong in principle, no
