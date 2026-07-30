@@ -39,7 +39,12 @@ local PAD = { U = 4, R = 5, D = 6, L = 7, X = 14, A = 15, M = 11,
 local log = assert(io.open(LOGP, "w"))
 log:write("# parity_trace loaded\n"); log:flush()
 
-local mem = PCSX.getMemPtr()
+-- Fetch the RAM pointer FRESH each frame, never once at load time. Caching it was why the trace
+-- died at frame ~360 every single run: the chunk runs before the disc boots, and the pointer taken
+-- then goes stale when the emulator (re)initialises memory — the callback throws, PCSX drops the
+-- listener, and the log simply stops. It looked exactly like "the emulator freezes", which is what
+-- I wrongly reported. watch_addr.lua, the script proven to work here, also reads it per call.
+local mem
 local function u8(a)  return mem[bit.band(a, 0x1fffff)] end
 local function u16(a) return u8(a) + u8(a + 1) * 256 end
 local function u32(a) return u16(a) + u16(a + 2) * 65536 end
@@ -96,7 +101,13 @@ local qi, qleft = 0, 0
 local frame, live, live_at = 0, false, -1
 local seg, seg_left, script_done = 0, 0, false
 
-PCSX.Events.createEventListener("GPU::Vsync", function()
+-- The callback body runs inside pcall and any error is written to the LOG. Without this an error
+-- silently kills the listener: the emulator keeps running perfectly (user-confirmed) while the trace
+-- just stops, which looks exactly like an emulator freeze. I misdiagnosed that three times — as a
+-- stale savestate, as a stalled emulator, and as parallel instances. A harness must report its own
+-- death.
+local function on_vsync()
+  mem = PCSX.getMemPtr()          -- fresh every frame, see the note above
   frame = frame + 1
   if not live and u8(ACTIVE_CNT) > 0 then
     live = true; live_at = frame
@@ -155,6 +166,21 @@ PCSX.Events.createEventListener("GPU::Vsync", function()
     log:write(line .. "\n"); log:flush()
   elseif frame % 120 == 0 then
     log:write(line .. "\n"); log:flush()
+  end
+end
+
+-- KEEP THE LISTENER OBJECT ALIVE. This is the documented pitfall of this skill ("_G.__keep = bp —
+-- MUSS am Leben gehalten werden, GC entfernt sonst den Breakpoint") and I walked straight into it:
+-- I stored `true` in the global instead of the listener, so the first GC cycle collected it. The
+-- trace then stopped at frame ~360 while the emulator kept running perfectly — which is exactly the
+-- "the emulator freezes" I wrongly reported.
+local err_seen = false
+_G.__parity_listener = PCSX.Events.createEventListener("GPU::Vsync", function()
+  local ok, err = pcall(on_vsync)
+  if not ok and not err_seen then
+    err_seen = true
+    log:write(string.format("# CALLBACK ERROR at frame %d: %s\n", frame, tostring(err)))
+    log:flush()
   end
 end)
 
