@@ -78,7 +78,13 @@ function PT_CAL_TICK(frame)
       -- die Eingabe ankommt. Richtiges Kriterium: der Wert faellt in BEIDEN Intervallen (monoton),
       -- und zwar plausibel weit (nicht 1 Bit Rauschen, nicht ueber den halben Wertebereich).
       local d1, d2 = C.B[a] - C.A[a], PT.u8(a) - C.B[a]
-      if d1 < 0 and d2 < 0 and d1 > -120 and d2 > -120 then
+      -- Monoton fallend allein reicht nicht: das lieferte 60 Treffer, allesamt auslaufende Puffer,
+      -- die gegen 0 gehen (100->27->0, 128->27->0 ...). Ein Raum-Cursor wird NIE 0 und springt in
+      -- beiden Intervallen aehnlich weit, weil die JUMP-Liste lokal gleichmaessig ist.
+      local v = PT.u8(a)
+      if d1 < 0 and d2 < 0 and v > 0 and C.A[a] > 0 and C.B[a] > 0
+         and d1 > -120 and d2 > -120
+         and math.abs(d1 - d2) <= math.max(2, math.floor(math.abs(d1) / 2)) then
         hits = hits + 1
         first = first or a
         if hits <= 8 then
