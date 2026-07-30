@@ -33,6 +33,13 @@ local ACTIVE_CNT  = 0x800ACA4E
 local BTN = { U = 4, R = 5, D = 6, L = 7, X = 14, A = 15, M = 11 }  -- A = SQUARE(15), M = R1(11)
 
 local log = assert(io.open(LOGP, "w"))
+-- LINE buffering, immediately. The first run came back with a ZERO-BYTE log: the header had been
+-- written but never flushed, and the emulator is force-killed at the end, so the buffer was lost.
+-- A capture whose evidence dies with the process is useless — so nothing here is buffered.
+-- NO setvbuf: PCSX-Redux's sandboxed io may not expose it, and a missing method kills the whole
+-- chunk right after io.open — which is exactly the failure mode seen (log file created, 0 bytes).
+-- watch_addr.lua, the one Lua script proven to work here, does not use it either. Flush explicitly.
+log:write("# parity_trace loaded\n"); log:flush()
 local mem = PCSX.getMemPtr()
 
 local function u8(a)  return mem[bit.band(a, 0x1fffff)] end
@@ -69,12 +76,17 @@ end
 -- read like a broken port.
 local function room_live() return u8(ACTIVE_CNT) > 0 end
 
+-- The event name is the one thing here I cannot verify statically, so it is probed rather than
+-- assumed: if the registration fails, the LOG says so (stdout from the emulator does not reach the
+-- driver's captured stream, as the first run showed).
+local ok_evt, err_evt = pcall(function()
 PCSX.Events.createEventListener("GPU::Vsync", function()
-  if not live then
-    if room_live() then live = true; frame = 0 end
-    return
-  end
+  -- Log from the FIRST vsync, never gated. The previous version only started once the enemy roster
+  -- was populated and produced a 0-byte log — which is indistinguishable from "the Lua is broken".
+  -- A trace that stays silent when its precondition is unmet cannot tell you WHY, so the readiness
+  -- is now DATA in the log (live=, act=) instead of a gate around it.
   frame = frame + 1
+  if not live and room_live() then live = true end
 
   if frame > START then
     if seg_left <= 0 then
@@ -92,8 +104,9 @@ PCSX.Events.createEventListener("GPU::Vsync", function()
     if seg_left > 0 then seg_left = seg_left - 1 end
   end
 
-  local line = string.format("F%d PL(%d,%d,rot=%d,hp=%d)",
-      frame, s32(PLAYER_POS), s32(PLAYER_POS + 8), s16(PLAYER_YAW), s16(PLAYER_BASE + 0x1ba))
+  local line = string.format("F%d live=%d act=%d PL(%d,%d,rot=%d,hp=%d)",
+      frame, live and 1 or 0, u8(ACTIVE_CNT),
+      s32(PLAYER_POS), s32(PLAYER_POS + 8), s16(PLAYER_YAW), s16(PLAYER_BASE + 0x1ba))
   for i = 0, 7 do
     local b = ENEMY_BASE + i * ENEMY_STRIDE
     if bit.band(u32(b), 1) ~= 0 then
@@ -103,9 +116,17 @@ PCSX.Events.createEventListener("GPU::Vsync", function()
         s32(b + 0x34), s32(b + 0x3c), s16(b + 0x6a))
     end
   end
-  log:write(line .. "\n")
-  if frame % 60 == 0 then log:flush() end
+  log:write(line .. "\n"); log:flush()
 end)
-
+end)
+log:write(string.format("# createEventListener ok=%s err=%s\n",
+                       tostring(ok_evt), tostring(err_evt)))
+if not ok_evt then
+  -- Try the alternative spellings before giving up, and record which one took.
+  for _, name in ipairs({ "GPU::VSync", "Vsync", "Frame", "GPU::Frame" }) do
+    local ok2 = pcall(function() PCSX.Events.createEventListener(name, function() end) end)
+    log:write(string.format("# probe '%s' ok=%s\n", name, tostring(ok2)))
+  end
+end
 _G.__parity_keep = true
 print("[parity_trace] armed: " .. SCRIPT .. " -> " .. LOGP)
