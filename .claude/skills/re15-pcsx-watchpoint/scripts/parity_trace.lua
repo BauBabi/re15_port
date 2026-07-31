@@ -130,6 +130,7 @@ for _ = 1, 8 do q_tap(PAD.X, 3, 60 * 2) end        -- skip intro dialog/movies
 local qi, qleft = 0, 0
 local frame, live, live_at = 0, false, -1
 local stage, jump_at = 1, -1
+local pos_stable, last_px, last_pz = 0, nil, nil
 local snap, snap_at, diff_at = nil, -1, -1
 local seek, seek_next, seek_steps, seek_release = false, -1, 0, -1
 local seg, seg_left, script_done = 0, 0, false
@@ -153,6 +154,14 @@ local function on_vsync()
   -- u16 in 0x800A0000-0x800B4000 moved by 16, i.e. the JUMP cursor never existed. The player state
   -- at that moment was hp=-7200 at (-31000,31000) — plainly not free gameplay. So require a SANE
   -- player HP as well; a cutscene actor does not have one.
+  -- RAUMEINTRITT erst melden, wenn die Spielerposition STEHT. Gemessen: bei +0 stand der Spieler
+  -- noch auf (-7600,-17600), bei +2 auf (-1300,-13950) — 6300 Einheiten in zwei Frames sind keine
+  -- Bewegung, sondern die Platzierung; der Wert bei +0 gehoerte noch zum alten Raum. Ein Vergleich,
+  -- der dort beginnt, misst den Uebergang statt den Raum.
+  local px, pz = s32(PLAYER_POS), s32(PLAYER_POS + 8)
+  if px == last_px and pz == last_pz then pos_stable = pos_stable + 1 else pos_stable = 0 end
+  last_px, last_pz = px, pz
+
   local php = s16(PLAYER_BASE + 0x9a)
   local ready = u8(ACTIVE_CNT) > 0   -- Select oeffnet das Debug-Menue laut Nutzer JEDERZEIT,
                                    -- auch waehrend des Intros; die HP-Huerde war unnoetig
@@ -182,7 +191,7 @@ local function on_vsync()
       log:write(string.format("# f%d GAMEPLAY (act=%d) -> debug JUMP, %d steps left\n",
                               frame, u8(ACTIVE_CNT), JLEFT)); log:flush()
       jump_at = frame
-    elseif stage == 2 and frame > jump_at + 60 * 20 then
+    elseif stage == 2 and frame > jump_at + 60 * 20 and pos_stable >= 30 then
       -- Stage 2: the target room is up (guarded by a delay so the roster of the OLD room, which is
       -- still resident while the JUMP runs, cannot be mistaken for the new one).
       live = true; live_at = frame
