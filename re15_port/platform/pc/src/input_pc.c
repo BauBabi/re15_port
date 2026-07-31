@@ -67,6 +67,11 @@ static uint16_t script_bit_for(char c)
         case 'A': case 'a': return RE15_PAD_SQUARE;
         case 'M': case 'm': return RE15_PAD_R1;
         case 'S': case 's': return RE15_PAD_START;  /* status-screen open/close (wave 2) */
+        /* Debug-Menue ("UTILITY MENU" @0x80014444): SELECT oeffnet, Dreieck wechselt die Stage.
+         * Die Zeilen-/Raum-Navigation laeuft dort ueber das HELD-Halbwort 0x800AC760, ein Token
+         * muss deshalb exakt so viele Frames lang sein wie Schritte gewuenscht sind. */
+        case 'E': case 'e': return RE15_PAD_SELECT;
+        case 'T': case 't': return RE15_PAD_TRIANGLE;
         case 'W': case 'w': default: return 0;   /* wait / unknown -> no bit */
     }
 }

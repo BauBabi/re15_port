@@ -30,7 +30,16 @@ typedef struct {
 void re15_debug_menu_reset(void);
 void re15_debug_menu_toggle(void);
 int  re15_debug_menu_open(void);
-int  re15_debug_menu_tick(uint16_t vpad_edge);
+/* held = Halbwort 0x800AC760, edge = Halbwort 0x800AC762 (Schreiber @0x80030564/@0x800305A0).
+ * D-Pad liegt auf den Bits 12-15 (die Maske `andi 0xf000` @0x80030514 gruppiert genau diese
+ * vier), die Face-Tasten auf 4-7. Rueckgabe 1 = Raum laden, Ziel in ->load_room. */
+int  re15_debug_menu_tick(uint16_t held, uint16_t edge);
+const char *re15_debug_menu_room_name(void);
+uint16_t re15_debug_menu_pad(uint16_t phys);
 const re15_debug_menu_t *re15_debug_menu_state(void);
+
+/* Halbwort-Offset in die JUMP-Tabelle (Original @0x800C263A): 637 je Stage, 13 je Eintrag,
+ * erstes Halbwort = Raum-ID (@0x8001476C-0x800147A8). */
+unsigned re15_debug_menu_table_offset(unsigned stage, unsigned idx);
 
 #endif /* RE15_DEBUG_MENU_H */

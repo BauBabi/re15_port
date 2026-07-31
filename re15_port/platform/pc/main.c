@@ -69,7 +69,8 @@ static inline int RNDI(float f) {
  * re15_pc_draw_item_icon are gone — the status screen is now the byte-true display list of
  * re15_inv_screen.c (engine) rasterized by inv_render_pc.c; see re15_inv_screen.h.) */
 #include "re15_inv_screen.h"  /* byte-true status-screen display list (wave 1) */
-#include "re15_room.h"        /* SHARED cross-room transition (re15_room_apply_pending) */
+#include "re15_room.h"
+#include "re15_debug_menu.h"        /* SHARED cross-room transition (re15_room_apply_pending) */
 #include "re15_enemy.h"       /* generic enemy-model registry (re15_enemy_find/alloc/reset) */
 #include "re15_enemy_ai.h"    /* re15_player_victim_state/type — Leon's grab-victim render override */
 #include "re15_ems.h"         /* enemy-model archive index (load EMDs out of CDEMD*.EMS) */
@@ -3495,6 +3496,51 @@ re_title:;
                 /* apply the OPTIONS controller preset (TYPE A = identity → byte-true default). */
                 gctx.pad_current = pc_pad_config((uint16_t)g_engine.pad_current);
                 gctx.pad_pressed = pc_pad_config((uint16_t)g_engine.pad_pressed);
+
+                /* ORIGINAL-DEBUG-MENUE ("UTILITY MENU", PSX.EXE @0x80014444) — Logik in
+                 * engine/src/debug_menu_common.c, jede Konstante dort mit ihrer Adresse.
+                 *
+                 * WARUM IM PORT: fuer den 1:1-Vergleich muessen Original und Port einen Raum ueber
+                 * DENSELBEN Weg betreten. Solange das Original per Debug-JUMP hineinspringt und der
+                 * Port per RE15_START_ROOM gesetzt wird, vergleicht der Harness zwei verschiedene
+                 * Situationen.
+                 *
+                 * Das Menue liest im Original zwei Halbwoerter: 0x800AC760 = held und 0x800AC762 =
+                 * edge (Schreiber @0x80030564 bzw. @0x800305A0). In diesem Wort liegt das D-Pad auf
+                 * den Bits 12-15 und liegen die Face-Tasten auf 4-7 — gegenueber dem Pad-Wort des
+                 * Ports sind die beiden Bytes also vertauscht; re15_debug_menu_pad() dreht sie.
+                 *
+                 * SPIELERPOSITION: der Lade-Zweig @0x80014A44-58 schreibt NUR 0x800B5359=1,
+                 * 0x800AC9A8=0 und 0x800BBE5C=0 — KEINE Position. Der Port nimmt deshalb den
+                 * Eintritts-Spawn des Zielraums aus re15_room_spawns, nicht die aktuelle Position. */
+                {
+                    uint16_t dbg_held = re15_debug_menu_pad(gctx.pad_current);
+                    uint16_t dbg_edge = re15_debug_menu_pad(gctx.pad_pressed);
+                    if (!re15_debug_menu_open()) {
+                        if (gctx.pad_pressed & RE15_PAD_BIT_SELECT)
+                            re15_debug_menu_toggle();
+                    } else {
+                        if (re15_debug_menu_tick(dbg_held, dbg_edge)) {
+                            const re15_debug_menu_t *dm = re15_debug_menu_state();
+                            unsigned  droom = (unsigned)dm->load_room << 4;   /* 0x114 -> ROOM1140 */
+                            int32_t   dx = 0, dy = 0, dz = 0;
+                            int16_t   dyaw = 0;
+                            int       dcut = 0;
+                            for (int _ri = 0; _ri < RE15_ROOM_COUNT; _ri++)
+                                if (re15_room_ids[_ri] == droom) {
+                                    const re15_room_spawn_t *rs = &re15_room_spawns[_ri];
+                                    dx = rs->x; dy = rs->y; dz = rs->z;
+                                    dyaw = rs->yaw; dcut = rs->cut;
+                                    break;
+                                }
+                            re15_room_request_change(droom, dx, dy, dz, dyaw, dcut);
+                            fprintf(stderr, "[debug-menu] JUMP -> %03x %s (ROOM%04X)\n",
+                                    dm->load_room, re15_debug_menu_room_name(), droom);
+                        }
+                        /* Waehrend das Menue offen ist, sieht das Spiel kein Pad. */
+                        gctx.pad_current = gctx.pad_pressed = 0;
+                    }
+                }
                 /* RL-4 per-room model-bank preload: load every model the room's roster needs BEFORE
                  * the engine AI reads it. scd_vm_tick (above) spawns the roster via Sce_em_set; the
                  * enemy AI inside re15_game_step then reads re15_enemy_find(type) for the byte-true EM
