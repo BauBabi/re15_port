@@ -292,8 +292,11 @@ local function on_vsync()
     end
   end
 
-  local line = string.format("F%d live=%d act=%d PL(%d,%d,rot=%d,hp=%d)",
-      frame, live and 1 or 0, u8(ACTIVE_CNT),
+  -- pad=0x800AC760 ist das Wort, aus dem das DEBUG-MENUE seine Eingabe liest (@0x8001461C,
+-- Bits 0x1000/0x4000). menu=0x800BBE5D ist dessen Auswahl-Byte (@0x80014604/18). Beide werden
+-- mitgeschrieben, damit "kommt die Eingabe ueberhaupt an" eine MESSUNG ist statt einer Vermutung.
+  local line = string.format("F%d live=%d act=%d pad=%04x menu=%d PL(%d,%d,rot=%d,hp=%d)",
+      frame, live and 1 or 0, u8(ACTIVE_CNT), u16(0x800AC760), u8(0x800BBE5D),
       s32(PLAYER_POS), s32(PLAYER_POS + 8), s16(PLAYER_YAW), s16(PLAYER_BASE + 0x9a))
   for i = 0, 7 do
     local b = ENEMY_BASE + i * ENEMY_STRIDE
