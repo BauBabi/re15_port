@@ -142,16 +142,21 @@ local seg, seg_left, script_done = 0, 0, false
 local function on_vsync()
   mem = PCSX.getMemPtr()          -- fresh every frame, see the note above
   frame = frame + 1
+  -- Der Kalibrier-Tick MUSS vor der Bereitschaftspruefung laufen: sonst feuern ROOM LIVE und der
+  -- Eingabe-Script schon WAEHREND der Raum-Suche (gemessen: live bei f15122, Raum erst bei f19501
+  -- gefunden) und messen den falschen Raum.
+  local cal_busy = PT_CAL_TICK and PT_CAL_TICK(frame) or false
+
   -- READINESS. active_count > 0 alone is NOT "the player has control": it is also true during
   -- cutscenes, and that is exactly what went wrong — stage 1 fired inside the intro sequence, where
   -- Select opens no debug menu. Proof from the RAM diff: across the 16 Left presses not a single
   -- u16 in 0x800A0000-0x800B4000 moved by 16, i.e. the JUMP cursor never existed. The player state
   -- at that moment was hp=-7200 at (-31000,31000) — plainly not free gameplay. So require a SANE
   -- player HP as well; a cutscene actor does not have one.
-  local php = s16(PLAYER_BASE + 0x1ba)
+  local php = s16(PLAYER_BASE + 0x9a)
   local ready = u8(ACTIVE_CNT) > 0   -- Select oeffnet das Debug-Menue laut Nutzer JEDERZEIT,
                                    -- auch waehrend des Intros; die HP-Huerde war unnoetig
-  if not live and ready then
+  if not live and ready and not cal_busy then
     if stage == 1 then
       -- Stage 1: gameplay reached (the opening area). NOW the debug menu exists, so queue the JUMP
       -- and go back to waiting — the run is only "live" for measurement once the TARGET room loads.
@@ -219,8 +224,6 @@ local function on_vsync()
   -- SEEK: read the cursor, tap toward the target, read again. Ends with Square. Every step is
   -- logged, so if CURSOR is the wrong byte the log shows it immediately (no convergence) instead of
   -- the run silently loading some other room — which is exactly how the fixed count fooled me.
-  local cal_busy = PT_CAL_TICK and PT_CAL_TICK(frame) or false
-
   if seek and frame >= seek_next then
     local cur = u8(CURSOR)
     if cur == TARGET then
@@ -257,7 +260,10 @@ local function on_vsync()
       end
     end
     if qleft > 0 then qleft = qleft - 1 end
-  else
+  elseif live then
+    -- Script-Phase EXPLIZIT an `live` haengen, nicht als else-Zweig. Vorher lief sie auch, wenn nur
+    -- cal_busy wahr war — der Eingabe-Script feuerte dadurch MITTEN in der Raum-Suche (gemessen:
+    -- segment W bei f13922, Raum erst bei f19501 gefunden) und mass den falschen Raum.
     -- script phase: starts START frames after the room went live
     local f = frame - live_at
     if f > START and not script_done then
@@ -279,7 +285,7 @@ local function on_vsync()
 
   local line = string.format("F%d live=%d act=%d PL(%d,%d,rot=%d,hp=%d)",
       frame, live and 1 or 0, u8(ACTIVE_CNT),
-      s32(PLAYER_POS), s32(PLAYER_POS + 8), s16(PLAYER_YAW), s16(PLAYER_BASE + 0x1ba))
+      s32(PLAYER_POS), s32(PLAYER_POS + 8), s16(PLAYER_YAW), s16(PLAYER_BASE + 0x9a))
   for i = 0, 7 do
     local b = ENEMY_BASE + i * ENEMY_STRIDE
     if bit.band(u32(b), 1) ~= 0 then
