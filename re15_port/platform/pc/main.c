@@ -3537,8 +3537,13 @@ re_title:;
                             fprintf(stderr, "[debug-menu] JUMP -> %03x %s (ROOM%04X)\n",
                                     dm->load_room, re15_debug_menu_room_name(), droom);
                         }
-                        /* Waehrend das Menue offen ist, sieht das Spiel kein Pad. */
-                        gctx.pad_current = gctx.pad_pressed = 0;
+                        /* KEIN Pad-Schlucken. Im Original friert das Menue NICHTS ein: FUN_8001443c
+                         * kehrt zurueck, danach laufen State-Dispatch, Subsystem-Ticks und die
+                         * Entity-/AI-Schleife normal weiter (@0x8001C990), und alle Pad-Zugriffe der
+                         * Menuefunktion sind reine LESEzugriffe — 0x800AC760/762 werden nirgends
+                         * geloescht (@0x800145EC ff.). Der Spieler laeuft also weiter, waehrend das
+                         * Menue offen ist. Mein erster Wurf hat hier das Pad genullt; das war der
+                         * Grund, warum sich beim Druck auf Select nichts mehr bewegte. */
                     }
                 }
                 /* RL-4 per-room model-bank preload: load every model the room's roster needs BEFORE
@@ -5684,6 +5689,51 @@ re_title:;
          * (re15_render_pc_item_prompt, render_pc.c:1681, using re15_msgfont_glyph; the prompt's own
          * glyph bytes come from the BSS scripts @0x800c4fc6 + name blob) — byte-true end-to-end, no
          * longer a 6×8-overlay faithful-line. */
+        /* ORIGINAL-DEBUG-MENUE ZEICHNEN — Layout byte-true aus PSX.EXE @0x80014AB4..0x80014C08.
+         * Der Zeichenblock enthaelt GENAU 7 Aufrufe der Text-Queue FUN_800279C8. a0 ist die gepackte
+         * Position (y<<16)|x (low half = X, high half = Y, belegt am Queue-Walker @0x800291B4), a1=3
+         * das Attribut. a1 ist fuer ALLE SIEBEN identisch 3 — es gibt also KEINE Farbhervorhebung der
+         * gewaehlten Zeile, die Auswahl zeigt allein der Cursor.
+         *   1 @0x80014AD0  x=104 y=84        "- DEBUG MENU -"  (String @0x8001052C)
+         *   2 @0x80014AEC  x=96  y=100       "UTILITY MENU"    (@0x8001053C)
+         *   3 @0x80014B14  x=96  y=108       "JUMP %d"         (@0x8001054C) Arg = Stage + 1
+         *   4 @0x80014B44  x=144 y=108       "%2X"             (@0x80010554) Arg = Raumindex
+         *   5 @0x80014BB4  x=168 y=108       "%s"              (@0x80010558) Arg = Name aus DEBUG.BIN
+         *   6 @0x80014BD0  x=96  y=116       "MEMORY VIEWER"   (@0x8001055C)
+         *   7 @0x80014BFC  x=80  y=100+8*sel ">"               (@0x8001056C) sel = 0x800BBE5D
+         * Zeilenabstand 8 px, Cursor-Spalte 16 px links vom Text.
+         *
+         * NICHT byte-true und hier bewusst benannt statt versteckt: die GLYPHEN. Das Original zieht
+         * sie aus der 8x8-Debug-Font in VRAM (768,256), 4 bpp, Glyphenindex = c-0x20
+         * (@0x800295DC GetTPage(0,0,0x300,0x100), Zellmathematik @0x8002931C). WOHER diese Textur
+         * geladen wird, ist noch NICHT ermittelt — bis dahin zeichnet der Port seine 6x8-Ersatz-
+         * schrift, aber auf dem ECHTEN 8-px-Raster, damit die Spaltenpositionen stimmen.
+         * Ebenfalls noch offen: die halbtransparente Box (FUN_80014CC4 — ein TILE 256x56 bei x=32,
+         * y=76, RGB = die Rampe 0x800BBE66, die im Einblendzustand +8 pro Frame bis >0x40 laeuft,
+         * @0x80014D70/@0x80014D90). */
+        if (re15_debug_menu_open()) {
+            extern int re15_render_pc_text_overlay_n(int x, int y, const char *text, int n);
+            const re15_debug_menu_t *dm = re15_debug_menu_state();
+            char dbuf[64];
+            int  di;
+            /* Zeichenweise auf dem 8-px-Raster des Originals (die Ersatzschrift rueckt sonst 6). */
+            #define DBG_TEXT8(bx, by, str) do {                                        \
+                const char *_s = (str);                                                \
+                for (di = 0; _s[di]; di++)                                             \
+                    re15_render_pc_text_overlay_n((bx) + di * 8, (by), _s + di, 1);     \
+            } while (0)
+            DBG_TEXT8(104, 84,  "- DEBUG MENU -");                    /* @0x80014AD0 */
+            DBG_TEXT8(96,  100, "UTILITY MENU");                      /* @0x80014AEC */
+            snprintf(dbuf, sizeof dbuf, "JUMP %d", dm->stage + 1);    /* @0x80014B14 */
+            DBG_TEXT8(96,  108, dbuf);
+            snprintf(dbuf, sizeof dbuf, "%2X", dm->room_idx[dm->stage]); /* @0x80014B44 */
+            DBG_TEXT8(144, 108, dbuf);
+            DBG_TEXT8(168, 108, re15_debug_menu_room_name());         /* @0x80014BB4 */
+            DBG_TEXT8(96,  116, "MEMORY VIEWER");                     /* @0x80014BD0 */
+            DBG_TEXT8(80,  100 + 8 * dm->row, ">");                   /* @0x80014BFC */
+            #undef DBG_TEXT8
+        }
+
         {
             extern void re15_render_pc_text_overlay(int x, int y, const char *text);
             extern int  re15_render_pc_text_overlay_n(int x, int y, const char *text, int n);
