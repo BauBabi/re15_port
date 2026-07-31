@@ -3926,8 +3926,41 @@ re_title:;
                                         &s_cine_scratch_skel, &s_cine_scratch_anim, pc_enemy_load);
                                 fprintf(stderr, "[rbj] room %04X cinematic overlay: %d clips, %d kf\n",
                                         dest_room, anim.clip_count, skel.keyframe_count);
+                            } else if (pl00_ok) {
+                                /* 2026-07-31 FIX — Nutzer-Report: "Leon fuehrt in den Raum zu dem wir
+                                 * springen noch Skript-Aktionen von dem Raum davor aus. Das macht er
+                                 * im Original nicht."
+                                 *
+                                 * URSACHE: hat der Zielraum keine eigene Cinematic-Animation, BEHIELT
+                                 * der Port die Bank des VORHERIGEN Raumes ("keeping current bank").
+                                 * Leons Motion-Indizes zeigten damit weiter auf die Clips des alten
+                                 * Raumes — schon Motion 0 ist dort eine Skript-Geste statt der Idle-
+                                 * Pose, also spielt er sichtbar die Szene von vorher weiter.
+                                 *
+                                 * DAS ORIGINAL KANN DAS GAR NICHT: der Raumlader FUN_800396FC setzt
+                                 * die Per-Raum-Arena zurueck (@0x80039738/40/48 schreiben 0x800AC77C /
+                                 * 0x800AC778 / 0x800BBEB0 auf die Arena-Basis 0x800AC780) — die
+                                 * Overlay-Daten des alten Raumes sind danach schlicht weg, und
+                                 * FUN_8001B3F8 re-pointet die Animations-Zeiger nur fuer die im
+                                 * RDT-Block +0x5C gesetzten Maskenbits. Kein Animationsblock im
+                                 * Zielraum = Spieler zeigt auf die PL00-BASIS, nicht auf die alte Bank.
+                                 * Dazu passt der Spieler-Reset des Transitions-Schwanzes:
+                                 * @0x8001CBDC `sb zero,0x800ACA58` nullt das Kommando-Register
+                                 * (Spieler+0x04). Ist dort 4 (= der SCD-Motion-Executor, gesetzt von
+                                 * Plc_motion @0x80041B90), hoert der Skript-Antrieb damit auf; der
+                                 * Routine-0-Handler @0x800318F8 setzt anschliessend Motion +0x94 = 0.
+                                 *
+                                 * Der Port bildet den Arena-Reset nach, indem er Leon aus der
+                                 * BEWAHRTEN PL00-Basis wiederherstellt — genau das, was
+                                 * re15_apply_room_cinematic sonst als Ausgangspunkt nimmt
+                                 * (enemy_common.c: *leon_skel = *s aus pl00_base). */
+                                skel = pl00_skel;
+                                anim = pl00_anim;
+                                s_rbj_room = dest_room;
+                                fprintf(stderr, "[rbj] room %04X has no RBJ (%s) — Leon auf PL00-Basis "
+                                        "zurueckgesetzt (Arena-Reset @0x80039738)\n", dest_room, rpath);
                             } else {
-                                fprintf(stderr, "[rbj] room %04X has no RBJ (%s) — keeping current bank\n",
+                                fprintf(stderr, "[rbj] room %04X has no RBJ (%s) und keine PL00-Basis\n",
                                         dest_room, rpath);
                             }
                         }
