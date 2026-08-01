@@ -2438,6 +2438,14 @@ re_title:;
      * RESTORED 2026-06-07 to push-out band 4 (the band-4-FREE complement is walkable;
      * band-4 cells are walls). */
     re15_collision_set_band(re15_collision_band_from_y(g_actors[RE15_ACTOR_SLOT_PLAYER].y));
+    /* BOOT-BGM: der Startraum wird an re15_room_apply_pending VORBEI installiert (Uebergabe
+     * §3 Schritt 14), also feuert der Raumwechsel-Aufruf aus room_common.c hier nicht. Im
+     * Original haengt die Auswahl am Raumlader FUN_800396fc, der auch fuer den ersten Raum
+     * laeuft — deshalb hier einmal mit der ECHTEN boot_room-ID nachziehen (nicht hartkodiert). */
+    re15_audio_start_room_bgm((int)((boot_room >> 12) - 1), (int)((boot_room >> 4) & 0xff));
+    /* Dito fuer die Raum-Sound-Baenke: re15_audio_init laeuft vor dem ersten RDT-Parse, deshalb
+     * hier einmal fuer den Startraum binden (danach uebernimmt room_common.c pro Raumwechsel). */
+    re15_audio_load_room_banks();
     /* PARITY STATE-INJECT (RE15_PLAYER_POS="x,z,rot"): teleport the player after spawn so a port
      * run can START from the SAME player pose as a DuckStation savestate — isolates the zombie-AI
      * parity from the (fuzzy vgamepad) input-replay. Reusable parity tool (memory: parity-oracle). */
@@ -2546,7 +2554,13 @@ re_title:;
     if (!s_preintro && rdt_ok && rdt.sub_scd[0]) {
         scd_thread_start(1, rdt.sub_scd[0]);
         s_sub00_spawned = 1;
-        re15_audio_start_room_bgm(0, 0x17);
+        /* KEIN re15_audio_start_room_bgm(0, 0x17) mehr. Das war hart auf ROOM1170 verdrahtet und
+         * lief zusammen mit dem prozess-globalen One-Shot darauf hinaus, dass der ERSTE Aufruf
+         * die BGM fuer die ganze Session festnagelt — in ROOM1240 spielte deshalb der Track von
+         * ROOM1170 (gemeldet 2026-08-01). Das Original waehlt die BGM im RAUMLADER
+         * FUN_800396fc: @0x8003971C FUN_800443ec (KeyOff + Fade-Start) und @0x800397xx
+         * FUN_80044210 (Latch + Laden) — also pro Raum aus der Tabelle, nie hartkodiert.
+         * Der Port macht das jetzt in room_common.c beim Raumwechsel. */
     }
 
     /* FE-4 CONTINUE: restore the SAVE-TIME camera cut LAST — after the room default (cam_id=0
@@ -2793,7 +2807,7 @@ re_title:;
              g_engine.frame_count >= (uint32_t)FRAME_AT_60(1800)) &&
             rdt_ok) {
             s_sub00_spawned = 1;
-            re15_audio_start_room_bgm(0, 0x17);   /* no BGM under the narrator */
+            /* (kein hartkodiertes ROOM1170-BGM mehr — siehe oben; die Auswahl haengt am Raumlader) */
             scd_room_reenter(&rdt,
                              g_actors[RE15_ACTOR_SLOT_PLAYER].x,
                              g_actors[RE15_ACTOR_SLOT_PLAYER].z, 0);  /* helipad scenario */
@@ -3505,6 +3519,21 @@ re_title:;
                 /* apply the OPTIONS controller preset (TYPE A = identity → byte-true default). */
                 gctx.pad_current = pc_pad_config((uint16_t)g_engine.pad_current);
                 gctx.pad_pressed = pc_pad_config((uint16_t)g_engine.pad_pressed);
+                /* RE15_AUTOWALK="<startframe>,<frames>": haelt VORWAERTS fuer <frames> Frames ab
+                 * <startframe>. Test-Harness fuer alles, was Laufen braucht (Schritt-SE, Kollision,
+                 * Lokomotion) — der Port hat sonst keine Moeglichkeit, in einem automatisierten Lauf
+                 * zu gehen. Reines Diagnose-Werkzeug, per Default aus. */
+                {
+                    static int aw_from = -1, aw_len = 0, aw_read = 0;
+                    if (!aw_read) {
+                        aw_read = 1;
+                        const char *aw = getenv("RE15_AUTOWALK");
+                        if (aw && *aw && sscanf(aw, "%d,%d", &aw_from, &aw_len) < 2) aw_len = 600;
+                    }
+                    if (aw_from >= 0 && (int)g_engine.frame_count >= aw_from &&
+                        (int)g_engine.frame_count < aw_from + aw_len)
+                        gctx.pad_current |= RE15_PAD_BIT_UP;
+                }
 
                 /* ORIGINAL-DEBUG-MENUE ("UTILITY MENU", PSX.EXE @0x80014444) — Logik in
                  * engine/src/debug_menu_common.c, jede Konstante dort mit ihrer Adresse.

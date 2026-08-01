@@ -101,6 +101,15 @@ void re15_audio_set_mono(int mono);
  * RDT (g_room_rdt.snd_*[0]) and re15_audio_footstep mixes the resolved VAG. */
 void re15_audio_footstep(int foot, int sound_type);
 
+/* Die beiden RAUM-Sound-Baenke (snd0 = Schritte, snd1 = Raum/Combat-SE) an den GERADE
+ * geladenen Raum binden. Gegenstueck zu FUN_80043eac @0x80043eac und FUN_80043fb0
+ * @0x80043fb0, die der Raumlader FUN_800396fc pro Raum aufruft (VH/VB aus dem frisch
+ * geladenen RDT, mit SsVabClose der Vorgaengerbank).
+ * MUSS nach dem RDT-Parse laufen und bei JEDEM Raumwechsel erneut: die Baenke werden aus
+ * dem RDT geschnitten. Lief das frueher in re15_audio_init(), war g_room_rdt_ok noch 0 und
+ * die Schritt-Bank wurde nie geladen. */
+void re15_audio_load_room_banks(void);
+
 /* Room SE by id (byte-true FUN_800453d0 core): play the per-room snd1 SE bank's sound for
  * `se_id` (0..0x18). This is the COMBAT/room SE path (zombie death groan, etc.) — distinct
  * from the SCD Se_on path in re15_audio_tick. The snd1 bank + its SE table (EDT) are loaded

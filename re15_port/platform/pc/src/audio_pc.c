@@ -470,14 +470,19 @@ static int load_footstep_vab_pc(void)
      * SLICED from the parsed RDT (g_room_rdt.snd_*[0], header offsets 0x08-0x10) — was
      * separate room####_snd0.{vh,vb,edt} files. Pointers alias the resident RDT buffer
      * (byte-true == the old files; no free). Parity with the PSX footstep loader. */
-    if (!g_room_rdt_ok) return -1;
+    if (!g_room_rdt_ok) { fprintf(stderr, "[foot] kein RDT geparst\n"); return -1; }
     const uint8_t *vh  = g_room_rdt.snd_vh[0];
     const uint8_t *vb  = g_room_rdt.snd_vb[0];
     const uint8_t *edt = g_room_rdt.snd_edt[0];
     int vh_sz = g_room_rdt.snd_vh_size[0], vb_sz = g_room_rdt.snd_vb_size[0],
         edt_sz = g_room_rdt.snd_edt_size[0];
-    if (!vh || !vb || !edt || re15_vab_parse(vh, (size_t)vh_sz, &s_foot_vab) != 0)
+    if (!vh || !vb || !edt || re15_vab_parse(vh, (size_t)vh_sz, &s_foot_vab) != 0) {
+        fprintf(stderr, "[foot] Bank snd0 nicht ladbar: vh=%p(%d) vb=%p(%d) edt=%p(%d)\n",
+                (const void *)vh, vh_sz, (const void *)vb, vb_sz, (const void *)edt, edt_sz);
         return -1;
+    }
+    fprintf(stderr, "[foot] Bank snd0 geladen: %d VAGs, vh=%dB vb=%dB edt=%dB\n",
+            s_foot_vab.vag_count, vh_sz, vb_sz, edt_sz);
     for (int i = 0; i < s_foot_vab.vag_count; i++) {
         uint32_t off = s_foot_vab.samples[i].offset, sz = s_foot_vab.samples[i].size;
         if (off + sz > (uint32_t)vb_sz) continue;
@@ -490,6 +495,20 @@ static int load_footstep_vab_pc(void)
     memcpy(s_foot_edt, edt, (edt_sz < (int)sizeof s_foot_edt) ? edt_sz : (int)sizeof s_foot_edt);
     s_foot_loaded = 1;
     return 0;
+}
+
+/* == FUN_80043eac @0x80043eac + FUN_80043fb0 @0x80043fb0, gerufen aus dem Raumlader
+ * FUN_800396fc. Beide schliessen erst die Vorgaengerbank (SsVabClose) und oeffnen dann die
+ * Bank des NEUEN Raums aus dem frisch geladenen RDT. Der Port hat kein SPU-RAM, also ist das
+ * Gegenstueck zu SsVabClose das Freigeben der dekodierten PCM-Blöcke. */
+static void free_room_bank_pcm(void)
+{
+    for (int i = 0; i < RE15_VAB_MAX_SAMPLES; i++) {
+        free(s_foot_decoded[i]); s_foot_decoded[i] = NULL; s_foot_decoded_len[i] = 0;
+        free(s_se_decoded[i]);   s_se_decoded[i]   = NULL; s_se_decoded_len[i]   = 0;
+    }
+    s_foot_loaded = 0;
+    s_se_loaded   = 0;
 }
 
 /* Load + decode the room SE bank (snd1, RDT +0x14/+0x18/+0x1c) — the combat/room SE bank
@@ -784,8 +803,13 @@ void re15_audio_init(void)
 
     /* Phase 4.6.3: load bundled VAB so Se_on events have something to play. */
     load_bundled_vab_pc();
-    load_footstep_vab_pc();   /* room snd0 + its EDT table (footstep SE) */
-    load_room_se_vab_pc();    /* room snd1 + its SE table (combat/room SE, FUN_800453d0) */
+    /* Die RAUM-Baenke (snd0/snd1) werden hier NICHT mehr geladen: re15_audio_init laeuft schon
+     * vor dem Opening-Movie, also BEVOR das erste RDT geparst ist (main.c) — g_room_rdt_ok war 0,
+     * load_footstep_vab_pc gab sofort -1 zurueck und s_foot_loaded blieb 0. Ergebnis: der
+     * Schritt-Sound hat NIE gespielt (gemeldet 2026-08-01, gemessen als "[foot] kein RDT geparst").
+     * Im Original haengen beide Baenke am RAUMLADER FUN_800396fc: FUN_80043eac (Bank 2, VH aus
+     * RDT+0xc, VB aus RDT+0x10) und FUN_80043fb0 (Bank 3, VB aus RDT+0x1c) — pro Raum, mit
+     * SsVabClose der Vorgaengerbank. Der Port macht das jetzt in re15_audio_load_room_banks(). */
     load_weapon_se_vab_pc(1); /* bank1: the briefing handgun ARMS01 (weapon 1, savestate-confirmed);
                                * gunshot = re15_audio_weapon_se(8). FUN_80043d8c loads the equipped
                                * weapon's ARMS bank — per-room/on-equip reload is a follow-up. */
@@ -1707,37 +1731,55 @@ static void re15_amb_mix(int16_t *out, int frames) {
     }
 }
 
-/* re15_bgm: room-music manager (RE2 FUN_8005a97c). Loads + loops MAIN, SUB,
- * and the looping room ambience (helicopter rotor from the snd0 SE bank). */
-static void re15_bgm_play_room(int stage, int room) {
-    int main_ok = re15_bgm_load_track(&s_ss_main, "MAIN", re15_bgm_for_room(stage, room)) == 0;
-    int sub_ok  = re15_bgm_load_track(&s_ss_sub,  "SUB_", re15_bgm_sub_for_room(stage, room)) == 0;
-    s_ss_main.vab_id = 5; s_ss_sub.vab_id = 6;   /* SsVabOpenHead ids (FUN_80044564/FUN_80044774) */
-    re15_amb_load_rotor(stage, room);
-    SDL_LockAudioDevice(s_audio_dev);
-    if (main_ok) ss_start(&s_ss_main, 1);
-    if (sub_ok) {
-        ss_start(&s_ss_sub, 1);
-        /* The SUB layer (helicopter rotor, BGM seq slot 1) is gated 1:1 by the SCD
-         * Sce_bgm_control (0x54) opcode — start it MUTED so it is silent until
-         * sub02's first SsSeqPlay (op=1) at the heli-arrival cut. Otherwise it would
-         * drone through the pre-arrival open. The sequence keeps looping; we toggle
-         * its master vol on PLAY/STOP so resumes are seamless (no restart pop). */
-        s_ss_sub.mvol = s_ss_sub.mvol_l = s_ss_sub.mvol_r = 0;
+/* Bank freigeben, BEVOR neu geladen wird. Ohne das leckt jeder Raumwechsel die dekodierten
+ * VAGs + die SEQ-Kopie — der Nachlade-Pfad ist im Port bis 2026-08-01 nie gefahren worden. */
+static void ss_free_bank(ss_seq_t *s) {
+    for (int i = 0; i < RE15_VAB_MAX_SAMPLES; i++) {
+        free(s->vag_pcm[i]); s->vag_pcm[i] = NULL; s->vag_len[i] = 0; s->vag_loop[i] = -1;
     }
-    /* SUB SEQ1 — die ZWEITE Sequenz des Containers, ein echtes drittes SsSeq-Handle.
-     * FUN_80044774 @0x80044774 oeffnet BEIDE: SEQ#1 @0 und SEQ#2 @ u32[size-8]
-     * (SsSeqOpen(&DAT_801eed00, ..) bzw. SsSeqOpen(&DAT_801eed00 + iVar3, ..), je gefolgt von
-     * SsSeqSetVol(.,0,0) + SsSeqPlay). Der SCD-0x54-Slot 2 adressiert sie.
-     * Die Grenze kommt jetzt aus dem Trailer (s_sub_seq2, gesetzt in re15_bgm_load_track) —
-     * die alte pQES-Suche im SEQ-Blob konnte auf ein Datenbyte-Muster treffen.
-     * Teilt sich die SUB-VAB (tone_src) und startet STUMM wie SEQ#1 (hoerbar nur ueber 0x54). */
-    s_ss_sub2.playing = 0;
-    if (sub_ok && s_sub_seq2 && s_sub_seq2_len > SS_SEQ_HDR) {
+    free((void *)(uintptr_t)s->seq); s->seq = NULL; s->seq_len = 0;
+    s->vab_ok = 0; s->playing = 0;
+    memset(&s->vab, 0, sizeof s->vab);
+}
+
+/* ALLE Lade-/Start-Helfer unten setzen voraus, dass der Aufrufer SDL_LockAudioDevice haelt:
+ * ss_free_bank gibt PCM frei, aus dem der Mix-Callback liest, und ss_start lockt selbst nicht. */
+
+/* == FUN_80044564 @0x80044564: MAIN-Bank laden + starten. Flag = main_b>>6. */
+static int re15_bgm_load_main(uint8_t main_b) {
+    ss_free_bank(&s_ss_main);
+    if (main_b == 0xff) return -1;                       /* @0x80044598: *DAT_800b5570 == 0xff */
+    if (re15_bgm_load_track(&s_ss_main, "MAIN", main_b & 0x3f) != 0) return -1;
+    s_ss_main.vab_id = 5;                                /* SsVabOpenHeadSticky(.., 5, 0x42fc0) */
+    ss_start(&s_ss_main, 1);
+    /* FUN_800444b0 @0x800444b0 spielt einen Slot NUR, wenn sein Flag == 0 ist (DAT_800b52ad).
+     * FUN_80044210 setzt das Flag auf main_b>>6 (@0x800442D0). Flag != 0 = geladen, aber stumm,
+     * bis das Skript ihn per Sce_bgm_control (0x54) aufdreht. */
+    if ((main_b >> 6) != 0) s_ss_main.mvol = s_ss_main.mvol_l = s_ss_main.mvol_r = 0;
+    return 0;
+}
+
+/* == FUN_80044774 @0x80044774: SUB-Bank laden + BEIDE Sequenzen starten.
+ * Flags: SUB-A = (sub_b>>6)&1 (DAT_800b52b5), SUB-B = sub_b>>7 (DAT_800b52bd) — @0x8004439c/@0x800443a4. */
+static int re15_bgm_load_sub(uint8_t sub_b) {
+    ss_free_bank(&s_ss_sub);
+    ss_free_bank(&s_ss_sub2);
+    s_ss_sub2.tone_src = NULL;
+    if (sub_b == 0xff) return -1;                        /* @0x800447c8: DAT_800b5570[1] == -1 */
+    if (re15_bgm_load_track(&s_ss_sub, "SUB_", sub_b & 0x3f) != 0) return -1;
+    s_ss_sub.vab_id = 6;                                 /* SsVabOpenHeadSticky(.., 6, ..+DAT_800bbdec) */
+    ss_start(&s_ss_sub, 1);
+    if (((sub_b >> 6) & 1) != 0) s_ss_sub.mvol = s_ss_sub.mvol_l = s_ss_sub.mvol_r = 0;
+
+    /* SEQ#2 — die zweite Sequenz des Containers, ein echtes drittes SsSeq-Handle. FUN_80044774
+     * oeffnet BEIDE: SsSeqOpen(&DAT_801eed00, ..) und SsSeqOpen(&DAT_801eed00 + iVar3, ..), je
+     * gefolgt von SsSeqSetVol(.,0,0) + SsSeqPlay. Der SCD-0x54-Slot 2 adressiert sie.
+     * Grenze aus dem Trailer (s_sub_seq2) statt aus einer pQES-Suche im Blob.
+     * Teilt sich die SUB-VAB ueber tone_src. */
+    if (s_sub_seq2 && s_sub_seq2_len > SS_SEQ_HDR) {
         uint8_t *sc = (uint8_t *)malloc((size_t)s_sub_seq2_len);
         if (sc) {
             memcpy(sc, s_sub_seq2, (size_t)s_sub_seq2_len);
-            free((void *)(uintptr_t)s_ss_sub2.seq);
             s_ss_sub2.seq = sc; s_ss_sub2.seq_len = s_sub_seq2_len;
             s_ss_sub2.ppqn     = (sc[8] << 8) | sc[9];
             s_ss_sub2.tempo_us = (uint32_t)((sc[10] << 16) | (sc[11] << 8) | sc[12]);
@@ -1745,9 +1787,28 @@ static void re15_bgm_play_room(int stage, int room) {
             if (s_ss_sub2.tempo_us == 0) s_ss_sub2.tempo_us = 500000;
             s_ss_sub2.vab_ok = 0; s_ss_sub2.tone_src = &s_ss_sub; s_ss_sub2.vab_id = 6;
             ss_start(&s_ss_sub2, 1);
-            s_ss_sub2.mvol = s_ss_sub2.mvol_l = s_ss_sub2.mvol_r = 0;
+            if ((sub_b >> 7) != 0) s_ss_sub2.mvol = s_ss_sub2.mvol_l = s_ss_sub2.mvol_r = 0;
         }
     }
+    return 0;
+}
+
+/* Nur die SUB-Sequenzen stoppen — FUN_80044210 @0x8004432C/@0x80044354 (SsSeqStop fuer beide),
+ * der Pfad "nur der SUB-Track hat sich geaendert". MAIN laeuft dabei unangetastet weiter. */
+static void re15_bgm_stop_subs(void) {
+    s_ss_sub.playing  = 0; ss_all_voices_off(&s_ss_sub);
+    s_ss_sub2.playing = 0; ss_all_voices_off(&s_ss_sub2);
+}
+
+/* re15_bgm: room-music manager. Laedt MAIN + SUB + die geloopte Raum-Ambience (Rotor). */
+static void re15_bgm_play_room(int stage, int room) {
+    int e = ss_bgm_entry(stage, room);
+    uint8_t main_b = (e < 0) ? 0xff : (uint8_t)(e & 0xff);
+    uint8_t sub_b  = (e < 0) ? 0xff : (uint8_t)((e >> 8) & 0xff);
+    re15_amb_load_rotor(stage, room);
+    SDL_LockAudioDevice(s_audio_dev);
+    re15_bgm_load_main(main_b);
+    re15_bgm_load_sub(sub_b);
     if (s_amb.pcm) s_amb.active = 1;
     SDL_UnlockAudioDevice(s_audio_dev);
 }
@@ -1823,15 +1884,58 @@ void re15_audio_start_room_bgm(int stage, int room)
      * SDL_LockAudioDevice. Dass auch die SOUNDEFFEKTE weg sind, passt dazu — die haengen an
      * derselben VAB-Maschinerie, waehrend die Voiceover ueber einen anderen Pfad laufen.
      *
-     * Der RE-Teil bleibt gueltig und ist oben dokumentiert; was fehlt, ist die Gegenstueck-Seite:
-     * das Original raeumt vor dem Nachladen auf (Fadeout-Wartschleife @0x8004428C-@0x800442B0 im
-     * Main-Pfad, SsSeqStop fuer beide Sub-Sequenzen @0x8004432C/@0x80044354 im Sub-Pfad). Genau
-     * diesen Abbau hat der Port nicht. Erst den nachbauen, DANN den Latch wieder scharfstellen.
-     * Bis dahin gilt wieder: eine BGM pro Programmlauf (das bisherige, funktionierende Verhalten). */
-    static int started = 0;
-    if (!g_audio.initialized || started) return;
-    started = 1;
-    re15_bgm_play_room(stage, room);
+     * ABBAU-PFAD IST JETZT DA (2026-08-01), damit ist der Latch wieder scharf:
+     *   - ss_free_bank() gibt die alte Bank frei, bevor neu geladen wird (der Nachlade-Pfad
+     *     leckte vorher VAG-PCM + SEQ-Kopie und war nie gefahren worden),
+     *   - re15_bgm_stop_subs() = SsSeqStop fuer beide Sub-Sequenzen @0x8004432C/@0x80044354,
+     *   - alles unter SDL_LockAudioDevice, weil der Mix-Callback aus genau diesem PCM liest.
+     *
+     * NICHT NACHGEBAUT: die Fadeout-Wartschleife des Main-Pfads (@0x8004428C-@0x800442B0:
+     * while (DAT_800b5218) FUN_80029ac8(1)). Das Gegenstueck dazu ist FUN_800449f4(0x3c)
+     * @0x800449f4 — SsSeqSetDecrescendo(handle, 0, 60) auf alle laufenden Handles, angestossen
+     * schon in FUN_800443ec @0x800443ec ganz am Anfang des Raumladers. Der Port hat kein
+     * Decrescendo; hier wird stattdessen hart umgeschaltet. Das ist eine BEKANNTE, benannte
+     * Luecke (60-Frame-Ausblendung beim Track-Wechsel), kein stiller Ersatz. */
+    if (!g_audio.initialized) return;
+
+    /* == FUN_80044210 @0x80044210. Tabellen-Eintrag: LOW byte = MAIN, HIGH byte = SUB;
+     * je die unteren 6 Bit sind der Slot, die oberen 2 sind Replay-Flags. */
+    int e = ss_bgm_entry(stage, room);
+    uint8_t main_b = (e < 0) ? 0xff : (uint8_t)(e & 0xff);
+    uint8_t sub_b  = (e < 0) ? 0xff : (uint8_t)((e >> 8) & 0xff);
+
+    /* DAT_800b2b44 / DAT_800b2b45 — die Caches. -1 = noch nie geladen, trifft nie zu. */
+    static int cache_main = -1, cache_sub = -1;
+    int main_same = (cache_main >= 0) && ((main_b & 0x3f) == (cache_main & 0x3f));
+    int sub_same  = (cache_sub  >= 0) && ((sub_b  & 0x3f) == (cache_sub  & 0x3f));
+
+    if (main_same && sub_same) {
+        /* @0x80044280 -> LAB_800443b0: GAR NICHTS. Kein Stop, kein Reload, kein Play —
+         * dieselbe Musik laeuft ueber den Raumwechsel hinweg durch. */
+    } else if (main_same) {
+        /* Nur der SUB-Track hat gewechselt: beide Sub-Sequenzen stoppen, SUB neu laden.
+         * MAIN wird NICHT angefasst (@0x80044320-@0x80044368). */
+        SDL_LockAudioDevice(s_audio_dev);
+        re15_bgm_stop_subs();
+        re15_bgm_load_sub(sub_b);
+        SDL_UnlockAudioDevice(s_audio_dev);
+    } else {
+        /* MAIN hat gewechselt: MAIN neu laden, danach IMMER auch SUB (@0x800442C0-@0x800442E0:
+         * FUN_80044564, Flag setzen, dann unbedingt FUN_80044774). */
+        re15_amb_load_rotor(stage, room);
+        SDL_LockAudioDevice(s_audio_dev);
+        re15_bgm_load_main(main_b);
+        re15_bgm_load_sub(sub_b);
+        if (s_amb.pcm) s_amb.active = 1;
+        SDL_UnlockAudioDevice(s_audio_dev);
+    }
+
+    /* @0x800443B8-@0x800443D0: der Cache wird UNBEDINGT aufgefrischt, auch im Nichts-Fall. */
+    cache_main = main_b; cache_sub = sub_b;
+    fprintf(stderr, "[bgm] stage=%d room=%02X entry=%04X -> MAIN%02X(flag %d) SUB%s(flags %d/%d)%s\n",
+            stage, room, (e < 0) ? 0xffff : e, main_b & 0x3f, main_b >> 6,
+            (sub_b == 0xff) ? "--" : "", (sub_b >> 6) & 1, sub_b >> 7,
+            (main_same && sub_same) ? "  [unveraendert, laeuft durch]" : "");
 }
 
 /* Gate the helicopter-rotor (SUB layer) volume + PAN by the current cut camera→heli
@@ -1877,6 +1981,8 @@ static void ss_seq_ctl_ex(int slot, int op, int part, int vol, int pan)
                 : (slot == 2) ? &s_ss_sub2 : NULL;
     if (!s) return;
     int base = (slot >= 1) ? s_ss_sub_base_mvol : 0x1a00; /* MAIN inits to 0x1a00 */
+    fprintf(stderr, "[bgm] Sce_bgm_control slot=%d op=%d (part=%d vol=%d pan=%d)\n",
+            slot, op, part, vol, pan);
     SDL_LockAudioDevice(s_audio_dev);
     switch (op) {
         case 1:   /* SsSeqSetVol + SsSeqPlay (loop) → audible */
@@ -1967,9 +2073,19 @@ void re15_audio_tick(void)
 void re15_audio_footstep(int foot, int sound_type)
 {
     (void)foot;
-    if (!s_foot_loaded) return;
+    static int diag = -1;
+    if (diag < 0) diag = getenv("RE15_FOOT_DEBUG") ? 1 : 0;
+    if (!s_foot_loaded) {
+        if (diag) fprintf(stderr, "[foot] SE unterdrueckt: Bank snd0 nicht geladen\n");
+        return;
+    }
     int vag = re15_footstep_vag(s_foot_edt, &s_foot_vab, sound_type);
-    if (vag < 0 || !s_foot_decoded[vag]) return;
+    if (vag < 0 || !s_foot_decoded[vag]) {
+        if (diag) fprintf(stderr, "[foot] SE unterdrueckt: type=%d -> vag=%d (dekodiert=%d)\n",
+                          sound_type, vag, (vag >= 0) ? (s_foot_decoded[vag] != NULL) : 0);
+        return;
+    }
+    if (diag) fprintf(stderr, "[foot] SE foot=%d type=%d vag=%d\n", foot, sound_type, vag);
 
     /* Tone volume with the PROGRAM stride (byte-true FUN_80045630 @0x800457dc walks
      * VH + prog*0x200 + 0x820 + tone*0x20 — the old read omitted prog*16, so any prog!=0
@@ -1998,6 +2114,20 @@ void re15_audio_footstep(int foot, int sound_type)
     s_active[slot].volume_q15 = vol;
     s_active[slot].active     = 1;
     SDL_UnlockAudioDevice(s_audio_dev);
+}
+
+/* Raum-Sound-Baenke (snd0 Schritte + snd1 Raum/Combat-SE) fuer den GERADE geladenen Raum
+ * binden. Gegenstueck zu FUN_80043eac/FUN_80043fb0 im Raumlader FUN_800396fc — muss nach dem
+ * RDT-Parse und bei JEDEM Raumwechsel laufen, weil beide Baenke aus dem RDT geschnitten werden. */
+void re15_audio_load_room_banks(void)
+{
+    if (!g_audio.initialized) return;
+    SDL_LockAudioDevice(s_audio_dev);
+    for (int i = 0; i < MIXER_MAX_ACTIVE_SAMPLES; i++) s_active[i].active = 0;  /* nichts spielt mehr aus der alten Bank */
+    free_room_bank_pcm();
+    SDL_UnlockAudioDevice(s_audio_dev);
+    load_footstep_vab_pc();   /* room snd0 + EDT (Schritt-SE) */
+    load_room_se_vab_pc();    /* room snd1 + SE-Tabelle (FUN_800453d0) */
 }
 
 void re15_audio_shutdown(void)

@@ -221,5 +221,11 @@ int re15_room_apply_pending(const re15_room_apply_ctx_t *c)
     re15_audio_start_room_bgm((int)((g_room_change.room_id >> 12) - 1),
                               (int)((g_room_change.room_id >> 4) & 0xff));
 
+    /* (16) Raum-Sound-Baenke neu binden (snd0 Schritte + snd1 Raum-SE). Im Original macht das
+     * der Raumlader FUN_800396fc per FUN_80043eac (@0x80043eac, VH aus RDT+0xc / VB aus RDT+0x10)
+     * und FUN_80043fb0 (@0x80043fb0, VB aus RDT+0x1c) — beide schliessen erst die Vorgaengerbank.
+     * Beide Baenke sind aus dem RDT geschnitten, gelten also nur fuer DIESEN Raum. */
+    re15_audio_load_room_banks();
+
     return 1;
 }

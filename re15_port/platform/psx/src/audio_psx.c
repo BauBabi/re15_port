@@ -644,7 +644,8 @@ void re15_audio_init(void)
     SpuSetCommonExtReverb   (0);
 
     load_bundled_vab();
-    load_footstep_vab();      /* room snd0 → SPU + its EDT table (footstep SE) */
+    /* Raum-Baenke NICHT hier: re15_audio_init laeuft vor dem ersten RDT-Parse. Sie kommen ueber
+     * re15_audio_load_room_banks() aus dem Raumlader (== FUN_80043eac/FUN_80043fb0). */
 
     /* Reserve the dialogue-voice SPU region (one clip at a time, reused). */
     s_voice_spu_base = spu_alloc(RE15_VOICE_SPU_SIZE);
@@ -695,6 +696,15 @@ static void do_load_room_bgm(int stage, int room)
  * BGM is never loaded/played (pure isolation: does the rest boot?). Flip to 1
  * once the hang is located. */
 #define RE15_BGM_ENABLE 1
+
+/* == FUN_80043eac @0x80043eac / FUN_80043fb0 @0x80043fb0 aus dem Raumlader FUN_800396fc:
+ * die Raum-Sound-Baenke an den gerade geladenen Raum binden. Muss nach dem RDT-Parse und bei
+ * jedem Raumwechsel laufen — vorher lief das in re15_audio_init(), wo noch kein RDT stand. */
+void re15_audio_load_room_banks(void)
+{
+    if (!g_audio.initialized) return;
+    load_footstep_vab();      /* room snd0 → SPU + EDT-Tabelle (Schritt-SE) */
+}
 
 void re15_audio_start_room_bgm(int stage, int room)
 {
