@@ -127,16 +127,64 @@ static void script_parse_once(void)
  * Start = inventory. SELECT+START held together toggles fullscreen. */
 static SDL_GameController *s_pad = NULL;
 
+/* Ein Joystick, den SDL nicht als GameController kennt (kein Eintrag in der Mapping-DB), wurde
+ * bisher STILL uebersprungen — das Pad steckt, tut aber nichts, ohne jede Meldung. Zwei Auswege,
+ * beide Standard bei SDL2:
+ *   1. gamecontrollerdb.txt neben der Exe (bzw. RE15_PAD_DB=<pfad>) wird geladen, falls vorhanden,
+ *   2. RE15_PAD_MAPPING="<GUID>,<Name>,a:b0,b:b1,..." setzt ein Mapping direkt.
+ * Danach faellt der Joystick in den normalen GameController-Pfad. */
+static void pad_load_mappings_once(void)
+{
+    static int done = 0;
+    if (done) return;
+    done = 1;
+    const char *db = getenv("RE15_PAD_DB");
+    int added = SDL_GameControllerAddMappingsFromFile(db && *db ? db : "gamecontrollerdb.txt");
+    if (added > 0) fprintf(stderr, "[pad] %d zusaetzliche Mappings geladen\n", added);
+    const char *m = getenv("RE15_PAD_MAPPING");
+    if (m && *m) {
+        int rc = SDL_GameControllerAddMapping(m);
+        fprintf(stderr, "[pad] RE15_PAD_MAPPING: %s\n",
+                (rc >= 0) ? "uebernommen" : SDL_GetError());
+    }
+}
+
 static void pad_ensure_open(void)
 {
-    if (s_pad && !SDL_GameControllerGetAttached(s_pad)) {   /* dropped -> release */
+    if (s_pad && !SDL_GameControllerGetAttached(s_pad)) {   /* abgezogen -> freigeben */
+        fprintf(stderr, "[pad] Controller abgezogen\n");
         SDL_GameControllerClose(s_pad);
         s_pad = NULL;
     }
-    if (!s_pad) {                                           /* (re)open the first controller present */
-        int n = SDL_NumJoysticks();
-        for (int i = 0; i < n; i++)
-            if (SDL_IsGameController(i)) { s_pad = SDL_GameControllerOpen(i); if (s_pad) break; }
+    if (s_pad) return;
+
+    pad_load_mappings_once();
+    int n = SDL_NumJoysticks();
+    for (int i = 0; i < n; i++) {
+        if (!SDL_IsGameController(i)) continue;
+        s_pad = SDL_GameControllerOpen(i);
+        if (!s_pad) continue;
+        fprintf(stderr, "[pad] Controller: \"%s\" (Slot %d)\n",
+                SDL_GameControllerName(s_pad) ? SDL_GameControllerName(s_pad) : "?", i);
+        return;
+    }
+    /* Nichts geoeffnet: melden, WARUM — genau einmal je Steck-Zustand, damit ein nicht erkanntes
+     * Pad nicht stumm bleibt. Die GUID ist das, was in gamecontrollerdb.txt gebraucht wird. */
+    static int warned_for = -1;
+    if (n != warned_for) {
+        warned_for = n;
+        if (n == 0) {
+            fprintf(stderr, "[pad] kein Controller gefunden (Tastatur bleibt aktiv)\n");
+        } else {
+            for (int i = 0; i < n; i++) {
+                char guid[64] = {0};
+                SDL_JoystickGetGUIDString(SDL_JoystickGetDeviceGUID(i), guid, sizeof guid);
+                fprintf(stderr, "[pad] Joystick %d \"%s\" GUID %s hat KEIN SDL-Mapping -> ignoriert."
+                                " Abhilfe: gamecontrollerdb.txt neben die Exe legen (oder RE15_PAD_DB),"
+                                " oder RE15_PAD_MAPPING setzen.\n",
+                        i, SDL_JoystickNameForIndex(i) ? SDL_JoystickNameForIndex(i) : "?", guid);
+            }
+        }
     }
 }
 
@@ -174,6 +222,28 @@ static uint16_t pad_read_bits(void)
         if (ly >  DZ) b |= RE15_PAD_DOWN;
         if (lx < -DZ) b |= RE15_PAD_LEFT;
         if (lx >  DZ) b |= RE15_PAD_RIGHT;
+    }
+    /* RE15_PAD_DEBUG=1: bei jeder Aenderung das PSX-Pad-Wort mit Klarnamen ausgeben. Damit laesst
+     * sich Taste fuer Taste gegen die Hardware-Belegung pruefen, statt sie zu glauben. */
+    if (getenv("RE15_PAD_DEBUG")) {
+        static uint16_t last = 0xffff;
+        if (b != last) {
+            last = b;
+            static const struct { uint16_t bit; const char *nm; } tbl[] = {
+                { RE15_PAD_SELECT, "Select" }, { 0x0002, "L3" }, { 0x0004, "R3" },
+                { RE15_PAD_START, "Start" },   { RE15_PAD_UP, "Up" },
+                { RE15_PAD_RIGHT, "Right" },   { RE15_PAD_DOWN, "Down" },
+                { RE15_PAD_LEFT, "Left" },     { 0x0100, "L2" }, { 0x0200, "R2" },
+                { RE15_PAD_L1, "L1" },         { RE15_PAD_R1, "R1" },
+                { RE15_PAD_TRIANGLE, "Dreieck" }, { RE15_PAD_CIRCLE, "Kreis" },
+                { RE15_PAD_CROSS, "Kreuz" },   { RE15_PAD_SQUARE, "Quadrat" },
+            };
+            char line[256]; int p = 0;
+            for (size_t i = 0; i < sizeof tbl / sizeof tbl[0]; i++)
+                if (b & tbl[i].bit)
+                    p += snprintf(line + p, sizeof line - (size_t)p, "%s%s", p ? "+" : "", tbl[i].nm);
+            fprintf(stderr, "[pad] %04X %s\n", b, p ? line : "-");
+        }
     }
     return b;
 }
