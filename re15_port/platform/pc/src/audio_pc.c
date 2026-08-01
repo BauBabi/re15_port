@@ -1704,9 +1704,29 @@ static void re15_bgm_dump_wav(const char *path, int stage, int room, int seconds
  * cinematic handoff so nothing plays under the narrator pre-intro. Idempotent. */
 void re15_audio_start_room_bgm(int stage, int room)
 {
-    static int started = 0;
-    if (!g_audio.initialized || started) return;
-    started = 1;
+    /* BYTE-TRUE LATCH: pro TRACK-ID, nicht pro Aufruf und nicht pro Raum.
+     *
+     * VORHER: 'static int started' war ein prozess-globaler ONE-SHOT — der erste erfolgreiche Aufruf
+     * gewann fuer die ganze Session, jeder spaetere war ein No-op. Der PC-Port spielte also GENAU
+     * EINE BGM pro Programmlauf; der Raumwechsel-Aufruf in room_common.c war ein toter Call.
+     *
+     * DAS ORIGINAL (FUN_80044210): es vergleicht die unteren 6 Bit der Track-ID gegen den Cache
+     * 0x800B2B44 (main) / 0x800B2B45 (sub) — 'andi a0,s0,0x3f / andi v1,v1,0x3f / beq' @0x80044278,
+     * @0x8004427C, @0x80044280 fuer main und @0x800442FC, @0x80044300, @0x80044304 fuer sub. Sind
+     * BEIDE gleich, springt es nach @0x800443B0 und tut GAR NICHTS: kein Stop, kein Reload, kein
+     * Play — die Musik laeuft einfach weiter. Der Cache wird danach unbedingt aufgefrischt
+     * (@0x800443C8 / @0x800443D0).
+     *
+     * Deshalb genuegt hier KEIN Vergleich auf (stage,room): zwei verschiedene Raeume mit demselben
+     * Stueck wuerden die Musik neu starten, wo das Original sie durchlaufen laesst. Verglichen wird
+     * die aufgeloeste Track-ID. */
+    static int s_cur_main = -1, s_cur_sub = -1;   /* == 0x800B2B44 / 0x800B2B45 */
+    if (!g_audio.initialized) return;
+    int m = re15_bgm_for_room(stage, room)     & 0x3f;
+    int s = re15_bgm_sub_for_room(stage, room) & 0x3f;
+    if (m == s_cur_main && s == s_cur_sub) return;    /* @0x80044280 / @0x80044304 */
+    s_cur_main = m;
+    s_cur_sub  = s;
     re15_bgm_play_room(stage, room);
 }
 

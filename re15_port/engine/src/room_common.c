@@ -211,8 +211,15 @@ int re15_room_apply_pending(const re15_room_apply_ctx_t *c)
     /* (14) No half-finished stair traversal carries across rooms. */
     re15_stair_reset();
 
-    /* (15) Per-room BGM (SS_BGMTBL): switch to the new room's track. */
-    re15_audio_start_room_bgm(0, (int)((g_room_change.room_id >> 4) & 0xff));
+    /* (15) Per-room BGM (SS_BGMTBL): switch to the new room's track.
+     *
+     * STAGE WAR AUF 0 FESTGENAGELT, obwohl sie in der Raum-ID steckt. Im Original indiziert
+     * FUN_80044210 die Tabelle mit BEIDEN Werten: Stage aus 0x800B0FE0 (@0x80044218) und Raum aus
+     * 0x800B0FE2 (@0x80044244), Zeiger = base + tab[stage]*2 + room*2 (@0x8004425C/@0x80044264).
+     * Mit stage=0 griffen alle STAGE2-6-Raeume in die STAGE1-Scheibe der Tabelle. Die Stage steckt
+     * in der Raum-ID genau so, wie die PSX-Seite sie schon herausrechnet (platform/psx/main.c). */
+    re15_audio_start_room_bgm((int)((g_room_change.room_id >> 12) - 1),
+                              (int)((g_room_change.room_id >> 4) & 0xff));
 
     return 1;
 }
