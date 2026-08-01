@@ -3579,7 +3579,47 @@ re_title:;
                         ap_mode = ap_gmode[ap_idx]; ap_slot = ap_gslot[ap_idx];
                         ap_tx = ap_gx[ap_idx];      ap_tz = ap_gz[ap_idx];
                     }
-                    if (ap_mode) {
+                    /* RE15_AOT_DUMP=1: alle aktiven AOTs des aktuellen Raums einmal auflisten.
+                     * Ohne das muss man raten, WO ein Schalter/eine Tuer liegt — mit dem Dump
+                     * hat man Typ, Mittelpunkt und Ausdehnung und kann den Autopiloten direkt
+                     * darauf ansetzen. */
+                    {
+                        static unsigned aotd_room = 0;
+                        if (getenv("RE15_AOT_DUMP") && aotd_room != g_current_room_id &&
+                            g_engine.frame_count > 40) {
+                            aotd_room = g_current_room_id;
+                            static const char *tn[] = { "GENERIC","DOOR","ITEM","CAM_SWITCH",
+                                                        "STAIR","MESSAGE","AUTO_EVENT","EXAMINE" };
+                            fprintf(stderr, "[aot] --- Raum %04X ---\n", g_current_room_id);
+                            for (int ai = 0; ai < RE15_AOT_MAX; ai++) {
+                                const re15_aot_t *a = &g_aot.slots[ai];
+                                if (!a->active) continue;
+                                fprintf(stderr, "[aot] %2d %-10s Mitte(%6d,%6d) halb(%5d,%5d) "
+                                                "ev=%u sce=%02X band=%u\n",
+                                        ai, (a->type < 8) ? tn[a->type] : "?",
+                                        a->x, a->z, a->half_w, a->half_h,
+                                        a->event_id, a->sce_flags, a->band);
+                            }
+                        }
+                    }
+                    /* Offene Nachrichten IMMER wegbestaetigen — auch waehrend der Cutscene.
+                     * Das Intro besteht aus Dialogboxen; wird keine bestaetigt, laeuft es nie zu
+                     * Ende und das Gameplay beginnt gar nicht (gemessen: bei Frame 12660 stand der
+                     * Spieler noch mit mo=211 am Helipad). Dieser Teil gehoert deshalb VOR die
+                     * Gameplay-Schranke. */
+                    if (ap_mode && g_scd.message_active) {
+                        /* Bestaetigt wird in RE1.5 mit QUADRAT (virtueller Remap @0x80073dbc),
+                         * Dialoge nehmen zusaetzlich KREUZ. Beide abwechselnd als Flanke geben,
+                         * damit kein Boxentyp haengen bleibt. */
+                        int ph = ap_msgwait++ & 7;
+                        if (ph == 0) gctx.pad_current |= RE15_PAD_BIT_SQUARE;
+                        if (ph == 4) gctx.pad_current |= RE15_PAD_BIT_CROSS;
+                    }
+                    /* GESTEUERT wird dagegen nur im echten Gameplay. Waehrend Intro/Cutscene haelt
+                     * player_mode 2 den Spieler ohnehin fest, und seine Koordinaten sind dort
+                     * Platzhalter — gemessen hakte der Regler sonst sofort ein Zwischenziel bei
+                     * (-31000,31000) ab und war aus dem Tritt, bevor der Lauf begann. */
+                    if (ap_mode && g_scd.player_mode != 2) {
                         re15_actor_t *ap_pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
                         int32_t tx = ap_tx, tz = ap_tz;
                         int have_target = (ap_mode == 2);
