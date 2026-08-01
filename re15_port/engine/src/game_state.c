@@ -9,6 +9,8 @@
  */
 
 #include <string.h>
+#include <stdio.h>     /* Flag-Trace (RE15_FLAG_TRACE) */
+#include <stdlib.h>
 #include "re15_scd.h"
 
 re15_game_state_t g_game;
@@ -39,4 +41,19 @@ void re15_game_flag_set(uint8_t zone, uint8_t idx, int value)
     uint32_t mask = 0x80000000u >> (idx & 0x1f);
     if (value) g_game.flags[zone][word] |= mask;
     else       g_game.flags[zone][word] &= ~mask;
+    /* RE15_FLAG_TRACE=1: die beiden Intro-Ende-Flags mitschreiben. Solange flag(1,27) oder
+     * flag(2,7) steht, zieht main.c:2890 player_mode jeden Frame auf 2 und der Spieler bleibt
+     * skript-gefuehrt — im nicht-interaktiven Lauf endet das Helipad-Intro genau deshalb nie. */
+    if ((zone == 1 && idx == 27) || (zone == 2 && idx == 7)) {
+        extern int re15_flag_trace_enabled(void);
+        if (re15_flag_trace_enabled())
+            fprintf(stderr, "[flag] z%u/%u = %d\n", zone, idx, value ? 1 : 0);
+    }
+}
+
+int re15_flag_trace_enabled(void)
+{
+    static int on = -1;
+    if (on < 0) on = getenv("RE15_FLAG_TRACE") ? 1 : 0;
+    return on;
 }

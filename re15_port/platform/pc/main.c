@@ -2886,6 +2886,10 @@ re_title:;
              * the countdown below stays as the player_mode HANDOFF timer (its 15 decrements
              * == the 15 level steps). Trace wf_bba41002 (#21). */
             re15_letterbox_tick(re15_game_flag_get(1, 27));
+            if (getenv("RE15_FLAG_TRACE") && (g_engine.frame_count % 300) == 0)
+                fprintf(stderr, "[cine] F%u z1/27=%d z2/7=%d cine=%d pmode=%d letterbox=%d\n",
+                        g_engine.frame_count, re15_game_flag_get(1, 27), re15_game_flag_get(2, 7),
+                        cine_active, g_scd.player_mode, g_scd.letterbox_countdown);
             if (cine_active) {
                 g_scd.player_mode         = 2;    /* scripted */
                 g_scd.letterbox_countdown = -1;   /* bars held while scripted */
@@ -3622,7 +3626,14 @@ re_title:;
                      * Lauf nur durch, weil der noch ungegatete Regler nebenbei Tasten drueckte.
                      * Bestaetigt wird in RE1.5 mit QUADRAT (virtueller Remap @0x80073dbc),
                      * Dialoge nehmen zusaetzlich KREUZ — beide abwechselnd als Flanke. */
-                    if (ap_mode && g_scd.message_active) {
+                    /* WICHTIG: waehrend einer Cutscene (player_mode == 2) NICHT klicken.
+                     * Das Helipad-Intro ist sehr lang und laeuft von selbst zu Ende — es braucht
+                     * keinen Tastendruck. Wer dort mitklickt, bringt das Skript aus der Spur:
+                     * gemessen wurden die Intro-Ende-Flags flag(1,27)/flag(2,7) dann NIE beide
+                     * geloescht, player_mode blieb 2 und der Spieler wurde nie frei. Ohne Klicken
+                     * endet die Flag-Spur sauber mit "z2/7 = 0" und "z1/27 = 0".
+                     * Im Gameplay (Examine-Dialoge) darf und soll der Autopilot dagegen weiterklicken. */
+                    if (ap_mode && g_scd.message_active && g_scd.player_mode != 2) {
                         int ph = ap_msgwait++ % 24;
                         if (ph == 0)  gctx.pad_current |= RE15_PAD_BIT_SQUARE;
                         if (ph == 12) gctx.pad_current |= RE15_PAD_BIT_CROSS;
@@ -3640,12 +3651,12 @@ re_title:;
                             tx = g_aot.slots[ap_slot].x; tz = g_aot.slots[ap_slot].z;
                             have_target = 1;
                         }
-                        /* Eine offene Nachricht blockiert jedes Skript — wegbestaetigen (CROSS,
-                         * Flanke: 1 Frame an, 3 aus), sonst haengt der Lauf ewig davor. */
-                        int msg = g_scd.message_active ? 1 : 0;
-                        if (msg) {
-                            if ((ap_msgwait++ & 3) == 0) gctx.pad_current |= RE15_PAD_BIT_CROSS;
-                        } else if (have_target) {
+                        /* (Das Wegbestaetigen offener Nachrichten liegt WEITER OBEN und ist auf
+                         * das Gameplay beschraenkt. Hier stand frueher ein zweiter, ungegateter
+                         * Nachrichten-Zweig — und weil message_active nach dem Intro STEHEN bleibt
+                         * (RE-Semantik: bis der Spieler wegdrueckt), sass der Regler dort fest und
+                         * hat nie gelenkt, obwohl player_mode laengst 0 war.) */
+                        if (have_target) {
                             /* NICHT auf der Luftlinie steuern — die endet zuverlaessig in einer
                              * Wand (gemessen: ROOM1130, Dauerhaenger bei (-768,3332)). Der Raum
                              * bringt seinen eigenen Navigationsgraphen mit (RDT-Bloecke), und die
