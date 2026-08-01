@@ -13,6 +13,7 @@
 #include "re15_rdt.h"
 #include "re15_msg.h"     /* re15_msg_clear_room_block  — Teardown (3) */
 #include "re15_light.h"   /* g_re15_room_lights_ok      — Teardown (2) */
+#include "re15_esp.h"     /* re15_esp_fx_reset / _set_room_bank — Teardown (4) */
 
 /* Overdraw-Layer des PC-Renderers (definiert in render_pc.c) — Teardown (1). */
 extern void re15_render_pc_set_pri_rects(const int *src_x, const int *src_y,
@@ -20,6 +21,7 @@ extern void re15_render_pc_set_pri_rects(const int *src_x, const int *src_y,
                                          const int *w, const int *h,
                                          const int *depth, int count);
 extern void re15_render_pc_set_pri_atlas(const uint32_t *rgba, int w, int h);
+extern void re15_render_pc_invalidate_tim_slot(int slot);   /* Teardown (5) */
 
 extern uint8_t *re15_asset_read_file(const char *path, int *out_size);
 
@@ -129,4 +131,21 @@ void re15_room_reset_render_pc(void)
     /* (3) NACHRICHTENTABELLE verwerfen — Begruendung siehe re15_msg_clear_room_block (der Loader
      * ueberschreibt nur so viele IDs, wie der neue Raum mitbringt). */
     re15_msg_clear_room_block();
+
+    /* (4) EFFEKT-BANK (ESP) verwerfen. Der Clear stand bisher IM Parser pc_load_room_esp und lief
+     * damit nur, wenn ueberhaupt ein RDT-Puffer vorlag — ein Raum ohne Effekt-Sektion behielt die
+     * Bank des Vorraums (17 von 206 RDTs haben keine). Im Original sind beide Schritte getrennt:
+     * FUN_80019354 nullt erst 96 Effekt-Slots ab 0x800A7424, Stride 0x84, Feld +0x00 (@0x80019378)
+     * und setzt die ID-Maps 0x800B2248/0x800B22D4 auf -1 (@0x80019388-E4) — erst danach wird die
+     * Sektion des neuen Raumes geparst. */
+    re15_esp_fx_reset();
+    re15_esp_set_room_bank(NULL);
+
+    /* (5) PROP-TEXTUR-SLOTS 4..9 ungueltig machen. pc_load_room_prop_set laedt Slot 4+op nur fuer
+     * die Props, die der neue Raum HAT; ein Raum mit weniger Props behielt die Textur des Vorraums
+     * im ueberzaehligen Slot. Im Original nullt FUN_8003EA7C das Flagwort ALLER 32 Objekt-Slots ab
+     * 0x800B3F98 (@0x8003EAB0-ACC), bevor die TPage/CLUT-Bytes der vorhandenen Props gesetzt werden
+     * (@0x8003EB04-18) — es faellt also nur die GUELTIGKEIT, nicht der Speicher. */
+    for (int slot = 4; slot <= 9; slot++)
+        re15_render_pc_invalidate_tim_slot(slot);
 }

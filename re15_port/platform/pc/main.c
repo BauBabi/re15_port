@@ -111,8 +111,11 @@ static uint8_t   *s_global_esp_buf = NULL;
 /* Parse `room_id`'s ESP section from its RDT and bind it as the active effect bank. */
 static void pc_load_room_esp(const uint8_t *rdt_buf, int rdt_size, unsigned room_id)
 {
-    re15_esp_fx_reset();
-    re15_esp_set_room_bank(NULL);
+    /* Der CLEAR sitzt seit dem Teardown-Umbau in re15_room_reset_render_pc (room_pc.c), NICHT mehr
+     * hier: dieser Parser lief nur, wenn ueberhaupt ein RDT-Puffer vorlag, sodass ein Raum ohne
+     * Effekt-Sektion die Bank des Vorraums behielt (17 von 206 RDTs haben keine). Im Original sind
+     * Loeschen und Neu-Parsen ebenfalls getrennt: FUN_80019354 nullt erst 96 Effekt-Slots
+     * (@0x80019378) und setzt die ID-Maps auf -1 (@0x80019388-E4), danach erst wird geparst. */
     if (!rdt_buf || rdt_size < 0x5C) return;
     #define U32LE(o) ((uint32_t)rdt_buf[o] | ((uint32_t)rdt_buf[(o)+1]<<8) | \
                       ((uint32_t)rdt_buf[(o)+2]<<16) | ((uint32_t)rdt_buf[(o)+3]<<24))

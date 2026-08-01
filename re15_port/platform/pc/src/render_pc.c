@@ -209,6 +209,20 @@ static void update_active_slot_globals(void) {
     }
 }
 
+/* PER-RAUM-TEARDOWN: einen TIM-Slot ungueltig machen (Prop-Texturen 4..9).
+ *
+ * pc_load_room_prop_set laedt Slot 4+op nur fuer die Props, die der neue Raum HAT — ein Raum mit
+ * weniger Props behielt die Textur des Vorraums im ueberzaehligen Slot. Im Original kann das nicht
+ * passieren: FUN_8003EA7C nullt das Flagwort ALLER 32 Objekt-Slots ab 0x800B3F98 (@0x8003EAB0-ACC),
+ * und erst danach werden die TPage/CLUT-Bytes +0x80/+0x81 fuer die tatsaechlich vorhandenen Props
+ * gesetzt (@0x8003EB04-18). Nur das Gueltigkeits-Flag faellt — die Pixel bleiben liegen und werden
+ * ueberschrieben. Genau das macht diese Funktion: loaded = 0, keine Textur-Freigabe. */
+void re15_render_pc_invalidate_tim_slot(int slot)
+{
+    if (slot < 0 || slot >= RE15_TIM_SLOT_MAX) return;
+    s_tim_slots[slot].loaded = 0;
+}
+
 void re15_render_pc_bind_tim_slot(int slot) {
     if (slot < 0 || slot >= RE15_TIM_SLOT_MAX) return;
     if (!s_tim_slots[slot].loaded) {
