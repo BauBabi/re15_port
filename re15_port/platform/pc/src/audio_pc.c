@@ -1719,14 +1719,28 @@ void re15_audio_start_room_bgm(int stage, int room)
      *
      * Deshalb genuegt hier KEIN Vergleich auf (stage,room): zwei verschiedene Raeume mit demselben
      * Stueck wuerden die Musik neu starten, wo das Original sie durchlaufen laesst. Verglichen wird
-     * die aufgeloeste Track-ID. */
-    static int s_cur_main = -1, s_cur_sub = -1;   /* == 0x800B2B44 / 0x800B2B45 */
-    if (!g_audio.initialized) return;
-    int m = re15_bgm_for_room(stage, room)     & 0x3f;
-    int s = re15_bgm_sub_for_room(stage, room) & 0x3f;
-    if (m == s_cur_main && s == s_cur_sub) return;    /* @0x80044280 / @0x80044304 */
-    s_cur_main = m;
-    s_cur_sub  = s;
+     * die aufgeloeste Track-ID.
+     *
+     * !! VORERST ZURUECKGENOMMEN (2026-08-01). Der Latch unten ist wieder der alte One-Shot, WEIL
+     * die byte-true Fassung eine Regression ausgeloest hat: Nutzer-Report "BGM und Soundeffekte
+     * scheinen nicht zu funktionieren. Lediglich die Voiceover funktionieren was sound betrifft."
+     *
+     * URSACHE DER REGRESSION (Diagnose, noch nicht am Log bestaetigt): der One-Shot machte den
+     * Raumwechsel-Aufruf in room_common.c zu einem TOTEN Call — re15_bgm_play_room lief damit exakt
+     * EINMAL pro Programmlauf. Mit dem Track-Latch laeuft es bei jedem Wechsel erneut, und dieser
+     * NACHLADE-Pfad ist im Port nie gefahren worden: re15_ss_load schreibt in dieselben ss_seq_t
+     * (s_ss_main/s_ss_sub), die VAB-ids 5/6 werden erneut geoeffnet, und ss_start laeuft unter
+     * SDL_LockAudioDevice. Dass auch die SOUNDEFFEKTE weg sind, passt dazu — die haengen an
+     * derselben VAB-Maschinerie, waehrend die Voiceover ueber einen anderen Pfad laufen.
+     *
+     * Der RE-Teil bleibt gueltig und ist oben dokumentiert; was fehlt, ist die Gegenstueck-Seite:
+     * das Original raeumt vor dem Nachladen auf (Fadeout-Wartschleife @0x8004428C-@0x800442B0 im
+     * Main-Pfad, SsSeqStop fuer beide Sub-Sequenzen @0x8004432C/@0x80044354 im Sub-Pfad). Genau
+     * diesen Abbau hat der Port nicht. Erst den nachbauen, DANN den Latch wieder scharfstellen.
+     * Bis dahin gilt wieder: eine BGM pro Programmlauf (das bisherige, funktionierende Verhalten). */
+    static int started = 0;
+    if (!g_audio.initialized || started) return;
+    started = 1;
     re15_bgm_play_room(stage, room);
 }
 
