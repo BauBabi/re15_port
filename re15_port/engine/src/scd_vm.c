@@ -551,6 +551,11 @@ void scd_vm_tick(void)
             if (!t->pc) { t->active = 0; break; }
 
             uint8_t op = *t->pc;
+            /* RE15_SCD_TRACE=1: jeden ausgefuehrten Opcode mitschreiben. Die VM ist die einzige
+             * verlaessliche Quelle dafuer, WAS ein Skript wirklich ausfuehrt — ein Offline-Walker
+             * desynchronisiert in Daten-Regionen und erfindet Opcodes, die nie laufen. */
+            if (getenv("RE15_SCD_TRACE"))
+                fprintf(stderr, "[scd] slot=%d op=0x%02X\n", (int)(t - g_scd.threads), op);
             int r = s_op_table[op](t);
 
             if (r == SCD_R_YIELD) break;   /* yield: thread done for this tick */
