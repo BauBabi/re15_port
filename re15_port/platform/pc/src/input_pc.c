@@ -17,6 +17,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#ifdef _WIN32
+#include <windows.h>   /* GetSystemMetrics(SM_REMOTESESSION) — RDP-Erkennung fuer die Pad-Diagnose */
+#endif
 #include "re15_engine.h"
 
 #define RE15_PAD_UP       0x0010
@@ -175,6 +178,21 @@ static void pad_ensure_open(void)
         warned_for = n;
         if (n == 0) {
             fprintf(stderr, "[pad] kein Controller gefunden (Tastatur bleibt aktiv)\n");
+#ifdef _WIN32
+            /* Haeufigster Fall in diesem Projekt: das Spiel laeuft auf dem Windows-Host, der
+             * Controller haengt am RDP-CLIENT (Steam Deck). RDP leitet Tastatur, Maus, Audio und
+             * Laufwerke weiter — generische HID-Gamepads NICHT (dafuer braeuchte es RemoteFX-USB-
+             * Umleitung, die die ueblichen Clients nicht koennen). SDL sieht auf dem Host deshalb
+             * gar kein Geraet. Loesung: re15_port/tools/re15_pad_bridge_*.py. */
+            if (GetSystemMetrics(SM_REMOTESESSION)) {
+                fprintf(stderr,
+                    "[pad] Diese Sitzung ist eine REMOTEDESKTOP-Sitzung. RDP leitet Gamepads nicht\n"
+                    "[pad] weiter — ein am Client (z.B. Steam Deck) steckendes Pad ist hier unsichtbar.\n"
+                    "[pad] Abhilfe: re15_port/tools/re15_pad_bridge_host.py auf DIESEM Rechner starten\n"
+                    "[pad] und re15_pad_bridge_client.py auf dem Client. Der Host legt dann ueber ViGEm\n"
+                    "[pad] ein virtuelles Pad an, das SDL wie ein echtes sieht.\n");
+            }
+#endif
         } else {
             for (int i = 0; i < n; i++) {
                 char guid[64] = {0};
