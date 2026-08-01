@@ -228,6 +228,8 @@ int     re15_nav_update_steer(re15_actor_t *e, int16_t tx, int16_t tz,
                               uint8_t wp_node, int wp_mode);
 uint8_t re15_nav_dbg_zone_self(void);
 uint8_t re15_nav_dbg_zone_target(void);
+/* Zwischenpunkt des letzten re15_nav_pathfind-Aufrufs (nur lesen). */
+void    re15_nav_dbg_waypoint(int16_t *x, int16_t *z);
 
 /* FUN_80101224 (@0x8011f7b4[1]) — the LIVE zombie ACTIVE handler, attack-windup half (byte-true):
  * while attack-armed (ai_flags & 0x100), the windup timer ai_attack_timer (+0x1da) counts down;

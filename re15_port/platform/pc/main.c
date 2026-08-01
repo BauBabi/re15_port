@@ -3519,6 +3519,137 @@ re_title:;
                  * VORWAERTS zehn Sekunden. Zwei Wege fuer dieselbe Sache waeren genau die Art
                  * Parallelpfad, die den RE15_START_ROOM-Aerger verursacht hat.) */
 
+                /* ==== AUTOPILOT ============================================================
+                 * RE15_AUTOPILOT="aot:<n>" | "xz:<x>,<z>"  [+ ",hold" | ",noact"]
+                 *
+                 * ZWECK: einen bestimmten Punkt im Raum ANSTEUERN und dort ausloesen, ohne
+                 * hand-getimte Tastenskripte. Ein zeitbasiertes Skript ("6 s vorwaerts") trifft
+                 * eine Tuer nur zufaellig; damit war ich bisher darauf angewiesen, mir Logs
+                 * schicken zu lassen. Der Autopilot regelt statt zu timen.
+                 *
+                 * Er erzeugt NUR Pad-Bits und laeuft damit durch denselben Eingabepfad wie ein
+                 * Mensch — kein Parallelweg an der Spiellogik vorbei.
+                 *
+                 * SELBSTKORRIGIEREND statt winkel-geraten: die Blickrichtung ist
+                 * (cos(rot_y), -sin(rot_y)) (actor_locomotion.c: x += c*v, z -= s*v). Aus dem
+                 * 2D-Kreuzprodukt Blick x Ziel folgt die Drehseite. Welche Taste rot_y erhoeht,
+                 * MUSS ich nicht wissen: der Regler dreht, misst, ob die Fehlstellung kleiner
+                 * wird, und dreht sonst um. Das haelt auch, wenn sich die Konvention aendert. */
+                {
+                    static int ap_init = 0, ap_mode = 0, ap_slot = -1, ap_hold = 0, ap_act = 1;
+                    static int32_t ap_tx = 0, ap_tz = 0;
+                    static int ap_turn = +1, ap_flipwait = 0, ap_msgwait = 0;
+                    static long ap_bestcross = -1;
+                    static int ap_stuck = 0, ap_avoid = 0, ap_avoid_dir = +1;
+                    static int32_t ap_lastx = 0, ap_lastz = 0;
+                    if (!ap_init) {
+                        ap_init = 1;
+                        const char *s = getenv("RE15_AUTOPILOT");
+                        if (s && *s) {
+                            if (!strncmp(s, "aot:", 4))      { ap_mode = 1; ap_slot = atoi(s + 4); }
+                            else if (!strncmp(s, "xz:", 3))  { ap_mode = 2; sscanf(s + 3, "%d,%d", &ap_tx, &ap_tz); }
+                            if (strstr(s, "noact")) ap_act = 0;
+                            fprintf(stderr, "[auto] Autopilot: %s\n", s);
+                        }
+                    }
+                    if (ap_mode) {
+                        re15_actor_t *ap_pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+                        int32_t tx = ap_tx, tz = ap_tz;
+                        int have_target = (ap_mode == 2);
+                        if (ap_mode == 1 && ap_slot >= 0 && ap_slot < RE15_AOT_MAX &&
+                            g_aot.slots[ap_slot].active) {
+                            tx = g_aot.slots[ap_slot].x; tz = g_aot.slots[ap_slot].z;
+                            have_target = 1;
+                        }
+                        /* Eine offene Nachricht blockiert jedes Skript — wegbestaetigen (CROSS,
+                         * Flanke: 1 Frame an, 3 aus), sonst haengt der Lauf ewig davor. */
+                        int msg = g_scd.message_active ? 1 : 0;
+                        if (msg) {
+                            if ((ap_msgwait++ & 3) == 0) gctx.pad_current |= RE15_PAD_BIT_CROSS;
+                        } else if (have_target) {
+                            /* NICHT auf der Luftlinie steuern — die endet zuverlaessig in einer
+                             * Wand (gemessen: ROOM1130, Dauerhaenger bei (-768,3332)). Der Raum
+                             * bringt seinen eigenen Navigationsgraphen mit (RDT-Bloecke), und die
+                             * Gegner-KI hat dafuer schon einen byte-true Pfadfinder. Den benutzen:
+                             * Zwischenpunkt holen und DEN ansteuern; das Endziel bleibt der
+                             * Abstands-Test unten. */
+                            int32_t ftx = tx, ftz = tz;
+                            {
+                                uint8_t zs = re15_nav_zone_from_pos((int16_t)ap_pl->x, (int16_t)ap_pl->z);
+                                uint8_t zg = re15_nav_zone_from_pos((int16_t)tx, (int16_t)tz);
+                                if (zs != zg) {
+                                    re15_nav_pathfind(ap_pl, zs, zg, (int16_t)tx, (int16_t)tz);
+                                    int16_t wx = 0, wz = 0;
+                                    re15_nav_dbg_waypoint(&wx, &wz);
+                                    if (wx || wz) { tx = wx; tz = wz; }
+                                }
+                            }
+                            int32_t dx = tx - ap_pl->x, dz = tz - ap_pl->z;
+                            long dist2 = (long)dx * dx + (long)dz * dz;
+                            int32_t fx =  re15_cos_q12(ap_pl->rot_y);
+                            int32_t fz = -re15_sin_q12(ap_pl->rot_y);
+                            long cross = (long)fx * dz - (long)fz * dx;   /* Drehrichtung */
+                            long dot   = (long)fx * dx + (long)fz * dz;   /* >0 = Ziel voraus */
+                            long acr   = cross < 0 ? -cross : cross;
+                            /* Ankunft zaehlt gegen das ENDziel, gesteuert wird auf den Zwischenpunkt. */
+                            long fdx = ftx - ap_pl->x, fdz = ftz - ap_pl->z;
+                            long fdist2 = fdx * fdx + fdz * fdz;
+                            if (fdist2 < 700L * 700L) {
+                                /* Am Ziel: Aktion HALTEN. Eine Tuer braucht 9 Frames Halten
+                                 * (obj+0x8C, FUN_8002bd44) — ein Tipp reicht nicht. */
+                                if (ap_act) gctx.pad_current |= RE15_PAD_BIT_SQUARE;
+                                if (ap_hold++ == 0)
+                                    fprintf(stderr, "[auto] Ziel erreicht (%d,%d), halte Aktion\n",
+                                            ap_pl->x, ap_pl->z);
+                            } else if (ap_avoid > 0) {
+                                /* WAND-AUSWEICHEN: die Luftlinie zum Ziel ist selten frei. Steht der
+                                 * Spieler trotz gedruecktem VORWAERTS, wird hier eine Weile im Bogen
+                                 * gelaufen (drehen UND vorwaerts = Tank-Kurve), danach zielt der
+                                 * Regler wieder direkt. Bringt das nichts, wird die Bogenrichtung
+                                 * gewechselt, sodass beide Seiten probiert werden. */
+                                ap_avoid--;
+                                gctx.pad_current |= RE15_PAD_BIT_UP;
+                                gctx.pad_current |= (ap_avoid_dir > 0) ? RE15_PAD_BIT_RIGHT
+                                                                       : RE15_PAD_BIT_LEFT;
+                            } else {
+                                long tol = dist2 / 8;               /* Winkeltoleranz mit Distanz */
+                                if (dot <= 0 || acr > tol) {
+                                    gctx.pad_current |= (ap_turn > 0) ? RE15_PAD_BIT_RIGHT
+                                                                      : RE15_PAD_BIT_LEFT;
+                                    if (ap_bestcross < 0 || acr < ap_bestcross) {
+                                        ap_bestcross = acr; ap_flipwait = 0;
+                                    } else if (++ap_flipwait > 25) {   /* wird nicht besser -> umdrehen */
+                                        ap_turn = -ap_turn; ap_flipwait = 0; ap_bestcross = -1;
+                                    }
+                                } else {
+                                    gctx.pad_current |= RE15_PAD_BIT_UP;
+                                    ap_bestcross = -1; ap_flipwait = 0;
+                                }
+                            }
+                            /* Fest? Position hat sich trotz Laufversuch kaum bewegt. */
+                            {
+                                int32_t mx = ap_pl->x - ap_lastx, mz = ap_pl->z - ap_lastz;
+                                if ((long)mx * mx + (long)mz * mz < 400L) {
+                                    if (++ap_stuck > 25 && ap_avoid == 0) {
+                                        ap_avoid = 45; ap_avoid_dir = -ap_avoid_dir; ap_stuck = 0;
+                                        fprintf(stderr, "[auto] fest bei (%d,%d) — Bogen %s\n",
+                                                ap_pl->x, ap_pl->z, ap_avoid_dir > 0 ? "rechts" : "links");
+                                    }
+                                } else ap_stuck = 0;
+                                ap_lastx = ap_pl->x; ap_lastz = ap_pl->z;
+                            }
+                            if ((g_engine.frame_count % 60) == 0)
+                                fprintf(stderr, "[auto] Spieler(%d,%d) zone=%u -> Wegpunkt(%d,%d) "
+                                                "Endziel(%d,%d) zone=%u d=%ld pad=%04X motion=%d\n",
+                                        ap_pl->x, ap_pl->z,
+                                        re15_nav_zone_from_pos((int16_t)ap_pl->x, (int16_t)ap_pl->z),
+                                        tx, tz, ftx, ftz,
+                                        re15_nav_zone_from_pos((int16_t)ftx, (int16_t)ftz),
+                                        (long)(fdist2 / 1000), gctx.pad_current, ap_pl->motion);
+                        }
+                    }
+                }
+
                 /* ORIGINAL-DEBUG-MENUE ("UTILITY MENU", PSX.EXE @0x80014444) — Logik in
                  * engine/src/debug_menu_common.c, jede Konstante dort mit ihrer Adresse.
                  *
@@ -3551,9 +3682,18 @@ re_title:;
                             if (dj && *dj) {
                                 unsigned r = 0; int f = 0;
                                 if (sscanf(dj, "%x@%d", &r, &f) >= 1) { dj_room = (int)r; dj_frame = f; }
+                                /* "@gp" = springe, sobald das SPIEL wirklich spielbar ist. Ein fester
+                                 * Frame reicht nicht: waehrend des Intros halten die Latches
+                                 * flag(1,27)/flag(2,7) den Spieler jeden Frame auf player_mode 2
+                                 * (oben, "scripted"), und ein Sprung mitten heraus liefert einen
+                                 * Spieler, der keine Eingabe annimmt. Gemessen: Sprung bei Frame 1
+                                 * nach ROOM1130 -> pmode blieb 2, der Autopilot stand fest. */
+                                if (strstr(dj, "@gp")) dj_frame = -1;
                             }
                         }
-                        if (dj_room >= 0 && !dj_done && (int)g_engine.frame_count >= dj_frame) {
+                        if (dj_room >= 0 && !dj_done &&
+                            (dj_frame < 0 ? (g_scd.player_mode != 2 && g_engine.frame_count > 60)
+                                          : ((int)g_engine.frame_count >= dj_frame))) {
                             dj_done = 1;
                             if (re15_debug_menu_point_at((unsigned)dj_room)) {
                                 dbg_edge |= RE15_DBG_EDGE_LOAD;   /* == Quadrat in der JUMP-Zeile */

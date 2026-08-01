@@ -242,3 +242,12 @@ int re15_nav_update_steer(re15_actor_t *e, int16_t tx, int16_t tz,
 /* Test/diagnostic accessors. */
 uint8_t re15_nav_dbg_zone_self(void)   { return s_nav_zone_self; }
 uint8_t re15_nav_dbg_zone_target(void) { return s_nav_zone_target; }
+
+/* Den von re15_nav_pathfind zuletzt bestimmten Zwischenpunkt auslesen. Nur-Lesen, keine
+ * Zustandsaenderung — der Testautopilot steuert damit den Raum-Graphen entlang statt auf der
+ * Luftlinie in eine Wand zu laufen. */
+void re15_nav_dbg_waypoint(int16_t *x, int16_t *z)
+{
+    if (x) *x = s_nav_out_x;
+    if (z) *z = s_nav_out_z;
+}

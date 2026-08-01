@@ -129,6 +129,15 @@ int re15_room_apply_pending(const re15_room_apply_ctx_t *c)
         p->sub_state_2 = 0;
         p->sub_state_3 = 0;
         p->state       = 1;    /* @0x8003192C — Routine 0 laeuft durch, State steht danach auf 1 */
+        /* ...und das ROUTINEN-Register selbst. @0x8001CBDC nullt 0x800ACA58 (Spieler+0x04)
+         * UNBEDINGT, also landet der Spieler nach JEDEM Raumwechsel wieder in Routine 0/1 =
+         * Gameplay (Tabelle @0x80073F90). g_scd.player_mode ist das Port-Gegenstueck dieser
+         * Routine (2 = SCRIPTED, Pad wird ignoriert) und blieb bisher ueber den Raumwechsel
+         * stehen: wer waehrend einer Cutscene den Raum wechselte, behielt einen Spieler, der
+         * keine Eingabe mehr annimmt. Gemessen beim Sprung aus dem Pre-Intro nach ROOM1130:
+         * pmode blieb 2, frozen=0, motion=0 — der Spieler stand fest, obwohl nichts ihn hielt.
+         * (Verwandt mit dem Irons-Freeze: dort war es ein Thread, hier das Routinen-Register.) */
+        g_scd.player_mode = 0;
     }
     re15_enemy_reset();   /* drop the previous room's loaded enemy models (free PC bufs);
                            * the new room lazy-loads its own on first spawn. */
