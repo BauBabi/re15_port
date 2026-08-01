@@ -102,6 +102,34 @@ int re15_room_apply_pending(const re15_room_apply_ctx_t *c)
     re15_actor_init();
     g_actors[RE15_ACTOR_SLOT_PLAYER].hp           = keep_hp;
     g_actors[RE15_ACTOR_SLOT_PLAYER].status_flags = keep_status;
+
+    /* SKRIPT-ANTRIEB DES SPIELERS BEENDEN — das fehlende Gegenstueck zum Original.
+     *
+     * Die Transitions-FSM nullt das Kommandoregister des Spielers: @0x8001CBDC 'sb zero,0x800ACA58'
+     * (= Spieler +0x04, State 0). Der State-0-Handler @0x800318F8 (Tabelle @0x80073F90, Eintrag 0)
+     * raeumt danach auf: Motion +0x94 = 0 (@0x80031924), +0x95 = 0 (@0x80031954), +0x1C4 = 0
+     * (@0x8003197C), und setzt State auf 1 (@0x8003192C).
+     *
+     * WARUM DAS WICHTIGER IST ALS ES AUSSIEHT: genau dieser Reset macht im Original den
+     * Clip-Index-Ueberlauf UNERREICHBAR. Das Original prueft nirgends gegen eine Clip-Anzahl —
+     * Plc_motion schreibt den Index ungeprueft (@0x80041BA8 sb a1,148(v0)), und die drei Leser von
+     * +0x94 (@0x8001F324, @0x8001F8E4, @0x8001AE48) rechnen EDD_base + motion*4 roh. Eine
+     * Clip-Anzahl existiert im EDD nicht einmal als Feld. Der Ueberlauf ist im Original also nur
+     * deshalb harmlos, WEIL der Raumwechsel Motion und State vorher auf 0 setzt.
+     *
+     * Der Port hatte dafuer kein Gegenstueck (scd_room_setup.c mappt nur die Port-Sentinels) und
+     * fing den Ueberlauf stattdessen mit einem MODULO-Wrap ab (anim_select_common.c) — ein Netz,
+     * das das Original nicht hat. Mit diesem Reset ist der Fall gar nicht mehr erreichbar. */
+    {
+        re15_actor_t *p = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        p->motion      = 0;    /* +0x94 @0x80031924 */
+        p->anim_frame  = 0;    /* +0x95 @0x80031954 */
+        p->anim_flags  = 0;    /* +0x1C4 @0x8003197C */
+        p->sub_state_1 = 0;
+        p->sub_state_2 = 0;
+        p->sub_state_3 = 0;
+        p->state       = 1;    /* @0x8003192C — Routine 0 laeuft durch, State steht danach auf 1 */
+    }
     re15_enemy_reset();   /* drop the previous room's loaded enemy models (free PC bufs);
                            * the new room lazy-loads its own on first spawn. */
 
