@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>   /* strlen — Asset-Wurzel-Fallback */
 #include "re15_engine.h"
 #include "re15_tim.h"
 
@@ -18,6 +19,33 @@ extern void      re15_pc_put_pixel(int x, int y, uint32_t rgba);
 uint8_t *re15_asset_read_file(const char *path, int *out_size)
 {
     FILE *f = fopen(path, "rb");
+    if (!f && path && path[0] && path[1] != ':' && path[0] != '/' && path[0] != '\\') {
+        /* CWD-UNABHAENGIGKEIT (2026-08-01, Nutzer-Report "BGM und Soundeffekte funktionieren nicht,
+         * lediglich die Voiceover"). Diese Funktion war ein blankes fopen — relative Pfade wurden
+         * also gegen das ARBEITSVERZEICHNIS aufgeloest, nicht gegen die Asset-Wurzel. Der Rest des
+         * Ports liest ueber pc_read_shared() (main.c), das RE15_ASSET_ROOT bzw. den einkompilierten
+         * Default voranstellt; das AUDIO-Backend umgeht das und benutzt fest verdrahtete relative
+         * Verzeichnislisten ("shared_assets/PSX/SOUND/", "SOUND/", "PSX/SOUND/", ...). Je nachdem,
+         * von wo die .exe gestartet wird, findet es seine Baenke damit nicht — waehrend alles, was
+         * ueber pc_read_shared laeuft, tadellos funktioniert. Genau dieses Muster hat der Nutzer
+         * beschrieben.
+         *
+         * Fix: schlaegt der literale Pfad fehl, ein zweiter Versuch unter der Asset-Wurzel. Der
+         * erste Versuch bleibt unveraendert, es kann also nichts kaputtgehen, was heute geht. */
+        const char *roots[2]; int nr = 0;
+        const char *envroot = getenv("RE15_ASSET_ROOT");
+        if (envroot && envroot[0]) roots[nr++] = envroot;
+#ifdef RE15_ASSET_ROOT_DEFAULT
+        roots[nr++] = RE15_ASSET_ROOT_DEFAULT;
+#endif
+        for (int i = 0; i < nr && !f; i++) {
+            char p[512];
+            size_t L = strlen(roots[i]);
+            int sep = (L > 0 && (roots[i][L-1] == '/' || roots[i][L-1] == '\\'));
+            snprintf(p, sizeof p, "%s%s%s", roots[i], sep ? "" : "/", path);
+            f = fopen(p, "rb");
+        }
+    }
     if (!f) {
         fprintf(stderr, "[asset] cannot open %s\n", path);
         return NULL;
