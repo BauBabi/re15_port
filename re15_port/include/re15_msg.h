@@ -91,6 +91,8 @@ void re15_msg_install_provider(void);
  * generically for every room. `block_size` must span all bodies (the next RDT
  * block boundary, NOT off[n_off-1] — see rdt_common.c). */
 void re15_msg_load_room_block(const uint8_t *block, int block_size);
+/* Per-Raum-Teardown: Text-, Roh- und Dauern-Tabelle verwerfen. Siehe msg_common.c. */
+void re15_msg_clear_room_block(void);
 
 /* Shared subtitle-display tick (the cross-port dialog-dismiss FSM).
  *

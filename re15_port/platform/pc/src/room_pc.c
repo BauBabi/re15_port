@@ -11,6 +11,15 @@
 #include <stdlib.h>
 #include "re15_room.h"
 #include "re15_rdt.h"
+#include "re15_msg.h"     /* re15_msg_clear_room_block  — Teardown (3) */
+#include "re15_light.h"   /* g_re15_room_lights_ok      — Teardown (2) */
+
+/* Overdraw-Layer des PC-Renderers (definiert in render_pc.c) — Teardown (1). */
+extern void re15_render_pc_set_pri_rects(const int *src_x, const int *src_y,
+                                         const int *dst_x, const int *dst_y,
+                                         const int *w, const int *h,
+                                         const int *depth, int count);
+extern void re15_render_pc_set_pri_atlas(const uint32_t *rgba, int w, int h);
 
 extern uint8_t *re15_asset_read_file(const char *path, int *out_size);
 
@@ -78,7 +87,46 @@ const unsigned char *re15_room_pc_bytes(int *size)
     return s_pc_room_buf;
 }
 
-/* PC cross-room render reset (re15_room_apply_pending ctx callback): the PC BG
- * loader re-reads each cut from file and there is no prop-VRAM bump allocator to
- * rewind, so nothing to reset here. (Kept as the per-port arch hook.) */
-void re15_room_reset_render_pc(void) { }
+/* PC-PER-RAUM-TEARDOWN (der ctx-Callback reset_render von re15_room_apply_pending).
+ *
+ * WAR VORHER EIN LEERER RUMPF — mit der Begruendung, der PC lade jeden Cut ohnehin neu und habe
+ * keinen Bump-Allokator zum Zuruecksetzen. Das war der Kern der Architektur-Abweichung, die der
+ * Nutzer aufgedeckt hat ("dann haben wir unseren Port ja NICHT ans Original angelehnt"): weil auf
+ * PSX genau dieser Hook den Per-Raum-Reset ausloest, lief auf PC gar keiner — und jeder Zustand,
+ * den niemand einzeln aufraeumte, wanderte in den naechsten Raum.
+ *
+ * DAS ORIGINAL-MODELL (audit wf_64fa9e73) hat ZWEI Mechanismen, nicht einen:
+ *   (a) ARENA: alles Variable liegt in einer Arena, die EIN Store freigibt — FUN_800396FC setzt den
+ *       Bump-Pointer 0x800AC77C auf die Arena-Basis 0x800AC780 (@0x80039738) und laedt die neue RDT
+ *       ab genau dieser Adresse (@0x80039740/@0x800397E8), also UEBER die alten Raumdaten.
+ *   (b) POOLS FESTER GROESSE: die werden nicht freigegeben, sondern es wird nur ihr
+ *       Gueltigkeits-Flagwort genullt — Entity +0x00 (@0x8001A4E8), Objekt +0x00 (@0x8003EABC),
+ *       Effekt +0x00 (@0x80019378), SCD-Thread +0x01/+0x02/+0x04/+0x08 (@0x8003ED0C-3D).
+ * Der Port braucht deshalb KEINEN Arena-Allokator — er braucht einen Teardown mit derselben
+ * Wirkung, an derselben Stelle der Reihenfolge.
+ *
+ * Diese Fassung macht die Loeschungen, die eigenstaendig belegt und ohne Speicher-Umlagerung
+ * machbar sind. NOCH NICHT drin (bewusst, als eigener Schritt): das free der RDT-Bytes wandert vom
+ * Loader hierher. Solange das nicht passiert ist, zeigen alte Aliasse auf noch gueltige Bytes —
+ * unschoen, aber harmlos; nach der Umlagerung waeren sie freigegeben, und dann muss die Liste der
+ * Besitzer vollstaendig sein (ASAN-Sweep ueber alle 240 Raeume). */
+void re15_room_reset_render_pc(void)
+{
+    /* (1) SPRITE.PRI-MASKEN + Vordergrund-Atlas verwerfen. Im Original zeigt der Masken-Zeiger jedes
+     * Cut-Eintrags (+0x1C) nach dem Laden in die NEUE RDT: FUN_800396FC reloziert ihn fuer alle
+     * RDT[+0x01] Cuts (@0x80039854-0x80039898). Die Arbeitspuffer der alten Masken lagen in der bei
+     * @0x80039738 freigegebenen Arena. Ohne diesen Clear verdecken im Zielraum die Occluder des
+     * Vorraums, bis der erste Cut-Wechsel sie ersetzt. */
+    re15_render_pc_set_pri_rects(NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0);
+    re15_render_pc_set_pri_atlas(NULL, 0, 0);
+
+    /* (2) LICHTSET ungueltig machen. Der Licht-Zeiger RDT+0x2C wird ebenfalls aus der NEUEN RDT
+     * reloziert (@0x800397FC-0x80039834); das alte Set lag in der freigegebenen Arena. Der
+     * Installations-Block in room_common.c hat keinen else-Zweig — schlaegt das Parsen fehl, stand
+     * bisher das Lichtset des Vorraums weiter. */
+    g_re15_room_lights_ok = 0;
+
+    /* (3) NACHRICHTENTABELLE verwerfen — Begruendung siehe re15_msg_clear_room_block (der Loader
+     * ueberschreibt nur so viele IDs, wie der neue Raum mitbringt). */
+    re15_msg_clear_room_block();
+}

@@ -10,6 +10,7 @@
  */
 #include "re15_msg.h"
 #include "re15_scd.h"   /* g_scd — shared subtitle-tick state */
+#include <string.h>     /* memset — re15_msg_clear_room_block (Per-Raum-Teardown) */
 
 #define DIALOG_BASE_SCROLL_SPEED  2  /* "g_dialogBasisGeschwindigkeit = 2 << istZweiterPuffer" */
 
@@ -239,6 +240,28 @@ const char *re15_msg_get_text(int msg_id)
  * exactly like the PSX dialog renderer FUN_80028868. */
 static unsigned char  s_msg_raw[MSG_TABLE_N][MSG_RAW_LEN];
 static unsigned short s_msg_raw_len[MSG_TABLE_N];
+
+/* PER-RAUM-TEARDOWN: die komplette Nachrichtentabelle ungueltig machen.
+ *
+ * WARUM ES DAS BRAUCHT: der Loader re15_msg_load_room_block UEBERSCHREIBT nur so viele Eintraege,
+ * wie der neue Raum mitbringt — IDs darueber behielten Text, Rohbytes und Dauer des VORHERIGEN
+ * Raumes. Im Original kann das nicht passieren: es gibt gar keine RAM-Tabelle. Die Messages liegen
+ * IN-PLACE in der RDT und werden ueber den Zeiger RDT+0x3C gelesen, der beim Laden auf die NEUE
+ * RDT reloziert wird (@0x800397FC-0x80039834 addiert die RDT-Basis auf alle Sektions-Zeiger). Die
+ * Bytes des alten Raumes sind mit dem Arena-Reset @0x80039738 weg — ein Zugriff auf eine ID, die
+ * der neue Raum nicht hat, liest die NEUEN Daten, nie die alten.
+ *
+ * Der Clear gehoert deshalb in den Teardown und NICHT an den Anfang des Loaders: der kehrt bei
+ * einem Raum ohne Message-Sektion frueh zurueck, und genau dann muss die alte Tabelle trotzdem
+ * fallen. (Gemessen: 36 von 206 RDTs haben keine Message-Sektion.) */
+void re15_msg_clear_room_block(void)
+{
+    memset(s_msg_text,     0, sizeof s_msg_text);
+    memset(s_msg_text_set, 0, sizeof s_msg_text_set);
+    memset(s_msg_raw,      0, sizeof s_msg_raw);
+    memset(s_msg_raw_len,  0, sizeof s_msg_raw_len);
+    memset(s_msg_durations,0, sizeof s_msg_durations);
+}
 
 void re15_msg_install_text(unsigned char msg_id, const uint8_t *data, size_t len)
 {

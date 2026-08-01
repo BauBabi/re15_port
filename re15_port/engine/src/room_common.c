@@ -56,13 +56,20 @@ int re15_room_apply_pending(const re15_room_apply_ctx_t *c)
      * g_room_rdt. Abort the transition if it fails (player stays put). */
     if (c->load_rdt(g_room_change.room_id) != 0) return 0;
 
-    /* (2) Re-alias the port's resident RDT to the freshly-parsed new room. */
+    /* (2) PER-RAUM-TEARDOWN — VOR dem Re-Aliasing, denn ab hier zeigt *c->rdt auf den neuen Raum
+     * und jede Aufraeum-Entscheidung, die noch den alten Zustand braucht, kaeme zu spaet.
+     *
+     * REIHENFOLGE NACH DEM ORIGINAL: FUN_800396FC gibt die Arena frei (@0x80039738 setzt den
+     * Bump-Pointer 0x800AC77C auf die Basis 0x800AC780) und laedt die neue RDT ab genau dieser
+     * Adresse (@0x80039740/@0x800397E8) — Freigabe steht also VOR der Installation, nicht danach.
+     * Der Port kann das Laden nicht davor schieben (Schritt 1 bricht bei Ladefehler ab und laesst
+     * den Spieler stehen — diese Semantik bleibt), aber der Teardown gehoert vor das Re-Aliasing.
+     * Frueher lief er als Schritt (3) NACH dem Alias und auf PC ausserdem als leerer Rumpf. */
+    c->reset_render();
+
+    /* (3) Re-alias the port's resident RDT to the freshly-parsed new room. */
     *c->rdt    = g_room_rdt;
     *c->rdt_ok = 1;
-
-    /* (3) ARCH: reset the renderer for the new room (PSX: rewind prop-VRAM bump
-     * allocator + invalidate the BG cache; PC: drop the per-room texture cache). */
-    c->reset_render();
 
     /* (3b) ARCH: load the destination room's Obj_model_set prop set into the now-
      * reset prop VRAM (data-driven per room; clears the previous room's prop slots).
