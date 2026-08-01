@@ -3607,13 +3607,18 @@ re_title:;
                      * Ende und das Gameplay beginnt gar nicht (gemessen: bei Frame 12660 stand der
                      * Spieler noch mit mo=211 am Helipad). Dieser Teil gehoert deshalb VOR die
                      * Gameplay-Schranke. */
-                    if (ap_mode && g_scd.message_active) {
-                        /* Bestaetigt wird in RE1.5 mit QUADRAT (virtueller Remap @0x80073dbc),
-                         * Dialoge nehmen zusaetzlich KREUZ. Beide abwechselnd als Flanke geben,
-                         * damit kein Boxentyp haengen bleibt. */
-                        int ph = ap_msgwait++ & 7;
-                        if (ph == 0) gctx.pad_current |= RE15_PAD_BIT_SQUARE;
-                        if (ph == 4) gctx.pad_current |= RE15_PAD_BIT_CROSS;
+                    /* CUTSCENE WEITERKLICKEN. Nicht nur bei g_scd.message_active: das Intro
+                     * wartet an Stellen auf einen Tastendruck, an denen dieses Flag NICHT steht —
+                     * gemessen stand der Spieler sonst noch bei Frame 5900 mit mo=211 am Helipad,
+                     * player_mode blieb 2. Das ist KEIN Fehler des Spiels, sondern genau das
+                     * Verhalten fuer jemanden, der den Controller nicht anfasst; frueher kam der
+                     * Lauf nur durch, weil der noch ungegatete Regler nebenbei Tasten drueckte.
+                     * Bestaetigt wird in RE1.5 mit QUADRAT (virtueller Remap @0x80073dbc),
+                     * Dialoge nehmen zusaetzlich KREUZ — beide abwechselnd als Flanke. */
+                    if (ap_mode && (g_scd.message_active || g_scd.player_mode == 2)) {
+                        int ph = ap_msgwait++ % 24;
+                        if (ph == 0)  gctx.pad_current |= RE15_PAD_BIT_SQUARE;
+                        if (ph == 12) gctx.pad_current |= RE15_PAD_BIT_CROSS;
                     }
                     /* GESTEUERT wird dagegen nur im echten Gameplay. Waehrend Intro/Cutscene haelt
                      * player_mode 2 den Spieler ohnehin fest, und seine Koordinaten sind dort
