@@ -2272,6 +2272,12 @@ re_title:;
     /* Save the BASE (pre-overlay) Elliot skeleton so a cross-room reload re-overlays from
      * base instead of stacking overlays (parity with the pl00_skel base saved above). */
     re15_emd_skeleton_t elliot_base_skel = elliot_skel;
+    /* ... und dazu seine BASIS-ANIMATION. Ohne die laesst sich Elliot beim Raumwechsel nicht auf
+     * den Ausgangszustand zuruecksetzen: der Overlay schreibt *elliot_anim komplett neu
+     * (enemy_common.c re15_apply_room_cinematic), es gab aber bisher nichts, worauf man
+     * zuruecksetzen koennte. Das Original braucht das nicht — dort verschwindet die Bank mit dem
+     * Arena-Reset (@0x80039738) von selbst. */
+    re15_emd_animation_t elliot_base_anim = elliot_anim;
     /* SHARED room-cinematic overlay (enemy_common.c) — the SAME single source of truth the
      * PSX port (re15_load_room_cinematic) and the cross-room reload below use: Leon (overlaid
      * from the clean pl00 base) + Elliot (from his base) + per-room RBJ→enemy rebind
@@ -3956,6 +3962,15 @@ re_title:;
                                  * (enemy_common.c: *leon_skel = *s aus pl00_base). */
                                 skel = pl00_skel;
                                 anim = pl00_anim;
+                                /* ELLIOT GENAUSO. Der erste Wurf dieses Fixes hat nur Leon
+                                 * zurueckgesetzt — das war asymmetrisch und damit derselbe Fehler
+                                 * eine Etage tiefer: Elliot behielt die Clips des Vorraums. Im
+                                 * Original faellt sein Resident-Flag bei JEDEM Raumwechsel, weil die
+                                 * Arena weg ist (@0x80039738). */
+                                if (elliot_skel_ok) {
+                                    elliot_skel = elliot_base_skel;
+                                    elliot_anim = elliot_base_anim;
+                                }
                                 s_rbj_room = dest_room;
                                 fprintf(stderr, "[rbj] room %04X has no RBJ (%s) — Leon auf PL00-Basis "
                                         "zurueckgesetzt (Arena-Reset @0x80039738)\n", dest_room, rpath);
