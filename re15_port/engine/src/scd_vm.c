@@ -1456,6 +1456,9 @@ static int op_se_on(scd_thread_t *t)
     evt.kind      = SCD_AUDIO_SE_ON;
     evt.bank      = t->pc[1];
     evt.sample_id = t->pc[2];
+    if (getenv("RE15_SE_DEBUG"))
+        fprintf(stderr, "[se] SCD Se_on: bank=%u id=%u vol=%u pan=%u\n",
+                t->pc[1], t->pc[2], t->pc[3], t->pc[4]);
     evt.volume    = t->pc[3];
     evt.pan       = t->pc[4];
     evt.raw_w0    = (uint16_t)t->pc[5];

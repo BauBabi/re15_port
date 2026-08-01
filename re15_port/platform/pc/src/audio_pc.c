@@ -2130,6 +2130,14 @@ void re15_audio_tick(void)
         switch ((scd_audio_kind_t)evt.kind) {
             case SCD_AUDIO_SE_ON:
                 g_audio.events_se_on++;
+                if (getenv("RE15_SE_DEBUG")) {
+                    static const char *kn[] = { "SKIP", "WEAPON", "SND0", "SND1", "CORE" };
+                    int k = (int)re15_audio_se_bank_kind(evt.bank);
+                    fprintf(stderr, "[se] Se_on bank=%u id=%u -> %s%s\n", evt.bank, evt.sample_id,
+                            (k >= 0 && k < 5) ? kn[k] : "?",
+                            (re15_audio_se_bank_kind(evt.bank) == RE15_SE_BANK_SKIP)
+                                ? "  << VERWORFEN (Bank nicht resident)" : "");
+                }
                 /* Byte-true FUN_80045024: the Se_on bank byte (evt.bank = the opcode's pc[1]) picks
                  * the VAB bank; evt.sample_id (pc[2]) is the record index (bank_base + record*4 =
                  * @0x80045140, NO -1). Route to the matching resident/room bank; a bank the port has
