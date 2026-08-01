@@ -1419,6 +1419,27 @@ static void ss_spu_reverb(int Lin0, int Rin0, int *outL, int *outR) {
 /* Render both BGM layers (+ SPU reverb) additively into `out` (44100). The
  * reverb processes at 22050 Hz (every 2nd output frame), output held across the
  * pair — matching the SPU's reverb sample rate. */
+/* ── BGM-Ausblendung beim Track-Wechsel ──────────────────────────────────────
+ * Byte-true FUN_80044ab8 @0x80044ab8 (Frame-Tick aus FUN_800458d4), angestossen von
+ * FUN_800449f4 @0x800449f4 (DAT_800b5218 = 1, DAT_800b5360 = 0x3c) aus FUN_800443ec.
+ *
+ *   state 1: einmal   v -= v/n fuer alle 16 Stimmen (SsUtGetDetVVol/SsUtSetDetVVol,
+ *                     Clamp >= 0), dann state = 2, n -= 1
+ *   state 2: dieselbe Schleife, n -= 1, bei n == 1 -> state = 3
+ *   state 3: n = 0, state = 0, und SsSeqStop fuer jeden der DREI Slots mit Flag != 0
+ *            (@0x80044b8c-@0x80044bb0)
+ *
+ * n laeuft von 0x3c=60 abwaerts, also teleskopiert das Produkt: v_k = v0 * (60-k)/60.
+ * Das ist eine LINEARE Rampe ueber 59 Frames auf 1/60, im 60. Frame der harte Stop.
+ * Nachgerechnet gegen die Formel: k=15 -> 0.75, k=30 -> 0.50, k=45 -> 0.25.
+ *
+ * Der Port hat keine SPU-Stimmen-Detune-Volumes, also faehrt derselbe Integer-Ausdruck
+ * hier auf einem Skalar ueber den ganzen BGM-Mix — gleiche Rampe, gleiche Frame-Zahl. */
+#define BGM_FADE_FRAMES 0x3c              /* FUN_800443ec: FUN_800449f4(0x3c) */
+static int s_bgm_fade_state = 0;          /* DAT_800b5218 */
+static int s_bgm_fade_n     = 0;          /* DAT_800b5360 */
+static int s_bgm_fade_vol   = 0x8000;     /* Skalar-Ersatz der 16 Stimmen-Volumes, 1.0 = 0x8000 */
+
 static void re15_ss_render_bgm(int16_t *out, int frames) {
     if (!s_ss_main.vab_ok && !s_ss_sub.vab_ok) return;
     static int16_t bgm[2048 * 2];
@@ -1427,9 +1448,14 @@ static void re15_ss_render_bgm(int16_t *out, int frames) {
     ss_mix(&s_ss_main, bgm, frames);
     ss_mix(&s_ss_sub,  bgm, frames);
     ss_mix(&s_ss_sub2, bgm, frames);   /* the SUB bank's SECOND sequence (SCD slot 2) */
+    const int fade = s_bgm_fade_vol;   /* Stimmen-Volume-Rampe der Ausblendung */
     static int s_rev_held_l = 0, s_rev_held_r = 0, s_rev_phase = 0;
     for (int f = 0; f < frames; f++) {
         int dryL = bgm[f*2+0], dryR = bgm[f*2+1];
+        if (fade != 0x8000) {          /* == SsUtSetDetVVol auf allen BGM-Stimmen */
+            dryL = (dryL * fade) >> 15;
+            dryR = (dryR * fade) >> 15;
+        }
         if (s_rev_phase == 0) ss_spu_reverb(dryL, dryR, &s_rev_held_l, &s_rev_held_r);
         s_rev_phase ^= 1;
         int L = (int)out[f*2+0] + dryL + s_rev_held_l;
@@ -1800,6 +1826,68 @@ static void re15_bgm_stop_subs(void) {
     s_ss_sub2.playing = 0; ss_all_voices_off(&s_ss_sub2);
 }
 
+/* Der aufgeschobene Track-Wechsel: im Original blockiert FUN_80044210 die Ausblendung aus
+ * (@0x8004428C-@0x800442B0: while (DAT_800b5218) FUN_80029ac8(1)) und laedt DANACH. Der Port
+ * darf die Hauptschleife nicht anhalten, also merkt er sich das Ziel und laedt, sobald die
+ * State-Machine auf 0 steht — hoerbar dieselbe Reihenfolge: alt ausblenden, Stop, neu starten. */
+static int     s_bgm_pending      = 0;
+static uint8_t s_bgm_pending_main = 0xff, s_bgm_pending_sub = 0xff;
+static int     s_bgm_pending_stage = 0, s_bgm_pending_room = 0;
+
+static void re15_bgm_commit_pending(void) {
+    if (!s_bgm_pending) return;
+    s_bgm_pending = 0;
+    re15_amb_load_rotor(s_bgm_pending_stage, s_bgm_pending_room);
+    SDL_LockAudioDevice(s_audio_dev);
+    re15_bgm_load_main(s_bgm_pending_main);
+    re15_bgm_load_sub (s_bgm_pending_sub);
+    if (s_amb.pcm) s_amb.active = 1;
+    SDL_UnlockAudioDevice(s_audio_dev);
+}
+
+/* == FUN_800449f4 @0x800449f4: Ausblendung anstossen. */
+static void re15_bgm_fade_start(void) {
+    s_bgm_fade_state = 1;
+    s_bgm_fade_n     = BGM_FADE_FRAMES;
+    s_bgm_fade_vol   = 0x8000;
+}
+
+/* == FUN_80044ab8 @0x80044ab8: ein Frame der Ausblendung. */
+static void re15_bgm_fade_tick(void) {
+    if (s_bgm_fade_state == 0) return;
+    if (s_bgm_fade_state == 1 || s_bgm_fade_state == 2) {
+        if (s_bgm_fade_n > 0) {                       /* v -= v/n, Clamp >= 0 */
+            int v = s_bgm_fade_vol - s_bgm_fade_vol / s_bgm_fade_n;
+            s_bgm_fade_vol = (v < 0) ? 0 : v;
+        }
+        if (getenv("RE15_BGM_FADE_DEBUG")) {
+            int k = BGM_FADE_FRAMES - s_bgm_fade_n + 1;   /* Frames, die bereits gedaempft haben */
+            fprintf(stderr, "[bgm] fade k=%2d vol=%5d soll=%5d\n", k, s_bgm_fade_vol,
+                    (0x8000 * (BGM_FADE_FRAMES - k)) / BGM_FADE_FRAMES);
+        }
+        if (s_bgm_fade_state == 1) {
+            s_bgm_fade_state = 2;
+            s_bgm_fade_n--;
+        } else {
+            s_bgm_fade_n--;
+            if (s_bgm_fade_n == 1) s_bgm_fade_state = 3;   /* @0x80044b64 */
+        }
+        return;
+    }
+    /* state 3: n = 0, state = 0, SsSeqStop fuer alle drei Slots (@0x80044b8c-@0x80044bb0). */
+    if (getenv("RE15_BGM_FADE_DEBUG"))
+        fprintf(stderr, "[bgm] Ausblendung fertig: Restlautstaerke %d/32768 (Soll 546 = 1/60)\n",
+                s_bgm_fade_vol);
+    s_bgm_fade_n     = 0;
+    s_bgm_fade_state = 0;
+    SDL_LockAudioDevice(s_audio_dev);
+    s_ss_main.playing = 0; ss_all_voices_off(&s_ss_main);
+    re15_bgm_stop_subs();
+    s_bgm_fade_vol = 0x8000;      /* die neuen Stimmen starten wieder auf voller Rampe */
+    SDL_UnlockAudioDevice(s_audio_dev);
+    re15_bgm_commit_pending();    /* == das, worauf FUN_80044210 gewartet hat */
+}
+
 /* re15_bgm: room-music manager. Laedt MAIN + SUB + die geloopte Raum-Ambience (Rotor). */
 static void re15_bgm_play_room(int stage, int room) {
     int e = ss_bgm_entry(stage, room);
@@ -1904,10 +1992,16 @@ void re15_audio_start_room_bgm(int stage, int room)
     uint8_t main_b = (e < 0) ? 0xff : (uint8_t)(e & 0xff);
     uint8_t sub_b  = (e < 0) ? 0xff : (uint8_t)((e >> 8) & 0xff);
 
-    /* DAT_800b2b44 / DAT_800b2b45 — die Caches. -1 = noch nie geladen, trifft nie zu. */
-    static int cache_main = -1, cache_sub = -1;
-    int main_same = (cache_main >= 0) && ((main_b & 0x3f) == (cache_main & 0x3f));
-    int sub_same  = (cache_sub  >= 0) && ((sub_b  & 0x3f) == (cache_sub  & 0x3f));
+    /* DAT_800b2b44 / DAT_800b2b45 — die Caches. Sie werden AUSSCHLIESSLICH am Ende von
+     * FUN_80044210 geschrieben (@0x800443B8/@0x800443D0) und nirgends initialisiert, liegen
+     * also im BSS und stehen beim Boot auf 0. Genau das bilden wir ab (nicht ein -1-Sentinel,
+     * der "beim ersten Aufruf immer laden" bedeuten wuerde).
+     * FOLGE, wie im Original: startet man DIREKT in einem Raum, dessen MAIN-Byte 0x00 ist
+     * (Tabelleneintraege 0xff00), gilt der Track als "schon geladen" und es laeuft nichts an.
+     * Ueber eine Tuer erreicht man solche Raeume immer mit einem abweichenden Cache. */
+    static int cache_main = 0, cache_sub = 0;
+    int main_same = ((main_b & 0x3f) == (cache_main & 0x3f));
+    int sub_same  = ((sub_b  & 0x3f) == (cache_sub  & 0x3f));
 
     if (main_same && sub_same) {
         /* @0x80044280 -> LAB_800443b0: GAR NICHTS. Kein Stop, kein Reload, kein Play —
@@ -1920,14 +2014,19 @@ void re15_audio_start_room_bgm(int stage, int room)
         re15_bgm_load_sub(sub_b);
         SDL_UnlockAudioDevice(s_audio_dev);
     } else {
-        /* MAIN hat gewechselt: MAIN neu laden, danach IMMER auch SUB (@0x800442C0-@0x800442E0:
-         * FUN_80044564, Flag setzen, dann unbedingt FUN_80044774). */
-        re15_amb_load_rotor(stage, room);
-        SDL_LockAudioDevice(s_audio_dev);
-        re15_bgm_load_main(main_b);
-        re15_bgm_load_sub(sub_b);
-        if (s_amb.pcm) s_amb.active = 1;
-        SDL_UnlockAudioDevice(s_audio_dev);
+        /* MAIN hat gewechselt. Im Original passiert das in ZWEI Etappen derselben Funktion
+         * FUN_800396fc: erst FUN_800443ec @0x800443ec ganz am Anfang (SsUtKeyOffV 0x10..0x17 und,
+         * weil der MAIN-Track abweicht, FUN_800449f4(0x3c) = Ausblendung ueber 60 Frames), dann
+         * am Ende FUN_80044210, das auf das Ende der Ausblendung WARTET und erst danach
+         * FUN_80044564 + FUN_80044774 laedt (@0x800442C0-@0x800442E0).
+         * Der Port stoesst hier die Ausblendung an und merkt sich das Ziel; geladen wird in
+         * re15_bgm_fade_tick, sobald die State-Machine durch ist. */
+        s_bgm_pending       = 1;
+        s_bgm_pending_main  = main_b;
+        s_bgm_pending_sub   = sub_b;
+        s_bgm_pending_stage = stage;
+        s_bgm_pending_room  = room;
+        re15_bgm_fade_start();
     }
 
     /* @0x800443B8-@0x800443D0: der Cache wird UNBEDINGT aufgefrischt, auch im Nichts-Fall. */
@@ -2020,6 +2119,10 @@ void re15_audio_seq_ctl(int slot, int op)
 void re15_audio_tick(void)
 {
     if (!g_audio.initialized) return;
+
+    /* == FUN_80044ab8 aus dem Frame-Tick FUN_800458d4: die BGM-Ausblendung weiterdrehen und,
+     * wenn sie durch ist, den aufgeschobenen Track-Wechsel ausfuehren. */
+    re15_bgm_fade_tick();
 
     scd_audio_event_t evt;
     while (scd_audio_queue_pop(&evt)) {
