@@ -3536,7 +3536,19 @@ re_title:;
                  * MUSS ich nicht wissen: der Regler dreht, misst, ob die Fehlstellung kleiner
                  * wird, und dreht sonst um. Das haelt auch, wenn sich die Konvention aendert. */
                 {
-                    static int ap_init = 0, ap_mode = 0, ap_slot = -1, ap_hold = 0, ap_act = 1;
+                    /* Zielkette: "xz:a,b;xz:c,d;aot:3" — Zwischenziele werden der Reihe nach
+                     * abgehakt, nur das LETZTE loest aus. Die Zwischenziele nimmt man am besten
+                     * aus den Nav-Zonen des Raums (RDT-Bloecke @0x38: Rechteck + Link-Maske);
+                     * Zonen-MITTEN liegen im Begehbaren, die Verbindung dazwischen ist kurz.
+                     * Ein einzelnes fernes Ziel reicht nicht: ROOM1130 ist die Kette 3->2->1->0,
+                     * und der Regler blieb am Zonenuebergang z=4500 haengen. */
+                    #define AP_MAX_GOALS 8
+                    static int ap_init = 0, ap_hold = 0, ap_act = 1;
+                    static int ap_n = 0, ap_idx = 0;
+                    static int ap_gmode[AP_MAX_GOALS];              /* 1 = aot, 2 = xz */
+                    static int ap_gslot[AP_MAX_GOALS];
+                    static int32_t ap_gx[AP_MAX_GOALS], ap_gz[AP_MAX_GOALS];
+                    int ap_mode = 0, ap_slot = -1;
                     static int32_t ap_tx = 0, ap_tz = 0;
                     static int ap_turn = +1, ap_flipwait = 0, ap_msgwait = 0;
                     static long ap_bestcross = -1;
@@ -3546,11 +3558,26 @@ re_title:;
                         ap_init = 1;
                         const char *s = getenv("RE15_AUTOPILOT");
                         if (s && *s) {
-                            if (!strncmp(s, "aot:", 4))      { ap_mode = 1; ap_slot = atoi(s + 4); }
-                            else if (!strncmp(s, "xz:", 3))  { ap_mode = 2; sscanf(s + 3, "%d,%d", &ap_tx, &ap_tz); }
                             if (strstr(s, "noact")) ap_act = 0;
-                            fprintf(stderr, "[auto] Autopilot: %s\n", s);
+                            const char *p = s;
+                            while (*p && ap_n < AP_MAX_GOALS) {
+                                while (*p == ';' || *p == ' ') p++;
+                                if (!strncmp(p, "aot:", 4)) {
+                                    ap_gmode[ap_n] = 1; ap_gslot[ap_n] = atoi(p + 4); ap_n++;
+                                } else if (!strncmp(p, "xz:", 3)) {
+                                    int gx = 0, gz = 0;
+                                    if (sscanf(p + 3, "%d,%d", &gx, &gz) == 2) {
+                                        ap_gmode[ap_n] = 2; ap_gx[ap_n] = gx; ap_gz[ap_n] = gz; ap_n++;
+                                    }
+                                }
+                                while (*p && *p != ';') p++;
+                            }
+                            fprintf(stderr, "[auto] Autopilot: %s (%d Ziele)\n", s, ap_n);
                         }
+                    }
+                    if (ap_idx < ap_n) {
+                        ap_mode = ap_gmode[ap_idx]; ap_slot = ap_gslot[ap_idx];
+                        ap_tx = ap_gx[ap_idx];      ap_tz = ap_gz[ap_idx];
                     }
                     if (ap_mode) {
                         re15_actor_t *ap_pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
@@ -3594,7 +3621,13 @@ re_title:;
                             /* Ankunft zaehlt gegen das ENDziel, gesteuert wird auf den Zwischenpunkt. */
                             long fdx = ftx - ap_pl->x, fdz = ftz - ap_pl->z;
                             long fdist2 = fdx * fdx + fdz * fdz;
-                            if (fdist2 < 700L * 700L) {
+                            int last = (ap_idx >= ap_n - 1);
+                            long arrive = last ? 700L * 700L : 1200L * 1200L;
+                            if (fdist2 < arrive && !last) {
+                                fprintf(stderr, "[auto] Zwischenziel %d erreicht bei (%d,%d)\n",
+                                        ap_idx, ap_pl->x, ap_pl->z);
+                                ap_idx++; ap_stuck = 0; ap_avoid = 0; ap_bestcross = -1;
+                            } else if (fdist2 < arrive) {
                                 /* Am Ziel: Aktion HALTEN. Eine Tuer braucht 9 Frames Halten
                                  * (obj+0x8C, FUN_8002bd44) — ein Tipp reicht nicht. */
                                 if (ap_act) gctx.pad_current |= RE15_PAD_BIT_SQUARE;
