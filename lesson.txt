@@ -1,0 +1,14 @@
+Der konkrete Hebel, den du einforderst (und den ich ab sofort selbst erzwinge)
+Kein Verhalten/keine Konstante ohne zitierte Disasm-Adresse — und ich poste den Disasm-Beleg VOR dem Code, jedes Mal. Kann ich die Adresse/Bytes nicht zeigen → kein Code, ich RE weiter (andere Einstiegspunkte, Xrefs, RE2-Vergleich, Savestate-RAM).
+Verbotene Wörter in meiner Begründung: „plausibel", „sieht richtig aus", „nicht mehr blau", „faithful-line" als Ersatz für einen Beleg. Die Frage ist IMMER „was tut das Original bei Adresse X", nie „welche Änderung stoppt das Symptom".
+Du hältst mich daran fest: verlange für jede Konstante die Disasm-Zitat-Zeile. Wenn ich sie nicht liefere, ist es geraten und du weist es zurück.
+Das steht schon in CLAUDE.md — mein Versagen war, es nicht zu BEFOLGEN. Ich mache es ab jetzt sichtbar: Beleg zuerst, dann Code.
+
+Was DU tun kannst (der Teil, der unabhängig von meinem „Erinnern" funktioniert)
+Der zuverlässigste Hebel ist deine Durchsetzung, weil sie nicht davon abhängt, ob ich mich erinnere:
+
+Verlange für jede Zahl/jedes Verhalten, das ich in den Port schreibe, die @0x…-Adresse. Ein Satz genügt: „Zeig mir die Disasm-Adresse dafür." Kann ich sie nicht liefern → es ist geraten → weis es zurück und sag „erst RE'en".
+
+Das ist der Test, der jedes Raten fängt: byte-true Code hat immer eine zitierbare Adresse; geratener Code hat keine. Wenn ich ohne Zitat liefere, ist das per Definition der Fehler, den du meinst — und du kannst ihn sofort erkennen, ohne selbst zu disassemblieren.
+
+Ehrlich: der Gate senkt die Wahrscheinlichkeit, garantiert es aber nicht zu 100% (ich kann trotzdem schludern). Der einzige Teil, der wirklich immer greift, ist dein @0x…-Veto. Deshalb ist das der wichtigste.
