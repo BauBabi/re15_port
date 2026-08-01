@@ -1494,27 +1494,47 @@ static int re15_bgm_sub_for_room(int stage, int room) {        /* SUB slot */
  * (dirs are hex-named: MAIN32/MAIN32.vh, SUB_15/SUB_15.vh). Returns 0 on success. */
 static int re15_bgm_load_track(ss_seq_t *s, const char *name, int slot) {
     if (slot < 0) return -1;
-    static const char *dirs[] = {
-        "../../../../extracted/PSX/SOUND/BGM/",
-        "../../../extracted/PSX/SOUND/BGM/",
-        "../../extracted/PSX/SOUND/BGM/",
-        "extracted/PSX/SOUND/BGM/",
-        NULL
-    };
-    uint8_t *vh=NULL,*vb=NULL,*seq=NULL; int vhs=0,vbs=0,seqs=0; char p[200];
-    for (int i = 0; dirs[i] && !vh; i++) {
-        snprintf(p,sizeof p,"%s%s%02X/%s%02X.vh",dirs[i],name,slot,name,slot); vh=re15_asset_read_file(p,&vhs);
-        if (!vh) continue;
-        snprintf(p,sizeof p,"%s%s%02X/%s%02X.vb",dirs[i],name,slot,name,slot); vb=re15_asset_read_file(p,&vbs);
-        snprintf(p,sizeof p,"%s%s%02X/%s%02X.seq",dirs[i],name,slot,name,slot); seq=re15_asset_read_file(p,&seqs);
+    /* AUSGELIEFERTES FORMAT: EIN Container je Track unter SOUND/, nicht drei Dateien unter einem
+     * extracted/-Baum.
+     *
+     * Der alte Pfad suchte MAIN%02X/MAIN%02X.{vh,vb,seq} unter "extracted/PSX/SOUND/BGM/" (+ drei
+     * ../-Varianten). Ein extracted/-Verzeichnis existiert im Repo NIRGENDS — gemessen am Log:
+     * viermal "[asset] cannot open .../extracted/PSX/SOUND/BGM/MAIN32/MAIN32.vh", dann
+     * "[bgm] MAIN32 not found". Die BGM hat deshalb nie gespielt.
+     *
+     * Ausgeliefert ist SOUND/MAIN%02X.BGM bzw. SOUND/SUB_%02X.BGM, und darin steckt beides:
+     *   MAIN32.BGM  90424 B: pQES (SEQ) @0x000, pBAV (VAB) @0x504
+     *   SUB_00.BGM 100804 B: pQES (SEQ) @0x000, pBAV (VAB) @0x88C
+     * Also SEQ von 0 bis zum pBAV-Offset, danach der VAB bis Dateiende. Die VH/VB-Grenze im VAB
+     * liefert re15_vab_parse selbst: file_size (VH+VB) minus vb_total_bytes. */
+    char path[256];
+    int sz = 0;
+    snprintf(path, sizeof path, "SOUND/%s%02X.BGM", name, slot);
+    uint8_t *blob = re15_asset_read_file(path, &sz);
+    if (!blob || sz < 0x40) { free(blob); fprintf(stderr, "[bgm] %s%02X.BGM nicht lesbar\n", name, slot); return -1; }
+
+    int vab_off = -1;
+    for (int i = 0; i + 4 <= sz; i++)
+        if (blob[i]=='p' && blob[i+1]=='B' && blob[i+2]=='A' && blob[i+3]=='V') { vab_off = i; break; }
+    if (vab_off <= 0) { fprintf(stderr, "[bgm] %s%02X.BGM: kein pBAV\n", name, slot); free(blob); return -1; }
+
+    re15_vab_t probe;
+    if (re15_vab_parse(blob + vab_off, (size_t)(sz - vab_off), &probe) != 0) {
+        fprintf(stderr, "[bgm] %s%02X.BGM: VAB-Kopf unlesbar\n", name, slot); free(blob); return -1;
     }
-    int rc = -1;
-    if (vh && vb && seq) { rc = re15_ss_load(s, vh, vhs, vb, vbs, seq, seqs);
-                           s->mvol = 0x1a00; s->mvol_l = 0x1a00; s->mvol_r = 0x1a00; }
-    else fprintf(stderr, "[bgm] %s%02X not found\n", name, slot);
-    free(vh); free(vb); free(seq);   /* VAGs decoded + SEQ copied; raw no longer needed */
+    int vh_sz = (int)probe.file_size - probe.vb_total_bytes;      /* VH-Anteil des Bank-Blobs */
+    if (vh_sz <= 0 || vab_off + vh_sz > sz) vh_sz = sz - vab_off; /* defensiv: alles als VH werten */
+    const uint8_t *vh  = blob + vab_off;
+    const uint8_t *vb  = blob + vab_off + vh_sz;
+    int            vbs = sz - vab_off - vh_sz;
+
+    int rc = re15_ss_load(s, vh, vh_sz, vb, vbs, blob, vab_off);
+    if (rc == 0) { s->mvol = 0x1a00; s->mvol_l = 0x1a00; s->mvol_r = 0x1a00; }
+    else fprintf(stderr, "[bgm] %s%02X.BGM: ss_load fehlgeschlagen\n", name, slot);
+    free(blob);   /* VAGs dekodiert + SEQ kopiert */
     return rc;
 }
+
 
 /* Init the play state for a loaded instance (no SDL lock — caller holds it / offline).
  * An instance with tone_src (SUB SEQ1) has no own VAB — the source's counts. */
