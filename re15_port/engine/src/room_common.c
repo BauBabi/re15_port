@@ -73,7 +73,28 @@ int re15_room_apply_pending(const re15_room_apply_ctx_t *c)
      * new room's SCD re-spawns its own via Obj_model_set. (scd_room_reenter
      * memset-clears g_scd props below; NOT done here as that path is also the
      * intro self-reentry, which must keep the cast.) */
+    /* SPIELER-GESUNDHEIT UEBER DEN RAUMWECHSEL RETTEN — re15_actor_init() memset-t ALLE Slots und
+     * setzt Slot 0 danach auf hp=100 (actor_common.c). Damit heilte der Port den Spieler an JEDER
+     * Tuer voll und loeschte Gift/Blutung; g_actors[0].hp ist die echte Spieler-HP (der Todes-Check
+     * re15_damage.c liest sie).
+     *
+     * DAS ORIGINAL TUT DAS NICHT: der Raumwechsel wischt NUR den Entity-Pool — FUN_8001A4C0 nullt
+     * 20 Slots ab 0x800ACC2C mit Stride 0x1F4, und zwar ausschliesslich deren Feld +0x00
+     * (@0x8001A4E8). Der SPIELERBLOCK liegt bei 0x800ACA54 und damit AUSSERHALB dieses Pools. Die
+     * einzige HP-Schreibstelle im gesamten Raumwechsel-Pfad ist @0x80031718 (sh 0x64 -> +0x9A) in
+     * FUN_800314B0, und die ist hinter dem Charakterwechsel-Gate @0x80039760-8C eingesperrt: sie
+     * feuert nur, wenn (0x800ACA5C & 0x0F) != Etage 0x800B0FF0 — also beim Modellwechsel, NICHT bei
+     * einem gewoehnlichen Raumwechsel. Dasselbe gilt fuer das Statuswort +0x98 (@0x80031720,
+     * Bit 0x2 = Gift/Blutung).
+     *
+     * Deshalb: Slot 0 durch die Neuinitialisierung schicken (Hitbox, Root-Motion-Tracker, Typ/Flags
+     * kommen sauber zurueck), aber die beiden Felder wiederherstellen, die das Original nicht
+     * anfasst. */
+    const int16_t  keep_hp     = g_actors[RE15_ACTOR_SLOT_PLAYER].hp;
+    const uint16_t keep_status = g_actors[RE15_ACTOR_SLOT_PLAYER].status_flags;
     re15_actor_init();
+    g_actors[RE15_ACTOR_SLOT_PLAYER].hp           = keep_hp;
+    g_actors[RE15_ACTOR_SLOT_PLAYER].status_flags = keep_status;
     re15_enemy_reset();   /* drop the previous room's loaded enemy models (free PC bufs);
                            * the new room lazy-loads its own on first spawn. */
 
