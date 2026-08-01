@@ -15,20 +15,22 @@ re15_gameflow_t g_gameflow;
  * This is the current default boot room, so NEW GAME reproduces the real opening. */
 #define RE15_NEWGAME_ROOM 0x1240
 
-void re15_gameflow_init(int debug_room)
+/* KEIN Raum-Sprung-Parameter mehr. Es gab hier einen RE15_START_ROOM-Schnellweg, der direkt
+ * INGAME in einen beliebigen Raum bootete. Der ist ENTFERNT (2026-08-01, auf Ansage des Nutzers),
+ * weil er systematisch andere Ergebnisse lieferte als das, was im Spiel zu sehen ist:
+ * er installierte den Raum AN re15_room_apply_pending VORBEI (eigene Boot-Sequenz in main.c),
+ * waehrend jeder echte Raumwechsel — Tuer wie Debug-JUMP — durch apply_pending laeuft.
+ * Damit fehlten dem Sprung genau die Schritte, die den Raum erst in den Spielzustand bringen
+ * (Teardown, Motion-Reset, Bank-/BGM-Wechsel, Kamera-Cut, SCD-Reenter).
+ * Raumwechsel gehen jetzt ausschliesslich ueber das ORIGINAL-Debug-Menue (UTILITY MENU,
+ * PSX.EXE @0x80014444) bzw. ueber Tueren — beide muenden in re15_room_request_change(). */
+void re15_gameflow_init(void)
 {
-    if (debug_room >= 0) {
-        /* RE15_START_ROOM debug fast-path: straight into the room (harness-preserving). */
-        g_gameflow.mode         = RE15_MODE_INGAME;
-        g_gameflow.start_room   = (uint16_t)debug_room;
-        g_gameflow.enter_ingame = 1;     /* platform loads it this frame */
-    } else {
-        g_gameflow.mode         = RE15_MODE_TITLE;
-        g_gameflow.start_room   = RE15_NEWGAME_ROOM;
-        g_gameflow.enter_ingame = 0;
-    }
-    g_gameflow.character   = 0;           /* Leon (PL00) */
-    g_gameflow.boot_movie  = 0;           /* dormant, byte-true to the MZD build (see header) */
+    g_gameflow.mode         = RE15_MODE_TITLE;
+    g_gameflow.start_room   = RE15_NEWGAME_ROOM;
+    g_gameflow.enter_ingame = 0;
+    g_gameflow.character    = 0;          /* Leon (PL00) */
+    g_gameflow.boot_movie   = 0;          /* dormant, byte-true to the MZD build (see header) */
 }
 
 void re15_gameflow_new_game(int character)

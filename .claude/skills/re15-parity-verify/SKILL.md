@@ -5,7 +5,7 @@ description: >-
   and walking the SAME path, so the same input triggers the same behavior. Use this whenever a
   room/movement/combat/presentation change needs proof (not "sieht richtig aus") — e.g. player
   walk/collision, zombie wake/engage/grab, camera cuts, animations. Covers the two harnesses
-  (PC RE15_START_ROOM + RE15_INPUT_SCRIPT ; PSX DuckStation debug-menu JUMP + tank-path), the
+  (PC RE15_DEBUG_JUMP + RE15_INPUT_SCRIPT ; PSX DuckStation debug-menu JUMP + tank-path), the
   byte-true movement model that defines "the same path", the verification checks, and the
   critical DuckStation variable-fps pitfall + how to work around it. Sister skills:
   re15-room-capture (drives DuckStation), re15-savestate-ghidra (reads savestate values).
@@ -28,7 +28,7 @@ einmal im Original, dann vergleichen.
 
 | | PC-Port | PSX-Original (DuckStation) |
 |---|---|---|
-| Raum laden | `RE15_START_ROOM=1140` (HEX Raum-ID) auf `re15_pc.exe` | Debug-Menü → JUMP, via `re15-room-capture/scripts/re15_quickload.py --left/--right N` (HEX-Listennummern; **ROOM1140 = `0x114 BRIEFING` = `--left 16`** von der Base `0x124 OPENING`) |
+| Raum laden | **Debug-Menü → JUMP**, via `RE15_DEBUG_JUMP=1140@<frame>` (HEX Raum-ID @ Frame). Setzt nur den Menü-Cursor; ausgelöst wird der Sprung vom normalen `re15_debug_menu_tick()` mit der Lade-Flanke — also derselbe Pfad wie ein Quadrat-Druck. ⚠️ `frame` zählt NUR ingame (das Front-End erhöht `frame_count` nicht). `RE15_START_ROOM` ist **entfernt** (2026-08-01): es bootete an `re15_room_apply_pending` vorbei und zeigte deshalb systematisch anderes als das Spiel. | Debug-Menü → JUMP, via `re15-room-capture/scripts/re15_quickload.py --left/--right N` (HEX-Listennummern; **ROOM1140 = `0x114 BRIEFING` = `--left 16`** von der Base `0x124 OPENING`) |
 | Spawn prüfen | erste Frame im `RE15_STATE_LOG` | `re15_enemy_state.py <sav>` + der Player-Pos-Reader (`scripts/ppos.py`) |
 
 Der Spawn MUSS in beiden identisch sein (Position + Yaw), sonst divergiert alles danach.
@@ -148,7 +148,7 @@ Mechanismus-Beleg, stärker als ein Pixel-Vergleich.
 
 ## 7. Ablauf-Checkliste
 
-1. Raum in BEIDEN laden (`RE15_START_ROOM` / `--left N`), Spawn (Pos+Yaw) gleich? → sonst zuerst das fixen.
+1. Raum in BEIDEN über das Debug-Menü laden (`RE15_DEBUG_JUMP` / `--left N`), Spawn (Pos+Yaw) gleich? → sonst zuerst das fixen.
 2. Denselben Tank-Path in BEIDEN fahren.
 3. TIMING-UNABHÄNGIGE Invarianten vergleichen (Richtung, Wände, Verhalten) — NICHT Wall-clock-Distanzen.
 4. Divergenz? → byte-true Ursache im Disasm/den Daten belegen und fixen. Keine Divergenz bei den

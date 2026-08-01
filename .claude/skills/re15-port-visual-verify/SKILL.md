@@ -45,7 +45,7 @@ kill $GP 2>/dev/null; wait 2>/dev/null
 
 ## Den Nutzer-Flow EXAKT reproduzieren (nicht Raum-Sprung!)
 
-`RE15_START_ROOM` überspringt Boot-/Load-Reihenfolge und versteckt genau die Bugs, die dabei entstehen (Upload-Reihenfolge, Latches). Der echte Weg:
+Ein Raum-Sprung überspringt Boot-/Load-Reihenfolge und versteckt genau die Bugs, die dabei entstehen (Upload-Reihenfolge, Latches). `RE15_START_ROOM` gibt es deshalb seit 2026-08-01 **nicht mehr** — es bootete an `re15_room_apply_pending` vorbei. Muss es doch ein Sprung sein, dann nur über das Debug-Menü (`RE15_DEBUG_JUMP=<hexraum>@<frame>`), das durch dieselbe Install-Sequenz läuft wie eine Tür. Der echte Weg bleibt aber:
 
 ```bash
 # Title -> LOAD GAME -> Slot 1, mit ECHTEM Pad-Input:
@@ -133,7 +133,7 @@ Ebenso: **`SDL_UpdateTexture` auf eine bereits gesampelte `STATIC`-Textur wird v
 1. [ ] **Clean rebuild** (`cmake --build … --clean-first`) + Zeitstempel der `.exe` nennen.
 2. [ ] Fix im Source verifiziert (`grep`), Symbol im Binary vorhanden.
 3. [ ] Lauf **ohne** `RE15_SOFTWARE_RENDER`, **ohne** `RE15_AUTOSHOT`.
-4. [ ] Flow = der des Nutzers (echter Load/Weg, kein `RE15_START_ROOM`).
+4. [ ] Flow = der des Nutzers (echter Load/Weg, kein Raum-Sprung; wenn unvermeidbar, dann nur Debug-Menü).
 5. [ ] **gdigrab**-Capture des echten Fensters angesehen.
 6. [ ] Objekt vorher **lokalisiert** (Tint/Kill-Switch) — die richtigen Pixel gemessen.
 7. [ ] Gegen das ORIGINAL verglichen (DuckStation-Savestate-Framebuffer, `re15_ss.py <sav> <png>`).

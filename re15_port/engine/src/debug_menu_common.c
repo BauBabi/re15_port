@@ -58,7 +58,7 @@
 
 /* Edge-Bits, gelesen am Halbwort 0x800AC762 (@0x800148B4 / @0x80014A38). */
 #define DBG_EDGE_STAGE 0x0010   /* Dreieck -> Stage + 1, @0x800148B4 */
-#define DBG_EDGE_LOAD  0x0080   /* Quadrat -> Raum laden, @0x80014A38 */
+#define DBG_EDGE_LOAD  RE15_DBG_EDGE_LOAD   /* Quadrat -> Raum laden, @0x80014A38 */
 #define DBG_STAGE_WRAP 6        /* @0x800148E4 sltiu 0x6 / @0x800148F0 sb zero */
 
 unsigned re15_debug_menu_table_offset(unsigned stage, unsigned idx)
@@ -164,4 +164,29 @@ int re15_debug_menu_tick(uint16_t held, uint16_t edge)
         s_dbg.open = 0;
     }
     return s_dbg.want_load;
+}
+
+/* Cursor fuer einen automatisierten Messlauf auf einen Zielraum stellen — MEHR NICHT.
+ * Ausgeloest wird der Sprung danach vom normalen re15_debug_menu_tick() mit der Lade-Flanke,
+ * also ueber exakt dieselbe Zeile @0x80014A38 wie ein Quadrat-Druck des Nutzers. Genau darum
+ * geht es: es darf nur EINEN Sprung-Codepfad geben. Der frueher parallel existierende
+ * RE15_START_ROOM-Schnellweg bootete an re15_room_apply_pending vorbei und zeigte deshalb
+ * regelmaessig etwas anderes als das Spiel.
+ * room_id ist die volle ID (0x1140); die Menue-Tabelle fuehrt sie als 0x114.
+ * Rueckgabe 1 = Zielraum steht im Menue, 0 = kein Slot fuer diese ID. */
+int re15_debug_menu_point_at(unsigned room_id)
+{
+    uint16_t want = (uint16_t)(room_id >> 4);
+    for (int st = 0; st < DBG_STAGE_WRAP; st++) {
+        for (int idx = 0; idx < DBG_ROOM_WRAP; idx++) {
+            if (!RE15_DBG_SLOT_USED(st, idx)) continue;
+            if (RE15_DBG_JUMP_ROOM(st, idx) != want) continue;
+            s_dbg.stage        = (uint8_t)st;
+            s_dbg.room_idx[st] = (uint8_t)idx;
+            s_dbg.row          = 1;          /* die JUMP-Zeile */
+            s_dbg.open         = 1;
+            return 1;
+        }
+    }
+    return 0;
 }

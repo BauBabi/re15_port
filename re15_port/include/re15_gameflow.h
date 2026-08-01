@@ -42,10 +42,11 @@ typedef struct {
 
 extern re15_gameflow_t g_gameflow;
 
-/* Initialise the machine. debug_room >= 0 = the RE15_START_ROOM debug fast-path
- * (boot straight into that room, INGAME) so every parity/room-probe harness is
- * preserved; debug_room < 0 = normal boot to TITLE. */
-void re15_gameflow_init(int debug_room);
+/* Initialise the machine — immer Boot zum TITLE. Der frueher hier moegliche
+ * RE15_START_ROOM-Schnellweg (direkt INGAME in einen Raum) ist entfernt: er umging
+ * re15_room_apply_pending und wich dadurch von dem ab, was im Spiel zu sehen ist.
+ * Raumwechsel laufen ausschliesslich ueber Tueren oder das Original-Debug-Menue. */
+void re15_gameflow_init(void);
 
 static inline re15_gameflow_mode_t re15_gameflow_mode(void) { return g_gameflow.mode; }
 static inline void re15_gameflow_set_mode(re15_gameflow_mode_t m) { g_gameflow.mode = m; }

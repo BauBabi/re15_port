@@ -1591,13 +1591,9 @@ int main(int argc, char *argv[])
     re15_audio_init();   /* FE-3: open the audio device early so the opening movie has sound
                           * (idempotent — the later call in the game-init path is a no-op). */
 
-    /* FE-0.3 / FE-1.3 — top-level mode machine: de-hardcode the boot-into-a-room.
-     * RE15_START_ROOM=<hex> keeps the debug fast-path (straight into that room, INGAME —
-     * every parity/room-probe harness preserved); otherwise boot to the TITLE screen. */
-    {
-        const char *sr_env = getenv("RE15_START_ROOM");
-        re15_gameflow_init((sr_env && *sr_env) ? (int)strtoul(sr_env, 0, 16) : -1);
-    }
+    /* FE-0.3 / FE-1.3 — top-level mode machine: immer Boot zum TITLE.
+     * Der RE15_START_ROOM-Schnellweg ist entfernt (siehe re15_gameflow_init). */
+    re15_gameflow_init();
     /* FE-3 — the CAPCOM.STR opening (re15_str.c video + re15_xa.c audio, byte-true). It is the WHOLE
      * boot intro: the "This game contains scenes of explicit violence and gore." disclaimer over a
      * lab scene (~frame 80-300), then the CAPCOM logo (~frame 320-500) — CAPTURE-VERIFIED against the
@@ -1882,13 +1878,11 @@ re_title:;
      * footstep loader (audio_pc) and the cross-room machinery see the boot room.
      * (Was loaded later, after props — moved up; RDT parse only needs file I/O.) */
     int rdt_size = 0;
-    /* RE15_START_ROOM=1150 boots a different room's RDT (debug: render the room1150 Irons
-     * kneel cutscene to compare frame-exact vs ablauf4). Default = the ROOM1170 intro. */
-    const char *start_room = getenv("RE15_START_ROOM");
-    /* FE-4: default boot room = g_gameflow.start_room (0x1240 new-game, or the CONTINUE
-     * resume room) instead of a hardcoded 0x1240; RE15_START_ROOM still overrides for debug. */
-    unsigned boot_room = (start_room && *start_room) ? (unsigned)strtoul(start_room, 0, 16)
-                                                     : (unsigned)g_gameflow.start_room;
+    /* FE-4: Boot-Raum = g_gameflow.start_room (0x1240 bei NEW GAME, sonst der CONTINUE-Raum).
+     * Die frueher hier moegliche RE15_START_ROOM-Ueberschreibung ist ENTFERNT — sie bootete an
+     * re15_room_apply_pending vorbei und lieferte damit einen anderen Zustand als jeder echte
+     * Raumwechsel. Zu einem beliebigen Raum kommt man ueber das Debug-Menue (Backspace). */
+    unsigned boot_room = (unsigned)g_gameflow.start_room;
     /* Asset-Pfad-Konsolidierung (2026-07-02): der Boot-Room-RDT kommt aus dem CD-Layout
      * STAGE{N}/ROOM%04X.RDT (N = room_id>>12), NICHT mehr aus der entfernten flachen RDT/-Struktur.
      * Identische Auflösung wie re15_room_load (room_pc.c) für die Cross-Room-Transitions. */
@@ -3519,21 +3513,11 @@ re_title:;
                 /* apply the OPTIONS controller preset (TYPE A = identity → byte-true default). */
                 gctx.pad_current = pc_pad_config((uint16_t)g_engine.pad_current);
                 gctx.pad_pressed = pc_pad_config((uint16_t)g_engine.pad_pressed);
-                /* RE15_AUTOWALK="<startframe>,<frames>": haelt VORWAERTS fuer <frames> Frames ab
-                 * <startframe>. Test-Harness fuer alles, was Laufen braucht (Schritt-SE, Kollision,
-                 * Lokomotion) — der Port hat sonst keine Moeglichkeit, in einem automatisierten Lauf
-                 * zu gehen. Reines Diagnose-Werkzeug, per Default aus. */
-                {
-                    static int aw_from = -1, aw_len = 0, aw_read = 0;
-                    if (!aw_read) {
-                        aw_read = 1;
-                        const char *aw = getenv("RE15_AUTOWALK");
-                        if (aw && *aw && sscanf(aw, "%d,%d", &aw_from, &aw_len) < 2) aw_len = 600;
-                    }
-                    if (aw_from >= 0 && (int)g_engine.frame_count >= aw_from &&
-                        (int)g_engine.frame_count < aw_from + aw_len)
-                        gctx.pad_current |= RE15_PAD_BIT_UP;
-                }
+                /* (Hier stand kurzzeitig ein RE15_AUTOWALK-Hack, der VORWAERTS in das Pad-Wort
+                 * ODERte. Entfernt: RE15_INPUT_SCRIPT in input_pc.c kann das laengst und tut es
+                 * am richtigen Ort — im echten Eingabepfad, ueber alle Modi hinweg. "U10" haelt
+                 * VORWAERTS zehn Sekunden. Zwei Wege fuer dieselbe Sache waeren genau die Art
+                 * Parallelpfad, die den RE15_START_ROOM-Aerger verursacht hat.) */
 
                 /* ORIGINAL-DEBUG-MENUE ("UTILITY MENU", PSX.EXE @0x80014444) — Logik in
                  * engine/src/debug_menu_common.c, jede Konstante dort mit ihrer Adresse.
@@ -3554,6 +3538,33 @@ re_title:;
                 {
                     uint16_t dbg_held = re15_debug_menu_pad(gctx.pad_current);
                     uint16_t dbg_edge = re15_debug_menu_pad(gctx.pad_pressed);
+                    /* RE15_DEBUG_JUMP="<hexraum>@<frame>" — automatisierter Messlauf-Sprung.
+                     * Er setzt NUR den Menue-Cursor und legt die Lade-Flanke an; ausgefuehrt wird
+                     * er vom normalen re15_debug_menu_tick() unten, also ueber genau denselben
+                     * Weg wie ein Quadrat-Druck des Nutzers. Ersetzt RE15_START_ROOM, das an
+                     * re15_room_apply_pending vorbeibootete und darum anderes zeigte als das Spiel. */
+                    {
+                        static int dj_room = -1, dj_frame = 0, dj_read = 0, dj_done = 0;
+                        if (!dj_read) {
+                            dj_read = 1;
+                            const char *dj = getenv("RE15_DEBUG_JUMP");
+                            if (dj && *dj) {
+                                unsigned r = 0; int f = 0;
+                                if (sscanf(dj, "%x@%d", &r, &f) >= 1) { dj_room = (int)r; dj_frame = f; }
+                            }
+                        }
+                        if (dj_room >= 0 && !dj_done && (int)g_engine.frame_count >= dj_frame) {
+                            dj_done = 1;
+                            if (re15_debug_menu_point_at((unsigned)dj_room)) {
+                                dbg_edge |= RE15_DBG_EDGE_LOAD;   /* == Quadrat in der JUMP-Zeile */
+                                fprintf(stderr, "[debug-menu] AUTO-JUMP -> ROOM%04X (Frame %u)\n",
+                                        (unsigned)dj_room, g_engine.frame_count);
+                            } else {
+                                fprintf(stderr, "[debug-menu] AUTO-JUMP: ROOM%04X steht nicht in der "
+                                                "JUMP-Tabelle\n", (unsigned)dj_room);
+                            }
+                        }
+                    }
                     if (!re15_debug_menu_open()) {
                         if (gctx.pad_pressed & RE15_PAD_BIT_SELECT)
                             re15_debug_menu_toggle();

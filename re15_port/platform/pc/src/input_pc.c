@@ -271,12 +271,13 @@ void re15_input_tick(void)
      * Keyed on OUR OWN tick counter, not g_engine.frame_count: the front-end loops (title,
      * char-select, load screen) render and poll input but never advance frame_count, so a
      * frame_count-keyed script froze at its start index for the whole front-end and COULD NOT
-     * press a single button there. That is why every scripted run had to jump straight into a
-     * room via RE15_START_ROOM — and a room reached that way is NOT the state a real
-     * playthrough arrives in. This counter advances once per re15_input_tick(), i.e. once per
-     * rendered frame in EVERY mode, so a script can drive boot -> title -> NEW GAME -> the
+     * press a single button there. Deshalb musste frueher jeder Skript-Lauf per RE15_START_ROOM
+     * direkt in einen Raum springen — und ein so betretener Raum ist NICHT der Zustand, in dem
+     * ein echter Durchlauf ankommt. This counter advances once per re15_input_tick(), i.e. once
+     * per rendered frame in EVERY mode, so a script can drive boot -> title -> NEW GAME -> the
      * intro rooms exactly like a player (and like the DuckStation --path capture it mirrors).
-     * RE15_START_ROOM runs are unaffected: they skip the front-end, so tick == frame_count. */
+     * RE15_START_ROOM ist inzwischen ENTFERNT (2026-08-01); dieses Skript ist zusammen mit dem
+     * Debug-Menue (Token E = SELECT, T = Dreieck, A = Quadrat) der einzige Weg in einen Raum. */
     if (!s_script_init) script_parse_once();
     s_input_ticks++;
     if (s_script_len > 0) {

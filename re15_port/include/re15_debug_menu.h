@@ -18,6 +18,10 @@
 
 #define RE15_DBG_STAGES 8
 
+/* Lade-Flanke im remappten Pad-Wort (Quadrat, @0x80014A38) — exportiert, damit ein
+ * automatisierter Messlauf DENSELBEN Tick-Pfad ausloest wie ein Tastendruck. */
+#define RE15_DBG_EDGE_LOAD 0x0080
+
 typedef struct {
     uint8_t open;                          /* Menue sichtbar (Original: eigener Pause-Zustand)   */
     uint8_t row;                           /* 0x800BBE5D — 0..2                                  */
@@ -34,6 +38,11 @@ int  re15_debug_menu_open(void);
  * D-Pad liegt auf den Bits 12-15 (die Maske `andi 0xf000` @0x80030514 gruppiert genau diese
  * vier), die Face-Tasten auf 4-7. Rueckgabe 1 = Raum laden, Ziel in ->load_room. */
 int  re15_debug_menu_tick(uint16_t held, uint16_t edge);
+/* Stellt den Menue-Cursor fuer einen automatisierten Messlauf auf room_id (volle ID, 0x1140) und
+ * oeffnet das Menue in der JUMP-Zeile. Loest NICHTS aus — den Sprung macht danach der normale
+ * re15_debug_menu_tick() mit der Lade-Flanke, also derselbe Pfad wie ein Quadrat-Druck.
+ * Rueckgabe 1 = Raum in der Tabelle gefunden. */
+int  re15_debug_menu_point_at(unsigned room_id);
 const char *re15_debug_menu_room_name(void);
 uint16_t re15_debug_menu_pad(uint16_t phys);
 const re15_debug_menu_t *re15_debug_menu_state(void);

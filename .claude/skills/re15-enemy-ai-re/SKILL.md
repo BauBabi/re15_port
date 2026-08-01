@@ -262,7 +262,7 @@ SPIELER während des Grabs — Leons PL00-Knochen + bank2-Keyframes), bank3 = Pa
 Port-Harness (env — die exe ignoriert argv!; `re15_port/build/platform/pc/re15_pc.exe`):
 
 ```bash
-RE15_START_ROOM=1140 RE15_PLAYER_POS="x,z,rot" \
+RE15_DEBUG_JUMP=1140@1 RE15_PLAYER_POS="x,z,rot" \   # Raum NUR ueber das Debug-Menue; RE15_START_ROOM ist entfernt (2026-08-01)
 RE15_INPUT_SCRIPT="MA6" \            # Tokens kombinierbar: U/D/L/R Tank, X=Cross(run) A=Square M=R1 W=wait B=Mash; "<Buchstaben><Sekunden>"; Lead-in RE15_INPUT_SCRIPT_START (Default 90 Frames)
 RE15_STATE_LOG=probe.log \           # 1 Zeile/Tick: "F%u pad=%04x PL(x,z,rot,hp) mo ac fx sl" + je Gegner "[slot t st ss1 g mo af d @(x,z,r)]"
 RE15_POSE_DUMP=pose.txt \            # + .leon: Leon-Render-Pose (vs/mo/af/frac/kf/ovr/rot + Bones b9/b13)

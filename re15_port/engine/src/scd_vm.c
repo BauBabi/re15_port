@@ -404,7 +404,8 @@ void scd_vm_init(void)
      * = scan runs. Cut_chg SETS the bit @0x800402d4 -> port cut_auto_enabled=0; the room-(re)load
      * chain FUN_800396fc masks the low 16 bits off @0x80039710-30 = auto ON at every room entry.)
      * The old zero-default froze the camera on the entry cut for any room not entered through a
-     * door (e.g. RE15_START_ROOM). [audit wf_559c230f CUTSEL-AUTOSCAN-DEFAULT-INVERTED] */
+     * door (damals der RE15_START_ROOM-Boot, inzwischen entfernt — heute ist der Boot-Raum selbst
+     * der einzige nicht per Tuer betretene Fall). [audit wf_559c230f CUTSEL-AUTOSCAN-DEFAULT-INVERTED] */
     g_scd.cut_auto_enabled = 1;
     re15_fade_init();                   /* boot-park the fade channels (LAB_80021138); room
                                          * loads do NOT reset them (engine globals) */
