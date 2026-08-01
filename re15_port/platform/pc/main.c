@@ -3594,11 +3594,18 @@ re_title:;
                             for (int ai = 0; ai < RE15_AOT_MAX; ai++) {
                                 const re15_aot_t *a = &g_aot.slots[ai];
                                 if (!a->active) continue;
+                                char dst[40] = "";
+                                if (a->type == RE15_AOT_TYPE_DOOR) {
+                                    const re15_aot_door_params_t *dp = &g_aot.door_params[ai];
+                                    /* Zielraum wie in room_common: (stage+1)<<12 | room<<4 */
+                                    snprintf(dst, sizeof dst, " -> ROOM%X%02X0 cut=%u",
+                                             dp->dest_stage + 1, dp->dest_room, dp->target_cut);
+                                }
                                 fprintf(stderr, "[aot] %2d %-10s Mitte(%6d,%6d) halb(%5d,%5d) "
-                                                "ev=%u sce=%02X band=%u\n",
+                                                "ev=%u sce=%02X band=%u%s\n",
                                         ai, (a->type < 8) ? tn[a->type] : "?",
                                         a->x, a->z, a->half_w, a->half_h,
-                                        a->event_id, a->sce_flags, a->band);
+                                        a->event_id, a->sce_flags, a->band, dst);
                             }
                         }
                     }
@@ -3615,7 +3622,7 @@ re_title:;
                      * Lauf nur durch, weil der noch ungegatete Regler nebenbei Tasten drueckte.
                      * Bestaetigt wird in RE1.5 mit QUADRAT (virtueller Remap @0x80073dbc),
                      * Dialoge nehmen zusaetzlich KREUZ — beide abwechselnd als Flanke. */
-                    if (ap_mode && (g_scd.message_active || g_scd.player_mode == 2)) {
+                    if (ap_mode && g_scd.message_active) {
                         int ph = ap_msgwait++ % 24;
                         if (ph == 0)  gctx.pad_current |= RE15_PAD_BIT_SQUARE;
                         if (ph == 12) gctx.pad_current |= RE15_PAD_BIT_CROSS;
@@ -3669,9 +3676,23 @@ re_title:;
                             int last = (ap_idx >= ap_n - 1);
                             long arrive = last ? 700L * 700L : 1200L * 1200L;
                             if (fdist2 < arrive && !last) {
-                                fprintf(stderr, "[auto] Zwischenziel %d erreicht bei (%d,%d)\n",
-                                        ap_idx, ap_pl->x, ap_pl->z);
-                                ap_idx++; ap_stuck = 0; ap_avoid = 0; ap_bestcross = -1;
+                                /* Zwischenziele vom Typ AOT (Treppe, Selbst-Tuer) muessen AUSGELOEST
+                                 * werden, nicht nur beruehrt: die Treppe startet ueber den
+                                 * Aktionsknopf (re15_stair_try_start(rdt, g_aot_action_pressed) in
+                                 * game_step_common.c). Deshalb dort 40 Frames die Taste halten und
+                                 * erst danach weiterschalten; reine xz-Punkte werden nur passiert. */
+                                if (ap_mode == 1 && ap_hold < 40) {
+                                    gctx.pad_current |= RE15_PAD_BIT_SQUARE;
+                                    if (ap_hold++ == 0)
+                                        fprintf(stderr, "[auto] AOT-Zwischenziel %d (Slot %d) erreicht "
+                                                        "bei (%d,%d) — loese aus\n",
+                                                ap_idx, ap_slot, ap_pl->x, ap_pl->z);
+                                } else {
+                                    fprintf(stderr, "[auto] Zwischenziel %d erreicht bei (%d,%d)\n",
+                                            ap_idx, ap_pl->x, ap_pl->z);
+                                    ap_idx++; ap_hold = 0;
+                                    ap_stuck = 0; ap_avoid = 0; ap_bestcross = -1;
+                                }
                             } else if (fdist2 < arrive) {
                                 /* Am Ziel: Aktion HALTEN. Eine Tuer braucht 9 Frames Halten
                                  * (obj+0x8C, FUN_8002bd44) — ein Tipp reicht nicht. */
