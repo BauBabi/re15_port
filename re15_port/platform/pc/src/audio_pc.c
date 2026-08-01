@@ -1041,11 +1041,19 @@ static void ss_decode_vab(ss_seq_t *s, const uint8_t *vb, int vb_sz)
         uint32_t off = s->vab.samples[i].offset, sz = s->vab.samples[i].size;
         s->vag_pcm[i] = NULL; s->vag_len[i] = 0; s->vag_loop[i] = -1;
         if (sz == 0 || off >= (uint32_t)vb_sz) continue;
-        /* CLAMP rather than skip when the VAB size-table slightly overruns the VB
-         * (e.g. SUB_15: table says 41504 B but the VB body is 41500 — 4 B short
-         * from extraction/rounding). Skipping dropped the whole VAG → SUB_15 (the
-         * helicopter-rotor layer) rendered SILENT. Clamp to the bytes present. */
-        if (off + sz > (uint32_t)vb_sz) sz = (uint32_t)vb_sz - off;
+        /* Defensiver Clamp — er soll NICHT mehr greifen, darum die Warnung.
+         * Aus dem SOUND/*.BGM-Container gelesen (Trailer-Offsets, FUN_80044564 @0x80044564 /
+         * FUN_80044774 @0x80044774) deckt sich Summe(VAG) exakt mit dem VB: game-weit
+         * 89/89 Container, und bei MAIN32 sind 0 von 5344 ADPCM-Bloecken ungueltig
+         * (gegen 90.5% ungueltige Flag-Bytes, wenn der VB 4 Byte zu frueh beginnt).
+         * Greift der Clamp doch, stimmt die Container-Aufteilung nicht.
+         * (Der frueher hier vermerkte Fall "SUB_15: Tabelle 41504 B, Koerper 41500 B" stammt
+         * aus dem alten extracted/-Dreidatei-Pfad, der nie aufloeste — nicht aus diesem.) */
+        if (off + sz > (uint32_t)vb_sz) {
+            fprintf(stderr, "[bgm] WARNUNG: VAG %d ragt aus dem VB (off=%u sz=%u vb=%d) — "
+                            "Container-Aufteilung pruefen\n", i, off, sz, vb_sz);
+            sz = (uint32_t)vb_sz - off;
+        }
         sz &= ~15u;                              /* whole 16-byte ADPCM blocks */
         if (sz == 0) continue;
         size_t cap = (sz / 16) * 28;
@@ -1492,43 +1500,110 @@ static int re15_bgm_sub_for_room(int stage, int room) {        /* SUB slot */
 
 /* Load one bank (VH/VB/SEQ) into the given instance. `name` = "MAIN" or "SUB_"
  * (dirs are hex-named: MAIN32/MAIN32.vh, SUB_15/SUB_15.vh). Returns 0 on success. */
+static uint32_t bgm_u32(const uint8_t *p) {
+    return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24);
+}
+
+/* SUB-Container fuehren eine ZWEITE Sequenz; hier geparkt fuer re15_bgm_play_room. */
+static uint8_t *s_sub_seq2     = NULL;
+static int      s_sub_seq2_len = 0;
+
 static int re15_bgm_load_track(ss_seq_t *s, const char *name, int slot) {
     if (slot < 0) return -1;
     /* AUSGELIEFERTES FORMAT: EIN Container je Track unter SOUND/, nicht drei Dateien unter einem
-     * extracted/-Baum.
+     * extracted/-Baum (der alte Pfad suchte MAIN%02X/MAIN%02X.{vh,vb,seq} unter
+     * "extracted/PSX/SOUND/BGM/" — ein extracted/-Verzeichnis existiert im Repo NIRGENDS, die BGM
+     * hat deshalb nie gespielt).
      *
-     * Der alte Pfad suchte MAIN%02X/MAIN%02X.{vh,vb,seq} unter "extracted/PSX/SOUND/BGM/" (+ drei
-     * ../-Varianten). Ein extracted/-Verzeichnis existiert im Repo NIRGENDS — gemessen am Log:
-     * viermal "[asset] cannot open .../extracted/PSX/SOUND/BGM/MAIN32/MAIN32.vh", dann
-     * "[bgm] MAIN32 not found". Die BGM hat deshalb nie gespielt.
+     * DIE AUFTEILUNG STEHT IN EINEM TRAILER AM DATEIENDE — sie wird NICHT gerechnet.
      *
-     * Ausgeliefert ist SOUND/MAIN%02X.BGM bzw. SOUND/SUB_%02X.BGM, und darin steckt beides:
-     *   MAIN32.BGM  90424 B: pQES (SEQ) @0x000, pBAV (VAB) @0x504
-     *   SUB_00.BGM 100804 B: pQES (SEQ) @0x000, pBAV (VAB) @0x88C
-     * Also SEQ von 0 bis zum pBAV-Offset, danach der VAB bis Dateiende. Die VH/VB-Grenze im VAB
-     * liefert re15_vab_parse selbst: file_size (VH+VB) minus vb_total_bytes. */
+     * MAIN, FUN_80044564 @0x80044564:
+     *     piVar5 = (int *)(base + size + -8);  iVar6 = *piVar5;          // u32 @size-8  = VH-Offset
+     *     piVar5 = piVar5 + -1;  puVar7 = base + *piVar5;                // u32 @size-12 = VB-Offset
+     *     FUN_8004ee38(&DAT_801f5500, base, *piVar5);                    // memcpy [0 .. VB) = SEQ+VH
+     *     SsVabOpenHeadSticky(&DAT_801f5500 + iVar6, 5, 0x42fc0);        // VH  = Puffer + VH-Offset
+     *     SsVabTransBody(puVar7, ...);                                   // VB  = Ladepuffer + VB-Offset
+     *     SsSeqOpen((ulong *)&DAT_801f5500, ...);                        // SEQ = [0 .. VH-Offset)
+     *
+     * SUB, FUN_80044774 @0x80044774 — ein Eintrag mehr, alles um ein u32 verschoben:
+     *     iVar3  = *(int *)(iVar5 + -8);      // u32 @size-8  = Offset der ZWEITEN Sequenz
+     *     iVar6  = *(int *)(iVar5 + -0xc);    // u32 @size-12 = VH-Offset
+     *     puVar7 = base + *(int *)(iVar5 + -0x10);   // u32 @size-16 = VB-Offset
+     *     SsSeqOpen(&DAT_801eed00, ...);              SsSeqPlay(...);    // SEQ #1 @0
+     *     SsSeqOpen(&DAT_801eed00 + iVar3, ...);      SsSeqPlay(...);    // SEQ #2 @Trailer-Offset
+     *
+     * WARUM DAS ZAEHLT: zwischen VH-Ende und VB liegen 4 Byte Pad. Die alte Rechnung
+     * vb = pBAV + (fsize - vb_total_bytes) verschluckt sie und beginnt den VB 4 Byte ZU FRUEH —
+     * ab dem zweiten 16-Byte-ADPCM-Block wird Datenmitte als Shift/Filter-Kopfbyte gelesen.
+     * Zensus mit re15_port/tools/bgm_container_probe.py ueber alle ausgelieferten Container:
+     * 89 echte (61 MAIN + 28 SUB), 0 Magic-Fehler, 89/89 fsize == VH-Formel + Summe(VAG),
+     * 89/89 Differenz Trailer-VB minus gerechnetem VB = exakt +4. Dazu 39 Platzhalter < 0x40 B
+     * (z.B. MAIN3C.BGM = 4 Byte) — daher die sz-Wache unten. */
     char path[256];
     int sz = 0;
     snprintf(path, sizeof path, "SOUND/%s%02X.BGM", name, slot);
     uint8_t *blob = re15_asset_read_file(path, &sz);
     if (!blob || sz < 0x40) { free(blob); fprintf(stderr, "[bgm] %s%02X.BGM nicht lesbar\n", name, slot); return -1; }
 
-    int vab_off = -1;
-    for (int i = 0; i + 4 <= sz; i++)
-        if (blob[i]=='p' && blob[i+1]=='B' && blob[i+2]=='A' && blob[i+3]=='V') { vab_off = i; break; }
-    if (vab_off <= 0) { fprintf(stderr, "[bgm] %s%02X.BGM: kein pBAV\n", name, slot); free(blob); return -1; }
+    const int is_sub = (name[0] == 'S');
+    uint32_t vh_off, vb_off, seq1_len, seq2_off = 0;
+    if (is_sub) {                                   /* FUN_80044774 */
+        seq2_off = bgm_u32(blob + sz - 8);
+        vh_off   = bgm_u32(blob + sz - 12);
+        vb_off   = bgm_u32(blob + sz - 16);
+        seq1_len = seq2_off;
+    } else {                                        /* FUN_80044564 */
+        vh_off   = bgm_u32(blob + sz - 8);
+        vb_off   = bgm_u32(blob + sz - 12);
+        seq1_len = vh_off;
+    }
+
+    /* Der Trailer muss zu dem passen, was in der Datei steht — sonst ist es kein Container
+     * dieser Bauart und wir fallen auf die pBAV-Suche zurueck, statt Muell zu dekodieren. */
+    int trailer_ok =
+        seq1_len > (uint32_t)SS_SEQ_HDR && vh_off > 0 && vh_off < vb_off && vb_off < (uint32_t)sz &&
+        seq1_len <= vh_off && (!is_sub || (seq2_off < vh_off && seq2_off >= (uint32_t)SS_SEQ_HDR)) &&
+        blob[0] == 'p' && blob[1] == 'Q' && blob[2] == 'E' && blob[3] == 'S' &&
+        blob[vh_off] == 'p' && blob[vh_off+1] == 'B' && blob[vh_off+2] == 'A' && blob[vh_off+3] == 'V' &&
+        (!is_sub || (blob[seq2_off] == 'p' && blob[seq2_off+1] == 'Q' &&
+                     blob[seq2_off+2] == 'E' && blob[seq2_off+3] == 'S'));
+
+    if (!trailer_ok) {
+        int scan = -1;
+        for (int i = 0; i + 4 <= sz; i++)
+            if (blob[i]=='p' && blob[i+1]=='B' && blob[i+2]=='A' && blob[i+3]=='V') { scan = i; break; }
+        if (scan <= 0) { fprintf(stderr, "[bgm] %s%02X.BGM: kein pBAV\n", name, slot); free(blob); return -1; }
+        fprintf(stderr, "[bgm] %s%02X.BGM: Trailer unplausibel (vh=%u vb=%u seq2=%u sz=%d)"
+                        " — Rueckfall auf pBAV-Suche @%d\n", name, slot, vh_off, vb_off, seq2_off, sz, scan);
+        vh_off = (uint32_t)scan; seq1_len = (uint32_t)scan; seq2_off = 0;
+        vb_off = 0;                                  /* unten aus dem VH-Kopf nachgezogen */
+    }
 
     re15_vab_t probe;
-    if (re15_vab_parse(blob + vab_off, (size_t)(sz - vab_off), &probe) != 0) {
+    size_t vh_span = (vb_off > vh_off) ? (size_t)(vb_off - vh_off) : (size_t)(sz - (int)vh_off);
+    if (re15_vab_parse(blob + vh_off, vh_span, &probe) != 0) {
         fprintf(stderr, "[bgm] %s%02X.BGM: VAB-Kopf unlesbar\n", name, slot); free(blob); return -1;
     }
-    int vh_sz = (int)probe.file_size - probe.vb_total_bytes;      /* VH-Anteil des Bank-Blobs */
-    if (vh_sz <= 0 || vab_off + vh_sz > sz) vh_sz = sz - vab_off; /* defensiv: alles als VH werten */
-    const uint8_t *vh  = blob + vab_off;
-    const uint8_t *vb  = blob + vab_off + vh_sz;
-    int            vbs = sz - vab_off - vh_sz;
+    if (vb_off == 0) {                               /* nur im Rueckfall: alte Rechnung */
+        int vh_sz = (int)probe.file_size - probe.vb_total_bytes;
+        if (vh_sz <= 0 || (int)vh_off + vh_sz > sz) vh_sz = sz - (int)vh_off;
+        vb_off = vh_off + (uint32_t)vh_sz;
+    }
 
-    int rc = re15_ss_load(s, vh, vh_sz, vb, vbs, blob, vab_off);
+    /* SsVabTransBody uebertraegt genau die Summe der VAG-Groessen (SsVabOpenHead legt sie in
+     * DAT_800bbda8[vabid] ab) — nicht "bis Dateiende": dahinter liegt der Trailer. */
+    int vbs = probe.vb_total_bytes;
+    if (vbs <= 0 || (int)vb_off + vbs > sz) vbs = sz - (int)vb_off;
+
+    /* SEQ #2 des SUB-Containers fuer den Aufrufer sichern (FUN_80044774 oeffnet BEIDE). */
+    free(s_sub_seq2); s_sub_seq2 = NULL; s_sub_seq2_len = 0;
+    if (is_sub && seq2_off > 0 && vh_off > seq2_off) {
+        int len2 = (int)(vh_off - seq2_off);
+        uint8_t *c2 = (uint8_t *)malloc((size_t)len2);
+        if (c2) { memcpy(c2, blob + seq2_off, (size_t)len2); s_sub_seq2 = c2; s_sub_seq2_len = len2; }
+    }
+
+    int rc = re15_ss_load(s, blob + vh_off, (int)vh_span, blob + vb_off, vbs, blob, (int)seq1_len);
     if (rc == 0) { s->mvol = 0x1a00; s->mvol_l = 0x1a00; s->mvol_r = 0x1a00; }
     else fprintf(stderr, "[bgm] %s%02X.BGM: ss_load fehlgeschlagen\n", name, slot);
     free(blob);   /* VAGs dekodiert + SEQ kopiert */
@@ -1650,32 +1725,27 @@ static void re15_bgm_play_room(int stage, int room) {
          * its master vol on PLAY/STOP so resumes are seamless (no restart pop). */
         s_ss_sub.mvol = s_ss_sub.mvol_l = s_ss_sub.mvol_r = 0;
     }
-    /* SUB SEQ1 — the bank's SECOND sequence, a real third SsSeq handle (byte-true FUN_80044774
-     * opens BOTH: SEQ0 @0x8004494c + SEQ1 @0x8004498c at seq_base + *(file_end-8); the SCD 0x54
-     * slot 2 addresses it — audit wf_1db9c802 BGM-SUB-SECOND-SEQ). The extracted SUB .seq blob
-     * contains both back-to-back; locate the second pQES and open it sharing the SUB VAB
-     * (tone_src). Starts MUTED like SEQ0 (audible only via the 0x54 op). */
+    /* SUB SEQ1 — die ZWEITE Sequenz des Containers, ein echtes drittes SsSeq-Handle.
+     * FUN_80044774 @0x80044774 oeffnet BEIDE: SEQ#1 @0 und SEQ#2 @ u32[size-8]
+     * (SsSeqOpen(&DAT_801eed00, ..) bzw. SsSeqOpen(&DAT_801eed00 + iVar3, ..), je gefolgt von
+     * SsSeqSetVol(.,0,0) + SsSeqPlay). Der SCD-0x54-Slot 2 adressiert sie.
+     * Die Grenze kommt jetzt aus dem Trailer (s_sub_seq2, gesetzt in re15_bgm_load_track) —
+     * die alte pQES-Suche im SEQ-Blob konnte auf ein Datenbyte-Muster treffen.
+     * Teilt sich die SUB-VAB (tone_src) und startet STUMM wie SEQ#1 (hoerbar nur ueber 0x54). */
     s_ss_sub2.playing = 0;
-    if (sub_ok && s_ss_sub.seq) {
-        for (int off = SS_SEQ_HDR; off + SS_SEQ_HDR < s_ss_sub.seq_len; off++) {
-            if (s_ss_sub.seq[off] == 'p' && s_ss_sub.seq[off+1] == 'Q' &&
-                s_ss_sub.seq[off+2] == 'E' && s_ss_sub.seq[off+3] == 'S') {
-                int len2 = s_ss_sub.seq_len - off;
-                uint8_t *sc = (uint8_t *)malloc((size_t)len2);
-                if (sc) {
-                    memcpy(sc, s_ss_sub.seq + off, (size_t)len2);
-                    free((void *)(uintptr_t)s_ss_sub2.seq);
-                    s_ss_sub2.seq = sc; s_ss_sub2.seq_len = len2;
-                    s_ss_sub2.ppqn     = (sc[8] << 8) | sc[9];
-                    s_ss_sub2.tempo_us = (uint32_t)((sc[10] << 16) | (sc[11] << 8) | sc[12]);
-                    if (s_ss_sub2.ppqn <= 0)     s_ss_sub2.ppqn = 48;
-                    if (s_ss_sub2.tempo_us == 0) s_ss_sub2.tempo_us = 500000;
-                    s_ss_sub2.vab_ok = 0; s_ss_sub2.tone_src = &s_ss_sub; s_ss_sub2.vab_id = 6;
-                    ss_start(&s_ss_sub2, 1);
-                    s_ss_sub2.mvol = s_ss_sub2.mvol_l = s_ss_sub2.mvol_r = 0;
-                }
-                break;
-            }
+    if (sub_ok && s_sub_seq2 && s_sub_seq2_len > SS_SEQ_HDR) {
+        uint8_t *sc = (uint8_t *)malloc((size_t)s_sub_seq2_len);
+        if (sc) {
+            memcpy(sc, s_sub_seq2, (size_t)s_sub_seq2_len);
+            free((void *)(uintptr_t)s_ss_sub2.seq);
+            s_ss_sub2.seq = sc; s_ss_sub2.seq_len = s_sub_seq2_len;
+            s_ss_sub2.ppqn     = (sc[8] << 8) | sc[9];
+            s_ss_sub2.tempo_us = (uint32_t)((sc[10] << 16) | (sc[11] << 8) | sc[12]);
+            if (s_ss_sub2.ppqn <= 0)     s_ss_sub2.ppqn = 48;
+            if (s_ss_sub2.tempo_us == 0) s_ss_sub2.tempo_us = 500000;
+            s_ss_sub2.vab_ok = 0; s_ss_sub2.tone_src = &s_ss_sub; s_ss_sub2.vab_id = 6;
+            ss_start(&s_ss_sub2, 1);
+            s_ss_sub2.mvol = s_ss_sub2.mvol_l = s_ss_sub2.mvol_r = 0;
         }
     }
     if (s_amb.pcm) s_amb.active = 1;

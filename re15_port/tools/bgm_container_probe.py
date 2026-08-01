@@ -79,6 +79,26 @@ def probe(path):
     berechnet = vh_off + vh_calc
     print("  >> ORIGINAL VB-Anfang = %d   |   berechnet (vh+vh_size) = %d   |   Differenz = %d" %
           (vb_off, berechnet, vb_off - berechnet))
+
+    # Gegenprobe ueber die ADPCM-Struktur selbst: in einem 16-Byte-Block ist Byte[1] das
+    # Flag-Byte (gueltig 0..7) und die unteren 4 Bit von Byte[0] der Shift (gueltig 0..12).
+    # Liegt die Basis richtig, ist KEIN Block ungueltig; 4 Byte daneben wird Datenmitte als
+    # Kopf gelesen und die Werte sind faktisch zufaellig.
+    def invalid_blocks(base):
+        n_bad = 0
+        for o in range(base, base + sum(sizes), 16):
+            if o + 16 > n:
+                return -1
+            if d[o + 1] > 7 or (d[o] & 0x0F) > 12:
+                n_bad += 1
+        return n_bad
+
+    total_blocks = sum(sizes) // 16
+    bad_now, bad_old = invalid_blocks(vb_off), invalid_blocks(berechnet)
+    print("  >> ungueltige ADPCM-Bloecke von %d:  Trailer-Basis = %d   |   alte Rechnung = %d" %
+          (total_blocks, bad_now, bad_old))
+    if bad_now:
+        ok = False
     return ok
 
 
