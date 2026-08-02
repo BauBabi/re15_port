@@ -149,6 +149,8 @@ Vollständig in [HANDOVER_2026-08-01.md](HANDOVER_2026-08-01.md) §1/§2b. Kernp
 
 | 2026-08-02 | **Verletzungs-Optik-RE (Nutzer-Request)**: byte-belegt — der Modell-Mechanismus ist ein KOSTÜM-Slot-System (`DAT_800aca5c` → Tabelle @0x80073f70, Reload nur beim Raumwechsel @0x80039750-8c); **kein HP/Condition-Input, im MZD-Build dormant** (Writer-Zensus geschlossen, 92 Savestates slot=0). Blutige TIM-Assets liegen unreferenziert. Sichtbares „Verletzt" = Injured-Anims + Inventar-Condition (beides im Port). NEUE echte Divergenzen: Slot-Mechanismus fehlt / Elza spielt in-game mit Leon-Modell / STPIC hardcoded (Q2-Blocker gelöst @0x800c01c4). Dossier `analysis/leon_injured_model.md`; PL01.PLD ergänzt | `02ed15eb` |
 
+| 2026-08-02 | **Verletzungs-Optik DYNAMISCH bewiesen** (HP-25-Patch + DuckStation-Capture): HP100 vs HP25 = NULL VRAM-/MD1-Differenz; Motion 2→**23 = Injured-Idle** — der „verletzte Leon" IST das Animations-Set, kein Modell/Textur-Wechsel. Scheinbefund Tile/CLUT war Waffen-Confounder. OFFEN: verletzter WALK (DS-Pad-Config, dann HP25-Geh-Capture) + Port-Live-Check der Injured-Idles (Sentinel 213); Elza-Bycatch: FUN_80024c30 gated auf `aca5c&4` = vermutlich Elza-Haar (Krähen-D7-Hinweis) | `c1f0064d` |
+
 Baseline nach der Session: **102/102 ctest grün.**
 
 ### Offene Punkte (oberste Zeile = nächster Schritt)
