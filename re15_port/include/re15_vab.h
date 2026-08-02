@@ -87,6 +87,22 @@ typedef struct {
  * (0x1000 = 1.0×). Replaces the hardcoded 22050 Hz. */
 uint16_t re15_vab_note2pitch(int midi_note, int center_note, int pitch_shift);
 
+/* EXAKTER note2pitch2-Port (RE_15_Quellcode_V2/note2pitch2.c; Disasm-Kern @0x80056b54-5c
+ * `lbu v0,0x5(v1); addu v0,a1,v0` — fine und shift werden ADDIERT, kein Vorzeichen-Delta):
+ *   s = (fine + shift) >> 3;  frac = s>15 ? s-16 : s;  carry = s>15;
+ *   sem = carry + note + 60 - center;  oct = sem/12 - 5;
+ *   pitch = DAT_80077520[(sem%12)*16 + frac];  oct<0 -> >>(-oct);  oct>=1 -> Overflow
+ *   (Original: VMANAGER_OBJ_1178; hier 0x3FFF-Ceiling, dokumentiert).
+ * Der SE-Pfad ruft SsUtKeyOnV(note=tone[+6], fine=tone[+5]) @0x8004522c — fine == shift.
+ * PSX-Pitch 0x1000 == 44100 Hz. (Dossier analysis/rolltor_sound.md D1, verify-korrigiert) */
+uint16_t re15_vab_note2pitch2(int note, int fine, int center, int shift);
+
+/* Layer-Resolver wie re15_edt_resolve_layers, zusaetzlich je Layer der Tone-Index
+ * (prog*RE15_VAB_TONES_PER_PROGRAM + tone) in out_tones (darf NULL sein) — fuer den
+ * byte-true Tone-Pitch/-Volume-Pfad (SsUtKeyOnV @0x8004522c: note/fine/vol aus dem Tone). */
+int re15_edt_resolve_layers_ex(const uint8_t *edt, const re15_vab_t *vab,
+                               int se_id, int *out_vags, int *out_tones, int max_out);
+
 /* Find the first tone in `program` whose [min_note,max_note] contains `note`.
  * Returns NULL if none / tones not loaded. */
 const re15_vab_tone_t *re15_vab_find_tone(const re15_vab_t *vab,

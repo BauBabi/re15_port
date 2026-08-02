@@ -72,6 +72,10 @@ typedef struct {
     int      pcm_len;      /* total int16 mono samples                   */
     int      pos;          /* current playback cursor (whole samples)    */
     int      subpos;       /* 0/1 — frame-half counter for 2× downsample */
+    uint32_t step_q16;     /* Q16 Abspielschritt pro 44100-Hz-Ausgabeframe: PSX-Pitch<<4
+                            * (SPU-Pitch 0x1000 == 44100 Hz; note2pitch2 @SsUtKeyOnV
+                            * @0x8004522c). 0 = Altverhalten 0x8000 (= konstant -12 HT). */
+    uint32_t pos_frac;     /* Q16-Restakkumulator des Cursors                            */
     int      active;       /* 1 = playing, 0 = free slot                 */
     int      volume_q15;   /* per-voice volume in 0..0x4000 (Q15)        */
 } active_sample_t;
@@ -307,14 +311,17 @@ static void audio_callback(void *userdata, Uint8 *stream, int len)
     /* For each active sample, mix into both output channels. Volume
      * scaling is Q15. Clip to int16 range.
      *
-     * Sample-rate match: PSX VAGs are typically 22050 Hz; SDL plays at
-     * 44100 Hz. Advance the source cursor every OTHER frame (subpos
-     * toggles) to halve effective playback rate — VAG sounds at its
-     * natural pitch instead of 2× fast. Phase 4.6.4+ will pull real
-     * per-sample rates from the VAB tone table for accurate pitch. */
+     * Sample-rate: jede Voice traegt ihren Q16-Schritt aus dem Tone-Pitch
+     * (SsUtKeyOnV @0x8004522c: note=tone[+6], fine=tone[+5] -> note2pitch2 ->
+     * SpuVmKeyOnNow; PSX-Pitch 0x1000 == 44100 Hz -> step = pitch<<4 bei
+     * 44100-Hz-Ausgabe). Der alte feste 2x-Downsample (= konstant Pitch 0x800,
+     * -12 HT) machte z.B. aus dem 2,5-s-Rolltor-Rumpeln (-39,4 HT, Tone
+     * note66/center107/shift105, ROOM1130 snd0 @0x1dd4) einen 0,47-s-Blip.
+     * (Dossier analysis/rolltor_sound.md D1, CONFIRMED) */
     for (int i = 0; i < MIXER_MAX_ACTIVE_SAMPLES; i++) {
         active_sample_t *s = &s_active[i];
         if (!s->active || s->pcm == NULL) continue;
+        uint32_t step = s->step_q16 ? s->step_q16 : 0x8000u;
 
         for (int f = 0; f < frames; f++) {
             if (s->pos >= s->pcm_len) {
@@ -332,8 +339,9 @@ static void audio_callback(void *userdata, Uint8 *stream, int len)
                 v = (v * rem) / MIXER_TAIL_FADE_SAMPLES;
             }
 
-            s->subpos ^= 1;
-            if (s->subpos == 0) s->pos++;   /* advance every other audio frame */
+            s->pos_frac += step;
+            s->pos      += (int)(s->pos_frac >> 16);
+            s->pos_frac &= 0xffffu;
 
             int32_t L = (int32_t)out[f * 2 + 0] + v;
             int32_t R = (int32_t)out[f * 2 + 1] + v;
@@ -541,18 +549,34 @@ static int load_room_se_vab_pc(void)
 /* Activate one mixer voice per resolved SE LAYER (byte-true FUN_80045024 @0x8004516c /
  * FUN_800453d0 @0x8004548c: EDT record byte3 bits 5-7 = extra consecutive tones keyed on with
  * the base tone — the handgun gunshot is TWO layered VAGs. audit wf_1db9c802 AUD-EDT-LAYER-B3HI.
- * Per-tone volume/pan stay the documented faithful-line deferral (flat 100 here). */
+ * PER-TONE PITCH + VOLUME (Dossier analysis/rolltor_sound.md D1/D2, CONFIRMED):
+ *  - Pitch: SsUtKeyOnV(voice, vabId, prog, tone, note=tone[+6], fine=tone[+5], voll, volr)
+ *    @0x8004522c (lbu 0x6(s1) @0x800451fc / lbu 0x5(s1) @0x80045210) -> note2pitch2 ->
+ *    SpuVmKeyOnNow(1, pitch). Exakter Algorithmus: re15_vab_note2pitch2 (fine+shift ADDIEREN).
+ *  - Volume non-positional: voll = volr = tone[+2] (LAB_800451dc lbu 0x2(s1) -> DAT_800b2824/26);
+ *    Positional-Pfad (flags!=0 -> FUN_80045a64-Panning @0x800451c0-cc) bleibt OFFEN (D3). */
 static void se_play_layers(const uint8_t *edt, const re15_vab_t *vab,
                            int16_t *const *decoded, const int *decoded_len, int se_id)
 {
-    int vags[8];
-    int n = re15_edt_resolve_layers(edt, vab, se_id, vags, 8);
+    int vags[8], tones[8];
+    int n = re15_edt_resolve_layers_ex(edt, vab, se_id, vags, tones, 8);
     if (n <= 0) return;
-    int vol = (100 * 0x4000 / 127) >> 1;
     SDL_LockAudioDevice(s_audio_dev);
     for (int k = 0; k < n; k++) {
         int vag = vags[k];
         if (vag < 0 || vag >= RE15_VAB_MAX_SAMPLES || !decoded[vag]) continue;
+        const re15_vab_tone_t *t = &vab->tones[tones[k]];
+        int vol = ((t->vol ? t->vol : 100) * 0x4000 / 127) >> 1;   /* tone[+2]; >>1 = Mixer-Headroom */
+        uint16_t pitch = re15_vab_note2pitch2(t->min_note, t->pitch_shift,
+                                              t->center_note, t->pitch_shift);
+        {   static int se_dbg = -1;
+            if (se_dbg < 0) se_dbg = getenv("RE15_SE_DEBUG") ? 1 : 0;
+            if (se_dbg)
+                fprintf(stderr, "[se] voice: se=%d layer=%d vag=%d note=%u fine=%u center=%u "
+                                "vol=%u pitch=0x%03x (%d Hz)\n",
+                        se_id, k, vag, t->min_note, t->pitch_shift, t->center_note,
+                        t->vol, pitch, (int)((44100u * pitch) >> 12));
+        }
         int slot = -1;
         for (int i = 0; i < MIXER_MAX_ACTIVE_SAMPLES; i++)
             if (!s_active[i].active) { slot = i; break; }
@@ -561,6 +585,8 @@ static void se_play_layers(const uint8_t *edt, const re15_vab_t *vab,
         s_active[slot].pcm_len    = decoded_len[vag];
         s_active[slot].pos        = 0;
         s_active[slot].subpos     = 0;
+        s_active[slot].step_q16   = (uint32_t)pitch << 4;   /* 0x1000 == 44100 Hz Ausgabe */
+        s_active[slot].pos_frac   = 0;
         s_active[slot].volume_q15 = vol;
         s_active[slot].active     = 1;
     }
@@ -738,6 +764,8 @@ static void play_sample_pc(int vag_index, int scd_volume)
     s_active[slot].pcm_len    = s_decoded_vag_len[vag_index];
     s_active[slot].pos        = 0;
     s_active[slot].subpos     = 0;
+    s_active[slot].step_q16   = 0;   /* Legacy-Pfad ohne Tone-Kontext -> 0x8000 (Altverhalten) */
+    s_active[slot].pos_frac   = 0;
     s_active[slot].volume_q15 = vol;
     s_active[slot].active     = 1;
     SDL_UnlockAudioDevice(s_audio_dev);
@@ -2206,8 +2234,15 @@ void re15_audio_footstep(int foot, int sound_type)
     int prog = s_foot_edt[st * 4 + 1] & 0x7f;
     int tone = s_foot_edt[st * 4 + 2] >> 4;
     int tvol = 0;
-    if (prog < RE15_VAB_PROGRAM_COUNT && tone < RE15_VAB_TONES_PER_PROGRAM)
-        tvol = s_foot_vab.tones[prog * RE15_VAB_TONES_PER_PROGRAM + tone].vol;
+    uint32_t step = 0;
+    if (prog < RE15_VAB_PROGRAM_COUNT && tone < RE15_VAB_TONES_PER_PROGRAM) {
+        const re15_vab_tone_t *t = &s_foot_vab.tones[prog * RE15_VAB_TONES_PER_PROGRAM + tone];
+        tvol = t->vol;
+        /* Tone-Pitch auch fuer Footsteps (derselbe SsUtKeyOnV-Pfad @0x8004522c; Dossier D1 —
+         * bisher klangen nur Tones mit note ~ center-12 zufaellig richtig). */
+        step = (uint32_t)re15_vab_note2pitch2(t->min_note, t->pitch_shift,
+                                              t->center_note, t->pitch_shift) << 4;
+    }
     if (!tvol) tvol = 100;
     int vol = (tvol * 0x4000 / 127) >> 1;
     if (vol > 0x4000) vol = 0x4000;
@@ -2222,6 +2257,8 @@ void re15_audio_footstep(int foot, int sound_type)
     s_active[slot].pcm_len    = s_foot_decoded_len[vag];
     s_active[slot].pos        = 0;
     s_active[slot].subpos     = 0;
+    s_active[slot].step_q16   = step;
+    s_active[slot].pos_frac   = 0;
     s_active[slot].volume_q15 = vol;
     s_active[slot].active     = 1;
     SDL_UnlockAudioDevice(s_audio_dev);

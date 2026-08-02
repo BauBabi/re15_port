@@ -72,7 +72,7 @@ guard DAT_800b21ef==−1; record from `*(DAT_800ac778+0x14)+se_index*4`; **posit
 
 | bank | loader | source | called |
 |---|---|---|---|
-| 0 resident | `FUN_800170e0` | in-RAM blob: memcpy `*DAT_801a1004` (VH) + SsVabTransBody `*DAT_801a1008` (VB) → `&DAT_801fdd00`. No CD I/O. Not a named SOUND/ file. | boot |
+| 0 resident | `FUN_800170e0` | in-RAM blob: memcpy `*DAT_801a1004` (VH) + SsVabTransBody `*DAT_801a1008` (VB) → `&DAT_801fdd00`. No CD I/O. **KORREKTUR 2026-08-02 (Dossier analysis/rolltor_sound.md D5): NICHT boot** — einziger Caller ist der Tür-Init `FUN_800161e0` @0x800162dc; Quelle = die 2 Tür-SEs aus DOOR00.DO2 (@0x8bc8, prog0/tone1+2). Game-weit von niemandem abgerufen (Zensus: 284/284 Se_on = bank 2; der EXE-Callsite @0x80018424 erzeugt via `or 0x010a0001` immer Bit 24 ≠ bank 0). | Tür-Init (DOOR00.DO2) |
 | 1 weapon | `FUN_80043d8c(weapon,vb_dst)` | equipped weapon's **ARMS** bank via CD file-id `FUN_80013b60` | `FUN_800314b0` @0x80031708 = `FUN_80043d8c(DAT_800aca5d, DAT_800ac77c)` at room-init |
 | 2/5 snd0/snd1 | RDT-resident | `*(DAT_800ac778+8)` / `+0x14` | RDT load |
 | 4 CORE | `FUN_800440c4(idx)` | **CORE** bank via CD file-id, SsVabOpenHeadSticky bank 4 size 0x38840 → `&DAT_801fbd00` | `FUN_800314b0` @0x800316e8 = `FUN_800440c4(DAT_800aca5c)` |
@@ -209,7 +209,7 @@ init, `0x02070001` (**snd0** idx7) at frame '#'(0x23), `0x04030001` (CORE idx3) 
    weapon **1** (6 dmg vs weapon 2's 24) — a distinct weapon-id discrepancy to verify (§3 note).
 3. **The aim/fire command FSM** (DAT_800aca59 tables @0x80073fb0/ff0; sub-switch DAT_800aca5a @0x80010b68;
    trigger latch DAT_800acae9; weapon-class dispatch @0x80074030) — not ported. Needed to fire the SE at the exact frame.
-4. **bank0 resident SE blob** (DAT_801a1000) — boot-resident region, not a named SOUND/ file.
+4. **bank0 SE blob** (DAT_801a1000) — KORREKTUR 2026-08-02: die DOOR00.DO2-Tür-SE-Bank, geladen ausschließlich im Tür-Init (`FUN_800161e0` @0x800162dc), NICHT boot-resident; im MZD-Build nie abgespielt (Dossier analysis/rolltor_sound.md D5).
 5. **bank4 CORE loader** (FUN_800440c4 → &DAT_801fbd00) — for heavy-weapon + scripted-death CORE SEs.
    (CORE00.**ESP** in the port is a different visual-fx subsystem — does not satisfy this.)
 6. **byte0 VAB-ID override + byte3 extra-tone layering + SsUtKeyOnV note/fine/pan** — beyond the current

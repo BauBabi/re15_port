@@ -20,7 +20,9 @@ int main(void)
         { 2, RE15_SE_BANK_SND0,   "2 RDT snd0" },
         { 3, RE15_SE_BANK_SND1,   "3 RDT snd1 (FUN_800453d0)" },
         { 4, RE15_SE_BANK_CORE,   "4 CORE @0x801fbd00" },
-        { 5, RE15_SE_BANK_SND1,   "5 RDT snd1" },
+        { 5, RE15_SE_BANK_SND0,   "5 RDT snd0 (caseD_5 @0x80045130: lw a0,0x8 @0x8004513c = snd0; "
+                                  "korrigiert 2026-08-02, Dossier analysis/rolltor_sound.md D6 — "
+                                  "die alte SND1-Erwartung war ohne Beleg)" },
     };
     for (int i = 0; i < 6; i++) {
         re15_se_bank_kind_t got = re15_audio_se_bank_kind(cases[i].bank);

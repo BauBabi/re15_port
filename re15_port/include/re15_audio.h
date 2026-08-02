@@ -128,7 +128,10 @@ void re15_audio_room_se_snd0(int se_id);
  *   2 -> SND0   (RDT snd0 bank -> re15_audio_room_se_snd0)
  *   3 -> SND1   (RDT snd1 SE bank, the FUN_800453d0 path -> re15_audio_room_se)
  *   4 -> CORE   (resident CORE @0x801fbd00 -> re15_audio_core_se)
- *   5 -> SND1   (RDT snd1 bank, shares snd1 with bank 3)
+ *   5 -> SND0   (caseD_5 @0x80045130 laedt DAT_800ac778 und liest `lw a0,0x8` @0x8004513c
+ *                = RDT snd0 — bank 5 == bank 2, NICHT snd1 (das ist caseD_3 mit +0x14).
+ *                Korrigiert 2026-08-02, Dossier analysis/rolltor_sound.md D6; z.B. der
+ *                EXE-Callsite FUN_80035538 case 5 = 0x0207xxxx gehoert auf snd0.)
  *   >=6 -> SKIP  (invalid: `sltiu v0,v1,0x6; beq v0,zero,ret` @0x80045094). */
 typedef enum {
     RE15_SE_BANK_SKIP = 0,
@@ -145,7 +148,7 @@ static inline re15_se_bank_kind_t re15_audio_se_bank_kind(unsigned bank)
         case 2:  return RE15_SE_BANK_SND0;
         case 3:  return RE15_SE_BANK_SND1;
         case 4:  return RE15_SE_BANK_CORE;
-        case 5:  return RE15_SE_BANK_SND1;
+        case 5:  return RE15_SE_BANK_SND0;   /* @0x8004513c lw a0,0x8 = snd0 (D6) */
         default: return RE15_SE_BANK_SKIP;   /* 0 (blob, not resident) + >=6 (invalid) */
     }
 }

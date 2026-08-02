@@ -1452,9 +1452,18 @@ static int op_end_switch(scd_thread_t *t)
 
 /* ----- Phase 4.4.3 audio opcodes ----------------------------------------- */
 
-/* 0x36 — Se_on (12 bytes). Layout per FUN_80041624 disasm:
- *   +1 bank, +2 sample_id, +3 volume, +4 pan, +5 extra,
- *   +6/+7 pos_x (s16), +8/+9 pos_y (s16), +10/+11 pos_z (s16) */
+/* 0x36 — Se_on (12 bytes). KORRIGIERTES Layout per LAB_80041624-Disasm
+ * (ghidra1_V2.txt:151737-151815; Dossier analysis/rolltor_sound.md D3, CONFIRMED):
+ *   +1 bank            (lbu a3,0x1)
+ *   +2/+3 id|FLAGS     (lh a0,0x2 — low byte = sample id, HIGH byte = FLAGS; das Packing an
+ *                       FUN_80045024 ist (bank<<24)|(id&0xff)<<16|(a0>>8) @0x80041718-34.
+ *                       flags != 0 -> Positional-Pfad FUN_80045a64 (@0x800451c0-cc) — OPEN)
+ *   +4/+5 Modus|Pool   (lh a1,0x4 — Ursprungs-Modus 0..5: Entity-Pool 0x800acc2c+idx*0x1f4
+ *                       bzw. Objekt-Pool 0x800b3f98+idx*0x94; Position = Ursprung + Offsets)
+ *   +6..+11 Offsets    (lhu, LE s16 x/y/z — ADDIERT auf den Ursprung)
+ * Die alte Deutung "+3 volume, +4 pan" war falsch (das RE15_SE_DEBUG-Log "vol=0 pan=1" zeigte
+ * in Wahrheit flags=0 und Ursprungs-Modus 1). Se_on hat KEINE Volume-/Pan-Operanden — Volume
+ * kommt aus dem Tone (+2), Pan aus dem Positional-Pfad. */
 static int op_se_on(scd_thread_t *t)
 {
     scd_audio_event_t evt = {0};
@@ -1462,11 +1471,12 @@ static int op_se_on(scd_thread_t *t)
     evt.bank      = t->pc[1];
     evt.sample_id = t->pc[2];
     if (getenv("RE15_SE_DEBUG"))
-        fprintf(stderr, "[se] SCD Se_on: bank=%u id=%u vol=%u pan=%u\n",
-                t->pc[1], t->pc[2], t->pc[3], t->pc[4]);
-    evt.volume    = t->pc[3];
-    evt.pan       = t->pc[4];
-    evt.raw_w0    = (uint16_t)t->pc[5];
+        fprintf(stderr, "[se] SCD Se_on: bank=%u id=%u flags=%u origin=%u/%u\n",
+                t->pc[1], t->pc[2], t->pc[3], t->pc[4], t->pc[5]);
+    evt.volume    = 0;                       /* kein Volume-Operand (s.o.) — Tone[+2] entscheidet */
+    evt.pan       = 0;                       /* kein Pan-Operand — Positional-Pfad (OPEN)        */
+    evt.raw_w0    = (uint16_t)((t->pc[3] << 8) | t->pc[4]);   /* FLAGS | Ursprungs-Modus */
+    evt.raw_w1    = (uint16_t)t->pc[5];                       /* Pool-Index              */
     /* Positional cues = LITTLE-ENDIAN s16 world coords (sound-source X,Y,Z,
      * offset from a listener origin). Verified vs PSX handler FUN_80041624:
      * +6/+8/+10 are each read with `lhu` (R3000 LE), no byte-swap, then passed

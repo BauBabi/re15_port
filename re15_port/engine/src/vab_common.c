@@ -206,8 +206,8 @@ int re15_footstep_vag(const uint8_t *edt, const re15_vab_t *vab, int sound_type)
  * record byte3 bits 5-7 = extra consecutive tones layered onto the base tone. ALL 24 ARMS banks
  * layer record 0 (the gunshot, byte3 0x30/0x36/0x20 = 1 extra), plus room-SE records (ROOM1170
  * snd0 rec 10) and CORE10-13 rec 0. [audit wf_1db9c802 AUD-EDT-LAYER-B3HI] */
-int re15_edt_resolve_layers(const uint8_t *edt, const re15_vab_t *vab,
-                            int se_id, int *out_vags, int max_out)
+int re15_edt_resolve_layers_ex(const uint8_t *edt, const re15_vab_t *vab,
+                               int se_id, int *out_vags, int *out_tones, int max_out)
 {
     if (edt == NULL || vab == NULL || out_vags == NULL || max_out <= 0) return 0;
     if (se_id < 0) return 0;
@@ -225,11 +225,19 @@ int re15_edt_resolve_layers(const uint8_t *edt, const re15_vab_t *vab,
     for (int k = 0; k <= extra && n < max_out; k++) {
         int tone = base_tone + k;                 /* consecutive tones (decompile lines 119-141) */
         if (tone >= RE15_VAB_TONES_PER_PROGRAM) break;
-        int vag1 = vab->tones[prog * RE15_VAB_TONES_PER_PROGRAM + tone].vag_index;
+        int tidx = prog * RE15_VAB_TONES_PER_PROGRAM + tone;
+        int vag1 = vab->tones[tidx].vag_index;
         if (vag1 <= 0 || vag1 > vab->vag_count) break;   /* empty tone slot ends the stack */
+        if (out_tones) out_tones[n] = tidx;
         out_vags[n++] = vag1 - 1;
     }
     return n;
+}
+
+int re15_edt_resolve_layers(const uint8_t *edt, const re15_vab_t *vab,
+                            int se_id, int *out_vags, int max_out)
+{
+    return re15_edt_resolve_layers_ex(edt, vab, se_id, out_vags, NULL, max_out);
 }
 
 /* PSX note2pitch LUT (DAT_80077520) — one octave of 2^(x/12) in Q12 (0x1000=1.0×),
@@ -248,6 +256,36 @@ static const uint16_t s_pitch_lut[12][16] = {
     { 0x1C82, 0x1C9C, 0x1CB7, 0x1CD1, 0x1CEC, 0x1D07, 0x1D22, 0x1D3D, 0x1D58, 0x1D73, 0x1D8E, 0x1DA9, 0x1DC5, 0x1DE0, 0x1DFC, 0x1E18 },
     { 0x1E34, 0x1E50, 0x1E6C, 0x1E88, 0x1EA4, 0x1EC1, 0x1EDD, 0x1EFA, 0x1F16, 0x1F33, 0x1F50, 0x1F6D, 0x1F8A, 0x1FA7, 0x1FC5, 0x1FE2 },
 };
+
+/* EXAKTER Port von note2pitch2 (RE_15_Quellcode_V2/note2pitch2.c, Zeile fuer Zeile):
+ *   uVar3 = ((fine & 0xffff) + shift) >> 3;          // tone[+5] wird zum fine-Argument ADDIERT
+ *                                                    //   (@0x80056b54-5c lbu 0x5; addu a1,v0)
+ *   sVar4 = uVar3; if (uVar3 > 15) sVar4 -= 16;      // EIN Abzug; carry ins Halbton
+ *   iVar2 = carry + note + 0x3c - center;            // Halbton-Offset (center = tone[+4])
+ *   iVar1 = iVar2/12 - 5;                            // Oktave (MIPS-div, trunc Richtung 0)
+ *   uVar3 = DAT_80077520[(iVar2 % 12)*16 + sVar4];   // 12x16 u16 (s_pitch_lut, byte-extrahiert)
+ *   iVar1 < 0  -> uVar3 >>= -iVar1;  iVar1 == 0 -> uVar3;  iVar1 >= 1 -> VMANAGER_OBJ_1178().
+ * Abweichungen vom Original, dokumentiert (nicht byte-erreichbar mit EDT-Byte-Daten):
+ *  - sem < 0 (center > note+60+carry): Original laese VOR der Tabelle (negativer Index) —
+ *    hier geclampt auf Index 0.
+ *  - oct >= 1: Original ruft den VMANAGER-Overflow — hier SPU-Ceiling 0x3FFF.
+ * Mit fine,shift <= 127 ist s <= 31 -> sVar4 immer in [0,15] (kein Zeilen-Ueberlauf moeglich).
+ * (Dossier analysis/rolltor_sound.md D1; verify-Korrektur: fine+shift ADDIEREN) */
+uint16_t re15_vab_note2pitch2(int note, int fine, int center, int shift)
+{
+    unsigned s    = ((unsigned)(fine & 0xffff) + (unsigned)(uint8_t)shift) >> 3;
+    int      frac = (int)s, carry = 0;
+    if (s > 15) { frac = (int)s - 16; carry = 1; }
+    int sem = carry + note + 0x3c - center;
+    int oct = sem / 12 - 5;
+    int idx = (sem % 12) * 16 + frac;
+    if (idx < 0)   idx = 0;                        /* sem<0: dokumentierte Klemme (s.o.) */
+    if (idx > 191) idx = 191;
+    uint32_t p = ((const uint16_t *)s_pitch_lut)[idx];
+    if (oct < 0)      p >>= (unsigned)(-oct) & 0x1f;
+    else if (oct >= 1) p = 0x3FFF;                 /* Original: VMANAGER_OBJ_1178 (Overflow) */
+    return (uint16_t)(p & 0xffff);
+}
 
 uint16_t re15_vab_note2pitch(int midi_note, int center_note, int pitch_shift)
 {
