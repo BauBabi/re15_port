@@ -166,3 +166,42 @@ Player-Select (`FUN_80101720`, TITLE.BIN) lädt per eigener Tabelle `@0x80102690
 2. **Wer nutzt TIM-Page 2 / CLUT-Zeile 2?** VRAM-Watch auf den Page-2-Bereich des Spieler-TIM-Slots beim Schaden/Tod. Kandidat: gar niemand (Altlast). Alternativ RE der „Blood-decal"-Spur aus `RE15_KNOWLEDGE.md §5.6` (Partikel 0x800A73B8, Sprite-State 0x800B25CC, „Apply-function not located") — das ist der wahrscheinlichere Träger des Live-Verletzt-Looks.
 3. **Slot-Bedeutung 8..15 absichern:** PL08/PL09/PL0A-0F-Nutzer finden (Story-NPC-Spawns? Debug-Menü „PL No."?). Nächster Schritt: DEBUG.BIN-Menü-Code nach Writes auf `DAT_800aca5c` jenseits der 4 bekannten scannen (DEBUG.BIN liest den Slot @0x800c00ac/0x800c01d0/0x800c4618/0x800c4730 — Reads; ein Debug-Menü-Write würde den 16-Slot-Raum erklären).
 4. **PL03/PL08/PL09-EMR-Deltas quantifizieren** (gleiche Clips, andere Bone-Längen?) — für byte-true NPC-Rendering, sobald diese Slots gebraucht werden.
+
+
+---
+
+## NACHTRAG 2026-08-02 (Session 2) — DYNAMISCHER GEGENBEWEIS: Es ist die ANIMATION
+
+Nutzer bestand darauf, den Wechsel im Original zu sehen -> Beweislage selbst erzeugt
+(re15_ss_patch.py: mzd_stage1_briefing.sav auf HP=25 gepatcht, DuckStation gefahren,
+Capture; Sonde/Ablauf im Scratchpad der Session, Ergebnisse hier):
+
+1. **HP 100 vs HP 25, gleiche Waffe (Messer W01), gleicher Raum — NULL VRAM-Differenz:**
+   Textur-Streifen (448..639, 256..511) identisch, alle 3 CLUT-Zeilen (480/481/482)
+   identisch, residente MD1 identisch (gleiche 255 `7840->7880`-Patches). Bei Danger
+   wechselt mid-room weder Modell noch Textur noch Palette.
+2. **Was wechselt: das Motion-Byte.** HP 100: motion=2. HP 25: **motion=23 = der
+   Injured-Idle-Clip** (PL00-Bank; Schwellen @0x800321a0 `slti 0x32` / @0x800322a4
+   `slti 0x1e`). Der sichtbare "verletzte Leon" des MZD-Builds IST die Verletzt-Pose/
+   -Animation (gebueckt, Arm) — was als "anderes Modell" wahrgenommen wird.
+3. **Frueherer Scheinbefund aufgeklaert:** Die in Session 2 zunaechst gemessenen
+   VRAM-Diffs (Face-/Hand-Tile px 200..255 + CLUT-Block 224..239) zwischen
+   `mzd_stage1_briefing` und `mzd_stage1_hit_effect` waren ein CONFOUNDER — die Saves
+   haben VERSCHIEDENE Waffen equipped (aca5d 0x01 vs 0x03); das Rect ist das bekannte
+   Waffen-Composite (PLW resident @0x801d7700; Datei-Offset-Beweis 0x5094/0x5348).
+   Nebenbefund: PL00W00/W01/W02 und W03/W04 sind BYTE-IDENTISCHE Disc-Duplikate
+   (file_id == weapon_id, Waffen teilen Art) — keine Zustands-Varianten.
+4. **Nebenbefund fuer die Kraehen-Kampagne:** FUN_80031c44 gated `FUN_80024c30` auf
+   `DAT_800aca5c & 4` (= Elza-Slots!) — der offene acc0c-Konsument D7 ist mit hoher
+   Wahrscheinlichkeit Elzas Haar-/Sekundaerphysik. (Noch zu verifizieren.)
+
+### Offen danach
+- **Verletzter WALK**: Bei den DuckStation-Fahrten registrierte der D-Pad-Hold nicht
+  (alle Captures zeigen Idle; DuckStation-Pad-Config pruefen — [[reai-v2-duckstation-config-update]]).
+  Naechster Schritt: Pad fixen, HP25 GEHEND capturen, Motion-Byte vs HP100-Walk diffen ->
+  belegt/widerlegt ein verletztes GEH-Set (Humpeln). Der Skript-Walker LAB_80030af0 hat
+  KEINEN Condition-Fork (Clip 5 fix); der Pad-Locomotion-Pfad (cmd-0 LAB_800318f8) ist
+  noch nicht auf Condition-Clips geprueft.
+- **Port-Gegenprobe**: feuert der Injured-Idle (Sentinels 213/214 -> PL00 22/23) im Port
+  LIVE und rendert er die richtige Pose? (Alte Sentinel-Kollision AIM_W==213 beachten,
+  [[reai-v2-aim-lower-land-hunch]].) Visuell per gdigrab bei RE15-Lauf mit HP<30.
