@@ -1,0 +1,4199 @@
+{
+  "exe_functions": [
+    "80010000",
+    "80010140",
+    "800104b0",
+    "800116f4",
+    "80011f50",
+    "800126c8",
+    "80012944",
+    "80012d60",
+    "8001306c",
+    "800130c4",
+    "80013114",
+    "8001311c",
+    "80013160",
+    "80013278",
+    "80013404",
+    "800134f0",
+    "80013a88",
+    "80013b60",
+    "80013c50",
+    "80013df0",
+    "80013f80",
+    "80013fdc",
+    "80014230",
+    "800142f4",
+    "80014324",
+    "80014368",
+    "8001443c",
+    "80014cc4",
+    "8001500c",
+    "80015850",
+    "80015a80",
+    "80015d84",
+    "800160c4",
+    "8001613c",
+    "800161e0",
+    "800164c8",
+    "80016518",
+    "800166c4",
+    "80016b54",
+    "80017048",
+    "800170e0",
+    "800171b4",
+    "800171f4",
+    "800174e4",
+    "80017fa4",
+    "80019354",
+    "8001945c",
+    "800194f8",
+    "80019700",
+    "800199d4",
+    "80019ca8",
+    "80019d50",
+    "80019e20",
+    "8001a4c0",
+    "8001a504",
+    "8001a50c",
+    "8001a6d4",
+    "8001a780",
+    "8001a7a8",
+    "8001a8f8",
+    "8001a9cc",
+    "8001aac4",
+    "8001ab9c",
+    "8001af20",
+    "8001af5c",
+    "8001b064",
+    "8001b3f8",
+    "8001b9b4",
+    "8001bafc",
+    "8001bf04",
+    "8001c2dc",
+    "8001c6e8",
+    "8001d600",
+    "8001db28",
+    "8001e1c8",
+    "8001e56c",
+    "8001e5b0",
+    "8001e8c8",
+    "8001e9ec",
+    "8001ef54",
+    "8001f024",
+    "8001f1e0",
+    "8001f220",
+    "8001f314",
+    "8001f3bc",
+    "8001f664",
+    "8001f8b4",
+    "8001fb94",
+    "8001ffd8",
+    "80020510",
+    "80020610",
+    "80020674",
+    "80020794",
+    "80020894",
+    "800209b8",
+    "800209ec",
+    "80020b04",
+    "80020f8c",
+    "8002134c",
+    "8002137c",
+    "80021634",
+    "800216ec",
+    "80021764",
+    "8002178c",
+    "800217b0",
+    "80021880",
+    "80021a0c",
+    "80021bbc",
+    "80021eb4",
+    "80022150",
+    "80022300",
+    "8002288c",
+    "80022da0",
+    "80022f0c",
+    "80023098",
+    "80023410",
+    "80023708",
+    "80023a58",
+    "80023e90",
+    "8002441c",
+    "800245d8",
+    "80024c30",
+    "80024e40",
+    "80025360",
+    "800253fc",
+    "800254a0",
+    "800256b0",
+    "80025940",
+    "80025a98",
+    "80025c00",
+    "800264e8",
+    "80026594",
+    "80026658",
+    "80026b30",
+    "80026be8",
+    "80026c34",
+    "80026ca8",
+    "80026dd4",
+    "80026e4c",
+    "80026e54",
+    "80026f48",
+    "80026f90",
+    "80027108",
+    "80027160",
+    "800271a8",
+    "80027368",
+    "80027488",
+    "800275f0",
+    "800276b0",
+    "80027724",
+    "80027780",
+    "80027828",
+    "800278bc",
+    "800279c8",
+    "80027e68",
+    "800280b4",
+    "80028134",
+    "8002877c",
+    "80028840",
+    "80028868",
+    "80028ec4",
+    "8002918c",
+    "80029214",
+    "8002939c",
+    "80029560",
+    "80029590",
+    "80029690",
+    "800297c8",
+    "800298b0",
+    "800299a4",
+    "80029a28",
+    "80029a98",
+    "80029ac8",
+    "80029afc",
+    "80029b48",
+    "80029ba4",
+    "80029bf8",
+    "80029c2c",
+    "80029cd8",
+    "80029e84",
+    "80029f40",
+    "8002a050",
+    "8002a16c",
+    "8002a1b8",
+    "8002a2a8",
+    "8002a630",
+    "8002a8d0",
+    "8002abec",
+    "8002ac38",
+    "8002ac84",
+    "8002acac",
+    "8002ad34",
+    "8002ad64",
+    "8002adb0",
+    "8002adf4",
+    "8002ae38",
+    "8002aec4",
+    "8002b498",
+    "8002b544",
+    "8002b5d0",
+    "8002b7e8",
+    "8002b898",
+    "8002b968",
+    "8002bc04",
+    "8002bd44",
+    "8002c18c",
+    "8002c444",
+    "8002cabc",
+    "8002cdf4",
+    "8002cfd4",
+    "8002d100",
+    "8002d1e8",
+    "8002d2c0",
+    "8002d3d8",
+    "8002d474",
+    "8002d7d8",
+    "8002da4c",
+    "8002dacc",
+    "8002dc48",
+    "8002dfb0",
+    "8002f3f0",
+    "8002f518",
+    "8002f600",
+    "8002f714",
+    "8002f7e8",
+    "8002f884",
+    "8002fb94",
+    "8002ffb8",
+    "8003014c",
+    "80030444",
+    "80030640",
+    "800314b0",
+    "80031c44",
+    "80035538",
+    "80036718",
+    "800369f8",
+    "80036b68",
+    "8003703c",
+    "80037250",
+    "80037358",
+    "8003790c",
+    "80037c1c",
+    "800390e0",
+    "80039270",
+    "800392d4",
+    "80039590",
+    "800396a8",
+    "800396fc",
+    "80039a30",
+    "80039b2c",
+    "80039c2c",
+    "80039ca0",
+    "8003a8e8",
+    "8003aea0",
+    "8003b068",
+    "8003b0a4",
+    "8003b558",
+    "8003b7f0",
+    "8003bc2c",
+    "8003bca8",
+    "8003d6a8",
+    "8003da78",
+    "8003dcc4",
+    "8003e64c",
+    "8003e9d4",
+    "8003ea3c",
+    "8003ea7c",
+    "8003ebf4",
+    "8003ec28",
+    "8003ecec",
+    "8003edbc",
+    "8003edec",
+    "8003ee3c",
+    "8003ef6c",
+    "8003f038",
+    "8003f0a0",
+    "80040140",
+    "8004116c",
+    "80041358",
+    "80041554",
+    "80042b64",
+    "80042bac",
+    "800436a8",
+    "800437d4",
+    "80043850",
+    "80043870",
+    "800438c8",
+    "80043958",
+    "80043a34",
+    "80043b80",
+    "80043c00",
+    "80043d8c",
+    "80043eac",
+    "80043fb0",
+    "800440c4",
+    "80044210",
+    "800443ec",
+    "800444b0",
+    "80044564",
+    "80044774",
+    "800449f4",
+    "80044ab8",
+    "80044da4",
+    "80044fec",
+    "80045024",
+    "800453d0",
+    "80045630",
+    "800458d4",
+    "80045a18",
+    "80045a64",
+    "80045d6c",
+    "800460b8",
+    "800467a8",
+    "8004694c",
+    "80046a1c",
+    "80046f68",
+    "80046fd8",
+    "800473f8",
+    "80047648",
+    "80048704",
+    "800487b0",
+    "80048904",
+    "80048a44",
+    "80048f28",
+    "800492b8",
+    "80049390",
+    "8004947c",
+    "80049a5c",
+    "8004a0cc",
+    "8004aa24",
+    "8004b33c",
+    "8004c058",
+    "8004c830",
+    "8004d4c4",
+    "8004d5f0",
+    "8004d96c",
+    "8004dadc",
+    "8004dc4c",
+    "8004df2c",
+    "8004df90",
+    "8004dfec",
+    "8004e054",
+    "8004e900",
+    "8004ea6c",
+    "8004eae4",
+    "8004eb70",
+    "8004ebdc",
+    "8004ed6c",
+    "8004edfc",
+    "8004ee38",
+    "8004ee60",
+    "8004ee78",
+    "8004ef90",
+    "8004efe4",
+    "8004f008",
+    "8004f090",
+    "8004f0b0",
+    "80052fd0",
+    "80053240",
+    "800534c4",
+    "800537e4",
+    "80053a8c",
+    "80053ca4",
+    "80053fc0",
+    "800542dc",
+    "8005a970",
+    "8005a99c",
+    "8005abf8",
+    "8005ad40",
+    "8005ad54",
+    "8005f87c",
+    "8005f89c",
+    "8005fb00",
+    "80060d8c",
+    "800614d0",
+    "80061fc0",
+    "80062108",
+    "80064768",
+    "8006549c",
+    "80066c30",
+    "80066d60",
+    "80067978",
+    "8006e170",
+    "8006e468",
+    "8006e4c8",
+    "8007d904"
+  ],
+  "named_functions": [
+    {
+      "name": "AddPrim",
+      "addr": "8006b538"
+    },
+    {
+      "name": "AddPrims",
+      "addr": "8006b574"
+    },
+    {
+      "name": "ApplyMatrix",
+      "addr": "800661c0"
+    },
+    {
+      "name": "ApplyMatrixLV",
+      "addr": "800672c8"
+    },
+    {
+      "name": "ApplyMatrixSV",
+      "addr": "80067a28"
+    },
+    {
+      "name": "ApplyRotMatrix",
+      "addr": "80067428"
+    },
+    {
+      "name": "AverageZ3",
+      "addr": "80066310"
+    },
+    {
+      "name": "AverageZ4",
+      "addr": "80066330"
+    },
+    {
+      "name": "BIOS_OBJ_14C0",
+      "addr": "800643c0"
+    },
+    {
+      "name": "BIOS_OBJ_164C",
+      "addr": "8006454c"
+    },
+    {
+      "name": "BIOS_OBJ_258",
+      "addr": "80063158"
+    },
+    {
+      "name": "BIOS_OBJ_358",
+      "addr": "80063258"
+    },
+    {
+      "name": "BIOS_OBJ_3A4",
+      "addr": "800632a4"
+    },
+    {
+      "name": "BIOS_OBJ_428",
+      "addr": "80063328"
+    },
+    {
+      "name": "BIOS_OBJ_4B0",
+      "addr": "800633b0"
+    },
+    {
+      "name": "BIOS_OBJ_560",
+      "addr": "80063460"
+    },
+    {
+      "name": "BIOS_OBJ_64",
+      "addr": "80062f64"
+    },
+    {
+      "name": "BIOS_OBJ_6A4",
+      "addr": "800635a4"
+    },
+    {
+      "name": "BIOS_OBJ_6D4",
+      "addr": "800635d4"
+    },
+    {
+      "name": "BIOS_OBJ_7CC",
+      "addr": "800636cc"
+    },
+    {
+      "name": "BIOS_OBJ_92C",
+      "addr": "8006382c"
+    },
+    {
+      "name": "BIOS_OBJ_95C",
+      "addr": "8006385c"
+    },
+    {
+      "name": "BIOS_OBJ_A94",
+      "addr": "80063994"
+    },
+    {
+      "name": "BIOS_OBJ_D88",
+      "addr": "80063c88"
+    },
+    {
+      "name": "BIOS_OBJ_DB8",
+      "addr": "80063cb8"
+    },
+    {
+      "name": "BIOS_OBJ_EDC",
+      "addr": "80063ddc"
+    },
+    {
+      "name": "CDREAD2_OBJ_50",
+      "addr": "80064810"
+    },
+    {
+      "name": "CDREAD_OBJ_114",
+      "addr": "800622b8"
+    },
+    {
+      "name": "CDREAD_OBJ_3DC",
+      "addr": "80062580"
+    },
+    {
+      "name": "CDREAD_OBJ_3E4",
+      "addr": "80062588"
+    },
+    {
+      "name": "CDREAD_OBJ_45C",
+      "addr": "80062600"
+    },
+    {
+      "name": "CDREAD_OBJ_468",
+      "addr": "8006260c"
+    },
+    {
+      "name": "CDREAD_OBJ_594",
+      "addr": "80062738"
+    },
+    {
+      "name": "CD_cw",
+      "addr": "800639c4"
+    },
+    {
+      "name": "CD_datasync",
+      "addr": "800642a4"
+    },
+    {
+      "name": "CD_flush",
+      "addr": "80063e94"
+    },
+    {
+      "name": "CD_getsector",
+      "addr": "80064410"
+    },
+    {
+      "name": "CD_init",
+      "addr": "800640b8"
+    },
+    {
+      "name": "CD_initintr",
+      "addr": "80064068"
+    },
+    {
+      "name": "CD_initvol",
+      "addr": "80063f74"
+    },
+    {
+      "name": "CD_ready",
+      "addr": "800636f8"
+    },
+    {
+      "name": "CD_set_test_parmnum",
+      "addr": "80064510"
+    },
+    {
+      "name": "CD_sync",
+      "addr": "80063478"
+    },
+    {
+      "name": "CD_vol",
+      "addr": "80063e0c"
+    },
+    {
+      "name": "COR_06_OBJ_A4",
+      "addr": "800659a0"
+    },
+    {
+      "name": "COUNTER_OBJ_170",
+      "addr": "8006e380"
+    },
+    {
+      "name": "COUNTER_OBJ_74",
+      "addr": "8006e284"
+    },
+    {
+      "name": "COUNTER_OBJ_98",
+      "addr": "8006e2a8"
+    },
+    {
+      "name": "COUNTER_OBJ_D0",
+      "addr": "8006e2e0"
+    },
+    {
+      "name": "CRES_OBJ_1E8",
+      "addr": "80061164"
+    },
+    {
+      "name": "CRES_OBJ_234",
+      "addr": "800611b0"
+    },
+    {
+      "name": "C_004_OBJ_DC",
+      "addr": "8006568c"
+    },
+    {
+      "name": "C_007_OBJ_B0",
+      "addr": "80065750"
+    },
+    {
+      "name": "C_011_OBJ_270",
+      "addr": "80064bac"
+    },
+    {
+      "name": "C_011_OBJ_3D0",
+      "addr": "80064d0c"
+    },
+    {
+      "name": "C_011_OBJ_7BC",
+      "addr": "800650f8"
+    },
+    {
+      "name": "C_011_OBJ_85C",
+      "addr": "80065198"
+    },
+    {
+      "name": "C_011_OBJ_900",
+      "addr": "8006523c"
+    },
+    {
+      "name": "C_011_OBJ_960",
+      "addr": "8006529c"
+    },
+    {
+      "name": "C_011_OBJ_A30",
+      "addr": "8006536c"
+    },
+    {
+      "name": "C_011_OBJ_A90",
+      "addr": "800653cc"
+    },
+    {
+      "name": "CatPrim",
+      "addr": "8006b5b0"
+    },
+    {
+      "name": "CdComstr",
+      "addr": "80062870"
+    },
+    {
+      "name": "CdControl",
+      "addr": "80062948"
+    },
+    {
+      "name": "CdControlB",
+      "addr": "80062bac"
+    },
+    {
+      "name": "CdControlF",
+      "addr": "80062a80"
+    },
+    {
+      "name": "CdDataCallback",
+      "addr": "80062d38"
+    },
+    {
+      "name": "CdDataSync",
+      "addr": "80062d5c"
+    },
+    {
+      "name": "CdFlush",
+      "addr": "80062838"
+    },
+    {
+      "name": "CdGetSector",
+      "addr": "80062d14"
+    },
+    {
+      "name": "CdInit",
+      "addr": "80064600"
+    },
+    {
+      "name": "CdIntToPos",
+      "addr": "80062d7c"
+    },
+    {
+      "name": "CdIntstr",
+      "addr": "800628a4"
+    },
+    {
+      "name": "CdLastCom",
+      "addr": "800627ac"
+    },
+    {
+      "name": "CdLastPos",
+      "addr": "800627bc"
+    },
+    {
+      "name": "CdMix",
+      "addr": "80062cf0"
+    },
+    {
+      "name": "CdMode",
+      "addr": "8006279c"
+    },
+    {
+      "name": "CdPosToInt",
+      "addr": "80062e80"
+    },
+    {
+      "name": "CdRead",
+      "addr": "800625a0"
+    },
+    {
+      "name": "CdRead2",
+      "addr": "800647c0"
+    },
+    {
+      "name": "CdReadCallback",
+      "addr": "80062774"
+    },
+    {
+      "name": "CdReadSync",
+      "addr": "800626a8"
+    },
+    {
+      "name": "CdReady",
+      "addr": "800628f8"
+    },
+    {
+      "name": "CdReadyCallback",
+      "addr": "80062930"
+    },
+    {
+      "name": "CdReset",
+      "addr": "800627cc"
+    },
+    {
+      "name": "CdSetDebug",
+      "addr": "80062858"
+    },
+    {
+      "name": "CdStatus",
+      "addr": "8006278c"
+    },
+    {
+      "name": "CdSync",
+      "addr": "800628d8"
+    },
+    {
+      "name": "CdSyncCallback",
+      "addr": "80062918"
+    },
+    {
+      "name": "ChangeClearPAD",
+      "addr": "8006e3d8"
+    },
+    {
+      "name": "ChangeClearRCnt",
+      "addr": "8006e478"
+    },
+    {
+      "name": "ChangeTh",
+      "addr": "8006e3c8"
+    },
+    {
+      "name": "CheckCallback",
+      "addr": "80061634"
+    },
+    {
+      "name": "ClearImage",
+      "addr": "80068bf4"
+    },
+    {
+      "name": "ClearOTag",
+      "addr": "80068e14"
+    },
+    {
+      "name": "ClearOTagR",
+      "addr": "80068ecc"
+    },
+    {
+      "name": "CloseTh",
+      "addr": "8006e388"
+    },
+    {
+      "name": "CompMatrix",
+      "addr": "80066d80"
+    },
+    {
+      "name": "DECRE_OBJ_1B4",
+      "addr": "80060ad4"
+    },
+    {
+      "name": "DECRE_OBJ_208",
+      "addr": "80060b28"
+    },
+    {
+      "name": "DIVGT3A_OBJ_40C",
+      "addr": "80067e94"
+    },
+    {
+      "name": "DMACallback",
+      "addr": "80061540"
+    },
+    {
+      "name": "DecDCTBufSize",
+      "addr": "8006d780"
+    },
+    {
+      "name": "DecDCTGetEnv",
+      "addr": "8006d658"
+    },
+    {
+      "name": "DecDCTPutEnv",
+      "addr": "8006d6e4"
+    },
+    {
+      "name": "DecDCTReset",
+      "addr": "8006d620"
+    },
+    {
+      "name": "DecDCTin",
+      "addr": "8006d78c"
+    },
+    {
+      "name": "DecDCTinCallback",
+      "addr": "8006d868"
+    },
+    {
+      "name": "DecDCTinSync",
+      "addr": "8006d828"
+    },
+    {
+      "name": "DecDCTout",
+      "addr": "8006d808"
+    },
+    {
+      "name": "DecDCToutCallback",
+      "addr": "8006d88c"
+    },
+    {
+      "name": "DecDCToutSync",
+      "addr": "8006d848"
+    },
+    {
+      "name": "DecDCTvlc",
+      "addr": "8006dd64"
+    },
+    {
+      "name": "DecDCTvlcSize",
+      "addr": "8006dd34"
+    },
+    {
+      "name": "DeliverEvent",
+      "addr": "8006e398"
+    },
+    {
+      "name": "DpqColor3",
+      "addr": "80066260"
+    },
+    {
+      "name": "DpqColorLight",
+      "addr": "80066238"
+    },
+    {
+      "name": "DrawOTag",
+      "addr": "80068fc4"
+    },
+    {
+      "name": "DrawOTagEnv",
+      "addr": "800690fc"
+    },
+    {
+      "name": "DrawPrim",
+      "addr": "80068f64"
+    },
+    {
+      "name": "DrawSync",
+      "addr": "80068a60"
+    },
+    {
+      "name": "DrawSyncCallback",
+      "addr": "80068968"
+    },
+    {
+      "name": "DumpClut",
+      "addr": "8006b4c0"
+    },
+    {
+      "name": "DumpDispEnv",
+      "addr": "8006bb10"
+    },
+    {
+      "name": "DumpDrawEnv",
+      "addr": "8006b990"
+    },
+    {
+      "name": "DumpTPage",
+      "addr": "8006b3f0"
+    },
+    {
+      "name": "EVENT_OBJ_7C",
+      "addr": "8006467c"
+    },
+    {
+      "name": "EXT_OBJ_234",
+      "addr": "8006d58c"
+    },
+    {
+      "name": "EXT_OBJ_A8",
+      "addr": "8006d400"
+    },
+    {
+      "name": "EXT_OBJ_AC",
+      "addr": "8006d404"
+    },
+    {
+      "name": "EnableEvent",
+      "addr": "8006e1d0"
+    },
+    {
+      "name": "FGO_01_OBJ_160",
+      "addr": "800681f8"
+    },
+    {
+      "name": "FGO_01_OBJ_64",
+      "addr": "800680fc"
+    },
+    {
+      "name": "FGO_01_OBJ_CC",
+      "addr": "80068164"
+    },
+    {
+      "name": "FGO_02_OBJ_160",
+      "addr": "80066830"
+    },
+    {
+      "name": "FGO_02_OBJ_68",
+      "addr": "80066738"
+    },
+    {
+      "name": "FGO_02_OBJ_CC",
+      "addr": "8006679c"
+    },
+    {
+      "name": "FGO_04_OBJ_64",
+      "addr": "800657c0"
+    },
+    {
+      "name": "FGO_05_OBJ_64",
+      "addr": "80065a34"
+    },
+    {
+      "name": "FGO_06_OBJ_64",
+      "addr": "80065bd4"
+    },
+    {
+      "name": "FlushCache",
+      "addr": "8006e4d8"
+    },
+    {
+      "name": "GEO_00_OBJ_2C",
+      "addr": "80068414"
+    },
+    {
+      "name": "GEO_00_OBJ_C4",
+      "addr": "800684ac"
+    },
+    {
+      "name": "GEO_01_OBJ_98",
+      "addr": "800683e0"
+    },
+    {
+      "name": "GPU_cw",
+      "addr": "8006e1a0"
+    },
+    {
+      "name": "GetClut",
+      "addr": "8006b3d8"
+    },
+    {
+      "name": "GetDispEnv",
+      "addr": "800696c0"
+    },
+    {
+      "name": "GetDrawEnv",
+      "addr": "800691d8"
+    },
+    {
+      "name": "GetGraphDebug",
+      "addr": "80068958"
+    },
+    {
+      "name": "GetGraphType",
+      "addr": "80068948"
+    },
+    {
+      "name": "GetIntrMask",
+      "addr": "80061644"
+    },
+    {
+      "name": "GetODE",
+      "addr": "800696f8"
+    },
+    {
+      "name": "GetRCnt",
+      "addr": "8006e2b0"
+    },
+    {
+      "name": "GetTPage",
+      "addr": "8006b310"
+    },
+    {
+      "name": "HookEntryInt",
+      "addr": "8006e3a8"
+    },
+    {
+      "name": "INTR_DMA_OBJ_274",
+      "addr": "80061e64"
+    },
+    {
+      "name": "INTR_OBJ_428",
+      "addr": "80061908"
+    },
+    {
+      "name": "INTR_OBJ_514",
+      "addr": "800619f4"
+    },
+    {
+      "name": "INTR_OBJ_6D0",
+      "addr": "80061bb0"
+    },
+    {
+      "name": "InitCARD",
+      "addr": "8006e130"
+    },
+    {
+      "name": "InitGeom",
+      "addr": "80066c40"
+    },
+    {
+      "name": "InitHeap",
+      "addr": "8006e3e8"
+    },
+    {
+      "name": "InterruptCallback",
+      "addr": "80061510"
+    },
+    {
+      "name": "Intpl",
+      "addr": "8006629c"
+    },
+    {
+      "name": "InvSquareRoot",
+      "addr": "80066990"
+    },
+    {
+      "name": "IsEndPrim",
+      "addr": "8006b51c"
+    },
+    {
+      "name": "KeyOnCheck",
+      "addr": "80058d10"
+    },
+    {
+      "name": "LIBPRESS_OBJ_19C",
+      "addr": "8006d7bc"
+    },
+    {
+      "name": "LIBPRESS_OBJ_1C8",
+      "addr": "8006d7e8"
+    },
+    {
+      "name": "LIBPRESS_OBJ_36C",
+      "addr": "8006d98c"
+    },
+    {
+      "name": "LIBPRESS_OBJ_37C",
+      "addr": "8006d99c"
+    },
+    {
+      "name": "LIBPRESS_OBJ_538",
+      "addr": "8006db58"
+    },
+    {
+      "name": "LIBPRESS_OBJ_5D0",
+      "addr": "8006dbf0"
+    },
+    {
+      "name": "LightColor",
+      "addr": "80066210"
+    },
+    {
+      "name": "LoadAverage0",
+      "addr": "80066490"
+    },
+    {
+      "name": "LoadAverage12",
+      "addr": "80066440"
+    },
+    {
+      "name": "LoadAverageByte",
+      "addr": "800665f0"
+    },
+    {
+      "name": "LoadAverageCol",
+      "addr": "80066650"
+    },
+    {
+      "name": "LoadAverageShort0",
+      "addr": "80066568"
+    },
+    {
+      "name": "LoadAverageShort12",
+      "addr": "800664e0"
+    },
+    {
+      "name": "LoadClut",
+      "addr": "8006d444"
+    },
+    {
+      "name": "LoadClut2",
+      "addr": "8006d4ac"
+    },
+    {
+      "name": "LoadImage",
+      "addr": "80068c88"
+    },
+    {
+      "name": "LoadTPage",
+      "addr": "8006d358"
+    },
+    {
+      "name": "Lzc",
+      "addr": "80066404"
+    },
+    {
+      "name": "MDEC_in",
+      "addr": "8006d9ac"
+    },
+    {
+      "name": "MDEC_in_sync",
+      "addr": "8006dad0"
+    },
+    {
+      "name": "MDEC_out",
+      "addr": "8006da40"
+    },
+    {
+      "name": "MDEC_out_sync",
+      "addr": "8006db68"
+    },
+    {
+      "name": "MDEC_reset",
+      "addr": "8006d8b0"
+    },
+    {
+      "name": "MSC02_OBJ_FC",
+      "addr": "80066a8c"
+    },
+    {
+      "name": "MargePrim",
+      "addr": "8006b958"
+    },
+    {
+      "name": "MatrixNormal",
+      "addr": "80066b48"
+    },
+    {
+      "name": "MoveImage",
+      "addr": "80068d50"
+    },
+    {
+      "name": "MulMatrix",
+      "addr": "80067f58"
+    },
+    {
+      "name": "MulMatrix0",
+      "addr": "80066ee0"
+    },
+    {
+      "name": "MulMatrix2",
+      "addr": "800684b4"
+    },
+    {
+      "name": "MulRotMatrix",
+      "addr": "800670d0"
+    },
+    {
+      "name": "MulRotMatrix0",
+      "addr": "80066fec"
+    },
+    {
+      "name": "NextPrim",
+      "addr": "8006b500"
+    },
+    {
+      "name": "OpenEvent",
+      "addr": "8006e428"
+    },
+    {
+      "name": "OpenTIM",
+      "addr": "8006bbbc"
+    },
+    {
+      "name": "OpenTMD",
+      "addr": "8006bc34"
+    },
+    {
+      "name": "OpenTh",
+      "addr": "8006e1c0"
+    },
+    {
+      "name": "OuterProduct0",
+      "addr": "800663ac"
+    },
+    {
+      "name": "OuterProduct12",
+      "addr": "80066354"
+    },
+    {
+      "name": "PAD_dr",
+      "addr": "8006e160"
+    },
+    {
+      "name": "PAD_init",
+      "addr": "8006e3b8"
+    },
+    {
+      "name": "PRIM_OBJ_19C",
+      "addr": "8006b4ac"
+    },
+    {
+      "name": "PRIM_OBJ_2FC",
+      "addr": "8006b60c"
+    },
+    {
+      "name": "PRIM_OBJ_324",
+      "addr": "8006b634"
+    },
+    {
+      "name": "PRIM_OBJ_5C0",
+      "addr": "8006b8d0"
+    },
+    {
+      "name": "PRIM_OBJ_678",
+      "addr": "8006b988"
+    },
+    {
+      "name": "PRIM_OBJ_7EC",
+      "addr": "8006bafc"
+    },
+    {
+      "name": "PRIM_OBJ_A4",
+      "addr": "8006b3b4"
+    },
+    {
+      "name": "PadInit",
+      "addr": "80061418"
+    },
+    {
+      "name": "PadRead",
+      "addr": "80061468"
+    },
+    {
+      "name": "PadStop",
+      "addr": "80061498"
+    },
+    {
+      "name": "PopMatrix",
+      "addr": "8006761c"
+    },
+    {
+      "name": "PushMatrix",
+      "addr": "8006757c"
+    },
+    {
+      "name": "PutDispEnv",
+      "addr": "80069210"
+    },
+    {
+      "name": "PutDrawEnv",
+      "addr": "80069038"
+    },
+    {
+      "name": "RATAN_OBJ_148",
+      "addr": "80065f28"
+    },
+    {
+      "name": "RATAN_OBJ_15C",
+      "addr": "80065f3c"
+    },
+    {
+      "name": "RATAN_OBJ_178",
+      "addr": "80065f58"
+    },
+    {
+      "name": "RATAN_OBJ_BC",
+      "addr": "80065e9c"
+    },
+    {
+      "name": "RCpolyGT3",
+      "addr": "80067a88"
+    },
+    {
+      "name": "RCpolyGT3A",
+      "addr": "80067a90"
+    },
+    {
+      "name": "ReadColorMatrix",
+      "addr": "8006774c"
+    },
+    {
+      "name": "ReadLightMatrix",
+      "addr": "80067704"
+    },
+    {
+      "name": "ReadRotMatrix",
+      "addr": "800676bc"
+    },
+    {
+      "name": "ReadTIM",
+      "addr": "8006bbcc"
+    },
+    {
+      "name": "ReadTMD",
+      "addr": "8006bc74"
+    },
+    {
+      "name": "ResetCallback",
+      "addr": "800614e0"
+    },
+    {
+      "name": "ResetEntryInt",
+      "addr": "8006e3f8"
+    },
+    {
+      "name": "ResetGraph",
+      "addr": "800685c4"
+    },
+    {
+      "name": "ResetRCnt",
+      "addr": "8006e350"
+    },
+    {
+      "name": "RestartCallback",
+      "addr": "80061604"
+    },
+    {
+      "name": "ReturnFromException",
+      "addr": "8006e4b8"
+    },
+    {
+      "name": "RotAverage4",
+      "addr": "80065d10"
+    },
+    {
+      "name": "RotAverageNclip3",
+      "addr": "80067998"
+    },
+    {
+      "name": "RotMatrix",
+      "addr": "80068098"
+    },
+    {
+      "name": "RotMatrixX",
+      "addr": "8006575c"
+    },
+    {
+      "name": "RotMatrixY",
+      "addr": "800659d0"
+    },
+    {
+      "name": "RotMatrixYXZ",
+      "addr": "800666d0"
+    },
+    {
+      "name": "RotMatrixZ",
+      "addr": "80065b70"
+    },
+    {
+      "name": "SEQINIT_OBJ_1D0",
+      "addr": "8005d3d4"
+    },
+    {
+      "name": "SEQINIT_OBJ_308",
+      "addr": "8005d50c"
+    },
+    {
+      "name": "SEQINIT_OBJ_314",
+      "addr": "8005d518"
+    },
+    {
+      "name": "SEQINIT_OBJ_3E0",
+      "addr": "8005d5e4"
+    },
+    {
+      "name": "SEQREAD_OBJ_1204",
+      "addr": "8005e7fc"
+    },
+    {
+      "name": "SEQREAD_OBJ_12B4",
+      "addr": "8005e8ac"
+    },
+    {
+      "name": "SEQREAD_OBJ_156C",
+      "addr": "8005eb64"
+    },
+    {
+      "name": "SEQREAD_OBJ_159C",
+      "addr": "8005eb94"
+    },
+    {
+      "name": "SEQREAD_OBJ_15A8",
+      "addr": "8005eba0"
+    },
+    {
+      "name": "SEQREAD_OBJ_1670",
+      "addr": "8005ec68"
+    },
+    {
+      "name": "SEQREAD_OBJ_1678",
+      "addr": "8005ec70"
+    },
+    {
+      "name": "SEQREAD_OBJ_16E8",
+      "addr": "8005ece0"
+    },
+    {
+      "name": "SEQREAD_OBJ_16F0",
+      "addr": "8005ece8"
+    },
+    {
+      "name": "SEQREAD_OBJ_16F4",
+      "addr": "8005ecec"
+    },
+    {
+      "name": "SEQREAD_OBJ_171C",
+      "addr": "8005ed14"
+    },
+    {
+      "name": "SEQREAD_OBJ_175C",
+      "addr": "8005ed54"
+    },
+    {
+      "name": "SEQREAD_OBJ_1768",
+      "addr": "8005ed60"
+    },
+    {
+      "name": "SEQREAD_OBJ_1778",
+      "addr": "8005ed70"
+    },
+    {
+      "name": "SEQREAD_OBJ_1780",
+      "addr": "8005ed78"
+    },
+    {
+      "name": "SEQREAD_OBJ_1788",
+      "addr": "8005ed80"
+    },
+    {
+      "name": "SEQREAD_OBJ_1794",
+      "addr": "8005ed8c"
+    },
+    {
+      "name": "SEQREAD_OBJ_17A4",
+      "addr": "8005ed9c"
+    },
+    {
+      "name": "SEQREAD_OBJ_17B0",
+      "addr": "8005eda8"
+    },
+    {
+      "name": "SEQREAD_OBJ_17C0",
+      "addr": "8005edb8"
+    },
+    {
+      "name": "SEQREAD_OBJ_17F4",
+      "addr": "8005edec"
+    },
+    {
+      "name": "SEQREAD_OBJ_17FC",
+      "addr": "8005edf4"
+    },
+    {
+      "name": "SEQREAD_OBJ_1800",
+      "addr": "8005edf8"
+    },
+    {
+      "name": "SEQREAD_OBJ_183C",
+      "addr": "8005ee34"
+    },
+    {
+      "name": "SEQREAD_OBJ_184C",
+      "addr": "8005ee44"
+    },
+    {
+      "name": "SEQREAD_OBJ_1860",
+      "addr": "8005ee58"
+    },
+    {
+      "name": "SEQREAD_OBJ_1870",
+      "addr": "8005ee68"
+    },
+    {
+      "name": "SEQREAD_OBJ_1878",
+      "addr": "8005ee70"
+    },
+    {
+      "name": "SEQREAD_OBJ_1B2C",
+      "addr": "8005f124"
+    },
+    {
+      "name": "SEQREAD_OBJ_1C84",
+      "addr": "8005f27c"
+    },
+    {
+      "name": "SEQREAD_OBJ_1D50",
+      "addr": "8005f348"
+    },
+    {
+      "name": "SEQREAD_OBJ_338",
+      "addr": "8005d930"
+    },
+    {
+      "name": "SEQREAD_OBJ_390",
+      "addr": "8005d988"
+    },
+    {
+      "name": "SEQREAD_OBJ_398",
+      "addr": "8005d990"
+    },
+    {
+      "name": "SEQREAD_OBJ_494",
+      "addr": "8005da8c"
+    },
+    {
+      "name": "SEQREAD_OBJ_5C8",
+      "addr": "8005dbc0"
+    },
+    {
+      "name": "SEQREAD_OBJ_5E0",
+      "addr": "8005dbd8"
+    },
+    {
+      "name": "SEQREAD_OBJ_600",
+      "addr": "8005dbf8"
+    },
+    {
+      "name": "SEQREAD_OBJ_650",
+      "addr": "8005dc48"
+    },
+    {
+      "name": "SEQREAD_OBJ_69C",
+      "addr": "8005dc94"
+    },
+    {
+      "name": "SEQREAD_OBJ_6F8",
+      "addr": "8005dcf0"
+    },
+    {
+      "name": "SEQREAD_OBJ_724",
+      "addr": "8005dd1c"
+    },
+    {
+      "name": "SEQREAD_OBJ_744",
+      "addr": "8005dd3c"
+    },
+    {
+      "name": "SEQREAD_OBJ_758",
+      "addr": "8005dd50"
+    },
+    {
+      "name": "SEQREAD_OBJ_778",
+      "addr": "8005dd70"
+    },
+    {
+      "name": "SEQREAD_OBJ_798",
+      "addr": "8005dd90"
+    },
+    {
+      "name": "SEQREAD_OBJ_7B8",
+      "addr": "8005ddb0"
+    },
+    {
+      "name": "SEQREAD_OBJ_7D8",
+      "addr": "8005ddd0"
+    },
+    {
+      "name": "SEQREAD_OBJ_7F4",
+      "addr": "8005ddec"
+    },
+    {
+      "name": "SEQREAD_OBJ_7F8",
+      "addr": "8005ddf0"
+    },
+    {
+      "name": "SEQREAD_OBJ_804",
+      "addr": "8005ddfc"
+    },
+    {
+      "name": "SEQREAD_OBJ_810",
+      "addr": "8005de08"
+    },
+    {
+      "name": "SEQREAD_OBJ_B98",
+      "addr": "8005e190"
+    },
+    {
+      "name": "SEQREAD_OBJ_D84",
+      "addr": "8005e37c"
+    },
+    {
+      "name": "SEQREAD_OBJ_EC",
+      "addr": "8005d6e4"
+    },
+    {
+      "name": "SEQREAD_OBJ_F0",
+      "addr": "8005d6e8"
+    },
+    {
+      "name": "SEQREAD_OBJ_F10",
+      "addr": "8005e508"
+    },
+    {
+      "name": "SEQREAD_OBJ_F2C",
+      "addr": "8005e524"
+    },
+    {
+      "name": "SEQREAD_OBJ_F38",
+      "addr": "8005e530"
+    },
+    {
+      "name": "SPU_OBJ_1034",
+      "addr": "80055850"
+    },
+    {
+      "name": "SPU_OBJ_10D8",
+      "addr": "800558f4"
+    },
+    {
+      "name": "SPU_OBJ_1114",
+      "addr": "80055930"
+    },
+    {
+      "name": "SPU_OBJ_1CC",
+      "addr": "800549e8"
+    },
+    {
+      "name": "SPU_OBJ_314",
+      "addr": "80054b30"
+    },
+    {
+      "name": "SPU_OBJ_360",
+      "addr": "80054b7c"
+    },
+    {
+      "name": "SPU_OBJ_3AC",
+      "addr": "80054bc8"
+    },
+    {
+      "name": "SPU_OBJ_3F8",
+      "addr": "80054c14"
+    },
+    {
+      "name": "SPU_OBJ_470",
+      "addr": "80054c8c"
+    },
+    {
+      "name": "SPU_OBJ_4BC",
+      "addr": "80054cd8"
+    },
+    {
+      "name": "SPU_OBJ_508",
+      "addr": "80054d24"
+    },
+    {
+      "name": "SPU_OBJ_554",
+      "addr": "80054d70"
+    },
+    {
+      "name": "SPU_OBJ_58",
+      "addr": "80054874"
+    },
+    {
+      "name": "SPU_OBJ_6DC",
+      "addr": "80054ef8"
+    },
+    {
+      "name": "SPU_OBJ_778",
+      "addr": "80054f94"
+    },
+    {
+      "name": "SPU_OBJ_7B0",
+      "addr": "80054fcc"
+    },
+    {
+      "name": "SPU_OBJ_7FC",
+      "addr": "80055018"
+    },
+    {
+      "name": "SPU_OBJ_8B8",
+      "addr": "800550d4"
+    },
+    {
+      "name": "SPU_OBJ_92C",
+      "addr": "80055148"
+    },
+    {
+      "name": "SPU_OBJ_978",
+      "addr": "80055194"
+    },
+    {
+      "name": "SPU_OBJ_9C4",
+      "addr": "800551e0"
+    },
+    {
+      "name": "SPU_OBJ_A6C",
+      "addr": "80055288"
+    },
+    {
+      "name": "SPU_OBJ_B24",
+      "addr": "80055340"
+    },
+    {
+      "name": "SPU_OBJ_B90",
+      "addr": "800553ac"
+    },
+    {
+      "name": "SPU_OBJ_BDC",
+      "addr": "800553f8"
+    },
+    {
+      "name": "SPU_OBJ_E64",
+      "addr": "80055680"
+    },
+    {
+      "name": "SPU_OBJ_EFC",
+      "addr": "80055718"
+    },
+    {
+      "name": "SPU_OBJ_F74",
+      "addr": "80055790"
+    },
+    {
+      "name": "SSPLAY_OBJ_F0",
+      "addr": "80060020"
+    },
+    {
+      "name": "SSSTART_OBJ_184",
+      "addr": "8005bb54"
+    },
+    {
+      "name": "SSSTART_OBJ_18C",
+      "addr": "8005bb5c"
+    },
+    {
+      "name": "SSSTART_OBJ_240",
+      "addr": "8005bc10"
+    },
+    {
+      "name": "SSSTART_OBJ_248",
+      "addr": "8005bc18"
+    },
+    {
+      "name": "SSSTART_OBJ_250",
+      "addr": "8005bc20"
+    },
+    {
+      "name": "SSSTART_OBJ_328",
+      "addr": "8005bcf8"
+    },
+    {
+      "name": "SSSTART_OBJ_E0",
+      "addr": "8005bab0"
+    },
+    {
+      "name": "SSTICK_OBJ_100",
+      "addr": "8005be08"
+    },
+    {
+      "name": "SSTICK_OBJ_118",
+      "addr": "8005be20"
+    },
+    {
+      "name": "SSTICK_OBJ_140",
+      "addr": "8005be48"
+    },
+    {
+      "name": "SSTICK_OBJ_158",
+      "addr": "8005be60"
+    },
+    {
+      "name": "SSTICK_OBJ_50",
+      "addr": "8005bd58"
+    },
+    {
+      "name": "SSTICK_OBJ_88",
+      "addr": "8005bd90"
+    },
+    {
+      "name": "SSTICK_OBJ_B0",
+      "addr": "8005bdb8"
+    },
+    {
+      "name": "SSTICK_OBJ_D8",
+      "addr": "8005bde0"
+    },
+    {
+      "name": "SSTICK_OBJ_EC",
+      "addr": "8005bdf4"
+    },
+    {
+      "name": "SYS_OBJ_1088",
+      "addr": "8006964c"
+    },
+    {
+      "name": "SYS_OBJ_110",
+      "addr": "8006289c"
+    },
+    {
+      "name": "SYS_OBJ_140",
+      "addr": "80068704"
+    },
+    {
+      "name": "SYS_OBJ_144",
+      "addr": "800628d0"
+    },
+    {
+      "name": "SYS_OBJ_1454",
+      "addr": "80069a18"
+    },
+    {
+      "name": "SYS_OBJ_1570",
+      "addr": "80069b34"
+    },
+    {
+      "name": "SYS_OBJ_15E4",
+      "addr": "80069ba8"
+    },
+    {
+      "name": "SYS_OBJ_16A8",
+      "addr": "80069c6c"
+    },
+    {
+      "name": "SYS_OBJ_1774",
+      "addr": "80069d38"
+    },
+    {
+      "name": "SYS_OBJ_17BC",
+      "addr": "80069d80"
+    },
+    {
+      "name": "SYS_OBJ_1844",
+      "addr": "80069e08"
+    },
+    {
+      "name": "SYS_OBJ_189C",
+      "addr": "80069e60"
+    },
+    {
+      "name": "SYS_OBJ_1900",
+      "addr": "80069ec4"
+    },
+    {
+      "name": "SYS_OBJ_1904",
+      "addr": "80069ec8"
+    },
+    {
+      "name": "SYS_OBJ_1A68",
+      "addr": "8006a02c"
+    },
+    {
+      "name": "SYS_OBJ_1AAC",
+      "addr": "8006a070"
+    },
+    {
+      "name": "SYS_OBJ_1BF8",
+      "addr": "8006a1bc"
+    },
+    {
+      "name": "SYS_OBJ_1C94",
+      "addr": "8006a258"
+    },
+    {
+      "name": "SYS_OBJ_1CDC",
+      "addr": "8006a2a0"
+    },
+    {
+      "name": "SYS_OBJ_1E4",
+      "addr": "800687a8"
+    },
+    {
+      "name": "SYS_OBJ_1E50",
+      "addr": "8006a414"
+    },
+    {
+      "name": "SYS_OBJ_1EE4",
+      "addr": "8006a4a8"
+    },
+    {
+      "name": "SYS_OBJ_1F2C",
+      "addr": "8006a4f0"
+    },
+    {
+      "name": "SYS_OBJ_20F0",
+      "addr": "8006a6b4"
+    },
+    {
+      "name": "SYS_OBJ_228C",
+      "addr": "8006a850"
+    },
+    {
+      "name": "SYS_OBJ_23B4",
+      "addr": "8006a978"
+    },
+    {
+      "name": "SYS_OBJ_2470",
+      "addr": "8006aa34"
+    },
+    {
+      "name": "SYS_OBJ_2504",
+      "addr": "8006aac8"
+    },
+    {
+      "name": "SYS_OBJ_2924",
+      "addr": "8006aee8"
+    },
+    {
+      "name": "SYS_OBJ_297C",
+      "addr": "8006af40"
+    },
+    {
+      "name": "SYS_OBJ_2994",
+      "addr": "8006af58"
+    },
+    {
+      "name": "SYS_OBJ_2A90",
+      "addr": "8006b054"
+    },
+    {
+      "name": "SYS_OBJ_2C34",
+      "addr": "8006b1f8"
+    },
+    {
+      "name": "SYS_OBJ_2D18",
+      "addr": "8006b2dc"
+    },
+    {
+      "name": "SYS_OBJ_538",
+      "addr": "80062cc4"
+    },
+    {
+      "name": "SYS_OBJ_5E0",
+      "addr": "80068ba4"
+    },
+    {
+      "name": "SYS_OBJ_61C",
+      "addr": "80068be0"
+    },
+    {
+      "name": "SYS_OBJ_834",
+      "addr": "80068df8"
+    },
+    {
+      "name": "SYS_OBJ_98",
+      "addr": "80062824"
+    },
+    {
+      "name": "SYS_OBJ_CFC",
+      "addr": "800692c0"
+    },
+    {
+      "name": "SYS_OBJ_DE8",
+      "addr": "800693ac"
+    },
+    {
+      "name": "SYS_OBJ_E9C",
+      "addr": "80069460"
+    },
+    {
+      "name": "SYS_OBJ_EF8",
+      "addr": "800694bc"
+    },
+    {
+      "name": "S_CRWA_OBJ_100",
+      "addr": "80054698"
+    },
+    {
+      "name": "S_CRWA_OBJ_174",
+      "addr": "8005470c"
+    },
+    {
+      "name": "S_CRWA_OBJ_9C",
+      "addr": "80054634"
+    },
+    {
+      "name": "S_GKS_OBJ_2C",
+      "addr": "80054530"
+    },
+    {
+      "name": "S_GKS_OBJ_8C",
+      "addr": "80054590"
+    },
+    {
+      "name": "S_ITC_OBJ_88",
+      "addr": "80060250"
+    },
+    {
+      "name": "S_ITC_OBJ_90",
+      "addr": "80060258"
+    },
+    {
+      "name": "S_M_F_OBJ_64",
+      "addr": "80060d74"
+    },
+    {
+      "name": "S_M_INIT_OBJ_4C",
+      "addr": "8005a968"
+    },
+    {
+      "name": "S_M_INT_OBJ_270",
+      "addr": "8005c920"
+    },
+    {
+      "name": "S_M_INT_OBJ_50",
+      "addr": "8005c700"
+    },
+    {
+      "name": "S_M_INT_OBJ_C0",
+      "addr": "8005c770"
+    },
+    {
+      "name": "S_M_M_OBJ_12C",
+      "addr": "8005c514"
+    },
+    {
+      "name": "S_M_M_OBJ_2A8",
+      "addr": "8005c690"
+    },
+    {
+      "name": "S_M_M_OBJ_54",
+      "addr": "8005c43c"
+    },
+    {
+      "name": "S_M_UTIL_OBJ_18",
+      "addr": "8005474c"
+    },
+    {
+      "name": "S_M_UTIL_OBJ_94",
+      "addr": "800547c8"
+    },
+    {
+      "name": "S_SAV_OBJ_A0",
+      "addr": "8005aa4c"
+    },
+    {
+      "name": "S_SCA_OBJ_124",
+      "addr": "8005cb24"
+    },
+    {
+      "name": "S_SCA_OBJ_12C",
+      "addr": "8005cb2c"
+    },
+    {
+      "name": "S_SCA_OBJ_134",
+      "addr": "8005cb34"
+    },
+    {
+      "name": "S_SCA_OBJ_13C",
+      "addr": "8005cb3c"
+    },
+    {
+      "name": "S_SCA_OBJ_144",
+      "addr": "8005cb44"
+    },
+    {
+      "name": "S_SCA_OBJ_14C",
+      "addr": "8005cb4c"
+    },
+    {
+      "name": "S_SCA_OBJ_154",
+      "addr": "8005cb54"
+    },
+    {
+      "name": "S_SCA_OBJ_15C",
+      "addr": "8005cb5c"
+    },
+    {
+      "name": "S_SCA_OBJ_164",
+      "addr": "8005cb64"
+    },
+    {
+      "name": "S_SCA_OBJ_194",
+      "addr": "8005cb94"
+    },
+    {
+      "name": "S_SCA_OBJ_240",
+      "addr": "8005cc40"
+    },
+    {
+      "name": "S_SCA_OBJ_294",
+      "addr": "8005cc94"
+    },
+    {
+      "name": "S_SCA_OBJ_330",
+      "addr": "8005cd30"
+    },
+    {
+      "name": "S_SCA_OBJ_384",
+      "addr": "8005cd84"
+    },
+    {
+      "name": "S_SCA_OBJ_5C",
+      "addr": "8005ca5c"
+    },
+    {
+      "name": "S_SCA_OBJ_64",
+      "addr": "8005ca64"
+    },
+    {
+      "name": "S_SCA_OBJ_6C",
+      "addr": "8005ca6c"
+    },
+    {
+      "name": "S_SCA_OBJ_74",
+      "addr": "8005ca74"
+    },
+    {
+      "name": "S_SCA_OBJ_7C",
+      "addr": "8005ca7c"
+    },
+    {
+      "name": "S_SCA_OBJ_84",
+      "addr": "8005ca84"
+    },
+    {
+      "name": "S_SCA_OBJ_8C",
+      "addr": "8005ca8c"
+    },
+    {
+      "name": "S_SCA_OBJ_94",
+      "addr": "8005ca94"
+    },
+    {
+      "name": "S_SCA_OBJ_9C",
+      "addr": "8005ca9c"
+    },
+    {
+      "name": "S_SCA_OBJ_CC",
+      "addr": "8005cacc"
+    },
+    {
+      "name": "S_SRMP_OBJ_170",
+      "addr": "8005b160"
+    },
+    {
+      "name": "S_SRMP_OBJ_180",
+      "addr": "8005b170"
+    },
+    {
+      "name": "S_SRMP_OBJ_2AC",
+      "addr": "8005b29c"
+    },
+    {
+      "name": "S_SRMP_OBJ_340",
+      "addr": "8005b330"
+    },
+    {
+      "name": "S_SRMP_OBJ_38C",
+      "addr": "8005b37c"
+    },
+    {
+      "name": "S_SRMP_OBJ_438",
+      "addr": "8005b428"
+    },
+    {
+      "name": "S_SRMP_OBJ_45C",
+      "addr": "8005b44c"
+    },
+    {
+      "name": "S_SRMP_OBJ_4DC",
+      "addr": "8005b4cc"
+    },
+    {
+      "name": "S_SR_OBJ_B0",
+      "addr": "8005ae34"
+    },
+    {
+      "name": "S_SR_OBJ_B4",
+      "addr": "8005ae38"
+    },
+    {
+      "name": "S_STM_OBJ_1C",
+      "addr": "8005cf70"
+    },
+    {
+      "name": "ScaleMatrix",
+      "addr": "80065ff0"
+    },
+    {
+      "name": "ScaleMatrixL",
+      "addr": "80067458"
+    },
+    {
+      "name": "SeAutoPan",
+      "addr": "800572dc"
+    },
+    {
+      "name": "SeAutoVol",
+      "addr": "80056ddc"
+    },
+    {
+      "name": "SePitchBend",
+      "addr": "80056c28"
+    },
+    {
+      "name": "SetAutoPan",
+      "addr": "8005748c"
+    },
+    {
+      "name": "SetAutoVol",
+      "addr": "80056f8c"
+    },
+    {
+      "name": "SetBackColor",
+      "addr": "80066420"
+    },
+    {
+      "name": "SetBlockFill",
+      "addr": "8006b810"
+    },
+    {
+      "name": "SetColorMatrix",
+      "addr": "80068068"
+    },
+    {
+      "name": "SetDefDispEnv",
+      "addr": "8006d5e4"
+    },
+    {
+      "name": "SetDefDrawEnv",
+      "addr": "8006d514"
+    },
+    {
+      "name": "SetDispMask",
+      "addr": "800689c4"
+    },
+    {
+      "name": "SetDrawArea",
+      "addr": "80069768"
+    },
+    {
+      "name": "SetDrawEnv",
+      "addr": "800698b0"
+    },
+    {
+      "name": "SetDrawLoad",
+      "addr": "8006b8f4"
+    },
+    {
+      "name": "SetDrawMode",
+      "addr": "80069858"
+    },
+    {
+      "name": "SetDrawMove",
+      "addr": "8006b824"
+    },
+    {
+      "name": "SetDrawOffset",
+      "addr": "800697ec"
+    },
+    {
+      "name": "SetDrawTPage",
+      "addr": "8006b840"
+    },
+    {
+      "name": "SetGraphDebug",
+      "addr": "80068830"
+    },
+    {
+      "name": "SetGraphQueue",
+      "addr": "8006889c"
+    },
+    {
+      "name": "SetGraphReverse",
+      "addr": "8006871c"
+    },
+    {
+      "name": "SetIntrMask",
+      "addr": "8006165c"
+    },
+    {
+      "name": "SetLightMatrix",
+      "addr": "80067f28"
+    },
+    {
+      "name": "SetLineF2",
+      "addr": "8006b768"
+    },
+    {
+      "name": "SetLineF3",
+      "addr": "8006b790"
+    },
+    {
+      "name": "SetLineF4",
+      "addr": "8006b7d0"
+    },
+    {
+      "name": "SetLineG2",
+      "addr": "8006b77c"
+    },
+    {
+      "name": "SetLineG3",
+      "addr": "8006b7b0"
+    },
+    {
+      "name": "SetLineG4",
+      "addr": "8006b7f0"
+    },
+    {
+      "name": "SetMulMatrix",
+      "addr": "800671b8"
+    },
+    {
+      "name": "SetPolyF3",
+      "addr": "8006b63c"
+    },
+    {
+      "name": "SetPolyF4",
+      "addr": "8006b68c"
+    },
+    {
+      "name": "SetPolyFT3",
+      "addr": "8006b650"
+    },
+    {
+      "name": "SetPolyFT4",
+      "addr": "8006b6a0"
+    },
+    {
+      "name": "SetPolyG3",
+      "addr": "8006b664"
+    },
+    {
+      "name": "SetPolyG4",
+      "addr": "8006b6b4"
+    },
+    {
+      "name": "SetPolyGT3",
+      "addr": "8006b678"
+    },
+    {
+      "name": "SetPolyGT4",
+      "addr": "8006b6c8"
+    },
+    {
+      "name": "SetPriority",
+      "addr": "80069830"
+    },
+    {
+      "name": "SetRCnt",
+      "addr": "8006e210"
+    },
+    {
+      "name": "SetRotMatrix",
+      "addr": "80066960"
+    },
+    {
+      "name": "SetSemiTrans",
+      "addr": "8006b5ec"
+    },
+    {
+      "name": "SetShadeTex",
+      "addr": "8006b614"
+    },
+    {
+      "name": "SetSprt",
+      "addr": "8006b704"
+    },
+    {
+      "name": "SetSprt16",
+      "addr": "8006b6f0"
+    },
+    {
+      "name": "SetSprt8",
+      "addr": "8006b6dc"
+    },
+    {
+      "name": "SetTexWindow",
+      "addr": "8006972c"
+    },
+    {
+      "name": "SetTile",
+      "addr": "8006b754"
+    },
+    {
+      "name": "SetTile1",
+      "addr": "8006b718"
+    },
+    {
+      "name": "SetTile16",
+      "addr": "8006b740"
+    },
+    {
+      "name": "SetTile8",
+      "addr": "8006b72c"
+    },
+    {
+      "name": "SetTransMatrix",
+      "addr": "80068328"
+    },
+    {
+      "name": "Snd_SetPlayMode",
+      "addr": "8005ff30"
+    },
+    {
+      "name": "SpuClearReverbWorkArea",
+      "addr": "80054598"
+    },
+    {
+      "name": "SpuFree",
+      "addr": "80060d10"
+    },
+    {
+      "name": "SpuGetKeyStatus",
+      "addr": "80054504"
+    },
+    {
+      "name": "SpuInitMalloc",
+      "addr": "8005a91c"
+    },
+    {
+      "name": "SpuIsTransferCompleted",
+      "addr": "800601c8"
+    },
+    {
+      "name": "SpuMalloc",
+      "addr": "8005c3e8"
+    },
+    {
+      "name": "SpuRead",
+      "addr": "8005cfc4"
+    },
+    {
+      "name": "SpuSetCommonAttr",
+      "addr": "8005ca00"
+    },
+    {
+      "name": "SpuSetNoiseVoice",
+      "addr": "8005a8f8"
+    },
+    {
+      "name": "SpuSetReverb",
+      "addr": "8005ad84"
+    },
+    {
+      "name": "SpuSetReverbDepth",
+      "addr": "8005ce1c"
+    },
+    {
+      "name": "SpuSetReverbModeParam",
+      "addr": "8005aff0"
+    },
+    {
+      "name": "SpuSetTransferMode",
+      "addr": "8005cf54"
+    },
+    {
+      "name": "SpuSetTransferStartAddr",
+      "addr": "8005cf88"
+    },
+    {
+      "name": "SpuStart",
+      "addr": "80055a00"
+    },
+    {
+      "name": "SpuVmAlloc",
+      "addr": "80055aa8"
+    },
+    {
+      "name": "SpuVmDoAllocate",
+      "addr": "800561f4"
+    },
+    {
+      "name": "SpuVmFlush",
+      "addr": "80058064"
+    },
+    {
+      "name": "SpuVmGetProgPan",
+      "addr": "80059218"
+    },
+    {
+      "name": "SpuVmGetProgVol",
+      "addr": "80059150"
+    },
+    {
+      "name": "SpuVmGetSeqLVol",
+      "addr": "80058ef8"
+    },
+    {
+      "name": "SpuVmGetSeqRVol",
+      "addr": "80058f48"
+    },
+    {
+      "name": "SpuVmGetSeqVol",
+      "addr": "80058e8c"
+    },
+    {
+      "name": "SpuVmInit",
+      "addr": "800577d0"
+    },
+    {
+      "name": "SpuVmKeyOff",
+      "addr": "80058a00"
+    },
+    {
+      "name": "SpuVmKeyOnNow",
+      "addr": "80055d10"
+    },
+    {
+      "name": "SpuVmNoiseOff",
+      "addr": "80057c38"
+    },
+    {
+      "name": "SpuVmNoiseOn",
+      "addr": "80057cf0"
+    },
+    {
+      "name": "SpuVmPBVoice",
+      "addr": "80057d70"
+    },
+    {
+      "name": "SpuVmPitchBend",
+      "addr": "80057f74"
+    },
+    {
+      "name": "SpuVmSeKeyOff",
+      "addr": "80058cdc"
+    },
+    {
+      "name": "SpuVmSeKeyOn",
+      "addr": "80058bf0"
+    },
+    {
+      "name": "SpuVmSeqKeyOff",
+      "addr": "80058f98"
+    },
+    {
+      "name": "SpuVmSetProgPan",
+      "addr": "800591a4"
+    },
+    {
+      "name": "SpuVmSetProgVol",
+      "addr": "800590dc"
+    },
+    {
+      "name": "SpuVmSetSeqVol",
+      "addr": "80058d18"
+    },
+    {
+      "name": "SpuVmSetVol",
+      "addr": "8005926c"
+    },
+    {
+      "name": "SpuVmVSetUp",
+      "addr": "8005aa60"
+    },
+    {
+      "name": "Square0",
+      "addr": "800662e8"
+    },
+    {
+      "name": "Square12",
+      "addr": "800662c0"
+    },
+    {
+      "name": "SquareRoot0",
+      "addr": "80065f60"
+    },
+    {
+      "name": "SquareRoot12",
+      "addr": "80066120"
+    },
+    {
+      "name": "SsSepClose",
+      "addr": "80060f58"
+    },
+    {
+      "name": "SsSepPause",
+      "addr": "80061358"
+    },
+    {
+      "name": "SsSepPlay",
+      "addr": "80060068"
+    },
+    {
+      "name": "SsSepSetCrescendo",
+      "addr": "8005fd54"
+    },
+    {
+      "name": "SsSepSetDecrescendo",
+      "addr": "8005fefc"
+    },
+    {
+      "name": "SsSepSetVol",
+      "addr": "8005ab8c"
+    },
+    {
+      "name": "SsSepStop",
+      "addr": "80060404"
+    },
+    {
+      "name": "SsSeqCalledTbyT",
+      "addr": "80060430"
+    },
+    {
+      "name": "SsSeqGetVol",
+      "addr": "8005abc4"
+    },
+    {
+      "name": "SsSeqOpen",
+      "addr": "8005d52c"
+    },
+    {
+      "name": "SsSeqPause",
+      "addr": "80061330"
+    },
+    {
+      "name": "SsSeqPlay",
+      "addr": "80060030"
+    },
+    {
+      "name": "SsSeqReplay",
+      "addr": "8005acec"
+    },
+    {
+      "name": "SsSeqSetCrescendo",
+      "addr": "8005fd20"
+    },
+    {
+      "name": "SsSeqSetDecrescendo",
+      "addr": "8005fec8"
+    },
+    {
+      "name": "SsSeqSetVol",
+      "addr": "8005ab5c"
+    },
+    {
+      "name": "SsSeqStop",
+      "addr": "800603dc"
+    },
+    {
+      "name": "SsSetMVol",
+      "addr": "8005c9b0"
+    },
+    {
+      "name": "SsSetNck",
+      "addr": "80060f34"
+    },
+    {
+      "name": "SsSetRVol",
+      "addr": "8005cd94"
+    },
+    {
+      "name": "SsSetReservedVoice",
+      "addr": "8005bf0c"
+    },
+    {
+      "name": "SsSetSerialAttr",
+      "addr": "80061384"
+    },
+    {
+      "name": "SsSetSerialVol",
+      "addr": "800600a0"
+    },
+    {
+      "name": "SsSetTableSize",
+      "addr": "8005d024"
+    },
+    {
+      "name": "SsSetTickMode",
+      "addr": "8005bd08"
+    },
+    {
+      "name": "SsStart",
+      "addr": "8005bc38"
+    },
+    {
+      "name": "SsStart2",
+      "addr": "8005bc58"
+    },
+    {
+      "name": "SsUtAllKeyOff",
+      "addr": "8005a71c"
+    },
+    {
+      "name": "SsUtAutoPan",
+      "addr": "8005a6c8"
+    },
+    {
+      "name": "SsUtAutoVol",
+      "addr": "8005a674"
+    },
+    {
+      "name": "SsUtChangeADSR",
+      "addr": "8005a3c0"
+    },
+    {
+      "name": "SsUtChangePitch",
+      "addr": "8005a280"
+    },
+    {
+      "name": "SsUtGetDetVVol",
+      "addr": "8005a498"
+    },
+    {
+      "name": "SsUtGetProgAtr",
+      "addr": "8005f9f8"
+    },
+    {
+      "name": "SsUtGetReverbType",
+      "addr": "8005afe0"
+    },
+    {
+      "name": "SsUtGetVVol",
+      "addr": "8005a55c"
+    },
+    {
+      "name": "SsUtGetVagAtr",
+      "addr": "8005f478"
+    },
+    {
+      "name": "SsUtKeyOff",
+      "addr": "80059b48"
+    },
+    {
+      "name": "SsUtKeyOffV",
+      "addr": "8005a0d8"
+    },
+    {
+      "name": "SsUtKeyOn",
+      "addr": "800597a4"
+    },
+    {
+      "name": "SsUtKeyOnV",
+      "addr": "80059d3c"
+    },
+    {
+      "name": "SsUtPitchBend",
+      "addr": "8005a1f0"
+    },
+    {
+      "name": "SsUtReverbOff",
+      "addr": "8005ac28"
+    },
+    {
+      "name": "SsUtReverbOn",
+      "addr": "8005ad64"
+    },
+    {
+      "name": "SsUtSetDetVVol",
+      "addr": "8005a4f0"
+    },
+    {
+      "name": "SsUtSetReverbDelay",
+      "addr": "8005f9b8"
+    },
+    {
+      "name": "SsUtSetReverbDepth",
+      "addr": "8005be74"
+    },
+    {
+      "name": "SsUtSetReverbFeedback",
+      "addr": "8005f438"
+    },
+    {
+      "name": "SsUtSetReverbType",
+      "addr": "8005af3c"
+    },
+    {
+      "name": "SsUtSetVVol",
+      "addr": "8005a5e8"
+    },
+    {
+      "name": "SsUtSetVagAtr",
+      "addr": "8005f6b4"
+    },
+    {
+      "name": "SsUtVibrateOff",
+      "addr": "80056dd4"
+    },
+    {
+      "name": "SsUtVibrateOn",
+      "addr": "80056dcc"
+    },
+    {
+      "name": "SsVabClose",
+      "addr": "80060c34"
+    },
+    {
+      "name": "SsVabFakeHead",
+      "addr": "8005bfac"
+    },
+    {
+      "name": "SsVabOpen",
+      "addr": "80060cb8"
+    },
+    {
+      "name": "SsVabOpenHead",
+      "addr": "8005bf44"
+    },
+    {
+      "name": "SsVabOpenHeadSticky",
+      "addr": "8005bf78"
+    },
+    {
+      "name": "SsVabOpenHeadWithMode",
+      "addr": "8005bfe0"
+    },
+    {
+      "name": "SsVabTransBody",
+      "addr": "8005ce94"
+    },
+    {
+      "name": "SsVabTransCompleted",
+      "addr": "8006019c"
+    },
+    {
+      "name": "StCdInterrupt",
+      "addr": "8006493c"
+    },
+    {
+      "name": "StCdInterrupt2",
+      "addr": "80064854"
+    },
+    {
+      "name": "StClearRing",
+      "addr": "80064708"
+    },
+    {
+      "name": "StFreeRing",
+      "addr": "800656a0"
+    },
+    {
+      "name": "StGetBackloc",
+      "addr": "80065640"
+    },
+    {
+      "name": "StGetNext",
+      "addr": "800654ec"
+    },
+    {
+      "name": "StSetRing",
+      "addr": "800654bc"
+    },
+    {
+      "name": "StSetStream",
+      "addr": "80064874"
+    },
+    {
+      "name": "StartCARD",
+      "addr": "8006e140"
+    },
+    {
+      "name": "StartRCnt",
+      "addr": "8006e2e8"
+    },
+    {
+      "name": "StopCallback",
+      "addr": "800615d4"
+    },
+    {
+      "name": "StopPAD",
+      "addr": "8006e1f0"
+    },
+    {
+      "name": "StopRCnt",
+      "addr": "8006e31c"
+    },
+    {
+      "name": "StoreImage",
+      "addr": "80068cec"
+    },
+    {
+      "name": "TEMPO_OBJ_DC",
+      "addr": "80060820"
+    },
+    {
+      "name": "TEMPO_OBJ_E8",
+      "addr": "8006082c"
+    },
+    {
+      "name": "TMD_OBJ_1768",
+      "addr": "8006d324"
+    },
+    {
+      "name": "TMD_OBJ_1784",
+      "addr": "8006d340"
+    },
+    {
+      "name": "TMD_OBJ_448",
+      "addr": "8006c004"
+    },
+    {
+      "name": "TMD_OBJ_468",
+      "addr": "8006c024"
+    },
+    {
+      "name": "TMD_OBJ_64",
+      "addr": "8006bc20"
+    },
+    {
+      "name": "TermPrim",
+      "addr": "8006b5d4"
+    },
+    {
+      "name": "TestEvent",
+      "addr": "8006e458"
+    },
+    {
+      "name": "TransposeMatrix",
+      "addr": "80065d90"
+    },
+    {
+      "name": "UT_GPA_OBJ_F0",
+      "addr": "8005fae8"
+    },
+    {
+      "name": "UT_GVA_OBJ_224",
+      "addr": "8005f69c"
+    },
+    {
+      "name": "UT_REV_OBJ_50",
+      "addr": "8005af8c"
+    },
+    {
+      "name": "UT_REV_OBJ_90",
+      "addr": "8005afcc"
+    },
+    {
+      "name": "UT_SVA_OBJ_1B0",
+      "addr": "8005f864"
+    },
+    {
+      "name": "VMANAGER_OBJ_107C",
+      "addr": "80056b24"
+    },
+    {
+      "name": "VMANAGER_OBJ_1178",
+      "addr": "80056c20"
+    },
+    {
+      "name": "VMANAGER_OBJ_12CC",
+      "addr": "80056d74"
+    },
+    {
+      "name": "VMANAGER_OBJ_144",
+      "addr": "80055bec"
+    },
+    {
+      "name": "VMANAGER_OBJ_1464",
+      "addr": "80056f0c"
+    },
+    {
+      "name": "VMANAGER_OBJ_148",
+      "addr": "80055bf0"
+    },
+    {
+      "name": "VMANAGER_OBJ_14DC",
+      "addr": "80056f84"
+    },
+    {
+      "name": "VMANAGER_OBJ_15F4",
+      "addr": "8005709c"
+    },
+    {
+      "name": "VMANAGER_OBJ_164",
+      "addr": "80055c0c"
+    },
+    {
+      "name": "VMANAGER_OBJ_1704",
+      "addr": "800571ac"
+    },
+    {
+      "name": "VMANAGER_OBJ_175C",
+      "addr": "80057204"
+    },
+    {
+      "name": "VMANAGER_OBJ_17B4",
+      "addr": "8005725c"
+    },
+    {
+      "name": "VMANAGER_OBJ_17E8",
+      "addr": "80057290"
+    },
+    {
+      "name": "VMANAGER_OBJ_1964",
+      "addr": "8005740c"
+    },
+    {
+      "name": "VMANAGER_OBJ_19DC",
+      "addr": "80057484"
+    },
+    {
+      "name": "VMANAGER_OBJ_1AF4",
+      "addr": "8005759c"
+    },
+    {
+      "name": "VMANAGER_OBJ_1C04",
+      "addr": "800576ac"
+    },
+    {
+      "name": "VMANAGER_OBJ_1C5C",
+      "addr": "80057704"
+    },
+    {
+      "name": "VMANAGER_OBJ_1CA8",
+      "addr": "80057750"
+    },
+    {
+      "name": "VMANAGER_OBJ_1CDC",
+      "addr": "80057784"
+    },
+    {
+      "name": "VMANAGER_OBJ_1E10",
+      "addr": "800578b8"
+    },
+    {
+      "name": "VMANAGER_OBJ_1FC4",
+      "addr": "80057a6c"
+    },
+    {
+      "name": "VMANAGER_OBJ_2440",
+      "addr": "80057ee8"
+    },
+    {
+      "name": "VMANAGER_OBJ_2A94",
+      "addr": "8005853c"
+    },
+    {
+      "name": "VMANAGER_OBJ_2EF0",
+      "addr": "80058998"
+    },
+    {
+      "name": "VMANAGER_OBJ_2F0C",
+      "addr": "800589b4"
+    },
+    {
+      "name": "VMANAGER_OBJ_2F20",
+      "addr": "800589c8"
+    },
+    {
+      "name": "VMANAGER_OBJ_3084",
+      "addr": "80058b2c"
+    },
+    {
+      "name": "VMANAGER_OBJ_3118",
+      "addr": "80058bc0"
+    },
+    {
+      "name": "VMANAGER_OBJ_31F8",
+      "addr": "80058ca0"
+    },
+    {
+      "name": "VMANAGER_OBJ_357C",
+      "addr": "80059024"
+    },
+    {
+      "name": "VMANAGER_OBJ_3AF4",
+      "addr": "8005959c"
+    },
+    {
+      "name": "VMANAGER_OBJ_3B90",
+      "addr": "80059638"
+    },
+    {
+      "name": "VMANAGER_OBJ_3BF4",
+      "addr": "8005969c"
+    },
+    {
+      "name": "VMANAGER_OBJ_3C20",
+      "addr": "800596c8"
+    },
+    {
+      "name": "VMANAGER_OBJ_3E74",
+      "addr": "8005991c"
+    },
+    {
+      "name": "VMANAGER_OBJ_4060",
+      "addr": "80059b08"
+    },
+    {
+      "name": "VMANAGER_OBJ_406C",
+      "addr": "80059b14"
+    },
+    {
+      "name": "VMANAGER_OBJ_41DC",
+      "addr": "80059c84"
+    },
+    {
+      "name": "VMANAGER_OBJ_4270",
+      "addr": "80059d18"
+    },
+    {
+      "name": "VMANAGER_OBJ_428C",
+      "addr": "80059d34"
+    },
+    {
+      "name": "VMANAGER_OBJ_434",
+      "addr": "80055edc"
+    },
+    {
+      "name": "VMANAGER_OBJ_441C",
+      "addr": "80059ec4"
+    },
+    {
+      "name": "VMANAGER_OBJ_45EC",
+      "addr": "8005a094"
+    },
+    {
+      "name": "VMANAGER_OBJ_45FC",
+      "addr": "8005a0a4"
+    },
+    {
+      "name": "VMANAGER_OBJ_4690",
+      "addr": "8005a138"
+    },
+    {
+      "name": "VMANAGER_OBJ_4740",
+      "addr": "8005a1e8"
+    },
+    {
+      "name": "VMANAGER_OBJ_48F4",
+      "addr": "8005a39c"
+    },
+    {
+      "name": "VMANAGER_OBJ_49E4",
+      "addr": "8005a48c"
+    },
+    {
+      "name": "VMANAGER_OBJ_4A4",
+      "addr": "80055f4c"
+    },
+    {
+      "name": "VMANAGER_OBJ_4A40",
+      "addr": "8005a4e8"
+    },
+    {
+      "name": "VMANAGER_OBJ_4AA8",
+      "addr": "8005a550"
+    },
+    {
+      "name": "VMANAGER_OBJ_4B38",
+      "addr": "8005a5e0"
+    },
+    {
+      "name": "VMANAGER_OBJ_4BC0",
+      "addr": "8005a668"
+    },
+    {
+      "name": "VMANAGER_OBJ_4C10",
+      "addr": "8005a6b8"
+    },
+    {
+      "name": "VMANAGER_OBJ_4C64",
+      "addr": "8005a70c"
+    },
+    {
+      "name": "VMANAGER_OBJ_4D90",
+      "addr": "8005a838"
+    },
+    {
+      "name": "VMANAGER_OBJ_514",
+      "addr": "80055fbc"
+    },
+    {
+      "name": "VMANAGER_OBJ_540",
+      "addr": "80055fe8"
+    },
+    {
+      "name": "VMANAGER_OBJ_670",
+      "addr": "80056118"
+    },
+    {
+      "name": "VMANAGER_OBJ_6E8",
+      "addr": "80056190"
+    },
+    {
+      "name": "VMANAGER_OBJ_86C",
+      "addr": "80056314"
+    },
+    {
+      "name": "VMANAGER_OBJ_AF0",
+      "addr": "80056598"
+    },
+    {
+      "name": "VMANAGER_OBJ_B60",
+      "addr": "80056608"
+    },
+    {
+      "name": "VMANAGER_OBJ_BD0",
+      "addr": "80056678"
+    },
+    {
+      "name": "VMANAGER_OBJ_BF8",
+      "addr": "800566a0"
+    },
+    {
+      "name": "VMANAGER_OBJ_C88",
+      "addr": "80056730"
+    },
+    {
+      "name": "VMANAGER_OBJ_E10",
+      "addr": "800568b8"
+    },
+    {
+      "name": "VMANAGER_OBJ_E9C",
+      "addr": "80056944"
+    },
+    {
+      "name": "VM_VSU_OBJ_BC",
+      "addr": "8005ab1c"
+    },
+    {
+      "name": "VOL_OBJ_1A0",
+      "addr": "8005fcb0"
+    },
+    {
+      "name": "VOL_OBJ_348",
+      "addr": "8005fe58"
+    },
+    {
+      "name": "VOL_OBJ_C8",
+      "addr": "8005fbd8"
+    },
+    {
+      "name": "VS_SRV_OBJ_30",
+      "addr": "8005bf3c"
+    },
+    {
+      "name": "VS_VH_OBJ_190",
+      "addr": "8005c0d4"
+    },
+    {
+      "name": "VS_VH_OBJ_1A0",
+      "addr": "8005c0e4"
+    },
+    {
+      "name": "VS_VH_OBJ_398",
+      "addr": "8005c2dc"
+    },
+    {
+      "name": "VS_VH_OBJ_440",
+      "addr": "8005c384"
+    },
+    {
+      "name": "VS_VH_OBJ_478",
+      "addr": "8005c3bc"
+    },
+    {
+      "name": "VS_VTB_OBJ_A0",
+      "addr": "8005cf34"
+    },
+    {
+      "name": "VSyncCallback",
+      "addr": "80061570"
+    },
+    {
+      "name": "VSyncCallbacks",
+      "addr": "800615a4"
+    },
+    {
+      "name": "VectorNormal",
+      "addr": "80066a30"
+    },
+    {
+      "name": "VectorNormalS",
+      "addr": "80066a1c"
+    },
+    {
+      "name": "VectorNormalSS",
+      "addr": "80066a5c"
+    },
+    {
+      "name": "WaitEvent",
+      "addr": "8006e448"
+    },
+    {
+      "name": "_96_remove",
+      "addr": "8006e498"
+    },
+    {
+      "name": "_SpuDataCallback",
+      "addr": "80055a84"
+    },
+    {
+      "name": "_SpuInit",
+      "addr": "80055938"
+    },
+    {
+      "name": "_SpuIsInAllocateArea",
+      "addr": "80054734"
+    },
+    {
+      "name": "_SpuIsInAllocateArea_",
+      "addr": "800547a4"
+    },
+    {
+      "name": "_SpuSetAnyVoice",
+      "addr": "8005a9ac"
+    },
+    {
+      "name": "_SsClose",
+      "addr": "80060db8"
+    },
+    {
+      "name": "_SsContDataEntry",
+      "addr": "8005e634"
+    },
+    {
+      "name": "_SsContModulation",
+      "addr": "8005de34"
+    },
+    {
+      "name": "_SsContNrpn1",
+      "addr": "8005e2d0"
+    },
+    {
+      "name": "_SsContNrpn2",
+      "addr": "8005e400"
+    },
+    {
+      "name": "_SsContPortaTime",
+      "addr": "8005df6c"
+    },
+    {
+      "name": "_SsContPortamento",
+      "addr": "8005e0a4"
+    },
+    {
+      "name": "_SsContResetAll",
+      "addr": "8005e208"
+    },
+    {
+      "name": "_SsContRpn1",
+      "addr": "8005e544"
+    },
+    {
+      "name": "_SsContRpn2",
+      "addr": "8005e5bc"
+    },
+    {
+      "name": "_SsGetMetaEvent",
+      "addr": "8005ef44"
+    },
+    {
+      "name": "_SsGetSeqData",
+      "addr": "8005d708"
+    },
+    {
+      "name": "_SsInit",
+      "addr": "8005ae54"
+    },
+    {
+      "name": "_SsInitSoundSeq",
+      "addr": "8005d204"
+    },
+    {
+      "name": "_SsNoteOn",
+      "addr": "8005d9b4"
+    },
+    {
+      "name": "_SsReadDeltaValue",
+      "addr": "8005f298"
+    },
+    {
+      "name": "_SsSeqCalledTbyT_1per2",
+      "addr": "8005bcb8"
+    },
+    {
+      "name": "_SsSeqPlay",
+      "addr": "8005d5f8"
+    },
+    {
+      "name": "_SsSetControlChange",
+      "addr": "8005db1c"
+    },
+    {
+      "name": "_SsSetPitchBend",
+      "addr": "8005ee98"
+    },
+    {
+      "name": "_SsSetProgramChange",
+      "addr": "8005daa4"
+    },
+    {
+      "name": "_SsSndCrescendo",
+      "addr": "80060f7c"
+    },
+    {
+      "name": "_SsSndDecrescendo",
+      "addr": "80060920"
+    },
+    {
+      "name": "_SsSndNextSep",
+      "addr": "8005f8b0"
+    },
+    {
+      "name": "_SsSndPause",
+      "addr": "800606a4"
+    },
+    {
+      "name": "_SsSndPlay",
+      "addr": "8005ad14"
+    },
+    {
+      "name": "_SsSndReplay",
+      "addr": "80060bcc"
+    },
+    {
+      "name": "_SsSndSetCres",
+      "addr": "8005fbe0"
+    },
+    {
+      "name": "_SsSndSetDecres",
+      "addr": "8005fd88"
+    },
+    {
+      "name": "_SsSndSetPauseMode",
+      "addr": "80061258"
+    },
+    {
+      "name": "_SsSndSetReplayMode",
+      "addr": "8005ac48"
+    },
+    {
+      "name": "_SsSndSetVabAttr",
+      "addr": "8005ebd4"
+    },
+    {
+      "name": "_SsSndSetVol",
+      "addr": "8005ab24"
+    },
+    {
+      "name": "_SsSndSetVolData",
+      "addr": "8005fb10"
+    },
+    {
+      "name": "_SsSndStop",
+      "addr": "80060270"
+    },
+    {
+      "name": "_SsSndTempo",
+      "addr": "80060744"
+    },
+    {
+      "name": "_SsStart",
+      "addr": "8005b9d0"
+    },
+    {
+      "name": "_SsTrapIntrVSync",
+      "addr": "8005bc78"
+    },
+    {
+      "name": "_SsUtBuildADSR",
+      "addr": "8005f3ac"
+    },
+    {
+      "name": "_SsUtResolveADSR",
+      "addr": "8005f350"
+    },
+    {
+      "name": "__main",
+      "addr": "80054440"
+    },
+    {
+      "name": "_addque",
+      "addr": "8006a7e0"
+    },
+    {
+      "name": "_addque2",
+      "addr": "8006a804"
+    },
+    {
+      "name": "_bu_init",
+      "addr": "8006e408"
+    },
+    {
+      "name": "_card_clear",
+      "addr": "8006e0e8"
+    },
+    {
+      "name": "_card_info",
+      "addr": "8006e0d8"
+    },
+    {
+      "name": "_card_write",
+      "addr": "8006e120"
+    },
+    {
+      "name": "_clr",
+      "addr": "80069fd0"
+    },
+    {
+      "name": "_ctl",
+      "addr": "8006a6d8"
+    },
+    {
+      "name": "_cwb",
+      "addr": "8006a714"
+    },
+    {
+      "name": "_cwc",
+      "addr": "8006a764"
+    },
+    {
+      "name": "_drs",
+      "addr": "8006a43c"
+    },
+    {
+      "name": "_dws",
+      "addr": "8006a1e8"
+    },
+    {
+      "name": "_exeque",
+      "addr": "8006aae8"
+    },
+    {
+      "name": "_getctl",
+      "addr": "8006a700"
+    },
+    {
+      "name": "_new_card",
+      "addr": "8006e150"
+    },
+    {
+      "name": "_otc",
+      "addr": "80069ee8"
+    },
+    {
+      "name": "_param",
+      "addr": "8006a7b0"
+    },
+    {
+      "name": "_patch_gte",
+      "addr": "80066cc0"
+    },
+    {
+      "name": "_reset",
+      "addr": "8006ade4"
+    },
+    {
+      "name": "_spu_FgetRXXa",
+      "addr": "800558fc"
+    },
+    {
+      "name": "_spu_FiDMA",
+      "addr": "800550f8"
+    },
+    {
+      "name": "_spu_FsetRXX",
+      "addr": "80055810"
+    },
+    {
+      "name": "_spu_FsetRXXa",
+      "addr": "80055858"
+    },
+    {
+      "name": "_spu_gcSPU",
+      "addr": "8005c6b0"
+    },
+    {
+      "name": "_spu_init",
+      "addr": "800548a8"
+    },
+    {
+      "name": "_spu_r_",
+      "addr": "80055298"
+    },
+    {
+      "name": "_spu_read",
+      "addr": "800557a8"
+    },
+    {
+      "name": "_spu_reset",
+      "addr": "8005481c"
+    },
+    {
+      "name": "_spu_setReverbAttr",
+      "addr": "8005b500"
+    },
+    {
+      "name": "_spu_t",
+      "addr": "80055478"
+    },
+    {
+      "name": "_spu_write",
+      "addr": "80055720"
+    },
+    {
+      "name": "_spu_writeByIO",
+      "addr": "80054dc4"
+    },
+    {
+      "name": "_status",
+      "addr": "80069ed0"
+    },
+    {
+      "name": "_sync",
+      "addr": "8006af20"
+    },
+    {
+      "name": "_version",
+      "addr": "8006b208"
+    },
+    {
+      "name": "callback",
+      "addr": "80064520"
+    },
+    {
+      "name": "catan",
+      "addr": "800658fc"
+    },
+    {
+      "name": "cb_read",
+      "addr": "800621a4"
+    },
+    {
+      "name": "cd_read_retry",
+      "addr": "800623c8"
+    },
+    {
+      "name": "checkRECT",
+      "addr": "80068acc"
+    },
+    {
+      "name": "close",
+      "addr": "8006e190"
+    },
+    {
+      "name": "data_ready_callback",
+      "addr": "800655b0"
+    },
+    {
+      "name": "def_cbread",
+      "addr": "800646e0"
+    },
+    {
+      "name": "def_cbready",
+      "addr": "800646b8"
+    },
+    {
+      "name": "def_cbsync",
+      "addr": "80064690"
+    },
+    {
+      "name": "dma_execute",
+      "addr": "800652e0"
+    },
+    {
+      "name": "firstfile",
+      "addr": "8006e4a8"
+    },
+    {
+      "name": "format",
+      "addr": "8006e200"
+    },
+    {
+      "name": "get_alarm",
+      "addr": "8006b09c"
+    },
+    {
+      "name": "get_ce",
+      "addr": "80069c7c"
+    },
+    {
+      "name": "get_cs",
+      "addr": "80069bb0"
+    },
+    {
+      "name": "get_dx",
+      "addr": "80069e14"
+    },
+    {
+      "name": "get_mode",
+      "addr": "80069b54"
+    },
+    {
+      "name": "get_ofs",
+      "addr": "80069d48"
+    },
+    {
+      "name": "get_tim_addr",
+      "addr": "8006bf20"
+    },
+    {
+      "name": "get_tmd_addr",
+      "addr": "8006c040"
+    },
+    {
+      "name": "get_tw",
+      "addr": "80069d90"
+    },
+    {
+      "name": "getintr",
+      "addr": "80062f00"
+    },
+    {
+      "name": "init_ring_status",
+      "addr": "800648fc"
+    },
+    {
+      "name": "lseek",
+      "addr": "8006e180"
+    },
+    {
+      "name": "main",
+      "addr": "80020bb0"
+    },
+    {
+      "name": "mem2mem",
+      "addr": "800652ac"
+    },
+    {
+      "name": "memclr",
+      "addr": "80061bc4"
+    },
+    {
+      "name": "memclr_1",
+      "addr": "80061e6c"
+    },
+    {
+      "name": "memclr_2",
+      "addr": "80061f94"
+    },
+    {
+      "name": "memcpy",
+      "addr": "8006e4f8"
+    },
+    {
+      "name": "memset",
+      "addr": "8006b2e4"
+    },
+    {
+      "name": "memset_1",
+      "addr": "8006e4e8"
+    },
+    {
+      "name": "nextfile",
+      "addr": "8006e418"
+    },
+    {
+      "name": "note2pitch",
+      "addr": "80056a74"
+    },
+    {
+      "name": "note2pitch2",
+      "addr": "80056b2c"
+    },
+    {
+      "name": "open",
+      "addr": "8006e488"
+    },
+    {
+      "name": "printf",
+      "addr": "8006e508"
+    },
+    {
+      "name": "puts",
+      "addr": "8006e538"
+    },
+    {
+      "name": "ratan2",
+      "addr": "80065de0"
+    },
+    {
+      "name": "rcos",
+      "addr": "80068348"
+    },
+    {
+      "name": "read",
+      "addr": "8006e438"
+    },
+    {
+      "name": "rename",
+      "addr": "8006e1e0"
+    },
+    {
+      "name": "restartIntr",
+      "addr": "80061b3c"
+    },
+    {
+      "name": "rsin",
+      "addr": "800683e8"
+    },
+    {
+      "name": "setIntr",
+      "addr": "8006193c"
+    },
+    {
+      "name": "setIntrDMA",
+      "addr": "80061dc4"
+    },
+    {
+      "name": "setIntrVSync",
+      "addr": "80061f68"
+    },
+    {
+      "name": "set_alarm",
+      "addr": "8006b068"
+    },
+    {
+      "name": "setjmp",
+      "addr": "8006e518"
+    },
+    {
+      "name": "sin_1",
+      "addr": "80068424"
+    },
+    {
+      "name": "start",
+      "addr": "80054448"
+    },
+    {
+      "name": "startIntr",
+      "addr": "80061678"
+    },
+    {
+      "name": "startIntrDMA",
+      "addr": "80061bf0"
+    },
+    {
+      "name": "startIntrVSync",
+      "addr": "80061e98"
+    },
+    {
+      "name": "stopIntr",
+      "addr": "80061a90"
+    },
+    {
+      "name": "strcpy",
+      "addr": "8006e528"
+    },
+    {
+      "name": "stup0",
+      "addr": "800544e8"
+    },
+    {
+      "name": "stup1",
+      "addr": "8005446c"
+    },
+    {
+      "name": "timeout",
+      "addr": "8006dc00"
+    },
+    {
+      "name": "trapIntr",
+      "addr": "80061754"
+    },
+    {
+      "name": "trapIntrDMA",
+      "addr": "80061c40"
+    },
+    {
+      "name": "trapIntrVSync",
+      "addr": "80061ef0"
+    },
+    {
+      "name": "unpack_packet",
+      "addr": "8006c1d8"
+    },
+    {
+      "name": "vmNoiseOn",
+      "addr": "80056408"
+    },
+    {
+      "name": "vmNoiseOn2",
+      "addr": "800568d8"
+    },
+    {
+      "name": "write",
+      "addr": "8006e1b0"
+    }
+  ],
+  "catalog": {
+    "80011f50": "Combat / player damage (verified 2026-06-28, ghidra1_V2.txt:77607-77814 + 223455-223490) :: FUN_80012d60",
+    "80012d60": "Combat / player damage (verified 2026-06-28, ghidra1_V2.txt:77607-77814 + 223455-223490) :: FUN_80012d60",
+    "80012e18": "Combat / player damage (verified 2026-06-28, ghidra1_V2.txt:77607-77814 + 223455-223490) :: FUN_80012d60",
+    "80012e30": "Combat / player damage (verified 2026-06-28, ghidra1_V2.txt:77607-77814 + 223455-223490) :: FUN_80012d60",
+    "80012e44": "Combat / player damage (verified 2026-06-28, ghidra1_V2.txt:77607-77814 + 223455-223490) :: FUN_80012d60",
+    "80012e54": "Combat / player damage (verified 2026-06-28, ghidra1_V2.txt:77607-77814 + 223455-223490) :: DAT_8006f418",
+    "80012ea4": "Combat / player damage (verified 2026-06-28, ghidra1_V2.txt:77607-77814 + 223455-223490) :: FUN_80012d60",
+    "80012f40": "Combat / player damage (verified 2026-06-28, ghidra1_V2.txt:77607-77814 + 223455-223490) :: FUN_80012d60",
+    "80012f54": "Combat / player damage (verified 2026-06-28, ghidra1_V2.txt:77607-77814 + 223455-223490) :: FUN_80012d60",
+    "80012fe8": "Combat / player damage (verified 2026-06-28, ghidra1_V2.txt:77607-77814 + 223455-223490) :: DAT_8006f430",
+    "80012ff4": "Combat / player damage (verified 2026-06-28, ghidra1_V2.txt:77607-77814 + 223455-223490) :: DAT_8006f418",
+    "80014230": "RVD / AOT :: 0x80014230",
+    "800142f4": "Camera :: 0x800142f4",
+    "80014324": "Camera :: 0x80014324",
+    "80014368": "RVD / AOT :: 0x80014368",
+    "8001500c": "Camera :: 0x8001500c",
+    "80015850": "Camera :: FUN_80015850",
+    "800166c4": "Render / fade / letterbox :: 0x80016b54",
+    "80016b54": "Render / fade / letterbox :: 0x80016b54",
+    "80017248": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: PTR_LAB_80071d40",
+    "800174e4": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: 0x80071d98 (action table)",
+    "80017eb0": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: 0x80071d98 (action table)",
+    "80017ed8": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: 0x80071d98 (action table)",
+    "80017f50": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: 0x80071d98 (action table)",
+    "80017fa4": "Combat / player damage (verified 2026-06-28, ghidra1_V2.txt:77607-77814 + 223455-223490) :: FUN_80017fa4",
+    "80018004": "Combat / player damage (verified 2026-06-28, ghidra1_V2.txt:77607-77814 + 223455-223490) :: FUN_80017fa4",
+    "800185b8": "Combat / player damage (verified 2026-06-28, ghidra1_V2.txt:77607-77814 + 223455-223490) :: FUN_80017fa4",
+    "80019354": "Sprite / BG / MDEC / TIM :: 0x800396fc",
+    "800194f8": "Sprite / BG / MDEC / TIM :: 0x800194f8",
+    "80019700": "Combat / player damage (verified 2026-06-28, ghidra1_V2.txt:77607-77814 + 223455-223490) :: FUN_80019700",
+    "80019894": "Combat / player damage (verified 2026-06-28, ghidra1_V2.txt:77607-77814 + 223455-223490) :: FUN_80019700",
+    "800198b0": "Combat / player damage (verified 2026-06-28, ghidra1_V2.txt:77607-77814 + 223455-223490) :: FUN_80019700",
+    "800199d4": "Combat / player damage (verified 2026-06-28, ghidra1_V2.txt:77607-77814 + 223455-223490) :: FUN_80017fa4",
+    "80019d50": "⚠️ HIGH-VALUE CORRECTIONS (seed labels that were WRONG — read first)",
+    "80019e20": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: FUN_80019e20",
+    "8001a50c": "⚠️ HIGH-VALUE CORRECTIONS (seed labels that were WRONG — read first)",
+    "8001a570": "Combat / player damage (verified 2026-06-28, ghidra1_V2.txt:77607-77814 + 223455-223490) :: FUN_80019700",
+    "8001a6d4": "Player / animation :: FUN_8001a6d4",
+    "8001a7a8": "Combat / player damage (verified 2026-06-28, ghidra1_V2.txt:77607-77814 + 223455-223490) :: FUN_8001a7a8",
+    "8001a8f8": "Player / animation :: FUN_8001a8f8",
+    "8001a9cc": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: FUN_8001a9cc",
+    "8001aac4": "Player / animation :: FUN_8001aac4",
+    "8001ab9c": "Player / animation :: FUN_8001ab9c",
+    "8001af20": "Combat / player damage (verified 2026-06-28, ghidra1_V2.txt:77607-77814 + 223455-223490) :: FUN_80012d60",
+    "8001af5c": "Prop / fixture rendering + perf (2026-06-02, this session) :: FUN_8001af5c",
+    "8001b064": "Prop / fixture rendering + perf (2026-06-02, this session) :: FUN_8001b064",
+    "8001c2dc": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: FUN_80104178",
+    "8001c6e8": "Combat / player damage (verified 2026-06-28, ghidra1_V2.txt:77607-77814 + 223455-223490) :: FUN_80017fa4",
+    "8001cce0": "Camera / RVD (BO-round detail) :: main @0x8001cce0",
+    "8001ce04": "⚠️ HIGH-VALUE CORRECTIONS (seed labels that were WRONG — read first)",
+    "8001ce0c": "Player / animation :: FUN_80031c44",
+    "8001ce14": "RVD / AOT :: FUN_800436a8",
+    "8001ce1c": "RVD / AOT :: FUN_800436a8",
+    "8001ce54": "Sprite / BG / MDEC / TIM :: 0x80039590",
+    "8001d600": "Sprite / BG / MDEC / TIM :: 0x800396fc",
+    "8001ee68": "⚠️ HIGH-VALUE CORRECTIONS (seed labels that were WRONG — read first)",
+    "8001f314": "Player / animation :: FUN_8001f314",
+    "8001f3bc": "Player / animation :: FUN_8001f314",
+    "8001f664": "Player / animation :: FUN_8001f664",
+    "8001f8b4": "Player / animation :: FUN_8001f314",
+    "80020f8c": "Render / fade / letterbox :: 0x80020f8c",
+    "8002137c": "Prop / fixture rendering + perf (2026-06-02, this session) :: PERF: frame loop",
+    "80021a0c": "Render / fade / letterbox :: 0x80021a0c",
+    "80021bbc": "Prop / fixture rendering + perf (2026-06-02, this session) :: DAT_800b0fe4",
+    "80022da0": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: FUN_80104178",
+    "80022f0c": "Prop / fixture rendering + perf (2026-06-02, this session) :: FUN_80022f0c",
+    "80023098": "Prop / fixture rendering + perf (2026-06-02, this session) :: FUN_8003e64c",
+    "800245d8": "Player / animation :: FUN_800245d8",
+    "80024c30": "Player / animation :: FUN_80024e40",
+    "80024e40": "Player / animation :: FUN_80024e40",
+    "800254a0": "Lighting / NCCT :: 0x800254a0",
+    "800256b0": "Prop / fixture rendering + perf (2026-06-02, this session) :: FUN_8002c18c",
+    "80026b7c": "Save / item-box (RE2_Quellcode_Overlays primär / RE2_Quellcode_V2 fallback — future rebuild) :: FUN_80026b7c",
+    "80027bec": "RE2 RENDERING PIPELINE (from the 85-agent render audit 2026-06-02b; ghidra_source_re2_Leon.txt) — the model our PSX port should converge on :: FUN_80027bec",
+    "80027dbc": "RE2 RENDERING PIPELINE (from the 85-agent render audit 2026-06-02b; ghidra_source_re2_Leon.txt) — the model our PSX port should converge on :: FUN_80027dbc",
+    "80028868": "Prop / fixture rendering + perf (2026-06-02, this session) :: FUN_80028868",
+    "80029cd8": "Sprite / BG / MDEC / TIM :: 0x8002a2a8",
+    "8002a2a8": "Sprite / BG / MDEC / TIM :: 0x8002a2a8",
+    "8002a630": "Sprite / BG / MDEC / TIM :: 0x8002a630",
+    "8002af20": "Prop / fixture rendering + perf (2026-06-02, this session) :: PERF: frame loop",
+    "8002b5d0": "Combat / player damage (verified 2026-06-28, ghidra1_V2.txt:77607-77814 + 223455-223490) :: FUN_8002b5d0",
+    "8002b898": "Prop / fixture rendering + perf (2026-06-02, this session) :: FUN_8002b898",
+    "8002b968": "Save / item-box (RE2_Quellcode_Overlays primär / RE2_Quellcode_V2 fallback — future rebuild) :: FUN_80032340",
+    "8002bd44": "Render / fade / letterbox :: 0x8002bd44",
+    "8002bda8": "⚠️ HIGH-VALUE CORRECTIONS (seed labels that were WRONG — read first)",
+    "8002c18c": "RVD / AOT :: 0x8002c18c",
+    "8002c444": "Stairs / floor-band traversal (verified 2026-06-10, ghidra1_V2.txt:136723-136901) :: FUN_8002c444",
+    "8002c820": "RE2 RENDERING PIPELINE (from the 85-agent render audit 2026-06-02b; ghidra_source_re2_Leon.txt) — the model our PSX port should converge on :: FUN_8002c820",
+    "8002ce94": "RE2 RENDERING PIPELINE (from the 85-agent render audit 2026-06-02b; ghidra_source_re2_Leon.txt) — the model our PSX port should converge on :: FUN_8002ce94",
+    "8002d0e8": "Prop / fixture rendering + perf (2026-06-02, this session) :: FUN_8002d0e8",
+    "8002da80": "RE2 RENDERING PIPELINE (from the 85-agent render audit 2026-06-02b; ghidra_source_re2_Leon.txt) — the model our PSX port should converge on :: FUN_8002da80 / FUN_8002ddf0",
+    "8002ddf0": "RE2 RENDERING PIPELINE (from the 85-agent render audit 2026-06-02b; ghidra_source_re2_Leon.txt) — the model our PSX port should converge on :: FUN_8002da80 / FUN_8002ddf0",
+    "8002e2d8": "RE2 RENDERING PIPELINE (from the 85-agent render audit 2026-06-02b; ghidra_source_re2_Leon.txt) — the model our PSX port should converge on :: FUN_8002ea40 / FUN_8002eaf8 / FUN_8002e2d8",
+    "8002ea40": "RE2 RENDERING PIPELINE (from the 85-agent render audit 2026-06-02b; ghidra_source_re2_Leon.txt) — the model our PSX port should converge on :: FUN_8002ea40 / FUN_8002eaf8 / FUN_8002e2d8",
+    "8002eaf8": "RE2 RENDERING PIPELINE (from the 85-agent render audit 2026-06-02b; ghidra_source_re2_Leon.txt) — the model our PSX port should converge on :: FUN_8002ea40 / FUN_8002eaf8 / FUN_8002e2d8",
+    "8003014c": "Render / fade / letterbox :: 0x8003014c",
+    "80030af0": "Player / animation :: LAB_80030af0",
+    "800314b0": "Sprite / BG / MDEC / TIM :: 0x800396fc",
+    "80031718": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: DAT_800acaee",
+    "80031c44": "Player / animation :: FUN_80031c44",
+    "80032150": "Save / item-box (RE2_Quellcode_Overlays primär / RE2_Quellcode_V2 fallback — future rebuild) :: FUN_80032150",
+    "80032340": "Save / item-box (RE2_Quellcode_Overlays primär / RE2_Quellcode_V2 fallback — future rebuild) :: FUN_80032340",
+    "80034a04": "Save / item-box (RE2_Quellcode_Overlays primär / RE2_Quellcode_V2 fallback — future rebuild) :: FUN_80034a04",
+    "80035af0": "Player / animation :: FUN_80035af0 (state2 Hit)",
+    "800366bc": "Player / animation :: FUN_80031c44",
+    "80038850": "Stairs / floor-band traversal (verified 2026-06-10, ghidra1_V2.txt:136723-136901) :: LAB_80038850",
+    "80038c60": "Stairs / floor-band traversal (verified 2026-06-10, ghidra1_V2.txt:136723-136901) :: LAB_80038c60",
+    "80038e50": "Stairs / floor-band traversal (verified 2026-06-10, ghidra1_V2.txt:136723-136901) :: LAB_80038e50",
+    "800390e0": "Stairs / floor-band traversal (verified 2026-06-10, ghidra1_V2.txt:136723-136901) :: FUN_800390e0",
+    "800392d4": "Sprite / BG / MDEC / TIM :: FUN_800392d4",
+    "800392e4": "⚠️ HIGH-VALUE CORRECTIONS (seed labels that were WRONG — read first)",
+    "80039590": "Sprite / BG / MDEC / TIM :: 0x80039590",
+    "800396fc": "Sprite / BG / MDEC / TIM :: 0x800396fc",
+    "80039b2c": "Lighting / NCCT :: 0x80039b2c",
+    "80039ca0": "Lighting / NCCT :: 0x80039ca0",
+    "8003b068": "Stairs / floor-band traversal (verified 2026-06-10, ghidra1_V2.txt:136723-136901) :: FUN_8003b0a4 (SCA push-out resolver)",
+    "8003b0a4": "Stairs / floor-band traversal (verified 2026-06-10, ghidra1_V2.txt:136723-136901) :: FUN_8003b0a4 (SCA push-out resolver)",
+    "8003b480": "Stairs / floor-band traversal (verified 2026-06-10, ghidra1_V2.txt:136723-136901) :: FUN_8003b0a4 (SCA push-out resolver)",
+    "8003beb0": "Stairs / floor-band traversal (verified 2026-06-10, ghidra1_V2.txt:136723-136901) :: Slope push-out handlers [#29]",
+    "8003c2cc": "Stairs / floor-band traversal (verified 2026-06-10, ghidra1_V2.txt:136723-136901) :: Slope push-out handlers [#29]",
+    "8003c734": "Stairs / floor-band traversal (verified 2026-06-10, ghidra1_V2.txt:136723-136901) :: Slope push-out handlers [#29]",
+    "8003cb9c": "Stairs / floor-band traversal (verified 2026-06-10, ghidra1_V2.txt:136723-136901) :: Slope push-out handlers [#29]",
+    "8003d00c": "Stairs / floor-band traversal (verified 2026-06-10, ghidra1_V2.txt:136723-136901) :: Slope push-out handlers [#29]",
+    "8003e64c": "RVD / AOT :: 0x8003e64c",
+    "8003ebf4": "SCD VM :: 0x8003f0a0",
+    "8003edec": "SCD VM :: 0x8003ee3c",
+    "8003ee3c": "SCD VM :: 0x8003ee3c",
+    "8003f0a0": "SCD VM :: 0x8003f0a0",
+    "8003f258": "SCD VM :: 0x8003f258 (0x02 Evt_next) / 0x8003f930 (0x11 Do) / 0x8003f8bc (0x12 Edwhile)",
+    "8003f2a0": "SCD VM :: 0x8003f2a0 (0x04 Evt_exec)",
+    "8003f328": "SCD VM :: LAB_8003fb9c (0x17 Goto)",
+    "8003f3e0": "SCD VM :: LAB_8003f428 (0x0A Sleeping)",
+    "8003f428": "SCD VM :: LAB_8003f428 (0x0A Sleeping)",
+    "8003f488": "SCD VM :: LAB_8003f428 (0x0A Sleeping)",
+    "8003f540": "SCD VM :: 0x8003f540 (0x0D For) / 0x8003f674 (0x0E Next)",
+    "8003f674": "SCD VM :: 0x8003f540 (0x0D For) / 0x8003f674 (0x0E Next)",
+    "8003f8bc": "SCD VM :: 0x8003f258 (0x02 Evt_next) / 0x8003f930 (0x11 Do) / 0x8003f8bc (0x12 Edwhile)",
+    "8003f930": "SCD VM :: 0x8003f258 (0x02 Evt_next) / 0x8003f930 (0x11 Do) / 0x8003f8bc (0x12 Edwhile)",
+    "8003fb9c": "SCD VM :: LAB_8003fb9c (0x17 Goto)",
+    "8003fbe8": "SCD VM :: 0x8003fbe8 (PSX 0x18 = GOSUB)",
+    "8003fc50": "SCD VM :: LAB_8003fc50 (0x19 Return)",
+    "8003fcf4": "SCD VM :: LAB_8003fcf4 (0x21 Ck)",
+    "8003fd54": "SCD VM :: LAB_8003fd54 (0x58) / LAB_8003fe90 (0x59)",
+    "8003fe90": "SCD VM :: LAB_8003fd54 (0x58) / LAB_8003fe90 (0x59)",
+    "800402a0": "SCD VM :: 0x800402a0 (0x29 Cut_chg)",
+    "800403ac": "SCD VM :: 0x800403ac (0x3C Cut_auto)",
+    "80040914": "RVD / AOT :: 0x80040914",
+    "80040aa4": "RVD / AOT :: 0x80040914",
+    "80040f14": "Player / animation :: LAB_80040f14 (0x2F Speed_set)",
+    "80040f40": "Player / animation :: 0x80040f40 (0x30 Add_speed)",
+    "8004116c": "Player / animation :: FUN_8004116c",
+    "80041290": "Player / animation :: LAB_80041290 (0x3E Member_cmp)",
+    "800412f0": "Player / animation :: LAB_80041290 (0x3E Member_cmp)",
+    "80041358": "Player / animation :: FUN_80041358",
+    "80041624": "Audio (SPU / VAB) — BO-round 2026-05-29 :: LAB_80041624 (Se_on)",
+    "80041b90": "Player / animation :: LAB_80041b90 (0x3F Plc_motion)",
+    "80041be4": "SCD VM :: 0x80041be4 (0x40 Plc_dest)",
+    "80041e98": "SCD VM :: LAB_80041e98 (0x41 Plc_neck)",
+    "80041f88": "Player / animation :: LAB_80041f88 (0x42 Plc_ret)",
+    "800420a0": "SCD VM :: 0x800420a0 (0x44 Sce_em_set)",
+    "80042b64": "RVD / AOT :: 0x80042b64",
+    "80042bac": "RVD / AOT :: 0x80042bac",
+    "80042bd0": "RVD / AOT :: 0x80042bac",
+    "80042c84": "RVD / AOT :: 0x80042bac",
+    "80042cac": "RVD / AOT :: 0x80042bac",
+    "80042ea8": "RVD / AOT :: 0x80042bac",
+    "800436a8": "RVD / AOT :: FUN_800436a8",
+    "800436cc": "RVD / AOT :: FUN_800436a8",
+    "80043724": "RVD / AOT :: FUN_800436a8",
+    "8004378c": "RVD / AOT :: FUN_800436a8",
+    "800443ec": "Sprite / BG / MDEC / TIM :: 0x800396fc",
+    "80045024": "Combat / player damage (verified 2026-06-28, ghidra1_V2.txt:77607-77814 + 223455-223490) :: FUN_80017fa4",
+    "80045a64": "Audio (SPU / VAB) — BO-round 2026-05-29 :: LAB_80041624 (Se_on)",
+    "8004a3c0": "Save / item-box (RE2_Quellcode_Overlays primär / RE2_Quellcode_V2 fallback — future rebuild) :: FUN_80026b7c",
+    "8004f008": "RVD / AOT :: 0x80042bac",
+    "8004f100": "⚠️ HIGH-VALUE CORRECTIONS (seed labels that were WRONG — read first)",
+    "8004f310": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: zombie FSM (3-level hierarchical, RAM-read HASH_1.sav + handler trace)",
+    "8004f3a4": "⚠️ HIGH-VALUE CORRECTIONS (seed labels that were WRONG — read first)",
+    "8004f4e0": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: zombie FSM (3-level hierarchical, RAM-read HASH_1.sav + handler trace)",
+    "8004f5e8": "⚠️ HIGH-VALUE CORRECTIONS (seed labels that were WRONG — read first)",
+    "8004f6f0": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: zombie FSM (3-level hierarchical, RAM-read HASH_1.sav + handler trace)",
+    "80050be8": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: zombie FSM (3-level hierarchical, RAM-read HASH_1.sav + handler trace)",
+    "80050cb8": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: zombie FSM (3-level hierarchical, RAM-read HASH_1.sav + handler trace)",
+    "80050ddc": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: LAB_80050ddc",
+    "80050f00": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: zombie FSM (3-level hierarchical, RAM-read HASH_1.sav + handler trace)",
+    "80051024": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: zombie FSM (3-level hierarchical, RAM-read HASH_1.sav + handler trace)",
+    "80051148": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: zombie attack-routing (DYNAMICALLY CONFIRMED 2026-06-29, live-combat savestate qf_r1.sav)",
+    "80051484": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: zombie FSM (3-level hierarchical, RAM-read HASH_1.sav + handler trace)",
+    "800517f0": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: zombie FSM (3-level hierarchical, RAM-read HASH_1.sav + handler trace)",
+    "80051908": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: zombie FSM (3-level hierarchical, RAM-read HASH_1.sav + handler trace)",
+    "80051b00": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: zombie FSM (3-level hierarchical, RAM-read HASH_1.sav + handler trace)",
+    "80053ca4": "Camera :: 0x80053ca4",
+    "80053fc0": "Lighting / NCCT :: 0x80053fc0",
+    "800542dc": "Lighting / NCCT :: 0x800542dc",
+    "800659d0": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: FUN_80104178",
+    "80067a28": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: FUN_80104178",
+    "80068c88": "Sprite / BG / MDEC / TIM :: 0x80068c88",
+    "80068f9c": "Save / item-box (RE2_Quellcode_Overlays primär / RE2_Quellcode_V2 fallback — future rebuild) :: FUN_80068f9c",
+    "8006947c": "Save / item-box (RE2_Quellcode_Overlays primär / RE2_Quellcode_V2 fallback — future rebuild) :: FUN_8006947c",
+    "80069668": "Save / item-box (RE2_Quellcode_Overlays primär / RE2_Quellcode_V2 fallback — future rebuild) :: FUN_80069668",
+    "80069714": "Save / item-box (RE2_Quellcode_Overlays primär / RE2_Quellcode_V2 fallback — future rebuild) :: FUN_80069714",
+    "8006a1e8": "⚠️ HIGH-VALUE CORRECTIONS (seed labels that were WRONG — read first)",
+    "8006b358": "Save / item-box (RE2_Quellcode_Overlays primär / RE2_Quellcode_V2 fallback — future rebuild) :: DAT_800d4a3c",
+    "8006bbbc": "Sprite / BG / MDEC / TIM :: 0x8006BBBC",
+    "8006bbcc": "Sprite / BG / MDEC / TIM :: 0x8006bbcc",
+    "8006dd64": "Sprite / BG / MDEC / TIM :: VLC id 0x3800",
+    "8006f418": "Combat / player damage (verified 2026-06-28, ghidra1_V2.txt:77607-77814 + 223455-223490) :: DAT_8006f418",
+    "8006f430": "Combat / player damage (verified 2026-06-28, ghidra1_V2.txt:77607-77814 + 223455-223490) :: DAT_8006f430",
+    "800703b8": "Save / item-box (RE2_Quellcode_Overlays primär / RE2_Quellcode_V2 fallback — future rebuild) :: FUN_800703b8",
+    "80071d10": "Camera :: 0x8001500c",
+    "80071d40": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: PTR_LAB_80071d40",
+    "80071d98": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: 0x80071d98 (action table)",
+    "80071da4": "Combat / player damage (verified 2026-06-28, ghidra1_V2.txt:77607-77814 + 223455-223490) :: FUN_80017fa4",
+    "80072bac": "⚠️ HIGH-VALUE CORRECTIONS (seed labels that were WRONG — read first)",
+    "80072d4c": "RVD / AOT :: 0x80040914",
+    "80072ecc": "Render / fade / letterbox :: 0x80020f8c",
+    "80072efc": "Render / fade / letterbox :: 0x80020f8c",
+    "80073e30": "Player / animation :: LAB_80030af0",
+    "80073e94": "Combat / player damage (verified 2026-06-28, ghidra1_V2.txt:77607-77814 + 223455-223490) :: DAT_80073e94",
+    "80073f90": "Player / animation :: DAT_800aca58",
+    "800741a8": "Player / animation :: FUN_80035af0 (state2 Hit)",
+    "800744a8": "SCD VM :: 0x800744a8",
+    "8007455c": "RVD / AOT :: 0x80040914",
+    "8007469c": "RVD / AOT :: 0x80042bac",
+    "80076d14": "Lighting / NCCT :: 0x800542dc",
+    "80076d34": "Lighting / NCCT :: 0x800542dc",
+    "8008ff68": "Sprite / BG / MDEC / TIM :: 0x8006BBBC",
+    "800a23ac": "Save / item-box (RE2_Quellcode_Overlays primär / RE2_Quellcode_V2 fallback — future rebuild) :: FUN_80032340",
+    "800a73b8": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: FUN_80019e20",
+    "800aa538": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: FUN_80019e20",
+    "800ac778": "Camera :: 0x80014324",
+    "800ac77c": "SCD VM :: 0x800420a0 (0x44 Sce_em_set)",
+    "800ac784": "Player / animation :: FUN_80031c44",
+    "800ac794": "Camera :: 0x800142f4",
+    "800ac9b0": "RVD / AOT :: 0x80042bac",
+    "800aca38": "Render / fade / letterbox :: 0x80021a0c",
+    "800aca3c": "SCD VM :: 0x800402a0 (0x29 Cut_chg)",
+    "800aca40": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: FUN_8011d6d4",
+    "800aca4e": "RVD / AOT :: FUN_800436a8",
+    "800aca54": "Combat / player damage (verified 2026-06-28, ghidra1_V2.txt:77607-77814 + 223455-223490) :: FUN_80012d60",
+    "800aca58": "Player / animation :: DAT_800aca58",
+    "800aca59": "Player / animation :: FUN_80035af0 (state2 Hit)",
+    "800aca5a": "Player / animation :: FUN_80035af0 (state2 Hit)",
+    "800aca5b": "Stairs / floor-band traversal (verified 2026-06-10, ghidra1_V2.txt:136723-136901)",
+    "800aca5c": "Player / animation :: FUN_80024e40",
+    "800aca74": "RVD / AOT :: 0x80040914",
+    "800aca88": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: FUN_8011d6d4",
+    "800acad6": "Stairs / floor-band traversal (verified 2026-06-10, ghidra1_V2.txt:136723-136901) :: LAB_80038c60",
+    "800acae0": "Player / animation :: LAB_80030AF0 (walker 3-state FSM)",
+    "800acae7": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: DAT_800acae7",
+    "800acae8": "Player / animation :: FUN_80035af0 (state2 Hit)",
+    "800acae9": "Stairs / floor-band traversal (verified 2026-06-10, ghidra1_V2.txt:136723-136901) :: LAB_80038c60",
+    "800acaec": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: DAT_800acaec",
+    "800acaee": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: DAT_800acaee",
+    "800acaf0": "Stairs / floor-band traversal (verified 2026-06-10, ghidra1_V2.txt:136723-136901) :: DAT_800acc0e / DAT_800acaf0 / DAT_800acaf2",
+    "800acaf2": "Stairs / floor-band traversal (verified 2026-06-10, ghidra1_V2.txt:136723-136901) :: DAT_800acc0e / DAT_800acaf0 / DAT_800acaf2",
+    "800acc0e": "Stairs / floor-band traversal (verified 2026-06-10, ghidra1_V2.txt:136723-136901) :: DAT_800acc0e / DAT_800acaf0 / DAT_800acaf2",
+    "800acc2c": "⚠️ HIGH-VALUE CORRECTIONS (seed labels that were WRONG — read first)",
+    "800afbb4": "RVD / AOT :: 0x80042bac",
+    "800afbb5": "Camera :: 0x800142f4",
+    "800b0fd0": "SCD VM :: LAB_8003fd54 (0x58) / LAB_8003fe90 (0x59)",
+    "800b0fe4": "Prop / fixture rendering + perf (2026-06-02, this session) :: DAT_800b0fe4",
+    "800b2248": "Combat / player damage (verified 2026-06-28, ghidra1_V2.txt:77607-77814 + 223455-223490) :: FUN_80019700",
+    "800b22d4": "Combat / player damage (verified 2026-06-28, ghidra1_V2.txt:77607-77814 + 223455-223490) :: FUN_80019700",
+    "800b2584": "Sprite / BG / MDEC / TIM :: 0x80039590",
+    "800b2858": "Stairs / floor-band traversal (verified 2026-06-10, ghidra1_V2.txt:136723-136901) :: FUN_8003b0a4 (SCA push-out resolver)",
+    "800b2b4c": "SCD VM :: 0x800b2b4c",
+    "800b3f70": "⚠️ HIGH-VALUE CORRECTIONS (seed labels that were WRONG — read first)",
+    "800b3f7a": "SCD VM :: 0x800b2b4c",
+    "800b3f98": "RVD / AOT :: FUN_800436a8",
+    "800b4008": "Prop / fixture rendering + perf (2026-06-02, this session) :: FUN_8002b898",
+    "800b5288": "Camera :: 0x80053ca4",
+    "800b52c4": "Combat / player damage (verified 2026-06-28, ghidra1_V2.txt:77607-77814 + 223455-223490) :: FUN_80017fa4",
+    "800b5568": "Render / fade / letterbox :: 0x80021a0c",
+    "800c4416": "Prop / fixture rendering + perf (2026-06-02, this session) :: DAT_800c4416",
+    "800ce550": "Save / item-box (RE2_Quellcode_Overlays primär / RE2_Quellcode_V2 fallback — future rebuild) :: FUN_80026b7c",
+    "800cfb74": "Save / item-box (RE2_Quellcode_Overlays primär / RE2_Quellcode_V2 fallback — future rebuild) :: FUN_80032150",
+    "800d46ac": "Save / item-box (RE2_Quellcode_Overlays primär / RE2_Quellcode_V2 fallback — future rebuild) :: DAT_800d4a3c",
+    "800d4a2c": "Save / item-box (RE2_Quellcode_Overlays primär / RE2_Quellcode_V2 fallback — future rebuild) :: FUN_80026b7c",
+    "800d4a3c": "Save / item-box (RE2_Quellcode_Overlays primär / RE2_Quellcode_V2 fallback — future rebuild) :: DAT_800d4a3c",
+    "800d4a68": "Save / item-box (RE2_Quellcode_Overlays primär / RE2_Quellcode_V2 fallback — future rebuild) :: DAT_800d4a68",
+    "800d5bfc": "Save / item-box (RE2_Quellcode_Overlays primär / RE2_Quellcode_V2 fallback — future rebuild) :: FUN_800703b8",
+    "800d5c14": "Save / item-box (RE2_Quellcode_Overlays primär / RE2_Quellcode_V2 fallback — future rebuild) :: FUN_800703b8",
+    "80100000": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: zombie FSM (3-level hierarchical, RAM-read HASH_1.sav + handler trace)",
+    "80100424": "⚠️ HIGH-VALUE CORRECTIONS (seed labels that were WRONG — read first)",
+    "8010055c": "⚠️ HIGH-VALUE CORRECTIONS (seed labels that were WRONG — read first)",
+    "80100688": "⚠️ HIGH-VALUE CORRECTIONS (seed labels that were WRONG — read first)",
+    "80101224": "⚠️ HIGH-VALUE CORRECTIONS (seed labels that were WRONG — read first)",
+    "8010168c": "⚠️ HIGH-VALUE CORRECTIONS (seed labels that were WRONG — read first)",
+    "80101784": "⚠️ HIGH-VALUE CORRECTIONS (seed labels that were WRONG — read first)",
+    "80101b64": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: FUN_80101b64 (+ FUN_80101de4 / FUN_80102058)",
+    "80101c7c": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: FUN_80101c7c",
+    "80101de4": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: FUN_80101b64 (+ FUN_80101de4 / FUN_80102058)",
+    "80102058": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: FUN_80101b64 (+ FUN_80101de4 / FUN_80102058)",
+    "80104178": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: FUN_80104178",
+    "80105a8c": "⚠️ HIGH-VALUE CORRECTIONS (seed labels that were WRONG — read first)",
+    "80106ba4": "⚠️ HIGH-VALUE CORRECTIONS (seed labels that were WRONG — read first)",
+    "8010919c": "⚠️ HIGH-VALUE CORRECTIONS (seed labels that were WRONG — read first)",
+    "8010a8c8": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: FUN_8010a8c8",
+    "8010b6d4": "⚠️ HIGH-VALUE CORRECTIONS (seed labels that were WRONG — read first)",
+    "8010b800": "⚠️ HIGH-VALUE CORRECTIONS (seed labels that were WRONG — read first)",
+    "8011d6d4": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: FUN_8011d6d4",
+    "8011d6e8": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: FUN_8011d6d4",
+    "8011d84c": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: zombie FSM (3-level hierarchical, RAM-read HASH_1.sav + handler trace)",
+    "8011d9f4": "⚠️ HIGH-VALUE CORRECTIONS (seed labels that were WRONG — read first)",
+    "8011da48": "⚠️ HIGH-VALUE CORRECTIONS (seed labels that were WRONG — read first)",
+    "8011db40": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: zombie FSM (3-level hierarchical, RAM-read HASH_1.sav + handler trace)",
+    "8011db88": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: zombie FSM (3-level hierarchical, RAM-read HASH_1.sav + handler trace)",
+    "8011f784": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: FUN_80104178",
+    "8011f7a4": "⚠️ HIGH-VALUE CORRECTIONS (seed labels that were WRONG — read first)",
+    "8011f7b4": "⚠️ HIGH-VALUE CORRECTIONS (seed labels that were WRONG — read first)",
+    "8011f800": "⚠️ HIGH-VALUE CORRECTIONS (seed labels that were WRONG — read first)",
+    "80120208": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: FUN_8010a8c8",
+    "801217a0": "⚠️ HIGH-VALUE CORRECTIONS (seed labels that were WRONG — read first)",
+    "801217b4": "⚠️ HIGH-VALUE CORRECTIONS (seed labels that were WRONG — read first)",
+    "801217b8": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: zombie attack-routing (DYNAMICALLY CONFIRMED 2026-06-29, live-combat savestate qf_r1.sav)",
+    "801217c4": "Enemy AI — STAGE1 zombie (type 0x47), partial RE 2026-06-29 :: zombie attack-routing (DYNAMICALLY CONFIRMED 2026-06-29, live-combat savestate qf_r1.sav)"
+  }
+}
