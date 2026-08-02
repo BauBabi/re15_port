@@ -1,5 +1,9 @@
 # RE1.5 Byte‑True Port — Master Implementation Roadmap
 
+> **AKTUELLE KAMPAGNE (2026-08-02):** [ROADMAP_ROOMCHAIN.md](ROADMAP_ROOMCHAIN.md) — Raumkette
+> 1120/1130/1140/1150/1170/1240 byte-true (Rolltor-Sound, Krähen-KI 1170, Zombie-Hit 1140,
+> systematischer Sweep, Adress-Coverage). Neue Sessions starten DORT.
+
 *Synthesis of the six area plans into one ordered, dependency‑driven execution sequence. Every task keeps its original area ID (prefixed `A1…A6` for traceability) so we can work it piece by piece.*
 
 ---

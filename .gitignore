@@ -79,3 +79,16 @@ re15_port/**/*.pdb
 # stray logs
 debug.log
 re15_card.mcr
+
+### Session-Scratch (Cleanup 2026-08-02): Laufzeit-Logs, Crash-DBs und
+### Verifikations-Screenshots entstehen bei jedem Lauf neu — nie tracken.
+### Bereits getrackte Referenzdateien unter shots/ bleiben davon unberührt.
+/*.log
+/err.txt
+/build_err.txt
+*.stackdump
+__pycache__/
+/.sentry-native/
+/shots/
+### Savestates sind Ground-Truth, aber zu groß fürs Repo — lokal halten.
+/stage_saves/*.sav
