@@ -151,7 +151,9 @@ Vollständig in [HANDOVER_2026-08-01.md](HANDOVER_2026-08-01.md) §1/§2b. Kernp
 
 | 2026-08-02 | **Verletzungs-Optik DYNAMISCH bewiesen** (HP-25-Patch + DuckStation-Capture): HP100 vs HP25 = NULL VRAM-/MD1-Differenz; Motion 2→**23 = Injured-Idle** — der „verletzte Leon" IST das Animations-Set, kein Modell/Textur-Wechsel. Scheinbefund Tile/CLUT war Waffen-Confounder. OFFEN: verletzter WALK (DS-Pad-Config, dann HP25-Geh-Capture) + Port-Live-Check der Injured-Idles (Sentinel 213); Elza-Bycatch: FUN_80024c30 gated auf `aca5c&4` = vermutlich Elza-Haar (Krähen-D7-Hinweis) | `c1f0064d` |
 
-Baseline nach der Session: **102/102 ctest grün.**
+| 2026-08-02 | **BLUT-DECAL-SYSTEM gefunden + portiert** (Nutzer-Save als Ground Truth): DR_MOVE-Blits aus der Damage-Bank (TIM-Seite 2) auf 8 Panels, Akkumulator FUN_80037edc (Schwelle 120, Clamp 2), Trigger = Overlay-Hurt-Dispatcher; KEINE HP-Schwelle. Port: Wund-Tabelle + Trigger + Slot-0-Blit + Re-Apply; ctest `unit_wound_accumulator`. OFFEN: Substate-0/1-Writer, STAGE2-5-Helper-Args, Gegner-Wunden @0x800b267c, Live-gdigrab | *(dieser Commit)* |
+
+Baseline nach der Session: **103/103 ctest grün.**
 
 ### Offene Punkte (oberste Zeile = nächster Schritt)
 
