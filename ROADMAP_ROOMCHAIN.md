@@ -147,6 +147,8 @@ Vollständig in [HANDOVER_2026-08-01.md](HANDOVER_2026-08-01.md) §1/§2b. Kernp
 
 | 2026-08-02 | **W1.2-NACHTRAG (Nutzer: „Krähen haben NOCH NIE angegriffen")**: Sonde `probe_crow_1170` fand die Wurzel — Krähen-INIT installierte die Hitbox nie (`+0x78 = DAT_80121108` @FUN_80111a4c, Box @0x801210fc {0,0,0,200,180,200}, ofs_y=0-Ausnahme) UND Spieler-Box-ofs_y war 0 statt −1530 (PSX.EXE file 0x64694 byte-verifiziert) → aec4-Y-Band wies den Grapple-Hover immer ab. Nach Fix: Sonde hp 100→76, Grab-Zyklus 12→13→14 läuft; Dossier-Nachtrag D12 | *(dieser Commit)* |
 
+| 2026-08-02 | **Verletzungs-Optik-RE (Nutzer-Request)**: byte-belegt — der Modell-Mechanismus ist ein KOSTÜM-Slot-System (`DAT_800aca5c` → Tabelle @0x80073f70, Reload nur beim Raumwechsel @0x80039750-8c); **kein HP/Condition-Input, im MZD-Build dormant** (Writer-Zensus geschlossen, 92 Savestates slot=0). Blutige TIM-Assets liegen unreferenziert. Sichtbares „Verletzt" = Injured-Anims + Inventar-Condition (beides im Port). NEUE echte Divergenzen: Slot-Mechanismus fehlt / Elza spielt in-game mit Leon-Modell / STPIC hardcoded (Q2-Blocker gelöst @0x800c01c4). Dossier `analysis/leon_injured_model.md`; PL01.PLD ergänzt | `02ed15eb` |
+
 Baseline nach der Session: **102/102 ctest grün.**
 
 ### Offene Punkte (oberste Zeile = nächster Schritt)
