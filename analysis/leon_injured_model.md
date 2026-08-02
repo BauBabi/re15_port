@@ -241,3 +241,32 @@ blutiger Kleidung genuegt, um den Mechanismus in Minuten zu lokalisieren.
 (Sentinels 213/214 -> PL00 22/23; Kollision 213==AIM_W pruefen) — DAS ist der sichtbare
 Verletzt-Look des Originals; (2) Walk bleibt bei Caution/Danger UNVERAENDERT (Clip 5,
 gleiche Speed) — nicht erfinden.
+
+
+---
+
+## NACHTRAG 3 (2026-08-02) — GEFUNDEN: Blut-DECALS in der Spieler-Textur (Nutzer-Save als Beweis)
+
+Der Nutzer lieferte den entscheidenden Savestate (Slot 1, gesichert als
+`stage_saves/mzd_blood_decals_hp30.sav`; HP=30, slot=0, wpn=1, PL00 resident):
+
+- **112 von 256 Texturzeilen weichen von der sauberen PL00-TIM ab** — 3194 einzelne
+  8bpp-Pixel, verstreut in kleinen Clustern (2-5 hw je Zeile) ueber BEIDE Mesh-Seiten
+  (Seite 0+1), Zeilen 2..255. KEIN Block-Swap: **einzelne Blut-Spritzer, in die
+  Texturseite GESTEMPELT.**
+- Die gestempelten Farb-Indizes sind ueberwiegend **224..239** — exakt der 16-Eintraege-
+  Block, der in der Arbeits-CLUT-Zeile 482 dynamisch verwaltet wird (Nachtrag 2/
+  Waffen-Composite-Analyse): der Block IST die Blut-Palette.
+- Residentes MD1 unveraendert (Standard-PL00-Patches) -> reines Pixel-Stempeln.
+- Das erklaert die gesamte Phaenomenologie: Decals AKKUMULIEREN pro Treffer-Ereignis
+  (nicht HP-Schwelle!) -> starke Korrelation mit Danger, ohne dass HP je gelesen wird.
+  Deshalb sahen Schwellen-Poke und Tuer-Test nichts; der Grab-Biss-Test stempelte
+  nicht (Trigger-Detail offen — vermutlich braucht es das Blut-PARTIKEL-Ereignis,
+  das auf dem Spieler landet, nicht den Schaden selbst).
+- Das ist das in RE15_KNOWLEDGE §5.6 beschriebene Blood-Decal-System (Partikel
+  @0x800A73B8, Sprite-State @0x800B25CC, **Apply-Funktion nie lokalisiert**) — jetzt
+  mit Ground-Truth-Save lokalisierbar.
+
+OFFEN (naechste RE-Runde, Workflow angesetzt): die Apply-Funktion (GPU-Prim in die
+Texturseite oder LoadImage-Kleinrect?), der exakte Trigger (welche Treffer/Partikel),
+Quelle der Stempel-Formen, Persistenz (Raumwechsel? Heilung?), Port-Implementierung.
