@@ -20,6 +20,11 @@
 
 #include "re15_actor.h"
 #include "re15_enemy_ai.h"
+#include "re15_damage.h"   /* re15_player_apply_hitbox — der Test-Spieler braucht die byte-true
+                            * Box @0x80073e94 {450,1530, ofs_y -1530}: seit die Kraehe ihre echte
+                            * Box @0x801210fc traegt (h=180), ist das aec4-Y-Band aktiv; ein
+                            * handgebauter Spieler ohne Box (h=0, ofs 0) macht das Band 180-eng
+                            * und lehnt den byte-true Grapple-Hover (~2000 ueber Leon) ab. */
 
 int main(void)
 {
@@ -28,6 +33,7 @@ int main(void)
 
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->active = 1; pl->type = 0; pl->x = 300; pl->y = 0; pl->z = 30000; pl->hp = 100;
+    re15_player_apply_hitbox(pl);   /* byte-true Box (s. include-Kommentar) */
 
     /* spawn a crow at (2000, 700, 300) facing rot 0 (state 0 = INIT, as op_sce_em_set seeds) */
     const int CS = 1;
@@ -78,6 +84,7 @@ int main(void)
     memset(g_actors, 0, sizeof g_actors);
     pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->active = 1; pl->type = 0; pl->x = 300; pl->y = 0; pl->z = 30000; pl->hp = 100;
+    re15_player_apply_hitbox(pl);   /* byte-true Box (s. include-Kommentar) */
     re15_actor_t *ev = &g_actors[1];
     ev->active = 1; ev->type = 0x21; ev->state = 0; ev->grid_id = 0x40;   /* the event crow */
     ev->x = 2000; ev->y = 700; ev->z = 300; ev->rot_y = 0;
@@ -102,6 +109,7 @@ int main(void)
         memset(g_actors, 0, sizeof g_actors);
         pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
         pl->active = 1; pl->type = 0; pl->x = 300; pl->y = 0; pl->z = 30000; pl->hp = 100;
+    re15_player_apply_hitbox(pl);   /* byte-true Box (s. include-Kommentar) */
         re15_actor_t *dc = &g_actors[1];
         dc->active = 1; dc->type = 0x21; dc->state = 0; dc->grid_id = 0x40;
         dc->x = 2000; dc->y = 700; dc->z = 300; dc->rot_y = 0;
@@ -126,6 +134,7 @@ int main(void)
         memset(g_actors, 0, sizeof g_actors);
         pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
         pl->active = 1; pl->type = 0; pl->x = 300; pl->y = 0; pl->z = 30000; pl->hp = 100;
+    re15_player_apply_hitbox(pl);   /* byte-true Box (s. include-Kommentar) */
         re15_actor_t *rc = &g_actors[1];
         rc->active = 1; rc->type = 0x21; rc->state = 0;
         rc->x = 2000; rc->y = 700; rc->z = 300;
@@ -146,6 +155,7 @@ int main(void)
         memset(g_actors, 0, sizeof g_actors);
         pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
         pl->active = 1; pl->type = 0; pl->x = 300; pl->y = 0; pl->z = 30000; pl->hp = 100;
+    re15_player_apply_hitbox(pl);   /* byte-true Box (s. include-Kommentar) */
         re15_actor_t *kc = &g_actors[1];
         kc->active = 1; kc->type = 0x21; kc->state = 0;
         kc->x = 2000; kc->y = 700; kc->z = 300;
@@ -171,6 +181,7 @@ int main(void)
         memset(g_actors, 0, sizeof g_actors);
         pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
         pl->active = 1; pl->type = 0; pl->x = 300; pl->y = 0; pl->z = 30000; pl->hp = 100;
+    re15_player_apply_hitbox(pl);   /* byte-true Box (s. include-Kommentar) */
         re15_actor_t *fc = &g_actors[1];
         fc->active = 1; fc->type = 0x21; fc->state = 0;
         fc->x = 2000; fc->y = 700; fc->z = 300;

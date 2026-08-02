@@ -1104,10 +1104,17 @@ void re15_player_apply_hitbox(re15_actor_t *p)
     if (!p) return;
     p->hit_radius_min = p->hit_radius_max = 450;
     p->hit_height     = 1530;
-    /* The player's +0x7c local offset was not extracted; XZ offset 0 centres the
-     * hitbox on the player horizontally (the only component the circular XZ test
-     * uses); the Y-centre offset is left 0 (unconfirmed for the player). */
-    p->hit_offset_x = p->hit_offset_y = p->hit_offset_z = 0;
+    /* Y-Offset jetzt BYTE-VERIFIZIERT (2026-08-02): die On-Disc-Struktur @0x80073e94
+     * (PSX.EXE Datei-Offset 0x64694) lautet vollstaendig
+     *   00 00 | 06 fa | 00 00 | c2 01 | fa 05 | c2 01
+     *   ofs_x=0, ofs_y=-1530, ofs_z=0, r_min=450, h=1530, r_max=450
+     * — das +0x7c-Offset ist (0,-1530,0), NICHT 0. Der alte 0-Wert ("unconfirmed")
+     * verschob das Y-Band des Body-Push um 1530: am Boden folgenlos (Zombie-dy +90
+     * statt -1440, Band +-2970), aber der FLIEGENDE Kraehen-Grapple (Hover ~2000
+     * ueber dem Spieler) fiel damit aus dem Band -> Kraehen konnten NIE zupacken
+     * (Nutzer-Report 2026-08-02, Sonde probe_crow_1170). */
+    p->hit_offset_x = p->hit_offset_z = 0;
+    p->hit_offset_y = -1530;
 }
 
 /* Enemy hitbox by type. The per-type +0x78 struct (DAT_800b2248[type<<2] + 0x8) is
@@ -1183,8 +1190,15 @@ void re15_enemy_apply_hitbox(re15_actor_t *a, uint8_t type)
     a->hit_radius_max = rz;
     a->hit_height     = h;
     a->hit_offset_x   = 0;
-    a->hit_offset_y   = (int16_t)(-(int32_t)h);   /* +0x7c local offset = (0, -height, 0) */
+    a->hit_offset_y   = (int16_t)(-(int32_t)h);   /* +0x7c local offset = (0, -height, 0) —
+                                                   * BYTE-VERIFIZIERT fuer die Zombie-Familie:
+                                                   * Box @STAGE1.BIN file 0x1f778 =
+                                                   * {0,-1440,0,400,1440,400} (2026-08-02) */
     a->hit_offset_z   = 0;
+    if (type == 0x21)                             /* CROW-Ausnahme: Box @0x801210fc (STAGE1.BIN
+                                                   * file 0x210fc, byte-verifiziert 2026-08-02) =
+                                                   * {0,0,0,200,180,200} — ofs_y ist 0, NICHT -h */
+        a->hit_offset_y = 0;
 }
 
 /* ====================================================================== *

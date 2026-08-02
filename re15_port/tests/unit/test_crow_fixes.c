@@ -46,6 +46,25 @@ int main(void)
     CHECK(c90->crow_armed == 0, "D1: grid 0x90 -> disarmed (0x90 & 0x10)");
     CHECK(c00->state == 1, "INIT muss nach ACTIVE (state 1) uebergehen");
 
+    /* ---- D12 (Nutzer-Report: Kraehen griffen NIE an): INIT installiert die Hitbox ----
+     * Original FUN_80111a4c: +0x78 = DAT_80121108 -> Box @0x801210fc (STAGE1.BIN file 0x210fc,
+     * byte-verifiziert 2026-08-02) = {0,0,0,200,180,200} — ofs_y ist 0, NICHT -h. Ohne die Box
+     * blieb hit_radius_min 0 -> der aec4-Kontakt (crow_contact) konnte nie feuern -> kein
+     * Grapple/Strike. Dazu: Spieler-Box @0x80073e94 (PSX.EXE file 0x64694) hat ofs_y = -1530
+     * (Halbwort +2 = 06 fa) — mit 0 statt -1530 lag der Grapple-Hover (~2000 ueber Leon)
+     * ausserhalb des Y-Bands. */
+    CHECK(c00->hit_radius_min == 200, "D12: Kraehen-Box r=200 nach INIT (@0x801210fc)");
+    CHECK(c00->hit_height == 180,     "D12: Kraehen-Box h=180 nach INIT");
+    CHECK(c00->hit_offset_y == 0,     "D12: Kraehen-Box ofs_y=0 (byte-true, NICHT -h)");
+    CHECK(pl->hit_radius_min == 0 || pl->hit_radius_min == 450,
+          "Sanity: Spieler-Slot unangetastet von der Kraehen-INIT");
+    {
+        re15_actor_t tmp; memset(&tmp, 0, sizeof tmp);
+        re15_player_apply_hitbox(&tmp);
+        CHECK(tmp.hit_offset_y == -1530,
+              "D12: Spieler ofs_y = -1530 (PSX.EXE file 0x64694, Halbwort +2 = 0xfa06)");
+    }
+
     /* ---- D5: move[0] timer wraps 0 -> 255 with the completion flag ---- */
     c00->sub_state_1 = 0; c00->sub_state_2 = 1;     /* patrol step1 (timer already seeded) */
     c00->crow_timer = 0; c00->crow_pturn = 0;

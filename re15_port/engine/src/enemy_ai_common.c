@@ -3831,6 +3831,16 @@ static void re15_crow_ai_tick(int slot)
                                                        * rng byte every tick from the next tick on
                                                        * (@0x80112028/0x8011204c) */
         e->crow_vvel = 0; e->crow_speed = 0; e->crow_atk_ctr = 0; e->crow_diveflag = 0;
+        re15_enemy_apply_hitbox(e, 0x21);             /* INIT FUN_80111a4c installiert +0x78 =
+                                                       * DAT_80121108 -> Box @0x801210fc =
+                                                       * {0,0,0,200,180,200} (byte-verifiziert
+                                                       * STAGE1.BIN file 0x210fc). FEHLTE im Port:
+                                                       * hit_radius_min blieb 0 -> crow_contact
+                                                       * (aec4-Tail) konnte NIE feuern -> Kraehen
+                                                       * haben im Port noch nie zugepackt
+                                                       * (Nutzer-Report 2026-08-02, Sonde
+                                                       * probe_crow_1170: sub 12 dauerhaft ohne
+                                                       * Kontakt). */
         e->crow_armed   = (uint8_t)((e->grid_id & 0x10) ? 0 : 1);
                                                       /* +0x1db = (grid&0x10) ? 0 : 1 — INIT
                                                        * @0x801123cc-e8 (`andi grid,0x10; bne ->

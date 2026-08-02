@@ -145,6 +145,8 @@ Vollständig in [HANDOVER_2026-08-01.md](HANDOVER_2026-08-01.md) §1/§2b. Kernp
 | 2026-08-02 | **W1.2 Krähen-KI 1170**: Kernbefund — Original entwaffnet per `grid&0x10` (@0x801123cc-e8), ROOM1170 = 5/7 Krähen PERMANENT passiv (Port griff mit allen 7 an); + Weave in Launch/Arc, Anim-Tick in Approach, ungegateter Grab/Strike-Schaden, Timer-Wrap, Death-Flock-Writes, INIT-f314, Doku-Erratum D10. ctest `unit_crow_fixes` | `2446139c` |
 | 2026-08-02 | **W1.3 Rolltor-Sound**: Mechanismus BELEGT — Tür ist im Original STUMM; das Fahrgeräusch ist ROOM1130 sub02 `Se_on(2,12/10/11)` auf snd0. Port-Defekt war fehlender Tone-Pitch/-Volume: `note2pitch2` EXAKT portiert (fine+shift ADDIEREN, Tabelle DAT_80077520), Mixer per-Voice Q16-Step, Tone-Volume; Se_on-Operanden korrigiert (id\|FLAGS); bank 5→snd0. ctest `unit_se_pitch` (Fixpunkte 512/421/406 = 5512/4533/4371 Hz) | `d10b7893` |
 
+| 2026-08-02 | **W1.2-NACHTRAG (Nutzer: „Krähen haben NOCH NIE angegriffen")**: Sonde `probe_crow_1170` fand die Wurzel — Krähen-INIT installierte die Hitbox nie (`+0x78 = DAT_80121108` @FUN_80111a4c, Box @0x801210fc {0,0,0,200,180,200}, ofs_y=0-Ausnahme) UND Spieler-Box-ofs_y war 0 statt −1530 (PSX.EXE file 0x64694 byte-verifiziert) → aec4-Y-Band wies den Grapple-Hover immer ab. Nach Fix: Sonde hp 100→76, Grab-Zyklus 12→13→14 läuft; Dossier-Nachtrag D12 | *(dieser Commit)* |
+
 Baseline nach der Session: **102/102 ctest grün.**
 
 ### Offene Punkte (oberste Zeile = nächster Schritt)
