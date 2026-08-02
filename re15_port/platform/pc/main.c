@@ -3555,7 +3555,7 @@ re_title:;
                     int ap_mode = 0, ap_slot = -1;
                     static int32_t ap_tx = 0, ap_tz = 0;
                     static int ap_turn = +1, ap_flipwait = 0, ap_msgwait = 0;
-                    static long ap_bestcross = -1;
+                    static long long ap_bestcross = -1;
                     static int ap_stuck = 0, ap_avoid = 0, ap_avoid_dir = +1;
                     static int32_t ap_lastx = 0, ap_lastz = 0;
                     if (!ap_init) {
@@ -3568,6 +3568,16 @@ re_title:;
                                 while (*p == ';' || *p == ' ') p++;
                                 if (!strncmp(p, "aot:", 4)) {
                                     ap_gmode[ap_n] = 1; ap_gslot[ap_n] = atoi(p + 4); ap_n++;
+                                } else if (!strncmp(p, "xza:", 4)) {
+                                    /* xza = Punkt ansteuern UND dort die Aktionstaste halten.
+                                     * Fuer Treppen und Tueren, ohne sich auf AOT-SLOT-NUMMERN zu
+                                     * verlassen: die sind ueber Szenarien hinweg NICHT stabil —
+                                     * nach dem Tor-Wechsel (Selbst-Tuer, cut 11) waren die Slots
+                                     * 8 und 9 neu belegt und lagen ploetzlich beim Spieler. */
+                                    int gx = 0, gz = 0;
+                                    if (sscanf(p + 4, "%d,%d", &gx, &gz) == 2) {
+                                        ap_gmode[ap_n] = 3; ap_gx[ap_n] = gx; ap_gz[ap_n] = gz; ap_n++;
+                                    }
                                 } else if (!strncmp(p, "xz:", 3)) {
                                     int gx = 0, gz = 0;
                                     if (sscanf(p + 3, "%d,%d", &gx, &gz) == 2) {
@@ -3645,11 +3655,36 @@ re_title:;
                     if (ap_mode && g_scd.player_mode != 2) {
                         re15_actor_t *ap_pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
                         int32_t tx = ap_tx, tz = ap_tz;
-                        int have_target = (ap_mode == 2);
-                        if (ap_mode == 1 && ap_slot >= 0 && ap_slot < RE15_AOT_MAX &&
-                            g_aot.slots[ap_slot].active) {
-                            tx = g_aot.slots[ap_slot].x; tz = g_aot.slots[ap_slot].z;
-                            have_target = 1;
+                        int have_target = (ap_mode == 2 || ap_mode == 3);
+                        if (ap_mode == 1 && ap_slot >= 0 && ap_slot < RE15_AOT_MAX) {
+                            const re15_aot_t *ga = &g_aot.slots[ap_slot];
+                            /* Ein Slot zaehlt nur als Ziel, wenn er aktiv ist UND ein echtes
+                             * Rechteck hat. Nach dem Selbst-Tuer-Reenter werden die AOTs neu
+                             * installiert; dabei stehen Slots kurzzeitig aktiv, aber entartet
+                             * (Mitte (0,0), halb (0,0)) in der Liste — der Regler hat die dann
+                             * faelschlich als "erreicht" abgehakt (gemessen: Slots 9 und 8 galten
+                             * schon bei (3512,14578) als erledigt, obwohl die Treppen bei
+                             * x<-20000 liegen). */
+                            if (ga->active && (ga->half_w > 0 || ga->half_h > 0)) {
+                                tx = ga->x; tz = ga->z;
+                                have_target = 1;
+                            }
+                        }
+                        /* HAT DIE AKTION GEGRIFFEN? Tuer und Treppe VERSETZEN den Spieler. Dieser
+                         * Sprung ist die einzige verlaessliche Erfolgsmeldung — und er muss HIER
+                         * geprueft werden, VOR der Ankunftspruefung: nach dem Versetzen ist der
+                         * Spieler weit vom alten Ziel entfernt, der Halte-Zweig laeuft also gar
+                         * nicht mehr an. Genau deshalb steuerte der Regler nach dem geoeffneten
+                         * Tor wieder auf das Tor zu, obwohl er laengst im Hof stand. */
+                        if (ap_hold > 0) {
+                            long long jx = ap_pl->x - ap_lastx, jz = ap_pl->z - ap_lastz;
+                            if (jx * jx + jz * jz > 3000LL * 3000LL) {
+                                fprintf(stderr, "[auto] Aktion hat versetzt -> (%d,%d), Ziel %d fertig\n",
+                                        ap_pl->x, ap_pl->z, ap_idx);
+                                ap_idx++; ap_hold = 0; ap_stuck = 0; ap_avoid = 0; ap_bestcross = -1;
+                                ap_lastx = ap_pl->x; ap_lastz = ap_pl->z;
+                                have_target = 0;          /* diesen Frame nicht mehr lenken */
+                            }
                         }
                         /* (Das Wegbestaetigen offener Nachrichten liegt WEITER OBEN und ist auf
                          * das Gameplay beschraenkt. Hier stand frueher ein zweiter, ungegateter
@@ -3675,25 +3710,66 @@ re_title:;
                                 }
                             }
                             int32_t dx = tx - ap_pl->x, dz = tz - ap_pl->z;
-                            long dist2 = (long)dx * dx + (long)dz * dz;
-                            int32_t fx =  re15_cos_q12(ap_pl->rot_y);
-                            int32_t fz = -re15_sin_q12(ap_pl->rot_y);
-                            long cross = (long)fx * dz - (long)fz * dx;   /* Drehrichtung */
-                            long dot   = (long)fx * dx + (long)fz * dz;   /* >0 = Ziel voraus */
-                            long acr   = cross < 0 ? -cross : cross;
+                            long long dist2 = (long long)dx * dx + (long long)dz * dz;
+                            /* ZIELWINKEL AUSRECHNEN, nicht ausprobieren.
+                             * Blickrichtung ist (cos(rot_y), -sin(rot_y)) (actor_locomotion.c:
+                             * x += c*v, z -= s*v). Fuer die Richtung (dx,dz) muss also gelten
+                             * cos(theta) ~ dx und sin(theta) ~ -dz, d.h. theta = atan2(-dz, dx),
+                             * umgerechnet in die 0..4095-Einheiten des Spiels.
+                             * Welche Taste dreht wohin? Steht im Port, muss nicht geraten werden:
+                             * LEFT erhoeht rot_y, RIGHT verringert ihn (player_common.c:385-386,
+                             * jeweils & 0xfff). Die frueher hier stehende Ausprobier-Heuristik
+                             * ("dreh, miss, sonst andersrum") hat den Spieler Runden drehen
+                             * lassen — das war der Grund, nicht die Geometrie. */
+                            int tgt_yaw = (int)(atan2((double)(-dz), (double)dx)
+                                                * 4096.0 / (2.0 * 3.14159265358979)) & 0xfff;
+                            int yaw_err = (((tgt_yaw - (int)ap_pl->rot_y) + 0x800) & 0xfff) - 0x800;
+                            long long acr = (yaw_err < 0 ? -yaw_err : yaw_err);
+                            long long cross = yaw_err;     /* >0 = nach LINKS drehen */
+                            long long dot   = (acr < 0x400) ? 1 : -1;   /* Ziel grob voraus? */
                             /* Ankunft zaehlt gegen das ENDziel, gesteuert wird auf den Zwischenpunkt. */
-                            long fdx = ftx - ap_pl->x, fdz = ftz - ap_pl->z;
-                            long fdist2 = fdx * fdx + fdz * fdz;
+                            long long fdx = ftx - ap_pl->x, fdz = ftz - ap_pl->z;
+                            long long fdist2 = fdx * fdx + fdz * fdz;
                             int last = (ap_idx >= ap_n - 1);
-                            long arrive = last ? 700L * 700L : 1200L * 1200L;
+                            long long arrive = last ? 700LL * 700LL : 1200LL * 1200LL;
                             if (fdist2 < arrive && !last) {
                                 /* Zwischenziele vom Typ AOT (Treppe, Selbst-Tuer) muessen AUSGELOEST
                                  * werden, nicht nur beruehrt: die Treppe startet ueber den
                                  * Aktionsknopf (re15_stair_try_start(rdt, g_aot_action_pressed) in
                                  * game_step_common.c). Deshalb dort 40 Frames die Taste halten und
                                  * erst danach weiterschalten; reine xz-Punkte werden nur passiert. */
-                                if (ap_mode == 1 && ap_hold < 40) {
-                                    gctx.pad_current |= RE15_PAD_BIT_SQUARE;
+                                /* (Die Teleport-Erkennung liegt WEITER OBEN, vor der
+                                 * Ankunftspruefung — hier waere sie wirkungslos, weil der Spieler
+                                 * nach dem Versetzen gar nicht mehr in Zielnaehe ist.) */
+                                if ((ap_mode == 1 || ap_mode == 3) && ap_hold < 90) {
+                                    /* PULSEN, nicht dauerhalten. Eine Tuer oeffnet auf die
+                                     * PRESS-FLANKE (DAT_800ac76c & 0x80 = virtuelle Flanke = rohes
+                                     * Quadrat -> ACTION-Scan FUN_80042bac(kind=0x10) -> sce-2
+                                     * @0x800430bc). Ein 40-Frame-Dauerdruck erzeugt genau EINE
+                                     * Flanke ganz am Anfang — und wenn der Spieler da noch laeuft
+                                     * oder nicht sauber im Rechteck steht, ist sie verpufft
+                                     * (gemessen: im Rechteck des Tors gestanden, gehalten, nichts
+                                     * passiert). 3 an / 3 aus liefert alle 6 Frames eine neue
+                                     * Flanke und deckt nebenbei den 9-Frame-Halte-Zaehler ab. */
+                                    /* ...und dabei WEITER auf das Ziel ausrichten. Der
+                                     * ACTION-Scan prueft einen Punkt 620 Einheiten VOR dem
+                                     * Spieler gegen das AOT-Rechteck (FUN_80042bac, kind=0x10) —
+                                     * wer daneben schaut, loest nichts aus, auch wenn er mitten
+                                     * im Rechteck steht (genau so blieb das Tor bei (3512,14578)
+                                     * zu). Erst ausrichten, dann druecken. */
+                                    if (acr > 60) {          /* erst sauber anschauen */
+                                        gctx.pad_current |= (yaw_err > 0) ? RE15_PAD_BIT_LEFT
+                                                                          : RE15_PAD_BIT_RIGHT;
+                                    } else if ((ap_hold % 6) < 3) {
+                                        gctx.pad_current |= RE15_PAD_BIT_SQUARE;
+                                        /* Und die FLANKE. g_aot_action_pressed kommt aus
+                                         * pad_PRESSED (game_step_common.c:156), nicht aus
+                                         * pad_current — wer nur letzteres setzt, erzeugt nie eine
+                                         * Tuer-Aktion. Genau daran ist das Tor bei (3512,14578)
+                                         * haengen geblieben: im Rechteck, ausgerichtet, gepulst,
+                                         * und trotzdem passierte nichts. */
+                                        if ((ap_hold % 6) == 0) gctx.pad_pressed |= RE15_PAD_BIT_SQUARE;
+                                    }
                                     if (ap_hold++ == 0)
                                         fprintf(stderr, "[auto] AOT-Zwischenziel %d (Slot %d) erreicht "
                                                         "bei (%d,%d) — loese aus\n",
@@ -3722,24 +3798,19 @@ re_title:;
                                 gctx.pad_current |= (ap_avoid_dir > 0) ? RE15_PAD_BIT_RIGHT
                                                                        : RE15_PAD_BIT_LEFT;
                             } else {
-                                long tol = dist2 / 8;               /* Winkeltoleranz mit Distanz */
-                                if (dot <= 0 || acr > tol) {
-                                    gctx.pad_current |= (ap_turn > 0) ? RE15_PAD_BIT_RIGHT
-                                                                      : RE15_PAD_BIT_LEFT;
-                                    if (ap_bestcross < 0 || acr < ap_bestcross) {
-                                        ap_bestcross = acr; ap_flipwait = 0;
-                                    } else if (++ap_flipwait > 25) {   /* wird nicht besser -> umdrehen */
-                                        ap_turn = -ap_turn; ap_flipwait = 0; ap_bestcross = -1;
-                                    }
+                                /* Erst auf den Zielwinkel drehen, dann geradeaus. 40 Einheiten
+                                 * Toleranz = gut 3 Grad (4096 = 360). */
+                                if (acr > 40) {
+                                    gctx.pad_current |= (yaw_err > 0) ? RE15_PAD_BIT_LEFT
+                                                                      : RE15_PAD_BIT_RIGHT;
                                 } else {
                                     gctx.pad_current |= RE15_PAD_BIT_UP;
-                                    ap_bestcross = -1; ap_flipwait = 0;
                                 }
                             }
                             /* Fest? Position hat sich trotz Laufversuch kaum bewegt. */
                             {
                                 int32_t mx = ap_pl->x - ap_lastx, mz = ap_pl->z - ap_lastz;
-                                if ((long)mx * mx + (long)mz * mz < 400L) {
+                                if ((long long)mx * mx + (long long)mz * mz < 400LL) {
                                     if (++ap_stuck > 25 && ap_avoid == 0) {
                                         ap_avoid = 45; ap_avoid_dir = -ap_avoid_dir; ap_stuck = 0;
                                         fprintf(stderr, "[auto] fest bei (%d,%d) — Bogen %s\n",
@@ -3750,12 +3821,12 @@ re_title:;
                             }
                             if ((g_engine.frame_count % 60) == 0)
                                 fprintf(stderr, "[auto] Spieler(%d,%d) zone=%u -> Wegpunkt(%d,%d) "
-                                                "Endziel(%d,%d) zone=%u d=%ld pad=%04X motion=%d\n",
+                                                "Endziel(%d,%d) zone=%u d=%lld pad=%04X motion=%d\n",
                                         ap_pl->x, ap_pl->z,
                                         re15_nav_zone_from_pos((int16_t)ap_pl->x, (int16_t)ap_pl->z),
                                         tx, tz, ftx, ftz,
                                         re15_nav_zone_from_pos((int16_t)ftx, (int16_t)ftz),
-                                        (long)(fdist2 / 1000), gctx.pad_current, ap_pl->motion);
+                                        (long long)(fdist2 / 1000), gctx.pad_current, ap_pl->motion);
                         }
                     }
                 }
