@@ -205,3 +205,39 @@ Capture; Sonde/Ablauf im Scratchpad der Session, Ergebnisse hier):
 - **Port-Gegenprobe**: feuert der Injured-Idle (Sentinels 213/214 -> PL00 22/23) im Port
   LIVE und rendert er die richtige Pose? (Alte Sentinel-Kollision AIM_W==213 beachten,
   [[reai-v2-aim-lower-land-hunch]].) Visuell per gdigrab bei RE15-Lauf mit HP<30.
+
+
+---
+
+## NACHTRAG 2 (2026-08-02, Session 2) — VOLLSTAENDIGE TRIGGER-MATRIX auf der ECHTEN Disc
+
+Nutzer praezisierte: zerrissene blutige Kleidung bei Danger, KEIN direktes Humpeln,
+Verletzt-Pose nur beim Idlen. Alle Trigger-Kandidaten DYNAMISCH auf der MZD-Mod-Disc
+(PATCH.BIN aktiv!) durchgetestet — DuckStation-Pad-Blocker dabei behoben
+([Pad1] war rein Keyboard; SDL-0-Bindungen ergaenzt, Backup settings.ini.bak_20260802):
+
+| Trigger | Experiment | Ergebnis |
+|---|---|---|
+| HP-Schwelle mid-room | HP-Poke auf 25 (briefing) | KEINE Daten-Aenderung; motion 2->23 (Injured-Idle) |
+| Schadens-Event | ECHTE Zombie-Bisse 100->10 (engage_live, 15s ohne Input) | Textur/CLUT/Mesh unveraendert |
+| Raumwechsel (PLD-Reload) | ECHTER Tuerdurchgang bei HP 25 (doorB + U-Hold + SQUARE) | Streifen 0 Diffs, CLUTs 0 Diffs, residente MD1 hp25 == hp100 BYTE-IDENTISCH, slot=0 |
+| Gehen bei Danger | U-Hold 8s, HP 25 vs 100 | motion=5 BEIDE (gleicher Walk-Clip, KEIN Humpeln) und gleiche Distanz (dz 1815 vs 1804 = gleiche Speed) |
+| Idle bei Danger | Capture stehend | motion=23 (PL00-Clip 23, Verletzt-Halte-Pose) |
+
+**Beide Nutzer-Beschreibungen sind REPRODUZIERT und byte-gemessen:** kein direktes
+Humpeln (Walk-Clip und -Speed identisch) ✓, Verletzt-Pose nur im Idle (motion 23) ✓.
+**Die zerrissene blutige Kleidung tritt auf dieser Disc ueber KEINEN der Trigger auf**
+(Schwelle/Biss/Tuer) — konsistent mit dem statischen Befund (blutige TIM-Seite 2 + dritte
+CLUT-Zeile liegen in JEDER PLD unreferenziert; Slot-Writer ohne HP-Input; TPAGE-Patches
+per Resident-Mesh-Gleichheit ausgeschlossen).
+
+**Offen bleibt einzig:** ein nicht ausgeuebter exotischer Trigger (z.B. Save/Load-Zyklus,
+Story-Punkt) ODER eine Erinnerung aus anderem Material (IGAS-/Restaurations-Builds, in
+denen das Feature verdrahtet ist). Konstruktiver Abschluss: Wenn der Look im laufenden
+Spiel reproduzierbar ist -> in DEM Moment einen Savestate ziehen; ein einziger Save mit
+blutiger Kleidung genuegt, um den Mechanismus in Minuten zu lokalisieren.
+
+**Port-Arbeitsauftrag daraus (byte-gedeckt):** (1) Injured-Idle im Port live verifizieren
+(Sentinels 213/214 -> PL00 22/23; Kollision 213==AIM_W pruefen) — DAS ist der sichtbare
+Verletzt-Look des Originals; (2) Walk bleibt bei Caution/Danger UNVERAENDERT (Clip 5,
+gleiche Speed) — nicht erfinden.
