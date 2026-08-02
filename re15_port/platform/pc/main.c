@@ -5183,6 +5183,41 @@ re_title:;
              * weapon's decoded dir[3] there, per-equip — WITHOUT it, the mesh samples the stale body-skin
              * placeholder = the untextured knife/gun the user reported. (PL00.TIM/PL04.TIM do NOT bake the
              * per-weapon art; each PLW carries its own dir[3], DMA'd on equip.) Re-blit only on aca5d change. */
+            {   /* Blut-Decal-Sync (analysis/blood_decals.md D2/D4): bei Level-Aenderung ODER
+                 * Slot-0-Reupload (Atlas-Rebuild wischt die Stempel — das Original persistiert
+                 * sie im VRAM, der Port re-appliziert; Modell = der Original-Re-Insert
+                 * LAB_80037d1c) alle Panels mit level>0 aus der Damage-Bank blitten.
+                 * LUT @0x80074208 (PSX.EXE file 0x64a08; Halfword-x -> Pixel = x*2):
+                 * Zeile 0 = Leon (PL00), Zeile 1 = Elza-Slot 4 (PL04).
+                 * srcX = 576+(p&3)*16 hw (@0x80037c64-84) -> TIM-px 256+(p&3)*32;
+                 * srcY = level*128+128+(p>=4?0x40:0) (@0x80037f48-74) -> TIM-Zeile srcY-256. */
+                extern int re15_wound_generation(void);
+                extern int re15_wound_level(int panel);
+                extern int re15_render_pc_wound_blit(int sx,int sy,int dx,int dy,int w,int h);
+                extern unsigned re15_render_pc_slot0_generation(void);
+                static const uint8_t WLUTX[2][8] = { {67,43,31,66,22,16,6,0},
+                                                     {67,43,31,66,23,7,7,24} };
+                static const uint8_t WLUTY[2][8] = { {35,44,192,175,116,26,102,0},
+                                                     {35,44,192,175,99,34,115,6} };
+                static int s_wnd_gen = -1; static unsigned s_wnd_slot_gen = 0xffffffffu;
+                unsigned wsg = re15_render_pc_slot0_generation();
+                if (re15_wound_generation() != s_wnd_gen || wsg != s_wnd_slot_gen) {
+                    int chr = (g_gameflow.character == 0) ? 0 : 1;
+                    int ok = 1, any = 0;
+                    for (int p = 0; p < 8; p++) {
+                        int lv = re15_wound_level(p);
+                        if (lv <= 0) continue;
+                        any = 1;
+                        int sxp = 256 + (p & 3) * 32;
+                        int syp = (lv * 128 + 128 + ((p >= 4) ? 0x40 : 0)) - 256;
+                        ok &= re15_render_pc_wound_blit(sxp, syp,
+                                                        (int)WLUTX[chr][p] * 2, (int)WLUTY[chr][p],
+                                                        32, 64);
+                    }
+                    if (ok || !any) { s_wnd_gen = re15_wound_generation();
+                                      s_wnd_slot_gen = re15_render_pc_slot0_generation(); }
+                }
+            }
             {
                 extern int  re15_player_equipped_weapon(void);
                 extern int  re15_render_pc_composite_slot0(const uint32_t *wpn, int ww, int wh, int dx, int dy);

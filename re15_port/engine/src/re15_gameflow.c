@@ -39,6 +39,14 @@ void re15_gameflow_new_game(int character)
     g_gameflow.start_room   = RE15_NEWGAME_ROOM;
     g_gameflow.enter_ingame = 1;         /* platform enters INGAME + loads the start room */
     g_gameflow.mode         = RE15_MODE_INGAME;
+    {   /* Blut-Decal-Reset: der Wund-Builder FUN_80037c1c laeuft NUR im Spieler-Load-Pfad
+         * (@0x800316c8/@0x800318cc, Teil von FUN_800314b0) und nullt Level+Akku — New Game
+         * und CONTINUE/Load starten also blutfrei; Raumwechsel dagegen NICHT (BD-6,
+         * analysis/blood_decals.md §5). CONTINUE laeuft durch denselben new_game-artigen
+         * Einstieg der Plattform; ein separater Load-Pfad muss diesen Reset mitrufen. */
+        extern void re15_wound_reset(void);
+        re15_wound_reset();
+    }
 }
 
 void re15_gameflow_to_gameover(void)

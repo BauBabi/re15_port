@@ -224,6 +224,15 @@ void re15_enemy_update_attack_point(int slot, const re15_emd_skeleton_t *skel,
 void re15_player_apply_hitbox(re15_actor_t *p);
 void re15_enemy_apply_hitbox(re15_actor_t *a, uint8_t type);
 
+/* Blut-Decal-Wundsystem (analysis/blood_decals.md): Panel-Akkumulator FUN_80037edc
+ * @0x80037edc (Schwelle 0x78, Level-Clamp 2), Tabelle @0x800b10ec, Reset beim
+ * Spieler-Load (FUN_80037c1c, Caller @0x800316c8/@0x800318cc). Renderer pollt
+ * generation und blittet die Damage-Bank-Panels (PC: Slot-0-Stash). */
+void re15_wound_reset(void);
+void re15_wound_add(int panel, int amount);
+int  re15_wound_level(int panel);
+int  re15_wound_generation(void);
+
 /* STAGE1 zombie AI byte-true primitives (handler FUN_8011d6d4). re15_enemy_player_dist
  * = the cached distance SquareRoot0(DX²+DZ²) (16-bit-wrapped deltas). re15_ai_arc_test
  * = FUN_8001a9cc: 0 if the player is inside the ±`cone` front arc of the zombie, else

@@ -514,6 +514,13 @@ target_include_directories(test_re2_zombie_ai PRIVATE ${CMAKE_SOURCE_DIR}/includ
 add_test(NAME unit_re2_zombie_ai COMMAND test_re2_zombie_ai)
 set_tests_properties(unit_re2_zombie_ai PROPERTIES TIMEOUT 30)
 
+# --- Blut-Decal-Wund-Akkumulator (Dossier analysis/blood_decals.md BD-3/BD-5) ---
+add_executable(test_wound_accumulator test_wound_accumulator.c)
+target_link_libraries(test_wound_accumulator PRIVATE re15_engine re15_test_support)
+target_include_directories(test_wound_accumulator PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_wound_accumulator COMMAND test_wound_accumulator)
+set_tests_properties(unit_wound_accumulator PROPERTIES TIMEOUT 30)
+
 # --- SE-Tone-Pitch note2pitch2 (Dossier analysis/rolltor_sound.md D1) ---
 add_executable(test_se_pitch test_se_pitch.c)
 target_link_libraries(test_se_pitch PRIVATE re15_engine re15_test_support)

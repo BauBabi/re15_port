@@ -87,6 +87,59 @@ static uint32_t dmg_rng(void) { return re15_engine_rand8(); }
  * uses this to pick the directional hurt clip (front aca59=3 -> 0x9, back aca59=2 ->
  * 0x8, @0x80035de0/f64), reproducing the exact FUN_8001a7a8 formula (bearing minus
  * heading, +0x400-centred, split at 0x800) — derived from the disasm, not guessed. */
+/* ==== Blut-Decal-Wundsystem (Spieler) — "zerrissene blutige Kleidung" ====================== *
+ * Vollstaendig RE'd in analysis/blood_decals.md (alle Findings adversarial CONFIRMED, Ground
+ * Truth stage_saves/mzd_blood_decals_hp30.sav). Original-Mechanik:
+ *  - Tabelle @0x800b10ec: 8 Panels x {level, akku} + vorgebautes DR_MOVE-Prim (16hw x 64
+ *    VRAM->VRAM-Blit, SetDrawMove @0x8006b824), gebaut beim Spieler-Load (FUN_80037c1c,
+ *    Caller NUR @0x800316c8/@0x800318cc -> Reset bei jedem Spieler-Load, s. BD-6).
+ *  - Akkumulator FUN_80037edc(panel, amount): akku += amount (@0x80037f04-08); erst ab
+ *    Schwelle 0x78=120 (@0x80037f14 sltiu) wird gestempelt: akku=0 (@0x80037f24),
+ *    level++ (@0x80037f2c), Clamp auf 2 (@0x80037f40/f50), srcY = level*128+128+
+ *    (panel>=4 ? 0x40 : 0) (@0x80037f48-74), Prim in die OT (@0x80037f7c-fc4).
+ *  - Quelle = Damage-Bank in Page 2 der Spieler-TIM (srcX = 576 + (panel&3)*16 hw,
+ *    @0x80037c64-84); Ziel = statische Panel-LUT @0x80074208 (4 Chars x 8 (x,y)-hw-Paare).
+ *  - Persistenz: VRAM + Tabelle ueberleben den Raumwechsel; Heilung loescht NICHT;
+ *    Spieler-Load (New Game/Load) nullt (BD-6).
+ * Der Port haelt level/akku hier; die Blit-Anwendung ist Render-Sache (PC: Slot-0-Stash,
+ * main.c Wound-Sync; Re-Apply nach Atlas-Rebuild = Modell des toten Re-Inserts LAB_80037d1c). */
+typedef struct { uint8_t level, acc; } re15_wound_t;
+static re15_wound_t s_wounds[8];
+static int          s_wounds_gen;
+
+void re15_wound_reset(void)
+{
+    /* Builder FUN_80037c1c: level := 0 (@0x80037c48 sb zero,0) + akku := 0 (@0x80037ce8) */
+    for (int i = 0; i < 8; i++) { s_wounds[i].level = 0; s_wounds[i].acc = 0; }
+    s_wounds_gen++;
+}
+
+void re15_wound_add(int panel, int amount)
+{
+    if (panel < 0 || panel > 7) return;
+    re15_wound_t *w = &s_wounds[panel];
+    int sum = (int)w->acc + amount;               /* lbu +1; addu (@0x80037f04) — Vergleich auf
+                                                   * dem UNtrunkierten Register wie das Original */
+    w->acc = (uint8_t)sum;                        /* sb (@0x80037f08) */
+    if (sum < 0x78) return;                       /* @0x80037f14 sltiu 0x78: <120 -> nur Akku */
+    w->acc = 0;                                   /* @0x80037f24 */
+    w->level = (uint8_t)(w->level + 1);           /* @0x80037f2c */
+    if (w->level >= 3) w->level = 2;              /* @0x80037f40/f50 Level-Clamp auf 2 */
+    s_wounds_gen++;                               /* OT-Einhaengen @0x80037f7c-fc4 -> Sync-Marke */
+}
+
+int re15_wound_level(int panel) { return (panel >= 0 && panel < 8) ? s_wounds[panel].level : 0; }
+int re15_wound_generation(void) { return s_wounds_gen; }
+
+/* Overlay-Hurt-Helper (STAGE1, Dispatcher @0x8010a580: lbu +0x5 -> jalr 0x801201b8[substate];
+ * analysis/blood_decals.md §3.2). Panel/Amount-Paare je Hurt-Substate: */
+static const struct { int8_t panel; uint8_t amt; } s_wound_helper[4][3] = {
+    { {0,10}, {5,50}, {7,50} },   /* substate 0 @0x8010a1cc — Front-Torso schwer */
+    { {0,10}, {4,50}, {7,50} },   /* substate 1 @0x8010a208 — Rueck-Torso schwer */
+    { {1,50}, {-1,0}, {-1,0} },   /* substate 2 @0x8010a244 — Standard front    */
+    { {2,50}, {-1,0}, {-1,0} },   /* substate 3 @0x8010a268 — Standard back     */
+};
+
 static int hit_from_front(const re15_actor_t *p, int32_t src_x, int32_t src_z)
 {
     int32_t ang = re15_atan2_q12(p->z - src_z, p->x - src_x);
@@ -135,6 +188,15 @@ int re15_player_take_damage(re15_actor_t *p, uint8_t attack_type,
         p->state       = 3;                                             /* +0x4 death */
         p->sub_state_1 = 0;
         p->sub_state_2 = 0;
+    } else {
+        /* Blut-Decal-Trigger: der Overlay-Hurt-Dispatcher (@0x8010a580) feuert beim
+         * Hurt-EINTRITT (state==2) die Panel-Helper des Substates (Tabelle oben, §3.2).
+         * Der Port erzeugt heute nur die Substates 2/3 (@80012ea4-f04); die Writer der
+         * Schwer-Substates 0/1 sind dokumentiert OFFEN (analysis/blood_decals.md §7.1). */
+        int ss = p->sub_state_1;
+        if (ss >= 0 && ss <= 3)
+            for (int i = 0; i < 3 && s_wound_helper[ss][i].panel >= 0; i++)
+                re15_wound_add(s_wound_helper[ss][i].panel, s_wound_helper[ss][i].amt);
     }
     return 1;
 }

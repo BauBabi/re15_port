@@ -277,6 +277,44 @@ int re15_render_pc_composite_slot0(const uint32_t *wpn, int ww, int wh, int dx, 
 
 unsigned re15_render_pc_slot0_generation(void) { return s_slot0_generation; }
 
+/* Blut-Decal-Blit (DR_MOVE-Aequivalent @0x80037f7c-fc4, analysis/blood_decals.md D2):
+ * kopiert ein Rect der Damage-Bank (Page 2 der Spieler-TIM) auf ein Wund-Panel — im
+ * STASH (persistiert wie das PSX-VRAM bis zum naechsten Spieler-Load/Reupload) und in
+ * JEDEM CLUT-Slab (das Original blittet rohe 8bpp-INDIZES; da jeder Slab dieselben
+ * Indizes durch seine eigene CLUT dekodiert, ist der RGBA-Rect-Copy je Slab exakt
+ * aequivalent — die Bank ist gegen die Body-CLUTs ausgemalt, §2.4). Koordinaten in
+ * TIM-PIXELN (x 0..383): src = Bank, dst = Panel-LUT. Rebuild + generation-Bump ->
+ * der Weapon-Composite in main.c legt seinen Patch im Folgeframe wieder drueber. */
+int re15_render_pc_wound_blit(int sx, int sy, int dx, int dy, int w, int h)
+{
+    if (!s_slot0_base_rgba || !s_renderer) return 0;
+    int W = s_slot0_base_w, H = s_slot0_base_h;
+    re15_tim_slot_t *st = &s_tim_slots[0];
+    int slab_h = (st->one_clut_h > 0) ? st->one_clut_h : H;
+    int slabs  = (st->n_cluts   > 0) ? st->n_cluts   : 1;
+    if (sx < 0 || sy < 0 || dx < 0 || dy < 0 || w <= 0 || h <= 0) return 0;
+    if (sx + w > W || dx + w > W || sy + h > slab_h || dy + h > slab_h) return 0;
+    for (int s = 0; s < slabs; s++) {
+        int soy = s * slab_h;
+        if (soy + slab_h > H) break;
+        for (int y = 0; y < h; y++)
+            memcpy(&s_slot0_base_rgba[(size_t)(soy + dy + y) * W + dx],
+                   &s_slot0_base_rgba[(size_t)(soy + sy + y) * W + sx],
+                   (size_t)w * 4);
+    }
+    if (st->tex) SDL_DestroyTexture(st->tex);
+    st->tex = SDL_CreateTexture(s_renderer, SDL_PIXELFORMAT_ARGB8888,
+                                SDL_TEXTUREACCESS_STATIC, W, H);
+    if (st->tex) {
+        SDL_UpdateTexture(st->tex, NULL, s_slot0_base_rgba, W * 4);
+        SDL_SetTextureBlendMode(st->tex, SDL_BLENDMODE_BLEND);
+        st->loaded = 1;
+    }
+    s_slot0_generation++;                      /* Weapon-Composite folgt (main.c-Watch) */
+    if (s_active_slot == 0) update_active_slot_globals();
+    return st->tex != NULL;
+}
+
 /* Phase 4.5.7.7 (2026-05-19): per-tri depth field for back-to-front sort.
  *
  * IMPORTANT: SDL_RenderGeometry reads a FLAT SDL_Vertex array (3 verts/tri,
