@@ -131,6 +131,16 @@ void re15_wound_add(int panel, int amount)
 int re15_wound_level(int panel) { return (panel >= 0 && panel < 8) ? s_wounds[panel].level : 0; }
 int re15_wound_generation(void) { return s_wounds_gen; }
 
+/* Debug-Eingang des Originals (LAB_80037de4, im Shipped-Build OHNE Caller — der
+ * "alles-verwunden"-Knopf): setzt ALLE 8 Levels auf das Byte @0x80074288 (initial 1)
+ * und blittet alle; @0x80037e9c-ed0 zykelt das Byte 1->2->1. Port-Zugang: env
+ * RE15_WOUND_DEBUG (Render-Pfad-Verifikation ohne Gameplay). */
+void re15_wound_debug_all(int level)
+{
+    for (int i = 0; i < 8; i++) { s_wounds[i].level = (uint8_t)((level >= 2) ? 2 : (level <= 0 ? 0 : 1)); s_wounds[i].acc = 0; }
+    s_wounds_gen++;
+}
+
 /* Overlay-Hurt-Helper (STAGE1, Dispatcher @0x8010a580: lbu +0x5 -> jalr 0x801201b8[substate];
  * analysis/blood_decals.md §3.2). Panel/Amount-Paare je Hurt-Substate: */
 static const struct { int8_t panel; uint8_t amt; } s_wound_helper[4][3] = {

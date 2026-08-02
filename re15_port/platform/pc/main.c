@@ -5200,6 +5200,14 @@ re_title:;
                 static const uint8_t WLUTY[2][8] = { {35,44,192,175,116,26,102,0},
                                                      {35,44,192,175,99,34,115,6} };
                 static int s_wnd_gen = -1; static unsigned s_wnd_slot_gen = 0xffffffffu;
+                {   /* Original-Debug-Eingang LAB_80037de4 ("alles verwunden", shipped ohne
+                     * Caller) als Render-Pfad-Probe: RE15_WOUND_DEBUG=<level 1|2> */
+                    static int s_wdbg = -1;
+                    if (s_wdbg < 0) { const char *e = getenv("RE15_WOUND_DEBUG");
+                                      s_wdbg = e ? atoi(e) : 0;
+                                      if (s_wdbg > 0) { extern void re15_wound_debug_all(int);
+                                                        re15_wound_debug_all(s_wdbg); } }
+                }
                 unsigned wsg = re15_render_pc_slot0_generation();
                 if (re15_wound_generation() != s_wnd_gen || wsg != s_wnd_slot_gen) {
                     int chr = (g_gameflow.character == 0) ? 0 : 1;
@@ -5214,6 +5222,9 @@ re_title:;
                                                         (int)WLUTX[chr][p] * 2, (int)WLUTY[chr][p],
                                                         32, 64);
                     }
+                    if (any)
+                        fprintf(stderr, "[wound] sync: applied=%d ok=%d gen=%d slotgen=%u\n",
+                                any, ok, re15_wound_generation(), re15_render_pc_slot0_generation());
                     if (ok || !any) { s_wnd_gen = re15_wound_generation();
                                       s_wnd_slot_gen = re15_render_pc_slot0_generation(); }
                 }
