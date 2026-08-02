@@ -49,27 +49,31 @@ Ziel dieser Kampagne:
 
 ## §2 Phasen
 
-### W0 — Struktur & Inventar *(Session 2026-08-02)*
+### W0 — Struktur & Inventar *(Session 2026-08-02 — KOMPLETT)*
 - [x] Analyse-Workflows: Adress-Coverage-Zensus + 3 RE-Dossiers (Krähe/Zombie/Rolltor)
 - [x] Artefakt-Cleanup (~1,3 GB shots-Scratch, Root-Logs, .sentry-native, __pycache__;
       .gitignore erweitert, damit es nicht wieder aufläuft)
 - [x] Diese Roadmap; lesson.txt-Regel verankert (§0)
-- [ ] RE15_ADDRESS_COVERAGE.md erzeugt und geprüft
-- [ ] Dossiers geprüft (adversarial verifiziert) und in §5 eingetragen
+- [x] RE15_ADDRESS_COVERAGE.md erzeugt und geprüft (`fb42f86e`) — EXE 250/386 zitiert,
+      STAGE1-Overlay 420/650; Lückenlisten als Anhang; reproduzierbar via `analysis/coverage/`
+- [x] Dossiers adversarial verifiziert (ALLE Findings CONFIRMED) und in §5 eingetragen
 
 ### W1 — Die drei gemeldeten Symptome fixen (in dieser Reihenfolge)
 Jeder Fix folgt §0: Beleg → Code (`@0x…` je Konstante) → Messung → ctest-Pin.
 
-- [ ] **W1.1 Zombie-Hit-Reaktion 1140** — Dossier `analysis/zombie_hit_1140.md`.
+- [x] *(Code+ctest `355adbdd`, 2026-08-02 — Live-gdigrab-Verifikation offen → §5 Punkt 1)*
+      **W1.1 Zombie-Hit-Reaktion 1140** — Dossier `analysis/zombie_hit_1140.md`.
       Akzeptanz: für Symptom (a) und (b) steht dokumentiert, was das Original in exakt der
       Situation tut (Adressen), der Port tut dasselbe, und ein room-probe-/AI-ctest pinnt
       beide Übergänge. Verifikation zusätzlich visuell per gdigrab (Skill
       `re15-port-visual-verify`), NICHT per Autoshot.
-- [ ] **W1.2 Krähen-KI 1170** — Dossier `analysis/crow_1170.md`.
+- [x] *(Code+ctest `2446139c`, 2026-08-02 — Rest-Divergenzen D7/D8/D9 + Live-Parity offen → §5 Punkt 3)*
+      **W1.2 Krähen-KI 1170** — Dossier `analysis/crow_1170.md`.
       Akzeptanz: alle Divergenzen der State-Machine gefixt oder als byte-true widerlegt;
       ROOM1170-Spawn-Parameter (Sce_em_set-Operanden) stimmen mit RDT-Bytes überein;
       Flugverhalten im Live-Fenster gegen PSX-Capture verglichen.
-- [ ] **W1.3 Rolltor-Sound** — Dossier `analysis/rolltor_sound.md`.
+- [x] *(Code+ctest `d10b7893`, 2026-08-02 — Hörprobe + PSX-Gegenprobe offen → §5 Punkte 1/5)*
+      **W1.3 Rolltor-Sound** — Dossier `analysis/rolltor_sound.md`.
       Akzeptanz: der Original-Mechanismus ist mit Adresse belegt (welcher Code, welcher SE,
       welche Bank), der Port spielt denselben Cue am selben Trigger-Punkt. Falls statisch
       nicht auffindbar: PCSX-Redux-Lua-Watchpoint auf SPU-KeyOn beim Tor-Durchgang
@@ -136,7 +140,34 @@ Vollständig in [HANDOVER_2026-08-01.md](HANDOVER_2026-08-01.md) §1/§2b. Kernp
 
 | Datum | Was | Ergebnis / Commit |
 |---|---|---|
-| 2026-08-02 | Kampagne aufgesetzt: Workflows (Coverage-Zensus + 3 RE-Dossiers), Cleanup, diese Roadmap | *(diese Session — Ergebnisse folgen unten)* |
+| 2026-08-02 | Kampagne aufgesetzt: Coverage-Zensus, 3 RE-Dossiers (alle Findings adversarial CONFIRMED), Cleanup, Roadmap | `fb42f86e` (Coverage), `590d6146` (Cleanup+Roadmap) |
+| 2026-08-02 | **W1.1 Zombie-Hit 1140**: beide Nutzer-Symptome gefixt — (a) Reverse-Leak (Reverse ist f314-ARGUMENT @0x80102aec, kein Zustand; Clear am Damage-Hijack), (b) Scripted-Lyer unschießbar (Wake-Phase-0 `+0x93\|=1`/Tick @0x80103aac-ab8) + Wake-Maschine FUN_80103a58 portiert; dazu D3 SE-Rolls, D4 Y-Korrekturen, D5 Choreo-Latch, D6 Grab-Bit, D7 anim-Wrap (@0x8001F610-3C, jetzt mit Bank-Regel). ctest `unit_zombie_hit_fixes` | `355adbdd` |
+| 2026-08-02 | **W1.2 Krähen-KI 1170**: Kernbefund — Original entwaffnet per `grid&0x10` (@0x801123cc-e8), ROOM1170 = 5/7 Krähen PERMANENT passiv (Port griff mit allen 7 an); + Weave in Launch/Arc, Anim-Tick in Approach, ungegateter Grab/Strike-Schaden, Timer-Wrap, Death-Flock-Writes, INIT-f314, Doku-Erratum D10. ctest `unit_crow_fixes` | `2446139c` |
+| 2026-08-02 | **W1.3 Rolltor-Sound**: Mechanismus BELEGT — Tür ist im Original STUMM; das Fahrgeräusch ist ROOM1130 sub02 `Se_on(2,12/10/11)` auf snd0. Port-Defekt war fehlender Tone-Pitch/-Volume: `note2pitch2` EXAKT portiert (fine+shift ADDIEREN, Tabelle DAT_80077520), Mixer per-Voice Q16-Step, Tone-Volume; Se_on-Operanden korrigiert (id\|FLAGS); bank 5→snd0. ctest `unit_se_pitch` (Fixpunkte 512/421/406 = 5512/4533/4371 Hz) | `d10b7893` |
+
+Baseline nach der Session: **102/102 ctest grün.**
 
 ### Offene Punkte (oberste Zeile = nächster Schritt)
-1. *(wird nach Workflow-Abschluss dieser Session gefüllt)*
+
+1. **Live-/Hör-Verifikation der drei W1-Fixes** — die Unit-Pins beweisen die Logik, nicht das
+   Bild/den Klang: (a) Rolltor-Hörprobe (diese Session hatte KEINEN Audio-Endpoint — RDP);
+   (b) Zombie (a)/(b) und Krähen-Verhalten im echten Fenster per gdigrab
+   (`re15-port-visual-verify`), Route/Aufruf steht in HANDOVER_2026-08-01.md §2b.
+   Für die Rolltor-Messung: `RE15_NO_INTRO=1 RE15_GOTO_ROOM=1130 RE15_FORCE_EVENT=2
+   RE15_SE_DEBUG=1` → `debug.log` muss `[se] voice: se=12/10/11 … pitch=0x200/0x1a5/0x196`
+   zeigen (die neue Voice-Log-Zeile).
+2. **SE-Pitch-Sweep** (Folge von W1.3): der Tone-Pitch gilt jetzt für ALLE SEs — Footsteps
+   u.a. klangen bisher nur richtig, wo note≈center−12 zufällig passte. Sweep über alle
+   snd0/snd1/ARMS/CORE-EDTs nach |Δ|≠12 und Stichproben hören (Dossier rolltor_sound.md §6 D1).
+3. **Krähen-Rest** (Dossier crow_1170.md §6): D7 `0x800acc0c`-Konsument (FUN_80024c30 RE'en),
+   D8 Root-Post-Pass für ALLE States (+ b544-Push-Loop), D9 Arrival-Frische (erst
+   `0x8001a804`-Tail disassemblieren), `aca52`-Producer (EXE-Knockdown @0x800334e8-504/
+   @0x800345c8 + Cmd-FSM @0x80073f90), Victim-Anim des Krähen-Grabs (Player-Cmd-5
+   @0x80036834), Live-Parity-Savestate (JUMP 1170 mit z3-Bit-125).
+4. **Zombie-Rest** (Dossier zombie_hit_1140.md §5): Wake-Trigger des Lyers (wer setzt +0x6=1),
+   Waffen-IDs 0x12/0x13 (Prone-Flinch-B-Klasse), DEATH-Spalte 4 Producer (FUN_80107634),
+   schwere Stagger-Handler FUN_80106290/80106624/80106048.
+5. **Rolltor-Rest** (Dossier rolltor_sound.md §7): PSX-Gegenprobe per SpuVmKeyOnNow-Watchpoint
+   @0x80055D10 (Skill `re15-pcsx-watchpoint`), Spielfluss-Nachweis ohne FORCE_EVENT
+   (Hof-Hindernis bei x≈−17000, HANDOVER §2b), Positional-Pfad FUN_80045a64 (D3), ADSR (D4).
+6. **W2-Sweep starten** (§2): ROOM1240 zuerst, Checkliste pro Raum.
