@@ -99,7 +99,11 @@ return (+0x1d4 & 0x80) ? −1 : +1             // @0x80115e04 — Hysterese
 
 - **Pfad 0** (Pending-Turn, @0x80112638): `if (+0x1d3 != 0)` → clear +0x1d3, Yaw ±40 (by +0x1d4&1),
   **sub_state = +0x1d4 & 3** (@0x80112694).
-- **Pfad 1** (Distanz-Ring): `grid&0x80 ? (dist +0x1dc < 5000) : (dist < 10000)` (@0x801126ac-d4) →
+- **Pfad 1** (Distanz-Ring): `grid < 0x80 ? (dist +0x1dc < 5000) : (dist < 10000)` (@0x801126ac-d4:
+  `sltiu v0,grid,0x80; beq zero->0x801126cc` — grid<0x80 fällt in `sltiu 0x1388` (5000),
+  grid>=0x80 brancht in `sltiu 0x2710` (10000). ERRATUM 2026-08-02: diese Zeile stand hier
+  INVERTIERT (`grid&0x80 ? <5000 : <10000`); der Port-Code war immer korrekt — Dossier
+  analysis/crow_1170.md D10) →
   `+0x1ec < 5400` (@0x801126e8) → **0x80115d74(a0=4)** = sub_state 4 DIVE.
 - **Pfad 2** (g_flag52 & 1, @0x80112708) → +0x1ec<5400 → sub_state 4.
 - **Pfad 3** (0x800aca50 & 0x1000, @0x80112748) → **sub_state = (+0x1d4 % 3) + 1** (mod-3-Magic verifiziert).
