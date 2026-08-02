@@ -1114,6 +1114,15 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
              * already-held player. TIMELINE-VERIFIED: the original's other zombie stayed in engage at
              * d=851 for the whole hold; the port had TWO simultaneous grabbers (F223) = double bites. */
             player->hit_react |= 1;
+            e->ai_flags |= 1;                 /* +0x1d8 |= 1 "actively grabbing" (FUN_80102548.c Z.28);
+                                               * cleared in throw-off [4] (Z.75). Read by the domino-
+                                               * shove gate (Z.87: only a NON-grabbing bystander is
+                                               * shovable). Dossier zombie_hit_1140.md D6. */
+            e->grab_choreo = 1;               /* word0 |= 0x1000 grab-choreo latch (FUN_80102548.c
+                                               * Z.21-22) — blocks the +0x1da windup-timeout death
+                                               * (FUN_80101224.c Z.12) until the [8] exit clears it
+                                               * (Z.115). Byte-true leak: a shot-aborted grab leaves
+                                               * it set. Dossier zombie_hit_1140.md D5. */
             /* THE SHARED ANCHOR (byte-true FUN_8001ac38 @0x801025f0, P2 disasm): computed on the
              * PRE-SNAP yaw from the BANK0 pair (+0x84/+0x16c) clip[grab_base] frame-0 root offset
              * (em10: (0,7) ~= the latch position), then COPIED to the player (@0x8001ad28-ad48) —
@@ -1222,6 +1231,8 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
                                                * DAT_800aca50|=1 + the 0x5a=90-tick clear timer (+0x1d5). */
             e->motion = (uint8_t)(grab_base + 2); e->anim_frame = 0;
             e->anim_frac = 7;                 /* +0x8f = 7 (@[4] decompile line 71) — walk->fling blend */
+            e->ai_flags &= (uint16_t)~1u;     /* +0x1d8 &= 0xfffe (FUN_80102548.c Z.75) — the grab is
+                                               * over, the zombie is a shovable bystander again */
             re15_audio_room_se(7);
             re15_audio_room_se(7);            /* SE 7 plays TWICE (@0x80102920 AND @0x80102960) */
             re15_player_victim_throwoff();
@@ -1273,6 +1284,8 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
             break;
         default:                              /* [8] EXIT (0x80102b90) -> back to the engage brain */
             e->anim_flags &= (uint16_t)~0x80u;  /* drop the [6] reverse-playback flag */
+            e->grab_choreo = 0;                 /* word0 &= 0xffffefff (FUN_80102548.c Z.115) — the
+                                                 * ONLY clear of the grab-choreo latch */
             re15_ai_set_state_word(e, 0x201);   /* +0x4 = state 1 / +0x5 = 2 (engage) */
             /* the player-side release clears the grabbed flag (+0x93 &= ~1). With a victim bank the
              * release-finish anim does it; WITHOUT one (headless/unit tests) clear it here so a later
@@ -1433,6 +1446,11 @@ static void re15_enemy_ai_live_knockdown(re15_actor_t *e)
             e->anim_frac = 0xf; e->anim_blend_rate = 0x100;
             e->anim_flags &= (uint16_t)~0x04u;        /* HOLD-LAST lie-down/get-up (drop inherited walk LOOP) */
             e->hit_react |= 1;
+            /* fall-grunt SE roll (FUN_8010512c.c [0]: `rand(); if ((r&3)==0) { r2=rand();
+             * SE(r2&1 ? 5 : 8); }` — TWO draws, first one unconditional; keeping both draws
+             * keeps the RNG stream byte-true). Dossier zombie_hit_1140.md D3. */
+            if ((re15_engine_rand8() & 3) == 0)
+                re15_audio_room_se((re15_engine_rand8() & 1) ? 5 : 8);
             e->hit_stun = (int16_t)0x80;              /* +0x1dc = 0x80 downed sentinel */
             e->grid_id |= 0x80;                       /* +0x9 |= 0x80 (downed reroute) */
             e->sub_state_2 = 1;
@@ -1456,6 +1474,10 @@ static void re15_enemy_ai_live_knockdown(re15_actor_t *e)
             e->anim_frac = 0xf;                       /* +0x8f = 0xf @0x80105368 */
             e->sub_state_2 = 5;                       /* +0x6 = 5 @0x80105358 */
             e->hit_react |= 1;                        /* +0x93 |= 1 @0x80105378-84 (was missing) */
+            /* get-up-grunt SE roll (FUN_8010512c.c [4]: `rand(); if ((r&7)==0) { r2=rand();
+             * SE(r2&1 ? 5 : 8); }` — 1/8 chance, both draws byte-true). Dossier D3. */
+            if ((re15_engine_rand8() & 7) == 0)
+                re15_audio_room_se((re15_engine_rand8() & 1) ? 5 : 8);
             break;
         case 6:
             e->grid_id &= (uint8_t)0x7f;
@@ -2302,7 +2324,10 @@ int re15_enemy_ai_live_active(int slot)
             e->ai_flags = (uint16_t)((e->ai_flags & ~0x10u) | ((uint16_t)r << 4));
     }
 
-    if (!(e->ai_flags & 0x100)) {
+    /* Windup-death gate (FUN_80101224.c Z.12): the armed path requires `(+0x1d8 & 0x100) &&
+     * !(word0 & 0x1000)` — while the grab-choreo latch is set (active OR shot-aborted grab), the
+     * +0x1da windup timeout is BLOCKED and the normal dispatch runs instead. (dossier D5) */
+    if (!(e->ai_flags & 0x100) || e->grab_choreo) {
         /* UNARMED decision path (FUN_80101224 @0x80101560+): the original reads a FUN_8001bc08
          * sensor into +0x1d8, manages the +0x0 lifecycle, then dispatches @0x8011f80c[+0x9 & 0xf]
          * (the sub-mode table). For the COMBAT sub-mode (+0x9 & 0xf == 0 -> @0x8011f80c[0] =
@@ -2392,11 +2417,43 @@ int re15_enemy_ai_live_active(int slot)
                                * wf_827f186d #8): 0x80101974 is NOT an empty `jr ra` — it is a DOUBLE
                                * dispatcher `lw @0x8011f9d8[+0x5*4]; jalr` then `lw @0x8011f9d4[+0x5*4];
                                * jalr`. Only decide row [0]=0x801039f4 is a stub; animate row
-                               * [0]=0x80103a58 is the +0x6 wake machine, rows [5]/[6]=0x80104b38/40
-                               * the lying get-up pair. The ROOM1140 lyer (+0x5=0) stays passive at
-                               * stage A, matching this break; the shot-awake path now runs via the
-                               * downed-HURT flinch (state-2 handler above). The full lying decide/
-                               * animate sub-machine (wake rows 5/6) is OPEN — tracked in the audit. */
+                               * [0]=0x80103a58 is the +0x6 wake machine — PORTED below (dossier
+                               * analysis/zombie_hit_1140.md D2, user symptom b). Rows [5]/[6]=
+                               * 0x80104b38/40 (lying get-up pair) remain OPEN — tracked in the audit;
+                               * the phase-0->1 wake TRIGGER (who writes +0x6=1) is OPEN (dossier §5). */
+                if (e->sub_state_1 == 0) {                /* row [0] = FUN_80103a58 (decompile-cited) */
+                    switch (e->sub_state_2) {             /* +0x6 wake phase */
+                    case 0:                               /* phase 0 — passive ambusher */
+                        e->hit_react |= 1;                /* +0x93 |= 1 EVERY tick (@0x80103aac-ab8:
+                                                           * lbu; ori 1; sb) — the passive lyer is
+                                                           * UNSHOOTABLE: FUN_80011f50's guard latches
+                                                           * +0x93|=2 and recurses past him. Was an
+                                                           * empty break: he took damage, flinched,
+                                                           * then froze forever (probe C). */
+                        /* +0x1b8 = 1 (same phase-0 store) — no port field consumer (documented). */
+                        break;
+                    case 1: {                             /* phase 1 — wake countdown +0x9c */
+                        int16_t was = e->ai_timer;        /* lh +0x9c; sh was-1 (post-dec store) */
+                        e->ai_timer = (int16_t)(was - 1);
+                        if (was == 0) {                   /* pre-decrement value == 0 -> rise */
+                            e->sub_state_2 = 2;           /* +0x6 = 2 */
+                            e->anim_frac   = 0xf;         /* +0x8f = 0xf */
+                        }
+                        break;
+                    }
+                    case 2:                               /* phase 2 — rise clip playout:
+                                                           * +0x6 += f314(+0x170,+0x174,0,0x100) */
+                        e->anim_blend_rate = 0x100;
+                        e->sub_state_2 = (uint8_t)(e->sub_state_2 + (uint8_t)re15_enemy_clip_done(e));
+                        break;
+                    default:                              /* phase 3 — become a normal zombie */
+                        e->grid_id = 0;                   /* +0x9 = 0 (downed bit AND nibble drop) */
+                        re15_ai_set_state_word(e, 0x201); /* word +0x4 = 0x201 (subs 2/0/0) */
+                        e->hit_react &= (uint8_t)~1u;     /* +0x93 &= 0xfe */
+                        /* +0x1b8 = 0 — no port field consumer (documented). */
+                        break;
+                    }
+                }
                 break;
             default:  /* @0x8011f80c[1..4],[9..15]: other sub-modes — deferred (cited) */
                 break;
@@ -3091,12 +3148,31 @@ static void re15_crow_perch_return(re15_actor_t *e)
  * to ALL further damage forever. */
 static void re15_crow_hit_player(re15_actor_t *e, re15_actor_t *player, int dmg)
 {
-    if (player->hit_react != 0) return;              /* +0x93 gate (once per contact)      */
-    player->hp = (int16_t)(player->hp - dmg);        /* @0x80113b04 (-4) / @0x80113e34 (-8) */
+    if (player->hit_react != 0) return;              /* +0x93 gate — DIVE-ONLY: einzig der Dive-Hit
+                                                      * prueft +0x93==0 (@0x80113ac0-cc) und steht
+                                                      * damit schon in der Commit-Bedingung */
+    player->hp = (int16_t)(player->hp - dmg);        /* @0x80113b04 (-4 dive) */
     player->hit_react |= 1;
     if (player->hp < 0) {                            /* lethal -> KILL broadcast            */
         s_crow_flock = (uint16_t)((s_crow_flock & 0xfff) | 0x2000);   /* @0x80113b58 */
         e->crow_hs = 1;                              /* +0x1d8 self-exempt                  */
+    }
+}
+
+/* UNGATED damage — Grapple (-8 @0x80113e34-3c) und Strike (-4 @0x801144f0-fc): der komplette
+ * Original-Kontaktpfad enthaelt KEINE Instruktion auf +0x93 (weder Read noch Write; Disasm
+ * 0x80113dd4-e58 / 0x801144f0-fc, Dossier crow_1170.md D4 CONFIRMED) — Folge-Strikes STAPELN im
+ * Original, waehrend der Port sie ueber den hit_react-Gate verschluckte. Der hit_react-Latch
+ * bleibt hier als PORT-PROXY fuer die (unportierte) Player-Cmd-FSM-Knockdown-Seite (Flinch-
+ * Detektor in game_step_common.c keyt darauf) — er unterdrueckt aber keinen Schaden mehr. */
+static void re15_crow_hit_player_ungated(re15_actor_t *e, re15_actor_t *player, int dmg)
+{
+    player->hp = (int16_t)(player->hp - dmg);
+    player->hit_react |= 1;                          /* PORT-PROXY (Original verwaltet +0x93 in den
+                                                      * Player-Cmd-Handlern, nicht hier) */
+    if (player->hp < 0) {                            /* lethal -> KILL broadcast            */
+        s_crow_flock = (uint16_t)((s_crow_flock & 0xfff) | 0x2000);   /* @0x80113b58 */
+        e->crow_hs = 1;
     }
 }
 
@@ -3219,8 +3295,13 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
     /* --- patrol[0-3]: clip-set + anim-advance + timer; transitions owned by steer --- */
     case 0:
         if (e->sub_state_2 == 0) { e->crow_timer = (uint8_t)(e->crow_mode % 60); e->sub_state_2 = 1; }
-        if (e->crow_timer == 0)  e->crow_pturn++;          /* completion flag */
-        else                     e->crow_timer--;
+        {   /* @0x80112824-2c: `addiu v1,a0,255; bne a0,zero; sb v1` — Dekrement IMMER (0 wrappt
+             * zu 255, Store im Delay-Slot), bei t==0 ZUSAETZLICH +0x1d3++ (@0x80112844-48).
+             * Dieselbe Wrap-Semantik wie move[6]/[7]/[12]/[13]/[14]. Dossier crow_1170.md D5. */
+            uint8_t t0 = e->crow_timer;
+            e->crow_timer = (uint8_t)(t0 - 1);
+            if (t0 == 0) e->crow_pturn++;              /* completion flag */
+        }
         return;
     case 1:
         if (e->sub_state_2 == 0) { re15_crow_clip(e, 1); e->sub_state_2 = 1; }
@@ -3243,6 +3324,10 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
         if (e->anim_frame == 8) { e->sub_state_2 = 1; re15_audio_room_se(1); }   /* frame-8 re-thrust + flap Se(1) @0x80112b10 */
         e->crow_vvel = (int16_t)(e->crow_vvel + 6);        /* gravity */
         e->y += e->crow_vvel;
+        re15_crow_weave(e);                                /* jal 0x80115e24 @0x80112b60 (Delay-Slot
+                                                            * sw y) — Weave-Bank VOR pos_advance;
+                                                            * fehlte = Take-off ohne Ausweich-Bank
+                                                            * bei dist<2000. Dossier crow_1170.md D2. */
         re15_crow_advance(e);
         if (re15_crow_anim(e)) re15_crow_sub(e, 5);        /* anim end -> second arc */
         return;
@@ -3254,6 +3339,8 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
         if (e->anim_frame == 8) e->sub_state_2 = 1;        /* frame-8 re-thrust (@0x80112cac) */
         e->crow_vvel = (int16_t)(e->crow_vvel + 6);
         e->y += e->crow_vvel;
+        re15_crow_weave(e);                                /* jal 0x80115e24 @0x80112cf8 — Weave-Bank
+                                                            * VOR pos_advance (Dossier D2) */
         re15_crow_advance(e);
         re15_crow_anim(e);
         return;
@@ -3342,6 +3429,11 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
             if (tgt - 3600 < e->y)      { e->crow_vvel = (int16_t)(-(e->crow_mode & 0x3f)); e->y += e->crow_vvel; }
             else if (e->y < tgt - 5400) { e->crow_vvel = (int16_t)( (e->crow_mode & 0x3f)); e->y += e->crow_vvel; }
             else { e->crow_speed = 50; e->sub_state_2 = 2; }
+            re15_crow_anim(e);       /* ALLE step1-Zweige (beide Korridor-Zweige UND der In-Band-
+                                      * Uebergang) muenden in jal 0x8001f314 @0x801136dc-f4 — ohne
+                                      * den Tick friert clip 6 waehrend der Steigphase auf Frame 0
+                                      * (Kraehen sind vom geteilten Anim-Pass ausgenommen).
+                                      * Dossier crow_1170.md D3 (CONFIRMED). */
             return;
         }
         re15_enemy_steer_point(e, player->x, player->z, 0x32);
@@ -3414,8 +3506,9 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
         if (e->crow_contact) {                               /* +0x1d0 contact -> GRAB (@0x80113dd4) */
             e->crow_hs = 1;                                  /* +0x1d8=1 self-exempt @0x80113ddc */
             s_crow_flock = (uint16_t)((s_crow_flock & 0xfff) | 0x8000);   /* @0x80113dfc */
-            re15_crow_hit_player(e, player, 8);              /* GRAB: -8 HP @0x80113e34; player cmd 5
-                                                              * @0x80113e48 (grabbed FSM = OPEN) */
+            re15_crow_hit_player_ungated(e, player, 8);      /* GRAB: -8 HP @0x80113e34 UNGATED (kein
+                                                              * +0x93 im Kontaktpfad — Dossier D4);
+                                                              * player cmd 5 @0x80113e48 (FSM = OPEN) */
             e->crow_struggle = 100;
             re15_crow_sub(e, 13);
         } else {
@@ -3512,7 +3605,8 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
         if (e->sub_state_2 == 0) {
             re15_crow_clip(e, 8);
             re15_crow_screech(e);                            /* 0x801161e8 @0x801144bc */
-            re15_crow_hit_player(e, player, 4);              /* STRIKE: -4 HP @0x801144f0 */
+            re15_crow_hit_player_ungated(e, player, 4);      /* STRIKE: -4 HP @0x801144f0-fc UNGATED
+                                                              * (kein +0x93 im Pfad — Dossier D4) */
             e->sub_state_2 = 1;
         }
         re15_crow_anim(e);
@@ -3630,6 +3724,11 @@ static void re15_crow_death(re15_actor_t *e)
         if (e->sub_state_2 == 0) {
             re15_esp_fx_splatter(re15_esp_room_bank(), 0, 13, e->x, e->y, e->z, e->crow_perch_h);
             e->hp = -1; e->crow_timer = 0x32; e->sub_state_2 = 1;    /* +0x1d5=0x32 */
+            /* GIB-Lane-Flock-Write @0x801149fc-4a20: aca50++, bei armed Re-Arm-Broadcast
+             * (aca50&0xf0ff)|0x800 (Dossier crow_1170.md D6). */
+            s_crow_flock = (uint16_t)(s_crow_flock + 1);
+            if (e->crow_armed)
+                s_crow_flock = (uint16_t)((s_crow_flock & 0xf0ff) | 0x800);
         } else if (e->crow_timer == 0) { e->state = 7; re15_crow_sub(e, 0); }  /* @0x80114b90 +0x4=7 */
         else e->crow_timer--;
         return;
@@ -3639,6 +3738,14 @@ static void re15_crow_death(re15_actor_t *e)
         re15_audio_room_se(3);                                       /* Se(3) @0x80114784 */
         e->hp = -1; e->crow_vvel = 0; e->crow_grav = 0x26;           /* +0x9a=-1, +0x1e4=0, +0x1e8=0x26 */
         e->crow_speed = 0; e->rot_z = 0; e->sub_state_3 = 1;         /* +0x8c=0, +0x6c=0 */
+        /* Death-Lane-Flock-Write @0x801147fc-8024: `lhu aca50; addiu +1; sh`, dann bei armed
+         * (+0x1db!=0) Re-Arm-Broadcast `(aca50)&0xf0ff|0x800` an die disarmten Flock-Mates
+         * (Konsument = ACTIVE-Tail-One-Shot @0x801125dc-614). GIB-Lane-Write oben; die dritte
+         * Lane @0x80114c68-c90 gehoert zu einem nicht portierten Death-Pfad (dokumentiert offen).
+         * Dossier crow_1170.md D6 (STAGE1-unerreichbar, 100%-Mandat). */
+        s_crow_flock = (uint16_t)(s_crow_flock + 1);
+        if (e->crow_armed)
+            s_crow_flock = (uint16_t)((s_crow_flock & 0xf0ff) | 0x800);
         break;
     case 1: { /* FALL 0x80114828 */
         e->rot_z = (int16_t)(e->rot_z + 140); if (e->rot_z > 1024) e->rot_z = 1024;  /* +0x6c spin, clamp */
@@ -3724,10 +3831,29 @@ static void re15_crow_ai_tick(int slot)
                                                        * rng byte every tick from the next tick on
                                                        * (@0x80112028/0x8011204c) */
         e->crow_vvel = 0; e->crow_speed = 0; e->crow_atk_ctr = 0; e->crow_diveflag = 0;
-        e->crow_armed   = 1;                          /* +0x1db = 1 — byte-true (FUN_80111a4c: grid&0x10
-                                                       * -> 0, else -> 1; the ROOM10C0 crows have grid=0) */
+        e->crow_armed   = (uint8_t)((e->grid_id & 0x10) ? 0 : 1);
+                                                      /* +0x1db = (grid&0x10) ? 0 : 1 — INIT
+                                                       * @0x801123cc-e8 (`andi grid,0x10; bne ->
+                                                       * sb zero,475 im j-Delay-Slot; sonst sb 1`).
+                                                       * ROOM1170 spawnt 7 Kraehen mit grid
+                                                       * 2x0x90/3x0x10/2x0x00 -> 5/7 PERMANENT
+                                                       * disarmed: sie launchen (Dive-Decide liest
+                                                       * +0x1db nicht), aber steer[9] @0x8011331c-24,
+                                                       * steer[10] @0x80113508-1c und steer[12/13/
+                                                       * 15/16] @0x80113c1c-2c verweigern jeden
+                                                       * Attack-Commit. Re-Arm NUR via aca50-Bit
+                                                       * 0x800 aus den Death-Lanes. Der alte
+                                                       * Hartcode `=1` galt nur fuer ROOM10C0
+                                                       * (grid=0). Dossier analysis/crow_1170.md D1
+                                                       * (CONFIRMED). */
         re15_crow_clip(e, 0);
-        e->anim_flags   = 0x04;
+        re15_crow_anim(e);                            /* INIT macht nach dem Clip-Set EINEN f314-Tick
+                                                       * (@0x80112300) -> +0x95=1 am Spawn-Ende
+                                                       * (Dossier D11; ohne ihn 1 Frame Phasenversatz
+                                                       * aller Wrap-Trigger des ersten Clips) */
+        e->anim_flags   = 0x04;                       /* PORT-SHIM (kein Original-Write; em_set
+                                                       * schreibt +0x1c4=0): Render-Loop-Hint fuer
+                                                       * den geteilten KF-Pfad (Dossier D11) */
         e->state        = 1;                          /* +0x4 = 1 ACTIVE (@0x80112388)        */
         if (e->grid_id & 0x40) e->state = 4;          /* byte-true override (@0x80112408): the
                                                        * grid&0x40 event crow (0xe1) enters FLIGHT-2 */

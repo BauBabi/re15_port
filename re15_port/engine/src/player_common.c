@@ -706,7 +706,33 @@ void re15_actors_anim_advance(void)
         if (a->motion_init_delay > 0) {
             a->motion_init_delay--;
         } else {
-            a->anim_frame++;
+            /* BYTE-TRUE frame step — the original's anim_set (@0x8001F610-3C, self-disassembled,
+             * cited in full in commit ceba1ba1):
+             *   8001f610: lbu   v0,149(v1)   ; +0x95 is a BYTE
+             *   8001f618: addiu v0,v0,1 ; 8001f61c: sb v0,149(v1)
+             *   8001f624: sltu  v0,v0,s4     ; (frame+1) < the clip's frame count ?
+             *   8001f628: bne   -> keep running    8001f638/3c: return 1 AND +0x95 = 0
+             * +0x95 therefore always stays inside [0, fc-1]. The port's bare `anim_frame++` let a
+             * clip-switch WITHOUT frame reset (byte-true: the standing stagger stores no +0x95,
+             * census 0x80105b7c-0x80105e60) inherit an out-of-range index -> the stagger froze
+             * (user symptom, ceba1ba1). That fix was reverted (991e566e) ONLY because it wrapped
+             * with the DEFAULT bank's clip length while the renderer poses loco-bank states from
+             * bank0 — the wrap point has to come from the SAME bank the renderer uses. That bank
+             * rule now exists as re15_actor_clip_len() (re15_actor_uses_loco_bank, the one
+             * definition main.c renders with) — exactly the condition the revert documented.
+             * HOLD-LAST branch: the original has none (the caller stops calling anim_set at
+             * return 1); the port's single global advancer pins a play-once clip (LOOP bit 0x04
+             * clear) on its last frame — the long-standing emulation of that stop.
+             * (dossier analysis/zombie_hit_1140.md D7) */
+            int fc = re15_actor_clip_len(a);
+            uint16_t nf = (uint16_t)(a->anim_frame + 1);
+            if (fc > 0 && (int)nf >= fc) {
+                a->anim_frame = (a->anim_flags & 0x04u)
+                              ? 0                                /* LOOP  -> @0x8001f63c +0x95 = 0 */
+                              : (uint16_t)(fc - 1);              /* play-once -> pin (port emulation) */
+            } else {
+                a->anim_frame = nf;
+            }
             if (a->anim_frac > 0) a->anim_frac--;
         }
     }

@@ -604,6 +604,13 @@ retry_after_latch:
         e->hp = -1;
     e->sub_state_3 = 0;                              /* +0x7 = 0 (@0x80012428) — start the hurt/death anim FSM at phase 0 */
     e->state       = (e->hp >= 0) ? 2 : 3;          /* +0x4 = HURT(2) / DEATH(3) (@0x80012520) */
+    /* Port bookkeeping: drop the REVERSE-playback bit. In the original, reverse is NOT entity
+     * state — it is the a2=1 argument of single f314 calls (grab-recovery @0x80102aec `ori a2,zero,1;
+     * jal 0x8001f314`; feeding kneel-down likewise), and the forced +0x4=2/3 here makes the next
+     * handler set a NEW clip forward. The port models reverse as persistent anim_flags 0x80, which
+     * without this clear LEAKED on a shot into grab-[6]/[7]: stagger, walk, fall and death all
+     * posed backwards (dossier analysis/zombie_hit_1140.md D1, CONFIRMED + probe-reproduced). */
+    e->anim_flags &= (uint16_t)~0x80u;
     /* +0x6 = VERTICAL HIT-DIR (@0x80012438-50): DAT_8006f410[player_word>>29] = [7,0,1,7,2,...]
      * indexed by the aim-elevation bits (acaec<<16): UP(bit31,idx4)->2, LEVEL(bit30,idx2)->1,
      * DOWN(bit29,idx1)->0. Feeds the hurt master's hit-dir column. */
@@ -611,6 +618,15 @@ retry_after_latch:
         extern int re15_player_aim_elevation(void);  /* player_common.c */
         int elev = re15_player_aim_elevation();      /* -1 down / 0 level / +1 up */
         e->sub_state_2 = (uint8_t)(elev > 0 ? 2 : elev < 0 ? 0 : 1);
+        /* Y-corrections of the vertical hit code (FUN_80011f50): @0x80012458-7c `lw playerY
+         * (DAT_800aca8c); slt playerY,enemyY; +0x6==0 -> sb 1` and the mirror @0x80012480-ac
+         * `slt enemyY,playerY; +0x6==2 -> sb 1`. Strict slt -> no-op on equal ground (ROOM1140).
+         * (dossier analysis/zombie_hit_1140.md D4) */
+        {
+            const re15_actor_t *ply = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+            if (ply->y < e->y && e->sub_state_2 == 0) e->sub_state_2 = 1;
+            if (e->y < ply->y && e->sub_state_2 == 2) e->sub_state_2 = 1;
+        }
     }
     /* knife-only HIT SE (@0x800123c0-d8): weapon==1 && hit landed -> FUN_80045024(0x1080001)
      * = the flesh-hit SE at the player position (the whiff plays only the swing SE 0x1050001). */
@@ -647,6 +663,10 @@ int re15_enemy_take_damage(re15_actor_t *e, uint8_t attack_type)
     e->hit_react |= 0x1;                                           /* +0x93 |= 1 (@8001300c) */
     e->state = 2;                                                  /* +0x4 = 2 hurt (@80013018) */
     if (e->hp < 0) e->state = 3;                                  /* signed HP<0 → death (@80013020) */
+    e->anim_flags &= (uint16_t)~0x80u;   /* same port-bookkeeping REVERSE drop as the gun path —
+                                          * reverse is a per-call f314 argument (@0x80102aec), not
+                                          * entity state; the hijacked state sets a new forward clip
+                                          * (dossier analysis/zombie_hit_1140.md D1) */
     return 1;
 }
 

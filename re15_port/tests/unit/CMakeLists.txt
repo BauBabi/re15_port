@@ -514,6 +514,20 @@ target_include_directories(test_re2_zombie_ai PRIVATE ${CMAKE_SOURCE_DIR}/includ
 add_test(NAME unit_re2_zombie_ai COMMAND test_re2_zombie_ai)
 set_tests_properties(unit_re2_zombie_ai PROPERTIES TIMEOUT 30)
 
+# --- Kraehen-KI ROOM1170 (Dossier analysis/crow_1170.md D1/D5) ---
+add_executable(test_crow_fixes test_crow_fixes.c)
+target_link_libraries(test_crow_fixes PRIVATE re15_engine re15_test_support)
+target_include_directories(test_crow_fixes PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_crow_fixes COMMAND test_crow_fixes)
+set_tests_properties(unit_crow_fixes PROPERTIES TIMEOUT 30)
+
+# --- Zombie-Hit-Reaktion ROOM1140 (Dossier analysis/zombie_hit_1140.md D1/D2/D5/D6) ---
+add_executable(test_zombie_hit_fixes test_zombie_hit_fixes.c)
+target_link_libraries(test_zombie_hit_fixes PRIVATE re15_engine re15_test_support)
+target_include_directories(test_zombie_hit_fixes PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_zombie_hit_fixes COMMAND test_zombie_hit_fixes)
+set_tests_properties(unit_zombie_hit_fixes PROPERTIES TIMEOUT 30)
+
 # --- DIAGNOSE-Probe (kein ctest-Eintrag): Zombie-Treffer-Timeline ---
 add_executable(probe_zombie_hit probe_zombie_hit.c)
 target_link_libraries(probe_zombie_hit PRIVATE re15_engine re15_test_support)

@@ -112,7 +112,15 @@ typedef struct {
                              *         The grab [0] COPIES the zombie anchor onto the player -> the
                              *         pair interlocks in the AUTHORED formation (no clipping). */
     int32_t  anchor_z;
-    uint16_t ai_flags;      /* +0x1d8: bit0x10 = "approach permitted" gate (decision block)  */
+    uint16_t ai_flags;      /* +0x1d8: bit0x10 = "approach permitted" gate (decision block);
+                             * bit0x1 = "actively grabbing" (set grab-[0] FUN_80102548.c Z.28,
+                             * cleared throw-off-[4] Z.75; read by the domino-shove gate Z.87) */
+    uint8_t  grab_choreo;   /* word0 (+0x0) bit 0x1000 — grab-choreography latch: set in grab-[0]
+                             * (FUN_80102548.c Z.21-22; the original also sets the PLAYER's word0 —
+                             * no modeled consumer, not mirrored), cleared ONLY in grab-exit [8]
+                             * (Z.115 &0xffffefff; a shot-aborted grab leaves it set = byte-true
+                             * leak). Consumer: windup-timeout death gate FUN_80101224.c Z.12
+                             * `(+0x1d8&0x100) && !(word0&0x1000)`. Dossier analysis/zombie_hit_1140.md D5/D6. */
     uint8_t  ai_contact;    /* +0x90 : WALL-contact byte (writer = the SCA resolver FUN_8003b0a4:
                              * heading-nibble<<4 | 8 | cell-attr&3; low nibble cleared per pass).
                              * Port writer deferred (ROOM1140 has 0 attr cells). */
