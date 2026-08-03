@@ -635,21 +635,43 @@ static void re15_player_victim_latch(const re15_actor_t *zombie, re15_actor_t *p
     if (!vb || !vb->victim_ok) return;                  /* no victim bank -> keep old frozen behaviour */
     g_player_victim_type    = zombie->type;
     g_player_victim_zombie  = (int)(zombie - g_actors);  /* remember the grabber for the turn-to-face */
-    g_player_victim_variant = (uint8_t)((zombie->sub_state_1 >= 4) ? 1 : 0);  /* +0x5=4 behind else face */
+    g_player_victim_variant = (zombie->type == 0x21)
+        ? 0   /* CROW: the normal-room grab writes aca59 = 0 (front FSM) @0x80113e30 — the
+               * rear FSM (aca59=1 @0x801152ac) exists only in the ROOM1171 event scene */
+        : (uint8_t)((zombie->sub_state_1 >= 4) ? 1 : 0);  /* +0x5=4 behind else face */
     if (g_player_victim == 0 || g_player_victim == 3) { /* enter (or re-enter from the release finish) */
         g_player_victim = 1;
         s_victim_phase  = 0;
         player->anim_frame = 0;
         s_victim_fresh  = 1;
-        /* ONE-SHOT yaw latch (byte-true phase 0, D1 disasm @0x8010a344-a3d4): a8f8(grabber pos,
-         * ±0x800) snaps rot_y := bearing(Leon->zombie), face then adds 0x800 -> BOTH variants end at
-         * bearing+0x800 = yaw(zombie->player) = the same value the zombie's own [0] snap writes
-         * (live: pl_rot == zrot within -2..-6 in all 17 grab rows). NOT re-snapped per frame — the
-         * only later yaw write is the release-exit ±0x800 fix-up (re15_player_victim_tick). */
-        player->rot_y = (int16_t)(((int)re15_atan2_q12(player->z - zombie->z,
-                                                       player->x - zombie->x) - 0x400) & 0x0fff);
-        player->anim_frac = 0;       /* +0x8f := 0 (@0x8010a3a0) — Leon's grab-start pose is a HARD
+        /* The grab cmd-5 write REPLACES the whole player command state — the per-frame dispatch
+         * @0x80031c88 indexes DAT_800aca58, so a latched aim FSM (cmd 1 action 7) simply stops
+         * being run. Exit the port's aim FSM here (keep the knife-in-hand latch aca50&0x4000 —
+         * a separate flag the cmd write does not touch). crow_victim_anim.md §4.3. */
+        {
+            extern void re15_player_aim_interrupt(void);
+            re15_player_aim_interrupt();
+        }
+        if (zombie->type == 0x21) {
+            /* CROW front victim FSM Ph0 (@0x801159f4, Hook A [0x21] = LAB_8011597c):
+             * blend +0x8f = 7 @0x80115a28 (the zombie grab is a HARD cut — the crow
+             * BLENDS Leon in), hit_react |= 1 @0x80115a40-4c, aca3c |= 0xC0
+             * @0x80115a3c-44 (control latch; port repr = the grab pin), and NO yaw
+             * snap — there is no a8f8 call anywhere in 0x801159bc-0x80115b7c: Leon
+             * keeps his facing (crow_victim_anim.md F1). */
+            player->anim_frac  = 7;
+            player->hit_react |= 1;
+        } else {
+            /* ONE-SHOT yaw latch (byte-true phase 0, D1 disasm @0x8010a344-a3d4): a8f8(grabber pos,
+             * ±0x800) snaps rot_y := bearing(Leon->zombie), face then adds 0x800 -> BOTH variants end at
+             * bearing+0x800 = yaw(zombie->player) = the same value the zombie's own [0] snap writes
+             * (live: pl_rot == zrot within -2..-6 in all 17 grab rows). NOT re-snapped per frame — the
+             * only later yaw write is the release-exit ±0x800 fix-up (re15_player_victim_tick). */
+            player->rot_y = (int16_t)(((int)re15_atan2_q12(player->z - zombie->z,
+                                                           player->x - zombie->x) - 0x400) & 0x0fff);
+            player->anim_frac = 0;   /* +0x8f := 0 (@0x8010a3a0) — Leon's grab-start pose is a HARD
                                       * cut; only the zombie blends (+0x8f=7 on its side) */
+        }
     }
 }
 
@@ -665,6 +687,17 @@ static void re15_victim_clip_map(uint8_t *c_intro, uint8_t *c_hold, uint8_t *c_r
     uint8_t v = g_player_victim_variant;
     if (g_player_victim_type == 0x20) {                 /* DOG (EM020) */
         *c_intro = (uint8_t)(3 * v); *c_hold = 1; *c_release = 2; *c_collapse = 0x0b;
+    } else if (g_player_victim_type == 0x21) {          /* CROW (EM021) — front victim FSM
+                                                         * 0x801159bc (Hook A [0x21]): intro clip 0
+                                                         * @0x80115a18 (14f), hold LOOP clip 1
+                                                         * @0x80115a88/@0x80115aa8 (36f, no
+                                                         * self-advance), release clip 2 @0x80115ad4
+                                                         * (20f) — EM021 victim EDD @blob+0x49d4.
+                                                         * NO collapse: the crow never devours
+                                                         * (Hook B [0x21] table [0] = jr-ra stub
+                                                         * @0x80115d6c, no cmd-6 writer —
+                                                         * crow_victim_anim.md F2); unreachable. */
+        *c_intro = 0; *c_hold = 1; *c_release = 2; *c_collapse = 2;
     } else {                                            /* ZOMBIE (default) */
         uint8_t base = (uint8_t)(v * 3);
         *c_intro = base; *c_hold = (uint8_t)(base + 1);
@@ -767,8 +800,12 @@ void re15_player_victim_tick(void)
             player->motion = c_release;
             player->anim_frame = 0;
             s_victim_fresh = 1;
-            player->anim_frac = 7;                     /* +0x8f=7 @0x8010a594 — blend into the release */
-            player->anim_blend_rate = 0x200;
+            if (g_player_victim_type != 0x21) {        /* crow Ph3 @0x80115acc-dc writes clip 2 + frame 0
+                                                        * ONLY — no +0x8f seed (the Ph0 blend 7 has long
+                                                        * decayed): hard cut into the release. */
+                player->anim_frac = 7;                 /* +0x8f=7 @0x8010a594 — blend into the release */
+                player->anim_blend_rate = 0x200;
+            }
             return;
         }
         /* TIMELINE-VERIFIED (deterministic /tmp/tl3 + the Q4 disasm of @0x8010a28c): phase 0/1 play the
@@ -788,8 +825,12 @@ void re15_player_victim_tick(void)
         }
         s_victim_fresh = 0;
         player->motion = clip;
-        re15_clip_root_motion_abs(player, &vb->skel_victim, &vb->anim_victim,
-                                  clip, (int)player->anim_frame);
+        if (g_player_victim_type != 0x21)              /* the crow victim FSM 0x801159bc-0x80115b7c has
+                                                        * NO func_0x8001ad68 root-motion placement — only
+                                                        * f314 (@0x80115a6c/abc/b08): Leon holds his XZ
+                                                        * during the peck pin (crow_victim_anim.md F1) */
+            re15_clip_root_motion_abs(player, &vb->skel_victim, &vb->anim_victim,
+                                      clip, (int)player->anim_frame);
     } else if (g_player_victim == 2) {                 /* COLLAPSE (state 6): collapse clip, play once +
                                                         * ROOT MOTION (the ~600-unit devour drag), hold last */
         uint8_t clip = c_collapse;
@@ -847,8 +888,10 @@ void re15_player_victim_tick(void)
              * zombie he shoved off (his entity yaw pointed AWAY for the whole grab; the face-victim
              * clips are authored root-180°-flipped). BEHIND keeps the grab yaw (no flip). Without
              * this Leon stood 180° reversed after every face-grab push-away. (The variant-3 -0x800
-             * @0x8010a648 belongs to the second clip set {8..13} — not in the port's variant model.) */
-            if (g_player_victim_variant == 0)
+             * @0x8010a648 belongs to the second clip set {8..13} — not in the port's variant model.)
+             * CROW: no flip — the front-FSM exit @0x80115b40-6c writes cmd/hit_react/aca3c only,
+             * never +0x6a (and the crow latch never snapped the yaw to begin with). */
+            if (g_player_victim_variant == 0 && g_player_victim_type != 0x21)
                 player->rot_y = (int16_t)(((int)player->rot_y + 0x800) & 0x0fff);
             player->motion = 200;                      /* restore the idle sentinel: the stale bank2
                                                         * clip index must not feed the normal player
@@ -859,8 +902,9 @@ void re15_player_victim_tick(void)
         }
         s_victim_fresh = 0;
         player->motion = clip;
-        re15_clip_root_motion_abs(player, &vb->skel_victim, &vb->anim_victim,
-                                  clip, (int)player->anim_frame);
+        if (g_player_victim_type != 0x21)              /* crow: no ad68 placement (see STRUGGLE) */
+            re15_clip_root_motion_abs(player, &vb->skel_victim, &vb->anim_victim,
+                                      clip, (int)player->anim_frame);
     }
 }
 
@@ -3177,22 +3221,27 @@ static void re15_crow_weave(re15_actor_t *e)
     else if (e->crow_bank == 2) e->rot_y = (int16_t)(e->rot_y - 80);   /* @0x80115ef0 */
 }
 
-/* crow screech — byte-true 0x801161e8: a vertical-distance-tiered vocalization on +0x1ec (lh),
- * layered SE ids per tier via 0x80037edc (the SE volume args 0xa/0x28/8 are not modeled by
- * re15_audio_room_se — id-only). Tier map re-verified against the raw bytes (audit wf_827f186d
- * crow #8 — the old port map had SE5 in the <3600 band and an invented SE7 beyond 3600):
- *   <1500  -> SE1+SE2            (@0x80116200 slti 1500; SE calls @0x80116208-1c)
- *   <3000  -> SE3+SE4+SE6+SE5    (@0x80116220 slti 3000; SE calls @0x80116228-50, a0=5 @0x80116250)
- *   <3600  -> SE0+SE7            (@0x80116254 slti 3600; SE0 vol-8 @0x8011625c-64, SE7 @0x80116268)
- *   >=3600 -> SILENT             (@0x80116258 beq -> epilogue 0x80116278, no SE call) */
-static void re15_crow_screech(const re15_actor_t *e)
+/* ATTACK-SITE wound stamper — byte-true 0x801161e8. KORRIGIERT (crow_victim_anim.md F3/F8,
+ * beide CONFIRMED): das ist KEIN Screech — die sechs Calls in 0x8011620c-70 sind
+ * `jal 0x80037edc` = der Per-Panel-WUND-Akkumulator (Panel in a0, Betrag in a1 =
+ * 0xa/0x28/0x8); die Routine enthaelt keinen einzigen SE-Call. Die alte Port-Fassung
+ * (re15_crow_screech) spielte die Panel-Nummern als Room-SEs ab. Staffelung auf dem
+ * vert-Fehler der Kraehe (+0x1ec, lh @0x801161f4):
+ *   <1500      -> (1,+0xa) @0x8011620c, (2,+0xa) @0x80116214-1c/70
+ *   1500..2999 -> (3,+0xa) @0x8011622c, (4,+0x28) @0x80116238,
+ *                 (6,+0x28) @0x80116244, (5,+0x28) @0x80116250-70
+ *   3000..3599 -> (0,+0x8) @0x80116260, (7,+0x28) @0x80116268-70
+ *   >=3600     -> nichts (beq @0x80116258 -> Epilog)
+ * Caller (jal-Zensus STAGE1.BIN): Dive-Connect @0x80113b7c, Grab move[13] step0
+ * @0x80113ef4, Strike move[16] @0x801144bc. */
+static void re15_crow_attack_wounds(const re15_actor_t *e)
 {
     int16_t ve = e->crow_vert_err;
-    if      (ve < 1500) { re15_audio_room_se(1); re15_audio_room_se(2); }
-    else if (ve < 3000) { re15_audio_room_se(3); re15_audio_room_se(4);
-                          re15_audio_room_se(6); re15_audio_room_se(5); }
-    else if (ve < 3600) { re15_audio_room_se(0); re15_audio_room_se(7); }
-    /* >= 3600: silent (@0x80116258) */
+    if      (ve < 1500) { re15_wound_add(1, 0x0a); re15_wound_add(2, 0x0a); }
+    else if (ve < 3000) { re15_wound_add(3, 0x0a); re15_wound_add(4, 0x28);
+                          re15_wound_add(6, 0x28); re15_wound_add(5, 0x28); }
+    else if (ve < 3600) { re15_wound_add(0, 0x08); re15_wound_add(7, 0x28); }
+    /* >= 3600: nothing (@0x80116258) */
 }
 
 /* room_coll FUN_8001c6e8 for the crow root (a0=&+0x34, a1=dim[3]=200, a2=8, a3=0x400) — the
@@ -3578,14 +3627,13 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
                 re15_audio_room_se(4);                       /* Se(4) hit @0x80113ae8 */
                 re15_crow_hit_player(e, player, 4);          /* DIVE HIT: -4 HP @0x80113b04; player
                                                               * cmd 2 @0x80113b00 + dir @0x80113b28 +
-                                                              * aca5a=0 @0x80113b30 (cmd FSM = OPEN) */
-                re15_crow_screech(e);                        /* 0x801161e8 @0x80113b7c */
-                /* Kraehen-Wund-DECALS BEIM KONTAKT (@0x80113b7c ruft 0x801161e8, dort nach
-                 * +0x1ec gestaffelt @0x80116200-3c): vert<1500 -> Panels 1(+10)+2(+10);
-                 * sonst vert<3000 -> 3(+10)+4(+0x28). bite_blood_fx.md Addendum 3 —
-                 * die Kraehe stempelt am KONTAKT, nicht im Release-Pfad. */
-                if (e->crow_vert_err < 1500)      { re15_wound_add(1, 10); re15_wound_add(2, 10); }
-                else if (e->crow_vert_err < 3000) { re15_wound_add(3, 10); re15_wound_add(4, 0x28); }
+                                                              * aca5a=0 @0x80113b30 -> Port-Flinch-
+                                                              * Detector (game_step_common.c) */
+                re15_crow_attack_wounds(e);                  /* 0x801161e8 @0x80113b7c — die
+                                                              * VOLLSTAENDIGEN vert-Band-Wundstempel
+                                                              * (die alte Inline-Teilkopie fehlte
+                                                              * Panels 6/5 im Mittelband + das ganze
+                                                              * 3000er-Band; crow_victim_anim.md §4.4) */
             }
             /* phase-2 tail @0x80113b90-bd0: nonzero +0x1d7 -> PRO FRAME ein BLUT-Spawn mit
              * scale = ctr<<11 (@0x80113b98 sll 0xb, Spawn @0x80113bb0) am KRAEHEN-Bone 2
@@ -3630,8 +3678,14 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
             e->crow_hs = 1;                                  /* +0x1d8=1 self-exempt @0x80113ddc */
             s_crow_flock = (uint16_t)((s_crow_flock & 0xfff) | 0x8000);   /* @0x80113dfc */
             re15_crow_hit_player_ungated(e, player, 8);      /* GRAB: -8 HP @0x80113e34 UNGATED (kein
-                                                              * +0x93 im Kontaktpfad — Dossier D4);
-                                                              * player cmd 5 @0x80113e48 (FSM = OPEN) */
+                                                              * +0x93 im Kontaktpfad — Dossier D4) */
+            re15_player_victim_latch(e, player);             /* player cmd 5 @0x80113e48 + aca59=0
+                                                              * @0x80113e30 + Paar-C-Link acbcc/acbd0 =
+                                                              * crow+0x178/+0x17c @0x80113e08-14 ->
+                                                              * Hook A [0x21] = LAB_8011597c front
+                                                              * victim FSM: Leon spielt EM021-victim
+                                                              * Clips 0 -> 1(Loop) -> 2
+                                                              * (crow_victim_anim.md F1/F5) */
             e->crow_struggle = 100;
             re15_crow_sub(e, 13);
         } else {
@@ -3647,9 +3701,10 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
             re15_crow_clip(e, 8);                            /* @0x80113ec4-c8 */
             e->crow_atk_ctr++;                               /* @0x80113ee0-e4 */
             e->crow_struggle = 100;                          /* @0x80113ef0/ef8 (delay slot) */
-            re15_crow_screech(e);                            /* 0x801161e8 @0x80113ef4 — the entry
-                                                              * plays the distance-tiered screech AND
-                                                              * Se(2) (audit wf_827f186d crow #9) */
+            re15_crow_attack_wounds(e);                      /* 0x801161e8 @0x80113ef4 — der Grab-
+                                                              * Entry STEMPELT die vert-Band-Wunden
+                                                              * (kein Screech; das Se(2) folgt separat
+                                                              * @0x80113f74-78 unten) */
             {   /* Peck-Grab-Entry-BLUT: 0x2000 am Kraehen-Bone 2 (@0x80113f0c/0x80113f6c;
                  * bite_blood_fx.md §3.1 D5b, CONFIRMED) */
                 int32_t pb2[3]; re15_enemy_bone_world_pos(e, 2, pb2);
@@ -3739,7 +3794,8 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
     case 16:
         if (e->sub_state_2 == 0) {
             re15_crow_clip(e, 8);
-            re15_crow_screech(e);                            /* 0x801161e8 @0x801144bc */
+            re15_crow_attack_wounds(e);                      /* 0x801161e8 @0x801144bc — Strike
+                                                              * stempelt die vert-Band-Wunden */
             {   /* Strike-BLUT: 0x1000 am Kraehen-Bone 2 (@0x801144c4/0x801144e0;
                  * bite_blood_fx.md §3.1 D5c, CONFIRMED) */
                 int32_t sb2[3]; re15_enemy_bone_world_pos(e, 2, sb2);

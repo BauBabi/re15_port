@@ -159,7 +159,11 @@ Vollständig in [HANDOVER_2026-08-01.md](HANDOVER_2026-08-01.md) §1/§2b. Kernp
 
 | 2026-08-03 | **Krähen-LIVE-Fix + Knockdown-Klasse** (`c9a19140`/`8c3ece3e`): LOS-Ray byte-true (FUN_8003dcc4 mit GEGNER-Höhenband-Filter — Sonde: 0→620 Attack-Ticks live), Elevation-Band-Stempel (hohe Krähe braucht UP-Aim), Death-Lane-Map, +0x9a-Latch; Spieler-Knockdown [4]/[5] komplett (0x800360e8/0x8003644c, Slam-Zweig, 0xb-rev-Aufstehen, i-Frames), Boss-0x27-Trigger. Liegend-Devour WIDERLEGT (dormante Girl-Ambush, toter Code — nichts erfunden). OFFEN: Krähen-Wurf-Exit (Mode 6, Watchpoint), aca3c-0x40/0x80-Leser, aca52-Bit-0-Semantik, Waffen-14-Lane, visuelle Clip-Prüfung 0xb-0x10 per gdigrab | `8c3ece3e` |
 
-Baseline nach der Session: **103/103 ctest grün.**
+| 2026-08-03 | **ROOM10A0-Treppen-Richtung** (Nutzer: „hintere Treppe steigt hoch statt runter"): Original RE'd — KEINE Zonen-Paarung; sce-12/13-Handler LAB_80043500/LAB_800435cc entscheiden PRO Record aus Rect-Hälfte × side-Flag rec+0xC (`ASCEND ⇔ low_half==(side==0)`), Ziel = band ± count&7 (rec+0xE, Gait @0x800389cc-dc), Facing = Achsen-Kardinale (acabe-Settle @0x8003891c-9ac). Port paarte über event_id = das side-Flag → in 10A0 (2× side-0 + 2× side-1) falsche Partner. Fix: per-Record-Entscheidung + side/count/axis/corner/extent-Registrierung + Kardinal-Snap + Probe 800→620 (@0x80042bd0). Proben: `probe_stair_10a0` 8/8 == Original, `probe_stair_1170` (neu, ctest) 4/4. Dossier `analysis/stair_10a0.md` (5×CONFIRMED, O2 Clip-5-Settle offen) | *(dieser Commit)* |
+
+| 2026-08-03 | **Leons Angegriffen-Anim bei Krähen** (Nutzer-Report): Hook A [0x21] = LAB_8011597c komplett RE'd (Front-FSM 0x801159bc: EM021-victim Clips 0→1-Loop→2 aus Paar C, Blend 7, hit_react-Latch; Rear = nur 1171-Szene; Hook B = toter Code). Port: Victim-Latch am Krähen-Grab (@0x80113e48/e30), Clip-Map 0x21, kein Root-Motion/Yaw-Flip/Release-Blend (byte-Fakten der Krähen-FSM); EM021-Bank-Geometrie aus dem dir[6]-Pool-Header (15/80) statt dir[2] (13/72); Flinch-Aim-Gate ENTFERNT (Original ungated @0x80113b00, cmd-Dispatch @0x80031c88 ersetzt Aim → `re15_player_aim_interrupt`), Flinch-Richtung auf Yaw-Vergleich a780 (@0x8001a788-a4, vorne→Clip 8) umgestellt (Port war invertiert); `re15_crow_screech` als Fehldeutung des Wund-Stemplers 0x801161e8 ersetzt (vollständige vert-Bänder an Dive/Grab/Strike). Sonde `probe_crow_flinch`: Grabs spielen 0→1→2 (14/36/20f), Dive-Flinch auch unter R1, kf_size 80. Dossier `analysis/crow_victim_anim.md` (8×CONFIRMED, 1×PLAUSIBLE). OFFEN: 1171-Wurf-Szene (Exit jetzt RE'd: Script-Plc_dest), visuelle gdigrab-Prüfung | *(dieser Commit)* |
+
+Baseline nach der Session: **104/104 ctest grün** (neu: `unit_stair_1170_regression`).
 
 ### Offene Punkte (oberste Zeile = nächster Schritt)
 
@@ -173,11 +177,14 @@ Baseline nach der Session: **103/103 ctest grün.**
 2. **SE-Pitch-Sweep** (Folge von W1.3): der Tone-Pitch gilt jetzt für ALLE SEs — Footsteps
    u.a. klangen bisher nur richtig, wo note≈center−12 zufällig passte. Sweep über alle
    snd0/snd1/ARMS/CORE-EDTs nach |Δ|≠12 und Stichproben hören (Dossier rolltor_sound.md §6 D1).
-3. **Krähen-Rest** (Dossier crow_1170.md §6): D7 `0x800acc0c`-Konsument (FUN_80024c30 RE'en),
-   D8 Root-Post-Pass für ALLE States (+ b544-Push-Loop), D9 Arrival-Frische (erst
-   `0x8001a804`-Tail disassemblieren), `aca52`-Producer (EXE-Knockdown @0x800334e8-504/
-   @0x800345c8 + Cmd-FSM @0x80073f90), Victim-Anim des Krähen-Grabs (Player-Cmd-5
-   @0x80036834), Live-Parity-Savestate (JUMP 1170 mit z3-Bit-125).
+3. **Krähen-Rest** (Dossiers crow_1170.md §6 + crow_victim_anim.md §7): D7 `0x800acc0c`-
+   Konsument (FUN_80024c30 RE'en), D8 Root-Post-Pass für ALLE States (+ b544-Push-Loop),
+   D9 Arrival-Frische (erst `0x8001a804`-Tail disassemblieren), `aca52`-Producer
+   (EXE-Knockdown @0x800334e8-504/@0x800345c8 + Cmd-FSM @0x80073f90), ROOM1171-Wurf-SZENE
+   bauen (Rear-Grab + Mode-6-Halt; Exit = Script-`Plc_dest` — crow_victim_anim.md §3;
+   vorher Plc_dest mode 0x13 @0x80073e30[19] disassemblieren), visuelle Identität der
+   EM021-victim Clips 0/1/2 + PLW 1/2 per gdigrab, Live-Parity-Savestate (JUMP 1170 mit
+   z3-Bit-125). *(Victim-Anim des Front-Grabs + Flinch-Gate/-Richtung: ERLEDIGT 2026-08-03.)*
 4. **Zombie-Rest** (Dossier zombie_hit_1140.md §5): Wake-Trigger des Lyers (wer setzt +0x6=1),
    Waffen-IDs 0x12/0x13 (Prone-Flinch-B-Klasse), DEATH-Spalte 4 Producer (FUN_80107634),
    schwere Stagger-Handler FUN_80106290/80106624/80106048.

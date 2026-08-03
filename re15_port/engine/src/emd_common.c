@@ -575,7 +575,20 @@ int re15_emd_parse_victim_bank(const uint8_t *emd, size_t emd_size,
     int ok_skel = out_skel && off_emr && off_emr < emd_size &&
                   re15_emd_parse_skeleton (emd + off_emr, emd_size - off_emr, out_skel) == 0;
     if (ok_skel && off_kf && (size_t)off_kf + 8 < emd_size && out_skel->keyframe_size_bytes > 0) {
-        int kf_off = (int)read_u16_le(emd + off_kf + 2);    /* bank2 EMR keyframes_offset (u16 @ +2) */
+        int kf_off        = (int)read_u16_le(emd + off_kf + 2); /* bank2 EMR keyframes_offset (u16 @ +2) */
+        int pool_bones    = (int)read_u16_le(emd + off_kf + 4); /* bank2 EMR bone_count      (u16 @ +4) */
+        int pool_kf_size  = (int)read_u16_le(emd + off_kf + 6); /* bank2 EMR keyframe_size   (u16 @ +6) */
+        /* KEYFRAME GEOMETRY comes from the POOL's OWN header, not dir[2]'s (crow_victim_anim.md
+         * F9, CONFIRMED): for EM10/EM20 both agree (15 bones / kf 80), but the CROW's dir[2] is
+         * the bird's own 13-bone/72 EMR while its victim pool is PL00-compatible 15/80 — it
+         * animates LEON (CDEMD0.EMS blob 8 @0x17b800: dir[6] header (0,8,15,80) @blob+0x4afc vs
+         * dir[2] header (88,152,13,72) @blob+0x5b4). Striding the pool with dir[2]'s 72
+         * mis-framed every keyframe; the render-side victim override (platform main) poses Leon
+         * with the PL00 hierarchy + exactly these keyframe fields. bone_count stays dir[2]'s —
+         * the engine-side hierarchy consumers (bone-pos queries) guard on it and the crow victim
+         * FSM never queries bones. */
+        if (pool_kf_size > 12 && pool_bones > 0 && pool_bones <= RE15_EMD_MAX_BONES)
+            out_skel->keyframe_size_bytes = pool_kf_size;
         if ((size_t)(off_kf + kf_off) < emd_size) {
             out_skel->keyframe_data      = emd + off_kf + kf_off;
             out_skel->keyframe_data_size = emd_size - (size_t)(off_kf + kf_off);

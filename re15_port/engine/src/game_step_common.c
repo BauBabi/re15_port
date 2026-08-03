@@ -83,6 +83,10 @@ static int16_t s_kd_t       = 0;             /* [5]-Decel-Zaehler t */
 int  re15_player_knockdown_active(void) { return s_knockdown; }
 void re15_player_knockdown_begin(int dir)
 {
+    /* cmd-2 [4]/[5] ersetzt wie jeder cmd-Write den kompletten cmd-1-Zustand inkl. Aim
+     * (Dispatch @0x80031c88) — Aim-FSM beenden, Knife-in-Hand-Latch bleibt. */
+    extern void re15_player_aim_interrupt(void);
+    re15_player_aim_interrupt();
     s_knockdown = 1;
     s_kd_dir    = (uint8_t)(dir & 1);
     s_kd_phase  = 0;
@@ -341,21 +345,35 @@ void re15_game_step(const re15_game_ctx_t *c)
      * (200, the step magnitude @0x80035e44/@0x80035fc8) decaying by DAT_800acaf2 = 0x32 (50) per frame
      * (@0x80035f20), pushed via FUN_800245d8(0x800) = rotate (mag,0,0) by Ry(facing + 0x800). UNBLOCKED
      * this session — the ported enemy AI now applies the damage. The live melee attacks write hp
-     * DIRECTLY (they don't route through re15_player_take_damage), so the direction is derived here from
-     * the attacker's position (re15_nearest_hostile -> re15_player_hit_from_front): front (aca59=3) ->
-     * clip 0x9, back (aca59=2) -> clip 0x8, no attacker (poison/environment) -> clip 0xa. Detect the
+     * DIRECTLY (they don't route through re15_player_take_damage), so the direction is derived here
+     * from the byte-true YAW compare FUN_8001a780 against the nearest hostile (see the inline
+     * citation at the clip pick below); no attacker (poison/environment) -> clip 0xa. Detect the
      * drop here (before re15_enemy_ai_run_all re-damages at the end of the step; s_prev_hp updated
-     * pre-damage so the next tick sees the drop). Grabbed/dead/stair/aim take precedence. The exact
-     * clip 0x8/0x9/0xa frame length (flinch duration) is faithful-line (15). */
-    extern int re15_player_aim_active(void);     /* player_common.c — don't flinch mid-aim */
+     * pre-damage so the next tick sees the drop). Grabbed/dead/stair take precedence. */
+    /* KEIN Aim-Gate (crow_victim_anim.md F6, CONFIRMED): das Original kennt keins — der
+     * Flinch-Writer schreibt cmd 2 UNCONDITIONAL (@0x80113b00; einzige Gates des Dive sind
+     * vert @0x80113ab0-b4 und hit_react==0 @0x80113ac0-cc), und der cmd-Dispatch @0x80031c88
+     * ERSETZT den kompletten cmd-1-Zustand inkl. Aim. Der Flinch bricht das Zielen ab, nicht
+     * umgekehrt (das alte `!re15_player_aim_active()`-Gate unterdrueckte jeden Flinch, solange
+     * der Spieler zielte — der Normalfall im Kraehenkampf). */
+    extern void re15_player_aim_interrupt(void);  /* player_common.c */
     if (c->rdt_ok && pl->hp < s_prev_hp && pl->hp >= 0 && s_hit_flinch == 0 &&
         s_knockdown == 0 &&        /* die Knockdown-Klasse hat Vorrang vor dem Flinch-Detector
                                     * (der Boss-Heavy-Biss wuerde sonst doppelt reagieren) */
-        !re15_player_is_dead() && !re15_player_is_grabbed() && !re15_stair_active() &&
-        !re15_player_aim_active()) {
+        !re15_player_is_dead() && !re15_player_is_grabbed() && !re15_stair_active()) {
         const re15_actor_t *atk = re15_nearest_hostile(pl);      /* the enemy that struck (adjacent) */
         uint8_t clip = 0x0a;                                     /* [0]/[1] fallback (@0x80035bd0) */
-        if (atk) clip = re15_player_hit_from_front(pl, atk->x, atk->z) ? 0x09 : 0x08;
+        /* RICHTUNG = der byte-true YAW-Vergleich FUN_8001a780 (@0x8001a788-a4):
+         *   ret = ((player.rot_y - attacker.rot_y + 0x400) & 0xfff) < 0x800
+         * ret 0 = der Angreifer schaut dem Spieler ins GESICHT (frontal) -> aca59 = 0+2 = [2]
+         * -> Clip 8 (@0x80035e38-40); ret 1 = gleiche Blickrichtung (Treffer von HINTEN) ->
+         * [3] -> Clip 9 (@0x80035fbc-c4). aca59 = a780+2 (@0x80113b10-28 Kraehen-Dive; die
+         * uebrigen cmd-2-Writer nutzen denselben Helper). KEINE Positionsrechnung — die alte
+         * Port-Ableitung aus Positionen (hit_from_front -> 9) war invertiert
+         * (crow_victim_anim.md F7). */
+        if (atk) clip = ((((int)pl->rot_y - (int)atk->rot_y + 0x400) & 0xfff) < 0x800)
+                            ? 0x09 : 0x08;
+        re15_player_aim_interrupt();             /* cmd-2 ersetzt den Aim-Zustand (@0x80031c88) */
         s_hit_flinch = (clip == 0x0a) ? 20 : 22; /* byte-true clip play-out = PL00.EDD frame_count (clip 0x8=22,
                                                   * 0x9=22, 0xa=20; 1 tick/frame, no 0x8000 tween frames). The
                                                   * original ends the hurt FSM when anim_set FUN_8001f314 reaches

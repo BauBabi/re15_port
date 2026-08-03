@@ -182,6 +182,20 @@ void re15_player_aim_reset(void)                              /* test/room-chang
     s_aim_recoil = 0; s_aim_elev = 0; s_knife_in_hand = 0;
     g_actors[RE15_ACTOR_SLOT_PLAYER].anim_flags &= (uint8_t)~0x80u;
 }
+/* HIT/GRAB interrupt (byte-true mechanism: the player command dispatch @0x80031c88 indexes
+ * DAT_800aca58 — a cmd-2 flinch / cmd-5 grab write REPLACES the whole cmd-1 state incl. the
+ * aim action; the dive/flinch writers carry NO aim gate (@0x80113b00 unconditional). Exit the
+ * aim FSM but KEEP the knife-in-hand latch (aca50 bit 0x4000 — a separate flag the cmd write
+ * does not touch; the LOWER-exit comment above documents the same persistence). Without this
+ * the port suppressed the flinch whenever the player aimed — the crow-fight normal case
+ * (crow_victim_anim.md F6). */
+void re15_player_aim_interrupt(void)
+{
+    extern re15_actor_t g_actors[];
+    s_player_aim_phase = RE15_AIM_NONE;
+    s_aim_recoil = 0; s_aim_elev = 0;
+    g_actors[RE15_ACTOR_SLOT_PLAYER].anim_flags &= (uint8_t)~0x80u;
+}
 /* SLASH damage window (byte-true @0x80035388-94): while the melee SLASH clip plays and the anim
  * frame is in [6..11], the resolver FUN_80011f50 is called EVERY tick (once-per-target latch +
  * recursion live inside weapon_fire). game_step polls this. */
