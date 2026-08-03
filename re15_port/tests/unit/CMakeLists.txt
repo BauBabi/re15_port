@@ -590,6 +590,14 @@ add_executable(probe_crow_flinch probe_crow_flinch.c)
 target_link_libraries(probe_crow_flinch PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_crow_flinch PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
+# Regression: Kraehen-Corpse Anim-Halt (Freeze Frame 12) + Blutlache +10/Tick x51 + GIB-Wipe
+# (analysis/crow_death_pool.md, Corpse-Maschine 0x801157e8/@0x80121234)
+add_executable(probe_crow_death probe_crow_death.c)
+target_link_libraries(probe_crow_death PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_crow_death PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_crow_death_corpse COMMAND probe_crow_death)
+set_tests_properties(unit_crow_death_corpse PROPERTIES TIMEOUT 30)
+
 # --- DIAGNOSE-Probe (kein ctest): ROOM10D0 Marvin-Cutscene Head-Look (analysis/cutscene_headlook.md) ---
 add_executable(probe_headlook_10d0 probe_headlook_10d0.c)
 target_link_libraries(probe_headlook_10d0 PRIVATE re15_engine re15_test_support)

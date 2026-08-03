@@ -364,6 +364,20 @@ typedef struct {
     int16_t  crow_accel;     /* +0x1e6: per-tick speed accel (dive ramp)                       */
     uint8_t  crow_contact;   /* +0x1d0: player-contact flag (strike/grab connect)             */
     int16_t  crow_struggle;  /* +0x9c : grab-hold struggle meter (drains, <0 = release)        */
+    uint16_t crow_shadow_w;  /* +0xbc: Schatten-Halbbreite — ACTIVE-Tail ((y-floor)>>4)+400 min 100
+                              * (@0x80115fa0-e4); Corpse-Pool-Grower +10/Tick (@0x8011589c-a0);
+                              * GIB-Wipe = 1 (@0x80115938). (crow_death_pool.md §1.3/1.4) */
+    uint16_t crow_shadow_h;  /* +0xbe: Schatten-Halbtiefe — dieselben Writer (@0x801158a8-ac etc.) */
+    uint8_t  crow_tint;      /* Grauwert der Prim-Farbwoerter +0xc4/+0xec: ((y-floor)>>5)+128 min 32,
+                              * v|v<<8|v<<16 Top-Byte erhalten (@0x80115fe8-6058); Wipe -> 0 (schwarz,
+                              * &=0xff000000 @0x80115940-54) */
+    uint8_t  crow_pool;      /* Farb-Zustand +0xc4/+0xec: 1 = (alt&0xff000000)|0x00ffff38 dunkelrote
+                              * Lache (@0x80115884-c8), 0 = Grau-Tint/Wipe */
+    uint8_t  crow_hide;      /* GIB-Scatter: Original zerlegt den Koerper in die 13 spawn-allozierten
+                              * Bone-Parts (+0x188, Armierung @0x80114a50-aa4) und toetet sie nach 50
+                              * Ticks (`sw zero,0(part)` @0x80114b78) -> Koerper weg; der Port
+                              * verbirgt das Mesh ab GIB-step-0 (Part-Scatter-Mover nicht RE'd,
+                              * crow_death_pool.md §4.2) */
 
     /* Dog (Cerberus, type 0x20) AI state — byte-true 0x8010d7f8 family (RE15_DOG_AI.md).
      * A ground chase/lunge/bite enemy; shares the zombie steering/collision + take_damage.

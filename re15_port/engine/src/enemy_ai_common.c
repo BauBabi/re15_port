@@ -3936,23 +3936,48 @@ static void re15_crow_death(re15_actor_t *e)
      * jalr @0x801211cc[+0x5] OHNE Bounds-Check): [7,8,9,10,11,13,15,16,17,18] -> GIB-Lane
      * 0x801149c4 (auch Shotgun + alle schweren Waffen zerlegen in Federn — der Port GIBte
      * vorher nur bei Waffe 7), [0-6,12,19,20] -> Normal-Fall 0x80114738, [14] -> dritte
-     * Lane 0x80114ba4 (Body ungelesen, dokumentiert OFFEN — faellt hier auf Normal-Fall).
-     * crow_shot_attack.md F3 (CONFIRMED). */
+     * Lane 0x80114ba4 (jetzt voll RE'd, crow_death_pool.md §1.6: Spin-Fall identisch Normal
+     * inkl. rot_z=0 @0x80114d80 / Timer 11 @0x80114d90-98, PLUS einmaliger ESP-Spawn
+     * `jal 0x80019700(0x08032000, rot_y, &ent+0x20, 0x8012110c)` @0x80114c94-ac; endet wie
+     * Normal in state 7 sub 0 = Lache. Port mappt weiter auf Normal — Pool-Verhalten damit
+     * byte-gleich, nur der ESP-Effekt fehlt, bis die fx-Identitaet 0x08032000 geklaert ist
+     * (§4.3). crow_shot_attack.md F3 (CONFIRMED). */
     {
         int wl = e->sub_state_1;
         int gib = (wl >= 7 && wl <= 11) || wl == 13 || (wl >= 15 && wl <= 18);
         if (gib && e->sub_state_1 != 7) e->sub_state_1 = 7;   /* auf die Port-GIB-Spur mappen */
     }
     if (e->sub_state_1 == 7) {   /* GIB lane 0x801149c4: 13 feather children (@0x80114a50) -> corpse */
-        if (e->sub_state_2 == 0) {
+        /* Step-Router auf +0x7 = sub_state_3 (`lbu v1,7(a0)` @0x801149d4, disasm-reproduziert) —
+         * NICHT +0x6: das schreibt der Schuss-Resolver byte-true als vertikale Hit-Richtung
+         * (@0x80012438-50) und es steht beim Death-Eintritt auf 0/1/2. Der alte Port steppte
+         * auf sub_state_2 -> Step 0 lief nie (Splatter/Timer/Flags uebersprungen). */
+        if (e->sub_state_3 == 0) {
+            re15_audio_room_se(3);                                   /* Se(3) @0x80114a24-28 */
             re15_esp_fx_splatter(re15_esp_room_bank(), 0, 13, e->x, e->y, e->z, e->crow_perch_h);
-            e->hp = -1; e->crow_timer = 0x32; e->sub_state_2 = 1;    /* +0x1d5=0x32 */
+            e->hp = -1; e->crow_timer = 0x32; e->sub_state_3 = 1;    /* +0x1d5=0x32 @0x80114ab4;
+                                                                      * +0x7++ @0x80114b14-18 */
+            /* Scatter step 0: Original armiert die 13 Bone-Part-Records *(ent+0x188)+i*0xac
+             * (+0x68=0x8f, +0x96=-50, +0x9a=3, word0|=0x4a @0x80114a50-aa4; +0x188 =
+             * Spawn-Puffer FUN_8001e56c, Caller Sce_em_set @0x80042524) — der Koerper
+             * zerlegt sich in seine 13 Bones. Der Part-Scatter-Mover ist nicht RE'd
+             * (crow_death_pool.md §4.2): der Port verbirgt das Mesh und behaelt den
+             * ESP-Feder-Stand-in oben als dokumentierte Annaeherung. */
+            e->crow_hide = 1;
+            e->flags |= 0x42;                                        /* word0|=0x2 @0x80114acc,
+                                                                      * |=0x40 @0x80114ae8 */
             /* GIB-Lane-Flock-Write @0x801149fc-4a20: aca50++, bei armed Re-Arm-Broadcast
              * (aca50&0xf0ff)|0x800 (Dossier crow_1170.md D6). */
             s_crow_flock = (uint16_t)(s_crow_flock + 1);
             if (e->crow_armed)
                 s_crow_flock = (uint16_t)((s_crow_flock & 0xf0ff) | 0x800);
-        } else if (e->crow_timer == 0) { e->state = 7; re15_crow_sub(e, 0); }  /* @0x80114b90 +0x4=7 */
+        } else if (e->crow_timer == 0) {
+            /* Timer 0: Parts getoetet (`sw zero,0(part)` i=0..12 @0x80114b78), dann
+             * `ori a0,zero,0x1` @0x80114b7c -> 0x80115d74 (Delay-Slot `sb 7,+0x4`
+             * @0x80114b90) = state 7 SUB 1 (Pool-WIPE — GIB-Leiche hat KEINE Lache,
+             * crow_death_pool.md §1.5; vorher ging der Port faelschlich in sub 0). */
+            e->state = 7; re15_crow_sub(e, 1);
+        }
         else e->crow_timer--;
         return;
     }
@@ -3981,26 +4006,70 @@ static void re15_crow_death(re15_actor_t *e)
                                                                       * @0x801148cc-e4 (audit wf_827f186d
                                                                       * crow #5 — was the spawn perch) */
             e->y = e->crow_floor - 400;
+            e->rot_z = 0;                                            /* +0x6c=0 beim Land @0x801148f8
+                                                                      * (Lane 14: @0x80114d80) — Leiche
+                                                                      * liegt UNGEROLLT, der Fall-Spin
+                                                                      * (bis 1024) wird zurueckgesetzt */
             re15_crow_clip(e, 0x0a); re15_audio_room_se(5);          /* land clip 0x0a + Se(5) @0x801148f4 */
             e->crow_timer = 11; e->sub_state_3 = 2;                  /* +0x1d5=11 */
         }
         break;
     }
-    case 2:   /* FINISH 0x80114934 */
+    case 2:   /* FINISH 0x80114934: der LETZTE Anim-Tick der toten Kraehe (`jal 0x8001f314`
+               * @0x8011493c) — 12 Ticks (Timer 11..0), Freeze-Frame = 12 des Land-Clips 0x0a */
         re15_crow_anim(e);
-        if (e->crow_timer == 0) { e->state = 7; e->sub_state_1 = 0; e->sub_state_3 = 0; }  /* +0x4=7 @0x80114978 */
+        if (e->crow_timer == 0) {
+            e->state = 7; re15_crow_sub(e, 0); e->sub_state_3 = 0;   /* a0=0 @0x80114964 ->
+                                                                      * 0x80115d74 (+0x5=0, +0x6/+0x7=0),
+                                                                      * Delay-Slot `sb 7,+0x4` @0x80114978 */
+            e->flags |= 0x42;                                        /* word0|=0x2 @0x80114990-94,
+                                                                      * |=0x40 @0x801149ac-b0 (aec4-
+                                                                      * Kontakt-Skip, Konsument oben) */
+        }
         else e->crow_timer--;
         break;
     }
 }
 
-/* SPECIAL (state 7) — byte-true 0x801157e8: the CORPSE settle / color-fade (dispatch on +0x5;
- * [0] color-fade 0x80115830, [2/3] scripted event — scene-specific, deferred). The dead crow lies
- * in its landed pose (clip 0x0a); the render draws it like the zombie corpse (state 7). The exact
- * +0xbc/+0xbe/+0xc4 shadow-recolor fade is the shared render-side corpse pool. */
+/* CORPSE (state 7) — byte-true 0x801157e8: `lbu +0x5; jalr @0x80121234[+0x5]` @0x801157f8-818.
+ * Nur die Subs {0,1} sind erreichbar (vollstaendiger jal-0x80115d74-Census ueber
+ * 0x80112020-0x80116400: a0=0 @0x80114964 Normal / @0x80114dec Lane 14, a0=1 @0x80114b7c GIB);
+ * die Tabelleneintraege [2..4] sind ALIASING mit der Hook-A-Victim-Tabelle @0x8012123c.
+ * KEIN f314-Call in state 7 (weder Dispatcher noch Handler) — die Leiche haelt Frame 12 des
+ * Land-Clips 0x0a fuer immer (letzter Anim-Tick = FINISH-f314 @0x8011493c). Der fruehere
+ * re15_crow_anim-Tick hier war der Nutzer-Report "tote Kraehen animieren weiter"
+ * (crow_death_pool.md §1.3, Handler disasm-reproduziert 2026-08-03). */
 static void re15_crow_special(re15_actor_t *e)
 {
-    re15_crow_anim(e);   /* hold the corpse pose; the fade is render-side (like the zombie corpse) */
+    switch (e->sub_state_1) {
+    case 0:                                       /* [0] 0x80115830 POOL-GROWER (Blutlache) */
+        if (e->sub_state_2 == 0) {
+            e->crow_timer  = 0x32;                /* +0x1d5=50 @0x8011585c-60 */
+            e->sub_state_2 = 1;                   /* +0x6++ @0x80115878-7c — faellt durch */
+        }
+        if (e->sub_state_2 == 1) {
+            e->crow_shadow_w = (uint16_t)(e->crow_shadow_w + 10);   /* +0xbc += 10 @0x8011589c-a0 */
+            e->crow_shadow_h = (uint16_t)(e->crow_shadow_h + 10);   /* +0xbe += 10 @0x801158a8-ac */
+            e->crow_pool = 1;                     /* +0xc4/+0xec = (alt&0xff000000)|0x00ffff38
+                                                   * @0x80115880-c8 = dunkelrote Lache (identische
+                                                   * Farbkonstante wie der Spieler-Todes-Pool
+                                                   * @0x8003699c-b8) */
+            {
+                uint8_t t = e->crow_timer;        /* unconditional-Dec (Wrap) @0x801158d8-e8 */
+                e->crow_timer = (uint8_t)(t - 1u);
+                if (t == 0) e->sub_state_2 = 2;   /* @0x801158f8-904 -> step 2 */
+            }                                     /* Bilanz: Reads 50..0 = 51 Wachstums-Ticks */
+        }
+        break;                                    /* step>=2: j 0x80115908 = jr ra (Halt) */
+    case 1:                                       /* [1] 0x80115910 POOL-WIPE (GIB-Leiche) */
+        if (e->sub_state_2 == 0) {
+            e->crow_shadow_w = 1; e->crow_shadow_h = 1;   /* sh 1 -> +0xbc/+0xbe @0x80115938-3c */
+            e->crow_pool = 0; e->crow_tint = 0;   /* +0xc4/+0xec &= 0xff000000 (schwarz)
+                                                   * @0x80115940-54 — unsichtbarer 1x1-Schatten */
+            e->sub_state_2 = 1;                   /* +0x6++ @0x8011596c-70 */
+        }
+        break;                                    /* step>=1: jr ra @0x80115974 */
+    }
 }
 
 /* One crow AI tick (dispatched from re15_enemy_ai_run_all for type 0x21).
@@ -4119,11 +4188,26 @@ static void re15_crow_ai_tick(int slot)
          * (sets entity[0]|=0x80000000 when player-dist<6000 @0x80012a6c/84), <800 -> jal
          * 0x80012974(0x1770) (|=0x20000000 @0x800129d4/ec), else |=0x40000000 @0x801125bc-c8.
          * The port models only the LOW byte of +0x00 (re15_actor.flags) and has no EXE
-         * render/audio consumer of the top bits — not faked. Likewise OPEN: jal 0x80115f70
-         * @0x801125cc (altitude presentation helper: +0x9a = vert-err>=5200 ? -1 : 0 targetability
-         * latch @0x80115f88-9c, shadow scale +0xbc/+0xbe = clamp((y-floor)>>4+400, min 100)
-         * @0x80115fa0-e4, shadow tint from (y-floor)>>5+128 @0x80115fe8-...) — render-side
-         * shadow-pool fields the port draws from its own shadow path. */
+         * render/audio consumer of the top bits — not faked. */
+        /* Tail-Helper 0x80115f70 (jal @0x801125cc, State-1-only) — Schatten-Groesse/-Tint:
+         * Halbmasse +0xbc/+0xbe = ((y − floor) >> 4) + 400, <50 -> 100 (@0x80115fa0-e4
+         * `sra 4; addiu 400; slti 50; ori 0x64`); Grau-Tint = ((y − floor) >> 5) + 128,
+         * <32 -> 32 (@0x80115fe8-6028 `sra 5; addiu 128; slti 32; ori 0x20`), als
+         * v|v<<8|v<<16 in die Prim-Farbwoerter +0xc4/+0xec, Top-Byte erhalten
+         * (@0x80116028-605c). Zugleich die BASIS der Corpse-Blutlache: States 3/7
+         * aktualisieren nicht mehr, der Pool-Grower waechst auf dem letzten State-1-Wert
+         * (crow_death_pool.md §1.4, disasm-reproduziert 2026-08-03). */
+        {
+            int32_t sd = e->y - e->crow_floor;
+            int32_t sz = (sd >> 4) + 400;              /* @0x80115fbc-c0 */
+            if ((int16_t)sz < 50) sz = 100;            /* @0x80115fd0-dc slti 50 -> ori 0x64 */
+            e->crow_shadow_w = (uint16_t)sz;           /* sh +0xbc @0x80115fe4 */
+            e->crow_shadow_h = (uint16_t)sz;           /* sh +0xbe @0x80115fe0 */
+            int32_t tv = (sd >> 5) + 128;              /* @0x80116004-08 */
+            if ((int16_t)tv < 32) tv = 32;             /* @0x80116018-24 slti 32 -> ori 0x20 */
+            e->crow_tint = (uint8_t)tv;
+            e->crow_pool = 0;                          /* State-1-Tail schreibt Grau, nie Rot */
+        }
         if ((s_crow_flock & 0x800) && e->crow_armed == 0) {   /* re-arm one-shot @0x801125dc-614 */
             s_crow_flock = (uint16_t)(s_crow_flock & 0xf0ff); /* @0x80112608-0c */
             e->crow_armed = 1;                                /* @0x80112610-14 */

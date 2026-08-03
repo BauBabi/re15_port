@@ -5470,13 +5470,19 @@ re_title:;
                      * ~1328/1428). Pool progress = 0x5a - +0x9e while settling (sub1), full after. */
                     int32_t nhx = 500, nhz = 600;
                     int corpse_pool = 0;
+                    uint8_t sh_r = 0, sh_g = 0, sh_b = 0;     /* only read when corpse_pool/tint set */
+                    int crow_tinted = 0;
                     /* The growing dark-red blood pool is the ZOMBIE root's corpse-settle (FUN_80109554):
                      * only the live-step zombie types (0x10/0x11/0x12/0x16/0x18) actually run
-                     * re15_enemy_corpse_settle (the writer of grab_kill_ctr=0x5a). Every other enemy
-                     * (dog/crow/spider/maggot/cockroach/alligator/tyrant/ivy/birkin/zgirl) reaches state 7
+                     * re15_enemy_corpse_settle (the writer of grab_kill_ctr=0x5a). The other enemies
+                     * (dog/spider/maggot/cockroach/alligator/tyrant/ivy/birkin/zgirl) reach state 7
                      * WITHOUT it, so its grab_kill_ctr/sub_state_1 hold unrelated values -> gating the pool
                      * on state==7 alone drew a spurious full-size zombie blood pool under those corpses
-                     * (audit wf_246147e3). Gate on the zombie type: those others keep the normal shadow. */
+                     * (audit wf_246147e3). Gate on the zombie type: those others keep the normal shadow.
+                     * KORREKTUR (crow_death_pool.md): die KRAEHE (0x21) gehoert NICHT zu "keine
+                     * Pool-Maschine" — sie hat ihre EIGENE (Corpse-Handler [0] 0x80115830, +10/Tick
+                     * fuer 51 Ticks, Farbe 0x00ffff38 @0x80115880-c8) und schreibt sie in die
+                     * crow_shadow_*-Felder (AI-seitig, ACTIVE-Tail @0x80115fa0-6058 + Corpse). */
                     int nis_zombie = (npc->type == 0x10 || npc->type == 0x11 || npc->type == 0x12 ||
                                       npc->type == 0x16 || npc->type == 0x18);
                     if (npc->state == RE15_AI_STATE_CORPSE && nis_zombie) {
@@ -5487,6 +5493,24 @@ re_title:;
                         nhx = 600 + 8 * grow;                 /* af5c base for zombies = 600/700 */
                         nhz = 700 + 8 * grow;
                         corpse_pool = 1;
+                        sh_r = 0x38; sh_g = 0xff; sh_b = 0xff;
+                    }
+                    if (npc->type == 0x21 && npc->crow_shadow_w != 0) {
+                        /* Krähe: Groesse/Farbe kommen KOMPLETT aus der AI (Prim-Feld-Port von
+                         * +0xbc/+0xbe/+0xc4/+0xec). crow_shadow_w==0 nur vor dem allerersten
+                         * ACTIVE-Tick (af5c-Spawn-Default nicht zitiert, §4.5) -> alter Default. */
+                        nhx = npc->crow_shadow_w; nhz = npc->crow_shadow_h;
+                        if (npc->crow_pool) {
+                            corpse_pool = 1;                  /* 0x00ffff38 @0x80115880-c8 */
+                            sh_r = 0x38; sh_g = 0xff; sh_b = 0xff;
+                        } else {
+                            /* Hoehen-Tint v (32..128, @0x80115fe8-6028). Backend-Konvention: der
+                             * neutrale PSX-Prim 0x80 == Weiss (siehe re15_render_shadow_quad),
+                             * also v*2, Clamp 255. Wipe (v=0) -> zeichnet nichts Sichtbares. */
+                            int tv = (int)npc->crow_tint * 2; if (tv > 255) tv = 255;
+                            sh_r = sh_g = sh_b = (uint8_t)tv;
+                            crow_tinted = 1;
+                        }
                     }
                     int32_t nsh_c[4][3] = {
                         { -nhx, 0,  nhz }, { -nhx, 0, -nhz },
@@ -5517,15 +5541,23 @@ re_title:;
                         nsy[v] = cy + (int)(((int64_t)_ir2 * (int64_t)_n) >> 16);
                     }
                     if (nok) {
-                        if (corpse_pool)
+                        if (corpse_pool || crow_tinted)
                             re15_render_shadow_quad_c(nsx[0], nsy[0], nsx[1], nsy[1],
                                                       nsx[2], nsy[2], nsx[3], nsy[3],
-                                                      0x38, 0xff, 0xff);   /* the dark-red pool */
+                                                      sh_r, sh_g, sh_b);   /* pool 0x38/0xff/0xff
+                                                                            * bzw. Kraehen-Grau-Tint */
                         else
                             re15_render_shadow_quad(nsx[0], nsy[0], nsx[1], nsy[1],
                                                     nsx[2], nsy[2], nsx[3], nsy[3]);
                     }
                 }
+
+                /* GIB-Scatter (Kraehe): Original zerlegt den Koerper in die 13 Bone-Parts
+                 * (@0x80114a50-aa4) und toetet sie nach 50 Ticks (@0x80114b78) -> Koerper weg.
+                 * Der Port verbirgt das Mesh ab GIB-step-0 (crow_hide, ESP-Feder-Stand-in
+                 * kommt aus der AI; Part-Scatter-Mover nicht RE'd, crow_death_pool.md §4.2).
+                 * Der (unsichtbare 1x1-)Schatten oben zeichnet weiter wie im Original. */
+                if (npc->type == 0x21 && npc->crow_hide) continue;
 
                 /* (enemy-model load moved ABOVE the region cull — see the pc_enemy_load call right
                  * after the !npc->active guard; visibility-independent so off-screen AI has its bank.) */
