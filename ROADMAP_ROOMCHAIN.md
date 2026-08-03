@@ -167,7 +167,9 @@ Vollständig in [HANDOVER_2026-08-01.md](HANDOVER_2026-08-01.md) §1/§2b. Kernp
 
 | 2026-08-03 | **Nutzer-Runde 2 (5 Punkte)**: (1+2) NPC-Gleiten gefixt (`3f5310cc`) — Elliot-Regression zurückgenommen (PLD-Bank-Ausnahme), Walker advanced NPC-Walk-Clips selbst (Original: f314 jeden Frame im Walk-Sub); (3) **ROOM10D0-Liegend-Zombie** steht jetzt auf: behavior sel 0x0E ist KEIN pose-only — Original-INIT @0x80100f64-fd4 startet die Sleeping-Submaschine (Word +0x4=0x1201, grid=0); Decoder-Zweig + Advancer-Schlaf-Halt (Phasen 0/1 ohne f314: case 0 @0x80105534, case 1 → Epilog @0x8010560c) nachgezogen — Probe: schlafen fr=0 → Annäherung <0xBB8 → Clip 0x2A 28f → Standup 0x29 59f → Engage (`analysis/zombie_lyer_10d0.md`, 3×CONFIRMED); (4) **Save-Zähler byte-true**: DAT_800b0fbd = LIVE-Zustand (frisch=0 @EXE 0xa17bd, PRE-Inkrement-Titel /NN/ @0x80026eac-f0, ++ nur nach Erfolg @0x80026488-9c, Load restauriert @0x80026290-a0) — Karten-Max-Seed gestrichen, New-Game-Reset, /00/-Semantik (`analysis/save_counter.md`, 3×CONFIRMED); (5) **Wund-Persistenz v5**: Original-Save-Blob ENTHÄLT die Wund-Tabelle (GSB+0x130 @0x800b10ec im 0x1230-memcpy @0x800261c4-d8) → Save v5 speichert/restauriert wounds[8][2] + Generation-Bump (Wound-Sync re-stempelt); behebt zugleich Stale-Blut nach CONTINUE (SI-3). HP/Injured-Anims waren bereits korrekt (SI-2). (`analysis/save_injured_state.md`, 4×CONFIRMED+1 PLAUSIBLE) | *(dieser Commit)* |
 
-Baseline nach der Session: **104/104 ctest grün** (neu: `unit_stair_1170_regression`).
+| 2026-08-03 | **Nutzer-Runde 3 (6 Punkte, Teil 1)**: (5) **Charakterauswahl-Textkästen** + (6) **Fallback-Font entfernt** (`bf92ef5b`): PSX-Transparenzregel (Farbwert 0x0000 = voll transparent, nur STP-Bit 0x8000 = opakes Schwarz; psx-spx) in SELECTH3-Atlas + tmoji_strip; 6x8-Tabelle komplett gelöscht, Debug-Menü/Untertitel auf TEX.TIM-Spielschrift (8-px-Raster @0x80014AB4-C08), Item-Prompt vs. Message-Doppelbeschriftung (34,180) entschärft. (2) **Tote Krähen byte-true** (`eab426af`, Dossier `analysis/crow_death_pool.md`, Kern-Zitate disasm-selbst-reproduziert): State 7 CORPSE 0x801157e8 hat KEINEN f314 → Freeze Frame 12 des Land-Clips 0x0a (letzter Tick = FINISH-f314 @0x8011493c); (3) **Blutlache = Schatten-Grower** Handler [0] 0x80115830 (+0xbc/+0xbe += 10/Tick × 51, Farben 0x00ffff38 @0x80115880-c8) + ACTIVE-Tail-Basis 0x80115f70 (Größe ((y−floor)>>4)+400 min 100, Tint >>5+128 min 32); GIB → sub 1 = Pool-WIPE (a0=1 @0x80114b7c) + 13-Bone-Scatter (@0x80114a50-aa4, Kill @0x80114b78 → crow_hide); GIB-Step-Router lief auf +0x6 statt +0x7 (`lbu 7(a0)` @0x801149d4) → Step 0 (Se(3)/Splatter/Timer/Flags) lief NIE; Land rot_z=0 @0x801148f8; word0|=0x2|0x40 an allen Lane-Enden. Regression `unit_crow_death_corpse`. (4) **ROOM1170-Treppentür verschlossen** (`57eb84e4`, Dossier `analysis/door_lock_1170.md`, Bytes selbst-verifiziert): Lock = sce1/Door-ZWILLING auf `Ck(4,0xc3)` (Aot_set msg 0x0c „It's locked from the other side." @scd 0x012c vs. Door @0x0144); Root-Cause war PORT-EIGEN — Boot-Pre-Stage `flag_set(4,195,1)` (pc+psx main.c) aus einer Fehllesung („sonst Dead-End"; tatsächlich umfasst der Ifel/Else NUR Slot 5, `Else_ck 07 00 26 00` @0x0140 → 0x0166 = slot6 dahinter) — gestrichen; Unlock byte-true nur ROOM1140 sub02 `Set(4,0xc3,1)` @0x0190; game-weit 36 Zwillingspaare, alle über den generischen Pfad = Fix global. Regression `unit_door_1170_lock`. (1) Marvin-Spawn/Start-Anim: RE-Workflow lief in einen Runtime-Stall (DuckStation-Capture) → neu aufgesetzt (`wf_a76ac28e`), OFFEN | `eab426af`/`57eb84e4` |
+
+Baseline nach der Session: **106/106 ctest grün** (neu: `unit_crow_death_corpse`, `unit_door_1170_lock`).
 
 ### Offene Punkte (oberste Zeile = nächster Schritt)
 
@@ -181,14 +183,19 @@ Baseline nach der Session: **104/104 ctest grün** (neu: `unit_stair_1170_regres
 2. **SE-Pitch-Sweep** (Folge von W1.3): der Tone-Pitch gilt jetzt für ALLE SEs — Footsteps
    u.a. klangen bisher nur richtig, wo note≈center−12 zufällig passte. Sweep über alle
    snd0/snd1/ARMS/CORE-EDTs nach |Δ|≠12 und Stichproben hören (Dossier rolltor_sound.md §6 D1).
-3. **Krähen-Rest** (Dossiers crow_1170.md §6 + crow_victim_anim.md §7): D7 `0x800acc0c`-
-   Konsument (FUN_80024c30 RE'en), D8 Root-Post-Pass für ALLE States (+ b544-Push-Loop),
-   D9 Arrival-Frische (erst `0x8001a804`-Tail disassemblieren), `aca52`-Producer
-   (EXE-Knockdown @0x800334e8-504/@0x800345c8 + Cmd-FSM @0x80073f90), ROOM1171-Wurf-SZENE
-   bauen (Rear-Grab + Mode-6-Halt; Exit = Script-`Plc_dest` — crow_victim_anim.md §3;
-   vorher Plc_dest mode 0x13 @0x80073e30[19] disassemblieren), visuelle Identität der
-   EM021-victim Clips 0/1/2 + PLW 1/2 per gdigrab, Live-Parity-Savestate (JUMP 1170 mit
-   z3-Bit-125). *(Victim-Anim des Front-Grabs + Flinch-Gate/-Richtung: ERLEDIGT 2026-08-03.)*
+3. **Krähen-Rest** (Dossiers crow_1170.md §6 + crow_victim_anim.md §7 + crow_death_pool.md §4):
+   D7 `0x800acc0c`-Konsument (FUN_80024c30 RE'en), D8 Root-Post-Pass für ALLE States
+   (+ b544-Push-Loop), D9 Arrival-Frische (erst `0x8001a804`-Tail disassemblieren),
+   `aca52`-Producer (EXE-Knockdown @0x800334e8-504/@0x800345c8 + Cmd-FSM @0x80073f90),
+   ROOM1171-Wurf-SZENE bauen (Rear-Grab + Mode-6-Halt; Exit = Script-`Plc_dest` —
+   crow_victim_anim.md §3; vorher Plc_dest mode 0x13 @0x80073e30[19] disassemblieren),
+   visuelle Identität der EM021-victim Clips 0/1/2 + PLW 1/2 per gdigrab, Live-Parity-
+   Savestate (JUMP 1170 mit z3-Bit-125); NEU aus crow_death_pool.md §4: Part-Scatter-
+   Mover/-Renderer der 13 GIB-Bone-Parts (Kandidat Skelett-Draw), fx-Identität ESP
+   0x08032000 (Waffen-14-Lane), word0-Bit-0x2/0x40-Konsumenten-Census, PSX-Live-Capture
+   der Lachen-Optik (Subtraktiv-Beweis stützt sich auf den Spieler-Pool), gdigrab der
+   liegenden Krähe + Lache. *(Victim-Anim des Front-Grabs + Flinch-Gate/-Richtung +
+   Corpse-Freeze/Lache/GIB-Wipe: ERLEDIGT 2026-08-03.)*
 4. **Zombie-Rest** (Dossier zombie_hit_1140.md §5): Wake-Trigger des Lyers (wer setzt +0x6=1),
    Waffen-IDs 0x12/0x13 (Prone-Flinch-B-Klasse), DEATH-Spalte 4 Producer (FUN_80107634),
    schwere Stagger-Handler FUN_80106290/80106624/80106048.
