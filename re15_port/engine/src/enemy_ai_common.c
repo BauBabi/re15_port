@@ -978,6 +978,19 @@ void re15_enemy_ai_live_init(int slot)
             e->sub_state_1 = 0x0c; e->sub_state_2 = 2; e->grid_id = 0; e->motion = 0x27;
         } else if (sel == 0x0d) {       /* pre-engaged: +0x4=0x201 + grid=0 @0x80100f40-54 */
             e->sub_state_1 = 0x02; e->grid_id = 0; e->motion = 0x27;
+        } else if (sel == 0x0e) {
+            /* SLEEPING-LYING (byte-true @0x80100f64-fd4, analysis/zombie_lyer_10d0.md D1
+             * CONFIRMED — der alte "pose-only"-Kommentar war falsch): +0x94=0x2A (sb @0x80100f78),
+             * +0x95=0 (@0x80100f88), +0x8f=0 (@0x80100f98), Word +0x4=0x1201 (@0x80100fc0-c4 =
+             * State 1 / +0x5=0x12 = die Sleeping-Submaschine decide 0x80105470/animate
+             * 0x801054f4) und +0x9=0 KOMPLETT geloescht (sb zero,9 @0x80100fd4). Aufwachen =
+             * reine Spieler-Naehe (dist +0x1d0 < 0xBB8 && player.hp>=0), dann Clip 0x2A einmal
+             * durch ("nach vorne beugen"), Standup-Sub 0xD (Clip 0x29), ENGAGE. Die im Port
+             * vorhandene Sleeping-/Standup-Maschine wird damit endlich erreicht — vorher blieb
+             * grid=0x0e -> Dispatch-default -> der Zombie lag fuer immer gebeugt (Nutzer-Report
+             * ROOM10D0; game-weit nur 10D0/10D1). */
+            e->sub_state_1 = 0x12; e->sub_state_2 = 0; e->grid_id = 0;
+            e->motion = 0x2a; e->anim_frame = 0; e->anim_frac = 0;
         } else if ((e->grid_id & 0x80) && (sel == 1 || sel == 3)) {
             /* byte-true: the WHOLE pose block (incl. this +0x5=5 @0x80100d68 / +0x94=0xc @0x80100d58)
              * is gated on behavior bit 0x80 — @0x80100cac-cb0 `andi v0,v1,0x80; beq v0,zero,0x80100e30`
@@ -987,8 +1000,10 @@ void re15_enemy_ai_live_init(int slot)
              * scd_vm.c:2769.) */
             e->sub_state_1 = 0x05; e->motion = 0x0c;
         }
-        /* sel 8 (lying, 0x88) / 0xb / 0xe: pose-only in the decoder -> +0x5 stays 0, grid unchanged
-         * (RAM: the 0x16 lyer keeps grid=0x88 +0x5=0, mo=0x13). */
+        /* sel 8 (lying, 0x88) / 0xb: pose-only in the decoder -> +0x5 stays 0, grid unchanged
+         * (RAM: the 0x16 lyer keeps grid=0x88 +0x5=0, mo=0x13). sel 0xe ist KEIN pose-only
+         * (s.o. — @0x80100f64-fd4 schreibt das State-Wort; Kontrast: sel 0xb @0x80100ec4-f10
+         * ohne Word-Write). */
     }
 }
 

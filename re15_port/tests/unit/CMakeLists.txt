@@ -567,6 +567,11 @@ add_executable(probe_marvin_10d0 probe_marvin_10d0.c)
 target_link_libraries(probe_marvin_10d0 PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_marvin_10d0 PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
+# --- DIAGNOSE-Probe (kein ctest-Eintrag): ROOM10D0 Liegend-Zombie behavior 0x0e (analysis/zombie_lyer_10d0.md) ---
+add_executable(probe_zlyer_10d0 probe_zlyer_10d0.c)
+target_link_libraries(probe_zlyer_10d0 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_zlyer_10d0 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
 # --- REGRESSION (ctest): ROOM1170-Treppen unter der per-Record-Richtungswahl ---
 add_executable(probe_stair_1170 probe_stair_1170.c)
 target_link_libraries(probe_stair_1170 PRIVATE re15_engine re15_test_support)
@@ -589,3 +594,13 @@ target_include_directories(probe_crow_flinch PRIVATE ${CMAKE_SOURCE_DIR}/include
 add_executable(probe_headlook_10d0 probe_headlook_10d0.c)
 target_link_libraries(probe_headlook_10d0 PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_headlook_10d0 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# --- DIAGNOSE-Probe (kein ctest): Save-Zaehler erbt bei NEW GAME den Karten-Stand (analysis/save_counter.md) ---
+add_executable(probe_save_counter probe_save_counter.c)
+target_link_libraries(probe_save_counter PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_save_counter PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# --- DIAGNOSE-Probe (kein ctest): Verletzungszustand (HP/Blut-Decals) im Savegame (analysis/save_injured_state.md) ---
+add_executable(probe_save_injured probe_save_injured.c)
+target_link_libraries(probe_save_injured PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_save_injured PRIVATE ${CMAKE_SOURCE_DIR}/include)

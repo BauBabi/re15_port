@@ -724,6 +724,13 @@ void re15_actors_anim_advance(void)
          * lie-down (incl. the spawn one, sub_state_2<4) still holds exactly as before. */
         int getup = (a->sub_state_1 == 0x11 && a->sub_state_2 >= 4);
         if ((mo == 0x0C || mo == 0x0E || mo == 0x12 || mo == 0x13) && !getup) { a->anim_frame = 0; continue; }
+        /* SLEEPING-LYING Warte-Halt (byte-true FUN_801054f4: die Schlafphasen 0/1 haben KEINEN
+         * f314-Call — case 0 @0x80105534 setzt nur +0x1b8/+0x6, case 1 -> Epilog @0x8010560c;
+         * der erste f314 kommt erst in der Wake-Phase @0x801055a8). Ohne den Halt spielte der
+         * globale Advancer den Liege-Clip 0x2A einmal durch und pinnte den LETZTEN Frame =
+         * die "nach vorne gebeugte" Dauerpose des ROOM10D0-Zombies (zombie_lyer_10d0.md D3).
+         * Die Wake-Phase (sub_state_2>=2) advanct normal (clip_done treibt die Maschine). */
+        if (mo == 0x2A && a->sub_state_1 == 0x12 && a->sub_state_2 <= 1) { a->anim_frame = 0; continue; }
         if (a->motion_init_delay > 0) {
             a->motion_init_delay--;
         } else {
