@@ -155,6 +155,8 @@ Vollständig in [HANDOVER_2026-08-01.md](HANDOVER_2026-08-01.md) §1/§2b. Kernp
 
 | 2026-08-03 | **Wund-Trigger korrigiert + Biss-Blut komplett** (`b26fe943`): Dispatcher @0x8010a580 = Phase 4 der Grab-OPFER-FSM → Stempel NUR beim überlebten Grab (Mash-Release); Falsch-Stempel aus dem Hurt-Entry entfernt. Alle Biss-/Release-/Devour-/Krähen-Blut-Spawns mit Original-Scales (0x1500/0x2000/ctr<<11) + Bone-Ankern portiert; 7 Alt-Sites von halber Scale auf 0x2000 gehoben. OFFEN: Steh-Biss-Direktstempel @0x8010f360, Dog-Knockdown-Klasse 4/5, hitchain-VERIFY ausstehend, Live-gdigrab Biss-Sequenz | `b26fe943` |
 
+| 2026-08-03 | **HIT-Verify komplett** (6×CONFIRMED, 2×PLAUSIBLE): Dog-Sprung-Biss stempelte im Port Zufalls-SEs statt Wund-Panels (Bytes 05 07 04 06 @0x80121014 = PANEL-Indizes, als SE-Tabelle fehlgedeutet) → gefixt `1e7f4338`. OFFEN: Dog-Heavy-Biss-Knockdown-Klasse facing+4 (@0x801187e8/f0; EXE-Handler 0x800360e8/0x8003644c), Liegend-Devour-Einstieg, cmd-4-Familie, PCSX-Watchpoint für indirekte aca58/59-Writer | `1e7f4338` |
+
 Baseline nach der Session: **103/103 ctest grün.**
 
 ### Offene Punkte (oberste Zeile = nächster Schritt)
