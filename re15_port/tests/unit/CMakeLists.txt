@@ -620,3 +620,12 @@ target_link_libraries(probe_door_1170 PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_door_1170 PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_door_1170_lock COMMAND probe_door_1170)
 set_tests_properties(unit_door_1170_lock PROPERTIES TIMEOUT 30)
+
+# Regression: ROOM10D0 Marvin SPAWN-/Start-Animation (Nutzer-Report #3) — die Executor-Kanal-
+# Bank ist +0x170/+0x174 = EMD dir[4]/dir[3] BANK 1 (FUN_80022300 @0x800224b8/c8), gemessen
+# gegen Original-Savestate r10d0_walk1 (Clip1 16f -> Clip2 52f). analysis/marvin_spawn_anim.md
+add_executable(probe_marvin_spawn probe_marvin_spawn.c)
+target_link_libraries(probe_marvin_spawn PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_marvin_spawn PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_marvin_spawn_bank COMMAND probe_marvin_spawn)
+set_tests_properties(unit_marvin_spawn_bank PROPERTIES TIMEOUT 30)

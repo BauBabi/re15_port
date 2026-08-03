@@ -3000,6 +3000,17 @@ int re15_actor_clip_len(const re15_actor_t *a)
     if (!b) return 0;
     if (re15_actor_uses_loco_bank(a) && b->loco_ok && (int)a->motion < b->anim_loco.clip_count)
         return b->anim_loco.clips[a->motion].frame_count;
+    /* NPC-Familie (0x40-0x4d): der Plc_dest-Walk und die Executor-Subs {2,4,5,6,9} spielen die
+     * EIGENE BANK 1 (+0x170/+0x174 = dir[4]/dir[3], FUN_80022300 @0x800224b8/c8) — der Walker
+     * (actor_locomotion.c) taktet Clip 5 an DIESER Laenge (30f fuer EM040), nicht an der
+     * Container-Bank (dir[1], Clip 5 = 20f). marvin_spawn_anim.md F1 (CONFIRMED). */
+    if (a->type >= 0x40 && a->type <= 0x4d && b->own_ok) {
+        int s1 = a->sub_state_1;
+        int own = a->walk_active ||
+                  (a->state == 4 && (s1 == 2 || s1 == 4 || s1 == 5 || s1 == 6 || s1 == 9));
+        if (own && (int)a->motion < b->anim_own.clip_count)
+            return b->anim_own.clips[a->motion].frame_count;
+    }
     if ((int)a->motion < b->anim.clip_count)
         return b->anim.clips[a->motion].frame_count;
     return 0;
@@ -6260,6 +6271,10 @@ static void re15_maggot_ai_tick(int slot)
  * re15_npc_ai_tick @L5264-5278. DEFERRED to wave 2: the dialogue behaviour VM + the per-NPC overlay states. */
 static const uint8_t s_irons_clip_len[24] =   /* EM040 (Chief Irons) clip frame-counts (CDEMD0.EMS idx 18, dir[1]) */
     { 34,32,50,26,20,20,50,1,1,1,1,25,1,1,1,1,1,10,25,1,1,1,30,30 };
+static const uint8_t s_em040_own_clip_len[14] =   /* EM040 BANK 1 = dir[3]-EDD (+0x170/+0x174-Kanal),
+                                                   * CDEMD0.EMS Blob 18 @Datei 0x2d5090 (byte-dekodiert,
+                                                   * marvin_spawn_anim.md F3 CONFIRMED) */
+    { 22,16,52,1,50,30,10,16,1,17,1,17,1,1 };
 
 /* Elliot (0x47) is a ROOM cinematic actor whose Plc_motion GESTURE clips come from his OWN loaded
  * EDD (PLD/ELLIOT.EDD → elliot_anim, 26 clips: clip 15 "Hey!"=20f, 16=30, 17=30, 20=25, 25=82 —
@@ -6276,10 +6291,18 @@ void re15_npc_set_elliot_anim(const re15_emd_animation_t *a) { s_npc_elliot_anim
 /* Executor-Sub → Anim-KANAL (adversarial verifiziert, marvin_10d0.md Verify D2/D4 — jeder Sub
  * liest ein ANDERES Bank-Paar der Entity):
  *   sub 0 @0x80050d40/48: +0x180/+0x184 = der RBJ-BINDER-Kanal (FUN_8001b3f8 — Cutscene-Gesten)
- *   sub 1 @0x80050ddc:    +0x84/+0x16c  = die Loco-Bank
- *   sub 2 @0x80050f88/90: +0x170/+0x174 = die Entity-EIGENE Bank (Spawn @0x80042374/8c)
+ *   sub 1 @0x80050ddc:    +0x84/+0x16c  = die Loco-Bank (dir[2]/dir[1])
  *   sub 3 @0x80051024:    +0x178/+0x17c = die Victim-Bank
- *   sub 6 @0x80051884/88 + Walk-INIT @0x800511bc: +0x170/+0x174 (eigene Bank)
+ *   subs 7/8:             +0x84/+0x16c  = Loco (f314-Loads @0x80051a20/24 bzw. @0x80051c18/1c;
+ *     Dispatch-Tabelle @0x80076ca0: [5]=0x80051484, [7]=0x80051908, [8]=0x80051b00 —
+ *     marvin_spawn_anim.md-Verify-KORREKTUR: NICHT "alles ausser 0/1/3 = eigener Kanal")
+ *   subs {2,4,5,6,9}:     +0x170/+0x174 = die Entity-EIGENE BANK 1 (dir[4]/dir[3]) — der
+ *     Kanal-Loader FUN_80022300 mappt POSITIONS-fest (+0x174=dir[3] @0x800224b8, +0x170=dir[4]
+ *     @0x800224c8); Sub-Loads: 2 @0x80050f88/90, Walk(4) @0x800512bc/c0 + 0x80051358/5c,
+ *     6 @0x80051884/88 + 0x800518e8/ec, Turn(9) @0x80051e9c/ea0. ⚠ NICHT eb->anim: die
+ *     largest-bank-Heuristik des Containers waehlt fuer EM040 dir[1] (24 Clips), der Kanal ist
+ *     aber Bank 1 (14 Clips {22,16,52,...} @Datei 0x2d5090) — genau das war Marvins falsche
+ *     Spawn-/Start-Animation (Savestate r10d0_walk1: +0x174=0x8013cc58 -> dir[3]).
  * Der RBJ-Kanal wird pro AKTOR-Slot vom Marker-Binder registriert (re15_actor_rbj_anim,
  * enemy_common.c); Fallback = die eigene Bank (der Spawn initialisiert beide Kanaele gleich,
  * der Binder ueberschreibt nur bei gesetztem Marker-Bit). */
@@ -6293,20 +6316,32 @@ static const re15_emd_animation_t *re15_npc_channel_anim(const re15_actor_t *e)
         const re15_emd_animation_t *rb = re15_actor_rbj_anim((int)(e - g_actors));
         if (rb) return rb;
     }
-    if (e->state == 4 && e->sub_state_1 == 1 && bank && bank->loco_ok)
-        return &bank->anim_loco;                          /* sub 1 -> Loco (+0x84/+0x16c) */
-    if (e->state == 4 && e->sub_state_1 == 3 && bank && bank->victim_ok)
+    if (e->state == 4 && !e->walk_active
+        && (e->sub_state_1 == 1 || e->sub_state_1 == 7 || e->sub_state_1 == 8)
+        && bank && bank->loco_ok)
+        return &bank->anim_loco;                          /* subs 1/7/8 -> Loco (+0x84/+0x16c) */
+    if (e->state == 4 && !e->walk_active && e->sub_state_1 == 3 && bank && bank->victim_ok)
         return &bank->anim_victim;                        /* sub 3 -> Victim (+0x178/+0x17c) */
     if (e->type == 0x47 && s_npc_elliot_anim) return s_npc_elliot_anim;   /* Elliot: eigene Bank */
-    if (bank && bank->ok && bank->anim.clip_count > 0) return &bank->anim;/* eigene Bank (+0x170) */
-    return NULL;                                          /* -> s_irons-Fallback-Tabelle */
+    if (bank && bank->own_ok) return &bank->anim_own;     /* +0x170/+0x174 = BANK 1 (dir[4]/dir[3]):
+                                                           * subs {2,4,5,6,9}, Plc_dest-Walk (Clip 5)
+                                                           * und der Idle-Rest */
+    if (bank && bank->ok && bank->anim.clip_count > 0) return &bank->anim; /* dir[3] leer -> Container-Bank */
+    return NULL;                                          /* -> Fallback-Tabellen */
 }
 static int re15_npc_motion_clip_len(const re15_actor_t *e)
 {
     const re15_emd_animation_t *an = re15_npc_channel_anim(e);
     if (an && (int)e->motion < an->clip_count && an->clips[e->motion].frame_count > 0)
         return an->clips[e->motion].frame_count;
-    uint8_t c = e->motion; int fc = (c < 24) ? s_irons_clip_len[c] : 1; return (fc < 1) ? 1 : fc;
+    /* Fallback ohne geladene Bank: die Tabelle des KANALS, den der Sub spielt (F3 CONFIRMED —
+     * s_irons beschreibt dir[1]/Bank 0, fuer den +0x170-Kanal gelten die Bank-1-Laengen). */
+    uint8_t c = e->motion; int fc;
+    int loco_sub = (e->state == 4 && !e->walk_active &&
+                    (e->sub_state_1 == 1 || e->sub_state_1 == 7 || e->sub_state_1 == 8));
+    if (loco_sub) fc = (c < 24) ? s_irons_clip_len[c] : 1;
+    else          fc = (c < 14) ? s_em040_own_clip_len[c] : 1;
+    return (fc < 1) ? 1 : fc;
 }
 static void re15_npc_clip(re15_actor_t *e, uint8_t c) { e->motion = c; e->anim_frame = 0; e->anim_frac = 7; }
 static int re15_npc_anim(re15_actor_t *e)     /* POST-inc +0x95, wrap at the ENTITY channel's clip length */
@@ -6561,7 +6596,10 @@ static void re15_npc_ai_tick(int slot)
     switch (e->state) {
     case 0:   /* INIT 0x8011c6dc: idle pose, INVULNERABLE, -> state 1 (or the shared executor) */
         e->hp = -1;                                       /* +0x9a = -1 (no HP / invulnerable) @0x8011c744 */
-        e->motion = 2; e->anim_frame = 0; e->anim_frac = 0; e->hit_react = 0;  /* idle clip 2 @0x8011c7bc */
+        e->motion = 2; e->anim_frame = 1; e->anim_frac = 0; e->hit_react = 0;
+        /* idle clip 2 @0x8011c7bc-c0 (+0x95=0 @0x8011c7d0), dann EIN f314-Schritt auf dem
+         * Loco-Paar +0x84/+0x16c @0x8011c800-08 -> +0x95=1 am INIT-Ende (marvin_spawn_anim.md
+         * Verify; fuer behavior&0x40 sofort von Sub 6 Clip 1 ueberschrieben). */
         e->ai_timer = 0x78;                               /* +0x9e = 120 @0x8011c754 */
         /* NPC-Neck-/Head-Look-Init (byte-true FUN_8011c6dc, cutscene_headlook.md B2/B3/B5):
          * Default-Blickziel = SPIELER (sw &player -> +0x1a8 @0x8011c738), Flags = 0 = TRACK

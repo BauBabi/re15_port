@@ -185,4 +185,13 @@ int re15_emd_parse_victim_bank(const uint8_t *emd, size_t emd_size,
                                re15_emd_skeleton_t  *out_skel,
                                re15_emd_animation_t *out_anim);
 
+/* Parse the em<NN> ENTITY-OWN channel bank (bank 1 = dir[3] EDD + dir[4] kf pool, dir[2] struct) —
+ * the +0x170/+0x174 channel: the loader FUN_80022300 fills the entity channels BY DIRECTORY
+ * POSITION (+0x174=dir[3] @0x800224b8, +0x170=dir[4] @0x800224c8), no size heuristic. The NPC
+ * state-4 executor subs {2,4,5,6,9} play this pair (analysis/marvin_spawn_anim.md F1, CONFIRMED).
+ * Returns -1 when dir[3] is empty (dog/crow/gorilla) — callers must fall back. */
+int re15_emd_parse_own_bank(const uint8_t *emd, size_t emd_size,
+                            re15_emd_skeleton_t  *out_skel,
+                            re15_emd_animation_t *out_anim);
+
 #endif /* RE15_EMD_H */

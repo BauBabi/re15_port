@@ -447,6 +447,10 @@ static void pc_enemy_load(uint8_t type)
     /* Load the GRAB-VICTIM bank (bank 2) — the animation the grab plays on LEON (struggle clips 0-5 /
      * collapse 6/7); PL00-compatible. Used by the player-victim FSM when a zombie grabs the player. */
     eb->victim_ok = (re15_emd_parse_victim_bank(buf, buflen, &eb->skel_victim, &eb->anim_victim) == 0);
+    /* Load the ENTITY-OWN channel bank (bank 1 = dir[3]/[4]) — the +0x170/+0x174 pair the NPC
+     * state-4 executor subs {2,4,5,6,9} and the Plc_dest walk play (FUN_80022300 @0x800224b8/c8;
+     * marvin_spawn_anim.md F1). own_ok=0 for dir[3]-empty types (dog/crow/gorilla). */
+    eb->own_ok = (re15_emd_parse_own_bank(buf, buflen, &eb->skel_own, &eb->anim_own) == 0);
     int slot = 11 + (int)(eb - g_enemy);
     if (tim.width > 0 && tim.height > 0 && slot < 24) {
         re15_render_pc_upload_tim_slot(&tim, slot);
@@ -5631,16 +5635,35 @@ re_title:;
                         npc_skel = rs; npc_anim = ra;
                         av.clip_override = (int)npc->motion;
                     }
-                } else if (npc->state == 4 && npc->sub_state_1 == 1) {
+                } else if (npc->state == 4 && !npc->walk_active &&
+                           (npc->sub_state_1 == 1 || npc->sub_state_1 == 7 || npc->sub_state_1 == 8)) {
+                    /* subs 1/7/8 -> Loco-Paar +0x84/+0x16c (f314-Loads sub 1 @0x80050e64,
+                     * sub 7 @0x80051a20/24, sub 8 @0x80051c18/1c — marvin_spawn_anim.md Verify). */
                     re15_enemy_bank_t *lb = re15_enemy_find(npc->type);
                     if (lb && lb->loco_ok && (int)npc->motion < lb->anim_loco.clip_count) {
                         npc_skel = &lb->skel_loco; npc_anim = &lb->anim_loco;
                         av.clip_override = (int)npc->motion;
                     }
-                } else if (npc->state == 4 && npc->sub_state_1 == 3) {
+                } else if (npc->state == 4 && !npc->walk_active && npc->sub_state_1 == 3) {
                     re15_enemy_bank_t *lb = re15_enemy_find(npc->type);
                     if (lb && lb->victim_ok && (int)npc->motion < lb->anim_victim.clip_count) {
                         npc_skel = &lb->skel_victim; npc_anim = &lb->anim_victim;
+                        av.clip_override = (int)npc->motion;
+                    }
+                } else if (!is_elliot &&
+                           (npc->walk_active ||
+                            (npc->state == 4 && (npc->sub_state_1 == 2 || npc->sub_state_1 == 4 ||
+                                                 npc->sub_state_1 == 5 || npc->sub_state_1 == 6 ||
+                                                 npc->sub_state_1 == 9)))) {
+                    /* Subs {2,4,5,6,9} + Plc_dest-Walk -> die EIGENE BANK 1 (+0x170/+0x174 =
+                     * dir[4]/dir[3]; Kanal-Loader FUN_80022300 @0x800224b8/c8, Sub-Loads
+                     * 2 @0x80050f88/90, Walk @0x800512bc/c0, 6 @0x80051884/88, Turn @0x80051e9c).
+                     * NICHT eb->anim (largest-bank dir[1]) — das war Marvins falsche Spawn-/
+                     * Start-/Lauf-Animation (marvin_spawn_anim.md F1/F2, Savestate r10d0_walk1:
+                     * Clip 1 = 16f / Clip 2 = 52f / Walk-Clip 5 = 30f aus Bank 1). */
+                    re15_enemy_bank_t *lb = re15_enemy_find(npc->type);
+                    if (lb && lb->own_ok && (int)npc->motion < lb->anim_own.clip_count) {
+                        npc_skel = &lb->skel_own; npc_anim = &lb->anim_own;
                         av.clip_override = (int)npc->motion;
                     }
                 }

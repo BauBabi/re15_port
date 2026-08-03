@@ -49,6 +49,13 @@ typedef struct {
     re15_emd_skeleton_t  skel_victim;
     re15_emd_animation_t anim_victim;
     uint8_t              victim_ok;
+    /* ENTITY-OWN channel bank (bank 1 = dir[3]/[4]): the +0x170/+0x174 channel — the loader
+     * FUN_80022300 maps channels BY POSITION (+0x174=dir[3] @0x800224b8, +0x170=dir[4]
+     * @0x800224c8); the NPC state-4 executor subs {2,4,5,6,9} + the Plc_dest walk play it.
+     * own_ok=0 when dir[3] is empty (dog/crow/gorilla). marvin_spawn_anim.md F1 (CONFIRMED). */
+    re15_emd_skeleton_t  skel_own;
+    re15_emd_animation_t anim_own;
+    uint8_t              own_ok;
     int tpage, clut;              /* PSX VRAM handles (per-tri path: both -1) */
     int xshift, yshift;           /* PSX VRAM tpage-X / CLUT-row relocation shifts */
     int pc_tex_slot;              /* PC render texture slot (-1 if unused) */

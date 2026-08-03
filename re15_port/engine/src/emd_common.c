@@ -598,3 +598,47 @@ int re15_emd_parse_victim_bank(const uint8_t *emd, size_t emd_size,
     }
     return (ok_anim && ok_skel) ? 0 : -1;
 }
+
+/* Parse the em<NN> ENTITY-OWN channel bank (bank 1 = dir[3] EDD + dir[4] keyframe pool) — the
+ * +0x170/+0x174 channel. The original channel loader FUN_80022300 maps the entity channels BY
+ * DIRECTORY POSITION: +0x16c=dir[1] @0x80022498, +0x84=dir[2] @0x800224a8, +0x174=dir[3]
+ * @0x800224b8, +0x170=dir[4] @0x800224c8 — there is NO "largest bank" selection. The container
+ * parser's largest-bank heuristic picked dir[1] (24 clips) for EM040, but Marvin's spawn/idle
+ * (executor sub 6 @0x800517f0, f314 loads @0x80051884/88) plays THIS pair: bank 1, 14 clips
+ * {22,16,52,1,50,30,10,16,1,17,1,17,1,1} (CDEMD0.EMS blob 18 dir[3] @file 0x2d5090; Savestate
+ * r10d0_walk1: +0x174=0x8013cc58 -> exactly that file offset). Structure comes from dir[2]
+ * (shared), keyframe pool re-pointed to dir[4] with the POOL's OWN geometry header (same rule
+ * as the victim bank). analysis/marvin_spawn_anim.md F1 (CONFIRMED). */
+int re15_emd_parse_own_bank(const uint8_t *emd, size_t emd_size,
+                            re15_emd_skeleton_t  *out_skel,
+                            re15_emd_animation_t *out_anim)
+{
+    if (!emd || emd_size < 12) return -1;
+    uint32_t begin = read_u32_le(emd + 0);
+    uint32_t count = read_u32_le(emd + 4);
+    if (count < 5) return -1;                               /* need dir[3]/[4] */
+    if ((size_t)begin + (size_t)count * 4 > emd_size) return -1;
+    uint32_t off_edd  = read_u32_le(emd + begin + 3 * 4);   /* dir[3] = bank1 EDD  (@0x800224b8) */
+    uint32_t off_emr  = read_u32_le(emd + begin + 2 * 4);   /* dir[2] = shared bone structure */
+    uint32_t off_kf   = read_u32_le(emd + begin + 4 * 4);   /* dir[4] = bank1 kf pool (@0x800224c8) */
+    if (!off_edd) return -1;                                /* dog/crow/gorilla: dir[3] empty */
+    int ok_anim = out_anim && off_edd < emd_size &&
+                  re15_emd_parse_animation(emd + off_edd, emd_size - off_edd, out_anim) == 0;
+    int ok_skel = out_skel && off_emr && off_emr < emd_size &&
+                  re15_emd_parse_skeleton (emd + off_emr, emd_size - off_emr, out_skel) == 0;
+    if (ok_anim && out_anim->clip_count <= 0) ok_anim = 0;
+    if (ok_skel && off_kf && (size_t)off_kf + 8 < emd_size && out_skel->keyframe_size_bytes > 0) {
+        int kf_off        = (int)read_u16_le(emd + off_kf + 2); /* bank1 EMR keyframes_offset */
+        int pool_bones    = (int)read_u16_le(emd + off_kf + 4); /* bank1 EMR bone_count       */
+        int pool_kf_size  = (int)read_u16_le(emd + off_kf + 6); /* bank1 EMR keyframe_size    */
+        if (pool_kf_size > 12 && pool_bones > 0 && pool_bones <= RE15_EMD_MAX_BONES)
+            out_skel->keyframe_size_bytes = pool_kf_size;
+        if ((size_t)(off_kf + kf_off) < emd_size) {
+            out_skel->keyframe_data      = emd + off_kf + kf_off;
+            out_skel->keyframe_data_size = emd_size - (size_t)(off_kf + kf_off);
+            out_skel->keyframe_count     = (int)(out_skel->keyframe_data_size /
+                                                 (size_t)out_skel->keyframe_size_bytes);
+        }
+    }
+    return (ok_anim && ok_skel) ? 0 : -1;
+}
