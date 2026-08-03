@@ -6188,7 +6188,9 @@ static const re15_emd_animation_t *re15_npc_channel_anim(const re15_actor_t *e)
 {
     extern const re15_emd_animation_t *re15_actor_rbj_anim(int slot);
     re15_enemy_bank_t *bank = re15_enemy_find(e->type);
-    if (e->state == 4 && e->sub_state_1 == 0) {          /* sub 0 -> RBJ-Kanal (+0x180) */
+    if (e->state == 4 && e->sub_state_1 == 0 && !e->walk_active) {   /* sub 0 -> RBJ-Kanal (+0x180);
+                                                          * waehrend eines Plc_dest-Walks besitzt der
+                                                          * Walker den Clip (5, eigene Bank) */
         const re15_emd_animation_t *rb = re15_actor_rbj_anim((int)(e - g_actors));
         if (rb) return rb;
     }

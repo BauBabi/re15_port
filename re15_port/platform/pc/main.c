@@ -5569,7 +5569,9 @@ re_title:;
                  * Override posierten Marvins Cutscene-Gesten aus der EM040-eigenen Bank
                  * (falsche Clips/Laengen). Muss mit re15_npc_channel_anim (enemy_ai_common.c)
                  * uebereinstimmen — derselbe Kanal fuer Laenge UND Pose. */
-                if (npc->state == 4 && npc->sub_state_1 == 0) {
+                if (npc->state == 4 && npc->sub_state_1 == 0 && !npc->walk_active) {
+                    /* (walk_active: der Plc_dest-Walker besitzt den Clip (5, eigene Bank) —
+                     * State/Sub sind dann nur Reste der letzten Geste, kein RBJ-Posing.) */
                     const re15_emd_skeleton_t  *rs = re15_actor_rbj_skel((int)(npc - g_actors));
                     const re15_emd_animation_t *ra = re15_actor_rbj_anim((int)(npc - g_actors));
                     if (rs && ra && (int)npc->motion < ra->clip_count) {

@@ -221,8 +221,14 @@ void re15_actor_step_walk(re15_actor_t *a)
              * NPC-Slots: Clip 5 der ENTITY-EIGENEN Bank (NPC-Walk-Sub-INIT
              * @0x800511dc `+0x94 = 5`; Kanal +0x170/+0x174) — NICHT die Player-
              * W01-Sentinels 100/105, die auf einer NPC-Bank falsche Clips
-             * indizieren (marvin_10d0.md D5, CONFIRMED: Marvin lief mit mo=105). */
-            if (a != &g_actors[RE15_ACTOR_SLOT_PLAYER]) {
+             * indizieren (marvin_10d0.md D5, CONFIRMED: Marvin lief mit mo=105).
+             * ⚠ ELLIOT-PORT-AUSNAHME (Nutzer-Regression 2026-08-03, "Elliot
+             * gleitet zum Heli"): der Port rendert Elliot aus ELLIOT.PLD, dessen
+             * EDD eine ANDERE Cliptabelle traegt als die EM047-EMD-Bank des
+             * Originals — Clip 5 ist dort KEIN Walk. Sein verifizierter Pfad
+             * (Sentinel 105/100 -> W01-Walk via anim_select) bleibt, bis die
+             * EM047-Bank-Frage gemessen ist (Familie marvin_10d0.md O3). */
+            if (a != &g_actors[RE15_ACTOR_SLOT_PLAYER] && a->type != 0x47) {
                 re15_actor_set_motion(a, 5);
             } else {
                 int clip = re15_to_re2_plc_dest_clip((int)a->walk_mode, /*rbj=*/1);
@@ -276,6 +282,23 @@ void re15_actor_step_walk(re15_actor_t *a)
         int32_t s = re15_sin_q12(a->rot_y);
         a->x += (int32_t)((c * (int32_t)speed) >> 12);
         a->z -= (int32_t)((s * (int32_t)speed) >> 12);
+    }
+
+    /* NPC-WALK-CLIP-ADVANCE (Nutzer-Regression 2026-08-03: "Marvin gleitet nur"): der
+     * Original-Walk-Sub tickt anim_set JEDEN Frame (jal f314 im Walk-Body @0x8005134c-Region)
+     * — im Port ist waehrend eines Plc_dest-Walks aber NIEMAND der Advancer: der NPC-Tick
+     * yieldet auf walk_active (enemy_ai_common), der globale Advancer ueberspringt
+     * Self-Advancing-Typen (0x40) bzw. State-4-NPCs. Also advanced der Walker hier selbst:
+     * Wrap an der Laenge derselben Bank, aus der der Renderer posiert (re15_actor_clip_len =
+     * die eigene EM-Bank; EM040 Clip 5 = 20f Gait). Elliot (0x47) behaelt seinen alten
+     * Advance-Pfad (kein State 4, globaler Advancer). */
+    if (a != &g_actors[RE15_ACTOR_SLOT_PLAYER] && a->type != 0x47 && a->motion == 5) {
+        extern int re15_actor_clip_len(const re15_actor_t *a);   /* enemy_ai_common.c */
+        int wfc = re15_actor_clip_len(a);
+        if (wfc > 1) {
+            a->anim_frame = (uint16_t)(((int)a->anim_frame + 1) % wfc);
+            if (a->anim_frac > 0) a->anim_frac--;
+        }
     }
 
     /* Arrival test: mode 0x09 is turn-in-place — arrives when yaw aligned.

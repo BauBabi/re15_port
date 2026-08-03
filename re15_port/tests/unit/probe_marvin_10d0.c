@@ -199,6 +199,9 @@ int main(void)
         take(&g_actors[1], &mv_now);
         if (ctrl_diff(&pl_now, &pl_prev)) { dump("LEON", tick, &pl_now); pl_prev = pl_now; }
         if (ctrl_diff(&mv_now, &mv_prev)) { dump("MARVIN", tick, &mv_now); mv_prev = mv_now; }
+        /* Gleit-Regression 2026-08-03: waehrend eines NPC-Walks jeden 3. Tick dumpen —
+         * beweist, dass der Walker den Clip-5-Frame selbst advanced (Wrap an EM040 fc=20). */
+        if (mv_now.wact && (tick % 3) == 0) dump("MARVIN*", tick, &mv_now);
 
         /* H1-Detektor: Neck-Ziel == Leons eigene Position (±600) -> Selbst-Blick */
         if ((pl_now.nflags & 0x04) && leon_selftarget_tick < 0) {
