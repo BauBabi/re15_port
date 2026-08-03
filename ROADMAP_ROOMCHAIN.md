@@ -169,7 +169,9 @@ Vollständig in [HANDOVER_2026-08-01.md](HANDOVER_2026-08-01.md) §1/§2b. Kernp
 
 | 2026-08-03 | **Nutzer-Runde 3 (6 Punkte, Teil 1)**: (5) **Charakterauswahl-Textkästen** + (6) **Fallback-Font entfernt** (`bf92ef5b`): PSX-Transparenzregel (Farbwert 0x0000 = voll transparent, nur STP-Bit 0x8000 = opakes Schwarz; psx-spx) in SELECTH3-Atlas + tmoji_strip; 6x8-Tabelle komplett gelöscht, Debug-Menü/Untertitel auf TEX.TIM-Spielschrift (8-px-Raster @0x80014AB4-C08), Item-Prompt vs. Message-Doppelbeschriftung (34,180) entschärft. (2) **Tote Krähen byte-true** (`eab426af`, Dossier `analysis/crow_death_pool.md`, Kern-Zitate disasm-selbst-reproduziert): State 7 CORPSE 0x801157e8 hat KEINEN f314 → Freeze Frame 12 des Land-Clips 0x0a (letzter Tick = FINISH-f314 @0x8011493c); (3) **Blutlache = Schatten-Grower** Handler [0] 0x80115830 (+0xbc/+0xbe += 10/Tick × 51, Farben 0x00ffff38 @0x80115880-c8) + ACTIVE-Tail-Basis 0x80115f70 (Größe ((y−floor)>>4)+400 min 100, Tint >>5+128 min 32); GIB → sub 1 = Pool-WIPE (a0=1 @0x80114b7c) + 13-Bone-Scatter (@0x80114a50-aa4, Kill @0x80114b78 → crow_hide); GIB-Step-Router lief auf +0x6 statt +0x7 (`lbu 7(a0)` @0x801149d4) → Step 0 (Se(3)/Splatter/Timer/Flags) lief NIE; Land rot_z=0 @0x801148f8; word0|=0x2|0x40 an allen Lane-Enden. Regression `unit_crow_death_corpse`. (4) **ROOM1170-Treppentür verschlossen** (`57eb84e4`, Dossier `analysis/door_lock_1170.md`, Bytes selbst-verifiziert): Lock = sce1/Door-ZWILLING auf `Ck(4,0xc3)` (Aot_set msg 0x0c „It's locked from the other side." @scd 0x012c vs. Door @0x0144); Root-Cause war PORT-EIGEN — Boot-Pre-Stage `flag_set(4,195,1)` (pc+psx main.c) aus einer Fehllesung („sonst Dead-End"; tatsächlich umfasst der Ifel/Else NUR Slot 5, `Else_ck 07 00 26 00` @0x0140 → 0x0166 = slot6 dahinter) — gestrichen; Unlock byte-true nur ROOM1140 sub02 `Set(4,0xc3,1)` @0x0190; game-weit 36 Zwillingspaare, alle über den generischen Pfad = Fix global. Regression `unit_door_1170_lock`. (1) Marvin-Spawn/Start-Anim: RE-Workflow lief in einen Runtime-Stall (DuckStation-Capture) → neu aufgesetzt (`wf_a76ac28e`), OFFEN | `eab426af`/`57eb84e4` |
 
-Baseline nach der Session: **106/106 ctest grün** (neu: `unit_crow_death_corpse`, `unit_door_1170_lock`).
+| 2026-08-03 | **Marvin-Spawn/Start/Lauf GELÖST (Runde 3 Punkt 1)** (`2194c41f`, Dossier `analysis/marvin_spawn_anim.md`, 5/5 CONFIRMED; Ground-Truth = DuckStation-Savestate r10d0_walk1 des abgestürzten Workflow-Vorlaufs): Die State-Maschine des Ports war byte-true — aber der **Executor-Kanal +0x170/+0x174 ist die BANK 1 (dir[4]/dir[3])**, positions-fest gemappt vom Kanal-Loader FUN_80022300 (@0x800224b8/c8), während der Port die largest-Bank (dir[1], 24 Clips) spielte → Clip-Wraps 32/50 statt 16/52 = falsche Posen für Spawn-Idle, Gesten UND Szenen-Walk (Clip 5 = 30f). Verify-KORREKTUR am Fix-Scope: eigene Bank spielen NUR Subs {2,4,5,6,9} (Dispatch @0x80076ca0); Subs 7/8 = +0x84/+0x16c (@0x80051a20/24, @0x80051c18/1c). Port: `re15_emd_parse_own_bank` (dir[3]/dir[4], own_ok=0 bei leerem dir[3] schützt Dog/Crow/Gorilla), Kanal-Map + Walker-Länge + Render-Override, Bank-1-Fallback-Tabelle, INIT-f314-Schritt; `test_npc_scd_pose`-Fixture auf Bank-1-Clip 5. Regression `unit_marvin_spawn_bank`. Betroffen alle 7 NPC-Typen 0x40-0x4d | `2194c41f` |
+
+Baseline nach der Session: **107/107 ctest grün** (neu: `unit_crow_death_corpse`, `unit_door_1170_lock`, `unit_marvin_spawn_bank`).
 
 ### Offene Punkte (oberste Zeile = nächster Schritt)
 
@@ -203,10 +205,12 @@ Baseline nach der Session: **106/106 ctest grün** (neu: `unit_crow_death_corpse
    @0x80055D10 (Skill `re15-pcsx-watchpoint`), Spielfluss-Nachweis ohne FORCE_EVENT
    (Hof-Hindernis bei x≈−17000, HANDOVER §2b), Positional-Pfad FUN_80045a64 (D3), ADSR (D4).
 6. **W2-Sweep starten** (§2): ROOM1240 zuerst, Checkliste pro Raum.
-7. **Cutscene-/NPC-Rest** (marvin_10d0.md §6 + cutscene_headlook.md §6): (a) ROOM10D0
-   visuelle gdigrab-Prüfung + DuckStation-Gegenprobe (re15-room-capture); (b) ROOM1170/
-   Elliot-Marker-Messung (Original bindet REC1 — was liest der ungebremste EDD-Index bei
-   Clip 25? Savestate!) vor Umstellung der Elliot-Ausnahme; (c) `Plc_dest` mode 0x13
-   (@0x80073e30[19]) disassemblieren; (d) FUN_8003703c-Kategorien (+0x9a-Vorzeichen-Bits)
-   verhaltens-verifizieren (Auto-Look derzeit konservativ NPC-only); (e) Sweep-Modi 3/4
-   Live-PSX-Vergleich (ROOM11B1 sub02); (f) 0x1910 Extra-Bytes nach dem 10D0-RBJ-Trailer.
+7. **Cutscene-/NPC-Rest** (marvin_10d0.md §6 + cutscene_headlook.md §6 + marvin_spawn_anim.md
+   open_questions): (a) ROOM10D0 visuelle gdigrab-Prüfung + DuckStation-Gegenprobe (Bank-1-
+   Posen vs r10d0_walk1-VRAM); (b) ROOM1170/Elliot-Marker-Messung (Original bindet REC1)
+   vor Umstellung der Elliot-Ausnahme; (c) `Plc_dest` mode 0x13 (@0x80073e30[19])
+   disassemblieren; (d) FUN_8003703c-Kategorien verhaltens-verifizieren; (e) Sweep-Modi 3/4
+   Live-PSX-Vergleich (ROOM11B1 sub02); (f) 0x1910 Extra-Bytes nach dem 10D0-RBJ-Trailer;
+   (g) Bank-0-Kanal +0x84/+0x16c game-weit kartieren (Plc_motion(1,…)-Fundstellen; Subs 7/8
+   ungenutzt in STAGE1?); (h) State-1-Idle-Kanal der NPCs messen (Port: eigene Bank —
+   INIT-f314 läuft auf +0x84/+0x16c, der State-1-Spielkanal ist nicht disasm-belegt).
