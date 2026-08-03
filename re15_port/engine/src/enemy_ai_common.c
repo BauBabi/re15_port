@@ -4794,15 +4794,20 @@ static void re15_dog_ai_tick(int slot)
                         if (e->dog_grab_armed == 0 && pl->hp >= 0) {   /* +0x1e4==0 @0x8010f2dc && hp>=0 @0x8010f2e4 */
                             /* KNOCKDOWN (audit #3): player cmd 2 (aca58=2 @0x8010f30c = the state-2
                              * hit FSM the port's game_step HP-drop flinch models), aca59=facing+2
-                             * (@0x8010f314-24), aca5a=0 (@0x8010f330), acae7|=1 (@0x8010f338-44),
-                             * grunt SE via 37edc(PTR_80121010[(rng&1)+aca59*2],0x32) @0x8010f34c-60. */
+                             * (@0x8010f314-24), aca5a=0 (@0x8010f330), acae7|=1 (@0x8010f338-44). */
                             re15_audio_room_se(3);            /* Se(3) connect @0x8010f2ec-f4 */
                             e->sub_state_2 = 5;               /* dog +0x6=5 recoil @0x8010f300 */
                             pl->hit_react |= 1;               /* acae7 |= 1 */
                             {
-                                static const uint8_t knock_se[4] = { 5, 7, 4, 6 };   /* bytes @0x80121014 (raw: 05 07 04 06) */
+                                /* KORRIGIERT (player_hit_chain.md HIT-4, verify 2026-08-03): der
+                                 * 37edc-Call @0x8010f34c-60 ist der WUND-STEMPEL — FUN_80037edc(
+                                 * panel = byte[0x80121010+4 + aca59*2+(rng&1) - 4], amount 0x32).
+                                 * Die Bytes 05 07 04 06 @0x80121014 sind PANEL-Indizes (front ->
+                                 * 5/7 Brust, back -> 4/6 Ruecken), KEINE SE-Nummern — die alte
+                                 * knock_se[]-Deutung spielte stattdessen zufaellige Raum-SEs. */
+                                static const uint8_t knock_panel[4] = { 5, 7, 4, 6 };   /* @0x80121014 */
                                 int facing = ((((int)pl->rot_y - (int)e->rot_y) + 0x400) & 0xfff) < 0x800 ? 1 : 0;  /* a780(&player) */
-                                re15_audio_room_se(knock_se[(facing ? 2 : 0) + (re15_engine_rand8() & 1)]);  /* 37edc tier -> direct SE (OPEN, crow stance) */
+                                re15_wound_add(knock_panel[(facing ? 2 : 0) + (re15_engine_rand8() & 1)], 0x32);
                             }
                         } else {                              /* GRAB escalation LAB_8010f468 */
                             int facing = ((((int)pl->rot_y - (int)e->rot_y) + 0x400) & 0xfff) < 0x800 ? 1 : 0;  /* a780 @0x8010f468 */
