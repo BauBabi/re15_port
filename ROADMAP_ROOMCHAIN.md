@@ -157,6 +157,8 @@ Vollständig in [HANDOVER_2026-08-01.md](HANDOVER_2026-08-01.md) §1/§2b. Kernp
 
 | 2026-08-03 | **HIT-Verify komplett** (6×CONFIRMED, 2×PLAUSIBLE): Dog-Sprung-Biss stempelte im Port Zufalls-SEs statt Wund-Panels (Bytes 05 07 04 06 @0x80121014 = PANEL-Indizes, als SE-Tabelle fehlgedeutet) → gefixt `1e7f4338`. OFFEN: Dog-Heavy-Biss-Knockdown-Klasse facing+4 (@0x801187e8/f0; EXE-Handler 0x800360e8/0x8003644c), Liegend-Devour-Einstieg, cmd-4-Familie, PCSX-Watchpoint für indirekte aca58/59-Writer | `1e7f4338` |
 
+| 2026-08-03 | **Krähen-LIVE-Fix + Knockdown-Klasse** (`c9a19140`/`8c3ece3e`): LOS-Ray byte-true (FUN_8003dcc4 mit GEGNER-Höhenband-Filter — Sonde: 0→620 Attack-Ticks live), Elevation-Band-Stempel (hohe Krähe braucht UP-Aim), Death-Lane-Map, +0x9a-Latch; Spieler-Knockdown [4]/[5] komplett (0x800360e8/0x8003644c, Slam-Zweig, 0xb-rev-Aufstehen, i-Frames), Boss-0x27-Trigger. Liegend-Devour WIDERLEGT (dormante Girl-Ambush, toter Code — nichts erfunden). OFFEN: Krähen-Wurf-Exit (Mode 6, Watchpoint), aca3c-0x40/0x80-Leser, aca52-Bit-0-Semantik, Waffen-14-Lane, visuelle Clip-Prüfung 0xb-0x10 per gdigrab | `8c3ece3e` |
+
 Baseline nach der Session: **103/103 ctest grün.**
 
 ### Offene Punkte (oberste Zeile = nächster Schritt)
