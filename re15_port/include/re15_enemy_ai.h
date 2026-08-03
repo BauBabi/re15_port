@@ -279,6 +279,12 @@ void re15_enemy_ai_set_combat_active(int v);
  * grabbed pose/anim, the exact XZ/Y pin, and the struggle-escape are deferred (cited in the .c). */
 int re15_player_is_grabbed(void);
 
+/* Spieler-KNOCKDOWN-Klasse (cmd-2 [4]/[5] = 0x800360e8/0x8003644c; analysis/player_knockdown.md):
+ * begin(dir) startet den Umfall (0 = von vorn [4], 1 = von hinten [5]); Ausloeser = der
+ * 0x27-Boss-Heavy-Biss (aca59 = facing+4 @0x801187e8/f0). FSM lebt in game_step_common.c. */
+void re15_player_knockdown_begin(int dir);
+int  re15_player_knockdown_active(void);
+
 /* THE single "which animation bank does this state pose from" rule — shared by the renderer and the
  * animation frame clock so they cannot drift (see enemy_ai_common.c). */
 int re15_actor_uses_loco_bank(const re15_actor_t *a);

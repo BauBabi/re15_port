@@ -46,6 +46,11 @@ int g_test_core_se_last = -1;
 int g_test_core_se_count = 0;
 void re15_audio_core_se(int se_id) { g_test_core_se_last = se_id; g_test_core_se_count++; }
 void re15_audio_prime_weapon(int weapon_id) { (void)weapon_id; }
+/* game_step_common.c haengt seit der Knockdown-Klasse an den Test-Links (enemy_ai_common
+ * ruft re15_player_knockdown_begin) — die zwei restlichen Plattform-Audio-Symbole stubben. */
+void re15_audio_footstep(int foot, int sound_type) { (void)foot; (void)sound_type; }
+void re15_audio_rotor_update(const int32_t cam_eye[3], const int32_t cam_tgt[3],
+                             const int32_t heli_pos[3]) { (void)cam_eye; (void)cam_tgt; (void)heli_pos; }
 
 /* Real asset reader for tests (the engine's item_icon_common.c reads ITEMALL.PIX through this; the PC
  * backend provides the game one). Resolves a "shared_assets/PSX/..." path via RE15_ASSET_PSX_DIR so the

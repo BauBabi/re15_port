@@ -65,6 +65,129 @@ static int     s_hit_flinch = 0;
 static int32_t s_hit_kb     = 0;             /* DAT_800acae0 knockback budget (decays 50/frame) */
 static int16_t s_prev_hp    = 100;
 
+/* ==== SPIELER-KNOCKDOWN-KLASSE (cmd-2 [4]/[5]) — analysis/player_knockdown.md (KD-1/KD-2
+ * CONFIRMED, EXE-Handler 0x800360e8 (von VORN, Tabelle @0x80010b88) und 0x8003644c (von
+ * HINTEN, @0x80010bb8) vollstaendig disassembliert). STAGE1-Ausloeser: der 0x27-Boss-Heavy-
+ * Biss (aca59 = facing+4 @0x801187e8/f0); game-weit identische Writer in STAGE3/4/5.
+ * Clips 0xb-0x10 aus der PLD-Basis-Bank (FUN_800314b0/FUN_80022300); i-Frames: +0x93 bleibt
+ * fuer die GESAMTE Dauer gesetzt (@0x80036178 .. Exit @0x800362f8/@0x80036690). Die
+ * aca3c-Bits 0x40/0x80 (Setter kartiert, Leser OFFEN — KD-11) sind dokumentiert, nicht
+ * modelliert. Kraehen-Wurf (cmd-4 Mode 6) bleibt OFFEN (Exit unbelegt — Softlock-Gefahr,
+ * §7.1) — dokumentierte Divergenz, nicht still degradiert. */
+static int     s_knockdown  = 0;             /* 0 aus / 1 aktiv */
+static uint8_t s_kd_dir     = 0;             /* 0 = vorn [4] / 1 = hinten [5] */
+static uint8_t s_kd_phase   = 0;
+static int32_t s_kd_speed   = 0;             /* DAT_800acae0-Aequivalent (Impuls 1000/500) */
+static int16_t s_kd_t       = 0;             /* [5]-Decel-Zaehler t */
+
+int  re15_player_knockdown_active(void) { return s_knockdown; }
+void re15_player_knockdown_begin(int dir)
+{
+    s_knockdown = 1;
+    s_kd_dir    = (uint8_t)(dir & 1);
+    s_kd_phase  = 0;
+    s_kd_t      = 0;
+}
+
+/* Clip setzen (+0x8f=7 an jeder Original-Clip-Site; rev = f314 a2=1 -> Rueckwaerts-Playback,
+ * Port-Modell anim_flags 0x80 wie der BACK-Walk). */
+static void kd_clip(re15_actor_t *pl, uint8_t clip, int rev)
+{
+    pl->motion = clip; pl->anim_frame = 0; pl->anim_frac = 7;
+    pl->motion_init_delay = 1;
+    if (rev) pl->anim_flags |= 0x80; else pl->anim_flags &= (uint16_t)~0x80u;
+}
+
+/* Bewegung entlang facing+0x800 (back=1, 245d8(0x800) @0x80036200) bzw. facing (back=0,
+ * 245d8(0) @0x800365b8) mit Wand-Klemme; Rueckgabe 1 = Wand getroffen. mag darf negativ
+ * werden ([4] hat KEINEN Decel-Clamp @0x800361c8-e0 — byte-true Vorwaerts-Drift). */
+static int kd_move(const re15_game_ctx_t *c, re15_actor_t *pl, int32_t mag, int back)
+{
+    if (mag == 0) return 0;
+    int32_t dx, dz, ox = pl->x, oz = pl->z;
+    re15_player_knockback_delta(back ? pl->rot_y : (int16_t)(pl->rot_y + 0x800), mag, &dx, &dz);
+    int32_t nx = ox + dx, nz = oz + dz;
+    re15_collision_ensure_band(pl->y);
+    re15_collision_constrain(c->rdt, ox, oz, &nx, &nz);
+    re15_collision_objects(&nx, &nz);
+    int wall = (nx != ox + dx || nz != oz + dz);
+    pl->x = nx; pl->z = nz;
+    return wall;
+}
+
+static int kd_adv(re15_actor_t *pl, int fc)
+{
+    if (pl->motion_init_delay > 0) { pl->motion_init_delay--; return 0; }
+    pl->anim_frame++;
+    return (int)pl->anim_frame >= fc - 1;
+}
+
+static void re15_player_knockdown_tick(const re15_game_ctx_t *c, re15_actor_t *pl)
+{
+    const re15_emd_animation_t *an = c->pl00_anim;
+#define KD_FC(cl) ((an && (int)(cl) < an->clip_count && an->clips[(cl)].frame_count > 0) \
+                   ? an->clips[(cl)].frame_count : 20)
+    switch (s_kd_phase) {
+    case 0:
+        if (s_kd_dir == 0) {                      /* [4] Ph0 @0x80036144-a0: Sturz RUECKWAERTS */
+            kd_clip(pl, 0x0d, 0);                 /* Clip 0xd @0x80036144-4c */
+            s_kd_speed = 1000;                    /* Impuls @0x8003616c */
+        } else {                                  /* [5] Ph0 @0x800364a8-50c: Sturz VORWAERTS */
+            kd_clip(pl, 0x0c, 0);                 /* Clip 0xc @0x800364a8-b0 */
+            s_kd_speed = 500;                     /* @0x800364c0/d0 */
+        }
+        pl->hit_react |= 1;                       /* i-Frames @0x80036178-80 / @0x800364e4 */
+        re15_audio_core_se(1);                    /* SE 0x04010001 @0x80036184-88 */
+        s_kd_phase = 1;
+        break;
+    case 1: {                                     /* Sturz-Playout + Physik */
+        if (s_kd_dir == 0) {
+            s_kd_speed -= 15 * (int32_t)pl->anim_frame;    /* @0x800361c8-e0, KEIN Clamp */
+            if (kd_move(c, pl, s_kd_speed, 1)) {           /* Wand-Probe @0x8003620c-18 */
+                kd_clip(pl, 0x0f, 0); s_kd_phase = 3;      /* SLAM-Zweig @0x8003622c-30 -> Ph5
+                                                            * (Clip 0xf @0x80036348-5c; das
+                                                            * aca3c|=0x80 ist dokumentiert, Leser
+                                                            * OFFEN KD-11) */
+                break;
+            }
+        } else if ((int)pl->anim_frame < 0xf) {            /* Move-Gate frame<15 @0x80036544 */
+            if (kd_move(c, pl, s_kd_speed, 0)) s_kd_speed = 0;   /* Wand=Stopp @0x800365ac-b0 */
+            s_kd_speed -= 5 * s_kd_t; s_kd_t++;            /* Decel 5*t @0x8003656c-8c */
+        }
+        if (kd_adv(pl, KD_FC(pl->motion))) {
+            if (s_kd_dir == 0) { kd_clip(pl, 0x0e, 0); s_kd_phase = 2; }  /* [4] Ph2/3 Clip 0xe */
+            else               { kd_clip(pl, 0x10, 0); s_kd_phase = 4; }  /* [5] Ph2 Clip 0x10 */
+        }
+        break; }
+    case 2:                                       /* [4] Ph2/3: Aufstehen vorw. + speed-15 Clamp0 */
+        s_kd_speed -= 15; if (s_kd_speed < 0) s_kd_speed = 0;   /* @0x800362bc-e0 */
+        (void)kd_move(c, pl, s_kd_speed, 1);
+        if (kd_adv(pl, KD_FC(pl->motion))) s_kd_phase = 6;      /* Exit Ph4 @0x800362f4 */
+        break;
+    case 3:                                       /* [4] Ph5/6: Slam-Clip 0xf Playout */
+        if (kd_adv(pl, KD_FC(pl->motion))) { kd_clip(pl, 0x10, 0); s_kd_phase = 4; }  /* Ph7 Clip 0x10 */
+        break;
+    case 4:                                       /* Boden-Clip 0x10 Playout */
+        if (kd_adv(pl, KD_FC(pl->motion))) { kd_clip(pl, 0x0b, 1); s_kd_phase = 5; }
+                                                  /* Aufstehen = Clip 0xb RUECKWAERTS
+                                                   * (ori a2,1 @0x800363c8 / @0x80036638) */
+        break;
+    case 5:                                       /* Aufstehen-Playout */
+        if (kd_adv(pl, KD_FC(pl->motion))) s_kd_phase = 6;
+        break;
+    default:                                      /* EXIT ([4] Ph4/Ph11 @0x800362f4/@0x8003640c,
+                                                   * [5] Ph6 @0x8003667c): aca58:=1, +0x93 = 0
+                                                   * (@0x800362f8-Region / @0x80036690),
+                                                   * aca3c &= ~0xC0 (@0x80036410-34/@0x80036680-a4) */
+        s_knockdown = 0;
+        pl->motion = 0;
+        pl->anim_flags &= (uint16_t)~0x80u;
+        pl->hit_react &= (uint8_t)~1u;
+        break;
+    }
+#undef KD_FC
+}
+
 static void re15_gameover_fsm_reset(void)
 {
     s_go_sub = s_go_ctr = s_go_lap = s_go_on = 0;
@@ -200,7 +323,7 @@ void re15_game_step(const re15_game_ctx_t *c)
      * the platform-side msg tick. */
     if (c->rdt_ok)
         re15_menu_start_poll(c->pad_pressed,
-                             (s_hit_flinch == 0 && !re15_player_is_grabbed() &&
+                             (s_hit_flinch == 0 && s_knockdown == 0 && !re15_player_is_grabbed() &&
                               !re15_player_is_dead()) ? 1 : 0);
     if (re15_menu_gameplay_frozen()) {
         re15_menu_fsm_tick(c->pad_pressed, c->pad_current);
@@ -226,6 +349,8 @@ void re15_game_step(const re15_game_ctx_t *c)
      * clip 0x8/0x9/0xa frame length (flinch duration) is faithful-line (15). */
     extern int re15_player_aim_active(void);     /* player_common.c — don't flinch mid-aim */
     if (c->rdt_ok && pl->hp < s_prev_hp && pl->hp >= 0 && s_hit_flinch == 0 &&
+        s_knockdown == 0 &&        /* die Knockdown-Klasse hat Vorrang vor dem Flinch-Detector
+                                    * (der Boss-Heavy-Biss wuerde sonst doppelt reagieren) */
         !re15_player_is_dead() && !re15_player_is_grabbed() && !re15_stair_active() &&
         !re15_player_aim_active()) {
         const re15_actor_t *atk = re15_nearest_hostile(pl);      /* the enemy that struck (adjacent) */
@@ -288,6 +413,12 @@ void re15_game_step(const re15_game_ctx_t *c)
          * scan KEEPS running (byte-true: the per-frame cam scan is ungated by the player's state), so
          * the cut still frames the grab. This branch is unreachable unless a live zombie grabs, so a
          * room with no live zombie (ROOM1170/1240 boot) never enters it = no 1170 regression. */
+        re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
+    } else if (c->rdt_ok && s_knockdown) {
+        /* KNOCKDOWN-Klasse (cmd-2 [4]/[5], 0x800360e8/0x8003644c): engine-getrieben wie
+         * Stair/Grab — kein Pad, kein Steer; RVD-Scan laeuft weiter. i-Frames halten
+         * (+0x93 bleibt gesetzt bis zum Exit). analysis/player_knockdown.md F1. */
+        re15_player_knockdown_tick(c, pl);
         re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
     } else if (c->rdt_ok && s_hit_flinch > 0) {
         /* HIT-FLINCH branch: root the player + play the directional flinch clip (0x8/0x9/0xa, set at
