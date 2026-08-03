@@ -158,12 +158,34 @@ typedef struct {
                            * do not respawn on room re-entry. [wf_f536e1ee #14-step-1] */
 } re15_aot_item_params_t;
 
+/* STAIR per-record direction data (byte-true sce-12/13 handlers LAB_80043500/LAB_800435cc —
+ * analysis/stair_10a0.md): the original has NO zone pairing; each stair AOT decides UP/DOWN
+ * alone from the rect HALF the player stands in along the stair axis, tied to the record's
+ * side flag:
+ *   side   = u16 rec+0xC = Aot_set pc[14..15] (lhu @0x80043530/58 sce12, @0x800435fc/24
+ *            sce13) — names the rect half that is the LOWER stair end (0 = low-coordinate
+ *            half, 1 = high). Standing there = ASCEND, the other half = DESCEND.
+ *   count  = u8 rec+0xE = pc[16] (lbu @0x800435b8 / @0x8004367c) — bands traversed (&7;
+ *            the gait counter DAT_800acaf2 starts at (count&7)-1 @0x800389cc-dc).
+ *   axis   = the sce itself: 12 = X (lh 0x4(a2) + lw 0x34(a1) @0x80043510-14),
+ *            13 = Z (lh 0x6(a2) + lw 0x3c(a1) @0x800435dc-e0).
+ *   corner/extent = the RAW record rect fields along that axis (the half test is
+ *            `player[axis]-corner < extent>>1`, srl+slt @0x80043520-24 / @0x800435ec-f0). */
+typedef struct {
+    uint16_t side;
+    uint8_t  count;
+    uint8_t  axis;        /* 12 = X, 13 = Z */
+    int32_t  corner;
+    int32_t  extent;
+} re15_aot_stair_params_t;
+
 typedef struct {
     re15_aot_t              slots[RE15_AOT_MAX];
     re15_aot_door_params_t  door_params[RE15_AOT_MAX];
     re15_aot_item_params_t  item_params[RE15_AOT_MAX];
     re15_aot_flag_params_t  flag_params[RE15_AOT_MAX];
     re15_aot_env_params_t   env_params[RE15_AOT_MAX];
+    re15_aot_stair_params_t stair_params[RE15_AOT_MAX];
 
     /* Edge-trigger state: set when an AOT fires, cleared by consumer or
      * after N frames of HUD display. */
@@ -210,13 +232,15 @@ int re15_aot_set_item_tk(int slot, int32_t cx, int32_t cz,
                          int32_t half_w, int32_t half_h,
                          uint8_t item_type, uint8_t amount, uint8_t taken_bit);
 
-/* Place a STAIR-type AOT (SCD Aot_set type 12/13). The rect is the stair zone;
- * `down_end` mirrors the SCD data0 byte (1 = the type-13/"up" end, 0 = the
- * type-12/"down" end) and is stored for reference. The scanner ignores STAIR
- * AOTs — stair_common.c polls them for the action trigger. */
+/* Place a STAIR-type AOT (SCD Aot_set type 12/13). The rect is the stair zone; the
+ * scanner ignores STAIR AOTs — stair_common.c polls them for the action trigger. The
+ * per-record direction data (side/count/axis/corner/extent, see
+ * re15_aot_stair_params_t) is what the byte-true sce-12/13 handlers LAB_80043500/
+ * LAB_800435cc read; event_id stores (uint8_t)side for the debug dumps. */
 int  re15_aot_set_stair(int slot, int32_t cx, int32_t cz,
                         int32_t half_w, int32_t half_h,
-                        uint8_t down_end, uint8_t band);
+                        uint8_t band, uint16_t side, uint8_t count,
+                        uint8_t axis, int32_t corner, int32_t extent);
 
 /* Place a CAM_SWITCH-type AOT (RVD zone). On entry, the scan sets
  * g_scd.cam_change_pending with cam_id = target_cut. No SFX, no

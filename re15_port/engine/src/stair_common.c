@@ -38,8 +38,15 @@
 #include "re15_player.h"       /* RE15_PLAYER_MOTION_* */
 #include "re15_scd.h"          /* g_scd.player_mode */
 
-#define STAIR_REACH      450   /* body-radius reach (player held just outside the rect) */
-#define STAIR_FWDPROBE   800   /* FUN_8002d474: probe 800u ahead of facing for the stair zone */
+#define STAIR_REACH      450   /* body-radius reach (player held just outside the rect) —
+                                * port fallback, no PSX referent (the original tests ONLY
+                                * the probe point for the shipped flags-0x31 records:
+                                * bit 0x20 @0x80042ef8 -> probe rect test @0x80042f0c-2c;
+                                * the player-pos test needs bit 0x40 @0x80042ea8, clear). */
+#define STAIR_FWDPROBE   620   /* byte-true action-scan probe = 0x26c ahead of facing
+                                * (`ori v0,zero,0x26c` @0x80042bd0, rotated by the player
+                                * yaw lh 0x6a(s1) via FUN_8004f008 @0x80042bf8). Was 800
+                                * (uncited) — stair_10a0.md finding stair-dir-04. */
 #define RE15_ANIM_REVERSE 0x80
 
 /* BYTE-TRUE descend handler LAB_80038c60. ANIMATION = PL00 clip 21 (down)/20 (up)
@@ -142,8 +149,8 @@ void re15_stair_tick(const re15_rdt_t *rdt,
          * Treppe in der Wand" (autopilot-proven: land x=-23309 → push +1012 back up
          * into the wall, vs the healthy x=-23422 → push -1109 forward). A plain
          * nearest-edge constrain is therefore a coin-flip near the midpoint. Instead we
-         * eject DETERMINISTICALLY FORWARD: step along the descent facing (rot_y, already
-         * aimed down the run toward the paired zone) to the FIRST walkable cell = the
+         * eject DETERMINISTICALLY FORWARD: step along the descent facing (rot_y, snapped
+         * to the stair axis cardinal at entry) to the FIRST walkable cell = the
          * foot of the staircase, exactly the original's landing — never backward. */
         if (rdt) {
             /* forward unit (player-move convention: x+=cos*v, z+=-sin*v). */
@@ -309,6 +316,7 @@ int re15_stair_try_start(const re15_rdt_t *rdt, int action_pressed)
     int32_t fx = p->x + (int32_t)(( cs * STAIR_FWDPROBE) / 4096);
     int32_t fz = p->z - (int32_t)(( sn * STAIR_FWDPROBE) / 4096);
     const re15_aot_t *zone = 0;
+    int zone_idx = -1;
     for (int i = 0; i < RE15_AOT_MAX; i++) {
         const re15_aot_t *a = &g_aot.slots[i];
         /* BAND GATE (byte-true FUN_8002da4c: a stair zone fires ONLY when
@@ -325,64 +333,70 @@ int re15_stair_try_start(const re15_rdt_t *rdt, int action_pressed)
         if (a->active && a->type == RE15_AOT_TYPE_STAIR &&
             (int)a->band == cur &&
             (point_in_zone(fx, fz, a) || player_in_zone(p, a))) {
-            zone = a; break;
+            zone = a; zone_idx = i; break;
         }
     }
     if (!zone) return 0;
 
-    /* Destination band = the OTHER end of THIS staircase (the type-12/13 PAIR).
-     * Each staircase is two AOT zones sharing event_id (the type/end flag), one
-     * on each platform (chain bands {0,2} for type-13, {2,4} for type-12). The
-     * player goes to the paired band he is NOT on. This is robust against the SCA
-     * having a non-platform band 3 (the big floor cells 0,1 = floor 0x33) which
-     * broke the old next_band_below() target (it returned 3, not 2 -> no vector
-     * -> "nichts passiert"). */
-    const re15_aot_t *paired = 0;
-    for (int i = 0; i < RE15_AOT_MAX; i++) {
-        const re15_aot_t *a = &g_aot.slots[i];
-        if (a->active && a->type == RE15_AOT_TYPE_STAIR &&
-            a->event_id == zone->event_id && a != zone) {
-            paired = a; break;
-        }
-    }
-    if (!paired) return 0;
-    int target = (cur == (int)zone->band) ? (int)paired->band : (int)zone->band;
-    if (target == cur) return 0;
-    const re15_aot_t *dest_zone = (target == (int)paired->band) ? paired : zone;
+    /* PER-RECORD direction decision (byte-true sce-12/13 handlers LAB_80043500 (X) /
+     * LAB_800435cc (Z) — analysis/stair_10a0.md, stair-dir-01/02 CONFIRMED). The
+     * original has NO zone pairing and NO destination-zone lookup; each stair AOT
+     * decides alone:
+     *   delta    = player[axis] - rect_corner    (lh 0x4/0x6(a2) + lw 0x34/0x3c(a1)
+     *                                             @0x80043510-1c / @0x800435dc-e8)
+     *   low_half = delta < extent>>1             (srl+slt @0x80043520-24 / @0x800435ec-f0)
+     *   ASCEND  <=> (low_half && side==0) || (!low_half && side==1)   @0x80043530-90
+     *   -> DAT_800aca5a = 1 (ascend) / 2 (descend) @0x80043594; mode 0xb, phase 1
+     *      switches to descend mode 0xc when aca5a&2 (@0x800389e0-f4).
+     * side = the rect half that is the LOWER stair end. The old event_id PAIR search
+     * was a port invention — event_id held this side flag (only 0/1), so ROOM10A0
+     * (two side-0 + two side-1 stairs) paired stair C with A / D with B and INVERTED
+     * the direction ("hintere Treppe steigt hoch statt runter"). */
+    const re15_aot_stair_params_t *sp = &g_aot.stair_params[zone_idx];
+    int32_t delta = (sp->axis == 13) ? (p->z - sp->corner) : (p->x - sp->corner);
+    int low_half  = delta < (sp->extent >> 1);
+    int up        = (low_half && sp->side == 0) || (!low_half && sp->side != 0);
+
+    /* Band count = the record's OWN count byte rec+0xE & 7 (lbu @0x800435b8 sce12 /
+     * @0x8004367c sce13; the gait counter DAT_800acaf2 starts at (count&7)-1
+     * @0x800389cc-dc and each cycle steps Y one 0x708 band @0x80038e00 until the
+     * pre-decrement test hits 0 @0x80038e30-44) — NOT a band difference of a paired
+     * zone. ROOM10A0 counts: A/B/D = 2, C = 1 (== |ΔBand|, RDT bytes @0xe40-0xecc). */
+    int n = sp->count & 7;                                /* andi 0x7 @0x800389cc */
+    if (n == 0) return 0;                                 /* defensive: no shipped record
+                                                           * has count 0 (all >= 1) */
+    int target = up ? cur + n : cur - n;
+    if (target < 0) return 0;                             /* defensive band clamp */
 
     /* Byte-true set-up (LAB_80038c60 phase 0). No landing vector: the body XZ EMERGES
-     * from forward-10 each tick over |Δband| band cycles; Y from the +0x708 per cycle.
-     *
-     * DETERMINISM (symptom 1 fix): the step count must come from the INTEGER band
-     * difference, NOT a Y subtraction. The original derives the count from the band
-     * numbers (cur/target = integer floors); deriving it from |targetY - p->y|/0x708
-     * made the count depend on the player's EXACT start Y, so a slightly-off start Y
-     * (e.g. a prior tick left him a few units off a clean band multiple, or the FK
-     * foot-lock nudged Y) rounded to a WRONG number of band-cycles → the descent
-     * finalised one band early/late = "ended in the middle of the staircase". We now
-     * SNAP s_saved_y to the exact source-band multiple and count integer bands, so the
-     * cycle count and the committed landing Y are identical regardless of the entry Y. */
+     * from forward-10 each tick over `count` band cycles; Y from the +0x708 per cycle.
+     * s_saved_y snaps to the exact source-band multiple so the cycle count and the
+     * committed landing Y are exact regardless of the entry Y. */
     s_target_band = target;
     s_target_y    = -(int32_t)(target * STAIR_YBAND);
     s_saved_y     = -(int32_t)(cur * STAIR_YBAND);        /* snap to exact source-band Y */
-    s_ydir        = (target < cur) ? +1 : -1;             /* descend: Y -> 0 (toward pit) */
-    s_bands_left  = s_abs(target - cur);                  /* integer band difference */
-    if (s_bands_left > 0) s_bands_left -= 1;               /* DAT_800acaf2 = count-1 (N cycles) */
+    s_ydir        = up ? -1 : +1;                         /* descend: Y -> 0 (toward pit) */
+    s_bands_left  = n - 1;                                /* DAT_800acaf2 = (count&7)-1
+                                                           * @0x800389d0-dc (N cycles) */
 
-    /* Face the paired (target) zone. Byte-true (LAB_80037fd8): the stair TURN preamble plays clip 5
-     * and geometrically decays the heading residual onto the run BEFORE stepping — instead of the
-     * instant snap this used to do. Endpoint = the paired-zone facing (the SAME atan2 the old snap
-     * used). Seed the acabe-equivalent residual = current heading MINUS target; the settle decays it
-     * to 0 (rot_y reaches target). FAITHFUL-LINE: the PSX walks in pre-aligned and decays the ABSOLUTE
-     * acabe to its own nearest cardinal (no target computed); the port probe-triggers, so we compute
-     * an explicit target + residual. Within the +-45deg basin the two coincide; if the player is >45deg
-     * off (rare — the probe requires the stair ahead) we fall back to the old instant snap so a byte-true
-     * decay can't land him 90deg off (a port safety choice, no PSX referent). */
-    int32_t rdx = dest_zone->x - p->x, rdz = dest_zone->z - p->z;
-    uint16_t tgt = (rdx || rdz) ? (uint16_t)((re15_atan2_q12(rdz, rdx) - 1024) & 0x0FFF)
-                                : (uint16_t)((uint16_t)p->rot_y & 0x0FFF);
-    s_motion  = (target < cur) ? RE15_PLAYER_MOTION_STAIR_DOWN   /* 220 -> PL00 clip 21 */
-                               : RE15_PLAYER_MOTION_STAIR_UP;     /* 221 -> PL00 clip 20 */
+    /* FACING = the endpoint of the byte-true mode-0xb phase-1 settle (@0x8003891c-
+     * 0x800389ac): the heading residual DAT_800acabe geometrically converges onto the
+     * nearest AXIS CARDINAL — X-stair (acaf2&0x80 clear @0x80038920-28) -> multiples of
+     * 0x800; Z-stair (flag set, sign path inverted) -> 0x400 + k*0x800 — step
+     * ±(res>>2)&0xff @0x8003894c/0x80038980, exit gate (acabe&0x3e0)==0 @0x800389a0,
+     * snap &0xff00 @0x800389a8-ac. No destination zone is ever computed. Port
+     * representation: rot_y snaps to the nearest cardinal of the stair's axis
+     * ({0,0x800} X / {0x400,0xc00} Z in the port's x+=cos,z-=sin convention). The old
+     * atan2 onto the PAIRED zone's centre pointed Leon at the WRONG stair once the
+     * pair was wrong (stair-dir-03). The visible clip-5 settle itself stays omitted
+     * (hardware measurement 2026-07-24: no turn anim; a cardinal walk-in converges in
+     * 0 frames — stair_10a0.md O2 keeps this open for re-measurement). */
+    uint16_t ry  = (uint16_t)p->rot_y & 0x0FFF;
+    uint16_t c0  = (sp->axis == 13) ? 0x400 : 0x000;
+    int      d0  = (int)((ry - c0 + 0x800) & 0x0FFF) - 0x800;   /* signed circular diff */
+    uint16_t tgt = (d0 >= -0x400 && d0 < 0x400) ? c0 : (uint16_t)((c0 + 0x800) & 0x0FFF);
+    s_motion  = up ? RE15_PLAYER_MOTION_STAIR_UP              /* 221 -> PL00 clip 20 */
+                   : RE15_PLAYER_MOTION_STAIR_DOWN;           /* 220 -> PL00 clip 21 */
     /* NO clip-5 turn preamble in EITHER direction. USER-VERIFIED on real PSX
      * (2026-07-24): the original plays no turn/landing animation before a stair
      * descent OR ascent — the player snaps to the run and the stepping gait

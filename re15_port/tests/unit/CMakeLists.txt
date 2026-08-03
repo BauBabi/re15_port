@@ -557,9 +557,25 @@ add_executable(probe_zombie_hit probe_zombie_hit.c)
 target_link_libraries(probe_zombie_hit PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_zombie_hit PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
+# --- DIAGNOSE-Probe (kein ctest-Eintrag): ROOM10A0-Treppen-Richtungswahl ---
+add_executable(probe_stair_10a0 probe_stair_10a0.c)
+target_link_libraries(probe_stair_10a0 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_stair_10a0 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# --- REGRESSION (ctest): ROOM1170-Treppen unter der per-Record-Richtungswahl ---
+add_executable(probe_stair_1170 probe_stair_1170.c)
+target_link_libraries(probe_stair_1170 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_stair_1170 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_stair_1170_regression COMMAND probe_stair_1170)
+
 # --- ORIGINAL-Debug-Menue (UTILITY MENU, PSX.EXE @0x80014444) ---
 add_executable(test_debug_menu test_debug_menu.c)
 target_link_libraries(test_debug_menu PRIVATE re15_engine re15_test_support)
 target_include_directories(test_debug_menu PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_debug_menu COMMAND test_debug_menu)
 set_tests_properties(unit_debug_menu PROPERTIES TIMEOUT 30)
+
+# Diagnose-Sonde (kein ctest): Leons Flinch beim Kraehen-Dive (analysis/crow_victim_anim.md)
+add_executable(probe_crow_flinch probe_crow_flinch.c)
+target_link_libraries(probe_crow_flinch PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_crow_flinch PRIVATE ${CMAKE_SOURCE_DIR}/include)

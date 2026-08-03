@@ -2161,19 +2161,38 @@ static int op_aot_set(scd_thread_t *t)
         hh = (int32_t)(rect_d < 0 ? -rect_d : rect_d) / 2;
     }
     uint8_t event_id = long_form ? t->pc[22] : t->pc[14];   /* act (+8 in the long form) */
-    /* SCD Aot_set types 12/13 = the STAIR band-transition zones (the ROOM1170
-     * outdoor staircase). Route them to the stair setter so stair_common.c can
-     * action-trigger the descent/ascent (band change) — see re15_aot.h. data0
-     * (pc[14], the type-13 "up" end = 1 / type-12 "down" end = 0) → down_end.
-     * chain (pc[4]) = the runtime AOT band (entry+0x82) = the platform this end
-     * sits on: ROOM1170 {0,2,2,4}. NOT floor (pc[3]=49, a constant flag). */
+    /* SCD Aot_set types 12/13 = the STAIR band-transition zones. Route them to the
+     * stair setter so stair_common.c can action-trigger the descent/ascent — see
+     * re15_aot.h. The runtime AOT record IS the raw SCD byte stream (installer stores
+     * pc+2 @0x80040578-84), so the sce-12/13 handler fields map as:
+     *   chain  = pc[4]      = rec+0x2  (band gate @0x80042cac-ccc; ROOM1170 {0,2,2,4})
+     *   side   = pc[14..15] = rec+0xC  u16 LE (lhu @0x80043530/58 resp. @0x800435fc/24)
+     *   count  = pc[16]     = rec+0xE  (lbu @0x800435b8 / @0x8004367c; bands & 7)
+     *   axis   = the sce itself (12 = X, 13 = Z)
+     *   corner/extent = the RAW rect fields along the axis (X: pc[6..7]/pc[10..11],
+     *   Z: pc[8..9]/pc[12..13] — lh 0x4/0x6(a2) + lhu 0x8/0xa(a2) in the handlers).
+     * NOT floor (pc[3]=0x31, a constant flag byte). All shipped stair records are
+     * SHORT form; a hypothetical long form falls back to the AABB-derived values. */
     if (type == 12 || type == 13) {
-        uint8_t chain = t->pc[4];
+        uint8_t  chain = t->pc[4];
+        uint16_t side; uint8_t count; int32_t st_corner, st_extent;
+        if (!long_form) {
+            side      = (uint16_t)(t->pc[14] | ((uint16_t)t->pc[15] << 8));
+            count     = t->pc[16];
+            st_corner = (int32_t)scd_read_le_s16(&t->pc[type == 13 ? 8 : 6]);
+            st_extent = (int32_t)scd_read_le_s16(&t->pc[type == 13 ? 12 : 10]);
+        } else {
+            side      = (uint16_t)(t->pc[22] | ((uint16_t)t->pc[23] << 8));
+            count     = t->pc[24];
+            st_corner = (type == 13) ? cz - hh : cx - hw;
+            st_extent = (type == 13) ? hh * 2 : hw * 2;
+        }
 #ifdef RE15_PLATFORM_PC
-        fprintf(stderr, "[STAIRREG] slot=%d type=%d chain=%d event=%d centre=(%d,%d) half=(%d,%d)\n",
-                slot, type, chain, event_id, cx, cz, hw, hh);
+        fprintf(stderr, "[STAIRREG] slot=%d type=%d chain=%d side=%u count=%u corner=%d extent=%d centre=(%d,%d) half=(%d,%d)\n",
+                slot, type, chain, side, count, st_corner, st_extent, cx, cz, hw, hh);
 #endif
-        re15_aot_set_stair(slot, cx, cz, hw, hh, event_id, chain);
+        re15_aot_set_stair(slot, cx, cz, hw, hh, chain, side, count,
+                           (uint8_t)type, st_corner, st_extent);
     } else {
         /* BYTE-TRUE event AOT (globalization 2026-06-13): the REAL event/sub id is
          * pc[17] (Java disasm "eventId"), NOT pc[14] ("act"/SAT). An Aot_set with

@@ -96,13 +96,23 @@ int re15_aot_set_item_tk(int slot, int32_t cx, int32_t cz,
 
 int re15_aot_set_stair(int slot, int32_t cx, int32_t cz,
                        int32_t half_w, int32_t half_h,
-                       uint8_t down_end, uint8_t band)
+                       uint8_t band, uint16_t side, uint8_t count,
+                       uint8_t axis, int32_t corner, int32_t extent)
 {
-    /* event_id carries the down/up-end flag (data0); band = the runtime aot+0x82
-     * (Aot_set chain pc[4]) = the platform this stair end sits on. */
-    int rc = re15_aot_set(slot, RE15_AOT_TYPE_STAIR, down_end, cx, cz, half_w, half_h);
+    /* band = the runtime aot+0x82 (Aot_set chain pc[4]) = the platform this stair end
+     * sits on (band gate @0x80042cac-ccc). side/count/axis/corner/extent feed the
+     * byte-true per-record direction decision LAB_80043500/LAB_800435cc — see
+     * re15_aot_stair_params_t (re15_aot.h). The old `down_end`/event_id PAIRING key is
+     * gone: event_id held this side flag (only 0/1), so rooms with two same-side stairs
+     * (ROOM10A0) paired the wrong zones and inverted the direction (stair_10a0.md). */
+    int rc = re15_aot_set(slot, RE15_AOT_TYPE_STAIR, (uint8_t)side, cx, cz, half_w, half_h);
     if (rc != 0) return rc;
     g_aot.slots[slot].band = band;
+    g_aot.stair_params[slot].side   = side;
+    g_aot.stair_params[slot].count  = count;
+    g_aot.stair_params[slot].axis   = axis;
+    g_aot.stair_params[slot].corner = corner;
+    g_aot.stair_params[slot].extent = extent;
     return 0;
 }
 
