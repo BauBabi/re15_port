@@ -542,6 +542,11 @@ target_include_directories(test_zombie_hit_fixes PRIVATE ${CMAKE_SOURCE_DIR}/inc
 add_test(NAME unit_zombie_hit_fixes COMMAND test_zombie_hit_fixes)
 set_tests_properties(unit_zombie_hit_fixes PROPERTIES TIMEOUT 30)
 
+# --- DIAGNOSE-Probe (kein ctest-Eintrag): Biss-/Release-/Devour-Blut-Spawns ---
+add_executable(probe_bite_fx probe_bite_fx.c)
+target_link_libraries(probe_bite_fx PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_bite_fx PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
 # --- DIAGNOSE-Probe (kein ctest-Eintrag): ROOM1170-Kraehen grid/armed/Attack-Erreichbarkeit ---
 add_executable(probe_crow_1170 probe_crow_1170.c)
 target_link_libraries(probe_crow_1170 PRIVATE re15_engine re15_test_support)
