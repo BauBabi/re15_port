@@ -2971,15 +2971,15 @@ re_title:;
             if (live) {
                 /* Render the raw .msg body with the real TEX.TIM glyph font in the
                  * per-speaker colour (0x05 code → CLUT row), at the RE'd box origin
-                 * (34,180) for the 0x300 dynamic Message_on. Fall back to the decoded
-                 * ASCII string + 6x8 debug font only if the font/raw is unavailable. */
-                int drawn = (raw && raw_len > 0) &&
-                            re15_render_pc_msg_text(34, 180, raw, raw_len);
-                if (!drawn) {
-                    const char *subtitle = re15_msg_get_text(msg_id);
-                    if (!subtitle) subtitle = re15_to_re2_room1170_subtitle(msg_id);
-                    if (subtitle) re15_debug_text(8, SCREEN_YRES - 32, 0, subtitle);
-                }
+                 * (34,180) for the 0x300 dynamic Message_on.
+                 * KEIN Ersatz-Font mehr (Nutzer 2026-08-03: "diesen fallback font will ich
+                 * gar nicht mehr haben"): die alte 6x8-Notschrift zeichnete denselben Text ein
+                 * ZWEITES Mal in einer Fremdschrift. Das Original hat nur diese eine Schrift —
+                 * fehlt sie, wird eben nichts gezeichnet. Der Item-Prompt schreibt in DIESELBE
+                 * Box (34,180), deshalb weicht die Message, solange er offen ist (sonst
+                 * ueberlagern sich zwei Texte an derselben Stelle). */
+                if (raw && raw_len > 0 && !re15_item_modal_prompt(NULL, NULL))
+                    re15_render_pc_msg_text(34, 180, raw, raw_len);
                 /* PAGE BREAK (FSM state 1): blinking down-arrow = press action for next page. */
                 if (g_scd.message_fsm == 1 && (g_scd.message_blink & 0x18)) {
                     extern void re15_render_pc_down_arrow(int x, int y);
@@ -6232,21 +6232,26 @@ re_title:;
          * NICHT byte-true und hier bewusst benannt statt versteckt: die GLYPHEN. Das Original zieht
          * sie aus der 8x8-Debug-Font in VRAM (768,256), 4 bpp, Glyphenindex = c-0x20
          * (@0x800295DC GetTPage(0,0,0x300,0x100), Zellmathematik @0x8002931C). WOHER diese Textur
-         * geladen wird, ist noch NICHT ermittelt — bis dahin zeichnet der Port seine 6x8-Ersatz-
-         * schrift, aber auf dem ECHTEN 8-px-Raster, damit die Spaltenpositionen stimmen.
+         * geladen wird, ist noch NICHT ermittelt — bis dahin zeichnet der Port die ECHTE
+         * TEX.TIM-Spielschrift auf dem 8-px-Raster des Originals (die frueher hier benutzte
+         * 6x8-Ersatzschrift ist auf Nutzer-Wunsch komplett entfernt, 2026-08-03).
          * Ebenfalls noch offen: die halbtransparente Box (FUN_80014CC4 — ein TILE 256x56 bei x=32,
          * y=76, RGB = die Rampe 0x800BBE66, die im Einblendzustand +8 pro Frame bis >0x40 laeuft,
          * @0x80014D70/@0x80014D90). */
         if (re15_debug_menu_open()) {
-            extern int re15_render_pc_text_overlay_n(int x, int y, const char *text, int n);
+            extern int re15_render_pc_game_text(int x, int y, const char *str, int attr);
             const re15_debug_menu_t *dm = re15_debug_menu_state();
             char dbuf[64];
             int  di;
-            /* Zeichenweise auf dem 8-px-Raster des Originals (die Ersatzschrift rueckt sonst 6). */
+            /* Zeichenweise auf dem 8-px-Raster des Originals (die Spielschrift hat variable
+             * Vorschuebe; das Raster haelt die Spaltenpositionen des Originals). */
             #define DBG_TEXT8(bx, by, str) do {                                        \
                 const char *_s = (str);                                                \
-                for (di = 0; _s[di]; di++)                                             \
-                    re15_render_pc_text_overlay_n((bx) + di * 8, (by), _s + di, 1);     \
+                char _c[2] = {0,0};                                                    \
+                for (di = 0; _s[di]; di++) {                                           \
+                    _c[0] = _s[di];                                                    \
+                    re15_render_pc_game_text((bx) + di * 8, (by), _c, 0);              \
+                }                                                                      \
             } while (0)
             DBG_TEXT8(104, 84,  "- DEBUG MENU -");                    /* @0x80014AD0 */
             DBG_TEXT8(96,  100, "UTILITY MENU");                      /* @0x80014AEC */
