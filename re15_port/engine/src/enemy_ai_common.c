@@ -2506,9 +2506,21 @@ int re15_enemy_ai_live_active(int slot)
          * is never set, savestate-proven), so the in-game attack is the GRAB the engage brain commits
          * (8.8), not the lunge. */
         switch (e->grid_id & 0xf) {                       /* @0x8011f80c[+0x9 & 0xf] sub-mode */
+            case 2:    /* STEHENDER SCHLAEFER (@0x8011f80c[2]=FUN_80101784, behavior 0x02 — der
+                        * Re-Entry-Zweig von 10D0/1140 u.a., 91 Records game-weit): decide via
+                        * Tabelle @0x8011f960, die sich von f840 NUR in [0] unterscheidet
+                        * ([0]=FUN_80101c7c statt FUN_80101b64 — Tabellen-Dump, zombie_10d0_reentry.md
+                        * F1 CONFIRMED); animate = die GETEILTE f890-Kaskade (@0x801017d8-e8).
+                        * Vorher: default:break -> der Zombie war eine tote Statue (Nutzer-Report). */
             case 0: {  /* combat sub-mode 0 -> FUN_8010168c: the DECIDE (f840) then the ANIMATE (f890) */
                 re15_actor_t *player = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-                re15_ai_dispatch_decision(e, player);   /* f840[+0x5] decide (incl. 7 = grab-commit) */
+                if ((e->grid_id & 0xf) == 2 && e->sub_state_1 == 0)
+                    re15_ai_decide_approach(e, player); /* f960[0]=FUN_80101c7c: arc 0x5f4 + LOS-Bit
+                                                         * 0x10 + dist<0xFA0 -> 0x201, 1/8 -> 0x801
+                                                         * (@0x80101c8c-cf4) */
+                else
+                    re15_ai_dispatch_decision(e, player);   /* f840[+0x5] decide (incl. 7 = grab-commit);
+                                                             * f960[1..19] == f840[1..19] (Dump) */
                 /* The f890 ANIMATE half, dispatched on the (possibly just-updated) +0x5 — same frame
                  * as the decide (FUN_8010168c calls decide then animate). The ported animate handlers:
                  *   +0x5 = 3/4 -> the GRAB (FUN_80102548) = the in-game attack (8.8);
