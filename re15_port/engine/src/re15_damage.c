@@ -141,14 +141,26 @@ void re15_wound_debug_all(int level)
     s_wounds_gen++;
 }
 
-/* Overlay-Hurt-Helper (STAGE1, Dispatcher @0x8010a580: lbu +0x5 -> jalr 0x801201b8[substate];
- * analysis/blood_decals.md §3.2). Panel/Amount-Paare je Hurt-Substate: */
+/* GRAB-RELEASE-Wund-Helper (KORRIGIERT 2026-08-03, analysis/player_hit_chain.md HIT-1/HIT-2:
+ * der Dispatcher @0x8010a580 ist PHASE 4 der Grab-OPFER-FSM 0x8010a2cc (cmd 5) und laeuft
+ * genau EINMAL pro UEBERLEBTEM Grab — aca59 ist dort die GRAB-RICHTUNG, kein Hit-Substate;
+ * plain cmd-2-Hits stempeln NIE ueber diese Tabelle, die EXE-Handler [0]/[1] sind tot).
+ * jalr 0x801201b8[dir] -> Helper: */
 static const struct { int8_t panel; uint8_t amt; } s_wound_helper[4][3] = {
-    { {0,10}, {5,50}, {7,50} },   /* substate 0 @0x8010a1cc — Front-Torso schwer */
-    { {0,10}, {4,50}, {7,50} },   /* substate 1 @0x8010a208 — Rueck-Torso schwer */
-    { {1,50}, {-1,0}, {-1,0} },   /* substate 2 @0x8010a244 — Standard front    */
-    { {2,50}, {-1,0}, {-1,0} },   /* substate 3 @0x8010a268 — Standard back     */
+    { {0,10}, {5,50}, {7,50} },   /* dir 0 @0x8010a1cc — Grab von VORN ueberlebt  */
+    { {0,10}, {4,50}, {7,50} },   /* dir 1 @0x8010a208 — Grab von HINTEN ueberlebt */
+    { {1,50}, {-1,0}, {-1,0} },   /* dir 2 @0x8010a244 — Krabbler-Grab (offen)     */
+    { {2,50}, {-1,0}, {-1,0} },   /* dir 3 @0x8010a268                             */
 };
+
+/* Stempel-Eintritt fuer den ueberlebten Grab-Release (player_hit_chain.md F2): Beleg
+ * @0x8010a580-5b0 (lbu aca59; jalr 0x801201b8[dir]); Devour/Death stempeln NICHT. */
+void re15_wound_release_stamp(int dir)
+{
+    if (dir < 0 || dir > 3) return;
+    for (int i = 0; i < 3 && s_wound_helper[dir][i].panel >= 0; i++)
+        re15_wound_add(s_wound_helper[dir][i].panel, s_wound_helper[dir][i].amt);
+}
 
 static int hit_from_front(const re15_actor_t *p, int32_t src_x, int32_t src_z)
 {
@@ -198,16 +210,12 @@ int re15_player_take_damage(re15_actor_t *p, uint8_t attack_type,
         p->state       = 3;                                             /* +0x4 death */
         p->sub_state_1 = 0;
         p->sub_state_2 = 0;
-    } else {
-        /* Blut-Decal-Trigger: der Overlay-Hurt-Dispatcher (@0x8010a580) feuert beim
-         * Hurt-EINTRITT (state==2) die Panel-Helper des Substates (Tabelle oben, §3.2).
-         * Der Port erzeugt heute nur die Substates 2/3 (@80012ea4-f04); die Writer der
-         * Schwer-Substates 0/1 sind dokumentiert OFFEN (analysis/blood_decals.md §7.1). */
-        int ss = p->sub_state_1;
-        if (ss >= 0 && ss <= 3)
-            for (int i = 0; i < 3 && s_wound_helper[ss][i].panel >= 0; i++)
-                re15_wound_add(s_wound_helper[ss][i].panel, s_wound_helper[ss][i].amt);
     }
+    /* KEIN Wund-Stempel hier (KORREKTUR 2026-08-03, player_hit_chain.md F1/HIT-3): das Original
+     * stempelt beim plain cmd-2-Hit NICHTS — Byte-Scan der EXE-Handler-Region 0x80035b70-0x80036700
+     * ohne jeden 0x80037edc-Aufruf, und FUN_80012d60 ruft ihn ebenfalls nicht. Der fruehere
+     * Hurt-Entry-Stempel hier war eine Fehldeutung des Dispatchers @0x8010a580 (der ist Phase 4
+     * der Grab-Opfer-FSM -> re15_wound_release_stamp am Grab-Release). */
     return 1;
 }
 
@@ -761,7 +769,7 @@ void re15_enemy_gore_tick(re15_actor_t *e)
 {
     if (!e || !e->active) return;
     if (e->hit_react & 0x2) {                                  /* +0x93 & 2 (@0x80106a98) */
-        re15_esp_fx_spawn(re15_esp_room_bank(), 0 /*effect-id*/, 0 /*sub*/,
+        re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0 /*effect-id*/, 0 /*sub*/, 0x2000 /* Original-a0 (D6, bite_blood_fx.md F6) */,
                           e->x, e->y, e->z, (int16_t)e->rot_y);  /* a1 = entity+0x6a = rot_y */
         e->hit_react &= (uint8_t)~0x2;                         /* +0x93 &= 0xfd (@0x80106abc) */
     }
@@ -848,7 +856,7 @@ void re15_enemy_hurt_fx(re15_actor_t *e)
     if (!e || !e->active) return;
     if (e->state != 2) return;               /* HURT state (entity+4==2) */
     if (e->sub_state_3 != 0) return;         /* FUN_80105b7c phase 0 (entity+7==0): spawn once */
-    re15_esp_fx_spawn(re15_esp_room_bank(), 0 /*effect-id*/, 0 /*sub*/,
+    re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0 /*effect-id*/, 0 /*sub*/, 0x2000 /* Original-a0 (D6, bite_blood_fx.md F6) */,
                       e->x, e->y, e->z, (int16_t)e->rot_y);   /* a0=0x2000 -> effect-id 0, a1=rot_y */
     e->hit_react   |= 0x1;                    /* entity+0x93 |= 1 */
     e->sub_state_3  = 1;                      /* entity+7 = 1 (phase advance) */
@@ -887,7 +895,7 @@ void re15_enemy_hurt_blood(re15_actor_t *e)
                  : 2;                                                   /* @0x80105cd8: part 2 */
     int32_t g[3];
     re15_enemy_bone_world_pos(e, bone, g);
-    re15_esp_fx_spawn(re15_esp_room_bank(), 0 /*effect-id*/, 0 /*sub*/,
+    re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0 /*effect-id*/, 0 /*sub*/, 0x2000 /* Original-a0 (D6, bite_blood_fx.md F6) */,
                       g[0], g[1], g[2], (int16_t)e->rot_y);
     re15_esp_fx_splatter(re15_esp_room_bank(), 0 /*blood*/, 8,
                          g[0], g[1], g[2], e->y);      /* floor = the actor's ground Y */
@@ -900,7 +908,7 @@ void re15_enemy_blood_at_bone(re15_actor_t *e, int bone)
     if (!e || !e->active) return;
     int32_t g[3];
     re15_enemy_bone_world_pos(e, bone, g);
-    re15_esp_fx_spawn(re15_esp_room_bank(), 0 /*effect-id*/, 0 /*sub*/,
+    re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0 /*effect-id*/, 0 /*sub*/, 0x2000 /* Original-a0 (D6, bite_blood_fx.md F6) */,
                       g[0], g[1], g[2], (int16_t)e->rot_y);
 }
 
@@ -921,7 +929,7 @@ void re15_enemy_death_fx(re15_actor_t *e)
     int32_t g[3];
     int gore = (e->type < 0x30) ? (int)s_gore_bone[e->type] : 0;   /* @0x8011f784[type] */
     re15_enemy_bone_world_pos(e, gore, g);
-    re15_esp_fx_spawn(re15_esp_room_bank(), 0 /*effect-id*/, 0 /*sub*/,
+    re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0 /*effect-id*/, 0 /*sub*/, 0x2000 /* Original-a0 (D6, bite_blood_fx.md F6) */,
                       g[0], g[1], g[2], (int16_t)e->rot_y);        /* @0x80106d2c ALWAYS */
     /* The two ZONE-GATED extra bursts (@0x80106d5c part 0 / @0x80106d8c part 2) belong to the STANDING
      * death handler FUN_80106c18 specifically, not to every caller of this helper — they are emitted

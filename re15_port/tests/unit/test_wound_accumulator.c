@@ -15,14 +15,13 @@ int main(void)
 {
     re15_wound_reset();
 
-    /* Ground-Truth-Sequenz: 3x Helper-Substate-0 */
-    for (int i = 0; i < 3; i++) {
-        re15_wound_add(0, 10);
-        re15_wound_add(5, 50);
-        re15_wound_add(7, 50);
-    }
+    /* Ground-Truth-Sequenz: 3x UEBERLEBTER Front-Grab (KORRIGIERT 2026-08-03,
+     * player_hit_chain.md HIT-1/HIT-5: der Dispatcher ist Phase 4 der Grab-Opfer-FSM,
+     * dir 0 = Grab von vorn — exakt die drei per Mash ueberlebten Grabs des Nutzer-Saves). */
+    for (int i = 0; i < 3; i++)
+        re15_wound_release_stamp(0);
     CHECK(re15_wound_level(0) == 0, "Panel 0 bleibt Level 0 (3x10=30 < 120)");
-    CHECK(re15_wound_level(5) == 1, "Panel 5 -> Level 1 (150 >= 120 beim 3. Treffer)");
+    CHECK(re15_wound_level(5) == 1, "Panel 5 -> Level 1 (150 >= 120 beim 3. Grab)");
     CHECK(re15_wound_level(7) == 1, "Panel 7 -> Level 1");
     for (int p = 1; p < 8; p++)
         if (p != 5 && p != 7)

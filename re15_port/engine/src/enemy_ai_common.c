@@ -672,6 +672,25 @@ static void re15_victim_clip_map(uint8_t *c_intro, uint8_t *c_hold, uint8_t *c_r
     }
 }
 
+/* Spieler-Bone-Weltposition in der VICTIM-Pose (bite_blood_fx.md D2): posiert aus der
+ * victim-Bank des Grabbers (skel_victim/anim_victim) — exakt die Bank, aus der der Port
+ * Leon im Grab/Devour animiert. Bone 8 = +0x5A0 = 172*8+0x40 (@0x8010a570/@0x8010a7a4).
+ * Fallback (kein Bank/headless) = Spieler-Root. */
+static void re15_player_victim_bone_pos(int bone, int32_t out[3])
+{
+    re15_actor_t *player = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    out[0] = player->x; out[1] = player->y; out[2] = player->z;
+    re15_enemy_bank_t *vb = re15_enemy_find(g_player_victim_type);
+    if (!vb || !vb->victim_ok || bone < 0 || bone >= vb->skel_victim.bone_count) return;
+    int kf = re15_compute_actor_kf(&vb->anim_victim, &vb->skel_victim, player, -1,
+                                   (uint32_t)player->anim_frame);
+    re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+    g_anim_pose_actor = NULL;                     /* Pose-QUERY, kein Render (kein Crossfade) */
+    if (re15_skel_compute_pose(&vb->skel_victim, kf, poses) != 0) return;
+    re15_skel_bone_to_world(poses[bone].trans, player->rot_y,
+                            player->x, player->y, player->z, out);
+}
+
 /* The zombie's THROW-OFF [4] starts the player's release finish in lockstep (byte-true: the grab's
  * escape path writes DAT_800aca5a = 4 = the struggle FSM's release phase; clip base+2). */
 void re15_player_victim_throwoff(void)
@@ -709,6 +728,12 @@ void re15_player_victim_devour(const re15_actor_t *zombie)
     s_victim_fresh = 1;
     re15_audio_core_se(1);                              /* collapse-entry SE: Se_on(0x4010001) = CORE
                                                          * bank4 record 1 (FUN_8010a6f8 init) */
+    {   /* Devour-ENTRY-Blut (FUN_8010a6f8: a0=0x1500 @0x8010a770, Anker Spieler-Bone 8
+         * @0x8010a7a0/a4 = +0x5A0; bite_blood_fx.md D4a, CONFIRMED). */
+        int32_t db8[3]; re15_player_victim_bone_pos(8, db8);
+        re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x1500,
+                             db8[0], db8[1], db8[2], (int16_t)player->rot_y);
+    }
 }
 
 /* Advance Leon's grab-victim animation one game tick (game_step, after re15_enemy_ai_run_all so the
@@ -797,8 +822,12 @@ void re15_player_victim_tick(void)
          * (Dog clip 0xB may end before 0x37 -> cap to the clip end so the eaten burst still fires.) */
         int blood_fr = 0x37; if (fc - 1 < blood_fr) blood_fr = fc - 1;
         if (player->anim_frame == blood_fr) {
-            re15_esp_fx_spawn(re15_esp_room_bank(), 0, 0,
-                              player->x, player->y, player->z, (int16_t)player->rot_y);
+            /* KORRIGIERT (bite_blood_fx.md D4b/F3): a0 = 0x2000 (@0x8010a82c — der alte Spawn
+             * lief mit Default-Scale 0x1000 = halb so gross) und Anker = Spieler-Bone 8
+             * (@0x8010a84c = +0x5A0), nicht der Root. */
+            int32_t bb8[3]; re15_player_victim_bone_pos(8, bb8);
+            re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x2000,
+                                 bb8[0], bb8[1], bb8[2], (int16_t)player->rot_y);
             re15_audio_core_se(3);
         }
     } else {                                           /* RELEASE finish (state 3): release clip once -> free.
@@ -1195,6 +1224,17 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
                     bite_fc = bb->anim.clips[e->motion].frame_count;
                 int bite_now = (bite_fc > 0) ? (((int)e->anim_frame % bite_fc) == bite_fc - 1)
                                              : re15_enemy_clip_done(e);
+                if (bite_now) {
+                    /* Biss-Zyklus-BLUT (@0x80102818, im selben Wrap-Zweig wie das HP-5
+                     * @0x801027dc): Effekt 0 sub 0, scale 0x1500 (@0x80102808), am ZOMBIE-
+                     * Bone 10 (Typen 0x13/0x14: 11; Select @0x801027f4-0x80102804), a1 =
+                     * Zombie-rot_y (@0x8010280c), a3 = (0,0,0) @0x8011f7d4.
+                     * bite_blood_fx.md D1 (CONFIRMED) — der vom Nutzer vermisste Biss-Effekt. */
+                    int bbone = (e->type == 0x13 || e->type == 0x14) ? 11 : 10;
+                    int32_t bg[3]; re15_enemy_bone_world_pos(e, bbone, bg);
+                    re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x1500,
+                                         bg[0], bg[1], bg[2], (int16_t)e->rot_y);
+                }
                 if (bite_now && player->hp >= 0) {
                     player->hp = (int16_t)(player->hp - 5);
                     if (player->hp < 0) player->state = 7;
@@ -1236,6 +1276,19 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
             re15_audio_room_se(7);
             re15_audio_room_se(7);            /* SE 7 plays TWICE (@0x80102920 AND @0x80102960) */
             re15_player_victim_throwoff();
+            /* UEBERLEBTER GRAB = die einzige Stelle, an der die Wund-Decals stempeln (Phase 4
+             * der Opfer-FSM: Dispatcher @0x8010a580-5b0 jalr 0x801201b8[aca59]; player_hit_
+             * chain.md HIT-1/F2, doppelt verifiziert via bite_blood_fx §2.2). dir = Grab-
+             * Richtung: face (+0x5=3) -> 0, behind (4) -> 1 (aca59-Write des Grab-Commits
+             * @0x80102640). Devour/Death stempeln NICHT. Dazu das Release-BLUT am Spieler-
+             * Bone 8 (scale 0x1500 @0x8010a550, Anker +0x5A0 @0x8010a568/70, a3=(0,0,0)
+             * @0x801201c8; bite_blood_fx.md D3). */
+            re15_wound_release_stamp((e->sub_state_1 == 3) ? 0 : 1);
+            {
+                int32_t rb8[3]; re15_player_victim_bone_pos(8, rb8);
+                re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x1500,
+                                     rb8[0], rb8[1], rb8[2], (int16_t)player->rot_y);
+            }
             s_grab_mercy_timer = 0x5a;
             e->sub_state_2 = 5;
             break;
@@ -3472,11 +3525,26 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
                                                               * cmd 2 @0x80113b00 + dir @0x80113b28 +
                                                               * aca5a=0 @0x80113b30 (cmd FSM = OPEN) */
                 re15_crow_screech(e);                        /* 0x801161e8 @0x80113b7c */
+                /* Kraehen-Wund-DECALS BEIM KONTAKT (@0x80113b7c ruft 0x801161e8, dort nach
+                 * +0x1ec gestaffelt @0x80116200-3c): vert<1500 -> Panels 1(+10)+2(+10);
+                 * sonst vert<3000 -> 3(+10)+4(+0x28). bite_blood_fx.md Addendum 3 —
+                 * die Kraehe stempelt am KONTAKT, nicht im Release-Pfad. */
+                if (e->crow_vert_err < 1500)      { re15_wound_add(1, 10); re15_wound_add(2, 10); }
+                else if (e->crow_vert_err < 3000) { re15_wound_add(3, 10); re15_wound_add(4, 0x28); }
             }
-            /* phase-2 tail @0x80113b90-bd0: nonzero +0x1d7 -> pose spawn 0x80019700(bank<<11,
-             * a3=0x8012110c NULL table = invisible, no port effect) + +0x1d7-- per tick
-             * (audit wf_827f186d crow #13) */
-            if (e->crow_bank != 0) e->crow_bank--;
+            /* phase-2 tail @0x80113b90-bd0: nonzero +0x1d7 -> PRO FRAME ein BLUT-Spawn mit
+             * scale = ctr<<11 (@0x80113b98 sll 0xb, Spawn @0x80113bb0) am KRAEHEN-Bone 2
+             * (pool+0x198), a3=(0,0,0) @0x8012110c; Dekrement @0x80113bcc. KORRIGIERT
+             * (bite_blood_fx.md §3.1 + Addendum, CONFIRMED): die alte "NULL table =
+             * invisible"-Lesart war falsch — das ist die sichtbare 6-Frame-Blutfahne
+             * nach dem Dive-Treffer. */
+            if (e->crow_bank != 0) {
+                int32_t cb2[3]; re15_enemy_bone_world_pos(e, 2, cb2);
+                re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0,
+                                     (uint16_t)((unsigned)e->crow_bank << 11),
+                                     cb2[0], cb2[1], cb2[2], (int16_t)e->rot_y);
+                e->crow_bank--;
+            }
         }
         e->y += e->crow_vvel;
         re15_crow_advance(e);
@@ -3527,6 +3595,12 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
             re15_crow_screech(e);                            /* 0x801161e8 @0x80113ef4 — the entry
                                                               * plays the distance-tiered screech AND
                                                               * Se(2) (audit wf_827f186d crow #9) */
+            {   /* Peck-Grab-Entry-BLUT: 0x2000 am Kraehen-Bone 2 (@0x80113f0c/0x80113f6c;
+                 * bite_blood_fx.md §3.1 D5b, CONFIRMED) */
+                int32_t pb2[3]; re15_enemy_bone_world_pos(e, 2, pb2);
+                re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x2000,
+                                     pb2[0], pb2[1], pb2[2], (int16_t)e->rot_y);
+            }
             if (player->hp < 0) {                            /* lethal recheck @0x80113f08: cmd 3
                                                               * @0x80113f20 (death FSM = OPEN) + KILL
                                                               * broadcast @0x80113f24-30 + +0x1d8=1 */
@@ -3538,7 +3612,13 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
             e->sub_state_2 = 1;
         }
         re15_crow_anim(e);
-        if (e->crow_timer == 0) { e->crow_timer = 30; re15_audio_room_se(2); }  /* re-peck every 30f @0x8011400c */
+        if (e->crow_timer == 0) { e->crow_timer = 30; re15_audio_room_se(2);    /* re-peck every 30f @0x8011400c */
+            /* pro Peck-Zyklus ein 0x2000-Blut am Bone 2 (Zyklus-Gate @0x80113fc4, Spawn
+             * @0x80113fe4; bite_blood_fx.md §3.1, CONFIRMED) */
+            int32_t kb2[3]; re15_enemy_bone_world_pos(e, 2, kb2);
+            re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x2000,
+                                 kb2[0], kb2[1], kb2[2], (int16_t)e->rot_y);
+        }
         else e->crow_timer--;
         if ((e->crow_timer % 10) == 0) re15_audio_room_se(0);   /* chirp every 10f @0x80114060 */
         /* struggle drain = PAD-MASH driven, byte-true move[13] @0x80114068 `jal 0x80037024` ->
@@ -3605,6 +3685,12 @@ static void re15_crow_move(re15_actor_t *e, re15_actor_t *player)
         if (e->sub_state_2 == 0) {
             re15_crow_clip(e, 8);
             re15_crow_screech(e);                            /* 0x801161e8 @0x801144bc */
+            {   /* Strike-BLUT: 0x1000 am Kraehen-Bone 2 (@0x801144c4/0x801144e0;
+                 * bite_blood_fx.md §3.1 D5c, CONFIRMED) */
+                int32_t sb2[3]; re15_enemy_bone_world_pos(e, 2, sb2);
+                re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x1000,
+                                     sb2[0], sb2[1], sb2[2], (int16_t)e->rot_y);
+            }
             re15_crow_hit_player_ungated(e, player, 4);      /* STRIKE: -4 HP @0x801144f0-fc UNGATED
                                                               * (kein +0x93 im Pfad — Dossier D4) */
             e->sub_state_2 = 1;
@@ -4405,11 +4491,11 @@ static void re15_dog_state456(re15_actor_t *e, re15_actor_t *pl)
         s_player_grabbed = 1;
         if (e->sub_state_2 == 0) {                        /* setup phase @0x80111b04 / @0x80111d28 */
             re15_player_victim_latch(e, pl);              /* pin + animate Leon from the dog's victim bank */
-            re15_esp_fx_spawn(re15_esp_room_bank(), 0, 0,
+            re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x2000 /* Original-a0 (D6) */,
                               pl->x, pl->y, pl->z, (int16_t)pl->rot_y);   /* eaten blood burst */
             e->sub_state_2 = 1;
         } else if (e->sub_state_2 == 1 && s_victim_phase >= 2) {   /* eaten past the shake phases -> KILL */
-            re15_esp_fx_spawn(re15_esp_room_bank(), 0, 0,
+            re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x2000 /* Original-a0 (D6) */,
                               pl->x, pl->y, pl->z, (int16_t)pl->rot_y);   /* gore burst @kill */
             re15_player_victim_devour(e);                 /* collapse -> player STATE 7 (aca58=7 @0x80111ea0) */
             e->sub_state_2 = 2;

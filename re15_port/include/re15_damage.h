@@ -232,6 +232,9 @@ void re15_wound_reset(void);
 void re15_wound_add(int panel, int amount);
 int  re15_wound_level(int panel);
 int  re15_wound_generation(void);
+/* Ueberlebter-Grab-Release-Stempel (Phase 4 der Opfer-FSM @0x8010a580-5b0; dir = Grab-Richtung
+ * 0 vorn / 1 hinten / 2-3 Krabbler). player_hit_chain.md F2 — NUR am Release rufen. */
+void re15_wound_release_stamp(int dir);
 
 /* STAGE1 zombie AI byte-true primitives (handler FUN_8011d6d4). re15_enemy_player_dist
  * = the cached distance SquareRoot0(DX²+DZ²) (16-bit-wrapped deltas). re15_ai_arc_test
