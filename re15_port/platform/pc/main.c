@@ -5526,7 +5526,15 @@ re_title:;
                         { -nhx, 0,  nhz }, { -nhx, 0, -nhz },
                         {  nhx, 0,  nhz }, {  nhx, 0, -nhz },
                     };
-                    int32_t nsh_world[3] = { npc->x, npc->y, npc->z };
+                    /* Quad-Hoehe = BODEN, nicht Actor-Y: FUN_8001b064 setzt `t[1] = param_2`
+                     * (Decompile RE_15_Quellcode_V2) — das Y kommt als a1 rein, und der
+                     * Kraehen-Root-Post-Pass uebergibt a1 = +0x1ba = die Floor-Referenz
+                     * (@0x8011221c-234, alle States). Fuer Boden-Gegner ist y == floor,
+                     * die Kraehe liegt/fliegt aber UEBER +0x1ba (Leiche: floor-400
+                     * @0x801148e4) — mit npc->y schwebte die Blutlache im Koerper
+                     * (Nutzer-Report 2026-08-03). */
+                    int32_t nsh_y = (npc->type == 0x21) ? (int32_t)npc->crow_floor : npc->y;
+                    int32_t nsh_world[3] = { npc->x, nsh_y, npc->z };
                     int32_t nsh_rot[9], nsh_trans[3];
                     /* byte-true: RotMatrixY(ACTOR rot_y) via the trig LUT (FUN_8001b064 @0x8001b0e4
                      * uses entity+0x6a, NOT the camera yaw — RE'd wf_13911cba). nyaw above IS that
