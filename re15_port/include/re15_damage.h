@@ -231,6 +231,11 @@ void re15_enemy_apply_hitbox(re15_actor_t *a, uint8_t type);
 void re15_wound_reset(void);
 void re15_wound_add(int panel, int amount);
 int  re15_wound_level(int panel);
+/* v5-Save-Serialisierung der Wund-Tabelle (8 Panels x {level, acc}) — das Original speichert
+ * sie im Save-Blob (GSB+0x130 @0x800b10ec im 0x1230-memcpy @0x800261c4-d8). Load bumpt die
+ * Generation (Wound-Sync re-stempelt nach dem TIM-Upload). */
+void re15_wound_save(uint8_t out[8][2]);
+void re15_wound_load(const uint8_t in[8][2]);
 int  re15_wound_generation(void);
 /* Ueberlebter-Grab-Release-Stempel (Phase 4 der Opfer-FSM @0x8010a580-5b0; dir = Grab-Richtung
  * 0 vorn / 1 hinten / 2-3 Krabbler). player_hit_chain.md F2 — NUR am Release rufen. */

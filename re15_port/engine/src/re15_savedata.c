@@ -26,13 +26,28 @@ int re15_savedata_validate(re15_savedata_t *sd)
 {
     if (!sd) return -1;
     if (sd->magic != RE15_SAVE_MAGIC) return -1;
-    if (sd->version >= 4) {
+    if (sd->version >= 5) {
         return (sd->checksum == re15_savedata_checksum(sd)) ? 0 : -1;
     }
+    if (sd->version == 4) {
+        /* v4 layout = the v5 struct WITHOUT wounds[]: its checksum word sits at
+         * offsetof(wounds). Validate the old extent, upgrade: zero wounds (older
+         * saves load clean), version 5, fresh checksum. */
+        const uint8_t *p = (const uint8_t *)sd;
+        size_t old_ck_off = offsetof(re15_savedata_t, wounds);
+        uint32_t sum = 0, old_ck;
+        for (size_t i = 0; i < old_ck_off; i++) sum += p[i];
+        memcpy(&old_ck, p + old_ck_off, sizeof old_ck);
+        if (sum != old_ck) return -1;
+        memset(sd->wounds, 0, sizeof sd->wounds);
+        sd->version  = RE15_SAVE_VERSION;
+        sd->checksum = re15_savedata_checksum(sd);
+        return 0;
+    }
     if (sd->version == 2 || sd->version == 3) {
-        /* v2/v3 layout = the v4 struct WITHOUT box[]: its checksum word sits
-         * where box[] now starts. Validate the old extent, then upgrade in
-         * place: empty box (per the header note), version 4, fresh checksum. */
+        /* v2/v3 layout = the struct WITHOUT box[] and wounds[]: its checksum word
+         * sits where box[] now starts. Validate the old extent, then upgrade in
+         * place: empty box + clean wounds, current version, fresh checksum. */
         const uint8_t *p = (const uint8_t *)sd;
         size_t old_ck_off = offsetof(re15_savedata_t, box);
         uint32_t sum = 0, old_ck;
@@ -40,6 +55,7 @@ int re15_savedata_validate(re15_savedata_t *sd)
         memcpy(&old_ck, p + old_ck_off, sizeof old_ck);
         if (sum != old_ck) return -1;
         memset(sd->box, 0, sizeof sd->box);
+        memset(sd->wounds, 0, sizeof sd->wounds);
         sd->version  = RE15_SAVE_VERSION;
         sd->checksum = re15_savedata_checksum(sd);
         return 0;
@@ -72,6 +88,8 @@ void re15_savedata_capture(re15_savedata_t *out, uint32_t playtime, uint16_t sav
     memcpy(out->inv,   g_inv.slots, sizeof(out->inv));
     memcpy(out->flags, g_game.flags, sizeof(out->flags));
     re15_itembox_export(out->box);       /* v4 ITEM BOX contents (page*8+i) */
+    re15_wound_save(out->wounds);        /* v5 Blut-Decal-Wunden (GSB+0x130-Analog @0x800b10ec —
+                                          * im Original-Save-memcpy @0x800261c4-d8 enthalten) */
 
     out->checksum = re15_savedata_checksum(out);
 }
@@ -114,6 +132,13 @@ int re15_savedata_restore(const re15_savedata_t *in, uint16_t *loaded_room)
     re15_inv_set_equipped_slot(in->equipped_slot);
     memcpy(g_game.flags, in->flags, sizeof(g_game.flags));
     re15_itembox_import(in->box);        /* v4 ITEM BOX contents survive load */
+    /* v5 Wund-Restore — setzt IMMER alle 8 Panels (aeltere Saves laden Nullen aus dem
+     * Upgrade-Pfad): behebt zugleich den Stale-Blut-Bug (analysis/save_injured_state.md
+     * SI-3 — CONTINUE liess das Blut des gestorbenen Runs stehen, weil kein Spiel-Caller
+     * ausser new_game re15_wound_reset rief) und stellt die gespeicherten Blut-Level
+     * wieder her (SI-1; der Generation-Bump laesst den Platform-Wound-Sync nach dem
+     * naechsten TIM-Upload automatisch re-stempeln). */
+    re15_wound_load(in->wounds);
 
     if (loaded_room) *loaded_room = in->room;
     return 0;

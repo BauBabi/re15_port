@@ -43,8 +43,10 @@ int re15_memcard_load(const char *path, int slot, re15_savedata_t *sd);
 int re15_memcard_list(const char *path, int used[RE15_SAVE_SLOTS],
                       char titles[RE15_SAVE_SLOTS][RE15_MC_TITLE_LEN]);
 
-/* Highest save_count across all slots (0 if none) — the RE1.5 global save counter
- * (DAT_800b0fbd) is incremented per save; the next save is this + 1. */
+/* Highest save_count across all slots (0 if none). NUR noch Diagnose/Tests: der Save-Zaehler
+ * DAT_800b0fbd lebt byte-true im LAUFENDEN Spielzustand (frisch = 0, Save = PRE-Inkrement,
+ * Load restauriert ihn aus dem Save @0x80026290-a0) — die Karte wird fuer die Nummer NIE
+ * gelesen (analysis/save_counter.md SC-1; der fruehere Seed aus diesem Maximum war erfunden). */
 int re15_memcard_max_save_count(const char *path);
 
 #endif /* RE15_MEMCARD_H */

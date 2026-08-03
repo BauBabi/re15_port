@@ -131,6 +131,25 @@ void re15_wound_add(int panel, int amount)
 int re15_wound_level(int panel) { return (panel >= 0 && panel < 8) ? s_wounds[panel].level : 0; }
 int re15_wound_generation(void) { return s_wounds_gen; }
 
+/* Save-Serialisierung (analysis/save_injured_state.md SI-1): die Wund-Tabelle @0x800b10ec
+ * liegt bei GSB+0x130 IM Original-Save-Blob (SAVE-memcpy a1=0x800b0fbc a2=0x1230
+ * @0x800261c4-d8; LOAD-Restore @0x80026290-a0) — die Blut-Level werden mitgespeichert.
+ * Load setzt alle 8 Panels exakt (ersetzt damit auch das fehlende wound_reset im
+ * CONTINUE-Pfad, SI-3) und bumpt die Generation, damit der Platform-Wound-Sync nach dem
+ * naechsten TIM-Upload automatisch re-stempelt. */
+void re15_wound_save(uint8_t out[8][2])
+{
+    for (int i = 0; i < 8; i++) { out[i][0] = s_wounds[i].level; out[i][1] = s_wounds[i].acc; }
+}
+void re15_wound_load(const uint8_t in[8][2])
+{
+    for (int i = 0; i < 8; i++) {
+        s_wounds[i].level = (uint8_t)((in[i][0] >= 2) ? 2 : in[i][0]);   /* Level-Clamp wie @0x80037f40 */
+        s_wounds[i].acc   = in[i][1];
+    }
+    s_wounds_gen++;
+}
+
 /* Debug-Eingang des Originals (LAB_80037de4, im Shipped-Build OHNE Caller — der
  * "alles-verwunden"-Knopf): setzt ALLE 8 Levels auf das Byte @0x80074288 (initial 1)
  * und blittet alle; @0x80037e9c-ed0 zykelt das Byte 1->2->1. Port-Zugang: env

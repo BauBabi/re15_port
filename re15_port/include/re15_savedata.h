@@ -26,7 +26,7 @@
 #include "re15_itembox.h"    /* RE15_BOX_SLOTS — ITEM BOX contents (v4)          */
 
 #define RE15_SAVE_MAGIC    0x35314552u   /* "RE15" little-endian                 */
-#define RE15_SAVE_VERSION  4             /* v2: + weapon_id; v3: + camera cut (restore the
+#define RE15_SAVE_VERSION  5             /* v2: + weapon_id; v3: + camera cut (restore the
                                           * save-time framing/background — reuses a reserved
                                           * byte, so v2 saves stay layout+checksum compatible
                                           * and load with cut 0 = the room's default);
@@ -35,7 +35,13 @@
                                           * @0x800b1444/1484/14a4/14c4 wholesale inside the
                                           * 0x1230-byte GSB memcpy @0x800261c4-d4, so box
                                           * persistence is RE1.5-shaped; v2/v3 blocks load
-                                          * with an EMPTY box via the validate/upgrade path). */
+                                          * with an EMPTY box via the validate/upgrade path);
+                                          * v5: + wounds[8][2] (die BLUT-DECAL-Wund-Tabelle
+                                          * @0x800b10ec liegt bei GSB+0x130 IM 0x1230-Save-
+                                          * memcpy @0x800261c4-d8 — das Original speichert
+                                          * die Blut-Level nachweislich mit; analysis/
+                                          * save_injured_state.md SI-1. Aeltere Blocks
+                                          * laden mit Null-Wunden = sauber). */
 
 /* The captured game-state. Fields are ordered u32 → u16 → u8 → arrays to avoid
  * implicit padding, so the layout (and thus the checksum) is deterministic. */
@@ -69,6 +75,10 @@ typedef struct {
                                             * checksum, so the v2/v3 checksum word
                                             * sits at offsetof(box) — the upgrade
                                             * path reads it there).              */
+    uint8_t  wounds[8][2];     /* v5: die Wund-Tabelle (8 Panels x {level, acc}) — das
+                                * GSB+0x130-Analog (@0x800b10ec, Stride 0x1c, im Save-
+                                * memcpy enthalten). Vor der checksum eingefuegt; das
+                                * v4-Checksum-Wort sitzt bei offsetof(wounds).       */
     uint32_t checksum;         /* additive checksum over all preceding bytes      */
 } re15_savedata_t;
 

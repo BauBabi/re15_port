@@ -229,7 +229,9 @@ int main(void)
     box_at(3, 7)->flags = RE15_BOX_KIND_WIDE;
     re15_savedata_t sd;
     re15_savedata_capture(&sd, 100, 1);
-    CHECK(sd.version == 4, "(v4) capture stamps version 4, got %u", sd.version);
+    CHECK(sd.version == RE15_SAVE_VERSION,
+          "capture stamps the current save version (%u), got %u",
+          (unsigned)RE15_SAVE_VERSION, sd.version);
     CHECK(sd.box[0].id == 0x03 && sd.box[1 * 8 + 4].id == 0x15 &&
           sd.box[3 * 8 + 7].id == 0x0e && sd.box[3 * 8 + 7].flags == RE15_BOX_KIND_WIDE,
           "(v4) box flattened page*8+i into the block");

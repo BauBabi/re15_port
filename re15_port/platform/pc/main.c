@@ -485,9 +485,11 @@ static void pc_load_room_prop_set(const re15_rdt_t *rdt, re15_md1_t md1[6], int 
  * the new-game briefing defaults. */
 static re15_savedata_t s_resume_sd;
 static int             s_resume_pending = 0;
-/* Persistent save number (RE1.5 DAT_800b0fbd): restored from the loaded save on CONTINUE (case 9
- * copies it inside the save region), then carried forward per save — so a load-then-save continues
- * the counter from the loaded save, not max-across-slots+1. 0 = "not yet seeded from a load". */
+/* Save-Zaehler = RE1.5 DAT_800b0fbd im LIVE-Game-State-Block (byte-true, analysis/save_counter.md):
+ * frisches Spiel = 0 (EXE-Image @Datei 0xa17bd; New-Game-Zweig setzt 0), SAVE speichert den Wert
+ * PRE-Inkrement (Titel /NN/ @0x80026eac-f0) und inkrementiert NUR nach Erfolg (@0x80026488-9c),
+ * LOAD/CONTINUE restauriert ihn wholesale aus dem Save (@0x80026290-a0). Die Karte/der Ziel-Slot
+ * wird fuer die Nummer NIE gelesen (der fruehere max-across-slots-Seed war erfunden). */
 static uint16_t        s_save_counter = 0;
 
 /* The memory-card slot screen — a blocking modal (like the title). save_mode:
@@ -1779,6 +1781,13 @@ re_title:;
                     }
                     int ch = pc_run_player_select();          /* "PLEASE SELECT MAIN CAST" (@0x80101094) */
                     re15_gameflow_new_game(ch);               /* ch = DAT_800aca5c>>2 (0=Leon,1=Elza) */
+                    /* NEW GAME setzt den Save-Zaehler zurueck (Nutzer-Report 2026-08-03; analysis/
+                     * save_counter.md SC-2): der Zaehler DAT_800b0fbd ist Teil des LIVE-Game-State-
+                     * Blocks — ein frisches Spiel startet mit 0 (EXE-Image-Byte @Datei 0xa17bd = 00;
+                     * einziger Writer ist das Post-Save-Inkrement @0x8002649c, restauriert nur vom
+                     * LOAD-memcpy @0x80026290-a0). Ohne den Reset erbte ein New-Game-Save den
+                     * Zaehler eines zuvor geladenen Spielstands. */
+                    s_save_counter = 0;
                 }
                 else if (cursor == 1) {                       /* LOAD GAME -> FE-4 memory-card load screen */
                     uint16_t resume_room = 0;
@@ -2620,11 +2629,16 @@ re_title:;
             for (int i = 0; i < RE15_INV_MAX_SLOTS; i++)
                 if (g_inv.slots[i].id == 0x21 && g_inv.slots[i].qty > 0) { mc = i; break; }
             re15_savedata_t sd;
-            /* Next save number = persistent counter + 1 (DAT_800b0fbd++). Seed from the card's
-             * max on the first save of a fresh (non-CONTINUE) session; a CONTINUE already seeded it
-             * from the loaded save above, so a load-then-save continues that counter. */
-            if (s_save_counter == 0) s_save_counter = (uint16_t)re15_memcard_max_save_count(RE15_CARD_PATH);
-            int scount = (int)s_save_counter + 1;
+            /* BYTE-TRUE Zaehler-Semantik (analysis/save_counter.md SC-1/SC-3, CONFIRMED):
+             * Der Save speichert den LIVE-Zaehler DAT_800b0fbd PRE-Inkrement (GSB-memcpy
+             * @0x800261c4-d8 + Titel /NN/ @0x80026eac-f0 laufen VOR dem Karten-Write; das
+             * Inkrement folgt NUR nach Erfolg @0x80026488-9c). Frisches Spiel = 0 (EXE-Image
+             * @0xa17bd), LOAD restauriert ihn wholesale — die Karte/der Ziel-Slot wird fuer
+             * die Nummer NIE gelesen. Der alte Port-Seed aus dem Karten-Maximum
+             * (re15_memcard_max_save_count) war erfunden und liess New-Game-Saves den
+             * Zaehler alter Slots erben (Nutzer-Report); ersatzlos gestrichen. Erster Save
+             * eines frischen Spiels heisst /00/ (Original), nicht /01/. */
+            int scount = (int)s_save_counter;
             re15_savedata_capture(&sd, g_engine.frame_count, (uint16_t)scount);
             /* Store the GAMEPLAY cut latched when the phone was examined (before its sub's Cut_chg to
              * the desk close-up), not the live cut sampled here — which is the transient close-up. The
@@ -2641,7 +2655,8 @@ re_title:;
                 sd.checksum = re15_savedata_checksum(&sd);
             }
             if (pc_run_memcard_screen(1, &sd, 0) >= 0) {
-                s_save_counter = (uint16_t)scount;   /* persist for the next save */
+                s_save_counter = (uint16_t)(scount + 1);   /* DAT_800b0fbd++ NUR nach Erfolg
+                                                            * (@0x80026488-9c, Post-Inkrement) */
                 if (mc >= 0 && --g_inv.slots[mc].qty == 0) { g_inv.slots[mc].id = 0; g_inv.slots[mc].flags = 0; }
                 fprintf(stderr, "[save] saved (room %04x); card=%s\n", g_current_room_id, mc >= 0 ? "consumed" : "none");
             }
