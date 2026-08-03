@@ -163,6 +163,8 @@ Vollständig in [HANDOVER_2026-08-01.md](HANDOVER_2026-08-01.md) §1/§2b. Kernp
 
 | 2026-08-03 | **Leons Angegriffen-Anim bei Krähen** (Nutzer-Report): Hook A [0x21] = LAB_8011597c komplett RE'd (Front-FSM 0x801159bc: EM021-victim Clips 0→1-Loop→2 aus Paar C, Blend 7, hit_react-Latch; Rear = nur 1171-Szene; Hook B = toter Code). Port: Victim-Latch am Krähen-Grab (@0x80113e48/e30), Clip-Map 0x21, kein Root-Motion/Yaw-Flip/Release-Blend (byte-Fakten der Krähen-FSM); EM021-Bank-Geometrie aus dem dir[6]-Pool-Header (15/80) statt dir[2] (13/72); Flinch-Aim-Gate ENTFERNT (Original ungated @0x80113b00, cmd-Dispatch @0x80031c88 ersetzt Aim → `re15_player_aim_interrupt`), Flinch-Richtung auf Yaw-Vergleich a780 (@0x8001a788-a4, vorne→Clip 8) umgestellt (Port war invertiert); `re15_crow_screech` als Fehldeutung des Wund-Stemplers 0x801161e8 ersetzt (vollständige vert-Bänder an Dive/Grab/Strike). Sonde `probe_crow_flinch`: Grabs spielen 0→1→2 (14/36/20f), Dive-Flinch auch unter R1, kf_size 80. Dossier `analysis/crow_victim_anim.md` (8×CONFIRMED, 1×PLAUSIBLE). OFFEN: 1171-Wurf-Szene (Exit jetzt RE'd: Script-Plc_dest), visuelle gdigrab-Prüfung | *(dieser Commit)* |
 
+| 2026-08-03 | **ROOM10D0 Marvin-Cutscene → VIER GLOBALE Cutscene-/NPC-Fixes** (Nutzer erlaubte global; Dossiers `analysis/marvin_10d0.md` + `analysis/cutscene_headlook.md`, 12/13 Findings CONFIRMED): (1) **Plc_neck → Work-Entity** (@0x80041e9c) statt Player-Hardcode + komplette Neck-FSM FUN_80037358 global: Klemmen (Spieler ±0x200/±0x138 @0x800319b0-c4, NPC ±0x2c8/±0x138 @0x8011c7a0/b0), Default-Steps 96/96 bzw. 64/48, Modi 2/3/4 (relativ/Sweep, Abschluss→0x12 @0x80037698), Entity-Tracking (Flags 0, Kopf-Part-Welt-Cache), NPC-Neck-Init (@0x8011c738-b0, grid&0x40→0x12 @0x8004260c-18), Gameplay-Auto-Look (State-1-Prolog @0x80031e04-40, konservative 3703c-Portierung); Messung: max-Yaw exakt 512 = Klemme (vorher 901), Marvins Necks auf Marvin. (2) **RBJ-Marker-Binder** (FUN_8001b3f8, Ziel +0x180/+0x184) datengetrieben statt Handtabelle — 10D0 REC1→Marvin bindet (Probe: 20/30/30/20/30/25/35/50/24/20 == REC1-EDD); Executor-Sub→Kanal-Map (0=RBJ, 1=Loco, 2/6/Walk=eigene, 3=Victim) in Länge UND Render; Elliot-1170-Ausnahme dokumentiert (O3, vor Umstellung messen). (3) **Plc_dest = State-4-Dispatch** (@0x80041c14-18): Modi 0-3/6 sind Pose-/Event-Subs, KEIN Walk — Mode 6 = Event-Reach @0x800517f0 (Marvin war 1700 Ticks eingefroren + weggedreht Richtung (0,0)); Spieler-Mode-6 = PLW-Clips 1→2 (Render-Override). (4) **Executor-Subs 1-3 = Play-once+Hold** (0x80050ddc/f00/1024, Double-Step 0x8, No-Blend 0x40) statt Endlos-Loop; NPC-Walk-Clip 5 (@0x800511dc) statt Player-Sentinels. Proben: probe_marvin_10d0 (alle 4 Hypothesen behoben, Dir_set-Facing 1770 hält), probe_headlook_10d0 (Klemme exakt). 104/104 ctest | *(dieser Commit)* |
+
 Baseline nach der Session: **104/104 ctest grün** (neu: `unit_stair_1170_regression`).
 
 ### Offene Punkte (oberste Zeile = nächster Schritt)
@@ -192,3 +194,10 @@ Baseline nach der Session: **104/104 ctest grün** (neu: `unit_stair_1170_regres
    @0x80055D10 (Skill `re15-pcsx-watchpoint`), Spielfluss-Nachweis ohne FORCE_EVENT
    (Hof-Hindernis bei x≈−17000, HANDOVER §2b), Positional-Pfad FUN_80045a64 (D3), ADSR (D4).
 6. **W2-Sweep starten** (§2): ROOM1240 zuerst, Checkliste pro Raum.
+7. **Cutscene-/NPC-Rest** (marvin_10d0.md §6 + cutscene_headlook.md §6): (a) ROOM10D0
+   visuelle gdigrab-Prüfung + DuckStation-Gegenprobe (re15-room-capture); (b) ROOM1170/
+   Elliot-Marker-Messung (Original bindet REC1 — was liest der ungebremste EDD-Index bei
+   Clip 25? Savestate!) vor Umstellung der Elliot-Ausnahme; (c) `Plc_dest` mode 0x13
+   (@0x80073e30[19]) disassemblieren; (d) FUN_8003703c-Kategorien (+0x9a-Vorzeichen-Bits)
+   verhaltens-verifizieren (Auto-Look derzeit konservativ NPC-only); (e) Sweep-Modi 3/4
+   Live-PSX-Vergleich (ROOM11B1 sub02); (f) 0x1910 Extra-Bytes nach dem 10D0-RBJ-Trailer.

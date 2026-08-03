@@ -221,6 +221,13 @@ void re15_player_reload_start(void)
     g_actors[RE15_ACTOR_SLOT_PLAYER].anim_frac  = 7;      /* blend 7 @0x80033dc8 */
 }
 int re15_player_reloading(void) { return s_player_aim_phase == RE15_AIM_RELOAD; }
+/* W-Bank-Cliplaenge (die vom Platform-Loader via re15_player_set_aim_clip_lens gefuetterten
+ * PLW-EDD-Frame-Counts) — Konsument: der Plc_dest-Mode-6-Event-Reach des Spielers
+ * (0x800517f0 spielt PLW-Paar-B-Clips 1/2; game_step_common.c). */
+int re15_player_wbank_clip_fc(int clip)
+{
+    return (clip >= 0 && clip < RE15_AIM_CLIP_MAX) ? (int)s_aim_clip_fcs[clip] : 0;
+}
 /* FIRE trigger (game_step, SQUARE held in HOLD/READY): GUN = DISCHARGE — recoil clip 7/9/11
  * plays out, then back to HOLD (sub2 @0x80033460: anim end -> sub1 = auto-refire cadence).
  * MELEE = SLASH (sub2 @0x80035314, byte-true): the SAME 7/9/11 elevation-clip formula

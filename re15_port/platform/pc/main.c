@@ -2284,6 +2284,10 @@ re_title:;
                 pl00_ok ? &pl00_skel : NULL, &skel, &anim,
                 &elliot_base_skel, elliot_skel_ok, &elliot_skel, &elliot_anim,
                 &s_cine_scratch_skel, &s_cine_scratch_anim, pc_enemy_load);
+        /* RBJ-MARKER-BINDER (byte-true FUN_8001b3f8 @0x80039a08): registriert die rohe
+         * RBJ-Sektion; die Record->Entity-Bindung (Marker-Bit (1+i) -> Aktor-Slot 1+i,
+         * Kanal +0x180 = Executor-Sub 0) loest die Engine lazy nach den Spawns auf. */
+        re15_rbj_bind_room(rbj_buf, (size_t)rbj_size);
         fprintf(stderr, "[rbj] boot room %04X cinematic overlay: %d clips, %d kf\n",
                 boot_room, anim.clip_count, skel.keyframe_count);
     }
@@ -4294,6 +4298,10 @@ re_title:;
                                         pl00_ok ? &pl00_skel : NULL, &skel, &anim,
                                         &elliot_base_skel, elliot_skel_ok, &elliot_skel, &elliot_anim,
                                         &s_cine_scratch_skel, &s_cine_scratch_anim, pc_enemy_load);
+                                /* Marker-Binder (FUN_8001b3f8): Raum-RBJ registrieren — die
+                                 * Engine bindet Records lazy an die gespawnten Entity-Slots.
+                                 * (rbuf bleibt resident: s_room_rbj bzw. RDT-Alias.) */
+                                re15_rbj_bind_room(rbuf, (size_t)rsz);
                                 fprintf(stderr, "[rbj] room %04X cinematic overlay: %d clips, %d kf\n",
                                         dest_room, anim.clip_count, skel.keyframe_count);
                             } else if (pl00_ok) {
@@ -4627,6 +4635,21 @@ re_title:;
                     p_skel = wact_skel;              /* composite: PL00 bones + active W pool */
                     p_anim = wact_anim;
                     p_clip_override = re15_player_aim_clip();
+                }
+            }
+            /* PLC_DEST-MODE-6 EVENT-REACH render override: der Spieler-Sub 0x800517f0 spielt
+             * PLW-Paar-B-Clips 1 (einmal) -> 2 (Loop) auf dem +0x170-Kanal (@0x80051884/88;
+             * FUN_80036b68 laedt dort die aktive W-Bank) — dieselbe Bank-Composite wie der
+             * Aim-Override. FSM/Advance: game_step_common re15_player_event_reach_tick. */
+            {
+                extern int re15_player_event_reach_clip(void);
+                extern int re15_player_aim_active(void);
+                int erc = re15_player_event_reach_clip();
+                if (erc >= 0 && wact_ok && re15_player_victim_state() == 0 &&
+                    !re15_player_aim_active()) {
+                    p_skel = wact_skel;
+                    p_anim = wact_anim;
+                    p_clip_override = erc;
                 }
             }
             int kf_idx = 0;
@@ -5536,6 +5559,34 @@ re_title:;
                         npc_skel = &lb->skel_loco;
                         npc_anim = &lb->anim_loco;
                         av.clip_override = (int)npc->motion;   /* bank0: 1 = lurch, 2..5 = engage walks */
+                    }
+                }
+
+                /* EXECUTOR-KANAL-Render (Sub->Kanal-Map, marvin_10d0.md Verify D2/D4): Sub 0
+                 * spielt den RBJ-BINDER-Kanal +0x180/+0x184 (@0x80050d40/48 — FUN_8001b3f8
+                 * bindet den Raum-Record per Marker; 10D0: REC1 -> Marvin), Sub 1 die
+                 * Loco-Bank (+0x84/+0x16c), Sub 3 die Victim-Bank (+0x178/+0x17c). Ohne den
+                 * Override posierten Marvins Cutscene-Gesten aus der EM040-eigenen Bank
+                 * (falsche Clips/Laengen). Muss mit re15_npc_channel_anim (enemy_ai_common.c)
+                 * uebereinstimmen — derselbe Kanal fuer Laenge UND Pose. */
+                if (npc->state == 4 && npc->sub_state_1 == 0) {
+                    const re15_emd_skeleton_t  *rs = re15_actor_rbj_skel((int)(npc - g_actors));
+                    const re15_emd_animation_t *ra = re15_actor_rbj_anim((int)(npc - g_actors));
+                    if (rs && ra && (int)npc->motion < ra->clip_count) {
+                        npc_skel = rs; npc_anim = ra;
+                        av.clip_override = (int)npc->motion;
+                    }
+                } else if (npc->state == 4 && npc->sub_state_1 == 1) {
+                    re15_enemy_bank_t *lb = re15_enemy_find(npc->type);
+                    if (lb && lb->loco_ok && (int)npc->motion < lb->anim_loco.clip_count) {
+                        npc_skel = &lb->skel_loco; npc_anim = &lb->anim_loco;
+                        av.clip_override = (int)npc->motion;
+                    }
+                } else if (npc->state == 4 && npc->sub_state_1 == 3) {
+                    re15_enemy_bank_t *lb = re15_enemy_find(npc->type);
+                    if (lb && lb->victim_ok && (int)npc->motion < lb->anim_victim.clip_count) {
+                        npc_skel = &lb->skel_victim; npc_anim = &lb->anim_victim;
+                        av.clip_override = (int)npc->motion;
                     }
                 }
 

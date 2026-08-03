@@ -209,15 +209,36 @@ typedef struct {
     int16_t  lookat_x;     /* head-look PITCH applied to bone 3 (set by neck FSM) */
     int16_t  lookat_y;     /* head-look YAW   applied to bone 3 (set by neck FSM) */
     int16_t  lookat_z;     /* RE2 +0x9E                                   */
-    /* Plc_neck head-look FSM (byte-true FUN_80024e40, 2026-06-16). The opcode stores a
-     * WORLD look-at TARGET (+0x160/162/164) + mode flags (+0x1b8); re15_neck_update slews
-     * the head yaw/pitch toward it each frame (damped) and publishes to lookat_x/y, which
-     * skeleton_common.c adds to bone 3 (PL00 head) — player only (enemies never Plc_neck). */
-    uint8_t  neck_flags;   /* +0x1b8: 0x80=enabled; 0x04/0x08=world look-at active; mode bits */
-    int16_t  neck_tx, neck_ty, neck_tz;  /* +0x160/162/164: world look-at target */
-    int16_t  neck_speed;   /* +0x9e: engage rate (reserved) */
-    int16_t  neck_yaw;     /* +0x94: current slewed head yaw   (signed) */
-    int16_t  neck_pitch;   /* +0x96: current slewed head pitch (signed) */
+    /* Plc_neck head-look FSM — byte-true FUN_80037358 (per-frame consumer) + opcode handler
+     * @0x80041e98. GLOBAL (cutscene_headlook.md, 2026-08-03): the FSM runs for the PLAYER
+     * (caller @0x80031d78) AND for every STAGE1 NPC root (jal 0x80037358 @0x8011c69c and
+     * siblings) — the opcode targets the per-thread WORK entity (`lw v1,0x154(a0)`
+     * @0x80041e9c), never implicitly the player. Flag bits (+0x1b8, after the 0x80 base):
+     *   0x04 world point (+0x160/162/164) · 0x08 RELATIVE (+0x162 yaw offset on the body
+     *   facing, +0x164 pitch target) · 0x40/0x20 yaw/pitch SWEEP (counter +0x160, mirror on
+     *   snap-arrival, completion -> flags=0x12 @0x80037698/@0x80037858) · 0x10 pitch->0 ·
+     *   0x02 target=keyframe (release) · 0x80 steps from the SCD speed bytes (+0x9e/0x9f)
+     *   instead of the part defaults. Flags LOW BITS == 0 -> ENTITY TRACKING (look at the
+     *   head part of neck_target_slot; NPC INIT default = the player @0x8011c738). */
+    uint8_t  neck_flags;   /* +0x1b8 flag bits (see above) */
+    int16_t  neck_tx, neck_ty, neck_tz;  /* +0x160/162/164: operands (world point / relative
+                                          * offsets / sweep counter in tx, mirrored target in ty) */
+    int16_t  neck_speed;   /* SCD speed s16: low byte = yaw step (+0x9e), high = pitch (+0x9f) */
+    int16_t  neck_yaw;     /* part+0x94: current slewed head yaw   (signed) */
+    int16_t  neck_pitch;   /* part+0x96: current slewed head pitch (signed) */
+    uint8_t  neck_bone;    /* +0x1b9: head part index (player 8 @0x80031938, NPC 8 @0x8011c778);
+                            * 0 = entity has no neck data -> FSM skipped (only player + NPC
+                            * roots run FUN_80037358 in STAGE1) */
+    uint8_t  neck_sweep;   /* port: sweep armed latch (first pass seeds target = full clamp) */
+    int16_t  neck_step_yaw, neck_step_pitch;    /* part+0x98/+0x9a defaults: player 96/96
+                                                 * @0x800319a4-ac, NPC 64/48 @0x8011c790-98 */
+    int16_t  neck_clamp_yaw, neck_clamp_pitch;  /* part+0x9c/+0x9e clamps: player ±0x200/±0x138
+                                                 * @0x800319b0-c4, NPC ±0x2c8/±0x138 @0x8011c7a0/b0 */
+    int8_t   neck_target_slot;   /* +0x1a8 entity-tracking target (actor slot; -1 = none) */
+    /* Cached head-part WORLD position from this actor's last posed frame (= the original's
+     * part+0x54/58/5c, read by a TRACKING looker on the next frame). ok=0 until first pose. */
+    int32_t  head_world[3];
+    uint8_t  head_world_ok;
     /* Animation =========================================================*/
     int16_t  motion;       /* ID 8 (0x8) → motion_no/clip id (RE2 +0x0A)  */
     int32_t  anim_frame;   /* per-clip frame counter (engine-side, RE2

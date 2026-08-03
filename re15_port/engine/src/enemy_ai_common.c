@@ -6167,21 +6167,50 @@ static const uint8_t s_irons_clip_len[24] =   /* EM040 (Chief Irons) clip frame-
  * dumped live via RE15_ELLIOT_CLIPDUMP 2026-07-26), NOT the shared EM040/Irons table (whose
  * [15/16/20]=1 and out-of-range [25] froze his wave on frame 0). Byte-true: anim_set (0x8001f314)
  * wraps anim_frame at the ENTITY'S OWN EDD clip count (channel +0x174), so the motion executor must
- * read Elliot's real bank. The platform registers the loaded bank (stable function-scope storage). */
+ * read Elliot's real bank. The platform registers the loaded bank (stable function-scope storage).
+ * ⚠ ROOM1170-AUSNAHME (marvin_10d0.md §6.3 / OFFEN O3): der RBJ-Marker bindet dort REC1 an Elliot,
+ * der Port bleibt bewusst auf Elliots eigener Bank (Clip 25 existiert nur dort; das Original-OOB-
+ * Verhalten auf REC1 ist ungemessen). Vor einer Umstellung per Savestate messen. */
 static const re15_emd_animation_t *s_npc_elliot_anim = NULL;
 void re15_npc_set_elliot_anim(const re15_emd_animation_t *a) { s_npc_elliot_anim = a; }
+
+/* Executor-Sub → Anim-KANAL (adversarial verifiziert, marvin_10d0.md Verify D2/D4 — jeder Sub
+ * liest ein ANDERES Bank-Paar der Entity):
+ *   sub 0 @0x80050d40/48: +0x180/+0x184 = der RBJ-BINDER-Kanal (FUN_8001b3f8 — Cutscene-Gesten)
+ *   sub 1 @0x80050ddc:    +0x84/+0x16c  = die Loco-Bank
+ *   sub 2 @0x80050f88/90: +0x170/+0x174 = die Entity-EIGENE Bank (Spawn @0x80042374/8c)
+ *   sub 3 @0x80051024:    +0x178/+0x17c = die Victim-Bank
+ *   sub 6 @0x80051884/88 + Walk-INIT @0x800511bc: +0x170/+0x174 (eigene Bank)
+ * Der RBJ-Kanal wird pro AKTOR-Slot vom Marker-Binder registriert (re15_actor_rbj_anim,
+ * enemy_common.c); Fallback = die eigene Bank (der Spawn initialisiert beide Kanaele gleich,
+ * der Binder ueberschreibt nur bei gesetztem Marker-Bit). */
+static const re15_emd_animation_t *re15_npc_channel_anim(const re15_actor_t *e)
+{
+    extern const re15_emd_animation_t *re15_actor_rbj_anim(int slot);
+    re15_enemy_bank_t *bank = re15_enemy_find(e->type);
+    if (e->state == 4 && e->sub_state_1 == 0) {          /* sub 0 -> RBJ-Kanal (+0x180) */
+        const re15_emd_animation_t *rb = re15_actor_rbj_anim((int)(e - g_actors));
+        if (rb) return rb;
+    }
+    if (e->state == 4 && e->sub_state_1 == 1 && bank && bank->loco_ok)
+        return &bank->anim_loco;                          /* sub 1 -> Loco (+0x84/+0x16c) */
+    if (e->state == 4 && e->sub_state_1 == 3 && bank && bank->victim_ok)
+        return &bank->anim_victim;                        /* sub 3 -> Victim (+0x178/+0x17c) */
+    if (e->type == 0x47 && s_npc_elliot_anim) return s_npc_elliot_anim;   /* Elliot: eigene Bank */
+    if (bank && bank->ok && bank->anim.clip_count > 0) return &bank->anim;/* eigene Bank (+0x170) */
+    return NULL;                                          /* -> s_irons-Fallback-Tabelle */
+}
 static int re15_npc_motion_clip_len(const re15_actor_t *e)
 {
-    if (e->type == 0x47 && s_npc_elliot_anim &&
-        (int)e->motion < s_npc_elliot_anim->clip_count &&
-        s_npc_elliot_anim->clips[e->motion].frame_count > 0)
-        return s_npc_elliot_anim->clips[e->motion].frame_count;
+    const re15_emd_animation_t *an = re15_npc_channel_anim(e);
+    if (an && (int)e->motion < an->clip_count && an->clips[e->motion].frame_count > 0)
+        return an->clips[e->motion].frame_count;
     uint8_t c = e->motion; int fc = (c < 24) ? s_irons_clip_len[c] : 1; return (fc < 1) ? 1 : fc;
 }
 static void re15_npc_clip(re15_actor_t *e, uint8_t c) { e->motion = c; e->anim_frame = 0; e->anim_frac = 7; }
-static int re15_npc_anim(re15_actor_t *e)     /* POST-inc +0x95, wrap at the real EM040 clip length */
+static int re15_npc_anim(re15_actor_t *e)     /* POST-inc +0x95, wrap at the ENTITY channel's clip length */
 {
-    uint8_t c = e->motion; int fc = (c < 24) ? s_irons_clip_len[c] : 1; if (fc < 1) fc = 1;
+    int fc = re15_npc_motion_clip_len(e); if (fc < 1) fc = 1;
     int done = (e->anim_frame + 1 >= fc);
     e->anim_frame = (uint8_t)((e->anim_frame + 1) % fc);
     return done;
@@ -6213,20 +6242,29 @@ static void re15_npc_sub_idle(re15_actor_t *e)
  * the original where anim_set is the sole stepper for a state-4 actor. */
 static void re15_npc_sub_motion(re15_actor_t *e)
 {
-    int fc = re15_npc_motion_clip_len(e); if (fc < 1) fc = 1;   /* Elliot's own EDD length (0x47), else EM040 */
+    int fc = re15_npc_motion_clip_len(e); if (fc < 1) fc = 1;   /* KANAL-Laenge (Sub->Kanal-Map oben) */
     switch (e->sub_state_2) {
-    case 0:   /* phase 0 init (@0x80050cec-d0c): +0x95=0, seed +0x8f crossfade, phase->1, then fall to play */
-        e->anim_frame = 0; e->anim_frac = 7; e->sub_state_2 = 1;
+    case 0:   /* phase 0 init (@0x80050cec-d0c / sub2 @0x80050f34-54): +0x95=0, seed +0x8f crossfade
+               * (UNLESS the no-blend bit +0x1c4&0x40 @0x80050f64-78 -> +0x8f=0), phase->1, fall to play */
+        e->anim_frame = 0; e->anim_frac = (uint8_t)((e->anim_flags & 0x40) ? 0 : 7);
+        e->sub_state_2 = 1;
         /* fallthrough — the original phase-0 branch continues into the phase-1 body @0x80050d34 */
-    case 1:   /* phase 1 play (@0x80050d34): advance the clip; at end latch phase 2 (HOLD) or replay (LOOP) */
-        if (e->anim_frame + 1 >= fc) {                       /* anim_set signals clip end (@0x80050d54) */
-            if (e->anim_flags & 0x04) { e->anim_frame = 0; e->sub_state_2 = 1; }  /* LOOP replay @0x80050dc8 */
-            else { e->anim_frame = (uint8_t)(fc - 1); e->sub_state_2 = 2; }         /* HOLD last frame @0x80050da4 */
-        } else {
+    case 1:   /* phase 1 play (@0x80050d34 / sub2 @0x80050f94): advance the clip (TWICE with the
+               * double-step bit +0x1c4&0x8 — second f314 call @0x80050fb8/d0); at end latch phase 2
+               * (HOLD @0x80050da4/0x80050fec) or replay (LOOP nur mit +0x1c4&0x4 @0x80050dc8/0x80051004-10) */
+    {
+        int steps = (e->anim_flags & 0x08) ? 2 : 1;
+        while (steps-- > 0) {
+            if (e->anim_frame + 1 >= fc) {                   /* anim_set signals clip end (@0x80050d54) */
+                if (e->anim_flags & 0x04) { e->anim_frame = 0; e->sub_state_2 = 1; }  /* LOOP replay */
+                else { e->anim_frame = (uint8_t)(fc - 1); e->sub_state_2 = 2; }        /* HOLD last frame */
+                break;
+            }
             e->anim_frame++;                                 /* +0x95++ */
             if (e->anim_frac > 0) e->anim_frac--;
         }
         break;
+    }
     case 2:   /* phase 2 held (@0x80050cdc exit): retain the last posed frame, no advance */
         break;
     }
@@ -6307,11 +6345,18 @@ static void re15_npc_sub_event_reach(re15_actor_t *e)
 static void re15_npc_sub_dispatch(re15_actor_t *e)
 {
     switch (e->sub_state_1) {
-    case 0: re15_npc_sub_motion(e); break;   /* motion phase-FSM = Plc_motion pose (@0x80076ca0[0]=0x80050cb8) */
+    case 0:                                  /* motion phase-FSM = Plc_motion pose (@0x80076ca0[0]=0x80050cb8) */
+    case 1:                                  /* 0x80050ddc — DIESELBE Play-once+Hold-FSM auf dem Loco-Kanal */
+    case 2:                                  /* 0x80050f00 — dito auf der Entity-EIGENEN Bank (+0x170/174);
+                                              * der alte Endlos-Idle-Loop fuer Subs 1-3 war erfunden —
+                                              * ROOM10D0 Plc_motion(2,6,0) loopte Marvins Clip 6 statt
+                                              * einmal zu spielen und zu halten (marvin_10d0.md D4) */
+    case 3:                                  /* 0x80051024 — dito auf der Victim-Bank (+0x178/17c) */
+        re15_npc_sub_motion(e); break;
     case 4: case 5: case 7: case 8: re15_npc_sub_walk(e); break;
     case 6: re15_npc_sub_event_reach(e); break;
     case 9: re15_npc_sub_turn(e); break;
-    default: re15_npc_sub_idle(e); break;   /* 1-3 idle */
+    default: re15_npc_sub_idle(e); break;
     }
 }
 
@@ -6402,7 +6447,10 @@ static void re15_npc_ai_tick(int slot)
      * wave sat at walk=0, st=4, sub=0, af=0 for the whole gesture because a Work_set(2,0) thread owned
      * slot 1 → scd_slot_event_controlled=1 → yielded. A Plc_dest WALK still yields (walk_active=1, or
      * the post-arrival gap where the SCD owns the slot but sub_state_1 != 0 = not the motion pose). */
-    int in_motion_pose = (e->state == 4 && e->sub_state_1 == 0);
+    /* Pose-Subs 0-3 (Plc_motion) UND der Event-Reach 6 (Plc_dest Mode 6) duerfen NICHT yielden —
+     * der Executor ist ihr einziger Frame-Advancer. Vorher yieldete alles ausser Sub 0, weshalb
+     * Marvins Mode-6-Idle in 10D0 nie lief (marvin_10d0.md D3). */
+    int in_motion_pose = (e->state == 4 && (e->sub_state_1 <= 3 || e->sub_state_1 == 6));
     if (e->walk_active || (re15_scd_slot_event_controlled(slot) && !in_motion_pose)) {
         e->hp = -1;
         return;
@@ -6414,6 +6462,20 @@ static void re15_npc_ai_tick(int slot)
         e->hp = -1;                                       /* +0x9a = -1 (no HP / invulnerable) @0x8011c744 */
         e->motion = 2; e->anim_frame = 0; e->anim_frac = 0; e->hit_react = 0;  /* idle clip 2 @0x8011c7bc */
         e->ai_timer = 0x78;                               /* +0x9e = 120 @0x8011c754 */
+        /* NPC-Neck-/Head-Look-Init (byte-true FUN_8011c6dc, cutscene_headlook.md B2/B3/B5):
+         * Default-Blickziel = SPIELER (sw &player -> +0x1a8 @0x8011c738), Flags = 0 = TRACK
+         * (sb 0 -> +0x1b8 @0x8011c768), Kopf-Bone 8 (sb 8 -> +0x1b9 @0x8011c778), Steps 64/48
+         * (sh @0x8011c790/98), Yaw-Klemme ±0x2c8 (@0x8011c7a0), Pitch-Klemme ±0x138
+         * (@0x8011c7b0), Akkus 0 (@0x8011c7a8/ac), Speed-Override-Byte 0x78 (@0x8011c758).
+         * SPL-Spawn-Ausnahme: entity+0x9 & 0x40 -> Flags = 0x12 (neck-idle statt Tracking,
+         * @0x8004260c-18) — genau die 10D0-Marvin-Konfiguration (behavior 0x40). */
+        e->neck_bone        = 8;
+        e->neck_target_slot = RE15_ACTOR_SLOT_PLAYER;
+        e->neck_step_yaw    = 64;  e->neck_step_pitch  = 48;
+        e->neck_clamp_yaw   = 0x2c8; e->neck_clamp_pitch = 0x138;
+        e->neck_yaw = 0; e->neck_pitch = 0; e->neck_sweep = 0;
+        e->neck_speed       = 0x78;
+        e->neck_flags       = (uint8_t)((e->grid_id & 0x40) ? 0x12 : 0x00);
         if (e->grid_id & 0x40) { e->state = 4; e->sub_state_1 = 6; }  /* +0x9&0x40 -> shared executor, +0x5=6 @0x8011c860 */
         else e->state = 1;                                /* default -> Irons overlay state 1 @0x8011c884 */
         e->sub_state_2 = 0; e->sub_state_3 = 0;

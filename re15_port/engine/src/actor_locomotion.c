@@ -217,9 +217,17 @@ void re15_actor_step_walk(re15_actor_t *a)
             a->walk_fsm = 2;
             /* A2: the walk/run EDD clip starts ONLY now (active stepping) — the
              * actor STOOD through the align phase. PSX Plc_dest sets no motion;
-             * the walker does, here. Matches Elliot stand 217020→walk 217022. */
-            int clip = re15_to_re2_plc_dest_clip((int)a->walk_mode, /*rbj=*/1);
-            if (clip >= 0) re15_actor_set_motion(a, (int16_t)clip);
+             * the walker does, here. Matches Elliot stand 217020→walk 217022.
+             * NPC-Slots: Clip 5 der ENTITY-EIGENEN Bank (NPC-Walk-Sub-INIT
+             * @0x800511dc `+0x94 = 5`; Kanal +0x170/+0x174) — NICHT die Player-
+             * W01-Sentinels 100/105, die auf einer NPC-Bank falsche Clips
+             * indizieren (marvin_10d0.md D5, CONFIRMED: Marvin lief mit mo=105). */
+            if (a != &g_actors[RE15_ACTOR_SLOT_PLAYER]) {
+                re15_actor_set_motion(a, 5);
+            } else {
+                int clip = re15_to_re2_plc_dest_clip((int)a->walk_mode, /*rbj=*/1);
+                if (clip >= 0) re15_actor_set_motion(a, (int16_t)clip);
+            }
         }
         return;   /* no position advance during the align state */
     }
@@ -297,11 +305,13 @@ void re15_actor_step_walk(re15_actor_t *a)
          * walk/run sentinel (100/105) is held; re15_compute_actor_kf freezes it at frame 0
          * (= the arms-down walk-start pose, W01 clip5 frame0 == PL00 clip0 frame0) once
          * walk_active clears — exactly what the original shows before the next Plc_motion. */
-        if (a->motion == 100 || a->motion == 105) {
+        if (a->motion == 100 || a->motion == 105 ||
+            (a->motion == 5 && a != &g_actors[RE15_ACTOR_SLOT_PLAYER])) {
             /* Freeze the held walk/run clip at frame 0 (FUN_8001f3bc end-of-clip wrap+freeze).
              * anim_freeze is read by re15_compute_actor_kf; the next Plc_motion's set_motion
              * clears it. The pad-walk (motion 105, walk_active 0) NEVER sets this, so gameplay
-             * walking still loops normally — only a scripted-walk ARRIVAL freezes. */
+             * walking still loops normally — only a scripted-walk ARRIVAL freezes. (NPC walks
+             * hold their clip-5 gait the same way until the next executor command.) */
             a->anim_freeze = 1;
         }
     }

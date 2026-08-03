@@ -81,6 +81,43 @@ static int32_t s_kd_speed   = 0;             /* DAT_800acae0-Aequivalent (Impuls
 static int16_t s_kd_t       = 0;             /* [5]-Decel-Zaehler t */
 
 int  re15_player_knockdown_active(void) { return s_knockdown; }
+/* ===== Plc_dest Mode 6 = EVENT-REACH auf dem SPIELER =====
+ * Byte-true 0x800517f0 (Player-Sub-Tabelle 0x80073e30[6] — identisch zur NPC-Tabelle
+ * 0x80076ca0[6]): Phase 0 spielt Clip 1 EINMAL (@0x80051844-74, Blend 7 @0x80051874),
+ * dann Clip 2 als Idle-LOOP (@0x800518b4-dc, Blend 7 @0x800518d8). Kanal = player+0x170/
+ * +0x174 = die PLW-Paar-B-Bank (FUN_80036b68; f314-Reads @0x80051884/88) — dieselbe
+ * Maschine wie der Kraehen-Mode-6-Liegend-Halt (crow_victim_anim.md §1.4). Die dest-Felder
+ * werden nie gelesen; Exit = der naechste Plc-Befehl des Scripts (Re-Init @0x80041bf8-c14).
+ * Der alte Port startete stattdessen den WALKER Richtung (0,0) — Leon lief in ROOM10D0
+ * die halbe Szene gegen den Weltursprung (marvin_10d0.md D3). Render: W-Bank-Override in
+ * platform main (wie der Aim-Override); der FSM hier ist der einzige Frame-Advancer. */
+static int s_ev_reach = 0;      /* 0 aus / 1 = Clip 1 einmal / 2 = Clip-2-Loop */
+void re15_player_event_reach_begin(void)
+{
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    s_ev_reach = 1;
+    pl->motion = 1; pl->anim_frame = 0; pl->anim_frac = 7;   /* Clip 1 @0x80051844/74 */
+    pl->anim_freeze = 0;
+    pl->walk_active = 0;
+}
+void re15_player_event_reach_end(void)  { s_ev_reach = 0; }
+int  re15_player_event_reach_clip(void) { return s_ev_reach ? ((s_ev_reach == 1) ? 1 : 2) : -1; }
+static void re15_player_event_reach_tick(re15_actor_t *pl)
+{
+    extern int re15_player_wbank_clip_fc(int clip);   /* player_common.c: PLW-EDD-Laengen */
+    if (!s_ev_reach) return;
+    int clip = (s_ev_reach == 1) ? 1 : 2;
+    int fc = re15_player_wbank_clip_fc(clip); if (fc < 1) fc = 1;
+    pl->motion = (int16_t)clip;
+    if ((int)pl->anim_frame + 1 >= fc) {
+        if (s_ev_reach == 1) { s_ev_reach = 2; pl->motion = 2; pl->anim_frame = 0; pl->anim_frac = 7; }
+        else pl->anim_frame = 0;                      /* Clip-2-Idle-Loop @0x800518dc */
+    } else {
+        pl->anim_frame++;
+        if (pl->anim_frac > 0) pl->anim_frac--;
+    }
+}
+
 void re15_player_knockdown_begin(int dir)
 {
     /* cmd-2 [4]/[5] ersetzt wie jeder cmd-Write den kompletten cmd-1-Zustand inkl. Aim
@@ -474,6 +511,35 @@ void re15_game_step(const re15_game_ctx_t *c)
          * original's non-normal command states. (audit wf_827f186d crow #2, HIGH) */
         pl->hit_react = 0;                       /* @0x80031964 */
         g_aca52_flags = (uint16_t)(g_aca52_flags & 0xfffe);   /* @0x80031c44 */
+        /* GAMEPLAY-AUTO-LOOK (byte-true State-1-Prolog @0x80031de8-40, cutscene_headlook.md
+         * B6 CONFIRMED): jeden Normal-Tick `flags |= 0x12` (@0x80031e04-08 = Idle-Release);
+         * dann — ausser im Substate 7 (@0x80031e10; Port-Entsprechung: Aim aktiv) —
+         * FUN_8003703c(a0=0xfa0=4000) (@0x80031e20-24): naechstes "lookable" SPL-Entity in
+         * 4000 Units; Treffer -> Ziel nach player+0x1a8 + `flags &= ~0x12` (@0x80031e3c-40)
+         * = ENTITY-TRACKING (Leons Kopf folgt dem naechsten NPC). Kategorien-Detail der
+         * +0x9a-Vorzeichen-Bits ist OFFEN (O1) — Port konservativ: NPC-Typen 0x40-0x4f mit
+         * hp<0 (der NPC-INIT-"lookable"-Marker `sh -1 -> +0x9a` @0x8011c748). Laeuft NUR im
+         * Normal-Branch = dem cmd-0/1-Pfad des Originals (Cutscene-Kommandos laufen andere
+         * cmds und behalten ihre Script-Necks). */
+        if (g_scd.player_mode != 2) {
+            extern int re15_player_aim_active(void);   /* player_common.c */
+            pl->neck_flags = (uint8_t)(pl->neck_flags | 0x12);
+            if (!re15_player_aim_active()) {
+                int  best = -1; int32_t best_d2 = 4000 * 4000;
+                for (int i = 1; i < RE15_ACTOR_MAX; i++) {
+                    const re15_actor_t *n = &g_actors[i];
+                    if (!n->active || n->hp >= 0) continue;
+                    if (n->type < 0x40 || n->type > 0x4f) continue;
+                    int32_t dx = n->x - pl->x, dz = n->z - pl->z;
+                    int32_t d2 = dx * dx + dz * dz;
+                    if (d2 < best_d2) { best_d2 = d2; best = i; }
+                }
+                if (best >= 0) {
+                    pl->neck_target_slot = (int8_t)best;
+                    pl->neck_flags = (uint8_t)(pl->neck_flags & ~0x12);
+                }
+            }
+        }
         int32_t ox = pl->x, oz = pl->z;
         re15_player_tick(c->cam_view, c->pad_current);
         /* ENTITY BODY COLLISION (byte-true FUN_80031c44 order: cmd-FSM move -> FUN_8002b544 body
@@ -757,6 +823,11 @@ void re15_game_step(const re15_game_ctx_t *c)
      * anim_frame off the grabbing zombie's bank 2 so he struggles + collapses instead of freezing
      * (byte-true player-command FSM @0x8010a28c/@0x8010a6f8). No-op when no zombie is grabbing. */
     re15_player_victim_tick();
+
+    /* PLC_DEST-MODE-6 EVENT-REACH auf dem Spieler (byte-true 0x800517f0 via 0x80073e30[6]) —
+     * tickt unabhaengig vom Branch, solange das Script den Halt haelt (Exit = naechster
+     * Plc-Befehl, kein Timeout; marvin_10d0.md D3). */
+    re15_player_event_reach_tick(pl);
 
     /* Body push WHILE GRABBED (byte-true FUN_80031c44: the cmd-5 victim handler — placement — is
      * followed by FUN_8002b544 body push then the walls in the SAME player tick): a THIRD zombie

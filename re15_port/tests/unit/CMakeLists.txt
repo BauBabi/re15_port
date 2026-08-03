@@ -562,6 +562,11 @@ add_executable(probe_stair_10a0 probe_stair_10a0.c)
 target_link_libraries(probe_stair_10a0 PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_stair_10a0 PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
+# --- DIAGNOSE-Probe (kein ctest-Eintrag): ROOM10D0 Marvin-Cutscene (analysis/marvin_10d0.md) ---
+add_executable(probe_marvin_10d0 probe_marvin_10d0.c)
+target_link_libraries(probe_marvin_10d0 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_marvin_10d0 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
 # --- REGRESSION (ctest): ROOM1170-Treppen unter der per-Record-Richtungswahl ---
 add_executable(probe_stair_1170 probe_stair_1170.c)
 target_link_libraries(probe_stair_1170 PRIVATE re15_engine re15_test_support)
@@ -579,3 +584,8 @@ set_tests_properties(unit_debug_menu PROPERTIES TIMEOUT 30)
 add_executable(probe_crow_flinch probe_crow_flinch.c)
 target_link_libraries(probe_crow_flinch PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_crow_flinch PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# --- DIAGNOSE-Probe (kein ctest): ROOM10D0 Marvin-Cutscene Head-Look (analysis/cutscene_headlook.md) ---
+add_executable(probe_headlook_10d0 probe_headlook_10d0.c)
+target_link_libraries(probe_headlook_10d0 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_headlook_10d0 PRIVATE ${CMAKE_SOURCE_DIR}/include)

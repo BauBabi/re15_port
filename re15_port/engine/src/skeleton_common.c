@@ -308,80 +308,142 @@ int re15_skel_compute_pose(const re15_emd_skeleton_t *skel,
 
         if (b == 0) root_kf_ay = ay;   /* "bodyYaw" for the head-look frame reduction */
 
-        /* Plc_neck head-look on bone 8 (PL00 head = mesh 6). BYTE-TRUE port of
-         * FUN_80037358 + FUN_8003790c (the REAL head-look; FUN_80024c30/FUN_80024e40 is a
-         * SEPARATE spring secondary-motion chain — not this). The original:
-         *   origin = head bone WORLD position;
-         *   worldYaw   = atan2(dz,dx) in the mesh-facing convention (re15_atan2_q12-1024);
-         *   worldPitch = atan2(dy,horiz), dy = origin.y - target.y (PSX Y inverted);
-         *   head-LOCAL target yaw = worldYaw - actorHeading(rot_y) - rootBoneYaw  (a SCALAR
-         *     angle subtraction — NOT a 3D matrix transform, which was the earlier bug);
-         *     head-local target pitch = worldPitch;
-         *   per-axis accumulator slews toward (target - keyframe) by a CONSTANT max step
-         *     (the Plc_neck speed bytes wk+0x9e/0x9f = 96/96 in room1150), then ADD to the
-         *     head bone's keyframe euler — YAW -> ay (vy, +0x62), PITCH -> az (vz, +0x64,
-         *     NOT ax). The original adds the offset, builds the matrix, then subtracts it
-         *     back; our accumulator (neck_yaw/neck_pitch) is exactly that persistent offset.
-         * Player-only — enemies never Plc_neck; bone 3 is the LEG knee so it must never get
-         * this. (Per-bone yaw/pitch RANGE clamp wk+0x9c/0x9a not yet extracted from the model
-         * neck-data init — omitted; room1150 look stays within range.) */
-        if (b == 8 && bact == &g_actors[RE15_ACTOR_SLOT_PLAYER]) {
+        /* Plc_neck/HEAD-LOOK FSM — BYTE-TRUE port of FUN_80037358 + FUN_8003790c, GLOBAL
+         * (cutscene_headlook.md B1-B7, 2026-08-03): the FSM runs for EVERY actor with neck
+         * data (+0x1b9 head part index != 0) — the player (caller @0x80031d78) AND the NPC
+         * roots (jal 0x80037358 @0x8011c69c + siblings); the old `b==8 && player` gate left
+         * NPCs headless and mis-owned NPC Plc_necks. Mechanics:
+         *   origin = head part WORLD position; FUN_8003790c yaw/pitch (atan2 + SquareRoot0);
+         *   head-LOCAL yaw = worldYaw - heading - rootBoneYaw; per-axis accumulator slews by
+         *   a constant step, CLAMPED to the part limits, then ADDs to the keyframe euler
+         *   (yaw -> vy +0x62, pitch -> vz +0x64), matrix built, offset restored. */
+        if (bact && bact->neck_bone != 0 && b == (int)bact->neck_bone) {
             re15_actor_t *a = bact;
-            int      active = (a->neck_flags & 0x80) && (a->neck_flags & 0x04);
-            int32_t  tgt_yaw = 0, tgt_pit = 0;
-            if (active) {
-                /* head MODEL pos = root_rot·relpos[8] + root_trans (root = poses[0]). */
-                int32_t rp8[3] = { (int32_t)skel->bone_relative_pos[8][0],
-                                   (int32_t)skel->bone_relative_pos[8][1],
-                                   (int32_t)skel->bone_relative_pos[8][2] };
-                int32_t hm[3]; mat3_apply(poses[0].rot, rp8, hm);
-                hm[0] += poses[0].trans[0]; hm[1] += poses[0].trans[1]; hm[2] += poses[0].trans[2];
-                /* head MODEL -> WORLD: headWorld = actorPos + Ryaw(rot_y)·hm
-                 * (Ryaw = [cs 0 sn; 0 1 0; -sn 0 cs], mesh faces +X at rot_y=0). */
-                int32_t cs = re15_cos_q12((int)a->rot_y), sn = re15_sin_q12((int)a->rot_y);
-                int32_t ox = a->x + (( cs*hm[0] + sn*hm[2]) >> 12);
-                int32_t oy = a->y + hm[1];
-                int32_t oz = a->z + ((-sn*hm[0] + cs*hm[2]) >> 12);
-                /* FUN_8003790c world look angles. dy = origin.y - target.y (Y inverted). */
-                int32_t dx = (int32_t)a->neck_tx - ox;
-                int32_t dz = (int32_t)a->neck_tz - oz;
-                int32_t dy = oy - (int32_t)a->neck_ty;
-                uint32_t h2 = (uint32_t)(dx*dx + dz*dz);
-                /* byte-true: FUN_8003790c @0x80037968 calls the BIOS SquareRoot0 approximation (GTE-LZCR
-                 * + 192-entry table @0x8007d984, drops low bits / underestimates), NOT an exact sqrt —
-                 * the port already ships the byte-true replica (audit wf_8cc15b53). */
-                uint32_t horiz = re15_squareroot0(h2);
-                /* worldYaw/worldPitch in mesh-facing convention (= re15_atan2_q12(a,b)-1024,
-                 * which equals FUN_8003790c's 0x1000-catan(a<<12/b)-quadrant form). */
+            uint8_t  fl = a->neck_flags;
+            /* head MODEL pos = root_rot·relpos[b] + root_trans (root = poses[0]). */
+            int32_t rp8[3] = { (int32_t)skel->bone_relative_pos[b][0],
+                               (int32_t)skel->bone_relative_pos[b][1],
+                               (int32_t)skel->bone_relative_pos[b][2] };
+            int32_t hm[3]; mat3_apply(poses[0].rot, rp8, hm);
+            hm[0] += poses[0].trans[0]; hm[1] += poses[0].trans[1]; hm[2] += poses[0].trans[2];
+            /* head MODEL -> WORLD: headWorld = actorPos + Ryaw(rot_y)·hm. */
+            int32_t cs = re15_cos_q12((int)a->rot_y), sn = re15_sin_q12((int)a->rot_y);
+            int32_t ox = a->x + (( cs*hm[0] + sn*hm[2]) >> 12);
+            int32_t oy = a->y + hm[1];
+            int32_t oz = a->z + ((-sn*hm[0] + cs*hm[2]) >> 12);
+            /* Cache the head WORLD pos for OTHER lookers' entity-tracking (the original's
+             * part+0x54/58/5c, read next frame — cutscene_headlook.md B5). */
+            a->head_world[0] = ox; a->head_world[1] = oy; a->head_world[2] = oz;
+            a->head_world_ok = 1;
+
+            /* --- target selection (FUN_80037358 flag bits) --- */
+            int   have_world = 0;             /* world-point target in (twx,twy,twz)? */
+            int32_t twx = 0, twy = 0, twz = 0;
+            int   yaw_keyframe = 0, pit_keyframe = 0;   /* residual -> 0 (release) */
+            int32_t rel_yaw = 0, rel_pit = 0; int rel = 0;
+            if (fl & 0x04) {                  /* world point +0x160/162/164 (mode 1) */
+                have_world = 1; twx = a->neck_tx; twy = a->neck_ty; twz = a->neck_tz;
+            } else if (fl & 0x08) {           /* RELATIVE (modes 2/3/4): local yaw offset =
+                                               * +0x162, pitch target = +0x164 (decompile
+                                               * Z.37-41: world yaw = bodyYaw+heading+ofs ->
+                                               * local = the raw offset) */
+                rel = 1; rel_yaw = a->neck_ty; rel_pit = a->neck_tz;
+            } else if (fl & 0x02) {           /* target = keyframe -> release */
+                yaw_keyframe = 1; pit_keyframe = 1;
+            } else {                          /* flags low bits 0 = ENTITY TRACKING: look at
+                                               * the head part of +0x1a8 (NPC default = the
+                                               * player @0x8011c738; player auto-look writes
+                                               * it via FUN_8003703c). */
+                int ts = (int)a->neck_target_slot;
+                if (ts >= 0 && ts < RE15_ACTOR_MAX && g_actors[ts].active) {
+                    have_world = 1;
+                    if (g_actors[ts].head_world_ok) {
+                        twx = g_actors[ts].head_world[0];
+                        twy = g_actors[ts].head_world[1];
+                        twz = g_actors[ts].head_world[2];
+                    } else {                  /* not yet posed: fall back to the entity root */
+                        twx = g_actors[ts].x; twy = g_actors[ts].y; twz = g_actors[ts].z;
+                    }
+                } else { yaw_keyframe = 1; pit_keyframe = 1; }
+            }
+            int32_t tgt_yaw = 0, tgt_pit = 0;
+            int     yaw_active = 0, pit_active = 0;
+            if (have_world) {
+                /* FUN_8003790c world look angles. dy = origin.y - target.y (Y inverted);
+                 * horiz via the byte-true SquareRoot0 replica (audit wf_8cc15b53). */
+                int32_t dx = twx - ox, dz = twz - oz, dy = oy - twy;
+                uint32_t horiz = re15_squareroot0((uint32_t)(dx*dx + dz*dz));
                 int32_t wYaw = ((int32_t)re15_atan2_q12(dz, dx) - 1024) & 0xFFF;
                 int32_t wPit = ((int32_t)re15_atan2_q12(dy, (int32_t)horiz) - 1024) & 0xFFF;
-                /* head-LOCAL absolute targets: scalar reduce yaw by actor heading + root yaw;
-                 * pitch is absolute (the head's parent has ~no pitch). Wrap to signed-12. */
                 tgt_yaw = (((wYaw - (int32_t)a->rot_y - (int32_t)root_kf_ay) + 0x800) & 0xFFF) - 0x800;
                 tgt_pit = ((wPit + 0x800) & 0xFFF) - 0x800;
+                yaw_active = 1; pit_active = 1;
             }
-            /* accumulator target = (head-local target - this bone's keyframe euler); on
-             * release (no active look-at) the accumulator eases to 0 = back to keyframe. */
-            int32_t resY = active ? ((((tgt_yaw - (int32_t)ay) + 0x800) & 0xFFF) - 0x800) : 0;
-            int32_t resP = active ? ((((tgt_pit - (int32_t)az) + 0x800) & 0xFFF) - 0x800) : 0;
-            /* constant max-step slew toward the residual, snap within one step.
-             * step = Plc_neck speed bytes (wk+0x9e yaw / wk+0x9f pitch); 96/96 in room1150. */
-            int32_t stepY = (int32_t)((uint16_t)a->neck_speed & 0xFF);        if (stepY < 1) stepY = 1;
-            int32_t stepP = (int32_t)(((uint16_t)a->neck_speed >> 8) & 0xFF); if (stepP < 1) stepP = 1;
+            if (rel) { tgt_yaw = rel_yaw; tgt_pit = rel_pit; yaw_active = 1; pit_active = 1; }
+            if (fl & 0x10) { pit_keyframe = 1; pit_active = 1; }   /* 0x10 Pitch-Null: der
+                                               * Akku laeuft auf 0 zurueck (Bestandteil des
+                                               * 0x12-Release und von Mode 4 = 0x58) */
+
+            /* --- SWEEP modes (bits 0x40 yaw / 0x20 pitch; decompile Z.79-94): counter in
+             * +0x160 (neck_tx); first pass seeds the target = the FULL clamp; on snap-arrival
+             * the target MIRRORS (Spiegelformel = -alt in local terms) and the counter
+             * decrements; at 0 -> flags = 0x12 (release) @0x80037698/@0x80037858. Mode 4
+             * (0x58) = yaw sweep = Kopfschuetteln; mode 3 (0x2a) = pitch sweep = Nicken. */
+            if (fl & 0x40) {
+                if (!a->neck_sweep) { a->neck_sweep = 1; a->neck_ty = a->neck_clamp_yaw; }
+                tgt_yaw = a->neck_ty; yaw_active = 1;
+            }
+            if (fl & 0x20) {
+                if (!a->neck_sweep) { a->neck_sweep = 1; a->neck_tz = a->neck_clamp_pitch; }
+                tgt_pit = a->neck_tz; pit_active = 1;
+            }
+
+            /* accumulator residual = (local target - keyframe euler); release -> 0. */
+            int32_t resY = yaw_active && !yaw_keyframe
+                             ? ((((tgt_yaw - (int32_t)ay) + 0x800) & 0xFFF) - 0x800) : 0;
+            int32_t resP = pit_active && !pit_keyframe
+                             ? ((((tgt_pit - (int32_t)az) + 0x800) & 0xFFF) - 0x800) : 0;
+            /* CLAMP the residual to the part limits (FUN_80037358 Z.57-67: target reduction
+             * BEFORE the slew; player ±0x200/±0x138 @0x800319b0-c4, NPC ±0x2c8/±0x138
+             * @0x8011c7a0/b0). This bound is exactly what the measured "verdreht" (yaw -901,
+             * pitch 426) exceeded — cutscene_headlook.md B3. */
+            int32_t cY = (int32_t)a->neck_clamp_yaw, cP = (int32_t)a->neck_clamp_pitch;
+            if (cY > 0) { if (resY >  cY) resY =  cY; if (resY < -cY) resY = -cY; }
+            if (cP > 0) { if (resP >  cP) resP =  cP; if (resP < -cP) resP = -cP; }
+            /* step source: bit 0x80 -> the SCD speed bytes (low yaw/high pitch, +0x9e/0x9f);
+             * else the part defaults +0x98/+0x9a (player 96/96, NPC 64/48). A 0 byte holds
+             * the axis (byte-true: the slew moves by the literal byte — 10D0 mode 2 sends
+             * speed 0x0A00 = yaw frozen, pitch 10/frame). */
+            int32_t stepY, stepP;
+            if (fl & 0x80) { stepY = (int32_t)((uint16_t)a->neck_speed & 0xFF);
+                             stepP = (int32_t)(((uint16_t)a->neck_speed >> 8) & 0xFF); }
+            else           { stepY = a->neck_step_yaw; stepP = a->neck_step_pitch; }
             int32_t dY = (((resY - (int32_t)a->neck_yaw)   + 0x800) & 0xFFF) - 0x800;
+            int snapY = 0;
             if      (dY >  stepY) a->neck_yaw = (int16_t)(a->neck_yaw + stepY);
             else if (dY < -stepY) a->neck_yaw = (int16_t)(a->neck_yaw - stepY);
-            else                  a->neck_yaw = (int16_t)resY;
-            /* RE15_NECK_TRACE: prove the head-look SLEW is smooth + sign-restored (U2:
-             * no 0x0FFF wrap to ~+360°). Emits tgt/res/neck_yaw per frame. */
+            else                  { a->neck_yaw = (int16_t)resY; snapY = 1; }
             { static FILE *nt = NULL; static int nti = 0;
               if (!nti) { nti = 1; const char *pp = getenv("RE15_NECK_TRACE"); if (pp && *pp) nt = fopen(pp, "w"); }
-              if (nt && active) { fprintf(nt, "tgt_yaw=%d resY=%d neck_yaw=%d (step=%d)\n",
-                                          (int)tgt_yaw, (int)resY, (int)a->neck_yaw, (int)stepY); fflush(nt); } }
+              if (nt && yaw_active) { fprintf(nt, "slot=%d tgt_yaw=%d resY=%d neck_yaw=%d (step=%d fl=%02x)\n",
+                                          (int)(a - g_actors), (int)tgt_yaw, (int)resY, (int)a->neck_yaw, (int)stepY, fl); fflush(nt); } }
             int32_t dP = (((resP - (int32_t)a->neck_pitch) + 0x800) & 0xFFF) - 0x800;
+            int snapP = 0;
             if      (dP >  stepP) a->neck_pitch = (int16_t)(a->neck_pitch + stepP);
             else if (dP < -stepP) a->neck_pitch = (int16_t)(a->neck_pitch - stepP);
-            else                  a->neck_pitch = (int16_t)resP;
+            else                  { a->neck_pitch = (int16_t)resP; snapP = 1; }
+            /* sweep arrival: mirror + count down; 0 -> flags = 0x12 (auto-release,
+             * @0x80037698 yaw / @0x80037858 pitch). */
+            if ((fl & 0x40) && snapY) {
+                a->neck_ty = (int16_t)(-a->neck_ty);                       /* Spiegelung */
+                if (a->neck_tx > 0) a->neck_tx--;
+                if (a->neck_tx <= 0) { a->neck_flags = 0x12; a->neck_sweep = 0; }
+            }
+            if ((fl & 0x20) && snapP) {
+                a->neck_tz = (int16_t)(-a->neck_tz);
+                if (a->neck_tx > 0) a->neck_tx--;
+                if (a->neck_tx <= 0) { a->neck_flags = 0x12; a->neck_sweep = 0; }
+            }
             ay = (int16_t)(ay + a->neck_yaw);   /* YAW  -> vy (+0x62) */
             az = (int16_t)(az + a->neck_pitch); /* PITCH -> vz (+0x64), byte-true (NOT ax) */
         }

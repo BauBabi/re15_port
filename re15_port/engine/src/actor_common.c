@@ -44,6 +44,16 @@ void re15_actor_init(void)
     g_actors[RE15_ACTOR_SLOT_PLAYER].root_prev_motion = -1;
     /* Byte-true player attack-hitbox (EXE-static @0x80073e94): radius 450, height 1530. */
     re15_player_apply_hitbox(&g_actors[RE15_ACTOR_SLOT_PLAYER]);
+    /* Player neck/head-look defaults — byte-true state-0 INIT LAB_800318f8:
+     * head bone 8 @0x80031938, flags 0 @0x80031974, steps 96/96 @0x800319a4-ac,
+     * yaw clamp ±0x200 @0x800319b0-b4, pitch clamp ±0x138 @0x800319b8-c4,
+     * accumulators 0 @0x800319bc-c0 (cutscene_headlook.md B3/B7). */
+    g_actors[RE15_ACTOR_SLOT_PLAYER].neck_bone        = 8;
+    g_actors[RE15_ACTOR_SLOT_PLAYER].neck_step_yaw    = 96;
+    g_actors[RE15_ACTOR_SLOT_PLAYER].neck_step_pitch  = 96;
+    g_actors[RE15_ACTOR_SLOT_PLAYER].neck_clamp_yaw   = 0x200;
+    g_actors[RE15_ACTOR_SLOT_PLAYER].neck_clamp_pitch = 0x138;
+    g_actors[RE15_ACTOR_SLOT_PLAYER].neck_target_slot = -1;
     g_actor_count = 1;
 }
 
@@ -56,6 +66,7 @@ int re15_actor_alloc(uint8_t type)
             g_actors[i].active = 1;
             g_actors[i].type   = type;
             g_actors[i].flags  = 0x01;
+            g_actors[i].neck_target_slot = -1;   /* no head-look target until an INIT sets one */
             if ((uint8_t)(i + 1) > g_actor_count) {
                 g_actor_count = (uint8_t)(i + 1);
             }

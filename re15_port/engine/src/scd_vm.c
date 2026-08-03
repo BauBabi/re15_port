@@ -1759,6 +1759,12 @@ static int op_plc_motion(scd_thread_t *t)
     } else {
         slot = (entity < RE15_ACTOR_MAX) ? entity : RE15_ACTOR_SLOT_PLAYER;
     }
+    /* Ein Plc_motion beendet einen laufenden Spieler-Event-Reach (Mode-6-Halt): das Original
+     * ueberschreibt +0x5 (Sub) mit pc[1] — der 0x800517f0-Idle laeuft nicht weiter. */
+    if (slot == RE15_ACTOR_SLOT_PLAYER) {
+        extern void re15_player_event_reach_end(void);
+        re15_player_event_reach_end();
+    }
     re15_actor_set_motion(&g_actors[slot], (int16_t)motion_id);
     /* Player animation-bank select (see re15_actor.h + memory anim_bank_selection_mechanism for
      * the full RE). The entity operand is a RESULT-CORRECT fold-vs-hold selector: entity!=0 →
@@ -1893,6 +1899,49 @@ static int op_plc_dest(scd_thread_t *t)
     }
     if (slot >= 0 && slot < RE15_ACTOR_MAX) {
         re15_actor_t *a = &g_actors[slot];
+        /* MODE = der EXECUTOR-SUB (byte-true @0x80041c14-18: `sb 4,0x4(a1); sb mode,0x5(a1)` —
+         * Plc_dest setzt IMMER State 4 + Sub = mode). Nur die Modi 4/5/7/8/9 sind WALK-Subs
+         * (Player-Tabelle 0x80073e30 / NPC 0x80076ca0: [4]=WALK [5]=RUN [7]/[8] Varianten
+         * [9]=TURN) — die POSE-/EVENT-Subs 0-3 und 6 laufen KEINEN Schritt: Sub 6 =
+         * EVENT-REACH @0x800517f0 (Clip 1 einmal -> Clip-2-Idle-Loop; die dest-Felder
+         * +0x1bc/+0x1be werden im ganzen Body nie gelesen). Der alte Port startete fuer JEDEN
+         * Mode den Walker -> `Plc_dest(0,6,0x3f,0,0)` liess Marvin UND Leon in ROOM10D0 ewig
+         * Richtung Weltursprung laufen (walk_active haengt, NPC-Tick yieldet, Marvin 1700
+         * Ticks eingefroren + weggedreht — marvin_10d0.md D3, CONFIRMED). */
+        int is_walk = (mode == 0x04 || mode == 0x05 || mode == 0x07 ||
+                       mode == 0x08 || mode == 0x09);
+        if (!is_walk) {
+            /* Re-Init-Guard (@0x80041bf8-c0c): skip nur wenn +0x1c4&4 UND +0x5 == mode. */
+            int skip_init = (a->state == 4 && a->sub_state_1 == mode && (a->anim_flags & 0x04));
+            a->walk_active = 0;
+            a->walk_dest_x = x; a->walk_dest_z = z;       /* dest gestasht (+0x1bc/+0x1be) */
+            a->walk_flag_bit = flag_bit;                  /* +0x1c3 */
+            if (!skip_init) {
+                if (slot != RE15_ACTOR_SLOT_PLAYER) {
+                    a->state = 4;                          /* @0x80041c14 */
+                    a->sub_state_1 = mode;                 /* @0x80041c18 -> Executor-Sub */
+                    a->sub_state_2 = 0;
+                    a->anim_flags  = 0;                    /* sh 0,0x1c4 @0x80041c4c */
+                } else {
+                    /* PLAYER Mode 6: derselbe Sub @0x800517f0 (Tabelle 0x80073e30[6]) auf dem
+                     * Spieler-+0x170-Kanal = die PLW-Paar-B-Bank (Clip 1 @0x80051854 einmal ->
+                     * Clip 2 @0x800518c8 Loop) — dieselbe Maschine wie der Kraehen-Mode-6-Halt
+                     * (crow_victim_anim.md §1.4). Engine-FSM in game_step_common. */
+                    extern void re15_player_event_reach_begin(void);
+                    if (mode == 0x06) re15_player_event_reach_begin();
+                }
+            }
+#ifdef RE15_PLATFORM_PC
+            fprintf(stderr, "[scd] Plc_dest(slot=%d mode=0x%02X) -> state4/sub%d (POSE/EVENT, kein Walk)\n",
+                    slot, mode, mode);
+#endif
+            t->pc += 8;
+            return 1;
+        }
+        if (slot == RE15_ACTOR_SLOT_PLAYER) {         /* Walk-Mode ersetzt einen Mode-6-Halt */
+            extern void re15_player_event_reach_end(void);
+            re15_player_event_reach_end();
+        }
         a->walk_dest_x   = x;
         a->walk_dest_z   = z;
         a->walk_mode     = mode;
@@ -1960,20 +2009,30 @@ static int op_plc_neck(scd_thread_t *t)
      * the old code wrote -22000 straight onto the head yaw → grotesque head clip through
      * Leon. Plc_neck(0,…) at the end = mode 0 = release → head eases back to forward.) */
     uint8_t mode = t->pc[1];
-    re15_actor_t *p = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-    p->neck_tx    = scd_read_le_s16(&t->pc[2]);   /* +0x160 world X */
-    p->neck_ty    = scd_read_le_s16(&t->pc[4]);   /* +0x162 world Y */
-    p->neck_tz    = scd_read_le_s16(&t->pc[6]);   /* +0x164 world Z */
-    p->neck_speed = scd_read_le_s16(&t->pc[8]);   /* +0x9e          */
-    /* +0x1b8 = 0x80 then mode bits (LAB_80041e98). 0x04/0x08 = world look-at active;
-     * mode 0 (0x92, no 0x04/08) = release/reset → re15_neck_update eases the head forward. */
+    /* ZIEL = die per-Thread-WORK-ENTITY (`lw v1,0x154(a0)` @0x80041e9c) — NICHT der Spieler.
+     * Der alte Hardcode auf g_actors[PLAYER] leitete jedes NPC-Plc_neck (Work_set(2,N)) auf
+     * Leons Kopf um — die Ursache von "Leons Kopf komisch verdreht" in ROOM10D0 (Marvins 5
+     * Neck-Kommandos, u.a. mit Leons eigener Position als Ziel) und der Grund, warum NPCs nie
+     * den Kopf bewegten. Routing identisch zu op_plc_motion/op_plc_dest (t->work_slot).
+     * cutscene_headlook.md B1 (CONFIRMED; 158 NPC-Necks in 30 Raeumen game-wide). */
+    int nslot = (t->work_slot >= 0 && t->work_slot < RE15_ACTOR_MAX)
+                    ? t->work_slot : RE15_ACTOR_SLOT_PLAYER;
+    re15_actor_t *p = &g_actors[nslot];
+    p->neck_tx    = scd_read_le_s16(&t->pc[2]);   /* +0x160 (Welt-X / Sweep-Zaehler)   @0x80041f20-28 */
+    p->neck_ty    = scd_read_le_s16(&t->pc[4]);   /* +0x162 (Welt-Y / relativer Yaw)   @0x80041f34-3c */
+    p->neck_tz    = scd_read_le_s16(&t->pc[6]);   /* +0x164 (Welt-Z / Pitch-Betrag)    @0x80041f48-50 */
+    p->neck_speed = scd_read_le_s16(&t->pc[8]);   /* low->+0x9e yaw / high->+0x9f pitch @0x80041f5c-6c */
+    /* +0x1b8 = 0x80 | Modus-Bits (caseD_0..4 @0x80041ed8-f10): 0=|0x12 Release, 1=|0x04
+     * Welt-Punkt, 2=|0x08 relativ, 3=|0x2a rel. Pitch-Sweep (Nicken), 4=|0x58 Yaw-Sweep
+     * (Kopfschuetteln, Zaehler in +0x160). */
     static const uint8_t mode_bits[5] = { 0x12, 0x04, 0x08, 0x2a, 0x58 };
     p->neck_flags = (uint8_t)(0x80 | (mode < 5 ? mode_bits[mode] : 0));
+    p->neck_sweep = 0;                            /* neuer Befehl -> Sweep-Latch neu armieren */
     /* RE15_NECK_LOG: prove op 0x41 fires + its target/mode (SDL stderr → void). */
     { static FILE *nl = NULL; static int nli = 0;
       if (!nli) { nli = 1; const char *pp = getenv("RE15_NECK_LOG"); if (pp && *pp) nl = fopen(pp, "w"); }
-      if (nl) { fprintf(nl, "PLC_NECK mode=%u tgt=(%d,%d,%d) speed=%d flags=0x%02x\n",
-                        mode, p->neck_tx, p->neck_ty, p->neck_tz, p->neck_speed, p->neck_flags);
+      if (nl) { fprintf(nl, "PLC_NECK slot=%d mode=%u tgt=(%d,%d,%d) speed=%d flags=0x%02x\n",
+                        nslot, mode, p->neck_tx, p->neck_ty, p->neck_tz, p->neck_speed, p->neck_flags);
                 fflush(nl); } }
     t->pc += 10;
     return 1;
@@ -1999,6 +2058,8 @@ static int op_plc_neck(scd_thread_t *t)
  * per-thread (rotor follows body off-pad). */
 static int op_plc_ret(scd_thread_t *t)
 {
+    /* Szenen-Ende beendet auch einen laufenden Spieler-Event-Reach (Mode-6-Halt). */
+    { extern void re15_player_event_reach_end(void); re15_player_event_reach_end(); }
     /* BK-round 2026-05-29: Plc_ret is the canonical CINEMATIC-END handoff.
      * PSX LAB_80041f88 writes player-mode DAT_800aca58=1 → a cleanup FSM returns
      * control to the player over the next frames. We lack that multi-frame FSM,

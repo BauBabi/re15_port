@@ -68,6 +68,16 @@ re15_enemy_bank_t *re15_enemy_alloc(uint8_t type);
 /* Drop all banks (call on room change). Frees any malloc'd buf (PC). */
 void re15_enemy_reset(void);
 
+/* ===== RBJ-Marker-Binder (byte-true FUN_8001b3f8, Aufruf @0x80039a08) =====
+ * Registriert die ROHE RBJ-/animation-Sektion des Raums (muss den residenten RDT-Buffer
+ * aliasen). Die Record->Entity-Bindung ist DATENGETRIEBEN: Marker-u32 @EMR-Prefix, Bit 0 =
+ * Spieler, Bit (1+i) = Enemy-Entity i (= Aktor-Slot 1+i). Ziel = der +0x180/+0x184-Kanal,
+ * den NUR Executor-Sub 0 (@0x80050d40/48) spielt. Lazy aufgeloest + gecacht; Reset via
+ * re15_enemy_reset. Typ 0x47 (Elliot) ist ausgenommen (marvin_10d0.md O3). */
+void re15_rbj_bind_room(const uint8_t *rbj, size_t size);
+const re15_emd_animation_t *re15_actor_rbj_anim(int slot);
+const re15_emd_skeleton_t  *re15_actor_rbj_skel(int slot);
+
 /* Room-cinematic overlay. Given a room's RBJ buffer (loaded per-port) + the PRE-OVERLAY
  * base skeletons, re-overlays Leon (+ optionally Elliot) from their bases with the RBJ
  * keyframes, and rebinds the per-room cutscene enemy's animation from an RBJ record
