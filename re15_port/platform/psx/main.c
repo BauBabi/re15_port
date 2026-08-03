@@ -149,17 +149,15 @@ int main(int argc, const char **argv)
      * pending the multi-room door-self-reentry — see multiroom_remaining_steps_TODO. */
     re15_game_flag_set(3, 193, 1);   /* = sub03 ran on the prior (multi-room) visit */
 
-    /* Außenbereich door hub (2026-06-06): ROOM1170 main00 gates the WHOLE outdoor
-     * door set behind `else` of `if(Ck(4,195,0))` — door 6 (the return from the
-     * outdoor area back to the helipad) AND door 5 (→ ROOM1140) + the examine AOTs
-     * only register when (4,195)==1. Door 0 (helipad→outdoor) is always on, so with
-     * (4,195)==0 you reach the outdoor area but it's a DEAD END (no return, no 1140
-     * door). The original sets (4,195) in ROOM1140/sub02 — i.e. once the player has
-     * been outside; we stage it here (same data-driven pattern as (3,193)) so the
-     * unmodified main00 registers the return door 6 + the on-foot door 5→1140.
-     * ROOM1140's own return door (door1→1170) is registered in BOTH branches, so
-     * this doesn't change the way back from 1140. */
-    re15_game_flag_set(4, 195, 1);
+    /* KEIN Pre-Stage von (4,195) — die fruehere Zeile `re15_game_flag_set(4,195,1)`
+     * beruhte auf einer Fehllesung der 1170-Blockstruktur ("sonst Dead-End").
+     * Byte-Befund (analysis/door_lock_1170.md §1/§8): der Ifel/Else-Block
+     * @main-SCD 0x0124-0x0164 umfasst NUR Slot 5; `Else_ck 07 00 26 00` @0x0140
+     * springt auf 0x0166 = Door_aot_set slot6 (`3b 06`, HINTER dem Block), Tuer 4
+     * und die Treppen sind ebenfalls unconditional. Mit (4,195)==0 wird Slot 5 das
+     * sce-1-Zwillingsrecord (msg 0x0c "It's locked from the other side.",
+     * LAB_80043084) — der byte-true Lock. Unlock NUR via ROOM1140 sub02
+     * `Set(4,0xc3,1)` @sub-SCD 0x0190 (Innenseite). */
 
     /* Spawn in cut 0's helipad position (matches PC main.c, AM-round).
      *

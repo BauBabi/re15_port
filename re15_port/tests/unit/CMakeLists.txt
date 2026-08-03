@@ -612,3 +612,11 @@ target_include_directories(probe_save_counter PRIVATE ${CMAKE_SOURCE_DIR}/includ
 add_executable(probe_save_injured probe_save_injured.c)
 target_link_libraries(probe_save_injured PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_save_injured PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# Regression: ROOM1170 Tuer-Slot-5-Lock — Ifel/Else-Zwilling sce1-MESSAGE/sce2-DOOR auf Ck(4,0xc3)
+# ("It's locked from the other side", analysis/door_lock_1170.md)
+add_executable(probe_door_1170 probe_door_1170.c)
+target_link_libraries(probe_door_1170 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_door_1170 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_door_1170_lock COMMAND probe_door_1170)
+set_tests_properties(unit_door_1170_lock PROPERTIES TIMEOUT 30)

@@ -2394,11 +2394,17 @@ re_title:;
          * Evt_exec(0x180B) → sub11 (narrator) through op_evt_exec; sub11 then sets
          * (3,125)/(4,242)/(2,7) + Cut_chg(7) + its 4 messages from its OWN bytecode. */
         re15_game_flag_set(3, 193, 1);
-        /* Außenbereich door hub: room1170 main00 gates the whole outdoor door set behind the
-         * `else` of `if(Ck(4,195,0))` — door 6 (return to the helipad) + door 5 (→ROOM1140) +
-         * examines only register when (4,195)==1; door 0 (helipad→outdoor) is always on, so
-         * (4,195)==0 makes the outdoor area a DEAD END. The original sets it in ROOM1140/sub02. */
-        re15_game_flag_set(4, 195, 1);
+        /* KEIN Pre-Stage von (4,195): der fruehere `flag_set(4,195,1)` hier beruhte auf einer
+         * FEHLLESUNG der 1170-Blockstruktur ("Aussenbereich sonst Dead-End"). Byte-Befund
+         * (analysis/door_lock_1170.md §1/§8, ROOM1170.RDT main00): der Ifel_ck/Else_ck-Block
+         * @0x0124-0x0164 umfasst NUR Slot 5 — `Else_ck 07 00 26 00` @0x0140 springt auf 0x0166,
+         * und DORT beginnt Door_aot_set slot6 (`3b 06` — Datei-verifiziert) bereits HINTER dem
+         * Block; Tuer 4 (->ROOM1130) und die Treppen-AOTs sind ebenfalls unconditional. Mit
+         * (4,195)==0 installiert Slot 5 das Aot_set-sce-1-Zwillingsrecord (@0x012c, msg 0x0c =
+         * "It's locked from the other side.", Handler LAB_80043084) statt der scharfen Tuer —
+         * der byte-true Lock. Unlock NUR in ROOM1140 sub02 `Set(4,0xc3,1)` @sub-SCD 0x0190
+         * (Innenseite der Tuer). Das Pre-Stage schaltete die Tuer am Treppenende frei
+         * (Nutzer-Report 2026-08-03) und ist ersatzlos gestrichen. */
     }
 
     /* Phase 4.5.12-H: refined position from agent F1's precise reverse-
