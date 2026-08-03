@@ -153,6 +153,8 @@ Vollständig in [HANDOVER_2026-08-01.md](HANDOVER_2026-08-01.md) §1/§2b. Kernp
 
 | 2026-08-02 | **BLUT-DECAL-SYSTEM gefunden + portiert** (Nutzer-Save als Ground Truth): DR_MOVE-Blits aus der Damage-Bank (TIM-Seite 2) auf 8 Panels, Akkumulator FUN_80037edc (Schwelle 120, Clamp 2), Trigger = Overlay-Hurt-Dispatcher; KEINE HP-Schwelle. Port: Wund-Tabelle + Trigger + Slot-0-Blit + Re-Apply; ctest `unit_wound_accumulator`. OFFEN: Substate-0/1-Writer, STAGE2-5-Helper-Args, Gegner-Wunden @0x800b267c, Live-gdigrab | *(dieser Commit)* |
 
+| 2026-08-03 | **Wund-Trigger korrigiert + Biss-Blut komplett** (`b26fe943`): Dispatcher @0x8010a580 = Phase 4 der Grab-OPFER-FSM → Stempel NUR beim überlebten Grab (Mash-Release); Falsch-Stempel aus dem Hurt-Entry entfernt. Alle Biss-/Release-/Devour-/Krähen-Blut-Spawns mit Original-Scales (0x1500/0x2000/ctr<<11) + Bone-Ankern portiert; 7 Alt-Sites von halber Scale auf 0x2000 gehoben. OFFEN: Steh-Biss-Direktstempel @0x8010f360, Dog-Knockdown-Klasse 4/5, hitchain-VERIFY ausstehend, Live-gdigrab Biss-Sequenz | `b26fe943` |
+
 Baseline nach der Session: **103/103 ctest grün.**
 
 ### Offene Punkte (oberste Zeile = nächster Schritt)
