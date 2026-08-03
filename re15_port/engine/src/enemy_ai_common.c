@@ -1400,6 +1400,56 @@ static void re15_enemy_ai_live_wander(int slot, re15_actor_t *e)
  * blockers) — the port has no separate ray-cast geometry. Counter/gating cadence is byte-true. */
 static uint8_t s_los_counter[RE15_ACTOR_MAX];             /* +0x1f0 low bits */
 static uint8_t s_los_blocked[RE15_ACTOR_MAX];             /* +0x1f0 bit 0x20 accumulator */
+/* BYTE-TRUE LOS-Blocker-Test FUN_8003dcc4 (Decompile RE_15_Quellcode_V2/FUN_8003dcc4.c,
+ * Feld-Mapping gegen re15_sca_entry_t: hw0=width hw1=density hw2=x hw3=z hw5=u1|floor<<8):
+ * pro Step k wird NUR die Quadranten-Region k der SCA gescannt (Runtime-Pointer
+ * @sca_base+8+k*4 aus FUN_8003aea0; Port = Praefixsummen sca_rgn[0..3], Region 4 NIE).
+ * Zellen-Filter: (w5>>12) == GEGNER-Band (+0x82: Kraehe = -(y/1800) Root-Refresh
+ * @0x80112128-54, Zombie = em_set pc[4] @0x800421d0) && (w5&0xf00) == 0x300.
+ * Kreuzung: alle Koordinaten /0x12, Ray (enemy->player) muss BEIDE Straddle-Tests einer
+ * Zell-Diagonale bestehen (OuterProduct0-Vorzeichen; Diagonalen (x1,z0)-(x0,z1) und
+ * (x0,z0)-(x1,z1)). analysis/crow_shot_attack.md F1 (CONFIRMED): der alte on_floor-
+ * Stand-in nutzte das SPIELER-Band mit invertierter Zellen-Semantik und blockte offene
+ * Flaechen dauerhaft — die fliegende 1170-Kraehe (Band 5..7 > max. Zellen-Band 4) ist im
+ * Original strukturell NIE geblockt, ROOM1140 (alle Zellen Band 0/Typ 3) bleibt identisch. */
+static int32_t los_cross_z(int32_t ax, int32_t az, int32_t bx, int32_t bz)
+{
+    return ax * bz - az * bx;                      /* OuterProduct0 y-Komponente */
+}
+static int los_seg_straddles_diag(int32_t ex, int32_t ez, int32_t px, int32_t pz,
+                                  int32_t c1x, int32_t c1z, int32_t c2x, int32_t c2z)
+{
+    int32_t dx = c2x - c1x, dz = c2z - c1z;
+    int32_t s1 = los_cross_z(dx, dz, px - c1x, pz - c1z);
+    int32_t s2 = los_cross_z(dx, dz, ex - c1x, ez - c1z);
+    if (((uint32_t)(s1 ^ s2) & 0x80000000u) == 0) return 0;   /* Ray-Enden straddeln nicht */
+    int32_t rx = px - ex, rz = pz - ez;
+    int32_t s3 = los_cross_z(rx, rz, c1x - ex, c1z - ez);
+    int32_t s4 = los_cross_z(rx, rz, c2x - ex, c2z - ez);
+    return ((uint32_t)(s3 ^ s4) & 0x80000000u) != 0;          /* Diagonal-Enden straddeln */
+}
+static int re15_los_ray_blocked(const re15_actor_t *e, const re15_actor_t *player, int step)
+{
+    if (!g_room_rdt.sca || step < 0 || step > 3) return 0;
+    int start = 0;
+    for (int g2 = 0; g2 < step; g2++) start += g_room_rdt.sca_rgn[g2];
+    int cnt = g_room_rdt.sca_rgn[step];
+    if (start + cnt > g_room_rdt.sca_count) return 0;
+    int32_t ex = e->x / 0x12, ez = e->z / 0x12;               /* alle Koordinaten /0x12 */
+    int32_t px = player->x / 0x12, pz = player->z / 0x12;
+    for (int i = 0; i < cnt; i++) {
+        const re15_sca_entry_t *c = &g_room_rdt.sca[start + i];
+        if ((c->floor >> 4) != e->floor) continue;            /* w5>>12 == +0x82 */
+        if ((c->floor & 0x0f) != 3) continue;                 /* (w5&0xf00) == 0x300 */
+        int32_t x0 = (int32_t)c->x / 0x12, z0 = (int32_t)c->z / 0x12;
+        int32_t x1 = ((int32_t)c->x + (int32_t)c->width)   / 0x12;
+        int32_t z1 = ((int32_t)c->z + (int32_t)c->density) / 0x12;
+        if (los_seg_straddles_diag(ex, ez, px, pz, x1, z0, x0, z1)) return 1;  /* Anti-Diagonale */
+        if (los_seg_straddles_diag(ex, ez, px, pz, x0, z0, x1, z1)) return 1;  /* Haupt-Diagonale */
+    }
+    return 0;
+}
+
 static int re15_enemy_los_probe(int slot, re15_actor_t *e, const re15_actor_t *player)
 {
     uint8_t step = (uint8_t)(s_los_counter[slot] & 0x0f);
@@ -1412,11 +1462,12 @@ static int re15_enemy_los_probe(int slot, re15_actor_t *e, const re15_actor_t *p
         int d = (((fb - (int)e->rot_y) + 0x800) & 0x0fff) - 0x800;
         if (d < -0x5e8 || d > 0x5e8) s_los_blocked[slot] = 1;
     }
-    if (g_room_rdt_ok) {                                  /* one amortized ray sample per step */
-        int32_t dx = player->x - e->x, dz = player->z - e->z;
-        int32_t sx = e->x + dx * (step + 1) / 5;
-        int32_t sz = e->z + dz * (step + 1) / 5;
-        if (!re15_collision_on_floor(&g_room_rdt, sx, sz))
+    if (g_room_rdt_ok) {                                  /* byte-true Ray: Region `step` gegen
+                                                           * FUN_8003dcc4 (s. Helper oben) —
+                                                           * ersetzt den on_floor-Stand-in, der
+                                                           * offene Flaechen dauerhaft blockte
+                                                           * (crow_shot_attack.md F1) */
+        if (re15_los_ray_blocked(e, player, step))
             s_los_blocked[slot] = 1;
     }
     if (step == 3) {                                      /* the verdict tick */
@@ -3299,11 +3350,15 @@ static void re15_crow_steer(re15_actor_t *e, re15_actor_t *player)
             else if (e->sub_state_1 != 6)  re15_crow_sub(e, 6);   /* @0x801132b0-b8 (+0x5!=6 -> 6) */
             else                           re15_crow_perch_return(e);  /* +0x5==6 arm (@0x801132c0;
                                                                         * dead in-context: +0x5==9) */
-        }
-        if (e->crow_atk_ctr >= 3) re15_crow_perch_return(e);  /* @0x801132e4-f8 `lbu +0x1d6;
-                                                               * sltiu 3; miss -> jal 0x80115f00`
-                                                               * — the way home after 3 attacks
+            if (e->crow_atk_ctr >= 3) re15_crow_perch_return(e);
+                                                              /* @0x801132e4-f8 `lbu +0x1d6; sltiu 3;
+                                                               * miss -> jal 0x80115f00` — NUR im
+                                                               * pturn-Pfad (@0x80113274 beq ->
+                                                               * 0x80113300 ueberspringt es sonst;
+                                                               * crow_shot_attack.md F7 CONFIRMED —
+                                                               * lief faelschlich jeden Tick)
                                                                * (audit wf_827f186d crow #4) */
+        }
         if (e->crow_parity != 0 && e->crow_armed != 0 &&
             e->crow_dist < 10000 && e->crow_atk_ctr < 3) {          /* attack-commit @0x8011330c-70 */
             re15_crow_sub(e, (e->grid_id & 0x80) ? 10 : 12);        /* downed->cruise, else grapple */
@@ -3806,6 +3861,17 @@ static void re15_crow_flight2_sub(re15_actor_t *e, re15_actor_t *player)
  * sub_state_3), [7] gib (the feather burst). */
 static void re15_crow_death(re15_actor_t *e)
 {
+    /* Death-Lane = weapon_id (+0x5 nach dem Schuss, @0x800124bc; Dispatcher @0x80114700-24
+     * jalr @0x801211cc[+0x5] OHNE Bounds-Check): [7,8,9,10,11,13,15,16,17,18] -> GIB-Lane
+     * 0x801149c4 (auch Shotgun + alle schweren Waffen zerlegen in Federn — der Port GIBte
+     * vorher nur bei Waffe 7), [0-6,12,19,20] -> Normal-Fall 0x80114738, [14] -> dritte
+     * Lane 0x80114ba4 (Body ungelesen, dokumentiert OFFEN — faellt hier auf Normal-Fall).
+     * crow_shot_attack.md F3 (CONFIRMED). */
+    {
+        int wl = e->sub_state_1;
+        int gib = (wl >= 7 && wl <= 11) || wl == 13 || (wl >= 15 && wl <= 18);
+        if (gib && e->sub_state_1 != 7) e->sub_state_1 = 7;   /* auf die Port-GIB-Spur mappen */
+    }
     if (e->sub_state_1 == 7) {   /* GIB lane 0x801149c4: 13 feather children (@0x80114a50) -> corpse */
         if (e->sub_state_2 == 0) {
             re15_esp_fx_splatter(re15_esp_room_bank(), 0, 13, e->x, e->y, e->z, e->crow_perch_h);
@@ -3826,9 +3892,11 @@ static void re15_crow_death(re15_actor_t *e)
         e->crow_speed = 0; e->rot_z = 0; e->sub_state_3 = 1;         /* +0x8c=0, +0x6c=0 */
         /* Death-Lane-Flock-Write @0x801147fc-8024: `lhu aca50; addiu +1; sh`, dann bei armed
          * (+0x1db!=0) Re-Arm-Broadcast `(aca50)&0xf0ff|0x800` an die disarmten Flock-Mates
-         * (Konsument = ACTIVE-Tail-One-Shot @0x801125dc-614). GIB-Lane-Write oben; die dritte
-         * Lane @0x80114c68-c90 gehoert zu einem nicht portierten Death-Pfad (dokumentiert offen).
-         * Dossier crow_1170.md D6 (STAGE1-unerreichbar, 100%-Mandat). */
+         * (Konsument = ACTIVE-Tail-One-Shot @0x801125dc-614). GIB-Lane-Write oben; die
+         * @0x80114c68-c90-Writes gehoeren zur Waffen-14-Lane 0x80114ba4 (nicht portiert,
+         * crow_shot_attack.md F3). KORREKTUR (F8): die Death-Lanes SIND in STAGE1 per Schuss
+         * erreichbar (jeder Treffer toetet, Lane = weapon_id) — nur die Root-PROMOTION
+         * (bit 0x1f) ist STAGE3/5-only; das alte "STAGE1-unerreichbar"-Etikett galt nur ihr. */
         s_crow_flock = (uint16_t)(s_crow_flock + 1);
         if (e->crow_armed)
             s_crow_flock = (uint16_t)((s_crow_flock & 0xf0ff) | 0x800);
@@ -3989,6 +4057,19 @@ static void re15_crow_ai_tick(int slot)
             s_crow_flock = (uint16_t)(s_crow_flock & 0xf0ff); /* @0x80112608-0c */
             e->crow_armed = 1;                                /* @0x80112610-14 */
         }
+        /* ELEVATION-BAND-Stempel (@0x80112560-c8: word0 &= 0x1fffffff, dann vert>=4001 ->
+         * jal 0x80012a0c(0x1770) = UP-Bit 0x80000000 NUR wenn player-dist<6000; vert<800 ->
+         * jal 0x80012974(0x1770) = DOWN-Bit 0x20000000; sonst LEVEL 0x40000000) — der
+         * Schuss-Resolver trifft die Kraehe nur im passenden Aim-Band (vorher traf der Port
+         * pauschal mit LEVEL). crow_shot_attack.md F5 (CONFIRMED). */
+        if (e->crow_vert_err >= 4001)    e->aim_band = (uint8_t)((e->crow_dist < 6000) ? 4 : 0);
+        else if (e->crow_vert_err < 800) e->aim_band = 1;
+        else                             e->aim_band = 2;
+        /* +0x9a-LATCH (Tail-Helper 0x80115f70, jal @0x801125cc): hp = vert>=5200 ? -1 : 0
+         * (@0x80115f88-9c) — die hohe Kraehe ist kein Waffen-/Auto-Aim-Ziel (Resolver und
+         * FUN_8003703c uebergehen hp<0; 703c-Fallback-Bucket dokumentiert offen).
+         * crow_shot_attack.md F4 (CONFIRMED). */
+        e->hp = (int16_t)((e->crow_vert_err >= 5200) ? -1 : 0);
         /* ROOT post-pass body-push (aec4 @0x801121d4): crow pushed out of the player;
          * +0x1d0 = contact (the strike/grab connect the handlers read next tick). */
         e->crow_contact = (uint8_t)(re15_body_push(player, RE15_BODY_R_PLAYER, e,
@@ -5609,7 +5690,14 @@ static void re15_maggot_ai_tick(int slot)
                         pl->hp = (int16_t)(pl->hp - 12);         /* @0x801187b4-c0 */
                         e->dog_blocked_ctr = 0x2d;               /* @0x801187c4-cc */
                         re15_audio_room_se(5);                   /* Se(5) @0x801187c8 (a0=5 @0x80118798) */
-                        pl->hit_react |= 1;                      /* @0x80118814-28; aca58=2/facing+4 @0x801187d0-f8 = port convention */
+                        pl->hit_react |= 1;                      /* @0x80118814-28 */
+                        /* KNOCKDOWN-Klasse statt Flinch-Degradation (player_knockdown.md KD-3/F1,
+                         * CONFIRMED — dieser Heavy-Biss gehoert dem 0x27-BOSS): aca58=2 +
+                         * aca59 = a780(facing) + 4 (@0x801187d0-f8, jal a780 @0x801187dc) ->
+                         * EXE-Handler [4] (vorn, 0x800360e8) / [5] (hinten, 0x8003644c).
+                         * HP<0 -> Death hat Vorrang (@0x801187fc-8810, bestehender Pfad). */
+                        if (pl->hp >= 0)
+                            re15_player_knockdown_begin(re15_maggot_a780(e, pl));
                     }
                 }
                 break;

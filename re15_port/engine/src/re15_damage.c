@@ -614,7 +614,16 @@ retry_after_latch:
             int elev = re15_player_aim_elevation();
             uint32_t pband = (elev > 0) ? 0x80000000u : (elev < 0) ? 0x20000000u : 0x40000000u;
             uint32_t eband;
-            if (e->grid_id & 0x80) {
+            if (e->type == 0x21) {
+                /* KRAEHE: das Band kommt aus dem ACTIVE-Tail-Stempel (@0x80112560-c8) —
+                 * UP 0x80000000 (0x80012a0c(0x1770): vert>=4001 && dist<6000) / DOWN
+                 * 0x20000000 (0x80012974(0x1770): vert<800) / LEVEL 0x40000000 / 0 = kein
+                 * Ziel. Vorher traf der Port die fliegende Kraehe pauschal mit LEVEL.
+                 * (crow_shot_attack.md F5, CONFIRMED) */
+                eband = (e->aim_band == 4) ? 0x80000000u :
+                        (e->aim_band == 1) ? 0x20000000u :
+                        (e->aim_band == 2) ? 0x40000000u : 0u;
+            } else if (e->grid_id & 0x80) {
                 /* The helpers measure from the PLAYER (0x800aca88/90 vs entity +0x34/+0x3c), not from
                  * the melee blade origin, so use the player distance here regardless of weapon. */
                 int32_t bdx = e->x - pl->x, bdz = e->z - pl->z;
