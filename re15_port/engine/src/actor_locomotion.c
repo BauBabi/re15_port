@@ -284,6 +284,9 @@ void re15_actor_step_walk(re15_actor_t *a)
         a->z -= (int32_t)((s * (int32_t)speed) >> 12);
     }
 
+    /* [SEIT marvin_glide_end.md Fix #1 (2026-08-04) laufen NPC-Plc_dest-Walks (0x40-0x4d ausser
+     * Elliot 0x47) byte-true in der State-4-Sub-VM (re15_npc_sub_walk) — die NPC-Zweige hier
+     * (motion=5-Set, Clip-Advance, Arrival-Freeze) erreichen nur noch Elliot/Player.] */
     /* NPC-WALK-CLIP-ADVANCE (Nutzer-Regression 2026-08-03: "Marvin gleitet nur"): der
      * Original-Walk-Sub tickt anim_set JEDEN Frame (jal f314 im Walk-Body @0x8005134c-Region)
      * — im Port ist waehrend eines Plc_dest-Walks aber NIEMAND der Advancer: der NPC-Tick

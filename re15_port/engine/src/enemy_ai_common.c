@@ -6435,39 +6435,81 @@ static void re15_npc_sub_turn(re15_actor_t *e)
     re15_npc_anim(e);                                        /* advance the turn clip (motion 5) */
 }
 
-/* per-type WALK param @0x80076c00 byte[(type-0x40)*2] — INIT writes it to +0x8c (sh, halfword). */
-static const uint8_t s_npc_walk_param[16] =
-    { 0x4b,0x4b,0x4b,0x4b,0x46,0x46,0x46,0x46,0x4b,0x4b,0x4b,0x32,0x32,0x46,0x46,0x32 };
+/* Per-Sub-Speed-Tabellen byte[(type-0x40)*2] (marvin_glide_end.md §2.3, PSX.EXE byte-gedumpt;
+ * INIT schreibt den Wert nach +0x8c). Die ODD-Bytes sind die Phase-2-Slews — Phase 2 liest sie
+ * fuer ALLE Subs aus der Sub-4-Tabelle @0x80076c01 (= 48 fuer alle Typen; Verify D4). */
+static const uint8_t s_npc_walk_param[16] =     /* Sub 4 @0x80076c00 (INIT @0x800511b4/bc) */
+    { 75,75,75,75, 70,70,70,70, 75,75,75, 50,50, 70,70, 50 };
+static const uint8_t s_npc_run_param[16] =      /* Sub 5 @0x80076c80 (INIT @0x800514f0/f8) */
+    { 200,200,200,200, 210,210,210,210, 200,200,200, 120,120, 210,210, 120 };
+static const uint8_t s_npc_walk7_param[16] =    /* Sub 7 @0x80076c20 (INIT @0x8005193c/4c) */
+    { 70,70,70,70, 65,65,65,65, 70,70,70, 35,35, 65,65, 35 };
+static const uint8_t s_npc_walk8_param[16] =    /* Sub 8 @0x80076c60 (INIT @0x80051b34/44) */
+    { 60,60,60,60, 55,55,55,55, 60,60,60, 30,30, 55,55, 30 };
 
-/* subs 4/5/7/8: WALK-to-target (@0x80051148). A 3-phase FSM on +0x6 (sub_state_2), disasm-verified:
- *   0 INIT (@0x80051198): +0x8c = walk_param, motion=5, anim_frac=7, sub_state_2=1 — falls through to RUN.
- *   1 RUN / turn-to-face (@0x80051200): arc_test(steer, 0x15e=350); aligned -> sub_state_2=2; steer + anim.
- *   2 ARRIVED / walk-straight (@0x800512d4): aligned, advance forward; steer + anim.
- * The FORWARD DISPLACEMENT is the executor's root-motion channel 0 (anim_flags&1 → FUN_800369f8), NOT this
- * sub: verified that NEITHER the walk nor turn sub writes +0x1c4 (anim_flags) — the bit is armed by the
- * un-RE'd anim/clip-set path. So this sub is byte-true for the STEERING; the movement plugs into the
- * executor gate once that arming is present. SUPERSEDED (@L4047-4053): the byte-true forward TRANSLATION
- * is actually pos_advance(a0=0) (FUN_800245d8), IMPLEMENTED @L4052-4053 — NOT the root-motion channel; so
- * this sub's walk-straight forward step IS ported. */
+/* subs 4/5/7/8: WALK-to-target — die volle Original-3-Phasen-FSM auf +0x6 (marvin_glide_end.md
+ * §2.2, alle Zitate Verify-CONFIRMED; Tabelle @0x80076ca0: [4]=0x80051148 [5]=0x80051484
+ * [7]=0x80051908 [8]=0x80051b00):
+ *   0 INIT: +0x8c = Speed-Tabelle[Sub], Gait-Clip SOFORT (Sub 4/5 -> Clip 5 @0x800511dc/
+ *     @0x80051518; Sub 7/8 -> Clip 1 @0x8005196c/@0x80051b64, LOCO-Kanal via Kanal-Map),
+ *     +0x95=0, +0x8f=7; faellt in Phase 1 durch.
+ *   1 TURN-TO-FACE: arc_test(dest, 0x15e) @0x80051214/@0x80051550; aligned -> Phase 2
+ *     (SUB 5: dabei +0x94=0 = RUN-GAIT CLIP 0 der Bank 1, `sb zero,148` @0x8005157c,
+ *     +0x95=0 @0x8005158c, +0x8f=7 @0x8005159c — der eigentliche Lauf-Zyklus, 22f).
+ *     Nicht aligned: Steer mit Slew @0x80076c41 (96/80, s_npc_turn_cone) @0x80051264/
+ *     @0x800515d0 + f314-Advance des Clips @0x800512c4/@0x80051630 — Pivot ANIMIERT,
+ *     KEINE Translation (@0x800512cc springt zum Exit).
+ *   2 WALK: Steer mit Slew 48 (@0x80076c01, @0x80051330-3c/@0x8005169c-a4) ->
+ *     pos_advance(a0=0) @0x80051344/@0x800516b0 -> f314-Advance @0x80051360/@0x8005171c ->
+ *     ARRIVAL SquareRoot0-Dist < 100 (Sub 4/7/8 @0x800513f8) bzw. < 300 (Sub 5 @0x80051764):
+ *     SCD-Flag FUN_8004ef90(0x800b1028, +0x1c3) @0x80051414/@0x80051780, dann +0x5=6/+0x6=0
+ *     (@0x80051428/38 bzw. @0x80051794/a4) = Uebergabe an Sub 6 EVENT-REACH (Ankunfts-Clip 1
+ *     einmal -> Clip-2-Idle); Re-Arm nur mit +0x1c4&4 (+0x5=Mode, +0x6=2 @0x8005145c/@0x800517c8).
+ * OFFEN (dokumentiert): Blocked-Probe FUN_8002d7d8 -> Subs 0x12/0x16 (FUN_80052508) nicht
+ * portiert (10D0-Pfad frei); Footstep-SE der Phase 1 (Frame-Flag 0x4000 -> FUN_80045630). */
 static void re15_npc_sub_walk(re15_actor_t *e)
 {
+    int sub = e->sub_state_1;
     if (e->sub_state_2 > 2) return;                          /* >2 -> exit (@0x80051190) */
-    if (e->sub_state_2 == 0) {                               /* INIT (@0x80051198) -> falls through to RUN */
-        e->crow_speed  = (int16_t)re15_npc_tbl(s_npc_walk_param, e->type);  /* +0x8c walk param (sh) */
-        e->sub_state_2 = 1; e->motion = 5; e->anim_frame = 0; e->anim_frac = 7;
+    if (e->sub_state_2 == 0) {                               /* INIT -> faellt in Phase 1 durch */
+        const uint8_t *tbl = (sub == 5) ? s_npc_run_param
+                           : (sub == 7) ? s_npc_walk7_param
+                           : (sub == 8) ? s_npc_walk8_param : s_npc_walk_param;
+        e->crow_speed  = (int16_t)re15_npc_tbl(tbl, e->type);   /* +0x8c (sh) */
+        e->motion      = (uint8_t)((sub == 7 || sub == 8) ? 1 : 5);
+        e->anim_frame  = 0; e->anim_frac = 7;
+        e->sub_state_2 = 1;
     }
-    if (e->sub_state_2 == 1 &&                               /* RUN: turn-to-face (@0x80051214) */
-        re15_ai_arc_test(e, e->steer_x, e->steer_z, 0x15e) == 0)
-        e->sub_state_2 = 2;                                  /* aligned (arc 350) -> walk-straight (@0x80051230) */
-    re15_enemy_steer_point(e, e->steer_x, e->steer_z, re15_npc_type_cone(e->type));  /* @0x80051264/133c yaw-slew */
-    /* WALK-STRAIGHT (phase 2 only): the forward TRANSLATION is pos_advance (FUN_800245d8) with a0=0
-     * (@0x80051344-48: `jal pos_advance; addu a0,zero,zero`) — move +0x8c (crow_speed = the per-type walk
-     * param loaded by INIT) along rot_y. It is NOT clip root-motion: EM040 clip 5 carries a CONSTANT
-     * sx=383 across all 20 keyframes (dumped from the loaded bank) = zero frame delta = an in-place step.
-     * The turn-to-face phase (1) has no pos_advance (@0x800512cc jumps to exit) so it pivots in place. */
-    if (e->sub_state_2 == 2)
-        re15_dog_advance(e, e->crow_speed);                  /* pos_advance(a0=0): +0x8c fwd along rot_y */
+    if (e->sub_state_2 == 1) {                               /* Phase 1: TURN-TO-FACE */
+        if (re15_ai_arc_test(e, e->steer_x, e->steer_z, 0x15e) == 0) {
+            e->sub_state_2 = 2;                              /* aligned @0x80051230/@0x8005156c */
+            if (sub == 5) {                                  /* RUN-Gait: Clip 0 (@0x8005157c-9c) */
+                e->motion = 0; e->anim_frame = 0; e->anim_frac = 7;
+            }
+        } else {
+            re15_enemy_steer_point(e, e->steer_x, e->steer_z,
+                                   re15_npc_type_cone(e->type));   /* Slew 96/80 @0x80076c41 */
+            re15_npc_anim(e);                                /* f314 @0x800512c4/@0x80051630 */
+            return;                                          /* Pivot: KEINE Translation */
+        }
+    }
+    /* Phase 2: WALK — Slew 48 (@0x80076c01) + Vorwaertsschritt + Anim + Arrival */
+    re15_enemy_steer_point(e, e->steer_x, e->steer_z, 48);
+    re15_dog_advance(e, e->crow_speed);                      /* pos_advance(a0=0) @0x80051344/@0x800516b0 */
     re15_npc_anim(e);
+    {
+        int32_t dx = e->steer_x - e->x, dz = e->steer_z - e->z;
+        uint32_t d = re15_squareroot0((uint32_t)(dx * dx + dz * dz));
+        uint32_t radius = (sub == 5) ? 300u : 100u;          /* slti @0x80051764 / @0x800513f8 */
+        if (d < radius) {
+            re15_game_flag_set(5, e->walk_flag_bit, 1);      /* FUN_8004ef90(0x800b1028,+0x1c3) */
+            if (e->anim_flags & 0x04) {                      /* Re-Arm @0x8005145c/@0x800517c8 */
+                e->sub_state_2 = 2;
+            } else {
+                e->sub_state_1 = 6; e->sub_state_2 = 0;      /* -> Sub 6 EVENT-REACH */
+            }
+        }
+    }
 }
 
 /* sub 6: EVENT-REACH (@0x800517f0). A 4-phase +0x6 FSM that plays clip 1 (the 32-frame arrival/gesture)
@@ -6595,10 +6637,12 @@ static void re15_npc_ai_tick(int slot)
      * wave sat at walk=0, st=4, sub=0, af=0 for the whole gesture because a Work_set(2,0) thread owned
      * slot 1 → scd_slot_event_controlled=1 → yielded. A Plc_dest WALK still yields (walk_active=1, or
      * the post-arrival gap where the SCD owns the slot but sub_state_1 != 0 = not the motion pose). */
-    /* Pose-Subs 0-3 (Plc_motion) UND der Event-Reach 6 (Plc_dest Mode 6) duerfen NICHT yielden —
-     * der Executor ist ihr einziger Frame-Advancer. Vorher yieldete alles ausser Sub 0, weshalb
-     * Marvins Mode-6-Idle in 10D0 nie lief (marvin_10d0.md D3). */
-    int in_motion_pose = (e->state == 4 && (e->sub_state_1 <= 3 || e->sub_state_1 == 6));
+    /* Pose-Subs 0-3 (Plc_motion), Event-Reach 6, die WALK-Subs 4/5/7/8 und Turn 9 duerfen NICHT
+     * yielden — der Executor (Sub-VM) ist ihr einziger Frame-/Schritt-Advancer. Vorher yieldete
+     * alles ausser Sub 0 (Marvins Mode-6-Idle lief nie, marvin_10d0.md D3); seit die NPC-Plc_dest-
+     * Walks byte-true in der Sub-VM laufen (state=4/+0x5=mode @0x80041c14-18, marvin_glide_end.md
+     * Fix #1), gilt das auch fuer 4/5/7/8/9. */
+    int in_motion_pose = (e->state == 4 && e->sub_state_1 <= 9);
     if (e->walk_active || (re15_scd_slot_event_controlled(slot) && !in_motion_pose)) {
         e->hp = -1;
         return;

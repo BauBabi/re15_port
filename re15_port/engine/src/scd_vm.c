@@ -1910,12 +1910,29 @@ static int op_plc_dest(scd_thread_t *t)
          * Ticks eingefroren + weggedreht — marvin_10d0.md D3, CONFIRMED). */
         int is_walk = (mode == 0x04 || mode == 0x05 || mode == 0x07 ||
                        mode == 0x08 || mode == 0x09);
-        if (!is_walk) {
+        /* NPC-Familie (0x40-0x4d) laeuft AUCH die Walk-Modes byte-true in der State-4-Sub-VM
+         * (@0x80041c14-18 setzt IMMER state=4/+0x5=mode; die NPC-Walk-Subs @0x80076ca0
+         * [4]=0x80051148 [5]=0x80051484 [7]=0x80051908 [8]=0x80051b00 sind in
+         * re15_npc_sub_walk portiert — marvin_glide_end.md Fix #1). AUSNAHME Elliot (0x47):
+         * bleibt auf dem Walker-Sonderpfad (PLD-Bank/Sentinels; vor der Umstellung per
+         * Savestate messen, marvin_10d0.md O3). Der Spieler behaelt seine eigene Walker-FSM
+         * (Player-Tabelle 0x80073e30, separat byte-true). */
+        int npc_subvm = 0;
+        if (slot != RE15_ACTOR_SLOT_PLAYER) {
+            uint8_t ty = a->type;
+            npc_subvm = (ty >= 0x40 && ty <= 0x4d && ty != 0x47);
+        }
+        if (!is_walk || npc_subvm) {
             /* Re-Init-Guard (@0x80041bf8-c0c): skip nur wenn +0x1c4&4 UND +0x5 == mode. */
             int skip_init = (a->state == 4 && a->sub_state_1 == mode && (a->anim_flags & 0x04));
             a->walk_active = 0;
             a->walk_dest_x = x; a->walk_dest_z = z;       /* dest gestasht (+0x1bc/+0x1be) */
+            a->steer_x = x; a->steer_z = z;               /* Sub-VM-Steer-Felder (= dieselben
+                                                           * Original-Bytes +0x1bc/+0x1be) */
             a->walk_flag_bit = flag_bit;                  /* +0x1c3 */
+            if (is_walk)                                  /* Port-Bookkeeping (R9): Ck(5,bit)-Polls
+                                                           * duerfen keine stale Ankunft sehen */
+                re15_game_flag_set(5, flag_bit, 0);
             if (!skip_init) {
                 if (slot != RE15_ACTOR_SLOT_PLAYER) {
                     a->state = 4;                          /* @0x80041c14 */
@@ -1932,8 +1949,8 @@ static int op_plc_dest(scd_thread_t *t)
                 }
             }
 #ifdef RE15_PLATFORM_PC
-            fprintf(stderr, "[scd] Plc_dest(slot=%d mode=0x%02X) -> state4/sub%d (POSE/EVENT, kein Walk)\n",
-                    slot, mode, mode);
+            fprintf(stderr, "[scd] Plc_dest(slot=%d mode=0x%02X dest=(%d,%d)) -> state4/sub%d (%s)\n",
+                    slot, mode, x, z, mode, is_walk ? "Sub-VM-WALK" : "POSE/EVENT, kein Walk");
 #endif
             t->pc += 8;
             return 1;
