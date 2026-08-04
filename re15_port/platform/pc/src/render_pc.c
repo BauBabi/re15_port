@@ -79,6 +79,8 @@ static int          s_item_modal_tex_type = -1;
 static int           s_letterbox_h = 0;
 static uint8_t       s_fade_alpha = 0;   /* BN-round: cinematic fade-in overlay (255=black .. 0=none) */
 static uint8_t       s_title_fade = 0;   /* front-end fade: black OVER the title/menu (movie -> title) */
+static uint8_t       s_tfade_add  = 0;   /* Title-Ebene ADDITIV-Weiss (Confirm Phase A, ABR1) */
+static uint8_t       s_tfade_sub  = 0;   /* Title-Ebene SUBTRAKTIV-Schwarz (Confirm B/C + Fade-in, ABR2) */
 static uint8_t       s_white_alpha = 0;  /* YOU-DIED chain: ADDITIVE white overlay (FUN_80021880 ABR1) */
 static int           s_black_bg = 0;     /* YOU-DIED chain: flat-black background (FUN_80021634(2,0)) */
 static int           s_scene_black = 0;  /* pre-intro narrator: full-screen black UNDER the subtitle
@@ -1057,6 +1059,30 @@ void re15_render_end_frame(void)
         SDL_Rect full = { 0, 0, SCREEN_XRES, SCREEN_YRES };
         SDL_RenderFillRect(s_renderer, &full);
     }
+    /* Title-Ebenen-Fades der EXE-Fade-Engine (Kanal-Semantik FUN_80021880: Vollbild-Prim,
+     * RGB = level>>7) — hier als Spaet-Layer UEBER Title-Art + Menue-Sprites:
+     *   ADD = Phase A des Menu-Confirm-Fades (ABR 1 additiv, Weiss-BLITZ; config 0x100/-0x800/7/0
+     *         @0x80102cd4-e4 in TITLE.BIN),
+     *   SUB = Phasen B/C + Title-Fade-in (ABR 2 subtraktiv B-F; @0x80102d28-4c / @0x80102054-64).
+     *   Der multiplikative s_title_fade-Alpha-Quad ist fuer diese Fades NICHT byte-true
+     *   (Kurvenform; analysis/title_fade_voice.md §4a). */
+    if (s_tfade_add > 0) {
+        SDL_SetRenderDrawBlendMode(s_renderer, SDL_BLENDMODE_ADD);
+        SDL_SetRenderDrawColor(s_renderer, s_tfade_add, s_tfade_add, s_tfade_add, 255);
+        SDL_Rect full = { 0, 0, SCREEN_XRES, SCREEN_YRES };
+        SDL_RenderFillRect(s_renderer, &full);
+        SDL_SetRenderDrawBlendMode(s_renderer, SDL_BLENDMODE_BLEND);
+    }
+    if (s_tfade_sub > 0) {
+        SDL_BlendMode bm = SDL_ComposeCustomBlendMode(   /* ABR2: dst - src */
+                 SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_REV_SUBTRACT,
+                 SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_ADD);
+        SDL_SetRenderDrawBlendMode(s_renderer, bm);
+        SDL_SetRenderDrawColor(s_renderer, s_tfade_sub, s_tfade_sub, s_tfade_sub, 255);
+        SDL_Rect full = { 0, 0, SCREEN_XRES, SCREEN_YRES };
+        SDL_RenderFillRect(s_renderer, &full);
+        SDL_SetRenderDrawBlendMode(s_renderer, SDL_BLENDMODE_BLEND);
+    }
 
     /* Selection cursor (▶): a small filled white triangle shared by the card screen AND the title
      * menu (the RE1.5 originals draw a cursor sprite; a filled ▶ is the byte-true equivalent marker).
@@ -1112,6 +1138,9 @@ void re15_render_end_frame(void)
 /* BN-round 2026-05-29: cinematic fade-in overlay alpha (0=none, 255=black).
  * Main loop ramps it 255→0 over the room-entry fade window. */
 void re15_render_pc_set_title_fade(int a) { s_title_fade = (a < 0) ? 0 : (a > 255) ? 255 : (uint8_t)a; }
+/* Title-Ebenen-Fades (Engine-Prim-Helligkeit B = level>>7; s.o.). */
+void re15_render_pc_title_fade_add(int b) { s_tfade_add = (b < 0) ? 0 : (b > 255) ? 255 : (uint8_t)b; }
+void re15_render_pc_title_fade_sub(int b) { s_tfade_sub = (b < 0) ? 0 : (b > 255) ? 255 : (uint8_t)b; }
 void re15_render_pc_set_fade(int a)
 {
     if (a < 0) a = 0;

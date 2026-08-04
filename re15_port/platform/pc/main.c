@@ -1713,6 +1713,11 @@ re_title:;
         const char *t_shot = getenv("RE15_TITLE_SHOT");   /* debug: dump the title/menu frame + auto-advance */
         unsigned tblink = 0;
         int cursor = 0;   /* 0=NEW GAME 1=LOAD GAME 2=OPTION — byte-true 3-item menu (TITLE.BIN FUN_80102b00) */
+        /* Title-Init laedt die CORE-SE-Bank 0x11 (FUN_800440c4(0x11) @0x80102704-08 in TITLE.BIN):
+         * CORE11.EDH/.VB (Datei-ids 195/196) traegt den "Biohazard 2!"-Announcer als SE 0
+         * (Stereo-Paar VAG5 L / VAG6 R, 44100 Hz) + den Cursor-Blip SE 4 (VAG2, 22050 Hz).
+         * analysis/title_fade_voice.md §2.3. */
+        { extern void re15_audio_prime_core(int idx); re15_audio_prime_core(0x11); }
         if (getenv("RE15_PSELECT_TEST")) {   /* debug: jump straight into the LEON/ELZA player-select */
             int ch = pc_run_player_select();
             fprintf(stderr, "[pselect] returned character %d (%s)\n", ch, ch ? "Elza" : "Leon");
@@ -1764,27 +1769,73 @@ re_title:;
              * (active row white, others blue) at x=0x20, y=0x85/0x99/0xad. */
             re15_render_pc_title_menu(&s_tmoji, cursor);
 
+            if (pp & (RE15_PAD_BIT_UP | RE15_PAD_BIT_DOWN)) {
+                /* Cursor-Blip = CORE-SE 4 (FUN_80045024(0x04040000,0) @0x80102b1c-24 UP /
+                 * @0x80102b6c-74 DOWN). */
+                extern void re15_audio_core_se(int se_id);
+                re15_audio_core_se(4);
+            }
             if (pp & RE15_PAD_BIT_UP)    cursor = (cursor + 2) % 3;
             if (pp & RE15_PAD_BIT_DOWN)  cursor = (cursor + 1) % 3;
             /* confirm = any of the four face buttons OR Start (byte-true mask 0x8f0 @0x800bc762) */
             uint16_t confirm = pp & (RE15_PAD_BIT_CROSS | RE15_PAD_BIT_SQUARE |
                                      RE15_PAD_BIT_TRIANGLE | RE15_PAD_BIT_CIRCLE | RE15_PAD_BIT_START);
             if (confirm) {
-                if (cursor == 0) {                            /* NEW GAME -> fade out menu -> player-select */
-                    /* byte-true: the menu confirm fades to black (0x80102ccc) then REPLACES the task
-                     * with the player-select (FUN_80029ba4 @0x80102c9c). Fade the menu out (32f, rate
-                     * 8/frame) drawing the title + menu each frame, then hand off. */
-                    for (int f = 8; f <= 256; f += 8) {
-                        re15_render_begin_frame();
-                        re15_input_tick();
-                        re15_render_background_gradient(8, 8, 16, 0, 0, 0);
-                        if (s_boot_title.pixels) re15_render_pc_show_title(&s_boot_title);
-                        re15_render_pc_title_menu(&s_tmoji, cursor);
-                        re15_render_pc_set_title_fade(f > 255 ? 255 : f);
-                        re15_render_end_frame();
+                /* "Biohazard 2!"-Announcer = CORE-SE 0, VOR dem Fade und bei JEDEM Menuepunkt
+                 * (FUN_80045024(0x04000000,0) @0x80102c20-24; Gate nur pad&0x8f0 @0x80102c14 —
+                 * kein Cursor-Check). Die Stimme (3.96 s) laeuft ueber Fade + Player-Select weiter
+                 * (kein Stop-Call im Pfad). */
+                { extern void re15_audio_core_se(int se_id); re15_audio_core_se(0); }
+                /* BLOCKING-Fade @0x80102ccc — fuer ALLE drei Menuepunkte (Call @0x80102c48 VOR dem
+                 * Item-Dispatch @0x80102c60). Drei Phasen der EXE-Fade-Engine (Integrator-Semantik
+                 * FUN_80021880: Prim-B = level>>7 VOR der Integration, level += step, fertig am
+                 * Vorzeichen-Bit; Engine-Tick = 2 Vsyncs im 480i-Title — DuckStation-gemessen,
+                 * jede Stufe exakt 2 Capture-Frames):
+                 *   A @0x80102cd4-e4: (0x100,-0x800,7,0) ADDITIV-Weiss, kick step<0 -> level=0x7fff
+                 *     => B 255->15, -16/Tick, 16 Ticks (Weiss-BLITZ);
+                 *   B @0x80102d28-4c: (0x200,+0xe0,7,1) SUBTRAKTIV, kick step>0 -> level=0
+                 *     => B 0->255, +1.75/Tick, 147 Ticks (Fade-to-black, ~4.9 s);
+                 *   C @0x80102d78-9c: (0x200,0,7,1) + kick(0x7fff) => B=255 FEST (Schwarz halten;
+                 *     im Original CD-Latenz, im Port latenzfrei). Der alte 32x(+8)-Alpha-Loop war
+                 *     ein unbelegter Rate-Defekt (0.53 s statt ~5.45 s). */
+                {
+                    extern void re15_render_pc_title_fade_add(int b);
+                    extern void re15_render_pc_title_fade_sub(int b);
+                    uint16_t level; int16_t step; int subph;
+                    uint32_t tf_last = SDL_GetTicks();
+                    for (int phase = 0; phase < 2; phase++) {
+                        if (phase == 0) { level = 0x7fff; step = -0x800; subph = 0; } /* A: kick @0x80102cf8 */
+                        else            { level = 0;      step = 0x00e0; subph = 1; } /* B: kick @0x80102d48 */
+                        while (!(level & 0x8000u)) {
+                            int B = level >> 7;
+                            for (int v = 0; v < 2; v++) {         /* Tick = 2 Vsyncs (Flip @0x80102d18) */
+                                re15_render_begin_frame();
+                                re15_input_tick();
+                                re15_render_background_gradient(8, 8, 16, 0, 0, 0);
+                                if (s_boot_title.pixels) re15_render_pc_show_title(&s_boot_title);
+                                re15_render_pc_title_menu(&s_tmoji, cursor);   /* Redraw @0x80102d10 */
+                                if (subph) re15_render_pc_title_fade_sub(B);
+                                else       re15_render_pc_title_fade_add(B);
+                                re15_render_end_frame();
+                                { uint32_t now = SDL_GetTicks(); uint32_t el = now - tf_last;
+                                  if (el < 16) SDL_Delay(16 - el); tf_last = SDL_GetTicks(); }
+                            }
+                            level = (uint16_t)(level + (uint16_t)step);
+                        }
+                        if (phase == 0) re15_render_pc_title_fade_add(0);
                     }
+                    re15_render_pc_title_fade_sub(255);           /* Phase C: Schwarz halten */
+                }
+                if (cursor == 0) {                            /* NEW GAME -> player-select */
+                    /* danach REPLACES der Confirm die Task mit dem Player-Select
+                     * (FUN_80029ba4 @0x80102c9c). */
+                    { extern void re15_render_pc_title_fade_sub(int b); re15_render_pc_title_fade_sub(0); }
                     int ch = pc_run_player_select();          /* "PLEASE SELECT MAIN CAST" (@0x80101094) */
                     re15_gameflow_new_game(ch);               /* ch = DAT_800aca5c>>2 (0=Leon,1=Elza) */
+                    /* Game-Start laedt die CHARAKTER-CORE-Bank: FUN_800440c4(DAT_800aca5c)
+                     * @0x800316d8-e8 (0 = Leon -> CORE00, 4 = Elza -> CORE04). Die noch spielende
+                     * Announcer-Voice liest ihre alte Generation weiter (audio_pc.c). */
+                    { extern void re15_audio_prime_core(int idx); re15_audio_prime_core(ch ? 4 : 0); }
                     /* NEW GAME setzt den Save-Zaehler zurueck (Nutzer-Report 2026-08-03; analysis/
                      * save_counter.md SC-2): der Zaehler DAT_800b0fbd ist Teil des LIVE-Game-State-
                      * Blocks — ein frisches Spiel startet mit 0 (EXE-Image-Byte @Datei 0xa17bd = 00;
@@ -1794,6 +1845,7 @@ re_title:;
                     s_save_counter = 0;
                 }
                 else if (cursor == 1) {                       /* LOAD GAME -> FE-4 memory-card load screen */
+                    { extern void re15_render_pc_title_fade_sub(int b); re15_render_pc_title_fade_sub(0); }
                     uint16_t resume_room = 0;
                     if (pc_run_memcard_screen(0, NULL, &resume_room) >= 0) {
                         /* loaded into s_resume_sd; enter INGAME at the saved room, then the
@@ -1803,15 +1855,29 @@ re_title:;
                         g_gameflow.start_room    = resume_room;
                         g_gameflow.enter_ingame  = 1;
                         g_gameflow.mode          = RE15_MODE_INGAME;   /* exits the title loop */
+                        /* Charakter-CORE-Bank wie der Game-Start (FUN_800440c4(DAT_800aca5c)
+                         * @0x800316d8-e8): 0 = Leon -> CORE00, 4 = Elza -> CORE04. */
+                        { extern void re15_audio_prime_core(int idx);
+                          re15_audio_prime_core(s_resume_sd.character ? 4 : 0); }
+                    } else {
+                        tblink = 0;   /* zurueck zum Titel: Fade-in erneut (Sub-Screen-Exit +0x400
+                                       * @0x801024f0-500 laeuft im Original im Sub-Screen selbst) */
                     }
                 }
                 else if (cursor == 2) {                       /* OPTION -> controller-CONFIG screen */
+                    { extern void re15_render_pc_title_fade_sub(int b); re15_render_pc_title_fade_sub(0); }
                     pc_run_config();                          /* byte-true EXE task @0x8002dde4 (foundation) */
                     if (s_boot_title.pixels) re15_render_pc_show_title(&s_boot_title);   /* restore title art */
+                    tblink = 0;                               /* Titel-Fade-in erneut */
                 }
             }
-            { extern void re15_render_pc_set_title_fade(int a);   /* fade in from the CAPCOM intro */
-              re15_render_pc_set_title_fade(tblink < 20 ? 255 - (int)tblink * 13 : 0); }
+            /* Title-FADE-IN nach Boot/FMV: dieselbe Fade-Engine, `FUN_800217b0(0x200,-0x400,7,3)`
+             * @0x80102054-64 = SUBTRAKTIV, B = 255 -> 0 mit -8/Tick, 32 Ticks (Tick = 2 Vsyncs).
+             * Bei 60-fps-Frames: Tick = tblink>>1. (Der alte `255 - tblink*13` ueber 20 Frames
+             * war eine geratene Rate.) */
+            { extern void re15_render_pc_title_fade_sub(int b);
+              int tk = (int)(tblink >> 1); int B = 255 - tk * 8; if (B < 0) B = 0;
+              re15_render_pc_title_fade_sub(B); }
             re15_render_end_frame();
             re15_render_pc_hide_title_menu();   /* stop drawing the menu sprites once the title yields */
             { unsigned t_af = 22; const char *afe = getenv("RE15_TITLE_SHOT_AF"); if (afe) t_af = (unsigned)atoi(afe);

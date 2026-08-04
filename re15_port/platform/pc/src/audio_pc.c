@@ -77,7 +77,13 @@ typedef struct {
                             * @0x8004522c). 0 = Altverhalten 0x8000 (= konstant -12 HT). */
     uint32_t pos_frac;     /* Q16-Restakkumulator des Cursors                            */
     int      active;       /* 1 = playing, 0 = free slot                 */
-    int      volume_q15;   /* per-voice volume in 0..0x4000 (Q15)        */
+    int      volume_q15;   /* per-voice LEFT volume in 0..0x4000 (Q15)   */
+    int      vol_r_q15;    /* per-voice RIGHT volume (Q15). Tone-Pan tone[+3]: die
+                            * SPU-Voice-Maschine liest vol UND pan aus den Tone-Attributen
+                            * selbst (SsUtKeyOnV.c: DAT_800b5321/22 = tone[+2]/[+3]) —
+                            * pan 0 = hart links, 0x40 = Mitte (beide voll), 0x7f = hart
+                            * rechts. Lineares LIBSND-vm-Modell; das CORE11-Announcer-
+                            * Paar (pan 0/127) ist damit exakt. */
 } active_sample_t;
 
 static int16_t *s_decoded_vag    [RE15_VAB_MAX_SAMPLES];
@@ -328,7 +334,9 @@ static void audio_callback(void *userdata, Uint8 *stream, int len)
                 s->active = 0;
                 break;
             }
-            int32_t v = ((int32_t)s->pcm[s->pos] * s->volume_q15) >> 15;
+            int vr_q15 = s->vol_r_q15 ? s->vol_r_q15 : s->volume_q15;   /* 0 = legacy mono */
+            int32_t vl = ((int32_t)s->pcm[s->pos] * s->volume_q15) >> 15;
+            int32_t vr = ((int32_t)s->pcm[s->pos] * vr_q15) >> 15;
 
             /* Tail fade-out: ramp the last MIXER_TAIL_FADE_SAMPLES PCM
              * samples to zero. Otherwise the abrupt amplitude drop at
@@ -336,15 +344,16 @@ static void audio_callback(void *userdata, Uint8 *stream, int len)
              * multiple overlapping voices each ending periodically). */
             int rem = s->pcm_len - s->pos;
             if (rem < MIXER_TAIL_FADE_SAMPLES) {
-                v = (v * rem) / MIXER_TAIL_FADE_SAMPLES;
+                vl = (vl * rem) / MIXER_TAIL_FADE_SAMPLES;
+                vr = (vr * rem) / MIXER_TAIL_FADE_SAMPLES;
             }
 
             s->pos_frac += step;
             s->pos      += (int)(s->pos_frac >> 16);
             s->pos_frac &= 0xffffu;
 
-            int32_t L = (int32_t)out[f * 2 + 0] + v;
-            int32_t R = (int32_t)out[f * 2 + 1] + v;
+            int32_t L = (int32_t)out[f * 2 + 0] + vl;
+            int32_t R = (int32_t)out[f * 2 + 1] + vr;
             if (L >  32767) L =  32767; else if (L < -32768) L = -32768;
             if (R >  32767) R =  32767; else if (R < -32768) R = -32768;
             out[f * 2 + 0] = (int16_t)L;
@@ -567,6 +576,14 @@ static void se_play_layers(const uint8_t *edt, const re15_vab_t *vab,
         if (vag < 0 || vag >= RE15_VAB_MAX_SAMPLES || !decoded[vag]) continue;
         const re15_vab_tone_t *t = &vab->tones[tones[k]];
         int vol = ((t->vol ? t->vol : 100) * 0x4000 / 127) >> 1;   /* tone[+2]; >>1 = Mixer-Headroom */
+        /* Tone-Pan tone[+3] (title_fade_voice.md §2.3): die Voice-Maschine liest vol+pan aus den
+         * Tone-Attributen (SsUtKeyOnV.c DAT_800b5321/22 = tone[+2]/[+3]); pan 0 = hart L,
+         * 0x40 = Mitte (beide voll), 0x7f = hart R — das CORE11-Announcer-Paar ist tone1 pan 0 /
+         * tone2 pan 127 (EDH-Bytes @0x40+0x820, byte-geparst). Lineares vm-Modell. */
+        int pan = t->pan;
+        int vl = vol, vr = vol;
+        if (pan < 0x40)      vr = vol * pan / 0x40;
+        else if (pan > 0x40) vl = vol * (0x7f - pan) / 0x3f;
         uint16_t pitch = re15_vab_note2pitch2(t->min_note, t->pitch_shift,
                                               t->center_note, t->pitch_shift);
         {   static int se_dbg = -1;
@@ -587,7 +604,8 @@ static void se_play_layers(const uint8_t *edt, const re15_vab_t *vab,
         s_active[slot].subpos     = 0;
         s_active[slot].step_q16   = (uint32_t)pitch << 4;   /* 0x1000 == 44100 Hz Ausgabe */
         s_active[slot].pos_frac   = 0;
-        s_active[slot].volume_q15 = vol;
+        s_active[slot].volume_q15 = vl;
+        s_active[slot].vol_r_q15  = vr;
         s_active[slot].active     = 1;
     }
     SDL_UnlockAudioDevice(s_audio_dev);
@@ -662,30 +680,51 @@ static int load_weapon_se_vab_pc(int weapon_id)
     return 0;
 }
 
-/* Load + decode the resident CORE SE bank (bank4, SOUND/CORE00.EDH + .VB — same EDH layout as the
- * ARMS banks). Lazy, once. */
-static int load_core_se_vab_pc(void)
+/* Load + decode a resident CORE SE bank (bank4, SOUND/CORE%02X.EDH + .VB — same EDH layout as the
+ * ARMS banks). Byte-true FUN_800440c4(idx): laedt die CD-Files u16[0x80073a88][idx] (EDH) +
+ * u16[0x80073ab0][idx] (VB) nach 0x801fbd00 (CORE00..CORE13, hex-benannt). Callsites im Original:
+ * Title-Init idx 0x11 (@0x80102704-08 in TITLE.BIN), Game-Start idx DAT_800aca5c (0 Leon / 4 Elza,
+ * @0x800316d8-e8 in FUN_800314b0). analysis/title_fade_voice.md §2.3. */
+static int s_core_idx = -1;
+static int16_t *s_core_old_decoded[RE15_VAB_MAX_SAMPLES];   /* Vorgaenger-Generation: bleibt alloziert,
+                                                             * bis die NAECHSTE prime laeuft — eine noch
+                                                             * spielende Voice (der 3.96-s-Announcer
+                                                             * ueber Fade+Select+Game-Start) liest ihre
+                                                             * PCM-Puffer weiter (kein Stop-Call im
+                                                             * Original-Pfad) */
+static uint8_t *s_core_old_edt = NULL;
+static int load_core_se_vab_pc(int idx)
 {
-    if (s_core_loaded) return 0;
+    if (s_core_loaded && s_core_idx == idx) return 0;
     static const char *dirs[] = { "shared_assets/PSX/SOUND/", "SOUND/", "PSX/SOUND/",
                                   "../shared_assets/PSX/SOUND/", NULL };
     char path[256];
     uint8_t *edh = NULL, *vb = NULL; int edh_sz = 0, vb_sz = 0;
     for (int i = 0; dirs[i] && !edh; i++) {
-        snprintf(path, sizeof path, "%sCORE00.EDH", dirs[i]);
+        snprintf(path, sizeof path, "%sCORE%02X.EDH", dirs[i], idx);
         edh = re15_asset_read_file(path, &edh_sz);
     }
     for (int i = 0; dirs[i] && !vb; i++) {
-        snprintf(path, sizeof path, "%sCORE00.VB", dirs[i]);
+        snprintf(path, sizeof path, "%sCORE%02X.VB", dirs[i], idx);
         vb = re15_asset_read_file(path, &vb_sz);
     }
     if (!edh || !vb || edh_sz < 8) { free(edh); free(vb); return -1; }
     uint32_t pbav = (uint32_t)edh[edh_sz-8] | ((uint32_t)edh[edh_sz-7] << 8) |
                     ((uint32_t)edh[edh_sz-6] << 16) | ((uint32_t)edh[edh_sz-5] << 24);
+    re15_vab_t nvab;
     if (pbav + 0x20u > (uint32_t)edh_sz ||
-        re15_vab_parse(edh + pbav, (size_t)edh_sz - pbav, &s_core_vab) != 0) {
+        re15_vab_parse(edh + pbav, (size_t)edh_sz - pbav, &nvab) != 0) {
         free(edh); free(vb); return -1;
     }
+    /* Generation rotieren: die VOR-vorherige Bank ist sicher still -> freigeben; die aktuelle wird
+     * zur alten (Voices darauf spielen aus). Danach erst die neue einhaengen. */
+    for (int i = 0; i < RE15_VAB_MAX_SAMPLES; i++) {
+        free(s_core_old_decoded[i]);
+        s_core_old_decoded[i] = s_core_decoded[i];
+        s_core_decoded[i] = NULL; s_core_decoded_len[i] = 0;
+    }
+    free(s_core_old_edt); s_core_old_edt = (uint8_t *)s_core_edt;
+    s_core_vab = nvab;
     for (int i = 0; i < s_core_vab.vag_count; i++) {
         uint32_t off = s_core_vab.samples[i].offset, sz = s_core_vab.samples[i].size;
         if (off + sz > (uint32_t)vb_sz) continue;
@@ -699,7 +738,15 @@ static int load_core_se_vab_pc(void)
     s_core_edt       = edh;
     s_core_edt_count = (int)(pbav / 4);
     s_core_loaded    = 1;
+    s_core_idx       = idx;
     return 0;
+}
+
+/* CORE-Bank explizit laden (byte-true FUN_800440c4-Callsites, s.o.). */
+void re15_audio_prime_core(int idx)
+{
+    if (!g_audio.initialized) return;
+    load_core_se_vab_pc(idx);
 }
 
 /* Play a CORE-bank SE by EDT record index (byte-true FUN_80045024 bank4: Se_on(0x40NN0001) -> record
@@ -708,7 +755,7 @@ static int load_core_se_vab_pc(void)
 void re15_audio_core_se(int se_id)
 {
     if (!g_audio.initialized) return;
-    if (!s_core_loaded && load_core_se_vab_pc() != 0) return;
+    if (!s_core_loaded && load_core_se_vab_pc(0) != 0) return;   /* Default CORE00 (Leon-Ingame) */
     if (se_id < 0 || se_id >= s_core_edt_count) return;
     se_play_layers(s_core_edt, &s_core_vab, s_core_decoded, s_core_decoded_len, se_id);
 }
@@ -767,6 +814,7 @@ static void play_sample_pc(int vag_index, int scd_volume)
     s_active[slot].step_q16   = 0;   /* Legacy-Pfad ohne Tone-Kontext -> 0x8000 (Altverhalten) */
     s_active[slot].pos_frac   = 0;
     s_active[slot].volume_q15 = vol;
+    s_active[slot].vol_r_q15  = 0;   /* legacy mono (Slot-Reuse: kein Pan-Rest) */
     s_active[slot].active     = 1;
     SDL_UnlockAudioDevice(s_audio_dev);
 }
@@ -2260,6 +2308,7 @@ void re15_audio_footstep(int foot, int sound_type)
     s_active[slot].step_q16   = step;
     s_active[slot].pos_frac   = 0;
     s_active[slot].volume_q15 = vol;
+    s_active[slot].vol_r_q15  = 0;   /* legacy mono (Slot-Reuse: kein Pan-Rest) */
     s_active[slot].active     = 1;
     SDL_UnlockAudioDevice(s_audio_dev);
 }
