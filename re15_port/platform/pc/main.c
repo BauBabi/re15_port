@@ -563,8 +563,9 @@ static void pc_draw_card_static(const re15_tim_t *bg, const int used[],
  * the PC single-card backend: the "MEMORY CARD BG" (DATA/TYPE00.TIM) full-screen, the dim panel
  * (drawn in render_pc), a header, the 5-slot list + an EXIT row, the SAVE/LOAD label, a blinking
  * cursor, and the OVERWRITE-confirm + result sub-screens. Coords are the RE'd 320x240 positions.
- * save_mode: 0 = SAVE (*sd), 1 = LOAD (into s_resume_sd, resume room -> *out_room). Returns the
+ * save_mode: 1 = SAVE (*sd), 0 = LOAD (into s_resume_sd, resume room -> *out_room). Returns the
  * chosen slot (0..4) or -1 on cancel/exit. */
+static uint16_t pc_pad_config(uint16_t p);   /* OPTIONS-Button-Config-Remap (Def. weiter unten) */
 static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint16_t *out_room)
 {
     extern int  re15_render_pc_game_text(int x, int y, const char *str, int attr);   /* RE1.5 game font */
@@ -674,10 +675,17 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
         }
         /* Byte-true confirm/cancel (FUN_80025c00 cases 1/2/6): the FSM checks the VIRTUAL edge
          * word (DAT_800ac76c) bit 0x4000 (= remap-entry 14 <- RAW SQUARE @0x80073dbc[14]) plus
-         * raw START to PROCEED/confirm, and virtual 0x8000 (= entry 15 <- RAW CROSS) to go
-         * BACK/cancel. Same □-confirm/✕-cancel convention as every other virtual-word menu
-         * (wave-6 finding 4 unified the label; behavior here was already correct). */
-        uint16_t vp     = re15_pad_virtual_word(pp);
+         * raw START to PROCEED/confirm (andi 0x800 auf DAT_800ac75c @0x80025e98), and virtual
+         * 0x8000 (= entry 15 <- RAW CROSS) to go BACK/cancel (andi 0x8000 @0x80025ea0). Same
+         * □-confirm/✕-cancel convention as every other virtual-word menu.
+         * CC-3-Fix (analysis/confirm_cancel_mapping.md, CONFIRMED): das virtuelle Wort folgt der
+         * OPTIONS-Button-Config — der Original-Builder FUN_80030444 remappt ueber
+         * PTR_DAT_80073e1c[DAT_800b0fcc] (Type A @0x80073dbc, B @0x80073ddc, C @0x80073dfc,
+         * EDIT @0x800b21cc); unter Type B/C bestaetigt der Card-Screen mit ○ (v0x4000<-0x0020
+         * @0x80073ddc[14]). Vorher baute der Port vp aus dem rohen Pad und umging die Config.
+         * START-Confirm bleibt RAW (@0x80025e98), Nav bleibt RAW-held (DAT_800ac760 — das
+         * D-Pad mappt in allen Presets identisch). */
+        uint16_t vp     = re15_pad_virtual_word(pc_pad_config(pp));
         uint16_t ok     = (uint16_t)((vp & 0x4000) | (pp & RE15_PAD_BIT_START));
         uint16_t cancel = (uint16_t)(vp & 0x8000);
 
