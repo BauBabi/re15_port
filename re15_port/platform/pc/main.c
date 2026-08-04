@@ -4169,21 +4169,47 @@ re_title:;
              * Irons-kneel, normally fired by AOT 6 when Leon walks to Irons). Fires once,
              * after the room SCD (main00) has installed AOTs + actors. */
             {
-                static int s_fe_init = 0, s_fe_id = -1, s_fe_done = 0;
+                static int s_fe_init = 0, s_fe_id = -1, s_fe_done = 0, s_fe_frame = 20;
                 if (!s_fe_init) { const char *fe = getenv("RE15_FORCE_EVENT");
-                                  if (fe && *fe) s_fe_id = atoi(fe); s_fe_init = 1; }
+                                  if (fe && *fe) { s_fe_id = atoi(fe);
+                                      /* "N@F": erst ab Frame F feuern (Debug-Harness — der
+                                       * room-ok-Check allein reicht bei RE15_GOTO_ROOM nicht,
+                                       * die Room-ID steht schon VOR dem SCD-Swap um). */
+                                      const char *at = strchr(fe, '@');
+                                      if (at) s_fe_frame = atoi(at + 1); }
+                                  s_fe_init = 1; }
                 /* If RE15_GOTO_ROOM is used, wait until we are actually IN that room
                  * (g_current_room_id) before firing — so the kneel fires AFTER the
                  * cross-room cinematic-bank reload, testing the real door path. */
                 const char *fe_goto = getenv("RE15_GOTO_ROOM");
                 unsigned fe_target = (fe_goto && *fe_goto) ? (unsigned)strtol(fe_goto, NULL, 16) : 0;
                 int fe_room_ok = (fe_target == 0) || (g_current_room_id == fe_target);
-                if (s_fe_id >= 0 && !s_fe_done && g_engine.frame_count >= 20 && fe_room_ok) {
+                if (s_fe_id >= 0 && !s_fe_done && g_engine.frame_count >= (uint32_t)s_fe_frame && fe_room_ok) {
                     extern int scd_event_fire(uint8_t);
                     fprintf(stderr, "[force-event] scd_event_fire(%d) at F%u\n",
                             s_fe_id, (unsigned)g_engine.frame_count);
                     scd_event_fire((uint8_t)s_fe_id);
                     s_fe_done = 1;
+                }
+            }
+            /* DEBUG: RE15_SUBSTART="N@F" — startet sub_scd[N] des AKTUELLEN Raums direkt als
+             * Thread (exakt die probe_marvin_10d0-Methode scd_thread_start(3, sub_scd[N])),
+             * ohne Event-Slot/Prompt-Interferenz. Fuer Render-Verifikation von Cutscenes. */
+            {
+                static int s_ss_init = 0, s_ss_id = -1, s_ss_frame = 20, s_ss_done = 0;
+                if (!s_ss_init) { const char *se = getenv("RE15_SUBSTART");
+                    if (se && *se) { s_ss_id = atoi(se);
+                        const char *at = strchr(se, '@'); if (at) s_ss_frame = atoi(at + 1); }
+                    s_ss_init = 1; }
+                if (s_ss_id >= 0 && !s_ss_done && g_engine.frame_count >= (uint32_t)s_ss_frame) {
+                    extern int scd_thread_start(int slot, const uint8_t *pc);
+                    if (g_room_rdt_ok && s_ss_id < RE15_RDT_MAX_SUB_SCD &&
+                        g_room_rdt.sub_scd[s_ss_id]) {
+                        scd_thread_start(3, g_room_rdt.sub_scd[s_ss_id]);
+                        fprintf(stderr, "[substart] sub_scd[%d] at F%u\n",
+                                s_ss_id, (unsigned)g_engine.frame_count);
+                    }
+                    s_ss_done = 1;
                 }
             }
             /* RE15_GOTO_ROOM=<hex>: debug — auto-queue ONE cross-room change to that

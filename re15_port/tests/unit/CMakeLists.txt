@@ -640,3 +640,16 @@ add_test(NAME unit_zombie_10d0_reentry_a COMMAND probe_zreentry_10d0 A)
 set_tests_properties(unit_zombie_10d0_reentry_a PROPERTIES TIMEOUT 30)
 add_test(NAME unit_zombie_10d0_reentry_b COMMAND probe_zreentry_10d0 B)
 set_tests_properties(unit_zombie_10d0_reentry_b PROPERTIES TIMEOUT 30)
+
+# DIAGNOSE-Probe (kein ctest): EM040-Bank-1-Gait-Inhalt (Keyframe-Varianz Clip 5/0 — "Marvin schwebt")
+add_executable(probe_em40_gait probe_em40_gait.c)
+target_link_libraries(probe_em40_gait PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_em40_gait PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# Regression: Marvin-Render-Pose — Bank-1-Gaits zyklieren in der GEPOSTEN Ausgabe
+# (compute_actor_kf + skel_compute_pose; Nutzer-Report #5 "schwebt am Anfang")
+add_executable(probe_marvin_render_pose probe_marvin_render_pose.c)
+target_link_libraries(probe_marvin_render_pose PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_marvin_render_pose PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_marvin_render_pose COMMAND probe_marvin_render_pose)
+set_tests_properties(unit_marvin_render_pose PROPERTIES TIMEOUT 30)
