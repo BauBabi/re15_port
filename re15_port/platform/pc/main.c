@@ -693,6 +693,23 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
         int nav_up   = nav_step && (held & RE15_PAD_BIT_UP);
         int nav_down = nav_step && (held & (RE15_PAD_BIT_DOWN | RE15_PAD_BIT_SELECT));
 
+        /* Menue-SEs des Save-Screens — CORE-Bank-4-Triade wie im RE2-MEM_CARD.BIN-Vorbild des
+         * portierten Save-Systems (jal-Zensus: 0x0404 Cursor x5 @0x801c05e0/0604/0778/07bc/166c,
+         * 0x0405 Cancel x8, 0x0406 Confirm x9 via RE2-SE-Player FUN_8005ba28) UND der RE1.5-eigenen
+         * gameweiten Menue-Konvention (Inventar FUN_8004a0cc: 0x0404 @0x8004a478ff, 0x0406
+         * @0x8004a51c-20, 0x0405 @0x8004a660-64). RE1.5s EIGENER (dormanter) Card-Screen
+         * FUN_80025c00 ist sound-frei (unfertiger Dev-Code, vollstaendiger jal-Zensus) — die
+         * Beeps folgen dem RE2-Template, dem dieser Screen ohnehin entstammt
+         * (analysis/typewriter_sounds.md TW-3/TW-4, beide CONFIRMED). */
+        {
+            extern void re15_audio_core_se(int se_id);
+            int cur_moved = 0;
+            if (st == ST_LIST)       cur_moved = (nav_up || nav_down);
+            else if (st == ST_OVERWRITE) cur_moved = (nav_up || nav_down);
+            if (cur_moved) re15_audio_core_se(4);            /* Cursor-Blip 0x0404 */
+            if (ok)        re15_audio_core_se(6);            /* Confirm 0x0406     */
+            else if (cancel) re15_audio_core_se(5);          /* Cancel 0x0405      */
+        }
         if (st == ST_LIST) {
             if (nav_up)   { cursor = (cursor + RE15_SAVE_SLOTS) % (RE15_SAVE_SLOTS + 1); blink = 0; }
             if (nav_down) { cursor = (cursor + 1) % (RE15_SAVE_SLOTS + 1); blink = 0; }
