@@ -139,9 +139,24 @@ int main(void)
                         if (re15_emd_parse_container(s_em40, len, &eb->md1, &eb->skel,
                                                      &eb->anim, &tim) == 0) {
                             eb->ok = 1; eb->buf = NULL;
+                            /* wie die Live-Plattform (main.c pc_enemy_load): ALLE Kanal-
+                             * Baenke laden — sonst faellt re15_actor_clip_len/
+                             * re15_npc_channel_anim auf die Container-Bank (dir[1])
+                             * zurueck und die Walk-Wraps messen die falsche Laenge
+                             * (Glide-Probe 2026-08-04: Wrap 20 statt Bank-1 30). */
+                            eb->loco_ok = (re15_emd_parse_loco_bank(s_em40, len,
+                                               &eb->skel_loco, &eb->anim_loco) == 0);
+                            eb->victim_ok = (re15_emd_parse_victim_bank(s_em40, len,
+                                               &eb->skel_victim, &eb->anim_victim) == 0);
+                            eb->own_ok = (re15_emd_parse_own_bank(s_em40, len,
+                                               &eb->skel_own, &eb->anim_own) == 0);
                             printf("EM040 bank: %d clips, fc[0..9]=", eb->anim.clip_count);
                             for (int c = 0; c < 10 && c < eb->anim.clip_count; c++)
                                 printf("%d ", eb->anim.clips[c].frame_count);
+                            printf("\nEM040 own(Bank1) ok=%d: %d clips, fc[0..9]=",
+                                   eb->own_ok, eb->own_ok ? eb->anim_own.clip_count : 0);
+                            for (int c = 0; eb->own_ok && c < 10 && c < eb->anim_own.clip_count; c++)
+                                printf("%d ", eb->anim_own.clips[c].frame_count);
                             printf("\n");
                         }
                     }

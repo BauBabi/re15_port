@@ -110,7 +110,12 @@ static int           s_pselect_text_show = 0;
 /* CONFIRM-ZOOM overlays (TITLE.BIN sub3-7): sub4 fades the 2D layer (backdrop + idle text) to black;
  * sub5/6 slide the selected char's name+subtitle SPRT rows toward the target rect. Reset each frame in
  * re15_render_pc_player_select and re-set by the confirm FSM. */
-static int           s_pselect_dim = 0;       /* 0=full, 255=black: black overlay over backdrop + colour-mod on idle text */
+static int           s_pselect_dim = 0;       /* 0=full, 255=black: black overlay over the BACKDROP (c4/c6/c7-
+                                               * Treiber @0x8010026c, TILE in SMALL-OT[0] = nur ueber der
+                                               * Backdrop-Ebene — Modelle+Text bleiben hell, §2.4) */
+static int           s_ps_cflag = 0;          /* FLAG scene+0x268: 0 = opake PROFILE-Prims, 1 = ADDITIV (Confirm) */
+static int           s_ps_ccnt  = 0;          /* Counter scene+0x26a: 0x20 -> 0, RGB-Rampe der Additiv-Prims */
+static int           s_ps_hide_names = 0;     /* Pan-Arm: Idle-Namen-Blocks deaktiviert (@0x80100b38-3c) */
 static int           s_slide_show = 0, s_slide_sel = 0, s_slide_nx, s_slide_ny, s_slide_sx, s_slide_sy;
 static int           s_pselect_groupa = 1;    /* apply the Group-A half-screen dim (1=idle/sub4; 0 once the char pans) */
 static int           s_select_pulse = 0x80;   /* highlight ramp counter scene+0x32e (0..0x80) */
@@ -966,16 +971,44 @@ void re15_render_end_frame(void)
             {  24, 168, 120, 48,  0,  88 },   /* C0 Leon PROFILE screen(24,168)  UV(0,88)  120x48 */
             { 176, 168, 120, 48,  0, 136 },   /* C1 Elza PROFILE screen(176,168) UV(0,136) 120x48 */
         };
-        /* CONFIRM sub4: fade the idle text ~2x faster than the backdrop (the profile-card colour fade is
-         * scene+0x26a over 32 frames vs the backdrop's ~64) — colour-mod toward black. */
-        int td = s_pselect_dim * 2; if (td > 255) td = 255;
-        Uint8 tm = (Uint8)(255 - td);
-        SDL_SetTextureColorMod(s_selecth3_tex, tm, tm, tm);
-        if (s_pselect_dim < 255) for (int i = 0; i < 4; i++) {
+        /* Group B NAMEN ([0]/[1]): das Original recolort sie NIE — einziger RGB-Write auf die
+         * Group-B-Prims ist das 0x80-Init (@0x80100938-940; Voll-Disasm-Store-Scan, pselect_info_bg.md
+         * F4 CONFIRMED). Ab dem Pan-Arm deaktiviert es die Blocks der NICHT gewaehlten Seite
+         * (`sw zero,0(t3)/60(t3)` @0x80100b38-3c) — der gewaehlte Name laeuft als Slide unten weiter.
+         * (Der fruehere td-ColorMod "~2x schneller als der Backdrop" war unbelegt und stempelte
+         * schwarze Kaesten ueber den zoomenden Charakter.) */
+        SDL_SetTextureColorMod(s_selecth3_tex, 255, 255, 255);
+        if (!s_ps_hide_names) for (int i = 0; i < 2; i++) {
             SDL_Rect src = { ps_text[i].u, ps_text[i].v, ps_text[i].w, ps_text[i].h };
             SDL_Rect dst = { ps_text[i].x, ps_text[i].y, ps_text[i].w, ps_text[i].h };
             SDL_RenderCopy(s_renderer, s_selecth3_tex, &src, &dst);
         }
+        /* Group C PROFILE-Badges ([2]/[3]): Prim-Wahl ueber FLAG scene+0x268 (@0x80100f74-9c) —
+         * 0 = OPAKES Prim (Code 0x64; Idle ist byte-identisch zum PSX-FB inkl. der opak-schwarzen
+         * 0x8400-Glyph-Schatten, §2.5), 1 = das ADDITIV-Prim (Code 0x66 via `ori 0x2` @0x80100e68,
+         * ABR1 GetTPage(1,1,320,256) @0x80100ea8, DR_MODE e10000b5 savestate-verifiziert) mit
+         * RGB = Counter<<2 (@0x80100fa0-b4), Counter 0x20->0 (@0x80101374-80 / Dec @0x80100f44-50).
+         * Additiv kann NIE abdunkeln -> ab Confirm sind die Badges unsichtbar, der Text ein
+         * ausklingender Glow. SDL-Mapping: PSX-Prim 0x80 = neutral = 255 -> v = min(counter<<3,255). */
+        if (!s_ps_cflag) {
+            for (int i = 2; i < 4; i++) {
+                SDL_Rect src = { ps_text[i].u, ps_text[i].v, ps_text[i].w, ps_text[i].h };
+                SDL_Rect dst = { ps_text[i].x, ps_text[i].y, ps_text[i].w, ps_text[i].h };
+                SDL_RenderCopy(s_renderer, s_selecth3_tex, &src, &dst);
+            }
+        } else if (s_ps_ccnt > 0) {
+            int v = s_ps_ccnt << 3; if (v > 255) v = 255;
+            SDL_SetTextureBlendMode(s_selecth3_tex, SDL_BLENDMODE_ADD);
+            SDL_SetTextureColorMod(s_selecth3_tex, (Uint8)v, (Uint8)v, (Uint8)v);
+            for (int i = 2; i < 4; i++) {                 /* beide Seiten — kein per-Char-Gate im
+                                                           * Original-Draw-Loop (@0x80101004) */
+                SDL_Rect src = { ps_text[i].u, ps_text[i].v, ps_text[i].w, ps_text[i].h };
+                SDL_Rect dst = { ps_text[i].x, ps_text[i].y, ps_text[i].w, ps_text[i].h };
+                SDL_RenderCopy(s_renderer, s_selecth3_tex, &src, &dst);
+            }
+            SDL_SetTextureBlendMode(s_selecth3_tex, SDL_BLENDMODE_BLEND);
+            SDL_SetTextureColorMod(s_selecth3_tex, 255, 255, 255);
+        }   /* counter==0: additiv mit RGB 0 = No-Op -> Draw entfaellt */
         /* CONFIRM sub5/6: the sliding NAME row (full bright, over the faded idle text). The subtitle row
          * (blk1/blk3) is NOT drawn — the original shows only the name during the confirm-zoom (same as
          * the idle, where the subtitle is never visible either; its block slides but is not rendered). */
@@ -1354,9 +1387,18 @@ void re15_render_pc_player_select(const re15_tim_t *bg, int sel, int pulse_count
     }
     s_select_sel = sel; s_select_pulse = pulse_counter; s_select_show = 1;
     s_pselect_dim = 0; s_slide_show = 0; s_pselect_groupa = 1;   /* reset confirm overlays; the FSM re-sets them */
+    s_ps_cflag = 0; s_ps_ccnt = 0; s_ps_hide_names = 0;
 }
-/* CONFIRM-ZOOM: sub4 backdrop/idle-text fade level (0..255). */
+/* CONFIRM-ZOOM: sub4 BACKDROP fade level (0..255) — TILE nur ueber der Backdrop-Ebene (§2.4). */
 void re15_render_pc_pselect_dim(int level) { s_pselect_dim = level < 0 ? 0 : level > 255 ? 255 : level; }
+/* CONFIRM: FLAG scene+0x268 + Counter scene+0x26a (PROFILE additiv, @0x80101374-80) und der
+ * Pan-Arm-Namen-Disable (@0x80100b38-3c). Vom pselect-FSM in main.c pro Frame gespiegelt. */
+void re15_render_pc_pselect_confirm(int flag, int counter, int hide_names)
+{
+    s_ps_cflag = flag ? 1 : 0;
+    s_ps_ccnt  = counter < 0 ? 0 : counter;
+    s_ps_hide_names = hide_names ? 1 : 0;
+}
 /* CONFIRM-ZOOM: turn the idle Group-A half-screen dim off once the selected char starts panning to centre
  * (else the right-half dim would darken the char as it crosses screen centre). */
 void re15_render_pc_pselect_groupa(int on) { s_pselect_groupa = on; }

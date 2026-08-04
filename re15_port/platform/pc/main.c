@@ -1080,6 +1080,7 @@ static int pc_run_player_select(void)
      * sub6(41f: pan selected char world-X->0, spin rot_y+=8, camera dolly pos.z += quadratic accum,
      * rebuild LookAt) -> sub7(60f hold + 32f fade-to-black) -> handoff. */
     int cz = -1;                          /* -1 = idle input phase; 0..5 = confirm LEVEL-2 state */
+    int cz_pflag = 0, cz_pcnt = 0;        /* FLAG scene+0x268 / Counter +0x26a (PROFILE-Additiv-Rampe) */
     int cz_c4 = 0, cz_c6 = 0, cz_c7 = 0;  /* fade driver 0x8010026c (busy / ramp level / phase) */
     int cz_396 = 0;                       /* shared counter scene+0x396 */
     int32_t cz_panvel = 0, cz_accel = 0, cz_accum = 0;  /* model pan vel (scene+0), accel04 (+4), cam-z accum (+0x74) */
@@ -1105,6 +1106,9 @@ static int pc_run_player_select(void)
          * dispatch order sub2 -> renderers). Advances the state + counters + pan/dolly/slide. ---- */
         if (cz == 0) {                               /* sub3 START-ZOOM (once): arm the fade driver */
             cz_c6 = 0; re15_cz_fade_tick(&cz_c4, &cz_c6, &cz_c7); cz = 1;
+            cz_pflag = 1; cz_pcnt = 0x20;            /* FLAG scene+0x268=1 + Counter +0x26a=0x20
+                                                      * (@0x80101374-80): PROFILE-Badges ab jetzt
+                                                      * ADDITIV mit RGB-Rampe Counter<<2 */
         } else if (cz == 1) {                        /* sub4 ZOOM-LOOP: fade the 2D layer over 64f */
             re15_cz_fade_tick(&cz_c4, &cz_c6, &cz_c7);
             if (cz_c4 == 0) { elza_alive = 0; cz_396 = 0; cz = 2; }   /* fade done: disable other char, arm pan/anim */
@@ -1129,10 +1133,16 @@ static int pc_run_player_select(void)
         if (cz >= 3) cam.trans[2] = (int32_t)(((int64_t)4104 * (20000 - cz_accum)) >> 12);
         int cz_dim = (cz == 1) ? cz_c6 : (cz >= 2 ? 255 : 0);   /* sub4 ramp; then backdrop fully black */
 
+        if (cz_pflag && cz_pcnt > 0) cz_pcnt--;      /* Counter-Dec pro Frame (@0x80100f44-50) */
+
         re15_render_begin_frame();
         re15_input_tick();
         re15_render_background_gradient(0, 0, 0, 0, 0, 0);
         re15_render_pc_player_select(&s_sel_bg, sel, pulse);
+        {   /* FLAG/Counter + Pan-Arm-Namen-Disable an den Renderer spiegeln (pselect_info_bg.md §4) */
+            extern void re15_render_pc_pselect_confirm(int flag, int counter, int hide_names);
+            re15_render_pc_pselect_confirm(cz_pflag, cz_pcnt, cz >= 2);
+        }
         re15_render_pc_pselect_text(&s_sel_txt, sel);   /* name/profile text overlays (groups B+C) */
         if (cz_dim) re15_render_pc_pselect_dim(cz_dim);
         if (cz >= 2) re15_render_pc_pselect_groupa(0);   /* stop the half-screen dim once the char pans to centre */
