@@ -4,6 +4,28 @@
 > 1120/1130/1140/1150/1170/1240 byte-true (Rolltor-Sound, Krähen-KI 1170, Zombie-Hit 1140,
 > systematischer Sweep, Adress-Coverage). Neue Sessions starten DORT.
 
+> **STATUS-SNAPSHOT 2026-08-04** (Zahlen aus `RE15_ADDRESS_COVERAGE.md`, frisch generiert;
+> Baseline **110/110 ctest grün**):
+>
+> | Metrik | Stand | Δ seit 2026-08-02 |
+> |---|---|---|
+> | Zitierte Original-Adressen im Port (unique) | **5431** | — (Session 1 ohne Gesamtzahl-Log) |
+> | EXE-Funktionen zitiert | **257/386 (66,6 %)** | +7 |
+> | STAGE1-Overlay-Funktionen zitiert | **431/650 (66,3 %)** | +11 |
+> | STAGE2/3/4/5/6 zitiert | 329/456 · 362/526 · 343/459 · 357/535 · 50/73 | (geteilter Adressraum, s. Methodik) |
+> | DAT_-Daten-Globals zitiert | 190 | — |
+>
+> **Funktional spielbar (end-to-end verifiziert):** Boot-FMV → Title-Menü (byte-true Fade + Announcer-
+> Stimme + Menü-SEs) → Charakterauswahl (Confirm-Zoom additiv) → Intro-Montage 1240/1170 →
+> STAGE1-Raumkette (1240/1170/1130/1140/1150/10A0/10C0/10D0 …) mit Kampf (Zombie/Krähe/Hund/…,
+> alle 7 STAGE1-Typen), Cutscenes/NPCs (Marvin-Szene komplett), Inventar/Item-Box, Save/Load
+> (RE2-Karte, v5-Persistenz inkl. Wunden), Türen/Treppen/Locks.
+> **Offen (grob):** W2-Raum-Sweep über die restlichen STAGE1-Räume; STAGE2-6-Räume unverifiziert
+> (Gegner-KI aller Stages ist portiert); PSX-Target-Link (PSn00bSDK-Layout, A5·B0); Java-Extractor-
+> Gradle; die 129 unzitierten EXE-Funktionen sind großteils toter/ersetzter Code (dormanter
+> RE1.5-Card-Screen + Sub-Ops, Task-/Thread-Infra, Engine-Main-Glue) — Detail in
+> `RE15_ADDRESS_COVERAGE.md` Anhang A/B.
+
 *Synthesis of the six area plans into one ordered, dependency‑driven execution sequence. Every task keeps its original area ID (prefixed `A1…A6` for traceability) so we can work it piece by piece.*
 
 ---
