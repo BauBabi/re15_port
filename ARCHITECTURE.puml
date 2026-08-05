@@ -1,0 +1,432 @@
+'=============================================================================
+' RE1.5-Port -- Architektur-Diagramme (PlantUML)
+'=============================================================================
+' Inhaltsgleich zu den Mermaid-Diagrammen in ARCHITECTURE.md -- diese Fassung
+' fuer Werkzeugketten, die PlantUML rendern (IntelliJ, VS Code PlantUML,
+' Confluence, Doxygen, plantuml.jar in CI).
+'
+' Rendern:
+'   java -jar plantuml.jar ARCHITECTURE.puml          -> je Diagramm ein PNG
+'   java -jar plantuml.jar -tsvg ARCHITECTURE.puml    -> SVG
+'   java -jar plantuml.jar -checkonly ARCHITECTURE.puml  (Syntaxpruefung)
+'
+' Die Datei enthaelt ACHT eigenstaendige, benannte Diagramme; PlantUML erzeugt
+' daraus acht Ausgabedateien, benannt nach dem jeweiligen Diagrammnamen.
+'
+' Stand: 2026-08-04
+'=============================================================================
+
+
+'--- 1 ----------------------------------------------------------------------
+' Schichtenmodell: eine Engine, zwei Backends
+'-----------------------------------------------------------------------------
+@startuml 01-schichten
+title RE1.5-Port -- Schichtenmodell
+
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultTextAlignment center
+skinparam package {
+  BorderColor #4a6a8a
+  FontStyle bold
+}
+
+package "Plattform-Backends -- kennen die Hardware" as BACKENDS #FCEEF3 {
+  component "platform/pc  |  SDL2  |  13 281 Z.\nmain.c | render_pc.c | audio_pc.c\ninput_pc.c | bg_pc.c | asset_pc.c" as PC
+  component "platform/psx  |  PSn00bSDK  |  4 644 Z.\nmain.c | render.c | mesh_psx.c\naudio_psx.c | asset_psx.c | vram_psx.c" as PSX
+}
+
+package "include/*.h -- der Vertrag (57 Header, 7 570 Z.)" as CONTRACT #FBF8E8 {
+  interface "Daten rein\nre15_game_ctx_t" as IN
+  interface "Dienste raus\nre15_room_apply_ctx_t\n(5 Funktionszeiger)" as OUT
+  interface "Backend-Pflichten\nRender | Audio | Assets" as API
+}
+
+package "engine/src -- plattformfrei (32 959 Z., 56 Dateien)" as ENGINE #EAF1F9 {
+  component "Kern &\nFrame-Tick" as E1
+  component "Raum, Skript-VM\n& Trigger" as E2
+  component "Aktoren, KI\n& Kampf" as E3
+  component "Modelle, Pose,\nKamera, Licht" as E4
+  component "Menues, Inventar,\nDialoge, Save" as E5
+  component "Audio-Daten\n& Effekte" as E6
+}
+
+BACKENDS -down-> CONTRACT : ruft jeden Frame
+CONTRACT -down-> ENGINE
+ENGINE .up.> BACKENDS : nur ueber Funktionszeiger\nim ctx -- nie direkt
+
+note right of ENGINE
+  Kein SDL, kein PSn00bSDK.
+  Alles was *Regel* ist, liegt hier.
+end note
+@enduml
+
+
+'--- 2 ----------------------------------------------------------------------
+' Der Frame-Tick
+'-----------------------------------------------------------------------------
+@startuml 02-frame-tick
+title Der Frame-Tick -- was pro Bild passiert
+
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+autonumber
+
+participant "main.c\n(Plattform)" as P
+participant "re15_game_step" as GS
+participant "SCD-VM" as SCD
+participant "AOT-Scan" as AOT
+participant "Gegner-KI" as AI
+participant "Render-\nBackend" as R
+
+P -> P : begin_frame, Eingabe lesen
+P -> SCD : scd_vm_tick()
+note over SCD : Opcodes schreiben nur\ngemeinsame Globals
+
+P -> GS : re15_game_step(ctx)
+activate GS
+
+group #FFE8E8 Zwei fruehe Ausstiege
+  GS --> P : Item-Modal aktiv? -> sofort zurueck
+  GS --> P : Menue offen/Uebergang? -> sofort zurueck
+end
+
+GS -> GS : Pad-Woerter latchen\n(physisch -> virtuell)
+
+group #E8F0FA Exklusive Spieler-Kette
+  GS -> GS : Treppe | Tod | Gegriffen |\nKnockdown | Flinch | sonst NORMAL
+  note right : nur NORMAL liest das Pad
+end
+
+GS -> GS : Bewegung -> Koerperstoss\n-> SCA-Waende -> Objekte
+note right : Waende gewinnen immer
+
+GS -> AOT : re15_aot_scan()
+AOT --> GS : Tuer / Item / Event gefeuert?
+GS -> GS : re15_actors_anim_advance()
+note right : branchunabhaengig!
+GS -> AI : re15_enemy_ai_run_all()
+AI -> AI : pro Gegner: Gate -> Distanz\n-> State-Dispatch
+GS --> P : mutierter Globalzustand
+deactivate GS
+
+P -> P : re15_room_apply_pending()
+P -> R : Szene bauen, Overlays, present
+@enduml
+
+
+'--- 3 ----------------------------------------------------------------------
+' Raum, Skript-VM und Trigger
+'-----------------------------------------------------------------------------
+@startuml 03-raum-skript-trigger
+title Von der RDT-Datei zum lebenden Raum
+
+skinparam componentStyle rectangle
+skinparam shadowing false
+
+file "ROOM####.RDT\n(Roh-Puffer)" as RDT
+component "re15_rdt_parse\nrdt_common.c" as PARSE
+
+RDT --> PARSE
+
+component "Kamera-Schnitte" as S1
+component "SCA-Kollision" as S2
+component "RVD-Zonen" as S3
+component "main00 / sub00-23\nSCD-Bytecode" as S4
+component "Licht | Texte\nModelle | Sound-Baenke" as S5
+
+PARSE --> S1
+PARSE --> S2
+PARSE --> S3
+PARSE --> S4
+PARSE --> S5
+
+component "SCD-VM\n24 Thread-Slots\nscd_vm.c" as VM #EAF1F9
+component "scd_register_room_events\n-> Kamera-AOTs" as SET
+
+S4 --> VM
+S3 --> SET
+
+database "g_aot\n64 Trigger-Slots" as G1
+database "g_scd\nProps | Variablen\nKamera | Dialog" as G2
+database "g_game\nStory-Flags" as G3
+database "g_actors\nSpawns | Posen" as G4
+queue "Audio-Ringqueue" as G5
+
+VM --> G1
+VM --> G2
+VM --> G3
+VM --> G4
+VM --> G5
+SET --> G1
+
+component "re15_aot_scan\njeden Frame\naot_common.c" as SCAN #EAF1F9
+G1 --> SCAN
+
+component "DOOR:\nRaumwechsel" as T1
+component "ITEM:\nAufnahme-Modal" as T2
+component "MESSAGE:\nDialog" as T3
+component "STAIR:\nTreppen-FSM" as T4
+component "EVENT:\nsub_scd starten" as T5
+component "CAM_SWITCH:\nSchnittwechsel" as T6
+
+SCAN --> T1
+SCAN --> T2
+SCAN --> T3
+SCAN --> T4
+SCAN --> T5
+SCAN --> T6
+
+note bottom of PARSE
+  Zero-Copy: alle Sektionszeiger
+  zeigen IN den Aufrufer-Puffer.
+  Puffer freigeben = alles kaputt.
+end note
+@enduml
+
+
+'--- 4 ----------------------------------------------------------------------
+' Aktor-Zustandsmaschine
+'-----------------------------------------------------------------------------
+@startuml 04-aktor-zustaende
+title Aktor-Zustandsmaschine (Gegner und NPCs)
+
+skinparam shadowing false
+
+[*] --> INIT : Sce_em_set\n(Spawn aus dem Skript)
+INIT --> ACTIVE : Verhaltens-Byte dekodiert
+ACTIVE --> HURT : Treffer
+HURT --> ACTIVE : Erholung
+ACTIVE --> DEATH : HP < 0
+HURT --> DEATH : HP < 0
+DEATH --> CORPSE : Sturz/Animation zu Ende
+CORPSE --> [*] : bleibt liegen
+ACTIVE --> EXECUTOR : Skript uebernimmt (NPCs)
+EXECUTOR --> ACTIVE : Skript gibt frei
+
+note right of ACTIVE
+  Dispatch-Kette:
+  state -> sub_state_1 (Verhalten)
+       -> sub_state_2 (Phase)
+       -> sub_state_3
+
+  DECIDE und ANIMATE laufen im
+  SELBEN Frame nacheinander.
+end note
+
+note bottom of INIT
+  grid_id ist ein Mehrzweck-Byte:
+  unteres Nibble = Untermodus,
+  0x20 = Frame ueberspringen,
+  0x40 = stationaer, 0x80 = liegend
+end note
+@enduml
+
+
+'--- 5 ----------------------------------------------------------------------
+' Modell-Datenkette
+'-----------------------------------------------------------------------------
+@startuml 05-modell-datenkette
+title Modelle, Pose, Kamera, Licht, Hintergrund
+
+skinparam componentStyle rectangle
+skinparam shadowing false
+
+package "Beim Laden" {
+  file "EMD / PLD-Container" as EMD
+  component "Offset-Verzeichnis lesen" as DIR
+  component "MD1 -- Mesh" as MD1
+  component "EMR -- Skelett\nStruktur IMMER dir[2]" as EMR #FBF8E8
+  component "EDD -- Clips/Frames" as EDD
+  component "TIM -- Textur" as TIM
+  component "Zusatz-Baenke\n(nur Keyframe-Pools)" as BANK
+
+  EMD --> DIR
+  DIR --> MD1
+  DIR --> EMR
+  DIR --> EDD
+  DIR --> TIM
+  DIR ..> BANK : weitere Paare
+}
+
+package "Pro Frame" {
+  component "anim_select\nBank + Clip + Keyframe" as SEL
+  component "re15_skel_compute_pose\nVorwaertskinematik in Q12" as POSE #EAF1F9
+  component "camera_common\nView x Bone" as VIEW
+  component "light_common\nVertex-Farben (NCCT)" as LIGHT
+
+  SEL --> POSE
+  POSE --> VIEW
+  VIEW --> LIGHT
+}
+
+package "Hintergrund pro Schnitt" {
+  file "BSS-Datei" as BSS
+  component "VLC entpacken" as VLC
+  component "MDEC / IDCT" as MDEC
+  component "320x240-Bild" as IMG
+
+  BSS --> VLC
+  VLC --> MDEC
+  MDEC --> IMG
+}
+
+EDD --> SEL
+EMR --> POSE
+component "Backend zeichnet" as OUT
+LIGHT --> OUT
+IMG --> OUT
+MD1 --> OUT
+
+note right of EMR
+  Die Knochen-STRUKTUR liegt immer
+  in dir[2]. Die anderen Bank-EMRs
+  sind reine Keyframe-Pools ohne
+  Knochentabelle.
+end note
+@enduml
+
+
+'--- 6 ----------------------------------------------------------------------
+' Menue-Zustandsmaschine
+'-----------------------------------------------------------------------------
+@startuml 06-menue-zustaende
+title Menues, Inventar, Dialoge -- Zustandsmaschine
+
+skinparam shadowing false
+
+[*] --> Gameplay
+Gameplay --> Uebergang : START gedrueckt
+
+state Uebergang {
+  [*] --> Ausblenden
+  Ausblenden --> SchwarzHalten
+  SchwarzHalten --> TaskStart
+  TaskStart --> Einblenden
+  Einblenden --> [*]
+}
+
+Uebergang --> MenueOffen
+
+state MenueOffen {
+  [*] --> Init
+  Init --> Run
+  Run --> MAP
+  Run --> FILE
+  Run --> CHECK
+  Run --> EXCHANGE
+  Run --> ITEMBOX
+  MAP --> Run
+  FILE --> Run
+  CHECK --> Run
+  EXCHANGE --> Run
+  ITEMBOX --> Run
+  Run --> Close
+  Close --> [*]
+}
+
+MenueOffen --> Gameplay : Close abgeschlossen
+
+note right of Uebergang
+  re15_menu_gameplay_frozen()
+  ist das EINE Gate -- der
+  Frame-Tick kehrt daran
+  frueh zurueck.
+end note
+
+note bottom of MenueOffen
+  Die Engine RENDERT NICHT.
+  re15_inv_screen_build erzeugt
+  eine Datenliste; ops[0] ist das
+  OBERSTE Element -> von hinten
+  nach vorne zeichnen.
+end note
+@enduml
+
+
+'--- 7 ----------------------------------------------------------------------
+' Audio-Wege
+'-----------------------------------------------------------------------------
+@startuml 07-audio
+title Audio -- von der Bank zur Voice
+
+skinparam componentStyle rectangle
+skinparam shadowing false
+
+package "Baenke" {
+  database "snd0 / snd1\n(im Raum-RDT)" as B1
+  database "ARMS##\n(Waffe)" as B2
+  database "CORE##\n(resident)" as B3
+  database "MAIN## / SUB_##\n(Musik)" as B4
+}
+
+component "SCD-Opcodes\nSe_on | Message_on | BGM" as SCD
+queue "Ring-Queue\n16 Eintraege" as Q
+component "C-Code\nKI | Schritte | Menue" as CODE
+component "re15_audio_tick\npro Frame" as TICK #EAF1F9
+component "EDT-Aufloesung\nBank -> Programm -> Ton -> Sample" as RES
+
+SCD --> Q
+Q --> TICK
+TICK --> RES
+CODE --> RES : direkte Bank-Aufrufe
+B1 --> RES
+B2 --> RES
+B3 --> RES
+B4 --> RES
+
+component "PC: Software-Mixer\nSlots | Pitch | Panning" as PCBK
+component "PSX: SPU\n24 Hardware-Voices" as PSXBK
+
+RES --> PCBK
+RES --> PSXBK
+
+note bottom of TICK
+  Falle 1: re15_audio_init laeuft VOR
+  dem ersten Raum-Parse -> dort keine
+  Raum-Baenke laden.
+  Falle 2 (PC): jede Mixer-Aenderung
+  zwischen SDL_LockAudioDevice/Unlock.
+end note
+@enduml
+
+
+'--- 8 ----------------------------------------------------------------------
+' Raumwechsel
+'-----------------------------------------------------------------------------
+@startuml 08-raumwechsel
+title Der Raumwechsel -- die laengste Kette im Port
+
+skinparam shadowing false
+autonumber
+
+participant "AOT-Scan" as AOT
+participant "Warteschlange" as Q
+participant "re15_room_apply_pending" as AP
+participant "Plattform-\nCallbacks" as CB
+participant "SCD-VM" as SCD
+
+AOT -> Q : re15_room_request_change(...)
+note over Q
+  Nur ein Flag setzen!
+  Nie mitten im Scan wechseln --
+  die Trigger-Tabelle wuerde
+  unter dem Scanner wegbrechen.
+end note
+
+... naechster Frame, NACH dem Game-Step ...
+
+AP -> CB : load_rdt() -- neue Raumdatei
+AP -> AP : Aktoren zuruecksetzen\n(HP/Status behalten)
+AP -> CB : reset_render() -- Modelle/Texturen frei
+AP -> AP : Spieler an Tuer-Spawn setzen
+AP -> CB : load_props() -- Raum-Modelle
+AP -> CB : load_bg_cut() -- Hintergrund
+AP -> SCD : scd_room_reenter() -- main00/sub00
+note over SCD
+  Story-Flags bleiben erhalten --
+  daran haengt, welcher Skript-
+  Zweig laeuft.
+end note
+AP --> AP : Rueckgabe 1 = Wechsel fand statt
+@enduml
