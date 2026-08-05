@@ -565,7 +565,6 @@ static void pc_draw_card_static(const re15_tim_t *bg, const int used[],
  * cursor, and the OVERWRITE-confirm + result sub-screens. Coords are the RE'd 320x240 positions.
  * save_mode: 1 = SAVE (*sd), 0 = LOAD (into s_resume_sd, resume room -> *out_room). Returns the
  * chosen slot (0..4) or -1 on cancel/exit. */
-static uint16_t pc_pad_config(uint16_t p);   /* OPTIONS-Button-Config-Remap (Def. weiter unten) */
 static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint16_t *out_room)
 {
     extern int  re15_render_pc_game_text(int x, int y, const char *str, int attr);   /* RE1.5 game font */
@@ -678,14 +677,15 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
          * raw START to PROCEED/confirm (andi 0x800 auf DAT_800ac75c @0x80025e98), and virtual
          * 0x8000 (= entry 15 <- RAW CROSS) to go BACK/cancel (andi 0x8000 @0x80025ea0). Same
          * □-confirm/✕-cancel convention as every other virtual-word menu.
-         * CC-3-Fix (analysis/confirm_cancel_mapping.md, CONFIRMED): das virtuelle Wort folgt der
-         * OPTIONS-Button-Config — der Original-Builder FUN_80030444 remappt ueber
-         * PTR_DAT_80073e1c[DAT_800b0fcc] (Type A @0x80073dbc, B @0x80073ddc, C @0x80073dfc,
-         * EDIT @0x800b21cc); unter Type B/C bestaetigt der Card-Screen mit ○ (v0x4000<-0x0020
-         * @0x80073ddc[14]). Vorher baute der Port vp aus dem rohen Pad und umging die Config.
-         * START-Confirm bleibt RAW (@0x80025e98), Nav bleibt RAW-held (DAT_800ac760 — das
-         * D-Pad mappt in allen Presets identisch). */
-        uint16_t vp     = re15_pad_virtual_word(pc_pad_config(pp));
+         * ZURUECKGENOMMEN 2026-08-05 (Nutzer): hier stand kurzzeitig
+         * `re15_pad_virtual_word(pc_pad_config(pp))`, damit der Card-Screen der
+         * OPTIONS-Button-Config folgt (unter Type B/C bestaetigt das Original mit ○,
+         * v0x4000<-0x0020 @0x80073ddc[14]). Ausloeser war ein Report ueber die
+         * Bestaetigen-/Abbrechen-Belegung im Ladebildschirm — der sich als RDP-Problem
+         * der Eingabe herausstellte, NICHT als Port-Fehler. Der Zusatz ist darum wieder
+         * draussen; der Card-Screen liest wie zuvor das rohe Pad. Die RE-Belege zur
+         * Belegung bleiben in analysis/confirm_cancel_mapping.md erhalten. */
+        uint16_t vp     = re15_pad_virtual_word(pp);
         uint16_t ok     = (uint16_t)((vp & 0x4000) | (pp & RE15_PAD_BIT_START));
         uint16_t cancel = (uint16_t)(vp & 0x8000);
 
