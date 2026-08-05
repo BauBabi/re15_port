@@ -15,6 +15,7 @@
 #include "re15_rdt.h"
 #include "re15_actor.h"
 #include "re15_enemy.h"   /* re15_enemy_reset on room change */
+#include "re15_enemy_ai.h"    /* re15_player_cmd_reset — Kommandoregister @0x8001CBDC/@0x80031518 */
 #include "re15_savepoint.h"   /* re15_savepoint_reset on room change */
 #include "re15_itembox.h"     /* re15_itembox_reset on room change (box pending) */
 #include "re15_scd.h"
@@ -138,6 +139,13 @@ int re15_room_apply_pending(const re15_room_apply_ctx_t *c)
          * pmode blieb 2, frozen=0, motion=0 — der Spieler stand fest, obwohl nichts ihn hielt.
          * (Verwandt mit dem Irons-Freeze: dort war es ein Thread, hier das Routinen-Register.) */
         g_scd.player_mode = 0;
+        /* (Der CUTSCENE-LATCH flag(2,7), aus dem main.c player_mode jeden Frame NEU ableitet, wird
+         * im Raum-(Re)Load selbst geloescht — scd_room_reenter, neben der Bank-1-Maske. Dort liegt
+         * der gemeinsame Engpass ALLER drei Raumwechsel-Aufrufer.) */
+        /* ...und die Kommandoregister-Statics, die ausserhalb von g_actors leben (Knockdown-Phase,
+         * Hit-Flinch, Event-Reach). Derselbe WORT-Store @0x8001CBDC / @0x80031518 raeumt sie im
+         * Original mit weg; hier angehaengt an den bestehenden Block, damit die Reihenfolge stimmt. */
+        re15_player_cmd_reset();
     }
     re15_enemy_reset();   /* drop the previous room's loaded enemy models (free PC bufs);
                            * the new room lazy-loads its own on first spawn. */

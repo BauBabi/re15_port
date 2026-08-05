@@ -435,6 +435,23 @@ int scd_thread_start(int slot, const uint8_t *pc)
     return 0;
 }
 
+/* UNBEDINGTER Thread-Reseed — byte-true FUN_8003ee3c -> FUN_8003edec (@0x8003ee1c-38:
+ * `sb 1,1(a0)` active, `sb 0,0(a0)` level, `sb -1,4(a0)` / `sb -1,8(a0)`, `sw pc,28(a0)`).
+ * Unterschied zu scd_thread_start: das Original prueft NICHT, ob der Slot laeuft — es
+ * ueberschreibt ihn. Genau das braucht der Per-Frame-sub01-Reseed in scd_vm_tick(); ausserdem
+ * darf er nicht wie scd_thread_start pro Frame eine Logzeile schreiben. */
+void scd_thread_reseed(int slot, const uint8_t *pc)
+{
+    if (slot < 0 || slot >= SCD_THREAD_COUNT) return;
+    scd_thread_t *t = &g_scd.threads[slot];
+    memset(t, 0, sizeof(*t));
+    t->active = 1;
+    t->call_depth = 0;
+    t->pc = pc;
+    t->work_slot = -1;
+    t->work_prop_idx = -1;
+}
+
 void scd_thread_kill(int slot)
 {
     if (slot < 0 || slot >= SCD_THREAD_COUNT) return;
@@ -513,20 +530,35 @@ int scd_event_fire(uint8_t event_id)
 #define SCD_R_FRAME_RET  0
 #define SCD_R_IF_FALSE   3
 
+/* Raum-Init-Lauf vs. Gameplay-Lauf. Das Original hat dafuer ZWEI getrennte Call-Sites:
+ *   INIT     FUN_8003ef6c ruft den Dispatcher FUN_8003f0a0 DIREKT (@0x8003f018) — kein sub01-Reseed;
+ *            Slot 1 wird dort mit sub00 geladen (a1 = 0, @0x8003efd8).
+ *   GAMEPLAY FUN_8003f038 (Haupt-Loop @0x8001cdec) macht ZUERST den Reseed und ruft DANN den
+ *            Dispatcher (@0x8003f088).
+ * Der Port faedelt beide durch scd_vm_tick(), deshalb dieser Schalter: waehrend des Raum-Init-Laufs
+ * bleibt der Reseed aus, sonst wuerde sub00 geklobbert, BEVOR es sein erstes Opcode ausfuehrt
+ * (ROOM10D0 haelt seine Sce_em_set-Spawns in sub00 — ohne die Unterdrueckung spawnt der Raum nichts). */
+static int s_vm_room_init = 0;
+void scd_vm_set_room_init(int on) { s_vm_room_init = on ? 1 : 0; }
+
 void scd_vm_tick(void)
 {
     g_scd.tick_count++;
-    /* Re-poll the room's sub_scd[1] (sub01) — but ONLY when an EXAMINE→work-var AOT fired
-     * this frame (examine_poll_pending). Our sub01 (for rooms that have one) is a work_vars
-     * gate, e.g. ROOM1150 `if(Cmp(work_vars[0]==2)){…Evt_exec(sub03);}` = examine-Irons-again
-     * → "I'll be fine". Running it ONLY on the examine event (not every frame) keeps rooms
-     * with no examine AOT from ever re-spawning it. Slot 2 = room-setup's sub01 slot; gated on
-     * player_mode!=2 so it never fires mid-cutscene. One-shot. */
-    if (g_scd.examine_poll_pending && s_current_rdt && s_current_rdt->sub_scd[1]
-        && g_scd.player_mode != 2 && !g_scd.threads[2].active) {
-        g_scd.examine_poll_pending = 0;
-        scd_thread_start(2, s_current_rdt->sub_scd[1]);
-    }
+    /* SUB01-RESEED — byte-true FUN_8003f038: JEDEN Gameplay-Frame wird Thread-Slot 1 auf sub_scd[1]
+     * zurueckgesetzt (@0x8003f064 `ori a0,zero,0x1`, @0x8003f070 `lw v0,68(v0)` = RDT+0x44,
+     * @0x8003f084 `ori a1,zero,0x1` -> jal FUN_8003ee3c @0x8003f080). Der Reset ist UNBEDINGT:
+     * FUN_8003ee3c -> FUN_8003edec @0x8003ee1c-38 schreibt Level/Flags/PC neu, egal ob der Slot
+     * gerade laeuft. Ab dem ersten Gameplay-Frame gehoert Slot 1 damit permanent sub01; das dort
+     * beim Init geladene sub00 wird verdraengt.
+     *
+     * Der Port fuehrte sub01 stattdessen nur EINMAL beim Raum-Eintritt aus (plus einen
+     * examine_poll_pending-Sonderweg, den es im Original nicht gibt). Fuer die Raeume, deren
+     * Trigger IN sub01 sitzt, hiess das: der Trigger feuerte live nie und detonierte erst beim
+     * naechsten Raum-Load im Tuer-Frame — ROOM1030s Zombie-Cutscene "triggert komisch" und
+     * ROOM1040s Schalter tat beim Druecken gar nichts (Nutzer-Report). */
+    if (!s_vm_room_init && s_current_rdt && s_current_rdt->sub_scd[1])
+        scd_thread_reseed(1, s_current_rdt->sub_scd[1]);
+    g_scd.examine_poll_pending = 0;   /* Port-Konstrukt, vom Per-Frame-Reseed abgeloest */
 
 
     /* BO-round 2026-05-29: REVERTED the BN-round Evt_exec next-tick defer.
@@ -592,6 +624,34 @@ void scd_vm_tick(void)
             /* r == 1: continue loop (next opcode) */
         }
     }
+
+    /* FRAME-ENDE-WISCH — byte-true FUN_8003ebf4, gerufen vom VM-Executor FUN_8003f0a0 @0x8003f18c
+     * UNBEDINGT am Ende JEDES VM-Laufs (direkt hinter der Slot-Schleife @0x8003f17c-88):
+     *   @0x8003ebf4 `addiu v0,zero,-1` -> @0x8003ebfc/ec04/ec0c/ec14 `sh v0` auf
+     *                0x800b0fd0/d2/d4/d6  = work_vars[0..3] := -1
+     *   @0x8003ec1c `sw zero,0x800b102c` = Flag-Bank 5, Wort 1 (Bits 0x20..0x3F) := 0
+     *
+     * Das sind KEINE Raum-Latches, sondern ein EIN-FRAME-Handshake: der AOT-Scan laeuft nach der VM
+     * (@0x8001ce1c) und schreibt work_vars[0]/[1] (FUN_80042bac @0x80042f3c/@0x80042ee4) sowie die
+     * Zonen-Bits 0x20+ — im naechsten Frame liest sub01 sie, danach sind sie wieder weg.
+     *
+     * Der Port hatte den Wisch gar nicht, also latchten die Bits dauerhaft. Folge (Nutzer-Report):
+     * ROOM1040s Schalter setzt Flag(5,0x21); beim naechsten BETRETEN des Raums war das Bit noch
+     * gesetzt, sub01s Gate `Ck(5,0x21)==1 && Ck(5,0)==0` sofort wahr, und die Rolltor-Frage
+     * "It's a shutter switch. Will you push it?" erschien im Tuer-Frame, obwohl der Spieler
+     * 31.400 Einheiten vom Schalter entfernt stand.
+     *
+     * NUR Wort 1: Bits >= 0x40 liegen im Original in Bank 6/7 (FUN_8004ef90 `bank + (bit>>5)*4`) —
+     * dort haelt der Port u.a. den Gegner-walk_flag_bit. Wort 0 (Bits 0x00..0x1F) ist echter
+     * Raum-Scratch und wird beim Raumladen gewischt (FUN_8003ecec @0x8003ed74), nicht hier.
+     *
+     * BEWUSST NICHT UEBERNOMMEN: derselbe FUN_8003ebf4 setzt @0x8003ebfc/ec04/ec0c/ec14 auch
+     * work_vars[0..3] := -1, macht sie also ebenfalls zu Ein-Frame-Scratch. Das ist byte-true, gehoert
+     * aber zu KEINEM der gemeldeten Fehler und wuerde die Bedeutung der Skript-Scratch-Variablen
+     * spielweit aendern (der Port laesst sie heute ueber Frames stehen; z.B. ROOM5100/5101 sub01
+     * `Cmp(work_vars[1]==0)` feuert dadurch beim Eintritt spurios). Dokumentierte, zitierte
+     * Divergenz — separat anzugehen, nicht als Beifang eines Bugfixes. */
+    g_game.flags[5][1] = 0;
 }
 
 /* ENDIAN POLICY (corrected 2026-06-08 — the V-round "all-BE 35-agent rule"

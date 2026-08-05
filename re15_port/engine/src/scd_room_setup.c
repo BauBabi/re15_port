@@ -120,6 +120,29 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
      * and the combat latch (idx 31): a cutscene room that left them set cannot leak bars/combat
      * into the next room. (Byte-true @0x80039730; trace wf_bba41002 #21.) */
     for (int fi = 16; fi < 32; fi++) re15_game_flag_set(1, (uint8_t)fi, 0);
+    /* ...und die ZWEITE Haelfte des Cutscene-Latches, aus dem main.c player_mode jeden Frame NEU
+     * ableitet (`cine_active = flag(1,27) || flag(2,7)`). Ohne das war der player_mode-Reset des
+     * Raumwechsels (room_common.c) wirkungslos: flag(1,27) loescht die Bank-1-Maske oben byte-true
+     * mit, flag(2,7) bisher NICHT — wer einen Raum verliess, waehrend eine Cutscene lief, behielt
+     * dauerhaft einen Spieler, der keine Eingabe mehr annahm (gemessen: 600 Frames pmode=2,
+     * unrettbar; Szenario C in probe_cut_1030).
+     *
+     * Warum das byte-true ist: flag(2,7) hat im Port GENAU EINEN Leser — eben diesen Proxy
+     * (repo-weiter grep: nur platform/{pc,psx}/main.c). Es ist damit die Port-Speicherstelle fuer
+     * "der Spieler ist skriptgefuehrt" — im Original das Routinen-Register DAT_800aca58, das die
+     * Transitions-FSM @0x8001CBDC `sb zero,0x800aca58` beim Raumwechsel UNBEDINGT nullt. Beide
+     * Haelften des Proxys folgen damit derselben Regel wie das Original.
+     * (Die Flag SELBST hat im Original zwei weitere Wirkungen — Pad-Maske DAT_800ac768 &= 0xf000
+     * @0x800304f4-51c und Inventar-Sperre @0x8001cd0c-20 —, die der Port noch nicht nachbildet;
+     * dokumentierte, davon unabhaengige Luecke.) */
+    re15_game_flag_set(2, 7, 0);
+    /* FLAG-BANK 5, WORT 0 — der pro-Raum-Scratch. Byte-true FUN_8003ecec @0x8003ed74
+     * `sw zero,0x800b1028`, gerufen aus der SCD-Raum-Init FUN_8003ef6c @0x8003ef84, die selbst an
+     * der Raum-Ladekette FUN_800396fc @0x80039a00 haengt. (Wort 1, die Bits 0x20..0x3F, ist KEIN
+     * Raum-Scratch sondern ein Ein-Frame-Handshake und wird am Ende jedes VM-Laufs gewischt —
+     * siehe scd_vm_tick. Bits >= 0x40 liegen im Original in Bank 6/7 und bleiben unangetastet.)
+     * Bank 5 ist im Original genau 8 Byte gross: Tabelle 0x80074664[5]=0x800b1028, [6]=0x800b1030. */
+    g_game.flags[5][0] = 0;
     /* Room re-entry re-inits the ENTITY pool. g_actors[] is a SEPARATE array from
      * g_scd (the memset above does NOT touch it), so boot-spawned NPCs would survive
      * the transition. The original clears all entities on room load; clear NPC slots
@@ -161,16 +184,16 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
      * not per-thread locals[] — so stamp the scenario into the global work-var
      * here (the memset above zeroed it = default scenario 0 at boot). */
     g_scd.work_vars[10] = (int16_t)entry_scenario;
+    /* Der INIT-Lauf: das Original ruft hier den Dispatcher FUN_8003f0a0 DIREKT (@0x8003f018),
+     * OHNE den sub01-Reseed — sonst wuerde das gerade in Slot 1 geladene sub00 verdraengt, bevor es
+     * sein erstes Opcode ausfuehrt (ROOM10D0 haelt seine Sce_em_set-Spawns dort). Der Reseed gehoert
+     * ausschliesslich zum Gameplay-Einstieg FUN_8003f038 (@0x8003f088). */
+    scd_vm_set_room_init(1);
     scd_vm_tick();                      /* run init+main once (main00 regs; sub00→scenario sub) */
-    /* RE1.5 re-points SCD thread slot 1 to sub01 every gameplay frame (FUN_8003f038), so
-     * sub01's per-frame setup runs continuously. Its effect is AOT-slot state (persistent),
-     * so running it ONCE right after main00/sub00 — when the slots it edits already exist —
-     * reproduces the byte-true end state. ROOM1130 sub01 = Aot_reset(3, sce=1, msg=1) →
-     * makes door-3 (→1170) a permanent "It's not necessary to go back" examine. sub01 is
-     * empty in rooms that don't need it (e.g. ROOM1170), so this is a no-op there. */
-    if (rdt && rdt->sub_scd[1]) {
-        scd_thread_start(2, rdt->sub_scd[1]);
-        scd_vm_tick();
-    }
+    scd_vm_set_room_init(0);
+    /* Der frueher hier stehende EINMAL-Start von sub01 (Slot 2) entfaellt: sub01 wird jetzt byte-true
+     * in JEDEM Gameplay-Frame in Slot 1 neu geseedet (scd_vm_tick, FUN_8003f038 @0x8003f064-84).
+     * Der Einmal-Start war die Ursache dafuer, dass ROOM1040s Schalter beim Druecken nichts tat und
+     * ROOM1030s Cutscene erst im naechsten Tuer-Frame feuerte. */
     re15_aot_settle_at(player_x, player_z);
 }

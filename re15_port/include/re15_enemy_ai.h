@@ -285,6 +285,12 @@ int re15_player_is_grabbed(void);
 void re15_player_knockdown_begin(int dir);
 int  re15_player_knockdown_active(void);
 
+/* Kommandoregister-Reset (Knockdown-/Flinch-/Event-Reach-Statics) — Port-Gegenstueck zu
+ * `sw zero,0x800aca58` @0x80031518 (Raumlader-Callee FUN_800314b0, jal @0x80039788) bzw.
+ * `sb zero,0x800aca58` @0x8001cbdc (Karten-Screen-Exit). Vom Raumwechsel UND vom Boot-/Lade-Pfad
+ * zu rufen; ohne ihn ueberlebt ein vom Tod unterbrochener Knockdown das Laden. */
+void re15_player_cmd_reset(void);
+
 /* THE single "which animation bank does this state pose from" rule — shared by the renderer and the
  * animation frame clock so they cannot drift (see enemy_ai_common.c). */
 int re15_actor_uses_loco_bank(const re15_actor_t *a);

@@ -101,6 +101,27 @@ void re15_player_event_reach_begin(void)
     pl->walk_active = 0;
 }
 void re15_player_event_reach_end(void)  { s_ev_reach = 0; }
+
+/* KOMMANDOREGISTER-RESET — das Port-Gegenstueck zum WORT-Store `sw zero,0x800aca58` @0x80031518
+ * (FUN_800314b0, der Spieler-Load; einziger Caller ist der RAUMLADER FUN_800396fc, jal @0x80039788)
+ * bzw. `sb zero,0x800aca58` @0x8001cbdc (Karten-Screen-Exit, direkt hinter jal FUN_80025c00
+ * @0x8001cba4). Beide Original-Pfade loeschen cmd/Variante/Phase ZUSAMMEN — jeder Raum-Load und
+ * jeder Rueckweg aus der Kartenmaske raeumt also einen laufenden Spieler-Befehl weg.
+ *
+ * Der Port hatte dafuer kein Gegenstueck: diese Statics leben ausserhalb von g_actors und wurden von
+ * KEINEM Raum- oder Lade-Pfad angefasst. Ein Knockdown, den der Tod unterbricht, laesst s_knockdown==1
+ * stehen (sein einziger Exit wird nie erreicht, weil der Death-Branch vorher gewinnt) — nach
+ * Tod -> Title -> LOAD haette der Spieler die Kontrolle erst nach Ablauf der alten Phase zurueck.
+ * s_prev_hp geht auf seinen Initialwert 100 (nicht 0), damit der HP-Drop-Detektor im ersten Frame
+ * nach dem Laden denselben Ausgangspunkt hat wie beim Frisch-Boot; praktisch ist der Wert inert,
+ * weil jeder Tick ihn neu schreibt. */
+void re15_player_cmd_reset(void)
+{
+    s_knockdown = 0; s_kd_dir = 0; s_kd_phase = 0; s_kd_speed = 0; s_kd_t = 0;
+    s_hit_flinch = 0; s_hit_kb = 0;
+    s_ev_reach = 0;
+    s_prev_hp = 100;
+}
 int  re15_player_event_reach_clip(void) { return s_ev_reach ? ((s_ev_reach == 1) ? 1 : 2) : -1; }
 static void re15_player_event_reach_tick(re15_actor_t *pl)
 {

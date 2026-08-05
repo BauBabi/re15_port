@@ -273,15 +273,21 @@ static void test_aot_on_fire_now(void)
     }
     TEST_ASSERT_EQ("Aot_on ITEM: pickup modal armed without geometry", 1, re15_item_modal_active());
 
-    /* FLAG_CHG: handler[4] @0x80043120 — the flag write runs once */
+    /* FLAG_CHG: handler[4] @0x80043120 — the flag write runs once.
+     * BANK 3 statt der ROOM1040-Nutzlast (5, 0x21): Bank-5-Wort-1 (Bits 0x20..0x3F) ist
+     * Ein-Frame-Scratch und wird am ENDE jedes VM-Laufs genullt (byte-true FUN_8003ebf4
+     * @0x8003ec1c, gerufen vom VM-Executor FUN_8003f0a0 @0x8003f18c) — nach run_one_opcode()
+     * waere dort im Original wie im Port immer 0 zu lesen. Geprueft wird hier der HANDLER
+     * (schreibt Aot_on die konfigurierte Flag?), und der ist bank-unabhaengig. Den Wisch selbst
+     * nagelt test_flag_gate fest. */
     setup_vm();
     re15_aot_set(7, RE15_AOT_TYPE_FLAG_CHG, 0, 5000, 5000, 100, 100);
-    g_aot.flag_params[7].group = 5; g_aot.flag_params[7].bit = 0x21; g_aot.flag_params[7].on = 1;
+    g_aot.flag_params[7].group = 3; g_aot.flag_params[7].bit = 0x21; g_aot.flag_params[7].on = 1;
     {
         uint8_t on[3] = { 0x47, 0x07, OP_EVT_NEXT };
         run_one_opcode(on);
     }
-    TEST_ASSERT_EQ("Aot_on FLAG: flag written", 1, re15_game_flag_get(5, 0x21));
+    TEST_ASSERT_EQ("Aot_on FLAG: flag written", 1, re15_game_flag_get(3, 0x21));
 
     TEST_OK("Aot_on fire-now (fix 3)");
 }

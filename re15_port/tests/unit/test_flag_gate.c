@@ -72,11 +72,26 @@ int main(void)
     CHECK("0x59 no bit-bleed (3,132/134 stay 0)",
           re15_game_flag_get(3, 132) == 0 && re15_game_flag_get(3, 134) == 0);
 
-    /* the primary op_set (0x22) that the door-lock If(Ck) pairs with */
-    { const uint8_t bc[] = { 0x22, 0x05, 0x2a, 0x01, OP_EVT_NEXT }; run_frag(bc); }   /* Set(5,42,OR) */
-    CHECK("0x22 SET   flag(5,42)=1", re15_game_flag_get(5, 42) == 1);
-    { const uint8_t bc[] = { 0x22, 0x05, 0x2a, 0x00, OP_EVT_NEXT }; run_frag(bc); }   /* clear */
-    CHECK("0x22 CLEAR flag(5,42)=0", re15_game_flag_get(5, 42) == 0);
+    /* the primary op_set (0x22) that the door-lock If(Ck) pairs with.
+     * BANK 3, NICHT 5: Bank-5-Wort-1 (Bits 0x20..0x3F) ist Ein-Frame-Scratch — siehe die
+     * Frame-Ende-Pruefung unten. Der Opcode-Pfad ist identisch. */
+    { const uint8_t bc[] = { 0x22, 0x03, 0x2a, 0x01, OP_EVT_NEXT }; run_frag(bc); }   /* Set(3,42,OR) */
+    CHECK("0x22 SET   flag(3,42)=1", re15_game_flag_get(3, 42) == 1);
+    { const uint8_t bc[] = { 0x22, 0x03, 0x2a, 0x00, OP_EVT_NEXT }; run_frag(bc); }   /* clear */
+    CHECK("0x22 CLEAR flag(3,42)=0", re15_game_flag_get(3, 42) == 0);
+
+    /* ---- FRAME-ENDE-WISCH von Flag-Bank 5, Wort 1 (Bits 0x20..0x3F) ----
+     * Byte-true FUN_8003ebf4 @0x8003ec1c `sw zero,0x800b102c`, gerufen vom VM-Executor
+     * FUN_8003f0a0 @0x8003f18c UNBEDINGT am Ende jedes VM-Laufs (hinter der Slot-Schleife
+     * @0x8003f17c-88). Diese Bits sind KEIN Raum-Latch, sondern ein Ein-Frame-Handshake:
+     * der AOT-Scan laeuft nach der VM und setzt sie, sub01 liest sie im naechsten Frame.
+     * Ohne den Wisch latchte ROOM1040s Schalter-Flag(5,0x21) dauerhaft und die Rolltor-Frage
+     * erschien beim naechsten BETRETEN des Raums im Tuer-Frame (Nutzer-Report).
+     * Bit 0x0a liegt in Wort 0 = echter Raum-Scratch und muss den Wisch UEBERLEBEN. */
+    { const uint8_t bc[] = { 0x22, 0x05, 0x21, 0x01, OP_EVT_NEXT }; run_frag(bc); }
+    CHECK("Bank5 Wort1: flag(5,0x21) am Frame-Ende gewischt", re15_game_flag_get(5, 0x21) == 0);
+    { const uint8_t bc[] = { 0x22, 0x05, 0x0a, 0x01, OP_EVT_NEXT }; run_frag(bc); }
+    CHECK("Bank5 Wort0: flag(5,0x0a) ueberlebt den Frame", re15_game_flag_get(5, 0x0a) == 1);
 
     /* ---- (2) end-to-end gate: If Ck(gate) { Set(witness) } EndIf ----
      * layout: If@0(4) Ck@4(4) Set@8(4) EndIf@12(2) Evt@14(1).

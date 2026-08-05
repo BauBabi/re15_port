@@ -38,14 +38,19 @@ int main(void)
 {
     printf("=== SCD 0x59 flag write + 0x57 fade step (audit wf_1db9c802) ===\n");
 
-    /* 0x59 SET: work_vars[4] = 37 -> bank 5, idx 37 (word 1, bit 5) set. No audio event. */
+    /* 0x59 SET: work_vars[4] = 37 -> bank 3, idx 37 (word 1, bit 5) set. No audio event.
+     * BANK 3, NICHT 5: Bank-5-Wort-1 (Bits 0x20..0x3F) ist Ein-Frame-Scratch und wird am ENDE
+     * jedes VM-Laufs genullt (byte-true FUN_8003ebf4 @0x8003ec1c, gerufen vom VM-Executor
+     * FUN_8003f0a0 @0x8003f18c) — dort waere nach run_op() IMMER 0 zu lesen, im Original wie im
+     * Port. Der Zweck dieses Tests ist die Wort-Mathematik idx>>5 fuer idx >= 32, und die
+     * prueft Bank 3 mit demselben Opcode-Pfad genauso. */
     {
         scd_vm_init(); re15_aot_init();
         g_scd.work_vars[4] = 37;
         unsigned audio_before = g_scd.audio_count;
-        uint8_t bc[] = { 0x59, 0x05, 0x04, 0x01, OP_EVT_NEXT };
+        uint8_t bc[] = { 0x59, 0x03, 0x04, 0x01, OP_EVT_NEXT };
         run_op(bc);
-        CHECK("0x59 SET: flag (5, 37) set", re15_game_flag_get(5, 37) == 1);
+        CHECK("0x59 SET: flag (3, 37) set", re15_game_flag_get(3, 37) == 1);
         CHECK("0x59 SET: no audio event queued", g_scd.audio_count == audio_before);
     }
 
@@ -53,13 +58,13 @@ int main(void)
     {
         scd_vm_init(); re15_aot_init();
         g_scd.work_vars[4] = 37;
-        re15_game_flag_set(5, 37, 1);
-        uint8_t bc_clear[] = { 0x59, 0x05, 0x04, 0x00, OP_EVT_NEXT };
+        re15_game_flag_set(3, 37, 1);
+        uint8_t bc_clear[] = { 0x59, 0x03, 0x04, 0x00, OP_EVT_NEXT };
         run_op(bc_clear);
-        CHECK("0x59 CLEAR: flag (5, 37) cleared", re15_game_flag_get(5, 37) == 0);
-        uint8_t bc_tgl[] = { 0x59, 0x05, 0x04, 0x07, OP_EVT_NEXT };
+        CHECK("0x59 CLEAR: flag (3, 37) cleared", re15_game_flag_get(3, 37) == 0);
+        uint8_t bc_tgl[] = { 0x59, 0x03, 0x04, 0x07, OP_EVT_NEXT };
         run_op(bc_tgl);
-        CHECK("0x59 TOGGLE: flag (5, 37) toggled on", re15_game_flag_get(5, 37) == 1);
+        CHECK("0x59 TOGGLE: flag (3, 37) toggled on", re15_game_flag_get(3, 37) == 1);
     }
 
     /* 0x59 advances 4 bytes (the length that always matched — no desync either way). */

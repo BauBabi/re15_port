@@ -723,6 +723,19 @@ void re15_actors_anim_advance(void)
          * back up instead of freezing forever in the get-up start pose. Strictly additive: every other
          * lie-down (incl. the spawn one, sub_state_2<4) still holds exactly as before. */
         int getup = (a->sub_state_1 == 0x11 && a->sub_state_2 >= 4);
+        /* Second dual use of the SAME clips: the LYING wake machine FUN_80103a58. Its phases 0 and 1
+         * hold (no f314 call — @0x80103aac-cc and @0x80103ad0-b04 don't touch +0x95), but phase 2 is a
+         * clip PLAYOUT driven by the function's only f314 call @0x80103b14 (a0=+0x170, a1=+0x174,
+         * a3=0x100). Without releasing the pin there the rise clip never finishes, so a script-woken
+         * zombie stays frozen mid-getup forever (ROOM1070 user report). Gated as tightly as the
+         * mechanism allows: zombie types only, state 1, decide row 0, phase >= 2, lying nibbles 7..10
+         * (nibble 7/8 with phase >= 2 is unreachable in shipped data — no producer writes +0x6 >= 2
+         * there — so in practice this only fires for the script-bumped nibble 9/10). */
+        { uint8_t nib = (uint8_t)(a->grid_id & 0x0f); uint8_t t = a->type;
+          if (!getup && (t==0x10||t==0x11||t==0x12||t==0x16||t==0x18)
+              && a->state == 1 && a->sub_state_1 == 0 && a->sub_state_2 >= 2
+              && nib >= 7 && nib <= 10)
+              getup = 1; }
         if ((mo == 0x0C || mo == 0x0E || mo == 0x12 || mo == 0x13) && !getup) { a->anim_frame = 0; continue; }
         /* SLEEPING-LYING Warte-Halt (byte-true FUN_801054f4: die Schlafphasen 0/1 haben KEINEN
          * f314-Call — case 0 @0x80105534 setzt nur +0x1b8/+0x6, case 1 -> Epilog @0x8010560c;

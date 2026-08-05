@@ -48,6 +48,7 @@ static uint8_t s_wander_mag[RE15_ACTOR_MAX];                   /* tentative def 
 static uint8_t s_wander_idx[RE15_ACTOR_MAX];                   /* tentative def (full def below) */
 /* FSM-CLOCK clip-end signal (defined below, used by the feeding stand-up + grab + death sub-FSMs). */
 static int re15_enemy_clip_done(const re15_actor_t *e);
+static void re15_enemy_ai_lying_phase(re15_actor_t *e);                                        /* fwd */
 
 /* The 32-bit state word the decision handlers store at entity+0x4, split into the
  * port's per-byte state fields (state=+0x4, sub_state_1=+0x5, sub_state_2=+0x6,
@@ -59,6 +60,46 @@ void re15_ai_set_state_word(re15_actor_t *e, uint32_t word)
     e->sub_state_1 = (uint8_t)((word >>  8) & 0xff);
     e->sub_state_2 = (uint8_t)((word >> 16) & 0xff);
     e->sub_state_3 = (uint8_t)((word >> 24) & 0xff);
+}
+
+/* LYING ANIMATE — FUN_80103a58 @0x8011f9d4[0], the +0x6 phase machine SHARED by all three lying
+ * sub-modes (@0x8011f80c[5]/[6], [7]/[8], [9]/[10]): each dispatcher loads its animate row from the
+ * same base 0x8011f9d4 (`addiu at,at,-1580` @0x8010194c / @0x801019c8 / @0x80101a44) and differs only
+ * in the decide row. Factored out of the case-7/8 body (pure code motion) so the script-woken
+ * nibble 9/10 can reuse it. */
+static void re15_enemy_ai_lying_phase(re15_actor_t *e)
+{
+    switch (e->sub_state_2) {                 /* +0x6 wake phase */
+    case 0:                                   /* phase 0 — passive ambusher */
+        e->hit_react |= 1;                    /* +0x93 |= 1 EVERY tick (@0x80103aac-ab8: lbu; ori 1;
+                                               * sb) — the passive lyer is UNSHOOTABLE:
+                                               * FUN_80011f50's guard latches +0x93|=2 and recurses
+                                               * past him. Was an empty break: he took damage,
+                                               * flinched, then froze forever (probe C). */
+        /* +0x1b8 = 1 (same phase-0 store) — no port field consumer (documented). */
+        break;
+    case 1: {                                 /* phase 1 — wake countdown +0x9c */
+        int16_t was = e->ai_timer;            /* lh +0x9c; sh was-1 (post-dec store) */
+        e->ai_timer = (int16_t)(was - 1);
+        if (was == 0) {                       /* pre-decrement value == 0 -> rise */
+            e->sub_state_2 = 2;               /* +0x6 = 2 */
+            e->anim_frac   = 0xf;             /* +0x8f = 0xf */
+        }
+        break;
+    }
+    case 2:                                   /* phase 2 — rise clip playout:
+                                               * +0x6 += f314(+0x170,+0x174,0,0x100) @0x80103b14-18
+                                               * (the ONLY f314 call in the whole function) */
+        e->anim_blend_rate = 0x100;
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + (uint8_t)re15_enemy_clip_done(e));
+        break;
+    default:                                  /* phase 3 — become a normal zombie @0x80103b3c-78 */
+        e->grid_id = 0;                       /* +0x9 = 0 (downed bit AND nibble drop) */
+        re15_ai_set_state_word(e, 0x201);     /* word +0x4 = 0x201 (subs 2/0/0) */
+        e->hit_react &= (uint8_t)~1u;         /* +0x93 &= 0xfe @0x80103b5c-68 — shootable again */
+        /* +0x1b8 = 0 — no port field consumer (documented). */
+        break;
+    }
 }
 
 /* INIT — FUN_8011d84c (STAGE1_full). The spawn/setup main-state. Byte-true map:
@@ -2591,46 +2632,41 @@ int re15_enemy_ai_live_active(int slot)
             case 7: case 8:   /* lying (@0x8011f80c[7]/[8]=0x80101974). CITATION CORRECTED (audit
                                * wf_827f186d #8): 0x80101974 is NOT an empty `jr ra` — it is a DOUBLE
                                * dispatcher `lw @0x8011f9d8[+0x5*4]; jalr` then `lw @0x8011f9d4[+0x5*4];
-                               * jalr`. Only decide row [0]=0x801039f4 is a stub; animate row
-                               * [0]=0x80103a58 is the +0x6 wake machine — PORTED below (dossier
-                               * analysis/zombie_hit_1140.md D2, user symptom b). Rows [5]/[6]=
-                               * 0x80104b38/40 (lying get-up pair) remain OPEN — tracked in the audit;
-                               * the phase-0->1 wake TRIGGER (who writes +0x6=1) is OPEN (dossier §5). */
-                if (e->sub_state_1 == 0) {                /* row [0] = FUN_80103a58 (decompile-cited) */
-                    switch (e->sub_state_2) {             /* +0x6 wake phase */
-                    case 0:                               /* phase 0 — passive ambusher */
-                        e->hit_react |= 1;                /* +0x93 |= 1 EVERY tick (@0x80103aac-ab8:
-                                                           * lbu; ori 1; sb) — the passive lyer is
-                                                           * UNSHOOTABLE: FUN_80011f50's guard latches
-                                                           * +0x93|=2 and recurses past him. Was an
-                                                           * empty break: he took damage, flinched,
-                                                           * then froze forever (probe C). */
-                        /* +0x1b8 = 1 (same phase-0 store) — no port field consumer (documented). */
-                        break;
-                    case 1: {                             /* phase 1 — wake countdown +0x9c */
-                        int16_t was = e->ai_timer;        /* lh +0x9c; sh was-1 (post-dec store) */
-                        e->ai_timer = (int16_t)(was - 1);
-                        if (was == 0) {                   /* pre-decrement value == 0 -> rise */
-                            e->sub_state_2 = 2;           /* +0x6 = 2 */
-                            e->anim_frac   = 0xf;         /* +0x8f = 0xf */
-                        }
-                        break;
+                               * jalr`. Decide row @0x8011f9d8[0]=0x801039f4 IS a stub (`jr ra; nop`
+                               * @0x801039f4-f8, byte-verified) — nibble 7/8 has NO self-wake, the wake
+                               * arrives from the SCRIPT via nibble 9/10 (see below). Animate row
+                               * @0x8011f9d4[0]=0x80103a58 is the +0x6 phase machine, SHARED by all
+                               * three lying sub-modes: 0x801018f8 (5/6), 0x80101974 (7/8) and
+                               * 0x801019f0 (9/10) all load the animate row from the same base
+                               * 0x8011f9d4 (`addiu at,at,-1580` @0x8010194c / @0x801019c8 / @0x80101a44)
+                               * and differ ONLY in the decide row. Rows [5]/[6]=0x80104b38/40 (lying
+                               * get-up pair) remain OPEN — tracked in the audit. */
+                if (e->sub_state_1 == 0)                  /* row [0] = FUN_80103a58 (decompile-cited) */
+                    re15_enemy_ai_lying_phase(e);
+                break;
+            case 9: case 10:  /* SCRIPT-WOKEN lying (@0x8011f80c[9]/[10]=0x801019f0). Same double
+                               * dispatcher as 7/8, but the DECIDE row @0x8011f9dc[0]=0x801039fc is the
+                               * IMMEDIATE WAKE instead of a stub. This nibble never comes from a spawn
+                               * — no Sce_em_set in the whole game uses low nibble 9/0xA; the script
+                               * bumps a sleeping 0x87/0x88 lyer up by 2 with Member_set(12,0x89/0x8A)
+                               * (member 12 == entity+0x9, FUN_8004116c table @0x80010c8c[12] ->
+                               * 0x800411f4 `sb a2,9(a0)`). ROOM1070 does this in sub_scd[2] after its
+                               * walk-in AOT (slot 14, sce=3, flags=0x41) fires; 12 rooms share the
+                               * pattern (1020/1021, 1070/1071, 1100/1101, 11F0/11F1, 1200/1201,
+                               * 3010/3011). Without this case the woken zombies froze forever AND
+                               * stayed invulnerable (hit_react bit 0 never cleared) — user report.
+                               * Order is decide-then-animate in the SAME tick (@0x80101a20 / @0x80101a54). */
+                if (e->sub_state_1 == 0) {
+                    if (e->sub_state_2 == 0) {            /* FUN_801039fc: lbu +0x6 @0x80103a0c; bne */
+                        e->sub_state_2 = 2;               /* +0x6 = 2      @0x80103a1c */
+                        e->anim_frac   = 0xf;             /* +0x8f = 0xf   @0x80103a28-30 (delay slot) */
+                        if ((re15_engine_rand8() & 3) == 0)   /* andi 3; bne @0x80103a34-3c */
+                            re15_audio_room_se(5);            /* jal 0x800453d0 a0=5 @0x80103a40-44 */
                     }
-                    case 2:                               /* phase 2 — rise clip playout:
-                                                           * +0x6 += f314(+0x170,+0x174,0,0x100) */
-                        e->anim_blend_rate = 0x100;
-                        e->sub_state_2 = (uint8_t)(e->sub_state_2 + (uint8_t)re15_enemy_clip_done(e));
-                        break;
-                    default:                              /* phase 3 — become a normal zombie */
-                        e->grid_id = 0;                   /* +0x9 = 0 (downed bit AND nibble drop) */
-                        re15_ai_set_state_word(e, 0x201); /* word +0x4 = 0x201 (subs 2/0/0) */
-                        e->hit_react &= (uint8_t)~1u;     /* +0x93 &= 0xfe */
-                        /* +0x1b8 = 0 — no port field consumer (documented). */
-                        break;
-                    }
+                    re15_enemy_ai_lying_phase(e);
                 }
                 break;
-            default:  /* @0x8011f80c[1..4],[9..15]: other sub-modes — deferred (cited) */
+            default:  /* @0x8011f80c[1..4],[11..15]: other sub-modes — deferred (cited) */
                 break;
         }
         return 0;

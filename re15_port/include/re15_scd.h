@@ -398,6 +398,12 @@ int  scd_thread_start(int slot, const uint8_t *pc);
 
 /* Kill a specific thread (sets kill_pending; takes effect at next yield) */
 void scd_thread_kill(int slot);
+/* Unbedingter Reseed (FUN_8003ee3c -> FUN_8003edec): ueberschreibt den Slot auch wenn er laeuft —
+ * das braucht der Per-Frame-sub01-Reseed. scd_thread_start weigert sich bei aktivem Slot. */
+void scd_thread_reseed(int slot, const uint8_t *pc);
+/* Raum-Init-Lauf markieren: waehrend er laeuft unterbleibt der sub01-Reseed (das Original hat dafuer
+ * zwei getrennte Call-Sites, FUN_8003ef6c @0x8003f018 vs FUN_8003f038 @0x8003f088). */
+void scd_vm_set_room_init(int on);
 
 /* Phase 4.4.6.1: event-handler registry. Bytecode authors register a
  * handler (entry pc) for each event_id; AOT triggers (and later other

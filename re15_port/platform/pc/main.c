@@ -514,7 +514,26 @@ static int pc_do_save(int slot, const re15_savedata_t *sd)
 
 /* Build the byte-true RE1.5 slot title as raw sysmes atlas codes. Template DEBUG.BIN @0x617f
  * (verified verbatim): 05 07 "Leon" 05 00 38 0c 0c 38 ...  /  05 06 "Elza" 05 00 38 0c 0c 38 ...
- * "Irons' Office" (apostrophe = atlas 0x3A; room stubbed, FUN_80026e4c returns 0). The 0x05 op is
+ *
+ * WARUM DER ORTSNAME KONSTANT IST — das ist ORIGINAL-Verhalten, kein Port-Stub (Nutzer-Report
+ * 2026-08-05 "egal in welchem Raum ich speichere, er schreibt immer Irons Office"):
+ * Der Ortsnamen-Resolver FUN_80026e4c ist in der ausgelieferten PSX.EXE ein Zwei-Instruktionen-Stub
+ *   @0x80026e4c  jr ra
+ *   @0x80026e50  addu v0,zero,zero          (Datei-Offset 0x1764c: 08 00 e0 03 21 10 00 00)
+ * — er gibt IMMER 0 zurueck. Eigener Opcode-Scan ueber das gesamte .text der EXE: genau ZWEI
+ * Aufrufer (@0x80026810 = diese Slot-Liste, @0x80026efc = der BIOS-Kartentitel) und NULL
+ * 32-Bit-Datenzeiger, also auch kein Tabellen-/vtable-Weg. Beide Aufrufer addieren den Rueckgabewert
+ * auf ihre Basis (@0x80026818 `ori a0,zero,0x1a` + @0x80026820 `addu a0,a0,v0` -> sysmes 0x1a+0;
+ * @0x80026f0c-24 0x13*v0 + 0x80073628 -> SJIS-Eintrag 0). Das Original zeigt damit selbst in JEDEM
+ * Raum sysmes 0x1a = "Irons' Office". Eine Raum->Ortsnamen-Zuordnung existiert im Binary nicht
+ * (Byte-Scan ueber PSX.EXE + alle BIN/*.BIN nach den 8 Save-Raum-IDs: null Treffer) — sie zu
+ * erfinden waere ein Rate-Defekt. Die 8 vorhandenen Ortsnamen liegen in DEBUG.BIN @0x6197-0x6210.
+ * DOKUMENTIERTE RESTDIVERGENZ (nicht Teil dieses Fixes, analysis/bug_save_room_name.md F2/F4):
+ * die Zeile ist ~28 px zu breit, weil der Port das `05 00` des Templates als Farb-Op + Space liest
+ * statt als Farb-Op MIT Argument, und weil re15_render_pc_game_codes fuer Code 0x00 hart 8 px
+ * vorrueckt statt der 4 px aus der Breitentabelle @0x800c4416.
+ *
+ * "Irons' Office": Apostroph = Atlas 0x3A. The 0x05 op is
  * the colour selector (`attr = next_byte & 7`, cf. msg_common.c:537): Leon = 07 (attr 7, blue
  * 32,80,232), Elza = 06 (attr 6, red 152,0,72), 05 00 resets the counter/room to the default
  * palette. re15_render_pc_game_codes interprets the embedded 0x05 ops. */
@@ -2015,6 +2034,31 @@ re_title:;
                 rdt.nCut, rdt.nDoor, rdt.nItem, rdt.zone_count,
                 rdt.main_scd_size, rdt.sub_scd_count, rdt.prop_count);
     }
+    /* RAUM-INIT-RESET AUF DEM BOOT-/LADE-PFAD — das fehlende Gegenstueck zum Original.
+     *
+     * Der Tod fuehrt IN-PROCESS hierher zurueck (mode == RE15_MODE_TITLE -> `goto re_title`), also
+     * laeuft nach Tod -> Title -> NEW GAME/LOAD genau dieser Block noch einmal — aber ohne den
+     * Raum-Init-Reset, den ein normaler Raumwechsel macht (room_common.c). Im Original raeumt JEDER
+     * Raum-Load das Spieler-Kommandoregister ab: FUN_800314b0 nullt @0x80031518 `sw zero,0x800aca58`
+     * (cmd/Variante/Phase in EINEM Wort) und setzt @0x80031718 HP=100 / @0x80031720 Status=0; einziger
+     * Caller ist der Raumlader FUN_800396fc (jal @0x80039788). Zusaetzlich nullt der Karten-Screen-Exit
+     * @0x8001cbdc `sb zero,0x800aca58` — genau der Pfad, den der Port als "Title -> LOAD GAME -> Spiel"
+     * nachbaut.
+     *
+     * Ohne das ueberlebte der DEVOUR-Kommandozustand (g_player_victim, Original DAT_800aca58 = 6) den
+     * Tod: im ersten Frame nach dem Laden lief die COLLAPSE-Phase weiter, setzte die Position ABSOLUT
+     * aus anchor(0,0) (Teleport an den Weltursprung) und bei anim_frame == 0x23 erneut hp = -1
+     * (byte-true FUN_8010a6f8 @0x8010a7e8/@0x8010a80c) -> zweiter Tod ~1 s nach dem Laden -> Title ->
+     * Load -> Endlosschleife. Traf jeden Grab-/Devour-Tod, also den Normalfall; NEW GAME direkt nach
+     * dem Tod war genauso betroffen.
+     *
+     * STELLE: nach dem RDT-Install, aber VOR pc_load_room_esp und weit vor dem ersten pc_enemy_load
+     * (re15_apply_room_cinematic) und dem Raum-RBJ-Bind — re15_enemy_reset() ruft selbst
+     * re15_rbj_bind_room(NULL,0) und wuerde spaeter platziert die eben gebundene Cutscene-Bank
+     * wegreissen. Auf dem ERSTEN Boot ist der Aufruf ein No-op (alles steht bereits auf 0). */
+    re15_enemy_reset();       /* Victim-/Crow-Flock-/Spawn-Count-Reset + Banks der Vor-Session */
+    re15_player_cmd_reset();  /* Knockdown-/Flinch-/Event-Reach-Statics ausserhalb von g_actors */
+
     /* Phase ESP-C: parse + bind this room's effect-sprite bank for op-0x3a spawns. */
     pc_load_room_esp(rdt_buf, rdt_size, boot_room);
 
@@ -2672,6 +2716,18 @@ re_title:;
     if (!s_preintro && rdt_ok && rdt.sub_scd[0]) {
         scd_thread_start(1, rdt.sub_scd[0]);
         s_sub00_spawned = 1;
+        /* sub00 SOFORT einmal laufen lassen — als INIT-Lauf, nicht als Gameplay-Frame.
+         * Im Original startet die SCD-Raum-Init FUN_8003ef6c Slot 1 mit sub00 (a1 = 0,
+         * @0x8003efd8) und ruft den Dispatcher DIREKT (@0x8003f018); sub00 bekommt damit genau
+         * einen Lauf, bevor ab dem ersten Gameplay-Frame FUN_8003f038 den Slot permanent mit
+         * sub01 ueberschreibt. Der Boot-Pfad hier startet sub00 erst NACH seinem Init-Tick (die
+         * Pre-Intro-Erkennung oben braucht dessen Ergebnis) — ohne diesen Lauf wuerde der
+         * Per-Frame-Reseed in scd_vm_tick sub00 verdraengen, BEVOR es sein erstes Opcode
+         * ausfuehrt (gemessen an ROOM1150: sub00s Evt_exec spawnte keinen Thread mehr).
+         * scd_room_reenter macht an derselben Stelle genau dasselbe. */
+        scd_vm_set_room_init(1);
+        scd_vm_tick();
+        scd_vm_set_room_init(0);
         /* KEIN re15_audio_start_room_bgm(0, 0x17) mehr. Das war hart auf ROOM1170 verdrahtet und
          * lief zusammen mit dem prozess-globalen One-Shot darauf hinaus, dass der ERSTE Aufruf
          * die BGM fuer die ganze Session festnagelt — in ROOM1240 spielte deshalb der Track von

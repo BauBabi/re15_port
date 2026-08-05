@@ -608,6 +608,11 @@ add_executable(probe_save_counter probe_save_counter.c)
 target_link_libraries(probe_save_counter PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_save_counter PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
+# --- DIAGNOSE-Probe (kein ctest): Save-Slot-Ortsname "Irons' Office" (analysis/bug_save_room_name.md) ---
+add_executable(probe_save_room_name probe_save_room_name.c)
+target_link_libraries(probe_save_room_name PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_save_room_name PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
 # --- DIAGNOSE-Probe (kein ctest): Verletzungszustand (HP/Blut-Decals) im Savegame (analysis/save_injured_state.md) ---
 add_executable(probe_save_injured probe_save_injured.c)
 target_link_libraries(probe_save_injured PRIVATE re15_engine re15_test_support)
@@ -653,3 +658,41 @@ target_link_libraries(probe_marvin_render_pose PRIVATE re15_engine re15_test_sup
 target_include_directories(probe_marvin_render_pose PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_marvin_render_pose COMMAND probe_marvin_render_pose)
 set_tests_properties(unit_marvin_render_pose PROPERTIES TIMEOUT 30)
+
+# --- DIAGNOSE-Probe (kein ctest): ROOM1040 "shutter switch"-Prompt beim Betreten (BUG 3) ---
+add_executable(probe_room1040_switch probe_room1040_switch.c)
+target_link_libraries(probe_room1040_switch PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_room1040_switch PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# DIAGNOSE (kein ctest): ROOM1070 Zombie-Wake (Nutzer-Report BUG 5) — analysis/bug_room1070_wake.md
+add_executable(probe_room1070_wake probe_room1070_wake.c)
+target_link_libraries(probe_room1070_wake PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_room1070_wake PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# --- ROOM1030 Cutscene-Messsonde (Bug-Report 2026-08: "Cutscene triggert komisch,
+#     keine Kontrolle zurueck"). Reine MESSUNG, kein ctest-Gate. ---
+add_executable(probe_cut_1030 probe_cut_1030.c)
+target_link_libraries(probe_cut_1030 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_cut_1030 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# DIAGNOSE (kein ctest): "nach dem Tod laden -> stirbt sofort wieder" (Nutzer-Report 2026-08-05)
+# analysis/bug_load_after_death.md — der Devour-Kommando-Zustand ueberlebt Tod->Title->LOAD.
+add_executable(probe_load_after_death probe_load_after_death.c)
+target_link_libraries(probe_load_after_death PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_load_after_death PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_load_after_death PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# ==== REGRESSIONS-GATES fuer die Fehlerliste vom 2026-08-05 ====
+# Die drei Sonden oben sind nach dem Fix keine reinen Messungen mehr, sondern pruefen das
+# wiederhergestellte Original-Verhalten und liefern bei Rueckfall einen Fehlercode.
+add_test(NAME unit_load_after_death COMMAND probe_load_after_death)
+set_tests_properties(unit_load_after_death PROPERTIES TIMEOUT 30)
+
+add_test(NAME unit_room1070_wake COMMAND probe_room1070_wake)
+set_tests_properties(unit_room1070_wake PROPERTIES TIMEOUT 30)
+
+# Der volle Nutzer-Ablauf: Schalter druecken (Prompt MUSS kommen) -> Raum neu betreten
+# (Prompt darf NICHT kommen, Kontrolle muss beim Spieler bleiben).
+add_test(NAME unit_room1040_switch COMMAND probe_room1040_switch 1040 -24000 16500 0 1)
+set_tests_properties(unit_room1040_switch PROPERTIES TIMEOUT 30)

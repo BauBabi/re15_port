@@ -181,10 +181,27 @@ Vollständig in [HANDOVER_2026-08-01.md](HANDOVER_2026-08-01.md) §1/§2b. Kernp
 
 | 2026-08-04 | **Confirm/Cancel-Belegung (Nutzer-Report Load-Screen)** (`analysis/confirm_cancel_mapping.md`, CC-1..6 alle CONFIRMED): Vollzensus der Pad-Bits pro Menü — RE1.5 ist **game-weit □-Confirm/✕-Cancel** über das VIRTUAL-Wort DAT_800ac76c (Type-A @0x80073dbc[14]=0x0080=□, [15]=0x0040=✕); Card-FSM FUN_80025c00 bestätigt mit v0x4000|RAW-START (@0x80025e84/e98), bricht mit v0x8000 ab (@0x80025ea0) — **Port-Bits waren byte-true**, das RE2-MEM_CARD-Vorbild (✕-Confirm @0x801c08a8) wird zu Recht NICHT übernommen. Der Nutzer-Eindruck ist original-echt: Title nimmt JEDEN Face-Button (0x8f0 @0x80102c14), einen Screen später ist ✕ Cancel. CC-3 (Card-Screen umgeht die OPTIONS-Button-Config) war als Fix eingebaut (`vp` via `pc_pad_config`), ist aber **am 2026-08-05 auf Nutzer-Wunsch zurückgenommen** — der auslösende Report entpuppte sich als RDP-Eingabeproblem, nicht als Port-Fehler; der Card-Screen liest wieder das rohe Pad. Die RE-Belege bleiben im Dossier gültig, CC-3 ist damit wieder ein OFFENER (belegter) Punkt. Beifang, der bleibt: alte „MSG-Confirm=CROSS"-Etikettierung byte-widerlegt (Memory korrigiert), save_mode-Doku-Inversion gefixt | *(dieser Commit)* |
 
-Baseline nach der Session: **110/110 ctest grün** (neu u.a.: `unit_crow_death_corpse`, `unit_door_1170_lock`, `unit_marvin_spawn_bank`, `unit_zombie_10d0_reentry_a/_b`, `unit_marvin_render_pose`).
+| 2026-08-06 | **Fehlerliste des Nutzers (5 Punkte) abgearbeitet** — Workflow `bugstack-5-re` (5 RE-Agenten + 5 adversariale Prüfer, alle Findings CONFIRMED oder als PLAUSIBLE/REFUTED korrigiert). Dossiers `analysis/bug_{load_after_death,room1030_cutscene,room1040_switch,room1070_wake,save_room_name}.md`. **(1) Laden nach dem Tod:** der Devour-Kommandozustand überlebte Tod→Title→LOAD (Teleport an den Weltursprung + zweiter Tod nach 34 Ticks); Raum-Init-Reset in den Boot-/Lade-Pfad eingesetzt (`re15_enemy_reset` + neue `re15_player_cmd_reset`), Port-Gegenstück zu `sw zero,0x800aca58` @0x80031518 / `sb zero,0x800aca58` @0x8001cbdc. **(2)+(3) ROOM1030/1040:** gemeinsamer Kern — der Port fuhr sub01 nur EINMAL beim Raum-Eintritt statt in jedem Gameplay-Frame (FUN_8003f038 @0x8003f064-84) und wischte Flag-Bank-5-Wort-1 nie (FUN_8003ebf4 @0x8003ec1c aus FUN_8003f0a0 @0x8003f18c); dadurch tat ROOM1040s Schalter beim Drücken nichts und detonierte stattdessen beim nächsten Betreten, ROOM1030s Cutscene feuerte nie live. Dazu `flag(2,7)` beim Raum-(Re)Load löschen (einziger Leser ist der `cine_active`-Proxy = Port-Gegenstück zum Routinenregister @0x8001CBDC) → kein permanenter Kontrollverlust mehr. **(5) ROOM1070:** Grid-Nibble 9/10 (der Skript-Wake, @0x8011f80c[9]/[10]=0x801019f0) war gar nicht dispatcht + der globale Anim-Advancer pinnte den Aufsteh-Clip auf Frame 0 — beides gefixt, gilt für 12 Räume. **(4) Save-Ortsname: KEIN Port-Fehler** — `FUN_80026e4c` ist in der ausgelieferten EXE ein `return 0`-Stub (@0x80026e4c `jr ra` / `addu v0,zero,zero`, zwei Aufrufer, null Datenzeiger — selbst nachverifiziert), das Original zeigt ebenfalls immer „Irons' Office"; nur der Code-Kommentar trägt jetzt den Beleg | *(dieser Commit)* |
+
+Baseline nach der Session: **113/113 ctest grün** (neu: `unit_load_after_death`, `unit_room1040_switch`, `unit_room1070_wake`). Live-Boot gegen einen HEAD-Baseline-Build frame-für-frame verglichen (`[walk]`-Spur F0..F300 + alle `[scd] thread start` identisch).
+
+Baseline der Vorsession: **110/110 ctest grün** (neu u.a.: `unit_crow_death_corpse`, `unit_door_1170_lock`, `unit_marvin_spawn_bank`, `unit_zombie_10d0_reentry_a/_b`, `unit_marvin_render_pose`).
 
 ### Offene Punkte (oberste Zeile = nächster Schritt)
 
+0. **Live-Verifikation der Fehlerlisten-Fixes vom 2026-08-06** — die ctest-Gates beweisen die
+   Logik, nicht das Bild: ROOM1040 (Schalter drücken → Frage; Raum neu betreten → keine Frage),
+   ROOM1030 (Cutscene feuert beim Zombie-Durchlauf, Kontrolle kommt zurück), ROOM1070 (fünf
+   Zombies stehen am Trigger-Punkt auf) und ein Tod→Load-Zyklus, jeweils im echten Fenster per
+   gdigrab (`re15-port-visual-verify`). Diese Session hatte keinen Audio-Endpoint (RDP).
+0b. **Zwei bewusst zurückgestellte, belegte Divergenzen aus derselben Runde** (nicht Teil der
+   gemeldeten Fehler, deshalb nicht als Beifang eingebaut):
+   (a) `work_vars[0..3] = -1` am Ende jedes VM-Laufs (dieselbe FUN_8003ebf4 @0x8003ebfc-ec14) —
+   macht die Skript-Scratch-Variablen zu Ein-Frame-Werten und lässt 6 Assertions in
+   `unit_scd_opcodes` fallen; braucht einen eigenen Durchgang.
+   (b) Save-Slot-Zeile ~28 px zu breit (`analysis/bug_save_room_name.md` F2/F4): das `05 00` des
+   Templates ist Farb-Op MIT Argument, und `re15_render_pc_game_codes` rückt für Code 0x00 hart
+   8 px vor statt der 4 px aus der Breitentabelle @0x800c4416.
 1. **Live-/Hör-Verifikation der drei W1-Fixes** — die Unit-Pins beweisen die Logik, nicht das
    Bild/den Klang: (a) Rolltor-Hörprobe (diese Session hatte KEINEN Audio-Endpoint — RDP);
    (b) Zombie (a)/(b) und Krähen-Verhalten im echten Fenster per gdigrab
