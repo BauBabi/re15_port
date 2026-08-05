@@ -92,3 +92,7 @@ __pycache__/
 /shots/
 ### Savestates sind Ground-Truth, aber zu groß fürs Repo — lokal halten.
 /stage_saves/*.sav
+
+# Wegwerf-Artefakte der zusaetzlichen Bauziele (targets/)
+re15_port/targets/*/build/
+re15_port/targets/steamdeck/dist/

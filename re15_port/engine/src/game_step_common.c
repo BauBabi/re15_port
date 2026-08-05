@@ -675,7 +675,11 @@ void re15_game_step(const re15_game_ctx_t *c)
          * (down = band 4 zone slot 10; up = band 2 zone slot 9; player_in_zone fires
          * the trigger regardless of facing.) Env-gated debug only. */
         {
-            extern int32_t re15_sin_q12(int), re15_cos_q12(int);
+            /* Typ MUSS int sein wie in re15_skeleton.h:39-40 (oben eingebunden) —
+             * NICHT int32_t: auf dem PC sind beide identisch, auf MIPS ist
+             * int32_t ein `long int` und die lokale Deklaration kollidiert dann
+             * mit dem Header (PSX-Build-Blocker, siehe targets/psx/README.md). */
+            extern int re15_sin_q12(int), re15_cos_q12(int);
             const char *dm = getenv("RE15_STAIR_DEMO");
             static int s_demo_done = 0;
             if (dm && *dm && !s_demo_done && !re15_stair_active()

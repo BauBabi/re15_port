@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  RE1.5-Port - CD-Image-Beschreibung (mkpsxiso, via psn00bsdk_add_cd_image).
+  Pfade sind relativ zum BUILD-Verzeichnis; Repo-Quellen ueber ${PROJECT_SOURCE_DIR}.
+
+  ISO9660-Grenzen der PSX: Wurzel max. 30 Eintraege, gesamte Disc max. 45
+  Verzeichnisse, Namen im 8.3-Format.
+-->
+<iso_project>
+	<track type="data">
+		<identifiers
+			system        ="PLAYSTATION"
+			volume        ="RE15_REBUILT"
+			volume_set    ="RE15_REBUILT"
+			publisher     ="RE15_PORT"
+			data_preparer ="PSN00BSDK ${PSN00BSDK_VERSION}"
+			application   ="PLAYSTATION"
+		/>
+		<directory_tree>
+			<file name="SYSTEM.CNF" type="data" source="${PROJECT_SOURCE_DIR}/system.cnf" />
+			<file name="RE15.EXE"   type="data" source="re15.exe" />
+			<dummy sectors="1024"/>
+		</directory_tree>
+	</track>
+</iso_project>
