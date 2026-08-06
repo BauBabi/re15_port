@@ -407,6 +407,13 @@ void scd_vm_init(void)
      * door (damals der RE15_START_ROOM-Boot, inzwischen entfernt — heute ist der Boot-Raum selbst
      * der einzige nicht per Tuer betretene Fall). [audit wf_559c230f CUTSEL-AUTOSCAN-DEFAULT-INVERTED] */
     g_scd.cut_auto_enabled = 1;
+    /* Gegner-Spawn-Limit auf die Vorgabe des Originals (FUN_8003ecec @0x8003ed58/60
+     * `ori v0,zero,0xff` + `sh v0,4084(at)` -> 0x800b0ff4 = work_vars[0x12]; Zaehler
+     * @0x8003ed7c `sh zero,4082(at)` -> 0x800b0ff2 = work_vars[0x11]). MUSS auch hier stehen,
+     * nicht nur in scd_room_reenter: der memset oben nullt work_vars, und ein Maximum von 0
+     * wuerde jeden Spawn verwerfen (op_sce_em_set @0x80042224 `slt`). */
+    g_scd.work_vars[0x12] = 0xFF;
+    g_scd.work_vars[0x11] = 0;
     re15_fade_init();                   /* boot-park the fade channels (LAB_80021138); room
                                          * loads do NOT reset them (engine globals) */
     memset((void *)s_event_handlers, 0, sizeof(s_event_handlers));  /* Phase 4.4.6.1 */
@@ -3005,6 +3012,34 @@ static int op_sce_em_set(scd_thread_t *t)
     extern uint8_t re15_em_status_zone(void);
     uint8_t  persist  = t->pc[7];
     int      suppress = (persist != 0xFF) && re15_game_flag_get(re15_em_status_zone(), persist);
+
+    /* GLEICHZEITIG-LIMIT (byte-true @0x80042214-3c) — der Grund, warum ROOM1030 im Original nur
+     * SECHS Zombies zeigt, obwohl 20 Records im RDT stehen:
+     *   @0x80042214  `lh v0,0(a1)`        v0 = Lebend-Zaehler   (0x800b0ff2 = work_vars[0x11])
+     *   @0x8004221c  `lh v1,4084(v1)`     v1 = Maximum          (0x800b0ff4 = work_vars[0x12])
+     *   @0x80042224  `slt v0,v0,v1`       Zaehler < Maximum ?
+     *   @0x80042228  `bne v0,zero,...`    ja  -> weiter, Zaehler++ (`sh v0,0(a1)` @0x8004223c
+     *                                     mit v0 = Zaehler+1 aus dem Delay-Slot @0x8004222c)
+     *   @0x80042230  `ori v0,zero,0x8000` nein -> Record VERWORFEN
+     *   @0x80042238  `sw v0,0(s0)`             (Entity-Wort +0x0 = 0x8000, kein Spawn)
+     * Das Maximum kommt aus dem Opcode Save(0x12, n) (0x24), den ROOM1030 direkt VOR seine
+     * Spawn-Liste setzt: RDT-Datei-Offset 0x1de2 = `24 12 06 00`, unmittelbar gefolgt vom ersten
+     * `44 00 16 0d`. Vorgabe ist 0xFF (praktisch unbegrenzt) aus der Raum-SCD-Init FUN_8003ecec
+     * @0x8003ed58/60 — siehe scd_room_setup.c, dieselbe Funktion setzt auch Zaehler und
+     * Flag-Bank-5-Wort-0 zurueck.
+     * Game-weit benutzen den Opcode nur ROOM1030/1031 (6) und ROOM1040/1041 (5); ueberall sonst
+     * bleibt die Vorgabe 0xFF stehen und das Gate ist wirkungslos.
+     *
+     * REIHENFOLGE: das Kill-Flag-Gate oben laeuft ZUERST (@0x80042128-38) und verbraucht KEINEN
+     * Zaehler — ein bereits erledigter Record macht beim Wieder-Betreten Platz fuer den naechsten
+     * aus der Warteschlange. */
+    if (!suppress) {
+        int16_t live = g_scd.work_vars[0x11];
+        int16_t cap  = g_scd.work_vars[0x12];
+        if (live < cap) g_scd.work_vars[0x11] = (int16_t)(live + 1);
+        else            suppress = 1;                 /* Entity-Wort 0x8000 = Record verworfen */
+    }
+
     int actor_slot = SCRIPT_SLOT_TO_ACTOR(slot);
     if (!suppress && actor_slot < RE15_ACTOR_MAX) {
         re15_actor_t *a = &g_actors[actor_slot];

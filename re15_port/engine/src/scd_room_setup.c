@@ -143,6 +143,16 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
      * siehe scd_vm_tick. Bits >= 0x40 liegen im Original in Bank 6/7 und bleiben unangetastet.)
      * Bank 5 ist im Original genau 8 Byte gross: Tabelle 0x80074664[5]=0x800b1028, [6]=0x800b1030. */
     g_game.flags[5][0] = 0;
+    /* ...und aus DERSELBEN Funktion die beiden Gegner-Spawn-Zaehler (dieselbe Instruktionsfolge,
+     * nur ein paar Zeilen davor bzw. danach):
+     *   @0x8003ed58/60  `ori v0,zero,0xff` + `sh v0,4084(at)` -> 0x800b0ff4 = MAXIMUM := 0xFF
+     *   @0x8003ed7c     `sh zero,4082(at)`                    -> 0x800b0ff2 = ZAEHLER := 0
+     * Bei Basis 0x800b0fd0 sind das work_vars[0x12] (Maximum) und work_vars[0x11] (Zaehler).
+     * Das Maximum MUSS hier auf 0xFF stehen: der memset oben nullt work_vars, und ein Maximum von
+     * 0 wuerde in JEDEM Raum jeden Spawn verwerfen. Nur ROOM1030/1031 und ROOM1040/1041 setzen es
+     * per Save(0x12,n) (Opcode 0x24) auf 6 bzw. 5 herunter — siehe das Gate in op_sce_em_set. */
+    g_scd.work_vars[0x12] = 0xFF;
+    g_scd.work_vars[0x11] = 0;
     /* Room re-entry re-inits the ENTITY pool. g_actors[] is a SEPARATE array from
      * g_scd (the memset above does NOT touch it), so boot-spawned NPCs would survive
      * the transition. The original clears all entities on room load; clear NPC slots

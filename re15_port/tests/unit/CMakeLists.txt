@@ -847,3 +847,42 @@ target_link_libraries(probe_stair_hwtruth_1060 PRIVATE re15_engine re15_test_sup
 target_include_directories(probe_stair_hwtruth_1060 PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_stair_hwtruth_1060 COMMAND probe_stair_hwtruth_1060)
 set_tests_properties(unit_stair_hwtruth_1060 PROPERTIES TIMEOUT 30)
+
+# --- LANE B (Bug-Report 2026-08-06 ROOM1030): "Zombies kriechen nicht unter dem Tor
+#     durch" + "Dutzende statt SECHS". Reine MESSUNG, kein ctest-Gate. ---
+add_executable(probe_laneb_1030_horde probe_laneb_1030_horde.c)
+target_link_libraries(probe_laneb_1030_horde PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_laneb_1030_horde PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# --- LANE E (Bug-Report 2026-08-06 ROOM1030): SICHTBARKEIT — wer wird ueberhaupt
+#     gezeichnet? Region-Quad-Cull (FUN_8001e8c8/FUN_80014368) + Spawn-Roster.
+#     Reine MESSUNG, kein ctest-Gate. ---
+add_executable(probe_laneE_1030_visible probe_laneE_1030_visible.c)
+target_link_libraries(probe_laneE_1030_visible PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_laneE_1030_visible PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# --- LANE D: ROOM1030 Spawn-/Sichtbarkeits-Messung (Nutzer-Report 2026-08-06:
+#     "nur SECHS Zombies im Original / Dutzende bei uns" + "Zombies kriechen unter dem Tor
+#     durch"). Reine MESSUNG, kein ctest-Gate. ---
+add_executable(probe_laned_1030_spawn probe_laned_1030_spawn.c)
+target_link_libraries(probe_laned_1030_spawn PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_laned_1030_spawn PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# --- LANE C: ROOM1030 Tor + Einlauf-Choreografie (Bug-Report 2026-08-06:
+#     "Zombies kriechen nicht unter dem Tor durch" / "Dutzende statt sechs").
+#     Reine MESSUNG, kein ctest-Gate. ---
+add_executable(probe_gate_1030 probe_gate_1030.c)
+target_link_libraries(probe_gate_1030 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_gate_1030 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# --- ADVERSARIALE GEGENPROBE zu Lane "behavior-0d" (ROOM1030). Reine MESSUNG, kein ctest-Gate. ---
+add_executable(probe_adv_1030_verify probe_adv_1030_verify.c)
+target_link_libraries(probe_adv_1030_verify PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_adv_1030_verify PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# ROOM1030 darf nur 6 Zombies instanziieren (Save(0x12,6) + Cap-Gate @0x80042224).
+add_executable(probe_1030_spawncap probe_1030_spawncap.c)
+target_link_libraries(probe_1030_spawncap PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1030_spawncap PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_1030_spawncap COMMAND probe_1030_spawncap)
+set_tests_properties(unit_1030_spawncap PROPERTIES TIMEOUT 30)
