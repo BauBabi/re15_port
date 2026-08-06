@@ -845,3 +845,5 @@ target_include_directories(probe_refA_gaitcause_1060 PRIVATE ${CMAKE_SOURCE_DIR}
 add_executable(probe_stair_hwtruth_1060 probe_stair_hwtruth_1060.c)
 target_link_libraries(probe_stair_hwtruth_1060 PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_stair_hwtruth_1060 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_stair_hwtruth_1060 COMMAND probe_stair_hwtruth_1060)
+set_tests_properties(unit_stair_hwtruth_1060 PROPERTIES TIMEOUT 30)

@@ -37,10 +37,18 @@ bei jeweils 3600 Einheiten Höhenunterschied (= 2 Bänder à 0x708).
 Das bestätigt die geometrische Herleitung (Schachtzelle 4100 + 2×(Body-Reach 450 + Skin 18) =
 5036) samt der vorhergesagten Start-/Landepunkte auf die Einheit genau.
 
-## Port-Stand
+## Port-Stand: trifft exakt
 
-3761 vor dem Cursor-Fix (`77db4118`), danach 4134/4355 — weiterhin **~700–900 zu kurz**. Die
-Lücke deckt sich mit den zwei noch nicht eingebauten, byte-true belegten Divergenzen
-(Fußreferenz **pro Fuß** statt gemeinsam @0x80039148-58; **unbedingter** Zug @0x80038d50 statt
-Skip beim Fußwechsel). Eingebaut wird davon nichts, solange kein Prüfstand existiert, der den
-Live-Wert des Ports reproduziert — siehe `re15_port/tests/unit/probe_stair_hwtruth_1060.c`.
+Gegen diese Referenz gemessen (`re15_port/tests/unit/probe_stair_hwtruth_1060.c`, ctest
+`unit_stair_hwtruth_1060`): der Port liefert **−5036, +5036, −5036, +5036 — Differenz 0 bei allen
+vier Treppen**. Gegenprobe mit temporär zurückgenommenem Cursor-Fix (`77db4118`): ebenfalls exakt
+5036, die Strecke war also schon vorher richtig.
+
+**Damit widerlegt:** die frühere Annahme, der Port laufe ~700–900 Einheiten zu kurz. Die Werte
+3761 und 4134/4355 stammten aus Messaufbauten **ohne PL00-Skelett** (dann trägt der FK-Fuß-Lock
+`FUN_800390e0` nichts bei und nur die Vorwärts-10 wirkt) bzw. aus umgeschriebenen Agenten-Sonden.
+
+Die zwei weiterhin offenen, byte-true belegten Divergenzen (Fußreferenz **pro Fuß** statt
+gemeinsam @0x80039148-58; **unbedingter** Zug @0x80038d50 statt Skip beim Fußwechsel) verursachen
+nachweislich **keinen** Streckenfehler. Sie einzubauen würde eine Strecke gefährden, die aktuell
+auf die Einheit stimmt — deshalb bleiben sie liegen.
