@@ -60,6 +60,16 @@ Beim byte-true Reverse Engineering gelten diese Regeln verbindlich und überschr
 - Ghidra headless auf `info/Re1.5/PSX/BIN/STAGE{1..6}.BIN` (+ `DEBUG.BIN`/`TITLE.BIN`; 0x800-Byte-Header, Code lädt @`0x80100000`), PSX-Loader + PsyQ-Signaturen. (Der Decompile-Dump-Helfer lag im alten `reAi`-Repo unter `scripts/` und kam nicht mit — ggf. neu anlegen.)
 - `stage_saves/` + DuckStation-Savestate-RAM-Dumps — live beobachten, was ein Wert (z.B. `entity[0x94]`) tatsächlich wird.
 
+⛔ **Zwei Datenquellen im Repo sind NICHT der Auslieferungsstand — wer daraus misst, misst einen Mod:**
+- `stage_saves/PATCHED-EXE_HASH-881C08B8082E53B6_*.sav` (6 Stück) laufen auf einer **gepatchten** EXE.
+  Prüfbar: `@0x80026e4c` ist dort `24 c2 01 08` (`j 0x80070890`) statt des Auslieferungs-Stubs
+  `08 00 e0 03` (`jr ra` / `addu v0,zero,zero`). Die übrigen ~78 Savestates sind sauber.
+- `info/Re1.5/re15_save_final.bin` (+ `.cue`) ist das **gepatchte Disc-Image** des Vorprojekts
+  (`t_size=0xb1000` statt `0xaf000`; der Save-Patch aus `reAi/scripts/patch_save_final.py`).
+  Der Auslieferungsstand ist `info/Re1.5/PSX.EXE` und der Baum darunter (`info/Re1.5/PSX/`).
+  Hintergrund: `analysis/save_system_patched_build.md`. Der Auslieferungsstand kann **nicht speichern**
+  — 21 RDTs enthalten wörtlich „Save is not available in this preview".
+
 **Format-Referenz (statt Formate zu raten):**
 - `RE15_KNOWLEDGE.md` — alle Dateiformate (§1.1 RDT, §1.2 SCD, §1.3 BSS, §1.4 EMD, §1.5 PLD, §1.6 TIM, §1.7 ESP, §1.8 VAB, … bis §1.19). Das ist die Format-Referenz in reAi_v2. (Das alte `DOCUMENTATION.md`/`docs/` wurde nicht übernommen.)
 - `info/Resident_Evil_und_Playstation_Information/`: `psx-spx.github.io-master` (kanonische PSX-Hardware-Spec), `BioClone Redux*`/`bioclone-remake-main`/`BioModels-master` (RE-Engine-RE-Referenz), `RE15Data`/`RE15Editor`/`re1.5-specific` (RE1.5-spezifisch), `information*.txt` (Format-Notizen), `PSYQ_SDK`/`PSn00bSDK-*` (SDK-Header + `psyq*.gdt`), `3dgraph.pdf` (GTE/3D).
