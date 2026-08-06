@@ -562,6 +562,21 @@ add_executable(probe_stair_10a0 probe_stair_10a0.c)
 target_link_libraries(probe_stair_10a0 PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_stair_10a0 PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
+# --- DIAGNOSE-Probe (kein ctest-Eintrag): ROOM1060 letzte Treppe Kamera-Sweep ---
+add_executable(probe_stair_cam_1060 probe_stair_cam_1060.c)
+target_link_libraries(probe_stair_cam_1060 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_stair_cam_1060 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# --- DIAGNOSE-Probe (kein ctest-Eintrag): Treppenhaus-Kamera-Kette (10A0/1060) ---
+add_executable(probe_stair_cam_chain probe_stair_cam_chain.c)
+target_link_libraries(probe_stair_cam_chain PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_stair_cam_chain PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# --- DIAGNOSE-Probe (kein ctest-Eintrag): ROOM10A0-Treppenhaus Kamera-Umschaltung ---
+add_executable(probe_stair_cam_10a0 probe_stair_cam_10a0.c)
+target_link_libraries(probe_stair_cam_10a0 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_stair_cam_10a0 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
 # --- DIAGNOSE-Probe (kein ctest-Eintrag): ROOM10D0 Marvin-Cutscene (analysis/marvin_10d0.md) ---
 add_executable(probe_marvin_10d0 probe_marvin_10d0.c)
 target_link_libraries(probe_marvin_10d0 PRIVATE re15_engine re15_test_support)
@@ -675,6 +690,12 @@ add_executable(probe_cut_1030 probe_cut_1030.c)
 target_link_libraries(probe_cut_1030 PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_cut_1030 PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
+# --- LANE D: Kamera-Zustand beim Raum-(Re)Load (Bug-Report 2026-08-06:
+#     "ROOM1030 erneut betreten -> Kamera auf den Zombies"). Reine MESSUNG. ---
+add_executable(probe_camload_1030 probe_camload_1030.c)
+target_link_libraries(probe_camload_1030 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_camload_1030 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
 # DIAGNOSE (kein ctest): "nach dem Tod laden -> stirbt sofort wieder" (Nutzer-Report 2026-08-05)
 # analysis/bug_load_after_death.md — der Devour-Kommando-Zustand ueberlebt Tod->Title->LOAD.
 add_executable(probe_load_after_death probe_load_after_death.c)
@@ -696,3 +717,34 @@ set_tests_properties(unit_room1070_wake PROPERTIES TIMEOUT 30)
 # (Prompt darf NICHT kommen, Kontrolle muss beim Spieler bleiben).
 add_test(NAME unit_room1040_switch COMMAND probe_room1040_switch 1040 -24000 16500 0 1)
 set_tests_properties(unit_room1040_switch PROPERTIES TIMEOUT 30)
+
+# --- MESSSONDE (kein ctest): ROOM1030 Kamera beim WIEDERbetreten (Nutzer-Report 2026-08-06).
+#     Faehrt den echten Tuer-Pfad re15_room_apply_pending 1030 -> 1040 -> 1030. ---
+add_executable(probe_cam_1030_reentry probe_cam_1030_reentry.c)
+target_link_libraries(probe_cam_1030_reentry PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_cam_1030_reentry PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# --- MESSSONDE (kein ctest): Cut_replace-Mechanismus in ROOM1030 (Lane B, 2026-08-06).
+#     Misst den Tail von op_cut_replace beim Wiederbetreten ueber alle Vorraum-Cuts. ---
+add_executable(probe_cut_replace_1030 probe_cut_replace_1030.c)
+target_link_libraries(probe_cut_replace_1030 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_cut_replace_1030 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# --- MESSSONDE (kein ctest): RVD-Auswahl PORT vs ORIGINAL FUN_80014230 (Kamera-Schwenk) ---
+add_executable(probe_rvd_diff_10a0 probe_rvd_diff_10a0.c)
+target_link_libraries(probe_rvd_diff_10a0 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_rvd_diff_10a0 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# --- MESSSONDE (kein ctest): Kamera-Verlauf beim Treppen-Abstieg ROOM10A0 ---
+#     (Ziel probe_stair_cam_10a0 ist bereits weiter oben definiert — Doppel-
+#      Definition entfernt, sie liess CMake mit "target already exists" abbrechen.)
+
+# --- MESSSONDE (kein ctest): Treppen-Abstieg ROOM10A0 tick-genau (Eject-Schrittweite) ---
+add_executable(probe_stair_eject_10a0 probe_stair_eject_10a0.c)
+target_link_libraries(probe_stair_eject_10a0 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_stair_eject_10a0 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# Regressions-Gate: ROOM1030 beim Wiederbetreten — der Tuer-Eintritts-Cut muss sich gegen jeden
+# Rest-Cut des Vorraums durchsetzen (Nutzer-Report 2026-08-06, Ursache: Schwanz von op_cut_replace).
+add_test(NAME unit_cam_1030_reentry COMMAND probe_cam_1030_reentry)
+set_tests_properties(unit_cam_1030_reentry PROPERTIES TIMEOUT 30)

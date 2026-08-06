@@ -3572,21 +3572,35 @@ int op_cut_replace(scd_thread_t *t)
         extern void re15_aot_cut_replace(uint8_t a, uint8_t b);
         re15_aot_cut_replace(a, b);   /* also swap the live CAM_SWITCH AOTs (cam_from/target) */
     }
-    /* byte-true tail (LAB_80040414 @0x800404ac-d0): after relabelling the zones, if the CURRENTLY
-     * ACTIVE cut == a, switch the camera to b immediately (FUN_800142f4 = store the new cut +
-     * repoint the active camera struct DAT_800ac794). Without this the camera only changes on the
-     * next zone re-entry — the live in-room replacement (the ROOM1130 case above) was the camera
-     * change the user saw missing. The port requests it via the standard cam-change path (the same
-     * g_scd.cam_id + cam_change_pending that Cut_chg / the door fire use; applied in re15_game_step,
-     * i.e. next frame rather than literally immediate — faithful-line). Cross-check 2026-06-30. */
-    {
-        extern int g_re15_active_cut;   /* the displayed cut (light_common.c, set per cut apply) */
-        if ((uint8_t)g_re15_active_cut == a) {
-            g_scd.cam_id_prev        = g_scd.cam_id;
-            g_scd.cam_id             = b;
-            g_scd.cam_change_pending = 1;
-        }
-    }
+    /* KEIN Kamera-Wechsel im Schwanz — das Original macht hier ein ZEIGER-FIXUP, keine Umschaltung.
+     *
+     * Der frueher hier stehende Block ("if (active_cut == a) -> cam_id = b, cam_change_pending = 1",
+     * eingebaut 2026-06-30 mit dem Guess-Tell "faithful-line" im Kommentar) war eine Fehllesung von
+     * LAB_80040414. Selbst disassembliert:
+     *   @0x80040438 `lbu a2,1(v1)`   a2 = pc[1] = a (alter Cut)
+     *   @0x80040440 `lbu a1,2(v1)`   a1 = pc[2] = b (neuer Cut)
+     *   @0x8004044c-a8  die TAUSCH-Schleife (Stride 20 @0x80040498, Ende bei Byte 0xff
+     *                   @0x800404a4): jeder Datensatz, der a traegt, bekommt b — UND umgekehrt.
+     *   @0x800404ac-b8 `lw v0,0x800ac794` + `lbu v0,2(v0)`  = das cam_from-Byte des ANKER-Datensatzes,
+     *                   gelesen NACH dem Tausch.
+     *   @0x800404c0    `bne v0,a2, ...`  -> nur weiter, wenn der Anker JETZT a traegt.
+     *   @0x800404c8/cc `jal FUN_800142f4` mit `a0 = a1` (= b).
+     * FUN_800142f4 @0x800142f4-14 schreibt `sb a0,0x800afbb5` (der angezeigte Cut-Index) und
+     * re-resolviert per FUN_80014324 den ANKER-ZEIGER `sw v0,0x800ac794`.
+     *
+     * Traegt der Anker nach dem Tausch a, dann trug er VOR dem Tausch b — der Aufruf schreibt also
+     * genau den Wert zurueck, der ohnehin angezeigt wurde, und richtet nur den durch das
+     * Umetikettieren stale gewordenen Zeiger neu aus. Das Original wechselt hier NIE die Ansicht.
+     *
+     * Der Port hat kein Gegenstueck zu diesem Anker-Zeiger (er schlaegt Zonen ueber den Index nach),
+     * also ist die byte-true Wirkung auf sein Datenmodell: nichts. Der alte Block testete zudem die
+     * Bedingung, die das Original gerade AUSSCHLIESST (active == a), und routete das Ergebnis ueber
+     * `cam_change_pending` — was room_common.c als "das Skript hat einen Cut gesetzt" wertet und
+     * damit den Tuer-Eintritts-Cut verwirft. Gemessen an ROOM1030: die Tuer 1040->1030 will Cut 8,
+     * der Port lieferte Cut 9 (byte-gleich zu Cut 0 = die Halle mit den 20 Zombies) — der Spieler
+     * stand unsichtbar am Tuer-Spawn, die Kamera auf den Zombies (Nutzer-Report 2026-08-06).
+     * Der Defekt war bis e53fb043 unerreichbar, weil ROOM1030s Cut_replace hinter Ck(4,15)==1
+     * (@Datei 0x1ff0) haengt und flag(4,15) nur sub01 @0x2198 setzt — sub01 lief vorher nie. */
     t->pc += 3;
     return 1;
 }

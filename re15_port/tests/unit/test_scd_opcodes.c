@@ -1047,30 +1047,35 @@ static int test_flag_ck2(void)
     return fail;
 }
 
-/* op_cut_replace (0x4b) live in-room switch — byte-true tail (LAB_80040414 @0x800404ac): after the
- * zone relabel, if the active (displayed) cut == a, switch the camera to b via the cam-change path. */
-static int test_cut_replace_live_switch(void)
+/* op_cut_replace (0x4b) fasst die KAMERA NICHT AN — der Schwanz von LAB_80040414 ist ein
+ * Zeiger-Fixup, keine Umschaltung. Byte-Beleg (selbst disassembliert):
+ *   @0x80040438/40  a2 = pc[1] = a, a1 = pc[2] = b
+ *   @0x8004044c-a8  TAUSCH-Schleife (Stride 20, Ende bei 0xff) — a<->b in beide Richtungen
+ *   @0x800404ac-c0  liest das cam_from-Byte des Anker-Datensatzes 0x800ac794 NACH dem Tausch und
+ *                   springt nur weiter, wenn es JETZT a ist (d.h. VOR dem Tausch war es b)
+ *   @0x800404c8/cc  jal FUN_800142f4(b) -> @0x80014300 `sb a0,0x800afbb5` (angezeigter Cut) +
+ *                   @0x80014310 `sw v0,0x800ac794` (Anker neu ausrichten)
+ * Es wird also genau der Wert zurueckgeschrieben, der ohnehin angezeigt wurde. Der Port hat keinen
+ * Anker-Zeiger -> byte-true Wirkung: nichts. Der frueher hier gepinnte "live switch" war eine
+ * Fehllesung und liess in ROOM1030 beim Wiederbetreten die Kamera auf den Zombies stehen, weil
+ * cam_change_pending den Tuer-Eintritts-Cut verdraengte (Nutzer-Report 2026-08-06). */
+static int test_cut_replace_no_camera_change(void)
 {
     int fail = 0;
     extern int g_re15_active_cut;
-    /* (a) active cut == a (9): Cut_replace(9,8) -> request switch to b (8). */
-    {
+    /* Weder bei active == a noch bei active == b noch sonstwo darf ein Cut-Wechsel entstehen. */
+    const int actives[3] = { 9, 8, 5 };
+    for (int i = 0; i < 3; i++) {
         uint8_t bc[4]; bc[0]=0x4b; bc[1]=9; bc[2]=8; bc[3]=SCD_OP_EVT_END;
-        scd_vm_init(); g_scd.cam_change_pending = 0; g_re15_active_cut = 9;
+        scd_vm_init(); g_scd.cam_change_pending = 0; g_scd.cam_id = 3;
+        g_re15_active_cut = actives[i];
         scd_thread_start(0, bc); scd_vm_tick();
-        if (g_scd.cam_id != 8 || g_scd.cam_change_pending != 1) {
-            fprintf(stderr,"FAIL: cut_replace live switch: cam_id=%d pending=%d (want 8/1)\n",
-                    (int)g_scd.cam_id, (int)g_scd.cam_change_pending); fail=1; }
+        if (g_scd.cam_change_pending != 0 || g_scd.cam_id != 3) {
+            fprintf(stderr,"FAIL: cut_replace(9,8) mit active=%d aendert die Kamera: "
+                    "cam_id=%d pending=%d (erwartet 3/0)\n",
+                    actives[i], (int)g_scd.cam_id, (int)g_scd.cam_change_pending); fail=1; }
     }
-    /* (b) active cut != a (5): no switch. */
-    {
-        uint8_t bc[4]; bc[0]=0x4b; bc[1]=9; bc[2]=8; bc[3]=SCD_OP_EVT_END;
-        scd_vm_init(); g_scd.cam_change_pending = 0; g_re15_active_cut = 5;
-        scd_thread_start(0, bc); scd_vm_tick();
-        if (g_scd.cam_change_pending != 0) {
-            fprintf(stderr,"FAIL: cut_replace no-switch: pending=%d (want 0)\n", (int)g_scd.cam_change_pending); fail=1; }
-    }
-    if (!fail) printf("PASS: test_cut_replace_live_switch (0x4b active==a -> switch to b)\n");
+    if (!fail) printf("PASS: test_cut_replace_no_camera_change (0x4b ist ein Zeiger-Fixup)\n");
     return fail;
 }
 
@@ -1295,7 +1300,7 @@ int main(void)
     failures += test_work_set();
     failures += test_speed_set();
     failures += test_flag_ck2();
-    failures += test_cut_replace_live_switch();
+    failures += test_cut_replace_no_camera_change();
     failures += test_sce_espr_on_spawn();
     failures += test_enemy_gore_tick();
     failures += test_enemy_gore_setup();

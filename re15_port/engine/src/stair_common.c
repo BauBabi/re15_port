@@ -330,9 +330,27 @@ int re15_stair_try_start(const re15_rdt_t *rdt, int action_pressed)
          * is no stair match at the door's band → the AOT door scan takes the
          * action. You must first ascend the lower stair onto band N before the
          * stair from band N is reachable. (2026-06-08) */
+        /* Der Spieler-POSITIONS-Test ist im Original an sce_flags Bit 0x40 gebunden, der
+         * SONDEN-Test an Bit 0x20 — selbst disassembliert (v1 = sce_flags aus `lbu v1,1(s0)`):
+         *   @0x80042ea8  `andi v0,v1,0x40` / `beq v0,zero,0x80042ef4`  -> Bit CLEAR ueberspringt
+         *                den ganzen Positions-Zweig
+         *   @0x80042ef8  `andi v0,v1,0x20` / `beq v0,zero,0x8004301c`  -> Bit SET laesst den
+         *                Sonden-Zweig laufen (Rect-Test @0x80042f0c-2c)
+         * Die ausgelieferten Treppen-Records tragen 0x31: Sonde JA, Position NEIN. Der Port testete
+         * die Position UNBEDINGT (STAIR_REACH 450, im Kommentar dort selbst als "port fallback, no
+         * PSX referent" gekennzeichnet) und machte Treppen damit aus Standpunkten greifbar, an denen
+         * das Original nichts ausloest — u.a. eine Geister-Aufwaerts-Treppe direkt am Landepunkt der
+         * letzten Treppe. Jetzt folgt das Gate den Flags. */
+        /* sce_flags == 0 = legacy/synthetische Installation (re15_aot_set setzt es auf 0,
+         * aot_common.c:51; nur die Opcode-Installer tragen die echten Record-Bits ein). Dafuer
+         * gilt weiter das alte, permissive Verhalten — dieselbe Fallback-Regel, die der AOT-Scan
+         * schon benutzt (aot_common.c:757/854). */
+        int probe_ok  = (a->sce_flags == 0) || (a->sce_flags & 0x20);
+        int pospos_ok = (a->sce_flags == 0) || (a->sce_flags & 0x40);
         if (a->active && a->type == RE15_AOT_TYPE_STAIR &&
             (int)a->band == cur &&
-            (point_in_zone(fx, fz, a) || player_in_zone(p, a))) {
+            ((probe_ok  && point_in_zone(fx, fz, a)) ||
+             (pospos_ok && player_in_zone(p, a)))) {
             zone = a; zone_idx = i; break;
         }
     }
