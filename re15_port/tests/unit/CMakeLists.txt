@@ -840,3 +840,8 @@ target_include_directories(probe_advz_cause_1060 PRIVATE ${CMAKE_SOURCE_DIR}/inc
 add_executable(probe_refA_gaitcause_1060 probe_refA_gaitcause_1060.c)
 target_link_libraries(probe_refA_gaitcause_1060 PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_refA_gaitcause_1060 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# Hardware-Wahrheit: Port-Treppenstrecke gegen 4 DuckStation-Messungen (ORIGINAL-EXE, ROOM1060).
+add_executable(probe_stair_hwtruth_1060 probe_stair_hwtruth_1060.c)
+target_link_libraries(probe_stair_hwtruth_1060 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_stair_hwtruth_1060 PRIVATE ${CMAKE_SOURCE_DIR}/include)
