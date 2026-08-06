@@ -199,10 +199,14 @@ void re15_stair_tick(const re15_rdt_t *rdt,
     p->motion_init_delay = 0;
 
     int     up   = (s_motion == RE15_PLAYER_MOTION_STAIR_UP);
-    /* (1) FUN_8001f314: advance the clip cursor +1/tick (forward playback). */
-    s_cursor++;
+    /* (1) FUN_8001f314: SAMPLE at the current cursor, THEN advance (+1/tick, forward playback).
+     * Byte-true Reihenfolge selbst disassembliert: @0x8001f35c `lbu v0,149(t0)` liest +0x95
+     * UNVERAENDERT und benutzt es als Keyframe-Index (`sll v0,v0,2` @0x8001f364 + `addu a2,v1,v0`);
+     * erst @0x8001f610-1c `lbu v0,149(v1)` / `addiu v0,v0,1` / `sb v0,149(v1)` erhoeht ihn, mit
+     * Wrap gegen frame_count @0x8001f624. Der Port inkrementierte VORHER (TRIAL). */
     int frame = s_cursor % STAIR_CLIPLEN;
     p->anim_frame = (uint16_t)frame;
+    s_cursor++;
 
     int     clip = (s_motion == RE15_PLAYER_MOTION_STAIR_DOWN) ? 21 : 20;
     int32_t cs   = re15_cos_q12((int)p->rot_y);

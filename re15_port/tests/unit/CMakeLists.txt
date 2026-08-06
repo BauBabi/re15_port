@@ -748,3 +748,95 @@ target_include_directories(probe_stair_eject_10a0 PRIVATE ${CMAKE_SOURCE_DIR}/in
 # Rest-Cut des Vorraums durchsetzen (Nutzer-Report 2026-08-06, Ursache: Schwanz von op_cut_replace).
 add_test(NAME unit_cam_1030_reentry COMMAND probe_cam_1030_reentry)
 set_tests_properties(unit_cam_1030_reentry PROPERTIES TIMEOUT 30)
+
+# --- LANE D MESSSONDE (kein ctest): Pro-Frame-Trajektorie des ROOM1060-Abstiegs ---
+#     Findet den exakten Bruchpunkt der RVD-Zustandsmaschine (FUN_80014230 @0x80014230).
+add_executable(probe_lane_d_traj1060 probe_lane_d_traj1060.c)
+target_link_libraries(probe_lane_d_traj1060 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_lane_d_traj1060 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# --- LANE-E MESSSONDE (kein ctest): Original-Quirk oder Port-Fehler? ROOM1060-Kette
+#     mit Segment-Skip-Detektor (RVD-Scan ist ein PUNKT-Test @0x80014298). ---
+add_executable(probe_lanee_chain_1060 probe_lanee_chain_1060.c)
+target_link_libraries(probe_lanee_chain_1060 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_lanee_chain_1060 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# --- LANE A MESSSONDE (kein ctest): ROOM1060 Zonen-/Geometrie-Karte + Abstiegs-Weg ---
+add_executable(probe_lanea_1060_zonepath probe_lanea_1060_zonepath.c)
+target_link_libraries(probe_lanea_1060_zonepath PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_lanea_1060_zonepath PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# --- LANE-F MESSSONDE (kein ctest): Etage/Band/Hoehe im Kamera-Zonen-Scan (ROOM1060)
+#     Prueft das Floor-Byte rec[1] (@0x80014274/0x80014280), die XZ-Ueberlappung der
+#     Zonen verschiedener Cuts und den idealen vs. Port-Abstiegs-Sweep. ---
+add_executable(probe_laneF_floor_1060 probe_laneF_floor_1060.c)
+target_link_libraries(probe_laneF_floor_1060 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_laneF_floor_1060 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# --- DIAGNOSE-Probe (kein ctest-Eintrag): LANE B Treppen-FSM Frame-fuer-Frame ---
+add_executable(probe_lb_stairfsm probe_lb_stairfsm.c)
+target_link_libraries(probe_lb_stairfsm PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_lb_stairfsm PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# --- LANE-E MESSSONDE (kein ctest): ist die Rueckschalt-Zone im Original ueberhaupt begehbar? ---
+add_executable(probe_lanee_reach_1060 probe_lanee_reach_1060.c)
+target_link_libraries(probe_lanee_reach_1060 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_lanee_reach_1060 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# --- LANE A MESSSONDE (kein ctest): ROOM1060 Marge der Kamera-Zonen am Treppenfuss ---
+add_executable(probe_lanea_1060_margin probe_lanea_1060_margin.c)
+target_link_libraries(probe_lanea_1060_margin PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_lanea_1060_margin PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# --- LANE C MESSSONDE (kein ctest): laeuft der RVD-/Cut-Zonen-Scan waehrend der Treppe? ---
+add_executable(probe_lanec_camscan_1060 probe_lanec_camscan_1060.c)
+target_link_libraries(probe_lanec_camscan_1060 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_lanec_camscan_1060 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# --- LANE-F MESSSONDE (kein ctest): RVD-Floor-Gate vs. Treppen, game-weit ---
+add_executable(probe_laneF_floorgate_rooms probe_laneF_floorgate_rooms.c)
+target_link_libraries(probe_laneF_floorgate_rooms PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_laneF_floorgate_rooms PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# --- LANE-E MESSSONDE (kein ctest): Trefferspanne der Treppen-Kamerazonen (Gait vs. Port-Eject) ---
+add_executable(probe_lanee_margin_1060 probe_lanee_margin_1060.c)
+target_link_libraries(probe_lanee_margin_1060 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_lanee_margin_1060 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# --- LANE-F MESSSONDE (kein ctest): Zonen-Skip durch diskrete Abtastung (ROOM1060) ---
+add_executable(probe_laneF_gap_1060 probe_laneF_gap_1060.c)
+target_link_libraries(probe_laneF_gap_1060 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_laneF_gap_1060 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# --- LANE-E MESSSONDE (kein ctest): game-weiter Zensus, wo der Port-Finalize-Versatz RVD-Zonen ueberspringt ---
+add_executable(probe_lanee_eject_census probe_lanee_eject_census.c)
+target_link_libraries(probe_lanee_eject_census PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_lanee_eject_census PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+add_executable(probe_adv_stairband_1060 probe_adv_stairband_1060.c)
+target_link_libraries(probe_adv_stairband_1060 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_adv_stairband_1060 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# --- ADVERSARIALE GEGENPROBE Lane C (kein ctest): Cut-Kette ROOM1060 mit KOPF-Triggern ---
+add_executable(probe_advc_chain1060 probe_advc_chain1060.c)
+target_link_libraries(probe_advc_chain1060 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_advc_chain1060 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+add_executable(probe_adv_ejectcam_1060 probe_adv_ejectcam_1060.c)
+target_link_libraries(probe_adv_ejectcam_1060 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_adv_ejectcam_1060 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# ADV-F adversarial cross-check (Diagnose, kein ctest)
+add_executable(probe_advF_ejectcam_1060 probe_advF_ejectcam_1060.c)
+target_link_libraries(probe_advF_ejectcam_1060 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_advF_ejectcam_1060 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# ADV-Z adversarial causality probe (Diagnose, kein ctest)
+add_executable(probe_advz_cause_1060 probe_advz_cause_1060.c)
+target_link_libraries(probe_advz_cause_1060 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_advz_cause_1060 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# REF-A adversarial gait-causality probe (Diagnose, kein ctest)
+add_executable(probe_refA_gaitcause_1060 probe_refA_gaitcause_1060.c)
+target_link_libraries(probe_refA_gaitcause_1060 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_refA_gaitcause_1060 PRIVATE ${CMAKE_SOURCE_DIR}/include)
