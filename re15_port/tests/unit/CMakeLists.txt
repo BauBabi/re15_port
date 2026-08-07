@@ -886,3 +886,10 @@ target_link_libraries(probe_1030_spawncap PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_1030_spawncap PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_1030_spawncap COMMAND probe_1030_spawncap)
 set_tests_properties(unit_1030_spawncap PROPERTIES TIMEOUT 30)
+
+# --- LANE E (2026-08-07): TOR-MASKE ROOM1030 — warum kommen nur Kriecher durch?
+#     Misst Sca_id_set(rgn2/3,idx6,0xF7) am Port + die (Maske & u0)-Arithmetik von
+#     @0x8003b254/58. Reine MESSUNG, kein ctest-Gate. ---
+add_executable(probe_laneE_gatemask probe_laneE_gatemask.c)
+target_link_libraries(probe_laneE_gatemask PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_laneE_gatemask PRIVATE ${CMAKE_SOURCE_DIR}/include)

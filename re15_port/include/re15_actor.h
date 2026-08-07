@@ -48,7 +48,20 @@ typedef struct {
     int32_t  member_0c;    /* RE1.5 Member id 7  → +0x0c (word) — stored, no consumer yet */
     uint8_t  grid_id;      /* RE1.5 Member id 12 → +0x09 — grid/cell id, the MOST frequent Member_set (117 sites) */
     uint8_t  member_0a;    /* RE1.5 Member id 14 → +0x0a — stored, no consumer yet */
-    uint8_t  member_0b;    /* RE1.5 Member id 15 → +0x0b — stored, no consumer yet */
+    uint8_t  member_0b;    /* RE1.5 Member id 15 -> entity+0x0b.
+                            * ⚠ DER ALTE ZUSATZ "stored, no consumer yet" WAR FALSCH und hat eine
+                            * Analyse in die Irre gefuehrt: enemy_ai_common.c:7062/7063 und
+                            * :7278/:7279 benutzen das Feld als LOS-Latch des Adult Spider (Port-
+                            * Gegenstueck zu entity+0x1D0 Bit 0, STAGE2 @0x80110e90-ebc).
+                            * Im ORIGINAL traegt +0x0b etwas ANDERES: den 0-basierten Slot-Index
+                            * der zuletzt getroffenen AOT-Zone (`addiu v0,s2,255` im Delay-Slot
+                            * @0x80042f44 -> `sb v0,11(s1)` @0x80042fc4, LAST-WINS auf dem
+                            * AUTO-Pfad), Leerwert 0xFF aus dem Frame-Wisch FUN_8003ec28
+                            * (`ori v0,zero,0xffff` @0x8003ec44 + `sh v0,0(v1)` @0x8003ec4c auf
+                            * 0x800aca5e = Spieler+0x0A/0x0B).
+                            * Wer den AOT-Stempel portiert, muss den Spider-Latch VORHER auf ein
+                            * eigenes Feld umziehen — sonst zerstoert der Stempel die Sichtlinie.
+                            * Details: analysis/room1030_crawl_mechanism.md */
     uint8_t  floor;        /* RE1.5 Member id 18 → +0x82 (floor band) */
     int32_t  x;            /* RE1.5 Member id 0 → +0x34 (world X)          */
     int32_t  y;            /* RE1.5 Member id 1 → +0x38 (world Y)          */
