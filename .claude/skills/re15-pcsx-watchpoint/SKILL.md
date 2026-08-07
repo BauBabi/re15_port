@@ -181,3 +181,39 @@ DREISTELLIGEN Bereich zaehlen. Erst dann ist das Menue wirklich offen.
 das Intro hat aber mehrere Abschnitte (Vorspann-Film, ROOM1240-Pre-Intro, Helipad). Naechster
 Schritt: SELECT ueber einen langen Zeitraum in kurzen Abstaenden druecken und mit `pathcount.lua`
 mitzaehlen, ab welchem Moment die Menuefunktion pro Bild laeuft.
+
+### Pad-API dieser Version (mit `padapi.lua` ausgelesen, 2026-08-07)
+
+Alles vorhanden — die API ist NICHT das Problem:
+
+```
+PCSX.CONSTS.PAD.BUTTON = { SELECT=0, START=3, UP=4, RIGHT=5, DOWN=6, LEFT=7,
+                           L2=8, R2=9, L1=10, R1=11, TRIANGLE=12, CIRCLE=13,
+                           CROSS=14, SQUARE=15 }
+PCSX.SIO0.slots[1].pads[1] = { setOverride, clearOverride, getButton, map, setAnalogMode }
+```
+
+### ⛔ UNGELOEST: SELECT oeffnet das Debug-Menue nicht
+
+Der Nutzer sagt: **ab dem Zeitpunkt nach der Spielerauswahl kann man JEDERZEIT SELECT druecken.**
+Der Zeitpunkt ist also nicht das Problem. Trotzdem:
+
+| Versuch | Ergebnis |
+|---|---|
+| vgamepad-Knopf BACK, 12x gedrueckt | Menue-Aufrufe: 1 |
+| Lua `setOverride(SELECT)`, nur bei Zustandswechsel, 182 Zyklen | Menue-Aufrufe: 1 |
+| Lua `setOverride(SELECT)`, **jedes Bild** waehrend der Druckphase, 182 Zyklen | Menue-Aufrufe: 1 |
+
+Immer genau **ein** Aufruf von `0x80014444` — und der kommt schon vor dem ersten SELECT.
+
+**Zu pruefen beim naechsten Mal, in dieser Reihenfolge:**
+1. **Kommt die Uebersteuerung ueberhaupt an?** Pad-Woerter mitlesen waehrend `setOverride` aktiv
+   ist: `0x800AC758` (roh), `0x800AC760` (remappt), `0x800AC768` (gehalten), `0x800AC76C` (Flanke).
+   SELECT ist Bit `0x100` im RAW-Wort. Zeigt keines der Woerter das Bit, erreicht die
+   Uebersteuerung das Spiel nicht — dann ist der vgamepad-Weg der richtige, aber mit korrekt
+   gemapptem Knopf (PCSX-Redux-Pad-Konfiguration pruefen!).
+2. **Ist `0x80014444` ueberhaupt die richtige Adresse?** Sie hat weder `jal` noch Zeiger in
+   PSX.EXE/DEBUG.BIN (selbst gescannt) — sie wird aus einem Overlay erreicht. Moeglicherweise ist
+   die Menueschleife eine ANDERE Funktion, und 0x80014444 wird nur einmal zum Aufbau gerufen.
+   Gegenprobe: Exec-Haltepunkte auf mehrere Adressen im Bereich 0x80014444-0x80014cb0 legen und
+   sehen, welche pro Bild zaehlt.

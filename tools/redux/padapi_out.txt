@@ -1,0 +1,76 @@
+PCSX.CONSTS vorhanden: true
+CONSTS = {
+  PAD = {
+    BUTTON = {
+      CIRCLE = 13 (number)
+      CROSS = 14 (number)
+      SQUARE = 15 (number)
+      SELECT = 0 (number)
+      START = 3 (number)
+      UP = 4 (number)
+      RIGHT = 5 (number)
+      DOWN = 6 (number)
+      LEFT = 7 (number)
+      L2 = 8 (number)
+      R2 = 9 (number)
+      L1 = 10 (number)
+      R1 = 11 (number)
+      TRIANGLE = 12 (number)
+    }
+  }
+  CPU = {
+    CLOCKSPEED = 33868800 (number)
+  }
+}
+
+PCSX.SIO0 vorhanden: true
+Pad1 vorhanden: true
+pad1 = {
+  setAnalogMode = function: 0x021a9ea200b8 (function)
+  map = function: 0x021a9ea20228 (function)
+  getButton = function: 0x021a9ea1fb68 (function)
+  setOverride = function: 0x021a9ea1fd40 (function)
+  clearOverride = function: 0x021a9ea1fee0 (function)
+}
+
+PCSX-Felder:
+  GUI (table)
+  getCPUCycles (function)
+  getMemPtr (function)
+  removeSymbol (function)
+  iterateSymbols (function)
+  getScratchPtr (function)
+  log (function)
+  loadSaveState (function)
+  getWriteLUT (function)
+  addBreakpoint (function)
+  getCurrentIso (function)
+  openIso (function)
+  pauseEmulator (function)
+  resumeEmulator (function)
+  softResetEmulator (function)
+  hardResetEmulator (function)
+  Events (table)
+  invalidateCache (function)
+  createSaveState (function)
+  getMemoryAsFile (function)
+  quit (function)
+  settings (table)
+  SIO0 (table)
+  Helpers (table)
+  Assembler (table)
+  CONSTS (table)
+  isoBuilder (function)
+  isoTools (table)
+  Misc (table)
+  getReadLUT (function)
+  Adpcm (table)
+  nextTick (function)
+  GPU (table)
+  getRegisters (function)
+  execSlots (table)
+  getSaveStateProtoSchema (function)
+  insertSymbol (function)
+  Binary (table)
+  getRomPtr (function)
+  getParPtr (function)
