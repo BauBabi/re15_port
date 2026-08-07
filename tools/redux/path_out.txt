@@ -1,0 +1,39 @@
+Haltepunkt 1 @0x80014444 Menuefunktion                          true
+Haltepunkt 2 @0x80014a44 JUMP bestaetigt (sb 1 -> Modus)        true
+Haltepunkt 3 @0x80014a50 JUMP: Datensatz-Zeiger NULL            true
+Haltepunkt 4 @0x8001d630 Raumwahl-Kette (lbu Menue-Stage)       true
+Haltepunkt 5 @0x8001d660 Raumwahl: neuer Raum -> 0x800b0fe2     true
+Haltepunkt 6 @0x800396fc Raumlader FUN_800396fc                 true
+Haltepunkt 7 @0x80025c00 Karten-/Menue-FSM FUN_80025c00         true
+B  600 | 1:0 2:0 3:0 4:0 5:0 6:0 7:0 | Spieler (0,0) Modus 0 | Menue-Bytes 0/0/00
+B 1200 | 1:0 2:0 3:0 4:0 5:0 6:0 7:0 | Spieler (0,0) Modus 0 | Menue-Bytes 0/0/00
+B 1800 | 1:0 2:0 3:0 4:0 5:0 6:0 7:0 | Spieler (0,0) Modus 0 | Menue-Bytes 0/0/00
+B 2400 | 1:0 2:0 3:0 4:0 5:0 6:0 7:0 | Spieler (0,0) Modus 0 | Menue-Bytes 0/0/00
+B 3000 | 1:0 2:0 3:0 4:0 5:0 6:0 7:0 | Spieler (0,0) Modus 0 | Menue-Bytes 0/0/00
+B 3600 | 1:0 2:0 3:0 4:0 5:0 6:0 7:0 | Spieler (0,0) Modus 0 | Menue-Bytes 0/0/00
+B 4200 | 1:0 2:0 3:0 4:0 5:0 6:0 7:0 | Spieler (0,0) Modus 0 | Menue-Bytes 0/0/00
+B 4800 | 1:0 2:0 3:0 4:0 5:0 6:0 7:0 | Spieler (0,0) Modus 0 | Menue-Bytes 0/0/00
+B 5400 | 1:0 2:0 3:0 4:0 5:0 6:0 7:0 | Spieler (0,0) Modus 0 | Menue-Bytes 0/0/00
+B 6000 | 1:0 2:0 3:0 4:0 5:0 6:0 7:0 | Spieler (0,0) Modus 0 | Menue-Bytes 0/0/00
+B 6600 | 1:0 2:0 3:0 4:0 5:0 6:0 7:0 | Spieler (0,0) Modus 0 | Menue-Bytes 0/0/00
+B 7200 | 1:0 2:0 3:0 4:0 5:0 6:0 7:0 | Spieler (0,0) Modus 0 | Menue-Bytes 0/0/00
+B 7800 | 1:0 2:0 3:0 4:0 5:0 6:0 7:0 | Spieler (0,0) Modus 0 | Menue-Bytes 0/0/00
+B 8400 | 1:0 2:0 3:0 4:0 5:0 6:0 7:0 | Spieler (0,0) Modus 0 | Menue-Bytes 0/0/00
+B 9000 | 1:0 2:0 3:0 4:0 5:0 6:0 7:0 | Spieler (3940,14167) Modus 0 | Menue-Bytes 0/0/00
+B 9600 | 1:1 2:0 3:0 4:0 5:0 6:1 7:0 | Spieler (-26214,-3861) Modus 0 | Menue-Bytes 0/0/00
+B10200 | 1:1 2:0 3:0 4:0 5:0 6:1 7:0 | Spieler (-26214,-3861) Modus 0 | Menue-Bytes 0/0/00
+B10800 | 1:1 2:0 3:0 4:0 5:0 6:1 7:0 | Spieler (-26214,-3861) Modus 0 | Menue-Bytes 0/0/00
+B11400 | 1:1 2:0 3:0 4:0 5:0 6:1 7:0 | Spieler (-26214,-3861) Modus 0 | Menue-Bytes 0/0/00
+B12000 | 1:1 2:0 3:0 4:0 5:0 6:1 7:0 | Spieler (-26214,-3861) Modus 0 | Menue-Bytes 0/0/00
+B12600 | 1:1 2:0 3:0 4:0 5:0 6:1 7:0 | Spieler (-26214,-3861) Modus 1 | Menue-Bytes 0/0/00
+B13200 | 1:1 2:0 3:0 4:0 5:0 6:1 7:0 | Spieler (-26214,-3861) Modus 0 | Menue-Bytes 0/0/00
+B13800 | 1:1 2:0 3:0 4:0 5:0 6:1 7:0 | Spieler (2300,14365) Modus 1 | Menue-Bytes 0/0/00
+B14400 | 1:1 2:0 3:0 4:0 5:0 6:1 7:0 | Spieler (-31000,31000) Modus 0 | Menue-Bytes 0/0/00
+B15000 | 1:1 2:0 3:0 4:0 5:0 6:1 7:0 | Spieler (-31000,31000) Modus 0 | Menue-Bytes 0/0/00
+B15600 | 1:1 2:0 3:0 4:0 5:0 6:1 7:0 | Spieler (2300,14365) Modus 0 | Menue-Bytes 0/0/00
+B16200 | 1:1 2:0 3:0 4:0 5:0 6:1 7:0 | Spieler (2664,-7336) Modus 0 | Menue-Bytes 0/0/00
+B16800 | 1:1 2:0 3:0 4:0 5:0 6:1 7:0 | Spieler (2664,-7336) Modus 0 | Menue-Bytes 0/0/00
+B17400 | 1:1 2:0 3:0 4:0 5:0 6:1 7:0 | Spieler (2664,-7336) Modus 0 | Menue-Bytes 0/0/00
+B18000 | 1:1 2:0 3:0 4:0 5:0 6:1 7:0 | Spieler (2664,-8030) Modus 0 | Menue-Bytes 0/0/00
+
+fertig

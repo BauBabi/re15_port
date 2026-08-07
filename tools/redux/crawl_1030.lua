@@ -18,6 +18,7 @@
 local OUT = [[C:\workspace\git\reAi_v2\tools\redux\crawl_out.txt]]
 local frames, out, phase, wartet = 0, nil, 0, 0
 local menuehits, spielerAb, menueAb = 0, -1, -1
+local zielgesetzt = 0
 local bestaetige = false
 
 local function u8(m, a) return m[bit.band(a, 0x1fffff)] end
@@ -57,6 +58,21 @@ function DrawImguiFrame()
     local ok1 = pcall(function()
       _G.__menu = PCSX.addBreakpoint(0x80014444, 'Exec', 4, 'dbgmenu', function()
         menuehits = menuehits + 1
+        return false
+      end)
+    end)
+    -- ZIEL im letztmoeglichen Augenblick setzen: ein EXEC-Haltepunkt auf 0x8001d630 feuert,
+    -- BEVOR der JUMP-Ausfuehrer seine beiden Lesevorgaenge macht —
+    --   @0x8001d63c  lbu v1,0(0x800bbe5e)        Menue-Stage
+    --   @0x8001d654  lbu v0,0(0x800bbe5f + v1)   Menue-Index -> wird der neue Raum
+    -- Aus DrawImguiFrame oder dem Pad-Haltepunkt geschrieben wurde mein Wert vorher wieder
+    -- ueberschrieben (gemessen: dort stand 0x17 = HELIPORT statt 0x03 = LOBBY).
+    local ok3 = pcall(function()
+      _G.__jump = PCSX.addBreakpoint(0x8001d630, 'Exec', 4, 'jumptarget', function()
+        local m = PCSX.getMemPtr()
+        w8(m, 0x800BBE5E, 0)        -- Stage 0
+        w8(m, 0x800BBE5F, 0x03)     -- Index 3 = LOBBY -> Raum 0x103 -> ROOM1030
+        zielgesetzt = zielgesetzt + 1
         return false
       end)
     end)
@@ -100,11 +116,9 @@ function DrawImguiFrame()
       w8(m, 0x800BBE5D, 1)        -- Zeile = JUMP
       w8(m, 0x800BBE5E, 0)        -- Stage 0
       w8(m, 0x800BBE5F, 0x03)     -- Index 3 -> ROOM1030
-      -- GEMESSEN: der Sprung uebernimmt die Menue-Bytes NICHT — die Raum-Globals zeigten
-      -- Stage 23/Idx 24 bzw. 36/17, waehrend die Menue-Bytes brav 0/03 trugen. Also direkt
-      -- die Globals setzen, die der JUMP-Ausfuehrer schreibt (@0x8001D644 / @0x8001D660).
-      w8(m, 0x800B0FE6, 0)        -- Stage 0
-      w8(m, 0x800B0FE2, 0x03)     -- Index 3 -> Raum 0x103 -> ROOM1030
+      -- 0x800B0FE6 / 0x800B0FE2 werden hier NICHT mehr beschrieben: das sind die AUSGABEN des
+      -- Sprungs (@0x8001D644 / @0x8001D660). Jedes Bild hineinzuschreiben ueberschreibt genau
+      -- das Ergebnis, das man messen will. Das Ziel setzt jetzt der Exec-Haltepunkt.
       wartet = wartet + 1
       if wartet > 120 then
         bestaetige = true
@@ -114,8 +128,8 @@ function DrawImguiFrame()
 
     if frames % 300 == 0 then
       out:write(string.format(
-        "B%5d | Menue %4d | Menue-Bytes Zeile %d Stage %d Idx %02x | Raum-Globals St %d Idx %02x = 0x%03x | Spieler (%d,%d) Modus %d Gegner %d\n",
-        frames, menuehits,
+        "B%5d | Menue %4d Ziel %4d | Menue-Bytes Zeile %d Stage %d Idx %02x | Raum-Globals St %d Idx %02x = 0x%03x | Spieler (%d,%d) Modus %d Gegner %d\n",
+        frames, menuehits, zielgesetzt,
         u8(m, 0x800BBE5D), u8(m, 0x800BBE5E), u8(m, 0x800BBE5F),
         u8(m, 0x800B0FE6), u8(m, 0x800B0FE2),
         bit.bor(bit.lshift(u8(m, 0x800B0FE6) + 1, 8), u8(m, 0x800B0FE2)),

@@ -153,3 +153,31 @@ selbst) und dort `0x800bbe5f + stage` unmittelbar vor dem `lbu` beschreiben — 
 mehr dazwischenfunken. Alternativ direkt das Zielregister nach dem `lbu` setzen
 (`PCSX.getRegisters().GPR.r[2]` = v0) oder gleich `0x800b0fe2` per Exec-Haltepunkt auf
 `0x8001d664` ueberschreiben.
+
+### ⛔ Erfolg messen, nicht vermuten: `pathcount.lua`
+
+Ich hatte „Menue offen" gemeldet, weil ein Exec-Haltepunkt auf `0x80014444` **einmal** gefeuert
+hatte. Das war falsch: Ein OFFENES Menue ruft seine Funktion **jedes Bild** auf, also hunderte
+Male. Ein einzelner Treffer ist ein beilaeufiger Aufruf, kein offenes Menue.
+
+`pathcount.lua` setzt Zaehler auf alle Kandidaten und zeigt, was wirklich laeuft. Messung vom
+2026-08-07 (SELECT gedrueckt, nachdem der Spieler existierte):
+
+| Haltepunkt | Treffer |
+|---|---|
+| `0x80014444` Menuefunktion | **1** |
+| `0x80014a44` JUMP bestaetigt | 0 |
+| `0x80014a50` JUMP Zeiger NULL | 0 |
+| `0x8001d630` Raumwahl-Kette | 0 |
+| `0x8001d660` neuer Raum | 0 |
+| `0x800396fc` Raumlader | 1 |
+
+Heisst: **Das Menue oeffnete sich nie**, und die beobachteten Raumwechsel waren der Intro-Verlauf.
+
+**Abnahmekriterium fuer den naechsten Versuch:** Haltepunkt auf `0x80014444` muss im
+DREISTELLIGEN Bereich zaehlen. Erst dann ist das Menue wirklich offen.
+
+**Offene Frage:** wann genau SELECT wirkt. Der Nutzer sagt „im Intro nach der Spielerauswahl" —
+das Intro hat aber mehrere Abschnitte (Vorspann-Film, ROOM1240-Pre-Intro, Helipad). Naechster
+Schritt: SELECT ueber einen langen Zeitraum in kurzen Abstaenden druecken und mit `pathcount.lua`
+mitzaehlen, ab welchem Moment die Menuefunktion pro Bild laeuft.

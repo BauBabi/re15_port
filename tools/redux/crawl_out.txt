@@ -1,106 +1,106 @@
 ROOM1030 ueber das Debug-Menue (mit Nachweis)
 Haltepunkte: Menue=true Pad=true
-B  300 | Menue    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
-B  600 | Menue    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
-B  900 | Menue    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
-B 1200 | Menue    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
-B 1500 | Menue    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
-B 1800 | Menue    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
-B 2100 | Menue    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
-B 2400 | Menue    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
-B 2700 | Menue    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
-B 3000 | Menue    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
-B 3300 | Menue    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
-B 3600 | Menue    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
-B 3900 | Menue    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
-B 4200 | Menue    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
-B 4500 | Menue    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
-B 4800 | Menue    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
-B 5100 | Menue    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
-B 5400 | Menue    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
-B 5700 | Menue    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
-B 6000 | Menue    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
-B 6300 | Menue    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
-B 6600 | Menue    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
-B 6900 | Menue    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
-B 7200 | Menue    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
-B 7500 | Menue    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
-B 7800 | Menue    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
-B 8100 | Menue    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
-B 8400 | Menue    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
-B 8700 | Menue    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
+B  300 | Menue    0 Ziel    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
+B  600 | Menue    0 Ziel    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
+B  900 | Menue    0 Ziel    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
+B 1200 | Menue    0 Ziel    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
+B 1500 | Menue    0 Ziel    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
+B 1800 | Menue    0 Ziel    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
+B 2100 | Menue    0 Ziel    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
+B 2400 | Menue    0 Ziel    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
+B 2700 | Menue    0 Ziel    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
+B 3000 | Menue    0 Ziel    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
+B 3300 | Menue    0 Ziel    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
+B 3600 | Menue    0 Ziel    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
+B 3900 | Menue    0 Ziel    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
+B 4200 | Menue    0 Ziel    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
+B 4500 | Menue    0 Ziel    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
+B 4800 | Menue    0 Ziel    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
+B 5100 | Menue    0 Ziel    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
+B 5400 | Menue    0 Ziel    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
+B 5700 | Menue    0 Ziel    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
+B 6000 | Menue    0 Ziel    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
+B 6300 | Menue    0 Ziel    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
+B 6600 | Menue    0 Ziel    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
+B 6900 | Menue    0 Ziel    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
+B 7200 | Menue    0 Ziel    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
+B 7500 | Menue    0 Ziel    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
+B 7800 | Menue    0 Ziel    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
+B 8100 | Menue    0 Ziel    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
+B 8400 | Menue    0 Ziel    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
+B 8700 | Menue    0 Ziel    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 00 = 0x100 | Spieler (0,0) Modus 0 Gegner 0
 
 SPIELER existiert ab Bild 8887: (3940,14167) — jetzt darf SELECT kommen
-B 9000 | Menue    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 17 = 0x117 | Spieler (3940,14167) Modus 0 Gegner 0
+B 9000 | Menue    0 Ziel    0 | Menue-Bytes Zeile 0 Stage 0 Idx 00 | Raum-Globals St 0 Idx 17 = 0x117 | Spieler (3940,14167) Modus 0 Gegner 0
 MENUE offen ab Bild 9285 (1 Aufrufe)
-B 9300 | Menue    1 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 0 Idx 03 = 0x103 | Spieler (3940,14167) Modus 1 Gegner 0
-B 9600 | Menue    1 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 0 Idx 03 = 0x103 | Spieler (-26214,-3861) Modus 0 Gegner 0
-B 9900 | Menue    1 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 0 Idx 03 = 0x103 | Spieler (-26214,-3861) Modus 0 Gegner 0
+B 9300 | Menue    1 Ziel    0 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 0 Idx 17 = 0x117 | Spieler (3940,14167) Modus 1 Gegner 0
+B 9600 | Menue    1 Ziel    0 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 23 Idx 24 = 0x1824 | Spieler (-26214,-3861) Modus 0 Gegner 0
+B 9900 | Menue    1 Ziel    0 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 23 Idx 24 = 0x1824 | Spieler (-26214,-3861) Modus 0 Gegner 0
 
 == Bild 9984  Spieler=(-26214,-3861) Modus=0 Gegner=0 ==
-B10200 | Menue    1 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 0 Idx 03 = 0x103 | Spieler (-26214,-3861) Modus 0 Gegner 0
+B10200 | Menue    1 Ziel    0 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 23 Idx 24 = 0x1824 | Spieler (-26214,-3861) Modus 0 Gegner 0
 
 == Bild 10284  Spieler=(-26214,-3861) Modus=0 Gegner=0 ==
-B10500 | Menue    1 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 0 Idx 03 = 0x103 | Spieler (-26214,-3861) Modus 0 Gegner 0
+B10500 | Menue    1 Ziel    0 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 23 Idx 24 = 0x1824 | Spieler (-26214,-3861) Modus 0 Gegner 0
 
 == Bild 10584  Spieler=(-26214,-3861) Modus=0 Gegner=0 ==
-B10800 | Menue    1 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 0 Idx 03 = 0x103 | Spieler (-26214,-3861) Modus 0 Gegner 0
+B10800 | Menue    1 Ziel    0 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 23 Idx 24 = 0x1824 | Spieler (-26214,-3861) Modus 0 Gegner 0
 
 == Bild 10884  Spieler=(-26214,-3861) Modus=0 Gegner=0 ==
-B11100 | Menue    1 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 0 Idx 03 = 0x103 | Spieler (-26214,-3861) Modus 0 Gegner 0
+B11100 | Menue    1 Ziel    0 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 23 Idx 24 = 0x1824 | Spieler (-26214,-3861) Modus 0 Gegner 0
 
 == Bild 11184  Spieler=(-26214,-3861) Modus=0 Gegner=0 ==
-B11400 | Menue    1 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 0 Idx 03 = 0x103 | Spieler (-26214,-3861) Modus 0 Gegner 0
+B11400 | Menue    1 Ziel    0 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 23 Idx 24 = 0x1824 | Spieler (-26214,-3861) Modus 0 Gegner 0
 
 == Bild 11484  Spieler=(-26214,-3861) Modus=0 Gegner=0 ==
-B11700 | Menue    1 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 0 Idx 03 = 0x103 | Spieler (-26214,-3861) Modus 0 Gegner 0
+B11700 | Menue    1 Ziel    0 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 23 Idx 24 = 0x1824 | Spieler (-26214,-3861) Modus 0 Gegner 0
 
 == Bild 11784  Spieler=(-26214,-3861) Modus=0 Gegner=0 ==
-B12000 | Menue    1 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 0 Idx 03 = 0x103 | Spieler (-26214,-3861) Modus 0 Gegner 0
+B12000 | Menue    1 Ziel    0 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 23 Idx 24 = 0x1824 | Spieler (-26214,-3861) Modus 0 Gegner 0
 
 == Bild 12084  Spieler=(-26214,-3861) Modus=0 Gegner=0 ==
-B12300 | Menue    1 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 0 Idx 03 = 0x103 | Spieler (-26214,-3861) Modus 0 Gegner 0
+B12300 | Menue    1 Ziel    0 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 23 Idx 24 = 0x1824 | Spieler (-26214,-3861) Modus 0 Gegner 0
 
 == Bild 12384  Spieler=(-26214,-3861) Modus=0 Gegner=0 ==
-B12600 | Menue    1 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 0 Idx 03 = 0x103 | Spieler (-26214,-3861) Modus 1 Gegner 0
+B12600 | Menue    1 Ziel    0 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 36 Idx 17 = 0x2517 | Spieler (-26214,-3861) Modus 1 Gegner 0
 
 == Bild 12684  Spieler=(-26214,-3861) Modus=1 Gegner=0 ==
-B12900 | Menue    1 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 3 Idx 17 = 0x417 | Spieler (-26214,-3861) Modus 0 Gegner 0
+B12900 | Menue    1 Ziel    0 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 36 Idx 17 = 0x2517 | Spieler (-26214,-3861) Modus 0 Gegner 0
 
 == Bild 12984  Spieler=(-26214,-3861) Modus=0 Gegner=0 ==
-B13200 | Menue    1 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 3 Idx 17 = 0x417 | Spieler (-26214,-3861) Modus 0 Gegner 0
+B13200 | Menue    1 Ziel    0 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 36 Idx 17 = 0x2517 | Spieler (-26214,-3861) Modus 0 Gegner 0
 
 == Bild 13284  Spieler=(-26214,-3861) Modus=0 Gegner=0 ==
-B13500 | Menue    1 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 3 Idx 17 = 0x417 | Spieler (-26214,-3861) Modus 0 Gegner 0
+B13500 | Menue    1 Ziel    0 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 36 Idx 17 = 0x2517 | Spieler (-26214,-3861) Modus 0 Gegner 0
 
 == Bild 13584  Spieler=(-26214,-3861) Modus=0 Gegner=0 ==
-B13800 | Menue    1 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 23 Idx 17 = 0x1817 | Spieler (2300,14365) Modus 1 Gegner 0
+B13800 | Menue    1 Ziel    0 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 23 Idx 17 = 0x1817 | Spieler (2300,14365) Modus 1 Gegner 1
 
-== Bild 13884  Spieler=(-31000,31000) Modus=1 Gegner=1 ==
-   Slot  0 Typ 47 grid 40  4/6/0  Clip 02 Bild 01  (1261,10091)
-B14100 | Menue    1 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 23 Idx 17 = 0x1817 | Spieler (-31000,31000) Modus 0 Gegner 1
+== Bild 13884  Spieler=(-31000,31000) Modus=0 Gegner=1 ==
+   Slot  0 Typ 47 grid 40  4/5/2  Clip 00 Bild 01  (-1655,6513)
+B14100 | Menue    1 Ziel    0 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 23 Idx 17 = 0x1817 | Spieler (-31000,31000) Modus 0 Gegner 1
 
 == Bild 14184  Spieler=(-31000,31000) Modus=0 Gegner=1 ==
    Slot  0 Typ 47 grid 40  4/0/2  Clip 0f Bild 00  (-2196,5870)
-B14400 | Menue    1 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 23 Idx 17 = 0x1817 | Spieler (-31000,31000) Modus 0 Gegner 1
+B14400 | Menue    1 Ziel    0 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 23 Idx 17 = 0x1817 | Spieler (-31000,31000) Modus 0 Gegner 1
 
 == Bild 14484  Spieler=(-31000,31000) Modus=0 Gegner=1 ==
    Slot  0 Typ 47 grid 40  4/0/2  Clip 14 Bild 00  (-2196,5870)
-B14700 | Menue    1 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 23 Idx 17 = 0x1817 | Spieler (-31000,31000) Modus 0 Gegner 1
+B14700 | Menue    1 Ziel    0 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 23 Idx 17 = 0x1817 | Spieler (-31000,31000) Modus 0 Gegner 1
 
 == Bild 14784  Spieler=(-31000,31000) Modus=0 Gegner=1 ==
    Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-2196,5870)
-B15000 | Menue    1 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 23 Idx 17 = 0x1817 | Spieler (-31000,31000) Modus 0 Gegner 1
+B15000 | Menue    1 Ziel    0 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 23 Idx 17 = 0x1817 | Spieler (-31000,31000) Modus 0 Gegner 1
 
 == Bild 15084  Spieler=(-31000,31000) Modus=0 Gegner=1 ==
    Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
-B15300 | Menue    1 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 23 Idx 17 = 0x1817 | Spieler (-31000,31000) Modus 0 Gegner 1
+B15300 | Menue    1 Ziel    0 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 23 Idx 17 = 0x1817 | Spieler (-31000,31000) Modus 0 Gegner 1
 
 == Bild 15384  Spieler=(-31000,31000) Modus=0 Gegner=1 ==
    Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
-B15600 | Menue    1 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 23 Idx 17 = 0x1817 | Spieler (2300,14365) Modus 0 Gegner 1
+B15600 | Menue    1 Ziel    0 | Menue-Bytes Zeile 1 Stage 0 Idx 03 | Raum-Globals St 23 Idx 17 = 0x1817 | Spieler (2300,14365) Modus 0 Gegner 1
 
-== Bild 15684  Spieler=(2300,14365) Modus=0 Gegner=1 ==
+== Bild 15684  Spieler=(2369,9765) Modus=0 Gegner=1 ==
    Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
 
 fertig
