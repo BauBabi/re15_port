@@ -125,3 +125,31 @@ Belegt heisst: Wort `+0x0` ohne Bit 0x8000.
 
 Schwester-Skills: `re15-room-capture` (DuckStation-Savestates), `re15-savestate-ghidra` (RAM aus Savestate),
 `re15-psx-disasm` (der statische Scan, der ZUERST läuft). Memory [[reai-v2-global-ai-freeze]].
+
+### Raumauswahl beim JUMP — die Kette (2026-08-07 disassembliert + live gemessen)
+
+```
+8001d630: addiu a1,a1,-16802     ; a1 = 0x800bbe5e  (Menue-STAGE)
+8001d638: lhu   v0,0x800b0fe2    ; alter Raumindex
+8001d63c: lbu   v1,0(a1)         ; Menue-Stage
+8001d644: sh    v0,0x800b0fe6    ; <- bekommt den ALTEN Index = VORHERIGER Raum (nicht die Stage!)
+8001d64c: addiu at,at,-16801     ; 0x800bbe5f
+8001d650: addu  at,at,v1         ; + stage
+8001d654: lbu   v0,0(at)         ; Menue-INDEX fuer diese Stage
+8001d660: sh    v0,0x800b0fe2    ; <- neuer Raum
+```
+
+⚠ **`0x800B0FE6` ist der VORHERIGE Raum, nicht die Stage** — die Bezeichnung in
+`debug_menu_common.c` ist an dieser Stelle irrefuehrend.
+
+**Offen (Stand 2026-08-07):** Das Ziel liess sich noch nicht setzen. Weder aus `DrawImguiFrame`
+noch aus dem Pad-Schreib-Haltepunkt geschrieben ueberlebt `0x800bbe5f + stage` bis zum Lesen —
+beim JUMP stand dort reproduzierbar `0x17` (HELIPORT) statt der geschriebenen `0x03` (LOBBY).
+Der Sprung selbst funktioniert (Modus 1 feuert, Raumwechsel messbar an Spielerposition und
+Entity-Tabelle), er nimmt nur ein anderes Ziel.
+
+**Naechster Ansatz:** einen **Exec-Haltepunkt auf `0x8001d654`** setzen (die Lese-Instruktion
+selbst) und dort `0x800bbe5f + stage` unmittelbar vor dem `lbu` beschreiben — dann kann nichts
+mehr dazwischenfunken. Alternativ direkt das Zielregister nach dem `lbu` setzen
+(`PCSX.getRegisters().GPR.r[2]` = v0) oder gleich `0x800b0fe2` per Exec-Haltepunkt auf
+`0x8001d664` ueberschreiben.

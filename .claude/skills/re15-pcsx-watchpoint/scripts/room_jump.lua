@@ -62,7 +62,18 @@ function DrawImguiFrame()
     end)
     local ok2 = pcall(function()
       _G.__pad = PCSX.addBreakpoint(0x800AC76C, 'Write', 4, 'confirm', function()
-        if bestaetige then w16(PCSX.getMemPtr(), 0x800AC762, 0x80) end
+        local m = PCSX.getMemPtr()
+        if menuehits > 0 then
+          -- ZIEL HIER setzen, nicht im Frame-Haken: der JUMP-Ausfuehrer liest
+          -- `0x800bbe5f + stage` (@0x8001d64c-54) und schreibt das Ergebnis nach 0x800b0fe2
+          -- (@0x8001d660); 0x800b0fe6 bekommt dabei den ALTEN Index, ist also der VORHERIGE
+          -- Raum. Aus dem Frame-Haken geschrieben ueberschrieb das Menue meinen Wert wieder
+          -- (gemessen: dort stand 0x17 = HELIPORT statt meiner 0x03).
+          w8(m, 0x800BBE5D, 1)        -- Zeile = JUMP
+          w8(m, 0x800BBE5E, 0)        -- Stage 0
+          w8(m, 0x800BBE5F, 0x03)     -- Index 3 -> LOBBY -> Raum 0x103 -> ROOM1030
+        end
+        if bestaetige then w16(m, 0x800AC762, 0x80) end
         return false
       end)
     end)
@@ -89,6 +100,11 @@ function DrawImguiFrame()
       w8(m, 0x800BBE5D, 1)        -- Zeile = JUMP
       w8(m, 0x800BBE5E, 0)        -- Stage 0
       w8(m, 0x800BBE5F, 0x03)     -- Index 3 -> ROOM1030
+      -- GEMESSEN: der Sprung uebernimmt die Menue-Bytes NICHT — die Raum-Globals zeigten
+      -- Stage 23/Idx 24 bzw. 36/17, waehrend die Menue-Bytes brav 0/03 trugen. Also direkt
+      -- die Globals setzen, die der JUMP-Ausfuehrer schreibt (@0x8001D644 / @0x8001D660).
+      w8(m, 0x800B0FE6, 0)        -- Stage 0
+      w8(m, 0x800B0FE2, 0x03)     -- Index 3 -> Raum 0x103 -> ROOM1030
       wartet = wartet + 1
       if wartet > 120 then
         bestaetige = true
@@ -96,9 +112,14 @@ function DrawImguiFrame()
       end
     end
 
-    if frames % 600 == 0 then
-      out:write(string.format("Bild %5d | Menue-Aufrufe %5d | Spieler=(%d,%d) | Modus %d | Gegner %d\n",
-        frames, menuehits, px, pz, u8(m, 0x800b5359), #gegner(m)))
+    if frames % 300 == 0 then
+      out:write(string.format(
+        "B%5d | Menue %4d | Menue-Bytes Zeile %d Stage %d Idx %02x | Raum-Globals St %d Idx %02x = 0x%03x | Spieler (%d,%d) Modus %d Gegner %d\n",
+        frames, menuehits,
+        u8(m, 0x800BBE5D), u8(m, 0x800BBE5E), u8(m, 0x800BBE5F),
+        u8(m, 0x800B0FE6), u8(m, 0x800B0FE2),
+        bit.bor(bit.lshift(u8(m, 0x800B0FE6) + 1, 8), u8(m, 0x800B0FE2)),
+        px, pz, u8(m, 0x800b5359), #gegner(m)))
       out:flush()
     end
 
