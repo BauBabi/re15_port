@@ -38,7 +38,7 @@ function DrawImguiFrame()
       local ok = pcall(function()
         _G.__bps[i] = PCSX.addBreakpoint(k[1], 'Exec', 4, 'p' .. i, function()
           n[i] = n[i] + 1
-          return false
+          return true   -- MESSUNG: false LOESCHT den Haltepunkt (1 Treffer, dann tot)
         end)
       end)
       out:write(string.format("Haltepunkt %d @0x%08x %-38s %s\n", i, k[1], k[2], tostring(ok)))

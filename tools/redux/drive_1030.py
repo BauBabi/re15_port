@@ -52,9 +52,14 @@ t0 = time.time()
 time.sleep(BOOT)
 
 def spieler_da():
+    # BEIDE Schreibweisen erkennen. Vorher stand hier nur "SPIELER existiert"; Sonden, die
+    # "SPIELER ab Bild" schreiben, liessen die Warteschleife bis zum Zeitlimit laufen — und die
+    # tippt alle 18 s weiter "Neues Spiel" (HOCH/A). Diese Tastendruecke liefen dann MITTEN in
+    # die Messung hinein und haben sie verfaelscht.
     try:
         with open(OUT, encoding="utf-8", errors="replace") as f:
-            return "SPIELER existiert" in f.read()
+            t = f.read()
+            return "SPIELER existiert" in t or "SPIELER ab Bild" in t
     except Exception:
         return False
 
@@ -105,4 +110,13 @@ try:
     proc.terminate()
 except Exception:
     pass
+
+# ⛔ proc.terminate() beendet nur den winzigen STARTER pcsx-redux.exe. Der eigentliche Emulator
+# heisst "pcsx-redux.main" — OHNE .exe — und ueberlebt. Ueber mehrere Laeufe haben sich so sechs
+# Leichen angesammelt (je ~128 KB, direkt beim Start blockiert); danach startete gar nichts mehr
+# und PCSX zeigte nur noch ein Fenster mit dem Titel "Error". Deshalb hier hart nachraeumen.
+subprocess.run(["taskkill", "/IM", "pcsx-redux.main", "/F"],
+               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+subprocess.run(["taskkill", "/IM", "pcsx-redux.exe", "/F"],
+               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 print("Ausgabe:", OUT, flush=True)

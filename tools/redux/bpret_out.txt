@@ -1,0 +1,8 @@
+Haltepunkte auf FUN_80030444 (laeuft jedes Bild)
+B  900  return false=0 | return true=0 | ohne return=0
+B 1800  return false=1 | return true=351 | ohne return=351
+B 2700  return false=1 | return true=768 | ohne return=768
+B 3600  return false=1 | return true=1117 | ohne return=1117
+B 4500  return false=1 | return true=1560 | ohne return=1560
+B 5400  return false=1 | return true=2075 | ohne return=2075
+fertig

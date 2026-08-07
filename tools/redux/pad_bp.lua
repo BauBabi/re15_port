@@ -73,7 +73,7 @@ function DrawImguiFrame()
           w32(m, 0x800AC768, MASK)
           w32(m, 0x800AC76C, MASK)
         end
-        return false          -- nicht anhalten
+        return true           -- MESSUNG: false LOESCHT den Haltepunkt (1 Treffer, dann tot)
       end)
     end)
     out:write(ok and "Haltepunkt gesetzt\n" or ("Haltepunkt FEHLER: " .. tostring(err) .. "\n"))

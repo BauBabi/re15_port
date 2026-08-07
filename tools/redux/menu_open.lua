@@ -44,7 +44,7 @@ function DrawImguiFrame()
     local ok = pcall(function()
       _G.__menu = PCSX.addBreakpoint(0x80014444, 'Exec', 4, 'dbgmenu', function()
         menuehits = menuehits + 1
-        return false
+        return true   -- MESSUNG: false LOESCHT den Haltepunkt (1 Treffer, dann tot)
       end)
     end)
     out:write("Menue-Haltepunkt: " .. tostring(ok) .. "\n")

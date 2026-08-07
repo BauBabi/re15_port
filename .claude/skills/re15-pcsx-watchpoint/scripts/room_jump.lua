@@ -58,7 +58,7 @@ function DrawImguiFrame()
     local ok1 = pcall(function()
       _G.__menu = PCSX.addBreakpoint(0x80014444, 'Exec', 4, 'dbgmenu', function()
         menuehits = menuehits + 1
-        return false
+        return true   -- MESSUNG: false LOESCHT den Haltepunkt (1 Treffer, dann tot)
       end)
     end)
     -- ZIEL im letztmoeglichen Augenblick setzen: ein EXEC-Haltepunkt auf 0x8001d630 feuert,
@@ -73,7 +73,7 @@ function DrawImguiFrame()
         w8(m, 0x800BBE5E, 0)        -- Stage 0
         w8(m, 0x800BBE5F, 0x03)     -- Index 3 = LOBBY -> Raum 0x103 -> ROOM1030
         zielgesetzt = zielgesetzt + 1
-        return false
+        return true   -- MESSUNG: false LOESCHT den Haltepunkt (1 Treffer, dann tot)
       end)
     end)
     local ok2 = pcall(function()
@@ -90,7 +90,7 @@ function DrawImguiFrame()
           w8(m, 0x800BBE5F, 0x03)     -- Index 3 -> LOBBY -> Raum 0x103 -> ROOM1030
         end
         if bestaetige then w16(m, 0x800AC762, 0x80) end
-        return false
+        return true   -- MESSUNG: false LOESCHT den Haltepunkt (1 Treffer, dann tot)
       end)
     end)
     out:write(string.format("Haltepunkte: Menue=%s Pad=%s\n", tostring(ok1), tostring(ok2)))

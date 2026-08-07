@@ -46,7 +46,7 @@ function PT_CAL_TICK(frame)
     C.try = C.try + 1
     if not C.steps[C.try] then
       PT.log:write(string.format("# f%d RAUM-SUCHE erschoepft\n", frame)); PT.log:flush()
-      C.on = 0; PT.release(); return false
+      C.on = 0; PT.release(); return true   -- MESSUNG: false LOESCHT den Haltepunkt (1 Treffer, dann tot)
     end
     C.n = C.steps[C.try]
     C.dir, C.press = PT.padSel, 1
@@ -67,7 +67,7 @@ function PT_CAL_TICK(frame)
                                frame, C.try, C.n, n, sig)); PT.log:flush()
     if sig == "16,10,10,11,11" then
       PT.log:write(string.format("# >>> ROOM1140 GEFUNDEN mit %d Links-Schritten\n", C.n))
-      PT.log:flush(); C.on = 0; PT.release(); return false
+      PT.log:flush(); C.on = 0; PT.release(); return true   -- MESSUNG: false LOESCHT den Haltepunkt (1 Treffer, dann tot)
     end
     C.on, C.nxt = 1, frame + 60
   end

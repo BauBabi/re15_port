@@ -36,7 +36,7 @@ function DrawImguiFrame()
     pcall(function()
       bp = PCSX.addBreakpoint(0x800AC76C, 'Write', 4, 'padcount', function()
         padwrites = padwrites + 1
-        return false
+        return true   -- MESSUNG: false LOESCHT den Haltepunkt (1 Treffer, dann tot)
       end)
     end)
   end

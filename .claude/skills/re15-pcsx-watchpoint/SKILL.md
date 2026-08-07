@@ -17,6 +17,59 @@ SET-Pfad des generischen Flag-Helfers `FUN_8003fdf8` (a3 = `bank_table[bank]` au
 statisch unsichtbar). Ergebnis: aca3c = Flag-Bank 1, Fade = SCD-Opcode `Set(1, 27)`. Siehe Memory
 [[reai-v2-global-ai-freeze]].
 
+## ⛔⛔ DIE ZWEI FALLEN, DIE MICH EINEN GANZEN TAG GEKOSTET HABEN
+
+### 1. `return false` im Haltepunkt-Rueckruf LOESCHT den Haltepunkt
+
+Frueher stand in diesem Skill „cb returns false = don't pause". **Das ist FALSCH** und hat JEDE
+Messung dieser Kampagne verdorben: jeder Zaehler blieb bei 1, und ich habe daraus reihenweise
+Aussagen ueber das SPIEL abgeleitet, die reine Werkzeug-Artefakte waren.
+
+Gegenprobe (`scripts/bpret.lua`), drei Haltepunkte auf denselben, in JEDEM Bild laufenden Code
+(Pad-Aufbereiter `FUN_80030444` @0x80030444):
+
+| Rueckgabewert | Treffer in 5400 Bildern |
+|---|---|
+| `return false` | **1** — danach tot |
+| `return true`  | 2075 |
+| kein `return`  | 2075 |
+
+→ **Im Rueckruf IMMER `return true` (oder gar nichts).** Ein Zaehler, der bei 1 steht, ist bis zum
+Beweis des Gegenteils ein geloeschter Haltepunkt — KEINE Aussage ueber den Programmablauf.
+
+**Rueckwirkend entwertet:** „Raumlader 0x800396fc laeuft nur 1x", „Schreib-Haltepunkt auf das
+Pad-Wort trifft nur 1x", „die Menue-Adressen feuern je einmal, also ist das Menue zu".
+
+### 2. Der Prozess heisst `pcsx-redux.main` — OHNE `.exe`
+
+`pcsx-redux.exe` ist nur ein winziger Starter. `proc.terminate()` und
+`taskkill /IM pcsx-redux.main.exe` treffen den Emulator NICHT. Ueber mehrere Laeufe sammeln sich
+Leichen an (je ~128 KB, direkt beim Start blockiert). Ab einer gewissen Zahl startet **gar nichts**
+mehr, und `-dofile` wird nie ausgefuehrt: kein Lua, keine Ausgabedatei, **keine Fehlermeldung**.
+
+**Erkennen** (nicht raten — ich habe stattdessen stundenlang meinen Lua-Code verdaechtigt):
+```bash
+tasklist //NH | grep -i pcsx        # mehrere pcsx-redux.main = Leichen
+powershell -NoProfile -Command "Get-Process | ? {\$_.Name -like '*pcsx*'} | Select Name,Id,MainWindowTitle"
+# MainWindowTitle == "Error"  ->  der Emulator haengt in einem Fehlerdialog
+```
+**Beheben:** `taskkill //IM pcsx-redux.main //F`, und wenn es dann immer noch nicht startet, die
+Konfiguration zuruecksetzen:
+```bash
+P=/c/Users/mjoedicke/AppData/Roaming/pcsx-redux
+cp "$P/pcsx.json" "$P/pcsx.json.bak"; rm -f "$P/pcsx.json"     # danach lief es sofort wieder
+```
+Anschliessend `emulator.ShownAutoUpdateConfig = true` setzen, sonst blockiert der Erst-Start-Dialog
+„Update configuration". Eine funktionierende Kopie liegt als `tools/redux/pcsx.json.good`.
+
+### Stille Lua-Ladefehler ueberhaupt sichtbar machen
+
+`-stdout` hilft nicht (GUI-Anwendung, die Umleitung bleibt 0 Byte). Stattdessen
+`scripts/luacheck.lua`: ein nachweislich ladbares Skript ruft `loadfile()` auf den Kandidaten —
+kompiliert nur, fuehrt nichts aus — und schreibt die Fehlermeldung mit Zeilennummer in eine Datei.
+Dauert Sekunden statt eines 6-Minuten-Laufs pro Halbierungsschritt.
+⚠️ Erst NACHDEM Falle 2 ausgeschlossen ist: laeuft der Emulator nicht, schweigt auch luacheck.
+
 ## Voraussetzungen (auf dieser Maschine)
 - **PCSX-Redux**: `winget install -e --id GrumpyCoders.PCSX-Redux --accept-package-agreements --accept-source-agreements`
   → `%LOCALAPPDATA%\Microsoft\WinGet\Packages\GrumpyCoders.PCSX-Redux_*\pcsx-redux.exe`.
@@ -228,19 +281,68 @@ UND im remappten `0x800AC760`.
 Deshalb TAKTEN: 8 Bilder druecken, 24 loslassen, und `setOverride`/`clearOverride` **in jedem
 Bild** aufrufen (nur beim Zustandswechsel gesetzt wirkt gar nicht — das war ein Fehlversuch).
 
-**Wirkung des Taktens, gemessen:**
+⚠️ Die daraus zuerst gezogene Folgerung („mit Takten laeuft das Menue tiefer, 6 statt 2 Adressen")
+war **falsch** — das waren geloeschte Haltepunkte (Falle 1 oben). Nichts davon belegt einen
+Menue-Durchlauf.
 
-| Eingabe | Adressen im Menue-Bereich, die feuern |
+### Die vier Pad-Woerter — disassembliert statt geraten (`FUN_80030444`)
+
+```c
+DAT_800ac75c = _DAT_800ac758;                 /* vorheriges ROHES held sichern       */
+_DAT_800ac758 = PadRead(0);                   /* 0x800AC758 = ROHES held (physisch)  */
+DAT_800ac770 = DAT_800ac768;                  /* vorheriges VIRTUELLES held          */
+DAT_800ac768 = 0;
+uVar4 = 0xf;
+do { uVar3 = uVar4 & 0xff;                    /* 16 virtuelle Funktionen 0..15       */
+     if ((*(ushort *)((&PTR_DAT_80073e1c)[DAT_800b0fcc] + uVar3*2) & _DAT_800ac758) != 0)
+         DAT_800ac768 = 1 << (uVar4 & 0x1f) | DAT_800ac768;
+     uVar4 = uVar4 - 1; } while (uVar3 != 0);
+DAT_800ac75c = (DAT_800ac75c ^ _DAT_800ac758) & _DAT_800ac758;   /* ROHE Flanke      */
+DAT_800ac760 = DAT_800ac758;                                     /* Kopie rohes held */
+DAT_800ac76c = (DAT_800ac770 ^ DAT_800ac768) & DAT_800ac768;     /* VIRT. Flanke     */
+DAT_800ac762 = (undefined2)DAT_800ac75c;                         /* rohe Flanke, low */
+```
+
+| Adresse | Inhalt |
 |---|---|
-| Dauerdruck | 2 (`0x80014444`, `0x80014cb0`) |
-| getaktet | **6** (`0x80014444`, `0x80014500`, `0x800145f4`, `0x80014698`, `0x80014b10`, `0x80014cb0`) |
+| `0x800AC758` | **rohes** held (physische Tasten, direkt aus `PadRead`) |
+| `0x800AC75C` | **rohe Flanke**; low half = `0x800AC762`, high half = `0x800AC766` |
+| `0x800AC760` | Kopie des rohen held; high half = `0x800AC764` |
+| `0x800AC768` | **virtuelles** held — Bit *i* nur, wenn die Belegungstabelle `PTR_DAT_80073e1c[cfg]` Funktion *i* auf eine gedrueckte Taste legt |
+| `0x800AC76C` | **virtuelle** Flanke |
 
-Das Menue laeuft mit Takten also deutlich tiefer — `0x800145f4` ist die Hoch-Taste,
-`0x80014698` die JUMP-Zeile, `0x80014b10` die Textausgabe.
+⚠️ **SELECT steht konstruktionsbedingt NIE in `0x800AC768`/`0x800AC76C`** — es ist keine belegbare
+Spielfunktion. Gemessen ueber 18000 Bilder: Bit 0x100 in roh/remap in 2383 Bildern, in held/Flanke
+**null Mal** (ODER ueber alle Bilder = `0x8211`). Das ist kein Fehler, sondern das Design.
+Wer auf SELECT prueft, liest die **rohe Flanke**.
 
-**Weiterhin offen:** jede Adresse feuert genau EINMAL und danach nie wieder. Das Menue macht
-also einen einzigen Durchlauf. Zu pruefen: (a) ob es sofort wieder verlassen wird — Austritt ist
-Pad-Bit `0x40` @0x8001466C, das im remappten Wort evtl. mitgesetzt ist; (b) ob die FLANKE fuer
-SELECT ueberhaupt je gesetzt wird (`edge` blieb in allen Messungen 0 — moeglicherweise filtert
-der Remap SELECT aus dem Flankenwort heraus, dann muss man `0x800AC76C` per Haltepunkt selbst
-setzen).
+Rohe Pad-Bits (libetc): `L2 0x0001 R2 0x0002 L1 0x0004 R1 0x0008 DREIECK 0x0010 KREIS 0x0020
+KREUZ 0x0040 QUADRAT 0x0080 SELECT 0x0100 L3 0x0200 R3 0x0400 START 0x0800 HOCH 0x1000
+RECHTS 0x2000 RUNTER 0x4000 LINKS 0x8000`.
+
+### Das Debug-Menue: `FUN_8001443c` (NICHT 0x80014444)
+
+```
+8001443c  lui   v0,0x800b
+80014440  lhu   v0,-0x389e(v0)  => DAT_800ac762     ; ROHE Flanke, low halfword
+80014444  addiu sp,sp,-0x18                         ; <- Prolog, laeuft bei JEDEM Aufruf
+8001444c  andi  v0,v0,0x100                         ; SELECT
+80014450  beq   v0,zero,LAB_8001452c                ; nicht gedrueckt -> raus
+8001445c  addiu v1,v1,-0x41a4                       ; v1 = 0x800bbe5c
+80014460  lbu   v0,0x0(v1)      => DAT_800bbe5c     ; OFFEN-Kennung
+80014468  bne   v0,zero,LAB_80014524                ; schon offen -> anderer Zweig
+80014480  xori  v0,v0,0x1                           ; TOGGLE 0<->1
+80014488  _sb   v0,0x0(v1)      => DAT_800bbe5c
+```
+
+→ **`DAT_800bbe5c` (0x800BBE5C) ist die Offen-Kennung.** Sie einfach jedes Bild zu LESEN ist ein
+direkter, eindeutiger Nachweis „Menue offen ja/nein" — viel besser als Ausfuehrungs-Haltepunkte
+(die genau hier zur Fehlinterpretation gefuehrt haben).
+
+Weiter im Menue (`RE_15_Quellcode_V2/FUN_8001443c.c`):
+- `DAT_800bbe5d` = Auswahlzeile: HOCH `0x1000` runter, RUNTER `0x4000` hoch (max 2), gelesen aus
+  `DAT_800ac760` (rohes held), gegated auf `DAT_800aca38 < 0` (Auto-Wiederholung).
+- `DAT_800bbe5e` = Stage, `(&DAT_800bbe5f)[stage]` = Raumindex; RECHTS `0x2000` zaehlt hoch und
+  **ueberspringt Leereintraege** anhand der Namenstabelle `&DAT_800c263a`
+  (**13 Byte je Eintrag, 0x27d = 637 je Stage = 49 Eintraege**, Index max 0x30).
+- `if ((DAT_800ac762 & 0x40) == 0)` @Zeile 36 — KREUZ (rohe Flanke) ist hier die Bestaetigung.

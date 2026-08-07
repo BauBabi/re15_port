@@ -39,7 +39,7 @@ function DrawImguiFrame()
       pcall(function()
         _G.__bps[i] = PCSX.addBreakpoint(ADRS[i], 'Exec', 4, 'a' .. i, function()
           n[i] = n[i] + 1
-          return false
+          return true   -- MESSUNG: false LOESCHT den Haltepunkt (1 Treffer, dann tot)
         end)
       end)
     end

@@ -1,0 +1,37 @@
+Pad-Fluss + Menue-Durchlaeufe (jedes Bild akkumuliert)
+
+B3000  Spieler (0,0)
+  roh oder=0000 n0x100=0 | remap oder=0000 n0x100=0 | held oder=0000 n0x100=0 | flanke oder=0000 n0x100=0
+
+B6000  Spieler (0,0)
+  roh oder=0000 n0x100=0 | remap oder=0000 n0x100=0 | held oder=0000 n0x100=0 | flanke oder=0000 n0x100=0
+SPIELER ab Bild 8889 — ab jetzt SELECT getaktet
+
+B9000  Spieler (3940,14167)
+  roh oder=1140 n0x100=60 | remap oder=1140 n0x100=60 | held oder=8211 n0x100=0 | flanke oder=8211 n0x100=0
+
+B12000  Spieler (-26214,-3861)
+  roh oder=1140 n0x100=923 | remap oder=1140 n0x100=923 | held oder=8211 n0x100=0 | flanke oder=8211 n0x100=0
+  80014444  n=1     erst=9286   letzt=9286  
+  80014500  n=1     erst=9561   letzt=9561  
+  80014698  n=1     erst=9561   letzt=9561  
+  80014b10  n=1     erst=9561   letzt=9561  
+  80014cb0  n=1     erst=9286   letzt=9286  
+
+B15000  Spieler (-31000,31000)
+  roh oder=1140 n0x100=1643 | remap oder=1140 n0x100=1643 | held oder=8211 n0x100=0 | flanke oder=8211 n0x100=0
+  80014444  n=1     erst=9286   letzt=9286  
+  80014500  n=1     erst=9561   letzt=9561  
+  80014698  n=1     erst=9561   letzt=9561  
+  80014b10  n=1     erst=9561   letzt=9561  
+  80014cb0  n=1     erst=9286   letzt=9286  
+
+B18000  Spieler (2664,-7336)
+  roh oder=1140 n0x100=2383 | remap oder=1140 n0x100=2383 | held oder=8211 n0x100=0 | flanke oder=8211 n0x100=0
+  80014444  n=1     erst=9286   letzt=9286  
+  80014500  n=1     erst=9561   letzt=9561  
+  80014698  n=1     erst=9561   letzt=9561  
+  80014b10  n=1     erst=9561   letzt=9561  
+  80014cb0  n=1     erst=9286   letzt=9286  
+
+fertig

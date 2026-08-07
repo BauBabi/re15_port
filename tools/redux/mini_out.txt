@@ -1,0 +1,5 @@
+A: Datei offen, Bild 30
+B: loadfile = function: builtin#23
+C: pcall=true chunk=function: 0x02c585a5bf38
+D: fehler=nil
+fertig
