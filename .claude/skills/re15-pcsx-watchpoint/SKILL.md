@@ -217,3 +217,30 @@ Immer genau **ein** Aufruf von `0x80014444` — und der kommt schon vor dem erst
    die Menueschleife eine ANDERE Funktion, und 0x80014444 wird nur einmal zum Aufbau gerufen.
    Gegenprobe: Exec-Haltepunkte auf mehrere Adressen im Bereich 0x80014444-0x80014cb0 legen und
    sehen, welche pro Bild zaehlt.
+
+### Pad-Eingabe: gemessen, was ankommt (`menu_probe.lua`)
+
+**H1 beantwortet — die Uebersteuerung KOMMT AN.** Bei dauerhaft gehaltenem SELECT:
+`roh=0100 remap=0100 held=0000 edge=0000`. Bit 0x100 = SELECT steht also im Rohwort `0x800AC758`
+UND im remappten `0x800AC760`.
+
+⚠ **Die FLANKE `0x800AC76C` bleibt bei Dauerdruck 0** — Menues reagieren aber auf die Flanke.
+Deshalb TAKTEN: 8 Bilder druecken, 24 loslassen, und `setOverride`/`clearOverride` **in jedem
+Bild** aufrufen (nur beim Zustandswechsel gesetzt wirkt gar nicht — das war ein Fehlversuch).
+
+**Wirkung des Taktens, gemessen:**
+
+| Eingabe | Adressen im Menue-Bereich, die feuern |
+|---|---|
+| Dauerdruck | 2 (`0x80014444`, `0x80014cb0`) |
+| getaktet | **6** (`0x80014444`, `0x80014500`, `0x800145f4`, `0x80014698`, `0x80014b10`, `0x80014cb0`) |
+
+Das Menue laeuft mit Takten also deutlich tiefer — `0x800145f4` ist die Hoch-Taste,
+`0x80014698` die JUMP-Zeile, `0x80014b10` die Textausgabe.
+
+**Weiterhin offen:** jede Adresse feuert genau EINMAL und danach nie wieder. Das Menue macht
+also einen einzigen Durchlauf. Zu pruefen: (a) ob es sofort wieder verlassen wird — Austritt ist
+Pad-Bit `0x40` @0x8001466C, das im remappten Wort evtl. mitgesetzt ist; (b) ob die FLANKE fuer
+SELECT ueberhaupt je gesetzt wird (`edge` blieb in allen Messungen 0 — moeglicherweise filtert
+der Remap SELECT aus dem Flankenwort heraus, dann muss man `0x800AC76C` per Haltepunkt selbst
+setzen).

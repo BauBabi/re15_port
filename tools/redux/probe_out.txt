@@ -1,0 +1,35 @@
+Menue-Sonde: Pad-Ankunft + welche Adresse pro Bild laeuft
+11 Haltepunkte gesetzt
+B  600 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler (0,0) | (keine)
+B 1200 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler (0,0) | (keine)
+B 1800 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler (0,0) | (keine)
+B 2400 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler (0,0) | (keine)
+B 3000 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler (0,0) | (keine)
+B 3600 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler (0,0) | (keine)
+B 4200 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler (0,0) | (keine)
+B 4800 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler (0,0) | (keine)
+B 5400 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler (0,0) | (keine)
+B 6000 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler (0,0) | (keine)
+B 6600 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler (0,0) | (keine)
+B 7200 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler (0,0) | (keine)
+B 7800 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler (0,0) | (keine)
+B 8400 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler (0,0) | (keine)
+SPIELER ab Bild 8891 — ab jetzt SELECT dauerhaft
+B 9000 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler (3940,14167) | (keine)
+B 9600 | roh=0100 remap=0100 held=0000 edge=0000 | Spieler (-26214,-3861) | 80014444:1 80014500:1 80014698:1 80014b10:1 80014cb0:1
+B10200 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler (-26214,-3861) | 80014444:1 80014500:1 800145f4:1 80014698:1 80014b10:1 80014cb0:1
+B10800 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler (-26214,-3861) | 80014444:1 80014500:1 800145f4:1 80014698:1 80014b10:1 80014cb0:1
+B11400 | roh=1000 remap=1000 held=0000 edge=0000 | Spieler (-26214,-3861) | 80014444:1 80014500:1 800145f4:1 80014698:1 80014b10:1 80014cb0:1
+B12000 | roh=0100 remap=0100 held=0000 edge=0000 | Spieler (-26214,-3861) | 80014444:1 80014500:1 800145f4:1 80014698:1 80014b10:1 80014cb0:1
+B12600 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler (-26214,-3861) | 80014444:1 80014500:1 800145f4:1 80014698:1 80014b10:1 80014cb0:1
+B13200 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler (-26214,-3861) | 80014444:1 80014500:1 800145f4:1 80014698:1 80014b10:1 80014cb0:1
+B13800 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler (2300,14365) | 80014444:1 80014500:1 800145f4:1 80014698:1 80014b10:1 80014cb0:1
+B14400 | roh=0100 remap=0100 held=0000 edge=0000 | Spieler (-31000,31000) | 80014444:1 80014500:1 800145f4:1 80014698:1 80014b10:1 80014cb0:1
+B15000 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler (-31000,31000) | 80014444:1 80014500:1 800145f4:1 80014698:1 80014b10:1 80014cb0:1
+B15600 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler (2300,14365) | 80014444:1 80014500:1 800145f4:1 80014698:1 80014b10:1 80014cb0:1
+B16200 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler (2664,-7336) | 80014444:1 80014500:1 800145f4:1 80014698:1 80014b10:1 80014cb0:1
+B16800 | roh=0100 remap=0100 held=0000 edge=0000 | Spieler (2664,-7336) | 80014444:1 80014500:1 800145f4:1 80014698:1 80014b10:1 80014cb0:1
+B17400 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler (2664,-7336) | 80014444:1 80014500:1 800145f4:1 80014698:1 80014b10:1 80014cb0:1
+B18000 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler (2664,-8030) | 80014444:1 80014500:1 800145f4:1 80014698:1 80014b10:1 80014cb0:1
+
+fertig
