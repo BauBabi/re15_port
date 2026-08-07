@@ -114,3 +114,43 @@ Raum über ihren eigenen Lader. Dafür muss das Datensatz-Layout aus `op_door_ao
 ### Schnellster Weg insgesamt
 Ein **PCSX-Redux-eigener Savestate** in ROOM1030. Den kann Lua direkt laden
 (`PCSX.loadSaveState(obj)`, Datei über `Support.File`), und ab da läuft die Messung vollautomatisch.
+
+## DER SCHLÜSSEL: so springt das Original in einen Raum (byte-true, selbst disassembliert)
+
+Der Debug-JUMP baut **keinen** Tür-Datensatz — er setzt drei Werte und überlässt den Rest dem
+normalen Raumlader:
+
+```
+@0x80014a44/48   sb 1     -> 0x800b5359    Modus 1 = Raumwechsel
+@0x80014a4c/50   sw zero  -> 0x800ac9a8    Datensatz-Zeiger = NULL
+@0x80014a54/58   sb zero  -> 0x800bbe5c
+```
+
+Das Ziel steht in den Raum-Globals, die der JUMP-Ausführer direkt beschreibt:
+
+| Adresse | Bedeutung |
+|---|---|
+| `0x800B0FE6` | Stage |
+| `0x800B0FE2` | Index |
+
+**Raumnummer = `(stage+1) << 8 | idx`** — Port-Raum-ID ist dieser Wert × 16.
+Beleg: BRIEFING ROOM = Index 0x14 → 0x114 → Port-ROOM1140.
+Damit ist **ROOM1030 = Stage 0, Index 0x03**.
+
+Der Zugriff `lw 0x800ac9a8` @0x8001d874 dereferenziert den Zeiger anschließend (`lh 0(a0)` für die
+Spielerposition) — bei NULL wird also von Adresse 0 gelesen. Ob der Lader das vorher abfängt, ist
+noch **nicht** geklärt; das ist die erste Frage beim nächsten Versuch.
+
+## Offen: jump_1030.lua lädt noch nicht
+
+Das Skript erzeugt **keine** Ausgabe — nicht einmal die Zeile, die es beim ersten Frame-Aufruf
+schreiben soll. Da `probe_boot.lua` mit identischem Aufruf einwandfrei läuft, liegt es am Inhalt,
+nicht am Pfad (beide Ablageorte getestet) und nicht am Startbefehl. `DrawImguiFrame` wird also gar
+nicht definiert ⇒ Ladefehler im Skript.
+
+Bereits ausgeschlossen: fehlendes BOM, Ablageort, `io`-Zugriff auf oberster Ebene (wurde in den
+Frame-Aufruf verlegt — half nicht).
+
+**Nächster Schritt:** von `probe_boot.lua` ausgehend in kleinen Schritten erweitern, bis die
+Ausgabe abbricht — dann ist die fehlerhafte Zeile eingekreist. Ein Lua-Ladefehler geht hier
+kommentarlos verloren (kein Eintrag in stdout), deshalb ist Bisektion der einzige verlässliche Weg.
