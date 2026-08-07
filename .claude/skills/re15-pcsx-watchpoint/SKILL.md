@@ -60,6 +60,65 @@ _G.__keep = bp   -- MUSS am Leben gehalten werden (GC entfernt sonst den Breakpo
 5. **Adresse→RAM-Offset**: `addr & 0x1fffff` (KSEG0/KUSEG-Mirror), nicht `addr`.
 6. Statik ist trotzdem ZUERST dran (billiger): erst alle Stores/Base-Tracking scannen; den Watchpoint nur, wenn statisch nichts (indirekt/DMA).
 
+## In einen BELIEBIGEN Raum springen (2026-08-07 erarbeitet, funktioniert)
+
+Damit ist jede dynamische Frage messbar, nicht nur Watchpoints. `drive_to_room.py` + `room_jump.lua`
+fahren das Spiel autonom bis ins Debug-Menue und springen von dort in einen Raum.
+
+### Die zwei Dinge, an denen ich stundenlang gescheitert bin
+
+1. **SELECT oeffnet das Debug-Menue NUR im INTRO, nach der Spielerauswahl.** Vorher gedrueckt
+   stoert es die Auswahl — der Spieler entsteht dann gar nicht. Also: warten, bis der Spieler
+   existiert (Position != 0,0), DANN SELECT.
+2. **„Neues Spiel" muss WIEDERHOLT werden**, nicht einmal gedrueckt. Die Zeitpunkte sind nicht
+   verlaesslich; `pcsx_drive.py` macht es alle ~18 s genauso. Einmaliges Druecken schlaegt oft fehl
+   und man wartet dann ewig auf einen Spieler, der nie kommt.
+
+### Nachweis statt Vermutung
+Ein **Exec-Haltepunkt auf `0x80014444`** (die Menuefunktion) beweist, dass das Menue offen ist.
+Ohne den raet man — die Menue-Bytes zeigen sonst nur die eigenen Schreibwerte zurueck.
+
+### Menue-Zustand (aus debug_menu_common.c, alle @0x-belegt)
+| Adresse | Bedeutung |
+|---|---|
+| `0x800BBE5D` | Auswahlzeile (1 = JUMP) |
+| `0x800BBE5E` | Stage |
+| `0x800BBE5F + stage` | Raumindex je Stage |
+| Halbwort `0x800AC762`, Bit `0x80` | Bestaetigen (`lhu` @0x80014a30, `andi 0x80` @0x80014a38) |
+
+**Raumnummer = `(stage+1) << 8 | idx`**, Port-Raum-ID = dieser Wert x 16.
+Beleg: BRIEFING ROOM = Index 0x14 -> 0x114 -> Port-ROOM1140. Liste: `re15_port/include/debug_jump_table.h`.
+
+Der JUMP baut KEINEN Tuer-Datensatz: `sb 1 -> 0x800b5359` (Modus 1 = Raumwechsel) @0x80014a44/48,
+`sw zero -> 0x800ac9a8` (Datensatz-Zeiger NULL) @0x80014a4c/50. Stage/Index wandern nach
+`0x800B0FE6` / `0x800B0FE2` (@0x8001D644 / @0x8001D660).
+
+### Weitere Fallen (jede kostete einen Fehlversuch)
+7. **Der Frame-Haken heisst `function DrawImguiFrame()`** — `PCSX.nextTick()` feuert NICHT
+   (haengt an AfterPollingCleanup).
+8. **Pad-Woerter aus `DrawImguiFrame` zu schreiben kommt ZU SPAET** — das Spiel ueberschreibt sie
+   jedes Bild vor der Nutzung. Immer per Schreib-Haltepunkt auf `0x800AC76C` einspeisen (das
+   letzte der vier Woerter, die FUN_80030444 schreibt).
+9. **`-no-ui` stuerzt ab** (Segfault). Braucht man nicht — Lua treibt alles, das Fenster darf
+   offen stehen und muss KEINEN Fokus haben.
+10. **Ein Lua-Ladefehler geht VOELLIG STILL verloren** — kein stdout, keine Datei, nichts. Bei
+    „keine Ausgabe" nicht am Aufruf zweifeln, sondern das Skript bisektieren.
+11. **`PCSX.GPU.takeScreenShot()`**: width/height/bpp sind CDATA -> `tonumber()`; `data.size` ist
+    ein Feld, keine Methode.
+12. **Kein `io`-Zugriff auf oberster Ebene** — Datei erst im Frame-Aufruf oeffnen.
+
+### Entity-Tabelle im RAM (zum Mitschreiben)
+Spieler `0x800aca54`; Gegner ab `0x800acc2c`, Schrittweite `0x1F4`
+(`s0 = 0x800acc2c + slot*0x1F4` @0x800420f8-118). Felder: `+0x4/5/6` Zustandsbytes,
+`+0x8` Typ, `+0x9` grid, `+0x34/0x38/0x3c` Position, `+0x94` Clip, `+0x95` Clip-Bild.
+Belegt heisst: Wort `+0x0` ohne Bit 0x8000.
+
+### Werkzeuge
+- `drive_to_room.py` — bootet, wiederholt „Neues Spiel" bis der Spieler da ist, drueckt dann
+  SELECT bis das Menue nachweislich offen ist.
+- `room_jump.lua` — erkennt das Menue per Exec-Haltepunkt, traegt Stage/Index ein, bestaetigt per
+  Pad-Haltepunkt und protokolliert danach die Entity-Tabelle Bild fuer Bild.
+
 ## Werkzeuge (`scripts/`)
 - `watch_addr.lua` — der Watchpoint (env: `PCSX_WATCH_ADDR`/`_LOG`/`_BITMASK`).
 - `pcsx_drive.py` — vgamepad + PCSX-Redux-Start + New-Game-Navigation + Log-Überwachung.

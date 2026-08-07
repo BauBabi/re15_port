@@ -1,0 +1,79 @@
+ROOM1030 ueber das Debug-Menue (mit Nachweis)
+Haltepunkte: Menue=true Pad=true
+Bild   600 | Menue-Aufrufe     0 | Spieler=(0,0) | Modus 0 | Gegner 0
+Bild  1200 | Menue-Aufrufe     0 | Spieler=(0,0) | Modus 0 | Gegner 0
+Bild  1800 | Menue-Aufrufe     0 | Spieler=(0,0) | Modus 0 | Gegner 0
+Bild  2400 | Menue-Aufrufe     0 | Spieler=(0,0) | Modus 0 | Gegner 0
+Bild  3000 | Menue-Aufrufe     0 | Spieler=(0,0) | Modus 0 | Gegner 0
+Bild  3600 | Menue-Aufrufe     0 | Spieler=(0,0) | Modus 0 | Gegner 0
+Bild  4200 | Menue-Aufrufe     0 | Spieler=(0,0) | Modus 0 | Gegner 0
+Bild  4800 | Menue-Aufrufe     0 | Spieler=(0,0) | Modus 0 | Gegner 0
+Bild  5400 | Menue-Aufrufe     0 | Spieler=(0,0) | Modus 0 | Gegner 0
+Bild  6000 | Menue-Aufrufe     0 | Spieler=(0,0) | Modus 0 | Gegner 0
+Bild  6600 | Menue-Aufrufe     0 | Spieler=(0,0) | Modus 0 | Gegner 0
+Bild  7200 | Menue-Aufrufe     0 | Spieler=(0,0) | Modus 0 | Gegner 0
+Bild  7800 | Menue-Aufrufe     0 | Spieler=(0,0) | Modus 0 | Gegner 0
+Bild  8400 | Menue-Aufrufe     0 | Spieler=(0,0) | Modus 0 | Gegner 0
+
+SPIELER existiert ab Bild 8709: (3940,14167) — jetzt darf SELECT kommen
+Bild  9000 | Menue-Aufrufe     0 | Spieler=(3940,14167) | Modus 0 | Gegner 0
+MENUE offen ab Bild 9107 (1 Aufrufe)
+Bild  9600 | Menue-Aufrufe     1 | Spieler=(-26214,-3861) | Modus 0 | Gegner 0
+
+== Bild 9806  Spieler=(-26214,-3861) Modus=0 Gegner=0 ==
+
+== Bild 10106  Spieler=(-26214,-3861) Modus=0 Gegner=0 ==
+Bild 10200 | Menue-Aufrufe     1 | Spieler=(-26214,-3861) | Modus 0 | Gegner 0
+
+== Bild 10406  Spieler=(-26214,-3861) Modus=0 Gegner=0 ==
+
+== Bild 10706  Spieler=(-26214,-3861) Modus=0 Gegner=0 ==
+Bild 10800 | Menue-Aufrufe     1 | Spieler=(-26214,-3861) | Modus 0 | Gegner 0
+
+== Bild 11006  Spieler=(-26214,-3861) Modus=0 Gegner=0 ==
+
+== Bild 11306  Spieler=(-26214,-3861) Modus=0 Gegner=0 ==
+Bild 11400 | Menue-Aufrufe     1 | Spieler=(-26214,-3861) | Modus 0 | Gegner 0
+
+== Bild 11606  Spieler=(-26214,-3861) Modus=0 Gegner=0 ==
+
+== Bild 11906  Spieler=(-26214,-3861) Modus=0 Gegner=0 ==
+Bild 12000 | Menue-Aufrufe     1 | Spieler=(-26214,-3861) | Modus 0 | Gegner 0
+
+== Bild 12206  Spieler=(-26214,-3861) Modus=0 Gegner=0 ==
+
+== Bild 12506  Spieler=(-26214,-3861) Modus=1 Gegner=0 ==
+Bild 12600 | Menue-Aufrufe     1 | Spieler=(-26214,-3861) | Modus 0 | Gegner 0
+
+== Bild 12806  Spieler=(-26214,-3861) Modus=0 Gegner=0 ==
+
+== Bild 13106  Spieler=(-26214,-3861) Modus=0 Gegner=0 ==
+Bild 13200 | Menue-Aufrufe     1 | Spieler=(-26214,-3861) | Modus 0 | Gegner 0
+
+== Bild 13406  Spieler=(-26214,-3861) Modus=0 Gegner=0 ==
+
+== Bild 13706  Spieler=(-31000,31000) Modus=0 Gegner=1 ==
+   Slot  0 Typ 47 grid 40  4/5/2  Clip 00 Bild 01  (-1655,6513)
+Bild 13800 | Menue-Aufrufe     1 | Spieler=(-31000,31000) | Modus 0 | Gegner 1
+
+== Bild 14006  Spieler=(-31000,31000) Modus=0 Gegner=1 ==
+   Slot  0 Typ 47 grid 40  4/0/2  Clip 0f Bild 00  (-2196,5870)
+
+== Bild 14306  Spieler=(-31000,31000) Modus=0 Gegner=1 ==
+   Slot  0 Typ 47 grid 40  4/0/2  Clip 14 Bild 00  (-2196,5870)
+Bild 14400 | Menue-Aufrufe     1 | Spieler=(-31000,31000) | Modus 0 | Gegner 1
+
+== Bild 14606  Spieler=(-31000,31000) Modus=0 Gegner=1 ==
+   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-2196,5870)
+
+== Bild 14906  Spieler=(-31000,31000) Modus=0 Gegner=1 ==
+   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+Bild 15000 | Menue-Aufrufe     1 | Spieler=(-31000,31000) | Modus 0 | Gegner 1
+
+== Bild 15206  Spieler=(-31000,31000) Modus=0 Gegner=1 ==
+   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+
+== Bild 15506  Spieler=(2369,9765) Modus=0 Gegner=1 ==
+   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+
+fertig

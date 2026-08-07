@@ -45,7 +45,7 @@ function DrawImguiFrame()
     end)
   end
 
-  if frames % 500 ~= 0 then return end
+  if frames % 2000 ~= 0 then return end
 
   local ok, err = pcall(function()
     local m = PCSX.getMemPtr()
@@ -65,7 +65,7 @@ function DrawImguiFrame()
       out:close()
       fertig = true
       PCSX.quit(0)
-    elseif frames >= 20000 then
+    elseif frames >= 200000 then
       out:write("\nnach 20000 Bildern noch nicht interaktiv\n")
       out:close()
       fertig = true
