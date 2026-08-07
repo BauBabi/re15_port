@@ -154,3 +154,37 @@ Frame-Aufruf verlegt — half nicht).
 **Nächster Schritt:** von `probe_boot.lua` ausgehend in kleinen Schritten erweitern, bis die
 Ausgabe abbricht — dann ist die fehlerhafte Zeile eingekreist. Ein Lua-Ladefehler geht hier
 kommentarlos verloren (kein Eintrag in stdout), deshalb ist Bisektion der einzige verlässliche Weg.
+
+## Gelöst: der stille Lua-Ladefehler
+
+`jump_1030.lua` erzeugte kommentarlos keine Ausgabe. Per Bisektion eingekreist
+(`bisect_a.lua` = Helfer + Lesezugriffe, `bisect_b.lua` = zusätzlich Zustandsausgabe und ein
+Schreibzugriff — **beide laufen**). Der Fehler lag in der Ablaufsteuerung der alten Fassung
+(Phasen-Variable); die neue Fassung ist aus `bisect_b.lua` aufgebaut und läuft.
+
+**Merksatz:** Ein Lua-Ladefehler geht hier *völlig still* verloren — kein Eintrag in stdout, keine
+Datei, nichts. Bei „keine Ausgabe" also nicht am Aufruf zweifeln, sondern bisektieren.
+
+Bestätigt außerdem: Lesen **und Schreiben** über `PCSX.getMemPtr()` funktioniert (`m[o] = v`).
+
+## Nächste Hürde: der Sprung braucht Spielbetrieb
+
+Erster Lauf des Sprungs bei Bild 900:
+
+```
+VOR:   Stage=0 Index=0x00   Modus=0   Spieler=(0,0,0)   aktive Gegner: 0
+       -> Ziel gesetzt, Modus 1 ausgelöst
+NACH:  Stage=0 Index=0x00   Modus=1   Spieler=(0,0,0)   aktive Gegner: 0
+```
+
+Spieler auf (0,0,0) und null Gegner heißt: Das Spiel steht noch im **Titel/Vorspann**. Der
+Modus-1-Handler läuft dort nicht — mein Wert 1 steht unverbraucht noch im Byte, und die
+Raum-Globals wurden zurückgesetzt.
+
+**Nächster Schritt:** erst per Pad-Schreibzugriff ins Spiel (NEU SPIEL bestätigen), dann springen.
+Kandidaten für das Pad-Wort: `0x800AC758` (roh, wird von `FUN_80030444` gelesen), daraus
+`0x800AC760` (remappt, vom Debug-Menü gelesen) sowie `0x800AC768` (gehalten) / `0x800AC76C`
+(Flanke). Der Titelbildschirm nimmt laut Portwissen jeden Face-Button (Maske 0x8f0 @0x80102c14).
+Offen ist, ob `DrawImguiFrame` vor oder nach dem Pad-Einlesen des Spiels läuft — deshalb im ersten
+Versuch alle vier Wörter über mehrere Bilder hinweg setzen und am Spielerzustand ablesen, ob es
+gegriffen hat.

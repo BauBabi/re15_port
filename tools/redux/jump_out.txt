@@ -1,0 +1,17 @@
+ROOM1030-Sprung
+
+== VOR dem Sprung (Bild 900) ==
+  Stage=0 Index=0x00 -> Raum 0x100
+  Modus 0x800b5359=0  Datensatz 0x800ac9a8=00000000
+  Spieler=(0,0,0)
+  aktive Gegner: 0
+
+  -> Ziel gesetzt, Modus 1 ausgeloest
+
+== NACH dem Sprung (Bild 1600) ==
+  Stage=0 Index=0x00 -> Raum 0x100
+  Modus 0x800b5359=1  Datensatz 0x800ac9a8=00000000
+  Spieler=(0,0,0)
+  aktive Gegner: 0
+
+fertig

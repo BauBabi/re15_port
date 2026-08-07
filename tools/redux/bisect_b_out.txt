@@ -1,0 +1,8 @@
+Schnitt B laeuft
+
+== Zustand (Bild 900) ==
+  Stage=0 Index=0x00 -> Raum 0x100
+  Modus 0x800b5359=0  Datensatz 0x800ac9a8=00000000
+  Spieler=(0,0,0)
+  aktive Gegner: 0
+Schreibzugriff ok

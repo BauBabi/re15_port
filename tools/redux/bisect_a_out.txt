@@ -1,0 +1,5 @@
+Schnitt A: Helfer geladen, Frame-Haken laeuft
+u32-Test 0x80010000 = 27bdffe0
+s32-Test Spieler-x = 0
+u16-Test Stage = 0  Index = 0
+u8-Test Modus = 0
