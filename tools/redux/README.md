@@ -188,3 +188,50 @@ Kandidaten für das Pad-Wort: `0x800AC758` (roh, wird von `FUN_80030444` gelesen
 Offen ist, ob `DrawImguiFrame` vor oder nach dem Pad-Einlesen des Spiels läuft — deshalb im ersten
 Versuch alle vier Wörter über mehrere Bilder hinweg setzen und am Spielerzustand ablesen, ob es
 gegriffen hat.
+
+## Gelöst: Pad-Eingabe braucht einen Haltepunkt, keinen Frame-Haken
+
+`pad_drive.lua` zeigt: Schreiben in die Pad-Wörter aus `DrawImguiFrame()` **greift** (die Werte
+stehen drin), kommt aber **zu spät** — das Spiel überschreibt sie jedes Bild, bevor es sie benutzt;
+nach der Treibphase standen sie wieder auf 0.
+
+Richtig ist ein **Schreib-Haltepunkt**:
+`PCSX.addBreakpoint(0x800AC76C, 'Write', 4, 'name', function() ... return false end)`
+— der Rückgabewert `false` lässt den Emulator weiterlaufen. `pad_bp.lua` setzt ihn auf das
+Flanken-Wort, das letzte der vier, die `FUN_80030444` schreibt (@0x8003057c, nach gehalten
+@0x8003051c und remappt @0x80030564).
+
+## ⛔ Aktueller Blocker: das Spiel hängt in einer CD-Wiederholschleife
+
+Der Haltepunkt feuerte im ganzen Lauf **genau einmal** — das Spiel liest also gar kein Pad ein.
+Der Programmzähler verrät warum:
+
+| Bild | pc |
+|---|---|
+| 400 | `80056f98` |
+| 800 | `000000b0` (BIOS-Vektor) |
+| 1200 | `80062130` |
+| 1600 | `80062130` — **unverändert** |
+
+Bei `0x80062130` steht eine Wiederhol-Schleife mit Zähler in der PsyQ-Bibliotheksregion:
+
+```
+8006212c: addiu v1,zero,-1
+80062130: lw    v0,16(sp)
+80062138: addiu v0,v0,-1        ; Zähler herunter
+8006213c: sw    v0,16(sp)
+80062148: bne   v0,v1,0x8006217c ; solange != -1: erneut versuchen
+```
+
+Davor wird `0x800787dc` gelesen und verglichen (@0x80062118-24). Das Spiel versucht also
+wiederholt, von der Disc zu lesen, und scheitert.
+
+**Nicht disc-spezifisch:** Mit dem zweiten Image (`re15_save_final.cue`) hängt es genauso, nur
+einen Schritt weiter in derselben Schleife (`pc = 8006217c`). `-loadiso` und `-iso` verhalten sich
+identisch. Der EXE-Ladevorgang selbst klappt (Code steht ab `0x80010000`) — es scheitern erst die
+späteren Lesezugriffe.
+
+**Nächste Ansätze:** die CD-Einstellungen in `AppData/Roaming/pcsx-redux/pcsx.json` prüfen
+(die Datei stammt aus einer früheren Sitzung und ist möglicherweise ungünstig vorbelegt),
+`-fastboot`/`-no-fastboot` gegeneinander testen, die emulator-eigene Protokollierung einschalten,
+und `0x800787dc` samt Aufrufer der Schleife auswerten, um zu sehen, *welcher* Lesevorgang scheitert.

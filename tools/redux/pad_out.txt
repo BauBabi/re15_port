@@ -1,0 +1,19 @@
+Bild  Phase  Pad-Woerter und Spielzustand
+  300 beob.  pad roh=0000 remap=0000 held=0000 edge=0000 | Spieler=(0,0,0) Gegner=0 Modus=0
+  400 beob.  pad roh=0000 remap=0000 held=0000 edge=0000 | Spieler=(0,0,0) Gegner=0 Modus=0
+  500 beob.  pad roh=0000 remap=0000 held=0000 edge=0000 | Spieler=(0,0,0) Gegner=0 Modus=0
+  600 TREIB  pad roh=08f0 remap=08f0 held=08f0 edge=08f0 | Spieler=(0,0,0) Gegner=0 Modus=0
+  700 TREIB  pad roh=08f0 remap=08f0 held=08f0 edge=08f0 | Spieler=(0,0,0) Gegner=0 Modus=0
+  800 TREIB  pad roh=08f0 remap=08f0 held=08f0 edge=08f0 | Spieler=(0,0,0) Gegner=0 Modus=0
+  900 TREIB  pad roh=08f0 remap=08f0 held=08f0 edge=08f0 | Spieler=(0,0,0) Gegner=0 Modus=0
+ 1000 TREIB  pad roh=08f0 remap=08f0 held=08f0 edge=08f0 | Spieler=(0,0,0) Gegner=0 Modus=0
+ 1100 nach   pad roh=08f0 remap=08f0 held=08f0 edge=08f0 | Spieler=(0,0,0) Gegner=0 Modus=0
+ 1200 nach   pad roh=0000 remap=0000 held=0000 edge=0000 | Spieler=(0,0,0) Gegner=0 Modus=0
+ 1300 nach   pad roh=0000 remap=0000 held=0000 edge=0000 | Spieler=(0,0,0) Gegner=0 Modus=0
+ 1400 nach   pad roh=0000 remap=0000 held=0000 edge=0000 | Spieler=(0,0,0) Gegner=0 Modus=0
+ 1500 nach   pad roh=0000 remap=0000 held=0000 edge=0000 | Spieler=(0,0,0) Gegner=0 Modus=0
+ 1600 nach   pad roh=0000 remap=0000 held=0000 edge=0000 | Spieler=(0,0,0) Gegner=0 Modus=0
+ 1700 nach   pad roh=0000 remap=0000 held=0000 edge=0000 | Spieler=(0,0,0) Gegner=0 Modus=0
+ 1700 ENDE   pad roh=0000 remap=0000 held=0000 edge=0000 | Spieler=(0,0,0) Gegner=0 Modus=0
+
+fertig

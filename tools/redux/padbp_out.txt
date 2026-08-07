@@ -1,0 +1,18 @@
+Bild  Phase  Haltepunkt-Treffer, Pad-Woerter, Spielzustand
+Haltepunkt gesetzt
+  300 beob.  Treffer=0 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler=(0,0,0) Gegner=0 Modus=0
+  450 beob.  Treffer=0 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler=(0,0,0) Gegner=0 Modus=0
+  600 START  Treffer=0 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler=(0,0,0) Gegner=0 Modus=0
+  600 TREIB  Treffer=0 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler=(0,0,0) Gegner=0 Modus=0
+  750 TREIB  Treffer=1 | roh=08f0 remap=08f0 held=08f0 edge=0000 | Spieler=(0,0,0) Gegner=0 Modus=0
+  900 TREIB  Treffer=1 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler=(0,0,0) Gegner=0 Modus=0
+ 1050 TREIB  Treffer=1 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler=(0,0,0) Gegner=0 Modus=0
+ 1200 STOP   Treffer=1 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler=(0,0,0) Gegner=0 Modus=0
+ 1200 beob.  Treffer=1 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler=(0,0,0) Gegner=0 Modus=0
+ 1350 beob.  Treffer=1 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler=(0,0,0) Gegner=0 Modus=0
+ 1500 beob.  Treffer=1 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler=(0,0,0) Gegner=0 Modus=0
+ 1650 beob.  Treffer=1 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler=(0,0,0) Gegner=0 Modus=0
+ 1800 beob.  Treffer=1 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler=(0,0,0) Gegner=0 Modus=0
+ 1900 ENDE   Treffer=1 | roh=0000 remap=0000 held=0000 edge=0000 | Spieler=(0,0,0) Gegner=0 Modus=0
+
+fertig

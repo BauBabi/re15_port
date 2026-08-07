@@ -1,0 +1,17 @@
+
+== Bild 400 ==
+  pc = 80056f98
+FEHLER: C:/workspace/git/reAi_v2/tools/redux/shot.lua:39: attempt to call method 'size' (a number value)
+
+== Bild 800 ==
+  pc = bfc07e7c
+FEHLER: C:/workspace/git/reAi_v2/tools/redux/shot.lua:39: attempt to call method 'size' (a number value)
+
+== Bild 1200 ==
+  pc = 8006217c
+FEHLER: C:/workspace/git/reAi_v2/tools/redux/shot.lua:39: attempt to call method 'size' (a number value)
+
+== Bild 1600 ==
+  pc = 8006217c
+FEHLER: C:/workspace/git/reAi_v2/tools/redux/shot.lua:39: attempt to call method 'size' (a number value)
+fertig
