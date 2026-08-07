@@ -201,37 +201,40 @@ Richtig ist ein **Schreib-Haltepunkt**:
 Flanken-Wort, das letzte der vier, die `FUN_80030444` schreibt (@0x8003057c, nach gehalten
 @0x8003051c und remappt @0x80030564).
 
-## ⛔ Aktueller Blocker: das Spiel hängt in einer CD-Wiederholschleife
+## ⛔ Aktueller Blocker: das Spiel führt Code aus, kommt aber nicht voran
 
-Der Haltepunkt feuerte im ganzen Lauf **genau einmal** — das Spiel liest also gar kein Pad ein.
-Der Programmzähler verrät warum:
+**Wichtig, weil irreführend:** Der Emulator *sieht* aus, als liefe alles — und das Spiel führt
+tatsächlich Code aus. Es macht nur keinen Fortschritt. Zwei Messungen, die zusammen erst das
+richtige Bild ergeben:
 
-| Bild | pc |
-|---|---|
-| 400 | `80056f98` |
-| 800 | `000000b0` (BIOS-Vektor) |
-| 1200 | `80062130` |
-| 1600 | `80062130` — **unverändert** |
+*Lebendigkeitstest* (`alive.lua`, 1800 Bilder): 102 **verschiedene** Programmzähler-Werte. Klingt
+nach normalem Betrieb — stammt aber fast vollständig aus der Boot-Phase bis Bild ~1500.
 
-Bei `0x80062130` steht eine Wiederhol-Schleife mit Zähler in der PsyQ-Bibliotheksregion:
+*Langzeittest* (`wait_title.lua`, 16.500 Bilder): ab Bild 1500 liegt **jede einzelne** der 33
+Stichproben in derselben Zwei-Adressen-Schleife (`0x80062130` / `0x8006217c`), und das
+Pad-Flankenwort wird **null mal** geschrieben. Kein Spieler, Modus bleibt 0.
+
+Das ist eine **Verklemmung**: Die Schleife läuft, erreicht ihr Ziel aber nie.
 
 ```
+80062118: lw   v0,0x800787dc     ; Zustandsvariable
+80062120: slt  v0,v0,a0
+80062124: beq  v0,zero,0x80062194 ; Ausgang
 8006212c: addiu v1,zero,-1
-80062130: lw    v0,16(sp)
-80062138: addiu v0,v0,-1        ; Zähler herunter
-8006213c: sw    v0,16(sp)
-80062148: bne   v0,v1,0x8006217c ; solange != -1: erneut versuchen
+80062130: lw   v0,16(sp)          ; Zähler auf dem Stapel
+80062138: addiu v0,v0,-1
+80062148: bne  v0,v1,0x8006217c   ; Wiederholung
 ```
 
-Davor wird `0x800787dc` gelesen und verglichen (@0x80062118-24). Das Spiel versucht also
-wiederholt, von der Disc zu lesen, und scheitert.
+Eingegrenzt: Die Funktion beginnt bei `0x80062108` und wird nur aus `0x80062050` und `0x80062074`
+gerufen; `0x800787dc` wird ausschließlich von neun Instruktionen zwischen `0x80061ebc` und
+`0x80062180` angefasst — ein geschlossenes Warte-Subsystem im PsyQ-Bibliotheksbereich (CD/libcd).
 
-**Nicht disc-spezifisch:** Mit dem zweiten Image (`re15_save_final.cue`) hängt es genauso, nur
-einen Schritt weiter in derselben Schleife (`pc = 8006217c`). `-loadiso` und `-iso` verhalten sich
-identisch. Der EXE-Ladevorgang selbst klappt (Code steht ab `0x80010000`) — es scheitern erst die
-späteren Lesezugriffe.
+**Nicht das Disc-Image:** Mit `re15_save_final.cue` hängt es genauso, nur einen Schritt weiter in
+derselben Schleife. `-loadiso` und `-iso` verhalten sich identisch. Und **DuckStation spielt beide
+Discs problemlos** — es ist also spezifisch für PCSX-Redux' CD-Emulation bei diesem Spiel.
 
-**Nächste Ansätze:** die CD-Einstellungen in `AppData/Roaming/pcsx-redux/pcsx.json` prüfen
-(die Datei stammt aus einer früheren Sitzung und ist möglicherweise ungünstig vorbelegt),
-`-fastboot`/`-no-fastboot` gegeneinander testen, die emulator-eigene Protokollierung einschalten,
-und `0x800787dc` samt Aufrufer der Schleife auswerten, um zu sehen, *welcher* Lesevorgang scheitert.
+**Nächste Ansätze:** CD-Einstellungen in `AppData/Roaming/pcsx-redux/pcsx.json` prüfen (die Datei
+stammt aus einer früheren Sitzung), `-fastboot` gegen `-no-fastboot`, ein anderes BIOS, und die
+Aufrufer `0x80062050`/`0x80062074` samt `0x800787dc` auswerten, um zu sehen, *welche* Bedingung
+nie eintritt.

@@ -1,0 +1,20 @@
+Lebendigkeitstest
+Bild   300 |  101 Proben,    2 VERSCHIEDENE pc | Pad-Schreibvorgaenge: 0 | pc jetzt 80059dfc | Modus 0
+Bild   600 |  401 Proben,   28 VERSCHIEDENE pc | Pad-Schreibvorgaenge: 0 | pc jetzt 80059dc8 | Modus 0
+Bild   900 |  701 Proben,   56 VERSCHIEDENE pc | Pad-Schreibvorgaenge: 1 | pc jetzt bfc0917c | Modus 0
+Bild  1200 | 1001 Proben,   81 VERSCHIEDENE pc | Pad-Schreibvorgaenge: 1 | pc jetzt 80062130 | Modus 0
+Bild  1500 | 1301 Proben,   85 VERSCHIEDENE pc | Pad-Schreibvorgaenge: 1 | pc jetzt 8006217c | Modus 0
+Bild  1800 | 1601 Proben,  101 VERSCHIEDENE pc | Pad-Schreibvorgaenge: 1 | pc jetzt 80062130 | Modus 0
+
+Haeufigste Programmzaehler-Werte:
+   8006217c  270x
+   80062130  203x
+   80059dfc  161x
+   8006df90  132x
+   80059dc8  120x
+   8006de18  95x
+   bfc091ac  81x
+   8006df34  78x
+
+ERGEBNIS: 102 verschiedene pc-Werte bei 1801 Proben, 1 Pad-Schreibvorgaenge
+-> das Spiel LAEUFT
