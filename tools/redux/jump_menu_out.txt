@@ -1,0 +1,91 @@
+Sprung nach ROOM1030 ueber das Debug-Menue
+B 1500 | Phase 0 | offen=0 Zeile=0 Stage=0 Idx=00 | Raum St 0 Idx 00 | n=0 | Spieler (0,0)
+B 3000 | Phase 0 | offen=0 Zeile=0 Stage=0 Idx=00 | Raum St 0 Idx 00 | n=0 | Spieler (0,0)
+B 4500 | Phase 0 | offen=0 Zeile=0 Stage=0 Idx=00 | Raum St 0 Idx 00 | n=0 | Spieler (0,0)
+B 6000 | Phase 0 | offen=0 Zeile=0 Stage=0 Idx=00 | Raum St 0 Idx 00 | n=0 | Spieler (0,0)
+B 7500 | Phase 0 | offen=0 Zeile=0 Stage=0 Idx=00 | Raum St 0 Idx 00 | n=0 | Spieler (0,0)
+SPIELER ab Bild 8887
+B 9000 | Phase 0 | offen=0 Zeile=0 Stage=0 Idx=00 | Raum St 0 Idx 17 | n=0 | Spieler (3940,14167)
+MENUE OFFEN ab Bild 9560 — SELECT aus, Ziel eintragen
+Ziel steht (Zeile=1 Stage=0 Idx=03) — jetzt KREUZ
+B10500 | Phase 2 | offen=0 Zeile=1 Stage=0 Idx=03 | Raum St 23 Idx 24 | n=467 | Spieler (-26214,-3861)
+B12000 | Phase 2 | offen=0 Zeile=1 Stage=0 Idx=03 | Raum St 23 Idx 24 | n=1171 | Spieler (-26214,-3861)
+KREUZ blieb wirkungslos — Abbruch der Bestaetigung
+
+== Bild 12322  Raum St 23 Idx 24  Spieler (-26214,-3861)  Gegner 0 ==
+
+== Bild 12622  Raum St 36 Idx 17  Spieler (-26214,-3861)  Gegner 0 ==
+
+== Bild 12922  Raum St 36 Idx 17  Spieler (-26214,-3861)  Gegner 0 ==
+
+== Bild 13222  Raum St 36 Idx 17  Spieler (-26214,-3861)  Gegner 0 ==
+
+== Bild 13522  Raum St 36 Idx 17  Spieler (-26214,-3861)  Gegner 0 ==
+
+== Bild 13822  Raum St 23 Idx 17  Spieler (-31000,31000)  Gegner 1 ==
+   Slot  0 Typ 47 grid 40  4/6/0  Clip 02 Bild 01  (1261,10091)
+
+== Bild 14122  Raum St 23 Idx 17  Spieler (-31000,31000)  Gegner 1 ==
+   Slot  0 Typ 47 grid 40  4/0/2  Clip 0f Bild 00  (-2196,5870)
+
+== Bild 14422  Raum St 23 Idx 17  Spieler (-31000,31000)  Gegner 1 ==
+   Slot  0 Typ 47 grid 40  4/0/1  Clip 14 Bild 02  (-2196,5870)
+
+== Bild 14722  Raum St 23 Idx 17  Spieler (-31000,31000)  Gegner 1 ==
+   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-2196,5870)
+
+== Bild 15022  Raum St 23 Idx 17  Spieler (-31000,31000)  Gegner 1 ==
+   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+
+== Bild 15322  Raum St 23 Idx 17  Spieler (-31000,31000)  Gegner 1 ==
+   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+
+== Bild 15622  Raum St 23 Idx 17  Spieler (2300,14365)  Gegner 1 ==
+   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+
+== Bild 15922  Raum St 23 Idx 17  Spieler (-31000,31000)  Gegner 1 ==
+   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+
+== Bild 16222  Raum St 23 Idx 17  Spieler (2664,-7336)  Gegner 1 ==
+   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+
+== Bild 16522  Raum St 23 Idx 17  Spieler (2664,-7336)  Gegner 1 ==
+   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+
+== Bild 16822  Raum St 23 Idx 17  Spieler (2664,-7336)  Gegner 1 ==
+   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+
+== Bild 17122  Raum St 23 Idx 17  Spieler (2664,-7336)  Gegner 1 ==
+   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+
+== Bild 17422  Raum St 23 Idx 17  Spieler (2664,-7336)  Gegner 1 ==
+   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+
+== Bild 17722  Raum St 23 Idx 17  Spieler (2664,-7336)  Gegner 1 ==
+   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+
+== Bild 18022  Raum St 23 Idx 17  Spieler (2664,-7336)  Gegner 1 ==
+   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+
+== Bild 18322  Raum St 23 Idx 17  Spieler (2664,-7336)  Gegner 1 ==
+   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+
+== Bild 18622  Raum St 23 Idx 17  Spieler (2664,-7336)  Gegner 1 ==
+   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+
+== Bild 18922  Raum St 23 Idx 17  Spieler (2664,-7336)  Gegner 1 ==
+   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+
+== Bild 19222  Raum St 23 Idx 17  Spieler (2664,-7336)  Gegner 1 ==
+   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+
+== Bild 19522  Raum St 23 Idx 17  Spieler (2664,-7336)  Gegner 1 ==
+   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+
+== Bild 19822  Raum St 23 Idx 17  Spieler (2664,-7336)  Gegner 1 ==
+   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+
+== Bild 20122  Raum St 23 Idx 17  Spieler (2664,-7336)  Gegner 1 ==
+   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+
+fertig

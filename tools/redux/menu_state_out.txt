@@ -1,0 +1,18 @@
+Debug-Menue: Offen-Kennung 0x800BBE5C als Beleg
+B 1500 | offen=0 (ab -1) Zeile=0/0 Stage=0 Idx=00 | FUN_8001443c n=0 | rohe Flanke oder=0000 SELECT-Flanken=0 | Spieler (0,0)
+B 3000 | offen=0 (ab -1) Zeile=0/0 Stage=0 Idx=00 | FUN_8001443c n=0 | rohe Flanke oder=0000 SELECT-Flanken=0 | Spieler (0,0)
+B 4500 | offen=0 (ab -1) Zeile=0/0 Stage=0 Idx=00 | FUN_8001443c n=0 | rohe Flanke oder=0000 SELECT-Flanken=0 | Spieler (0,0)
+B 6000 | offen=0 (ab -1) Zeile=0/0 Stage=0 Idx=00 | FUN_8001443c n=0 | rohe Flanke oder=0000 SELECT-Flanken=0 | Spieler (0,0)
+B 7500 | offen=0 (ab -1) Zeile=0/0 Stage=0 Idx=00 | FUN_8001443c n=0 | rohe Flanke oder=1040 SELECT-Flanken=0 | Spieler (0,0)
+SPIELER ab Bild 8889 — ab jetzt SELECT getaktet
+B 9000 | offen=0 (ab -1) Zeile=0/0 Stage=0 Idx=00 | FUN_8001443c n=0 | rohe Flanke oder=1140 SELECT-Flanken=2 | Spieler (3940,14167)
+
+*** MENUE OFFEN ab Bild 9562 (0x800BBE5C=1) ***
+B10500 | offen=1 (ab 9562) Zeile=0/0 Stage=0 Idx=24 | FUN_8001443c n=466 | rohe Flanke oder=1140 SELECT-Flanken=102 | Spieler (-26214,-3861)
+B12000 | offen=0 (ab 9562) Zeile=0/0 Stage=0 Idx=24 | FUN_8001443c n=1170 | rohe Flanke oder=1140 SELECT-Flanken=191 | Spieler (-26214,-3861)
+B13500 | offen=0 (ab 9562) Zeile=0/0 Stage=0 Idx=17 | FUN_8001443c n=1798 | rohe Flanke oder=1140 SELECT-Flanken=283 | Spieler (-26214,-3861)
+B15000 | offen=0 (ab 9562) Zeile=0/0 Stage=0 Idx=17 | FUN_8001443c n=2436 | rohe Flanke oder=1140 SELECT-Flanken=368 | Spieler (-31000,31000)
+B16500 | offen=1 (ab 9562) Zeile=0/0 Stage=0 Idx=17 | FUN_8001443c n=3114 | rohe Flanke oder=1140 SELECT-Flanken=458 | Spieler (2664,-7336)
+B18000 | offen=1 (ab 9562) Zeile=0/0 Stage=0 Idx=17 | FUN_8001443c n=3855 | rohe Flanke oder=1140 SELECT-Flanken=550 | Spieler (2664,-7336)
+
+fertig
