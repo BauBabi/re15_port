@@ -910,3 +910,56 @@ Spieler in der Zone steht. Was fehlt, sind die BEIDEN AUSSEREN Bedingungen des G
 **`flag(3,0x74)`** (Story) und **`flag(5,0x20)`**.
 
 `flag(4,0x0f)` = Bank 4 Wort 0 @`0x800B1018`, Maske `0x80000000 >> 15` = **`0x00010000`**.
+
+---
+
+## 14. Die ROOM1030-SCD-Struktur, statisch aufgeloest — und die Bestaetigung des Nutzers
+
+**Nutzer (2026-08-08):** *„mit direktem Jump zu 1030 wirst du das Kriechen der Zombies nicht
+sehen. das wird erst durch die Cutscene ausgeloest."* Das deckt sich exakt mit der Messung aus
+§11/§13: die Vorbedingungen fehlen beim Direktsprung. Die dynamische Jagd ist damit beendet;
+der Rest ist statisch aufgeloest.
+
+### SCD-Basis und Sub-Tabelle
+
+Bei `0x1fd0` steht die Sub-Offset-Tabelle (Offsets relativ zu `0x1fd0`):
+```
+0x1fd0  18 00 b0 01 d6 01 28 02 56 02 e2 04 f8 04 84 07
+0x1fe0  94 07 10 08 6a 08 a8 08
+```
+→ sub00 `+0x018` = **0x1fe8** · sub01 `+0x1b0` = **0x2180** · sub02 `+0x1d6` = **0x21a6**
+(sub02 deckt sich exakt mit der Dossier-Angabe „sub02 @0x21a6" — die Basis ist damit bestaetigt.)
+
+| Sub | Adresse | Rolle |
+|---|---|---|
+| sub00 | `0x1fe8` | Raum-Init: `22 03 74 01` = **Set(bank3,0x74,1)** (Story, bedingungslos), danach `If Ck(bank4,0x0f,==1)` → `22 05 14 01` Set(bank5,0x14,1) |
+| sub01 | `0x2180` | Der Poller (wird laut Per-Frame-Modell in JEDEM Gameplay-Bild neu geseedet): `Ck(bank3,0x74,==1) && Ck(bank4,0x0f,==0) && Ck(bank5,0x20,==1)` → `If Ck(bank5,0x22,==1)` → `Set(bank4,0x0f,1)` |
+| sub02 | `0x21a6` | der Kriech-Zyklus (Glied 6) |
+
+**Das schliesst den Kreis:** sub00 setzt die Story-Flagge beim Betreten; sub01 pollt und setzt
+`flag(4,0x0f)`, sobald der Spieler in den Zonen steht; beim naechsten Raum-Init setzt sub00 dann
+`flag(5,0x14)` und sub02 laeuft.
+
+### `flag(5,0x20)` kommt aus einem AOT-Payload, NICHT aus einem Opcode
+
+`Set(bank5,0x20,1)` = `22 05 20 01` hat **0 Vorkommen in ganz STAGE1**. Statt dessen tragen drei
+aufeinanderfolgende Aot_set-Records (Stride 20) die Payload-Form `05 00 <bit> 00 01 00`:
+
+| Payload | Offset in ROOM1030.RDT |
+|---|---|
+| `flag(5,0x20)` | `0x1cd8` |
+| `flag(5,0x21)` | `0x1cec` |
+| `flag(5,0x22)` | `0x1d00` |
+
+(`flag(5,0x21)` kommt zusaetzlich bei `0x21de` vor — das ist die Payload im `Aot_reset` von sub02.)
+
+Gemessen wurde `flag(5,0x22)` gesetzt, `flag(5,0x20)` nicht → der Spieler stand in der einen Zone,
+aber nicht in der anderen. Beide werden in **derselben** Bild-Auswertung gebraucht (Wort 1 wird am
+Bildende gewischt), die Zonen muessen sich also ueberlappen.
+
+### Woran es im PORT wirklich haengt
+
+Alles andere ist laut §? bereits vorhanden (Bank-5-Wort-1-Wisch `scd_vm.c:658`, `Aot_reset` als
+FULL-RETYPE, `flag(5,0x22)` wird live korrekt gesetzt). **Es fehlt genau Glied 1: der Aktor-Stempel
+`entity+0x0B`** (`@0x80042f5c` / `@0x80042fc4 sb v0,11(s1)` in `FUN_80042bac`). Ohne ihn ist
+`member15 == 5` in sub06 nie wahr, und der Zyklus kann selbst bei gesetzten Flags nichts tun.
