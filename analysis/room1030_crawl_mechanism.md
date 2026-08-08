@@ -963,3 +963,45 @@ Alles andere ist laut §? bereits vorhanden (Bank-5-Wort-1-Wisch `scd_vm.c:658`,
 FULL-RETYPE, `flag(5,0x22)` wird live korrekt gesetzt). **Es fehlt genau Glied 1: der Aktor-Stempel
 `entity+0x0B`** (`@0x80042f5c` / `@0x80042fc4 sb v0,11(s1)` in `FUN_80042bac`). Ohne ihn ist
 `member15 == 5` in sub06 nie wahr, und der Zyklus kann selbst bei gesetzten Flags nichts tun.
+
+---
+
+## 15. EINBAU-STAND (2026-08-08)
+
+### Erledigt: der Vorbedingungs-Blocker
+
+`member_0b` ist frei. Der Adult-Spider-LOS-Latch ist nach `aspider_los` umgezogen
+(`re15_actor.h`, `enemy_ai_common.c:7062/7063` + `:7278/:7279`) — reiner Speicher-Umzug, keine
+Verhaltensaenderung, 116/116 Tests gruen. Der Header-Kommentar hatte diese Reihenfolge selbst als
+Vorbedingung benannt. Nebeneffekt: `Member_cmp(15)`/`Work_set` auf einen AKTOR las bisher den
+Spider-Latch statt des AOT-Stempels — das war eine echte Divergenz und ist jetzt behoben.
+
+### Als naechstes: Glied 1 — der Aktor-Stempel
+
+**Der Port-Scan `re15_aot_scan(player_x, player_z, active_cut)` (aot_common.c:545) nimmt nur die
+SPIELER-Position.** Das Original `FUN_80042bac` bekommt dagegen einen ENTITY-Zeiger
+(`@0x80042bb4 addu s1,a0,zero`) und wird fuer JEDE Entitaet gefahren; dabei entsteht der Stempel
+(`@0x80042f44 addiu v0,s2,255` → `sb v0,11(s1)` @0x80042f5c ACTION / @0x80042fc4 AUTO).
+
+Zu beachten sind dabei Glied 2 (LAST-WINS auf AUTO, FIRST-WINS auf ACTION), Glied 3 (drei
+verschiedene Clear-Regeln + ein vierter Mechanismus), Glied 4 (geschlossenes Intervall, unsigned)
+und Glied 5 (weitere Stempel-Vorbedingungen).
+
+### ✅ Ein PRUEFBARES Ziel gibt es jetzt — gemessen am Original
+
+Die Messung liefert die Soll-Werte, gegen die der Einbau verifiziert werden kann:
+
+| Situation im Original | Soll |
+|---|---|
+| 5 von 6 Zombies (Typ 0x16) stehen bei z≈-24838 | `entity+0x0B` = **0x05** |
+| ein Zombie weiter hinten (z≈-25561) | `entity+0x0B` = **0x00** |
+| Leerwert vor dem ersten Treffer | **0xFF** (Slot 0 zeigte das beim Raumeintritt) |
+
+Damit ist Glied 1 nach dem Einbau **direkt gegen das Original pruefbar** — kein „sieht richtig aus".
+
+### Weiterhin OFFEN vor Glied 7/8
+
+Die Feldzuordnung `+0x1C4` ist ungeklaert (§10): gemessen stand dort pro Slot `0x000X0000`, also
+der Slot-Index im OBEREN Halbwort, waehrend das Freigabe-Bit `0x1000` im unteren liegen muesste
+(dort durchgehend 0). Entweder ist `+0x1C4` nicht das Wort aus Glied 7/8, oder es traegt
+zusaetzlich eine Slot-ID. **Vor Glied 7/8 klaeren** — Glied 1 haengt nicht davon ab.
