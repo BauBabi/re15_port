@@ -1,0 +1,32 @@
+Schreib-Haltepunkt auf 0x800bbe5c (Offen-Kennung Debug-Menue)
+Haltepunkt gesetzt
+
+B 3000 offen=0 Treffer=4  Spieler (0,0)
+   PC 0xbfc0d864  1 Schreibvorgaenge
+   PC 0x80021efc  1 Schreibvorgaenge
+   PC 0xbfc0661c  1 Schreibvorgaenge
+   PC 0x80054458  1 Schreibvorgaenge
+
+B 6000 offen=0 Treffer=4  Spieler (0,0)
+   PC 0xbfc0d864  1 Schreibvorgaenge
+   PC 0x80021efc  1 Schreibvorgaenge
+   PC 0xbfc0661c  1 Schreibvorgaenge
+   PC 0x80054458  1 Schreibvorgaenge
+SPIELER ab Bild 8859
+
+B 9000 offen=0 Treffer=4  Spieler (3940,14167)
+   PC 0xbfc0d864  1 Schreibvorgaenge
+   PC 0x80021efc  1 Schreibvorgaenge
+   PC 0xbfc0661c  1 Schreibvorgaenge
+   PC 0x80054458  1 Schreibvorgaenge
+
+*** OFFEN ab Bild 9532 — ab hier KEIN SELECT mehr ***
+*** WIEDER ZU bei Bild 9576 (44 Bilder offen) ***
+
+B12000 offen=0 Treffer=14  Spieler (-26214,-3861)
+   PC 0x80014488  5 Schreibvorgaenge
+   PC 0x80014c20  5 Schreibvorgaenge
+   PC 0xbfc0661c  1 Schreibvorgaenge
+   PC 0xbfc0d864  1 Schreibvorgaenge
+   PC 0x80021efc  1 Schreibvorgaenge
+   PC 0x80054458  1 Schreibvorgaenge

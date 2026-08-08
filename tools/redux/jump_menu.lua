@@ -4,9 +4,22 @@
 --   @0x80014440 lhu DAT_800ac762 / @0x8001444c andi 0x100 / @0x80014450 beq  -> SELECT (ROHE Flanke)
 --   @0x80014460 lbu DAT_800bbe5c / @0x80014480 xori 1 / @0x80014488 sb       -> Offen-Kennung, TOGGLE
 --   Zeile 29/32: HOCH 0x1000 / RUNTER 0x4000 auf DAT_800bbe5d (max 2)        -> Auswahlzeile
---   Zeile 36:    if ((DAT_800ac762 & 0x40) == 0) { navigieren }              -> KREUZ = bestaetigen
 --   Zeile 15:    (&DAT_800bbe5f)[DAT_800b0fe0] = DAT_800b0fe2                -> Index = aktueller Raum
 -- Raumnummer = (stage+1)<<8 | idx  ->  ROOM1030 = Stage 0, Index 0x03.
+--
+-- ⛔ BESTAETIGT WIRD MIT QUADRAT (0x80), NICHT MIT KREUZ. Ich hatte Zeile 36
+--   `if ((DAT_800ac762 & 0x40) == 0)` als „Kreuz bestaetigt" gelesen — das ist aber nur das Gatter
+--   fuer die Navigation. Die Ausfuehrung steht in Zeile 82 und disassembliert so:
+--     80014a30  lhu  v0,-0x389e(v0) => DAT_800ac762     ; rohe Flanke
+--     80014a38  andi v0,v0,0x80                         ; QUADRAT
+--     80014a3c  beq  v0,zero,LAB_80014ab4
+--     80014a48  sb   v0, DAT_800b5359                   ; Modus 1 = Raumsprung
+--     80014a50  sw   zero, DAT_800ac9a8
+--     80014a58  sb   zero, DAT_800bbe5c                 ; Menue zu
+--   Passt zur projektweiten Regel: RE1.5 bestaetigt game-weit mit QUADRAT.
+--
+-- ⛔ Der aktuelle Raum steht in Stage 0x800B0FE0 / Index 0x800B0FE2. 0x800B0FE6 ist der
+--   VORHERIGE Raum (@0x8001d644) — danach zu vergleichen war falsch.
 --
 -- ⚠ Der Toggle ist der Grund, warum man NICHT dauernd SELECT takten darf: jede weitere Flanke
 --   schliesst das Menue wieder. Also: druecken bis 0x800BBE5C==1, dann SOFORT aufhoeren.
@@ -70,7 +83,7 @@ function DrawImguiFrame()
     local m = PCSX.getMemPtr()
     local px, pz = s32(m, 0x800aca88), s32(m, 0x800aca90)
     local offen = u8(m, 0x800BBE5C)
-    local SEL, KREUZ = PCSX.CONSTS.PAD.BUTTON.SELECT, PCSX.CONSTS.PAD.BUTTON.CROSS
+    local SEL, BESTAETIGE = PCSX.CONSTS.PAD.BUTTON.SELECT, PCSX.CONSTS.PAD.BUTTON.SQUARE
 
     if spielerAb < 0 and (px ~= 0 or pz ~= 0) then
       spielerAb = frames
@@ -97,38 +110,50 @@ function DrawImguiFrame()
       w8(m, 0x800BBE5F + ZIEL_STAGE, ZIEL_IDX)
       if frames - seit > 60 then
         phase, seit = 2, frames
-        out:write(string.format("Ziel steht (Zeile=%d Stage=%d Idx=%02x) — jetzt KREUZ\n",
+        out:write(string.format("Ziel steht (Zeile=%d Stage=%d Idx=%02x) — jetzt QUADRAT\n",
           u8(m, 0x800BBE5D), u8(m, 0x800BBE5E), u8(m, 0x800BBE5F))); out:flush()
       end
 
     elseif phase == 2 then
-      -- Ziel weiter halten und KREUZ takten (8 an / 24 aus) fuer die rohe Flanke 0x40
+      -- Ziel weiter halten und QUADRAT takten (8 an / 24 aus) fuer die rohe Flanke 0x80
       w8(m, 0x800BBE5D, 1)
       w8(m, 0x800BBE5E, ZIEL_STAGE)
       w8(m, 0x800BBE5F + ZIEL_STAGE, ZIEL_IDX)
       local t = (frames - seit) % 32
-      taste(KREUZ, t < 8)
+      taste(BESTAETIGE, t < 8)
       -- Raumwechsel erkennen: 0x800b0fe2 = aktueller Raumindex
-      if u8(m, 0x800B0FE2) == ZIEL_IDX and u8(m, 0x800B0FE6) == ZIEL_STAGE then
-        taste(KREUZ, false)
+      if u8(m, 0x800B0FE2) == ZIEL_IDX and u8(m, 0x800B0FE0) == ZIEL_STAGE then
+        taste(BESTAETIGE, false)
         phase, seit = 3, frames
         out:write(string.format("\n*** IM ZIELRAUM ab Bild %d ***\n", frames)); out:flush()
       end
       if frames - seit > 2400 then
-        out:write("KREUZ blieb wirkungslos — Abbruch der Bestaetigung\n"); out:flush()
+        out:write("QUADRAT blieb wirkungslos — Abbruch der Bestaetigung\n"); out:flush()
         phase, seit = 3, frames
       end
 
     else
       if (frames - seit) % 300 ~= 0 then return end
       local g = gegner(m)
-      out:write(string.format("\n== Bild %d  Raum St %d Idx %02x  Spieler (%d,%d)  Gegner %d ==\n",
-        frames, u8(m, 0x800B0FE6), u8(m, 0x800B0FE2), px, pz, #g))
-      for i = 1, math.min(#g, 8) do
+      -- Die Kriech-Kette ist in analysis/room1030_crawl_mechanism.md byte-belegt. Live pruefbar
+      -- sind genau die Felder, die der Sub-Modus-0x10-Toggle FUN_80104f80 schreibt:
+      --   @0x80104fd4 sb +0x93 |= 1     @0x80104fec sb +0x94 = 0x12   (Kriech-Clip)
+      --   @0x80104ffc sb +0x95 = rng&3  @0x8010501c sb +0x8F = 0x0F
+      --   @0x80105050 sb +0x9F = 1 NUR wenn (+0x09 & 0x80) CLEAR
+      -- Freigabe kommt von sub07 als +0x1C4 |= 0x1000 (Glied 7/8).
+      -- ROOM1030 spawnt 20x Typ 0x16 (@0x8011e8a0-a4 sw v0,11268(at) -> 0x80072c04).
+      local nkriech = 0
+      for i = 1, #g do if u8(m, g[i].e + 0x94) == 0x12 then nkriech = nkriech + 1 end end
+      out:write(string.format("\n== Bild %d  Raum St %d Idx %02x  Spieler (%d,%d)  Gegner %d  davon Clip 0x12: %d ==\n",
+        frames, u8(m, 0x800B0FE0), u8(m, 0x800B0FE2), px, pz, #g, nkriech))
+      for i = 1, math.min(#g, 10) do
         local e = g[i].e
-        out:write(string.format("   Slot %2d Typ %02x grid %02x  %d/%d/%d  Clip %02x Bild %02x  (%d,%d)\n",
+        out:write(string.format(
+          "   Slot %2d Typ %02x grid %02x  %d/%d/%d  Clip %02x Bild %02x  +93=%02x +8F=%02x +9F=%02x  1C4=%08x  (%d,%d)\n",
           g[i].slot, g[i].typ, u8(m, e + 9), u8(m, e + 4), u8(m, e + 5), u8(m, e + 6),
-          u8(m, e + 0x94), u8(m, e + 0x95), s32(m, e + 0x34), s32(m, e + 0x3c)))
+          u8(m, e + 0x94), u8(m, e + 0x95),
+          u8(m, e + 0x93), u8(m, e + 0x8F), u8(m, e + 0x9F), u32(m, e + 0x1C4),
+          s32(m, e + 0x34), s32(m, e + 0x3c)))
       end
       out:flush()
     end
@@ -136,7 +161,7 @@ function DrawImguiFrame()
     if frames % 1500 == 0 then
       out:write(string.format("B%5d | Phase %d | offen=%d Zeile=%d Stage=%d Idx=%02x | Raum St %d Idx %02x | n=%d | Spieler (%d,%d)\n",
         frames, phase, offen, u8(m, 0x800BBE5D), u8(m, 0x800BBE5E), u8(m, 0x800BBE5F),
-        u8(m, 0x800B0FE6), u8(m, 0x800B0FE2), naufruf, px, pz))
+        u8(m, 0x800B0FE0), u8(m, 0x800B0FE2), naufruf, px, pz))
       out:flush()
     end
 

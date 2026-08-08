@@ -65,9 +65,14 @@ def spieler_da():
 
 
 def menue_offen():
+    # ⛔ GROSS-/KLEINSCHREIBUNG EGAL. Vorher stand hier nur "MENUE offen"; eine Sonde, die
+    # "MENUE OFFEN" schreibt, wurde nicht erkannt -> der Treiber tippte weiter BACK (= SELECT),
+    # und JEDE dieser Flanken setzt DAT_8008f618 = 2 (FUN_8001443c.c Zeile 23), was das Menue
+    # ueber @0x80014… wieder SCHLIESST. Genau daran ist der Sprung nach ROOM1030 gescheitert.
     try:
         with open(OUT, encoding="utf-8", errors="replace") as f:
-            return "MENUE offen" in f.read()
+            t = f.read().upper()
+            return "MENUE OFFEN" in t or "*** OFFEN" in t
     except Exception:
         return False
 
