@@ -471,6 +471,21 @@ void re15_game_step(const re15_game_ctx_t *c)
     }
     s_prev_hp = pl->hp;                           /* pre-damage baseline for the NEXT tick's drop check */
 
+    /* ===== ACTION-ZUSTANDS-GATE (Nutzer-Report 2026-08-08: "waehrend einer Aktion kann man
+     * weiter untersuchen") — byte-true: der ACTION-Scan FUN_80042bac(player,1,0x10) hat im
+     * Original GENAU 8 Caller (XREF-komplett, ghidra1_V2.txt @153742): die DECIDE-Handler der
+     * cmd-1-Substates 0-4 der Tabelle @0x80073fb0 (Call-Sites @0x80031fe4/@0x80032400/
+     * @0x800326d0/@0x80032a50/@0x80032c84, jeweils `lw DAT_800ac76c; andi 0x80` = virtueller
+     * ACTION-Edge) + die 3 AUTO-Pool-Sites in FUN_800436a8 (a2=0). Der Substate-Dispatcher
+     * @0x80031ecc-1ef4 (`lbu DAT_800aca59; jalr @0x80073fb0[s]`) laeuft NUR im cmd-1-Handler
+     * LAB_80031de8 (@0x80073f90[1]). Waehrend cmd 2 (Hit/Knockdown LAB_80035af0), cmd 3/6/7
+     * (Tod LAB_800366bc/LAB_800368c0/LAB_8003694c), cmd 5 (Grab LAB_80036834) und der
+     * Treppen-Substates [8..13] (DECIDE LAB_8003579c..LAB_80038ef4 — keiner in der Caller-
+     * Liste) feuert also KEIN Examine/Tuer/Message. Die Scans in den Branches unten bleiben
+     * (Kamera-/RVD- und AUTO-Klasse laufen im Original ungegatet weiter, FUN_800436a8
+     * @0x8001ce1c); nur die ACTION-Klasse wird ueber das Press-Flag entwaffnet — alle
+     * ACTION-Fire-Pfade in aot_common.c sind auf g_aot_action_pressed gegatet. Gemessen
+     * (test_action_msg_gate, vor dem Fix): Knockdown/Flinch/Tod/Aim-LOWER feuerten Examine. */
     if (c->rdt_ok && re15_stair_active()) {
         /* Engine-driven stair traversal (action-triggered): auto-walk Leon
          * up/down + force the stair clip + sink/raise Y. The player does NOT
@@ -478,6 +493,7 @@ void re15_game_step(const re15_game_ctx_t *c)
          * but the RVD camera scan KEEPS running (byte-true: the original's
          * per-frame cam scan is ungated by the stair) so the pit's RVD zone
          * flips the cut as Leon crosses it during the descent. */
+        g_aot_action_pressed = 0;    /* Treppen-DECIDEs [8..13] rufen den ACTION-Scan nie */
         re15_stair_tick(c->rdt, c->pl00_skel, c->pl00_anim);
         g_scd.cut_auto_enabled = 1;
         re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
@@ -499,6 +515,8 @@ void re15_game_step(const re15_game_ctx_t *c)
         (void)re15_player_death_tick();                  /* keep the legacy 0x78 counter ticking (its
                                                           * countdown is DEAD CODE in the original -
                                                           * the presentation is the FSM below) */
+        g_aot_action_pressed = 0;    /* cmd 3/6/7 (LAB_800366bc/LAB_800368c0/LAB_8003694c):
+                                      * kein cmd-1-Dispatcher -> kein ACTION-Scan (Gate oben) */
         re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
         re15_gameover_fsm_tick();                        /* the byte-true parallel game-over chain */
     } else if (c->rdt_ok && re15_player_is_grabbed()) {
@@ -516,11 +534,13 @@ void re15_game_step(const re15_game_ctx_t *c)
          * scan KEEPS running (byte-true: the per-frame cam scan is ungated by the player's state), so
          * the cut still frames the grab. This branch is unreachable unless a live zombie grabs, so a
          * room with no live zombie (ROOM1170/1240 boot) never enters it = no 1170 regression. */
+        g_aot_action_pressed = 0;    /* cmd 5 (LAB_80036834): kein DECIDE -> kein ACTION-Scan */
         re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
     } else if (c->rdt_ok && s_knockdown) {
         /* KNOCKDOWN-Klasse (cmd-2 [4]/[5], 0x800360e8/0x8003644c): engine-getrieben wie
          * Stair/Grab — kein Pad, kein Steer; RVD-Scan laeuft weiter. i-Frames halten
          * (+0x93 bleibt gesetzt bis zum Exit). analysis/player_knockdown.md F1. */
+        g_aot_action_pressed = 0;    /* cmd 2 (LAB_80035af0): kein DECIDE -> kein ACTION-Scan */
         re15_player_knockdown_tick(c, pl);
         re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
     } else if (c->rdt_ok && s_hit_flinch > 0) {
@@ -552,6 +572,7 @@ void re15_game_step(const re15_game_ctx_t *c)
          * neu. Das alte `motion = 0` blitzte hier 1 Tick PL00-Base-Clip 0 (gemessen,
          * probe_hitdoor_entry_anim t=19). */
         --s_hit_flinch;
+        g_aot_action_pressed = 0;    /* cmd 2 (LAB_80035af0): kein DECIDE -> kein ACTION-Scan */
         re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
     } else {
         /* NORMAL cmd-0 handler prologue (byte-true LAB_800318f8/FUN_80031c44): the original
@@ -593,6 +614,16 @@ void re15_game_step(const re15_game_ctx_t *c)
                 }
             }
         }
+        /* AIM-Zustand ZUM DECIDE-ZEITPUNKT festhalten (= DAT_800aca59 == 7, BEVOR die Aim-FSM
+         * dieses Frames weiterschaltet): der Substate-7-DECIDE ist ein NOP (`jr ra` @0x80032e3c)
+         * -> waehrend des GESAMTEN Zielens (Raise/Hold/Reload/LOWER — Eintritt `ori v0,0x701` +
+         * `sw v0,DAT_800aca58` @0x8003201c-20, Exit erst `sb zero,DAT_800aca59` @0x80033d4c/
+         * @0x80034d38/@0x80035500) laeuft KEIN ACTION-Scan. Vor player_tick lesen, weil das
+         * Original DECIDE vor der EXECUTE-Phase dispatcht (@0x80031eec vor @0x80031f14) — am
+         * Simultan-Frame R1+SQUARE prueft der Substate-0-DECIDE den ACTION-Edge zuerst
+         * (@0x80031fc4 vor dem Aim-Eintritt @0x80031ffc), Examine darf dort also noch feuern. */
+        extern int re15_player_aim_active(void);
+        int aim_decide = re15_player_aim_active();
         int32_t ox = pl->x, oz = pl->z;
         re15_player_tick(c->cam_view, c->pad_current);
         /* ENTITY BODY COLLISION (byte-true FUN_80031c44 order: cmd-FSM move -> FUN_8002b544 body
@@ -757,6 +788,11 @@ void re15_game_step(const re15_game_ctx_t *c)
                         re15_collision_band_from_y(pl->y), (int)g_scd.player_mode);
             }
         }
+        /* AIM-GATE (byte-true): war der Spieler zum DECIDE-Zeitpunkt im Substate 7 (Aim aktiv,
+         * inkl. LOWER), feuert kein ACTION-Scan und keine Treppe — DECIDE[7] = `jr ra`
+         * @0x80032e3c; die Treppen-Eintritte sind selbst ACTION-Scan-Handler (sce 12/13,
+         * LAB_80043500/LAB_800435cc) und haengen am selben Gate. */
+        if (aim_decide) g_aot_action_pressed = 0;
         /* A stair may START this frame: ACTION pressed while in/against a stair
          * zone. If so it consumes the action and we SKIP the door scan;
          * otherwise scan the door AOTs (also action-gated). */

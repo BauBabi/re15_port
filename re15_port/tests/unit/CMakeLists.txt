@@ -381,6 +381,16 @@ target_include_directories(test_savepoint PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_savepoint COMMAND test_savepoint)
 set_tests_properties(unit_savepoint PROPERTIES TIMEOUT 30)
 
+# --- Byte-true ACTION-Zustands-Gate (Examine/Tuer nur cmd-1-Substates 0-4, DECIDE-Tabelle
+#     @0x80073fb0) + Live-FF-Kadenz durch die echte game_step-Pad-Verkabelung (Reports A+B) ---
+add_executable(test_action_msg_gate test_action_msg_gate.c)
+target_link_libraries(test_action_msg_gate PRIVATE re15_engine re15_test_support)
+target_include_directories(test_action_msg_gate PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_action_msg_gate PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_action_msg_gate COMMAND test_action_msg_gate)
+set_tests_properties(unit_action_msg_gate PROPERTIES TIMEOUT 30)
+
 # --- Byte-true dialog FSM buttons + cadence (msg audit wf_6aad95ad) ---
 add_executable(test_msg_dialog test_msg_dialog.c)
 target_link_libraries(test_msg_dialog PRIVATE re15_engine re15_test_support)
