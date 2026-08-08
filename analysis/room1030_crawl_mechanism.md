@@ -856,3 +856,57 @@ Die Port-Seite muss **vier** Dinge koennen, bevor Glied 6-8 ueberhaupt sinnvoll 
 Punkt 4 war schon bekannt. Punkte 1-3 sind **neu** und waren in der bisherigen Fassung dieses
 Dossiers nicht als Vorbedingung benannt — der Zyklus wurde dort ab sub02 beschrieben, als liefe er
 von selbst.
+
+---
+
+## 13. ⛔ KORREKTUR zu §11/§12 — Flag-Bits sind MSB-ZUERST nummeriert
+
+In §11 steht „weder `flag(5,0x21)` noch `flag(5,0x22)` wird je gesetzt". **Das ist falsch.** Ich
+hatte die Bit-Nummer LSB-zuerst gerechnet. Der generische Flag-Helfer rechnet anders:
+
+```
+8003fdd4  lui   t0,0x8000        ; t0 = 0x80000000
+8003fdd8  lbu   v1,0x1(v0)       ; bank
+8003fddc  lbu   a1,0x2(v0)       ; bit
+8003fdec  sll   v1,v1,0x2        ; bank*4 = Tabellenindex
+8003fdf0  sra   v0,a1,0x5        ; Wort  = bit >> 5
+8003fdf4  sll   v0,v0,0x2        ; *4
+8003fdfc  addiu at,at,0x4664     ; PTR_DAT_80074664 = Bank-Basistabelle
+8003fe04  lw    v1,0x0(at)       ; bank_base
+8003fe0c  addu  a3,v0,v1         ; a3 = bank_base + (bit>>5)*4
+8003fe18  andi  a1,a1,0x1f       ; bit & 31
+8003fe68  srlv  v1,t0,a1         ; MASKE = 0x80000000 >> (bit & 31)   <-- MSB-ZUERST
+8003fe74  sw    v1,0x0(a3)       ; SET-Pfad
+```
+
+**Regel:** `wort = bank_base + (bit>>5)*4`, `maske = 0x80000000 >> (bit & 31)`.
+Bit 0 ist also `0x80000000`, Bit 31 ist `0x00000001`.
+
+**Bank-Basistabelle @0x80074664** (selbst ausgelesen):
+
+| Bank | Basis | | Bank | Basis |
+|---|---|---|---|---|
+| 0 | `0x800ACA38` | | 6 | `0x800B1030` |
+| 1 | `0x800ACA3C` | | 7 | `0x800B1038` |
+| 2 | `0x800ACA40` | | 8 | `0x800B1058` |
+| 3 | `0x800B0FF8` | | 9 | `0x800B1078` |
+| 4 | `0x800B1018` | | 10 | `0x800B1098` |
+| 5 | `0x800B1028` | | 11 | `0x800ACA44` |
+
+(Bank 5 = `0x800B1028` deckt sich mit der Messung: Wort 0 dort, Wort 1 bei `0x800B102C`.)
+
+### Die Messung neu ausgewertet
+
+| Flag | Bit | Wort | Maske | gemessen |
+|---|---|---|---|---|
+| `flag(5,0x14)` | 20 | 0 @`0x800B1028` | `0x00000800` | W0 ODER = 0 → **nicht gesetzt** |
+| `flag(5,0x20)` | 32 | 1 @`0x800B102C` | `0x80000000` | **nicht gesetzt** |
+| `flag(5,0x21)` | 33 | 1 | `0x40000000` | **nicht gesetzt** |
+| `flag(5,0x22)` | 34 | 1 | `0x20000000` | W1 ODER = `0x20000000` → ✅ **GESETZT** |
+
+**Damit ist §11 in einem wesentlichen Punkt zu korrigieren:** die AOT-Maschinerie funktioniert —
+Slot 5 feuert seinen sce-4-Handler und setzt `flag(5,0x22)` als Ein-Bild-Signal, sobald der
+Spieler in der Zone steht. Was fehlt, sind die BEIDEN AUSSEREN Bedingungen des Gatters @0x2180:
+**`flag(3,0x74)`** (Story) und **`flag(5,0x20)`**.
+
+`flag(4,0x0f)` = Bank 4 Wort 0 @`0x800B1018`, Maske `0x80000000 >> 15` = **`0x00010000`**.
