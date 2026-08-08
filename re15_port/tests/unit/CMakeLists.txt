@@ -956,6 +956,18 @@ target_link_libraries(probe_dog_hit PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_dog_hit PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_dog_hit COMMAND probe_dog_hit)
 set_tests_properties(unit_dog_hit PROPERTIES TIMEOUT 30)
+
+# Dog-FINISHER (Nutzer-Report 2026-08-08): Grab sub 9 -> Feed-Timeout -> sub 0xb FUN_801100b4
+# (Dog-Clip 0x1b, cmd 6 @0x80110138, Victim-Bank dog+0x178/0x17c @0x80110160/70) -> Hook B
+# LAB_80111cb0/Maschine B 0x80111cf0: LEON-Kollaps = Dog-BANK2-Clip 4 (@0x80111d44), Blut 0x2000
+# @Frames 0x29/0x3a (Bone 8), Se_on(0x4030001) @0x3a, 45630(2,0) @0x4f, Wunden 0/5/7
+# (@0x80111e78/84/90) + cmd 7 (@0x80111ea0) am Clip-Ende. Bank-echt (EM020 aus CDEMD0.EMS).
+add_executable(probe_dog_devour probe_dog_devour.c)
+target_link_libraries(probe_dog_devour PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_dog_devour PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_dog_devour COMMAND probe_dog_devour)
+set_tests_properties(unit_dog_devour PROPERTIES TIMEOUT 30)
+
 # ROOM11E0 STROM-/Funken-Effekt (Nutzer-Report 2026-08-08, WRENCH-Reparatur-Stelle):
 # sub27 (Datei 0x20DC) loopt `Sce_espr_on id=0x11 sub=0 cat=0 @(-12200,-2400,-8000)
 # scale16=0x1000` + Sleep(20) solange flag(4,36)==0; sub21 setzt flag(4,36)=1 (@+0x086A).

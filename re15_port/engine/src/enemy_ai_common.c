@@ -722,17 +722,21 @@ static void re15_player_victim_latch(const re15_actor_t *zombie, re15_actor_t *p
 }
 
 /* Victim-anim CLIP MAP per grabber type — which bank-2 clips the eaten player plays. Both the ZOMBIE
- * (EM10 bank2, 14 clips) and the DOG (EM020 bank2, 15-bone PL00 player set verified, 29 clips) carry a
- * player-eaten set, but with DIFFERENT layouts:
+ * (EM10 bank2, 14 clips) and the DOG (EM020 bank2, 15-bone PL00 player set, 5 clips: 0=intro front
+ * 29f / 1=hold 18f / 2=release 60f / 3=intro behind / 4=collapse 90f, bank-gemessen probe_dog_devour)
+ * carry a player-eaten set, but with DIFFERENT layouts:
  *  - ZOMBIE (@0x8010a28c): intro = variant*3, hold = +1, release = +2; collapse = variant+6.
- *  - DOG (byte-true machine A @0x80111984): intro = 3*variant (@0x80111a0c), hold = 1 (@0x80111abc),
- *    release/kill = 2 (@0x80111b1c), collapse = 0xB (@0x80111bf4).
- * Default = the zombie layout, so the live-verified zombie grab is byte-identical (unchanged). */
+ *  - DOG (byte-true machine A @0x80111984 / machine B @0x80111cf0): intro = 3*variant (@0x80111a0c),
+ *    hold = 1 (@0x80111abc), release = 2 (@0x80111b1c), collapse = 4 (+0x94:=4 @0x80111d44, machine B
+ *    phase [0]). KORRIGIERT 2026-08-08: der fruehere Kollaps 0x0B war der Hook-A-[6]-RECOVER-Clip aus
+ *    Leons EIGENER Bank (acae8:=0xb @0x80111bf4, gespielt via anim_set(DAT_800acad8=player+0x84,
+ *    DAT_800acbc0=player+0x16c, 1, 0x200) @0x80111c10-28) — Bank2 hat nur 5 Clips, 0x0B lief also
+ *    ins Leere (fc=1, kein Fress-Tod sichtbar). */
 static void re15_victim_clip_map(uint8_t *c_intro, uint8_t *c_hold, uint8_t *c_release, uint8_t *c_collapse)
 {
     uint8_t v = g_player_victim_variant;
     if (g_player_victim_type == 0x20) {                 /* DOG (EM020) */
-        *c_intro = (uint8_t)(3 * v); *c_hold = 1; *c_release = 2; *c_collapse = 0x0b;
+        *c_intro = (uint8_t)(3 * v); *c_hold = 1; *c_release = 2; *c_collapse = 4;
     } else if (g_player_victim_type == 0x21) {          /* CROW (EM021) — front victim FSM
                                                          * 0x801159bc (Hook A [0x21]): intro clip 0
                                                          * @0x80115a18 (14f), hold LOOP clip 1
@@ -801,13 +805,23 @@ void re15_player_victim_devour(const re15_actor_t *zombie)
     re15_actor_t *player = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     g_player_victim_type    = zombie->type;
     g_player_victim_zombie  = (int)(zombie - g_actors);
-    g_player_victim_variant = (uint8_t)((zombie->sub_state_1 >= 6) ? 1 : 0);  /* (+0x5)-5 */
+    g_player_victim_variant = (zombie->type == 0x20)
+        ? 0   /* DOG: FUN_801100b4 schreibt aca59:=0 (@0x80110140) — Devour-Richtung immer 0 */
+        : (uint8_t)((zombie->sub_state_1 >= 6) ? 1 : 0);  /* ZOMBIE: (+0x5)-5 */
     g_player_victim = 2;
-    player->anim_frame = 0;                             /* @0x8010a75c frame reset on collapse entry */
+    player->anim_frame = 0;                             /* @0x8010a75c frame reset on collapse entry
+                                                         * (Dog: +0x95:=0 @0x80111d4c) */
     s_victim_fresh = 1;
-    re15_audio_core_se(1);                              /* collapse-entry SE: Se_on(0x4010001) = CORE
+    if (zombie->type == 0x20) {
+        /* DOG-Devour-Einstieg (FUN_801100b4 voll-disasm 0x801100b4-0x801101e0 + Maschine-B-Phase
+         * [0] @0x80111d28-68): KEIN SE, KEIN Blut — nur Clip/Zaehler/Flags. Harter Schnitt
+         * +0x8f := 0 (@0x80111d5c). Die Blut/SE-Kadenz kommt in Phase [1] bei den Frames
+         * 0x29/0x3a/0x4f (re15_player_victim_tick). */
+        player->anim_frac = 0;
+    } else {
+        re15_audio_core_se(1);                          /* collapse-entry SE: Se_on(0x4010001) = CORE
                                                          * bank4 record 1 (FUN_8010a6f8 init) */
-    {   /* Devour-ENTRY-Blut (FUN_8010a6f8: a0=0x1500 @0x8010a770, Anker Spieler-Bone 8
+        /* Devour-ENTRY-Blut (FUN_8010a6f8: a0=0x1500 @0x8010a770, Anker Spieler-Bone 8
          * @0x8010a7a0/a4 = +0x5A0; bite_blood_fx.md D4a, CONFIRMED). */
         int32_t db8[3]; re15_player_victim_bone_pos(8, db8);
         re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x1500,
@@ -883,6 +897,9 @@ void re15_player_victim_tick(void)
         player->motion = clip;
         int fc = (clip < vb->anim_victim.clip_count) ? vb->anim_victim.clips[clip].frame_count : 1;
         if (fc < 1) fc = 1;
+        int at_end_prev = (!s_victim_fresh && (int)player->anim_frame >= fc - 1);
+                                                        /* letzter Frame stand SCHON (voriger Tick) —
+                                                         * = f314-done-Signal des Vor-Ticks */
         if (!s_victim_fresh && player->anim_frame < fc - 1)     /* frame 0 posed on the entry tick */
             player->anim_frame++;
         s_victim_fresh = 0;
@@ -890,12 +907,40 @@ void re15_player_victim_tick(void)
                                   clip, (int)player->anim_frame);   /* placed EVERY tick (ad68 runs in
                                                                      * all cmd-6 frames), incl. entry f0
                                                                      * and the held last frame */
+        if (g_player_victim_type == 0x20) {
+            /* ==== DOG-FINISHER — Maschine B @0x80111cf0 (Hook B LAB_80111cb0, Phasen @0x801002d4;
+             * voll-disasm 2026-08-08). Phase [1] @0x80111d6c, Frame-Kadenz auf +0x95 (Clip 4, 90f):
+             *  - Frame 0x29: Blut FUN_80019700(0x2000, yaw, Bone 8 = acbdc+0x5A0, 0-Block
+             *    0x801210e0) @0x80111e30 (Aufruf-Setup @0x80111e10-34);
+             *  - Frame 0x3a: dito Blut @0x80111ddc + Se_on(0x4030001) = CORE Rec 3 @0x80111df4;
+             *  - Frame 0x4f: FUN_80045630(2,0) = Body-Fall-SE auf dem Boden-Material @0x80111da4.
+             * KEIN HP-Write in der ganzen Maschine (0x80111cb0-0x80111f08). */
+            if (player->anim_frame == 0x29 || player->anim_frame == 0x3a) {
+                int32_t bb8[3]; re15_player_victim_bone_pos(8, bb8);
+                re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x2000,
+                                     bb8[0], bb8[1], bb8[2], (int16_t)player->rot_y);
+                if (player->anim_frame == 0x3a) re15_audio_core_se(3);   /* @0x80111df4 */
+            }
+            if (player->anim_frame == 0x4f && g_room_rdt_ok)             /* @0x80111da4: 45630(2,0) */
+                re15_audio_footstep(2, re15_rdt_floor_sound(&g_room_rdt, player->x, player->z));
+            /* Phase [2] @0x80111e74 — laeuft den Tick NACH dem Clip-Ende (Phase [1] aca5a+=done
+             * @0x80111e68): Wundstempel FUN_80037edc(0,0xa) @0x80111e78, (5,0x32) @0x80111e84,
+             * (7,0x32) @0x80111e90 (der Dog-Hook-B STEMPELT — anders als der generische Zombie-
+             * Devour 0x8010a6b8, der nie stempelt), dann `sw 7 -> aca58` @0x80111ea0 = cmd 7
+             * LEICHE. HP schreibt das Original hier NICHT — hp=-1 ist PORT-PLUMBING (die
+             * Death-/Gameover-FSM des Ports keyt auf hp<0), klar als solches markiert. */
+            if (at_end_prev && player->state != 7) {
+                re15_wound_add(0, 0x0a);                /* @0x80111e78 */
+                re15_wound_add(5, 0x32);                /* @0x80111e84 */
+                re15_wound_add(7, 0x32);                /* @0x80111e90 */
+                if (player->hp >= 0) player->hp = -1;   /* PORT-PLUMBING (kein Original-Write) */
+                player->state = 7;                      /* cmd 7 @0x80111ea0 */
+            }
+        } else {
         /* HP = -1 EXACTLY at collapse anim frame 0x23=35 (byte-true FUN_8010a6f8 @0x8010a80c/814,
          * gate @0x8010a7e8 == 0x23) — a DIRECT SET in the cmd-6 handler, NOT a clamp in the damage
          * path; the original hands the devour off at hp=70 and this store makes the corpse -1
-         * (every kill save reads exactly -1). The zombie collapse clips (6/7) run well past 0x23; the
-         * DOG collapse clip 0xB can be shorter, so cap the kill frame to the clip end (robust, the dog
-         * eaten-death always resolves to the corpse). */
+         * (every kill save reads exactly -1). The zombie collapse clips (6/7) run well past 0x23. */
         int kill_fr = 0x23; if (fc - 1 < kill_fr) kill_fr = fc - 1;
         if (player->anim_frame == kill_fr && player->hp >= 0) {
             player->hp    = -1;
@@ -905,8 +950,7 @@ void re15_player_victim_tick(void)
          * FUN_80019700(0x2000) = effect-id 0 — the SAME spawn the hurt-fx uses) + its SE
          * Se_on(0x4030001) = CORE bank4 record 3 (Se_on RE'd: FUN_80045024 top byte = bank,
          * bank4 = the resident CORE00.EDH table @0x801fbd00, RAM-matched). The frame-0x23 chomp
-         * Se_on(0x2070001) is BANK 2 (*(DAT_800ac778+8), a room-state pointer) — still deferred.
-         * (Dog clip 0xB may end before 0x37 -> cap to the clip end so the eaten burst still fires.) */
+         * Se_on(0x2070001) is BANK 2 (*(DAT_800ac778+8), a room-state pointer) — still deferred. */
         int blood_fr = 0x37; if (fc - 1 < blood_fr) blood_fr = fc - 1;
         if (player->anim_frame == blood_fr) {
             /* KORRIGIERT (bite_blood_fx.md D4b/F3): a0 = 0x2000 (@0x8010a82c — der alte Spawn
@@ -916,6 +960,7 @@ void re15_player_victim_tick(void)
             re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x2000,
                                  bb8[0], bb8[1], bb8[2], (int16_t)player->rot_y);
             re15_audio_core_se(3);
+        }
         }
     } else {                                           /* RELEASE finish (state 3): release clip once -> free.
                                                         * (Entered via re15_player_victim_throwoff — the
@@ -5416,6 +5461,18 @@ static void re15_dog_grabhold(re15_actor_t *e, re15_actor_t *pl)
         e->motion = 0x19; e->anim_frame = 0; e->anim_frac = 7;   /* release clip @0x8010fb0c */
         e->sub_state_2 = 5;
         e->grab_kill_ctr = (uint8_t)((re15_engine_rand8() + 30) & 0x3f);  /* +0x9e rand @0x8010fb64 */
+        {   /* RELEASE-Einmalstempel der DOG-Opfer-Maschine A Phase [4] (@0x80111b04, laeuft auf dem
+             * Spieler-Tick nach dem aca5a:=4-Push): Blut FUN_80019700(0x1500, yaw, Spieler-Bone 8 =
+             * acbdc+0x5A0 @0x80111b38-5c, 0-Block 0x801210e0) @0x80111b58 + WUNDE FUN_80037edc(0,0xa)
+             * @0x80111b60-68 — der Dog-Hook stempelt SELBST nur Panel 0 (NICHT das generische
+             * Zombie-Triple 0/5/7 der Tabelle 0x801201b8). Einmalig pro Release (Phase [4] setzt
+             * sofort aca5a:=5 @0x80111b08-10); Port-Ort = der einmalige step-4-Eintritt. */
+            re15_actor_t *plv = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+            int32_t rb8[3]; re15_player_victim_bone_pos(8, rb8);
+            re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x1500,
+                                 rb8[0], rb8[1], rb8[2], (int16_t)plv->rot_y);
+            re15_wound_add(0, 0x0a);                    /* @0x80111b64 (a0=0 @0x80111b60, a1=0xa @0x80111b68) */
+        }
         /* FALLTHROUGH to step 5 */
         /* fall through */
     case 5:                                             /* run release anim 0x8010fb68 */
@@ -5524,15 +5581,18 @@ static void re15_dog_state456(re15_actor_t *e, re15_actor_t *pl)
          * swap / @0x800214e8 fade) that the PC renderer has no equivalent of = a no-op here. So there is
          * no unported dog-death behaviour; only the shared game-over CAMERA fade infra is engine-wide. */
         s_player_grabbed = 1;
-        if (e->sub_state_2 == 0) {                        /* setup phase @0x80111b04 / @0x80111d28 */
+        if (e->sub_state_2 == 0) {                        /* setup phase @0x801119c0 / @0x80111d28 */
             re15_player_victim_latch(e, pl);              /* pin + animate Leon from the dog's victim bank */
-            re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x2000 /* Original-a0 (D6) */,
-                              pl->x, pl->y, pl->z, (int16_t)pl->rot_y);   /* eaten blood burst */
+            /* KEIN Blut im Setup — Maschine A [0] (@0x801119c0-0x80111aa4) und Maschine B [0]
+             * (@0x80111d28-68) spawnen NICHTS (voll-disasm 2026-08-08; Blut kommt erst in
+             * A-Phase [4] @0x80111b58 bzw. B-Phase [1] Frames 0x29/0x3a @0x80111e30/ddc —
+             * letztere spielt jetzt der Victim-FSM-Kollaps). Die frueheren 0x2000-Bursts
+             * hier waren unbelegt. */
             e->sub_state_2 = 1;
         } else if (e->sub_state_2 == 1 && s_victim_phase >= 2) {   /* eaten past the shake phases -> KILL */
-            re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x2000 /* Original-a0 (D6) */,
-                              pl->x, pl->y, pl->z, (int16_t)pl->rot_y);   /* gore burst @kill */
-            re15_player_victim_devour(e);                 /* collapse -> player STATE 7 (aca58=7 @0x80111ea0) */
+            re15_player_victim_devour(e);                 /* -> Maschine-B-Kollaps (Clip 4 @0x80111d44,
+                                                           * Kadenz 0x29/0x3a/0x4f, Wunden + cmd 7
+                                                           * @0x80111e78-ea0 im Victim-FSM) */
             e->sub_state_2 = 2;
         }
         re15_dog_anim(e);                                 /* the dog holds its pounce-land pose */

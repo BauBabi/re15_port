@@ -129,7 +129,9 @@ STAGE2 registriert dieselbe Architektur (`STAGE2_overlay.c:9560-9588`): generisc
 
 **Opfer-FSMs (Spieler-Seite, laufen via Hook):** `@0x8010a664` `sw =1` (Grab-Phase-5-Exit → Steuerung), `@0x8010a8ac/b4` `sb 7 / sb 0` (Devour-Reaktion → cmd 7, FUN_8010a6f8-Tail).
 
-**Zombie-Girl 0x13 (Action-Tabelle `0x80120fd4[+0x5]`, Dispatch `@0x8010dce0-f0`):**
+**⚠️ KORREKTUR 2026-08-08 (Dog-Finisher-RE, probe_dog_devour):** Die folgende Tabelle war als „Zombie-Girl 0x13" etikettiert — **sie ist der DOG 0x20** (Root 0x8010d7f8; das Zombie-Girl-Root ist 0x8010a8c8). Die Rows: 8=FUN_8010f15c Steh-Biss, 9/0xa=FUN_8010f80c/FUN_8010fc60 Fress-Grab vorne/hinten (Clips 0x17/0x1a, Feed-Countdown +0x9e=50), 0xb=FUN_801100b4 **Dog-DEVOUR-Start** (Dog-Clip 0x1b @0x801100f4; `sb 6→aca58 @0x80110138, 0→aca59 @0x80110140, 0→aca5a @0x80110148`; acbfc:=dog @0x80110150; acbcc/acbd0 := dog+0x178/+0x17c @0x80110160/70 = EM020-Bank2; **kein Blut/SE/HP-Write**, voll-disasm 0x801100b4-0x801101e0). Der Kill läuft dann über Hook B LAB_80111cb0 → `0x801210f0[aca59]` → Maschine B 0x80111cf0 (Phasen @0x801002d4): Leon-Clip **4** aus der Dog-Bank2 (@0x80111d44, 90 Frames bank-gemessen), Blut 0x2000 @Frames 0x29/0x3a (Bone 8, @0x80111e30/@0x80111ddc), Se_on(0x4030001) @0x3a (@0x80111df4), 45630(2,0) @0x4f (@0x80111da4), Wundstempel §1.3 + `sw 7→aca58` @0x80111ea0 am Clip-Ende. Maschine-B-Phasen [3]/[4] (@0x80111eac: acb10/acb12 += 8, acaf2-Countdown) sind via cmd 6 unerreichbar (Phase [2]-Wortwrite nullt aca5a) — vermutlich Alt-Code/Pool-Grower-Duplikat, OFFEN.
+
+**Zombie-Girl-Etikett (ALT, siehe Korrektur oben — Adressen gehören dem DOG):**
 
 | +0x5 | Funktion | Sites | Write |
 |---|---|---|---|
@@ -153,7 +155,7 @@ STAGE2 registriert dieselbe Architektur (`STAGE2_overlay.c:9560-9588`): generisc
 | Spider-Spit FUN_80116288 | `@0x80116390/3a4` | cmd 2, `facing+2` (HP−2) |
 | Dog Leicht-Biss FUN_80118270 | `@0x80118484/9c`, Tod `@0x801184b4/bc` | cmd 2, `facing+2` (HP−6); 3/0 |
 | Dog Schwer-Biss FUN_8011854c | `@0x801187d8`, **`@0x801187e8 addiu v0,v0,4; @0x801187f0 sb`**, Tod `@0x80118808/10` | cmd 2, **`facing+4` = Knockdown-Substates 4/5** (HP−12); 3/0 |
-| Dog Fress-Attacke FUN_80118ddc | `@0x801191cc` | `sw =6` (cmd 6, dir 0; HP−600 `_ALL:9858`) |
+| ~~Dog~~ **GORILLA 0x27** Luft-Finisher FUN_80118ddc (KORRIGIERT 2026-08-08: Pointer nur in der Gorilla-Tabelle `@0x80121448`, B[8] des Selectors; Frame-Fenster `@0x80121478`={8,9,0xa}; der Dog-Devour ist FUN_801100b4, s. Korrektur-Box oben) | `@0x801191cc` | `sw =6` (cmd 6, dir 0; HP−600 `_ALL:9858`; danach Hook B des GORILLA LAB_8011c3d4) |
 | Gorilla Strike FUN_8011a44c | `@0x8011a7d4/ec`, Tod `@0x8011a804/0c` | cmd 2, `facing+2` (HP−12); 3/0 |
 | Gorilla Rear-Up-Grab FUN_8011a960 | `@0x8011ac48/68` | cmd 5, dir = `func_0x8001a780(&player)` ∈ {0,1} |
 | Gorilla-Grab-Reaktion LAB_8011c118 (Hook A) | `@0x8011c38c` | `sw =1` Release |
