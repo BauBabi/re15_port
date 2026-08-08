@@ -752,3 +752,43 @@ einen Spieler, der sich bewegt.
 Halbwort liegen; dort stand durchgaengig 0. Entweder ist `+0x1C4` nicht das Wort aus Glied 7/8,
 oder es traegt zusaetzlich eine Slot-ID. **Vor dem Einbau von Glied 7/8 klaeren** — eine
 Feldzuordnung, die im Original nachweislich anders belegt ist, darf nicht in den Port.
+
+---
+
+## 11. WARUM DER DEBUG-SPRUNG DAS KRIECHEN NIE ZEIGT (gemessen 2026-08-08)
+
+Drei aufeinander aufbauende Messungen am Original (PCSX-Redux, `tools/redux/crawl_watch.lua`,
+ereignisgesteuert auf jede Aenderung von `+0x94` und `+0x0B`, Flag-Bank 5 in JEDEM Bild
+ODER-akkumuliert):
+
+| Schritt | Messung | Folgerung |
+|---|---|---|
+| Spieler steht still | 6 Zombies Typ 0x16 bei z≈-24838, `+0x0B` = **0x05** bei 5 von 6 | Zone-Geometrie + Glied 1 bestaetigt: sie stehen IN der HINWEG-Zone |
+| dito, 8000 Bilder | `1C4lo` durchgehend `0000`, Clips nur 0x02/0x05/0x27 | Kette bricht zwischen „Stempel==5" und `Gosub 7` ab |
+| Spieler in die Zone versetzt (z=-24300) | Zustaende 1/4/1 → 1/6/1 → 1/12/1, Clips 0x03/0x04/0x0a/0x29 | die KI lebt und greift an — es ist NICHT allgemeine Untaetigkeit |
+| ueber ALLE Bilder | **Flag5 ODER W0 = `00000000`**, W1 ODER = `20000000` | `flag(5,0x21)` und `flag(5,0x22)` werden NIE gesetzt |
+
+### Der eigentliche Grund
+
+sub02 (Glied 6) beginnt mit
+```
+18 04              Gosub 4
+06 00 2e 00        If (len 46)
+21 05 14 01          Ck(bank5, bit 0x14, ==1)     <-- GATE des GANZEN Zyklus
+```
+`flag(5,0x14)` ist Bit 20 → Bank-5-**Wort 0**, Maske `0x00100000` (Adresse `0x800B1028`).
+Gemessen war Wort 0 ueber den gesamten Lauf **durchgehend 0**. Der Zyklus, der Zone 4/6 umschaltet
+und ueber `Gosub 7` das Freigabe-Bit setzt, **lief also kein einziges Mal**.
+
+⛔ **Konsequenz fuer die Methodik:** Ein Debug-Menue-Sprung nach ROOM1030 reproduziert das
+Kriechen grundsaetzlich NICHT — er setzt `flag(5,0x14)` nicht. Wer den Mechanismus am Original
+sehen will, muss den Raum auf dem regulaeren Weg betreten (Story-Zustand), oder `flag(5,0x14)`
+gezielt setzen. Das erklaert rueckwirkend, warum drei Messlaeufe „nichts passiert" ergaben,
+obwohl Zone-Stempel und KI nachweislich funktionieren.
+
+### Naechster Schritt (nicht geraten, sondern benannt)
+
+**Wer setzt `flag(5,0x14)`?** Das ist genau die Frage, fuer die dieses Werkzeug gebaut ist: ein
+SCHREIB-Haltepunkt auf `0x800B1028` mit Maske `0x00100000` liefert den literalen PC. Erst danach
+ist entscheidbar, ob der Port diese Vorbedingung ueberhaupt herstellt — und ohne sie ist jeder
+Einbau von Glied 6-8 blind.
