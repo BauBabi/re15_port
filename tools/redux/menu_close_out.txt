@@ -30,3 +30,37 @@ B12000 offen=0 Treffer=14  Spieler (-26214,-3861)
    PC 0xbfc0d864  1 Schreibvorgaenge
    PC 0x80021efc  1 Schreibvorgaenge
    PC 0x80054458  1 Schreibvorgaenge
+
+B15000 offen=0 Treffer=14  Spieler (-31000,31000)
+   PC 0x80014488  5 Schreibvorgaenge
+   PC 0x80014c20  5 Schreibvorgaenge
+   PC 0xbfc0661c  1 Schreibvorgaenge
+   PC 0xbfc0d864  1 Schreibvorgaenge
+   PC 0x80021efc  1 Schreibvorgaenge
+   PC 0x80054458  1 Schreibvorgaenge
+
+B18000 offen=0 Treffer=14  Spieler (2664,-7336)
+   PC 0x80014488  5 Schreibvorgaenge
+   PC 0x80014c20  5 Schreibvorgaenge
+   PC 0xbfc0661c  1 Schreibvorgaenge
+   PC 0xbfc0d864  1 Schreibvorgaenge
+   PC 0x80021efc  1 Schreibvorgaenge
+   PC 0x80054458  1 Schreibvorgaenge
+
+=== die ersten Schreibvorgaenge im Detail ===
+   Bild    674  PC=0xbfc0d864  Wert vorher=0
+   Bild    830  PC=0xbfc0661c  Wert vorher=0
+   Bild    870  PC=0x80054458  Wert vorher=0
+   Bild   1024  PC=0x80021efc  Wert vorher=0
+   Bild   9531  PC=0x80014488  Wert vorher=0
+   Bild   9575  PC=0x80014c20  Wert vorher=1
+   Bild   9801  PC=0x80014488  Wert vorher=0
+   Bild  10028  PC=0x80014c20  Wert vorher=1
+   Bild  10254  PC=0x80014488  Wert vorher=0
+   Bild  10482  PC=0x80014c20  Wert vorher=1
+   Bild  10708  PC=0x80014488  Wert vorher=0
+   Bild  10936  PC=0x80014c20  Wert vorher=1
+   Bild  11161  PC=0x80014488  Wert vorher=0
+   Bild  11389  PC=0x80014c20  Wert vorher=1
+
+fertig

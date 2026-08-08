@@ -708,3 +708,47 @@ dann muss der Test angepasst werden, nicht der Clear weggelassen.
   Vor Schritt 5 harmlos, danach nicht mehr automatisch.
 * Kein einziger Wert der Kette ist bisher an einem **Original**-Savestate gemessen. Alle
   Feldzuordnungen sind instruktions-hergeleitet.
+
+---
+
+## 10. HARDWARE-VERIFIKATION am ORIGINAL (2026-08-08, PCSX-Redux)
+
+Der letzte Punkt oben — „kein einziger Wert der Kette ist bisher an einem **Original**-Savestate
+gemessen" — ist damit teilweise erledigt. Zugang: Debug-Menue-Sprung Stage 0 / Index 0x03,
+autonom gefahren (`tools/redux/jump_menu.lua`). Zwei Werkzeug-Defekte mussten dafuer erst weg:
+`return false` im Haltepunkt-Rueckruf LOESCHT den Haltepunkt (gemessen 1 vs. 2075 Treffer), und
+bestaetigt wird im Debug-Menue mit **QUADRAT** (`@0x80014a38 andi v0,v0,0x80`), nicht mit KREUZ.
+
+### Bestaetigt
+
+| Behauptung im Dossier | Messung am Original | Status |
+|---|---|---|
+| Spawn-Cap `24 12 06 00` @0x1de2 = `work_vars[0x12] = 6` | **genau 6** belegte Gegner-Slots, durchgaengig ueber ~10000 Bilder | ✅ |
+| ROOM1030 spawnt Typ **0x16** (`@0x8011e8a0-a4 sw v0,11268(at)` → `0x80072c04`) | alle 6 Slots tragen `+0x08 = 0x16` | ✅ |
+| Entity-Tabelle `0x800acc2c + slot*0x1F4` | Slots 0..5 zusammenhaengend belegt, Felder plausibel | ✅ |
+
+Damit ist die Nutzer-Beobachtung „im Original sind nur 6 Zombies sichtbar" **hardware-belegt** —
+und der bereits eingebaute Cap trifft die richtige Zahl.
+
+### Noch NICHT bestaetigt — und eine Selbstkorrektur
+
+Bei stillstehendem Spieler (nur Raumsprung, keine Bewegung) traten ueber ~10000 Bilder **nur**
+die Clips `0x02`, `0x05` und `0x27` auf. **Weder `0x12` (Uebergang) noch `0x1A` (Kriechen)**.
+Die Trigger-Kette lief also gar nicht an — erwartbar, denn der Zonen-Handshake (Glied 6) braucht
+einen Spieler, der sich bewegt.
+
+⚠️ Zwei Messfehler meinerseits, die hier festgehalten gehoeren:
+1. Ich habe zuerst nur nach `+0x94 == 0x12` gesucht. Laut Tabelle in §? ist `0x12` aber nur der
+   **Uebergang**, das eigentliche Kriechen ist **`0x1A`**.
+2. Abtastung alle 300 Bilder ist zu grob: Slot 0 sprang zwischen zwei Stichproben von
+   `z=-27878` auf `z=-25004` — genau die Strecke unter dem Tor. Der Vorgang lag ZWISCHEN den
+   Abtastpunkten. Messung muss ereignisgesteuert sein (`tools/redux/crawl_watch.lua` schreibt bei
+   jeder Aenderung von `+0x94`).
+
+### Beobachtung, die eine Feldzuordnung in Frage stellt
+
+`+0x1C4` stand pro Slot auf `0x00000000, 0x00010000, 0x00020000, … 0x00050000` — also
+**Slot-Index im oberen Halbwort**. Das Freigabe-Bit `0x1000` aus Glied 7/8 muesste im UNTEREN
+Halbwort liegen; dort stand durchgaengig 0. Entweder ist `+0x1C4` nicht das Wort aus Glied 7/8,
+oder es traegt zusaetzlich eine Slot-ID. **Vor dem Einbau von Glied 7/8 klaeren** — eine
+Feldzuordnung, die im Original nachweislich anders belegt ist, darf nicht in den Port.

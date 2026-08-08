@@ -4,88 +4,291 @@ B 3000 | Phase 0 | offen=0 Zeile=0 Stage=0 Idx=00 | Raum St 0 Idx 00 | n=0 | Spi
 B 4500 | Phase 0 | offen=0 Zeile=0 Stage=0 Idx=00 | Raum St 0 Idx 00 | n=0 | Spieler (0,0)
 B 6000 | Phase 0 | offen=0 Zeile=0 Stage=0 Idx=00 | Raum St 0 Idx 00 | n=0 | Spieler (0,0)
 B 7500 | Phase 0 | offen=0 Zeile=0 Stage=0 Idx=00 | Raum St 0 Idx 00 | n=0 | Spieler (0,0)
-SPIELER ab Bild 8887
+SPIELER ab Bild 8891
 B 9000 | Phase 0 | offen=0 Zeile=0 Stage=0 Idx=00 | Raum St 0 Idx 17 | n=0 | Spieler (3940,14167)
-MENUE OFFEN ab Bild 9560 — SELECT aus, Ziel eintragen
-Ziel steht (Zeile=1 Stage=0 Idx=03) — jetzt KREUZ
-B10500 | Phase 2 | offen=0 Zeile=1 Stage=0 Idx=03 | Raum St 23 Idx 24 | n=467 | Spieler (-26214,-3861)
-B12000 | Phase 2 | offen=0 Zeile=1 Stage=0 Idx=03 | Raum St 23 Idx 24 | n=1171 | Spieler (-26214,-3861)
-KREUZ blieb wirkungslos — Abbruch der Bestaetigung
+MENUE OFFEN ab Bild 9564 — SELECT aus, Ziel eintragen
+Ziel steht (Zeile=1 Stage=0 Idx=03) — jetzt QUADRAT
 
-== Bild 12322  Raum St 23 Idx 24  Spieler (-26214,-3861)  Gegner 0 ==
+*** IM ZIELRAUM ab Bild 9628 ***
 
-== Bild 12622  Raum St 36 Idx 17  Spieler (-26214,-3861)  Gegner 0 ==
+== Bild 9928  Raum St 0 Idx 03  Spieler (-8200,-22500)  Gegner 6  davon Clip 0x12: 0 ==
+   Slot  0 Typ 16 grid 00  1/2/0  Clip 27 Bild 01  +93=00 +8F=00 +9F=00  1C4=00000000  (-8978,-27878)
+   Slot  1 Typ 16 grid 00  1/2/0  Clip 27 Bild 01  +93=00 +8F=00 +9F=00  1C4=00010000  (-11700,-26671)
+   Slot  2 Typ 16 grid 00  1/2/0  Clip 27 Bild 01  +93=00 +8F=00 +9F=00  1C4=00020000  (-10000,-30000)
+   Slot  3 Typ 16 grid 00  1/2/0  Clip 27 Bild 01  +93=00 +8F=00 +9F=00  1C4=00030000  (-5400,-28110)
+   Slot  4 Typ 16 grid 00  1/2/0  Clip 27 Bild 01  +93=00 +8F=00 +9F=00  1C4=00040000  (-7300,-25655)
+   Slot  5 Typ 16 grid 00  1/2/0  Clip 27 Bild 01  +93=00 +8F=00 +9F=00  1C4=00050000  (-7300,-29655)
 
-== Bild 12922  Raum St 36 Idx 17  Spieler (-26214,-3861)  Gegner 0 ==
+== Bild 10228  Raum St 0 Idx 03  Spieler (-8200,-22303)  Gegner 6  davon Clip 0x12: 0 ==
+   Slot  0 Typ 16 grid 00  1/2/1  Clip 02 Bild 25  +93=00 +8F=00 +9F=06  1C4=00000000  (-8646,-25004)
+   Slot  1 Typ 16 grid 00  1/2/1  Clip 02 Bild 25  +93=00 +8F=00 +9F=00  1C4=00010000  (-11281,-24838)
+   Slot  2 Typ 16 grid 00  1/2/1  Clip 02 Bild 02  +93=00 +8F=00 +9F=14  1C4=00020000  (-9133,-25960)
+   Slot  3 Typ 16 grid 00  1/2/1  Clip 02 Bild 25  +93=00 +8F=00 +9F=0c  1C4=00030000  (-6896,-25619)
+   Slot  4 Typ 16 grid 00  1/2/1  Clip 05 Bild 09  +93=00 +8F=00 +9F=06  1C4=00040000  (-7104,-24838)
+   Slot  5 Typ 16 grid 00  1/2/1  Clip 05 Bild 11  +93=00 +8F=00 +9F=00  1C4=00050000  (-6296,-26459)
 
-== Bild 13222  Raum St 36 Idx 17  Spieler (-26214,-3861)  Gegner 0 ==
+== Bild 10528  Raum St 0 Idx 03  Spieler (-8200,-22303)  Gegner 6  davon Clip 0x12: 0 ==
+   Slot  0 Typ 16 grid 00  1/2/1  Clip 02 Bild 0f  +93=00 +8F=00 +9F=09  1C4=00000000  (-8803,-24838)
+   Slot  1 Typ 16 grid 00  1/2/1  Clip 02 Bild 0f  +93=00 +8F=00 +9F=04  1C4=00010000  (-9605,-24838)
+   Slot  2 Typ 16 grid 00  1/2/1  Clip 02 Bild 17  +93=00 +8F=00 +9F=14  1C4=00020000  (-9209,-25533)
+   Slot  3 Typ 16 grid 00  1/2/1  Clip 02 Bild 0f  +93=00 +8F=00 +9F=0e  1C4=00030000  (-8402,-25534)
+   Slot  4 Typ 16 grid 00  1/2/1  Clip 05 Bild 2d  +93=00 +8F=00 +9F=07  1C4=00040000  (-8001,-24838)
+   Slot  5 Typ 16 grid 00  1/2/1  Clip 05 Bild 35  +93=00 +8F=00 +9F=03  1C4=00050000  (-7199,-24838)
 
-== Bild 13522  Raum St 36 Idx 17  Spieler (-26214,-3861)  Gegner 0 ==
+== Bild 10828  Raum St 0 Idx 03  Spieler (-8200,-22303)  Gegner 6  davon Clip 0x12: 0 ==
+   Slot  0 Typ 16 grid 00  1/2/1  Clip 02 Bild 24  +93=00 +8F=00 +9F=0c  1C4=00000000  (-8851,-24838)
+   Slot  1 Typ 16 grid 00  1/2/1  Clip 02 Bild 24  +93=00 +8F=00 +9F=06  1C4=00010000  (-9653,-24838)
+   Slot  2 Typ 16 grid 00  1/2/1  Clip 02 Bild 01  +93=00 +8F=00 +9F=1a  1C4=00020000  (-9408,-25600)
+   Slot  3 Typ 16 grid 00  1/2/1  Clip 02 Bild 24  +93=00 +8F=00 +9F=12  1C4=00030000  (-8434,-25542)
+   Slot  4 Typ 16 grid 00  1/2/1  Clip 05 Bild 18  +93=00 +8F=00 +9F=0c  1C4=00040000  (-8048,-24838)
+   Slot  5 Typ 16 grid 00  1/2/1  Clip 05 Bild 20  +93=00 +8F=00 +9F=06  1C4=00050000  (-7611,-25511)
 
-== Bild 13822  Raum St 23 Idx 17  Spieler (-31000,31000)  Gegner 1 ==
-   Slot  0 Typ 47 grid 40  4/6/0  Clip 02 Bild 01  (1261,10091)
+== Bild 11128  Raum St 0 Idx 03  Spieler (-8200,-22303)  Gegner 6  davon Clip 0x12: 0 ==
+   Slot  0 Typ 16 grid 00  1/2/1  Clip 02 Bild 0e  +93=00 +8F=00 +9F=0c  1C4=00000000  (-8963,-24838)
+   Slot  1 Typ 16 grid 00  1/2/1  Clip 02 Bild 0e  +93=00 +8F=00 +9F=0b  1C4=00010000  (-9765,-24838)
+   Slot  2 Typ 16 grid 00  1/2/1  Clip 02 Bild 16  +93=00 +8F=00 +9F=1a  1C4=00020000  (-9367,-25534)
+   Slot  3 Typ 16 grid 00  1/2/1  Clip 02 Bild 0e  +93=00 +8F=00 +9F=14  1C4=00030000  (-8560,-25533)
+   Slot  4 Typ 16 grid 00  1/2/1  Clip 05 Bild 03  +93=00 +8F=00 +9F=0c  1C4=00040000  (-8165,-24830)
+   Slot  5 Typ 16 grid 00  1/2/1  Clip 05 Bild 0b  +93=00 +8F=00 +9F=09  1C4=00050000  (-7363,-24831)
 
-== Bild 14122  Raum St 23 Idx 17  Spieler (-31000,31000)  Gegner 1 ==
-   Slot  0 Typ 47 grid 40  4/0/2  Clip 0f Bild 00  (-2196,5870)
+== Bild 11428  Raum St 0 Idx 03  Spieler (-8200,-22303)  Gegner 6  davon Clip 0x12: 0 ==
+   Slot  0 Typ 16 grid 00  1/2/1  Clip 02 Bild 23  +93=00 +8F=00 +9F=12  1C4=00000000  (-9189,-24838)
+   Slot  1 Typ 16 grid 00  1/2/1  Clip 02 Bild 23  +93=00 +8F=00 +9F=0c  1C4=00010000  (-9992,-24828)
+   Slot  2 Typ 16 grid 00  1/2/1  Clip 02 Bild 00  +93=00 +8F=00 +9F=00  1C4=00020000  (-9562,-25549)
+   Slot  3 Typ 16 grid 00  1/2/1  Clip 02 Bild 23  +93=00 +8F=00 +9F=14  1C4=00030000  (-8754,-25551)
+   Slot  4 Typ 16 grid 00  1/2/1  Clip 05 Bild 27  +93=00 +8F=00 +9F=11  1C4=00040000  (-8387,-24838)
+   Slot  5 Typ 16 grid 00  1/2/1  Clip 05 Bild 2f  +93=00 +8F=00 +9F=0c  1C4=00050000  (-7703,-25257)
 
-== Bild 14422  Raum St 23 Idx 17  Spieler (-31000,31000)  Gegner 1 ==
-   Slot  0 Typ 47 grid 40  4/0/1  Clip 14 Bild 02  (-2196,5870)
+== Bild 11728  Raum St 0 Idx 03  Spieler (-8200,-22303)  Gegner 6  davon Clip 0x12: 0 ==
+   Slot  0 Typ 16 grid 00  1/2/1  Clip 02 Bild 0d  +93=00 +8F=00 +9F=14  1C4=00000000  (-9300,-24838)
+   Slot  1 Typ 16 grid 00  1/2/1  Clip 02 Bild 0d  +93=00 +8F=00 +9F=0e  1C4=00010000  (-10101,-24827)
+   Slot  2 Typ 16 grid 00  1/2/1  Clip 02 Bild 15  +93=00 +8F=00 +9F=02  1C4=00020000  (-9734,-25540)
+   Slot  3 Typ 16 grid 00  1/2/1  Clip 02 Bild 0d  +93=00 +8F=00 +9F=19  1C4=00030000  (-8896,-25534)
+   Slot  4 Typ 16 grid 00  1/2/1  Clip 05 Bild 12  +93=00 +8F=00 +9F=14  1C4=00040000  (-8499,-24838)
+   Slot  5 Typ 16 grid 00  1/2/1  Clip 05 Bild 1a  +93=00 +8F=00 +9F=0d  1C4=00050000  (-7697,-24838)
 
-== Bild 14722  Raum St 23 Idx 17  Spieler (-31000,31000)  Gegner 1 ==
-   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-2196,5870)
+== Bild 12028  Raum St 0 Idx 03  Spieler (-8200,-22303)  Gegner 6  davon Clip 0x12: 0 ==
+   Slot  0 Typ 16 grid 00  1/2/1  Clip 02 Bild 22  +93=00 +8F=00 +9F=14  1C4=00000000  (-9342,-24825)
+   Slot  1 Typ 16 grid 00  1/2/1  Clip 02 Bild 22  +93=00 +8F=00 +9F=12  1C4=00010000  (-10144,-24828)
+   Slot  2 Typ 16 grid 00  1/2/1  Clip 02 Bild 2a  +93=00 +8F=00 +9F=06  1C4=00020000  (-9716,-25540)
+   Slot  3 Typ 16 grid 00  1/2/1  Clip 02 Bild 22  +93=00 +8F=00 +9F=1a  1C4=00030000  (-8904,-25553)
+   Slot  4 Typ 16 grid 00  1/2/1  Clip 05 Bild 36  +93=00 +8F=00 +9F=14  1C4=00040000  (-8540,-24838)
+   Slot  5 Typ 16 grid 00  1/2/1  Clip 05 Bild 05  +93=00 +8F=00 +9F=12  1C4=00050000  (-7739,-24838)
 
-== Bild 15022  Raum St 23 Idx 17  Spieler (-31000,31000)  Gegner 1 ==
-   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+== Bild 12328  Raum St 0 Idx 03  Spieler (-8200,-22303)  Gegner 6  davon Clip 0x12: 0 ==
+   Slot  0 Typ 16 grid 00  1/2/1  Clip 02 Bild 0c  +93=00 +8F=00 +9F=17  1C4=00000000  (-9452,-24838)
+   Slot  1 Typ 16 grid 00  1/2/1  Clip 02 Bild 0c  +93=00 +8F=00 +9F=14  1C4=00010000  (-10254,-24838)
+   Slot  2 Typ 16 grid 00  1/2/1  Clip 02 Bild 14  +93=00 +8F=00 +9F=09  1C4=00020000  (-9872,-25544)
+   Slot  3 Typ 16 grid 00  1/2/1  Clip 02 Bild 0c  +93=00 +8F=00 +9F=1f  1C4=00030000  (-9045,-25534)
+   Slot  4 Typ 16 grid 00  1/2/1  Clip 05 Bild 21  +93=00 +8F=00 +9F=17  1C4=00040000  (-8656,-24838)
+   Slot  5 Typ 16 grid 00  1/2/1  Clip 05 Bild 29  +93=00 +8F=00 +9F=14  1C4=00050000  (-7847,-24838)
 
-== Bild 15322  Raum St 23 Idx 17  Spieler (-31000,31000)  Gegner 1 ==
-   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+== Bild 12628  Raum St 0 Idx 03  Spieler (-8200,-22303)  Gegner 6  davon Clip 0x12: 0 ==
+   Slot  0 Typ 16 grid 00  1/2/1  Clip 02 Bild 21  +93=00 +8F=00 +9F=1a  1C4=00000000  (-9560,-24838)
+   Slot  1 Typ 16 grid 00  1/2/1  Clip 02 Bild 21  +93=00 +8F=00 +9F=14  1C4=00010000  (-10361,-24835)
+   Slot  2 Typ 16 grid 00  1/2/1  Clip 02 Bild 29  +93=00 +8F=00 +9F=0c  1C4=00020000  (-9931,-25553)
+   Slot  3 Typ 16 grid 00  1/2/1  Clip 02 Bild 21  +93=00 +8F=00 +9F=00  1C4=00030000  (-9121,-25554)
+   Slot  4 Typ 16 grid 00  1/2/1  Clip 05 Bild 0c  +93=00 +8F=00 +9F=1a  1C4=00040000  (-8759,-24838)
+   Slot  5 Typ 16 grid 00  1/2/1  Clip 05 Bild 14  +93=00 +8F=00 +9F=14  1C4=00050000  (-7958,-24838)
 
-== Bild 15622  Raum St 23 Idx 17  Spieler (2300,14365)  Gegner 1 ==
-   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+== Bild 12928  Raum St 0 Idx 03  Spieler (-8200,-22303)  Gegner 6  davon Clip 0x12: 0 ==
+   Slot  0 Typ 16 grid 00  1/2/1  Clip 02 Bild 0b  +93=00 +8F=00 +9F=1e  1C4=00000000  (-9623,-24827)
+   Slot  1 Typ 16 grid 00  1/2/1  Clip 02 Bild 0b  +93=00 +8F=00 +9F=19  1C4=00010000  (-10425,-24827)
+   Slot  2 Typ 16 grid 00  1/2/1  Clip 02 Bild 13  +93=00 +8F=00 +9F=0c  1C4=00020000  (-10031,-25525)
+   Slot  3 Typ 16 grid 00  1/2/1  Clip 02 Bild 0b  +93=00 +8F=00 +9F=06  1C4=00030000  (-9217,-25536)
+   Slot  4 Typ 16 grid 00  1/2/1  Clip 05 Bild 30  +93=00 +8F=00 +9F=1d  1C4=00040000  (-8822,-24838)
+   Slot  5 Typ 16 grid 00  1/2/1  Clip 05 Bild 38  +93=00 +8F=00 +9F=18  1C4=00050000  (-8020,-24854)
 
-== Bild 15922  Raum St 23 Idx 17  Spieler (-31000,31000)  Gegner 1 ==
-   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+== Bild 13228  Raum St 0 Idx 03  Spieler (-8200,-22303)  Gegner 6  davon Clip 0x12: 0 ==
+   Slot  0 Typ 16 grid 00  1/2/1  Clip 02 Bild 20  +93=00 +8F=00 +9F=00  1C4=00000000  (-9637,-24826)
+   Slot  1 Typ 16 grid 00  1/2/1  Clip 02 Bild 20  +93=00 +8F=00 +9F=1a  1C4=00010000  (-10439,-24826)
+   Slot  2 Typ 16 grid 00  1/2/1  Clip 02 Bild 28  +93=00 +8F=00 +9F=12  1C4=00020000  (-10007,-25545)
+   Slot  3 Typ 16 grid 00  1/2/1  Clip 02 Bild 20  +93=00 +8F=00 +9F=07  1C4=00030000  (-9196,-25552)
+   Slot  4 Typ 16 grid 00  1/2/1  Clip 05 Bild 1b  +93=00 +8F=00 +9F=00  1C4=00040000  (-8840,-24838)
+   Slot  5 Typ 16 grid 00  1/2/1  Clip 05 Bild 23  +93=00 +8F=00 +9F=1a  1C4=00050000  (-8038,-24838)
 
-== Bild 16222  Raum St 23 Idx 17  Spieler (2664,-7336)  Gegner 1 ==
-   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+== Bild 13528  Raum St 0 Idx 03  Spieler (-8200,-22303)  Gegner 6  davon Clip 0x12: 0 ==
+   Slot  0 Typ 16 grid 00  1/2/1  Clip 02 Bild 0a  +93=00 +8F=00 +9F=06  1C4=00000000  (-9648,-24838)
+   Slot  1 Typ 16 grid 00  1/2/1  Clip 02 Bild 0a  +93=00 +8F=00 +9F=1f  1C4=00010000  (-10451,-24822)
+   Slot  2 Typ 16 grid 00  1/2/1  Clip 02 Bild 12  +93=00 +8F=00 +9F=14  1C4=00020000  (-8992,-25627)
+   Slot  3 Typ 16 grid 00  1/2/1  Clip 02 Bild 0a  +93=00 +8F=00 +9F=0c  1C4=00030000  (-7177,-24916)
+   Slot  4 Typ 16 grid 00  1/2/1  Clip 05 Bild 06  +93=00 +8F=00 +9F=06  1C4=00040000  (-8847,-24838)
+   Slot  5 Typ 16 grid 00  1/2/1  Clip 05 Bild 0e  +93=00 +8F=00 +9F=1e  1C4=00050000  (-8045,-24829)
 
-== Bild 16522  Raum St 23 Idx 17  Spieler (2664,-7336)  Gegner 1 ==
-   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+== Bild 13828  Raum St 0 Idx 03  Spieler (-8200,-22303)  Gegner 6  davon Clip 0x12: 0 ==
+   Slot  0 Typ 16 grid 00  1/2/1  Clip 02 Bild 1f  +93=00 +8F=00 +9F=06  1C4=00000000  (-9667,-24838)
+   Slot  1 Typ 16 grid 00  1/2/1  Clip 02 Bild 1f  +93=00 +8F=00 +9F=00  1C4=00010000  (-10468,-24822)
+   Slot  2 Typ 16 grid 00  1/2/1  Clip 02 Bild 27  +93=00 +8F=00 +9F=14  1C4=00020000  (-8449,-25539)
+   Slot  3 Typ 16 grid 00  1/2/1  Clip 02 Bild 1f  +93=00 +8F=00 +9F=0c  1C4=00030000  (-7260,-24838)
+   Slot  4 Typ 16 grid 00  1/2/1  Clip 05 Bild 2a  +93=00 +8F=00 +9F=06  1C4=00040000  (-8861,-24838)
+   Slot  5 Typ 16 grid 00  1/2/1  Clip 05 Bild 32  +93=00 +8F=00 +9F=00  1C4=00050000  (-8058,-24838)
 
-== Bild 16822  Raum St 23 Idx 17  Spieler (2664,-7336)  Gegner 1 ==
-   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+== Bild 14128  Raum St 0 Idx 03  Spieler (-8200,-22303)  Gegner 6  davon Clip 0x12: 0 ==
+   Slot  0 Typ 16 grid 00  1/2/1  Clip 02 Bild 09  +93=00 +8F=00 +9F=0c  1C4=00000000  (-9654,-24838)
+   Slot  1 Typ 16 grid 00  1/2/1  Clip 02 Bild 09  +93=00 +8F=00 +9F=06  1C4=00010000  (-10456,-24823)
+   Slot  2 Typ 16 grid 00  1/2/1  Clip 02 Bild 11  +93=00 +8F=00 +9F=18  1C4=00020000  (-8441,-25536)
+   Slot  3 Typ 16 grid 00  1/2/1  Clip 02 Bild 09  +93=00 +8F=00 +9F=11  1C4=00030000  (-7248,-24838)
+   Slot  4 Typ 16 grid 00  1/2/1  Clip 05 Bild 15  +93=00 +8F=00 +9F=0c  1C4=00040000  (-8851,-24838)
+   Slot  5 Typ 16 grid 00  1/2/1  Clip 05 Bild 1d  +93=00 +8F=00 +9F=06  1C4=00050000  (-8050,-24838)
 
-== Bild 17122  Raum St 23 Idx 17  Spieler (2664,-7336)  Gegner 1 ==
-   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+== Bild 14428  Raum St 0 Idx 03  Spieler (-8200,-22303)  Gegner 6  davon Clip 0x12: 0 ==
+   Slot  0 Typ 16 grid 00  1/2/1  Clip 02 Bild 1e  +93=00 +8F=00 +9F=0c  1C4=00000000  (-9653,-24825)
+   Slot  1 Typ 16 grid 00  1/2/1  Clip 02 Bild 1e  +93=00 +8F=00 +9F=07  1C4=00010000  (-10456,-24838)
+   Slot  2 Typ 16 grid 00  1/2/1  Clip 02 Bild 26  +93=00 +8F=00 +9F=1a  1C4=00020000  (-8427,-25544)
+   Slot  3 Typ 16 grid 00  1/2/1  Clip 02 Bild 1e  +93=00 +8F=00 +9F=14  1C4=00030000  (-7246,-24838)
+   Slot  4 Typ 16 grid 00  1/2/1  Clip 05 Bild 00  +93=00 +8F=00 +9F=0c  1C4=00040000  (-8852,-24838)
+   Slot  5 Typ 16 grid 00  1/2/1  Clip 05 Bild 08  +93=00 +8F=00 +9F=06  1C4=00050000  (-8049,-24838)
 
-== Bild 17422  Raum St 23 Idx 17  Spieler (2664,-7336)  Gegner 1 ==
-   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+== Bild 14728  Raum St 0 Idx 03  Spieler (-8200,-22303)  Gegner 6  davon Clip 0x12: 0 ==
+   Slot  0 Typ 16 grid 00  1/2/1  Clip 02 Bild 08  +93=00 +8F=00 +9F=10  1C4=00000000  (-9618,-24838)
+   Slot  1 Typ 16 grid 00  1/2/1  Clip 02 Bild 08  +93=00 +8F=00 +9F=0c  1C4=00010000  (-10419,-24838)
+   Slot  2 Typ 16 grid 00  1/2/1  Clip 02 Bild 10  +93=00 +8F=00 +9F=1e  1C4=00020000  (-8409,-25536)
+   Slot  3 Typ 16 grid 00  1/2/1  Clip 02 Bild 08  +93=00 +8F=00 +9F=14  1C4=00030000  (-7214,-24828)
+   Slot  4 Typ 16 grid 00  1/2/1  Clip 05 Bild 24  +93=00 +8F=00 +9F=0f  1C4=00040000  (-8813,-24838)
+   Slot  5 Typ 16 grid 00  1/2/1  Clip 05 Bild 2c  +93=00 +8F=00 +9F=0c  1C4=00050000  (-8011,-24838)
 
-== Bild 17722  Raum St 23 Idx 17  Spieler (2664,-7336)  Gegner 1 ==
-   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+== Bild 15028  Raum St 0 Idx 03  Spieler (-8200,-22303)  Gegner 6  davon Clip 0x12: 0 ==
+   Slot  0 Typ 16 grid 00  1/2/1  Clip 02 Bild 1d  +93=00 +8F=00 +9F=13  1C4=00000000  (-9608,-24838)
+   Slot  1 Typ 16 grid 00  1/2/1  Clip 02 Bild 1d  +93=00 +8F=00 +9F=0c  1C4=00010000  (-10411,-24834)
+   Slot  2 Typ 16 grid 00  1/2/1  Clip 02 Bild 25  +93=00 +8F=00 +9F=00  1C4=00020000  (-8378,-25548)
+   Slot  3 Typ 16 grid 00  1/2/1  Clip 02 Bild 1d  +93=00 +8F=00 +9F=16  1C4=00030000  (-7203,-24838)
+   Slot  4 Typ 16 grid 00  1/2/1  Clip 05 Bild 0f  +93=00 +8F=00 +9F=12  1C4=00040000  (-8803,-24838)
+   Slot  5 Typ 16 grid 00  1/2/1  Clip 05 Bild 17  +93=00 +8F=00 +9F=0c  1C4=00050000  (-8000,-24838)
 
-== Bild 18022  Raum St 23 Idx 17  Spieler (2664,-7336)  Gegner 1 ==
-   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+== Bild 15328  Raum St 0 Idx 03  Spieler (-8200,-22303)  Gegner 6  davon Clip 0x12: 0 ==
+   Slot  0 Typ 16 grid 00  1/2/1  Clip 02 Bild 07  +93=00 +8F=00 +9F=14  1C4=00000000  (-9614,-24838)
+   Slot  1 Typ 16 grid 00  1/2/1  Clip 02 Bild 07  +93=00 +8F=00 +9F=11  1C4=00010000  (-10416,-24838)
+   Slot  2 Typ 16 grid 00  1/2/1  Clip 02 Bild 0f  +93=00 +8F=00 +9F=06  1C4=00020000  (-8018,-25640)
+   Slot  3 Typ 16 grid 00  1/2/1  Clip 02 Bild 07  +93=00 +8F=00 +9F=1a  1C4=00030000  (-7209,-24838)
+   Slot  4 Typ 16 grid 00  1/2/1  Clip 05 Bild 33  +93=00 +8F=00 +9F=14  1C4=00040000  (-8813,-24838)
+   Slot  5 Typ 16 grid 00  1/2/1  Clip 05 Bild 02  +93=00 +8F=00 +9F=10  1C4=00050000  (-8012,-24838)
 
-== Bild 18322  Raum St 23 Idx 17  Spieler (2664,-7336)  Gegner 1 ==
-   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+== Bild 15628  Raum St 0 Idx 03  Spieler (-8200,-22303)  Gegner 6  davon Clip 0x12: 0 ==
+   Slot  0 Typ 16 grid 00  1/2/1  Clip 02 Bild 1c  +93=00 +8F=00 +9F=14  1C4=00000000  (-9650,-24822)
+   Slot  1 Typ 16 grid 00  1/2/1  Clip 02 Bild 1c  +93=00 +8F=00 +9F=14  1C4=00010000  (-10452,-24838)
+   Slot  2 Typ 16 grid 00  1/2/1  Clip 02 Bild 24  +93=00 +8F=00 +9F=06  1C4=00020000  (-8426,-25542)
+   Slot  3 Typ 16 grid 00  1/2/1  Clip 02 Bild 1c  +93=00 +8F=00 +9F=1c  1C4=00030000  (-7245,-24838)
+   Slot  4 Typ 16 grid 00  1/2/1  Clip 05 Bild 1e  +93=00 +8F=00 +9F=14  1C4=00040000  (-8848,-24838)
+   Slot  5 Typ 16 grid 00  1/2/1  Clip 05 Bild 26  +93=00 +8F=00 +9F=14  1C4=00050000  (-8046,-24838)
 
-== Bild 18622  Raum St 23 Idx 17  Spieler (2664,-7336)  Gegner 1 ==
-   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+== Bild 15928  Raum St 0 Idx 03  Spieler (-8200,-22303)  Gegner 6  davon Clip 0x12: 0 ==
+   Slot  0 Typ 16 grid 00  1/2/1  Clip 02 Bild 06  +93=00 +8F=00 +9F=1a  1C4=00000000  (-9705,-24838)
+   Slot  1 Typ 16 grid 00  1/2/1  Clip 02 Bild 06  +93=00 +8F=00 +9F=14  1C4=00010000  (-10507,-24838)
+   Slot  2 Typ 16 grid 00  1/2/1  Clip 02 Bild 0e  +93=00 +8F=00 +9F=0c  1C4=00020000  (-7007,-25565)
+   Slot  3 Typ 16 grid 00  1/2/1  Clip 02 Bild 06  +93=00 +8F=00 +9F=00  1C4=00030000  (-7298,-24838)
+   Slot  4 Typ 16 grid 00  1/2/1  Clip 05 Bild 09  +93=00 +8F=00 +9F=1a  1C4=00040000  (-8906,-24838)
+   Slot  5 Typ 16 grid 00  1/2/1  Clip 05 Bild 11  +93=00 +8F=00 +9F=14  1C4=00050000  (-8100,-24838)
 
-== Bild 18922  Raum St 23 Idx 17  Spieler (2664,-7336)  Gegner 1 ==
-   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+== Bild 16228  Raum St 0 Idx 03  Spieler (-8200,-22303)  Gegner 6  davon Clip 0x12: 0 ==
+   Slot  0 Typ 16 grid 00  1/2/1  Clip 02 Bild 1b  +93=00 +8F=00 +9F=1a  1C4=00000000  (-9717,-24838)
+   Slot  1 Typ 16 grid 00  1/2/1  Clip 02 Bild 1b  +93=00 +8F=00 +9F=16  1C4=00010000  (-10519,-24838)
+   Slot  2 Typ 16 grid 00  1/2/1  Clip 02 Bild 23  +93=00 +8F=00 +9F=0c  1C4=00020000  (-6515,-24838)
+   Slot  3 Typ 16 grid 00  1/2/1  Clip 02 Bild 1b  +93=00 +8F=00 +9F=05  1C4=00030000  (-7314,-24877)
+   Slot  4 Typ 16 grid 00  1/2/1  Clip 05 Bild 2d  +93=00 +8F=00 +9F=1a  1C4=00040000  (-8917,-24821)
+   Slot  5 Typ 16 grid 00  1/2/1  Clip 05 Bild 35  +93=00 +8F=00 +9F=15  1C4=00050000  (-8115,-24838)
 
-== Bild 19222  Raum St 23 Idx 17  Spieler (2664,-7336)  Gegner 1 ==
-   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+== Bild 16528  Raum St 0 Idx 03  Spieler (-8200,-22303)  Gegner 6  davon Clip 0x12: 0 ==
+   Slot  0 Typ 16 grid 00  1/2/1  Clip 02 Bild 05  +93=00 +8F=00 +9F=00  1C4=00000000  (-9760,-24838)
+   Slot  1 Typ 16 grid 00  1/2/1  Clip 02 Bild 05  +93=00 +8F=00 +9F=1a  1C4=00010000  (-10562,-24838)
+   Slot  2 Typ 16 grid 00  1/2/1  Clip 02 Bild 0d  +93=00 +8F=00 +9F=10  1C4=00020000  (-7042,-25565)
+   Slot  3 Typ 16 grid 00  1/2/1  Clip 02 Bild 05  +93=00 +8F=00 +9F=06  1C4=00030000  (-7355,-24825)
+   Slot  4 Typ 16 grid 00  1/2/1  Clip 05 Bild 18  +93=00 +8F=00 +9F=00  1C4=00040000  (-8959,-24838)
+   Slot  5 Typ 16 grid 00  1/2/1  Clip 05 Bild 20  +93=00 +8F=00 +9F=1a  1C4=00050000  (-8157,-24838)
 
-== Bild 19522  Raum St 23 Idx 17  Spieler (2664,-7336)  Gegner 1 ==
-   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+== Bild 16828  Raum St 0 Idx 03  Spieler (-8200,-22303)  Gegner 6  davon Clip 0x12: 0 ==
+   Slot  0 Typ 16 grid 00  1/2/1  Clip 02 Bild 1a  +93=00 +8F=00 +9F=03  1C4=00000000  (-9755,-24827)
+   Slot  1 Typ 16 grid 00  1/2/1  Clip 02 Bild 1a  +93=00 +8F=00 +9F=1b  1C4=00010000  (-10557,-24821)
+   Slot  2 Typ 16 grid 00  1/2/1  Clip 02 Bild 22  +93=00 +8F=00 +9F=13  1C4=00020000  (-8465,-25576)
+   Slot  3 Typ 16 grid 00  1/2/1  Clip 02 Bild 1a  +93=00 +8F=00 +9F=0b  1C4=00030000  (-7358,-24957)
+   Slot  4 Typ 16 grid 00  1/2/1  Clip 05 Bild 03  +93=00 +8F=00 +9F=02  1C4=00040000  (-8952,-24833)
+   Slot  5 Typ 16 grid 00  1/2/1  Clip 05 Bild 0b  +93=00 +8F=00 +9F=1a  1C4=00050000  (-8151,-24838)
 
-== Bild 19822  Raum St 23 Idx 17  Spieler (2664,-7336)  Gegner 1 ==
-   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+== Bild 17128  Raum St 0 Idx 03  Spieler (-8200,-22303)  Gegner 6  davon Clip 0x12: 0 ==
+   Slot  0 Typ 16 grid 00  1/2/1  Clip 02 Bild 04  +93=00 +8F=00 +9F=06  1C4=00000000  (-9756,-24838)
+   Slot  1 Typ 16 grid 00  1/2/1  Clip 02 Bild 04  +93=00 +8F=00 +9F=00  1C4=00010000  (-10557,-24838)
+   Slot  2 Typ 16 grid 00  1/2/1  Clip 02 Bild 0c  +93=00 +8F=00 +9F=14  1C4=00020000  (-8550,-25535)
+   Slot  3 Typ 16 grid 00  1/2/1  Clip 02 Bild 04  +93=00 +8F=00 +9F=0c  1C4=00030000  (-7354,-24828)
+   Slot  4 Typ 16 grid 00  1/2/1  Clip 05 Bild 27  +93=00 +8F=00 +9F=06  1C4=00040000  (-8955,-24838)
+   Slot  5 Typ 16 grid 00  1/2/1  Clip 05 Bild 2f  +93=00 +8F=00 +9F=00  1C4=00050000  (-8153,-24838)
 
-== Bild 20122  Raum St 23 Idx 17  Spieler (2664,-7336)  Gegner 1 ==
-   Slot  0 Typ 47 grid 40  4/0/2  Clip 11 Bild 00  (-31000,29500)
+== Bild 17428  Raum St 0 Idx 03  Spieler (-8200,-22303)  Gegner 6  davon Clip 0x12: 0 ==
+   Slot  0 Typ 16 grid 00  1/2/1  Clip 02 Bild 19  +93=00 +8F=00 +9F=0b  1C4=00000000  (-9734,-24838)
+   Slot  1 Typ 16 grid 00  1/2/1  Clip 02 Bild 19  +93=00 +8F=00 +9F=05  1C4=00010000  (-10535,-24828)
+   Slot  2 Typ 16 grid 00  1/2/1  Clip 02 Bild 21  +93=00 +8F=00 +9F=14  1C4=00020000  (-8508,-25528)
+   Slot  3 Typ 16 grid 00  1/2/1  Clip 02 Bild 19  +93=00 +8F=00 +9F=0f  1C4=00030000  (-7328,-24843)
+   Slot  4 Typ 16 grid 00  1/2/1  Clip 05 Bild 12  +93=00 +8F=00 +9F=09  1C4=00040000  (-8932,-24838)
+   Slot  5 Typ 16 grid 00  1/2/1  Clip 05 Bild 1a  +93=00 +8F=00 +9F=04  1C4=00050000  (-8130,-24822)
+
+== Bild 17728  Raum St 0 Idx 03  Spieler (-8200,-22303)  Gegner 6  davon Clip 0x12: 0 ==
+   Slot  0 Typ 16 grid 00  1/2/1  Clip 02 Bild 03  +93=00 +8F=00 +9F=0c  1C4=00000000  (-9809,-24838)
+   Slot  1 Typ 16 grid 00  1/2/1  Clip 02 Bild 03  +93=00 +8F=00 +9F=06  1C4=00010000  (-10612,-24838)
+   Slot  2 Typ 16 grid 00  1/2/1  Clip 02 Bild 0b  +93=00 +8F=00 +9F=1a  1C4=00020000  (-10318,-25584)
+   Slot  3 Typ 16 grid 00  1/2/1  Clip 02 Bild 03  +93=00 +8F=00 +9F=12  1C4=00030000  (-7405,-24833)
+   Slot  4 Typ 16 grid 00  1/2/1  Clip 05 Bild 36  +93=00 +8F=00 +9F=0c  1C4=00040000  (-9003,-24838)
+   Slot  5 Typ 16 grid 00  1/2/1  Clip 05 Bild 05  +93=00 +8F=00 +9F=06  1C4=00050000  (-8202,-24838)
+
+== Bild 18028  Raum St 0 Idx 03  Spieler (-8200,-22303)  Gegner 6  davon Clip 0x12: 0 ==
+   Slot  0 Typ 16 grid 00  1/2/1  Clip 02 Bild 18  +93=00 +8F=00 +9F=0d  1C4=00000000  (-9808,-24822)
+   Slot  1 Typ 16 grid 00  1/2/1  Clip 02 Bild 18  +93=00 +8F=00 +9F=0b  1C4=00010000  (-10606,-24881)
+   Slot  2 Typ 16 grid 00  1/2/1  Clip 02 Bild 20  +93=00 +8F=00 +9F=1a  1C4=00020000  (-9354,-25561)
+   Slot  3 Typ 16 grid 00  1/2/1  Clip 02 Bild 18  +93=00 +8F=00 +9F=14  1C4=00030000  (-7402,-24838)
+   Slot  4 Typ 16 grid 00  1/2/1  Clip 05 Bild 21  +93=00 +8F=00 +9F=0c  1C4=00040000  (-9001,-24838)
+   Slot  5 Typ 16 grid 00  1/2/1  Clip 05 Bild 29  +93=00 +8F=00 +9F=0b  1C4=00050000  (-8200,-24838)
+
+== Bild 18328  Raum St 0 Idx 03  Spieler (-8200,-22303)  Gegner 6  davon Clip 0x12: 0 ==
+   Slot  0 Typ 16 grid 00  1/2/1  Clip 02 Bild 02  +93=00 +8F=00 +9F=12  1C4=00000000  (-9864,-24838)
+   Slot  1 Typ 16 grid 00  1/2/1  Clip 02 Bild 02  +93=00 +8F=00 +9F=0c  1C4=00010000  (-10542,-25263)
+   Slot  2 Typ 16 grid 00  1/2/1  Clip 02 Bild 0a  +93=00 +8F=00 +9F=00  1C4=00020000  (-7870,-25535)
+   Slot  3 Typ 16 grid 00  1/2/1  Clip 02 Bild 02  +93=00 +8F=00 +9F=14  1C4=00030000  (-7461,-24833)
+   Slot  4 Typ 16 grid 00  1/2/1  Clip 05 Bild 0c  +93=00 +8F=00 +9F=12  1C4=00040000  (-9063,-24838)
+   Slot  5 Typ 16 grid 00  1/2/1  Clip 05 Bild 14  +93=00 +8F=00 +9F=0c  1C4=00050000  (-8262,-24838)
+
+== Bild 18628  Raum St 0 Idx 03  Spieler (-8200,-22303)  Gegner 6  davon Clip 0x12: 0 ==
+   Slot  0 Typ 16 grid 00  1/2/1  Clip 02 Bild 17  +93=00 +8F=00 +9F=14  1C4=00000000  (-9857,-24838)
+   Slot  1 Typ 16 grid 00  1/2/1  Clip 02 Bild 17  +93=00 +8F=00 +9F=0f  1C4=00010000  (-10660,-24822)
+   Slot  2 Typ 16 grid 00  1/2/1  Clip 02 Bild 1f  +93=00 +8F=00 +9F=04  1C4=00020000  (-9020,-25639)
+   Slot  3 Typ 16 grid 00  1/2/1  Clip 02 Bild 17  +93=00 +8F=00 +9F=1a  1C4=00030000  (-7456,-24838)
+   Slot  4 Typ 16 grid 00  1/2/1  Clip 05 Bild 30  +93=00 +8F=00 +9F=14  1C4=00040000  (-9057,-24821)
+   Slot  5 Typ 16 grid 00  1/2/1  Clip 05 Bild 38  +93=00 +8F=00 +9F=0e  1C4=00050000  (-8255,-24838)
+
+== Bild 18928  Raum St 0 Idx 03  Spieler (-8200,-22303)  Gegner 6  davon Clip 0x12: 0 ==
+   Slot  0 Typ 16 grid 00  1/2/1  Clip 02 Bild 01  +93=00 +8F=00 +9F=14  1C4=00000000  (-9781,-24838)
+   Slot  1 Typ 16 grid 00  1/2/1  Clip 02 Bild 01  +93=00 +8F=00 +9F=12  1C4=00010000  (-10584,-24833)
+   Slot  2 Typ 16 grid 00  1/2/1  Clip 02 Bild 09  +93=00 +8F=00 +9F=06  1C4=00020000  (-9787,-25640)
+   Slot  3 Typ 16 grid 00  1/2/1  Clip 02 Bild 01  +93=00 +8F=00 +9F=1a  1C4=00030000  (-7390,-24838)
+   Slot  4 Typ 16 grid 00  1/2/1  Clip 05 Bild 1b  +93=00 +8F=00 +9F=14  1C4=00040000  (-8987,-24838)
+   Slot  5 Typ 16 grid 00  1/2/1  Clip 05 Bild 23  +93=00 +8F=00 +9F=12  1C4=00050000  (-8184,-24838)
+
+== Bild 19228  Raum St 0 Idx 03  Spieler (-8200,-22303)  Gegner 6  davon Clip 0x12: 0 ==
+   Slot  0 Typ 16 grid 00  1/2/1  Clip 02 Bild 16  +93=00 +8F=00 +9F=19  1C4=00000000  (-9805,-24823)
+   Slot  1 Typ 16 grid 00  1/2/1  Clip 02 Bild 16  +93=00 +8F=00 +9F=14  1C4=00010000  (-10606,-24825)
+   Slot  2 Typ 16 grid 00  1/2/1  Clip 02 Bild 1e  +93=00 +8F=00 +9F=0b  1C4=00020000  (-9470,-25552)
+   Slot  3 Typ 16 grid 00  1/2/1  Clip 02 Bild 16  +93=00 +8F=00 +9F=00  1C4=00030000  (-7398,-24861)
+   Slot  4 Typ 16 grid 00  1/2/1  Clip 05 Bild 06  +93=00 +8F=00 +9F=18  1C4=00040000  (-9004,-24838)
+   Slot  5 Typ 16 grid 00  1/2/1  Clip 05 Bild 0e  +93=00 +8F=00 +9F=14  1C4=00050000  (-8201,-24838)
+
+== Bild 19528  Raum St 0 Idx 03  Spieler (-8200,-22303)  Gegner 6  davon Clip 0x12: 0 ==
+   Slot  0 Typ 16 grid 00  1/2/1  Clip 02 Bild 00  +93=00 +8F=00 +9F=1a  1C4=00000000  (-9854,-24831)
+   Slot  1 Typ 16 grid 00  1/2/1  Clip 02 Bild 00  +93=00 +8F=00 +9F=14  1C4=00010000  (-10653,-24890)
+   Slot  2 Typ 16 grid 00  1/2/1  Clip 02 Bild 08  +93=00 +8F=00 +9F=0c  1C4=00020000  (-9446,-25535)
+   Slot  3 Typ 16 grid 00  1/2/1  Clip 02 Bild 00  +93=00 +8F=00 +9F=01  1C4=00030000  (-7451,-24838)
+   Slot  4 Typ 16 grid 00  1/2/1  Clip 05 Bild 2a  +93=00 +8F=00 +9F=1a  1C4=00040000  (-9056,-24838)
+   Slot  5 Typ 16 grid 00  1/2/1  Clip 05 Bild 32  +93=00 +8F=00 +9F=14  1C4=00050000  (-8253,-24838)
+
+== Bild 19828  Raum St 0 Idx 03  Spieler (-8200,-22303)  Gegner 6  davon Clip 0x12: 0 ==
+   Slot  0 Typ 16 grid 00  1/2/1  Clip 02 Bild 15  +93=00 +8F=00 +9F=1f  1C4=00000000  (-9867,-24838)
+   Slot  1 Typ 16 grid 00  1/2/1  Clip 02 Bild 15  +93=00 +8F=00 +9F=19  1C4=00010000  (-10669,-24824)
+   Slot  2 Typ 16 grid 00  1/2/1  Clip 02 Bild 1d  +93=00 +8F=00 +9F=0e  1C4=00020000  (-9457,-25536)
+   Slot  3 Typ 16 grid 00  1/2/1  Clip 02 Bild 15  +93=00 +8F=00 +9F=06  1C4=00030000  (-7461,-24838)
+   Slot  4 Typ 16 grid 00  1/2/1  Clip 05 Bild 15  +93=00 +8F=00 +9F=1e  1C4=00040000  (-9066,-24838)
+   Slot  5 Typ 16 grid 00  1/2/1  Clip 05 Bild 1d  +93=00 +8F=00 +9F=19  1C4=00050000  (-8262,-24840)
+
+== Bild 20128  Raum St 0 Idx 03  Spieler (-8200,-22303)  Gegner 6  davon Clip 0x12: 0 ==
+   Slot  0 Typ 16 grid 00  1/2/1  Clip 02 Bild 2a  +93=00 +8F=00 +9F=00  1C4=00000000  (-9827,-24828)
+   Slot  1 Typ 16 grid 00  1/2/1  Clip 02 Bild 2a  +93=00 +8F=00 +9F=1a  1C4=00010000  (-10628,-24869)
+   Slot  2 Typ 16 grid 00  1/2/1  Clip 02 Bild 07  +93=00 +8F=00 +9F=12  1C4=00020000  (-9305,-25590)
+   Slot  3 Typ 16 grid 00  1/2/1  Clip 02 Bild 2a  +93=00 +8F=00 +9F=09  1C4=00030000  (-7425,-24838)
+   Slot  4 Typ 16 grid 00  1/2/1  Clip 05 Bild 00  +93=00 +8F=00 +9F=00  1C4=00040000  (-9025,-24838)
+   Slot  5 Typ 16 grid 00  1/2/1  Clip 05 Bild 08  +93=00 +8F=00 +9F=1a  1C4=00050000  (-8223,-24838)
 
 fertig
