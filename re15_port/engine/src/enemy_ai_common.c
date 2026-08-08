@@ -5028,9 +5028,9 @@ static void re15_crow_ai_tick(int slot)
  *    does not model the entity word0 flag bits (engine-wide flag word).
  *  - +0x1c0 = 0x8000 hit-tween latch (hurt entries @0x80110a80/@0x80110c3c) —
  *    no +0x1c0 reader/writer is modeled port-wide (also open for the zombie).
- *  - FUN_80111870 skeletal root-motion assist (chase @0x8010e550, sub-7 hop
- *    @0x8010f118): bone-matrix delta displacement on top of func_0x800245d8 —
- *    the port's enemy walker is the 245d8 component only.
+ *  - FUN_80111870 skeletal root-motion assist (chase @0x8010e540, sub-7 hop
+ *    @0x8010f118): PORTED as re15_dog_pawlock (paw-pin drag, zombie foot-lock
+ *    model) on top of func_0x800245d8 — both call sites wired.
  *  - reroute-13 aux +0xb0=0xc1c/0 (@0x80110440/@0x801104d0) — shadow-block aux
  *    field of the af5c shadow descriptor, not modeled.
  *  - entity word0 |= 2|0x40 at corpse entry (@0x801117cc/e8) — flag word, see
@@ -5106,13 +5106,80 @@ static void re15_dog_clip_keep(re15_actor_t *e, int turn)
  * clamp encodes the same contact into +0x90 (ai_contact bit0 + heading nibble), so "blocked
  * last frame" = the +0x90 contact bits. (audit wf_827f186d dog #15) */
 static int re15_dog_blocked(const re15_actor_t *e) { return (e->ai_contact & 3) != 0; }
-/* func_0x80019700(0x2000, rot_y, bone-block, &DAT_80120f54) — the universal hit-blood burst
- * (hurt @0x80110aa0 bone+0xec, airborne @0x80110c88 bone+0x40, bark-chain death @0x8010ebe0
- * bone+0x2f0). Port: the same effect-0 spawn the zombie hurt fx uses (re15_damage.c
- * re15_enemy_hurt_fx); position = actor world pos (bone offset = faithful-line). */
-static void re15_dog_blood(re15_actor_t *e)
+/* func_0x80019700(0x2000, rot_y, part-matrix, &DAT_80120f54) — the universal hit-blood burst,
+ * ALWAYS a0=0x2000 (= effect 0, scale16 0x2000), anchored at a PART MATRIX (raw disasm):
+ *   grounded hurt    @0x80110a84-aa4: a2 = pool+0xEC  = 0xAC*1 +0x40 -> BONE 1
+ *   airborne hurt    @0x80110c6c-8c:  a2 = pool+0x40  = 0xAC*0 +0x40 -> BONE 0
+ *   bark-chain death @0x8010ebd0-e4:  a2 = pool+0x2F0 = 0xAC*4 +0x40 -> BONE 4
+ *   airborne death   @0x80110f80-fa0: a2 = pool+0x40  = 0xAC*0 +0x40 -> BONE 0
+ * a1 = +0x6a (rot_y); a3 = &DAT_80120f54 = 16x 00 (raw dump) = zero offset vector. Port: pose
+ * the EM020 skeleton and spawn at the bone's world position (re15_enemy_bone_world_pos — the
+ * same part-matrix anchor model as re15_enemy_hurt_blood; falls back to the actor root when no
+ * bank is loaded). The old port spawned at the actor ROOT (= under the dog's belly at floor
+ * level, occluded by the body) with the 0x1000 default scale — the user-visible "no blood". */
+static void re15_dog_blood(re15_actor_t *e, int bone)
 {
-    re15_esp_fx_spawn(re15_esp_room_bank(), 0, 0, e->x, e->y, e->z, (int16_t)e->rot_y);
+    int32_t g[3];
+    re15_enemy_bone_world_pos(e, bone, g);
+    re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x2000,
+                         g[0], g[1], g[2], (int16_t)e->rot_y);
+}
+/* Death-/Liege-Playout: f314 wraps +0x95 to 0 at the clip end (FUN_8001f3bc decompile L89-94 /
+ * FUN_8001f8b4 L76-81: `+0x95++; if (fc <= +0x95) +0x95 = 0; return`), but the POSE it wrote
+ * into the part pool on that call is keyframe fc-1 — and the holding states never call f314
+ * again (CORPSE root FUN_80111774: full raw disasm 0x80111774-0x8011186c contains NO jal
+ * 0x8001f314; airborne-hurt LIE phase @FUN_80110b9c case 2 is counter-only). On the PSX the
+ * corpse therefore keeps the LAST collapse keyframe. The port re-poses from anim_frame every
+ * render frame, so the wrap-to-0 showed keyframe 0 (= the dog standing up again) as the corpse
+ * pose — the user-visible "weird dead pose". Pin fc-1 at the wrap for those playouts. */
+static int re15_dog_anim_hold_last(re15_actor_t *e)
+{
+    int done = re15_dog_anim(e);
+    if (done) {
+        int fc = (e->motion < 28) ? s_dog_clip_len[e->motion] : 1;
+        e->anim_frame = (fc > 0 ? fc : 1) - 1;
+    }
+    return done;
+}
+/* FUN_80111870(0, sel) — the dog PAW-PIN root motion (raw disasm 0x80111870-0x801118c8 /
+ * decompile FUN_80111870.c): CompMatrix chain ent(+0x20) x part0-local(pool+0x18) x the leg
+ * chain locals; iVar1 = pool + sel*0x204 + 0x764:
+ *   sel 0 -> part 11 (locals @iVar1-0x140/-0x94/+0x18 = parts 9/10/11), composed @+0x54/+0x5c
+ *   sel 1 -> part 14 (pool+0x968; parts 12/13/14)
+ * then ent.x -= (chain.trans.x - composed.trans.x) ; ent.z -= (chain.trans.z - composed.trans.z)
+ * = drag the body so the selected PAW keeps the world position the pool last posed. Callers:
+ * chase @0x8010e550 (sel = +0x95 < 0x1e) and the hurt-recover hop @0x8010f0f8-118 (sel =
+ * +0x95 < 0xd). Port model = the accepted zombie foot-lock (re15_enemy_footlock_step,
+ * FUN_8010939c class): pose the skeleton at the current keyframe (QUERY mode), paw world =
+ * rotate(local, rot_y), drag by -(now - prev) while the SAME paw stays selected; the first
+ * frame after a (re)select only seeds the reference (the pool-vs-chain jump-cut delta of the
+ * original's entry frame is skipped, same modeling as the zombie foot-lock). */
+static int32_t s_dogpaw_ref[RE15_ACTOR_MAX][2];
+static uint8_t s_dogpaw_ok[RE15_ACTOR_MAX];
+static uint8_t s_dogpaw_sel[RE15_ACTOR_MAX];
+static void re15_dog_pawlock(int slot, re15_actor_t *e, int sel)
+{
+    static re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+    re15_enemy_bank_t *b = re15_enemy_find(e->type);
+    if (!b || !b->ok || slot < 0 || slot >= RE15_ACTOR_MAX) return;
+    int bone = sel ? 14 : 11;                 /* pool+0x968 / pool+0x764 (stride 0xAC) */
+    if (bone >= b->skel.bone_count) return;
+    int kf = re15_compute_actor_kf(&b->anim, &b->skel, e, -1, (uint32_t)e->anim_frame);
+    void *save = g_anim_pose_actor;
+    g_anim_pose_actor = NULL;                 /* QUERY: don't mutate the crossfade blend */
+    int rv = re15_skel_compute_pose(&b->skel, kf, poses);
+    g_anim_pose_actor = save;
+    if (rv != 0) return;
+    int32_t lx = poses[bone].trans[0], lz = poses[bone].trans[2];
+    int32_t cs = re15_cos_q12(e->rot_y), sn = re15_sin_q12(e->rot_y);
+    int32_t wx = (int32_t)(( (int64_t)cs * lx + (int64_t)sn * lz) >> 12);
+    int32_t wz = (int32_t)((-(int64_t)sn * lx + (int64_t)cs * lz) >> 12);
+    if (s_dogpaw_ok[slot] && s_dogpaw_sel[slot] == (uint8_t)sel) {
+        e->x -= (wx - s_dogpaw_ref[slot][0]);
+        e->z -= (wz - s_dogpaw_ref[slot][1]);
+    }
+    s_dogpaw_ref[slot][0] = wx; s_dogpaw_ref[slot][1] = wz;
+    s_dogpaw_ok[slot] = 1; s_dogpaw_sel[slot] = (uint8_t)sel;
 }
 /* DAT_800aca50 bit 0 — the dog PACK-ALERT bit: cleared by the dog INIT (`sh zero,0x800aca50`
  * @0x8010db84), set by the bark step (@0x8010eb58 `ori v0,v0,1`), cleared again at bark step 4
@@ -5599,6 +5666,7 @@ static void re15_dog_ai_tick(int slot)
                 e->sub_state_2 = 1;
                 e->ai_timer = 0; e->grab_kill_ctr = 0;        /* +0x9c=0 / +0x9e=0 @0x8010e360-70 */
                 re15_dog_clip(e, 0);                          /* walk clip 0 @0x8010e378-98 */
+                s_dogpaw_ok[slot] = 0;                        /* fresh clip -> re-seed the paw pin */
             }
             if (e->dog_blocked_ctr < 0x1f) {                  /* slti +0x1dc,31 @0x8010e3bc */
                 e->dog_yawrate = (int16_t)((re15_engine_rand8() & 0xf) + 1);   /* +0x1e2=(rng&0xf)+1 @0x8010e468-84 */
@@ -5618,7 +5686,10 @@ static void re15_dog_ai_tick(int slot)
             re15_dog_anim(e);                                 /* f314 @0x8010e4c0 */
             if (e->dog_pounce_cd) e->dog_pounce_cd--;         /* +0x1e6 ticks ONLY in the chase act @0x8010e4cc-e4e0 (audit #15) */
             if (e->anim_frame == 0 || e->anim_frame == 0x1e) re15_audio_room_se(6);  /* footstep Se(6) @0x8010e4f8-538 */
-            /* FUN_80111870(0, +0x95<0x1e) root-motion assist @0x8010e550 — OPEN (see header) */
+            re15_dog_pawlock(slot, e, (e->anim_frame < 0x1e) ? 1 : 0);
+                                                              /* FUN_80111870(0, +0x95<0x1e): paw-pin root
+                                                               * motion — sel gate sltiu 0x1e @0x8010e51c-3c,
+                                                               * call @0x8010e540 */
             re15_dog_advance_ofs(e, 8);                       /* 245d8(8): speed=+0x8c, yaw OFFSET 8 @0x8010e548-54c (audit #6) */
             break;
 
@@ -5686,7 +5757,8 @@ static void re15_dog_ai_tick(int slot)
                 s_dog_pack_alert = (uint16_t)(s_dog_pack_alert & 0xfffe);   /* aca50 &= ~1 @0x8010eb78-7c */
                 if (e->hp < 0) {                              /* shot during the chain @0x8010eb88 */
                     e->state = 3; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 1;  /* +0x4=3,+0x7=1 @0x8010eb98-bc8 */
-                    re15_dog_blood(e);                        /* 19700(0x2000, rot_y, bone+0x2f0) @0x8010ebe0 */
+                    re15_dog_blood(e, 4);                     /* 19700(0x2000, rot_y, pool+0x2F0 = BONE 4)
+                                                               * @0x8010ebd0-e4 */
                     break;
                 }
                 e->sub_state_2 = 5;                           /* +0x6=5 = INNER step (NOT +0x4=5!) @0x8010ebf0 (audit #2) */
@@ -5727,12 +5799,16 @@ static void re15_dog_ai_tick(int slot)
                 e->sub_state_2 = 1;
                 e->motion = 0x13; e->anim_frame = 0;          /* clip 0x13 (+0x94/+0x95/+0x96; NO +0x8f write) @0x8010f038-64 */
                 e->crow_speed = 0x14;                         /* +0x8c = 20 (the SPEED) @0x8010f070-74 (audit #10) */
+                s_dogpaw_ok[slot] = 0;                        /* fresh clip -> re-seed the paw pin */
             }
             if (e->sub_state_2 == 1) {
                 e->dog_yawrate = (int16_t)((re15_engine_rand8() & 0xf) + 1);   /* +0x1e2 @0x8010f090-a4 */
                 re15_enemy_steer_point(e, pl->x, pl->z, e->dog_yawrate);       /* a8f8 homing @0x8010f0ac */
                 if (re15_dog_anim(e)) e->sub_state_2 = 2;
-                /* FUN_80111870(0, +0x95<0xd) root motion @0x8010f118 — OPEN (see header) */
+                re15_dog_pawlock(slot, e, (e->anim_frame < 0x0d) ? 1 : 0);
+                                                              /* FUN_80111870(0, +0x95<0xd): paw-pin root
+                                                               * motion — sel gate @0x8010f0f8-110 (sltiu
+                                                               * 0xd), call @0x8010f118 */
                 re15_dog_advance_ofs(e, 0x800);               /* 245d8(0x800) = 180° REARWARD at +0x8c=20
                                                                * @0x8010f120-124 (audit #10 — was a 0x800-speed charge) */
             } else if (e->sub_state_2 == 2) {
@@ -5910,7 +5986,8 @@ static void re15_dog_ai_tick(int slot)
                 re15_dog_clip(e, 6);                          /* clip 6 @0x80110a3c-70 */
                 re15_audio_room_se(1);                        /* Se(1) @0x80110a7c */
                 /* +0x1c0 = 0x8000 @0x80110a80 — OPEN (header) */
-                re15_dog_blood(e);                            /* 19700(0x2000, rot_y, bone+0xec) @0x80110a84-aa0 (audit #4) */
+                re15_dog_blood(e, 1);                         /* 19700(0x2000, rot_y, pool+0xEC = BONE 1)
+                                                               * @0x80110a84-aa4 (audit #4) */
                 /* fall through */
             case 1:
                 if (re15_dog_anim(e)) e->sub_state_3++;       /* f314 @0x80110ab0-dc */
@@ -5938,10 +6015,13 @@ static void re15_dog_ai_tick(int slot)
                 /* +0x1c0 = 0x8000 @0x80110c3c — OPEN */
                 e->grab_kill_ctr = (int16_t)((re15_engine_rand8() + 0x2d) & 0x3f);   /* +0x9e @0x80110c48-5c */
                 re15_audio_room_se(1);                        /* Se(1) @0x80110c68 */
-                re15_dog_blood(e);                            /* 19700(0x2000, rot_y, bone+0x40) @0x80110c6c-88 */
+                re15_dog_blood(e, 0);                         /* 19700(0x2000, rot_y, pool+0x40 = BONE 0)
+                                                               * @0x80110c6c-8c */
                 /* fall through */
             case 1:
-                if (re15_dog_anim(e)) e->sub_state_3++;       /* f314 @0x80110c98-cc0 */
+                if (re15_dog_anim_hold_last(e)) e->sub_state_3++;   /* f314 @0x80110c98-cc0; the LIE phase
+                                                               * (case 2, counter-only @FUN_80110b9c) holds
+                                                               * the clip-7 END pose until the stand-up */
                 e->crow_speed = (int16_t)(e->crow_speed - 2); /* +0x8c -= 2 @0x80110cd0-e0 */
                 re15_dog_advance_ofs(e, (1 - (e->hit_react & 0x80)) * 0x800);   /* 245d8((1-(+0x93&0x80))*0x800)
                                                                * @0x80110ce4-f8 (both cases ≡ 0x800 mod 0x1000) */
@@ -5984,7 +6064,9 @@ static void re15_dog_ai_tick(int slot)
                 re15_dog_clip(e, 0x0e);                       /* collapse clip 0xe @0x801111f0-121c */
                 /* fall through */
             case 2:
-                if (re15_dog_anim(e)) e->sub_state_3++;       /* f314 @0x80111228-50 */
+                if (re15_dog_anim_hold_last(e)) e->sub_state_3++;   /* f314 @0x80111228-50; pose stays at
+                                                               * keyframe fc-1 (f3bc wrap L89-94; no f314 in
+                                                               * the corpse root 0x80111774) */
                 if (e->sub_state_3 == 3) re15_audio_room_se(7);   /* Se(7) on 2->3 @0x80111260-6c */
                 break;
             case 3:
@@ -6003,13 +6085,16 @@ static void re15_dog_ai_tick(int slot)
                 e->crow_speed = 0x96;                         /* +0x8c = 0x96 @0x80110f40 */
                 /* +0x1c0 = 0x8000 — OPEN */
                 re15_audio_room_se(4);                        /* Se(4) @0x80110f50 */
-                re15_dog_blood(e);                            /* 19700(0x2000, rot_y, bone+0x40) @0x80110f54-70 */
+                re15_dog_blood(e, 0);                         /* 19700(0x2000, rot_y, pool+0x40 = BONE 0)
+                                                               * @0x80110f80-fa0 */
                 if (e->em_flag_id != 0xFF)
                     re15_game_flag_set(re15_em_status_zone(), e->em_flag_id, 1);   /* ef90(0x800b1038,+0x1c6)
                                                                * AT DEATH ENTRY @0x80110f80-8c (audit #5) */
                 /* fall through */
             case 1:
-                if (re15_dog_anim(e)) e->sub_state_3++;       /* f314 */
+                if (re15_dog_anim_hold_last(e)) e->sub_state_3++;   /* f314; the corpse holds the knock-fly
+                                                               * clip 7 END pose (f3bc wrap; no f314 in
+                                                               * the corpse root 0x80111774) */
                 e->crow_speed = (int16_t)(e->crow_speed - 2); /* +0x8c -= 2 */
                 re15_dog_advance_ofs(e, (1 - (e->hit_react & 0x80)) * 0x800);   /* backward slide */
                 if (e->sub_state_3 == 2) re15_audio_room_se(7);   /* Se(7) on 1->2 */

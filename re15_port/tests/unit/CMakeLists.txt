@@ -938,3 +938,13 @@ set_tests_properties(unit_crawl_toggle PROPERTIES TIMEOUT 30)
 add_executable(probe_crawl_commit probe_crawl_commit.c)
 target_link_libraries(probe_crawl_commit PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_crawl_commit PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# Dog-Treffer-Trias (Nutzer-Report 2026-08-08): (1) Blut-Spawn @HURT-Entry (0x2000, Bone 1
+# @0x80110a84-aa4), (2) Rueckstoss-Hop sub 7 (Clip 0x13, +0x8c=0x14, 245d8(0x800)
+# @0x8010f070/f120), (3) Corpse haelt LETZTEN Collapse-Keyframe (f314-Wrap FUN_8001f3bc,
+# kein f314 im Corpse-Root 0x80111774). Bank-echt (EM020 aus CDEMD0.EMS).
+add_executable(probe_dog_hit probe_dog_hit.c)
+target_link_libraries(probe_dog_hit PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_dog_hit PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_dog_hit COMMAND probe_dog_hit)
+set_tests_properties(unit_dog_hit PROPERTIES TIMEOUT 30)
