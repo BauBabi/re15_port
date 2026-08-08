@@ -99,6 +99,14 @@ static inline int RNDI(float f) {
 #define RE15_TIM_SLOT_WPN_MELEE 24 /* RESERVED/unused: the in-hand weapon now textures from the */
 #define RE15_TIM_SLOT_WPN_GUN   25 /* character's own body-skin TIM (slot 0), page 0x81/clut-1 — */
                                    /* NOT a separate PLW dir[3]/PL04 atlas (byte-true FUN_80036b68). */
+/* Render-TIM-Slot fuer Room-Prop obj_id `op`: 0..5 -> 4..9 (historisch), 6..15 -> 26..35.
+ * Noetig, weil das Original Room-Props NIE bei 6 kappt: die Objekt-Schleife FUN_800436a8
+ * laeuft bis RDT-Header nOmodel (`lbu v0,2(v0)` @0x80043758 / `sltu s0,nOmodel` @0x800437ac),
+ * der Obj_model_set-Handler LAB_80040914 indexiert den Pool DIREKT per obj_id
+ * (`a3*0x94 + DAT_800b3f98` @0x8004093c-58) und bindet das Modell pro obj_id aus der
+ * RDT+0x30-Tabelle (@0x80040ab4-adc -> FUN_8002b898). ROOM11F0/11F1 (Generator-Raum)
+ * traegt nOmodel=12 — mit dem alten 6er-Cap fehlten die Schalter obj 0x06..0x0B. */
+#define RE15_TIM_SLOT_PROP(op) ((op) < 6 ? 4 + (op) : 26 + ((op) - 6))
 
 extern void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
 
@@ -461,23 +469,34 @@ static void pc_enemy_load(uint8_t type)
             type, eb->md1.mesh_count, eb->skel.bone_count, eb->anim.clip_count, eb->pc_tex_slot);
 }
 
-static void pc_load_room_prop_set(const re15_rdt_t *rdt, re15_md1_t md1[6], int ok[6])
+static void pc_load_room_prop_set(const re15_rdt_t *rdt,
+                                  re15_md1_t md1[RE15_RDT_MAX_PROPS],
+                                  int ok[RE15_RDT_MAX_PROPS])
 {
     /* Globalization Phase 3-A (2026-06-13): the room's Obj_model_set props (MD1+TIM)
      * are SLICED from the parsed RDT (rdt->prop_md1/tim[], the 0x30 model-pointer
      * table) — was per-room room####_obj##.{md1,tim} files. Pointers alias the resident
-     * RDT buffer (byte-true == the old files). prop[op] → md1[op] + render slot 4+op.
-     * Parity with PSX re15_load_room_props. Caller passes the right RDT: &rdt at boot,
-     * &g_room_rdt on the cross-room reload. */
-    for (int op = 0; op < 6; op++) ok[op] = 0;
+     * RDT buffer (byte-true == the old files). prop[op] → md1[op] + render slot
+     * RE15_TIM_SLOT_PROP(op). Parity with PSX re15_load_room_props. Caller passes the
+     * right RDT: &rdt at boot, &g_room_rdt on the cross-room reload.
+     *
+     * KEIN 6er-Cap mehr (Nutzer-Report ROOM11F0: 6 der 10 Generator-Schalter fehlten):
+     * das Original laedt ALLE nOmodel Modelle — Schleifen-Schranke `lbu v0,2(v0)` =
+     * RDT+0x02 nOmodel @0x80043758 / `sltu s0,nOmodel` @0x800437ac (FUN_800436a8);
+     * Modell-Bind pro obj_id @0x80040ab4-adc (LAB_80040914 -> FUN_8002b898).
+     * ROOM11F0/11F1 nOmodel=12. Game-weites Maximum: nOmodel=17 (ROOM1190/1191) —
+     * liegt UEBER RE15_RDT_MAX_PROPS=16 (Engine-Pool props[16]); dort clippt weiterhin
+     * das Engine-Cap (dokumentiert OFFEN, separates Thema). */
+    for (int op = 0; op < RE15_RDT_MAX_PROPS; op++) ok[op] = 0;
     if (!rdt) return;
-    int nprops = rdt->prop_count < 6 ? rdt->prop_count : 6;
+    int nprops = rdt->prop_count < RE15_RDT_MAX_PROPS ? rdt->prop_count
+                                                      : RE15_RDT_MAX_PROPS;
     for (int op = 0; op < nprops; op++) {
         const uint8_t *mb = rdt->prop_md1[op]; int msz = rdt->prop_md1_size[op];
         const uint8_t *tb = rdt->prop_tim[op]; int tsz = rdt->prop_tim_size[op];
         if (mb && re15_md1_parse(mb, (size_t)msz, &md1[op]) == 0) ok[op] = 1;
         if (tb) { re15_tim_t tt; if (re15_tim_parse(tb, tsz, &tt) == 0)
-                      re15_render_pc_upload_tim_slot(&tt, 4 + op); }
+                      re15_render_pc_upload_tim_slot(&tt, RE15_TIM_SLOT_PROP(op)); }
     }
 }
 
@@ -2171,12 +2190,13 @@ re_title:;
     extern void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
     extern void re15_render_pc_bind_tim_slot(int slot);
 
-    /* Generic per-prop loader for all 6 ROOM1170 obj models (obj_id 0..5).
-     * Each gets its own MD1 + TIM in slots 4..9 so the prop renderer can
-     * bind the correct texture per prop. (Slot 0=Leon, 1=Elliot, 2=heli
-     * body legacy, 3=pilot legacy, 4..9 = obj_id 0..5 generic.)            */
-    re15_md1_t s_room_prop_md1[6] = {0};
-    int        s_room_prop_ok [6] = {0};
+    /* Generic per-prop loader for ALL room obj models (obj_id 0..RE15_RDT_MAX_PROPS-1).
+     * Each gets its own MD1 + TIM (slots 4..9 fuer obj 0..5, 26..35 fuer obj 6..15 —
+     * RE15_TIM_SLOT_PROP) so the prop renderer can bind the correct texture per prop.
+     * (Slot 0=Leon, 1=Elliot, 2=heli body legacy, 3=pilot legacy.) Das alte [6]-Array
+     * kappte ROOM11F0s 12 Props (Original: KEIN Cap, Schranke = nOmodel @0x80043758). */
+    re15_md1_t s_room_prop_md1[RE15_RDT_MAX_PROPS] = {0};
+    int        s_room_prop_ok [RE15_RDT_MAX_PROPS] = {0};
     /* Data-driven per-room prop set (parity with PSX). Boots ROOM1170; the cross-
      * room consume reloads for the destination room (room1140 etc.). */
     pc_load_room_prop_set(&rdt, s_room_prop_md1, s_room_prop_ok);   /* boot room RDT (room1170) */
@@ -6224,10 +6244,13 @@ re_title:;
 #endif
                 const re15_md1_t *prop_md1 = NULL;
                 int prop_md1_ok = 0;
-                if (oid >= 0 && oid < 6 && s_room_prop_ok[oid]) {
+                /* Kein 6er-Cap (ROOM11F0: 12 Props, Schalter obj 0x06..0x0B waren
+                 * unsichtbar). Original rendert jeden Pool-Eintrag bis nOmodel
+                 * (FUN_800436a8 @0x80043758/0x800437ac; Draw FUN_8002c18c pro Objekt). */
+                if (oid >= 0 && oid < RE15_RDT_MAX_PROPS && s_room_prop_ok[oid]) {
                     prop_md1 = &s_room_prop_md1[oid];
                     prop_md1_ok = 1;
-                    re15_render_pc_bind_tim_slot(4 + oid);
+                    re15_render_pc_bind_tim_slot(RE15_TIM_SLOT_PROP(oid));
                 }
 
                 /* Render prop's MD1 mesh as TEXTURED triangles. */

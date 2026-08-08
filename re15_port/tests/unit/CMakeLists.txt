@@ -894,6 +894,17 @@ add_executable(probe_gate_1030 probe_gate_1030.c)
 target_link_libraries(probe_gate_1030 PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_gate_1030 PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
+# --- REGRESSION (ctest): ROOM11F0 Generator-Raum — 12 Obj_model_set-Props (10 Schalter
+#     id 0x02..0x0B, Maschine id 0x00, Tuer-Prop id 0x01), Notch-Stempel, Toggle-Subs,
+#     Win-Pattern. Nutzer-Report "6 Schalter fehlen" = PC-Loader/Draw-Cap 6 (main.c);
+#     Original hat KEIN Cap: FUN_800436a8 laeuft bis nOmodel (@0x80043758/0x800437ac),
+#     LAB_80040914 indexiert den Pool per obj_id (@0x8004093c-58). ---
+add_executable(probe_gen_11f0 probe_gen_11f0.c)
+target_link_libraries(probe_gen_11f0 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_gen_11f0 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_gen_11f0_switches COMMAND probe_gen_11f0)
+set_tests_properties(unit_gen_11f0_switches PROPERTIES TIMEOUT 30)
+
 # --- ADVERSARIALE GEGENPROBE zu Lane "behavior-0d" (ROOM1030). Reine MESSUNG, kein ctest-Gate. ---
 add_executable(probe_adv_1030_verify probe_adv_1030_verify.c)
 target_link_libraries(probe_adv_1030_verify PRIVATE re15_engine re15_test_support)

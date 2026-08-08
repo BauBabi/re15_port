@@ -153,11 +153,16 @@ static uint32_t      rgb555_to_argb8888(uint16_t c);   /* fwd (defined with the 
 
 /* TIM slot pool — allows multiple characters/props to have their own
  * textures. Slot 0 = player default (Leon); other slots for NPCs/props. */
-#define RE15_TIM_SLOT_MAX 26   /* 24/25 = weapon-in-hand model TIMs (W01 knife / W03 gun)
+#define RE15_TIM_SLOT_MAX 36   /* 24/25 = weapon-in-hand model TIMs (W01 knife / W03 gun)
                                 * 0=Leon 1=Elliot 2=heli-legacy 3=pilot-legacy
-                                * 4..9 = ROOM1170 obj0..5 generic prop TIMs
+                                * 4..9 = room obj0..5 generic prop TIMs
                                 * 10 = em21 (legacy); 11..18 = generic enemy banks
-                                * (re15_enemy g_enemy[0..7], globalization 2026-06-13) */
+                                * (re15_enemy g_enemy[0..7], globalization 2026-06-13)
+                                * 26..35 = room obj6..15 prop TIMs (ROOM11F0/11F1
+                                * Generator-Raum hat nOmodel=12; das Original kappt NIE
+                                * bei 6 — die Objekt-Schleife FUN_800436a8 laeuft bis
+                                * RDT-Header nOmodel @0x80043758/0x800437ac, Modell-Bind
+                                * pro obj_id @0x80040ab4-adc -> FUN_8002b898) */
 typedef struct {
     SDL_Texture *tex;
     int          w, h, one_clut_h, n_cluts, clut_base_y;
