@@ -3623,7 +3623,24 @@ int op_sce_espr_on(scd_thread_t *t)
     } else {
         wx = bx + (int32_t)ox; wy = by + (int32_t)oy; wz = bz + (int32_t)oz;   /* cat0 identity */
     }
-    re15_esp_fx_spawn(re15_esp_room_bank(), effect_id, sub_index, wx, wy, wz, param);
+    /* ROW-SPAWNER, byte-true (ROOM11E0 Strom-Effekt 2026-08-08): FUN_80041864 packt
+     * a0 = pc[2]<<24 | pc[3]<<16 | LE16(pc[6..7]) (@0x80041938-4c: sll a0,a3,24 / srl+sll /
+     * or a0,a0,a1 mit a1 = lhu 6(s0)) und ruft FUN_80019700 (@0x80041954) — den ROW-Spawner.
+     * Einen row-losen Pfad gibt es im Original NICHT: FUN_80019700 laedt IMMER den Row-Block
+     * (ein Slot je Stream, Row-0-Copy, CLUT/TPAGE-Seed aus dem EFF-Header). Der alte
+     * re15_esp_fx_spawn-Aufruf (Legacy ohne Row-VM) liess Routine 10 (@0x800176b0:
+     * flags:=0x13/ABE, TPAGE|=0x20/ABR1-additiv) nie laufen — der ROOM11E0-Funke stand
+     * deshalb ohne Additiv-Blend und ohne Row-Zustand im Pool. scale16 = pc[6..7]
+     * (ROOM11E0: 0x1000; Datei-Bytes `3A 00 11 00 00 00 00 10 ...` @0x20E4). Der
+     * Legacy-Fallback greift nur, wenn KEINE Bank den Effekt aufloest (defensiv,
+     * z.B. synthetische Test-Banks ohne Row-Block). */
+    {
+        uint16_t scale16 = (uint16_t)t->pc[6] | ((uint16_t)t->pc[7] << 8);
+        if (re15_esp_fx_spawn_rows(re15_esp_room_bank(), effect_id, sub_index,
+                                   scale16, wx, wy, wz, wy, param) <= 0)
+            re15_esp_fx_spawn_ex(re15_esp_room_bank(), effect_id, sub_index,
+                                 scale16 ? scale16 : 0x1000, wx, wy, wz, param);
+    }
     t->pc += 16;
     return 1;
 }

@@ -160,6 +160,18 @@ typedef struct {
     uint8_t  row_cursor;        /* slot+0x6f */
     uint8_t  row[40];           /* the active row copy (slot+0x00..0x27) */
     uint8_t  flags;             /* slot+0x6c */
+    /* ===== byte-true render words (ROOM11E0 Strom-Effekt, 2026-08-08) =====
+     * slot+0x30 TPAGE / slot+0x32 CLUT. Seeded at spawn from the EFF header
+     * (FUN_80019700: +0x32 = hdr16[2] + ((sub&0xff)>>3)*0x40, +0x30 = hdr16[3]);
+     * routines 8 (@0x80017608-20) and 10 (@0x800176d8-fc) OR row[0x16] into TPAGE
+     * and add row[0x1e]<<6 to CLUT. The draw FUN_800534c4 emits TPAGE<<16 into
+     * POLY_FT4 word5 — its bits 5-6 = PSX ABR semi-transparency mode (0=50/50,
+     * 1=B+F additiv, 2=B-F, 3=B+F/4); ABE itself = flags bit4 (prim code |= 2,
+     * FUN_800534c4 `>>3 & 2`). On PSX the page bits are runtime-patched by
+     * FUN_800194f8 (GetTPage of the VRAM slot); on PC the page = the bound TIM
+     * slot, so only the ABR bits are consumed by the draw. */
+    uint16_t tpage;             /* slot+0x30 */
+    uint16_t clut;              /* slot+0x32 */
 } re15_esp_fx_t;
 
 void           re15_esp_fx_reset(void);
@@ -178,9 +190,12 @@ re15_esp_fx_t *re15_esp_fx_spawn(const re15_esp_t *bank, uint8_t effect_id, uint
 void re15_esp_fx_splatter(const re15_esp_t *bank, uint8_t effect_id, int n,
                           int32_t x, int32_t y, int32_t z, int32_t floor_y);
 /** Spawn the (effect_id, sub) row streams as ROW-VM slots (one per stream). Returns the count.
- *  The SHELL (id 4 sub 0) chains R16 2-tick freeze -> R11 RNG spread -> B=12 floor bounce. */
+ *  The SHELL (id 4 sub 0) chains R16 2-tick freeze -> R11 RNG spread -> B=12 floor bounce.
+ *  `param` = the op/parent param word (slot+0x2e in FUN_80019700; op 0x3A pc[14..15],
+ *  routine-8 child = parent param @0x80017614). Seeds slot CLUT/TPAGE from the EFF header. */
 int re15_esp_fx_spawn_rows(const re15_esp_t *bank, uint8_t effect_id, uint8_t sub,
-                           uint16_t scale16, int32_t x, int32_t y, int32_t z, int32_t floor_y);
+                           uint16_t scale16, int32_t x, int32_t y, int32_t z, int32_t floor_y,
+                           int16_t param);
 /** Platform SE hook: the shell-clink (FUN_80045024(0x01020001) = ARMS record 2). */
 extern void (*re15_esp_shell_clink_hook)(void);
 /** Platform SE hook: the gunshot BANG (routine 9, ARMS record 0, muzzle tick 2). */

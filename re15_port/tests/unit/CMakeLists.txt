@@ -956,3 +956,14 @@ target_link_libraries(probe_dog_hit PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_dog_hit PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_dog_hit COMMAND probe_dog_hit)
 set_tests_properties(unit_dog_hit PROPERTIES TIMEOUT 30)
+# ROOM11E0 STROM-/Funken-Effekt (Nutzer-Report 2026-08-08, WRENCH-Reparatur-Stelle):
+# sub27 (Datei 0x20DC) loopt `Sce_espr_on id=0x11 sub=0 cat=0 @(-12200,-2400,-8000)
+# scale16=0x1000` + Sleep(20) solange flag(4,36)==0; sub21 setzt flag(4,36)=1 (@+0x086A).
+# Row-Maschine: Effekt 0x11 sub0 = 1 Stream/2 Rows @0x46F8, row0 A=10 -> Routine 10
+# @0x800176b0: flags:=0x13 (ABE), TPAGE|=0x20 (ABR1 additiv), Advance. Spawner-Kette
+# FUN_80041864 (@0x8004194c packt scale16 aus pc[6..7]) -> FUN_80019700 (IMMER Row-Block).
+add_executable(probe_espr_11e0 probe_espr_11e0.c)
+target_link_libraries(probe_espr_11e0 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_espr_11e0 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_espr_11e0 COMMAND probe_espr_11e0)
+set_tests_properties(unit_espr_11e0 PROPERTIES TIMEOUT 30)

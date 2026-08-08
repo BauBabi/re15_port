@@ -153,7 +153,7 @@ static uint32_t      rgb555_to_argb8888(uint16_t c);   /* fwd (defined with the 
 
 /* TIM slot pool — allows multiple characters/props to have their own
  * textures. Slot 0 = player default (Leon); other slots for NPCs/props. */
-#define RE15_TIM_SLOT_MAX 36   /* 24/25 = weapon-in-hand model TIMs (W01 knife / W03 gun)
+#define RE15_TIM_SLOT_MAX 44   /* 24/25 = weapon-in-hand model TIMs (W01 knife / W03 gun)
                                 * 0=Leon 1=Elliot 2=heli-legacy 3=pilot-legacy
                                 * 4..9 = room obj0..5 generic prop TIMs
                                 * 10 = em21 (legacy); 11..18 = generic enemy banks
@@ -162,7 +162,12 @@ static uint32_t      rgb555_to_argb8888(uint16_t c);   /* fwd (defined with the 
                                 * Generator-Raum hat nOmodel=12; das Original kappt NIE
                                 * bei 6 — die Objekt-Schleife FUN_800436a8 laeuft bis
                                 * RDT-Header nOmodel @0x80043758/0x800437ac, Modell-Bind
-                                * pro obj_id @0x80040ab4-adc -> FUN_8002b898) */
+                                * pro obj_id @0x80040ab4-adc -> FUN_8002b898)
+                                * 36..43 = Raum-ESP-TIM je Effekt-ID-Index (RDT-dir 0x54/0x58;
+                                * das Original laedt JEDE ESP-TIM einzeln ins VRAM
+                                * (FUN_800194f8: LoadImage je TIM + GetTPage-Patch in den
+                                * EFF-Header) — Slot 19 hielt nur eff[0], ROOM11E0 hat DREI
+                                * (ids 5/7/0x11), der Funke 0x11 sampelte die falsche TIM) */
 typedef struct {
     SDL_Texture *tex;
     int          w, h, one_clut_h, n_cluts, clut_base_y;
@@ -342,6 +347,7 @@ typedef struct {
 static textri_verts_t s_textri_queue[TEXTRI_QUEUE_MAX];
 static float          s_textri_depth[TEXTRI_QUEUE_MAX];
 static uint8_t        s_textri_slot [TEXTRI_QUEUE_MAX];  /* TIM slot per tri */
+static uint8_t        s_textri_blend[TEXTRI_QUEUE_MAX];  /* PSX-ABR-Ableitung je Tri (s.u.) */
 static int            s_textri_count = 0;
 
 /* Temporary buffer used to emit the sorted-by-depth tri list to SDL.
@@ -403,6 +409,15 @@ void re15_render_pc_clear_scene_overlays(void)
  * sprites draw ABR0 = 0.5*back + 0.5*front -> alpha 128 with SDL BLEND). Reset to 255 after. */
 static int s_tri_alpha = 255;
 void re15_render_pc_set_tri_alpha(int a) { s_tri_alpha = (a < 0) ? 0 : (a > 255) ? 255 : a; }
+/* Per-tri BLEND MODE for subsequently queued tris — die PSX-ABR-Modi der Effekt-Sprites
+ * (POLY-Code-Bit 0x02 = ABE aus flags Bit4, ABR = TPAGE-Bits 5-6; Draw FUN_800534c4,
+ * Routine 10 @0x800176d8-ec ORt row[0x16] in TPAGE — ROOM11E0 Strom-Effekt = ABR1):
+ *   0 = SDL_BLENDMODE_BLEND (Default; ABR0 50/50 via alpha 128, opak via alpha 255)
+ *   1 = SDL_BLENDMODE_ADD   (ABR1 B+F additiv; ABR3 B+F/4 = ADD mit alpha 64, da SDL-ADD
+ *                            dst + src*srcA/255 rechnet — 64/255 = 0.251 ~ 1/4)
+ *   2 = REV_SUBTRACT custom (ABR2 B-F; wie der Shadow-Blob s_shadow_blend) */
+static int s_tri_blend = 0;
+void re15_render_pc_set_tri_blend(int m) { s_tri_blend = (m < 0 || m > 2) ? 0 : m; }
 int re15_render_pc_dbg_tim_loaded(void)      { return s_tim_texture != NULL ? 1 : 0; }
 int re15_render_pc_dbg_min_sx(void)          { return s_dbg_last_min_sx; }
 int re15_render_pc_dbg_max_sx(void)          { return s_dbg_last_max_sx; }
@@ -732,14 +747,22 @@ void re15_render_end_frame(void)
          * preserved (batches by slot within the global depth order). */
         int mi = 0;
         if (s_textri_count > 0 && s_tim_texture) {
-            uint8_t cur_slot = s_textri_slot[order[0]];
+            /* ABR2 (B - F) subtraktiv wie der Shadow-Blob (einmal komponiert). */
+            static SDL_BlendMode s_tri_sub_blend = SDL_BLENDMODE_INVALID;
+            if (s_tri_sub_blend == SDL_BLENDMODE_INVALID)
+                s_tri_sub_blend = SDL_ComposeCustomBlendMode(
+                    SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_REV_SUBTRACT,
+                    SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_ADD);
+            uint8_t cur_slot  = s_textri_slot [order[0]];
+            uint8_t cur_blend = s_textri_blend[order[0]];
             int batch_start = 0;
             for (int i = 0; i <= s_textri_count; i++) {
                 float tri_depth = (i < s_textri_count) ? s_textri_depth[order[i]] : -1e30f;
-                uint8_t s = (i < s_textri_count) ? s_textri_slot[order[i]] : 0xFF;
+                uint8_t s  = (i < s_textri_count) ? s_textri_slot [order[i]] : 0xFF;
+                uint8_t bl = (i < s_textri_count) ? s_textri_blend[order[i]] : 0;
                 int mask_due = (mi < mask_n) &&
                     ((float) re15_pri_mask_camera_z(s_pri_rects[mask_order[mi]].depth) >= tri_depth);
-                if (i == s_textri_count || s != cur_slot || mask_due) {
+                if (i == s_textri_count || s != cur_slot || bl != cur_blend || mask_due) {
                     int n = i - batch_start;
                     if (n > 0 && s_tim_slots[cur_slot].loaded) {
                         for (int j = 0; j < n; j++) {
@@ -748,11 +771,24 @@ void re15_render_end_frame(void)
                             s_textri_flush_buf[j * 3 + 1] = src->v[1];
                             s_textri_flush_buf[j * 3 + 2] = src->v[2];
                         }
-                        SDL_RenderGeometry(s_renderer, s_tim_slots[cur_slot].tex,
+                        /* PSX-ABR je Batch: 1 = ADD (ABR1/3), 2 = REV_SUBTRACT (ABR2),
+                         * 0 = BLEND (Default/ABR0). Nicht unterstuetzter Custom-Blend
+                         * (SW-Renderer) faellt auf BLEND zurueck (SetTextureBlendMode
+                         * schlaegt fehl und der Modus bleibt der zuletzt gesetzte). */
+                        SDL_Texture *btex = s_tim_slots[cur_slot].tex;
+                        if (cur_blend == 1)      SDL_SetTextureBlendMode(btex, SDL_BLENDMODE_ADD);
+                        else if (cur_blend == 2) {
+                            if (SDL_SetTextureBlendMode(btex, s_tri_sub_blend) != 0)
+                                SDL_SetTextureBlendMode(btex, SDL_BLENDMODE_BLEND);
+                        }
+                        SDL_RenderGeometry(s_renderer, btex,
                                             s_textri_flush_buf, n * 3, NULL, 0);
+                        if (cur_blend != 0)
+                            SDL_SetTextureBlendMode(btex, SDL_BLENDMODE_BLEND);
                     }
                     batch_start = i;
                     cur_slot = s;
+                    cur_blend = bl;
                     while (mi < mask_n &&
                            (float) re15_pri_mask_camera_z(s_pri_rects[mask_order[mi]].depth) >= tri_depth) {
                         const re15_pri_rect_t *r = &s_pri_rects[mask_order[mi++]];
@@ -1914,6 +1950,7 @@ void re15_render_textured_tri(int x0, int y0, int u0, int v0,
      * order — back-compat with anything that wasn't depth-aware. */
     s_textri_depth[s_textri_count] = (float)z;
     s_textri_slot[s_textri_count]  = (uint8_t)s_active_slot;
+    s_textri_blend[s_textri_count] = (uint8_t)s_tri_blend;
 
     /* Phase 4.5.7.5 #PC-2: route to the correct CLUT slab. The PSX clut
      * word's bits 6..14 = CLUT VRAM y; subtracting the TIM's base y
@@ -2002,6 +2039,7 @@ void re15_render_textured_tri_lit(int x0, int y0, int u0, int v0,
 
     s_textri_depth[s_textri_count] = (float)z;
     s_textri_slot[s_textri_count]  = (uint8_t)s_active_slot;
+    s_textri_blend[s_textri_count] = (uint8_t)s_tri_blend;
 
     int clut_y = (clut >> 6) & 0x1FF;
     int clut_idx = clut_y - s_tim_clut_base_y;

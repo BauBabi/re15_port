@@ -326,7 +326,7 @@ int main(void)
              * Row seed (id4 sub0 row1 @0x1900): drift (-35,-50,-140), gravity accel (0,10,0). */
             {
                 re15_esp_fx_reset();
-                int ns = re15_esp_fx_spawn_rows(NULL, 0x04, 0, 0x0800, 0, 0, 0, 60);
+                int ns = re15_esp_fx_spawn_rows(NULL, 0x04, 0, 0x0800, 0, 0, 0, 60, 0);
                 re15_esp_fx_t *sh = (re15_esp_fx_t *)re15_esp_fx_get(0);
                 int sfail = 0;
                 if (ns < 1 || !sh) { fprintf(stderr, "FAIL: (D5) shell spawn_rows failed (n=%d)\n", ns); sfail = 1; }
@@ -356,7 +356,7 @@ int main(void)
              * 6-stream spray: streams 1-5 start staggered (routine 4, flags 0x61 frozen). */
             {
                 re15_esp_fx_reset();
-                int ns2 = re15_esp_fx_spawn_rows(NULL, 0x00, 2, 0x1000, 0, 0, 0, 30000);
+                int ns2 = re15_esp_fx_spawn_rows(NULL, 0x00, 2, 0x1000, 0, 0, 0, 30000, 0);
                 int vfail = 0;
                 if (ns2 < 2) { fprintf(stderr, "FAIL: (D6) id0 sub2 must spawn the spray, got %d\n", ns2); vfail = 1; }
                 else {

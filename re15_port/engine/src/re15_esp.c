@@ -434,12 +434,15 @@ static void esp_fx_dispatch(re15_esp_fx_t *f)
             break;
         }
         case 8: {   /* @0x800175ec: flags := row[0x0e] (0x93 = anchor-placement show); tpage |=
-                     * row[0x16] (render-side ABR, stage 3c); CHILD spawn cat 2 FIXED (lui 0x200
-                     * @0x80017624), sub = row[0x1e], scale = row[0x26] — the 0x02040bb8 secondary
+                     * row[0x16] (@0x80017608-20: lhu +0x30 / lhu +0x16 / or / sh +0x30 — the ABR
+                     * bits, muzzle rows carry 0x20 = ABR1 additive); CHILD spawn cat 2 FIXED
+                     * (lui 0x200 @0x80017624), sub = row[0x1e], scale = row[0x26], param = the
+                     * PARENT's param (lh a1,0x2e(a3) @0x80017614) — the 0x02040bb8 secondary
                      * flash; advance UNCONDITIONAL. */
             f->flags = f->row[0x0e];
+            f->tpage |= row_u16(f->row, 0x16);
             re15_esp_fx_spawn_rows(f->bank, 2, f->row[0x1e], row_u16(f->row, 0x26),
-                                   f->x, f->y, f->z, f->floor_y);
+                                   f->x, f->y, f->z, f->floor_y, f->param);
             esp_fx_row_advance(f);
             break;
         }
@@ -449,9 +452,16 @@ static void esp_fx_dispatch(re15_esp_fx_t *f)
             esp_fx_row_advance(f);
             break;
         }
-        case 10: {  /* @0x800176b0: flags := row[0x0e]; tpage |= row[0x16] + clut += row[0x1e]<<6
-                     * (render-side CLUT fade, stage 3c); anim := row[0x26]; advance UNCONDITIONAL. */
+        case 10: {  /* @0x800176b0 (selbst disassembliert, ROOM11E0 Strom-Effekt 2026-08-08):
+                     *   sb  row[0x0e] -> flags+0x6c        (@0x800176c0/c8)
+                     *   lhu +0x30 | lhu +0x16 -> sh +0x30  (@0x800176d8-ec: TPAGE |= row[0x16];
+                     *                                       id17 row0 = 0x20 -> ABR1 ADDITIV)
+                     *   lhu +0x1e << 6 + lhu +0x32 -> sh   (@0x800176e0-fc: CLUT += row[0x1e]*0x40)
+                     *   sb  row[0x26] -> anim_idx +0x6e    (@0x800176f4/704)
+                     *   jal 0x800174e4 (advance UNCONDITIONAL) */
             f->flags = f->row[0x0e];
+            f->tpage |= row_u16(f->row, 0x16);
+            f->clut   = (uint16_t)(f->clut + (row_u16(f->row, 0x1e) << 6));
             f->frame = (int16_t)(f->row[0x26] - 1); f->timer = 0;
             esp_fx_row_advance(f);
             break;
@@ -488,10 +498,30 @@ static void esp_fx_dispatch_b(re15_esp_fx_t *f)
  * shotgun-shell 0x01090001 variant is a stage-3 refinement). NULL = silent (engine tests). */
 void (*re15_esp_shell_clink_hook)(void) = NULL;
 
+/* FUN_80019700 header seed (decompile lines 85-88): per spawned slot
+ *   slot+0x32 (CLUT)  = EFF hdr u16 @+4  + ((sub & 0xff) >> 3) * 0x40
+ *   slot+0x30 (TPAGE) = EFF hdr u16 @+6
+ * On PSX the hdr words are runtime-patched by the TIM installer FUN_800194f8
+ * (GetClut(0x120,y) / GetTPage(0,0,x,y) low byte) — for the ROOM bank the file
+ * carries only the pre-seed. The draw consumes the ABR bits 5-6 (routines 8/10
+ * OR row[0x16] in); the PAGE bits collapse to the per-id TIM slot binding on PC. */
+static void esp_fx_seed_header(re15_esp_fx_t *f, const re15_esp_t *rb, int ei, uint8_t sub)
+{
+    if (!rb || !rb->raw || ei < 0 || ei >= rb->id_count) return;
+    uint32_t hs = rb->eff[ei].eff_start;
+    if ((size_t)hs + 8 > rb->raw_size) return;
+    uint16_t hdr_clut  = (uint16_t)(rb->raw[hs + 4] | (rb->raw[hs + 5] << 8));
+    uint16_t hdr_tpage = (uint16_t)(rb->raw[hs + 6] | (rb->raw[hs + 7] << 8));
+    f->clut  = (uint16_t)(hdr_clut + (uint16_t)((sub & 0xff) >> 3) * 0x40);
+    f->tpage = hdr_tpage;
+}
+
 /* Spawn the (effect_id, sub) row streams as ROW-VM slots — one slot per stream (the byte-true
- * spawner allocation; trace wf_a18487d9). Returns the number of slots spawned. */
+ * spawner allocation; trace wf_a18487d9). `param` = the op/parent param word stored at slot+0x2e
+ * (FUN_80019700 `*(u16*)(slot+0x2e) = param_2`). Returns the number of slots spawned. */
 int re15_esp_fx_spawn_rows(const re15_esp_t *bank, uint8_t effect_id, uint8_t sub,
-                           uint16_t scale16, int32_t x, int32_t y, int32_t z, int32_t floor_y)
+                           uint16_t scale16, int32_t x, int32_t y, int32_t z, int32_t floor_y,
+                           int16_t param)
 {
     const re15_esp_t *rb = bank;
     int ei = re15_esp_find_id(rb, effect_id);
@@ -502,9 +532,10 @@ int re15_esp_fx_spawn_rows(const re15_esp_t *bank, uint8_t effect_id, uint8_t su
         int nrows = 0;
         const uint8_t *rows = re15_esp_row_stream(rb, ei, sub, s, &nrows);
         if (!rows || nrows <= 0) continue;
-        re15_esp_fx_t *f = re15_esp_fx_spawn_ex(bank, effect_id, sub, scale16, x, y, z, 0);
+        re15_esp_fx_t *f = re15_esp_fx_spawn_ex(bank, effect_id, sub, scale16, x, y, z, param);
         if (!f) break;
         f->phys = 1; f->flags = 0x03;
+        esp_fx_seed_header(f, rb, ei, sub);   /* CLUT/TPAGE seed (FUN_80019700) */
         f->rows_base = rows; f->row_count = (uint8_t)(nrows > 255 ? 255 : nrows);
         f->row_cursor = 0;
         esp_fx_row_load(f, 0);
@@ -545,6 +576,7 @@ void re15_esp_fx_splatter(const re15_esp_t *bank, uint8_t effect_id, int n,
                 if (!f) return;                 /* pool full */
                 f->phys      = 1;
                 f->flags     = 0x03;            /* spawner init (@0x800197b4-d0): active+visible */
+                esp_fx_seed_header(f, rb, ei, 0);   /* CLUT/TPAGE seed (FUN_80019700) */
                 f->rows_base = rows;
                 f->row_count = (uint8_t)(nrows > 255 ? 255 : nrows);
                 f->row_cursor = 0;

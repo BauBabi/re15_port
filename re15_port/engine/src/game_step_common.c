@@ -672,15 +672,15 @@ void re15_game_step(const re15_game_ctx_t *c)
                     int32_t gy   = pl->y - 2083;          /* fallback aim hand-bone height (b13) */
                     int32_t gp[3];
                     if (re15_player_gunbone_world(0x8c, 0x25d, 0, gp))    /* MUZZLE 0x02000800 {0x8c,0x25d,0} */
-                        re15_esp_fx_spawn_rows(re15_esp_global_bank(), 2, 0, 0x0800, gp[0], gp[1], gp[2], pl->y);
+                        re15_esp_fx_spawn_rows(re15_esp_global_bank(), 2, 0, 0x0800, gp[0], gp[1], gp[2], pl->y, 0);
                     else
                         re15_esp_fx_spawn_rows(re15_esp_global_bank(), 2, 0, 0x0800,
-                            pl->x + ( fcos * 0x25d >> 12), gy, pl->z + (-fsin * 0x25d >> 12), gy + 2083);
+                            pl->x + ( fcos * 0x25d >> 12), gy, pl->z + (-fsin * 0x25d >> 12), gy + 2083, 0);
                     if (re15_player_gunbone_world(0x91, 0x1f4, -25, gp)) /* SMOKE 0x03000c00 {0x91,0x1f4,-25} */
-                        re15_esp_fx_spawn_rows(re15_esp_global_bank(), 3, 0, 0x0c00, gp[0], gp[1], gp[2], pl->y);
+                        re15_esp_fx_spawn_rows(re15_esp_global_bank(), 3, 0, 0x0c00, gp[0], gp[1], gp[2], pl->y, 0);
                     else
                         re15_esp_fx_spawn_rows(re15_esp_global_bank(), 3, 0, 0x0c00,
-                            pl->x + ( fcos * 0x1f4 >> 12), gy - 25, pl->z + (-fsin * 0x1f4 >> 12), gy + 2083);
+                            pl->x + ( fcos * 0x1f4 >> 12), gy - 25, pl->z + (-fsin * 0x1f4 >> 12), gy + 2083, 0);
                     /* SHELL EJECT (byte-true @0x8003383c-64 of the handgun one-shot @0x800337bc =
                      * item-dispatch [6]/[7]): id 4 sub 0 scale 0x800 = 0x04000800, spawned INLINE at
                      * discharge alongside muzzle+smoke (offset {0x91,0x109,-50}) — the SAME handler the
@@ -691,13 +691,19 @@ void re15_game_step(const re15_game_ctx_t *c)
                      * R11 RNG spread on the row seed (-35,-50,-140) -> gravity (0,10,0) +
                      * B=12 floor bounce (clink SE; kill on the 2nd contact). floor = gy. */
                     if (re15_player_gunbone_world(0x91, 0x109, -50, gp))  /* SHELL 0x04000800 {0x91,0x109,-50} */
-                        re15_esp_fx_spawn_rows(re15_esp_global_bank(), 4, 0, 0x0800, gp[0], gp[1], gp[2], pl->y);
+                        re15_esp_fx_spawn_rows(re15_esp_global_bank(), 4, 0, 0x0800, gp[0], gp[1], gp[2], pl->y, 0);
                     else
                         re15_esp_fx_spawn_rows(re15_esp_global_bank(), 4, 0, 0x0800,
-                            pl->x + ( fcos * 0x109 >> 12), gy - 50, pl->z + (-fsin * 0x109 >> 12), gy);
+                            pl->x + ( fcos * 0x109 >> 12), gy - 50, pl->z + (-fsin * 0x109 >> 12), gy, 0);
                 }
             }
-            g_aot_action_pressed = 0;         /* aiming blocks the door/stair action (no doors while aiming) */
+            /* (Der fruehere R1-Clear von g_aot_action_pressed stand HIER. Ersetzt durch das
+             * byte-true aim_decide-Gate unten: das Original unterdrueckt den ACTION-Scan nicht
+             * per R1-Level, sondern per Substate 7 — NOP-DECIDE @0x80032e3c — und der haelt
+             * auch die LOWER-Phase nach R1-Release (Exit erst `sb zero,DAT_800aca59`
+             * @0x80033d4c/@0x80034d38/@0x80035500). Der alte R1-Clear liess genau diese
+             * LOWER-Luecke offen: gemessen feuerte SQUARE dort ein Examine
+             * (test_action_msg_gate A5c, vor dem Fix). */
         }
         /* GUNSHOT BANG (byte-true wf_efa45868-e53): the muzzle effect's 40-byte descriptor ROW
          * script fires it on the slot's SECOND tick — row1 u16[0]=9 -> routine 9 @0x80017654 ->

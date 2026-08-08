@@ -87,6 +87,9 @@ static inline int RNDI(float f) {
 #include "re15_itembox.h"      /* ITEM BOX (RE1.5-hybrid): box-AOT pending signal + storage */
 
 #define RE15_TIM_SLOT_EFFECT 19   /* effect-sprite TIM render slot (0..18 used by chars/props) */
+#define RE15_TIM_SLOT_EFFECT_ROOM(i) (36 + (i))  /* Raum-ESP-TIM je Effekt-Index 0..7 (byte-true
+                                   * FUN_800194f8 laedt JEDE TIM der RDT-Tabelle; Slot 19 hielt
+                                   * nur eff[0] — ROOM11E0 ids {5,7,0x11} brauchen drei) */
 #define RE15_TIM_SLOT_EFFECT_GLOBAL 20 /* GLOBAL effect bank (CORE00.ESP) sprite sheet — effect-id 0
                                         * hit/blood. Its texture is NOT in any RDT; it lives in VRAM
                                         * (tpage 0x001f -> VRAM(960,256) 4-bit, clut 0x7951). Extracted
@@ -137,15 +140,21 @@ static void pc_load_room_esp(const uint8_t *rdt_buf, int rdt_size, unsigned room
                 s_room_esp.id_count ? s_room_esp.eff[0].effect_id : 0,
                 s_room_esp.id_count ? s_room_esp.eff[0].count_a : 0,
                 s_room_esp.id_count ? s_room_esp.eff[0].count_b : 0);
-        /* Upload the effect TIM (eff[0].tim_off) to the dedicated effect render slot. */
-        if (s_room_esp.id_count && s_room_esp.eff[0].tim_off &&
-            (uint32_t)rdt_size > s_room_esp.eff[0].tim_off) {
+        /* JEDE Effekt-TIM in ihren eigenen Render-Slot (36+i) — byte-true FUN_800194f8:
+         * das Original laedt die TIM-Tabelle KOMPLETT (LoadImage je TIM, VRAM-Spalte ab
+         * x=960 abwaerts) und patcht CLUT/TPAGE je Effekt in dessen EFF-Header. Der alte
+         * Ein-Slot-Upload (nur eff[0] -> Slot 19) liess z.B. den ROOM11E0-Strom-Effekt
+         * (id 0x11 = eff[2], eigene TIM @0x25A74) aus der TIM von Effekt 5 sampeln. */
+        for (int ei = 0; ei < s_room_esp.id_count; ei++) {
+            if (!s_room_esp.eff[ei].tim_off || (uint32_t)rdt_size <= s_room_esp.eff[ei].tim_off)
+                continue;
             re15_tim_t tim;
-            if (re15_tim_parse(rdt_buf + s_room_esp.eff[0].tim_off,
-                               (size_t)rdt_size - s_room_esp.eff[0].tim_off, &tim) == 0) {
-                re15_render_pc_upload_tim_slot(&tim, RE15_TIM_SLOT_EFFECT);
+            if (re15_tim_parse(rdt_buf + s_room_esp.eff[ei].tim_off,
+                               (size_t)rdt_size - s_room_esp.eff[ei].tim_off, &tim) == 0) {
+                re15_render_pc_upload_tim_slot(&tim, RE15_TIM_SLOT_EFFECT_ROOM(ei));
                 fprintf(stderr, "[esp] effect TIM (id 0x%02x) -> slot %d: %dx%d\n",
-                        s_room_esp.eff[0].effect_id, RE15_TIM_SLOT_EFFECT, tim.width, tim.height);
+                        s_room_esp.eff[ei].effect_id, RE15_TIM_SLOT_EFFECT_ROOM(ei),
+                        tim.width, tim.height);
             }
         }
     } else {
@@ -192,6 +201,11 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy)
                 case 4:  slot = RE15_TIM_SLOT_FX_SHELL;      break;
                 default: slot = RE15_TIM_SLOT_EFFECT_GLOBAL; break;
             }
+        } else if (bank && f->eff_idx >= 0) {
+            /* ROOM-Bank: die TIM DIESES Effekts (Upload-Schleife oben; byte-true
+             * FUN_800194f8-Analog — auf PSX zeigen die gepatchten TPAGE-Page-Bits auf
+             * die per-TIM-VRAM-Spalte, auf PC ist die Seite = der per-Id-Slot). */
+            slot = RE15_TIM_SLOT_EFFECT_ROOM(f->eff_idx);
         }
         if (!re15_render_pc_dbg_slot_loaded(slot)) continue;   /* that bank's texture not loaded */
         re15_render_pc_bind_tim_slot(slot);
@@ -262,7 +276,23 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy)
         int64_t stepY = (S > 0) ? h16 / S : 0;
         int ute = (stepX > 0x1ffff) ? 1 : 0;          /* >=2x magnification edge trim */
         int vte = (stepY > 0x1ffff) ? 1 : 0;
-        int abe = (bank == global_bank && (f->effect_id == 2 || f->effect_id == 3));
+        /* ===== BLEND, byte-true (ROOM11E0 Strom-Effekt 2026-08-08) =====
+         * ABE = flags Bit4 (Draw FUN_800534c4: prim code 0x2C |= `(flags>>3)&2` -> 0x2E),
+         * ABR = TPAGE-Bits 5-6 (POLY_FT4 word5 = tpage<<16; Seed = EFF-hdr u16 @+6,
+         * Routine 8 @0x80017608-20 / Routine 10 @0x800176d8-ec ORen row[0x16] hinein).
+         * ROOM11E0 id 0x11 row0: flags=0x13, row[0x16]=0x20 -> ABE an, ABR1 = B+F ADDITIV.
+         * Muzzle (CORE00 id2, rows 0x93/0x20) ist damit ebenfalls ABR1 (die alte 50/50-
+         * Annahme war der Platzhalter, solange TPAGE nicht modelliert war); Blut (id0,
+         * Routine 3 flags:=0x13, TPAGE bleibt hdr-Seed 0x001F) = ABR0 50/50.
+         * Legacy-Fx (ohne Row-VM, flags==0) behalten den alten Pfad (Global 2/3 = 50/50). */
+        int abe, abr;
+        if (f->rows_base) {
+            abe = (f->flags & 0x10) != 0;
+            abr = (f->tpage >> 5) & 3;
+        } else {
+            abe = (bank == global_bank && (f->effect_id == 2 || f->effect_id == 3));
+            abr = 0;
+        }
         int z = (int)vz >> 4;
         {
             extern FILE *pc_fx_log_handle(void);
@@ -271,7 +301,18 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy)
                             sx, sy, S, nspr, cstart, (long long)w16, camf);
         }
         extern void re15_render_pc_set_tri_alpha(int a);
-        if (abe) re15_render_pc_set_tri_alpha(128);   /* ABR0 = 0.5*back + 0.5*front */
+        extern void re15_render_pc_set_tri_blend(int m);
+        if (abe) {
+            switch (abr) {
+            case 1:  re15_render_pc_set_tri_blend(1); re15_render_pc_set_tri_alpha(255); break;
+                     /* ABR1 = 1.0*B + 1.0*F (SDL ADD, voller Beitrag) */
+            case 2:  re15_render_pc_set_tri_blend(2); re15_render_pc_set_tri_alpha(255); break;
+                     /* ABR2 = B - F (REV_SUBTRACT) */
+            case 3:  re15_render_pc_set_tri_blend(1); re15_render_pc_set_tri_alpha(64);  break;
+                     /* ABR3 = B + F/4 (SDL ADD: dst + src*srcA/255, 64/255 ~ 1/4) */
+            default: re15_render_pc_set_tri_alpha(128); break;   /* ABR0 = 0.5*B + 0.5*F */
+            }
+        }
         for (int q = 0; q < nspr; q++) {
             re15_esp_coord_t c;
             if (!bank || f->eff_idx < 0 ||
@@ -287,7 +328,7 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy)
             re15_render_textured_tri(x1, y0, u1, v0,  x1, y1, u1, v1,
                                      x0, y1, u0, v1,  0, 0, z, 128, 128, 128);
         }
-        if (abe) re15_render_pc_set_tri_alpha(255);
+        if (abe) { re15_render_pc_set_tri_blend(0); re15_render_pc_set_tri_alpha(255); }
     }
 }
 
