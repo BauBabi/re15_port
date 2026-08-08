@@ -184,6 +184,9 @@ int main(void)
         re15_actor_step_all_walkers();
         re15_actors_anim_advance();
         re15_enemy_ai_run_all(0);
+        re15_aot_stamp_entities();      /* LETZTER Zustands-Tick des Frames (FUN_800436a8
+                                         * @0x8001ce1c nach AI/Spieler) — wie re15_game_step */
+        re15_object_notch_update();
     }
     roster("nach 300 Ticks");
     dump_workvars("nach 300 Ticks");
@@ -207,6 +210,8 @@ int main(void)
             re15_actor_step_all_walkers();
             re15_actors_anim_advance();
             re15_enemy_ai_run_all(0);
+            re15_aot_stamp_entities();  /* Frame-Ende wie re15_game_step (@0x8001ce1c) */
+            re15_object_notch_update();
             if (t == 0 || t == 1 || t == 5 || t == 30 || t == 120 || t == 239)
                 printf("   t=%3d: slot%d grid=0x%02X s1=0x%02x mo=%-3d animflg=0x%04x m0b=%u "
                        "| flag(5,%d)=%d flag(5,34)=%d\n",
@@ -230,6 +235,8 @@ int main(void)
             re15_actor_step_all_walkers();
             re15_actors_anim_advance();
             re15_enemy_ai_run_all(0);
+            re15_aot_stamp_entities();  /* Frame-Ende wie re15_game_step (@0x8001ce1c) */
+            re15_object_notch_update();
             if (t == 0 || t == 1 || t == 5 || t == 30 || t == 239)
                 printf("   t=%3d: slot%d grid=0x%02X s1=0x%02x mo=%-3d animflg=0x%04x m0b=%u "
                        "| flag(5,33)=%d\n",

@@ -662,11 +662,17 @@ void re15_aot_stamp_entities(void)
     /* Netto-Wirkung von Wisch + Scan-Clear, bevor gestempelt wird:
      *   Spieler       -> 0xFF (gewischt, KEIN Clear)
      *   aktiver Gegner-> 0    (gewischt, dann gecleart)
-     *   INAKTIVER Gegner -> unberuehrt (weder Wisch noch Clear) => Alt-Wert bleibt stale */
+     *   INAKTIVER Gegner -> unberuehrt (weder Wisch noch Clear) => Alt-Wert bleibt stale
+     * Der VM-Tail-Wisch ist ein HALBWORT-Store `sh 0xFFFF` und trifft +0x0A UND +0x0B
+     * (Spieler @0x8003ec44 `ori v0,zero,0xffff` + @0x8003ec4c `sh v0,0(v1)` auf 0x800aca5e;
+     * aktive Gegner @0x8003ec68 `sh v1,10(a0)`) — member_0a wird also genauso pro Frame
+     * auf 0xFF gewischt (die erste Port-Fassung wischte nur member_0b; ein member_0a-Writer
+     * existiert: Gorilla-INIT +0x1b9=0x19, enemy_ai_common.c). */
     g_actors[RE15_ACTOR_SLOT_PLAYER].member_0b = 0xFF;
+    g_actors[RE15_ACTOR_SLOT_PLAYER].member_0a = 0xFF;
     for (int es = 0; es < RE15_ACTOR_MAX; es++) {
         if (es == RE15_ACTOR_SLOT_PLAYER) continue;
-        if (g_actors[es].active) g_actors[es].member_0b = 0;
+        if (g_actors[es].active) { g_actors[es].member_0b = 0; g_actors[es].member_0a = 0xFF; }
     }
 
     for (int i = 0; i < RE15_AOT_MAX; i++) {
@@ -716,9 +722,12 @@ void re15_aot_stamp_entities(void)
 
 void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
 {
-    /* Glied 1 zuerst: im Original macht derselbe Treiber FUN_800436a8 erst Clear+Stempel,
-     * bevor die Handler laufen (@0x800436c0 / @0x80043728 / @0x80043790, alle mit a2 = 0). */
-    re15_aot_stamp_entities();
+    /* Glied 1 (re15_aot_stamp_entities) laeuft NICHT mehr hier: der Original-Treiber
+     * FUN_800436a8 laeuft @0x8001ce1c als LETZTER Zustands-Tick des Frames — NACH Gegner-AI
+     * (@0x8001ce04) und Spieler (@0x8001ce0c). Der Port ruft ihn deshalb am ENDE von
+     * re15_game_step (nach re15_enemy_ai_run_all); dieser Scan hier laeuft dagegen im
+     * Spieler-Zweig VOR der Gegner-AI — ein Stempel an dieser Stelle saehe die
+     * VORFRAME-Position der Gegner (Dossier §4 Schritt 5 Punkt 6). */
 
     /* Reset per-frame event flag at scan start. Main loop reads it
      * between scan() and the next frame, dispatching to SCD. */

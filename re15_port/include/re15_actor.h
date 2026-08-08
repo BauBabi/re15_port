@@ -47,7 +47,10 @@ typedef struct {
     uint8_t  sub_state_4;  /* RE1.5 Member id 13 → +0x08 */
     int32_t  member_0c;    /* RE1.5 Member id 7  → +0x0c (word) — stored, no consumer yet */
     uint8_t  grid_id;      /* RE1.5 Member id 12 → +0x09 — grid/cell id, the MOST frequent Member_set (117 sites) */
-    uint8_t  member_0a;    /* RE1.5 Member id 14 → +0x0a — stored, no consumer yet */
+    uint8_t  member_0a;    /* RE1.5 Member id 14 → +0x0a — pro Frame auf 0xFF gewischt
+                            * (sh 0xFFFF @0x8003ec4c Spieler / @0x8003ec68 aktive Gegner,
+                            * zusammen mit member_0b im Stempel-Pass); Writer existiert
+                            * (Gorilla-INIT +0x1b9=0x19, enemy_ai_common.c) */
     uint8_t  member_0b;    /* RE1.5 Member id 15 -> entity+0x0b: der 0-basierte Slot-Index der
                             * zuletzt getroffenen AOT-Zone (`addiu v0,s2,255` im Delay-Slot
                             * @0x80042f44 -> `sb v0,11(s1)` @0x80042f5c ACTION / @0x80042fc4 AUTO,
@@ -57,9 +60,9 @@ typedef struct {
                             * ⚠ Historie: hier lag frueher der LOS-Latch des Adult Spider (der
                             * einzige Typ ohne eigene Feldgruppe). Der ist nach `aspider_los`
                             * umgezogen — sonst haette der AOT-Stempel seine Sichtlinie zerstoert.
-                            * Der Stempel selbst (Glied 1) ist noch NICHT implementiert; ohne ihn
-                            * ist `member15 == 5` in ROOM1030-sub06 nie wahr und die Kriech-Kette
-                            * kann nicht laufen. Details: analysis/room1030_crawl_mechanism.md */
+                            * Der Stempel (Glied 1) IST implementiert: re15_aot_stamp_entities
+                            * (aot_common.c), seit 81bf395c; laeuft als letzter Zustands-Tick
+                            * des Frames. Details: analysis/room1030_crawl_mechanism.md */
     uint8_t  floor;        /* RE1.5 Member id 18 → +0x82 (floor band) */
     int32_t  x;            /* RE1.5 Member id 0 → +0x34 (world X)          */
     int32_t  y;            /* RE1.5 Member id 1 → +0x38 (world Y)          */

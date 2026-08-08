@@ -368,11 +368,10 @@ void re15_game_step(const re15_game_ctx_t *c)
      * door AOT scan below. */
     g_aot_action_pressed = (c->pad_pressed & RE15_PAD_BIT_SQUARE) ? 1 : 0;
 
-    /* Keypad combination-lock dial: refresh every object's notch (member+0xb = the sce=5
-     * grid cell it is over) so the dpad-moved cursor's Member_cmp(15==notch) confirm reads
-     * the current cell. Byte-true FUN_80042bac per-entity member+0xb stamp (@0x80042f5c);
-     * no-op in rooms without sce=5 cells + objects. */
-    re15_object_notch_update();
+    /* (Der Objekt-Notch-Refresh re15_object_notch_update lief frueher HIER am Step-Anfang —
+     * er laeuft jetzt zusammen mit dem Aktor-Stempel am STEP-ENDE, byte-true zur
+     * Frame-Position des AUTO-Pool-Scans FUN_800436a8 @0x8001ce1c. Die VM des Folgeframes
+     * liest damit wie das Original immer den Stand des Vorframe-ENDES.) */
 
     /* Expose the per-frame VIRTUAL press-edge word to the SCD VM / dialog FSM — the
      * original reads the config-REMAPPED edge word DAT_800ac76c (FUN_80030444 tail
@@ -906,6 +905,17 @@ void re15_game_step(const re15_game_ctx_t *c)
             pl->x = nx;
             pl->z = nz;
         }
+    }
+
+    /* GLIED-1-STEMPEL + OBJEKT-NOTCH ALS LETZTER ZUSTANDS-TICK DES FRAMES. Frame-Position
+     * byte-true: der AUTO-Pool-Scan FUN_800436a8 laeuft @0x8001ce1c NACH Gegner-AI
+     * (@0x8001ce04) und Spieler (@0x8001ce0c); die VM des NAECHSTEN Frames (@0x8001cdec)
+     * liest also immer den Stempel des Vorframe-ENDES. Die beiden Early-Returns oben
+     * (Item-Modal, Menue-Freeze) lassen den Stempel wie das Original stehen — dort laeuft
+     * auch im Original kein Scan (Task suspendiert). */
+    if (c->rdt_ok) {
+        re15_aot_stamp_entities();
+        re15_object_notch_update();
     }
 }
 
