@@ -894,6 +894,14 @@ add_executable(probe_gate_1030 probe_gate_1030.c)
 target_link_libraries(probe_gate_1030 PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_gate_1030 PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
+# --- FAHRSTUHL ROOM1080 (ctest-Pin): Etagen-Wahl (Panel sub06 -> Cursor-Notch 4/5/6 ->
+#     sub07/08/09 -> Aot_on 0/1/2) muss pro Etage das RDT-Soll-Ziel liefern:
+#     slot0 -> ROOM1040 (main00 @0x482), slot1 -> ROOM10C0 (@0x4A2), slot2 -> ROOM1120 (@0x4C2). ---
+add_executable(probe_elevator_1080 probe_elevator_1080.c)
+target_link_libraries(probe_elevator_1080 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_elevator_1080 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME probe_elevator_1080 COMMAND probe_elevator_1080)
+
 # --- REGRESSION (ctest): ROOM11F0 Generator-Raum — 12 Obj_model_set-Props (10 Schalter
 #     id 0x02..0x0B, Maschine id 0x00, Tuer-Prop id 0x01), Notch-Stempel, Toggle-Subs,
 #     Win-Pattern. Nutzer-Report "6 Schalter fehlen" = PC-Loader/Draw-Cap 6 (main.c);

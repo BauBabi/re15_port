@@ -22,8 +22,6 @@
 #include "re15_audio.h"      /* audio event kinds for door/pickup SFX */
 #include "re15_actor.h"      /* Phase 4.5.9-D: player = g_actors[0] */
 #include "re15_skeleton.h"   /* re15_sin_q12/cos_q12 — door forward-reach trigger */
-#include "re15_room_list.h"   /* re15_room_ids[] — Intro-Auto-Tür: Ziel-Raum-Index */
-#include "re15_room_spawns.h" /* re15_room_spawns[] — korrekter Eintritts-Spawn des Intro-Zielraums */
 #include "re15_collision.h"  /* set the floor band at a same-room door (band from spawn Y) — shared (PSX + PC) */
 #include "re15_room.h"       /* g_current_room_id + cross-room transition request.
                               * SHARED now (room_common.c) — both ports queue the
@@ -420,15 +418,6 @@ static int aot_fire_door(int i)
 {
     re15_aot_t *a = &g_aot.slots[i];
     const re15_aot_door_params_t *d = &g_aot.door_params[i];
-    /* Auto-Advance-/Intro-Tür-Erkennung (Null-Rechteck, dest != aktueller Raum) — für
-     * den Spawn-Override unten (gleiches Kriterium wie im Scan). */
-    int is_auto_door = 0;
-    if (a->half_w == 0 && a->half_h == 0) {
-        unsigned dd = (((unsigned)d->dest_stage + 1u) << 12)
-                    | ((unsigned)d->dest_room << 4)
-                    | (g_current_room_id & 0x000Fu);
-        is_auto_door = (dd != g_current_room_id);
-    }
 #ifndef RE15_PLATFORM_PC
     printf("[AOT] DOOR slot=%d destroom=%u cut=%u spawn=(%d,%d)\n",
            i, d->dest_room, d->target_cut, d->spawn_x, d->spawn_z);
@@ -473,26 +462,25 @@ static int aot_fire_door(int i)
                          | ((unsigned)d->dest_room << 4)
                          | (g_current_room_id & 0x000Fu);
         if (dest_id != g_current_room_id) {
-            int32_t sx = d->spawn_x, sy = d->spawn_y, sz = d->spawn_z;
-            int16_t syaw = d->spawn_yaw_4096;
-            int     scut = (int)d->target_cut;
-            /* INTRO-AUTO-TÜR: ihre Null-Rechteck-„next-pos" trägt KEINE echte
-             * Ziel-Spawn-Position — sie ist der EIGENE Spawn des Quellraums
-             * (z.B. 1240: -26214,0,-3861, Y=0). Den Intro-Raum stattdessen an
-             * SEINEM korrekten Eintritts-Spawn betreten (re15_room_spawns),
-             * sonst landet der Spieler auf der falschen Ebene/Band (Y aus dem
-             * Quellraum). Normale Lauf-Türen behalten ihren echten Spawn. */
-            if (is_auto_door) {
-                for (int ri = 0; ri < RE15_ROOM_COUNT; ri++) {
-                    if (re15_room_ids[ri] == dest_id) {
-                        const re15_room_spawn_t *rs = &re15_room_spawns[ri];
-                        sx = rs->x; sy = rs->y; sz = rs->z;
-                        syaw = rs->yaw; scut = rs->cut;
-                        break;
-                    }
-                }
-            }
-            re15_room_request_change(dest_id, sx, sy, sz, syaw, scut);
+            /* BYTE-TRUE (Fahrstuhl-ROOM1080-Fix 2026-08-08): der Warp nutzt IMMER den
+             * Door_aot_set-Payload — Handler sce-2 @0x800430bc `sw a0,DAT_800ac9a8`;
+             * Warp FUN_8001d600 Door-Zweig @0x8001d82c liest a0=[DAT_800ac9a8]:
+             *   @0x8001d87c lh 0(a0)=Spawn-X  @0x8001d89c lh 2(a0)=Y  @0x8001d8bc lh 4(a0)=Z
+             *   @0x8001d8dc lhu 6(a0)=Yaw     @0x8001d930 lbu 10(a0)=CUT
+             *   @0x8001d94c lbu 9(a0)=ROOM    @0x8001d960 lbu 8(a0)=STAGE.
+             * Es gibt KEINE Default-Spawn-Quelle und KEINEN Null-Rect-Sonderfall. Der alte
+             * „Intro-Auto-Tür"-Override (re15_room_spawns statt Payload bei half_w==half_h==0)
+             * war eine Port-Erfindung und verfälschte ALLE 26 ausgelieferten Null-Rect-
+             * Cross-Room-Türen (Census 2026-08-08: u.a. ROOM1080 Fahrstuhl-Slots 0-2 —
+             * Soll-Spawns @Datei 0x490/0x4B0/0x4D0: (-21936,0,-11000)cut5 / (1450,0,7300)cut0 /
+             * (1300,0,7300)cut0 — sowie 3010/3020/3060/3080/4020/5021: alles echte
+             * Ziel-Spawns). Der Fahrstuhl warf den Spieler dadurch auf jeder Etage an den
+             * Default-Eintritts-Spawn des Zielraums = immer derselbe falsche Ausgang.
+             * Die 1240→1170-Intro-Übergabe (Payload -26214,0,-3861 cut0, die OPENING-
+             * Konstante) läuft ebenfalls byte-true über den Payload; die Intro-Choreografie
+             * des Zielraums positioniert den Spieler selbst (wie im Original). */
+            re15_room_request_change(dest_id, d->spawn_x, d->spawn_y, d->spawn_z,
+                                     d->spawn_yaw_4096, (int)d->target_cut);
             a->was_inside = 1;
             return 1;
         }
