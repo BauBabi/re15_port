@@ -266,3 +266,13 @@ Env-Instrumentierung `RE15_FADE_LOG` bleibt. ⚠ NEBENBEFUND (offen, eigener RE-
 CONTINUE bleibt der RVD-Auto-Scan aus, bis ein SCD-/Tür-Pfad ihn aktiviert (60 s idle ohne
 6→0-Switch trotz Zone) — ob das Original nach Load `DAT_800aca3c`-Bit 0x100 gesetzt bootet,
 ist nicht disassembliert.
+
+**Nachtrag 2026-08-08 (3):** (a) RVD-Auto-Scan nach Session-Boot/CONTINUE aktiviert (Kamera
+klebte nach Load) — FUN_800396fc löscht das Scan-Gate bei JEDEM Raum-Start VOR der SCD-Init
+(`@0x80039710-30` → `jal FUN_8003ef6c @0x80039a00`), auch auf dem LOAD-Pfad (`@0x8001d5ac`);
+PC+PSX-Boot ziehen jetzt nach. OFFEN: restauriert das ORIGINAL beim LOAD den Save-Cut
+(`camera_cut` ist Port-v3-Feld; FUN_800396fc wendet DAT_800b0fe4 an)? (b) ROOM11F0
+Generator-Schalter: Engine korrekt, PC-Prop-Layer-Cap 6→16 gefixt (kein Original-Cap:
+`@0x80043758/@0x800437ac/@0x80040ab4-adc`); ctest-Pin unit_gen_11f0_switches. OFFEN:
+ROOM1190 nOmodel=17>16 (Original-Pool-Kapazität 0x800B3F98 RE'en), PSX-Loader-6er-Grenze,
+gdigrab-Sicht beider Kamera-Fixes + 11F0.
