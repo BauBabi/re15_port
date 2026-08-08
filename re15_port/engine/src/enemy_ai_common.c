@@ -7059,8 +7059,8 @@ static void re15_adult_spider_ai_tick(int slot)
                 * @0x80118e64[+0x6] ALWAYS. Tail: lockout-- and stuck-counter (byte-true @0x80110f8c). */
         int p = re15_enemy_los_probe(slot, e, pl);            /* 0x8001bc08 -> +0x1e0 @0x80110e58 */
         int los, rr; int32_t dist;
-        if (p != 2) e->member_0b = (uint8_t)(p & 1);          /* +0x1d0 bit0 LATCHED on verdict tick @0x80110e70-bc */
-        los  = e->member_0b & 1;
+        if (p != 2) e->aspider_los = (uint8_t)(p & 1);        /* +0x1d0 bit0 LATCHED on verdict tick @0x80110e70-bc */
+        los  = e->aspider_los & 1;
         dist = re15_enemy_player_dist(e, pl);                 /* SquareRoot0 -> +0x1d4 @0x80110efc */
         e->dog_dist = (int16_t)dist;
 
@@ -7275,8 +7275,8 @@ static void re15_adult_spider_ai_tick(int slot)
         if (e->sub_state_3 == 0) { re15_aspider_clip(e, 1); re15_audio_room_se(2); e->sub_state_3 = 1; }  /* flinch @0x80113a0c */
         else if (re15_aspider_anim(e)) {                      /* recover @0x80113e84 */
             int los; int pp = re15_enemy_los_probe(slot, e, pl);  /* +0x1d0 bit0 @0x80113f04 */
-            if (pp != 2) e->member_0b = (uint8_t)(pp & 1);
-            los = e->member_0b & 1;
+            if (pp != 2) e->aspider_los = (uint8_t)(pp & 1);
+            los = e->aspider_los & 1;
             e->state = 1; e->hit_react = 0;                   /* state=1, +0x93:=0 FULL clear @0x80113ef4 */
             e->steer_x = (int16_t)pl->x; e->steer_z = (int16_t)pl->z;   /* +0x1bc/+0x1be=player @0x80113ec4-e4 */
             if (los) { e->sub_state_1 = 1; e->sub_state_2 = 0xa; }      /* LOS -> +0x5=1, +0x6=0xa @0x80113f18-28 */
