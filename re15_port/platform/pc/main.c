@@ -2728,6 +2728,21 @@ re_title:;
         fprintf(stderr, "[save] CONTINUE: resumed in room %04x (hp=%d)\n", rr, g_actors[0].hp);
     }
 
+    /* RVD-AUTO-SCAN AN bei JEDEM Raum-Start — auch Session-Boot/LOAD (byte-true):
+     * FUN_800396fc laeuft bei jedem Raum-Start — Tuerpfad `jal FUN_800396fc` @0x8001d988
+     * (FUN_8001d600) UND Session-Start/LOAD `jal` @0x8001d5ac (FUN_8001d22c; der LOAD
+     * bootet durch dieselbe Kette, Save-Record statt New-Game-Defaults). Ihr Kopf loescht
+     * das Scan-Gate: `lw v0,DAT_800aca3c` @0x8003970c, `lui v1,0xffff` @0x80039710,
+     * `and v0,v0,v1` @0x80039728, `sw v0,DAT_800aca3c` @0x80039730 — Bit 0x100 liegt in
+     * der unteren Haelfte → RVD-Scan AN. ERST DANACH ruft dieselbe Funktion die
+     * SCD-Raum-Init `jal FUN_8003ef6c` @0x80039a00 — die Skripte (Cut_chg LAB_800402a0
+     * `ori 0x100` @0x800402d4 setzt das Bit wieder / Cut_old/Cut_auto geben frei) haben
+     * das LETZTE Wort. Der Tuerpfad des Ports hat exakt diese Reihenfolge schon
+     * (scd_room_reenter: cut_auto_enabled=1 @scd_room_setup.c:114, dann Init-Tick);
+     * der Boot-/CONTINUE-Pfad hier liess das Gate faelschlich AUS (gemessen Run C0:
+     * Save in 1150 @cut 6, Spieler 60 s idle IN der 6->0-RVD-Zone, kein Pick). */
+    g_scd.cut_auto_enabled = 1;
+
     /* Phase 4.5.12: prime AOT edge-state from spawn pos so door zones
      * the player materializes inside don't auto-trigger on frame 1.
      * (Tick the SCD VM once first so main00's Door_aot_set / Aot_set

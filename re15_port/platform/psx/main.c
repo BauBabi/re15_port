@@ -205,6 +205,11 @@ int main(int argc, const char **argv)
      * destination (17106,-7965,31896, yaw=-29429), instantly leaving
      * cut 0's frustum. PC main.c had this two-call sequence but PSX
      * was missing it — root cause of "PSX Leon invisible" regression. */
+    /* RVD-AUTO-SCAN AN beim Raum-Start (byte-true, wie PC-Boot-Pfad): FUN_800396fc
+     * loescht das Scan-Gate VOR der SCD-Raum-Init — `and v0,v0,v1(0xffff0000)`
+     * @0x80039728 + `sw DAT_800aca3c` @0x80039730, dann erst `jal FUN_8003ef6c`
+     * @0x80039a00; die Skripte (Cut_chg @0x800402d4) haben das letzte Wort. */
+    g_scd.cut_auto_enabled = 1;
     scd_vm_tick();
     re15_aot_settle_at(g_actors[RE15_ACTOR_SLOT_PLAYER].x,
                        g_actors[RE15_ACTOR_SLOT_PLAYER].z);
