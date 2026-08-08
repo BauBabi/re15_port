@@ -286,3 +286,14 @@ in Spielernähe (<1200 @0x80103628) statt aufzustehen. (b) Hunde-Treffer-Trias g
 @0x8010e540), Corpse hält letzten Keyframe (Corpse-Root 0x80111774 ohne f314). ctest 119/119.
 OFFEN: gdigrab-Sicht (1030-Zyklus, Hunde), ROOM1040-Kriechtor-Pendant (Stempel 6/7), Grid-1-
 Zeilen 5/15, Grab-Anker-OOB/+0x9A/Gore-Part, Paw-Lock-Betrag vs PSX-Trace.
+
+**Nachtrag 2026-08-08 (5):** Vier Nutzer-Reports gefixt: (a) Dog-FINISHER byte-true (echter
+Devour = FUN_801100b4 + Opfer-Maschine 0x80111cf0: Leon-Clip 4 aus EM020-Bank 2, Blut 0x2000
+@Frame 0x29/0x3a Bone 8, Wund-Triple, cmd 7; Dossier-Korrektur: FUN_80118ddc = GORILLA) —
+`7801d822`. (b) ROOM11E0-Strom-Funke: Op-0x3A immer Row-Spawner (@0x80041954), per-Effekt-TIMs
+(FUN_800194f8-Analog), ABE/ABR-Blend aus TPAGE-Bits — Muendungsfeuer nebenbei korrekt ADDITIV —
+`cc13dd21`. (c) ACTION-Klasse waehrend Hit/Grab/Tod/Zielen entwaffnet (Scan nur aus cmd-1-DECIDE
+0-4, @0x80031fe4ff; Aim-Substate-7-DECIDE = jr-ra @0x80032e3c) — `1651417d`. (d) Typewriter-FF
+war BEREITS byte-true (0x4000 held: Timer -4 + 2 Glyphen/Frame @0x80028214/28/38) — gepinnt.
+OFFEN gesammelt: gdigrab-Sichtlaeufe (11E0-Funke, Dog-Finisher, Action-Gate), Release-0xB-
+Zwischenclip, CLUT-Konsum PC-Draw, ABR3-Approximation.
