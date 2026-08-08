@@ -182,7 +182,7 @@ static const uint8_t s_opcode_sizes[256] = {
     [0x30] = 1,  [0x31] = 1,  [0x32] = 8,  [0x33] = 8,
     [0x34] = 4,  [0x35] = 3,  [0x36] = 12, [0x37] = 4,
     [0x38] = 12, [0x39] = 4,  [0x3A] = 16, [0x3B] = 32,  /* 0x38: 3->12 byte-true (LAB_800417ac +0xc) */
-    [0x3C] = 2,  [0x3D] = 3,  [0x3E] = 6,  [0x3F] = 4,  /* 0x3D: 4->3 byte-true (LAB_80041238 @0x80041254 `addiu pc,pc,3`; was an uncorrected RE2 length, unmapped -> op_unknown desynced +1) */
+    [0x3C] = 2,  [0x3D] = 3,  [0x3E] = 6,  [0x3F] = 4,  /* 0x3D: 4->3 byte-true (LAB_80041238 @0x80041254 `addiu pc,pc,3`; war eine unkorrigierte RE2-Laenge). Handler jetzt registriert: op_member_get (P2d) */
     [0x40] = 8,  [0x41] = 10, [0x42] = 1,  [0x43] = 4,
     [0x44] = 20, [0x45] = 3,  [0x46] = 10, [0x47] = 2,
     [0x48] = 16, [0x49] = 8,  [0x4A] = 2,  [0x4B] = 3,
@@ -297,6 +297,7 @@ static void register_opcodes(void)
     extern int op_aot_on(scd_thread_t *t);
     extern int op_cut_auto(scd_thread_t *t);
     extern int op_member_set2(scd_thread_t *t);
+    extern int op_member_get(scd_thread_t *t);
     extern int op_add_aspeed(scd_thread_t *t);
     extern int op_sce_espr_on(scd_thread_t *t);
     extern int op_sce_espr_kill(scd_thread_t *t);
@@ -311,6 +312,7 @@ static void register_opcodes(void)
     s_op_table[0x47]                  = op_aot_on;
     s_op_table[0x3C]                  = op_cut_auto;
     s_op_table[0x35]                  = op_member_set2;
+    s_op_table[0x3D]                  = op_member_get;   /* Member_get (LAB_80041238) — P2d */
     s_op_table[0x31]                  = op_add_aspeed;
     s_op_table[0x3A]                  = op_sce_espr_on;
     s_op_table[0x4C]                  = op_sce_espr_kill;
@@ -3490,6 +3492,42 @@ int op_member_set2(scd_thread_t *t)
     if (ws >= 0) {
         re15_actor_set_member((int)ws, member_id, value);   /* [#11] RE1.5 id direct */
     }
+    t->pc += 3;
+    return 1;
+}
+
+/* Member_get (0x3D) — 3 bytes [op, var_idx, member_id]. Byte-true LAB_80041238:
+ *   var    = pc[1]  (lb  @0x8004124c)
+ *   member = pc[2]  (    @0x80041250)
+ *   Work-Entity aus dem Thread-Work-Slot (thread+0x154 @0x8004125c — dasselbe Muster
+ *   wie op_member_set2 oben), GET ueber den byte-true Member-Core FUN_80041358
+ *   (jal @0x80041260; Port: re15_actor_get_member, actor_common.c GET-Map),
+ *   Ergebnis als s16 nach work_vars[var] (`sh` nach 0x800B0FD0+2*var @0x80041274),
+ *   pc += 3 (@0x80041254 — die Laengentabelle [0x3D]=3 oben stimmte schon).
+ * REGRESSIONSFLAECHE (B4-Zensus, game-weit: 206 echte RDTs / 41027 Instruktionen /
+ * 0 DESYNC): 0x3D kommt in EXAKT 4 RDTs vor — 90 Fundstellen, alle Teil der
+ * Kriechtor-Maschine:
+ *   ROOM1030/1031: sub05 @0x24B2 (RUECKWEG: wv4=member16, AND 0x0FFF, OR 0x2000,
+ *     Member_set2), sub07 @0x2754 (HINWEG: OR 0x1000), sub09 @0x280A (zweiter
+ *     Hinweg-Committer, XA-Variante), sub10 @0x284A/0x285E (liest Bit 0x1000
+ *     zurueck + konditionaler Z-Versatz +3600 via member 2).
+ *   ROOM1040/1041: sub10 = HINWEG / sub09 = RUECKWEG, je 20-fach ausgerollt;
+ *     ⚠ Stempelwerte dort 6 (hin) / 7 (rueck) statt 5/4, mit 20 Bank-5-Latches
+ *     Bits 0x00-0x13 (Set @`22 05 xx 01` pro Block).
+ * Gelesen werden game-weit nur Member 16 (+0x1C4 lhu @0x80041444) und 2 (Z).
+ * Alle 90 Fundstellen folgen `Work_set kind 2` (Aktor-Bindung) — deshalb ist hier
+ * wie bei op_member_set2 NUR der Actor-Pfad bedient.
+ * OFFEN: Prop-Work-Entities (kind 3, t->work_prop_idx) — das Original nimmt
+ * thread+0x154 kind-agnostisch; ohne Fundstelle bleibt der sicherste No-op
+ * (work_vars[var] unveraendert). */
+int op_member_get(scd_thread_t *t)
+{
+    uint8_t var_idx   = t->pc[1];
+    uint8_t member_id = t->pc[2];
+    int8_t ws = (t->work_slot >= 0) ? t->work_slot : g_scd.work_slot;
+    if (ws >= 0)
+        g_scd.work_vars[var_idx] =
+            (int16_t)re15_actor_get_member((int)ws, member_id);   /* sh @0x80041274 */
     t->pc += 3;
     return 1;
 }

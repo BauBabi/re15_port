@@ -247,6 +247,109 @@ int main(void)
         roster("nach Phase C");
     }
 
+    /* ---- Phase D (P2d): END-TO-END — die ECHTE Story-Kette, nur echter SCD-Bytecode. ----
+     * Vorbedingungs-Kette (Dossier §12/§14, Bytes selbst gedumpt):
+     *   flag(4,0x0f)  — Original-Setzer sub01 @0x2198 `22 04 0f 01` ("Cutscene ist gelaufen").
+     *                   Hier direkt gesetzt (der Setzer haengt an flag(3,0x74)+flag(5,0x20)+
+     *                   flag(5,0x22) = Spieler-Choreografie); Bank 4 ueberlebt den Re-Init
+     *                   (scd_room_reenter wischt nur Bank-1[16..31], flag(2,7), Bank-5-W0).
+     *   Raum-Re-Init  — sub00 @0x1fe8 laeuft ERNEUT mit den ECHTEN Bytes: `06 00 1e 00 If /
+     *                   21 04 0f 01 Ck / 4b 00 09 .. 4b 06 0c / 37 02 06 f7 / 37 03 06 f7 /
+     *                   22 05 14 01` (= flag(5,0x14) @0x2008 + Tor-Zellen 0xF7) und der
+     *                   sub00-Tail spawnt `04 ff 18 0b` (sub11) + `04 ff 18 02` (sub02 =
+     *                   der Kriech-Zyklus, Glied 6) — KEIN Nachbau in C.
+     *   Dann Gegner in Zone 5 parken (wie Phase B) und die Kette beobachten:
+     *   Stempel 5 -> sub06 -> Gosub 7 = sub07 @0x2754 `3d 04 10 / 26 op5 OR 0x1000 / 35 10 04`
+     *   (jetzt LIVE: 0x3D ist registriert) -> anim_flags|0x1000 -> Steer-Decide 0x1001 ->
+     *   Toggle Clip 0x12 -> grid 0x81/sca 8 -> Kriechen Clip 0x1A mit Hand-Lock-Vortrieb.
+     *   Parken NUR solange der Gegner im Normalzustand ist — sobald Toggle/Grid-1 uebernimmt,
+     *   wird die Position NICHT mehr angefasst (kein Hand-Weiterschieben von Zustand ODER Ort). */
+    printf("\n===== Phase D (P2d): END-TO-END Story-Kette (echter Bytecode) =====\n");
+    re15_game_flag_set(4, 0x0f, 1);                 /* sub01-Setzer @0x2198 (Vorbedingung) */
+    scd_room_reenter(&rdt, pl->x, pl->z, 0);        /* echter Raum-Re-Init: main00 + sub00 */
+    printf("  nach Re-Init: flag(3,0x74)=%d flag(4,0x0f)=%d flag(5,0x14)=%d\n",
+           re15_game_flag_get(3, 0x74), re15_game_flag_get(4, 0x0f), re15_game_flag_get(5, 0x14));
+    dump_threads("nach Re-Init");
+    roster("Phase-D-Spawn");
+    victim = -1;
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) if (g_actors[s].active) { victim = s; break; }
+    if (victim < 0 || !re15_game_flag_get(5, 0x14)) {
+        printf("  HAENGER VOR DEM ZYKLUS: victim=%d flag(5,0x14)=%d — sub00-Gate nicht gefeuert\n",
+               victim, re15_game_flag_get(5, 0x14));
+    } else {
+        re15_actor_t *v = &g_actors[victim];
+        int t_stamp = -1, t_bit1000 = -1, t_s110 = -1, t_grid81 = -1, t_mo1a = -1, t_lock0 = -1;
+        int t_rueck = -1, t_standup = -1;
+        int32_t cx0 = 0, cz0 = 0, rx = 0, rz = 0;
+        printf("  Gegner slot=%d (Enemy-Index %d, Bank-5-Latch Bit %d) -> Zone 5 (-8000,-24700)\n",
+               victim, victim - 1, victim - 1);
+        for (int t = 0; t < 600; t++) {
+            /* Parken nur bis der Toggle/Grid-1 uebernimmt (danach bewegt der Hand-Lock). */
+            int taken = (v->grid_id & 0x80) ||
+                        (v->state == 1 && (v->sub_state_1 == 0x10 || (v->grid_id & 0x0f) == 1));
+            if (!taken) { v->x = -8000; v->z = -24700; v->floor = 0; }
+            scd_vm_tick();
+            re15_aot_scan(pl->x, pl->z, 0);
+            if (g_aot.fired_event_id_this_frame) scd_event_fire(g_aot.fired_event_id_this_frame);
+            re15_actor_step_all_walkers();
+            re15_actors_anim_advance();
+            re15_enemy_ai_run_all(0);
+            re15_aot_stamp_entities();
+            re15_object_notch_update();
+            if (t_stamp   < 0 && v->member_0b == 5)          { t_stamp = t;   printf("   t=%3d KETTE: m0b=5 (Glied 1, Zone-5-Stempel)\n", t); }
+            if (t_bit1000 < 0 && (v->anim_flags & 0x1000))   { t_bit1000 = t; printf("   t=%3d KETTE: anim_flags|=0x1000 (sub07 @0x2754 via 0x3D/0x26/0x35; af=0x%04x wv4=%d)\n", t, v->anim_flags, g_scd.work_vars[4]); }
+            if (t_s110    < 0 && v->state == 1 && v->sub_state_1 == 0x10)
+                                                             { t_s110 = t;    printf("   t=%3d KETTE: Wort 0x1001 -> Sub-Modus 0x10 (Steer-Decide @0x80101ecc-Klasse)\n", t); }
+            if (t_grid81  < 0 && v->grid_id == 0x81)         { t_grid81 = t;  cx0 = v->x; cz0 = v->z;
+                                                               printf("   t=%3d KETTE: Kriech-Commit grid=0x81 sca=%u (Toggle Phase 2)\n", t, v->sca_mask); }
+            if (t_mo1a    < 0 && v->motion == 0x1A)          { t_mo1a = t;    printf("   t=%3d KETTE: Clip 0x1A (Kriech-Lokomotion, ai_timer=%d)\n", t, (int)v->ai_timer); }
+            if (t_lock0   < 0 && t_grid81 >= 0 && (v->x != -8000 || v->z != -24700) && (v->x != cx0 || v->z != cz0))
+                                                             { t_lock0 = t;   printf("   t=%3d KETTE: erster Hand-Lock-Schritt pos=(%ld,%ld)\n", t, (long)v->x, (long)v->z); }
+            if (t_rueck   < 0 && t_grid81 >= 0 && (v->grid_id & 0x80) && v->sub_state_1 == 6)
+                                                             { t_rueck = t;   rx = v->x; rz = v->z;
+                                                               printf("   t=%3d KETTE: RUECKWEG — Zone-4-Stempel -> sub05 (af=0x%04x) -> Wort 0x601 -> Toggle, Kriech-Strecke dx=%ld dz=%ld\n",
+                                                                      t, v->anim_flags, (long)(rx - cx0), (long)(rz - cz0)); }
+            if (t_standup < 0 && t_rueck >= 0 && !(v->grid_id & 0x80))
+                                                             { t_standup = t; printf("   t=%3d KETTE: AUFGESTANDEN — grid=0x%02x sca=%u Wort=%u/0x%02x\n",
+                                                                      t, v->grid_id, v->sca_mask, v->state, v->sub_state_1); }
+            if ((t % 60) == 59 || t == 0)
+                printf("   t=%3d: grid=0x%02X s1=0x%02x mo=0x%02x af=0x%04x m0b=%u sca=%u pos=(%6ld,%6ld) "
+                       "wv4=%d wv7=%d f(5,0x14)=%d latch(5,%d)=%d aot4/5/6-sce=%u/%u/%u\n",
+                       t, v->grid_id, v->sub_state_1, (unsigned)v->motion, v->anim_flags,
+                       v->member_0b, v->sca_mask, (long)v->x, (long)v->z,
+                       g_scd.work_vars[4], g_scd.work_vars[7],
+                       re15_game_flag_get(5, 0x14), victim - 1,
+                       re15_game_flag_get(5, (uint8_t)(victim - 1)),
+                       g_aot.slots[4].sce_flags ? g_aot.slots[4].type : 0,
+                       g_aot.slots[5].sce_flags ? g_aot.slots[5].type : 0,
+                       g_aot.slots[6].sce_flags ? g_aot.slots[6].type : 0);
+        }
+        printf("  -- Phase-D-Bilanz --\n");
+        printf("   Stempel=%d  0x1000=%d  0x1001=%d  grid81=%d  clip1A=%d  ersterLock=%d  Rueckweg=%d  aufgestanden=%d (Tick-Nummern; -1 = nie)\n",
+               t_stamp, t_bit1000, t_s110, t_grid81, t_mo1a, t_lock0, t_rueck, t_standup);
+        if (t_rueck >= 0)
+            printf("   Kriech-Strecke Commit->Rueckweg: dx=%ld dz=%ld (von (%ld,%ld) nach (%ld,%ld) in %d Ticks)\n",
+                   (long)(rx - cx0), (long)(rz - cz0), (long)cx0, (long)cz0, (long)rx, (long)rz, t_rueck - t_grid81);
+        else if (t_grid81 >= 0)
+            printf("   Kriech-Vortrieb seit Commit: dx=%ld dz=%ld (von (%ld,%ld) nach (%ld,%ld))\n",
+                   (long)(v->x - cx0), (long)(v->z - cz0), (long)cx0, (long)cz0, (long)v->x, (long)v->z);
+        /* Zweitzyklus-Beobachtung: nach dem Aufstehen bleibt der HINWEG-Poller (Gosub 6) hinter
+         * der Drossel `Cmp(wv7 < 4)` (sub02 @0x21cc `23 00 07 03 04 00`) gesperrt, solange >= 4
+         * Zombies in Zone 6 stehen — sub03 zaehlt member15==6 ueber die 20 Slots (Save(wv7,0) +
+         * For/Work_set(2,wv4)/Member_cmp(15==6)/wv7++, Bytes @0x21f8-2224). Nach dem Re-Entry-
+         * Repositioning (sub00-For @0x2028+) stehen 5 der 6 Zombies IN Zone 6 -> wv7=5..6 >= 4 =
+         * byte-true GESCHLOSSEN, kein Haenger. */
+        if (t_bit1000 < 0) {
+            printf("   HAENGER-DIAGNOSE: sub07 hat nie gefeuert.\n");
+            dump_threads("Haenger");
+            dump_workvars("Haenger");
+            printf("   flag(5,0x14)=%d flag(5,latch %d)=%d m0b=%u — Kettenglied davor pruefen\n",
+                   re15_game_flag_get(5, 0x14), victim - 1,
+                   re15_game_flag_get(5, (uint8_t)(victim - 1)), v->member_0b);
+        }
+        roster("nach Phase D");
+    }
+
     printf("\n===== BEFUND =====\n");
     {
         int n = 0;
