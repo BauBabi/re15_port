@@ -792,3 +792,67 @@ obwohl Zone-Stempel und KI nachweislich funktionieren.
 SCHREIB-Haltepunkt auf `0x800B1028` mit Maske `0x00100000` liefert den literalen PC. Erst danach
 ist entscheidbar, ob der Port diese Vorbedingung ueberhaupt herstellt — und ohne sie ist jeder
 Einbau von Glied 6-8 blind.
+
+---
+
+## 12. DIE VOLLSTAENDIGE VORBEDINGUNGS-KETTE (statisch aufgeloest, 2026-08-08)
+
+Nach dem Messbefund aus §11 („`flag(5,0x14)` wird nie gesetzt") habe ich die Setzer statisch
+gesucht — Rohbytes im ausgelieferten RDT, kein Decompilat.
+
+**`Set(bank5,0x14,1)` = `22 05 14 01`** — 2 Vorkommen in `ROOM1030.RDT` (@0x2008, @0x27da).
+Der erste steht in einem `If`-Block mit genau einem Gatter:
+```
+06 00 1e 00     If (len 30)
+21 04 0f 01       Ck(bank4, bit 0x0f, ==1)     <-- Gatter
+4b 00 09 / 4b 03 0a / 4b 04 0b / 4b 06 0c
+37 02 06 f7 / 37 03 06 f7
+22 05 14 01       Set(bank5, 0x14, 1)
+08 00           Endif
+```
+
+**`Set(bank4,0x0f,1)` = `22 04 0f 01`** — in GANZ STAGE1 nur **zwei** Vorkommen:
+`ROOM1030.RDT @0x2198` und sein Spiegel `ROOM1031.RDT @0x2284`. Kein einziges `Set(bank4,0x0f,0)`.
+Der Setzer liegt unmittelbar vor sub02 (@0x21a6) und ist doppelt gegatet:
+```
+0x2180  06 00 20 00      If (len 32)
+        21 03 74 01        Ck(bank3, 0x74, ==1)     <-- STORY-Flag
+        21 04 0f 00        Ck(bank4, 0x0f, ==0)     <-- Einmal-Schutz
+        21 05 20 01        Ck(bank5, 0x20, ==1)
+0x2190  06 00 0e 00        If (len 14)
+        21 05 22 01          Ck(bank5, 0x22, ==1)   <-- Ein-Bild-Signal, AOT-Slot 5
+        22 04 0f 01          Set(bank4, 0x0f, 1)
+        04 ff 18 08          Evt_exec/Gosub 8
+0x21a0  08 00 08 00      Endif Endif
+        01 00            Evt_end
+        18 04            Gosub 4                    <-- sub02 (Glied 6) beginnt hier
+```
+
+### Die Kette von oben nach unten
+
+```
+flag(3,0x74) [STORY]  UND  flag(5,0x20)  UND  flag(5,0x22) [Spieler in AOT-Zone 5]
+      -> Set flag(4,0x0f)            @0x2198
+      -> Set flag(5,0x14)            @0x2008   (gegatet auf flag(4,0x0f))
+      -> sub02 laeuft                @0x21a6   (gegatet auf flag(5,0x14))
+      -> Zone-4/6-Handshake, Gosub 7 -> +0x1C4 |= 0x1000
+      -> Steer-Funktionen -> Zombie legt sich hin und kriecht (+0x94 0x12 -> 0x1A)
+```
+
+**Damit ist der Messbefund vollstaendig erklaert.** Gemessen war Bank-5-Wort 0 durchgehend `0`
+und Wort 1 ODER nur `0x20000000` — also weder `flag(5,0x20)` (Bit 32 = Wort 1 Maske `0x1`) noch
+`flag(5,0x22)` (Bit 34 = Maske `0x4`) je gesetzt, und `flag(5,0x14)` (Wort 0 Maske `0x00100000`)
+folglich auch nicht. Ein Debug-Sprung bringt weder den Story-Zustand `flag(3,0x74)` mit noch
+laeuft das Vorspiel, das `flag(5,0x20)` setzt.
+
+### Was das fuer den Einbau bedeutet
+
+Die Port-Seite muss **vier** Dinge koennen, bevor Glied 6-8 ueberhaupt sinnvoll sind:
+1. `flag(3,0x74)` zum richtigen Zeitpunkt setzen (Story),
+2. `flag(5,0x20)` setzen,
+3. den AOT-sce-4-Handler von Slot 5 `flag(5,0x22)` als **Ein-Bild-Signal** setzen lassen,
+4. den Aktor-Stempel `entity+0x0B` liefern (Glied 1 — im Port bis heute nicht vorhanden).
+
+Punkt 4 war schon bekannt. Punkte 1-3 sind **neu** und waren in der bisherigen Fassung dieses
+Dossiers nicht als Vorbedingung benannt — der Zyklus wurde dort ab sub02 beschrieben, als liefe er
+von selbst.
