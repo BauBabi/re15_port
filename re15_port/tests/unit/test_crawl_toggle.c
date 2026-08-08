@@ -39,10 +39,17 @@ static void install_mock_bank(void)
     if (!eb) { printf("FAIL Bank-Slot\n"); s_fail++; return; }
     memset(&eb->anim_own, 0, sizeof eb->anim_own);
     memset(&eb->skel_own, 0, sizeof eb->skel_own);
-    eb->anim_own.clip_count = 0x1B;
+    eb->anim_own.clip_count = 0x2B;             /* 43 wie die echte Bank 1 (B3 §6) */
     eb->anim_own.clips[0x12].first_frame = 0;   eb->anim_own.clips[0x12].frame_count = 98;
     eb->anim_own.clips[0x1A].first_frame = 98;  eb->anim_own.clips[0x1A].frame_count = 99;
-    eb->anim_own.frame_count = 98 + 99;
+    /* Kriech-Grab-/Devour-Clips (echte Laengen aus CDEMD0.EMS dir[3]: 0x1B=19, 0x1C=15,
+     * 0x1D=29, 9=65, 0xA=65); Frame-Eintraege bleiben 0 (kf 0, keine Flags). */
+    eb->anim_own.clips[0x1B].first_frame = 197; eb->anim_own.clips[0x1B].frame_count = 19;
+    eb->anim_own.clips[0x1C].first_frame = 216; eb->anim_own.clips[0x1C].frame_count = 15;
+    eb->anim_own.clips[0x1D].first_frame = 231; eb->anim_own.clips[0x1D].frame_count = 29;
+    eb->anim_own.clips[0x09].first_frame = 260; eb->anim_own.clips[0x09].frame_count = 65;
+    eb->anim_own.clips[0x0A].first_frame = 325; eb->anim_own.clips[0x0A].frame_count = 65;
+    eb->anim_own.frame_count = 390;
     for (int f = 0; f < 98; f++) eb->anim_own.frames[f] = 0;          /* Clip 0x12: alle Flags 0 */
     for (int f = 0; f < 99; f++) {
         uint32_t w = 0;
@@ -130,6 +137,57 @@ int main(void)
           "Aufstehen: Wort 0x201 (@0x801050a4) -> state=1/+0x5=2/+0x6=0, ist %u/%u/%u",
           e->state, e->sub_state_1, e->sub_state_2);
     CHECK((e->hit_react & 1) == 0, "Aufstehen: hit_react-Bit 0 geloescht (@0x80105100-10)");
+
+    printf("== KRIECH-GRAB (Grid-1 Zeilen 1/2 = FUN_80103b94) + DEVOUR (3/4 = FUN_80104548) ==\n");
+    /* Kriecher zuruecksetzen + Spieler NAH und FRONTAL: DECIDE[0]-Nah-Zweig
+     * (player+0x93==0 @0x8010360c-14, +0x1d0<0x4b0 @0x80103628-34, arc 0x200 @0x80103640-48,
+     * gleiche Etage @0x80103650-68) -> Wort 0x101/0x201 @0x80103670-8c. */
+    pl->hit_react = 0; pl->hp = 100; pl->x = 0; pl->z = 800; pl->floor = 0;
+    e->state = 1; e->sub_state_1 = 0; e->sub_state_2 = 1; e->sub_state_3 = 0;
+    e->grid_id = 0x81; e->sca_mask = 8; e->motion = 0x1A; e->anim_frame = 20;
+    e->anim_flags = 0; e->ai_flags = 0; e->hit_react = 0; e->anim_frac = 0;
+    e->x = 0; e->z = 0; e->floor = 0;
+    e->ai_dist = 0x400;                                 /* +0x1d0 < 0x4b0 (Sonde setzt direkt;
+                                                         * live_tick wuerde ihn berechnen) */
+    e->rot_y = (int16_t)(((int)re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0x0fff);
+    re15_enemy_ai_live_active(1);
+    CHECK(e->sub_state_1 == 1 || e->sub_state_1 == 2,
+          "Nah-Zweig: Wort (aligned+1)<<8|1 -> +0x5==1/2 (@0x80103670-8c), ist %u", e->sub_state_1);
+    CHECK(e->motion == 0x1B, "Grab [0]: motion==0x1B (@0x80103c1c-20), ist 0x%02x", e->motion);
+    CHECK((e->hit_react & 1) && (pl->hit_react & 1),
+          "Grab [0]: self+0x93|=1 (@0x80103c68-74) + player+0x93|=1 (@0x80103cc4-e0)");
+    CHECK((e->ai_flags & 1) != 0, "Grab [0]: +0x1D8|=1 (@0x80103d00-10)");
+    CHECK(re15_player_is_grabbed() == 1, "Grab [0]: cmd-5-Pin (aca58 @0x80103cbc-c0)");
+    CHECK(e->sub_state_2 == 1, "Grab [0] faellt in [1] (Sprungtabelle @0x8010007c), s2==%u", e->sub_state_2);
+    {
+        int t = 0;
+        while (e->sub_state_2 != 3 && t < 40) { re15_enemy_ai_live_active(1); t++; }
+        printf("  (Biss-Loop nach %d Ticks; Clip 0x1B = 19f)\n", t);
+    }
+    CHECK(e->sub_state_2 == 3 && e->motion == 0x1C,
+          "Grab [2]: motion==0x1C (@0x80103d78-7c) -> Loop [3], ist s2=%u mo=0x%02x",
+          e->sub_state_2, e->motion);
+    CHECK(e->ai_timer == 100 || e->ai_timer == 99, "Grab [2]: ESCAPE +0x9C=100 (@0x80103d88-8c), ist %d", (int)e->ai_timer);
+    CHECK(e->grab_kill_ctr <= 0x5a && e->grab_kill_ctr >= 0x58,
+          "Grab [2]: KILL-Budget +0x9E=0x5A (@0x80103dd0-d4), ist %d", (int)e->grab_kill_ctr);
+    CHECK(pl->hp == 95, "Grab [2]: player.hp -= 5 (@0x80103ddc-ec), ist %d", (int)pl->hp);
+    e->anim_flags |= 0x2000;                            /* sub05-Wirkung waehrend des Grabs */
+    for (int t = 0; t < 3; t++) re15_enemy_ai_live_active(1);
+    CHECK(e->sub_state_1 <= 2 && e->sub_state_1 >= 1,
+          "0x2000 in Sub 1/2 IGNORIERT (DECIDE[1,2]=jr ra @0x80103b8c-90), +0x5 ist %u", e->sub_state_1);
+    pl->hp = -1;                                        /* Kill-Bedingung (@0x80103ef8-f04) */
+    re15_enemy_ai_live_active(1);
+    CHECK(e->sub_state_1 == 3 || e->sub_state_1 == 4,
+          "DEVOUR-Handoff: +0x5 += 2 (@0x80103f18-24), +0x6=0 (@0x80103f34), ist %u/%u",
+          e->sub_state_1, e->sub_state_2);
+    re15_enemy_ai_live_active(1);
+    CHECK(e->motion == (uint16_t)(e->sub_state_1 + 6),
+          "Devour [0]: motion==(+0x5)+6 (@0x80104588-94; Sub 3 -> Clip 0x09), ist 0x%02x", e->motion);
+    e->anim_flags |= 0x2000;
+    for (int t = 0; t < 3; t++) re15_enemy_ai_live_active(1);
+    CHECK(e->sub_state_1 == 3 || e->sub_state_1 == 4,
+          "0x2000 in Sub 3/4 IGNORIERT (DECIDE[3,4]=jr ra @0x80104540-44) — Aufstehen NUR aus Sub 0, ist %u",
+          e->sub_state_1);
 
     printf("\n%s (%d Fehler)\n", s_fail ? "FAILED" : "PASSED", s_fail);
     return s_fail ? 1 : 0;

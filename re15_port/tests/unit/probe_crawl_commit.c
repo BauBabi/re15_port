@@ -57,8 +57,9 @@ static re15_enemy_bank_t *load_em016(const char *base)
             if (re15_emd_parse_container(s_em, len, &eb->md1, &eb->skel, &eb->anim, NULL) == 0)
                 eb->ok = 1;
             eb->buf = NULL;
-            eb->loco_ok = (re15_emd_parse_loco_bank(s_em, len, &eb->skel_loco, &eb->anim_loco) == 0);
-            eb->own_ok  = (re15_emd_parse_own_bank (s_em, len, &eb->skel_own,  &eb->anim_own)  == 0);
+            eb->loco_ok   = (re15_emd_parse_loco_bank  (s_em, len, &eb->skel_loco,   &eb->anim_loco)   == 0);
+            eb->own_ok    = (re15_emd_parse_own_bank   (s_em, len, &eb->skel_own,    &eb->anim_own)    == 0);
+            eb->victim_ok = (re15_emd_parse_victim_bank(s_em, len, &eb->skel_victim, &eb->anim_victim) == 0);
         }
     }
     free(ems);
@@ -216,6 +217,42 @@ int main(void)
             }
             if (rueck_armed && e2->grid_id == 0 && e2->sub_state_1 == 0x13 && t > 300) break;
         }
+    }
+
+    /* ===== D5: KRIECH-GRAB + KRIECH-DEVOUR mit echter Bank (Grid-1 Zeilen 1/2 + 3/4;
+     * Hardware-Soll: Clip 0x1B (19f) einmal -> 0x1C-Loop -> bei Kill Clip 0x09,
+     * tools/redux/crawl_cycle_out.txt Lauf 1). Spieler nah + frontal -> DECIDE[0]-Nah-Zweig
+     * (@0x8010360c-8c) -> FUN_80103b94 -> Devour FUN_80104548. */
+    printf("\n== D5: Kriech-Grab/Devour (echte Bank; Opfer-Bank victim_ok=%d) ==\n", eb->victim_ok);
+    {
+        re15_actor_t *e3 = &g_actors[3];
+        memset(e3, 0, sizeof *e3);
+        e3->active = 1; e3->type = 0x16; e3->hp = 100;
+        e3->state = 1; e3->sub_state_1 = 0; e3->sub_state_2 = 1;
+        e3->grid_id = 0x81; e3->sca_mask = 8; e3->motion = 0x1A; e3->anim_frame = 30;
+        e3->x = 0; e3->z = 0; e3->floor = 0; e3->ai_dist = 0x400;
+        pl->hit_react = 0; pl->hp = 100; pl->x = 0; pl->z = 800; pl->floor = 0;
+        e3->rot_y = (int16_t)(((int)re15_atan2_q12(pl->z - e3->z, pl->x - e3->x) - 0x400) & 0x0fff);
+        printf("  Bank: fc[0x1B]=%d (Soll 19)  fc[0x1C]=%d  fc[0x1D]=%d  fc[0x09]=%d\n",
+               eb->anim_own.clips[0x1B].frame_count, eb->anim_own.clips[0x1C].frame_count,
+               eb->anim_own.clips[0x1D].frame_count, eb->anim_own.clips[0x09].frame_count);
+        int last_s1 = -1, last_s2 = -1, last_mo = -1;
+        for (int t = 0; t < 260; t++) {
+            re15_enemy_ai_live_active(3);
+            re15_player_victim_tick();                 /* Opfer-FSM (cmd-5/6-Seite) mitlaufen lassen */
+            if (t == 60) { pl->hp = -1;                /* Kill-Bedingung ausloesen (statt 90 Ticks
+                                                        * +0x9E-Budget abzuwarten) */
+                printf("   t=%3d [pl->hp = -1 gesetzt]\n", t); }
+            if (e3->sub_state_1 != last_s1 || e3->sub_state_2 != last_s2 || (int)e3->motion != last_mo)
+                printf("   t=%3d s1=%u s2=%u mo=0x%02x fr=%-3u plhp=%-4d vs=%d grabbed=%d pos=(%ld,%ld)\n",
+                       t, e3->sub_state_1, e3->sub_state_2, (unsigned)e3->motion,
+                       (unsigned)e3->anim_frame, (int)pl->hp, re15_player_victim_state(),
+                       re15_player_is_grabbed(), (long)e3->x, (long)e3->z);
+            last_s1 = e3->sub_state_1; last_s2 = e3->sub_state_2; last_mo = (int)e3->motion;
+            if (e3->sub_state_1 >= 3 && e3->sub_state_2 >= 2) break;   /* Devour INERT erreicht */
+        }
+        printf("  Ende: s1=%u s2=%u mo=0x%02x (Soll: s1 3/4, s2 2 = INERT, mo 0x09/0x0A)\n",
+               e3->sub_state_1, e3->sub_state_2, (unsigned)e3->motion);
     }
     return 0;
 }

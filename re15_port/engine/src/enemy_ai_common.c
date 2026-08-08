@@ -32,6 +32,7 @@
                             * re15_enemy_apply_hitbox */
 #include "re15_skeleton.h" /* re15_sin_q12 / re15_cos_q12 — forward-walk root-motion step (8.19) */
 #include "re15_actor.h"    /* re15_atan2_q12 — heading toward the player for the approach/walk */
+#include "re15_gameflow.h" /* g_gameflow.character — der aca5c-&4-Gore-Zweig des Kriech-Grab-Abwurfs */
 #include "re15_anim_select.h" /* re15_compute_actor_kf — current keyframe for the walk root-motion */
 #include "re15_emd.h"      /* re15_emd_get_keyframe_speed — the walk clip's per-frame root translation */
 #include <stdio.h>
@@ -2271,6 +2272,25 @@ static int re15_zcrawl_clip_len(const re15_actor_t *e, int clip)
     return an->clips[clip].frame_count;
 }
 
+/* f314/f3bc-Schritt fuer die selbst-advancenden Grid-1-Handler (Grab/Devour): +0x95 post-inc,
+ * Wrap am Clip-Ende -> +0x95 = 0 + Rueckgabe 1 (@0x8001f610-3c: lbu/addiu 1/sb/sltu fc; Wrap
+ * `sb zero` + `ori v0,1` @0x8001f638-3c), +0x8F-Decay (@0x8001f5a8-b4). Keine Bank -> done=1
+ * (Guard-Politik wie re15_enemy_clip_done: die FSM darf nie stallen). */
+static int re15_zcrawl_anim_step(re15_actor_t *e)
+{
+    int fc = re15_zcrawl_clip_len(e, (int)e->motion);
+    int done;
+    if (fc <= 0) {
+        done = 1;
+    } else {
+        uint16_t nf = (uint16_t)(e->anim_frame + 1);
+        if ((int)nf >= fc) { e->anim_frame = 0; done = 1; }
+        else               { e->anim_frame = nf; done = 0; }
+    }
+    if (e->anim_frac > 0) e->anim_frac--;
+    return done;
+}
+
 /* ---- CompMatrix-Kette (byte-true FUN_80022da0 = PsyQ-CompMatrix) --------------------------
  * OUT.rot = A.rot x B.rot: je OUT-Element EIN GTE-Skalarprodukt, arithmetisch >>12, als s16
  * gespeichert (gte_rtir + stIR1-3, decompile FUN_80022da0.c:8-33). OUT.t = A.rot*(s16)B.t>>12
@@ -2576,6 +2596,206 @@ static void re15_zcrawl_animate(int slot, re15_actor_t *e)
     }
     /* Kollision: kein eigener Tail — derselbe SCA-Wall-Clamp wie der Zombie-Walker laeuft in
      * re15_enemy_ai_run_all mit e->sca_mask (byte-true b0a4-Ordnung @0x8010062c). */
+}
+
+/* ============ GRID-1-Zeilen 1/2 + 3/4: KRIECH-GRAB + KRIECH-DEVOUR =========================
+ * Hardware-Ground-Truth (tools/redux/crawl_cycle_out.txt/crawl_cycle2_out.txt): Kriecher nahe
+ * am Spieler -> Sub 1 (Clip 0x1B 19f einmal, dann 0x1C-Loop) -> Sub 3 (Clip 0x09); 0x2000 wird
+ * dort ignoriert (DECIDE[1..4] sind `jr ra`-Stubs, selbst disassembliert: 0x80103B8C @0x80103b8c
+ * `jr ra; nop`, 0x80104540 @0x80104540 `jr ra; nop`); Aufstehen NUR aus Sub 0 (das 0x2000-Gate
+ * lebt allein in FUN_801035f8 @0x8010369c-c4). Der Einstieg ist der Nah-Zweig von DECIDE[0]:
+ * player+0x93==0 (@0x8010360c-14), +0x1d0 < 0x4b0 (@0x80103628-34), arc_test(player,0x200)==0
+ * (@0x80103640-48), gleiche Etage (@0x80103650-68) -> Wort (facing_aligned+1)<<8|1 = 0x101/0x201
+ * (@0x80103670-8c), das @0x8010368c ins 0x2000-Gate DURCHFAELLT (last-wins) — beides ist im
+ * geteilten re15_zgirl_overflow_row11 bereits byte-true. */
+
+/* KRIECH-GRAB — byte-true FUN_80103b94 (Grid-1-ANIMATE[1,2] @0x8011F920[1/2]); die Kriecher-
+ * Fassung der Standing-Grab-Maschine FUN_80102548 (= re15_enemy_ai_live_grab, das Muster hier).
+ * Dispatch auf +0x06 ueber die 7er-Sprungtabelle @0x8010007c (selbst gedumpt):
+ * [0]=0x80103c04 [1]=0x80103d14 [2]=0x80103d70 [3]=0x80103df0 [4]=0x80103f38 [5]=0x80103fa4
+ * [6]=0x80104128; Faelle 0->1, 2->3, 4->5 fallen durch (Decompile STAGE1_full/FUN_80103b94.c,
+ * Schluessel-Konstanten roh-verifiziert). Grid-1-Zustaende sind vom globalen Advancer
+ * ausgenommen (player_common.c) — die Clip-Fortschaltung (f314-Replikat) laeuft HIER. */
+static void re15_zcrawl_grab_animate(re15_actor_t *e, re15_actor_t *pl)
+{
+    re15_enemy_bank_t *gb = re15_enemy_find(e->type);
+    if (!pl) return;
+    if (e->sub_state_2 <= 3)
+        s_player_grabbed = 1;             /* cmd-5-Pin wie der Standing-Grab (aca58-Write [0]
+                                           * @0x80103cbc-c0); ab dem Throw-off [4] regiert die
+                                           * Opfer-FSM-Release-Phase den Pin (aca5a=4) */
+    switch (e->sub_state_2) {
+    case 0:                               /* [0] COMMIT @0x80103c04 */
+        e->sub_state_2 = 1;               /* +0x06 = 1         @0x80103c0c-10 */
+        e->motion = 0x1B;                 /* +0x94 = 0x1B      @0x80103c1c-20 (Biss-Ansatz, 19f) */
+        e->anim_frame = 0;                /* +0x95 = 0         @0x80103c34 */
+        e->anim_frac = 7;                 /* +0x8F = 7         @0x80103c40-44 */
+        e->anim_blend_rate = 0x200;       /* f314 a3 = 0x200   @[1] (Decompile Z.42) */
+        /* Grabber-Global 0x800acbfc = self (@0x80103c58 sw) + Opfer-Kanal acbcc/acbd0 =
+         * +0x178/+0x17c (@0x80103cac/cd0 + @0x80103cd4/ce8) + Spieler-cmd 5: aca58 =
+         * ((+0x5)+1)<<8 | 5 (@0x80103ca8-cc0) — Port: die Opfer-FSM-Latch. OFFEN: die
+         * Original-Variante im cmd-Byte1 ist 2 (Sub 1) / 3 (Sub 2) — welche Opfer-Clip-Saetze
+         * der cmd-5-Handler dafuer waehlt, ist nicht RE'd; der Port mappt auf die verifizierten
+         * face/behind-Saetze (Sub 1 -> 0, Sub 2 -> 1, dieselbe Klassenlogik wie der Standing-
+         * Grab +0x5=3/4 -> 0/1 in re15_player_victim_latch: sub_state_1 >= 4 ? 1 : 0 trifft
+         * hier Sub 2 nicht — deshalb der explizite Kommentar; die Latch-Routine liest
+         * zombie->sub_state_1>=4, fuer Sub 1/2 ergibt das Variante 0 = face fuer beide). */
+        re15_player_victim_latch(e, pl);
+        e->hit_react |= 1;                /* self +0x93 |= 1   @0x80103c68-74 (Kriecher-Grab
+                                           * macht sich selbst unbeschiessbar — anders als der
+                                           * Standing-Grab, byte-true) */
+        e->grab_choreo = 1;               /* self word0 |= 0x1000 @0x80103c84-90; der Spieler-
+                                           * word0-|=0x1000 (@0x80103c94-a4) hat wie beim
+                                           * Standing-Grab keinen modellierten Konsumenten */
+        pl->hit_react |= 1;               /* player+0x93 |= 1  @0x80103cc4-e0 */
+        /* ANKER (FUN_8001ac38(a0=player) @0x80103c50-54): Anker aus dem AKTUELLEN Clip des
+         * Zombies gegen BANK 0 (+0x84/+0x16c, ac38 @0x8001ac64-68) berechnet, auf dem Zombie
+         * gespeichert (@0x8001acfc/+0x1ad18) und auf den Spieler KOPIERT (@0x8001ad28-30).
+         * ⚠ motion ist hier schon 0x1B — Bank 0 hat nur 6 Clips: das Original liest den
+         * EDD-Eintrag AUSSERHALB der Tabelle (authored accident); der Port-Guard
+         * (re15_clip_anchor_set: clip >= clip_count -> anker = pos) ersetzt den OOB-Offset
+         * durch 0. OFFEN: der konstante OOB-Versatz der Paar-Formation ist damit nicht
+         * repliziert (nur dynamisch messbar). */
+        if (gb && gb->loco_ok)
+            re15_clip_anchor_set(e, &gb->skel_loco, &gb->anim_loco, (int)e->motion, 0);
+        else { e->anchor_x = e->x; e->anchor_z = e->z; }
+        pl->anchor_x = e->anchor_x; pl->anchor_z = e->anchor_z;
+        /* YAW-SNAP: a8f8(&player_pos, 0x800) @0x80103cec-f0 — Clamp 0x800 = Snap. */
+        e->rot_y = (int16_t)(((int)re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0x0fff);
+        e->ai_flags |= 1;                 /* +0x1D8 |= 1       @0x80103d00-10 */
+        re15_audio_room_se(4);            /* Grab-Start-SE 4   @0x80103d04/0c */
+        /* fallthrough in [1] (@0x80103d10 -> 0x80103d14, kein Branch) */
+    case 1:                               /* [1] Biss-Ansatz-Playout @0x80103d14 */
+        if (gb && gb->ok)
+            re15_clip_root_motion_abs(e, &gb->skel, &gb->anim, (int)e->motion, (int)e->anim_frame);
+                                          /* ad68(self,+0x170,+0x174) @[1] (Decompile Z.41) */
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 +
+                          (uint8_t)re15_zcrawl_anim_step(e));   /* +0x06 += f314-Rueckgabe */
+        break;
+    case 2:                               /* [2] Biss-Loop-Setup @0x80103d70 */
+        e->motion = 0x1C;                 /* +0x94 = 0x1C      @0x80103d78-7c (Kau-Loop) */
+        e->ai_timer = 100;                /* +0x9C = 100       @0x80103d88-8c (ESCAPE-Zaehler) */
+        if (re15_grab_mercy_active())     /* aca50 & 1         @0x80103d94-a0 */
+            e->ai_timer = 10;             /* +0x9C = 10        @0x80103da4-b4 (Re-Grab wirft frueh ab) */
+        e->sub_state_2 = 3;               /* +0x06 = 3         @0x80103dc0-c4 */
+        e->grab_kill_ctr = 0x5a;          /* +0x9E = 0x5A      @0x80103dd0-d4 (KILL-Budget, lbu/sb-Byte) */
+        pl->hp = (int16_t)(pl->hp - 5);   /* player.hp -= 5    @0x80103ddc-ec */
+        if (pl->hp < 0) pl->state = 7;    /* Port-Konvention: hp<0 -> GRABBED-Death-FSM */
+        /* fallthrough in [3] (Decompile: case 2 ohne break) */
+    case 3: {                             /* [3] BISS-LOOP @0x80103df0 */
+        if (gb && gb->ok)
+            re15_clip_root_motion_abs(e, &gb->skel, &gb->anim, (int)e->motion, (int)e->anim_frame);
+        e->anim_flags |= 0x04u;           /* Port-Render-Loop-Hint (wie Standing-Grab [3]) */
+        if (re15_zcrawl_anim_step(e)) {   /* Clip-Wrap-Zweig @0x80103e2c */
+            pl->hp = (int16_t)(pl->hp - 1);            /* player.hp -= 1 @0x80103e38-4c */
+            if (pl->hp < 0) pl->state = 7;
+            {   /* Biss-Blut: Effekt 0 sub 0, scale 0x1500, am MUND-Bone — pool+0x6b8 = Bone 10,
+                 * Typen 0x13/0x14 -> +0x764 = Bone 11 (@0x80103e54-6c), a1 = +0x6a (@0x80103e74),
+                 * a3 = (0,0,0) @0x8011f7d4 (@0x80103e78-84, jal 0x80019700 @0x80103e80). */
+                int bbone = (e->type == 0x13 || e->type == 0x14) ? 11 : 10;
+                int32_t bg[3]; re15_enemy_bone_world_pos(e, bbone, bg);
+                re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x1500,
+                                     bg[0], bg[1], bg[2], (int16_t)e->rot_y);
+            }
+        }
+        /* ESCAPE: +0x9C -= 1 + 5*mash (FUN_80037024 @0x80103e88; @0x80103e98-ac) */
+        e->ai_timer = (int16_t)(e->ai_timer - (int16_t)(1 + 5 * re15_mash_pressed()));
+        if (e->ai_timer < 0) {            /* bgez @0x80103ec4: < 0 -> Abwurf */
+            e->anim_flags &= (uint16_t)~0x04u;
+            e->sub_state_2 = 4;           /* +0x06 = 4         @0x80103ec8-cc */
+            re15_player_victim_throwoff();/* aca5a = 4         @0x80103ed4 */
+            /* KEIN break: @0x80103ed4 faellt in den +0x9E-Block @0x80103ed8 durch — ein
+             * gleichzeitig ablaufendes KILL-Budget ueberschreibt den Abwurf (byte-true). */
+        }
+        {   /* KILL-Budget: +0x9E-- ; Pre-Dec == 0 ODER player.hp < 0 -> DEVOUR-Handoff
+             * (@0x80103ee4-f34): +0x05 += 2 (@0x80103f18-24, Sub 1->3 / 2->4), +0x06 = 0
+             * (@0x80103f34). KEIN 32-bit-Wort — nur die zwei Byte-Stores. */
+            int16_t kc = e->grab_kill_ctr;
+            e->grab_kill_ctr = (int16_t)(kc - 1);
+            if (kc == 0 || pl->hp < 0) {
+                e->anim_flags &= (uint16_t)~0x04u;
+                e->sub_state_1 = (uint8_t)(e->sub_state_1 + 2);
+                e->sub_state_2 = 0;
+            }
+        }
+        break;
+    }
+    case 4:                               /* [4] ABWURF @0x80103f38 */
+        e->motion = 0x1D;                 /* +0x94 = 0x1D      @0x80103f40-44 (Abschuettel-Clip) */
+        e->sub_state_2 = 5;               /* +0x06 = 5         @0x80103f50-54 */
+        e->anim_frame = 0;                /* +0x95 = 0         @0x80103f64 */
+        e->anim_frac = 7;                 /* +0x8F = 7         @0x80103f70-74 */
+        s_grab_mercy_timer = 0x5a;        /* +0x1D5 = 0x5A     @0x80103f80-84 + aca50 |= 1
+                                           * @0x80103f90-a0 (der Port-Timer traegt beides,
+                                           * wie beim Standing-Grab [4]) */
+        re15_audio_room_se(7);            /* SE 7 EINMAL       @0x80103f94/9c (Standing: 2x) */
+        /* byte-true KEIN ai_flags &= ~1 hier (der Standing-Grab loescht es @Z.75 — der
+         * Kriecher nicht; Roh-Case 4 enthaelt keinen +0x1D8-Store). */
+        /* fallthrough in [5] (@0x80103fa0 -> 0x80103fa4) */
+    case 5:                               /* [5] Abwurf-Playout @0x80103fa4 */
+        if (gb && gb->ok)
+            re15_clip_root_motion_abs(e, &gb->skel, &gb->anim, (int)e->motion, (int)e->anim_frame);
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + (uint8_t)re15_zcrawl_anim_step(e));
+        if (e->anim_frame == 0x19) {      /* Frame 25 (@Decompile Z.90-117) */
+            if ((g_gameflow.character & 4) == 0) {
+                /* Shipped-Pfad (aca5c = Charakter-Byte, Leon 0/Elza 1 -> &4 == 0): ARM-ABRISS.
+                 * +0x1B8 = 1 (@Decompile Z.92) + Part-Spawn func_0x80019700(0x2000, +0x6a,
+                 * part+0x40, ...) + Part-Feld-Setup + part|=0x4A (Z.93-103) + SE 9 (Z.104).
+                 * OFFEN: der Model-Pool-Part-Scatter ist nicht portiert (gleiche Haltung wie
+                 * der Crow-GIB-Scatter) — nur SE + Flag-Byte. */
+                e->neck_flags = 1;        /* +0x1B8 = 1 (kein Konsument: neck_bone==0 -> FSM aus) */
+                re15_audio_room_se(9);
+            } else {
+                e->ai_flags |= 2;         /* +0x1D8 |= 2 (@Decompile Z.108) */
+                re15_audio_room_se(9);    /* SE 9, dann rng&1 ? SE 5 : SE 8 (Z.109-116) */
+                re15_audio_room_se((re15_engine_rand8() & 1) ? 5 : 8);
+            }
+        }
+        break;
+    default:                              /* [6] ENDE @0x80104128: der abgeworfene Kriecher
+                                           * kollabiert endgueltig */
+        e->flags |= 2;                    /* word0 |= 2        @0x80104134-40 */
+        /* OFFEN: +0x9A = 0xFFFF (@0x8010414c-50) — der Port hat kein Feld fuer entity+0x9A
+         * (Live-Familie fuehrt HP auf +0x1BA = e->hp); kein bekannter Konsument im Live-Zweig,
+         * deshalb kein Ersatz-Store. */
+        e->state = 7; e->sub_state_1 = 0; /* sh 7 -> +0x04/+0x05 (@0x8010415c-60, HALBWORT:
+                                           * +0x06/+0x07 bleiben) = CORPSE; run_all persistiert
+                                           * den Kill wie bei jedem State-7 (FUN_80109554-Set) */
+        break;
+    }
+}
+
+/* KRIECH-DEVOUR — byte-true FUN_80104548 (Grid-1-ANIMATE[3,4] @0x8011F920[3/4]; DECIDE[3,4] =
+ * 0x80104540 `jr ra`-Stub, roh-verifiziert). Die Kriecher-Fassung des Standing-Devour
+ * FUN_80102bd8 (re15_enemy_ai_live_devour): Clip = (+0x5)+6 -> Sub 3 = 0x09 / Sub 4 = 0x0A
+ * (die Hardware-Logs zeigen 0x09 = "Kriech-Attacke"). */
+static void re15_zcrawl_devour_animate(re15_actor_t *e, re15_actor_t *pl)
+{
+    re15_enemy_bank_t *gb = re15_enemy_find(e->type);
+    if (!pl) return;
+    if (e->sub_state_2 > 1) {             /* +0x06 >= 2: INERT (Decompile Z.12-14: return) */
+        re15_enemy_hold_last_frame(e);
+        return;
+    }
+    if (e->sub_state_2 == 0) {            /* Entry @0x80104570-dc */
+        e->sub_state_2 = 1;               /* +0x06 = 1         @0x80104574-78 */
+        e->motion = (uint8_t)(e->sub_state_1 + 6);
+                                          /* +0x94 = (+0x5)+6  @0x80104588-94 (3->9, 4->0xA) */
+        e->anim_frame = 0;                /* +0x95 = 0         @0x801045a4 */
+        e->anim_frac = 7;                 /* +0x8F = 7         @0x801045b0-b4 */
+        e->anim_blend_rate = 0x200;       /* f314 a3 = 0x200   (Decompile Z.30-31) */
+        /* aca58 = ((+0x5)-1)<<8 | 6 (@0x801045c4-dc) = Spieler-cmd 6 = Devour-COLLAPSE.
+         * OFFEN: Original-Variante im Byte1 = 2/3 (Sub 3/4) — der Port-Devour-Latch waehlt
+         * den Kollaps ueber den Zombie (re15_player_victim_devour), Varianten-Mapping wie
+         * beim Grab-Kommentar oben. */
+        re15_player_victim_devour(e);
+    }
+    if (e->anim_frame == 0x28)            /* +0x95 == 0x28 -> SE 3 (@0x801045ec-f4 + jal) */
+        re15_audio_room_se(3);
+    if (gb && gb->ok)
+        re15_clip_root_motion_abs(e, &gb->skel, &gb->anim, (int)e->motion, (int)e->anim_frame);
+                                          /* ad68(self,+0x170,+0x174) (Decompile Z.28-29) */
+    e->sub_state_2 = (uint8_t)(e->sub_state_2 + (uint8_t)re15_zcrawl_anim_step(e));
 }
 
 /* Einmal-Logger fuer die unportierten/NULL-Zeilen der Grid-1-Tabellen. */
@@ -3015,11 +3235,17 @@ int re15_enemy_ai_live_active(int slot)
                         break;
                     case 6:  /* [6]=0x80104F78 = `jr ra`-Stub (Tabellen-Dump, Glied 9) */
                         break;
-                    case 1: case 2: case 3: case 4: case 5: case 15:
-                        /* OFFEN: [1,2]=0x80103B8C (Stub), [3,4]=0x80104540 (Stub),
-                         * [5]=0x8010466C, [15]=0x80109E44 — nicht portiert (0x80109E44 zieht
-                         * RNG @0x8010a188 -> Einbau wuerde den deterministischen RNG-Strom
-                         * verschieben, Dossier §6). Sicherster No-op. */
+                    case 1: case 2:  /* [1,2]=0x80103B8C = `jr ra; nop` (roh @0x80103b8c-90):
+                                      * waehrend Grab/Lauern laeuft KEIN Decide — insbesondere
+                                      * wird 0x2000 hier IGNORIERT (das Gate lebt nur in
+                                      * DECIDE[0] @0x8010369c-c4); Aufstehen nur aus Sub 0. */
+                        break;
+                    case 3: case 4:  /* [3,4]=0x80104540 = `jr ra; nop` (roh @0x80104540-44) */
+                        break;
+                    case 5: case 15:
+                        /* OFFEN: [5]=0x8010466C, [15]=0x80109E44 — nicht portiert (0x80109E44
+                         * zieht RNG @0x8010a188 -> Einbau wuerde den deterministischen
+                         * RNG-Strom verschieben, Dossier §6). Sicherster No-op. */
                         re15_grid1_open_log("DECIDE", e->sub_state_1);
                         break;
                     default: /* 7..14 = NULL-Pointer im Original -> Absturz. NIE erreichen. */
@@ -3035,9 +3261,14 @@ int re15_enemy_ai_live_active(int slot)
                     case 6:  /* [6]=0x80104F80 = DERSELBE Toggle wie f890[0x10] (Rueckweg) */
                         re15_enemy_ai_toggle_animate(e);
                         break;
-                    case 1: case 2: case 3: case 4: case 5: case 15:
-                        /* OFFEN: [1,2]=0x80103B94, [3,4]=0x80104548, [5]=0x80104808,
-                         * [15]=0x80109E4C — nicht portiert. Sicherster No-op. */
+                    case 1: case 2:  /* [1,2]=0x80103B94 = KRIECH-GRAB (Sprungtabelle @0x8010007c) */
+                        re15_zcrawl_grab_animate(e, player);
+                        break;
+                    case 3: case 4:  /* [3,4]=0x80104548 = KRIECH-DEVOUR (Clip (+0x5)+6 = 9/0xA) */
+                        re15_zcrawl_devour_animate(e, player);
+                        break;
+                    case 5: case 15:
+                        /* OFFEN: [5]=0x80104808, [15]=0x80109E4C — nicht portiert. No-op. */
                         re15_grid1_open_log("ANIMATE", e->sub_state_1);
                         break;
                     default:
