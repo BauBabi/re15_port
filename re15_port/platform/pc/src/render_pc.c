@@ -1178,6 +1178,10 @@ void re15_render_pc_set_fade(int a)
 {
     if (a < 0) a = 0;
     if (a > 255) a = 255;
+    { extern int re15_fade_log_on(void);
+      if (re15_fade_log_on() && (uint8_t)a != s_fade_alpha)
+          fprintf(stderr, "[fade-log] set_fade %u -> %u\n",
+                  (unsigned)s_fade_alpha, (unsigned)a); }
     s_fade_alpha = (uint8_t)a;
 }
 

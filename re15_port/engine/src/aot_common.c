@@ -1248,6 +1248,11 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
      * index the player is inside for this cam_from (byte-true FIRST-in-table). Only reached when no
      * earlier SCD AOT fired (returned) — preserving the original SCD-AOT-vs-camera precedence. */
     if (best_cam_id >= 0) {
+        { extern int re15_fade_log_on(void);
+          if (re15_fade_log_on() && (int)g_scd.cam_id != best_cam_id)
+              fprintf(stderr, "[fade-log] RVD-Zonen-Scan: cam %u -> %d (player %ld/%ld)\n",
+                      (unsigned)g_scd.cam_id, best_cam_id,
+                      (long)player_x, (long)player_z); }
         g_scd.cam_id             = (uint8_t)best_cam_id;
         g_scd.cam_change_pending = 1;
     }

@@ -4,9 +4,26 @@
  * for the mechanism summary + addresses. The render layer consumes the tick outputs (out_* /
  * drawn / abr) as full-screen overlay draws in the byte-true OT position. */
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include "re15_fade.h"
 
 re15_fade_ch_t g_fade_ch[RE15_FADE_CHANNELS];
+
+/* RE15_FADE_LOG=1 — Messlauf-Instrumentierung (env-gegatet, im Normalpfad stumm):
+ * loggt jeden config/kick/kill mit Parametern, damit der TRIGGER eines sichtbaren
+ * Fades eindeutig einem Code-Pfad zugeordnet werden kann (Stop-Gate: messen). */
+int re15_fade_log_on(void)
+{
+    static int c = -1;
+    if (c < 0) {
+        c = getenv("RE15_FADE_LOG") ? 1 : 0;
+        /* Pipe-Redirect puffert stderr unter Windows voll — beim Kill des Messlaufs
+         * ginge das Log verloren. Nur im Log-Modus ungepuffert schalten. */
+        if (c) setvbuf(stderr, NULL, _IONBF, 0);
+    }
+    return c;
+}
 
 /* FUN_800217b0: config. Writes step/abr/bucket + the 0x00/0xff rgb masks from the 3-bit flags
  * (bit2=R @0x800217f4-800, bit1=G @0x8002180c-18, bit0=B @0x80021824-30) and rebuilds the two
@@ -14,6 +31,9 @@ re15_fade_ch_t g_fade_ch[RE15_FADE_CHANNELS];
 void re15_fade_config(int ch, int abr, int rgb_mask, int16_t step, int ot_bucket)
 {
     if (ch < 0 || ch >= RE15_FADE_CHANNELS) return;
+    if (re15_fade_log_on())
+        fprintf(stderr, "[fade-log] config ch=%d abr=%d mask=%d step=%d bucket=%d\n",
+                ch, abr, rgb_mask, (int)step, ot_bucket);
     re15_fade_ch_t *c = &g_fade_ch[ch];
     c->step      = step;
     c->abr       = (uint8_t)(abr & 3);
@@ -31,6 +51,9 @@ void re15_fade_kick(int ch, uint16_t value)
 {
     if (ch < 0 || ch >= RE15_FADE_CHANNELS) return;
     re15_fade_ch_t *c = &g_fade_ch[ch];
+    if (re15_fade_log_on())
+        fprintf(stderr, "[fade-log] kick ch=%d value=0x%04x (step=%d)\n",
+                ch, (unsigned)value, (int)c->step);
     if (c->step != 0) c->level = (c->step <= 0) ? 0x7FFF : 0;
     else              c->level = value;
 }
@@ -39,6 +62,8 @@ void re15_fade_kick(int ch, uint16_t value)
 void re15_fade_kill(int ch)
 {
     if (ch < 0 || ch >= RE15_FADE_CHANNELS) return;
+    if (re15_fade_log_on())
+        fprintf(stderr, "[fade-log] kill ch=%d\n", ch);
     g_fade_ch[ch].level = 0xFFFF;
 }
 

@@ -3304,8 +3304,22 @@ re_title:;
              * Obj_model_set semantics are wrong somewhere — fixing the
              * camera animator can't compensate for wrong actor positions. */
             static int s_last_cut_idx = -1;
-            static int s_fade_frames  = 0;   /* BN-round: cinematic fade-in countdown */
-            static int s_intro_faded  = 0;   /* one-shot: fade only on the first room open */
+            /* [ENTFERNT 2026-08-08] s_fade_frames/s_intro_faded — die BN-Runden-Heuristik
+             * "15-Frame-Fade-in beim Cut-Wechsel auf 0" hatte KEIN Original-Gegenstück und
+             * erzeugte das gemeldete Phantom-Fade in ROOM1150 (Kamera Mitte->Tür):
+             *   - RVD-Kamerawechsel im Original: FUN_80014230 -> FUN_800142f4 schreibt NUR
+             *     `sb a0,DAT_800afbb5` @0x80014300 (Cut-Index) + `sw v0,DAT_800ac794`
+             *     @0x80014310 (RVD-Gruppenzeiger); kein Zugriff auf die Fade-Kanaele
+             *     (DAT_800b5458 / FUN_800217b0/FUN_800216ec/FUN_80021764).
+             *   - Das echte Intro-/Raum-Fade-in ist der Tuer-FSM-Kick (FUN_8001c958 state 3:
+             *     `li a1,-0x1800` @0x8001cbbc -> FUN_800217b0 @0x8001cc00) — im Port byte-true
+             *     in apply_pending (re15_fade_config/kick unten) fuer JEDEN Raumwechsel inkl.
+             *     1240->1170-Intro.
+             *   - Spielstart/Load bootet OHNE Fade: Game-Init FUN_800161e0 killt Kanal 0
+             *     (`jal FUN_80021764` @0x80016420) und setzt Schwarz-Clear (FUN_80021634(2,0)
+             *     @0x80016424) — der erste Raum erscheint direkt.
+             * Gemessen (RE15_FADE_LOG, Run D): CONTINUE-Load auf Cut!=0 liess den One-Shot
+             * scharf; der naechste RVD-Wechsel 1->0 in 1150 feuerte das 15-Frame-set_fade. */
             /* BO-round (Tier-3): active cut's region quad (anchor zone), for the
              * per-object region cull (PSX FUN_8002c18c → FUN_80014368). Refreshed
              * on cut change; props/NPCs outside it are not drawn. */
@@ -3325,18 +3339,15 @@ re_title:;
                 g_scd.cam_change_pending = 0;
             }
             if (active_cut_idx != s_last_cut_idx) {
-                /* BN-round 2026-05-29: on the first helipad cut (room/cinematic
-                 * open), trigger the PSX-style fade-in and clear any lingering
-                 * pre-intro narrator subtitle (#2 "To escape", timer runs into here).
-                 * BO-round (Tier-3 #4): 15 frames = the canonical FUN_80021a0c ramp
-                 * (DAT_800b5568 0x00→0xF0 at +0x10/frame = 15 steps), NOT the old
-                 * 6-frame ablauf measurement. */
-                if (active_cut_idx == 0 && s_last_cut_idx != 0 && s_fade_frames == 0
-                    && !s_intro_faded) {
-                    s_intro_faded = 1;
-                    s_fade_frames = 15;
-                    g_scd.message_display_frames = 0;
-                }
+                { extern int re15_fade_log_on(void);
+                  if (re15_fade_log_on())
+                      fprintf(stderr, "[fade-log] F%u room=%04x CUT %d -> %d\n",
+                              g_engine.frame_count, g_current_room_id,
+                              s_last_cut_idx, active_cut_idx); }
+                /* KEIN Fade beim Kamerawechsel — byte-true: der RVD-Cut-Apply
+                 * FUN_800142f4 schreibt nur den Cut-Index (`sb` @0x80014300) und den
+                 * RVD-Gruppenzeiger (`sw` @0x80014310); die Fade-Engine wird auf diesem
+                 * Pfad nie beruehrt (siehe Kommentar an s_last_cut_idx oben). */
                 s_last_cut_idx = active_cut_idx;
                 /* BO-round (Tier-3): refresh the active cut's region quad. */
                 cam_has_region = rdt_ok
@@ -3669,16 +3680,18 @@ re_title:;
                  * reads g_letterbox_level directly (ticked above on the live flag(1,27));
                  * the old binary set_letterbox(24/0) toggle is superseded (#21). */
 
-                /* BO-round: ramp the cinematic fade-in (alpha 255→0 over 15 frames =
-                 * canonical FUN_80021a0c ±0x10/frame). PSX fades in from black. */
+                /* Frontend-Overlay-Release im Gameplay (Ersatz des entfernten 15-Frame-
+                 * Heuristik-Ramps): das s_fade_alpha-Overlay gehoert den Frontend-Screens
+                 * (Card-Save/-Load haelt beim Exit 255 = @0x800265ec static 0x7fff) und dem
+                 * Death-FSM (setzt es weiter unten JEDEN Frame neu). Im Original loest der
+                 * Game-Init FUN_800161e0 den Front-End-Hold durch den Kanal-0-KILL
+                 * (`jal FUN_80021764` @0x80016420) + Schwarz-Clear (FUN_80021634(2,0)
+                 * @0x80016424); das per-Frame-Nullen hier ist dessen Port-Gegenstueck.
+                 * Raum-Fades laufen NICHT hierueber, sondern byte-true ueber die
+                 * Fade-Kanaele (g_fade_ch, re15_fade_tick im Renderer). */
                 {
                     extern void re15_render_pc_set_fade(int a);
-                    if (s_fade_frames > 0) {
-                        re15_render_pc_set_fade((s_fade_frames * 255) / 15);
-                        s_fade_frames--;
-                    } else {
-                        re15_render_pc_set_fade(0);
-                    }
+                    re15_render_pc_set_fade(0);
                 }
 
                 /* PRE-INTRO NARRATOR BLACK — the byte-true mechanism is a VOID CAMERA, not a fill.
@@ -4443,6 +4456,11 @@ re_title:;
                      * then the destination room fade in over exactly 6 game frames). NB: the RE15_AUTOSHOT
                      * BMP tool (SDL_RenderReadPixels) does NOT capture these blend/overlay draws — verify
                      * fades/letterbox by recording the window with ffmpeg, not by autoshot brightness. */
+                    { extern int re15_fade_log_on(void);
+                      if (re15_fade_log_on())
+                          fprintf(stderr, "[fade-log] F%u room=%04x TUER-EINTRITTS-FADE kick "
+                                  "(main.c apply_pending)\n",
+                                  g_engine.frame_count, g_current_room_id); }
                     re15_fade_config(0, 2, 7, (int16_t)-0x1800, 0);
                     re15_fade_kick(0, 0);
 

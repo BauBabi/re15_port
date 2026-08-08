@@ -255,3 +255,14 @@ Baseline der Vorsession: **110/110 ctest grün** (neu u.a.: `unit_crow_death_cor
 | **Tür-Anim nach Zombie-Kampf** | Phantom-Flinch reproduziert (HP-Drop-Detektor-Baseline 100 beim Raumwechsel) + gefixt; dazu Flinch-/Knockdown-Exit-`motion=0`-Blitz, Aim-/Idle-Statics überleben die Tür nicht mehr (`@0x8001cbdc`/`@0x8003192c`/`@0x8003196c-94`), Sentinel-Trennung AIM_W 213→215. Sonde `probe_hitdoor_entry_anim` A/B/C: Zielraum-Eintritt identisch. Dossier `analysis/door_entry_phantom_flinch.md`. OFFEN: gdigrab-Sichtprüfung; RBJ-Bank-Divergenz der Flinch-Clips (dokumentiert, separates Ticket) | `5baefbb8` |
 | **ROOM1030 Kriechtor** | ALLE Glieder 1-10 eingebaut: Stempel ans Frame-Ende (`@0x8001ce1c`-Ordnung) + 0x0A-Wisch, `sca_mask` 4↔8, Grid-Wurzel 1 (Doppel-Dispatch), Toggle `FUN_80104f80`, Kriech-Lokomotion `FUN_801036dc`, **Hand-Lock** `FUN_80109470` (5×CompMatrix, Kette 0→7→Arm), Opcode 0x3D. Blocker A per 17-Stellen-Audit SAFE entschieden; Blocker B statisch geschlossen (Rundung → Savestate C). **End-to-End-Beweis** (probe_gate_1030 Phase D, echter Bytecode): Stempel→sub07→0x1000→0x1001→Toggle→grid 0x81/sca 8→Kriechen dz=+2202 durch den Torstreifen→Zone 4→sub05→Aufstehen. ctest 117/117. Dossier §17. OFFEN: Live-Verifikation über den Story-Weg (Cutscene; Debug-Sprung zeigt es NIE, §11), ROOM1040-Pendant (Stempel 6/7), Savestate B/C-Messungen | `b0aeb5e6`, `4c670931`, `43a73748`, `+0x3D` |
 | **Save-Ortsname** | NUTZER-ENTSCHEIDUNG: Patch-Indizes übernommen (0=Schreibmaschine 1150/1151, 1=Telefon 1070/1071) + Original-Anzeige-Maschinerie: Slot-Zeile sysmes(0x1a+loc) aus DEBUG.BIN (`FUN_800c00e4`), SJIS-Kartentitel `FUN_80026e54` byte-identisch zur echten Mod-Karte nachgerechnet. Blob-Feld `loc_idx` @0x26 (Karte+0x203-Analog). Coverage regeneriert (126 EXE-Funktionen ohne Zitat, vorher 129). recheck-Dossier §11 | `a1f0c5e0` |
+
+**Nachtrag 2026-08-08 (2):** Phantom-Fade-in bei Kamerawechsel (Nutzer-Report Irons' Office
+Mitte→Tür) — gemessener Trigger war die BN-Runden-Heuristik `s_fade_frames=15` (One-Shot blieb
+auf dem CONTINUE-Pfad scharf, Save trägt Cut≠0; feuerte beim nächsten RVD-Wechsel auf Cut 0).
+Ersatzlos entfernt: RVD-Cut-Apply `FUN_800142f4` schreibt NUR `sb @0x80014300` + `sw @0x80014310`
+(kein Fade-Kanal-Zugriff); Boot/Load killt Kanal 0 (`@0x80016420`) statt zu faden; das echte
+Raum-Fade ist der Tür-FSM-Kick (`-0x1800 @0x8001cbbc` → `@0x8001cc00`), im Port vorhanden.
+Env-Instrumentierung `RE15_FADE_LOG` bleibt. ⚠ NEBENBEFUND (offen, eigener RE-Fall): nach
+CONTINUE bleibt der RVD-Auto-Scan aus, bis ein SCD-/Tür-Pfad ihn aktiviert (60 s idle ohne
+6→0-Switch trotz Zone) — ob das Original nach Load `DAT_800aca3c`-Bit 0x100 gesetzt bootet,
+ist nicht disassembliert.

@@ -1591,6 +1591,11 @@ static int op_fade_adjust(scd_thread_t *t)
      * LEVEL, not the step — FUN_800216ec writes it to the channel level only when the configured
      * step (0x56) is 0 (static overlay, brightness = level>>7); with a nonzero step the value is
      * IGNORED and the ramp auto-starts at 0 / 0x7fff. All shipped SCD fades are static pulses. */
+    { extern int re15_fade_log_on(void);
+      if (re15_fade_log_on())
+          fprintf(stderr, "[fade-log] F%d SCD op 0x57 fade_kick(ch=%u, lvl=0x%04x)\n",
+                  (int)g_engine.frame_count, (unsigned)t->pc[1],
+                  (unsigned)(uint16_t)scd_read_le_s16(&t->pc[2])); }
     re15_fade_kick(t->pc[1], (uint16_t)scd_read_le_s16(&t->pc[2]));
     t->pc += 4;
     return 1;
@@ -3975,6 +3980,10 @@ int op_member_calc(scd_thread_t *t)       { t->pc += 6; return 1; }
  * (ROOM11F0/11F1 @0x174a, ROOM3080 @0x81e: `56 00 02 07 00 00` = ch0 subtractive white static). */
 int op_fade_config(scd_thread_t *t)
 {
+    { extern int re15_fade_log_on(void);
+      if (re15_fade_log_on())
+          fprintf(stderr, "[fade-log] F%d SCD op 0x56 fade_config(ch=%u)\n",
+                  (int)g_engine.frame_count, (unsigned)t->pc[1]); }
     re15_fade_config(t->pc[1], t->pc[2], t->pc[3], scd_read_le_s16(&t->pc[4]), 7);
     t->pc += 6;
     return 1;
