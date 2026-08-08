@@ -276,3 +276,13 @@ Generator-Schalter: Engine korrekt, PC-Prop-Layer-Cap 6→16 gefixt (kein Origin
 `@0x80043758/@0x800437ac/@0x80040ab4-adc`); ctest-Pin unit_gen_11f0_switches. OFFEN:
 ROOM1190 nOmodel=17>16 (Original-Pool-Kapazität 0x800B3F98 RE'en), PSX-Loader-6er-Grenze,
 gdigrab-Sicht beider Kamera-Fixes + 11F0.
+
+**Nachtrag 2026-08-08 (4):** (a) ROOM1030-Feinschliff nach Nutzer-Test: Toggle-RICHTUNG war
+invertiert (f314-a2-Semantik @0x8001f338-354 literal; B3-§6-Rampen-Lesung widerlegt; hardware-
+bestätigt §18) + 2 Glitch-Ticks — Hinlegen/Aufstehen jetzt byte-true (je 95 Frames). Kriech-Grab/
+-Devour (Grid-1-Zeilen 1/2+3/4, FUN_80103b94/FUN_80104548) portiert — Kriecher lauern/greifen
+in Spielernähe (<1200 @0x80103628) statt aufzustehen. (b) Hunde-Treffer-Trias gefixt: Bone-Blut
+0x2000 (@0x80110a84ff), Rückstoß-Hop inkl. Paw-Pin-Root-Motion FUN_80111870 (@0x8010f118/
+@0x8010e540), Corpse hält letzten Keyframe (Corpse-Root 0x80111774 ohne f314). ctest 119/119.
+OFFEN: gdigrab-Sicht (1030-Zyklus, Hunde), ROOM1040-Kriechtor-Pendant (Stempel 6/7), Grid-1-
+Zeilen 5/15, Grab-Anker-OOB/+0x9A/Gore-Part, Paw-Lock-Betrag vs PSX-Trace.
