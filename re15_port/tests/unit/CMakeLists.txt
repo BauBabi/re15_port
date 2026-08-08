@@ -871,6 +871,12 @@ target_include_directories(probe_laned_1030_spawn PRIVATE ${CMAKE_SOURCE_DIR}/in
 # --- LANE C: ROOM1030 Tor + Einlauf-Choreografie (Bug-Report 2026-08-06:
 #     "Zombies kriechen nicht unter dem Tor durch" / "Dutzende statt sechs").
 #     Reine MESSUNG, kein ctest-Gate. ---
+# Glied-1-Nachweis: stempelt der Port entity+0x0B wie das Original?
+# Soll (am ORIGINAL per PCSX-Redux gemessen): Aktor in AOT-Slot 5 -> 5, in Slot 6 -> 6.
+add_executable(probe_lanea_1030_cap probe_lanea_1030_cap.c)
+target_link_libraries(probe_lanea_1030_cap PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_lanea_1030_cap PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
 add_executable(probe_gate_1030 probe_gate_1030.c)
 target_link_libraries(probe_gate_1030 PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_gate_1030 PRIVATE ${CMAKE_SOURCE_DIR}/include)

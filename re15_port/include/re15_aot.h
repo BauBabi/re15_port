@@ -278,6 +278,12 @@ void re15_aot_cut_replace(uint8_t a, uint8_t b);
  * directly, ITEM grants inventory + deactivates, CAM_SWITCH sets
  * cam_change_pending (filtered by cam_from). Call once per frame from
  * main, AFTER player tick. `active_cut` filters CAM_SWITCH zones. */
+/* Glied 1 — AOT-Stempel auf entity+0x0B (byte-true FUN_800436a8 + FUN_80042bac): Clear + Stempel
+ * fuer JEDEN Aktor, LAST-WINS ueber alle AUTO-Records. Wird von re15_aot_scan() zuerst gerufen;
+ * separat exportiert, damit Sonden/Tests ihn ohne den Handler-Dispatch fahren koennen.
+ * Soll-Werte am Original gemessen: analysis/room1030_crawl_mechanism.md §15. */
+void re15_aot_stamp_entities(void);
+
 void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut);
 
 /* Phase 4.5.12: prime was_inside from a spawn position without firing

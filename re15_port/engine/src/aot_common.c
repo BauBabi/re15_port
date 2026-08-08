@@ -542,8 +542,115 @@ void re15_aot_fire_slot(int slot)
     }
 }
 
+/* ---------------------------------------------------------------------------------------------
+ * Glied 1 — der AOT-Stempel auf entity+0x0B (byte-true FUN_800436a8 + FUN_80042bac).
+ *
+ * Der Port hatte diesen Pass GAR NICHT: `member_0b` wurde bei Aktoren nie geschrieben (der
+ * einzige Schreiber war der Adult-Spider-LOS-Latch, seit dem aspider_los-Umzug weg). Im Original
+ * traegt +0x0B den 0-basierten Slot-Index der zuletzt getroffenen AOT-Zone, und die ROOM1030-
+ * Kriech-Kette liest ihn als `member15` (sub06: `3e 00 0f 00 05 00` = member15 == 5).
+ *
+ * AM ORIGINAL GEMESSEN (PCSX-Redux, analysis/room1030_crawl_mechanism.md §11/§15) — das sind die
+ * Soll-Werte, gegen die dieser Pass prueft:
+ *   5 von 6 Zombies bei z~-24838  ->  +0x0B = 0x05      (Zone 5 = x[-12900,-3700] z[-25300,-24200])
+ *   der Zombie bei z~-25561       ->  +0x0B = 0x00      (ausserhalb -> Aktiv-Clear, NICHT stale)
+ *   Leerwert vor dem ersten Treffer / Spieler ausserhalb -> 0xFF
+ *
+ * INSTRUKTIONEN:
+ *   Wisch (VM-Tail FUN_8003ec28, unbedingt @0x8003f194):
+ *     @0x8003ec44  ori v0,zero,0xffff
+ *     @0x8003ec4c  sh  v0,0(v1)      ; Spieler+0x0A/0x0B = 0xFF (Delay-Slot -> laeuft IMMER)
+ *     @0x8003ec68  sh  v1,10(a0)     ; JEDER AKTIVE Gegner, Stride 500
+ *   Scan-Clear (FUN_800436a8):
+ *     @0x80043704  andi v0,v0,0x1    ; nur wenn word0 & 1 (aktiv)
+ *     @0x8004371c  sb   zero,0(at)   ; Gegner+0x0B = 0     (Spieler-Pool: KEIN Clear)
+ *   Stempel (FUN_80042bac, AUTO-Pfad — alle drei Pool-Aufrufe uebergeben a2 = 0):
+ *     @0x80042c64  addiu s2,s2,1     ; Laufindex +1 pro Array-Position
+ *     @0x80042f44  addiu v0,s2,255   ; Delay-Slot: low byte = s2-1 = 0-basierter Slot
+ *     @0x80042fc4  sb   v0,11(s1)    ; AUTO-Stempel
+ *     @0x8004301c  bne  v0,zero,0x80042c50  ; Schleife laeuft WEITER -> LAST-WINS
+ *   Vorbedingungen je Record (Glied 5):
+ *     @0x80042c8c  and  v0,v0,a3     ; rec[1] & Pool-Maske (1 Spieler / 2 Gegner / 4 Objekt)
+ *     @0x80042ca4  bne  v0,s6,...    ; rec[1] & 0x10 muss == a2 (=0) sein -> nur AUTO
+ *     @0x80042cb4  andi v0,v0,0x80   ; rec[2] Bit 0x80 -> Floor-Pruefung entfaellt
+ *     @0x80042ccc  bne  v1,v0,...    ; sonst rec[2] == entity+0x82
+ *     @0x80042ea0  lbu  v1,1(s0)     ; 0x40 = CENTRE-Test, 0x20 = FORWARD-Test (620 voraus)
+ *   Ohne 0x40 UND ohne 0x20 stempelt ein Record nie.
+ *
+ * BEWUSST NICHT UEBERNOMMEN (nicht vergessen, sondern begruendet):
+ *  a) Die Spiegelung des Index nach work_vars[1] (CENTRE @0x80042ee4 -> 0x800B0FD2) bzw.
+ *     work_vars[0] (FORWARD @0x80042f3c -> 0x800B0FD0). Im Original ist das ein EIN-BILD-Signal,
+ *     weil der VM-Tail work_vars[0..3] jedes Bild auf -1 wischt (@0x8003ebfc/ec04/ec0c/ec14).
+ *     Diesen Wisch hat der Port bewusst nicht — der Spiegel wuerde also KLEBEN. Das waere kein
+ *     naeherer, sondern ein anderer Zustand.
+ *  b) Der Objekt-Pool-Clear (@0x80043788 `sb zero,0(at)`, unbedingt). `g_scd.props[].member_0b`
+ *     ist im Port die Kombinationsschloss-NOTCH (re15_object_notch_update, test_keypad deckt sie
+ *     ab). Ob der Original-Clear dort byte-true ist, ist eine EIGENE Frage mit eigener
+ *     Verifikation — sie wird hier nicht mitentschieden.
+ * ------------------------------------------------------------------------------------------- */
+void re15_aot_stamp_entities(void)
+{
+    /* Netto-Wirkung von Wisch + Scan-Clear, bevor gestempelt wird:
+     *   Spieler       -> 0xFF (gewischt, KEIN Clear)
+     *   aktiver Gegner-> 0    (gewischt, dann gecleart)
+     *   INAKTIVER Gegner -> unberuehrt (weder Wisch noch Clear) => Alt-Wert bleibt stale */
+    g_actors[RE15_ACTOR_SLOT_PLAYER].member_0b = 0xFF;
+    for (int es = 0; es < RE15_ACTOR_MAX; es++) {
+        if (es == RE15_ACTOR_SLOT_PLAYER) continue;
+        if (g_actors[es].active) g_actors[es].member_0b = 0;
+    }
+
+    for (int i = 0; i < RE15_AOT_MAX; i++) {
+        const re15_aot_t *a = &g_aot.slots[i];
+        if (!a->active) continue;
+        /* NICHT ueber a->type filtern: ROOM1030-Slot 6 hat sce=0 (RE15_AOT_TYPE_NONE) und
+         * stempelt im Original trotzdem. Das Original geht ausschliesslich ueber rec[1]. */
+        uint8_t pm = (uint8_t)(a->sce_flags & 0x07);          /* Pool-Maske */
+        uint8_t tb = (uint8_t)(a->sce_flags & 0x60);          /* 0x40 CENTRE | 0x20 FORWARD */
+        /* ⛔ HIER KEIN „sce_flags == 0 -> beide Tests"-Fallback. Diese Port-Konvention gilt fuer
+         * die ACTION-Geometrie synthetischer Installationen; fuer den Stempel ist sie falsch und
+         * war in der ersten Fassung ein echter Fehler (die Sonde meldete 52/60 statt 6/5, weil
+         * ROOM1030 die Slots 51-63 mit `sce=0x00 band=0xFF` als grosse Rechtecke haelt und
+         * LAST-WINS sie gewinnen liess). Im Original bedeutet rec[1] == 0:
+         *   Pool-Maske 0 -> @0x80042c8c `and v0,v0,a3` = 0 -> der Record wird fuer JEDEN Pool
+         *   uebersprungen; und ohne 0x40/0x20 stempelt er ohnehin nie (@0x80042ea0). */
+        if (a->sce_flags & 0x10) continue;                    /* @0x80042ca4: nur AUTO */
+        if (pm == 0) continue;                                /* @0x80042c8c: keine Pool-Maske */
+        if (tb == 0) continue;                                /* @0x80042ea0: sonst nie Stempel */
+
+        for (int es = 0; es < RE15_ACTOR_MAX; es++) {
+            re15_actor_t *e = &g_actors[es];
+            if (!e->active) continue;
+            uint8_t bit = (es == RE15_ACTOR_SLOT_PLAYER) ? 0x01u : 0x02u;
+            if (!(pm & bit)) continue;                        /* @0x80042c8c */
+            if (!(a->band & 0x80) && e->floor != a->band) continue;  /* @0x80042cb4-ccc */
+
+            int hit = 0;
+            if (tb & 0x40) {                                  /* CENTRE: die Entitaetsposition */
+                hit = a->has_quad
+                    ? re15_aot_point_in_quad(e->x, e->z, a->xs, a->zs)
+                    : ((abs_i32(e->x - a->x) <= a->half_w) && (abs_i32(e->z - a->z) <= a->half_h));
+            }
+            if (!hit && (tb & 0x20)) {                        /* FORWARD: 620 Einheiten voraus */
+                int ry = (int)e->rot_y;
+                int32_t c = re15_cos_q12(ry), s = re15_sin_q12(ry);
+                int32_t fx = e->x + (int32_t)((620 * c) >> 12);
+                int32_t fz = e->z - (int32_t)((620 * s) >> 12);
+                hit = a->has_quad
+                    ? re15_aot_point_in_quad(fx, fz, a->xs, a->zs)
+                    : ((abs_i32(fx - a->x) <= a->half_w) && (abs_i32(fz - a->z) <= a->half_h));
+            }
+            if (hit) e->member_0b = (uint8_t)i;                /* LAST-WINS: hoechster Slot gewinnt */
+        }
+    }
+}
+
 void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
 {
+    /* Glied 1 zuerst: im Original macht derselbe Treiber FUN_800436a8 erst Clear+Stempel,
+     * bevor die Handler laufen (@0x800436c0 / @0x80043728 / @0x80043790, alle mit a2 = 0). */
+    re15_aot_stamp_entities();
+
     /* Reset per-frame event flag at scan start. Main loop reads it
      * between scan() and the next frame, dispatching to SCD. */
     g_aot.fired_event_id_this_frame = 0;

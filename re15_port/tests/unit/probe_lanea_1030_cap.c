@@ -125,8 +125,14 @@ static void room_probe(const char *base, const char *room, uint32_t em_off, int 
             if (g_actors[1].member_0b > max1) max1 = g_actors[1].member_0b;
             if (g_actors[2].member_0b > max2) max2 = g_actors[2].member_0b;
         }
-        printf("   PORT: Aktor 1 MITTEN in AOT-Slot 6 -> member_0b max ueber 16 Frames = %u  (ORIGINAL: 6)\n", max1);
-        printf("   PORT: Aktor 2 MITTEN in AOT-Slot 5 -> member_0b max ueber 16 Frames = %u  (ORIGINAL: 5)\n", max2);
+        /* ⚠ Slot 6 wird mit sce=0x00 INSTALLIERT (das Rechteck stimmt: x[-27300,3300]
+         * z[-24500,-700]). Er stempelt erst, nachdem sub02 ihn per
+         * Aot_reset(6, sce=5, flags=0x42) einschaltet — und sub02 haengt an flag(5,0x14), das
+         * ohne den Story-Zustand nie gesetzt wird. AM ORIGINAL GEMESSEN (PCSX-Redux,
+         * analysis/room1030_crawl_mechanism.md §11): dort trat ebenfalls NUR 5 auf, NIE 6.
+         * In diesem Zustand ist 0 also der RICHTIGE Wert, nicht 6. */
+        printf("   PORT: Aktor 1 MITTEN in AOT-Slot 6 -> member_0b max ueber 16 Frames = %u  (ORIGINAL in diesem Zustand: 0 — Zone 6 ist aus)\n", max1);
+        printf("   PORT: Aktor 2 MITTEN in AOT-Slot 5 -> member_0b max ueber 16 Frames = %u  (ORIGINAL: 5 — am Geraet gemessen)\n", max2);
     }
     printf("   PORT: member_0b je Aktor:");
     for (int s = 1; s < RE15_ACTOR_MAX; s++)
