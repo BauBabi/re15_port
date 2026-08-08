@@ -1,4 +1,4 @@
-Syntaxpruefung: C:\workspace\git\reAi_v2\tools\redux\crawl_force.lua
-OK — laedt sauber (Kompilat: function: 0x01ed8836b608)
+Syntaxpruefung: C:\workspace\git\reAi_v2\tools\redux\crawl_cycle2.lua
+OK — laedt sauber (Kompilat: function: 0x02ad2eaa4bb8)
 Der Fehler liegt also NICHT in der Syntax, sondern zur Laufzeit.
 fertig

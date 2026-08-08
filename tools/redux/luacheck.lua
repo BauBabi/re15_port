@@ -13,7 +13,7 @@
 -- Aufruf:  PCSX_LUA=...\luacheck.lua  und der Kandidat in ZIEL (unten).
 -- Dauer: ein paar Sekunden, kein Booten noetig.
 
-local ZIEL = [[C:\workspace\git\reAi_v2\tools\redux\crawl_force.lua]]
+local ZIEL = [[C:\workspace\git\reAi_v2\tools\redux\crawl_cycle2.lua]]
 local OUT  = [[C:\workspace\git\reAi_v2\tools\redux\luacheck_out.txt]]
 
 local frames, fertig = 0, false

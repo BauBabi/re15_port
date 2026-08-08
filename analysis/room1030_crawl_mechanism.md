@@ -1076,3 +1076,43 @@ Drossel Cmp(wv7<4) verhaelt sich byte-true. ctest 117/117 (neu: unit_crawl_toggl
 4. Cull-Randfall der Hand-Referenz (B3 §8.3): nicht nachgebaut, on-screen irrelevant.
 5. LIVE-Verifikation im echten Spielfluss (Story-Weg ueber die Cutscene, gdigrab) steht aus —
    der Debug-Sprung zeigt das Kriechen NIE (§11); der Nutzer-Weg ist der Beweis.
+
+---
+
+## 18. HARDWARE-GROUND-TRUTH des vollen Zyklus (2026-08-08, PCSX-Redux, 2 deterministische Laeufe)
+
+Messpunkt: Exec-BP @0x80030444 (Pad-Aufbereiter, 1x/Spiel-Frame VOR der VM — dort ist +0x0B der
+stabile Vor-Scan-Stempel). Einziger Poke: `flag(5,0x20)` (0x800B102C |= 0x80000000); sub01 →
+flag(4,0x0f) → sub08 → Tor-Zellen/flag(5,0x14) liefen ORGANISCH. Logs: tools/redux/
+crawl_cycle_out.txt (Lauf 1) + crawl_cycle2_out.txt (Lauf 2); Sonden crawl_cycle*.lua + drive_1030.py.
+
+### Der Zyklus (Lauf 2, Slot 4; Lauf 1 identisch ±1 gf)
+- **HINLEGEN:** 0x1000→Steer→0x1001→Toggle im SELBEN Frame; 94=0x12, 95=rng&3(+1 Durchfall-Advance),
+  9F=1 ⇒ Pose 97→0 RUECKWAERTS (f314 a2≠0: Slot = fc−1−95); 95 zaehlt +1/Frame; Position eingefroren;
+  Trigger→Commit = 95 Frames; Commit = Wrap+1: 09=0x81, 1D7=8, Wort=1, 93 geloescht; +1 Frame: 94=0x1A, 8C=0x1E.
+- **KRIECHEN:** 234 Frames, dz=+2837 (ø 12,1/Frame); **Savestate-C-Messung:** Vortrieb in 2-FRAME-PAAREN
+  (Delta 0, dann ~20-60 — konsistent mit Half-Rate-Keyframes: Clip 0x1A = 99 Frames auf ~50 kf).
+  8C bleibt konstant 0x1E (Konsument feuert nie — deckt B3 §8.4). 1C4 konstant 0x1000.
+- **AUFSTEHEN:** Zone-4-Stempel → +1 Frame: 1C4 0x1000→0x2000 (exakt &0x0FFF|0x2000), DECIDE-0
+  konsumiert → **Sub-Modus 6** (f920[6], dieselbe Toggle-Funktion), Clip 0x12, 95=rng&3, **9F=0 ⇒
+  Pose VORWAERTS 0→97** = langsames Aufstehen ueber 95 Frames, kein Steh-Halt (danach sofort
+  Clip 0x05 mit Blend 0x0E). Commit: 09=0, 1D7=4, Wort 0x201. **1C4 bleibt 0x2000 stehen (kein Clear).**
+  ⇒ Der Richtungs-Fix (Commit dieser Session) ist damit HARDWARE-BESTAETIGT; B3-§6-Rampen-Lesung
+  endgueltig widerlegt (Keyframes wie gespeichert: frame 0 = liegend py=−175, frame 97 = stehend −1744).
+
+### sub08 = die "Cutscene" (Bytes @0x2764 dekodiert, Timing 2x gemessen)
+t+0: `Set(1,0x1B)` (= flag(1,27) = das KINO-/Letterbox-Bit!), Aot_reset 17, 4x Rolltor-`4b`-Records,
+Tor-Zellen 0xF7, wv5/wv7=0, Gosub 9 (SOLO-Trigger: genau EIN Zombie pro Aufruf, Cursor wv5
+persistiert; weitere Aufrufe t+5/25/35); Kamera-Cuts `29 0c`@t+25, `29 0b`@t+250, `29 05`@t+450
+(Sleeps 5+20+10+15+20+180+200); Kino aus + `Set(5,0x14)`@t+450; Gruppen-Latch @t+453 (sub02→Gosub 6
+latcht ALLE gestempelten gleichzeitig). Drossel wv7<4 biss nie (wv7=1 beim Gruppenstart).
+
+### NEU ENTDECKTES PORT-LOCH: Kriech-Verfolgung nahe am Spieler
+Nach dem Tor schaltet der Kriecher bei ~1300 Einheiten auf **Sub-Modus 1** (Clip 0x1B 19f einmal →
+Clip 0x1C-Loop 13f = Kriech-Lauern) und **Sub-Modus 3** (Clip 0x09 = Kriech-Attacke); dort ist DECIDE
+ein Stub und **0x2000 wird IGNORIERT** — Aufstehen NUR aus Sub 0 (Lauf 1: Kriecher attackierte den in
+Zone 4 stehenden Spieler statt aufzustehen). Die Port-Zeilen 1/3 waren OFFEN-No-ops — Einbau laeuft.
+
+### Wartende Zombies
+Kein Warte-Sonderclip: normale Verfolger-AI (Clips 0x02/0x05), die an der fuer Maske 4 soliden
+Tor-Zelle (0xF7 & 4 ≠ 0) bei z≈−24838 auflaeuft — genau in Zone 5.
