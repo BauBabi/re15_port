@@ -652,12 +652,23 @@ void scd_vm_tick(void)
      * dort haelt der Port u.a. den Gegner-walk_flag_bit. Wort 0 (Bits 0x00..0x1F) ist echter
      * Raum-Scratch und wird beim Raumladen gewischt (FUN_8003ecec @0x8003ed74), nicht hier.
      *
-     * BEWUSST NICHT UEBERNOMMEN: derselbe FUN_8003ebf4 setzt @0x8003ebfc/ec04/ec0c/ec14 auch
-     * work_vars[0..3] := -1, macht sie also ebenfalls zu Ein-Frame-Scratch. Das ist byte-true, gehoert
-     * aber zu KEINEM der gemeldeten Fehler und wuerde die Bedeutung der Skript-Scratch-Variablen
-     * spielweit aendern (der Port laesst sie heute ueber Frames stehen; z.B. ROOM5100/5101 sub01
-     * `Cmp(work_vars[1]==0)` feuert dadurch beim Eintritt spurios). Dokumentierte, zitierte
-     * Divergenz — separat anzugehen, nicht als Beifang eines Bugfixes. */
+     * NACHGEHOLT 2026-08-08 (war als "bewusst nicht uebernommen" markiert): derselbe FUN_8003ebf4
+     * setzt auch work_vars[0..3] := -1. Die Pruefung, warum das KEIN harmloses Weglassen ist:
+     *   - Das Original initialisiert 0x800b0fd0..d6 beim Raumladen NICHT. FUN_8003ecec fasst nur
+     *     0x800b0ff4 (@0x8003ed60), 0x800b1028 (@0x8003ed74), 0x800b0ff2 (@0x8003ed7c) und
+     *     0x800aca50/52 (@0x8003ed84/8c) an. work_vars[0..3] leben ALLEIN vom Ein-Bild-Handshake:
+     *     hier auf -1, danach schreibt der AOT-Scan die getroffenen Slots.
+     *   - Der Port memset't sie dagegen auf 0 und wischte nie -> sie standen dauerhaft auf 0.
+     *   - `op_cmp` liest VORZEICHENBEHAFTET (`lh` @0x8003fad8, int16_t). -1 und 0 sind damit
+     *     unterscheidbar: `Cmp(work_vars[N]==0)` war im Port beim Betreten WAHR, im Original FALSCH.
+     * Das fehlende Wischen war also die Ursache spurioser Skript-Ausloesungen, nicht deren Schutz.
+     * Reihenfolge stimmt unveraendert: VM-Tick -> dieser Wisch -> re15_aot_scan schreibt die
+     * Treffer -> das NAECHSTE Bild liest sie (main.c:3024 tickt die VM, re15_game_step scannt).
+     * Nur [0..3] — work_vars[0x11]/[0x12] (Gegner-Zaehler/Cap) liegen ausserhalb und bleiben. */
+    g_scd.work_vars[0] = -1;
+    g_scd.work_vars[1] = -1;
+    g_scd.work_vars[2] = -1;
+    g_scd.work_vars[3] = -1;
     g_game.flags[5][1] = 0;
 }
 

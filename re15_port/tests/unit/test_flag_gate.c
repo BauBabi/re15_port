@@ -59,14 +59,20 @@ int main(void)
     /* ---- (1) round-trip through the REAL indexed write op 0x59 (DAT_800b0fd0 scratch) ---- */
     /* 0x59 resolves idx = work_vars[pc[2]] — use a >31 index (like ROOM1021's Ck(3,133)) so the
      * per-zone word math (idx>>5=4) is exercised, not just the low word. bank = pc[1]. */
-    g_scd.work_vars[3] = 133;
-    { const uint8_t bc[] = { 0x59, 0x03, 0x03, 0x01, OP_EVT_NEXT }; run_frag(bc); }   /* SET   */
+    /* ⚠ Variablen-Index 4, NICHT 0..3: FUN_8003ebf4 wischt work_vars[0..3] am Ende JEDES
+     * VM-Laufs auf -1 (@0x8003ebfc/ec04/ec0c/ec14, gerufen @0x8003f18c) — dieselbe Routine, die
+     * gleich darunter fuer Flag-Bank 5 Wort 1 geprueft wird. Eine Saat in [0..3] ueberlebt den
+     * ersten run_frag() also nicht, und 0x59 laese danach 0xFFFF (`lhu` @0x8003feb8) als
+     * Bit-Index. Index 4 liegt ausserhalb des Wischs und pinnt weiterhin genau den indizierten
+     * Schreibpfad. */
+    g_scd.work_vars[4] = 133;
+    { const uint8_t bc[] = { 0x59, 0x03, 0x04, 0x01, OP_EVT_NEXT }; run_frag(bc); }   /* SET   */
     CHECK("0x59 SET   flag(3,133)=1", re15_game_flag_get(3, 133) == 1);
-    { const uint8_t bc[] = { 0x59, 0x03, 0x03, 0x00, OP_EVT_NEXT }; run_frag(bc); }   /* CLEAR */
+    { const uint8_t bc[] = { 0x59, 0x03, 0x04, 0x00, OP_EVT_NEXT }; run_frag(bc); }   /* CLEAR */
     CHECK("0x59 CLEAR flag(3,133)=0", re15_game_flag_get(3, 133) == 0);
-    { const uint8_t bc[] = { 0x59, 0x03, 0x03, 0x07, OP_EVT_NEXT }; run_frag(bc); }   /* TOGGLE*/
+    { const uint8_t bc[] = { 0x59, 0x03, 0x04, 0x07, OP_EVT_NEXT }; run_frag(bc); }   /* TOGGLE*/
     CHECK("0x59 TOGGLE flag(3,133)->1", re15_game_flag_get(3, 133) == 1);
-    { const uint8_t bc[] = { 0x59, 0x03, 0x03, 0x07, OP_EVT_NEXT }; run_frag(bc); }
+    { const uint8_t bc[] = { 0x59, 0x03, 0x04, 0x07, OP_EVT_NEXT }; run_frag(bc); }
     CHECK("0x59 TOGGLE flag(3,133)->0", re15_game_flag_get(3, 133) == 0);
     /* a >31 idx must NOT bleed into a neighbour bit (the old zone*32+idx packing collided) */
     CHECK("0x59 no bit-bleed (3,132/134 stay 0)",

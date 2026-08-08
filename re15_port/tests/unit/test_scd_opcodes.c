@@ -615,23 +615,33 @@ static int test_speed_set(void)
  * ========================================================================= */
 
 /* =========================================================================
+ * ⚠ ALLE Beobachter der folgenden Tests liegen auf work_vars[4], NICHT [0..3]: FUN_8003ebf4
+ * wischt work_vars[0..3] am Ende JEDES VM-Laufs auf -1 (@0x8003ebfc/ec04/ec0c/ec14, gerufen
+ * @0x8003f18c). Ein Wert in [0..3] ist nach scd_vm_tick() byte-true -1 — der Test wuerde dann
+ * statt der Opcode-Logik den Wisch messen. Operanden: Save/Cmp var = pc[1],
+ * Calc dst = pc[3] (op_calc: scd_work_alu(pc[2], &work_vars[pc[3]], imm)).
+ *
  * Test [#8]: Do/Edwhile predicate-chain loop + Save/Calc/Cmp integration.
- *   work_vars[0]=0; do { work_vars[0]+=1; } edwhile(work_vars[0] < 3);
- * Runs 3x; afterwards work_vars[0]==3 and the unified loop_count balances to 0.
+ *   work_vars[4]=0; do { work_vars[4]+=1; } edwhile(work_vars[4] < 3);
+ * Runs 3x; afterwards work_vars[4]==3 and the unified loop_count balances to 0.
  * Exercises Do(0x11)/Edwhile(0x12), the byte-true AND/OR predicate chain (Cmp
  * via the real dispatcher), and work-var ops Save(0x24)/Calc(0x26).
- *   [0..3] Save(var0,0)  [4..7] Do(block_len=14)  [8..13] Calc(ADD,dst0,1)
- *   [14..15] Edwhile(chain=6)  [16..21] Cmp(var0,'<',3)  [22] Evt_end
+ *   [0..3] Save(var4,0)  [4..7] Do(block_len=14)  [8..13] Calc(ADD,dst4,1)
+ *   [14..15] Edwhile(chain=6)  [16..21] Cmp(var4,'<',3)  [22] Evt_end
  * ========================================================================= */
 static int test_do_edwhile_loop(void)
 {
     uint8_t bc[23];
     memset(bc, SCD_OP_NOP, sizeof(bc));
-    bc[0]=0x24; bc[1]=0x00; write_le16(bc+2, 0);                 /* Save work_vars[0]=0 */
+    bc[0]=0x24; bc[1]=0x04; write_le16(bc+2, 0);                 /* Save work_vars[4]=0 */
     bc[4]=0x11; bc[5]=0x00; write_le16(bc+6, 14);                /* Do block_len=14 */
-    bc[8]=0x26; bc[9]=0x00; bc[10]=0x00; bc[11]=0x00; write_le16(bc+12, 1); /* Calc +1 */
+    bc[8]=0x26; bc[9]=0x00; bc[10]=0x00; bc[11]=0x04; write_le16(bc+12, 1); /* Calc w4 +1 */
     bc[14]=0x12; bc[15]=6;                                       /* Edwhile chain_len=6 */
-    bc[16]=0x23; bc[17]=0x00; bc[18]=0x00; bc[19]=0x03; write_le16(bc+20, 3); /* Cmp var0 < 3 */
+    /* ⚠ Cmp (0x23) liest die Variable aus pc[2] = bc[18], NICHT aus pc[1]: `andi 0xff`
+     * @0x8003ff80 nimmt das LOW-Byte des u16 @pc[2]; pc[1] wird von diesem Handler gar nicht
+     * gelesen (der Selektor pc[1] gehoert zur Ck-Familie 0x1F/0x20/0x21). Deckt sich mit den
+     * ausgelieferten Bytes von ROOM1030 sub02: `23 00 07 03 04 00` = Cmp(work_vars[7], '<', 4). */
+    bc[16]=0x23; bc[17]=0x00; bc[18]=0x04; bc[19]=0x03; write_le16(bc+20, 3); /* Cmp var4 < 3 */
     bc[22]=SCD_OP_EVT_END;
 
     scd_vm_init();
@@ -640,9 +650,9 @@ static int test_do_edwhile_loop(void)
 
     if (g_scd.threads[0].active != 0) {
         fprintf(stderr, "FAIL: test_do_edwhile_loop: Thread sollte beendet sein\n"); return 1; }
-    if (g_scd.work_vars[0] != 3) {
-        fprintf(stderr, "FAIL: test_do_edwhile_loop: work_vars[0] sollte 3 sein, ist %d\n",
-                g_scd.work_vars[0]); return 1; }
+    if (g_scd.work_vars[4] != 3) {
+        fprintf(stderr, "FAIL: test_do_edwhile_loop: work_vars[4] sollte 3 sein, ist %d\n",
+                g_scd.work_vars[4]); return 1; }
     if (g_scd.threads[0].loop_count != 0) {
         fprintf(stderr, "FAIL: test_do_edwhile_loop: loop_count sollte 0 sein, ist %d\n",
                 g_scd.threads[0].loop_count); return 1; }
@@ -652,7 +662,7 @@ static int test_do_edwhile_loop(void)
 
 /* =========================================================================
  * Test [#8]: Break (0x1A) jumps to the innermost loop's exit (+0x60) and pops.
- *   do { break; work_vars[0]=99; } ...   // the +=99 must be SKIPPED.
+ *   do { break; work_vars[4]=99; } ...   // the +=99 must be SKIPPED.
  *   [0..3] Save(var0,0)  [4..7] Do(block_len=14 -> exit=bc[22])  [8..9] Break
  *   [10..15] Calc(ADD,dst0,99) SKIPPED  [22] Evt_end
  * ========================================================================= */
@@ -660,10 +670,10 @@ static int test_break_exits_loop(void)
 {
     uint8_t bc[23];
     memset(bc, SCD_OP_NOP, sizeof(bc));
-    bc[0]=0x24; bc[1]=0x00; write_le16(bc+2, 0);                 /* Save work_vars[0]=0 */
+    bc[0]=0x24; bc[1]=0x04; write_le16(bc+2, 0);                 /* Save work_vars[4]=0 */
     bc[4]=0x11; bc[5]=0x00; write_le16(bc+6, 14);                /* Do block_len=14 -> exit=bc[22] */
     bc[8]=0x1A; bc[9]=0x00;                                      /* Break */
-    bc[10]=0x26; bc[11]=0x00; bc[12]=0x00; bc[13]=0x00; write_le16(bc+14, 99); /* Calc +99 (skipped) */
+    bc[10]=0x26; bc[11]=0x00; bc[12]=0x00; bc[13]=0x04; write_le16(bc+14, 99); /* Calc w4 +99 (skipped) */
     bc[22]=SCD_OP_EVT_END;
 
     scd_vm_init();
@@ -672,9 +682,9 @@ static int test_break_exits_loop(void)
 
     if (g_scd.threads[0].active != 0) {
         fprintf(stderr, "FAIL: test_break_exits_loop: Thread sollte beendet sein\n"); return 1; }
-    if (g_scd.work_vars[0] != 0) {
-        fprintf(stderr, "FAIL: test_break_exits_loop: work_vars[0] sollte 0 sein (Calc uebersprungen), ist %d\n",
-                g_scd.work_vars[0]); return 1; }
+    if (g_scd.work_vars[4] != 0) {
+        fprintf(stderr, "FAIL: test_break_exits_loop: work_vars[4] sollte 0 sein (Calc uebersprungen), ist %d\n",
+                g_scd.work_vars[4]); return 1; }
     if (g_scd.threads[0].loop_count != 0) {
         fprintf(stderr, "FAIL: test_break_exits_loop: loop_count sollte 0 sein, ist %d\n",
                 g_scd.threads[0].loop_count); return 1; }
@@ -691,10 +701,10 @@ static int test_break_exits_loop(void)
  * switch via loop_exit and the trailing Eswitch (0x16) balances loop_count → 0.
  *
  *   switch(work_vars[5]) {
- *     case 1: work_vars[0]=11; break;
- *     case 2: work_vars[0]=22; break;   // selected when sel==2
- *     case 3: work_vars[0]=33; break;
- *     default: work_vars[0]=99; break;  // selected when no case matches
+ *     case 1: work_vars[4]=11; break;
+ *     case 2: work_vars[4]=22; break;   // selected when sel==2
+ *     case 3: work_vars[4]=33; break;
+ *     default: work_vars[4]=99; break;  // selected when no case matches
  *   }
  *
  * Byte layout (Save 0x24 = [op][var][u16]; Case = [0x14][_][blocklen:u16][value:u16]):
@@ -713,27 +723,27 @@ static int run_switch_case(int16_t sel, int16_t expect_w0)
     bc[0]=0x24; bc[1]=0x05; write_le16(bc+2, (uint16_t)sel);          /* Save w5 = sel  */
     bc[4]=SCD_OP_SWITCH; bc[5]=0x05; write_le16(bc+6, 46);            /* Switch var5    */
     bc[8]=SCD_OP_CASE;   write_le16(bc+10, 6); write_le16(bc+12, 1);  /* case 1         */
-    bc[14]=0x24; bc[15]=0x00; write_le16(bc+16, 11); bc[18]=0x1A;     /* w0=11; Break   */
+    bc[14]=0x24; bc[15]=0x04; write_le16(bc+16, 11); bc[18]=0x1A;     /* w4=11; Break   */
     bc[20]=SCD_OP_CASE;  write_le16(bc+22, 6); write_le16(bc+24, 2);  /* case 2         */
-    bc[26]=0x24; bc[27]=0x00; write_le16(bc+28, 22); bc[30]=0x1A;     /* w0=22; Break   */
+    bc[26]=0x24; bc[27]=0x04; write_le16(bc+28, 22); bc[30]=0x1A;     /* w4=22; Break   */
     bc[32]=SCD_OP_CASE;  write_le16(bc+34, 6); write_le16(bc+36, 3);  /* case 3         */
-    bc[38]=0x24; bc[39]=0x00; write_le16(bc+40, 33); bc[42]=0x1A;     /* w0=33; Break   */
+    bc[38]=0x24; bc[39]=0x04; write_le16(bc+40, 33); bc[42]=0x1A;     /* w4=33; Break   */
     bc[44]=SCD_OP_DEFAULT;                                            /* default        */
-    bc[46]=0x24; bc[47]=0x00; write_le16(bc+48, 99); bc[50]=0x1A;     /* w0=99; Break   */
+    bc[46]=0x24; bc[47]=0x04; write_le16(bc+48, 99); bc[50]=0x1A;     /* w4=99; Break   */
     bc[52]=SCD_OP_END_SWITCH;                                         /* Eswitch        */
     bc[54]=SCD_OP_EVT_END;
 
     scd_vm_init();
-    g_scd.work_vars[0] = -1;            /* sentinel: detect "no body ran" */
+    g_scd.work_vars[4] = -1;            /* sentinel: detect "no body ran" */
     scd_thread_start(0, bc);
     scd_vm_tick();
 
     if (g_scd.threads[0].active != 0) {
         fprintf(stderr, "FAIL: test_switch_case_break(sel=%d): Thread sollte beendet sein\n", sel);
         return 1; }
-    if (g_scd.work_vars[0] != expect_w0) {
-        fprintf(stderr, "FAIL: test_switch_case_break(sel=%d): work_vars[0] sollte %d sein, ist %d\n",
-                sel, expect_w0, g_scd.work_vars[0]); return 1; }
+    if (g_scd.work_vars[4] != expect_w0) {
+        fprintf(stderr, "FAIL: test_switch_case_break(sel=%d): work_vars[4] sollte %d sein, ist %d\n",
+                sel, expect_w0, g_scd.work_vars[4]); return 1; }
     if (g_scd.threads[0].loop_count != 0) {
         fprintf(stderr, "FAIL: test_switch_case_break(sel=%d): loop_count sollte 0 sein, ist %d\n",
                 sel, g_scd.threads[0].loop_count); return 1; }
@@ -951,7 +961,7 @@ static int test_goto_block_unwind(void)
         0x06, 0x00, 0x08, 0x00,              /* +0  If(len=8): push, block_sp[0]=1, body @+4 */
         0x17, 0xFF, 0xFF, 0x00, 0x08, 0x00,  /* +4  Goto(pc1=0xFF,pc2=0xFF, off=8 → +0xC) */
         0x08, 0x00,                          /* +A  Endif  (SKIPPED by the Goto) */
-        0x24, 0x00, 0x55, 0x00,              /* +C  Save(w0 = 0x55) */
+        0x24, 0x04, 0x55, 0x00,              /* +C  Save(w4 = 0x55) */
         SCD_OP_EVT_END                       /* +10 Evt_end */
     };
     scd_vm_init();
@@ -960,9 +970,9 @@ static int test_goto_block_unwind(void)
     if (g_scd.threads[0].block_sp[0] != 0) {
         fprintf(stderr, "FAIL: Goto(pc1=0xFF) muss block_sp[0] auf 0 unwinden, ist %d\n",
                 g_scd.threads[0].block_sp[0]); return 1; }
-    if (g_scd.work_vars[0] != 0x55) {
+    if (g_scd.work_vars[4] != 0x55) {
         fprintf(stderr, "FAIL: Save nach Goto muss laufen (w0=0x55), ist %d\n",
-                g_scd.work_vars[0]); return 1; }
+                g_scd.work_vars[4]); return 1; }
     printf("PASS: test_goto_block_unwind\n");
     return 0;
 }
