@@ -44,8 +44,12 @@ int main(void)
     if (re15_savepoint_loc() != 1) { fprintf(stderr, "FAIL: 1071 loc != 1 (Port-Entscheidung Elza-Spiegel)\n"); fail = 1; }
     re15_savepoint_latch_loc(0x1150);
     if (re15_savepoint_loc() != 0) { fprintf(stderr, "FAIL: 1150 loc != 0\n"); fail = 1; }
+    re15_savepoint_latch_loc(0x1120);
+    if (re15_savepoint_loc() != 2) { fprintf(stderr, "FAIL: 1120 loc != 2 (West Staircase 1F, PORT-S)\n"); fail = 1; }
     re15_savepoint_latch_loc(0x2010);
-    if (re15_savepoint_loc() != 0) { fprintf(stderr, "FAIL: 2010 (PATCH-UNDEFINIERT) loc != 0\n"); fail = 1; }
+    if (re15_savepoint_loc() != 3) { fprintf(stderr, "FAIL: 2010 loc != 3 (PORT-L Listen-Reihenfolge)\n"); fail = 1; }
+    re15_savepoint_latch_loc(0x5011);
+    if (re15_savepoint_loc() != 7) { fprintf(stderr, "FAIL: 5011 loc != 7 (Monitor Room)\n"); fail = 1; }
     re15_savepoint_latch_loc(0x1070);
     re15_savepoint_latch_loc(0x1140);   /* kein Save-Raum -> 0 */
     if (re15_savepoint_loc() != 0) { fprintf(stderr, "FAIL: Nicht-Save-Raum loc != 0\n"); fail = 1; }
