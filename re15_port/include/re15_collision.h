@@ -26,11 +26,13 @@ void re15_collision_constrain(const re15_rdt_t *rdt,
                               int32_t *x, int32_t *z);
 
 /* ENEMY wall clamp (byte-true FUN_8003b0a4 with the enemy's own args): radius = the enemy's box
- * radius (hit_radius_min), solid-mask = 4 (enemy layer, entity+0x1d7), band = from enemy_y (+0x82). */
+ * radius (hit_radius_min), solid-mask = entity+0x1d7 (Zombie @0x80100624 / ZGirl @0x8010aac8 lesen
+ * das Feld — 4 aufrecht, 8 kriechend; ALLE anderen Aufrufer uebergeben hart 4), band = from
+ * enemy_y (+0x82). */
 void re15_collision_constrain_enemy(const re15_rdt_t *rdt,
                                     int32_t old_x, int32_t old_z,
                                     int32_t *x, int32_t *z,
-                                    int32_t radius, int32_t enemy_y);
+                                    int32_t radius, int32_t enemy_y, uint32_t mask);
 
 /* Object (Obj_model_set prop) push-out: keep the player out of every SOLID prop's
  * authored collision box (FUN_8002cabc). Call AFTER re15_collision_constrain in the

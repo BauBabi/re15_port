@@ -4295,7 +4295,7 @@ static void re15_crow_ai_tick(int slot)
          * (audit wf_827f186d crow #B, raw-disasm CONFIRMED) */
         if (g_room_rdt_ok) {
             int32_t nx = e->x, nz = e->z;
-            re15_collision_constrain_enemy(&g_room_rdt, crow_ox, crow_oz, &nx, &nz, 200, e->y);
+            re15_collision_constrain_enemy(&g_room_rdt, crow_ox, crow_oz, &nx, &nz, 200, e->y, 4u);
             e->crow_wall = (uint8_t)((nx != e->x || nz != e->z) ? 1 : 0);
             e->x = nx; e->z = nz;
         } else e->crow_wall = 0;
@@ -8972,7 +8972,8 @@ void re15_enemy_ai_run_all(int combat_active)
              * unconditionally): pushes can no longer leave a zombie inside a wall. */
             if (g_room_rdt_ok && (e->x != sweep_ox || e->z != sweep_oz)) {
                 int32_t nx = e->x, nz = e->z;
-                re15_collision_constrain_enemy(&g_room_rdt, sweep_ox, sweep_oz, &nx, &nz, e->hit_radius_min, e->y);
+                re15_collision_constrain_enemy(&g_room_rdt, sweep_ox, sweep_oz, &nx, &nz, e->hit_radius_min, e->y,
+                                               e->sca_mask ? e->sca_mask : 4u); /* +0x1d7 @0x80100624 (Zombie liest das FELD; 8 = Kriecher passiert die Tor-Zelle 0xF7) */
                 e->x = nx; e->z = nz;
             }
         }
@@ -8997,7 +8998,7 @@ void re15_enemy_ai_run_all(int combat_active)
             } else if (g_room_rdt_ok && (e->x != dog_ox || e->z != dog_oz)) {
                 int32_t ix = e->x, iz = e->z;                 /* the AI's INTENDED position this frame */
                 int32_t nx = ix, nz = iz;
-                re15_collision_constrain_enemy(&g_room_rdt, dog_ox, dog_oz, &nx, &nz, e->hit_radius_min, e->y);
+                re15_collision_constrain_enemy(&g_room_rdt, dog_ox, dog_oz, &nx, &nz, e->hit_radius_min, e->y, 4u);
                 e->x = nx; e->z = nz;
                 if (nx != ix || nz != iz) {                   /* the clamp moved it = WALL CONTACT (the SCA resolver's +0x90) */
                     int push = ((int)re15_atan2_q12(nz - iz, nx - ix) - 0x400) & 0xfff;  /* wall-normal / escape heading */
@@ -9016,7 +9017,7 @@ void re15_enemy_ai_run_all(int combat_active)
             re15_enemy_body_push_tail(s, e);
             if (g_room_rdt_ok && (e->x != asp_ox || e->z != asp_oz)) {
                 int32_t nx = e->x, nz = e->z;
-                re15_collision_constrain_enemy(&g_room_rdt, asp_ox, asp_oz, &nx, &nz, e->hit_radius_min, e->y);
+                re15_collision_constrain_enemy(&g_room_rdt, asp_ox, asp_oz, &nx, &nz, e->hit_radius_min, e->y, 4u);
                 e->x = nx; e->z = nz;
             }
         }
@@ -9028,7 +9029,7 @@ void re15_enemy_ai_run_all(int combat_active)
             re15_enemy_body_push_tail(s, e);
             if (g_room_rdt_ok && (e->x != rc_ox || e->z != rc_oz)) {
                 int32_t nx = e->x, nz = e->z;
-                re15_collision_constrain_enemy(&g_room_rdt, rc_ox, rc_oz, &nx, &nz, e->hit_radius_min, e->y);
+                re15_collision_constrain_enemy(&g_room_rdt, rc_ox, rc_oz, &nx, &nz, e->hit_radius_min, e->y, 4u);
                 e->x = nx; e->z = nz;
             }
         }
@@ -9042,7 +9043,7 @@ void re15_enemy_ai_run_all(int combat_active)
             re15_enemy_body_push_tail(s, e);
             if (g_room_rdt_ok && (e->x != bk_ox || e->z != bk_oz)) {
                 int32_t nx = e->x, nz = e->z;
-                re15_collision_constrain_enemy(&g_room_rdt, bk_ox, bk_oz, &nx, &nz, e->hit_radius_min, e->y);
+                re15_collision_constrain_enemy(&g_room_rdt, bk_ox, bk_oz, &nx, &nz, e->hit_radius_min, e->y, 4u);
                 e->x = nx; e->z = nz;
             }
         }
@@ -9060,7 +9061,7 @@ void re15_enemy_ai_run_all(int combat_active)
             if (g_room_rdt_ok && (e->x != mag_ox || e->z != mag_oz)) {
                 int32_t ix = e->x, iz = e->z;
                 int32_t nx = ix, nz = iz;
-                re15_collision_constrain_enemy(&g_room_rdt, mag_ox, mag_oz, &nx, &nz, e->hit_radius_min, e->y);
+                re15_collision_constrain_enemy(&g_room_rdt, mag_ox, mag_oz, &nx, &nz, e->hit_radius_min, e->y, 4u);
                 e->x = nx; e->z = nz;
                 if (nx != ix || nz != iz) {               /* clamp moved it = wall contact (+0x1d6 != 0) */
                     int push = ((int)re15_atan2_q12(nz - iz, nx - ix) - 0x400) & 0xfff;
@@ -9117,7 +9118,8 @@ void re15_enemy_ai_run_all(int combat_active)
             }
             if (g_room_rdt_ok && (e->x != zg_ox || e->z != zg_oz)) {   /* SCA b0a4 @0x8010aad0 */
                 int32_t nx = e->x, nz = e->z;
-                re15_collision_constrain_enemy(&g_room_rdt, zg_ox, zg_oz, &nx, &nz, e->hit_radius_min, e->y);
+                re15_collision_constrain_enemy(&g_room_rdt, zg_ox, zg_oz, &nx, &nz, e->hit_radius_min, e->y,
+                                               e->sca_mask ? e->sca_mask : 4u); /* +0x1d7 @0x8010aac8 (ZGirl-Root, zweiter Feld-Leser) */
                 e->x = nx; e->z = nz;
             }
         }
@@ -9136,7 +9138,7 @@ void re15_enemy_ai_run_all(int combat_active)
             re15_enemy_body_push_tail(s, e);
             if (g_room_rdt_ok && (e->x != al_ox || e->z != al_oz)) {
                 int32_t nx = e->x, nz = e->z;
-                re15_collision_constrain_enemy(&g_room_rdt, al_ox, al_oz, &nx, &nz, e->hit_radius_min, e->y);
+                re15_collision_constrain_enemy(&g_room_rdt, al_ox, al_oz, &nx, &nz, e->hit_radius_min, e->y, 4u);
                 e->x = nx; e->z = nz;
             }
         }
@@ -9152,7 +9154,7 @@ void re15_enemy_ai_run_all(int combat_active)
             re15_enemy_body_push_tail(s, e);
             if (g_room_rdt_ok && (e->x != ty_ox || e->z != ty_oz)) {
                 int32_t nx = e->x, nz = e->z;
-                re15_collision_constrain_enemy(&g_room_rdt, ty_ox, ty_oz, &nx, &nz, e->hit_radius_min, e->y);
+                re15_collision_constrain_enemy(&g_room_rdt, ty_ox, ty_oz, &nx, &nz, e->hit_radius_min, e->y, 4u);
                 e->x = nx; e->z = nz;
             }
         }

@@ -45,7 +45,7 @@ int main(void)
         re15_collision_constrain(&rdt, OX, OZ, &nx, &nz);          /* player mask 1: 1&0x04=0 -> skip */
         if (nx != PX || nz != PZ) { fprintf(stderr, "FAIL(1a): player must PASS an enemy-solid cell (u0=0x04), moved to (%d,%d)\n", nx, nz); fail = 1; }
         nx = PX; nz = PZ;
-        re15_collision_constrain_enemy(&rdt, OX, OZ, &nx, &nz, 450, 0);   /* enemy mask 4: 4&0x04=4 -> push */
+        re15_collision_constrain_enemy(&rdt, OX, OZ, &nx, &nz, 450, 0, 4u);   /* enemy mask 4: 4&0x04=4 -> push */
         if (nx == PX && nz == PZ) { fprintf(stderr, "FAIL(1b): enemy must be PUSHED out of the enemy-solid cell\n"); fail = 1; }
         if (!fail) printf("  (1) enemy-solid u0=0x04: player passes, enemy pushed out\n");
     }
@@ -57,7 +57,7 @@ int main(void)
         re15_collision_constrain(&rdt, OX, OZ, &nx, &nz);          /* player: 1&0xfb=1 -> push */
         if (nx == PX && nz == PZ) { fprintf(stderr, "FAIL(2a): player must be PUSHED out of a player-solid cell (u0=0xfb)\n"); fail = 1; }
         nx = PX; nz = PZ;
-        re15_collision_constrain_enemy(&rdt, OX, OZ, &nx, &nz, 450, 0);   /* enemy: 4&0xfb=0 -> skip */
+        re15_collision_constrain_enemy(&rdt, OX, OZ, &nx, &nz, 450, 0, 4u);   /* enemy: 4&0xfb=0 -> skip */
         if (nx != PX || nz != PZ) { fprintf(stderr, "FAIL(2b): enemy must PASS a player-solid cell (u0=0xfb), moved to (%d,%d)\n", nx, nz); fail = 1; }
         if (!fail) printf("  (2) player-solid u0=0xfb: player pushed out, enemy passes\n");
     }
@@ -69,7 +69,7 @@ int main(void)
         re15_rdt_t rdt; re15_sca_entry_t e; make_cell(&rdt, &e, 0x05);   /* solid to both (bit0 + bit2) */
         const int32_t QX = 1500, QOX = 1440;                            /* just outside the +x face */
         int32_t sx = QX, sz = 0; re15_collision_constrain(&rdt, QOX, 0, &sx, &sz);              /* r=450 */
-        int32_t bx = QX, bz = 0; re15_collision_constrain_enemy(&rdt, QOX, 0, &bx, &bz, 1600, 0); /* r=1600 */
+        int32_t bx = QX, bz = 0; re15_collision_constrain_enemy(&rdt, QOX, 0, &bx, &bz, 1600, 0, 4u); /* r=1600 */
         if (sx != QX) { fprintf(stderr, "FAIL(3a): r=450 player must NOT reach x=1500 (broad-phase 1450), moved to %d\n", sx); fail = 1; }
         if (bx == QX) { fprintf(stderr, "FAIL(3b): r=1600 enemy must be CAUGHT at x=1500 (broad-phase 2600), stayed %d\n", bx); fail = 1; }
         if (!fail) printf("  (3) larger radius reaches further: r450 leaves x=1500 alone, r1600 catches+moves it (->%d)\n", bx);

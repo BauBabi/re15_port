@@ -605,16 +605,19 @@ void re15_collision_constrain(const re15_rdt_t *rdt,
 }
 
 /* ENEMY wall clamp — byte-true args: the enemy's OWN radius (box[+0x78][6] = hit_radius_min), the
- * enemy solid-mask 4 (entity+0x1d7, @0x80100624), and the enemy's own band from its Y (+0x82, which
- * the port does not maintain for enemies, so derive it like the player does). Every ground-enemy
- * wall-clamp caller in enemy_ai_common.c must route through this instead of the player clamp. */
+ * enemy solid-mask (entity+0x1d7 — GENAU ZWEI Original-Leser: Zombie-Root @0x80100624
+ * `lbu a2,471(a0)` + ZGirl-Root @0x8010aac8; 4 = aufrecht, 8 = kriechend @0x801050f4/@0x8010374c;
+ * alle uebrigen Aufrufer von FUN_8003b0a4 uebergeben hart 4), and the enemy's own band from its Y
+ * (+0x82, which the port does not maintain for enemies, so derive it like the player does). Every
+ * ground-enemy wall-clamp caller in enemy_ai_common.c must route through this instead of the
+ * player clamp. */
 void re15_collision_constrain_enemy(const re15_rdt_t *rdt,
                                     int32_t old_x, int32_t old_z,
                                     int32_t *x, int32_t *z,
-                                    int32_t radius, int32_t enemy_y)
+                                    int32_t radius, int32_t enemy_y, uint32_t mask)
 {
     collision_constrain_impl(rdt, old_x, old_z, x, z,
-                             re15_collision_band_from_y(enemy_y), radius, 4u);
+                             re15_collision_band_from_y(enemy_y), radius, mask);
 }
 
 /* FUN_8002cabc / FUN_8002bd44 — OBJECT (Obj_model_set prop) push-out.

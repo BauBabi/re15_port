@@ -265,7 +265,7 @@ int main(void)
             int32_t px = xs[c], pz = -26000;
             for (int step = 0; step < 120; step++) {
                 int32_t nx = px, nz = pz + 60;
-                re15_collision_constrain_enemy(&rdt, px, pz, &nx, &nz, 400, 0);
+                re15_collision_constrain_enemy(&rdt, px, pz, &nx, &nz, 400, 0, 4u);
                 px = nx; pz = nz;
                 if (pz > GATE_Z_NORTH) break;
             }

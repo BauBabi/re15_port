@@ -185,7 +185,7 @@ int main(void)
             re15_collision_set_band(0);
             int32_t nx = x, nz = endz;
             if (cases[c].enemy)
-                re15_collision_constrain_enemy(&rdt, x, z, &nx, &nz, 200, 0);
+                re15_collision_constrain_enemy(&rdt, x, z, &nx, &nz, 200, 0, 4u);
             else
                 re15_collision_constrain(&rdt, x, z, &nx, &nz);
             printf("   %-26s (%d,%d)->soll(%d,%d) ist(%d,%d)  %s\n",

@@ -372,6 +372,14 @@ typedef struct {
     uint8_t  crow_parity;    /* +0x1d2: per-tick LOS/parity toggle (wing-flap alternation)     */
     uint8_t  crow_atk_ctr;   /* +0x1d6: attack/peck attempt counter (gates re-commit, <3)      */
     uint8_t  crow_bank;      /* +0x1d7: proximity yaw-weave bank latch (0x80115e24)            */
+    uint8_t  sca_mask;       /* +0x1d7 (Zombie-Vokabular): SCA-Kollisionsmaske — 4 aufrecht /
+                              * 8 kriechend (Toggle-Writes @0x801050b4 sb 4 / @0x801050f4 sb 8;
+                              * Kriech-Erstframe @0x8010374c sb 8). GENAU ZWEI Original-Leser:
+                              * Zombie-Root @0x80100624 lbu 471(a0) + ZGirl-Root @0x8010aac8 —
+                              * alle anderen Aufrufer von FUN_8003b0a4 uebergeben hart 4.
+                              * Default 4 beim Spawn (@0x80100828). EIGENES Feld, NICHT
+                              * crow_bank mitbenutzen (Dossier §4 Schritt 1): die Kraehe
+                              * belegt +0x1d7 physisch anders und liest ihn nie als Maske. */
     uint8_t  crow_diveflag;  /* +0x1da: dive-committed flag                                    */
     uint8_t  crow_armed;     /* +0x1db: attack-armed flag (LOS-gated)                          */
     int16_t  crow_yawrate;   /* +0x1de: per-state yaw-slew rate                                */

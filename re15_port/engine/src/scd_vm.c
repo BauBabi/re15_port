@@ -3094,6 +3094,9 @@ static int op_sce_em_set(scd_thread_t *t)
          * (e.g. sub 6 idle-FSM @0x800517f0), independent of +0x1c4 & 0x04; that bit ONLY gates the
          * motion-FSM (sub 0 @0x80050cb8) play-once-HOLD. (audit wf_29b40e5d) */
         a->anim_flags = 0;   /* +0x1c4 = 0 @0x8004216c */
+        a->sca_mask = 4;     /* +0x1d7 = 4 Default beim Spawn (@0x80100828; game-weites
+                              * Standardgegner-Vokabular, Dossier Glied 11) — der Kriech-
+                              * Toggle schaltet 4<->8 (@0x801050b4/@0x801050f4) */
         a->flags  = 0x01;          /* visible */
         a->x = (int32_t)x;
         a->y = (int32_t)y;
