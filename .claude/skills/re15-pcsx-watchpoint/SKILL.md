@@ -367,3 +367,23 @@ naechste Start im „Error"-Fenster haengt. Mit Gnadenfrist + Reset ist er durch
 
 **Regel:** vor jedem neuen Lauf `tasklist //NH | grep -i pcsx` — ist da noch etwas, laeuft der
 vorige Lauf noch. Warten, nicht danebenstarten.
+
+### ⛔ KORREKTUR: das Fenster „Error" ist ein ABSTURZ, kein Konfigurationsproblem
+
+Oben steht, man solle bei `MainWindowTitle == "Error"` die `pcsx.json` zuruecksetzen. Das half
+einmal zufaellig — die eigentliche Ursache ist eine andere: **„Error" ist das Fenster des
+crashpad-Handlers, der Emulator ist abgestuerzt.** Beweis: neben dem Arbeitsverzeichnis, aus dem
+der Treiber gestartet wurde, liegt danach ein frisches `.sentry-native/<uuid>.run/…envelope`.
+
+**Erkennen:**
+```bash
+ls -la .sentry-native/ 2>/dev/null          # frischer Zeitstempel = gerade abgestuerzt
+powershell -NoProfile -Command "Get-Process | ? {\$_.Name -like '*pcsx*'} | Select Name,Id,MainWindowTitle,WorkingSet"
+# WorkingSet ~128 KB  -> Leiche, nie hochgekommen
+# WorkingSet ~140 MB + Titel "Error" -> lief und ist DANN abgestuerzt
+```
+Der Unterschied ist wichtig: eine Leiche behebt man per `taskkill`, einen Absturz nicht. Bei
+wiederholten Abstuerzen hilft nur, den Lauf zu vereinfachen (weniger Haltepunkte, weniger
+Speicherzugriffe pro Bild) oder ihn zu wiederholen.
+
+⚠️ `.sentry-native/` gehoert in `.gitignore` — sonst landen Absturz-Dumps im Repo (ist mir passiert).
