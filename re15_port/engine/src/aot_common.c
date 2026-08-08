@@ -312,16 +312,38 @@ int re15_aot_object_notch(int32_t px, int32_t pz)
 }
 
 /* Per-frame OBJECT-pool notch pass (byte-true FUN_80042bac: the scan stamps member+0xb for every
- * scanned entity, not just the player). Each active object's notch = the sce=5 grid cell it is over;
- * an object over no cell keeps its last notch (@0x80042f5c only writes inside the hit branch). This
- * is what lets the keypad dial cursor (an Obj_model_set prop moved by dpad Speed_set+Add_speed)
- * feed its Member_cmp(15==notch) confirm. Called once per frame by re15_game_step. */
+ * scanned entity, not just the player). Each active object's notch = the grid cell it is over.
+ * This is what lets the keypad dial cursor (an Obj_model_set prop moved by dpad Speed_set+
+ * Add_speed) feed its Member_cmp(15==notch) confirm. Called once per frame by re15_game_step.
+ *
+ * ⛔ KORREKTUR 2026-08-08: hier stand "an object over no cell keeps its last notch
+ * (@0x80042f5c only writes inside the hit branch)". Der Stempel-Zweig stimmt, aber der Satz
+ * unterschlug den CLEAR davor — und zitierte ausserdem den ACTION-Pfad, obwohl der Objekt-Pool
+ * ueber AUTO laeuft. Der Treiber FUN_800436a8 nullt jedes Objekt UNBEDINGT, bevor er scannt:
+ *     @0x8004374c-58  lw v0,0x800ac778 / lbu v0,0x2(v0)     ; Objekt-Anzahl
+ *     @0x80043760     beq v0,zero,...                        ; 0 -> Schleife ganz aus
+ *     @0x8004376c     addiu s2,s2,0x3f98                     ; Basis 0x800B3F98
+ *     @0x80043780     addiu at,at,0x3fa3                     ; 0x800B3FA3 = obj+0x0B
+ *     @0x80043788     sb   zero,0x0(at)                      ; obj+0x0B = 0  — OHNE Aktiv-Test
+ *     @0x8004378c/90  jal FUN_80042bac / a2 = 0 (AUTO), a1 = 4 (Objekt-Pool), Stride 148
+ * (Zum Vergleich: der GEGNER-Pool clearet nur bei `word0 & 1` @0x80043704/08 — deshalb bleibt ein
+ * INAKTIVER Gegner stale, ein Objekt aber nie.)
+ *
+ * Netto: ueber keiner Zelle steht 0, nicht der Alt-Wert. Die ROOM1230-Zellen liegen auf den Slots
+ * 7..17, eine 0 ist dort also kein gueltiger Zellen-Index — genau das trennt "ueber keiner Zelle"
+ * von "ueber Zelle 7". Verifiziert von integration_keypad.
+ *
+ * VERBLEIBENDE, HIER NICHT MITENTSCHIEDENE DIVERGENZ: re15_aot_object_notch waehlt die Records
+ * ueber `type == EXAMINE_WORKVAR` (sce=5), das Original ueber rec[1] (Pool-Bit 0x04 + AUTO +
+ * Testbit 0x40/0x20 + Band). Fuer ROOM1230 fallen beide zusammen — die Zellen tragen gemessen
+ * `sce=0x44` = CENTRE|Objekt-Pool, kein 0x10 —, in anderen Raeumen koennen sie auseinandergehen.
+ * Das ist eine eigene Frage mit eigener Verifikation. */
 void re15_object_notch_update(void)
 {
     for (int i = 0; i < (int)g_scd.prop_count; i++) {
         if (!g_scd.props[i].active) continue;
         int notch = re15_aot_object_notch(g_scd.props[i].x, g_scd.props[i].z);
-        if (notch >= 0) g_scd.props[i].member_0b = (uint8_t)notch;
+        g_scd.props[i].member_0b = (notch >= 0) ? (uint8_t)notch : 0;   /* Clear @0x80043788 */
     }
 }
 

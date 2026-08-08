@@ -158,5 +158,9 @@ int main(void)
     /* ROOM1030: 20 Records ab Datei-Offset 0x1de6; ROOM1140 als Kontrollraum ohne Save(0x12,..). */
     room_probe(base, "ROOM1030", 0x1de6, 20);
     room_probe(base, "ROOM1140", 0, 0);
+    /* ROOM1230 = das Kombinationsschloss. Gebraucht, um zu entscheiden, ob der byte-true
+     * Objekt-Pool-Pfad (Pool-Maske Bit 4 + AUTO + Testbits 0x40/0x20) die sce=5-Zellen ueberhaupt
+     * trifft — die Port-Abkuerzung re15_aot_object_notch filtert stattdessen nur auf den Typ. */
+    room_probe(base, "ROOM1230", 0, 0);
     return 0;
 }
