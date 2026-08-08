@@ -297,16 +297,36 @@ int re15_aot_point_in_quad(int32_t px, int32_t pz,
  * contains it; the confirm reads it via `Member_cmp(member15==notch)`. Returns the grid-cell
  * slot the point is over, or -1 if none. (The original stamps `s2-1` = the AOT slot index; a
  * cell installed at Aot_set(7,..) is slot 7, matching the confirm's `Member_cmp(15==7)`.) */
+/* Byte-true Record-Auswahl des OBJEKT-Pool-Passes (FUN_800436a8 ruft FUN_80042bac mit
+ * a1 = 4 @0x80043778 und a2 = 0 @0x80043790). Das Original filtert AUSSCHLIESSLICH ueber rec[1]:
+ *   @0x80042c8c  and  v0,v0,a3   ; Pool-Maske gegen a1 = 4
+ *   @0x80042ca4  bne  v0,s6,...  ; rec[1] & 0x10 muss == a2 (=0) sein  -> nur AUTO
+ *   @0x80042ea0  lbu  v1,1(s0)   ; 0x40 CENTRE / 0x20 FORWARD — ohne beide stempelt es nie
+ * Der Typ (sce) spielt KEINE Rolle: der AUTO-Pfad hat keinen sce-Filter, den hat nur ACTION
+ * (@0x80042f48 `lbu v0,0x0(s0)` + @0x80042f50 `beq`). */
+static int aot_obj_record_ok(const re15_aot_t *a)
+{
+    if (!a->active)                 return 0;
+    if (!(a->sce_flags & 0x04))     return 0;   /* Objekt-Pool-Bit */
+    if (a->sce_flags & 0x10)        return 0;   /* ACTION-only -> im AUTO-Pass aus */
+    if (!(a->sce_flags & 0x60))     return 0;   /* weder CENTRE noch FORWARD */
+    return 1;
+}
+
+/* Positions-Sonde (CENTRE-Test) fuer Tests/Sonden. Die vollstaendige Fassung inklusive
+ * Band-Gate und FORWARD-Test steht in re15_object_notch_update(), weil sie die Prop-Felder
+ * (+0x82 band, rot_y) braucht, die hier nicht vorliegen. */
 int re15_aot_object_notch(int32_t px, int32_t pz)
 {
     int notch = -1;
     for (int i = 0; i < RE15_AOT_MAX; i++) {
         const re15_aot_t *a = &g_aot.slots[i];
-        if (!a->active || a->type != RE15_AOT_TYPE_EXAMINE_WORKVAR) continue;   /* sce=5 grid cell */
+        if (!aot_obj_record_ok(a)) continue;
+        if (!(a->sce_flags & 0x40)) continue;                 /* nur der CENTRE-Test */
         int inside = a->has_quad
                    ? re15_aot_point_in_quad(px, pz, a->xs, a->zs)
                    : ((abs_i32(px - a->x) <= a->half_w) && (abs_i32(pz - a->z) <= a->half_h));
-        if (inside) notch = i;   /* byte-true: the scan overwrites per slot, so the last hit wins */
+        if (inside) notch = i;   /* byte-true LAST-WINS (@0x8004301c: Schleife laeuft weiter) */
     }
     return notch;
 }
@@ -333,17 +353,44 @@ int re15_aot_object_notch(int32_t px, int32_t pz)
  * 7..17, eine 0 ist dort also kein gueltiger Zellen-Index — genau das trennt "ueber keiner Zelle"
  * von "ueber Zelle 7". Verifiziert von integration_keypad.
  *
- * VERBLEIBENDE, HIER NICHT MITENTSCHIEDENE DIVERGENZ: re15_aot_object_notch waehlt die Records
- * ueber `type == EXAMINE_WORKVAR` (sce=5), das Original ueber rec[1] (Pool-Bit 0x04 + AUTO +
- * Testbit 0x40/0x20 + Band). Fuer ROOM1230 fallen beide zusammen — die Zellen tragen gemessen
- * `sce=0x44` = CENTRE|Objekt-Pool, kein 0x10 —, in anderen Raeumen koennen sie auseinandergehen.
- * Das ist eine eigene Frage mit eigener Verifikation. */
+ * RECORD-AUSWAHL (2026-08-08 byte-true nachgezogen): frueher waehlte diese Funktion die Records
+ * ueber `type == EXAMINE_WORKVAR` (sce=5). Ein Zensus ueber ALLE 206 ausgelieferten Raeume
+ * (probe_objnotch_census) zeigte, dass das game-weit ABWEICHT: 34 Raeume betroffen, 38 Records
+ * stempelte der Port zu viel (z.B. `t=7 sce=0x41` — sce=5, aber Pool-Bit 0x01 = SPIELER, kein
+ * Objekt), 28 Records fehlten ihm. Jetzt entscheidet rec[1] wie im Original (aot_obj_record_ok).
+ * ROOM1230 ist davon nicht betroffen: die Zellen tragen gemessen `sce=0x44` = CENTRE|Objekt-Pool
+ * ohne 0x10, beide Auswahlen greifen dort dieselben Records (integration_keypad haelt das fest). */
 void re15_object_notch_update(void)
 {
-    for (int i = 0; i < (int)g_scd.prop_count; i++) {
-        if (!g_scd.props[i].active) continue;
-        int notch = re15_aot_object_notch(g_scd.props[i].x, g_scd.props[i].z);
-        g_scd.props[i].member_0b = (notch >= 0) ? (uint8_t)notch : 0;   /* Clear @0x80043788 */
+    for (int p = 0; p < (int)g_scd.prop_count; p++) {
+        if (!g_scd.props[p].active) continue;
+        int notch = -1;
+        for (int i = 0; i < RE15_AOT_MAX; i++) {
+            const re15_aot_t *a = &g_aot.slots[i];
+            if (!aot_obj_record_ok(a)) continue;
+            /* Per-Entitaet-Band-Gate @0x80042cb4 `andi v0,v0,0x80` / @0x80042ccc `bne v1,v0`:
+             * ohne Bit 0x80 muss rec[2] == entity+0x82 sein. Das Prop-Feld `band` IST +0x82
+             * (Obj_model_set pc[4] -> pool+0x82, @0x8004096c-74). */
+            if (!(a->band & 0x80) && g_scd.props[p].band != a->band) continue;
+            int hit = 0;
+            if (a->sce_flags & 0x40) {                        /* CENTRE: Objekt-Position */
+                hit = a->has_quad
+                    ? re15_aot_point_in_quad(g_scd.props[p].x, g_scd.props[p].z, a->xs, a->zs)
+                    : ((abs_i32(g_scd.props[p].x - a->x) <= a->half_w) &&
+                       (abs_i32(g_scd.props[p].z - a->z) <= a->half_h));
+            }
+            if (!hit && (a->sce_flags & 0x20)) {              /* FORWARD: 620 voraus */
+                int ry = (int)g_scd.props[p].rot_y;
+                int32_t c = re15_cos_q12(ry), s = re15_sin_q12(ry);
+                int32_t fx = g_scd.props[p].x + (int32_t)((620 * c) >> 12);
+                int32_t fz = g_scd.props[p].z - (int32_t)((620 * s) >> 12);
+                hit = a->has_quad
+                    ? re15_aot_point_in_quad(fx, fz, a->xs, a->zs)
+                    : ((abs_i32(fx - a->x) <= a->half_w) && (abs_i32(fz - a->z) <= a->half_h));
+            }
+            if (hit) notch = i;                               /* LAST-WINS */
+        }
+        g_scd.props[p].member_0b = (notch >= 0) ? (uint8_t)notch : 0;   /* Clear @0x80043788 */
     }
 }
 

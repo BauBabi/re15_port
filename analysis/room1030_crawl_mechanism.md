@@ -1005,3 +1005,35 @@ Die Feldzuordnung `+0x1C4` ist ungeklaert (§10): gemessen stand dort pro Slot `
 der Slot-Index im OBEREN Halbwort, waehrend das Freigabe-Bit `0x1000` im unteren liegen muesste
 (dort durchgehend 0). Entweder ist `+0x1C4` nicht das Wort aus Glied 7/8, oder es traegt
 zusaetzlich eine Slot-ID. **Vor Glied 7/8 klaeren** — Glied 1 haengt nicht davon ab.
+
+---
+
+## 16. ⛔ KORREKTUR zu §10 — `+0x1C4` ist ein HALBWORT, die Feldzuordnung stimmt
+
+In §10 stand als Warnung: „`+0x1C4` stand pro Slot auf `0x000X0000`, also der Slot-Index im OBEREN
+Halbwort, waehrend das Freigabe-Bit `0x1000` im unteren liegen muesste. Vor Glied 7/8 klaeren."
+
+**Geklaert — und der Fehler lag bei mir.** Alle drei Steer-Funktionen lesen identisch (STAGE1.BIN,
+selbst disassembliert):
+
+```
+80101eb8: lui  v1,0x800b
+80101ebc: lw   v1,-14460(v1)      ; aktueller Entity-Zeiger
+80101ec4: lhu  v0,452(v1)         ; 452 = 0x1C4  ->  HALBWORT
+80101ecc: andi v0,v0,0x1000
+80101ed0: beq  v0,zero,0x80101edc
+80101ed4: ori  v0,zero,0x1001
+80101ed8: sw   v0,4(v1)           ; entity+0x04 = 0x1001
+```
+(identisch bei `@0x801021c0-e0` und `@0x80105784-a4` — die drei Steer-Funktionen aus Glied 8.)
+
+Ich hatte ein **32-Bit-Wort** gelesen. Das obere Halbwort (`+0x1C6`) traegt eine Slot-ID, das ist
+ein ANDERES Feld. Das untere Halbwort — das einzige, das das Original liest — war `0x0000`, also
+Bit `0x1000` schlicht nicht gesetzt. Das passt exakt zum Rest der Messung (die Kette lief nie).
+
+**Die Feldzuordnung `+0x1C4` in Glied 7/8 ist damit bestaetigt, nicht widerlegt.** Der Blocker vor
+Glied 7/8 ist aufgehoben.
+
+Bonus aus derselben Stelle: bei gesetztem Bit schreibt das Original `entity+0x04 = 0x1001`, also
+`+0x04 = 0x01` und `+0x05 = 0x10` — genau der Sub-Modus 0x10, den Glied 9 als TOGGLE
+(`FUN_80104f80`) beschreibt. Glied 8 → Glied 9 haengt damit instruktionsseitig zusammen.

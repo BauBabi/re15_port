@@ -871,6 +871,12 @@ target_include_directories(probe_laned_1030_spawn PRIVATE ${CMAKE_SOURCE_DIR}/in
 # --- LANE C: ROOM1030 Tor + Einlauf-Choreografie (Bug-Report 2026-08-06:
 #     "Zombies kriechen nicht unter dem Tor durch" / "Dutzende statt sechs").
 #     Reine MESSUNG, kein ctest-Gate. ---
+# Zensus: weicht die Objekt-Notch-Record-Auswahl (Port: type==sce5) irgendwo von der
+# Original-Auswahl (rec[1]: Pool-Bit 0x04 + AUTO + Testbit) ab?
+add_executable(probe_objnotch_census probe_objnotch_census.c)
+target_link_libraries(probe_objnotch_census PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_objnotch_census PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
 # Glied-1-Nachweis: stempelt der Port entity+0x0B wie das Original?
 # Soll (am ORIGINAL per PCSX-Redux gemessen): Aktor in AOT-Slot 5 -> 5, in Slot 6 -> 6.
 add_executable(probe_lanea_1030_cap probe_lanea_1030_cap.c)
