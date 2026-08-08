@@ -3296,41 +3296,48 @@
         "raw"
       ],
       "files": [
+        "re15_port/engine/src/game_step_common.c",
         "re15_port/engine/src/scd_vm.c",
         "re15_port/platform/pc/main.c",
         "re15_port/tests/unit/probe_room1040_switch.c"
       ],
-      "count": 3
+      "count": 4
     },
     "8001ce04": {
       "kinds": [
         "raw"
       ],
       "files": [
+        "re15_port/engine/src/aot_common.c",
         "re15_port/engine/src/enemy_ai_common.c",
         "re15_port/engine/src/game_step_common.c",
         "re15_port/include/re15_enemy_ai.h",
         "re15_port/tests/unit/test_room1140_combat.c"
       ],
-      "count": 4
+      "count": 5
     },
     "8001ce0c": {
       "kinds": [
         "raw"
       ],
       "files": [
+        "re15_port/engine/src/aot_common.c",
+        "re15_port/engine/src/game_step_common.c",
         "re15_port/tests/unit/probe_lanec_camscan_1060.c"
       ],
-      "count": 1
+      "count": 3
     },
     "8001ce1c": {
       "kinds": [
         "raw"
       ],
       "files": [
-        "re15_port/engine/src/scd_vm.c"
+        "re15_port/engine/src/aot_common.c",
+        "re15_port/engine/src/game_step_common.c",
+        "re15_port/engine/src/scd_vm.c",
+        "re15_port/tests/unit/probe_gate_1030.c"
       ],
-      "count": 1
+      "count": 4
     },
     "8001ce2c": {
       "kinds": [
@@ -3835,17 +3842,46 @@
       ],
       "count": 3
     },
-    "8001e9ec": {
+    "8001e8f4": {
       "kinds": [
-        "fun"
+        "raw"
       ],
       "files": [
+        "re15_port/engine/src/enemy_ai_common.c"
+      ],
+      "count": 1
+    },
+    "8001e97c": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c"
+      ],
+      "count": 1
+    },
+    "8001e9ec": {
+      "kinds": [
+        "fun",
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
         "re15_port/include/re15_light.h",
         "re15_port/platform/pc/main.c",
         "re15_port/platform/psx/src/mesh_psx.c",
         "re15_port/tests/unit/probe_laneE_1030_visible.c"
       ],
-      "count": 4
+      "count": 5
+    },
+    "8001ea24": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c"
+      ],
+      "count": 1
     },
     "8001ed9c": {
       "kinds": [
@@ -3889,14 +3925,16 @@
         "re15_port/engine/src/re15_to_re2.c",
         "re15_port/engine/src/stair_common.c",
         "re15_port/include/re15_actor.h",
+        "re15_port/include/re15_enemy_ai.h",
         "re15_port/platform/pc/main.c",
         "re15_port/tests/unit/probe_lanee_eject_census.c",
         "re15_port/tests/unit/probe_lanee_margin_1060.c",
         "re15_port/tests/unit/probe_lb_stairfsm.c",
         "re15_port/tests/unit/test_anim_pose_order.c",
+        "re15_port/tests/unit/test_crawl_toggle.c",
         "re15_port/tests/unit/test_zombie_hit_fixes.c"
       ],
-      "count": 15
+      "count": 17
     },
     "8001f324": {
       "kinds": [
@@ -4000,6 +4038,16 @@
       "files": [
         "re15_port/engine/src/player_common.c",
         "re15_port/tests/unit/test_anim_pose_order.c"
+      ],
+      "count": 2
+    },
+    "8001f5b4": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
+        "re15_port/tests/unit/test_crawl_toggle.c"
       ],
       "count": 2
     },
@@ -4553,9 +4601,10 @@
         "fun"
       ],
       "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
         "re15_port/engine/src/skeleton_common.c"
       ],
-      "count": 1
+      "count": 2
     },
     "80022f0c": {
       "kinds": [
@@ -10056,9 +10105,10 @@
         "raw"
       ],
       "files": [
-        "re15_port/engine/src/aot_common.c"
+        "re15_port/engine/src/aot_common.c",
+        "re15_port/include/re15_actor.h"
       ],
-      "count": 1
+      "count": 2
     },
     "8003ecec": {
       "kinds": [
@@ -11817,7 +11867,52 @@
       ],
       "count": 2
     },
+    "8004124c": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/scd_vm.c"
+      ],
+      "count": 1
+    },
+    "80041250": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/scd_vm.c"
+      ],
+      "count": 1
+    },
     "80041254": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/scd_vm.c"
+      ],
+      "count": 1
+    },
+    "8004125c": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/scd_vm.c"
+      ],
+      "count": 1
+    },
+    "80041260": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/scd_vm.c"
+      ],
+      "count": 1
+    },
+    "80041274": {
       "kinds": [
         "raw"
       ],
@@ -11921,6 +12016,15 @@
         "re15_port/tests/unit/test_member.c"
       ],
       "count": 6
+    },
+    "80041444": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/scd_vm.c"
+      ],
+      "count": 1
     },
     "8004146c": {
       "kinds": [
@@ -12701,7 +12805,6 @@
       ],
       "files": [
         "re15_port/engine/src/aot_common.c",
-        "re15_port/engine/src/game_step_common.c",
         "re15_port/engine/src/scd_vm.c",
         "re15_port/include/re15_aot.h",
         "re15_port/include/re15_scd.h",
@@ -12718,7 +12821,7 @@
         "re15_port/tests/unit/test_aot_edge.c",
         "re15_port/tests/unit/test_aot_sce_census.c"
       ],
-      "count": 17
+      "count": 16
     },
     "80042bd0": {
       "kinds": [
@@ -12941,7 +13044,6 @@
       ],
       "files": [
         "re15_port/engine/src/aot_common.c",
-        "re15_port/engine/src/game_step_common.c",
         "re15_port/include/re15_actor.h",
         "re15_port/include/re15_aot.h",
         "re15_port/include/re15_scd.h",
@@ -12949,7 +13051,7 @@
         "re15_port/tests/unit/probe_gate_1030.c",
         "re15_port/tests/unit/probe_laned_1030_spawn.c"
       ],
-      "count": 8
+      "count": 7
     },
     "80042f74": {
       "kinds": [
@@ -13300,23 +13402,16 @@
       ],
       "files": [
         "re15_port/engine/src/aot_common.c",
+        "re15_port/engine/src/game_step_common.c",
         "re15_port/engine/src/scd_vm.c",
         "re15_port/include/re15_aot.h",
         "re15_port/tests/unit/probe_adv_1030_verify.c",
+        "re15_port/tests/unit/probe_gate_1030.c",
         "re15_port/tests/unit/probe_lanea_1030_cap.c",
         "re15_port/tests/unit/probe_laned_1030_spawn.c",
         "re15_port/tests/unit/test_aot_sce_census.c"
       ],
-      "count": 7
-    },
-    "800436c0": {
-      "kinds": [
-        "raw"
-      ],
-      "files": [
-        "re15_port/engine/src/aot_common.c"
-      ],
-      "count": 1
+      "count": 9
     },
     "800436f0": {
       "kinds": [
@@ -13355,15 +13450,6 @@
       ],
       "files": [
         "re15_port/tests/unit/probe_adv_1030_verify.c"
-      ],
-      "count": 1
-    },
-    "80043728": {
-      "kinds": [
-        "raw"
-      ],
-      "files": [
-        "re15_port/engine/src/aot_common.c"
       ],
       "count": 1
     },
@@ -22571,6 +22657,15 @@
       ],
       "count": 1
     },
+    "80072f38": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/tests/unit/probe_crawl_commit.c"
+      ],
+      "count": 1
+    },
     "80073350": {
       "kinds": [
         "fun"
@@ -24345,9 +24440,10 @@
         "raw"
       ],
       "files": [
+        "re15_port/engine/src/aot_common.c",
         "re15_port/include/re15_actor.h"
       ],
-      "count": 1
+      "count": 2
     },
     "800aca74": {
       "kinds": [
@@ -29552,10 +29648,13 @@
         "raw"
       ],
       "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
         "re15_port/engine/src/re15_collision.c",
+        "re15_port/include/re15_actor.h",
+        "re15_port/include/re15_collision.h",
         "re15_port/tests/unit/probe_laneE_gatemask.c"
       ],
-      "count": 2
+      "count": 5
     },
     "8010062c": {
       "kinds": [
@@ -29680,6 +29779,16 @@
         "re15_port/platform/pc/main.c"
       ],
       "count": 1
+    },
+    "80100828": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/scd_vm.c",
+        "re15_port/include/re15_actor.h"
+      ],
+      "count": 2
     },
     "8010082c": {
       "kinds": [
@@ -30258,6 +30367,15 @@
       ],
       "count": 2
     },
+    "8010164c": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c"
+      ],
+      "count": 1
+    },
     "8010168c": {
       "kinds": [
         "fun"
@@ -30268,6 +30386,16 @@
         "re15_port/tests/unit/test_enemy_ai.c"
       ],
       "count": 3
+    },
+    "80101708": {
+      "kinds": [
+        "fun"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
+        "re15_port/tests/unit/test_crawl_toggle.c"
+      ],
+      "count": 2
     },
     "80101714": {
       "kinds": [
@@ -30290,6 +30418,15 @@
       ],
       "count": 1
     },
+    "80101728": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c"
+      ],
+      "count": 1
+    },
     "80101744": {
       "kinds": [
         "raw"
@@ -30305,10 +30442,11 @@
         "raw"
       ],
       "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
         "re15_port/engine/src/enemy_ai_re2_zombie.c",
         "re15_port/include/re15_ai_flavor.h"
       ],
-      "count": 2
+      "count": 3
     },
     "80101754": {
       "kinds": [
@@ -30319,6 +30457,15 @@
         "re15_port/include/re15_ai_flavor.h"
       ],
       "count": 2
+    },
+    "8010175c": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c"
+      ],
+      "count": 1
     },
     "80101784": {
       "kinds": [
@@ -31311,6 +31458,15 @@
       ],
       "count": 1
     },
+    "80101ecc": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/tests/unit/probe_gate_1030.c"
+      ],
+      "count": 1
+    },
     "80101ef0": {
       "kinds": [
         "fun",
@@ -32231,21 +32387,24 @@
     },
     "801035f8": {
       "kinds": [
+        "fun",
         "raw"
       ],
       "files": [
-        "re15_port/engine/src/enemy_ai_common.c"
+        "re15_port/engine/src/enemy_ai_common.c",
+        "re15_port/tests/unit/test_crawl_toggle.c"
       ],
-      "count": 1
+      "count": 2
     },
     "8010360c": {
       "kinds": [
         "raw"
       ],
       "files": [
-        "re15_port/engine/src/enemy_ai_common.c"
+        "re15_port/engine/src/enemy_ai_common.c",
+        "re15_port/tests/unit/test_crawl_toggle.c"
       ],
-      "count": 1
+      "count": 2
     },
     "80103628": {
       "kinds": [
@@ -32283,6 +32442,25 @@
       ],
       "count": 1
     },
+    "8010368c": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c"
+      ],
+      "count": 1
+    },
+    "80103690": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
+        "re15_port/tests/unit/test_crawl_toggle.c"
+      ],
+      "count": 2
+    },
     "8010369c": {
       "kinds": [
         "raw"
@@ -32301,7 +32479,70 @@
       ],
       "count": 1
     },
+    "801036b8": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
+        "re15_port/tests/unit/test_crawl_toggle.c"
+      ],
+      "count": 2
+    },
     "801036c0": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
+        "re15_port/tests/unit/test_crawl_toggle.c"
+      ],
+      "count": 2
+    },
+    "801036dc": {
+      "kinds": [
+        "fun",
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
+        "re15_port/engine/src/player_common.c",
+        "re15_port/tests/unit/probe_crawl_commit.c",
+        "re15_port/tests/unit/test_crawl_toggle.c"
+      ],
+      "count": 4
+    },
+    "801036fc": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
+        "re15_port/tests/unit/test_crawl_toggle.c"
+      ],
+      "count": 2
+    },
+    "8010370c": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
+        "re15_port/tests/unit/test_crawl_toggle.c"
+      ],
+      "count": 2
+    },
+    "8010371c": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
+        "re15_port/tests/unit/test_crawl_toggle.c"
+      ],
+      "count": 2
+    },
+    "8010372c": {
       "kinds": [
         "raw"
       ],
@@ -32310,15 +32551,111 @@
       ],
       "count": 1
     },
+    "8010373c": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
+        "re15_port/tests/unit/test_crawl_toggle.c"
+      ],
+      "count": 2
+    },
     "8010374c": {
       "kinds": [
         "raw"
       ],
       "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
+        "re15_port/engine/src/re15_collision.c",
+        "re15_port/include/re15_actor.h",
         "re15_port/tests/unit/probe_laneE_gatemask.c",
-        "re15_port/tests/unit/probe_laned_1030_spawn.c"
+        "re15_port/tests/unit/probe_laned_1030_spawn.c",
+        "re15_port/tests/unit/test_crawl_toggle.c"
+      ],
+      "count": 6
+    },
+    "8010375c": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c"
+      ],
+      "count": 1
+    },
+    "80103790": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
+        "re15_port/engine/src/player_common.c"
       ],
       "count": 2
+    },
+    "8010379c": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c"
+      ],
+      "count": 1
+    },
+    "801037b0": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c"
+      ],
+      "count": 1
+    },
+    "801037dc": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c"
+      ],
+      "count": 1
+    },
+    "801037e4": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c"
+      ],
+      "count": 1
+    },
+    "801037ec": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c"
+      ],
+      "count": 1
+    },
+    "80103808": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c"
+      ],
+      "count": 1
+    },
+    "8010383c": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c"
+      ],
+      "count": 1
     },
     "80103854": {
       "kinds": [
@@ -32498,6 +32835,15 @@
       ],
       "count": 1
     },
+    "80103b94": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c"
+      ],
+      "count": 1
+    },
     "80104178": {
       "kinds": [
         "fun",
@@ -32508,6 +32854,42 @@
         "re15_port/include/re15_damage.h"
       ],
       "count": 2
+    },
+    "80104540": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c"
+      ],
+      "count": 1
+    },
+    "80104548": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c"
+      ],
+      "count": 1
+    },
+    "8010466c": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c"
+      ],
+      "count": 1
+    },
+    "80104808": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c"
+      ],
+      "count": 1
     },
     "801048a8": {
       "kinds": [
@@ -32649,13 +33031,197 @@
       ],
       "count": 1
     },
+    "80104f78": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c"
+      ],
+      "count": 1
+    },
     "80104f80": {
+      "kinds": [
+        "fun",
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
+        "re15_port/engine/src/player_common.c",
+        "re15_port/include/re15_actor.h",
+        "re15_port/include/re15_enemy_ai.h",
+        "re15_port/tests/unit/probe_laned_1030_spawn.c",
+        "re15_port/tests/unit/test_crawl_toggle.c"
+      ],
+      "count": 6
+    },
+    "80104f90": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c"
+      ],
+      "count": 1
+    },
+    "80104fcc": {
       "kinds": [
         "raw"
       ],
       "files": [
         "re15_port/engine/src/enemy_ai_common.c",
-        "re15_port/tests/unit/probe_laned_1030_spawn.c"
+        "re15_port/tests/unit/test_crawl_toggle.c"
+      ],
+      "count": 2
+    },
+    "80104fd4": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
+        "re15_port/tests/unit/test_crawl_toggle.c"
+      ],
+      "count": 2
+    },
+    "80104fec": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
+        "re15_port/tests/unit/test_crawl_toggle.c"
+      ],
+      "count": 2
+    },
+    "80104ffc": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
+        "re15_port/engine/src/player_common.c"
+      ],
+      "count": 2
+    },
+    "8010500c": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
+        "re15_port/tests/unit/test_crawl_toggle.c"
+      ],
+      "count": 2
+    },
+    "8010501c": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
+        "re15_port/tests/unit/test_crawl_toggle.c"
+      ],
+      "count": 2
+    },
+    "8010502c": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
+        "re15_port/include/re15_actor.h"
+      ],
+      "count": 2
+    },
+    "80105044": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
+        "re15_port/include/re15_actor.h",
+        "re15_port/tests/unit/test_crawl_toggle.c"
+      ],
+      "count": 3
+    },
+    "80105048": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/include/re15_actor.h"
+      ],
+      "count": 1
+    },
+    "80105050": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
+        "re15_port/include/re15_actor.h",
+        "re15_port/tests/unit/test_crawl_toggle.c"
+      ],
+      "count": 3
+    },
+    "80105054": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c"
+      ],
+      "count": 1
+    },
+    "8010506c": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/anim_select_common.c",
+        "re15_port/engine/src/enemy_ai_common.c",
+        "re15_port/engine/src/player_common.c",
+        "re15_port/include/re15_actor.h",
+        "re15_port/include/re15_enemy_ai.h"
+      ],
+      "count": 5
+    },
+    "80105088": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c"
+      ],
+      "count": 1
+    },
+    "8010508c": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c"
+      ],
+      "count": 1
+    },
+    "80105094": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
+        "re15_port/tests/unit/test_crawl_toggle.c"
+      ],
+      "count": 2
+    },
+    "801050a4": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
+        "re15_port/tests/unit/test_crawl_toggle.c"
       ],
       "count": 2
     },
@@ -32664,8 +33230,42 @@
         "raw"
       ],
       "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
+        "re15_port/engine/src/scd_vm.c",
+        "re15_port/include/re15_actor.h",
         "re15_port/tests/unit/probe_laneE_gatemask.c",
-        "re15_port/tests/unit/probe_laned_1030_spawn.c"
+        "re15_port/tests/unit/probe_laned_1030_spawn.c",
+        "re15_port/tests/unit/test_crawl_toggle.c"
+      ],
+      "count": 6
+    },
+    "801050cc": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
+        "re15_port/include/re15_actor.h"
+      ],
+      "count": 2
+    },
+    "801050d0": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
+        "re15_port/tests/unit/test_crawl_toggle.c"
+      ],
+      "count": 2
+    },
+    "801050e4": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
+        "re15_port/tests/unit/test_crawl_toggle.c"
       ],
       "count": 2
     },
@@ -32674,10 +33274,34 @@
         "raw"
       ],
       "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
+        "re15_port/engine/src/re15_collision.c",
+        "re15_port/engine/src/scd_vm.c",
+        "re15_port/include/re15_actor.h",
         "re15_port/tests/unit/probe_laneE_gatemask.c",
-        "re15_port/tests/unit/probe_laned_1030_spawn.c"
+        "re15_port/tests/unit/probe_laned_1030_spawn.c",
+        "re15_port/tests/unit/test_crawl_toggle.c"
+      ],
+      "count": 7
+    },
+    "80105100": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
+        "re15_port/tests/unit/test_crawl_toggle.c"
       ],
       "count": 2
+    },
+    "8010510c": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c"
+      ],
+      "count": 1
     },
     "80105124": {
       "kinds": [
@@ -34171,6 +34795,61 @@
       ],
       "count": 1
     },
+    "80109470": {
+      "kinds": [
+        "fun"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
+        "re15_port/tests/unit/probe_crawl_commit.c"
+      ],
+      "count": 2
+    },
+    "801094a0": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c"
+      ],
+      "count": 1
+    },
+    "801094b0": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c"
+      ],
+      "count": 1
+    },
+    "801094b8": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c"
+      ],
+      "count": 1
+    },
+    "80109504": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c"
+      ],
+      "count": 1
+    },
+    "80109524": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c"
+      ],
+      "count": 1
+    },
     "80109554": {
       "kinds": [
         "fun",
@@ -34348,7 +35027,25 @@
       ],
       "count": 1
     },
+    "80109e44": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c"
+      ],
+      "count": 1
+    },
     "80109e4c": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c"
+      ],
+      "count": 1
+    },
+    "8010a188": {
       "kinds": [
         "raw"
       ],
@@ -34772,9 +35469,13 @@
         "raw"
       ],
       "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
+        "re15_port/engine/src/re15_collision.c",
+        "re15_port/include/re15_actor.h",
+        "re15_port/include/re15_collision.h",
         "re15_port/tests/unit/probe_laneE_gatemask.c"
       ],
-      "count": 1
+      "count": 5
     },
     "8010aad0": {
       "kinds": [
@@ -53599,6 +54300,26 @@
       ],
       "count": 1
     },
+    "8011f8e0": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
+        "re15_port/include/re15_enemy_ai.h"
+      ],
+      "count": 2
+    },
+    "8011f920": {
+      "kinds": [
+        "raw"
+      ],
+      "files": [
+        "re15_port/engine/src/enemy_ai_common.c",
+        "re15_port/include/re15_enemy_ai.h"
+      ],
+      "count": 2
+    },
     "8011f960": {
       "kinds": [
         "raw"
@@ -54580,17 +55301,17 @@
   "per_file": {
     "re15_port/engine/src/actor_common.c": 13,
     "re15_port/engine/src/actor_locomotion.c": 30,
-    "re15_port/engine/src/anim_select_common.c": 21,
-    "re15_port/engine/src/aot_common.c": 102,
+    "re15_port/engine/src/anim_select_common.c": 22,
+    "re15_port/engine/src/aot_common.c": 104,
     "re15_port/engine/src/camera_common.c": 13,
     "re15_port/engine/src/debug_menu_common.c": 43,
     "re15_port/engine/src/emd_common.c": 16,
-    "re15_port/engine/src/enemy_ai_common.c": 2762,
+    "re15_port/engine/src/enemy_ai_common.c": 2833,
     "re15_port/engine/src/enemy_ai_re2_zombie.c": 148,
     "re15_port/engine/src/enemy_common.c": 11,
     "re15_port/engine/src/fade_common.c": 24,
     "re15_port/engine/src/game_state.c": 4,
-    "re15_port/engine/src/game_step_common.c": 169,
+    "re15_port/engine/src/game_step_common.c": 171,
     "re15_port/engine/src/inventory_common.c": 50,
     "re15_port/engine/src/item_icon_common.c": 1,
     "re15_port/engine/src/item_modal_common.c": 64,
@@ -54601,10 +55322,10 @@
     "re15_port/engine/src/msg_common.c": 26,
     "re15_port/engine/src/nav_zone_common.c": 19,
     "re15_port/engine/src/pad_common.c": 6,
-    "re15_port/engine/src/player_common.c": 106,
+    "re15_port/engine/src/player_common.c": 111,
     "re15_port/engine/src/pri_common.c": 4,
     "re15_port/engine/src/rdt_common.c": 13,
-    "re15_port/engine/src/re15_collision.c": 22,
+    "re15_port/engine/src/re15_collision.c": 25,
     "re15_port/engine/src/re15_damage.c": 227,
     "re15_port/engine/src/re15_esp.c": 47,
     "re15_port/engine/src/re15_gameflow.c": 8,
@@ -54622,14 +55343,14 @@
     "re15_port/engine/src/room_common.c": 38,
     "re15_port/engine/src/rotor_common.c": 17,
     "re15_port/engine/src/scd_room_setup.c": 29,
-    "re15_port/engine/src/scd_vm.c": 378,
+    "re15_port/engine/src/scd_vm.c": 387,
     "re15_port/engine/src/skeleton_common.c": 31,
     "re15_port/engine/src/stair_common.c": 59,
     "re15_port/engine/src/vab_common.c": 19,
     "re15_port/include/debug_jump_table.h": 9,
     "re15_port/include/font_atlas_psx.h": 1,
     "re15_port/include/font_width.h": 3,
-    "re15_port/include/re15_actor.h": 149,
+    "re15_port/include/re15_actor.h": 163,
     "re15_port/include/re15_ai_flavor.h": 26,
     "re15_port/include/re15_anim_select.h": 1,
     "re15_port/include/re15_aot.h": 48,
@@ -54637,12 +55358,12 @@
     "re15_port/include/re15_bg.h": 2,
     "re15_port/include/re15_camera.h": 8,
     "re15_port/include/re15_cdfs.h": 3,
-    "re15_port/include/re15_collision.h": 6,
+    "re15_port/include/re15_collision.h": 8,
     "re15_port/include/re15_damage.h": 55,
     "re15_port/include/re15_debug_menu.h": 17,
     "re15_port/include/re15_emd.h": 4,
     "re15_port/include/re15_enemy.h": 9,
-    "re15_port/include/re15_enemy_ai.h": 86,
+    "re15_port/include/re15_enemy_ai.h": 91,
     "re15_port/include/re15_engine.h": 11,
     "re15_port/include/re15_esp.h": 22,
     "re15_port/include/re15_fade.h": 20,
@@ -54710,13 +55431,14 @@
     "re15_port/tests/unit/probe_advz_cause_1060.c": 1,
     "re15_port/tests/unit/probe_cam_1030_reentry.c": 2,
     "re15_port/tests/unit/probe_camload_1030.c": 18,
+    "re15_port/tests/unit/probe_crawl_commit.c": 3,
     "re15_port/tests/unit/probe_crow_1170.c": 7,
     "re15_port/tests/unit/probe_crow_death.c": 17,
     "re15_port/tests/unit/probe_crow_flinch.c": 2,
     "re15_port/tests/unit/probe_cut_1030.c": 3,
     "re15_port/tests/unit/probe_cut_replace_1030.c": 4,
     "re15_port/tests/unit/probe_em40_gait.c": 2,
-    "re15_port/tests/unit/probe_gate_1030.c": 8,
+    "re15_port/tests/unit/probe_gate_1030.c": 11,
     "re15_port/tests/unit/probe_headlook_10d0.c": 11,
     "re15_port/tests/unit/probe_hitdoor_entry_anim.c": 1,
     "re15_port/tests/unit/probe_laneE_1030_visible.c": 12,
@@ -54768,6 +55490,7 @@
     "re15_port/tests/unit/test_catan.c": 2,
     "re15_port/tests/unit/test_cockroach_ai.c": 5,
     "re15_port/tests/unit/test_collision_layers.c": 4,
+    "re15_port/tests/unit/test_crawl_toggle.c": 29,
     "re15_port/tests/unit/test_crow_ai.c": 15,
     "re15_port/tests/unit/test_crow_fixes.c": 6,
     "re15_port/tests/unit/test_damage.c": 10,
@@ -54823,5 +55546,5 @@
     "re15_port/tools/overlay_mapper/generate_mapping.c": 1,
     "re15_port/tools/overlay_mapper/overlay_mapper.c": 4
   },
-  "total_unique": 5651
+  "total_unique": 5722
 }

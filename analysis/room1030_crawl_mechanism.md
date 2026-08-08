@@ -1037,3 +1037,42 @@ Glied 7/8 ist aufgehoben.
 Bonus aus derselben Stelle: bei gesetztem Bit schreibt das Original `entity+0x04 = 0x1001`, also
 `+0x04 = 0x01` und `+0x05 = 0x10` — genau der Sub-Modus 0x10, den Glied 9 als TOGGLE
 (`FUN_80104f80`) beschreibt. Glied 8 → Glied 9 haengt damit instruktionsseitig zusammen.
+
+---
+
+## 17. EINBAU-STAND (2026-08-08, Session-Abschluss) — DIE KETTE IST IM PORT UND LAEUFT
+
+Commits: `b0aeb5e6` (Stempel/Notch ans Frame-Ende + 0x0A-Wisch), `4c670931` (sca_mask),
+`43a73748` (Grid-Wurzel 1 + Toggle + Kriech-Lokomotion + Hand-Lock), + Opcode 0x3D mit
+End-to-End-Beweis. Alle Glieder 1-10 sind eingebaut; probe_gate_1030 Phase D spielt die
+VOLLSTAENDIGE Kette ueber echten RDT-Bytecode (einzige gesetzte Vorbedingung: flag(4,0x0f)):
+Stempel 5 -> sub07 (0x3D/0x26/0x35) anim_flags|=0x1000 -> 0x1001 -> Toggle -> Kriech-Commit
+grid=0x81/sca=8 -> Clip 0x1A mit Hand-Lock-Vortrieb (dz=+2202 in 190 Ticks, durch den
+Tor-Streifen) -> Zone 4 -> sub05 (0x2000) -> Aufstehen (grid=0, sca=4, Wort 0x201).
+Drossel Cmp(wv7<4) verhaelt sich byte-true. ctest 117/117 (neu: unit_crawl_toggle).
+
+### Blocker-Bilanz
+- **BLOCKER A: ENTSCHIEDEN, SAFE.** Alle 17 grid_id-Bit-0x80-Lesestellen (16 aus §3 + die
+  17. in re15_damage.c Aim-Band @0x80101614-20) haben byte-belegte Original-Gegenstellen am
+  physisch selben Bit — das Original teilt "liegend"=="kriechend" bewusst. 0x81 wird geschrieben.
+- **BLOCKER B: Algorithmus GESCHLOSSEN, Rundung offen.** FUN_80109470 ist ein HAND-Lock
+  (5x CompMatrix, Kette 0->7->Arm, Hand-Bone 10/13; die "4x"-Angabe in §3 war die
+  Schwester FUN_8010939c/Fuss). Implementiert mit exakter FUN_80022da0-Semantik (s16-Rot,
+  >>12 floor, B.t s16). LSB-Genauigkeit gegen die GTE-Kette + Rotations-Staleness: erst per
+  Savestate C messbar (§5) — Messung weiterhin erwuenscht, aber nicht mehr einbau-blockierend.
+- **BLOCKER C.1 (0x3D-Zensus): ERLEDIGT.** Game-weit exakt 4 RDTs betroffen (1030/1031 +
+  1040/1041); ROOM1040 nutzt Stempelwerte 6/7 + 20 Bank-5-Latches Bits 0x00-0x13 — dessen
+  Kriechtor muss separat verifiziert werden (gleiche Maschine, andere Operanden).
+- **BLOCKER C.2 (Objekt-Notch): war bereits erledigt** (1369b1aa), integration_keypad gruen.
+
+### Offene Punkte (ehrlich OFFEN, dokumentiert im Code)
+1. Playback-Richtung Toggle-Clip 0x12: Port folgt dem DATEN-Anker (py-Rampe -1744->-175 =
+   Hinlegen = vorwaerts, B3 §6); die literale a2=(s8)+0x9F-Abbildung wuerde die Rampe
+   invertieren. Dynamische Klaerung: Savestate B, +0x95-Folge waehrend des Hinlegens.
+2. Grid-1-Zeilen 1-5/15 (u.a. 0x8010466C/0x80104808, [15] mit RNG-Zug @0x8010a188) — No-op
+   mit Einmal-Log; im ROOM1030-Zyklus nicht erreicht.
+3. Setzer von +0x1D8-Bits 0x20/0x40 (Hand-Lock-Unterdrueckung) und 0x80 (Aufsteh-Sperre)
+   sowie +0x8C-Konsument: statisch nicht gefunden (B3 §8.4); Spawn=0 -> Verhalten identisch.
+4. Cull-Randfall der Hand-Referenz (B3 §8.3): nicht nachgebaut, on-screen irrelevant.
+5. LIVE-Verifikation im echten Spielfluss (Story-Weg ueber die Cutscene, gdigrab) steht aus —
+   der Debug-Sprung zeigt das Kriechen NIE (§11); der Nutzer-Weg ist der Beweis.

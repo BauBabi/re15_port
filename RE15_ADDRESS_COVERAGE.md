@@ -41,7 +41,7 @@ Zuordnungsregeln (implementiert in `generate_address_coverage.py`):
    Adressen `>= 0x80100000`. ⚠️ **Mehrdeutigkeit:** Alle Stages teilen sich den Adressraum
    ab `0x80100000` — eine zitierte Overlay-Adresse kann in **mehreren** Stages in einem
    Funktionsintervall liegen und wird dann für **jede** dieser Stages gezählt
-   (2697 von 2720 Overlay-Zitaten treffen mehr als eine Stage).
+   (2759 von 2782 Overlay-Zitaten treffen mehr als eine Stage).
    Aus dem Zitat allein ist NICHT entscheidbar, welche Stage gemeint war; die Stage-Spalten
    sind daher obere Schranken je Stage, keine disjunkte Aufteilung.
 3. **DAT_-Zitate (Daten-Globals):** Adressen, die mindestens einmal als `DAT_…` zitiert werden,
@@ -58,15 +58,15 @@ Nicht Teil des Nenners: die 872 benannten (PsyQ-/SDK-)Symbole aus
 
 | Metrik | Wert |
 |---|---|
-| Zitierte Original-Adressen im Port (unique) | **5651** |
+| Zitierte Original-Adressen im Port (unique) | **5722** |
 | … davon DAT_-Daten-Globals (separat, nicht gemappt) | 200 (EXE-Raum 192, Overlay-Raum 8) |
-| … davon Funktions-Zitate im EXE-Raum (< 0x80100000) | 2731 |
-| … davon Funktions-Zitate im Overlay-Raum (>= 0x80100000) | 2720 |
+| … davon Funktions-Zitate im EXE-Raum (< 0x80100000) | 2740 |
+| … davon Funktions-Zitate im Overlay-Raum (>= 0x80100000) | 2782 |
 | EXE-Funktionen (Decompile-Inventar) | 386 |
 | EXE-Funktionen ZITIERT | **260** (67.4%) |
 | EXE-Funktionen NICHT zitiert | 126 |
-| EXE-Raum-Zitate auf Funktionen gemappt / ungemappt | 2243 / 488 (ungemappt = Datenraum oder > Start+0x4000) |
-| Overlay-Zitate, die mehrere Stages treffen (Mehrdeutigkeit) | 2697 |
+| EXE-Raum-Zitate auf Funktionen gemappt / ungemappt | 2251 / 489 (ungemappt = Datenraum oder > Start+0x4000) |
+| Overlay-Zitate, die mehrere Stages treffen (Mehrdeutigkeit) | 2759 |
 | Overlay-Zitate ohne Stage-Funktions-Treffer | 23 |
 
 ### Overlay-Coverage je Stage
@@ -75,12 +75,12 @@ Nicht Teil des Nenners: die 872 benannten (PsyQ-/SDK-)Symbole aus
 
 | Stage | Funktionen | zitiert | nicht zitiert | zitiert % | gemappte Zitate |
 |---|---:|---:|---:|---:|---:|
-| STAGE1 | 650 | 433 | 217 | 66.6% | 2677 |
-| STAGE2 | 456 | 331 | 125 | 72.6% | 2477 |
-| STAGE3 | 526 | 364 | 162 | 69.2% | 2660 |
-| STAGE4 | 459 | 343 | 116 | 74.7% | 2564 |
-| STAGE5 | 535 | 359 | 176 | 67.1% | 2697 |
-| STAGE6 | 73 | 50 | 23 | 68.5% | 416 |
+| STAGE1 | 650 | 439 | 211 | 67.5% | 2739 |
+| STAGE2 | 456 | 337 | 119 | 73.9% | 2537 |
+| STAGE3 | 526 | 371 | 155 | 70.5% | 2722 |
+| STAGE4 | 459 | 350 | 109 | 76.3% | 2624 |
+| STAGE5 | 535 | 363 | 172 | 67.9% | 2759 |
+| STAGE6 | 73 | 50 | 23 | 68.5% | 468 |
 
 ## Subsystem-Sicht (EXE-Funktionen × Katalog-Kontext)
 
@@ -133,37 +133,36 @@ dass der Katalog nur einen Teil des EXE-Inventars abdeckt.
 
 ## Anhang B — nicht-zitierte STAGE1-Overlay-Funktionen
 
-217 von 650 STAGE1-Overlay-Funktionen ohne Adress-Zitat:
+211 von 650 STAGE1-Overlay-Funktionen ohne Adress-Zitat:
 
 ```
 8010093c  801010f8  801012e8  801016f0  80101d48  801021e4  80102bbc  801031fc
-801035e8  80103978  80103b94  80103d48  80103e6c  80103f60  80104008  801040e8
-80104250  80104340  80104548  8010466c  80104760  80104780  80104b40  80105848
-801060a0  80106238  8010626c  80106290  801063a4  80106418  80106624  801066dc
-80106a24  80106ea0  80107200  80107244  801074b0  80107634  801076e0  80107c9c
-801082bc  80108504  80108574  8010899c  801089e4  80108abc  80108af4  80108b9c
-80108c70  80108d04  80108d54  80108d74  80109100  80109164  801091e4  801092dc
-801092f4  80109470  801099cc  80109a08  80109a44  80109d74  80109d78  80109ef8
-8010a0c8  8010a8b8  8010aed4  8010af84  8010b26c  8010b2e8  8010b364  8010b780
-8010b814  8010b87c  8010b888  8010b8f8  8010b974  8010b9ec  8010b9f0  8010ba6c
-8010bae8  8010bb3c  8010be38  8010bf14  8010bf68  8010c088  8010c138  8010c334
-8010c938  8010cb14  8010cb34  8010cfc8  8010cfe0  8010d5c0  8010d8c4  8010e2f0
-8010e690  8010e6c4  8010ea24  8010efa4  8010f7f0  8010fc48  8010fdbc  801101e0
-801108d0  8011099c  80110b98  80110db0  80111648  80112230  80112684  80112938
-80113384  8011340c  8011347c  801137fc  80113900  801152cc  8011539c  8011552c
-80115efc  80116750  8011696c  8011723c  8011926c  80119284  80119634  8011970c
-8011971c  80119770  80119998  801199f8  80119d0c  8011a160  8011a818  8011afb8
-8011b750  8011b988  8011bb8c  8011c084  8011c150  8011c1cc  8011c248  8011c290
-8011c2d8  8011c370  8011c414  8011c818  8011c8a8  8011c940  8011c950  8011c9cc
-8011ca48  8011ca90  8011cab8  8011cad8  8011cb70  8011cc60  8011ccac  8011ccb4
-8011cd30  8011cdac  8011cdf4  8011ce3c  8011cf9c  8011d018  8011d04c  8011d060
-8011d0a8  8011d1f4  8011d248  8011d2c4  8011d340  8011d388  8011d3d0  8011d460
-8011d468  8011d4b4  8011d530  8011d598  8011d5ac  8011d5f4  8011d63c  8011d740
-8011d80c  8011d888  8011d904  8011d94c  8011d994  8011da2c  8011dac4  8011db70
-8011dbd0  8011dc68  8011dd18  8011dd98  8011de44  8011dec0  8011df3c  8011df40
-8011df84  8011dfcc  8011e00c  8011e064  8011e088  8011e104  8011e14c  8011e194
-8011e22c  8011e370  8011e518  8011e634  8011e644  8011e6c0  8011e73c  8011e784
-8011e7cc
+801035e8  80103978  80103d48  80103e6c  80103f60  80104008  801040e8  80104250
+80104760  80104780  80104b40  80105848  801060a0  80106238  8010626c  80106290
+801063a4  80106418  80106624  801066dc  80106a24  80106ea0  80107200  80107244
+801074b0  80107634  801076e0  80107c9c  801082bc  80108504  80108574  8010899c
+801089e4  80108abc  80108af4  80108b9c  80108c70  80108d04  80108d54  80108d74
+80109100  80109164  801091e4  801092dc  801092f4  801099cc  80109a08  80109a44
+80109d74  80109d78  80109ef8  8010a8b8  8010aed4  8010af84  8010b26c  8010b2e8
+8010b364  8010b780  8010b814  8010b87c  8010b888  8010b8f8  8010b974  8010b9ec
+8010b9f0  8010ba6c  8010bae8  8010bb3c  8010be38  8010bf14  8010bf68  8010c088
+8010c138  8010c334  8010c938  8010cb14  8010cb34  8010cfc8  8010cfe0  8010d5c0
+8010d8c4  8010e2f0  8010e690  8010e6c4  8010ea24  8010efa4  8010f7f0  8010fc48
+8010fdbc  801101e0  801108d0  8011099c  80110b98  80110db0  80111648  80112230
+80112684  80112938  80113384  8011340c  8011347c  801137fc  80113900  801152cc
+8011539c  8011552c  80115efc  80116750  8011696c  8011723c  8011926c  80119284
+80119634  8011970c  8011971c  80119770  80119998  801199f8  80119d0c  8011a160
+8011a818  8011afb8  8011b750  8011b988  8011bb8c  8011c084  8011c150  8011c1cc
+8011c248  8011c290  8011c2d8  8011c370  8011c414  8011c818  8011c8a8  8011c940
+8011c950  8011c9cc  8011ca48  8011ca90  8011cab8  8011cad8  8011cb70  8011cc60
+8011ccac  8011ccb4  8011cd30  8011cdac  8011cdf4  8011ce3c  8011cf9c  8011d018
+8011d04c  8011d060  8011d0a8  8011d1f4  8011d248  8011d2c4  8011d340  8011d388
+8011d3d0  8011d460  8011d468  8011d4b4  8011d530  8011d598  8011d5ac  8011d5f4
+8011d63c  8011d740  8011d80c  8011d888  8011d904  8011d94c  8011d994  8011da2c
+8011dac4  8011db70  8011dbd0  8011dc68  8011dd18  8011dd98  8011de44  8011dec0
+8011df3c  8011df40  8011df84  8011dfcc  8011e00c  8011e064  8011e088  8011e104
+8011e14c  8011e194  8011e22c  8011e370  8011e518  8011e634  8011e644  8011e6c0
+8011e73c  8011e784  8011e7cc
 ```
 
 ## Anhang C — STAGE2–6 (nur Zählwerte)
@@ -174,9 +173,9 @@ die Funktionsinventare in `analysis/coverage/original_overlay_inventory.json`.
 
 | Stage | nicht zitiert / gesamt |
 |---|---:|
-| STAGE2 | 125 / 456 |
-| STAGE3 | 162 / 526 |
-| STAGE4 | 116 / 459 |
-| STAGE5 | 176 / 535 |
+| STAGE2 | 119 / 456 |
+| STAGE3 | 155 / 526 |
+| STAGE4 | 109 / 459 |
+| STAGE5 | 172 / 535 |
 | STAGE6 | 23 / 73 |
 
