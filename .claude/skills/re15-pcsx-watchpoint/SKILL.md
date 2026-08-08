@@ -346,3 +346,24 @@ Weiter im Menue (`RE_15_Quellcode_V2/FUN_8001443c.c`):
   **ueberspringt Leereintraege** anhand der Namenstabelle `&DAT_800c263a`
   (**13 Byte je Eintrag, 0x27d = 637 je Stage = 49 Eintraege**, Index max 0x30).
 - `if ((DAT_800ac762 & 0x40) == 0)` @Zeile 36 — KREUZ (rohe Flanke) ist hier die Bestaetigung.
+
+### Nie zwei Laeufe gleichzeitig (und der Treiber raeumt jetzt selbst auf)
+
+Ein Messlauf dauert 5-8 Minuten und laeuft damit ueber jedes kurze Bash-Zeitlimit hinaus — er
+wandert dann in den HINTERGRUND und **laeuft weiter**. Startet man daneben den naechsten, konkurrieren
+zwei Emulatoren um dieselbe Konfiguration und dasselbe Fenster: der zweite erzeugt gar keine
+Ausgabedatei. Genau daran ist eine Kriech-Messung gescheitert, und ich habe zuerst wieder die
+Konfiguration verdaechtigt (die war in Ordnung: gueltiges JSON, 1280x721, ShownAutoUpdateConfig=true).
+
+`drive_1030.py` macht deshalb jetzt beides selbst:
+- **beim START** `aufraeumen()` (taskkill auf `pcsx-redux.main` UND `pcsx-redux.exe`) und
+  `konfig_zuruecksetzen()` (kopiert `tools/redux/pcsx.json.good` ueber `%APPDATA%\pcsx-redux\pcsx.json`)
+  → jeder Lauf startet deterministisch;
+- **am ENDE** erst 6 s Gnadenfrist, damit die Sonde ihr `PCSX.quit(0)` erreicht und eine saubere
+  Konfiguration schreibt, und nur dann hartes `taskkill`.
+
+⚠️ Das harte Beenden war ein SELBSTGEBAUTER Kreislauf: es hinterlaesst eine pcsx.json, mit der der
+naechste Start im „Error"-Fenster haengt. Mit Gnadenfrist + Reset ist er durchbrochen.
+
+**Regel:** vor jedem neuen Lauf `tasklist //NH | grep -i pcsx` — ist da noch etwas, laeuft der
+vorige Lauf noch. Warten, nicht danebenstarten.

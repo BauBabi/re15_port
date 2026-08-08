@@ -16,7 +16,7 @@ Ablauf:
   5. ab hier uebernimmt das Lua-Skript: Raumindex schreiben und JUMP bestaetigen
 """
 import vgamepad as vg
-import subprocess, time, os
+import subprocess, time, os, shutil
 
 B = vg.XUSB_BUTTON
 EXE  = os.getenv("PCSX_EXE", r"C:\Users\mjoedicke\AppData\Local\Microsoft\WinGet\Packages\GrumpyCoders.PCSX-Redux_Microsoft.Winget.Source_8wekyb3d8bbwe\pcsx-redux.exe")
@@ -40,6 +40,34 @@ def fertig():
     except Exception:
         return False
 
+
+def konfig_zuruecksetzen():
+    """Jeden Lauf mit einer BEKANNT GUTEN pcsx.json beginnen.
+
+    ⛔ Ein hartes Beenden von pcsx-redux hinterlaesst eine pcsx.json, mit der der Emulator beim
+    naechsten Mal in einem Fenster mit dem Titel "Error" haengenbleibt: kein Lua, keine
+    Ausgabedatei, keine Fehlermeldung. Da der Treiber am Ende selbst hart beendet, war das ein
+    selbstgebauter Kreislauf — mehrfach erlebt. Deshalb hier deterministisch zuruecksetzen.
+    """
+    gut = os.path.join(os.path.dirname(os.path.abspath(__file__)), "pcsx.json.good")
+    ziel = os.path.join(os.environ.get("APPDATA", ""), "pcsx-redux", "pcsx.json")
+    try:
+        if os.path.exists(gut) and os.path.isdir(os.path.dirname(ziel)):
+            shutil.copyfile(gut, ziel)
+            print("pcsx.json auf den bekannt guten Stand gesetzt", flush=True)
+    except Exception as e:
+        print("Konfig-Reset fehlgeschlagen:", e, flush=True)
+
+
+def aufraeumen():
+    """Erst hoeflich, dann hart — und den RICHTIGEN Prozessnamen treffen."""
+    for name in ("pcsx-redux.main", "pcsx-redux.exe"):
+        subprocess.run(["taskkill", "/IM", name, "/F"],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+aufraeumen()          # Leichen frueherer Laeufe blockieren sonst den Start
+konfig_zuruecksetzen()
 
 gp = vg.VX360Gamepad(); gp.update(); time.sleep(1.0)
 print("vgamepad erzeugt", flush=True)
@@ -120,8 +148,12 @@ except Exception:
 # heisst "pcsx-redux.main" — OHNE .exe — und ueberlebt. Ueber mehrere Laeufe haben sich so sechs
 # Leichen angesammelt (je ~128 KB, direkt beim Start blockiert); danach startete gar nichts mehr
 # und PCSX zeigte nur noch ein Fenster mit dem Titel "Error". Deshalb hier hart nachraeumen.
-subprocess.run(["taskkill", "/IM", "pcsx-redux.main", "/F"],
-               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-subprocess.run(["taskkill", "/IM", "pcsx-redux.exe", "/F"],
-               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+# Gnadenfrist: die Lua-Sonden beenden sich selbst per PCSX.quit(0) und schreiben dabei eine
+# saubere pcsx.json. Nur wer dann noch lebt, wird hart beendet.
+for _ in range(6):
+    time.sleep(1)
+    if subprocess.run(["tasklist", "/FI", "IMAGENAME eq pcsx-redux.main", "/NH"],
+                      capture_output=True, text=True).stdout.find("pcsx-redux") < 0:
+        break
+aufraeumen()
 print("Ausgabe:", OUT, flush=True)

@@ -1,0 +1,3 @@
+ROOM1030 — Clip-Wechsel aller Gegner, ereignisgesteuert
+B 1500 | Phase 0 | Raum St 0 Idx 00 | Spieler (0,0) | Zeilen 0
+B 3000 | Phase 0 | Raum St 0 Idx 00 | Spieler (0,0) | Zeilen 0
