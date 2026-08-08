@@ -724,6 +724,13 @@ add_executable(probe_cam_1030_reentry probe_cam_1030_reentry.c)
 target_link_libraries(probe_cam_1030_reentry PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_cam_1030_reentry PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
+# --- MESSSONDE (kein ctest, A1 2026-08-08): "komische Animation nach Tuerwechsel nach
+#     Zombie-Kampf" — echter Tuer-Pfad 1170 -> 1140 (Kampf-Variante A/B/C) -> Tuer raus,
+#     Spieler-Felder der ersten 120 Ticks im Zielraum loggen. ---
+add_executable(probe_hitdoor_entry_anim probe_hitdoor_entry_anim.c)
+target_link_libraries(probe_hitdoor_entry_anim PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_hitdoor_entry_anim PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
 # --- MESSSONDE (kein ctest): Cut_replace-Mechanismus in ROOM1030 (Lane B, 2026-08-06).
 #     Misst den Tail von op_cut_replace beim Wiederbetreten ueber alle Vorraum-Cuts. ---
 add_executable(probe_cut_replace_1030 probe_cut_replace_1030.c)

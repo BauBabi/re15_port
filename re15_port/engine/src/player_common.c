@@ -124,9 +124,14 @@
  *   NO direct shot SE — the bang is data-driven by the spawned ESP effect.
  * (The earlier clip-0xD model was the MELEE FSM's knife DRAW — FUN_80035538 belongs to items 0-2;
  * its SE 0x1080001 is the knife draw. PL00 clips 17/18 = the box push. Both prior models wrong.)
- * The MOTION sentinel 213 tells the render "weapon-bank pose"; re15_player_aim_clip() carries the
- * actual W-bank clip. */
-#define RE15_MOTION_AIM_W         213    /* sentinel: pose from the WEAPON bank (clip via aim_clip) */
+ * The MOTION sentinel 215 tells the render "weapon-bank pose"; re15_player_aim_clip() carries the
+ * actual W-bank clip. (2026-08-08: WAR 213 — kollidierte mit RE15_MOTION_IDLE_HURT1==213. Folge 1:
+ * der One-Shot-Clamp unten klemmte den 30-Frame-Injured-Idle PL00 Clip 22 auf die W-Bank-Cliplaenge
+ * (Freeze bei Frame fc(W)-1). Folge 2: stale Aim-Phase + Injured-Idle posierte die W-Bank statt
+ * PL00 Clip 22. Sentinels sind Port-Konstrukte — die Trennung stellt das Original-Verhalten her:
+ * der Injured-Idle spielt seine vollen 30 EDD-Frames (PL00.EDD Clip 22), der Aim-Zustand lebt im
+ * Original ausschliesslich im cmd-1/ACTION-7-Zustand, nie im Clip-Register vermischt.) */
+#define RE15_MOTION_AIM_W         215    /* sentinel: pose from the WEAPON bank (clip via aim_clip) */
 #define RE15_AIM_TURN_RATE         24    /* @0x80074090: 5-u16 records per weapon, rec[0] low byte
                                           * = 0x3018&0xff = 0x18 = 24 — identical for ALL weapons */
 /* Player aim sub-phase (the action-8 FSM @0x80035810 collapsed to the visible raise->ready path):
@@ -153,6 +158,18 @@ static int s_knife_in_hand = 0;             /* player word 0x800aca54 bit 0x4000
                                              * (sub4, clip 0xD + SE + model attach) runs only ONCE;
                                              * later aims RE-RAISE (sub0, clip 6, no SE). Persists
                                              * across lower/raise (@0x80034e88-a8 pre-check). */
+/* Idle-FSM state (player only; single player_tick caller). s_idle_phase mirrors the original
+ * idle sub-state classes of switchD_8003206c: 0 neutral(clip3,timer) 1 settle(clip1,1-shot)
+ * 2 sway(clip2,timer) 3 hair(clip4,1-shot) 4 injured(clip22/23,replay). File-scope, damit der
+ * Raum-/Lade-Reset sie wischen kann: der cmd-0-Wort-Store `sw 1,0x800aca58` @0x8003192c nullt
+ * +0x05/+0x06 (Substate+Phase) bei JEDEM Raumwechsel — die Idle-Phase startet im Zielraum
+ * frisch (vorher ueberlebte z.B. Phase 4/Injured die Tuer und der Zielraum begann mit Sway
+ * statt neutral — gemessen, probe_hitdoor_entry_anim Kontroll-Lauf). */
+static int      s_idle_phase = -1;   /* -1 = not idle / needs (re)entry */
+static int      s_idle_timer = 0;
+static uint32_t s_frame_ctr  = 0;    /* free-running RNG feed — bewusst NICHT resettet (kein
+                                      * Original-Gegenstueck fuer einen Zaehler-Reset) */
+void re15_player_idle_reset(void) { s_idle_phase = -1; s_idle_timer = 0; }
 void re15_player_set_aim_clip_len(int fc)
 {
     for (int i = 0; i < RE15_AIM_CLIP_MAX; i++) s_aim_clip_fcs[i] = (uint16_t)fc;
@@ -431,13 +448,8 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
         /* Pick the locomotion state: forward = walk (or run if held), back = the
          * walk clip with a negated step (RE1.5 mode 8: motion 0x30, step negated —
          * no distinct back animation), nothing = idle. */
-        /* Idle FSM state (player only; single player_tick caller). s_idle_phase
-         * mirrors the original idle sub-state classes of switchD_8003206c:
-         *   0 neutral(clip3,timer) 1 settle(clip1,1-shot) 2 sway(clip2,timer)
-         *   3 hair(clip4,1-shot)   4 injured(clip22/23,replay). */
-        static int      s_idle_phase = -1;   /* -1 = not idle / needs (re)entry */
-        static int      s_idle_timer = 0;
-        static uint32_t s_frame_ctr  = 0;
+        /* Idle-FSM state: file-scope (s_idle_phase/s_idle_timer/s_frame_ctr, decl. oben
+         * bei den Aim-Statics) — der Raum-/Lade-Reset wischt Phase+Timer. */
         s_frame_ctr++;                       /* free-running RNG feed for the hash */
 
         int16_t want_motion = RE15_MOTION_IDLE;
@@ -487,13 +499,13 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
                 p->anim_flags &= (uint8_t)~RE15_ANIM_REVERSE;       /* (in-hand flag persists) */
                 /* LEAVE the aim sentinel THIS SAME tick. The exit clears phase→NONE, so the
                  * render's aim override (main.c, gated on re15_player_aim_active()) stops
-                 * applying — but want_motion is still RE15_MOTION_AIM_W (=213) from above, and
-                 * 213 ALSO == RE15_MOTION_IDLE_HURT1, so anim_select would pose PL00 clip 22
-                 * (the INJURED-IDLE hunch) for this one frame. That hunched pose then seeds the
-                 * FRAC crossfade → Leon visibly bends forward and rises = the spurious "land
-                 * animation" (measured: exit-frame kfi=661, a PL00 keyframe, vs the weapon
-                 * bank's 248-kf range; every weapon). Drop to the idle sentinel now so the
-                 * render sees motion 200 (not the ambiguous 213) the instant the aim ends. */
+                 * applying — but want_motion is still RE15_MOTION_AIM_W from above, and ohne
+                 * aktiven Override ist der AIM_W-Sentinel fuer anim_select unaufloesbar (kein
+                 * Sentinel-Zweig; er fiele als direkter Clip-Index in die def-Bank). Historie:
+                 * als AIM_W noch ==213 war, posierte dieser eine Frame PL00 Clip 22 (Injured-
+                 * Idle-Hunch) und seedete den FRAC-Crossfade = die gemessene "Land-Animation"
+                 * (exit-frame kfi=661). Drop to the idle sentinel now so the render sees
+                 * motion 200 the instant the aim ends. */
                 want_motion = RE15_MOTION_IDLE;
                 s_idle_phase = -1;                                  /* clean idle-FSM (re)entry */
             }

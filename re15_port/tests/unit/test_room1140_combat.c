@@ -900,8 +900,8 @@ int main(void)
             re15_player_set_aim_clip_len(10);   /* mock the W-bank clip length (platform sets it) */
         }
         re15_player_tick(NULL, RE15_PAD_BIT_R1);          /* hold R1 -> gun FSM sub0 RAISE */
-        if (pl->motion != 213) {
-            fprintf(stderr, "FAIL: (16) hold R1 -> weapon-bank sentinel 213, ist %d\n", pl->motion); fail = 1; }
+        if (pl->motion != 215) {
+            fprintf(stderr, "FAIL: (16) hold R1 -> weapon-bank sentinel 215, ist %d\n", pl->motion); fail = 1; }
         if (re15_player_aim_clip() != 6) {
             fprintf(stderr, "FAIL: (16) the raise = W-bank clip 6 (sub0 @0x80032f18), ist %d\n",
                     re15_player_aim_clip()); fail = 1; }
@@ -915,7 +915,7 @@ int main(void)
                     (int)(pl->x - ax), (int)(pl->z - az)); fail = 1; }
         /* UP was held -> the HOLD switched to the AIM-UP elevation clip 10 (byte-true dpad
          * elevation @0x80033180: UP/DOWN swap clips 8/10/12 + acaec 0x8000/0x2000) */
-        if (pl->motion != 213 || re15_player_aim_clip() != 10) {
+        if (pl->motion != 215 || re15_player_aim_clip() != 10) {
             fprintf(stderr, "FAIL: (16) raise done + UP held -> HOLD clip 10 (aim-up), mo=%d clip=%d\n",
                     pl->motion, re15_player_aim_clip()); fail = 1; }
         re15_player_tick(NULL, RE15_PAD_BIT_R1);          /* dpad released -> back to LEVEL clip 8 */
@@ -945,7 +945,7 @@ int main(void)
         if (re15_player_aim_ready()) {
             fprintf(stderr, "FAIL: (16) release R1 -> not aim-ready\n"); fail = 1; }
         for (int f = 0; f < 12; f++) re15_player_tick(NULL, 0);  /* lower plays out -> exit */
-        if (pl->motion == 213 || (pl->anim_flags & 0x80)) {
+        if (pl->motion == 215 || (pl->anim_flags & 0x80)) {
             fprintf(stderr, "FAIL: (16) gun LOWER done -> leave the aim pose, motion=%d\n", pl->motion); fail = 1; }
         /* MELEE path (items 0-2 @0x80074030 -> FSM 0x80034e70, byte-true wf_306144dd-336):
          * COLD entry = DRAW sub4 (clip 0xD + SE, sets the in-hand 0x4000 flag) -> HOLD clips
@@ -960,7 +960,7 @@ int main(void)
             re15_player_aim_reset();                      /* clean slate incl. in-hand flag */
             pl->motion = 200; pl->anim_frame = 0;
             re15_player_tick(NULL, RE15_PAD_BIT_R1);
-            if (pl->motion != 213 || re15_player_aim_clip() != 0x0d) {
+            if (pl->motion != 215 || re15_player_aim_clip() != 0x0d) {
                 fprintf(stderr, "FAIL: (16) knife COLD aim = DRAW clip 0xD (sub4), mo=%d clip=%d\n",
                         pl->motion, re15_player_aim_clip()); fail = 1; }
             for (int f = 0; f < 12; f++) re15_player_tick(NULL, RE15_PAD_BIT_R1 | RE15_PAD_BIT_UP);

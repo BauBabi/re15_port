@@ -112,15 +112,33 @@ void re15_player_event_reach_end(void)  { s_ev_reach = 0; }
  * KEINEM Raum- oder Lade-Pfad angefasst. Ein Knockdown, den der Tod unterbricht, laesst s_knockdown==1
  * stehen (sein einziger Exit wird nie erreicht, weil der Death-Branch vorher gewinnt) — nach
  * Tod -> Title -> LOAD haette der Spieler die Kontrolle erst nach Ablauf der alten Phase zurueck.
- * s_prev_hp geht auf seinen Initialwert 100 (nicht 0), damit der HP-Drop-Detektor im ersten Frame
- * nach dem Laden denselben Ausgangspunkt hat wie beim Frisch-Boot; praktisch ist der Wert inert,
- * weil jeder Tick ihn neu schreibt. */
+ *
+ * s_prev_hp = -1 = "keine Baseline": der HP-Drop-Detektor (unten, `hp < s_prev_hp`) kann im
+ * ersten Tick nach einem Reset nicht feuern und re-basiert sich am Tick-Ende auf die live HP.
+ * NICHT 100 setzen (der alte Wert): HP ueberlebt den Raumwechsel byte-true (einziger HP-Writer
+ * ist der Session-Start @0x80031710-18, FUN_800314b0-Tail — der laeuft bei Tuerwechseln NICHT,
+ * Gate @0x80039760-8c), eine 100er-Baseline fabrizierte deshalb bei hp<100 im ERSTEN Tick des
+ * Zielraums einen PHANTOM-FLINCH: Clip 0xa + 500 Einheiten Rueckstoss ohne jede Eingabe
+ * (gemessen, probe_hitdoor_entry_anim Lauf B/C vs. Kontrolle A). Im Original ist ein
+ * Hit-Eintritt am Raumanfang mechanisch unerreichbar: cmd:=0 @0x8001cbdc, cmd-0 baut frisch auf.
+ *
+ * Aim + Idle: das cmd:=0 @0x8001cbdc toetet den GESAMTEN cmd-1-Zustand inkl. der ACTION-7-
+ * Aim-Action (Dispatch @0x80031c88 indexiert aca58), und der cmd-0-Handler nullt die Aim-/
+ * Turn-Bank @0x8003196c-94 und wischt per Wort-Store `sw 1,0x800aca58` @0x8003192c auch
+ * +0x05/+0x06 (Idle-Substate/-Phase). Die Port-Statics dieser beiden FSMs muessen denselben
+ * Reset erfahren, sonst ueberlebt eine LOWER-Phase die Tuer (Waffe-heben-Pantomime im
+ * Zielraum) bzw. die Idle-Phase startet nicht neutral. */
 void re15_player_cmd_reset(void)
 {
+    extern void re15_player_aim_interrupt(void);   /* player_common.c — Phase:=NONE, Knife-Latch
+                                                    * bleibt (aca54-Bit 0x4000 ueberlebt, s. dort) */
+    extern void re15_player_idle_reset(void);      /* player_common.c — Idle-Phase/-Timer */
     s_knockdown = 0; s_kd_dir = 0; s_kd_phase = 0; s_kd_speed = 0; s_kd_t = 0;
     s_hit_flinch = 0; s_hit_kb = 0;
     s_ev_reach = 0;
-    s_prev_hp = 100;
+    s_prev_hp = -1;
+    re15_player_aim_interrupt();
+    re15_player_idle_reset();
 }
 int  re15_player_event_reach_clip(void) { return s_ev_reach ? ((s_ev_reach == 1) ? 1 : 2) : -1; }
 static void re15_player_event_reach_tick(re15_actor_t *pl)
@@ -240,10 +258,20 @@ static void re15_player_knockdown_tick(const re15_game_ctx_t *c, re15_actor_t *p
     default:                                      /* EXIT ([4] Ph4/Ph11 @0x800362f4/@0x8003640c,
                                                    * [5] Ph6 @0x8003667c): aca58:=1, +0x93 = 0
                                                    * (@0x800362f8-Region / @0x80036690),
-                                                   * aca3c &= ~0xC0 (@0x80036410-34/@0x80036680-a4) */
+                                                   * aca3c &= ~0xC0 (@0x80036410-34/@0x80036680-a4).
+                                                   * Clip +0x94 bleibt UNANGETASTET (dieselben
+                                                   * `sw 1`-Wort-Exits wie der Flinch) — kein
+                                                   * `motion = 0`-Blitz. Lief der Schluss-Clip
+                                                   * RUECKWAERTS (Aufstehen = 0xb reversed,
+                                                   * @0x800363c8/@0x80036638), ist die Endpose
+                                                   * der Vorwaerts-Slot 0: Frame auf 0 setzen,
+                                                   * wenn das Reverse-Bit faellt, damit derselbe
+                                                   * Keyframe stehen bleibt. */
         s_knockdown = 0;
-        pl->motion = 0;
-        pl->anim_flags &= (uint16_t)~0x80u;
+        if (pl->anim_flags & 0x80u) {
+            pl->anim_frame = 0;
+            pl->anim_flags &= (uint16_t)~0x80u;
+        }
         pl->hit_react &= (uint8_t)~1u;
         break;
     }
@@ -519,7 +547,12 @@ void re15_game_step(const re15_game_ctx_t *c)
             s_hit_kb -= 0x32;                                              /* DAT_800acaf2 = 50 */
             if (s_hit_kb < 0) s_hit_kb = 0;
         }
-        if (--s_hit_flinch == 0) pl->motion = 0;
+        /* Exit: das Original kippt NUR das cmd-Wort auf 1 (`sw 1` @0x80035c80/@0x80035db8 —
+         * die Exits der cmd-2-Substate-Handler [0]-[3]); Clip +0x94 bleibt UNANGETASTET, der
+         * Exit-Frame zeigt die letzte Flinch-Pose, erst der cmd-1-Tick des FOLGEframes waehlt
+         * neu. Das alte `motion = 0` blitzte hier 1 Tick PL00-Base-Clip 0 (gemessen,
+         * probe_hitdoor_entry_anim t=19). */
+        --s_hit_flinch;
         re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
     } else {
         /* NORMAL cmd-0 handler prologue (byte-true LAB_800318f8/FUN_80031c44): the original
