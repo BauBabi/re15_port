@@ -83,7 +83,7 @@ int main(void)
     CHECK(e->sub_state_2 == 1, "Phase 0: sub_state_2==1 (@0x8010500c), ist %u", e->sub_state_2);
     CHECK(e->xfer_dir == 1, "HINWEG-Latch: xfer_dir==1 (Bit 0x80 clear, @0x80105050), ist %u", e->xfer_dir);
     CHECK(e->anim_frame >= 1 && e->anim_frame <= 4, "Startframe rng&3 (+1 Advance) in [1..4], ist %u", (unsigned)e->anim_frame);
-    CHECK(re15_actor_toggle_reverse(e) == 0, "HINWEG posiert VORWAERTS (B3 §6: py-Rampe = Hinlegen)");
+    CHECK(re15_actor_toggle_reverse(e) == 1, "HINWEG posiert GESPIEGELT (a2=1: Slot fc-+0x95-1 @0x8001f344-54; kf-Daten: frame0 py=-175 LIEGEND -> gespiegelt = Hinlegen)");
 
     int ticks = 1;
     while (e->grid_id != 0x81 && ticks < 200) { re15_enemy_ai_live_active(1); ticks++; }
@@ -119,7 +119,7 @@ int main(void)
     CHECK(e->motion == 0x12, "Toggle Phase 0: motion==0x12, ist 0x%02x", e->motion);
     CHECK(e->xfer_dir == 0, "RUECKWEG-Latch: xfer_dir bleibt 0 (Bit 0x80 gesetzt, @0x80105044-48)");
     CHECK((e->hit_react & 1) != 0, "Toggle Phase 0: hit_react|=1");
-    CHECK(re15_actor_toggle_reverse(e) == 1, "RUECKWEG posiert RUECKWAERTS (f314 a2!=0: Slot fc-1-frame, FUN_8001f314.c:13)");
+    CHECK(re15_actor_toggle_reverse(e) == 0, "RUECKWEG posiert VORWAERTS-wie-gespeichert (a2=0: Slot=+0x95 @0x8001f35c; frame0 py=-175 -> 97 py=-1744 = Aufstehen)");
 
     ticks = 1;
     while ((e->grid_id & 0x80) != 0 && ticks < 200) { re15_enemy_ai_live_active(1); ticks++; }

@@ -19,6 +19,7 @@
 #include "re15_enemy_ai.h"
 #include "re15_emd.h"
 #include "re15_ems.h"
+#include "re15_anim_select.h"   /* re15_compute_actor_kf — der Render-kf des Frames */
 
 #define RE15_STR(x)  #x
 #define RE15_XSTR(x) RE15_STR(x)
@@ -142,6 +143,79 @@ int main(void)
                    (long)(lock_dz < 0 ? -lock_dz : lock_dz), 130 - (first_lock_tick > 0 ? first_lock_tick : 0));
         else
             printf("  -> KEIN Vortrieb gemessen (Hand-Lock lieferte 0-Delta) — pruefen!\n");
+    }
+
+    /* ===== D4: VOLL-ZYKLUS-POSE-TRACE (Diagnose Nutzer-Report "komische Bewegungen /
+     * abruptes Aufstehen") — tick-genau: Zustandsfelder + der kf-Slot, den der RENDERER
+     * dieses Ticks posieren wuerde (Bank-Regel re15_actor_uses_loco_bank + Enemy-Zweig aus
+     * anim_select_common.c: clip_override = (anim_flags&4)?motion:-1; Mirror =
+     * re15_actor_toggle_reverse). kf-Sprung > 3 innerhalb derselben Bank = POSE-SPRUNG. */
+    printf("\n== D4: Voll-Zyklus-Pose-Trace (HINWEG-Toggle -> Kriechen -> RUECKWEG -> Aufstehen) ==\n");
+    {
+        re15_actor_t *e2 = &g_actors[2];
+        memset(e2, 0, sizeof *e2);
+        e2->active = 1; e2->type = 0x16; e2->hp = 100;
+        e2->state = 1; e2->sub_state_1 = 2; e2->sub_state_2 = 1;   /* ENGAGE-Walker */
+        e2->grid_id = 0; e2->sca_mask = 4; e2->motion = 3; e2->anim_flags = 0x1000; /* sub07-Wirkung */
+        e2->x = 0; e2->z = 0; e2->rot_y = 0;
+        pl->x = 0; pl->z = 20000; pl->hit_react = 1;
+        e2->steer_x = 0; e2->steer_z = 20000;
+        int prev_kf = -1; const void *prev_bank = NULL;
+        int last_mo = -1, last_s1 = -1, last_s2 = -1, last_grid = -1;
+        int rueck_armed = 0;
+        for (int t = 0; t < 420; t++) {
+            re15_enemy_ai_live_active(2);
+            /* Nicht-Toggle/Grid-1-Zustaende advanct der globale Advancer — hier nachbilden,
+             * damit der Trace die echte Frame-Folge sieht (probe hat keinen game_step). */
+            if (!(e2->state == 1 && (e2->sub_state_1 == 0x10 || (e2->grid_id & 0x0f) == 1))) {
+                int fcx = re15_actor_clip_len(e2);
+                uint16_t nf = (uint16_t)(e2->anim_frame + 1);
+                if (fcx > 0 && (int)nf >= fcx)
+                    e2->anim_frame = (e2->anim_flags & 0x04u) ? 0 : (uint16_t)(fcx - 1);
+                else e2->anim_frame = nf;
+                if (e2->anim_frac > 0) e2->anim_frac--;
+            }
+            /* RUECKWEG ausloesen, sobald der Kriecher 60 Ticks gekrochen ist (sub05-Wirkung:
+             * af = (af & 0x0FFF) | 0x2000 — manueller Stand-in, hier geht es um die POSEN). */
+            if (!rueck_armed && e2->grid_id == 0x81 && e2->motion == 0x1A && t > 160) {
+                e2->anim_flags = (uint16_t)((e2->anim_flags & 0x0fff) | 0x2000);
+                rueck_armed = 1;
+                printf("   t=%3d [RUECKWEG-TRIGGER af=0x%04x]\n", t, e2->anim_flags);
+            }
+            /* Render-kf dieses Ticks bestimmen (wie anim_select fuer Gegner). */
+            {
+                re15_enemy_bank_t *b = re15_enemy_find(0x16);
+                const re15_emd_animation_t *an2; const re15_emd_skeleton_t *sk2;
+                const char *bn;
+                if (re15_actor_uses_loco_bank(e2) && b->loco_ok)
+                    { an2 = &b->anim_loco; sk2 = &b->skel_loco; bn = "LOCO"; }
+                else { an2 = &b->anim; sk2 = &b->skel; bn = "AKT"; }
+                int ov = (e2->anim_flags & 0x04) ? (int)e2->motion : -1;
+                int mir = re15_actor_toggle_reverse(e2);
+                int kf = re15_compute_actor_kf(an2, sk2, e2, ov, (uint32_t)e2->anim_frame);
+                /* KF-SPRUNG nur INNERHALB desselben Clips werten — ein Clip-Wechsel traegt
+                 * naturgemaess neue kf-Indizes (der Uebergang wird per +0x8F-Crossfade
+                 * geblendet) und wird separat annotiert. */
+                int cchg = (e2->motion != last_mo || prev_bank != (const void *)an2);
+                int jump = (!cchg && prev_kf >= 0 &&
+                            (kf - prev_kf > 3 || prev_kf - kf > 3));
+                int chg = (e2->motion != last_mo || e2->sub_state_1 != last_s1 ||
+                           e2->sub_state_2 != last_s2 || e2->grid_id != last_grid);
+                if (chg || jump || (t % 12) == 0)
+                    printf("   t=%3d st=%u s1=0x%02x s2=%u grid=0x%02x xfer=%u sca=%u mo=0x%02x "
+                           "fr=%-3u frac=%-2u bank=%-4s mir=%d kf=%-3d%s%s pos=(%ld,%ld)\n",
+                           t, e2->state, e2->sub_state_1, e2->sub_state_2, e2->grid_id,
+                           e2->xfer_dir, e2->sca_mask, (unsigned)e2->motion,
+                           (unsigned)e2->anim_frame, e2->anim_frac, bn, mir, kf,
+                           jump ? " <== KF-SPRUNG" : "",
+                           (cchg && prev_kf >= 0) ? " [CLIP-WECHSEL]" : "",
+                           (long)e2->x, (long)e2->z);
+                prev_kf = kf; prev_bank = (const void *)an2;
+                last_mo = e2->motion; last_s1 = e2->sub_state_1;
+                last_s2 = e2->sub_state_2; last_grid = e2->grid_id;
+            }
+            if (rueck_armed && e2->grid_id == 0 && e2->sub_state_1 == 0x13 && t > 300) break;
+        }
     }
     return 0;
 }

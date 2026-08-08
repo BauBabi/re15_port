@@ -300,10 +300,12 @@ void re15_player_cmd_reset(void);
  * ANIMATE 0x8011F920) ist im case 1 des Grid-Switch verdrahtet (enemy_ai_common.c). */
 void re15_enemy_ai_toggle_animate(re15_actor_t *e);
 
-/* Render-Spiegelung des Toggle-Clips 0x12 auf dem RUECKWEG (xfer_dir==0): f314 posiert bei
- * a2!=0 den Slot (fc - frame) - 1 (FUN_8001f314.c:13, a2 = (s8)+0x9F @0x8010506c). Der
- * Richtungs-Anker ist der Datenbeleg B3 §6 (Clip 0x12 root-py -1744 -> -175 = Hinlegen =
- * VORWAERTS); genutzt von re15_compute_actor_kf statt des port-erfundenen anim_flags-0x80. */
+/* Render-Spiegelung des Toggle-Clips 0x12 auf dem HINWEG (xfer_dir==1): f314 posiert bei
+ * a2!=0 den Slot (fc - frame) - 1 — Rohbytes @0x8001f338 (beq a2) + @0x8001f344-54
+ * (subu fc / addiu -1); a2 = (s8)+0x9F @0x8010506c. Keyframe-Rohdaten (CDEMD0.EMS Blob
+ * 0xD5800): Clip 0x12 frame 0 = py -175 LIEGEND, frame 97 = py -1744 STEHEND — d.h.
+ * gespiegelt = HINLEGEN, vorwaerts = AUFSTEHEN (die alte B3-§6-Rampen-Lesung war invertiert).
+ * Genutzt von re15_compute_actor_kf statt des port-erfundenen anim_flags-0x80. */
 int re15_actor_toggle_reverse(const re15_actor_t *a);
 
 /* THE single "which animation bank does this state pose from" rule — shared by the renderer and the

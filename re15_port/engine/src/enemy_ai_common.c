@@ -2399,20 +2399,30 @@ static void re15_enemy_handlock_step(int slot, re15_actor_t *e, int sel,
 }
 
 /* Render-Richtung des Toggle-Clips 0x12: der Toggle spielt ihn per f314 mit a2 = (s8)+0x9F
- * (@0x8010506c); f314 posiert bei a2!=0 den GESPIEGELTEN Slot (fc - frame) - 1, waehrend
- * +0x95 normal hochzaehlt (FUN_8001f314.c:13). RICHTUNGS-ZUORDNUNG (Ableitung, im Dossier/B3
- * nicht als Instruktion eindeutig): der Datenbeleg B3 §6 definiert die VORWAERTS-Richtung —
- * Clip 0x12 rampt root-py -1744 -> -175 = HINLEGEN. Also spielt der HINWEG (xfer_dir==1,
- * Bit 0x80 clear) VORWAERTS und der RUECKWEG (xfer_dir==0, Kriecher steht auf) RUECKWAERTS
- * (= gespiegelte Slots). Eigene Abfrage statt anim_flags-Bit 0x80 (das Port-Reverse-Bit auf
- * +0x1C4 ist port-erfunden und wird hier nicht mitbenutzt — Dossier §2). */
+ * (@0x8010506c). LITERALE a2-Semantik, selbst disassembliert (PSX.EXE):
+ *   @0x8001f338  beq t2,zero,0x8001f358    ; t2 = a2
+ *   @0x8001f344  lbu v0,149(t0)            ; a2 != 0:
+ *   @0x8001f34c  subu v0,t1,v0             ;   t1 = frame_count
+ *   @0x8001f354  addiu v0,v0,-1            ;   POSIERTER SLOT = fc - (+0x95) - 1 (SPIEGEL)
+ * (+0x95 zaehlt richtungs-unabhaengig hoch: post-inc + Wrap @0x8001f610-3c.)
+ * RICHTUNGS-ZUORDNUNG (Korrektur 2026-08-08): Mirror bei xfer_dir==1 = HINWEG.
+ * Die fruehere Ableitung ("B3 §6: py rampt -1744 -> -175 = Hinlegen = vorwaerts") ist
+ * WIDERLEGT — die Keyframe-ROHDATEN (CDEMD0.EMS Blob 0xD5800, dir[3]/dir[4], selbst geparst)
+ * zeigen Clip 0x12 WIE GESPEICHERT: frame 0 = kf400 py=-175 (LIEGEND) -> frame 97 = kf449
+ * py=-1744 (STEHEND) = vorwaerts-wie-gespeichert ist das AUFSTEHEN. Damit ist die literale
+ * Abbildung widerspruchsfrei: HINWEG (xfer=1, a2=1) = gespiegelte Slots 97->0 = stehend ->
+ * liegend = HINLEGEN; RUECKWEG (xfer=0, a2=0) = vorwaerts 0->97 = liegend -> stehend =
+ * AUFSTEHEN. Eigene Abfrage statt anim_flags-Bit 0x80 (das Port-Reverse-Bit auf +0x1C4 ist
+ * port-erfunden und wird hier nicht mitbenutzt — Dossier §2). */
 int re15_actor_toggle_reverse(const re15_actor_t *a)
 {
     uint8_t t;
     if (!a) return 0;
     t = a->type;
     if (!(t == 0x10 || t == 0x11 || t == 0x12 || t == 0x16 || t == 0x18)) return 0;
-    if (a->state != 1 || a->motion != 0x12 || a->xfer_dir != 0) return 0;
+    if (a->state != 1 || a->motion != 0x12 || a->xfer_dir == 0) return 0;  /* a2=(s8)+0x9F:
+                                                                            * nur !=0 spiegelt
+                                                                            * (@0x8001f338) */
     return (a->sub_state_1 == 0x10) ||                        /* f890[0x10] (Grid 0)  */
            ((a->grid_id & 0x0f) == 1 && a->sub_state_1 == 6); /* f920[6]   (Grid 1)  */
 }
@@ -2446,11 +2456,20 @@ void re15_enemy_ai_toggle_animate(re15_actor_t *e)
                                                      * (Guard-Politik wie re15_enemy_clip_done) */
         } else {
             /* f314-Replikat: +0x95 hochzaehlen, Wrap am Clip-Ende liefert die Rueckgabe 1
-             * (FUN_8001f3bc @0x8001F610-3C: post-inc, (frame+1)>=fc -> +0x95=0, return 1).
-             * Die Pose-Richtung (vorwaerts/gespiegelt) entscheidet re15_actor_toggle_reverse
-             * am Render (FUN_8001f314.c:13). */
+             * (FUN_8001f3bc: post-inc + Wrap @0x8001f610-3c, return 1 @0x8001f638). Die
+             * Pose-Richtung (vorwaerts/gespiegelt) entscheidet re15_actor_toggle_reverse am
+             * Render (Slot = fc-+0x95-1 bei a2!=0, @0x8001f344-54).
+             * WRAP-TICK-POSE (Port-Render-Konvention, kein Original-Feld): das Original
+             * posiert ERST (Slot aus dem PRE-Increment-+0x95) und wrappt DANACH — der Render
+             * dieses Frames zeigt die f3bc-Locals der LETZTEN Pose, nie den Slot des
+             * gewrappten Zaehlers. Der Port leitet die Render-Pose aus anim_frame ab, also
+             * traegt anim_frame am Done-Tick fc-1 = den zuletzt posierten Slot (vorwaerts:
+             * Slot fc-1; gespiegelt: Slot fc-1-(fc-1) = 0) statt des Original-Zaehlerwerts 0
+             * (@0x8001f63c) — dieselbe Emulations-Klasse wie der Advancer-HOLD-LAST
+             * (player_common.c). Der Zaehler ist danach tot: Phase 2/Folgezustand setzen
+             * Clip+Frame neu. */
             uint16_t nf = (uint16_t)(e->anim_frame + 1);
-            if ((int)nf >= fc) { e->anim_frame = 0; done = 1; }
+            if ((int)nf >= fc) { e->anim_frame = (uint16_t)(fc - 1); done = 1; }
             else               { e->anim_frame = nf; done = 0; }
         }
         if (e->anim_frac > 0) e->anim_frac--;       /* +0x8F-Decay in f3bc (@0x8001f5b4, saettigend) */
@@ -2458,6 +2477,15 @@ void re15_enemy_ai_toggle_animate(re15_actor_t *e)
         return;                                     /* Phase 1 faellt NICHT in Phase 2 (@0x8010508c j) */
     }
     default:                                        /* PHASE 2 @0x80105094 */
+        /* Render-Pose des Uebergangs-Ticks (Port-Render-Konvention, Fortsetzung des
+         * Done-Tick-Pins oben): Phase 2 aendert +0x05 -> re15_actor_toggle_reverse greift
+         * nicht mehr, der Render liest den Slot UNGESPIEGELT aus anim_frame. Damit weiter
+         * die zuletzt POSIERTE Pose steht (Original: die f3bc-Locals, bis der Folgezustand
+         * per f314 neu posiert), wird der absolute Slot eingetragen: HINWEG (gespiegelt,
+         * zuletzt Slot 0 = kf400 py -175 LIEGEND) -> 0; RUECKWEG (vorwaerts, zuletzt Slot
+         * fc-1 = kf449 py -1744 STEHEND) -> bleibt fc-1. Zaehler ist danach tot (Kriech-
+         * Erstframe schreibt +0x95=0 @0x8010372c, Engage-Entry setzt seinen eigenen Clip). */
+        if (e->xfer_dir != 0) e->anim_frame = 0;
         e->grid_id = 0;                             /* +0x09 = 0         @0x80105094 sb zero */
         re15_ai_set_state_word(e, 0x201);           /* +0x04 = 0x201 (32-bit: +0x5=2,+0x6=0,+0x7=0 —
                                                      * Dossier-Falle 2)  @0x801050a4 */
@@ -3424,9 +3452,23 @@ int re15_actor_uses_loco_bank(const re15_actor_t *a)
      * @0x8011f80c[0]); die Grid-1-Tabelle @0x8011F920 hat eigene +0x5-Belegungen (u.a.
      * 2 = Stub 0x80103b94) und posiert nie die Loco-Bank. Ohne den Guard griffe die Regel
      * fuer Grid-1-Subs 2/7 faelschlich. */
-    return (a->state == 1 && (a->grid_id & 0x0f) == 0
-            && (a->sub_state_1 == 0x13 || a->sub_state_1 == 2 || a->sub_state_1 == 7))
-        || (a->state == 2 && !(a->grid_id & 0x80));
+    int walk_state = (a->state == 1 && (a->grid_id & 0x0f) == 0
+                      && (a->sub_state_1 == 0x13 || a->sub_state_1 == 2 || a->sub_state_1 == 7))
+                  || (a->state == 2 && !(a->grid_id & 0x80));
+    if (!walk_state) return 0;
+    /* MOTION-Gate (Kriechtor-Fix 3): das Original hat keine Bank-REGEL — es rendert die
+     * zuletzt per f314 posierten Locals; ein Walk-State posiert die Loco-Bank erst, wenn
+     * sein Entry seinen Loco-Clip in +0x94 geschrieben hat. Auf dem Uebergangs-Tick nach
+     * dem RUECKWEG-Toggle (Phase 2 schreibt Wort 0x201 @0x801050a4, +0x94 traegt noch den
+     * Bank-1-Clip 0x12) stehen die Locals noch auf der Bank-1-Pose — die Loco-Bank darf
+     * dann NICHT posieren (Clip 0x12=18 existiert dort nicht; 18 %% 6 posierte den Walk-
+     * Clip 0 = der gemessene 1-Tick-Glitch, D4-Trace t=257). Motion-basiert: nur Clips,
+     * die die Loco-Bank (dir[1], 6 Clips beim Zombie) wirklich traegt. */
+    {
+        re15_enemy_bank_t *b = re15_enemy_find(a->type);
+        if (b && b->loco_ok && (int)a->motion >= b->anim_loco.clip_count) return 0;
+    }
+    return 1;
 }
 
 /* The frame count of the clip this actor is ACTUALLY being posed from — same bank the renderer

@@ -283,7 +283,30 @@ int main(void)
         int32_t cx0 = 0, cz0 = 0, rx = 0, rz = 0;
         printf("  Gegner slot=%d (Enemy-Index %d, Bank-5-Latch Bit %d) -> Zone 5 (-8000,-24700)\n",
                victim, victim - 1, victim - 1);
+        /* WARTENDER Zombie (Diagnose-Task 4): einen ZWEITEN Gegner ebenfalls in Zone 5 parken.
+         * Sobald die wv7-Drossel (>=4 Zombies in Zone 6) zu ist, bekommt er den Stempel 5, aber
+         * sub06/Gosub-7 feuert nie -> er bleibt in der normalen AI vor dem GESCHLOSSENEN Tor
+         * (Maske 4 vs. Zellen-0xF7). Geloggt: s1/motion/rot_y + Zustandswechsel-Zaehler. */
+        int wait_slot = -1;
+        for (int s = victim + 1; s < RE15_ACTOR_MAX; s++)
+            if (g_actors[s].active) { wait_slot = s; break; }
+        int wait_s1_changes = 0, wait_mo_changes = 0; int wait_last_s1 = -1, wait_last_mo = -1;
+        if (wait_slot > 0)
+            printf("  WARTENDER slot=%d -> Zone 5 (-6000,-24700)\n", wait_slot);
         for (int t = 0; t < 600; t++) {
+            if (wait_slot > 0) {
+                re15_actor_t *w = &g_actors[wait_slot];
+                int wtaken = (w->grid_id & 0x80) ||
+                             (w->state == 1 && (w->sub_state_1 == 0x10 || (w->grid_id & 0x0f) == 1));
+                if (!wtaken) { w->x = -6000; w->z = -24700; w->floor = 0; }
+                if (wait_last_s1 >= 0 && w->sub_state_1 != wait_last_s1) wait_s1_changes++;
+                if (wait_last_mo >= 0 && (int)w->motion != wait_last_mo) wait_mo_changes++;
+                wait_last_s1 = w->sub_state_1; wait_last_mo = (int)w->motion;
+                if ((t % 120) == 0)
+                    printf("   [warte t=%3d] slot%d grid=0x%02x s1=0x%02x mo=0x%02x af=0x%04x m0b=%u rot=%d\n",
+                           t, wait_slot, w->grid_id, w->sub_state_1, (unsigned)w->motion,
+                           w->anim_flags, w->member_0b, (int)w->rot_y);
+            }
             /* Parken nur bis der Toggle/Grid-1 uebernimmt (danach bewegt der Hand-Lock). */
             int taken = (v->grid_id & 0x80) ||
                         (v->state == 1 && (v->sub_state_1 == 0x10 || (v->grid_id & 0x0f) == 1));
@@ -323,6 +346,12 @@ int main(void)
                        g_aot.slots[4].sce_flags ? g_aot.slots[4].type : 0,
                        g_aot.slots[5].sce_flags ? g_aot.slots[5].type : 0,
                        g_aot.slots[6].sce_flags ? g_aot.slots[6].type : 0);
+        }
+        if (wait_slot > 0) {
+            re15_actor_t *w = &g_actors[wait_slot];
+            printf("  WARTENDER-Bilanz: s1-Wechsel=%d motion-Wechsel=%d Endzustand s1=0x%02x mo=0x%02x af=0x%04x grid=0x%02x\n",
+                   wait_s1_changes, wait_mo_changes, w->sub_state_1, (unsigned)w->motion,
+                   w->anim_flags, w->grid_id);
         }
         printf("  -- Phase-D-Bilanz --\n");
         printf("   Stempel=%d  0x1000=%d  0x1001=%d  grid81=%d  clip1A=%d  ersterLock=%d  Rueckweg=%d  aufgestanden=%d (Tick-Nummern; -1 = nie)\n",

@@ -40,11 +40,13 @@ int re15_compute_actor_kf(const re15_emd_animation_t *anim,
 
     int slot;
     int reverse = (a->anim_flags & 0x80) ? 1 : 0;
-    /* ROOM1030 Kriechtor-Toggle, RUECKWEG (Aufstehen): f314 posiert bei a2 = (s8)+0x9F != 0
-     * den GESPIEGELTEN Slot (fc - frame) - 1 (FUN_8001f314.c:13; Aufruf @0x8010506c). Eigene
+    /* ROOM1030 Kriechtor-Toggle, HINWEG (Hinlegen): f314 posiert bei a2 = (s8)+0x9F != 0
+     * den GESPIEGELTEN Slot (fc - frame) - 1 — Rohbytes @0x8001f338 (beq a2) +
+     * @0x8001f344-54 (lbu +0x95 / subu fc / addiu -1); Aufruf @0x8010506c. Eigene
      * Zustands-Abfrage statt anim_flags-Bit 0x80 (das Port-Reverse-Bit auf +0x1C4 ist
-     * port-erfunden — Dossier §2). Richtungs-Anker: B3 §6 (Clip-0x12-root-py-Rampe =
-     * Hinlegen = vorwaerts), Ableitung in enemy_ai_common.c re15_actor_toggle_reverse. */
+     * port-erfunden — Dossier §2). Der alte Richtungs-Anker "B3 §6 py-Rampe -1744->-175 =
+     * Hinlegen = vorwaerts" ist WIDERLEGT (Keyframe-Rohdaten: Clip 0x12 frame 0 = py -175
+     * LIEGEND, frame 97 = py -1744 STEHEND) — Ableitung in re15_actor_toggle_reverse. */
     if (re15_actor_toggle_reverse(a)) reverse = 1;
     /* BYTE-TRUE post-walk hold: a scripted Plc_dest walk/run that has ARRIVED sets
      * anim_freeze (actor_locomotion.c) — the original holds the walk clip, and FUN_8001f3bc
