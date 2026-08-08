@@ -725,6 +725,15 @@ void re15_actors_anim_advance(void)
          * other 6 NPC types (0x42/0x45/0x47/0x49/0x4b/0x4d) are gated here while in the executor. */
         { uint8_t t = a->type;
           if (a->state == 4 && (t==0x40||t==0x42||t==0x45||t==0x47||t==0x49||t==0x4b||t==0x4d)) continue; }
+        /* ROOM1030 Kriechtor: der Sub-0x10-TOGGLE (f890[0x10]/f920[6] = FUN_80104f80) und die
+         * Grid-1-Kriechmaschine (FUN_801036dc) rufen f314 SELBST in jedem Tick (@0x8010506c
+         * bzw. @0x80103790-9c) — der globale Advancer muss diese Zustaende auslassen (sonst
+         * Doppel-Advance), und der Clip-0x0C/0x0E/0x12/0x13-Pin unten darf sie NICHT greifen
+         * (B2-Caveat 3: der Toggle spielt Clip 0x12 mit Startframe rng&3 @0x80104ffc jeden
+         * Frame — ein Frame-0-Pin wuerde den Uebergang einfrieren). */
+        { uint8_t t = a->type;
+          if ((t==0x10||t==0x11||t==0x12||t==0x16||t==0x18) && a->state == 1 &&
+              (a->sub_state_1 == 0x10 || (a->grid_id & 0x0f) == 1)) continue; }
         uint16_t mo = a->motion;
         /* These clips hold frame 0 for the SPAWN lie-down (a downed zombie stays flat). But clips
          * 0x12/0x13 are DUAL-USE: the KNOCKDOWN GET-UP (re15_enemy_ai_live_knockdown case 4 sets

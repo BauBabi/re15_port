@@ -291,6 +291,21 @@ int  re15_player_knockdown_active(void);
  * zu rufen; ohne ihn ueberlebt ein vom Tod unterbrochener Knockdown das Laden. */
 void re15_player_cmd_reset(void);
 
+/* ROOM1030 KRIECHTOR (Dossier analysis/room1030_crawl_mechanism.md Glieder 9/10):
+ * re15_enemy_ai_toggle_animate = der Sub-Modus-0x10-TOGGLE (byte-true FUN_80104f80), haengt
+ * als f890[0x10] in der Standing-Animate-Kaskade UND als Grid-1-ANIMATE[6] (f920[6] —
+ * dieselbe Funktion, Tabellen selbst gedumpt). Phase 0 (Setup, faellt durch) / Phase 1
+ * (Clip 0x12 aus BANK 1, Richtung = (s8)+0x9F) / Phase 2 (Commit: Aufstehen ODER
+ * grid_id=0x81 + sca_mask=8 = Kriecher). Grid-Wurzel 1 selbst (DECIDE 0x8011F8E0 /
+ * ANIMATE 0x8011F920) ist im case 1 des Grid-Switch verdrahtet (enemy_ai_common.c). */
+void re15_enemy_ai_toggle_animate(re15_actor_t *e);
+
+/* Render-Spiegelung des Toggle-Clips 0x12 auf dem RUECKWEG (xfer_dir==0): f314 posiert bei
+ * a2!=0 den Slot (fc - frame) - 1 (FUN_8001f314.c:13, a2 = (s8)+0x9F @0x8010506c). Der
+ * Richtungs-Anker ist der Datenbeleg B3 §6 (Clip 0x12 root-py -1744 -> -175 = Hinlegen =
+ * VORWAERTS); genutzt von re15_compute_actor_kf statt des port-erfundenen anim_flags-0x80. */
+int re15_actor_toggle_reverse(const re15_actor_t *a);
+
 /* THE single "which animation bank does this state pose from" rule — shared by the renderer and the
  * animation frame clock so they cannot drift (see enemy_ai_common.c). */
 int re15_actor_uses_loco_bank(const re15_actor_t *a);

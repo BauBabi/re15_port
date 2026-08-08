@@ -380,6 +380,16 @@ typedef struct {
                               * Default 4 beim Spawn (@0x80100828). EIGENES Feld, NICHT
                               * crow_bank mitbenutzen (Dossier §4 Schritt 1): die Kraehe
                               * belegt +0x1d7 physisch anders und liest ihn nie als Maske. */
+    uint8_t  xfer_dir;       /* +0x9F (Zombie-Vokabular): Richtungs-Latch des Kriechtor-TOGGLES
+                              * (FUN_80104f80): Phase 0 setzt 0 (@0x8010502c sb zero,159(v0)),
+                              * dann 1 NUR wenn (+0x09 & 0x80) CLEAR (@0x80105044 andi 0x80 /
+                              * @0x80105048 bne / @0x80105050 sb a0,159(v1)) = HINWEG (stehender
+                              * Zombie legt sich hin). Phase 1 reicht ihn als f314-Richtung a2
+                              * durch (@0x8010506c, (s8)+0x9F); Phase 2 verzweigt darauf
+                              * (@0x801050cc beq: 0 = Aufstehen fertig, 1 = Kriech-Commit 0x81).
+                              * EIGENES Feld (Dossier §2): +0x9F ist sonst dog_aux9f/neck_speed-
+                              * High — und NICHT ueber anim_flags Bit 0x80 routen (Port-Bit 0x80
+                              * auf +0x1C4 ist port-erfunden, im Original nie getestet). */
     uint8_t  crow_diveflag;  /* +0x1da: dive-committed flag                                    */
     uint8_t  crow_armed;     /* +0x1db: attack-armed flag (LOS-gated)                          */
     int16_t  crow_yawrate;   /* +0x1de: per-state yaw-slew rate                                */

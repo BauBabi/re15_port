@@ -912,3 +912,18 @@ set_tests_properties(unit_1030_spawncap PROPERTIES TIMEOUT 30)
 add_executable(probe_laneE_gatemask probe_laneE_gatemask.c)
 target_link_libraries(probe_laneE_gatemask PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_laneE_gatemask PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# ROOM1030 Kriechtor-Maschine: Sub-Modus-0x10-Toggle (FUN_80104f80) + Grid-Wurzel 1
+# (FUN_80101708) + Kriech-Erstframe (FUN_801036dc) — Zustandsmaschinen-Gate mit Mock-Bank
+# (Cliplaengen 98/99; Hand-Lock darf 0-Delta liefern).
+add_executable(test_crawl_toggle test_crawl_toggle.c)
+target_link_libraries(test_crawl_toggle PRIVATE re15_engine re15_test_support)
+target_include_directories(test_crawl_toggle PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_crawl_toggle COMMAND test_crawl_toggle)
+set_tests_properties(unit_crawl_toggle PROPERTIES TIMEOUT 30)
+
+# Kriech-VORTRIEB mit der ECHTEN CDEMD0.EMS-Bank (Hand-Lock FUN_80109470, 5x CompMatrix):
+# Betrag wird geloggt, NICHT geprueft (Soll erst per Savestate C). Reine MESSUNG, kein ctest.
+add_executable(probe_crawl_commit probe_crawl_commit.c)
+target_link_libraries(probe_crawl_commit PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_crawl_commit PRIVATE ${CMAKE_SOURCE_DIR}/include)

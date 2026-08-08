@@ -49,6 +49,10 @@ static uint8_t s_wander_idx[RE15_ACTOR_MAX];                   /* tentative def 
 /* FSM-CLOCK clip-end signal (defined below, used by the feeding stand-up + grab + death sub-FSMs). */
 static int re15_enemy_clip_done(const re15_actor_t *e);
 static void re15_enemy_ai_lying_phase(re15_actor_t *e);                                        /* fwd */
+/* ROOM1030 Kriechtor-Maschine (Grid-Wurzel 1 + Sub-Modus-0x10-Toggle) — fwd. re15_zgirl_
+ * overflow_row11 IST FUN_801035f8 = Grid-1-DECIDE[0] (@0x8011F8E0[0]); definiert weiter unten. */
+static void re15_zgirl_overflow_row11(re15_actor_t *e, re15_actor_t *pl);                      /* fwd */
+static void re15_zcrawl_animate(int slot, re15_actor_t *e);                                    /* fwd */
 
 /* The 32-bit state word the decision handlers store at entity+0x4, split into the
  * port's per-byte state fields (state=+0x4, sub_state_1=+0x5, sub_state_2=+0x6,
@@ -2223,6 +2227,341 @@ static void re15_enemy_footlock_step(int slot, re15_actor_t *e)
     s_zfoot_ok[slot] = 1; s_zfoot_sel[slot] = (uint8_t)sel;
 }
 
+/* ============================================================================================
+ * ROOM1030 KRIECHTOR-MASCHINE — Grid-Wurzel 1 + Sub-Modus-0x10-Toggle + Kriech-Lokomotion +
+ * Hand-Lock. Byte-true nach analysis/room1030_crawl_mechanism.md (Glieder 8-12, §16) und dem
+ * B3-Root-Motion-Report (FUN_80109470 vollstaendig disassembliert, 5x CompMatrix; Clip-Bank-
+ * Binder FUN_80022300 instruktions-belegt; CDEMD0.EMS Typ-0x16-Bank selbst geparst).
+ *
+ *   Dispatch:  @0x8010164c lbu 9 / andi 0xf -> Tabelle 0x8011f80c; [1] = FUN_80101708 =
+ *              DOPPEL-Dispatch: DECIDE @0x8011F8E0[+0x05] (@0x80101728 jalr), +0x05 FRISCH
+ *              lesen (@0x8010174c), ANIMATE @0x8011F920[+0x05] (@0x8010175c jalr).
+ *   Tabellen:  [0] = 0x801035F8 / 0x801036DC (Kriechen), [6] = 0x80104F78-Stub / 0x80104F80
+ *              (Toggle — DIESELBE Funktion haengt auch als f890[0x10]); [7..14] = NULL
+ *              (jalr 0 = Absturz im Original); [1,2]=0x80103B8C/0x80103B94, [3,4]=0x80104540/
+ *              0x80104548, [5]=0x8010466C/0x80104808, [15]=0x80109E44/0x80109E4C (unportiert).
+ *
+ * BANK: Clips 0x12 (98f) / 0x1A (99f) liegen in BANK 1 = dir[3] EDD / dir[4] kf-Pool =
+ * der +0x170/+0x174-Kanal (FUN_80022300 @0x800224b8/@0x800224c8, positions-fest). Port:
+ * re15_emd_parse_own_bank; Fallback = die Container-Bank (die largest-EDD-Heuristik waehlt
+ * fuer die Zombie-Familie dieselbe 43-Clip-Bank dir[3]). Datengetrieben, kein Raum-Fall. */
+
+/* Bank-1-Zugriff des Kriechers (anim + skel). NULL wenn keine Bank geladen (headless). */
+static const re15_emd_animation_t *re15_zcrawl_anim(const re15_actor_t *e,
+                                                    const re15_emd_skeleton_t **out_sk)
+{
+    re15_enemy_bank_t *b = re15_enemy_find(e->type);
+    if (b && b->own_ok) {                       /* +0x170/+0x174 = Bank 1 dir[4]/dir[3] */
+        if (out_sk) *out_sk = &b->skel_own;
+        return &b->anim_own;
+    }
+    if (b && b->ok && b->anim.clip_count > 0) { /* Container-Parse = groesste Bank = dir[3]
+                                                 * fuer EM01x/EM016 (identische Daten) */
+        if (out_sk) *out_sk = &b->skel;
+        return &b->anim;
+    }
+    if (out_sk) *out_sk = NULL;
+    return NULL;
+}
+
+static int re15_zcrawl_clip_len(const re15_actor_t *e, int clip)
+{
+    const re15_emd_animation_t *an = re15_zcrawl_anim(e, NULL);
+    if (!an || clip < 0 || clip >= an->clip_count) return 0;
+    return an->clips[clip].frame_count;
+}
+
+/* ---- CompMatrix-Kette (byte-true FUN_80022da0 = PsyQ-CompMatrix) --------------------------
+ * OUT.rot = A.rot x B.rot: je OUT-Element EIN GTE-Skalarprodukt, arithmetisch >>12, als s16
+ * gespeichert (gte_rtir + stIR1-3, decompile FUN_80022da0.c:8-33). OUT.t = A.rot*(s16)B.t>>12
+ * + A.t, 32-bit (gte_ldVXY0/ldVZ0 laden B.t als HALBWORTE, gte_rt + stlvnl, :34-38).
+ * Rundungs-Vorbehalt (B3 §8.1): die LSB-Genauigkeit dieser Integer-Nachbildung gegen die
+ * echte GTE-Kette ist erst per Savestate C messbar — Algorithmus + Konstanten sind belegt. */
+typedef struct { int16_t r[9]; int32_t t[3]; } re15_zcrawl_mat_t;
+
+static void re15_zcrawl_compmatrix(const re15_zcrawl_mat_t *A,
+                                   const int16_t brot[9], const int16_t bt[3],
+                                   re15_zcrawl_mat_t *out)
+{
+    re15_zcrawl_mat_t o;
+    for (int r = 0; r < 3; r++) {
+        for (int c = 0; c < 3; c++) {
+            int32_t s = (int32_t)A->r[r*3+0] * brot[0*3+c]
+                      + (int32_t)A->r[r*3+1] * brot[1*3+c]
+                      + (int32_t)A->r[r*3+2] * brot[2*3+c];
+            o.r[r*3+c] = (int16_t)(s >> 12);            /* stIR: s16, >>12 floor */
+        }
+        int32_t tsum = (int32_t)A->r[r*3+0] * bt[0]
+                     + (int32_t)A->r[r*3+1] * bt[1]
+                     + (int32_t)A->r[r*3+2] * bt[2];
+        o.t[r] = (tsum >> 12) + A->t[r];                /* 32-bit OUT.t */
+    }
+    *out = o;
+}
+
+/* Bone-Lokalmatrix der aktuellen Pose: rot = RotMatrix(kf-Winkel) — derselbe byte-true
+ * Builder, den f3bc in die +0x18-Locals schreibt (FUN_8001f3bc.c:71,84; Port-Replikat
+ * mat3_from_euler via re15_skel_euler_matrix_for_test). Kein Crossfade: der Lock laeuft
+ * nur bei +0x8F==0 (Blend-Gate @0x801037e4), die Referenz-Restdifferenz der letzten
+ * Blend-Frames ist Teil des Rundungs-Vorbehalts oben. */
+static void re15_zcrawl_bone_rot(const re15_emd_skeleton_t *sk, int kf, int bone, int16_t out[9])
+{
+    extern void re15_skel_euler_matrix_for_test(int ax, int ay, int az, int32_t m[9]);
+    int16_t ax = 0, ay = 0, az = 0;
+    int32_t m32[9];
+    re15_emd_get_keyframe_angles(sk, kf, bone, &ax, &ay, &az);
+    re15_skel_euler_matrix_for_test((int)ax, (int)ay, (int)az, m32);
+    for (int i = 0; i < 9; i++) out[i] = (int16_t)m32[i];
+}
+
+/* Hand-Weltposition ueber die 5er-Kette (byte-true FUN_80109470 @0x801094a0-f4):
+ *   M_entity x L0 x L7 x L(8+3s) x L(9+3s) x L(10+3s)  ->  OUT.t = Hand-Welt (Bone 10/13).
+ * M_entity: rot = R (Aufrufer: Rotationsmatrix von Render N-1 bzw. die aktuelle fuer das
+ * Referenz-Update), t = LIVE Position (+0x34/38/3C via entity+0x20, B3 §1 Z.8010949c).
+ * L0.t = Root-KEYFRAME (kf px/py/pz — Clip 0x1A traegt (0,-175,0), aus den Daten gelesen,
+ * nicht hartkodiert; Root-Write FUN_8001f3bc.c:29-37). L*.t = EMR-relpos (Bank-1-Skelett). */
+static void re15_zcrawl_hand_world(const int16_t R[9], int32_t px, int32_t py, int32_t pz,
+                                   const re15_emd_skeleton_t *sk, int kf, int sel,
+                                   int32_t out[3])
+{
+    re15_zcrawl_mat_t M;
+    int16_t brot[9], bt[3];
+    for (int i = 0; i < 9; i++) M.r[i] = R[i];
+    M.t[0] = px; M.t[1] = py; M.t[2] = pz;
+    /* L0: rot = Pose bone0, t = Root-Keyframe (@0x801094a0: x pool+0x018 = bone0.local) */
+    re15_zcrawl_bone_rot(sk, kf, 0, brot);
+    { int16_t kx = 0, ky = 0, kz = 0;
+      re15_emd_get_keyframe_position(sk, kf, &kx, &ky, &kz);
+      bt[0] = kx; bt[1] = ky; bt[2] = kz; }
+    re15_zcrawl_compmatrix(&M, brot, bt, &M);
+    /* L7, L(8+3s), L(9+3s), L(10+3s): rot = Pose, t = relpos (@0x801094b0/d4/e4/f4) */
+    { const int bones[4] = { 7, 8 + 3*sel, 9 + 3*sel, 10 + 3*sel };
+      for (int j = 0; j < 4; j++) {
+          int b = bones[j];
+          if (b >= sk->bone_count) break;               /* Guard: Mock-/Fremdskelette */
+          re15_zcrawl_bone_rot(sk, kf, b, brot);
+          bt[0] = sk->bone_relative_pos[b][0];
+          bt[1] = sk->bone_relative_pos[b][1];
+          bt[2] = sk->bone_relative_pos[b][2];
+          re15_zcrawl_compmatrix(&M, brot, bt, &M);
+      } }
+    out[0] = M.t[0]; out[1] = M.t[1]; out[2] = M.t[2];
+}
+
+/* HAND-LOCK-Referenz je Slot: beide Hand-Weltpositionen + die dabei benutzte Rotations-
+ * matrix — das Port-Aequivalent der Render-Compose-Works pool[bone]+0x54/58/5C
+ * (FUN_8001e9ec @0x8001ea24, einziger Schreiber; B3 §3). Der Lock in Tick N rechnet BEIDE
+ * Terme mit der Rotation aus Tick N-1 (die +0x20-Rotation wird erst im Render N neu gebaut,
+ * @0x8001e8f4 jal 0x80068098). KEIN sel-Wechsel-Skip: der Render schreibt ALLE Bones, die
+ * Referenz beider Haende existiert immer (B3 Differenz #2). Cull-Randfall (@0x8001e97c:
+ * unsichtbar -> works stale) wird NICHT nachgebaut — B3 §8.3: ohne Messung dokumentieren. */
+static struct {
+    int32_t hand[2][3];
+    int16_t rot[9];
+    uint8_t ok;
+} s_zcrawl_ref[RE15_ACTOR_MAX];
+static uint32_t s_zcrawl_prevfw[RE15_ACTOR_MAX];   /* Frame-Wort des zuletzt posierten Ticks
+                                                    * (= *(entity+0x168), FUN_8001f314.c:15-16) */
+
+/* Referenz-Update am Tick-Ende (Port-Aequivalent des Render-Compose): Rotation = JETZT
+ * (Render N nutzt die Winkel nach Steer), Position = nach dem Lock, Pose = der in diesem
+ * Tick posierte Frame. Laeuft JEDEN Kriech-Tick — auch waehrend des Blend-Gates (der Render
+ * laeuft unabhaengig vom Lock). */
+static void re15_zcrawl_cache_ref(int slot, const re15_actor_t *e,
+                                  const re15_emd_skeleton_t *sk, int kf)
+{
+    extern void re15_skel_euler_matrix_for_test(int ax, int ay, int az, int32_t m[9]);
+    int32_t m32[9];
+    if (!sk) { s_zcrawl_ref[slot].ok = 0; return; }
+    re15_skel_euler_matrix_for_test((int)e->rot_x, (int)e->rot_y, (int)e->rot_z, m32);
+    for (int i = 0; i < 9; i++) s_zcrawl_ref[slot].rot[i] = (int16_t)m32[i];
+    for (int s = 0; s < 2; s++)
+        re15_zcrawl_hand_world(s_zcrawl_ref[slot].rot, e->x, e->y, e->z,
+                               sk, kf, s, s_zcrawl_ref[slot].hand[s]);
+    s_zcrawl_ref[slot].ok = 1;
+}
+
+/* re15_enemy_handlock_step — byte-true FUN_80109470 (B3 §1/§2/§3/§7; einziger Caller in ganz
+ * STAGE1.BIN: @0x8010383c im Kriech-Tail). Delta NUR auf X/Z:
+ *   entity+0x34 -= OUT.t[0] - ref_x   (@0x80109504-18: lw 36(sp) / lw 84(s0) / subu / sw)
+ *   entity+0x3C -= OUT.t[2] - ref_z   (@0x80109524-38, analog mit 44(sp) / +0x5C)
+ * Y wird NIE angefasst. sel: 0 = Hand A (Bones 8-10, Lock-Bone 10), 1 = Hand B (11-13,
+ * Lock-Bone 13) — s0 = pool + s1*0x204 + 0x6B8 (@0x801094b8-c8). NICHT re15_enemy_footlock_
+ * step wiederverwenden: anderer Algorithmus (B3 §5 Differenzen #1/#2/#3/#6/#9). */
+static void re15_enemy_handlock_step(int slot, re15_actor_t *e, int sel,
+                                     const re15_emd_skeleton_t *sk, int kf)
+{
+    int32_t hw[3];
+    if (!sk || !s_zcrawl_ref[slot].ok) return;
+    re15_zcrawl_hand_world(s_zcrawl_ref[slot].rot, e->x, e->y, e->z, sk, kf, sel, hw);
+    e->x -= hw[0] - s_zcrawl_ref[slot].hand[sel][0];
+    e->z -= hw[2] - s_zcrawl_ref[slot].hand[sel][2];
+}
+
+/* Render-Richtung des Toggle-Clips 0x12: der Toggle spielt ihn per f314 mit a2 = (s8)+0x9F
+ * (@0x8010506c); f314 posiert bei a2!=0 den GESPIEGELTEN Slot (fc - frame) - 1, waehrend
+ * +0x95 normal hochzaehlt (FUN_8001f314.c:13). RICHTUNGS-ZUORDNUNG (Ableitung, im Dossier/B3
+ * nicht als Instruktion eindeutig): der Datenbeleg B3 §6 definiert die VORWAERTS-Richtung —
+ * Clip 0x12 rampt root-py -1744 -> -175 = HINLEGEN. Also spielt der HINWEG (xfer_dir==1,
+ * Bit 0x80 clear) VORWAERTS und der RUECKWEG (xfer_dir==0, Kriecher steht auf) RUECKWAERTS
+ * (= gespiegelte Slots). Eigene Abfrage statt anim_flags-Bit 0x80 (das Port-Reverse-Bit auf
+ * +0x1C4 ist port-erfunden und wird hier nicht mitbenutzt — Dossier §2). */
+int re15_actor_toggle_reverse(const re15_actor_t *a)
+{
+    uint8_t t;
+    if (!a) return 0;
+    t = a->type;
+    if (!(t == 0x10 || t == 0x11 || t == 0x12 || t == 0x16 || t == 0x18)) return 0;
+    if (a->state != 1 || a->motion != 0x12 || a->xfer_dir != 0) return 0;
+    return (a->sub_state_1 == 0x10) ||                        /* f890[0x10] (Grid 0)  */
+           ((a->grid_id & 0x0f) == 1 && a->sub_state_1 == 6); /* f920[6]   (Grid 1)  */
+}
+
+/* SUB-MODUS-0x10-TOGGLE — byte-true FUN_80104f80 (Dossier Glied 9, komplette Funktion
+ * selbst gelesen). Haengt DOPPELT: f890[0x10] (Standing-Kaskade) und f920[6] (Grid 1) —
+ * Hin- und Rueckweg teilen sich EINE Funktion (Tabellen selbst gedumpt). Dispatch auf +0x06. */
+void re15_enemy_ai_toggle_animate(re15_actor_t *e)
+{
+    switch (e->sub_state_2) {                       /* @0x80104f90 lbu v1,6(a0) */
+    case 0:                                         /* PHASE 0 @0x80104fcc */
+        e->hit_react |= 1;                          /* +0x93 |= 1        @0x80104fd4 */
+        e->motion = 0x12;                           /* +0x94 = 0x12      @0x80104fec */
+        e->anim_frame = (uint16_t)(re15_engine_rand8() & 3);
+                                                    /* +0x95 = rng & 3   @0x80104ffc (deterministischer
+                                                     * Port-RNG, derselbe Strom wie alle rng-Zieher) */
+        e->sub_state_2 = 1;                         /* +0x06 = 1         @0x8010500c */
+        e->anim_frac = 0x0F;                        /* +0x8F = 0x0F      @0x8010501c */
+        e->xfer_dir = 0;                            /* +0x9F = 0         @0x8010502c */
+        if (!(e->grid_id & 0x80))                   /* (+0x09 & 0x80)?   @0x80105044-48 */
+            e->xfer_dir = 1;                        /* +0x9F = 1 nur bei CLEAR @0x80105050 */
+        /* ⛔ KEIN return: Phase 0 FAELLT DURCH in Phase 1 (Dossier-Falle 1) — Setup und
+         * erster anim_set im SELBEN Tick, +0x06 wird 1 + Rueckgabe. */
+        /* fallthrough */
+    case 1: {                                       /* PHASE 1 @0x80105054 */
+        int fc = re15_zcrawl_clip_len(e, 0x12);     /* Clip 0x12 aus BANK 1 (98f, B3 §6) */
+        int done;
+        e->anim_blend_rate = 0x100;                 /* f314 a3 = 0x100   @0x8010506c */
+        if (fc <= 0) {
+            done = 1;                               /* keine Bank geladen -> FSM nie stallen
+                                                     * (Guard-Politik wie re15_enemy_clip_done) */
+        } else {
+            /* f314-Replikat: +0x95 hochzaehlen, Wrap am Clip-Ende liefert die Rueckgabe 1
+             * (FUN_8001f3bc @0x8001F610-3C: post-inc, (frame+1)>=fc -> +0x95=0, return 1).
+             * Die Pose-Richtung (vorwaerts/gespiegelt) entscheidet re15_actor_toggle_reverse
+             * am Render (FUN_8001f314.c:13). */
+            uint16_t nf = (uint16_t)(e->anim_frame + 1);
+            if ((int)nf >= fc) { e->anim_frame = 0; done = 1; }
+            else               { e->anim_frame = nf; done = 0; }
+        }
+        if (e->anim_frac > 0) e->anim_frac--;       /* +0x8F-Decay in f3bc (@0x8001f5b4, saettigend) */
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + (uint8_t)done);   /* +0x06 += Rueckgabe @0x80105088 */
+        return;                                     /* Phase 1 faellt NICHT in Phase 2 (@0x8010508c j) */
+    }
+    default:                                        /* PHASE 2 @0x80105094 */
+        e->grid_id = 0;                             /* +0x09 = 0         @0x80105094 sb zero */
+        re15_ai_set_state_word(e, 0x201);           /* +0x04 = 0x201 (32-bit: +0x5=2,+0x6=0,+0x7=0 —
+                                                     * Dossier-Falle 2)  @0x801050a4 */
+        e->sca_mask = 4;                            /* +0x1D7 = 4        @0x801050b4 */
+        if (e->xfer_dir != 0) {                     /* @0x801050cc beq: 0 -> FERTIG (Aufstehen) */
+            e->grid_id = 0x81;                      /* +0x09 = 0x81      @0x801050d0-d4 (ori 0x81/sb;
+                                                     * B2-Audit: ERLAUBT, alle 17 Lesestellen SAFE) */
+            re15_ai_set_state_word(e, 0x1);         /* +0x04 = 1 (+0x5=0,+0x6=0,+0x7=0) @0x801050e4 */
+            e->sca_mask = 8;                        /* +0x1D7 = 8        @0x801050f4 */
+        }
+        e->hit_react &= (uint8_t)~1u;               /* +0x93 &= 0xFE     @0x80105100-10 (beide Pfade:
+                                                     * das beq-Ziel 0x80105100 fuehrt in denselben
+                                                     * Clear; Feld-Tabelle §2: @0x8010510c) */
+        break;
+    }
+}
+
+/* KRIECH-LOKOMOTION — byte-true FUN_801036dc (Dossier Glied 10 + B3 §4/§7). ANIMATE der
+ * Grid-Wurzel 1, Zeile [0] (@0x8011F920[0]). Der Vortrieb entsteht AUSSCHLIESSLICH aus dem
+ * Hand-Lock: der Root-Kanal von Clip 0x1A ist px=0, pz=0 konstant, py=-175 (B3 §6). */
+static void re15_zcrawl_animate(int slot, re15_actor_t *e)
+{
+    const re15_emd_skeleton_t *sk = NULL;
+    const re15_emd_animation_t *an = re15_zcrawl_anim(e, &sk);
+    int fc = (an && 0x1A < an->clip_count) ? an->clips[0x1A].frame_count : 0;
+
+    if (e->sub_state_2 == 0) {                      /* Erstframe */
+        e->ai_timer = 0x1E;                         /* +0x8C HALBWORT = 0x1E @0x801036fc (sh;
+                                                     * Konsument statisch nicht gefunden — B3 §8.4
+                                                     * OFFEN, Wert trotzdem byte-true setzen) */
+        e->sub_state_2 = 1;                         /* +0x06 = 1         @0x8010370c */
+        e->motion = 0x1A;                           /* +0x94 = 0x1A      @0x8010371c */
+        e->anim_frame = 0;                          /* +0x95 = 0         @0x8010372c */
+        e->anim_frac = 0x0F;                        /* +0x8F = 0x0F      @0x8010373c */
+        e->sca_mask = 8;                            /* +0x1D7 = 8        @0x8010374c */
+        e->anim_blend_rate = 0x100;                 /* f314 a3 = 0x100   @0x8010379c */
+        /* Referenz initial fuellen (B3 §3: der Erst-Tick nach Clip-Wechsel ist durch das
+         * +0x8F-Gate geschuetzt — hier nur den Cache seeden, damit er nie uninitialisiert
+         * gelesen wird). prevfw: +0x168 zeigt noch auf das zuletzt posierte 0x12-Wort —
+         * Clip 0x12 traegt KEINE Flags (B3 §6: alle 0). */
+        if (an && sk && fc > 0)
+            re15_zcrawl_cache_ref(slot, e, sk,
+                (int)(re15_emd_get_frame_entry(an, 0x1A, 0) & 0xFFFu));
+        else
+            s_zcrawl_ref[slot].ok = 0;
+        s_zcrawl_prevfw[slot] = 0;
+        /* faellt durch in den Tail (Adressfolge @0x8010374c -> @0x8010375c, kein Branch) */
+    }
+
+    /* (1) Frame-Wort des VORHERIGEN Ticks: Bit 0x10000 -> Steer auf den Snapshot
+     *     +0x1BC/+0x1BE mit Rate 0x10 (@0x8010375c-84, jal 0x8001aac4(+0x1bc,+0x1be,0x10)) */
+    if (s_zcrawl_prevfw[slot] & 0x10000u)
+        re15_enemy_steer_point(e, e->steer_x, e->steer_z, 0x10);
+
+    /* (2) Anim vorwaerts 1 Frame/Tick, Wrap bei fc (=99, B3 §6) — anim_set a3=0x100
+     *     @0x80103790-9c; +0x8F-Decay wie ueblich (f3bc @0x8001f5b4). Der globale Advancer
+     *     laesst Grid-1-/Toggle-Zombies aus (player_common.c) — f314 laeuft HIER. */
+    if (fc > 0) {
+        uint16_t nf = (uint16_t)(e->anim_frame + 1);
+        e->anim_frame = ((int)nf >= fc) ? 0 : nf;
+    }
+    {
+        uint32_t fw_now = (an && fc > 0)
+                        ? re15_emd_get_frame_entry(an, 0x1A, (int)e->anim_frame) : 0;
+        int kf_now = (int)(fw_now & 0xFFFu);
+        s_zcrawl_prevfw[slot] = fw_now;             /* = *(entity+0x168) fuer den naechsten Tick */
+        if (e->anim_frac > 0) e->anim_frac--;
+
+        /* (3) Room-SE 2 bei +0x95 == 0x23 oder == 0x50 (@0x801037b0-cc, jal 0x800453d0(2)) */
+        if (e->anim_frame == 0x23 || e->anim_frame == 0x50)
+            re15_audio_room_se(2);
+
+        /* (4) Blend-Gate: +0x8F != 0 -> KEIN Root-Motion (@0x801037dc-e4) */
+        if (e->anim_frac == 0) {
+            /* (5) Frame-Wort DIESES Ticks: Bit 0x2000 -> Hand B (Bones 11-13), sonst Hand A
+             *     (8-10) (@0x801037ec-fc); Unterdrueckungs-Gates +0x1D8 & 0x40 (B) / 0x20 (A)
+             *     (@0x80103808-3c; Setzer statisch nicht gefunden — B3 §8.4 OFFEN, beim Spawn 0
+             *     -> Gate-Verhalten identisch). */
+            int sel = (fw_now & 0x2000u) ? 1 : 0;
+            if (!(e->ai_flags & (sel ? 0x40u : 0x20u)))
+                re15_enemy_handlock_step(slot, e, sel, sk, kf_now);   /* (6) @0x8010383c */
+        }
+
+        /* Referenz-Update = Port-Aequivalent des Render-Compose (@0x8001e9ec/+0x54): laeuft
+         * jeden Tick, auch waehrend des Blend-Gates — der Render posiert unabhaengig davon. */
+        if (an && sk && fc > 0)
+            re15_zcrawl_cache_ref(slot, e, sk, kf_now);
+    }
+    /* Kollision: kein eigener Tail — derselbe SCA-Wall-Clamp wie der Zombie-Walker laeuft in
+     * re15_enemy_ai_run_all mit e->sca_mask (byte-true b0a4-Ordnung @0x8010062c). */
+}
+
+/* Einmal-Logger fuer die unportierten/NULL-Zeilen der Grid-1-Tabellen. */
+static void re15_grid1_open_log(const char *half, int idx)
+{
+    static uint32_t s_logged[2];
+    int side = (half[0] == 'D') ? 0 : 1;
+    if (idx < 0 || idx > 15) idx = 15;
+    if (s_logged[side] & (1u << idx)) return;
+    s_logged[side] |= (1u << idx);
+    fprintf(stderr, "[grid1] OFFEN: %s[%d] nicht portiert (Tabellen 0x8011F8E0/0x8011F920)\n",
+            half, idx);
+}
+
 /* ================== ENTITY BODY COLLISION (byte-true FUN_8002aec4 + FUN_8002b544) ================
  * The walk-through blocker (W2 disasm 2026-07-03): a mutual CYLINDER PUSH-OUT run on every entity's
  * own tick — a positional slide, never a move veto. FUN_8002aec4(pusher, pushee) MOVES THE PUSHEE:
@@ -2606,6 +2945,12 @@ int re15_enemy_ai_live_active(int slot)
                 else if (e->sub_state_1 == 0x11)
                     /* KNOCKDOWN/GET-UP (@0x8011f890[0x11]=FUN_8010512c): the poise-break fall. */
                     re15_enemy_ai_live_knockdown(e);
+                else if (e->sub_state_1 == 0x10)
+                    /* KRIECHTOR-TOGGLE (@0x8011f890[0x10]=FUN_80104f80): das 0x1000-Bit auf
+                     * +0x1C4 laesst die Steer-Decides 0x1001 schreiben (:333-334/:407-408) —
+                     * dieser Handler IST die fehlende Gegenseite (Dossier Glied 9; er haengt
+                     * zusaetzlich als Grid-1-ANIMATE[6] = f920[6], dieselbe Funktion). */
+                    re15_enemy_ai_toggle_animate(e);
                 else if (e->sub_state_1 == 0)
                     /* SEARCH-STAND (@0x8011f890[0]=FUN_80101d08): idle stand, LOS-gated escalation. */
                     re15_enemy_ai_live_search_stand(e);
@@ -2624,6 +2969,54 @@ int re15_enemy_ai_live_active(int slot)
                      * factored into re15_enemy_ai_live_engage_animate (pure code motion; the zombie
                      * girl shares it, audit wf_827f186d zombie-girl #1). */
                     re15_enemy_ai_live_engage_animate(slot, e);
+                break;
+            }
+            case 1: {  /* GRID-WURZEL 1 = die KRIECH-MASCHINE (@0x8011f80c[1]=FUN_80101708,
+                        * Dossier Glied 10): DOPPEL-Dispatch — DECIDE @0x8011F8E0[+0x05]
+                        * (@0x80101728 jalr), danach +0x05 FRISCH lesen (@0x8010174c), ANIMATE
+                        * @0x8011F920[+0x05] (@0x8010175c jalr). HARTE INVARIANTE: Indizes 7..14
+                        * sind in BEIDEN Tabellen NULL (= jalr 0 = Absturz im Original) — der
+                        * Port darf sie nie erreichen; hier lauter No-op statt Absturz. */
+                re15_actor_t *player = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+                switch (e->sub_state_1) {                       /* DECIDE @0x8011F8E0[+0x05] */
+                    case 0:  /* [0]=0x801035F8 — der Kern ist bereits byte-true portiert als
+                              * re15_zgirl_overflow_row11 (Grab-Write @0x8010368c faellt durch
+                              * ins 0x2000-Gate @0x80103690-c4 inkl. +0x1D8-Bit-0x80-Sperre
+                              * @0x801036b8 -> Wort 0x601 = Toggle/Aufstehen). */
+                        re15_zgirl_overflow_row11(e, player);
+                        break;
+                    case 6:  /* [6]=0x80104F78 = `jr ra`-Stub (Tabellen-Dump, Glied 9) */
+                        break;
+                    case 1: case 2: case 3: case 4: case 5: case 15:
+                        /* OFFEN: [1,2]=0x80103B8C (Stub), [3,4]=0x80104540 (Stub),
+                         * [5]=0x8010466C, [15]=0x80109E44 — nicht portiert (0x80109E44 zieht
+                         * RNG @0x8010a188 -> Einbau wuerde den deterministischen RNG-Strom
+                         * verschieben, Dossier §6). Sicherster No-op. */
+                        re15_grid1_open_log("DECIDE", e->sub_state_1);
+                        break;
+                    default: /* 7..14 = NULL-Pointer im Original -> Absturz. NIE erreichen. */
+                        fprintf(stderr, "[grid1] FATAL-ORIGINAL: DECIDE[%d] ist NULL "
+                                "(jalr 0 @0x8011F8E0) — No-op statt Absturz\n", e->sub_state_1);
+                        break;
+                }
+                switch (e->sub_state_1) {   /* +0x05 FRISCH lesen (@0x8010174c): DECIDE darf
+                                             * +0x05 aendern; ANIMATE @0x8011F920[+0x05] */
+                    case 0:  /* [0]=0x801036DC = die Kriech-Lokomotion */
+                        re15_zcrawl_animate(slot, e);
+                        break;
+                    case 6:  /* [6]=0x80104F80 = DERSELBE Toggle wie f890[0x10] (Rueckweg) */
+                        re15_enemy_ai_toggle_animate(e);
+                        break;
+                    case 1: case 2: case 3: case 4: case 5: case 15:
+                        /* OFFEN: [1,2]=0x80103B94, [3,4]=0x80104548, [5]=0x80104808,
+                         * [15]=0x80109E4C — nicht portiert. Sicherster No-op. */
+                        re15_grid1_open_log("ANIMATE", e->sub_state_1);
+                        break;
+                    default:
+                        fprintf(stderr, "[grid1] FATAL-ORIGINAL: ANIMATE[%d] ist NULL "
+                                "(jalr 0 @0x8011F920) — No-op statt Absturz\n", e->sub_state_1);
+                        break;
+                }
                 break;
             }
             case 5: case 6:   /* feeding (@0x8011f80c[5]/[6]=0x801018f8) -> the dist-gated wake-up */
@@ -2666,7 +3059,8 @@ int re15_enemy_ai_live_active(int slot)
                     re15_enemy_ai_lying_phase(e);
                 }
                 break;
-            default:  /* @0x8011f80c[1..4],[11..15]: other sub-modes — deferred (cited) */
+            default:  /* @0x8011f80c[3..4],[11..15]: other sub-modes — deferred (cited);
+                       * [1] = Grid-Wurzel 1 (Kriech-Maschine) ist portiert, s.o. */
                 break;
         }
         return 0;
@@ -3025,7 +3419,13 @@ router_gate:
 int re15_actor_uses_loco_bank(const re15_actor_t *a)
 {
     if (!a) return 0;
-    return (a->state == 1 && (a->sub_state_1 == 0x13 || a->sub_state_1 == 2 || a->sub_state_1 == 7))
+    /* Grid-Nibble-Guard (B2-Caveat 2): die Loco-Bank-Poser sitzen AUSSCHLIESSLICH in
+     * Grid-0-Handlern (`lw a0,132(v0)` @0x80105d3c / engage FUN_801021f8, beide via
+     * @0x8011f80c[0]); die Grid-1-Tabelle @0x8011F920 hat eigene +0x5-Belegungen (u.a.
+     * 2 = Stub 0x80103b94) und posiert nie die Loco-Bank. Ohne den Guard griffe die Regel
+     * fuer Grid-1-Subs 2/7 faelschlich. */
+    return (a->state == 1 && (a->grid_id & 0x0f) == 0
+            && (a->sub_state_1 == 0x13 || a->sub_state_1 == 2 || a->sub_state_1 == 7))
         || (a->state == 2 && !(a->grid_id & 0x80));
 }
 
@@ -6760,7 +7160,10 @@ static void re15_npc_ai_tick(int slot)
 /* Girl animate row [0x11] — the byte-true TABLE-OVERFLOW word: the girl decide/animate tables have
  * 17 rows [0..0x10] and FUN_8010b6d4 has NO bounds check (@0x8010b718-38/@0x8010b740-6c), so
  * +0x5=0x11 reads animate[0x11] = word @0x801202ec = 0x801035f8 = the mode-1 idle DECIDE (also
- * mode-1 decide[0] @0x801202ec). Raw-disasm'd end-to-end: */
+ * mode-1 decide[0] @0x801202ec). Raw-disasm'd end-to-end.
+ * GETEILT (ROOM1030-Kriechtor): 0x801035F8 ist zugleich die Grid-Wurzel-1-DECIDE-Zeile [0]
+ * (@0x8011F8E0[0], Dossier Glied 10) — der Grid-1-case ruft dieselbe Funktion (der Grab-Write
+ * @0x8010368c faellt durch ins 0x2000-Gate @0x80103690-c4 -> Wort 0x601 = Toggle/Aufstehen). */
 static void re15_zgirl_overflow_row11(re15_actor_t *e, re15_actor_t *pl)
 {
     /* if player.hit_react==0 (@0x8010360c-14) && dist +0x1d0 < 0x4b0 (@0x80103628-34) &&
