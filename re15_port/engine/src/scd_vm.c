@@ -1286,6 +1286,9 @@ void re15_scd_show_message(uint8_t index)
      * menu↔room flicker. Skipping the dialog closes both. (No re-examine cooldown: the AOT
      * fires on a fresh action-button EDGE only, so each deliberate press = one menu open.) */
     if (re15_savepoint_is(g_current_room_id, index)) {
+        re15_savepoint_latch_loc(g_current_room_id);  /* Ortsindex (Patch-Analog AOT_TYPE1_HOOK
+                                                       * @0x8007087c: Telefon-Pfad schreibt den
+                                                       * Index VOR dem Kartenmenue) */
         re15_savepoint_set_pending(1);
         return;
     }
@@ -1351,6 +1354,8 @@ static int op_message_on(scd_thread_t *t)
      * typewriter path (re15_dialog_open) below. (No re-examine cooldown: the examine AOT fires
      * on a fresh action-button EDGE only, so each deliberate press = one menu open.) */
     if (re15_savepoint_is(g_current_room_id, t->pc[1])) {
+        re15_savepoint_latch_loc(g_current_room_id);  /* Ortsindex (Patch-Analog SCD_SAVE_RET
+                                                       * @0x800708c0: Schreibmaschinen-Pfad) */
         re15_savepoint_set_pending(1);
         if (getenv("RE15_MSG_LOG"))
             fprintf(stderr, "[msg] room=%04x id=%d SAVEPOINT (menu, message suppressed)\n",

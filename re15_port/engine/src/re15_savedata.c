@@ -9,6 +9,7 @@
 #include "re15_gameflow.h"
 #include "re15_collision.h"   /* re15_collision_set_band / band_from_y — resume floor band */
 #include "re15_damage.h"      /* re15_player_equipped_weapon / _set_equipped_weapon (DAT_800aca5d) */
+#include "re15_savepoint.h"   /* re15_savepoint_loc — Ortsnamen-Index (Patch-Analog 0x800B0FBF) */
 #include <string.h>
 #include <stddef.h>
 
@@ -84,6 +85,8 @@ void re15_savedata_capture(re15_savedata_t *out, uint32_t playtime, uint16_t sav
     out->equipped_slot = (uint8_t)re15_inv_equipped_slot();
     out->weapon_id     = (uint8_t)re15_player_equipped_weapon();   /* DAT_800aca5d */
     out->camera_cut    = (uint8_t)g_scd.cam_id;                    /* active fixed-camera cut */
+    out->loc_idx       = re15_savepoint_loc();   /* Ortsnamen-Index, gelatcht am Save-Trigger
+                                                  * (Patch-Analog: 0x800B0FBF -> Karte +0x203) */
 
     memcpy(out->inv,   g_inv.slots, sizeof(out->inv));
     memcpy(out->flags, g_game.flags, sizeof(out->flags));

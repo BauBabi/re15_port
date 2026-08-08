@@ -47,4 +47,18 @@ void re15_savepoint_reset(void);
 void re15_savepoint_set_cut(int cut);   /* latch at the examine action fire */
 int  re15_savepoint_saved_cut(void);    /* the latched gameplay cut, or -1 */
 
+/* ORTSNAMEN-INDEX des Save-Punkts — UEBERNAHME DES VORPROJEKT-PATCHES (Nutzer-Entscheidung
+ * 2026-08-08, analysis/bug_save_room_name_recheck.md §3): Der Original-Resolver FUN_80026e4c
+ * @0x80026e4c ist ein return-0-Stub (Datei 0x1764c: jr ra / addu v0,zero,zero); die
+ * Anzeige-Maschinerie existiert komplett (Slot-Zeile sysmes 0x1a+idx @0x80026818/20,
+ * BIOS-Kartentitel SJIS-Tabelle 0x13*idx @0x80026f0c-28). Der Patch des Vorprojekts
+ * (reAi/scripts/patch_save_final.py Block [Z]) fuellt den Index ueber game_state[3]
+ * = 0x800B0FBF (Kartenblock-Offset +0x203) mit genau ZWEI Werten:
+ *   0 = Schreibmaschine ROOM1150/1151 (SCD_SAVE_RET @0x800708c0 `sb zero`)
+ *   1 = Telefon        ROOM1070      (AOT_TYPE1_HOOK @0x8007087c `sb v0=1`)
+ * Alle uebrigen Save-Raeume hat der Patch NIE definiert -> 0 (= Stub-Verhalten).
+ * Latch: beim Pending-Set per Registry-Lookup des ausloesenden Raums; reset() wischt auf 0. */
+void    re15_savepoint_latch_loc(unsigned room_id);  /* Registry-Lookup -> Latch */
+uint8_t re15_savepoint_loc(void);                    /* der gelatchte Index (0/1) */
+
 #endif /* RE15_SAVEPOINT_H */

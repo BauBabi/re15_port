@@ -35,6 +35,25 @@ int main(void)
     if (re15_savepoint_pending()) { fprintf(stderr, "FAIL: pending should clear\n"); fail = 1; }
     if (!fail) printf("  pending one-shot signal ok\n");
 
+    /* Ortsnamen-Index (Patch-Uebernahme, re15_savepoint.h): Telefon ROOM1070/1071 -> 1
+     * (AOT_TYPE1_HOOK @0x8007087c), Schreibmaschine ROOM1150/1151 -> 0 (SCD_SAVE_RET
+     * @0x800708c0), alle PATCH-UNDEFINIERTEN + unbekannte Raeume -> 0, reset() wischt. */
+    re15_savepoint_latch_loc(0x1070);
+    if (re15_savepoint_loc() != 1) { fprintf(stderr, "FAIL: 1070 loc != 1\n"); fail = 1; }
+    re15_savepoint_latch_loc(0x1071);
+    if (re15_savepoint_loc() != 1) { fprintf(stderr, "FAIL: 1071 loc != 1 (Port-Entscheidung Elza-Spiegel)\n"); fail = 1; }
+    re15_savepoint_latch_loc(0x1150);
+    if (re15_savepoint_loc() != 0) { fprintf(stderr, "FAIL: 1150 loc != 0\n"); fail = 1; }
+    re15_savepoint_latch_loc(0x2010);
+    if (re15_savepoint_loc() != 0) { fprintf(stderr, "FAIL: 2010 (PATCH-UNDEFINIERT) loc != 0\n"); fail = 1; }
+    re15_savepoint_latch_loc(0x1070);
+    re15_savepoint_latch_loc(0x1140);   /* kein Save-Raum -> 0 */
+    if (re15_savepoint_loc() != 0) { fprintf(stderr, "FAIL: Nicht-Save-Raum loc != 0\n"); fail = 1; }
+    re15_savepoint_latch_loc(0x1070);
+    re15_savepoint_reset();
+    if (re15_savepoint_loc() != 0) { fprintf(stderr, "FAIL: reset wischt loc nicht\n"); fail = 1; }
+    if (!fail) printf("  loc latch (Patch-Indizes 0/1) ok\n");
+
     if (fail) { printf("SAVEPOINT: FAIL\n"); return 1; }
     printf("SAVEPOINT: all checks passed\n");
     return 0;

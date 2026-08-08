@@ -84,12 +84,13 @@ static void show(const char *tag, const uint8_t *c, int n)
     printf("\"\n");
 }
 
-/* --- PORT: main.c:521-539 pc_slot_title_codes, 1:1 kopiert -------------------- */
-static int port_slot_title_codes(uint8_t *tc, int character, int count)
+/* --- PORT: main.c pc_slot_title_codes, 1:1 kopiert (Stand 2026-08-08: Ortsname
+ * datengetrieben sysmes(0x1a+loc), Kopie bis exkl. Terminator 0x01, max 0x10 —
+ * der Original-memcpy nimmt 0x10 Bytes @0x80026830, der Drucker stoppt am 0x01). */
+static int port_slot_title_codes(const uint8_t *dbg, uint8_t *tc, int character, int count, int loc)
 {
     static const uint8_t leon[] = { 0x28, 0x41, 0x4b, 0x4a };
     static const uint8_t elza[] = { 0x21, 0x48, 0x56, 0x3d };
-    static const uint8_t room[] = { 0x25,0x4e,0x4b,0x4a,0x4f, 0x3a, 0x00, 0x2b,0x42,0x42,0x45,0x3f,0x41 };
     int n = 0;
     const uint8_t *nm = character ? elza : leon;
     tc[n++] = 0x05; tc[n++] = (uint8_t)(character ? 0x06 : 0x07);
@@ -101,7 +102,8 @@ static int port_slot_title_codes(uint8_t *tc, int character, int count)
     tc[n++] = (uint8_t)(0x0c + count % 10);
     tc[n++] = 0x38;
     tc[n++] = 0x00; tc[n++] = 0x00;
-    for (int k = 0; k < 13; k++) tc[n++] = room[k];
+    const uint8_t *loc_nm = sysmes(dbg, (unsigned)(0x1a + loc));
+    for (int k = 0; k < 0x10 && loc_nm[k] != 0x01; k++) tc[n++] = loc_nm[k];
     return n;
 }
 
@@ -140,17 +142,24 @@ int main(void)
     /* ---- M2: ORIGINAL-Zeile vs PORT-Zeile (Leon, Zaehler 7) ---- */
     printf("\n[M2] Slot-Zeile Leon, Zaehler 7:\n");
     uint8_t o[64], p[64];
-    int on = orig_slot_title_codes(dbg, o, 0, 7, 0);   /* FUN_80026e4c() == 0 */
-    int pn = port_slot_title_codes(p, 0, 7);
+    int on = orig_slot_title_codes(dbg, o, 0, 7, 0);   /* Resolver == 0 (Schreibmaschine/Stub) */
+    int pn = port_slot_title_codes(dbg, p, 0, 7, 0);
     show("ORIGINAL", o, on);
     show("PORT", p, pn);
     CHECK(pn == on, "Laenge: Port %d Bytes, Original %d Bytes", pn, on);
     CHECK(pn == on && memcmp(p, o, (size_t)on) == 0, "Bytefolge weicht ab (siehe oben)");
 
+    /* ---- M2b: loc=1 (Telefon ROOM1070/1071 — Patch-Uebernahme) ---- */
+    printf("\n[M2b] Slot-Zeile Leon, Zaehler 7, loc=1 (Telefon -> sysmes 0x1b Medical Room):\n");
+    on = orig_slot_title_codes(dbg, o, 0, 7, 1);       /* Resolver == 1 (Patch AOT_TYPE1_HOOK) */
+    pn = port_slot_title_codes(dbg, p, 0, 7, 1);
+    show("ORIGINAL", o, on);
+    show("PORT", p, pn);
+
     /* ---- M3: dasselbe fuer Elza ---- */
     printf("\n[M3] Slot-Zeile Elza, Zaehler 12:\n");
     on = orig_slot_title_codes(dbg, o, 1, 12, 0);
-    pn = port_slot_title_codes(p, 1, 12);
+    pn = port_slot_title_codes(dbg, p, 1, 12, 0);
     show("ORIGINAL", o, on);
     show("PORT", p, pn);
     CHECK(pn == on && memcmp(p, o, (size_t)on) == 0, "Bytefolge Elza weicht ab");

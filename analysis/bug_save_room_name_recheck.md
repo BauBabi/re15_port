@@ -457,6 +457,8 @@ Build (`b653c80f`) hat die Tabelle genau einen (japanischen) Eintrag. Fuer den P
 python -c "d=open(r'c:/workspace/git/reAi_v2/info/Re1.5/PSX.EXE','rb').read(); print(d[0x1764c:0x17654].hex(' '))"
 # -> 08 00 e0 03 21 10 00 00
 
+# (Anm. 2026-08-08: Reproduktionsrezepte unveraendert gueltig; Implementierungs-Stand s. §11.)
+
 # Patch im Vorprojekt
 python -c "d=open(r'c:/workspace/git/reAi/info/Re1.5_PATCHED/re15/PSX.EXE','rb').read(); print(d[0x1764c:0x17654].hex(' '))"
 # -> 24 c2 01 08 00 00 00 00   (= j 0x80070890 / nop)
@@ -474,3 +476,27 @@ for p in sorted(glob.glob('c:/workspace/git/reAi_v2/stage_saves/*.sav')):
     except Exception as e: print(p,'ERR',e)
 EOF
 ```
+
+---
+
+## 11. IMPLEMENTIERT (2026-08-08) — Nutzer-Entscheidung: Patch-Verhalten uebernehmen
+
+Der Nutzer hat §6.1 ("konstant lassen") ueberstimmt: der Port soll die Ortsnamen-Logik des
+Vorprojekt-Patches zeigen, kombiniert mit der ORIGINAL-Anzeige-Maschinerie. Eingebaut:
+
+| Baustein | Port-Ort | Beleg |
+|---|---|---|
+| Ortsindex-Registry (0 Schreibmaschine 1150/1151, 1 Telefon 1070; **1071 -> 1 = PORT-Entscheidung**, Elza-Spiegel — der Patch hat 1071 nie angefasst; alle uebrigen Save-Raeume PATCH-UNDEFINIERT -> 0) | `re15_savepoint.c` (Registry + Latch), Latch-Aufrufe an beiden Trigger-Intercepts `scd_vm.c` | Patch: `SCD_SAVE_RET` @0x800708c0 `sb zero`, `AOT_TYPE1_HOOK` @0x8007087c `sb v0=1`; RDT-Sentinel ROOM1070.RDT @0x1568 / ROOM1150.RDT @0x10ED |
+| Transport im Save-Blob: `loc_idx` @Struct-Offset 0x26 (rekrutiertes Reserve-Byte, kein Versions-Bump — alte Saves tragen 0 = bisheriges Verhalten) | `re15_savedata.h/.c` | Patch-Analog `game_state[3]` = 0x800B0FBF -> Kartenblock +0x203 |
+| Slot-Zeile datengetrieben: sysmes(0x1a+loc) aus DEBUG.BIN, Kopie bis exkl. Terminator 0x01 (max 0x10) | `main.c` `pc_sysmes` + `pc_slot_title_codes` | Getter FUN_800c00e4 (tab @Datei 0x5f96), `ori a0,0x1a` @0x80026818 + `addu` @0x80026820, memcpy 0x10 @0x8002682c-30; Namen @0x6197 (Irons' Office) / @0x61a6 (Medical Room) |
+| BIOS-Kartentitel byte-true SJIS statt ASCII-snprintf: Template 0x2a + Ziffern +0x25/+0x27 + SJIS-Ort 0x13 = 0x3d B; `RE15_MC_TITLE_LEN` 32 -> 64 | `re15_mc_title.c` + `gen/mc_title_bank.inc` (`tools/gen_mc_title_bank.py`) | FUN_80026e54: memcpy @0x80026e98/9c, Weiche @0x80026e58-94, Ziffern @0x80026ec8/@0x80026f00, Anhang @0x80026f0c-2c; Templates Datei 0xff8/0xfcc, SJIS-Tabelle Datei 0x63e28 |
+
+**End-to-End-Verifikation:** `re15_mc_compose_title`-Algorithmus gegen die ECHTE Mod-Karte
+`re15_save_final_1.mcd` nachgerechnet — Block 1 (Leon /01/ loc 0) und Block 2 (/02/ loc 1)
+**byte-identisch** (Python-Nachbau aus denselben EXE-Offsets vs. .mcd-Bytes). ctest 116/116;
+`probe_save_room_name` M2b zeigt die loc-1-Zeile "Medical Room"; ctest-Pin `unit_savepoint`
+prueft die Latch-Semantik (1070/1071->1, 1150->0, undefiniert->0, reset->0).
+
+**Unveraendert offen:** die ~28-px-Breiten-Divergenz der Slot-Zeile (F2/F4 aus
+`bug_save_room_name.md` — Renderer-Semantik `05 00` + Code-0x00-Breite), und die
+SJIS-Namen bleiben RE1-Herrenhaus-Leftovers (semantisch falsch, aber Patch-treu, §3.7).

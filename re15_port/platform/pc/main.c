@@ -505,30 +505,29 @@ static uint16_t        s_save_counter = 0;
 static int pc_do_save(int slot, const re15_savedata_t *sd)
 {
     char title[RE15_MC_TITLE_LEN];
-    /* On-card BIOS title = DAT_800107cc/f8 template "BIO HAZARD <Leon|Elza> /NN/" (what a PSX card
-     * manager shows). The in-game slot list instead reconstructs the sysmes "<Leon|Elza> /NN/". */
-    snprintf(title, sizeof title, "BIO HAZARD %s /%02d/",
-             sd->character ? "Elza" : "Leon", sd->save_count % 100);
+    /* On-card BIOS-Titel = byte-true SJIS-Kette (FUN_80026e54): Template 0x2a B @0x80026e98
+     * + Zaehler-Ziffern +0x25/+0x27 @0x80026ec8/@0x80026f00 + SJIS-Ortsname 0x13 B @0x80026f28.
+     * (Vorher ASCII-snprintf — sichtbar nur fuer externe PSX-Kartenmanager; die In-Game-
+     * Slot-Liste rekonstruiert ihre Zeile aus dem Blob.) End-to-End-Referenz: Mod-Karte
+     * re15_save_final_1.mcd traegt exakt diese Kette (bug_save_room_name_recheck.md §3.6). */
+    re15_mc_compose_title(title, sd->character, sd->save_count % 100, sd->loc_idx);
     return re15_memcard_save(RE15_CARD_PATH, slot, sd, title) == 0;
 }
 
 /* Build the byte-true RE1.5 slot title as raw sysmes atlas codes. Template DEBUG.BIN @0x617f
  * (verified verbatim): 05 07 "Leon" 05 00 38 0c 0c 38 ...  /  05 06 "Elza" 05 00 38 0c 0c 38 ...
  *
- * WARUM DER ORTSNAME KONSTANT IST — das ist ORIGINAL-Verhalten, kein Port-Stub (Nutzer-Report
- * 2026-08-05 "egal in welchem Raum ich speichere, er schreibt immer Irons Office"):
- * Der Ortsnamen-Resolver FUN_80026e4c ist in der ausgelieferten PSX.EXE ein Zwei-Instruktionen-Stub
- *   @0x80026e4c  jr ra
- *   @0x80026e50  addu v0,zero,zero          (Datei-Offset 0x1764c: 08 00 e0 03 21 10 00 00)
- * — er gibt IMMER 0 zurueck. Eigener Opcode-Scan ueber das gesamte .text der EXE: genau ZWEI
- * Aufrufer (@0x80026810 = diese Slot-Liste, @0x80026efc = der BIOS-Kartentitel) und NULL
- * 32-Bit-Datenzeiger, also auch kein Tabellen-/vtable-Weg. Beide Aufrufer addieren den Rueckgabewert
- * auf ihre Basis (@0x80026818 `ori a0,zero,0x1a` + @0x80026820 `addu a0,a0,v0` -> sysmes 0x1a+0;
- * @0x80026f0c-24 0x13*v0 + 0x80073628 -> SJIS-Eintrag 0). Das Original zeigt damit selbst in JEDEM
- * Raum sysmes 0x1a = "Irons' Office". Eine Raum->Ortsnamen-Zuordnung existiert im Binary nicht
- * (Byte-Scan ueber PSX.EXE + alle BIN/*.BIN nach den 8 Save-Raum-IDs: null Treffer) — sie zu
- * erfinden waere ein Rate-Defekt. Die 8 vorhandenen Ortsnamen liegen in DEBUG.BIN @0x6197-0x6210.
- * DOKUMENTIERTE RESTDIVERGENZ (nicht Teil dieses Fixes, analysis/bug_save_room_name.md F2/F4):
+ * ORTSNAME (Historie + Entscheidung): Der Resolver FUN_80026e4c ist in der ausgelieferten
+ * PSX.EXE ein return-0-Stub (@0x80026e4c jr ra / @0x80026e50 addu v0,zero,zero, Datei 0x1764c)
+ * — das Original zeigt in JEDEM Raum sysmes 0x1a = "Irons' Office". Die Anzeige-Maschinerie
+ * existiert aber komplett: Slot-Zeile = sysmes(0x1a + resolver) (@0x80026818 ori a0,0x1a +
+ * @0x80026820 addu a0,a0,v0, memcpy 0x10 @0x8002682c-30, Getter FUN_800c00e4: ptr = tab +
+ * u16[tab+idx*2], tab = DEBUG.BIN Datei 0x5f96; die 8 Namen liegen @0x6197-0x6210). Der Port
+ * uebernimmt per NUTZER-ENTSCHEIDUNG 2026-08-08 den Vorprojekt-Patch (reAi patch_save_final.py
+ * Block [Z], SAVE_LOC_FUNC @0x80070890): Index aus dem Save-Punkt — 0 Schreibmaschine
+ * ("Irons' Office"), 1 Telefon ROOM1070/1071 ("Medical Room" sysmes 0x1b). Details + Registry:
+ * re15_savepoint.h/.c; Transport im Blob: re15_savedata.h loc_idx (Patch-Analog Karte +0x203).
+ * DOKUMENTIERTE RESTDIVERGENZ (unveraendert, analysis/bug_save_room_name.md F2/F4):
  * die Zeile ist ~28 px zu breit, weil der Port das `05 00` des Templates als Farb-Op + Space liest
  * statt als Farb-Op MIT Argument, und weil re15_render_pc_game_codes fuer Code 0x00 hart 8 px
  * vorrueckt statt der 4 px aus der Breitentabelle @0x800c4416.
@@ -537,11 +536,26 @@ static int pc_do_save(int slot, const re15_savedata_t *sd)
  * the colour selector (`attr = next_byte & 7`, cf. msg_common.c:537): Leon = 07 (attr 7, blue
  * 32,80,232), Elza = 06 (attr 6, red 152,0,72), 05 00 resets the counter/room to the default
  * palette. re15_render_pc_game_codes interprets the embedded 0x05 ops. */
-static int pc_slot_title_codes(uint8_t *tc, int character, int count)
+
+/* sysmes-Getter (byte-true FUN_800c00e4, DEBUG.BIN laedt RAW @0x800c0000):
+ * ptr = tab + u16[tab + idx*2], tab = Datei-Offset 0x5f96. Die Tabelle hat exakt 34
+ * Eintraege 0x00..0x21 (erster Offset 0x44 -> 0x44/2 = 34; recheck-Dossier §3.3).
+ * NULL, wenn DEBUG.BIN fehlt oder idx ausserhalb. */
+static const uint8_t *pc_sysmes(int idx)
+{
+    static uint8_t *s_dbg = NULL; static int s_dbg_tried = 0, s_dbg_size = 0;
+    if (!s_dbg_tried) { s_dbg_tried = 1; s_dbg = pc_read_shared("BIN/DEBUG.BIN", &s_dbg_size); }
+    if (!s_dbg || idx < 0 || idx > 0x21) return NULL;
+    const unsigned tab = 0x5f96;
+    unsigned off = tab + (unsigned)(s_dbg[tab + idx * 2] | (s_dbg[tab + idx * 2 + 1] << 8));
+    if ((int)off + 0x10 > s_dbg_size) return NULL;
+    return s_dbg + off;
+}
+
+static int pc_slot_title_codes(uint8_t *tc, int character, int count, int loc)
 {
     static const uint8_t leon[] = { 0x28, 0x41, 0x4b, 0x4a };                       /* "Leon" */
     static const uint8_t elza[] = { 0x21, 0x48, 0x56, 0x3d };                       /* "Elza" */
-    static const uint8_t room[] = { 0x25,0x4e,0x4b,0x4a,0x4f, 0x3a, 0x00, 0x2b,0x42,0x42,0x45,0x3f,0x41 }; /* "Irons' Office" */
     int n = 0;
     const uint8_t *nm = character ? elza : leon;
     tc[n++] = 0x05; tc[n++] = character ? 0x06 : 0x07; /* name colour: Elza=06 (red), Leon=07 (blue) */
@@ -553,7 +567,17 @@ static int pc_slot_title_codes(uint8_t *tc, int character, int count)
     tc[n++] = (uint8_t)(0x0c + count % 10);            /* ones digit */
     tc[n++] = 0x38;                                    /* counter delimiter glyph */
     tc[n++] = 0x00; tc[n++] = 0x00;                    /* gap */
-    for (int k = 0; k < 13; k++) tc[n++] = room[k];
+    /* Ortsname = sysmes(0x1a + loc), datengetrieben aus DEBUG.BIN (Getter oben; memcpy-Laenge
+     * 0x10 @0x80026830 ori a2,zero,0x10 — der Drucker stoppt am Terminator 0x01, also werden
+     * maximal 16 Bytes bis exklusive 0x01 uebernommen). Fallback ohne DEBUG.BIN: das alte
+     * Literal (byte-gleich zu sysmes 0x1a, probe_save_room_name M4). */
+    const uint8_t *loc_nm = pc_sysmes(0x1a + loc);
+    if (loc_nm) {
+        for (int k = 0; k < 0x10 && loc_nm[k] != 0x01; k++) tc[n++] = loc_nm[k];
+    } else {
+        static const uint8_t room[] = { 0x25,0x4e,0x4b,0x4a,0x4f, 0x3a, 0x00, 0x2b,0x42,0x42,0x45,0x3f,0x41 }; /* "Irons' Office" */
+        for (int k = 0; k < 13; k++) tc[n++] = room[k];
+    }
     return n;
 }
 
@@ -561,7 +585,8 @@ static int pc_slot_title_codes(uint8_t *tc, int character, int count)
  * fade-IN on open (FUN_800264e8) and fade-OUT on close (FUN_80026594). The interactive main loop
  * draws its own copy plus the cursor/overwrite/result sub-screens. */
 static void pc_draw_card_static(const re15_tim_t *bg, const int used[],
-                                const int slot_char[], const int slot_cnt[], int save_mode)
+                                const int slot_char[], const int slot_cnt[],
+                                const int slot_loc[], int save_mode)
 {
     extern void re15_render_pc_show_cardbg(const re15_tim_t *tim);
     extern int  re15_render_pc_game_text(int x, int y, const char *str, int attr);
@@ -571,7 +596,7 @@ static void pc_draw_card_static(const re15_tim_t *bg, const int used[],
     else            re15_render_background_gradient(0, 0, 0, 0, 0, 0);
     re15_render_pc_game_text(160 - re15_render_pc_game_text_width("Memory Card 1") / 2, 24, "Memory Card 1", 0);
     for (int i = 0; i < RE15_SAVE_SLOTS; i++) {
-        if (used[i]) { uint8_t tc[48]; int tn = pc_slot_title_codes(tc, slot_char[i], slot_cnt[i]);
+        if (used[i]) { uint8_t tc[48]; int tn = pc_slot_title_codes(tc, slot_char[i], slot_cnt[i], slot_loc[i]);
                        re15_render_pc_game_codes(41, 56 + i * 20, tc, tn, 0); }
         else re15_render_pc_game_text(41, 56 + i * 20, "NO DATA", 0);
     }
@@ -611,12 +636,17 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
     re15_memcard_list(RE15_CARD_PATH, used, titles);
     /* In-game slot label = byte-true RE1.5 sysmes idx 0x17 template (FUN_80026658), reconstructed
      * from each slot's savedata (character + save counter) — NOT the on-card BIOS title. */
-    int slot_char[RE15_SAVE_SLOTS], slot_cnt[RE15_SAVE_SLOTS];
+    int slot_char[RE15_SAVE_SLOTS], slot_cnt[RE15_SAVE_SLOTS], slot_loc[RE15_SAVE_SLOTS];
     for (int i = 0; i < RE15_SAVE_SLOTS; i++) {
-        slot_char[i] = 0; slot_cnt[i] = 0;
+        slot_char[i] = 0; slot_cnt[i] = 0; slot_loc[i] = 0;
         if (used[i]) {
             re15_savedata_t sl;
-            if (re15_memcard_load(RE15_CARD_PATH, i, &sl) == 0) { slot_char[i] = sl.character; slot_cnt[i] = sl.save_count % 100; }
+            if (re15_memcard_load(RE15_CARD_PATH, i, &sl) == 0) {
+                slot_char[i] = sl.character; slot_cnt[i] = sl.save_count % 100;
+                slot_loc[i]  = sl.loc_idx;   /* Ortsindex aus dem Blob (Patch-Analog: Pfad A
+                                              * SAVE_LOC_FUNC lbu v0,3(a0) @0x800708a0 liest
+                                              * den Kartenblock-Header) */
+            }
             else used[i] = 0;
         }
     }
@@ -643,7 +673,7 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
         for (int level = 0x7FFF; !(level & 0x8000); level -= 0x1800) {
             re15_render_begin_frame();
             re15_input_tick();
-            pc_draw_card_static(&s_card_bg, used, slot_char, slot_cnt, save_mode);
+            pc_draw_card_static(&s_card_bg, used, slot_char, slot_cnt, slot_loc, save_mode);
             re15_render_pc_set_fade(level >> 7);
             re15_render_end_frame();
         }
@@ -662,7 +692,7 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
          * idx0x11 "Access error", idx0x15 "Fail in save". */
         re15_render_pc_game_text(160 - re15_render_pc_game_text_width("Memory Card 1") / 2, 24, "Memory Card 1", 0);
         for (int i = 0; i < RE15_SAVE_SLOTS; i++) {                        /* 5 slots x=41 y=56+20i */
-            if (used[i]) { uint8_t tc[48]; int tn = pc_slot_title_codes(tc, slot_char[i], slot_cnt[i]);
+            if (used[i]) { uint8_t tc[48]; int tn = pc_slot_title_codes(tc, slot_char[i], slot_cnt[i], slot_loc[i]);
                            re15_render_pc_game_codes(41, 56 + i * 20, tc, tn, 0); }
             else re15_render_pc_game_text(41, 56 + i * 20, "NO DATA", 0);  /* sysmes idx 0x0f */
         }
@@ -784,7 +814,7 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
         for (int level = 0; !(level & 0x8000); level += 0x1800) {   /* step 0x1800, done at bit15 */
             re15_render_begin_frame();
             re15_input_tick();
-            pc_draw_card_static(&s_card_bg, used, slot_char, slot_cnt, save_mode);
+            pc_draw_card_static(&s_card_bg, used, slot_char, slot_cnt, slot_loc, save_mode);
             re15_render_pc_set_fade(level >> 7);                     /* byte-true brightness = level>>7 */
             re15_render_end_frame();
         }

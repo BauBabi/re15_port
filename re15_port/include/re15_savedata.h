@@ -66,7 +66,16 @@ typedef struct {
                                 * The cut also selects the room's background image, so WITHOUT
                                 * restoring it a load frames the saved position under the room's
                                 * default cut 0 (wrong camera + wrong background). v3 field. */
-    uint8_t  reserved[2];      /* keep inv[]/flags[] 4-aligned (deterministic sum) */
+    uint8_t  loc_idx;          /* Ortsnamen-Index des Save-Punkts — Patch-Analog game_state[3]
+                                * = 0x800B0FBF / Kartenblock +0x203 (reAi patch_save_final.py
+                                * Block [Z]; SAVE_LOC_FUNC @0x80070890 liest genau dieses Byte).
+                                * 0 = Schreibmaschine/Default ("Irons' Office" sysmes 0x1a =
+                                * Stub-Verhalten @0x80026e4c), 1 = Telefon ROOM1070(/1071)
+                                * ("Medical Room" sysmes 0x1b). Reserve-Byte rekrutiert wie
+                                * camera_cut (v3) — alle aelteren Blocks tragen hier 0 und
+                                * zeigen unveraendert sysmes 0x1a; Layout+Checksumme identisch,
+                                * kein Versions-Bump noetig. */
+    uint8_t  reserved1;        /* keep inv[]/flags[] 4-aligned (deterministic sum) */
     re15_inv_slot_t inv[RE15_INV_MAX_SLOTS];                     /* 11 × 4 bytes  */
     uint32_t flags[RE15_FLAG_ZONES][RE15_FLAG_WORDS_ZONE];       /* g_game.flags  */
     re15_inv_slot_t box[RE15_BOX_SLOTS];   /* v4 ITEM BOX, page*8+i order (the 4

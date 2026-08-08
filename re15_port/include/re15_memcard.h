@@ -27,7 +27,11 @@
 #define RE15_MC_BLOCK      0x2000         /* 8 KB per block                      */
 #define RE15_MC_FRAME      0x80           /* 128 B per frame                     */
 #define RE15_SAVE_SLOTS    5              /* saves per card (blocks 1..5)        */
-#define RE15_MC_TITLE_LEN  32             /* title chars we surface to the UI    */
+#define RE15_MC_TITLE_LEN  64             /* PSX-Titelfeld @Block+0x04 ist 64 B SJIS (psx-spx;
+                                           * CLUT folgt erst @+0x60). Der byte-true RE1.5-Titel
+                                           * ist 0x3d B (Template 0x2a @0x80026e98 + SJIS-Ort
+                                           * 0x13 @0x80026f28) — die alte 32er-Kappung schnitt
+                                           * ihn ab. */
 
 /* Write `sd` into `slot` (0..RE15_SAVE_SLOTS-1) of the card image at `path`,
  * with the BIOS-card-menu title `title` (ASCII/SJIS, ≤ RE15_MC_TITLE_LEN). The
@@ -48,5 +52,10 @@ int re15_memcard_list(const char *path, int used[RE15_SAVE_SLOTS],
  * Load restauriert ihn aus dem Save @0x80026290-a0) — die Karte wird fuer die Nummer NIE
  * gelesen (analysis/save_counter.md SC-1; der fruehere Seed aus diesem Maximum war erfunden). */
 int re15_memcard_max_save_count(const char *path);
+
+/* Byte-true BIOS-Kartentitel (FUN_80026e54): SJIS-Template (Leon/Elza, 0x2a B) + Zaehler-
+ * Ziffern in +0x25/+0x27 + SJIS-Ortsname (0x13 B, Index = Save-Punkt-Ortsindex). Schreibt
+ * exakt 0x3d Bytes + NUL-Padding in out[RE15_MC_TITLE_LEN]. re15_mc_title.c. */
+void re15_mc_compose_title(char *out, int character, int count, int loc);
 
 #endif /* RE15_MEMCARD_H */
