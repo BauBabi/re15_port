@@ -1,4 +1,20 @@
-# RE1.5 Port — v0.1 (Early Preview)
+# RE1.5 Port — v0.1.1 (Early Preview)
+
+## Neu in v0.1.1 (gegenueber v0.1)
+- **Elliot-Intro (ROOM1170) byte-true:** Der Renn-Glide ist behoben, und Elliot laeuft
+  jetzt vollstaendig ueber die NPC-Sub-VM mit seiner EIGENEN EM047-Animationsbank
+  (Roadmap 7b komplett; inkl. eines nachgezogenen Original-Details: das
+  SCD-Ankunfts-Flag des Turn-Subs @0x80051dd8).
+- **Debug-Menue (SELECT) byte-true:** Original-Navigationsgefuehl (Auto-Repeat-Kadenz
+  0/6/8/10), Kreuz/SELECT schliessen per Tasten-EDGE (gehaltene Renn-Taste schliesst
+  nicht mehr sofort), 8x8-Original-Debugfont aus TEX.TIM statt der Spielschrift,
+  subtraktive Hintergrund-Box, Raumnummern mit fuehrender Null. Bestaetigung = ▢.
+- Test-Suite-Fix (Use-after-free, nur Tests; Linux-Gate deckte ihn auf).
+Die Dateinamen unten heissen entsprechend `re15_port_v0.1.1_*`.
+
+---
+
+# v0.1 (Basis)
 
 Erster eigenstaendiger PC-Release des Resident-Evil-1.5-Ports (MZD-Build-Basis).
 Zwei Pakete (je ~135 MB gezippt, ~290 MB entpackt, Assets enthalten).
@@ -10,8 +26,8 @@ Split-Zips — 7-Zip/WinRAR verwenden. Pruefsummen: `SHA256SUMS.txt`.
 
 | Paket | Plattform | Start |
 |---|---|---|
-| `re15_port_v0.1_win64.zip` | Windows x64 | `re15_pc.exe` doppelklicken (oder `Start_RE15_Port.bat`) |
-| `re15_port_v0.1_linux_steamdeck_x64.zip` | Linux x64 / Steam Deck (SteamOS 3.5+) | `./run.sh` (Deck: als Non-Steam-Game hinzufuegen) |
+| `re15_port_v0.1.1_win64.zip` | Windows x64 | `re15_pc.exe` doppelklicken (oder `Start_RE15_Port.bat`) |
+| `re15_port_v0.1.1_linux_steamdeck_x64.zip` | Linux x64 / Steam Deck (SteamOS 3.5+) | `./run.sh` (Deck: als Non-Steam-Game hinzufuegen) |
 
 Beide Pakete sind selbst-enthalten: SDL2 statisch, Assets unter `shared_assets/PSX`
 relativ zum Startordner, Savegames als PSX-Memory-Card-Image `re15_card.mcr` neben
