@@ -1123,7 +1123,12 @@ int main(void)
                    "(byte-true DAT_800aca5d)\n");
     }
 
-    free(buf);
+    /* ⛔ KEIN free(buf) hier: `rdt` traegt ZEIGER IN DIESEN PUFFER (blocks/sub_scd/sca/...),
+     * und die Sektionen (20)-(25) benutzen ihn weiter — Sektion (25) publiziert `rdt` sogar
+     * als g_room_rdt fuer den Nav-Zonen-Graphen. Der fruehe free war ein Use-after-free, den
+     * der Windows-Heap (msvcrt, Block bleibt gemappt) still tolerierte; unter glibc wird die
+     * 153-KB-Allokation ge-munmap-t -> SIGSEGV in re15_nav_zone_from_pos (Linux-Build v0.1,
+     * gdb: nd unlesbar bei i=4). free() jetzt am Test-Ende. */
     /* (20): the DEATH -> CONTINUE reload (the second half of the ROOM1140 "hang" fix). When the player
      * dies (HP<0) the death branch runs the byte-true 0x78 (120-frame) timer; at expiry game_step fires
      * re15_player_continue_reload, which QUEUES a reload of the CURRENT room (re15_room_apply_pending in
@@ -1624,6 +1629,7 @@ int main(void)
                    "refill+HOLD (byte-true FUN_8004ea6c/eae4/eb70/ebdc)\n");
     }
 
+    free(buf);   /* erst NACH allen rdt-Nutzern (s. Kommentar an der alten free-Stelle) */
     if (fail) { fprintf(stderr, "\nROOM1140 COMBAT-WIRING TEST FAILED\n"); return 1; }
     printf("\nPASS: ROOM1140 live-AI game_step wiring (spawn; WAKE->engage; TURN-to-face->GRAB->HP; "
            "GRABBED-lock; player DEATH; zombie HURT/DEATH; PLAYER-SHOOTS; LEON grab-victim anim; "
