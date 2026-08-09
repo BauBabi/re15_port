@@ -297,3 +297,10 @@ Devour = FUN_801100b4 + Opfer-Maschine 0x80111cf0: Leon-Clip 4 aus EM020-Bank 2,
 war BEREITS byte-true (0x4000 held: Timer -4 + 2 Glyphen/Frame @0x80028214/28/38) — gepinnt.
 OFFEN gesammelt: gdigrab-Sichtlaeufe (11E0-Funke, Dog-Finisher, Action-Gate), Release-0xB-
 Zwischenclip, CLUT-Konsum PC-Draw, ABR3-Approximation.
+
+**Nachtrag 2026-08-09:** Elliot-Intro-Run-Glide gefixt (Altbestand seit 7f86a8c6, in v0.1):
+Advancer-Skip klammert `walk_active` jetzt aus (Original: Walk-Sub ruft f314 jeden Tick,
+@0x80051630/@0x8005171c) + Elliots Walker-Speeds aus den NPC-Tabellen (WALK 70/RUN 210
+@0x80076c0e/8e, Savestate-Beweis +0x8c=210). Pin unit_elliot_1170_run, ctest 124/124.
+**7b ENTBLOCKT:** Messungen liegen vor (Run aus EM047-eigener Bank; Clip 25 = LEON; REC0⊃REC1)
+— volle EM047-Umstellung als naechster Schritt, gdigrab-Abnahme noetig.
