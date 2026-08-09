@@ -247,7 +247,9 @@ void re15_actor_anim_select(const re15_actor_t *a, int is_player,
 
     /* Locomotion / idle pose source by motion sentinel. These swap only the
      * POSE source (skel + anim) and the clip; the mesh + texture chosen above
-     * stay. Applies to the player AND Elliot. */
+     * stay. Player-only seit 7b (2026-08-09): Elliot (0x47) traegt keine
+     * Sentinels mehr — seine Plc_dest-Walks laufen in der NPC-Sub-VM (Clips
+     * 5/0 der EM047-Own-Bank, Render-Override in main.c). */
     int m = (int)a->motion;
     if (banks->w01_ok && (m == 105 || m == 100)) {
         /* Walk -> W01 clip5, Run -> W01 clip0 (PL00W01 weapon track). BYTE-TRUE, definitively RE'd

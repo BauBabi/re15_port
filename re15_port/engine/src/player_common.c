@@ -723,20 +723,13 @@ void re15_actors_anim_advance(void)
          * advancer must NOT also step them (a double advance would defeat the motion-FSM's play-once
          * HOLD, wrapping the pose instead of holding). Only 0x40 is self-advancing (skipped above); the
          * other 6 NPC types (0x42/0x45/0x47/0x49/0x4b/0x4d) are gated here while in the executor.
-         * AUSNAHME walk_active (Elliot-1170-Gleit-Regression, 2026-08-09): Elliot (0x47) laeuft
-         * Plc_dest-Walks auf dem Port-WALKER-Sonderpfad (op_plc_dest laesst seinen state unveraendert
-         * — der NPC-INIT hatte ihn wegen grid&0x40 auf state 4/sub 6 gestellt, @0x8011c860), und
-         * waehrend walk_active yieldet der NPC-Tick (enemy_ai_common.c) = der Executor laeuft NICHT.
-         * Das Original advanct die Anim im Walk-Sub JEDEN Tick: Sub-5-RUN @0x80051484 ruft f314
-         * (anim_set 0x8001f314) in Phase 1 @0x80051630 UND in Phase 2 @0x8005171c (a0/a1 =
-         * Kanal +0x170/+0x174 @0x80051714/18, nach pos_advance 0x800245d8 @0x800516b0); Sub-4-WALK
-         * analog. Ohne die Freigabe stand +0x95 den ganzen Lauf auf 0 = Run-Frame-0-Pose gleitet
-         * ueber das Helipad (Sonde probe_elliot_1170_run: af 26 Ticks eingefroren, pos -200/Tick).
-         * Nur Elliot kann state4+walk_active sein (alle anderen NPC-Typen routet op_plc_dest mit
-         * walk_active=0 in die Sub-VM) — die Executor-HOLD-Logik bleibt unberuehrt. */
+         * (Elliot-1170-Gleit-Historie 2026-08-09: dieser Skip hungerte Elliots Run aus, solange sein
+         * Plc_dest auf dem alten WALKER-Sonderpfad lief — state 4 aus dem INIT (grid&0x40 @0x8011c860),
+         * aber kein Sub-VM-f314. Seit der 7b-Umstellung laeuft 0x47 wie alle NPCs in der Sub-VM
+         * (op_plc_dest, scd_vm.c), deren Walk-Subs jeden Tick f314 rufen (Sub 5 @0x80051630/@0x8005171c)
+         * — der Skip hier ist damit auch fuer Elliot korrekt (Sub-VM = einziger Advancer). */
         { uint8_t t = a->type;
-          if (a->state == 4 && !a->walk_active &&
-              (t==0x40||t==0x42||t==0x45||t==0x47||t==0x49||t==0x4b||t==0x4d)) continue; }
+          if (a->state == 4 && (t==0x40||t==0x42||t==0x45||t==0x47||t==0x49||t==0x4b||t==0x4d)) continue; }
         /* ROOM1030 Kriechtor: der Sub-0x10-TOGGLE (f890[0x10]/f920[6] = FUN_80104f80) und die
          * Grid-1-Kriechmaschine (FUN_801036dc) rufen f314 SELBST in jedem Tick (@0x8010506c
          * bzw. @0x80103790-9c) — der globale Advancer muss diese Zustaende auslassen (sonst

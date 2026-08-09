@@ -2003,14 +2003,19 @@ static int op_plc_dest(scd_thread_t *t)
         /* NPC-Familie (0x40-0x4d) laeuft AUCH die Walk-Modes byte-true in der State-4-Sub-VM
          * (@0x80041c14-18 setzt IMMER state=4/+0x5=mode; die NPC-Walk-Subs @0x80076ca0
          * [4]=0x80051148 [5]=0x80051484 [7]=0x80051908 [8]=0x80051b00 sind in
-         * re15_npc_sub_walk portiert — marvin_glide_end.md Fix #1). AUSNAHME Elliot (0x47):
-         * bleibt auf dem Walker-Sonderpfad (PLD-Bank/Sentinels; vor der Umstellung per
-         * Savestate messen, marvin_10d0.md O3). Der Spieler behaelt seine eigene Walker-FSM
-         * (Player-Tabelle 0x80073e30, separat byte-true). */
+         * re15_npc_sub_walk portiert — marvin_glide_end.md Fix #1). Der Spieler behaelt seine
+         * eigene Walker-FSM (Player-Tabelle 0x80073e30, separat byte-true).
+         * ELLIOT (0x47) SEIT 7b-UMSTELLUNG 2026-08-09 EBENFALLS SUB-VM (die alte Walker-
+         * Ausnahme `ty != 0x47` ist GEMESSEN widerlegt): Savestate orig_1170_gp.sav traegt
+         * enemy[0]+0x8c = 210 = der Sub-5-INIT-Store (lbu 0x80076c80[(0x47-0x40)*2] @0x800514e4-f0
+         * -> sh +0x8c @0x800514f8); der Sub-5-Body posiert per f314 vom OWN-Kanal +0x170/+0x174
+         * (@0x80051714/18) = EM047 Bank 1 (CDEMD0.EMS Blob 21 @0x336000: 6 Clips {22,16,52,1,50,30});
+         * Clip 25 verlangt LEON, nicht Elliot (sub02:120-122 Work_set(1,0) vor Plc_motion(0,25,0)),
+         * und REC0 ⊃ REC1 ist byte-verifiziert (emd_common.c:380ff) — beide alten O3-Blocker weg. */
         int npc_subvm = 0;
         if (slot != RE15_ACTOR_SLOT_PLAYER) {
             uint8_t ty = a->type;
-            npc_subvm = (ty >= 0x40 && ty <= 0x4d && ty != 0x47);
+            npc_subvm = (ty >= 0x40 && ty <= 0x4d);
         }
         if (!is_walk || npc_subvm) {
             /* Re-Init-Guard (@0x80041bf8-c0c): skip nur wenn +0x1c4&4 UND +0x5 == mode. */

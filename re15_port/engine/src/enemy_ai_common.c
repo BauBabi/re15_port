@@ -7188,7 +7188,20 @@ static const re15_emd_animation_t *re15_npc_channel_anim(const re15_actor_t *e)
         return &bank->anim_loco;                          /* subs 1/7/8 -> Loco (+0x84/+0x16c) */
     if (e->state == 4 && !e->walk_active && e->sub_state_1 == 3 && bank && bank->victim_ok)
         return &bank->anim_victim;                        /* sub 3 -> Victim (+0x178/+0x17c) */
-    if (e->type == 0x47 && s_npc_elliot_anim) return s_npc_elliot_anim;   /* Elliot: eigene Bank */
+    /* Elliot (0x47): Gesten (Sub 0, RBJ-Kanal-Fallback) + Idle-Rest aus der ELLIOT.PLD-Bank
+     * (in ROOM1170 vom Setup mit RBJ REC0 ueberlagert; REC0 ⊃ REC1 byte-verifiziert
+     * emd_common.c:380ff — datengleich zum Original-REC1-Marker-Kanal fuer Clips 0..24).
+     * SEIT 7b (2026-08-09) NICHT mehr fuer die OWN-Kanal-Subs {2,4,5,6,9}: dort posiert das
+     * Original vom +0x170/+0x174-Paar (Sub-5-f314 @0x80051714/18, Sub-6 @0x80051884/88) =
+     * EM047 Bank 1 (CDEMD0.EMS Blob 21 @0x336000, 6 Clips {22,16,52,1,50,30}) — der
+     * bank->own_ok-Zweig unten uebernimmt, sobald EM047 in der Registry ist. */
+    {
+        int own_sub = (e->state == 4 &&
+                       (e->sub_state_1 == 2 || e->sub_state_1 == 4 || e->sub_state_1 == 5 ||
+                        e->sub_state_1 == 6 || e->sub_state_1 == 9));
+        if (e->type == 0x47 && s_npc_elliot_anim && !(own_sub && bank && bank->own_ok))
+            return s_npc_elliot_anim;
+    }
     if (bank && bank->own_ok) return &bank->anim_own;     /* +0x170/+0x174 = BANK 1 (dir[4]/dir[3]):
                                                            * subs {2,4,5,6,9}, Plc_dest-Walk (Clip 5)
                                                            * und der Idle-Rest */
@@ -7283,6 +7296,13 @@ static void re15_npc_sub_turn(re15_actor_t *e)
     uint8_t cone = re15_npc_type_cone(e->type);              /* @0x80076c41 */
     if (re15_ai_arc_test(e, e->steer_x, e->steer_z, cone) == 0) {   /* ALIGNED (@0x80051d90-98) */
         e->sub_state_1 = 6; e->sub_state_2 = 0;              /* -> sub 6 event-reach (@0x80051dac/dbc) */
+        /* SCD-ANKUNFTS-FLAG (byte-true, selbst disassembliert): der Original-Turn ruft beim
+         * Alignment FUN_8004ef90(0x800b1028, +0x1c3) — `lbu a1,451(v0)` @0x80051dcc,
+         * `addiu a0,0x800b1028` @0x80051dd4, `jal 0x8004ef90` @0x80051dd8 — wie die Walk-Subs.
+         * Fehlte im Port (latent: vor der Elliot-7b-Umstellung lief kein NPC-Mode-9 durch die
+         * Sub-VM); ohne das Flag haengt ROOM1170-sub02 nach `Plc_dest(0,9,33,...)` ewig im
+         * Sub10-Poll -> keine Cutscene-Gesten. */
+        re15_game_flag_set(5, e->walk_flag_bit, 1);
         if (e->anim_flags & 4) { e->sub_state_1 = 9; e->sub_state_2 = 2; }   /* re-arm (@0x80051df4) */
     }
     re15_enemy_steer_point(e, e->steer_x, e->steer_z, cone); /* yaw-slew (@0x80051e44) */

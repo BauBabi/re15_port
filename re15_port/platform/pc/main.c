@@ -4229,11 +4229,13 @@ re_title:;
                  * before the actor first rendered and fell back to the EM040 (s_irons_clip_len) table.
                  * Loading the roster here from the spawn table makes each bank resident the frame its
                  * actor spawns. pc_enemy_load is idempotent (early-returns once re15_enemy_find hits).
-                 * Type 0x47 is EXCLUDED to match the NPC render loop's `!= 0x47` convention — it still
-                 * renders from the resident ELLIOT.MD1 bank (the not-yet-dropped hardcode), so pulling
-                 * EM47 into the registry here would give its AI the wrong (EM47) clip lengths. */
+                 * 0x47 SEIT 7b-UMSTELLUNG 2026-08-09 MITGELADEN: Elliots Plc_dest-Walks laufen jetzt
+                 * byte-true in der State-4-Sub-VM, deren OWN-Kanal (+0x170/+0x174, f314 @0x80051714/18)
+                 * die EM047-Bank-1 ist (CDEMD0.EMS Blob 21 @0x336000, 6 Clips {22,16,52,1,50,30}) —
+                 * re15_actor_clip_len/re15_npc_channel_anim brauchen die Registry-Bank. Mesh/TIM
+                 * rendern weiter aus ELLIOT.PLD (anim_select-0x47-Zweig unveraendert). */
                 for (int _pi = 1; _pi < RE15_ACTOR_MAX; _pi++)
-                    if (g_actors[_pi].active && g_actors[_pi].type && g_actors[_pi].type != 0x47)
+                    if (g_actors[_pi].active && g_actors[_pi].type)
                         pc_enemy_load(g_actors[_pi].type);
                 re15_game_step(&gctx);
             }
@@ -5758,8 +5760,8 @@ re_title:;
                  * PSX loads the model at Sce_em_set SPAWN (not lazily on first draw) — so a walking actor
                  * outside the current camera cut must still have its keyframes. (Was gated after the cull
                  * at the old site below; a culled off-screen enemy then had bank=NULL and froze.) */
-                if (npc->type && npc->type != 0x47 && !re15_enemy_find(npc->type))
-                    pc_enemy_load(npc->type);
+                if (npc->type && !re15_enemy_find(npc->type))
+                    pc_enemy_load(npc->type);   /* inkl. 0x47 seit 7b (EM047-Own-Bank-Kanal) */
 
                 /* BO-round (Tier-3): canonical per-cut REGION-QUAD cull, same as
                  * the prop path (PSX FUN_8002c18c → FUN_80014368). Replaces the
@@ -5965,17 +5967,22 @@ re_title:;
                         npc_skel = &lb->skel_victim; npc_anim = &lb->anim_victim;
                         av.clip_override = (int)npc->motion;
                     }
-                } else if (!is_elliot &&
-                           (npc->walk_active ||
-                            (npc->state == 4 && (npc->sub_state_1 == 2 || npc->sub_state_1 == 4 ||
-                                                 npc->sub_state_1 == 5 || npc->sub_state_1 == 6 ||
-                                                 npc->sub_state_1 == 9)))) {
+                } else if (npc->walk_active ||
+                           (npc->state == 4 && (npc->sub_state_1 == 2 || npc->sub_state_1 == 4 ||
+                                                npc->sub_state_1 == 5 || npc->sub_state_1 == 6 ||
+                                                npc->sub_state_1 == 9))) {
                     /* Subs {2,4,5,6,9} + Plc_dest-Walk -> die EIGENE BANK 1 (+0x170/+0x174 =
                      * dir[4]/dir[3]; Kanal-Loader FUN_80022300 @0x800224b8/c8, Sub-Loads
                      * 2 @0x80050f88/90, Walk @0x800512bc/c0, 6 @0x80051884/88, Turn @0x80051e9c).
                      * NICHT eb->anim (largest-bank dir[1]) — das war Marvins falsche Spawn-/
                      * Start-/Lauf-Animation (marvin_spawn_anim.md F1/F2, Savestate r10d0_walk1:
-                     * Clip 1 = 16f / Clip 2 = 52f / Walk-Clip 5 = 30f aus Bank 1). */
+                     * Clip 1 = 16f / Clip 2 = 52f / Walk-Clip 5 = 30f aus Bank 1).
+                     * SEIT 7b (2026-08-09) AUCH ELLIOT (das alte `!is_elliot` ist gestrichen):
+                     * sein Run/Walk posiert das Original vom OWN-Kanal (f314 a0/a1 = +0x170/+0x174
+                     * @0x80051714/18) = EM047 Bank 1 (15 Bones == ELLIOT.PLD-15-Part-Mesh; Blob 21
+                     * @CDEMD0.EMS 0x336000, Clips {22,16,52,1,50,30}) — NICHT mehr W01-Clip 0
+                     * (Leons Run). Mesh + TIM (2 tpages/2 CLUT-Zeilen, xshift/yshift) bleiben aus
+                     * dem anim_select-0x47-Zweig = ELLIOT.PLD, nur skel/anim wechseln hier. */
                     re15_enemy_bank_t *lb = re15_enemy_find(npc->type);
                     if (lb && lb->own_ok && (int)npc->motion < lb->anim_own.clip_count) {
                         npc_skel = &lb->skel_own; npc_anim = &lb->anim_own;
