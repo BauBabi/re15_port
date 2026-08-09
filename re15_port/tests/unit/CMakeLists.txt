@@ -587,6 +587,14 @@ add_executable(probe_stair_cam_10a0 probe_stair_cam_10a0.c)
 target_link_libraries(probe_stair_cam_10a0 PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_stair_cam_10a0 PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
+# --- ROOM1170 Elliot-Intro-Run: Sonde + ctest-PIN (Gleit-Report 2026-08-09; f314-per-Tick
+# --- im Walk-Sub @0x80051630/@0x8005171c, Speed 210 @0x80076c8e, Sub-6-Handoff @0x80051794) ---
+add_executable(probe_elliot_1170_run probe_elliot_1170_run.c)
+target_link_libraries(probe_elliot_1170_run PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_elliot_1170_run PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_elliot_1170_run COMMAND probe_elliot_1170_run)
+set_tests_properties(unit_elliot_1170_run PROPERTIES TIMEOUT 30)
+
 # --- DIAGNOSE-Probe (kein ctest-Eintrag): ROOM10D0 Marvin-Cutscene (analysis/marvin_10d0.md) ---
 add_executable(probe_marvin_10d0 probe_marvin_10d0.c)
 target_link_libraries(probe_marvin_10d0 PRIVATE re15_engine re15_test_support)

@@ -270,6 +270,23 @@ void re15_actor_step_walk(re15_actor_t *a)
      * slewing toward target. This gives a smooth arc into the dest line
      * rather than a visible rotate-then-walk staircase.                 */
     int16_t speed = mode_to_speed(a->walk_mode);
+    /* ELLIOT (0x47) auf dem Walker-Sonderpfad: die PLAYER-Speeds (75/200/70/70) sind fuer NPCs
+     * FALSCH — der Original-Walk-Sub-INIT laedt +0x8c aus der PER-TYP-Tabelle byte[(type-0x40)*2]:
+     *   Sub-4 WALK  @0x800511a8-bc: lbu 0x80076c00[idx] -> sh +0x8c; Elliot byte[14] = 70
+     *   Sub-5 RUN   @0x800514e4-f8: lbu 0x80076c80[idx] -> sh +0x8c; Elliot byte[14] = 210
+     *   Sub-7       @0x80076c20[14] = 65;  Sub-8 @0x80076c60[14] = 55
+     * Savestate-Kreuzbeweis: stage_saves/orig_1170_gp.sav enemy[0] (Elliot) +0x8c = 210 (der
+     * Sub-5-INIT-Store des Intro-Runs). Mode 9 TURN bleibt 0 (rotate-in-place). Slews stimmen
+     * bereits: Phase-1 0x60 (@0x80076c41[14]=0x60), Phase-2 RUN 0x48=72 (PLC_YAW_SLEW_RUN_S2). */
+    if (a->type == 0x47 && a != &g_actors[RE15_ACTOR_SLOT_PLAYER]) {
+        switch (a->walk_mode) {
+        case 0x04: speed = 70;  break;   /* @0x80076c0e (Tabelle 0x80076c00 + 14) */
+        case 0x05: speed = 210; break;   /* @0x80076c8e (Tabelle 0x80076c80 + 14) */
+        case 0x07: speed = 65;  break;   /* @0x80076c2e */
+        case 0x08: speed = 55;  break;   /* @0x80076c6e */
+        default: break;
+        }
+    }
     if (speed) {
         /* AF-round (2026-05-26): rotate (speed, 0, 0) by Ry(rot_y) to match
          * original PSX walker FUN_800245d8 which moves vector (speed,0,0).
