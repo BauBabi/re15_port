@@ -109,6 +109,14 @@ int re15_pri_load_cut_atlas(int cut_idx)
 static uint32_t s_bg_cache[BG_PIXELS];
 static int      s_bg_loaded = 0;
 
+/* RE15_FADE_LOG-Messlauf-Instrumentierung (env-gegatet, Normalpfad stumm):
+ * s_bg_tag = Herkunft des Cache-Inhalts ("room1170#00"), gesetzt bei jedem
+ * erfolgreichen Load; re15_bg_blit loggt pro Frame, WELCHES Bild in den
+ * Framebuffer geht — damit ist ein BG-Leck (falscher Raum im Cache beim
+ * Present) direkt im Log messbar statt nur im Screenshot. */
+extern int re15_fade_log_on(void);   /* fade_common.c */
+static char s_bg_tag[24] = "(none)";
+
 void re15_bg_init(void)
 {
     /* Nothing to do — software decode has no per-process setup. */
@@ -224,7 +232,15 @@ int re15_bg_load_room_cut(const char *room_prefix, int cut_idx)
         if (buf) {
             int rv = re15_bg_load_from_bss(buf, (size_t)sz);
             free(buf);
-            if (rv == 0) return 0;
+            if (rv == 0) {
+                snprintf(s_bg_tag, sizeof s_bg_tag, "%s#%02d", room_prefix, cut_idx);
+                if (re15_fade_log_on())
+                    fprintf(stderr, "[bg-log] F%u load %s ok\n", g_engine.frame_count, s_bg_tag);
+                return 0;
+            }
+            if (re15_fade_log_on())
+                fprintf(stderr, "[bg-log] F%u load %s#%02d FAIL rv=%d\n",
+                        g_engine.frame_count, room_prefix, cut_idx, rv);
             return rv;
         }
     }
@@ -235,10 +251,18 @@ int re15_bg_load_room_cut(const char *room_prefix, int cut_idx)
         if (buf) {
             int rv = re15_bg_load_from_bss(buf, (size_t)sz);
             free(buf);
-            if (rv == 0) return 0;
+            if (rv == 0) {
+                snprintf(s_bg_tag, sizeof s_bg_tag, "%s#%02d", room_prefix, cut_idx);
+                if (re15_fade_log_on())
+                    fprintf(stderr, "[bg-log] F%u load %s ok\n", g_engine.frame_count, s_bg_tag);
+                return 0;
+            }
             return rv;
         }
     }
+    if (re15_fade_log_on())
+        fprintf(stderr, "[bg-log] F%u load %s#%02d MISSING\n",
+                g_engine.frame_count, room_prefix, cut_idx);
     return -100;
 }
 
@@ -267,6 +291,9 @@ int re15_bg_load_cut(int cut_idx)
 void re15_bg_blit(int dst_x, int dst_y)
 {
     if (!s_bg_loaded) return;
+    if (re15_fade_log_on())
+        fprintf(stderr, "[bg-log] F%u blit %s (room=%04x)\n",
+                g_engine.frame_count, s_bg_tag, g_current_room_id);
 
     /* Paint cached BG into the PC software framebuffer. The framebuffer
      * is SCREEN_XRES × SCREEN_YRES uint32 RGBA, owned by render_pc.c.

@@ -1925,6 +1925,9 @@ re_title:;
             uint16_t confirm = pp & (RE15_PAD_BIT_CROSS | RE15_PAD_BIT_SQUARE |
                                      RE15_PAD_BIT_TRIANGLE | RE15_PAD_BIT_CIRCLE | RE15_PAD_BIT_START);
             if (confirm) {
+                { extern int re15_fade_log_on(void);
+                  if (re15_fade_log_on())
+                      fprintf(stderr, "[flow] title confirm tblink=%u cursor=%d\n", tblink, cursor); }
                 /* "Biohazard 2!"-Announcer = CORE-SE 0, VOR dem Fade und bei JEDEM Menuepunkt
                  * (FUN_80045024(0x04000000,0) @0x80102c20-24; Gate nur pad&0x8f0 @0x80102c14 —
                  * kein Cursor-Check). Die Stimme (3.96 s) laeuft ueber Fade + Player-Select weiter
@@ -1974,7 +1977,11 @@ re_title:;
                     /* danach REPLACES der Confirm die Task mit dem Player-Select
                      * (FUN_80029ba4 @0x80102c9c). */
                     { extern void re15_render_pc_title_fade_sub(int b); re15_render_pc_title_fade_sub(0); }
+                    { extern int re15_fade_log_on(void);
+                      if (re15_fade_log_on()) fprintf(stderr, "[flow] pselect enter\n"); }
                     int ch = pc_run_player_select();          /* "PLEASE SELECT MAIN CAST" (@0x80101094) */
+                    { extern int re15_fade_log_on(void);
+                      if (re15_fade_log_on()) fprintf(stderr, "[flow] pselect done ch=%d\n", ch); }
                     re15_gameflow_new_game(ch);               /* ch = DAT_800aca5c>>2 (0=Leon,1=Elza) */
                     /* Game-Start laedt die CHARAKTER-CORE-Bank: FUN_800440c4(DAT_800aca5c)
                      * @0x800316d8-e8 (0 = Leon -> CORE00, 4 = Elza -> CORE04). Die noch spielende
@@ -2073,24 +2080,10 @@ re_title:;
      * Use FRAME_AT_60(n) = n at 60fps target, n/2 at 30fps target, etc. */
 #define FRAME_AT_60(n)  (((n) * target_fps) / 60)
 
-    /* Phase 4.5.6.4: software MDEC + decode bundled BG. Mirror the PSX
-     * flow (re15_bg_init + re15_bg_load_test_asset at boot) so both
-     * targets show the same room background. PC decodes the BSS chunk
-     * in software (IDCT + YUV→RGB) into a 320×240 RGBA cache. */
+    /* Phase 4.5.6.4: software MDEC + decode bundled BG (PC: no-op chip init).
+     * Der eigentliche Boot-BG-Preload ist NACH die Raum-Initialisierung verschoben
+     * (vor den Game-Loop, s.u.) — Beleg + Messung dort. */
     re15_bg_init();
-    /* Boot BG preload: re15_bg_load_cut(0) is room-aware via g_current_room_id,
-     * which is still the room_common.c default (0x1170) HERE — g_current_room_id
-     * isn't set to boot_room until ~L457 below. So this caches ROOM1170's cut 0 as
-     * a transient placeholder; it is immediately overwritten once the boot room's
-     * SCD runs and its first Cut_chg fires the real per-cut load (~L1274). For the
-     * ROOM1240 boot this is the pre-intro: sub[2] Cut_chg(0..8) cycles ROOM1240's OWN
-     * BG00..BG08 (black->zombie->T-Virus->STARS->heli->Umbrella), verified byte-true
-     * against the original — the crates the placeholder shows never reach the screen
-     * (frame 0 is cut 0 = black). Fall back to the bundled test asset if the file is
-     * missing, so dev builds without room BSS still show something. */
-    if (re15_bg_load_cut(0) != 0) {
-        re15_bg_load_test_asset();
-    }
 
     /* Phase 4.5.9 / globalization Phase 3-A (2026-06-13): load + parse the room RDT
      * EARLY — before audio + props — so the footstep VAB, the Obj_model_set props,
@@ -2854,8 +2847,36 @@ re_title:;
         g_scd.cam_change_pending = 1;
     }
 
+    /* BOOT-BG-PRELOAD — NACH Raum-Init + Entry-Cut, byte-true zur Raumlader-Reihenfolge.
+     * Gemessen (RE15_FADE_LOG+bg-log, 2026-08-10, Flow Title->NEW GAME->Select->Boot):
+     * der alte Preload stand VOR `g_current_room_id = boot_room` und cachte deshalb
+     * ROOM1170#00 (g_current_room_id-Default, room_common.c:34); Game-Frame 0 blittet den
+     * Cache VOR dem Cut-Wechsel-Block (Blit ~L3069 < Load ~L3433) -> 1 ungedeckter Frame
+     * ROOM1170-Helipad zwischen Select-Schwarz und den ROOM1240-Montage-Stills
+     * (Nutzer-Report v0.1.1). Das Original kennt diesen Frame nicht: der Raumlader
+     * FUN_8001d600 setzt ZUERST den Modus-2-SCHWARZ-Clear (FUN_80021634(2,0),
+     * Boot-Zweig @0x8001d620-28, Tuer-Zweig @0x8001d830-34; Game-Init FUN_800161e0
+     * killt zusaetzlich Fade-Kanal 0 @0x80016420 + Schwarz-Clear @0x80016424), laedt DANN
+     * Raum (FUN_800396fc) + Entry-Cut-BG (FUN_80013c50 @0x8001da80; Boot-Cut = 0 via
+     * DAT_800b0fe4=0, Tuer = Ziel-Cut DAT_800afbb5), wartet die Loads ab
+     * (@0x8001d850-868 Fade 0x10000; @0x8001dabc-d4 BG 0x2000000) und gibt den BG erst
+     * DANACH frei (FUN_80021634(0,0) @0x8001dadc-e0 + DAT_800b5457=1 @0x8001dae4-ec).
+     * PC-Aequivalent (Loads synchron, das Schwarz-Fenster hat hier null Frames): den
+     * Entry-Cut-BG des BOOT-Raums JETZT laden — g_current_room_id ist der Boot-Raum,
+     * g_scd.cam_id der Entry-Cut (NEW GAME = 0 wie DAT_800b0fe4=0; CONTINUE = Save-Cut).
+     * Frame 0 blittet damit denselben BG, den das Original als ersten Frame zeigt
+     * (ROOM1240 Cut 0 = schwarz dekodierendes MDEC-Still BG00). Kein erfundener Fade.
+     * Test-Asset-Fallback nur fuer dev-Builds ohne Raum-BSS (wie bisher). */
+    if (re15_bg_load_cut((int)g_scd.cam_id) != 0) {
+        re15_bg_load_test_asset();
+    }
+
     g_engine.frame_count = 0;
 
+    { extern int re15_fade_log_on(void);
+      if (re15_fade_log_on())
+          fprintf(stderr, "[flow] game loop start room=%04x preintro=%d\n",
+                  g_current_room_id, s_preintro); }
 
     int sx = 32, sy = 32, sdx = 1, sdy = 1;
 

@@ -74,3 +74,18 @@ target_link_libraries(test_keypad PRIVATE re15_engine re15_test_support)
 target_include_directories(test_keypad PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME integration_keypad COMMAND test_keypad)
 set_tests_properties(integration_keypad PROPERTIES TIMEOUT 30)
+
+# --- Boot-BG-Pin (Nutzer-Report v0.1.1): kein Fremd-Raum-BG-Frame zwischen Select-Exit
+#     und den ROOM1240-Intro-Stills. Faehrt die ECHTE re15_pc.exe (Title-Auto-Advance ->
+#     NEW-GAME-Boot, Exit bei Game-Frame 34) und prueft die [bg-log]-Frame-Sequenz in
+#     debug.log: erster Blit = F0 room1240#00, nirgends room1170. Original-Belege
+#     (FUN_8001d600 Schwarz-Clear @0x8001d620-28, BG-Freigabe @0x8001dadc-ec) im Skript.
+#     Braucht die gebaute exe -> nur wenn das PC-Target existiert. ~18s gemessen. ---
+if(TARGET re15_pc)
+    add_test(NAME integration_boot_bg_pin
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_CURRENT_BINARY_DIR}/bootbg_wd
+                     -P ${CMAKE_CURRENT_SOURCE_DIR}/test_boot_bg_pin.cmake)
+    set_tests_properties(integration_boot_bg_pin PROPERTIES TIMEOUT 120)
+endif()
