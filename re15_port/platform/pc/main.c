@@ -4191,9 +4191,29 @@ re_title:;
                             }
                         }
                     }
+                    /* JUMP-Tabelle einmalig aus DEBUG.BIN laden (RAW-Abbild @0x800c0000 im
+                     * Original; Tabelle @Datei 0x263a/0x2642 — Muster wie die Breitentabelle
+                     * DEBUG.BIN[0x4416] in render_pc.c). Ohne Datei bleibt der Header-Fallback. */
+                    {
+                        static int dbin_once = 0;
+                        if (!dbin_once) {
+                            dbin_once = 1;
+                            int dbsz = 0;
+                            uint8_t *db = pc_read_shared("BIN/DEBUG.BIN", &dbsz);
+                            if (db) { re15_debug_menu_set_bin(db, (unsigned)dbsz); free(db); }
+                        }
+                    }
+                    if (getenv("RE15_DBGMENU_DIAG") && (g_engine.pad_pressed & RE15_PAD_BIT_SELECT))
+                        fprintf(stderr, "[debug-menu] DIAG raw=%04x cfg=%04x frame=%u\n",
+                                g_engine.pad_pressed, gctx.pad_pressed, g_engine.frame_count);
                     if (!re15_debug_menu_open()) {
-                        if (gctx.pad_pressed & RE15_PAD_BIT_SELECT)
+                        if (gctx.pad_pressed & RE15_PAD_BIT_SELECT) {
                             re15_debug_menu_toggle();
+                            /* Open-Block @0x80014490-0x800144E0: Cursor auf den AKTUELLEN Raum
+                             * (DAT_800bbe5e := DAT_800b0fe0, (&DAT_800bbe5f)[st] := DAT_800b0fe2). */
+                            re15_debug_menu_sync_cursor(g_current_room_id);
+                            fprintf(stderr, "[debug-menu] OPEN (frame %u)\n", g_engine.frame_count);
+                        }
                     } else {
                         if (re15_debug_menu_tick(dbg_held, dbg_edge)) {
                             const re15_debug_menu_t *dm = re15_debug_menu_state();
@@ -6615,40 +6635,35 @@ re_title:;
          *   7 @0x80014BFC  x=80  y=100+8*sel ">"               (@0x8001056C) sel = 0x800BBE5D
          * Zeilenabstand 8 px, Cursor-Spalte 16 px links vom Text.
          *
-         * NICHT byte-true und hier bewusst benannt statt versteckt: die GLYPHEN. Das Original zieht
-         * sie aus der 8x8-Debug-Font in VRAM (768,256), 4 bpp, Glyphenindex = c-0x20
-         * (@0x800295DC GetTPage(0,0,0x300,0x100), Zellmathematik @0x8002931C). WOHER diese Textur
-         * geladen wird, ist noch NICHT ermittelt — bis dahin zeichnet der Port die ECHTE
-         * TEX.TIM-Spielschrift auf dem 8-px-Raster des Originals (die frueher hier benutzte
-         * 6x8-Ersatzschrift ist auf Nutzer-Wunsch komplett entfernt, 2026-08-03).
-         * Ebenfalls noch offen: die halbtransparente Box (FUN_80014CC4 — ein TILE 256x56 bei x=32,
-         * y=76, RGB = die Rampe 0x800BBE66, die im Einblendzustand +8 pro Frame bis >0x40 laeuft,
-         * @0x80014D70/@0x80014D90). */
+         * GLYPHEN byte-true (2026-08-09): attr=3 ohne Bit 0x80 -> Flusher-Pfad FUN_80029214
+         * = die 8x8-FESTBREITEN-Debugschrift, SPRT_8 @tpage(768,256) 4bpp, CLUT (256,480).
+         * Quelle: TEX.TIM ("TEX TIM" Datei-ID 0x21 @0x800212B8, Slot-Upload sh 0x001b ->
+         * DAT_800aca4c @0x800212D0/D8 -> Pixel @VRAM(704,256), tpage 768 = TIM-Texel x=256,
+         * Glyphzeilen v=0..31). Gezeichnet via re15_render_pc_debug_text (render_pc.c, dort
+         * die volle Beleg-Kette). Box = FUN_80014CC4: TILE (0x20,0x4C,0x100,0x38), r=g=0xff
+         * (Open-Block ori 0xff @0x80014510, sh -> 0x800bbe66 @0x80014518), b=0, SemiTrans +
+         * DrawMode-tpage 0x40 -> ABR2 SUBTRAKTIV. Die Einblend-Rampe +8/Frame (@0x80014D70/90,
+         * Zustand 0) ist im MZD-Build TOTER CODE: der Open-Block setzt den Zustand DIREKT auf 1
+         * (sw 1 @0x8001449C) und die Rampe auf 0xff — Zustand 0 ist unerreichbar (einziger
+         * Schreiber von DAT_8008f618 ist das Menue selbst, BSS-Startwert 0 zaehlt nicht, weil
+         * das Menue nur bei DAT_800bbe5c!=0 zeichnet). */
         if (re15_debug_menu_open()) {
-            extern int re15_render_pc_game_text(int x, int y, const char *str, int attr);
+            extern int  re15_render_pc_debug_text(int x, int y, const char *str);
+            extern void re15_render_pc_debug_box(int rg);
             const re15_debug_menu_t *dm = re15_debug_menu_state();
             char dbuf[64];
-            int  di;
-            /* Zeichenweise auf dem 8-px-Raster des Originals (die Spielschrift hat variable
-             * Vorschuebe; das Raster haelt die Spaltenpositionen des Originals). */
-            #define DBG_TEXT8(bx, by, str) do {                                        \
-                const char *_s = (str);                                                \
-                char _c[2] = {0,0};                                                    \
-                for (di = 0; _s[di]; di++) {                                           \
-                    _c[0] = _s[di];                                                    \
-                    re15_render_pc_game_text((bx) + di * 8, (by), _c, 0);              \
-                }                                                                      \
-            } while (0)
-            DBG_TEXT8(104, 84,  "- DEBUG MENU -");                    /* @0x80014AD0 */
-            DBG_TEXT8(96,  100, "UTILITY MENU");                      /* @0x80014AEC */
-            snprintf(dbuf, sizeof dbuf, "JUMP %d", dm->stage + 1);    /* @0x80014B14 */
-            DBG_TEXT8(96,  108, dbuf);
-            snprintf(dbuf, sizeof dbuf, "%2X", dm->room_idx[dm->stage]); /* @0x80014B44 */
-            DBG_TEXT8(144, 108, dbuf);
-            DBG_TEXT8(168, 108, re15_debug_menu_room_name());         /* @0x80014BB4 */
-            DBG_TEXT8(96,  116, "MEMORY VIEWER");                     /* @0x80014BD0 */
-            DBG_TEXT8(80,  100 + 8 * dm->row, ">");                   /* @0x80014BFC */
-            #undef DBG_TEXT8
+            re15_render_pc_debug_box(0xff);                            /* FUN_80014CC4, Rampe 0xff */
+            re15_render_pc_debug_text(104, 84,  "- DEBUG MENU -");     /* @0x80014AD0, String @0x8001052C */
+            re15_render_pc_debug_text(96,  100, "UTILITY MENU");       /* @0x80014AEC, @0x8001053C */
+            snprintf(dbuf, sizeof dbuf, "JUMP %d", dm->stage + 1);     /* @0x80014B14, @0x8001054C */
+            re15_render_pc_debug_text(96,  108, dbuf);
+            /* "%2X" @0x80010554: der Formatter FUN_800279c8 (case 'X') druckt bei fester Breite
+             * ALLE Nibbles inkl. fuehrender Nullen -> C-Aequivalent ist %02X, nicht %2X. */
+            snprintf(dbuf, sizeof dbuf, "%02X", dm->room_idx[dm->stage]); /* @0x80014B44 */
+            re15_render_pc_debug_text(144, 108, dbuf);
+            re15_render_pc_debug_text(168, 108, re15_debug_menu_room_name()); /* @0x80014BB4, "%s" @0x80010558 */
+            re15_render_pc_debug_text(96,  116, "MEMORY VIEWER");      /* @0x80014BD0, @0x8001055C */
+            re15_render_pc_debug_text(80,  100 + 8 * dm->row, ">");    /* @0x80014BFC, ">" @0x8001056C */
         }
 
         {

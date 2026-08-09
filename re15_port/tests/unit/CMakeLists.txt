@@ -615,6 +615,8 @@ add_test(NAME unit_stair_1170_regression COMMAND probe_stair_1170)
 add_executable(test_debug_menu test_debug_menu.c)
 target_link_libraries(test_debug_menu PRIVATE re15_engine re15_test_support)
 target_include_directories(test_debug_menu PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_debug_menu PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_debug_menu COMMAND test_debug_menu)
 set_tests_properties(unit_debug_menu PROPERTIES TIMEOUT 30)
 

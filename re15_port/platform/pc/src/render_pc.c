@@ -77,6 +77,16 @@ static int          s_item_modal_tex_type = -1;
  * frame; the bars simply overlay it. The main loop sets the bar height each
  * frame (= cinematic active ? ~17 : 0) via re15_render_pc_set_letterbox(). */
 static int           s_letterbox_h = 0;
+/* DEBUG-MENUE-BOX (FUN_80014cc4): pro Frame von main.c gemeldet, in end_frame subtraktiv
+ * gezeichnet (Rect 0x20,0x4c,0x100,0x38 @0x800144E4-0x8001450C; r=g=Rampe, b=0). */
+static int           s_dbgmenu_box = 0;
+static int           s_dbgmenu_box_rg = 0;
+
+void re15_render_pc_debug_box(int rg)
+{
+    s_dbgmenu_box = 1;
+    s_dbgmenu_box_rg = rg & 0xff;
+}
 static uint8_t       s_fade_alpha = 0;   /* BN-round: cinematic fade-in overlay (255=black .. 0=none) */
 static uint8_t       s_title_fade = 0;   /* front-end fade: black OVER the title/menu (movie -> title) */
 static uint8_t       s_tfade_add  = 0;   /* Title-Ebene ADDITIV-Weiss (Confirm Phase A, ABR1) */
@@ -897,6 +907,23 @@ void re15_render_end_frame(void)
         SDL_Rect fullb = { 0, 0, SCREEN_XRES, SCREEN_YRES };
         SDL_RenderFillRect(s_renderer, &fullb);
         SDL_SetRenderDrawBlendMode(s_renderer, SDL_BLENDMODE_BLEND);
+    }
+
+    /* DEBUG-MENUE-BOX (byte-true FUN_80014cc4): ein TILE @(DAT_800bbe68=0x20, 6a=0x4c) Groesse
+     * (6c=0x100, 6e=0x38), r=g=DAT_800bbe66 (Open-Block: ori 0xff @0x80014510), b=0
+     * (sb zero @FUN_80014cc4 auf TILE+6), SetSemiTrans(1) + SetDrawMode-tpage 0x40 -> ABR
+     * (0x40>>5)&3 = 2 = SUBTRAKTIV (dst - src): dieselbe Blend-Mechanik wie die Letterbox oben.
+     * Gezeichnet UNTER dem Text-Overlay (die Prims der Textqueue liegen im OT ueber dem TILE). */
+    if (s_dbgmenu_box) {
+        SDL_BlendMode bm = SDL_ComposeCustomBlendMode(   /* ABR2: dst - src per channel */
+            SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_REV_SUBTRACT,
+            SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_ADD);
+        SDL_SetRenderDrawBlendMode(s_renderer, bm);
+        SDL_SetRenderDrawColor(s_renderer, (Uint8)s_dbgmenu_box_rg, (Uint8)s_dbgmenu_box_rg, 0, 255);
+        SDL_Rect dbgb = { 0x20, 0x4c, 0x100, 0x38 };     /* @0x800144E4-0x8001450C */
+        SDL_RenderFillRect(s_renderer, &dbgb);
+        SDL_SetRenderDrawBlendMode(s_renderer, SDL_BLENDMODE_BLEND);
+        s_dbgmenu_box = 0;                               /* Frame-Latch: pro Frame neu melden */
     }
 
     /* Subtitle overlay ON TOP of the 3D + foreground AND the letterbox bars (drawn after
@@ -2466,6 +2493,53 @@ int re15_render_pc_game_text(int x, int y, const char *str, int attr)
         re15_msgfont_glyph(penx, y, code, attr);
         int w = s_msgfont_w[code];
         penx += (w > 0) ? w : 12;
+    }
+    return penx - x;
+}
+
+/* DEBUG-MENUE-TEXT — die 8x8-FESTBREITEN-Debugschrift des Originals, byte-true.
+ *
+ * Quelle der Glyphen: die Textqueue (FUN_800279c8) wird von FUN_8002918c geflusht; Eintraege OHNE
+ * attr-Bit 0x80 (das Menue nutzt attr=3 fuer alle 7 Zeilen, @0x80014AD0..0x80014BFC) laufen durch
+ * FUN_80029214 = SPRT_8-Bauer (Prim-Code 0x74, RGB 0x808080):
+ *     u = ((c-0x20) & 0x1f) * 8,  v = ((c-0x20) & 0xe0) >> 5 * 8      (@0x80029214, puVar5[3])
+ *     tpage = GetTPage(0,0,0x300,0x100) = 4bpp @VRAM(768,256)          (@0x800295DC, DR_MODE-Init)
+ *     CLUT  = (((attr&0x30)>>3)+semi+0x1e0)*0x40 | 0x10 -> (256,480)   (attr 3, semi 0 -> Zeile 0)
+ *     Vorschub +8 pro Zeichen, Space baut KEIN Prim, rueckt aber vor   (@0x80029214-Schleife)
+ * Die VRAM-Quelle ist TEX.TIM (Datei-ID 0x21 "TEX TIM" @0x800212B8): der Slot-Loader FUN_8004ee78
+ * legt die Pixel mit Slot 0x1b (sh 0x001b -> DAT_800aca4c @0x800212D0/D8) nach VRAM (704,256) und
+ * die CLUT (CLUT-Zaehler 0) nach (256,480) = TEX.TIMs eigenem CLUT-Rect. tpage 768 beginnt damit
+ * bei TIM-Texel x = (768-704)*4 = 256 — exakt der Bereich, den s_msgfont_idx laedt. Die 8x8-Glyphen
+ * sind dessen Zeilen 0..31 (der 16x16-Spielfont beginnt erst bei v=32), Palette = CLUT-Zeile 0
+ * = s_msgfont_pal[0] (re15_msgfont_attr_row(0)==0). */
+int re15_render_pc_debug_text(int x, int y, const char *str)
+{
+    re15_msgfont_ensure();
+    if (!s_msgfont_ok || !str) return 0;
+    int penx = x;
+    for (const unsigned char *pp = (const unsigned char *)str; *pp; pp++) {
+        unsigned c = *pp;
+        if (c != 0x20 && c >= 0x20) {                        /* Space: kein Prim (@0x80029214) */
+            unsigned g = c - 0x20;
+            int u = (int)(g & 0x1f) * 8;                     /* Spalte (@0x80029214 uv-Wort) */
+            int v = (int)((g & 0xe0) >> 5) * 8;              /* Zeile 0..7 */
+            for (int gy = 0; gy < 8; gy++) {
+                int py = v + gy;
+                for (int gx = 0; gx < 8; gx++) {
+                    uint8_t idx = s_msgfont_idx[py * MSGFONT_W + u + gx];
+                    if (!idx) continue;                      /* Index 0 = transparent */
+                    uint32_t px = s_msgfont_pal[0][idx];     /* CLUT-Zeile 0 @(256,480) */
+                    if (!px) continue;
+                    int ox = penx + gx, oy = y + gy;
+                    if ((unsigned)ox < (unsigned)SCREEN_XRES &&
+                        (unsigned)oy < (unsigned)SCREEN_YRES) {
+                        s_text_overlay[oy * SCREEN_XRES + ox] = (px & 0xFFFFFF00u) | 0xFFu;
+                        s_text_overlay_used = 1;
+                    }
+                }
+            }
+        }
+        penx += 8;                                           /* fester 8-px-Vorschub */
     }
     return penx - x;
 }
