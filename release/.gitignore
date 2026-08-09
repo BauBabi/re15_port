@@ -1,0 +1,9 @@
+# Release-Pakete: die grossen Roh-Ordner + Logs bleiben lokal; die SPLIT-ZIP-
+# Volumes (.z01/.z02/.zip, je <100 MB) werden committet.
+pkg-win/
+pkg-linux/
+linux_out/
+*.log
+docker_linux_build.sh.bak
+lbuild/
+docker_debug.sh
