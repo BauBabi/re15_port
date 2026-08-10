@@ -29,6 +29,7 @@
 #include "re15_vab.h"
 #include "re15_room.h"
 #include "re15_esp.h"     /* re15_esp_shell_clink_hook */     /* g_room_rdt — footstep snd0 VAB sliced from the room RDT */
+#include "re2_ems.h"      /* WELLE A: RE2-ENEMSE-Bank-TOC + SE-Map-Dekodierung (PC-only) */
 
 extern uint8_t *re15_asset_read_file(const char *path, int *out_size);
 
@@ -777,6 +778,172 @@ void re15_audio_weapon_se(int se_id)
 void re15_audio_prime_weapon(int weapon_id)
 {
     load_weapon_se_vab_pc(weapon_id);
+}
+
+/* ===== 5. Bank-Slot: RE2-Flavor ENEMSE (WELLE A, PORT-OPTION) ====================
+ * RE2s globale Gegner-SE-Bank aus shared_assets/RE2/ENEMSE.VBS — Muster wie s_core_vab.
+ * Byte-Belege: Bank-TOC @0x800a7b1c (re2_enemse_toc_entry, gen/re2_ems_toc.inc);
+ * EDT-Record = [SE-Map @0 .. vh_off) [VAB-VH "pBAV" @vh_off] [Trailer], vh_off =
+ * u32 @edt[edt_size-8] (FUN_8005a09c: DAT_800d75ac = base + *(int*)(base-8+size);
+ * Bank 0/11 real: vh_off=0x80, Bytes dort 70 42 41 56 = "pBAV" — selbst verifiziert).
+ * VBD-Record = der VB-Body (Original: FUN_800132b0 in die SPU; hier ADPCM->PCM). */
+static int16_t   *s_re2se_decoded    [RE15_VAB_MAX_SAMPLES];
+static int        s_re2se_decoded_len[RE15_VAB_MAX_SAMPLES];
+static re15_vab_t s_re2se_vab;
+static uint8_t   *s_re2se_edt = NULL;       /* eigener EDT-Record-Puffer (SE-Map @0)   */
+static int        s_re2se_map_count = 0;    /* vh_off/4 = SE-Map-Eintraege (Bank11: 32) */
+static int        s_re2se_loaded = 0;
+static int        s_re2se_bank_sel  = -1;   /* gewaehlte Bank (re15_audio_re2_enemy_bank) */
+static int        s_re2se_bank_cur  = -1;   /* tatsaechlich geladene Bank               */
+
+/* ENEMSE.VBS lokalisieren (Nutzer-Entscheidung: shared_assets/RE2/; env-Override). */
+static uint8_t *read_re2_enemse_vbs(int *out_sz)
+{
+    char path[300];
+    uint8_t *b = NULL;
+    const char *envroot = getenv("RE15_RE2_ASSET_ROOT");
+    if (envroot && envroot[0]) {
+        snprintf(path, sizeof path, "%s/ENEMSE.VBS", envroot);
+        b = re15_asset_read_file(path, out_sz);
+    }
+#ifdef RE15_ASSET_ROOT_DEFAULT
+    if (!b) {
+        snprintf(path, sizeof path, "%s/../RE2/ENEMSE.VBS", RE15_ASSET_ROOT_DEFAULT);
+        b = re15_asset_read_file(path, out_sz);
+    }
+#endif
+    if (!b) {
+        static const char *roots[] = { "shared_assets/RE2/", "../shared_assets/RE2/",
+                                       "../../shared_assets/RE2/", "../../../shared_assets/RE2/", NULL };
+        for (int i = 0; roots[i] && !b; i++) {
+            snprintf(path, sizeof path, "%sENEMSE.VBS", roots[i]);
+            b = re15_asset_read_file(path, out_sz);
+        }
+    }
+    return b;
+}
+
+static int load_re2_enemy_se_pc(int bank)
+{
+    if (s_re2se_loaded && s_re2se_bank_cur == bank) return 0;
+    re2_enemse_rec_t rec;
+    if (re2_enemse_toc_entry(bank, &rec) != 0) return -1;
+    int vbs_sz = 0;
+    uint8_t *vbs = read_re2_enemse_vbs(&vbs_sz);
+    if (!vbs) {
+        static int warned = 0;
+        if (!warned) { warned = 1;
+            fprintf(stderr, "[re2se] shared_assets/RE2/ENEMSE.VBS fehlt -> RE2-Gegner-SEs stumm\n"); }
+        return -1;
+    }
+    if (rec.edt_off + rec.edt_size > (uint32_t)vbs_sz ||
+        rec.vbd_off + rec.vbd_size > (uint32_t)vbs_sz || rec.edt_size < 12) {
+        free(vbs); return -1;
+    }
+    /* Vorgaenger-Bank freigeben (Original: SsVabClose @FUN_8005a09c-Kopf). */
+    for (int i = 0; i < RE15_VAB_MAX_SAMPLES; i++) {
+        free(s_re2se_decoded[i]); s_re2se_decoded[i] = NULL; s_re2se_decoded_len[i] = 0;
+    }
+    free(s_re2se_edt); s_re2se_edt = NULL; s_re2se_map_count = 0;
+    s_re2se_loaded = 0; s_re2se_bank_cur = -1;
+
+    uint8_t *edt = (uint8_t *)malloc(rec.edt_size);
+    if (!edt) { free(vbs); return -1; }
+    memcpy(edt, vbs + rec.edt_off, rec.edt_size);
+    /* VH-Offset = Trailer-u32 @[size-8] (FUN_8005a09c, s.o.). */
+    uint32_t vh_off = (uint32_t)edt[rec.edt_size-8]        | ((uint32_t)edt[rec.edt_size-7] << 8)
+                    | ((uint32_t)edt[rec.edt_size-6] << 16) | ((uint32_t)edt[rec.edt_size-5] << 24);
+    if (vh_off + 0x20u > rec.edt_size ||
+        re15_vab_parse(edt + vh_off, (size_t)rec.edt_size - vh_off, &s_re2se_vab) != 0) {
+        free(edt); free(vbs); return -1;
+    }
+    const uint8_t *vb = vbs + rec.vbd_off;
+    for (int i = 0; i < s_re2se_vab.vag_count; i++) {
+        uint32_t off = s_re2se_vab.samples[i].offset, sz = s_re2se_vab.samples[i].size;
+        if (off + sz > rec.vbd_size) continue;
+        size_t cap = (sz / 16) * 28;
+        int16_t *pcm = (int16_t *)malloc(cap * sizeof(int16_t));
+        if (!pcm) continue;
+        s_re2se_decoded[i]     = pcm;
+        s_re2se_decoded_len[i] = re15_vag_adpcm_decode(vb + off, sz, pcm, cap);
+    }
+    free(vbs);                       /* VAGs dekodiert; nur der EDT-Record (SE-Map+VH) bleibt */
+    s_re2se_edt       = edt;
+    s_re2se_map_count = (int)(vh_off / 4);
+    s_re2se_loaded    = 1;
+    s_re2se_bank_cur  = bank;
+    fprintf(stderr, "[re2se] ENEMSE Bank %d geladen: %d VAGs, Map %d Eintraege\n",
+            bank, s_re2se_vab.vag_count, s_re2se_map_count);
+    return 0;
+}
+
+void re15_audio_re2_enemy_bank(int bank)
+{
+    s_re2se_bank_sel = bank;         /* lazy: geladen beim ersten re15_audio_re2_enemy_se */
+}
+
+/* RE2-Gegner-SE (byte-true FUN_8005bd6c-Dekodierung, PC-Wiedergabe wie se_play_layers):
+ *   - flag2000 -> se_id += 0x10 ("(*param_2 & 0x2000) != 0" am FUN_8005bd6c-Kopf)
+ *   - Map-Eintrag @EDT[se_id*4]; 0xFFFFFFFF = stumm ("*(int*)pbVar13 != -1")
+ *   - Tone-Adresse VH+0x820 + prog*0x200 + tone*0x20 == re15_vab-Tone [prog*16+tone]
+ *   - b3>>5 = ZUSAETZLICHE konsekutive Tones (Schleife am FUN_8005bd6c-Ende: tone+1 je Layer)
+ * Nicht uebernommen (dokumentiert): das Kanal-Prioritaets-Gate FUN_8005c92c (b2&0xF) und die
+ * SPU-Kanal-Buchhaltung DAT_800d4f18.. — der PC-Mixer hat freie Voices statt fester Kanaele.
+ * VAB-Override (b0 bit7) verweist auf eine ANDERE Laufzeit-VAB-Handle-Nummer; der Port hat
+ * nur die ENEMSE-VH resident und spielt dann ersatzweise aus ihr (einmalige stderr-Notiz). */
+void re15_audio_re2_enemy_se(int se_id, int flag2000)
+{
+    if (!g_audio.initialized) return;
+    if (!s_re2se_loaded) {
+        if (s_re2se_bank_sel < 0) {
+            static int warned = 0;
+            if (!warned) { warned = 1;
+                fprintf(stderr, "[re2se] keine ENEMSE-Bank gewaehlt (re15_audio_re2_enemy_bank) -> stumm\n"); }
+            return;
+        }
+        if (load_re2_enemy_se_pc(s_re2se_bank_sel) != 0) return;
+    }
+    if (flag2000) se_id += 0x10;                       /* zweite Map-Haelfte (Raum-Paar) */
+    if (se_id < 0 || se_id >= s_re2se_map_count) return;
+    uint32_t entry = (uint32_t)s_re2se_edt[se_id*4]        | ((uint32_t)s_re2se_edt[se_id*4+1] << 8)
+                   | ((uint32_t)s_re2se_edt[se_id*4+2] << 16) | ((uint32_t)s_re2se_edt[se_id*4+3] << 24);
+    re2_enemse_se_t se;
+    re2_enemse_decode_entry(entry, &se);
+    if (se.silent) return;
+    if (se.vab_override >= 0) {
+        static int warned = 0;
+        if (!warned) { warned = 1;
+            fprintf(stderr, "[re2se] Map-Eintrag mit VAB-Override %d -> spiele aus der ENEMSE-VH\n",
+                    se.vab_override); }
+    }
+    SDL_LockAudioDevice(s_audio_dev);
+    for (int k = 0; k <= se.extra; k++) {              /* Basis-Tone + b3>>5 Extra-Layer */
+        int tone_idx = se.prog * RE15_VAB_TONES_PER_PROGRAM + se.tone + k;
+        if (tone_idx >= RE15_VAB_TOTAL_TONES) break;
+        const re15_vab_tone_t *t = &s_re2se_vab.tones[tone_idx];
+        int vag = (int)t->vag_index - 1;               /* VH-vag_index ist 1-basiert */
+        if (vag < 0 || vag >= RE15_VAB_MAX_SAMPLES || !s_re2se_decoded[vag]) continue;
+        int vol = ((t->vol ? t->vol : 100) * 0x4000 / 127) >> 1;   /* wie se_play_layers */
+        int pan = t->pan, vl = vol, vr = vol;
+        if (pan < 0x40)      vr = vol * pan / 0x40;
+        else if (pan > 0x40) vl = vol * (0x7f - pan) / 0x3f;
+        uint16_t pitch = re15_vab_note2pitch2(t->min_note, t->pitch_shift,
+                                              t->center_note, t->pitch_shift);
+        int slot = -1;
+        for (int i = 0; i < MIXER_MAX_ACTIVE_SAMPLES; i++)
+            if (!s_active[i].active) { slot = i; break; }
+        if (slot < 0) { slot = s_next_slot; s_next_slot = (s_next_slot + 1) % MIXER_MAX_ACTIVE_SAMPLES; }
+        s_active[slot].pcm        = s_re2se_decoded[vag];
+        s_active[slot].pcm_len    = s_re2se_decoded_len[vag];
+        s_active[slot].pos        = 0;
+        s_active[slot].subpos     = 0;
+        s_active[slot].step_q16   = (uint32_t)pitch << 4;
+        s_active[slot].pos_frac   = 0;
+        s_active[slot].volume_q15 = vl;
+        s_active[slot].vol_r_q15  = vr;
+        s_active[slot].active     = 1;
+    }
+    SDL_UnlockAudioDevice(s_audio_dev);
 }
 
 /* Triggered from re15_audio_tick when a SCD Se_on event arrives. */

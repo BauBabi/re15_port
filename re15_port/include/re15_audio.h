@@ -170,4 +170,25 @@ void re15_audio_core_se(int se_id);
  * PC = load_weapon_se_vab_pc(weapon_id); PSX = follow-up stub. */
 void re15_audio_prime_weapon(int weapon_id);
 
+/* ===== RE2-Flavor: ENEMSE-Gegner-SE-Bank (WELLE A, PORT-OPTION, PC-only) ==========
+ * RE2s globale, kind-getriebene Gegner-SE-Bank (COMMON/SOUND/ENEMSE.VBS) — der
+ * RE1.5-Kontrast ist die RDT-snd1-Bank (re15_audio_room_se). Byte-Belege:
+ *   - Bank-TOC @0x800a7b1c (EDT+VBD-Records; Loader FUN_8005a09c, file-id 0x161,
+ *     Tags "ENEM EDT"/"ENEM VBD"; VH = EDT-Base + u32@[edt_size-8], SsVabOpenHeadSticky)
+ *   - Trigger FUN_8005bd6c(se_id, actor): Actor-Flag 0x2000 -> se_id += 0x10
+ *     (zweite Map-Haelfte = zweiter kind des Raum-Paars @0x800a7400); Map-Eintrag-
+ *     Semantik in re2_ems.h (re2_enemse_decode_entry).
+ * Bank-Wahl: das Original mappt das Raum-Gegner-Paar {DAT_800d8cd0/d1} ueber die
+ * Paar-Tabelle @0x800a7400 auf den Bankindex (FUN_80052b38) — die kind-Basis dieser
+ * Tabelle ist OFFEN (Lane I), darum waehlt der Port die Bank EXPLIZIT. Ohne gewaehlte
+ * Bank spielt re15_audio_re2_enemy_se nichts (einmalige stderr-Notiz). */
+
+/* Bank fuer die folgenden RE2-SEs waehlen (0..RE2_ENEMSE_BANK_COUNT-1). Lazy: die
+ * eigentlichen EDT/VBD-Reads passieren beim ERSTEN re15_audio_re2_enemy_se. */
+void re15_audio_re2_enemy_bank(int bank);
+
+/* RE2-Gegner-SE (byte-true FUN_8005bd6c-Dekodierung): `flag2000` = Actor-Flag 0x2000
+ * (vertauschtes Raum-Paar -> +0x10 in die zweite Map-Haelfte). PC-only; PSX: no-op. */
+void re15_audio_re2_enemy_se(int se_id, int flag2000);
+
 #endif /* RE15_AUDIO_H */
