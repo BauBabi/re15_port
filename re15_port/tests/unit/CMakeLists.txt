@@ -999,3 +999,23 @@ target_link_libraries(probe_espr_11e0 PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_espr_11e0 PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_espr_11e0 COMMAND probe_espr_11e0)
 set_tests_properties(unit_espr_11e0 PROPERTIES TIMEOUT 30)
+
+# --- RE2-Modus WELLE A: CDEMD0.EMS-TOC (EXE @0x8009adf4) + RE2-EMD-Splitter gegen die
+#     echten shared_assets/RE2-Bytes (EM010: dir@0x23DAC/8, Paar1 8 Clips/65, MD1 nObj 34) ---
+add_executable(test_re2_ems test_re2_ems.c)
+target_link_libraries(test_re2_ems PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_ems PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2_ems PRIVATE
+    RE15_ASSET_RE2_DIR="${CMAKE_SOURCE_DIR}/shared_assets/RE2")
+add_test(NAME unit_re2_ems COMMAND test_re2_ems)
+set_tests_properties(unit_re2_ems PROPERTIES TIMEOUT 30)
+
+# --- RE2-Modus WELLE A: ENEMSE.VBS-Bank-TOC (EXE @0x800a7b1c, Loader FUN_8005a09c) +
+#     byte-true SE-Map-Dekodierung (FUN_8005bd6c) an echten Bank-0/11-Bytes ---
+add_executable(test_re2_enemse test_re2_enemse.c)
+target_link_libraries(test_re2_enemse PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_enemse PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2_enemse PRIVATE
+    RE15_ASSET_RE2_DIR="${CMAKE_SOURCE_DIR}/shared_assets/RE2")
+add_test(NAME unit_re2_enemse COMMAND test_re2_enemse)
+set_tests_properties(unit_re2_enemse PROPERTIES TIMEOUT 30)

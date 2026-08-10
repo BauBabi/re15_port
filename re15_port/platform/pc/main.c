@@ -72,6 +72,7 @@ static inline int RNDI(float f) {
 #include "re15_room.h"
 #include "re15_debug_menu.h"        /* SHARED cross-room transition (re15_room_apply_pending) */
 #include "re15_enemy.h"       /* generic enemy-model registry (re15_enemy_find/alloc/reset) */
+#include "re2_ems.h"          /* WELLE A: RE2-Flavor-Asset-Loader (CDEMD0.EMS-TOC, PC-only) */
 #include "re15_enemy_ai.h"    /* re15_player_victim_state/type — Leon's grab-victim render override */
 #include "re15_ems.h"         /* enemy-model archive index (load EMDs out of CDEMD*.EMS) */
 #include "re15_room_list.h"   /* GENERATED room-id list for the [ / ] debug room-browser */
@@ -450,12 +451,89 @@ static const uint8_t *pc_cdemd(size_t *out_sz)
     return s_ems;
 }
 
+/* Cached RE2 CDEMD0.EMS (WELLE A) — das RE2-Gegner-Archiv fuer den OPTIONS→AI→RE2-Flavor.
+ * Liegt per Nutzer-Entscheidung unter shared_assets/RE2/ (NICHT im PSX-Baum — der RE1.5-
+ * Single-Asset-Root bleibt unangetastet). ~10.6 MB, einmal gelesen, resident (die RE2-Bank
+ * aliast hinein wie die RE1.5-Bank in ihren malloc-Blob). env RE15_RE2_ASSET_ROOT
+ * uebersteuert; Default = Geschwister von RE15_ASSET_ROOT_DEFAULT (= shared_assets/PSX). */
+static const uint8_t *pc_re2_cdemd(size_t *out_sz)
+{
+    static uint8_t *s_ems = NULL; static int s_sz = 0; static int s_tried = 0;
+    if (!s_tried) {
+        s_tried = 1;
+        char path[300];
+        const char *envroot = getenv("RE15_RE2_ASSET_ROOT");
+        if (envroot && envroot[0]) {
+            snprintf(path, sizeof path, "%s/CDEMD0.EMS", envroot);
+            s_ems = re15_asset_read_file(path, &s_sz);
+        }
+#ifdef RE15_ASSET_ROOT_DEFAULT
+        if (!s_ems) {
+            snprintf(path, sizeof path, "%s/../RE2/CDEMD0.EMS", RE15_ASSET_ROOT_DEFAULT);
+            s_ems = re15_asset_read_file(path, &s_sz);
+        }
+#endif
+        if (!s_ems) {
+            static const char *roots[] = { "shared_assets/RE2/", "../shared_assets/RE2/",
+                                           "../../shared_assets/RE2/", "../../../shared_assets/RE2/", NULL };
+            for (int i = 0; roots[i] && !s_ems; i++) {
+                snprintf(path, sizeof path, "%sCDEMD0.EMS", roots[i]);
+                s_ems = re15_asset_read_file(path, &s_sz);
+            }
+        }
+    }
+    if (out_sz) *out_sz = (size_t)s_sz;
+    return s_ems;
+}
+
+/* WELLE A: RE2-Bank fuer `type` aus CDEMD0.EMS laden (TOC @0x8009adf4, Splitter re2_ems.c).
+ * Generisch ueber den kind gebaut (Hund/Kraehe folgen in Welle C/D); der RE1.5-Typ IST der
+ * RE2-kind fuer die Zombie-Familie (RE2 klemmt kinds 0x10..0x1F auf ein Overlay,
+ * FUN_8001b710; EMD/TIM-Records sind per-kind). Rueckgabe 1 = Bank gefuellt. */
+static int pc_enemy_load_re2(uint8_t type, re15_enemy_bank_t *eb)
+{
+    extern void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
+    size_t ems_sz = 0;
+    const uint8_t *ems = pc_re2_cdemd(&ems_sz);
+    if (!ems) {
+        static int warned = 0;
+        if (!warned) {
+            warned = 1;
+            fprintf(stderr, "[enemy] RE2-Flavor: shared_assets/RE2/CDEMD0.EMS fehlt -> "
+                            "Fallback auf RE1.5-Modelle\n");
+        }
+        return 0;
+    }
+    re15_tim_t tim = {0};
+    if (re2_ems_load_bank(ems, ems_sz, type, eb, &tim) != 0) {
+        fprintf(stderr, "[enemy] RE2 EM0%02X: kein TOC-Eintrag/Parse-Fehler -> RE1.5-Fallback\n", type);
+        return 0;
+    }
+    eb->buf = NULL;                                    /* Bank aliast das residente EMS */
+    int slot = 11 + (int)(eb - g_enemy);
+    if (tim.width > 0 && tim.height > 0 && slot < 24) {
+        re15_render_pc_upload_tim_slot(&tim, slot);    /* TIM-Slot-Upload wie der RE1.5-Pfad */
+        eb->pc_tex_slot = slot;
+    }
+    eb->ok = 1;
+    fprintf(stderr, "[enemy] RE2 EM0%02X loaded: %d meshes, %d bones, %d clips -> slot %d\n",
+            type, eb->md1.mesh_count, eb->skel.bone_count, eb->anim.clip_count, eb->pc_tex_slot);
+    return 1;
+}
+
 static void pc_enemy_load(uint8_t type)
 {
     extern void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
     if (type == 0 || re15_enemy_find(type)) return;
     re15_enemy_bank_t *eb = re15_enemy_alloc(type);
     if (!eb) return;                                   /* registry full */
+
+    /* RE2-Flavor-Zweig (WELLE A) — VOR dem RE1.5-Zweig, nur wenn der RE2-Zombie-Brain
+     * den Typ besitzt (re15_re2z_owns_type: Zombie-Familie). Fehlt das RE2-Archiv oder
+     * der Record, faellt der Lauf UNVERAENDERT in den byte-true RE1.5-Pfad darunter. */
+    if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2z_owns_type(type)) {
+        if (pc_enemy_load_re2(type, eb)) return;
+    }
 
     /* Enemy models live inside CDEMD0.EMS (no per-type EM<NN>.EMD on the disc).
      * Try a standalone split file first (back-compat / future), else extract the
