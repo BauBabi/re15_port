@@ -7,3 +7,4 @@ linux_out/
 docker_linux_build.sh.bak
 lbuild/
 docker_debug.sh
+win_out/

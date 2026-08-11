@@ -1,0 +1,29 @@
+RE1.5 Port — Version @VERSION@ (Windows x64)
+=======================================
+Eigenstaendiger PC-Port des Resident-Evil-1.5-Prototyps (MZD-Build).
+Alles Noetige liegt in diesem Ordner — Start_RE15_Port.bat doppelklicken
+(SDL2 ist statisch eingebaut, keine Installation/DLLs noetig).
+Assets: shared_assets\PSX (CD-Baum) und shared_assets\extracted_fx
+(Effekt-Texturen). Die .bat zeigt den Port per RE15_ASSET_ROOT/RE15_CD_ROOT
+auf beide — deshalb die .bat starten und nicht re15_pc.exe direkt.
+Savegames: re15_card.mcr (PSX-Memory-Card-Image, entsteht neben der exe).
+
+Steuerung (Tastatur, DuckStation-Layout):
+  Pfeile / WASD   Laufen (Tank-Steuerung)
+  K oder Shift    Rennen (gehalten)  [= X]
+  J               Aktion/Bestaetigen [= []]  (haelt Texte schneller)
+  L               Abbrechen          [= O]
+  I               Inventar/Status    [= /\]
+  E               Zielen (gehalten)  [= R1], dann J = Schuss
+  Q               [= L1]
+  Enter           Start (Menue)      Backspace = Select
+  1 / 3           [= L2 / R2]
+Gamepads: SDL-GameController wird automatisch erkannt
+(optional gamecontrollerdb.txt in den Ordner legen).
+
+Early Preview. Kern der Spielsysteme byte-true zum Original
+re-engineert; Umfang/offene Punkte: siehe Repo (ROADMAP/analysis).
+
+Hinweis zum Entpacken: Das Paket ist ein Standard-SPLIT-ZIP (.z01 + .zip).
+Der Windows-Explorer-eigene ZIP-Handler kann das NICHT — 7-Zip oder WinRAR
+verwenden und beide Volumes in denselben Ordner legen.

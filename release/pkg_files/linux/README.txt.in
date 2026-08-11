@@ -1,0 +1,51 @@
+RE1.5 Port — Version @VERSION@ (Linux x64 / Steam Deck)
+=======================================
+Eigenstaendiger PC-Port des Resident-Evil-1.5-Prototyps (MZD-Build).
+Dieses Paket: Linux x64 (Steam Deck-kompatibel). Start: ./run.sh
+Alles Noetige liegt in diesem Ordner — einfach ./run.sh starten
+(SDL2 ist statisch eingebaut, keine Installation/Bibliotheken noetig).
+Assets: shared_assets/PSX (CD-Baum) und shared_assets/extracted_fx
+(Effekt-Texturen). run.sh zeigt den Port per RE15_ASSET_ROOT/RE15_CD_ROOT
+auf beide — deshalb run.sh starten und nicht re15_pc direkt.
+Savegames: re15_card.mcr (PSX-Memory-Card-Image, entsteht neben run.sh;
+liegt das Paket schreibgeschuetzt, weicht run.sh nach
+~/.local/share/re15 aus).
+
+Steuerung (Tastatur, DuckStation-Layout):
+  Pfeile / WASD   Laufen (Tank-Steuerung)
+  K oder Shift    Rennen (gehalten)  [= X]
+  J               Aktion/Bestaetigen [= []]  (haelt Texte schneller)
+  L               Abbrechen          [= O]
+  I               Inventar/Status    [= /\]
+  E               Zielen (gehalten)  [= R1], dann J = Schuss
+  Q               [= L1]
+  Enter           Start (Menue)      Backspace = Select
+  1 / 3           [= L2 / R2]
+Gamepads: SDL-GameController wird automatisch erkannt
+(optional gamecontrollerdb.txt in den Ordner legen).
+
+Early Preview. Kern der Spielsysteme byte-true zum Original
+re-engineert; Umfang/offene Punkte: siehe Repo (ROADMAP/analysis).
+
+--- Linux / Steam Deck ---
+Start: ./run.sh (setzt Asset-Wurzel, Render-Backend und Arbeitsverzeichnis).
+Gebaut auf Debian-11-Basis (glibc 2.31, Steam-Runtime-3.0-"sniper"-Stand):
+das Binary verlangt maximal GLIBC_2.29 und laeuft damit auf SteamOS 3.x und
+praktisch jedem aktuellen Linux; SDL2 ist statisch eingebaut.
+
+Steam Deck:
+  1. Im Desktop-Modus entpacken (Ark oeffnet die Split-Zip-Volumes .z01+.zip
+     als EIN Archiv, wenn beide im selben Ordner liegen).
+  2. chmod +x run.sh re15_pc
+  3. Steam -> Bibliothek -> "Nicht-Steam-Spiel hinzufuegen" -> run.sh
+     auswaehlen (NICHT re15_pc), danach zurueck in den Spielmodus.
+Bestaetigen ist im Spiel [] (Quadrat), Abbrechen O (Kreis) — RE1.5
+bestaetigt game-weit mit Quadrat, nicht mit Kreuz.
+
+run.sh erzwingt SDL_RENDER_DRIVER=opengles2. Grund: nur dieses SDL-Backend
+beherrscht auf Mesa den subtraktiven Blend, mit dem der Port Fades-to-black,
+Cutscene-Balken und Schatten zeichnet — sonst erscheinen sie WEISS statt
+schwarz. Wer selbst SDL_RENDER_DRIVER setzt, behaelt seine Wahl.
+
+Laeuft es nicht? Im Desktop-Modus ein Terminal oeffnen und ./run.sh starten —
+das Skript meldet fehlende Teile im Klartext; Details danach in debug.log.
