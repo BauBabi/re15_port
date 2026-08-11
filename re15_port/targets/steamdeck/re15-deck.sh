@@ -44,6 +44,19 @@ fi
 export RE15_ASSET_ROOT="$ASSETS"
 export RE15_CD_ROOT="$ASSETS"
 
+# --- SDL-Render-Backend erzwingen: opengles2 (2026-08-05) -------------------
+# Der Port macht PSX-Fades-to-black, Cutscene-Balken und Schatten ueber einen
+# SUBTRAKTIVEN Custom-Blend (SDL_BLENDOPERATION_REV_SUBTRACT, "dst - src").
+# Auf dem Deck (Mesa) unterstuetzt das per Default gewaehlte "opengl"-Backend
+# diesen Blend NICHT: SDL_SetRenderDrawBlendMode() schlaegt still fehl, der
+# vorherige BLEND-Modus bleibt aktiv und die helle Graustufen-Quelle wird
+# DECKEND gezeichnet -> Fades/Balken erscheinen WEISS statt schwarz.
+# Auf echter Deck-Hardware nachgemessen (re15_port/tools/sdl_blend_probe.c,
+# 2026-08-11): opengles2 -> SDL_SetRenderDrawBlendMode rc=0; opengl, opengles,
+# vulkan und software -> rc=-1 "That operation is not supported".
+# Wer bereits ein Backend gesetzt hat, behaelt seine Wahl.
+export SDL_RENDER_DRIVER="${SDL_RENDER_DRIVER:-opengles2}"
+
 # --- Beschreibbares Arbeitsverzeichnis (Spielstand, Log, Screenshots) -------
 DATA="${XDG_DATA_HOME:-$HOME/.local/share}/re15"
 mkdir -p "$DATA"

@@ -21,9 +21,11 @@ OUT="${1:-$HERE/dist/re15-deck}"
 
 BIN="$HERE/build/platform/pc/re15_pc"
 ASSETS="$REPO/re15_port/shared_assets/PSX"
+FX="$REPO/re15_port/shared_assets/extracted_fx"
 
 [[ -x "$BIN"    ]] || { echo "FEHLER: $BIN fehlt — zuerst build.sh ausfuehren." >&2; exit 1; }
 [[ -d "$ASSETS" ]] || { echo "FEHLER: Asset-Baum $ASSETS fehlt." >&2; exit 1; }
+[[ -d "$FX"     ]] || { echo "FEHLER: Effekt-Texturen $FX fehlen." >&2; exit 1; }
 
 echo "== Paket wird erstellt: $OUT =="
 rm -rf "$OUT"
@@ -35,6 +37,14 @@ chmod +x "$OUT/re15_pc" "$OUT/re15-deck.sh"
 
 echo "   Assets kopieren (~283 MB) ..."
 cp -r "$ASSETS" "$OUT/assets"
+
+# Globale Effekt-Texturen (Blut id0, Muendungsfeuer id2, Rauch id3, Huelsen id4).
+# Diese liegen im PSX-Original nur im VRAM; der Port laedt sie aus extracted_fx/
+# (byte-true aus VRAM-Dumps). pc_read_shared() sucht sie unter "$RE15_CD_ROOT/../
+# extracted_fx/" — bei RE15_CD_ROOT=$HERE/assets also als Geschwister von assets/.
+# Ohne diesen Ordner rendern Treffer-/Schusseffekte gar nicht (2026-08-05).
+echo "   Effekt-Texturen kopieren (extracted_fx/) ..."
+cp -r "$FX" "$OUT/extracted_fx"
 
 cat > "$OUT/README.txt" <<'EOF'
 RE1.5 Rebuilt — Steam Deck

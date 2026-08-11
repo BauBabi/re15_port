@@ -89,9 +89,25 @@ OPTIONS → Tastenbelegung Typ B oder C.
 | Start + Asset-Laden + Dauerlauf | 90 s ohne Absturz |
 | Bildausgabe | Titelbildschirm korrekt gerendert (`shots/steamdeck_title_proof.png`) |
 
-**Nicht verifiziert** (kein Gerät zur Hand): der Lauf auf echter Deck-Hardware, Gamescope im
-Spielmodus, die tatsächliche Steam-Input-Zuordnung und die Bildwiederholrate. Die
-Abhängigkeitslage lässt keine Überraschung erwarten, aber gesehen habe ich es nicht.
+### 5.1 Auf echter Hardware gefunden (2026-08-05)
+
+Der erste Lauf auf einem echten Deck hat drei Dinge aufgedeckt, die im Container nicht
+sichtbar waren. Alle drei sind behoben; die Fixes stecken in `package.sh` (Paketinhalt),
+`re15-deck.sh` (Startumgebung) und `platform/pc/src/bg_pc.c` (Pfad):
+
+| Symptom auf dem Gerät | Ursache | Fix |
+|---|---|---|
+| **Alle Raumhintergründe schwarz** | Der BSS-Lader baute den Pfad mit `room%04x` (klein), der Asset-Baum heißt `BSS/ROOM1170/`. Windows ist case-**in**sensitiv, ext4 nicht — auf dem Deck fand der Lader nie eine Datei. | `bg_pc.c` schreibt `BSS/ROOM%04X/BG%02d.BSS` groß, genau wie der PRI-Lader zwei Zeilen darüber |
+| **Fades, Cutscene-Balken und Schatten weiß statt schwarz** | Der Port zeichnet sie mit `SDL_BLENDOPERATION_REV_SUBTRACT`. Das per Default gewählte SDL-Backend `opengl` kann das auf Mesa nicht: `SDL_SetRenderDrawBlendMode()` schlägt still fehl, der alte BLEND-Modus bleibt stehen, die helle Graustufen-Quelle wird deckend gezeichnet. Gemessen mit `RE15_PSELECT_DIAG`: nur `opengles2` liefert den SUBTRACT-Pfad. | `re15-deck.sh` setzt `SDL_RENDER_DRIVER=opengles2` (überschreibbar) |
+| **Kein Blut, kein Mündungsfeuer, kein Rauch, keine Hülsen** | Diese Texturen liegen im Original nur im VRAM; der Port lädt sie aus `shared_assets/extracted_fx/` (`platform/pc/main.c`, Tabelle `extracted_fx/effect*.tim`), gesucht als `$RE15_CD_ROOT/../extracted_fx/`. Das Paket enthielt den Ordner nicht. | `package.sh` kopiert `extracted_fx/` als Geschwister von `assets/` |
+
+Dieselben drei Defekte steckten im Release-Paket `re15_port_v0.1.1_linux_steamdeck_x64.zip`
+(plus ein vierter: gegen `ubuntu:22.04` gebaut → `GLIBC_2.34`, startet auf SteamOS 3.4 nicht).
+Das Release-Paketieren prüft sie jetzt aktiv — siehe `release/make_package.sh`
+(`check_binary_paths`, `check_tree`, `check_glibc`) und `release/RELEASE_NOTES.md`.
+
+**Weiterhin nicht verifiziert:** Gamescope im Spielmodus, die tatsächliche
+Steam-Input-Zuordnung und die Bildwiederholrate.
 
 Ebenfalls offen: Der Port skaliert intern auf 320×240 (PSX-Auflösung) und rendert im Fenster
 640×480. Wie das im Spielmodus auf dem 1280×800-Display des Decks skaliert, ist ungetestet —

@@ -226,7 +226,13 @@ int re15_bg_load_room_cut(const char *room_prefix, int cut_idx)
      * re15_reborn/assets/<room>_bg##.bss. room_prefix ("room%04x") names the subdir;
      * Windows file lookup is case-insensitive so it matches the tree's ROOM%04X. */
     for (int i = 0; s_pc_bg_roots[i]; i++) {
-        snprintf(rel, sizeof rel, "%sBSS/%s/BG%02d.BSS", s_pc_bg_roots[i], room_prefix, cut_idx);
+        /* Linux/Steam-Deck-Fix (2026-08-05): der Verzeichnisname im Asset-Baum ist ROOM%04X
+         * (GROSS), room_prefix liefert aber "room%04x" (klein, bg_pc.c re15_bg_room_prefix).
+         * Auf case-INsensitiven FS (Windows) egal — der bestehende Kommentar unten baute genau
+         * darauf. Auf case-SENSITIVEN FS (SteamOS/ext4) fand der Lader den BG NIE, der Raum-
+         * Hintergrund blieb schwarz. Jetzt GROSS geschrieben, exakt wie der PRI-Lader oben
+         * (Zeile 76, "%sBSS/ROOM%04X/PRI%02d.TIM") — byte-gleiche Datei, nur Pfad-Case. */
+        snprintf(rel, sizeof rel, "%sBSS/ROOM%04X/BG%02d.BSS", s_pc_bg_roots[i], g_current_room_id, cut_idx);
         int sz = 0;
         uint8_t *buf = re15_asset_read_file(rel, &sz);
         if (buf) {
