@@ -30,25 +30,41 @@ static void make_emset(uint8_t *bc /*[21]*/, uint8_t slot, uint8_t type, uint8_t
     bc[20] = OP_EVT_NEXT;            /* the 0x44 handler advances +20, then this parks the thread */
 }
 
+/* Die Bytecode-Puffer sind STATIC, nicht lokal: die VM haelt t->pc nach dem Tick weiter auf den
+ * Puffer (Evt_next yieldet, der Thread bleibt aktiv und laeuft im naechsten Tick dort weiter).
+ * Ein Stack-Puffer ist danach tot — die VM las in fremden Stack (ASan: stack-buffer-underflow in
+ * scd_vm_tick, scd_vm.c:594; Segfault in ~1 von 150 Laeufen). */
+static uint8_t s_bc_fresh[21];
+static uint8_t s_bc_reenter[21];
+
 /* full-room bring-up (clears flags) + spawn; returns the resulting actor .active. */
 static int fresh_spawn(uint8_t slot, uint8_t type, uint8_t persist, int preset_idx, unsigned room)
 {
     re15_actor_init(); re15_aot_init(); scd_vm_init();   /* scd_vm_init CLEARS g_game.flags */
     g_current_room_id = room;
     if (preset_idx >= 0) re15_game_flag_set(re15_em_status_zone(), (uint8_t)preset_idx, 1);
-    uint8_t bc[21]; make_emset(bc, slot, type, persist);
-    scd_thread_start(1, bc);
+    make_emset(s_bc_fresh, slot, type, persist);
+    scd_thread_start(1, s_bc_fresh);
     scd_vm_tick();
     return g_actors[ACTOR_OF(slot)].active;
 }
 
-/* room RE-ENTRY: reset actors only (keep g_game.flags), spawn again — the respawn path. */
+/* room RE-ENTRY: die ECHTE Wiedereintritts-Kette der Engine (scd_room_reenter, byte-true
+ * FUN_8001d600 -> FUN_800396fc -> FUN_8003ef6c) statt eines nachgebauten Teil-Resets. Sie
+ * loescht VM-Threads und Entity-Pool, laesst g_game.flags aber stehen — genau die Bedingung,
+ * die diese Pruefung braucht (die em-status-Zone 7/8 fasst sie nicht an).
+ *
+ * Vorher stand hier NUR re15_actor_init(). Damit blieb Slot 1 mit dem geparkten Thread des
+ * vorigen Spawns belegt, und scd_thread_start verweigert einen belegten Slot
+ * (scd_vm.c:433 `if (t->active) return -1;`) — der Re-Entry-Spawn lief also GAR NICHT.
+ * Pruefung (5) hielt damit aus dem falschen Grund: nicht weil das Kill-Flag den Spawn
+ * unterdrueckt, sondern weil nie einer versucht wurde. */
 static int reenter_spawn(uint8_t slot, uint8_t type, uint8_t persist, unsigned room)
 {
-    re15_actor_init();                   /* clears actors; g_game.flags UNTOUCHED */
+    scd_room_reenter(NULL, 0, 0, 0);     /* Threads + Entities weg; g_game.flags bleiben */
     g_current_room_id = room;
-    uint8_t bc[21]; make_emset(bc, slot, type, persist);
-    scd_thread_start(1, bc);
+    make_emset(s_bc_reenter, slot, type, persist);
+    scd_thread_start(1, s_bc_reenter);
     scd_vm_tick();
     return g_actors[ACTOR_OF(slot)].active;
 }
