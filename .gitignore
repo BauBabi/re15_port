@@ -93,6 +93,10 @@ __pycache__/
 ### Savestates sind Ground-Truth, aber zu groß fürs Repo — lokal halten.
 /stage_saves/*.sav
 
+### Aus info/Re1.5/ (Baum + re15.cat) jederzeit reproduzierbares CD-Image
+### -> scripts/build_re15_iso.py ; ~215 MB, nie tracken.
+/info/re15/
+
 # Wegwerf-Artefakte der zusaetzlichen Bauziele (targets/)
 re15_port/targets/*/build/
 re15_port/targets/steamdeck/dist/
