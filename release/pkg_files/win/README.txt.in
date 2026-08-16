@@ -21,6 +21,12 @@ Steuerung (Tastatur, DuckStation-Layout):
 Gamepads: SDL-GameController wird automatisch erkannt
 (optional gamecontrollerdb.txt in den Ordner legen).
 
+NEU in v0.2 — RE2-KI-Modus: Im OPTIONS-Menue laesst sich unter "AI" von
+RE1.5 auf RE2 umschalten. Zombies, Hunde und Kraehen laufen dann auf dem
+vollstaendigen, byte-genau nachgebauten Retail-RE2-Verhalten samt
+RE2-Animationen und -Sounds (Assets unter shared_assets\RE2). Die Spinne
+folgt in einer spaeteren Version.
+
 Early Preview. Kern der Spielsysteme byte-true zum Original
 re-engineert; Umfang/offene Punkte: siehe Repo (ROADMAP/analysis).
 

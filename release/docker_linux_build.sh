@@ -32,11 +32,21 @@ if [[ "$(id -u)" == "0" ]] && ! command -v gcc >/dev/null 2>&1; then
     export DEBIAN_FRONTEND=noninteractive
     apt-get update -qq
     apt-get install -y -qq --no-install-recommends \
-        build-essential cmake ninja-build git ca-certificates \
+        build-essential ninja-build git ca-certificates wget \
         libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxss-dev \
         libxfixes-dev libwayland-dev libxkbcommon-dev wayland-protocols \
         libasound2-dev libpulse-dev libdbus-1-dev libudev-dev \
         libgl1-mesa-dev libegl1-mesa-dev >/dev/null
+fi
+# cmake: Debian 11 (bullseye) liefert nur 3.18, re15_port verlangt >=3.21, und
+# bullseye-backports ist inzwischen archiviert (kein Release-File). Deshalb das
+# offizielle Kitware-Binary-Tarball (statisch, aendert die glibc-Anforderung
+# des SPIELS nicht — Gate check_glibc prueft weiterhin das Binary).
+if ! cmake --version 2>/dev/null | grep -qE ' 3\.(2[1-9]|[3-9][0-9])| [4-9]\.'; then
+    CMV=3.28.6
+    wget -q "https://github.com/Kitware/CMake/releases/download/v${CMV}/cmake-${CMV}-linux-x86_64.tar.gz" -O /tmp/cmake.tgz
+    tar -xzf /tmp/cmake.tgz -C /opt
+    export PATH="/opt/cmake-${CMV}-linux-x86_64/bin:$PATH"
 fi
 
 BUILD="$REPO/release/lbuild"

@@ -1,4 +1,36 @@
-# RE1.5 Port — v0.1.2 (Early Preview)
+# RE1.5 Port — v0.2 (Early Preview)
+
+## Neu in v0.2 (gegenueber v0.1.2) — RE2-KI-Modus fuer Zombies, Hunde, Kraehen
+
+Im OPTIONS-Menue schaltet der Eintrag **AI: RE1.5 / RE2** die drei Gegnertypen,
+die es auch im fertigen Retail-RE2 gibt, auf deren **vollstaendiges
+RE2-Original-Verhalten** um — Gehirn, Animationen, Sounds und Effekt-Ablaeufe
+byte-genau aus den RE2-Overlays re-engineert (EMZ0 / EMD0G_MOD0 / EMOVL21,
+jede Konstante mit Disassembly-Zitat im Code, Master-Doku `RE15_RE2_AI.md`):
+
+- **Zombie** (Wellen A+B): RE2-Gangarten-Maschine, Angriffs-Leiter, 10-Phasen-
+  Grab mit Biss-Frames/Schaden aus dem Original-Parameterblock, Partner-
+  Aufweck-Domino, dreistufige Trefferreaktion, RE2-Modelle/Clips + ENEMSE-SEs.
+- **Hund/Cerberus** (Welle C): 17 Zustaende — Stalking mit Aggro-Meter,
+  4-Phasen-Verfolgung mit Ermuedung, Sprungattacke mit echter Flugbahn,
+  **Kehlen-Latch als Finisher** (nur bei toedlichem Biss; per Tasten-Hammern
+  abschuettelbar), Rudel-Heul-Koordination.
+- **Kraehe** (Welle D): 15 Zustaende — Schwarm-Koordination (es greift immer
+  nur EINE an), Sichtpruefung, Sturzflug-Hieb, Festkrallen mit Pick-Schaden,
+  Spiralsturz mit Erholung, zuckende Leiche mit wachsender Blutlache.
+- Die **Spinne** folgt in einer spaeteren Version.
+
+Der RE1.5-Modus (Default) bleibt byte-identisch unberuehrt. Qualitaetssicherung:
+je Welle ein adversarieller Multi-Agent-Review (alle bestaetigten Divergenzen
+vor dem Commit gefixt), 132 Engine-Tests inkl. A/B-Proben RE1.5-vs-RE2 in
+ROOM1140/1190/10C0 (Biss exakt 20 HP, Peck exakt 5 HP, keine Doppel-Claims).
+
+Paketierung: `shared_assets/RE2/` (CDEMD0.EMS + ENEMSE.VBS, ~18 MB) ist neu im
+Paket; die Startskripte exportieren `RE15_RE2_ASSET_ROOT`, und
+`release/make_package.sh` bricht ab, wenn die RE2-Assets fehlen.
+Die Dateinamen unten heissen entsprechend `re15_port_v0.2_*`.
+
+---
 
 ## Neu in v0.1.2 (gegenueber v0.1.1) — Linux-/Steam-Deck-Paket repariert
 Das v0.1.1-Deck-Paket war in vier Punkten falsch geschnuert. Alle vier sind
@@ -54,8 +86,8 @@ Split-Zips — 7-Zip/WinRAR verwenden. Pruefsummen: `SHA256SUMS.txt`.
 
 | Paket | Plattform | Start |
 |---|---|---|
-| `re15_port_v0.1.2_win64.zip` | Windows x64 | `Start_RE15_Port.bat` doppelklicken |
-| `re15_port_v0.1.2_linux_steamdeck_x64.zip` | Linux x64 / Steam Deck (SteamOS 3.x) | `./run.sh` (Deck: als Non-Steam-Game hinzufuegen) |
+| `re15_port_v0.2_win64.zip` | Windows x64 | `Start_RE15_Port.bat` doppelklicken |
+| `re15_port_v0.2_linux_steamdeck_x64.zip` | Linux x64 / Steam Deck (SteamOS 3.x) | `./run.sh` (Deck: als Non-Steam-Game hinzufuegen) |
 
 Beide Pakete sind selbst-enthalten: SDL2 statisch, Assets unter `shared_assets/PSX`
 (CD-Baum) plus `shared_assets/extracted_fx` (Effekt-Texturen), Savegames als
@@ -95,6 +127,6 @@ release/build_linux_deck.sh --distrobox re15-build   # auf dem Deck selbst
 ```
 Paketieren (beide Plattformen, mit den Gates oben):
 ```bash
-release/make_package.sh --version v0.1.2             # --only linux | --only win
+release/make_package.sh --version v0.2               # --only linux | --only win
 ```
-Ergebnis: `re15_port_v0.1.2_{linux_steamdeck_x64,win64}.{z01,zip}` + `SHA256SUMS.txt`.
+Ergebnis: `re15_port_v0.2_{linux_steamdeck_x64,win64}.{z01,zip}` + `SHA256SUMS.txt`.

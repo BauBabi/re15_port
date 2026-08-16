@@ -57,6 +57,10 @@ FX="$HERE/shared_assets/extracted_fx"
 
 export RE15_ASSET_ROOT="$ASSETS"
 export RE15_CD_ROOT="$ASSETS"
+# Seit v0.2: OPTIONS->AI=RE2 laedt die RE2-Gegner-Assets (CDEMD0.EMS/ENEMSE.VBS)
+# von hier; ohne den Export griffe nur der cwd-relative Fallback, der nach dem
+# cd ins (ggf. ausgewichene) Arbeitsverzeichnis ins Leere laufen kann.
+export RE15_RE2_ASSET_ROOT="$HERE/shared_assets/RE2"
 export SDL_RENDER_DRIVER="${SDL_RENDER_DRIVER:-opengles2}"
 
 if [[ -w "$HERE" ]]; then

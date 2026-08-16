@@ -13,4 +13,6 @@ rem ===========================================================================
 cd /d "%~dp0"
 set "RE15_ASSET_ROOT=%~dp0shared_assets\PSX"
 set "RE15_CD_ROOT=%~dp0shared_assets\PSX"
+rem Seit v0.2: OPTIONS->AI=RE2 laedt die RE2-Gegner-Assets von hier.
+set "RE15_RE2_ASSET_ROOT=%~dp0shared_assets\RE2"
 start "" re15_pc.exe %*

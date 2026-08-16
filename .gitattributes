@@ -1,0 +1,8 @@
+# Shell-Skripte laufen in Linux-Containern/auf dem Deck — CRLF bricht `set -euo pipefail`
+# (v0.2-Lehre: docker_linux_build.sh starb an "pipefail"). Immer LF ausliefern.
+*.sh text eol=lf
+# Referenz-/Originaldaten NIE normalisieren (Windows matcht Attribut-Muster
+# case-insensitiv — sonst wird z.B. PSYQ_SDK/.../CONV.SH umgeschrieben).
+info/** -text
+stage_saves/** -text
+original/** -text

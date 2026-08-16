@@ -50,6 +50,7 @@ done
 
 ASSETS="$REPO/re15_port/shared_assets/PSX"
 FX="$REPO/re15_port/shared_assets/extracted_fx"
+RE2="$REPO/re15_port/shared_assets/RE2"
 NAME="re15_port_${VERSION}"
 
 # --- Gates ------------------------------------------------------------------
@@ -98,11 +99,20 @@ check_tree() {           # $1 = fertiger Paketordner
         [[ -f "$out/shared_assets/extracted_fx/$f" ]] \
             || die "Effekt-Textur fehlt im Paket: shared_assets/extracted_fx/$f"
     done
+    # Seit v0.2: OPTIONS->AI=RE2 laedt Gegner-Modelle/-Sounds aus shared_assets/RE2/
+    # (platform/pc/main.c pc_re2_cdemd, audio_pc.c read_re2_enemse_vbs — cwd-Fallback
+    # "shared_assets/RE2/" bzw. Launcher-Export RE15_RE2_ASSET_ROOT). Fehlen die
+    # Dateien, faellt die Option still auf RE1.5 zurueck -> Gate statt Stille.
+    for f in CDEMD0.EMS ENEMSE.VBS; do
+        [[ -s "$out/shared_assets/RE2/$f" ]] \
+            || die "RE2-Asset fehlt/leer im Paket: shared_assets/RE2/$f (RE2-AI-Option waere still tot)"
+    done
 }
 
 # --- Gemeinsames Einsammeln --------------------------------------------------
 [[ -d "$ASSETS" ]] || die "Asset-Baum fehlt: $ASSETS"
 [[ -d "$FX"     ]] || die "Effekt-Texturen fehlen: $FX"
+[[ -s "$RE2/CDEMD0.EMS" && -s "$RE2/ENEMSE.VBS" ]] || die "RE2-Assets fehlen: $RE2"
 
 copy_common() {          # $1 = Paketordner
     local out="$1"
@@ -111,6 +121,8 @@ copy_common() {          # $1 = Paketordner
     cp -r "$ASSETS" "$out/shared_assets/PSX"
     echo "   Effekt-Texturen kopieren (shared_assets/extracted_fx) ..."
     cp -r "$FX" "$out/shared_assets/extracted_fx"
+    echo "   RE2-Assets kopieren (shared_assets/RE2, ~18 MB, fuer OPTIONS->AI=RE2) ..."
+    cp -r "$RE2" "$out/shared_assets/RE2"
 }
 
 render_readme() {        # $1 = Vorlage, $2 = Ziel
