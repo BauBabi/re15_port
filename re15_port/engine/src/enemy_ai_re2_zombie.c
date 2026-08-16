@@ -144,9 +144,15 @@ static uint32_t re2z_rand(void)
     s_re2_rng  = v & 0xffffu;
     return v & 0xffu;
 }
+/* WELLE C: the dog draws from the SAME generator (RE2 has ONE state word 0x800CE318 for every
+ * overlay — 69 jal 0x80015FE8 in the dog module alone). Exported for enemy_ai_re2_dog.c. */
+uint32_t re15_re2_rand(void) { return re2z_rand(); }
 void re15_re2z_onesave_reset(void);                           /* Welle B (below): FUN_800401d4 latch */
 void re15_re2z_rng_reset(void) { s_re2_rng = 0xD2706CA4u;     /* room load — keeps runs deterministic */
-                                 re15_re2z_onesave_reset(); }
+                                 re15_re2z_onesave_reset();
+                                 re15_re2dog_room_reset(); }  /* WELLE C: 0x800CFBF4-Analog (der
+                                                               * einzige EXE-Clear FUN_80052f3c ist
+                                                               * ein Room-Init) */
 
 /* ---- the GAIT MACHINE (@0x80101A7C-AC init, @0x80101B2C-90 per tick) ------------------------
  * INIT (walk entered):
@@ -535,6 +541,10 @@ static int re2z_player_damage(re15_actor_t *pl, int dmg)
     return 0;
 }
 void re15_re2z_onesave_reset(void) { s_re2z_onesave = 0; }
+/* WELLE C: the dog's flight bite runs through the SAME FUN_800401d4 (jal @0x80104EBC, a0=20,
+ * a1=0) and shares the ONE-SAVE latch DAT_800cfd4c bit 0x1000 with the zombie bite — one
+ * exported entry keeps that latch single. Return: 0 survived / 1 one-save / 2 death. */
+int re15_re2_player_damage(re15_actor_t *pl, int dmg) { return re2z_player_damage(pl, dmg); }
 
 /* 0x800CFBF6 movement bits from PORT state (the mapping the ladder already used; see the
  * fill_gates comment for the producer chain @0x8003CC80/@0x8003D18C/@0x8003D6B4). */

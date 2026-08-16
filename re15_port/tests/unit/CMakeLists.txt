@@ -533,6 +533,22 @@ target_compile_definitions(test_re2_room1140_ab PRIVATE
 add_test(NAME unit_re2_room1140_ab COMMAND test_re2_room1140_ab)
 set_tests_properties(unit_re2_room1140_ab PROPERTIES TIMEOUT 60)
 
+# --- WELLE C: RE2-Cerberus-KI (OPTIONS -> AI -> RE2) Unit-Test ---
+add_executable(test_re2_dog_ai test_re2_dog_ai.c)
+target_link_libraries(test_re2_dog_ai PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_dog_ai PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_re2_dog_ai COMMAND test_re2_dog_ai)
+set_tests_properties(unit_re2_dog_ai PROPERTIES TIMEOUT 30)
+
+# --- WELLE C: RE2-Cerberus-Brain A/B im echten ROOM1190 (headless, deterministisch) ---
+add_executable(test_re2_room1190_ab test_re2_room1190_ab.c)
+target_link_libraries(test_re2_room1190_ab PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_room1190_ab PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2_room1190_ab PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2_room1190_ab COMMAND test_re2_room1190_ab)
+set_tests_properties(unit_re2_room1190_ab PROPERTIES TIMEOUT 60)
+
 # --- Blut-Decal-Wund-Akkumulator (Dossier analysis/blood_decals.md BD-3/BD-5) ---
 add_executable(test_wound_accumulator test_wound_accumulator.c)
 target_link_libraries(test_wound_accumulator PRIVATE re15_engine re15_test_support)

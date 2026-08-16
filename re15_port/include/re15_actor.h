@@ -227,6 +227,31 @@ typedef struct {
     uint8_t  re2z_bitefr;       /* Biss-Frame  aus dem (frame,dmg)-Paar param[0x14+s5*2]   @0x801028A0-AC   */
     uint8_t  re2z_bitedmg;      /* Biss-Schaden aus demselben Paar (Anwendung @0x801028F4-FC)               */
     int16_t  re2z_prev_hp;      /* Port-Feld: HP-Schnappschuss fuer die HURT-Resistenz-Abschreibung        */
+    /* ---- RE2-Flavor WELLE C (enemy_ai_re2_dog.c re15_re2dog_tick): die Cerberus-Arbeitsbytes
+     * aus EMD0G_MOD0.BIN (ModB @0x80100000). Geteilt mit dem Zombie werden speed_h(+0x144),
+     * re2z_t158(+0x158), re2z_t15a(+0x15A), re2z_dir16a(+0x16A Aggro/Mash, signed gelesen),
+     * re2z_flags21a(+0x21A Fatigue u16), re2z_hits1d2(+0x1D2), re2z_self1d3(+0x1D3),
+     * re2z_prev_sub/prev_hp (Port-Schnappschuesse) und dog_floor_y(+0x1C2 Boden-Y). */
+    int16_t  re2d_vy146;        /* +0x146 vy (Sprung -280 @0x801013A4, Gravity +40 @0x801014C0 u.a.) */
+    int16_t  re2d_turn224;      /* +0x224 RUN-Drehrate (96 @0x80100BCC/BE4, Tabelle @0x80100C4C)      */
+    int16_t  re2d_offx228;      /* +0x228 STALK-Zieloffset X (tbl @0x801054A8, @0x801008AC-C4)        */
+    int16_t  re2d_offz22a;      /* +0x22A STALK-Zieloffset Z (@0x801008C0-E0)                          */
+    uint8_t  re2d_route218;     /* +0x218 Wegpunkt-/Routen-Byte (0x8004AA50-Rueckgabe; Port: MAPPING)  */
+    uint8_t  re2d_air219;       /* +0x219 Luft-Flag (Set 1 @0x8010132C, Clear bei Landung @0x801015F0) */
+    uint8_t  re2d_abort21c;     /* +0x21C Abdreh-Flag (Set @0x80100DD0-D4/-4-Zweig, Consume @0x80100E14-28) */
+    uint8_t  re2d_pause21d;     /* +0x21D Chase-Pause (Seed tbl@0x80105420 @0x801017DC-E4, Dec @0x80100D3C) */
+    uint8_t  re2d_bite21e;      /* +0x21E Kontakt-Resultat: 1 Boden-Biss/2 LATCH (@0x80104F24/@0x80104F84) */
+    uint8_t  re2d_budget21f;    /* +0x21F Blut-/FX-Budget (Gate+Dec @0x80105090-98/@0x8010518C-98)     */
+    uint8_t  re2d_rel220;       /* +0x220 Release-Einmal-Latch des Latch (@0x80102024-48)              */
+    uint8_t  re2d_launch222;    /* +0x222 "im Sprung"-Flag (Set @0x80101330, Clear @0x80101460)        */
+    uint8_t  re2d_dbl223;       /* +0x223 Doppel-Treffer-Marker (Set 1 @0x80103488, |0x80 @0x80103400) */
+    uint8_t  re2d_nolatch22c;   /* +0x22C Kein-Latch-Marke (Kreis/Fenster; Gate @0x80105000-08)        */
+    uint8_t  re2d_wound22d;     /* +0x22D verwundeter Spawn (Set @0x80100438; Gates @0x801033F0 u.a.)  */
+    uint8_t  re2d_circle22e;    /* +0x22E Kreis-Modus (Spawn 9 @0x80100480; RUN-P0 @0x80100C58-7C)     */
+    uint8_t  re2d_atkcd22f;     /* +0x22F Angriffs-Cooldown P3 (tbl@0x80105430+30 @0x801011B8-C4)      */
+    uint8_t  re2d_stuck230;     /* +0x230 Stuck-Zaehler (Root @0x801000C8-D8; Unstick-Gates >=16)      */
+    uint8_t  re2d_se231;        /* +0x231 Todesschrei-Latch (Gate @0x801041B8-C4, Set @0x801046E8)     */
+    uint8_t  re2d_cd232;        /* +0x232 Root-Countdown (Dec @0x80100040-50)                          */
     int16_t  hurt_bend_bone;    /* part index to bend, -1 = none */
     int16_t  hurt_bend_vz;      /* the PRE-update +0x9c applied this tick */
     /* Phase 4.5.13-RE2 F1: speed was at ID 27 (wrong) — correct ID is

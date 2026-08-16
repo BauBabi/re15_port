@@ -528,14 +528,23 @@ static void pc_enemy_load(uint8_t type)
     re15_enemy_bank_t *eb = re15_enemy_alloc(type);
     if (!eb) return;                                   /* registry full */
 
-    /* RE2-Flavor-Zweig (WELLE A) — VOR dem RE1.5-Zweig, nur wenn der RE2-Zombie-Brain
-     * den Typ besitzt (re15_re2z_owns_type: Zombie-Familie). Fehlt das RE2-Archiv oder
+    /* RE2-Flavor-Zweig (WELLE A) — VOR dem RE1.5-Zweig, nur wenn ein RE2-Brain den Typ
+     * besitzt (re15_re2_owns_type: Zombie-Familie + Hund 0x20). Fehlt das RE2-Archiv oder
      * der Record, faellt der Lauf UNVERAENDERT in den byte-true RE1.5-Pfad darunter. */
-    if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2z_owns_type(type)) {
-        /* WELLE B: ENEMSE-Wiedergabe im Engine-Brain registrieren (PC-only Symbole — der
-         * Funktionszeiger haelt engine/ link-sauber fuers PSX-Target) + Zombie-Bank waehlen
-         * (Bank-Wahl-Beleg + Kandidaten-Probe: enemy_ai_re2_zombie.c RE2Z_ENEMSE_BANK). */
-        re15_re2z_audio_hook(re15_audio_re2_enemy_se, re15_audio_re2_enemy_bank);
+    if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2_owns_type(type)) {
+        /* WELLE B/C: ENEMSE-Wiedergabe im Engine-Brain registrieren (PC-only Symbole — der
+         * Funktionszeiger haelt engine/ link-sauber fuers PSX-Target) + Bank waehlen.
+         * Zombie: Bank 0 (Beleg enemy_ai_re2_zombie.c RE2Z_ENEMSE_BANK). HUND: Bank 31 +
+         * flag2000 (Paar-Tabelle @0x800A7400: kind 0x20 ist in allen 13 Zeilen der ZWEITE
+         * kind; Zeile 31 = {0x00,0x20} = reine Hunde-Bank; EDT-Map-Probe: alle Hunde-Baenke
+         * tragen dieselbe zweite Haelfte — enemy_ai_re2_dog.c RE2DOG_ENEMSE_BANK). Der
+         * ENEMSE-Slot ist wie im Original EINE Raum-Bank; kein Auslieferungs-RE1.5-Raum
+         * mischt Hunde mit Zombies (Memory reai-v2-dog-ai), Konflikt daher nur theoretisch
+         * (letzter Ladevorgang gewinnt). */
+        if (type == 0x20)
+            re15_re2dog_audio_hook(re15_audio_re2_enemy_se, re15_audio_re2_enemy_bank);
+        else
+            re15_re2z_audio_hook(re15_audio_re2_enemy_se, re15_audio_re2_enemy_bank);
         if (pc_enemy_load_re2(type, eb)) return;
     }
 

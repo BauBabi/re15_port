@@ -710,6 +710,14 @@ static void re15_victim_clip_map(uint8_t *c_intro, uint8_t *c_hold, uint8_t *c_r
 {
     uint8_t v = g_player_victim_variant;
     if (g_player_victim_type == 0x20) {                 /* DOG (EM020) */
+        if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2) {
+            /* WELLE C: die RE2-Victim-Bank des Hunds (EM_TYPE20.EMD dir[5]/[6], byte-geparst)
+             * trägt EINEN Clip: 145 Frames, 15-Bone-Spieler-Pool — die Struggle-Choreo synchron
+             * zum Hunde-Latch-Clip 23 (ebenfalls 145 F, EDD self-read). Alle Phasen zeigen auf
+             * Clip 0; Hold/Release/Collapse der RE2-Spieler-Seite sind EXE-seitig (OPEN). */
+            *c_intro = 0; *c_hold = 0; *c_release = 0; *c_collapse = 0;
+            return;
+        }
         *c_intro = (uint8_t)(3 * v); *c_hold = 1; *c_release = 2; *c_collapse = 4;
     } else if (g_player_victim_type == 0x21) {          /* CROW (EM021) — front victim FSM
                                                          * 0x801159bc (Hook A [0x21]): intro clip 0
@@ -5699,6 +5707,17 @@ static void re15_dog_ai_tick(int slot)
 {
     re15_actor_t *e  = &g_actors[slot];
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+
+    /* PORT OPTION (WELLE C): unter dem RE2-Flavor übernimmt das RE2-Cerberus-Brain den GANZEN
+     * Dispatch (re15_re2dog_tick, enemy_ai_re2_dog.c — Root @0x80100004, Tabelle @0x80105438).
+     * ai_dist speist der RE2-Hund wie das Original vor dem Dispatch (+0x1F0-Analog). Der
+     * RE1.5-Default darunter bleibt byte-identisch; run_alls Tail (Body-Push + SCA-Wall-Clamp
+     * + ai_contact) läuft für beide Flavors unverändert. */
+    if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && e->type == 0x20) {
+        e->ai_dist = (uint32_t)re15_enemy_player_dist(e, pl);
+        re15_re2dog_tick(slot);
+        return;
+    }
 
     switch (e->state) {
     case 0:   /* INIT FUN_8010d93c: idle pose, seed steer/HP/timers, grid-scripted start */

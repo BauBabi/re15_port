@@ -8,8 +8,10 @@
  *                    EMZ0.BIN (loads RAW @0x80100000; disassemble with
  *                    .claude/skills/re15-psx-disasm/scripts/re2_disasm.py --bin EMZ0.BIN).
  *
- * ONLY zombies switch. Dog/crow/spider/maggot/birkin/NPCs stay on the RE1.5 brain in both modes —
- * anything else would break six verified byte-true campaigns.
+ * WELLE C erweitert den Schalter per Nutzer-Auftrag auf den HUND (Cerberus 0x20, RE2-Modul
+ * EMD0G_MOD0.BIN == CDEMD0.EMS TOC-Sektor 1206, geladen @0x80100000). Krähen folgen (Welle D).
+ * Spider/Maggot/Birkin/NPCs bleiben in beiden Modi auf dem RE1.5-Brain — deren byte-true
+ * Kampagnen bleiben unberührt, und der RE1.5-Default ist weiterhin in ALLEN Typen byte-identisch.
  */
 #ifndef RE15_AI_FLAVOR_H
 #define RE15_AI_FLAVOR_H
@@ -24,6 +26,30 @@ void             re15_ai_flavor_set(re15_ai_flavor_t f);
 
 /* Does the RE2 brain own this actor type? (zombie family only) */
 int re15_re2z_owns_type(unsigned type);
+
+/* WELLE C: the FULL RE2 ownership set (zombie family + dog 0x20). NUR der Asset-Loader keyt
+ * darauf (platform/pc/main.c pc_enemy_load). Review-Fix #9 — ausdruecklich NICHT darauf keyen:
+ * die Anim-Advance-/Loco-/SFX-Exemptions bleiben auf re15_re2z_owns_type (player_common.c
+ * re15_type_self_advances_anim + enemy_ai_common.c), die Victim-Map keyt auf Flavor +
+ * g_player_victim_type. Der Hund braucht sie nicht (Typ 0x20 self-advanct schon immer).
+ * ⚠️ Welle D: ein NEUER Typ in diesem Set erbt die Exemptions NICHT automatisch — jede
+ * geteilte Stelle muss einzeln geprueft und explizit verdrahtet werden. */
+int re15_re2_owns_type(unsigned type);
+
+#include <stdint.h>
+
+/* ---- WELLE C: the RE2 retail DOG (Cerberus, kind 0x20) brain — enemy_ai_re2_dog.c ---------
+ * re15_re2dog_tick REPLACES the RE1.5 dog dispatch (re15_dog_ai_tick) when the RE2 flavor is
+ * selected. RE'd from EMD0G_MOD0.BIN: root @0x80100004, state table @0x80105438, 17 ACTIVE
+ * substates @0x80105464, HURT @0x801032A8, DEATH @0x801040DC, CORPSE @0x801049EC. */
+int  re15_re2dog_tick(int slot);                  /* 1 = handled (RE2 dog brain owns this actor) */
+void re15_re2dog_audio_hook(void (*se_fn)(int se_id, int flag2000), void (*bank_fn)(int bank));
+void re15_re2dog_room_reset(void);                /* room load: 0x800CFBF4-Analog-Bits löschen
+                                                   * (einziger EXE-Clear: FUN_80052f3c @0x80052f3c) */
+
+/* The shared RE2 PRNG @0x80015FE8 (state 0x800CE318 — ONE generator for every RE2 overlay;
+ * the dog draws from the same stream as the zombie). Defined in enemy_ai_re2_zombie.c. */
+uint32_t re15_re2_rand(void);
 
 /* RE2 zombie brain entry points (enemy_ai_re2_zombie.c). */
 #include <stdint.h>
