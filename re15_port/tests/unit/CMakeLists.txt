@@ -549,6 +549,22 @@ target_compile_definitions(test_re2_room1190_ab PRIVATE
 add_test(NAME unit_re2_room1190_ab COMMAND test_re2_room1190_ab)
 set_tests_properties(unit_re2_room1190_ab PROPERTIES TIMEOUT 60)
 
+# --- WELLE D: RE2-Kraehen-KI (OPTIONS -> AI -> RE2) Unit-Test ---
+add_executable(test_re2_crow_ai test_re2_crow_ai.c)
+target_link_libraries(test_re2_crow_ai PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_crow_ai PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_re2_crow_ai COMMAND test_re2_crow_ai)
+set_tests_properties(unit_re2_crow_ai PROPERTIES TIMEOUT 30)
+
+# --- WELLE D: RE2-Kraehen-Brain A/B im echten ROOM10C0 (headless, deterministisch) ---
+add_executable(test_re2_room10c0_ab test_re2_room10c0_ab.c)
+target_link_libraries(test_re2_room10c0_ab PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_room10c0_ab PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2_room10c0_ab PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2_room10c0_ab COMMAND test_re2_room10c0_ab)
+set_tests_properties(unit_re2_room10c0_ab PROPERTIES TIMEOUT 60)
+
 # --- Blut-Decal-Wund-Akkumulator (Dossier analysis/blood_decals.md BD-3/BD-5) ---
 add_executable(test_wound_accumulator test_wound_accumulator.c)
 target_link_libraries(test_wound_accumulator PRIVATE re15_engine re15_test_support)

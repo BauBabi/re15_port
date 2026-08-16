@@ -15,6 +15,7 @@
 #include "re15_aot.h"
 #include "re15_rdt.h"
 #include "re15_actor.h"
+#include "re15_ai_flavor.h"   /* re15_re2z_rng_reset — Reenter-Clear des 0x800CFBF4-Analogs */
 
 extern scd_vm_t g_scd;
 
@@ -163,6 +164,15 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
     for (int ai = 1; ai < RE15_ACTOR_MAX; ai++)
         if (g_actors[ai].active) memset(&g_actors[ai], 0, sizeof(g_actors[ai]));
     g_actor_count = 1;
+    /* WELLE-D-Review-Fix #12: das geteilte RE2-Raum-Flag-Wort (g_re2_room_gflags =
+     * 0x800CFBF4-Analog: Kraehen-Flock-Mutex Bit 0 + Hunde-Bits 0x20/0x40/0x80) MUSS beim
+     * Same-Room-Reenter mitfallen — das Original cleart 0x800CFBF4 bei JEDEM Raum-(Re-)Load
+     * (FUN_80052f3c, `sh zero` @0x80052fe4, selbst gelesen). Ohne den Clear haelt ein soeben
+     * weggewischter Claimer den Mutex fuer immer (einziger Releaser ist sein eigener
+     * Post-Pass @0x801044E4-F0) = Angriffs-Lockout der respawnten Kraehen. re15_re2z_rng_reset
+     * faehrt die volle Raum-Lade-Kette des RE2-Flavors (PRNG-Seed 0x800CE318 + One-Save-Latch
+     * + Flag-Wort) — im RE1.5-Default wirkungsfrei (nur unbenutzte RE2-Zustaende). */
+    re15_re2z_rng_reset();
     /* A same-room re-entry mirrors the original's room-reload PLAYER re-init.
      * Our run-to-door is a PERSISTENT walker (actor.walk_active + motion
      * 100/105 — an engine construct with NO original counterpart; the original

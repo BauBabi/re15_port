@@ -209,7 +209,11 @@ typedef struct {
     uint8_t  re2z_self1d3;      /* self+0x1D3 (Set 15 @0x8010276C-70; low-7-Dec im Root @0x80100484-98)     */
     uint8_t  re2z_flag222;      /* +0x222 "schon getroffen"-Marke (Flinch-Arbitrierung @0x80105080-9C)      */
     int8_t   re2z_res223;       /* +0x223 Flinch-Resistenz, signed (Seed 16+(rand&15) @0x80100888-9C)       */
-    uint8_t  re2z_hits1d2;      /* +0x1D2 Treffer-Zaehler (jeder 3. -> Blut-FX, @0x801050B0-E4)             */
+    uint8_t  re2z_hits1d2;      /* +0x1D2 = zone + 3*bracket, PRO TREFFER GESETZT (fix_1d2_spec:
+                                 * Applier FUN_800470C0 @0x80047310-30/@0x80047564-80 + Hitscan
+                                 * @0x80041A8C-9C; zone 0 tief/1 mitte/2 hoch, bracket = Hitcode>>28).
+                                 * Port-Produzent re15_re2_stamp_1d2 (re15_damage.c; Bracket OPEN=0).
+                                 * Konsumenten: Zombie-Blut %3==0 (=Zone 0), Hunde-Gore /3 (=Bracket)  */
     uint8_t  re2z_walkclip;     /* +0x218 Walk-Clip aus dem Param-Block (@0x80100860-8C; Werte 0/2)         */
     uint8_t  re2z_dir16a;       /* +0x16A Fall-/Varianten-Byte (Knockdown-Seite, @0x8010328C-98)            */
     int16_t  re2z_t158;         /* +0x158 Budget/Timer (Grab-Wehr-Budget 148 @0x80102828-2C u.a.)           */
@@ -252,6 +256,29 @@ typedef struct {
     uint8_t  re2d_stuck230;     /* +0x230 Stuck-Zaehler (Root @0x801000C8-D8; Unstick-Gates >=16)      */
     uint8_t  re2d_se231;        /* +0x231 Todesschrei-Latch (Gate @0x801041B8-C4, Set @0x801046E8)     */
     uint8_t  re2d_cd232;        /* +0x232 Root-Countdown (Dec @0x80100040-50)                          */
+    /* ---- RE2-Flavor WELLE D (enemy_ai_re2_crow.c re15_re2crow_tick): die Kraehen-Arbeitsbytes
+     * aus EMOVL21_S0.BIN (Slot 0 @0x80100000). GETEILT mit Zombie/Hund werden die gleich-
+     * adressierten Felder: re2d_route218(+0x218 next-Phase/Accel-Step/Spin s8-gelesen),
+     * re2d_air219(+0x219 Timer/Grab-Timeout), re2z_flags21a(+0x21A Flap-Reload), re2d_abort21c
+     * (+0x21C Angriffs-Cooldown), re2d_pause21d(+0x21D Wand-Streak), re2d_bite21e(+0x21E
+     * Kontakt-Streak), re2d_budget21f(+0x21F Routen-Byte 0x8004AA50), re2d_rel220(+0x220
+     * Nav-Zaehler rand&0x7f), re2d_turn224(+0x224 Zielhoehe/Grav-Akku/Snapshot-X),
+     * re2d_offx228(+0x228 Spiral-Spin ±200), re2z_t158(+0x158), re2z_t15a(+0x15A Lache-Ticks),
+     * re2z_self1d3(+0x1D3), dog_floor_y(+0x1C2 Boden-Y), ai_dist(+0x1F0),
+     * crow_shadow_w/h (Schatten-Record [+0x16C]+4/+6), crow_hide (GIB-Mesh-Wipe). */
+    uint8_t  re2c_grab21b;      /* +0x21B GRAB-Phasen-Zaehler (Set 4 @0x801026B0-B4, Dec @0x80102700-10,
+                                 * Reload (rand&7)+2 @0x80102718-2C, Lift-Ende @0x80102818-24)          */
+    int8_t   re2c_pac221;       /* +0x221 Flock-Pacifier, s8 (Set 120 im Post-Pass @0x8010451C-20;
+                                 * Dec im ACTIVE-Prolog @0x80100558-80; Gates lb/bgtz @0x801006D8-E0)   */
+    int16_t  re2c_snap226;      /* +0x226 Idle-Hop-Snapshot-Z (sh @0x80100930) / HURT-Knock-Richtung
+                                 * (Bearing(PL->self)-Yaw, sh @0x801029D4)                              */
+    uint16_t re2c_flags22a;     /* +0x22A Flag-Wort (lhu/sh 554): 1 Wake-Timer-Arm (Takeoff @0x80100D0C-20,
+                                 * Sub-0-DEC @0x80100754-7C), 2 LOS (Root @0x801001C8-E8, ret==0 -> set),
+                                 * 4 Mutex-Claim (@0x801042D0-DC), 8 Grab-Join (Broadcast @0x80102540-44,
+                                 * Konsum 8+2 @0x8010420C-24), 0x10 Abort (@0x80104410-1C), 0x20
+                                 * Kraechz-Sperre (Idle-P10 @0x80100A04-10, State-4 @0x801035B0-BC),
+                                 * 0x40 Konvergenz (@0x80102548-4C, Nav-Gate @0x80100584-90), 0x80
+                                 * Pacify-Broadcast (@0x80102680-84, Post-Pass @0x80104504-20)          */
     int16_t  hurt_bend_bone;    /* part index to bend, -1 = none */
     int16_t  hurt_bend_vz;      /* the PRE-update +0x9c applied this tick */
     /* Phase 4.5.13-RE2 F1: speed was at ID 27 (wrong) — correct ID is

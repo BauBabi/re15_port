@@ -543,6 +543,12 @@ static void pc_enemy_load(uint8_t type)
          * (letzter Ladevorgang gewinnt). */
         if (type == 0x20)
             re15_re2dog_audio_hook(re15_audio_re2_enemy_se, re15_audio_re2_enemy_bank);
+        else if (type == 0x21)
+            /* WELLE D — KRAEHE: Paar-Tabelle @0x800A7400 (file 0x97C00, selbst gelesen
+             * 2026-08-16): kind 0x21 steht in GENAU EINER Zeile, 21 = {0x21, 0x00} = reine
+             * Kraehen-Bank, ERSTE Haelfte (flag2000=0). EDT-Probe Bank 21: ids 0..14 live,
+             * 15+ leer — SEs 1..6 alle belegt (enemy_ai_re2_crow.c RE2CROW_ENEMSE_BANK). */
+            re15_re2crow_audio_hook(re15_audio_re2_enemy_se, re15_audio_re2_enemy_bank);
         else
             re15_re2z_audio_hook(re15_audio_re2_enemy_se, re15_audio_re2_enemy_bank);
         if (pc_enemy_load_re2(type, eb)) return;

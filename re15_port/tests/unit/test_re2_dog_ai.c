@@ -11,6 +11,7 @@
 #include "re15_actor.h"
 #include "re15_ai_flavor.h"
 #include "re15_enemy_ai.h"
+#include "re15_damage.h"    /* re15_enemy_take_damage / clear_hit_guard — 1D2-Stempel-Pin */
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
@@ -398,6 +399,30 @@ static void test_howl_claim(void)
     d2->active = 0;
 }
 
+static void test_1d2_zone_stamp(void)
+{
+    /* fix_1d2_spec (Welle-D-Nachtrag): +0x1D2 wird PRO TREFFER auf zone+3*bracket GESETZT
+     * (Applier FUN_800470C0 @0x80047310-30/@0x80047564-80 + Hitscan @0x80041A8C-9C, selbst
+     * disassembliert; Port-Produzent re15_re2_stamp_1d2 in re15_damage.c). Ohne Aim-Elevation
+     * = LEVEL = zone 1, Bracket OPEN=0. KEIN Akkumulator: zwei Treffer bleiben bei 1. */
+    fresh_dog(3000, 0);
+    tick();
+    DOG->hp = 50;
+    re15_enemy_take_damage(DOG, 0);
+    CHECK(DOG->re2z_hits1d2 == 1, "+0x1D2 = zone 1 (LEVEL) + 3*0 nach dem 1. Treffer, val=%d",
+          DOG->re2z_hits1d2);
+    re15_player_clear_hit_guard(DOG);                      /* Hit-Guard-Analog freigeben */
+    DOG->hit_react = 0;
+    re15_enemy_take_damage(DOG, 0);
+    CHECK(DOG->re2z_hits1d2 == 1, "+0x1D2 ist SET, kein Zaehler (2. Treffer bleibt 1), val=%d",
+          DOG->re2z_hits1d2);
+    /* Hunde-Gore-Budgets lesen das BRACKET (/3): mit Bracket 0 -> Maximum 2/4; das DEATH-
+     * Zeile-9-Gate `<3` (Bracket 0 = Nah) unterdrueckt die Gore-Variante wie im RE2-Nah-Fall
+     * (Fern-Bracket-Producer = offene Folge-Lane, RE15_RE2_AI.md). */
+    CHECK(DOG->re2z_hits1d2 / 3u == 0u, "Bracket-Anteil 0 (OPEN-Mapping), val=%d",
+          DOG->re2z_hits1d2);
+}
+
 int main(void)
 {
     re15_re2dog_audio_hook(se_cap, se_bank_cap);
@@ -411,6 +436,7 @@ int main(void)
     test_bite_damage_and_latch();
     test_hurt_knockdown_death();
     test_howl_claim();
+    test_1d2_zone_stamp();
 
     re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);               /* Default wiederherstellen */
     if (fails == 0) printf("test_re2_dog_ai: OK\n");

@@ -28,6 +28,9 @@
 #include "re15_room_list.h"  /* re15_room_ids[] / RE15_ROOM_COUNT — current-room index for the continue spawn */
 #include "re15_room_spawns.h"/* re15_room_spawns[] — the current room's entry spawn for the continue-reload */
 #include "re15_enemy.h"      /* re15_enemy_find — the per-type EMD bank (skel/anim) for the gore-bone pose */
+#include "re15_ai_flavor.h"  /* re15_re2_owns_type — der +0x1D2-Stempel des RE2-Flavors (s.u.) */
+
+static void re15_re2_stamp_1d2(re15_actor_t *e);   /* fix_1d2_spec — Definition vor take_damage */
 #include "re15_anim_select.h"/* re15_compute_actor_kf — motion+frame -> keyframe for the gore-bone pose */
 
 /* DAT_8006f418 — ghidra1_V2.txt:223455-223478 (11×s16 LE). */
@@ -712,6 +715,8 @@ retry_after_latch:
         e->hp = -1;
     e->sub_state_3 = 0;                              /* +0x7 = 0 (@0x80012428) — start the hurt/death anim FSM at phase 0 */
     e->state       = (e->hp >= 0) ? 2 : 3;          /* +0x4 = HURT(2) / DEATH(3) (@0x80012520) */
+    re15_re2_stamp_1d2(e);                           /* RE2-Flavor: +0x1D2 = zone+3*bracket (SET,
+                                                      * fix_1d2_spec — Belege am Helfer oben) */
     /* Port bookkeeping: drop the REVERSE-playback bit. In the original, reverse is NOT entity
      * state — it is the a2=1 argument of single f314 calls (grab-recovery @0x80102aec `ori a2,zero,1;
      * jal 0x8001f314`; feeding kneel-down likewise), and the forced +0x4=2/3 here makes the next
@@ -745,6 +750,32 @@ retry_after_latch:
     return best + 1;                                /* hit (slot+1, non-zero) */
 }
 
+/* WELLE-D-Nachtrag (fix_1d2_spec, alle Zitate selbst nachdisassembliert 2026-08-16): der
+ * RE2-+0x1D2-PRODUZENT. +0x1D2 ist PRO TREFFER ein SET auf `zone + 3*bracket` (KEIN Zaehler) —
+ * beide RE2-Applier tragen die identische Formel:
+ *   - Projektil/AoE FUN_800470C0 (zweifach): Basis 1 @0x80047294-98 / @0x800474B8-BC;
+ *     s5&0x20000 + Schuss unterhalb der Halbhoehe (a0 = sign16(+0x98)>>1 @0x800472AC-B8,
+ *     `enemy_y+a0 < shot_y` @0x800472BC-CC) -> zone 0 @0x800472D4 / @0x800474F8;
+ *     word0&0x10000000 + Schuss oberhalb 3/4-Hoehe (`shot_y < enemy_y+3*a0` @0x800472E8-304)
+ *     -> zone 2 @0x8004730C / @0x80047530; dann `+0x1D2 = zone + 3*s6` @0x80047310-30 /
+ *     @0x80047564-80 mit s6 = Hitcode>>28 (@0x80047114).
+ *   - Hitscan-Applier: dieselbe Formel `3*s1 + zone -> sb 466` @0x80041A8C-9C.
+ * ZONE-Port: die Schuss-Y-Regeln haengen an s5&0x20000/word0&0x10000000 ohne Port-Produzent ->
+ * deklarierte Naeherung ueber die Aim-Elevation (DOWN->0 Beine, UP->2 Kopf, LEVEL->1; dieselbe
+ * Quelle, die oben +0x6 stempelt). BRACKET-Port: 0 (OPEN) — die Hitcode-Produzenten sind
+ * waffen-/pfadspezifisch (Bowgun-Bolzen 0xC @FUN_80046304:153, GL-Runden (+0x1b)+0x30009
+ * @FUN_8001ed9c:44/47, Sparkshot 0x2002000A @FUN_80020758:28, Hitscan-s1-Producer nicht RE'd);
+ * ein RE1.5-Waffen->Bracket-Mapping existiert nicht. Konsumenten: Zombie-Blut %3==0 = ZONE 0
+ * (Bein-Treffer, @0x801050B0-E4), Hunde-Gore /3 = BRACKET (@0x80103D00-28/@0x80103DB8-E0),
+ * Hunde-Gore-Tod Zeile 9 `<3` = Bracket 0 (@0x801046A8-C4). */
+static void re15_re2_stamp_1d2(re15_actor_t *e)
+{
+    if (re15_ai_flavor() != RE15_AI_FLAVOR_RE2 || !re15_re2_owns_type(e->type)) return;
+    extern int re15_player_aim_elevation(void);
+    int elev = re15_player_aim_elevation();
+    e->re2z_hits1d2 = (uint8_t)((elev < 0) ? 0 : (elev > 0) ? 2 : 1);   /* + 3*0 (Bracket OPEN) */
+}
+
 /* Enemy branch of FUN_80012d60 (@80012f08-80013034): apply a resolved hit to an
  * ENEMY actor — the counterpart to the player branch. Same dmg table, but the
  * reaction sub-state is the hit-clip from re15_react_table (not the front/back
@@ -771,6 +802,7 @@ int re15_enemy_take_damage(re15_actor_t *e, uint8_t attack_type)
     e->hit_react |= 0x1;                                           /* +0x93 |= 1 (@8001300c) */
     e->state = 2;                                                  /* +0x4 = 2 hurt (@80013018) */
     if (e->hp < 0) e->state = 3;                                  /* signed HP<0 → death (@80013020) */
+    re15_re2_stamp_1d2(e);                                        /* RE2-Flavor: +0x1D2-SET (s.o.) */
     e->anim_flags &= (uint16_t)~0x80u;   /* same port-bookkeeping REVERSE drop as the gun path —
                                           * reverse is a per-call f314 argument (@0x80102aec), not
                                           * entity state; the hijacked state sets a new forward clip

@@ -9,7 +9,8 @@
  *                    .claude/skills/re15-psx-disasm/scripts/re2_disasm.py --bin EMZ0.BIN).
  *
  * WELLE C erweitert den Schalter per Nutzer-Auftrag auf den HUND (Cerberus 0x20, RE2-Modul
- * EMD0G_MOD0.BIN == CDEMD0.EMS TOC-Sektor 1206, geladen @0x80100000). Krähen folgen (Welle D).
+ * EMD0G_MOD0.BIN == CDEMD0.EMS TOC-Sektor 1206, geladen @0x80100000). WELLE D auf die KRÄHE
+ * (0x21, EMOVL21_S0.BIN == CDEMD0.EMS Sektor 0x528, Slot 0 @0x80100000).
  * Spider/Maggot/Birkin/NPCs bleiben in beiden Modi auf dem RE1.5-Brain — deren byte-true
  * Kampagnen bleiben unberührt, und der RE1.5-Default ist weiterhin in ALLEN Typen byte-identisch.
  */
@@ -51,9 +52,39 @@ void re15_re2dog_room_reset(void);                /* room load: 0x800CFBF4-Analo
  * the dog draws from the same stream as the zombie). Defined in enemy_ai_re2_zombie.c. */
 uint32_t re15_re2_rand(void);
 
+/* ---- WELLE D: the RE2 retail CROW (kind 0x21) brain — enemy_ai_re2_crow.c -----------------
+ * re15_re2crow_tick REPLACES the RE1.5 crow dispatch (re15_crow_ai_tick) when the RE2 flavor
+ * is selected. RE'd from EMOVL21_S0.BIN (== CDEMD0.EMS Sektor 0x528, Slot 0 @0x80100000):
+ * Root @0x8010013C, state table @0x80104908, DEC/EXEC @0x80104928/@0x80104964 (15 Subs),
+ * HURT rows @0x80104A18, State-4 @0x80104A64, CORPSE @0x80104A70. */
+int  re15_re2crow_tick(int slot);                 /* 1 = handled (RE2 crow brain owns this actor) */
+void re15_re2crow_audio_hook(void (*se_fn)(int se_id, int flag2000), void (*bank_fn)(int bank));
+
+/* Das geteilte Raum-Flag-Wort 0x800CFBF4 (Hund-Bits 0x20/0x40/0x80 + Kraehen-Flock-Mutex
+ * Bit 0x1). EIN Original-Wort -> EIN Port-Global (enemy_ai_re2_dog.c); einziger EXE-Clear
+ * ist der Room-Init FUN_80052f3c -> re15_re2dog_room_reset/re15_re2z_rng_reset. */
+extern uint16_t g_re2_room_gflags;
+
+
 /* RE2 zombie brain entry points (enemy_ai_re2_zombie.c). */
 #include <stdint.h>
 #include "re15_actor.h"
+
+/* Der geteilte 0x8002959c-Anim-Advancer (Kern 0x80029B28-4C: +1/Tick, Wrap auf 0, done NUR
+ * am Wrap-Tick; frac-Decay @0x800299C0-CC). Definiert in enemy_ai_re2_dog.c (Welle C),
+ * benutzt von Hund UND Kraehe (44 jal 0x8002959c im Kraehen-Modul). */
+int re15_re2_advance_959c(re15_actor_t *e, int blend);
+
+/* FUN_800401d4 mit MODE-Parameter (Kraehen-Peck a0=5, a1=aliveflag @0x8010265C-64) —
+ * enemy_ai_re2_zombie.c, teilt den EINEN One-Save-Latch mit Zombie-/Hunde-Biss. */
+int re15_re2_player_damage_mode(re15_actor_t *pl, int dmg, int mode);
+
+/* WELLE D: LOS-Shim (enemy_ai_common.c) — MAPPING fuer den RE2-Ray 0x80050858(self,PL,0x8400,0)
+ * (Root @0x801001C0-E8: ret==0 -> +0x22A|=2 "Sicht frei"). Der Port fährt den byte-true
+ * RE1.5-Ray FUN_8003dcc4 (re15_los_ray_blocked, alle 4 Regionen in EINEM Tick, ohne den
+ * RE1.5-16-Tick-Amortisierer und ohne FOV-Kegel — 0x80050858 ist ein reiner Kollisionsstrahl).
+ * Rueckgabe 1 = Sicht frei (Mode 0x8400 selbst nicht RE'd — deklariertes MAPPING). */
+int re15_re2_los_clear(re15_actor_t *e, re15_actor_t *pl);
 void re15_re2z_gait_init(re15_actor_t *e);        /* seed the gait row/timer  @0x80101A7C-AC   */
 int  re15_re2z_walk_turn(re15_actor_t *e, int32_t px, int32_t pz, uint32_t dist); /* @0x80101BAC */
 void re15_re2z_rng_reset(void);                   /* re-seed the RE2 PRNG on room load (also

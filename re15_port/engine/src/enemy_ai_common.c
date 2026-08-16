@@ -1705,6 +1705,20 @@ static int re15_enemy_los_probe(int slot, re15_actor_t *e, const re15_actor_t *p
     return 2;
 }
 
+/* WELLE D (RE2-Kraehe): LOS-Shim — MAPPING fuer den RE2-EXE-Ray 0x80050858(selfpos, playerpos,
+ * 0x8400, 0), den der Kraehen-Root JEDEN Tick zieht (@0x801001C0-E8: ret==0 -> +0x22A|=2 =
+ * "Sicht frei", ret!=0 -> Bit geloescht). Port: der byte-true RE1.5-Ray FUN_8003dcc4
+ * (re15_los_ray_blocked oben), alle 4 Regionen in EINEM Tick — OHNE den 16-Tick-Amortisierer
+ * und OHNE FOV-Kegel des RE1.5-Sensors (0x80050858 ist ein reiner Kollisionsstrahl; die
+ * Mode-0x8400-Semantik selbst ist nicht RE'd -> deklariertes MAPPING, RE15_RE2_AI.md OFFEN). */
+int re15_re2_los_clear(re15_actor_t *e, re15_actor_t *pl)
+{
+    if (!g_room_rdt_ok) return 1;                 /* keine Zellen -> frei (wie der Sensor oben) */
+    for (int k = 0; k < 4; k++)
+        if (re15_los_ray_blocked(e, pl, k)) return 0;
+    return 1;
+}
+
 /* CORPSE / PRONE-SETTLE (root state 7 = FUN_80109554, shared m0/m1; raw-disasm'd C7 2026-07-05):
  * a killed zombie does NOT freeze — it lies in clip 0x15 (face-down) / 0x14 (face-up, after the
  * backward fall 0xb or when downed +0x9&0x80), its blood pool spreads (+0xbc/+0xbe += 8/frame for
@@ -4932,6 +4946,19 @@ static void re15_crow_ai_tick(int slot)
 {
     re15_actor_t *e      = &g_actors[slot];
     re15_actor_t *player = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+
+    /* PORT OPTION (WELLE D): unter dem RE2-Flavor übernimmt das RE2-Kraehen-Brain den GANZEN
+     * Dispatch (re15_re2crow_tick, enemy_ai_re2_crow.c — Root @0x8010013C, Tabelle @0x80104908).
+     * ai_dist speist der Hook wie beim Hund (+0x1F0-Analog, EXE-seitig vor dem Dispatch).
+     * Pause-Gate: der RE2-Root prueft 0x800CFBDC&0x20000000 OHNE die RE1.5-grid&0x20-Ausnahme
+     * (@0x80100148-158) -> hier s_ai_paused pur. Der RE1.5-Default darunter bleibt byte-identisch. */
+    if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && e->type == 0x21) {
+        if (!s_ai_paused) {
+            e->ai_dist = (uint32_t)re15_enemy_player_dist(e, player);
+            re15_re2crow_tick(slot);
+        }
+        return;
+    }
 
     /* --- ROOT pre-pass (0x80112020) --- */
     /* +0x1d4 = a FRESH RNG BYTE every root tick: @0x80112028 `jal 0x8001af20` (rng), stored

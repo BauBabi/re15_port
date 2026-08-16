@@ -657,12 +657,17 @@ Port: `engine/src/enemy_ai_re2_dog.c` (`re15_re2dog_tick`), Hook am Kopf von `re
   `+0xD`-Partner-Index, `0x800CFBD8&0x10000000`-Gate — kein Port-Produzent, Zweige tot dokumentiert.
 * Sub-16-Eintritt (Skript-Kette), Callback `0x800CE480`-Konsument, 24×u16-Tabellen
   `@0x80105380/0x801053F0` (keine Modul-Xrefs), zweite EXE-TOC `@0x8009CFA0`.
-* `+0x1D2`-Produzent (HURT-Zeilen 9/10/16 + DEATH-Gore-Gate): EXE-seitig FUN_800470C0 —
-  PER-HIT-**SET** `+0x1D2` = Vertikal-Zone {1 @0x80047298 / 0 @0x800472D4 / 2 @0x8004730C}
-  + 3×Range-Bracket (`sll s6,1` @0x800472A8/@0x80047310, `addu; sb` @0x80047328-30; kein
-  Akkumulator). RE1.5-Waffe→Zone/Bracket-Mapping nicht RE'd → Port: Feld bleibt 0, Budgets
-  auf Maximum, Zeile-9-Gore-Tod = toter Pfad (markiert). ⚠️ Dieselbe SET-Semantik stellt
-  das Welle-B-Zombie-Mapping (`hits1d2++` im Flinch) in Frage — separater Punkt.
+* ~~`+0x1D2`-Produzent OPEN~~ → **GESCHLOSSEN (Welle-D-Nachtrag, fix_1d2_spec)**: `+0x1D2` =
+  **zone + 3·bracket, pro Treffer GESETZT** — beide Applier selbst disassembliert (Projektil
+  FUN_800470C0: Basis 1 @0x80047294-98/@0x800474B8-BC, Zone 0 @0x800472D4/@0x800474F8, Zone 2
+  @0x8004730C/@0x80047530, `+3·s6` @0x80047310-30/@0x80047564-80, s6 = Hitcode>>28 @0x80047114;
+  Hitscan-Applier `3·s1+zone → sb 466` @0x80041A8C-9C). **Port-Produzent**:
+  `re15_re2_stamp_1d2` (re15_damage.c) — Zone über die Aim-Elevation (deklarierte Näherung
+  der Schuss-Y-Regeln), **Bracket = 0 (OPEN)**: die Hitcode-Produzenten sind waffen-/pfad-
+  spezifisch (Bowgun `0xC` @FUN_80046304:153, GL `(+0x1b)+0x30009` @FUN_8001ed9c:44/47,
+  Sparkshot `0x2002000A` @FUN_80020758:28; Hitscan-s1 nicht RE'd). Das Welle-B-Zombie-
+  `hits1d2++` ist ENTFERNT (Blut-Gate `%3==0` = ZONE 0 = Bein-Treffer); Hunde-Gore-Zeile 9
+  bleibt mit Bracket 0 unterdrückt (= RE2-Nah-Treffer-Verhalten; Fern-Bracket = Folge-Lane).
 * Kopf-/Kiefer-Tracking `0x80104B98` (~13 Sub-Tails, u.a. Feed @0x80101BB0): Zwei-Part-
   Aufruf von EXE `0x80017D98` (+0x1C1=2/3, Gate `+0x1C0&1` @0x80017DC4-CC, Ziel
   `[self+0x1B4]`, schreibt Part-Euler) — kein Gegner-Part-Winkel-Kanal im Port → OPEN;
@@ -674,6 +679,205 @@ Port: `engine/src/enemy_ai_re2_dog.c` (`re15_re2dog_tick`), Hook am Kopf von `re
   Stand-in, Sabber/0x84/Glas stumm), Part-Blend-Wörter (Latch F98/102), GIB-Part-Scatter
   `0x80104440`, Corpse-Farbtint/UV-Scroll, Hitbox-Squash `0x80104088` (Port führt Hitbox über
   atk_pt). Spawn-Raws 6/7/8/9/0x2003 (Fenster-/Skript-Varianten) haben keinen RE1.5-Produzenten.
+
+## ✅ WELLE D — die RE2-KRÄHE (kind 0x21), 2026-08-16
+
+Quelle: `info/re2leon/COMMON/BIN/EMOVL21_S0.BIN` == `CDEMD0.EMS`-Sektor 0x528 (byte-identisch,
+Lane K; TOC in der EXE `@0x8009ADF4`: Typ 0x21 = Code 0x4A88 @0x51E/0x528, TIM 0x8220 @0x532,
+EMD 0x7E28 @0x543 — alle Werte für Welle D selbst nachgelesen). Slot-0-Reloc `@0x80100000`.
+Voll-Disasm 2026-08-16: Scratchpad `crow_self.asm` (4770 Instr., eigener Dump; jede Konstante
+im Code trägt ihr `@0x…`-Zitat daraus). Port: `engine/src/enemy_ai_re2_crow.c`, Hook am Kopf
+von `re15_crow_ai_tick` (enemy_ai_common.c). Der RE1.5-Default (Flug-Brain FUN_80112020)
+bleibt byte-identisch.
+
+### Struktur (byte-belegt)
+
+* Zustandstabelle `@0x80104908`: [0] INIT `0x801002FC` · [1] ACTIVE `0x801004E4` ·
+  [2]=[3] HURT `0x801028BC` · [4] SKRIPT-PERCH `0x801034DC` (eigene Tabelle `@0x80104A64`) ·
+  [5][6] NULL · [7] CORPSE `0x80103950` (Tabelle `@0x80104A70`).
+* ACTIVE = DEC `@0x80104928` → EXEC `@0x80104964` auf `+0x5` (15 Subs); die ALT-Tabellen
+  `@0x801049A0/DC` (für `+0x10E&0x80`) sind **inhaltsgleich** (selbst gedumpt). Der EXEC-Index
+  wird NACH dem DEC **neu gelesen** (`lbu v0,5` @0x80100654 UND @0x8010067C) — ein DEC-Commit
+  läuft noch im selben Tick in den neuen Executor (Port-Bug der ersten Fassung, gefixt).
+* Root `@0x8010013C`: Pause-Gate `0x800CFBDC&0x20000000`; `+0x1D3`-low-7-Dec; **LOS-Ray
+  `0x80050858(self,PL,0x8400,0)` JEDEN Tick — POLARITÄT SELBST BELEGT: ret==0 → `+0x22A|=2`
+  („Sicht frei", @0x801001C8-E8)**; dist<900 → `+0x98=−350` (Render-Pitch, doc); Post-Pass
+  `0x801044B0` (Mutex-Release wenn `+0x5∉[11..14]`, Pacify-Bit 0x80 → `+0x221=120`); Schatten-
+  Helfer `0x8010026C`: state≠7 → Schatten w=h = **360000/((Höhe+1550)>>1)**, am Boden 400
+  (@0x80100294-2F0); Wand-Pass EXE `FUN_8003567C` → `+0x110/+0x114`.
+* INIT `@0x801002FC`: **HP=10** (`sh 10,342` @0x80100324/348); Hitbox-Record {96,96,512,312}
+  (@0x801003A0-B4); `+0x98=−350`, `+0x9E=530`, `+0x1EE=300` (Leser offen); Boden-Probe
+  `0x8004FBA0(pos,250,1024,0)` → `+0x1C2`; Schatten-Init `0x80016480(+0x16C,0,0xC800C8,0)` =
+  200×200; `+0x10E&0x4000` → State 4 (Sub=`+0x10E&0xf`, `+0x22A|=1`); Victim-Hook-Install
+  `0x80104740` → `0x800CE384`.
+
+### Substate-/Executor-Tabelle (alle mit @-Zitaten im Code)
+
+| Sub | Rolle | Kern (selbst disasm'd) |
+|---|---|---|
+| 0 | Sitzen/Idle | DEC: Wake dist≤1800 / RENNT≤5401 / `+0x22A&1`-Timer `+0x158`; **Spieler tot + Pacifier abgelaufen + dist<1800 → NIE wecken** (@0x801006D0-F4). EXEC: 15-Phasen-Idle `@0x80100004` (P7 würfelt `rand%7` als Nächstes in `+0x218`, Phase 6 = Hop nur 1/16; P10: SE 6 50%, gesperrt von `+0x22A&0x20`; P13: Reverse-Trick `(39−f)<<8\|0x7000A` @0x80100B1C; P14: Teleport zurück zum `+0x224/226`-Snapshot) |
+| 1 | Alarm | `rand&7` Ticks → Sub 2 (bzw. 3 bei `+0x10E&0x40`) @0x80100BCC-C14 |
+| 2 | Abheben | 6 Phasen `@0x80100044`: Clip 7, Speed `100+rand&0x1f`, **vy-Folge −10→−80→−60→−100→−80 (Lane-K-Reihenfolge korrigiert)**, SE 1 50%, Feder 1/8, Steer 32 (50% auf den DELTA-Punkt = authored Jink @0x80100DF4-E2C), Accel +1 Cap 300, done → Sub 4 |
+| 3 | Skript-Abflug | Clip 6, Speed 60/80+`rand&7`, Steer-Rate 0→32, done → Sub 4 |
+| 4 | Kreisen | DEC: dist≥7201 → Sub 7/8 (`rand&1`); 1/16: `+0x158=rand&0x3f` + Höhenprobe gegen PL-BodenY−3600 → Sub 5/6; Wand-Prober + Arbitrierung/Listener. EXEC: Clip 3/4 (`rand&1`), Steer 32 auf `+0x1C4/6`, **Accel = `+0x218` ∈ {2,3} je Clip**, Cap 300 |
+| 5/6 | Steigen/Sinken | vy −40/+40, Bänder PL-BodenY−4800/−1800, Accel +2/+1, Flap-Reload 9/15 |
+| 7 | Landen | 7 Phasen `@0x8010005C`: Sturz vy 120, Flare-Gate y−(floor−250)≥−300, Flare Clip 0xA, Snap y=floor−250, Falten Clip 8; **Ende: Spieler lebt ODER Pacifier läuft → `+0x158=rand·2` + SOFORT Sub 2; nur tot+pacified → Sub 0 (Lane-K-„Spieler ruhig→Sub 0" korrigiert, @0x801018DC-924)** |
+| 8 | Trudeln | Yaw += `(s8)+0x218`, Steer 96, Kegel 96 auf den Steuerpunkt → Sub 4; Timer `rand&0x3f` |
+| 9 | Setzen | Clip 8, Steer 96, done → `+0x158=rand&0xf` + Sub 0 |
+| 10 | Wand-Crash | via Prober `0x80104094`: Kontakt `+0x110&1` + `+0x21D`-Streak frisch + Speed≥231 + **Ebenen-Fenster `(plane<<10)+1920..2176` (`0x80050110`; plane 2 wrap-identisch @0x80104120-28)**; Streak≥11 → 1/128 Sub 7 sonst Sub 8; Grav-Akku `+0x224` +20/Tick, Thud SE 5, Clip 0xB mit Frame-Dekrement-Hold, Aufstehen → (1,9) |
+| 11 | Angriffs-Anlauf | DEC: Kegel(Spieler,96) raus ODER LOS weg → Sub 4. EXEC: Zielhöhe **PL-BodenY−2700**, Steer SPIELER 96, Accel +5, y±40-Klemme; **Commit-Gate = Spieler-Body-Kontakt (`+0xD==0`)**: Fenster ±359 → Speed≥231 → Sub 12, sonst Nav-Reseed + Sub 8; ohne Kontakt nur 3D-Move (@0x80101EE8-F74) |
+| 12 | STRIKE | P0: `0x80015910(self,PL)` ≠0 → **Spieler-State (2,1)** sonst (2,0) (@0x8010201C-34); Shake(4,0)+Rumble(10,150,0) (Pad-Aktuator, doc), SE 4, Clip 9; Grav-Fall, Thud SE 5, Clip 0xB; Exit-Kegel 1024: innen → Sub 9, außen → Sub 0 + `+0x158=rand&0xf` |
+| 13 | Hover-Harass | DEC: Kegel 192 / LOS → Vol 350 + Sub 4. EXEC: Ziel PL-BodenY−2880, ±60-Klemme; claimed (`+0x22A&4`) → Steer 96/Accel +4, sonst 384/+12; dist<900 → Vol 100; **dist<650 stoppt + Höhenfenster ±99 → Sub 14** |
+| 14 | GRAB | P0 (claimed): Broadcast 8+64, **PL → (5,0)** via `0x80104078`, Anker `0x800CFDAC/0x800CFD80/84`, y-Snap auf `+0x224`, Steer 2048, Clip 5, **Timeout `+0x219=100`**, Speed 300. P1-Peck: Shake(6,0)/Rumble(4,150,1) (doc), **Blut-FX `0x11000` @ y+500**, Feder 1/4, SE 2, **`0x800401d4(5, aliveflag)`** — ret 1 → Release, ret 2 → **Broadcast 128** + Release. P2-4: **Mash `+0x219 −= 3·mash+1`** (@0x801026DC-F8), Lift/Drop y∓(150∓15k). Release `@0x80102848`: Nav-Reseed, Sub 4, Vol 350, **Broadcast 16, `PL+0x6=3`** (Victim-Release-Phase) |
+
+### Flock-Protokoll (Mutex + Broadcast, selbst belegt)
+
+* **Mutex = `0x800CFBF4` Bit 0** — DASSELBE Wort wie die Hunde-Bits (Port: geteiltes
+  `g_re2_room_gflags`, einziger EXE-Clear = Room-Init FUN_80052f3c). Claim in der Arbitrierung
+  `0x801041F0`: Fenster **dist ∈ [901, 7195]** (`addiu −901; sltiu 0x189B` @0x80104254-60) +
+  Mutex frei + LOS-Bit 2 + Kegel(Spieler,256) → `0xFBF4|=1`, `+0x22A|=4`; `rand&0xf==0` →
+  Sub 11 sonst Sub 13. **Es greift immer nur EINE Krähe an.** Release im Post-Pass, sobald
+  `+0x5∉[11..14]` (@0x801044C4-F0).
+* **Direkt-STRIKE** (Lane-K-Korrektur): das Gate ist KEIN „dist<901", sondern der
+  **Body-Push-Stempel `+0xD==0`** (EXE `FUN_800355c4` setzt `+0xD=0xFF`/Frame, der Part-Push
+  `FUN_80034d0c` stempelt die Pusher-Id; Spieler = 0 — beide selbst decompile-gelesen) +
+  Kontakt-Streak `+0x21E==0` + Speed≥231 + Mutex frei + Kegel 256 → Sub 12 OHNE Claim
+  (@0x80104310-80).
+* **Broadcast `0x8010452C(mask)`**: alle Typ-0x21 der Aktivliste AB Eintrag 1 (Spieler-Kopf
+  übersprungen), Claimer ausgenommen (`andi 4; bne` @0x8010456C-70): `+0x22A|=mask` +
+  Nav-Reset. Masken: **8+64** Grab-Start (Konsum „Join-Harass": Bits 8+2 zusammen → Sub 13,
+  Clear 0x48 @0x8010420C-34; Bit 64 = Konvergenz im ACTIVE-Nav @0x80100584-90), **16**
+  Abbruch (Listener `0x80104400`: Vol 350, Nav-Reseed `rand&0x9D` (!), Sub 4, Cooldown
+  `+0x21C=30`, Clear 0x58), **128** Pacify (Post-Pass → `+0x221=120`; ACTIVE-Prolog
+  dekrementiert bei totem Spieler @0x80100558-80; abgelaufen + dist<1800 → Landen
+  `0x8010447C`, Sitzen wacht nie mehr @0x801006D0-F4).
+
+### HURT/GIB/CORPSE (Zeilen-Dispatch `@0x80104A18` auf `+0x5`)
+
+* Zeilen **0-4/13-16/18 → Flug-Treffer `0x80102934`**: SE 3, Clip 9, Knock-Richtung
+  `atan2(PL→self)−Yaw` → `+0x226`, **Speed=100 über `[0x800CE330]`=CURRENT-ENTITY (=self —
+  Lane-K-OPEN „Attacker-Write `+0x144`" damit AUFGELÖST)**, Spiral-Spin ±200 auf `+0x78`
+  (Pitch, Clamp ±2047 — Render-doc), Federburst + 2..3 Federn; Boden: SE 5, Clip 0xB;
+  **HP≥0 → ERHOLUNG: Kegel 1024 außen → (1,9), innen → (1,0)+`+0x158=rand&0xf` — die Krähe
+  fliegt wieder**; HP<0 → 11 Ticks Liegen → (7,0).
+* Zeilen **5/6/9/10/11/17 → GIB `0x80102CA0`**: 13 Part-Zeilen (`[+0x198]`+i·172) Wurf
+  `0x80102EF4` (Speed 800/vy −100) / Wirbel `0x80102F34` nach rand-Maske (Zeilen 9/10 immer
+  Wurf), 3× Federburst, Federn `(rand&3)|8` → **(7,1) ohne Lache**. Port: Mesh-Wipe
+  (`crow_hide`) + ESP-Stand-in (Part-Mover Render-OPEN).
+* Zeile **12 → Boden-Treffer `0x80102FB4`**: **Sofort-Kill (`sh −1,342`)**, Roh-Vektor-
+  Rutscher (byte-true Skalar/Vektor-Aliasing von `+0x144`), Wand → Splat-Pose → **(7,2)**.
+* Zeilen **7/8 → Launch-Treffer `0x8010327C`**: Sofort-Kill, **Speed 600 in
+  SPIELER-Blickrichtung `0x800CFC6E`**, Wand-Bounce Yaw+2048 → **(7,3)**.
+* CORPSE `@0x80104A70`: **Sub 0** = Tint `0x80016FE4([+0x16C], 0xBFBF10)` (Render-doc),
+  **Lache = Schatten-Record `+4/+6` := 400, dann +10/Tick solange `+0x15A`(=60)>0 — NUR in
+  Phase 1**; Zucken: Frame 11↔0/12-Toggle, Timer `+0x219=(rand&0x1f)+25` = `+0x158`-Seed,
+  Eskalation `+0x158 += 10+rand&0xf` bis ≥151, SE 3 nur solange `+0x158<90`, ≥91 nur jeden
+  2. Tick. **Sub 1** (GIB) = Schatten-Disable-Byte `[+0x16C]+0xE=0`. **Sub 2** (Wand-Splat) =
+  Clip-4-Flattern (Doppel-Rate unter `+0x158<100`) + Absturz. **Sub 3** = Lache ohne Zucken.
+  Sub 4 (`@0x80104A80` → `0x8010477C`) = tote Zeile (kein Schreiber).
+
+### SE-/FX-Map + ENEMSE-Bank (selbst bestimmt)
+
+* Paar-Tabelle `@0x800A7400` (file 0x97C00, 73 Zeilen, selbst gelesen): kind 0x21 in GENAU
+  EINER Zeile — **21 = {0x21, 0x00} = reine Krähen-Bank, ERSTE Hälfte (flag2000=0)**.
+  EDT-Probe Bank 21 (TOC `@0x800A7B1C`): ids 0..14 live, 15+ leer. Override:
+  `RE15_RE2_CROW_SE_BANK`.
+* SEs (`0x8005BD6C(id,self)`): 1 Flügelschlag · 2 Picken (Grab-Peck) · 3 Kreischen
+  (Wand-Crash/Hurt/Zucken) · 4 Strike-Impact · 5 Thud · 6 Idle-Krächzen (50%,
+  `+0x22A&0x20`-gesperrt). Volume-Helfer `0x8010472C` (350/100/50/10 → `+0x90/92/9A/9C`) =
+  doc-NOP (kein Port-Kanal; `+0x90` ist zugleich der Wand-Radius von FUN_8003567C).
+* FX (`0x8001BF10`, Tabelle `0x8009DB44`): Federn `0xC000800` ±512 (`0x80104678`, a1=ANZAHL),
+  Federburst `0x12800` ±128 (`0x8010459C`), Grab-Blut `0x11000` @ y+500 → Port: ESP-Splatter-/
+  Room-Bank-Blut-Stand-ins (RE1.5-GIB-Präzedenz), RNG-Draw-Zählung erhalten.
+
+### Schaden (byte-belegt vs. OFFEN)
+
+* **GRAB-Peck = 5 HP**: `0x800401d4(5, aliveflag)` @0x8010265C-64; `aliveflag` = `+0x218` =
+  (PL-HP>0) aus dem Sub-14-Prolog. **MODE-Semantik selbst decompile-gelesen** (FUN_800401d4):
+  mode 1 = NICHT-tödlich (HP<0 → One-Save-Schwanz, ret 1 → Abschütteln); mode 0 (HP≤0-Spieler)
+  = voller Pfad → mit gesetztem One-Save-Latch ret 2 = Tod → Broadcast 128. Port:
+  `re15_re2_player_damage_mode` (geteilter One-Save-Latch mit Zombie/Hund).
+* **STRIKE**: schreibt NUR den Spieler-State (2, Sub 1/0) — die Schadenshöhe liegt im
+  EXE-State-2-Handler des Spielers (kein `0x800401d4`-Caller; einziger weiterer EXE-Caller
+  `FUN_80047664` ist ein AoE-Helfer, selbst gelesen). **OFFEN** — Port: Hit-Guard/Flinch ohne
+  HP-Verlust, KEIN erfundener Wert.
+
+### Assets
+
+`EM021.EMD` @Sektor 0x543 (selbst geparst): dir @0x7E08, 8 Sektionen; **Paar 1 = 12 Clips**
+(EDD @0xC; Frame-Zahlen 15/4/21/16/10/8/24/33/16/6/40/40 — exakt der KI-Bereich 0..0xB),
+EMR 13 Knochen kf 72; Paar 2 leer (own_ok=0); **Paar 3 = Victim {14, 36, 20}F auf
+15-Bone-Player-Pool** (Intro/Hold-Loop/Release = die Clips 0→1→2 des Victim-Hooks
+`0x80104740`, Tabelle `@0x80100124` selbst gelesen) → der Welle-A-Splitter
+(`re2_emd_parse_bank`) trägt alles unverändert. TIM 0x8220 @0x532.
+
+### Verifikation
+
+* `test_re2_crow_ai` (Unit): INIT/HP10/Hitbox96, Wake→Alarm→Takeoff→Kreisen, Takeoff-Werte,
+  Arbitrierung (NIE zwei Claims), GRAB-Peck exakt 5 HP + Timeout-Release + One-Save (mode 1)
+  + Kill (mode 0 + Latch) + Pacifier 120, Direkt-STRIKE am Body-Kontakt, HURT-RECOVERY
+  (fliegt wieder!), Kill→(7,0) mit Lache 400→+10/Tick×60 + Zuck-SE, GIB→(7,1)+Schatten-Disable,
+  Launch-Zeile (Speed 600, Spieler-Yaw, (7,3)), 600F-No-Freeze.
+* `test_re2_room10c0_ab` (A/B, echter RE1.5-Krähen-Raum): RE1.5-Baseline unverändert; RE2:
+  EM021-Bank parst (12 Clips/13 Knochen/victim_ok), Spawn HP=10, Takeoff+Höhengewinn,
+  Attack-Commit ohne Doppel-Claim, GRAB mit exakt 5-HP-Pecks, Anschuss-Recovery, Kill→Corpse
+  mit Lache-Wachstum, 600F-No-Freeze. ctest gesamt: **132/132**.
+* Live-Smoke (echte EXE, `RE15_AI_FLAVOR=RE2` + `RE15_DEBUG_JUMP=10c0@gp` + Boot-Input-Skript;
+  stderr = `re15_port/debug.log`): `[room] PC loaded room10c0.rdt`, `[enemy] RE2 EM021 loaded:
+  13 meshes, 13 bones, 12 clips`, `[re2se] ENEMSE Bank 21 geladen: 16 VAGs, Map 32 Eintraege`,
+  3 Krähen ticken das RE2-Brain (Idle-Phasen-Würfel P7, Clips 0/1/2; kein Wake bei dist>5401 —
+  byte-true).
+
+### Review-Pass (16 bestätigte Funde, 2026-08-16) — alle umgesetzt
+
+Adversarieller Review über den Welle-D-Diff (`welle_d_review_confirmed.json`): 4×HIGH
+(dec4-Fern-Exit fällt in den 1/16-Roll @0x801010F0→F8; exec4-Re-Roll ALT==0 @0x801012B4-C8;
+Alarm ohne sub2-Latch = geometrische Dauer, 1 Draw/Tick @0x80100BCC-D8; GRAB-Eintritts-Tick =
+P0+P1+P2 @0x801025C8→CC/@0x801026BC→C0), 9 weitere Setup-Fallthroughs (Landen/Wand-Crash/
+Strike/Flug-Treffer/Boden/Launch/3×Corpse-Ph0), exec8-ALT==0 @0x80101A78-94, exec11 ohne
+y-Klemme @0x80101EAC-E4, GIB-Wirbel-Draws (3/Zeile, 0x80102F34 @0x80102F54/68/88),
+Post-Pass-Release ohne State-Zusatz @0x801044C4-D4, dec5/6-Timer unbedingt @0x8010131C/@0x801014BC,
+exec3-Timer/Overwrite @0x80101068-84, Reenter-Clear des 0x800CFBF4-Analogs (FUN_80052f3c
+`sh zero` @0x80052fe4 → `scd_room_reenter` ruft jetzt `re15_re2z_rng_reset`), Test-OOB-Härtung.
+Muster-Sweep über ALLE übrigen Phasen-/Timer-Stellen: exec2-Tail/exec7-P5 sind byte-true
+NEU==0-Muster (`addiu −1; sb; andi; bne`), alle übrigen ALT==0-Stellen folgen dem
+`t/t−1/if(t==0)`-Muster (je gegen crow_self.asm geprüft).
+
+### OFFEN (Welle-D-Ausgang)
+
+* **STRIKE-Spielerschaden** (EXE-State-2-Handler des Spielers): nicht RE'd — Port ohne
+  HP-Verlust (s.o.). Nächster Weg: RE2-Spieler-Dispatch von `FUN_80035f68`/`FUN_80038bbc`
+  weiter verfolgen (Handler-Tabelle nicht gefunden; `DAT_800cfbfc`-Xrefs erschöpft).
+* ⚠️ **HURT-Row-Semantik = TREFFER-CODE, nicht Herkunfts-Sub** (Welle-D-Nachtrag, selbst
+  belegt): BEIDE RE2-Waffen-Applier überschreiben `+0x5` vor dem HURT-Tick — Projektil
+  `sb s5,5(s1)` = RE2-**Waffen**-Low-Byte (@0x80047324/@0x80047574), Hitscan
+  `sb (hi16(param)+1),5` (@0x80041AB4). Die HURT-Zeilen der Krähe (@0x80104A18, 19 Zeilen)
+  und des Hundes (@0x80105538) dispatchen also auf Waffen-/Trefferklassen (Krähen-GIB bei den
+  Projektil-Ids 9/10/11/17 = GL-Runden/Rocket — deckt sich mit dem RE2-Spielverhalten), NICHT
+  auf dem Herkunfts-Substate. Port (Welle C+D): `re2z_prev_sub` als deklariertes MAPPING;
+  der byte-true Umbau braucht ein RE1.5-Waffe→RE2-Zeilen-Mapping + den Hitscan-Code-Producer
+  (`[sp+64]>>16`-Quelle) = eigene Folge-Lane, betrifft Welle C mit. Der Post-Pass-Mutex-
+  Release der Krähe nutzt bereits die wörtliche +0x5-Form (s. Code @0x801044C4-D4-Kommentar).
+* **Bracket-Producer für `+0x1D2`** (s. Welle-C-OFFEN-Update): Zone gestempelt, Bracket 0 —
+  Hunde-Gore-Zeile 9 wird erst mit einem Fern-Bracket-Producer erreichbar.
+* Navigator `0x8004A808`/Route `0x8004AA50` — Steuerziel = Spieler (MAPPING, Welle-B/C-Muster);
+  `+0x21F`-Routen-Byte bleibt 0, `+0x220`-Buchhaltung byte-true.
+* LOS `0x80050858` Mode 0x8400: Ret-Semantik der EXE-Funktion nicht disassembliert; Polarität
+  über den Root-Writer belegt (ret==0 = frei) → Port-MAPPING RE1.5-Ray `FUN_8003dcc4`
+  (alle 4 Regionen/Tick, ohne FOV-Kegel).
+* Wand-Ebene `0x80050110` + Fenster: Port-MAPPING = SCA-Klemme + Frontal-Metrik
+  (Restweg²·4 < Sollweg²); Radius-Quelle `+0x90` (350/100/50/10, volume-gekoppelt) nicht
+  modelliert (fix 200 wie die RE1.5-Krähe).
+* State 4 (Skript-Perch, Subs 0/1/2 mit Wegpunkten (−12500,−12852)→(−3919,−12288) Rate 96
+  @0x801036FC-704/@0x8010376C-70, Versteck via `word0|0x80008` bis `+0x1D4&4`): kein
+  RE1.5-Spawn-Produzent für `+0x10E&0x4000` → Port-Stub (Spec hier dokumentiert).
+* Render-Seite: Modell-Tint `0xBFBF10`, Spiral-Pitch `+0x78` ±200, Roll/Pitch-Zufall des
+  Wand-Splats, Part-Scatter des GIB, Lache-FARBE (EXE-Schattenrenderer), `+0x98`-Pitch −350.
+* Leser offen: `+0x9E=530`, `+0x1EE=300`, `+0x1E8=1` (INIT), Paar-Tabelle `@0x801048A8`
+  (2×12 s16, {300,300},{250,450},… — kein Modul-Konsument), Advancer-a3-Bit `0x10000`
+  (Idle-P9/P13), Feder-Einzel-FX `0x80104628` (kind `0x50C00`, kein gefundener Caller).
+* SE-Volume-Kanal (`0x8010472C`) und Pad-Rumble/Screenshake (`0x8003947C/0x80039514`,
+  Welle-C-Decompile) — dokumentiert übersprungen.
 
 ## UI
 

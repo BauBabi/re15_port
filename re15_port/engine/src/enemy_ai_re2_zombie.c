@@ -541,6 +541,24 @@ static int re2z_player_damage(re15_actor_t *pl, int dmg)
     return 0;
 }
 void re15_re2z_onesave_reset(void) { s_re2z_onesave = 0; }
+
+/* WELLE D: der volle FUN_800401d4-MODE-Parameter (Decompile RE2_Quellcode_V2/FUN_800401d4.c,
+ * selbst gelesen 2026-08-16). Der Kraehen-GRAB-Peck ruft (5, aliveflag) @0x8010265C-64
+ * (`lbu a1,536(s0); jal 0x800401d4; addiu a0,zero,5` — a1 = +0x218 = HP>0?1:0, Prolog
+ * @0x801024C4-D8):
+ *   mode 1 (Spieler lebt): HP-=dmg; HP>=0 -> 0; HP<0 -> KEIN Todespfad, faellt in den
+ *          One-Save-Schwanz (HP=0 + Latch, ret 1) — der Peck allein toetet NIE direkt.
+ *   mode 0 (HP<=0):        wie gehabt (HP<-14 ODER Latch -> ret 2 Tod; sonst One-Save).
+ *   mode >1:               ret 1 ohne One-Save-Schreiber (`if (param_2 != 0) return 1`).
+ * Die x1.5/x5/x2-Skalierungen bleiben wie in Welle B unportiert (RE2-only-Globals). */
+int re15_re2_player_damage_mode(re15_actor_t *pl, int dmg, int mode)
+{
+    if (mode == 0) return re2z_player_damage(pl, dmg);
+    pl->hp = (int16_t)(pl->hp - dmg);
+    if (mode != 1) return 1;                             /* `if (param_2 != 0) return 1` */
+    if (pl->hp >= 0) return 0;                           /* `-1 < param_1*0x10000 -> 0` */
+    pl->hp = 0; s_re2z_onesave = 1; return 1;            /* One-Save-Schwanz */
+}
 /* WELLE C: the dog's flight bite runs through the SAME FUN_800401d4 (jal @0x80104EBC, a0=20,
  * a1=0) and shares the ONE-SAVE latch DAT_800cfd4c bit 0x1000 with the zombie bite — one
  * exported entry keeps that latch single. Return: 0 survived / 1 one-save / 2 death. */
@@ -1362,7 +1380,11 @@ static void re2z_hurt(re15_actor_t *e, re15_actor_t *pl)
     e->re2z_flag222 = 1;                                           /* sb 1,546 @0x801050A0 */
     re15_ai_set_state_word(e, 0x501);                              /* sw 0x501 @0x801050A4-AC */
     e->re2z_res223 = (int8_t)(16 + (re2z_rand() & 0xfu));          /* @0x801050C0-C8 */
-    e->re2z_hits1d2++;                                             /* +0x1D2 (writer EXE-side) */
+    /* +0x1D2 ist KEIN Zaehler (fix_1d2_spec, Welle-D-Nachtrag): der EXE-Applier SETZT pro
+     * Treffer `zone + 3*bracket` (Projektil @0x80047310-30/@0x80047564-80, Hitscan
+     * @0x80041A8C-9C — selbst disassembliert). Port-Produzent: re15_re2_stamp_1d2
+     * (re15_damage.c). Das %3-Gate hier extrahiert die ZONE: ==0 heisst ZONE 0 =
+     * BEIN-Treffer blutet — nicht "jeder 3. Treffer" (das fruehere Inkrement war falsch). */
     if ((e->re2z_hits1d2 % 3u) == 0u)                              /* 0xAAAAAAAB trick @0x801050B0-E4 */
         re2z_blood_fx(e);                                          /* bone-blood args 0x1000/0x17D0
                                                                     * @0x801050E8-EC (RE1.5 stand-in) */

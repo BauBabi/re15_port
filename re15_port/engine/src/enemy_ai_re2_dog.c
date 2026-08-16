@@ -55,7 +55,8 @@ extern void re15_enemy_steer_point(re15_actor_t *e, int32_t tx, int32_t tz, int 
 /* ---- ownership -------------------------------------------------------------------------- */
 int re15_re2_owns_type(unsigned type)
 {
-    return re15_re2z_owns_type(type) || type == 0x20u;
+    return re15_re2z_owns_type(type) || type == 0x20u
+        || type == 0x21u;   /* WELLE D: RE2-Kraehe (EMOVL21_S0.BIN, enemy_ai_re2_crow.c) */
 }
 
 /* ---- ENEMSE audio hook ------------------------------------------------------------------ */
@@ -87,8 +88,12 @@ static void re2d_se(int id) { if (s_re2d_se_fn) s_re2d_se_fn(id, 1); }   /* flag
  * Bits the dog module reads/writes: 0x20 noise/lunge claim (set @0x8010135C, clear only in the
  * floor-lost helper @0x80105260), 0x40 pack-help signal (set at mash-release @0x8010205C),
  * 0x80 howl claim (set @0x80101950). The ONLY EXE writer is the room-init clear FUN_80052f3c
- * (@0x80052f3c, self-read decompile: DAT_800cfbf4 = 0) → room-scoped, reset here on room load. */
-static uint16_t s_re2d_gflags = 0;
+ * (@0x80052f3c, self-read decompile: DAT_800cfbf4 = 0) → room-scoped, reset here on room load.
+ * WELLE D: BIT 0 DESSELBEN Worts ist der Kraehen-Flock-Mutex (Claim @0x801042C4-CC, Frei-Gate
+ * @0x8010426C-7C, Release im Krähen-Post-Pass @0x801044E4-F0) → EIN geteiltes Global
+ * (exportiert), kein zweites erfinden. */
+uint16_t g_re2_room_gflags = 0;
+#define s_re2d_gflags g_re2_room_gflags   /* lokale Lesbarkeit; dasselbe 0x800CFBF4-Analog */
 void re15_re2dog_room_reset(void) { s_re2d_gflags = 0; }
 
 /* ---- small helpers ---------------------------------------------------------------------- */
@@ -128,7 +133,9 @@ static int re2d_frame_slot(const re15_actor_t *e)          /* +0x14D frame byte 
  * Port: 1 Frame/Tick, a3 → anim_blend_rate (Welle-B-Konvention); Wrap + frac-Decay exakt wie
  * oben. Loop-Clips laufen dadurch periodisch weiter (EDD-Frame-SEs feuern je Zyklus) und das
  * Lean-Gate frac<7 (@0x80104CBC) wird erreichbar. */
-static int re2d_advance(re15_actor_t *e, int blend)
+/* WELLE D: als GETEILTER Helfer exportiert (re15_ai_flavor.h) — die Kraehe faehrt DENSELBEN
+ * EXE-Treiber 0x8002959c (44 jal im Kraehen-Modul), Kern-Zitate unveraendert die obigen. */
+int re15_re2_advance_959c(re15_actor_t *e, int blend)
 {
     e->anim_blend_rate = (uint16_t)blend;
     if (e->anim_frac > 0) e->anim_frac--;                  /* +0x14E-Decay @0x800299C0-CC */
@@ -139,6 +146,7 @@ static int re2d_advance(re15_actor_t *e, int blend)
     e->anim_frame = (uint16_t)nf;
     return 0;
 }
+static int re2d_advance(re15_actor_t *e, int blend) { return re15_re2_advance_959c(e, blend); }
 
 /* EDD frame word of the CURRENT frame (event bits: 0x40000 SE-8 @0x8010051C-30, 0x8000000 →
  * SE = word>>28 via 0x80016028, 0x30000 blood @0x801027E8-848). Dog bank = pair 1 (27 clips,
@@ -1544,14 +1552,13 @@ static void re2d_hurt(re15_actor_t *e, re15_actor_t *pl)
         switch (row) {
         case 9:                                            /* [9] 0x80103CE4 */
         {
-            /* +0x1D2 (Review-Fund #7) — Produzent ist EXE-seitig und im Port OPEN: der Waffen-
-             * Hit-Applier FUN_800470C0 SETZT pro Treffer +0x1D2 = Vertikal-Zone {1 `sb 1,466`
-             * @0x80047298 / 0 @0x800472D4 / 2 @0x8004730C} + 3×Range-Bracket (s6 = hitcode>>28;
-             * `sll v1,s6,1` @0x800472A8/@0x80047310, `addu; sb v0,466` @0x80047328-30) — ein
-             * PER-HIT-SET, kein Akkumulator (selbst nachdisassembliert). Ein RE1.5-Waffe→
-             * Zone/Bracket-Mapping ist nicht RE'd → +0x1D2 bleibt 0 (INIT-Clear): die Budgets
-             * hier laufen auf Maximum und das Zeile-9-Gore-Gate unten bleibt zu (toter Pfad,
-             * markiert). */
+            /* +0x1D2 = zone + 3*bracket, PRO TREFFER GESETZT (fix_1d2_spec, Welle-D-Nachtrag):
+             * Applier FUN_800470C0 {1 @0x80047294-98 / 0 @0x800472D4 / 2 @0x8004730C, +3*s6
+             * @0x80047310-30, s6 = Hitcode>>28 @0x80047114} + Hitscan-Applier @0x80041A8C-9C.
+             * PORT-PRODUZENT: re15_re2_stamp_1d2 (re15_damage.c) — ZONE aus der Aim-Elevation
+             * (deklarierte Naeherung), BRACKET = 0 (OPEN: Hitcode-Produzenten waffen-/pfad-
+             * spezifisch, RE1.5-Mapping nicht RE'd). Das /3 hier extrahiert das BRACKET →
+             * mit Bracket 0 laufen die Budgets auf Maximum (= RE2-Nah-Treffer-Verhalten). */
             int n = 2 - (int)(e->re2z_hits1d2 / 3u);       /* @0x80103D00-28 */
             e->re2d_budget21f = (uint8_t)((n > 0) ? n : 0);
             for (int i = 0; i < n; i++)
@@ -1560,8 +1567,9 @@ static void re2d_hurt(re15_actor_t *e, re15_actor_t *pl)
         }
         case 10: case 16:                                  /* [10]/[16] 0x80103D9C */
         {
-            int n = 4 - (int)(e->re2z_hits1d2 / 3u);       /* @0x80103DB8-E0 (+0x1D2-Produzent
-                                                            * OPEN, s. Zeile-9-Block oben) */
+            int n = 4 - (int)(e->re2z_hits1d2 / 3u);       /* @0x80103DB8-E0 (/3 = BRACKET;
+                                                            * Produzent re15_re2_stamp_1d2,
+                                                            * s. Zeile-9-Block oben) */
             e->re2d_budget21f = (uint8_t)((n > 0) ? n : 0);
             for (int i = 0; i < n; i++)
                 re2d_fx(e, (int)(re15_re2_rand() & 0xfu), 8);
@@ -1619,12 +1627,14 @@ static void re2d_death(re15_actor_t *e, re15_actor_t *pl)
         if (row == 7 && re15_player_victim_state() == 1) re15_player_victim_throwoff();
         int gore = (row == 0 || row == 5 || row == 6 || row == 9);   /* Tabelle @0x801055CC →
                                                                       * 0x80104610 */
-        if (gore && !(row == 9 && e->re2z_hits1d2 < 3)) {  /* 0x80104694-Gate @0x801046A8-C4.
-                                                            * TOTER PFAD fuer row==9 im Port:
-                                                            * +0x1D2 hat keinen Produzenten
-                                                            * (FUN_800470C0-SET, OPEN — s. HURT-
-                                                            * Zeile 9), bleibt 0 → hits<3 immer
-                                                            * wahr. Struktur byte-true belassen. */
+        if (gore && !(row == 9 && e->re2z_hits1d2 < 3)) {  /* 0x80104694-Gate @0x801046A8-C4:
+                                                            * `<3` = BRACKET 0 (Nah-Treffer) →
+                                                            * Zeile-9-Gore nur bei Fern-Brackets.
+                                                            * Produzent re15_re2_stamp_1d2 setzt
+                                                            * zone+3*0 (Bracket OPEN) → wie im
+                                                            * RE2-Nah-Fall bleibt die Gore-
+                                                            * Variante hier unterdrueckt; Fern-
+                                                            * Bracket = offene Folge-Lane. */
             e->re2d_se231 = 1;                             /* sb 1,561 @0x801046E8 (kein SE 7) */
             /* Part-Scatter 0x80104440 (7 Parts @0x80105680 {2,3,4,7,8,9,10}, Flags|0x4A,
              * Vel 800/−150/10/−100) = GIB-Dismember — Render-seitig OPEN, dokumentiert. */
