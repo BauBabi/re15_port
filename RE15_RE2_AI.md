@@ -334,18 +334,153 @@ WALK=105, BACK=WALK+reverse), pro Tick neu berechnet wie die Original-Bits.
 **Gemessen** (`RE15_RE2_TRACE=1`, ROOM1140, `L14,U200`): **20 Commits** — 1× `0x0301` und
 **19× `0x0C01`**. Vorher: 1.
 
-### Was jetzt noch fehlt
+### ~~Was jetzt noch fehlt~~ → in WELLE B geschlossen (s.u.)
 
-Nicht mehr die Entscheidung, sondern die **Ausführung**: `0x0C01` ist RE2-Substate 12, dessen
-Executor `0x80104748` nicht portiert ist, und `0x0E01` ist Substate 14 (`0x80104D74`). RE2-Clip-
-Indizes zeigen nicht auf RE1.5-Clips, und ein Mapping auf einen RE1.5-Substate wäre wieder eine
-Chimäre. Deshalb werden diese Worte verworfen statt falsch angewandt.
+## ✅ WELLE B — der KOMPLETTE RE2-Zombie (Verhalten + Präsentation), 2026-08-10
 
-## 🔜 W3+ — Trefferreaktion (HURT `@0x80104F40`), Kriech-Variante (`@0x80101210`), State 8
+Code: `enemy_ai_re2_zombie.c` (`re15_re2z_tick` = das volle Brain), Shims in `enemy_ai_common.c`,
+Hooks in `re15_enemy_ai_live_tick` / `re15_zgirl_ai_tick` (der RE1.5-Dispatch wird für RE2-Zombies
+KOMPLETT ersetzt — die alten Teil-Hooks in `decide_engage`/Walk-Animate sind entfernt).
+Tests: `test_re2_zombie_ai` (erweitert) + `test_re2_room1140_ab` (A/B im echten ROOM1140).
+Alle Zitate erneut selbst disassembliert (`re2_disasm.py --bin EMZ0.BIN`); Stichproben der
+Parameterblock-Bytes direkt aus EMZ0.BIN gedumpt.
 
-Nur Leads, **alle** Erstbefunde widerlegt. Belegt ist bisher: die Kriech-Variante nutzt **eigene**
-Tabellen (`0x8010C90C` Decision / `0x8010C918` Executor) mit nur **drei** Einträgen, und
-`sub_state_1 == 1` teilt sich den Handler mit der aufrechten Variante.
+### Struktur (byte-belegt)
+
+* **Root-Prolog = Cooldown-Bank** vor dem State-Dispatch: `+0x239` (Moan-CD) `@0x8010045C-6C`,
+  `+0x23E` (Biss-CD) `@0x80100470-80`, `self+0x1D3` low-7 `@0x80100484-98`.
+* **ACTIVE = Decision-dann-Executor im selben Tick** (`lbu +5` → `0x8010C88C`, `lbu +5` erneut →
+  `0x8010C8CC`, `@0x801011A8-EC`); die Tabellen selbst ausgelesen (16 Paare, s. Code-Kommentar).
+* **Modell-Parameterblock @0x80100000** (Bytes selbst gedumpt): +0x04 Walk-Stile `{0,2}`
+  (INIT-Pick `(r1>>(r2&3))&7` `@0x80100860-8C`), +0x0C Grab-Clips `0B 0B 0E 0E ×2` (P0 liest
+  `[s5*2]` `@0x801026C4-CC`), **+0x14 Biss-Paare `(16,20),(1,5),(16,30),(1,10)`**, +0x1C die 10
+  Grab-Phasen-Zeiger (== 0x801026C0…0x80102EB4, verifiziert), +0x44 Clip-Liste
+  `01 02 17 16 08 09` (Fall/Leiche/Bodenliegen), +0xD8 Aufsteh-Clips `03 03 04 0D`.
+* **Bank-Modell**: der WALK spielt/verfährt die **Pair-1-Bank** (sein `0x80015e7c` lädt explizit
+  `a1=+0x108/a2=+0x17C` `@0x80101CB0-BC`; Pair-1-Clips 0..7 tragen die +X-Vorwärts-Root-Bewegung,
+  byte-gelesen aus EM010) — alle anderen Subs die 31-Clip-**Pair-2**-Action-Bank (deren Clip 2 =
+  Rückwärts-Fall, sx 0/−53/−186…). Im Port: `re15_actor_uses_loco_bank`-Zweig + `re15_re2z_move_root`.
+* **Bewegung** = das Paar `0x80015e7c` (schreibt das Keyframe-Root-DELTA nach `+0x144/146/148`,
+  `sh v1,324(t0)` `@0x80015FD8-E4`) + `0x800152C8` (wendet den Vektor yaw-rotiert an,
+  `@0x80015314-34`) → im Port EINE Delta-Anwendung. Grab-P8-Recoil: `delta.x −= 30` zwischen den
+  beiden (`@0x80102CA0-AC`). Die nackten `sh 11,+0x144`-Seeds sind Dead Stores (dokumentiert).
+
+### Executors (alle mit @-Zitaten im Code)
+
+| Sub | Inhalt |
+|---|---|
+| 0 | Idle Clip 0, Zufalls-Startframe, Moan-Timer (`@0x80101458-90`); DECISION[0] `@0x80101294`: dist<5000+Kegel→`0x101`, Bewegungs-Filter+50 %→`0xC01` (`@0x8010131C/74/3CC`) |
+| 1 | WALK: Clip `+0x218` (`@0x80101A7C-8C`), W1-Turn-Gate, Moan-Block (`@0x80101C44-88`), Pair-1-Root-Bewegung; DECISION[1] = die W2-Leiter, jetzt LIVE für ALLE Worte |
+| 3 | **GRAB, 10 Phasen** (P0 Latch/Claim/self+0x1D3=15/Moan `@0x801026C0-D0`, P2 Biss=Grab+1 **plain, Rate 0** + Budget 148 `@0x80102814-34`, P3 Biss-Frame/Schaden + Mash −(2+5·mash) `@0x80102838-FC` — der Budget-Ablauf-Tick **fällt in den Biss-Check durch** `@0x80102884-98`, P4 Abwurf `@0x80102968`, P5 1/16-Seiten-Latch 0x20/0x40 `@0x801029A4-A40`, P7/P8 Erholung + 15/16-Rückwärts-Fall (Commit `@0x80102D24-DEC`: `0x501`+Phase 1, Clip 2@Frame 20, self+0x1D3\|=0x80, +0x10E\|=0x2000, SE rand&1→13/12, t158=1); **P8-Frames 7..24 = PARTNER-DOMINO** `@0x80102DF0-EB0` (Gates kind&0x10/HP≥0/!Kriecher/+0x1D3==0/!(+0x21A&8)/!(+0x10E&0x2000) → Partner `0x901` + Richtungsbyte +0x16B + **SE 4** `@0x80102E90-A8`; Partner-Index +0xD → Tabelle `@0x800CFE14`, Produzent nicht RE'd → Port: Body-Push-Kontakt, MAPPING); **P9 = Wort `0x1` (STAND), KEIN SE** `@0x80102EB4-B8` — Spieler-Seite über die Port-Victim-Infra; Kill-Tick-Richtung explizit (`re15_re2z_victim_devour`, `@0x80102928-50`) |
+| 5 | KNOCKDOWN-Fall (eigene Phasentabelle param+0x6C): P0 Seite+Clip 1/2 **ab Frame side·5+10** (`@0x80103310-38`) + self+0x1D3\|=0x80/+0x10E\|=0x2000 (`@0x80103300-20`) + **SE rand&1→13/12 cd150** (`@0x8010332C-60`) + t158=0 (`@0x80103368`), P6 **Kriech-Marker `+0x21A|=0x10` `@0x8010358C`** + Liege-Clip 8/9 + ¼-Moan, P7 = Liege-Clip läuft aus (advance `@0x801036A0-A4`, **kein Timer**) → bei done **Marker-Clear `@0x801036B8-BC`** + `&=~0x2` `@0x801036C8-CC` + Phase 8, P8 → `0x101` (`@0x801036F4-F8`) |
+| 6 | Post-Kill (Grab committet `0x601` beim Spielertod `@0x80102924-38`): Clip-Wort 0xF0018=Clip 24 (`@0x801039B0/C8`), Anker `0x80015b94` (`@0x801039D0`, OPEN), SE rand&1→11/10 (`@0x801039D8-F0`), self+0x1D3\|=0x80 → `0x101` (`@0x80103B14`) |
+| 7 | Liege-Spawn: P0 Clip 23/22 **plain (Rate 0)** (`@0x801037CC-E4`) + self+0x1D3\|=0x80; P1 = **Limpet-Halt auf `+0x10E&0x4000`** (`@0x8010381C-28`; Spawn schreibt 0x4002 `@0x80100A34-38`); P2 Boden-Idle 8/9 Rate 0xF Zufalls-Frame (`@0x80103838-8C`) + Moan ½ SE 12/¼ SE 10/¼ SE 11 cd150 (`@0x80103894-D4`); P3 advance; **P4 → `0x101`** + Claim-Clear (`@0x80103900-2C`). Wake-PRODUZENT = Limpet-Clear (einziger Overlay-Clear `@0x80104F0C` in EXEC[15], skript-/EXE-seitig) → Port: RE1.5-Nähe-Gate als MAPPING |
+| 8 | Fressen: **rotiert Clips 18/19/20** per rand&7 aus param `@0x801000A8` (P0 `@0x80103BF4-C10` Rate 7; P2-Re-Draw Frame 3 Rate 0 `@0x80103CB0-D4`); Limpet wie sub 7 (Spawn 0x4004 `@0x80100A88-8C`, Loop-Gate `@0x80103C94-A0`); Wake-Kette P3 Aufsteh-Clip 0x15 (`@0x80103CD8-EC`) + Marker-Set/Clear → **P5 `0x101`** (`@0x80103D90-94`) |
+| 9 | Aufstehen: Clips 3/4 (param+0xD8), `+0x21A = (~0x10)|0x8` (`@0x80103F7C-90`), SE 12 **rand&1- und cd-gegated + cd150** (`@0x80103F84-B4`) → `0x101` |
+| 12 | **AUSFALL-BISS**: 0x19→0x1B Rate 7, ±190-Yaw-Korrektur, Kegel 320, Dash-Root-Motion, Ende Frame 25/`0x101` (`@0x801047B8-48FC`) — KEIN Direktschaden (einziger 401d4-Caller = Grab) |
+| 14 | **SCHNAPP-BISS**: Clip 0x11 Rate 0xF, Frame 10 FX+SE 5, Ende `+0x4=1` + **`+0x23E=60`** (`@0x80104DB4-E2C`) |
+| 13 | **Voller Re-Init** (`@0x80104928`): Wort `1` (`@0x80104988`), HP-Re-Roll aus `@0x8010C600` (rand&0xf, `@0x801049C8`), Stil = **EIN** Draw&7 aus **eigener** Tabelle `@0x801000F8` (`@0x801049C4-EC`), Flag-Clears + res223-Reseed (`@0x801049DC-A18`); Re-Bind/Schatten OPEN — heute toter Code (kein 0xD01-Produzent) |
+| 2 | Anrempeln: Clip **4+walkclip** (Pair 1!) Rate 0xF (`@0x80102290-AC`), t158=(rand&0x3f)+180 (`@0x801022A8-C0`), SE cd-gegated rand&1→11/10 + cd150 (`@0x801022C4-E8`) — Entry OFFEN |
+| 11 | Clip 0x0A Rate 0xF (`@0x801043D8/F8/440C`), Steer(+0x1C4, 128) (`@0x80104400-14`), `+0x21A=(~0x4)|0x2` (`@0x80104438-48`), self+0x1D3\|=0x80, +0x10E\|=0x2000, SE cd-gegated rand&1→11/10 (`@0x80104474-98`) — Entry OFFEN |
+| 10/15 | inert (Block C / Bank-B; EXEC[15] trägt den einzigen Limpet-Clear `@0x80104F0C`) |
+
+### HURT/DEATH/CORPSE/State 8
+
+* **HURT `@0x80104F40`**: Grab-Abbruch-Prolog (PL-cmd==5 && PL+0x1B4==self → Claim-Clear
+  `@0x80104FAC`, beidseitig `&=~0x1004`); Resistenz `+0x223` (INIT-Seed 16+(rand&15)
+  `@0x80100888-9C`; Abschreibung = angewandter Schaden, **MAPPING** — der Dekrement-Produzent
+  liegt im nicht disassemblierten RE2-EXE-Damage-Writer). Überlebt die Resistenz → Resist
+  **ohne** `+0x222`-Write (`@0x80105078` springt an `0x80105164` vorbei). Erschöpft →
+  **Eligibility-Gate `@0x80105080-98`**: `0x501` NUR wenn `+0x222==1` ODER `+0x5==1` (Port:
+  `re2z_prev_sub`, weil das geteilte take_damage `+0x5` überschreibt); sonst Marke
+  (`@0x80105164`) + Resist. Flinch: Re-Seed (`@0x801050A4-C8`) + jeder 3. Treffer Blut
+  (`@0x801050B0-E4`); **KEIN SE auf dem Flinch-Pfad** (beide Zweige enden `j 0x80105418`;
+  SE 9 `@0x801052B4-B8` liegt im nicht portierten Per-Sub-Bereich hinter `+0x21A&0x60==0`,
+  `+0x152<0`, `+0x1D0&0xC0` — OPEN, stumm). Kriech-Konvertierung (`+0x21A&0x10` →
+  `0x80107A78`) NICHT portiert (W5); der Marker lebt nur während der Bodenphase — P7-Exit
+  löscht ihn (`@0x801036B8-BC`).
+* **DEATH `@0x80108250`**: Kill-Latch `+0x21A|=0x4000` (`@0x80108294-98`), Grab-Abbruch
+  (Claim-Clear `@0x801082F4`), Todes-Clip 7, Ende → `0x907` (`@0x801084DC`).
+* **CORPSE `@0x8010A440`**: Clip 23, bei `+0x21A&0x4` 22 (`@0x8010A490-BC`), **HP=−1**
+  (`@0x8010A4D4`), Timer 120/40; Leichen-Tint 0xBFBF10 = Render-seitig OFFEN.
+* **State 8 `@0x80109CFC`**: Entry OFFEN (Helfer-Tails nicht RE'd); Auflösung implementiert:
+  Aufsteh-Commit `0x901` (`@0x8010AE9C`).
+
+### Präsentation
+
+* **Clips**: RE2-nativ aus der echten EM01x-Bank (Welle-A-Loader); Clip-Wort
+  `(rate<<16)|(frame<<8)|clip` auf `+0x14C` → Port-Felder (rate 0xF/7 = frac, Advance-a3
+  0x100/0x200 = blend).
+* **SEs** über `re15_audio_re2_enemy_se` (Hook `re15_re2z_audio_hook`, PC registriert in
+  `pc_enemy_load`): 3 Grab-Biss `@0x801028E8`, **4 = Partner-Domino-Wake** `@0x80102E9C-A4`
+  (NICHT „Grab-Ende" — P9 spielt nichts), 5 Schnapp-Biss `@0x80104DFC`, 10/11 Moans (Idle ½
+  `@0x801014CC-EC`, Walk 2×1/32 `@0x80101C54-88`, Grab rand&1 `@0x8010279C-C0`, Boden ¼
+  `@0x801035F0-610`), **12/13 Knockdown-Paar** (rand&1→13/12: Grab-Fall `@0x80102DC4-DC`,
+  Knockdown-P0 `@0x8010333C-58`), 12 Getup (rand&1+cd `@0x80103F94-B4`), Liege-Idle-Mix
+  ½ 12/¼ 10/¼ 11 (`@0x80103894-D4`); **SE 9 = OPEN** (Per-Sub-Bereich, s. HURT). Alle mit
+  Cooldown `+0x239=150` wo zitiert. **Footsteps** = Frame-Flag-Mechanismus `0x801016c8`
+  (Bit 0x08000000, id = Wort>>28 < 2 → ENEMSE-SE 0/1; EM010-Pair-1-Clip 0: Frames 20/62) —
+  flavor-bewusst in `re15_enemy_anim_sfx`.
+  **ENEMSE-Bank = 0**: die Paar-Tabelle `@0x800a7400` (file 0x97C00, Zeile 11 = `{0x10,0}`
+  byte-verifiziert) ist zur kind-Basis nicht auflösbar; empirische Probe über alle 73 dekodierten
+  EDT-Maps: Bank 0 ist die einzige Single-kind-Bank, deren Live-Einträge ALLE benutzten Zombie-IDs
+  {3,4,5,8,9,10,11,12} abdecken (Bank 11 fehlt 11/12, Bänke 28/65 fehlen 4/5, Bank 72 nur in der
+  +0x10-Hälfte). `RE15_RE2_SE_BANK` übersteuert zum Hör-A/B. Hörbarkeit im Agent-Env nicht prüfbar.
+* **Treffer-FX bleiben RE1.5** (dokumentiert): RE2s FX-System (`FUN_8001bf10`, z.B. Schnapp-Biss
+  `0x0A001000` `@0x80104DE0-F4`) ist nicht portiert (Row-Kompatibilität unbelegt, Lane I §3) —
+  der Port spawnt das RE1.5-Room-Bank-Blut an denselben Stellen.
+* **Schaden** (`FUN_800401d4`, Decompilat): Biss-Paare byte-true (20/5/30/10); **One-Save**
+  (HP<0 aber ≥−14 und Latch frei → HP=0 + Latch; sonst Tod) portiert; die ×1.5/×5/×2-Skalierungen
+  hängen an RE2-only-Globals (200-HP-Skala, Difficulty `@0x800D482A`) — nicht portiert, dokumentiert.
+
+### Verifikation
+
+* `test_re2_zombie_ai`: Gates↔Produzenten, `+0x23E`-Gating, Root-Prolog-Dekremente (bit7-Erhalt),
+  Grab-Phasen P0–P5 inkl. Biss-Schaden 20 + Budget −2 + **Ablauf-Tick-Biss-Fallthrough**,
+  **P9-Wort `0x1` ohne SE**, **Partner-Domino** (0x901+SE 4, 0x2000-Gate), One-Save→Tod
+  (`0x601`), Schnapp-Biss-Ende `+0x23E=60`, Lunge-Clips 0x19→0x1B→`0x101`,
+  **HURT-Eligibility** (Resist ohne 222-Write / Marke ohne Flinch / 222==1→`0x501`, kein SE),
+  Knockdown-P0 (Frame 10/15, SE 12/13, cd150, Downed-Marker) + P7-Marker-Clear,
+  DEATH→CORPSE (HP −1, Clip 23/22 nach Bit 0x4), State 8→`0x901` (Getup-Latch 0x8 + SE-Gate),
+  Leiter-LIVE (D/E→EXEC[12] im selben Tick), INIT-Remap (Feeder→sub 8 + `+0x10E=0x4004`,
+  **Fress-Rotation 18/19/20**, Wake-Kette + Grid-Clear), **Liege-Kette** (Limpet-Halt →
+  Idle 8/9 → `0x101` + Grid-Clear), P5-Seiten-Latch.
+* `test_re2_room1140_ab` (echter Raum, echtes SCD, voller run_all-Loop): RE1.5-Baseline
+  first-attack F32; RE2: 1×lying+4×feeding-Spawns, Wake F12, first-attack F35, **Biss-Drop exakt
+  20 HP**, Beschuss→Knockdown→CORPSE HP=−1+Kill-Latch, 600-Frame-No-Freeze-Lauf.
+* **Live-Smoke** (echte EXE, echte RE2-Bänke, `RE15_AI_FLAVOR=re2` + Debug-JUMP ROOM1140):
+  EM016/EM010/EM011 geladen (31 Clips), Zombies laufen an (Pair-1-Root-Bewegung), Leiter committet
+  live (`0x0C01`-Lunge, `0x0301`-Grab), HP-Kette 100→70→40→20→**0 (One-Save)**→−20 (Tod) mit den
+  byte-zitierten 30er- (Typ 0x11) und 20er-Bissen, Opfer-Collapse-Clip 6 aus der RE2-Victim-Bank,
+  Seiten-Latch (21a=0x0020) und Knockdown-Flags (21a=0x0216) im Trace, kein Freeze.
+
+### OFFEN (Welle-B-Ausgang, nach dem Review-Pass)
+
+* Kriech-Variante (`0x80101210`, eigene Tabellen `0x8010C90C/18`, HURT-Tabelle `0x8010CBE8`,
+  Konvertierung `0x80107A78`) — W5.
+* State-8-EINTRITT (Helfer-Tails `@0x80107A58/@0x80107EB8`), CORPSE-Beschuss-Subs 1..11,
+  Dismember-Helfer `0x80106128/0x80106310/0x8010640C/0x80106510`, EXEC[5]-Phasen P1–P5-Interna
+  (FX/SE), HURTs Per-Sub-Reaktionsbereich `@0x80105168+` (inkl. SE-9-Gates `+0x1D0&0xC0`).
+* Wake-PRODUZENT der Limpets: der einzige `+0x10E&0x4000`-Clear liegt in EXEC[15]
+  `@0x80104F0C` (Bank-B-Kette); wer `0xF01` committet ist skript-/EXE-seitig nicht RE'd →
+  Port ersetzt ihn durch das RE1.5-Nähe-Gate (MAPPING, dokumentiert im Code).
+* Partner-Index `+0xD` (Tabelle `@0x800CFE14`): Produzent nicht RE'd → Port-MAPPING =
+  Body-Push-Kontakt (`contact_slot`); Richtungsbyte +0x16B via facing-aligned-Kollaps.
+* PL+0x1D3-low-7-Fenster (B/J bleiben über ihre übrigen Gates in RE1.5-Räumen stumm),
+  `+0x154&0x800`-Gate (gemappt 1), FUN_80015910-Richtungs-Sub → front/behind-Kollaps
+  (Grab-P0, Kill-Tick, P5-Latch, Domino), Rumble (`0x800395B8/0x80039514/0x8003947C`),
+  Kill-Zähler-Global `0x800D46C0`, Leichen-Tint, ENEMSE-Zeilen-Semantik `FUN_80052b38`,
+  EXEC[13]-Re-Bind `0x80028794` + `+0x151..153` + Schatten-Reset, EXEC[6]-Anker
+  `0x80015b94`, Fress-Tropf-FX `0x13D0`, `+0x1C0`-Bits (kein Port-Feld),
+  Downed-/Grid-Mappings (Review #16/#18) = Port-Infrastruktur, als MAPPING kommentiert.
+
+## 🔜 W5 — Kriecher, State-8-Eintritt, Dismemberment
+
+Belegt bisher: die Kriech-Variante nutzt **eigene** Tabellen (`0x8010C90C` Decision /
+`0x8010C918` Executor, nur drei Einträge), und `sub_state_1 == 1` teilt sich den Handler mit der
+aufrechten Variante. Korrekturen aus Lane Z: der Grab-15er geht auf **SELF**+0x1D3
+(`@0x80102770`), und es GIBT Overlay-Claim-Löscher (HURT `@0x80104FAC`, DEATH `@0x801082F4`) —
+die alte „nur Spieler-seitig"-Aussage oben ist damit präzisiert.
 
 ---
 

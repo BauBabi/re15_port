@@ -19,14 +19,24 @@
  */
 #include "re15_actor.h"
 #include "re15_ai_flavor.h"
+#include "re15_enemy_ai.h"
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
 
 extern const uint16_t re15_re2z_gait_tbl[32];
 extern int re15_re2z_walk_turn(re15_actor_t *e, int32_t px, int32_t pz, uint32_t dist);
 
 static int fails = 0;
 #define CHECK(c, ...) do { if (!(c)) { printf("FAIL: " __VA_ARGS__); printf("\n"); fails++; } } while (0)
+
+/* ---- WELLE B: SE capture hook (records what the brain would send to ENEMSE) -------------- */
+static int  se_log[128]; static int se_n = 0;
+static int  se_bank_sel = -1;
+static void se_cap(int id, int flag2000) { (void)flag2000; if (se_n < 128) se_log[se_n++] = id; }
+static void se_bank_cap(int bank) { se_bank_sel = bank; }
+static int  se_last(void) { return se_n ? se_log[se_n - 1] : -1; }
+static int  se_seen(int id) { for (int i = 0; i < se_n; i++) if (se_log[i] == id) return 1; return 0; }
 
 /* One tick of the RE2 walk turn from rot_y=0 with the steer point far off-heading, so the residual
  * always exceeds the rate and the observed rot_y delta IS the rate. The gait machine is pre-seeded
@@ -238,6 +248,419 @@ int main(void)
           "close turn: got %d, expected 24 (8 @0x80101BBC + 16 @0x80101CAC)", turn_delta(0, 2999));
     CHECK(turn_delta(0, 3000) == 8,
           "sltiu 0xbb8 boundary: 3000 must NOT get the extra turn (got %d)", turn_delta(0, 3000));
+
+    /* =======================================================================================
+     * WELLE B — the full brain (re15_re2z_tick): gates wired to the closed producers, the
+     * attack executors, the grab phases, HURT/DEATH/CORPSE/state 8. All thresholds cited in
+     * enemy_ai_re2_zombie.c; the checks below pin the PORT to those citations.
+     * ===================================================================================== */
+    re15_re2z_audio_hook(se_cap, se_bank_cap);
+    CHECK(se_bank_sel == 0, "default ENEMSE bank must be 0 (probe-selected; RE2Z_ENEMSE_BANK)");
+
+    /* ---- fill_gates: the Welle-B producers ------------------------------------------------ */
+    {
+        re15_actor_t e, p; memset(&e, 0, sizeof e); memset(&p, 0, sizeof p);
+        e.re2z_cd23e = 5; e.re2z_flags21a = 0x4030; e.contact_flags = 2;
+        re15_re2z_gates_t g;
+        re15_re2z_fill_gates(&e, &p, 0, &g);
+        CHECK(g.self_23e == 5,      "gate +0x23E must read re2z_cd23e (@0x80101790)");
+        CHECK(g.self_21a == 0x4030, "gate +0x21A must read re2z_flags21a (@0x80101928)");
+        CHECK(g.self_110 == 1,      "gate +0x110 bit0 must read the contact result (@0x80101844)");
+        e.contact_flags = 0;
+        re15_re2z_fill_gates(&e, &p, 0, &g);
+        CHECK(g.self_110 == 0, "no contact -> +0x110 bit0 clear");
+    }
+
+    /* ---- the +0x23E cooldown gates blocks B (and A/J) in the ladder ----------------------- */
+    {
+        re15_re2z_gates_t g = base_gates(); re15_re2z_decision_t d;
+        g.arc512 = 0; g.dist = 1999u; g.self_106 = 1; g.pl_106 = 0; g.pl_1d3 = 0;
+        g.self_23e = 1;                                /* cooling down -> bne @0x8010179c */
+        CHECK(!re15_re2z_decide_walk(&g, &d), "B must be gated while +0x23E != 0");
+        g.self_23e = 0;
+        CHECK(re15_re2z_decide_walk(&g, &d) && d.word == 0x00000E01u,
+              "B fires once the cooldown expired (-> EXEC[14])");
+    }
+
+    /* ---- full-brain fixtures over g_actors ------------------------------------------------ */
+    re15_actor_init();
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->active = 1; pl->hp = 100; pl->x = 200; pl->z = 0; pl->floor = 0;
+
+    /* ---- root prolog: the cooldown bank decrements (@0x8010045C-98) ----------------------- */
+    {
+        int s = re15_actor_alloc(0x10);
+        re15_actor_t *e = &g_actors[s];
+        e->state = 1; e->sub_state_1 = 4;              /* EXEC[4] = jr ra -> a pure prolog tick */
+        e->re2z_cd239 = 3; e->re2z_cd23e = 2; e->re2z_self1d3 = 0x8F;   /* bit7 + low7 = 15 */
+        re15_re2z_tick(s);
+        CHECK(e->re2z_cd239 == 2 && e->re2z_cd23e == 1,
+              "root prolog must decrement +0x239/+0x23E (@0x8010045C-6C/@0x80100470-80)");
+        CHECK(e->re2z_self1d3 == 0x8E,
+              "self+0x1D3 low-7 decrement must PRESERVE bit 7 (@0x80100484-98), got 0x%02X",
+              e->re2z_self1d3);
+        re15_actor_free(s);
+    }
+
+    /* ---- GRAB phases P0..P4 + bite damage (EXEC[3] @0x801025EC) --------------------------- */
+    {
+        re15_re2z_rng_reset(); se_n = 0;
+        pl->hp = 100; pl->hit_react = 0; pl->state = 0;
+        int s = re15_actor_alloc(0x10);
+        re15_actor_t *e = &g_actors[s];
+        e->x = 0; e->z = 0; e->rot_y = 0; e->hp = 60;
+        e->state = 1; e->sub_state_1 = 3; e->sub_state_2 = 0; e->ai_dist = 200;
+        re15_re2z_tick(s);                                       /* P0 @0x801026C0 */
+        CHECK(e->sub_state_2 == 1, "grab P0 -> phase 1 (@0x801026D4)");
+        CHECK(e->motion == 0x0B, "upright grab clip must be 0x0B (param[0x0C], @0x801026C4-CC)");
+        CHECK(e->re2z_bitefr == 16 && e->re2z_bitedmg == 20,
+              "upright bite pair must be (16,20) (param @0x80100014)");
+        CHECK(e->re2z_self1d3 == 15, "self+0x1D3 = 15 at P0 (@0x8010276C-70)");
+        CHECK((e->ai_flags & 1u) && e->grab_choreo, "grab latches (word0|=0x1000 @0x80102768-88)");
+        CHECK(re15_player_is_grabbed(), "P0 must claim/pin the player (@0x8010275C-60)");
+        CHECK(pl->hit_react & 1, "PL hit-guard set with the cmd-5 latch");
+        re15_re2z_tick(s);                                       /* P1: no bank -> clip done */
+        CHECK(e->sub_state_2 == 2, "grab P1 -> phase 2 on clip end (@0x80102800-10)");
+        re15_re2z_tick(s);                                       /* P2 @0x80102814 */
+        CHECK(e->sub_state_2 == 3 && e->motion == 0x0C,
+              "P2: bite clip = grab+1 (@0x80102830-34), phase 3");
+        CHECK(e->re2z_t158 == 148, "P2 struggle budget = 148 (@0x80102828-2C)");
+        e->anim_frame = 16;                                      /* the byte-cited bite frame */
+        int16_t hp0 = pl->hp;
+        re15_re2z_tick(s);                                       /* P3 bite @0x801028A0-FC */
+        CHECK(pl->hp == (int16_t)(hp0 - 20), "bite damage 20 (param @0x80100015), HP %d->%d",
+              hp0, pl->hp);
+        CHECK(se_last() == 3, "bite SE 3 (@0x801028E8-F0), got %d", se_last());
+        CHECK(e->re2z_t158 == 146, "budget -2 per un-mashed tick (@0x80102868-7C)");
+        e->re2z_t158 = 1; e->anim_frame = 0;
+        re15_re2z_tick(s);                                       /* budget 1-2 = -1 -> throw */
+        CHECK(e->sub_state_2 == 4, "budget < 0 -> phase 4 (@0x80102884-94)");
+        re15_re2z_tick(s);                                       /* P4 @0x80102968 */
+        CHECK(e->sub_state_2 == 5 && e->motion == 0x0D,
+              "P4: throw clip = grab+2 (@0x8010297C-A0), phase 5");
+        /* the expiry tick FALLS THROUGH into the bite check (@0x80102884 skips only the
+         * phase-4 writes — Review #6): budget out ON the bite frame still bites */
+        e->sub_state_2 = 3; e->re2z_t158 = 1; e->anim_frame = 16;
+        {
+            int16_t hpx = pl->hp;
+            re15_re2z_tick(s);
+            CHECK(e->sub_state_2 == 4 && pl->hp == (int16_t)(hpx - 20),
+                  "expiry tick still bites (@0x80102898 fall-through), phase %d hp %d->%d",
+                  e->sub_state_2, hpx, pl->hp);
+        }
+        /* P9 exits with word 0x1 = STAND, NO SE (`addiu v0,1; sw v0,4` @0x80102EB4-B8) */
+        se_n = 0;
+        e->state = 1; e->sub_state_1 = 3; e->sub_state_2 = 9;
+        re15_re2z_tick(s);
+        CHECK(e->state == 1 && e->sub_state_1 == 0,
+              "P9 -> word 0x1 (STAND), got %d/%d", e->state, e->sub_state_1);
+        CHECK(!se_seen(4), "P9 plays NO SE (the SE 4 lives in the P8 partner block)");
+        re15_actor_free(s);
+    }
+
+    /* ---- P8 partner-domino (@0x80102DF0-EB0): frames 7..24 wake the bumped partner --------- */
+    {
+        se_n = 0;
+        int s1 = re15_actor_alloc(0x10);
+        int s2 = re15_actor_alloc(0x10);
+        re15_actor_t *ez = &g_actors[s1], *pz = &g_actors[s2];
+        ez->state = 1; ez->sub_state_1 = 3; ez->sub_state_2 = 8;
+        ez->anim_frame = 10;                                     /* in [7..24] @0x80102DF8-FC */
+        ez->contact_slot = (int8_t)s2;                           /* +0xD-MAPPING: body-push contact */
+        pz->state = 1; pz->sub_state_1 = 1; pz->hp = 50;
+        pz->re2z_self1d3 = 0; pz->re2z_flags21a = 0; pz->re2z_f10e = 0;
+        re15_re2z_tick(s1);
+        CHECK(pz->state == 1 && pz->sub_state_1 == 9,
+              "partner gets 0x901 (@0x80102E90-98), got %d/%d", pz->state, pz->sub_state_1);
+        CHECK(se_seen(4), "partner wake plays SE 4 (@0x80102E9C-A4)");
+        /* gate: an already-fallen partner (+0x10E&0x2000) is skipped (@0x80102E80-84) */
+        pz->state = 1; pz->sub_state_1 = 1; pz->sub_state_2 = 0; pz->re2z_f10e = 0x2000;
+        ez->sub_state_2 = 8; ez->anim_frame = 10;
+        re15_re2z_tick(s1);
+        CHECK(pz->sub_state_1 == 1, "fallen partner (0x2000) must NOT be dominoed");
+        re15_actor_free(s1); re15_actor_free(s2);
+    }
+
+    /* ---- grab kill: one-save then death (FUN_800401d4) ------------------------------------ */
+    {
+        re15_re2z_rng_reset();                                   /* also clears the one-save latch */
+        pl->hp = 10; pl->hit_react = 0; pl->state = 0;
+        int s = re15_actor_alloc(0x10);
+        re15_actor_t *e = &g_actors[s];
+        e->state = 1; e->sub_state_1 = 3; e->sub_state_2 = 2; e->ai_dist = 200;
+        e->re2z_grabclip = 0x0B; e->re2z_bitefr = 16; e->re2z_bitedmg = 20;
+        re15_re2z_tick(s);                                       /* P2 -> phase 3 */
+        e->anim_frame = 16;
+        re15_re2z_tick(s);                                       /* bite: 10-20 = -10 > -15 */
+        CHECK(pl->hp == 0 && e->sub_state_2 == 4,
+              "first lethal bite = ONE SAVE: HP clamped 0 + throw-off (FUN_800401d4)");
+        /* second grab, the save latch is set -> the next lethal bite kills */
+        e->sub_state_2 = 2; re15_re2z_tick(s);
+        e->anim_frame = 16;
+        re15_re2z_tick(s);
+        CHECK(pl->hp < 0 && pl->state == 7,
+              "latched one-save -> death (HP %d, PL state %d)", pl->hp, pl->state);
+        CHECK(e->state == 1 && e->sub_state_1 == 6,
+              "player death commits self 0x601 (@0x80102924-38), got state %d sub %d",
+              e->state, e->sub_state_1);
+        re15_actor_free(s);
+        re15_re2z_rng_reset();
+    }
+
+    /* ---- SNAP BITE (EXEC[14]) + the 60-frame cooldown ------------------------------------- */
+    {
+        se_n = 0;
+        pl->hp = 100; pl->state = 0;
+        int s = re15_actor_alloc(0x10);
+        re15_actor_t *e = &g_actors[s];
+        e->state = 1; e->sub_state_1 = 14; e->sub_state_2 = 0; e->ai_dist = 1500;
+        re15_re2z_tick(s);                                       /* P0 @0x80104DB4 */
+        CHECK(e->motion == 0x11 && e->sub_state_2 == 1,
+              "snap bite clip 0x11 rate 0xF (sw 0xF0011 @0x80104DB4-BC)");
+        e->anim_frame = 10;
+        re15_re2z_tick(s);                                       /* frame 10 + clip end (no bank) */
+        CHECK(se_seen(5), "snap-bite SE 5 at frame 10 (@0x80104DFC-04)");
+        CHECK(e->state == 1 && e->sub_state_1 == 0,
+              "snap bite ends with word 1 -> ACTIVE sub 0 (sw 1 @0x80104E24)");
+        CHECK(e->re2z_cd23e == 60, "+0x23E = 60 at the end (@0x80104E28-2C), got %u", e->re2z_cd23e);
+        re15_re2z_tick(s);
+        CHECK(e->re2z_cd23e == 59, "the root prolog counts the bite cooldown down (@0x80100470-80)");
+        re15_actor_free(s);
+    }
+
+    /* ---- LUNGE BITE (EXEC[12]): clips 0x19 -> 0x1B, ends in WALK -------------------------- */
+    {
+        pl->x = 2000; pl->z = 0;                                 /* in front (mesh yaw 0 = +X) */
+        int s = re15_actor_alloc(0x10);
+        re15_actor_t *e = &g_actors[s];
+        e->x = 0; e->z = 0; e->rot_y = 0;
+        e->state = 1; e->sub_state_1 = 12; e->sub_state_2 = 0; e->ai_dist = 2000;
+        re15_re2z_tick(s);                                       /* P0 @0x801047B8 */
+        CHECK(e->motion == 0x19 && e->sub_state_2 == 1, "lunge P0 clip 0x19 (sw 0x70019)");
+        re15_re2z_tick(s);                                       /* P1: player inside +-320 -> P2 */
+        CHECK(e->sub_state_2 == 2, "P1 arc(PL,320)==0 -> phase 2 (@0x80104840-50)");
+        re15_re2z_tick(s);                                       /* P2 sets 0x1B, falls into P3 */
+        CHECK(e->motion == 0x1B, "P2 clip 0x1B (sw 0x7001B @0x80104884-8C)");
+        CHECK(e->state == 1 && e->sub_state_1 == 1,
+              "P3 clip end -> 0x101 WALK (@0x801048D8-DC), got sub %d", e->sub_state_1);
+        re15_actor_free(s);
+    }
+
+    /* ---- HURT: resist / eligibility mark / knockdown-flinch (@0x80104F40, Review #2) ------- */
+    {
+        re15_re2z_rng_reset(); se_n = 0;
+        pl->x = 200; pl->z = 0; pl->hp = 100; pl->state = 0; pl->motion = 0;
+        int s = re15_actor_alloc(0x10);
+        re15_actor_t *e = &g_actors[s];
+        e->state = 1; e->sub_state_1 = 4; e->hp = 60; e->re2z_res223 = 20;
+        re15_re2z_tick(s);                                       /* snapshot prev_hp/prev_sub (4) */
+        e->hp -= 7; e->state = 2;                                /* a 7-dmg hit */
+        re15_re2z_tick(s);
+        CHECK(e->re2z_res223 == 13, "resist: res223 -= dmg (mapping), res=%d", e->re2z_res223);
+        CHECK(e->re2z_flag222 == 0,
+              "res-survived resist writes NO +0x222 (@0x80105078 jumps past 0x80105164)");
+        CHECK(e->state == 1 && e->sub_state_1 == 1, "resisting -> back to walk (mapping)");
+        /* exhaust the pool while NOT walking and NOT marked -> MARK ONLY, no flinch
+         * (@0x80105080-98: 0x501 needs +0x222==1 OR +0x5==1) */
+        e->sub_state_1 = 4; e->sub_state_2 = 0;                  /* non-walk sub */
+        re15_re2z_tick(s);                                       /* prev_sub = 4 */
+        e->hp -= 20; e->state = 2;                               /* 13-20 -> res < 0 */
+        re15_re2z_tick(s);
+        CHECK(e->re2z_flag222 == 1 && e->state == 1 && e->sub_state_1 != 5,
+              "eligibility fail -> mark @0x80105164 + resist, NO 0x501 (got sub %d)",
+              e->sub_state_1);
+        /* now marked -> the next exhausted hit flinches */
+        re15_re2z_tick(s);
+        e->hp -= 20; e->state = 2;
+        re15_re2z_tick(s);
+        CHECK(e->state == 1 && e->sub_state_1 == 5,
+              "+0x222==1 -> knockdown-flinch 0x501 (@0x801050A4-AC), got sub %d", e->sub_state_1);
+        CHECK(e->re2z_res223 >= 16 && e->re2z_res223 <= 31,
+              "flinch reseeds res223 = 16+(rand&15) (@0x801050C0-C8), got %d", e->re2z_res223);
+        CHECK(!se_seen(9), "NO SE on the flinch path (both 0x501 arms end via j 0x80105418; "
+              "SE 9 lives behind the un-ported +0x1D0&0xC0 gates — Review #14)");
+        /* the knockdown chain: P0 fall clip 1/2 AT FRAME 10/15 + SE 12/13 + downed marker */
+        se_n = 0; e->re2z_cd239 = 0;
+        re15_re2z_tick(s);                                       /* EXEC[5] P0 */
+        CHECK(e->motion == 1 || e->motion == 2,
+              "knockdown fall clip 1/2 (param @0x80100044, @0x801032C8-CC), got %d", e->motion);
+        CHECK(e->anim_frame == (uint32_t)((e->motion - 1) * 5 + 10),
+              "fall clip starts at frame side*5+10 (@0x80103310-1C), got %u", (unsigned)e->anim_frame);
+        CHECK(se_seen(12) || se_seen(13), "P0 SE 12/13 (@0x8010332C-60)");
+        CHECK(e->re2z_cd239 == 150, "P0 arms the moan cooldown 150 (@0x8010335C-60)");
+        CHECK((e->grid_id & 0x80u) != 0, "downed marker set (PORT-MAPPING Review #18)");
+        CHECK((e->re2z_f10e & 0x2000u) != 0, "+0x10E|=0x2000 (@0x80103308/3320)");
+        re15_re2z_tick(s);                                       /* P1: clip done -> 6 */
+        re15_re2z_tick(s);                                       /* P6 */
+        CHECK(e->re2z_flags21a & 0x10u, "P6 sets the crawl marker +0x21A|=0x10 (@0x8010358C)");
+        CHECK(e->motion == 8 || e->motion == 9,
+              "P6 ground-lie clip 8/9 (@0x80103574-A8), got %d", e->motion);
+        CHECK(e->sub_state_2 == 7, "P6 -> phase 7 (@0x8010357C-80)");
+        re15_re2z_tick(s);                                       /* P7: lie clip done (no bank) */
+        CHECK(!(e->re2z_flags21a & 0x10u),
+              "P7 exit CLEARS the crawl marker (@0x801036B8-BC, Review #6)");
+        CHECK(e->sub_state_2 == 8, "P7 -> phase 8 on clip end (@0x801036C4), got %d", e->sub_state_2);
+        re15_re2z_tick(s);                                       /* P8 */
+        CHECK(e->state == 1 && e->sub_state_1 == 1,
+              "knockdown ends in 0x101 (@0x801036F4-F8), got %d/%d", e->state, e->sub_state_1);
+        CHECK((e->grid_id & 0x80u) == 0, "downed marker cleared on rise (PORT-MAPPING)");
+        re15_actor_free(s);
+    }
+
+    /* ---- DEATH -> CORPSE (claim-clear + kill latch + lie clip by orientation) ------------- */
+    {
+        se_n = 0;
+        int s = re15_actor_alloc(0x10);
+        re15_actor_t *e = &g_actors[s];
+        e->state = 3; e->hp = -5; e->re2z_flags21a = 0;
+        re15_re2z_tick(s);
+        CHECK(e->re2z_flags21a & 0x4000u, "DEATH sets the kill latch +0x21A|=0x4000 (@0x80108294-98)");
+        CHECK(e->motion == 7, "death clip 7 (@0x80108A88 family)");
+        re15_re2z_tick(s);                                       /* clip done -> corpse */
+        CHECK(e->state == 7, "DEATH commits 0x907 (@0x801084DC), got state %d", e->state);
+        re15_re2z_tick(s);                                       /* corpse init */
+        CHECK(e->hp == -1, "CORPSE HP = -1 (@0x8010A4D4)");
+        CHECK(e->motion == 0x17, "corpse lie clip 23 with orientation bit clear (@0x8010A490-98)");
+        re15_actor_free(s);
+        /* the 22-variant: orientation bit 0x4 set */
+        s = re15_actor_alloc(0x10); e = &g_actors[s];
+        e->state = 7; e->re2z_flags21a = 0x4; e->hp = -5; e->sub_state_1 = 9;
+        re15_re2z_tick(s);
+        CHECK(e->motion == 0x16, "corpse lie clip 22 when +0x21A&0x4 (@0x8010A4A8-BC)");
+        re15_actor_free(s);
+    }
+
+    /* ---- STATE 8 resolves through the get-up commit 0x901 (@0x8010AE9C) ------------------- */
+    {
+        se_n = 0;
+        re15_re2z_rng_reset();                                   /* first draw 0x7D (odd) -> the
+                                                                  * rand&1 SE gate passes */
+        int s = re15_actor_alloc(0x10);
+        re15_actor_t *e = &g_actors[s];
+        e->state = 8; e->hp = 30; e->re2z_cd239 = 0;
+        re15_re2z_tick(s);
+        CHECK(e->state == 1 && e->sub_state_1 == 9,
+              "state 8 -> 0x901 get-up (@0x8010AE9C), got %d/%d", e->state, e->sub_state_1);
+        re15_re2z_tick(s);                                       /* EXEC[9] P0 */
+        CHECK(e->motion == 3 || e->motion == 4,
+              "get-up clip 3/4 from the param list @0x801000D8, got %d", e->motion);
+        CHECK((e->re2z_flags21a & 0x8u) != 0 && !(e->re2z_flags21a & 0x10u),
+              "get-up sets +0x21A|=0x8 and clears 0x10 (@0x80103F7C-90)");
+        CHECK(se_seen(12), "get-up SE 12 (rand&1 + cd gate @0x80103F84-B4)");
+        CHECK(e->re2z_cd239 == 150, "get-up SE arms the cooldown (@0x80103FB0-B4)");
+        re15_actor_free(s);
+    }
+
+    /* ---- the ladder LIVE: D/E commit 0x0C01 and EXEC[12] runs the same tick --------------- */
+    {
+        re15_re2z_rng_reset();
+        pl->x = -1500; pl->z = 0; pl->motion = 100;              /* RUNNING, behind the zombie */
+        pl->hp = 100; pl->state = 0; pl->hit_react = 0;
+        int s = re15_actor_alloc(0x10);
+        re15_actor_t *e = &g_actors[s];
+        e->x = 0; e->z = 0; e->rot_y = 0;
+        e->state = 1; e->sub_state_1 = 1; e->sub_state_2 = 1;
+        e->re2z_gaitinit = (uint8_t)(0x80u | 1u); e->re2z_gaittmr = 30000;
+        int committed_tick = -1;
+        for (int t = 0; t < 300 && committed_tick < 0; t++) {
+            e->ai_dist = 1400;                                   /* inside E(2500)+D(3500), outside G(1200) */
+            e->x = 0; e->z = 0; e->rot_y = 0;                    /* facing +X, the player BEHIND (-X)
+                                                                  * -> OUTSIDE both cones (D/E need
+                                                                  * arc1024 != 0, beq @0x80101868) */
+            re15_re2z_tick(s);
+            if (e->sub_state_1 == 12) committed_tick = t;
+        }
+        CHECK(committed_tick >= 0, "D/E must commit 0x0C01 against a running player (@0x801018a0/e4)");
+        CHECK(e->motion == 0x19, "the commit runs EXEC[12] the SAME tick (@0x801011A8-EC)");
+        pl->motion = 0;
+        re15_actor_free(s);
+    }
+
+    /* ---- INIT remap: RE1.5 spawn nibbles land in the RE2 spawn subs ----------------------- */
+    {
+        re15_re2z_rng_reset();
+        pl->x = 20000; pl->z = 0;                                /* far away: no wake */
+        int s = re15_actor_alloc(0x10);
+        re15_actor_t *e = &g_actors[s];
+        e->x = 0; e->z = 0; e->grid_id = 6; e->state = 0;        /* the ROOM1140 feeder nibble */
+        re15_re2z_tick(s);
+        CHECK(e->state == 1 && e->sub_state_1 == 8,
+              "feeder spawn -> ACTIVE sub 8 (INIT 0x801 @0x80100AD4), got %d/%d",
+              e->state, e->sub_state_1);
+        CHECK(e->re2z_f10e == 0x4004,
+              "feeder spawn writes +0x10E = 0x4004 (@0x80100A88-8C), got 0x%04x", e->re2z_f10e);
+        CHECK(e->re2z_walkclip == 0 || e->re2z_walkclip == 2,
+              "walk clip from the param style row (values 0/2, @0x80100860-8C), got %u",
+              e->re2z_walkclip);
+        CHECK(e->re2z_res223 >= 16 && e->re2z_res223 <= 31,
+              "INIT seeds res223 = 16+(rand&15) (@0x80100888-9C)");
+        e->ai_dist = 60000;                                      /* far: the limpet latch holds */
+        re15_re2z_tick(s);
+        CHECK(e->motion >= 0x12 && e->motion <= 0x14,
+              "feeding ROTATES clips 18/19/20 (rand&7 @0x801000A8, @0x80103BF4-C10), got %d",
+              e->motion);
+        for (int t = 0; t < 6; t++) { e->ai_dist = 60000; re15_re2z_tick(s); }
+        CHECK(e->state == 1 && e->sub_state_1 == 8,
+              "far feeder stays feeding (limpet +0x10E&0x4000 @0x80103C94-A0)");
+        /* wake (MAPPED gate clears the limpet) -> byte-true chain P3 clip 0x15 -> P5 0x101 */
+        int woke = 0;
+        for (int t = 0; t < 12 && !woke; t++) {
+            e->ai_dist = 100;
+            re15_re2z_tick(s);
+            if (e->sub_state_1 == 1 || e->sub_state_1 == 0) woke = 1;
+        }
+        CHECK(woke, "near feeder wakes through P3(clip 0x15 @0x80103CD8)->P5(0x101 @0x80103D90)");
+        CHECK(e->grid_id == 0, "wake clears the spawn nibble (PORT-MAPPING Review #16)");
+        re15_actor_free(s);
+    }
+
+    /* ---- LYING chain: P0 hold -> limpet -> idle 8/9 -> 0x101 + grid clear ------------------ */
+    {
+        re15_re2z_rng_reset();
+        int s = re15_actor_alloc(0x16);
+        re15_actor_t *e = &g_actors[s];
+        e->state = 1; e->sub_state_1 = 7; e->sub_state_2 = 0;
+        e->grid_id = 0x88; e->re2z_f10e = 0x4002; e->ai_dist = 60000;
+        re15_re2z_tick(s);
+        CHECK(e->motion == 0x17 && e->sub_state_2 == 1,
+              "lying P0: clip 23 PLAIN (rate 0, @0x801037CC-E4), phase 1");
+        CHECK((e->re2z_self1d3 & 0x80u) != 0, "lying P0 sets self+0x1D3|=0x80 (@0x80103804-14)");
+        re15_re2z_tick(s);
+        CHECK(e->sub_state_2 == 1, "far lyer HOLDS in P1 (limpet +0x10E&0x4000 @0x8010381C-28)");
+        e->ai_dist = 100;                                        /* MAPPED wake clears the latch */
+        re15_re2z_tick(s);                                       /* P1 -> 2 */
+        re15_re2z_tick(s);                                       /* P2: idle clip */
+        CHECK(e->motion == 8 || e->motion == 9,
+              "lying P2 idle clip 8/9 rate 0xF (@0x80103838-8C), got %d", e->motion);
+        re15_re2z_tick(s);                                       /* P3: clip done -> 4 */
+        re15_re2z_tick(s);                                       /* P4: 0x101 */
+        CHECK(e->state == 1 && e->sub_state_1 == 1,
+              "lying P4 exits 0x101 (@0x80103900-0C, NOT 0x901 — Review #15), got %d/%d",
+              e->state, e->sub_state_1);
+        CHECK(e->grid_id == 0,
+              "the 0x88 spawn nibble is cleared on wake (PORT-MAPPING Review #16/#3)");
+        re15_actor_free(s);
+    }
+
+    /* ---- P5 escape side latch: the 1/16 two-draw roll sets +0x21A 0x20/0x40 --------------- */
+    {
+        re15_re2z_rng_reset();
+        pl->x = 200; pl->z = 0;
+        int s = re15_actor_alloc(0x10);
+        re15_actor_t *e = &g_actors[s];
+        e->state = 1; e->sub_state_1 = 3; e->re2z_grabclip = 0x0B;
+        int latched = 0;
+        for (int t = 0; t < 400 && !latched; t++) {
+            e->sub_state_2 = 5; e->anim_frame = 3; e->re2z_flags21a = 0;
+            re15_re2z_tick(s);                                   /* P5 @0x801029A4 */
+            if (e->re2z_flags21a & 0x60u) latched = 1;
+        }
+        CHECK(latched, "the 1/16 escape roll must eventually latch +0x21A 0x20/0x40 (@0x80102A34-40)");
+        re15_actor_free(s);
+    }
+
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);                     /* leave the byte-true default */
 
     if (fails == 0) printf("test_re2_zombie_ai: OK\n");
     else            printf("test_re2_zombie_ai: %d FAILURES\n", fails);

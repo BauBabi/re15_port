@@ -524,6 +524,15 @@ target_include_directories(test_re2_zombie_ai PRIVATE ${CMAKE_SOURCE_DIR}/includ
 add_test(NAME unit_re2_zombie_ai COMMAND test_re2_zombie_ai)
 set_tests_properties(unit_re2_zombie_ai PROPERTIES TIMEOUT 30)
 
+# --- WELLE B: RE2-Zombie-Brain A/B im echten ROOM1140 (headless, deterministisch) ---
+add_executable(test_re2_room1140_ab test_re2_room1140_ab.c)
+target_link_libraries(test_re2_room1140_ab PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_room1140_ab PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2_room1140_ab PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2_room1140_ab COMMAND test_re2_room1140_ab)
+set_tests_properties(unit_re2_room1140_ab PROPERTIES TIMEOUT 60)
+
 # --- Blut-Decal-Wund-Akkumulator (Dossier analysis/blood_decals.md BD-3/BD-5) ---
 add_executable(test_wound_accumulator test_wound_accumulator.c)
 target_link_libraries(test_wound_accumulator PRIVATE re15_engine re15_test_support)

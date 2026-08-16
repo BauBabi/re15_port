@@ -532,6 +532,10 @@ static void pc_enemy_load(uint8_t type)
      * den Typ besitzt (re15_re2z_owns_type: Zombie-Familie). Fehlt das RE2-Archiv oder
      * der Record, faellt der Lauf UNVERAENDERT in den byte-true RE1.5-Pfad darunter. */
     if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2z_owns_type(type)) {
+        /* WELLE B: ENEMSE-Wiedergabe im Engine-Brain registrieren (PC-only Symbole — der
+         * Funktionszeiger haelt engine/ link-sauber fuers PSX-Target) + Zombie-Bank waehlen
+         * (Bank-Wahl-Beleg + Kandidaten-Probe: enemy_ai_re2_zombie.c RE2Z_ENEMSE_BANK). */
+        re15_re2z_audio_hook(re15_audio_re2_enemy_se, re15_audio_re2_enemy_bank);
         if (pc_enemy_load_re2(type, eb)) return;
     }
 

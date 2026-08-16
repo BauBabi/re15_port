@@ -202,6 +202,31 @@ typedef struct {
     uint8_t  re2z_gaitrow;      /* +0x16B RE2 gait row 0..31 into tbl @0x8010C924 */
     uint8_t  re2z_gaitinit;     /* port-only: has the gait machine been seeded for this walk? */
     uint16_t re2z_gaittmr;      /* +0x158 RE2 gait segment timer (frames left in this row)     */
+    /* ---- RE2-Flavor WELLE B (enemy_ai_re2_zombie.c re15_re2z_tick): die RE2-Arbeitsbytes.
+     * Jedes Feld traegt seinen RE2-Actor-Offset; Producer/Consumer-Adressen stehen am Code. */
+    uint8_t  re2z_cd239;        /* +0x239 Moan-Cooldown (Set 150 @0x801027C0 u.a.; Root-Dec @0x8010045C-6C) */
+    uint8_t  re2z_cd23e;        /* +0x23E Biss-Cooldown (Set 60 @0x80104E2C; Root-Dec @0x80100470-80)       */
+    uint8_t  re2z_self1d3;      /* self+0x1D3 (Set 15 @0x8010276C-70; low-7-Dec im Root @0x80100484-98)     */
+    uint8_t  re2z_flag222;      /* +0x222 "schon getroffen"-Marke (Flinch-Arbitrierung @0x80105080-9C)      */
+    int8_t   re2z_res223;       /* +0x223 Flinch-Resistenz, signed (Seed 16+(rand&15) @0x80100888-9C)       */
+    uint8_t  re2z_hits1d2;      /* +0x1D2 Treffer-Zaehler (jeder 3. -> Blut-FX, @0x801050B0-E4)             */
+    uint8_t  re2z_walkclip;     /* +0x218 Walk-Clip aus dem Param-Block (@0x80100860-8C; Werte 0/2)         */
+    uint8_t  re2z_dir16a;       /* +0x16A Fall-/Varianten-Byte (Knockdown-Seite, @0x8010328C-98)            */
+    int16_t  re2z_t158;         /* +0x158 Budget/Timer (Grab-Wehr-Budget 148 @0x80102828-2C u.a.)           */
+    int16_t  re2z_t15a;         /* +0x15A Idle-Moan-Timer (Seed rand+300 @0x8010148C-90)                    */
+    uint16_t re2z_flags21a;     /* +0x21A Flag-Wort (INIT-Clear @0x8010087C; 0x20/0x40 Seiten-Latches,
+                                 * 0x4 Liege-Orientierung, 0x10 Kriech-Marker, 0x8 Aufsteh-Latch
+                                 * (@0x80103F88-90 set, @0x80102D60-64 clear), 0x4000 Kill-gezaehlt)        */
+    uint16_t re2z_f10e;         /* +0x10E Spawn-/Zustands-Wort: 0x4000 Limpet-Latch (Spawns schreiben
+                                 * 0x4002/0x4004 @0x80100A34-38/@0x80100A88-8C; einziger Overlay-Clear
+                                 * @0x80104F0C EXEC[15]), 0x2000 "gefallen" (@0x80102DB8-C0/@0x80103308-20/
+                                 * @0x80104468-70), Bit 0 Kriecher (OPEN W5)                                */
+    uint8_t  re2z_prev_sub;     /* Port-Feld: ACTIVE-Sub-Schnappschuss fuer HURTs +0x5==1-Test
+                                 * (@0x80105090-98) — das geteilte take_damage ueberschreibt +0x5          */
+    uint8_t  re2z_grabclip;     /* P0-gewaehlter Grab-Clip (param[0x0C+s5*2] @0x801026C4-CC)                */
+    uint8_t  re2z_bitefr;       /* Biss-Frame  aus dem (frame,dmg)-Paar param[0x14+s5*2]   @0x801028A0-AC   */
+    uint8_t  re2z_bitedmg;      /* Biss-Schaden aus demselben Paar (Anwendung @0x801028F4-FC)               */
+    int16_t  re2z_prev_hp;      /* Port-Feld: HP-Schnappschuss fuer die HURT-Resistenz-Abschreibung        */
     int16_t  hurt_bend_bone;    /* part index to bend, -1 = none */
     int16_t  hurt_bend_vz;      /* the PRE-update +0x9c applied this tick */
     /* Phase 4.5.13-RE2 F1: speed was at ID 27 (wrong) — correct ID is

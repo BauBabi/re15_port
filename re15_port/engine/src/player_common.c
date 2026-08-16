@@ -19,6 +19,7 @@
 #include <stdint.h>
 #include "re15_player.h"
 #include "re15_actor.h"
+#include "re15_ai_flavor.h"   /* WELLE B: RE2-Flavor-Gates im Anim-Advancer (Clip-Pin-Konflikte) */
 #include "re15_skeleton.h"   /* re15_sin_q12 / re15_cos_q12 */
 #include "re15_scd.h"        /* g_scd.player_mode (BL-round input gate) */
 #include "re15_enemy_ai.h"
@@ -738,7 +739,16 @@ void re15_actors_anim_advance(void)
          * Frame — ein Frame-0-Pin wuerde den Uebergang einfrieren). */
         { uint8_t t = a->type;
           if ((t==0x10||t==0x11||t==0x12||t==0x16||t==0x18) && a->state == 1 &&
-              (a->sub_state_1 == 0x10 || (a->grid_id & 0x0f) == 1)) continue; }
+              (a->sub_state_1 == 0x10 || (a->grid_id & 0x0f) == 1) &&
+              re15_ai_flavor() != RE15_AI_FLAVOR_RE2) continue; }   /* RE1.5-Sub-Semantik; unter
+                                                                     * RE2-Flavor advanct der Brain-
+                                                                     * Besitz normal (WELLE B) */
+        /* WELLE B (RE2-Flavor): every RE1.5-clip-number-specific pin below (0x0C/0x0E/0x12/0x13
+         * lie-down, 0x2A sleeper) is meaningless against the RE2 EM01x bank — 0x0C IS the RE2
+         * grab-BITE clip (grab 0x0B + 1 @0x80102830-34), 0x0E the crawler grab, 0x12 the feeding
+         * loop (@0x80100ADC). Pinning them at frame 0 froze the RE2 bite (bite frame 16
+         * @0x80100014 never reached). The RE2 brain owns its holds itself -> plain advance. */
+        int re2z_owned = (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2z_owns_type(a->type));
         uint16_t mo = a->motion;
         /* These clips hold frame 0 for the SPAWN lie-down (a downed zombie stays flat). But clips
          * 0x12/0x13 are DUAL-USE: the KNOCKDOWN GET-UP (re15_enemy_ai_live_knockdown case 4 sets
@@ -762,14 +772,16 @@ void re15_actors_anim_advance(void)
               && a->state == 1 && a->sub_state_1 == 0 && a->sub_state_2 >= 2
               && nib >= 7 && nib <= 10)
               getup = 1; }
-        if ((mo == 0x0C || mo == 0x0E || mo == 0x12 || mo == 0x13) && !getup) { a->anim_frame = 0; continue; }
+        if ((mo == 0x0C || mo == 0x0E || mo == 0x12 || mo == 0x13) && !getup && !re2z_owned)
+            { a->anim_frame = 0; continue; }
         /* SLEEPING-LYING Warte-Halt (byte-true FUN_801054f4: die Schlafphasen 0/1 haben KEINEN
          * f314-Call — case 0 @0x80105534 setzt nur +0x1b8/+0x6, case 1 -> Epilog @0x8010560c;
          * der erste f314 kommt erst in der Wake-Phase @0x801055a8). Ohne den Halt spielte der
          * globale Advancer den Liege-Clip 0x2A einmal durch und pinnte den LETZTEN Frame =
          * die "nach vorne gebeugte" Dauerpose des ROOM10D0-Zombies (zombie_lyer_10d0.md D3).
          * Die Wake-Phase (sub_state_2>=2) advanct normal (clip_done treibt die Maschine). */
-        if (mo == 0x2A && a->sub_state_1 == 0x12 && a->sub_state_2 <= 1) { a->anim_frame = 0; continue; }
+        if (mo == 0x2A && a->sub_state_1 == 0x12 && a->sub_state_2 <= 1 && !re2z_owned)
+            { a->anim_frame = 0; continue; }
         if (a->motion_init_delay > 0) {
             a->motion_init_delay--;
         } else {

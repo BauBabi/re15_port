@@ -30,7 +30,34 @@ int re15_re2z_owns_type(unsigned type);
 #include "re15_actor.h"
 void re15_re2z_gait_init(re15_actor_t *e);        /* seed the gait row/timer  @0x80101A7C-AC   */
 int  re15_re2z_walk_turn(re15_actor_t *e, int32_t px, int32_t pz, uint32_t dist); /* @0x80101BAC */
-void re15_re2z_rng_reset(void);                   /* re-seed the RE2 PRNG on room load          */
+void re15_re2z_rng_reset(void);                   /* re-seed the RE2 PRNG on room load (also
+                                                   * clears the FUN_800401d4 one-save latch)    */
+
+/* ---- WELLE B: the FULL RE2 zombie brain -----------------------------------------------------
+ * re15_re2z_tick REPLACES the RE1.5 state dispatch for an owned zombie when the RE2 flavor is
+ * selected (hooked in re15_enemy_ai_live_tick / re15_zgirl_ai_tick). It runs the RE2 overlay's
+ * root prolog (cooldown bank @0x8010045C-98) + state machine: ACTIVE @0x8010114C with the
+ * decision-then-executor double dispatch (@0x801011A8-EC), HURT @0x80104F40, DEATH @0x80108250,
+ * CORPSE @0x8010A440, state 8 @0x80109CFC. Presentation uses the REAL RE2 EM01x bank the Welle-A
+ * loader fills (clip indices are RE2-native) + the ENEMSE SE bank via the audio hook below. */
+int  re15_re2z_tick(int slot);                    /* 1 = handled (RE2 brain owns this actor)    */
+
+/* PC registers the ENEMSE playback here (engine stays link-clean for the PSX target, which
+ * never runs the RE2 flavor). bank_fn selects the ENEMSE bank (audio_pc load_re2_enemy_se). */
+void re15_re2z_audio_hook(void (*se_fn)(int se_id, int flag2000), void (*bank_fn)(int bank));
+
+/* ---- WELLE B shims exported from enemy_ai_common.c (wrap its statics) ---------------------- */
+void re15_re2z_player_pin(void);                  /* s_player_grabbed = 1 (per-frame pin)       */
+int  re15_re2z_mash(void);                        /* re15_mash_pressed() (FUN_8001598C twin)    */
+void re15_re2z_footlock(int slot, re15_actor_t *e);  /* clip-driven walk movement              */
+void re15_re2z_victim_begin(re15_actor_t *zombie, re15_actor_t *player, int behind);
+void re15_re2z_victim_devour(re15_actor_t *zombie, int behind);  /* Kill-Tick-Richtung
+                                                   * (dir<<8)|6 @0x80102928-50 — explizit    */
+void re15_re2z_grab_anchor(re15_actor_t *e, re15_actor_t *pl, int clip);
+void re15_re2z_grab_rootmotion(re15_actor_t *e);
+void re15_re2z_move_root(re15_actor_t *e);        /* 0x80015e7c: per-frame clip root delta   */
+void re15_re2z_se_play(int se_id);                /* ENEMSE-SE ueber den Audio-Hook (fuer den
+                                                   * Frame-Flag-SFX-Pfad 0x801016c8)          */
 
 /* ---- W2: the attack-decision ladder DECISION[1] @0x80101714 --------------------------------
  * Kept as a PURE function over an explicit gate struct: the control flow is fully verified, but

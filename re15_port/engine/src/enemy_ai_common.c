@@ -353,35 +353,9 @@ void re15_ai_decide_engage(re15_actor_t *e, const re15_actor_t *player)
 {
     if (!e || !player) return;
 
-    /* PORT OPTION (no original): with the RE2 AI flavor selected, THIS is the function RE2 replaces.
-     * re15_ai_decide_engage is the RE1.5 DECIDE half for the walking engage substates (f840[2] and
-     * f840[0x13]); RE2's counterpart is DECISION[1] @0x80101714, dispatched from 0x8010118C through
-     * the table @0x8010C88C. So the RE2 ladder runs INSTEAD of the RE1.5 decision, not alongside it —
-     * running both would be a chimera, and the RE1.5 arm would keep committing grabs the RE2 ladder
-     * did not choose (measured: it did exactly that, which is why this moved here).
-     *
-     * Today the ladder can only ever commit 0x0301 = the side GRAB; every other block is gated on a
-     * field with no proven producer in the port and is filled with a proven zero rather than a guess
-     * (see re15_re2z_fill_gates). 0x0301 maps 1:1 onto the port's own byte-true grab: RE1.5 commits
-     * with the same sub_state_1 = 3 (@case 7 below), so the RE2 DECISION drives the port's existing,
-     * already byte-true grab EXECUTOR. Words other than 0x0301 are ignored on purpose — RE2's
-     * sub_states 10/12/14 mean different things in RE1.5, so applying them would corrupt the state
-     * machine instead of porting anything. */
-    if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2z_owns_type(e->type)) {
-        re15_re2z_decision_t rd;
-        int committed = re15_re2z_walk_decide(e, player, re15_player_is_grabbed(), &rd);
-        if (getenv("RE15_RE2_TRACE") && (committed || e->ai_dist < 1500u)) {
-            re15_re2z_gates_t gg;
-            re15_re2z_fill_gates(e, player, re15_player_is_grabbed(), &gg);
-            fprintf(stderr, "[re2z] gates d=%u flo=%u/%u claimed=%u g1=%d g2=%d -> %s 0x%08x\n",
-                    gg.dist, gg.self_106, gg.pl_106, gg.pl_1d3, gg.g1_sector_hit, gg.g2_sector_hit,
-                    committed ? "COMMIT" : "none", rd.word);
-        }
-        if (committed && rd.word == 0x00000301u)
-            re15_ai_set_state_word(e, rd.word);            /* sw @0x80101958 / @0x8010199c */
-        return;                                            /* RE2's ladder is the WHOLE decision */
-    }
-
+    /* (WELLE B: with the RE2 AI flavor an owned zombie never reaches this function anymore —
+     * re15_enemy_ai_live_tick hands the WHOLE dispatch to re15_re2z_tick, whose walk decision
+     * IS RE2's DECISION[1] @0x80101714. The old partial hook that lived here is gone.) */
     uint8_t contact = e->ai_contact;                       /* bVar1 = entity+0x90 */
 
     /* contact-direction gate: (bVar1&0xf0)*0x10 = the packed contact heading; relative to
@@ -1497,6 +1471,96 @@ static void re15_enemy_ai_live_grab(re15_actor_t *e, re15_actor_t *player)
                 player->hit_react &= (uint8_t)~1u;
             break;
     }
+}
+
+/* ==== WELLE B (RE2-Flavor) — Shims, die die RE2-Grab-Maschine (enemy_ai_re2_zombie.c) an die
+ * hiesigen statics anbindet. KEIN neues Verhalten: jede Funktion delegiert 1:1 an die byte-true
+ * RE1.5-Infrastruktur oben (Victim-FSM, Anker/Root-Motion, Mash, Foot-Lock). Der RE2-Grab
+ * (EXEC[3] @0x801025EC, Phasen @0x8010001C) faehrt die Spieler-Seite ueber GENAU dieselbe
+ * Victim-/cmd-Infrastruktur wie der RE1.5-Grab (player_hit_chain-Modell) — nur mit RE2-Clips,
+ * RE2-Schadenswerten und explizitem Richtungs-Sub (FUN_80015910 @0x80102714-28). */
+void re15_re2z_player_pin(void) { s_player_grabbed = 1; }
+int  re15_re2z_mash(void)       { return re15_mash_pressed(); }
+void re15_re2z_footlock(int slot, re15_actor_t *e) { re15_enemy_footlock_step(slot, e); }
+
+/* RE2-P0-Aequivalent des cmd-5-Latches (@0x80102710 PL+0x1B4=self, @0x80102720-28 PL+0x4=
+ * (dir<<8)|5, @0x8010275C PL+0x1D3|=0x80): Victim-FSM mit EXPLIZITER Variante (der RE1.5-Latch
+ * leitet sie aus sub_state_1>=4 ab, der RE2-Grab traegt sub 3 fuer beide Richtungen). */
+void re15_re2z_victim_begin(re15_actor_t *zombie, re15_actor_t *player, int behind)
+{
+    re15_enemy_bank_t *vb = re15_enemy_find(zombie->type);
+    if (vb && vb->victim_ok) {
+        g_player_victim_type    = zombie->type;
+        g_player_victim_zombie  = (int)(zombie - g_actors);
+        g_player_victim_variant = (uint8_t)(behind ? 1 : 0);
+        if (g_player_victim == 0 || g_player_victim == 3) {
+            g_player_victim = 1;
+            s_victim_phase  = 0;
+            player->anim_frame = 0;
+            s_victim_fresh  = 1;
+            {   /* cmd-5 ersetzt den ganzen Spieler-Command-State (wie beim RE1.5-Latch oben) */
+                extern void re15_player_aim_interrupt(void);
+                re15_player_aim_interrupt();
+            }
+        }
+    }
+    player->hit_react |= 1;          /* +0x93|=1 — kein Zweit-Grab auf den gehaltenen Spieler */
+    s_player_grabbed = 1;
+}
+
+/* RE2-Kill-Tick (@0x80102928-50, selbst disassembliert): das Original zieht FUN_80015910(self,PL)
+ * am Kill-Tick NEU und schreibt (dir<<8)|6 in den Spieler-Cmd — die Devour-VARIANTE kommt also
+ * live vom Kill-Tick. Der RE1.5-Ableiter in re15_player_victim_devour (sub_state_1 >= 6) sieht
+ * beim RE2-Grab immer sub 3 -> Variante hier EXPLIZIT nachgesetzt (Review-Fund #17). */
+void re15_re2z_victim_devour(re15_actor_t *zombie, int behind)
+{
+    re15_player_victim_devour(zombie);
+    g_player_victim_variant = (uint8_t)(behind ? 1 : 0);
+}
+
+/* Anker-Teilung (byte-true Muster FUN_8001ac38: EIN Anker fuer beide, @0x80102748-64 sync't RE2
+ * die Spieler-Anim auf die Zombie-Bank — die Paar-Formation kommt aus den Clip-Root-Offsets). */
+void re15_re2z_grab_anchor(re15_actor_t *e, re15_actor_t *pl, int clip)
+{
+    re15_enemy_bank_t *b = re15_enemy_find(e->type);
+    if (b && b->ok) re15_clip_anchor_set(e, &b->skel, &b->anim, clip, 0);
+    else { e->anchor_x = e->x; e->anchor_z = e->z; }
+    pl->anchor_x = e->anchor_x;
+    pl->anchor_z = e->anchor_z;
+}
+
+void re15_re2z_grab_rootmotion(re15_actor_t *e)
+{
+    re15_enemy_bank_t *b = re15_enemy_find(e->type);
+    if (b && b->ok)
+        re15_clip_root_motion_abs(e, &b->skel, &b->anim, (int)e->motion, (int)e->anim_frame);
+}
+
+/* RE2 0x80015e7c+0x800152C8-Aequivalent (das Bewegungs-PAAR: e7c schreibt die per-Frame-
+ * DIFFERENZ der Keyframe-Root-Offsets in den Vektor +0x144/146/148 (`sh v1,324(t0)`
+ * @0x80015FD8-E4, selbst disassembliert), 152c8 wendet ihn yaw-rotiert auf +0x38/+0x40 an
+ * (@0x80015314-34)). Der Port kollabiert das Paar in EINE Delta-Anwendung
+ * (re15_clip_root_motion_delta liest dieselben kf-Felder +6..+11).
+ * BANK-WAHL: der WALK laedt fuer e7c explizit die PAIR-1-Bank (a1=+0x108/a2=+0x17C
+ * @0x80101CB0-BC) = die Port-Loco-Bank; alle anderen Substates fahren die vom Dispatcher
+ * gereichte Pair-2-Action-Bank. Byte-gelesen: Pair-1-Clip 0 sx 2/47/121/209... (+X vorwaerts),
+ * Pair-2-Clip 0x1B sx 82/141/212 (Lunge-Dash), Pair-2-Clip 2 sx 0/-53/-186 (Rueckwaerts-Fall).
+ * prev-Tracking ueber die freien root_prev_*-Felder (der apply_root_motion-Nutzerkreis sind
+ * Spieler/NPC-Walker, nie ein RE2-Zombie). */
+void re15_re2z_move_root(re15_actor_t *e)
+{
+    re15_enemy_bank_t *b = re15_enemy_find(e->type);
+    if (!b || !b->ok) { e->root_prev_kf = -1; return; }
+    const re15_emd_skeleton_t  *s = &b->skel;
+    const re15_emd_animation_t *a = &b->anim;
+    if (e->state == 1 && e->sub_state_1 == 1 && b->loco_ok) {   /* WALK -> Pair 1 @0x80101CB0-BC */
+        s = &b->skel_loco; a = &b->anim_loco;
+    }
+    int fr = (int)e->anim_frame;
+    if (e->root_prev_motion == e->motion && e->root_prev_kf >= 0)
+        re15_clip_root_motion_delta(e, s, a, (int)e->motion, fr, e->root_prev_kf);
+    e->root_prev_kf = (int16_t)fr;
+    e->root_prev_motion = e->motion;
 }
 
 /* SEARCH-STAND animate (+0x5=0) — byte-true FUN_80101d08 (@0x8011f890[0], cluster-B raw): the idle
@@ -3094,29 +3158,9 @@ static void re15_enemy_ai_live_engage_animate(int slot, re15_actor_t *e)
         uint8_t v = s_gait_variant[slot];
         int16_t rot = gait_rot(v, s_wander_idx[slot]);   /* unbounded fetch (blob) */
         int16_t sVar7 = (int16_t)((int16_t)s_wander_mag[slot] * rot);
-        /* PORT OPTION (no original): with the RE2 AI flavor selected, the zombie's WALK TURN follows
-         * the RE2 gate instead of this authored weave — far away it still weaves (+8/-8 by the gait
-         * row's bit15), but inside 5001 it turns monotonically onto the player and inside 3000 it adds
-         * a second rate-16 turn. See enemy_ai_re2_zombie.c for the byte-true disasm citations. */
-        if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2z_owns_type(e->type)) {
-            /* The RE2 gait row (+0x16B) and its segment timer (+0x158) are owned by RE2's OWN gait
-             * machine (@0x80101A7C-AC init, @0x80101B2C-90 tick) driving RE2's OWN PRNG — feeding it
-             * from the RE1.5 wander index would be a cross-game guess, so it does not happen. */
-            re15_re2z_walk_turn(e, g_actors[RE15_ACTOR_SLOT_PLAYER].x,
-                                   g_actors[RE15_ACTOR_SLOT_PLAYER].z, e->ai_dist);
-            /* RE2's own attack DECISION (DECISION[1] @0x80101714) runs on the same tick as the walk,
-             * because 0x8010118C dispatches decision-then-executor (@0x801011A8-EC). Today the ladder
-             * can only ever commit 0x0301 = the side GRAB: every other block is gated on a field with
-             * no proven producer in the port, and those gates are filled with proven zeros rather
-             * than guesses (see re15_re2z_fill_gates). 0x0301 maps 1:1 onto the port's own byte-true
-             * grab entry — RE1.5 commits the grab with the same sub_state_1 = 3 (@enemy_ai_common
-             * case 7), so the RE2 decision drives the port's existing, already byte-true grab. Any
-             * other word is IGNORED on purpose: RE2's sub_states 10/12/14 mean different things in
-             * RE1.5, so applying them would corrupt the state machine rather than port anything. */
-            /* (the RE2 attack DECISION lives in re15_ai_decide_engage — this is the ANIMATE half) */
-        } else {
-            re15_enemy_steer_point(e, e->steer_x, e->steer_z, sVar7);
-        }
+        /* (WELLE B: the RE2 walk lives entirely in re15_re2z_tick now — an owned zombie under the
+         * RE2 flavor never reaches this RE1.5 walk animate. The old in-place turn hook is gone.) */
+        re15_enemy_steer_point(e, e->steer_x, e->steer_z, sVar7);
         {   /* the timer/idx block runs for EVERY variant (the original has no v<=1
              * gate) — variant 6's zero rows expire per frame (1 rand draw/frame),
              * variant 12 latches the 30260-frame snap segment: byte-true quirks. */
@@ -3723,6 +3767,21 @@ router_gate:
 int re15_actor_uses_loco_bank(const re15_actor_t *a)
 {
     if (!a) return 0;
+    /* WELLE B (RE2-Flavor): der RE2-WALK (ACTIVE sub 1) posiert/verfaehrt die PAIR-1-Bank —
+     * sein 0x80015e7c laedt EXPLIZIT a1=EMR@+0x108 / a2=EDD@+0x17C (@0x80101CB0-BC), waehrend
+     * der Dispatcher allen anderen Subs die Pair-2-Action-Bank reicht. Pair 1 == die Port-
+     * Loco-Bank (dir[1]/[2], re2_ems.c). Byte-gelesen: Pair-1-Clips 0..7 tragen die
+     * +X-Vorwaertsbewegung (Clip 0: sx 2/47/121/209...), Pair-2-Clip 0 ist das wurzelfeste
+     * Idle. */
+    if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2z_owns_type(a->type)) {
+        /* Pair-1-Spieler: WALK (a1=+0x108/a2=+0x17C @0x80101CB0-BC) und BUMP (dieselben Loads
+         * @0x801022F0-F4, Clips 4/6 = 0xF0004+walkclip @0x80102290-AC) — beide byte-belegt. */
+        if (a->state == 1 && (a->sub_state_1 == 1 || a->sub_state_1 == 2)) {
+            re15_enemy_bank_t *b = re15_enemy_find(a->type);
+            return (b && b->loco_ok && (int)a->motion < b->anim_loco.clip_count) ? 1 : 0;
+        }
+        return 0;
+    }
     /* Grid-Nibble-Guard (B2-Caveat 2): die Loco-Bank-Poser sitzen AUSSCHLIESSLICH in
      * Grid-0-Handlern (`lw a0,132(v0)` @0x80105d3c / engage FUN_801021f8, beide via
      * @0x8011f80c[0]); die Grid-1-Tabelle @0x8011F920 hat eigene +0x5-Belegungen (u.a.
@@ -3898,6 +3957,15 @@ int re15_enemy_ai_live_tick(int slot)
                              (int16_t)g_actors[RE15_ACTOR_SLOT_PLAYER].z,
                           e->ai_wp_node, (int)(e->ai_flags & 8u));
     e->ai_flags &= (uint16_t)~8u;                        /* the @0x8010a9f8 one-shot clear */
+
+    /* PORT OPTION (WELLE B): with the RE2 AI flavor the WHOLE state dispatch is the RE2 brain
+     * (re15_re2z_tick, enemy_ai_re2_zombie.c) — root prolog + decision-then-executor exactly as
+     * the RE2 overlay runs it (@0x801011A8-EC). The RE1.5 default below stays byte-identical.
+     * run_all's shared tail (body pushes + SCA wall clamp) still applies to the RE2 zombie. */
+    if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2z_owns_type(e->type)) {
+        re15_re2z_tick(slot);
+        return 1;
+    }
 
     int32_t wall_ox = e->x, wall_oz = e->z;              /* pre-dispatch pos for the wall clamp */
     switch (e->state) {                                  /* @0x8011f7b4[entity+0x4] */
@@ -7680,6 +7748,13 @@ static void re15_zgirl_ai_tick(int slot)
                           e->ai_wp_node, (int)(e->ai_flags & 8u));  /* FUN_80039e7c @0x8010a9c0-e0 */
     e->ai_flags &= (uint16_t)~8u;                   /* the one-shot clear @0x8010a9f0-fc */
 
+    /* PORT OPTION (WELLE B): RE2 folds kind 0x13 onto the SAME zombie overlay (loader clamp
+     * 0x10..0x1F -> 0x10, @0x8001B738-48), so the girl runs the full RE2 brain too. */
+    if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2z_owns_type(e->type)) {
+        re15_re2z_tick(slot);
+        return;
+    }
+
     switch (e->state) {                             /* @0x80120208[+0x4] @0x8010aa0c-2c */
     case 0:                                         /* INIT FUN_8010ab2c */
         e->state = 1;                               /* +0x4=1 @0x8010aba4-a8 */
@@ -9725,6 +9800,22 @@ static void re15_enemy_anim_sfx(const re15_actor_t *e)
 {
     re15_enemy_bank_t *b = re15_enemy_find(e->type);
     if (!b || !b->ok) return;
+    /* WELLE B (Review-Fund #20): unter RE2-Flavor gilt (a) die flavor-bewusste Bank-Regel
+     * (WALK/BUMP = Pair 1, re15_actor_uses_loco_bank) und (b) der RE2-SFX-MECHANISMUS
+     * 0x801016c8 (selbst disassembliert, Aufruf im Walk-Tail @0x80101D34): Frame-Wort-Bit
+     * 0x08000000 gesetzt UND (Wort>>28) < 2 -> ENEMSE-SE (Wort>>28) via 0x8005bd6c — NICHT
+     * die RE1.5-Room-SE-Maske. EM010-Pair-1-Belegung byte-gelesen: Clip 0 Frames 20/62 =
+     * SE 1/0 (die zwei Schritte). */
+    if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2z_owns_type(e->type)) {
+        const re15_emd_animation_t *A = re15_actor_uses_loco_bank(e) ? &b->anim_loco : &b->anim;
+        if ((int)e->motion >= A->clip_count) return;
+        const re15_emd_clip_t *c = &A->clips[e->motion];
+        if (c->frame_count <= 0) return;
+        uint32_t fw = A->frames[c->first_frame + (e->anim_frame % (uint32_t)c->frame_count)];
+        if ((fw & 0x08000000u) && (fw >> 28) < 2u)          /* and @0x801016e4, sltiu @0x801016f0 */
+            re15_re2z_se_play((int)(fw >> 28));             /* jal 0x8005bd6c @0x801016fc */
+        return;
+    }
     const re15_emd_animation_t *A = &b->anim;
     if (e->state == 1 && (e->sub_state_1 == 0x13 || e->sub_state_1 == 2 || e->sub_state_1 == 7)
         && b->loco_ok && (int)e->motion < b->anim_loco.clip_count)
