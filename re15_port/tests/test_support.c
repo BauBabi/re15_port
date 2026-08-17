@@ -38,7 +38,19 @@ void re15_audio_load_room_banks(void)
 
 /* Audio stubs for engine unit tests (the real impls live in the PC/PSX backends,
  * not linked into test binaries). enemy_ai_common.c's death FSM calls re15_audio_room_se. */
-void re15_audio_room_se(int se_id) { (void)se_id; }
+/* SNDL1-SE-SPION (nur Test-Harnisch): protokolliert jeden FUN_800453d0-Aufruf mit dem
+ * vom Test gesetzten Tick-Stempel, damit SE-Kadenz/Frames byte-genau gepinnt werden koennen. */
+int g_test_room_se_log[2048];
+int g_test_room_se_tickof[2048];
+int g_test_room_se_n    = 0;
+int g_test_room_se_tick = 0;
+void re15_audio_room_se(int se_id)
+{
+    if (g_test_room_se_n < 2048) {
+        g_test_room_se_tickof[g_test_room_se_n] = g_test_room_se_tick;
+        g_test_room_se_log[g_test_room_se_n++]  = se_id;
+    }
+}
 void re15_audio_weapon_se(int se_id) { (void)se_id; }
 /* FILE wave: spy on the CORE00-bank SE calls (FUN_80045024 bank 4) so the FSM tests
  * can assert the byte-cited call sites (SE(4,4)/(4,5)/(4,6)/(4,8)). */

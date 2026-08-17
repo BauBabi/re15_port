@@ -414,6 +414,114 @@ int re15_autolook_scan(re15_actor_t *pl, uint32_t radius)
     return 0;
 }
 
+/* =========================== NPC-NECK-SPAWN-INIT ==========================================
+ * NUTZER-REPORT (wiederholt): "Irons schaut im Original etwas diagonaler in Irons' Office."
+ *
+ * URSACHE (byte-true, alles selbst disassembliert; die alte Diagnose in skeleton_common.c
+ * — "Irons' NPC-INIT laeuft auch im Original NIE, sein Neck-Zustand wird aus dem Vorraum
+ * geerbt" — ist damit WIDERLEGT und entfernt):
+ *
+ *   `Sce_em_set` (Opcode 0x44, Handler @0x800420a0, Dispatch 0x800744a8[68]) ruft den
+ *   TYP-ROOT SELBST auf, INLINE beim Spawn, bevor irgendein Skript-Opcode folgen kann:
+ *     800421e0  sw   zero,4(s0)                 ; Entity+0x4..0x7 = 0  -> STATE 0
+ *     80042530  jal  0x8001e5b0                 ; Part-Pool-Init
+ *     80042578  sw   s0,-14460(at)              ; DAT_800ac784 = die neue Entity
+ *     8004257c  lbu  v0,8(s0)                   ; Typ
+ *     80042584  sll  v0,v0,2
+ *     8004258c  addiu at,at,11180               ; 0x80072bac = Typ->Root-Tabelle
+ *     80042594  lw   v0,0(at)
+ *     8004259c  jalr v0                         ; <-- ROOT MIT STATE 0 = der INIT LAEUFT
+ *   (Das Freeze-Bit +0x9&0x20 wird dafuer eigens vorher geloescht, @0x8004256c
+ *    `andi v0,v1,0xdf; sb v0,9(s0)`, und danach @0x80042604 `or v0,v0,s4` wieder gesetzt.)
+ *   Erst DANACH kaeme ein optionaler state=4-Override aus dem Spawn-Operanden
+ *   (@0x800425a4 `lh v0,16(s2)`; ROOM1150 hat dort 0x0000 -> faellt aus) und der
+ *   SPL-Sonderfall @0x8004260c-18 (`andi v0,0x40` auf Entity+0x9 -> +0x1b8 = 0x12).
+ *
+ *   Der NPC-INIT (Typ 0x45 = Irons: Tabelle 0x80121738[0] = FUN_8011d2b8) schreibt dabei
+ *   die Kopf-/Neck-Konfiguration — bei ALLEN SIEBEN NPC-Typen BYTE-IDENTISCH:
+ *     +0x1a8 = &player (0x800aca54)   @0x8011d314   (Default-Blickziel)
+ *     +0x9e  = 0x78                   @0x8011d334   (Speed-Override-Byte)
+ *     +0x1b8 = 0                      @0x8011d344   (Flags 0 = ENTITY-TRACKING!)
+ *     +0x1b9 = 8                      @0x8011d354   (Kopf-Part-Index)
+ *     part8+0x98 = 0x40               @0x8011d36c   (Yaw-Step 64)
+ *     part8+0x9a = 0x30               @0x8011d374   (Pitch-Step 48)
+ *     part8+0x9c = 0x2c8              @0x8011d37c   (Yaw-Klemme +-712)
+ *     part8+0x94/0x96 = 0             @0x8011d384/88 (Akkumulatoren)
+ *     part8+0x9e = 0x138              @0x8011d38c   (Pitch-Klemme +-312)
+ *   Gleiche Blocks: 0x40 @0x8011c738-b0 · 0x42 @0x8011cd18-80 · 0x47 @0x8011d8b8-920 ·
+ *   0x49 @0x8011de04-6c · 0x4b @0x8011e3dc-444 · 0x4d (STAGE6) @0x80101984-19ec.
+ *
+ *   ROOM1150 spawnt Irons mit `44 00 45 00 00 00 00 ff 62 ad 30 fd ed 99 00 00 00 00 00 00`
+ *   (main00+0x012c): Behavior-Byte pc[3] = 0x00 -> Entity+0x9 = 0 (@0x80042164) -> der
+ *   0x12-Override @0x80042618 greift NICHT -> +0x1b8 bleibt 0 = Irons TRACKT LEON mit dem
+ *   Kopf, permanent, in BEIDEN Achsen (Yaw + Pitch, geklemmt auf +-0x2c8/+-0x138).
+ *   Genau das ist das gemeldete "diagonaler". Danach setzt sub02 (`Work_set(2,0)` +
+ *   `Plc_motion(0,3)`) nur state=4/+0x94=3 (@0x80041ba8-c8) — +0x1b8/+0x1b9 fasst
+ *   Plc_motion NICHT an, die Neck-Konfiguration des INIT bleibt also stehen.
+ *
+ * SAVESTATE-GROUND-TRUTH (7 NPC-Instanzen in 5 sauberen Savestates, per re15-savestate-ghidra
+ * gelesen — mzd_stage1_npc/mzd_stage1_dog/mzd_stage1_maggot/orig_1170_gp/lampwalk_base):
+ * JEDER dort lebende NPC (0x40/0x42/0x47/0x4b) steht auf state=4 UND traegt trotzdem
+ * +0x1b9=8, +0x1a8=0x800aca54, +0x9e=120, part8 step=(64,48), clamp=(0x2c8,0x138) —
+ * Werte, die AUSSCHLIESSLICH der INIT schreibt. Der INIT laeuft also im echten Spiel,
+ * auch wenn das Skript die Entity danach nach state 4 stempelt.
+ * (Diese Savestates haben alle Behavior 0x40 -> +0x1b8 = 0x12; ein Savestate MIT einem
+ *  Typ-0x45/Behavior-0x00-NPC existiert nicht — das Tracking selbst ist statisch belegt,
+ *  nicht live gemessen. Ehrlich vermerkt.)
+ *
+ * PORT-DEFEKT: der Port hat den NPC-INIT als `case 0` des Zustands-Dispatch
+ * (enemy_ai_common.c). Der SCD stempelt state=4 (op_plc_motion @0x80041bb0) noch im
+ * Raum-Lade-Frame, also BEVOR die Entity-Schleife das erste Mal tickt -> case 0 lief nie
+ * -> neck_bone blieb 0 -> die Neck-FSM in re15_skel_compute_pose war fuer Irons komplett
+ * abgeschaltet (gemessen mit probe_irons_neck_1150, Lane B:
+ *   VORHER  bone=0 fl=0x00 acc=(0,0) step=(0,0) clamp=(0,0) -> Kopf yaw=0 pitch=-51
+ *   NACHHER bone=8 fl=0x00 tgt=0 acc=(-680,+165)            -> Kopf yaw=664 pitch=-332).
+ *
+ * FIX: die Spawn-Zeit-Wirkung des INIT hier nachziehen, an der Frame-Position, die im Port
+ * dem `jalr` @0x8004259c entspricht — direkt nach dem SCD-VM-Tick (main.c) und VOR der
+ * Entity-Schleife (re15_enemy_ai_run_all am Step-Ende). Nur die NECK-Felder; alles andere
+ * am INIT (state/clip/hp) liegt weiter im Zustands-Dispatch und ist fuer Irons ohnehin vom
+ * Skript ueberschrieben (state 4 / clip 3 — identisch zum Original).
+ * `neck_bone == 0` ist der exakte "INIT lief noch nicht"-Marker: den Wert 8 schreibt nur
+ * der INIT (@0x8011d354 & Geschwister), und kein ausgelieferter Pfad setzt ihn je zurueck.
+ * Laeuft der Dispatch-`case 0` normal (Marvin/Elliot/ROOM11B0), ist bone bereits 8 und
+ * diese Schleife ein No-Op. */
+static void re15_npc_neck_spawn_init(void)
+{
+    for (int i = 1; i < RE15_ACTOR_MAX; i++) {
+        re15_actor_t *e = &g_actors[i];
+        if (!e->active || e->neck_bone != 0) continue;
+        const uint8_t t = e->type;
+        /* Die sieben Typen, deren Root-Tabelle[0] den obigen Neck-Block traegt (STAGE1:
+         * 0x40/0x42/0x45/0x47/0x49/0x4b; STAGE6: 0x4d) — dieselbe Menge, die der Port in
+         * re15_enemy_ai_run_all auf re15_npc_ai_tick routet. */
+        if (t != 0x40 && t != 0x42 && t != 0x45 && t != 0x47 &&
+            t != 0x49 && t != 0x4b && t != 0x4d) continue;
+
+        e->neck_bone        = 8;                        /* +0x1b9 @0x8011d354 */
+        e->neck_target_slot = RE15_ACTOR_SLOT_PLAYER;   /* +0x1a8 = &player @0x8011d314 */
+        e->neck_step_yaw    = 0x40;                     /* part8+0x98 @0x8011d36c */
+        e->neck_step_pitch  = 0x30;                     /* part8+0x9a @0x8011d374 */
+        e->neck_clamp_yaw   = 0x2c8;                    /* part8+0x9c @0x8011d37c */
+        e->neck_clamp_pitch = 0x138;                    /* part8+0x9e @0x8011d38c */
+        /* Flags/Speed/Akkus nur, wenn noch KEIN Plc_neck auf dieser Entity lief: der
+         * Opcode-Handler setzt IMMER Bit 0x80 (`ori v0,zero,0x80` @0x80041ea4 /
+         * `sb v0,0x1b8(v1)` @0x80041ea8) und schreibt +0x9e/+0x9f (@0x80041f68/6c) —
+         * im Original stuende sein Kommando NACH dem INIT und wuerde gewinnen.
+         * (Bone/Steps/Klemmen/Ziel oben fasst Plc_neck nie an, die duerfen unbedingt.) */
+        if (!(e->neck_flags & 0x80)) {
+            e->neck_yaw = 0; e->neck_pitch = 0;         /* part8+0x94/0x96 @0x8011d384/88 */
+            e->neck_sweep = 0;
+            e->neck_speed = 0x78;                       /* +0x9e @0x8011d334 */
+            /* +0x1b8 = 0 @0x8011d344, danach der SPL-Spawn-Sonderfall
+             * @0x8004260c-18: (Entity+0x9 & 0x40) -> 0x12 (neck-idle statt Tracking).
+             * Der Port bildet Entity+0x9 auf actor.grid_id ab (Sce_em_set schreibt das
+             * Behavior-Byte pc[3] dorthin). ROOM1150-Irons: pc[3] = 0x00 -> Tracking. */
+            e->neck_flags = (uint8_t)((e->grid_id & 0x40) ? 0x12 : 0x00);
+        }
+    }
+}
+
 void re15_game_step(const re15_game_ctx_t *c)
 {
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
@@ -425,6 +533,12 @@ void re15_game_step(const re15_game_ctx_t *c)
      * inside re15_aot_scan on the TRIGGER frame (its tail still runs that frame, byte-true), then this
      * gate takes over from the next tick. Unreachable outside an item pickup = no room regression. */
     if (re15_item_modal_active()) return;
+
+    /* Spawn-Zeit-Neck-INIT der NPCs (Sce_em_set `jalr` @0x8004259c) — siehe den Block ueber
+     * re15_npc_neck_spawn_init(). Steht hier, weil main.c den SCD-VM-Tick unmittelbar vor
+     * re15_game_step faehrt: der Spawn ist gerade passiert, die Entity-Schleife
+     * (re15_enemy_ai_run_all) laeuft erst am Step-Ende. */
+    re15_npc_neck_spawn_init();
 
     if (s_go_on && !re15_player_is_dead())
         re15_gameover_fsm_reset();                       /* continue-reload revived the player */

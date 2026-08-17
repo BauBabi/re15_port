@@ -326,24 +326,21 @@ int re15_skel_compute_pose(const re15_emd_skeleton_t *skel,
          * (`lhu a1,98(s0)` @0x800375dc). Ebenso ist Bit 0x10 ein ABSOLUTES Pitch-Ziel 0
          * (`sh zero,20(sp)` @0x80037560), kein "Akku -> 0". Beides unten korrigiert.
          *
-         * OPEN (Report 4, ROOM1150 Irons): das Gate `neck_bone != 0` ist eine PORT-Kruecke.
-         * Im Original ruft der 0x45-Root die FSM JEDEN Tick (`jal 0x80037358` @0x8011d278),
-         * und +0x1b8/+0x1b9 (Flags/Kopf-Part) ueberleben den Raumwechsel: der Room-Load
-         * cleart nur Entity-Wort 0 (FUN_8001a4c0), der Part-Pool-Init FUN_8001e5b0 schreibt
-         * +0x94..+0x9e gar nicht. Irons' eigener NPC-INIT @0x8011d2b8 (Neck-Defaults
-         * @0x8011d344-8c) laeuft auch im Original NIE (SCD-VM @0x8001cdec vor Entity-Loop
-         * @0x8001ce04; sub02 Plc_motion(0,3) stampft +0x4=4 @0x80041bb0 vor dem ersten
-         * Root-Tick) -> Slot 0 ERBT den letzten Neck-Zustand des Vorraums (ROOM10D0 Marvin:
-         * flags 0x92 / bone 8 / yaw-step 100). Der Port hat neck_bone == 0 -> FSM ganz aus.
-         * Die Vererbung ist im Port NICHT hier reparierbar (die Slot-Felder werden in
-         * actor_common.c re15_actor_alloc/re15_actor_init genullt, und die konkreten
-         * Erbwerte sind Laufzeitdaten). MESSANLEITUNG: DuckStation-Savestate in ROOM1150,
-         * angespielt ueber die ECHTE Kampagnenkette (NICHT Debug-JUMP — andere Slot-
-         * Historie), dann per Skill re15-savestate-ghidra lesen: enemy[0] @0x800acc2c
-         * +0x1b8/+0x1b9/+0x9e/+0x9f sowie Part-Pool +0x188 -> part8 (+8*0xac) +0x94/+0x96
-         * (Akkus), +0x98/+0x9a (Steps), +0x9c/+0x9e (Klemmen). Erst mit diesen Werten darf
-         * das Gate fallen. Leons Seite der Szene (Kniet-Look, gemessen acc(p=312) = Klemme
-         * aktiv) ist mit der Klemmen-/Release-Korrektur unten bereits gefixt. */
+         * KORREKTUR 2026-08-17 (Report "Irons schaut diagonaler", Runde 2): der frueher hier
+         * stehende OPEN-Text ("Irons' NPC-INIT @0x8011d2b8 laeuft auch im Original NIE, der
+         * Neck-Zustand wird aus dem Vorraum GEERBT") ist WIDERLEGT — statisch UND dynamisch:
+         *   - `Sce_em_set` ruft den Typ-Root INLINE beim Spawn mit state 0 auf
+         *     (`sw zero,4(s0)` @0x800421e0 ... `jalr v0` @0x8004259c) -> der INIT laeuft
+         *     IMMER, bevor irgendein SCD-Opcode (auch Plc_motion) die Entity anfassen kann.
+         *   - 7 NPC-Instanzen aus 5 sauberen Savestates (mzd_stage1_npc/dog/maggot,
+         *     orig_1170_gp, lampwalk_base) stehen auf state=4 und tragen trotzdem +0x1b9=8,
+         *     +0x1a8=&player, +0x9e=120, part8 step=(64,48), clamp=(0x2c8,0x138) — Werte, die
+         *     nur der INIT schreibt.
+         * `neck_bone != 0` bleibt als Gate stehen, ist aber keine Kruecke mehr, sondern der
+         * exakte "+0x1b9 wurde gesetzt"-Test des Originals (`lbu ... 0x1b9(wk)` -> Part-Index).
+         * Gefuellt wird es jetzt zur SPAWN-Zeit von re15_npc_neck_spawn_init()
+         * (game_step_common.c), dem Port-Aequivalent des `jalr` @0x8004259c — dort steht auch
+         * die vollstaendige Adress-Herleitung. */
         if (bact && bact->neck_bone != 0 && b == (int)bact->neck_bone) {
             re15_actor_t *a = bact;
             uint8_t  fl = a->neck_flags;

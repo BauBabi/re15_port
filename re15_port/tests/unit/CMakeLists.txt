@@ -1183,3 +1183,45 @@ if(TARGET SDL2::SDL2-static)
     add_test(NAME unit_rotor_bgm_pin COMMAND test_rotor_bgm_pin)
     set_tests_properties(unit_rotor_bgm_pin PROPERTIES TIMEOUT 120)
 endif()
+
+# --- DIAGNOSE (kein ctest): Nutzer-Report "Irons schaut im Original etwas diagonaler".
+#     Misst Irons' (NPC 0x45) Neck-Zustand + die GERENDERTE Kopf-Orientierung in ROOM1150.
+add_executable(probe_irons_neck_1150 probe_irons_neck_1150.c)
+target_link_libraries(probe_irons_neck_1150 PRIVATE re15_engine re15_test_support m)
+target_include_directories(probe_irons_neck_1150 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# --- MESSPROBE ROOM1140 Re-Entry nach "in die Menge laufen" (Nutzer-Report 2026-08-17) ---
+add_executable(probe_1140_reentry probe_1140_reentry.c)
+target_link_libraries(probe_1140_reentry PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1140_reentry PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# --- PIN (2026-08-17): Nutzer-Report "Irons schaut im Original etwas diagonaler in Irons'
+#     Office". Sce_em_set ruft den Typ-Root INLINE beim Spawn mit state 0 (`sw zero,4(s0)`
+#     @0x800421e0 ... `jalr v0` @0x8004259c) -> der NPC-INIT 0x8011d2b8 LAEUFT immer und
+#     setzt +0x1b8=0 (Entity-Tracking) / +0x1b9=8 / part8 Steps 0x40-0x30 / Klemmen
+#     0x2c8-0x138. Der Port fuehrte den INIT nur als state-0-Dispatch aus, den der SCD mit
+#     Plc_motion (state=4 @0x80041bb0) ueberholte -> Neck-FSM fuer Irons komplett aus.
+#     Der Pin nagelt die GERENDERTE Kopf-Orientierung (Yaw UND Pitch) fest.
+add_executable(test_irons_neck_1150 test_irons_neck_1150.c)
+target_link_libraries(test_irons_neck_1150 PRIVATE re15_engine re15_test_support m)
+target_include_directories(test_irons_neck_1150 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_irons_neck_1150 PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_irons_neck_1150 COMMAND test_irons_neck_1150)
+set_tests_properties(unit_irons_neck_1150 PROPERTIES TIMEOUT 90)
+
+# --- MESSPROBE ROOM10D0 Knockdown/Getup-SEs (Nutzer-Report 2026-08-17) ---
+add_executable(probe_10d0_knockse probe_10d0_knockse.c)
+target_link_libraries(probe_10d0_knockse PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_10d0_knockse PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# --- Bank-Regel + Frame-Wort-SEs des STAGE1-Zombies (Nutzer-Reports 2026-08-17 A+B) ---
+add_executable(test_zombie_bank_sfx test_zombie_bank_sfx.c)
+target_link_libraries(test_zombie_bank_sfx PRIVATE re15_engine re15_test_support)
+target_include_directories(test_zombie_bank_sfx PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_zombie_bank_rule  COMMAND test_zombie_bank_sfx bank)
+add_test(NAME unit_zombie_idle_clip  COMMAND test_zombie_bank_sfx idle)
+add_test(NAME unit_zombie_step_sfx   COMMAND test_zombie_bank_sfx step)
+add_test(NAME unit_zombie_knock_sfx  COMMAND test_zombie_bank_sfx knock)
+set_tests_properties(unit_zombie_bank_rule unit_zombie_idle_clip
+                     unit_zombie_step_sfx unit_zombie_knock_sfx PROPERTIES TIMEOUT 60)

@@ -821,6 +821,20 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
      * via the local_40==0 auto-repeat; the initial delay debounces the carried-over hold.) */
     int nav_delay = 0x13;
     int auto_drive = getenv("RE15_CARD_AUTO") != NULL;
+    /* TEST-HAKEN (kein Spielverhalten): RE15_CARD_SLOT="a,b,c" waehlt beim AUTO-DRIVE je
+     * Screen-Aufruf der Reihe nach den Start-Cursor (sonst bestaetigt der Auto-Drive immer
+     * Slot 0). Nur damit laesst sich die Nutzer-Sequenz "Spielstand laden -> auf einen NEUEN
+     * Slot speichern" headless fahren (integration_save_counter_pin). */
+    if (auto_drive) {
+        const char *cs = getenv("RE15_CARD_SLOT");
+        if (cs) {
+            static int cs_idx = 0;
+            const char *p = cs;
+            for (int i = 0; i < cs_idx && p; i++) { p = strchr(p, ','); if (p) p++; }
+            if (p && *p) { int n = atoi(p); if (n >= 0 && n < RE15_SAVE_SLOTS) cursor = n; }
+            cs_idx++;
+        }
+    }
     const char *card_shot = getenv("RE15_CARD_SHOT");
     unsigned af = 0;
 
@@ -2916,7 +2930,27 @@ re_title:;
         re15_savedata_restore(&s_resume_sd, &rr);
         s_resume_pending = 0;
         s_resume_cut   = (int)s_resume_sd.camera_cut;   /* restore the save-time framing/background */
-        s_save_counter = s_resume_sd.save_count;   /* DAT_800b0fbd restored from the loaded save */
+        /* [PORT-ABWEICHUNG, Nutzer-Entscheid 2026-08-17] — Save-Nummer zaehlt MONOTON hoch.
+         *
+         * ORIGINAL (byte-true belegt, analysis/save_counter.md §0.2): der Zaehler ist Zustand
+         * des laufenden SPIELSTRANGS, nicht der Karte. Der LOAD restauriert ihn WHOLESALE aus
+         * dem Save-Block — `memcpy(&DAT_800b0dbc, buf, 0x1430)` @0x80026290-a0, der Zaehler
+         * DAT_800b0fbd liegt bei Block+0x201 — und springt am Post-Inkrement VORBEI
+         * (@0x800262a4 `j 0x800264a0`; das Inkrement selbst @0x8002648c `lbu` / @0x80026494
+         * `addiu 1` / @0x8002649c `sb` laeuft nur im Save-Erfolgszweig @0x80026230). Gespeichert
+         * wird immer der PRE-Inkrement-Stand (Write-Quelle ist Live-RAM 0x800b0dbc,
+         * @0x800261ec/@0x80026224). FOLGE IM ORIGINAL: der erste Save nach einem Load traegt
+         * NOCHMAL dieselbe Nummer; wer nur "laden -> einmal speichern -> beenden" spielt, sieht
+         * die Nummer nie steigen.
+         *
+         * ENTSCHEIDUNG (wie bei den Ortsnamen 2026-08-08, Muster re15_savepoint.c): der Port
+         * weicht hier BEWUSST ab und restauriert den geladenen Stand + 1, damit auch der erste
+         * Save nach einem Load hochzaehlt. Das ist die EINZIGE Abweichung — alles andere bleibt
+         * byte-true: neues Spiel startet bei 0 (EXE-Image @Datei 0xa17bd = 00, main.c NEW-GAME-
+         * Zweig), gespeichert wird weiter PRE-Inkrement, und das Post-Inkrement nach erfolgreichem
+         * Write (@0x8002648c-9c) bleibt unveraendert. Kein Karten-/Slot-Wert geht in die Nummer
+         * ein (das Original liest sie dort NIE). Eingefroren von integration_save_counter_pin. */
+        s_save_counter = (uint16_t)(s_resume_sd.save_count + 1);
         /* Re-prime the ARMS SE bank to the restored weapon: the room-init primed the default
          * (bank1), and re15_player_set_equipped_weapon (in restore) sets the weapon id but not the
          * cached SE bank — so a save with a gun equipped would fire the wrong SE without this. */
@@ -3080,6 +3114,14 @@ re_title:;
         /* FE-4 phone SAVE (outside the game frame): a save-point phone was examined?
          * gate on the MEMORY CARD item (0x21, RE1.5's ink-ribbon equivalent) — if held,
          * open the save screen and consume one card on a successful save. */
+        /* TEST-HAKEN (kein Spielverhalten): RE15_SAVE_TEST_AGAIN=<frame> feuert einen ZWEITEN
+         * Save-Point im selben Prozess. Der Save-Zaehler ist Sitzungs-Zustand (DAT_800b0fbd),
+         * also braucht sein Pin zwei Saves in EINER Sitzung. */
+        { static int s_save_again = -2;
+          if (s_save_again == -2) { const char *sa = getenv("RE15_SAVE_TEST_AGAIN");
+                                    s_save_again = (sa && *sa) ? atoi(sa) : -1; }
+          if (s_save_again >= 0 && (int)g_engine.frame_count == s_save_again)
+              re15_savepoint_set_pending(1); }
         if (re15_savepoint_pending()) {
             re15_savepoint_set_pending(0);
             /* Examining a save-point phone ALWAYS opens the save screen (replacing the dormant RE1.5
@@ -3129,7 +3171,21 @@ re_title:;
                 s_save_counter = (uint16_t)(scount + 1);   /* DAT_800b0fbd++ NUR nach Erfolg
                                                             * (@0x80026488-9c, Post-Inkrement) */
                 if (mc >= 0 && --g_inv.slots[mc].qty == 0) { g_inv.slots[mc].id = 0; g_inv.slots[mc].flags = 0; }
-                fprintf(stderr, "[save] saved (room %04x); card=%s\n", g_current_room_id, mc >= 0 ? "consumed" : "none");
+                /* n = die GESCHRIEBENE Nummer (Pre-Inkrement, @0x800261c4-d8/@0x80026eac-f0),
+                 * next = der Sitzungs-Zaehler danach (Post-Inkrement @0x80026488-9c). */
+                fprintf(stderr, "[save] saved (room %04x) slot n=%d -> next=%u; card=%s\n",
+                        g_current_room_id, scount, (unsigned)s_save_counter,
+                        mc >= 0 ? "consumed" : "none");
+                /* TEST-HAKEN (kein Spielverhalten): RE15_SAVE_TEST_EXIT_AFTER=<n> beendet den
+                 * Prozess, sobald n Saves geschrieben sind — deterministisches Lauf-Ende fuer
+                 * den Zaehler-Pin (die Karte ist hier bereits geschlossen geschrieben). */
+                { static int s_saves_done = 0, s_save_exit = -2;
+                  if (s_save_exit == -2) { const char *se = getenv("RE15_SAVE_TEST_EXIT_AFTER");
+                                           s_save_exit = (se && *se) ? atoi(se) : -1; }
+                  if (s_save_exit > 0 && ++s_saves_done >= s_save_exit) {
+                      fprintf(stderr, "[save] SAVE_TEST_EXIT_AFTER: %d saves -> exit\n", s_saves_done);
+                      fflush(stderr); exit(0);
+                  } }
             }
             /* No post-save re-examine cooldown: the examine fires only on a fresh action-button
              * EDGE (a held button cannot re-fire), so each DELIBERATE press re-opens the menu with

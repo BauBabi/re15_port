@@ -7,6 +7,90 @@ einem neuen Spiel soll der Zähler natürlich von vorne losgehen."
 Status: **Bug im Port reproduziert (Probe), Original-Mechanismus vollständig
 disassembliert und zitiert, Fix-Plan unten. Engine-Code NICHT geändert** (nur
 Diagnose-Probe `re15_port/tests/unit/probe_save_counter.c` + dieses Dossier).
+→ Der Fix-Plan aus §3 ist inzwischen umgesetzt (main.c:657/2141/2919/3112/3129)
+und seit 2026-08-17 durch `integration_save_counter_pin` eingefroren (§5).
+
+---
+
+## 0. NACHTRAG 2026-08-17 — Report „nach dem Laden wieder dieselbe Nummer"
+
+Nutzer-Report: „Beim Laden eines Spielstandes und Speichern auf einen NEUEN Slot
+schreibt er wieder die gleiche Nummer, statt hochzuzählen."
+
+**Analyse-Ergebnis: KEIN Port-Fehler — das war byte-true der Original-Mechanismus.**
+Der Zähler ist LIVE-Spielzustand, kein Karten-/Slot-Zustand; ein LOAD setzt ihn
+auf den im Save gespeicherten Stand zurück, und gespeichert wird PRE-Inkrement.
+Also trägt der erste Save nach einem Load nochmal dieselbe Nummer, der nächste
+zählt wieder hoch.
+
+**→ NUTZER-ENTSCHEID 2026-08-17: bewusste ABWEICHUNG, siehe §6.** Der Port zählt
+ab jetzt monoton hoch. Die Original-Beleglage unten bleibt unverändert gültig und
+ist der Maßstab dafür, was die Abweichung genau ändert (und was nicht).
+
+### 0.1 MESSUNG (echte `re15_pc.exe`, zwei Läufe, Karten-Bytes gelesen)
+
+Karte `re15_card.mcr`, Slot s → Block (s+1)*0x2000, Blob ab +0x100,
+`save_count` (u16 LE) bei Blob+26 = Block+0x11a; Titel-Ziffern Block+0x29/+0x2b.
+
+```
+Lauf 1  NEW GAME, zwei Saves in EINER Sitzung (RE15_CARD_SLOT=0,1)
+  [save] saved (room 1240) slot n=0 -> next=1
+  [save] saved (room 1240) slot n=1 -> next=2
+  slot0: save_count=0  Titel-Ziffern 0 0   (SJIS 82 4f 82 4f)
+  slot1: save_count=1  Titel-Ziffern 0 1   (SJIS 82 4f 82 50)   ← zählt hoch
+
+Lauf 2  CONTINUE aus Slot 1 (Nummer 1), zwei Saves (RE15_CARD_SLOT=1,2,3)
+  [save] CONTINUE: resumed in room 1240
+  [save] saved (room 1240) slot n=1 -> next=2      ← WIEDER 1  = der Report
+  [save] saved (room 1240) slot n=2 -> next=3
+  slot2: save_count=1   slot3: save_count=2  Titel-Ziffern 0 2
+```
+
+Der gemeldete Effekt tritt also **genau einmal** auf — beim ersten Save nach
+einem Load; innerhalb einer Sitzung zählt der Port korrekt hoch.
+
+### 0.2 BELEG, dass das Original genau das tut
+
+Zusätzlich zu §2 (Store/Inkrement/Restore) diesmal explizit nachgezogen:
+
+* **Die Karte bekommt den Pre-Inkrement-Stand, nicht den inkrementierten.**
+  Der Karten-Write `jal FUN_800271a8` @0x80026224 bekommt als Quelle
+  `a0 = 0x800b0dbc` (@0x800261e4-ec: `lui t0,0x800b` / `addiu t0,t0,4028`
+  = 0x800b0fbc / `addiu s0,t0,-512`), also **Live-RAM**: der Zähler
+  DAT_800b0fbd liegt bei Block+0x201. Das Inkrement @0x80026488-9c läuft
+  erst danach im Erfolgszweig (`beq v0,zero,0x80026480` @0x80026230).
+* **Kein Async-Schlupfloch:** FUN_800271a8 ist synchron —
+  `open`/`write(fd,param_1,param_5)`/`close` + Verify-`read` 0x200
+  (RE_15_Quellcode_V2/FUN_800271a8.c). Der inkrementierte Wert kann die
+  Karte nicht mehr erreichen.
+* **Der LOAD überschreibt den Zähler wholesale** (@0x80026290-a0,
+  `memcpy(&DAT_800b0dbc, buf, 0x1430)`; 0x800b0dbc+0x201 = 0x800b0fbd) und
+  springt am Inkrement **vorbei** (@0x800262a4 `j 0x800264a0`).
+* **Nur 4 Referenzen** auf DAT_800b0fbd im ganzen Spiel (ghidra1_V2.txt:492892):
+  R/W-Inkrement @0x8002648c/@0x8002649c + die zwei Titel-Reads
+  @0x80026eac/@0x80026ecc. Kein Overlay referenziert die Adresse
+  (grep `800b0fbd` über `RE_15_Quellcode_Overlays/`: leer). Es gibt also
+  keinen zweiten Schreiber, der die Nummer aus der Karte ableiten könnte.
+* **Die angezeigte Nummer ist der rohe Zähler** (kein +1): Kartentitel
+  @0x80026ec8/@0x80026f00, In-Game-Slot-Zeile FUN_80026658 @0x80026834
+  (`lbu t0,1(s0)`, s0 = GSB-Kopie, +1 = DAT_800b0fbd) + `divu` 10
+  @0x8002683c-64.
+* **Folge im Original** (unvermeidbar aus obigem): zwei Karten-Blöcke können
+  dieselbe Nummer tragen; wer immer nur „letzten Stand laden → einmal
+  speichern → beenden" spielt, sieht die Nummer nie steigen. Das Original
+  zählt Saves **des laufenden Spielstrangs**, nicht Saves der Karte.
+
+### 0.3 OFFEN (mit Adresse)
+
+* RE2-Vergleichswert weiterhin **nicht lokalisiert**. Gesucht in
+  `info/re2leon/COMMON/BIN/MEM_CARD.BIN` (Overlay-Basis ~0x801c0000): die
+  vier `0xcccccccd`-Div-10-Stellen dort (f+0x22c8, f+0x263c, f+0x3648,
+  f+0x3730) sind **Listen-/UI-Nummerierung**, nicht der Save-Zähler — die
+  Ziffern bei @0x801c22c8-2318 stammen aus `s3+1` mit
+  `s3 = <Stack-Basis> + lbu 21(s4)` (@0x801c22a4-b0), also einem
+  Eintrags-Index; die Byte-Inkremente @0x801c1320/@0x801c133c sind
+  Screen-Timer (`sb ...,2(s2)`-Nachbarn). Für die RE1.5-Semantik nicht
+  nötig: RE1.5s eigener Karten-Code spezifiziert sie vollständig.
 
 ---
 
@@ -179,4 +263,101 @@ laufenden Spielzustands.
   zusätzlich nullt — kein Clear gefunden (alle 4 Xrefs enumeriert, kein
   base+0x4861-Writer); retail un-exercisable, für die Fix-Semantik irrelevant.
 - OFFEN: Lage des RE2-Leon-eigenen Save-Zählers (nur Vergleichswert; RE1.5-
-  Beleglage vollständig).
+  Beleglage vollständig). Suchstand 2026-08-17 in §0.3.
+
+---
+
+## 5. PIN (2026-08-17) — `integration_save_counter_pin`
+
+`re15_port/tests/integration/test_save_counter_pin.cmake` (+ CMakeLists-Eintrag)
+fährt **zwei echte `re15_pc.exe`-Läufe** (~15 s) und prüft ZWEI unabhängige
+Kanäle statt eines nachgebauten Modells:
+
+* **Kanal A — die geschriebenen Nummern** aus der Prozess-Logzeile
+  `[save] saved (room ....) slot n=<N> -> next=<M>`: Lauf 1 muss `0;1` liefern,
+  Lauf 2 (CONTINUE aus Nummer 1) `1;2`. Das ist exakt der Nutzer-Report.
+* **Kanal B — die Karten-Bytes** (das Produkt):
+
+| Slot | erwartet | pinnt |
+|------|----------|-------|
+| 0 | 0 | neues Spiel startet bei 0 (EXE-Image @Datei 0xa17bd) + Store ist PRE-Inkrement |
+| 1 | 1 | zweiter Save DERSELBEN Sitzung zählt hoch (@0x80026488-9c) |
+| 2 | 1 | LOAD restauriert den Zähler wholesale (@0x80026290-a0) — nicht 0, und nicht 2 (kein Karten-Seed) |
+| 3 | 2 | danach läuft die Zählung des geladenen Standes weiter |
+
+Zusätzlich die Kartentitel-Ziffern von Slot 3 („0 2", Basis Vollbreiten-'0'
+0x824f, @0x80026ec8/@0x80026f00).
+
+**Gegenproben gemessen (Pin wird ROT):**
+
+| Eingriff in `main.c` | Pin-Meldung |
+|----------------------|-------------|
+| Abweichung zurückgebaut (`+ 0` statt `+ 1` im LOAD-Restore) | „Lauf 2 … schrieb die Nummern '1;2', erwartet '2;3'" |
+| Post-Inkrement entfernt (`scount + 0`) | „Lauf 1 … schrieb die Nummern '0;0', erwartet '0;1'" |
+| LOAD-Restore ganz entfernt | „Lauf 2 … schrieb die Nummern '0;1', erwartet '2;3'" |
+
+(Die letzten beiden auch über Kanal B gemessen, bevor Kanal A dazukam:
+Slot1 = 0 statt 1 bzw. Slot2 = 0 statt 1.)
+
+Harness-Haken in `main.c` (reine Testhaken, kein Spielverhalten):
+`RE15_CARD_SLOT="a,b,c"` (Ziel-Slot je Karten-Screen beim Auto-Drive),
+`RE15_SAVE_TEST_AGAIN=<frame>` (zweiter Save in derselben Sitzung) und
+`RE15_SAVE_TEST_EXIT_AFTER=<n>` (deterministisches Prozessende nach n Saves —
+der zuvor benutzte Weg über `RE15_KILL_AT`+`RE15_BOOT_EXIT_AT` war flakey);
+dazu trägt die `[save] saved`-Logzeile jetzt `n=<geschriebene Nummer> ->
+next=<Zähler>`.
+
+**Zwei Werkzeugfallen, die dabei Zeit gekostet haben** (für künftige Pins):
+* `file(STRINGS)` auf `debug.log` verschluckt stumm alles ab dem ersten
+  BINÄR-Byte — die späteren `[save]`-Zeilen fehlten, obwohl sie in der Datei
+  stehen. Der Pin liest das Log darum binär-sicher als HEX.
+* Der frisch überschriebene 128-KB-Kartenblob war direkt nach Prozess-Ende
+  gelegentlich noch mit dem vorigen Inhalt sichtbar (Windows-Dateisicht);
+  der Pin liest die Karte darum mit begrenzter Wiederholung.
+
+---
+
+## 6. NUTZER-ENTSCHEID 2026-08-17 — Abweichung: Save-Nummer zählt monoton
+
+**Entscheidung:** Die Save-Nummer soll **monoton hochzählen** — auch der erste
+Save nach einem Load steigt um 1. Das ist eine **bewusste PORT-ABWEICHUNG** vom
+Original (Präzedenz: die Speicherort-Namen 2026-08-08, Muster `re15_savepoint.c`).
+
+### 6.1 Original vs. Port — nebeneinander
+
+| | Original (belegt) | Port ab 2026-08-17 |
+|---|---|---|
+| Neues Spiel | 0 (EXE-Image @Datei 0xa17bd = 00) | **0 — unverändert** |
+| Save schreibt | Zähler PRE-Inkrement (Write-Quelle Live-RAM 0x800b0dbc, @0x800261ec/@0x80026224) | **unverändert** |
+| Nach erfolgreichem Write | Zähler +1 (@0x8002648c `lbu` / @0x80026494 `addiu 1` / @0x8002649c `sb`, Erfolgszweig @0x80026230) | **unverändert** |
+| LOAD | Zähler = gespeicherter Stand (memcpy @0x80026290-a0, Block+0x201) und **springt am Post-Inkrement vorbei** (@0x800262a4 `j 0x800264a0`) | **Zähler = gespeicherter Stand + 1** ← die Abweichung |
+| Ziffernbau/Anzeige | roher Zähler, kein +1 (@0x80026ec8/@0x80026f00; In-Game @0x80026834) | **unverändert** |
+| Karte/Ziel-Slot | geht in die Nummer NIE ein | **unverändert** |
+| Folge | Laden(N) → Save schreibt N erneut | Laden(N) → Save schreibt **N+1** |
+
+### 6.2 Umsetzung
+
+**Eine** Stelle: `re15_port/platform/pc/main.c`, LOAD-Restore im CONTINUE-Zweig
+(`s_save_counter = (uint16_t)(s_resume_sd.save_count + 1);`), Kommentar dort als
+`[PORT-ABWEICHUNG, Nutzer-Entscheid 2026-08-17]` mit den Original-Adressen.
+
+**Warum dort und nicht am Post-Inkrement** (der zunächst genannte Einzeiler): ein
+`+2` am Post-Inkrement (`s_save_counter = scount + 2`) würde auch die Saves
+*innerhalb* einer Sitzung um 2 springen lassen (0, 2, 4 …). Die Abweichung gehört
+genau an die Stelle, an der das Original den Stand zurücksetzt — so bleibt jede
+andere Semantik byte-true, und die Zählung ist lückenlos.
+
+### 6.3 Gemessene Soll-Sequenz (drei exe-Läufe, eine Karte)
+
+```
+Lauf 1  NEUES SPIEL, zwei Saves      slot0 = 0  Titel 82 4f 82 4f  (/00/)
+                                     slot1 = 1  Titel 82 4f 82 50  (/01/)
+Lauf 2  CONTINUE aus slot1 (=1)      slot2 = 2  Titel 82 4f 82 51  (/02/)
+                                     slot3 = 3  Titel 82 4f 82 52  (/03/)
+Lauf 3  CONTINUE aus slot3 (=3)      slot4 = 4  Titel 82 4f 82 53  (/04/)
+```
+
+Randfälle damit abgedeckt: neues Spiel startet weiter bei der Original-Startnummer
+(0 → `/00/`); Laden→Speichern→Laden→Speichern zählt durchgehend hoch (Lauf 3);
+die Kartentitel-Ziffern folgen dem neuen Wert (der Ziffernbau selbst bleibt
+byte-true, `re15_mc_title.c`).

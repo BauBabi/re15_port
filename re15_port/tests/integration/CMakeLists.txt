@@ -103,4 +103,19 @@ if(TARGET re15_pc)
                      -DRE15_PC_MAIN=${CMAKE_CURRENT_SOURCE_DIR}/../../platform/pc/main.c
                      -P ${CMAKE_CURRENT_SOURCE_DIR}/test_relatch_pin.cmake)
     set_tests_properties(integration_relatch_pin PROPERTIES TIMEOUT 240)
+
+    # --- Save-Zaehler-Pin (Nutzer-Report 2026-08-17: "nach dem Laden schreibt er beim
+    #     Speichern auf einen NEUEN Slot wieder die gleiche Nummer"). Der Zaehler ist
+    #     LIVE-Spielzustand (DAT_800b0fbd), nicht Karten-/Slot-Zustand: frisches Spiel = 0
+    #     (EXE-Image @Datei 0xa17bd), SAVE schreibt PRE-Inkrement (Write @0x80026224 aus
+    #     Live-RAM 0x800b0dbc), Inkrement NUR nach Erfolg (@0x80026488-9c), LOAD restauriert
+    #     ihn wholesale (@0x80026290-a0) und ueberspringt das Inkrement (@0x800262a4).
+    #     Faehrt zwei echte exe-Laeufe (NEW GAME -> Slot 0,1 / CONTINUE Slot 1 -> Slot 2,3)
+    #     und prueft die geschriebenen Karten-Bytes: 0/1/1/2. ~45s gemessen. ---
+    add_test(NAME integration_save_counter_pin
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_CURRENT_BINARY_DIR}/savecnt_wd
+                     -P ${CMAKE_CURRENT_SOURCE_DIR}/test_save_counter_pin.cmake)
+    set_tests_properties(integration_save_counter_pin PROPERTIES TIMEOUT 240)
 endif()

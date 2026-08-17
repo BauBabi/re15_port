@@ -3820,13 +3820,52 @@ int re15_actor_uses_loco_bank(const re15_actor_t *a)
         }
         return 0;
     }
-    /* Grid-Nibble-Guard (B2-Caveat 2): die Loco-Bank-Poser sitzen AUSSCHLIESSLICH in
-     * Grid-0-Handlern (`lw a0,132(v0)` @0x80105d3c / engage FUN_801021f8, beide via
-     * @0x8011f80c[0]); die Grid-1-Tabelle @0x8011F920 hat eigene +0x5-Belegungen (u.a.
-     * 2 = Stub 0x80103b94) und posiert nie die Loco-Bank. Ohne den Guard griffe die Regel
-     * fuer Grid-1-Subs 2/7 faelschlich. */
-    int walk_state = (a->state == 1 && (a->grid_id & 0x0f) == 0
-                      && (a->sub_state_1 == 0x13 || a->sub_state_1 == 2 || a->sub_state_1 == 7))
+    /* VOLLSTAENDIGE BANK-0-LISTE — eigener jal-Scan ueber GANZ STAGE1.BIN nach `jal 0x8001f314`
+     * (anim_set) mit Rueckwaerts-Aufloesung von a0/a1 (2026-08-17). BANK 0 = `lw a0,132(v0)` /
+     * `lw a1,364(v0)` (= +0x84/+0x16c, im Port b->anim_loco, 6 Clips), BANK 1 = `lw a0,368(v0)` /
+     * `lw a1,372(v0)` (= +0x170/+0x174, im Port b->anim, 43 Clips). Im Zombie-Wurzelbereich
+     * (0x80100424..0x801099xx) posieren aus BANK 0 GENAU diese Handler:
+     *   @0x80100c90  INIT            FUN_80100688
+     *   @0x80101da8  f890[0x00]      FUN_80101d08  SEARCH-STAND (Steh-Idle)      <- FEHLTE
+     *   @0x80102000  f890[0x01]      FUN_80101ef0  WANDER (Schlurf-Roam)         <- FEHLTE
+     *   @0x80102420  f890[0x02]      FUN_801021f8  ENGAGE-WALK
+     *   @0x80102efc  f890[0x07]      FUN_80102dc8  TURN
+     *   @0x80103128/@0x80103144  f890[0x08]  FUN_80103014  CHARGE                <- FEHLTE
+     *   @0x8010590c  f890[0x13]      FUN_801057bc  APPROACH
+     *   @0x80105d44/@0x80105de8  FUN_80105b7c  Steh-Stagger (State 2)
+     *   @0x80105fd0/@0x80106024  FUN_80106048  Steh-Stagger-Variante (State 2)
+     * ALLES andere (Grab/Devour/Feeding/Standup/Knockdown/Downed/Sleeping/Toggle) posiert BANK 1.
+     *
+     * WIRKUNG DER LUECKE (Nutzer-Report ROOM1140-Wiedereintritt): der Steh-Idle spielte im Port
+     * die 14-Frame-Aktions-Bank-Clip-0 statt der 75-Frame-Loco-Clip-0 (gemessen mit
+     * probe_10d0_knockse: LOCO[0] fc=75 / ACT[0] fc=14, LOCO[1] fc=99 / ACT[1] fc=26). ROOM1140
+     * hat beim ERSTBESUCH nur liegende/fressende Zombies (Bank 1), der Wiedereintritts-Zweig
+     * seines sub00 (Datei 0x0c12ff, behavior 0x02) dagegen FUENF STEHENDE — deshalb faellt es
+     * genau dort auf. Dazu fehlten der Loco-Bank die Schritt-SEs (Frame-Wort-Bit 1) in
+     * Wander/Charge/Stagger: LOCO[1] f31/f80, LOCO[2] f20/f31, LOCO[3] f31/f47, LOCO[4] f12/f41,
+     * LOCO[5] f24/f83 — die Aktions-Clips 0..5 tragen KEIN einziges SE-Bit.
+     *
+     * Grid-Nibble-Guard: die f890-Kaskade haengt an GENAU ZWEI Nibbles — @0x8011f80c[0] =
+     * FUN_8010168c (`addiu at,at,-1904` = 0x8011f890 @0x801016e0) und @0x8011f80c[2] =
+     * FUN_80101784 (dieselbe Tabelle @0x801017d8). Nibble 2 ist der STEHENDE Re-Entry-Schlaefer
+     * (ROOM1140/10D0 u.a.) und teilt die Animate-Kaskade vollstaendig; ohne ihn im Guard bliebe
+     * genau der gemeldete Fall auf der falschen Bank. Grid-Nibble 1 (Kriechen, Tabelle
+     * @0x8011F920) und die Liege-Nibbles 5..10 (@0x8011f9d4) bleiben ausgeschlossen. */
+    /* GELTUNGSBEREICH: der jal-Scan oben deckt den Wurzelbereich von FUN_80100424 ab, und diese
+     * Wurzel ist per Typ-Tabelle registriert fuer 0x10/0x11/0x12/0x16 (@0x8011e88c-a4
+     * `sw v0,11244/11248/11252/11268(at)` -> 0x80072bec/bf0/bf4/c04) plus 0x18. Nur fuer diese
+     * Typen sind die neuen Subs {0,1,8} belegt; die Zombie-Dame 0x13 (Wurzel FUN_8010a8c8) und
+     * alle anderen Typen behalten die alte, engere Regel — ihre Handler wurden hier NICHT
+     * gescannt, und geraten wird nicht. */
+    int shares_root = (a->type == 0x10 || a->type == 0x11 || a->type == 0x12 ||
+                       a->type == 0x16 || a->type == 0x18);
+    int gnib = a->grid_id & 0x0f;
+    int walk_state = (a->state == 1 && (gnib == 0 || (shares_root && gnib == 2))
+                      && (a->sub_state_1 == 0x02 || a->sub_state_1 == 0x07 ||
+                          a->sub_state_1 == 0x13 ||
+                          (shares_root && (a->sub_state_1 == 0x00 ||
+                                           a->sub_state_1 == 0x01 ||
+                                           a->sub_state_1 == 0x08))))
                   || (a->state == 2 && !(a->grid_id & 0x80));
     if (!walk_state) return 0;
     /* MOTION-Gate (Kriechtor-Fix 3): das Original hat keine Bank-REGEL — es rendert die
@@ -10043,10 +10082,19 @@ static void re15_enemy_anim_sfx(const re15_actor_t *e)
             re15_re2z_se_play((int)(fw >> 28));             /* jal 0x8005bd6c @0x801016fc */
         return;
     }
+    /* BANK = die des POSERS, nicht eine eigene Regel. FUN_8001b38c liest `*(entity+0x168)`
+     * (@0x8001b3a4 `lw v0,360(v0)` / @0x8001b3ac `lw v0,0(v0)`), und +0x168 wird AUSSCHLIESSLICH
+     * von anim_set FUN_8001f314 gesetzt (@0x8001f36c `sw a2,360(t0)`) — auf das Frame-Wort DER
+     * BANK, die der Zustands-Handler gerade posiert hat. Also MUSS der SFX-Dekoder dieselbe
+     * Bank-Regel benutzen wie Render und Clip-Uhr; eine zweite, engere Kopie ("nur +0x5 in
+     * {0x13,2,7}") liess den Steh-Stagger (State 2, Original posiert BANK 0 @0x80105d44) und
+     * Wander/Charge (@0x80102000 / @0x80103128) auf der Aktions-Bank lesen — deren Clips 0..5
+     * tragen KEIN SE-Bit, waehrend die Loco-Clips 1..5 je zwei Schritt-Bits (SE 1) haben
+     * (LOCO[1] f31/f80, [2] f20/f31, [3] f31/f47, [4] f12/f41, [5] f24/f83; gemessen). Damit
+     * fehlten dem Port die Schritt-/Stagger-Geraeusche komplett. */
     const re15_emd_animation_t *A = &b->anim;
-    if (e->state == 1 && (e->sub_state_1 == 0x13 || e->sub_state_1 == 2 || e->sub_state_1 == 7)
-        && b->loco_ok && (int)e->motion < b->anim_loco.clip_count)
-        A = &b->anim_loco;                                  /* the walk states play the loco clip (main.c:3166) */
+    if (re15_actor_uses_loco_bank(e) && b->loco_ok && (int)e->motion < b->anim_loco.clip_count)
+        A = &b->anim_loco;
     if ((int)e->motion >= A->clip_count) return;
     const re15_emd_clip_t *c = &A->clips[e->motion];
     if (c->frame_count <= 0) return;
