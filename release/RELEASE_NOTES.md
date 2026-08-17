@@ -1,3 +1,45 @@
+# RE1.5 Port — v0.2.5 (Early Preview)
+
+## Neu in v0.2.5 — Sound-Stimmen, RE2-Trefferreaktion, RE2-Soundbank
+
+**Gegner klangen falsch, weil die Stimmen-Verwaltung fehlte.** Im Original ist
+jeder Laut fest einer von acht Klang-Stimmen zugeordnet, und auf jeder Stimme
+klingt immer nur EIN Sample: ein neuer Laut schneidet den laufenden ab — oder
+wird komplett verworfen, wenn der laufende Vorrang hat. Der Port legte jeden
+Laut auf einem freien Kanal obendrauf. Beim Zombie (Treffer -> Sturz ->
+Aufprall) lagen dadurch vier Samples uebereinander statt zwei; der Fall-Laut
+faellt im Original weg, weil die Stimme noch den Treffer-Laut fuehrt. Weil die
+Aufnahmen je Raum unterschiedlich lang sind, fiel das im 2F-Korridor auf und im
+Dinner-Raum nicht.
+
+**RE2-Modus: Gegner reagieren jetzt auf Treffer.** Das Original waehlt die
+Reaktion ueber eine Tabelle mit zwei Eingaengen (Trefferart x Zone/Entfernung);
+im Port waren BEIDE Achsen falsch belegt — die Spalte kam aus der Zielhoehe und
+landete systematisch in einem leeren Tabellenfeld, und das Byte, das die
+Reaktions-Phase fuehrt, wurde ueberschrieben. Damit war die Reaktion
+strukturell tot. Jetzt portiert: Grunzer beim Treffer, vierphasige Reaktion,
+Zurricktaumeln, leichtes Zucken, Rueckstoss, Knockdown bei Schnellfeuer, und
+der Widerstandswert sinkt korrekt pro Trefferart.
+
+**RE2-Modus: Soundbank wechselt wieder.** Sie wurde nur beim ersten Mal geladen
+— nach einem Zombie-Raum spielte der Hund Zombie-Samples.
+
+**Kleiner Bildfehler beim Sturz behoben:** im Uebergabemoment blitzte fuer ein
+einzelnes Bild eine fremde Pose auf.
+
+Als korrekt belegt und bewusst NICHT geaendert: dass der Zombie nach dem
+Zuruecktaumeln seine Lauf-Animation neu startet (Original-Verhalten, vorher
+durch die falsche Animationsbank verdeckt), und dass die Raeume verschiedene
+Zombie-Stimmsaetze haben.
+
+Noch offen im RE2-Modus (mit Adressen dokumentiert): das feine Zucken des
+Oberkoerpers (direkt manipulierte Knochen-Matrizen), zwei von sechs
+Reaktions-Routinen (Ragdoll-Sturz, Rutsch-Variante) und der Gore-/Zerleger-Zweig.
+
+Testsuite 154 -> 159 Pruefungen, jede Korrektur mit Gegenprobe.
+
+---
+
 # RE1.5 Port — v0.2.4 (Early Preview)
 
 ## Neu in v0.2.4 (gegenueber v0.2.3) — drei Animations-/Sound-Fehler
@@ -256,8 +298,8 @@ Split-Zips — 7-Zip/WinRAR verwenden. Pruefsummen: `SHA256SUMS.txt`.
 
 | Paket | Plattform | Start |
 |---|---|---|
-| `re15_port_v0.2.4_win64.zip` | Windows x64 | `Start_RE15_Port.bat` doppelklicken |
-| `re15_port_v0.2.4_linux_steamdeck_x64.zip` | Linux x64 / Steam Deck (SteamOS 3.x) | `./run.sh` (Deck: als Non-Steam-Game hinzufuegen) |
+| `re15_port_v0.2.5_win64.zip` | Windows x64 | `Start_RE15_Port.bat` doppelklicken |
+| `re15_port_v0.2.5_linux_steamdeck_x64.zip` | Linux x64 / Steam Deck (SteamOS 3.x) | `./run.sh` (Deck: als Non-Steam-Game hinzufuegen) |
 
 Beide Pakete sind selbst-enthalten: SDL2 statisch, Assets unter `shared_assets/PSX`
 (CD-Baum) plus `shared_assets/extracted_fx` (Effekt-Texturen), Savegames als
@@ -297,6 +339,6 @@ release/build_linux_deck.sh --distrobox re15-build   # auf dem Deck selbst
 ```
 Paketieren (beide Plattformen, mit den Gates oben):
 ```bash
-release/make_package.sh --version v0.2.4               # --only linux | --only win
+release/make_package.sh --version v0.2.5               # --only linux | --only win
 ```
-Ergebnis: `re15_port_v0.2.4_{linux_steamdeck_x64,win64}.{z01,zip}` + `SHA256SUMS.txt`.
+Ergebnis: `re15_port_v0.2.5_{linux_steamdeck_x64,win64}.{z01,zip}` + `SHA256SUMS.txt`.
