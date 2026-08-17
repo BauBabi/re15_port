@@ -84,3 +84,36 @@ endif()
 if(MINGW)
     target_link_options(re15_pc PRIVATE -static)
 endif()
+
+# -----------------------------------------------------------------------------
+# GUI-SUBSYSTEM (2026-08-17) — Fix fuer "startet nicht, kein Fenster"
+# -----------------------------------------------------------------------------
+# Die exe war bis hierher eine KONSOLEN-Anwendung (PE-Subsystem 3 "Windows CUI").
+# Beim Start OHNE vorhandene Konsole (Doppelklick, `start`, Start-Process) muss der
+# Windows-Loader dann erst eine Konsole erzeugen — und genau dort blieb der Prozess
+# auf betroffenen Systemen haengen, NOCH BEVOR main() lief. Per gdb an den haengenden
+# Prozess (2026-08-17, Nutzer-Rechner UND hier reproduziert):
+#     #0  ntdll!ZwCreateFile
+#     #1  KERNELBASE!AttachConsole
+#     ...
+#     #14 ntdll!LdrLoadDll
+#     #19 ntdll!LdrInitializeThunk          <- noch im Loader, vor main()
+# Symptom: Prozess lebt (1 Thread, 0% CPU), KEIN Fenster, nicht einmal debug.log
+# (die legt die erste Zeile von main() an). Aus einer BEREITS OFFENEN Konsole
+# gestartet lief dieselbe exe normal durch — sie erbt dort die Konsole.
+#
+# Ein SDL-Spiel ist eine GUI-Anwendung; Subsystem 2 ("Windows GUI") braucht gar keine
+# Konsole und umgeht den Loader-Pfad komplett. Bei MinGW wird NUR das Subsystem
+# umgestellt, der Entry-Point bleibt mainCRTStartup — sonst verlangte der Linker ein
+# WinMain(), und main.c hat ein regulaeres C-main().
+# Ausgaben gehen dadurch nicht verloren: stderr landet ohnehin per freopen in
+# debug.log, und main() haengt sich beim Start an eine vorhandene Eltern-Konsole an
+# (AttachConsole(ATTACH_PARENT_PROCESS)), so dass Shell-Laeufe und CTest wie bisher
+# stdout sehen.
+if(WIN32)
+    if(MINGW)
+        target_link_options(re15_pc PRIVATE -Wl,--subsystem,windows -Wl,-e,mainCRTStartup)
+    else()
+        set_target_properties(re15_pc PROPERTIES WIN32_EXECUTABLE TRUE)
+    endif()
+endif()

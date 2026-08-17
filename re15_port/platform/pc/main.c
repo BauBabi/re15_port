@@ -17,7 +17,10 @@
 #include <time.h>
 #include <math.h>
 #include <string.h>
-#include <SDL_timer.h>    /* SDL_GetTicks/SDL_Delay — Frame-Timing (ohne main-Umleitung) */
+#ifdef _WIN32
+#include <windows.h>      /* AttachConsole — GUI-Subsystem-Begleiter, siehe main() */
+#endif
+#include <SDL_timer.h>   /* SDL_GetTicks/SDL_Delay — Frame-Timing (ohne main-Umleitung) */
 #include "re15_engine.h"
 #include "re15_tim.h"
 #include "re15_scd.h"
@@ -1855,6 +1858,23 @@ static void pc_run_config(void)
 int main(int argc, char *argv[])
 {
     (void) argc; (void) argv;
+
+#ifdef _WIN32
+    /* GUI-SUBSYSTEM-BEGLEITER (2026-08-17, siehe platform/pc/CMakeLists.txt):
+     * Die exe ist jetzt eine GUI-Anwendung (Subsystem 2), weil der Loader beim
+     * ANLEGEN einer Konsole fuer das alte CUI-Subsystem haengen blieb — vor main(),
+     * ohne Fenster und ohne debug.log (gdb-Stack: LdrInitializeThunk -> LdrLoadDll
+     * -> KernelBase!AttachConsole -> ntdll!ZwCreateFile).
+     * GUI-Prozesse bekommen keine Konsole; damit Shell-Laeufe und CTest ihre
+     * stdout-Ausgabe (u.a. der --headless-JSON-Status) weiterhin sehen, haengen wir
+     * uns an eine BEREITS EXISTIERENDE Eltern-Konsole an. Das ist der harmlose Fall:
+     * schlaegt fehl (0), wenn keine da ist — es wird KEINE erzeugt, also auch nicht
+     * der Loader-Pfad betreten, der den Haenger ausloeste. */
+    if (AttachConsole(ATTACH_PARENT_PROCESS)) {
+        freopen("CONOUT$", "w", stdout);
+        setvbuf(stdout, NULL, _IONBF, 0);
+    }
+#endif
 
     /* Phase 4.5.10-J: redirect stderr to debug.log so user can read
      * exact numerical state. */
