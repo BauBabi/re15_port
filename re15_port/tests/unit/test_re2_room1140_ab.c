@@ -174,13 +174,21 @@ int main(void)
         pl->x = 30000; pl->z = 30000;                     /* Spieler weit weg (kein Grab-Rauschen) */
         int knocked = 0;
         for (int hits = 0; hits < 12 && !knocked; hits++) {
-            e->hp = (int16_t)(e->hp - 10); e->state = 2;  /* 10-dmg-Treffer (take_damage-Analog) */
-            for (int f = 0; f < 6; f++) {                 /* ohne Bank laeuft der Knockdown in ~4
-                                                           * Ticks durch (P7 = Clip-done, kein
-                                                           * 90er-Timer mehr) -> PRO Frame samplen */
-                frame();
-                if (e->sub_state_1 == 5 && e->state == 1) knocked = 1;
-            }
+            /* Treffer-Analog EXAKT wie die RE2-Applier: `sw 2,4` nullt +0x5/+0x6/+0x7
+             * (@0x80047288), danach `sb <Zeile>,5` (@0x80047324) und +0x1D2 = Zone 1
+             * (@0x80047294-98). OHNE das +0x6-Nullen bliebe die Reaktions-Phase stehen und
+             * der Kosten-Abzug @0x801055D8-EC liefe nur EINMAL. */
+            e->hp = (int16_t)(e->hp - 10); e->state = 2;
+            e->sub_state_1 = 2; e->sub_state_2 = 0; e->re2z_hits1d2 = 1;
+            /* Schnellfeuer: EIN Frame je Treffer. Das ist die Bedingung, unter der der
+             * Knockdown im Original ueberhaupt entsteht — der Zwischen-Handler 0x80105BC0
+             * setzt in seiner Endphase `+0x223 = (rand&0x10)+15` @0x80106028-30 und
+             * `+0x222 = 0` @0x80106034, laedt die Resistenz also wieder auf. Wer langsam
+             * schiesst, bekommt nur Zuckungen; wer nachsetzt, wirft den Zombie um.
+             * (Ohne EMD-Bank ist re2z_clip_done sofort wahr, die Erholung laeuft hier also
+             * schneller ab als im Spiel — umso schaerfer ist der Pin.) */
+            frame();
+            if (e->sub_state_1 == 5 && e->state == 1) knocked = 1;
         }
         CHECK(knocked, "RE2: genug Treffer muessen den Knockdown 0x501 ausloesen (@0x801050A4)");
         e->hp = -20; e->state = 3;                        /* Kill */

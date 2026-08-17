@@ -453,26 +453,50 @@ int main(void)
         pl->x = 200; pl->z = 0; pl->hp = 100; pl->state = 0; pl->motion = 0;
         int s = re15_actor_alloc(0x10);
         re15_actor_t *e = &g_actors[s];
+        /* ⛔ NEU-KALIBRIERT 2026-08-18 (Nutzer-Report "reagieren nicht auf die Schuesse").
+         * Der Treffer-Zustand, den beide RE2-Applier hinterlassen: `sw 2,4(s1)` @0x80047288
+         * nullt +0x5/+0x6/+0x7, danach `sb <Trefferart>,5(s1)` @0x80047324 — also state=2,
+         * +0x5 = ZEILE (Trefferart), +0x6 = 0. Der Port stempelt genau das in
+         * re15_re2_stamp_1d2 (re15_damage.c). Zeile 2 -> Kosten 15 (@0x8010CC33[2]). */
+#define RE2_HIT(row_) do { e->hp = (int16_t)(e->hp - 10); e->state = 2;                       \
+                           e->sub_state_1 = (uint8_t)(row_); e->sub_state_2 = 0;              \
+                           e->re2z_hits1d2 = 1; } while (0)
         e->state = 1; e->sub_state_1 = 4; e->hp = 60; e->re2z_res223 = 20;
-        re15_re2z_tick(s);                                       /* snapshot prev_hp/prev_sub (4) */
-        e->hp -= 7; e->state = 2;                                /* a 7-dmg hit */
         re15_re2z_tick(s);
-        CHECK(e->re2z_res223 == 13, "resist: res223 -= dmg (mapping), res=%d", e->re2z_res223);
+        /* Treffer 1: Resistenz noch da -> KEIN Flinch, sondern der Haupt-Handler 0x80105438
+         * (Zeile 2, Spalte 1 = @0x8010C98C). Der zieht die Kosten ab und macht Krach. */
+        RE2_HIT(2); se_n = 0; e->re2z_cd239 = 0;
+        re15_re2z_tick(s);
+        CHECK(e->state == 2 && e->sub_state_2 == 1,
+              "Treffer 1 -> Reaktions-Phase 1 (sb 1,6 @0x801055B4), got %d/%d",
+              e->state, e->sub_state_2);
+        CHECK(se_seen(11) || se_seen(12),
+              "Treffer-Grunzer 11/12 (rand&1 @0x801054E8-500)");
+        CHECK(e->re2z_cd239 == 150, "Grunzer-Cooldown 150 (@0x80105508-0C), got %d", e->re2z_cd239);
+        CHECK(e->re2z_res223 == 5,
+              "+0x223 -= cost[Zeile 2] = 15 (@0x801055D8-EC), got %d", e->re2z_res223);
+        CHECK(e->re2z_gaitrow == 24, "+0x16B = 24 (@0x80105514-18), got %d", e->re2z_gaitrow);
         CHECK(e->re2z_flag222 == 0,
-              "res-survived resist writes NO +0x222 (@0x80105078 jumps past 0x80105164)");
-        CHECK(e->state == 1 && e->sub_state_1 == 1, "resisting -> back to walk (mapping)");
-        /* exhaust the pool while NOT walking and NOT marked -> MARK ONLY, no flinch
-         * (@0x80105080-98: 0x501 needs +0x222==1 OR +0x5==1) */
-        e->sub_state_1 = 4; e->sub_state_2 = 0;                  /* non-walk sub */
-        re15_re2z_tick(s);                                       /* prev_sub = 4 */
-        e->hp -= 20; e->state = 2;                               /* 13-20 -> res < 0 */
+              "Treffer mit Restresistenz schreibt KEIN +0x222 (@0x80105078 springt an 0x80105164 vorbei)");
+        /* die Phasen laufen ohne weitere Treffer weiter: P1 3 Frames -> P2 (t158 = 16) */
+        for (int f = 0; f < 4; f++) re15_re2z_tick(s);
+        CHECK(e->state == 2 && e->sub_state_2 == 2 && e->re2z_t158 <= 16,
+              "P1 (3 Frames, @0x80105850-6C) -> P2 mit +0x158 = 16, got %d/%d/%d",
+              e->state, e->sub_state_2, e->re2z_t158);
+        /* Treffer 2: Resistenz 5 > 0 -> wieder Haupt-Handler, 5-15 = -10 */
+        RE2_HIT(2);
         re15_re2z_tick(s);
-        CHECK(e->re2z_flag222 == 1 && e->state == 1 && e->sub_state_1 != 5,
-              "eligibility fail -> mark @0x80105164 + resist, NO 0x501 (got sub %d)",
-              e->sub_state_1);
-        /* now marked -> the next exhausted hit flinches */
+        CHECK(e->re2z_res223 == -10, "+0x223 zweiter Abzug -> -10, got %d", e->re2z_res223);
+        CHECK(e->hp < 81, "Nachlade-Gate: HP < 81 (slti 81 @0x80105604), hp=%d", e->hp);
+        /* Treffer 3: Resistenz <= 0, aber +0x222 == 0 und Zeile != 1 -> NUR markieren
+         * (@0x80105164); der Dispatch laeuft danach in 0x80105BC0, weil +0x222 jetzt 1 ist. */
+        RE2_HIT(2);
         re15_re2z_tick(s);
-        e->hp -= 20; e->state = 2;
+        CHECK(e->re2z_flag222 == 1 && e->state == 2 && e->sub_state_1 != 5,
+              "Eligibility verfehlt -> Markieren @0x80105164, KEIN 0x501 (got %d/%d)",
+              e->state, e->sub_state_1);
+        /* Treffer 4: jetzt markiert -> Flinch 0x501 */
+        RE2_HIT(2);
         re15_re2z_tick(s);
         CHECK(e->state == 1 && e->sub_state_1 == 5,
               "+0x222==1 -> knockdown-flinch 0x501 (@0x801050A4-AC), got sub %d", e->sub_state_1);
@@ -480,6 +504,7 @@ int main(void)
               "flinch reseeds res223 = 16+(rand&15) (@0x801050C0-C8), got %d", e->re2z_res223);
         CHECK(!se_seen(9), "NO SE on the flinch path (both 0x501 arms end via j 0x80105418; "
               "SE 9 lives behind the un-ported +0x1D0&0xC0 gates — Review #14)");
+#undef RE2_HIT
         /* the knockdown chain: P0 fall clip 1/2 AT FRAME 10/15 + SE 12/13 + downed marker */
         se_n = 0; e->re2z_cd239 = 0;
         re15_re2z_tick(s);                                       /* EXEC[5] P0 */

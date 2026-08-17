@@ -173,6 +173,11 @@ static void render_view(const re15_actor_t *npc, view_t *v)
 
 static void frame(void) { re15_enemy_ai_run_all(1); re15_actors_anim_advance(); }
 
+/* ---- SE-Mitschnitt (der ENEMSE-Hook, den platform/pc/main.c im Spiel registriert) ---- */
+static int s_se_log[128], se_n;
+static void probe_se(int se_id, int flag2000) { (void)flag2000; if (se_n < 128) s_se_log[se_n++] = se_id; }
+static int  se_seen(int id) { for (int i = 0; i < se_n; i++) if (s_se_log[i] == id) return 1; return 0; }
+
 static int bringup(const re15_rdt_t *rdt, int fire_sub, int verbose)
 {
     re15_actor_init();
@@ -289,6 +294,81 @@ static void run_room(const char *tag, const char *rdtpath, int fire_sub, uint8_t
               "%s: state %d nach dem Treffer (2 HURT / 3 DEATH erwartet)", tag, e->state);
         printf("  [schuss] hp %d -> %d, state %d\n", hp0, e->hp, e->state);
     }
+
+    /* (5) TREFFERREAKTION (Nutzer-Report 2026-08-17 "Sie reagieren nicht auf die Schuesse"):
+     *     der Schuss muss den Zombie SICHTBAR und HOERBAR stoppen. Gemessen wird genau das,
+     *     was der Nutzer wahrnimmt — Zustand, gerenderte Pose, SE-Id.
+     *     Belege (enemy_ai_re2_zombie.c): Dispatch @0x801053E0-410, Haupt-Handler 0x80105438,
+     *     Grunzer 11/12 @0x801054E8-500, Cooldown 150 @0x80105508-0C, Kosten-Abzug
+     *     @0x801055D8-EC, Phasen @0x801055B4 / @0x80105850-6C / @0x80105970-7C. */
+    if (want_type == 0x10) {
+        re15_actor_t *e = &g_actors[first];
+        /* frisch aufsetzen: lebendiger, gehender Zombie neben dem Spieler */
+        e->state = 1; e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0;
+        e->hp = 60;                       /* < 81 -> kein Resistenz-Nachladen @0x80105604 */
+        e->re2z_res223 = 20; e->re2z_flag222 = 0; e->re2z_cd239 = 0;
+        e->hit_react = 0;
+        pl->x = e->x - 800; pl->z = e->z; pl->rot_y = 0;
+        re15_player_set_equipped_weapon(3);
+
+        se_n = 0;
+        int16_t res_before = e->re2z_res223;
+        int fired = re15_player_weapon_fire(3);
+        CHECK(fired != 0, "%s: Reaktions-Probe — der Schuss trifft nicht", tag);
+        printf("  [reaktion] nach dem Schuss: state=%d row(+0x5)=%d phase(+0x6)=%d col(+0x1D2)=%d\n",
+               e->state, e->sub_state_1, e->sub_state_2, e->re2z_hits1d2);
+        CHECK(e->sub_state_2 == 0,
+              "%s: +0x6 muss nach dem Treffer 0 sein (`sw` @0x80047288 nullt +0x5..+0x7), ist %d",
+              tag, e->sub_state_2);
+        CHECK(e->re2z_hits1d2 == 1,
+              "%s: +0x1D2 = Basis-Zone 1 (@0x80047294-98), ist %d", tag, e->re2z_hits1d2);
+
+        view_t v0; render_view(e, &v0);
+        uint32_t pose0 = ((uint32_t)v0.clip << 16) | (uint32_t)(v0.kf & 0xffff);
+        int hurt_frames = 0, pose_changes = 0, se_grunt = -1;
+        uint32_t lastp = pose0;
+        for (int f = 0; f < 60; f++) {
+            frame();
+            if (e->state == 2) hurt_frames++;
+            if (se_grunt < 0) { if (se_seen(11)) se_grunt = 11; else if (se_seen(12)) se_grunt = 12; }
+            view_t v; render_view(e, &v);
+            uint32_t p = ((uint32_t)v.clip << 16) | (uint32_t)(v.kf & 0xffff);
+            if (p != lastp) { pose_changes++; lastp = p; }
+            if (f == 0)
+                printf("  [reaktion] frame1: state=%d phase=%d res223=%d cd239=%d clip=%d kf=%d SE=%d\n",
+                       e->state, e->sub_state_2, e->re2z_res223, e->re2z_cd239, v.clip, v.kf, se_grunt);
+        }
+        printf("  [reaktion] HURT-Frames=%d, Pose-Wechsel=%d, Grunzer-SE=%d, res223 %d -> %d\n",
+               hurt_frames, pose_changes, se_grunt, res_before, e->re2z_res223);
+        CHECK(se_grunt == 11 || se_grunt == 12,
+              "%s: KEIN Treffer-Grunzer — SE 11/12 @0x801054E8-500 fehlt (Nutzer-Report: kein Laut)",
+              tag);
+        CHECK(e->re2z_cd239 > 0,
+              "%s: der Grunzer-Cooldown 150 @0x80105508-0C wurde nicht gestellt", tag);
+        CHECK(hurt_frames >= 15,
+              "%s: die Reaktion dauert nur %d Frames — das Original haelt state 2 ueber P0(1) + "
+              "P1(3, @0x80105850-6C) + P2(17, +0x158 16->0 @0x80105970-7C)", tag, hurt_frames);
+        CHECK(pose_changes >= 5,
+              "%s: die gerenderte Pose aendert sich waehrend der Reaktion nur %dx", tag, pose_changes);
+        CHECK(e->re2z_res223 == (int8_t)(res_before - 15),
+              "%s: +0x223 -= cost[Zeile 3] = 15 (Tabelle @0x8010CC33, Abzug @0x801055D8-EC), "
+              "%d -> %d", tag, res_before, e->re2z_res223);
+
+        /* Schnellfeuer -> Knockdown 0x501: der Zwischen-Handler 0x80105BC0 laedt die Resistenz
+         * in seiner Endphase wieder auf (@0x80106028-34), also muss nachgesetzt werden. */
+        e->state = 1; e->sub_state_1 = 1; e->sub_state_2 = 0;
+        e->hp = 60; e->re2z_res223 = 20; e->re2z_flag222 = 0;
+        int knocked = 0;
+        for (int shot = 0; shot < 10 && !knocked; shot++) {
+            e->hit_react = 0;
+            re15_player_weapon_fire(3);
+            frame();
+            if (e->state == 1 && e->sub_state_1 == 5) knocked = 1;
+        }
+        printf("  [reaktion] Schnellfeuer -> Knockdown=%d (state=%d sub=%d)\n",
+               knocked, e->state, e->sub_state_1);
+        CHECK(knocked, "%s: Schnellfeuer loest keinen Knockdown 0x501 aus (@0x801050A4-AC)", tag);
+    }
     free(buf);
 }
 
@@ -337,6 +417,7 @@ int main(int argc, char **argv)
     memset(&s_def_mesh, 0, sizeof s_def_mesh);
     memset(&s_def_skel, 0, sizeof s_def_skel);
     memset(&s_def_anim, 0, sizeof s_def_anim);
+    re15_re2z_audio_hook(probe_se, NULL);      /* wie platform/pc/main.c den ENEMSE-Hook setzt */
 
     if (argc > 1 && strcmp(argv[1], "census") == 0) {
         re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);

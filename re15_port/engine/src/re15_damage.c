@@ -715,8 +715,8 @@ retry_after_latch:
         e->hp = -1;
     e->sub_state_3 = 0;                              /* +0x7 = 0 (@0x80012428) — start the hurt/death anim FSM at phase 0 */
     e->state       = (e->hp >= 0) ? 2 : 3;          /* +0x4 = HURT(2) / DEATH(3) (@0x80012520) */
-    re15_re2_stamp_1d2(e);                           /* RE2-Flavor: +0x1D2 = zone+3*bracket (SET,
-                                                      * fix_1d2_spec — Belege am Helfer oben) */
+    /* RE2-Flavor: +0x1D2/+0x6 (der Stempel steht am ENDE, damit er den RE1.5-+0x6-Schreiber
+     * unten ueberschreibt — Belege am Helfer). */
     /* Port bookkeeping: drop the REVERSE-playback bit. In the original, reverse is NOT entity
      * state — it is the a2=1 argument of single f314 calls (grab-recovery @0x80102aec `ori a2,zero,1;
      * jal 0x8001f314`; feeding kneel-down likewise), and the forced +0x4=2/3 here makes the next
@@ -747,6 +747,7 @@ retry_after_latch:
         extern void re15_audio_weapon_se(int idx);
         re15_audio_weapon_se(8);
     }
+    re15_re2_stamp_1d2(e);                          /* RE2-Flavor: +0x1D2 + +0x6 (s.u.) */
     return best + 1;                                /* hit (slot+1, non-zero) */
 }
 
@@ -768,12 +769,48 @@ retry_after_latch:
  * ein RE1.5-Waffen->Bracket-Mapping existiert nicht. Konsumenten: Zombie-Blut %3==0 = ZONE 0
  * (Bein-Treffer, @0x801050B0-E4), Hunde-Gore /3 = BRACKET (@0x80103D00-28/@0x80103DB8-E0),
  * Hunde-Gore-Tod Zeile 9 `<3` = Bracket 0 (@0x801046A8-C4). */
+/* ⛔ KORREKTUR 2026-08-18 (Nutzer-Report "die RE2-Zombies reagieren nicht auf die Schuesse"):
+ * die bisherige Aim-Elevation-Naeherung war doppelt falsch.
+ *
+ * (a) ZONE. Beide RE2-Applier setzen +0x1D2 UNBEDINGT auf die Basis 1
+ *       80047294: addiu v0,zero,1
+ *       80047298: sb   v0,466(s1)          (Zwilling @0x800474B8-BC)
+ *     und korrigieren erst DANACH: Zone 0 nur wenn `hitcode & 0x20000` (`lui v0,0x2; and v0,s5,v0;
+ *     beq -> 0x80047314` @0x8004729C-A4) UND der Schuss unter der halben Koerperhoehe liegt
+ *     (a0 = sign16(+0x98)>>1 @0x800472AC-B8, `enemy_y + a0 < shot_y` @0x800472BC-CC -> `sb zero,466`
+ *     @0x800472D4); Zone 2 nur wenn `word0 & 0x10000000` (@0x800472D8-E4) UND `shot_y < enemy_y +
+ *     3*a0` (@0x800472E8-304 -> `sb 2,466` @0x8004730C). BEIDE Korrekturen haengen an Bits des
+ *     Hitcodes bzw. an einer Schuss-Y-Koordinate, fuer die der Port KEINEN Produzenten hat
+ *     (der Port-Schuss ist der RE1.5-Hitscan FUN_80011F50, ohne RE2-Hitcode). Der einzige
+ *     BELEGTE Wert ist deshalb die Basis 1. Die alte Elevation-Naeherung erzeugte ausserdem
+ *     systematisch Zone 2 = Spalte 2 — und Spalte 2 ist in 11 von 17 Zeilen der Dispatch-Tabelle
+ *     @0x8010C964 NULL (selbst gedumpt), also eine im Original unmoegliche Kombination.
+ *     BRACKET bleibt 0 (OPEN): `s6 = hitcode>>28` @0x80047114 bzw. `s1` aus den Bits 2/4 des
+ *     Trefferflag-Worts @0x80041834-48 — auch das ist RE2-Waffen-Zustand ohne Port-Produzent.
+ *     -> +0x1D2 = 1 + 3*0 = 1.
+ *
+ * (b) +0x6. Der RE2-Applier schreibt +0x4 als WORT:
+ *       8004727C: lh   v1,342(s1)          ; HP
+ *       80047284: bgez v1,0x80047294
+ *       80047288: sw   v0,4(s1)            ; v0 = 2  (Delay-Slot, laeuft IMMER)
+ *       8004728C: addiu v0,zero,3
+ *       80047290: sw   v0,4(s1)            ; v0 = 3 bei HP < 0
+ *     Das `sw` nullt +0x5/+0x6/+0x7 mit; nur +0x5 wird danach wieder gesetzt
+ *     (`sb s5,5(s1)` @0x80047324 / `sb v1,5(t0)` @0x80041AB4). **+0x6 ist nach JEDEM RE2-Treffer
+ *     0.** Der Port stempelte hier die RE1.5-Aim-Elevation (0/1/2) hinein; +0x6 ist im
+ *     RE2-HURT aber die REAKTIONS-PHASE (der Master @0x80105478-B8 verzweigt darauf, und die
+ *     Onset-Phase setzt +0x6=1 @0x801055B4). Mit +0x6 != 0 war sowohl das Flinch-Gate
+ *     (`bne v0,zero,0x80105168` @0x80105064) als auch die Onset-Phase strukturell blockiert —
+ *     genau der gemeldete "keine Reaktion". */
 static void re15_re2_stamp_1d2(re15_actor_t *e)
 {
     if (re15_ai_flavor() != RE15_AI_FLAVOR_RE2 || !re15_re2_owns_type(e->type)) return;
-    extern int re15_player_aim_elevation(void);
-    int elev = re15_player_aim_elevation();
-    e->re2z_hits1d2 = (uint8_t)((elev < 0) ? 0 : (elev > 0) ? 2 : 1);   /* + 3*0 (Bracket OPEN) */
+    /* NEGATIV-PROBE (2026-08-18, Ergebnis im Report): ersetzt man diese zwei Zeilen wieder
+     * durch den alten Elevation-Stempel `hits1d2 = elev<0?0:elev>0?2:1` OHNE das +0x6-Nullen,
+     * wird probe_re2_livepath sofort rot — kein Grunzer (SE=-1), +0x223 unveraendert 20, kein
+     * Knockdown. Das ist exakt der gemeldete Fehler. */
+    e->re2z_hits1d2 = 1u;   /* Basis-Zone 1 @0x80047294-98 + 3*Bracket 0 (OPEN, s.o.) */
+    e->sub_state_2  = 0u;   /* +0x6 = 0 durch das Wort-`sw` @0x80047288/@0x80047290 */
 }
 
 /* Enemy branch of FUN_80012d60 (@80012f08-80013034): apply a resolved hit to an
