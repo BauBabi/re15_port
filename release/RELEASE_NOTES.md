@@ -1,3 +1,34 @@
+# RE1.5 Port — v0.2.4 (Early Preview)
+
+## Neu in v0.2.4 (gegenueber v0.2.3) — drei Animations-/Sound-Fehler
+
+Aufgefallen bei der Untersuchung einer Nutzer-Meldung ("der liegende Zombie im
+2F-Korridor klingt beim Getroffenwerden/Hinfallen/Aufstehen anders als die im
+Dinner-Raum"). Die Meldung selbst ist **byte-true** — die Raeume liefern im
+Original verschiedene Zombie-Stimmsaetze (andere Aufnahmen, andere Tonhoehe:
+11 kHz statt 8 kHz), und der Zufallsgenerator laesst die Grunzer je nach
+Blickrichtung unterschiedlich fallen. Auf dem Weg dorthin kamen aber drei echte
+Fehler ans Licht:
+
+- **Rueckwaerts abgespielte Animationen spielten ihre Geraeusche zum falschen
+  Zeitpunkt.** Im Original haengen Pose und Ton zwingend am selben (gespiegelten)
+  Bild-Index; der Port zeichnete gespiegelt, las die Toene aber vorwaerts.
+  Gemessen: ein Laut feuerte bei Zaehler 42 statt 17.
+- **Ein Richtungs-Merker blieb haengen**: Ein Zombie, den man beim Hinknien zum
+  Fressen unterbricht, stand danach **rueckwaerts** auf (auch sichtbar).
+- **Sichtbares Stocken beim Aufstehen**: ein unbelegter Ueberblendungswert liess
+  die ersten acht von 59 Bildern komplett in der alten Pose einfrieren.
+
+Zwei falsche Faehrten sind im Quelltext dokumentiert, damit sie niemand erneut
+"repariert": Der Wert, der wie eine Abspielgeschwindigkeit aussieht, steuert die
+Ueberblendungsdauer (der Bildvorschub ist immer ein Bild pro Tick); und die
+Vorne/Hinten-Auswahl beim Zu-Boden-Gehen gilt nur fuer den Todes-Clip, nicht fuer
+den Knockdown.
+
+Testsuite von 150 auf 154 Pruefungen; jede Korrektur mit Gegenprobe abgesichert.
+
+---
+
 # RE1.5 Port — v0.2.3 (Early Preview)
 
 ## Neu in v0.2.3 (gegenueber v0.2.2) — vier gemeldete Punkte
@@ -225,8 +256,8 @@ Split-Zips — 7-Zip/WinRAR verwenden. Pruefsummen: `SHA256SUMS.txt`.
 
 | Paket | Plattform | Start |
 |---|---|---|
-| `re15_port_v0.2.3_win64.zip` | Windows x64 | `Start_RE15_Port.bat` doppelklicken |
-| `re15_port_v0.2.3_linux_steamdeck_x64.zip` | Linux x64 / Steam Deck (SteamOS 3.x) | `./run.sh` (Deck: als Non-Steam-Game hinzufuegen) |
+| `re15_port_v0.2.4_win64.zip` | Windows x64 | `Start_RE15_Port.bat` doppelklicken |
+| `re15_port_v0.2.4_linux_steamdeck_x64.zip` | Linux x64 / Steam Deck (SteamOS 3.x) | `./run.sh` (Deck: als Non-Steam-Game hinzufuegen) |
 
 Beide Pakete sind selbst-enthalten: SDL2 statisch, Assets unter `shared_assets/PSX`
 (CD-Baum) plus `shared_assets/extracted_fx` (Effekt-Texturen), Savegames als
@@ -266,6 +297,6 @@ release/build_linux_deck.sh --distrobox re15-build   # auf dem Deck selbst
 ```
 Paketieren (beide Plattformen, mit den Gates oben):
 ```bash
-release/make_package.sh --version v0.2.3               # --only linux | --only win
+release/make_package.sh --version v0.2.4               # --only linux | --only win
 ```
-Ergebnis: `re15_port_v0.2.3_{linux_steamdeck_x64,win64}.{z01,zip}` + `SHA256SUMS.txt`.
+Ergebnis: `re15_port_v0.2.4_{linux_steamdeck_x64,win64}.{z01,zip}` + `SHA256SUMS.txt`.
