@@ -1,3 +1,52 @@
+# RE1.5 Port — v0.2.2 (Early Preview)
+
+## Neu in v0.2.2 (gegenueber v0.2.1) — START-FIX: Spiel liess sich nicht mehr starten
+
+**Wer v0.2.1 nicht starten konnte, braucht dieses Paket.** Symptom: Doppelklick auf
+`re15_pc.exe` (oder `Start_RE15_Port.bat`) erzeugte einen Prozess im Hintergrund, aber
+KEIN Fenster — und nicht einmal eine `debug.log`.
+
+Ursache (per Debugger am haengenden Prozess belegt): Die exe war eine **Konsolen**-
+Anwendung (PE-Subsystem 3). Ohne bereits offene Konsole muss der Windows-Loader erst
+eine erzeugen, und genau dort blockierte er — **bevor** die erste Zeile des Programms
+lief:
+
+```
+#0  ntdll!ZwCreateFile
+#1  KERNELBASE!AttachConsole
+#14 ntdll!LdrLoadDll
+#19 ntdll!LdrInitializeThunk      <- noch im Loader, vor main()
+```
+
+Aus einer bereits offenen Konsole gestartet lief dieselbe exe normal durch (sie erbt
+die Konsole) — daher war der Fehler so verwirrend. `start ""` in der .bat legte
+ebenfalls eine neue Konsole an und half deshalb nicht.
+
+Fix: Die exe ist jetzt eine **GUI-Anwendung** (Subsystem 2) — ein SDL-Spiel braucht
+keine Konsole und umgeht den Loader-Pfad komplett. Damit Kommandozeilen-Laeufe und die
+Testsuite ihre Ausgabe behalten, haengt sich das Programm beim Start an eine *bereits
+vorhandene* Eltern-Konsole an (erzeugt keine neue). Zusaetzlich: `start ""` aus der
+.bat entfernt. Nebeneffekt: beim Doppelklick oeffnet sich kein schwarzes Konsolen-
+fenster mehr.
+
+Verifikation ueber genau den Startweg, der vorher hing:
+| | v0.2.1 | v0.2.2 |
+|---|---|---|
+| Threads | 1 | 14 |
+| CPU | 0 % | 0,47 % |
+| Fenster | keins | sichtbar, 976x759 |
+| `debug.log` | wird nicht geschrieben | wird geschrieben |
+
+Neu im Repo: `tools/diag_window.ps1` — listet ALLE Fenster eines Prozesses (auch
+unsichtbare oder ausserhalb des Bildschirms), die Bildschirme und die `debug.log`.
+Damit laesst sich "kein Fenster erzeugt" von "Fenster unsichtbar" und "Fenster
+ausserhalb des Desktops" unterscheiden.
+
+Inhaltlich identisch zu v0.2.1 (alle 15 dort behobenen Abweichungen sind enthalten);
+Testsuite 144/144 auf beiden Plattformen.
+
+---
+
 # RE1.5 Port — v0.2.1 (Early Preview)
 
 ## Neu in v0.2.1 — 15 gemeldete Abweichungen behoben
@@ -141,8 +190,8 @@ Split-Zips — 7-Zip/WinRAR verwenden. Pruefsummen: `SHA256SUMS.txt`.
 
 | Paket | Plattform | Start |
 |---|---|---|
-| `re15_port_v0.2.1_win64.zip` | Windows x64 | `Start_RE15_Port.bat` doppelklicken |
-| `re15_port_v0.2.1_linux_steamdeck_x64.zip` | Linux x64 / Steam Deck (SteamOS 3.x) | `./run.sh` (Deck: als Non-Steam-Game hinzufuegen) |
+| `re15_port_v0.2.2_win64.zip` | Windows x64 | `Start_RE15_Port.bat` doppelklicken |
+| `re15_port_v0.2.2_linux_steamdeck_x64.zip` | Linux x64 / Steam Deck (SteamOS 3.x) | `./run.sh` (Deck: als Non-Steam-Game hinzufuegen) |
 
 Beide Pakete sind selbst-enthalten: SDL2 statisch, Assets unter `shared_assets/PSX`
 (CD-Baum) plus `shared_assets/extracted_fx` (Effekt-Texturen), Savegames als
@@ -182,6 +231,6 @@ release/build_linux_deck.sh --distrobox re15-build   # auf dem Deck selbst
 ```
 Paketieren (beide Plattformen, mit den Gates oben):
 ```bash
-release/make_package.sh --version v0.2.1               # --only linux | --only win
+release/make_package.sh --version v0.2.2               # --only linux | --only win
 ```
-Ergebnis: `re15_port_v0.2.1_{linux_steamdeck_x64,win64}.{z01,zip}` + `SHA256SUMS.txt`.
+Ergebnis: `re15_port_v0.2.2_{linux_steamdeck_x64,win64}.{z01,zip}` + `SHA256SUMS.txt`.
