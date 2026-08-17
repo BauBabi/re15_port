@@ -1238,6 +1238,15 @@ target_include_directories(test_zombie_se_ab_10d0 PRIVATE ${CMAKE_SOURCE_DIR}/in
 add_test(NAME unit_zombie_se_ab_10d0 COMMAND test_zombie_se_ab_10d0)
 set_tests_properties(unit_zombie_se_ab_10d0 PROPERTIES TIMEOUT 90)
 
+# --- PIN auf die SE-STIMMEN-MASCHINE (Nutzer-Report 2026-08-17 #4) ---
+# FUN_800453d0 byte3&0x1f-0x10 = feste SPU-Stimme, FUN_80045a18 = Prioritaets-Gate,
+# FUN_800458d4 = Frame-Pumpe (Stimme v == SPU 16+v). Prueft berechnete Werte, kein Klang.
+add_executable(test_se_voice_machine test_se_voice_machine.c)
+target_link_libraries(test_se_voice_machine PRIVATE re15_engine re15_test_support)
+target_include_directories(test_se_voice_machine PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_se_voice_machine COMMAND test_se_voice_machine)
+set_tests_properties(unit_se_voice_machine PROPERTIES TIMEOUT 60)
+
 # --- PIN auf die a3-Semantik von anim_set (FUN_8001f314) — Nutzer-Report 2026-08-17 #3 ---
 # Widerlegt+friert ein: a3 ist KEINE Frame-Rate (Vorschub ist immer +1 @0x8001f610-3c),
 # sondern der Crossfade-Gewichtsschritt (@0x8001f474 mult mit +0x8f).
@@ -1263,3 +1272,33 @@ target_link_libraries(test_knockdown_frontback PRIVATE re15_engine re15_test_sup
 target_include_directories(test_knockdown_frontback PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_knockdown_frontback COMMAND test_knockdown_frontback)
 set_tests_properties(unit_knockdown_frontback PROPERTIES TIMEOUT 60)
+
+# --- DIAGNOSE: Schuss -> Taumel -> Sturz, Frame-Sequenz (Nutzer-Report nach v0.2.4) ---
+add_executable(probe_stagger_fall_1140 probe_stagger_fall_1140.c)
+target_link_libraries(probe_stagger_fall_1140 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_stagger_fall_1140 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# --- RE2-Modus: der ECHTE Spielweg (pc_enemy_load-Spiegel inkl. RE2-Bank aus CDEMD0.EMS,
+#     AI-Ticks in game_step-Reihenfolge, Render-Auswahl, Schuss). Nutzer-Report 2026-08-17. ---
+add_executable(probe_re2_livepath test_re2_livepath.c)
+target_link_libraries(probe_re2_livepath PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re2_livepath PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_re2_livepath PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2_livepath COMMAND probe_re2_livepath)
+set_tests_properties(unit_re2_livepath PROPERTIES TIMEOUT 90)
+
+# --- RE2-Modus: byte-true ENEMSE-Bank-Wahl FUN_80052b38 + Raum-kind-Paar @0x8005728c-b8 ---
+add_executable(test_re2_enemse_bank test_re2_enemse_bank.c)
+target_link_libraries(test_re2_enemse_bank PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_enemse_bank PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_re2_enemse_bank COMMAND test_re2_enemse_bank)
+set_tests_properties(unit_re2_enemse_bank PROPERTIES TIMEOUT 30)
+
+# --- Schuss -> Taumel -> Sturz: Uebergabetick-Bank + volle Sturz-Frame-Folge ---
+add_executable(test_knockdown_handoff test_knockdown_handoff.c)
+target_link_libraries(test_knockdown_handoff PRIVATE re15_engine re15_test_support)
+target_include_directories(test_knockdown_handoff PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_knockdown_handoff_bank COMMAND test_knockdown_handoff bank)
+add_test(NAME unit_knockdown_fall_seq     COMMAND test_knockdown_handoff fall)
+set_tests_properties(unit_knockdown_handoff_bank unit_knockdown_fall_seq PROPERTIES TIMEOUT 60)

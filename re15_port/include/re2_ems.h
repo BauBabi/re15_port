@@ -102,4 +102,16 @@ typedef struct {
 
 void re2_enemse_decode_entry(uint32_t entry, re2_enemse_se_t *out);
 
+/* ---- ENEMSE-BANK-WAHL (byte-true FUN_80052b38, Belege in re2_ems.c) --------------------
+ * Der Raum sammelt beim Spawn sein kind-PAAR (A/B, @0x8005728c-b8), FUN_80052b38 sucht damit
+ * die Zeile in der Paar-Tabelle @0x800a7400; der ZEILENINDEX IST die ENEMSE-Bank
+ * (DAT_800d424b -> Lader FUN_8005a09c). Rueckgabe 0xFF = kein Treffer = KEINE Bank.
+ * *out_flag_kind = der kind, dessen Entities im Original word0 |= 0x2000 bekommen
+ * (= die zweite Map-Haelfte / se_id+0x10 in FUN_8005bd6c); -1 = keiner. */
+int  re2_enemse_select_bank(int kindA, int kindB, int *out_flag_kind);
+int  re2_enemse_pair_row(int bank, int *out_k0, int *out_k1);
+void re2_enemse_room_reset(void);          /* FUN_80052f3c @0x80053028/30 */
+void re2_enemse_room_add_kind(int kind);   /* Spawn @0x8005728c-b8 */
+void re2_enemse_room_kinds(int *out_a, int *out_b);
+
 #endif /* RE2_EMS_H */

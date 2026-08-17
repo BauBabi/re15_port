@@ -57,7 +57,15 @@ static SDL_AudioDeviceID s_audio_dev = 0;
  * events fire in quick succession. RE1.5 in-game audio is essentially
  * monophonic per channel anyway — multiple events should map to
  * different SPU channels via the tone-table mapping (Phase 4.7+). */
-#define MIXER_MAX_ACTIVE_SAMPLES   4
+/* Mixer-Slots: die ERSTEN RE15_SE_VOICE_COUNT (8) sind die FESTEN SE-Stimmen des Originals
+ * (logische Stimme v == SPU-Hardware-Stimme 16+v, FUN_800458d4 — Herleitung in re15_vab.h).
+ * Slot v gehoert exklusiv Stimme v: ein Key-On dort UEBERSCHREIBT das laufende Sample, genau
+ * wie SsUtKeyOnV auf denselben Hardware-Kanal. Die restlichen Slots sind der alte freie Pool
+ * fuer die Pfade ohne Stimmen-Zuordnung (Legacy-Se_on-VAG, Schritte). */
+#define MIXER_SE_VOICE_SLOTS       RE15_SE_VOICE_COUNT
+#define MIXER_FREE_POOL_FIRST      MIXER_SE_VOICE_SLOTS
+#define MIXER_FREE_POOL_COUNT      4
+#define MIXER_MAX_ACTIVE_SAMPLES   (MIXER_SE_VOICE_SLOTS + MIXER_FREE_POOL_COUNT)
 
 /* Output device rate (Hz). Voice clips are resampled to this at load. */
 #define RE15_AUDIO_RATE 44100
@@ -93,7 +101,37 @@ static int      s_vag_count   = 0;
 static int      s_vab_loaded  = 0;
 
 static active_sample_t s_active[MIXER_MAX_ACTIVE_SAMPLES];
-static int             s_next_slot = 0;
+static int             s_next_slot = MIXER_FREE_POOL_FIRST;
+
+/* Freien Slot aus dem POOL (Index >= MIXER_FREE_POOL_FIRST) holen; alles darunter gehoert
+ * exklusiv den 8 festen SE-Stimmen und darf nie gestohlen werden. */
+static int mixer_alloc_free_slot(void)
+{
+    for (int i = MIXER_FREE_POOL_FIRST; i < MIXER_MAX_ACTIVE_SAMPLES; i++)
+        if (!s_active[i].active) return i;
+    int slot = s_next_slot;
+    s_next_slot = MIXER_FREE_POOL_FIRST +
+                  ((s_next_slot + 1 - MIXER_FREE_POOL_FIRST) % MIXER_FREE_POOL_COUNT);
+    return slot;
+}
+
+/* ===== SE-STIMMEN-MASCHINE — Port-Zustand (Herleitung + Adressen: re15_vab.h) ============
+ *  s_se_prio[v]  == DAT_800b22cc[v]  (laufende Prioritaet der Stimme; @0x800454dc gesetzt,
+ *                   @FUN_800458d4 auf 0 zurueck, sobald die Stimme ausgeklungen ist)
+ *  s_se_pend[v]  == der vorgemerkte Key-On-Satz DAT_800b2420 + v*0x12 (@0x80045504-58).
+ *                   FUN_800453d0 SPIELT NICHT SELBST — es traegt nur ein; die Frame-Pumpe
+ *                   FUN_800458d4 keyt. Folge (byte-true): zwei SE auf DERSELBEN Stimme im
+ *                   SELBEN Frame -> nur der LETZTE erklingt, der erste wird ueberschrieben. */
+static unsigned char s_se_prio[RE15_SE_VOICE_COUNT];
+typedef struct {
+    int      pending;      /* DAT_800b2420+v*0x12 +0x00 == 1 (@0x80045514 `sh v0,0(v1)`) */
+    int16_t *pcm;
+    int      pcm_len;
+    uint32_t step_q16;
+    int      vl_q15, vr_q15;
+    int      se_id;        /* +0x02, nur Buchhaltung/Debug (@0x80045510)                 */
+} se_pending_t;
+static se_pending_t s_se_pend[RE15_SE_VOICE_COUNT];
 
 /* Room footstep bank (snd0) — separate from the Se_on test VAB. Its EDT table
  * (snd0.edt) maps a floor sound_type → VAB tone → VAG (byte-true FUN_80045630). */
@@ -569,21 +607,66 @@ static int load_room_se_vab_pc(void)
     return 0;
 }
 
-/* Activate one mixer voice per resolved SE LAYER (byte-true FUN_80045024 @0x8004516c /
- * FUN_800453d0 @0x8004548c: EDT record byte3 bits 5-7 = extra consecutive tones keyed on with
- * the base tone — the handgun gunshot is TWO layered VAGs. audit wf_1db9c802 AUD-EDT-LAYER-B3HI.
- * PER-TONE PITCH + VOLUME (Dossier analysis/rolltor_sound.md D1/D2, CONFIRMED):
- *  - Pitch: SsUtKeyOnV(voice, vabId, prog, tone, note=tone[+6], fine=tone[+5], voll, volr)
- *    @0x8004522c (lbu 0x6(s1) @0x800451fc / lbu 0x5(s1) @0x80045210) -> note2pitch2 ->
- *    SpuVmKeyOnNow(1, pitch). Exakter Algorithmus: re15_vab_note2pitch2 (fine+shift ADDIEREN).
- *  - Volume non-positional: voll = volr = tone[+2] (LAB_800451dc lbu 0x2(s1) -> DAT_800b2824/26);
- *    Positional-Pfad (flags!=0 -> FUN_80045a64-Panning @0x800451c0-cc) bleibt OFFEN (D3). */
+/* Einen SE des Originals byte-true "abspielen" = ihn auf SEINER Stimme VORMERKEN.
+ *
+ * Byte-true FUN_800453d0 (Raum-SE) bzw. FUN_80045024 (Bank-SE); die vollstaendige
+ * Instruktions-Herleitung samt Adressen steht im Kopf von re15_vab.h. Kurz:
+ *   - Der Record legt die Stimme FEST: voice = (byte3 & 0x1f) - 0x10 (@0x80045478-7c).
+ *     Logische Stimme v == SPU-Hardware-Stimme 16+v (FUN_800458d4).
+ *   - Vor allem anderen laeuft das Prioritaets-Gate FUN_80045a18 (@0x800454bc): laeuft auf
+ *     der Stimme ein hoeher priorisierter SE, wird dieser hier KOMPLETT VERWORFEN — die ID
+ *     feuert, es ist nur nichts zu hoeren. Bei Gleichstand entscheidet Bit 3 des Nibbles.
+ *   - Danach prio[voice] = byte2 & 7 (@0x800454dc) und der Key-On-Satz wird VORGEMERKT
+ *     (@0x80045504-58); gekeyt wird erst in der Frame-Pumpe se_voice_pump/FUN_800458d4.
+ *   - Extra-Layer (byte3>>5, @0x8004548c) laufen auf voice+1, voice+2, ... mit tone+1,
+ *     tone+2, ...; die Schleife bricht ab, sobald voice+k > 7 (@0x80045578 "if (7 < uVar10+1)
+ *     return") — und setzt prio auch fuer die Folge-Stimmen (@0x800455ac DAT_800b22cd[..]),
+ *     OHNE deren Gate erneut zu pruefen.
+ *
+ * PITCH je Tone (Dossier analysis/rolltor_sound.md D1, CONFIRMED):
+ *   SsUtKeyOnV(voice, vabId, prog, tone, note=tone[+6], fine=tone[+5], voll, volr)
+ *   (@0x8004522c; note = lbu 0x6(s1) @0x800451fc, fine = lbu 0x5(s1) @0x80045210)
+ *   -> note2pitch2 (fine + tone[+5] werden ADDIERT) -> SpuVmKeyOnNow.
+ *
+ * OFFEN, mit Adresse (KEIN Platzhalter, sondern eine benannte, nicht portierbare Stelle):
+ *   LAUTSTAERKE/PANNING des Raum-SE-Pfades ist im Original POSITIONAL und haengt an der
+ *   SENDENDEN Entity: FUN_800453d0 ruft UNBEDINGT FUN_80045a64(*(0x800ac784) + 0x34)
+ *   (@0x800454e0-ec) und uebernimmt deren Ergebnis DAT_800b2824/26 als voll/volr
+ *   (@0x80045544-54). FUN_80045a64 @0x80045a64 selbst ist vollstaendig disassembliert:
+ *     - Kamera = *(RDT+0x24) + DAT_800b0fe4*0x20 (@0x80045a68-9c)
+ *     - dist ueber zwei SquareRoot0-Stufen (@0x80045aa0-b38)
+ *     - u = dist/250, geklemmt auf 0x7f (@0x80045b3c-5c; 0x10624dd3-Magic = /250)
+ *     - Winkel ueber vier FUN_80045d6c-Aufrufe (@0x80045b70-bb8); Sonderfaelle
+ *       0/0x800/0x1000 -> voll = volr = 0x89 (@0x80045c0c-1c)
+ *     - sonst: eine Seite 0x89, die andere PAN_LUT@0x80074728[idx] (@0x80045c88-94),
+ *       idx = (ang & 0x3ff)>>3 bzw. 0x89-idx (@0x80045c50-7c)
+ *     - zum Schluss beidseitig ATT_LUT@0x800747a8[u] abziehen (@0x80045cf0-d1c)
+ *   Der Port kann das HIER nicht auswerten: er hat kein Gegenstueck zu DAT_800ac784 (die
+ *   gerade tickende Entity), und die Aufrufer sind re15_audio_room_se(id) ohne Emitter.
+ *   Bis der Emitter durchgereicht ist, bleibt die Tone-eigene vol/pan (tone[+2]/[+3]) als
+ *   Ersatz stehen — das ist eine LAUTSTAERKE-/RICHTUNGS-Abweichung, keine Klang-Identitaet. */
 static void se_play_layers(const uint8_t *edt, const re15_vab_t *vab,
                            int16_t *const *decoded, const int *decoded_len, int se_id)
 {
+    re15_edt_rec_t rec;
+    if (re15_edt_decode(edt, se_id, &rec) != 0 || rec.empty) return;
+
     int vags[8], tones[8];
     int n = re15_edt_resolve_layers_ex(edt, vab, se_id, vags, tones, 8);
     if (n <= 0) return;
+
+    static int se_dbg = -1;
+    if (se_dbg < 0) se_dbg = getenv("RE15_SE_DEBUG") ? 1 : 0;
+
+    /* PRIORITAETS-GATE (FUN_80045a18 @0x800454bc-c8): verwirft den SE komplett. */
+    if (re15_se_prio_gate(s_se_prio, rec.voice, rec.prio_nib)) {
+        if (se_dbg)
+            fprintf(stderr, "[se] GATE: se=%d Stimme=%d prio=%d(nib %d) VERWORFEN "
+                            "(laufend prio=%d) [FUN_80045a18]\n",
+                    se_id, rec.voice, rec.prio, rec.prio_nib, s_se_prio[rec.voice]);
+        return;
+    }
+
     SDL_LockAudioDevice(s_audio_dev);
     for (int k = 0; k < n; k++) {
         int vag = vags[k];
@@ -600,35 +683,90 @@ static void se_play_layers(const uint8_t *edt, const re15_vab_t *vab,
         else if (pan > 0x40) vl = vol * (0x7f - pan) / 0x3f;
         uint16_t pitch = re15_vab_note2pitch2(t->min_note, t->pitch_shift,
                                               t->center_note, t->pitch_shift);
-        {   static int se_dbg = -1;
-            if (se_dbg < 0) se_dbg = getenv("RE15_SE_DEBUG") ? 1 : 0;
-            if (se_dbg)
-                fprintf(stderr, "[se] voice: se=%d layer=%d vag=%d note=%u fine=%u center=%u "
-                                "vol=%u pitch=0x%03x (%d Hz)\n",
-                        se_id, k, vag, t->min_note, t->pitch_shift, t->center_note,
-                        t->vol, pitch, (int)((44100u * pitch) >> 12));
+        if (se_dbg)
+            fprintf(stderr, "[se] Stimme: se=%d layer=%d vag=%d note=%u fine=%u center=%u "
+                            "vol=%u pitch=0x%03x (%d Hz) -> SE-Stimme %d (SPU %d)\n",
+                    se_id, k, vag, t->min_note, t->pitch_shift, t->center_note,
+                    t->vol, pitch, (int)((44100u * pitch) >> 12),
+                    rec.voice + k, RE15_SE_SPU_VOICE_BASE + rec.voice + k);
+
+        if (rec.voice < 0) {
+            /* Direkt-Zweig FUN_80045024 "if ((byte3 & 0x1f) < 0x10)": sofortiges SsUtKeyOnV
+             * @0x8004522c auf einen Kanal AUSSERHALB der 8 gepumpten SE-Stimmen, ohne Gate.
+             * Port: freier Pool-Slot wie bisher (game-weit 112 von 6140 Records). */
+            int slot = mixer_alloc_free_slot();
+            s_active[slot].pcm        = decoded[vag];
+            s_active[slot].pcm_len    = decoded_len[vag];
+            s_active[slot].pos        = 0;
+            s_active[slot].subpos     = 0;
+            s_active[slot].step_q16   = (uint32_t)pitch << 4;   /* 0x1000 == 44100 Hz Ausgabe */
+            s_active[slot].pos_frac   = 0;
+            s_active[slot].volume_q15 = vl;
+            s_active[slot].vol_r_q15  = vr;
+            s_active[slot].active     = 1;
+            continue;
         }
-        int slot = -1;
-        for (int i = 0; i < MIXER_MAX_ACTIVE_SAMPLES; i++)
-            if (!s_active[i].active) { slot = i; break; }
-        if (slot < 0) { slot = s_next_slot; s_next_slot = (s_next_slot + 1) % MIXER_MAX_ACTIVE_SAMPLES; }
-        s_active[slot].pcm        = decoded[vag];
-        s_active[slot].pcm_len    = decoded_len[vag];
-        s_active[slot].pos        = 0;
-        s_active[slot].subpos     = 0;
-        s_active[slot].step_q16   = (uint32_t)pitch << 4;   /* 0x1000 == 44100 Hz Ausgabe */
-        s_active[slot].pos_frac   = 0;
-        s_active[slot].volume_q15 = vl;
-        s_active[slot].vol_r_q15  = vr;
-        s_active[slot].active     = 1;
+        int voice = rec.voice + k;
+        if (voice >= RE15_SE_VOICE_COUNT) break;   /* @0x80045578 "if (7 < uVar10 + 1) return" */
+
+        s_se_prio[voice]          = (unsigned char)rec.prio;   /* @0x800454dc / @0x800455ac */
+        s_se_pend[voice].pending  = 1;                         /* @0x80045514 sh v0,0(v1)   */
+        s_se_pend[voice].se_id    = se_id;                     /* @0x80045510               */
+        s_se_pend[voice].pcm      = decoded[vag];
+        s_se_pend[voice].pcm_len  = decoded_len[vag];
+        s_se_pend[voice].step_q16 = (uint32_t)pitch << 4;      /* 0x1000 == 44100 Hz Ausgabe */
+        s_se_pend[voice].vl_q15   = vl;
+        s_se_pend[voice].vr_q15   = vr;
     }
     SDL_UnlockAudioDevice(s_audio_dev);
 }
 
-/* Play a room SE by id (byte-true FUN_800453d0 core, PC path). The per-room SE table
- * (snd1 EDT, DAT_800ac778+0x14) maps se_id → program+tone(+layers) → VAG(s). The exact
- * pitch (record byte0) + SPU voice/pan (byte3 low bits) are FAITHFUL-LINE. Used by the
- * C-driven combat (e.g. the zombie death groan, FUN_80107cb0 frame 7 -> 800453d0(rng&1?8:5)). */
+/* Frame-Pumpe — byte-true FUN_800458d4 (gerufen @0x80021488):
+ *   - laeuft die 8 Slots RUECKWAERTS (Stimme 7..0 == SPU 23..16; iVar5 startet 0x180000
+ *     und faellt je Runde um 0x10000, Argument = iVar5>>16),
+ *   - keyt jede vorgemerkte Aufnahme ("if (*psVar3 != 0) SsUtKeyOnV(...); *psVar3 = 0;")
+ *     — im Port: Slot v des Mixers UEBERSCHREIBEN, das schneidet das laufende Sample ab,
+ *     genau wie ein SPU-Key-On auf denselben Hardware-Kanal,
+ *   - und setzt danach prio[v] = 0, sobald die Stimme still ist
+ *     ("SpuGetKeyStatus(1 << voice) == 0 -> (&DAT_800b22bc)[voice] = 0"). */
+static void se_voice_pump(void)
+{
+    for (int v = RE15_SE_VOICE_COUNT - 1; v >= 0; v--) {
+        if (s_se_pend[v].pending) {
+            s_active[v].pcm        = s_se_pend[v].pcm;
+            s_active[v].pcm_len    = s_se_pend[v].pcm_len;
+            s_active[v].pos        = 0;
+            s_active[v].subpos     = 0;
+            s_active[v].step_q16   = s_se_pend[v].step_q16;
+            s_active[v].pos_frac   = 0;
+            s_active[v].volume_q15 = s_se_pend[v].vl_q15;
+            s_active[v].vol_r_q15  = s_se_pend[v].vr_q15;
+            s_active[v].active     = 1;
+            s_se_pend[v].pending   = 0;
+        }
+        if (!s_active[v].active) s_se_prio[v] = 0;   /* SpuGetKeyStatus == 0 */
+    }
+}
+
+/* Play a room SE by id (byte-true FUN_800453d0, PC path). The per-room SE table
+ * (snd1 EDT, DAT_800ac778+0x14) maps se_id -> program+tone(+layers) -> VAG(s).
+ * Reichweiten-Gate se_id < 0x19 = @0x80045420 "sltiu v0,v1,0x19".
+ * Stimmen-/Prioritaets-Maschine: se_play_layers (Adressen dort). Used by the C-driven
+ * combat (e.g. the zombie death groan, FUN_80107cb0 frame 7 -> 800453d0(rng&1?8:5)).
+ *
+ * NICHT portiert, mit Beleg + Messwert (kein Platzhalter):
+ *  - se_id += 12, falls (*(u32*)*(0x800ac784) & 0x2000) != 0 (@0x80045404-18). Einziger
+ *    Produzent dieses Bits ist Sce_em_set mit pc[5] != 0 -> entity+0x0 = 0x2001
+ *    (@0x8004229c-b0); in ROOM10D0 (Datei 0x126a / 0x12a4) und ROOM1140 (0x000bbe ff.)
+ *    ist pc[5] == 0 -> der Versatz ist fuer diese Spawns nachweislich inaktiv.
+ *  - VAB-Override byte0 bit7 -> vabId = byte0 & 0x7f (@0x8004545c-68): waehlt eine ANDERE
+ *    residente VAB-Handle-Nummer fuer den Key-On, waehrend die Tone-Attribute weiter aus
+ *    der Bank-3-VH kommen. Census ueber alle 412 Raum-EDT-Tabellen: 680 von 6140 Records
+ *    setzen das Bit — in ROOM10D0 und ROOM1140 ist byte0 aller Records 0x00, also inaktiv.
+ *  - Hall: tone[prog][0].pan und tone[prog][tone].mode werden auf RDT+6 gesetzt
+ *    (@0x800454b8 sb v1,3(s6) / @0x800454c0 sb v1,1(s4); v1 = lbu 6(a2) = RDT-Header+6).
+ *    Gemessen: RDT+6 == 0 in ROOM10D0 UND ROOM1140 -> das Original schreibt dort 0
+ *    (= kein Reverb-Mode), der Port wertet mode/pan-Patch nicht aus: gleichwertig. */
 void re15_audio_room_se(int se_id)
 {
     if (!g_audio.initialized || !s_se_loaded || se_id < 0 || se_id >= 0x19) return;
@@ -765,7 +903,9 @@ void re15_audio_prime_core(int idx)
 
 /* Play a CORE-bank SE by EDT record index (byte-true FUN_80045024 bank4: Se_on(0x40NN0001) -> record
  * NN of the resident CORE table @0x801fbd00 -> program+tone -> VAG, same lookup as the room/weapon
- * banks). FAITHFUL-LINE: per-tone volume/pan deferred, like the other SE paths. */
+ * banks). Per-Tone-vol/pan (tone[+2]/[+3]) = der NICHT-positionale Zweig von FUN_80045024
+ * (LAB_800451dc `lbu 0x2(s1)` -> DAT_800b2824/26); der positionale Zweig FUN_80045a64
+ * (@0x800451c0-cc) braucht die Emitter-Position — OFFEN, Details an se_play_layers. */
 void re15_audio_core_se(int se_id)
 {
     if (!g_audio.initialized) return;
@@ -776,8 +916,18 @@ void re15_audio_core_se(int se_id)
 
 /* Play a WEAPON SE by id (byte-true FUN_80045024 bank1 core, PC path). The equipped weapon's ARMS
  * EDT (bank1) maps se_id -> program+tone -> VAG (identical to re15_footstep_vag). The GUNSHOT is
- * se_id 8. FAITHFUL-LINE: pitch (record byte0 VAB-ID override) + SPU voice/pan (byte3) deferred;
- * the VAG selection + positional-less play is byte-true. Wired at the player fire in game_step. */
+ * se_id 8. Stimme + Prioritaets-Gate laufen jetzt in se_play_layers (Adressen dort;
+ * byte3 & 0x1f - 0x10 @0x80045478-7c, Gate FUN_80045a18, Pumpe FUN_800458d4).
+ *
+ * Zwei Record-Felder sind fuer DIESEN Pfad belegt-aber-nicht-portiert, jeweils mit Adresse:
+ *  - byte0 bit7 = VAB-Handle-Override (@0x8004545c-68 in FUN_800453d0, identisch im
+ *    FUN_80045024-Kopf): waehlt eine andere residente VAB fuer den Key-On. Der Port haelt je
+ *    Bank genau EINE VH resident, es gibt also keine zweite Handle-Nummer, auf die verwiesen
+ *    werden koennte — beobachtbar erst, wenn mehrere Baenke gleichzeitig resident sind.
+ *  - voll/volr: FUN_80045024 nimmt bei (param_1 & 0xff) == 0 den NICHT-positionalen Zweig
+ *    (DAT_800b2824 = DAT_800b2826 = tone[+2], LAB_800451dc `lbu 0x2(s1)`) — genau das tut der
+ *    Port; sonst FUN_80045a64(param_2) (@0x800451c0-cc), das die Emitter-Position braucht
+ *    (siehe den OFFEN-Block an se_play_layers). */
 void re15_audio_weapon_se(int se_id)
 {
     if (!g_audio.initialized || !s_weap_loaded || se_id < 0 || se_id >= s_weap_edt_count) return;
@@ -907,7 +1057,18 @@ void re15_audio_re2_enemy_bank(int bank)
 void re15_audio_re2_enemy_se(int se_id, int flag2000)
 {
     if (!g_audio.initialized) return;
-    if (!s_re2se_loaded) {
+    /* BANK-LATCH-FIX (2026-08-17, Nutzer-Report "im RE2-Modus haben die Gegner den falschen
+     * Sound"): das Gate hiess frueher nur `if (!s_re2se_loaded)`. Nach dem ERSTEN Laden wurde
+     * `s_re2se_bank_sel` damit nie wieder angewandt — die ENEMSE-Bank blieb fuer den Rest der
+     * Sitzung stehen, obwohl `re15_audio_re2_enemy_bank()` sie pro Gegner/Raum neu waehlt.
+     * Folge: nach einem Zombie-Raum spielte der HUND die Zombie-Samples (und wegen des
+     * flag2000-Versatzes zusaetzlich aus der falschen Map-Haelfte). Im Original haengt die
+     * Bank am RAUM-kind-Paar (FUN_80052b38 @0x80052b40-c2c: Zeilenindex der Paar-Tabelle
+     * @0x800a7400 IST die Bank, Lader FUN_8005a09c; zweite Zeilenhaelfte -> word0 |= 0x2000
+     * @LAB_80052c2c) und wird bei jedem Raumwechsel neu bestimmt.
+     * `load_re2_enemy_se_pc` kann den Wechsel bereits (Frueh-Ausstieg :991 nur wenn die
+     * GEWUENSCHTE Bank schon geladen ist) — es fehlte allein die Bedingung hier. */
+    if (!s_re2se_loaded || s_re2se_bank_cur != s_re2se_bank_sel) {
         if (s_re2se_bank_sel < 0) {
             static int warned = 0;
             if (!warned) { warned = 1;
@@ -942,10 +1103,7 @@ void re15_audio_re2_enemy_se(int se_id, int flag2000)
         else if (pan > 0x40) vl = vol * (0x7f - pan) / 0x3f;
         uint16_t pitch = re15_vab_note2pitch2(t->min_note, t->pitch_shift,
                                               t->center_note, t->pitch_shift);
-        int slot = -1;
-        for (int i = 0; i < MIXER_MAX_ACTIVE_SAMPLES; i++)
-            if (!s_active[i].active) { slot = i; break; }
-        if (slot < 0) { slot = s_next_slot; s_next_slot = (s_next_slot + 1) % MIXER_MAX_ACTIVE_SAMPLES; }
+        int slot = mixer_alloc_free_slot();
         s_active[slot].pcm        = s_re2se_decoded[vag];
         s_active[slot].pcm_len    = s_re2se_decoded_len[vag];
         s_active[slot].pos        = 0;
@@ -979,14 +1137,7 @@ static void play_sample_pc(int vag_index, int scd_volume)
      * overlapped and clipped against each other. RE1.5 audio is monophonic
      * per channel anyway. */
     SDL_LockAudioDevice(s_audio_dev);
-    int slot = -1;
-    for (int i = 0; i < MIXER_MAX_ACTIVE_SAMPLES; i++) {
-        if (!s_active[i].active) { slot = i; break; }
-    }
-    if (slot < 0) {
-        slot = s_next_slot;
-        s_next_slot = (s_next_slot + 1) % MIXER_MAX_ACTIVE_SAMPLES;
-    }
+    int slot = mixer_alloc_free_slot();
     s_active[slot].pcm        = s_decoded_vag[vag_index];
     s_active[slot].pcm_len    = s_decoded_vag_len[vag_index];
     s_active[slot].pos        = 0;
@@ -2468,6 +2619,17 @@ void re15_audio_tick(void)
         }
     }
 
+    /* == FUN_800458d4 (Original-Aufrufstelle: `jal 0x800458d4` @0x80021488), in der
+     * Reihenfolge der Funktion selbst: ERST die vorgemerkten SE-Key-Ons ausfuehren und die
+     * Prioritaeten der ausgeklungenen Stimmen zuruecksetzen, DANN am Funktionsende
+     * (`jal FUN_80044ab8` @0x800459ec) die BGM-Ausblendung weiterdrehen.
+     * OFFEN (klein, benannt): SE aus der SCD-Warteschlange werden unten in DIESEM Tick
+     * vorgemerkt und damit erst im naechsten gekeyt, waehrend die AI ihre SE schon vor
+     * re15_audio_tick vormerkt. Ob FUN_8002134c (der Aufrufer von @0x80021488) im Original
+     * vor oder nach dem SCD-Lauf liegt, ist nicht nachgemessen — betrifft nur 1 Frame
+     * Latenz, nicht welche SE erklingen. */
+    se_voice_pump();
+
     /* == FUN_80044ab8 aus dem Frame-Tick FUN_800458d4: die BGM-Ausblendung weiterdrehen und,
      * wenn sie durch ist, den aufgeschobenen Track-Wechsel ausfuehren. */
     re15_bgm_fade_tick();
@@ -2569,10 +2731,7 @@ void re15_audio_footstep(int foot, int sound_type)
     if (vol < 0) vol = 0;
 
     SDL_LockAudioDevice(s_audio_dev);
-    int slot = -1;
-    for (int i = 0; i < MIXER_MAX_ACTIVE_SAMPLES; i++)
-        if (!s_active[i].active) { slot = i; break; }
-    if (slot < 0) { slot = s_next_slot; s_next_slot = (s_next_slot + 1) % MIXER_MAX_ACTIVE_SAMPLES; }
+    int slot = mixer_alloc_free_slot();
     s_active[slot].pcm        = s_foot_decoded[vag];
     s_active[slot].pcm_len    = s_foot_decoded_len[vag];
     s_active[slot].pos        = 0;
@@ -2593,6 +2752,12 @@ void re15_audio_load_room_banks(void)
     if (!g_audio.initialized) return;
     SDL_LockAudioDevice(s_audio_dev);
     for (int i = 0; i < MIXER_MAX_ACTIVE_SAMPLES; i++) s_active[i].active = 0;  /* nichts spielt mehr aus der alten Bank */
+    /* Stimm-Prioritaeten + Vormerkungen zuruecksetzen. Das Original loescht sie im Raum-Init
+     * FUN_80043a34 (`sb zero,0x800b22cc` @0x80043acc, `sb zero,0x800b22d0` @0x80043ad4);
+     * hier faellt ohnehin JEDE Stimme still, und FUN_800458d4 setzt prio einer stillen
+     * Stimme auf 0 — deshalb ist das vollstaendige Loeschen gleichwertig. */
+    memset(s_se_prio, 0, sizeof s_se_prio);
+    memset(s_se_pend, 0, sizeof s_se_pend);
     free_room_bank_pcm();
     SDL_UnlockAudioDevice(s_audio_dev);
     load_footstep_vab_pc();   /* room snd0 + EDT (Schritt-SE) */

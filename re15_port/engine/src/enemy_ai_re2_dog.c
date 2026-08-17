@@ -73,6 +73,11 @@ int re15_re2_owns_type(unsigned type)
 static void (*s_re2d_se_fn)(int se_id, int flag2000) = 0;
 static void (*s_re2d_bank_fn)(int bank) = 0;
 
+/* Bank-Wahl bleibt EMPIRISCH (deklarierte PORT-NAEHERUNG) — der byte-true Mechanismus
+ * FUN_80052b38 liest die RE2-RAUMDATEN (Spawn-Record +7), nicht den Gegner-kind; Belege +
+ * Refutation im Kopf von enemy_ai_re2_zombie.c (RE2Z_ENEMSE_BANK). Stuetze fuer 31+flag2000:
+ * eigener jal-0x8005bd6c-Scan ueber EMD0G_MOD0.BIN (2026-08-17) findet die ids {1,7,8,10} —
+ * die ZWEITE Haelfte von Bank 31 hat {0,1,2,3,6..14} live (4/5 stumm) und deckt sie. */
 void re15_re2dog_audio_hook(void (*se_fn)(int, int), void (*bank_fn)(int))
 {
     s_re2d_se_fn   = se_fn;

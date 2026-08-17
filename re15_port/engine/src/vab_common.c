@@ -240,6 +240,52 @@ int re15_edt_resolve_layers(const uint8_t *edt, const re15_vab_t *vab,
     return re15_edt_resolve_layers_ex(edt, vab, se_id, out_vags, NULL, max_out);
 }
 
+/* Byte-true Zerlegung eines EDT-Records — Feld fuer Feld die Instruktionen aus
+ * FUN_800453d0 (Adressen im Kopfkommentar von re15_vab.h):
+ *   byte0 bit7 -> VAB-Override (@0x8004545c `andi v0,v1,0x80` / @0x80045468 `andi fp,v1,0x7f`)
+ *   byte1 & 0x7f = Programm     (@0x80045498 `andi s7,v0,0x7f`)
+ *   byte2 >> 4   = Basis-Tone   (@0x80045474 `srl s2,v0,4`)
+ *   byte2 & 0xf  = Prio-Nibble  (@0x800454b0 `andi s1,a1,0xf`)
+ *   byte2 & 0x7  = Stimm-Prio   (@0x800454cc `andi s1,s1,0x7`)
+ *   byte3 & 0x1f - 0x10 = STIMME(@0x80045478-7c `andi s0,v1,0x1f` / `addiu s0,s0,-16`)
+ *   byte3 >> 5   = Extra-Layer  (@0x8004548c `srl s3,v0,5`)                              */
+int re15_edt_decode(const uint8_t *edt, int se_id, re15_edt_rec_t *out)
+{
+    if (edt == NULL || out == NULL || se_id < 0) return -1;
+    const uint8_t *e = edt + (size_t)se_id * 4;
+    out->vab_override = (e[0] & 0x80) ? (e[0] & 0x7f) : -1;
+    out->prog         = e[1] & 0x7f;
+    out->tone         = e[2] >> 4;
+    out->prio_nib     = e[2] & 0x0f;
+    out->prio         = e[2] & 0x07;
+    out->voice        = (int)(e[3] & 0x1f) - 0x10;
+    out->extra        = e[3] >> 5;
+    out->empty        = (e[2] == 0 && e[3] == 0);
+    return 0;
+}
+
+/* Byte-true FUN_80045a18 @0x80045a18 (Instruktion fuer Instruktion):
+ *   80045a1c  andi a0,a0,0xff                ; voice
+ *   80045a2c  lbu  v1,DAT_800b22cc[voice]    ; laufende Prioritaet
+ *   80045a30  andi a1,a1,0x7                 ; neue Prioritaet
+ *   80045a34  sltu v0,a1,v1
+ *   80045a38  beq  v0,zero,0x80045a48
+ *   80045a40  j 0x80045a5c / 80045a44 ori v0,zero,0x1   ; neu < laufend  -> 1 (verwerfen)
+ *   80045a48  bne  v1,a1,0x80045a5c / 80045a4c addu v0,zero,zero ; ungleich -> 0 (erlauben)
+ *   80045a50  andi v0,a2,0xff                ; a2 = UNMASKIERTES Nibble (vor `andi 7`)
+ *   80045a54  sltiu v0,v0,0x8
+ *   80045a58  xori v0,v0,0x1                 ; Gleichstand: Nibble >= 8 -> 1 (verwerfen)  */
+int re15_se_prio_gate(const unsigned char *prio, int voice, int prio_nib)
+{
+    if (prio == NULL) return 0;
+    if (voice < 0 || voice >= RE15_SE_VOICE_COUNT) return 0;   /* Direkt-Zweig: kein Gate */
+    unsigned running = prio[voice];
+    unsigned fresh   = (unsigned)prio_nib & 0x7u;
+    if (fresh < running) return 1;                             /* @0x80045a34-44 */
+    if (running != fresh) return 0;                            /* @0x80045a48-4c */
+    return (((unsigned)prio_nib & 0xffu) >= 8u) ? 1 : 0;       /* @0x80045a50-58 */
+}
+
 /* PSX note2pitch LUT (DAT_80077520) — one octave of 2^(x/12) in Q12 (0x1000=1.0×),
  * 12 semitones × 16 fine steps = 192 entries. Byte-extracted from the binary. */
 static const uint16_t s_pitch_lut[12][16] = {

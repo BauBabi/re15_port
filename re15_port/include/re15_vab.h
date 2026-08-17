@@ -131,6 +131,74 @@ int re15_footstep_vag(const uint8_t *edt, const re15_vab_t *vab, int sound_type)
 int re15_edt_resolve_layers(const uint8_t *edt, const re15_vab_t *vab,
                             int se_id, int *out_vags, int max_out);
 
+/* ===== BYTE-TRUE SE-STIMMEN-MASCHINE (FUN_800453d0 / FUN_80045a18 / FUN_800458d4) ======
+ *
+ * Der Raum-SE-Pfad des Originals spielt NICHT "einfach ab". Jede EDT-Aufnahme traegt ihre
+ * SPU-Stimme FEST im Record, und ein Prioritaets-Gate verwirft einen SE komplett, solange
+ * auf dieser Stimme ein hoeher priorisierter laeuft. Selbst disassembliert:
+ *
+ *   FUN_800453d0 (Raum-SE, Bank 3 = RDT snd1):
+ *     80045404  lw   v0,0(v0)          ; v0 = *(u32*)*(0x800ac784)  (aktuelle Entity, Flags)
+ *     8004540c  andi v0,v0,0x2000
+ *     80045410  beq  v0,zero,+0x8      ;  -> se_id unveraendert
+ *     80045418  addiu s5,a0,12         ;  -> se_id += 12   (zweite Tabellenhaelfte)
+ *     80045420  sltiu v0,v1,0x19       ; se_id >= 0x19 -> return
+ *     80045438  lb   fp,0x800b21ef     ; vabId = Bank-3-Default; == -1 -> return
+ *     80045454  lbu  v1,0(a1)          ; byte0
+ *     8004545c  andi v0,v1,0x80
+ *     80045468  andi fp,v1,0x7f        ; byte0 bit7 -> vabId = byte0 & 0x7f  (VAB-OVERRIDE)
+ *     80045474  srl  s2,v0,4          ; tone  = byte2 >> 4
+ *     80045478  andi s0,v1,0x1f
+ *     8004547c  addiu s0,s0,-16        ; VOICE = (byte3 & 0x1f) - 0x10
+ *     8004548c  srl  s3,v0,5           ; extra = byte3 >> 5   (zusaetzliche Layer)
+ *     80045498  andi s7,v0,0x7f        ; prog  = byte1 & 0x7f
+ *     800454b0  andi s1,a1,0xf         ; prio-Nibble = byte2 & 0xf
+ *     800454bc  jal  0x80045a18        ; PRIORITAETS-GATE -> !=0: KOMPLETT VERWERFEN
+ *     800454cc  andi s1,s1,0x7
+ *     800454dc  sb   s1,0x800b22cc[voice]      ; prio[voice] = byte2 & 7
+ *
+ *   FUN_80045a18(voice, prio_nib)  — das Gate, exakt:
+ *     80045a2c  lbu  v1,0x800b22cc[voice]      ; laufende Prioritaet der Stimme
+ *     80045a30  andi a1,a1,0x7
+ *     80045a34  sltu v0,a1,v1
+ *     80045a40/44  j ...; ori v0,1              ; neu < laufend      -> 1 = VERWERFEN
+ *     80045a48/4c  bne v1,a1; addu v0,zero,zero ; neu > laufend      -> 0 = ERLAUBEN
+ *     80045a50-58  andi v0,a2,0xff; sltiu 8; xori 1 ; gleich: (byte2&0xf) >= 8 -> VERWERFEN
+ *
+ *   FUN_800458d4 (Frame-Pumpe): logische Stimme v == SPU-HARDWARE-Stimme 16+v
+ *     (iVar5 = 0x180000, je Runde -0x10000, Argument = iVar5>>16 -> 23..16; 8 Durchlaeufe),
+ *     keyt die vorgemerkte Aufnahme mit SsUtKeyOnV(16+v, ...) und setzt danach
+ *     prio[v] = 0, sobald SpuGetKeyStatus(1<<(16+v)) == 0 (Stimme ausgeklungen).
+ *
+ * FOLGE (das, was man hoert): pro Stimme klingt IMMER NUR EIN Sample; ein neuer SE auf
+ * derselben Stimme SCHNEIDET den laufenden ab, und ein leiser-priorisierter SE faellt ganz
+ * aus, solange die Stimme belegt ist. Ein Port, der jeden SE auf einem freien Mixer-Slot
+ * uebereinander legt, spielt dieselben IDs zur selben Zeit — und klingt trotzdem falsch.
+ */
+#define RE15_SE_VOICE_COUNT   8      /* FUN_800458d4: 8 Slots = SPU-Stimmen 16..23 */
+#define RE15_SE_SPU_VOICE_BASE 16    /* FUN_800458d4: iVar5>>16 laeuft 23..16      */
+
+typedef struct {
+    int voice;        /* (byte3 & 0x1f) - 0x10  @0x80045478-7c; < 0 = Direkt-Zweig
+                       * (FUN_80045024 `if (uVar12 < 0x10)`: sofortiges SsUtKeyOnV
+                       * @0x8004522c ohne Gate)                                     */
+    int prio;         /* byte2 & 7    @0x800454cc                                   */
+    int prio_nib;     /* byte2 & 0xf  @0x800454b0 (Bit 3 = "bei Gleichstand nicht
+                       * neu ausloesen", @0x80045a50-58)                            */
+    int prog;         /* byte1 & 0x7f @0x80045498                                   */
+    int tone;         /* byte2 >> 4   @0x80045474                                   */
+    int extra;        /* byte3 >> 5   @0x8004548c — zusaetzliche Layer              */
+    int vab_override; /* byte0 bit7 ? byte0 & 0x7f : -1  @0x8004545c-68             */
+    int empty;        /* Record ohne Inhalt (byte2 == 0 && byte3 == 0)              */
+} re15_edt_rec_t;
+
+/* Einen EDT-Record byte-true zerlegen (Feld-Adressen s.o.). Gibt 0 zurueck. */
+int re15_edt_decode(const uint8_t *edt, int se_id, re15_edt_rec_t *out);
+
+/* Byte-true FUN_80045a18 @0x80045a18. `prio` = die 8 laufenden Stimm-Prioritaeten
+ * (DAT_800b22cc[0..7]). Rueckgabe != 0 heisst: der SE wird KOMPLETT VERWORFEN. */
+int re15_se_prio_gate(const unsigned char *prio, int voice, int prio_nib);
+
 /* Parse a VH (header) blob. Computes sample offsets + sizes by walking
  * the VAG size table. Returns 0 on success, negative on error:
  *   -1: too small (< 32 bytes)

@@ -3897,7 +3897,38 @@ int re15_actor_uses_loco_bank(const re15_actor_t *a)
                           (shares_root && (a->sub_state_1 == 0x00 ||
                                            a->sub_state_1 == 0x01 ||
                                            a->sub_state_1 == 0x08))))
-                  || (a->state == 2 && !(a->grid_id & 0x80));
+                  || (a->state == 2 && !(a->grid_id & 0x80))
+    /* POISE-BREAK-UEBERGABETICK — +0x168 zeigt hier noch auf BANK 0.
+     *
+     * Das Original hat KEINE Bank-Regel: es posiert das Frame-Wort, auf das +0x168 zuletzt
+     * zeigte (`sw a2,360(t0)` @0x8001f36c), und der EINZIGE Schreiber ist anim_set. Der
+     * Router-Ausgang des Steh-Staggers schreibt beim Poise-Bruch NUR die drei State-Bytes und
+     * ruft KEIN anim_set:
+     *   80105b24  lh   v0,476(v0)          ; +0x1dc (Poise)
+     *   80105b2c  bgez v0,0x80105b6c       ; >= 0 -> raus
+     *   80105b34-40  lbu +0x9 ; andi 0x80 ; bne -> raus       (nicht am Boden)
+     *   80105b48  sb   v0(=1),4(v1)        ; +0x4 = 1  ACTIVE
+     *   80105b58  sb   v0(=0x11),5(v1)     ; +0x5 = 0x11 KNOCKDOWN
+     *   80105b68  sb   zero,6(v1)          ; +0x6 = 0
+     * Der letzte anim_set davor war der Stagger selbst — und der laedt BANK 0:
+     *   80105d38  addu a2,zero,zero / 80105d3c lw a0,132(v0) / 80105d40 lw a1,364(v0)
+     *   80105d44  jal  0x8001f314          (Phase 1; Phase 3 identisch @0x80105ddc-e8)
+     * Der Knockdown-Entry, der auf BANK 1 umstellt, laeuft erst im NAECHSTEN Tick
+     * (@0x8010516c: +0x94 = 0x0b @0x80105190-94, +0x95 = 0 @0x801051a4, +0x6 = 1 @0x801051b4).
+     * Der Port leitet die Bank dagegen JEDEN Frame neu aus (State, +0x5) her und kippte auf
+     * diesem einen Uebergabetick auf die Aktions-Bank, obwohl +0x94 noch der Loco-Walk-Clip
+     * (2..5) ist — GEMESSEN (probe_stagger_fall_1140 engage, v0.2.4):
+     *   t=43  s1=0x02  LOCO clip2 kf= 93
+     *   t=44  s1=0x11 s2=0  ACT clip2 kf= 46   <<< ein Frame FREMDE Animation
+     *   t=45  s1=0x11 s2=1  ACT clip0x0b kf=274 (der Sturz)
+     * Gate exakt auf diesen Zustand: +0x5 = 0x11 mit +0x6 = 0 und noch nicht am Boden — das
+     * Downed-Bit setzt erst der Entry (@0x80105224-30 `lbu v0,9(v1); ori v0,v0,0x80; sb v0,9(v1)`,
+     * daneben +0x1b8 = 1 @0x80105204 und +0x1dc = 0x80 @0x80105214).
+     * Der Router @0x80105b48-68 ist der EINZIGE Produzent dieser Kombination (der zweite
+     * 0x11-Schreiber, der Downed-Flinch @0x80106990, setzt +0x6 = 4 @0x801069a0 und laeuft
+     * ohnehin nur mit gesetztem +0x9 & 0x80). */
+                  || (a->state == 1 && a->sub_state_1 == 0x11 && a->sub_state_2 == 0
+                      && !(a->grid_id & 0x80));
     if (!walk_state) return 0;
     /* MOTION-Gate (Kriechtor-Fix 3): das Original hat keine Bank-REGEL — es rendert die
      * zuletzt per f314 posierten Locals; ein Walk-State posiert die Loco-Bank erst, wenn

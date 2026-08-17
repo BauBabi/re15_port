@@ -168,6 +168,87 @@ int re2_enemse_toc_entry(int bank, re2_enemse_rec_t *out)
     return 0;
 }
 
+/* ===== ENEMSE-BANK-WAHL — byte-true FUN_80052b38 ========================
+ *
+ * ⚠️ STAND 2026-08-17: DER MECHANISMUS IST BYTE-TRUE, ABER (NOCH) NICHT VERDRAHTET.
+ * Er ist hier abgelegt + unit-gepinnt (tests/unit/test_re2_enemse_bank.c), damit niemand
+ * ihn erneut erarbeiten muss. Warum er das Spiel noch nicht steuert:
+ *   Die Bank haengt am RAUM-Byte `Spawn-Record +7` (SOUND-ID), NICHT am Gegner-kind
+ *   (`Spawn-Record +3`, siehe `jal 0x8001b710` @0x800571f0 + 0x10..0x1F-Klemme @0x8001b738-40;
+ *   der Modell-Binder FUN_8001aaa8 liest den kind aus entity+0x8 @0x8001aac8, waehrend
+ *   FUN_80052b38 entity+0x1FA = record+7 vergleicht). Beides sind VERSCHIEDENE Bytes, und die
+ *   Paar-Tabelle @0x800a7400 fuehrt 15 ids < 0x10, die im kind-Raum (Minimum 0x10) nicht
+ *   existieren. RE1.5-Raeume liefern kein record+7, und die RE2-Raumdaten liegen nicht im Repo
+ *   (info/re2leon = COMMON/BIN + PL0 + ZMOVIE + PSX.EXE). Ein kind->Bank-Mapping waere damit
+ *   geraten — deshalb bleiben die drei Brains bei ihren empirischen Bank-Konstanten
+ *   (Begruendung + Refutation im Kopf von enemy_ai_re2_zombie.c).
+ *
+ * Original (RE2_Quellcode_V2/FUN_80052b38.c + Disasm @0x80052b40-0x80052c2c; Aufruf aus dem
+ * Raum-Setup FUN_80053528 @0x80053610):
+ *   pcVar5/cVar2 = Zeile.kindA, pcVar4 = Zeile.kindB, Schrittweite 2, Abbruch bei kindA == -1;
+ *   DAT_800d424b (= die Bank-Nummer) zaehlt die Zeilen mit.
+ *     (a) `cVar2 == DAT_800d8cd0 && (DAT_800d8cd1 == 0 || DAT_800d8cd1 == *pcVar4)` -> Treffer,
+ *         bVar1 = false  (Raum-kindA liegt in der ERSTEN Haelfte)
+ *     (b) `*pcVar4 == DAT_800d8cd0 && (DAT_800d8cd1 == 0 || DAT_800d8cd1 == cVar2)` -> Treffer,
+ *         bVar1 = true   (Raum-kindA liegt in der ZWEITEN Haelfte)
+ *   kein Treffer / DAT_800d8cd0 == 0 -> DAT_800d424b = 0xFF (Lader FUN_8005a09c bricht bei
+ *   0xFF ab: `if (uVar4 == 0xff) break;` — dann gibt es GAR KEINE Gegner-Bank).
+ *   Anschliessend Entity-Schleife @LAB_80052c2c: jede aktive Entity, deren kind (+0x1FA)
+ *   die ZWEITE Haelfte des Treffers ist, bekommt `word0 |= 0x2000` — genau das Bit, das der
+ *   SE-Trigger FUN_8005bd6c als "+0x10-Map-Haelfte" liest.
+ * `*out_flag_kind` liefert deshalb den kind, der im Spiel das 0x2000-Bit traegt (-1 = keiner). */
+int re2_enemse_select_bank(int kindA, int kindB, int *out_flag_kind)
+{
+    if (out_flag_kind) *out_flag_kind = -1;
+    if (kindA <= 0) return 0xFF;                      /* `if (_DAT_800d8cd0 != 0)` @0x80052b44 */
+    for (int bank = 0; bank < RE2_ENEMSE_BANK_COUNT + 1; bank++) {
+        int k0 = s_re2_enemse_pairs[bank * 2], k1 = s_re2_enemse_pairs[bank * 2 + 1];
+        if (k0 == 0xFF) break;                        /* `while (cVar2 != -1)` @0x80052bec */
+        if (k0 == kindA && (kindB == 0 || kindB == k1)) {
+            if (out_flag_kind) *out_flag_kind = k1;   /* bVar1 == false -> 2. Haelfte = kindB */
+            return bank;
+        }
+        if (k1 == kindA && (kindB == 0 || kindB == k0)) {
+            if (out_flag_kind) *out_flag_kind = kindA;/* bVar1 == true  -> 2. Haelfte = kindA */
+            return bank;
+        }
+    }
+    return 0xFF;                                      /* `DAT_800d424b = 0xff` @0x80052c24 */
+}
+
+int re2_enemse_pair_row(int bank, int *out_k0, int *out_k1)
+{
+    if (bank < 0 || bank >= RE2_ENEMSE_BANK_COUNT + 1) return -1;
+    if (out_k0) *out_k0 = s_re2_enemse_pairs[bank * 2];
+    if (out_k1) *out_k1 = s_re2_enemse_pairs[bank * 2 + 1];
+    return 0;
+}
+
+/* Raum-kind-Paar (DAT_800d8cd0 / DAT_800d8cd1) — byte-true Enemy-Spawn @0x8005728c-0x800572b8
+ * (identischer zweiter Pfad @0x80057920-0x8005794c):
+ *      lbu v1,DAT_800d8cd0 ; beq v1,kind -> fertig            (schon kindA)
+ *      beq v1,zero -> sb kind,DAT_800d8cd0                     (A noch leer -> A = kind)
+ *      sb kind,DAT_800d8cd1                                    (sonst B = kind, ueberschreibend)
+ * Clear beim Raum-Init FUN_80052f3c (`DAT_800d8cd0 = 0; DAT_800d8cd1 = 0;` @0x80053028/30). */
+static uint8_t s_room_kindA = 0, s_room_kindB = 0;
+
+void re2_enemse_room_reset(void) { s_room_kindA = 0; s_room_kindB = 0; }
+
+void re2_enemse_room_add_kind(int kind)
+{
+    uint8_t k = (uint8_t)kind;
+    if (k == 0) return;
+    if (s_room_kindA == k) return;                    /* beq v1,v0 @0x80057298 */
+    if (s_room_kindA == 0) { s_room_kindA = k; return; }  /* @0x800572a0 -> @0x800572b8 */
+    s_room_kindB = k;                                 /* sb v0,DAT_800d8cd1 @0x800572ac */
+}
+
+void re2_enemse_room_kinds(int *out_a, int *out_b)
+{
+    if (out_a) *out_a = s_room_kindA;
+    if (out_b) *out_b = s_room_kindB;
+}
+
 void re2_enemse_decode_entry(uint32_t entry, re2_enemse_se_t *out)
 {
     memset(out, 0, sizeof *out);

@@ -500,14 +500,32 @@ static const uint16_t re2z_hp13_tbl[16] = { 70,84,118,65,50,85,48,65,40,73,69,56
 static void (*s_re2z_se_fn)(int se_id, int flag2000) = 0;
 static void (*s_re2z_se_bank_fn)(int bank) = 0;
 
-/* Zombie ENEMSE bank. The room-pair table @0x800a7400 (RE2 PSX.EXE file 0x97C00, 73 rows x 2,
- * byte-read 2026-08-10: row 11 = {0x10,0x00}) could not be resolved to a kind base (values fit
- * kind-0x10 for the PAIR rows 32+ but leave no pure-cop row). EMPIRICAL probe over the decoded
- * EDT maps (all 73 banks): bank 0 is the only SINGLE-kind bank whose live map covers EVERY SE
- * id the zombie overlay triggers ({3,4,5,8,9,10,11,12} — live ids 0..13); bank 11 lacks 11/12,
- * banks 28/65 lack 4/5 in their zombie half, bank 72 covers them only in the +0x10 half.
- * -> default bank 0, flag2000=0; RE15_RE2_SE_BANK overrides for A/B listening. OPEN: the exact
- * FUN_80052b38 row semantics. */
+/* Zombie ENEMSE bank — EMPIRISCH (bleibt eine deklarierte PORT-NAEHERUNG, siehe unten).
+ * Probe ueber alle 73 dekodierten EDT-Maps: Bank 0 ist eine der Baenke, deren Live-Map JEDE
+ * SE-id abdeckt, die das Zombie-Overlay ausloest (eigener jal-0x8005bd6c-Scan ueber
+ * EMOVL10_S0.BIN, 2026-08-17: ids {2,3,4,5,7,8,9,10,11,12,13} an 38 Stellen, id 12 allein
+ * 12x). RE15_RE2_SE_BANK uebersteuert fuer A/B-Hoerproben.
+ *
+ * ⛔ NUTZER-REPORT 2026-08-17 "die Zombies haben den falschen Sound" — WAS DAZU BELEGT IST:
+ * Der MECHANISMUS ist jetzt byte-true disassembliert (re2_ems.c re2_enemse_select_bank,
+ * FUN_80052b38 @0x80052b40-c2c + Raum-kind-Paar-Aufbau im Enemy-Spawn @0x8005728c-b8 +
+ * Bank-Lader FUN_8005a09c). Er liefert die Bank NICHT aus dem Gegner-kind, sondern aus einem
+ * EIGENEN Byte der RE2-RAUMDATEN:
+ *     Spawn-Record +3 -> KIND   (`jal 0x8001b710` @0x800571f0; die 0x10..0x1F-Klemme
+ *                        @0x8001b738-40 beweist den kind-Wertebereich; Modell-Binder
+ *                        FUN_8001aaa8 liest den kind aus entity+0x8 @0x8001aac8)
+ *     Spawn-Record +7 -> SOUND-ID (`lbu v0,7(v0)` @0x80057274 -> `sb v0,0x1fa(s0)` @0x80057280
+ *                        -> DAT_800d8cd0/cd1 @0x8005728c-b8 -> FUN_80052b38)
+ * Das sind ZWEI VERSCHIEDENE Bytes. Die Paar-Tabelle @0x800a7400 fuehrt ausserdem 15 ids
+ * < 0x10 (0x01..0x0F), die im CDEMD0-kind-Raum (Minimum 0x10) gar nicht existieren — die
+ * Tabelle lebt also NICHT im kind-Raum. Ein byte-true kind->Bank-Mapping kann es damit nicht
+ * geben; es braeuchte die RE2-RAUMDATEN (record+7), die in diesem Repo NICHT liegen
+ * (info/re2leon enthaelt nur COMMON/BIN, PL0, ZMOVIE, PSX.EXE).
+ * GEGENPROBE, warum hier NICHT auf "Zeile 11 = {0x10,0x00}" umgestellt wurde: deren Live-Map
+ * endet bei id 10 — die im Overlay meistgenutzten ids 11/12/13 waeren stumm. Die id-Deckung
+ * ist aber ebenfalls kein Beweis (viele Baenke decken die Menge), darum bleibt es beim
+ * Bestandswert und der Punkt als OPEN dokumentiert statt eine Zahl gegen eine andere zu
+ * tauschen. */
 #define RE2Z_ENEMSE_BANK 0
 
 void re15_re2z_audio_hook(void (*se_fn)(int, int), void (*bank_fn)(int))
