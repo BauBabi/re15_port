@@ -1064,6 +1064,10 @@ void re15_enemy_ai_live_init(int slot)
              * ROOM10D0; game-weit nur 10D0/10D1). */
             e->sub_state_1 = 0x12; e->sub_state_2 = 0; e->grid_id = 0;
             e->motion = 0x2a; e->anim_frame = 0; e->anim_frac = 0;
+            e->anim_flags &= (uint16_t)~0x80u;   /* a2 = 0 (@0x8010559c `addu a2,zero,zero`, Paar zu
+                                                  * `jal 0x8001f314` @0x801055a8): der Aufwach-Clip
+                                                  * 0x2A laeuft VORWAERTS. Richtung im Port = Aktor-Bit,
+                                                  * also explizit loeschen (s. standup_animate). */
         } else if ((e->grid_id & 0x80) && (sel == 1 || sel == 3)) {
             /* byte-true: the WHOLE pose block (incl. this +0x5=5 @0x80100d68 / +0x94=0xc @0x80100d58)
              * is gated on behavior bit 0x80 — @0x80100cac-cb0 `andi v0,v1,0x80; beq v0,zero,0x80100e30`
@@ -1162,6 +1166,15 @@ static void re15_enemy_ai_standup_animate(re15_actor_t *e)
     if (phase == 0) {                                     /* entry: the get-up clip 0x29 */
         e->sub_state_2 = 1;
         e->motion = 0x29; e->anim_frame = 0; e->anim_frac = 7;
+        /* RICHTUNG EXPLIZIT VORWAERTS — a2 = 0 (@0x80104af0 `addu a2,zero,zero`, Delay-Slot-Paar
+         * zu `jal 0x8001f314` @0x80104afc). Im Original ist die Richtung ein PRO-AUFRUF-Argument,
+         * im Port ein Aktor-Bit — also muss dieser Setzer es aktiv LOESCHEN. Sonst erbt der
+         * Aufsteher das Rueckwaerts-Bit, das das Hinknien gesetzt hat (@0x80104994, s. Zeile 1128):
+         * decide[0xc] FUN_801048a8 schaltet bei `+0x1d0 < 0xbb8` (@0x801048bc) und Spieler-HP >= 0
+         * SOFORT auf `+0x4 = 0xd01` (@0x801048d8-dc) — UNABHAENGIG von der Feeding-Phase +0x6.
+         * Ein mitten im Hinknien gestoerter Zombie sprang also in den Aufsteher, und der lief im
+         * Port rueckwaerts (Pose UND, ueber +0x168/FUN_8001b38c, die Frame-SEs). */
+        e->anim_flags &= (uint16_t)~0x80u;
         if ((re15_engine_rand8() & 3) == 0) re15_audio_room_se(5);  /* @0x80104ae0 func_0x800453d0(5) */
     }
     /* ONE-SHOT HOLD (byte-true f8b4: a 0x8000-terminal frame entry CLAMPS the counter — one-shots
@@ -1185,7 +1198,25 @@ static void re15_enemy_ai_live_feeding(re15_actor_t *e)
         case 0: break;                                   /* idle-feeding (busy writes deferred) */
         case 1:                                           /* count the wait timer down (0x80103ad0) */
             if (e->ai_timer != 0) e->ai_timer = (int16_t)(e->ai_timer - 1);
-            else { e->sub_state_2 = 2; e->motion = 0x29; e->anim_frac = 0xf; e->anim_frame = 0; }
+            else { e->sub_state_2 = 2; e->motion = 0x29; e->anim_frac = 7; e->anim_frame = 0;
+                   e->anim_flags &= (uint16_t)~0x80u; }   /* a2 = 0 (@0x80104af0) — s. standup */
+            /* +0x8f = 7, NICHT 0xf (byte-true FUN_801048e8 Phase 0, dieselbe Stelle, die auch
+             * +0x94 = 0x29 setzt):
+             *   80104948: ori v0,zero,0x29   80104950-4c: sb v0,148(v1)   ; +0x94 = Clip 0x29
+             *   8010495c: sb zero,149(v0)                                 ; +0x95 = 0
+             *   80104968: ori v0,zero,0x7    8010496c: sb v0,143(v1)      ; +0x8f = 7   <<<<
+             * und der zugehoerige Crossfade-Schritt ist a3 = 0x200 (@0x801049a0 jal 0x8001f314 /
+             * @0x801049a4 ori a3,zero,0x200). Der zweite Produzent von Clip 0x29 (Standup
+             * FUN_80104a50) setzt exakt dasselbe Paar: +0x8f = 7 @0x80104ac8-d0, a3 = 0x200
+             * @0x80104afc-b00 — es gibt game-weit KEINE Stelle, die Clip 0x29 mit +0x8f = 0xf laedt.
+             * WARUM DAS SICHTBAR WAR: das Gewicht der Vor-Pose ist frac*rate (FUN_8001f3bc
+             * @0x8001f474 `mult v0,a3` mit v0 = a3-Rate, a3 = +0x8f; IR0 = 0x1000 - Produkt
+             * @0x8001f4a8-b0). Byte-true saettigt dieses Produkt NIE: 0xf*0x100 = 0xf00,
+             * 7*0x200 = 0xe00, 3*0x400 = 0xc00 — alle < 0x1000. Das uncitierte 0xf ergab hier
+             * 0xf*0x200 = 0x1e00, was skeleton_common.c auf 0x1000 klemmt = 100% ALTE Pose fuer
+             * die ersten 8 Ticks des 59-Frame-Aufstehers: ein eingefrorenes Pose-Plateau statt
+             * eines Uebergangs. Genau die Klemm-Falle, vor der skeleton_common.c:205-207 warnt.
+             * Pin: test_anim_rate (PIN 4). */
             /* enter stand-up: play the byte-true GET-UP clip 0x29 (59f). The RAM-authoritative wake
              * runs the feeding as combat-sub-mode +0x5=0xc (FUN_801048e8) -> +0x5=0xd stand-up
              * (FUN_80104a50 @0x8011f890[0xd]) which sets +0x94 = 0x29 and plays it to clip-end before
@@ -10098,7 +10129,20 @@ static void re15_enemy_anim_sfx(const re15_actor_t *e)
     if ((int)e->motion >= A->clip_count) return;
     const re15_emd_clip_t *c = &A->clips[e->motion];
     if (c->frame_count <= 0) return;
-    uint32_t sfx = A->frames[c->first_frame + (e->anim_frame % c->frame_count)] >> 22;  /* top 10 = SFX mask */
+    /* RICHTUNG (Fix 2026-08-17): der SE-Dekoder MUSS denselben Slot lesen wie die Pose.
+     * Im Original gibt es nur EINEN Frame-Zeiger: anim_set schreibt +0x168 (@0x8001f36c
+     * `sw a2,360(t0)`) auf `&frame[Cursor]` (a2 == 0, @0x8001f358) bzw. auf den GESPIEGELTEN
+     * `&frame[Framezahl-Cursor-1]` (a2 != 0, @0x8001f34c-54) — und FUN_8001b38c liest genau
+     * diesen Zeiger (@0x8001b3a4 `lw v0,360(v0)`, @0x8001b3ac `lw v0,0(v0)`, @0x8001b3b4
+     * `srl s0,v0,22`). Pose und SE koennen im Original also GAR NICHT auseinanderlaufen.
+     * Der Port las hier fest den Vorwaerts-Slot (`anim_frame % frame_count`), waehrend der
+     * Renderer bei gesetztem Reverse-Bit den gespiegelten posiert — bei jedem Rueckwaerts-Clip
+     * feuerten die Frame-SEs damit an den GESPIEGELTEN Frames, also in umgekehrter Reihenfolge
+     * und zu falschen Zeitpunkten. Betroffen u.a. das Feeding-Hinknien (Clip 0x29 rueckwaerts,
+     * a2=1 @0x80104994) — genau der "klingt anders beim Zu-Boden-Gehen/Aufstehen"-Report.
+     * re15_actor_playback_slot ist die EINE Spiegel-Regel, die auch der Renderer benutzt. */
+    int se_slot = re15_actor_playback_slot(e, e->anim_frame, c->frame_count);
+    uint32_t sfx = A->frames[c->first_frame + se_slot] >> 22;  /* top 10 = SFX mask */
     for (int bit = 0; sfx; bit++, sfx >>= 1)
         if (sfx & 1u) re15_audio_room_se(bit);              /* FUN_800453d0(bit): SE id == bit index */
 }

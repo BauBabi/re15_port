@@ -23,6 +23,43 @@
 /* Per-actor keyframe lookup: motion + anim_frame -> skeleton keyframe index,
  * against the SELECTED anim/skel. (reverse playback, walk loop, freeze-on-end
  * all preserved.) `cur` = the already-fps-adjusted current anim frame. */
+/* PLAYBACK-RICHTUNG — EINE Definition fuer den ganzen Port.
+ *
+ * Im Original ist die Richtung KEIN Aktor-Zustand, sondern das 3. Argument (a2) JEDES
+ * einzelnen anim_set-Aufrufs. FUN_8001f314 waehlt damit den Frame-Index:
+ *   8001f338: beq   t2,zero,0x8001f358   ; a2 == 0 -> VORWAERTS
+ *   8001f344: lbu   v0,149(t0)           ;   sonst: v0 = +0x95 (Cursor)
+ *   8001f34c: subu  v0,t1,v0             ;   v0 = Framezahl - Cursor
+ *   8001f354: addiu v0,v0,-1             ;   v0 = Framezahl - Cursor - 1   <<< SPIEGELUNG
+ *   8001f358: lbu   v0,149(t0)           ; vorwaerts: v0 = +0x95
+ *   8001f364: sll   v0,v0,2
+ *   8001f368: addu  a2,v1,v0             ; a2 = &frame_entry[index]
+ *   8001f36c: sw    a2,360(t0)           ; +0x168 = ZEIGER AUF DAS FRAME-WORT
+ * Der Port bildet die Richtung als Aktor-Bit anim_flags & 0x80 ab; damit MUSS jeder
+ * Clip-Setzer sie explizit setzen ODER loeschen (ein stehengebliebenes Bit spielt den
+ * naechsten Clip rueckwaerts — im Original unmoeglich, weil a2 pro Aufruf kommt).
+ *
+ * WARUM ZENTRAL: +0x168 ist der EINZIGE Frame-Zeiger im Original, und AUSSER dem Renderer
+ * liest ihn auch der Frame-Wort-SE-Dekoder FUN_8001b38c (@0x8001b3a4 `lw v0,360(v0)` /
+ * @0x8001b3ac `lw v0,0(v0)` / @0x8001b3b4 `srl s0,v0,22`). Pose und SE lesen also IMMER
+ * denselben, richtungsrichtigen Slot. Eine zweite Kopie der Spiegel-Regel (oder ein
+ * Dekoder, der sie weglaesst) laesst SEs bei Rueckwaerts-Clips an den gespiegelten
+ * Frames feuern = falsche Reihenfolge/Zeitpunkte. */
+int re15_actor_anim_reverse(const re15_actor_t *a)
+{
+    if (!a) return 0;
+    return ((a->anim_flags & 0x80) || re15_actor_toggle_reverse(a)) ? 1 : 0;
+}
+
+int re15_actor_playback_slot(const re15_actor_t *a, uint32_t cur, int frame_count)
+{
+    if (frame_count <= 0) return 0;
+    uint32_t m = cur % (uint32_t)frame_count;
+    return re15_actor_anim_reverse(a)
+         ? (int)((uint32_t)(frame_count - 1) - m)      /* @0x8001f34c-54 */
+         : (int)m;                                     /* @0x8001f358 */
+}
+
 int re15_compute_actor_kf(const re15_emd_animation_t *anim,
                           const re15_emd_skeleton_t  *skel,
                           const re15_actor_t *a, int clip_override,
@@ -39,7 +76,7 @@ int re15_compute_actor_kf(const re15_emd_animation_t *anim,
     if (clip->frame_count <= 0) return 0;
 
     int slot;
-    int reverse = (a->anim_flags & 0x80) ? 1 : 0;
+    int reverse = re15_actor_anim_reverse(a);   /* eine Definition, s.o. */
     /* ROOM1030 Kriechtor-Toggle, HINWEG (Hinlegen): f314 posiert bei a2 = (s8)+0x9F != 0
      * den GESPIEGELTEN Slot (fc - frame) - 1 — Rohbytes @0x8001f338 (beq a2) +
      * @0x8001f344-54 (lbu +0x95 / subu fc / addiu -1); Aufruf @0x8010506c. Eigene
@@ -47,7 +84,6 @@ int re15_compute_actor_kf(const re15_emd_animation_t *anim,
      * port-erfunden — Dossier §2). Der alte Richtungs-Anker "B3 §6 py-Rampe -1744->-175 =
      * Hinlegen = vorwaerts" ist WIDERLEGT (Keyframe-Rohdaten: Clip 0x12 frame 0 = py -175
      * LIEGEND, frame 97 = py -1744 STEHEND) — Ableitung in re15_actor_toggle_reverse. */
-    if (re15_actor_toggle_reverse(a)) reverse = 1;
     /* BYTE-TRUE post-walk hold: a scripted Plc_dest walk/run that has ARRIVED sets
      * anim_freeze (actor_locomotion.c) — the original holds the walk clip, and FUN_8001f3bc
      * wraps the frame counter to 0 + freezes at clip-end → the arms-down walk-start pose.
@@ -56,8 +92,7 @@ int re15_compute_actor_kf(const re15_emd_animation_t *anim,
     if (a->anim_freeze) {
         slot = 0;
     } else if (a->walk_active || clip_override >= 0) {
-        uint32_t m = cur % (uint32_t)clip->frame_count;
-        slot = reverse ? (int)((uint32_t)(clip->frame_count - 1) - m) : (int)m;
+        slot = re15_actor_playback_slot(a, cur, clip->frame_count);
     } else if (reverse) {
         uint32_t idx = (cur >= (uint32_t)clip->frame_count)
                        ? (uint32_t)(clip->frame_count - 1) : cur;

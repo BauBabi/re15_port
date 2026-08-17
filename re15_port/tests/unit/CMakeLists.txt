@@ -1225,3 +1225,41 @@ add_test(NAME unit_zombie_step_sfx   COMMAND test_zombie_bank_sfx step)
 add_test(NAME unit_zombie_knock_sfx  COMMAND test_zombie_bank_sfx knock)
 set_tests_properties(unit_zombie_bank_rule unit_zombie_idle_clip
                      unit_zombie_step_sfx unit_zombie_knock_sfx PROPERTIES TIMEOUT 60)
+
+# --- A/B-MESSPROBE ROOM10D0-Liegender vs. ROOM1140-Stehender (Nutzer-Report 2026-08-17 #3) ---
+add_executable(probe_ab_se_10d0_1140 probe_ab_se_10d0_1140.c)
+target_link_libraries(probe_ab_se_10d0_1140 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_ab_se_10d0_1140 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+# --- A/B-PIN ROOM10D0-Liegender vs. ROOM1140-Stehender (Nutzer-Report 2026-08-17 #3) ---
+add_executable(test_zombie_se_ab_10d0 test_zombie_se_ab_10d0.c)
+target_link_libraries(test_zombie_se_ab_10d0 PRIVATE re15_engine re15_test_support)
+target_include_directories(test_zombie_se_ab_10d0 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_zombie_se_ab_10d0 COMMAND test_zombie_se_ab_10d0)
+set_tests_properties(unit_zombie_se_ab_10d0 PROPERTIES TIMEOUT 90)
+
+# --- PIN auf die a3-Semantik von anim_set (FUN_8001f314) — Nutzer-Report 2026-08-17 #3 ---
+# Widerlegt+friert ein: a3 ist KEINE Frame-Rate (Vorschub ist immer +1 @0x8001f610-3c),
+# sondern der Crossfade-Gewichtsschritt (@0x8001f474 mult mit +0x8f).
+add_executable(test_anim_rate test_anim_rate.c)
+target_link_libraries(test_anim_rate PRIVATE re15_engine re15_test_support)
+target_include_directories(test_anim_rate PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_anim_rate COMMAND test_anim_rate)
+set_tests_properties(unit_anim_rate PROPERTIES TIMEOUT 60)
+
+# --- PIN Rueckwaerts-Wiedergabe (anim_set a2) + Frame-Wort-SE-Dekoder lesen denselben Slot ---
+# Byte-true: +0x168 (@0x8001f36c) ist der EINZIGE Frame-Zeiger; FUN_8001b38c liest ihn (@0x8001b3a4).
+add_executable(test_anim_reverse_se test_anim_reverse_se.c)
+target_link_libraries(test_anim_reverse_se PRIVATE re15_engine re15_test_support)
+target_include_directories(test_anim_reverse_se PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_anim_reverse_se COMMAND test_anim_reverse_se)
+set_tests_properties(unit_anim_reverse_se PROPERTIES TIMEOUT 60)
+
+# --- PIN Front/Back-Latch (+0x93 Bit 0x80) + Knockdown-Clipwahl (Nutzer-Report 2026-08-17 #3) ---
+# Belegt: Latch wirkt NUR im Tod (13-2*Bit @0x80106ca0-ac); der Knockdown nimmt
+# unbedingt Clip 0x0B (@0x80105190-94) -> kann die gemeldete SE-Differenz nicht erklaeren.
+add_executable(test_knockdown_frontback test_knockdown_frontback.c)
+target_link_libraries(test_knockdown_frontback PRIVATE re15_engine re15_test_support)
+target_include_directories(test_knockdown_frontback PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_knockdown_frontback COMMAND test_knockdown_frontback)
+set_tests_properties(unit_knockdown_frontback PROPERTIES TIMEOUT 60)

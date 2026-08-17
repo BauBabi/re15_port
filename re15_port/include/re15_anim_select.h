@@ -83,6 +83,13 @@ void re15_actor_anim_select(const re15_actor_t *a, int is_player,
  * loop, reverse playback (anim_flags 0x80) and freeze-on-end behaviour. `cur`
  * is passed explicitly so the platform owns the fps policy (PSX 30Hz = raw
  * anim_frame; PC halves it at 60fps). */
+/* Playback-Richtung + der daraus folgende Frame-Slot — EINE Definition (anim_select_common.c).
+ * Byte-true FUN_8001f314: a2 != 0 posiert `Framezahl - Cursor - 1` (@0x8001f34c-54), a2 == 0
+ * den Cursor selbst (@0x8001f358). Sowohl der Renderer als auch der Frame-Wort-SE-Dekoder
+ * (FUN_8001b38c liest +0x168, das anim_set @0x8001f36c setzt) MUESSEN denselben Slot benutzen. */
+int re15_actor_anim_reverse(const re15_actor_t *a);
+int re15_actor_playback_slot(const re15_actor_t *a, uint32_t cur, int frame_count);
+
 int re15_compute_actor_kf(const re15_emd_animation_t *anim,
                           const re15_emd_skeleton_t  *skel,
                           const re15_actor_t *a, int clip_override,
