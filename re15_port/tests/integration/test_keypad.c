@@ -34,6 +34,7 @@
 #include "re15_aot.h"
 #include "re15_actor.h"
 #include "re15_room.h"
+#include "re15_msg.h"
 
 #define RE15_STR(x)  #x
 #define RE15_XSTR(x) RE15_STR(x)
@@ -72,11 +73,33 @@ static void enter_1230(void)
     scd_room_reenter(&g_rdt, 0, 0, 0);
 }
 
+/* MESSAGE-PUMP — im Original laeuft der Dialog-FSM TOP-LEVEL und UNGEGATET
+ * (FUN_800280b4 @0x800280c8 `lbu DAT_800b8520; andi 0x80; beq-skip` -> `jal FUN_80028134`
+ * @0x800280dc, Caller @0x80010044 im Root-Frame-Loop): der Text tickt und laesst sich
+ * schliessen, obwohl alles andere steht. Genau das braucht dieser Test seit dem globalen
+ * Text-Freeze: ROOM1230 sub17 @0x13aa ist `2b 00 ff ff` = Message_on(id 0, Maske 0xffff)
+ * -> g_pauseflags |= 0xffff0000 (@0x80040508/@0x8004051c -> @0x80027ed0) und danach
+ * `02` Evt_next @0x13ae — die Set(5,0/1/2,1)-Opcodes @0x13b4-0x13bf laufen also
+ * ERST NACH dem Wegdruecken des Textes. Ohne Pump stuende die VM fuer immer
+ * (SCD-Gate @0x8003f04c). */
+static void msg_pump(void)
+{
+    extern uint16_t g_scd_pad_edge;
+    extern uint16_t g_scd_pad_held;
+    for (int i = 0; i < 600 && g_scd.message_active; i++) {
+        g_scd_pad_held = 0x4000;   /* HELD virt. 0x4000 = Typewriter-Fast-Forward @0x80028214 */
+        g_scd_pad_edge = 0x4000;   /* Press-Edge = Confirm/Dismiss @0x80028570/@0x80028698 */
+        re15_msg_tick(0, 0, 0);
+    }
+    g_scd_pad_held = 0;
+    g_scd_pad_edge = 0;
+}
+
 /* fire sub_scd[ev] and tick it to completion, clearing event slots afterwards */
 static void fire(int ev, int ticks)
 {
     scd_event_fire((uint8_t)ev);
-    for (int f = 0; f < ticks; f++) scd_vm_tick();
+    for (int f = 0; f < ticks; f++) { scd_vm_tick(); msg_pump(); }
     for (int s = SCD_EVENT_SLOT_FIRST; s <= SCD_EVENT_SLOT_LAST; s++) g_scd.threads[s].active = 0;
 }
 

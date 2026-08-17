@@ -183,6 +183,9 @@ static struct {
 } s_fmv_audio;
 static int s_dev_freq = 44100;     /* actual device rate (from SDL have.freq)   */
 static FILE *s_audio_cap = NULL;   /* RE15_AUDIO_CAP=<raw>: dump mixed output (verify) */
+static int   s_audio_cap_sync = 0; /* RE15_AUDIO_CAP_SYNC: frame-locked render, no SDL device */
+static long  s_cap_ticks      = 0; /* gerenderte Spielframes in diesem Modus (== PCM/1470)     */
+static long  s_cap_limit      = 0; /* RE15_AUDIO_CAP_FRAMES: danach Datei schliessen + exit(0)  */
 static int   s_audio_mono = 0;     /* OPTIONS SOUND: 1 = mono (collapse final mix), 0 = stereo */
 void re15_audio_set_mono(int mono) { s_audio_mono = mono ? 1 : 0; }
 
@@ -276,7 +279,17 @@ static ss_seq_t s_ss_sub2;          /* SUB_<nn> SECOND sequence (SEQ1) — a rea
                                      * addresses it. Shares the SUB VAB via tone_src.
                                      * [audit wf_1db9c802 BGM-SUB-SECOND-SEQ] */
 static int      s_ss_rate = 44100;
-static int      s_ss_sub_base_mvol = 0x1a00;  /* SUB layer base vol (rotor gating scales this) */
+/* BGM LAYER BASE MASTER — the SAME value for all three SsSeq slots, byte-true.
+ * FUN_80044774 gives each opened sequence its own SsSeqSetVol from the slot's vol halfword
+ * (SEQ0: `lh a1,DAT_800b52b8` @0x80044960 -> `jal 0x8005ab5c` @0x80044970;
+ *  SEQ#2: `lh a1,DAT_800b52c0` @0x800449a0 -> `jal 0x8005ab5c` @0x800449b0), and the SCD 0x54 op1
+ * re-applies it (`lh a1,DAT_800b52b0+slot*8` @0x80044e00-10 -> `jal 0x8005ab5c` @0x80044e24).
+ * MEASURED in the original mid-intro savestate stage_saves/orig_1170_gp.sav (and gp2):
+ *   vol@0x800b52b0 (MAIN) = 127, vol@0x800b52b8 (SUB SEQ0) = 127, vol@0x800b52c0 (SUB SEQ#2) = 127,
+ *   handles @0x800b52ae/b6/be = 0/1/2 (all three sequences OPEN during the cinematic).
+ * i.e. the SUB layer is NOT quieter than MAIN and carries no positional scaling. */
+#define SS_BASE_MVOL 0x1a00                   /* port-side Q15 master, shared by MAIN/SUB/SUB2 */
+static int      s_ss_sub_base_mvol = SS_BASE_MVOL;  /* == MAIN base (orig: both SetVol 127) */
 
 /* (RE1.5 SE pan + distance-attenuation tables moved to the SHARED rotor_common.c,
  * along with the integer azimuth + pan math — see re15_rotor_compute_pan. This port
@@ -1015,6 +1028,32 @@ void re15_audio_init(void)
         fprintf(stderr, "[audio] RE15_NOAUDIO set -> audio disabled\n");
         return;
     }
+
+    /* DETERMINISTISCHE MESS-AUFNAHME (RE15_AUDIO_CAP_SYNC=<raw>): kein SDL-Geraet, statt dessen
+     * rendert re15_audio_tick() pro SPIELFRAME exakt RE15_AUDIO_RATE/30 Stereo-Frames durch
+     * GENAU DIESELBE Mix-Kette (audio_callback) und schreibt sie in die Datei. Notwendig, weil
+     * RE15_AUDIO_CAP am SDL-Callback haengt und damit ECHTZEIT-getaktet ist: die Zuordnung
+     * Spielframe -> PCM-Offset ist dort nicht reproduzierbar, ein Mess-Fenster "ROOM1170-Frame
+     * F441..F1218" also nicht sauber ausschneidbar. Mit CAP_SYNC gilt Offset = Frame * 1470
+     * Stereo-Frames, und derselbe Lauf liefert bit-gleiche Werte.
+     * Reine Diagnose (wie RE15_BGM_DUMP / RE15_AUDIO_CAP), kein Spielpfad. */
+    { const char *sync = getenv("RE15_AUDIO_CAP_SYNC");
+      if (sync && *sync) {
+          s_audio_cap = fopen(sync, "wb");
+          s_audio_cap_sync = 1;
+          { const char *lim = getenv("RE15_AUDIO_CAP_FRAMES");
+            if (lim && *lim) s_cap_limit = atol(lim); }
+          s_dev_freq = RE15_AUDIO_RATE;
+          s_audio_dev = 0;                 /* SDL_LockAudioDevice(0) ist ein No-op */
+          load_bundled_vab_pc();
+          load_weapon_se_vab_pc(1);
+          re15_xa_init();
+          g_audio.initialized = 1;
+          g_audio.backend_active = 1;
+          fprintf(stderr, "[audio] RE15_AUDIO_CAP_SYNC -> %s (%d Frames/Tick, kein SDL-Geraet)\n",
+                  sync, RE15_AUDIO_RATE / 30);
+          return;
+      } }
 
     if (SDL_InitSubSystem(SDL_INIT_AUDIO) < 0) {
         fprintf(stderr, "[audio] SDL_InitSubSystem(AUDIO) failed: %s\n",
@@ -1928,7 +1967,14 @@ static void ss_start(ss_seq_t *s, int loop) {
  * 0x07 repeat). Reached via snd0.edt SE[29]/[30] → tone1/2, keyed by the heli EM
  * behavior DAT_80073c70[0x40] (dispatcher FUN_8002bd44) — NOT by an SCD Se_on.
  * (Prior wrong guesses: snd0_00004 = crash rumble; CORE00_00002 = wrong bank.)
- * Env overrides for A/B: RE15_ROTOR_WAV, RE15_ROTOR_RATE, RE15_ROTOR_VOL. */
+ * Env overrides for A/B: RE15_ROTOR_WAV, RE15_ROTOR_RATE, RE15_ROTOR_VOL.
+ *
+ * ⚠ WIDERLEGT (2026-08-17) — ALLES OBERHALB DIESER ZEILE IST EINE ALTE HYPOTHESE, KEIN BELEG.
+ * Der Rotor ist SUB_15.BGM SEQ0: FUN_80044774 oeffnet die Sequenz und spielt sie
+ * (@0x8004494c / SsSeqSetVol @0x80044960-74 / SsSeqPlay @0x80044980), der SCD-0x54-op1 dreht sie
+ * auf (@0x80044e00-44). FUN_8002bd44 ist der generische Objekt-/AI-Dispatch-Loop des Haupt-Updates
+ * (@0x8001ce14), kein SE-Keyer. Diese amb_-Schleife ist damit KEIN Spiel-Pfad mehr, sondern nur
+ * noch ein manuelles A/B-Werkzeug — sie bleibt per Default AUS (ohne RE15_ROTOR_WAV kein Ton). */
 static void re15_amb_load_rotor(int stage, int room) {
     (void)stage; (void)room;
     (void)stage; (void)room;
@@ -2055,6 +2101,40 @@ static int re15_bgm_load_sub(uint8_t sub_b) {
             if (s_ss_sub2.ppqn <= 0)     s_ss_sub2.ppqn = 48;
             if (s_ss_sub2.tempo_us == 0) s_ss_sub2.tempo_us = 500000;
             s_ss_sub2.vab_ok = 0; s_ss_sub2.tone_src = &s_ss_sub; s_ss_sub2.vab_id = 6;
+            /* BASIS-mvol — fehlte komplett (Nutzer-Report "Helikopter-Rotor unhoerbar in ROOM1170",
+             * 2026-08-17): s_ss_sub2 laeuft NICHT durch re15_bgm_load_track (das setzt mvol
+             * @audio_pc.c ~L1900), also blieb sein Master statisch 0 -> SEQ#2 war PERMANENT stumm
+             * (gemessene RMS im Narrator-Fenster exakt 0.0). Im Original bekommt SEQ#2 dieselbe
+             * SsSeqSetVol-Behandlung wie SEQ0: `lh a1,DAT_800b52c0` @0x800449a0 + `jal 0x8005ab5c`
+             * @0x800449b0 + `jal 0x80060030` (SsSeqPlay) @0x800449c0, mit vol@0x800b52c0 = 127
+             * (Savestate stage_saves/orig_1170_gp.sav) = derselbe Wert wie MAIN/SEQ0.
+             * Und SEQ#2 laeuft ab RAUM-EINTRITT durch: Flag B = 0 -> der Auto-Play-Gate
+             * FUN_800444b0 laesst ihn spielen, schon unterm Narrator (Savestate:
+             * DAT_800b52bd == 0, DAT_800b52b5 == 1). ZITAT KORRIGIERT (2026-08-17, Review-Fund
+             * F2): die frueher hier genannte Adresse @0x80044500 gehoert zum SEQ0-Flag
+             * DAT_800b52b5, NICHT zu DAT_800b52bd. Die Bytes (selbst disassembliert):
+             *   800444f0: lbu v1,21173(v1)        ; DAT_800b52b5  (SEQ0-Flag)
+             *   800444f8: beq v1,0xff -> 0x80044554  ; 0xff = kein SUB -> auch SEQ#2 faellt aus
+             *   80044500: bne v1,zero,0x80044524  ; <- 52b5-Gate (mit 52b5==1 GENOMMEN)
+             *   80044524: lui v0,0x800b
+             *   80044528: lbu v0,21181(v0)        ; DAT_800b52bd  (SEQ#2-Flag)  <-- das Gate
+             *   80044530: bne v0,zero,0x80044554  ; Flag != 0 -> SEQ#2 NICHT auto-replayen
+             *   8004453c: lb  a0,21182(a0)        ; DAT_800b52be = SEQ#2-Handle
+             *   80044540: jal 0x8005acec          ; SsSeqReplay
+             *   80044550: sb  v0,21180(at)        ; DAT_800b52bc = 1
+             * Der Beleg fuer "SEQ#2 spielt ab Raum-Eintritt" liegt also in @0x80044528/@0x80044530
+             * /@0x80044540 — plus der Vorbedingung @0x800444f8 (DAT_800b52b5 != 0xff).
+             *
+             * ⚠ DATEN-BEFUND zu SUB_15 (ROOM1170), selbst geparst 2026-08-17 — SEQ#2 dieses
+             * Containers ist STUMM BY DATA, nicht durch einen Port-Bug:
+             *   SUB_15.BGM size 44808; Trailer u32[size-8] = 152 = SEQ#2-Offset, u32[size-12] = 176.
+             *   SEQ#2 = Bytes 152..176 (24 B): "pQES" 00000001 | ppqn 0x0030 | tempo 0x07a120 |
+             *   rhythm 0x0402 | 00 b0 0a 40 (delta0, CC10 Pan=0x40) | 00 ff 2f 00 (End of Track).
+             *   Also EIN Pan-Controller, dann Track-Ende — keine Note. Der Rotor ist SEQ0 (@0,
+             *   152 B, ppqn 0x01e0), den das Skript per Sce_bgm_control(1,1) aufdreht.
+             * Das Basis-mvol hier ist trotzdem byte-true richtig (SsSeqSetVol @0x800449a0-b4 mit
+             * vol 127) und gilt fuer JEDEN SUB-Container — es macht aber SUB_15 nicht hoerbar. */
+            s_ss_sub2.mvol = s_ss_sub2.mvol_l = s_ss_sub2.mvol_r = SS_BASE_MVOL;  /* @0x800449a0-b4 */
             ss_start(&s_ss_sub2, 1);
             if ((sub_b >> 7) != 0) s_ss_sub2.mvol = s_ss_sub2.mvol_l = s_ss_sub2.mvol_r = 0;
         }
@@ -2280,29 +2360,39 @@ void re15_audio_start_room_bgm(int stage, int room)
             (main_same && sub_same) ? "  [unveraendert, laeuft durch]" : "");
 }
 
-/* Gate the helicopter-rotor (SUB layer) volume + PAN by the current cut camera→heli
- * geometry. The L/R volume (0..0x7f) is computed by the SHARED re15_rotor_compute_pan
- * (rotor_common.c, byte-true FUN_80045a64); this backend just scales the SsSeq SUB
- * layer master by it. (Was an independent atan2(double) + mirrored-pan + 127-clamp
- * copy — now unified with the PSX.) */
+/* ⛔ PORT-ERFINDUNG ENTFERNT (Nutzer-Report "Helikopter-Rotor unhoerbar in ROOM1170", 2026-08-17).
+ *
+ * Diese Funktion skalierte den SsSeq-SUB-Layer (s_ss_sub.mvol_l/r) JEDEN FRAME mit der
+ * SE-Distanz-/Pan-Mathematik FUN_80045a64 — dafuer gibt es KEINEN Beleg, im Gegenteil:
+ * `jal 0x80045a64` hat in der ganzen PSX.EXE exakt VIER Aufrufer — @0x800451cc, @0x8004527c,
+ * @0x800454e8, @0x80045830 (selbst gescannt: Instruktionswort 0x0C011699, 4-Byte-aligned) — und
+ * ALLE VIER liegen im SE-Pfad und uebergeben eine Entity-Position (@0x800454e4/@0x8004582c
+ * `lw a0,g_entity(cur)` + `addiu a0,a0,52` @0x800454ec/@0x80045830-Delay, bzw. `lw a0,32(sp)`
+ * @0x800451c8/@0x80045278). NIEMAND wendet sie auf ein SsSeq-/BGM-Volumen an. Die BGM-Lautstaerke
+ * kommt ausschliesslich aus SsSeqSetVol mit dem Slot-vol-Halbwort (@0x80044960/@0x800449a0 beim
+ * Laden, @0x80044e00-24 beim SCD-0x54-op1), und das ist im Original-Savestate fuer ALLE DREI Slots
+ * 127 (0x800b52b0/b8/c0, stage_saves/orig_1170_gp.sav) — also unskaliert.
+ * Nachgerechnet lag die erfundene Skalierung bei 44..96 von 127 je Intro-Cut (-2.5..-9 dB) und
+ * begrub den Rotor unter dem gleichzeitig laufenden MAIN32-Score.
+ *
+ * Die Funktion bleibt als NO-OP stehen, weil der gemeinsame Treiber re15_rotor_drive
+ * (engine/src/game_step_common.c) sie noch ruft; rotor_common.c/re15_rotor_compute_pan bleiben
+ * fuer den ECHTEN SE-Pfad (FUN_80045a64-Replikat) korrekt und unveraendert. */
 void re15_audio_rotor_update(const int32_t cam_eye[3], const int32_t cam_tgt[3],
                              const int32_t heli_pos[3])
 {
-    if (!g_audio.initialized) return;
-    int volL, volR;
-    re15_rotor_compute_pan(cam_eye, cam_tgt, heli_pos, &volL, &volR);
-    s_ss_sub.mvol_l = (s_ss_sub_base_mvol * volL) / 0x7f;
-    s_ss_sub.mvol_r = (s_ss_sub_base_mvol * volR) / 0x7f;
-    s_ss_sub.mvol   = (s_ss_sub.mvol_l + s_ss_sub.mvol_r) / 2;
+    (void)cam_eye; (void)cam_tgt; (void)heli_pos;
+    /* kein Positions-Gate auf dem BGM-Layer — siehe 4-Caller-Census oben. */
 }
 
-/* Silence the rotor (SUB layer) — the heli is an intro element; once the
- * cinematic hands off to gameplay (player_mode≠2) the heli has flown off and the
- * SE is keyed off in the original (distance attenuation alone never reaches 0). */
+/* ⛔ EBENFALLS BELEGLOS: das harte Nullen des SUB-Layers ausserhalb des Skript-Modus.
+ * Im Original steuert AUSSCHLIESSLICH der SCD-0x54-Status den Slot (op1 = SetVol(vol)+SsSeqPlay
+ * @0x80044e00-44, op2 = SsSeqStop @0x80044e50-84), und SEQ#2 laeuft ueber den Auto-Play-Gate
+ * FUN_800444b0 sogar unabhaengig davon weiter, bis der Raum-BGM-Wechsel (FUN_80044210) ihn stoppt.
+ * NO-OP, damit der bestehende PSX-/PC-Aufrufpfad kompiliert. */
 void re15_audio_rotor_silence(void)
 {
-    if (!g_audio.initialized) return;
-    s_ss_sub.mvol_l = s_ss_sub.mvol_r = s_ss_sub.mvol = 0;
+    /* kein player_mode-Mute — der Slot-Status kommt aus Sce_bgm_control (@0x80044e00-84). */
 }
 
 /* SsSeq slot control (SCD Sce_bgm_control / 0x54 → PSX FUN_80044da4). slot 0 =
@@ -2323,8 +2413,8 @@ static void ss_seq_ctl_ex(int slot, int op, int part, int vol, int pan)
                 : (slot == 2) ? &s_ss_sub2 : NULL;
     if (!s) return;
     int base = (slot >= 1) ? s_ss_sub_base_mvol : 0x1a00; /* MAIN inits to 0x1a00 */
-    fprintf(stderr, "[bgm] Sce_bgm_control slot=%d op=%d (part=%d vol=%d pan=%d)\n",
-            slot, op, part, vol, pan);
+    fprintf(stderr, "[bgm] Sce_bgm_control slot=%d op=%d (part=%d vol=%d pan=%d) capTick=%ld\n",
+            slot, op, part, vol, pan, s_cap_ticks);
     SDL_LockAudioDevice(s_audio_dev);
     switch (op) {
         case 1:   /* SsSeqSetVol + SsSeqPlay (loop) → audible */
@@ -2362,6 +2452,21 @@ void re15_audio_seq_ctl(int slot, int op)
 void re15_audio_tick(void)
 {
     if (!g_audio.initialized) return;
+
+    /* RE15_AUDIO_CAP_SYNC: ein Spielframe = RE15_AUDIO_RATE/30 Stereo-Frames, gerendert durch
+     * dieselbe Kette wie der SDL-Callback (der in diesem Modus gar nicht laeuft). audio_callback
+     * schreibt selbst nach s_audio_cap. */
+    if (s_audio_cap_sync) {
+        static int16_t capbuf[(RE15_AUDIO_RATE / 30) * 2];
+        audio_callback(NULL, (Uint8 *)capbuf, (int)sizeof capbuf);
+        s_cap_ticks++;
+        if (s_cap_limit > 0 && s_cap_ticks >= s_cap_limit) {
+            if (s_audio_cap) { fflush(s_audio_cap); fclose(s_audio_cap); s_audio_cap = NULL; }
+            fprintf(stderr, "[audio] CAP_SYNC: %ld Frames geschrieben -> exit\n", s_cap_ticks);
+            fflush(stderr);
+            exit(0);
+        }
+    }
 
     /* == FUN_80044ab8 aus dem Frame-Tick FUN_800458d4: die BGM-Ausblendung weiterdrehen und,
      * wenn sie durch ist, den aufgeschobenen Track-Wechsel ausfuehren. */
@@ -2501,6 +2606,7 @@ void re15_audio_shutdown(void)
         SDL_CloseAudioDevice(s_audio_dev);
         s_audio_dev = 0;
     }
+    if (s_audio_cap) { fflush(s_audio_cap); fclose(s_audio_cap); s_audio_cap = NULL; }
     SDL_QuitSubSystem(SDL_INIT_AUDIO);
     g_audio.backend_active = 0;
 }

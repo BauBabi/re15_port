@@ -42,8 +42,22 @@ static int     s_grant    = -1;     /* DAT_8008f62c (free slot, -1 = full)  */
 static int     s_prompt   = 0;
 static int     s_choice   = 0;
 static int     s_msg_no   = 0;
-/* typewriter reveal (byte-true FUN_80028134: 1 glyph per 2<<bVar2 frames; bVar2 = (DAT_800b5456==0);
- * the briefing savestate has DAT_800b5456=2 -> 2 frames/glyph). Confirm is gated until fully revealed. */
+/* TYPEWRITER reveal — byte-true FUN_80028134 (the SHARED message VM; the item modal does NOT draw its
+ * own text: state 5 opens the prompt through FUN_80027e68(0,0x100,id,0xff000000), so the pickup line is
+ * typed by exactly the same VM as every room/examine dialog).
+ *
+ *   state-0 SEED  @0x800281a0-ac : timer  = 1 << s1        -> 1
+ *   reload byte   @0x800281b0-c4 : DAT_800b8524 = 2 << s1  -> 2   (sllv, enc 0x02221004 verified)
+ *   s1            @0x80028148 + @0x80028168 : s1 = sltiu(DAT_800b5456, 1) = (DAT_800b5456 == 0)
+ *                 measured DAT_800b5456 == 2 in stage_saves/orig_1170_gp.sav, doorA_square.sav,
+ *                 equip_test.sav  -> s1 = 0  -> seed 1 / reload 2 (= 1 glyph per 2 frames).
+ * OPEN (not modelled): an in-text control code can REPLACE the reload at runtime
+ *   (@0x800283ac `sllv v0,v0,s1` + @0x800283b4 `sb v0,DAT_800b8524`, reached via the in-string
+ *   control-code table @0x8001096c) — the three cited savestates show DAT_800b8524 == 1, i.e. the last
+ *   message they displayed carried such a code. The port's prompt walker (re15_item_prompt_walk) has no
+ *   speed-code model; the shipped item prompts are typed at the state-0 default 2. Both 1 and 2 satisfy
+ *   the `reload < 4` fast-forward gate @0x8002822c, so the FF cadence below is unaffected either way. */
+#define ITEM_MSG_RELOAD 2                  /* DAT_800b8524 = 2<<s1, s1=0  @0x800281b0-c4 */
 static int     s_reveal       = 0;
 static int     s_reveal_total = 0;
 static int     s_reveal_timer = 0;
@@ -139,7 +153,7 @@ int re15_item_modal_active(void) { return s_state != 0; }
 uint8_t re15_item_modal_state(void) { return s_state; }
 int re15_item_modal_frame(void) { return (int)s_f630; }
 
-void re15_item_modal_tick(uint16_t pad_edge)
+void re15_item_modal_tick(uint16_t pad_edge, uint16_t pad_held)
 {
     int again = 1;
     while (again) {
@@ -202,7 +216,9 @@ void re15_item_modal_tick(uint16_t pad_edge)
             s_choice  = 0;                        /* default Yes (DAT_800b8520 bit0 = 0) */
             s_msg_no  = 0;
             s_reveal       = 0;                   /* start the typewriter */
-            s_reveal_timer = 2;                   /* 2 frames/glyph (DAT_800b8524 = 2<<0) */
+            s_reveal_timer = 1;                   /* SEED = 1<<s1 @0x800281a0-ac (NOT the reload: the
+                                                   * state-0 tick decrements it to 0 and emits the first
+                                                   * glyph immediately; reload 2 only applies afterwards) */
             s_reveal_total = re15_item_prompt_walk(s_prompt, s_type, 0, 0, 0);  /* byte-true glyph count */
             s_state   = 6;
             return;
@@ -214,9 +230,28 @@ void re15_item_modal_tick(uint16_t pad_edge)
                   * IS the virtual word (caller: re15_pad_virtual_word) — virtual 0x3000 <- RAW d-pad
                   * LEFT/RIGHT, 0x4000 <- RAW SQUARE, 0x8000 <- RAW CROSS (@0x80073dbc[12..15]). */
             s_visible = 1;
-            if (s_reveal < s_reveal_total) {                      /* TYPEWRITER: 1 glyph / 2 frames — no
-                                                                  * input accepted until fully revealed */
-                if (--s_reveal_timer <= 0) { s_reveal++; s_reveal_timer = 2; }
+            if (s_reveal < s_reveal_total) {
+                /* TYPEWRITER + FAST-FORWARD — byte-true FUN_80028134 state-1 body
+                 * (@0x800281d8-0x80028238, emit loop @0x80028250, reload @0x8002843c + @0x80028740-44).
+                 * The FF-enable byte DAT_800b8522 is set to 0x80 for message type 0x100 @0x80027f28 —
+                 * and 0x100 is exactly what the item modal opens with (@0x8001df6c-94) — so the pickup
+                 * text fast-forwards like any dialog. HELD is the VIRTUAL word DAT_800ac768 & 0x4000
+                 * (@0x8002820c/@0x80028214), i.e. physically SQUARE (preset @0x80073dbc[14]); the
+                 * pause-flag pad mask `held &= 0xf000` (@0x800304f4) lets 0x4000 through, so FF works
+                 * inside the modal's own freeze. No input is accepted until fully revealed. */
+                int budget = 1;                                   /* s2 = 1            @0x800281d8 */
+                int t0     = s_reveal_timer;                      /* v1 = DAT_800b8525 @0x800281e4 */
+                s_reveal_timer = t0 - 1;                          /* a0 = v1-1, stored @0x800281f0/f8 */
+                if (((s_reveal_timer & 0xff) != 0)                /* skip FF when it lands on 0
+                                                                   * @0x800281fc/@0x80028200 */
+                    && (pad_held & 0x4000)) {                     /* held virt 0x4000  @0x80028214/18 */
+                    s_reveal_timer = t0 - 4;                      /* v1 -= 4, stored   @0x80028228/34 */
+                    if (ITEM_MSG_RELOAD < 4) budget = 2;          /* sltiu 4 -> ori 2  @0x8002822c/38 */
+                }
+                if (s_reveal_timer > 0) return;                   /* lb + bgtz         @0x8002823c-48 */
+                s_reveal += budget;                               /* emit loop, s2--   @0x80028250/5c */
+                if (s_reveal > s_reveal_total) s_reveal = s_reveal_total;
+                s_reveal_timer = ITEM_MSG_RELOAD;                 /* timer = reload    @0x8002843c/8740 */
                 return;
             }
             if (s_prompt == 2) {                                  /* can't-carry: any confirm dismisses */
@@ -283,4 +318,5 @@ int re15_item_modal_prompt(uint8_t *out_type, int *out_choice)
 }
 
 int re15_item_modal_reveal(void)       { return s_reveal; }
+int re15_item_modal_reveal_total(void) { return s_reveal_total; }
 int re15_item_modal_prompt_ready(void) { return s_prompt != 0 && s_reveal >= s_reveal_total; }

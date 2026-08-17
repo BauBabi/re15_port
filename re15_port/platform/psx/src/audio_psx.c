@@ -745,29 +745,39 @@ void re15_audio_seq_ctl(int slot, int op)
     }
 }
 
-/* Per-frame rotor (SUB layer) DISTANCE attenuation + STEREO PAN — the L/R volume is
- * computed by the SHARED re15_rotor_compute_pan (rotor_common.c, byte-true
- * FUN_80045a64 + FUN_80045d6c). This backend applies it to the SPU: sets the layer
- * master + rescales the active SUB voices so it tracks continuously. */
+/* ⛔ PORT-ERFINDUNG ENTFERNT (2026-08-17, Review-Fund F3 — symmetrisch zu audio_pc.c:2340).
+ *
+ * Hier stand eine Distanz-/Pan-Skalierung des BGM-SUB-Layers: re15_rotor_compute_pan ->
+ * `gainL/R = (0x1400 * panL/R) / 0x7f` -> s_bgm_sub.mvol_l/r + direktes Umschreiben der
+ * aktiven SPU_CH_VOL_L/R. Dafuer gibt es KEINEN Beleg. Eigener Byte-Zensus (4-Byte-alignter
+ * Scan der PSX.EXE nach dem Instruktionswort 0x0C011699 = `jal 0x80045a64`, t_addr 0x80010000/
+ * t_size 0xaf000): EXAKT vier Aufrufer — @0x800451cc, @0x8004527c, @0x800454e8, @0x80045830 —
+ * und ALLE VIER liegen im SE-Pfad (Entity-Position: @0x800454e4 `lw a0,g_entity(cur)` +
+ * @0x800454ec `addiu a0,a0,52`; identisch @0x8004582c-34; @0x800451c8/@0x80045278 `lw a0,32(sp)`).
+ * Derselbe Scan ueber alle acht RE1.5-Overlays (STAGE1-6/DEBUG/TITLE.BIN, RAW @0x80100000)
+ * liefert NULL Treffer. NIEMAND wendet FUN_80045a64 auf ein SsSeq-/BGM-Volumen an.
+ * Die BGM-Lautstaerke kommt ausschliesslich aus SsSeqSetVol mit dem Slot-vol-Halbwort
+ * (`lh a1,DAT_800b52b8` @0x80044960 + `jal 0x8005ab5c` @0x80044970 fuer SEQ0,
+ *  `lh a1,DAT_800b52c0` @0x800449a0 + `jal 0x8005ab5c` @0x800449b0 fuer SEQ#2, und
+ *  @0x80044e00-24 beim SCD-0x54-op1) — im Original-Savestate stage_saves/orig_1170_gp.sav
+ * fuer ALLE DREI Slots 127 (0x800b52b0/b8/c0), also unskaliert.
+ *
+ * re15_audio_rotor_silence() nullte den SUB-Layer zusaetzlich hart; im Original steuert
+ * AUSSCHLIESSLICH der SCD-0x54-Status den Slot (op1 = SetVol+SsSeqPlay @0x80044e00-44,
+ * op2 = SsSeqStop @0x80044e50-84). Beide bleiben als NO-OP stehen, weil der gemeinsame
+ * Treiber re15_rotor_drive (engine/src/game_step_common.c) sie noch ruft. rotor_common.c /
+ * re15_rotor_compute_pan bleiben fuer den ECHTEN SE-Pfad (FUN_80045a64-Replikat) unveraendert. */
 void re15_audio_rotor_update(const int32_t cam_eye[3], const int32_t cam_tgt[3],
                              const int32_t heli_pos[3])
 {
-    if (!g_audio.initialized || !s_bgm_sub.vab_ok || !s_bgm_sub.playing) return;
-
-    int panL, panR;
-    re15_rotor_compute_pan(cam_eye, cam_tgt, heli_pos, &panL, &panR);
-
-    int gainL = (0x1400 * panL) / 0x7f;           /* SUB base master 0x1400, scaled */
-    int gainR = (0x1400 * panR) / 0x7f;
-    s_bgm_sub.mvol_l = gainL;                      /* future note-ons */
-    s_bgm_sub.mvol_r = gainR;
-    for (int i = 0; i < s_bgm_sub.ch_count; i++)
-        if (s_bgm_sub.voice[i].active) {
-            SPU_CH_VOL_L(s_bgm_sub.ch_base + i) = (int16_t)gainL;
-            SPU_CH_VOL_R(s_bgm_sub.ch_base + i) = (int16_t)gainR;
-        }
+    (void)cam_eye; (void)cam_tgt; (void)heli_pos;
+    /* kein Positions-Gate auf dem BGM-Layer — siehe 4-Caller-Zensus oben. */
 }
-void re15_audio_rotor_silence(void) { if (g_audio.initialized) ssx_stop(&s_bgm_sub); }
+void re15_audio_rotor_silence(void)
+{
+    /* kein player_mode-/Positions-Mute — der Slot-Status kommt aus Sce_bgm_control
+     * (@0x80044e00-84). */
+}
 
 void re15_audio_tick(void)
 {

@@ -25,6 +25,117 @@
 #include "re15_collision.h"
 #include "re15_stair.h"
 #include "re15_audio.h"
+#include "re15_fade.h"        /* re15_fade_config/kick/done — die Transitions-Blende */
+
+/*=========================================================================
+ * RAUM-TRANSITIONS-PRAESENTATION — byte-true Auszug der Transitions-FSM
+ * FUN_8001c958 (Zustands-Byte DAT_800b5359, Sprungtabelle @0x8001069c;
+ * selbst nachdisassembliert 2026-08-17):
+ *
+ *   table[0]=0x8001c9c8 (State 1)  table[1]=0x8001ca98 (2)  table[2]=0x8001cbb8 (3)
+ *   table[3]=0x8001cc34 (State 4)  table[4]=0x8001cc70 (State 5)
+ *   Dispatch: @0x8001c994 `lbu v0,DAT_800b5359` / @0x8001c99c `addiu v1,v0,-1` /
+ *             @0x8001c9a0 `sltiu v0,v1,0x5` / @0x8001c9b0 `addiu at,at,1692` (=0x8001069c) /
+ *             @0x8001c9c0 `jr v0`.
+ *
+ * SCHARFMACHEN (die Tuer setzt aca3c|0x8000, der Frame-Kopf zieht nach):
+ *   @0x8001cda0 `andi v0,v1,0x8000` / @0x8001cda4 `beq -> Subsysteme`
+ *   @0x8001cdb0 `lbu DAT_800acae7` (+0x93) / @0x8001cdb8 `bne -> Subsysteme`
+ *   @0x8001cdc4 `sw aca3c|0x40`  @0x8001cdd0 `sb 1,DAT_800b5359`
+ *   @0x8001cdd8-e8 `lw g_pauseflags; lui v1,0xff00; or; sw`  ← ARM-FREEZE
+ *
+ * STATE 1 (Tuer-Zweig): @0x8001ca20-2c `aca38|=0x10000`, @0x8001ca30
+ *   `jal FUN_80021634(1,0)`, @0x8001ca44 `sw zero,g_pauseflags`, @0x8001ca48-50
+ *   `aca38|=0x4000`, @0x8001ca54 `jal FUN_8001d600` (RAUMLADER, SYNCHRON) —
+ *   dort @0x8001d82c-34 `FUN_80021634(2,0)` = MODE-2-SCHWARZ, die beiden
+ *   Warteschleifen @0x8001d850-868 (`aca38 & 0x10000`) und @0x8001dabc-d4
+ *   (`aca38 & 0x2000000`), Freigabe @0x8001dadc-ec (`FUN_80021634(0,0)` +
+ *   `DAT_800b5457 = 1`) — dann `j 0x8001cbbc` in den State-3-Rumpf.
+ *
+ * STATE-3-RUMPF (die EINBLENDUNG) @0x8001cbb8-cc28:
+ *   @0x8001cbb8 `ori a0,0x200`   (ch 0, abr 2)
+ *   @0x8001cbbc `addiu a1,zero,-6144`  (Schritt -0x1800)
+ *   @0x8001cbc0 `ori a2,0x7`     (rgb-Maske 7)
+ *   @0x8001cbcc `lw t1,g_pauseflags`      (alter Wert)
+ *   @0x8001cbdc `sb zero,0x800aca58`      ← SPIELER-KOMMANDOWORT = 0
+ *   @0x8001cbe4 `sw 7,g_pauseflags`
+ *   @0x8001cbfc `sw t1,DAT_8008f628`      (Sicherung der FSM, NICHT DAT_800b853c)
+ *   @0x8001cc00 `jal FUN_800217b0`        = re15_fade_config(0,2,7,-0x1800,0)
+ *   @0x8001cc18 `jal FUN_800216ec`        = re15_fade_kick(0,0)  -> level 0x7fff
+ *   @0x8001cc20-28 `sb 4,DAT_800b5359`
+ *
+ * STATE 4 @0x8001cc34-6c:  DAT_800b5359 = 5 (@0x8001cc48-50);
+ *   `DAT_8008f628 |= g_pauseflags` (@0x8001cc58/@0x8001cc64);
+ *   `g_pauseflags |= 0xff000000` (@0x8001cc5c `lui v0,0xff00` + @0x8001cc6c `sw`)
+ *   ← DIE LOGIK STEHT WAEHREND DER GANZEN EINBLENDUNG (Spieler 0x80000000,
+ *     AI 0x20000000, Anim/Action 0x10000000, SCD 0x02000000, Pad 0x01000000).
+ *
+ * STATE 5 @0x8001cc70-94:  `jal FUN_8002178c(0)` (Blende fertig?) / `beq v0,zero`
+ *   -> weiter warten; sonst `sb zero,DAT_800b5359` (@0x8001cc8c) +
+ *   `sw DAT_8008f628,g_pauseflags` (@0x8001cc84/@0x8001cc94) = FREIGABE.
+ *
+ * Dauer der Einblendung ist damit AUS DEN BYTES gerechnet, nicht gemessen:
+ * level 0x7fff, Schritt -0x1800 -> 0x7fff,0x67ff,0x4fff,0x37ff,0x1fff,0x07ff,
+ * dann Unterlauf auf 0xefff (Bit15 = fertig) = 6 gezeichnete Frames, Freigabe
+ * im 7. Poll.
+ *
+ * OFFEN (bewusst NICHT mit einer Zahl gefuellt): die beiden Lader-Warteschleifen
+ * @0x8001d850-868 / @0x8001dabc-d4 halten im Original zusaetzlich so lange an,
+ * wie das CD-Laufwerk braucht — das ist Hardware-Zeit und KEINE Konstante. Der
+ * Port laedt synchron aus dem Dateisystem, dort vergeht dabei kein Frame.
+ *=========================================================================*/
+
+/* DAT_8008f628 — der EIGENE Sicherungsplatz der Transitions-FSM. Bewusst NICHT
+ * g_re15_pauseflags_saved (= DAT_800b853c): das gehoert dem Message-System, und
+ * beide Freezes koennen sich ueberlappen. */
+static uint32_t s_trans_pause_saved = 0;
+/* DAT_800b5359 — Zustands-Byte der Transitions-FSM (0 = keine Transition laeuft). */
+static uint8_t  s_trans_state = 0;
+
+void re15_room_transition_present(void)
+{
+    /* State 1 @0x8001ca44: der Raumwechsel loescht die Pause-Flags KOMPLETT (und
+     * damit auch einen haengenden Message-Freeze — "kein Bit bleibt stehen"). */
+    re15_pauseflags_clear();
+    /* State-3-Rumpf, in der Reihenfolge der Instruktionen. */
+    s_trans_pause_saved = g_re15_pauseflags;          /* @0x8001cbcc lw -> @0x8001cbfc sw */
+    /* @0x8001cbdc `sb zero,0x800aca58` = Spieler+0x4 auf Kommando 0; der cmd-0-Handler
+     * @0x800318f8 raeumt auf und setzt das Wort noch im selben Durchlauf auf 1
+     * (@0x8003192c `sw v0(=1),0x800aca58`). Der Port hat keinen cmd-0-Tick, also
+     * direkt die 1 — exakt wie re15_room_apply_pending es fuer die Tuer schon tut. */
+    g_actors[RE15_ACTOR_SLOT_PLAYER].state       = 1;
+    g_actors[RE15_ACTOR_SLOT_PLAYER].sub_state_1 = 0;   /* @0x80031974-Umfeld / cmd-0-INIT */
+    g_actors[RE15_ACTOR_SLOT_PLAYER].sub_state_2 = 0;
+    g_re15_pauseflags = 7;                             /* @0x8001cbc4 ori 0x7 + @0x8001cbe4 sw */
+    re15_fade_config(0, 2, 7, (int16_t)-0x1800, 0);    /* FUN_800217b0(0x200,-6144,7,0) @0x8001cc00 */
+    re15_fade_kick(0, 0);                              /* FUN_800216ec(0,0,..) @0x8001cc18 */
+    s_trans_state = 4;                                 /* @0x8001cc20-28 */
+}
+
+int re15_room_transition_active(void) { return s_trans_state != 0; }
+
+int re15_room_transition_tick(void)
+{
+    if (s_trans_state == 4) {                          /* Handler @0x8001cc34 */
+        s_trans_state        = 5;                      /* @0x8001cc48-50 */
+        s_trans_pause_saved |= g_re15_pauseflags;      /* @0x8001cc58 or + @0x8001cc64 sw */
+        g_re15_pauseflags   |= 0xFF000000u;            /* @0x8001cc5c lui 0xff00 + @0x8001cc6c sw */
+        return 1;
+    }
+    if (s_trans_state == 5) {                          /* Handler @0x8001cc70 */
+        if (!re15_fade_done(0)) return 1;              /* @0x8001cc70 jal FUN_8002178c(0) + @0x8001cc78 beq */
+        s_trans_state     = 0;                         /* @0x8001cc8c sb zero,DAT_800b5359 */
+        g_re15_pauseflags = s_trans_pause_saved;       /* @0x8001cc84 lw + @0x8001cc94 sw */
+        return 0;
+    }
+    return 0;
+}
+
+void re15_room_transition_reset(void)
+{
+    s_trans_state       = 0;
+    s_trans_pause_saved = 0;
+}
 
 /* Cross-room state — the parsed RDT of the resident room + the queued change.
  * (Moved here from re15_room.c so BOTH ports link it.) The actual RDT BYTES
@@ -49,6 +160,11 @@ int re15_room_apply_pending(const re15_room_apply_ctx_t *c)
     if (!g_room_change.pending) return 0;
     g_room_change.pending = 0;
     re15_savepoint_reset();   /* new room: drop any stale save pending/latched-cut from the old room */
+    /* GLOBALE PAUSE-FLAGS beim Raumwechsel loeschen — byte-true: die Transitions-FSM schreibt
+     * `sw zero,-13760(at)` auf 0x800aca40 an ZWEI Stellen, @0x8001ca44 und @0x8001caec. Ohne
+     * das koennte ein Freeze, dessen Text der Raumwechsel wegraeumt, nie mehr aufgehoben werden
+     * (der Restore-Pfad haengt am Message-Dismiss). */
+    re15_pauseflags_clear();
     re15_itembox_reset();     /* likewise the box-screen pending (save-phone precedent) */
     g_scd_self_reenter_fired = 0;  /* new room: re-arm the intro self-reenter latch (a genuine
                                     * later re-entry must be able to run its own door scenario) */

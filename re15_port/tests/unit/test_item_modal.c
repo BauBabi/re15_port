@@ -32,7 +32,7 @@ static void run_to_prompt(int *out_zoom, int *out_flip)
         uint8_t st = re15_item_modal_state();
         if (st == 2) zoom++;
         if (st == 4) flip++;
-        re15_item_modal_tick(0);   /* no input during zoom/flip */
+        re15_item_modal_tick(0, 0);   /* no input during zoom/flip */
     }
     if (out_zoom) *out_zoom = zoom;
     if (out_flip) *out_flip = flip;
@@ -43,7 +43,7 @@ static void run_reveal(void)
 {
     int guard = 0;
     while (re15_item_modal_active() && !re15_item_modal_prompt_ready() && guard++ < 400)
-        re15_item_modal_tick(0);
+        re15_item_modal_tick(0, 0);
 }
 
 int main(void)
@@ -69,7 +69,7 @@ int main(void)
          * accepts no confirm — feeding the confirm bit during typing must NOT grant. */
         int guard = 0;
         while (re15_item_modal_active() && !re15_item_modal_prompt_ready() && guard++ < 400) {
-            re15_item_modal_tick(0x4000);             /* confirm bit during typing -> ignored */
+            re15_item_modal_tick(0x4000, 0);             /* confirm bit during typing -> ignored */
             if (inv_has(0x15)) break;                 /* must never happen mid-typing */
         }
         CHECK("typewriter revealed the prompt while state 6 held", re15_item_modal_prompt_ready()
@@ -77,7 +77,7 @@ int main(void)
         CHECK("confirm was IGNORED during typing (not granted yet)", !inv_has(0x15));
         CHECK("reveal reached the full text (>= 30 glyphs)", re15_item_modal_reveal() >= 30);
 
-        re15_item_modal_tick(0x4000);                 /* text is up -> virtual confirm = Yes */
+        re15_item_modal_tick(0x4000, 0);                 /* text is up -> virtual confirm = Yes */
         CHECK("confirm(Yes) grants + ends the modal", !re15_item_modal_active() && inv_has(0x15));
     }
 
@@ -88,11 +88,11 @@ int main(void)
         run_to_prompt(NULL, NULL);
         CHECK("No-path: take-prompt up", re15_item_modal_prompt(NULL, NULL) == 1);
         run_reveal();                                 /* type the text out first */
-        re15_item_modal_tick(0x1000 | 0x4000);        /* virt menu-L toggle -> No, then confirm */
+        re15_item_modal_tick(0x1000 | 0x4000, 0);        /* virt menu-L toggle -> No, then confirm */
         int saw_shrink = 0, guard = 0;
         while (re15_item_modal_active() && guard++ < 200) {
             if (re15_item_modal_state() == 8) saw_shrink++;
-            re15_item_modal_tick(0);
+            re15_item_modal_tick(0, 0);
         }
         CHECK("No: shrink-away ran 17 frames", saw_shrink == 17);
         CHECK("No: item 0x15 NOT granted (declined)", !inv_has(0x15));
@@ -106,11 +106,11 @@ int main(void)
         run_to_prompt(NULL, NULL);
         CHECK("full: can't-carry prompt (2)", re15_item_modal_prompt(NULL, NULL) == 2);
         run_reveal();                                 /* type the text out first */
-        re15_item_modal_tick(0x4000);                 /* any confirm dismisses */
+        re15_item_modal_tick(0x4000, 0);                 /* any confirm dismisses */
         int saw_shrink = 0, guard = 0;
         while (re15_item_modal_active() && guard++ < 200) {
             if (re15_item_modal_state() == 8) saw_shrink++;
-            re15_item_modal_tick(0);
+            re15_item_modal_tick(0, 0);
         }
         CHECK("full: shrink-away ran 17 frames", saw_shrink == 17);
         CHECK("full: item 0x24 NOT granted", !inv_has(0x24));
@@ -120,12 +120,12 @@ int main(void)
     {
         re15_inv_init();
         re15_item_modal_start(0x15, 10, 0, -1);
-        re15_item_modal_tick(0);                       /* into state 2 */
+        re15_item_modal_tick(0, 0);                       /* into state 2 */
         uint8_t before = re15_item_modal_state();
         re15_item_modal_start(0x03, 1, 0, -1);         /* must be ignored */
         CHECK("guard: second start ignored", re15_item_modal_state() == before);
         int guard = 0;
-        while (re15_item_modal_active() && guard++ < 200) re15_item_modal_tick(0x4000);  /* Yes to finish */
+        while (re15_item_modal_active() && guard++ < 200) re15_item_modal_tick(0x4000, 0);  /* Yes to finish */
         CHECK("guard: only the FIRST item granted (0x15, not 0x03)", inv_has(0x15) && !inv_has(0x03));
     }
 
@@ -135,12 +135,62 @@ int main(void)
         re15_item_modal_start(0x15, 50, 0, -1);
         int qx[4], qy[4], face; uint8_t type;
         CHECK("init frame: no quad yet", re15_item_modal_quad(qx, qy, &type, &face) == 0);
-        re15_item_modal_tick(0);                       /* state 1 -> 2 */
-        re15_item_modal_tick(0);                       /* first zoom frame */
+        re15_item_modal_tick(0, 0);                       /* state 1 -> 2 */
+        re15_item_modal_tick(0, 0);                       /* first zoom frame */
         int drew = re15_item_modal_quad(qx, qy, &type, &face);
         CHECK("zoom: quad drawn with the right item type", drew == 1 && type == 0x15);
         int guard = 0;
-        while (re15_item_modal_active() && guard++ < 200) re15_item_modal_tick(0x4000);
+        while (re15_item_modal_active() && guard++ < 200) re15_item_modal_tick(0x4000, 0);
+    }
+
+    /* ---- (6) TEXT FAST-FORWARD (byte-true FUN_80028134 @0x800281d8-0x80028238) ----
+     * The item prompt is typed by the SHARED message VM (state 5 opens it as type 0x100
+     * @0x8001df6c-94, and type 0x100 sets the FF-enable byte DAT_800b8522 = 0x80 @0x80027f28), so
+     * HOLDING virtual 0x4000 (= physical SQUARE, preset @0x80073dbc[14]) must accelerate it 4x:
+     *   timer -= 4 instead of 1 (@0x80028228 vs @0x800281f0) AND 2 glyphs per expiry
+     *   (@0x80028238, gated on reload < 4 @0x8002822c; reload = 2<<s1 = 2 @0x800281b0-c4).
+     * With seed 1 (@0x800281a0-ac) and reload 2, N glyphs cost:
+     *   held   : 1 + ceil((N-1)/2) ticks   (first tick lands the timer exactly on 0 -> budget 1)
+     *   normal : 1 + 2*(N-1) ticks
+     * EDGE-only (the pre-existing case (1) feed) must NOT accelerate — the VM reads the HELD word
+     * DAT_800ac768 (@0x8002820c), never the edge word. */
+    {
+        int n_norm = 0, n_held = 0, n_edge = 0, glyphs = 0, guard;
+
+        re15_inv_init(); re15_item_modal_start(0x15, 50, 0, -1); run_to_prompt(NULL, NULL);
+        glyphs = re15_item_modal_reveal_total();
+        guard = 0;
+        while (re15_item_modal_active() && !re15_item_modal_prompt_ready() && guard++ < 500) {
+            re15_item_modal_tick(0, 0); n_norm++;
+        }
+        while (re15_item_modal_active() && guard++ < 600) re15_item_modal_tick(0x4000, 0);
+
+        re15_inv_init(); re15_item_modal_start(0x15, 50, 0, -1); run_to_prompt(NULL, NULL);
+        guard = 0;
+        while (re15_item_modal_active() && !re15_item_modal_prompt_ready() && guard++ < 500) {
+            re15_item_modal_tick(0, 0x4000); n_held++;      /* HELD virtual 0x4000 -> fast-forward */
+        }
+        while (re15_item_modal_active() && guard++ < 600) re15_item_modal_tick(0x4000, 0);
+
+        re15_inv_init(); re15_item_modal_start(0x15, 50, 0, -1); run_to_prompt(NULL, NULL);
+        guard = 0;
+        while (re15_item_modal_active() && !re15_item_modal_prompt_ready() && guard++ < 500) {
+            re15_item_modal_tick(0x4000, 0); n_edge++;      /* EDGE only -> must stay at base speed */
+        }
+        while (re15_item_modal_active() && guard++ < 600) re15_item_modal_tick(0x4000, 0);
+
+        printf("  [ff] glyphs=%d  normal=%d ticks  held=%d ticks  edge-only=%d ticks\n",
+               glyphs, n_norm, n_held, n_edge);
+        CHECK("ff: prompt has glyphs to type", glyphs > 0);
+        CHECK("ff: base cadence = 1 + 2*(N-1) ticks (seed 1 @0x800281a0-ac, reload 2 @0x800281b0-c4)",
+              n_norm == 1 + 2 * (glyphs - 1));
+        CHECK("ff: HELD 0x4000 = 1 + ceil((N-1)/2) ticks (-4/tick @0x80028228 + 2 glyphs @0x80028238)",
+              n_held == 1 + (glyphs - 1 + 1) / 2);
+        /* Steady-state speed-up is exactly 4x (-4 vs -1 per tick x 2 vs 1 glyph); the measured
+         * TOTALS carry the shared 1-tick seed frame, so 32 glyphs = 63 vs 17 ticks (3.7x). */
+        CHECK("ff: HELD is >3x faster than base", n_held * 3 < n_norm);
+        CHECK("ff: EDGE-only does NOT accelerate (VM reads HELD DAT_800ac768 @0x8002820c)",
+              n_edge == n_norm);
     }
 
     if (g_fail) { printf("ITEM-MODAL: FAIL\n"); return 1; }

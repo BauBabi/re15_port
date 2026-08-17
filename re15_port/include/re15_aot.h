@@ -104,6 +104,13 @@ typedef struct {
     uint8_t  band;
     uint8_t  door_hold;   /* DOOR only: byte-true 9-frame press-and-hold accumulator (obj+0x8C,
                            * FUN_8002bd44) — the door opens when this reaches 9, not on a tap-edge */
+    uint16_t pause_mask16;/* MESSAGE (sce=1) only: das Payload-Halbwort u16@+2 des Records.
+                           * Handler LAB_80043084 reicht es als param_4 = mask<<16 an
+                           * FUN_80027e68 weiter (@0x80043098 `lhu a3,2(v0)`, @0x800430a4
+                           * `sll a3,a3,16`), das damit g_pauseflags ver-ODERt (@0x80027ed0)
+                           * = der globale Text-Freeze. Der Port hat dieses Halbwort bisher
+                           * VERWORFEN, deshalb lief bei offenem Examine-Text alles weiter.
+                           * Census (240 RDTs): ALLE 511 sce-1-Installs tragen 0xffff. */
     int16_t  xs[4];       /* quad corners X (LE from RDT zone) */
     int16_t  zs[4];       /* quad corners Z */
     int32_t  x;           /* axis-aligned rect, XZ plane (PSX world units) */
@@ -255,6 +262,8 @@ void re15_aot_reset(int slot);
 /* Re-type an existing AOT slot into an EXAMINE/MESSAGE AOT (sce=1), keeping its rect.
  * `msg_index` = the .msg index shown on action. Used by Aot_reset(slot, sce=1, msg). */
 void re15_aot_set_message(int slot, uint8_t msg_index);
+/* Wie oben, plus das Pause-Halbwort u16@+2 des Payloads (siehe re15_aot_t.pause_mask16). */
+void re15_aot_set_message_mask(int slot, uint8_t msg_index, uint16_t pause_mask16);
 
 /* Aot_reset (0x46) = FULL RETYPE (byte-true LAB_80040738): rec[0] = new sce (@0x80040764),
  * rec[1] = (old_flags & 0x80) + pc[3] (@0x8004076c-78), payload halfwords +0xC/+0xE/+0x10

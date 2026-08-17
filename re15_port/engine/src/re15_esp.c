@@ -11,6 +11,7 @@
  * TIM @0x1A628/0x1CA68). See re15_esp.h for the format. Parse/index only — no rendering.
  */
 #include "re15_esp.h"
+#include "re15_scd.h"   /* g_re15_pauseflags + RE15_PAUSE_ACTION — Selbst-Gate @0x80019e40 */
 #include <string.h>
 
 extern uint8_t re15_engine_rand8(void);   /* the shared FUN_8001af20 draw (re15_damage.c) */
@@ -603,6 +604,22 @@ void re15_esp_fx_splatter(const re15_esp_t *bank, uint8_t effect_id, int n,
 
 void re15_esp_fx_tick(const re15_esp_t *bank)
 {
+    /* ANIM-/FX-FREEZE (Bit 0x10000000) — SELBST-GATE, byte-true zum Prolog derselben
+     * Original-Funktion, deren Rumpf dieser Treiber portiert (Fix-Runde Cluster 1, Fund 5;
+     * selbst nachdisassembliert 2026-08-17, info/Re1.5/PSX.EXE):
+     *   80019e20  addiu sp,sp,-32
+     *   80019e28  lw   v0,-13760(v0)      v0 = g_pauseflags (0x800aca40)
+     *   80019e2c  lui  v1,0x1000
+     *   80019e3c  and  v0,v0,v1
+     *   80019e40  bne  v0,zero,0x8001a4a4 -> 0x8001a4a4 ist der REINE Epilog
+     *                                        (`lw ra,28(sp)` .. @0x8001a4b8 `jr ra`)
+     * Der komplette Rumpf faellt also aus, solange Bit 0x10000000 steht — deshalb stehen im
+     * Original bei offenem Examine-Text auch die Partikel und nicht nur die Entscheidungen.
+     * Das Gate sitzt hier (nicht am Aufrufer), weil das Original es ebenfalls im Prolog der
+     * Funktion selbst traegt; damit gilt es fuer PC- UND PSX-Loop gleichermassen.
+     * (Die ANDERE Haelfte derselben Original-Funktion, die Keyframe-Integration, ist in
+     *  game_step_common.c mit denselben Adressen gegatet.) */
+    if (g_re15_pauseflags & RE15_PAUSE_ACTION) return;
     /* Byte-true FUN_80019e20 frame timer (L117-131): when the per-slot timer hits 0, advance
      * the anim-record index; the new record's param-low byte = its duration, 0xFF = loop back
      * to the record's desc-low byte, 0/0 (duration & loop-target both 0) = end -> despawn.

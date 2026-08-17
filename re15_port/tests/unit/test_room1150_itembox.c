@@ -37,6 +37,7 @@
 #include "re15_item_modal.h"
 #include "re15_savepoint.h"
 #include "re15_itembox.h"
+#include "re15_msg.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -96,6 +97,25 @@ static int fire_examine(int *saw_cut8)
         if (g_scd.cam_id == 8) *saw_cut8 = 1;
     }
     return 0;
+}
+
+/* MESSAGE-PUMP — der Dialog-FSM laeuft im Original TOP-LEVEL und UNGEGATET
+ * (FUN_800280b4 @0x800280c8-dc, Caller @0x80010044): der Text tickt und laesst sich
+ * wegdruecken, waehrend Spieler/AI/Skript stehen. Braucht dieser Test seit dem globalen
+ * Text-Freeze, weil ROOM1150 sub07 `Message_on(3)` mit Maske 0xffff traegt (Census
+ * 2026-08-17: sub @0x10fa `2b 03 ff ff`) und die VM danach bis zum Dismiss steht
+ * (SCD-Gate @0x8003f04c). */
+static void msg_pump(void)
+{
+    extern uint16_t g_scd_pad_edge;
+    extern uint16_t g_scd_pad_held;
+    for (int i = 0; i < 600 && g_scd.message_active; i++) {
+        g_scd_pad_held = 0x4000;   /* HELD virt. 0x4000 = Fast-Forward @0x80028214 */
+        g_scd_pad_edge = 0x4000;   /* Press-Edge = Confirm/Dismiss @0x80028570/@0x80028698 */
+        re15_msg_tick(0, 0, 0);
+    }
+    g_scd_pad_held = 0;
+    g_scd_pad_edge = 0;
 }
 
 int main(void)
@@ -235,8 +255,23 @@ int main(void)
         if (g_scd.message_query != 0) {
             fprintf(stderr, "FAIL(5): plain message must not be a YES/NO query\n"); fail = 1;
         }
-        if (!saw_cut8 || g_scd.cam_id != cut_before || !g_scd.cut_auto_enabled) {
-            fprintf(stderr, "FAIL(5): shipped mode camera round trip broken\n"); fail = 1;
+        /* GLOBALER TEXT-FREEZE (byte-true, RE 2026-08-17): sub07 ist
+         *   Cut_chg(8) ; Message_on(3, Maske 0xffff) ; Evt_next ; Cut_old ; Nop ; Cut_auto(1)
+         * Das Message_on ver-ODERt 0xffff0000 in g_pauseflags (@0x80040508 `lhu a3,2(v0)` +
+         * @0x8004051c `sll a3,16` -> @0x80027ed0), das SCD-Gate @0x8003f04c haelt die VM ab
+         * dem Folgeframe an. Die Nahaufnahme (Cut 8) STEHT also, solange der Text laeuft —
+         * genau dafuer ist der Freeze da. Cut_old/Cut_auto laufen erst NACH dem Dismiss
+         * (Restore @0x800285a4/@0x800286cc/@0x8002871c). */
+        if (!saw_cut8 || g_scd.cam_id != 8) {
+            fprintf(stderr, "FAIL(5): close-up cut 8 must HOLD while the frozen text is up "
+                            "(cam_id=%d)\n", g_scd.cam_id); fail = 1;
+        }
+        msg_pump();                       /* Text wegdruecken -> Snapshot-Restore */
+        for (int i = 0; i < 8; i++) scd_vm_tick();
+        if (g_scd.cam_id != cut_before || !g_scd.cut_auto_enabled) {
+            fprintf(stderr, "FAIL(5): camera round trip after dismiss broken "
+                            "(cam_id=%d want %d, auto=%d)\n",
+                    g_scd.cam_id, cut_before, g_scd.cut_auto_enabled); fail = 1;
         }
         if (re15_itembox_pending()) {
             fprintf(stderr, "FAIL(5): shipped mode must NOT raise the box pending\n");

@@ -69,4 +69,42 @@ if(NOT first_blit MATCHES "F0 blit room1240#00 \\(room=1240\\)")
     message(FATAL_ERROR "boot_bg_pin: erster Blit ist nicht ROOM1240 cut 0: '${first_blit}'")
 endif()
 
-message(STATUS "boot_bg_pin OK: '${first_blit}', kein room1170 im Boot-Fenster")
+# 3) NEGATIV-FALL (Nutzer-Report 2026-08-17 "ROOM1170-Blitzer nach Charakterwahl"):
+#    Der Boot-Pfad darf bei einem BG-Load-FEHLSCHLAG NIEMALS `DATA/TEST.BSS` malen —
+#    diese Datei ist BYTE-IDENTISCH zu BSS/ROOM1170/BG00.BSS (= das Helipad), und
+#    re15_bg_load_test_asset() aktualisiert nicht einmal s_bg_tag (bg_pc.c:184-209), d.h.
+#    der [bg-log]-Blit haette weiter den ALTEN Tag gemeldet, waehrend die Pixel ROOM1170
+#    sind — Fehlschlag 1) oben faengt den Fall also gar nicht. Original-SOLL ist
+#    SCHWARZ-HALTEN: Raumlader-Boot-Zweig `ori a0,0x2; jal 0x80021634; addu a1,zero,zero`
+#    @0x8001d620-28, Freigabe erst @0x8001dadc-ec. Da sich ein Load-Fehlschlag hier nicht
+#    deterministisch erzwingen laesst (alle Assets sind vorhanden), pinnt der Test die
+#    QUELLE: die Falle muss aus dem Boot-Pfad verschwunden sein.
+if(RE15_PC_MAIN AND EXISTS "${RE15_PC_MAIN}")
+    # Nur ECHTE Aufrufe zaehlen — Kommentarzeilen (fuehrendes '*' oder '/*') beschreiben die
+    # entfernte Falle und duerfen den Pin nicht ausloesen.
+    file(STRINGS "${RE15_PC_MAIN}" tst_lines REGEX "re15_bg_load_test_asset\\(")
+    foreach(line IN LISTS tst_lines)
+        if(NOT line MATCHES "^[ \t]*(\\*|/\\*|//)")
+            message(FATAL_ERROR "boot_bg_pin: platform/pc/main.c ruft wieder "
+                                "re15_bg_load_test_asset() — TEST.BSS == BSS/ROOM1170/BG00.BSS "
+                                "(Helipad). Byte-true ist SCHWARZ-HALTEN "
+                                "(@0x8001d620-28 .. @0x8001dadc-ec). Zeile: '${line}'")
+        endif()
+    endforeach()
+    file(STRINGS "${RE15_PC_MAIN}" fail_log_lines REGEX "BOOT-BG LOAD FAILED")
+    if(NOT fail_log_lines)
+        message(FATAL_ERROR "boot_bg_pin: der ungegatete Boot-BG-Fehlschlag-Log fehlt in "
+                            "platform/pc/main.c (ein echter Load-Fehlschlag beim Nutzer muss im "
+                            "debug.log selbstbeweisend sein).")
+    endif()
+else()
+    message(WARNING "boot_bg_pin: RE15_PC_MAIN nicht gesetzt — Negativ-Fall uebersprungen")
+endif()
+
+# 4) Im gruenen Lauf darf der Fehlschlag-Pfad gar nicht erst feuern.
+file(STRINGS "${WORKDIR}/debug.log" fail_lines REGEX "BOOT-BG LOAD FAILED")
+if(fail_lines)
+    message(FATAL_ERROR "boot_bg_pin: Boot-BG-Load ist fehlgeschlagen: '${fail_lines}'")
+endif()
+
+message(STATUS "boot_bg_pin OK: '${first_blit}', kein room1170 im Boot-Fenster, kein TEST.BSS-Fallback")

@@ -86,6 +86,21 @@ if(TARGET re15_pc)
              COMMAND "${CMAKE_COMMAND}"
                      -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
                      -DWORKDIR=${CMAKE_CURRENT_BINARY_DIR}/bootbg_wd
+                     -DRE15_PC_MAIN=${CMAKE_CURRENT_SOURCE_DIR}/../../platform/pc/main.c
                      -P ${CMAKE_CURRENT_SOURCE_DIR}/test_boot_bg_pin.cmake)
     set_tests_properties(integration_boot_bg_pin PROPERTIES TIMEOUT 120)
+
+    # --- Re-Latch-Pin (Nutzer-Reports 2026-08-17): prozess-lange `static`-Latches duerfen den
+    #     In-Process-Reboot nach dem Tod (`goto re_title`) NICHT ueberleben. Faehrt zwei volle
+    #     Boots (Title-Auto-Advance -> NEW GAME -> RE15_KILL_AT -> Titel -> NEW GAME) und prueft,
+    #     dass die Waffen-Anim-Bank in JEDEM Boot neu gebunden wird (Original: FUN_800314b0
+    #     `jal FUN_80036b68` @0x800316f0, unbedingt); dazu der Quell-Pin fuer den
+    #     Player-Select-TIM-Re-Upload pro Entry (@0x80101870). ~23s gemessen. ---
+    add_test(NAME integration_relatch_pin
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_CURRENT_BINARY_DIR}/relatch_wd
+                     -DRE15_PC_MAIN=${CMAKE_CURRENT_SOURCE_DIR}/../../platform/pc/main.c
+                     -P ${CMAKE_CURRENT_SOURCE_DIR}/test_relatch_pin.cmake)
+    set_tests_properties(integration_relatch_pin PROPERTIES TIMEOUT 240)
 endif()

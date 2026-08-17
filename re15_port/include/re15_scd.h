@@ -382,6 +382,58 @@ void re15_game_state_init(void);
 int  re15_game_flag_get(uint8_t zone, uint8_t idx);     /* 0 or 1 */
 void re15_game_flag_set(uint8_t zone, uint8_t idx, int value);
 
+/*=========================================================================
+ * GLOBALE PAUSE-FLAGS = DAT_800aca40 (byte-true, RE 2026-08-17).
+ *
+ * DAS ist der Mechanismus hinter "wenn man im Original einen Text liest,
+ * friert alles andere ein". Er ist DATEN-getrieben, nicht pauschal:
+ *
+ *   FUN_80027e68 (Message-Open) bekommt die Maske als param_4 und macht
+ *     @0x80027e74  lbu v0,DAT_800b8520 / @0x80027e7c andi 0x80 / @0x80027e80 beq
+ *                  -> schon offen: `j 0x800280ac; addiu v0,zero,-1` (KEIN Re-Save)
+ *     @0x80027eb4  lw  v0,0(a0)          a0 = 0x800aca40 (@0x80027e98 addiu a0,a0,-13760)
+ *     @0x80027ec8  sw  v0,DAT_800b853c   <- SNAPSHOT des Vorzustands
+ *     @0x80027ecc  or  v0,a3,v0
+ *     @0x80027ed0  sw  v0,0(a0)          <- g_pauseflags |= Maske
+ *
+ * Die Maske kommt aus den ROOM-DATEN:
+ *   SCD 0x2B Message_on @0x800404f4: @0x80040508 `lhu a3,2(v0)` + @0x8004051c `sll a3,16`
+ *   sce-1 Examine-AOT   @0x80043084: @0x80043098 `lhu a3,2(v0)` + @0x800430a4 `sll a3,16`
+ * Eigener Census ueber alle 240 ausgelieferten RDTs (2026-08-17):
+ *   Message_on 698x -> 420x 0x0000 (Untertitel: KEIN Freeze), 34x 0xff80, 244x 0xffff
+ *   sce-1 AOT  511x -> ALLE 0xffff  (=> JEDER Examine-Text friert die Welt ein)
+ *   ROOM1240 (6) + ROOM1170 (16) Kino-Captions: ALLE 0x0000 -> Cutscenes laufen weiter.
+ *
+ * Close = Snapshot-Restore (FUN_80028134): @0x800285a4 (Select-Confirm),
+ * @0x800286cc (End-Wait), @0x8002871c (Hold-N-Timeout) — jeweils
+ * `lw a0,DAT_800b853c` -> `sw a0,0x800aca40`.
+ * Raumwechsel loescht das Wort komplett: @0x8001ca44 / @0x8001caec `sw zero,0x800aca40`.
+ *
+ * Jeder Leser gated sich SELBST auf sein eigenes Bit (Haupt-Loop ruft alles
+ * IMMER, @0x8001cdec..@0x8001ce34).
+ *=========================================================================*/
+#define RE15_PAUSE_PLAYER  0x80000000u  /* Spieler-Dispatcher FUN_80031c44: @0x80031c54 `lw a0,g_pauseflags`
+                                         * + @0x80031c78 `bltz a0,0x80031da8` (Vorzeichen-Bit) */
+#define RE15_PAUSE_AI      0x20000000u  /* alle AI-Roots, exemplarisch Live-Zombie FUN_80100424 (STAGE1.BIN):
+                                         * @0x8010042c lw / @0x80100430 `lui v1,0x2000` / @0x80100438 and /
+                                         * @0x8010043c `bne -> 0x80100658` */
+#define RE15_PAUSE_ACTION  0x10000000u  /* Action-Driver / Model-Instance-Animator FUN_80019e20:
+                                         * @0x80019e28 lw / @0x80019e2c `lui v1,0x1000` / @0x80019e3c and /
+                                         * @0x80019e40 `bne -> 0x8001a4a4` */
+#define RE15_PAUSE_SCD     0x02000000u  /* SCD-Frame-Runner FUN_8003f038: @0x8003f040 lw /
+                                         * @0x8003f044 `lui v1,0x200` / @0x8003f04c `bne -> 0x8003f090` */
+#define RE15_PAUSE_PAD     0x01000000u  /* Pad-Remap FUN_80030444: @0x800304f4 lw / @0x800304f8 `lui v1,0x100` /
+                                         * @0x80030500 beq / @0x80030514 `andi v0,v0,0xf000` /
+                                         * @0x8003051c `sw 0x800ac768` (Held-Wort; das Edge-Wort
+                                         * 0x800ac76c wird DANACH daraus gebildet, Decompile Z.26) */
+
+extern uint32_t g_re15_pauseflags;        /* DAT_800aca40 */
+extern uint32_t g_re15_pauseflags_saved;  /* DAT_800b853c — Snapshot fuer den Restore */
+
+void re15_pauseflags_open(uint32_t mask);  /* @0x80027eb4-ed0 (mit Open-Guard @0x80027e74) */
+void re15_pauseflags_close(void);          /* @0x800285a4 / @0x800286cc / @0x8002871c */
+void re15_pauseflags_clear(void);          /* @0x8001ca44 / @0x8001caec (Raumwechsel) */
+
 /* Object (prop) work-entity member access — Work_set kind 3. member 15 = member_0b = the
  * combination-lock NOTCH (S1-4 PROG-3 keypad dial). */
 int32_t re15_prop_get_member(int prop_idx, uint8_t member_id);

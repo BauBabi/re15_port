@@ -997,6 +997,13 @@ static void re2z_exec_knockdown(re15_actor_t *e)
         }
         break;
     default:                                                       /* P8 @0x801036F4 */
+        /* ⛔ OPEN (Batch B1, Folge-RE — VISUELL, nicht im State-Log sichtbar): P8 committet
+         * `addiu v0,zero,257` @0x801036F4 / `sw v0,4(s2)` @0x801036F8 = 0x101 DIREKT in den WALK —
+         * der Zombie schnappt aus der Liege in den Gang, OHNE EXEC[9] Get-up (gemessen s1 5->1,
+         * nie 9). Selbst nachdisassembliert und byte-true so uebernommen. Zu klaeren bleibt, ob der
+         * Original-WALK-/STAND-Decide das Liege-Latch `+0x21A & 0x200` (gesetzt in P0
+         * @0x801032F4) konsumiert und dann doch 0x901 einschiebt — dafuer decide[1] @0x80101714 auf
+         * `lhu 538(s0)`-Reads scannen. Bis dahin KEIN Port-Eingriff (waere geraten). */
         re15_ai_set_state_word(e, 0x101);                          /* sw 0x101 @0x801036F4-F8 */
         e->grid_id &= (uint8_t)0x7Fu;                              /* PORT-MAPPING (Review #18):
                                                                     * Downed-Band-Clear beim
@@ -1445,7 +1452,33 @@ static void re2z_state8(re15_actor_t *e)
 /* ---- INIT (state 0) @0x8010065C ------------------------------------------------------------ */
 static void re2z_init(int slot, re15_actor_t *e)
 {
-    uint8_t sel = (uint8_t)(e->grid_id & 0x1f);                    /* RE1.5 spawn behavior nibble */
+    uint8_t beh = e->grid_id;                                      /* Sce_em_set pc[3] (+0x9) */
+    uint8_t sel = (uint8_t)(beh & 0x1f);                           /* RE1.5 spawn behavior nibble */
+    /* Liege-Familien des RE1.5-Posenpakets, GENAU wie dort auf Bit 0x80 gegated
+     * (`lbu v1,9(v0); andi v0,v1,0x80; beq -> 0x80100e30` @0x80100ca4-b0).
+     *
+     * ⚠ ZITAT KORRIGIERT (2026-08-17, Review-Fund F5): hier stand frueher "GENAU ZWEI
+     * Liege-Familien". Unter DEMSELBEN 0x80-Gate liegen in STAGE1.BIN DREI sel-Decoder
+     * (selbst disassembliert, roh @0x80100000):
+     *   @0x80100cb8-ce0  sel {4,7,9}   -> +0x94 = 0x0c
+     *   @0x80100cfc-d24  sel {5,8,0xa} -> +0x94 = 0x0e
+     *   @0x80100d3c-d68  sel {1,3}     -> +0x94 = 0x0c (`ori v0,zero,0xc` @0x80100d54 /
+     *                                     `sb v0,148(a0)` @0x80100d58)
+     *                                     UND +0x5 = 5 (`ori v0,zero,0x5` @0x80100d64 /
+     *                                     `sb v0,5(v1)` @0x80100d68)
+     *   danach EIN gemeinsames f314 @0x80100da0 (+0x95=0 @0x80100d78, +0x8f=0 @0x80100d88)
+     *   @0x80100dc0-de8  FINAL sel {4,7,9}   -> +0x94 = 0x12
+     *   @0x80100e04-e2c  FINAL sel {5,8,0xa} -> +0x94 = 0x13
+     * Der DRITTE Zweig bekommt KEIN FINAL — er behaelt 0x0c und traegt zusaetzlich den
+     * Sub-State 5 (die RE1.5-Lane bildet ihn in enemy_ai_common.c bereits so ab).
+     * Ausgeliefert erreichbar: beh 0x81 in ROOM1010/1011/1220/1221/4050/4051/5060/5061,
+     * beh 0x83 in ROOM3010/3011.
+     * Folge fuer den RE2-Flavor: {1,3} gehoeren zu den GEGATETEN Liege-Spawns und werden wie
+     * {4,5,7,8,9,0xa} auf den Liege-Executor EXEC[7] abgebildet (PORT-OPTION, dokumentiert) —
+     * sonst faellt beh 0x81/0x83 in den finalen else-Zweig, `re15_ai_set_state_word(e, 0x1)`
+     * ueberschreibt den vom RE1.5-Live-INIT geseedeten sub_state_1=5, und die Leiche steht auf. */
+    int lying_family = (sel == 1 || sel == 3 || sel == 4 || sel == 5 || sel == 7 ||
+                        sel == 8 || sel == 9 || sel == 0x0a);
     /* the RE1.5 live-init supplies the PORT spawn data (HP row @0x8011f034, steer seed) — RE2
      * room data does not exist in RE1.5 rooms, so this is the byte-true data source. Its RE1.5
      * sub-state/motion writes are overridden below with the RE2 seeds. */
@@ -1467,6 +1500,53 @@ static void re2z_init(int slot, re15_actor_t *e)
         e->re2z_walkclip = re2z_param_walk[(r1 >> (r2 & 3u)) & 7u];
     }
     e->re2z_res223 = (int8_t)(16 + (re2z_rand() & 0xfu));          /* @0x80100888-9C */
+    /* +0x21A Bit 0x8000 = "dieser Zombie laeuft mit Frame-Wort-SEs (und dem Extra-Turn)" —
+     * eines der beiden Sub-Gates vor dem Drittel-Takt der WALK-/BUMP-Executoren
+     * (@0x80101cf4-f8 / @0x80102414-18, siehe enemy_ai_common.c re15_enemy_anim_sfx).
+     * INIT-Produzent, selbst disassembliert:
+     *   80100894: lbu v1,8(s2)                 ; Entity-Typ
+     *   801008a0: addiu v0,zero,17             ; 0x11
+     *   801008bc: bne v1,v0,0x801008d8         ; nur Typ 0x11 faellt durch
+     *   801008c4: lhu v0,538(s2)
+     *   801008c8: addiu v1,zero,250
+     *   801008cc: sh  v1,342(s2)               ; +0x156 = HP = 250  (NICHT portiert, s.u.)
+     *   801008d0: ori v0,v0,0x8000
+     *   801008d4: sh  v0,538(s2)               ; +0x21A |= 0x8000
+     * WICHTIG ZUM ZEITPUNKT: das ist der INIT-HANDLER (Zustand 0, Tabelle @0x8010C830) — im
+     * Original wie im Port laeuft er im ERSTEN KI-TICK der Entity, NICHT beim Sce_em_set-Spawn.
+     * Wer das Bit direkt nach dem Spawn liest (ohne einen re15_enemy_ai_run_all-Tick), sieht
+     * korrekterweise 0.
+     *
+     * OPEN (nicht erfunden): @0x801008D8-0x80100950 setzt dasselbe Bit fuer 1 von 3 zufaelligen
+     * Zombies, aber nur wenn das RE2-Spielglobal DAT_800cfb74 Bit 0x40 traegt
+     * (`lw v0,-1164(v0)` @0x801008DC, `andi v0,v0,0x40` @0x801008E4, `beq -> 0x80100954`
+     * @0x801008E8; Rest-3-Test @0x80100900-28; `+0x223 = (rand&0xf)+32` @0x80100944-4C).
+     * Der Port hat kein Gegenstueck zu diesem RE2-Global -> Pfad bleibt OPEN.
+     *
+     * ⚠ +0x156 = 250 (@0x801008C8-CC) BEWUSST NICHT PORTIERT — begruendet, nicht vergessen:
+     * +0x156 ist das HP-Halbwort (dasselbe, das re2z_corpse als `sh -1,342` @0x8010A4D4 auf -1
+     * setzt und das die Death-/Hurt-Pfade lesen). Die 250 sind EINE Zeile des KOMPLETTEN
+     * RE2-HP-Modells, das dieser Port bewusst nicht verwendet: der RE2-INIT wuerfelt die HP
+     * sonst aus drei Tabellen — `lhu v0,-14736(at)`/`sh v0,342(s2)` @0x80100708-10 (Tabelle
+     * 0x8010C670), @0x80100750-58 (0x8010C690), @0x80100784-8C (0x8010C600), je ueber einen
+     * (rand>>(rand&3))&0xf-Index. Der Port nimmt die HP stattdessen aus dem RE1.5-Live-INIT
+     * (HP-Zeile @0x8011f034), weil es fuer RE1.5-Raeume keine RE2-Raumdaten gibt. NUR die 250
+     * nachzuziehen wuerde ein halbes Modell aufpfropfen: gemessen bekommt der ROOM1140-Typ-0x11
+     * damit 250 statt 71 HP (3.5x zaeher) — eine Kampf-Balance-Aenderung ohne Beleg dafuer, dass
+     * sie zum uebrigen (RE1.5-)HP-Satz passt. Zitiert, offen gefuehrt, nicht erfunden.
+     *
+     * NULL-STORES DESSELBEN BLOCKS (@0x801008A4-C0) — Port-Abgleich, damit die Luecke benannt ist:
+     *   `sh zero,538` @0x8010087C -> re2z_flags21a = 0            PORTIERT (oben)
+     *   `sb zero,546` @0x80100884 -> re2z_flag222 = 0             PORTIERT (oben)
+     *   `sb v0,536`   @0x8010088C -> re2z_walkclip                PORTIERT (oben)
+     *   `sb v0,547`   @0x8010089C -> re2z_res223                  PORTIERT (oben)
+     *   `sb zero,537` @0x80100880 (+0x219), `sb zero,560/561` @0x801008A4/A8 (+0x230/+0x231),
+     *   `sh zero,566` @0x801008AC (+0x236), `sb zero,569/570/571/572` @0x801008B0/B4/B8/C0
+     *   (+0x239/+0x23A/+0x23B/+0x23C): davon hat der Port NUR +0x239 (re2z_cd239, direkt darunter
+     *   genullt) und +0x219 (re2d_air219, ein HUND-Feld derselben Union — der Zombie-INIT nullt es
+     *   im Original mit, der Port haelt die Flavor-Felder getrennt). +0x230/+0x231/+0x236/+0x23A/
+     *   +0x23B/+0x23C haben im Port GAR KEIN Feld und auch keinen Leser -> nichts zu nullen. */
+    if (e->type == 0x11) e->re2z_flags21a |= 0x8000u;              /* @0x801008BC-D4 */
     e->re2z_prev_hp = e->hp;
     e->speed_h = 0;                                                /* +0x144 spawn-clean (kein Walk-
                                                                     * Writer; Attacken saeen 11) */
@@ -1484,7 +1564,34 @@ static void re2z_init(int slot, re15_actor_t *e)
                                                                     * (`addiu 18; sw 332`
                                                                     * @0x80100AD0-DC) — EXEC[8] P0
                                                                     * zieht naechsten Tick neu */
-    } else if (sel == 8 || sel == 0x0b || sel == 0x0e) {           /* lying -> ACTIVE sub 7 */
+    } else if (sel == 8 || sel == 0x0b || sel == 0x0e ||
+               (lying_family && (beh & 0x80u))) {                   /* lying -> ACTIVE sub 7 */
+        /* ⛔ D15.1 — Nutzer-Report ROOM1100 "Zombies nicht komplett korrekt positioniert":
+         * sel 7 (= behavior 0x87, die Slots 1/3 des Evidence-Korridors) fiel in den else-Zweig
+         * und STAND aufrecht zwischen den liegenden 0x88ern (2 von 5 "Leichen").
+         * Beleg: das RE1.5-Liege-Posenpaket (STAGE1.BIN roh, selbst disassembliert) — DREI
+         * sel-Decoder unter EINEM 0x80-Gate (Zitat korrigiert 2026-08-17, Review-Fund F5;
+         * hier stand frueher faelschlich "GENAU ZWEI Liege-Familien"):
+         *   Gate  `lbu v1,9(v0); andi v0,v1,0x80; beq -> 0x80100e30`   @0x80100ca4-b0
+         *   sel {4,7,9}   -> +0x94 = 0x0c  @0x80100cb8-e0   (Pose VOR dem f314)
+         *   sel {5,8,0xa} -> +0x94 = 0x0e  @0x80100cfc-d24
+         *   sel {1,3}     -> +0x94 = 0x0c  @0x80100d3c-58   UND +0x5 = 5 @0x80100d64-68
+         *   +0x95 = 0 @0x80100d78, +0x8f = 0 @0x80100d88
+         *   EIN  f314(+0x170/+0x174, a2=0, a3=0x200)        @0x80100da0
+         *   sel {4,7,9}   -> +0x94 = 0x12  @0x80100dc0-e8   ← FINAL (ueberschreibt 0x0c NACH f314)
+         *   sel {5,8,0xa} -> +0x94 = 0x13  @0x80100e04-e2c  ← FINAL
+         *   sel {1,3}     -> KEIN FINAL, behaelt 0x0c + Sub-State 5
+         * beh 0x87 -> sel 7 -> Clip 0x12, beh 0x88 -> sel 8 -> 0x13, beh 0x81/0x83 -> Clip 0x0c.
+         * Der RE2-Flavor hat keine RE1.5-Clip-Indizes, bildet aber ALLE DREI Familien auf
+         * denselben Liege-Executor EXEC[7] ab. sel 8 bleibt (wie bisher) ohne 0x80-Gate, damit die
+         * bestehenden ROOM1140/ROOM1100-Pins unveraendert greifen; 1/3/4/5/7/9/0xa sind exakt so
+         * gegated wie @0x80100cac. 0x0b/0x0e stammen aus dem ZWEITEN Decoder-Block, der NICHT auf
+         * 0x80 gegated ist (`andi v0,v0,0x1f` @0x80100e44/@0x80100ec8; scd_vm.c:3001/3003 =
+         * Clip 3 / 0x2A).
+         * ⚠ ENTFERNT (2026-08-17): die Zusatzbedingung `&& sel != 7` schloss ausgerechnet sel 7
+         * wieder aus — sie hatte KEINEN Byte-Beleg und widersprach sowohl diesem Kommentar als
+         * auch @0x80100cbc/@0x80100cd4 (sel 7 steht dort explizit in der ERSTEN Familie).
+         * PORT-OPTION (RE2-Flavor ist kein RE1.5-Original-Verhalten). */
         e->re2z_f10e = 0x4002u;                                    /* sh 0x4002,270 @0x80100A34-38 */
         re15_ai_set_state_word(e, 0x701);                          /* @0x801009E8-0x80100A84 */
     } else if (sel == 0x0d) {                                      /* pre-engaged -> WALK */
@@ -1512,6 +1619,45 @@ int re15_re2z_tick(int slot)
 
     if (e->state != 2) e->re2z_prev_hp = e->hp;                    /* HP snapshot for the HURT
                                                                     * resistance write-off */
+
+    /* ⛔ D15.2 GEFIXT — SKRIPT-WECKER fuer die Liegenden (Nutzer-Report ROOM1100: nach dem
+     * "Leichen erwachen"-Event passiert nichts). Das Weck-Signal des Spiels ist ein RE1.5-
+     * MECHANISMUS und existiert in der RE2-Overlay-KI nicht:
+     *   ROOM1100 sub02 fuehrt pro Zombie `Work_set(2,n); Member_set(12, 0x89 bzw. 0x8A)` aus.
+     *   Member 12 ist entity+0x9 — der Sprungtabellen-Fall endet mit `j 0x80041230` @0x800411f4
+     *   und dem Delay-Slot-Store **`sb a2,9(a0)` @0x800411f8**. Der Bump hebt das Liege-Nibble
+     *   7/8 auf 9/10.
+     *   In RE1.5 haengt an 9/10 der Dispatcher @0x8011f80c[9]/[10] = 0x801019f0, dessen DECIDE-Zeile
+     *   @0x8011f9dc[0] = 0x801039fc der SOFORT-WECKER ist (Gegenstueck: 7/8 -> @0x8011f9d8[0] =
+     *   0x801039f4 = `jr ra`-Stub = kein Selbstwecken). Port-Zwilling: enemy_ai_common.c case 9/10.
+     *   Der RE2-Brain liest den Nibble nach dem INIT nie -> die Liegenden blieben fuer immer in
+     *   s1==7 (gemessen 400+ Ticks ohne Transition).
+     * PORT-MAPPING (RE2-Flavor, dokumentiert): der Bump wird hier in die byte-true RE2-Kette
+     * uebersetzt — Get-up-Commit 0x901 = EXEC[9] @0x80103E48 (dasselbe Ziel, das der RE2-Liege-
+     * Executor selbst nach dem Limpet-Clear ansteuert), Limpet-Latch +0x10E &= ~0x4000 loesen
+     * und das Liege-Nibble wie beim regulaeren Aufstehen fallen lassen (re2z_exec_lying P4 /
+     * re2z_exec_getup, beide `grid_id = 0`). Damit uebernimmt die gestaffelte sub02-Kaskade
+     * (Sleep(10,20) zwischen den Bumps) dieselbe Dramaturgie wie in RE1.5.
+     * ⚠ MASKE KORRIGIERT (2026-08-17, Review-Fund F4): hier stand `&= ~0x4002`. Der EINZIGE
+     * +0x10E-Clear des Overlays loescht nur Bit 0x4000 —
+     *   80104f0c: andi v1,v1,0xbfff
+     *   80104f10: sh   v1,270(s0)
+     * (eigener Scan aller 84 +0x10E-Zugriffe in EMOVL10_S0.BIN: AND-Masken nur 0xbfff
+     * @0x80104F0C, 0xdfff @0x80103744/sh @0x8010374C und `andi 0xffc0; ori 0x1` @0x80104590-98).
+     * Bit 0x0002 ueberlebt im Original: die Low-6-Bits von +0x10E sind der State-1-Dispatch-
+     * Selektor (`lhu v0,270(a0)` @0x80101154, `andi 0x3f` @0x8010115C, Tabelle @0x8010C854)
+     * und werden nach dem INIT weitergelesen (`andi 0x3f; ==6` @0x80104A80-94). Der Spawn-Seed
+     * `addiu v0,zero,16386` / `sh v0,270(s2)` @0x80100A34-38 ist ein WRITE, kein Beleg fuer die
+     * Umkehrung. Gegenprobe in dieser Datei: dieselbe Instruktion ist an zwei weiteren Stellen
+     * korrekt als `~0x4000u` mit demselben Zitat @0x80104F0C abgebildet. */
+    {   uint8_t nib = (uint8_t)(e->grid_id & 0x0fu);
+        if (nib >= 9 && nib <= 10 && e->state == 1 && e->sub_state_1 == 7) {
+            re15_ai_set_state_word(e, 0x901);                      /* EXEC[9] Get-up @0x80103E48 */
+            e->re2z_f10e &= (uint16_t)~0x4000u;                    /* andi 0xbfff @0x80104F0C */
+            e->grid_id = 0;
+        }
+    }
+
     switch (e->state) {                                            /* table @0x8010C830 */
     case 0: re2z_init(slot, e); break;                             /* 0x8010065C */
     case 1: re2z_active(slot, e, pl);

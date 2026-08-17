@@ -988,7 +988,11 @@ static int pc_run_memcard_screen(int save_mode, const re15_savedata_t *sd, uint1
  * center (160,120); global view R=diag(4104,4096,4104), TR=(0,0,20039). Models at world POS
  * (Leon -1568 / Elza +1568, Y=2036, Z=0), rot_y 0x404, idle clip 2. Both drawn every frame. */
 typedef struct { re15_md1_t md1; re15_emd_skeleton_t skel; re15_emd_animation_t anim; int tim_slot; int ok;
-                 re15_md1_t wpn_md1; int wpn_ok; int wpn_tim_slot; } pselect_model_t;
+                 re15_md1_t wpn_md1; int wpn_ok; int wpn_tim_slot;
+                 /* the PARSED body TIM stays with the model so the caller can RE-UPLOAD it into the
+                  * VRAM slot on every select entry (see pselect_upload_tim). Its pixel/CLUT pointers
+                  * alias the resident file buffer read in pselect_load_model (never freed). */
+                 re15_tim_t tim; int tim_ok; } pselect_model_t;
 
 static void pselect_load_model(pselect_model_t *m, const char *md1p, const char *eddp,
                                const char *base_emrp, const char *kf_emrp, const char *timp, int tim_slot,
@@ -1017,8 +1021,11 @@ static void pselect_load_model(pselect_model_t *m, const char *md1p, const char 
             m->skel.keyframe_count     = (ksz - koff) / kfs;
         }
     }
-    re15_tim_t tim = {0}; int tsz = 0; uint8_t *tb = pc_read_shared(timp, &tsz);
-    if (tb && re15_tim_parse(tb, tsz, &tim) == 0) re15_render_pc_upload_tim_slot(&tim, tim_slot);
+    int tsz = 0; uint8_t *tb = pc_read_shared(timp, &tsz);   /* buffer stays resident (tim aliases it) */
+    if (tb && re15_tim_parse(tb, tsz, &m->tim) == 0) {
+        m->tim_ok = 1;
+        re15_render_pc_upload_tim_slot(&m->tim, tim_slot);
+    }
     /* EQUIPPED WEAPON (W03 handgun): the hand+gun mesh is PLW section [2] (de[2]..de[3]), drawn on
      * bone 11 at render time. It is textured from the character's BODY skin TIM (all its tris read
      * page 0x81 / clut 0x7840 = the same tpage as the body's hand mesh) — the PLW's own dir[3] TIM
@@ -1296,6 +1303,27 @@ static int pc_run_player_select(void)
          * player-select CD id 0x44 loads PL04, not the prototype's PL08 — that is why my earlier
          * "right = PL08" (proto-disc directory) rendered Jill. Elza also holds the W03 handgun idle. */
         pselect_load_model(&s_elza, "PLD/PL04.MD1", "PLD/PL04W03.EDD", "PLD/PL04.EMR", "PLD/PL04W03.EMR", "PLD/PL04.TIM", 21, "PLD/PL04W03.PLW", 23); }
+    /* PER-ENTRY VRAM RE-UPLOAD (fix Nutzer-Report "Modelle kaputt nach Tod -> NEW GAME", 2026-08-17).
+     * The mesh/anim/skeleton PARSE is a process-lifetime cache (above), but the TIM SLOTS are NOT ours
+     * between two select entries: every in-game boot overwrites slots 20-23 with the GLOBAL effect
+     * sheets (RE15_TIM_SLOT_EFFECT_GLOBAL=20 blood, FX_MUZZLE=21, FX_SMOKE=22, FX_SHELL=23 — main.c
+     * ~L2262-2284, one "[esp] global effect-* TIM -> slot N" line per boot in debug.log). Leon's body
+     * skin lives in slot 20 and Elza's in slot 21, so the SECOND select (after Tod -> Titel -> NEW GAME)
+     * rendered both characters out of the effect sheets = "Modelle kaputt".
+     * The original re-does BOTH the load and the VRAM upload on every select entry: the menu confirm
+     * REPLACES the title task with the select task (TITLE.BIN `addiu a0,0x80101094` @0x80102c98 +
+     * `jal 0x80029ba4` @0x80102c9c), whose scene-init FUN_80101720 (called @0x801011d8) CD-loads the
+     * models (`jal 0x80013b60` @0x80101808, file id from the table read @0x801017fc) and registers
+     * their TIMs into VRAM (`jal 0x80022150` @0x80101870, a0=2). There is no process-lifetime cache.
+     * The port keeps the parse cached (no CD here) but mirrors the VRAM half unconditionally. */
+    {
+        extern void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
+        if (s_leon.tim_ok) re15_render_pc_upload_tim_slot(&s_leon.tim, s_leon.tim_slot);  /* @0x80101870 */
+        if (s_elza.tim_ok) re15_render_pc_upload_tim_slot(&s_elza.tim, s_elza.tim_slot);
+        if (getenv("RE15_PSELECT_DIAG"))
+            fprintf(stderr, "PSELECT TIM RE-UPLOAD: leon slot %d ok=%d, elza slot %d ok=%d\n",
+                    s_leon.tim_slot, s_leon.tim_ok, s_elza.tim_slot, s_elza.tim_ok);
+    }
     /* Byte-true camera (wf_0aab308c): global view R=diag(4104,4096,4104), TR=(0,0,20039), H=1000. */
     re15_camera_view_t cam = {0};
     cam.rot[0] = 4104; cam.rot[4] = 4096; cam.rot[8] = 4104;
@@ -2963,12 +2991,44 @@ re_title:;
      * g_scd.cam_id der Entry-Cut (NEW GAME = 0 wie DAT_800b0fe4=0; CONTINUE = Save-Cut).
      * Frame 0 blittet damit denselben BG, den das Original als ersten Frame zeigt
      * (ROOM1240 Cut 0 = schwarz dekodierendes MDEC-Still BG00). Kein erfundener Fade.
-     * Test-Asset-Fallback nur fuer dev-Builds ohne Raum-BSS (wie bisher). */
+     *
+     * FEHLSCHLAG = SCHWARZ HALTEN (Fix Report "ROOM1170-Blitzer nach Charakterwahl", 2026-08-17).
+     * Der alte Fallback `re15_bg_load_test_asset()` malte bei JEDEM transienten Load-Fehlschlag
+     * `DATA/TEST.BSS` in den BG-Cache — und TEST.BSS ist BYTE-IDENTISCH zu BSS/ROOM1170/BG00.BSS
+     * (MD5 beider Dateien gleich, Recherche-Lane 2026-08-17), also das HELIPAD. Der Cache wird ab
+     * Frame 0 geblittet und erst beim naechsten erfolgreichen Cut-Load ersetzt (fruehestens F161)
+     * -> genau der gemeldete ROOM1170-Blitzer nach der Charakterwahl.
+     * Das Original kennt keinen Ersatz-BG: der Raumlader haelt den MODE-2-SCHWARZ-Clear
+     * (`ori a0,0x2; jal 0x80021634; addu a1,zero,zero` @0x8001d620-28, Tuer-Zweig @0x8001d830-34)
+     * und gibt den BG erst NACH den Load-Waits frei (`jal 0x80021634` mit a0=0/a1=0 @0x8001dadc-e0
+     * + `DAT_800b5457 = 1` @0x8001dae4-ec; BG-Wait-Schleife @0x8001dabc-d4, Maske 0x2000000) —
+     * bleibt der Load aus, bleibt das Bild SCHWARZ. Der Port-Aequivalent: Cache verwerfen; die
+     * Frame-Schleife malt dann `re15_render_background_gradient(0,0,0,0,0,0)` (main.c ~L3193).
+     * Das Log ist bewusst UNGEGATET (kein RE15_FADE_LOG noetig): ein echter Load-Fehlschlag beim
+     * Nutzer soll im debug.log selbstbeweisend sein. (DATA/TEST.BSS bleibt im Asset-Baum — der
+     * Disc-Spiegel ist vollstaendig; nur der Code malt es nicht mehr als BG.) */
     if (re15_bg_load_cut((int)g_scd.cam_id) != 0) {
-        re15_bg_load_test_asset();
+        re15_bg_invalidate();     /* BLACK HOLD (@0x8001d620-28 .. @0x8001dadc-ec), NIE TEST.BSS */
+        fprintf(stderr, "[bg] BOOT-BG LOAD FAILED room=%04x cut=%d -> holding BLACK "
+                        "(byte-true @0x8001d620-28; no TEST.BSS fallback)\n",
+                g_current_room_id, (int)g_scd.cam_id);
     }
 
     g_engine.frame_count = 0;
+
+    /* DEBUG-HARNESS: RE15_BOOT_EXIT_AT=<n> beendet den Prozess beim n-ten GAME-BOOT (1-basiert).
+     * Der Tod fuehrt IN-PROCESS zum Titel zurueck (`goto re_title`) und der ganze Boot-Block laeuft
+     * erneut — ohne Abbruchbedingung laeuft ein Tod->Titel->NEW-GAME-Harness endlos. Mit n=3 laufen
+     * Boot 1 und Boot 2 VOLLSTAENDIG durch (das ist der Zyklus, in dem prozess-lange `static`-Latches
+     * auffliegen), dann endet der Prozess sauber. Reiner Testhaken, kein Spielverhalten. */
+    { static int s_boot_n = 0; static int s_boot_exit_at = -2;
+      if (s_boot_exit_at == -2) { const char *be = getenv("RE15_BOOT_EXIT_AT");
+                                  s_boot_exit_at = (be && *be) ? atoi(be) : -1; }
+      s_boot_n++;
+      if (s_boot_exit_at > 0 && s_boot_n >= s_boot_exit_at) {
+          fprintf(stderr, "[flow] BOOT_EXIT_AT: boot #%d reached -> exit\n", s_boot_n);
+          fflush(stderr); exit(0);
+      } }
 
     { extern int re15_fade_log_on(void);
       if (re15_fade_log_on())
@@ -3181,6 +3241,15 @@ re_title:;
           if (re15_gameflow_mode() != RE15_MODE_TITLE)
               g_gameflow.mode = re15_menu_is_open() ? RE15_MODE_INVENTORY : RE15_MODE_INGAME; }
 
+        /* RAUM-TRANSITIONS-FSM (FUN_8001c958 States 4/5) — MUSS vor allen Subsystemen
+         * laufen: im Original dispatcht die FSM @0x8001c994, die Subsystem-Aufrufe
+         * (SCD @0x8001cdec, Spieler @0x8001ce0c, AOT @0x8001ce1c, Action-Driver
+         * @0x8001ce2c) folgen erst danach und gaten sich selbst am Pause-Wort.
+         * State 4 (@0x8001cc34-6c) friert mit `g_pauseflags |= 0xff000000` ein,
+         * State 5 (@0x8001cc70-94) gibt frei, sobald die -0x1800-Einblendung durch
+         * ist (FUN_8002178c). Belege vollstaendig in room_common.c. */
+        re15_room_transition_tick();
+
         /* Phase 4.5.6.4: paint cached MDEC BG into the software
          * framebuffer (replaces the gradient when an asset loaded).
          * Match PSX flow: BG first, meshes/HUD layer on top. */
@@ -3233,8 +3302,13 @@ re_title:;
              * early-returns for player/enemy/anim). Advance ONLY the modal FSM at 30 Hz; rendering
              * (incl. the modal quad) keeps running. The state-6 prompt reads the VIRTUAL edge word
              * DAT_800ac76c (wave-6 finding 4): build it from the config-normalized physical edge
-             * (pc_pad_config -> re15_pad_virtual_word, table @0x80073dbc via FUN_80030444). */
-            re15_item_modal_tick(re15_pad_virtual_word(pc_pad_config((uint16_t)g_engine.pad_pressed)));
+             * (pc_pad_config -> re15_pad_virtual_word, table @0x80073dbc via FUN_80030444).
+             * The state-6 TYPEWRITER additionally needs the HELD word DAT_800ac768 for the byte-true
+             * text fast-forward (@0x8002820c `lw DAT_800ac768` + @0x80028214 `andi 0x4000`) — built the
+             * same way from pad_current. (g_scd_pad_held is NOT usable here: the SCD VM is frozen while
+             * the modal runs, so its held mirror is stale.) */
+            re15_item_modal_tick(re15_pad_virtual_word(pc_pad_config((uint16_t)g_engine.pad_pressed)),
+                                 re15_pad_virtual_word(pc_pad_config((uint16_t)g_engine.pad_current)));
         } else if ((target_fps == 30 || (g_engine.frame_count & 1) == 0)
                    && re15_menu_gameplay_frozen()) {
             /* STATUS SCREEN (wave 2): gameplay is FULLY SUSPENDED while the menu is open or
@@ -3268,6 +3342,18 @@ re_title:;
                 re15_esp_fx_splatter(re15_esp_global_bank(), 0, 12,
                                      pp->x, pp->y - 1400, pp->z, pp->y);
             }
+            /* TEXT-FREEZE (Fix-Runde Cluster 1, Fund 5): BEIDE Treiber liefen bisher
+             * ungegatet durch jeden eingefrorenen Text. Die Gates sitzen jetzt IN der Engine,
+             * genau wie im Original — dort traegt jeder Leser sein Bit selbst:
+             *   re15_esp_fx_tick            -> RE15_PAUSE_ACTION (0x10000000), Selbst-Gate im
+             *                                  Prolog von FUN_80019e20 (@0x80019e28 lw /
+             *                                  @0x80019e3c and / @0x80019e40 bne -> Epilog
+             *                                  0x8001a4a4); Beleg in re15_esp.c.
+             *   re15_actor_step_all_walkers -> pro Slot: Spieler RE15_PAUSE_PLAYER
+             *                                  (@0x80031c78 -> 0x80073f90[4] -> 0x80073e30[4]
+             *                                  = WALK-Handler 0x80030af0), NPC RE15_PAUSE_AI
+             *                                  (@0x8011c5c0); Beleg in actor_locomotion.c.
+             * So gilt das Gate fuer PC- UND PSX-Loop und ist unit-testbar (test_text_freeze). */
             re15_esp_fx_tick(re15_esp_room_bank());   /* Phase ESP-C: advance effect particles (30Hz) */
             /* Walker steps once per 30 Hz SCD tick. (A 2026-06-01 disasm trace
              * suggested the PSX walker runs at 60 Hz → tried 2× stepping, but the
@@ -3847,17 +3933,16 @@ re_title:;
                 }
             }
 
-            /* Helicopter rotor (BGM SUB layer = SsSeq slot 1): on/off is driven by the
-             * SCD's Sce_bgm_control (0x54) opcode (SsSeqPlay at the heli/sky cuts,
-             * SsSeqStop during Leon's close-ups). The PER-FRAME distance+azimuth
-             * ATTENUATION of the playing layer (FUN_80045a64) is now driven by the SHARED
-             * re15_rotor_drive — IDENTICAL to the PSX (this port previously had
-             * re15_audio_rotor_update implemented but never called it, so the rotor never
-             * faded by distance). Safety: once the cinematic ends (player_mode != 2; heli
-             * gone in gameplay), force the SUB layer silent in case the final SsSeqStop
-             * was missed by our SCD execution. */
+            /* Helicopter rotor (BGM SUB layer = SsSeq slots 1/2): on/off is driven ONLY by the
+             * SCD's Sce_bgm_control (0x54) opcode — op1 = SsSeqSetVol(slot vol) + SsSeqPlay
+             * (@0x80044e00-44), op2 = SsSeqStop (@0x80044e50-84) — plus the room-entry auto-play
+             * gate FUN_800444b0 for SEQ#2. The former per-frame distance+azimuth ATTENUATION of the
+             * playing layer was a PORT INVENTION and is gone (re15_audio_rotor_update is now a
+             * no-op; FUN_80045a64 has exactly 4 callers @0x800451cc/@0x8004527c/@0x800454e8/
+             * @0x80045830, ALL in the SE path, none on a SsSeq volume) — likewise the
+             * `player_mode != 2` hard-mute, which had no original counterpart. re15_rotor_drive
+             * stays wired (shared with the PSX main loop) but no longer touches the BGM master. */
             re15_rotor_drive(&active_cuts[active_cut_idx]);
-            if (g_scd.player_mode != 2) re15_audio_rotor_silence();
 
             /* Shadow orientation is built PER-ACTOR at each shadow draw below via
              * re15_camera_yaw_matrix_angle(actor.rot_y) — byte-true RotMatrixY(actor rot_y), the
@@ -4677,8 +4762,14 @@ re_title:;
                           fprintf(stderr, "[fade-log] F%u room=%04x TUER-EINTRITTS-FADE kick "
                                   "(main.c apply_pending)\n",
                                   g_engine.frame_count, g_current_room_id); }
-                    re15_fade_config(0, 2, 7, (int16_t)-0x1800, 0);
-                    re15_fade_kick(0, 0);
+                    /* Der Kick steckt jetzt in re15_room_transition_present() (room_common.c) —
+                     * zusammen mit dem, was direkt daneben im selben State-3-Rumpf steht und im
+                     * Port fehlte: das Spieler-Kommandowort (@0x8001cbdc) und der Logik-Freeze
+                     * fuer die Dauer der Blende (State 4 @0x8001cc34-6c, Freigabe State 5
+                     * @0x8001cc70-94). Damit laufen Kreuz-Raum-Tuer und Self-Reenter durch
+                     * DIESELBE Praesentation, wie im Original (FUN_8001d600 verzweigt nur am
+                     * Tuer-Record-Zeiger @0x8001d618, nicht am Zielraum). */
+                    re15_room_transition_present();
 
                     /* The shared transition set the door's ENTRY cut in the
                      * frame-local active_cut_idx (via rc.cam_active_cut). The PC
@@ -5039,13 +5130,29 @@ re_title:;
              * items 0-2 -> melee bank (W01 trio), items 3+ -> gun bank (W03 pair). The WHOLE
              * carry set switches (locomotion + aim clips share the 14-clip layout), and the aim
              * FSM gets the new bank's per-clip frame counts (recoil 23f vs draw 15f cadence). */
+            /* DERIVED state, NO process-lifetime latch (fix Nutzer-Report "Messer-Anims trotz
+             * Handfeuerwaffe nach Load", 2026-08-17). The old `static int s_wgun` survived the
+             * in-process `goto re_title` after death: the boot block re-inits the LOCALS
+             * wact_skel/wact_anim/wact_ok to the W01 (knife) defaults (main.c ~L2595) and re-seeds
+             * the aim clip lengths from W01 (~L2588), but s_wgun kept the PREVIOUS session's value,
+             * so after Tod -> Titel -> LOAD with a gun equipped `want_gun(1) == s_wgun(1)` and the
+             * watcher never fired -> the recoil clip rendered from the MELEE bank (measured fc=25
+             * = PL00W01 clip7 instead of fc=23 = PL00W03 clip7, every session after the first).
+             * The original has no such latch: the weapon bank is re-derived UNCONDITIONALLY on every
+             * player load — FUN_800314b0 `jal FUN_80036b68` @0x800316f0 (FUN_800314b0 itself is
+             * called by the room loader FUN_800396fc @0x80039788 and by @0x8001d5a4), and
+             * FUN_80036b68 reads charid/equipped fresh (`lbu DAT_800aca5c` @0x80036b84,
+             * `lbu DAT_800aca5d` @0x80036b8c), looks up the CD file base (`lhu DAT_800741e8[char*2]`
+             * @0x80036bb4), CD-loads it (`jal 0x80013b60` @0x80036bc0) and OVERWRITES both bank
+             * pointers (`sw v0,DAT_800acbc8` @0x80036be4 / `sw v0,DAT_800acbc4` @0x80036c04) —
+             * no "last state" comparison anywhere. Comparing the BOUND pointer reproduces that:
+             * the locals reset on every (re)boot, so the first frame after a boot always rebinds. */
             {
                 extern int  re15_player_equipped_weapon(void);
                 extern void re15_player_set_aim_clip_lens(const uint16_t *fcs, int n);
-                static int s_wgun = -1;
+                int is_gun_bound = (wact_anim == &w03_anim);   /* == DAT_800acbc8 readback */
                 int want_gun = (re15_player_equipped_weapon() >= 3) && w03_ok;
-                if (want_gun != s_wgun) {
-                    s_wgun = want_gun;
+                if (want_gun != is_gun_bound) {
                     wact_skel = want_gun ? &w03_skel : &w01_skel;
                     wact_anim = want_gun ? &w03_anim : &w01_anim;
                     wact_ok   = want_gun ? w03_ok    : w01_ok;
@@ -5053,6 +5160,13 @@ re_title:;
                     int n = (wact_anim->clip_count < 14) ? wact_anim->clip_count : 14;
                     for (int i = 0; i < n; i++) fcs[i] = (uint16_t)wact_anim->clips[i].frame_count;
                     re15_player_set_aim_clip_lens(fcs, n);
+                    /* Fires only on an actual bank switch (rare) — and MUST fire again after every
+                     * death->title->boot, which is exactly what the removed latch prevented. The
+                     * recoil clip 7 frame count is the bank fingerprint: W01 (knife) = 25, W03
+                     * (gun) = 23 (EDD clip tables, measured). */
+                    fprintf(stderr, "[equip] W-bank -> %s (recoil clip7 fc=%d)\n",
+                            want_gun ? "W03" : "W01",
+                            (n > 7) ? (int)fcs[7] : -1);
                 }
             }
             re15_anim_banks_t banks = {

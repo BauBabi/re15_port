@@ -1582,6 +1582,22 @@ static void re15_enemy_ai_live_search_stand(re15_actor_t *e)
         e->motion = 0; e->anim_frame = 0;
         e->anim_frac = 0xf; e->anim_blend_rate = 0x100;
         e->hit_react = 0;                                 /* +0x93 = 0 */
+        /* IDLE-CLIP 0 LOOPT (byte-true, selbst disassembliert; Nutzer-Report ROOM1140-Re-Entry
+         * "eingefrorene Statue"): FUN_80101d08 ruft f314 UNBEDINGT in JEDEM Tick —
+         *   80101d20: bne v0,zero,0x80101d94   ; +0x6!=0 -> INIT ueberspringen …
+         *   80101d9c-a4: lw a0,132 / lw a1,364 ; … aber der f314-Aufruf liegt HINTER dem Label
+         *   80101da8: jal 0x8001f314 (a2=0, a3=0x100)
+         * — und wertet den Rueckgabewert NICHT aus (kein Done-Uebergang). Die Advance-Haelfte
+         * wrappt am Clip-Ende auf 0:
+         *   8001f610: lbu v0,149(v1) ; 8001f618: addiu v0,v0,1 ; 8001f61c: sb v0,149(v1)
+         *   8001f624: sltu v0,v0,s4  ; 8001f628: bne -> return 0
+         *   8001f638: ori v0,zero,0x1 ; 8001f63c: sb zero,149(v1)   ← WRAP auf 0
+         * Der Port-Advancer bildet genau diesen Wrap ueber das LOOP-Bit ab
+         * (player_common.c:809 `@0x8001f63c`-Zweig); ohne das Bit pinnte er Clip 0 auf fr=13
+         * (gemessen: alle 5 Re-Entry-Schlaefer 840 Ticks unbewegt). Gilt fuer die Erstbesuch-
+         * Sub-0-Idler UND alle behavior-0x02-Re-Entry-Schlaefer. Das Bit wird von den
+         * Play-once-Eintraegen wieder geloescht (Knockdown :1787, Death :3906). */
+        e->anim_flags |= 0x04u;
     }
 }
 
@@ -3847,6 +3863,22 @@ int re15_actor_clip_len(const re15_actor_t *a)
     if (!b) return 0;
     if (re15_actor_uses_loco_bank(a) && b->loco_ok && (int)a->motion < b->anim_loco.clip_count)
         return b->anim_loco.clips[a->motion].frame_count;
+    /* NPC-Familie, Executor-Sub 0 = die Plc_motion-POSE: das Original taktet sie auf dem
+     * RBJ-BINDER-Kanal +0x180/+0x184, nicht auf der Basis-EDD — FUN_80050cb8 laedt
+     * `lw a0,384(v0)` @0x80050d40 (+0x180) und `lw a1,388(v0)` @0x80050d48 (+0x184) und ruft
+     * damit `jal 0x8001f314` @0x80050d4c. Die AI-Uhr des Ports (re15_npc_motion_clip_len ->
+     * re15_npc_channel_anim) macht das seit langem richtig; DIESE Funktion (die Uhr des globalen
+     * Advancers / des Walkers / der Trace-Gegenprobe) las weiter die Container-Bank und lieferte
+     * fuer die ROOM1170-Gesten fc=1 statt der REC-Overlay-Laenge (clip15=20, gemessen im
+     * RE15_ANIM_TRACE als fc_clock=1 vs. fc_render=20). Fuer state-4-NPCs ueberspringt der globale
+     * Advancer den Aktor (player_common.c:733), die Divergenz war also nicht sichtbar — sie wird es,
+     * sobald jemand hier taktet. Gleiche Gates wie re15_npc_channel_anim (Sub 0, kein Plc_dest-Walk). */
+    if (a->type >= 0x40 && a->type <= 0x4d && a->state == 4 && a->sub_state_1 == 0 && !a->walk_active) {
+        extern const re15_emd_animation_t *re15_actor_rbj_anim(int slot);
+        const re15_emd_animation_t *rb = re15_actor_rbj_anim((int)(a - g_actors));
+        if (rb && (int)a->motion < rb->clip_count && rb->clips[a->motion].frame_count > 0)
+            return rb->clips[a->motion].frame_count;
+    }
     /* NPC-Familie (0x40-0x4d): der Plc_dest-Walk und die Executor-Subs {2,4,5,6,9} spielen die
      * EIGENE BANK 1 (+0x170/+0x174 = dir[4]/dir[3], FUN_80022300 @0x800224b8/c8) — der Walker
      * (actor_locomotion.c) taktet Clip 5 an DIESER Laenge (30f fuer EM040), nicht an der
@@ -7342,6 +7374,21 @@ static int re15_npc_anim(re15_actor_t *e)     /* POST-inc +0x95, wrap at the ENT
     int fc = re15_npc_motion_clip_len(e); if (fc < 1) fc = 1;
     int done = (e->anim_frame + 1 >= fc);
     e->anim_frame = (uint8_t)((e->anim_frame + 1) % fc);
+    /* CROSSFADE-DECAY +0x8f: anim_set zieht den Blend-Zaehler in JEDEM Aufruf um 1 herunter
+     *   8001f5a8  lbu  v0,143(v1)      v0 = +0x8f
+     *   8001f5b0  addiu v0,v0,-1
+     *   8001f5b4  sb   v0,143(v1)
+     * erreicht ueber `bne a3,zero,0x8001f45c` @0x8001f41c (a3 = Blend-Rate, hier 0x200).
+     * Der Walk-Sub seedet +0x8f=7 (`ori v0,zero,0x7` / `sb v0,143(v1)` @0x800511f8-fc) und ruft
+     * anim_set jeden Tick (@0x800512c4 / @0x80051630) -> der Uebergang ist nach 7 Ticks vorbei.
+     * Ohne das Decay blieb frac dauerhaft 7, der Renderer mischte also in JEDEM Frame 7/8 der
+     * Vor-Pose bei: die Beine schwangen nur mit ~39% Amplitude = das gemeldete Gleiten/Schlurfen
+     * (Elliot 1170, Marvin 10D0 und jeder andere NPC-Sub). Gegenprobe: in allen Original-
+     * Savestates mit laufenden NPCs (mzd_stage1_npc.sav 0x40/0x42/0x4b, orig_1170_gp.sav 0x47)
+     * steht +0x8f == 0. Die uebrigen AI-Familien decayen bereits (Kraehe :4120, Hund :5229,
+     * Zombie :2437/:2642) — nur der NPC-Pfad fehlte. Kein Doppel-Decay: der Plc_motion-Executor
+     * fuehrt seine eigene Advance-Schleife (:7442) und ruft diese Funktion nicht. */
+    if (e->anim_frac > 0) e->anim_frac--;
     return done;
 }
 
@@ -7382,6 +7429,23 @@ static void re15_npc_sub_motion(re15_actor_t *e)
                * double-step bit +0x1c4&0x8 — second f314 call @0x80050fb8/d0); at end latch phase 2
                * (HOLD @0x80050da4/0x80050fec) or replay (LOOP nur mit +0x1c4&0x4 @0x80050dc8/0x80051004-10) */
     {
+        /* ⚠️ HOLD-FRAME — NICHT auf 0 "korrigieren" (2026-08-17 gegengeprueft, Batch B1):
+         * Eine Recherche-Spec forderte hier `anim_frame = 0`, weil der Original-E-Trace und der
+         * ROOM1170-Savestate im Gesten-Hold `+0x95 = 0` zeigen. Der ZAEHLER ist tatsaechlich 0 —
+         * die gehaltene POSE ist es NICHT. Beleg (selbst disassembliert):
+         *   FUN_8001f314 POSIERT ZUERST den aktuellen Frame — `sw a2,360(t0)` @0x8001f36c setzt
+         *   +0x168 auf den Record von +0x95 (bzw. fc-1-(+0x95) bei a2!=0, @0x8001f344-54) und
+         *   FUN_8001f3bc baut daraus die Pose — und ADVANCT ERST DANACH: `lbu v0,149` @0x8001f610,
+         *   `addiu v0,v0,1` @0x8001f618, `sb v0,149` @0x8001f61c, `sltu v0,v0,s4` @0x8001f624,
+         *   sonst `sb zero,149` @0x8001f63c + return 1.
+         *   Auf dem letzten Tick wird also Record fc-1 POSIERT, dann +0x95 auf 0 gewrappt und 1
+         *   zurueckgegeben; FUN_80050cb8 latcht daraufhin +0x6 = 2 @0x80050da4 und ruft NIE wieder
+         *   f314 (Dispatch `slti v0,v1,2; beq v0,zero,0x80050dcc` @0x80050cd8-dc = sofortiger Exit).
+         *   Die gehaltene Pose ist damit Frame fc-1 — der Port, der jeden Frame neu aus anim_frame
+         *   posiert, trifft sie GENAU mit HOLD-LAST. Ein Wechsel auf 0 waere eine Regression, auch
+         *   fuer die Reverse-Gesten (Marvin, Plc_flg 0x80: Original posiert fc-1-(fc-1) = Slot 0,
+         *   Port rendert aus fc-1 ueber anim_select_common.c:61-64 ebenfalls Slot 0).
+         * Verbleibende (rein numerische) Divergenz: +0x95 selbst liest im Hold fc-1 statt 0. */
         int steps = (e->anim_flags & 0x08) ? 2 : 1;
         while (steps-- > 0) {
             if (e->anim_frame + 1 >= fc) {                   /* anim_set signals clip end (@0x80050d54) */
@@ -7454,7 +7518,18 @@ static const uint8_t s_npc_walk8_param[16] =    /* Sub 8 @0x80076c60 (INIT @0x80
  *     (@0x80051428/38 bzw. @0x80051794/a4) = Uebergabe an Sub 6 EVENT-REACH (Ankunfts-Clip 1
  *     einmal -> Clip-2-Idle); Re-Arm nur mit +0x1c4&4 (+0x5=Mode, +0x6=2 @0x8005145c/@0x800517c8).
  * OFFEN (dokumentiert): Blocked-Probe FUN_8002d7d8 -> Subs 0x12/0x16 (FUN_80052508) nicht
- * portiert (10D0-Pfad frei); Footstep-SE der Phase 1 (Frame-Flag 0x4000 -> FUN_80045630). */
+ * portiert (10D0-Pfad frei); Footstep-SE der Phase 1 (Frame-Flag 0x4000 -> FUN_80045630).
+ * ⛔ OPEN — STRUKTUR-DIVERGENZ SUBS 7/8 (2026-08-17 selbst disassembliert, WIDERLEGT die alte
+ * "gleiche Struktur"-Notiz): 0x80051908 (Sub 7) und 0x80051b00 (Sub 8) haben KEINEN arc_test und
+ * KEINE Phase 1. Ihr Dispatch ist zweiwertig — `lbu v0,6(v1); bne v0,zero,0x80051990` @0x80051918-20
+ * (Sub 7) bzw. @0x80051b10-18 (Sub 8): +0x6==0 = INIT (Speed 0x80076c20 @0x80051944 / 0x80076c60
+ * @0x80051b3c, +0x6=1, +0x94=1, +0x95=0, +0x8f=7), alles andere = der EINZIGE Body @0x80051990 /
+ * @0x80051b88, der ab dem INIT-Tick TRANSLATIERT: Steer mit der NEGIERTEN Tabelle 0x80076c21
+ * (`lbu a2` @0x800519b8, `subu a2,zero,a2` @0x800519c4) bzw. 0x80076c01 (@0x80051bb0/bc),
+ * `jal 0x800245d8` mit a0=0x800 @0x800519c8/@0x80051bc0 (NICHT a0=0 wie Sub 4 @0x80051348) und
+ * f314 auf dem LOCO-Paar +0x84/+0x16c @0x80051a28/@0x80051c20. Der Port faehrt fuer 7/8 heute die
+ * Sub-4/5-Maschine (arc_test + Cone-Pivot) — beleglos. Nicht in diesem Batch geaendert
+ * (Negativ-Cone-Semantik von 0x8001aac4 und pos_advance-Mode 0x800 sind ungeklaert). */
 static void re15_npc_sub_walk(re15_actor_t *e)
 {
     int sub = e->sub_state_1;
@@ -7469,17 +7544,43 @@ static void re15_npc_sub_walk(re15_actor_t *e)
         e->sub_state_2 = 1;
     }
     if (e->sub_state_2 == 1) {                               /* Phase 1: TURN-TO-FACE */
-        if (re15_ai_arc_test(e, e->steer_x, e->steer_z, 0x15e) == 0) {
+        /* ALIGN-TICK-DURCHFALL GEFIXT (selbst disassembliert, PSX.EXE roh):
+         *   Sub 4: `jal 0x8001ab9c` @0x80051214 (a2=0x15e) -> `bne v0,zero,0x80051234` @0x8005121c.
+         *          NICHT aligned  -> springt DIREKT in den Phase-1-Body @0x80051234.
+         *          ALIGNED (v0==0) -> faellt durch auf `sb v0(=2),6(v1)` @0x80051230 und laeuft
+         *          danach den GLEICHEN Phase-1-Body @0x80051234: Steer mit der CONE-Tabelle
+         *          0x80076c41 (`lbu a2,0(at)` @0x80051260, `jal 0x8001aac4` @0x80051264),
+         *          f314 @0x800512c4, **`j 0x80051470` @0x800512cc = EXIT — KEINE Translation**.
+         *   Sub 5: `bne v0,zero,0x800515a0` @0x80051558; ALIGNED-Writes +0x6=2 @0x8005156c,
+         *          +0x94=0 @0x8005157c, +0x95=0 @0x8005158c, +0x8f=7 @0x8005159c, dann derselbe
+         *          Body @0x800515a0 (Steer @0x800515cc, f314 @0x80051630, `j 0x800517dc` @0x80051638).
+         * Phase 2 ist NUR ueber den Dispatch des NAECHSTEN Ticks erreichbar
+         * (`lbu v1,6(a0)` @0x8005115c -> `beq v1,2 -> 0x800512d4` @0x80051184-88 bzw.
+         *  @0x80051498 -> `beq v1,2 -> 0x80051640` @0x800514c0-c4).
+         * Vorher fiel der Port beim Align-Erfolg im SELBEN Tick in Phase 2 durch (Slew 48 +
+         * Vorwaertsschritt) — gemessen Marvin T434 (Translation 1 Tick zu frueh, Slew 48 statt 96)
+         * und Elliot F441 (Lauf ab Tick 1 statt Anlauf-Tick mit r+96/Delta-pos 0). */
+        int aligned = (re15_ai_arc_test(e, e->steer_x, e->steer_z, 0x15e) == 0);
+        if (aligned) {
             e->sub_state_2 = 2;                              /* aligned @0x80051230/@0x8005156c */
             if (sub == 5) {                                  /* RUN-Gait: Clip 0 (@0x8005157c-9c) */
                 e->motion = 0; e->anim_frame = 0; e->anim_frac = 7;
             }
-        } else {
-            re15_enemy_steer_point(e, e->steer_x, e->steer_z,
-                                   re15_npc_type_cone(e->type));   /* Slew 96/80 @0x80076c41 */
-            re15_npc_anim(e);                                /* f314 @0x800512c4/@0x80051630 */
-            return;                                          /* Pivot: KEINE Translation */
         }
+        /* PHASE-1-BODY — laeuft in BEIDEN Faellen (aligned wie nicht-aligned) und beendet den Tick. */
+        re15_enemy_steer_point(e, e->steer_x, e->steer_z,
+                               re15_npc_type_cone(e->type));  /* Slew 96/80 @0x80076c41 */
+        /* OPEN (Footstep-SE der Phase 1, byte-genau lokalisiert, NICHT portiert): Frame-Flag-Test
+         * `lw v0,360(entity)`(+0x168) / `lw v1,0(v0)` / `andi 0x4000` @0x80051278-88 (Sub 4) bzw.
+         * @0x800515e4-f4 (Sub 5) -> `jal 0x80045630(a0, 7-3*((flag>>12)&1))` @0x800512a8 / @0x80051614
+         * (a0=0 Sub 4 @0x80051290, a0=1 Sub 5 @0x800515fc; Phase 2 @0x800512d4-308 / @0x800519dc-a10 /
+         * @0x80051bd4-c08 analog). BLOCKER: FUN_80045630 nimmt fuer type>=0x40 den NPC-Zweig
+         * `addiu s3,a0,-8` @0x8005175c (statt `addu s3,a0,zero` @0x80051738) und ueberspringt das
+         * DAT_800aca3c&0x4000-Override @0x80045788-90; das Port-API re15_audio_footstep(foot,type)
+         * maskiert &0x7f erst NACH der Addition (audio_pc.c:2448) — der -8-Shift ist damit nicht
+         * abbildbar, ohne audio_pc.c anzufassen (gehoert einer anderen Lane). */
+        re15_npc_anim(e);                                    /* f314 @0x800512c4/@0x80051630 */
+        return;                                              /* EXIT @0x800512cc/@0x80051638 */
     }
     /* Phase 2: WALK — Slew 48 (@0x80076c01) + Vorwaertsschritt + Anim + Arrival */
     re15_enemy_steer_point(e, e->steer_x, e->steer_z, 48);
@@ -9853,11 +9954,91 @@ static void re15_enemy_anim_sfx(const re15_actor_t *e)
      * die RE1.5-Room-SE-Maske. EM010-Pair-1-Belegung byte-gelesen: Clip 0 Frames 20/62 =
      * SE 1/0 (die zwei Schritte). */
     if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2z_owns_type(e->type)) {
+        /* ⛔ CALL-SITE-GATE (Nutzer-Report "Phantom-Schritt-SEs beim Hinfallen/Liegen/Aufstehen"):
+         * das Original ruft 0x801016c8 NICHT aus dem Root und NICHT in jedem Zustand. Eigener
+         * jal-Scan ueber die GANZE EMOVL10_S0.BIN liefert EXAKT ZWEI Treffer:
+         *   @0x80101d34  — in EXEC[1] WALK  (Funktionsstart 0x80101A40)
+         *   @0x80102454  — in EXEC[2] BUMP  (Funktionsstart 0x80102260, naechster Exec 0x801025EC)
+         * SUCHWORT KORRIGIERT (2026-08-17, Review-Fund F6): das Reproduktions-Wort ist
+         * **0x0C0405B2**, nicht 0x0C4405B2. Nachrechnung: 0x801016c8 >> 2 = 0x200405B2,
+         * & 0x03FFFFFF = 0x000405B2, jal = 0x0C000000 | 0x000405B2 = 0x0C0405B2. Das frueher hier
+         * stehende 0x0C4405B2 dekodiert zu `jal 0x811016c8` (ausserhalb des PSX-RAM) und liefert
+         * beim Nachscannen 0 Treffer — der Beleg war dadurch nicht nachpruefbar.
+         * Knockdown (EXEC[5] 0x80103188), Lying (EXEC[7] 0x80103780) und Get-up (EXEC[9] 0x80103E48)
+         * enthalten KEINEN Call — dort spielt das Original nur seine eigenen SEs (Fall-Commit 12/13
+         * @0x8010333C-58, Ground-Lie-Moan 11 @0x801035F0-610, Get-up 12 @0x80103F94-A8).
+         * Port-Abbildung: EXEC-Index == sub_state_1 (re2z_active-Dispatch, enemy_ai_re2_zombie.c),
+         * ACTIVE == state 1. */
+        if (!(e->state == 1 && (e->sub_state_1 == 1 || e->sub_state_1 == 2))) return;
+
+        /* ⛔ SUB-GATE + DRITTEL-TAKT (2026-08-17, Review-Fund F7 — vorher als OPEN gefuehrt,
+         * dadurch feuerten die Frame-Wort-SEs 3x zu haeufig UND fuer jeden Zombie).
+         * Beide Call-Sites tragen davor denselben Vorspann; roh-Byte-verifiziert (EMOVL10_S0.BIN,
+         * RAW @0x80100000), Call-Site 1:
+         *   80101cd8: 9622010e  lhu  v0,270(s1)          ; +0x10E
+         *   80101ce0: 30420080  andi v0,v0,0x80
+         *   80101ce4: 14400006  bne  v0,zero,0x80101d00  ; Bit gesetzt -> weiter zum Takt
+         *   80101cec: 9622021a  lhu  v0,538(s1)          ; +0x21A
+         *   80101cf4: 30428000  andi v0,v0,0x8000
+         *   80101cf8: 10400019  beq  v0,zero,0x80101d60  ; sonst KEIN SE (und kein Extra-Turn)
+         *   80101d00: 9223014d  lbu  v1,333(s1)          ; +0x14D
+         *   80101d04-24         lui 0xaaaa/ori 0xaaab/multu/mfhi/srl 1/sll 1/addu/subu = v1 % 3
+         *   80101d28: addiu v0,zero,2
+         *   80101d2c: bne  v1,v0,0x80101d5c              ; nur Rest 2 erreicht den Call
+         *   80101d34: jal  0x801016c8
+         * Call-Site 2 identisch: @0x80102400-04 / @0x80102414-18 / @0x80102420-4c / jal @0x80102454.
+         *
+         * +0x14D IST DAS FRAME-BYTE des laufenden Clips — es braucht KEIN neues Port-Feld:
+         *   - das Clip-Wort liegt bei +0x14C und packt clip | frame<<8 | rate<<16
+         *     (Walk-Entry @0x80101a8c `sw v0,332(s1)` mit v0 = +0x218 | 0xF0000),
+         *   - @0x8010b72c-40 `lbu v0,332(s2)` / `sb zero,333(s2)` / `addiu v0,v0,1` /
+         *     `sb v0,332(s2)` = "naechster Clip, Frame 0" -> +0x14C Clip, +0x14D Frame,
+         *   - @0x801028a0 `lbu v1,333(s1)` ist der Biss-Frame-Vergleich, den der Port bereits
+         *     ueber re2z_frame_slot (= anim_frame % clip_len) abbildet.
+         * PRODUZENT: die geteilte EXE-Anim-Advance 0x8002959c, unmittelbar VOR dem Gate gerufen
+         * (@0x80101cd0 bzw. @0x801023f0, a0=Entity, a1=+0x108, a2=+0x17C, a3=256). Port-Zwilling
+         * ist genau der Slot, den die Frame-Wort-Suche unten schon benutzt.
+         *
+         * PRODUZENTEN DER SUB-GATE-BITS (selbst gescannt, alle +0x10E-/+0x21A-Stores des Overlays):
+         *   +0x21A |= 0x8000: (a) INIT, Typ == 0x11 — `lbu v1,8(s2)` @0x80100894 /
+         *       `addiu v0,zero,17` @0x801008A0 / `bne v1,v0,0x801008d8` @0x801008BC, dann
+         *       `lhu v0,538(s2)` @0x801008C4 / `ori v0,v0,0x8000` @0x801008D0 /
+         *       `sh v0,538(s2)` @0x801008D4. PORTIERT in re2z_init (enemy_ai_re2_zombie.c).
+         *       ⚠ ZEITPUNKT: das ist der INIT-Handler (Zustand 0, Tabelle @0x8010C830) — er
+         *       laeuft im ERSTEN KI-TICK der Entity, nicht beim Sce_em_set-Spawn. Wer direkt
+         *       nach dem Spawn (ohne re15_enemy_ai_run_all-Tick) liest, sieht korrekt 0.
+         *       Der Nachbar-Store `+0x156 = 250` @0x801008C8-CC ist das HP-Halbwort und bleibt
+         *       bewusst OFFEN (Begruendung + Tabellen-Zitate in re2z_init).
+         *       (b) OPEN: @0x801008D8-0x80100950 setzt dasselbe Bit fuer 1 von 3 zufaelligen
+         *       Zombies, aber nur wenn das RE2-Spielglobal `DAT_800cfb74 & 0x40` steht
+         *       (@0x801008DC-E8, Rest-3-Test @0x80100900-28). Der Port hat kein Gegenstueck zu
+         *       diesem Global -> NICHT erfunden, als OPEN dokumentiert.
+         *   +0x10E |= 0x80: NUR in der Gore-/Dismember-Hilfsfunktion 0x80106128
+         *       (`lhu v0,270(s0)` @0x8010613C / `ori v0,v0,0x80` @0x80106144 /
+         *        `sh v0,270(s0)` @0x80106148), 14 Aufrufer — @0x801010CC, @0x801051B0,
+         *       @0x8010525C, @0x80105550, @0x80105DE8, @0x80107984, @0x80107A04, @0x80107C18,
+         *       @0x80107C70, @0x80108468, @0x80108708, @0x80108800, @0x80108B24, @0x80109BB4 —
+         *       allesamt im RE2-Dismember-/Death-Zweig, den der Port nicht modelliert (die
+         *       Funktion selbst spawnt ueber `jal 0x8001bf10` @0x80106180/@0x801061B0/@0x801061F0
+         *       die Gore-Effekte; das Bit ist dort die "schon getauscht"-Marke, die die Aufrufer
+         *       @0x801010C0-C4 / @0x801051A4-A8 / @0x8010845C-60 vorher abfragen).
+         *       OPEN: solange der Port keinen Gore-Modell-Tausch hat, setzt niemand das Bit.
+         *       Keine Instruktion des Overlays LOESCHT es wieder (AND-Masken nur 0xdfff/0xbfff/
+         *       0xffc0), es ist also ein Einweg-Latch.
+         *   WIRKUNG DER LUECKE, damit sie benannt ist: unter RE2-Flavor spielt derzeit NUR Typ
+         *   0x11 die Frame-Wort-Schritt-SEs. Typ 0x10 und 0x16 (und jeder weitere von
+         *   re15_re2z_owns_type gefuehrte Typ) bleiben stumm, bis einer der beiden OPEN-Pfade
+         *   portiert ist — im Original waeren sie es ebenfalls, solange DAT_800cfb74&0x40 nicht
+         *   steht und sie nicht zerstueckelt wurden. */
+        if (!((e->re2z_f10e & 0x0080u) || (e->re2z_flags21a & 0x8000u)))
+            return;                                         /* @0x80101ce0-f8 / @0x80102400-18 */
         const re15_emd_animation_t *A = re15_actor_uses_loco_bank(e) ? &b->anim_loco : &b->anim;
         if ((int)e->motion >= A->clip_count) return;
         const re15_emd_clip_t *c = &A->clips[e->motion];
         if (c->frame_count <= 0) return;
-        uint32_t fw = A->frames[c->first_frame + (e->anim_frame % (uint32_t)c->frame_count)];
+        uint32_t slot14d = e->anim_frame % (uint32_t)c->frame_count;    /* == +0x14D */
+        if ((slot14d % 3u) != 2u) return;                   /* @0x80101d00-2c / @0x80102420-4c */
+        uint32_t fw = A->frames[c->first_frame + slot14d];
         if ((fw & 0x08000000u) && (fw >> 28) < 2u)          /* and @0x801016e4, sltiu @0x801016f0 */
             re15_re2z_se_play((int)(fw >> 28));             /* jal 0x8005bd6c @0x801016fc */
         return;

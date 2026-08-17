@@ -25,7 +25,9 @@
 #include "re15_esp.h"           /* re15_esp_fx_spawn — the discharge muzzle/smoke/shell fx (ids 2/3/4) */
 #include "re15_inventory.h"     /* re15_ammo_* — the byte-true magazine/reload model (FUN_8004ea6c/eae4) */
 #include "re15_skeleton.h"      /* re15_sin_q12/re15_cos_q12 — the muzzle forward offset */
+#include "re15_math.h"          /* re15_squareroot0 — der Auto-Look-Scan vergleicht die WURZEL */
 #include "re15_item_modal.h"    /* item-get pickup modal — freezes gameplay while presenting */
+#include "re15_room.h"          /* re15_room_transition_present — Tuer-Praesentation beim Self-Reenter */
 
 /* GAME-OVER / death presentation — REWRITTEN 2026-07-05 to the byte-true model (full raw RE of
  * LAB_8003694c + the game-over FSM FUN_8001500c/@0x80071d10, live-verified vs 92 DuckStation
@@ -348,6 +350,69 @@ static void re15_gameover_fsm_tick(void)
     }
 }
 
+/* === AUTO-LOOK-SCAN — byte-true FUN_8003703c(radius) ==========================
+ * Selbst nachdisassembliert 2026-08-17 (PSX.EXE @0x8003703c-0x80037248):
+ *   8003705c-6c  s4 = s5 = s6 = a0            ; ALLE DREI Klassen-Bestwerte = radius
+ *   8003708c     lbu s3,(0x800ACA4E)          ; Entity-Count
+ *   80037098     s2 = 0x800ACC2C              ; Entity-Array, Stride 500 (0x1F4)
+ *   800370ac     andi v0,v0,1 ; bne -> Body   ; Wort 0 Bit 0 = aktiv, sonst skip
+ *   800370c8-f8  dx = ent+0x34 - 0x800ACA88 (Spieler-X), dz = ent+0x3C - 0x800ACA90;
+ *                jal SquareRoot0(dx*dx + dz*dz)   ->  WURZEL, kein Quadrat-Vergleich
+ *   80037104     lbu a0,-145(s0) = ent+0x09
+ *   8003710c     andi v0,a0,0x60 ; bne -> skip    ; AUSSCHLUSS 0x20 (AI-Freeze) / 0x40
+ *                                                 ; (Cutscene-Spawn, gesetzt aus dem
+ *                                                 ; Sce_em_set-Behavior-Byte; der Tail
+ *                                                 ; @0x8004260c-18 setzt dafuer +0x1b8=0x12)
+ *   80037118-20  lh v0,0(s0) = ent+0x9A (HP) ; bltz -> Klasse 3
+ *   80037124     andi v0,a0,0x80             ; !=0 -> Klasse 2, sonst Klasse 1
+ *   80037130-70  je Klasse: sltu dist < best -> best = dist, idx = i+1
+ *   80037190-a4  Prioritaet: K1, sonst K2  (beide rv = 1), sonst K3 (rv = 2)
+ *   800371f0-218 Ziel-Store `sw v1,0(v0)` nach 0x800ACBFC = player+0x1a8
+ *   800371a8-e4  rv == 0 -> Store trotzdem: +0x1a8 = 0x800ACC2C = Entity-Slot 0
+ * Klassen-Semantik (lane17_NECK.md 8.3, Savestate-Ground-Truth):
+ *   K1 hp>=0 && !(+0x9&0x80) = LEBENDE Gegner (mzd_stage1_engage_live.sav: Player-flags
+ *      0x00, +0x1a8 = lebender Zombie slot3 hp=105 — Leon schaut lebenden Gegnern nach)
+ *   K2 hp>=0 &&  (+0x9&0x80) = der ROOM1140-"Lyer" (+0x9 = 0x88) / DOWNED
+ *   K3 hp<0                  = NPCs (INIT `sh -1 -> +0x9a` @0x8011c744) UND GETOETETE
+ *      Gegner (Devour-Ende +0x9a = 0xffff @FUN_80103b94; ausgewachsene Blutlache
+ *      FUN_80115f70) — das ist das gemeldete "Leon schaut liegenden Gegnern nach".
+ * Der Port bildet ent+0x09 auf actor.grid_id ab (Sce_em_set schreibt pc[3] dorthin,
+ * scd_vm.c:3091) und ent+0x9A auf actor.hp. */
+/* Nicht static: der Unit-Pin test_neck_headlook.c deklariert die Funktion per extern
+ * (wie der Port es an anderen Stellen mit re15_player_aim_active() haelt) — sie hat
+ * bewusst keinen Header-Eintrag, weil sie nur der Prolog unten aufruft. */
+int re15_autolook_scan(re15_actor_t *pl, uint32_t radius)
+{
+    uint32_t bK1 = radius, bK2 = radius, bK3 = radius;   /* @0x8003705c-6c */
+    int      iK1 = 0,      iK2 = 0,      iK3 = 0;        /* 0 = nichts (Original: idx+1) */
+    for (int i = 1; i < RE15_ACTOR_MAX; i++) {
+        const re15_actor_t *n = &g_actors[i];
+        if (!n->active) continue;                        /* @0x800370ac Wort 0 Bit 0 */
+        if (n->grid_id & 0x60) continue;                 /* @0x8003710c AUSSCHLUSS */
+        int32_t dx = n->x - pl->x, dz = n->z - pl->z;    /* @0x800370c8-e8 */
+        /* WURZEL-Vergleich (@0x800370f8 jal SquareRoot0 / @0x8003715c sltu). Der alte
+         * Port verglich dx*dx+dz*dz gegen 4000*4000 — bei dx=-33664/dz=36836 sind das
+         * 2 490 155 792, was als int32 NEGATIV wird und das Gate passieren liess: genau
+         * so trackte Leon nach dem ROOM1170-Intro den ~49 900 Units entfernten Rest-NPC
+         * (lane17_NECK.md 7.1). Die u32-Summe + SquareRoot0 gibt hier 49 824 > 4000. */
+        uint32_t dist = re15_squareroot0((uint32_t)(dx * dx) + (uint32_t)(dz * dz));
+        if (n->hp < 0) {                                 /* @0x80037120 bltz -> K3 */
+            if (dist < bK3) { bK3 = dist; iK3 = i; }     /* @0x8003715c-70 */
+        } else if (n->grid_id & 0x80) {                  /* @0x80037124/28 -> K2 */
+            if (dist < bK2) { bK2 = dist; iK2 = i; }     /* @0x80037148-58 */
+        } else {                                         /* K1 */
+            if (dist < bK1) { bK1 = dist; iK1 = i; }     /* @0x80037130-44 */
+        }
+    }
+    if (iK1) { pl->neck_target_slot = (int8_t)iK1; return 1; }   /* @0x80037190-94 */
+    if (iK2) { pl->neck_target_slot = (int8_t)iK2; return 1; }   /* @0x8003719c-a0 */
+    if (iK3) { pl->neck_target_slot = (int8_t)iK3; return 2; }   /* @0x800371d0/e8 */
+    /* Fehlschlag: das Original schreibt trotzdem +0x1a8 = Entity-Slot 0 (@0x800371d8-dc)
+     * und liefert 0; der Caller wertet nur den Rueckgabewert aus, die Flags bleiben 0x12
+     * (Release), das Ziel wird also nicht konsumiert. */
+    pl->neck_target_slot = 1;                                    /* Entity-Slot 0 = Actor 1 */
+    return 0;
+}
 
 void re15_game_step(const re15_game_ctx_t *c)
 {
@@ -393,6 +458,50 @@ void re15_game_step(const re15_game_ctx_t *c)
     extern uint16_t g_scd_pad_held;
     g_scd_pad_held = re15_pad_virtual_word(c->pad_current);
 
+    /* PAD-FREEZE (Bit 0x01000000) — byte-true FUN_80030444:
+     *   800304f4  lw   v0,-13760(v0)      v0 = g_pauseflags
+     *   800304f8  lui  v1,0x100
+     *   80030500  beq  v0,zero,0x80030520
+     *   80030514  andi v0,v0,0xf000
+     *   8003051c  sw   v0,-14488(at)      DAT_800ac768 (VIRTUELLES Held-Wort)
+     * Das EDGE-Wort DAT_800ac76c wird DANACH aus dem maskierten Held-Wort gebildet
+     * (`DAT_800ac76c = (DAT_800ac770 ^ DAT_800ac768) & DAT_800ac768`, Decompile
+     * FUN_80030444 Z.26) — also traegt auch der Edge nur noch 0xf000. Uebrig bleiben
+     * genau die 4 Menue-Bits: virt. 0x1000/0x2000 (Yes/No-Toggle), 0x4000 (Confirm +
+     * Typewriter-Fast-Forward, phys. SQUARE) und 0x8000 (Cancel). Deshalb laesst sich
+     * ein Text im eingefrorenen Zustand weiterhin beschleunigen und wegdruecken. */
+    if (g_re15_pauseflags & RE15_PAUSE_PAD) {
+        g_scd_pad_held = (uint16_t)(g_scd_pad_held & 0xf000u);
+        g_scd_pad_edge = (uint16_t)(g_scd_pad_edge & 0xf000u);
+    }
+    /* NICHT maskiert (byte-true): der ROHE Pad (c->pad_pressed / DAT_800ac75c) — FUN_80030444
+     * fasst nur die VIRTUELLEN Woerter 0x800ac768/0x800ac76c an (@0x8003051c).
+     * KORREKTUR 2026-08-17 (Fix-Runde Cluster 1, Fund 2): der alte Text schloss daraus, der
+     * START-Poll @0x8001cd64-cde8 lese den rohen Edge und das Inventar lasse sich im Original
+     * auch bei offenem Text oeffnen — deshalb blieb re15_menu_start_poll ungegatet. Die vier
+     * Instruktionen UNMITTELBAR VOR diesem Bereich (selbst nachdisassembliert) sagen das
+     * Gegenteil:
+     *   8001cd0c  lui  v1,0x100            v1 = 0x01000000            (Delay-Slot)
+     *   8001cd10  lui  v0,0x800b
+     *   8001cd14  lw   v0,-13760(v0)       v0 = g_pauseflags (0x800aca40)
+     *   8001cd1c  and  v0,v0,v1
+     *   8001cd20  bne  v0,zero,0x8001cdec  -> UEBER den ganzen Block hinweg
+     * Das Sprungziel 0x8001cdec ist `jal 0x8003f038` (der SCD-Runner), d.h. der komplette
+     * Menue-Open 0x8001cd28-0x8001cde8 ist uebersprungen: Roh-Pad `lhu 0x800ac760 & 0x900`
+     * @0x8001cd2c-38, Roh-START-Edge `lhu 0x800ac762 & 0x800` @0x8001cd68-74 ->
+     * 0x800aca3c |= 0x8000 @0x8001cd88, hit_react-Gate @0x8001cdb0-b8, 0x800aca3c |= 0x40
+     * @0x8001cdc4, `sb 1,0x800b5359` @0x8001cdd0 und g_pauseflags |= 0xff000000
+     * @0x8001cdd8-e8. Der Poll liest den rohen Edge zwar (das stimmte), ist aber
+     * UNERREICHBAR, solange Bit 0x01000000 steht. Jede ausgelieferte Freeze-Maske traegt es
+     * (sce-1 0xffff0000, Message_on 0xff800000/0xffff0000, Item-Modal 0xff000000).
+     * -> re15_menu_start_poll unten ist jetzt auf RE15_PAUSE_PAD gegatet.
+     * (Der 2. Wachposten davor, @0x8001cd04 `andi v0,a0,0x40` / @0x8001cd08 `bne -> 0x8001cdec`
+     *  = "Menue schon offen", ist in menu_common.c:128 als `s_alive || s_stage != 0` modelliert.)
+     * OPEN: das ITEM-Modal (`if (re15_item_modal_active()) return;` weiter oben) kehrt VOR
+     * diesem Gate zurueck, sein 0xff000000-Freeze (@0x8001dbb8/@0x8001dbc8) enthaelt aber
+     * ebenfalls Bit 0x01000000. Die Pad-Maskierung fehlt dort also noch; der Modal-Tick
+     * liegt in item_modal_common.c / platform-main (fremde Dateien in diesem Batch). */
+
     /* (Plc_neck head-look FSM is computed inside re15_skel_compute_pose at the head bone —
      * it needs the root bone matrix there to get the look angle in the correct frame. The
      * old re15_neck_update body-relative slew is retired to avoid double-slewing.) */
@@ -410,7 +519,12 @@ void re15_game_step(const re15_game_ctx_t *c)
      * flagged divergence — closed here). The pad globals above stay written so a
      * lingering timed/paged message (stage-1 wait @0x8001c9c8) can still be advanced by
      * the platform-side msg tick. */
-    if (c->rdt_ok)
+    /* PAD-FREEZE-GATE @0x8001cd14-20 (Fund 2, Belege im Block oben): bei gesetztem
+     * Bit 0x01000000 springt das Original UEBER den kompletten Menue-Open. Nur der OPEN
+     * haengt daran — der Close/Transition laeuft in re15_menu_fsm_tick() darunter weiter
+     * (byte-true: das Original setzt beim Open selbst 0xff000000 @0x8001cdd8-e8 und
+     * restauriert es erst beim Menue-Ende), also kann dieses Gate kein Menue einsperren. */
+    if (c->rdt_ok && !(g_re15_pauseflags & RE15_PAUSE_PAD))
         re15_menu_start_poll(c->pad_pressed,
                              (s_hit_flinch == 0 && s_knockdown == 0 && !re15_player_is_grabbed() &&
                               !re15_player_is_dead()) ? 1 : 0);
@@ -471,6 +585,34 @@ void re15_game_step(const re15_game_ctx_t *c)
     }
     s_prev_hp = pl->hp;                           /* pre-damage baseline for the NEXT tick's drop check */
 
+    /* ===== GAME-OVER-FSM — PARALLELER TOP-LEVEL-TREIBER, NICHT Teil der Zweig-Kette =====
+     * KORREKTUR 2026-08-17 (Fix-Runde Cluster 1, Fund 3). Der Aufruf stand bisher IM
+     * Todes-Zweig der else-if-Kette unten. Seit der Freeze-Zweig (RE15_PAUSE_PLAYER) als
+     * ERSTES Glied davor sitzt, wurde der Todes-Zweig bei offenem Text nicht mehr erreicht
+     * -> die komplette Todes-Praesentation (White-Flash / YOU DIED / Death-Cam / Fade) stand
+     * still, bis der Text weggedrueckt wurde. Selbst nachdisassembliert, Haupt-Loop-Tail:
+     *   8001cdec  jal 0x8003f038      SCD-Runner
+     *   8001cdf4  jal 0x8004f090
+     *   8001cdfc  jal 0x8001500c      GAME-OVER-FSM   <- UNBEDINGT, VOR dem Spieler
+     *   8001ce04  jal 0x8001a50c      Entity-/AI-Loop
+     *   8001ce0c  jal 0x80031c44      Spieler-Dispatcher (mit dem bltz @0x80031c78)
+     * FUN_8001500c hat KEIN Pause-Gate: eigener wortweiser EXE-Scan nach `lw rX,-13760(rY)`
+     * (die einzige Ladeform von 0x800aca40) liefert genau 9 Leser — 0x800144a4, 0x80019e28,
+     * 0x8001cbcc, 0x8001cc9c, 0x8001cd14, 0x8001cdd8, 0x800304f4, 0x80031c54, 0x8003f040 —
+     * KEINER davon liegt in 0x8001500c..0x80015840 (Root + alle 7 Sub-Handler der Tabelle
+     * PTR_LAB_80071d10). Sein einziges Gate ist das Kommando-Wort:
+     *   80015014  lbu v1,-13736(v1)   v1 = DAT_800aca58
+     *   8001501c  beq v1,6  -> 0x80015038
+     *   80015028  beq v1,3  -> 0x80015038
+     *   80015030  bne v1,7  -> 0x80015064   (= `lw ra,16(sp)` / `jr ra`, sofortiges Ende)
+     * cmd 3/6/7 sind exakt die Todes-Handler (@0x80073f9c/@0x80073fa8/@0x80073fac) — im Port
+     * `re15_player_is_dead()` (hp<0). Der bltz @0x80031c78 deckt diese Funktion NICHT ab, sie
+     * laeuft also auch im eingefrorenen Text weiter: die Game-Over-Kette kommt aus jedem
+     * Freeze heraus. (`c->rdt_ok` bleibt als Port-Vorbedingung stehen — im Original ist immer
+     * ein Raum geladen; die Bedingungsmenge des alten Zweigs bleibt damit unveraendert.) */
+    if (c->rdt_ok && re15_player_is_dead())
+        re15_gameover_fsm_tick();                 /* @0x8001cdfc, vor @0x8001ce0c */
+
     /* ===== ACTION-ZUSTANDS-GATE (Nutzer-Report 2026-08-08: "waehrend einer Aktion kann man
      * weiter untersuchen") — byte-true: der ACTION-Scan FUN_80042bac(player,1,0x10) hat im
      * Original GENAU 8 Caller (XREF-komplett, ghidra1_V2.txt @153742): die DECIDE-Handler der
@@ -486,7 +628,32 @@ void re15_game_step(const re15_game_ctx_t *c)
      * @0x8001ce1c); nur die ACTION-Klasse wird ueber das Press-Flag entwaffnet — alle
      * ACTION-Fire-Pfade in aot_common.c sind auf g_aot_action_pressed gegatet. Gemessen
      * (test_action_msg_gate, vor dem Fix): Knockdown/Flinch/Tod/Aim-LOWER feuerten Examine. */
-    if (c->rdt_ok && re15_stair_active()) {
+    if (c->rdt_ok && (g_re15_pauseflags & RE15_PAUSE_PLAYER)) {
+        /* SPIELER-FREEZE (Bit 0x80000000) — byte-true Spieler-Dispatcher FUN_80031c44:
+         *   80031c54  lw   a0,-13760(a0)          a0 = g_pauseflags (0x800aca40)
+         *   80031c78  bltz a0,0x80031da8          Vorzeichen-Bit gesetzt -> ALLES uebersprungen
+         * Uebersprungen werden damit: die Kommando-FSM (PTR_LAB_80073f90[state]), die
+         * Kollision FUN_8002b544, der RVD-/Kamera-Zonen-Scan FUN_8002d100(...,0x12)+
+         * FUN_8002dc48 und FUN_80037358. Der Spieler steht also still und nimmt keine
+         * Eingabe an, solange ein Examine-Text offen ist.
+         *
+         * WEITER LAEUFT dagegen der AOT-Pool-Scan: FUN_800436a8 (@0x8001ce1c im Haupt-Loop)
+         * liest g_pauseflags NIRGENDS (selbst nachdisassembliert, @0x800436a8ff) — er ist ein
+         * eigener Top-Level-Aufruf, nicht Teil des Spieler-Dispatchers. Deshalb hier derselbe
+         * Zuschnitt wie in den Stair-/Grab-/Death-Zweigen: kein player_tick, keine Kollision,
+         * aber der Scan bleibt. g_aot_action_pressed=0, weil die ACTION-Klasse im Original
+         * ausschliesslich aus den cmd-1-DECIDE-Handlern gerufen wird (@0x80031fe4 usw.), die
+         * dieser bltz gerade ueberspringt — zusaetzlich blockt der Open-Guard @0x80027e74
+         * jeden erneuten Message-Open.
+         *
+         * OPEN (bewusst NICHT gegatet): der RVD-Kamera-Zonen-Scan sitzt im Original INNERHALB
+         * dieses Dispatchers (@0x80031c78 deckt ihn mit ab), im Port aber in re15_aot_scan,
+         * das hier weiterlaufen muss. Beobachtbar ist die Differenz nicht, weil der Spieler
+         * waehrend des Freezes seine Position nicht aendert und ein Punkt-Test ohne
+         * Positionsaenderung nie eine neue Zone betritt. */
+        g_aot_action_pressed = 0;
+        re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
+    } else if (c->rdt_ok && re15_stair_active()) {
         /* Engine-driven stair traversal (action-triggered): auto-walk Leon
          * up/down + force the stair clip + sink/raise Y. The player does NOT
          * steer — SKIP player_tick + collision (the 0x4000-latch behaviour) —
@@ -518,7 +685,10 @@ void re15_game_step(const re15_game_ctx_t *c)
         g_aot_action_pressed = 0;    /* cmd 3/6/7 (LAB_800366bc/LAB_800368c0/LAB_8003694c):
                                       * kein cmd-1-Dispatcher -> kein ACTION-Scan (Gate oben) */
         re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
-        re15_gameover_fsm_tick();                        /* the byte-true parallel game-over chain */
+        /* (re15_gameover_fsm_tick() ist HERAUSGEZOGEN — sie ist im Original der eigene
+         *  Top-Level-Aufruf @0x8001cdfc VOR dem Spieler-Dispatcher @0x8001ce0c und darf
+         *  nicht am Zweig haengen, sonst friert der Freeze-Zweig die Todes-Kette ein.
+         *  Siehe den Beleg-Block oben, Fund 3.) */
     } else if (c->rdt_ok && re15_player_is_grabbed()) {
         grabbed_branch = 1;
         /* PLAYER-GRABBED LOCK (Phase 8.10, byte-true LAB_80036834): a live zombie has the player
@@ -572,6 +742,17 @@ void re15_game_step(const re15_game_ctx_t *c)
          * neu. Das alte `motion = 0` blitzte hier 1 Tick PL00-Base-Clip 0 (gemessen,
          * probe_hitdoor_entry_anim t=19). */
         --s_hit_flinch;
+        if (s_hit_flinch <= 0) {
+            /* ...und dieses cmd-Wort schreibt der Port jetzt auch WIRKLICH (Fix-Runde
+             * Cluster 4): `sw a0(=1),0x800aca58` @0x80035c80 / @0x80035db8. Bisher blieb
+             * das Feld auf der 2, die re15_damage.c:225 (@0x80012ebc `sb v0,0x4(s1)`)
+             * hineinschreibt, denn kein Pfad setzte es zurueck. Solange +0x4 nur Deko war,
+             * war das folgenlos — seit der Auto-Look-Prolog am echten Kommandowort haengt,
+             * waere ein stehengebliebenes cmd 2 eine Divergenz. */
+            pl->state       = 1;   /* @0x80035c80 / @0x80035db8 */
+            pl->sub_state_1 = 0;
+            pl->sub_state_2 = 0;
+        }
         g_aot_action_pressed = 0;    /* cmd 2 (LAB_80035af0): kein DECIDE -> kein ACTION-Scan */
         re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
     } else {
@@ -585,32 +766,89 @@ void re15_game_step(const re15_game_ctx_t *c)
          * original's non-normal command states. (audit wf_827f186d crow #2, HIGH) */
         pl->hit_react = 0;                       /* @0x80031964 */
         g_aca52_flags = (uint16_t)(g_aca52_flags & 0xfffe);   /* @0x80031c44 */
-        /* GAMEPLAY-AUTO-LOOK (byte-true State-1-Prolog @0x80031de8-40, cutscene_headlook.md
-         * B6 CONFIRMED): jeden Normal-Tick `flags |= 0x12` (@0x80031e04-08 = Idle-Release);
-         * dann — ausser im Substate 7 (@0x80031e10; Port-Entsprechung: Aim aktiv) —
-         * FUN_8003703c(a0=0xfa0=4000) (@0x80031e20-24): naechstes "lookable" SPL-Entity in
-         * 4000 Units; Treffer -> Ziel nach player+0x1a8 + `flags &= ~0x12` (@0x80031e3c-40)
-         * = ENTITY-TRACKING (Leons Kopf folgt dem naechsten NPC). Kategorien-Detail der
-         * +0x9a-Vorzeichen-Bits ist OFFEN (O1) — Port konservativ: NPC-Typen 0x40-0x4f mit
-         * hp<0 (der NPC-INIT-"lookable"-Marker `sh -1 -> +0x9a` @0x8011c748). Laeuft NUR im
-         * Normal-Branch = dem cmd-0/1-Pfad des Originals (Cutscene-Kommandos laufen andere
-         * cmds und behalten ihre Script-Necks). */
-        if (g_scd.player_mode != 2) {
+        /* GAMEPLAY-AUTO-LOOK — byte-true State-1-Prolog LAB_80031de8 (Tabelle
+         * PTR_LAB_80073f90[1], Dispatch `lw v0,0(at)` @0x80031cac auf DAT_800aca58 =
+         * player+0x4 = das Kommando-Wort). Selbst nachdisassembliert 2026-08-17:
+         *   80031e04 ori v0,v0,0x12 ; sb 0(s0)        s0 = 0x800ACC0C = player+0x1b8
+         *   80031e10 lbu 0x800aca59 ; beq ==7 -> skip (Substate 7 = Aim -> kein Scan)
+         *   80031e20 jal 0x8003703c ; ori a0,0xfa0    (Radius 4000)
+         *   80031e2c andi v0,0xff ; beq 0 -> skip
+         *   80031e3c andi v0,0xed ; sb 0(s0)          Treffer -> flags &= ~0x12 = TRACKING
+         * Der Scan selbst steht als re15_autolook_scan() weiter oben in dieser Datei. */
+        {
             extern int re15_player_aim_active(void);   /* player_common.c */
-            pl->neck_flags = (uint8_t)(pl->neck_flags | 0x12);
-            if (!re15_player_aim_active()) {
-                int  best = -1; int32_t best_d2 = 4000 * 4000;
-                for (int i = 1; i < RE15_ACTOR_MAX; i++) {
-                    const re15_actor_t *n = &g_actors[i];
-                    if (!n->active || n->hp >= 0) continue;
-                    if (n->type < 0x40 || n->type > 0x4f) continue;
-                    int32_t dx = n->x - pl->x, dz = n->z - pl->z;
-                    int32_t d2 = dx * dx + dz * dz;
-                    if (d2 < best_d2) { best_d2 = d2; best = i; }
-                }
-                if (best >= 0) {
-                    pl->neck_target_slot = (int8_t)best;
-                    pl->neck_flags = (uint8_t)(pl->neck_flags & ~0x12);
+            /* GATE — DAS ECHTE KOMMANDOWORT (Fix-Runde Cluster 4, 2026-08-17).
+             * Der Proxy `neck_flags & 0x6C` ist ERSETZT: op_plc_motion/op_plc_dest schreiben
+             * jetzt +0x4 = 4 auch auf den Spieler-Slot (@0x80041bb0 / @0x80041c14), op_plc_ret
+             * schreibt +0x4 = 1 zurueck (@0x80041f90) — scd_vm.c. Damit ist im Port dasselbe
+             * Feld scharf, an dem das Original dispatcht:
+             *   80031c8c  lbu v1,-13736(v1)   v1 = DAT_800aca58 = Spieler+0x4
+             *   80031c94  sll v1,v1,2
+             *   80031ca4  addiu at,at,16272   at = 0x80073f90
+             *   80031cac  lw  v0,0(at)
+             *   80031cb4  jalr v0
+             * Tabelle @0x80073f90 (selbst ausgelesen): [0]=0x800318f8 [1]=0x80031de8
+             * [2]=0x80035af0 [3]=0x800366bc [4]=0x80030660 [5]=0x80036834 [6]=0x800368c0
+             * [7]=0x8003694c. Der Prolog ist [1]; [4] ist der Plc-Executor OHNE Prolog.
+             *
+             * WARUM `!= 4` und nicht `== 1`: dieser else-Zweig IST der cmd-0/1-Handler des
+             * Ports — die uebrigen Kommandos haben eigene Geschwister-Zweige weiter oben
+             * (cmd 2 Knockdown/Flinch LAB_80035af0, cmd 3/6/7 Tod LAB_800366bc/
+             * LAB_800368c0/LAB_8003694c, cmd 5 Grab LAB_80036834, dazu der Freeze-Zweig).
+             * Wer hier ankommt, steht im Original auf cmd 1 — es sei denn, ein Skript hat
+             * ihn auf cmd 4 gesetzt. Genau dieses eine Fenster muss der Prolog auslassen.
+             * (Der cmd-0-INIT @0x800318f8 setzt das Wort ohnehin sofort auf 1:
+             * @0x8003192c `sw v0(=1),0x800aca58`; room_common.c:137 bildet das nach.)
+             *
+             * Was die alte Proxy-Maske belegte und weiterhin gilt:
+             *   (a) Der Prolog hat im Original KEIN neck_flags-Gate. Selbst nachdisassembliert
+             *       (s0 = 0x800acc0c = player+0x1b8, @0x80031df4 `addiu s0,s0,-13300`):
+             *         80031dfc  lbu v0,0(s0)
+             *         80031e00  nop
+             *         80031e04  ori v0,v0,0x12
+             *         80031e08  sb  v0,0(s0)
+             *       Zwischen Load und Store liegt KEIN Branch — er laeuft immer, wenn er
+             *       ueberhaupt gerufen wird.
+             *   (b) Das EINZIGE Gate ist das Kommando-Wort: @0x80031c8c `lbu v1,-13736(v1)`
+             *       (= DAT_800aca58 = player+0x4) / @0x80031c94 `sll v1,v1,2` / @0x80031ca4
+             *       `addiu at,at,16272` (= 0x80073f90) / @0x80031cac `lw v0,0(at)` /
+             *       @0x80031cb4 `jalr v0`. Tabelle @0x80073f90: [1] = 0x80031de8 (dieser
+             *       Prolog), [4] = 0x80030660 (der Plc-Executor).
+             *   (c) Plc_neck fasst das Kommando-Wort NIE an — der Handler @0x80041e98ff
+             *       schreibt ausschliesslich +0x1b8 (440): @0x80041ea8 `sb v0(=0x80),440(v1)`
+             *       (Reset auf das Speed-Bit), dann je Modus @0x80041ee0 `ori 0x12` (0),
+             *       @0x80041eec `ori 0x4` (1), @0x80041ef8 `ori 0x8` (2), @0x80041f04
+             *       `ori 0x2a` (3), @0x80041f10 `ori 0x58` (4), Store @0x80041f14.
+             * -> Plc_neck setzt also KEIN Kommando; die Skript-Neck-Modi und das Kommandowort
+             *    sind unabhaengige Felder. Genau deshalb war die alte Maske nur ein Proxy.
+             *
+             * GEMESSEN (lane17_NECK.md 7.4, Original-Savestates): waehrend der ROOM1240-Montage
+             * und des ROOM1170-Intros steht der Spieler auf cmd 1 -> der Prolog LAEUFT dort
+             * (montage1240_orig / orig_intro_late: neckfl = 0x12, accP = -186 = aktiver
+             * Release); nur der script-ANIMIERTE Spieler (orig_1170_gp2, cmd 4) ueberspringt
+             * ihn. Das noch aeltere `g_scd.player_mode != 2` schaltete den Prolog in JEDER
+             * Cutscene ab -> Leons Kopf behielt den eingebackenen Keyframe-Pitch.
+             *
+             * DIE SWEEP-PHASE BLEIBT GESCHUETZT (der Grund, warum die Proxy-Maske nicht
+             * einfach entfernt werden durfte). ROOM1170 sub02, aus der RDT disassembliert
+             * (shared_assets/PSX/STAGE1/ROOM1170.RDT, Datei-Offsets):
+             *   0x1520  Work_set(1,0)                       -> Work-Slot = SPIELER
+             *   0x1530  Sleep(10)
+             *   0x1538  Plc_neck(4,3,0,0,0,spd=0x3c)        -> +0x1b8 = 0x80|0x58 = 0xd8
+             *   0x1542  Plc_motion(0,0x0f,0)                -> +0x4 = 4
+             *   0x1546  Sleep(30)                            <- ERST HIER gibt der Thread ab
+             * Zwischen 0x1538 und 0x1542 liegt KEIN Sleep/Yield: der Sweep wird armiert und
+             * der Spieler im SELBEN VM-Durchlauf auf cmd 4 gesetzt. Der Prolog laeuft also
+             * ab dem ersten Sweep-Frame nicht mehr und kann mit `ori 0x12` das Bit 0x02
+             * nicht setzen, das sonst das Sweep-Ziel @0x80037534-48 ueberschreibt. Mit der
+             * alten Modus-Maske war das ein Zufallstreffer, jetzt ist es der belegte
+             * Mechanismus — und die 10 Ticks Sleep davor (0x1530) laufen byte-true MIT
+             * Prolog (cmd 1, Release 0x12), wie im Original. */
+            if (pl->state != 4) {
+                pl->neck_flags = (uint8_t)(pl->neck_flags | 0x12);   /* @0x80031e04-08 */
+                if (!re15_player_aim_active()) {                     /* @0x80031e10-18 */
+                    if (re15_autolook_scan(pl, 0xfa0))               /* @0x80031e20-24 */
+                        pl->neck_flags = (uint8_t)(pl->neck_flags & 0xed);  /* @0x80031e3c-40 */
                 }
             }
         }
@@ -865,6 +1103,38 @@ void re15_game_step(const re15_game_ctx_t *c)
             g_scd.cam_id             = entry_cut;
             g_scd.cam_change_pending = 1;
         }
+        /* ===== TUER-PRAESENTATION AUCH FUER DEN SELF-REENTER (Nutzer-Report
+         * "Elliots Laufanimation am Anfang im Intro ist noch falsch", Teil a:
+         * der HARTE SCHNITT).
+         *
+         * Das Original unterscheidet einen Selbst-Raum-Tuer NICHT von einer
+         * gewoehnlichen: der Raumlader FUN_8001d600 verzweigt allein am
+         * Tuer-Record-Zeiger — @0x8001d600 `lw v0,0x800ac9a8` /
+         * @0x8001d618 `bne v0,zero,0x8001d82c` — es gibt KEINEN
+         * "Ziel == aktueller Raum"-Sonderweg. sub11s `Aot_on(3)` feuert also
+         * die volle Transitions-FSM FUN_8001c958: Mode-2-Schwarz
+         * (@0x8001d82c-34 `FUN_80021634(2,0)`), Lader-Warteschleifen
+         * (@0x8001d850-868 / @0x8001dabc-d4), Freigabe (@0x8001dadc-ec),
+         * dann die 6-Frame-Einblendung + der 0xff000000-Freeze (State 4/5,
+         * @0x8001cc34-6c / @0x8001cc70-94).
+         *
+         * GEMESSEN (Port @62e7fb47, voller Flow Title->NEW GAME->Boot,
+         * RE15_STATE_LOG, scratchpad/c4/state_before.log): der Port schnitt
+         * OHNE Blende und OHNE Freeze direkt in die Szene —
+         *   F439  kein Elliot, cam 7 (Narrator)
+         *   F440  Reenter: Elliot @(1261,10091,r1199) st4 ss1=6 mo2 af1, cam 0
+         *   F441  Walker-INIT  r1295 (+96), keine Bewegung
+         *   F442  Bewegung @(1162,9906,r1343)
+         * = 2 Ticks vom Bild bis zum Sprint. Das Original (PCSX-Redux-Trace
+         * tools/redux/intro_trace_out.txt, 60-Hz-Felder) haelt zwischen
+         * denselben Punkten 8599..8632 = 33 Felder EINGEFROREN (af und r
+         * konstant, waehrend die Letterbox-Praesentation weiterlaeuft).
+         *
+         * re15_room_transition_present() spielt den State-3-Rumpf ab; der
+         * Freeze + die Freigabe laufen in re15_room_transition_tick() am
+         * Frame-Anfang (main.c, vor scd_vm_tick — byte-true die Position der
+         * FSM @0x8001c994 vor den Subsystem-Aufrufen @0x8001cdec). */
+        re15_room_transition_present();
     }
 
     /* Dispatch any AOT event fired this frame to its SCD handler (the handler
@@ -907,14 +1177,36 @@ void re15_game_step(const re15_game_ctx_t *c)
      * stair/menu branches too (it used to sit inside re15_player_tick, which those branches skip →
      * the whole scene froze the instant the player was grabbed = the ROOM1140 "hang"). Placed BEFORE
      * run_all so the AI's clip-end gate (re15_enemy_clip_done) reads the frame this pass advanced. */
-    re15_actors_anim_advance();
+    /* ANIM-FREEZE (Bit 0x10000000) — byte-true Action-Driver / Model-Instance-Animator
+     * FUN_80019e20 (Haupt-Loop @0x8001ce2c):
+     *   80019e28  lw   v0,-13760(v0)      v0 = g_pauseflags
+     *   80019e2c  lui  v1,0x1000
+     *   80019e3c  and  v0,v0,v1
+     *   80019e40  bne  v0,zero,0x8001a4a4  -> Funktions-Ende, KEINE Keyframe-Integration
+     * Das ist der Grund, warum im Original bei offenem Text auch die POSEN stehen und nicht
+     * nur die Entscheidungen. Ohne dieses Gate lief der Port pro Sekunde 30 Anim-Frames
+     * weiter (gemessen: 240 Advances in 60 Frames ueber 4 Aktoren). */
+    if (!(g_re15_pauseflags & RE15_PAUSE_ACTION))
+        re15_actors_anim_advance();
 
     /* MASH-ESCAPE feed (byte-true FUN_80037024): the grab's bite loop reads the press-EDGE pad bits
      * (any D-pad/face button & 0xf0f0) to drain its escape window 1 + 5*mash — the classic wiggle-out.
      * Fed every tick (also while the grabbed branch skips re15_player_tick — the pad edge still
      * arrives here), so mashing during the grab breaks Leon free via the THROW-OFF. */
     re15_enemy_ai_set_pad_pressed(c->pad_pressed);
-    if (c->rdt_ok)
+    /* AI-FREEZE (Bit 0x20000000) — im Original gated sich JEDER AI-Root selbst; exemplarisch
+     * der Live-Zombie-Root FUN_80100424 (STAGE1.BIN, selbst disassembliert 2026-08-17):
+     *   8010042c  lw   v0,-13760(v0)      v0 = g_pauseflags
+     *   80100430  lui  v1,0x2000
+     *   80100438  and  v0,v0,v1
+     *   8010043c  bne  v0,zero,0x80100658  -> sofortiges Funktions-Ende
+     *   (zweites, unabhaengiges Gate @0x80100450-5c: `lbu +0x9; andi 0x20` = der bereits
+     *    portierte Per-Entity-Freeze)
+     * 164 solcher Lesestellen in den Overlays = alle Gegner-/NPC-Roots. Der Port faedelt
+     * sie durch re15_enemy_ai_run_all, also steht das Gate hier am Sammel-Aufruf; Wirkung
+     * identisch (kein Root laeuft). Der bereits vorhandene, aber NIE verdrahtete Hebel
+     * re15_enemy_ai_set_paused bleibt unangetastet (fremde Datei, Batch B1). */
+    if (c->rdt_ok && !(g_re15_pauseflags & RE15_PAUSE_AI))
         re15_enemy_ai_run_all(g_scd.combat_active);
 
     /* LEON GRAB-VICTIM ANIMATION (state 5 struggle / state 6 collapse) — advance AFTER run_all so the

@@ -48,6 +48,7 @@ int re15_aot_set(int slot, uint8_t type, uint8_t event_id,
     a->was_inside      = 0;
     a->sce_flags       = 0;      /* installers with real record flags override (op_aot_set pc[3]) */
     a->cam_from_filter = 0xFF;   /* default = no filter; CAM_SWITCH overrides */
+    a->pause_mask16    = 0;      /* sce-1 installer setzt das echte Payload-Halbwort u16@+2 */
     a->x               = cx;
     a->z               = cz;
     a->half_w          = half_w < 0 ? -half_w : half_w;
@@ -151,14 +152,20 @@ void re15_aot_cut_replace(uint8_t a, uint8_t b)
     }
 }
 
-void re15_aot_set_message(int slot, uint8_t msg_index)
+void re15_aot_set_message_mask(int slot, uint8_t msg_index, uint16_t pause_mask16)
 {
     if (slot < 0 || slot >= RE15_AOT_MAX) return;
     re15_aot_t *a = &g_aot.slots[slot];
-    a->active     = 1;
-    a->type       = RE15_AOT_TYPE_MESSAGE;
-    a->event_id   = msg_index;          /* MESSAGE: event_id holds the .msg index */
-    a->was_inside = 0;
+    a->active       = 1;
+    a->type         = RE15_AOT_TYPE_MESSAGE;
+    a->event_id     = msg_index;        /* MESSAGE: event_id holds the .msg index */
+    a->was_inside   = 0;
+    a->pause_mask16 = pause_mask16;     /* Payload u16@+2 (@0x80043098) */
+}
+
+void re15_aot_set_message(int slot, uint8_t msg_index)
+{
+    re15_aot_set_message_mask(slot, msg_index, 0);   /* Alt-Aufrufer/Tests: kein Freeze */
 }
 
 /* Aot_reset (0x46) = FULL RETYPE (byte-true LAB_80040738, aot_sce_census fix 2):
@@ -197,8 +204,11 @@ void re15_aot_retype(int slot, uint8_t sce, uint8_t flags,
         a->type = RE15_AOT_TYPE_NONE;             /* handler[0] @0x8004305C = inert */
         break;
     case 1:
-        a->type     = RE15_AOT_TYPE_MESSAGE;
-        a->event_id = (uint8_t)p0;                /* msg u16@+0 (LAB_80043084) */
+        a->type         = RE15_AOT_TYPE_MESSAGE;
+        a->event_id     = (uint8_t)p0;            /* msg u16@+0 (@0x8004309c `lhu a2,0(v0)`) */
+        a->pause_mask16 = p1;                     /* Pause-Maske u16@+2 (@0x80043098 `lhu a3,2(v0)`) —
+                                                   * Aot_reset schreibt Payload +0/+2/+4 = p0/p1/p2
+                                                   * (@0x80040788-a8), also ist p1 genau dieses Feld. */
         break;
     case 2:
         a->type      = RE15_AOT_TYPE_DOOR;
@@ -576,9 +586,11 @@ void re15_aot_fire_slot(int slot)
         (void)scd_event_fire(a->event_id);
         break;
     case RE15_AOT_TYPE_MESSAGE: {
-        /* handler[1] @0x80043084: FUN_80027e68(0,0x300,msg,…). */
-        extern void re15_scd_show_message(uint8_t index);
-        re15_scd_show_message(a->event_id);
+        /* handler[1] @0x80043084: FUN_80027e68(0, 0x300, msg u16@+0, (u16@+2)<<16).
+         * Das 4. Argument ist die PAUSE-MASKE (@0x80043098/@0x800430a4) — sie friert
+         * ueber FUN_80027e68 @0x80027ed0 Spieler/AI/Anim/Skript ein. */
+        extern void re15_scd_show_message(uint8_t index, uint32_t pause_mask);
+        re15_scd_show_message(a->event_id, (uint32_t)a->pause_mask16 << 16);
         break;
     }
     case RE15_AOT_TYPE_FLAG_CHG: {
@@ -1209,9 +1221,12 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
                 /* EXAMINE/MESSAGE AOT (sce=1): show the .msg index (event_id) and do
                  * NOT change rooms — the byte-true ROOM1130 back-door "It's not
                  * necessary to go back" (msg index 1). msg_block then suppresses
-                 * re-fire until the message clears. */
-                extern void re15_scd_show_message(uint8_t index);
-                re15_scd_show_message(a->event_id);
+                 * re-fire until the message clears. Das Payload-Halbwort u16@+2 ist die
+                 * PAUSE-MASKE (@0x80043098 `lhu a3,2(v0)` + @0x800430a4 `sll a3,a3,16`);
+                 * ausgeliefert ist sie in ALLEN 511 sce-1-Zonen 0xffff -> 0xffff0000, also
+                 * friert jeder Examine-Text die Welt ein, bis der Text weg ist. */
+                extern void re15_scd_show_message(uint8_t index, uint32_t pause_mask);
+                re15_scd_show_message(a->event_id, (uint32_t)a->pause_mask16 << 16);
                 break;
             }
             case RE15_AOT_TYPE_EXAMINE_WORKVAR:

@@ -1060,3 +1060,126 @@ target_compile_definitions(test_re2_enemse PRIVATE
     RE15_ASSET_RE2_DIR="${CMAKE_SOURCE_DIR}/shared_assets/RE2")
 add_test(NAME unit_re2_enemse COMMAND test_re2_enemse)
 set_tests_properties(unit_re2_enemse PROPERTIES TIMEOUT 30)
+
+# --- Batch A1 (2026-08-17): NECK/HEAD-LOOK — Auto-Look-Scan FUN_8003703c (Wurzel-Gate +
+#     Ausschluss +0x9&0x60 + K1/K2/K3) und die Neck-FSM-Basis FUN_80037358 (Klemme VOR
+#     dem Keyframe-Abzug @0x80037598/@0x800375a4-d0, Release-Pitch 0 ABSOLUT
+#     @0x80037554-60). Belege: analysis-Specs lane17_NECK / lane17_CUTSCENE. ---
+add_executable(test_neck_headlook test_neck_headlook.c)
+target_link_libraries(test_neck_headlook PRIVATE re15_engine re15_test_support)
+target_include_directories(test_neck_headlook PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_neck_headlook COMMAND test_neck_headlook)
+set_tests_properties(unit_neck_headlook PROPERTIES TIMEOUT 30)
+
+# --- Batch B1 (2026-08-17): Gegner-/NPC-KI-Cluster. Pins:
+#     T1 Phase-1-Body auf dem Align-Tick der Walk-Subs (Sub 4 @0x80051230 -> Body @0x80051234,
+#        Exit @0x800512cc; Sub 5 @0x8005156c -> @0x800515a0, Exit @0x80051638)
+#     T2 Idle-Clip 0 LOOPT (f314 unbedingt @0x80101da8, Wrap `sb zero,149` @0x8001f63c)
+#     T3 RE2-Frame-Wort-SFX nur in EXEC[1]/EXEC[2] (jal-Scan EMOVL10_S0.BIN: @0x80101d34/@0x80102454)
+#     T4 ROOM1100 sel-7 liegt (RE1.5-Posenpaket-Familie {4,7,9} @0x80100dc0-e8)
+#     T5 Skript-Wecker Nibble 9/10 (`sb a2,9(a0)` @0x800411f8) -> RE2 EXEC[9] 0x901 @0x80103E48
+#     T3b LIEGEN (EXEC[7]) + AUFSTEHEN (EXEC[9]) ohne Frame-Wort-SE — der woertlich gemeldete
+#        Teil von Report 13, den T3 nicht erreicht
+#
+# ⛔ EIN add_test PRO PIN (Review-Fund test-validity 2026-08-17): vorher lief das ganze Binary
+#    unter EINEM Eintrag (`add_test(NAME unit_lane_b1_ai COMMAND test_lane_b1_ai)`) und
+#    aggregierte alle Pins in einen Exit-Code. Solange EIN Pin rot war (T1), war das ctest-
+#    Verdikt fuer die anderen bedeutungslos — die einzigen Pins der Nutzer-Reports 12/13/15
+#    konnten unbemerkt rot werden, und genau das war eingetreten (T4/T5 rot, Suite meldete
+#    unveraendert "unit_lane_b1_ai (Failed)"). Jeder Pin hat jetzt sein eigenes CI-Signal.
+add_executable(test_lane_b1_ai test_lane_b1_ai.c)
+target_link_libraries(test_lane_b1_ai PRIVATE re15_engine re15_test_support)
+target_include_directories(test_lane_b1_ai PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_lane_b1_t1_aligntick  COMMAND test_lane_b1_ai t1)   # Reports 1 + 11
+add_test(NAME unit_lane_b1_t2_idleloop   COMMAND test_lane_b1_ai t2)   # Report 12
+add_test(NAME unit_lane_b1_t3_sfxgate    COMMAND test_lane_b1_ai t3)   # Report 13 (Walk/Knockdown)
+add_test(NAME unit_lane_b1_t3b_getupsfx  COMMAND test_lane_b1_ai t3b)  # Report 13 (Liegen/Get-up)
+add_test(NAME unit_lane_b1_t45_room1100  COMMAND test_lane_b1_ai t45)  # Report 15
+set_tests_properties(unit_lane_b1_t1_aligntick unit_lane_b1_t2_idleloop
+                     unit_lane_b1_t3_sfxgate unit_lane_b1_t3b_getupsfx
+                     unit_lane_b1_t45_room1100 PROPERTIES TIMEOUT 90)
+
+# --- Report 15 (ASSET-HAELFTE): die 13 BSS-Hintergruende von ROOM1100 waren ROOM1170-Kopien
+#     (git HEAD nachgerechnet: alle 13 byte-identisch mit BSS/ROOM1170/). Neu geschnitten aus
+#     STAGE1/ROOM110.BSS (851968 B = 13 x 65536). Der Fix lag in KEINEM Test — dieser Daten-Pin
+#     prueft den GANZEN BSS-Baum (156 Raeume / 1688 Chunk-Dateien) gegen seine Stage-Container. ---
+#     Bewusst OHNE re15_engine: reiner Datei-Vergleich, kein Netz, kein Emulator, keine Engine.
+add_executable(test_bss_room_source test_bss_room_source.c)
+target_compile_definitions(test_bss_room_source PRIVATE RE15_ASSETS_PATH=${RE15_ASSETS_PATH})
+add_test(NAME unit_bss_room_source COMMAND test_bss_room_source)
+set_tests_properties(unit_bss_room_source PROPERTIES TIMEOUT 120)
+
+# --- Batch C (2026-08-17): GLOBALER TEXT-FREEZE (Nutzer-Report 16). Pins:
+#     (1) sce-1-Examine-AOT traegt die Pause-Maske im Payload u16@+2 (@0x80043098)
+#     (2) offener Examine-Text (0xffff0000) -> Spieler/KI/Anim/SCD/Pad stehen
+#         (@0x80031c78 / @0x8010043c / @0x80019e40 / @0x8003f04c / @0x80030514)
+#     (3) Maske 0 (Caption, 420 von 698 Message_on) friert NICHTS ein — Regressionsschutz
+#         fuer die Kino-Captions ROOM1170/ROOM1240 (alle 22 tragen 0x0000)
+#     (4) Close = Snapshot-Restore (@0x800285a4/@0x800286cc/@0x8002871c), auch ueber
+#         einem bestehenden Item-Modal-Freeze
+#     (5) Open-Guard (@0x80027e74) schuetzt den Snapshot vor dem Re-Exec
+#     (6) Raumwechsel nullt g_pauseflags (@0x8001ca44/@0x8001caec)
+add_executable(test_text_freeze test_text_freeze.c)
+target_link_libraries(test_text_freeze PRIVATE re15_engine re15_test_support)
+target_include_directories(test_text_freeze PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_text_freeze PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_text_freeze COMMAND test_text_freeze)
+set_tests_properties(unit_text_freeze PROPERTIES TIMEOUT 60)
+
+# --- Cluster 4 (2026-08-17): Raum-Transitions-Praesentation + Spieler-Kommandowort.
+#     (a) Der Self-Reenter (Narrator -> Cinematic, ROOM1170) lief ohne Tuer-Praesentation:
+#         harter Schnitt auf den bereits sprintenden Elliot. FUN_8001d600 verzweigt ALLEIN
+#         am Tuer-Record-Zeiger (@0x8001d600/@0x8001d618) — ein Selbst-Raum-Wechsel nimmt
+#         also dieselbe Praesentation. Transitions-FSM FUN_8001c958, Tabelle @0x8001069c;
+#         State 4 @0x8001cc34-5c setzt g_pauseflags |= 0xff000000 (lui 0xff00 + or) und
+#         State-Byte 5 @0x8001cc50 -> Spieler/KI/Anim/SCD/Pad stehen die ganze Einblendung.
+#     (b) Spieler-Kommandowort +0x4: Plc_motion @0x80041ba4-b0 / Plc_dest @0x80041c14
+#         schreiben 4, Plc_ret @0x80041f8c-9c schreibt 1 und NICHT +0x1b8 — darum fuehrt
+#         das Original ab cmd 1 jeden Frame 0x12 nach. Ersetzt den frueheren 0x6C-Proxy.
+add_executable(test_room_transition_cmd test_room_transition_cmd.c)
+target_link_libraries(test_room_transition_cmd PRIVATE re15_engine re15_test_support)
+target_include_directories(test_room_transition_cmd PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_room_transition_cmd COMMAND test_room_transition_cmd)
+set_tests_properties(unit_room_transition_cmd PROPERTIES TIMEOUT 30)
+
+# --- Cluster 3 (2026-08-17): RE2-Frame-Wort-SE-Kadenz. Beide Original-Gates:
+#     Sub-Gate (+0x10E & 0x80) || (+0x21A & 0x8000)  @0x80101cd8-cf8 / @0x801023f8-418
+#     Drittel-Takt  +0x14D % 3 == 2                  @0x80101d00-2c  / @0x80102420-4c
+#     (+0x14D IST das Frame-Byte des Clip-Wortes @+0x14C, Produzent = die geteilte
+#      EXE-Anim-Advance jal 0x8002959c direkt davor @0x80101cd0 / @0x801023f0.)
+add_executable(test_re2_sfx_cadence test_re2_sfx_cadence.c)
+target_link_libraries(test_re2_sfx_cadence PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_sfx_cadence PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2_sfx_cadence PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2_sfx_cadence COMMAND test_re2_sfx_cadence)
+set_tests_properties(unit_re2_sfx_cadence PROPERTIES TIMEOUT 90)
+
+# --- Cluster 3 (2026-08-17): ROTOR-BGM-PIN (Nutzer-Report 3, "Rotoren-Sound fehlt im
+#     ROOM1170-Intro"). Der Port hatte auf dem BGM-SUB-Layer eine ERFUNDENE
+#     Positions-Skalierung (FUN_80045a64 hat in der ganzen EXE nur 4 Caller, alle im
+#     SE-Pfad, keiner bei BGM) plus ein player_mode-Mute. Beides daempfte den Rotor nicht
+#     nur, es hob auch das Skript-Stop Sce_bgm_control(1,2) jeden Frame wieder auf.
+#     Der Pin rendert die Mix-Kette deterministisch (RE15_AUDIO_CAP_SYNC: 1470 Stereo-
+#     Frames je Spielframe, ohne SDL-Geraet) und misst den isolierten Rotor-Layer:
+#     ON-Fenster rms>0 mit Blade-Pass ~10.9 Hz, OFF-Fenster still, kein Pegelunterschied
+#     zwischen ferner und naher Kameraposition. Gegen den alten Stand fallen 4 der 5 Pins.
+#     Braucht audio_pc.c + SDL2 direkt (NICHT re15_test_support, dessen Audio-Stubs
+#     genau die geprueften Funktionen ersetzen wuerden).
+if(TARGET SDL2::SDL2-static)
+    add_executable(test_rotor_bgm_pin
+        test_rotor_bgm_pin.c
+        ${CMAKE_SOURCE_DIR}/platform/pc/src/audio_pc.c)
+    target_link_libraries(test_rotor_bgm_pin PRIVATE re15_engine SDL2::SDL2-static)
+    target_include_directories(test_rotor_bgm_pin PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/platform/pc/src)
+    target_compile_definitions(test_rotor_bgm_pin PRIVATE
+        RE15_PLATFORM_PC
+        RE15_ASSET_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+        RE15_CD_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+        RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+    add_test(NAME unit_rotor_bgm_pin COMMAND test_rotor_bgm_pin)
+    set_tests_properties(unit_rotor_bgm_pin PROPERTIES TIMEOUT 120)
+endif()

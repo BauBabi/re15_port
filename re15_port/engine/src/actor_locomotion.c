@@ -348,7 +348,31 @@ void re15_actor_step_walk(re15_actor_t *a)
 /* Drive all active walkers in the actor pool. Called once per SCD tick. */
 void re15_actor_step_all_walkers(void)
 {
+    /* FREEZE-GATE (Fix-Runde Cluster 1, Fund 5; alle Adressen selbst nachdisassembliert
+     * 2026-08-17). Diesen SAMMEL-Treiber gibt es im Original nicht — die Fortbewegung liegt
+     * dort PRO AKTOR hinter einem eigenen Pause-Bit, deshalb gated dieser Loop pro Slot:
+     *   SPIELER (Slot 0), Bit 0x80000000 — FUN_80031c44:
+     *     80031c54  lw   a0,-13760(a0)      a0 = g_pauseflags (0x800aca40)
+     *     80031c78  bltz a0,0x80031da8      Vorzeichen-Bit -> Sprung ueber den cmd-Dispatch
+     *   und genau in diesem uebersprungenen Bereich liegt der Walk: @0x80031ca4
+     *   `addiu at,at,16272` (= Tabelle 0x80073f90) / @0x80031cac `lw v0,0(at)` /
+     *   @0x80031cb4 `jalr v0`; PTR_LAB_80073f90[4] = 0x80030660 dispatcht seinerseits
+     *   @0x8003069c `addiu at,at,15920` (= 0x80073e30) / @0x800306a4 `lw v0,0(at)` /
+     *   @0x800306ac `jalr v0`, und PTR_LAB_80073e30[4] = 0x80030af0 ist der WALK-Handler
+     *   (dieselbe Adresse, die re15_actor_step_walk oben zitiert).
+     *   NPC (alle uebrigen Slots), Bit 0x20000000 — die NPC-Fortbewegung laeuft im Executor
+     *   der AI-Root (FUN_80050be8-Kette), und JEDE Root gated sich selbst darauf; exemplarisch
+     *   der Root, der auch die Neck-FSM ruft: @0x8011c5ac `addiu s0,s0,-13760` /
+     *   @0x8011c5b4 `lw v0,0(s0)` / @0x8011c5b8 `lui v1,0x2000` / @0x8011c5bc and /
+     *   @0x8011c5c0 `bne v0,zero,0x8011c6ac` (Ende der Root).
+     * Ohne dieses Gate lief die Weltposition waehrend eines eingefrorenen Textes weiter,
+     * waehrend Skelett/Keyframe standen — und das Plc_dest-Ankunftsflag (re15_game_flag_set
+     * unten) konnte mitten im Freeze umschlagen. Das Gate sitzt in der Engine, damit es fuer
+     * PC- und PSX-Loop gleichermassen gilt. */
     for (int i = 0; i < RE15_ACTOR_MAX; i++) {
+        const uint32_t pause_bit = (i == RE15_ACTOR_SLOT_PLAYER) ? RE15_PAUSE_PLAYER  /* @0x80031c78 */
+                                                                 : RE15_PAUSE_AI;     /* @0x8011c5c0 */
+        if (g_re15_pauseflags & pause_bit) continue;
         if (g_actors[i].active && g_actors[i].walk_active) {
             re15_actor_step_walk(&g_actors[i]);
         }

@@ -328,6 +328,17 @@ int re15_bg_is_loaded(void)
     return s_bg_loaded;
 }
 
+/* Cache verwerfen — der PC-Gegenpart zu bg_psx.c:222 (bislang NUR im PSX-Backend definiert, der
+ * PC-Link brach an der ersten Verwendung). Nach dem Aufruf malt die Frame-Schleife SCHWARZ
+ * (main.c: `re15_bg_is_loaded()` false -> `re15_render_background_gradient(0,0,0,0,0,0)`), was dem
+ * gehaltenen MODE-2-SCHWARZ des Original-Raumladers entspricht (`ori a0,0x2; jal 0x80021634;
+ * addu a1,zero,zero` @0x8001d620-28; Freigabe erst @0x8001dadc-ec nach den Load-Waits). */
+void re15_bg_invalidate(void)
+{
+    s_bg_loaded = 0;
+    snprintf(s_bg_tag, sizeof s_bg_tag, "(none)");
+}
+
 /* AZ-round 2026-05-28: BG foreground occlusion patch — re-blit a rect of
  * the cached BG image (from sprite.pri mask) onto the PC framebuffer
  * AFTER characters have rendered. This overdraws character pixels where

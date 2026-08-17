@@ -23,6 +23,7 @@
 #include "re15_emd.h"
 #include "re15_actor.h"     /* g_actors for Plc_neck head-look */
 #include "re15_math.h"      /* re15_squareroot0 — the BIOS sqrt approx for the neck-pitch horiz dist */
+#include "re15_scd.h"       /* g_re15_pauseflags + RE15_PAUSE_* — Freeze-Gate der Neck-FSM (s.u.) */
 
 /* Q12 helpers — int32 intermediates to avoid overflow during multiply.
  *
@@ -314,9 +315,35 @@ int re15_skel_compute_pose(const re15_emd_skeleton_t *skel,
          * roots (jal 0x80037358 @0x8011c69c + siblings); the old `b==8 && player` gate left
          * NPCs headless and mis-owned NPC Plc_necks. Mechanics:
          *   origin = head part WORLD position; FUN_8003790c yaw/pitch (atan2 + SquareRoot0);
-         *   head-LOCAL yaw = worldYaw - heading - rootBoneYaw; per-axis accumulator slews by
-         *   a constant step, CLAMPED to the part limits, then ADDs to the keyframe euler
-         *   (yaw -> vy +0x62, pitch -> vz +0x64), matrix built, offset restored. */
+         *   head-LOCAL yaw = worldYaw - heading - rootBoneYaw; das LOKALE ZIEL wird auf die
+         *   Part-Klemmen begrenzt, DANN der Kopf-Keyframe-Euler abgezogen = Akku-Ziel; der
+         *   Akku slewt mit konstantem Schritt und wird auf den Keyframe-Euler ADDIERT
+         *   (yaw -> vy +0x62, pitch -> vz +0x64), Matrix gebaut, Offset zurueckgenommen.
+         * KORREKTUR 2026-08-17 (Batch A1, Reports 1/3/4): die alte Etikette "CLAMPED ...
+         * then ADDs" beschrieb die Klemme auf dem RESIDUAL (nach kf-Abzug). Die Bytes sagen
+         * das Gegenteil — `subu a3,v1,s1` @0x80037598 bildet das Residual OHNE part+0x62,
+         * die Klemme @0x800375a4-d0 sitzt darauf, und part+0x62 kommt erst im Slew-Delta
+         * (`lhu a1,98(s0)` @0x800375dc). Ebenso ist Bit 0x10 ein ABSOLUTES Pitch-Ziel 0
+         * (`sh zero,20(sp)` @0x80037560), kein "Akku -> 0". Beides unten korrigiert.
+         *
+         * OPEN (Report 4, ROOM1150 Irons): das Gate `neck_bone != 0` ist eine PORT-Kruecke.
+         * Im Original ruft der 0x45-Root die FSM JEDEN Tick (`jal 0x80037358` @0x8011d278),
+         * und +0x1b8/+0x1b9 (Flags/Kopf-Part) ueberleben den Raumwechsel: der Room-Load
+         * cleart nur Entity-Wort 0 (FUN_8001a4c0), der Part-Pool-Init FUN_8001e5b0 schreibt
+         * +0x94..+0x9e gar nicht. Irons' eigener NPC-INIT @0x8011d2b8 (Neck-Defaults
+         * @0x8011d344-8c) laeuft auch im Original NIE (SCD-VM @0x8001cdec vor Entity-Loop
+         * @0x8001ce04; sub02 Plc_motion(0,3) stampft +0x4=4 @0x80041bb0 vor dem ersten
+         * Root-Tick) -> Slot 0 ERBT den letzten Neck-Zustand des Vorraums (ROOM10D0 Marvin:
+         * flags 0x92 / bone 8 / yaw-step 100). Der Port hat neck_bone == 0 -> FSM ganz aus.
+         * Die Vererbung ist im Port NICHT hier reparierbar (die Slot-Felder werden in
+         * actor_common.c re15_actor_alloc/re15_actor_init genullt, und die konkreten
+         * Erbwerte sind Laufzeitdaten). MESSANLEITUNG: DuckStation-Savestate in ROOM1150,
+         * angespielt ueber die ECHTE Kampagnenkette (NICHT Debug-JUMP — andere Slot-
+         * Historie), dann per Skill re15-savestate-ghidra lesen: enemy[0] @0x800acc2c
+         * +0x1b8/+0x1b9/+0x9e/+0x9f sowie Part-Pool +0x188 -> part8 (+8*0xac) +0x94/+0x96
+         * (Akkus), +0x98/+0x9a (Steps), +0x9c/+0x9e (Klemmen). Erst mit diesen Werten darf
+         * das Gate fallen. Leons Seite der Szene (Kniet-Look, gemessen acc(p=312) = Klemme
+         * aktiv) ist mit der Klemmen-/Release-Korrektur unten bereits gefixt. */
         if (bact && bact->neck_bone != 0 && b == (int)bact->neck_bone) {
             re15_actor_t *a = bact;
             uint8_t  fl = a->neck_flags;
@@ -336,20 +363,65 @@ int re15_skel_compute_pose(const re15_emd_skeleton_t *skel,
             a->head_world[0] = ox; a->head_world[1] = oy; a->head_world[2] = oz;
             a->head_world_ok = 1;
 
-            /* --- target selection (FUN_80037358 flag bits) --- */
+            /* ===== FREEZE-GATE der Neck-FSM (Fix-Runde Cluster 1, 2026-08-17) =============
+             * Selbst nachdisassembliert + selbst gescannt; die FSM ist im Original KEIN
+             * Top-Level-Treiber, sie haengt ausschliesslich an Aufrufern, die sich vorher auf
+             * ihr eigenes Pause-Bit gaten:
+             *   SPIELER (Bit 0x80000000) — eigener wortweiser EXE-Scan nach `jal 0x80037358`
+             *     (= 0x0C00DCD6) liefert in der GANZEN PSX.EXE genau EINEN Treffer: @0x80031d78.
+             *     Der liegt INNERHALB von FUN_80031c44 zwischen
+             *       80031c54  lw   a0,-13760(a0)      a0 = g_pauseflags (0x800aca40)
+             *       80031c78  bltz a0,0x80031da8      Vorzeichen-Bit -> Sprung UEBER den Call
+             *     und dem Ziel; @0x80031da8 enthaelt nur noch den Schatten-Call
+             *     (@0x80031dcc `jal 0x8001b064`) und den Epilog (@0x80031dd4 `lw ra,20(sp)` ...
+             *     @0x80031de0 `jr ra`). Steht 0x80000000, laeuft die Neck-FSM also NICHT.
+             *   NPC (Bit 0x20000000) — die Overlay-Roots rufen sie; eigener Scan von STAGE1.BIN
+             *     findet 6 Call-Sites (0x8011c69c, 0x8011cc6c, 0x8011d278, 0x8011d80c,
+             *     0x8011dd58, 0x8011e320) und JEDER umschliessende Root traegt im Prolog das
+             *     AI-Gate `lui v1,0x2000` (Roots 0x8011c5a0/0x8011cb70/0x8011d140/0x8011d6d4/
+             *     0x8011dc68/0x8011e22c -> Gates @0x8011c5b8/cb88/d158/d6ec/dc80/e244).
+             *     Exemplarisch 0x8011c5a0: @0x8011c5ac `addiu s0,s0,-13760` (= 0x800aca40) /
+             *     @0x8011c5b4 `lw v0,0(s0)` / @0x8011c5b8 `lui v1,0x2000` / @0x8011c5bc and /
+             *     @0x8011c5c0 `bne v0,zero,0x8011c6ac` — das Ziel liegt HINTER dem Call
+             *     @0x8011c69c.
+             * Der Port ruft diese FSM aus dem RENDER-Pfad (platform/pc/main.c), wo es kein
+             * Pause-Bit gibt: ohne dieses Gate slewten die Koepfe waehrend jedes eingefrorenen
+             * Textes weiter und die Sweep-Zaehler (+0x160 = neck_tx, unten `a->neck_tx--`)
+             * liefen bis zum Auto-Release `neck_flags = 0x12` herunter — mitten im Freeze.
+             * GEFROREN wird exakt die FSM (Ziel-Wahl, Klemme, Slew, Zaehler, Flags). Der bereits
+             * erreichte AKKU wird weiterhin auf den Keyframe addiert (unten `ay + a->neck_yaw`),
+             * denn im Original friert parallel der Pose-Builder FUN_80019e20 ein
+             * (@0x80019e28 lw / @0x80019e3c and / @0x80019e40 `bne -> 0x8001a4a4` = Epilog,
+             * Bit 0x10000000) und die zuletzt gebaute Kopf-Matrix bleibt unveraendert stehen.
+             * Der `goto` bildet den `bltz`-Sprung 1:1 ab (Call uebersprungen, Rest laeuft). */
+            {
+                const uint32_t neck_pause_bit =
+                    (a == &g_actors[RE15_ACTOR_SLOT_PLAYER]) ? RE15_PAUSE_PLAYER   /* @0x80031c78 */
+                                                             : RE15_PAUSE_AI;      /* @0x8011c5c0 */
+                if (g_re15_pauseflags & neck_pause_bit) goto neck_apply_acc;
+            }
+
+            /* --- target selection (FUN_80037358 flag bits) ---
+             * BYTE-TRUE REIHENFOLGE, selbst nachdisassembliert 2026-08-17 (PSX.EXE, alle
+             * Adressen unten im Code zitiert). Das Original haelt ZWEI Ziele auf dem Stack:
+             *   18(sp) = ABSOLUTES Welt-Ziel-Yaw   ·   20(sp) = LOKALES Ziel-Pitch
+             * und ueberschreibt sie in dieser Reihenfolge:
+             *   0x04 Zielpunkt -> 0x08 relativ -> 0x40 Yaw-Sweep -> 0x02 Release-Yaw ->
+             *   0x10 Pitch-Null -> [Yaw-Klemme+Slew] -> 0x20 Pitch-Sweep -> [Pitch-Klemme+Slew].
+             * Der Port haelt beide Ziele LOKAL (= a3 des Originals, `18(sp)-heading-bodyYaw`
+             * @0x80037580-98) — das ist dieselbe Groesse, nur ohne den konstanten Offset. */
             int   have_world = 0;             /* world-point target in (twx,twy,twz)? */
             int32_t twx = 0, twy = 0, twz = 0;
-            int   yaw_keyframe = 0, pit_keyframe = 0;   /* residual -> 0 (release) */
             int32_t rel_yaw = 0, rel_pit = 0; int rel = 0;
             if (fl & 0x04) {                  /* world point +0x160/162/164 (mode 1) */
                 have_world = 1; twx = a->neck_tx; twy = a->neck_ty; twz = a->neck_tz;
             } else if (fl & 0x08) {           /* RELATIVE (modes 2/3/4): local yaw offset =
-                                               * +0x162, pitch target = +0x164 (decompile
-                                               * Z.37-41: world yaw = bodyYaw+heading+ofs ->
-                                               * local = the raw offset) */
+                                               * +0x162, pitch target = +0x164 (@0x80037480-b0:
+                                               * 18(sp) = +0x162 + heading + bodyYaw -> lokal =
+                                               * der rohe Offset; 20(sp) = +0x164 direkt) */
                 rel = 1; rel_yaw = a->neck_ty; rel_pit = a->neck_tz;
-            } else if (fl & 0x02) {           /* target = keyframe -> release */
-                yaw_keyframe = 1; pit_keyframe = 1;
+            } else if (fl & 0x02) {           /* target = keyframe -> release (siehe unten) */
+                /* nichts zu tun: die Default-Ziele unten SIND das Release */
             } else {                          /* flags low bits 0 = ENTITY TRACKING: look at
                                                * the head part of +0x1a8 (NPC default = the
                                                * player @0x8011c738; player auto-look writes
@@ -364,10 +436,14 @@ int re15_skel_compute_pose(const re15_emd_skeleton_t *skel,
                     } else {                  /* not yet posed: fall back to the entity root */
                         twx = g_actors[ts].x; twy = g_actors[ts].y; twz = g_actors[ts].z;
                     }
-                } else { yaw_keyframe = 1; pit_keyframe = 1; }
+                }
+                /* sonst: PORT-GUARD (kein gueltiges Trackingziel) -> Release-Defaults unten.
+                 * Das Original hat hier IMMER einen gueltigen +0x1a8-Zeiger (Default-Store
+                 * `addiu v0,a1,48 / sw v0,0(a1)` = Entity-Slot 0 @0x800371d8-dc). */
             }
-            int32_t tgt_yaw = 0, tgt_pit = 0;
-            int     yaw_active = 0, pit_active = 0;
+            /* LOKALE Ziele (a3 des Originals bzw. 20(sp)). Default = Release-Semantik. */
+            int32_t tgt_yaw = (int32_t)ay;    /* Release-Ziel Yaw = Kopf-Keyframe-vy (s.u.) */
+            int32_t tgt_pit = 0;
             if (have_world) {
                 /* FUN_8003790c world look angles. dy = origin.y - target.y (Y inverted);
                  * horiz via the byte-true SquareRoot0 replica (audit wf_8cc15b53). */
@@ -377,39 +453,66 @@ int re15_skel_compute_pose(const re15_emd_skeleton_t *skel,
                 int32_t wPit = ((int32_t)re15_atan2_q12(dy, (int32_t)horiz) - 1024) & 0xFFF;
                 tgt_yaw = (((wYaw - (int32_t)a->rot_y - (int32_t)root_kf_ay) + 0x800) & 0xFFF) - 0x800;
                 tgt_pit = ((wPit + 0x800) & 0xFFF) - 0x800;
-                yaw_active = 1; pit_active = 1;
             }
-            if (rel) { tgt_yaw = rel_yaw; tgt_pit = rel_pit; yaw_active = 1; pit_active = 1; }
-            if (fl & 0x10) { pit_keyframe = 1; pit_active = 1; }   /* 0x10 Pitch-Null: der
-                                               * Akku laeuft auf 0 zurueck (Bestandteil des
-                                               * 0x12-Release und von Mode 4 = 0x58) */
+            if (rel) { tgt_yaw = rel_yaw; tgt_pit = rel_pit; }
+            /* --- SWEEP-Seeds. Zaehler in +0x160 (neck_tx), Ziel in +0x162 (neck_ty), LATCH in
+             * +0x164 (neck_tz) — BEIDE Sweeps teilen sich Latch UND Ziel-Feld; sie sind nie
+             * gleichzeitig aktiv (Mode 3 = 0x2a nur Pitch, Mode 4 = 0x58 nur Yaw).
+             *   YAW-Seed  @0x800374c8-f8: `lh v0,356(a0)` (+0x164) == 0 -> +0x164 = 1 und
+             *                             +0x162 = part+0x9c + heading + bodyYaw (lokal = +Klemme)
+             *   PITCH-Seed @0x800376fc-20: dieselbe Latch-Pruefung; +0x162 = part+0x9e
+             *                             (das Pitch-Ziel IST bereits lokal)
+             * Der Port benutzte hier ein privates Byte neck_sweep und seedete deshalb IMMER;
+             * das Original seedet NICHT, wenn das Skript einen Pitch-Operanden != 0 gesetzt
+             * hat (+0x164 ist bei Mode 2/3/4 zugleich der relative Pitch, @0x800374a8-b0).
+             * Fuer die belegten Faelle identisch: ROOM1170 sub02 Plc_neck(4,3,0,0,0x3c) hat
+             * pc[6..7] = 0 -> Latch frei -> Seed wie bisher. neck_sweep bleibt als
+             * Kompatibilitaets-Feld stehen (scd_vm.c:2142 setzt es), wird hier aber nur noch
+             * mitgefuehrt. */
+            if (fl & 0x40) {                                        /* @0x800374bc-c0 */
+                if (a->neck_tz == 0) {                              /* @0x800374c8-d0 */
+                    a->neck_tz = 1;                                 /* @0x800374d4-d8 */
+                    a->neck_ty = a->neck_clamp_yaw;                 /* @0x800374dc-f8 */
+                    a->neck_sweep = 1;
+                }
+                tgt_yaw = a->neck_ty;                               /* @0x800374fc-510 */
+            }
+            /* 0x02 RELEASE-YAW @0x80037528-48: 18(sp) = heading + part+0x62 + bodyYaw, das
+             * lokale Ziel ist also EXAKT der Kopf-Keyframe-Euler vy — der Kopf faehrt auf die
+             * Keyframe-Pose zurueck. (Kommt NACH dem Yaw-Sweep -> 0x02 gewinnt; deshalb ist
+             * Mode 3 = 0x2a yaw-seitig ein Release.) */
+            if (fl & 0x02) tgt_yaw = (int32_t)ay;
+            /* 0x10 PITCH-NULL @0x80037554-60 (`andi 0x10; sh zero,20(sp)`): das Ziel ist die
+             * GESAMT-Neigung 0 — NICHT "Akku -> 0". Der Slew konvergiert (part+0x64 + Akku)
+             * gegen 0 (@0x800377a0-b8), der Akku laeuft also auf -kf_vz. Savestate-Beleg:
+             * montage1240_orig/orig_intro_late accP = -186 bei Keyframe vz = +186
+             * (lane17_NECK.md 7.2). Der alte Port setzte resP = 0 -> der eingebackene
+             * Keyframe-Pitch (~16 Grad gesenkt) blieb waehrend des ganzen Intros stehen. */
+            if (fl & 0x10) tgt_pit = 0;
+            if (fl & 0x20) {                                        /* @0x800376f0-f4 */
+                if (a->neck_tz == 0) {                              /* @0x800376fc-704 */
+                    a->neck_tz = 1;                                 /* @0x80037708-0c */
+                    a->neck_ty = a->neck_clamp_pitch;               /* @0x80037718-20 */
+                    a->neck_sweep = 1;
+                }
+                tgt_pit = a->neck_ty;                               /* @0x80037724-38 */
+            }
 
-            /* --- SWEEP modes (bits 0x40 yaw / 0x20 pitch; decompile Z.79-94): counter in
-             * +0x160 (neck_tx); first pass seeds the target = the FULL clamp; on snap-arrival
-             * the target MIRRORS (Spiegelformel = -alt in local terms) and the counter
-             * decrements; at 0 -> flags = 0x12 (release) @0x80037698/@0x80037858. Mode 4
-             * (0x58) = yaw sweep = Kopfschuetteln; mode 3 (0x2a) = pitch sweep = Nicken. */
-            if (fl & 0x40) {
-                if (!a->neck_sweep) { a->neck_sweep = 1; a->neck_ty = a->neck_clamp_yaw; }
-                tgt_yaw = a->neck_ty; yaw_active = 1;
-            }
-            if (fl & 0x20) {
-                if (!a->neck_sweep) { a->neck_sweep = 1; a->neck_tz = a->neck_clamp_pitch; }
-                tgt_pit = a->neck_tz; pit_active = 1;
-            }
-
-            /* accumulator residual = (local target - keyframe euler); release -> 0. */
-            int32_t resY = yaw_active && !yaw_keyframe
-                             ? ((((tgt_yaw - (int32_t)ay) + 0x800) & 0xFFF) - 0x800) : 0;
-            int32_t resP = pit_active && !pit_keyframe
-                             ? ((((tgt_pit - (int32_t)az) + 0x800) & 0xFFF) - 0x800) : 0;
-            /* CLAMP the residual to the part limits (FUN_80037358 Z.57-67: target reduction
-             * BEFORE the slew; player ±0x200/±0x138 @0x800319b0-c4, NPC ±0x2c8/±0x138
-             * @0x8011c7a0/b0). This bound is exactly what the measured "verdreht" (yaw -901,
-             * pitch 426) exceeded — cutscene_headlook.md B3. */
+            /* KLEMME auf das KOERPER-RESIDUAL, BEVOR der Kopf-Keyframe abgezogen wird
+             * (@0x80037580-98: `subu a3,v1,s1` = Ziel - heading - bodyYaw, OHNE part+0x62;
+             *  @0x800375a4-d0: (a3+cl)&0xfff > 2*cl -> Ziel = bodyYaw+heading ± cl, Vorzeichen
+             *  aus a3&0x800; Pitch analog @0x80037760-98 auf dem absolut-lokalen 20(sp)).
+             * Der Kopf-Keyframe kommt ERST im Slew-Delta dazu (`lhu a1,98(s0)` @0x800375dc /
+             * `lhu v0,100(s0)` @0x800377a0). Der alte Port klemmte das Residual NACH dem
+             * kf-Abzug -> gerenderter Kopf = kf ± Klemme statt ± Klemme (Report 3/6-N1).
+             * Klemmen: Spieler ±0x200/±0x138 @0x800319b0-c4, NPC ±0x2c8/±0x138 @0x8011c7a0/b0. */
             int32_t cY = (int32_t)a->neck_clamp_yaw, cP = (int32_t)a->neck_clamp_pitch;
-            if (cY > 0) { if (resY >  cY) resY =  cY; if (resY < -cY) resY = -cY; }
-            if (cP > 0) { if (resP >  cP) resP =  cP; if (resP < -cP) resP = -cP; }
+            if (((tgt_yaw + cY) & 0xFFF) > cY * 2) tgt_yaw = (tgt_yaw & 0x800) ? -cY : cY;
+            if (((tgt_pit + cP) & 0xFFF) > cP * 2) tgt_pit = (tgt_pit & 0x800) ? -cP : cP;
+            /* Akku-Ziel = geklemmtes LOKALES Ziel - Kopf-Keyframe-Euler (Snap-Form
+             * @0x80037630-4c yaw / @0x800377ec-fc pitch). */
+            int32_t resY = (((tgt_yaw - (int32_t)ay) + 0x800) & 0xFFF) - 0x800;
+            int32_t resP = (((tgt_pit - (int32_t)az) + 0x800) & 0xFFF) - 0x800;
             /* step source: bit 0x80 -> the SCD speed bytes (low yaw/high pitch, +0x9e/0x9f);
              * else the part defaults +0x98/+0x9a (player 96/96, NPC 64/48). A 0 byte holds
              * the axis (byte-true: the slew moves by the literal byte — 10D0 mode 2 sends
@@ -423,27 +526,48 @@ int re15_skel_compute_pose(const re15_emd_skeleton_t *skel,
             if      (dY >  stepY) a->neck_yaw = (int16_t)(a->neck_yaw + stepY);
             else if (dY < -stepY) a->neck_yaw = (int16_t)(a->neck_yaw - stepY);
             else                  { a->neck_yaw = (int16_t)resY; snapY = 1; }
-            { static FILE *nt = NULL; static int nti = 0;
-              if (!nti) { nti = 1; const char *pp = getenv("RE15_NECK_TRACE"); if (pp && *pp) nt = fopen(pp, "w"); }
-              if (nt && yaw_active) { fprintf(nt, "slot=%d tgt_yaw=%d resY=%d neck_yaw=%d (step=%d fl=%02x)\n",
-                                          (int)(a - g_actors), (int)tgt_yaw, (int)resY, (int)a->neck_yaw, (int)stepY, fl); fflush(nt); } }
-            int32_t dP = (((resP - (int32_t)a->neck_pitch) + 0x800) & 0xFFF) - 0x800;
-            int snapP = 0;
-            if      (dP >  stepP) a->neck_pitch = (int16_t)(a->neck_pitch + stepP);
-            else if (dP < -stepP) a->neck_pitch = (int16_t)(a->neck_pitch - stepP);
-            else                  { a->neck_pitch = (int16_t)resP; snapP = 1; }
-            /* sweep arrival: mirror + count down; 0 -> flags = 0x12 (auto-release,
-             * @0x80037698 yaw / @0x80037858 pitch). */
+            /* YAW-Sweep-Ankunft @0x80037664-c4 (nur im Snap-Fenster, `beq` @0x80037628):
+             * +0x160-- ; ==0 -> flags = 0x12 @0x80037698 ; danach IMMER spiegeln
+             * `+0x162 = 2*(bodyYaw+heading) - +0x162` @0x800376a0-c4 = lokal -alt. */
             if ((fl & 0x40) && snapY) {
                 a->neck_ty = (int16_t)(-a->neck_ty);                       /* Spiegelung */
                 if (a->neck_tx > 0) a->neck_tx--;
                 if (a->neck_tx <= 0) { a->neck_flags = 0x12; a->neck_sweep = 0; }
             }
+            int32_t dP = (((resP - (int32_t)a->neck_pitch) + 0x800) & 0xFFF) - 0x800;
+            int snapP = 0;
+            if      (dP >  stepP) a->neck_pitch = (int16_t)(a->neck_pitch + stepP);
+            else if (dP < -stepP) a->neck_pitch = (int16_t)(a->neck_pitch - stepP);
+            else                  { a->neck_pitch = (int16_t)resP; snapP = 1; }
+            /* PITCH-Sweep-Ankunft @0x80037814-a4 — das Ziel ALTERNIERT Klemme <-> 0, es wird
+             * NICHT gespiegelt (Report 3/6-N3, selbst disassembliert):
+             *   80037820 lh v0,20(sp) ; beq zero -> 0x80037874        (Ziel == 0?)
+             *   80037830-3c +0x160-- ; 80037844 bne !=0 -> 0x8003785c ; 80037858 sb 0x12,+0x1b8
+             *   80037868 sh zero,354(v0)    -> +0x162 = 0             (Ziel war != 0)
+             *   80037880-a4 flags&0x20 && 20(sp)==0 -> +0x162 = part+0x9e (Ziel war 0)
+             * Der Zaehler laeuft also NUR auf dem Weg zurueck zur 0 herunter (halbe Rate ggue.
+             * dem Yaw-Sweep). Der alte Port spiegelte das Vorzeichen (-Klemme) und zaehlte
+             * jeden Snap herunter. Ziel-Feld ist +0x162 = neck_ty (NICHT +0x164/neck_tz —
+             * +0x164 ist im Original der Sweep-Latch). */
             if ((fl & 0x20) && snapP) {
-                a->neck_tz = (int16_t)(-a->neck_tz);
-                if (a->neck_tx > 0) a->neck_tx--;
-                if (a->neck_tx <= 0) { a->neck_flags = 0x12; a->neck_sweep = 0; }
+                if (tgt_pit != 0) {
+                    if (a->neck_tx > 0) a->neck_tx--;
+                    if (a->neck_tx <= 0) { a->neck_flags = 0x12; a->neck_sweep = 0; }
+                    a->neck_ty = 0;                       /* @0x80037868 */
+                } else {
+                    a->neck_ty = a->neck_clamp_pitch;     /* @0x8003789c-a4 */
+                }
             }
+            { static FILE *nt = NULL; static int nti = 0;
+              if (!nti) { nti = 1; const char *pp = getenv("RE15_NECK_TRACE"); if (pp && *pp) nt = fopen(pp, "w"); }
+              if (nt) { fprintf(nt, "slot=%d fl=%02x tgt=(%d,%d) res=(%d,%d) acc=(%d,%d) kf=(%d,%d) step=(%d,%d)\n",
+                                (int)(a - g_actors), fl, (int)tgt_yaw, (int)tgt_pit, (int)resY, (int)resP,
+                                (int)a->neck_yaw, (int)a->neck_pitch, (int)ay, (int)az,
+                                (int)stepY, (int)stepP); fflush(nt); } }
+        neck_apply_acc:
+            /* Sprungziel des Freeze-Gates oben: der Akku wird IMMER addiert (im Freeze der
+             * eingefrorene Stand — der Kopf haelt seine letzte Pose statt auf den Keyframe
+             * zurueckzuschnappen). */
             ay = (int16_t)(ay + a->neck_yaw);   /* YAW  -> vy (+0x62) */
             az = (int16_t)(az + a->neck_pitch); /* PITCH -> vz (+0x64), byte-true (NOT ax) */
         }

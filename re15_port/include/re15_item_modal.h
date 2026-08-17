@@ -35,10 +35,13 @@ void re15_item_modal_start(uint8_t item_type, uint8_t amount, uint8_t taken_bit,
 /* Advance the FSM one 30 Hz game tick (one FUN_8001db28 dispatch). `pad_edge` = the newly-pressed
  * VIRTUAL pad word this tick (DAT_800ac76c — build with re15_pad_virtual_word(), wave-6 finding 4)
  * — read only by the message-box wait (state 6): & 0x3000 (raw d-pad L/R) toggles Yes/No, & 0x4000
- * (raw SQUARE) confirms, & 0xc000 dismisses the can't-carry line. Call ONLY while active, from the 30 Hz
- * gameplay tick — the caller must FREEZE the rest of gameplay while active (byte-true g_pauseflags |=
- * 0xff000000: player move, enemy AI, SCD/event, model anim all halt). */
-void re15_item_modal_tick(uint16_t pad_edge);
+ * (raw SQUARE) confirms, & 0xc000 dismisses the can't-carry line. `pad_held` = the CURRENTLY-HELD
+ * virtual word (DAT_800ac768) — read by the state-6 typewriter for the byte-true TEXT FAST-FORWARD
+ * (& 0x4000 -> timer -= 4 @0x80028228 + 2 glyphs/expiry @0x80028238 = 4x speed; the item prompt opens
+ * as message type 0x100, which sets the FF-enable byte @0x80027f28). Call ONLY while active, from the
+ * 30 Hz gameplay tick — the caller must FREEZE the rest of gameplay while active (byte-true
+ * g_pauseflags |= 0xff000000: player move, enemy AI, SCD/event, model anim all halt). */
+void re15_item_modal_tick(uint16_t pad_edge, uint16_t pad_held);
 
 /* Non-zero while the modal is presenting (== DAT_80072d3b != 0). */
 int re15_item_modal_active(void);
@@ -53,9 +56,12 @@ int re15_item_modal_quad(int out_x[4], int out_y[4], uint8_t *out_type, int *out
  * "YOU CAN'T CARRY ANY MORE ITEMS" line. *out_type = the item id (for the name). */
 int re15_item_modal_prompt(uint8_t *out_type, int *out_choice);
 
-/* Typewriter reveal: the number of prompt glyphs shown so far (1 per 2 frames). The renderer clamps
- * each prompt line to this budget. `_ready` = the text has fully revealed (Yes/No is now selectable). */
+/* Typewriter reveal: the number of prompt glyphs shown so far (1 per 2 frames at the base cadence,
+ * 2 per frame while the FF button is HELD). The renderer clamps each prompt line to this budget.
+ * `_reveal_total` = the byte-true glyph count of the open prompt (re15_item_prompt_walk).
+ * `_ready` = the text has fully revealed (Yes/No is now selectable). */
 int re15_item_modal_reveal(void);
+int re15_item_modal_reveal_total(void);
 int re15_item_modal_prompt_ready(void);
 
 /* Inspection (tests): the raw state byte (0..8, mirrors DAT_80072d3b) + counters. */

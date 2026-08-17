@@ -400,6 +400,11 @@ int scd_audio_queue_pop(scd_audio_event_t *out)
 void scd_vm_init(void)
 {
     memset(&g_scd, 0, sizeof(g_scd));   /* clears tick_count + all *_pending flags */
+    /* Der memset wischt auch message_active/message_fsm_active — damit verschwindet der einzige
+     * Weg, einen offenen Text zu schliessen. Ein noch gesetztes g_pauseflags wuerde die VM danach
+     * fuer immer anhalten (Gate @0x8003f04c). Deshalb hier derselbe Voll-Clear wie in der
+     * Raumwechsel-FSM des Originals (@0x8001ca44 / @0x8001caec `sw zero,0x800aca40`). */
+    re15_pauseflags_clear();
     g_scd.work_slot = -1;               /* Phase 4.5.9-F: no work entity at boot */
     /* RVD auto-camera default = ON (byte-true INVERSE of DAT_800aca3c bit 0x100: the main loop
      * @0x8001cce0-e4 SKIPS the RVD scan FUN_80014230 only when the bit is SET; zero-init = CLEAR
@@ -552,6 +557,16 @@ void scd_vm_set_room_init(int on) { s_vm_room_init = on ? 1 : 0; }
 
 void scd_vm_tick(void)
 {
+    /* SKRIPT-FREEZE (Bit 0x02000000) — byte-true am KOPF des Frame-Runners selbst,
+     * genau wie im Original: FUN_8003f038
+     *   8003f040  lw   v0,-13760(v0)     v0 = g_pauseflags (0x800aca40)
+     *   8003f044  lui  v1,0x200
+     *   8003f048  and  v0,v0,v1
+     *   8003f04c  bne  v0,zero,0x8003f090   -> Funktions-Ende, KEIN Reseed, KEIN Dispatch
+     * Damit parkt waehrend eines Examine-Textes auch der Message_on-Opcode automatisch
+     * (der Port fuehrt einen geparkten Opcode sonst jeden Frame erneut aus — 2200x gemessen).
+     * Der tick_count laeuft bewusst NICHT weiter: das Original erreicht @0x8003f05c gar nicht. */
+    if (g_re15_pauseflags & RE15_PAUSE_SCD) return;
     g_scd.tick_count++;
     /* SUB01-RESEED — byte-true FUN_8003f038: JEDEN Gameplay-Frame wird Thread-Slot 1 auf sub_scd[1]
      * zurueckgesetzt (@0x8003f064 `ori a0,zero,0x1`, @0x8003f070 `lw v0,68(v0)` = RDT+0x44,
@@ -1277,7 +1292,7 @@ static void msg_show(scd_thread_t *t)
 /* Show a .msg line by index directly (no SCD thread) — used by EXAMINE/MESSAGE AOTs
  * (the ROOM1130 back-door "It's not necessary to go back"). Same state writes as
  * msg_show: a plain subtitle that auto-dismisses after its own duration. */
-void re15_scd_show_message(uint8_t index)
+void re15_scd_show_message(uint8_t index, uint32_t pause_mask)
 {
     /* FE-4: EXAMINE-AOT direct message path — same save-point check as op_message_on. A
      * save-point phone opens the save MENU instead of the flavor message: request the menu
@@ -1287,6 +1302,11 @@ void re15_scd_show_message(uint8_t index)
      * platform had to force-clear it, which reopened the msg_block re-examine gate → the
      * menu↔room flicker. Skipping the dialog closes both. (No re-examine cooldown: the AOT
      * fires on a fresh action-button EDGE only, so each deliberate press = one menu open.) */
+    /* OPEN (dokumentiert, nicht gefixt): die beiden Interceptions unten kehren zurueck, BEVOR
+     * ein Dialog geoeffnet wird — der byte-true Freeze aus @0x80043098 (0xffff -> 0xffff0000)
+     * entfaellt damit fuer Save-Telefon und Item-Box. Fachlich deckungsgleich, weil beide
+     * stattdessen einen MODALEN Screen oeffnen, der ueber re15_menu_gameplay_frozen /
+     * re15_itembox_pending denselben Effekt hat (kein Spieler, keine KI, kein Skript). */
     if (re15_savepoint_is(g_current_room_id, index)) {
         re15_savepoint_latch_loc(g_current_room_id);  /* Ortsindex (Patch-Analog AOT_TYPE1_HOOK
                                                        * @0x8007087c: Telefon-Pfad schreibt den
@@ -1306,7 +1326,12 @@ void re15_scd_show_message(uint8_t index)
     /* EXAMINE / MESSAGE-AOT line (e.g. the ROOM1130 back-door "It's not necessary to go
      * back") → the SAME byte-true typewriter FSM as dialog, NON-blocking: it types out and
      * waits for the action button (or its own end-hold) to dismiss. No voiceover. */
-    re15_dialog_open((int)index, 0);
+    /* pause_mask = das Payload-Halbwort u16@+2 des sce-1-Records, <<16 — byte-true
+     * LAB_80043084: @0x80043098 `lhu a3,2(v0)`, @0x8004309c `lhu a2,0(v0)` (msg id),
+     * @0x800430a0 `jal FUN_80027e68`, @0x800430a4 `sll a3,a3,16`.  Eigener Census ueber
+     * 240 RDTs: ALLE 511 ausgelieferten sce-1-Installs tragen 0xffff -> 0xffff0000, also
+     * friert JEDER Examine-Text Spieler+AI+Anim+Skript ein, bis der Text weg ist. */
+    re15_dialog_open_mask((int)index, 0, pause_mask);
     g_scd.message_arg2 = 0;
     g_scd.message_arg3 = 0;
 }
@@ -1344,6 +1369,20 @@ static int op_message_on(scd_thread_t *t)
 {
     extern uint8_t g_aot_action_pressed;
     uint8_t arg2 = t->pc[2];
+
+    /* GLOBALER TEXT-FREEZE — pc[2..3] ist NICHT die "Farbe" (alte Fehl-Etikettierung,
+     * korrigiert 2026-08-17), sondern die PAUSE-MASKE fuer DAT_800aca40.  Byte-true
+     * LAB_800404f4 (Dispatch PTR_LAB_800744a8[0x2B] @0x80074554 = 0x800404f4):
+     *   80040504  lbu a2,1(v0)      msg id  = script[1]
+     *   80040508  lhu a3,2(v0)      MASKE   = script[2..3] (LE)
+     *   80040518  jal 0x80027e68    a1 = 0x300 (@0x80040500), a0 = 0 (@0x80040514)
+     *   8004051c  sll a3,a3,16      param_4 = Maske << 16
+     * FUN_80027e68 ver-ODERt param_4 in g_pauseflags (@0x80027ed0) und sichert den
+     * Vorzustand nach DAT_800b853c (@0x80027ec8).
+     * Eigener Census (240 RDTs, 2026-08-17): 698 Message_on -> 420x 0x0000 (Untertitel,
+     * KEIN Freeze), 34x 0xff80, 244x 0xffff.  Deshalb darf hier NICHT pauschal
+     * eingefroren werden. */
+    uint32_t pause_mask = ((uint32_t)(t->pc[2] | ((uint32_t)t->pc[3] << 8))) << 16;
 
     /* FE-4: a PHONE save-point message ("You can save your progress with this. Save is not available
      * in this preview") — the port REPLACES it with the working save MENU, so open the menu and DO
@@ -1383,9 +1422,9 @@ static int op_message_on(scd_thread_t *t)
     /* YES/NO QUERY: a selection prompt that BLOCKS the SCD thread until the player confirms.
      * BYTE-TRUE TRIGGER (RE'd 2026-06-14 from FUN_80027e68 / FUN_80028134): the YES/NO state
      * is entered SOLELY by the .msg body's 0x03 control code (caseD_3 → FSM state 4), NOT by
-     * arg2. Message_on's pc[2..3] are the message COLOR (opcode 0x2B: param_2=0x300 const,
-     * param_4 = pc[2..3]<<16 = color), NOT a flag — a plain message and a query both carry
-     * pc[2]=0x80. So gate on re15_msg_is_choice() ALONE. We park at this opcode (yield WITHOUT
+     * arg2. Message_on's pc[2..3] are param_4 = pc[2..3]<<16 (opcode 0x2B: param_2=0x300 const),
+     * NOT a flag — a plain message and a query both carry pc[2]=0x80. So gate on
+     * re15_msg_is_choice() ALONE. We park at this opcode (yield WITHOUT
      * advancing PC) and run a wait FSM via g_scd.message_query: 1 = wait for the opening action
      * button to RELEASE (debounce), 2 = wait for a fresh PRESS = the answer. Plain messages
      * keep the PSX-canon non-blocking fall-through below. (void)arg2 — kept for the comment. */
@@ -1398,7 +1437,7 @@ static int op_message_on(scd_thread_t *t)
      * switch below [▼] Will you push it? Yes/No" is the canonical case. */
     if (re15_msg_is_choice(t->pc[1])) {
         if (g_scd.message_query == 0 && !g_scd.message_fsm_active) {
-            re15_dialog_open((int)t->pc[1], 1);    /* blocking: query=1, fsm_active=1 */
+            re15_dialog_open_mask((int)t->pc[1], 1, pause_mask);   /* blocking: query=1, fsm_active=1 */
             g_scd.message_arg2 = t->pc[2];
             g_scd.message_arg3 = t->pc[3];
             return 2;                              /* park (PC not advanced) */
@@ -1418,6 +1457,11 @@ static int op_message_on(scd_thread_t *t)
      * actually have authored VOICE##.VAG (re15_room_has_voice = {0x1170}) — NOT 1240's narrator (msg
      * ids 0..5 have no voice clip; queuing would collide with 1170's voice bank). See #1A above. */
     if (re15_room_full_text(g_current_room_id)) {
+        /* KEIN Pause-Freeze auf diesem Pfad — und das ist gemessen, nicht angenommen:
+         * die beiden Full-Text-Raeume tragen in ALLEN ihren Message_on die Maske 0x0000
+         * (ROOM1240 6/6 @sub 0x57e..0x5fa, ROOM1170 16/16 @sub 0x146e..0x17a2; eigener
+         * Census 2026-08-17).  Es gibt hier also nichts einzufrieren — die Intro-/Kino-
+         * Captions laufen im Original wie im Port mit weiterlaufender Welt. */
         msg_show(t);                               /* full-text all-at-once (message_fsm_active=0) */
         g_scd.message_fsm_active = 0;
         if (re15_room_has_voice(g_current_room_id)) {
@@ -1428,7 +1472,7 @@ static int op_message_on(scd_thread_t *t)
             scd_audio_queue_push(&vev);
         }
     } else {
-        re15_dialog_open((int)t->pc[1], 0);        /* non-blocking typewriter */
+        re15_dialog_open_mask((int)t->pc[1], 0, pause_mask);   /* non-blocking typewriter */
         g_scd.message_arg2 = t->pc[2];
         g_scd.message_arg3 = t->pc[3];
     }
@@ -1878,12 +1922,31 @@ static int op_plc_motion(scd_thread_t *t)
      * earlier scd_anim_owned dispatch-yield proxy, which wrongly HELD ROOM1150's breathe-loop; the two
      * blockers it hit are now fixed: spawn anim_flags=0 @0x8004216c, and the executor is the single
      * frame-advancer via the re15_actors_anim_advance state-4 skip.)
-     * Player (slot 0) is not NPC-ticked — its Plc_motion gestures drive the player anim path — so only
-     * NPC slots are retargeted. */
+     * DAS KOMMANDOWORT GILT AUCH FUER DEN SPIELER (Korrektur 2026-08-17, Fix-Runde Cluster 4).
+     * Selbst nachdisassembliert — der Handler schreibt +0x4 UNBEDINGT auf das WORK-Entity
+     * (`lw v0,340(a0)` = thread+0x154), es gibt keinen Spieler-Sonderweg:
+     *   80041ba0  lw   v0,340(a0)      v0 = work entity
+     *   80041ba4  ori  v1,zero,0x4
+     *   80041ba8  sb   a1,148(v0)      +0x94 = Clip
+     *   80041bb0  sb   v1,4(v0)        +0x4  = 4          <<<< auch fuer den Spieler
+     *   80041bb4  sb   zero,6(v0)      +0x6  = 0
+     *   80041bb8  sb   zero,7(v0)      +0x7  = 0
+     *   80041bc4  sb   a2,5(v0)        +0x5  = pc[1]
+     * Fuer den Spieler ist +0x4 = DAT_800aca58, das Kommandowort, an dem der Dispatcher
+     * FUN_80031c44 die Tabelle @0x80073f90 indiziert (@0x80031c8c `lbu v1,-13736(v1)` /
+     * @0x80031c94 `sll v1,v1,2` / @0x80031ca4 `addiu at,at,16272` / @0x80031cac `lw v0,0(at)` /
+     * @0x80031cb4 `jalr v0`): [1] = 0x80031de8 (der Auto-Look-Prolog), [4] = 0x80030660 (der
+     * Plc-Executor). Genau DAS ist das Gate, das den Prolog waehrend einer Skript-Szene
+     * abschaltet — bis hierher hatte der Port nie cmd 4 und musste in game_step_common.c mit
+     * einer neck_flags-Maske proxien.
+     * +0x5 bleibt beim Spieler unangetastet: der Port fuehrt dort den Hurt-Anim-Index
+     * (re15_damage.c:226, @0x80012ec4) und hat keine Spieler-Sub-VM; das Original schreibt
+     * dort pc[1] (0/1 bei allen ausgelieferten Spieler-Plc_motions), also einen Wert ohne
+     * Wirkung im Port. */
+    g_actors[slot].state       = 4;            /* +0x4 = 4 (executor / Skript-Kommando) @0x80041bb0 */
+    g_actors[slot].sub_state_2 = 0;            /* +0x6 = 0 (motion phase reset)         @0x80041bb4 */
     if (slot != RE15_ACTOR_SLOT_PLAYER) {
-        g_actors[slot].state       = 4;        /* +0x4 = 4 (executor)          @0x80041bb0 */
-        g_actors[slot].sub_state_1 = entity;   /* +0x5 = pc[1] (sub)           @0x80041bc4 */
-        g_actors[slot].sub_state_2 = 0;        /* +0x6 = 0 (motion phase reset) @0x80041bb4 */
+        g_actors[slot].sub_state_1 = entity;   /* +0x5 = pc[1] (sub)                    @0x80041bc4 */
     }
     /* AP-round 2026-05-26 (per PSX disasm @0x80041b90): Plc_motion sets
      * state=4 which the FSM at 0x80050cdc translates to state=1 with
@@ -2029,8 +2092,13 @@ static int op_plc_dest(scd_thread_t *t)
                                                            * duerfen keine stale Ankunft sehen */
                 re15_game_flag_set(5, flag_bit, 0);
             if (!skip_init) {
+                /* +0x4 = 4 gilt UNBEDINGT, auch fuer den Spieler (@0x80041c14 `sb v0,4(a1)`,
+                 * v0 = 4 aus dem Delay-Slot @0x80041c00/@0x80041c10; der Guard davor prueft
+                 * nur +0x1c4&4 und +0x5==mode, keinen Slot). Fuer den Spieler ist +0x4 das
+                 * Kommandowort DAT_800aca58 -> Dispatcher-Tabelle @0x80073f90[4] = 0x80030660
+                 * (Plc-Executor, KEIN Auto-Look-Prolog). */
+                a->state = 4;                              /* @0x80041c14 */
                 if (slot != RE15_ACTOR_SLOT_PLAYER) {
-                    a->state = 4;                          /* @0x80041c14 */
                     a->sub_state_1 = mode;                 /* @0x80041c18 -> Executor-Sub */
                     a->sub_state_2 = 0;
                     a->anim_flags  = 0;                    /* sh 0,0x1c4 @0x80041c4c */
@@ -2053,6 +2121,11 @@ static int op_plc_dest(scd_thread_t *t)
         if (slot == RE15_ACTOR_SLOT_PLAYER) {         /* Walk-Mode ersetzt einen Mode-6-Halt */
             extern void re15_player_event_reach_end(void);
             re15_player_event_reach_end();
+            /* ...und setzt genauso das Kommandowort (@0x80041c14 `sb v0(=4),4(a1)` — der
+             * Handler kennt keinen Walk/Nicht-Walk-Unterschied, der Port trennt hier nur,
+             * weil der Spieler seine EIGENE Walker-FSM hat, Tabelle @0x80073e30). Ohne das
+             * lief der Auto-Look-Prolog waehrend eines skript-gelaufenen Spielers weiter. */
+            a->state = 4;                             /* @0x80041c14 */
         }
         a->walk_dest_x   = x;
         a->walk_dest_z   = z;
@@ -2205,6 +2278,34 @@ static int op_plc_ret(scd_thread_t *t)
     re15_actor_set_motion(pl, 200);   /* = the +5..7 walk-scratch clear → idle/rest pose */
     pl->anim_frame    = 0;
     g_scd.player_mode = 1;          /* gameplay/PAD live next frame (zero delay) */
+    /* DAS KOMMANDOWORT — jetzt wirklich geschrieben (Fix-Runde Cluster 4, 2026-08-17).
+     * Selbst nachdisassembliert, Handler 0x80041f88 = PTR_LAB_800744a8[0x42]
+     * (Tabellen-Eintrag @0x800745b0 gelesen; 0x3F->0x80041b90, 0x40->0x80041be4,
+     * 0x41->0x80041e98, 0x42->0x80041f88):
+     *   80041f88  lw   v0,340(a0)     v0 = work entity (thread+0x154)
+     *   80041f8c  ori  v1,zero,0x1
+     *   80041f90  sb   v1,4(v0)       +0x4 = 1   <<< zurueck auf den cmd-1-Handler
+     *   80041f94  sb   zero,5(v0)     +0x5 = 0
+     *   80041f98  sb   zero,6(v0)     +0x6 = 0
+     *   80041f9c  sb   zero,7(v0)     +0x7 = 0
+     *   80041fa8  addiu v0,v0,1       pc += 1
+     * Tabelle @0x80073f90[1] = 0x80031de8 = der Auto-Look-Prolog. Weil Plc_ret NUR
+     * +0x4..+0x7 anfasst und +0x1b8 (neck_flags) NICHT aufraeumt (verifiziert: im
+     * ganzen Handler kein Store auf 440/0x1b8), ist genau das die Mechanik, mit der
+     * das Original nach dem Szenenende jeden Frame wieder `ori 0x12` auf +0x1b8
+     * fuehrt (@0x80031e04-08) und Leons Kopf loest. Der Port haelt den Kopf ohne
+     * diesen Store dauerhaft im Skript-Modus fest.
+     * Ziel ist das WORK-Entity; bei allen ausgelieferten Plc_ret ist das der Spieler
+     * (ROOM1170 sub02 macht `Work_set(1,0)` vor dem Szenenende) — der Port routet es
+     * ueber t->work_slot, exakt wie op_plc_motion/op_plc_dest. */
+    {
+        int rslot = (t->work_slot >= 0 && t->work_slot < RE15_ACTOR_MAX)
+                    ? t->work_slot : RE15_ACTOR_SLOT_PLAYER;
+        g_actors[rslot].state       = 1;   /* @0x80041f90 */
+        g_actors[rslot].sub_state_1 = 0;   /* @0x80041f94 */
+        g_actors[rslot].sub_state_2 = 0;   /* @0x80041f98 */
+        g_actors[rslot].sub_state_3 = 0;   /* @0x80041f9c */
+    }
     t->pc += 1;
     return 1;
 }
@@ -2404,7 +2505,16 @@ static int op_aot_set(scd_thread_t *t)
              * through to `type` = port enum 1 = DOOR with zero door_params = INERT: no examine
              * text fired anywhere from a direct Aot_set. [wf_f536e1ee divergence #3] */
             uint8_t msg = long_form ? t->pc[22] : t->pc[14];   /* payload u16@0 low byte */
+            /* Payload u16@+2 = die PAUSE-MASKE, die der Handler als param_4<<16 an
+             * FUN_80027e68 gibt (@0x80043098/@0x800430a4). Payload-Basis = pc+14 (kurz) /
+             * pc+22 (lang), also liegt sie bei pc[16..17] bzw. pc[24..25]. Eigener Census
+             * ueber 240 RDTs: 511/511 Installs tragen 0xffff. Vorher hat der Port dieses
+             * Halbwort weggeworfen -> KEIN Freeze bei Examine-Texten (Nutzer-Report 16). */
+            uint16_t pmask = long_form ? (uint16_t)(t->pc[24] | (t->pc[25] << 8))
+                                       : (uint16_t)(t->pc[16] | (t->pc[17] << 8));
             re15_aot_set(slot, RE15_AOT_TYPE_MESSAGE, msg, cx, cz, hw, hh);
+            if (slot >= 0 && slot < RE15_AOT_MAX)
+                g_aot.slots[slot].pause_mask16 = pmask;
         } else if (type == 4) {
             /* sce=4 FLAG_CHG (byte-true LAB_80043120: table 0x80074664[u16@0=group], bit u16@2
              * MSB-first, on/off u16@4; idempotent per-frame for the AUTO variants). 30 shipped

@@ -77,7 +77,15 @@ int re15_msg_is_choice(int msg_id);
  * 0x02 page break = wait for the action button (down-arrow), action HELD = fast-forward,
  * 0x03 = YES/NO. `blocking` = the SCD thread parks until resolved (choice/yes-no); 0 = a
  * non-blocking examine line. The FSM is advanced by re15_msg_tick each frame. */
-void re15_dialog_open(int msg_id, int blocking);
+void re15_dialog_open(int msg_id, int blocking);          /* == _mask(..., 0) = Caption, kein Freeze */
+
+/* Wie oben, plus die byte-true PAUSE-MASKE aus den Raum-Daten (FUN_80027e68 param_4):
+ * Message_on pc[2..3]<<16 (@0x80040508/@0x8004051c) bzw. sce-1-Payload u16@+2 <<16
+ * (@0x80043098/@0x800430a4).  Sie wird in g_re15_pauseflags (= DAT_800aca40) ge-ODERt
+ * (@0x80027ed0), der Vorzustand in g_re15_pauseflags_saved gesichert (@0x80027ec8), und
+ * beim Dismiss wiederhergestellt (@0x800285a4/@0x800286cc/@0x8002871c).  Maske 0 =
+ * Untertitel: die Welt laeuft weiter. */
+void re15_dialog_open_mask(int msg_id, int blocking, uint32_t pause_mask);
 
 /* Hook our msg duration table into the SCD VM Message_on opcode. */
 void re15_msg_install_provider(void);

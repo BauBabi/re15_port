@@ -85,4 +85,23 @@ typedef struct {
 
 int re15_room_apply_pending(const re15_room_apply_ctx_t *ctx);
 
+/*---------------------------------------------------------------------------
+ * RAUM-TRANSITIONS-PRAESENTATION (Transitions-FSM FUN_8001c958, Zustands-Byte
+ * DAT_800b5359, Tabelle @0x8001069c). Vollstaendige Adress-Belege stehen im
+ * Kopfkommentar von room_common.c.
+ *
+ *   re15_room_transition_present()  = State-1-Tuerzweig + State-3-Rumpf
+ *       (@0x8001ca44 Pause-Flags loeschen, @0x8001cbdc Spieler-Kommandowort,
+ *        @0x8001cc00/@0x8001cc18 die -0x1800-Einblendung, @0x8001cc20-28 State 4)
+ *   re15_room_transition_tick()     = State 4 (@0x8001cc34, Freeze 0xff000000)
+ *        und State 5 (@0x8001cc70, Freigabe wenn die Blende fertig ist).
+ *        MUSS am FRAME-ANFANG laufen, VOR allen Subsystemen — im Original
+ *        dispatcht die FSM @0x8001c994, die Subsystem-Aufrufe folgen erst
+ *        @0x8001cdec. Rueckgabe 1 = Transition laeuft (Logik eingefroren).
+ *--------------------------------------------------------------------------*/
+void re15_room_transition_present(void);
+int  re15_room_transition_tick(void);
+int  re15_room_transition_active(void);
+void re15_room_transition_reset(void);
+
 #endif /* RE15_ROOM_H */

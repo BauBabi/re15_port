@@ -351,8 +351,27 @@ void re15_msg_load_room_block(const uint8_t *block, int block_size)
  * the typing, then 0x03 → YES/NO. The render draws only the revealed window [message_page,
  * message_parse). `blocking` = the SCD thread parks until the FSM resolves (choice / yes-no);
  * non-blocking examine lines (re15_scd_show_message) display in parallel. */
-void re15_dialog_open(int msg_id, int blocking)
+void re15_dialog_open_mask(int msg_id, int blocking, uint32_t pause_mask)
 {
+    /* GLOBALER TEXT-FREEZE (byte-true FUN_80027e68 @0x80027eb4-ed0): die Maske stammt
+     * aus den Raum-DATEN (Message_on pc[2..3] @0x80040508 / sce-1-Payload u16@+2
+     * @0x80043098, jeweils <<16 @0x8004051c bzw. @0x800430a4) und wird in
+     * g_pauseflags = DAT_800aca40 ge-ODERt; der Vorzustand geht nach DAT_800b853c.
+     * Maske 0 = Untertitel -> die Welt laeuft weiter (420 von 698 ausgelieferten
+     * Message_on, u.a. ALLE 22 Kino-Captions in ROOM1170/ROOM1240 — eigener Census
+     * ueber 240 RDTs, 2026-08-17).  Der Open-GUARD sitzt in re15_pauseflags_open.
+     *
+     * OPEN (bewusst nicht mit-geaendert): das Original VERWIRFT einen zweiten Message-Open,
+     * solange einer offen ist — FUN_80027e68 @0x80027e74-80 springt nach 0x800280ac und gibt
+     * -1 zurueck, BEVOR irgendein Zustand geschrieben wird; die neue Nachricht erscheint also
+     * gar nicht. Der Port setzt seinen Dialog-FSM dagegen weiter unbedingt neu (Bestandsver-
+     * halten, an dem die Caption-Ketten haengen). Gegatet ist hier nur die Pauseflags-
+     * Buchhaltung, denn ohne den Guard wuerde @0x80027ec8 den Snapshot mit dem bereits
+     * eingefrorenen Wert ueberschreiben (der Port re-executed den geparkten Message_on-Opcode
+     * bzw. den Examine-AOT; gemessen 2200x) und der Restore koennte den Freeze nie aufheben.
+     * Die verbleibende Differenz — zweiter Text erscheint mit der Maske des ersten — braucht
+     * eine eigene Runde MIT Cutscene-Regressionstests (CLAUDE.md-Lektion "Message-Clear-Fix"). */
+    re15_pauseflags_open(pause_mask);
     g_scd.message_id          = (uint8_t)msg_id;
     g_scd.message_active      = 1;
     g_scd.message_fsm_active  = 1;
@@ -367,6 +386,13 @@ void re15_dialog_open(int msg_id, int blocking)
     g_scd.message_blink       = 0;
     g_scd.message_query       = blocking ? 1 : 0;
     g_scd.message_display_frames = 2;  /* keep the box alive while the FSM owns the lifetime */
+}
+
+/* Legacy 2-Argument-Form = Caption ohne Freeze (Maske 0). Bestandshalter fuer
+ * Aufrufer/Tests, die keine Raum-Maske haben. */
+void re15_dialog_open(int msg_id, int blocking)
+{
+    re15_dialog_open_mask(msg_id, blocking, 0u);
 }
 
 /* Advance the dialog FSM one frame (byte-true FUN_80028134). Reads the press EDGE
@@ -395,7 +421,11 @@ static void re15_dialog_step(void)
     int rlen = 0;
     const unsigned char *raw = re15_msg_get_raw((int)g_scd.message_id, &rlen);
     if (!raw || rlen <= 0) {   /* empty/invalid message: fully dismiss so msg_block can't stick (see :467) */
-        g_scd.message_active = 0; g_scd.message_display_frames = 0; g_scd.message_query = 0; return;
+        g_scd.message_active = 0; g_scd.message_display_frames = 0; g_scd.message_query = 0;
+        re15_pauseflags_close();   /* Port-Sonderfall (leere/ungueltige .msg): dieser Pfad ist der
+                                    * einzige Ausgang, sonst bliebe der Freeze ohne Dismiss stehen.
+                                    * (message_fsm_active bleibt wie bisher unangetastet.) */
+        return;
     }
 
     int act_edge = (g_scd_pad_edge & CONFIRM_BIT) != 0;        /* virt 0x4000 = confirm (raw SQUARE) */
@@ -495,6 +525,16 @@ static void re15_dialog_step(void)
         break;
     }
     if (g_scd.message_fsm == 6) {          /* DONE — fully reset so the player UNFREEZES */
+        /* CLOSE = SNAPSHOT-RESTORE (byte-true FUN_80028134). Das Original hat drei
+         * Dismiss-Stellen, die alle dasselbe tun (`lw a0,DAT_800b853c` -> `sw a0,0x800aca40`):
+         *   @0x80028594/@0x800285a4  Select-Confirm (FSM-Case 4, virt. 0x4000)  <- Port-Case 3
+         *   @0x800286bc/@0x800286cc  End-Wait       (Case 5, 0xc000)            <- Port-Case 4
+         *   @0x80028708/@0x8002871c  Hold-N-Timeout (Case 6)                    <- Port-Case 5
+         * Im Port muenden alle drei in genau dieses fsm==6, deshalb steht der Restore hier.
+         * NICHT `= 0`: der Snapshot ist wichtig, weil das Item-Modal seinen eigenen
+         * 0xff000000-Freeze bereits gesetzt haben kann (@0x8001dbb8/@0x8001dbc8) und der
+         * Text-Close ihn nicht mitloeschen darf. */
+        re15_pauseflags_close();
         g_scd.message_active         = 0;
         g_scd.message_select         = 0;
         g_scd.message_fsm_active     = 0;
