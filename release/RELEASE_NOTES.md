@@ -1,3 +1,38 @@
+# RE1.5 Port — v0.2.3 (Early Preview)
+
+## Neu in v0.2.3 (gegenueber v0.2.2) — vier gemeldete Punkte
+
+**Zombies im Dinner-Raum nach Wiedereintritt** und **Zombie-Sound beim
+Hinfallen/Aufstehen** waren derselbe Fehler: Die STAGE1-Zombies beziehen ihre
+Posen aus zwei Animationssaetzen, und der Port ordnete drei Zustaenden den
+falschen zu. Folgen: Der Schlaefer, der im Dinner-Raum erst auftaucht, nachdem
+man in die Menge gelaufen ist (der Raum schaltet dann per Ausloesebereich auf
+eine andere Aufstellung um), spielte eine 14-Bilder-Aktionsanimation statt der
+75-Bilder-Steh-Animation — der fruehere Anlauf liess lediglich den falschen Clip
+sauber wiederholen. Und weil die Schritt- und Aufprallgeraeusche in den
+Einzelbildern des richtigen Satzes stecken, war derselbe Zombie rund um den
+Sturz stumm. Die Fall-/Aufsteh-Logik selbst war bereits byte-true.
+
+**Irons schaut jetzt "diagonaler"**: Im Original folgt er Leon dauerhaft mit dem
+Kopf, in beiden Achsen zugleich. Im Port lief seine Kopfsteuerung ueberhaupt
+nicht an, weil ihre Initialisierung an einen Zustand geknuepft war, den das
+Raumskript schon im Ladeframe ueberschreibt — im Original ruft das
+Spawn-Kommando den NPC-Code dagegen sofort mit auf. Gemessen dreht sein Kopf
+jetzt 54 Grad zu Leon statt starr geradeaus. Betrifft game-weit 22 weitere
+NPC-Platzierungen, die im Original ebenso mit dem Kopf folgen.
+
+**Speicher-Nummer zaehlt jetzt durch** — das war *kein* Portfehler: Das Original
+zaehlt die Speicherungen des Spielstrangs (der Zaehler steckt im Spielstand und
+wird beim Laden zurueckgesetzt), nicht die Karten-Slots. Auf Nutzer-Entscheid
+weicht der Port hier bewusst ab und zaehlt monoton hoch; alles andere bleibt
+byte-true. Die Abweichung ist im Code und in `analysis/save_counter.md`
+dokumentiert.
+
+Testsuite von 144 auf 150 Pruefungen gewachsen; jede Korrektur ist mit einer
+Gegenprobe abgesichert (Fix zurueckgebaut -> Pruefung schlaegt fehl).
+
+---
+
 # RE1.5 Port — v0.2.2 (Early Preview)
 
 ## Neu in v0.2.2 (gegenueber v0.2.1) — START-FIX: Spiel liess sich nicht mehr starten
@@ -190,8 +225,8 @@ Split-Zips — 7-Zip/WinRAR verwenden. Pruefsummen: `SHA256SUMS.txt`.
 
 | Paket | Plattform | Start |
 |---|---|---|
-| `re15_port_v0.2.2_win64.zip` | Windows x64 | `Start_RE15_Port.bat` doppelklicken |
-| `re15_port_v0.2.2_linux_steamdeck_x64.zip` | Linux x64 / Steam Deck (SteamOS 3.x) | `./run.sh` (Deck: als Non-Steam-Game hinzufuegen) |
+| `re15_port_v0.2.3_win64.zip` | Windows x64 | `Start_RE15_Port.bat` doppelklicken |
+| `re15_port_v0.2.3_linux_steamdeck_x64.zip` | Linux x64 / Steam Deck (SteamOS 3.x) | `./run.sh` (Deck: als Non-Steam-Game hinzufuegen) |
 
 Beide Pakete sind selbst-enthalten: SDL2 statisch, Assets unter `shared_assets/PSX`
 (CD-Baum) plus `shared_assets/extracted_fx` (Effekt-Texturen), Savegames als
@@ -231,6 +266,6 @@ release/build_linux_deck.sh --distrobox re15-build   # auf dem Deck selbst
 ```
 Paketieren (beide Plattformen, mit den Gates oben):
 ```bash
-release/make_package.sh --version v0.2.2               # --only linux | --only win
+release/make_package.sh --version v0.2.3               # --only linux | --only win
 ```
-Ergebnis: `re15_port_v0.2.2_{linux_steamdeck_x64,win64}.{z01,zip}` + `SHA256SUMS.txt`.
+Ergebnis: `re15_port_v0.2.3_{linux_steamdeck_x64,win64}.{z01,zip}` + `SHA256SUMS.txt`.
