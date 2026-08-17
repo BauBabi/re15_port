@@ -1,4 +1,59 @@
-# RE1.5 Port — v0.2 (Early Preview)
+# RE1.5 Port — v0.2.1 (Early Preview)
+
+## Neu in v0.2.1 — 15 gemeldete Abweichungen behoben
+
+Aus einem Spieltest von v0.2 kamen 17 Beobachtungen. 15 davon waren echte
+Abweichungen vom Original und sind behoben; 2 waren korrektes Verhalten und
+bleiben unveraendert (unten begruendet). Jede Korrektur traegt ihre
+Disassembly-Adresse im Quelltext; die Testsuite ist von 132 auf 144 Pruefungen
+gewachsen.
+
+**Die Wurzel gleich zweier Meldungen:** Bei Nicht-Spieler-Figuren lief eine
+Posen-Ueberblendung nie aus — der Port mischte dauerhaft 7/8 der vorherigen Pose
+bei, wodurch die Beine nur ~39 % ihrer Schwingung erreichten. Das war das
+"Gleiten/Schlurfen" von Elliot (Intro) und Marvin (2F-Korridor). In allen
+Original-Savestates steht der zugehoerige Zaehler auf 0.
+
+Behoben:
+- **Elliot-Intro**: Laufanimation (s.o.) und der harte Szenenschnitt — der
+  Uebergang laeuft jetzt wie im Original ueber Schwarzblende und Einblendung.
+- **Kurz sichtbarer Helipad-Hintergrund** direkt nach der Charakterwahl: der
+  Boot-Notbehelf zeichnete eine Datei, die byte-identisch mit dem
+  Helipad-Hintergrund ist; jetzt bleibt das Bild schwarz wie im Original.
+- **Helikopter-Rotor im Intro**: zwei portseitige Erfindungen (Lautstaerke nach
+  Kameraposition, Stummschaltung nach Spielerzustand) entfernt. Die eine hob
+  zusaetzlich das Skript-Stop des Sounds jeden Frame wieder auf. Nachgemessen am
+  Tonausgang: Rotor jetzt hoerbar mit korrekter Rotorblatt-Frequenz, und still,
+  sobald das Skript ihn stoppt.
+- **Leons Kopfhaltung** im und nach dem Intro (er verfolgte durch einen
+  Rechenueberlauf eine weit entfernte Figur) sowie seine **Blickrichtung** in der
+  Marvin-Szene.
+- **Leon schaut liegenden Gegnern nach** — diese Automatik fehlte komplett.
+- **Texte frieren das Spiel ein**: Beim Untersuchen steht jetzt alles still
+  (Gegner, Animationen, Skript) bis der Text weg ist — wie im Original. Die
+  Untertitel der Zwischensequenzen frieren weiterhin nicht ein; diese
+  Unterscheidung steckt in den Spieldaten selbst.
+- **Modelle nach Tod und NEW GAME** sowie **Messer-Animationen trotz Pistole nach
+  dem Laden**: beides waren Zustaende, die einen Neustart ueberlebten.
+- **Item-Aufnahme-Text** laesst sich jetzt beschleunigen (Taste halten).
+- **Zombie-Menge im Dinner-Raum** nach erneutem Betreten (standen als Statue).
+- **Hintere Tuer im 2F-Korridor** zeigte die Hintergruende des Helipads: 13
+  Hintergrund-Dateien des Evidence-Korridors waren aus dem falschen Quell-Archiv
+  geschnitten. Ein neuer Datentest prueft jetzt alle 156 Raeume.
+- **Zombie-Positionen im Evidence-Korridor** und **Zombie-Sounds beim
+  Hinfallen/Aufstehen** (RE2-Modus: Sounds spielten in falschen Zustaenden und
+  dreimal zu haeufig).
+
+Unveraendert, weil im Original genauso:
+- **Verletzt-Idle nach dem Laden**: Das Original startet die Idle-Animation nach
+  jedem Laden neutral und wechselt erst nach einigen Sekunden in die verletzte
+  Variante — und nur unter halber Gesundheit. Die HUD-Warnung "CAUTION" erscheint
+  aber schon deutlich frueher. Ein Spielstand in diesem Fenster zeigt also
+  CAUTION ohne Verletzt-Animation, im Original wie hier.
+- **Irons' Kopfdrehung**: war Teil desselben Klemmen-Fehlers wie Leons
+  Blickrichtung und ist damit miterledigt.
+
+---
 
 ## Neu in v0.2 (gegenueber v0.1.2) — RE2-KI-Modus fuer Zombies, Hunde, Kraehen
 
@@ -86,8 +141,8 @@ Split-Zips — 7-Zip/WinRAR verwenden. Pruefsummen: `SHA256SUMS.txt`.
 
 | Paket | Plattform | Start |
 |---|---|---|
-| `re15_port_v0.2_win64.zip` | Windows x64 | `Start_RE15_Port.bat` doppelklicken |
-| `re15_port_v0.2_linux_steamdeck_x64.zip` | Linux x64 / Steam Deck (SteamOS 3.x) | `./run.sh` (Deck: als Non-Steam-Game hinzufuegen) |
+| `re15_port_v0.2.1_win64.zip` | Windows x64 | `Start_RE15_Port.bat` doppelklicken |
+| `re15_port_v0.2.1_linux_steamdeck_x64.zip` | Linux x64 / Steam Deck (SteamOS 3.x) | `./run.sh` (Deck: als Non-Steam-Game hinzufuegen) |
 
 Beide Pakete sind selbst-enthalten: SDL2 statisch, Assets unter `shared_assets/PSX`
 (CD-Baum) plus `shared_assets/extracted_fx` (Effekt-Texturen), Savegames als
@@ -127,6 +182,6 @@ release/build_linux_deck.sh --distrobox re15-build   # auf dem Deck selbst
 ```
 Paketieren (beide Plattformen, mit den Gates oben):
 ```bash
-release/make_package.sh --version v0.2               # --only linux | --only win
+release/make_package.sh --version v0.2.1               # --only linux | --only win
 ```
-Ergebnis: `re15_port_v0.2_{linux_steamdeck_x64,win64}.{z01,zip}` + `SHA256SUMS.txt`.
+Ergebnis: `re15_port_v0.2.1_{linux_steamdeck_x64,win64}.{z01,zip}` + `SHA256SUMS.txt`.
