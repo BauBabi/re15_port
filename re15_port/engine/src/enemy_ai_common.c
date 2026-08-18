@@ -1843,7 +1843,16 @@ static void re15_enemy_ai_live_knockdown(re15_actor_t *e)
             e->sub_state_2 = 1;
             break;
         case 2:
-            e->ai_timer = (int16_t)(lie_tbl[re15_engine_rand8() & 0xf] * 30);
+            /* ⛔ RAND IST HIER KEIN WUERFEL — er ist eine KONSTANTE (Beleg s. Block ueber
+             * case 4). Der Root ruft im NIEDERGESCHLAGENEN Zustand FUN_80012974
+             * (@0x80101638) und diese verlaesst a0 IMMER als 0x20000000
+             * (@0x800129d4 `lui a0,0x2000` im Delay-Slot von `beq s0,zero` @0x800129d0,
+             * Rohbytes `3c 04 20 00`; danach bis `jr ra` @0x80012a04 KEIN a0-Write).
+             * FUN_8001af20 hasht NUR a0 (@0x8001af30 `srl v1,a0,7` …) -> Rueckgabe 0.
+             * Also `rand & 0xf` == 0 -> IMMER lie_tbl[0] (@0x801052a8-bc, Tabelle
+             * @0x8011FB10[0] = 12) -> Liegezeit 12*30 = 360 Ticks
+             * (@0x801052c4-d8 `sll 4; subu; sll 1` = *30). */
+            e->ai_timer = (int16_t)(lie_tbl[0] * 30);
             /* byte-true lie-start latch clear (@0x801052e8-f4 in row [2]=0x80105278: `lbu +0x93;
              * andi 0xfe; sb`): the original re-arms damage the moment the zombie starts LYING —
              * the port held bit 0 until the [6] get-up exit, so a knocked-down zombie was
@@ -1861,16 +1870,65 @@ static void re15_enemy_ai_live_knockdown(re15_actor_t *e)
             e->anim_frac = 0xf;                       /* +0x8f = 0xf @0x80105368 */
             e->sub_state_2 = 5;                       /* +0x6 = 5 @0x80105358 */
             e->hit_react |= 1;                        /* +0x93 |= 1 @0x80105378-84 (was missing) */
-            /* get-up-grunt SE roll (FUN_8010512c.c [4]: `rand(); if ((r&7)==0) { r2=rand();
-             * SE(r2&1 ? 5 : 8); }` — 1/8 chance, both draws byte-true). Dossier D3. */
-            if ((re15_engine_rand8() & 7) == 0)
-                re15_audio_room_se((re15_engine_rand8() & 1) ? 5 : 8);
+            /* ============ AUFSTEH-GRUNZER: SE 8, IMMER (nicht 1/8) ==========================
+             * Nutzer-Report 2026-08-18: "das schrille Moaning kommt nur beim Sterben; im
+             * Original macht er es AUCH beim Aufstehen". Der Port wuerfelte hier 1/8 * 1/2 =
+             * 1/16 auf SE 8 — das Original wuerfelt an dieser Stelle GAR NICHT.
+             *
+             * FUN_8001af20 (@0x8001af20, 15 Instr, Rohbytes selbst gelesen) ist eine REINE
+             * FUNKTION DES a0-REGISTERS; der Speicher-State @0x800ac774 ist ein Dead Store
+             * (`lhu t1,0(v0)` @0x8001af28, t1 nie benutzt):
+             *   8001af30  00 04 19 c2  srl  v1,a0,7
+             *   8001af34  30 63 00 ff  andi v1,v1,0xff
+             *   8001af38  00 83 20 21  addu a0,a0,v1
+             *   8001af3c  30 84 00 ff  andi a0,a0,0xff
+             *   8001af48  ac 44 00 00  sw   a0,0(v0)        <- Dead Store
+             *   8001af4c  30 82 00 ff  andi v0,a0,0xff      <- Rueckgabe
+             *
+             * a0 AN DIESER CALLSITE IST BEWEISBAR 0x20000000. Kette (jede Instruktion der
+             * Strecke disassembliert, KEIN a0-Write dazwischen):
+             *   FUN_80101224 (ACTIVE = @0x8011f7b4[1]) prueft den DOWNED-Bit und ruft
+             *     80101614  90 a2 00 09  lbu  v0,9(a1)          ; +0x9
+             *     8010161c  30 42 00 80  andi v0,v0,0x80
+             *     80101620  10 40 00 07  beq  v0,zero,0x80101640   ; NICHT downed -> ueberspringen
+             *     80101630  34 04 13 88  ori  a0,zero,0x1388
+             *     80101638  0c 00 4a 5d  jal  0x80012974           ; DOWNED -> immer gerufen
+             *   FUN_80012974 verlaesst a0 IMMER als 0x20000000:
+             *     800129d0  12 00 00 08  beq  s0,zero,0x800129f4
+             *     800129d4  3c 04 20 00  lui  a0,0x2000            ; DELAY-SLOT = immer
+             *     ... bis 80012a04 `jr ra`: KEIN weiterer a0-Write
+             *   -> 0x80101640-70 (Index-Rechnung + `jalr v0`), Sub-Mode-Handler
+             *      0x8010168c (nur v0/at/sp/ra), Decide @0x8011f840[0x11] = 0x80105124
+             *      (`jr ra; nop` — Leerfunktion), Animate-Dispatch @0x801016f0,
+             *      FUN_8010512c-Prolog 0x8010512c-0x80105164 und Phase [4]
+             *      0x8010532c-0x80105390: KEINE Instruktion schreibt a0.
+             *   Der DOWNED-Bit ist ab Phase [0] (@0x80105230 `+0x9 |= 0x80`) bis Phase [6]
+             *   (@0x80105400 ff. `&= 0x7f`) gesetzt — an Phase [4] also GARANTIERT.
+             *
+             * DARAUS FOLGT (Rohbytes @0x80105388-b8):
+             *   80105390  0c 00 6b c8  jal  0x8001af20   -> hash(0x20000000):
+             *                (0x20000000>>7)&0xff = 0 ; (0x20000000+0)&0xff = 0 -> RUECKGABE 0
+             *   80105398  30 42 00 07  andi v0,v0,7      -> 0
+             *   8010539c  14 40 00 09  bne  v0,zero,…    -> NICHT genommen: SE feuert IMMER
+             *   801053a4  0c 00 6b c8  jal  0x8001af20   -> a0 ist jetzt 0 (die rng schreibt
+             *                a0 selbst: @0x8001af3c/@0x8001af44) -> hash(0) = 0
+             *   801053ac  30 42 00 01  andi v0,v0,1      -> 0
+             *   801053b0  10 40 00 02  beq  v0,zero,0x801053bc  -> GENOMMEN
+             *   801053b4  34 04 00 08  ori  a0,zero,0x8  (Delay-Slot)  ->  a0 = 8
+             *   801053bc  jal 0x800453d0                 ->  Se(8)
+             * = der Aufsteh-Grunzer ist DETERMINISTISCH SE 8. (Genau das, was der Nutzer im
+             * Original hoert und im Port vermisst hat.) Kein Wurf, kein RNG-Zug. */
+            re15_audio_room_se(8);                    /* @0x801053bc jal 0x800453d0, a0=8 */
             break;
         case 6:
             e->grid_id &= (uint8_t)0x7f;
             re15_ai_set_state_word(e, 0x201);         /* -> engage (entry re-roll) */
             e->hit_react &= (uint8_t)~1u;
-            e->hit_stun = (int16_t)((re15_engine_rand8() & 3) + 4);   /* poise re-arm */
+            /* Auch hier ist der Wurf konstant: der Root-Check @0x80101620 lief in DIESEM Tick
+             * noch mit gesetztem DOWNED-Bit (Phase [6] loescht es erst selbst, @0x80105400 ff.),
+             * also a0 = 0x20000000 -> rand() == 0 (Herleitung im Block bei case 4).
+             * Poise-Neuladung = (0 & 3) + 4 = 4. */
+            e->hit_stun = (int16_t)4;                 /* +0x1dc = (rand&3)+4 -> 4 */
             break;
         default:                                       /* [1]/[5]: play to clip end */
             e->sub_state_2 = (uint8_t)(e->sub_state_2 + (uint8_t)re15_enemy_clip_done(e));

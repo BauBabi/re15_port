@@ -1302,3 +1302,10 @@ target_include_directories(test_knockdown_handoff PRIVATE ${CMAKE_SOURCE_DIR}/in
 add_test(NAME unit_knockdown_handoff_bank COMMAND test_knockdown_handoff bank)
 add_test(NAME unit_knockdown_fall_seq     COMMAND test_knockdown_handoff fall)
 set_tests_properties(unit_knockdown_handoff_bank unit_knockdown_fall_seq PROPERTIES TIMEOUT 60)
+
+# --- NEGATIV-PIN Aufsteh-Grunzer nach Knockdown (Nutzer-Report 2026-08-18) ---
+add_executable(test_zombie_getup_se test_zombie_getup_se.c)
+target_link_libraries(test_zombie_getup_se PRIVATE re15_engine re15_test_support)
+target_include_directories(test_zombie_getup_se PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_zombie_getup_se COMMAND test_zombie_getup_se)
+set_tests_properties(unit_zombie_getup_se PROPERTIES TIMEOUT 120)

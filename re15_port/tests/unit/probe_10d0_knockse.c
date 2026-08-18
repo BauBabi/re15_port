@@ -17,7 +17,9 @@
  *     [1] @0x80105234  f314 rate 0x100 -> +0x6 += done
  *     [2] @0x80105278  Liege-Timer +0x9c = tbl@0x8011fb10[rand&0xf]*30
  *     [3] @0x801052f8  Countdown — KEIN f314, KEIN SE
- *     [4] @0x8010532c  Clip 0x12, SE-Wurf 1/8 -> (rand&1)?5:8 (@0x801053bc)
+ *     [4] @0x8010532c  Clip 0x12, SE 8 DETERMINISTISCH (@0x801053bc): a0 == 0x20000000
+ *                      (FUN_80012974 @0x800129d4, im DOWNED-Zustand immer gerufen
+ *                       @0x80101638) -> FUN_8001af20 gibt 0 -> beide Wuerfe 0
  *     [5] @0x801053c4  f314 -> +0x6 += done
  *     [6] @0x80105400  Wort 0x201 (ENGAGE), Poise neu
  *   FRAME-WORT-SE-DEKODER FUN_8001b38c: `srl s0,v0,22` (@0x8001b3b4) -> Bit N = SE N,

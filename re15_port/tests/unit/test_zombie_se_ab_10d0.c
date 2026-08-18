@@ -21,12 +21,18 @@
  *         (@0x801051e0-f0) => (rand&1)==0 -> SE 8, sonst SE 5.
  *         Danach +0x1b8=1 (@0x80105204), +0x1dc=0x80 (@0x80105214), +0x9|=0x80 (@0x8010522c-30).
  *     [1] anim_set(+0x170,+0x174,0,0x100) (@0x80105240-4c) -> BANK 1, +0x6 += ret.
- *     [2] +0x9|=0x80, +0x6=3, +0x9c = tbl@0x8011fb10[rand&0xf]*30 (@0x801052a8-d8),
+ *     [2] +0x9|=0x80, +0x6=3, +0x9c = tbl@0x8011fb10[rand&0xf]*30 (@0x801052a8-d8) —
+ *         KORREKTUR 2026-08-18: `rand` ist hier KEIN Wurf. Der ACTIVE-Root ruft im DOWNED-
+ *         Zustand IMMER FUN_80012974 (@0x80101620-38), die a0 IMMER als 0x20000000 verlaesst
+ *         (@0x800129d4 `lui a0,0x2000` im Delay-Slot, danach kein a0-Write bis `jr ra`), und
+ *         FUN_8001af20 hasht NUR a0 -> Rueckgabe 0. Also IMMER tbl[0]*30 = 360,
  *         +0x93 &= 0xfe (@0x801052f0-f4).
  *     [3] Countdown, KEIN anim_set, KEIN SE (@0x801052f8-328).
  *     [4] Clip 0x12 (@0x80105334-38), +0x95=0, +0x6=5, +0x8f=0xf, +0x93|=1, +0x1b8=0,
- *         SE-Wurf 1/8: `andi v0,v0,7; bne -> skip` (@0x80105398-9c), dann derselbe
- *         (rand&1)==0 -> 8 / sonst 5 (@0x801053ac-bc).
+ *         SE: `andi v0,v0,7; bne -> skip` (@0x80105398-9c), dann (rand&1)==0 -> 8 / sonst 5
+ *         (@0x801053ac-bc). KORREKTUR 2026-08-18: mit rand()==0 (s.o.) ist der Zweig NICHT
+ *         genommen und der zweite Wurf ebenfalls 0 -> der Aufsteh-Grunzer ist DETERMINISTISCH
+ *         SE 8 (@0x801053b4 `ori a0,zero,8` im Delay-Slot). Pin: test_zombie_getup_se.c.
  *     [5] anim_set(+0x170,+0x174,0,0x100) (@0x801053d0-dc).
  *     [6] +0x9 &= 0x7f (@0x80105414-18), Wort 0x201, Poise neu.
  *   Die FALL-/AUFPRALL-Geraeusche kommen aus den FRAME-WOERTERN des Clips 0x0b, dekodiert von
