@@ -1,3 +1,39 @@
+# RE1.5 Port — v0.2.7 (Early Preview)
+
+## Neu in v0.2.7 — RE2-Gegner: Zucken, Ragdoll, und JEDE Waffe wirkt
+
+**Jede Waffe loest jetzt eine Trefferreaktion aus.** Im RE2-Modus trafen sieben
+von 22 Angriffsarten eine leere Stelle der Reaktionstabelle — der Zombie steckte
+den Treffer wortlos weg. Ursache war eine falsche Zuordnung im Port: Die
+Reaktionszeile wird im Original ueber die **Gegenstands-Nummer der gefuehrten
+Waffe** gewaehlt, der Port stempelte stattdessen seine eigene Waffen-Nummer und
+zeigte damit auf Felder, die es im RE2-Sinn gar nicht gibt (Magnum und
+Raketenwerfer machen dort 900 Schaden und toeten sofort — die Reaktion kommt
+also nie dran). Jetzt ist jede RE1.5-Waffe ihrer RE2-Entsprechung zugeordnet,
+zwoelf davon als harte Identitaet (Browning, Ingram und Flammenwerfer sind in
+beiden Spielen dieselbe Waffe).
+
+**Ingram, SPAS-12 und MC51 trafen auf Distanz ueberhaupt nicht.** Ihr
+Trefferpunkt-Test lief durch den kurzen Nahkampf-Kegel statt durch den
+Schuss-Streifen — ein Fehler in einer Waffenliste im Schadenscode, der BEIDE
+KI-Modi betraf.
+
+**Zombies zucken beim Treffer.** Das Original dreht dafuer zwei Knochen direkt:
+der Oberkoerper bekommt exakt den Gegenwinkel des Rumpfes, wodurch sich die
+Drehung oben aufhebt und nur ein Versatz bleibt — das sichtbare Zucken. Vorher
+bewegte sich dabei kein einziges Bild, jetzt 19 von 40.
+
+**Zwei neue Reaktionen:** ein Ragdoll-Sturz mit echter Aufprall-Physik (der
+Zombie prallt beim Aufschlag ab und steht als Kriecher wieder auf) und eine
+Rutsch-Reaktion. Beide kommen mit staerkeren Waffen im Spiel tatsaechlich vor.
+
+Testsuite 162 Pruefungen; ein Zensus faehrt alle 22 Waffen durch einen echten
+Schuss und verlangt je eine tatsaechlich gefahrene Reaktion (Animationswechsel,
+Zucken, Laut) — kein blosser Tabellen-Check. Im RE1.5-Modus bleibt die
+Original-Logik unveraendert; das ist zusaetzlich abgesichert.
+
+---
+
 # RE1.5 Port — v0.2.6 (Early Preview)
 
 ## Neu in v0.2.6 — Zombie stoehnt beim Aufstehen wieder, korrekte Liegezeit
@@ -335,8 +371,8 @@ Split-Zips — 7-Zip/WinRAR verwenden. Pruefsummen: `SHA256SUMS.txt`.
 
 | Paket | Plattform | Start |
 |---|---|---|
-| `re15_port_v0.2.6_win64.zip` | Windows x64 | `Start_RE15_Port.bat` doppelklicken |
-| `re15_port_v0.2.6_linux_steamdeck_x64.zip` | Linux x64 / Steam Deck (SteamOS 3.x) | `./run.sh` (Deck: als Non-Steam-Game hinzufuegen) |
+| `re15_port_v0.2.7_win64.zip` | Windows x64 | `Start_RE15_Port.bat` doppelklicken |
+| `re15_port_v0.2.7_linux_steamdeck_x64.zip` | Linux x64 / Steam Deck (SteamOS 3.x) | `./run.sh` (Deck: als Non-Steam-Game hinzufuegen) |
 
 Beide Pakete sind selbst-enthalten: SDL2 statisch, Assets unter `shared_assets/PSX`
 (CD-Baum) plus `shared_assets/extracted_fx` (Effekt-Texturen), Savegames als
@@ -376,6 +412,6 @@ release/build_linux_deck.sh --distrobox re15-build   # auf dem Deck selbst
 ```
 Paketieren (beide Plattformen, mit den Gates oben):
 ```bash
-release/make_package.sh --version v0.2.6               # --only linux | --only win
+release/make_package.sh --version v0.2.7               # --only linux | --only win
 ```
-Ergebnis: `re15_port_v0.2.6_{linux_steamdeck_x64,win64}.{z01,zip}` + `SHA256SUMS.txt`.
+Ergebnis: `re15_port_v0.2.7_{linux_steamdeck_x64,win64}.{z01,zip}` + `SHA256SUMS.txt`.
