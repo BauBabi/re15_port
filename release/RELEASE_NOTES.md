@@ -1,3 +1,34 @@
+# RE1.5 Port — v0.2.8 (Early Preview)
+
+## Neu in v0.2.8 — RE2-Gore ist sichtbar
+
+Der Zerleger-Zweig der RE2-Zombies war in v0.2.7 zwar berechnet, aber im Bild
+nicht zu sehen. Jetzt schon:
+
+- **Abgerissene Gliedmassen verschwinden wirklich.** Das Original laeuft die
+  Koerperteile flach ab — ein abgerissener Oberschenkel nimmt Unterschenkel und
+  Fuss NICHT automatisch mit; stattdessen gibt es eine Weitergabe-Regel, die
+  dasselbe Ergebnis erzeugt. Beides ist nachgebaut.
+- **Verkohlung und Saeure-Faerbung** liegen auf den richtigen Koerperteilen. Die
+  Faerbung multipliziert im Original die Beleuchtung (neutral ist nicht null) —
+  mit dem urspruenglich gesetzten Startwert waere jeder unversehrte Zombie
+  schwarz gewesen; das ist abgefangen.
+- **Stumpf-Modell**: der Zerleger tauscht jetzt das dafuer vorgesehene
+  Reserve-Modell ein (der bisherige Behelf schrieb stattdessen eine Faerbung,
+  die das Original an dieser Stelle gar nicht setzt).
+- **Trefferrichtung wirkt**: Treffer von hinten loesen andere Taumel- und
+  Sturz-Varianten aus als Treffer von vorn (anderer Clip, anderer Rueckstoss),
+  und die Zuck-Richtung spiegelt sich entsprechend.
+
+Testsuite 164 Pruefungen; sieben Gegenproben, jede einzeln nachgewiesen.
+Der RE1.5-Modus ist dreifach abgesichert unveraendert.
+
+Noch offen: abgerissene Teile fliegen nicht weg, sondern bleiben am Koerper
+(der Port hat keine Physik fuer einzelne Koerperteile) — mit Adressen
+dokumentiert.
+
+---
+
 # RE1.5 Port — v0.2.7 (Early Preview)
 
 ## Neu in v0.2.7 — RE2-Gegner: Zucken, Ragdoll, und JEDE Waffe wirkt
@@ -371,8 +402,8 @@ Split-Zips — 7-Zip/WinRAR verwenden. Pruefsummen: `SHA256SUMS.txt`.
 
 | Paket | Plattform | Start |
 |---|---|---|
-| `re15_port_v0.2.7_win64.zip` | Windows x64 | `Start_RE15_Port.bat` doppelklicken |
-| `re15_port_v0.2.7_linux_steamdeck_x64.zip` | Linux x64 / Steam Deck (SteamOS 3.x) | `./run.sh` (Deck: als Non-Steam-Game hinzufuegen) |
+| `re15_port_v0.2.8_win64.zip` | Windows x64 | `Start_RE15_Port.bat` doppelklicken |
+| `re15_port_v0.2.8_linux_steamdeck_x64.zip` | Linux x64 / Steam Deck (SteamOS 3.x) | `./run.sh` (Deck: als Non-Steam-Game hinzufuegen) |
 
 Beide Pakete sind selbst-enthalten: SDL2 statisch, Assets unter `shared_assets/PSX`
 (CD-Baum) plus `shared_assets/extracted_fx` (Effekt-Texturen), Savegames als
@@ -412,6 +443,6 @@ release/build_linux_deck.sh --distrobox re15-build   # auf dem Deck selbst
 ```
 Paketieren (beide Plattformen, mit den Gates oben):
 ```bash
-release/make_package.sh --version v0.2.7               # --only linux | --only win
+release/make_package.sh --version v0.2.8               # --only linux | --only win
 ```
-Ergebnis: `re15_port_v0.2.7_{linux_steamdeck_x64,win64}.{z01,zip}` + `SHA256SUMS.txt`.
+Ergebnis: `re15_port_v0.2.8_{linux_steamdeck_x64,win64}.{z01,zip}` + `SHA256SUMS.txt`.
