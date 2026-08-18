@@ -1792,8 +1792,116 @@ static void re15_re2z_part_reset(re15_actor_t *e)
 {
     for (int i = 0; i < 16; i++) {
         e->re2z_part_flags[i] = (i < 15) ? 1u : 0u;
-        e->re2z_part_tint[i]  = 0u;
+        /* Farbwort-Seed: der Modell-Aufbau schreibt in JEDEN Part `+0x70 = 0x808080`
+         * (`puVar8[-9] = 0x808080;` FUN_80028368 in RE2_Quellcode_V2/FUN_80028368.c:55,
+         * puVar8 laeuft mit Wort-Stride 0x2b = 0xAC). 0x80 ist der PSX-neutrale
+         * Modulationswert (GPU: final = tex*prim/0x80) — die Tinte MULTIPLIZIERT also,
+         * sie ersetzt nicht. Frueher stand hier 0 = "keine Tinte" (Port-Sentinel);
+         * mit dem Renderer-Konsumenten ist der Original-Seed die richtige Zahl. */
+        e->re2z_part_tint[i]  = 0x00808080u;
+        e->re2z_part_mesh[i]  = (uint8_t)i;     /* Geometrie-Zeiger zeigen initial auf den
+                                                 * eigenen Part (FUN_80028368-Aufbau) */
     }
+}
+
+/* ============================================================================================
+ * DIE ANZEIGE-BRUECKE DES MODELLBLOCKS  (der bisher fehlende Konsument von +0x198)
+ * --------------------------------------------------------------------------------------------
+ * Original: FUN_80027160 @0x80027160 (RE2-EXE, ghidra_re2_Leon.txt Z.108178-108432) ist der
+ * Part-Draw-Walk. Aufruf-Konvention aus dem Aufrufer @0x80026894 belegt:
+ *     80026894: lw    a1,0x198(s0)     ; a1 = Part-Array (16 Records, Stride 0xAC)
+ *     80026898: lw    a2,0x0(s0)       ; a2 = Entity-Flagwort
+ *     8002689c: jal   FUN_80027160
+ *     800268a0: _addiu a3,s0,0x38      ; a3 = &Entity-Position
+ * Part-Zahl aus `lbu s3,0x107(s1)` @0x80027354.
+ *
+ * (A) SICHTBARKEIT — Bit 0 des Flagworts +0x00 ist DRAW ENABLE, der Test steht in BEIDEN
+ *     Schleifen und ist ein FLACHES `continue`, KEIN Baum-Schnitt:
+ *     einfache Schleife                       Hauptschleife
+ *       80027374: lw   a2,0x0(s2)               800273b4: lw   a2,0x0(s2)
+ *       8002737c: andi v0,a2,0x1                800273bc: andi v0,a2,0x9000
+ *       80027380: beq  v0,zero,0x80027394       800273c0: beq  v0,zero,0x800273e4
+ *       8002738c: jal  FUN_80027434             800273c4: _andi v0,a2,0x1
+ *       80027390: _addiu a3,s2,0x48             800273c8: beq  v0,zero,0x800273f8
+ *       800273a4: _addiu s2,s2,0xac             800273f8: addiu s0,s0,0xac
+ *                                               8002740c: _addiu s2,s2,0xac
+ *     Der Record-Zeiger wird UNBEDINGT im Delay-Slot weitergeschoben (0x800273A4 /
+ *     0x800273F8 / 0x8010740C) — es gibt keinen Matrix-Stack, kein Push/Pop, keine Rekursion.
+ *     Ein geloeschtes Bit 0 nimmt also NICHT automatisch die Knochenkette darunter mit;
+ *     die Kinder wuerden mit der (eingefrorenen) Elternmatrix weiterzeichnen.
+ *
+ * (A2) DIE KETTE gibt es trotzdem — als FLAG-KASKADE im Kopf BEIDER Zeichner
+ *     (FUN_80027434 @0x80027470-94, wortgleich in FUN_80027ff0 @0x80028010-34):
+ *       80027470: lw   v0,0x94(s1)     ; +0x94 = Zeiger auf den ELTERN-Record
+ *       80027478: lw   v0,0x0(v0)      ; Eltern-Flagwort
+ *       80027480: andi v1,v0,0x21      ; Bit 0 und Bit 5 isolieren
+ *       80027484: li   v0,0x20
+ *       80027488: bne  v1,v0,0x80027498; Eltern != (0x20 gesetzt UND 0x01 klar) -> normal
+ *       80027490: j    0x80027bb8      ; sonst: Epilog = NICHTS zeichnen
+ *       80027494: _sw  v1,0x0(s1)      ; und das EIGENE Flagwort wird 0x20
+ *     Weil FUN_80028368 die Records ELTERN-VOR-KIND ablegt (`child[+0x74] = &parent+0x48`,
+ *     `child[+0x94] = &parent` FUN_80028368.c:106-109), pflanzt sich die 0x20 im selben
+ *     flachen Durchlauf durch die ganze noch aktive Kette fort. Ein Kind, dessen Bit 0
+ *     bereits klar ist, wird nie betreten und gibt die 0x20 auch nicht weiter.
+ *     -> abgerissener Oberschenkel nimmt Unterschenkel+Fuss NUR mit, wenn er 0x20 traegt
+ *        UND sein Bit 0 geloescht ist (das tut im Original die Flugphysik FUN_80028ad8 beim
+ *        Aufschlag: `*param_1 = *param_1 & 0xfffffffe`, FUN_80028ad8.c:52).
+ *
+ * (B) TINTE — das Farbwort +0x70 geht als CVECTOR in das GTE-RGB-Register und wird von
+ *     NCCT mit dem BELEUCHTUNGSERGEBNIS MULTIPLIZIERT (nicht ersetzt):
+ *       80027900: lw   s8,0x70(s1)     ; Farbwort
+ *       80027ae0: move a2,s8           ; -> FUN_80027bec (Tris)  / @0x80027AFC -> FUN_80027dbc (Quads)
+ *       80027c08: sw   a2,0x10(sp)     ; CVECTOR r,g,b   (LOW BYTE = R)
+ *       80027c18: sb   a3,0x13(sp)     ; CVECTOR.cd = GPU-Primitiv-Code -> Byte 3 ist NICHT Farbe
+ *       80027c2c: ldrgb v0             ; GTE RGB-Register
+ *       80027d10: NCCT                 ; out = RGB_reg * (BK + LCM*LLM*N)
+ *     Neutral ist 0x808080 (FUN_80028368.c:55) — genau der PSX-Modulationsneutralwert.
+ *     Der Port rendert die Beleuchtung in DEMSELBEN Raum (render_pc.c
+ *     psx_prim_to_sdl_vert: "final = (tex x prim) / 0x80", Quelle psx-spx), die Tinte ist
+ *     also `prim' = prim * tint / 0x80` mit Saettigung — genau ein NCCT-Modulationsschritt.
+ *
+ * ⛔ NUR RE2: die Bruecke wird ausschliesslich betreten, wenn der RE2-Flavor aktiv IST, der
+ *    RE2-Zombie-Brain den Typ besitzt UND der INIT-Seed gelaufen ist. Im RE1.5-Pfad liefert
+ *    re15_re2z_gore_resolve() 0 und der Renderer laeuft unveraendert weiter.
+ *
+ * OFFEN (ehrlich): die Parts mit 0x4A (abgerissener Arm) und 0x1062 (abgesprengtes Bein)
+ *    behalten Bit 0 und werden im Original als FREIFLIEGENDE Teile mit eigener Matrix
+ *    (Bit 0x40 = lokale Transformation ueberspringen) und eigener Physik (Bit 0x08/0x20,
+ *    FUN_80028dac/FUN_80028ad8) gezeichnet. Der Port hat keine Part-Physik — diese Teile
+ *    bleiben am Skelett und tragen nur die Blut-Tinte 0x0010104F. Damit fehlt auch der
+ *    Kaskaden-Ausloeser (Bit 0 wird nie durch den Aufschlag geloescht); die Kaskade selbst
+ *    ist unten trotzdem byte-true implementiert, damit ein spaeterer Physik-Zwilling sie
+ *    ohne weitere Aenderung bekommt. */
+int re15_re2z_gore_active(const re15_actor_t *e)
+{
+    if (!e) return 0;
+    if (re15_ai_flavor() != RE15_AI_FLAVOR_RE2) return 0;      /* RE1.5 kann hier NIE landen */
+    if (!re15_re2z_owns_type(e->type)) return 0;
+    return (e->re2z_part_flags[0] & 1u) != 0;                  /* INIT-Seed (part_reset) gelaufen */
+}
+
+int re15_re2z_gore_resolve(const re15_actor_t *e, const int8_t *bone_parent, int n,
+                           uint8_t *out_draw, uint32_t *out_tint, uint8_t *out_mesh)
+{
+    if (!re15_re2z_gore_active(e) || !out_draw || !out_tint || !out_mesh) return 0;
+    if (n > 16) n = 16;                                        /* Modellblock hat 16 Records */
+
+    uint32_t fl[16];
+    for (int i = 0; i < n; i++) fl[i] = e->re2z_part_flags[i];
+
+    for (int i = 0; i < n; i++) {                              /* flacher Walk, Stride 0xAC */
+        out_tint[i] = e->re2z_part_tint[i];
+        out_mesh[i] = e->re2z_part_mesh[i];                    /* Stumpf-Tausch @0x8010531C-50 */
+        if (!(fl[i] & 1u)) { out_draw[i] = 0; continue; }      /* andi 0x1 @0x8002737C/@0x800273C4 */
+        int p = bone_parent ? (int)bone_parent[i] : -1;
+        if (p >= 0 && p < n && (fl[p] & 0x21u) == 0x20u) {     /* andi 0x21 / li 0x20 @0x80027480-88 */
+            fl[i] = 0x20u;                                     /* sw v1,0(s1) @0x80027494 */
+            out_draw[i] = 0;                                   /* j 0x80027bb8 = Epilog */
+            continue;
+        }
+        out_draw[i] = 1;
+    }
+    return 1;
 }
 
 /* ---- FUN_80106128 — VERKOHLUNG (+ das +0x10E-Bit 0x80) ------------------------------------ */
@@ -1949,10 +2057,17 @@ static void re2z_leg_gore(re15_actor_t *e)
         e->re2z_flags21a |= 0x20u;                              /* ori 0x20 @0x801052F4 */
     }
     if ((re2z_rand() & 1u) && e->type != 0x1eu) {               /* @0x801052F8-314 */
-        /* STUMPF: Part-15-Mesh in den Oberschenkel (@0x8010531C-50) — OPEN ohne Modellblock;
-         * der Zustand wird als Tinte des blutigen Stumpfes gefuehrt (dieselbe Farbe, die
-         * 0x80107438 fuer abgerissene Glieder schreibt, `lui 0x10 / ori 0x104f` @0x80107528). */
-        e->re2z_part_tint[thigh] = 0x0010104Fu;                 /* [PORT-MAPPING] */
+        /* STUMPF-MESH: die vier Geometrie-Woerter des RESERVE-Parts 15 wandern in den
+         * Oberschenkel — der Oberschenkel zeigt danach das Stumpf-Modell:
+         *   8010531c: lw v0,2588(v1)  ->  8010532c: sw v0,8(s0)
+         *   80105330: lw v0,2596(v1)  ->  80105338: sw v0,16(s0)
+         *   8010533c: lw v0,2592(v1)  ->  80105344: sw v0,12(s0)
+         *   80105348: lw v0,2600(v1)  ->  80105350: sw v0,20(s0)
+         * 2588..2600 = 15*172 + 8/12/16/20 (Stride 172), s0 = v1 + 2064 bzw. 1548 = Part 12/9.
+         * Port-Zwilling: Objektindex statt Zeiger (Part i == MD1-Mesh i). Die frueher hier
+         * eingesetzte Blut-TINTE war ein Stand-in ohne Original-Beleg — @0x8010531C-50
+         * schreibt KEIN Farbwort — und ist damit entfallen. */
+        e->re2z_part_mesh[thigh] = 15u;                         /* @0x8010531C-50 */
     }
     (void)re2z_rand();                                          /* @0x80105354, Emitter-Winkel */
     re2z_gore_fx(e, 8000u);                                     /* @0x80105368, Oberschenkel */
@@ -2009,16 +2124,27 @@ static void re2z_hit_stagger(re15_actor_t *e, re15_actor_t *pl)
     case 0:
         e->sub_state_2 = 1;                                        /* sb 1,6 @0x80105C48 */
         e->re2z_t15a   = 10;                                       /* +0x15A = 10 @0x80105C50 */
-        /* ⚠ OFFEN (Welle E, bewusst NICHT in dieser Welle verdrahtet): +0x1D0 HAT seit Welle E
-         * einen Produzenten (re2z_stamp_hit, Formel + Adressen dort). Der `& 0x20`-Zweig dieses
-         * Handlers waehlt Clip 3 statt 4 und Schub 0 statt -450 (@0x80105C5C-88) und wuerde damit
-         * die in test_re2_hit_reaction gepinnten Erwartungen kippen — das ist die Welle des
-         * Stagger-/Ragdoll-Handlers, nicht die des Zerlegers. Bis dahin: Clip 4, Rate 3,
-         * Knockback -450 (der `&0x20`-Zweig 3 / 0 ist damit unerreichbar, dokumentiert). */
-        re2z_clip(e, 4, 0, 3, 0x400, 0);                           /* sw 0x00030004 @0x80105C74,
+        /* RUECKEN-TREFFER (`+0x1D0 & 0x20`) — Welle F, jetzt verdrahtet. Das Clip-Wort steht
+         * als 0x00030004 in a1 (`lui a1,0x3` @0x80105C18 / `ori a1,a1,0x4` @0x80105C38) und
+         * wird um EINS DEKREMENTIERT, wenn das Bit steht -> Clip 3, Rate unveraendert 3:
+         *   80105c40: lhu  v1,464(s4)     ; +0x1D0
+         *   80105c58: andi v1,v1,0x20
+         *   80105c5c: sltu v1,zero,v1     ; 1 wenn Ruecken
+         *   80105c60: subu a1,a1,v1       ; 0x00030004 -> 0x00030003
+         *   80105c74: sw   a1,332(s4)     ; +0x14C
+         * Der Schub kommt aus einer Zwei-Wort-Tabelle auf dem Stack, indiziert mit dem
+         * gleichen Bit (`sp+16 = -450` @0x80105BEC-F0, `sp+18 = 0` @0x80105BF4):
+         *   80105c64: srl  v0,v0,4
+         *   80105c68: andi v0,v0,0x2      ; 0 (Front) oder 2 (Ruecken) = Byte-Index
+         *   80105c78: lhu  v0,0(v0)       ; sp+16 bzw. sp+18
+         *   80105c88: sh   v0,324(s4)     ; +0x144
+         * Ein Ruecken-Treffer schiebt den Zombie also NICHT zurueck (Schub 0). */
+        {   int back = (e->re2z_hitdir1d0 & 0x20u) != 0;           /* @0x80105C40-60 */
+            re2z_clip(e, back ? 3 : 4, 0, 3, 0x400, 0);            /* sw a1,332 @0x80105C74,
                                                                     * Advance-Blend 1024 @0x80105F3C */
-        re2z_thrust(e, -450);                                      /* +0x144 = -450 @0x80105BEC/
-                                                                    * @0x80105C88 + FUN_800152C8 */
+            re2z_thrust(e, back ? 0 : -450);                       /* sh v0,324 @0x80105C88 +
+                                                                    * FUN_800152C8 @0x80105C84 */
+        }
         re15_enemy_steer_point(e, e->steer_x, e->steer_z, 16);     /* @0x80105C90-9C */
         if (e->re2z_cd239 == 0) {                                  /* @0x80105CA0-A8 */
             re2z_se((re2z_rand() & 1u) ? 12 : 13);                 /* @0x80105CB0-C8 */
@@ -2170,15 +2296,20 @@ static void re2z_hit_main(re15_actor_t *e, re15_actor_t *pl)
             && (int)e->re2z_res223 <= 0                            /* sll 24 / bgtz @0x801055F0-F4 */
             && (int)e->hp >= 81)                                   /* slti 81 / bne @0x801055FC-08 */
             e->re2z_res223 = (int8_t)(16 + (re2z_rand() & 0xfu));  /* @0x80105610-20 */
-        /* ⚠ OFFEN (Welle E, MESSUNG statt Vermutung): der Ruecken-Treffer kehrt die
-         * ZUCK-RICHTUNG um — `lhu v0,464(s1)` @0x80105624 / `andi v0,v0,0x20` @0x8010562C /
-         * `addiu v0,zero,-1` @0x80105634 / `sh v0,346(s1)` @0x80105638. Seit Welle E gibt es
-         * den Produzenten (re2z_stamp_hit), der Zweig ist also verdrahtbar. Er wird hier NICHT
-         * verdrahtet, weil er — GEMESSEN, nicht vermutet — die P1/P2-Rampe von test_re2_hit_
-         * reaction spiegelt (0/-192/-384/-576 -> 0/+192/+384/+576, weil re2z_lean_angle mit
-         * +0x15A multipliziert). Das ist byte-true richtig, kippt aber einen Pin einer anderen
-         * Welle; er gehoert mit den beiden Zwillingen (Stagger-Clip 3/Schub 0, Ragdoll-Clip 3/
-         * Schub +100) in EINEN Schritt. */
+        /* RUECKEN-TREFFER kehrt die ZUCK-RICHTUNG um (Welle F, jetzt verdrahtet):
+         *   80105624: lhu v0,464(s1)      ; +0x1D0
+         *   8010562c: andi v0,v0,0x20     ; Ruecken-Bit
+         *   80105630: beq  v0,zero,0x80105640
+         *   80105634: addiu v0,zero,-1    ; Delay-Slot
+         *   80105638: sh   v0,346(s1)     ; +0x15A = -1  (Default 1 @0x801055B8-BC)
+         * re2z_lean_angle multipliziert mit +0x15A, die P1/P2-Rampe spiegelt sich also
+         * am Vorzeichen (0/-192/-384/-576 -> 0/+192/+384/+576). Das ist byte-true: der
+         * Zombie zuckt beim Ruecken-Treffer nach VORN statt nach hinten.
+         * Der Zwilling `addiu s3,zero,2048` @0x8010563C (Default `addu s3,zero,zero`
+         * @0x801055C8) dreht NUR die Richtung des Blut-Emitters (`sll a1,s3,16` /
+         * `sra a1,a1,16` / `subu a1,v0,a1` @0x801056E8-700, a1 = FUN_8001BF10-Winkel);
+         * der Port hat keinen richtungsbehafteten Emitter (re2z_blood_fx) -> OFFEN/no-op. */
+        if (e->re2z_hitdir1d0 & 0x20u) e->re2z_t15a = -1;          /* @0x80105624-38 */
         break;
     case 1:
         re2z_hit_move(e);                                          /* @0x80105740-90 */
@@ -2342,15 +2473,24 @@ static void re2z_hit_ragdoll(re15_actor_t *e, re15_actor_t *pl)
         e->re2_lean[2]  = 0;                                       /* sh zero,320 @0x80106860 */
         e->re2z_t158    = 0;                                       /* sh zero,344 @0x80106864 */
         e->re2z_gaitrow = 0;                                       /* sb zero,363 @0x80106868 */
-        /* ⚠ OFFEN (Welle E, bewusst NICHT in dieser Welle verdrahtet — s. Stagger): +0x1D0 hat
-         * seit Welle E einen Produzenten; der `& 0x20`-Zweig waehlt hier Clip 3 statt 4 und
-         * Schub +100 statt -250 (Tabelle sp+16/sp+18 @0x80106728-34). Das kippt die in
-         * test_re2_hit_reaction gepinnte Ragdoll-Erwartung und gehoert in die Ragdoll-Welle.
-         * Bis dahin: Bit 0x20 als klar behandelt -> Clip 4 mit Rate 3 und Schub -250. */
-        re2z_clip(e, 4, 0, 3, 0x400, 0);                           /* sw 0x30004,332 @0x80106888,
+        /* RUECKEN-TREFFER (`+0x1D0 & 0x20`) — Welle F, jetzt verdrahtet. Exakt dieselbe
+         * Zwei-Instruktions-Mechanik wie im Stagger-P0, nur mit anderer Schub-Tabelle:
+         *   80106728: addiu v0,zero,-250  /  8010672c: sh v0,16(sp)   ; Front
+         *   80106730: addiu v0,zero,100   /  80106734: sh v0,18(sp)   ; Ruecken
+         *   8010686c: andi v1,v1,0x20
+         *   80106870: sltu v1,zero,v1
+         *   80106874: subu a2,a2,v1       ; Clip-Wort 0x00030004 -> 0x00030003
+         *   80106878: srl  v0,v0,4  /  8010687c: andi v0,v0,0x2      ; Byte-Index 0/2
+         *   80106888: sw   a2,332(s2)     ; +0x14C
+         *   8010688c: lhu  v0,0(v0)  /  8010689c: sh v0,324(s2)      ; +0x144
+         * Ein Treffer in den Ruecken kippt den Zombie also NACH VORN (+100) statt nach
+         * hinten (-250), mit dem gespiegelten Sturz-Clip 3. */
+        {   int back = (e->re2z_hitdir1d0 & 0x20u) != 0;           /* @0x8010686C-74 */
+            re2z_clip(e, back ? 3 : 4, 0, 3, 0x400, 0);            /* sw a2,332 @0x80106888,
                                                                     * Advance-Blend 1024 @0x801069D8 */
-        re2z_thrust(e, -250);                                      /* +0x144 @0x8010689C +
+            re2z_thrust(e, back ? 100 : -250);                     /* sh v0,324 @0x8010689C +
                                                                     * FUN_800152C8 @0x80106898 */
+        }
         /* Gore-Emitter @0x801068A0-4C: 4 feste Wuerfe, danach (rand&3)+2 Durchlaeufe zu je 2.
          * FX-Zwilling fehlt (Lane-I), die WURF-ZAHL ist Verhalten und wird exakt nachgezogen. */
         (void)re2z_rand();                                         /* @0x801068C0 */

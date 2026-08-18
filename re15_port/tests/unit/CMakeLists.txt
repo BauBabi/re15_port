@@ -1339,3 +1339,14 @@ target_compile_definitions(test_re2_gore PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_re2_gore COMMAND test_re2_gore)
 set_tests_properties(unit_re2_gore PROPERTIES TIMEOUT 120)
+
+# --- WELLE F: die ANZEIGE-BRUECKE des Modellblocks +0x198 (Zwilling FUN_80027160
+#     @0x80027160): Part-Sichtbarkeit (Bit 0), die Eltern-Kaskade (0x21)==0x20 und die
+#     NCCT-Tinten-Modulation — inklusive Gegenprobe, dass der RE1.5-Pfad 0 liefert. ---
+add_executable(test_re2_gore_render test_re2_gore_render.c)
+target_link_libraries(test_re2_gore_render PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_gore_render PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2_gore_render PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2_gore_render COMMAND test_re2_gore_render)
+set_tests_properties(unit_re2_gore_render PROPERTIES TIMEOUT 120)

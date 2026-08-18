@@ -186,7 +186,9 @@ static re15_actor_t *bringup_zombie(uint8_t **buf_out, re15_enemy_bank_t **bank_
     return &g_actors[first];
 }
 
-/* Setzt den Gegner frisch als lebenden, gehenden Zombie neben den Spieler. */
+/* Setzt den Gegner frisch als lebenden, gehenden Zombie neben den Spieler.
+ * ROT_Y wird hier bewusst NICHT angefasst: die Abschnitte (1)-(4) haengen an der exakten
+ * Zustands-/RNG-Folge. Die TREFFERRICHTUNG stellt Abschnitt (5) selbst ein. */
 static void reset_zombie(re15_actor_t *e, uint8_t row)
 {
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
@@ -221,8 +223,14 @@ int main(void)
            bank->anim.clip_count > 4 ? bank->anim.clips[4].frame_count : -1,
            bank->anim.clip_count > 5 ? bank->anim.clips[5].frame_count : -1);
 
-    /* ---------------- (1) das OBERKOERPER-ZUCKEN ---------------- */
+    /* ---------------- (1) das OBERKOERPER-ZUCKEN ----------------
+     * Zwei Durchlaeufe: RUECKEN-Treffer (+0x1D0 & 0x20 gesetzt) und Treffer von VORN.
+     * Der Haupt-P0 setzt +0x15A = 1 (@0x801055B8-BC) und dreht es beim Ruecken-Treffer
+     * auf -1 (`andi 0x20` @0x8010562C / `addiu v0,zero,-1` @0x80105634 /
+     * `sh v0,346(s1)` @0x80105638). re2z_lean_angle multipliziert mit +0x15A
+     * (@0x801057B0-C8), die ganze P1/P2-Rampe spiegelt sich also am Vorzeichen. */
     {
+        const int sgn = +1;   /* gemessen: die Bringup-Geometrie liefert einen RUECKEN-Treffer */
         reset_zombie(e, 3);                    /* Zeile 3 -> Haupt-Handler 0x80105438 */
         s_se_n = 0;
         int max_rot = 0, max_shift = 0, twitch_frames = 0, phase1_zero_seen = 0;
@@ -236,10 +244,20 @@ int main(void)
             if (t.rot_delta > max_rot)   max_rot   = t.rot_delta;
             if (t.top_shift > max_shift) max_shift = t.top_shift;
             if (f < 26)
-                printf("  [zuck] f%-2d phase=%d +0x158=%d +0x16B=%d lean.z=%d rotDelta=%d topShift=%d\n",
+                printf("  [zuck] f%-2d phase=%d +0x158=%d +0x16B=%d +0x1D0=0x%02X +0x15A=%d "
+                       "lean.z=%d rotDelta=%d topShift=%d\n",
                        f, e->sub_state_2, (int)e->re2z_t158, (int)(int8_t)e->re2z_gaitrow,
+                       (unsigned)(e->re2z_hitdir1d0 & 0xffu), (int)e->re2z_t15a,
                        (int)e->re2_lean[2], t.rot_delta, t.top_shift);
         }
+        /* Das VORZEICHEN der Rampe ist ab Welle F Verhalten: die Bringup-Geometrie liefert
+         * einen RUECKEN-Treffer (+0x1D0 & 0x20 steht), also +0x15A = -1 (@0x80105638) und die
+         * Rampe ist gespiegelt. Ohne diesen Pin misst der Rampen-Check das falsche Vorzeichen.
+         * Beide Richtungen einzeln stellt Abschnitt (5) — hier haengt die Geometrie am Bringup. */
+        CHECK((e->re2z_hitdir1d0 & 0x20u) != 0,
+              "die Bringup-Geometrie liefert keinen Ruecken-Treffer mehr (+0x1D0=0x%02X) — "
+              "dann gilt die gespiegelte Rampen-Erwartung unten nicht",
+              (unsigned)(e->re2z_hitdir1d0 & 0xffu));
         CHECK(twitch_frames >= 15,
               "das Zucken laeuft nur in %d von 40 Frames — P1 (4 Ticks @0x80105850-54) + P2 "
               "(17 Ticks @0x80105970-7C) muessen es tragen", twitch_frames);
@@ -254,16 +272,20 @@ int main(void)
               "unveraendert — dieser Frame wurde nicht gesehen (der Test misst dann Rauschen)");
         /* Der belegte Rampen-Verlauf. f0 ist der P0-Frame (setzt +0x6 = 1, +0x158 = 0, +0x16B = 24
          * @0x801055B0-CC) und stellt noch keinen Winkel. Danach vier P1-Ticks mit +0x158 = 0..3
-         * (`slti 3` @0x80105850) und dem <<3-Faktor: 0, -8*1*24*1, -8*2*24*1, -8*3*24*1
-         * = 0/-192/-384/-576. Ab f5 P2 mit +0x158 = 16 abwaerts und OHNE <<3: -16*24 = -384. */
-        CHECK(lean_angles[1] == 0 && lean_angles[2] == -192 && lean_angles[3] == -384 &&
-              lean_angles[4] == -576,
-              "P1-Rampe erwartet 0/-192/-384/-576 (=-8*+0x158*(s8)+0x16B*+0x15A @0x801057B0-C8), "
-              "gemessen %d/%d/%d/%d", lean_angles[1], lean_angles[2], lean_angles[3],
-              lean_angles[4]);
-        CHECK(lean_angles[5] == -384 && lean_angles[6] == -360,
-              "P2 startet mit +0x158 = 16 und OHNE den <<3 -> -384, -360, ... "
-              "(@0x801058E0-F0 / @0x80105868), gemessen %d, %d", lean_angles[5], lean_angles[6]);
+         * (`slti 3` @0x80105850) und dem <<3-Faktor: 0, -8*1*24*+0x15A, -8*2*24*+0x15A,
+         * -8*3*24*+0x15A. Ab f5 P2 mit +0x158 = 16 abwaerts und OHNE <<3: -16*24*+0x15A.
+         * Mit +0x15A = 1 (Treffer von VORN) also 0/-192/-384/-576 und -384/-360;
+         * mit +0x15A = -1 (RUECKEN, @0x80105638) exakt gespiegelt 0/+192/+384/+576 und
+         * +384/+360. Das VORZEICHEN ist der einzige Unterschied — die Betraege sind identisch. */
+        CHECK(lean_angles[1] == 0 && lean_angles[2] == sgn*192 && lean_angles[3] == sgn*384 &&
+              lean_angles[4] == sgn*576,
+              "P1-Rampe erwartet 0/%d/%d/%d (=-8*+0x158*(s8)+0x16B*+0x15A "
+              "@0x801057B0-C8), gemessen %d/%d/%d/%d", sgn*192, sgn*384, sgn*576,
+              lean_angles[1], lean_angles[2], lean_angles[3], lean_angles[4]);
+        CHECK(lean_angles[5] == sgn*384 && lean_angles[6] == sgn*360,
+              "P2 startet mit +0x158 = 16 und OHNE den <<3 -> %d, %d, ... "
+              "(@0x801058E0-F0 / @0x80105868), gemessen %d, %d", sgn*384, sgn*360,
+              lean_angles[5], lean_angles[6]);
         printf("  [zuck] Frames mit Zucken=%d, max Bone0-Delta=%d (Q12), max Top-Shift=%d\n",
                twitch_frames, max_rot, max_shift);
     }
@@ -425,8 +447,82 @@ int main(void)
                "(re15_re2z_row_for_weapon, Zensus in test_re2_weapon_rows)\n", null_rows);
     }
 
+    /* ---------------- (5) DIE TREFFERRICHTUNG +0x1D0 & 0x20 ----------------
+     * Drei Konsumenten, ein Bit. Geometrie: der Spieler steht auf (e->x - 800, e->z), die
+     * Peilung Angreifer->Ziel ist damit 0, also d = -rot_y und das Ruecken-Bit ist
+     * `((1024 - rot_y) & 0xFFF) < 2048` (@0x80041A0C-2C):
+     *     rot_y = 0    -> Bit 0x20 GESETZT (RUECKEN)      rot_y = 2048 -> Bit klar (VORN)
+     * (a) Haupt-Handler 0x80105438: +0x15A = 1 (@0x801055B8-BC), beim Ruecken-Treffer -1
+     *     (`andi 0x20` @0x8010562C / `addiu v0,zero,-1` @0x80105634 / `sh v0,346` @0x80105638).
+     *     re2z_lean_angle multipliziert damit -> die P1-Rampe spiegelt sich am Vorzeichen.
+     * (b) Stagger 0x80105BC0 und (c) Ragdoll 0x801066FC tragen dieselbe Zwei-Instruktions-
+     *     Mechanik: das Clip-Wort 0x00030004 wird um `sltu v1,zero,(+0x1D0 & 0x20)`
+     *     DEKREMENTIERT (`subu a1,a1,v1` @0x80105C60 / `subu a2,a2,v1` @0x80106874) -> Clip 3
+     *     statt 4; der Schub kommt aus einer Zwei-Wort-Stack-Tabelle, indiziert mit
+     *     `((+0x1D0 >> 4) & 2)` (@0x80105C64-78 / @0x80106878-8C):
+     *       Stagger sp+16 = -450 (@0x80105BEC-F0), sp+18 =    0 (@0x80105BF4)
+     *       Ragdoll sp+16 = -250 (@0x80106728-2C), sp+18 = +100 (@0x80106730-34)
+     *     Der Schub laeuft ueber FUN_800152C8 (re2z_thrust) entlang +0x76; bei rot_y = 0 ist
+     *     cos = 4096, bei rot_y = 2048 cos = -4096 — das Vorzeichen von dx dreht sich also
+     *     NICHT mit der Trefferrichtung mit. Gepinnt wird der Clip (eindeutig) und dass der
+     *     Schub ueberhaupt richtungsabhaengig ist. */
+    {
+        /* (a) Rampen-Vorzeichen in BEIDEN Richtungen */
+        for (int hb = 1; hb >= 0; hb--) {
+            reset_zombie(e, 3);
+            e->rot_y = (int16_t)(hb ? 0 : 2048);
+            s_se_n = 0;
+            int lean[6];
+            for (int f = 0; f < 6; f++) { frame(); lean[f] = (int)e->re2_lean[2]; }
+            const int sgn = hb ? +1 : -1;
+            printf("  [richtung] back=%d +0x1D0=0x%02X +0x15A=%d Rampe %d/%d/%d/%d\n",
+                   hb, (unsigned)(e->re2z_hitdir1d0 & 0xffu), (int)e->re2z_t15a,
+                   lean[1], lean[2], lean[3], lean[4]);
+            CHECK(((e->re2z_hitdir1d0 & 0x20u) != 0) == (hb != 0),
+                  "Testgeometrie stellt +0x1D0 & 0x20 nicht ein (back=%d, +0x1D0=0x%02X)",
+                  hb, (unsigned)(e->re2z_hitdir1d0 & 0xffu));
+            CHECK(lean[1] == 0 && lean[2] == sgn*192 && lean[3] == sgn*384 && lean[4] == sgn*576,
+                  "back=%d: Rampe erwartet 0/%d/%d/%d (+0x15A = %d @0x80105638), "
+                  "gemessen %d/%d/%d/%d", hb, sgn*192, sgn*384, sgn*576, sgn,
+                  lean[1], lean[2], lean[3], lean[4]);
+        }
+        /* (b)/(c) Clip + Schub in beiden Richtungen */
+        struct { uint8_t row; const char *name; } cases[2] = {
+            { 10, "stagger" },   /* Zeile 10 / Spalte 1 -> Handler 2 = 0x80105BC0 */
+            {  8, "ragdoll" },   /* Zeile  8 / Spalte 1 -> Handler 3 = 0x801066FC */
+        };
+        for (int c = 0; c < 2; c++) {
+            int32_t dx[2]; int mot[2];
+            for (int hb = 0; hb < 2; hb++) {
+                reset_zombie(e, cases[c].row);
+                e->rot_y = (int16_t)(hb ? 0 : 2048);
+                s_se_n = 0;
+                int32_t x0 = e->x;
+                frame();
+                dx[hb]  = e->x - x0;
+                mot[hb] = (int)e->motion;
+                CHECK(((e->re2z_hitdir1d0 & 0x20u) != 0) == (hb != 0),
+                      "%s: Testgeometrie stellt +0x1D0 & 0x20 nicht ein (back=%d, +0x1D0=0x%02X)",
+                      cases[c].name, hb, (unsigned)(e->re2z_hitdir1d0 & 0xffu));
+            }
+            printf("  [%s] vorn: Clip=%d dx=%d | Ruecken: Clip=%d dx=%d\n",
+                   cases[c].name, mot[0], (int)dx[0], mot[1], (int)dx[1]);
+            CHECK(mot[0] == 4,
+                  "%s von VORN muss Clip 4 fahren (Clip-Wort 0x00030004 unveraendert), ist %d",
+                  cases[c].name, mot[0]);
+            CHECK(mot[1] == 3,
+                  "%s in den RUECKEN muss Clip 3 fahren (`subu` @0x80105C60 / @0x80106874), ist %d",
+                  cases[c].name, mot[1]);
+            CHECK(dx[0] != dx[1],
+                  "%s: der Schub ist richtungsunabhaengig — die Stack-Tabelle sp+16/sp+18 "
+                  "(@0x80105BEC-F4 / @0x80106728-34) wird nicht indiziert (dx %d == %d)",
+                  cases[c].name, (int)dx[0], (int)dx[1]);
+        }
+    }
+
     free(buf);
     re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
+
     printf(fails ? "test_re2_hit_reaction: %d FAIL\n" : "test_re2_hit_reaction: OK\n", fails);
     return fails ? 1 : 0;
 }

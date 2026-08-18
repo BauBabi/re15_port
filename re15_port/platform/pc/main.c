@@ -6400,7 +6400,43 @@ re_title:;
 
                 int npc_bones = npc_skel->bone_count;
                 if (npc_bones > npc_md1->mesh_count) npc_bones = npc_md1->mesh_count;
+                /* ---- RE2-GORE: Part-Sichtbarkeit + Part-Tinte (Zwilling FUN_80027160) ----
+                 * gore_on == 0 im GESAMTEN RE1.5-Pfad (re15_re2z_gore_active gated auf
+                 * Flavor + RE2-Zombie-Typ + INIT-Seed) — dann bleibt der Renderpfad Byte
+                 * fuer Byte der alte. Nur wenn der RE2-Zombie-Brain seinen Modellblock
+                 * geseedet hat, traegt gore_draw[] das Bit-0-DRAW-ENABLE (@0x8002737C /
+                 * @0x800273C4, flacher Walk mit Eltern-Kaskade @0x80027480-94) und
+                 * gore_tint[] das Farbwort +0x70 (@0x80027900), das NCCT (@0x80027D10)
+                 * mit dem Beleuchtungsergebnis MULTIPLIZIERT. */
+                uint8_t  gore_draw[RE15_EMD_MAX_BONES];
+                uint32_t gore_tint[RE15_EMD_MAX_BONES];
+                uint8_t  gore_mesh[RE15_EMD_MAX_BONES];
+                int gore_on = re15_re2z_gore_resolve(npc, npc_skel->bone_parent, npc_bones,
+                                                     gore_draw, gore_tint, gore_mesh);
+                /* NCCT-Modulation des Farbworts +0x70: das Wort geht als CVECTOR ins
+                 * GTE-RGB-Register (`sw a2,0x10(sp)` @0x80027C08 — LOW BYTE = R, Byte 3
+                 * ist der GPU-Primitiv-Code `sb a3,0x13(sp)` @0x80027C18 — dann
+                 * `ldrgb v0` @0x80027C2C) und NCCT (@0x80027D10) rechnet
+                 * out = RGB_reg * (BackColor + LCM*LLM*N). Die Tinte ERSETZT die
+                 * Vertexfarbe also nicht, sie SKALIERT das Beleuchtungsergebnis; neutral
+                 * ist 0x808080 (FUN_80028368.c:55 `puVar8[-9] = 0x808080`). Die
+                 * Vertexfarben des Ports stehen im selben PSX-Primitiv-Raum
+                 * (render_pc.c psx_prim_to_sdl_vert: "final = (tex x prim) / 0x80"),
+                 * also ist ein Modulationsschritt genau `prim * tint / 0x80`. */
+#define RE2_GORE_TINT(r_, g_, b_) do { if (gore_on) {                                  \
+        uint32_t _t = gore_tint[nbi];                                                  \
+        int _r = ((int)(r_) * (int)( _t         & 0xFFu)) >> 7;                        \
+        int _g = ((int)(g_) * (int)((_t >>  8)  & 0xFFu)) >> 7;                        \
+        int _b = ((int)(b_) * (int)((_t >> 16)  & 0xFFu)) >> 7;                        \
+        (r_) = (uint8_t)(_r > 255 ? 255 : _r);                                         \
+        (g_) = (uint8_t)(_g > 255 ? 255 : _g);                                         \
+        (b_) = (uint8_t)(_b > 255 ? 255 : _b); } } while (0)
                 for (int nbi = 0; nbi < npc_bones; nbi++) {
+                    /* Bit 0 klar -> dieser Part wird nicht gezeichnet. Das `continue` ist
+                     * flach wie im Original (`_addiu s2,s2,0xac` im Delay-Slot @0x800273A4 /
+                     * @0x800273F8 / @0x8010740C) — die Kinder verschwinden NICHT automatisch
+                     * mit, dafuer sorgt allein die Kaskade in re15_re2z_gore_resolve. */
+                    if (gore_on && !gore_draw[nbi]) continue;
                     const re15_skel_pose_t *np = &npc_poses[nbi];
                     int32_t nyawed_rot[9];
                     for (int r = 0; r < 3; r++) {
@@ -6461,7 +6497,13 @@ re_title:;
                             active_cut_idx);
                     }
 
-                    const re15_md1_mesh_t *nm = &npc_md1->meshes[nbi];
+                    /* GEOMETRIE-QUELLE: normal das eigene Mesh; nach dem Zerleger-Stumpf-Tausch
+                     * (`lw 2588/2592/2596/2600` -> `sw 8/12/16/20` @0x8010531C-50) liefert der
+                     * RESERVE-Part 15 die vier Geometrie-Woerter des Oberschenkels. */
+                    int nmi = nbi;
+                    if (gore_on && gore_mesh[nbi] < (uint8_t)npc_md1->mesh_count)
+                        nmi = (int)gore_mesh[nbi];
+                    const re15_md1_mesh_t *nm = &npc_md1->meshes[nmi];
                     for (int ti = 0; ti < nm->triangle_count; ti++) {
                         const re15_md1_triangle_t *tri = &nm->triangles[ti];
                         if (tri->v0 >= (uint32_t)nm->tri_vertex_count) continue;
@@ -6513,6 +6555,9 @@ re_title:;
                             ng0 = ng1 = ng2 = g_re15_light_tint[1];
                             nb0 = nb1 = nb2 = g_re15_light_tint[2];
                         }
+                        RE2_GORE_TINT(nr0, ng0, nb0);
+                        RE2_GORE_TINT(nr1, ng1, nb1);
+                        RE2_GORE_TINT(nr2, ng2, nb2);
                         re15_render_textured_tri_lit(
                             (int)ax[0], (int)ay[0], (int)uv->u0 + page_off, (int)uv->v0,
                             (int)ax[1], (int)ay[1], (int)uv->u1 + page_off, (int)uv->v1,
@@ -6576,6 +6621,10 @@ re_title:;
                             nqg0=nqg1=nqg2=nqg3=g_re15_light_tint[1];
                             nqb0=nqb1=nqb2=nqb3=g_re15_light_tint[2];
                         }
+                        RE2_GORE_TINT(nqr0, nqg0, nqb0);
+                        RE2_GORE_TINT(nqr1, nqg1, nqb1);
+                        RE2_GORE_TINT(nqr2, nqg2, nqb2);
+                        RE2_GORE_TINT(nqr3, nqg3, nqb3);
                         re15_render_textured_tri_lit(
                             (int)ax[0], (int)ay[0], (int)uv->u0 + page_off, (int)uv->v0,
                             (int)ax[1], (int)ay[1], (int)uv->u1 + page_off, (int)uv->v1,
@@ -6590,6 +6639,7 @@ re_title:;
                             nqr0, nqg0, nqb0, nqr3, nqg3, nqb3, nqr2, nqg2, nqb2);
                     }
                 }
+#undef RE2_GORE_TINT
             }
 
             /* I-round disable (2026-05-24): NPC name-label overlay

@@ -265,9 +265,12 @@ int main(void)
         hit(e, 3u, 1u);
         unsigned f21a = e->re2z_flags21a, p13 = e->re2z_part_flags[13], p10 = e->re2z_part_flags[10];
         int se9 = se_count(9);
+        /* Der Stumpf ist seit Welle F ein MESH-Tausch (Reserve-Part 15 -> Oberschenkel,
+         * @0x8010531C-50), keine Tinte mehr — der Stand-in war ohne Beleg. Gepinnt wird er
+         * in test_re2_gore_render (PIN 6); hier nur zur Anzeige. */
         printf("   nachher: +0x152=%d +0x21A=0x%04X SE9=%d Part13=0x%04X Part10=0x%04X "
-               "Stumpf-Tinte(Part12)=0x%06X\n",
-               e->re2z_pool152, f21a, se9, p13, p10, (unsigned)e->re2z_part_tint[12]);
+               "Stumpf-Mesh(Part12)=%d\n",
+               e->re2z_pool152, f21a, se9, p13, p10, (int)e->re2z_part_mesh[12]);
         CHECK(e->re2z_pool152 == -1, "PIN 4: +0x152 muss auf -1 klemmen; ist %d", e->re2z_pool152);
         CHECK((f21a & 0x40u) != 0u,
               "PIN 4: Seitentreffer 0x80 -> LINKES Bein, `+0x21A |= 0x40` (@0x801052E4); "

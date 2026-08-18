@@ -293,13 +293,28 @@ typedef struct {
      *              `lw v0,516(a2)`/`andi 1` @0x801061C0-CC), 0x4A = abgerissener Arm
      *              (@0x80107544/@0x801075B4/@0x80107630), 0x1062 = abgesprengtes Bein
      *              (@0x8010537C), 0x10 = weggeaetzt (@0x80105EC4)
-     *   [i][+0x70] Farbwort (r,g,b) — Verkohlung 0x00404040.. (@0x8010627C-F4), Saeure
-     *              0x00304040.. (@0x8010633C-84), blutiger Stumpf 0x0010104F (@0x80107568)
-     * [PORT-MAPPING] Der Renderer hat noch keine Part-Sichtbarkeit/-Tinte (skeleton_common.c und
-     * platform/pc/** sind fuer diese Welle gesperrt) — die Felder tragen den Zustand byte-true,
-     * die Anzeige-Bruecke bleibt OFFEN. */
+     *   [i][+0x70] Farbwort (r,g,b; LOW BYTE = R, Byte 3 = GPU-Code, `sw`@0x80027C08 +
+     *              `sb`@0x80027C18) — neutral 0x00808080 (FUN_80028368.c:55), Verkohlung
+     *              0x00404040.. (@0x8010627C-F4), Saeure 0x00304040.. (@0x8010633C-84),
+     *              blutiger Stumpf 0x0010104F = r 0x4F/g 0x10/b 0x10 (@0x80107568)
+     * ANZEIGE-BRUECKE (jetzt vorhanden): re15_re2z_gore_resolve() bildet den Part-Draw-Walk
+     * FUN_80027160 @0x80027160 nach — Bit-0-Sichtbarkeitstest @0x8002737C/@0x800273C4 (flach)
+     * plus die Eltern-Kaskade `(Eltern & 0x21) == 0x20` @0x80027480-94; die Tinte MULTIPLIZIERT
+     * das Beleuchtungsergebnis (GTE `ldrgb`@0x80027C2C + `NCCT`@0x80027D10). Vollstaendige
+     * Belegkette im Kopfkommentar der Bruecke in engine/src/enemy_ai_re2_zombie.c. */
     uint16_t re2z_part_flags[16];
     uint32_t re2z_part_tint[16];
+    /* [i] = welcher MD1-Objektindex die GEOMETRIE dieses Parts liefert. Im Original sind das
+     * die vier Wörter [i][+0x08/+0x0C/+0x10/+0x14] (Geometrie- und Paketzeiger, gelesen vom
+     * Zeichner FUN_80027434 @0x80027AD4-B04); der Zerleger TAUSCHT sie:
+     *   80105324: lw v0,2588(v1) / 8010532c: sw v0,8(s0)
+     *   80105330: lw v0,2596(v1) / 80105338: sw v0,16(s0)
+     *   8010533c: lw v0,2592(v1) / 80105344: sw v0,12(s0)
+     *   80105348: lw v0,2600(v1) / 80105350: sw v0,20(s0)
+     * 2588/2592/2596/2600 = 15*172 + 8/12/16/20 = die vier Mesh-Wörter des RESERVE-Parts 15.
+     * Der Port hat statt Zeigern Objektindizes (Part i == Bone i == MD1-Mesh i, gepinnt in
+     * test_re2_gore_render), also ist der Zwilling `re2z_part_mesh[thigh] = 15`. Seed = i. */
+    uint8_t  re2z_part_mesh[16];
     /* ---- RE2-Flavor WELLE C (enemy_ai_re2_dog.c re15_re2dog_tick): die Cerberus-Arbeitsbytes
      * aus EMD0G_MOD0.BIN (ModB @0x80100000). Geteilt mit dem Zombie werden speed_h(+0x144),
      * re2z_t158(+0x158), re2z_t15a(+0x15A), re2z_dir16a(+0x16A Aggro/Mash, signed gelesen),
@@ -713,5 +728,20 @@ int16_t re15_atan2_q12(int32_t dz, int32_t dx);
 void re15_actor_apply_root_motion(re15_actor_t *a,
                                   const re15_emd_skeleton_t *skel,
                                   const re15_emd_animation_t *anim);
+
+/* ---- RE2-Gore: die ANZEIGE-BRUECKE des Modellblocks +0x198 (PORT-OPTION, nur RE2-Flavor) ----
+ * Zwilling des Part-Draw-Walks FUN_80027160 @0x80027160. Vollstaendige Belegkette im
+ * Kopfkommentar in engine/src/enemy_ai_re2_zombie.c.
+ *   re15_re2z_gore_active()  1, wenn RE2-Flavor + RE2-Zombie-Typ + INIT-Seed. Im RE1.5-Pfad
+ *                            IMMER 0 — der Renderer darf ohne diesen Gate nichts aendern.
+ *   re15_re2z_gore_resolve() fuellt out_draw[0..n-1] (0 = Part nicht zeichnen, Bit-0-Test
+ *                            @0x8002737C/@0x800273C4 + Eltern-Kaskade @0x80027480-94) und
+ *                            out_tint[0..n-1] (Farbwort +0x70, LOW BYTE = R, neutral
+ *                            0x00808080) und out_mesh[0..n-1] (MD1-Objektindex des Parts,
+ *                            normal == i, nach dem Stumpf-Tausch @0x8010531C-50 == 15).
+ *                            Rueckgabe 0 = Gore inaktiv, out_* unberuehrt. */
+int re15_re2z_gore_active(const re15_actor_t *e);
+int re15_re2z_gore_resolve(const re15_actor_t *e, const int8_t *bone_parent, int n,
+                           uint8_t *out_draw, uint32_t *out_tint, uint8_t *out_mesh);
 
 #endif /* RE15_ACTOR_H */
