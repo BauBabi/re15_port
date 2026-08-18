@@ -1,3 +1,31 @@
+# RE1.5 Port — v0.2.9 (Early Preview)
+
+## Neu in v0.2.9 — die RE2-Spinne
+
+Der RE2-KI-Modus ist damit fuer alle vier gemeinsamen Gegnertypen verfuegbar:
+Zombie, Hund, Kraehe — und jetzt die **Spinne**.
+
+Portiert ist der Boden-Modus vollstaendig: Fortbewegung mit drei
+Geschwindigkeitsstufen, der neunphasige Sprungangriff, Biss (20 Schaden),
+Trefferreaktion, Tod und Leiche. Nachgemessen im echten Raum: beide Spinnen
+laufen auf dem RE2-Verhalten, bewegen sich ueber 600 Bilder mit 19
+Zustandswechseln ohne Haenger, der Biss zieht korrekt ab.
+
+Nebenbei belegt und damit **nicht** eingebaut: die RE2-Spinne hat KEIN Gift —
+der einzige Schadensaufruf des Moduls beruehrt den Vergiftungs-Zustand des
+Spielers nachweislich nicht.
+
+**Spinnen an Decke und Wand behalten vorerst das RE1.5-Verhalten.** Das Original
+hat dafuer eigene Modi (inklusive Abseilen am Faden); sie sind untersucht, aber
+noch nicht umgesetzt. Die Zustaendigkeit ist so gesetzt, dass eine
+Decken-Spinne ueber ihre ganze Lebenszeit beim alten Verhalten bleibt — kein
+Bruch mitten im Kampf. Ebenfalls noch offen: die Baby-Spinne.
+
+Testsuite 166 Pruefungen; der Raum-Test schlaegt fehl (statt zu ueberspringen),
+wenn kein Raum eine Spinne aufstellt.
+
+---
+
 # RE1.5 Port — v0.2.8 (Early Preview)
 
 ## Neu in v0.2.8 — RE2-Gore ist sichtbar
@@ -402,8 +430,8 @@ Split-Zips — 7-Zip/WinRAR verwenden. Pruefsummen: `SHA256SUMS.txt`.
 
 | Paket | Plattform | Start |
 |---|---|---|
-| `re15_port_v0.2.8_win64.zip` | Windows x64 | `Start_RE15_Port.bat` doppelklicken |
-| `re15_port_v0.2.8_linux_steamdeck_x64.zip` | Linux x64 / Steam Deck (SteamOS 3.x) | `./run.sh` (Deck: als Non-Steam-Game hinzufuegen) |
+| `re15_port_v0.2.9_win64.zip` | Windows x64 | `Start_RE15_Port.bat` doppelklicken |
+| `re15_port_v0.2.9_linux_steamdeck_x64.zip` | Linux x64 / Steam Deck (SteamOS 3.x) | `./run.sh` (Deck: als Non-Steam-Game hinzufuegen) |
 
 Beide Pakete sind selbst-enthalten: SDL2 statisch, Assets unter `shared_assets/PSX`
 (CD-Baum) plus `shared_assets/extracted_fx` (Effekt-Texturen), Savegames als
@@ -443,6 +471,6 @@ release/build_linux_deck.sh --distrobox re15-build   # auf dem Deck selbst
 ```
 Paketieren (beide Plattformen, mit den Gates oben):
 ```bash
-release/make_package.sh --version v0.2.8               # --only linux | --only win
+release/make_package.sh --version v0.2.9               # --only linux | --only win
 ```
-Ergebnis: `re15_port_v0.2.8_{linux_steamdeck_x64,win64}.{z01,zip}` + `SHA256SUMS.txt`.
+Ergebnis: `re15_port_v0.2.9_{linux_steamdeck_x64,win64}.{z01,zip}` + `SHA256SUMS.txt`.
