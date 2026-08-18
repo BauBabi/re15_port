@@ -1,3 +1,37 @@
+# RE1.5 Port — v0.3.0 (Early Preview)
+
+## Neu in v0.3.0 — die letzten offenen RE2-Punkte
+
+**Abgerissene Koerperteile fliegen jetzt.** Bisher blieben Arme und Beine am
+Koerper haengen. Im Original bekommen sie eine eigene Bewegung mit Wurf,
+Schwerkraft und Bodenaufprall — und erst dieser Aufprall laesst auch die
+nachfolgenden Teile verschwinden (ein abgerissenes Bein prallt auf, danach ist
+auch der Fuss weg). Diese Kette war zwar schon eingebaut, aber nie ausloesbar,
+weil es ohne fliegende Teile keinen Aufprall gab.
+
+**Der Haupt-Trefferhandler spritzte gar kein Blut** — das fehlte im Port
+komplett und ist jetzt drin, inklusive Richtung: bei einem Treffer von hinten
+spritzt es entgegengesetzt.
+
+**Die Spinne ist vollstaendig**: Decken- und Wandmodus samt Abseilen am Faden,
+alle Sonderreaktionen auf Treffer und Tod, und das komplette Verhalten der
+**Baby-Spinne** (ein Lebenspunkt, zertretbar, ertrinkt in Wasser) — samt
+Nachlegen durch die erwachsene Spinne bis zu einer Obergrenze.
+
+Zwei Befunde, die bewusst NICHT zu Aenderungen gefuehrt haben:
+- Decken- und Wandspinnen kommen in RE1.5 gar nicht vor: alle 58
+  Spinnen-Platzierungen der 240 Raeume sind Boden-Spinnen. Die neuen Modi sind
+  korrekt, unter den ausgelieferten Daten aber unbenutzt.
+- Die Entfernungs-Einstufung der Treffer bleibt unvollstaendig, weil RE1.5 die
+  noetigen Trefferbox-Daten nicht besitzt. Eine naheliegende "Reparatur" haette
+  dem Messer den Schaden komplett genommen — das ist jetzt mit Adressen belegt
+  statt als offener Punkt gefuehrt.
+
+Testsuite 167 Pruefungen. Damit ist der RE2-KI-Modus fuer alle vier gemeinsamen
+Gegnertypen abgeschlossen.
+
+---
+
 # RE1.5 Port — v0.2.9 (Early Preview)
 
 ## Neu in v0.2.9 — die RE2-Spinne
@@ -430,8 +464,8 @@ Split-Zips — 7-Zip/WinRAR verwenden. Pruefsummen: `SHA256SUMS.txt`.
 
 | Paket | Plattform | Start |
 |---|---|---|
-| `re15_port_v0.2.9_win64.zip` | Windows x64 | `Start_RE15_Port.bat` doppelklicken |
-| `re15_port_v0.2.9_linux_steamdeck_x64.zip` | Linux x64 / Steam Deck (SteamOS 3.x) | `./run.sh` (Deck: als Non-Steam-Game hinzufuegen) |
+| `re15_port_v0.3.0_win64.zip` | Windows x64 | `Start_RE15_Port.bat` doppelklicken |
+| `re15_port_v0.3.0_linux_steamdeck_x64.zip` | Linux x64 / Steam Deck (SteamOS 3.x) | `./run.sh` (Deck: als Non-Steam-Game hinzufuegen) |
 
 Beide Pakete sind selbst-enthalten: SDL2 statisch, Assets unter `shared_assets/PSX`
 (CD-Baum) plus `shared_assets/extracted_fx` (Effekt-Texturen), Savegames als
@@ -471,6 +505,6 @@ release/build_linux_deck.sh --distrobox re15-build   # auf dem Deck selbst
 ```
 Paketieren (beide Plattformen, mit den Gates oben):
 ```bash
-release/make_package.sh --version v0.2.9               # --only linux | --only win
+release/make_package.sh --version v0.3.0               # --only linux | --only win
 ```
-Ergebnis: `re15_port_v0.2.9_{linux_steamdeck_x64,win64}.{z01,zip}` + `SHA256SUMS.txt`.
+Ergebnis: `re15_port_v0.3.0_{linux_steamdeck_x64,win64}.{z01,zip}` + `SHA256SUMS.txt`.
