@@ -1,3 +1,40 @@
+# RE1.5 Port — v0.2.6 (Early Preview)
+
+## Neu in v0.2.6 — Zombie stoehnt beim Aufstehen wieder, korrekte Liegezeit
+
+Nutzer-Report zu v0.2.5: "Das schrille Moaning kommt aktuell nur beim Sterben.
+Im Original macht er es auch beim Aufstehen, nachdem man ihn niedergeschossen
+hat."
+
+**Die Ursache war grundsaetzlicher als der Laut selbst: an dieser Stelle wird
+im Original gar nicht gewuerfelt.** Der Zufallsgenerator des Spiels ist eine
+reine Rechenfunktion seines Eingabewerts — der gespeicherte "Zustand" wird
+zwar gelesen, aber nie verwendet. Im Niedergeschossen-Zustand ist dieser
+Eingabewert konstant (die komplette Aufrufkette wurde nachverfolgt: niemand
+veraendert ihn unterwegs). Damit fallen beide "Wuerfe" beim Aufstehen immer
+gleich aus: **der Stoehn-Laut kommt jedes Mal.** Der Port hatte daraus eine
+echte Wahrscheinlichkeit von 1:16 gemacht — in 15 von 16 Faellen blieb es
+still. Gemessen ueber acht Zufalls-Startwerte: vorher in fuenf von acht
+Durchlaeufen gar kein Laut, jetzt in allen acht.
+
+Aus derselben Herleitung mitkorrigiert:
+- **Liegezeit nach dem Niederschuss**: immer 360 Ticks (der Port wuerfelte
+  zwischen 30 und 750 — mal eine Sekunde, mal 25).
+- **Standfestigkeit nach dem Aufstehen**: fester Wert statt Wurf.
+
+Geprueft und ausgeschlossen: die in v0.2.5 eingefuehrte Stimmen-/Vorrang-
+Verwaltung verwirft den Laut NICHT (im Test mitgesichert); sie blieb
+unangetastet.
+
+Nicht geaendert, weil ohne Beleg: der Grunzer beim Hinfallen bleibt bei 1/4 —
+dort laeuft der Code ueber einen anderen Pfad, dessen Eingabewert nachweislich
+nicht konstant ist.
+
+Testsuite 160 Pruefungen; der neue Pin faehrt acht Durchlaeufe mit
+verschiedenen Zufalls-Startwerten.
+
+---
+
 # RE1.5 Port — v0.2.5 (Early Preview)
 
 ## Neu in v0.2.5 — Sound-Stimmen, RE2-Trefferreaktion, RE2-Soundbank
@@ -298,8 +335,8 @@ Split-Zips — 7-Zip/WinRAR verwenden. Pruefsummen: `SHA256SUMS.txt`.
 
 | Paket | Plattform | Start |
 |---|---|---|
-| `re15_port_v0.2.5_win64.zip` | Windows x64 | `Start_RE15_Port.bat` doppelklicken |
-| `re15_port_v0.2.5_linux_steamdeck_x64.zip` | Linux x64 / Steam Deck (SteamOS 3.x) | `./run.sh` (Deck: als Non-Steam-Game hinzufuegen) |
+| `re15_port_v0.2.6_win64.zip` | Windows x64 | `Start_RE15_Port.bat` doppelklicken |
+| `re15_port_v0.2.6_linux_steamdeck_x64.zip` | Linux x64 / Steam Deck (SteamOS 3.x) | `./run.sh` (Deck: als Non-Steam-Game hinzufuegen) |
 
 Beide Pakete sind selbst-enthalten: SDL2 statisch, Assets unter `shared_assets/PSX`
 (CD-Baum) plus `shared_assets/extracted_fx` (Effekt-Texturen), Savegames als
@@ -339,6 +376,6 @@ release/build_linux_deck.sh --distrobox re15-build   # auf dem Deck selbst
 ```
 Paketieren (beide Plattformen, mit den Gates oben):
 ```bash
-release/make_package.sh --version v0.2.5               # --only linux | --only win
+release/make_package.sh --version v0.2.6               # --only linux | --only win
 ```
-Ergebnis: `re15_port_v0.2.5_{linux_steamdeck_x64,win64}.{z01,zip}` + `SHA256SUMS.txt`.
+Ergebnis: `re15_port_v0.2.6_{linux_steamdeck_x64,win64}.{z01,zip}` + `SHA256SUMS.txt`.
