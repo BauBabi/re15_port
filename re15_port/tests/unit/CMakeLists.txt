@@ -1329,3 +1329,13 @@ target_link_libraries(test_zombie_getup_se PRIVATE re15_engine re15_test_support
 target_include_directories(test_zombie_getup_se PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_zombie_getup_se COMMAND test_zombie_getup_se)
 set_tests_properties(unit_zombie_getup_se PROPERTIES TIMEOUT 120)
+
+# --- WELLE E: der RE2-ZERLEGER-/GORE-ZWEIG (FUN_80106128/310/40C/510, Gore-Zweig @0x80105288
+#     und Handler 0x80107438) + die beiden zuvor blockierten Gates +0x152 und +0x1D0. ---
+add_executable(test_re2_gore test_re2_gore.c)
+target_link_libraries(test_re2_gore PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_gore PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2_gore PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2_gore COMMAND test_re2_gore)
+set_tests_properties(unit_re2_gore PROPERTIES TIMEOUT 120)

@@ -258,6 +258,48 @@ typedef struct {
                                  * (`lhu v0,450; sh v0,562` @0x80106994-A0)                     */
     uint8_t  re2z_rag231;       /* +0x231 Ragdoll-Untermaschinen-Wahl (@0x80106738/@0x801067B0/
                                  * @0x8010681C) — 1 -> FUN_80109610, 2 -> FUN_801092C4, beide OPEN */
+    /* ---- RE2-GORE/ZERLEGER (enemy_ai_re2_zombie.c, Welle E) ---------------------------------
+     * Die drei ZONEN-POOLS +0x151/+0x152/+0x153 sind KEINE Erfindung: der RE2-INIT setzt alle
+     * drei auf 13 (`addiu v0,zero,13` @0x8010081C, `sb v0,337/338/339(s2)` @0x80100820/24/28,
+     * Zwilling im Restyle @0x801049B4-C0), und der EXE-Applier zieht je Treffer die 3-Bit-
+     * Kosten des Schadens-Records ab, mit Saettigung bei -1:
+     *   Region 0 -> +0x153 : `lw t0,112(sp)` / `bne t0,zero` @0x80041900-08, Abzug @0x80041910-44
+     *   Region 1 -> +0x152 : `bne t0,1`      @0x80041950,    Abzug @0x80041954-88
+     *   Region 2 -> +0x151 : `bne t0,2`      @0x80041994,    Abzug @0x80041998-CC
+     *   Kosten  = `(rec->w1 >> (Bracket*3)) & 7`  (`sll v0,s1,1`/`addu v0,v0,s1`/`srlv`/`andi 7`)
+     *   Klemme  = `sll v0,v0,24 / bgez / addiu v0,zero,-1 / sb` (@0x8004197C-88)
+     * Die REGION ist exakt die Zone von +0x1D2: `+0x1D2 = 3*Bracket + Region` @0x80041A88-9C
+     * (Zwilling @0x80047310-30) — der Port stempelt Zone 1, trifft also +0x152, und genau
+     * `(s8)+0x152 < 0` ist das Gate des Zerleger-Zweigs @0x80105294-9C. */
+    int8_t   re2z_pool151;      /* +0x151 hohe Zone   (Region 2) */
+    int8_t   re2z_pool152;      /* +0x152 mittlere Zone (Region 1) — das Gore-Gate @0x8010529C */
+    int8_t   re2z_pool153;      /* +0x153 tiefe Zone  (Region 0) */
+    uint8_t  re2z_burn23a;      /* +0x23A Flammenwerfer-Trefferzaehler: INIT 0 @0x801008B4,
+                                 * Inkrement @0x80105284/@0x80105578, Schwelle >= 9 @0x80105250 */
+    uint16_t re2z_hitdir1d0;    /* +0x1D0 TREFFERRICHTUNG. Low-Byte wird pro Treffer neu gebaut
+                                 * (`andi 0xff00` @0x80041384 / @0x80047178) aus
+                                 * d = FUN_800154AC(Angreifer,Ziel) - Ziel+0x76 (@0x800419D8-A08):
+                                 *   ((d+1024)&0xFFF) < 2048 -> |= 0x20 (Ruecken)  @0x80041A0C-2C
+                                 *   ((d+1536)&0xFFF) < 1024 -> |= 0x40 (Seite A)  @0x80041A30-58
+                                 *   ((d- 512)&0xFFF) < 1024 -> |= 0x80 (Seite B)  @0x80041A5C-84
+                                 * (Zwilling im Schuss-Applier @0x80047360-D8.) */
+                                /* Der Port stempelt +0x1D0 in der HURT-Wurzel, wenn +0x6 == 0 ist
+                                 * — genau die Flanke, die re15_damage.c je Treffer erzeugt. */
+    /* Der MODELLBLOCK +0x198 ist im Original ein Array aus 172-Byte-Part-Records (Stride 0xAC,
+     * belegt durch die Offsetleiter 112/284/456/.../2520 = Part n*172+112 in FUN_80106128 und
+     * durch `sw zero,2580` = Part 15 @0x801010DC). Der Port hat keinen solchen Block; diese zwei
+     * Arrays bilden die zwei Felder ab, die der Zerleger-Zweig LIEST und SCHREIBT:
+     *   [i][+0x00] Flag-Wort — Bit 0 = "Part vorhanden" (die Rauch-Emitter gaten darauf,
+     *              `lw v0,516(a2)`/`andi 1` @0x801061C0-CC), 0x4A = abgerissener Arm
+     *              (@0x80107544/@0x801075B4/@0x80107630), 0x1062 = abgesprengtes Bein
+     *              (@0x8010537C), 0x10 = weggeaetzt (@0x80105EC4)
+     *   [i][+0x70] Farbwort (r,g,b) — Verkohlung 0x00404040.. (@0x8010627C-F4), Saeure
+     *              0x00304040.. (@0x8010633C-84), blutiger Stumpf 0x0010104F (@0x80107568)
+     * [PORT-MAPPING] Der Renderer hat noch keine Part-Sichtbarkeit/-Tinte (skeleton_common.c und
+     * platform/pc/** sind fuer diese Welle gesperrt) — die Felder tragen den Zustand byte-true,
+     * die Anzeige-Bruecke bleibt OFFEN. */
+    uint16_t re2z_part_flags[16];
+    uint32_t re2z_part_tint[16];
     /* ---- RE2-Flavor WELLE C (enemy_ai_re2_dog.c re15_re2dog_tick): die Cerberus-Arbeitsbytes
      * aus EMD0G_MOD0.BIN (ModB @0x80100000). Geteilt mit dem Zombie werden speed_h(+0x144),
      * re2z_t158(+0x158), re2z_t15a(+0x15A), re2z_dir16a(+0x16A Aggro/Mash, signed gelesen),
