@@ -99,6 +99,19 @@ void re15_re2z_rng_reset(void);                   /* re-seed the RE2 PRNG on roo
  * loader fills (clip indices are RE2-native) + the ENEMSE SE bank via the audio hook below. */
 int  re15_re2z_tick(int slot);                    /* 1 = handled (RE2 brain owns this actor)    */
 
+/* ---- RE1.5-Waffe -> RE2-ATTACKEN-ID (= Zeile der Trefferreaktions-Tabelle @0x8010C940) -------
+ * Im Original ist diese Zeile die ITEM-ID der gefuehrten Waffe: EQUIP FUN_8006B000 schreibt sie
+ * nach 0x800D5BFA (`sb v0,23546(at)` @0x8006B09C, Gate `sltiu <0x14` @0x8006B040), FUN_8003BAF0
+ * uebernimmt sie nach `+0x10E` (`sh v0,270(s2)` @0x8003BD4C) und der Applier stempelt sie als
+ * `+0x5 = (a1>>16)+1` @0x80041AA0-B4 (a1 aus `((+0x10E & 0xFFF)-1)<<16` @0x80047EB4-C8).
+ * Der Port schiesst mit dem RE1.5-Hitscan (`+0x5 = weapon_id` @0x800124BC) — ein ANDERER Id-Raum.
+ * Diese beiden Funktionen uebersetzen ihn; die vollstaendige Begruendung je Waffe steht als
+ * Tabelle in enemy_ai_re2_zombie.c. `col` ist die gestempelte Spalte (+0x1D2), `survived` = 0,
+ * wenn der Treffer toedlich war (dann laeuft die DEATH-Wurzel und die Zeile ist folgenlos).
+ * GARANTIE: der Rueckgabewert liegt in 1..19 und trifft fuer survived != 0 nie eine NULL-Zelle. */
+uint8_t re15_re2z_row_for_weapon (unsigned weapon_id,  unsigned col, int survived);
+uint8_t re15_re2z_row_for_atktype(unsigned attack_type, unsigned col, int survived);
+
 /* PC registers the ENEMSE playback here (engine stays link-clean for the PSX target, which
  * never runs the RE2 flavor). bank_fn selects the ENEMSE bank (audio_pc load_re2_enemy_se). */
 void re15_re2z_audio_hook(void (*se_fn)(int se_id, int flag2000), void (*bank_fn)(int bank));

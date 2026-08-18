@@ -1415,16 +1415,196 @@ static void re2z_active(int slot, re15_actor_t *e, re15_actor_t *pl)
  * innerhalb einer Gruppe zone 0/1/2. Zone 2 (c2/c5/c8) ist ausserhalb der Zeilen 9..11 NULL —
  * eine Kombination, die das Original nie erzeugt (Zone 2 braucht word0 & 0x10000000).
  *
- * ---- ZEILEN-SEMANTIK (+0x5) ----
+ * ---- ZEILEN-SEMANTIK (+0x5) = DIE RE2-ATTACKEN-ID — VOLLSTAENDIG AUFGELOEST 2026-08-18 ----
  * +0x5 ist NICHT der KI-Substate: beide RE2-Applier ueberschreiben ihn pro Treffer mit der
  * TREFFER-ART: `sb s5,5(s1)` @0x80047324 (s5 = Hitcode, Basis a3) bzw. `+0x5 = (a1>>16)+1`
- * @0x80041AA0-B4 (a1 = 2. Argument von FUN_800410CC, gespeichert @0x8004110C). Der Erzeuger
- * dahinter ist `(spieler+0x10E) & 0xFFF` @0x80047EB4-C0 / @0x80048444-58.
- * ⛔ OPEN: dieser Erzeuger hat im Port KEINEN Zwilling (der Port schiesst mit dem RE1.5-Hitscan
- * FUN_80011F50; dort ist `+0x5 = weapon_id` @0x800124BC). Der Port speist die Zeile deshalb aus
- * der RE1.5-Waffen-Id (dokumentierte MAPPING) — fuer Messer (1) und Browning (3) landet das in
- * den Zeilen 1..4, also im selben Haupt-Handler wie im Original.
+ * @0x80041AA0-B4. Die frueher hier als "OPEN" gefuehrte Herkunft ist jetzt zu Ende
+ * disassembliert; die Kette ist LUECKENLOS und macht die Zeile zu einer WAFFEN-Id:
+ *
+ *  (1) EQUIP FUN_8006B000 (info/re2leon/PSX.EXE):
+ *        8006b004: lbu a3,23548(a3)      ; a3 = *(u8*)0x800D5BFC  = angewaehlter Inventar-Slot
+ *        8006b028: addu a2,v0,a1         ; a2 = 0x800CC1E8 + slot*4
+ *        8006b034: lbu v0,-30636(at)     ; at = a2+0x10000 -> ea = 0x800D4A3C + slot*4 = ITEM-ID
+ *        8006b040: sltiu v0,v0,0x14      ; Item-Id < 20  == "das ist eine Waffe"
+ *        8006b088: sb a3,23544(at)       ; 0x800D5BF8 = Slot   (128 = nichts ausgeruestet)
+ *        8006b09c: sb v0,23546(at)       ; 0x800D5BFA = ITEM-ID der Waffe
+ *      Dass 0x800D4A3C das Inventar-Array (Stride 4, Byte0 = Item-Id) ist, belegt FUN_800696CC
+ *      @0x800696E4-0x80069704: es scannt `0x800D4A3C + i*4` nach dem Byte == a0 und liefert i.
+ *  (2) UEBERNAHME in die Entity FUN_8003BAF0:
+ *        8003bd30: lbu v1,23544(v1)      ; 0x800D5BF8
+ *        8003bd38: beq v1,128,0x8003bd50 ; nichts ausgeruestet
+ *        8003bd44: lbu v0,23546(v0)      ; 0x800D5BFA
+ *        8003bd4c: sh v0,270(s2)         ; +0x10E = ITEM-ID      (8003bd50: sh zero,270 sonst)
+ *  (3) ANGRIFF FUN_80047C6C @0x80047EB4-F8: `v0 = +0x10E & 0xFFF`, `a1 = ((v0-1)<<16)|band`,
+ *      `a2 = 0x800A68E8 + v0*24 + 0x800A6F8C[band]*8`, dann `jal FUN_800410CC`. Zwilling
+ *      FUN_80048314 @0x80048444-60. -> `+0x5 = (a1>>16)+1 = ITEM-ID` @0x80041AA0-B4.
+ *  => **Die Zeile IST die Item-Id der gefuehrten Waffe.** 0 = unbewaffnet, 1..19 = Waffen.
+ *
+ * ---- WIE VIELE ATTACKEN-IDS? GENAU 19 (1..19) — drei unabhaengige Belege ----
+ *  a) `sltiu ...,0x14` @0x8006B040 (Item-Id < 20 == Waffe).
+ *  b) Die Post-Hit-Handler-Tabelle @0x800A6FDC hat exakt 20 Eintraege (0..19): 0x800A6FDC +
+ *     20*4 = 0x800A702C, ab dort stehen andere Daten.
+ *  c) Die per-Gegnertyp-Schadensrecords `0x800A6A88[typ] + (id-1)*20` (Stride belegt
+ *     @0x800413A4-B8 `v1*5*4` bzw. @0x8004723C `addiu v0,v0,-20`) sind je 0x17C = 380 Byte
+ *     = 19*20 lang (0x800A412C -> 0x800A42A8 -> 0x800A4424 -> 0x800A45A0 …).
+ *
+ * ---- ZOMBIE-SCHADEN JE ATTACKEN-ID (0x800A412C = Typen 0x10-0x14/0x18-0x1F, selbst gedumpt) --
+ * HP-Abzug = `(word0 >> (bracket*10)) & 0x3FF` (@0x80047244-54 / FUN_800410CC):
+ *   id 1: 3/0/0 | 2: 16/15/14 | 3: 16/15/14 | 4: 16/15/14 | 5: 900 | 6: 900 | 7: 200/60/40
+ *   id 8: 300/80/60 | 9: 200/50/10 | 10: 200/50/5 | 11: 200/50/10 | 12: 30 | 13: 16/15/14
+ *   id 14: 60 | 15: 4 | 16: 15 | 17: 900 | 18: 8 | 19: 16/15/14
+ *
+ * ---- WARUM DIE ZEILEN 5, 6, 17 NULL SIND: SIE SIND IM ORIGINAL UNERREICHBAR ----
+ * Genau diese drei Ids tragen `0x384E1384` = 900/900/900 Schaden (@0x800A412C + 4*20 / 5*20 /
+ * 16*20). Kein Zombie hat 900 HP (HP-Tabelle @0x8010C600 max 118), also setzt der Applier
+ * IMMER `+0x4 = 3` (DEATH) statt 2 (`lh v1,342 / bgez / sw 2,4(s1)` @0x8004727C-90) und die
+ * HURT-Wurzel FUN_80104F40 laeuft dort nie. Die NULL-Zellen sind also kein Loch, sondern der
+ * Beweis, dass Magnum-/Raketen-Klasse den Zombie sofort toetet.
+ *
+ * ---- DIE GEOMETRIE-TABELLE @0x800A68E8 (id-Stride 24, 3 Hoehen-Gruppen a 8 Byte) ------------
+ * Sie bestaetigt die Waffen-KLASSEN unabhaengig vom Schaden (selbst gedumpt): id 1 hat drei
+ * EIGENE Boxen je Zielhoehe (0x800A657C/0x800A63A8/0x800A64E0 = Nahkampf-Schwung); die Ids
+ * 2/3/4/13 teilen sich EINE identische Box (0x800A6618/34/50 + 0x800A666C = Pistolen-Klasse);
+ * 5,6 / 7,8 / 14 / 15 haben je eigene Boxen; 9,10,11,12,16,17 zeigen auf den NULL-Record
+ * 0x800A6350 — diese Waffen benutzen den Kontakt-Pfad FUN_800410CC gar nicht, sondern erzeugen
+ * eigene Projektil-/Flammen-Entities (Granaten, Bolzen, Flammenstrahl, Rakete).
  * ==========================================================================================*/
+
+/* ==========================================================================================
+ * DIE RE1.5-WAFFE -> RE2-ATTACKEN-ID-ZUORDNUNG (Nutzer-Vorgabe 2026-08-18: "Einzelne staerkere
+ * Waffen muessen auch in Resident Evil 1.5 reagieren, unabhaengig von der RE2-KI").
+ *
+ * Das Problem: der Port schiesst mit dem RE1.5-Hitscan FUN_80011F50 (`+0x5 = weapon_id`
+ * @0x800124BC). RE1.5-Waffen-Id und RE2-Attacken-Id sind ZWEI VERSCHIEDENE Id-Raeume — RE1.5
+ * hat 22 Zeilen (0..21, Schaden @0x8006E0D0, Tester-Dispatch @0x8006E548), RE2 hat 19 Waffen
+ * (1..19). Roh durchgereicht landeten 7 von 22 RE1.5-Waffen auf einer NULL-Zelle bzw. ausserhalb
+ * der Tabelle (gemessen: w 0,5,6,17,19,20,21 -> gar keine Reaktion).
+ *
+ * Die Zuordnung unten geht nach WAFFEN-KLASSE. Belegt ist die Klasse auf BEIDEN Seiten:
+ *   RE1.5: Tester-Dispatch @0x8006E548 (0x80012574 = Schusswaffe / 0x800127FC = Nahkampf /
+ *          0x800128A0 = Sprengstoff), Reach @0x8006E5A0, Schaden @0x8006E0D0, Munitions-Records
+ *          @0x80074C88.. (Waffen-Props @0x80074DA8, Stride 0xC).
+ *   RE2:   Geometrie-Tabelle @0x800A68E8 (s.o.), Schadensrecords @0x800A412C, Poise-Kosten
+ *          @0x8010CC33 und die Reaktionszeile selbst @0x8010C940.
+ * Wo RE1.5 mehr Waffen einer Klasse hat als RE2 Zeilen, wird die naechstliegende Zeile derselben
+ * Klasse gewaehlt — das ist eine [PORT-ZUORDNUNG, kein Byte-Beleg], je Zeile unten begruendet.
+ * INVARIANTE: KEINE Waffe darf auf eine stumme Zelle fallen (re2z_row_guard unten).
+ * ========================================================================================== */
+enum { RE2Z_ATK_MAX = 19 };   /* Ids 1..19 (Beleg (a)/(b)/(c) oben)                             */
+
+/* ---- DIE RE2-WAFFEN-IDS 1..19, byte-belegt aus info/re2leon/PSX.EXE --------------------------
+ * Item-Definitionstabelle `{u8 maxQty, u8 pad, u8 flags, u8 nCombine, Rec *list}` mit Stride 8
+ * ab 0x800A9E1C — Beleg FUN_800695B0 @0x80069600 (`lbu a0,-25057(at)` = 0x800A9E1F + id*8) und
+ * @0x80069618 (`lw v1,-25056(at)` = 0x800A9E20 + id*8). `flags` Bit 7 = DAUERFEUER, gesetzt genau
+ * fuer 0x0E/0x0F/0x10/0x12 — deckungsgleich mit den Dauerfeuer-Zweigen in FUN_8006A0CC
+ * (@0x8006A128 id 15, @0x8006A130 id 18, @0x8006A184 id 16, @0x8006A1D0 id 14).
+ * Zweiter, unabhaengiger Beleg: die Waffen-Modelle `info/re2leon/PL0/PLD/PL00W%02X.PLW` (Leon)
+ * bzw. `PL01W%02X.PLW` (Claire) — PLW-Index == Item-Id, Stub-Dateien = "hat diese Waffe nicht";
+ * PL01W09/0A/0B sind byte-gleich (EIN Granatwerfer, 3 Munitionsarten), PL00W01 == PL01W01 (Messer).
+ *   1 Messer | 2 Handgun (Leon, 18) | 3 Handgun Browning HP (Claire, 13) | 4 Custom Handgun (18)
+ *   5 Magnum (8) | 6 Custom Magnum (8) | 7 Schrotflinte (5) | 8 Custom Schrotflinte (7)
+ *   9 GL Explosiv | 10 GL Brand | 11 GL Saeure | 12 Bowgun (18) | 13 Colt S.A.A. (6)
+ *   14 Spark Shot (100) | 15 SMG/Ingram (100) | 16 Flammenwerfer (100) | 17 Raketenwerfer (4)
+ *   18 Gatling (100) | 19 Chris-Pistole (15, nur PL0BW13.PLW)
+ * Gegenprobe gegen die Zombie-Schadensrecords oben: 1 -> 3 (Messer), 5/6 -> 900 (Magnum),
+ * 7/8 -> 200/300 (Schrot), 12 -> 30 (Bowgun-Bolzen), 15/18 -> 4/8 pro Schuss (Dauerfeuer),
+ * 17 -> 900 (Rakete). Beide Quellen stimmen ueberein.
+ *
+ * ---- RE1.5-Waffen-Id (0..21) -> RE2-Attacken-Id (Zeile @0x8010C940) --------------------------
+ *  w  RE1.5-Waffe            -> id  RE2-Zeile          Kriterium
+ *  -- ---------------------- --- ------------------    ------------------------------------------
+ *  0  unbewaffnet (dmg 0)       1  MAIN                RE2-Id 0 hat KEINE Geometrie (@0x800A68E8
+ *                                                      Zeile 0 = Datenwoerter) und feuert nie; der
+ *                                                      Port kann mit w=0 aber "treffen" (Schaden 0).
+ *                                                      Schwaechste gueltige Zeile. [PORT-ZUORDNUNG]
+ *  1  Combat Knife              1  Messer   MAIN       IDENTITAET. Beide sind die Nahkampfwaffe mit
+ *                                                      dem kleinsten Schaden; RE2-Id 1 ist die
+ *                                                      EINZIGE Zeile mit eigener Nahkampf-Geometrie
+ *                                                      je Zielhoehe (@0x800A6900).
+ *  2  Pipe (Nahkampf, dmg 24)   1  Messer   MAIN       ebenfalls Nahkampf-Tester 0x800127FC
+ *                                                      (@0x8006E550), aber RE2 hat nur EINE
+ *                                                      Nahkampfzeile. [PORT-ZUORDNUNG]
+ *  3  Browning HP               3  Browning HP MAIN    IDENTITAET — RE2-Id 3 IST die Browning HP
+ *                                                      (Claires Startpistole, Magazin 13).
+ *  4  SIG P228                  2  Handgun  MAIN       die andere Standard-Pistolenzeile (Leons
+ *                                                      VP70). Gleiche Poise-Kosten 0x0F wie Zeile 3
+ *                                                      (@0x8010CC35/36). [PORT-ZUORDNUNG]
+ *  5  Beretta M93R (3-Schuss)   4  Custom HG MAIN      Pistolenzeile mit der GROESSTEN Poise-Kosten-
+ *  6  Glock 18 (Vollauto)       4  Custom HG MAIN      Konstante 0x23 = 35 (@0x8010CC37) = das
+ *                                                      RE2-Pendant zu "mehr Stopping Power pro
+ *                                                      Trigger-Zug" (Burst/Vollauto, RE1.5-Schaden
+ *                                                      15 statt 5). [PORT-ZUORDNUNG]
+ *  7  Super Redhawk (.44)       5  Magnum   (NULL)     KLASSEN-IDENTITAET. RE2 5/6 = 900 Schaden =
+ *                                                      immer toedlich; RE1.5 w7 toetet ebenfalls
+ *                                                      IMMER (`hp = -1` @0x800124FC fuer type<0x20,
+ *                                                      alle RE2-Zombietypen 0x10..0x18 sind <0x20).
+ *                                                      Die NULL-Zeile bleibt damit genau so
+ *                                                      unerreichbar wie im Original.
+ *  8  Remington M870            7  Schrot   7438/RAGDOLL  KLASSEN-IDENTITAET (Standard-Schrotflinte,
+ *                                                      eigene breitere Geometrie 0x800A6724).
+ *  9  Hand Grenade (HE)         9  GL Explosiv STAGGER Sprengstoff-Tester 0x800128A0 @0x8006E56C-74.
+ * 10  Acid Grenade             11  GL Saeure  STAGGER  Die Munitionsart ist auf BEIDEN Seiten
+ * 11  Incend. Grenade          10  GL Brand   STAGGER  belegt: RE1.5 Subtyp-Byte @0x80074E14+8
+ *                                                      (3 = HE, 1 = Saeure, 2 = Brand) gegen RE2
+ *                                                      Ammo-Recs 0x800A9D10/1C/28 (0x18 Grenade,
+ *                                                      0x19 Flame, 0x1A Acid). Zeilen 10/11 sind
+ *                                                      ausserdem byte-identisch.
+ * 12  Ingram M10 (MP)          15  SMG      7EF0/BURN  IDENTITAET — RE2-Id 15 IST die Ingram-MP
+ *                                                      (Dauerfeuer, flags 0x80 @0x800A9E96,
+ *                                                      8-Frame-Takt @0x8006A128). Die 7EF0-Zeile ist
+ *                                                      genau die "leichte" Reaktion, die eine
+ *                                                      Dauerfeuerwaffe braucht.
+ * 13  SPAS-12 (dmg 100)         8  Custom Schrot RAGDOLL  die staerkere Schrotflintenzeile
+ *                                                      (300/80/60). KLASSEN-IDENTITAET.
+ * 14  Flammenwerfer            16  Flammenwerfer MAIN  IDENTITAET — RE2-Id 16 IST der Flammenwerfer
+ *                                                      (Munition 0x17 Fuel, flags 0x81
+ *                                                      @0x800A9E9E, Dauerfeuer @0x8006A184).
+ * 15  GL Explosiv               9  GL Explosiv STAGGER  wie w9/w10/w11 — im RE1.5-Original tragen
+ * 16  GL Saeure                11  GL Saeure  STAGGER   Handgranate und GL-Runde derselben Sorte
+ * 17  GL Brand                 10  GL Brand   STAGGER   byte-gleiche Schadenszeilen.
+ * 18  Rocket Launcher          17  Rakete   (NULL)     IDENTITAET. RE2 17 = 900 = immer toedlich;
+ *                                                      RE1.5 w18 = 400 Schaden > jede Zombie-HP
+ *                                                      (Tabelle @0x8011F034 max 111, RE2 max 118).
+ * 19  H&K MC51 (Vollauto)      18  Gatling  7EF0/BURN  die zweite Dauerfeuerzeile; byte-identisch zu
+ *                                                      Zeile 15, damit MP und Sturmgewehr dieselbe
+ *                                                      leichte Reaktion tragen. [PORT-ZUORDNUNG]
+ * 20  Colt Python (dmg 0)      13  Colt S.A.A. MAIN    KLASSEN-IDENTITAET (Single-Action-Revolver,
+ *                                                      RE2-Magazin 6). Im RE1.5-Original unfertig
+ *                                                      (Schaden 0 in jeder Gegnerzeile).
+ * 21  keine Waffe (tote Zeile)  1  Messer   MAIN       nicht fuehrbar (kein PLW, ARMS-Bank 0);
+ *                                                      defensiver Default. [PORT-ZUORDNUNG]
+ * NICHT benutzt werden die RE2-Zeilen 6 (Custom Magnum, ebenfalls NULL/900), 12 (Bowgun — RE1.5
+ * hat keine Armbrust), 14 (Spark Shot — RE1.5 hat keine Elektrowaffe) und 19 (existiert als
+ * Attacken-Id, liegt physisch aber schon in der 1D-Kriecher-Tabelle, s. re2z_hit_tbl).
+ */
+static const uint8_t re2z_row_from_weapon[22] = {
+    /* 0*/  1, /* 1*/  1, /* 2*/  1, /* 3*/  3, /* 4*/  2, /* 5*/  4,
+    /* 6*/  4, /* 7*/  5, /* 8*/  7, /* 9*/  9, /*10*/ 11, /*11*/ 10,
+    /*12*/ 15, /*13*/  8, /*14*/ 16, /*15*/  9, /*16*/ 11, /*17*/ 10,
+    /*18*/ 17, /*19*/ 18, /*20*/ 13, /*21*/  1
+};
+
+/* Der zweite Port-Erzeuger von +0x5: re15_enemy_take_damage (FUN_80012D60-Gegner-Zweig) fuettert
+ * `+0x5 = re15_react_table[attack_type]` — RE1.5-REAKTIONS-CLIP-Ids (0x03..0x14), wieder ein
+ * dritter Id-Raum. Kriterium hier ist die SCHADENSKLASSE aus re15_damage_table @0x8006F418
+ * {10,20,1000,1000,1000,50,100,200,300,1000,0}:
+ *   Typ 0/1  (10/20, Nahkampf-Angriff eines Gegners) -> RE2 1  (Nahkampfzeile)
+ *   Typ 2/3/4/9 (1000 = Instakill)                   -> RE2 17 (900er-Klasse; toetet ohnehin)
+ *   Typ 5/6  (50/100, Sprengstoff)                   -> RE2 9
+ *   Typ 7    (200)                                   -> RE2 10
+ *   Typ 8    (300)                                   -> RE2 11 (RE2-Id 8 traegt genau 300/80/60)
+ *   Typ 10   (0)                                     -> RE2 1
+ * [PORT-ZUORDNUNG] — im Original gibt es diesen Pfad nicht, dort kommt jede Zeile aus +0x10E. */
+static const uint8_t re2z_row_from_atktype[11] = { 1, 1, 17, 17, 17, 9, 9, 10, 11, 17, 1 };
+
+/* INVARIANTE "kein stummer Treffer": faellt die gewaehlte Zeile in der TATSAECHLICH gestempelten
+ * Spalte auf NULL, obwohl der Zombie den Treffer UEBERLEBT hat (also die HURT-Wurzel wirklich
+ * laeuft), wird auf die schwerste nicht-NULL-Zeile derselben Wucht ausgewichen: 8 = 7438/RAGDOLL.
+ * Das kann im Original nicht passieren (die drei NULL-Zeilen gehoeren zu 900-Schaden-Waffen, s.o.);
+ * im Port ist es erreichbar, weil der RE1.5-Schaden ein anderer ist (z.B. Zombietyp 0x18 mit der
+ * HP-Zeile 1058 aus @0x8011F034 ueberlebt die 400 des Raketenwerfers). [PORT-SICHERUNG] */
+enum { RE2Z_ROW_FALLBACK = 8 };
+/* (die drei Funktionen stehen direkt hinter re2z_hit_tbl — sie lesen die Tabelle) */
 
 /* Kosten-Tabelle je Zeile, Bytes @0x8010CC33 + (+0x5) — gelesen `lbu v1,-13261(at)` @0x801055D8.
  * Selbst gedumpt 2026-08-18 (`bytes 0x8010cc30 40`):
@@ -1463,7 +1643,33 @@ static const uint8_t re2z_hit_tbl[19][9] = {
 /*17*/ { 0,0,0, 0,0,0, 0,0,0 },
 /*18*/ { 6,6,0, 6,6,0, 6,6,0 }    /* @0x8010CBC8, byte-identisch zu Zeile 15; col8 faellt mit dem
                                    * NULL-Eintrag [0] der 1D-Tabelle @0x8010CBE8 zusammen */
+    /* Zeile 19 existiert als Attacken-Id, liegt physisch aber schon in der 1D-Kriecher-Tabelle
+     * @0x8010CBE8 (0x8010C940 + 19*36 = 0x8010CBEC = 1D[1] = 0x80107888 in allen 9 Spalten).
+     * Der Port stempelt sie deshalb NIE (re2z_row_from_weapon enthaelt keine 19). */
 };
+
+/* ---- die Zuordnungs-Funktionen (Tabellen + Kriterien s. Block oben) ------------------------ */
+static uint8_t re2z_row_guard(unsigned row, unsigned col, int survived)
+{
+    if (row == 0u || row > (unsigned)RE2Z_ATK_MAX) row = 1u;      /* nie ausserhalb 1..19 */
+    if (!survived) return (uint8_t)row;                           /* DEATH-Wurzel, Zeile egal */
+    if (col > 8u) col = 1u;
+    if (row < 19u && re2z_hit_tbl[row][col] != RE2ZH_NULL) return (uint8_t)row;
+    return (uint8_t)RE2Z_ROW_FALLBACK;                            /* [PORT-SICHERUNG] */
+}
+
+uint8_t re15_re2z_row_for_weapon(unsigned weapon_id, unsigned col, int survived)
+{
+    unsigned row = (weapon_id < 22u) ? re2z_row_from_weapon[weapon_id] : 1u;
+    return re2z_row_guard(row, col, survived);
+}
+
+uint8_t re15_re2z_row_for_atktype(unsigned attack_type, unsigned col, int survived)
+{
+    unsigned row = (attack_type < 11u) ? re2z_row_from_atktype[attack_type] : 1u;
+    return re2z_row_guard(row, col, survived);
+}
+
 static void re2z_grab_abort(re15_actor_t *e, re15_actor_t *pl)
 {
     /* @0x80104F68-FDC (HURT) / @0x801082B0-328 (DEATH): PL-cmd==5 && PL+0x1B4==self ->

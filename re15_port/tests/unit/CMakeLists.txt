@@ -1298,6 +1298,16 @@ target_compile_definitions(test_re2_hit_reaction PRIVATE
 add_test(NAME unit_re2_hit_reaction COMMAND test_re2_hit_reaction)
 set_tests_properties(unit_re2_hit_reaction PROPERTIES TIMEOUT 90)
 
+# --- RE2/RE1.5: ZENSUS ueber ALLE 22 Waffen-Ids — jede muss eine Reaktion ausloesen
+#     (Nutzer-Vorgabe 2026-08-18; RE1.5-Waffe -> RE2-Attacken-Id, Zeile @0x8010C940). ---
+add_executable(test_re2_weapon_rows test_re2_weapon_rows.c)
+target_link_libraries(test_re2_weapon_rows PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_weapon_rows PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2_weapon_rows PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2_weapon_rows COMMAND test_re2_weapon_rows)
+set_tests_properties(unit_re2_weapon_rows PROPERTIES TIMEOUT 120)
+
 # --- RE2-Modus: byte-true ENEMSE-Bank-Wahl FUN_80052b38 + Raum-kind-Paar @0x8005728c-b8 ---
 add_executable(test_re2_enemse_bank test_re2_enemse_bank.c)
 target_link_libraries(test_re2_enemse_bank PRIVATE re15_engine re15_test_support)

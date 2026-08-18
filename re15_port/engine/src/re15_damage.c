@@ -30,7 +30,9 @@
 #include "re15_enemy.h"      /* re15_enemy_find — the per-type EMD bank (skel/anim) for the gore-bone pose */
 #include "re15_ai_flavor.h"  /* re15_re2_owns_type — der +0x1D2-Stempel des RE2-Flavors (s.u.) */
 
-static void re15_re2_stamp_1d2(re15_actor_t *e);   /* fix_1d2_spec — Definition vor take_damage */
+/* fix_1d2_spec — Definition vor take_damage. `row_src`/`row_id`: welcher Port-Erzeuger die
+ * RE2-Trefferreaktions-ZEILE (+0x5) speist (0 = RE1.5-Waffen-Id, 1 = RE1.5-Angriffstyp). */
+static void re15_re2_stamp_hit(re15_actor_t *e, int row_src, unsigned row_id);
 #include "re15_anim_select.h"/* re15_compute_actor_kf — motion+frame -> keyframe for the gore-bone pose */
 
 /* DAT_8006f418 — ghidra1_V2.txt:223455-223478 (11×s16 LE). */
@@ -666,7 +668,18 @@ retry_after_latch:
          * a cap — proven vs savestate 4, a zombie hit at dist 6695). The old `dist >= reach+radius`
          * cap was a decode error that limited guns to ~1400u = the "can't hit them" bug.
          * MELEE (weapon 1/2 -> FUN_800127fc): the bounded cone tester R = reach + enemy radius. */
-        int is_gun_strip = (weapon_id == 0 || (weapon_id >= 3 && weapon_id <= 8));
+        /* ⛔ KORREKTUR 2026-08-18 (Nutzer-Vorgabe "einzelne staerkere Waffen muessen reagieren"):
+         * die Menge stand frueher als `w == 0 || (3 <= w <= 8)` da und verfehlte 12, 13, 19, 21.
+         * Die Tester-Dispatch-Tabelle @0x8006E548 (selbst gedumpt, `table 0x8006e548 22`) sagt:
+         *   [0]=0x80012574 [1]=0x800127FC [2]=0x800127FC [3..8]=0x80012574 [9,10,11]=0x800128A0
+         *   [12]=0x80012574 [13]=0x80012574 [14..18]=0x800128A0 [19]=0x80012574 [20]=0x800128A0
+         *   [21]=0x80012574
+         * Ingram M10 (12), SPAS-12 (13) und H&K MC51 (19) liefen damit im Port durch den
+         * begrenzten Nahkampf-Kegel (Reach 1300/1800/1100 @0x8006E5A0) statt durch den
+         * unbegrenzten Schuss-Streifen — genau die "starke Waffe trifft/reagiert nicht". */
+        int is_gun_strip = (weapon_id == 0 || (weapon_id >= 3 && weapon_id <= 8) ||
+                            weapon_id == 12 || weapon_id == 13 || weapon_id == 19 ||
+                            weapon_id == 21);
         if (is_gun_strip) {
             if (!re15_gun_wedge_inside(pl, e->x, e->z, (int32_t)reach,
                                        (int32_t)((uint32_t)e->hit_radius_min & 0xffffu))) continue;
@@ -747,7 +760,7 @@ retry_after_latch:
         extern void re15_audio_weapon_se(int idx);
         re15_audio_weapon_se(8);
     }
-    re15_re2_stamp_1d2(e);                          /* RE2-Flavor: +0x1D2 + +0x6 (s.u.) */
+    re15_re2_stamp_hit(e, 0, (unsigned)weapon_id);  /* RE2-Flavor: +0x1D2 + +0x6 + ZEILE (s.u.) */
     return best + 1;                                /* hit (slot+1, non-zero) */
 }
 
@@ -802,7 +815,29 @@ retry_after_latch:
  *     Onset-Phase setzt +0x6=1 @0x801055B4). Mit +0x6 != 0 war sowohl das Flinch-Gate
  *     (`bne v0,zero,0x80105168` @0x80105064) als auch die Onset-Phase strukturell blockiert —
  *     genau der gemeldete "keine Reaktion". */
-static void re15_re2_stamp_1d2(re15_actor_t *e)
+/* ⛔ NACHTRAG 2026-08-18 (Nutzer-Vorgabe "einzelne staerkere Waffen muessen auch in RE1.5
+ * reagieren"): der Stempel setzt jetzt AUCH die ZEILE +0x5.
+ *
+ * Im Original ist die Zeile die ITEM-ID der gefuehrten Waffe — die Kette ist lueckenlos belegt:
+ *   8006b034: lbu v0,-30636(at)   ; Item-Id des Inventar-Slots (0x800D4A3C + slot*4)
+ *   8006b040: sltiu v0,v0,0x14    ; Item-Id < 20 == Waffe
+ *   8006b09c: sb   v0,23546(at)   ; 0x800D5BFA = Item-Id der ausgeruesteten Waffe
+ *   8003bd4c: sh   v0,270(s2)     ; +0x10E = Item-Id (bzw. 0 @0x8003BD50, wenn nichts gefuehrt)
+ *   80047eb4: lhu  v0,270(s0) / andi 0xfff / addiu a1,v0,-1 / sll a1,16   -> FUN_800410CC
+ *   80041aa0: lw t0,64(sp) / srl v1,t0,16 / addiu v1,v1,1 / sb v1,5(t0)   ; +0x5 = Item-Id
+ * Der Port schiesst mit dem RE1.5-Hitscan FUN_80011F50 (`+0x5 = weapon_id` @0x800124BC) — ein
+ * anderer Id-Raum mit 22 statt 19 Eintraegen. Ungeuebersetzt fielen 7 von 22 RE1.5-Waffen auf
+ * eine NULL-Zelle bzw. aus der Tabelle (gemessen: w 0,5,6,17,19,20,21 = gar keine Reaktion).
+ * re15_re2z_row_for_weapon/-atktype (enemy_ai_re2_zombie.c) uebersetzt klassenweise; dort steht
+ * die Zuordnung mit Begruendung je Waffe.
+ *
+ * NUR die Zombie-Familie bekommt die Zeile: sie ist der einzige Konsument der 2D-Tabelle
+ * @0x8010C940. Hund (0x20) und Kraehe (0x21) benutzen +0x5 als ACTIVE-Substate und behalten
+ * exakt das bisherige Verhalten.
+ *
+ * Reihenfolge: der Stempel laeuft am ENDE beider Applier, also NACH `+0x5 = weapon_id` und nach
+ * dem `+0x4 = 2/3` — `survived` kann damit aus e->state gelesen werden. */
+static void re15_re2_stamp_hit(re15_actor_t *e, int row_src, unsigned row_id)
 {
     if (re15_ai_flavor() != RE15_AI_FLAVOR_RE2 || !re15_re2_owns_type(e->type)) return;
     /* NEGATIV-PROBE (2026-08-18, Ergebnis im Report): ersetzt man diese zwei Zeilen wieder
@@ -811,6 +846,11 @@ static void re15_re2_stamp_1d2(re15_actor_t *e)
      * Knockdown. Das ist exakt der gemeldete Fehler. */
     e->re2z_hits1d2 = 1u;   /* Basis-Zone 1 @0x80047294-98 + 3*Bracket 0 (OPEN, s.o.) */
     e->sub_state_2  = 0u;   /* +0x6 = 0 durch das Wort-`sw` @0x80047288/@0x80047290 */
+    if (re15_re2z_owns_type(e->type)) {
+        int survived = (e->state != 3);   /* +0x4 == 3 -> DEATH-Wurzel statt HURT (@0x8004728C-90) */
+        e->sub_state_1 = row_src ? re15_re2z_row_for_atktype(row_id, e->re2z_hits1d2, survived)
+                                 : re15_re2z_row_for_weapon (row_id, e->re2z_hits1d2, survived);
+    }
 }
 
 /* Enemy branch of FUN_80012d60 (@80012f08-80013034): apply a resolved hit to an
@@ -839,7 +879,7 @@ int re15_enemy_take_damage(re15_actor_t *e, uint8_t attack_type)
     e->hit_react |= 0x1;                                           /* +0x93 |= 1 (@8001300c) */
     e->state = 2;                                                  /* +0x4 = 2 hurt (@80013018) */
     if (e->hp < 0) e->state = 3;                                  /* signed HP<0 → death (@80013020) */
-    re15_re2_stamp_1d2(e);                                        /* RE2-Flavor: +0x1D2-SET (s.o.) */
+    re15_re2_stamp_hit(e, 1, (unsigned)type);                     /* RE2-Flavor: +0x1D2 + ZEILE (s.o.) */
     e->anim_flags &= (uint16_t)~0x80u;   /* same port-bookkeeping REVERSE drop as the gun path —
                                           * reverse is a per-call f314 argument (@0x80102aec), not
                                           * entity state; the hijacked state sets a new forward clip

@@ -368,9 +368,15 @@ int main(void)
         re15_actor_t *hit = (r > 0) ? &g_actors[r - 1] : NULL;
         printf("  [reach] Waffe 8 auf 4000: fire=%d slot=%d row(+0x5)=%d state=%d\n",
                r, r - 1, hit ? hit->sub_state_1 : -1, hit ? hit->state : -1);
-        CHECK(hit && hit->sub_state_1 == 8 && hit->state == 2,
-              "Waffe 8 jenseits 3000 muss in Zeile 8 / HURT landen (+0x5 = weapon_id "
-              "@0x800124BC) — fire=%d row=%d state=%d", r,
+        /* AKTUALISIERT 2026-08-18: die Zeile ist nicht mehr die rohe RE1.5-Waffen-Id, sondern die
+         * uebersetzte RE2-ATTACKEN-ID (= Item-Id der Waffe, Beleg-Kette in enemy_ai_re2_zombie.c).
+         * Die Remington M870 (RE1.5-Waffe 8) ist die STANDARD-Schrotflinte und landet damit auf
+         * RE2-Id 7 (Shotgun, Schadensrecord 200/60/40 @0x800A412C+6*20); die staerkere SPAS-12
+         * (RE1.5-Waffe 13) traegt RE2-Id 8 (Custom Shotgun, 300/80/60). Beide Zeilen dispatchen in
+         * Spalte 1 dieselbe Ragdoll-Zelle 0x801066FC — der Sturz bleibt also erreichbar. */
+        CHECK(hit && hit->sub_state_1 == 7 && hit->state == 2,
+              "Waffe 8 jenseits 3000 muss in RE2-Zeile 7 (Schrotflinte) / HURT landen "
+              "— fire=%d row=%d state=%d", r,
               hit ? hit->sub_state_1 : -1, hit ? hit->state : -1);
         if (hit && hit->state == 2) {
             hit->re2z_hits1d2 = 1; hit->sub_state_2 = 0; s_se_n = 0;
@@ -381,17 +387,17 @@ int main(void)
         }
     }
 
-    /* ---------------- (5) ZEILEN-ZENSUS: welche Waffen-Id landet in welcher Zelle? ----------
-     * Der Port speist die TABELLEN-ZEILE aus der RE1.5-Waffen-Id (`+0x5 = weapon_id`
-     * @0x800124BC); das Original nimmt die Spieler-Attacken-Id `(spieler+0x10E) & 0xFFF`
-     * (@0x80047EB4-C0 -> FUN_800410CC -> `+0x5 = (a1>>16)+1` @0x80041AA0-B4). Der Zensus zeigt
-     * schwarz auf weiss, welche Waffen-Ids damit auf eine NULL-Zelle fallen — dort wuerde das
-     * Original `jalr 0` ausfuehren, die Kombination entsteht dort also NIE, und der Port
-     * reagiert gar nicht. */
+    /* ---------------- (5) ZEILEN-ZENSUS DER TABELLE SELBST ---------------------------------
+     * Zeigt, welche der 19 RE2-Attacken-Ids welche Zelle traegt (Spalte 1). Die drei NULL-Zeilen
+     * 5/6/17 sind KEIN Loch: genau diese Ids tragen 900 Schaden (`0x384E1384` @0x800A412C+4*20 /
+     * +5*20 / +16*20 = Magnum / Custom Magnum / Raketenwerfer), toeten den Zombie also immer, und
+     * der Applier setzt dann `+0x4 = 3` (DEATH) statt 2 (@0x8004727C-90) — die HURT-Wurzel laeuft
+     * dort nie. Welche RE1.5-WAFFE auf welche Zeile abgebildet wird und dass jede eine Reaktion
+     * ausloest, pinnt seit 2026-08-18 der eigene Zensus test_re2_weapon_rows.c. */
     {
         static const char *hname[7] = { "NULL", "0x80105438", "0x80105BC0", "0x801066FC",
                                         "0x8010703C", "0x80107438", "0x80107EF0" };
-        printf("  [zeilen] Waffe -> Zeile -> Zelle(Spalte 1):\n");
+        printf("  [zeilen] RE2-Attacken-Id -> Zelle(Spalte 1):\n");
         /* Nur EIN Zombie darf ticken — die Diagnose ist global, ein zweiter HURT-Zombie wuerde
          * sie im selben Frame ueberschreiben. */
         for (int s = 1; s < RE15_ACTOR_MAX; s++)
@@ -403,17 +409,20 @@ int main(void)
             e->state = 2;
             frame();
             int h = re15_re2z_last_hit_handler();
-            printf("      w=%-2d row=%-2d -> %s%s\n", w, w, hname[h < 7 ? h : 0],
-                   h == 0 ? "   <== KEINE Reaktion" : "");
+            printf("      id=%-2d -> %s%s\n", w, hname[h < 7 ? h : 0],
+                   h == 0 ? "   <== NULL" : "");
             if (h == 0) null_rows++;
             if (w >= 1 && w <= 4 && h != 1) shipped_ok = 0;
         }
         CHECK(shipped_ok,
-              "die ausgelieferten Nahwaffen/Pistolen 1..4 muessen im Haupt-Handler 0x80105438 "
+              "die Messer-/Pistolen-Ids 1..4 muessen im Haupt-Handler 0x80105438 "
               "landen (Tabelle @0x8010C940 Zeilen 1-4)");
-        printf("  [zeilen] %d von 22 Waffen-Ids fallen auf eine NULL-Zelle (OPEN: der "
-               "Zeilen-Erzeuger (spieler+0x10E)&0xFFF @0x80047EB4-C0 hat im Port keinen "
-               "Zwilling)\n", null_rows);
+        CHECK(null_rows == 7,
+              "erwartet werden GENAU 7 NULL-Zellen (Ids 0 = existiert nicht, 5/6/17 = 900-Schaden-"
+              "Waffen und damit unerreichbar, 19/20/21 = ausserhalb der 19 RE2-Attacken-Ids), "
+              "gemessen %d", null_rows);
+        printf("  [zeilen] %d NULL-Zellen — der Port stempelt keine davon mehr "
+               "(re15_re2z_row_for_weapon, Zensus in test_re2_weapon_rows)\n", null_rows);
     }
 
     free(buf);
