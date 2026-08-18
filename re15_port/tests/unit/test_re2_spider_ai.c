@@ -52,24 +52,63 @@ int main(void)
 {
     re15_re2spider_audio_hook(se_cap, se_bank_cap, 0);
 
-    /* ---- 1. Besitz-Gate: nur BODEN-Spawns (INIT-Sprungtabelle @0x80100004, Index +0x10E&0xF).
-     *      Index 0/1 -> +0x222 = 0 (@0x80100460); 2/3 -> 1 (@0x80100480); 4..11 -> 3
-     *      (@0x801004C0). Welle E besitzt nur Modus 0. */
+    /* ---- 1. Besitz-Gate (WELLE F: ausnahmslos) --------------------------------------------
+     * Die INIT-Sprungtabelle @0x80100004 waehlt ueber (+0x10E & 0xF) den Oberflaechen-Modus:
+     * 0/1 -> +0x222 = 0 (@0x80100460), 2/3 -> 1 (@0x80100480), 4..11 -> 3 (@0x801004C0),
+     * >= 12 klemmt `sltiu v0,v1,0xc` @0x8010043C weg (bleibt 0). Mit Modus 1/2/3 portiert
+     * gehoert jeder 0x25 UND jeder 0x26 dem RE2-Brain. */
     fresh(0, 0, 0);
-    CHECK(re15_re2spider_owns(SP) == 1, "owns(grid 0) muss 1 sein (INIT-Tabelle @0x80100460)");
-    SP->grid_id = 1;  CHECK(re15_re2spider_owns(SP) == 1, "owns(grid 1) == 1 (@0x8010058C, kein Write)");
-    /* NEGATIV: Decke/Wand duerfen NICHT uebernommen werden. */
-    SP->grid_id = 2;  CHECK(re15_re2spider_owns(SP) == 0, "NEGATIV owns(grid 2) muss 0 sein (Decke @0x80100480)");
-    SP->grid_id = 3;  CHECK(re15_re2spider_owns(SP) == 0, "NEGATIV owns(grid 3) muss 0 sein (Decke @0x80100480)");
-    SP->grid_id = 7;  CHECK(re15_re2spider_owns(SP) == 0, "NEGATIV owns(grid 7) muss 0 sein (Wand @0x801004C0)");
-    SP->grid_id = 11; CHECK(re15_re2spider_owns(SP) == 0, "NEGATIV owns(grid 11) muss 0 sein (Wand @0x801004C0)");
-    /* NEGATIV: die BABY-Spinne (0x26) ist in Welle E bewusst NICHT im RE2-Brain — das
-     * Modul EMS26.BIN hat eine eigene Zustandstabelle @0x80101084 und wuerde auf den
-     * Adult-Tabellen @0x80106420 falsch laufen. */
+    for (int g = 0; g < 16; g++) {
+        SP->grid_id = (uint8_t)g;
+        CHECK(re15_re2spider_owns(SP) == 1, "owns(grid %d) muss 1 sein (WELLE F, Tabelle @0x80100004)", g);
+    }
     SP->grid_id = 0; SP->type = 0x26;
-    CHECK(re15_re2spider_owns(SP) == 0, "NEGATIV: Baby 0x26 darf NICHT vom Adult-Brain uebernommen werden");
-    CHECK(re15_re2_owns_type(0x26) == 0, "NEGATIV: 0x26 darf nicht im RE2-Asset-Ownership-Set sein");
+    CHECK(re15_re2spider_owns(SP) == 1, "owns(Baby 0x26) == 1 (EMS26.BIN-Brain @0x8010001C)");
+    CHECK(re15_re2_owns_type(0x26) == 1, "0x26 muss im RE2-Asset-Ownership-Set sein (Modell+Brain)");
+    /* NEGATIV: fremde Typen bleiben aussen vor. */
+    SP->type = 0x27; CHECK(re15_re2spider_owns(SP) == 0, "NEGATIV: 0x27 (Gorilla) gehoert nicht der Spinne");
+    SP->type = 0x20; CHECK(re15_re2spider_owns(SP) == 0, "NEGATIV: 0x20 (Hund) gehoert nicht der Spinne");
+    CHECK(re15_re2spider_owns(0) == 0, "NEGATIV: NULL -> 0");
     SP->type = 0x25;
+
+    /* ---- 1b. WELLE F: die drei Oberflaechen-Modi laufen jetzt im Brain --------------------
+     * INIT-Tabelle: grid 2/3 -> +0x222 = 1 (@0x80100480) mit Roll +0x78 = 2048 (@0x8010048C)
+     * und +0x22C = Y + 1250 (@0x801004A4-B0); grid 4..11 -> +0x222 = 3 (@0x801004C0) mit
+     * Quadrant (+0x10E-4)>>1 (@0x801004CC-DC) und Yaw = Quadrant<<10 (@0x801004E0). */
+    {   fresh(0, 0, 2); SP->y = -1000; tick();
+        CHECK(SP->re2s_mode222 == 1, "grid 2 -> +0x222 = 1 (DECKE) @0x80100480 (ist %u)", SP->re2s_mode222);
+        CHECK(SP->rot_z == 2048, "grid 2 -> +0x78 = 2048 @0x8010048C (ist %d)", (int)SP->rot_z);
+        CHECK(SP->re2s_y22c == -1000 + 1250, "grid 2 -> +0x22C = Y+1250 @0x801004A4-B0 (ist %d)",
+              (int)SP->re2s_y22c);
+        CHECK(SP->re2s_yaw21a == 2048, "grid 2 -> +0x21A = 2048 @0x80100488"); }
+    {   fresh(0, 0, 7); tick();
+        CHECK(SP->re2s_mode222 == 3, "grid 7 -> +0x222 = 3 (WAND) @0x801004C0 (ist %u)", SP->re2s_mode222);
+        CHECK(SP->re2s_q230 == ((7 - 4) >> 1), "grid 7 -> +0x230 = (7-4)>>1 = 1 @0x801004CC-DC (ist %u)",
+              SP->re2s_q230);
+        CHECK(SP->rot_y == (int16_t)(1 << 10), "grid 7 -> +0x76 = Quadrant<<10 @0x801004E0 (ist %d)",
+              (int)SP->rot_y); }
+    /* NEGATIV: Boden-Spawn darf KEINEN dieser Werte tragen. */
+    {   fresh(0, 0, 0); tick();
+        CHECK(SP->re2s_mode222 == 0 && SP->rot_z == 0 && SP->re2s_q230 == 0,
+              "NEGATIV: grid 0 bleibt Boden (@0x80100460), kein Roll/Quadrant"); }
+
+    /* ---- 1c. WAND-Substate 0 @0x80102B7C: FUN_80101D04 + `+0x5 = 2` (@0x80102B90-98) ------ */
+    {   fresh(0, 0, 7); tick();               /* INIT -> +0x222 = 3 */
+        SP->sub_state_1 = 0; SP->sub_state_2 = 0; SP->sub_state_3 = 0;
+        tick();
+        CHECK(SP->sub_state_1 == 2, "WAND-Sub0 -> +0x5 = 2 @0x80102B94 (ist %u)", SP->sub_state_1);
+        CHECK(SP->re2s_gs225 == 1, "FUN_80101D04 setzt +0x225 = 1 @0x80101D8C (ist %u)", SP->re2s_gs225);
+        CHECK(SP->re2s_yaw226 == 0, "FUN_80101D04 setzt +0x226 = 0 @0x80101D9C");
+        /* +0x230 = 1 (ungerade) -> +0x74 = +0x76, +0x78 = 0 (@0x80101D24-30) */
+        CHECK(SP->rot_x == SP->rot_y && SP->rot_z == 0,
+              "FUN_80101D04 (+0x230 ungerade): +0x74 = +0x76, +0x78 = 0 @0x80101D24-30"); }
+    /* NEGATIV: bei GERADEM Quadranten dreht es genau andersherum (@0x80101D34-3C). */
+    {   fresh(0, 0, 4); tick();               /* (4-4)>>1 = 0 -> gerade */
+        SP->sub_state_1 = 0; SP->sub_state_2 = 0; SP->sub_state_3 = 0;
+        tick();
+        CHECK(SP->rot_x == 0 && SP->rot_z == 1024,
+              "NEGATIV/Gegenprobe (+0x230 gerade): +0x74 = 0, +0x78 = 1024 @0x80101D34-3C"); }
+    fresh(0, 0, 0);
 
     /* ---- 2. Ownership-Set + ENEMSE-Bank ---------------------------------------------------- */
     CHECK(re15_re2_owns_type(0x25) == 1, "0x25 muss im RE2-Ownership-Set sein (Asset-Loader)");
@@ -237,7 +276,19 @@ int main(void)
         CHECK(SP->state == 7, "DEATH muss auf CORPSE 7 gehen @0x80103E98-9C (ist %u)", SP->state);
         CHECK(SP->hp == 1, "CORPSE-Wiederbelebung HP = 1 @0x80103EB0 (ist %d)", (int)SP->hp);
         CHECK(SP->re2s_done224 == 1, "+0x224 = 1 @0x80103EB8");
-        CHECK(SP->re2s_c23a == -1, "+0x23A = -1 @0x80103E84"); }
+        /* WELLE-F-FIX: +0x23A = -1 (@0x80103E84) liegt im Original INNERHALB des Wasser-Zweigs
+         * `+0x10C != 0` (@0x80103E3C). +0x10C ist im Port immer 0 (FUN_800527B4 hat keinen
+         * Zwilling) -> der Zweig laeuft NICHT. Welle E hat ihn unbedingt ausgefuehrt. */
+        CHECK(SP->re2s_c23a == 0,
+              "+0x23A bleibt 0: @0x80103E84 liegt im Wasser-Zweig @0x80103E3C (ist %d)",
+              (int)SP->re2s_c23a); }
+    /* Gegenprobe: mit gesetztem +0x10C feuert der Wasser-Zweig genau wie im Original. */
+    {   fresh(2000, 0, 0); tick();
+        SP->state = 3; SP->sub_state_1 = 1; SP->sub_state_2 = 0; SP->re2s_water10c = -500;
+        int guard = 0; while (guard++ < 60 && SP->state == 3) tick();
+        CHECK(SP->re2s_c23a == -1, "Wasser-Zweig: +0x23A = -1 @0x80103E84 (ist %d)", (int)SP->re2s_c23a);
+        CHECK(SP->re2s_sink23e == 3 && SP->re2s_sink23f == 1,
+              "Wasser-Zweig: +0x23E = 3 / +0x23F = 1 @0x80103E8C-94"); }
     /* NEGATIV: mit +0x239 != 0 darf es KEINE Wiederbelebung geben (@0x80103EA0-A8). */
     {   fresh(2000, 0, 0); tick();
         SP->state = 3; SP->sub_state_1 = 1; SP->sub_state_2 = 0; SP->re2s_dead239 = 1; SP->hp = 0;
@@ -298,6 +349,234 @@ int main(void)
         re15_enemy_ai_run_all(1);
         CHECK(SP->re2s_mode222 == 0 && SP->re2s_yaw21a == 0 && SP->re2s_f106 == 0,
               "NEGATIV: RE1.5-Flavor darf KEINE RE2-Spinnenfelder schreiben");
+        re15_ai_flavor_set(RE15_AI_FLAVOR_RE2); }
+
+
+    /* ================= WELLE F ============================================================= */
+
+    /* ---- F1. ZEILEN-UEBERSETZUNG: +0x5 (RE1.5-Waffen-Id) -> RE2-Zeile ---------------------
+     * Die Karte ist waffen-identisch zu re2z_row_from_weapon (enemy_ai_re2_zombie.c, dort mit
+     * Item-Tabelle @0x800A9E1C + PLW-Gegenprobe hergeleitet). Geprueft wird die WIRKUNG: die
+     * Zeile landet in +0x23C (@0x80102C94-AC) und waehlt den Handler aus @0x80106518. */
+    {   struct { uint8_t w, row; } map[] = {
+            { 0, 1}, { 1, 1}, { 2, 1}, { 3, 3}, { 4, 2}, { 5, 4}, { 6, 4}, { 7, 5},
+            { 8, 7}, { 9, 9}, {10,11}, {11,10}, {12,15}, {13, 8}, {14,16}, {15, 9},
+            {16,11}, {17,10}, {18,17}, {19,18}, {20,13}, {21, 1} };
+        for (unsigned i = 0; i < sizeof map / sizeof map[0]; i++) {
+            fresh(2000, 0, 0); tick();
+            SP->state = 2; SP->sub_state_1 = map[i].w; SP->sub_state_2 = 0;
+            tick();
+            CHECK(SP->re2s_row23c == map[i].row,
+                  "Zeilen-Karte w%u -> RE2-Zeile %u (+0x23C @0x80102CAC), ist %u",
+                  map[i].w, map[i].row, SP->re2s_row23c);
+        }
+        /* NEGATIV/Klemme: ausserhalb 0..21 -> Zeile 1 (PORT-SICHERUNG, im Original unmoeglich). */
+        fresh(2000, 0, 0); tick();
+        SP->state = 2; SP->sub_state_1 = 200; SP->sub_state_2 = 0; tick();
+        CHECK(SP->re2s_row23c == 1, "NEGATIV: Zeile ausserhalb 0..21 klemmt auf 1 (ist %u)",
+              SP->re2s_row23c); }
+
+    /* ---- F2. HURT-Sonderzeile @0x80102FDC (Modus 0 @0x80103018) — NIEDERSCHLAG -------------
+     * w7 (Magnum) -> Zeile 5. P0: Clip-Wort 0x00030001 (@0x80103088) + FUN_80105BF0 (Bein).
+     * P2: Zustandswort 0x901 (@0x801030B4) — NICHT die Rand-Tabelle der generischen Zeile. */
+    {   fresh(2000, 0, 0); tick();
+        SP->state = 2; SP->sub_state_1 = 7; SP->sub_state_2 = 0;
+        uint8_t legs0 = SP->re2s_legn221;
+        tick();
+        CHECK(SP->re2s_row23c == 5, "w7 -> Zeile 5 (Sonderzeile @0x80102FDC)");
+        CHECK(SP->motion == 1, "Sonderzeile P0: Clip 1 @0x80103088 (ist %d)", (int)SP->motion);
+        CHECK(SP->re2s_legn221 <= legs0, "FUN_80105BF0 darf Beine nur abziehen @0x80105C74");
+        int guard = 0; while (guard++ < 40 && SP->state == 2) tick();
+        CHECK(SP->state == 1 && SP->sub_state_1 == 9,
+              "Sonderzeile P2: Zustandswort 0x901 @0x801030B4 (ist %u/%u)",
+              SP->state, SP->sub_state_1); }
+
+    /* ---- F3. FUN_80105BF0: Bein-Budget +0x221 (INIT 8 @0x801003B4), Gate `< 3` @0x80105C20 -- */
+    {   fresh(2000, 0, 0); tick();
+        CHECK(SP->re2s_legn221 == 8, "INIT: +0x221 = 8 @0x80100374/@0x801003B4 (ist %u)",
+              SP->re2s_legn221);
+        int guard = 0;
+        while (guard++ < 400 && SP->re2s_legn221 > 2) {
+            SP->state = 2; SP->sub_state_1 = 7; SP->sub_state_2 = 0; tick();
+            int g2 = 0; while (g2++ < 40 && SP->state == 2) tick();
+        }
+        CHECK(SP->re2s_legn221 >= 2,
+              "NEGATIV: +0x221 darf nie unter 2 fallen (Gate `< 3` @0x80105C20), ist %u",
+              SP->re2s_legn221); }
+
+    /* ---- F4. HURT-Zeile 11 @0x801039AC: Bein abschiessen, danach GENERISCHE Zeile ---------
+     * w10 -> Zeile 11. Der Handler setzt +0x5 = 2 (@0x80103AE0) und faellt in @0x80102D18. */
+    {   fresh(2000, 0, 0); tick();
+        SP->state = 2; SP->sub_state_1 = 10; SP->sub_state_2 = 0;
+        uint8_t legs0 = SP->re2s_legn221;
+        tick();
+        CHECK(SP->re2s_row23c == 11, "w10 -> Zeile 11 @0x801039AC (ist %u)", SP->re2s_row23c);
+        CHECK(SP->sub_state_1 == 2, "Zeile 11 setzt +0x5 = 2 @0x80103AE0 (ist %u)", SP->sub_state_1);
+        CHECK(SP->re2s_legn221 == (uint8_t)(legs0 - 1) || SP->re2s_legs220 != 0,
+              "Zeile 11: +0x221-- @0x80103A3C bzw. Bein schon weg"); }
+
+    /* ---- F5. DEATH-Sonderzeile @0x801044D0 (Modus 0 @0x8010452C) -> BABY-SPINNEN -----------
+     * w7 -> Zeile 5. P0: +0x23A = 1 (@0x80104574), Clip-Wort 0x0007000C (@0x80104578),
+     * FUN_80105D38(self, 0x2002, (rand&3)+6) (@0x80104590-A4) = 6..9 Kinder vom Typ 0x26. */
+    {   fresh(2000, 0, 0); tick();
+        SP->state = 3; SP->sub_state_1 = 7; SP->sub_state_2 = 0;
+        tick();
+        CHECK(SP->re2s_row23c == 5, "DEATH w7 -> Zeile 5 (@0x801044D0)");
+        CHECK(SP->re2s_c23a == 1, "DEATH-Sonderzeile P0: +0x23A = 1 @0x80104574 (ist %d)",
+              (int)SP->re2s_c23a);
+        CHECK(SP->motion == 12, "DEATH-Sonderzeile P0: Clip 12 @0x80104578 (ist %d)", (int)SP->motion);
+        int babies = 0;
+        for (int i = 0; i < RE15_ACTOR_MAX; i++)
+            if (g_actors[i].active && g_actors[i].type == 0x26) babies++;
+        CHECK(babies >= 6 && babies <= 9,
+              "DEATH-Sonderzeile spawnt 6..9 Babys (a2 = (rand&3)+6 @0x801045A8), sind %d", babies);
+        /* Das Spawn-Wort ist 0x2002 (@0x8010459C) -> Variante 2 -> Start-Substate 1 (BODEN,
+         * Byte-Tabelle @0x801010A4). */
+        for (int i = 0; i < RE15_ACTOR_MAX; i++)
+            if (g_actors[i].active && g_actors[i].type == 0x26) {
+                CHECK(g_actors[i].re2z_f10e == 0x2002,
+                      "Kind +0x10E = 0x2002 @0x8010459C/@0x80105E0C (ist 0x%04X)",
+                      g_actors[i].re2z_f10e);
+                break;
+            } }
+
+    /* ---- F6. Der SPAWN-DECKEL: 17 lebende 0x26 ausser self (`sltiu 0x12` @0x80105DB0) ------ */
+    {   fresh(2000, 0, 0); tick();
+        for (int n = 0; n < 12; n++) {
+            SP->state = 3; SP->sub_state_1 = 7; SP->sub_state_2 = 0; SP->re2s_done224 = 0;
+            tick();
+        }
+        int babies = 0;
+        for (int i = 0; i < RE15_ACTOR_MAX; i++)
+            if (g_actors[i].active && g_actors[i].type == 0x26) babies++;
+        CHECK(babies <= 17, "NEGATIV: nie mehr als 17 lebende 0x26 @0x80105DB0-C0 (sind %d)", babies); }
+
+    /* ---- F7. Zeile 14 vetot den Spawn (@0x80105D88) und das Bein-Abtrennen (@0x80105C04) --- */
+    {   fresh(2000, 0, 0); tick();
+        /* Zeile 14 ist im Port ueber die Waffen-Karte NICHT erreichbar (RE2-Id 14 = Spark Shot).
+         * Deshalb direkt gesetzt UND +0x6 != 0, damit re2s_row_translate den Wert nicht als
+         * RE1.5-Waffen-Id umdeutet (die Uebersetzung laeuft nur auf dem frischen Treffer). */
+        SP->state = 3; SP->sub_state_1 = 14; SP->sub_state_2 = 1;
+        SP->re2s_row23c = 14;
+        SP->re2s_done224 = 0;
+        tick();
+        int babies = 0;
+        for (int i = 0; i < RE15_ACTOR_MAX; i++)
+            if (g_actors[i].active && g_actors[i].type == 0x26) babies++;
+        CHECK(babies == 0, "NEGATIV: +0x23C == 14 verbietet JEDEN Spawn @0x80105D84-88 (sind %d)",
+              babies);
+        /* 30 @0x80104C98, danach zieht der FX-Emitter FUN_80106140 im Root-Tail (@0x80100188,
+         * Dec @0x80106164-68) noch im SELBEN Frame eins ab -> 29. */
+        CHECK(SP->re2s_fx23b == 29, "Zeile 14: +0x23B = 30 @0x80104C98 minus 1 Root-Tick "
+              "@0x80106164 (ist %u)", SP->re2s_fx23b); }
+
+    /* ---- F8. Generischer DEATH-Abschluss @0x80104440: 1..4 Babys ---------------------------
+     * Die generische Zeile setzt beim ersten Tod HP=1 und +0x224 = 1 (@0x80103EB0/B8); ein
+     * WEITERER Treffer schickt sie erneut in DEATH und damit in den Abschluss-Ausbruch. */
+    {   fresh(2000, 0, 0); tick();
+        SP->state = 3; SP->sub_state_1 = 1; SP->sub_state_2 = 0;
+        int guard = 0; while (guard++ < 60 && SP->state == 3) tick();
+        CHECK(SP->re2s_done224 == 1, "generische Zeile setzt +0x224 = 1 @0x80103EB8");
+        SP->state = 3; SP->sub_state_1 = 1; SP->sub_state_2 = 0;
+        tick();
+        int babies = 0;
+        for (int i = 0; i < RE15_ACTOR_MAX; i++)
+            if (g_actors[i].active && g_actors[i].type == 0x26) babies++;
+        CHECK(babies >= 1 && babies <= 4,
+              "Abschluss-Ausbruch @0x80104478: 1..4 Babys ((rand&3)+1), sind %d", babies);
+        CHECK(SP->motion == 13, "Abschluss-Ausbruch: Clip 13 @0x80104460 (ist %d)", (int)SP->motion); }
+
+    /* ---- F9. BABY-BRAIN (EMS26.BIN) -------------------------------------------------------
+     * INIT @0x801000DC: HP = 1 (@0x801000F8), Clip-Wort 0x000F0000 (@0x80100120),
+     * +0x21E = 120 (@0x80100128), +0x1D3 = 6 (@0x801001B0); Start-Substate aus der Byte-Tabelle
+     * @0x801010A4 = {0,0,1,4,2,2,0,0} nach (+0x10E & 0xFF). */
+    {   re15_actor_init();
+        re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
+        PL = &g_actors[RE15_ACTOR_SLOT_PLAYER]; SP = &g_actors[1];
+        memset(PL, 0, sizeof *PL); memset(SP, 0, sizeof *SP);
+        PL->active = 1; PL->hp = 100; PL->x = 4000;
+        SP->active = 1; SP->type = 0x26; SP->state = 0; SP->re2z_f10e = 0x2002;
+        re15_re2spider_baby_tick(1);
+        CHECK(SP->hp == 1, "Baby-INIT: HP = 1 @0x801000F8 (ist %d)", (int)SP->hp);
+        CHECK(SP->motion == 0 && SP->anim_frac == 15,
+              "Baby-INIT: Clip-Wort 0x000F0000 @0x80100120 (Rate 15; INIT ruft KEIN "
+              "FUN_8002959C, also kein Decay), ist %d/%u", (int)SP->motion, SP->anim_frac);
+        CHECK(SP->re2s_c21e == 120, "Baby-INIT: +0x21E = 120 @0x80100128 (ist %u)", SP->re2s_c21e);
+        CHECK(SP->state == 1 && SP->sub_state_1 == 1,
+              "Baby +0x10E = 0x2002 -> Variante 2 -> Substate 1 (Tabelle @0x801010A4), ist %u/%u",
+              SP->state, SP->sub_state_1);
+        /* NEGATIV: Variante 4 (0x2004) startet in Substate 2 (FALL) und traegt +0x144 = 200. */
+        memset(SP, 0, sizeof *SP);
+        SP->active = 1; SP->type = 0x26; SP->state = 0; SP->re2z_f10e = 0x2004;
+        re15_re2spider_baby_tick(1);
+        CHECK(SP->sub_state_1 == 2, "Baby 0x2004 -> Substate 2 (FALL) @0x801010A4[4] (ist %u)",
+              SP->sub_state_1);
+        CHECK(SP->speed_h == 200, "Baby 0x2004: +0x144 = 200 @0x80100234 (ist %d)", (int)SP->speed_h);
+        /* NEGATIV: Variante 0 ist UNVERWUNDBAR (HP = -1 @0x80100204) und setzt +0x10E |= 0x4000. */
+        memset(SP, 0, sizeof *SP);
+        SP->active = 1; SP->type = 0x26; SP->state = 0; SP->re2z_f10e = 0x0000;
+        re15_re2spider_baby_tick(1);
+        CHECK(SP->hp == -1, "Baby-Variante 0: HP = -1 @0x80100204 (ist %d)", (int)SP->hp);
+        CHECK((SP->re2z_f10e & 0x4000u) != 0, "Baby-Variante 0: +0x10E |= 0x4000 @0x80100214-20"); }
+
+    /* ---- F10. BABY: ZERTRETEN @0x801003D4-448 ---------------------------------------------
+     * Vier Bedingungen: dist < 500 (@0x801003DC), Schrittbits & 6 (@0x801003F4), gleiche
+     * Etage +0x106 (@0x80100410), Spieler-Zustandswort in {0x101,0x201,0x301,0x401}
+     * (@0x80100424-3C). Substate 5 (RENNEN) ist AUSGESCHLOSSEN. */
+    {   re15_actor_init(); re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
+        PL = &g_actors[RE15_ACTOR_SLOT_PLAYER]; SP = &g_actors[1];
+        memset(PL, 0, sizeof *PL); memset(SP, 0, sizeof *SP);
+        PL->active = 1; PL->hp = 100; PL->x = 100; PL->state = 1; PL->sub_state_1 = 1;
+        PL->motion = 105;                                  /* WALK -> 0x800CFBF6 |= 2 */
+        SP->active = 1; SP->type = 0x26; SP->state = 1; SP->sub_state_1 = 1;
+        SP->re2z_f10e = 0x2002;
+        re15_re2spider_baby_tick(1);
+        CHECK(SP->state == 3, "Baby zertreten -> Zustand 3 @0x80100448 (ist %u)", SP->state);
+        /* NEGATIV a: RENNEN (Spieler-Substate 5) darf NICHT zertreten. */
+        memset(SP, 0, sizeof *SP);
+        SP->active = 1; SP->type = 0x26; SP->state = 1; SP->sub_state_1 = 1; SP->re2z_f10e = 0x2002;
+        PL->sub_state_1 = 5; PL->motion = 100;
+        re15_re2spider_baby_tick(1);
+        CHECK(SP->state != 3, "NEGATIV: Spieler-Substate 5 (Rennen) zertritt NICHT @0x80100424-3C");
+        /* NEGATIV b: ohne Schrittpuls (Stillstand) kein Zertreten. */
+        memset(SP, 0, sizeof *SP);
+        SP->active = 1; SP->type = 0x26; SP->state = 1; SP->sub_state_1 = 1; SP->re2z_f10e = 0x2002;
+        PL->sub_state_1 = 1; PL->motion = 0;
+        re15_re2spider_baby_tick(1);
+        CHECK(SP->state != 3, "NEGATIV: kein Schrittpuls (0x800CFBF6 & 6 == 0) -> kein Zertreten");
+        /* NEGATIV c: falsche Etage. */
+        memset(SP, 0, sizeof *SP);
+        SP->active = 1; SP->type = 0x26; SP->state = 1; SP->sub_state_1 = 1; SP->re2z_f10e = 0x2002;
+        SP->y = -5400; SP->re2s_f106 = 3;   /* +0x106 wird erst im Root-TAIL @0x80100080-B0
+                                             * geschrieben -> hier der Wert des Vorframes */
+        PL->motion = 105;
+        re15_re2spider_baby_tick(1);
+        CHECK(SP->state != 3, "NEGATIV: andere Etage (+0x106) -> kein Zertreten @0x80100410"); }
+
+    /* ---- F11. BABY-Tod @0x80100BFC: erster Tick = Platscher, zweiter = Despawn ------------- */
+    {   re15_actor_init(); re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
+        PL = &g_actors[RE15_ACTOR_SLOT_PLAYER]; SP = &g_actors[1];
+        memset(PL, 0, sizeof *PL); memset(SP, 0, sizeof *SP);
+        PL->active = 1; PL->hp = 100;
+        SP->active = 1; SP->type = 0x26; SP->state = 3; SP->re2z_f10e = 0x2002;
+        se_n = 0;
+        re15_re2spider_baby_tick(1);
+        CHECK(SP->active == 1 && SP->sub_state_2 == 1,
+              "Baby-Tod: erster Tick setzt +0x6 = 1 @0x80100CA4, kein Despawn");
+        CHECK(se_seen(7), "Baby-Tod: SE 7 @0x80100CF8");
+        re15_re2spider_baby_tick(1);
+        CHECK(SP->active == 0, "Baby-Tod: zweiter Tick despawnt (FUN_8001B250 @0x80100D24)"); }
+
+    /* ---- F12. NEGATIV-Gesamttest fuer das Baby: RE1.5-Flavor unveraendert ------------------ */
+    {   re15_actor_init(); re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
+        PL = &g_actors[RE15_ACTOR_SLOT_PLAYER]; SP = &g_actors[1];
+        memset(PL, 0, sizeof *PL); memset(SP, 0, sizeof *SP);
+        PL->active = 1; PL->hp = 100; PL->x = 100; PL->state = 1; PL->sub_state_1 = 1;
+        PL->motion = 105;
+        SP->active = 1; SP->type = 0x26; SP->state = 1; SP->sub_state_1 = 1;
+        re15_enemy_ai_run_all(1);
+        CHECK(SP->state != 3,
+              "NEGATIV: unter RE1.5-Flavor darf das RE2-Zertret-Gate NICHT feuern");
         re15_ai_flavor_set(RE15_AI_FLAVOR_RE2); }
 
     printf(fails ? "test_re2_spider_ai: %d FAIL\n" : "test_re2_spider_ai: OK\n", fails);

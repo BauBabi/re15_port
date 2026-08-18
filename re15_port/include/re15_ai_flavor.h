@@ -72,6 +72,7 @@ void re15_re2crow_audio_hook(void (*se_fn)(int se_id, int flag2000), void (*bank
  *          HURT @0x80102C78, DEATH @0x80103C80, State 4 @0x80104CF0, CORPSE @0x80104CF8.
  *   Baby:  Root @0x8010001C, Zustandstabelle @0x80101084 (HURT/State4/CORPSE sind `jr ra`). */
 int  re15_re2spider_tick(int slot);               /* 1 = handled (RE2-Spinnen-Brain besitzt ihn) */
+int  re15_re2spider_baby_tick(int slot);          /* WELLE F: Baby 0x26 (EMS26.BIN @0x8010001C) */
 /* Besitz-Gate: Welle E deckt den BODEN-Modus (+0x222 == 0) end-to-end ab. Decken-/Wand-Spawns
  * (INIT-Sprungtabelle @0x80100004 Index 2..11 -> +0x222 = 1 bzw. 3) bleiben ueber ihre GANZE
  * Lebenszeit auf dem unveraenderten byte-true RE1.5-Brain — kein Flavor-Wechsel mitten im Kampf. */

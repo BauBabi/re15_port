@@ -57,10 +57,12 @@ int re15_re2_owns_type(unsigned type)
 {
     return re15_re2z_owns_type(type) || type == 0x20u
         || type == 0x21u    /* WELLE D: RE2-Kraehe (EMOVL21_S0.BIN, enemy_ai_re2_crow.c)     */
-        || type == 0x25u;   /* WELLE E: RE2-Spinne  (EMS25.BIN,      enemy_ai_re2_spider.c).
-                             * 0x26 (Baby) ist RE'd, aber NICHT portiert -> bewusst NICHT im
-                             * Set: der Asset-Loader wuerde sonst das RE2-Modell unter dem
-                             * RE1.5-Brain laden (Modell/Clip-Ids passen nicht zusammen). */
+        || type == 0x25u    /* WELLE E: RE2-Spinne  (EMS25.BIN,      enemy_ai_re2_spider.c)     */
+        || type == 0x26u;   /* WELLE F: RE2-Baby-Spinne (EMS26.BIN, re15_re2spider_baby_tick).
+                             * Jetzt im Set, weil das Baby-Brain portiert ist — Modell und
+                             * Clip-Ids passen damit wieder zusammen. Erzeugt werden 0x26er im
+                             * Port ausschliesslich vom Laufzeit-Spawner der Adult
+                             * (FUN_80105D38, re2s_spawn_babies). */
 }
 
 /* ---- ENEMSE audio hook ------------------------------------------------------------------ */

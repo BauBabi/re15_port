@@ -24,7 +24,9 @@
 #include <stdint.h>
 #include <stdlib.h>   /* getenv (headless flavor override) */
 #include <stdio.h>    /* RE15_RE2_TRACE */
+#include <string.h>   /* memset (Part-Record-Reset) */
 #include "re15_actor.h"
+#include "re15_math.h"       /* re15_vector_normal — MatrixNormal_0-Zwilling */
 #include "re15_ai_flavor.h"
 #include "re15_skeleton.h"   /* re15_sin_q12 / re15_cos_q12 */
 #include "re15_damage.h"     /* re15_ai_arc_test — the RE1.5 twin of RE2 FUN_80015614 */
@@ -640,9 +642,18 @@ static void re2z_walk_moan(re15_actor_t *e)
 /* RE1.5-mapped hit-FX stand-in (DOCUMENTED): RE2's FX system (FUN_8001bf10, packed group ids
  * like 0x0A001000 @0x80104DE0-F4) is not ported (Lane-I §3: row-format compatibility unproven).
  * The port spawns the RE1.5 room-bank blood the same way the RE1.5 bite/gore code does. */
+/* [PORT-MAPPING] FUN_8001BF10(a0 = gepackte Effekt-Id, a1 = WINKEL, a2 = &Anker-Matrix,
+ * a3 = &Geschwindigkeit|0). Der Port hat keinen ankergebundenen RE2-Emitter; der Stand-in ist
+ * ein RE1.5-Raumbank-Spawn an der Aktorposition. Der WINKEL a1 wird trotzdem 1:1 durchgereicht
+ * (Parameterwort des ESP-Slots), damit der Wert im Port derselbe ist wie im Original. */
+static void re2z_blood_fx_dir(re15_actor_t *e, int16_t yaw)
+{
+    re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x1500, e->x, e->y, e->z, yaw);
+}
+
 static void re2z_blood_fx(re15_actor_t *e)
 {
-    re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x1500, e->x, e->y, e->z, (int16_t)e->rot_y);
+    re2z_blood_fx_dir(e, (int16_t)e->rot_y);
 }
 
 /* FUN_800152C8(self, yaw_off) — applies the +0x144 vector yaw-rotated (self-disasm'd:
@@ -1790,6 +1801,25 @@ static void re2z_gore_fx(re15_actor_t *e, uint32_t packed_id)
  * fuer den Anfangswert — im Original kommt er aus dem Modell-Loader. */
 static void re15_re2z_part_reset(re15_actor_t *e)
 {
+    /* Die Flug-/Wurf-Felder des Records (+0x38..+0xA4) und die eingefrorene Matrix (+0x48):
+     * im Original baut FUN_80028368 den Block komplett neu auf, im Port ist das dieser Reset. */
+    memset(e->re2z_part_v,    0, sizeof e->re2z_part_v);
+    memset(e->re2z_part_rot,  0, sizeof e->re2z_part_rot);
+    memset(e->re2z_part_m,    0, sizeof e->re2z_part_m);
+    memset(e->re2z_part_t,    0, sizeof e->re2z_part_t);
+    memset(e->re2z_part_grav, 0, sizeof e->re2z_part_grav);
+    memset(e->re2z_part_st86, 0, sizeof e->re2z_part_st86);
+    memset(e->re2z_part_yaw98,0, sizeof e->re2z_part_yaw98);
+    memset(e->re2z_part_w9a,  0, sizeof e->re2z_part_w9a);
+    memset(e->re2z_part_w9c,  0, sizeof e->re2z_part_w9c);
+    memset(e->re2z_part_w9e,  0, sizeof e->re2z_part_w9e);
+    memset(e->re2z_part_life, 0, sizeof e->re2z_part_life);
+    memset(e->re2z_part_wa4,  0, sizeof e->re2z_part_wa4);
+    for (int i = 0; i < 16; i++) e->re2z_part_blend[i] = -1;   /* +0x7A: -1 = keine Setz-Blende
+                                                                * (`bltz` @0x80028D2C) */
+    e->re2z_part_seeded  = 0u;
+    e->re2z_part_stepped = 0u;
+    e->re2z_part_frame   = 0u;
     for (int i = 0; i < 16; i++) {
         e->re2z_part_flags[i] = (i < 15) ? 1u : 0u;
         /* Farbwort-Seed: der Modell-Aufbau schreibt in JEDEN Part `+0x70 = 0x808080`
@@ -1864,14 +1894,14 @@ static void re15_re2z_part_reset(re15_actor_t *e)
  *    RE2-Zombie-Brain den Typ besitzt UND der INIT-Seed gelaufen ist. Im RE1.5-Pfad liefert
  *    re15_re2z_gore_resolve() 0 und der Renderer laeuft unveraendert weiter.
  *
- * OFFEN (ehrlich): die Parts mit 0x4A (abgerissener Arm) und 0x1062 (abgesprengtes Bein)
- *    behalten Bit 0 und werden im Original als FREIFLIEGENDE Teile mit eigener Matrix
- *    (Bit 0x40 = lokale Transformation ueberspringen) und eigener Physik (Bit 0x08/0x20,
- *    FUN_80028dac/FUN_80028ad8) gezeichnet. Der Port hat keine Part-Physik — diese Teile
- *    bleiben am Skelett und tragen nur die Blut-Tinte 0x0010104F. Damit fehlt auch der
- *    Kaskaden-Ausloeser (Bit 0 wird nie durch den Aufschlag geloescht); die Kaskade selbst
- *    ist unten trotzdem byte-true implementiert, damit ein spaeterer Physik-Zwilling sie
- *    ohne weitere Aenderung bekommt. */
+ * (C) DAS FREIFLIEGENDE TEIL — seit Welle G verdrahtet. Parts mit 0x4A (Arm) bzw. 0x1062 (Bein)
+ *    behalten Bit 0, zeichnen also weiter, bekommen aber ueber Bit 0x40 eine EIGENE Matrix
+ *    (`andi v0,s3,0x40` @0x80027498) und eine eigene Physik (Bit 0x08 -> FUN_80028DAC
+ *    @0x80027B98, Bit 0x20 -> FUN_80028AD8 @0x800276A0). Beide sind unten byte-true portiert;
+ *    der Einstieg ist re15_re2z_gore_part_matrix(). Damit feuert auch der KASKADEN-AUSLOESER
+ *    echt: FUN_80028AD8 loescht beim zweiten Bodenkontakt Bit 0 (`and v0,v0,-2` @0x80028CA0),
+ *    das Flagwort des Schienbeins bleibt 0x1062 -> `(Eltern & 0x21) == 0x20` -> der Fuss
+ *    verschwindet mit. */
 int re15_re2z_gore_active(const re15_actor_t *e)
 {
     if (!e) return 0;
@@ -1901,6 +1931,210 @@ int re15_re2z_gore_resolve(const re15_actor_t *e, const int8_t *bone_parent, int
         }
         out_draw[i] = 1;
     }
+    return 1;
+}
+
+/* ============================================================================================
+ * DAS FREIFLIEGENDE TEIL — die zwei Part-Physiken (Welle G)
+ * Vollstaendig disassembliert 2026-08-18:
+ *   FUN_80028AD8  0x80028AD8..0x80028DA8   Wurf mit Aufschlag   (Bein, Flagwort 0x1062)
+ *   FUN_80028DAC  0x80028DAC..0x80028EA0   Drift mit Ablauf     (Arm,  Flagwort 0x4A)
+ *   FUN_80028F48  0x80028F48..0x8002910C   die Setz-Blende der Matrix (nur im Bein-Zweig)
+ *   MatrixNormal_0 @0x8008CE30 (OuterProduct0 @0x8008DF78, VectorNormal @0x8008D424)
+ *
+ * ---- WER RUFT SIE, UND MIT WELCHER MATRIX ---------------------------------------------------
+ * Beide haengen im ZEICHNER FUN_80027434, nicht in der KI:
+ *   80027498: andi v0,s3,0x40        ; Flagbit 0x40 = "eigene Matrix"
+ *   8002749c: bne  v0,zero,0x800275e4; -> Eltern-Verkettung UEBERSPRINGEN
+ *   80027694: andi v0,s3,0x20
+ *   800276a0: jal  0x80028ad8        ; (a0 = Record, a1 = Matrix)
+ *   80027b98: jal  0x80028dac        ; nur erreichbar, wenn `param_3 & 0x18` != 0 (sonst
+ *                                    ; return @0x80027... im 0x18==0-Zweig) -> Bit 0x08
+ * Die Matrix IST der Record selbst: der Walk uebergibt `_addiu a3,s2,0x48` @0x80027390 bzw.
+ * fuehrt `addiu s0,s2,72` @0x80027370/@0x800273B0 mit `addiu s0,s0,172` @0x800273F8 im
+ * Gleichtakt zu `addiu s2,s2,172` @0x8002740C. rec+0x48 = MATRIX{ short m[3][3]; long t[3]; },
+ * also m @+0x48..+0x59 und t @+0x5C/+0x60/+0x64 — genau die Offsets, die FUN_80028AD8 ueber
+ * `param_2+20/24/28` und FUN_80028DAC ueber `param_1[0x17]/[0x18]/[0x19]` anfasst.
+ *
+ * ---- [PORT-MAPPING], je einzeln benannt ------------------------------------------------------
+ *  (1) BODEN. `FUN_8004FBA0(rec+0x5C,100,0x2000,1)` @0x80028B74 ist die Raum-Boden-Sonde AN DER
+ *      POSITION DES TEILS. Der Port hat in diesem Modul keine Punkt-Sonde und nimmt die
+ *      Boden-Y des Aktors (e->y) — dieselbe Ersetzung, die der Ragdoll/Rutsch-Zweig mit
+ *      +0x1C2/+0x232 schon macht. Fuer ein Teil, das <= 100 Einheiten weit fliegt, ist das
+ *      dieselbe Ebene; auf einer Treppe waere es eine Abweichung. OFFEN, mit Adresse.
+ *  (2) WAND. `FUN_8004C1BC(rec+0x5C,100,1<<(-(Y/1800)&0x1f),0x2000)` @0x80028CDC prallt das Teil
+ *      an der Raumgeometrie ab (`v>>2`, dann Vorzeichenwechsel @0x80028CEC-D20). Kein
+ *      Port-Zwilling -> der Zweig ist NICHT modelliert. OFFEN, mit Adresse.
+ *  (3) ROTATION. `RotMatrix` @0x8008E1F4 (PsyQ) wird durch den byte-true Port-Builder
+ *      mat3_from_euler (skeleton_common.c, Zwilling von FUN_8001F3BC) ersetzt — dieselbe
+ *      Trig-Tabelle, dieselbe Q12-Kette, die der ganze Port fuer Knochenmatrizen benutzt.
+ *  (4) MatrixNormal_0 @0x8008CE30 ist strukturell nachgebaut (r2 = r0 x r1 @0x8008CE8C,
+ *      r0 = r1 x r2 @0x8008CE9C, dann VectorNormal auf alle drei Zeilen @0x8008CEA8/B4/C0).
+ *      Der Zeilen-Normalisierer ist re15_vector_normal — der bereits vorhandene byte-true
+ *      libgte-VectorNormal-Zwilling (RE1.5-Link-Adresse 0x80066A30, RE2 0x8008D424, dieselbe
+ *      Bibliotheksroutine). Die GTE-interne Rundung des OP-Befehls ist damit nicht bit-exakt
+ *      reproduziert; das ist eine PRAEZISIONS-, keine Mechanismus-Abweichung.
+ *  (5) SKALIERUNG. Der `flags & 0x10`-Zweig @0x80028C54-80 schreibt zusaetzlich +0x8C/+0x90 =
+ *      7000 und +0x8E = 0 — die drei Skalierungs-Halbwoerter, die der Zeichner ueber
+ *      `param_3 & 0x400` / `& 0x2000` in ScaleMatrix schiebt. Der Port hat keine Part-Skalierung;
+ *      der Zweig setzt hier nur die belegten Flag-/Zustandsfelder. OFFEN, mit Adresse.
+ * ========================================================================================== */
+
+/* RotMatrix-Zwilling (mat3_from_euler in skeleton_common.c). */
+extern void re15_skel_euler_matrix_for_test(int ax, int ay, int az, int32_t m[9]);
+
+/* FUN_80028F48 @0x80028F48 + MatrixNormal_0 @0x8008CE30 — die Setz-Blende:
+ *   80028f4c: addiu v1,zero,4096
+ *   80028f50: subu  v1,v1,a3          ; w = 4096 - t   auf die ALTE Matrix
+ *   80028f58: mtc2  v1,IR0 / ... / gpf12 (0x4b98003d)   ; IR = w * M
+ *   80028f80: mtc2  a3,IR0 / ... / gpl12 (0x4ba8003e)   ; IR += t * R
+ * elementweise ueber alle NEUN Kurzwoerter (Bloecke @0x80028F5C-FBC, @0x80028FC4-9030,
+ * @0x80029034-90E4), danach `jal 0x8008ce30` @0x80029108. */
+static void re2z_part_settle(re15_actor_t *e, int i)
+{
+    int32_t R[9];
+    re15_skel_euler_matrix_for_test((int)e->re2z_part_rot[i][0],      /* +0x3E @0x80028D34 */
+                                    (int)e->re2z_part_rot[i][1],      /* +0x40 @0x80028D40 */
+                                    (int)e->re2z_part_rot[i][2], R);  /* +0x42 @0x80028D4C */
+    int32_t t = 4096 - ((int32_t)e->re2z_part_blend[i] << 8);         /* 4096 - c*256
+                                                                       * @0x80028D6C-78 */
+    int32_t w = 4096 - t;                                             /* @0x80028F4C-50 */
+    int16_t *m = e->re2z_part_m[i];
+    for (int k = 0; k < 9; k++)
+        m[k] = (int16_t)((((int32_t)m[k] * w) + (R[k] * t)) >> 12);   /* gpf12 + gpl12 */
+
+    /* MatrixNormal_0 @0x8008CE30 */
+    int32_t r0[3] = { m[0], m[1], m[2] };
+    int32_t r1[3] = { m[3], m[4], m[5] };
+    int32_t r2[3];
+    r2[0] = (r0[1]*r1[2] - r0[2]*r1[1]) >> 12;      /* OuterProduct0(r0,r1,r2) @0x8008CE8C, */
+    r2[1] = (r0[2]*r1[0] - r0[0]*r1[2]) >> 12;      /* GTE OP mit sf=1 (0x4b78000c) */
+    r2[2] = (r0[0]*r1[1] - r0[1]*r1[0]) >> 12;
+    r0[0] = (r1[1]*r2[2] - r1[2]*r2[1]) >> 12;      /* OuterProduct0(r1,r2,r0) @0x8008CE9C */
+    r0[1] = (r1[2]*r2[0] - r1[0]*r2[2]) >> 12;
+    r0[2] = (r1[0]*r2[1] - r1[1]*r2[0]) >> 12;
+    re15_vector_normal(r0[0], r0[1], r0[2], r0);    /* @0x8008CEA8 */
+    re15_vector_normal(r1[0], r1[1], r1[2], r1);    /* @0x8008CEB4 */
+    re15_vector_normal(r2[0], r2[1], r2[2], r2);    /* @0x8008CEC0 */
+    m[0] = (int16_t)r0[0]; m[1] = (int16_t)r0[1]; m[2] = (int16_t)r0[2];  /* @0x8008CED0-E8 */
+    m[3] = (int16_t)r1[0]; m[4] = (int16_t)r1[1]; m[5] = (int16_t)r1[2];  /* @0x8008CEF4-F00 */
+    m[6] = (int16_t)r2[0]; m[7] = (int16_t)r2[1]; m[8] = (int16_t)r2[2];  /* @0x8008CF18-30 */
+
+    e->re2z_part_blend[i] = (int8_t)(e->re2z_part_blend[i] - 1);      /* @0x80028D7C-88 */
+}
+
+/* FUN_80028AD8 — Wurf mit Aufschlag (Flagbit 0x20). */
+static void re2z_part_phys_ad8(re15_actor_t *e, int i)
+{
+    int16_t *v = e->re2z_part_v[i];
+    int32_t *t = e->re2z_part_t[i];
+
+    if (e->re2z_part_st86[i] == 0) {                           /* lh v0,134 @0x80028AF4 */
+        /* RotMatrix((0, +0x38, 0)) @0x80028B10-24, dann ApplyMatrixSV((+0x3C, +0x3A, 0))
+         * mit dem Ergebnis ZURUECK nach +0x38/+0x3A/+0x3C (`addiu a2,s1,56` @0x80028B3C). */
+        int32_t M[9];
+        re15_skel_euler_matrix_for_test(0, (int)v[0], 0, M);
+        int32_t ix = v[2], iy = v[1];                          /* vz bleibt 0 @0x80028B18 */
+        int32_t ox = (M[0]*ix + M[1]*iy) >> 12;
+        int32_t oy = (M[3]*ix + M[4]*iy) >> 12;
+        int32_t oz = (M[6]*ix + M[7]*iy) >> 12;
+        v[0] = (int16_t)ox; v[1] = (int16_t)oy; v[2] = (int16_t)oz;
+        e->re2z_part_st86[i]  = 3;                             /* sh 3,134  @0x80028B48-4C */
+        e->re2z_part_blend[i] = 15;                            /* sb 15,122 @0x80028B50-54 */
+    }
+
+    if (e->re2z_part_st86[i] >= 2) {                           /* slti v0,v0,2 @0x80028B60 */
+        int32_t floor_y = (int32_t)e->y;                       /* [PORT (1)] @0x80028B74 */
+        t[0] += v[0];                                          /* @0x80028B80-8C */
+        v[1]  = (int16_t)(v[1] + e->re2z_part_grav[i]);        /* +0x3A += +0x79 @0x80028B90-A4 */
+        t[1] += v[1];                                          /* @0x80028BAC-B8 */
+        t[2] += v[2];                                          /* @0x80028BBC-CC */
+        if (floor_y < t[1]) {                                  /* slt v1,s0,v1 @0x80028BD8 */
+            e->re2z_part_st86[i] = (int16_t)(e->re2z_part_st86[i] - 1); /* @0x80028BE4-F0 */
+            t[1] = floor_y;                                    /* @0x80028BF4 */
+            v[1] = (int16_t)(((int32_t)(int16_t)(-v[1])) >> 2);/* @0x80028BF8-C10 */
+            v[0] = (int16_t)(((int32_t)v[0]) >> 2);            /* @0x80028BFC-C1C */
+            v[2] = (int16_t)(((int32_t)v[2]) >> 2);            /* @0x80028C14-28 */
+            (void)re2z_rand();                                 /* jal 0x80015FE8 @0x80028C28 */
+            re2z_gore_fx(e, 2000u);                            /* FUN_8001BF10 @0x80028C4C */
+            if (e->re2z_part_flags[i] & 0x10u) {               /* @0x80028C54-60 */
+                e->re2z_part_flags[i] = (uint16_t)(e->re2z_part_flags[i] | 0x2000u); /* @0x80028C64-68 */
+                /* +0x8C/+0x90 = 7000, +0x8E = 0 @0x80028C6C-7C: Skalierung, [PORT (5)] */
+                e->re2z_part_st86[i] = 1;                      /* sh 1,134 @0x80028C80 */
+            }
+            if (e->re2z_part_st86[i] == 1) {                   /* lh 134 / beq 1 @0x80028C84-8C */
+                t[1] = floor_y;                                /* @0x80028C94 */
+                e->re2z_part_flags[i] =                        /* DER KASKADEN-AUSLOESER:
+                                                                * `and v0,v0,-2` @0x80028CA0 */
+                    (uint16_t)(e->re2z_part_flags[i] & (uint16_t)~1u);
+            }
+        }
+        /* [PORT (2)] Wandtest @0x80028CAC-D20 nicht modelliert. */
+    }
+
+    if (e->re2z_part_blend[i] >= 0)                            /* lb 122 / bltz @0x80028D24-2C */
+        re2z_part_settle(e, i);
+}
+
+/* FUN_80028DAC — Drift mit Ablauf (Flagbit 0x08). */
+static void re2z_part_phys_dac(re15_actor_t *e, int i)
+{
+    int32_t *t = e->re2z_part_t[i];
+
+    uint16_t life = e->re2z_part_life[i];                      /* lhu 160 @0x80028DC0 */
+    if ((life & 0x7fffu) < 0x1du)                              /* andi/sltiu @0x80028DC8-CC */
+        e->re2z_part_life[i] = (uint16_t)(life + 1u);          /* sh @0x80028DD4/E0 */
+    else
+        e->re2z_part_flags[i] = 0u;                            /* sw zero,0 @0x80028DDC — das
+                                                                * Teil verschwindet nach 29 Frames */
+
+    e->re2z_part_w9a[i] = (int16_t)(e->re2z_part_w9a[i] + e->re2z_part_w9e[i]); /* @0x80028DF0-E00 */
+    t[1] += (int32_t)e->re2z_part_w9a[i];                                        /* @0x80028E04-14 */
+
+    int32_t M[9];
+    re15_skel_euler_matrix_for_test(0, (int)e->re2z_part_yaw98[i], 0, M);        /* @0x80028DF8-E24 */
+    int16_t sp = (int16_t)(e->re2z_part_w9c[i] + e->re2z_part_wa4[i]);           /* @0x80028E28-38 */
+    if (sp < 0) sp = 0;                                                          /* bgez @0x80028E3C-48 */
+    e->re2z_part_w9c[i] = sp;
+    t[0] += (int32_t)(int16_t)((M[0] * (int32_t)sp) >> 12);                      /* out.vx @0x80028E64-74 */
+    t[2] += (int32_t)(int16_t)((M[6] * (int32_t)sp) >> 12);                      /* out.vz @0x80028E78-88 */
+}
+
+int re15_re2z_gore_part_matrix(re15_actor_t *e, int part, uint32_t frame,
+                               int32_t rot[9], int32_t trans[3])
+{
+    if (!e || !rot || !trans || part < 0 || part >= 16) return 0;
+    if (!re15_re2z_gore_active(e)) return 0;                   /* RE1.5 landet hier NIE */
+    uint16_t fl = e->re2z_part_flags[part];
+    if (!(fl & 0x40u)) return 0;                               /* andi v0,s3,0x40 @0x80027498 */
+    if (!(fl & 0x01u)) return 0;                               /* Bit 0 weg -> der Walk betritt
+                                                                * FUN_80027434 gar nicht erst
+                                                                * (@0x8002737C/@0x800273C4) */
+
+    uint16_t bit = (uint16_t)(1u << part);
+    if (!(e->re2z_part_seeded & bit)) {
+        /* [PORT] Das Original hat die Matrix schon im Record stehen (der Zeichner hat sie im
+         * VORFRAME dort hineingeschrieben). Der Port berechnet die Pose jeden Frame neu und
+         * friert sie hier beim ersten Frame mit Bit 0x40 ein — 1 Frame Unterschied in der
+         * Ausgangspose, danach identisch. */
+        for (int k = 0; k < 9; k++) e->re2z_part_m[part][k] = (int16_t)rot[k];
+        for (int k = 0; k < 3; k++) e->re2z_part_t[part][k] = trans[k];
+        e->re2z_part_seeded = (uint16_t)(e->re2z_part_seeded | bit);
+    }
+
+    if (e->re2z_part_frame != frame) {                         /* neuer Frame -> Schritt-Sperre auf */
+        e->re2z_part_frame   = frame;
+        e->re2z_part_stepped = 0u;
+    }
+    if (!(e->re2z_part_stepped & bit)) {
+        e->re2z_part_stepped = (uint16_t)(e->re2z_part_stepped | bit);
+        if (fl & 0x20u) re2z_part_phys_ad8(e, part);           /* @0x80027694-A0 */
+        /* Der 0x08-Zweig haengt hinter dem `param_3 & 0x18`-Gate; 0x08 impliziert es. */
+        if (fl & 0x08u) re2z_part_phys_dac(e, part);           /* @0x80027B98 */
+    }
+
+    for (int k = 0; k < 9; k++) rot[k]   = (int32_t)e->re2z_part_m[part][k];
+    for (int k = 0; k < 3; k++) trans[k] = e->re2z_part_t[part][k];
     return 1;
 }
 
@@ -2074,6 +2308,17 @@ static void re2z_leg_gore(re15_actor_t *e)
 
     int shin = thigh + 1;                                       /* addiu s0,s0,172 @0x80105370 */
     e->re2z_part_flags[shin] |= 0x1062u;                        /* ori 0x1062 @0x8010537C-80 */
+    /* DIE WURF-FELDER (@0x80105384-C0) — jetzt verdrahtet (Welle G). Sie sind die Eingabe der
+     * Flugphysik FUN_80028AD8; +0x86 = 0 loest deren INIT aus (`lh 134` @0x80028AF4). */
+    e->re2z_part_v   [shin][2] = 10;                            /* +0x3C = 10    @0x80105388-8C */
+    e->re2z_part_v   [shin][1] = -200;                          /* +0x3A = -200  @0x80105390-94 */
+    e->re2z_part_st86[shin]    = 0;                             /* +0x86 = 0     @0x8010539C */
+    e->re2z_part_grav[shin]    = 50;                            /* +0x79 = 50    @0x80105398/A0 */
+    e->re2z_part_rot [shin][0] = 0;                             /* +0x3E = 0     @0x801053A4 */
+    e->re2z_part_v   [shin][0] = (int16_t)(e->rot_y + 2048);    /* +0x38 = +0x76+2048
+                                                                 * @0x80105384/A8-AC */
+    e->re2z_part_rot [shin][2] = 1024;                          /* +0x42 = 1024  @0x801053B4-B8 */
+    e->re2z_part_rot [shin][1] = (int16_t)e->rot_y;             /* +0x40 = +0x76 @0x801053B0/C0 */
     (void)re2z_rand();                                          /* @0x801053BC */
     re2z_gore_fx(e, 7000u);                                     /* @0x801053D0, Schienbein */
 }
@@ -2306,10 +2551,31 @@ static void re2z_hit_main(re15_actor_t *e, re15_actor_t *pl)
          * am Vorzeichen (0/-192/-384/-576 -> 0/+192/+384/+576). Das ist byte-true: der
          * Zombie zuckt beim Ruecken-Treffer nach VORN statt nach hinten.
          * Der Zwilling `addiu s3,zero,2048` @0x8010563C (Default `addu s3,zero,zero`
-         * @0x801055C8) dreht NUR die Richtung des Blut-Emitters (`sll a1,s3,16` /
-         * `sra a1,a1,16` / `subu a1,v0,a1` @0x801056E8-700, a1 = FUN_8001BF10-Winkel);
-         * der Port hat keinen richtungsbehafteten Emitter (re2z_blood_fx) -> OFFEN/no-op. */
+         * @0x801055C8) dreht die Richtung des Blut-Emitters. */
         if (e->re2z_hitdir1d0 & 0x20u) e->re2z_t15a = -1;          /* @0x80105624-38 */
+        /* ---- DER BLUT-EMITTER DES HAUPT-HANDLERS @0x80105640-710 (Welle G) ------------------
+         * Er fehlte im Port komplett — ein normaler Treffer spritzte im RE2-Modus gar nicht.
+         *   80105640: lbu  v1,5(s1)
+         *   80105644: addiu v0,zero,16
+         *   80105648: beq  v1,v0,0x80105714     ; Zeile 16 (Flammenwerfer) -> KEIN Blut
+         *   80105650: lbu  v1,466(s1)           ; +0x1D2
+         *   8010565c-74: v1 % 3                 ; Zonen-Anteil
+         *   80105678: beq  v1,zero,0x801056dc   ; Zone 0 -> Anker Part 1 (+244), v = {0,800,0}
+         *   8010567c: _addiu a0,zero,6096       ; Delay-Slot: BEIDE Zweige nehmen Id 6096
+         *   80105680-d8: sonst Anker Part 0 (+72), v aus Part 8 (+0x2C..) mit x -= 100*+0x15A
+         *                und y += 300
+         *   801056e8: sll  a1,s3,16
+         *   801056fc: sra  a1,a1,16
+         *   80105700: subu a1,v0,a1             ; a1 = +0x76 - s3   (s3 = 2048 bei Ruecken)
+         *   80105708: jal  0x8001bf10
+         * [PORT-MAPPING] Der Stand-in ist positionslos, die beiden Anker-/Geschwindigkeits-
+         * Varianten fallen also zusammen; die Id und der WINKEL sind die des Originals.
+         * KEIN RNG-Wurf in diesem Block — die Wurfzahl bleibt unveraendert. */
+        if (e->sub_state_1 != 16u) {                               /* @0x80105640-48 */
+            int16_t bdir = (int16_t)((int)e->rot_y -
+                                     ((e->re2z_hitdir1d0 & 0x20u) ? 2048 : 0));
+            re2z_blood_fx_dir(e, bdir);                            /* Id 6096 @0x8010567C */
+        }
         break;
     case 1:
         re2z_hit_move(e);                                          /* @0x80105740-90 */
@@ -2731,6 +2997,28 @@ static void re2z_hit_slide(re15_actor_t *e, re15_actor_t *pl)
  *   (@0x801077D8/@0x80107828-38), ein RNG-Wurf -> `+0x4 = 1` bzw. `0x201` (@0x80107834-4C),
  *   `+0x1D3 &= 0x7F` (@0x80107850-5C).
  * ========================================================================================== */
+/* Die Drift-Felder eines abgerissenen ARMS (Flagwort 0x4A). Die drei Vorkommen @0x80107554-74,
+ * @0x801075C4-E4 und @0x80107640-60 sind wortgleich; die Offsets folgen dem Part-Stride 172
+ * (Part 3: 676/672/670/674/680/668 - 516; Part 5: ... - 860; Part 6: ... - 1032).
+ *   +0xA0 = 0    (Lebensdauer)      sh zero,676(v1)  @0x80107554
+ *   +0x9C = 0    (Vortrieb)         sh zero,672(v1)  @0x80107558
+ *   +0x9A = -10  (vy)               sh s3,670(v1)    @0x8010755C   (s3 = -10 @0x80107540)
+ *   +0x9E = 0    (vy-Zuwachs)       sh zero,674(v1)  @0x80107560
+ *   +0xA4 = 0    (Vortriebs-Zuwachs)sh zero,680(v1)  @0x80107564
+ *   +0x98 = +0x76 + 2048 (Kurs)     sh v0,668(v1)    @0x8010756C-74
+ * Der Arm steigt also mit 10 Einheiten je Frame und verschwindet nach 29 Frames
+ * (`sltiu v0,v0,0x1d` @0x80028DCC / `sw zero,0(s0)` @0x80028DDC) — KEIN Vortrieb, keine
+ * Gravitation, keine Kaskade (Flagwort wird 0, nicht 0x20). */
+static void re2z_arm_throw(re15_actor_t *e, int p)
+{
+    e->re2z_part_life [p] = 0;
+    e->re2z_part_w9c  [p] = 0;
+    e->re2z_part_w9a  [p] = -10;
+    e->re2z_part_w9e  [p] = 0;
+    e->re2z_part_wa4  [p] = 0;
+    e->re2z_part_yaw98[p] = (int16_t)(e->rot_y + 2048);
+}
+
 static void re2z_knockdown_gore(re15_actor_t *e)
 {
     uint32_t r = re2z_rand();                                      /* @0x80107514 */
@@ -2739,6 +3027,7 @@ static void re2z_knockdown_gore(re15_actor_t *e)
         /* RECHTER UNTERARM AB, RECHTE HAND WEG (@0x80107534-88) */
         e->re2z_part_flags[3] |= 0x4Au;                            /* ori 0x4A @0x80107544-48 */
         e->re2z_part_tint [3]  = 0x0010104Fu;                      /* sw s1,628 @0x80107568 */
+        re2z_arm_throw(e, 3);                                      /* @0x80107554-74 */
         /* FUN_8001CEFC(5,3,Part 3) @0x80107570 = die am Teil haengenden Effekte abschalten
          * (Port: No-op, der Stand-in kennt keine Anker) */
         re2z_se(2);                                                /* jal 0x8005bd6c @0x80107584 */
@@ -2747,11 +3036,13 @@ static void re2z_knockdown_gore(re15_actor_t *e)
             /* LINKER OBERARM + UNTERARM AB, LINKE HAND WEG (@0x801075A4-7C) */
             e->re2z_part_flags[5] |= 0x4Au;                        /* ori 0x4A @0x801075B4-B8 */
             e->re2z_part_tint [5]  = 0x0010104Fu;                  /* sw s1,972 @0x801075D8 */
+            re2z_arm_throw(e, 5);                                  /* @0x801075C4-E4 */
             re2z_gore_fx(e, 6000u);                                /* @0x801075E0 */
             (void)re2z_rand();                                     /* @0x801075E8 */
             re2z_gore_fx(e, 0x08001000u);                          /* @0x80107600 */
             e->re2z_part_flags[6] |= 0x4Au;                        /* ori 0x4A @0x80107630-34 */
             e->re2z_part_tint [6]  = 0x0010104Fu;                  /* sw s1,1144 @0x80107654 */
+            re2z_arm_throw(e, 6);                                  /* @0x80107640-60 */
             re2z_gore_fx(e, 6000u);                                /* @0x8010765C */
             e->re2z_part_flags[7]  = 0u;                           /* sw zero,1204 @0x8010767C */
         }

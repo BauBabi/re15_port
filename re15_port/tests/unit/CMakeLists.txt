@@ -1351,6 +1351,17 @@ target_compile_definitions(test_re2_gore_render PRIVATE
 add_test(NAME unit_re2_gore_render COMMAND test_re2_gore_render)
 set_tests_properties(unit_re2_gore_render PROPERTIES TIMEOUT 120)
 
+# --- WELLE G: DAS FREIFLIEGENDE TEIL — die zwei Part-Physiken FUN_80028AD8 @0x80028AD8
+#     (Bein, Wurf + Aufschlag + Kaskaden-Ausloeser) und FUN_80028DAC @0x80028DAC (Arm, Drift +
+#     Ablauf), beide ueber Flagbit 0x40 = "eigene Matrix" (`andi v0,s3,0x40` @0x80027498). ---
+add_executable(test_re2_gore_fly test_re2_gore_fly.c)
+target_link_libraries(test_re2_gore_fly PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_gore_fly PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2_gore_fly PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2_gore_fly COMMAND test_re2_gore_fly)
+set_tests_properties(unit_re2_gore_fly PROPERTIES TIMEOUT 120)
+
 # WELLE E — RE2-Spinne (kind 0x25 Adult / 0x26 Baby), enemy_ai_re2_spider.c
 add_executable(test_re2_spider_ai test_re2_spider_ai.c)
 target_link_libraries(test_re2_spider_ai PRIVATE re15_engine re15_test_support)

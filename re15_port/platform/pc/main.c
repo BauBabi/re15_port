@@ -4544,6 +4544,18 @@ re_title:;
                 for (int _pi = 1; _pi < RE15_ACTOR_MAX; _pi++)
                     if (g_actors[_pi].active && g_actors[_pi].type)
                         pc_enemy_load(g_actors[_pi].type);
+                /* WELLE F: die RE2-Adult-Spinne (0x25) erzeugt Baby-Spinnen (0x26) ZUR LAUFZEIT
+                 * (FUN_80105D38, Aufrufstellen @0x8010322C/@0x801033D8/@0x801034DC/@0x80104478/
+                 * @0x801045A4/@0x801046B8/@0x801047D8/@0x80104830). Typ 0x26 steht in KEINEM
+                 * Sce_em_set der 240 ausgelieferten RDTs (eigener Zensus: 0 Records) — die
+                 * Roster-Schleife darueber holt die Bank also nie, und die AI laese im Spawn-Frame
+                 * eine NULL-Bank. pc_enemy_load ist idempotent. */
+                if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2)
+                    for (int _pi = 1; _pi < RE15_ACTOR_MAX; _pi++)
+                        if (g_actors[_pi].active && g_actors[_pi].type == 0x25) {
+                            pc_enemy_load(0x26);
+                            break;
+                        }
                 re15_game_step(&gctx);
             }
             /* PARITY STATE-LOG (RE15_STATE_LOG=path): append per-tick player pose + each live
@@ -6467,6 +6479,18 @@ re_title:;
                         nyawed_trans[1] + npc->y,
                         nyawed_trans[2] + npc->z,
                     };
+                    /* ---- RE2-GORE: DAS FREIFLIEGENDE TEIL --------------------------------
+                     * Traegt der Part Bit 0x40, ueberspringt der Original-Zeichner die
+                     * Eltern-Verkettung und nimmt die Matrix aus dem Part-Record selbst
+                     * (`andi v0,s3,0x40` @0x80027498 / `bne v0,zero,0x800275E4` @0x8002749C);
+                     * die Flugphysik laeuft im selben Zug (`jal 0x80028AD8` @0x800276A0 /
+                     * `jal 0x80028DAC` @0x80027B98) — im Original haengt sie also am ZEICHNEN,
+                     * genau wie hier. Der Aufruf schreibt Rotation UND Translation um; im
+                     * RE1.5-Flavor liefert er immer 0 und laesst beide unberuehrt. */
+                    if (gore_on)
+                        (void)re15_re2z_gore_part_matrix(npc, nbi,
+                                                         (uint32_t)g_engine.frame_count,
+                                                         nyawed_rot, nbone_world_trans);
                     /* CANONICAL per-bone light fold (2026-06-02). */
                     if (npc_lit)
                         re15_light_ctx_rotate_for_bone(&lctx_npc_world, nyawed_rot,

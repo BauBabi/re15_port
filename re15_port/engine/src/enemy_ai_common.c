@@ -6544,12 +6544,19 @@ static void re15_spider_ai_tick(int slot)
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     uint8_t variant  = (uint8_t)(e->grid_id & 0x7f);
 
-    /* WELLE E: die RE2-BABY-Spinne (EMS26.BIN, Root @0x8010001C, Zustandstabelle @0x80101084,
-     * HP = 1 @0x801000F8, Spielerschaden 1 HP `addiu a0,zero,1` + `jal 0x800401d4` @0x80100EAC,
-     * komplette Wasser-/Ertrink-Logik ueber FUN_800527B4) ist vollstaendig RE'd, aber in dieser
-     * Welle NICHT portiert — sie hat eine EIGENE Zustandstabelle und liefe auf den Adult-
-     * Tabellen falsch. Typ 0x26 bleibt deshalb in BEIDEN Flavors auf dem byte-true RE1.5-Brain
-     * (re15_re2spider_owns() liefert dafuer 0). Kein Hook hier. */
+    /* WELLE F: unter dem RE2-Flavor uebernimmt das RE2-BABY-Brain (EMS26.BIN, eigene
+     * Zustandstabelle @0x80101084, Root @0x8010001C) den GANZEN Dispatch — analog zur Adult.
+     * Der RE1.5-Default darunter bleibt byte-identisch. Pause-Gate wie bei allen RE2-Brains
+     * (`lw 0x800CFBDC & 0x20000000` @0x8010002C-38) -> s_ai_paused pur. */
+    if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2spider_owns(e)) {
+        if (!s_ai_paused) {
+            if (e->state == 0 && e->re2z_f10e == 0)
+                e->re2z_f10e = (uint16_t)e->grid_id;   /* +0x10E <- Spawn-Byte, wenn der
+                                                        * Laufzeit-Spawner keines gesetzt hat */
+            re15_re2spider_baby_tick(slot);
+        }
+        return;
+    }
 
     switch (e->state) {
     case 0:   /* INIT 0x801164b0: one-shot -> ACTIVE */

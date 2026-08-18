@@ -209,10 +209,18 @@ typedef struct {
     uint8_t  re2z_self1d3;      /* self+0x1D3 (Set 15 @0x8010276C-70; low-7-Dec im Root @0x80100484-98)     */
     uint8_t  re2z_flag222;      /* +0x222 "schon getroffen"-Marke (Flinch-Arbitrierung @0x80105080-9C)      */
     int8_t   re2z_res223;       /* +0x223 Flinch-Resistenz, signed (Seed 16+(rand&15) @0x80100888-9C)       */
-    uint8_t  re2z_hits1d2;      /* +0x1D2 = zone + 3*bracket, PRO TREFFER GESETZT (fix_1d2_spec:
-                                 * Applier FUN_800470C0 @0x80047310-30/@0x80047564-80 + Hitscan
-                                 * @0x80041A8C-9C; zone 0 tief/1 mitte/2 hoch, bracket = Hitcode>>28).
-                                 * Port-Produzent re15_re2_stamp_1d2 (re15_damage.c; Bracket OPEN=0).
+    uint8_t  re2z_hits1d2;      /* +0x1D2 = zone + 3*bracket, PRO TREFFER GESETZT
+                                 * (`sb v1,466` @0x80041A9C bzw. @0x80047330).
+                                 * BRACKET (2026-08-18 zu Ende disassembliert): im Kontakt-Applier
+                                 * FUN_800410CC der INDEX der getroffenen Angriffs-TEILBOX
+                                 * (`addiu s4,v0,1|2|4` @0x800414A4/@0x800415AC/@0x800416B4 ->
+                                 * sp+72 @0x80041768 -> `andi 0x2`/`0x4` @0x80041834-48); im
+                                 * Projektil-Applier FUN_800470C0 `hitcode>>28` @0x80047114.
+                                 * Bracket 0 = innerste Teilbox = direkter Treffer = der einzige
+                                 * Bracket, bei dem Zeile 1 ueberhaupt Schaden macht
+                                 * (0x800A412C w0 = 0x00000003). Der Port hat den Overlap-Test
+                                 * FUN_80041CE4 und die Volumen-Tabelle 0x800A68E8 nicht — 1/2
+                                 * sind daher nicht erzeugbar. Volle Kette in re15_damage.c.
                                  * Konsumenten: Zombie-Blut %3==0 (=Zone 0), Hunde-Gore /3 (=Bracket)  */
     uint8_t  re2z_walkclip;     /* +0x218 Walk-Clip aus dem Param-Block (@0x80100860-8C; Werte 0/2)         */
     uint8_t  re2z_dir16a;       /* +0x16A Fall-/Varianten-Byte (Knockdown-Seite, @0x8010328C-98)            */
@@ -315,6 +323,46 @@ typedef struct {
      * Der Port hat statt Zeigern Objektindizes (Part i == Bone i == MD1-Mesh i, gepinnt in
      * test_re2_gore_render), also ist der Zwilling `re2z_part_mesh[thigh] = 15`. Seed = i. */
     uint8_t  re2z_part_mesh[16];
+    /* ---- DAS FREIFLIEGENDE TEIL (Welle G) -----------------------------------------------------
+     * Traegt Bit 0x40, dann UEBERSPRINGT der Zeichner die Eltern-Verkettung
+     * (`andi v0,s3,0x40` @0x80027498 / `bne v0,zero,0x800275E4` @0x8002749C in FUN_80027434)
+     * und benutzt die Matrix, die im
+     * Part-Record selbst steht: rec+0x48 ist eine PSX-MATRIX (m[3][3] shorts @+0x48..+0x59,
+     * t[3] longs @+0x5C/+0x60/+0x64). Beleg, dass param_4 == rec+0x48 ist: der Draw-Walk
+     * uebergibt sie so (`_addiu a3,s2,0x48` @0x80027390 bzw. `addiu s0,s2,72` @0x80027370/B0
+     * mit `addiu s0,s0,172` @0x800273F8 im Gleichtakt zu `addiu s2,s2,172`), und die Physik
+     * liest/schreibt sie ueber BEIDE Wege deckungsgleich (FUN_80028AD8 ueber param_2+20/24/28,
+     * FUN_80028DAC ueber param_1[0x17]/[0x18]/[0x19] = rec+0x5C/+0x60/+0x64).
+     * Die restlichen Felder sind die Wurf-/Flug-Zustaende, die die beiden Physiken benutzen:
+     *   +0x38/+0x3A/+0x3C  Wurf-Parameter (yaw, vy, Vortrieb), nach dem INIT die Geschwindigkeit
+     *                      (`ApplyMatrixSV(..., s1+56)` @0x80028B3C-44)
+     *   +0x3E/+0x40/+0x42  Ziel-Rotation der Setz-Blende (`lhu 62/64/66` @0x80028D34-4C)
+     *   +0x79  Gravitation je Frame (`lbu 121` @0x80028B90)
+     *   +0x7A  Blend-Zaehler 15..0 (`sb 15,122` @0x80028B54, `lb 122` @0x80028D24)
+     *   +0x86  Aufschlag-Budget 3..1 (`sh 3,134` @0x80028B4C, `--` @0x80028BEC-F0)
+     *   +0x98/+0x9A/+0x9C/+0x9E/+0xA0/+0xA4  die Felder der ZWEITEN Physik FUN_80028DAC
+     *          (Kurs, vy, Vortrieb, vy-Zuwachs, Lebensdauer, Vortriebs-Zuwachs)
+     * re2z_part_seeded ist ein PORT-Feld: das Original hat die Matrix immer live im Record,
+     * der Port friert sie beim ersten Frame mit Bit 0x40 aus der Skelett-Pose ein. */
+    int16_t  re2z_part_v[16][3];    /* +0x38/+0x3A/+0x3C */
+    int16_t  re2z_part_rot[16][3];  /* +0x3E/+0x40/+0x42 */
+    int16_t  re2z_part_m[16][9];    /* +0x48 MATRIX m[3][3], Q12                                  */
+    int32_t  re2z_part_t[16][3];    /* +0x5C MATRIX t[3], Weltkoordinaten                         */
+    int8_t   re2z_part_grav[16];    /* +0x79 */
+    int8_t   re2z_part_blend[16];   /* +0x7A */
+    int16_t  re2z_part_st86[16];    /* +0x86 */
+    int16_t  re2z_part_yaw98[16];   /* +0x98 */
+    int16_t  re2z_part_w9a[16];     /* +0x9A */
+    int16_t  re2z_part_w9c[16];     /* +0x9C */
+    int16_t  re2z_part_w9e[16];     /* +0x9E */
+    uint16_t re2z_part_life[16];    /* +0xA0 */
+    int16_t  re2z_part_wa4[16];     /* +0xA4 */
+    uint16_t re2z_part_seeded;      /* PORT: Bit i = Matrix von Part i ist eingefroren            */
+    uint16_t re2z_part_stepped;     /* PORT: Bit i = Part i hat in re2z_part_frame schon geschritten */
+    uint32_t re2z_part_frame;       /* PORT: Frame des letzten Physik-Schritts (Ein-Schritt-Sperre,
+                                     * im Original haengt der Schritt am ZEICHNEN:
+                                     * `andi v0,s3,0x20` @0x80027694 -> `jal 0x80028AD8` @0x800276A0,
+                                     * `jal 0x80028DAC` @0x80027B98)                              */
     /* ---- RE2-Flavor WELLE C (enemy_ai_re2_dog.c re15_re2dog_tick): die Cerberus-Arbeitsbytes
      * aus EMD0G_MOD0.BIN (ModB @0x80100000). Geteilt mit dem Zombie werden speed_h(+0x144),
      * re2z_t158(+0x158), re2z_t15a(+0x15A), re2z_dir16a(+0x16A Aggro/Mash, signed gelesen),
@@ -387,6 +435,42 @@ typedef struct {
                                  * Tabelle @0x801000B4, Treiber FUN_80104DE8)                    */
     int32_t  re2s_y22c;         /* +0x22C Referenz-Y der Oberflaeche (Decke Y+1250 @0x801004AC,
                                  * Wand 1250-1800*((+0x10E&0xF0)>>4) @0x8010057C)                */
+    uint8_t  re2s_legs220;      /* +0x220 BITMASKE der abgetrennten Beine (FUN_80105BF0
+                                 * `+0x220 |= 1<<k` @0x80105C64; Test @0x80105C34 /
+                                 * @0x8010376C / @0x801039F8)                                  */
+    uint8_t  re2s_legn221;      /* +0x221 verbleibende Beine, INIT 8 @0x80100374/@0x801003B4;
+                                 * Dec @0x80105C74/@0x80103A3C; Gate `< 3` @0x80105C20 /
+                                 * @0x801039E4                                                 */
+    uint8_t  re2s_fall223;      /* +0x223 "faellt gerade" (1 @0x801031EC / @0x80104764,
+                                 * 0 @0x8010336C)                                              */
+    uint8_t  re2s_sink23e;      /* +0x23E Wasser-Sink-/Schwimm-Zustand 0..3 (FUN_80104F18)     */
+    uint8_t  re2s_sink23f;      /* +0x23F Sink-Freigabe (1 @0x80103E94/@0x80104134/@0x8010463C,
+                                 * 0 @0x80104F48)                                              */
+    int16_t  re2s_sink244;      /* +0x244 Sink-Akkumulator (@0x80104F94/@0x80104FA8)           */
+    int16_t  re2s_water10c;     /* +0x10C WASSER-/BODEN-Y aus FUN_800527B4(X,Z) (HURT-Kopf
+                                 * @0x80102CB0-D0, DEATH-Kopf @0x80103CB8-D8). 0 = "kein
+                                 * Wasser-AOT getroffen". Der Port hat KEINEN Zwilling des
+                                 * sce==7-AOT-Scans -> bleibt 0 (OPEN, aber mit dem
+                                 * Original-Rueckgabewert des Nicht-Treffers).                 */
+    uint16_t re2s_yaw226;       /* +0x226 ANKER-YAW der Oberflaeche. Clear @0x80101D9C
+                                 * (FUN_80101D04), Setzer 2048 @0x8010244C. Gelesen von der
+                                 * Decken-Ausrichtung @0x80101A08/@0x80101A38, dem Faden-Winkel
+                                 * @0x80102360 und FUN_80102B10 @0x80102B14.                    */
+    int32_t  re2s_p228;         /* +0x228 Anker-Parameter (a1 von FUN_801054D0 @0x80101688 /
+                                 * @0x80102BFC). Im Modul EMS25.BIN gibt es KEINEN Schreiber
+                                 * (eigener Store-Scan ueber alle sb/sh/sw mit Offset 552) —
+                                 * der Wert kommt aus der EXE. Port: bleibt 0 (OPEN).           */
+    uint8_t  re2s_next231;      /* +0x231 NAECHSTER Substate nach dem Abseilen (Setzer 2
+                                 * @0x80101EC0, Clear @0x80102930/@0x80102AE4; gelesen
+                                 * @0x80101FBC, @0x801022B4, @0x801022F8)                       */
+    uint8_t  re2s_f236;         /* +0x236 Faden-/Seil-Sichtbarkeit: 1 @0x801016AC / @0x801022F4 /
+                                 * @0x8010245C, 0 @0x80101B80 / @0x80102774. Reines Render-Bit
+                                 * ohne Port-Konsument, wird aber byte-true mitgefuehrt.        */
+    int16_t  re2s_partner240;   /* +0x240 PARTNER-Spinne. Im Modul EMS25.BIN gibt es GENAU EINEN
+                                 * Schreiber, den INIT-Clear `sw zero,576(s2)` @0x8010042C —
+                                 * gesetzt wird der Zeiger ausserhalb des Moduls (EXE). Der Port
+                                 * hat dafuer keinen Erzeuger -> immer -1 (OPEN, kein Ersatz).
+                                 * Port fuehrt einen SLOT-Index statt eines Zeigers.            */
     uint8_t  re2s_q230;         /* +0x230 Wand-Quadrant (+0x10E-4)>>1 @0x801004DC               */
     uint8_t  re2s_c232;         /* +0x232 Byte-Countdown (ACTIVE-Tail-Dec @0x80100618-28)        */
     uint8_t  re2s_snap233[3];   /* +0x233/+0x234/+0x235 = Schnappschuss von +0x5/+0x6/+0x7,
@@ -786,5 +870,21 @@ void re15_actor_apply_root_motion(re15_actor_t *a,
 int re15_re2z_gore_active(const re15_actor_t *e);
 int re15_re2z_gore_resolve(const re15_actor_t *e, const int8_t *bone_parent, int n,
                            uint8_t *out_draw, uint32_t *out_tint, uint8_t *out_mesh);
+
+/* ---- DAS FREIFLIEGENDE TEIL (Welle G) -------------------------------------------------------
+ * re15_re2z_gore_part_matrix() ist der Zwilling des Zweigs, den FUN_80027434 fuer ein Teil mit
+ * Bit 0x40 nimmt:
+ *   80027498: andi v0,s3,0x40
+ *   8002749c: bne  v0,zero,0x800275e4      ; Eltern-Verkettung UEBERSPRINGEN, Matrix steht schon
+ *   80027694: andi v0,s3,0x20
+ *   800276a0: jal  0x80028ad8              ; Wurf-Physik mit Aufschlag (Bein 0x1062)
+ *   80027b98: jal  0x80028dac              ; Drift-Physik mit Lebensdauer (Arm 0x4A)
+ * Rueckgabe 1 = das Teil hat eine EIGENE Matrix; rot[9] (Q12, zeilenweise) und trans[3] werden
+ * dann UEBERSCHRIEBEN. Rueckgabe 0 = normale Skelett-Pose, rot/trans bleiben unberuehrt.
+ * `frame` ist der Frame-Zaehler: der Physikschritt laeuft genau EINMAL je Frame und Aktor,
+ * egal wie oft der Renderer die Funktion aufruft (Schatten-Pass, zweiter Zeichen-Pass).
+ * Im RE1.5-Flavor liefert die Funktion IMMER 0 (dasselbe Dreifach-Gate wie _gore_active). */
+int re15_re2z_gore_part_matrix(re15_actor_t *e, int part, uint32_t frame,
+                               int32_t rot[9], int32_t trans[3]);
 
 #endif /* RE15_ACTOR_H */

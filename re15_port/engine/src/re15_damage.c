@@ -798,9 +798,62 @@ retry_after_latch:
  *     BELEGTE Wert ist deshalb die Basis 1. Die alte Elevation-Naeherung erzeugte ausserdem
  *     systematisch Zone 2 = Spalte 2 — und Spalte 2 ist in 11 von 17 Zeilen der Dispatch-Tabelle
  *     @0x8010C964 NULL (selbst gedumpt), also eine im Original unmoegliche Kombination.
- *     BRACKET bleibt 0 (OPEN): `s6 = hitcode>>28` @0x80047114 bzw. `s1` aus den Bits 2/4 des
- *     Trefferflag-Worts @0x80041834-48 — auch das ist RE2-Waffen-Zustand ohne Port-Produzent.
- *     -> +0x1D2 = 1 + 3*0 = 1.
+ *     BRACKET bleibt 0. ⛔ 2026-08-18 ZU ENDE DISASSEMBLIERT — der Erzeuger ist jetzt bekannt,
+ *     und er belegt, dass 0 der RICHTIGE Wert fuer den Port ist (kein Platzhalter):
+ *
+ *     (i) KONTAKT-/TREFFERBOX-APPLIER FUN_800410CC (JEDE gefuehrte Waffe: der Spieler-Angriff
+ *         FUN_80047C6C ruft ihn @0x80047EF4 mit `a2 = 0x800A68E8 + id*24 + 0x800A6F8C[band]*8`
+ *         @0x80047EB4-F8). Der Bracket ist der INDEX DER GETROFFENEN ANGRIFFS-TEILBOX:
+ *           80041224: addu  s3,a0,v0        ; s3 = Angriffs-Volumen-Record (28 B: 4 Maskenbytes
+ *                                           ;      + DREI Teilboxen bei +4 / +12 / +20)
+ *           80041460: addiu a2,s3,4  / 80041464: jal 0x80041ce4   ; Teilbox 0
+ *           800414a4: addiu s4,v0,1                                ; -> s4 |= 1
+ *           80041568: addiu a2,s3,12 / 8004156c: jal 0x80041ce4   ; Teilbox 1
+ *           800415ac: addiu s4,v0,2                                ; -> s4 |= 2
+ *           80041670: addiu a2,s3,20 / 80041674: jal 0x80041ce4   ; Teilbox 2
+ *           800416b4: addiu s4,v0,4                                ; -> s4 |= 4
+ *           80041750: sltu  v0,v1,t0 ; der NAECHSTE Treffer gewinnt (sp+96 = beste Distanz)
+ *           80041768: sw    s4,72(sp)
+ *           8004182c: lw    t0,72(sp)
+ *           80041834: andi  v0,t0,0x2 / 80041838: sltu s1,zero,v0    ; Teilbox 1 -> Bracket 1
+ *           8004183c: andi  v0,t0,0x4 / 80041848: addiu s1,zero,2    ; Teilbox 2 -> Bracket 2
+ *         (Der ZONEN-Anteil s7 kommt aus derselben Schleife: `srl s7,v1,1` @0x8004149C/
+ *          @0x800415A4/@0x800416AC ueber die Maskentabelle 0x800A6DB4, gegated mit der
+ *          Haltungsklasse des Opfers `s6 = (word0>>26)&7` @0x800413CC-D4; `+0x1D2 = 3*s1 + s7`
+ *          @0x80041A6C/@0x80041A88-9C.)
+ *         Die drei Teilboxen sind KONZENTRISCH: die per-Waffe-Records liegen in Dreiergruppen
+ *         (id 2 z.B. 0x800A6618/0x800A6634/0x800A6650, je 28 B, selbst gedumpt), und die
+ *         Schadens-/Poise-Daten steigen nach innen: Zeile 7 (Schrot) 200/60/40 Schaden,
+ *         Zeile 2 (Pistole) 16/15/14, Poise-Kosten 4/2/0 bzw. 2/1/0. **Zeile 1 (Messer) hat
+ *         `w0 = 0x00000003` = 3/0/0 — nur Bracket 0 macht ueberhaupt Schaden.**
+ *         -> Bracket 0 = INNERSTE Teilbox = der direkte Treffer. Genau das ist der RE1.5-
+ *            Hitscan FUN_80011F50 des Ports: EIN Treffertest auf Zielhoehe, ohne Abstufung.
+ *     WAS DEM PORT FEHLT, um 1 oder 2 zu erzeugen (namentlich): der Overlap-Test FUN_80041CE4
+ *         @0x80041CE4, die Angriffs-Volumen-Tabelle 0x800A68E8 (19 Waffen x 3 Records x 3
+ *         Teilboxen) und die Ziel-Haltungsklasse (word0>>26)&7. Alle drei sind RE2-Datensaetze
+ *         ohne RE1.5-Gegenstueck — es gibt keine Groesse, aus der der Port sie ableiten koennte.
+ *
+ *     (ii) PROJEKTIL-/AoE-APPLIER FUN_800470C0: `srl s6,s5,28` @0x80047114, s5 = a3 = der
+ *         Hitcode; `+0x5 = a3 & 0xFF` = die ZEILE (`sb s5,5(s1)` @0x80047324) und
+ *         `+0x1D2 = 3*s6 + zone` (`sll v1,s6,1` @0x80047310 / `addu v1,v1,s6` @0x80047320 /
+ *         `sb v0,466` @0x80047330). ZENSUS aller 17 `jal FUN_800470C0` in info/re2leon/PSX.EXE
+ *         (selbst gescannt), Hitcode -> (Zeile, Bracket):
+ *           0x0003000E @0x8001E97C-80  -> Zeile 14, 0   0x00030011 @0x8001F7B0/C0 -> 17, 0
+ *           0x00020011 @0x8001F820-2C -> 17, 0          0x0002000A @0x80021058-70/@0x800214F0 -> 10, 0
+ *           0x00020010 @0x800233E8-F4 -> 16, 0          0x00060001 @0x80042F84-88 -> 1, 0
+ *           0x0000000C @0x800467C4    -> 12, 0          (+0x1b)+0x30009 @0x8001EED0-DC -> 9..11, 0
+ *           0x1002_0009 @0x80020D54-58/@0x80020D84-88 -> 9, **1**
+ *           0x1002000B @0x800216E4/F0/@0x800216FC     -> 11, **1**
+ *           0x2002000A @0x80020794-A0                  -> 10, **2**
+ *         D.h. JEDER DIREKTE Projektil-Einschlag hat Bracket 0; 1 und 2 tragen ausschliesslich
+ *         die NACHBRENNER-Entities der Granatwerfer-Runden (Explosiv-Druckwelle, Saeure-Pfuetze,
+ *         Brand-Flaeche). Die Port-Zeilen 9/10/11/12/16/17 sind genau die Waffen mit dem
+ *         NULL-Geometrie-Record 0x800A6350 (@0x800A68E8, selbst gedumpt) — sie treffen NUR ueber
+ *         diesen Applier, und dort ist ihr Bracket byte-true 0. Der Port hat keine
+ *         Nachbrenner-Entities (OPEN: FUN_8001ED9C/FUN_80020758 haben keinen Port-Zwilling).
+ *     -> +0x1D2 = 1 + 3*0 = 1 ist damit fuer JEDEN Pfad, den der Port ueberhaupt abbildet, der
+ *        belegte Wert. Die Spalten 3..8 der Reaktionstabelle @0x8010C940 bleiben unerreichbar,
+ *        weil ihr Eingang (Teilbox 1/2 bzw. AoE-Nachbrenner) im Port nicht existiert.
  *
  * (b) +0x6. Der RE2-Applier schreibt +0x4 als WORT:
  *       8004727C: lh   v1,342(s1)          ; HP
