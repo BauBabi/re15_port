@@ -1288,6 +1288,16 @@ target_compile_definitions(probe_re2_livepath PRIVATE
 add_test(NAME unit_re2_livepath COMMAND probe_re2_livepath)
 set_tests_properties(unit_re2_livepath PROPERTIES TIMEOUT 90)
 
+# --- RE2-Trefferreaktion: Oberkoerper-Zucken (Bone-Matrix-Injektion) + die beiden zuvor
+#     offenen Handler 0x801066FC (Ragdoll) und 0x8010703C (Rutsch). Nutzer-Report 2026-08-18. ---
+add_executable(test_re2_hit_reaction test_re2_hit_reaction.c)
+target_link_libraries(test_re2_hit_reaction PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_hit_reaction PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2_hit_reaction PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2_hit_reaction COMMAND test_re2_hit_reaction)
+set_tests_properties(unit_re2_hit_reaction PROPERTIES TIMEOUT 90)
+
 # --- RE2-Modus: byte-true ENEMSE-Bank-Wahl FUN_80052b38 + Raum-kind-Paar @0x8005728c-b8 ---
 add_executable(test_re2_enemse_bank test_re2_enemse_bank.c)
 target_link_libraries(test_re2_enemse_bank PRIVATE re15_engine re15_test_support)

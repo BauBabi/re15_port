@@ -231,6 +231,33 @@ typedef struct {
     uint8_t  re2z_bitefr;       /* Biss-Frame  aus dem (frame,dmg)-Paar param[0x14+s5*2]   @0x801028A0-AC   */
     uint8_t  re2z_bitedmg;      /* Biss-Schaden aus demselben Paar (Anwendung @0x801028F4-FC)               */
     int16_t  re2z_prev_hp;      /* Port-Feld: HP-Schnappschuss fuer die HURT-Resistenz-Abschreibung        */
+    /* ---- RE2-Trefferreaktion: BONE-MATRIX-INJEKTION (das Oberkoerper-Zucken) -----------------
+     * Die RE2-Trefferhandler drehen NACH dem Anim-Advance (FUN_8002959C) ZWEI Part-Matrizen des
+     * Modell-Pools (+0x198): Part 0 wird NACH-multipliziert, Part 1 VOR-multipliziert mit der
+     * transponierten (= gegenlaeufigen) Matrix. Belege, alle selbst disassembliert:
+     *   Haupt-Handler P1 @0x801057A4-E8 : vec = (0,0, -((+0x158 * (s8)+0x16B) << 3) * +0x15A)
+     *                                     RotMatrix 0x8008E1F4 -> MulMatrix  0x8008D934(part0+24)
+     *                     @0x801057EC-838: vec.z = +((+0x158 * (s8)+0x16B) * (+0x15A << 3))
+     *                                     RotMatrix          -> MulMatrix2 0x8008DA44(part1+24)
+     *   Haupt-Handler P2 @0x801058D4-960: dasselbe OHNE den <<3 (vec.z = -/+(+0x158*+0x16B)*+0x15A)
+     *   Ragdoll 0x801066FC @0x80106A04-3C / @0x80106CA0-D4: vec = (+0x13C,+0x13E,+0x140), zweite
+     *                                     Matrix explizit ueber TransposeMatrix 0x8008E1B4.
+     * Rz(-t) == Rz(t)^T (RotMatrix negiert bei negativem Winkel nur den Sinus, @0x8008E204-2C),
+     * die drei Fundstellen sind also EIN Mechanismus: bone0 *= R(lean); bone1 = R(lean)^T * bone1.
+     * Verrechnung mit der Keyframe-Pose: der Port baut die LOKALE Bone-Matrix aus den Eulern
+     * (mat3_from_euler == RotMatrix, M = Rx*Ry*Rz) und multipliziert die Injektion direkt darauf —
+     * ABSOLUT pro Tick, nicht akkumulierend (das Original baut die Part-Matrizen im Advance
+     * jeden Tick neu, sonst waere die P2-Rampe 16->0 sinnlos). */
+    int16_t  re2_lean[3];       /* +0x13C/+0x13E/+0x140 — der SVECTOR fuer RotMatrix           */
+    uint8_t  re2_lean_on;       /* 1 = Injektion aktiv (wird zu Beginn jedes AI-Ticks geloescht) */
+    /* Wurzel-Bone-Blend des Rutsch-Handlers 0x8010703C: FUN_80028F48(Identitaet @0x8009DB44,
+     * Kopie der Part-0-Matrix, Part 0, w=+0x158) = elementweise ((4096-w)*I + w*M) >> 12
+     * (@0x801072F8 / @0x801073C0). 0 = aus. */
+    int16_t  re2_bone0_wgt;
+    int16_t  re2z_gy232;        /* +0x232 = Kopie von +0x1C2 (Boden-Y) beim Ragdoll-Start
+                                 * (`lhu v0,450; sh v0,562` @0x80106994-A0)                     */
+    uint8_t  re2z_rag231;       /* +0x231 Ragdoll-Untermaschinen-Wahl (@0x80106738/@0x801067B0/
+                                 * @0x8010681C) — 1 -> FUN_80109610, 2 -> FUN_801092C4, beide OPEN */
     /* ---- RE2-Flavor WELLE C (enemy_ai_re2_dog.c re15_re2dog_tick): die Cerberus-Arbeitsbytes
      * aus EMD0G_MOD0.BIN (ModB @0x80100000). Geteilt mit dem Zombie werden speed_h(+0x144),
      * re2z_t158(+0x158), re2z_t15a(+0x15A), re2z_dir16a(+0x16A Aggro/Mash, signed gelesen),

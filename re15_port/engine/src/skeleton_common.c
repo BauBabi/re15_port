@@ -581,6 +581,58 @@ int re15_skel_compute_pose(const re15_emd_skeleton_t *skel,
         int32_t local_rot[9];
         mat3_from_euler((int)ax, (int)ay, (int)az, local_rot);
 
+        /* RE2-TREFFERREAKTION — das Oberkoerper-ZUCKEN (Nutzer-Report "das feine Zucken beim
+         * Treffer fehlt"). Das Original dreht NACH dem Anim-Advance zwei Part-Matrizen des
+         * Modell-Pools (+0x198), Part 0 nach-, Part 1 vor-multipliziert mit der GEGENLAEUFIGEN
+         * Matrix — die drei Fundstellen sind ein und derselbe Mechanismus:
+         *   Haupt-Handler P1  @0x801057A4-E8  RotMatrix 0x8008E1F4 -> MulMatrix  0x8008D934(part0+24)
+         *                     @0x801057EC-838 (Gegenwinkel)        -> MulMatrix2 0x8008DA44(part1+24)
+         *   Haupt-Handler P2  @0x801058D4-960 (dasselbe ohne den <<3-Faktor)
+         *   Ragdoll  0x801066FC @0x80106A04-3C und @0x80106CA0-D4 — dort steht die zweite Matrix
+         *                     EXPLIZIT als TransposeMatrix 0x8008E1B4, was den Gegenwinkel-Trick
+         *                     der beiden anderen Stellen als Transposition ausweist (Rz(-t) ==
+         *                     Rz(t)^T, RotMatrix negiert bei negativem Winkel nur den Sinus
+         *                     @0x8008E204-2C).
+         * MulMatrix  (0x8008D934) schreibt das Ergebnis nach a0 -> part0 = part0 * R.
+         * MulMatrix2 (0x8008DA44) schreibt nach a1                -> part1 = R^T  * part1.
+         * Die Nach-Multiplikation von Part 0 mit Rz(t) ist identisch zu "az += t", weil
+         * mat3_from_euler (= RotMatrix, RE_15_Quellcode_V2/RotMatrix.c) M = Rx*Ry*Rz baut; fuer den
+         * Ragdoll-Vektor mit allen drei Achsen gilt das NICHT, darum steht hier die Matrix-Form,
+         * die alle drei Fundstellen exakt trifft. Part-Index == Bone-Index (dieselbe Zuordnung, die
+         * die RE1.5-Stagger-Beuge oben mit hurt_bend_bone = 7 = Pool+1204 benutzt).
+         * WIRKUNG: bone1s Welt-Rotation kuerzt sich exakt weg (W0*R * R^T*L1 == W0*L1) — es dreht
+         * sichtbar nur Bone 0, und der Rest des Koerpers wird um den mitgedrehten Bind-Offset
+         * versetzt. Genau das ist das feine Zucken.
+         * ABSOLUT pro Tick, nicht akkumulierend: das Original baut die Part-Matrizen im Advance
+         * (FUN_8002959C, unmittelbar VOR jeder dieser Stellen) jeden Tick neu — sonst waere die
+         * P2-Rampe +0x158 16->0 wirkungslos. */
+        if (bact && bact->re2_lean_on && (b == 0 || b == 1)) {
+            int32_t R[9], tmp[9];
+            mat3_from_euler((int)bact->re2_lean[0], (int)bact->re2_lean[1],
+                            (int)bact->re2_lean[2], R);
+            if (b == 0) {
+                mat3_mul(local_rot, R, tmp);                  /* MulMatrix  @0x801057E4 */
+            } else {
+                int32_t Rt[9];
+                for (int r = 0; r < 3; r++)
+                    for (int c = 0; c < 3; c++) Rt[r*3+c] = R[c*3+r];   /* 0x8008E1B4 */
+                mat3_mul(Rt, local_rot, tmp);                 /* MulMatrix2 @0x80105834 */
+            }
+            memcpy(local_rot, tmp, sizeof local_rot);
+        }
+        /* Wurzel-Bone-Blend des Rutsch-Handlers 0x8010703C: FUN_80028F48 interpoliert die 9
+         * Matrix-Shorts elementweise zwischen der Identitaet @0x8009DB44 (00 10 diag) und der
+         * gesicherten Part-0-Matrix mit Gewicht w = +0x158 (GTE GPF12/GPL12 @0x80028F7C/@0x80028FA4,
+         * Aufrufe @0x801072F8 und @0x801073C0): part0 = ((4096-w)*I + w*M) >> 12. */
+        if (bact && bact->re2_bone0_wgt > 0 && b == 0) {
+            int w = (int)bact->re2_bone0_wgt;
+            if (w > 0x1000) w = 0x1000;
+            for (int k = 0; k < 9; k++) {
+                int32_t idv = (k == 0 || k == 4 || k == 8) ? RE15_SKEL_ONE : 0;
+                local_rot[k] = (idv * (0x1000 - w) + local_rot[k] * w) >> 12;
+            }
+        }
+
         int32_t bone_rel_pos[3] = {
             (int32_t)skel->bone_relative_pos[b][0],
             (int32_t)skel->bone_relative_pos[b][1],
