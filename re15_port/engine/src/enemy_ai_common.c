@@ -6544,6 +6544,13 @@ static void re15_spider_ai_tick(int slot)
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     uint8_t variant  = (uint8_t)(e->grid_id & 0x7f);
 
+    /* WELLE E: die RE2-BABY-Spinne (EMS26.BIN, Root @0x8010001C, Zustandstabelle @0x80101084,
+     * HP = 1 @0x801000F8, Spielerschaden 1 HP `addiu a0,zero,1` + `jal 0x800401d4` @0x80100EAC,
+     * komplette Wasser-/Ertrink-Logik ueber FUN_800527B4) ist vollstaendig RE'd, aber in dieser
+     * Welle NICHT portiert — sie hat eine EIGENE Zustandstabelle und liefe auf den Adult-
+     * Tabellen falsch. Typ 0x26 bleibt deshalb in BEIDEN Flavors auf dem byte-true RE1.5-Brain
+     * (re15_re2spider_owns() liefert dafuer 0). Kein Hook hier. */
+
     switch (e->state) {
     case 0:   /* INIT 0x801164b0: one-shot -> ACTIVE */
         if (e->hp <= 0) e->hp = 100;                      /* +0x9a=100 @0x801164f8 */
@@ -8254,6 +8261,22 @@ static void re15_adult_spider_ai_tick(int slot)
 {
     re15_actor_t *e  = &g_actors[slot];
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+
+    /* PORT OPTION (WELLE E): unter dem RE2-Flavor uebernimmt das RE2-Spinnen-Brain den GANZEN
+     * Dispatch (re15_re2spider_tick, enemy_ai_re2_spider.c — Root @0x801000C8, Zustandstabelle
+     * @0x80106420, ACTIVE-Oberflaechenschicht +0x222 @0x80106440). ai_dist speist der Hook wie
+     * bei Hund/Kraehe (+0x1F0-Analog, im Original EXE-seitig vor dem Dispatch gefuellt).
+     * Pause-Gate: der RE2-Root prueft 0x800CFBDC & 0x20000000 @0x801000D4-E4 -> s_ai_paused pur.
+     * Der RE1.5-Default darunter bleibt byte-identisch; run_alls Tail (Body-Push +
+     * SCA-Wand-Klemme) laeuft fuer beide Flavors unveraendert. */
+    if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && e->type == 0x25 && re15_re2spider_owns(e)) {
+        if (!s_ai_paused) {
+            e->re2z_f10e = (uint16_t)e->grid_id;   /* +0x10E <- RE1.5-Spawn-Byte (MAPPING) */
+            e->ai_dist = (uint32_t)re15_enemy_player_dist(e, pl);
+            re15_re2spider_tick(slot);
+        }
+        return;
+    }
 
     switch (e->state) {
     case 0:   /* INIT 0x80110b6c: -> ACTIVE/AMBUSH, HP row, clip 0x10, steer=player */

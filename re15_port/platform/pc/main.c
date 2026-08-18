@@ -552,6 +552,14 @@ static void pc_enemy_load(uint8_t type)
              * Kraehen-Bank, ERSTE Haelfte (flag2000=0). EDT-Probe Bank 21: ids 0..14 live,
              * 15+ leer — SEs 1..6 alle belegt (enemy_ai_re2_crow.c RE2CROW_ENEMSE_BANK). */
             re15_re2crow_audio_hook(re15_audio_re2_enemy_se, re15_audio_re2_enemy_bank);
+        else if (type == 0x25 || type == 0x26)
+            /* WELLE E — SPINNE: Paar-Tabelle @0x800A7400: kind 0x25 steht in den Zeilen 53
+             * ({0x25,0x1F}) und 54 ({0x25,0x20}), beide Male als ERSTER kind (flag2000=0);
+             * die ersten Map-Haelften beider Zeilen sind byte-identisch (memcmp ueber die
+             * dekodierten EDT-Maps). kind 0x26 steht in Zeile 24 = {0x26,0x00}.
+             * Belege + Refutation: enemy_ai_re2_spider.c RE2SPIDER_ENEMSE_BANK. */
+            re15_re2spider_audio_hook(re15_audio_re2_enemy_se, re15_audio_re2_enemy_bank,
+                                      type == 0x26);
         else
             re15_re2z_audio_hook(re15_audio_re2_enemy_se, re15_audio_re2_enemy_bank);
         if (pc_enemy_load_re2(type, eb)) return;

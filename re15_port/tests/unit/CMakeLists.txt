@@ -1350,3 +1350,17 @@ target_compile_definitions(test_re2_gore_render PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_re2_gore_render COMMAND test_re2_gore_render)
 set_tests_properties(unit_re2_gore_render PROPERTIES TIMEOUT 120)
+
+# WELLE E — RE2-Spinne (kind 0x25 Adult / 0x26 Baby), enemy_ai_re2_spider.c
+add_executable(test_re2_spider_ai test_re2_spider_ai.c)
+target_link_libraries(test_re2_spider_ai PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_spider_ai PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_re2_spider_ai COMMAND test_re2_spider_ai)
+
+# WELLE E — RE2-Spinne A/B im echten ROOM1090 (Skill re15-room-probe)
+add_executable(test_re2_room1090_ab test_re2_room1090_ab.c)
+target_link_libraries(test_re2_room1090_ab PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_room1090_ab PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2_room1090_ab PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2_room1090_ab COMMAND test_re2_room1090_ab)

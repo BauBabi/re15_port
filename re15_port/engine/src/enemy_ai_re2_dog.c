@@ -56,7 +56,11 @@ extern void re15_enemy_steer_point(re15_actor_t *e, int32_t tx, int32_t tz, int 
 int re15_re2_owns_type(unsigned type)
 {
     return re15_re2z_owns_type(type) || type == 0x20u
-        || type == 0x21u;   /* WELLE D: RE2-Kraehe (EMOVL21_S0.BIN, enemy_ai_re2_crow.c) */
+        || type == 0x21u    /* WELLE D: RE2-Kraehe (EMOVL21_S0.BIN, enemy_ai_re2_crow.c)     */
+        || type == 0x25u;   /* WELLE E: RE2-Spinne  (EMS25.BIN,      enemy_ai_re2_spider.c).
+                             * 0x26 (Baby) ist RE'd, aber NICHT portiert -> bewusst NICHT im
+                             * Set: der Asset-Loader wuerde sonst das RE2-Modell unter dem
+                             * RE1.5-Brain laden (Modell/Clip-Ids passen nicht zusammen). */
 }
 
 /* ---- ENEMSE audio hook ------------------------------------------------------------------ */

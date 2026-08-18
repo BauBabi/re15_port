@@ -363,6 +363,49 @@ typedef struct {
                                  * Kraechz-Sperre (Idle-P10 @0x80100A04-10, State-4 @0x801035B0-BC),
                                  * 0x40 Konvergenz (@0x80102548-4C, Nav-Gate @0x80100584-90), 0x80
                                  * Pacify-Broadcast (@0x80102680-84, Post-Pass @0x80104504-20)          */
+    /* ---- RE2-Flavor WELLE E (enemy_ai_re2_spider.c re15_re2spider_tick): die Spinnen-
+     * Arbeitsbytes aus EMS25.BIN (Adult 0x25) / EMS26.BIN (Baby 0x26), Slot 0 @0x80100000.
+     * GETEILT mit Zombie/Hund/Kraehe werden die gleich-adressierten Felder: hp(+0x156),
+     * re2z_t158(+0x158), re2z_t15a(+0x15A), speed_h(+0x144 Schritt-X), re2d_vy146(+0x146),
+     * re2z_self1d3(+0x1D3), re2z_f10e(+0x10E Spawn-Deskriptor), ai_dist(+0x1F0).
+     * Die folgenden Offsets kollidieren in der BREITE mit Hund/Kraehe (die lesen +0x218/+0x21A/
+     * +0x21C als BYTE bzw. anderes Wort) — deshalb eigene Felder, keine Umdeutung fremder. */
+    int16_t  re2s_z148;         /* +0x148 Schritt-Z (walk-P0 `sh zero,328` @0x8010093C, Attack-P0
+                                 * @0x80100D5C) — dritte Komponente des 0x800152C8-Vektors        */
+    int16_t  re2s_t218;         /* +0x218 Re-Decide-Sperre, lh/sh (Dec im ACTIVE-Tail
+                                 * @0x80100600-14; Seed 15 @0x80100F58/@0x80101068)               */
+    int16_t  re2s_yaw21a;       /* +0x21A Oberflaechen-Yaw-Offset (INIT 0 Boden / 2048 Decke
+                                 * @0x80100488, 2048 Wand @0x801004C4) — a1 von FUN_800152C8     */
+    int16_t  re2s_t21c;         /* +0x21C Anzeige-/Freeze-Zaehler (ACTIVE-Tail-Gate @0x8010062C) */
+    uint16_t re2s_c21e;         /* +0x21E Frame-Zaehler, laeuft solange +0x21C != 0
+                                 * (@0x8010063C-4C; Clear @0x8010065C/@0x80101384)                */
+    uint8_t  re2s_mode222;      /* +0x222 OBERFLAECHEN-MODUS 0=Boden 1=Decke 2=Uebergang 3=Wand.
+                                 * INIT-Sprungtabelle @0x80100004 nach (+0x10E & 0xF):
+                                 * 0 -> 0 (@0x80100460), 2/3 -> 1 (@0x8010047C), 4..11 -> 3
+                                 * (@0x801004B4). ACTIVE dispatcht darauf @0x801005D4.           */
+    uint8_t  re2s_gs225;        /* +0x225 Boden-Kontakt-Automat (INIT 1 fuer Wand @0x80100588;
+                                 * Tabelle @0x801000B4, Treiber FUN_80104DE8)                    */
+    int32_t  re2s_y22c;         /* +0x22C Referenz-Y der Oberflaeche (Decke Y+1250 @0x801004AC,
+                                 * Wand 1250-1800*((+0x10E&0xF0)>>4) @0x8010057C)                */
+    uint8_t  re2s_q230;         /* +0x230 Wand-Quadrant (+0x10E-4)>>1 @0x801004DC               */
+    uint8_t  re2s_c232;         /* +0x232 Byte-Countdown (ACTIVE-Tail-Dec @0x80100618-28)        */
+    uint8_t  re2s_snap233[3];   /* +0x233/+0x234/+0x235 = Schnappschuss von +0x5/+0x6/+0x7,
+                                 * genommen wenn +0x21C == 0 (@0x80100650-68)                    */
+    uint8_t  re2s_row23c;       /* +0x23C GELATCHTE Waffenzeile (nur wenn +0x6 == 0:
+                                 * HURT @0x80102CAC, DEATH @0x80103CB4) — steuert das
+                                 * Blut-FX-Gate (@0x80102DC0 / @0x80103DDC)                    */
+    uint8_t  re2s_dead239;      /* +0x239 "eingeschmolzen": blockt die CORPSE-Wiederbelebung
+                                 * HP=1 (@0x80103EA0-B8); Setzer @0x80104C28 (Zeile 11)        */
+    uint8_t  re2s_done224;      /* +0x224 Leiche fertig (@0x80103EB8) — routet einen weiteren
+                                 * Treffer auf den Zerstoerungspfad (@0x80103D38)              */
+    uint8_t  re2s_tgt237;       /* +0x237 Ziel = Partner statt Spieler (FUN_80105F98 @0x80105FF8);
+                                 * im Port IMMER 0 (RE1.5 hat keinen Partner-Slot, s. Datei)     */
+    uint8_t  re2s_se238;        /* +0x238 Schritt-SE-Rotation mod 3 (FUN_80106004 @0x80106084)   */
+    int8_t   re2s_c23a;         /* +0x23A signed (DEATH-SE-Wahl @0x80103FF4-4004)                */
+    uint8_t  re2s_fx23b;        /* +0x23B FX-Emitter-Ticks (FUN_80106140 @0x80106158-68)         */
+    uint8_t  re2s_c23d;         /* +0x23D Root-Countdown (@0x80100104-114)                       */
+    uint8_t  re2s_f106;         /* +0x106 Etagen-Index = -Y / 1800 (Root @0x80100144-70)         */
+    uint8_t  re2s_seeded;       /* PORT-Feld: INIT-HP schon gezogen? (RE1.5-Spawns setzen hp)    */
     int16_t  hurt_bend_bone;    /* part index to bend, -1 = none */
     int16_t  hurt_bend_vz;      /* the PRE-update +0x9c applied this tick */
     /* Phase 4.5.13-RE2 F1: speed was at ID 27 (wrong) — correct ID is
