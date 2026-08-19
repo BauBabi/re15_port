@@ -273,4 +273,29 @@ void re15_damage_seed_rng(uint32_t seed);
  * the low 8 bits of the hash, matching the original's byte result. */
 uint8_t re15_engine_rand8(void);
 
+/* ---- RE2-FLAVOR: das vollstaendige RE2-HP-/Schadensmodell (re15_damage.c) -------------------
+ * Im RE2-Modus (re15_ai_flavor() == RE15_AI_FLAVOR_RE2) laeuft der Kampf gegen die RE2-Zahlen:
+ * Schaden aus 0x800A6A88[typ] (Applier FUN_800470C0 @0x80047218-68, Bracket 0) und Start-HP
+ * aus dem jeweiligen RE2-EM-Modul. Der RE1.5-Pfad ist davon UNBERUEHRT — jede Abfrage im
+ * .c ist zusaetzlich auf den Flavor gegatet. Alle Belege stehen an den Tabellen.
+ *
+ * re15_re2_damage_model()      1 = Modell aktiv (Default). Umgebungsvariable
+ *                              RE15_RE2_DMG_MODEL=0 schaltet es ab (Negativ-Test).
+ * re15_re2_damage_model_set()  derselbe Hebel programmatisch (schlaegt die Variable).
+ * re15_re2_init_hp(e)          der RE2-INIT-HP-Zug fuer diesen Aktor, < 0 = kein RE2-Modell.
+ * re15_re2_hp_sync()           stempelt die RE2-INIT-HP auf jeden RE2-eigenen Aktor, dessen
+ *                              INIT gerade gelaufen ist (genau einmal pro Spawn). Aufruf aus
+ *                              game_step nach re15_enemy_ai_run_all; die Schadenspfade rufen
+ *                              ihn zusaetzlich idempotent auf. Im RE1.5-Modus ein No-op. */
+int     re15_re2_damage_model(void);
+void    re15_re2_damage_model_set(int on);
+/* Der EINZIGE typ-spezifische Sonderfall: RE2 setzt die HP von KIND 0x11 fest auf 250
+ * (@0x801008BC/C8/CC). DEFAULT AUS — dass der RE1.5-Typ 0x11 dasselbe Wesen ist, ist NICHT
+ * belegt, und die Zeile macht ausgerechnet den Dinner-Room-Zombie 3x zaeher (Herleitung +
+ * Messung am Schalter in re15_damage.c). Einschalten: RE15_RE2_ZOMBIE11_250=1. */
+int     re15_re2_kind11_250(void);
+void    re15_re2_kind11_250_set(int on);
+int16_t re15_re2_init_hp(const re15_actor_t *e);
+void    re15_re2_hp_sync(void);
+
 #endif /* RE15_DAMAGE_H */

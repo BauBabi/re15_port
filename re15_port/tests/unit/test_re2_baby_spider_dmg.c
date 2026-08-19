@@ -198,30 +198,62 @@ int main(void)
               "(dann misst Punkt 5 nichts)");
     }
 
-    /* ---- 6) NEGATIV: der Fix darf NUR Typ 0x26 betreffen ---- */
-    printf("\n=== 6) NEGATIV: 0x25 (Adult) und 0x10 (Zombie) behalten die RE1.5-Zeilen ===\n");
+    /* ---- 6) GELTUNGSBEREICH: RE1.5 unveraendert, RE2 traegt jetzt die RE2-Zeilen ---------
+     * ⚠ HIER STAND FRUEHER: "der Fix darf NUR Typ 0x26 betreffen" — 0x25 und 0x10 mussten auch
+     * im RE2-Modus die RE1.5-Zeile behalten. Diese Erwartung ist per NUTZER-ENTSCHEIDUNG
+     * 2026-08-19 aufgehoben ("die Zombies stecken viel zu viel ein"): der RE2-Modus faehrt jetzt
+     * das VOLLSTAENDIGE RE2-Schadens-/HP-Modell (re15_damage.c, Applier FUN_800470C0
+     * @0x80047218-68 ueber die Per-Typ-Zeiger 0x800A6A88[typ]). Der Test bleibt eine Wache —
+     * aber fuer die richtige Grenze: RE1.5 unveraendert, RE2 mit der RE2-Zeile.
+     *   RE1.5: 0x25 @0x8006ED88[3] = 10 ; 0x10 @0x8006E650[3] = 5     (aus PSX.EXE gedumpt)
+     *   RE2:   0x25 -> 0x800A6A88[0x25] = 0x800A4B90, Waffe 3 -> Zeile 3 @0x800A4BB8 Zone 0 = 17
+     *          0x10 -> 0x800A6A88[0x10] = 0x800A412C, Waffe 3 -> Zeile 3 @0x800A4154 Zone 0 = 16
+     * Der Modell-Schalter muss beides umschalten koennen (Negativ-Test). */
+    printf("\n=== 6) GELTUNGSBEREICH: RE1.5-Zeile vs. RE2-Zeile bei 0x25 / 0x10 ===\n");
     {
-        /* 0x25 @0x8006ED88[3] = 10 ; 0x10 @0x8006E650[3] = 5 — beide aus PSX.EXE gedumpt. */
-        const struct { uint8_t type; int dmg; const char *addr; } guard[2] = {
-            { 0x25u, 10, "0x8006ED88[3]" }, { 0x10u, 5, "0x8006E650[3]" }
+        const struct { uint8_t type; int dmg15; int dmg2; const char *a15; const char *a2; } guard[2] = {
+            { 0x25u, 10, 17, "0x8006ED88[3]", "0x800A4BB8" },
+            { 0x10u,  5, 16, "0x8006E650[3]", "0x800A4154" }
         };
         for (int g = 0; g < 2; g++) {
-            for (int fl = 0; fl < 2; fl++) {
-                int flavor = fl ? RE15_AI_FLAVOR_RE2 : RE15_AI_FLAVOR_RE15;
-                bringup(flavor, slots, 8);
-                arm(slots[1], guard[g].type, 300, 3000);
-                re15_player_set_equipped_weapon(3);
-                int fired = re15_player_weapon_fire(3);
+            /* (a) RE1.5-Pfad — MUSS byte-identisch bleiben */
+            bringup(RE15_AI_FLAVOR_RE15, slots, 8);
+            arm(slots[1], guard[g].type, 300, 3000);
+            re15_player_set_equipped_weapon(3);
+            if (re15_player_weapon_fire(3)) {
                 re15_actor_t *e = &g_actors[slots[1]];
-                CHECK(fired != 0, "Guard 0x%02X (%s): Schuss kam nicht an", guard[g].type,
-                      fl ? "RE2" : "RE1.5");
-                if (!fired) continue;
-                CHECK(e->hp == (int16_t)(300 - guard[g].dmg),
-                      "Guard 0x%02X (%s): hp %d, erwartet %d aus %s", guard[g].type,
-                      fl ? "RE2" : "RE1.5", e->hp, 300 - guard[g].dmg, guard[g].addr);
-            }
+                CHECK(e->hp == (int16_t)(300 - guard[g].dmg15),
+                      "Guard 0x%02X (RE1.5): hp %d, erwartet %d aus %s", guard[g].type,
+                      e->hp, 300 - guard[g].dmg15, guard[g].a15);
+            } else CHECK(0, "Guard 0x%02X (RE1.5): Schuss kam nicht an", guard[g].type);
+
+            /* (b) RE2 + Modell AN -> die RE2-Zeile */
+            re15_re2_damage_model_set(1);
+            bringup(RE15_AI_FLAVOR_RE2, slots, 8);
+            arm(slots[1], guard[g].type, 300, 3000);
+            g_actors[slots[1]].re2_hp_stamped = 1;   /* Test-HP behalten (HP-Seite hat eigenen Pin) */
+            re15_player_set_equipped_weapon(3);
+            if (re15_player_weapon_fire(3)) {
+                re15_actor_t *e = &g_actors[slots[1]];
+                CHECK(e->hp == (int16_t)(300 - guard[g].dmg2),
+                      "Guard 0x%02X (RE2 AN): hp %d, erwartet %d aus %s", guard[g].type,
+                      e->hp, 300 - guard[g].dmg2, guard[g].a2);
+            } else CHECK(0, "Guard 0x%02X (RE2 AN): Schuss kam nicht an", guard[g].type);
+
+            /* (c) RE2 + Modell AUS -> wieder die RE1.5-Zeile (Negativ-Test) */
+            re15_re2_damage_model_set(0);
+            bringup(RE15_AI_FLAVOR_RE2, slots, 8);
+            arm(slots[1], guard[g].type, 300, 3000);
+            re15_player_set_equipped_weapon(3);
+            if (re15_player_weapon_fire(3)) {
+                re15_actor_t *e = &g_actors[slots[1]];
+                CHECK(e->hp == (int16_t)(300 - guard[g].dmg15),
+                      "Guard 0x%02X (RE2 AUS): hp %d, erwartet %d aus %s", guard[g].type,
+                      e->hp, 300 - guard[g].dmg15, guard[g].a15);
+            } else CHECK(0, "Guard 0x%02X (RE2 AUS): Schuss kam nicht an", guard[g].type);
+            re15_re2_damage_model_set(1);
         }
-        printf("  0x25 -> 10, 0x10 -> 5, in beiden Modi\n");
+        printf("  0x25: RE1.5 10 / RE2 17 ; 0x10: RE1.5 5 / RE2 16 ; Modell AUS = RE1.5\n");
     }
 
     printf("\n%s\n", fails ? "FAILED" : "OK");

@@ -490,6 +490,10 @@ typedef struct {
     uint8_t  re2s_c23d;         /* +0x23D Root-Countdown (@0x80100104-114)                       */
     uint8_t  re2s_f106;         /* +0x106 Etagen-Index = -Y / 1800 (Root @0x80100144-70)         */
     uint8_t  re2s_seeded;       /* PORT-Feld: INIT-HP schon gezogen? (RE1.5-Spawns setzen hp)    */
+    uint8_t  re2_hp_stamped;    /* PORT-Feld (re15_damage.c re15_re2_hp_sync): RE2-INIT-HP schon
+                                 * gestempelt? Wird beim Zustand 0 (INIT steht aus) und beim
+                                 * Deaktivieren des Slots wieder geloescht. NUR im RE2-Flavor
+                                 * gelesen — der RE1.5-Pfad fasst das Feld nie an.              */
     int16_t  hurt_bend_bone;    /* part index to bend, -1 = none */
     int16_t  hurt_bend_vz;      /* the PRE-update +0x9c applied this tick */
     /* Phase 4.5.13-RE2 F1: speed was at ID 27 (wrong) — correct ID is

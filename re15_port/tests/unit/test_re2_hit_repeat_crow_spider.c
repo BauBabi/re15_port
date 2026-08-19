@@ -236,6 +236,15 @@ static void run_ex(const char *tag, re15_ai_flavor_t flavor, uint8_t type, int w
         if (!airborne) { printf("FAIL: %s — Kraehe hebt nicht ab\n", tag); fails++; return; }
     }
 
+    /* ⛔ HARNESS-HILFE (2026-08-19, vollstaendiges RE2-Schadensmodell): in RE2 toetet EIN
+     * Pistolen- oder Messertreffer die Kraehe — HP 10 (`addiu v0,zero,10` / `sh v0,342(s1)`
+     * EMOVL21_S0.BIN @0x80100324/348) gegen Zone 0 der RE2-Zeile 0x800A45A0 = 15. Damit ist
+     * "WIEDERHOLT treffbar" (= der +0x93-Latch, worum es diesem Pin geht) nicht mehr ueber
+     * Schadens-Ereignisse messbar. Die Kraehe bekommt hier deshalb 60 HP = 4 Treffer — dieselbe
+     * Sorte Harness-Hilfe wie das `pl->hp = 100` oben. Die byte-true Ein-Treffer-Letalitaet
+     * selbst ist in test_re2_hp_model gepinnt (HP-Block + Schadenszeile 0x800A45A0). */
+    if (type == 0x21u && flavor == RE15_AI_FLAVOR_RE2 && re15_re2_damage_model()) e->hp = 60;
+
     int hp_last = e->hp, hit_once = 0;
     for (int f = 0; f < budget; f++) {
         pl->hp = 100; track(slot, back);

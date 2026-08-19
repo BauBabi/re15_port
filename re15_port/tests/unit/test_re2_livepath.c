@@ -357,7 +357,14 @@ static void run_room(const char *tag, const char *rdtpath, int fire_sub, uint8_t
         /* Schnellfeuer -> Knockdown 0x501: der Zwischen-Handler 0x80105BC0 laedt die Resistenz
          * in seiner Endphase wieder auf (@0x80106028-34), also muss nachgesetzt werden. */
         e->state = 1; e->sub_state_1 = 1; e->sub_state_2 = 0;
-        e->hp = 60; e->re2z_res223 = 20; e->re2z_flag222 = 0;
+        /* HP 120 statt 60 (Harness-Konstante, 2026-08-19). Mit dem vollstaendigen RE2-Schadens-
+         * modell macht die Pistole 16 statt 5 Schaden (RE2-Zeile 0x800A412C, Waffe 3 -> Zeile 3,
+         * Zone 0 = 16 @0x800A4154). GEMESSEN mit den alten 60 HP: die Resistenz laeuft wie
+         * vorgesehen leer (20 -> 5 -> -10) und +0x222 kippt im dritten Schuss auf 1 — aber genau
+         * dieser dritte Schuss toetet den Zombie (60 - 3*16 = 12, vierter Schuss -4), also kann
+         * der Flinch @0x801050A4 nicht mehr feuern. 120 HP geben der Resistenz-Kette (das, was
+         * dieser Block misst) die noetigen Treffer; der Test ist damit in BEIDEN Modi gruen. */
+        e->hp = 120; e->re2z_res223 = 20; e->re2z_flag222 = 0;
         int knocked = 0;
         for (int shot = 0; shot < 10 && !knocked; shot++) {
             e->hit_react = 0;

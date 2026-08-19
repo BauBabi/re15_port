@@ -1323,6 +1323,13 @@ void re15_game_step(const re15_game_ctx_t *c)
     if (c->rdt_ok && !(g_re15_pauseflags & RE15_PAUSE_AI))
         re15_enemy_ai_run_all(g_scd.combat_active);
 
+    /* RE2-FLAVOR: die RE2-INIT-HP nachstempeln. Der Stempel feuert GENAU EINMAL pro Spawn, in
+     * dem Tick, in dem der INIT (Zustand 0) auf einen Nicht-Null-Zustand umschaltet — also
+     * unmittelbar nachdem der Brain-INIT gelaufen ist und lange bevor ein Treffer fallen kann.
+     * Belege (0x800A6A88-Schadenszeiger, EM-Modul-HP-Tabellen, DAT_800CFB74-Bit-0x40-Beweis)
+     * stehen an re15_re2_hp_sync in re15_damage.c. Im RE1.5-Modus ein No-op. */
+    re15_re2_hp_sync();
+
     /* LEON GRAB-VICTIM ANIMATION (state 5 struggle / state 6 collapse) — advance AFTER run_all so the
      * grab (re15_enemy_ai_live_grab) has latched the victim state this frame. Drives Leon's motion/
      * anim_frame off the grabbing zombie's bank 2 so he struggles + collapses instead of freezing

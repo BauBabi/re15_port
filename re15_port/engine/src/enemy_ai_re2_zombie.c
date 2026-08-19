@@ -666,11 +666,64 @@ static void re2z_walk_moan(re15_actor_t *e)
  * The port spawns the RE1.5 room-bank blood the same way the RE1.5 bite/gore code does. */
 /* [PORT-MAPPING] FUN_8001BF10(a0 = gepackte Effekt-Id, a1 = WINKEL, a2 = &Anker-Matrix,
  * a3 = &Geschwindigkeit|0). Der Port hat keinen ankergebundenen RE2-Emitter; der Stand-in ist
- * ein RE1.5-Raumbank-Spawn an der Aktorposition. Der WINKEL a1 wird trotzdem 1:1 durchgereicht
- * (Parameterwort des ESP-Slots), damit der Wert im Port derselbe ist wie im Original. */
+ * ein RE1.5-Raumbank-Spawn. Der WINKEL a1 wird 1:1 durchgereicht (Parameterwort des ESP-Slots),
+ * damit der Wert im Port derselbe ist wie im Original.
+ *
+ * ⛔ NUTZER-REPORT 2026-08-19: "Das Blut beim Treffen erscheint am Fuss."
+ * GEMESSEN (probe_re2_stagger, ROOM1140, echter Weg, geladene RE2-Bank EM010):
+ *   Aktor-Wurzel (-1800,   0,-19600)      <- hier spawnte der Port
+ *   Bone0 Huefte (-1800,-1166,-19600)     <- hier spawnt das Original  (dy = -1166)
+ *   Bone1 Brust  (-1800,-1166,-19600)
+ * Der Stand-in war POSITIONSLOS und benutzte die Aktor-Wurzel — und die liegt in RE1.5/RE2 auf
+ * dem BODEN (+0x38/+0x3C/+0x40, +0x3C == Bodenhoehe). Also: Blut an den Fuessen.
+ *
+ * ---- DER ANKER IST EINE KNOCHEN-MATRIX (selbst disassembliert, re2leon/PSX.EXE) -------------
+ * FUN_8001BF10 kopiert aus a2 GENAU 32 Byte = eine ganze PSX-MATRIX in den Effekt-Slot und
+ * merkt sich zusaetzlich den ZEIGER, d.h. der Effekt HAENGT am Knochen:
+ *   8001c03c: lw v0,0(a2)   8001c040: lw v1,4(a2)   8001c044: lw a0,8(a2)   8001c048: lw a1,12(a2)
+ *   8001c04c: sw v0,76(t0)  8001c050: sw v1,80(t0)  8001c054: sw a0,84(t0)  8001c058: sw a1,88(t0)
+ *   8001c05c: lw v0,16(a2) …                        8001c06c: sw v0,92(t0) … 8001c078: sw a1,104(t0)
+ *   8001c094: sw a2,108(t0)      ; der ANKER-Zeiger (den FUN_8001CEFC spaeter vergleicht)
+ * a2 ist immer `+0x198 + n*172 + 72` — der Modellblock hat Part-Stride 172 und die Part-MATRIX
+ * bei +0x48 = 72 (Part 0 -> +72, Part 1 -> +244, Part 3 -> +588, Part 8 -> +1448 …).
+ * Port-Zwilling der Matrix-Translation ist re15_enemy_bone_world_pos() — dieselbe QUERY-Pose,
+ * die der RE2-HUND (enemy_ai_re2_dog.c re2d_fx) schon benutzt; der Zombie war der Ausreisser. */
+/* Port-Diagnose (nur Tests, die Engine liest das nicht): Anker-Part + Weltposition des zuletzt
+ * gespawnten Treffer-Effekts. */
+static int     s_re2z_last_fx_part = -1;
+static int32_t s_re2z_last_fx_pos[3];
+int  re15_re2z_last_fx_part(void) { return s_re2z_last_fx_part; }
+void re15_re2z_last_fx_pos(int32_t out[3])
+{
+    out[0] = s_re2z_last_fx_pos[0]; out[1] = s_re2z_last_fx_pos[1]; out[2] = s_re2z_last_fx_pos[2];
+}
+
+static void re2z_blood_fx_at(re15_actor_t *e, int part, int16_t yaw)
+{
+    int32_t p[3];
+    re15_enemy_bone_world_pos(e, part, p);   /* == die Translation der Part-Matrix +0x198+n*172+72 */
+    s_re2z_last_fx_part = part;
+    s_re2z_last_fx_pos[0] = p[0]; s_re2z_last_fx_pos[1] = p[1]; s_re2z_last_fx_pos[2] = p[2];
+    re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x1500, p[0], p[1], p[2], yaw);
+}
+
+/* Die ANKER-WAHL der drei Treffer-Emitter (Wurzel-Flinch @0x801050B0-158, Haupt-Handler-P0
+ * @0x80105650-704, Stagger-P0 @0x80105D14-DBC — alle drei wortgleich):
+ *     801050b0: lbu a0,466(s1)          ; +0x1D2
+ *     801050b4-dc: a0 % 3               ; magisches multu 0xAAAAAAAB -> ZONE
+ *     801050e4: bne a0,zero,0x8010511c
+ *     801050f4: lw a2,408(s1)           ; +0x198
+ *     80105110: _addiu a2,a2,244        ; ZONE 0  -> Part 1 (1*172+72)
+ *     8010514c: lw s0,408(s1)
+ *     80105158: _addiu a2,s0,72         ; sonst   -> Part 0 (0*172+72) */
+static int re2z_blood_anchor(const re15_actor_t *e)
+{
+    return (((unsigned)e->re2z_hits1d2 % 3u) == 0u) ? 1 : 0;
+}
+
 static void re2z_blood_fx_dir(re15_actor_t *e, int16_t yaw)
 {
-    re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x1500, e->x, e->y, e->z, yaw);
+    re2z_blood_fx_at(e, re2z_blood_anchor(e), yaw);
 }
 
 static void re2z_blood_fx(re15_actor_t *e)
@@ -1073,6 +1126,16 @@ static void re2z_exec_knockdown(re15_actor_t *e)
     case 1:                                                        /* fall plays out (P1..P5
                                                                     * @0x80103370-52C: FX/SE-Interna
                                                                     * OPEN) */
+        /* DER SPIELER-CLAIM FAELLT SCHON WAEHREND DES STURZES — Phase 2 (`sb 3,6(s2)`
+         * @0x8010340C, also der Aufschlag-Frame) loescht ihn:
+         *   80103470: lbu v1,467(s2)
+         *   80103484: andi v1,v1,0x7f
+         *   80103490: sb  v1,467(s2)
+         * Das ist der Grund, warum man einen fallenden/liegenden RE2-Zombie weiter treffen kann
+         * (Kandidatenfilter `lbu 467 / bne zero` @0x80047138-40). [PORT-MAPPING] fuer die
+         * STELLE: der Port fasst P1..P5 zu dieser einen Phase zusammen, der Clear laeuft also
+         * ab dem ersten Sturz-Tick statt ab dem Aufschlag-Tick. */
+        e->re2z_self1d3 &= 0x7Fu;                                  /* andi 0x7f @0x80103484-90 */
         if (re2z_clip_done(e)) e->sub_state_2 = 6;
         break;
     case 6:                                                        /* P6 @0x80103568 */
@@ -1114,6 +1177,15 @@ static void re2z_exec_knockdown(re15_actor_t *e)
          * per Flinch (0x501 @0x801050A4) niedergeschlagene Zombie fuer immer untreffbar, weil
          * der Flinch-Pfad keinen Reaktions-Handler-Endausgang durchlaeuft. */
         re2z_hit_latch_release(e);                                 /* +0x93 &= 0xfe @0x80105fa4 */
+        /* Die beiden Aufraeum-Stores des Original-P8, die im Port fehlten (selbst
+         * nachdisassembliert 2026-08-19, 0x801036F4..0x80103754):
+         *   80103718: lbu v0,467(s2)   80103724: andi v0,v0,0x7f   80103728: sb v0,467(s2)
+         *   8010373c: lhu v0,270(s2)   80103744: andi v0,v0,0xdfff 8010374c: sh v0,270(s2)
+         * Ohne den ersten blieb +0x1D3 nach JEDEM Sturz auf 0x80 stehen — der Zombie waere mit
+         * dem Original-Trefferfilter (@0x80047138-40) fuer immer untreffbar; der zweite nimmt
+         * das in P0 gesetzte Bit 0x2000 (@0x80103308/3320) wieder zurueck. */
+        e->re2z_self1d3 &= 0x7Fu;                                  /* andi 0x7f  @0x80103718-28 */
+        e->re2z_f10e    &= (uint16_t)~0x2000u;                     /* andi 0xdfff @0x8010373C-4C */
         e->grid_id &= (uint8_t)0x7Fu;                              /* PORT-MAPPING (Review #18):
                                                                     * Downed-Band-Clear beim
                                                                     * Aufstehen (RE1.5-Zwilling
@@ -1405,7 +1477,9 @@ static void re2z_exec_snapbite(re15_actor_t *e)
         return;
     }
     if (e->sub_state_2 == 1 && re2z_frame_slot(e) >= 10) {         /* frame 10 @0x80104DD0-D8 */
-        re2z_blood_fx(e);                                          /* FX 0x0A001000 @0x80104DE0-F4 */
+        re2z_blood_fx_at(e, 8, (int16_t)e->rot_y);                 /* FX 0x0A001000 @0x80104DE0-F4,
+                                                                    * Anker `addiu a2,a2,1448`
+                                                                    * @0x80104DF8 = Part 8 (Kopf) */
         re2z_se(5);                                                /* @0x80104DFC-04 */
         e->sub_state_2 = 2;                                        /* (port: one-shot marker; the
                                                                     * original fires on the exact
@@ -1865,11 +1939,12 @@ static int re2z_lean_angle(const re15_actor_t *e, int shift3)
  * Die RNG-WURFZAHL ist Verhalten und wird exakt nachgezogen.
  * ========================================================================================== */
 
-/* [PORT-MAPPING] FUN_8001BF10 — Stand-in, Id nur dokumentiert (s. Block oben). */
-static void re2z_gore_fx(re15_actor_t *e, uint32_t packed_id)
+/* [PORT-MAPPING] FUN_8001BF10 — Stand-in, Id nur dokumentiert (s. Block oben). `part` ist der
+ * ANKER (a2 = +0x198 + part*172 + 72); jede Fundstelle traegt ihr `@0x…` am Aufruf. */
+static void re2z_gore_fx(re15_actor_t *e, int part, uint32_t packed_id)
 {
     (void)packed_id;
-    re2z_blood_fx(e);
+    re2z_blood_fx_at(e, part, (int16_t)e->rot_y);
 }
 
 /* Der Modellblock beim INIT: Bit 0 ("Part vorhanden") fuer die 15 echten Parts, Part 15 leer
@@ -2132,7 +2207,9 @@ static void re2z_part_phys_ad8(re15_actor_t *e, int i)
             v[0] = (int16_t)(((int32_t)v[0]) >> 2);            /* @0x80028BFC-C1C */
             v[2] = (int16_t)(((int32_t)v[2]) >> 2);            /* @0x80028C14-28 */
             (void)re2z_rand();                                 /* jal 0x80015FE8 @0x80028C28 */
-            re2z_gore_fx(e, 2000u);                            /* FUN_8001BF10 @0x80028C4C */
+            re2z_gore_fx(e, i, 2000u);                         /* Anker = das fliegende Teil selbst
+                                                             * (`addiu a2,s1,72` @0x80028C34),
+                                                             * FUN_8001BF10 @0x80028C4C */
             if (e->re2z_part_flags[i] & 0x10u) {               /* @0x80028C54-60 */
                 e->re2z_part_flags[i] = (uint16_t)(e->re2z_part_flags[i] | 0x2000u); /* @0x80028C64-68 */
                 /* +0x8C/+0x90 = 7000, +0x8E = 0 @0x80028C6C-7C: Skalierung, [PORT (5)] */
@@ -2219,18 +2296,21 @@ static void re2z_gore_burn(re15_actor_t *e)
 {
     e->re2z_f10e |= 0x80u;                     /* lhu 270 / ori 0x80 / sh @0x8010613C-48 */
     if (re2z_rand() & 1u) {                    /* jal @0x80106160, andi/beq @0x80106168-6C */
-        re2z_gore_fx(e, 0x05032710u);                                  /* Part 0 , v={0,200,0}
+        re2z_gore_fx(e, 0, 0x05032710u);                               /* Part 0 (a2 = s1+72
+                                                                        * @0x80106178), v={0,200,0}
                                                                         * @0x80106174-84 */
-        if (e->re2z_part_flags[8] & 1u) re2z_gore_fx(e, 0x05031388u);  /* Kopf, v=0 @0x80106190-B4 */
-        if (e->re2z_part_flags[3] & 1u) re2z_gore_fx(e, 0x050313E8u);  /* R-Unterarm, v={0,200,0}
+        if (e->re2z_part_flags[8] & 1u) re2z_gore_fx(e, 8, 0x05031388u); /* Kopf (+1448 = 8*172+72
+                                                                        * @0x801061AC) @0x80106190-B4 */
+        if (e->re2z_part_flags[3] & 1u) re2z_gore_fx(e, 3, 0x050313E8u); /* R-Unterarm (+588
+                                                                        * @0x801061E0), v={0,200,0}
                                                                         * @0x801061C0-E0/@0x80106254 */
     } else {
-        re2z_gore_fx(e, 0x05032710u);                                  /* Part 0 , v=0
+        re2z_gore_fx(e, 0, 0x05032710u);                               /* Part 0 , v=0
                                                                         * @0x801061E4-F4 */
-        if (e->re2z_part_flags[3] & 1u) re2z_gore_fx(e, 0x05031388u);  /* R-Unterarm, v={0,200,0}
+        if (e->re2z_part_flags[3] & 1u) re2z_gore_fx(e, 3, 0x05031388u); /* R-Unterarm, v={0,200,0}
                                                                         * @0x80106200-24 */
-        if (e->re2z_part_flags[6] & 1u) re2z_gore_fx(e, 0x050313E8u);  /* L-Unterarm, v={0,-200,0}
-                                                                        * @0x8010622C-58 */
+        if (e->re2z_part_flags[6] & 1u) re2z_gore_fx(e, 6, 0x050313E8u); /* L-Unterarm (+1104
+                                                                        * @0x80106250) @0x8010622C-58 */
     }
     if (e->sub_state_1 == 16u) return;         /* `lbu v1,5` / `beq v1,16` @0x8010625C-64 */
     e->re2z_part_tint[0]  = 0x00404040u;       /* sw a1,112  @0x8010627C */
@@ -2257,18 +2337,18 @@ static void re2z_gore_acid(re15_actor_t *e)
     e->re2z_part_tint[8]  = 0x00304040u;       /* sw v1,1488 @0x8010636C */
     e->re2z_part_tint[9]  = 0x00506060u;       /* sw a1,1660 @0x80106378 */
     e->re2z_part_tint[12] = 0x00506060u;       /* sw a1,2176 @0x80106384 */
-    re2z_gore_fx(e, 0x040F1770u);                                      /* Part 0  @0x80106390 */
-    if (e->re2z_part_flags[12] & 1u) re2z_gore_fx(e, 0x040F0FA0u);     /* L-Oberschenkel
+    re2z_gore_fx(e, 0, 0x040F1770u);                                   /* Part 0  @0x80106390 */
+    if (e->re2z_part_flags[12] & 1u) re2z_gore_fx(e, 12, 0x040F0FA0u); /* L-Oberschenkel
                                                                         * @0x801063A0-C0 */
-    if (e->re2z_part_flags[3]  & 1u) re2z_gore_fx(e, 0x040F0FA0u);     /* R-Unterarm @0x801063D0-F0 */
+    if (e->re2z_part_flags[3]  & 1u) re2z_gore_fx(e, 3, 0x040F0FA0u);  /* R-Unterarm @0x801063D0-F0 */
 }
 
 /* ---- FUN_8010640C — SPRENG-RUSS ----------------------------------------------------------- */
 static void re2z_gore_soot(re15_actor_t *e)
 {
-    re2z_gore_fx(e, 0x05032710u);                                      /* Part 0 , v={0,200,0}
+    re2z_gore_fx(e, 0, 0x05032710u);                                   /* Part 0 , v={0,200,0}
                                                                         * @0x80106418-44 */
-    if (e->re2z_part_flags[3] & 1u) re2z_gore_fx(e, 0x050313E8u);      /* R-Unterarm @0x80106450-70 */
+    if (e->re2z_part_flags[3] & 1u) re2z_gore_fx(e, 3, 0x050313E8u);   /* R-Unterarm @0x80106450-70 */
     e->re2z_part_tint[0]  = 0x00404040u;       /* sw a0,112  @0x8010648C */
     e->re2z_part_tint[1]  = 0x00484848u;       /* sw a2,284  @0x80106498 */
     e->re2z_part_tint[2]  = 0x00707070u;       /* sw v1,456  @0x801064A4 */
@@ -2294,18 +2374,19 @@ static void re2z_gore_spark(re15_actor_t *e)
         (void)re2z_rand(); (void)re2z_rand(); (void)re2z_rand();
         uint32_t r = re2z_rand();
         static const int k[4] = { 5096, 4096, 4096, 3096 };
-        re2z_gore_fx(e, 0x06000000u | (uint32_t)(((r & 0xffu) << 3) + (uint32_t)k[i]));
+        re2z_gore_fx(e, 0, 0x06000000u | (uint32_t)(((r & 0xffu) << 3) + (uint32_t)k[i]));
     }
     {   uint32_t r = re2z_rand();                                      /* @0x80106664 */
-        re2z_gore_fx(e, 0x040C0000u | (uint32_t)(((r & 0xffu) << 3) + 4096u));  /* @0x80106670-84 */
+        re2z_gore_fx(e, 0, 0x040C0000u | (uint32_t)(((r & 0xffu) << 3) + 4096u)); /* Part 0
+                                                                        * @0x80106670-84 */
     }
     {   uint32_t r = re2z_rand();                                      /* @0x80106690 */
-        re2z_gore_fx(e, 0x06000000u | (uint32_t)(((r & 0xffu) << 3) + 3096u));  /* Part 9
-                                                                        * @0x8010669C-B0 */
+        re2z_gore_fx(e, 9, 0x06000000u | (uint32_t)(((r & 0xffu) << 3) + 3096u)); /* Part 9 (+1620
+                                                                        * @0x801066B0) @0x8010669C-B0 */
     }
     {   uint32_t r = re2z_rand();                                      /* @0x801066B8 */
-        re2z_gore_fx(e, 0x06000000u | (uint32_t)(((r & 0xffu) << 3) + 3096u));  /* Part 3
-                                                                        * @0x801066C0-D8 */
+        re2z_gore_fx(e, 3, 0x06000000u | (uint32_t)(((r & 0xffu) << 3) + 3096u)); /* Part 3 (+588
+                                                                        * @0x801066D8) @0x801066C0-D8 */
     }
 }
 
@@ -2380,7 +2461,9 @@ static void re2z_leg_gore(re15_actor_t *e)
         e->re2z_part_mesh[thigh] = 15u;                         /* @0x8010531C-50 */
     }
     (void)re2z_rand();                                          /* @0x80105354, Emitter-Winkel */
-    re2z_gore_fx(e, 8000u);                                     /* @0x80105368, Oberschenkel */
+    re2z_gore_fx(e, thigh, 8000u);                              /* Anker = der Oberschenkel
+                                                                 * (`addiu a2,s0,72` @0x80105364),
+                                                                 * Emitter @0x80105368 */
 
     int shin = thigh + 1;                                       /* addiu s0,s0,172 @0x80105370 */
     e->re2z_part_flags[shin] |= 0x1062u;                        /* ori 0x1062 @0x8010537C-80 */
@@ -2396,7 +2479,9 @@ static void re2z_leg_gore(re15_actor_t *e)
     e->re2z_part_rot [shin][2] = 1024;                          /* +0x42 = 1024  @0x801053B4-B8 */
     e->re2z_part_rot [shin][1] = (int16_t)e->rot_y;             /* +0x40 = +0x76 @0x801053B0/C0 */
     (void)re2z_rand();                                          /* @0x801053BC */
-    re2z_gore_fx(e, 7000u);                                     /* @0x801053D0, Schienbein */
+    re2z_gore_fx(e, shin, 7000u);                               /* Anker = das Schienbein
+                                                                 * (`addiu s0,s0,172` @0x80105370,
+                                                                 * `addiu a2,s0,72` @0x801053CC) */
 }
 
 /* ---- @0x80105E10-F10 (Stagger-P0, Zeile 11 = GL SAEURE): das UNTERSCHENKEL-WEGAETZEN -------
@@ -2423,10 +2508,14 @@ static void re2z_stagger_acid_leg(re15_actor_t *e)
     int shin = 10 + 3 * (int)side;                              /* @0x80105E84-90 */
     e->re2z_part_flags[shin]     |= 0x10u;                      /* ori 0x10 @0x80105EC4 */
     e->re2z_part_tint [shin]      = 0x00304040u;                /* sw s2,112 @0x80105EC0 */
-    re2z_gore_fx(e, 0x040F0BB8u);                               /* @0x80105ED0 */
+    re2z_gore_fx(e, shin, 0x040F0BB8u);                         /* Anker = das Schienbein
+                                                                 * (`addiu a2,s3,72` @0x80105EB0,
+                                                                 * Emitter @0x80105ED0) */
     e->re2z_part_flags[shin + 1] |= 0x10u;                      /* ori 0x10 @0x80105F00 */
     e->re2z_part_tint [shin + 1]  = 0x00304040u;                /* sw s2,112 @0x80105EFC */
-    re2z_gore_fx(e, 0x040F07D0u);                               /* @0x80105F0C */
+    re2z_gore_fx(e, shin + 1, 0x040F07D0u);                     /* Anker = der Fuss (`addiu s3,
+                                                                 * s3,172` @0x80105ED4, `addiu a2,
+                                                                 * s3,72` @0x80105EE4) @0x80105F0C */
 }
 
 /* ---- Handler 0x80105BC0: der "schon angeschlagen"-Treffer (Zeilen 9-11 + jeder Treffer mit
@@ -2492,7 +2581,10 @@ static void re2z_hit_stagger(re15_actor_t *e, re15_actor_t *pl)
         re2z_hit_move(e);                                          /* @0x80105F28-58 */
         if (re2z_clip_done(e)) e->sub_state_2 = (uint8_t)(e->sub_state_2 + 1);  /* @0x80105F50-58 */
         if (e->re2z_t15a != 0 && e->re2z_dir16a != 0) {            /* @0x80105F5C-74 */
-            re2z_blood_fx(e);                                      /* @0x80105FF4 (Effekt-Ids
+            re2z_blood_fx_at(e, 0, (int16_t)e->rot_y);             /* Anker in BEIDEN Zweigen
+                                                                    * `addiu a2,s3,72` = Part 0
+                                                                    * (@0x80105FA8 / @0x80105FDC) */
+                                                                   /* @0x80105FF4 (Effekt-Ids
                                                                     * 8000/5096 je +0x222) */
             e->re2z_t15a = (int16_t)(e->re2z_t15a - 1);            /* @0x80105FFC-0C */
         }
@@ -2543,7 +2635,10 @@ static void re2z_hit_light(re15_actor_t *e, re15_actor_t *pl)
         e->sub_state_2 = 1;                                        /* @0x80107F98 */
         re2z_clip(e, clip, 0, 7, 0x200, 0);                        /* @0x80107FAC (Blend 512
                                                                     * @0x80108194) */
-        re2z_blood_fx(e);                                          /* @0x801080C4 */
+        re2z_blood_fx_at(e, 1, (int16_t)e->rot_y);                 /* @0x801080C4; Anker
+                                                                    * `addiu a2,s1,244` @0x801080C0
+                                                                    * = Part 1 (Brust), OHNE
+                                                                    * Zonen-Verzweigung */
         if (e->re2z_cd239 == 0) {                                  /* @0x801080CC-D4 */
             re2z_se(12);                                           /* @0x801080D8-E0 */
             e->re2z_cd239 = 150;                                   /* @0x801080E4-E8 */
@@ -2854,7 +2949,9 @@ static void re2z_hit_ragdoll(re15_actor_t *e, re15_actor_t *pl)
                 (void)re2z_rand();                                 /* @0x8010692C */
             }
         }
-        re2z_blood_fx(e);
+        re2z_blood_fx_at(e, 0, (int16_t)e->rot_y);                 /* Anker `addiu s1,s3,72` = Part 0
+                                                                    * @0x801068D0, Emitter
+                                                                    * @0x801068D8 / @0x80106908 */
         if (e->re2z_cd239 == 0) {                                  /* @0x80106950-58 */
             re2z_se((re2z_rand() & 1u) ? 12 : 13);                 /* @0x80106960-78 */
             e->re2z_cd239 = 150;                                   /* @0x80106980-84 */
@@ -2934,7 +3031,9 @@ static void re2z_hit_ragdoll(re15_actor_t *e, re15_actor_t *pl)
         e->re2z_t15a   = 10;                                       /* +0x15A = 10 @0x80106D50-54 */
         e->re2z_dir16a = 2;                                        /* +0x16A = 2  @0x80106D58-5C */
         (void)re2z_rand();                                         /* Staub-FX-Wurf @0x80106D64 */
-        re2z_blood_fx(e);                                          /* FUN_8001BF10 @0x80106D7C */
+        re2z_blood_fx_at(e, 1, (int16_t)e->rot_y);                 /* FUN_8001BF10 @0x80106D7C,
+                                                                    * Anker `addiu a2,s0,244`
+                                                                    * @0x80106D78 = Part 1 */
         re2z_se(9);                                                /* @0x80106D84-8C */
     }
     if (frame < 20 || e->sub_state_2 != 1) return;                 /* @0x80106D98-AC */
@@ -3007,7 +3106,12 @@ static void re2z_hit_slide(re15_actor_t *e, re15_actor_t *pl)
         e->re2z_t15a    = 0;                                       /* +0x15A = 0   @0x8010713C */
         e->re2z_gaitrow = 50;                                      /* +0x16B = 50  @0x80107140 */
         (void)re2z_rand();                                         /* Blut-Wurf @0x80107184 */
-        re2z_blood_fx(e);                                          /* FUN_8001BF10 @0x801071A0 */
+        /* Anker ist HIER kein fester Part: `lb a0,362(s1)` (+0x16A) @0x8010715C, dann
+         *   80107164-80: v1 = a0*172   (sll/addu/subu-Kette: 3a<<2 -a =11a, <<2 -a =43a, <<2)
+         *   80107188: _addu s2,a0,v1   ; a0 = +0x198
+         *   8010719c: addiu a2,s2,72   ; = &Part[+0x16A] + 0x48
+         * -> der Anker ist der Part mit dem Index (s8)+0x16A. */
+        re2z_blood_fx_at(e, (int)(int8_t)e->re2z_dir16a, (int16_t)e->rot_y); /* @0x801071A0 */
         /* FALLTHROUGH @0x801071A8 */
         /* FALLTHROUGH */
     case 1:
@@ -3127,24 +3231,28 @@ static void re2z_knockdown_gore(re15_actor_t *e)
             e->re2z_part_flags[5] |= 0x4Au;                        /* ori 0x4A @0x801075B4-B8 */
             e->re2z_part_tint [5]  = 0x0010104Fu;                  /* sw s1,972 @0x801075D8 */
             re2z_arm_throw(e, 5);                                  /* @0x801075C4-E4 */
-            re2z_gore_fx(e, 6000u);                                /* @0x801075E0 */
+            re2z_gore_fx(e, 5, 6000u);                             /* Part 5 (`addiu s0,v1,932`
+                                                                    * @0x801075B0) @0x801075E0 */
             (void)re2z_rand();                                     /* @0x801075E8 */
-            re2z_gore_fx(e, 0x08001000u);                          /* @0x80107600 */
+            re2z_gore_fx(e, 5, 0x08001000u);                       /* Part 5 (a2 = s0 @0x801075FC)
+                                                                    * @0x80107600 */
             e->re2z_part_flags[6] |= 0x4Au;                        /* ori 0x4A @0x80107630-34 */
             e->re2z_part_tint [6]  = 0x0010104Fu;                  /* sw s1,1144 @0x80107654 */
             re2z_arm_throw(e, 6);                                  /* @0x80107640-60 */
-            re2z_gore_fx(e, 6000u);                                /* @0x8010765C */
+            re2z_gore_fx(e, 6, 6000u);                             /* Part 6 (`addiu s0,v1,1104`
+                                                                    * @0x8010762C) @0x8010765C */
             e->re2z_part_flags[7]  = 0u;                           /* sw zero,1204 @0x8010767C */
         }
     }
     /* Die Blutfontaene am Part 3 laeuft IMMER — der Abriss faellt hier durch (@0x80107680-708). */
-    re2z_gore_fx(e, 5000u);                                        /* v={0,0,0}   @0x801076A4 */
+    /* Alle vier Fontaenen haengen am PART 3 (`addiu s0,s0,588` @0x801076A0, a2 = s0). */
+    re2z_gore_fx(e, 3, 5000u);                                     /* v={0,0,0}   @0x801076A4 */
     (void)re2z_rand();                                             /* @0x801076B0 */
-    re2z_gore_fx(e, 6000u);                                        /* v={0,400,0} @0x801076C4 */
+    re2z_gore_fx(e, 3, 6000u);                                     /* v={0,400,0} @0x801076C4 */
     (void)re2z_rand();                                             /* @0x801076D0 */
-    re2z_gore_fx(e, 4000u);                                        /* v={0,800,0} @0x801076E4 */
+    re2z_gore_fx(e, 3, 4000u);                                     /* v={0,800,0} @0x801076E4 */
     (void)re2z_rand();                                             /* @0x801076EC */
-    re2z_gore_fx(e, 0x08001000u);                                  /* @0x80107704 */
+    re2z_gore_fx(e, 3, 0x08001000u);                               /* @0x80107704 */
 }
 
 static void re2z_hit_knockdown(re15_actor_t *e, re15_actor_t *pl)
@@ -3339,7 +3447,8 @@ static void re2z_death(re15_actor_t *e, re15_actor_t *pl)
          * laeuft NUR fuer den LIEGENDEN Toten. Ihr Vorspann: Blut-Emitter 8000 am Part 0
          * (@0x8010840C-1C) und der Todes-SE (rand&1) ? 13 : 11 (@0x80108424-3C, EIN Wurf). */
         if (!(e->re2z_flags21a & 0x10u) && (e->re2z_flags21a & 0x2u)) {
-            re2z_gore_fx(e, 8000u);                                /* @0x8010841C */
+            re2z_gore_fx(e, 0, 8000u);                             /* Part 0 (`addiu a2,a2,72`
+                                                                    * @0x80108420) @0x8010841C */
             re2z_se((re2z_rand() & 1u) ? 13 : 11);                 /* @0x80108424-3C */
             re2z_dismember_row(e, 1);
         }
@@ -3620,5 +3729,50 @@ int re15_re2z_tick(int slot)
     default: re15_ai_set_state_word(e, 0x101); break;              /* [4] EXE-shared nav / [5][6]
                                                                     * NULL -> recover to walk */
     }
+
+    /* ============================================================================================
+     * ⛔ DIE TREFFBARKEIT IM RE2-ZWEIG IST +0x1D3 — NICHT DER RE1.5-LATCH +0x93
+     * --------------------------------------------------------------------------------------------
+     * NUTZER-REPORT 2026-08-19: "Nach ein paar Treffern schwanken die Zombies nach hinten. Beim
+     * Original wuerden sie dann umfallen, wenn man sie noch mal trifft. Bei uns nicht."
+     *
+     * GEMESSEN (probe_re2_stagger, ROOM1140, echter Weg game_step + R1/SQUARE, RE2-Bank geladen):
+     *   f132 Treffer -> +0x222 = 1, Stagger-P0 (Clip 4, Schub -450 = "nach hinten schwanken")
+     *   f132..f174   -> Stagger-P1, +0x93 = 0x01 die GANZE Zeit
+     *   f175         -> P2: +0x223 neu geseedet, +0x222 = 0
+     *   f187         -> erst JETZT wieder ein Treffer (11 Frames nach der Latch-Freigabe)
+     * Der Flinch 0x501 (@0x801050A4) — der einzige TREFFER-Weg in den Sturz-Executor EXEC[5]
+     * (der zweite 0x501-Produzent @0x80102D24-2C ist der Griff-Ausgang, kein Treffer) — wurde in
+     * 900 Frames NIE erreicht: sein Gate ist `+0x222 == 1` (@0x80105080-98), und +0x222 ist
+     * ausschliesslich WAEHREND des Staggers 1 (gesetzt @0x80105164, geloescht in Stagger-P2
+     * @0x80106034 bzw. EXEC[5]-P0 @0x801032F4). Es braucht also einen Treffer MITTEN in der
+     * Reaktion — und genau den hat der Port abgewiesen.
+     *
+     * ---- WAS DAS ORIGINAL TUT (selbst disassembliert, info/re2leon/PSX.EXE) --------------------
+     * Die RE2-Trefferschleife FUN_800470C0 filtert ihre Kandidaten so:
+     *   80047124: lw   v0,0(s0)          ; Entity-Flagwort
+     *   8004712c: andi v0,v0,0x1
+     *   80047130: beq  v0,zero,0x8004740c ; inaktiv -> naechster Kandidat
+     *   80047138: lbu  v0,467(s0)        ; +0x1D3
+     *   8004713c: nop
+     *   80047140: bne  v0,zero,0x8004740c ; **+0x1D3 != 0 -> Kandidat UEBERSPRUNGEN**
+     *   80047148: lh   v0,342(s0)        ; HP < 0 -> ueberspringen …
+     * RE2 kennt kein +0x93: eigener Voll-Scan aller `sb/lbu rt,467(rs)` in EMOVL10_S0.BIN zeigt,
+     * dass WEDER der Haupt-Handler 0x80105438 NOCH der Stagger 0x80105BC0 +0x1D3 je schreiben —
+     * der Zombie bleibt in beiden Reaktionen TREFFBAR. Gesetzt wird +0x1D3 |= 0x80 nur dort, wo
+     * der Port es auch schon setzt: Ragdoll-P0 @0x801069A4-B0, Knockdown-P0 @0x801074F0-504,
+     * EXEC[5]-P0 @0x80103304, EXEC[6] @0x801039F8 — und passend wieder geloescht.
+     *
+     * ---- WARUM DER PORT ES ANDERS MACHTE ------------------------------------------------------
+     * Der Port faehrt in BEIDEN Flavors den RE1.5-Resolver FUN_80011f50, dessen Ein-Treffer-Latch
+     * +0x93 Bit 0 (@0x800124E8/F0) einen Kandidaten bis zur Freigabe abweist. Die Freigabe wurde
+     * an den RE1.5-Ort gehaengt (Reaktions-ENDE, @0x80105f9c-fac) — damit war der RE2-Zombie
+     * fuer die gesamte Reaktion unverwundbar und der Flinch-Zweig toter Code.
+     * PORT-VERTRAG, kein geratener Wert: der Latch, den der geteilte Resolver liest, SPIEGELT
+     * jetzt exakt den Original-Filter — treffbar genau dann, wenn +0x1D3 == 0. Die bestehenden
+     * Freigaben an den Reaktions-Ausgaengen bleiben stehen (sie sind dieselbe Aussage) . */
+    if (e->re2z_self1d3 == 0u)
+        e->hit_react &= (uint8_t)~1u;                              /* Zwilling von `lbu 467 /
+                                                                    * bne v0,zero` @0x80047138-40 */
     return 1;
 }

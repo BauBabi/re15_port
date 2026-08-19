@@ -1113,7 +1113,9 @@ set_tests_properties(unit_bss_room_source PROPERTIES TIMEOUT 120)
 #     (1) sce-1-Examine-AOT traegt die Pause-Maske im Payload u16@+2 (@0x80043098)
 #     (2) offener Examine-Text (0xffff0000) -> Spieler/KI/Anim/SCD/Pad stehen
 #         (@0x80031c78 / @0x8010043c / @0x80019e40 / @0x8003f04c / @0x80030514)
-#     (3) Maske 0 (Caption, 420 von 698 Message_on) friert NICHTS ein — Regressionsschutz
+#     (3) Maske 0 (Caption, 451 von 765 Message_on — Zensus neu erhoben 2026-08-19 mit dem
+#         zweifach korrigierten RDT-Walker; der defekte Lauf zaehlte 420 von 698)
+#         friert NICHTS ein — Regressionsschutz
 #         fuer die Kino-Captions ROOM1170/ROOM1240 (alle 22 tragen 0x0000)
 #     (4) Close = Snapshot-Restore (@0x800285a4/@0x800286cc/@0x8002871c), auch ueber
 #         einem bestehenden Item-Modal-Freeze
@@ -1443,3 +1445,39 @@ target_compile_definitions(test_re2_baby_spider_dmg PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_re2_baby_spider_dmg COMMAND test_re2_baby_spider_dmg)
 set_tests_properties(unit_re2_baby_spider_dmg PROPERTIES TIMEOUT 60)
+
+# --- DIAGNOSE: Zustandsfolge Stagger -> Niederschlag beim WIEDERHOLTEN Treffer (Nutzer-Report
+#     2026-08-19 "sie fallen nicht um"). Kein add_test — reine Messsonde. ---
+add_executable(probe_re2_stagger probe_re2_stagger.c)
+target_link_libraries(probe_re2_stagger PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re2_stagger PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_re2_stagger PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- MESSSONDE: Treffer bis zum Tod je Waffe/Typ/Konfiguration (RE1.5 | RE2 Modell AUS |
+#     RE2 Modell AN), echter game_step-Weg. Kein add_test — reine Messung. ---
+add_executable(probe_re2_hp_model probe_re2_hp_model.c)
+target_link_libraries(probe_re2_hp_model PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re2_hp_model PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_re2_hp_model PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- PIN: das vollstaendige RE2-HP-/Schadensmodell + der Beweis, dass RE1.5 unveraendert
+#     bleibt (inkl. Negativ-Test "Modell aus"). ---
+add_executable(test_re2_hp_model test_re2_hp_model.c)
+target_link_libraries(test_re2_hp_model PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_hp_model PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2_hp_model PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2_hp_model COMMAND test_re2_hp_model)
+set_tests_properties(unit_re2_hp_model PROPERTIES TIMEOUT 180)
+
+# --- PIN: Nutzer-Report 2026-08-19 (RE2-KI, Dinner Room) — (A) Schwanken -> Niederschlag,
+#     (B) Blut an der Trefferstelle statt am Fuss. ---
+add_executable(test_re2_stagger_knockdown test_re2_stagger_knockdown.c)
+target_link_libraries(test_re2_stagger_knockdown PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_stagger_knockdown PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2_stagger_knockdown PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2_stagger_knockdown COMMAND test_re2_stagger_knockdown)
+set_tests_properties(unit_re2_stagger_knockdown PROPERTIES TIMEOUT 120)

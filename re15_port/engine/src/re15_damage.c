@@ -20,6 +20,7 @@
  *   80012eec      player+0x93 |= 1        (set guard; delay slot -> always runs)
  *   80012ee8-efc  if (HP < 0) state=3 (death), +0x5=0, +0x6=0
  */
+#include <stdlib.h>          /* getenv — RE15_RE2_DMG_MODEL (Negativ-Test-Hebel) */
 #include "re15_damage.h"
 #include "re15_math.h"       /* re15_squareroot0 — the engine's ONLY sqrt (BIOS 0x80065f60) */
 #include "re15_skeleton.h"   /* re15_skel_compute_pose / re15_skel_bone_to_world / g_anim_pose_actor */
@@ -433,15 +434,162 @@ static const uint16_t s_re2_wpn_dmg_spiderbaby[22] = {
     /* w21 -> r1  @0x800a4b90 */  15
 };
 
+/* ============================================================================================
+ * ⛔ RE2-FLAVOR — DAS VOLLSTAENDIGE RE2-HP-/SCHADENSMODELL (Nutzer-Auftrag 2026-08-19)
+ * ============================================================================================
+ * VORGESCHICHTE: der RE2-Modus fuhr bis hierher NUR das VERHALTEN; HP und Schaden blieben
+ * RE1.5. Das stand mit Begruendung in enemy_ai_re2_zombie.c ("nur die 250 nachzuziehen waere
+ * ein halbes Modell"). Der Nutzer hat diese Entscheidung aufgehoben ("die Zombies stecken viel
+ * zu viel ein, viel mehr als im Original") — also wird das Modell VOLLSTAENDIG portiert:
+ * Schadenszeile UND Start-HP, fuer JEDEN Typ, den das RE2-Gehirn besitzt.
+ *
+ * ---- (1) DER RE2-SCHADENSAPPLIER FUN_800470C0 (info/re2leon/PSX.EXE, selbst disassembliert)
+ *   80047218: lbu  v0,8(s1)            ; Gegner-TYP
+ *   80047220: sll  v0,v0,2
+ *   80047224: lui  at,0x800a
+ *   80047228: addu at,at,v0
+ *   8004722c: lw   a1,27272(at)        ; a1 = *(u32*)(0x800A6A88 + typ*4)  PER-TYP-ZEIGER
+ *   80047230: sll  v0,v1,2             ; v1 = Hitcode & 0xffff = RE2-ITEM-ZEILE (1-basiert)
+ *   80047234: addu v0,v0,v1
+ *   80047238: sll  v0,v0,2
+ *   8004723c: addiu v0,v0,-20          ; Zeilen-Offset = 20*(w-1)  (20 Byte je Waffe)
+ *   80047240: addu a1,a1,v0
+ *   80047244: sll  v0,s6,2             ; s6 = Hitcode>>28 = BRACKET (@0x80047114)
+ *   80047248: addu v0,v0,s6
+ *   8004724c: lw   v1,0(a1)            ; Wort 0 = DREI 10-Bit-Werte (Zonen)
+ *   80047250: sll  v0,v0,1             ; Schiebeweite = 10*Bracket
+ *   80047254: srlv v1,v1,v0
+ *   80047258: lhu  v0,342(s1)          ; HP (+0x156)
+ *   8004725c: andi v1,v1,0x3ff
+ *   80047260: subu v0,v0,v1
+ *   80047268: sh   v0,342(s1)          ; HP -= dmg
+ * BRACKET 0 = der direkte Einschlag — Herleitung unten bei re15_re2_stamp_hit, plus der Zensus
+ * aller 17 `jal FUN_800470C0` in info/re2leon/PSX.EXE: jeder DIREKTE Treffer traegt Bracket 0.
+ * WAFFEN-INDEX = die RE2-Item-Zeile aus derselben Karte, die der RE2-Trefferreaktions-Dispatch
+ * schon benutzt (re2z_row_from_weapon, enemy_ai_re2_zombie.c:1676 == s_re2s_row_from_weapon,
+ * enemy_ai_re2_spider.c:1556): {1,1,1,3,2,4,4,5,7,9,11,10,15,8,16,9,11,10,17,18,13,1}.
+ *
+ * PER-TYP-ZEIGER 0x800A6A88[typ] (selbst gedumpt, `table 0x800a6a88 48`):
+ *   0x10 @0x800A6AC8 -> 0x800A412C | 0x11 @0x800A6ACC -> 0x800A412C
+ *   0x12 @0x800A6AD0 -> 0x800A412C | 0x13 @0x800A6AD4 -> 0x800A412C
+ *   0x16 @0x800A6AE0 -> 0x800A42A8 | 0x18 @0x800A6AE8 -> 0x800A412C
+ *   0x20 @0x800A6B08 -> 0x800A4424 | 0x21 @0x800A6B0C -> 0x800A45A0
+ *   0x25 @0x800A6B1C -> 0x800A4B90 | 0x26 @0x800A6B20 -> 0x800A4B90
+ * Die Tabellen unten sind Zone 0 von `basis + 20*(zeile-1)`, je RE1.5-Waffe einzeln aus der
+ * RE2-EXE gelesen (Generator-Lauf ueber info/re2leon/PSX.EXE, jede Zelle mit ihrer Adresse).
+ * GEGENPROBE: die Spinnen-Zeile reproduziert s_re2_wpn_dmg_spiderbaby (Commit 49de51f3) Zelle
+ * fuer Zelle — dieselbe Methode, dasselbe Ergebnis. */
+
+/* 0x800A412C — Zombies 0x10/0x11/0x12/0x13/0x18 */
+static const uint16_t s_re2_wpn_dmg_zombie[22] = {
+    /* w0  -> r1  @0x800A412C */   3, /* w1  -> r1  @0x800A412C */   3,
+    /* w2  -> r1  @0x800A412C */   3, /* w3  -> r3  @0x800A4154 */  16,
+    /* w4  -> r2  @0x800A4140 */  16, /* w5  -> r4  @0x800A4168 */  16,
+    /* w6  -> r4  @0x800A4168 */  16, /* w7  -> r5  @0x800A417C */ 900,
+    /* w8  -> r7  @0x800A41A4 */ 200, /* w9  -> r9  @0x800A41CC */ 200,
+    /* w10 -> r11 @0x800A41F4 */ 200, /* w11 -> r10 @0x800A41E0 */ 200,
+    /* w12 -> r15 @0x800A4244 */   4, /* w13 -> r8  @0x800A41B8 */ 300,
+    /* w14 -> r16 @0x800A4258 */  15, /* w15 -> r9  @0x800A41CC */ 200,
+    /* w16 -> r11 @0x800A41F4 */ 200, /* w17 -> r10 @0x800A41E0 */ 200,
+    /* w18 -> r17 @0x800A426C */ 900, /* w19 -> r18 @0x800A4280 */   8,
+    /* w20 -> r13 @0x800A421C */  16, /* w21 -> r1  @0x800A412C */   3
+};
+/* 0x800A42A8 — Zombie-Typ 0x16 hat in RE2 eine EIGENE, schwaechere Zeile (Zeiger 0x800A6AE0
+ * zeigt zusammen mit 0x15/0x17 auf diese Tabelle, alle anderen Zombie-Typen auf 0x800A412C). */
+static const uint16_t s_re2_wpn_dmg_zombie16[22] = {
+    /* w0  -> r1  @0x800A42A8 */   3, /* w1  -> r1  @0x800A42A8 */   3,
+    /* w2  -> r1  @0x800A42A8 */   3, /* w3  -> r3  @0x800A42D0 */  11,
+    /* w4  -> r2  @0x800A42BC */  11, /* w5  -> r4  @0x800A42E4 */  11,
+    /* w6  -> r4  @0x800A42E4 */  11, /* w7  -> r5  @0x800A42F8 */ 900,
+    /* w8  -> r7  @0x800A4320 */  60, /* w9  -> r9  @0x800A4348 */  80,
+    /* w10 -> r11 @0x800A4370 */ 200, /* w11 -> r10 @0x800A435C */  80,
+    /* w12 -> r15 @0x800A43C0 */   3, /* w13 -> r8  @0x800A4334 */  80,
+    /* w14 -> r16 @0x800A43D4 */  12, /* w15 -> r9  @0x800A4348 */  80,
+    /* w16 -> r11 @0x800A4370 */ 200, /* w17 -> r10 @0x800A435C */  80,
+    /* w18 -> r17 @0x800A43E8 */ 900, /* w19 -> r18 @0x800A43FC */   6,
+    /* w20 -> r13 @0x800A4398 */  11, /* w21 -> r1  @0x800A42A8 */   3
+};
+/* 0x800A4424 — Hund 0x20 */
+static const uint16_t s_re2_wpn_dmg_dog[22] = {
+    /* w0  -> r1  @0x800A4424 */  10, /* w1  -> r1  @0x800A4424 */  10,
+    /* w2  -> r1  @0x800A4424 */  10, /* w3  -> r3  @0x800A444C */  18,
+    /* w4  -> r2  @0x800A4438 */  18, /* w5  -> r4  @0x800A4460 */  18,
+    /* w6  -> r4  @0x800A4460 */  18, /* w7  -> r5  @0x800A4474 */ 200,
+    /* w8  -> r7  @0x800A449C */  59, /* w9  -> r9  @0x800A44C4 */ 300,
+    /* w10 -> r11 @0x800A44EC */ 300, /* w11 -> r10 @0x800A44D8 */ 300,
+    /* w12 -> r15 @0x800A453C */  10, /* w13 -> r8  @0x800A44B0 */ 300,
+    /* w14 -> r16 @0x800A4550 */  12, /* w15 -> r9  @0x800A44C4 */ 300,
+    /* w16 -> r11 @0x800A44EC */ 300, /* w17 -> r10 @0x800A44D8 */ 300,
+    /* w18 -> r17 @0x800A4564 */ 300, /* w19 -> r18 @0x800A4578 */  18,
+    /* w20 -> r13 @0x800A4514 */  18, /* w21 -> r1  @0x800A4424 */  10
+};
+/* 0x800A45A0 — Kraehe 0x21 */
+static const uint16_t s_re2_wpn_dmg_crow[22] = {
+    /* w0  -> r1  @0x800A45A0 */  15, /* w1  -> r1  @0x800A45A0 */  15,
+    /* w2  -> r1  @0x800A45A0 */  15, /* w3  -> r3  @0x800A45C8 */  15,
+    /* w4  -> r2  @0x800A45B4 */  15, /* w5  -> r4  @0x800A45DC */  15,
+    /* w6  -> r4  @0x800A45DC */  15, /* w7  -> r5  @0x800A45F0 */ 200,
+    /* w8  -> r7  @0x800A4618 */  60, /* w9  -> r9  @0x800A4640 */  60,
+    /* w10 -> r11 @0x800A4668 */  60, /* w11 -> r10 @0x800A4654 */  60,
+    /* w12 -> r15 @0x800A46B8 */  15, /* w13 -> r8  @0x800A462C */ 120,
+    /* w14 -> r16 @0x800A46CC */  15, /* w15 -> r9  @0x800A4640 */  60,
+    /* w16 -> r11 @0x800A4668 */  60, /* w17 -> r10 @0x800A4654 */  60,
+    /* w18 -> r17 @0x800A46E0 */ 300, /* w19 -> r18 @0x800A46F4 */  30,
+    /* w20 -> r13 @0x800A4690 */  15, /* w21 -> r1  @0x800A45A0 */  15
+};
+/* 0x800A4B90 — Spinnen 0x25 UND 0x26 (beide Zeiger zeigen auf dieselbe Tabelle). Identisch
+ * zu s_re2_wpn_dmg_spiderbaby oben; die Baby-Konstante bleibt als Beleg-Anker stehen. */
+#define s_re2_wpn_dmg_spider s_re2_wpn_dmg_spiderbaby
+
+/* ---- der MODELL-SCHALTER (Port-Hebel, im Original nicht vorhanden) -------------------------
+ * Nur damit der Negativ-Test das RE2-Modell ABschalten und die alten Trefferzahlen
+ * reproduzieren kann. Default = AN (im RE2-Flavor). Der RE1.5-Pfad liest ihn nie: JEDE
+ * RE2-Abfrage unten ist zusaetzlich mit `re15_ai_flavor() == RE15_AI_FLAVOR_RE2` gegatet. */
+static int s_re2_model = 1;
+static int s_re2_model_env_read = 0;
+int re15_re2_damage_model(void)
+{
+    if (!s_re2_model_env_read) {
+        const char *v = getenv("RE15_RE2_DMG_MODEL");
+        s_re2_model_env_read = 1;
+        if (v && (v[0] == '0' || v[0] == 'n' || v[0] == 'N')) s_re2_model = 0;
+    }
+    return s_re2_model;
+}
+void re15_re2_damage_model_set(int on)
+{
+    s_re2_model = on ? 1 : 0;
+    s_re2_model_env_read = 1;    /* explizit gesetzt schlaegt die Umgebungsvariable */
+}
+/* Gilt fuer diesen Typ das RE2-Modell? (Flavor + Schalter + RE2-Besitz — alles typ-fest.) */
+static int re15_re2_model_owns(uint8_t type)
+{
+    return re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2_damage_model()
+        && re15_re2_owns_type((unsigned)type);
+}
+
 /* type -> its byte-true damage row (@0x8006e0d0 + type*0x58). */
 static const uint16_t *re15_enemy_dmg_row(uint8_t type)
 {
     /* RE2-Flavor: die Baby-Spinne faehrt das RE2-Gehirn (EMS26.BIN) mit RE2-HP; sie muss
      * deshalb auch die RE2-Schadenszeile bekommen, sonst ist sie unzerstoerbar UND friert im
      * nicht existierenden RE2-HURT-Zustand ein (Belege am Tabellen-Kopf). Das Besitz-Gate
-     * re15_re2spider_owns haengt ausschliesslich am Typ, also reicht der Typ hier. */
+     * re15_re2spider_owns haengt ausschliesslich am Typ, also reicht der Typ hier.
+     * ⚠ Die Baby-Spinne behaelt ihre Zeile AUCH bei abgeschaltetem Modell-Schalter: sie ist
+     * kein Balance-Thema, sondern der Fix gegen den permanenten Einfrierer (49de51f3). */
     if (type == 0x26u && re15_ai_flavor() == RE15_AI_FLAVOR_RE2)
         return s_re2_wpn_dmg_spiderbaby;
+    if (re15_re2_model_owns(type)) {                 /* RE2-Modell: die RE2-Schadenszeile */
+        switch (type) {
+            case 0x10: case 0x11: case 0x12: case 0x13: case 0x18:
+                                return s_re2_wpn_dmg_zombie;     /* 0x800A412C */
+            case 0x16: return s_re2_wpn_dmg_zombie16;            /* 0x800A42A8 */
+            case 0x20: return s_re2_wpn_dmg_dog;                 /* 0x800A4424 */
+            case 0x21: return s_re2_wpn_dmg_crow;                /* 0x800A45A0 */
+            case 0x25: return s_re2_wpn_dmg_spider;              /* 0x800A4B90 */
+            default:   break;                                    /* kein RE2-Zeiger -> RE1.5 */
+        }
+    }
     switch (type) {
         case 0x10: case 0x11: case 0x12: case 0x13: case 0x16: case 0x18: return s_player_wpn_dmg_zombie;
         case 0x20: return s_wpn_dmg_dog;
@@ -456,6 +604,184 @@ static const uint16_t *re15_enemy_dmg_row(uint8_t type)
         default:   return s_player_wpn_dmg_zombie;                  /* fallback (unrouted combat types) */
     }
 }
+/* ============================================================================================
+ * ⛔ RE2-FLAVOR — (2) DIE START-HP (+0x156) AUS DEN RE2-EM-MODULEN
+ * ============================================================================================
+ * WELCHER ZWEIG GILT? Jedes RE2-EM-INIT waehlt seine HP-Tabelle ueber ZWEI Bits des
+ * RE2-Spielworts DAT_800CFB74 (0x40 und 0x20). Der Port hat dieses Wort nicht — bisher stand
+ * deshalb ueberall "kein Produzent -> beide Bits 0". DAS IST WIDERLEGT (eigener Voll-Scan aller
+ * `sw`-Instruktionen mit Immediate 0xFB74 in info/re2leon/PSX.EXE + allen EM-Overlays; es gibt
+ * GENAU 9 Schreiber):
+ *   0x8002B4B4  sw v0,-1164(at)   in FUN_8002B48C = `DAT_800cfb74 |= 0x40`  (Boot-Systeminit)
+ *   0x8002C698  = `DAT_800cfb74 &= 0x10008D9`  -> 0x8D9 & 0x40 = 0x40, das Bit UEBERLEBT
+ *   0x80026320 |0x4 | 0x80026488 |0x08000000 | 0x8002B928 | 0x80038FE0 | 0x80039408 (AND mit
+ *   0x…FFFF) | 0x80051BDC |0x00040000 | 0x8010295C |0x100
+ * KEIN Schreiber setzt jemals 0x20, und keiner loescht 0x40.
+ * => Im ausgelieferten RE2 ist BIT 0x40 IMMER GESETZT und BIT 0x20 NIE. Damit ist genau EIN
+ *    Zweig je Modul erreichbar — der wird hier portiert, die uebrigen drei sind toter Code.
+ *
+ * ZOMBIE-FAMILIE (EMOVL10_S0.BIN, INIT @0x8010065C):
+ *   801006d4: andi v0,v0,0x40        ; 801006d8: beq -> 0x8010075c   (0x40 gesetzt = Fallthrough)
+ *   801006e0/e8: 2x jal 0x80015fe8   ; s0 = 1. Zug, v0 = 2. Zug
+ *   801006f0: andi v0,v0,0x3         ; 801006f4: srlv s0,s0,v0
+ *   801006f8: andi s0,s0,0xf         ; 801006fc: sll s0,s0,1
+ *   80100708: lhu v0,-14736(at)      ; Tabelle 0x8010C670
+ *   80100710: sh  v0,342(s2)         ; HP
+ *   8010071c: andi v0,v0,0x20        ; 0x20 KLAR -> weiter bei 0x801007f0
+ *   801007f4: lbu v0,-1037(v0)       ; DAT_800CFBF3
+ *   801007fc: sltiu v0,v0,0x4        ; 80100800: beq -> 0x80100818
+ *   80100810: addiu v0,v0,15         ; 80100814: sh v0,342(s2)   -> HP += 15 wenn Zaehler < 4
+ *   801008bc: bne v1,v0(=17),0x801008d8   \  NUR Typ 0x11:
+ *   801008c8: addiu v1,zero,250            > HP = 250 FEST (ueberschreibt den Wuerfelwert)
+ *   801008cc: sh  v1,342(s2)               /
+ * DAT_800CFBF3 IST BELEGT DIE GEGNERZAHL DES RAUMS, nicht geraten: FUN_80049E48 nullt sie beim
+ * Raum-Reset (`sb zero,-1037(at)` @0x80049EE4) und initialisiert daneben die 33-Eintrag-
+ * Entity-Liste ab 0x800CFE18; die beiden Entity-Allokatoren erhoehen sie (@0x80057220 /
+ * @0x800578B4, `lbu/addiu 1/sb` auf s4+14859 = 0x800CFBF3, uebersprungen fuer Kategorie -1);
+ * und der Auto-Aim-Zielscan FUN_80045C10 laeuft mit GENAU diesem Zaehler die Gegnerliste ab
+ * 0x800CFE1C ab (`uVar5 = DAT_800cfbf3` / `while(uVar6--)` / `+0x156`-Test).
+ * PORT-ANALOGON: die Zahl der Gegner-Aktoren im Raum (Typen 0x10..0x3F, Spieler-Slot aus).
+ *
+ * HUND (EMD0G_MOD0.BIN, INIT @0x80100150):
+ *   80100160: andi v0,v0,0x40 -> gesetzt: 0x8010016C   80100180: andi 0x20 -> klar: 0x801001AC
+ *   80100184: andi s1,v0,0x3          ; s1 = 1. Zug & 3
+ *   801001C4: lhu v0,21424(at)        ; Tabelle 0x801053B0, Index (2. Zug & 0xf)
+ *   801001CC: addu v0,v0,s1           ; 80100234: sh v0,342(s0)
+ * KRAEHE (EMOVL21_S0.BIN): 80100324: addiu v0,zero,10 / 80100348: sh v0,342(s1) -> HP = 10 FEST
+ * SPINNE (EMS25.BIN, INIT @0x801001FC):
+ *   80100234: andi 0x40 -> gesetzt: 0x80100240        80100254: andi 0x20 -> klar: 0x80100280
+ *   80100258: andi s0,v0,0x3          ; 80100298: lhu v0,25396(at) = Tabelle 0x80106334
+ *   801002A0: addu v0,v0,s0           ; 80100308: sh v0,342(s2)
+ * BABY-SPINNE (EMS26.BIN): HP = 1 (@0x801000F8) bzw. -1 = unverwundbar (@0x80100204) — bereits
+ *   byte-true im Brain (enemy_ai_re2_spider.c:2320/2342) und hier BEWUSST NICHT angefasst.
+ *
+ * ⚠ Hund und Spinne setzen ihre HP heute schon selbst, aber aus dem WIDERLEGTEN Zweig
+ *   ("beide Bits 0" -> 0x80105340 bzw. 0x801062C4). Der Stempel unten korrigiert sie auf den
+ *   ausgelieferten Zweig, ohne die fremden Brain-Dateien anzufassen. Die Kraehe stempelt auf
+ *   denselben Wert 10, den ihr Brain schon setzt (kein Verhaltensunterschied, aber EIN Ort).
+ *   OFFEN (gemeldet, nicht stillschweigend): der Hunde-HURT-P4-Re-Roll @0x80103850
+ *   (enemy_ai_re2_dog.c:1473) zieht weiter aus 0x80105340; er ist laut eigener Datei "im
+ *   HURT-Fluss unerreicht" und liegt ausserhalb dieser Datei. */
+/* ⛔ DER EINZIGE TYP-SPEZIFISCHE SONDERFALL DES MODELLS — und die einzige Stelle, an der die
+ * Index-Identitaet RE1.5-Typ == RE2-Kind KAMPFRELEVANT wird. DEFAULT: AUS. Begruendung:
+ *
+ * BELEGT: der RE2-Zombie-INIT ueberschreibt die gewuerfelte HP fuer GENAU EIN Kind fest auf 250
+ *   80100894: lbu   v1,8(s2)             ; Entity+0x8 = KIND
+ *   801008a0: addiu v0,zero,17           ; 0x11
+ *   801008bc: bne   v1,v0,0x801008d8     ; jedes andere Kind ueberspringt
+ *   801008c8: addiu v1,zero,250
+ *   801008cc: sh    v1,342(s2)           ; +0x156 = 250
+ * BELEGT: RE2-Kind 0x11 ist ein echter, ausgelieferter Gegner mit eigenen Assets — CDEMD0-TOC
+ *   @0x8009ADF4 (Index (kind-0x10)*4): TIM Sektor 157 / 66592 B, EMD Sektor 190 / 149468 B.
+ *   (Die im extrahierten Ordner info/re2leon/PL0/PLD/CDEMD0 fehlende EM011.EMD ist ein
+ *   EXTRAKTIONS-Artefakt jenes Dumps, kein Befund — der TOC der Original-EXE fuehrt sie.)
+ *
+ * NICHT BELEGT — und deshalb nicht angewandt: dass der RE1.5-Typ 0x11 DASSELBE Wesen ist.
+ *   Alles andere am RE2-Modell ist kind-UNABHAENGIG (die Wuerfeltabelle 0x8010C670 gilt fuer die
+ *   ganze Familie, der Schadenszeiger 0x800A6A88[0x11] ist byte-gleich dem von 0x10/0x12/0x13/
+ *   0x18 = 0x800A412C). NUR diese eine Zeile haengt an der Kind-IDENTITAET, und fuer die gibt es
+ *   in den ausgelieferten Daten keinen Beweis: die ENEMSE-Raumpaar-Tabelle @0x800A7400 taugt
+ *   nicht als Haeufigkeits-Indiz (0x11 steht in 1 Zeile — 0x18 aber auch, 0x10 nur in 3), und
+ *   ein offline-SCD-Zensus ueber die RE2-RDTs desynct (die RE1.5-Gegenprobe reproduziert den
+ *   bekannten Roster nicht), liefert also ebenfalls keinen Beleg.
+ * WIRKUNG, GEMESSEN (probe_re2_hp_model, ROOM1140, echter game_step-Weg): mit der Zeile bekommt
+ *   der Dinner-Room-Zombie vom Typ 0x11 250 statt 79-128 HP und braucht 16 Pistolenschuesse
+ *   statt 5-8 — er wird also GENAU in der Situation zaeher, aus der der Nutzer-Report kommt
+ *   ("die Zombies stecken viel zu viel ein"). Eine unbelegte Identitaet darf keine
+ *   Kampf-Balance tragen (STOP-GATE): die Zeile ist portiert, zitiert und abschaltbar, aber
+ *   der RE1.5-Typ 0x11 faehrt per Default die normale Familien-Wuerfeltabelle.
+ * Einschalten: RE15_RE2_ZOMBIE11_250=1 (oder re15_re2_kind11_250_set(1)). */
+static int s_re2_kind11_250 = 0;
+static int s_re2_kind11_env_read = 0;
+int re15_re2_kind11_250(void)
+{
+    if (!s_re2_kind11_env_read) {
+        const char *v = getenv("RE15_RE2_ZOMBIE11_250");
+        s_re2_kind11_env_read = 1;
+        if (v && (v[0] == '1' || v[0] == 'y' || v[0] == 'Y')) s_re2_kind11_250 = 1;
+    }
+    return s_re2_kind11_250;
+}
+void re15_re2_kind11_250_set(int on) { s_re2_kind11_250 = on ? 1 : 0; s_re2_kind11_env_read = 1; }
+
+static const uint16_t s_re2_hp_zombie[16] =     /* @0x8010C670 (EMOVL10_S0.BIN, selbst gedumpt) */
+    { 80, 94, 128, 75, 60, 95, 58, 75, 50, 83, 79, 66, 80, 65, 82, 65 };
+static const uint16_t s_re2_hp_dog[16] =        /* @0x801053B0 (EMD0G_MOD0.BIN) */
+    { 129, 95, 95, 95, 129, 80, 95, 95, 80, 95, 69, 80, 69, 95, 69, 80 };
+static const uint16_t s_re2_hp_spider[16] =     /* @0x80106334 (EMS25.BIN) */
+    { 109, 109, 109, 109, 129, 109, 109, 129, 109, 109, 109, 129, 109, 99, 109, 109 };
+
+/* Die Gegnerzahl des Raums = das Port-Analogon zu DAT_800CFBF3 (Beleg oben). */
+static int re15_re2_room_enemy_count(void)
+{
+    int n = 0;
+    for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++)
+        if (g_actors[s].active && g_actors[s].type >= 0x10u && g_actors[s].type < 0x40u) n++;
+    return n;
+}
+
+/* Der RE2-INIT-HP-Zug fuer einen Typ. Rueckgabe < 0 = dieser Typ hat kein RE2-HP-Modell (dann
+ * bleibt der Wert stehen, den sein Brain gesetzt hat). Zieht aus dem RE2-PRNG @0x80015FE8
+ * (re15_re2_rand) — derselbe Generator, aus dem die Original-INITs ziehen.
+ * ⚠ PORT-PLUMBING: der Port hat den RE1.5-INIT bereits laufen lassen (der seinerseits gewuerfelt
+ * hat), diese Zuege kommen also ZUSAETZLICH in den Strom. Der RE2-Modus ist ohnehin ein Hybrid
+ * (RE1.5-Raumdaten + RE2-Gehirn) und war nie strom-identisch zum RE2-Original. */
+int16_t re15_re2_init_hp(const re15_actor_t *e)
+{
+    if (!e) return -1;
+    switch (e->type) {
+        case 0x10: case 0x11: case 0x12: case 0x13: case 0x16: case 0x18: {
+            uint32_t r1 = re15_re2_rand();                       /* @0x801006E0 */
+            uint32_t r2 = re15_re2_rand();                       /* @0x801006E8 */
+            int hp = s_re2_hp_zombie[(r1 >> (r2 & 3u)) & 0xfu];  /* @0x801006F0-710 */
+            if (re15_re2_room_enemy_count() < 4)                 /* sltiu ..,0x4 @0x801007FC */
+                hp += 15;                                        /* @0x80100810-14 */
+            if (e->type == 0x11 && re15_re2_kind11_250()) hp = 250;   /* @0x801008C8-CC — s. Block */
+            return (int16_t)hp;
+        }
+        case 0x20: {
+            uint32_t r1 = re15_re2_rand() & 3u;                  /* @0x8010016C/184 */
+            return (int16_t)(s_re2_hp_dog[re15_re2_rand() & 0xfu] + (int)r1);  /* @0x801001AC-234 */
+        }
+        case 0x21: return 10;                                    /* @0x80100324/348 */
+        case 0x25: {
+            uint32_t r1 = re15_re2_rand() & 3u;                  /* @0x80100240/258 */
+            return (int16_t)(s_re2_hp_spider[re15_re2_rand() & 0xfu] + (int)r1); /* @0x80100280-308 */
+        }
+        default: return -1;     /* 0x26 Baby: HP 1/-1 kommt byte-true aus seinem eigenen Brain */
+    }
+}
+
+/* Stempelt die RE2-INIT-HP auf jeden RE2-eigenen Aktor, dessen INIT gerade gelaufen ist.
+ * WARUM HIER UND NICHT IM BRAIN: die HP der Zombie-Familie entsteht in re15_enemy_ai_live_init
+ * (enemy_ai_common.c) bzw. re2z_init (enemy_ai_re2_zombie.c) — beide Dateien werden in dieser
+ * Session parallel bearbeitet und duerfen nicht angefasst werden. Der Stempel ist deshalb ein
+ * Nachlauf: er feuert GENAU EINMAL pro Spawn, in dem Tick, in dem der INIT (Zustand 0) auf
+ * einen Nicht-Null-Zustand umschaltet — also bevor irgendein Treffer fallen kann.
+ * ⛔ EINZIGER AUFRUFER IST game_step (direkt nach re15_enemy_ai_run_all) — BEWUSST NICHT die
+ * Schadenspfade. Ein zusaetzlicher "idempotenter" Aufruf in re15_player_weapon_fire stand hier
+ * kurzzeitig drin, damit auch KI-Sonden ohne game_step das Modell sehen; er hat aber die
+ * Invariante "ein Schuss senkt HP" gebrochen: laeuft der Stempel erst IM Schuss, ersetzt er die
+ * (niedrigeren) RE1.5-INIT-HP durch die (hoeheren) RE2-HP und der Treffer sieht wie eine
+ * HP-ERHOEHUNG aus. GEMESSEN: test_re2_livepath "ROOM1190 Hunde: HP unveraendert — kein
+ * Schadens-Durchgriff" und der Knockdown-Block, der `e->hp = 60` selbst setzt. Der Stempel
+ * gehoert an den Frame-Schritt; Harnesse, die nur re15_enemy_ai_run_all ticken, bleiben damit
+ * exakt so, wie sie vor dieser Aenderung waren (sie sehen die RE1.5-INIT-HP). */
+void re15_re2_hp_sync(void)
+{
+    if (re15_ai_flavor() != RE15_AI_FLAVOR_RE2 || !re15_re2_damage_model()) return;
+    for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) {
+        re15_actor_t *e = &g_actors[s];
+        if (!e->active) { e->re2_hp_stamped = 0; continue; }
+        if (!re15_re2_owns_type(e->type)) continue;
+        if (e->state == 0) { e->re2_hp_stamped = 0; continue; }   /* INIT steht noch aus */
+        if (e->re2_hp_stamped) continue;
+        e->re2_hp_stamped = 1;
+        int16_t hp = re15_re2_init_hp(e);
+        if (hp >= 0) e->hp = hp;
+    }
+}
+
 /* Per-weapon shot reach (UNK_8006e5a0, u32). 22 weapons. */
 static const uint16_t s_player_wpn_reach[22] = {
     1000, 1100, 1000, 1000, 1100, 1000, 1200, 1000, 1500, 1000, 1000,

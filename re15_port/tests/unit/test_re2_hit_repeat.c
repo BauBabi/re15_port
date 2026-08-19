@@ -100,6 +100,28 @@ static void frame(uint16_t cur, uint16_t edge)
     re15_game_step(&s_ctx);
 }
 
+/* ⛔ ABSTAND NACHFUEHREN (2026-08-19): der RE2-Stagger stoesst den Zombie um -450 Einheiten
+ * zurueck (`re2z_thrust(e, -450)`, `sh v0,324` @0x80105C88), der Knockdown noch weiter. Ohne
+ * Nachlaufen faellt er aus der Messer-Reichweite (1100 + Radius) und dieser Pin misst
+ * REICHWEITE statt der Trefferkette. Position/Rotation zu setzen ist Harness-Hilfe, der
+ * Schuss-Weg (Aim-FSM + game_step + weapon_fire) bleibt echt — gleiches Verfahren wie
+ * probe_re2_hit_crow_spider.c track(). */
+extern int16_t re15_atan2_q12(int32_t dz, int32_t dx);
+static void hr_track(int slot, int32_t back)
+{
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    re15_actor_t *e  = &g_actors[slot];
+    int32_t dx = e->x - pl->x, dz = e->z - pl->z;
+    int64_t q  = (int64_t)dx*dx + (int64_t)dz*dz;
+    double  d  = q > 0 ? __builtin_sqrt((double)q) : 0.0;
+    if (d > 1.0) {
+        pl->x = e->x - (int32_t)((double)dx / d * back);
+        pl->z = e->z - (int32_t)((double)dz / d * back);
+    } else { pl->x = e->x - back; pl->z = e->z; }
+    pl->y = e->y;
+    pl->rot_y = (int16_t)(((int)re15_atan2_q12(e->z - pl->z, e->x - pl->x) - 0x400) & 0x0fff);
+}
+
 /* Der Raum faehrt aus seinem EIGENEN SCD hoch — dieselben Sce_em_set-Spawns wie im Spiel. */
 static void bringup(void)
 {
@@ -169,16 +191,29 @@ static void run(const char *tag, re15_ai_flavor_t flavor, int weapon, int budget
     pl->x = e->x - ((weapon < 3) ? 1200 : 2600);   /* Messer braucht Naehe (reach 1100 + r 400) */
     pl->z = e->z; pl->y = e->y; pl->rot_y = 1024;  /* rot_y 1024 = Blick +X = zum Zombie */
     pl->hp = 100;
+    (void)hr_track;
     re15_player_cmd_reset(); re15_player_aim_reset(); re15_player_set_aim_clip_len(12);
 
     for (int f = 0; f < 40 && !re15_player_aim_ready(); f++) {
         pl->hp = 100; frame(RE15_PAD_BIT_R1, 0);
     }
 
+    /* ⛔ HARNESS-HILFE (2026-08-19, vollstaendiges RE2-Schadensmodell): das Messer macht in RE2
+     * nur noch 3 Schaden (Zeile 0x800A412C Zeile 1 Zone 0 = 3; RE1.5 @0x8006E650[1] = 6), und
+     * der Zombie traegt RE2-HP (0x8010C670, 50..128). Bis zum Tod waeren ~30 Treffer noetig —
+     * im Rahmen dieses Pins nicht erreichbar. Punkt (2b) misst NICHT Letalitaet, sondern dass
+     * beide Latches (+0x93 Bit 0 und das DOWNED-Bit) wieder freigegeben werden; der Tod ist nur
+     * der end-to-end-Beleg dafuer. Der Zombie bekommt deshalb 15 HP = 5 Messertreffer, genau
+     * wie der Spieler oben unsterblich gehalten wird. Die byte-true RE2-Zahlen selbst pinnt
+     * test_re2_hp_model (Schadenszeile + HP-Tabelle je Typ). */
+    if (flavor == RE15_AI_FLAVOR_RE2 && weapon == 1 && re15_re2_damage_model()) e->hp = 15;
+
     int hp_last = e->hp;
     uint8_t grid_last = e->grid_id;
+    const int32_t back = (weapon < 3) ? 1200 : 2600;
     for (int f = 0; f < budget; f++) {
         pl->hp = 100;
+        hr_track(slot, back);   /* Rueckstoss -450 @0x80105C88 nachlaufen (s. Helfer) */
         frame(RE15_PAD_BIT_R1 | RE15_PAD_BIT_SQUARE, (f == 0) ? RE15_PAD_BIT_SQUARE : 0);
         if (e->hp < hp_last) out->hits++;
         hp_last = e->hp;
@@ -207,7 +242,7 @@ int main(void)
     printf("=== ROOM1140 (Dinner Room): zielen + feuern auf dem ECHTEN Weg ===\n");
     result_t r2g, r2k, r15g, r15k;
     run("RE2   Pistole", RE15_AI_FLAVOR_RE2,  3, 900, &r2g);
-    run("RE2   Messer",  RE15_AI_FLAVOR_RE2,  1, 900, &r2k);
+    run("RE2   Messer",  RE15_AI_FLAVOR_RE2,  1, 900, &r2k);   /* HP-Klemme s. run() */
     run("RE1.5 Pistole", RE15_AI_FLAVOR_RE15, 3, 900, &r15g);
     run("RE1.5 Messer",  RE15_AI_FLAVOR_RE15, 1, 900, &r15k);
 
