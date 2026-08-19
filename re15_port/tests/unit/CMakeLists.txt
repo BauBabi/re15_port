@@ -1375,3 +1375,21 @@ target_include_directories(test_re2_room1090_ab PRIVATE ${CMAKE_SOURCE_DIR}/incl
 target_compile_definitions(test_re2_room1090_ab PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_re2_room1090_ab COMMAND test_re2_room1090_ab)
+
+# --- DIAGNOSE: der ECHTE Schuss-/Schlag-Weg im RE2-Flavor (Nutzer-Blocker "kann keinen Zombie
+#     treffen"). Kein add_test — reine Messsonde. ---
+add_executable(probe_re2_hitpath probe_re2_hitpath.c)
+target_link_libraries(probe_re2_hitpath PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re2_hitpath PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_re2_hitpath PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- PIN: zielen + feuern in ROOM1140 muss WIEDERHOLT treffen (Nutzer-Blocker 2026-08-19,
+#     RE2-Modus: +0x93-Ein-Treffer-Latch wurde nie freigegeben). ---
+add_executable(test_re2_hit_repeat test_re2_hit_repeat.c)
+target_link_libraries(test_re2_hit_repeat PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_hit_repeat PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2_hit_repeat PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2_hit_repeat COMMAND test_re2_hit_repeat)
+set_tests_properties(unit_re2_hit_repeat PROPERTIES TIMEOUT 120)

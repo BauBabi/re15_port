@@ -673,6 +673,52 @@ static void re2z_thrust(re15_actor_t *e, int spd)
     e->z -= (int32_t)(((int32_t)re15_sin_q12(e->rot_y) * spd) >> 12);
 }
 
+/* ⛔ RESOLVER-LATCH-FREIGABE (+0x93 Bit 0) — Nutzer-Blocker 2026-08-19
+ * "Bei der RE2-AI kann ich immer noch keinen Zombie treffen. Weder mit Schusswaffe noch mit
+ * Messer." GEMESSEN (probe_re2_hitpath, ROOM1140, echter Weg game_step + R1/SQUARE, Ziel = der
+ * stehende Zombie Slot 2 Typ 0x10):
+ *   RE1.5-Flavor, Pistole, 120 Frames Dauerfeuer -> 3 TREFFER, +0x93 endet 0x80
+ *   RE2  -Flavor, Pistole, 120 Frames Dauerfeuer -> 1 TREFFER, +0x93 bleibt 0x01 (fuer immer)
+ *   RE1.5-Flavor, Messer  -> Treffer, +0x93 endet 0x00
+ *   RE2  -Flavor, Messer  -> 1 Treffer, +0x93 bleibt 0x01
+ * Nach dem ERSTEN Treffer ist der Zombie im RE2-Modus dauerhaft UNTREFFBAR.
+ *
+ * MECHANISMUS (selbst disassembliert, RE1.5 PSX.EXE — der Port faehrt DIESEN Resolver
+ * FUN_80011f50 in BEIDEN Flavors, es gibt keinen portierten RE2-Resolver):
+ *   SETZEN     80012490+ ... 800124e8: lbu v0,147(s1)
+ *                             800124f0: ori v0,v0,0x1        (danach sb) = Ein-Treffer-Latch
+ *   AUSSCHLUSS 800120c0: lui s4,0x300          (Maske 0x03000000 = +0x93 Bits 0|1)
+ *              800120f4: lw  v0,144(s0)        (+0x90-Wort, +0x93 ist dessen High-Byte)
+ *              800120fc: and v0,v0,s4
+ *              80012100: beq v0,s4,0x80012124  -> Kandidat UEBERSPRUNGEN
+ *   ZWEITKONTAKT 800123fc: lbu v1,147(s1) / 80012404: andi v0,v1,0x1 / 80012408: beq
+ *              8001240c: ori v0,v1,0x2 / 80012410: sb v0,147(s1) / 80012418: jal 0x80011f50
+ *              -> Bit 1 dazu, Rekursion auf das NAECHSTE Opfer. Ein Aktor mit Bit0 gesetzt
+ *                 kassiert also NIE wieder Schaden, bis Bit 0 geloescht wird.
+ *   FREIGABE (RE1.5-Overlay STAGE1.BIN, Zwilling dieser Zeile):
+ *              80105f9c: lbu v0,147(v1)
+ *              80105fa4: andi v0,v0,0xfe
+ *              80105fac: sb  v0,147(v1)        (Stagger-Ausgang -> ACTIVE 0x10201)
+ *              gleiche Freigabe im Knockdown-Ausgang 80106b8c-90 / 80106a1c-20 und im
+ *              Liege-Wecker 80103b5c-68.
+ *   D.h. in RE1.5 gehoert die Freigabe dem TREFFER-REAKTIONS-HANDLER: Phase 0 setzt
+ *   `+0x93 |= 1` (@0x80106af4-fc / @0x80106958-60), die Endphase loescht es beim Ruecksprung
+ *   nach ACTIVE.
+ *
+ * WARUM ES IM RE2-BRAIN FEHLTE (nachgewiesen, nicht vermutet): das RE2-Overlay hat das Feld
+ * gar nicht. Eigener Voll-Scan beider RE2-Binaries nach `sb/lbu rt,147(rs)`:
+ *   info/re2leon/COMMON/BIN/EMOVL10_S0.BIN : 0 Treffer
+ *   info/re2leon/PSX.EXE                   : 0 Treffer
+ * (RE2 hat ein anderes Entity-Layout — z.B. HP als +0x156 `sh -1,342` @0x8010A4D4 statt
+ * RE1.5 +0x9a.) Das +0x93-Protokoll ist also reines RE1.5-EXE-Resolver-Eigentum, und mit
+ * der Uebernahme der Zustandsmaschine durch den RE2-Brain fiel der EINZIGE Freigeber weg.
+ * PORT-VERTRAG, kein geratener Wert: dieselbe Maske 0xfe (@0x80105fa4) an derselben
+ * STRUKTURELLEN Stelle — dem Endausgang jeder RE2-Treffer-Reaktion zurueck nach ACTIVE. */
+static void re2z_hit_latch_release(re15_actor_t *e)
+{
+    e->hit_react &= (uint8_t)~1u;                                  /* andi 0xfe @0x80105fa4 */
+}
+
 /* ============================== ACTIVE: DECISIONS ========================================== */
 
 /* DECISION[0] @0x80101294 (stand) — self-disasm'd 2026-08-10:
@@ -1039,9 +1085,17 @@ static void re2z_exec_knockdown(re15_actor_t *e)
          * @0x801032F4) konsumiert und dann doch 0x901 einschiebt — dafuer decide[1] @0x80101714 auf
          * `lhu 538(s0)`-Reads scannen. Bis dahin KEIN Port-Eingriff (waere geraten). */
         re15_ai_set_state_word(e, 0x101);                          /* sw 0x101 @0x801036F4-F8 */
+        /* P8 ist der EINZIGE Ausgang der Sturz-Kette und damit der Zwilling des RE1.5-Knockdown-
+         * Ausgangs case 6, der DREI Dinge zusammen macht: `-> 0x201`, `grid_id &= 0x7f` (Downed-
+         * Band weg) UND `hit_react &= ~1` (@0x80106b8c-90 / @0x80106a1c-20). Der Downed-Clear
+         * stand hier schon (Review #18) — die +0x93-Freigabe fehlte, und OHNE sie bleibt jeder
+         * per Flinch (0x501 @0x801050A4) niedergeschlagene Zombie fuer immer untreffbar, weil
+         * der Flinch-Pfad keinen Reaktions-Handler-Endausgang durchlaeuft. */
+        re2z_hit_latch_release(e);                                 /* +0x93 &= 0xfe @0x80105fa4 */
         e->grid_id &= (uint8_t)0x7Fu;                              /* PORT-MAPPING (Review #18):
                                                                     * Downed-Band-Clear beim
-                                                                    * Aufstehen (RE1.5-Zwilling) */
+                                                                    * Aufstehen (RE1.5-Zwilling
+                                                                    * @0x801022b8-bc) */
         break;
     }
 }
@@ -2424,6 +2478,8 @@ static void re2z_hit_stagger(re15_actor_t *e, re15_actor_t *pl)
     default:                                                       /* P2 @0x80106010 */
         re15_ai_set_state_word(e, 0x101);                          /* sw 257 @0x8010601C (Delay-Slot,
                                                                     * laeuft immer) */
+        re2z_hit_latch_release(e);                                 /* Reaktion vorbei -> wieder
+                                                                    * treffbar (@0x80105f9c-fac) */
         if ((int)e->re2z_res223 <= 0) {                            /* bgtz @0x80106018 */
             e->re2z_res223 = (int8_t)((re2z_rand() & 0x10u) + 15u);/* @0x80106028-30 */
             e->re2z_flag222 = 0;                                   /* sb zero,546 @0x80106034 */
@@ -2482,6 +2538,8 @@ static void re2z_hit_light(re15_actor_t *e, re15_actor_t *pl)
         break;
     default:                                                       /* P2 @0x801081AC */
         re15_ai_set_state_word(e, 0x101);                          /* sw 257 @0x801081B0 */
+        re2z_hit_latch_release(e);                                 /* Reaktion vorbei -> wieder
+                                                                    * treffbar (@0x80105f9c-fac) */
         if ((re2z_rand() & 1u) == 0u)                              /* @0x801081B4-B8 */
             re15_ai_set_state_word(e, 0x201);                      /* 513 @0x801081BC-C0 */
         if (re15_ai_arc_test(e, pl->x, pl->z, 512) == 0            /* @0x801081D8-E0 */
@@ -2610,6 +2668,12 @@ static void re2z_hit_main(re15_actor_t *e, re15_actor_t *pl)
          * jetzt aber korrekt. */
         break;
     case 3:
+        re2z_hit_latch_release(e);                                 /* Reaktion vorbei -> wieder
+                                                                    * treffbar (RE1.5-Zwilling
+                                                                    * @0x80105f9c-fac); ALLE vier
+                                                                    * Ausgaenge dieser Phase
+                                                                    * (@0x80105ACC/B08/B24/B38)
+                                                                    * verlassen die Reaktion */
         if (e->sub_state_1 == 14u) re2z_gore_spark(e);             /* Spark Shot @0x80105A50-64
                                                                     * (v0 = 14 aus dem Delay-Slot
                                                                     * des Phasen-`beq` @0x801054B0) */
@@ -2804,6 +2868,8 @@ static void re2z_hit_ragdoll(re15_actor_t *e, re15_actor_t *pl)
                                                                     * @0x8010CBE8 (@0x80104FE0-500C) */
         re2z_clip(e, 5, 0, 0xF, 0x100, 0);                         /* sw 0xF0005,332 @0x80106B40 */
         re15_ai_set_state_word(e, 0x1);                            /* sw 1,4 @0x80106B3C (WORT) */
+        re2z_hit_latch_release(e);                                 /* Reaktion vorbei -> wieder
+                                                                    * treffbar (@0x80105f9c-fac) */
         /* Hitbox-/word0-Felder @0x80106B14-50 sind Modell-/Kollisions-Praesentation ohne
          * Port-Zwilling (OPEN). */
         return;                                                    /* j 0x80106F14 */
@@ -2967,6 +3033,8 @@ static void re2z_hit_slide(re15_actor_t *e, re15_actor_t *pl)
         break;
     default:                                                       /* P6 @0x801073E8 */
         re15_ai_set_state_word(e, 0x101);                          /* sw 257,4 @0x80107408 */
+        re2z_hit_latch_release(e);                                 /* Reaktion vorbei -> wieder
+                                                                    * treffbar (@0x80105f9c-fac) */
         if ((re2z_rand() & 1u) != 0u)                              /* @0x8010740C-10 */
             re15_ai_set_state_word(e, 0x201);                      /* sw 513,4 @0x80107418 */
         break;
@@ -3087,6 +3155,8 @@ static void re2z_hit_knockdown(re15_actor_t *e, re15_actor_t *pl)
         e->re2z_f10e = 0x2001u;                                    /* sh 8193,270 @0x80107820-24 */
         re15_ai_set_state_word(e, (re2z_rand() & 1u) ? 1u : 0x201u);/* @0x80107834-4C */
         e->re2z_self1d3 &= 0x7fu;                                  /* andi 0x7f @0x80107850-5C */
+        re2z_hit_latch_release(e);                                 /* Reaktion vorbei -> wieder
+                                                                    * treffbar (@0x80105f9c-fac) */
         /* Hitbox-/word0-Felder @0x801077F8-838 = Modell-/Kollisions-Praesentation (OPEN). */
         return;
     }
@@ -3218,6 +3288,9 @@ static void re2z_hurt(re15_actor_t *e, re15_actor_t *pl)
      * dort also nie. Der Port haelt hier das bisherige Verhalten (zurueck in den Gang), damit
      * kein Zombie einfriert. */
     re15_ai_set_state_word(e, 0x101);
+    re2z_hit_latch_release(e);                                     /* auch die Notbremse verlaesst
+                                                                    * die Reaktion -> treffbar
+                                                                    * (@0x80105f9c-fac) */
 }
 
 /* Port-Diagnose: welche Tabellenzelle zuletzt dispatcht wurde (0 = NULL/keine). Nur fuer die

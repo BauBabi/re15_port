@@ -2543,7 +2543,24 @@ int re15_re2spider_tick(int slot)
     switch (e->state) {                                    /* @0x80100118, Tabelle @0x80106420 */
     case 0: re2s_init(e);              break;              /* @0x801001EC */
     case 1: re2s_active(e, pl);        break;              /* @0x801005AC */
-    case 2: re2s_hurt(e, pl);          break;              /* @0x80102C78 */
+    case 2:
+        re2s_hurt(e, pl);                                  /* @0x80102C78 */
+        /* ⛔ RESOLVER-LATCH-FREIGABE (+0x93 Bit 0) — dieselbe Familie wie beim RE2-Zombie und
+         * -Hund (Nutzer-Blocker 2026-08-19, dort GEMESSEN: 1 statt 3-20 Treffer, +0x93 blieb
+         * 0x01/0x03). Der flavor-blinde Resolver FUN_80011f50 setzt den Ein-Treffer-Latch
+         * (@0x800124e8/@0x800124f0), ueberspringt Kandidaten mit +0x93-Bits 0|1 (Maske
+         * 0x03000000 @0x800120c0, Test @0x800120f4-0x80012100) und setzt beim Zweitkontakt
+         * Bit 1 + rekursiert (@0x800123fc-0x80012418). Freigeber ist in RE1.5 immer der
+         * Treffer-Reaktions-Handler beim Ruecksprung nach ACTIVE (`andi 0xfe` @0x80105f9c-fac);
+         * das RE2-Overlay kennt +0x93 nicht (Voll-Scan `sb/lbu rt,147(rs)`: EMOVL10_S0.BIN 0
+         * Treffer, info/re2leon/PSX.EXE 0 Treffer), also fiel der Freigeber mit der Uebernahme
+         * des Dispatchs weg. Die HURT-Wurzel kehrt ueber mehrere Zeilen nach ACTIVE zurueck
+         * (Niederschlag P2 -> 0x901 @0x801030B4, Bein-Re-Entry `+0x4 = 1` @0x8010313C/
+         * @0x80103474, generische Zeile -> 0x901 @0x80102E08-58, Zeile 16 `+0x4 = 1`
+         * @0x80103C2C-54) — deshalb steht die Freigabe an der gemeinsamen Wurzel: HURT
+         * abgearbeitet UND wieder ACTIVE = die Reaktion ist vorbei. */
+        if (e->state == 1) e->hit_react &= (uint8_t)~1u;   /* andi 0xfe @0x80105fa4 */
+        break;
     case 3: re2s_death(e, pl);         break;              /* @0x80103C80 */
     case 4: re2s_state4(e);            break;              /* @0x80104CF0 */
     case 7: re2s_corpse(e);            break;              /* @0x80104CF8 */

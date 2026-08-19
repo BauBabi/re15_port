@@ -1417,6 +1417,21 @@ static void re2d_hurt_p2(re15_actor_t *e, re15_actor_t *pl)
         e->re2z_f10e &= (uint16_t)~0x2000u;                /* @0x801036F8-704 */
         e->re2z_self1d3 &= 0x7fu;                          /* @0x80103708-18 */
         e->re2d_dbl223 = 0;                                /* sb zero,547 @0x8010370C */
+        /* ⛔ RESOLVER-LATCH-FREIGABE (+0x93 Bit 0) — dieselbe Familie wie beim RE2-Zombie
+         * (Nutzer-Blocker 2026-08-19; GEMESSEN in ROOM1190 auf dem echten Weg: RE1.5-Hund
+         * 8 Treffer in 900 Frames Dauerfeuer, RE2-Hund 1 Treffer und +0x93 endet 0x03 =
+         * dauerhaft aus der Kandidatenliste geworfen). Der flavor-blinde Resolver
+         * FUN_80011f50 setzt den Ein-Treffer-Latch (@0x800124e8/@0x800124f0), ueberspringt
+         * Kandidaten mit Bits 0|1 (Maske 0x03000000 @0x800120c0, Test @0x800120f4-0x80012100)
+         * und setzt beim Zweitkontakt Bit 1 + rekursiert (@0x800123fc-0x80012418).
+         * Freigeber ist beim RE1.5-HUND die Treffer-Erholung: `+0x93 = 0` @0x80110b70 (Boden)
+         * bzw. @0x80110d90 (Luft-Slide), jeweils beim Ruecksprung nach ACTIVE. Das RE2-Overlay
+         * kennt +0x93 gar nicht (Voll-Scan `sb/lbu rt,147(rs)`: EMOVL10_S0.BIN 0 Treffer,
+         * info/re2leon/PSX.EXE 0 Treffer), also fiel mit der Uebernahme der Zustandsmaschine
+         * der einzige Freigeber weg. Hier steht der Zwilling: derselbe Ruecksprung nach
+         * ACTIVE (@0x8010371C-48). Nur Bit 0 (Maske 0xfe wie @0x80105fa4) — Bit 0x80
+         * (Front/Rueck-Latch der Todes-Richtung) bleibt bewusst stehen. */
+        e->hit_react &= (uint8_t)~1u;
         if (e->re2d_wound22d) {                            /* @0x80103714 */
             re15_ai_set_state_word(e, 0x10D01);            /* Flucht sub13/+0x6=1 @0x8010371C-24 */
         } else if (re15_ai_arc_test(e, pl->x, pl->z, 512) == 0) {   /* @0x80103728-38 */
@@ -1440,6 +1455,10 @@ static void re2d_hurt_p3(re15_actor_t *e)
         re2d_hitbox(e, 1);                                 /* @0x801037C0 */
         e->re2d_dbl223 = 0;                                /* @0x801037CC */
         re15_ai_set_state_word(e, 0x201);                  /* sw 513,4 @0x801037C8-D0 */
+        e->hit_react &= (uint8_t)~1u;                      /* Resolver-Latch frei (Begruendung +
+                                                            * Belege im P2-Ausgang oben; RE1.5-
+                                                            * Zwilling `+0x93 = 0` @0x80110b70 /
+                                                            * @0x80110d90) */
     }
 }
 

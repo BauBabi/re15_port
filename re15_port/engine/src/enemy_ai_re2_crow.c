@@ -1734,6 +1734,22 @@ int re15_re2crow_tick(int slot)
     }
     case 2: case 3:                                        /* HURT 0x801028BC ([2]==[3]) */
         re2c_hurt(e, pl);
+        /* ⛔ RESOLVER-LATCH-FREIGABE (+0x93 Bit 0) — dieselbe Familie wie beim RE2-Zombie und
+         * -Hund (Nutzer-Blocker 2026-08-19, dort GEMESSEN: 1 statt 3-20 Treffer). Der
+         * flavor-blinde Resolver FUN_80011f50 setzt den Ein-Treffer-Latch
+         * (@0x800124e8/@0x800124f0), ueberspringt Kandidaten mit +0x93-Bits 0|1 (Maske
+         * 0x03000000 @0x800120c0, Test @0x800120f4-0x80012100) und setzt beim Zweitkontakt
+         * Bit 1 + rekursiert (@0x800123fc-0x80012418). Freigeber ist in RE1.5 immer der
+         * Treffer-Reaktions-Handler beim Ruecksprung nach ACTIVE (`andi 0xfe`
+         * @0x80105f9c-fac). Das RE2-Overlay kennt +0x93 nicht (Voll-Scan `sb/lbu rt,147(rs)`:
+         * EMOVL10_S0.BIN 0 Treffer, info/re2leon/PSX.EXE 0 Treffer) -> mit der Uebernahme des
+         * Dispatchs durch dieses Brain fiel der einzige Freigeber weg.
+         * Die Kraehe hat GENAU EINEN lebenden Ausgang aus HURT: die Erholungs-Phase P4
+         * @0x80102BEC (`re2c_state(e,1,9)` @0x80102C20-28 / `re2c_state(e,1,0)`
+         * @0x80102C3C-44) — alle anderen Zweige enden toedlich (hp=-1 @0x80103024) oder in
+         * CORPSE. Deshalb steht die Freigabe hier: HURT-Wurzel abgearbeitet UND wieder
+         * ACTIVE = die Reaktion ist vorbei. */
+        if (e->state == 1) e->hit_react &= (uint8_t)~1u;   /* andi 0xfe @0x80105fa4 */
         break;
     case 4:
         /* SKRIPT-PERCH 0x801034DC (Tabelle @0x80104A64) — OFFEN: kein RE1.5-Spawn erreicht
