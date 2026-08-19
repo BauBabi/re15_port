@@ -1,3 +1,62 @@
+# RE1.5 Port — v0.3.2 (Early Preview)
+
+## Drei gemeldete Punkte am RE2-Zombie behoben
+
+**Die Zombies stecken nicht mehr zu viel ein.** Der RE2-Modus hat bisher nur
+das VERHALTEN aus RE2 uebernommen — Lebenspunkte und Waffenschaden blieben auf
+RE1.5-Werten. Man kaempfte also gegen RE2-Gegner mit RE1.5-Zaehigkeit. Jetzt ist
+das Modell vollstaendig portiert. Pistolentreffer, bis ein Zombie faellt:
+
+| Zombie | vorher | jetzt |
+|---|---|---|
+| Typ 0x10 | 20 | **5** |
+| Typ 0x11 | 15 | **4** |
+| Typ 0x16 | 18 | **6** |
+
+Schrotflinte toetet weiterhin mit einem Schuss.
+
+⚠️ Zwei Waffen werden dadurch **langsamer**, und das ist korrekt: Das **Messer**
+braucht 27 statt 16 Treffer, die **Ingram** 20 statt 10. Die RE2-Messer-Zeile
+lautet {3, 0, 0} — drei Schadenspunkte, und in den anderen Trefferzonen gar
+keine. Das RE2-Messer ist fast nutzlos. Zusammen mit dem unten genannten
+Rueckstoss heisst das: Messerkaempfe gegen RE2-Zombies sind eine schlechte Idee.
+So war es im Original auch.
+
+**Zombies fallen jetzt um.** Nach ein paar Treffern schwanken sie nach hinten;
+trifft man sie in diesem Fenster erneut, stuerzen sie — wie im Original. Bisher
+passierte das nie: Der Port sperrte den Gegner waehrend des Schwankens gegen
+weitere Treffer, wodurch der Sturz-Zweig in 900 Bildern kein einziges Mal
+erreicht wurde. RE2 laesst den Zombie waehrend beider Trefferreaktionen
+angreifbar — genau darauf baut der Sturz auf. Dazu gehoert der Original-
+Rueckstoss von 450 Einheiten, der den Zombie beim Schwanken nach hinten schiebt.
+
+**Das Blut erscheint nicht mehr am Fuss.** Der Effekt hing an der Position des
+Gegners, und die sitzt am Boden — 1166 Einheiten zu tief. Im Original haengt er
+an einem Knochen, und welcher, entscheidet die Trefferzone. Alle 28 Stellen im
+Zombie tragen jetzt ihren Anker: Brust, Kopf, Arm oder Oberschenkel je nach
+Treffer.
+
+## Ausserdem
+
+**Baby-Spinnen froren im RE2-Modus permanent ein.** Nach dem ersten Treffer
+waren sie weder tot noch ansprechbar. In RE1.5 sind sie unzerstoerbar (das ist
+korrekt so), in RE2 dagegen stirbt eine Baby-Spinne an jedem Treffer — der Port
+rechnete mit den RE1.5-Werten und liess sie mit einem Lebenspunkt in eine
+Trefferreaktion laufen, die es im RE2-Modul gar nicht gibt.
+
+**Werkzeug-Korrektur mit Folgen.** Das interne Zaehlwerkzeug fuer Raumdaten hat
+Eintraege verloren und dabei trotzdem "100 % Abdeckung" gemeldet. Ueber alle 240
+Raeume fehlten 34 Gegner-Platzierungen und 9 Tueren. Daraus war unter anderem
+der falsche Beleg entstanden, Baby-Spinnen kaemen im Spiel gar nicht vor. Alle
+19 betroffenen Belegzahlen sind neu erhoben; keine Schlussfolgerung kippt.
+
+Testsuite 173 Pruefungen.
+
+⚠️ Weiterhin nicht am Bildschirm geprueft (die Entwicklungssitzung kann keine
+Fenster aufzeichnen) — nur rechnerisch und ueber die Testsuite.
+
+---
+
 # RE1.5 Port — v0.3.1 (Early Preview)
 
 ## Behoben: im RE2-Modus liessen sich Gegner nicht treffen
