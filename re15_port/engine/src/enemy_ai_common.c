@@ -1061,7 +1061,9 @@ void re15_enemy_ai_live_init(int slot)
              * durch ("nach vorne beugen"), Standup-Sub 0xD (Clip 0x29), ENGAGE. Die im Port
              * vorhandene Sleeping-/Standup-Maschine wird damit endlich erreicht — vorher blieb
              * grid=0x0e -> Dispatch-default -> der Zombie lag fuer immer gebeugt (Nutzer-Report
-             * ROOM10D0; game-weit nur 10D0/10D1). */
+             * ROOM10D0; game-weit nur 10D0/10D1 — NACHGEPRUEFT 2026-08-19 mit dem zweifach
+             * korrigierten RDT-Walker: Deskriptor 0x0E kommt in allen 844 Sce_em_set genau 2x vor,
+             * ROOM10D0 + ROOM10D1, beide Typ 0x10; unveraendert gegenueber dem defekten Lauf). */
             e->sub_state_1 = 0x12; e->sub_state_2 = 0; e->grid_id = 0;
             e->motion = 0x2a; e->anim_frame = 0; e->anim_frac = 0;
             e->anim_flags &= (uint16_t)~0x80u;   /* a2 = 0 (@0x8010559c `addu a2,zero,zero`, Paar zu
@@ -3351,7 +3353,9 @@ int re15_enemy_ai_live_active(int slot)
          * (8.8), not the lunge. */
         switch (e->grid_id & 0xf) {                       /* @0x8011f80c[+0x9 & 0xf] sub-mode */
             case 2:    /* STEHENDER SCHLAEFER (@0x8011f80c[2]=FUN_80101784, behavior 0x02 — der
-                        * Re-Entry-Zweig von 10D0/1140 u.a., 91 Records game-weit): decide via
+                        * Re-Entry-Zweig von 10D0/1140 u.a., 91 Records game-weit; NACHGEPRUEFT
+                        * 2026-08-19 mit dem zweifach korrigierten RDT-Walker: 91 bestaetigt —
+                        * der defekte, Sektionen abschneidende Lauf haette hier nur 87 gezaehlt): decide via
                         * Tabelle @0x8011f960, die sich von f840 NUR in [0] unterscheidet
                         * ([0]=FUN_80101c7c statt FUN_80101b64 — Tabellen-Dump, zombie_10d0_reentry.md
                         * F1 CONFIRMED); animate = die GETEILTE f890-Kaskade (@0x801017d8-e8).
@@ -3515,7 +3519,9 @@ int re15_enemy_ai_live_active(int slot)
             case 9: case 10:  /* SCRIPT-WOKEN lying (@0x8011f80c[9]/[10]=0x801019f0). Same double
                                * dispatcher as 7/8, but the DECIDE row @0x8011f9dc[0]=0x801039fc is the
                                * IMMEDIATE WAKE instead of a stub. This nibble never comes from a spawn
-                               * — no Sce_em_set in the whole game uses low nibble 9/0xA; the script
+                               * — no Sce_em_set in the whole game uses low nibble 9/0xA (NACHGEPRUEFT
+                               * 2026-08-19 mit dem zweifach korrigierten RDT-Walker: 0 Records in
+                               * allen 844 Sce_em_set, unveraendert gegenueber dem defekten Lauf); the script
                                * bumps a sleeping 0x87/0x88 lyer up by 2 with Member_set(12,0x89/0x8A)
                                * (member 12 == entity+0x9, FUN_8004116c table @0x80010c8c[12] ->
                                * 0x800411f4 `sb a2,9(a0)`). ROOM1070 does this in sub_scd[2] after its
@@ -3535,7 +3541,22 @@ int re15_enemy_ai_live_active(int slot)
                 }
                 break;
             default:  /* @0x8011f80c[3..4],[11..15]: other sub-modes — deferred (cited);
-                       * [1] = Grid-Wurzel 1 (Kriech-Maschine) ist portiert, s.o. */
+                       * [1] = Grid-Wurzel 1 (Kriech-Maschine) ist portiert, s.o.
+                       * REICHWEITE NEU ERHOBEN 2026-08-19 mit dem zweifach korrigierten RDT-Walker
+                       * (aot_sce_census.py; der alte, Sektionen abschneidende Lauf sah ROOM3010/3011
+                       * gar nicht — dessen main-SCD wurde durch das Datenwort @0x78 = 0x206A bei
+                       * 0x206A statt bei sub_s = 0x2204 gekappt). Ausgelieferte Sce_em_set-Spawns
+                       * auf diesem default-Zweig, ueber alle 240 RDTs:
+                       *   Nibble 3: 2 Records (ROOM3010/3011, Typ 0x11, Deskriptor 0x83) — vorher
+                       *             0, also erst durch die Zensus-Korrektur ueberhaupt sichtbar
+                       *   Nibble 4: 28 Records (2000/2001 je 2, 3000/3001 je 7, 3010/3011 je 5),
+                       *             vorher 18 gezaehlt
+                       *   Nibble 11..15: 0 Records
+                       * Der Port-PFAD aendert sich dadurch NICHT: beide Nibbles fielen vorher wie
+                       * nachher in diesen bewusst deferrten Zweig, und der Spawn-POSE-Decoder
+                       * re15_enemy_spawn_action (scd_vm.c) deckt sel 3 (`sel==1||sel==3` -> Clip
+                       * 0x0C) und sel 5 (-> Clip 0x13) byte-true ab. Die Korrektur macht nur die
+                       * echte Reichweite dieses deferred-Markers sichtbar. */
                 break;
         }
         return 0;
@@ -7958,7 +7979,11 @@ static void re15_npc_ai_tick(int slot)
  * shipped flat instant-aggro chase modeled the UNREACHABLE mode-1 nav walk (the clip-26 walk fn
  * 0x8010be50 has exactly ONE reference in STAGE1.BIN = the mode-1 animate[0] pointer word
  * @0x80120308; zero jal refs; no shipped room spawns mode 1 — SCD census: STAGE1 has 0 type-0x13
- * spawns, STAGE4 ROOM4050/4051 spawn `44 00 13 00` = behavior byte 0x00 -> mode 0). The REAL brain:
+ * spawns, STAGE4 ROOM4050/4051 spawn `44 00 13 00` = behavior byte 0x00 -> mode 0.
+ * NACHGEPRUEFT 2026-08-19 mit dem zweifach korrigierten RDT-Walker (aot_sce_census.py; der alte
+ * Lauf schnitt Sektionen ab und zaehlte 810 statt 844 Sce_em_set): Typ 0x13 kommt weiterhin in
+ * GENAU 2 Raeumen vor — ROOM4050 und ROOM4051 — und traegt dort ausschliesslich Deskriptor 0x00.
+ * Unveraendert ueber alle drei Walker-Staende). The REAL brain:
  *   root FUN_8010a8c8 (@0x80072bac[0x13]): pause gate @0x8010a8d0-e0, skip gate +0x9&0x20
  *   @0x8010a8f4-900, dist cache +0x1d0 @0x8010a908-64 (SquareRoot0), mercy +0x1d5 tick + aca50&=
  *   ~1 @0x8010a974-9b4, nav steer FUN_80039e7c(+0x1bc/+0x1be, +0x1d6, +0x1d8&8) @0x8010a9c0-e0 +
@@ -8158,7 +8183,13 @@ static void re15_zgirl_ai_tick(int slot)
                                                      * advance, audit #6 — and steer 0x10 via jal
                                                      * 0x8001aac4 @0x8010bed8-dc, audit #8 citation
                                                      * fix) has ZERO spawns game-wide; modes 2..0xc =
-                                                     * pose stubs @0x8010b800.. — all unrouted. */
+                                                     * pose stubs @0x8010b800.. — all unrouted.
+                                                     * NACHGEPRUEFT 2026-08-19 mit dem zweifach
+                                                     * korrigierten RDT-Walker: alle 4 ausgelieferten
+                                                     * Typ-0x13-Records (ROOM4050/4051) tragen
+                                                     * Deskriptor 0x00 -> Modus 0; Modus 1 bleibt bei
+                                                     * 0 Spawns. Unveraendert ueber alle drei
+                                                     * Walker-Staende (810/822/844 Sce_em_set). */
         /* FUN_8010b6d4 anim-interrupt: (+0x1c0 & 0x9fff) == 0x8001 -> +0x5=9, +0x6=0
          * (@0x8010b6e4-b708). No +0x1c0 writer exists port-wide (documented OPEN, same as the
          * standard zombie's stagger release) -> the interrupt cannot fire yet. */
@@ -8823,7 +8854,11 @@ static void re15_cockroach_ai_tick(int slot)
  *    NB (audit wf_efd92a2c dormant #2, wrong-citation): the morph target is NOT "type 0x33". In the RDT
  *    Sce_em_set record [op,slot,type,grid], ROOM3070 @0x33ce = `44 00 30 33` and @0x340c = `44 00 30 10`
  *    are BOTH type 0x30 — 0x33/0x10 are the grid bytes, not a type. Type 0x33 is unregistered game-wide:
- *    EXE dispatch slot 0x33 @0x80072c78 = 0 and no overlay writes it (a jalr NULL). The only sibling type
+ *    EXE dispatch slot 0x33 @0x80072c78 = 0 and no overlay writes it (a jalr NULL). Die RDT-Haelfte
+ *    dieser Aussage NACHGEPRUEFT 2026-08-19 mit dem zweifach korrigierten Walker: unter allen 844
+ *    Sce_em_set gibt es NULL Records mit Typ 0x33 (unveraendert ueber alle drei Walker-Staende);
+ *    die Dispatch-Haelfte ist ein EXE-/Overlay-Scan und vom Walker-Fehler ohnehin nicht betroffen.
+ *    The only sibling type
  *    sharing this root is 0x36 — STAGE3 registration @0x8011cec0 stores root 0x80116230 to slot 0x30
  *    (sw @0x8011cf48 -> 0x80072c6c) AND slot 0x36 (sw @0x8011cf50 -> 0x80072c84), never 0x33 (raw-verified). */
 static void re15_birkin_clip(re15_actor_t *e, uint8_t c) { e->motion = c; e->anim_frame = 0; e->anim_frac = 7; }
@@ -10297,7 +10332,10 @@ void re15_enemy_ai_run_all(int combat_active)
              * (base 0x8011f3b4..0x8011f433) and their EXE dmg rows @0x8006e0d0+type*0x58 are all-zero too
              * = unused registration slots, so they are deliberately NOT routed (a spawned one would be a
              * 0-HP walking zombie, weapon-immune, dying to the first hit — but there are 0 such spawns in
-             * all 240 shipped RDTs, byte-true census). Keeping them UNROUTED is the accepted byte-true
+             * all 240 shipped RDTs, byte-true census. NACHGEPRUEFT 2026-08-19 mit dem zweifach
+             * korrigierten RDT-Walker — der alte Lauf schnitt Sektionen ab und sah 810 statt 844
+             * Sce_em_set: auch im vollstaendigen Zensus kommt KEIN Record mit Typ 0x1c/0x1d/0x1e/0x1f
+             * vor). Keeping them UNROUTED is the accepted byte-true
              * decision (audit wf_efd92a2c dormant #4, reachable=NO). Adding 0x12/0x18 is safe for the
              * tested rooms: ROOM1140/1170 contain only 0x10/0x11/0x16, so their combat is unchanged. */
             int32_t sweep_ox = e->x, sweep_oz = e->z;    /* pre-dispatch pos (wall-sweep origin) */

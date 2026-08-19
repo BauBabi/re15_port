@@ -174,15 +174,20 @@ void re15_aot_set_message(int slot, uint8_t msg_index)
  *   payload +0/+2/+4 = pc[4..9] (3 LE halfwords)  @0x80040788-a8 (`lhu 4/6/8(a2)` →
  *     `sh 0/2/4(v1)`; v1 = rec+0x14 for a polygon record / rec+0xC else, @0x80040774-84)
  *   rec[2] (band) is NOT written → band preserved.
- * The record STAYS registered — the new sce selects the handler (PTR_8007469c). Census
- * (d7376834): 384 uses = 188 disable (sce 0), 82 message, 67 event rewrites, 32 door
- * spawn-updates, 8 item re-arms, 5 sce-5, 2 flag writes. Payload layouts per sce from the
- * handler table (census §2):
+ * The record STAYS registered — the new sce selects the handler (PTR_8007469c).
+ * ⚠️ ZAHLEN NEU ERHOBEN 2026-08-19 mit dem korrigierten Walker (aot_sce_census.py, FEHLER-FIX 1
+ * 8a549543 + FEHLER-FIX 2 „Adresstabelle endet bei 0x5C"; die alten Zahlen 384 = 188/82/67/32/8/
+ * 5/2 stammten aus dem defekten Lauf, der Sektionen zu klein berechnete und trotzdem
+ * „100.00% coverage" meldete). Census ueber alle 240 RDTs, 0 Desync-Stopps:
+ *   419 uses = 205 disable (sce 0), 88 message, 76 event rewrites, 35 door spawn-updates,
+ *   8 item re-arms, 5 sce-5, 2 flag writes.
+ * Payload layouts per sce from the handler table (census §2):
  *   sce 1 MESSAGE @0x80043084: msg u16@+0            → event_id
  *   sce 2 DOOR    @0x800430BC: the payload IS the door record's next_pos block — the 3
  *         written halfwords are next_pos_x/y/z (Door_aot_set pc[14..19] = rec+0xC..0x11);
  *         dest stage/room (+8/+9), yaw (+6), cut (+0xA) lie BEYOND the written window and
- *         keep their install values (all 32 shipped retypes target 0x3B-installed slots).
+ *         keep their install values (alle 35 ausgelieferten sce-2-Retypes zielen auf einen
+ *         0x3B-installierten Slot — korrigierter Zensus 2026-08-19: 35/35, vorher 32/32).
  *   sce 3 EVENT   @0x800430F0: FUN_8003ee3c(cond u16@+0, sub u8@+3) → sub = p1>>8
  *   sce 4 FLAG    @0x80043120: group u16@+0, bit u16@+2, on u16@+4
  *   sce 5 marker  @0x8004318C: NOP handler (payload unused) → EXAMINE_WORKVAR
@@ -221,7 +226,8 @@ void re15_aot_retype(int slot, uint8_t sce, uint8_t flags,
         break;
     case 3:
         /* action-vs-auto per the NEW flags bit 0x10 (the scan's `(flags&0x10)==param_3`
-         * gate, FUN_80042bac): census retype-to-3 = 58× 0x31 action + 9× 0x41 auto. */
+         * gate, FUN_80042bac): retype-to-3 = 67× 0x31 action + 9× 0x41 auto
+         * (korrigierter Zensus 2026-08-19; der defekte Walker meldete 58× 0x31). */
         a->type     = (flags & 0x10) ? RE15_AOT_TYPE_GENERIC : RE15_AOT_TYPE_AUTO_EVENT;
         a->event_id = (uint8_t)(p1 >> 8);         /* sub u8@payload+3 (@0x80043100) */
         break;
@@ -257,8 +263,10 @@ void re15_aot_retype(int slot, uint8_t sce, uint8_t flags,
         a->event_id = (uint8_t)p0;                /* data0 (down/up end) */
         break;
     default:
-        /* sce 6/10/11 = dormant handlers, NEVER shipped as retype targets either
-         * (census sce_counts). Registered-inert is the safe mapping. */
+        /* sce 6/10/11 = dormant handlers, NEVER shipped as retype targets either.
+         * NACHGEPRUEFT 2026-08-19 mit dem korrigierten Walker: in den 2295 Installs +
+         * 419 Retypes ueber alle 240 RDTs kommt kein sce 6/10/11 vor (die ausgelieferten
+         * sce-Werte sind 0,1,2,3,4,5,7,8,9,12,13). Registered-inert is the safe mapping. */
         a->type = RE15_AOT_TYPE_NONE;
         break;
     }
@@ -455,9 +463,12 @@ static int aot_fire_door(int i)
      * door (e.g. ROOM5130 door1 dest_stage=5 -> ROOM6020, not ROOM1020).
      * The variant nibble (scenario/player, low bit of the room id) is
      * carried over from the current room so we stay in the same scenario.
-     * VALIDATED: this formula resolves 563/567 cross-room doors game-wide to
-     * existing rooms (scripts/door_graph.py; the 4 misses are non-door scan
-     * artifacts). Room INDEX 0 is a VALID destination (ROOM_x00): the warp
+     * VALIDATED: this formula resolves 649/653 Door_aot_set records game-wide to
+     * existing rooms (scripts/door_graph.py, NEU ERHOBEN 2026-08-19 nach beiden
+     * rdt_section_end-Fixes — die alte Angabe 563/567 stammte aus einem aelteren,
+     * abschneidenden Walker-Stand; der Lauf davor meldete 640, dann 641, jetzt 649.
+     * Die 4 Misses sind unveraendert dieselben non-door scan artifacts in
+     * ROOM4030/4031 @0x47e/@0x4a6). Room INDEX 0 is a VALID destination (ROOM_x00): the warp
      * FUN_8001d600 reads the door struct dest bytes (+8 stage / +9 room) with
      * NO room==0 special case — the old `dest_room != 0` pre-filter threw
      * ROOM1050's three doors to ROOM1000 into the in-room-teleport branch
@@ -480,8 +491,12 @@ static int aot_fire_door(int i)
              *   @0x8001d94c lbu 9(a0)=ROOM    @0x8001d960 lbu 8(a0)=STAGE.
              * Es gibt KEINE Default-Spawn-Quelle und KEINEN Null-Rect-Sonderfall. Der alte
              * „Intro-Auto-Tür"-Override (re15_room_spawns statt Payload bei half_w==half_h==0)
-             * war eine Port-Erfindung und verfälschte ALLE 26 ausgelieferten Null-Rect-
-             * Cross-Room-Türen (Census 2026-08-08: u.a. ROOM1080 Fahrstuhl-Slots 0-2 —
+             * war eine Port-Erfindung und verfälschte ALLE 27 ausgelieferten Null-Rect-
+             * Cross-Room-Türen (Zensus NEU ERHOBEN 2026-08-19 mit dem korrigierten Walker;
+             * die Zahl ist von beiden rdt_section_end-Fixes unberührt, 27 vorher wie nachher —
+             * die alte Angabe 26 war ein reiner Zählfehler. Betroffen: 1031, 1080/1081 Slots
+             * 0-2, 1170, 1171, 1240, 1241, 3010/3011, 3020, 3060/3061, 3080/3081,
+             * 4020/4021 Slots 0-2, 5021, 5090/5091 — u.a. ROOM1080 Fahrstuhl-Slots 0-2 —
              * Soll-Spawns @Datei 0x490/0x4B0/0x4D0: (-21936,0,-11000)cut5 / (1450,0,7300)cut0 /
              * (1300,0,7300)cut0 — sowie 3010/3020/3060/3080/4020/5021: alles echte
              * Ziel-Spawns). Der Fahrstuhl warf den Spieler dadurch auf jeder Etage an den
@@ -557,10 +572,16 @@ static int aot_fire_door(int i)
 /* Aot_on (0x47) fire-now — byte-true LAB_800407bc: resolve the record
  * (DAT_800ac9b0[pc[1]] @0x800407cc-ec), take its payload (rec+0x14 polygon /
  * rec+0xC rect, @0x800407f4-808) and `jalr PTR_8007469c[rec[0]]` @0x8004082c —
- * the handler runs ONCE, with NO geometry/band/pool/action test. Census
- * (d7376834): all 73 shipped uses target sce-2 DOOR slots (66, e.g. ROOM1240
- * sub02/03 slot 0 = the intro handoff, ROOM1080 sub07-10) or sce-9 ITEM slots
- * (7, e.g. ROOM1051 sub03 slot 12 = a scripted grant). Mapping per port type: */
+ * the handler runs ONCE, with NO geometry/band/pool/action test.
+ * ⚠️ ZENSUS NEU ERHOBEN 2026-08-19 (korrigierter Walker; der defekte Lauf meldete 73 = 66/7):
+ * alle 76 ausgelieferten Aot_on zielen auf einen DOOR- oder ITEM-Slot —
+ *   66 sce-2 DOOR (z.B. ROOM1240 sub02/03 Slot 0 = das Intro-Handoff, ROOM1080 sub07-10),
+ *    9 sce-9 ITEM (z.B. ROOM1051 sub03 Slot 12 = ein Skript-Grant; NEU sichtbar:
+ *      ROOM11D0/11D1 sub03 @0x18aa Slot 10, installiert von sub00s Item_aot_set),
+ *    1 Sonderfall ROOM1090 sub06 @0x2726 Slot 3: main00 installiert den Slot als sce-3
+ *      (Aot_set @0x2336), sub00 ueberschreibt ihn per Door_aot_set @0x2352 mit sce-2 —
+ *      zur Feuer-Zeit also ebenfalls eine DOOR.
+ * Mapping per port type: */
 void re15_aot_fire_slot(int slot)
 {
     if (slot < 0 || slot >= RE15_AOT_MAX) return;
@@ -805,9 +826,16 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
          * original ACTION scan skips them outright (@0x80042f48-50 `lbu v0,0(s0);
          * beq v0,zero` -> loop-continue, press NOT consumed) and the AUTO scan's
          * handler[0] @0x8004305C only restores the work-var latch from the snapshot
-         * 0x800bbde8/eec = net no-op. 21 shipped sce-0 doors are permanently dead
-         * (e.g. ROOM1250 slots 0-2, 1180 slot 4, 5070 slots 1-2) — they must be
-         * dead in the port too. A later Aot_reset can retype the slot live. */
+         * 0x800bbde8/eec = net no-op. ZENSUS NEU ERHOBEN 2026-08-19 (korrigierter Walker;
+         * von beiden rdt_section_end-Fixes unberührt, 37 vorher wie nachher — die alte
+         * Angabe „21" war ein Zählfehler): 37 Door_aot_set installieren mit sce = 0.
+         * Davon werden 23 spaeter per Aot_reset live geschaltet (22x nach sce-2 DOOR:
+         * 10D0/10D1 s2, 1140/1141 s1, 11B0, 11E0/11E1 s5, 1230/1231 s6, 2020/2021 s1,
+         * 2070/2071 s4, 20A0/20A1 s2, 3040/3041 s0, 6010/6011 s1; 4x nach sce-1 MESSAGE:
+         * 5070/5071 s1+s2) — die uebrigen 14 sind PERMANENT tot (1170 s1, 1180/1181 s4,
+         * 1250/1251 s0-2, 4001 s1, 5120/5121 s2-3) und muessen es im Port auch sein.
+         * (Die alte Beispielliste nannte 5070 s1-2 als „permanently dead" — die werden in
+         * Wahrheit zu sce-1 retyped; korrigiert.) */
         if (a->type == RE15_AOT_TYPE_NONE) continue;
         /* INTRO-HANDOFF / AUTO-ADVANCE-TÜR: ein cross-room DOOR-AOT mit
          * degeneriertem (0×0) Rechteck am Player-Spawn ist eine Auto-Advance-Tür
@@ -1034,8 +1062,10 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
          * NOTHING clears the work-var latch when the entity leaves (FUN_800436a8 clears
          * only entity+0xB per frame @0x8004371c/0x80043788) — scripts reset-then-poll.
          * Per-entity band gate @0x80042cac: entity band (+0x82) == rec[2] unless bit 0x80.
-         * Census: 142 installs 0x44 (centre+objects), 8x 0x21 (fwd+player), 8x 0x41
-         * (centre+player); + 0x42 retypes (centre+enemies). The ACTION variants (0x31 etc.)
+         * Zensus NEU ERHOBEN 2026-08-19 (korrigierter Walker; der defekte Lauf meldete
+         * 142/8/8): 205 sce-5 Installs = 154x 0x44 (centre+objects), 33x 0x31 (ACTION),
+         * 10x 0x41 (centre+player), 8x 0x21 (fwd+player); + 5 Retypes (3x 0x31, 2x 0x42
+         * centre+enemies). The ACTION variants (0x31 etc.)
          * fall through to the examine path below. sce_flags==0 = legacy/synthetic install
          * -> action path (unchanged). */
         if (a->type == RE15_AOT_TYPE_EXAMINE_WORKVAR &&
@@ -1130,8 +1160,10 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
                         * the briefing door warped to room1130; a 3.5s forward walk-in did NOT.) */
                        ? (door_inside && g_aot_action_pressed && !msg_block && !action_fired)
                  : (a->type == RE15_AOT_TYPE_ITEM)
-                       /* ITEM = ACTION-gated (wf_f536e1ee #5: all 162 shipped items carry flags
-                        * bit 0x10 SET — the sce9 handler runs from the press-edge scan only;
+                       /* ITEM = ACTION-gated (wf_f536e1ee #5: alle 164 ausgelieferten Items tragen
+                        * flags bit 0x10 SET — 160x 0x31 + 4x 0x51, Zensus NEU ERHOBEN 2026-08-19
+                        * mit dem korrigierten Walker; der defekte Lauf zaehlte 162 —
+                        * the sce9 handler runs from the press-edge scan only;
                         * the old walk-in level trigger hoovered items silently). */
                        ? (gen_reach && g_aot_action_pressed && !msg_block && !action_fired)
                  : (a->type == RE15_AOT_TYPE_FLAG_CHG)

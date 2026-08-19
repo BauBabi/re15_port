@@ -221,7 +221,9 @@ static void test_aot_set(void)
         TEST_ASSERT_EQ("geom 0x51: centre hit stamps work_var[1]=slot", 3, g_scd.work_vars[1]);
     }
 
-    /* sce=1 -> MESSAGE (div #3: 427 shipped examine zones were inert invalid-spawn DOORs) +
+    /* sce=1 -> MESSAGE (div #3: 436 ausgelieferte Examine-Zonen waren inerte invalid-spawn DOORs —
+     * Zensus NEU ERHOBEN 2026-08-19 mit dem zweifach korrigierten RDT-Walker; der defekte Lauf sah
+     * 429, die alte Angabe 427 zaehlt genau die 0x31-Variante ohne die 9 mit Polygon-Bit 0xb1) +
      * sce=4 -> FLAG_CHG (div #4) incl. the ENEMY-pool gating (0x42 zones: the player must NOT
      * set the flag; an enemy inside must). [wf_f536e1ee steps 3+4] */
     {

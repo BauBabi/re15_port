@@ -275,8 +275,11 @@ void re15_aot_retype(int slot, uint8_t sce, uint8_t flags,
 
 /* Aot_on (0x47) fire-now (byte-true LAB_800407bc): dispatch the slot's sce handler ONCE
  * immediately — `jalr PTR_8007469c[rec[0]]` @0x8004082c with a0 = the record payload
- * (@0x80040804/808) — bypassing every geometry/band/action test. All 73 shipped uses
- * target sce-2 doors (66) or sce-9 items (7) [aot_sce_census d7376834]. */
+ * (@0x80040804/808) — bypassing every geometry/band/action test. Alle 76 ausgelieferten
+ * Aot_on zielen auf einen DOOR- oder ITEM-Slot: 66x sce-2 DOOR, 9x sce-9 ITEM, 1x ROOM1090
+ * Slot 3 (in main00 als sce-3 installiert, in sub00 per Door_aot_set mit sce-2 ueberschrieben).
+ * [Zensus NEU ERHOBEN 2026-08-19 mit dem zweifach korrigierten Walker; aot_sce_census
+ * d7376834 meldete 73 = 66/7, weil sein rdt_section_end() Sektionen zu klein berechnete.] */
 void re15_aot_fire_slot(int slot);
 /* Cut_replace(a,b): swap cut ids a<->b in the live CAM_SWITCH AOTs (companion to the
  * RVD-zone swap in op_cut_replace). */

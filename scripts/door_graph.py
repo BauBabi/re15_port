@@ -98,12 +98,43 @@ def walk(data, start, end, room_id, script, doors):
         collect_doors(data, pc, room_id, script, doors)
         pc += sz
 
+def section_ptr_extent(data, sec_start):
+    """Groesster Offset der sektionseigenen u16-Zeiger-Tabelle (0 = keine lesbar).
+    Gleiche Tabellen-Lesart wie section_regions()."""
+    if sec_start == 0 or sec_start + 2 > len(data): return 0
+    first = u16(data, sec_start)
+    if first < 2 or first % 2 or sec_start + first > len(data): return 0
+    mx = 0
+    for i in range(first // 2):
+        o = u16(data, sec_start + 2*i)
+        if o == 0 or sec_start + o >= len(data): continue
+        if o > mx: mx = o
+    return mx
+
 def rdt_section_end(data, sec_start):
+    """Kleinster plausibler RDT-Adresstabellen-Eintrag > Sektions-Ausdehnung, sonst EOF.
+
+    ⛔ SELBER FEHLER-FIX wie re15_port/tools/aot_sce_census.py (8a549543, 2026-08-19):
+    ein Adresstabellen-Eintrag kann INNERHALB der Sektion liegen; wurde er als Sektionsende
+    genommen, klemmte section_regions() (`e = min(e, sec_end - sec_start)`) alle Regionen
+    dahinter weg — der Walker verlor lautlos Records. Ein Kandidat muss deshalb HINTER der
+    von der sektionseigenen Zeiger-Tabelle aufgespannten Spanne liegen.
+    ⛔ FEHLER-FIX 2 (2026-08-19, ebenfalls spiegelgleich zu aot_sce_census.py): die
+    Kandidaten-Schleife lief ueber `range(0x40, 0x90, 4)` und las 12 Woerter, die keine
+    Sektions-Zeiger sind. Die RDT-Adresstabelle endet bei 0x5C (`animationStart`) —
+    RE15_KNOWLEDGE.md §1.1 + RDTExtractor.java `Addresses.read()` (letztes readInt @92 = 0x5C).
+    Ab 0x60 stehen Licht-/Kamera-Daten (@0x60 und @0x80 tragen game-weit 0x683c0000).
+    Einzelne dieser Datenwoerter sahen wie kleine Datei-Offsets aus (ROOM2090 @0x64 = 0x0ac2,
+    ROOM3010 @0x78 = 0x206a) und kappten die main-Sektion mitten im Skript.
+
+    WIRKUNG hier (gemessen 2026-08-19, alle 240 RDTs): Door_aot_set real 640 -> 649,
+    bogus unveraendert 4."""
+    floor = sec_start + section_ptr_extent(data, sec_start)
     cands = []
-    for o in range(0x40, 0x90, 4):
+    for o in range(0x40, 0x60, 4):          # 0x40..0x5C = mainScd..animationStart
         if o + 4 > len(data): break
         v = u32(data, o)
-        if sec_start < v <= len(data): cands.append(v)
+        if floor < v <= len(data): cands.append(v)
     return min(cands) if cands else len(data)
 
 def section_regions(data, sec_start, sec_end):

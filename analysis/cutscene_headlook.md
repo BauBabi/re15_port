@@ -17,8 +17,11 @@ Original-Klemmen). Zusätzlich fehlen im Port: der komplette **NPC-Head-Look**
 (Original: jeder STAGE1-NPC-Root ruft den Neck-FSM `FUN_80037358`, `jal @0x8011c69c`),
 die **Winkel-Klemmen** (Spieler ±0x200/±0x138 @0x800319b0/b8), die **Modi 2/3/4**
 (relative/sweep) und das **Gameplay-Auto-Look** (state-1-Prolog @0x80031e04 +
-`FUN_8003703c(0xfa0)` @0x80031e20). Game-weit betroffen: **147 von 351 `Plc_neck`
-in 28 Räumen** aller 6 Stages → globaler Fix nötig (vom Nutzer ausdrücklich erlaubt).
+`FUN_8003703c(0xfa0)` @0x80031e20). Game-weit betroffen: **158 von 371 `Plc_neck`
+in 30 Räumen** aller 6 Stages → globaler Fix nötig (vom Nutzer ausdrücklich erlaubt).
+*(Zahlen neu erhoben 2026-08-19 mit dem zweifach korrigierten RDT-Walker; der alte Stand
+„147 von 351 in 28 Räumen" stammte aus dem Walker, der Sektionen zu klein berechnete —
+siehe §Zensus unten.)*
 
 ---
 
@@ -210,10 +213,18 @@ zwei redundante Reset-Wege.
 Scan `re15_port/shared_assets/PSX/STAGE*/ROOM*.RDT`, main+sub, mit Work_set-Kontext
 (Script im Scratchpad `neck_census.py`):
 
-- **351 `Plc_neck` gesamt** · Modus-Verteilung: mode0=91, mode1=185, mode2=23, mode3=17, mode4=33
-- **147 an `Work_set(2,…)` = NPC** in **28 Räumen**:
-  1021 10D0 11B0 11B1 11C0 1211 2000 2001 3000 3001 3020 3061 3070 3071 3080 3091
+⚠️ **Neu erhoben 2026-08-19** mit dem zweifach korrigierten `rdt_section_end()`
+(`re15_port/tools/aot_sce_census.py`: Fix 1 = Zeiger-Tabellen-Ausdehnung, Fix 2 = Adresstabelle
+endet bei 0x5C). Der frühere Walker schnitt Sektionen ab und meldete trotzdem 100 % Abdeckung;
+seine Zahlen stehen in Klammern.
+
+- **371 `Plc_neck` gesamt** (vorher 346/„351") · Modus-Verteilung: mode0=93, mode1=200,
+  mode2=23, mode3=19, mode4=36
+- **158 an `Work_set(2,…)` = NPC** in **30 Räumen** (vorher 147 in 29):
+  1021 1090 10D0 1141 11B0 11B1 11C0 1211 2000 2001 3000 3001 3020 3061 3070 3071 3080 3091
   30C1 30E0 30E1 4000 4001 4010 4031 5011 50B0 6000 6030 6031
+  (neu sichtbar: ROOM1090; ROOM1141 fehlte in der alten 28er-Liste, war aber schon im alten
+  Lauf enthalten)
 - ROOM1150 (Referenz „korrekt"): 10/10 an `Work_set(1,0)` + nur Modus 1/0 — deckt genau
   die funktionierende Port-Teilmenge ab; darum blieb der Defekt dort unsichtbar.
 - (2 Census-Zeilen „mode=79" = Offline-Walker-Desync in Daten-Regionen, bekanntes

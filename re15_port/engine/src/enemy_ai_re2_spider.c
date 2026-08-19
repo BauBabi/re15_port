@@ -738,25 +738,41 @@ static void re2s_thrust3(re15_actor_t *e, int dy, int dz){ (void)e; (void)dy; (v
  * WELLE F — ACTIVE Modus 1 (DECKE) @0x801013AC / Modus 2 (FADEN) @0x80101CC8 /
  *           Modus 3 (WAND) @0x80102B40
  *
- * ERREICHBARKEIT — GEMESSEN, nicht geschaetzt (2026-08-18, NACHGEPRUEFT + TEILWEISE KORRIGIERT
- * 2026-08-19; die Korrektur betrifft NUR Typ 0x26, das 0x25-Ergebnis wurde reproduziert):
+ * ERREICHBARKEIT — GEMESSEN, nicht geschaetzt (2026-08-18, NACHGEPRUEFT + KORRIGIERT
+ * 2026-08-19 in ZWEI Runden; die SCHLUSSFOLGERUNG haelt beide Male, nur die Zahlen wandern):
  *
- *  ⛔ WERKZEUG-FEHLER, der die alte Fassung verfaelscht hat: der Zensus benutzte die
+ *  ⛔ WERKZEUG-FEHLER 1, der die urspruengliche Fassung verfaelscht hat: der Zensus benutzte die
  *     Sektions-Logik aus re15_port/tools/aot_sce_census.py, und deren `rdt_section_end()` nahm
  *     den KLEINSTEN RDT-Adresstabellen-Eintrag > sec_start. In ROOM1090.RDT ist der Eintrag
  *     @0x6C = 0x21E4 und liegt damit INNERHALB des sub-SCD (sub_s = 0x21B4, dessen eigene
  *     Zeiger-Tabelle bis 0x21B4+0x578 = 0x272C reicht) — der Walk wurde bei 0x21E4 abgeschnitten
  *     und hat die dahinter liegenden Records nie gesehen. Korrigiert (sec_end muss >=
- *     sec_start + max(Zeiger-Tabellen-Offset) sein) findet derselbe Walk 822 statt 810 Records,
- *     0 Desync-Stopps, und eine Roh-Gegenprobe ueber den gesamten SCD-Bereich aller 240 RDTs
- *     meldet 0 zusaetzlich uebersehene Records.
+ *     sec_start + max(Zeiger-Tabellen-Offset) sein): 822 statt 810 Records.
  *
- *  (a) Zensus ueber ALLE 240 ausgelieferten RE1.5-RDTs (822 `Sce_em_set`-Records, Opcode 0x44,
+ *  ⛔ WERKZEUG-FEHLER 2, gefunden 2026-08-19 durch genau die von Fix 1 geforderte Roh-Gegenprobe:
+ *     dieselbe Funktion suchte ihre Kandidaten in `range(0x40, 0x90, 4)` — die RDT-Adresstabelle
+ *     endet aber bei 0x5C (`animationStart`; RE15_KNOWLEDGE.md §1.1 "Header + 0x60-Byte-
+ *     Adresstabelle" und der Java-Extraktor RDTExtractor.java `Addresses.read()`, dessen letztes
+ *     `readInt(data, 92)` = 0x5C ist). Ab 0x60 stehen Licht-/Kameradaten; einzelne davon sehen
+ *     wie kleine Datei-Offsets aus und kappten die main-Sektion mitten im Skript:
+ *       ROOM2090 @0x64 = 0x0AC2 -> main endete 0x0AC2 statt 0x0ADC (= sub_s)
+ *         -> 2 Sce_em_set vom Typ 0x25 (Slots 0/1, Stride 20, Deskriptor 0x00) fielen raus
+ *       ROOM3010 @0x78 = 0x206A -> main endete 0x206A statt 0x2204 (= sub_s)
+ *         -> 9 Sce_em_set vom Typ 0x10/0x11 fielen raus (betrifft die Spinne nicht)
+ *     Nach BEIDEN Fixes: 844 Records, 0 Desync-Stopps, und eine Roh-Gegenprobe ueber den
+ *     gesamten SCD-Bereich aller 240 RDTs meldet 0 uebersehene Records (die einzigen zwei
+ *     Rest-Kandidaten, ROOM3071 @0x4160/@0x4174, liegen im MESSAGE-Block und dekodieren als
+ *     Klartext "...got no choice but to take our chance...").
+ *
+ *  (a) Zensus ueber ALLE 240 ausgelieferten RE1.5-RDTs (844 `Sce_em_set`-Records, Opcode 0x44,
  *      Stride 20 — Typ = pc[2] (scd_vm.c:3122), Deskriptor = pc[3] -> actor.grid_id
  *      (scd_vm.c:3201)):
- *        Typ 0x25: 58 Records, davon 50x Deskriptor 0x00 und 8x 0x41 — (Deskriptor & 0xF) liegt
+ *        Typ 0x25: 62 Records, davon 54x Deskriptor 0x00 und 8x 0x41 — (Deskriptor & 0xF) liegt
  *          zu 100% in {0,1}. NULL Decken-Spawns (2/3), NULL Wand-Spawns (4..11). Raeume:
- *          STAGE2 ROOM2030/2050/2060/2070/20A0 (+ ..1-Varianten). REPRODUZIERT.
+ *          STAGE2 ROOM2030/2050/2060/2070/2090/20A0 (+ ..1-Varianten).
+ *          ⚠️ Die MENGE der Deskriptoren ist ueber alle drei Walker-Staende identisch {0x00,0x41};
+ *          Fix 2 hat nur ROOM2090/2091 mit je 2x Deskriptor 0x00 ergaenzt (50x -> 54x). Die
+ *          Erreichbarkeits-Schlussfolgerung unten kippt dadurch NICHT.
  *        Typ 0x26: **7 Records, alle in STAGE1/ROOM1090** (RDT-Offsets 0x2214/0x2228/0x223C/
  *          0x2250/0x2264/0x2278/0x228C, Slots 0..6, Deskriptoren 00/01/02/04/03/03/04, y=-1800).
  *          Die alte Aussage "kommt game-weit in KEINEM Sce_em_set vor" war der oben beschriebene
@@ -1881,8 +1897,10 @@ static void re2s_hurt(re15_actor_t *e, re15_actor_t *pl)
  *       ueber ALLE Basis-Alias-Offsets, nicht nur `546(self)`) plus dem INIT-Blockclear
  *       @0x80100330. Der Modus-0-ACTIVE-Code (0x80100688..0x801013AC) enthaelt KEINEN davon —
  *       ein Boden-Spawn bleibt bis zum Tod Modus 0.
- *   (2) Beide in den 240 RDTs vorkommenden Deskriptoren fuer Typ 0x25 (0x00 50x, 0x41 8x) gehen
- *       durch die INIT-Sprungtabelle @0x80100004 auf Index 0 bzw. 1 — beide MODUS 0.
+ *   (2) Beide in den 240 RDTs vorkommenden Deskriptoren fuer Typ 0x25 (0x00 54x, 0x41 8x — Stand
+ *       des zweifach korrigierten Walkers 2026-08-19; die MENGE {0x00,0x41} ist ueber alle drei
+ *       Walker-Staende dieselbe, nur die Anzahl stieg 58 -> 62) gehen durch die INIT-Sprungtabelle
+ *       @0x80100004 auf Index 0 bzw. 1 — beide MODUS 0.
  * Die Baby-Spinne (Typ 0x26, die einzigen anderen Spinnen-Records, 7x in ROOM1090) faehrt ein
  * ANDERES Modul (EMS26.BIN) und kommt hier gar nicht an: ihre Wurzeltabelle @0x80101084 hat als
  * Eintrag [2] (HURT) die Adresse 0x80100BB8 = `jr ra`.
@@ -2204,7 +2222,8 @@ static void re2s_corpse(re15_actor_t *e)
  * ⛔ ERREICHBARKEIT — KORRIGIERT 2026-08-19. Die alte Fassung sagte "Typ 0x26 kommt in KEINEM
  * der 810 `Sce_em_set`-Records vor, Baby-Spinnen entstehen AUSSCHLIESSLICH aus dem
  * Laufzeit-Spawner der Adult". Das war ein WERKZEUG-FEHLER (abgeschnittene sub-SCD-Sektion,
- * Herleitung im WELLE-F-Kopf oben). Richtig ist: der korrigierte Zensus (822 Records, 0
+ * Herleitung im WELLE-F-Kopf oben — dort steht auch der zweite, am 2026-08-19 nachgezogene
+ * Werkzeug-Fehler). Richtig ist: der zweifach korrigierte Zensus (844 Records, 0
  * Desync-Stopps, Roh-Gegenprobe ohne Fund) findet **7 Records vom Typ 0x26, alle in
  * STAGE1/ROOM1090** (RDT-Offsets 0x2214..0x228C, Slots 0..6, Deskriptoren 00/01/02/04/03/03/04).
  * Der Laufzeit-Spawner der Adult (FUN_80105D38, re2s_spawn_babies oben) ist also der ZWEITE, nicht
@@ -2228,9 +2247,28 @@ static void re2s_corpse(re15_actor_t *e)
  *         FUN_8003567C(self, 1024).
  *
  * OPEN (kein Port-Kanal, jeweils mit dem Original-Nicht-Treffer-Wert):
- *   FUN_800527B4(X,Z) = der sce==7-Wasser-AOT-Scan -> 0 ("kein Wasser"). Damit sind der
+ *   FUN_800527B4(X,Z) = der Wasser-AOT-Scan -> 0 ("kein Wasser"). Damit sind der
  *     DROWN-Substate (@0x801009E4), der SINK-Todeszweig (@0x80100D40) und der Wasser-Revert im
  *     MOVE (@0x801006F4) unerreichbar. Sie sind trotzdem byte-true portiert.
+ *     ⚠️ TRAGWEITE NEU GEMESSEN 2026-08-19 — diese OPEN-Stelle ist NICHT tot, sie war nur
+ *     unsichtbar. Der frueher benutzte RDT-Walker kappte ROOM2090s main-SCD bei 0x0AC2 (das
+ *     Datenwort @0x64 = 0x0AC2 wurde faelschlich als Sektionsende gelesen, s. WELLE-F-Kopf
+ *     Werkzeug-Fehler 2), und genau dahinter liegen die BEIDEN einzigen Adult-Spider-Spawns
+ *     des Raumes. ROOM2090 sah dadurch aus wie ein Raum ganz OHNE Spinnen. Gemessen mit dem
+ *     korrigierten Walker (Datei-Offsets in ROOM2090.RDT):
+ *       Sce_em_set @0x0AB0 Slot 0 Typ 0x25 Desk. 0x00 floor 0 -> (x,y,z) = (-100, 0, -8296)
+ *       Sce_em_set @0x0AC4 Slot 1 Typ 0x25 Desk. 0x00 floor 0 -> (x,y,z) = (-2300, 0, -23896)
+ *     und die drei sce-8-Wasserzonen desselben main00 (Aot_set, flags 0x47 = CENTRE + Pools
+ *     Spieler|Gegner|Objekte, band 0 — also fuer den Gegner-Pool scharf):
+ *       @0x09D6 Slot 2  x[-8900..7200]  z[-27000..-18100]
+ *       @0x09EA Slot 3  x[-8900..7200]  z[-14500.. -5400]
+ *       @0x09FE Slot 4  x[-8900..-1700] z[-18100..-14500]
+ *     Punkt-Test: Slot 0 liegt in Wasserzone Slot 3, Slot 1 in Wasserzone Slot 2 — BEIDE
+ *     ausgelieferten Spinnen starten IM Wasser. Im Original laufen sie damit ab Frame 1 in
+ *     den Wasser-Zweig, im Port nie. Das ist kein neuer Port-Fehler (der Kanal fehlte schon
+ *     immer), aber sein Gewicht war durch den Zensus-Fehler verdeckt: bisher sah es aus, als
+ *     koenne ihn kein ausgelieferter Raum ausloesen. Naechster Schritt fuer diese OPEN-Stelle
+ *     ist damit belegt und priorisiert, NICHT mehr hypothetisch.
  *   FUN_80016480 (Boden-Schatten-Slot @0x8010025C), FUN_80100F28 (ESP-Effekt-Records
  *     @0x801010DC), FUN_8003947C/0x80039514 (Rumble), FUN_80065B9C (Partner-Schaden).
  *   +0x1E8 = 1 (@0x80100164) ist die ANZAHL der Hitbox-Kugeln (FUN_80035408), NICHT Gravitation.

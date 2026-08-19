@@ -181,12 +181,28 @@ def rdt_section_end(data, sec_start):
     die SIEBEN Baby-Spinnen-Records (0x2214..0x228C, Typ 0x26, lueckenlose Slot-Folge 0..6)
     fielen aus dem Zensus. Daraus entstand die Falschaussage "Typ 0x26 kommt game-weit in
     KEINEM Sce_em_set vor", die als belegter Befund in enemy_ai_re2_spider.c stand.
-    FIX: ein Kandidat muss HINTER der von der Zeiger-Tabelle aufgespannten Spanne liegen;
+    FIX 1: ein Kandidat muss HINTER der von der Zeiger-Tabelle aufgespannten Spanne liegen;
     was mitten in der Sektion liegt, ist kein Sektionsende. Danach 822 statt 810
-    Sce_em_set-Records, gegengeprueft per Roh-Scan (0 uebersehene Records)."""
+    Sce_em_set-Records, gegengeprueft per Roh-Scan (0 uebersehene Records).
+
+    ⛔ FEHLER-FIX 2 (2026-08-19, gefunden durch genau die vom Fix-1-Commit geforderte
+    Roh-Scan-Gegenprobe): die Kandidaten-Schleife lief ueber `range(0x40, 0x90, 4)` und las
+    damit 12 Woerter, die GAR KEINE Sektions-Zeiger sind. Die RDT-Adresstabelle endet bei
+    0x5C (`animationStart`) — Beleg: RE15_KNOWLEDGE.md §1.1 ("Header + 0x60-Byte-Adresstabelle
+    am Dateianfang", letzte Zeile 0x5C) und der Java-Extraktor
+    src/main/java/de/re15/extractors/RDTExtractor.java, `Addresses.read()`, dessen letztes
+    `readInt(data, 92)` = Datei-Offset 0x5C ist. Ab 0x60 stehen Licht-/Kamera-Daten; in ALLEN
+    RDTs steht z.B. @0x60 und @0x80 das Muster 0x683c0000, dazwischen negative Koordinaten.
+    Einzelne dieser Datenwoerter sehen aber wie kleine plausible Datei-Offsets aus und wurden
+    als Sektionsende genommen:
+      ROOM2090 @0x64 = 0x00000ac2 -> main endete 0x0ac2 statt 0x0adc (= sub_s)
+               -> 2 Sce_em_set (Typ 0x25 Adult Spider, Slots 0/1, Stride 20) fielen raus
+      ROOM3010 @0x78 = 0x0000206a -> main endete 0x206a statt 0x2204 (= sub_s)
+               -> 9 Sce_em_set (Typ 0x10/0x11, Slots 0..6, Stride 20) fielen raus
+    FIX: nur die echten Tabellen-Eintraege 0x40..0x5C als Kandidaten zulassen."""
     floor = sec_start + section_ptr_extent(data, sec_start)
     cands = []
-    for o in range(0x40, 0x90, 4):
+    for o in range(0x40, 0x60, 4):          # 0x40..0x5C = mainScd..animationStart
         if o + 4 > len(data): break
         v = u32(data, o)
         if floor < v <= len(data):

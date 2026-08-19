@@ -357,9 +357,12 @@ void re15_dialog_open_mask(int msg_id, int blocking, uint32_t pause_mask)
      * aus den Raum-DATEN (Message_on pc[2..3] @0x80040508 / sce-1-Payload u16@+2
      * @0x80043098, jeweils <<16 @0x8004051c bzw. @0x800430a4) und wird in
      * g_pauseflags = DAT_800aca40 ge-ODERt; der Vorzustand geht nach DAT_800b853c.
-     * Maske 0 = Untertitel -> die Welt laeuft weiter (420 von 698 ausgelieferten
+     * Maske 0 = Untertitel -> die Welt laeuft weiter (451 von 765 ausgelieferten
      * Message_on, u.a. ALLE 22 Kino-Captions in ROOM1170/ROOM1240 — eigener Census
-     * ueber 240 RDTs, 2026-08-17).  Der Open-GUARD sitzt in re15_pauseflags_open.
+     * ueber 240 RDTs, NEU ERHOBEN 2026-08-19 mit dem korrigierten Walker; der defekte
+     * Lauf meldete 420 von 698. Die 22 Kino-Captions sind von den Fixes unberuehrt:
+     * ROOM1170 16/16 + ROOM1240 6/6 Maske 0x0000).
+     * Der Open-GUARD sitzt in re15_pauseflags_open.
      *
      * OPEN (bewusst nicht mit-geaendert): das Original VERWIRFT einen zweiten Message-Open,
      * solange einer offen ist — FUN_80027e68 @0x80027e74-80 springt nach 0x800280ac und gibt

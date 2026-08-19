@@ -1329,8 +1329,10 @@ void re15_scd_show_message(uint8_t index, uint32_t pause_mask)
     /* pause_mask = das Payload-Halbwort u16@+2 des sce-1-Records, <<16 — byte-true
      * LAB_80043084: @0x80043098 `lhu a3,2(v0)`, @0x8004309c `lhu a2,0(v0)` (msg id),
      * @0x800430a0 `jal FUN_80027e68`, @0x800430a4 `sll a3,a3,16`.  Eigener Census ueber
-     * 240 RDTs: ALLE 511 ausgelieferten sce-1-Installs tragen 0xffff -> 0xffff0000, also
-     * friert JEDER Examine-Text Spieler+AI+Anim+Skript ein, bis der Text weg ist. */
+     * 240 RDTs (NEU ERHOBEN 2026-08-19 mit dem korrigierten Walker; der defekte Lauf
+     * meldete 511): ALLE 524 ausgelieferten sce-1-Records (436 Aot_set-Installs + 88
+     * Aot_reset-Retypes) tragen 0xffff -> 0xffff0000, also friert JEDER Examine-Text
+     * Spieler+AI+Anim+Skript ein, bis der Text weg ist. */
     re15_dialog_open_mask((int)index, 0, pause_mask);
     g_scd.message_arg2 = 0;
     g_scd.message_arg3 = 0;
@@ -1379,8 +1381,9 @@ static int op_message_on(scd_thread_t *t)
      *   8004051c  sll a3,a3,16      param_4 = Maske << 16
      * FUN_80027e68 ver-ODERt param_4 in g_pauseflags (@0x80027ed0) und sichert den
      * Vorzustand nach DAT_800b853c (@0x80027ec8).
-     * Eigener Census (240 RDTs, 2026-08-17): 698 Message_on -> 420x 0x0000 (Untertitel,
-     * KEIN Freeze), 34x 0xff80, 244x 0xffff.  Deshalb darf hier NICHT pauschal
+     * Eigener Census (240 RDTs, NEU ERHOBEN 2026-08-19 mit dem korrigierten Walker; der
+     * defekte Lauf meldete 698 -> 420/34/244): 765 Message_on -> 451x 0x0000 (Untertitel,
+     * KEIN Freeze), 35x 0xff80, 279x 0xffff.  Deshalb darf hier NICHT pauschal
      * eingefroren werden. */
     uint32_t pause_mask = ((uint32_t)(t->pc[2] | ((uint32_t)t->pc[3] << 8))) << 16;
 
@@ -1460,7 +1463,9 @@ static int op_message_on(scd_thread_t *t)
         /* KEIN Pause-Freeze auf diesem Pfad — und das ist gemessen, nicht angenommen:
          * die beiden Full-Text-Raeume tragen in ALLEN ihren Message_on die Maske 0x0000
          * (ROOM1240 6/6 @sub 0x57e..0x5fa, ROOM1170 16/16 @sub 0x146e..0x17a2; eigener
-         * Census 2026-08-17).  Es gibt hier also nichts einzufrieren — die Intro-/Kino-
+         * Census, nachgeprueft 2026-08-19 mit dem korrigierten Walker — beide Raeume sind
+         * von den rdt_section_end-Fixes unberuehrt, 6/6 und 16/16 bleiben).
+         * Es gibt hier also nichts einzufrieren — die Intro-/Kino-
          * Captions laufen im Original wie im Port mit weiterlaufender Welt. */
         msg_show(t);                               /* full-text all-at-once (message_fsm_active=0) */
         g_scd.message_fsm_active = 0;
@@ -2500,7 +2505,9 @@ static int op_aot_set(scd_thread_t *t)
             re15_aot_set(slot, RE15_AOT_TYPE_EXAMINE_WORKVAR, (uint8_t)slot, cx, cz, hw, hh);
         } else if (type == 1) {
             /* sce=1 MESSAGE (byte-true LAB_80043084: FUN_80027e68(0,0x300, u16@0 = room-msg
-             * index, u16@2<<16 = pause bits); 427 shipped zones, ALL flags 0x31 action+forward).
+             * index, u16@2<<16 = pause bits); 436 ausgelieferte Zonen = 427x flags 0x31
+             * action+forward + 9x 0xb1 (dasselbe 0x31 mit dem Polygon-Bit 0x80) — Zensus NEU
+             * ERHOBEN 2026-08-19 mit dem korrigierten Walker; der defekte Lauf sah nur 429).
              * These carry pause 0xFFFF at pc[16..17], so the old ev-heuristic (ev==0xFF) fell
              * through to `type` = port enum 1 = DOOR with zero door_params = INERT: no examine
              * text fired anywhere from a direct Aot_set. [wf_f536e1ee divergence #3] */
@@ -2508,7 +2515,9 @@ static int op_aot_set(scd_thread_t *t)
             /* Payload u16@+2 = die PAUSE-MASKE, die der Handler als param_4<<16 an
              * FUN_80027e68 gibt (@0x80043098/@0x800430a4). Payload-Basis = pc+14 (kurz) /
              * pc+22 (lang), also liegt sie bei pc[16..17] bzw. pc[24..25]. Eigener Census
-             * ueber 240 RDTs: 511/511 Installs tragen 0xffff. Vorher hat der Port dieses
+             * ueber 240 RDTs (NEU ERHOBEN 2026-08-19, korrigierter Walker; defekter Lauf:
+             * 511/511): 524/524 sce-1-Records (436 Installs + 88 Retypes) tragen 0xffff.
+             * Vorher hat der Port dieses
              * Halbwort weggeworfen -> KEIN Freeze bei Examine-Texten (Nutzer-Report 16). */
             uint16_t pmask = long_form ? (uint16_t)(t->pc[24] | (t->pc[25] << 8))
                                        : (uint16_t)(t->pc[16] | (t->pc[17] << 8));
@@ -2517,8 +2526,11 @@ static int op_aot_set(scd_thread_t *t)
                 g_aot.slots[slot].pause_mask16 = pmask;
         } else if (type == 4) {
             /* sce=4 FLAG_CHG (byte-true LAB_80043120: table 0x80074664[u16@0=group], bit u16@2
-             * MSB-first, on/off u16@4; idempotent per-frame for the AUTO variants). 30 shipped
-             * zones (2x action, 4x auto-player, 10x auto-ENEMY, 8x both pools) — the old
+             * MSB-first, on/off u16@4; idempotent per-frame for the AUTO variants). 24 shipped
+             * zones = 2x 0x31 action, 4x 0x41 auto-player, 10x 0x42 auto-ENEMY, 8x 0x43 both
+             * pools (Zensus nachgeprueft 2026-08-19 mit dem korrigierten Walker: von beiden
+             * rdt_section_end-Fixes unberuehrt; die Aufschluesselung 2/4/10/8 stimmte immer,
+             * die alte Summe „30" war ein Additionsfehler) — the old
              * heuristic installed them as EXAMINE_WORKVAR (flag never set + work_vars[0]
              * corruption on action). [wf_f536e1ee divergence #4] */
             re15_aot_set(slot, RE15_AOT_TYPE_FLAG_CHG, 0, cx, cz, hw, hh);
@@ -3413,8 +3425,12 @@ static int op_item_aot_set(scd_thread_t *t)
      *     left the slot uninstalled, which broke a later re-arm of a taken item. */
     re15_aot_set_item_tk((int)slot, cx, cz, hw, hh, item_t, amount, tk_bit);
     if (slot < RE15_AOT_MAX) {
-        g_aot.slots[slot].sce_flags = t->pc[3];   /* 0x31 forward / 0x51 centre (all shipped
-                                                   * items are ACTION-gated — wf_f536e1ee #5) */
+        g_aot.slots[slot].sce_flags = t->pc[3];   /* 0x31 forward / 0x51 centre — alle 164
+                                                   * ausgelieferten Item_aot_set sind ACTION-
+                                                   * gegatet (Bit 0x10): 160x 0x31 + 4x 0x51.
+                                                   * Zensus NEU ERHOBEN 2026-08-19 mit dem
+                                                   * korrigierten Walker (defekter Lauf: 162 =
+                                                   * 158+4) — wf_f536e1ee #5 */
         g_aot.slots[slot].band      = t->pc[4];
         int inert = (t->pc[2] == 0);
         if (tk_bit && re15_game_flag_get(9, tk_bit)) {
@@ -3565,10 +3581,15 @@ static int op_unknown(scd_thread_t *t)
  * PTR_8007469c[rec[0]]` @0x8004082c with a0 = the record payload (@0x80040804/808) — the
  * slot's sce handler runs ONCE immediately, bypassing every geometry/band/action test.
  * NOT an "activate" opcode (the old port behaviour, which only set active=1 and left the
- * fire to the geometry scan). 73 shipped uses, all on sce-2 doors (66 — incl. ROOM1240
+ * fire to the geometry scan). 76 shipped uses (Zensus NEU ERHOBEN 2026-08-19 mit dem
+ * zweifach korrigierten Walker; der defekte Lauf meldete 73 = 66/7), alle auf einem DOOR-
+ * oder ITEM-Slot: 66 sce-2 doors (incl. ROOM1240
  * sub02/sub03 slot 0: `47 00` is the LAST opcode before Evt_end = the intro→ROOM1170
- * handoff; ROOM1080 sub07-10; ROOM4020…) or sce-9 items (7 — scripted grants, e.g.
- * ROOM1051 sub03 slot 12). Dispatch per port type in re15_aot_fire_slot(). */
+ * handoff; ROOM1080 sub07-10; ROOM4020…), 9 sce-9 items (scripted grants, e.g.
+ * ROOM1051 sub03 slot 12 sowie neu sichtbar ROOM11D0/11D1 sub03 slot 10), und 1 Sonderfall
+ * ROOM1090 sub06 slot 3, dessen Slot in main00 als sce-3 installiert und in sub00 per
+ * Door_aot_set mit sce-2 ueberschrieben wird (zur Feuer-Zeit also ebenfalls DOOR).
+ * Dispatch per port type in re15_aot_fire_slot(). */
 int op_aot_on(scd_thread_t *t)
 {
     uint8_t slot = t->pc[1];
