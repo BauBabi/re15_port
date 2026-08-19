@@ -73,6 +73,67 @@ int re2_emd_parse_bank(const uint8_t *emd, size_t emd_size, re15_enemy_bank_t *e
 int re2_ems_load_bank(const uint8_t *ems, size_t ems_size, int kind,
                       re15_enemy_bank_t *eb, re15_tim_t *out_tim);
 
+/* ---- WELLE G: HYBRID-RIG ("RE2 AI" + RE1.5-Modelle) --------------------------------------
+ *
+ * Nutzer-Auftrag 2026-08-19: der RE2-Modus soll wahlweise die RE1.5-GEOMETRIE (MD1-Mesh +
+ * TIM-Textur) mit RE2-Gehirn UND RE2-Animation fahren. Animation MUSS RE2 bleiben — das RE2-
+ * Gehirn adressiert Clip-Indizes, die es in den RE1.5-Baenken nicht gibt (RE2-EM010 Paar 1 =
+ * 8 Clips gegen RE1.5-EM10 Paar 1 = 6; Frame-Laengen komplett verschieden).
+ *
+ * Damit RE2-Keyframes RE1.5-Meshes posieren koennen, muss die BONE-ORDNUNG uebersetzt werden.
+ * Selbst gemessen (2026-08-19, Parser 1:1 wie emd_common.c/md1_common.c, Quellen
+ * shared_assets/PSX/EMD/CDEMD0.EMS bzw. shared_assets/RE2/CDEMD0.EMS):
+ *
+ *   RE2 EM010/11/12/13/16/18  parent[] = [-1,0,1,2,3,1,5,6,0,0,9,10,0,12,13]   (Wurzel = BRUST)
+ *      Slot 0 Brust | 1 Huefte | 2-4 R-Bein | 5-7 L-Bein | 8 Kopf | 9-11 R-Arm | 12-14 L-Arm
+ *   RE1.5 EM10/11/12/16/18    parent[] = [-1,0,1,2,0,4,5,0,7,8,9,7,11,12,7]    (Wurzel = HUEFTE)
+ *      Slot 0 Huefte | 1-3 R-Bein | 4-6 L-Bein | 7 Brust | 8-10 R-Arm | 11-13 L-Arm | 14 Kopf
+ *   RE1.5 EM13 (Zombie Girl)  parent[] = [-1,0,1,2,0,4,5,0,7,7,9,10,7,12,13]
+ *      wie oben, aber 8 Kopf | 9-11 R-Arm | 12-14 L-Arm (= RE2-Reihenfolge ab Slot 8)
+ *   RE1.5 PL00.PLD (Leon) parent[] == RE2 EM010 — nur die RE1.5-ZOMBIE-Familie weicht ab.
+ *
+ * Zuordnung unabhaengig ueber die MD1-Geometrie belegt (Mesh-Index == Bone-Index,
+ * emd_common.c:190; Zahlen = Tri-Vertices / Bounding-Box in PSX-Einheiten):
+ *   Brust  RE2 Mesh 0 (41 v, y -852..132)  == RE1.5 Mesh 7  (29 v, y -735..120)
+ *   Huefte RE2 Mesh 1 (15 v, y   -2..463)  == RE1.5 Mesh 0  (18 v, y   -2..433)
+ *   Kopf   RE2 Mesh 8 (68 v, y -520.. 44)  == RE1.5 Mesh 14 (42 v, y -448.. 64)
+ *   Fuss   RE2 Mesh 4 (16 v, x -122..374)  == RE1.5 Mesh 3  (16 v, x -132..361)
+ *
+ * Das Um-Wurzeln Huefte<->Brust ist GEOMETRISCH KOSTENLOS: der Versatz zwischen beiden ist in
+ * BEIDEN Rigs exakt (0,0,0) (RE1.5 EM10 Bone 7, RE2 EM010 Bone 1) — die Kante dreht nur ihre
+ * Richtung um, ihre Laenge ist null.
+ *
+ * HUND 0x20: RE1.5 15 Bones / kf 80 gegen RE2 17 / kf 92 — RE2 gibt jedem VORDERBEIN ein
+ * drittes Segment (Slots 7 und 10, Versatz (-21,520,0)). Die uebrigen 15 Slots decken sich
+ * (Bone-Offsets bis auf +-2 Einheiten identisch). Die zwei Extra-Slots haben KEIN RE1.5-
+ * Gegenstueck (-1): RE1.5 traegt Unterarm+Pfote in EINEM Mesh (Slot 6/8, 26 Vertices, gegen
+ * RE2 18+12). => im Hybrid bleibt die Hundepfote STARR; das RE2-Pfotengelenk wird nicht
+ * gezeichnet. Bewusst dokumentierte Abweichung, NICHT byte-true.
+ * KRAEHE 0x21 (13/72), SPINNE 0x25 (20/104), BABY 0x26 (1/20): parent[] identisch,
+ * Bone-Offsets identisch (Spinne byte-gleich) => Identitaets-Permutation.
+ */
+
+/* RE2-Bone-Slot -> RE1.5-Bone-/Mesh-Index fuer `kind`. Rueckgabe = Slot-Zahl (== RE2-
+ * bone_count) oder -1, wenn fuer den kind kein Hybrid definiert ist. */
+int re2_hybrid_perm(int kind, const int8_t **out_perm);
+
+/* Baut die Bank `eb` (frisch aus re2_ems_load_bank) zur HYBRID-Bank um:
+ *   - eb->md1 := *md15                        (RE1.5-Geometrie)
+ *   - eb->mesh_remap := Permutation, remap_ok := 1
+ *   - die Bind-Positionen ALLER vier Skelett-Kopien (skel/skel_loco/skel_own/skel_victim —
+ *     re2_emd_parse_bank parst dir[2] je Paar erneut) werden auf die RE1.5-Werte umgesetzt,
+ *     wobei die RE2-HIERARCHIE erhalten bleibt (die RE2-Keyframes indizieren RE2-Slots).
+ *     Regel pro Kante (i, parent p) in RE2-Slots, m = perm:
+ *       parent15[m[i]] == m[p]  -> pos := pos15[m[i]]           (gleiche Kante)
+ *       parent15[m[p]] == m[i]  -> pos := -pos15[m[p]]          (umgekehrte Kante = Um-Wurzelung)
+ *       sonst / m < 0           -> RE2-Wert bleibt stehen       (gezaehlt in *out_unmapped)
+ * Rueckgabe 0 ok, negativ = kein Hybrid fuer den kind / Bone-Zahl passt nicht.
+ * `out_unmapped` (optional) = Zahl der Kanten ohne RE1.5-Entsprechung — PIN-Wert der Tests
+ * (Soll: 0 fuer alle Typen; die beiden Hunde-Extra-Slots sind KEINE Kanten mit m>=0). */
+int re2_hybrid_apply(re15_enemy_bank_t *eb, int kind,
+                     const re15_md1_t *md15, const re15_emd_skeleton_t *skel15,
+                     int *out_unmapped);
+
 /* ---- ENEMSE.VBS Bank-TOC (EXE @0x800a7b1c) + SE-Map-Dekodierung -------------- */
 
 #define RE2_ENEMSE_BANK_COUNT 73      /* == Paar-Tabelle @0x800a7400 (FUN_80052b38) */

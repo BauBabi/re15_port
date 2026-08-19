@@ -1412,3 +1412,15 @@ target_compile_definitions(test_re2_hit_repeat_crow_spider PRIVATE
 add_test(NAME unit_re2_hit_repeat_crow_spider COMMAND test_re2_hit_repeat_crow_spider)
 set_tests_properties(unit_re2_hit_repeat_crow_spider PROPERTIES TIMEOUT 120)
 
+# --- PIN: WELLE G — "RE2 AI" mit RE1.5-MODELLEN (Hybrid-Rig re2_hybrid_apply). Misst die
+#     Bone-Ordnungen beider Spiele aus den ECHTEN Archiven, pinnt die Permutationstabellen,
+#     den Umbau (RE1.5-Geometrie unter RE2-Rig/Clips) und die Regressionswachen fuer die
+#     beiden bestehenden Modi. ---
+add_executable(test_re2_hybrid_rig test_re2_hybrid_rig.c)
+target_link_libraries(test_re2_hybrid_rig PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_hybrid_rig PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2_hybrid_rig PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+    RE15_ASSET_RE2_DIR="${CMAKE_SOURCE_DIR}/shared_assets/RE2")
+add_test(NAME unit_re2_hybrid_rig COMMAND test_re2_hybrid_rig)
+set_tests_properties(unit_re2_hybrid_rig PROPERTIES TIMEOUT 60)

@@ -25,6 +25,30 @@ typedef enum {
 re15_ai_flavor_t re15_ai_flavor(void);
 void             re15_ai_flavor_set(re15_ai_flavor_t f);
 
+/* ---- WELLE G (2026-08-19): die MODELLHERKUNFT als ZWEITES, ORTHOGONALES Flag ---------------
+ * Nutzer-Auftrag: "RE2 AI" soll RE1.5-Modelle (Mesh + Textur) mit RE2-Gehirn UND RE2-Animation
+ * fahren; "RE2 AI + Models" zusaetzlich die RE2-Modelle (= der bisherige RE2-Modus).
+ *
+ * BEWUSST NICHT als drittes Enum-Glied von re15_ai_flavor_t: 17 Stellen im Port vergleichen
+ * `re15_ai_flavor() == RE15_AI_FLAVOR_RE2`; ein dreiwertiges Flavor haette jede davon einzeln
+ * pruefen muessen (genau diese stillen Mitzieh-Fehler haben in dieser Kampagne wiederholt
+ * Regressionen erzeugt). Dieses Flag lesen NUR die Asset-Pfade:
+ *   platform/pc/main.c  pc_enemy_load  -> pc_enemy_hybrid_re15_models
+ * ⛔ NICHT die Clip-Wahl: re15_victim_clip_map (enemy_ai_common.c) waehlt CLIP-Indizes in der
+ *    Victim-BANK — das ist ANIMATION, die in beiden RE2-Modi RE2 bleibt. Sie keyt daher weiter
+ *    auf re15_ai_flavor() und darf hier NICHT mitgezogen werden.
+ *
+ * DEFAULT = RE2 (der Auslieferungsstand des RE2-Modus bleibt byte-identisch, und jedes
+ * bestehende Harness mit `RE15_AI_FLAVOR=re2` bekommt weiter GENAU das, was es bisher bekam).
+ * Das Menue setzt beide Flags explizit; headless waehlt `RE15_AI_MODELS=re15` den Hybrid. */
+typedef enum {
+    RE15_AI_MODELS_RE15 = 0,   /* RE1.5-Mesh + -Textur, RE2-Skelettordnung (Hybrid) */
+    RE15_AI_MODELS_RE2  = 1    /* RE2-Mesh + -Textur (DEFAULT, = bisheriges Verhalten) */
+} re15_ai_models_t;
+
+re15_ai_models_t re15_ai_models(void);
+void             re15_ai_models_set(re15_ai_models_t m);
+
 /* Does the RE2 brain own this actor type? (zombie family only) */
 int re15_re2z_owns_type(unsigned type);
 

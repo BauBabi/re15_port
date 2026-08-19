@@ -53,6 +53,28 @@ void             re15_ai_flavor_set(re15_ai_flavor_t f) { s_flavor = (f == RE15_
                                                                      ? RE15_AI_FLAVOR_RE2
                                                                      : RE15_AI_FLAVOR_RE15; }
 
+/* WELLE G — Modellherkunft (orthogonal zum Brain, siehe re15_ai_flavor.h). Default RE2, damit
+ * der bisherige RE2-Modus UND jedes Harness mit `RE15_AI_FLAVOR=re2` byte-identisch bleiben;
+ * `RE15_AI_MODELS=re15` (oder 15/0) waehlt den Hybrid headless. */
+static re15_ai_models_t s_models = RE15_AI_MODELS_RE2;
+static int s_models_env_read = 0;
+
+re15_ai_models_t re15_ai_models(void)
+{
+    if (!s_models_env_read) {
+        const char *v = getenv("RE15_AI_MODELS");
+        s_models_env_read = 1;
+        if (v && (strcmp(v, "re15") == 0 || strcmp(v, "RE15") == 0 ||
+                  strcmp(v, "15")   == 0 || strcmp(v, "0")    == 0))
+            s_models = RE15_AI_MODELS_RE15;
+    }
+    return s_models;
+}
+void re15_ai_models_set(re15_ai_models_t m) { s_models = (m == RE15_AI_MODELS_RE15)
+                                                          ? RE15_AI_MODELS_RE15
+                                                          : RE15_AI_MODELS_RE2;
+                                              s_models_env_read = 1; }
+
 /* The RE1.5 zombie family. RE2 folds its whole 0x10..0x1F kind range onto one group (@0x8001B738),
  * so this is the port's equivalent set — and ONLY these ever leave the RE1.5 brain. */
 int re15_re2z_owns_type(unsigned type)

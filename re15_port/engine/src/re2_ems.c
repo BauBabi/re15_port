@@ -153,6 +153,96 @@ int re2_ems_load_bank(const uint8_t *ems, size_t ems_size, int kind,
     return 0;
 }
 
+/* ===== WELLE G: HYBRID-RIG (RE1.5-Geometrie unter RE2-Keyframes) ======== *
+ * Alle Messwerte + die Begruendung der Tabellen stehen im Kopf von re2_ems.h.  */
+
+/* Zombie-Familie 0x10/0x11/0x12/0x16/0x18 — RE1.5 hat Kopf auf Slot 14, Arme 8..13. */
+static const int8_t k_perm_zombie[15] = { 7,0,1,2,3,4,5,6, 14, 8, 9,10,11,12,13 };
+/* Zombie Girl 0x13 — RE1.5 hat Kopf auf Slot 8, Arme 9..14 (= RE2-Reihenfolge ab 8). */
+static const int8_t k_perm_zgirl [15] = { 7,0,1,2,3,4,5,6,  8, 9,10,11,12,13,14 };
+/* Hund 0x20 — RE2-Slots 7 und 10 (drittes Vorderbein-Segment) haben kein RE1.5-Gegenstueck. */
+static const int8_t k_perm_dog   [17] = { 0,1,2,3,4,5,6,-1, 7, 8,-1, 9,10,11,12,13,14 };
+/* Kraehe/Spinne/Baby — parent[] und Bone-Offsets in beiden Spielen identisch. */
+static const int8_t k_perm_ident [20] = { 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19 };
+
+int re2_hybrid_perm(int kind, const int8_t **out_perm)
+{
+    const int8_t *p = NULL; int n = -1;
+    switch (kind) {
+    case 0x10: case 0x11: case 0x12: case 0x16: case 0x18: p = k_perm_zombie; n = 15; break;
+    case 0x13:                                             p = k_perm_zgirl;  n = 15; break;
+    case 0x20:                                             p = k_perm_dog;    n = 17; break;
+    case 0x21:                                             p = k_perm_ident;  n = 13; break;
+    case 0x25:                                             p = k_perm_ident;  n = 20; break;
+    case 0x26:                                             p = k_perm_ident;  n =  1; break;
+    default: break;
+    }
+    if (out_perm) *out_perm = p;
+    return n;
+}
+
+/* Bind-Positionen EINER Skelett-Kopie umsetzen (Hierarchie = RE2, Laengen = RE1.5). */
+static int re2_hybrid_rig_skel(re15_emd_skeleton_t *dst, const int8_t *perm, int n,
+                               const re15_emd_skeleton_t *s15)
+{
+    int unmapped = 0;
+    for (int i = 0; i < n; i++) {
+        int p = (int)dst->bone_parent[i];
+        if (p < 0) continue;             /* Wurzel: bone_relative_pos[0] wird nie gelesen —
+                                          * der Root-Trans kommt aus dem Keyframe
+                                          * (skeleton_common.c:680, FUN_8001f3bc.c:28-37). */
+        int mi = (int)perm[i];
+        int mp = (p < n) ? (int)perm[p] : -1;
+        if (mi < 0 || mp < 0) continue;  /* Slot ohne RE1.5-Gegenstueck (Hundepfoten) */
+        if ((int)s15->bone_parent[mi] == mp) {
+            dst->bone_relative_pos[i][0] = s15->bone_relative_pos[mi][0];
+            dst->bone_relative_pos[i][1] = s15->bone_relative_pos[mi][1];
+            dst->bone_relative_pos[i][2] = s15->bone_relative_pos[mi][2];
+        } else if ((int)s15->bone_parent[mp] == mi) {
+            /* umgekehrte Kante = die Um-Wurzelung Huefte<->Brust; in beiden Rigs (0,0,0). */
+            dst->bone_relative_pos[i][0] = (int16_t)(-s15->bone_relative_pos[mp][0]);
+            dst->bone_relative_pos[i][1] = (int16_t)(-s15->bone_relative_pos[mp][1]);
+            dst->bone_relative_pos[i][2] = (int16_t)(-s15->bone_relative_pos[mp][2]);
+        } else {
+            unmapped++;                  /* RE2-Wert bleibt stehen — Test pinnt 0 */
+        }
+    }
+    return unmapped;
+}
+
+int re2_hybrid_apply(re15_enemy_bank_t *eb, int kind,
+                     const re15_md1_t *md15, const re15_emd_skeleton_t *skel15,
+                     int *out_unmapped)
+{
+    if (out_unmapped) *out_unmapped = 0;
+    if (!eb || !md15 || !skel15) return -1;
+    const int8_t *perm = NULL;
+    int n = re2_hybrid_perm(kind, &perm);
+    if (n <= 0 || !perm)                       return -2;
+    if (n != eb->skel.bone_count)              return -3;   /* RE2-Bone-Zahl muss passen */
+    if (n > RE15_EMD_MAX_BONES)                return -4;
+    for (int i = 0; i < n; i++) {
+        int m = (int)perm[i];
+        if (m >= skel15->bone_count)           return -5;
+        if (m >= md15->mesh_count)             return -6;
+    }
+
+    int um = 0;
+    um += re2_hybrid_rig_skel(&eb->skel,        perm, n, skel15);
+    if (eb->loco_ok)   um += re2_hybrid_rig_skel(&eb->skel_loco,   perm, n, skel15);
+    if (eb->own_ok)    um += re2_hybrid_rig_skel(&eb->skel_own,    perm, n, skel15);
+    /* skel_victim (Paar 3) posiert LEON, nicht den Gegner — sein Rig ist PL00-kompatibel
+     * (RE1.5 PL00.PLD parent[] == RE2 EM010 parent[], selbst gemessen). Er bleibt daher
+     * UNVERAENDERT: Leons Modell ist in beiden Modi dasselbe RE1.5-PL00. */
+
+    for (int i = 0; i < RE15_EMD_MAX_BONES; i++)
+        eb->mesh_remap[i] = (i < n) ? perm[i] : (int8_t)-1;
+    eb->remap_ok = 1;
+    eb->md1 = *md15;
+    if (out_unmapped) *out_unmapped = um;
+    return 0;
+}
+
 /* ===== ENEMSE.VBS Bank-TOC + SE-Map ===================================== */
 
 int re2_enemse_toc_entry(int bank, re2_enemse_rec_t *out)

@@ -524,6 +524,74 @@ static int pc_enemy_load_re2(uint8_t type, re15_enemy_bank_t *eb)
     return 1;
 }
 
+/* Den RE1.5-EMD-Blob fuer `type` besorgen (Split-Datei oder Blob aus CDEMD0.EMS) — der
+ * Aufrufer bekommt einen PRIVATEN malloc-Puffer und uebernimmt ihn als eb->buf. Aus
+ * pc_enemy_load herausgezogen, weil der WELLE-G-Hybrid denselben Blob braucht. */
+static uint8_t *pc_enemy_read_re15_emd(uint8_t type, size_t *out_len)
+{
+    uint8_t *buf = NULL; char rel[32]; int sz = 0;
+    snprintf(rel, sizeof rel, "EMD/EM%02X.EMD", type);
+    buf = pc_read_shared(rel, &sz);                    /* malloc'd if it exists */
+    if (buf) { if (out_len) *out_len = (size_t)sz; return buf; }
+    int idx = re15_ems_index_for_type(type);
+    size_t ems_sz = 0; const uint8_t *ems = (idx >= 0) ? pc_cdemd(&ems_sz) : NULL;
+    size_t off = 0, len = 0;
+    if (ems && re15_ems_get_entry(ems, ems_sz, idx, &off, &len) == 0) {
+        buf = (uint8_t *)malloc(len);                  /* private copy: banks free their buf */
+        if (buf) { memcpy(buf, ems + off, len); if (out_len) *out_len = len; return buf; }
+    }
+    return NULL;
+}
+
+/* WELLE G — HYBRID: die frisch geladene RE2-Bank behaelt Skelett-HIERARCHIE + ALLE Animationen,
+ * bekommt aber die RE1.5-GEOMETRIE (MD1 + TIM) und die RE1.5-Bind-Laengen (permutiert, weil die
+ * beiden Rigs die Bones anders ordnen — Messwerte + Tabellen in re2_ems.h/re2_ems.c).
+ * Schlaegt irgendein Schritt fehl, bleibt die reine RE2-Bank stehen (sichtbarer Fallback statt
+ * eines halb umgebauten Skeletts) und der Grund steht auf stderr. */
+static void pc_enemy_hybrid_re15_models(uint8_t type, re15_enemy_bank_t *eb)
+{
+    extern void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
+    size_t buflen = 0;
+    uint8_t *buf = pc_enemy_read_re15_emd(type, &buflen);
+    if (!buf) {
+        fprintf(stderr, "[enemy] Hybrid EM%02X: RE1.5-Modell nicht gefunden -> RE2-Modell bleibt\n",
+                type);
+        return;
+    }
+    /* re15_md1_t/-animation_t sind gross (Frames[1664]) — niemals Stack-Locals. Die Anim wird
+     * nur zum Parsen gebraucht und danach verworfen: die Clips bleiben RE2. */
+    static re15_md1_t           s_md15;
+    static re15_emd_skeleton_t  s_sk15;
+    static re15_emd_animation_t s_an15;
+    re15_tim_t tim; memset(&tim, 0, sizeof tim);
+    if (re15_emd_parse_container(buf, buflen, &s_md15, &s_sk15, &s_an15, &tim) != 0) {
+        free(buf);
+        fprintf(stderr, "[enemy] Hybrid EM%02X: RE1.5-EMD-Parse fehlgeschlagen -> RE2-Modell bleibt\n",
+                type);
+        return;
+    }
+    int unmapped = -1;
+    int rc = re2_hybrid_apply(eb, (int)type, &s_md15, &s_sk15, &unmapped);
+    if (rc != 0) {
+        free(buf);
+        fprintf(stderr, "[enemy] Hybrid EM%02X: re2_hybrid_apply rc=%d -> RE2-Modell bleibt\n",
+                type, rc);
+        return;
+    }
+    eb->buf = buf;                                     /* md1 zeigt JETZT in diesen Puffer; die
+                                                        * RE2-Skelette/EDDs aliasen weiter das
+                                                        * residente EMS (wird nie freigegeben) */
+    int slot = (eb->pc_tex_slot >= 0) ? eb->pc_tex_slot : 11 + (int)(eb - g_enemy);
+    if (tim.width > 0 && tim.height > 0 && slot < 24) {
+        re15_render_pc_upload_tim_slot(&tim, slot);    /* RE1.5-TIM ersetzt die RE2-Textur */
+        eb->pc_tex_slot = slot;
+    }
+    fprintf(stderr, "[enemy] Hybrid EM%02X: RE1.5-Geometrie (%d Meshes) unter RE2-Rig "
+                    "(%d Bones, %d Clips), %d Kanten ohne Zuordnung -> slot %d\n",
+            type, eb->md1.mesh_count, eb->skel.bone_count, eb->anim.clip_count,
+            unmapped, eb->pc_tex_slot);
+}
+
 static void pc_enemy_load(uint8_t type)
 {
     extern void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
@@ -562,28 +630,21 @@ static void pc_enemy_load(uint8_t type)
                                       type == 0x26);
         else
             re15_re2z_audio_hook(re15_audio_re2_enemy_se, re15_audio_re2_enemy_bank);
-        if (pc_enemy_load_re2(type, eb)) return;
+        if (pc_enemy_load_re2(type, eb)) {
+            /* WELLE G: "RE2 AI" (ohne "+ Models") behaelt Gehirn + Animation aus RE2, tauscht
+             * aber Mesh/Textur/Bind-Laengen gegen RE1.5 (re15_ai_models(), orthogonales Flag). */
+            if (re15_ai_models() == RE15_AI_MODELS_RE15)
+                pc_enemy_hybrid_re15_models(type, eb);
+            return;
+        }
     }
 
     /* Enemy models live inside CDEMD0.EMS (no per-type EM<NN>.EMD on the disc).
      * Try a standalone split file first (back-compat / future), else extract the
      * type's EMD blob out of the archive (re15_ems, the byte-true port of the
      * Java EMS splitter). Either way `buf` ends up a private, bank-owned copy. */
-    uint8_t *buf = NULL; size_t buflen = 0;
-    char rel[32]; int sz = 0;
-    snprintf(rel, sizeof rel, "EMD/EM%02X.EMD", type);
-    buf = pc_read_shared(rel, &sz);                    /* malloc'd if it exists */
-    if (buf) {
-        buflen = (size_t)sz;
-    } else {
-        int idx = re15_ems_index_for_type(type);
-        size_t ems_sz = 0; const uint8_t *ems = (idx >= 0) ? pc_cdemd(&ems_sz) : NULL;
-        size_t off = 0, len = 0;
-        if (ems && re15_ems_get_entry(ems, ems_sz, idx, &off, &len) == 0) {
-            buf = (uint8_t *)malloc(len);             /* private copy: banks free their buf */
-            if (buf) { memcpy(buf, ems + off, len); buflen = len; }
-        }
-    }
+    size_t buflen = 0;
+    uint8_t *buf = pc_enemy_read_re15_emd(type, &buflen);
     if (!buf) {
         eb->type = 0;
         fprintf(stderr, "[enemy] EM%02X model not found (no split file, not in CDEMD0.EMS)\n", type);
@@ -1589,8 +1650,34 @@ enum { CFG_TOP = 0, CFG_PICKER, CFG_SOUND, CFG_EDIT, CFG_AI };
 static const int k_cfg_top_x[3]  = { 147, 198, 248 };            /* DAT_80073d6c.x (y=24) */
 #define CFG_AI_X 14
 #define CFG_AI_Y 225
-#define CFG_AI_W 96
+/* WELLE G: 96 war auf die zwei alten Beschriftungen zugeschnitten. Die BREITESTE der drei ist
+ * jetzt "AI  RE2 MODELS". Breiten GEMESSEN aus der Glyphen-Vorschubtabelle, die der Renderer
+ * selbst benutzt (BIN/DEBUG.BIN Datei-Offset 0x4416 == RAM 0x800c4416, render_pc.c:2300 —
+ * s_msgfont_w[code], Code-Abbildung pc_font_code):
+ *   "AI  RE1.5" = 56 px | "AI  RE2" = 46 px | "AI  RE2 MODELS" = 100 px
+ * Text beginnt bei CFG_AI_X+5 = 19, also Kasten-Ende >= 19+100+5 = 124 -> Breite >= 110.
+ * Kollisionsfrei: der byte-true OPTIONS-Kasten endet bei y=220 (dieser Streifen liegt darunter)
+ * und die Zeile bleibt mit x=14..124 weit innerhalb der 320er-Breite. */
+#define CFG_AI_W 110
 static const int k_cfg_pick_x[5] = { 147, 164, 181, 198, 248 }; /* DAT_80073d78.x (y=24) */
+
+/* WELLE G — der AI-Schalter hat DREI Zustaende. Sie sind kein drittes Flavor-Enum, sondern das
+ * Produkt aus zwei orthogonalen Flags (re15_ai_flavor.h begruendet, warum):
+ *   0 = RE1.5-Gehirn        + RE1.5-Modelle   ("AI  RE1.5")
+ *   1 = RE2-Gehirn/-Anim    + RE1.5-Modelle   ("AI  RE2")           <- Hybrid, WELLE G
+ *   2 = RE2-Gehirn/-Anim    + RE2-Modelle     ("AI  RE2 MODELS")    <- bisheriger RE2-Modus
+ * Im Zustand 0 ist die Modellherkunft bedeutungslos (der Asset-Pfad liest sie nur unter dem
+ * RE2-Flavor); sie wird trotzdem mitgesetzt, damit das Zurueckschalten deterministisch ist. */
+static int pc_ai_mode(void)
+{
+    if (re15_ai_flavor() != RE15_AI_FLAVOR_RE2) return 0;
+    return (re15_ai_models() == RE15_AI_MODELS_RE2) ? 2 : 1;
+}
+static void pc_ai_mode_set(int m)
+{
+    re15_ai_flavor_set(m == 0 ? RE15_AI_FLAVOR_RE15 : RE15_AI_FLAVOR_RE2);
+    re15_ai_models_set(m == 2 ? RE15_AI_MODELS_RE2 : RE15_AI_MODELS_RE15);
+}
 
 /* EDIT custom-remap screen (FUN_8002ebbc). s_edit_phase: 0=slot-select, 1=panel A (basic action), 2=panel B
  * (special code). Slot-grid nav = byte-true jump-table transitions (0x80010a30/a70/aa8/ae8); panels + assign
@@ -1672,9 +1759,10 @@ static void pc_config_draw_overlay(const re15_tim_t *tim, int screen, int cur)
      * `lit` draws the same blue 50%-ABE cursor tile the byte-true tabs use, so it reads as one UI. */
     void pc_config_draw_ai_row(int lit) {
         if (lit) re15_render_pc_config_rect(CFG_AI_X, CFG_AI_Y, CFG_AI_W, 14, 0, 0, 0x80, 128);
-        unsigned char b[16]; int n = 0;
-        const char *s = (re15_ai_flavor() == RE15_AI_FLAVOR_RE2) ? "AI  RE2" : "AI  RE1.5";
-        for (const char *p = s; *p; p++) b[n++] = (unsigned char)pc_font_code(*p);
+        unsigned char b[20]; int n = 0;
+        static const char *k_ai_top[3] = { "AI  RE1.5", "AI  RE2", "AI  RE2 MODELS" };
+        const char *s = k_ai_top[pc_ai_mode()];
+        for (const char *p = s; *p && n < 20; p++) b[n++] = (unsigned char)pc_font_code(*p);
         re15_render_pc_config_text(CFG_AI_X + 5, CFG_AI_Y + 2, b, n, 0);
     }
     if (screen == CFG_TOP) {
@@ -1682,16 +1770,24 @@ static void pc_config_draw_overlay(const re15_tim_t *tim, int screen, int cur)
         if (cur < 3)
             re15_render_pc_config_rect(k_cfg_top_x[cur], 24, 48, 16, 0, 0, 0x80, 128); /* blue tab cursor @50% */
     } else if (screen == CFG_AI) {
-        /* PORT EXTENSION — zombie-brain picker, laid out like the SOUND screen (same CONFIG.TIM
-         * label boxes at uv 0,232 88x18), with the row-below marker kept lit so it is obvious
-         * where this screen was entered from. */
-        re15_render_pc_config_tile(tim, 0, 232, 88, 18, 116, 51);
-        re15_render_pc_config_tile(tim, 0, 232, 88, 18, 116, 70);
+        /* PORT EXTENSION — AI picker, laid out like the SOUND screen (same CONFIG.TIM label
+         * boxes at uv 0,232 88x18), with the row-below marker kept lit so it is obvious where
+         * this screen was entered from. WELLE G: DRITTE Zeile bei y=89 (Raster 19 px wie 51/70).
+         * Beschriftungen GEMESSEN gegen die Vorschubtabelle BIN/DEBUG.BIN@0x4416 (render_pc.c:2300):
+         * "RE1.5" 34 px | "RE2" 24 px | "RE2 MODELS" 78 px. Kasten x=116..204, Text ab x=124 ->
+         * laengste Zeile endet bei 202, bleibt also innerhalb der Kachel. */
+        static const struct { const char *s; int tile_y, text_y; } k_ai_rows[3] = {
+            { "RE1.5", 51, 53 }, { "RE2", 70, 71 },   /* Zeile 1/2 unveraendert */
+            { "RE2 MODELS", 89, 90 },                 /* WELLE G, Raster 19 px  */
+        };
+        for (int r = 0; r < 3; r++)
+            re15_render_pc_config_tile(tim, 0, 232, 88, 18, 116, k_ai_rows[r].tile_y);
         pc_config_draw_ai_row(1);
-        { unsigned char b[8]; int n = 0; for (const char *p = "RE1.5"; *p; p++) b[n++] = (unsigned char)pc_font_code(*p);
-          re15_render_pc_config_text(124, 53, b, n, (re15_ai_flavor() == RE15_AI_FLAVOR_RE15) ? 0 : 3); }
-        { unsigned char b[8]; int n = 0; for (const char *p = "RE2"; *p; p++) b[n++] = (unsigned char)pc_font_code(*p);
-          re15_render_pc_config_text(134, 71, b, n, (re15_ai_flavor() == RE15_AI_FLAVOR_RE2) ? 0 : 3); }
+        for (int r = 0; r < 3; r++) {
+            unsigned char b[16]; int n = 0;
+            for (const char *p = k_ai_rows[r].s; *p && n < 16; p++) b[n++] = (unsigned char)pc_font_code(*p);
+            re15_render_pc_config_text(124, k_ai_rows[r].text_y, b, n, (pc_ai_mode() == r) ? 0 : 3);
+        }
     } else if (screen == CFG_PICKER) {
         /* opaque CONFIG.TIM tiles cover the baked CONFIG/SOUND: "TYPE A B C" then "EDIT" ("EXIT" stays baked). */
         re15_render_pc_config_tile(tim, 0, 192, 50, 24, 147, 16);
@@ -1840,10 +1936,12 @@ static void pc_run_config(void)
                     else               { screen = CFG_TOP; cur = 0; }      /* EXIT -> back to top */
                 }
             } else if (screen == CFG_AI) {
-                /* PORT EXTENSION: pick the zombie brain. UP/DOWN toggles like the SOUND screen. */
-                if (pp & (RE15_PAD_BIT_UP | RE15_PAD_BIT_DOWN))
-                    re15_ai_flavor_set(re15_ai_flavor() == RE15_AI_FLAVOR_RE2
-                                       ? RE15_AI_FLAVOR_RE15 : RE15_AI_FLAVOR_RE2);
+                /* PORT EXTENSION: pick the AI mode. WELLE G — DREI Zustaende, also kein Toggle
+                 * mehr: DOWN geht vorwaerts, UP rueckwaerts durch den 3-Zyklus (die SOUND-Seite
+                 * hat nur zwei Zeilen, dort ist UP == DOWN; mit drei Zeilen waere das nicht
+                 * bedienbar). */
+                if (pp & RE15_PAD_BIT_DOWN) pc_ai_mode_set((pc_ai_mode() + 1) % 3);
+                else if (pp & RE15_PAD_BIT_UP) pc_ai_mode_set((pc_ai_mode() + 2) % 3);
                 if (confirm || cancel) { screen = CFG_TOP; cur = 3; }
             } else if (screen == CFG_SOUND) {
                 if (pp & (RE15_PAD_BIT_UP | RE15_PAD_BIT_DOWN)) s_config_sound ^= 1;   /* raw 0x5000 toggle */
@@ -2048,9 +2146,18 @@ re_title:;
                        * 3 = preset picker, 4 = SOUND, 5 = EDIT slot-select, 6 = EDIT panel A, 7 = EDIT panel B.
                        * RE15_CONFIG_CUR = picker cursor / EDIT slot; RE15_CONFIG_CODE = EDIT panel cursor. */
                       int t = atoi(getenv("RE15_CONFIG_TAB")?getenv("RE15_CONFIG_TAB"):"0");
-                      int screen = (t <= 2) ? CFG_TOP : (t == 3 ? CFG_PICKER : (t == 4 ? CFG_SOUND : CFG_EDIT));
-                      int cur = (t <= 2) ? t : atoi(getenv("RE15_CONFIG_CUR")?getenv("RE15_CONFIG_CUR"):"0");
-                      if (t >= 5) { s_config_type = 3; s_edit_phase = t - 5; s_edit_slot = cur;
+                      /* WELLE G: 8 = der AI-Screen (wie im interaktiven pc_run_config oben);
+                       * RE15_CONFIG_AI=0|1|2 waehlt den Zustand fuer den Shot vor, damit die
+                       * Beschriftungs-BREITE aller drei Zustaende am gerenderten Bild und nicht
+                       * nach Gefuehl geprueft werden kann. */
+                      if (t == 8) { const char *ai = getenv("RE15_CONFIG_AI");
+                                    pc_ai_mode_set(ai ? atoi(ai) : 0); }
+                      int screen = (t == 8) ? CFG_AI
+                                 : (t <= 2) ? CFG_TOP
+                                 : (t == 3) ? CFG_PICKER : (t == 4 ? CFG_SOUND : CFG_EDIT);
+                      int cur = (t == 8) ? 3
+                              : (t <= 2) ? t : atoi(getenv("RE15_CONFIG_CUR")?getenv("RE15_CONFIG_CUR"):"0");
+                      if (t >= 5 && t <= 7) { s_config_type = 3; s_edit_phase = t - 5; s_edit_slot = cur;
                                     s_edit_code = atoi(getenv("RE15_CONFIG_CODE")?getenv("RE15_CONFIG_CODE"):"0"); }
                       for (int f=0; f<4; f++) {   /* render a few frames so the shot reads a presented buffer, not stale black */
                           re15_render_begin_frame(); re15_render_background_gradient(0,0,0,0,0,0);
@@ -6256,6 +6363,13 @@ re_title:;
                 const re15_md1_t           *npc_md1  = av.mesh;
                 const re15_emd_skeleton_t  *npc_skel = av.skel;
                 const re15_emd_animation_t *npc_anim = av.anim;
+                /* WELLE G: Bone-Slot -> Mesh-Index NUR fuer eine Hybrid-Bank, und NUR wenn wir
+                 * wirklich deren MD1 zeichnen (nicht den Elliot-/PL00-Fallback). */
+                const int8_t *npc_remap = NULL;
+                {
+                    re15_enemy_bank_t *hb = re15_enemy_find(npc->type);
+                    if (hb && hb->remap_ok && npc_md1 == &hb->md1) npc_remap = hb->mesh_remap;
+                }
 
                 /* LOCO-BANK render: the STAGE1 zombie WALKING states pose the locomotion bank (bank0,
                  * entity+0x84), NOT the 43-clip action bank. W1 disasm 2026-07-03: the ENGAGE (+0x5=2)
@@ -6419,7 +6533,13 @@ re_title:;
                 }
 
                 int npc_bones = npc_skel->bone_count;
-                if (npc_bones > npc_md1->mesh_count) npc_bones = npc_md1->mesh_count;
+                /* Ohne Remap ist Mesh-Index == Bone-Index (emd_common.c:190), also darf die
+                 * Schleife nie ueber die Mesh-Zahl hinaus. MIT Remap (WELLE-G-Hybrid) gilt das
+                 * NICHT: der RE2-Hund hat 17 Bones gegen 15 RE1.5-Meshes, und die Klammer haette
+                 * genau die beiden LETZTEN Slots (15/16 = linkes Hinterbein) verschluckt — die
+                 * -1-Eintraege in mesh_remap uebernehmen die Aufgabe pro Slot. */
+                if (!npc_remap && npc_bones > npc_md1->mesh_count) npc_bones = npc_md1->mesh_count;
+                if (npc_bones > RE15_EMD_MAX_BONES) npc_bones = RE15_EMD_MAX_BONES;
                 /* ---- RE2-GORE: Part-Sichtbarkeit + Part-Tinte (Zwilling FUN_80027160) ----
                  * gore_on == 0 im GESAMTEN RE1.5-Pfad (re15_re2z_gore_active gated auf
                  * Flavor + RE2-Zombie-Typ + INIT-Seed) — dann bleibt der Renderpfad Byte
@@ -6535,6 +6655,22 @@ re_title:;
                     int nmi = nbi;
                     if (gore_on && gore_mesh[nbi] < (uint8_t)npc_md1->mesh_count)
                         nmi = (int)gore_mesh[nbi];
+                    /* WELLE G — HYBRID-BANK ("RE2 AI" mit RE1.5-Modellen): der Bone-Slot ist ein
+                     * RE2-Slot, das Mesh liegt im RE1.5-MD1 mit ANDERER Ordnung. -1 = der Slot
+                     * hat kein RE1.5-Gegenstueck (RE2-Hund: die zwei zusaetzlichen Pfoten-
+                     * Gelenke 7/10) -> nichts zeichnen. Tabellen/Messung: re2_ems.h.
+                     * ⚠️ GORE-GRENZE: der Zerleger stempelt part_mesh = RESERVE-Mesh 15
+                     * (@0x8010531C-50); das gibt es NUR im RE2-MD1 (17 Meshes) — der RE1.5-MD1
+                     * hat 0..14. Die Klammer oben greift dann und der Oberschenkel bleibt INTAKT
+                     * (Schienbein+Fuss fliegen weiter weg): im Hybrid gibt es KEINEN Stumpf.
+                     * Selbst gemessen: KEIN RE1.5-Zombie-EMD (EM10/11/12/13/16/18) traegt ein
+                     * 16. Mesh, aus dem sich ein Stumpf bauen liesse (mesh_count == bone_count). */
+                    if (npc_remap) {
+                        int r = (nmi >= 0 && nmi < RE15_EMD_MAX_BONES) ? (int)npc_remap[nmi] : -1;
+                        if (r < 0) continue;
+                        nmi = r;
+                    }
+                    if (nmi >= npc_md1->mesh_count) continue;
                     const re15_md1_mesh_t *nm = &npc_md1->meshes[nmi];
                     for (int ti = 0; ti < nm->triangle_count; ti++) {
                         const re15_md1_triangle_t *tri = &nm->triangles[ti];

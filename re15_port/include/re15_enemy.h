@@ -56,6 +56,14 @@ typedef struct {
     re15_emd_skeleton_t  skel_own;
     re15_emd_animation_t anim_own;
     uint8_t              own_ok;
+    /* WELLE G — HYBRID-BANK ("RE2 AI" mit RE1.5-Modellen, re2_ems.h re2_hybrid_apply):
+     * md1 stammt dann aus dem RE1.5-EMD, Skelett/Animation weiter aus dem RE2-EMD. Weil die
+     * beiden Rigs die 15 Bones ANDERS ordnen (RE1.5-Zombie wurzelt in der Huefte, RE2 in der
+     * Brust), bildet mesh_remap den RE2-Bone-/Mesh-Slot auf den RE1.5-Mesh-Index ab.
+     * -1 = kein RE1.5-Gegenstueck (RE2-Hund hat zwei Pfoten-Slots mehr) -> Slot wird NICHT
+     * gezeichnet. remap_ok == 0 => 1:1 (mesh_idx == bone_idx, emd_common.c:190). */
+    int8_t  mesh_remap[RE15_EMD_MAX_BONES];
+    uint8_t remap_ok;
     int tpage, clut;              /* PSX VRAM handles (per-tri path: both -1) */
     int xshift, yshift;           /* PSX VRAM tpage-X / CLUT-row relocation shifts */
     int pc_tex_slot;              /* PC render texture slot (-1 if unused) */
