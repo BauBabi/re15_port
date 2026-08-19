@@ -371,9 +371,77 @@ static const uint16_t s_wpn_dmg_tyrant[22]  = { 0,4,16,10,10,20,20,200,30,50,200
 static const uint16_t s_wpn_dmg_birkin[22]  = { 0,7,30,15,15,28,28,50,40,40,70,40,8,50,8,40,70,40,400,20,0,100 };          /* 0x30 */
 static const uint16_t s_wpn_dmg_immune[22]  = { 0 };  /* 0x26 spider-baby / 0x2d ivy / 0x36 birkin-5 = weapon-immune */
 
+/* ⛔ RE2-FLAVOR: die BABY-SPINNE (Typ 0x26) ist NUR in RE1.5 waffen-immun ------------------
+ * VERIFIZIERT 2026-08-19 (Nebenbefund aus eb841053/9178ddba, eigener Zensus + Messung):
+ *
+ * (a) RE1.5 ist KORREKT und bleibt unangetastet. Zeile 0x26 @0x8006EDE0 (= 0x8006e0d0 + 0x26*0x58)
+ *     ist 22x0, gedumpt aus PSX.EXE; die Tabelle hat GENAU EINEN Xref (`addiu a0,a0,-7984`
+ *     @0x800124B8 — eigener Voll-Scan aller PSX.EXE-Instruktionen), also gibt es in RE1.5 keinen
+ *     zweiten Schadensweg auf die Baby-Spinne. Der Crit-Instakill greift nicht
+ *     (`sltiu v0,v0,0x20` @0x80012510, 0x26 >= 0x20). Sie ist byte-true unzerstoerbar.
+ *
+ * (b) RE2 gibt DEMSELBEN Typ-Index eine volle Zeile. Der RE2-Applier FUN_800470C0 rechnet
+ *     (@0x80047218-68, selbst disassembliert):
+ *       80047218: lbu v0,8(s1)            ; Gegner-TYP
+ *       8004722c: lw  a1,27272(at)        ; a1 = *(u32*)(0x800A6A88 + typ*4)  Per-Typ-ZEIGER
+ *       80047230-3c: v0 = (w*5)<<2 - 20   ; Zeile = 20 Byte je Waffe, w 1-basiert
+ *       8004724c: lw  v1,0(a1)            ; Wort 0 = DREI 10-Bit-Werte
+ *       80047254: srlv v1,v1,v0           ; v0 = Bracket*10   (s6 = a3>>28 @0x80047114)
+ *       8004725c: andi v1,v1,0x3ff
+ *       80047260/68: subu v0,v0,v1 / sh v0,342(s1)   ; HP(+0x156) -= dmg
+ *     0x800A6A88[0x25] == 0x800A6A88[0x26] == 0x800A4B90 — Adult UND Baby teilen sich die Zeile.
+ *     BRACKET = 0: in diesem Port ist das der belegte Wert (die Herleitung steht unten bei
+ *     re15_re2_stamp_hit, "Bracket 0 = INNERSTE Teilbox = der direkte Treffer ... genau der
+ *     RE1.5-Hitscan FUN_80011F50 des Ports"; Zensus aller 17 FUN_800470C0-Aufrufe: jeder DIREKTE
+ *     Einschlag hat Bracket 0).
+ *     WAFFEN-INDEX = die RE2-Item-Zeile, dieselbe Karte, die enemy_ai_re2_spider.c:1525
+ *     (s_re2s_row_from_weapon) schon fuer den Trefferreaktions-Dispatch benutzt.
+ *     Baby-HP = 1 (`sh v0,342` EMS26.BIN @0x801000F8) und die kleinste Zone-0-Zahl der Zeile ist
+ *     10 -> in RE2 toetet JEDER Treffer die Baby-Spinne sofort.
+ *
+ * (c) DER FEHLER, den das behebt (GEMESSEN, probe_re2_baby_spider_hit, ROOM1090, echter
+ *     game_step-Schussweg): im RE2-Modus lieferte die RE1.5-Nullzeile HP 1 - 0 = 1 >= 0, also
+ *     `+0x4 = 2` (HURT, @0x80012520-2C). Das RE2-Baby-Modul hat aber gar keinen HURT-Handler —
+ *     Wurzeltabelle @0x80101084 Eintrag [2] = 0x80100BB8 = `jr ra`. Messwert: nach dem ersten
+ *     Schuss GENAU EIN Zustandswechsel in 300 Frames, +0x93 blieb 0x03 = die Spinne war
+ *     PERMANENT eingefroren und nicht mehr treffbar. Mit der RE2-Zeile geht sie wie im Original
+ *     direkt auf `+0x4 = 3` (DEATH @0x80103C80-Zwilling 0x80100BFC).
+ *
+ * Werte = Zone 0 von 0x800A4B90 + (RE2-Zeile-1)*20, je Waffe einzeln aus der EXE gelesen. */
+static const uint16_t s_re2_wpn_dmg_spiderbaby[22] = {
+    /* w0  -> r1  @0x800a4b90 */  15,
+    /* w1  -> r1  @0x800a4b90 */  15,
+    /* w2  -> r1  @0x800a4b90 */  15,
+    /* w3  -> r3  @0x800a4bb8 */  17,
+    /* w4  -> r2  @0x800a4ba4 */  17,
+    /* w5  -> r4  @0x800a4bcc */  17,
+    /* w6  -> r4  @0x800a4bcc */  17,
+    /* w7  -> r5  @0x800a4be0 */ 130,
+    /* w8  -> r7  @0x800a4c08 */  55,
+    /* w9  -> r9  @0x800a4c30 */  60,
+    /* w10 -> r11 @0x800a4c58 */  90,
+    /* w11 -> r10 @0x800a4c44 */ 130,
+    /* w12 -> r15 @0x800a4ca8 */  10,
+    /* w13 -> r8  @0x800a4c1c */ 130,
+    /* w14 -> r16 @0x800a4cbc */  10,
+    /* w15 -> r9  @0x800a4c30 */  60,
+    /* w16 -> r11 @0x800a4c58 */  90,
+    /* w17 -> r10 @0x800a4c44 */ 130,
+    /* w18 -> r17 @0x800a4cd0 */ 200,
+    /* w19 -> r18 @0x800a4ce4 */  18,
+    /* w20 -> r13 @0x800a4c80 */  17,
+    /* w21 -> r1  @0x800a4b90 */  15
+};
+
 /* type -> its byte-true damage row (@0x8006e0d0 + type*0x58). */
 static const uint16_t *re15_enemy_dmg_row(uint8_t type)
 {
+    /* RE2-Flavor: die Baby-Spinne faehrt das RE2-Gehirn (EMS26.BIN) mit RE2-HP; sie muss
+     * deshalb auch die RE2-Schadenszeile bekommen, sonst ist sie unzerstoerbar UND friert im
+     * nicht existierenden RE2-HURT-Zustand ein (Belege am Tabellen-Kopf). Das Besitz-Gate
+     * re15_re2spider_owns haengt ausschliesslich am Typ, also reicht der Typ hier. */
+    if (type == 0x26u && re15_ai_flavor() == RE15_AI_FLAVOR_RE2)
+        return s_re2_wpn_dmg_spiderbaby;
     switch (type) {
         case 0x10: case 0x11: case 0x12: case 0x13: case 0x16: case 0x18: return s_player_wpn_dmg_zombie;
         case 0x20: return s_wpn_dmg_dog;
@@ -604,6 +672,18 @@ retry_after_latch:
          * So gate on the hitbox, which makes every ported enemy with a box shootable. */
         if (e->hit_radius_min <= 0) continue;   /* no damage hitbox -> not a valid auto-aim target */
         if (e->state == 7) continue;   /* RE15_AI_STATE_CORPSE — already a corpse (literal: avoid the AI-header dep) */
+        /* ⛔ RE2-FLAVOR / BABY-SPINNE: HP < 0 heisst in RE2 "kein gueltiges Ziel", nicht "gleich
+         * tot". Der RE2-Applier verwirft solche Kandidaten VOR dem Schaden:
+         *   80047148: lh   v0,342(s0)          ; HP (+0x156)
+         *   80047150: bltz v0,0x8004740c       ; HP < 0 -> naechster Kandidat
+         * Der RE1.5-Resolver kennt dieses Gate nicht — er rechnet HP -= dmg und liest nur das
+         * Vorzeichen (@0x80012520-2C). Die Baby-Spinne mit Spawn-Deskriptor 0 setzt sich in ihrem
+         * RE2-INIT aber genau darueber auf UNVERWUNDBAR (`sh -1,342` EMS26.BIN @0x80100204, Zweig
+         * `+0x10E & 0xFF == 0` @0x801001F8). GEMESSEN (probe_re2_baby_spider_hit, ROOM1090 Baby #0,
+         * grid 0x00): sie ging beim ERSTEN Schuss auf `+0x4 = 3` (Tod) statt unberuehrt zu bleiben.
+         * Eng gefasst auf genau diesen Fall (RE2-Flavor + Typ 0x26) — die RE1.5-Semantik von
+         * HP < 0 bei allen anderen Typen bleibt unveraendert. */
+        if (e->type == 0x26u && re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && e->hp < 0) continue;
         if ((e->hit_react & 0x3) == 0x3) continue;   /* already hit + re-touched this attack -> excluded */
         /* ELEVATION-BAND gate (byte-true @0x800120d0-ec: candidate needs
          * enemy.word0 & player_word & 0xe0000000 != 0, player band = acaec<<16 ->

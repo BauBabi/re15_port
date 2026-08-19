@@ -1424,3 +1424,22 @@ target_compile_definitions(test_re2_hybrid_rig PRIVATE
     RE15_ASSET_RE2_DIR="${CMAKE_SOURCE_DIR}/shared_assets/RE2")
 add_test(NAME unit_re2_hybrid_rig COMMAND test_re2_hybrid_rig)
 set_tests_properties(unit_re2_hybrid_rig PROPERTIES TIMEOUT 60)
+
+# --- DIAGNOSE: der echte Schuss-Weg auf die BABY-SPINNE (Typ 0x26, ROOM1090), je Flavor.
+#     Kein add_test — reine Messsonde. ---
+add_executable(probe_re2_baby_spider_hit probe_re2_baby_spider_hit.c)
+target_link_libraries(probe_re2_baby_spider_hit PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re2_baby_spider_hit PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_re2_baby_spider_hit PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- PIN: Waffenschaden auf die BABY-SPINNE (Typ 0x26) je Flavor. RE1.5 = byte-true immun
+#     (Nullzeile @0x8006EDE0, ein einziger Xref @0x800124B8), RE2 = jeder Treffer toetet
+#     (Zeile 0x800A4B90 == die des Adults, HP 1 @0x801000F8) + HP<0 = kein Ziel (@0x80047150). ---
+add_executable(test_re2_baby_spider_dmg test_re2_baby_spider_dmg.c)
+target_link_libraries(test_re2_baby_spider_dmg PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_baby_spider_dmg PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2_baby_spider_dmg PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2_baby_spider_dmg COMMAND test_re2_baby_spider_dmg)
+set_tests_properties(unit_re2_baby_spider_dmg PROPERTIES TIMEOUT 60)

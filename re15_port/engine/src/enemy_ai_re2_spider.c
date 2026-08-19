@@ -738,21 +738,52 @@ static void re2s_thrust3(re15_actor_t *e, int dy, int dz){ (void)e; (void)dy; (v
  * WELLE F — ACTIVE Modus 1 (DECKE) @0x801013AC / Modus 2 (FADEN) @0x80101CC8 /
  *           Modus 3 (WAND) @0x80102B40
  *
- * ERREICHBARKEIT — GEMESSEN, nicht geschaetzt (2026-08-18):
- *  (a) Eigener Zensus ueber ALLE 240 ausgelieferten RE1.5-RDTs (810 `Sce_em_set`-Records,
- *      Opcode 0x44, Stride 20 — Typ = pc[2] (scd_vm.c:3122), Deskriptor = pc[3] -> actor.grid_id
- *      (scd_vm.c:3201)): 58 Records vom Typ 0x25, davon 50x Deskriptor 0x00 und 8x 0x41 —
- *      (Deskriptor & 0xF) liegt zu 100% in {0,1} = BODEN. NULL Decken-Spawns (2/3), NULL
- *      Wand-Spawns (4..11). Raeume: STAGE2 ROOM2030/2050/2060/2070/20A0 (+ ..1-Varianten).
- *      Typ 0x26 (Baby) kommt game-weit in KEINEM Sce_em_set vor.
- *  (b) Eigener Store-Scan ueber EMS25.BIN (alle sb/sh/sw mit Offset 546 = +0x222): geschrieben
- *      wird der Oberflaechen-Modus NUR in INIT (@0x80100460 = 0 / @0x80100480 = 1 /
- *      @0x801004C0 = 3), in Modus 1 (@0x80101B5C = 2), in Modus 2 (@0x801026B0 = 1) und in
- *      HURT/DEATH (@0x80103370 / @0x80103FE0 / @0x8010433C, alle = 0). In Modus 0: NIRGENDS.
- *  => Ein Boden-Spawn kann seinen Modus NIE wechseln. Unter den ausgelieferten Raumdaten sind
- *     die drei Handler hier TOTER PFAD. Sie werden trotzdem byte-true portiert, weil damit das
- *     Besitz-Gate re15_re2spider_owns() ohne Ausnahme greifen kann (Welle E musste Decken-/
- *     Wandspawns dem RE1.5-Brain lassen) — und weil ein Debug-/Test-Spawn sie erreichen kann.
+ * ERREICHBARKEIT — GEMESSEN, nicht geschaetzt (2026-08-18, NACHGEPRUEFT + TEILWEISE KORRIGIERT
+ * 2026-08-19; die Korrektur betrifft NUR Typ 0x26, das 0x25-Ergebnis wurde reproduziert):
+ *
+ *  ⛔ WERKZEUG-FEHLER, der die alte Fassung verfaelscht hat: der Zensus benutzte die
+ *     Sektions-Logik aus re15_port/tools/aot_sce_census.py, und deren `rdt_section_end()` nahm
+ *     den KLEINSTEN RDT-Adresstabellen-Eintrag > sec_start. In ROOM1090.RDT ist der Eintrag
+ *     @0x6C = 0x21E4 und liegt damit INNERHALB des sub-SCD (sub_s = 0x21B4, dessen eigene
+ *     Zeiger-Tabelle bis 0x21B4+0x578 = 0x272C reicht) — der Walk wurde bei 0x21E4 abgeschnitten
+ *     und hat die dahinter liegenden Records nie gesehen. Korrigiert (sec_end muss >=
+ *     sec_start + max(Zeiger-Tabellen-Offset) sein) findet derselbe Walk 822 statt 810 Records,
+ *     0 Desync-Stopps, und eine Roh-Gegenprobe ueber den gesamten SCD-Bereich aller 240 RDTs
+ *     meldet 0 zusaetzlich uebersehene Records.
+ *
+ *  (a) Zensus ueber ALLE 240 ausgelieferten RE1.5-RDTs (822 `Sce_em_set`-Records, Opcode 0x44,
+ *      Stride 20 — Typ = pc[2] (scd_vm.c:3122), Deskriptor = pc[3] -> actor.grid_id
+ *      (scd_vm.c:3201)):
+ *        Typ 0x25: 58 Records, davon 50x Deskriptor 0x00 und 8x 0x41 — (Deskriptor & 0xF) liegt
+ *          zu 100% in {0,1}. NULL Decken-Spawns (2/3), NULL Wand-Spawns (4..11). Raeume:
+ *          STAGE2 ROOM2030/2050/2060/2070/20A0 (+ ..1-Varianten). REPRODUZIERT.
+ *        Typ 0x26: **7 Records, alle in STAGE1/ROOM1090** (RDT-Offsets 0x2214/0x2228/0x223C/
+ *          0x2250/0x2264/0x2278/0x228C, Slots 0..6, Deskriptoren 00/01/02/04/03/03/04, y=-1800).
+ *          Die alte Aussage "kommt game-weit in KEINEM Sce_em_set vor" war der oben beschriebene
+ *          Werkzeug-Fehler. Die Baby-Spinne entsteht also NICHT nur aus dem Laufzeit-Spawner.
+ *          (Deckungsgleich mit dem Savestate-Befund in RE15_SPIDER_AI.md "6x Schwarm ROOM1090"
+ *          und mit re15_spider_ai_tick, das dieselben Varianten 0..4 fuehrt.)
+ *  (b) Store-Scan ueber EMS25.BIN nach ALLEN Schreibern von +0x222 — nicht nur `sb rt,546(self)`,
+ *      sondern ueber JEDEN im Modul vorkommenden `addiu rD,rS,K`-Basis-Alias (0 < K < 0x400) auch
+ *      `sb rt,(546-K)(alias)`. Damit kommt der INIT-Block dazu, den ein reiner Offset-546-Scan
+ *      nicht sieht (er schreibt ueber s0 = self+0x218, `addiu s0,s2,536` @0x80100418):
+ *        INIT-Blockclear `sw zero,536(v1)`-Schleife @0x80100330-40 (12 Worte ab +0x218) -> 0
+ *        Sprungtabelle @0x80100004[+0x10E & 0xF], Gate `sltiu v0,v1,0xc` @0x8010043C
+ *          (aus der Datei gelesen): [0]=0x80100460 [1]=0x8010058C [2]=[3]=0x8010047C
+ *          [4..11]=0x801004B4
+ *          -> [0]: `sb zero,10(s0)` @0x80100460 = MODUS 0
+ *          -> [1]: KEIN Schreiber (Sprung direkt auf den Epilog) = MODUS 0 aus dem Blockclear
+ *          -> [2]/[3]: `sb v0,10(s0)` v0=1 @0x80100480 = MODUS 1 (Decke)
+ *          -> [4..11]: `sb v0,10(s0)` v0=3 @0x801004C0 = MODUS 3 (Wand)
+ *        Modus 1: `sb v0,546(s0)` v0=2 @0x80101B5C ; Modus 2: v0=1 @0x801026B0
+ *        HURT/DEATH: 0 @0x80103370 / @0x80103FE0 / @0x8010433C
+ *        Modus-0-Code (0x80100688..0x801013AC, Grenzen aus der Modus-Tabelle @0x80106440):
+ *          KEIN EINZIGER Schreiber.
+ *  => Ein Boden-Spawn kann seinen Modus NIE wechseln, und beide ausgelieferten Deskriptoren
+ *     (0x00 -> Index 0, 0x41 -> Index 1) landen auf MODUS 0. Unter den ausgelieferten Raumdaten
+ *     sind die drei ACTIVE-Handler hier TOTER PFAD. Sie werden trotzdem byte-true portiert, weil
+ *     damit das Besitz-Gate re15_re2spider_owns() ohne Ausnahme greifen kann (Welle E musste
+ *     Decken-/Wandspawns dem RE1.5-Brain lassen) — und weil ein Debug-/Test-Spawn sie erreicht.
  *
  * FLOCK-MUTEX: 0x800CFBF4 Bit 0x20. Das ist DASSELBE Wort und DASSELBE Bit, das der RE2-Hund
  * benutzt (g_re2_room_gflags, enemy_ai_re2_dog.c) — im Original teilen sich die Module die
@@ -1839,7 +1870,25 @@ static void re2s_hurt(re15_actor_t *e, re15_actor_t *pl)
     re2s_hurt_row_generic(e);
 }
 
-/* Die generische Zeile @0x80102D18 -> @0x80102D54 (Modus 0). */
+/* Die generische Zeile @0x80102D18 -> @0x80102D54 (Modus 0).
+ *
+ * ⛔ WARUM NUR MODUS 0 — NACHGEPRUEFT 2026-08-19, KEIN OFFENER PUNKT.
+ * @0x80102D18 dispatcht `lbu +0x222` ueber die 4-Eintrag-Tabelle @0x80106568 (selbst aus
+ * EMS25.BIN gelesen) = {0x80102D54, 0x80102E78, 0x80102F2C, 0x80102F2C}. Die Eintraege 1..3 sind
+ * unter den ausgelieferten Raumdaten NICHT ERREICHBAR, und zwar nicht "vermutlich", sondern aus
+ * zwei unabhaengigen, selbst erhobenen Belegen (beide im WELLE-F-Kopf oben ausgeschrieben):
+ *   (1) +0x222 wird im ganzen Modul nur an acht Stellen geschrieben (erschoepfender Store-Scan
+ *       ueber ALLE Basis-Alias-Offsets, nicht nur `546(self)`) plus dem INIT-Blockclear
+ *       @0x80100330. Der Modus-0-ACTIVE-Code (0x80100688..0x801013AC) enthaelt KEINEN davon —
+ *       ein Boden-Spawn bleibt bis zum Tod Modus 0.
+ *   (2) Beide in den 240 RDTs vorkommenden Deskriptoren fuer Typ 0x25 (0x00 50x, 0x41 8x) gehen
+ *       durch die INIT-Sprungtabelle @0x80100004 auf Index 0 bzw. 1 — beide MODUS 0.
+ * Die Baby-Spinne (Typ 0x26, die einzigen anderen Spinnen-Records, 7x in ROOM1090) faehrt ein
+ * ANDERES Modul (EMS26.BIN) und kommt hier gar nicht an: ihre Wurzeltabelle @0x80101084 hat als
+ * Eintrag [2] (HURT) die Adresse 0x80100BB8 = `jr ra`.
+ * => Modi 1/2/3 werden bewusst NICHT portiert. Das ist kein Spielfehler: kein ausgelieferter
+ *    Raum kann sie erreichen. (Anders als die ACTIVE-Modi 1/2/3, die portiert sind, weil das
+ *    Besitz-Gate re15_re2spider_owns() ausnahmslos greifen muss.) */
 static void re2s_hurt_row_generic(re15_actor_t *e)
 {
     switch (e->sub_state_2) {
@@ -2152,10 +2201,21 @@ static void re2s_corpse(re15_actor_t *e)
  * HERKUNFT: shared_assets/RE2/CDEMD0.EMS[0x3B6800 .. +4346] == info/re2leon/COMMON/BIN/EMS26.BIN
  * (SHA1-Gleichheit im Dateikopf belegt). TOC kind 0x26: Ovl-Slot0 Sektor 1901 / 0x10FA B.
  *
- * ERREICHBARKEIT (gemessen): Typ 0x26 kommt in KEINEM der 810 `Sce_em_set`-Records der 240
- * ausgelieferten RDTs vor — Baby-Spinnen entstehen AUSSCHLIESSLICH aus dem Laufzeit-Spawner der
- * Adult (FUN_80105D38, re2s_spawn_babies oben). Im Port ist der erreichbare Weg der
- * DEATH-Abschluss (@0x80104440 / @0x801047F8) und die schweren HURT-/DEATH-Zeilen.
+ * ⛔ ERREICHBARKEIT — KORRIGIERT 2026-08-19. Die alte Fassung sagte "Typ 0x26 kommt in KEINEM
+ * der 810 `Sce_em_set`-Records vor, Baby-Spinnen entstehen AUSSCHLIESSLICH aus dem
+ * Laufzeit-Spawner der Adult". Das war ein WERKZEUG-FEHLER (abgeschnittene sub-SCD-Sektion,
+ * Herleitung im WELLE-F-Kopf oben). Richtig ist: der korrigierte Zensus (822 Records, 0
+ * Desync-Stopps, Roh-Gegenprobe ohne Fund) findet **7 Records vom Typ 0x26, alle in
+ * STAGE1/ROOM1090** (RDT-Offsets 0x2214..0x228C, Slots 0..6, Deskriptoren 00/01/02/04/03/03/04).
+ * Der Laufzeit-Spawner der Adult (FUN_80105D38, re2s_spawn_babies oben) ist also der ZWEITE, nicht
+ * der einzige Weg. Damit ist im RE2-Modus der ganze Baby-Zweig ab dem ersten ROOM1090-Betreten
+ * live — inklusive INIT (`+0x10E & 0xFF == 0` -> HP = -1 UNVERWUNDBAR @0x801001F8-204, sonst
+ * HP = 1 @0x801000F8) und dem Zertret-Gate @0x801003D4-460.
+ * FOLGE (2026-08-19 gemessen + gefixt, s. re15_damage.c s_re2_wpn_dmg_spiderbaby und
+ * tests/unit/test_re2_baby_spider_dmg.c): der RE1.5-Hitscan lieferte diesen Aktoren die
+ * RE1.5-Nullzeile @0x8006EDE0, HP blieb 1 >= 0, `+0x4 = 2` — und Eintrag [2] der Wurzeltabelle
+ * @0x80101084 ist 0x80100BB8 = `jr ra`, die Spinne fror also nach dem ersten Schuss dauerhaft
+ * ein. In RE2 toetet jeder Treffer sofort (Zeile 0x800A4B90 == die des Adults, Zone 0 min 10).
  *
  * ROOT @0x8010001C:
  *   Pause-Gate `lw 0x800CFBDC & 0x20000000` (@0x8010002C-38) -> sofort return (der Aufrufer
