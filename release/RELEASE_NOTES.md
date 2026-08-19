@@ -1,3 +1,75 @@
+# RE1.5 Port — v0.3.1 (Early Preview)
+
+## Behoben: im RE2-Modus liessen sich Gegner nicht treffen
+
+Gemeldet: "Bei der RE2-AI kann ich keinen Zombie treffen, weder mit
+Schusswaffe noch mit Messer." Das stimmte — und es traf **alle vier** Gegner.
+
+Die Ursache lag nicht dort, wo man sie vermutet. Der Treffer war nie das
+Problem, die **Zielerfassung danach** war es: Das Spiel markiert einen
+getroffenen Gegner intern und nimmt ihn damit fuer den Rest des Treffers aus
+der Zielsuche — sowohl fuer Schuesse als auch fuer den Nahkampf. Aufgehoben
+wird diese Markierung normalerweise von der Trefferreaktion des Gegners. Der
+RE2-Modus bringt aber seine eigenen Reaktionen mit und hat diese eine Aufgabe
+nicht mitgeerbt. Ergebnis: der erste Schuss sass, danach war der Gegner
+dauerhaft unverwundbar.
+
+Bei der Kraehe hiess das woertlich unsterblich — sie hat zehn Lebenspunkte und
+liess sich genau einmal treffen.
+
+Gemessen wurde diesmal der **komplette Weg ab dem Zielen**, nicht wie zuvor ab
+dem Schadenseintritt. Genau daran waren die frueheren Pruefungen
+vorbeigelaufen: sie loesten den Schaden direkt aus und sahen alles gruen,
+waehrend im Spiel der Schuss den Gegner nie erreichte. Vorher/nachher, jeweils
+Dauerfeuer auf dasselbe Ziel:
+
+| | vorher | nachher |
+|---|---|---|
+| Zombie, Pistole | 1 Treffer | 20, stirbt |
+| Zombie, Messer | 1 Treffer | 16, stirbt |
+| Hund | 1 Treffer | 8, stirbt |
+| Kraehe | 1 Treffer, ueberlebt | 6, stirbt |
+| Spinne | 1 Treffer, ueberlebt | 10, stirbt |
+
+Der RE1.5-Modus war nie betroffen und ist unveraendert.
+
+## Neu: dritte Einstellung "AI RE2 MODELS"
+
+Auf Wunsch aufgeteilt. Der Menuepunkt AI hat jetzt drei Stufen:
+
+- **AI RE1.5** — alles wie im Original.
+- **AI RE2** — RE2-Verhalten und RE2-Animationen, aber die **Modelle aus
+  RE1.5**. (Diese Einstellung hat sich geaendert.)
+- **AI RE2 MODELS** — zusaetzlich die RE2-Modelle; das entspricht dem
+  bisherigen RE2-Modus.
+
+Dass sich RE2-Animationen ueberhaupt auf RE1.5-Modelle legen lassen, liegt an
+einer Eigenheit beider Spiele: Die Skelette sind gleich aufgebaut, nur anders
+aufgehaengt — RE2 an der Brust, RE1.5 an der Huefte. Der Abstand zwischen
+diesen beiden Punkten ist in beiden Spielen exakt null, das Umhaengen kostet
+also nichts. Kurios am Rande: die RE2-Reihenfolge ist genau die, die RE1.5
+selbst fuer Leon und alle Mitspieler verwendet — nur die RE1.5-Zombies tanzen
+aus der Reihe.
+
+Drei Grenzen dieser Kombination sind gemessen und werden nicht beschoenigt:
+
+- **Hund:** RE2 gibt den Vorderbeinen ein Gelenk mehr, das es in RE1.5 nicht
+  gibt. Die Pfote bleibt in dieser Einstellung starr.
+- **Zerlegen:** Kein RE1.5-Zombiemodell besitzt einen Beinstumpf. Der
+  Unterschenkel fliegt weg, der Oberschenkel bleibt heil.
+- **Fussrutschen:** Die RE2-Laufanimation ist fuer ein rund zehn Prozent
+  laengeres Bein gemacht. Dagegen wurde bewusst **nichts** eingebaut — jede
+  Korrektur waere eine erfundene Zahl.
+
+Testsuite 170 Pruefungen.
+
+⚠️ Nicht am Bildschirm geprueft: Diese Version konnte nur rechnerisch und ueber
+die Testsuite verifiziert werden, nicht durch eine Bildaufnahme des laufenden
+Spiels. Auf verdrehte Gliedmassen in der Einstellung "AI RE2" und auf den Sitz
+der dritten Menuezeile bitte besonders achten.
+
+---
+
 # RE1.5 Port — v0.3.0 (Early Preview)
 
 ## Neu in v0.3.0 — die letzten offenen RE2-Punkte
