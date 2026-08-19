@@ -153,13 +153,43 @@ def section_regions(data, sec_start, sec_end):
         off2name.setdefault(o, idx)
     return [(o, e, off2name.get(o, -1)) for (o, e) in regions]
 
+def section_ptr_extent(data, sec_start):
+    """Groesster Offset der sektionseigenen u16-Zeiger-Tabelle (0 = keine lesbar).
+
+    Gleiche Tabellen-Lesart wie section_regions() — bewusst als eigene Funktion, damit
+    rdt_section_end() die Ausdehnung kennt, BEVOR die Regionen gebildet werden."""
+    if sec_start == 0 or sec_start + 2 > len(data): return 0
+    first = u16(data, sec_start)
+    if first < 2 or first % 2 or sec_start + first > len(data): return 0
+    mx = 0
+    for i in range(first // 2):
+        o = u16(data, sec_start + 2*i)
+        if o == 0 or sec_start + o >= len(data): continue
+        if o > mx: mx = o
+    return mx
+
 def rdt_section_end(data, sec_start):
-    """Smallest plausible RDT address-table entry > sec_start, else EOF."""
+    """Smallest plausible RDT address-table entry > sec_start, else EOF.
+
+    ⛔ FEHLER-FIX 2026-08-19 — dieser Walker hat LAUTLOS RECORDS VERLOREN und dabei
+    weiter "100.00% coverage" gemeldet, weil er 100 % einer ZU KLEIN berechneten Sektion
+    maß. Ein Adresstabellen-Eintrag kann INNERHALB der Sektion liegen; wurde er als
+    Sektionsende genommen, klemmte section_regions() (`end = min(end, sec_end - sec_start)`)
+    alle Regionen dahinter weg.
+    Konkret ROOM1090.RDT: sub_s=0x21B4, sektionseigene Zeiger-Tabelle reicht bis
+    0x21B4+0x578=0x272C, aber Adresstabelle @0x6C = 0x21E4 liegt mittendrin. Ergebnis:
+    die SIEBEN Baby-Spinnen-Records (0x2214..0x228C, Typ 0x26, lueckenlose Slot-Folge 0..6)
+    fielen aus dem Zensus. Daraus entstand die Falschaussage "Typ 0x26 kommt game-weit in
+    KEINEM Sce_em_set vor", die als belegter Befund in enemy_ai_re2_spider.c stand.
+    FIX: ein Kandidat muss HINTER der von der Zeiger-Tabelle aufgespannten Spanne liegen;
+    was mitten in der Sektion liegt, ist kein Sektionsende. Danach 822 statt 810
+    Sce_em_set-Records, gegengeprueft per Roh-Scan (0 uebersehene Records)."""
+    floor = sec_start + section_ptr_extent(data, sec_start)
     cands = []
     for o in range(0x40, 0x90, 4):
         if o + 4 > len(data): break
         v = u32(data, o)
-        if sec_start < v <= len(data):
+        if floor < v <= len(data):
             cands.append(v)
     return min(cands) if cands else len(data)
 
