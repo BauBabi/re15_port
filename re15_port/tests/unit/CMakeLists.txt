@@ -1689,3 +1689,27 @@ target_compile_definitions(test_re2_lyer_1140 PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_re2_lyer_1140 COMMAND test_re2_lyer_1140)
 set_tests_properties(unit_re2_lyer_1140 PROPERTIES TIMEOUT 300)
+
+# --- MESSSONDE (Nutzer-Report v0.3.5): "gerader Schuss trifft den fressenden Zombie nicht".
+#     Faehrt in ROOM1140 den echten Schuss-Weg (game_step + R1 ohne D-Pad -> SQUARE) auf JEDEN
+#     Aktor einzeln und protokolliert die komplette Gate-Kette von re15_player_weapon_fire. ---
+add_executable(probe_1140_feeder_shot probe_1140_feeder_shot.c)
+target_link_libraries(probe_1140_feeder_shot PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1140_feeder_shot PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1140_feeder_shot PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- PIN (Nutzer-Report v0.3.5 "gerader Schuss trifft den fressenden Zombie nicht"):
+#     das ELEVATIONS-BAND in ROOM1140. Sollseite ist der ACTIVE-Tail-Stempel der Zombie-Familie
+#     (@0x80101600-04 jal FUN_80012aa4 a0=0xBB8, @0x80101614-3c Downed-Nachlauf mit
+#     FUN_80012974(0x1388)) — vollstaendig hergeleitet im Kopf von re15_band_stamp_aa4.
+#     Sechs Faelle: Fresser gerade/6000 TREFFER, Fresser runter/2800 TREFFER (Ring), Fresser
+#     runter/6000 KEIN, Liegender gerade/3000 KEIN, Liegender runter/3000 TREFFER, Liegender
+#     runter/6000 KEIN. Plus der RE2-Flavor-Gegencheck. ---
+add_executable(test_1140_straight_shot test_1140_straight_shot.c)
+target_link_libraries(test_1140_straight_shot PRIVATE re15_engine re15_test_support)
+target_include_directories(test_1140_straight_shot PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_1140_straight_shot PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_1140_straight_shot COMMAND test_1140_straight_shot)
+set_tests_properties(unit_1140_straight_shot PROPERTIES TIMEOUT 300)

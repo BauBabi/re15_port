@@ -1018,6 +1018,82 @@ static int64_t re15_wedge_cross(int32_t ax, int32_t az, int32_t bx, int32_t bz)
 {
     return (int64_t)ax * bz - (int64_t)az * bx;   /* FUN_80012944 */
 }
+
+/* ===== ELEVATIONS-BAND-STEMPEL — FUN_80012aa4 (@0x80012aa4, PSX.EXE) ========================= *
+ * Der Gegner traegt sein Ziel-Band in word0 Bit 31/30/29 (UP/LEVEL/DOWN); der Resolver
+ * FUN_80011f50 laesst einen Kandidaten nur durch, wenn `enemy.word0 & player.word0 & 0xE0000000`
+ * gesetzt ist (@0x800120d0-ec). Gestempelt wird es im ACTIVE-Tail der Zombie-Familie, DIREKT vor
+ * dem Sub-Dispatch @0x8011f80c[+0x9 & 0xf] — also fuer JEDES Sub-Mode-Nibble, auch Fresser (6)
+ * und Liegende (7/8). Selbst disassembliert (STAGE1.BIN roh @0x80100000):
+ *   801015c0-cc  lbu +0x9 ; andi 0x80 ; bne -> 0x80101600      (downed -> Block ueberspringen)
+ *   801015d4-e0  word0 &= 0x1FFFFFFF                            (alle drei Bandbits weg)
+ *   801015f0-fc  word0 |= 0x40000000                            (LEVEL — toter Store, s.u.)
+ *   80101600-04  jal 0x80012aa4 ; ori a0,zero,0xbb8             (R = 3000, IMMER, auch downed)
+ *   80101614-20  lbu +0x9 ; andi 0x80 ; beq -> 0x80101640
+ *   80101628-3c  word0 &= ~0x40000000 ; jal 0x80012974 ; a0 = 0x1388 (5000)
+ *   80101640-70  lbu +0x9 ; andi 0xf ; lw 0x8011f80c[..] ; jalr  (der Sub-Dispatch)
+ * Derselbe Tail-Bauplan beim Zombie-Girl-Root: @0x8010b640-4c `word0 |= 0x40000000`,
+ * @0x8010b650-54 `jal 0x80012aa4 / a0 = 0xbb8`, @0x8010b664-84 der Downed-LEVEL-Clear.
+ *
+ * FUN_80012aa4(R) selbst (PSX.EXE, selbst disassembliert):
+ *   80012abc/acc/ad4  v1 = playerY(DAT_800aca8c) - enemyY(+0x38)
+ *   80012af0-afc      word0 &= 0x1FFFFFFF          <- raeumt ALLE drei Bandbits, auch bei downed
+ *                                                     (darum ist das LEVEL von 801015f8 tot)
+ *   80012ac0/ad8/b0c-b1c  s0 = v1 / 1800   (Magic 0x91A2B3C5 = ceil(2^42/1800), `+n`, `sra 10`,
+ *                                           `- (n>>31)` = Trunkierung Richtung 0 = C-`/`)
+ *   80012b20-24       sltiu v0,s0,2  -> (unsigned)s0 < 2
+ *   80012b2c-44         word0 |= 0x40000000   (LEVEL)
+ *   80012b48-5c       dist = SquareRoot0(dx*dx + dz*dz) zum Spieler
+ *   80012b64-84       v1 = |s0| * 1000        (`sll 5; subu; sll 2; addu; sll 3` = *31*4+1 = *125*8)
+ *   80012b88-8c       sltu  dist, R + |s0|*1000
+ *   80012b90-94       slt   |s0|*1000, dist          -> nur INNERHALB des Rings
+ *   80012b9c/ba0        s0 > 0 -> word0 |= 0x80000000 (UP)
+ *   80012bb8            sonst  -> word0 |= 0x20000000 (DOWN)
+ * FUN_80012974(R): dist < R -> word0 |= 0x20000000 (@0x800129cc-f0), kein Clear.
+ *
+ * WAS DER PORT VORHER TAT (und was daran falsch war): `grid&0x80 ? (dist<5000?DOWN:0) : LEVEL`.
+ * Das ist eine ERFUNDENE Bandtrennung — sie kennt weder den Hoehen-Index noch den Ring. Konkret
+ * fehlte: (a) ein NICHT-niedergeschlagener Gegner innerhalb 3000 traegt ZUSAETZLICH das DOWN-Band
+ * (ein nach unten gerichteter Schuss auf einen nahen stehenden/knienden Zombie ging ins Leere),
+ * (b) das UP-Band fuer Gegner >= 1800 ueber dem Spieler, (c) LEVEL faellt weg, sobald der
+ * Hoehen-Index ausserhalb {0,1} liegt.
+ * GEGENPROBE gegen die fuenf im Original gemessenen word0-Werte (HASH-957757946319438E_resume.sav,
+ * Spieler -7663/-17629, flacher Boden -> s0 = 0), die frueher hier im Kommentar standen:
+ *   downed grid 0x80 dist 2307 -> aa4: LEVEL + Ring(0<2307<3000) DOWN ; downed: LEVEL weg,
+ *                                 974(5000) DOWN            = 0x20000000  == gemessen
+ *   downed grid 0x80 dist 5538 -> aa4: LEVEL, kein Ring     ; downed: LEVEL weg, 974: nein = 0
+ *   downed grid 0x80 dist 5752 -> dito                                                     = 0
+ *   stehend grid 0x00 dist 7075 -> aa4: LEVEL, kein Ring                       = 0x40000000
+ *   liegend 0x16 grid 0x88 dist 7228 -> wie downed 5538                                    = 0
+ * 5/5 exakt reproduziert.
+ *
+ * GELTUNGSBEREICH (Zensus aller `jal` auf die drei Band-Helfer in STAGE1..5.BIN, selbst
+ * gescannt): 0x80012aa4 wird IMMER mit a0 = 0xbb8 gerufen — STAGE1 @0x80101600 (Zombie-ACTIVE),
+ * @0x8010b650 (Zombie-Girl), @0x8011d49c/@0x8011da30 (der generische 0x47-Root). Andere
+ * Gegner-Familien stempeln ANDERS und bleiben hier unangetastet: Hund @0x8010dd38-4c
+ * (`word0 |= 0x40000000` + `jal 0x80012974 / a0 = 0xfa0`), Kraehe @0x801125ac (974 mit 0x1770)
+ * / @0x80112594 (0x80012a0c) — die faehrt weiter ueber e->aim_band. */
+static uint32_t re15_band_stamp_aa4(const re15_actor_t *pl, const re15_actor_t *e,
+                                    uint32_t dist, int32_t R)
+{
+    int32_t vd   = pl->y - e->y;                       /* @0x80012abc/acc/ad4 */
+    int32_t s0   = vd / 1800;                          /* @0x80012ad8/b0c-b1c (Magic 0x91A2B3C5) */
+    int32_t ring = (s0 < 0 ? -s0 : s0) * 1000;         /* @0x80012b64-84 */
+    uint32_t band = 0;
+    if ((uint32_t)s0 < 2u) band |= 0x40000000u;        /* sltiu s0,2 @0x80012b20 -> @0x80012b3c-44 */
+    if (dist < (uint32_t)(R + ring) &&                 /* sltu @0x80012b88-8c */
+        ring < (int32_t)dist)                          /* slt  @0x80012b90-94 */
+        band |= (s0 > 0) ? 0x80000000u : 0x20000000u;  /* @0x80012b9c/ba0 UP | @0x80012bb8 DOWN */
+    return band;
+}
+/* Die Zombie-Familie = genau die Typen, deren ACTIVE-Tail der oben zitierte Block ist
+ * (Live-Zombies 0x10/0x11/0x12/0x16/0x18 ueber FUN_80101224 @0x80101600, Zombie-Girl 0x13 ueber
+ * @0x8010b650). */
+static int re15_band_is_zombie_family(uint8_t type)
+{
+    return type == 0x10u || type == 0x11u || type == 0x12u ||
+           type == 0x13u || type == 0x16u || type == 0x18u;
+}
 /* FUN_800126c8: enemy (relx,relz) inside the semi-infinite triangle (VA,VB,V5). */
 static int re15_wedge_tri(int32_t VAx, int32_t VAz, int32_t VBx, int32_t VBz,
                           int32_t V5x, int32_t V5z, int32_t relx, int32_t relz)
@@ -1096,30 +1172,10 @@ retry_after_latch:
          * enemy.word0 & player_word & 0xe0000000 != 0, player band = acaec<<16 ->
          * UP bit31 / LEVEL bit30 / DOWN bit29).
          *
-         * THE ENEMY BAND IS DRIVEN BY THE DOWNED FLAG (RE'd 2026-07-28, STAGE1.BIN):
-         *   801015f0-fc:  lw v0,0(a0) ; lui v1,0x4000 ; or v0,v0,v1 ; sw v0,0(a0)
-         *                 -> word0 |= 0x40000000  (LEVEL band on)     [also @0x80100744-50]
-         *   80101614-1c:  lbu v0,9(a1) ; andi v0,v0,0x80              (grid_id & 0x80 = DOWNED)
-         *   80101620:     beq v0,zero,0x80101640                      (not downed -> keep it)
-         *   80101624-3c:  lui v1,0xbfff ; ori v1,v1,0xffff ; lw v0,0(a1) ; and v0,v0,v1 ;
-         *                 sw v0,0(a1)   -> word0 &= ~0x40000000       (LEVEL band CLEARED)
-         * The strip is NOT the whole story: the very next instructions call the DOWN-adder
-         *   80101630: ori a0,zero,0x1388            (R = 5000)
-         *   80101638: jal 0x80012974
-         * and FUN_80012974 @0x800129c0-f0 does: dist = SquareRoot0(dx^2+dz^2) to the player;
-         *   800129cc: sltu s0,a1,s0    (dist < R?)   800129d4: lui a0,0x2000
-         *   800129ec: or v1,v1,a0 ; 800129f0: sw v1,0(v0)   -> word0 |= 0x20000000 (DOWN band)
-         * So a downed enemy loses LEVEL but GAINS the DOWN band while it is within 5000 units —
-         * i.e. it stays killable by a DOWN-aimed shot, and only becomes untargetable further away.
-         *
-         * MEASURED in the original (HASH-957757946319438E_resume.sav, player at -7663/-17629):
-         *   downed 0x10 grid 0x80 dist 2307 -> word0 0x20000001 (band DOWN)
-         *   downed 0x11 grid 0x80 dist 5538 -> word0 0x00000001 (no band)
-         *   downed 0x11 grid 0x80 dist 5752 -> word0 0x00000011 (no band)
-         *   standing 0x10 grid 0x00 dist 7075 -> word0 0x40000001 (band LEVEL)
-         *   scripted lying 0x16 grid 0x88 dist 7228 -> word0 0x00000001 (no band)
-         * The port used to keep LEVEL unless `type == 0x16 && downed`, so a zombie the player had SHOT
-         * DOWN still took straight shots (user-verified divergence). Gate on the DOWNED FLAG + range. */
+         * Das Gegner-Band selbst kommt aus dem ACTIVE-Tail-Stempel — die vollstaendige
+         * Herleitung (FUN_80012aa4 @0x80012aa4, der Tail @0x801015c0-0x80101640, die Ring-Formel
+         * und die 5/5-Gegenprobe gegen die Savestate-Messwerte) steht im Kopf von
+         * re15_band_stamp_aa4 weiter oben. Kurz: NICHT-downed heisst NICHT pauschal LEVEL. */
         {
             extern int re15_player_aim_elevation(void);
             int elev = re15_player_aim_elevation();
@@ -1134,14 +1190,32 @@ retry_after_latch:
                 eband = (e->aim_band == 4) ? 0x80000000u :
                         (e->aim_band == 1) ? 0x20000000u :
                         (e->aim_band == 2) ? 0x40000000u : 0u;
-            } else if (e->grid_id & 0x80) {
-                /* The helpers measure from the PLAYER (0x800aca88/90 vs entity +0x34/+0x3c), not from
-                 * the melee blade origin, so use the player distance here regardless of weapon. */
+            } else {
+                /* Die Helfer messen vom SPIELER (0x800aca88/90 gegen entity +0x34/+0x3c), nicht vom
+                 * Nahkampf-Klingenpunkt — also hier immer die Spieler-Distanz, unabhaengig von der
+                 * Waffe. */
                 int32_t bdx = e->x - pl->x, bdz = e->z - pl->z;
                 uint32_t bdist = (uint32_t)dmg_isqrt((int64_t)bdx*bdx + (int64_t)bdz*bdz);
-                eband = (bdist < 5000u) ? 0x20000000u : 0u;   /* @0x80101630-38 -> @0x800129cc-f0 */
-            } else {
-                eband = 0x40000000u;                          /* @0x801015f4-fc */
+                if (re15_band_is_zombie_family(e->type)) {
+                    /* Der byte-true ACTIVE-Tail-Stempel: aa4(0xbb8) IMMER (@0x80101600-04) — auch
+                     * fuer einen niedergeschlagenen Gegner —, danach der Downed-Nachlauf. */
+                    eband = re15_band_stamp_aa4(pl, e, bdist, 0xbb8);
+                    if (e->grid_id & 0x80) {                  /* @0x80101614-20 lbu +0x9; andi 0x80 */
+                        eband &= ~0x40000000u;                /* @0x80101624-3c LEVEL weg */
+                        if (bdist < 0x1388u) eband |= 0x20000000u;  /* 0x80012974(0x1388) @0x800129cc-f0 */
+                    }
+                } else {
+                    /* OFFEN (kein Rate-Ersatz, sondern der alte, bewusst konservative Stand): die
+                     * uebrigen Familien stempeln mit anderen Helfern/Radien — Hund @0x8010dd38-4c
+                     * (`|= 0x40000000` + 0x80012974(0xfa0)), Maggot @0x801173a8-b8, die generischen
+                     * 0x47-Roots @0x8011d49c/@0x8011da30 (aa4(0xbb8), gleiche Form wie oben). Bis
+                     * jede davon einzeln disassembliert ist, bleibt fuer sie das bisherige Verhalten
+                     * unveraendert stehen. */
+                    if (e->grid_id & 0x80)
+                        eband = (bdist < 0x1388u) ? 0x20000000u : 0u;  /* @0x80101630-38 -> @0x800129cc-f0 */
+                    else
+                        eband = 0x40000000u;                           /* @0x801015f4-fc */
+                }
             }
             if ((pband & eband) == 0) continue;
         }
