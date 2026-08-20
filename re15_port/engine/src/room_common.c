@@ -291,8 +291,20 @@ int re15_room_apply_pending(const re15_room_apply_ctx_t *c)
 
     /* (7) Re-init the SCD VM for the new room (main00+sub00 of the new RDT). This runs
      * main00 THROUGH its spawned sub's first yield — so a room whose main00 fires an
-     * Evt_exec that immediately issues a Cut_chg has that Cut_chg queued here. */
-    scd_room_reenter(c->rdt, g_room_change.x, g_room_change.z, 0);
+     * Evt_exec that immediately issues a Cut_chg has that Cut_chg queued here.
+     *
+     * entry_scenario = work_vars[0x0A] = der EINTRITTS-CUT der durchschrittenen Tuer.
+     * byte-true FUN_8001d600 (Raum-Betreten): `DAT_800afbb5 = *(byte*)(DAT_800ac9a8+10)`
+     * @0x8001d930 `lbu v1,10(a0)` und @0x8001d948 `sh v1,4068(at)` -> work_vars[0x0A].
+     * DAT_800ac9a8 zeigt auf den ZIEL-Block der Tuer (= Door_aot_set pc+14: x,y,z,yaw,
+     * stage@+8, room@+9, cut@+10, band@+0xb) — also exakt g_room_change.target_cut
+     * (op_door_aot_set liest denselben Cut aus pc[24] = (pc+14)[10]).
+     * Vorher stand hier hart 0, d.h. sub00's `Switch(work_vars[0x0A])` bekam game-weit
+     * immer Fall 0 (z.B. ROOM1090: immer Cut_chg 8, nie Cut_chg 0x0B fuer Eintritt via
+     * Cut 3 aus ROOM1050). Der Selbst-Raum-Pfad in game_step_common.c uebergab den
+     * target_cut bereits korrekt — jetzt tun es beide. */
+    scd_room_reenter(c->rdt, g_room_change.x, g_room_change.z,
+                     (uint8_t)g_room_change.target_cut);
 
     /* (8) Camera precedence (byte-true, RE'd 2026-07-22 from the ROOM1170 pre-intro trace):
      * the new room's SCD init may have issued its OWN Cut_chg — e.g. ROOM1170 main00 ->

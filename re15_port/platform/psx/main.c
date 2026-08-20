@@ -673,6 +673,9 @@ int main(int argc, const char **argv)
             if (!g_scd.props[pi].active)          continue;
             if (oid < 0 || oid >= 6 || !re15_obj_ok[oid]) continue;
             int32_t px = g_scd.props[pi].x, py = g_scd.props[pi].y, pz = g_scd.props[pi].z;
+            /* Typ-4-Props (schiebbare Kisten) zeichnet das Original 900 hoeher —
+             * byte-true FUN_8002c18c @0x8002c23c/@0x8002c24c (re15_prop_render_y). */
+            py = re15_prop_render_y(otype, py);
             /* Byte-true per-prop cull, SHARED with the PC port (re15_prop_culled in
              * re15_aot.h): type-0 props (all of room1170's) take the whole-object
              * FUN_80014368 region-quad cull, with a sink-gate (x<-25000) fallback

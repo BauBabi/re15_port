@@ -1713,3 +1713,57 @@ target_compile_definitions(test_1140_straight_shot PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_1140_straight_shot COMMAND test_1140_straight_shot)
 set_tests_properties(unit_1140_straight_shot PROPERTIES TIMEOUT 300)
+
+# --- MESSSONDE (Nutzer-Report v0.3.5, ROOM1090: Feuer/Kisten/Cutscene/Kistenhoehe).
+#     Reine Diagnose ohne add_test: protokolliert Obj_model_set-Props, work_vars und AOTs. ---
+add_executable(probe_1090_objects probe_1090_objects.c)
+target_link_libraries(probe_1090_objects PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1090_objects PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1090_objects PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- PIN (Nutzer-Report v0.3.5, ROOM1090): (D) "Kiste zu tief" = der Typ-4-Render-Versatz
+#     -900 aus FUN_8002c18c @0x8002c24c; (C) "Cutscene beim Feuer-Transporter startet nicht"
+#     = work_vars[0x0A] IST der aktive Kamera-Cut (FUN_8001d600 @0x8001d948 / Cut_chg
+#     @0x800402fc / Per-Frame FUN_80021bc0 @0x80021bfc) und wurde im Port nie fortgeschrieben.
+#     Faehrt den echten RVD-Weg Cut 8 -> 11 -> 12 -> 13 und prueft beide Negativ-Faelle. ---
+add_executable(test_1090_room_pin test_1090_room_pin.c)
+target_link_libraries(test_1090_room_pin PRIVATE re15_engine re15_test_support)
+target_include_directories(test_1090_room_pin PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_1090_room_pin PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_1090_room_pin COMMAND test_1090_room_pin)
+set_tests_properties(unit_1090_room_pin PROPERTIES TIMEOUT 60)
+# --- MESSSONDE (kein add_test): RNG-SEED-SWEEP fuer die drei Nutzer-Symptome v0.3.5
+#     (A) "fallen komisch um und stehen direkt wieder auf", (B) "Laufanimation, aber laufen
+#     nicht", (C) "Zombies sind unsterblich". Alle drei sind "manchmal" — deshalb N Laeufe mit
+#     verschobenem RE2-PRNG-Zustand (EIN 16-Bit-State @0x800CE318 -> Seed = Vorwuerfe) und
+#     verschobenem Schuss-Fahrplan, jeweils ueber den ECHTEN Weg (re15_game_step + Pad, echte
+#     ROOM1140-Spawns, GELADENE RE2-Baenke). ---
+add_executable(probe_re2z_abc probe_re2z_abc.c)
+target_link_libraries(probe_re2z_abc PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re2z_abc PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_re2z_abc PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- PIN ueber einen RNG-SEED-SWEEP: die drei Nutzer-Symptome aus v0.3.5 im RE2-Modus —
+#     (A) "fallen komisch um und stehen dann direkt wieder auf", (B) "Laufanimation, aber laufen
+#     nicht", (C) "Zombies sind unsterblich". Alle drei sind "manchmal", deshalb 64 Seeds
+#     x 900 Frames ueber den ECHTEN Weg (re15_game_step + Pad, echte ROOM1140-Spawns, GELADENE
+#     RE2-Bank) statt Einzellaeufe.
+#     Gemeinsame Wurzel: EXEC[11] @0x8010439C. Der Port hatte dort einen erfundenen Ausgang
+#     `0x101` ("Exit MAPPED / Entry OPEN"); das Original committet in P2
+#     +0x4 = 0x00020501 (lui 0x2 @0x801043EC + ori 0x501 @0x801045D4 + sw @0x801045DC) = EXEC[5]
+#     PHASE 2, die Bodenkette — und NUR dort werden die in P0 gesetzten Latches +0x1D3 |= 0x80
+#     (@0x8010444C-5C) und +0x10E |= 0x2000 (@0x80104460-70) wieder geloescht.
+#     Gepinnt wird der VERLAUF ueber den Sweep (kein Endzustand): Sperr-Fenster des
+#     Kandidatenfilters, DOWN-Dauern samt Streuung aus der Liegezeit-Tabelle @0x8010004C, plus
+#     Positiv-Kontrollen (es muss getroffen und gestorben werden), vier Negativ-Kontrollen
+#     (Leiche / +0x10E&0x8000 / stehengebliebener +0x1D3-Claim) und die RE1.5-Regressionswache. ---
+add_executable(test_re2_zombie_abc test_re2_zombie_abc.c)
+target_link_libraries(test_re2_zombie_abc PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_zombie_abc PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2_zombie_abc PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2_zombie_abc COMMAND test_re2_zombie_abc)
+set_tests_properties(unit_re2_zombie_abc PROPERTIES TIMEOUT 600)

@@ -382,4 +382,30 @@ static inline int re15_prop_culled(int obj_type, int32_t x, int32_t z,
     return x < -25000;   /* no region (cinematic): hide only the SCD-sunk box */
 }
 
+/* RENDER-Y eines Obj_model_set-Props — byte-true FUN_8002c18c (Objekt-Draw-Loop).
+ *
+ * Nutzer-Report v0.3.5 ROOM1090: "Kiste im Raum ist irgendwie zu tief."
+ *
+ * Sollseite (ROOM1090.RDT main00 @Datei 0x2170/0x2192): beide Obj_model_set tragen
+ * pc[2]=0x04, also Objekt-Typ 4, und stehen auf Boden-Y (obj0 y=-1800 = Band 1,
+ * obj1 y=-9000 = Band 5) mit Box {cx0,cy-900,cz0, h900,900,900}.
+ *
+ * Das Original hebt beim ZEICHNEN jeden Typ-4-Prop um 900 Einheiten an (PSX: -Y = hoch),
+ * NACHDEM FUN_80022da0 die Objekt-Matrix aus obj+0x34/38/3C gebaut hat:
+ *   8002c234: lbu   v1,8(s1)            ; obj[+0x08] = Typ (Obj_model_set pc[2])
+ *   8002c238: ori   v0,zero,0x4
+ *   8002c23c: bne   v1,v0,0x8002c254    ; nur Typ 4
+ *   8002c244: lw    v0,96(s1)           ; obj[+0x60] = MATRIX(+0x48).t[1] = Translation Y
+ *   8002c24c: addiu v0,v0,-900
+ *   8002c250: sw    v0,96(s1)
+ * (Die gespeicherte Objekt-Position obj[+0x38] bleibt unveraendert — der Versatz gilt
+ *  NUR fuer die Darstellung. Kollision/Push lesen weiter die rohe Y.)
+ *
+ * Ohne diesen Versatz sitzt die 1800 hohe Kiste genau ihre halbe Hoehe zu tief im Boden —
+ * exakt der gemeldete Eindruck. Geteilt von PC- und PSX-Prop-Loop. */
+static inline int32_t re15_prop_render_y(int obj_type, int32_t y)
+{
+    return (obj_type == 4) ? (y - 900) : y;   /* @0x8002c23c/@0x8002c24c */
+}
+
 #endif /* RE15_AOT_H */

@@ -1308,6 +1308,25 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
               fprintf(stderr, "[fade-log] RVD-Zonen-Scan: cam %u -> %d (player %ld/%ld)\n",
                       (unsigned)g_scd.cam_id, best_cam_id,
                       (long)player_x, (long)player_z); }
+        /* byte-true FUN_80021bc0 (der PRO-BILD-Kamera-Apply): er spiegelt den aktiven
+         * Cut (DAT_800afbb5, gesetzt vom Kamera-Setzer FUN_800142f4 @0x80014300) in die
+         * globalen Work-Vars, BEVOR er ihn anwendet:
+         *   @0x80021be0 `lbu v1,-1099(v1)` = DAT_800afbb5 (aktiver Cut)
+         *   @0x80021be8 `lhu v0,4068(v0)`  = altes work_vars[0x0A]
+         *   @0x80021bf4 `sh  v0,4072(at)`  -> work_vars[0x0C] = alter Cut
+         *   @0x80021bfc `sh  v1,4068(at)`  -> work_vars[0x0A] = aktiver Cut
+         *   @0x80021c00 `jal 0x80014324`   -> Kamera anwenden
+         * Damit ist work_vars[0x0A] game-weit "die Kamera, in der der Spieler GERADE
+         * steht" — der Wert, den Skripte per Cmp/Switch abfragen. Nutzer-Report v0.3.5
+         * ROOM1090 "Cutscene beim Feuer-Transporter startet nicht": sub01 @Datei 0x23F4
+         * feuert sub02 ueber `Cmp(work_vars[0x0A]==13)`; Cut 13 ist KEIN Tuer-Eintritts-
+         * Cut (Tueren nach 1090 tragen Cut 0/3/6 — game-weiter Door_aot_set-Zensus), also
+         * kann nur dieser Per-Frame-Spiegel ihn liefern. Der Port aktualisierte
+         * work_vars[0x0A] nach dem Raum-Laden nie -> die Bedingung wurde nie wahr. */
+        if ((int)g_scd.work_vars[0x0A] != best_cam_id) {
+            g_scd.work_vars[0x0C] = g_scd.work_vars[0x0A];   /* @0x80021bf4 */
+            g_scd.work_vars[0x0A] = (int16_t)best_cam_id;    /* @0x80021bfc */
+        }
         g_scd.cam_id             = (uint8_t)best_cam_id;
         g_scd.cam_change_pending = 1;
     }

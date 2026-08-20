@@ -6891,7 +6891,12 @@ re_title:;
                 /* Render prop's MD1 mesh as TEXTURED triangles. */
                 if (prop_md1_ok) {
                     int32_t prop_x = g_scd.props[pi].x;
-                    int32_t prop_y = g_scd.props[pi].y;
+                    /* Typ-4-Props (schiebbare Kisten) zeichnet das Original 900 hoeher —
+                     * byte-true FUN_8002c18c @0x8002c23c/@0x8002c24c, siehe
+                     * re15_prop_render_y() in re15_aot.h. Nur die DARSTELLUNG; die
+                     * Kollisions-/Push-Position g_scd.props[pi].y bleibt roh. */
+                    int32_t prop_y = re15_prop_render_y((int)g_scd.props[pi].obj_type,
+                                                        g_scd.props[pi].y);
                     int32_t prop_z = g_scd.props[pi].z;
                     int16_t prop_rx = g_scd.props[pi].rot_x;
                     int16_t prop_ry = g_scd.props[pi].rot_y;
@@ -7256,6 +7261,34 @@ re_title:;
                 }
             }
         }
+
+        /* MESS-HAKEN RE15_FBDUMP="<frame>:<pfad.ppm>" (2026-08-21) — dumpt den SOFTWARE-
+         * FRAMEBUFFER (die 2D-Ebene: BG-Blit + Overlays) roh als PPM, VOR end_frame.
+         * Grund: `re15_render_pc_screenshot` (SDL_RenderReadPixels) und ffmpeg-gdigrab
+         * liefern in einer nicht-interaktiven Sitzung BEIDE komplett Schwarz (gemessen:
+         * auch das Titelbild kommt mit max=24 zurueck) — Pixel-Verifikation ist dort
+         * unmoeglich. Dieser Haken umgeht SDL vollstaendig und beantwortet die Frage
+         * "ist der HINTERGRUND schwarz?" (der Hintergrund IST die 2D-Ebene; die 3D-Props
+         * gehen ueber SDL_RenderGeometry und stehen bewusst NICHT drin). Rein env-gegatet,
+         * Normalpfad unberuehrt. */
+        { static int s_fbd_init = 0; static long s_fbd_frame = -1; static char s_fbd_path[256];
+          if (!s_fbd_init) { s_fbd_init = 1;
+              const char *e = getenv("RE15_FBDUMP");
+              if (e && *e) { const char *c = strchr(e, ':');
+                  if (c && (size_t)(c - e) < 16) { s_fbd_frame = atol(e);
+                      snprintf(s_fbd_path, sizeof s_fbd_path, "%s", c + 1); } } }
+          if (s_fbd_frame >= 0 && (long)g_engine.frame_count == s_fbd_frame) {
+              extern uint32_t *re15_pc_framebuffer(void);
+              const uint32_t *fb = re15_pc_framebuffer();
+              FILE *f = fb ? fopen(s_fbd_path, "wb") : NULL;
+              if (f) { fprintf(f, "P6\n%d %d\n255\n", SCREEN_XRES, SCREEN_YRES);
+                  for (int i = 0; i < SCREEN_XRES * SCREEN_YRES; i++) {
+                      unsigned char rgb[3] = { (unsigned char)(fb[i] >> 24),
+                                               (unsigned char)(fb[i] >> 16),
+                                               (unsigned char)(fb[i] >>  8) };
+                      fwrite(rgb, 1, 3, f); }
+                  fclose(f);
+                  fprintf(stderr, "[fbdump] F%u -> %s\n", g_engine.frame_count, s_fbd_path); } } }
 
         re15_render_end_frame();
 

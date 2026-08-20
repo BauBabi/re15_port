@@ -1241,6 +1241,15 @@ static int op_cut_chg(scd_thread_t *t)
     g_scd.cam_arg2          = 0;
     g_scd.cam_arg3          = 0;
     g_scd.cam_change_pending = 1;
+    /* byte-true LAB_800402a0: der Handler schreibt den Cut in die GLOBALEN Work-Vars —
+     *   @0x800402d0 `lhu a2,4068(a2)`  = altes work_vars[0x0A]
+     *   @0x800402ec `sh  a2,4072(at)`  -> work_vars[0x0C] = alter Cut
+     *   @0x800402fc `sh  a0,4068(at)`  -> work_vars[0x0A] = pc[1] (neuer Cut)
+     *   @0x800402e4 `sb  a1,16251(at)` -> DAT_800b3f7b = alter Cut (fuer Cut_old 0x2A)
+     * work_vars[0x0A] IST damit game-weit "der aktive Kamera-Cut" und wird von
+     * Cmp/Switch gelesen (z.B. ROOM1090 sub01 `Cmp(work_vars[0x0A]==13)`). */
+    g_scd.work_vars[0x0C] = g_scd.work_vars[0x0A];   /* @0x800402ec */
+    g_scd.work_vars[0x0A] = (int16_t)t->pc[1];       /* @0x800402fc */
     /* byte-true LAB_800402a0 @0x800402d4 `ori DAT_800aca3c,0x100` -> Bit 0x100 SET =
      * Auto-Cam-Scan AUS (Gate @0x8001cce0 `andi 0x100`->bne ueberspringt jal FUN_80014230).
      * cut_auto_enabled ist die Port-Inverse des Bits. [#16] */
@@ -3860,6 +3869,14 @@ int op_cut_old(scd_thread_t *t)
 {
     g_scd.cam_id = g_scd.cam_id_prev;
     g_scd.cam_change_pending = 1;
+    /* byte-true FUN_8004032c: derselbe Work-Var-Umlauf wie Cut_chg, nur mit dem
+     * gemerkten alten Cut aus DAT_800b3f7b:
+     *   @0x8004033c `lbu a0,16251(a0)` = DAT_800b3f7b (alter Cut)
+     *   @0x80040344 `lhu v1,4068(v1)`  = aktuelles work_vars[0x0A]
+     *   @0x8004035c `sh  v1,4072(at)`  -> work_vars[0x0C]
+     *   @0x80040364 `sh  a0,4068(at)`  -> work_vars[0x0A] */
+    g_scd.work_vars[0x0C] = g_scd.work_vars[0x0A];        /* @0x8004035c */
+    g_scd.work_vars[0x0A] = (int16_t)g_scd.cam_id_prev;   /* @0x80040364 */
     /* byte-true FUN_8004032c @0x8004032c loescht DAT_800aca3c Bit 0x100 -> Auto-Cam-Scan
      * AN. Port-Inverse: cut_auto_enabled = 1. [#16] */
     g_scd.cut_auto_enabled = 1;
