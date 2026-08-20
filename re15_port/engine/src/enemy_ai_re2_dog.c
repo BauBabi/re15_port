@@ -66,34 +66,52 @@ int re15_re2_owns_type(unsigned type)
 }
 
 /* ---- ENEMSE audio hook ------------------------------------------------------------------ */
-/* Dog ENEMSE bank: the ROOM-PAIR table @0x800A7400 (RE2 PSX.EXE file 0x97C00, 73 rows × 2
- * kinds, self-read 2026-08-16) lists kind 0x20 in 13 rows — ALWAYS as the SECOND kind
- * (rows 31/38/44/47/54/57/58/60/61/63/66/68/71) → the dog plays from the SECOND map half
- * (flag2000, se_id+0x10 — FUN_8005bd6c head "(*param_2 & 0x2000)"). Row 31 = {0x00,0x20} is
- * the pure dog bank. EMPIRICAL probe over all 73 decoded EDT maps (same method as the zombie
- * bank 0): every dog-pair bank carries the IDENTICAL dog half — live ids {0,1,2,3,6..14},
- * ids 4/5 = 0xFFFFFFFF (SILENT — the feed-bite SE 4 @0x80101B98 is byte-true silent!).
- * → default bank 31 + flag2000=1; RE15_RE2_DOG_SE_BANK overrides for A/B listening. */
-#define RE2DOG_ENEMSE_BANK 31
+/* ⛔ BANK KORRIGIERT 2026-08-20: 31+flag2000 -> 6, flag2000 = 0.
+ *
+ * Die alte Fassung (Text unten widerrufen) las die Paar-Tabelle @0x800A7400 als Liste von
+ * GEGNER-KINDS und fand "kind 0x20 in 13 Zeilen, immer als zweiter kind". Das ist eine
+ * KATEGORIEN-VERWECHSLUNG — dieselbe, die schon den Kraehen-Sound falsch gemacht hat
+ * (416168cb). Die Tabelle fuehrt die SOUND-ID aus dem Sce_em_set-Record, nicht den kind:
+ *   Sce_em_set = Opcode 0x44; Dispatch @0x800A74C8, Eintrag [0x44] @0x800A75D8 = 0x8005714C.
+ *   Im Handler: `lbu a0,3(v0)` @0x800571EC -> `jal 0x8001b710`   => Record+3 = KIND
+ *               `lbu v0,7(v0)` @0x80057274 -> `sb v0,506(s0)` @0x80057280 => Record+7 -> +0x1FA
+ *   Verglichen wird gegen die Tabelle NUR +0x1FA (`lb v1,506(a0)` @0x80052C48).
+ *   Struktur-Beleg: 28 Zeilen fuehren Werte 0x01..0x0F — im kind-Raum (ab 0x10) unmoeglich.
+ *   Die "0x20", die die alte Fassung sah, ist die Sound-Id des NPC-kind 0x45; Bank 31 =
+ *   {0x00,0x20} ist damit eine reine NPC-Bank, kein Hund.
+ *
+ * BELEG FUER BANK 6 — Zensus ueber alle 250 RDT-Dateien in info/re2leon/PL0/RDT (Opcode 0x44,
+ * 22 B, +3 kind, +7 sound): kind 0x20 traegt Sound-Id 0x0C in 14 von 15 Records (der eine
+ * Ausreisser ROOM5040 @0x020DC ist ein Falsch-Positiv: +18..21 != 0, ausserhalb jeder
+ * Record-Kette). Raeume: ROOM20F0(1), ROOM2110(5), ROOM2160(3), ROOM21A0(3), ROOM3050(2).
+ * 0x0C steht in GENAU EINER Zeile: Zeile 6 = {0x0C,0x00} -> Bank 6, ERSTE Haelfte.
+ * flag2000 = 0, weil 0x0C in KEINER Zeile als k1 steht (und Laufzeit-Spawns ohnehin nie:
+ * der Entity-Erzeuger FUN_8001ad3c setzt `sw 1,0(s0)` @0x8001b108 und schreibt +0x1FA nie).
+ * Raum-Simulation ROOM21A0 (3 Hunde, sonst nichts): A=0x0C, B=0 -> Bank 6, A in erster
+ * Haelfte -> flag2000 0.
+ *
+ * DATEN-GEGENPROBE (TOC @0x800A7B1C): Bank 6 = EDT @0x075800 (0xCA8), VBD @0x076800 0x0F8F0
+ * = 62 KB, progs=1 vags=13, live ids {0..8,10,11,12}. Der eigene jal-0x8005bd6c-Zensus ueber
+ * EMD0G_MOD0.BIN findet 14 Aufrufe mit ids {1,3,4,7,8,10,11} — Bank 6 deckt sie VOLLSTAENDIG.
+ * Die alte Bank 31 hat progs=2 vags=5 und live NUR {16..19,22..30} = reine zweite Haelfte.
+ *
+ * ⛔ FOLGE, die die alte Fassung als "byte-true" verbucht hatte: unter Bank 31 war id 20 TOT,
+ * d.h. der FRESS-BISS (SE 4 @0x80101B98) war schlicht STUMM. Der alte Kommentar erklaerte das
+ * zu Absicht ("ids 4/5 = 0xFFFFFFFF, byte-true silent"). Das war ein Artefakt der falschen
+ * Bank — in Bank 6 ist id 4 live. */
+#define RE2DOG_ENEMSE_BANK 6
 
 static void (*s_re2d_se_fn)(int se_id, int flag2000) = 0;
 static void (*s_re2d_bank_fn)(int bank) = 0;
 
-/* Bank-Wahl bleibt EMPIRISCH (deklarierte PORT-NAEHERUNG) — der byte-true Mechanismus
- * FUN_80052b38 liest die RE2-RAUMDATEN (Spawn-Record +7), nicht den Gegner-kind; Belege +
- * Refutation im Kopf von enemy_ai_re2_zombie.c (RE2Z_ENEMSE_BANK). Stuetze fuer 31+flag2000:
- * eigener jal-0x8005bd6c-Scan ueber EMD0G_MOD0.BIN (2026-08-17) findet die ids {1,7,8,10} —
- * die ZWEITE Haelfte von Bank 31 hat {0,1,2,3,6..14} live (4/5 stumm) und deckt sie. */
+/* Kein env-Override mehr: der Wert ist belegt (s.o.), also gibt es nichts umzuschalten. */
 void re15_re2dog_audio_hook(void (*se_fn)(int, int), void (*bank_fn)(int))
 {
     s_re2d_se_fn   = se_fn;
     s_re2d_bank_fn = bank_fn;
-    if (s_re2d_bank_fn) {
-        const char *ov = getenv("RE15_RE2_DOG_SE_BANK");
-        s_re2d_bank_fn(ov ? atoi(ov) : RE2DOG_ENEMSE_BANK);
-    }
+    if (s_re2d_bank_fn) s_re2d_bank_fn(RE2DOG_ENEMSE_BANK);
 }
-static void re2d_se(int id) { if (s_re2d_se_fn) s_re2d_se_fn(id, 1); }   /* flag2000: zweite Map-Hälfte */
+static void re2d_se(int id) { if (s_re2d_se_fn) s_re2d_se_fn(id, 0); }   /* flag2000 = 0 (s.o.) */
 
 /* ---- room-scoped globals (0x800CFBF4-Analog) --------------------------------------------
  * Bits the dog module reads/writes: 0x20 noise/lunge claim (set @0x8010135C, clear only in the

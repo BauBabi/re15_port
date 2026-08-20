@@ -93,33 +93,56 @@
 extern void re15_enemy_steer_point(re15_actor_t *e, int32_t tx, int32_t tz, int slew);
 
 /* ---- ENEMSE-Audio-Hook -------------------------------------------------------------------
- * Paar-Tabelle @0x800A7400 (RE2 PSX.EXE, vendored s_re2_enemse_pairs): kind 0x25 steht in
- * GENAU ZWEI Zeilen — 53 = {0x25,0x1F} und 54 = {0x25,0x20} — beide Male als ERSTER kind
- * (FUN_80052b38-Treffer (a) -> die zweite Map-Haelfte gehoert dem PARTNER, die Spinne spielt
- * aus der ERSTEN Haelfte, flag2000 = 0). EDT-Probe ueber ENEMSE.VBS (eigener Lauf 2026-08-18,
- * TOC @0x800A7B1C): die ersten Haelften von Bank 53 und 54 sind BYTE-IDENTISCH (memcmp), ids
- * 0..13 belegt, 14/15 = 0xFFFFFFFF (stumm). Das Modul feuert die ids {0,1,3,5,6,8,9} (eigener
- * jal-0x8005bd6c-Scan ueber EMS25.BIN) — alle gedeckt. -> Default 53.
- * kind 0x26 steht in Zeile 24 = {0x26,0x00} (reine Baby-Bank, erste Haelfte); ids 0..8 belegt,
- * das Baby-Modul feuert nur id 7 (@0x80100CF4 in EMS26.BIN) — gedeckt.
- * Bank-Wahl bleibt wie bei Hund/Kraehe eine DEKLARIERTE NAEHERUNG: der byte-true Mechanismus
- * FUN_80052b38 keyt auf das RE2-Raum-Byte Spawn-Record+7, das RE1.5-Raeume nicht liefern
- * (vollstaendige Begruendung + Refutation in re2_ems.c re2_enemse_select_bank). */
-#define RE2SPIDER_ENEMSE_BANK      53
-#define RE2SPIDER_BABY_ENEMSE_BANK 24
+ * ⛔ BANK KORRIGIERT 2026-08-20: Adult 53 -> 11, Baby 24 -> 11 (beide teilen sich die Bank).
+ *
+ * Die alte Fassung las die Paar-Tabelle @0x800A7400 als Liste von GEGNER-KINDS ("kind 0x25
+ * steht in Zeile 53 und 54"). Das ist eine KATEGORIEN-VERWECHSLUNG — dieselbe, die den
+ * Kraehen-Sound falsch gemacht hat (416168cb). Die Tabelle fuehrt die SOUND-ID aus dem
+ * Sce_em_set-Record, nicht den kind:
+ *   Sce_em_set = Opcode 0x44; Dispatch @0x800A74C8, Eintrag [0x44] @0x800A75D8 = 0x8005714C.
+ *   Im Handler: `lbu a0,3(v0)` @0x800571EC -> `jal 0x8001b710`   => Record+3 = KIND
+ *               `lbu v0,7(v0)` @0x80057274 -> `sb v0,506(s0)` @0x80057280 => Record+7 -> +0x1FA
+ *   Verglichen wird gegen die Tabelle NUR +0x1FA (`lb v1,506(a0)` @0x80052C48).
+ *   Struktur-Beleg: 28 Zeilen fuehren Werte 0x01..0x0F — im kind-Raum (ab 0x10) unmoeglich.
+ *   Die "0x25"/"0x26" der alten Fassung sind Sound-Ids fremder Gegner: Bank 53 = {0x25,0x1F}
+ *   gehoert kind 0x12 + kind 0x41, Bank 24 = {0x26,0x00} gehoert kind 0x34.
+ *
+ * BELEG FUER BANK 11 — Zensus ueber alle 250 RDT-Dateien in info/re2leon/PL0/RDT (Opcode 0x44,
+ * 22 B, +3 kind, +7 sound):
+ *   kind 0x25 (Adult) -> Sound-Id 0x10 in 12/12 Records
+ *                        (ROOM2010 x2, ROOM3020 x4, ROOM4050 x2, ROOM4070 x2, ROOMD050 x2)
+ *   kind 0x26 (Baby)  -> Sound-Id 0x10 in 27/28 (ROOMF150 x27; der eine Rest ROOM2010 @0x010EE
+ *                        traegt snd 0 = "nicht registrieren")  => DIESELBE Id wie die Adult.
+ * 0x10 steht in drei Zeilen — 11 = {0x10,0x00}, 65 = {0x10,0x1F}, 66 = {0x10,0x20} — und
+ * IMMER als k0, also flag2000 = 0. Die Allein-Zeile (Spinne ohne Partner) ist Zeile 11.
+ * Raum-Simulation: ROOM3020 (4 Adults) -> A=0x10, B=0 -> Bank 11; ROOMF150 (27 Babys) ->
+ * ebenfalls Bank 11; ROOM4050/4070 (Spinne + kind 0x41) -> A=0x1F, B=0x10 -> Bank 65, das
+ * 0x2000-Bit bekommt die 0x1F-Entity, die SPINNE NICHT -> flag2000 bleibt 0.
+ *
+ * DATEN-GEGENPROBE (TOC @0x800A7B1C): Bank 11 = EDT @0x0C9800 (0xCA8), VBD @0x0CA800 0x096D0
+ * = 37 KB, progs=1 vags=10, live ids {0..10}. STARKER BELEG: die erste Haelfte (16 ids x 4 B)
+ * von Bank 11 ist BYTE-IDENTISCH mit der ersten Haelfte von Bank 65 und Bank 66 — genau den
+ * drei Zeilen, die die Id 0x10 fuehren; kein anderer Bank-Halbsatz stimmt damit ueberein.
+ * Die alten Baenke waren Doppel-Baenke fremder Gegner: 53 progs=2 vags=19 (103 KB),
+ * 24 progs=2 vags=20 (101 KB).
+ * Modul-Bedarf (eigener jal-0x8005bd6c-Zensus): EMS25.BIN 9 Aufrufe, ids {1,3,6} plus zwei
+ * dynamische (@0x8010400C 5|6 ueber +0x23A; @0x80106050 id 10 oder Tabelle @0x801066C8
+ * = {00,08,09,08,00,03,06,09,0b,00,10,13}); EMS26.BIN 1 Aufruf @0x80100CF8 se 7. Bank 11
+ * deckt alles bis id 10; der Tabellenwert 0x13 liegt ausserhalb und ist damit stumm — das
+ * gilt aber ebenso fuer jede andere Zeile mit Id 0x10 und ist keine Bank-Frage. */
+#define RE2SPIDER_ENEMSE_BANK      11
+#define RE2SPIDER_BABY_ENEMSE_BANK 11
 
 static void (*s_re2s_se_fn)(int se_id, int flag2000) = 0;
 static void (*s_re2s_bank_fn)(int bank) = 0;
 
+/* Kein env-Override mehr: der Wert ist belegt (s.o.), also gibt es nichts umzuschalten. */
 void re15_re2spider_audio_hook(void (*se_fn)(int, int), void (*bank_fn)(int), int baby)
 {
     s_re2s_se_fn   = se_fn;
     s_re2s_bank_fn = bank_fn;
-    if (s_re2s_bank_fn) {
-        const char *ov = getenv("RE15_RE2_SPIDER_SE_BANK");
-        s_re2s_bank_fn(ov ? atoi(ov)
-                          : (baby ? RE2SPIDER_BABY_ENEMSE_BANK : RE2SPIDER_ENEMSE_BANK));
-    }
+    if (s_re2s_bank_fn)
+        s_re2s_bank_fn(baby ? RE2SPIDER_BABY_ENEMSE_BANK : RE2SPIDER_ENEMSE_BANK);
 }
 static void re2s_se(int id) { if (s_re2s_se_fn) s_re2s_se_fn(id, 0); }   /* erste Map-Haelfte */
 

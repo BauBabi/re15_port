@@ -114,9 +114,19 @@ int main(void)
     /* ---- 2. Ownership-Set + ENEMSE-Bank ---------------------------------------------------- */
     CHECK(re15_re2_owns_type(0x25) == 1, "0x25 muss im RE2-Ownership-Set sein (Asset-Loader)");
     CHECK(re15_re2_owns_type(0x27) == 0, "NEGATIV: Gorilla 0x27 bleibt RE1.5");
-    CHECK(se_bank_sel == 53, "Adult-ENEMSE-Bank = 53 (Paar-Tabelle @0x800A7400 Zeile {0x25,0x1F})");
+    /* ⛔ KORRIGIERT 2026-08-20: vorher Adult 53 / Baby 24. Der alte Pin las die Paar-Tabelle
+     * @0x800A7400 als Liste von GEGNER-KINDS ("Zeile {0x25,0x1F}"). Sie fuehrt aber die
+     * SOUND-ID aus dem Sce_em_set-Record (+7 -> entity+0x1FA, `lbu v0,7(v0)` @0x80057274;
+     * verglichen wird nur +0x1FA, `lb v1,506(a0)` @0x80052C48) — die "0x25"/"0x26" dort sind
+     * Sound-Ids fremder Gegner (Bank 53 = kind 0x12 + 0x41, Bank 24 = kind 0x34). Zensus ueber
+     * alle 250 RDTs in info/re2leon/PL0/RDT: kind 0x25 -> Sound-Id 0x10 (12/12), kind 0x26 ->
+     * 0x10 (27/28) — DIESELBE Id, also DIESELBE Bank. 0x10 steht in den Zeilen 11/65/66, immer
+     * als k0 (flag2000 = 0); die Allein-Zeile ist 11. Daten-Gegenprobe: die erste Haelfte von
+     * Bank 11 ist byte-identisch mit der von 65 und 66. Herleitung im Kopf von
+     * enemy_ai_re2_spider.c. */
+    CHECK(se_bank_sel == 11, "Adult-ENEMSE-Bank = 11 (Sound-Id 0x10 -> Zeile 11 {0x10,0x00})");
     re15_re2spider_audio_hook(se_cap, se_bank_cap, 1);
-    CHECK(se_bank_sel == 24, "Baby-ENEMSE-Bank = 24 (Zeile {0x26,0x00}) — belegt, noch ungenutzt");
+    CHECK(se_bank_sel == 11, "Baby teilt sich die Bank 11 mit der Adult (beide Sound-Id 0x10)");
     re15_re2spider_audio_hook(se_cap, se_bank_cap, 0);
 
     /* ---- 3. INIT @0x801001EC ---------------------------------------------------------------- */

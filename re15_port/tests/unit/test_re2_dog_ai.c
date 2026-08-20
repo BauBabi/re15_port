@@ -253,9 +253,18 @@ static void test_attack_launch(void)
     CHECK(DOG->speed_h == 280, "Absprung-Speed 280 (sh 280,324 @0x80101320-24), speed=%d", DOG->speed_h);
     CHECK(DOG->re2d_air219 == 1, "Luft-Flag (sb 1,537 @0x8010132C)");
     CHECK(se_seen(3), "Angriffs-Bark SE 3 (jal 0x8005bd6c(3) @0x80101344)");
-    CHECK(se_bank_sel == 31, "Hunde-ENEMSE-Bank 31 (Paar-Zeile 31 {00,20} @0x800A7400)");
+    /* ⛔ KORRIGIERT 2026-08-20: vorher 31 + flag2000 == 1. Der alte Pin las die Paar-Tabelle
+     * @0x800A7400 als Liste von GEGNER-KINDS und fand "kind 0x20 in Zeile 31 {00,20}". Die
+     * Tabelle fuehrt aber die SOUND-ID aus dem Sce_em_set-Record (+7 -> entity+0x1FA,
+     * `lbu v0,7(v0)` @0x80057274 / `sb v0,506(s0)` @0x80057280; verglichen wird nur +0x1FA,
+     * `lb v1,506(a0)` @0x80052C48) — die "0x20" dort ist die Sound-Id des NPC-kind 0x45,
+     * Bank 31 ist eine reine NPC-Bank. Zensus ueber alle 250 RDTs in info/re2leon/PL0/RDT:
+     * kind 0x20 traegt Sound-Id 0x0C (14/15), und 0x0C steht in genau einer Zeile: 6 =
+     * {0x0C,0x00} -> Bank 6, erste Haelfte, also flag2000 = 0. Volle Herleitung im Kopf von
+     * enemy_ai_re2_dog.c. */
+    CHECK(se_bank_sel == 6, "Hunde-ENEMSE-Bank 6 (Sound-Id 0x0C -> Zeile 6 {0x0C,0x00})");
     for (int i = 0; i < se_n; i++)
-        CHECK(se_fl[i] == 1, "Hunde-SEs laufen ueber die ZWEITE Map-Haelfte (flag2000)");
+        CHECK(se_fl[i] == 0, "Hunde-SEs laufen ueber die ERSTE Map-Haelfte (flag2000 = 0)");
 
     /* Noise-Bit 0xFBF4|=0x20 (@0x8010134C-60): ein zweiter Hund in Sub 0 wacht dadurch auf */
     re15_actor_t *d2 = &g_actors[2];
