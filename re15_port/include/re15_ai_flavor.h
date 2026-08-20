@@ -52,6 +52,29 @@ void             re15_ai_models_set(re15_ai_models_t m);
 /* Does the RE2 brain own this actor type? (zombie family only) */
 int re15_re2z_owns_type(unsigned type);
 
+/* ---- PORT-OPTION 2026-08-20: "RE2-ZOMBIE-UEBERNAHME IM RE1.5-MODUS" -------------------------
+ * ⛔ KEIN byte-true Verhalten — eine AUSDRUECKLICH vom Nutzer verlangte Abweichung vom
+ * RE1.5-Original ("... Gliedmassen abgeschossen werden koennen ... sowie die Schadenswerte fuer
+ * Zombies ... moechte ich auch in RE1.5 AI haben"). Der Schalter zieht ZWEI vollstaendig belegte
+ * RE2-Systeme in den RE1.5-Modus, und zwar NUR fuer die Zombie-Familie (re15_re2z_owns_type):
+ *   (1) den ZERLEGER (Gliedmassen-Abschuss): re15_re15_re2z_gore_hit() ruft aus dem
+ *       RE1.5-Trefferpfad den Applier-Stempel (+0x1D0 @0x80041A0C-84, Zonen-Reserve
+ *       @0x80041900-9C) und den Zerleger @0x80105288-3D8 auf. Es wird KEIN RE1.5-Zustandsfeld
+ *       angefasst — nur re2z_*-Felder, die das RE1.5-Gehirn nirgends liest.
+ *   (2) das SCHADENS-/HP-MODELL (re15_damage.c): RE2-Schadenszeile 0x800A6A88[typ] +
+ *       RE2-INIT-HP (@0x8010C670, +15 bei Raum-Gegnerzahl < 4, Typ 0x11 fest 250 @0x801008C8).
+ *       BEIDE HAELFTEN ZUSAMMEN — nur eine davon waere eine unbelegte Balance-Aenderung.
+ * Hund 0x20, Kraehe 0x21 und Spinne 0x25/0x26 bleiben im RE1.5-Modus UNVERAENDERT.
+ *
+ * DEFAULT = AN. Zurueck auf den byte-true RE1.5-Auslieferungsstand: RE15_RE15_RE2Z_IMPORT=0
+ * oder re15_re15_re2z_import_set(0) — genau diesen Hebel benutzen die byte-true-PINs, um
+ * weiterhin die ORIGINALWERTE zu pruefen.
+ * (Der Einstieg des Zerlegers, re15_re15_re2z_gore_hit(), steht bei den uebrigen
+ * Gore-Bruecken-Deklarationen in re15_actor.h.) */
+int  re15_re15_re2z_import(void);
+void re15_re15_re2z_import_set(int on);
+int  re15_re15_re2z_import_owns(unsigned type);   /* RE1.5-Flavor + Option + Zombie-Typ */
+
 /* WELLE C: the FULL RE2 ownership set (zombie family + dog 0x20). NUR der Asset-Loader keyt
  * darauf (platform/pc/main.c pc_enemy_load). Review-Fix #9 — ausdruecklich NICHT darauf keyen:
  * die Anim-Advance-/Loco-/SFX-Exemptions bleiben auf re15_re2z_owns_type (player_common.c

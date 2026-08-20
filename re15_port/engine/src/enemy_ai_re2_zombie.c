@@ -32,6 +32,7 @@
 #include "re15_damage.h"     /* re15_ai_arc_test — the RE1.5 twin of RE2 FUN_80015614 */
 #include "re15_enemy_ai.h"   /* re15_ai_set_state_word / live_init / victim FSM / is_grabbed */
 #include "re15_enemy.h"      /* re15_enemy_find (RE2 bank from the Welle-A loader) */
+#include "re2_ems.h"         /* re2_hybrid_perm — RE2-Part <-> RE1.5-Bone (Import-Modus) */
 #include "re15_esp.h"        /* re15_esp_fx_spawn_ex (RE1.5 hit-FX stand-in, documented) */
 
 /* ---- the flavor switch itself ------------------------------------------------------------- */
@@ -81,6 +82,52 @@ int re15_re2z_owns_type(unsigned type)
 {
     return type == 0x10 || type == 0x11 || type == 0x12
         || type == 0x13 || type == 0x16 || type == 0x18;
+}
+
+/* ============================================================================================
+ * ⛔ PORT-OPTION "RE2-ZOMBIE-UEBERNAHME IM RE1.5-MODUS"  (KEIN byte-true Fix — AUSDRUECKLICHER
+ *    NUTZER-AUFTRAG 2026-08-20, woertlich:
+ *      "Bei RE2 AI und RE2 AI + Model ist es so, dass auch mit der Handfeuerwaffe Gliedmassen
+ *       abgeschossen werden koennen. Bei RE1.5 AI noch nicht. Und genau das, sowie die
+ *       Schadenswerte fuer Zombies, moechte ich auch in RE1.5 AI haben."
+ *    Der Nutzer WEISS, dass RE1.5 das im Original nicht hat, und will die Abweichung. Das hier
+ *    ist deshalb bewusst NICHT als byte-true verkauft: es ist ein SCHALTER, der zwei
+ *    vollstaendig belegte RE2-Systeme (Zerleger + Schadens-/HP-Modell) in den RE1.5-Modus
+ *    hineinzieht. Alles, was UNTER dem Schalter laeuft, bleibt byte-true zu RE2 (jede Konstante
+ *    traegt weiter ihr @0x…); nur die AUSWAHL ist eine Port-Entscheidung.
+ *
+ * GILT AUSSCHLIESSLICH FUER DIE ZOMBIE-FAMILIE (re15_re2z_owns_type: 0x10/0x11/0x12/0x13/
+ * 0x16/0x18). Hund 0x20, Kraehe 0x21 und Spinne 0x25/0x26 bleiben im RE1.5-Modus unangetastet —
+ * dafuer gibt es eine eigene Regressionswache (tests/unit/test_re15_re2z_import.c).
+ *
+ * DEFAULT = AN (das ist der Zustand, den der Nutzer haben will). Der EINZIGE Hebel zurueck auf
+ * den byte-true RE1.5-Auslieferungsstand ist RE15_RE15_RE2Z_IMPORT=0 bzw. der Setter — und
+ * genau ueber diesen Hebel pruefen die byte-true-PINs weiterhin die ORIGINALWERTE.
+ * ========================================================================================== */
+static int s_re15_import = 1;
+static int s_re15_import_env_read = 0;
+
+int re15_re15_re2z_import(void)
+{
+    if (!s_re15_import_env_read) {
+        const char *v = getenv("RE15_RE15_RE2Z_IMPORT");
+        s_re15_import_env_read = 1;
+        if (v && (v[0] == '0' || v[0] == 'n' || v[0] == 'N')) s_re15_import = 0;
+    }
+    return s_re15_import;
+}
+
+void re15_re15_re2z_import_set(int on)
+{
+    s_re15_import = on ? 1 : 0;
+    s_re15_import_env_read = 1;     /* explizit gesetzt schlaegt die Umgebungsvariable */
+}
+
+int re15_re15_re2z_import_owns(unsigned type)
+{
+    return re15_ai_flavor() == RE15_AI_FLAVOR_RE15
+        && re15_re15_re2z_import()
+        && re15_re2z_owns_type(type);
 }
 
 /* ---- W1: the RE2 WALK TURN GATE ------------------------------------------------------------
@@ -698,10 +745,16 @@ void re15_re2z_last_fx_pos(int32_t out[3])
     out[0] = s_re2z_last_fx_pos[0]; out[1] = s_re2z_last_fx_pos[1]; out[2] = s_re2z_last_fx_pos[2];
 }
 
+static int re2z_part_to_bone(const re15_actor_t *e, int part);   /* fwd: Part -> Bank-Bone-Slot */
+
 static void re2z_blood_fx_at(re15_actor_t *e, int part, int16_t yaw)
 {
     int32_t p[3];
-    re15_enemy_bone_world_pos(e, part, p);   /* == die Translation der Part-Matrix +0x198+n*172+72 */
+    /* `part` ist eine RE2-PART-Nummer, re15_enemy_bone_world_pos will einen BONE-SLOT der
+     * geladenen Bank — im RE1.5-Modus sind das verschiedene Nummernraeume (Block ueber
+     * re2z_part_to_bone). Im RE2-Modus ist die Umrechnung die Identitaet. */
+    re15_enemy_bone_world_pos(e, re2z_part_to_bone(e, part), p);
+                                             /* == die Translation der Part-Matrix +0x198+n*172+72 */
     s_re2z_last_fx_part = part;
     s_re2z_last_fx_pos[0] = p[0]; s_re2z_last_fx_pos[1] = p[1]; s_re2z_last_fx_pos[2] = p[2];
     re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x1500, p[0], p[1], p[2], yaw);
@@ -2053,11 +2106,76 @@ static void re15_re2z_part_reset(re15_actor_t *e)
  *    echt: FUN_80028AD8 loescht beim zweiten Bodenkontakt Bit 0 (`and v0,v0,-2` @0x80028CA0),
  *    das Flagwort des Schienbeins bleibt 0x1062 -> `(Eltern & 0x21) == 0x20` -> der Fuss
  *    verschwindet mit. */
+/* ============================================================================================
+ * ⛔ DIE PART-NUMMERIERUNG IM RE1.5-MODUS  (Messung 2026-08-20, probe_tmp_rigdump)
+ * --------------------------------------------------------------------------------------------
+ * Der Modellblock +0x198 ist in RE2-PART-Nummern indiziert. Im RE2-Modus ist die geladene Bank
+ * das RE2-Rig, also Part == Bone-Slot. Im RE1.5-Modus ist die geladene Bank das RE1.5-Rig —
+ * und das hat eine ANDERE Reihenfolge. SELBST GEMESSEN aus den ausgelieferten Banken
+ * (Bind-Offsets, PSX-Konvention -y = oben):
+ *   RE1.5 EM010: 0 Wurzel | 1,2,3 Gliedmasse nach UNTEN (228/664/783) | 4,5,6 dito
+ *                7 Torso (0,0,0) | 8,9,10 Gliedmasse nach OBEN/seitlich (-550/-399)
+ *                | 11,12,13 dito | 14 mittig oben (-667), groesstes Mesh
+ *   RE2   EM010: 0 Wurzel | 1 (0,0,0) | 2,3,4 nach UNTEN (252/730/861) | 5,6,7 dito
+ *                8 mittig oben (-783) | 9,10,11 nach OBEN/seitlich (-605/-421) | 12,13,14 dito
+ * Die Umrechnung ist damit GENAU die Hybrid-Permutation, die der Port fuer den Modus "RE2 AI"
+ * (RE2-Gehirn + RE1.5-Modelle) bereits fuehrt und die dort vom Nutzer visuell abgenommen ist:
+ * k_perm_zombie / k_perm_zgirl in re2_ems.c (re2_hybrid_perm), RE2-Slot -> RE1.5-Index.
+ * Sie hier wiederzuverwenden ist der einzige Weg, der GARANTIERT dasselbe sichtbare Teil
+ * abreissen laesst wie im Modus "RE2 AI" — und genau das hat der Nutzer verlangt.
+ *
+ * ⚠ OFFENER BEFUND (RE2-Pfad, ABSICHTLICH HIER NICHT ANGEFASST): die Part-BENENNUNG im
+ *   Welle-E-Block weiter unten ("9 R-Oberschenkel | 10 R-Schienbein | 11 R-Fuss") passt NICHT
+ *   zu diesen Bind-Offsets — RE2-Bone 9/12 liegen 605 Einheiten OBERHALB der Wurzel, sind also
+ *   Schultern. Auch die dort notierte Elternkette weicht ab (gemessen 8<-0, notiert 8<-1). Der
+ *   MECHANISMUS (welcher Part-Index welche Flags bekommt) ist davon unberuehrt und bleibt
+ *   byte-true; nur die deutschen Koerperteil-NAMEN im Kommentar sind fraglich. Das ist ein
+ *   RE2-Thema und wird gemeldet, nicht nebenbei umgeschrieben.
+ * ========================================================================================== */
+static int re2z_perm_for(const re15_actor_t *e, const int8_t **out_perm)
+{
+    if (!re15_re15_re2z_import_owns(e->type)) { if (out_perm) *out_perm = NULL; return 0; }
+    int n = re2_hybrid_perm((int)e->type, out_perm);
+    if (n <= 0 || !out_perm || !*out_perm) { if (out_perm) *out_perm = NULL; return 0; }
+    return n;
+}
+
+/* RE2-Part -> Bone-Slot der GELADENEN Bank (Identitaet ausserhalb des RE1.5-Imports). */
+static int re2z_part_to_bone(const re15_actor_t *e, int part)
+{
+    const int8_t *perm = NULL;
+    int n = re2z_perm_for(e, &perm);
+    if (!n || part < 0 || part >= n) return part;
+    int b = (int)perm[part];
+    return (b >= 0) ? b : part;
+}
+
+/* Bone-Slot der geladenen Bank -> RE2-Part (die Umkehrung). */
+static int re2z_bone_to_part(const re15_actor_t *e, int bone)
+{
+    const int8_t *perm = NULL;
+    int n = re2z_perm_for(e, &perm);
+    if (!n) return bone;
+    for (int i = 0; i < n; i++) if ((int)perm[i] == bone) return i;
+    return -1;                                     /* Slot ohne RE2-Gegenstueck */
+}
+
+/* ⛔ 2026-08-20 — DAS FLAVOR-GATE IST JETZT ZWEIWERTIG (Nutzer-Auftrag, Block bei
+ * re15_re15_re2z_import): im RE1.5-Modus darf die Bruecke ebenfalls aktiv werden, ABER NUR
+ *   (a) mit eingeschalteter Port-Option re15_re15_re2z_import() und
+ *   (b) fuer die Zombie-Familie und
+ *   (c) nachdem der Modellblock geseedet ist — und im RE1.5-Modus seedet ihn AUSSCHLIESSLICH
+ *       re15_re15_re2z_gore_hit(), also erst beim ERSTEN Treffer.
+ * Bis dahin ist re2z_part_flags[0] == 0 (Aktor-memset) und die Funktion liefert wie bisher 0,
+ * d.h. der Renderpfad eines nie getroffenen RE1.5-Zombies bleibt Byte fuer Byte der alte.
+ * Mit RE15_RE15_RE2Z_IMPORT=0 ist der RE1.5-Pfad in JEDEM Zustand wieder komplett stumm —
+ * genau darauf pinnen test_re2_gore_render.c PIN 1 und test_re2_gore_fly.c PIN 1. */
 int re15_re2z_gore_active(const re15_actor_t *e)
 {
     if (!e) return 0;
-    if (re15_ai_flavor() != RE15_AI_FLAVOR_RE2) return 0;      /* RE1.5 kann hier NIE landen */
     if (!re15_re2z_owns_type(e->type)) return 0;
+    if (re15_ai_flavor() != RE15_AI_FLAVOR_RE2 &&
+        !re15_re15_re2z_import_owns(e->type)) return 0;
     return (e->re2z_part_flags[0] & 1u) != 0;                  /* INIT-Seed (part_reset) gelaufen */
 }
 
@@ -2067,12 +2185,31 @@ int re15_re2z_gore_resolve(const re15_actor_t *e, const int8_t *bone_parent, int
     if (!re15_re2z_gore_active(e) || !out_draw || !out_tint || !out_mesh) return 0;
     if (n > 16) n = 16;                                        /* Modellblock hat 16 Records */
 
+    /* Der Aufrufer indiziert mit BONE-SLOTS der geladenen Bank; der Modellblock steht in
+     * RE2-PART-Nummern. Im RE2-Modus ist das dasselbe, im RE1.5-Modus uebersetzt die
+     * Hybrid-Permutation (Block ueber re2z_part_to_bone). Der Walk selbst laeuft danach
+     * unveraendert ueber die Elternkette DER GELADENEN BANK — die Permutation ist
+     * kantentreu (re2_ems.c re2_hybrid_rig_skel pinnt das mit `unmapped == 0`). */
     uint32_t fl[16];
-    for (int i = 0; i < n; i++) fl[i] = e->re2z_part_flags[i];
+    uint8_t  msh[16];
+    for (int i = 0; i < n; i++) {
+        int p = re2z_bone_to_part(e, i);
+        if (p < 0 || p >= 16) {                                /* Slot ohne RE2-Part (Hundepfoten
+                                                                * u.ae.) -> unveraendert zeichnen */
+            fl[i] = 1u; out_tint[i] = 0x00808080u; msh[i] = (uint8_t)i;
+            continue;
+        }
+        fl[i]       = e->re2z_part_flags[p];
+        out_tint[i] = e->re2z_part_tint[p];
+        /* Der Geometrie-Zeiger ist ebenfalls eine PART-Nummer: zeigt er auf sich selbst, ist
+         * es der eigene Bank-Slot; der Stumpf-Tausch @0x8010531C-50 setzt 15 (der RESERVE-Part
+         * des RE2-MD1) — der bleibt 15 und faellt im Renderer aus der Mesh-Klammer. */
+        uint8_t m = e->re2z_part_mesh[p];
+        msh[i] = (m == (uint8_t)p) ? (uint8_t)i : m;
+    }
 
     for (int i = 0; i < n; i++) {                              /* flacher Walk, Stride 0xAC */
-        out_tint[i] = e->re2z_part_tint[i];
-        out_mesh[i] = e->re2z_part_mesh[i];                    /* Stumpf-Tausch @0x8010531C-50 */
+        out_mesh[i] = msh[i];                                  /* Stumpf-Tausch @0x8010531C-50 */
         if (!(fl[i] & 1u)) { out_draw[i] = 0; continue; }      /* andi 0x1 @0x8002737C/@0x800273C4 */
         int p = bone_parent ? (int)bone_parent[i] : -1;
         if (p >= 0 && p < n && (fl[p] & 0x21u) == 0x20u) {     /* andi 0x21 / li 0x20 @0x80027480-88 */
@@ -2257,7 +2394,13 @@ int re15_re2z_gore_part_matrix(re15_actor_t *e, int part, uint32_t frame,
                                int32_t rot[9], int32_t trans[3])
 {
     if (!e || !rot || !trans || part < 0 || part >= 16) return 0;
-    if (!re15_re2z_gore_active(e)) return 0;                   /* RE1.5 landet hier NIE */
+    if (!re15_re2z_gore_active(e)) return 0;                   /* RE1.5 nur mit der Port-Option
+                                                                * (re15_re15_re2z_import) und erst
+                                                                * nach dem ersten Treffer */
+    /* `part` ist der BONE-SLOT der geladenen Bank (so ruft der Renderer); der Modellblock steht
+     * in RE2-Part-Nummern (Block ueber re2z_part_to_bone). */
+    part = re2z_bone_to_part(e, part);
+    if (part < 0 || part >= 16) return 0;
     uint16_t fl = e->re2z_part_flags[part];
     if (!(fl & 0x40u)) return 0;                               /* andi v0,s3,0x40 @0x80027498 */
     if (!(fl & 0x01u)) return 0;                               /* Bit 0 weg -> der Walk betritt
@@ -3315,7 +3458,11 @@ static const uint32_t re2z_pool_cost_w1[20] = {
     0x0285100Au, 0x078EFC0Au, 0x0102040Au, 0x02851014u                 /* 16..19 */
 };
 
-static void re2z_stamp_hit(re15_actor_t *e, const re15_actor_t *pl)
+/* `row` ist im Original IMMER +0x5 (der Applier hat es unmittelbar davor gestempelt). Der
+ * Parameter existiert nur, damit die RE1.5-Bruecke unten dieselbe Rechnung mit ihrer eigenen,
+ * NICHT nach +0x5 geschriebenen Zeile fahren kann — im RE1.5-Modus ist +0x5 der RE1.5-Reaktions-
+ * clip und darf nicht ueberschrieben werden. */
+static void re2z_stamp_hit_row(re15_actor_t *e, const re15_actor_t *pl, unsigned row)
 {
     /* --- +0x1D0: Low-Byte je Treffer neu (`andi 0xff00` @0x80041384 / @0x80047178) --- */
     int bearing = ((int)re15_atan2_q12(e->z - pl->z, e->x - pl->x) - 1024) & 0xfff;
@@ -3329,7 +3476,6 @@ static void re2z_stamp_hit(re15_actor_t *e, const re15_actor_t *pl)
     /* --- die Zonen-Reserve der getroffenen Region --- */
     unsigned region  = (unsigned)e->re2z_hits1d2 % 3u;             /* @0x80041A88-9C */
     unsigned bracket = (unsigned)e->re2z_hits1d2 / 3u;
-    unsigned row     = e->sub_state_1;
     if (row >= 20u) return;
     int cost = (int)((re2z_pool_cost_w1[row] >> (bracket * 3u)) & 7u);  /* @0x80041954-70 */
     int8_t *pool = (region == 0u) ? &e->re2z_pool153                    /* @0x80041900-08 */
@@ -3337,6 +3483,111 @@ static void re2z_stamp_hit(re15_actor_t *e, const re15_actor_t *pl)
                                   : &e->re2z_pool151;                   /* @0x80041994 */
     int v = (int)*pool - cost;                                          /* subu @0x80041974 */
     *pool = (int8_t)((v < 0) ? -1 : v);                                 /* Klemme @0x8004197C-88 */
+}
+
+static void re2z_stamp_hit(re15_actor_t *e, const re15_actor_t *pl)
+{
+    re2z_stamp_hit_row(e, pl, e->sub_state_1);                          /* `sb v1,5` @0x80041AB4 */
+}
+
+/* ============================================================================================
+ * ⛔ DIE RE1.5-BRUECKE IN DEN ZERLEGER   (PORT-OPTION, Nutzer-Auftrag — s. Block bei
+ *    re15_re15_re2z_import; KEIN byte-true RE1.5-Verhalten, sondern eine gewollte Uebernahme)
+ * --------------------------------------------------------------------------------------------
+ * WAS IM RE2-MODUS PASSIERT (und was diese Bruecke deshalb nachbaut): der Schuss-Applier
+ * stempelt +0x1D2 = 1 und die Zeile +0x5 (re15_re2_stamp_hit, re15_damage.c), im naechsten
+ * KI-Tick laeuft die HURT-Wurzel @0x80104F40 (re2z_hurt) und dort in dieser Reihenfolge
+ *   (1) re2z_stamp_hit  = der Applier-Zwilling FUN_800410CC/FUN_800470C0 (+0x1D0-Richtung
+ *       @0x80041A0C-84 und die Zonen-Reserve +0x151/+0x152/+0x153 @0x80041900-9C),
+ *   (2) re2z_leg_gore   = DER ZERLEGER @0x80105288-3D8,
+ *   (3) der 2D-Dispatch @0x801053E0-410.
+ * Im RE1.5-Modus laeuft statt re2z_hurt das RE1.5-Gehirn (enemy_ai_common.c). Die Bruecke ruft
+ * deshalb GENAU (1) + (2) + den (3)-Zweig, der Gore erzeugt — und NICHTS von der RE2-Zustands-
+ * maschine. Sie schreibt AUSSCHLIESSLICH re2z_*-Felder (die das RE1.5-Gehirn nirgends liest);
+ * +0x4/+0x5/+0x6/+0x7/hp/hit_react bleiben unberuehrt.
+ *
+ * ---- WARUM DAS MIT DER PISTOLE UEBERHAUPT ZUENDET -------------------------------------------
+ * Das Dreifach-Gate des Zerlegers @0x80105288-B0 ist:
+ *     +0x21A & 0x60 == 0   (Einweg: ein zweites Bein kommt nie)
+ *     (s8)+0x152 < 0       (die MITTLERE Zonen-Reserve ist aufgebraucht)
+ *     +0x1D0 & 0xC0 != 0   (der Treffer kam von der SEITE)
+ * Die Reserve startet bei 13 (`addiu v0,zero,13` @0x8010081C), die Kosten stehen als Wort 1 der
+ * Zombie-Angriffs-Tabelle 0x800A412C (re2z_pool_cost_w1) und werden mit `>> (Bracket*3) & 7`
+ * gelesen (@0x80041954-70). Pistole = RE1.5-Waffe 3 -> RE2-Zeile 3 -> w1 = 0x02851014 ->
+ * Bracket 0 -> Kosten 4. Region = +0x1D2 % 3 = 1 % 3 = 1 = +0x152. Also
+ *     13 -> 9 -> 5 -> 1 -> (1-4 = -3, geklemmt) -1
+ * und ab dem VIERTEN Pistolentreffer ist das Reserve-Gate offen; jeder weitere Treffer, der
+ * seitlich einschlaegt (+0x1D0 & 0xC0), reisst das Bein ab. Das ist exakt dieselbe Rechnung,
+ * die der RE2-Modus heute schon fahrt — die Bruecke erfindet nichts.
+ *
+ * ---- WAS BEWUSST NICHT MITKOMMT (mit Adresse, damit die Luecke benannt ist) ------------------
+ *  (a) re2z_dismember_row @0x80105188-284 (Verkohlung/Aetzung/Russ/Elektro-Tinten der
+ *      Granatwerfer-Zeilen 9/10/11/14/16) sitzt im ORIGINAL INNERHALB der Reaktions-Handler
+ *      (Stagger-P0 @0x80105DC4, Haupt-P0 @0x80105510, Haupt-P3 @0x80105A50, DEATH @0x80108444) —
+ *      nicht im Applier. Ohne die RE2-Handler gibt es dafuer keinen belegten Zeitpunkt.
+ *  (b) re2z_stagger_acid_leg @0x80105E10-F10 haengt ebenfalls in Stagger-P0.
+ *  (c) Der DEATH-Zweig @0x80108250 hat seinen eigenen Gore; die Bruecke feuert deshalb NUR,
+ *      wenn der Zombie den Treffer UEBERLEBT (im Original ist re2z_leg_gore Teil der
+ *      HURT-Wurzel, die bei +0x4 == 3 gar nicht mehr laeuft, `sw v0,4(s1)` @0x8004728C-90).
+ *  (d) SE 9 (`jal 0x8005bd6c` @0x801052B4-B8): im RE1.5-Modus registriert
+ *      platform/pc/main.c den ENEMSE-Hook nicht (er haengt am RE2-Asset-Zweig von
+ *      pc_enemy_load), also ist re2z_se() dort ein No-op — der Abriss ist STUMM.
+ *  (e) STUMPF-GEOMETRIE: der Zerleger stempelt `part_mesh = 15` (@0x8010531C-50) = der
+ *      RESERVE-Part des RE2-MD1. Der RE1.5-Zombie-MD1 hat nur die Meshes 0..14 (selbst
+ *      gemessen: mesh_count == bone_count == 15 fuer EM10/11/12/13/16/18), also greift die
+ *      Klammer in platform/pc/main.c (`gore_mesh[nbi] < mesh_count`) und der Oberschenkel
+ *      bleibt INTAKT. Schienbein + Fuss fliegen trotzdem weg — genau das Ergebnis, das der
+ *      Nutzer im Modus "RE2 AI" (= RE1.5-Modelle!) als korrekt bestaetigt hat.
+ * ========================================================================================== */
+void re15_re15_re2z_gore_hit(re15_actor_t *e, const re15_actor_t *pl, int row_src, unsigned row_id)
+{
+    if (!e || !pl) return;
+    if (!re15_re15_re2z_import_owns(e->type)) return;      /* nur RE1.5-Modus + Option + Zombie */
+    if (e->state == 3) return;                             /* toedlicher Treffer -> DEATH-Wurzel,
+                                                            * der Zerleger sitzt im HURT (s.o. c) */
+
+    /* --- der LAZY-INIT der RE2-Zerleger-Felder ------------------------------------------------
+     * Im RE2-Modus macht das re2z_init (Zustand 0, Tabelle @0x8010C830). Im RE1.5-Modus laeuft
+     * dieser INIT nie, also seedet der erste Treffer. Bit 0 von part_flags[0] ist der Marker:
+     * ein frisch gespawnter Aktor ist genullt (re15_actor_init/Spawn-memset), also feuert der
+     * Seed nach JEDEM Respawn genau einmal. */
+    if (!(e->re2z_part_flags[0] & 1u)) {
+        re15_re2z_part_reset(e);                           /* Modellblock (PORT-MAPPING) */
+        e->re2z_pool151 = e->re2z_pool152 = e->re2z_pool153 = 13;  /* `addiu v0,zero,13`
+                                                                    * @0x8010081C, `sb v0,337/338/
+                                                                    * 339(s2)` @0x80100820/24/28 */
+        e->re2z_hitdir1d0 = 0;                             /* sh zero,464 @0x801006BC */
+        e->re2z_flags21a  = 0;                             /* sh zero,538 @0x8010087C */
+        e->re2z_hits1d2   = 0;                             /* +0x1D2 (Applier stempelt gleich)   */
+        e->re2z_gaitrow   = 0;
+    }
+
+    /* --- der Applier-Stempel (re15_re2_stamp_hit-Zwilling, dieselben zwei Belege) ------------ */
+    e->re2z_hits1d2 = 1u;                                  /* Basis-Zone 1 @0x80047294-98 +
+                                                            * 3*Bracket 0 (Bracket-Herleitung im
+                                                            * Block ueber re15_re2_stamp_hit) */
+    unsigned row = row_src ? re15_re2z_row_for_atktype(row_id, e->re2z_hits1d2, 1)
+                           : re15_re2z_row_for_weapon (row_id, e->re2z_hits1d2, 1);
+    re2z_stamp_hit_row(e, pl, row);                        /* @0x80041A0C-84 + @0x80041900-9C */
+
+    /* --- (2) DER ZERLEGER @0x80105288-3D8 ---------------------------------------------------- */
+    re2z_leg_gore(e);
+
+    /* --- (3) der Dispatch-Zweig, der Gore erzeugt: Handler 0x80107438 (Knockdown) reisst in
+     *     seiner Phase 0 die ARME ab (@0x80107514-708, `beq v1,12` @0x8010750C schliesst nur
+     *     Zeile 12 aus). Die Bruecke fragt DIESELBE Tabelle @0x8010C940 wie re2z_hurt, damit
+     *     beide Modi im Gleichschritt bleiben.
+     *     ⚠ GEMESSEN/ABGELESEN: mit der vom Port gestempelten Spalte 1 traegt KEINE Zeile den
+     *     Handler 5 (Spalte 1 der Tabelle ist {1,1,1,1,-,-,3,3,2,2,2,4,1,1,6,1,-,6}) — der
+     *     Zweig ist heute also in BEIDEN Modi unerreichbar. Er steht hier trotzdem, weil er im
+     *     RE2-Modus an derselben Stelle steht: sobald ein Bracket-Produzent (Teilbox 1/2 bzw.
+     *     AoE-Nachbrenner, Belege in re15_damage.c) nachgezogen wird, zuenden beide Modi
+     *     gemeinsam statt nur einer. */
+    {
+        unsigned col = e->re2z_hits1d2;
+        uint8_t h = (row < 19u && col < 9u) ? re2z_hit_tbl[row][col] : (uint8_t)RE2ZH_NULL;
+        if (h == (uint8_t)RE2ZH_7438 && row != 12u) re2z_knockdown_gore(e);  /* @0x8010750C-708 */
+    }
 }
 
 static void re2z_hurt(re15_actor_t *e, re15_actor_t *pl)

@@ -149,18 +149,56 @@ int main(void)
     uint32_t tint[RE15_EMD_MAX_BONES];
     uint8_t  mesh[RE15_EMD_MAX_BONES];
 
-    /* ================================================== PIN 1: RE1.5 BLEIBT UNBERUEHRT ==== */
+    /* ================================================== PIN 1: RE1.5 BLEIBT UNBERUEHRT ====
+     * ⛔ 2026-08-20: der Nutzer hat den Zerleger AUSDRUECKLICH auch fuer den RE1.5-KI-Modus
+     * verlangt; die Port-Option re15_re15_re2z_import() (Default AN) macht das. Der
+     * ORIGINALZUSTAND ist damit nicht mehr der Default — aber weiterhin erreichbar, und genau
+     * er wird hier weiterhin gepinnt (Option explizit AUS). PIN 1b pinnt die Gegenrichtung. */
     {
         re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
+        re15_re15_re2z_import_set(0);
         e->re2z_part_flags[10] = 0x1063u;                      /* wie nach dem Zerleger */
         ident(rot); tr[0] = 111; tr[1] = 222; tr[2] = 333;
         int own = re15_re2z_gore_part_matrix(e, 10, fr++, rot, tr);
-        printf("== PIN 1  RE1.5-Flavor: own=%d trans=(%d,%d,%d)\n", own, tr[0], tr[1], tr[2]);
-        CHECK(own == 0, "im RE1.5-Flavor muss die Part-Physik 0 liefern, ist %d", own);
+        printf("== PIN 1  RE1.5-Flavor, Import AUS: own=%d trans=(%d,%d,%d)\n",
+               own, tr[0], tr[1], tr[2]);
+        CHECK(own == 0, "im RE1.5-Flavor OHNE Import muss die Part-Physik 0 liefern, ist %d", own);
         CHECK(tr[0] == 111 && tr[1] == 222 && tr[2] == 333 && rot[0] == 0x1000,
-              "der RE1.5-Pfad darf rot/trans NICHT anfassen (trans=(%d,%d,%d) rot[0]=%d)",
-              tr[0], tr[1], tr[2], rot[0]);
+              "der RE1.5-Pfad OHNE Import darf rot/trans NICHT anfassen (trans=(%d,%d,%d) "
+              "rot[0]=%d)", tr[0], tr[1], tr[2], rot[0]);
+
+        /* PIN 1b — Option AN: die Physik LAEUFT, und zwar auf dem RE1.5-BONE-SLOT. Der
+         * Modellblock steht in RE2-Part-Nummern; der Renderer indiziert mit Bank-Slots, also
+         * uebersetzt die Bruecke ueber re2_hybrid_perm (RE2-Slot -> RE1.5-Index, hier
+         * Part 10 -> Bone 9). Genau diese Permutation benutzt der Modus "RE2 AI" zum
+         * Zeichnen — dadurch fliegt in beiden Modi DASSELBE sichtbare Teil weg. */
+        re15_re15_re2z_import_set(1);
+        {
+            const int8_t *perm = NULL;
+            int np = re2_hybrid_perm(0x10, &perm);
+            int bone = (np > 10 && perm) ? (int)perm[10] : 10;
+            CHECK(bone == 9, "k_perm_zombie[10] muss 9 sein (RE2-Part 10 -> RE1.5-Bone 9), ist %d",
+                  bone);
+            ident(rot); tr[0] = 111; tr[1] = 222; tr[2] = 333;
+            int own15 = re15_re2z_gore_part_matrix(e, bone, fr++, rot, tr);
+            printf("== PIN 1b RE1.5-Flavor, Import AN: Part 10 -> Bone %d, own=%d "
+                   "trans=(%d,%d,%d)\n", bone, own15, tr[0], tr[1], tr[2]);
+            CHECK(own15 == 1, "mit der Port-Option MUSS die Part-Physik im RE1.5-Modus laufen "
+                              "(own=%d)", own15);
+            /* Und der FALSCHE Slot (die ungetauschte Nummer) darf NICHT laufen — das ist der
+             * Beweis, dass die Uebersetzung wirklich greift und nicht zufaellig passt. */
+            ident(rot); tr[0] = 111; tr[1] = 222; tr[2] = 333;
+            int own_wrong = re15_re2z_gore_part_matrix(e, 10, fr++, rot, tr);
+            CHECK(own_wrong == 0, "Bone-Slot 10 gehoert im RE1.5-Rig zu RE2-Part 11 und darf "
+                                  "keine eigene Matrix haben (own=%d)", own_wrong);
+        }
         e->re2z_part_flags[10] = 1u;
+        e->re2z_part_seeded = 0u; e->re2z_part_stepped = 0u;   /* die PIN-1b-Schritte zuruecknehmen */
+        memset(e->re2z_part_v,   0, sizeof e->re2z_part_v);
+        memset(e->re2z_part_t,   0, sizeof e->re2z_part_t);
+        memset(e->re2z_part_m,   0, sizeof e->re2z_part_m);
+        memset(e->re2z_part_st86,0, sizeof e->re2z_part_st86);
+        for (int i = 0; i < 16; i++) e->re2z_part_blend[i] = -1;
         re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
     }
 

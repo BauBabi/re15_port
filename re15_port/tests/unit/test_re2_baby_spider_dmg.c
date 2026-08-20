@@ -216,7 +216,14 @@ int main(void)
             { 0x10u,  5, 16, "0x8006E650[3]", "0x800A4154" }
         };
         for (int g = 0; g < 2; g++) {
-            /* (a) RE1.5-Pfad — MUSS byte-identisch bleiben */
+            /* (a) RE1.5-Pfad — MUSS byte-identisch bleiben.
+             * ⛔ 2026-08-20: der RE1.5-SPIELMODUS faehrt fuer die ZOMBIE-Familie inzwischen per
+             * Nutzer-Auftrag die RE2-Zeile (Port-Option re15_re15_re2z_import, Default AN).
+             * Diese Wache prueft die ORIGINALWERTE, also schaltet sie die Option explizit ab —
+             * die Aussage ("RE1.5-Zeile @0x8006E650[3] = 5") bleibt damit unveraendert gepinnt.
+             * Der 0x25 (Adult-Spinne) ist von der Option ohnehin nicht betroffen; sie ist
+             * zombie-fest. Was der Spielmodus heute tut: test_re2_hp_model.c Abschnitt 7. */
+            re15_re15_re2z_import_set(0);
             bringup(RE15_AI_FLAVOR_RE15, slots, 8);
             arm(slots[1], guard[g].type, 300, 3000);
             re15_player_set_equipped_weapon(3);
@@ -226,6 +233,7 @@ int main(void)
                       "Guard 0x%02X (RE1.5): hp %d, erwartet %d aus %s", guard[g].type,
                       e->hp, 300 - guard[g].dmg15, guard[g].a15);
             } else CHECK(0, "Guard 0x%02X (RE1.5): Schuss kam nicht an", guard[g].type);
+            re15_re15_re2z_import_set(1);         /* Default wiederherstellen */
 
             /* (b) RE2 + Modell AN -> die RE2-Zeile */
             re15_re2_damage_model_set(1);

@@ -1600,3 +1600,34 @@ target_compile_definitions(test_re2_zombie_death_fall PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_re2_zombie_death_fall COMMAND test_re2_zombie_death_fall)
 set_tests_properties(unit_re2_zombie_death_fall PROPERTIES TIMEOUT 300)
+
+# --- MESSSONDE: reisst die PISTOLE im RE1.5-KI-Modus wirklich ein Bein ab?
+#     Nutzer-Auftrag 2026-08-20 ("... auch mit der Handfeuerwaffe Gliedmassen abgeschossen
+#     werden koennen ... moechte ich auch in RE1.5 AI haben"). Faehrt game_step() mit Pad
+#     R1/SQUARE in ROOM1140 mit echten Sce_em_set-Spawns und protokolliert je Treffer die
+#     Zonen-Reserve +0x152, die Trefferrichtung +0x1D0, +0x21A, die Part-Flagwoerter und den
+#     RNG-Wurfzaehler; am Ende sagt die Anzeige-Bruecke (FUN_80027160-Zwilling), welche Meshes
+#     der Renderer noch zeichnet. Mit Gegenproben (Option AUS / frontal) und Hunde-Wache.
+#     Kein add_test — reine Messsonde. ---
+add_executable(probe_re15_gore_import probe_re15_gore_import.c)
+target_link_libraries(probe_re15_gore_import PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re15_gore_import PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_re15_gore_import PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- PIN: die PORT-OPTION "RE2-ZOMBIE-UEBERNAHME IM RE1.5-MODUS" (re15_re15_re2z_import).
+#     ⛔ KEIN byte-true RE1.5-Verhalten, sondern eine AUSDRUECKLICH vom Nutzer verlangte
+#     Abweichung (2026-08-20: "... auch mit der Handfeuerwaffe Gliedmassen abgeschossen werden
+#     koennen ... sowie die Schadenswerte fuer Zombies ... moechte ich auch in RE1.5 AI haben").
+#     Gepinnt werden BEIDE Richtungen: der Zerleger @0x80105288-3D8 aus dem RE1.5-Trefferpfad
+#     (Zonen-Reserve 13/9/5/1/-1, 4. Pistolentreffer von der Seite, Flagwort 0x1062, genau 3
+#     RNG-Wuerfe, Anzeige-Bruecke + Kaskade, Part->Bone-Permutation) UND der Originalzustand mit
+#     abgeschalteter Option, plus Abgrenzung gegen Hund/Kraehe/Spinne und gegen den RE2-Modus,
+#     plus die gemessene Stumpf-Grenze (RE1.5-MD1 hat kein Mesh 15). ---
+add_executable(test_re15_re2z_import test_re15_re2z_import.c)
+target_link_libraries(test_re15_re2z_import PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re15_re2z_import PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re15_re2z_import PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re15_re2z_import COMMAND test_re15_re2z_import)
+set_tests_properties(unit_re15_re2z_import PROPERTIES TIMEOUT 300)

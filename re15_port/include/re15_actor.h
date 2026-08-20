@@ -891,4 +891,19 @@ int re15_re2z_gore_resolve(const re15_actor_t *e, const int8_t *bone_parent, int
 int re15_re2z_gore_part_matrix(re15_actor_t *e, int part, uint32_t frame,
                                int32_t rot[9], int32_t trans[3]);
 
+/* ---- PORT-OPTION 2026-08-20: der Zerleger AUCH im RE1.5-Modus (Nutzer-Auftrag) --------------
+ * ⛔ Bewusste Abweichung vom RE1.5-Original, per Schalter re15_re15_re2z_import()
+ * (re15_ai_flavor.h) — dort steht die vollstaendige Begruendung + der Hebel zurueck.
+ * re15_re15_re2z_gore_hit() ist der Einstieg aus dem RE1.5-TREFFERPFAD (re15_damage.c:
+ * re15_player_weapon_fire / re15_enemy_take_damage). Er fahrt GENAU die zwei Schritte, die im
+ * RE2-Modus vor dem Reaktions-Dispatch stehen: den Applier-Stempel (+0x1D0-Richtung
+ * @0x80041A0C-84 und die Zonen-Reserve +0x151/+0x152/+0x153 @0x80041900-9C) und den Zerleger
+ * @0x80105288-3D8 — und schreibt dabei AUSSCHLIESSLICH re2z_*-Felder, nie ein RE1.5-Zustandsfeld.
+ *   row_src == 0 -> `row_id` ist eine RE1.5-WAFFEN-Id, == 1 -> eine ATTACKEN-Id.
+ *   `pl` ist der Treffer-URSPRUNG (Peilung des +0x1D0-Stempels).
+ * No-op ausserhalb des RE1.5-Modus, ohne die Option, fuer Nicht-Zombies und bei toedlichem
+ * Treffer (der Zerleger sitzt im HURT, das DEATH hat seinen eigenen Gore-Zweig @0x80108250). */
+void re15_re15_re2z_gore_hit(re15_actor_t *e, const re15_actor_t *pl,
+                             int row_src, unsigned row_id);
+
 #endif /* RE15_ACTOR_H */

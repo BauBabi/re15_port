@@ -98,12 +98,22 @@ static int load_room(void)
     return 1;
 }
 
-static int bringup(int flavor, int model_on)
+/* ⛔ 2026-08-20 — DIE PORT-OPTION "RE2-UEBERNAHME IM RE1.5-MODUS" (Nutzer-Auftrag).
+ * Seit diesem Stand faehrt der RE1.5-KI-MODUS fuer die ZOMBIE-FAMILIE per Default ebenfalls
+ * das RE2-Schadens-/HP-Modell — ausdrueckliche Nutzer-Vorgabe ("... sowie die Schadenswerte
+ * fuer Zombies, moechte ich auch in RE1.5 AI haben"), also eine GEWOLLTE Abweichung vom
+ * RE1.5-Original.
+ * ⚠ WAS DAS FUER DIESEN TEST HEISST: die RE1.5-REGRESSIONSWACHE (Abschnitt 1) prueft weiterhin
+ * DIESELBEN ORIGINALWERTE — sie schaltet die Option dafuer explizit AUS. Sie prueft damit
+ * weiter die FUNKTION (die Zeilen @0x8006e0d0 + typ*0x58) und nicht mehr den Spielmodus.
+ * Was der SPIELMODUS heute tut, steht in Abschnitt 7 (neu) — beide Richtungen sind gepinnt. */
+static int bringup_opt(int flavor, int model_on, int import_on)
 {
     re15_rdt_t rdt;
     if (re15_rdt_parse(s_buf, (size_t)s_sz, &rdt) != 0) return -1;
     re15_ai_flavor_set((re15_ai_flavor_t)flavor);
     re15_re2_damage_model_set(model_on);
+    re15_re15_re2z_import_set(import_on);
     re15_actor_init(); re15_aot_init(); scd_vm_init();
     re15_enemy_reset(); re15_enemy_ai_set_paused(0);
     re15_damage_seed_rng(0x0badf00du);
@@ -121,6 +131,9 @@ static int bringup(int flavor, int model_on)
         if (g_actors[s].active && g_actors[s].type >= 0x10 && g_actors[s].type < 0x40) return s;
     return -1;
 }
+
+/* Der bisherige Einstieg — Import AUS, d.h. jeder alte Aufruf misst weiter die ORIGINALWERTE. */
+static int bringup(int flavor, int model_on) { return bringup_opt(flavor, model_on, 0); }
 
 /* EIN Ziel scharfmachen. re2_hp_stamped = 1: der HP-Stempel darf die gesetzten Test-HP nicht
  * ueberschreiben — hier wird der SCHADEN gemessen, die HP-Seite hat ihren eigenen Block. */
@@ -389,6 +402,143 @@ int main(void)
             CHECK(e->re2_hp_stamped == 1, "RE2/Modell AN/0x11: kein Stempel gesetzt");
             printf("  RE2 Modell AN  0x11: hp=%d (Stempel=%d)\n", e->hp, e->re2_hp_stamped);
         }
+    }
+
+    /* ================= 7) DIE PORT-OPTION: RE2-MODELL AUCH IM RE1.5-MODUS =================
+     * ⛔ KEIN byte-true Verhalten — AUSDRUECKLICHER NUTZER-AUFTRAG 2026-08-20 (woertlich:
+     * "... sowie die Schadenswerte fuer Zombies, moechte ich auch in RE1.5 AI haben").
+     * Gepinnt werden BEIDE Richtungen und die Abgrenzung:
+     *   (a) RE1.5 + Option AN  -> die ZOMBIE-Typen bekommen die RE2-Zeile UND die RE2-HP
+     *   (b) RE1.5 + Option AN  -> Hund/Kraehe/Spinne bleiben EXAKT auf ihren RE1.5-Werten
+     *   (c) RE1.5 + Option AUS -> alles zurueck auf die Originalwerte (== Abschnitt 1)
+     *   (d) der RE2-Modus ist von der Option voellig unberuehrt */
+    printf("\n=== 7) PORT-OPTION (Nutzer-Auftrag): RE2-Zahlen fuer Zombies im RE1.5-Modus ===\n");
+    {
+        /* (a) SCHADEN: die RE2-Zeile, gemessen ueber den echten Schuss-Weg. */
+        for (int w = 0; w < 22; w++) {
+            int slot = bringup_opt(RE15_AI_FLAVOR_RE15, 1, 1);
+            if (slot < 0) { CHECK(0, "Option AN: kein Gegner in ROOM1140"); break; }
+            arm(slot, 0x10, 2000, GUN_STRIP[w] ? 4000 : 700);
+            re15_player_set_equipped_weapon(w);
+            int fired = re15_player_weapon_fire(w);
+            re15_actor_t *e = &g_actors[slot];
+            if (!fired) { CHECK(0, "Option AN typ=0x10 w%d: Schuss kam nicht an", w); continue; }
+            int crit = (w == 7);
+            int want = crit ? -1 : (2000 - E2_ZOMBIE[w]);
+            CHECK(e->hp == (int16_t)want,
+                  "RE1.5+Option typ=0x10 w%d: hp %d, erwartet %d (RE2-Schaden %d)",
+                  w, e->hp, want, E2_ZOMBIE[w]);
+        }
+        printf("  RE1.5 + Option  typ=0x10: 22/22 Waffen auf der RE2-Zeile 0x800A412C\n");
+        for (int w = 0; w < 22; w++) {           /* 0x16 hat seine eigene RE2-Zeile 0x800A42A8 */
+            int slot = bringup_opt(RE15_AI_FLAVOR_RE15, 1, 1);
+            if (slot < 0) break;
+            arm(slot, 0x16, 2000, GUN_STRIP[w] ? 4000 : 700);
+            re15_player_set_equipped_weapon(w);
+            if (!re15_player_weapon_fire(w)) continue;
+            re15_actor_t *e = &g_actors[slot];
+            int want = (w == 7) ? -1 : (2000 - E2_ZOMBIE16[w]);
+            CHECK(e->hp == (int16_t)want, "RE1.5+Option typ=0x16 w%d: hp %d, erwartet %d",
+                  w, e->hp, want);
+        }
+        printf("  RE1.5 + Option  typ=0x16: 22/22 Waffen auf der RE2-Zeile 0x800A42A8\n");
+
+        /* (b) ABGRENZUNG: Hund / Kraehe / Spinne behalten im RE1.5-Modus ihre RE1.5-Zeile. */
+        struct { uint8_t t; const int *row; const char *name; } keep[] = {
+            { 0x20, E15_DOG,    "Hund   0x20" },
+            { 0x21, E15_CROW,   "Kraehe 0x21" },
+            { 0x25, E15_SPIDER, "Spinne 0x25" },
+        };
+        for (unsigned k = 0; k < sizeof keep / sizeof keep[0]; k++) {
+            int bad = 0;
+            for (int w = 0; w < 22; w++) {
+                int slot = bringup_opt(RE15_AI_FLAVOR_RE15, 1, 1);
+                if (slot < 0) break;
+                arm(slot, keep[k].t, 2000, GUN_STRIP[w] ? 4000 : 700);
+                re15_player_set_equipped_weapon(w);
+                if (!re15_player_weapon_fire(w)) { bad++; continue; }
+                re15_actor_t *e = &g_actors[slot];
+                int want = (w == 7 && keep[k].t < 0x20) ? -1 : (2000 - keep[k].row[w]);
+                if (e->hp != (int16_t)want) {
+                    CHECK(0, "RE1.5+Option %s w%d: hp %d, erwartet %d — die Option darf NUR "
+                             "die Zombie-Familie treffen", keep[k].name, w, e->hp, want);
+                    bad++;
+                }
+            }
+            if (!bad) printf("  RE1.5 + Option  %s: 22/22 Waffen UNVERAENDERT (RE1.5-Zeile)\n",
+                             keep[k].name);
+        }
+
+        /* (a2) HP: der Stempel feuert im RE1.5-Modus jetzt — aber nur fuer Zombies. */
+        {
+            int slot = bringup_opt(RE15_AI_FLAVOR_RE15, 1, 1);
+            int z11 = -1, dog = -1;
+            for (int s = 1; s < RE15_ACTOR_MAX; s++)
+                if (g_actors[s].active && g_actors[s].type == 0x11) { z11 = s; break; }
+            for (int s = 1; s < RE15_ACTOR_MAX; s++)
+                if (g_actors[s].active && g_actors[s].type == 0x20) { dog = s; break; }
+            (void)slot;
+            if (z11 > 0) {
+                re15_actor_t *e = &g_actors[z11];
+                int16_t before = e->hp;
+                re15_re2_hp_sync();
+                CHECK(e->re2_hp_stamped == 1, "RE1.5+Option/0x11: kein HP-Stempel");
+                CHECK(e->hp == 250, "RE1.5+Option/0x11: hp %d statt 250 (@0x801008C8-CC) — "
+                                    "HP und Schaden gehoeren zusammen", e->hp);
+                printf("  RE1.5 + Option  0x11: hp %d -> %d (RE2-INIT-HP, Stempel=%d)\n",
+                       before, e->hp, e->re2_hp_stamped);
+            }
+            if (dog > 0) {
+                re15_actor_t *e = &g_actors[dog];
+                int16_t before = e->hp;
+                re15_re2_hp_sync();
+                CHECK(e->hp == before && e->re2_hp_stamped == 0,
+                      "RE1.5+Option/Hund 0x20: HP wurde gestempelt (%d -> %d, Stempel=%d)",
+                      before, e->hp, e->re2_hp_stamped);
+                printf("  RE1.5 + Option  Hund 0x20: hp bleibt %d, Stempel=%d\n",
+                       e->hp, e->re2_hp_stamped);
+            }
+        }
+
+        /* (c) NEGATIV-TEST der Option: AUS -> exakt die Originalwerte (Abschnitt 1 misst das
+         *     bereits fuer alle 6 Typen; hier zusaetzlich die HP-Seite am echten 0x11-Spawn). */
+        {
+            bringup_opt(RE15_AI_FLAVOR_RE15, 1, 0);
+            int z11 = -1;
+            for (int s = 1; s < RE15_ACTOR_MAX; s++)
+                if (g_actors[s].active && g_actors[s].type == 0x11) { z11 = s; break; }
+            if (z11 > 0) {
+                re15_actor_t *e = &g_actors[z11];
+                int16_t before = e->hp;
+                re15_re2_hp_sync();
+                CHECK(e->hp == before && e->re2_hp_stamped == 0 && e->hp != 250,
+                      "RE1.5 mit Option AUS: der Stempel hat trotzdem gefeuert "
+                      "(%d -> %d, Stempel=%d)", before, e->hp, e->re2_hp_stamped);
+                printf("  RE1.5 Option AUS 0x11: hp bleibt %d, Stempel=%d, kein 250\n",
+                       e->hp, e->re2_hp_stamped);
+            }
+        }
+
+        /* (d) DER RE2-MODUS IST VON DER OPTION UNBERUEHRT — beide Stellungen, gleiche Zahlen. */
+        for (int opt = 0; opt <= 1; opt++) {
+            int bad = 0;
+            for (int w = 0; w < 22; w++) {
+                int slot = bringup_opt(RE15_AI_FLAVOR_RE2, 1, opt);
+                if (slot < 0) break;
+                arm(slot, 0x10, 2000, GUN_STRIP[w] ? 4000 : 700);
+                re15_player_set_equipped_weapon(w);
+                if (!re15_player_weapon_fire(w)) { bad++; continue; }
+                re15_actor_t *e = &g_actors[slot];
+                int want = (w == 7) ? -1 : (2000 - E2_ZOMBIE[w]);
+                if (e->hp != (int16_t)want) {
+                    CHECK(0, "RE2-Modus mit Option=%d w%d: hp %d statt %d — die Option darf den "
+                             "RE2-Modus NICHT beruehren", opt, w, e->hp, want);
+                    bad++;
+                }
+            }
+            if (!bad) printf("  RE2-Modus, Option=%d: 22/22 Waffen unveraendert\n", opt);
+        }
+        re15_re15_re2z_import_set(1);            /* Default wiederherstellen */
     }
 
     printf("\n%s\n", fails ? "FAILED" : "OK");

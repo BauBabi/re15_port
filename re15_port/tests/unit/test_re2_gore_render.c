@@ -157,20 +157,40 @@ int main(void)
     uint32_t tint[RE15_EMD_MAX_BONES];
     uint8_t  mesh[RE15_EMD_MAX_BONES];
 
-    /* ================================================== PIN 1: RE1.5 BLEIBT UNBERUEHRT ==== */
+    /* ================================================== PIN 1: RE1.5 BLEIBT UNBERUEHRT ====
+     * ⛔ 2026-08-20 — WAS DIESER PIN JETZT PRUEFT (und warum er NICHT abgeschwaecht ist):
+     * Der Nutzer hat AUSDRUECKLICH verlangt, dass der Zerleger auch im RE1.5-KI-Modus laeuft
+     * ("... auch mit der Handfeuerwaffe Gliedmassen abgeschossen werden koennen ... moechte ich
+     * auch in RE1.5 AI haben"). Dafuer gibt es die Port-Option re15_re15_re2z_import()
+     * (Default AN). Der ORIGINALZUSTAND — RE1.5-Pfad komplett stumm — ist damit nicht mehr der
+     * Default, aber er ist weiterhin ERREICHBAR und wird hier weiterhin gepinnt: der Test
+     * schaltet die Option explizit AUS und prueft dann exakt dieselbe Aussage wie bisher.
+     * Zusaetzlich (PIN 1b) wird die neue, gewollte Richtung gepinnt: Option AN + geseedeter
+     * Modellblock -> die Bruecke IST im RE1.5-Modus aktiv. */
     {
         re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
+        re15_re15_re2z_import_set(0);            /* der byte-true RE1.5-Auslieferungsstand */
         memset(draw, 0xAB, sizeof draw); memset(tint, 0xCD, sizeof tint);
         memset(mesh, 0xEF, sizeof mesh);
         int on   = re15_re2z_gore_resolve(e, bank->skel.bone_parent, nb, draw, tint, mesh);
         int live = re15_re2z_gore_active(e);
-        printf("== PIN 1  RE1.5-Flavor: active=%d resolve=%d (Ausgabe unberuehrt: %s)\n",
+        printf("== PIN 1  RE1.5-Flavor, Import AUS: active=%d resolve=%d (Ausgabe unberuehrt: %s)\n",
                live, on, (draw[0] == 0xAB && tint[0] == 0xCDCDCDCDu) ? "ja" : "NEIN");
-        CHECK(live == 0, "re15_re2z_gore_active() muss im RE1.5-Flavor 0 sein, ist %d", live);
-        CHECK(on == 0, "re15_re2z_gore_resolve() muss im RE1.5-Flavor 0 liefern, ist %d", on);
+        CHECK(live == 0, "re15_re2z_gore_active() muss im RE1.5-Flavor OHNE Import 0 sein, ist %d",
+              live);
+        CHECK(on == 0, "re15_re2z_gore_resolve() muss im RE1.5-Flavor OHNE Import 0 liefern, ist %d",
+              on);
         CHECK(draw[0] == 0xAB && tint[0] == 0xCDCDCDCDu && mesh[0] == 0xEF,
-              "der RE1.5-Pfad darf die Renderer-Ausgabefelder NICHT anfassen "
+              "der RE1.5-Pfad OHNE Import darf die Renderer-Ausgabefelder NICHT anfassen "
               "(draw[0]=0x%02X tint[0]=0x%08X mesh[0]=0x%02X)", draw[0], tint[0], mesh[0]);
+
+        /* PIN 1b — die GEWOLLTE Abweichung (Nutzer-Auftrag), gegenrichtung gepinnt. */
+        re15_re15_re2z_import_set(1);
+        int live2 = re15_re2z_gore_active(e);
+        printf("== PIN 1b RE1.5-Flavor, Import AN: active=%d (Port-Option, Nutzer-Auftrag)\n",
+               live2);
+        CHECK(live2 == 1, "mit der Port-Option MUSS die Bruecke im RE1.5-Modus aktiv sein "
+                          "(re15_re15_re2z_import)");
         re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
     }
 

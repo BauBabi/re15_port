@@ -37,6 +37,7 @@
 #include "re15_actor.h"
 #include "re15_aot.h"
 #include "re15_enemy_ai.h"
+#include "re15_ai_flavor.h" /* re15_re15_re2z_import_set — die Port-Option ausschalten (s. main) */
 #include "re15_enemy.h"    /* re15_enemy_alloc/find/reset — mock the death-clip bank */
 #include "re15_damage.h"   /* re15_damage_seed_rng */
 #include "re15_player.h"   /* re15_player_tick + RE15_PAD_BIT_R1 (the aim pose, Phase 8.14) */
@@ -74,6 +75,17 @@ static int is_live_zombie(uint8_t t) { return t == 0x10 || t == 0x11 || t == 0x1
 
 int main(void)
 {
+    /* ⛔ 2026-08-20 — DIESER TEST PRUEFT DIE ORIGINALWERTE, NICHT DEN SPIELMODUS.
+     * Der Nutzer hat ausdruecklich verlangt, dass der RE1.5-KI-MODUS fuer die Zombie-Familie
+     * das RE2-Schadens-/HP-Modell mitfaehrt ("... sowie die Schadenswerte fuer Zombies ...
+     * moechte ich auch in RE1.5 AI haben"), Port-Option re15_re15_re2z_import(), Default AN.
+     * Die byte-true RE1.5-Zahlen unten (Messer 6 / Pistole 5 aus @0x8006e0d0 + typ*0x58) sind
+     * davon unberuehrt — sie kommen weiterhin aus derselben Tabellenfunktion, sobald die Option
+     * aus ist. Der Test schaltet sie deshalb explizit ab und pinnt damit weiter GENAU das, was
+     * er immer gepinnt hat. Was der SPIELMODUS heute tut, pinnen test_re2_hp_model.c
+     * Abschnitt 7 und test_re15_re2z_import.c. */
+    re15_re15_re2z_import_set(0);
+
     const char *path = RE15_ASSET_PSX_DIR "/STAGE1/ROOM1140.RDT";
     long sz = 0;
     uint8_t *buf = slurp(path, &sz);

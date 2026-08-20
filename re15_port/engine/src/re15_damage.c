@@ -568,6 +568,32 @@ static int re15_re2_model_owns(uint8_t type)
         && re15_re2_owns_type((unsigned)type);
 }
 
+/* ============================================================================================
+ * ⛔ PORT-OPTION 2026-08-20 — DAS RE2-SCHADENS-/HP-MODELL AUCH IM RE1.5-MODUS
+ * --------------------------------------------------------------------------------------------
+ * AUSDRUECKLICHER NUTZER-AUFTRAG (woertlich): "Bei RE2 AI und RE2 AI + Model ist es so, dass
+ * auch mit der Handfeuerwaffe Gliedmassen abgeschossen werden koennen. Bei RE1.5 AI noch nicht.
+ * Und genau das, sowie die Schadenswerte fuer Zombies, moechte ich auch in RE1.5 AI haben."
+ * Das ist damit KEIN byte-true Fix, sondern eine gewollte Abweichung vom RE1.5-Original — und
+ * sie ist als solche geschaltet (re15_re15_re2z_import, re15_ai_flavor.h; Default AN, zurueck
+ * mit RE15_RE15_RE2Z_IMPORT=0). Alles UNTER dem Schalter bleibt byte-true zu RE2: es sind
+ * exakt dieselben Tabellen und dieselben Zuege wie im RE2-Modus, nur die AUSWAHL ist neu.
+ *
+ * ⛔ HP UND SCHADEN GEHEN NUR ZUSAMMEN. Nur eine der beiden Haelften waere eine unbelegte
+ * Balance-Aenderung — genau der Fehler aus 717d13e0. Deshalb keyen re15_enemy_dmg_row() UND
+ * re15_re2_hp_sync() auf DIESELBE Funktion hier.
+ *
+ * NUR DIE ZOMBIE-FAMILIE: re15_re15_re2z_import_owns() haengt an re15_re2z_owns_type
+ * (0x10/0x11/0x12/0x13/0x16/0x18). Hund 0x20, Kraehe 0x21, Spinnen 0x25/0x26 sehen im
+ * RE1.5-Modus weiterhin GENAU ihre RE1.5-Zeile @0x8006e0d0 und ihre RE1.5-INIT-HP
+ * (Regressionswachen: tests/unit/test_re2_hp_model.c Abschnitt 7(b) fuer die Schadenszeile,
+ * tests/unit/test_re15_re2z_import.c Abschnitt 8 fuer den Zerleger).
+ * ========================================================================================== */
+static int re15_re15_import_owns(uint8_t type)
+{
+    return re15_re15_re2z_import_owns((unsigned)type);
+}
+
 /* type -> its byte-true damage row (@0x8006e0d0 + type*0x58). */
 static const uint16_t *re15_enemy_dmg_row(uint8_t type)
 {
@@ -579,7 +605,10 @@ static const uint16_t *re15_enemy_dmg_row(uint8_t type)
      * kein Balance-Thema, sondern der Fix gegen den permanenten Einfrierer (49de51f3). */
     if (type == 0x26u && re15_ai_flavor() == RE15_AI_FLAVOR_RE2)
         return s_re2_wpn_dmg_spiderbaby;
-    if (re15_re2_model_owns(type)) {                 /* RE2-Modell: die RE2-Schadenszeile */
+    /* ⛔ PORT-OPTION (Block oben): im RE1.5-Modus bekommt die ZOMBIE-FAMILIE dieselbe
+     * RE2-Schadenszeile. re15_re15_import_owns() ist zombie-fest, der switch kann fuer diesen
+     * Zweig also gar keine Hund-/Kraehen-/Spinnen-Zeile treffen. */
+    if (re15_re2_model_owns(type) || re15_re15_import_owns(type)) {   /* die RE2-Schadenszeile */
         switch (type) {
             case 0x10: case 0x11: case 0x12: case 0x13: case 0x18:
                                 return s_re2_wpn_dmg_zombie;     /* 0x800A412C */
@@ -811,13 +840,21 @@ int16_t re15_re2_init_hp(const re15_actor_t *e)
  * Schadens-Durchgriff" und der Knockdown-Block, der `e->hp = 60` selbst setzt. Der Stempel
  * gehoert an den Frame-Schritt; Harnesse, die nur re15_enemy_ai_run_all ticken, bleiben damit
  * exakt so, wie sie vor dieser Aenderung waren (sie sehen die RE1.5-INIT-HP). */
+/* ⛔ 2026-08-20 — der Stempel laeuft JETZT AUCH IM RE1.5-MODUS, aber nur unter der Port-Option
+ * und nur fuer die Zombie-Familie (Block ueber re15_re15_import_owns). Ohne die Option ist er
+ * im RE1.5-Modus weiterhin ein VOLLSTAENDIGES No-op — inklusive des Port-Feldes
+ * re2_hp_stamped, worauf test_re2_hp_model.c Abschnitt 5/6 pinnt. */
 void re15_re2_hp_sync(void)
 {
-    if (re15_ai_flavor() != RE15_AI_FLAVOR_RE2 || !re15_re2_damage_model()) return;
+    int re2_mode   = (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2_damage_model());
+    int re15_mode  = (re15_ai_flavor() == RE15_AI_FLAVOR_RE15 && re15_re15_re2z_import());
+    if (!re2_mode && !re15_mode) return;
     for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) {
         re15_actor_t *e = &g_actors[s];
         if (!e->active) { e->re2_hp_stamped = 0; continue; }
-        if (!re15_re2_owns_type(e->type)) continue;
+        /* RE2-Modus: die ganze RE2-Besitzmenge. RE1.5-Modus: NUR die Zombie-Familie — Hund,
+         * Kraehe und Spinne behalten dort ihre RE1.5-INIT-HP. */
+        if (!(re2_mode ? re15_re2_owns_type(e->type) : re15_re15_import_owns(e->type))) continue;
         if (e->state == 0) { e->re2_hp_stamped = 0; continue; }   /* INIT steht noch aus */
         if (e->re2_hp_stamped) continue;
         e->re2_hp_stamped = 1;
@@ -1211,6 +1248,12 @@ retry_after_latch:
         re15_audio_weapon_se(8);
     }
     re15_re2_stamp_hit(e, 0, (unsigned)weapon_id);  /* RE2-Flavor: +0x1D2 + +0x6 + ZEILE (s.u.) */
+    /* ⛔ PORT-OPTION (Nutzer-Auftrag): im RE1.5-Modus zusaetzlich der RE2-ZERLEGER. No-op im
+     * RE2-Modus (dort macht das re2z_hurt @0x80104F40 selbst), no-op ohne die Option, no-op
+     * fuer Nicht-Zombies und bei toedlichem Treffer. Steht NACH `e->state = 2/3`, damit die
+     * Bruecke das "ueberlebt?" aus e->state lesen kann. Volle Begruendung an
+     * re15_re15_re2z_gore_hit (enemy_ai_re2_zombie.c). */
+    re15_re15_re2z_gore_hit(e, &g_actors[RE15_ACTOR_SLOT_PLAYER], 0, (unsigned)weapon_id);
     return best + 1;                                /* hit (slot+1, non-zero) */
 }
 
@@ -1383,6 +1426,11 @@ int re15_enemy_take_damage(re15_actor_t *e, uint8_t attack_type)
     e->state = 2;                                                  /* +0x4 = 2 hurt (@80013018) */
     if (e->hp < 0) e->state = 3;                                  /* signed HP<0 → death (@80013020) */
     re15_re2_stamp_hit(e, 1, (unsigned)type);                     /* RE2-Flavor: +0x1D2 + ZEILE (s.o.) */
+    /* ⛔ PORT-OPTION (Nutzer-Auftrag): der RE2-Zerleger auch aus dem Trefferbox-Pfad. Der
+     * Treffer-URSPRUNG dieses Appliers ist der Spieler-Angriff (FUN_80012d60-Gegner-Zweig wird
+     * ausschliesslich aus re15_resolve_attack fuer Spieler-Angriffe erreicht), also ist der
+     * Spieler-Aktor die Peilungsquelle des +0x1D0-Stempels. */
+    re15_re15_re2z_gore_hit(e, &g_actors[RE15_ACTOR_SLOT_PLAYER], 1, (unsigned)type);
     e->anim_flags &= (uint16_t)~0x80u;   /* same port-bookkeeping REVERSE drop as the gun path —
                                           * reverse is a per-call f314 argument (@0x80102aec), not
                                           * entity state; the hijacked state sets a new forward clip
