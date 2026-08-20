@@ -1714,6 +1714,15 @@ target_compile_definitions(test_1140_straight_shot PRIVATE
 add_test(NAME unit_1140_straight_shot COMMAND test_1140_straight_shot)
 set_tests_properties(unit_1140_straight_shot PROPERTIES TIMEOUT 300)
 
+# --- DIAGNOSE (Nutzer-Report 2026-08-21, RE2-KI): "fallen manchmal komisch und stehen direkt
+#     wieder auf", "manchmal Laufanimation, aber laufen nicht", "manchmal unsterblich".
+#     Seed-Sweep-Sonde ueber den echten game_step-Weg. Reine Messsonde. ---
+add_executable(probe_re2z_abc probe_re2z_abc.c)
+target_link_libraries(probe_re2z_abc PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re2z_abc PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_re2z_abc PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
 # --- MESSSONDE (Nutzer-Report v0.3.5, ROOM1090: Feuer/Kisten/Cutscene/Kistenhoehe).
 #     Reine Diagnose ohne add_test: protokolliert Obj_model_set-Props, work_vars und AOTs. ---
 add_executable(probe_1090_objects probe_1090_objects.c)
@@ -1734,17 +1743,6 @@ target_compile_definitions(test_1090_room_pin PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_1090_room_pin COMMAND test_1090_room_pin)
 set_tests_properties(unit_1090_room_pin PROPERTIES TIMEOUT 60)
-# --- MESSSONDE (kein add_test): RNG-SEED-SWEEP fuer die drei Nutzer-Symptome v0.3.5
-#     (A) "fallen komisch um und stehen direkt wieder auf", (B) "Laufanimation, aber laufen
-#     nicht", (C) "Zombies sind unsterblich". Alle drei sind "manchmal" — deshalb N Laeufe mit
-#     verschobenem RE2-PRNG-Zustand (EIN 16-Bit-State @0x800CE318 -> Seed = Vorwuerfe) und
-#     verschobenem Schuss-Fahrplan, jeweils ueber den ECHTEN Weg (re15_game_step + Pad, echte
-#     ROOM1140-Spawns, GELADENE RE2-Baenke). ---
-add_executable(probe_re2z_abc probe_re2z_abc.c)
-target_link_libraries(probe_re2z_abc PRIVATE re15_engine re15_test_support)
-target_include_directories(probe_re2z_abc PRIVATE ${CMAKE_SOURCE_DIR}/include)
-target_compile_definitions(probe_re2z_abc PRIVATE
-    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 
 # --- PIN ueber einen RNG-SEED-SWEEP: die drei Nutzer-Symptome aus v0.3.5 im RE2-Modus —
 #     (A) "fallen komisch um und stehen dann direkt wieder auf", (B) "Laufanimation, aber laufen
@@ -1767,3 +1765,19 @@ target_compile_definitions(test_re2_zombie_abc PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_re2_zombie_abc COMMAND test_re2_zombie_abc)
 set_tests_properties(unit_re2_zombie_abc PROPERTIES TIMEOUT 600)
+
+# --- ROOM11F0 "Cursor-/Bedien-Screen": ist der Hintergrund dort schwarz? ---------------------
+#     Nutzer-Befund v0.3.5: "Beim Cursor im Generator-Raum (ROOM 11F0) ist der Hintergrund noch
+#     schwarz." Der Screen ist KEIN eigenes UI-Overlay, sondern Kamera-CUT 10 + 11 Props:
+#     AOT slot1 sce=3 ev=0x10 (@0x0D64) -> sub16 -> Cut_chg 0x0A (@0x15C0) + Set(5,0..0x0C)
+#     (@0x15C2..); sub01 (@0x1098ff) faehrt Objekt 0 per Sce_key_ck = der Cursor.
+#     Original-Beleg, dass dort das Raumbild steht (kein bewusstes Schwarz): der BG-Index IST der
+#     Cut-Index — FUN_80021bbc liest die BG-LBA als DAT_800b52c8 + (room<<5) + cut*2
+#     (@0x80021c88-0x80021cb8), angestossen ueber DAT_800b5457 (@0x800402f4 / @0x80021514 /
+#     @0x8002152c-60). Die Sonde pinnt: BG10 dekodiert NICHT schwarz, sub16 erreicht Cut 10,
+#     die Cut-10-Kamerabytes, und dass KEIN Prop unter dieser Nadir-Kamera den 320x240-Rahmen
+#     ausfuellt (ein bildschirmfuellendes Prop WAERE der schwarze Hintergrund). ---
+add_executable(probe_gen_11f0_cursor_view probe_gen_11f0_cursor_view.c)
+target_link_libraries(probe_gen_11f0_cursor_view PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_gen_11f0_cursor_view PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_gen_11f0_cursor_view COMMAND probe_gen_11f0_cursor_view)

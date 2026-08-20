@@ -571,6 +571,15 @@ static const uint8_t re2z_param_walk13[8] = { 0, 2, 0, 2, 0, 2, 0, 2 };       /*
 static const uint16_t re2z_hp13_tbl[16] = { 70,84,118,65,50,85,48,65,40,73,69,56,70,55,72,55 };
                                              /* @0x8010C600 (selbst gelesen) — EXEC[13]s
                                               * HP-Re-Roll `sh v1,342(s1)` @0x801049C8 */
+/* ⛔ DIE LIEGEZEIT-TABELLE DES STURZES — u16[16] @0x8010004C, selbst gelesen 2026-08-21:
+ *   0x8010004c: 5a 00 1e 00 aa 00 a0 00 0a 00 28 00 64 00 32 00
+ *   0x8010005c: 6e 00 14 00 23 00 46 00 1e 00 b4 00 1e 00 3c 00
+ * EXEC[5] P2 zieht daraus `+0x15A` (@0x80103428-88) — das ist die Dauer, die der gefallene
+ * Zombie AM BODEN bleibt, bevor die Aufsteh-Kette P6/P7/P8 laeuft. Der Port kannte bisher nur
+ * den ERSTEN Eintrag (90) und hat ihn dann ganz entfernt ("KEIN Timer", Review #6/[4]) — deshalb
+ * gab es im Port ueberhaupt keine Bodenzeit. */
+static const uint16_t re2z_lie_tbl[16] = { 90,30,170,160,10,40,100,50,110,20,35,70,30,180,30,60 };
+                                             /* @0x8010004C */
 
 /* ---- ENEMSE audio hook (PC registers; the engine stays link-clean for PSX) ---------------- */
 static void (*s_re2z_se_fn)(int se_id, int flag2000) = 0;
@@ -1147,6 +1156,23 @@ static void re2z_exec_grab(re15_actor_t *e, re15_actor_t *pl)
  *   P7 @0x80103628: ground hold (shadow grower = render, skip). Duration: param u16 @0x8010004C
  *      = 90 (MAPPED as the lie time — P7's exact advance is not RE'd, OPEN).
  *   P8 @0x801036F4: commit 0x101 @0x801036F4-F8. */
+/* ⛔ DER GEMEINSAME SCHWANZ DER STURZ-PHASEN @0x80103548 — DIE LIEGEZEIT.
+ * Angesprungen von P3 (beide Zweige), P4/P5. Er zaehlt +0x15A herunter und schaltet erst bei
+ * ABGELAUFENEM Timer auf Phase 6 (die Aufsteh-Kette). Selbst disassembliert:
+ *   80103548: lhu  v1,346(s2)          ; +0x15A  (ALTER Wert)
+ *   80103550: addiu v0,v1,-1
+ *   80103554: bne  v1,zero,0x80103754  ; ALT != 0 -> nur dekrementieren und raus
+ *   80103558: sh   v0,346(s2)          ; DELAY-SLOT: der Store laeuft in BEIDEN Faellen
+ *   8010355c: addiu v0,zero,6
+ *   80103564: sb   v0,6(s2)            ; ALT == 0 -> Phase 6
+ * Das ist der ALT==0-Test mit Delay-Slot-Store, nicht NEU==0. */
+static void re2z_kd_tail(re15_actor_t *e)
+{
+    uint16_t alt = (uint16_t)e->re2z_t15a;
+    e->re2z_t15a = (int16_t)(alt - 1u);                            /* sh @0x80103558 (Delay-Slot) */
+    if (alt == 0u) e->sub_state_2 = 6;                             /* @0x8010355C-64 */
+}
+
 static void re2z_exec_knockdown(re15_actor_t *e)
 {
     switch (e->sub_state_2) {
@@ -1176,20 +1202,87 @@ static void re2z_exec_knockdown(re15_actor_t *e)
         e->sub_state_2 = 1;                                        /* @0x801032D0-D4 */
         break;
     }
-    case 1:                                                        /* fall plays out (P1..P5
-                                                                    * @0x80103370-52C: FX/SE-Interna
-                                                                    * OPEN) */
-        /* DER SPIELER-CLAIM FAELLT SCHON WAEHREND DES STURZES — Phase 2 (`sb 3,6(s2)`
-         * @0x8010340C, also der Aufschlag-Frame) loescht ihn:
-         *   80103470: lbu v1,467(s2)
-         *   80103484: andi v1,v1,0x7f
-         *   80103490: sb  v1,467(s2)
-         * Das ist der Grund, warum man einen fallenden/liegenden RE2-Zombie weiter treffen kann
-         * (Kandidatenfilter `lbu 467 / bne zero` @0x80047138-40). [PORT-MAPPING] fuer die
-         * STELLE: der Port fasst P1..P5 zu dieser einen Phase zusammen, der Clear laeuft also
-         * ab dem ersten Sturz-Tick statt ab dem Aufschlag-Tick. */
-        e->re2z_self1d3 &= 0x7Fu;                                  /* andi 0x7f @0x80103484-90 */
-        if (re2z_clip_done(e)) e->sub_state_2 = 6;
+    case 1:                                                        /* P1 @0x80103370: der Sturz
+                                                                    * spielt ab */
+        /* ⛔ 2026-08-21 KORRIGIERT (Nutzer-Report v0.3.5 "fallen komisch um und stehen dann
+         * direkt wieder auf" + "Zombies sind unsterblich"). Hier stand `if (clip_done)
+         * sub_state_2 = 6;` — ein PORT-MAPPING, das die Phasen 2..5 des Originals
+         * UEBERSPRANG. Das Original zaehlt in P1 nur weiter:
+         *   80103370-80: jal 0x8002959c (Advance, a3=256)
+         *   80103384: lbu v1,6(s2)      ; +0x6
+         *   8010338c: addu v1,v1,v0     ; += Advance-Rueckgabe
+         *   80103398: sb  v1,6(s2)      ; -> PHASE 2, NICHT 6
+         * und der Spieler-Claim faellt erst im AUFSCHLAG (P2 @0x80103470-90), nicht schon hier.
+         * P1 ruft AUSSCHLIESSLICH den Advance — kein Steer, keine Wurzelbewegung. */
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + (uint8_t)re2z_clip_done(e));
+                                                                   /* +0x6 += ret @0x80103384-98 */
+        break;
+    case 2: {                                                      /* P2 @0x80103404: DER AUFSCHLAG */
+        int side = (int)(e->re2z_dir16a & 1u);
+        e->sub_state_2 = 3;                                        /* sb 3,6 @0x8010340C */
+        /* Prone-Clip aus sp+18+(+0x16A) = param@0x80100046+side = {0x17,0x16}, Rate 0xF
+         * (`lbu v0,18(v0)` @0x80103414, `lui v1,0xf` @0x80103418, `sw v0,332` @0x80103424). */
+        re2z_clip(e, re2z_param_clips[2 + side], 0, 0xF, 0x100, 0);
+        /* ---- DIE LIEGEZEIT: DREI Wuerfe, Zwei-Draw-Shift-Pick + Rest ----
+         *   80103420: jal rand            ; r1
+         *   80103428: jal rand            ; r2   (Delay: s0 = r1)
+         *   80103430: jal rand            ; r3   (Delay: s1 = r2)
+         *   80103438: andi s1,s1,0x3      ; r2 & 3
+         *   8010343c: srav s0,s0,s1       ; r1 >> (r2 & 3)
+         *   80103440/44: andi 0xf / sll 1 ; Index * 2
+         *   80103450: lhu a0,16(s0)       ; = re2z_lie_tbl[idx]   (sp+32 == 0x8010004C)
+         *   80103474: andi v0,v0,0xf      ; r3 & 0xf
+         *   80103480/88: addu a0,a0,v0 / sh a0,346(s2)   ; +0x15A = tbl[idx] + (r3 & 0xf) */
+        {   uint32_t r1 = re2z_rand(), r2 = re2z_rand(), r3 = re2z_rand();
+            uint32_t idx = (r1 >> (r2 & 3u)) & 0xfu;
+            e->re2z_t15a = (int16_t)(re2z_lie_tbl[idx] + (r3 & 0xfu));
+        }
+        e->re2z_t158    = 0;                                       /* sh zero,344 — Teil der
+                                                                    * Hitbox-Reset-Gruppe
+                                                                    * @0x80103478/7C (+0x9A/+0x9C) */
+        e->re2z_self1d3 &= 0x7Fu;                                  /* andi 0x7f @0x80103484-90 —
+                                                                    * ERST HIER faellt der Claim:
+                                                                    * genau deshalb ist ein
+                                                                    * liegender RE2-Zombie wieder
+                                                                    * treffbar (@0x80047138-40) */
+        /* +0x144 = r4 & 3 (@0x8010348C `jal rand` / @0x80103498 `andi v0,v0,0x3` /
+         * @0x801034A4 `sh v0,324(s2)` im Delay-Slot). Der Wert ist in P3 das TWITCH-Gate. */
+        e->speed_h = (uint8_t)(re2z_rand() & 3u);
+        /* Der Brand-Zweig `+0x10E & 0x80` (@0x8010349C-A0) halbiert die Liegezeit aus einem
+         * ZWEITEN Zwei-Draw-Pick (@0x801034A8-D8) und nullt +0x144. */
+        if (e->re2z_f10e & 0x80u) {
+            uint32_t rA = re2z_rand(), rB = re2z_rand();
+            e->speed_h = 0;                                 /* sh zero,324 @0x801034AC */
+            e->re2z_t15a = (int16_t)(re2z_lie_tbl[(rA >> (rB & 3u)) & 0xfu] >> 1);
+                                                                   /* srl 1 @0x801034D4, sh
+                                                                    * @0x801034D8 */
+        }
+        /* Hitbox 200/200/-350/350 (@0x80103454-6C) = Praesentation/Kollision, kein Port-Zwilling. */
+        break;
+    }
+    case 3:                                                        /* P3 @0x801034DC: Boden-Zucken */
+        /* `lh v0,324(s2)` / `bne v0,zero,0x80103548` @0x801034DC-E4: bei +0x144 != 0 wird der
+         * Clip NICHT fortgeschaltet (der Koerper liegt still), sonst advance + `+0x6 += ret`
+         * (@0x801034F4-50C) -> P4. In BEIDEN Faellen laeuft danach der gemeinsame Schwanz. */
+        if (e->speed_h == 0) {
+            e->sub_state_2 = (uint8_t)(e->sub_state_2 + (uint8_t)re2z_clip_done(e));
+        }
+        re2z_kd_tail(e);                                           /* @0x80103548 */
+        break;
+    case 4:                                                        /* P4 @0x80103510 */
+        e->re2z_t158   = (int16_t)((re2z_rand() & 0xfu) + 3u);     /* @0x80103510-20 */
+        e->sub_state_2 = 5;                                        /* sb 5,6 @0x80103524-28 */
+        /* FALLTHROUGH nach P5 @0x8010352C — im Original steht dort kein Sprung. */
+        /* FALLTHRU */
+    case 5:                                                        /* P5 @0x8010352C */
+        /* `lhu v1,344` / `addiu v0,v1,-1` / `bne v1,zero,…` / `sh v0,344` IM DELAY-SLOT:
+         * getestet wird der ALTE Wert (@0x8010352C-3C). Erst wenn +0x158 SCHON 0 war, geht es
+         * zurueck auf Phase 3 (@0x80103540-44) — die Zuck-Schleife P3<->P4<->P5. */
+        {   uint16_t alt = (uint16_t)e->re2z_t158;
+            e->re2z_t158 = (int16_t)(alt - 1u);
+            if (alt == 0u) e->sub_state_2 = 3;                     /* @0x80103540-44 */
+        }
+        re2z_kd_tail(e);                                           /* @0x80103548 */
         break;
     case 6:                                                        /* P6 @0x80103568 */
         e->re2z_flags21a |= 0x10u;                                 /* CRAWL MARKER @0x8010358C */
@@ -1247,21 +1340,54 @@ static void re2z_exec_knockdown(re15_actor_t *e)
     }
 }
 
-/* EXEC[6] @0x80103954 — post-kill / secondary reaction (the grab's player-death commit 0x601
- * lands here @0x80102924-38): SE 10 @0x801039F0, then back to 0x101 @0x80103B14. */
+/* EXEC[6] @0x80103954 — der Zombie beugt sich ueber den TOTEN SPIELER (Ziel des Grab-Commits
+ * 0x601 @0x80102924-38).
+ *
+ * ⛔ 2026-08-21 KORRIGIERT. Die alte Fassung endete mit `if (clip_done) set_state_word(0x101)`
+ * und zitierte dafuer "@0x80103B14" — diese Adresse liegt GAR NICHT in EXEC[6]: die Funktion
+ * endet mit `jr ra` @0x80103A68, und 0x80103A70 ist bereits die decide[2]-Zeile des
+ * KRIECHER-Brains (@0x8010C914). Ein Fehlzitat, und der 0x101-Ausgang war frei erfunden.
+ * Folge im Port: +0x1D3 blieb nach dem Spielertod auf 0x80 stehen (P0 setzt es @0x801039F8-A04,
+ * niemand loescht es) -> Gate (2) des Trefferfilters @0x80047138-40 -> der Zombie war fuer
+ * immer untreffbar. Im Original passiert das nicht, weil P2 in den FRESSER geht, dessen P3 den
+ * Claim wieder freigibt (`andi 0x7f` @0x80103CE4-FC).
+ *
+ * ORIGINAL (selbst disassembliert):
+ *   Dispatch @0x80103970-A4: +0x6==1 -> P1 0x80103A08 | ==0 -> P0 0x801039B0 [Delay lui v0,0xf]
+ *                            +0x6==2 -> P2 0x80103A44 [Delay-Slot **addiu v1,zero,2049 = 0x801**]
+ *   P0 @0x801039B0: `ori v0,v0,0x18` + `sw v0,332` @0x801039C8 = Clip 0x18 Rate 0xF;
+ *      `sb 1,6` @0x801039D4 (Delay-Slot von `jal 0x80015B94` = der Anker auf die Leiche);
+ *      SE (rand&1)? 10 : 11 @0x801039D8-F4 (KEIN +0x239-Gate);
+ *      +0x1D3 |= 0x80 @0x801039F8-A04.  **KEIN Sprung -> FALLTHROUGH nach P1.**
+ *   P1 @0x80103A08: jal 0x80015CB8 (Pose) + jal 0x8002959C (a3=256);
+ *      `+0x6 += Rueckgabe` @0x80103A30-40.
+ *   P2 @0x80103A44: `lhu v0,270(s0)` / **`sw v1,4(s0)` mit v1 = 0x801** / `ori v0,v0,0x4000` /
+ *      `sh v0,270(s0)` = Zustand 1 / +0x5 = 8 (FRESSEN) und +0x10E |= 0x4000 (das Limpet-Latch,
+ *      das EXEC[8] P1 haelt). */
 static void re2z_exec_six(re15_actor_t *e)
 {
-    if (e->sub_state_2 == 0) {                                     /* P0 @0x801039B0 (Review #10) */
-        re2z_clip(e, 0x18, 0, 0xF, 0x200, 0);                      /* sw 0xF0018,332 @0x801039B0/C8 */
+    if (e->sub_state_2 == 0) {                                     /* P0 @0x801039B0 */
+        re2z_clip(e, 0x18, 0, 0xF, 0x200, 0);                      /* sw 0xF0018,332 @0x801039C8 */
         /* Anker 0x80015b94(PL, banks) @0x801039D0: richtet den Fresser am toten Spieler aus —
          * die Spieler-Seite haelt der Port ueber die Victim-FSM; OPEN, dokumentiert. */
         re2z_se((re2z_rand() & 1u) ? 10 : 11);                     /* rand&1==0 -> 11, sonst 10
                                                                     * (@0x801039D8-F0, KEIN cd-Gate) */
         e->re2z_self1d3 |= 0x80u;                                  /* ori 0x80 @0x801039F8-A04 */
-        e->sub_state_2 = 1;                                        /* @0x801039CC-D4 */
+        e->sub_state_2 = 1;                                        /* @0x801039D4 */
+        /* FALLTHROUGH nach P1 @0x80103A08 */
+        /* FALLTHRU */
+    }
+    if (e->sub_state_2 == 1) {                                     /* P1 @0x80103A08 */
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + (uint8_t)re2z_clip_done(e));
+                                                                   /* +0x6 += ret @0x80103A30-40 */
         return;
     }
-    if (re2z_clip_done(e)) re15_ai_set_state_word(e, 0x101);       /* @0x80103B14 */
+    if (e->sub_state_2 == 2) {                                     /* P2 @0x80103A44 */
+        re15_ai_set_state_word(e, 0x801);                          /* sw v1,4 mit v1=0x801 aus dem
+                                                                    * Delay-Slot @0x801039A4 —
+                                                                    * FRESSEN, nicht 0x101 */
+        e->re2z_f10e |= 0x4000u;                                   /* ori 0x4000 @0x80103A4C-50 */
+    }
 }
 
 /* EXEC[7] @0x80103780 — LYING SLEEPER (spawn pose; INIT commits 0x701). Phase table param+0x94.
@@ -1474,11 +1600,98 @@ static void re2z_exec_getup(re15_actor_t *e)
     }
 }
 
-/* EXEC[11] @0x8010439C: clip 2, +0x21A|=0x2 @0x80104448, SE 10 @0x8010448C.
- * ENTRY OPEN (no port producer); executor implemented for completeness. */
+/* ============================================================================================
+ * EXEC[11] @0x8010439C — DER ZUSAMMENBRUCH ("auf die Knie gehen").
+ *
+ * ⛔ NUTZER-BLOCKER v0.3.5, ALLE DREI SYMPTOME HABEN HIER IHRE GEMEINSAME WURZEL:
+ *   (A) "Die Zombies fallen manchmal komisch um und stehen dann direkt wieder auf."
+ *   (B) "Manchmal haben sie eine Laufanimation, aber laufen nicht."
+ *   (C) "Es kommt vor, dass die Zombies unsterblich sind."
+ *
+ * GEMESSEN (probe_re2z_abc, Seed-Sweep, ROOM1140, echter game_step + Pad, RE2-Bank EM010
+ * geladen; seed 7, slot 2, Pistole):
+ *   f140  st=2 s1= 3 s2=2                                  (Stagger-P2)
+ *   f141  st=1 s1=11 s2=0                                  <-- 0xB01, EXEC[11] LAEUFT
+ *   f142  st=1 s1=11 s2=1  1D3=80 10E=2004  +0x93=01       <-- Trefferfilter sperrt
+ *   f191  st=1 s1= 1 s2=0  1D3=80 10E=2004  +0x93=01
+ *   f192  st=1 s1= 1 s2=1  1D3=80 10E=2004  +0x93=01       <-- LAEUFT, DAUERHAFT UNTREFFBAR
+ * Ueber 64 Seeds x 900 Frames x 4 Waffen tritt das in jedem Waffen-Lauf mehrfach auf.
+ *
+ * ⛔ SELBSTKORREKTUR AN DER ALTEN FASSUNG: die trug den Kommentar "ENTRY OPEN (no port
+ * producer); executor implemented for completeness" und einen FREI ERFUNDENEN Ausgang
+ * `if (clip_done) set_state_word(0x101)` ("Exit MAPPED"). Beides ist falsch:
+ *   - ENTRY: der Port committet 0xB01 an DREI Stellen (re2z_hit_stagger @0x80106098,
+ *     re2z_hit_main @0x80105ACC, die Death-Wurzel @0x80108224) — eigener Byte-Scan des Overlays
+ *     nach `addiu/ori rt,zero,0xB01` findet genau diese drei Adressen. Der Executor ist
+ *     der meistbenutzte Reaktions-Ausgang, kein toter Code.
+ *   - EXIT: das Original geht NIE nach 0x101 zurueck. Es hat DREI Phasen.
+ *
+ * ---- ORIGINAL, selbst disassembliert (EMOVL10_S0.BIN) --------------------------------------
+ * Dispatch @0x801043B8-F4:
+ *   801043b8: lbu v1,6(s0)             ; +0x6
+ *   801043c0: beq v1,1  -> 0x8010449C  ; P1
+ *   801043d4: beq v1,zero-> 0x801043F8 ; P0     [Delay-Slot: lui v0,0xf]
+ *   801043e8: beq v1,2  -> 0x801045D4  ; P2     [Delay-Slot: **lui v0,0x2**]
+ *   801043f0: j 0x801045F0             ; sonst Epilog
+ * P0 @0x801043F8: Clip-Wort 0xF000A; steer(+0x1C4/+0x1C6, 128) @0x80104400-14; `sb 1,6`
+ *   @0x80104418; +0x158=0 @0x8010442C; +0x222=0 @0x80104430; +0x16B=0 @0x80104434;
+ *   +0x21A &= ~4 dann |= 2 @0x80104438-48; word0 &= 0xF3FFFFFF dann |= 0x04000000
+ *   @0x8010441C/28/40/44/50/54; +0x1D3 |= 0x80 @0x8010444C-5C; +0x10E |= 0x2000 @0x80104460-70;
+ *   SE (rand&1)?10:11 nur bei +0x239==0, danach +0x239=150 @0x80104464-98.
+ *   **KEIN Sprung am Ende — P0 FAELLT DURCH nach P1.**
+ * P1 @0x8010449C:
+ *   8010449c/a4/a8: +0x158 += 1                       (der NEUE Wert wird getestet)
+ *   801044ac/b0   : (+0x158 & 1) == 0 -> 0x801044D0
+ *   801044c0      : (ungerade) jal 0x80015E7C         ; Wurzel-Delta -> +0x144
+ *   801044d0-e0   : (gerade)  +0x144 = (s16)+0x144 >> 2
+ *   801044ec      : jal 0x8002959C (a3=256)
+ *   801044f8-508  : **+0x6 += Advance-Rueckgabe**     ; -> P2, wenn der Clip durch ist
+ *   80104504      : jal 0x800152C8                    ; +0x144 anwenden
+ *   8010450c/14/18: +0x14D < 18 -> 0x801045BC = steer(+0x1C4/+0x1C6, 16), return
+ *   ab +0x14D >= 18 der KRIECHER-TEST (siehe unten)
+ * P2 @0x801045D4:
+ *   801045d4/dc   : **+0x4 = 0x00020501** (lui 0x2 aus dem Delay-Slot @0x801043EC + ori 0x501)
+ *                   = Zustand 1 / +0x5 = 5 / **+0x6 = 2** -> EXEC[5] PHASE 2, der AUFSCHLAG
+ *   801045d8-e8   : +0x223 = (rand & 0xf) + 16
+ *   801045ec      : +0x16A = 0
+ *
+ * ---- WARUM DAS ALLE DREI SYMPTOME ERKLAERT ------------------------------------------------
+ * (C) P0 setzt +0x1D3 |= 0x80 und +0x10E |= 0x2000. Beide werden AUSSCHLIESSLICH am Ende der
+ *     Sturzkette geloescht (EXEC[5] P2 @0x80103484-90 bzw. P8 @0x80103718-28 / @0x8010373C-4C).
+ *     Der erfundene 0x101-Ausgang liess den Zombie an dieser Kette VORBEI in den WALK — mit
+ *     gesetztem +0x1D3, und damit fuer immer hinter Gate (2) des Trefferfilters
+ *     (`lbu v0,467(s0)` / `bne v0,zero` @0x80047138-40).
+ * (A) Statt der Bodenkette (Aufschlag-Clip, Liegezeit, Aufstehen) ging es sofort in den Gang.
+ * (B) Clip 0x0A laeuft ~50 Frames; P1 bewegt nur jeden ZWEITEN Tick per Wurzel-Delta. Danach
+ *     kam im Port sofort der WALK-Clip — Laufanimation, waehrend die Fortbewegung noch aus der
+ *     abklingenden Zusammenbruch-Phase stammte.
+ *
+ * ⛔ OFFEN, mit Adressen benannt (NICHT geraten, NICHT genommen): der KRIECHER-TEST in P1.
+ *   80104530: jal 0x80015614(PL.x,PL.z,256)   ; Peilung
+ *   8010453c: bne v0,zero -> Epilog
+ *   80104544/4c: +0x1F0 < 0x708
+ *   8010455c/64/68: 0x800CFDCB & 0x80  -> Epilog        (Einmal-Riegel PRO RAUM)
+ *   80104570-80: +0x106 == 0x800CFCFE                   (gleiche Etage)
+ *   80104584/8c: +0x4 = 0x101
+ *   80104590-98: **+0x10E = (+0x10E & ~0x3F) | 1**      = die KRIECHER-WURZEL
+ *   8010459c-b0: 0x800CFDCB |= 0x80
+ * Bit 0 von +0x10E schaltet die GANZE Zustand-1-Wurzel um:
+ *   80101154: lhu v0,270(a0) / 8010115c: andi v0,v0,0x3f / 80101160: sll v0,v0,2
+ *   8010116c: lw v0,-14252(at)   ; Tabelle @0x8010C854
+ *   80101174: jalr v0
+ *   @0x8010C854 alterniert: GERADE -> 0x8010118C (aufrecht, decide @0x8010C88C / exec
+ *   @0x8010C8CC), UNGERADE -> 0x80101210 (KRIECHER, decide @0x8010C90C / exec @0x8010C918 =
+ *   {0x80103024 Kriechen, 0x801025EC GRAB (geteilt), 0x80103B48}).
+ * Der Port hat WEDER einen Kriecher-Brain NOCH einen Produzenten fuer das Raum-Global
+ * 0x800CFDCB. Den Zweig zu nehmen wuerde bedeuten, den Zombie mit +0x10E&1 in die AUFRECHTE
+ * Wurzel laufen zu lassen (der Port ignoriert den Selektor) — also einen kriechenden Zombie
+ * aufrecht gehen zu lassen. Deshalb wird der Zweig NICHT genommen; der Port faehrt konsequent
+ * den Fall "Test schlaegt fehl", und das ist ein echter Original-Pfad (P1 -> P2). Der
+ * Kriecher-Brain bleibt als eigener Auftrag offen.
+ * ========================================================================================== */
 static void re2z_exec_eleven(re15_actor_t *e)
 {
-    if (e->sub_state_2 == 0) {                                     /* P0 (Review #12) */
+    if (e->sub_state_2 == 0) {                                     /* P0 @0x801043F8 */
         re2z_clip(e, 0x0A, 0, 0xF, 0x200, 0);                      /* Wort 0xF000A: lui 0xf im
                                                                     * P0-Delay-Slot @0x801043D8,
                                                                     * ori 0xa @0x801043F8, sw
@@ -1487,6 +1700,7 @@ static void re2z_exec_eleven(re15_actor_t *e)
                                                                     * @0x80104400-14 */
         e->re2z_t158 = 0;                                          /* sh zero,344 @0x8010442C */
         e->re2z_flag222 = 0;                                       /* sb zero,546 @0x80104430 */
+        e->re2z_gaitrow = 0;                                       /* sb zero,363 @0x80104434 */
         e->re2z_flags21a = (uint16_t)((e->re2z_flags21a & ~0x4u) | 0x2u);
                                                                    /* andi 0xfffb + ori 0x2
                                                                     * @0x80104438-48 */
@@ -1497,9 +1711,42 @@ static void re2z_exec_eleven(re15_actor_t *e)
             e->re2z_cd239 = 150;                                   /* @0x80104494-98 */
         }
         e->sub_state_2 = 1;                                        /* sb 1,6 @0x80104410-18 */
+        /* FALLTHROUGH nach P1 @0x8010449C — das Original hat hier KEINEN Sprung, P1 laeuft im
+         * SELBEN Tick. (Wiederkehrender Fehler dieser Kampagne: Original-Fallthroughs zu
+         * else-if begradigt.) */
+        /* FALLTHRU */
+    }
+    if (e->sub_state_2 == 1) {                                     /* P1 @0x8010449C */
+        e->re2z_t158 = (int16_t)(e->re2z_t158 + 1);                /* +0x158 += 1 @0x801044A4-A8 */
+        if ((e->re2z_t158 & 1) != 0) {                             /* NEUER Wert & 1 @0x801044AC-B0 */
+            re15_re2z_move_root(e);                                /* jal 0x80015E7C @0x801044C0 +
+                                                                    * jal 0x800152C8 @0x80104504 =
+                                                                    * das Bewegungs-PAAR */
+        }
+        /* ⛔ OPEN (benannt, nicht gefuellt): auf den GERADEN Ticks ruft das Original kein
+         * 0x80015E7C, sondern `+0x144 = (s16)+0x144 >> 2` (@0x801044D0-E0) und laesst
+         * 0x800152C8 diesen ABKLINGENDEN Rest anwenden. Der Port fasst e7c+152c8 zu EINER
+         * Delta-Anwendung zusammen (re15_re2z_move_root) und fuehrt +0x144 gar nicht — der
+         * Viertel-Nachschlag hat deshalb keinen Zwilling. Eine Zahl dafuer zu erfinden waere
+         * geraten; die Richtung und die Haupt-Haelfte der Strecke stimmen. */
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + (uint8_t)re2z_clip_done(e));
+                                                                   /* +0x6 += Advance-Rueckgabe
+                                                                    * @0x801044F8-508 */
+        if (re2z_frame_slot(e) < 18)                               /* sltiu 0x12 @0x8010450C-18 */
+            re15_enemy_steer_point(e, e->steer_x, e->steer_z, 16); /* @0x801045BC-C8 */
+        /* ab Frame 18 stuende hier der KRIECHER-TEST (@0x80104530-B8) — siehe den Block ueber
+         * dieser Funktion: OPEN, wird nicht genommen. */
         return;
     }
-    if (re2z_clip_done(e)) re15_ai_set_state_word(e, 0x101);       /* Exit MAPPED; Entry OPEN */
+    if (e->sub_state_2 == 2) {                                     /* P2 @0x801045D4 */
+        re15_ai_set_state_word(e, 0x00020501u);                    /* lui v0,0x2 @0x801043EC +
+                                                                    * ori 0x501 @0x801045D4 +
+                                                                    * sw v0,4 @0x801045DC
+                                                                    * = EXEC[5] PHASE 2 */
+        e->re2z_res223 = (int8_t)((re2z_rand() & 0xfu) + 16u);     /* @0x801045D8-E8 */
+        e->re2z_dir16a = 0;                                        /* sb zero,362 @0x801045EC */
+    }
+    /* sonst: Epilog @0x801045F0 — nichts zu tun. */
 }
 
 /* EXEC[12] @0x80104748 — LUNGE BITE (0x0C01, blocks D/E). Fully self-disasm'd:
@@ -4459,10 +4706,78 @@ int re15_re2z_tick(int slot)
      * laufen bereits ueber re2z_blood_fx_at an der Knochen-Matrix. Deshalb: Bit 1 gehoert bei
      * einem RE2-eigenen Zombie in JEDEM Tick auf 0 — sonst erzeugt ausgerechnet der korrekte
      * Filter das Fuss-Blut. */
-    {   int hittable = (e->active != 0)                            /* (1) +0x0 & 1   @0x80047124-30 */
-                    && (e->re2z_self1d3 == 0u)                     /* (2) +0x1D3     @0x80047138-40 */
+    /* ============================================================================================
+     * ⛔ DIE SPAWN-POSE IST VOM FILTER AUSGENOMMEN — SOLLSEITE IST RE1.5, NICHT RE2
+     * --------------------------------------------------------------------------------------------
+     * NUTZER-REPORT v0.3.5: "Im Dining Room trifft man den am Boden fressenden Zombie nicht."
+     * GEMESSEN (Parallel-Auftrag, ROOM1140, echter Weg): RE2-Modus, Abstand 6000 -> 0 Treffer in
+     * 240 Frames (+0x1D3 = 0x80, +0x10E = 0x4004, daraus hit_react = 0x01); Abstand 2600 ->
+     * 5 Treffer. RE1.5-Modus, derselbe Schuss auf 6000 -> 2-3 Treffer.
+     * Eigener Seed-Sweep (probe_re2z_abc, 64 Seeds x 900 Frames, 3 Waffen): der Liegende (EXEC[7])
+     * ist in 64/64 Seeds dauerhaft gesperrt, die Fresser (EXEC[8]) in 57-83 Faellen.
+     *
+     * WARUM DER PORT DA UEBERHAUPT HINKOMMT — beide Sperren sind byte-true, aber der ZUSTAND ist
+     * port-synthetisiert:
+     *   (2) +0x1D3 |= 0x80 — EXEC[7] P0 `ori 0x80` @0x80103804-14, EXEC[8] P0 @0x80103C04-14
+     *   (4) +0x10E = 0x4002 / 0x4004 — der SPAWN-REMAP in re2z_init (`sh 0x4002,270` @0x80100A34-38
+     *       bzw. `sh 0x4004,270` @0x80100A88-8C)
+     * Im Original gehoert zu jedem 0x4000-Spawn ein WECKER: der einzige Overlay-Clear steht in
+     * EXEC[15] (`andi v1,v1,0xbfff` / `sh v1,270(s0)` @0x80104F0C-10), angestossen vom RE2-Raum-
+     * skript. RE1.5-Raeume haben diese Records NICHT — Byte-Zensus ueber die ausgelieferten RDTs
+     * (Muster 0x34,0x0C,0x89|0x8A): ROOM1100/1101 je 5, ROOM1070 5, ROOM1020 4, **ROOM1140 = 0**.
+     * Der Port muss den Clear deshalb MAPPEN (re2z_exec_lying / re2z_exec_feeding, Naehe-Gate) —
+     * und genau dieses Port-Mapping ist es, das die Treffbarkeit an eine Distanz haengt. Diesen
+     * Zustand — "aus der Ferne unverwundbar, aus der Naehe verwundbar" — gibt es in KEINEM der
+     * beiden Originale.
+     *
+     * DIE SOLLSEITE IST RE1.5 (ROOM1140 ist ein RE1.5-Raum, und der Nutzer trifft den Fresser
+     * dort im Original). RE1.5s Kandidaten-Sammelschleife FUN_80011F50 gatet PRO AKTOR
+     * AUSSCHLIESSLICH auf "aktiv" — selbst disassembliert, info/Re1.5/PSX.EXE:
+     *   80011ffc: lw    v0,0(s0)          ; Entity-Flagwort
+     *   80012000: nop
+     *   80012004: andi  v0,v0,0x1
+     *   80012008: beq   v0,zero,0x80012024 ; NUR inaktiv wird uebersprungen
+     *   80012034: bne   v0,zero,0x80011ffc ; naechster Kandidat
+     *   80012038: addiu s0,s0,500          ; Stride 0x1F4 = RE1.5-Entity
+     * Es gibt dort WEDER ein +0x1D3- noch ein +0x10E-Gegenstueck: eine liegende oder fressende
+     * RE1.5-Leiche ist ein ganz normaler Kandidat. (Der +0x93-Riegel ist ein EIN-TREFFER-Latch im
+     * Auflöser, keine dauerhafte Pose-Unverwundbarkeit.)
+     *
+     * ⚠️ AUSDRUECKLICH GEWUENSCHTE ABWEICHUNG von RE2 (Nutzer-Entscheidung, wie 83b7740c):
+     * solange der Zombie die port-synthetisierte SPAWN-POSE haelt (EXEC[7] liegend / EXEC[8]
+     * fressend), zaehlen die Sperren (2) und (4) NICHT. Der Geltungsbereich ist damit exakt der
+     * Ort, an dem der Port den Zustand selbst erzeugt hat. UEBERALL SONST bleibt der Filter
+     * unveraendert scharf — dort sitzt der echte Nutzen: der walking-immortal-Fall aus EXEC[11]
+     * (siehe der Block ueber re2z_exec_eleven) wird weiterhin von Gate (2) gefangen, sobald ein
+     * Latch stehen bleibt, und Leichen (Gate 3) bleiben unbeschiessbar.
+     * ========================================================================================== */
+    {   int spawn_pose = (e->state == 1)
+                      && (e->sub_state_1 == 7 || e->sub_state_1 == 8);  /* EXEC[7]/EXEC[8] */
+        /* ⛔ UND DER LATCH MUSS MIT DER POSE FALLEN, EGAL WIE SIE ENDET.
+         * GEMESSEN, nachdem die Ausnahme oben griff (probe_re2z_abc, 64 Seeds, Pistole):
+         *   [C-ANDERE] seed 4 slot 3 f257: st=1 s1=1 s2=1 hp=49 **1D3=80 10E=4004** clip=2
+         * Also ein LAUFENDER Zombie, der den Fresser-Spawnzustand noch traegt: er wurde in der
+         * Pose getroffen (das ist jetzt erlaubt), der HURT-Handler hat ihn in den WALK entlassen,
+         * und die beiden port-synthetisierten Latches blieben stehen — dieselbe Unsterblichkeit
+         * eine Ebene weiter. Im Original kann dieser Zustand nicht entstehen (dort ist die Pose
+         * unbeschiessbar), und in RE1.5 gibt es die Latches ueberhaupt nicht.
+         * Die Pose-Ausgaenge des Originals raeumen GENAU DIESE ZWEI Bytes auf:
+         *   EXEC[7] P4 : `andi 0x7f` @0x80103914-18
+         *   EXEC[8] P3 : `andi 0x7f` @0x80103CE4-FC     P5: @0x80103D98
+         *   Wecker     : `andi v1,v1,0xbfff` / `sh v1,270(s0)` @0x80104F0C-10
+         * Der Port zieht sie deshalb einmalig nach, sobald die Pose verlassen ist. Das Bit 0x4000
+         * identifiziert den Zustand eindeutig: gesetzt wird es nur vom Spawn-Remap (@0x80100A34-38
+         * / @0x80100A88-8C) und von EXEC[6] P2 (@0x80103A4C-50), und EXEC[6] P2 committet im
+         * selben Tick 0x801, ist also im naechsten Tick wieder `spawn_pose`. */
+        if (!spawn_pose && (e->re2z_f10e & 0x4000u)) {
+            e->re2z_f10e    &= (uint16_t)~0x4000u;                 /* andi 0xbfff @0x80104F0C */
+            e->re2z_self1d3 &= 0x7Fu;                              /* andi 0x7f   @0x80103914 /
+                                                                    * @0x80103CE4-FC */
+        }
+        int hittable = (e->active != 0)                            /* (1) +0x0 & 1   @0x80047124-30 */
+                    && (spawn_pose || e->re2z_self1d3 == 0u)       /* (2) +0x1D3     @0x80047138-40 */
                     && (e->hp >= 0)                                /* (3) HP < 0     @0x80047148-50 */
-                    && !(e->re2z_f10e & 0xC000u);                  /* (4) +0x10E     @0x80047158-64 */
+                    && (spawn_pose || !(e->re2z_f10e & 0xC000u));  /* (4) +0x10E     @0x80047158-64 */
         if (hittable) e->hit_react &= (uint8_t)~1u;                /* Kandidat freigegeben */
         else          e->hit_react |= (uint8_t)1u;                 /* Kandidat UEBERSPRUNGEN */
         e->hit_react &= (uint8_t)~2u;                              /* RE2 kennt +0x93 nicht ->

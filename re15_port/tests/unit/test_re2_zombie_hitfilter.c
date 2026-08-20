@@ -120,13 +120,58 @@ int main(void)
               "GATE 2: +0x1D3 != 0 muss SPERREN (@0x80047140 bne) (+0x93 = 0x%02X)", hr);
     }
 
-    /* ---- GATE (4) +0x10E & 0xC000 -> gesperrt  (@0x80047158-64 `lhu 270`/`andi 0xc000`) ---- */
-    {   re15_actor_t *e = mk();
-        e->re2z_f10e = 0x4000u;                 /* Limpet-/Liege-Latch */
+    /* ---- GATE (4) +0x10E & 0xC000 -> gesperrt  (@0x80047158-64 `lhu 270`/`andi 0xc000`) ----
+     *
+     * ⛔ 2026-08-21 AUFGETEILT (Nutzer-Report v0.3.5 "im Dining Room trifft man den am Boden
+     * fressenden Zombie nicht"). Hier stand EIN Block, der einen WALK-Aktor (state 1 / +0x5 = 1)
+     * mit +0x10E = 0x4000 baute und "muss SPERREN" verlangte. Die GATE-AUSSAGE ist byte-true und
+     * bleibt erhalten — sie wird jetzt am 0x8000-Bit gepinnt (Block direkt darunter, unveraendert).
+     * Der KONSTRUIERTE Zustand dagegen kann es im Port nicht mehr geben: 0x4000 wird
+     * ausschliesslich vom Spawn-Remap (@0x80100A34-38 / @0x80100A88-8C) und von EXEC[6] P2
+     * (@0x80103A4C-50) gesetzt, gehoert also zur Liege-/Fress-Pose. Steht es AUSSERHALB dieser
+     * Pose noch, ist es ein port-synthetisierter Rest, den re15_re2z_tick jetzt einmalig
+     * nachraeumt — der Zwilling der Original-Pose-Ausgaenge (`andi 0x7f` @0x80103914 /
+     * @0x80103CE4-FC, `andi 0xbfff` @0x80104F0C).
+     * Beide neuen Faelle werden hier POSITIV gepinnt statt die alte Aussage stillschweigend
+     * umzuschreiben. */
+    {   /* (4a) IN der Spawn-Pose: 0x4000 sperrt NICHT — Sollseite ist RE1.5, dessen
+         *      Kandidaten-Sammelschleife FUN_80011F50 pro Aktor NUR auf "aktiv" gatet:
+         *        80011ffc: lw v0,0(s0) / 80012004: andi v0,v0,0x1 / 80012008: beq v0,zero,…
+         *        80012038: addiu s0,s0,500   (Stride 0x1F4 = RE1.5-Entity)
+         *      Ein liegender/fressender RE1.5-Zombie ist dort ein ganz normaler Kandidat. */
+        re15_actor_t *e = mk();
+        e->sub_state_1 = 8;                     /* EXEC[8] FRESSEN */
+        e->sub_state_2 = 1;                     /* P1 = Limpet-Halt, kein Phasenwechsel */
+        e->re2z_f10e = 0x4004u;                 /* Spawn-Remap des Fressers @0x80100A88-8C */
+        e->re2z_self1d3 = 0x80u;                /* EXEC[8] P0 `ori 0x80` @0x80103C04-14 */
+        e->ai_dist = 6000u;                     /* GENAU der gemeldete Abstand: ausserhalb des
+                                                 * port-gemappten Naehe-Weckers (dist < 0xFA0),
+                                                 * also der Fall, in dem der Nutzer NICHT traf */
         e->hit_react = 0;
         uint8_t hr = tick_latch(e);
-        CHECK((hr & 1) == 1,
-              "GATE 4: +0x10E & 0x4000 muss SPERREN (@0x80047164 bne) (+0x93 = 0x%02X)", hr);
+        CHECK((hr & 1) == 0,
+              "GATE 4a: der FRESSER in der Spawn-Pose muss TREFFBAR sein (RE1.5-Sollseite "
+              "FUN_80011F50 @0x80011FFC-38) (+0x93 = 0x%02X, 1D3 = 0x%02X, 10E = 0x%04X)",
+              hr, e->re2z_self1d3, e->re2z_f10e);
+        CHECK(e->re2z_f10e == 0x4004u && e->re2z_self1d3 == 0x80u,
+              "GATE 4a: IN der Pose bleiben beide Latches STEHEN (die Executor-Ketten lesen sie: "
+              "@0x8010381C-28 / @0x80103C94-A0), got 10E = 0x%04X 1D3 = 0x%02X",
+              e->re2z_f10e, e->re2z_self1d3);
+    }
+    {   /* (4b) AUSSERHALB der Pose: der Rest wird einmalig nachgeraeumt. Ohne das war der in
+         *      der Pose getroffene Fresser nach dem HURT-Ausgang dauerhaft untreffbar —
+         *      gemessen als [C-ANDERE] st=1 s1=1 1D3=80 10E=4004 (probe_re2z_abc). */
+        re15_actor_t *e = mk();                 /* state 1 / +0x5 = 1 = WALK */
+        e->re2z_f10e    = 0x4004u;
+        e->re2z_self1d3 = 0x80u;
+        e->hit_react    = 0;
+        uint8_t hr = tick_latch(e);
+        CHECK((e->re2z_f10e & 0x4000u) == 0 && (e->re2z_self1d3 & 0x80u) == 0,
+              "GATE 4b: Pose verlassen -> 0x4000 und der 0x80-Claim werden nachgeraeumt "
+              "(@0x80104F0C / @0x80103914), got 10E = 0x%04X 1D3 = 0x%02X",
+              e->re2z_f10e, e->re2z_self1d3);
+        CHECK((hr & 1) == 0,
+              "GATE 4b: danach ist der Aktor wieder Kandidat (+0x93 = 0x%02X)", hr);
     }
     {   re15_actor_t *e = mk();
         e->re2z_f10e = 0x8000u;

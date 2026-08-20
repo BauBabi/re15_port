@@ -516,7 +516,35 @@ int main(void)
         CHECK(e->re2z_cd239 == 150, "P0 arms the moan cooldown 150 (@0x8010335C-60)");
         CHECK((e->grid_id & 0x80u) != 0, "downed marker set (PORT-MAPPING Review #18)");
         CHECK((e->re2z_f10e & 0x2000u) != 0, "+0x10E|=0x2000 (@0x80103308/3320)");
-        re15_re2z_tick(s);                                       /* P1: clip done -> 6 */
+        /* ⛔ 2026-08-21 KORRIGIERT — hier stand `tick; tick;` mit dem Kommentar "P1: clip done
+         * -> 6". Das war der EINGANG, den der Port frei erfunden hatte: das Original geht von
+         * P1 nach PHASE 2 (`+0x6 += Advance-Rueckgabe` @0x80103384-98), nicht nach 6. Die
+         * Aussagen ueber P6/P7/P8 unten sind byte-true und bleiben WORTGLEICH stehen — nur der
+         * Weg dorthin fuehrt jetzt durch die echte Bodenkette. */
+        re15_re2z_tick(s);                                       /* P1: Clip durch -> Phase 2 */
+        CHECK(e->sub_state_2 == 2,
+              "P1 -> PHASE 2 (@0x80103384-98), got %d", e->sub_state_2);
+        re15_re2z_tick(s);                                       /* P2: der Aufschlag */
+        CHECK(e->sub_state_2 == 3, "P2 -> Phase 3 (`sb 3,6` @0x8010340C), got %d", e->sub_state_2);
+        CHECK(e->motion == 0x17 || e->motion == 0x16,
+              "P2 Aufschlag-Clip 23/22 (sp+18+(+0x16A) @0x80103410-24), got %d", e->motion);
+        CHECK((e->re2z_self1d3 & 0x80u) == 0,
+              "P2 gibt den Spieler-Claim frei (`andi 0x7f` @0x80103484-90) -> der liegende "
+              "Zombie ist wieder treffbar (Filter-Gate 2 @0x80047138-40)");
+        CHECK(e->re2z_t15a >= 10 && e->re2z_t15a <= 195,
+              "P2 zieht die LIEGEZEIT +0x15A aus u16tbl@0x8010004C[(r1>>(r2&3))&0xf] + (r3&0xf) "
+              "(@0x80103428-88) -> 10..195, got %d", e->re2z_t15a);
+        {   /* die Zuck-Schleife P3<->P4<->P5 brennt +0x15A herunter; erst bei ALT==0 kommt P6
+             * (`bne v1,zero` mit `sh v0,346` im Delay-Slot @0x80103548-64) */
+            int guard = 0;
+            while (e->sub_state_2 != 6 && guard < 400) { re15_re2z_tick(s); guard++; }
+            CHECK(e->sub_state_2 == 6,
+                  "der gemeinsame Schwanz @0x80103548 schaltet nach ABGELAUFENEM +0x15A auf "
+                  "Phase 6, got %d nach %d Ticks", e->sub_state_2, guard);
+            CHECK(guard >= 10,
+                  "die Bodenzeit ist ECHT (mindestens der kleinste Tabelleneintrag 10), "
+                  "got %d Ticks", guard);
+        }
         re15_re2z_tick(s);                                       /* P6 */
         CHECK(e->re2z_flags21a & 0x10u, "P6 sets the crawl marker +0x21A|=0x10 (@0x8010358C)");
         CHECK(e->motion == 8 || e->motion == 9,
