@@ -1556,3 +1556,29 @@ target_compile_definitions(test_re2_crow_se_bank PRIVATE
     RE15_RE2_RDT_DIR="${CMAKE_SOURCE_DIR}/../info/re2leon/PL0/RDT")
 add_test(NAME unit_re2_crow_se_bank COMMAND test_re2_crow_se_bank)
 set_tests_properties(unit_re2_crow_se_bank PROPERTIES TIMEOUT 60)
+
+# --- DIAGNOSE (Nutzer-Report 2026-08-20, RE1.5-KI): "der Zombie stirbt, faellt nach hinten,
+#     die Animation wird ab der Haelfte noch einmal wiederholt, dann faellt er wirklich um".
+#     Faehrt den ECHTEN Weg (re15_game_step + Pad R1->SQUARE, echte ROOM1140-Spawns,
+#     GELADENE RE1.5-Bank) und protokolliert den ANIMATIONS-FORTSCHRITT (gerenderter
+#     Keyframe/Slot, +0x8f, Bone-Weltposition), nicht nur den State. Reine Messsonde. ---
+add_executable(probe_re15_zdeath probe_re15_zdeath.c)
+target_link_libraries(probe_re15_zdeath PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re15_zdeath PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_re15_zdeath PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- PIN: die RE1.5-Todesanimation des Zombies laeuft MONOTON durch (kein Ruecksprung).
+#     Nutzer-Report 2026-08-20 (RE1.5-KI): "er stirbt, faellt nach hinten, die Animation wird ab
+#     der Haelfte noch einmal wiederholt". Ursache war der nachgebaute 1/8-Zweig
+#     (FUN_80106c18 @0x80106e50-70), der im Auslieferungsstand UNERREICHBAR ist
+#     (@0x80106c40/44 = NOP/NOP, 0 Xrefs auf 0x80106c58, Ghidra-Decompilat, LIVE-RAM).
+#     Der Pin pinnt den VERLAUF ueber einen RNG-Seed-Sweep (der Fehler war 1-aus-8) und beide
+#     Sturzrichtungen (Clip 0x0b/0x0d), mit Negativ-Kontrolle und RE2-Regressionswache. ---
+add_executable(test_re15_zombie_death_anim test_re15_zombie_death_anim.c)
+target_link_libraries(test_re15_zombie_death_anim PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re15_zombie_death_anim PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re15_zombie_death_anim PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re15_zombie_death_anim COMMAND test_re15_zombie_death_anim)
+set_tests_properties(unit_re15_zombie_death_anim PROPERTIES TIMEOUT 300)

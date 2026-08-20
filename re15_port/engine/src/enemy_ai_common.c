@@ -4149,15 +4149,48 @@ void re15_enemy_ai_live_death(int slot)
         if (!re15_enemy_clip_done(e)) return;          /* still playing the death clip (FSM-clock gate) */
         e->sub_state_3 = 2;
     }
-    /* phase 2 — settle to corpse, EXCEPT the STANDING 1/8 secondary death-throe (FUN_80106c18
-     * @0x80106e50: `jal rng; andi v0,0x7; bne v0,zero -> corpse`; on (rng&7)==0 it writes +0x6=4 /
-     * +0x7=0 @0x80106e60-70 and JUMPS past the corpse write -> re-enters phase 0 -> replays the fall
-     * clip = a visible extra death twitch). The downed handler has no such branch. (audit #9) */
-    if (!(e->grid_id & 0x80) && (re15_engine_rand8() & 7) == 0) {
-        e->sub_state_2 = 4;                            /* +0x6 = 4 (@0x80106e60) */
-        e->sub_state_3 = 0;                            /* +0x7 = 0 -> phase-0 re-entry next tick */
-        return;
-    }
+    /* ⛔ PHASE 2 IST IM AUSLIEFERUNGSSTAND UNERREICHBAR — der 1/8-„Todeszucker" darf NICHT
+     * nachgebaut werden. (Nutzer-Report 2026-08-20, RE1.5-KI: „er stirbt und faellt nach hinten,
+     * die Animation wird ab der Haelfte noch einmal wiederholt, bis er wirklich umfaellt".)
+     *
+     * Die alte Fassung stand hier: `if ((rng&7)==0) { +0x6=4; +0x7=0; return; }` — zitiert auf
+     * FUN_80106c18 @0x80106e50-70. GEMESSEN (probe_re15_zdeath, echter game_step-Weg, geladene
+     * RE1.5-Bank, 64 RNG-Seeds): in 4 von 64 Laeufen sprang der gerenderte Keyframe des
+     * 55-Frame-Sturzclips vom LETZTEN Frame zurueck (mo=0x0b: slot 54 -> 0..3, kf 301 -> 274;
+     * mo=0x0d: kf 329 -> 302) und der ganze Sturz lief ein zweites Mal — genau die 0..3 aus dem
+     * `+0x95 = rand&3` der Phase 0 (@0x80106cc4-c8).
+     *
+     * DAS ORIGINAL KANN DAS NICHT — vier unabhaengige Belege:
+     *  (1) Der Phasen-Dispatch von FUN_80106c18 hat den Eintritt in den Phase->=2-Block
+     *      WEG-GENOPPT: @0x80106c38 `beq v1,s1(=1) -> 0x80106e14` (Phase 1), Delay-Slot
+     *      @0x80106c3c `slti v0,v1,2` — und die Auswertung @0x80106c40/@0x80106c44 ist
+     *      `0x00000000 / 0x00000000` (NOP/NOP). Es bleibt @0x80106c48 `beq v1,zero -> 0x80106c6c`
+     *      (Phase 0) und sonst @0x80106c50 `j 0x80106ea0` = nur der Tail. Identisches Muster im
+     *      DOWNED-Tod FUN_80107cb0 @0x80107cd4/@0x80107cd8.
+     *  (2) Xref-Vollscan ueber GANZ STAGE1.BIN (alle j/jal/beq/bne/regimm-Ziele): **0 Xrefs** auf
+     *      0x80106c58 (Phase->=2-Block Steh-Tod) und **0 Xrefs** auf 0x80107cf0 (Downed-Tod).
+     *      Damit sind @0x80106e50 (rng&7), @0x80106e60-70 (+0x6=4/+0x7=0) und @0x80106e98
+     *      (+0x4=7) toter Code.
+     *  (3) Ghidra-Decompilat RE_15_Quellcode_Overlays/STAGE1_full/FUN_80106c18.c liest exakt so:
+     *      `if (+0x7 != 1) { if (+0x7 != 0) goto LAB_80106ea0; ...Phase 0... }` — Phase >= 2
+     *      erreicht nur noch den Tail.
+     *  (4) LIVE-RAM, kein Runtime-Patch: in drei RE1.5-Savestates (stage_saves/
+     *      mzd_stage1_combat_death.sav, room1140_entry.sav, mzd_stage1_briefing_live.sav)
+     *      steht an 0x80106c40 und 0x80106c44 jeweils 0x00000000.
+     * UND selbst wenn der Zweig liefe, waere die Wiederholung falsch: die DEATH-Wurzel
+     * FUN_80106ba4 loest den Handler JEDEN Tick neu ueber die Master-Tabelle auf
+     * (@0x80106be0-c00: `lbu +0x5; lbu +0x6; sll 5; sll 2; lw @0x8011feac; jalr`), und
+     * @0x8011feac[+0x5*8 + 4] ist FUN_80107634 — dort erst 60..187 Frames Wartezeit
+     * (@0x80107678-98 `rng&0x7f + 60` nach +0x9c) und DANN Clip 0x12/0x13 (@0x8010774c-58),
+     * also ein spaeteres, eigenes Zucken — NIE wieder Phase 0 mit dem Sturzclip.
+     *
+     * ⚠ OPEN (eigene Regressionsflaeche, bewusst NICHT in diesem Durchgang geaendert):
+     * im SELBEN toten Block liegt auch der CORPSE-Uebergang `+0x4 = 7` (@0x80106e98 Steh-Tod /
+     * @0x80107ec8 Downed-Tod). Nach demselben Beweis bleibt der getoetete Zombie im
+     * Auslieferungsstand in state 3 (DEATH) stehen und haelt den letzten Frame des Sturzclips;
+     * der Port schaltet stattdessen auf state 7 und faehrt re15_enemy_corpse_settle. Das
+     * beruehrt Leichen-Settle, Blut/Gore und den Trefferfilter (`state == 7` schliesst
+     * Kandidaten aus) und braucht einen eigenen Mess-/Fix-Durchgang. */
     e->state = (uint8_t)RE15_AI_STATE_CORPSE;          /* +0x4 = 7 (@0x80107ec8 / @0x80106e98): the
                                                         * halfword write zeroes +0x5 -> the settle
                                                         * FSM starts at INIT */
