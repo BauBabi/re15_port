@@ -93,7 +93,22 @@ static void test_init_wake_takeoff(void)
     }
     CHECK(got2, "ALARM -> Sub 2 ABHEBEN (@0x80100C0C-14)");
     CHECK(got4, "Takeoff-Clip done -> Sub 4 KREISEN (@0x80100E84-98)");
-    CHECK(se_bank_sel == 21, "Kraehen-ENEMSE-Bank 21 (Paar-Zeile 21={0x21,0} @0x800A7400), bank=%d",
+    /* ENEMSE-Bank 7 (korrigiert 2026-08-20, Nutzer-Report "bei RE2-AI haben die Kraehen den
+     * falschen Sound"). Der VORHERIGE Pin stand auf 21 mit der Begruendung "Paar-Zeile 21 =
+     * {0x21,0x00} @0x800A7400" — diese Begruendung ist WIDERLEGT: die Tabelle @0x800A7400
+     * fuehrt keine Gegner-kinds, sondern die SOUND-ID aus dem Sce_em_set-Record (+7). Kurz:
+     *   - Sce_em_set = Opcode 0x44 (Dispatch @0x800A74C8, [0x44] @0x800A75D8 = 0x8005714C);
+     *     `lbu a0,3(v0)` @0x800571EC -> jal 0x8001b710 = kind, `lbu v0,7(v0)` @0x80057274 ->
+     *     `sb v0,506(s0)` @0x80057280 = Sound-Id; verglichen wird NUR +0x1FA (`lb v1,506(a0)`
+     *     @0x80052C48). Die Tabelle fuehrt ausserdem 43 Zeilen mit Werten < 0x10, die es im
+     *     kind-Raum (ab 0x10) nicht gibt.
+     *   - Zensus der echten RE2-RDTs: kind 0x21 traegt Sound-Id 0x0D (37/37 Records,
+     *     ROOM1090 x28 + ROOM2110 x9). 0x0D steht nur in Zeile 7 = {0x0D,0x00} -> Bank 7.
+     * Die vollstaendige Herleitung mit allen Byte-Ankern (EXE, RDT-Zensus, ENEMSE-Map)
+     * laeuft als eigener Test: tests/unit/test_re2_crow_se_bank.c. NICHT auf 21 zurueckdrehen,
+     * ohne dort die Anker zu widerlegen. */
+    CHECK(se_bank_sel == 7,
+          "Kraehen-ENEMSE-Bank 7 (Sound-Id 0x0D -> Paar-Zeile 7={0x0D,0} @0x800A7400), bank=%d",
           se_bank_sel);
     for (int i = 0; i < se_n; i++)
         CHECK(se_fl[i] == 0, "Kraehen-SEs laufen ueber die ERSTE Map-Haelfte (flag2000=0)");

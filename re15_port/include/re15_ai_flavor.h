@@ -83,6 +83,7 @@ uint32_t re15_re2_rand(void);
  * HURT rows @0x80104A18, State-4 @0x80104A64, CORPSE @0x80104A70. */
 int  re15_re2crow_tick(int slot);                 /* 1 = handled (RE2 crow brain owns this actor) */
 void re15_re2crow_audio_hook(void (*se_fn)(int se_id, int flag2000), void (*bank_fn)(int bank));
+void re15_re2crow_se_play(int se_id);             /* Testhaken auf den ENEMSE-Pfad des Brains */
 
 #include "re15_actor.h"
 

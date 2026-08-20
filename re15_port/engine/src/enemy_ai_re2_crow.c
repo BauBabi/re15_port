@@ -77,32 +77,49 @@ extern void re15_enemy_steer_point(re15_actor_t *e, int32_t tx, int32_t tz, int 
 #define RE15_BODY_R_PLAYER  450   /* PSX.EXE hitbox @file 0x64694: 0x1c2 (enemy_ai_common.c) */
 
 /* ---- ENEMSE audio hook ------------------------------------------------------------------ */
-/* Kraehen-Bank: ROOM-Paar-Tabelle @0x800A7400 (RE2 PSX.EXE file 0x97C00, 73 Zeilen à 2 kinds,
- * selbst gelesen 2026-08-16): kind 0x21 steht in GENAU EINER Zeile — 21 = {0x21, 0x00} = reine
- * Kraehen-Bank, ERSTE Haelfte (flag2000=0, FUN_8005bd6c-Kopf). EDT-Probe Bank 21 (TOC
- * @0x800A7B1C selbst dekodiert): ids 0..14 live, 15+ leer; SEs 1..6 alle belegt
- * (1=0x2230000 Fluegelschlag, 2=0x2330000 Picken, 3=0x3420000 Kreischen, 4=0x3520000
- * Strike-Impact, 5=0x3640000 Thud, 6=0x3720000 Kraechzen). */
-#define RE2CROW_ENEMSE_BANK 21
+/* KRAEHEN-BANK = 7. BYTE-TRUE HERGELEITET (2026-08-20, Nutzer-Report "bei RE2-AI haben die
+ * Kraehen den falschen Sound"). Die alte 21 war eine KATEGORIEN-VERWECHSLUNG: die Paar-Tabelle
+ * @0x800A7400 fuehrt NICHT Gegner-kinds, sondern die SOUND-ID aus dem Spawn-Record.
+ *
+ * 1) Sce_em_set = Opcode 0x44 (Dispatch-Tabelle @0x800A74C8, Eintrag [0x44] @0x800A75D8 =
+ *    0x8005714C). Im Handler: `lbu a0,3(v0)` @0x800571EC -> `jal 0x8001b710` = Record+3 IST
+ *    der kind; `lbu v0,7(v0)` @0x80057274 -> `sb v0,506(s0)` @0x80057280 = Record+7 wird
+ *    entity+0x1FA. Nur +0x1FA wird spaeter gegen die Tabelle verglichen
+ *    (`lb v1,506(a0)` @0x80052C48). Zusatzbeleg: die Tabelle fuehrt 15 Werte < 0x10, die es
+ *    im kind-Raum (Minimum 0x10) gar nicht gibt.
+ * 2) Zensus ueber ALLE 495 RE2-RDTs (info/re2leon/PL0/RDT, Opcode 0x44, kind=+3, sound=+7):
+ *    kind 0x21 traegt sound-id 0x0D in 37 von 37 Records (ROOM1090 x28, ROOM2110 x9).
+ * 3) 0x0D steht in der Paar-Tabelle in genau EINER Zeile: Zeile 7 = {0x0D, 0x00}
+ *    (Datei 0x97C0E) -> Bank 7, und weil die zweite Haelfte 0 ist, bleibt flag2000 = 0
+ *    (Entity-Schleife @0x80052C4C-88 setzt 0x2000 nur fuer die zweite Haelfte).
+ * 4) Gegenprobe an den Daten (ENEMSE.VBS, TOC @0x800A7B1C selbst dekodiert):
+ *      Bank  7 = EDT @0x86800, VBD 0x0BCF0, 8 VAGs, lebende ids 0..6  <- genau die 6 SEs
+ *                des Moduls (+ id 0), also eine reine Kraehen-Bank.
+ *      Bank 21 = EDT @0x189000, VBD 0x1FE00, 16 VAGs, ids 0..14 -> fremder Gegner.
+ *    Bank-7-Map: id1 0x05210000 (prog0/tone2/ch5/prio1) Fluegelschlag · id2 0x073A0000
+ *    (t3/ch7/p10) Picken · id3 0x05420000 (t4/ch5/p2) Kreischen · id4 0x07510000 (t5/ch7/p1)
+ *    Strike · id5 0x06610000 (t6/ch6/p1) Thud · id6 0x047A0000 (t7/ch4/p10) Kraechzen.
+ * Warum es nur bei der Kraehe auffiel: der Zombie-Port-Wert 0 = Zeile {0x03,0x00} ist
+ * zufaellig eine ECHTE Zombie-Sound-Id (kind 0x10/0x12 tragen 0x03/0x05/0x06). */
+#define RE2CROW_ENEMSE_BANK 7
 
 static void (*s_re2c_se_fn)(int se_id, int flag2000) = 0;
 static void (*s_re2c_bank_fn)(int bank) = 0;
 
-/* Bank-Wahl bleibt EMPIRISCH (deklarierte PORT-NAEHERUNG) — der byte-true Mechanismus
- * FUN_80052b38 liest die RE2-RAUMDATEN (Spawn-Record +7), nicht den Gegner-kind; Belege +
- * Refutation im Kopf von enemy_ai_re2_zombie.c (RE2Z_ENEMSE_BANK). Stuetze fuer 21: eigener
- * jal-0x8005bd6c-Scan ueber EMOVL21_S0.BIN (2026-08-17) findet die ids {1,2,3,4,5,6} — Bank 21
- * (erste Haelfte) hat 0..14 live, deckt sie also vollstaendig. */
 void re15_re2crow_audio_hook(void (*se_fn)(int, int), void (*bank_fn)(int))
 {
     s_re2c_se_fn   = se_fn;
     s_re2c_bank_fn = bank_fn;
-    if (s_re2c_bank_fn) {
-        const char *ov = getenv("RE15_RE2_CROW_SE_BANK");
-        s_re2c_bank_fn(ov ? atoi(ov) : RE2CROW_ENEMSE_BANK);
-    }
+    /* KEIN env-Override mehr (RE15_RE2_CROW_SE_BANK ist entfernt): der Wert war ein Schalter,
+     * solange die Bank empirisch war — jetzt ist er byte-hergeleitet (s.o.) und damit scharf. */
+    if (s_re2c_bank_fn) s_re2c_bank_fn(RE2CROW_ENEMSE_BANK);
 }
-static void re2c_se(int id) { if (s_re2c_se_fn) s_re2c_se_fn(id, 0); }   /* erste Map-Haelfte */
+/* flag2000 = 0: Zeile 7 = {0x0D, 0x00} — die zweite Haelfte ist leer, die Entity-Schleife
+ * @0x80052C4C-88 setzt word0|0x2000 nur fuer die ZWEITE Haelfte. */
+static void re2c_se(int id) { if (s_re2c_se_fn) s_re2c_se_fn(id, 0); }
+/* Testhaken (Muster: re15_re2z_se_play): feuert einen SE ueber GENAU den Pfad des Brains,
+ * damit in der Unit messbar ist, welche Bank-Haelfte (flag2000) benutzt wird. */
+void re15_re2crow_se_play(int se_id) { re2c_se(se_id); }
 
 /* ---- kleine Helfer ------------------------------------------------------------------------ */
 

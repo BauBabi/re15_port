@@ -1539,3 +1539,20 @@ target_compile_definitions(test_re2_zombie_hitfilter PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_re2_zombie_hitfilter COMMAND test_re2_zombie_hitfilter)
 set_tests_properties(unit_re2_zombie_hitfilter PROPERTIES TIMEOUT 60)
+
+# --- HERLEITUNG + PIN: die RE2-Kraehe spielt aus ENEMSE-Bank 7, nicht 21.
+#     Nutzer-Report 2026-08-20 "bei RE2-AI haben die Kraehen den falschen Sound".
+#     Widerlegt den alten Beleg ("Paar-Zeile 21 = {0x21,0x00}"): die Tabelle @0x800A7400
+#     fuehrt SOUND-IDs aus dem Sce_em_set-Record (+7), keine kinds (Opcode 0x44, Dispatch
+#     @0x800A74C8; +3 = kind @0x800571EC, +7 = Sound-Id @0x80057274/80; Vergleich
+#     @0x80052C48). Zensus der echten RE2-RDTs: kind 0x21 -> Sound-Id 0x0D -> Zeile 7.
+#     Der Test liest die EXE, die zwei Kraehen-RDTs und ENEMSE.VBS selbst nach. ---
+add_executable(test_re2_crow_se_bank test_re2_crow_se_bank.c)
+target_link_libraries(test_re2_crow_se_bank PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_crow_se_bank PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2_crow_se_bank PRIVATE
+    RE15_ASSET_RE2_DIR="${CMAKE_SOURCE_DIR}/shared_assets/RE2"
+    RE15_RE2_EXE_PATH="${CMAKE_SOURCE_DIR}/../info/re2leon/PSX.EXE"
+    RE15_RE2_RDT_DIR="${CMAKE_SOURCE_DIR}/../info/re2leon/PL0/RDT")
+add_test(NAME unit_re2_crow_se_bank COMMAND test_re2_crow_se_bank)
+set_tests_properties(unit_re2_crow_se_bank PROPERTIES TIMEOUT 60)

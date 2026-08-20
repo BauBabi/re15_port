@@ -65,7 +65,15 @@ static SDL_AudioDeviceID s_audio_dev = 0;
 #define MIXER_SE_VOICE_SLOTS       RE15_SE_VOICE_COUNT
 #define MIXER_FREE_POOL_FIRST      MIXER_SE_VOICE_SLOTS
 #define MIXER_FREE_POOL_COUNT      4
-#define MIXER_MAX_ACTIVE_SAMPLES   (MIXER_SE_VOICE_SLOTS + MIXER_FREE_POOL_COUNT)
+/* RE2-ENEMSE-Kanaele (PORT-OPTION, RE2-Flavor): das RE2-Gegner-SE-Trigger FUN_8005bd6c legt
+ * den SPU-Kanal FEST (`andi s1,v0,0x1f` auf EDT-Byte3 @0x8005bdfc) und laesst pro Kanal nur
+ * EINEN Laut zu (Prio-Gate FUN_8005c92c @0x8005be08-14). Zensus ueber alle 73 ENEMSE-Baenke
+ * (ENEMSE.VBS + TOC @0x800a7b1c): es kommen NUR die Kanaele 2..7 vor — 8 Slots decken den
+ * Wertebereich vollstaendig ab. Eigener Slot-Block, damit die 8 RE1.5-SE-Stimmen und der
+ * freie Pool byte-identisch bleiben. */
+#define MIXER_RE2SE_CH_COUNT       8
+#define MIXER_RE2SE_CH_FIRST       (MIXER_FREE_POOL_FIRST + MIXER_FREE_POOL_COUNT)
+#define MIXER_MAX_ACTIVE_SAMPLES   (MIXER_RE2SE_CH_FIRST + MIXER_RE2SE_CH_COUNT)
 
 /* Output device rate (Hz). Voice clips are resampled to this at load. */
 #define RE15_AUDIO_RATE 44100
@@ -107,7 +115,7 @@ static int             s_next_slot = MIXER_FREE_POOL_FIRST;
  * exklusiv den 8 festen SE-Stimmen und darf nie gestohlen werden. */
 static int mixer_alloc_free_slot(void)
 {
-    for (int i = MIXER_FREE_POOL_FIRST; i < MIXER_MAX_ACTIVE_SAMPLES; i++)
+    for (int i = MIXER_FREE_POOL_FIRST; i < MIXER_FREE_POOL_FIRST + MIXER_FREE_POOL_COUNT; i++)
         if (!s_active[i].active) return i;
     int slot = s_next_slot;
     s_next_slot = MIXER_FREE_POOL_FIRST +
@@ -132,6 +140,37 @@ typedef struct {
     int      se_id;        /* +0x02, nur Buchhaltung/Debug (@0x80045510)                 */
 } se_pending_t;
 static se_pending_t s_se_pend[RE15_SE_VOICE_COUNT];
+
+/* ===== RE2-ENEMSE-KANALMASCHINE (PORT-OPTION, RE2-Flavor) ================================
+ * Das RE2-Gegenstueck der obigen Maschine. Byte-Belege aus FUN_8005bd6c (RE2 PSX.EXE):
+ *   @0x8005bdfc `andi s1,v0,0x1f`  = KANAL   aus EDT-Byte3
+ *   @0x8005be00 `andi s5,v1,0xf`   = PRIO-NIBBLE aus EDT-Byte2
+ *   @0x8005be08 `jal 0x8005c92c(chan, prio)` + @0x8005be14 `bne v0,zero,0x8005c018`
+ *                                  = das Gate VERWIRFT den SE komplett
+ *   @0x8005be98 `sb (prio&7),0x800d4ca0[chan*2]`   = laufende Prioritaet des Kanals
+ *   @0x8005beac/b0 `sb s4,1(a0)` / `sb 1,0(a0)`    = VORMERKUNG im Voice-Record
+ *                                  0x800d4f18 + chan*32 (nicht sofort gekeyt!)
+ *   @0x8005c870 `sb zero,0x800d4ca0[chan*2]`       = Freigabe in der Frame-Pumpe
+ *   @0x8005bf14-48 Extra-Layer (Byte3>>5) laufen auf chan+1 UND tone+1.
+ * s_re2se_prio[c] == DAT_800d4ca0[c*2], s_re2se_pend[c] == der vorgemerkte Key-On. */
+static unsigned char s_re2se_prio[MIXER_RE2SE_CH_COUNT];
+static se_pending_t  s_re2se_pend[MIXER_RE2SE_CH_COUNT];
+
+/* Das RE2-Gate FUN_8005c92c @0x8005c92c-0x8005c968 (a0 = chan, a1 = prio-Nibble):
+ *   8005c93c  lbu  a0,DAT_800d4ca0[chan*2]     ; laufende Prioritaet
+ *   8005c940  andi v1,a1,0x7                   ; neue Prioritaet
+ *   8005c944  sltu v0,v1,a0
+ *   8005c948  beq  v0,zero,0x8005c958
+ *   8005c954  addiu v0,zero,1                  ; neu < laufend  -> 1 (VERWERFEN)
+ *   8005c958  bne  a0,v1,0x8005c968 / 8005c95c addu v0,zero,zero ; ungleich -> 0 (erlauben)
+ *   8005c960  andi v0,a1,0x8 / 8005c964 sltu v0,zero,v0
+ *                                             ; Gleichstand: Nibble-Bit 3 -> 1 (VERWERFEN)
+ * ist ZEILENGLEICH mit dem RE1.5-Gate FUN_80045a18 (@0x80045a34-58), das der Port bereits als
+ * re15_se_prio_gate (vab_common.c) fuehrt — der einzige textuelle Unterschied ist der
+ * Gleichstands-Zweig: RE2 testet `nib & 8`, RE1.5 `!(nib < 8)`. Fuer das Argument, das BEIDE
+ * bekommen (b2 & 0x0F, also 0..15), sind die zwei Ausdruecke identisch. Deshalb wird hier
+ * dieselbe Funktion benutzt statt einer zweiten Kopie; der Kanal (0..7) ist im selben
+ * Wertebereich wie die RE1.5-Stimme, s. MIXER_RE2SE_CH_COUNT. */
 
 /* Room footstep bank (snd0) — separate from the Se_on test VAB. Its EDT table
  * (snd0.edt) maps a floor sound_type → VAB tone → VAG (byte-true FUN_80045630). */
@@ -1009,6 +1048,14 @@ static int load_re2_enemy_se_pc(int bank)
     }
     free(s_re2se_edt); s_re2se_edt = NULL; s_re2se_map_count = 0;
     s_re2se_loaded = 0; s_re2se_bank_cur = -1;
+    /* Die Samples der Vorgaenger-Bank sind weg -> laufende Kanal-Prioritaeten UND
+     * Vormerkungen (die auf die eben freigegebenen PCM-Puffer zeigen) mit freigeben. */
+    for (int c = 0; c < MIXER_RE2SE_CH_COUNT; c++) {
+        s_re2se_prio[c] = 0;
+        s_re2se_pend[c].pending = 0; s_re2se_pend[c].pcm = NULL; s_re2se_pend[c].pcm_len = 0;
+        s_active[MIXER_RE2SE_CH_FIRST + c].active = 0;
+        s_active[MIXER_RE2SE_CH_FIRST + c].pcm    = NULL;
+    }
 
     uint8_t *edt = (uint8_t *)malloc(rec.edt_size);
     if (!edt) { free(vbs); return -1; }
@@ -1049,11 +1096,18 @@ void re15_audio_re2_enemy_bank(int bank)
  *   - flag2000 -> se_id += 0x10 ("(*param_2 & 0x2000) != 0" am FUN_8005bd6c-Kopf)
  *   - Map-Eintrag @EDT[se_id*4]; 0xFFFFFFFF = stumm ("*(int*)pbVar13 != -1")
  *   - Tone-Adresse VH+0x820 + prog*0x200 + tone*0x20 == re15_vab-Tone [prog*16+tone]
- *   - b3>>5 = ZUSAETZLICHE konsekutive Tones (Schleife am FUN_8005bd6c-Ende: tone+1 je Layer)
- * Nicht uebernommen (dokumentiert): das Kanal-Prioritaets-Gate FUN_8005c92c (b2&0xF) und die
- * SPU-Kanal-Buchhaltung DAT_800d4f18.. — der PC-Mixer hat freie Voices statt fester Kanaele.
+ *   - b3>>5 = ZUSAETZLICHE konsekutive Tones (Schleife am FUN_8005bd6c-Ende: tone+1 je Layer,
+ *     UND chan+1 — `addiu s1,s1,1` @0x8005bf3c neben `addiu t0,t0,1` @0x8005bf44)
+ *   - KANAL-MASCHINE (2026-08-20 nachgezogen, Nutzer-Report "die Kraehen haben den falschen
+ *     Sound"): chan = b3&0x1f, prio-Nibble = b2&0xf, Gate FUN_8005c92c, Prio-Latch
+ *     DAT_800d4ca0[chan*2], Vormerkung statt Sofort-Key-On (Adressen bei re2se_prio_gate).
+ *     Vorher legte jeder SE einen NEUEN freien Mixer-Slot an — bei einem Kraehen-Schwarm
+ *     stapelten sich dadurch beliebig viele Kopien desselben Lauts uebereinander, waehrend
+ *     das Original pro Kanal genau EINEN Laut fuehrt und den Rest verwirft.
  * VAB-Override (b0 bit7) verweist auf eine ANDERE Laufzeit-VAB-Handle-Nummer; der Port hat
- * nur die ENEMSE-VH resident und spielt dann ersatzweise aus ihr (einmalige stderr-Notiz). */
+ * nur die ENEMSE-VH resident und spielt dann ersatzweise aus ihr (einmalige stderr-Notiz).
+ * WEITER OFFEN (benannt): die positionale Lautstaerke/Panning (FUN_8005bec0-f08 uebernimmt
+ * entity+56/60/64 in den Voice-Record) — der Port nutzt weiter die Tone-eigene vol/pan. */
 void re15_audio_re2_enemy_se(int se_id, int flag2000)
 {
     if (!g_audio.initialized) return;
@@ -1090,6 +1144,20 @@ void re15_audio_re2_enemy_se(int se_id, int flag2000)
             fprintf(stderr, "[re2se] Map-Eintrag mit VAB-Override %d -> spiele aus der ENEMSE-VH\n",
                     se.vab_override); }
     }
+    static int se_dbg = -1;
+    if (se_dbg < 0) se_dbg = getenv("RE15_SE_DEBUG") ? 1 : 0;
+
+    /* KANAL-PRIORITAETS-GATE (@0x8005be08-14): verwirft den SE KOMPLETT. */
+    if (se.chan >= 0 && se.chan < MIXER_RE2SE_CH_COUNT
+        && re15_se_prio_gate(s_re2se_prio, se.chan, se.prio)) {
+        if (se_dbg)
+            fprintf(stderr, "[re2se] GATE: se=%d chan=%d prio-nib=%d VERWORFEN "
+                            "(laufend prio=%d) [FUN_8005c92c]\n",
+                    se_id, se.chan, se.prio,
+                    (se.chan >= 0 && se.chan < MIXER_RE2SE_CH_COUNT) ? s_re2se_prio[se.chan] : 0);
+        return;
+    }
+
     SDL_LockAudioDevice(s_audio_dev);
     for (int k = 0; k <= se.extra; k++) {              /* Basis-Tone + b3>>5 Extra-Layer */
         int tone_idx = se.prog * RE15_VAB_TONES_PER_PROGRAM + se.tone + k;
@@ -1103,18 +1171,68 @@ void re15_audio_re2_enemy_se(int se_id, int flag2000)
         else if (pan > 0x40) vl = vol * (0x7f - pan) / 0x3f;
         uint16_t pitch = re15_vab_note2pitch2(t->min_note, t->pitch_shift,
                                               t->center_note, t->pitch_shift);
-        int slot = mixer_alloc_free_slot();
-        s_active[slot].pcm        = s_re2se_decoded[vag];
-        s_active[slot].pcm_len    = s_re2se_decoded_len[vag];
-        s_active[slot].pos        = 0;
-        s_active[slot].subpos     = 0;
-        s_active[slot].step_q16   = (uint32_t)pitch << 4;
-        s_active[slot].pos_frac   = 0;
-        s_active[slot].volume_q15 = vl;
-        s_active[slot].vol_r_q15  = vr;
-        s_active[slot].active     = 1;
+        int chan = se.chan + k;                        /* `addiu s1,s1,1` @0x8005bf3c */
+        if (chan < 0 || chan >= MIXER_RE2SE_CH_COUNT) {
+            /* Kanal ausserhalb des gemessenen 2..7-Fensters: alter freier Pool, kein Gate. */
+            int slot = mixer_alloc_free_slot();
+            s_active[slot].pcm        = s_re2se_decoded[vag];
+            s_active[slot].pcm_len    = s_re2se_decoded_len[vag];
+            s_active[slot].pos        = 0;
+            s_active[slot].subpos     = 0;
+            s_active[slot].step_q16   = (uint32_t)pitch << 4;
+            s_active[slot].pos_frac   = 0;
+            s_active[slot].volume_q15 = vl;
+            s_active[slot].vol_r_q15  = vr;
+            s_active[slot].active     = 1;
+            continue;
+        }
+        s_re2se_prio[chan]         = (unsigned char)(se.prio & 0x7);  /* @0x8005be98 */
+        s_re2se_pend[chan].pending = 1;                               /* @0x8005beb0 */
+        s_re2se_pend[chan].se_id   = se_id;                           /* @0x8005beac */
+        s_re2se_pend[chan].pcm     = s_re2se_decoded[vag];
+        s_re2se_pend[chan].pcm_len = s_re2se_decoded_len[vag];
+        s_re2se_pend[chan].step_q16 = (uint32_t)pitch << 4;
+        s_re2se_pend[chan].vl_q15  = vl;
+        s_re2se_pend[chan].vr_q15  = vr;
+        if (se_dbg)
+            fprintf(stderr, "[re2se] se=%d layer=%d bank=%d prog=%d tone=%d vag=%d "
+                            "-> Kanal %d (prio %d)\n",
+                    se_id, k, s_re2se_bank_cur, se.prog, se.tone + k, vag, chan, se.prio & 7);
     }
     SDL_UnlockAudioDevice(s_audio_dev);
+}
+
+/* Frame-Pumpe der RE2-ENEMSE-Kanaele — das Gegenstueck zu se_voice_pump fuer FUN_8005bd6c:
+ * die vorgemerkten Key-Ons ausfuehren (Slot ueberschreiben == SPU-Key-On auf denselben
+ * Hardware-Kanal) und die Prioritaet eines still gewordenen Kanals freigeben
+ * (`sb zero,0x800d4ca0[chan*2]` @0x8005c870). */
+static void re2se_voice_pump(void)
+{
+    for (int c = MIXER_RE2SE_CH_COUNT - 1; c >= 0; c--) {
+        int slot = MIXER_RE2SE_CH_FIRST + c;
+        if (s_re2se_pend[c].pending) {
+            s_active[slot].pcm        = s_re2se_pend[c].pcm;
+            s_active[slot].pcm_len    = s_re2se_pend[c].pcm_len;
+            s_active[slot].pos        = 0;
+            s_active[slot].subpos     = 0;
+            s_active[slot].step_q16   = s_re2se_pend[c].step_q16;
+            s_active[slot].pos_frac   = 0;
+            s_active[slot].volume_q15 = s_re2se_pend[c].vl_q15;
+            s_active[slot].vol_r_q15  = s_re2se_pend[c].vr_q15;
+            s_active[slot].active     = 1;
+            s_re2se_pend[c].pending   = 0;
+        }
+        if (!s_active[slot].active) s_re2se_prio[c] = 0;
+    }
+}
+
+/* Testhaken/Diagnose: laufende Kanal-Prioritaet (== DAT_800d4ca0[chan*2]) und der zuletzt
+ * VORGEMERKTE SE je Kanal. Nur lesend; kein Spielpfad. */
+int re15_audio_re2_se_channel_state(int chan, int *out_pending_se)
+{
+    if (chan < 0 || chan >= MIXER_RE2SE_CH_COUNT) return -1;
+    if (out_pending_se) *out_pending_se = s_re2se_pend[chan].pending ? s_re2se_pend[chan].se_id : -1;
+    return (int)s_re2se_prio[chan];
 }
 
 /* Triggered from re15_audio_tick when a SCD Se_on event arrives. */
@@ -2629,6 +2747,7 @@ void re15_audio_tick(void)
      * vor oder nach dem SCD-Lauf liegt, ist nicht nachgemessen — betrifft nur 1 Frame
      * Latenz, nicht welche SE erklingen. */
     se_voice_pump();
+    re2se_voice_pump();   /* dieselbe Stelle fuer die RE2-ENEMSE-Kanaele (PORT-OPTION) */
 
     /* == FUN_80044ab8 aus dem Frame-Tick FUN_800458d4: die BGM-Ausblendung weiterdrehen und,
      * wenn sie durch ist, den aufgeschobenen Track-Wechsel ausfuehren. */
@@ -2758,6 +2877,12 @@ void re15_audio_load_room_banks(void)
      * Stimme auf 0 — deshalb ist das vollstaendige Loeschen gleichwertig. */
     memset(s_se_prio, 0, sizeof s_se_prio);
     memset(s_se_pend, 0, sizeof s_se_pend);
+    /* Dasselbe fuer die RE2-ENEMSE-Kanaele: das Original bestimmt die Gegner-Bank bei JEDEM
+     * Raumwechsel neu (FUN_80052b38 aus dem Raum-Setup FUN_80053528 @0x80053610) und laedt
+     * sie ueber FUN_8005a09c nach; die Kanal-Prioritaeten einer nicht mehr geladenen Bank
+     * duerfen den neuen Raum nicht blockieren. */
+    memset(s_re2se_prio, 0, sizeof s_re2se_prio);
+    memset(s_re2se_pend, 0, sizeof s_re2se_pend);
     free_room_bank_pcm();
     SDL_UnlockAudioDevice(s_audio_dev);
     load_footstep_vab_pc();   /* room snd0 + EDT (Schritt-SE) */

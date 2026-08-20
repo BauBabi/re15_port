@@ -778,10 +778,35 @@ bleibt byte-identisch.
 
 ### SE-/FX-Map + ENEMSE-Bank (selbst bestimmt)
 
-* Paar-Tabelle `@0x800A7400` (file 0x97C00, 73 Zeilen, selbst gelesen): kind 0x21 in GENAU
-  EINER Zeile — **21 = {0x21, 0x00} = reine Krähen-Bank, ERSTE Hälfte (flag2000=0)**.
-  EDT-Probe Bank 21 (TOC `@0x800A7B1C`): ids 0..14 live, 15+ leer. Override:
-  `RE15_RE2_CROW_SE_BANK`.
+* **ENEMSE-Bank = 7** (korrigiert 2026-08-20, Nutzer-Report „bei RE2-AI haben die Krähen den
+  falschen Sound"). ⛔ **WIDERLEGT: die frühere Zuordnung „Bank 21, weil kind 0x21 in Zeile 21
+  = {0x21,0x00} steht".** Die Paar-Tabelle `@0x800A7400` führt **keine Gegner-kinds**, sondern
+  die **SOUND-ID aus dem Sce_em_set-Record (+7)**:
+  * Sce_em_set = **Opcode 0x44** (Dispatch-Tabelle `@0x800A74C8`, Eintrag `[0x44] @0x800A75D8`
+    = `0x8005714C`; einzige Wort-Referenz dieser Adresse in der EXE).
+  * Im Handler: `lbu a0,3(v0)` `@0x800571EC` → `jal 0x8001b710` = **Record+3 IST der kind**;
+    `lbu v0,7(v0)` `@0x80057274` → `sb v0,506(s0)` `@0x80057280` = **Record+7 → entity+0x1FA**.
+    Verglichen wird gegen die Tabelle **nur +0x1FA** (`lb v1,506(a0)` `@0x80052C48`).
+  * Struktur-Beleg: 28 Zeilen führen Werte 0x01..0x0F — im kind-Raum (ab 0x10) unmöglich.
+  * Zensus über alle 495 RE2-RDTs (`info/re2leon/PL0/RDT`): **kind 0x21 → Sound-Id 0x0D**,
+    37/37 Records (ROOM1090 ×28, ROOM2110 ×9). 0x0D steht in genau einer Zeile:
+    **Zeile 7 = {0x0D, 0x00} → Bank 7, erste Hälfte (flag2000 = 0)**.
+  * Daten-Gegenprobe (TOC `@0x800A7B1C`): Bank 7 = EDT `@0x86800`, VBD 0x0BCF0, **8 VAGs,
+    ids 0..6 live** — deckt exakt die 6 SEs des Moduls. Bank 21 = EDT `@0x189000`, VBD
+    0x1FE00, 16 VAGs, ids 0..14 = eine fremde, doppelt so große Bank.
+  * Der env-Override `RE15_RE2_CROW_SE_BANK` ist **entfernt** (Wert ist belegt, kein Schalter).
+  * Herleitung als Test: `re15_port/tests/unit/test_re2_crow_se_bank.c` (liest EXE, die beiden
+    Krähen-RDTs und ENEMSE.VBS selbst nach).
+  * ⚠️ **Gleiche Kategorien-Verwechslung noch offen bei Hund und Spinne**: kind 0x20 → Sound-Id
+    0x0C (Zeile 6), kind 0x25/0x26 → Sound-Id 0x10 (Zeile 11); der Port fährt dort 31+flag2000
+    bzw. 53/24. Der Zombie-Wert 0 = Zeile {0x03,0x00} ist dagegen zufällig richtig
+    (kind 0x10/0x12 tragen Sound-Id 0x03/0x05/0x06).
+* **Kanal-/Prioritäts-Maschine** (2026-08-20 nachgezogen): `FUN_8005BD6C` legt den SPU-Kanal
+  FEST (`andi s1,v0,0x1f` `@0x8005BDFC` auf EDT-Byte3) und lässt pro Kanal nur EINEN Laut zu —
+  `jal 0x8005C92C` `@0x8005BE08` + `bne v0,zero` `@0x8005BE14` verwerfen den SE komplett;
+  `sb (prio&7),DAT_800D4CA0[chan*2]` `@0x8005BE98` latcht, `sb zero,…` `@0x8005C870` gibt frei;
+  Key-On wird nur VORGEMERKT (`@0x8005BEAC/B0`), Extra-Layer laufen auf chan+1/tone+1
+  (`@0x8005BF3C/44`). Bank-7-Kanäle: id0→4 id1→5 id2→7 id3→5 id4→7 id5→6 id6→4.
 * SEs (`0x8005BD6C(id,self)`): 1 Flügelschlag · 2 Picken (Grab-Peck) · 3 Kreischen
   (Wand-Crash/Hurt/Zucken) · 4 Strike-Impact · 5 Thud · 6 Idle-Krächzen (50%,
   `+0x22A&0x20`-gesperrt). Volume-Helfer `0x8010472C` (350/100/50/10 → `+0x90/92/9A/9C`) =
