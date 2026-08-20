@@ -87,6 +87,7 @@
 #include "re15_enemy_ai.h"   /* re15_actor_clip_len */
 #include "re15_enemy.h"      /* re15_enemy_find (RE2-Bank des Welle-A-Loaders) */
 #include "re15_esp.h"        /* re15_esp_fx_spawn_ex (RE1.5-Blut-Stand-in) */
+#include "re15_aot.h"        /* re15_aot_water_at (== FUN_800527B4, Wasser-Pull) */
 #include "re15_math.h"      /* re15_squareroot0 (== SquareRoot0 0x8008D2F4) */
 
 extern void re15_enemy_steer_point(re15_actor_t *e, int32_t tx, int32_t tz, int slew);
@@ -151,6 +152,63 @@ static void re2s_clip(re15_actor_t *e, uint32_t w)
 /* FUN_8002959C(self, +0x108, +0x17C, blend) — 1 Frame/Tick, Wrap auf 0, `done` NUR am
  * Wrap-Tick (Kern 0x80029B28-4C, Welle C). */
 static int re2s_advance(re15_actor_t *e, int blend) { return re15_re2_advance_959c(e, blend); }
+
+/* FUN_800527B4(self.X, self.Z) — der WASSER-PULL. ALLE zehn Aufrufstellen der beiden
+ * Spinnen-Overlays uebergeben ausnahmslos `lw a0,56(self)` / `lw a1,64(self)` (= +0x38/+0x40),
+ * also die EIGENE Position (EMS25.BIN: @0x801001b0 @0x80101e20 @0x80102cc8 @0x80103cd0
+ * @0x80104e30 @0x80104e70; EMS26.BIN: @0x8010026c @0x801006ec @0x80100c20 @0x80101038).
+ * Der Port-Zwilling steht in aot_common.c (re15_aot_water_at, byte-true Umschrift
+ * @0x800527B4-0x800528C8) und scannt die RE1.5-sce-8-Zonen — dieselbe Zonenklasse, die in
+ * RE2 sce 7 traegt (Handler-Beleg: RE2 @0x800A73C4[7]=0x80051a2c stempelt +0x10C, RE1.5
+ * @0x8007469c[8]=0x8004330c stempelt +0x88; beide `lhu v0,0(a0)` aus derselben Payload).
+ * ROOM2090 (STAGE2) ist der ausgelieferte Nachweis: main00 installiert drei sce-8-Rechtecke
+ * mit p0 = -1620 (Datei-Offsets 0x09D6/0x09EA/0x09FE) und stellt DAHINTER beide Adult-Spinnen
+ * (0x0AB0 -> (-100,0,-8296), 0x0AC4 -> (-2300,0,-23896)) MITTEN HINEIN. */
+static int32_t re2s_water_scan(const re15_actor_t *e)
+{
+    return re15_aot_water_at(e->x, e->z);                  /* FUN_800527B4 @0x800527B4 */
+}
+
+/* Der ENGINE-STEMPEL auf +0x10C. In RE2 schreibt der AOT-Scan-Handler sce 7 (@0x80051a3c
+ * `sh v0,268(v1)`) diesen Wert JEDEN Frame in jede Entity im Rechteck, nachdem der Aufrufer
+ * ihn unmittelbar davor genullt hat (@0x800526dc / @0x80052788 `sh zero,268(...)` direkt vor
+ * `jal 0x80051088`). +0x10C ist damit KEIN dauerhafter Cache, sondern ein Pro-Frame-Wert —
+ * exakt derselbe, den der Pull an derselben (X,Z) liefert. EMS26.BIN schreibt +0x10C nie
+ * selbst und LIEST nur (@0x80100b48/@0x80100da0/@0x80100f9c), lebt also ausschliesslich von
+ * diesem Stempel; EMS25.BIN schreibt ihn nur an den beiden Cache-Koepfen @0x80102cd0/
+ * @0x80103cd8. Der Port zieht den Stempel deshalb am Modul-Kopf nach (der Original-Stempel
+ * laeuft im Frame vor dem AI-Tick).
+ * BEKANNTER UNTERSCHIED (deklariert, nicht verschwiegen): der Original-STEMPEL laeuft im
+ * gegateten Scan — Pool-Maske `rec[1] & poolmask` (@0x80051168) und Band `rec[2]` gegen
+ * entity+0x106 (@0x80051180-9C, ausser rec[3] & 0x80) —, waehrend der PULL FUN_800527B4 rein
+ * geometrisch ist (weder Band noch Maske, s. @0x800527B4-0x800528C8). Der Port stempelt mit
+ * dem PULL. Fuer JEDEN ausgelieferten Datensatz ist das identisch: die drei ROOM2090-Zonen
+ * tragen flags 0x47 (Pool-Bits 0x07 = Spieler|Gegner|Objekte) und band 0, und beide dort
+ * gespawnten 0x25 tragen floor 0 (Sce_em_set pc[4]) — Maske und Band greifen also nicht.
+ * Fuer den ADULT ist der Unterschied ohnehin folgenlos: EMS25.BIN liest +0x10C nur, nachdem
+ * es dasselbe Feld selbst mit genau diesem ungegateten Pull befuellt hat (@0x80102cc8 /
+ * @0x80103cd0). */
+static void re2s_water_stamp(re15_actor_t *e)
+{
+    e->re2s_water10c = (int16_t)re2s_water_scan(e);        /* @0x80051a3c / RE1.5 @0x8004331c */
+}
+
+/* +0x44/+0x46/+0x48 — der PRO-FRAME-POSITIONS-SCHNAPPSCHUSS der Engine-Entity-Schleife
+ * (RE2-EXE @0x800366A4-C4, Zwilling @0x800268F4-914):
+ *   lw v0,56(s1) / lw v1,60(s1) / lw a0,64(s1)      = +0x38/+0x3C/+0x40 (X/Y/Z, 32 bit)
+ *   sh v0,68(s1) / sh v1,70(s1) / sh a0,72(s1)      = +0x44/+0x46/+0x48 (auf s16 gekappt)
+ * Genau diese drei Halbworte laedt der Wasser-Revert der Baby-Spinne @0x801006FC-714 zurueck
+ * (`lh` -> `sw`, also s16 vorzeichenerweitert). Der Port legt den Schnappschuss am Modul-Kopf
+ * an — dieselbe Stelle im Frame (vor jeder Bewegung dieses Ticks) — und kappt byte-true auf
+ * int16_t. Modul-lokal, weil pro Tick genau eine Spinne laeuft. */
+static int16_t s_re2s_prev_x, s_re2s_prev_y, s_re2s_prev_z;
+
+static void re2s_pos_snapshot(const re15_actor_t *e)
+{
+    s_re2s_prev_x = (int16_t)e->x;                         /* @0x800366BC */
+    s_re2s_prev_y = (int16_t)e->y;                         /* @0x800366C0 */
+    s_re2s_prev_z = (int16_t)e->z;                         /* @0x800366C4 */
+}
 
 /* FUN_800152C8(self, yaw_off): (+0x144,+0x146,+0x148) um (+0x76 + yaw_off) gedreht auf
  * +0x38/+0x40 addieren. Der Port fuehrt nur die X/Z-Ebene (Y-Komponente +0x146 hat im
@@ -301,7 +359,11 @@ static void re2s_init(re15_actor_t *e)
     e->re2s_yaw226 = 0; e->re2s_p228 = 0; e->re2s_next231 = 0; e->re2s_f236 = 0;
     e->re2s_legs220 = 0; e->re2s_fall223 = 0;                        /* 12 Worte ab +0x218 */
     e->re2s_sink23e = 0; e->re2s_sink23f = 0; e->re2s_sink244 = 0;
-    e->re2s_water10c = 0; e->re2s_partner240 = -1;   /* +0x240: kein Erzeuger im Port (s. Header) */
+    e->re2s_partner240 = -1;   /* +0x240: kein Erzeuger im Port (s. Header) */
+    /* +0x10C wird hier NICHT genullt: EMS25.BIN schreibt +0x10C ausschliesslich an den beiden
+     * Cache-Koepfen @0x80102cd0 (HURT) und @0x80103cd8 (DEATH) — der INIT fasst es nie an
+     * (Voll-Scan `sh rt,268(rs)` ueber EMS25.BIN: genau diese zwei Treffer). Der Wert kommt
+     * vom Engine-Stempel am Modul-Kopf (re2s_water_stamp). */
     e->re2s_legn221 = 8;      /* +0x221 = 8 Beine @0x80100374 -> `sb s0,545(s2)` @0x801003B4 */
     e->speed_h = 0; e->re2d_vy146 = 0; e->re2s_z148 = 0;
     e->re2z_t158 = 0; e->re2z_t15a = 0;
@@ -1112,10 +1174,9 @@ static void re2s_m2_sub0(re15_actor_t *e, re15_actor_t *pl)
     int32_t dy = pl->y - e->y;                             /* +0x3C-Differenz @0x80101DD4-08 */
     int32_t n;
     if (dy >= 3501) {                                      /* slti 3501 @0x80101E0C-10 */
-        /* FUN_800527B4(X,Z) @0x80101E20 — der sce==7-AOT-Scan (Wasser-Oberflaechen-Y). Der Port
-         * hat dafuer keinen Zwilling; der Original-Rueckgabewert OHNE Treffer ist 0 (siehe
-         * re2s_water10c) -> hier 0. OPEN, aber kein erfundener Wert. */
-        int32_t floor_y = 0;                               /* FUN_800527B4 @0x80101E20 (OPEN) */
+        /* FUN_800527B4(X,Z) @0x80101E20 — der Wasser-Pull (frisch, NICHT der +0x10C-Cache:
+         * das Original ruft hier `jal 0x800527b4` mit `lw a0,56(s0)`/`lw a1,64(s0)`). */
+        int32_t floor_y = re2s_water_scan(e);              /* FUN_800527B4 @0x80101E20 */
         if (floor_y >= e->dog_floor_y) {                   /* +0x1C2 @0x80101E28-34 */
             n = (dy - 3500) / 100;                         /* Magic-Div @0x80101E3C-58 */
         } else {
@@ -1871,7 +1932,11 @@ static void re2s_hurt(re15_actor_t *e, re15_actor_t *pl)
         e->sub_state_1  = re2s_row_translate(e->sub_state_1);   /* PORT-ZUORDNUNG, s.o. */
         e->re2s_row23c  = e->sub_state_1;                  /* +0x23C @0x80102C94-AC */
     }
-    /* +0x10C = FUN_800527B4(X,Z) (@0x80102CB0-D0) — im Port OPEN (bleibt 0 = kein Wasser). */
+    /* @0x80102CB0-D0: `lh v0,268(s0)`; nur wenn +0x10C == 0 wird frisch gescannt. Mit dem
+     * Engine-Stempel am Modul-Kopf ist das im Wasser ein No-op und ausserhalb ein 0->0 —
+     * genau wie im Original, wo derselbe Stempel den Cache-Kopf vorwegnimmt. */
+    if (e->re2s_water10c == 0)                             /* @0x80102CB8 */
+        e->re2s_water10c = (int16_t)re2s_water_scan(e);    /* @0x80102CC8-D0 */
 
     switch (e->sub_state_1) {                              /* Tabelle @0x80106518 */
     case 4: case 15: case 18: re2s_hurt_row_gore(e);    return;
@@ -2041,7 +2106,22 @@ static void re2s_death_row_special(re15_actor_t *e)
         (void)re2s_spawn_babies(e, 0x2002u, (re2s_rand() & 3u) + 6u);   /* @0x80104590-A4 */
     }
     if (!re2s_advance(e, 512)) return;                     /* Frame-Flag 0x40000 @0x801045B8-D4 */
-    /* +0x10C == 0 (Port: immer, s. re2s_water10c) -> direkt CORPSE @0x801045E4/@0x80104644 */
+    /* WASSER-ZWEIG @0x801045DC-3C (frueher unerreichbar, weil +0x10C immer 0 war):
+     *   +0x10C == 0 -> direkt CORPSE (@0x801045E4 -> @0x80104644)
+     *   sonst: +0x23C in {9,10} ODER == 16 -> FUN_801056DC(self,0,7) (@0x801045F4-1C)
+     *          +0x23A = -1 IMMER (Delay-Slot @0x8010462C)
+     *          +0x23E == 0 -> +0x23E = 3 (@0x80104634), +0x23F = 1 (@0x8010463C)
+     * Wortgleich mit dem generischen Zweig @0x80103E3C-94. */
+    if (e->re2s_water10c != 0) {                           /* @0x801045E4 */
+        if (e->re2s_row23c == 9u || e->re2s_row23c == 10u
+            || e->re2s_row23c == 16u)                      /* @0x801045F4-0C */
+            re2s_gore(e);                                  /* FUN_801056DC(self,0,7) @0x80104618 */
+        e->re2s_c23a = -1;                                 /* @0x8010462C */
+        if (e->re2s_sink23e == 0u) {                       /* @0x80104628 */
+            e->re2s_sink23e = 3;                           /* @0x80104634 */
+            e->re2s_sink23f = 1;                           /* @0x8010463C */
+        }
+    }
     re2s_word(e, 7u);                                      /* @0x80104644 */
 }
 
@@ -2099,6 +2179,78 @@ static void re2s_death_row14(re15_actor_t *e)
     re2s_death_row_generic(e);                             /* @0x80104CCC */
 }
 
+/* Dümpel-Tabelle @0x8010667C (roh `00 08 10 20 20 10 08 00`), Index ((+0x15A & 0x3F) >> 3). */
+static const uint8_t s_re2s_bob_tab[8] = { 0, 8, 16, 32, 32, 16, 8, 0 };   /* @0x8010667C */
+
+/* FUN_80104F18(self) @0x80104F18-0x8010506C — der WASSER-Y-TREIBER der Leiche.
+ * Aufrufer: DEATH-Tail @0x80103D04 und CORPSE @0x80104D98, beide unter `+0x23A < 0`.
+ * (a1 = self, a2 = self + 536 = +0x218; `sb v0,38(a2)` = +0x23E, `sh v0,44(a2)` = +0x244.)
+ *   +0x23E == 0                       -> return                          @0x80104F1C-24
+ *   w = (s16)+0x10C
+ *   w == 0 (kein Wasser)              -> +0x23A = 1 (@0x80104F44), +0x23F = 0 (@0x80104F48),
+ *                                        Y = (s16)+0x1C2 (@0x80104F50), return
+ *   +0x23E == 2                       -> BOB (@0x80104F54)
+ *   +0x23E == 1                       -> +0x23E = 2 (@0x80104F88), +0x146 = 140 (@0x80104F90),
+ *                                        +0x244 = 0 (@0x80104F94), Fallthrough in BOB
+ *   +0x23E == 3                       -> DUEMPELN (@0x80104F78 -> @0x80105034)
+ *   sonst                             -> return (@0x80104F6C/@0x80104F80)
+ *   BOB @0x80104F98:
+ *     +0x244 += (u16)+0x146                                              @0x80104F98-A8
+ *     Y = w + ((s16)+0x244 + 70)   (Store im Delay-Slot, laeuft IMMER)   @0x80104FB4-D8
+ *     +0x146 = (u16)+0x146 - 15                                          @0x80104FC4-C8
+ *     (s16)+0x146 > 0 -> @0x80105010: Y < (s16)+0x1C2 ? return
+ *                                     : Y = +0x1C2 (@0x80105028), +0x146 = 0 (@0x80105030)
+ *     sonst           -> (s16)+0x146 < -70 ? +0x146 = -70                @0x80104FDC-E8
+ *                        w < Y ? return                                  @0x80104FF8-FC
+ *                        : Y = w (@0x80105004), +0x23E = 3 (@0x8010500C)
+ *   DUEMPELN @0x80105034: v = (u16)+0x15A; +0x15A = v + 1 (@0x80105048);
+ *                         Y = w + (tab[(v & 0x3F) >> 3] + 70)            @0x8010503C-64 */
+static void re2s_sink_drive(re15_actor_t *e)
+{
+    if (e->re2s_sink23e == 0u) return;                     /* @0x80104F1C-24 */
+
+    int32_t w = (int32_t)e->re2s_water10c;                 /* lh 268(a1) @0x80104F2C */
+    if (w == 0) {                                          /* @0x80104F34 */
+        e->re2s_c23a   = 1;                                /* +0x23A = 1 @0x80104F44 */
+        e->re2s_sink23f = 0;                               /* +0x23F = 0 @0x80104F48 */
+        e->y = (int32_t)e->dog_floor_y;                    /* Y = +0x1C2  @0x80104F50 */
+        return;
+    }
+
+    if (e->re2s_sink23e == 3u) {                           /* @0x80104F74-78 */
+        uint16_t v = (uint16_t)e->re2z_t15a;               /* lhu 346(a1) @0x80105034 */
+        e->re2z_t15a = (int16_t)(uint16_t)(v + 1u);        /* @0x8010503C/@0x80105048 */
+        e->y = w + (int32_t)s_re2s_bob_tab[(v & 0x3fu) >> 3] + 70;   /* @0x80105040-64 */
+        return;
+    }
+    if (e->re2s_sink23e == 1u) {                           /* @0x80104F64 */
+        e->re2s_sink23e = 2;                               /* @0x80104F88 */
+        e->re2d_vy146   = 140;                             /* +0x146 = 140 @0x80104F8C-90 */
+        e->re2s_sink244 = 0;                               /* +0x244 = 0   @0x80104F94 */
+    } else if (e->re2s_sink23e != 2u) {
+        return;                                            /* @0x80104F6C / @0x80104F80 */
+    }
+
+    /* BOB @0x80104F98 */
+    uint16_t acc = (uint16_t)((uint16_t)e->re2s_sink244 + (uint16_t)e->re2d_vy146);
+    e->re2s_sink244 = (int16_t)acc;                        /* @0x80104FA8 */
+    e->y = w + (int32_t)(int16_t)acc + 70;                 /* @0x80104FB4-D8 (Delay-Slot-Store) */
+
+    int16_t vy = (int16_t)(uint16_t)((uint16_t)e->re2d_vy146 - 15u);
+    e->re2d_vy146 = vy;                                    /* @0x80104FC4-C8 */
+
+    if (vy > 0) {                                          /* bgtz @0x80104FD4 */
+        if (e->y < (int32_t)e->dog_floor_y) return;        /* @0x8010501C-20 */
+        e->y          = (int32_t)e->dog_floor_y;           /* @0x80105028 */
+        e->re2d_vy146 = 0;                                 /* @0x80105030 */
+        return;
+    }
+    if (vy < -70) e->re2d_vy146 = -70;                     /* @0x80104FDC-E8 */
+    if (w < e->y) return;                                  /* @0x80104FF8-FC */
+    e->y            = w;                                   /* @0x80105004 */
+    e->re2s_sink23e = 3;                                   /* @0x8010500C */
+}
+
 static void re2s_death(re15_actor_t *e, re15_actor_t *pl)
 {
     (void)pl;
@@ -2106,7 +2258,8 @@ static void re2s_death(re15_actor_t *e, re15_actor_t *pl)
         e->sub_state_1 = re2s_row_translate(e->sub_state_1);     /* PORT-ZUORDNUNG, s. HURT */
         e->re2s_row23c = e->sub_state_1;                   /* +0x23C @0x80103C9C-B4 */
     }
-    /* +0x10C = FUN_800527B4(X,Z) (@0x80103CB8-D8) — im Port OPEN (bleibt 0 = kein Wasser). */
+    if (e->re2s_water10c == 0)                             /* @0x80103CB8-C0 */
+        e->re2s_water10c = (int16_t)re2s_water_scan(e);    /* @0x80103CD0-D8 */
 
     switch (e->sub_state_1) {                              /* Tabelle @0x801065A8 */
     case 5: case 6: case 7: case 8: case 17: re2s_death_row_special(e); break;
@@ -2116,8 +2269,10 @@ static void re2s_death(re15_actor_t *e, re15_actor_t *pl)
     case 14: re2s_death_row14(e);   break;
     default: re2s_death_row_generic(e); break;             /* 1..4, 12, 13, 15, 18, 19 */
     }
-    /* Tail FUN_80104F18(self) @0x80103D04 (Wasser-Sink-Treiber) — im Port OPEN, weil
-     * +0x23E nur im Wasser-Zweig gesetzt wird und +0x10C hier immer 0 ist. */
+    /* Tail @0x80103CF8-D04: `lb v0,570(s0)` (+0x23A) < 0 -> FUN_80104F18(self).
+     * (Der zweite Tail-Aufruf EXE 0x80018FB0 @0x80103D0C ist ein Render-Helfer ohne
+     * Port-Kanal und bleibt OPEN.) */
+    if (e->re2s_c23a < 0) re2s_sink_drive(e);              /* @0x80103D04 */
 }
 
 static void re2s_death_row_generic(re15_actor_t *e)
@@ -2211,6 +2366,9 @@ static void re2s_corpse(re15_actor_t *e)
         e->re2s_gs225  = 2;                                /* @0x80104D80 */
         e->re2z_t15a   = 0;                                /* @0x80104D84 */
     }
+    /* @0x80104D8C-98: `lb v0,570(s0)` (+0x23A) < 0 -> FUN_80104F18(self). Die beiden
+     * word0-Render-Bits @0x80104DB0 / @0x80104DD0 haben weiterhin keinen Port-Konsumenten. */
+    if (e->re2s_c23a < 0) re2s_sink_drive(e);              /* @0x80104D98 */
 }
 
 /* ==========================================================================================
@@ -2246,29 +2404,27 @@ static void re2s_corpse(re15_actor_t *e)
  *   Tail: +0x106 = (-Y)/1800 (@0x80100080-B0); word0 == 0 -> return; FUN_80035530(self);
  *         FUN_8003567C(self, 1024).
  *
+ * ✅ WASSER-KANAL GESCHLOSSEN (2026-08-20, war die letzte grosse OPEN-Stelle der Welle F).
+ *   FUN_800527B4(X,Z) hat jetzt den Port-Zwilling re15_aot_water_at (aot_common.c, byte-true
+ *   Umschrift @0x800527B4-0x800528C8) und wird an ALLEN zehn Aufrufstellen beider Overlays
+ *   benutzt (s. re2s_water_scan). Der Engine-Stempel auf +0x10C (RE2 @0x80051a3c, RE1.5
+ *   @0x8004331c auf +0x88) wird am Modul-Kopf nachgezogen (re2s_water_stamp).
+ *   NACHWEIS DER ERREICHBARKEIT (Rohdaten selbst nachgelesen, ROOM2090.RDT, STAGE2;
+ *   mainScd = Datei 0x994..0xADC, sauberer Opcode-Walk mit Aot_set 0x2C = 20 B und
+ *   Sce_em_set 0x44 = 20 B endet exakt auf `01` @0x0AD8 = Sektionsende):
+ *     @0x09D6 `2c 02 08 47 00 00 3c dd 88 96 e4 3e c4 22 ac f9 ..`
+ *             Slot 2 sce 8 band 0  x[-8900..7200]  z[-27000..-18100]  p0 = -1620
+ *     @0x09EA Slot 3 sce 8 band 0  x[-8900..7200]  z[-14500.. -5400]  p0 = -1620
+ *     @0x09FE Slot 4 sce 8 band 0  x[-8900..-1700] z[-18100..-14500]  p0 = -1620
+ *     @0x0AB0 `44 00 25 00 00 00 00 73 9c ff 00 00 98 df ..`  Slot 0 Typ 0x25 floor 0
+ *             -> (x,y,z) = (-100, 0, -8296)   liegt in Wasserzone Slot 3
+ *     @0x0AC4 `44 01 25 00 00 00 00 74 04 f7 00 00 a8 a2 ..`  Slot 1 Typ 0x25 floor 0
+ *             -> (x,y,z) = (-2300, 0, -23896) liegt in Wasserzone Slot 2
+ *   Beide ausgelieferten Adult-Spinnen des Raumes stehen also ab Frame 1 im Wasser (p0 = -1620
+ *   ist auch die Y des Wasser-Prop Obj_model_set[1] desselben main00). Gemessen im Port:
+ *   nach re15_aot_scan tragen beide Aktoren water_y = -1620.
+ *
  * OPEN (kein Port-Kanal, jeweils mit dem Original-Nicht-Treffer-Wert):
- *   FUN_800527B4(X,Z) = der Wasser-AOT-Scan -> 0 ("kein Wasser"). Damit sind der
- *     DROWN-Substate (@0x801009E4), der SINK-Todeszweig (@0x80100D40) und der Wasser-Revert im
- *     MOVE (@0x801006F4) unerreichbar. Sie sind trotzdem byte-true portiert.
- *     ⚠️ TRAGWEITE NEU GEMESSEN 2026-08-19 — diese OPEN-Stelle ist NICHT tot, sie war nur
- *     unsichtbar. Der frueher benutzte RDT-Walker kappte ROOM2090s main-SCD bei 0x0AC2 (das
- *     Datenwort @0x64 = 0x0AC2 wurde faelschlich als Sektionsende gelesen, s. WELLE-F-Kopf
- *     Werkzeug-Fehler 2), und genau dahinter liegen die BEIDEN einzigen Adult-Spider-Spawns
- *     des Raumes. ROOM2090 sah dadurch aus wie ein Raum ganz OHNE Spinnen. Gemessen mit dem
- *     korrigierten Walker (Datei-Offsets in ROOM2090.RDT):
- *       Sce_em_set @0x0AB0 Slot 0 Typ 0x25 Desk. 0x00 floor 0 -> (x,y,z) = (-100, 0, -8296)
- *       Sce_em_set @0x0AC4 Slot 1 Typ 0x25 Desk. 0x00 floor 0 -> (x,y,z) = (-2300, 0, -23896)
- *     und die drei sce-8-Wasserzonen desselben main00 (Aot_set, flags 0x47 = CENTRE + Pools
- *     Spieler|Gegner|Objekte, band 0 — also fuer den Gegner-Pool scharf):
- *       @0x09D6 Slot 2  x[-8900..7200]  z[-27000..-18100]
- *       @0x09EA Slot 3  x[-8900..7200]  z[-14500.. -5400]
- *       @0x09FE Slot 4  x[-8900..-1700] z[-18100..-14500]
- *     Punkt-Test: Slot 0 liegt in Wasserzone Slot 3, Slot 1 in Wasserzone Slot 2 — BEIDE
- *     ausgelieferten Spinnen starten IM Wasser. Im Original laufen sie damit ab Frame 1 in
- *     den Wasser-Zweig, im Port nie. Das ist kein neuer Port-Fehler (der Kanal fehlte schon
- *     immer), aber sein Gewicht war durch den Zensus-Fehler verdeckt: bisher sah es aus, als
- *     koenne ihn kein ausgelieferter Raum ausloesen. Naechster Schritt fuer diese OPEN-Stelle
- *     ist damit belegt und priorisiert, NICHT mehr hypothetisch.
  *   FUN_80016480 (Boden-Schatten-Slot @0x8010025C), FUN_80100F28 (ESP-Effekt-Records
  *     @0x801010DC), FUN_8003947C/0x80039514 (Rumble), FUN_80065B9C (Partner-Schaden).
  *   +0x1E8 = 1 (@0x80100164) ist die ANZAHL der Hitbox-Kugeln (FUN_80035408), NICHT Gravitation.
@@ -2292,13 +2448,13 @@ static uint16_t re2sb_stepbits(const re15_actor_t *pl)
 }
 
 /* `probe` @0x80101020 — Boden-/Wasser-Orakel.
- *   fy = FUN_800527B4(X,Z)                       (@0x80101038; im Port 0 = kein Wasser)
+ *   fy = FUN_800527B4(X,Z)                       (@0x80101038, FRISCHER Pull, nicht +0x10C)
  *   Y >= (s16)+0x1C2            -> 1 (gelandet)  (@0x8010104C)
  *   Y - 10 < fy                 -> 0 (noch frei) (@0x80101060)
  *   sonst                       -> fy            (< 0 = Wasser) */
 static int re2sb_probe(const re15_actor_t *e)
 {
-    int32_t fy = (int32_t)e->re2s_water10c;                /* FUN_800527B4 @0x80101038 (OPEN) */
+    int32_t fy = re2s_water_scan(e);                       /* FUN_800527B4 @0x80101038 */
     if (e->y >= (int32_t)e->dog_floor_y) return 1;         /* @0x8010104C */
     if (e->y - 10 < fy) return 0;                          /* @0x80101060 */
     return (int)fy;
@@ -2349,7 +2505,9 @@ static void re2sb_init(re15_actor_t *e)
     e->speed_h = 0; e->re2d_vy146 = 0; e->re2s_z148 = 0;   /* @0x8010019C-A4 */
     e->rot_x = 0; e->rot_z = 0;                            /* @0x801001A8-AC */
     e->re2z_dir16a = 0;
-    e->re2s_water10c = 0;                                  /* +0x10C: OPEN (s. Kopf) */
+    /* +0x10C wird hier NICHT genullt: EMS26.BIN schreibt +0x10C an KEINER Stelle (Voll-Scan
+     * `sh rt,268(rs)` ueber EMS26.BIN: 0 Treffer) und liest es nur (@0x80100b48/@0x80100da0/
+     * @0x80100f9c) — der Wert kommt ausschliesslich vom Engine-Stempel (re2s_water_stamp). */
 
     unsigned v = (unsigned)(e->re2z_f10e & 0xffu);         /* +0x10E & 0xFF @0x801001C0 */
     e->state       = 1;                                    /* Zustandswort @0x801001CC */
@@ -2411,8 +2569,15 @@ static void re2sb_ground(re15_actor_t *e, re15_actor_t *pl)
             if (t == 0u) { e->sub_state_2 = 0; e->sub_state_3 = 0; }   /* `sh 0,6` @0x801006CC */
         }
         re2s_thrust(e, (int)(int8_t)(uint8_t)e->re2s_c21e);/* FUN_800152C8 @0x801006DC */
-        /* Wasser-Revert auf +0x44/+0x46/+0x48 @0x801006F4-14 — OPEN (+0x10C == 0). */
-        if (re2sb_probe(e) == 0) {                         /* @0x80100718-20 */
+        /* WASSER-REVERT @0x801006EC-714: `jal 0x800527b4` frisch; Treffer != 0 -> die drei
+         * Halbworte +0x44/+0x46/+0x48 (Frame-Start-Position, s. re2s_pos_snapshot) zurueck nach
+         * +0x38/+0x3C/+0x40 schreiben UND per `j 0x80100730` (@0x80100710) den Probe-/FALL-Test
+         * @0x80100718-20 UEBERSPRINGEN. Die Baby-Spinne kommt also nicht ins Wasser hinein. */
+        if (re2s_water_scan(e) != 0) {                     /* @0x801006F4 */
+            e->x = (int32_t)s_re2s_prev_x;                 /* @0x801006FC/@0x80100708 */
+            e->y = (int32_t)s_re2s_prev_y;                 /* @0x80100700/@0x8010070C */
+            e->z = (int32_t)s_re2s_prev_z;                 /* @0x80100704/@0x80100714 */
+        } else if (re2sb_probe(e) == 0) {                  /* @0x80100718-20 */
             e->sub_state_1 = 2; e->sub_state_2 = 0; e->sub_state_3 = 0;
         }
     }
@@ -2545,7 +2710,9 @@ static void re2sb_drown(re15_actor_t *e, re15_actor_t *pl)
  *   SE 7 (@0x80100CF8), FUN_80100F28(self, 0, tbl[+0x5]) (@0x80100D10-14). */
 static void re2sb_death(re15_actor_t *e)
 {
-    if (e->re2s_water10c < (int32_t)e->dog_floor_y && e->re2s_mode222 == 0u) {
+    /* @0x80100C20: `jal 0x800527b4` — der DEATH-Kopf zieht den Wasser-Y FRISCH (nicht +0x10C),
+     * `slt v0,v0,v1` gegen (s16)+0x1C2 @0x80100C30. */
+    if (re2s_water_scan(e) < (int32_t)e->dog_floor_y && e->re2s_mode222 == 0u) {
         /* SINK @0x80100D40 — byte-true portiert; im Port nur erreichbar, wenn +0x1C2 > 0 ist
          * (das Modul setzt implizit +0x1C2 <= 0 in trockenen Raeumen voraus, s. Kopf). */
         e->y      += 30;                                   /* @0x80100D68 */
@@ -2569,6 +2736,11 @@ int re15_re2spider_baby_tick(int slot)
 {
     re15_actor_t *e  = &g_actors[slot];
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+
+    re2s_water_stamp(e);                                   /* Engine-Stempel +0x10C @0x80051a3c —
+                                                            * EMS26.BIN schreibt +0x10C NIE selbst
+                                                            * und liest es an drei Stellen */
+    re2s_pos_snapshot(e);                                  /* +0x44/+0x46/+0x48 @0x800366A4-C4 */
 
     if ((e->re2z_self1d3 & 0x7fu) != 0u)                   /* @0x80100040-54 */
         e->re2z_self1d3--;
@@ -2631,6 +2803,8 @@ int re15_re2spider_tick(int slot)
     /* Pause-Gate `lw 0x800CFBDC & 0x20000000` @0x801000D4-E4: der Freeze-Zweig @0x80100198
      * klemmt nur Y an die Boden-/Wandhoehe (FUN_800527B4 + +0x1C2) und kehrt zurueck.
      * Der Aufrufer (enemy_ai_common.c) haelt die Pause bereits ab. */
+
+    re2s_water_stamp(e);                                   /* Engine-Stempel +0x10C @0x80051a3c */
 
     if ((e->re2z_self1d3 & 0x7fu) != 0u)                   /* @0x801000EC-F8 */
         e->re2z_self1d3--;                                 /* @0x801000FC-100 (Bit 0x80 bleibt) */

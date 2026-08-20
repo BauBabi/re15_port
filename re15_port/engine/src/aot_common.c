@@ -329,6 +329,26 @@ static int aot_obj_record_ok(const re15_aot_t *a)
     return 1;
 }
 
+/* WASSER-PULL-SCAN — byte-true Umschrift von FUN_800527B4 (@0x800527B4-0x800528C8).
+ * Vollstaendige Instruktions-Herleitung + die sce-Nummern-Bruecke RE1.5-8 <-> RE2-7 stehen
+ * ueber der Deklaration in re15_aot.h. Reihenfolge = Slot-Reihenfolge (das Original laeuft
+ * das Zeiger-Feld @0x800CE558 in Installations-Reihenfolge ab, @0x800527f0), ERSTER Treffer
+ * gewinnt (@0x80052890/@0x800528ac springen sofort zum Epilog @0x800528c8). */
+int32_t re15_aot_water_at(int32_t x, int32_t z)
+{
+    for (int i = 0; i < RE15_AOT_MAX; i++) {
+        const re15_aot_t *a = &g_aot.slots[i];
+        if (!a->active) continue;                       /* Record-Zeiger == 0 @0x800527f8 */
+        if (a->type != RE15_AOT_TYPE_WATER) continue;   /* rec[0] != sce_water @0x80052808 */
+        int hit = a->has_quad                           /* rec[1] & 0x80 @0x80052818 */
+                ? re15_aot_point_in_quad(x, z, a->xs, a->zs)          /* FUN_8002c820 @0x80052880 */
+                : ((abs_i32(x - a->x) <= a->half_w) &&
+                   (abs_i32(z - a->z) <= a->half_h));                 /* FUN_8002c904 @0x8005289c */
+        if (hit) return (int32_t)g_aot.env_params[i].p0;  /* lh 20/12(s0) @0x80052890/@0x800528ac */
+    }
+    return 0;                                            /* @0x800528c4 addu v0,zero,zero */
+}
+
 /* Positions-Sonde (CENTRE-Test) fuer Tests/Sonden. Die vollstaendige Fassung inklusive
  * Band-Gate und FORWARD-Test steht in re15_object_notch_update(), weil sie die Prop-Felder
  * (+0x82 band, rot_y) braucht, die hier nicht vorliegen. */

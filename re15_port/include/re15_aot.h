@@ -308,6 +308,40 @@ void re15_aot_settle_at(int32_t player_x, int32_t player_z);
 int  re15_aot_point_in_quad(int32_t px, int32_t pz,
                             const int16_t xs[4], const int16_t zs[4]);
 
+/* WASSER-PULL-SCAN — Port-Zwilling von FUN_800527B4 (RE2-Retail-EXE @0x800527B4, selbst
+ * disassembliert 2026-08-20). Liefert die WASSER-OBERFLAECHEN-Y an (x,z), oder 0 wenn der
+ * Punkt in keiner Wasserzone liegt.
+ *
+ * Original (RE2, @0x800527B4-0x800528C8), Instruktion fuer Instruktion:
+ *   @0x800527d4  lbu s3,0x4230(0x800d)   = AOT-Zaehler; ==0 -> @0x800528C4 return 0
+ *   @0x800527f0  lw  s0,0(s2++)          = naechster Record; ==0 -> naechster (@0x800527f8)
+ *   @0x80052800  lbu v1,0(s0)            = rec[0] = sce
+ *   @0x80052804  addiu v0,zero,7
+ *   @0x80052808  bne v1,v0,@0x800528b8   = KEIN sce-7-Record -> weiter (Zaehler s1++ im
+ *                                          Delay-Slot @0x8005280c, zaehlt JEDEN Record)
+ *   @0x80052818  andi v0,rec[1],0x80     = Quad-Flag
+ *   @0x80052880  jal 0x8002c820          = Punkt-in-Viereck (4 Punkte rec+4..rec+18)
+ *   @0x80052890  lh v0,20(s0)            = Treffer -> Nutzlast-Halbwort rec+20
+ *   @0x8005289c  jal 0x8002c904          = Punkt-in-Rechteck (rec+4..rec+11)
+ *   @0x800528ac  lh v0,12(s0)            = Treffer -> Nutzlast-Halbwort rec+12
+ *   @0x800528c4  addu v0,zero,zero       = kein Treffer -> 0
+ *   KEIN Band-Gate, KEINE Pool-Maske — der Pull prueft ausschliesslich die Geometrie.
+ *
+ * sce-NUMMERN-BRUECKE (belegt, nicht geraten): der Scan sucht die Zonen, deren Handler die
+ * Oberflaechen-Y in die Entity stempelt. Das ist in RE2 sce 7 (Tabelle @0x800A73C4[7] =
+ * 0x80051a2c: `lhu v0,0(a0); sh v0,268(entity)` = +0x10C) und in RE1.5 sce 8 (Tabelle
+ * @0x8007469c[8] = 0x8004330c: `lhu v0,0(a0); sh v0,136(entity)` = +0x88) — dieselbe
+ * Semantik, andere Nummer und anderes Feld. Der Port fuehrt die RE1.5-Zonen als
+ * RE15_AOT_TYPE_WATER, also wird hier genau darueber gescannt.
+ * Nutzlast rec+12 (rect) bzw. rec+20 (quad) == das erste Halbwort der Aot_set-Payload
+ * (pc[14..15]) == g_aot.env_params[i].p0 im Port.
+ *
+ * Der Rueckgabewert ist bewusst ZUSTANDSLOS: sowohl RE1.5 (+0x88, geleert @0x8001a59c nach
+ * jedem Gegner-Handler und @0x8002c154 fuer den Spieler) als auch RE2 (+0x10C, geleert
+ * @0x800526dc/@0x80052788 unmittelbar vor dem Scan-Aufruf) behandeln die Stempel-Kopie als
+ * REINEN PRO-FRAME-Wert; 0 heisst "kein Wasser an dieser Stelle". */
+int32_t re15_aot_water_at(int32_t x, int32_t z);
+
 /* Combination-lock NOTCH probe (FUN_80042bac @0x80042f5c): the sce=5 grid-cell slot the point
  * (px,pz) is over, or -1. The keypad cursor's member+0xb = this each frame. */
 int  re15_aot_object_notch(int32_t px, int32_t pz);

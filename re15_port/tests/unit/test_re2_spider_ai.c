@@ -14,6 +14,7 @@
 #include "re15_ai_flavor.h"
 #include "re15_enemy_ai.h"
 #include "re15_damage.h"
+#include "re15_aot.h"        /* sce-8-Wasserzone fuer den FUN_800527B4-Kanal */
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
@@ -276,19 +277,46 @@ int main(void)
         CHECK(SP->state == 7, "DEATH muss auf CORPSE 7 gehen @0x80103E98-9C (ist %u)", SP->state);
         CHECK(SP->hp == 1, "CORPSE-Wiederbelebung HP = 1 @0x80103EB0 (ist %d)", (int)SP->hp);
         CHECK(SP->re2s_done224 == 1, "+0x224 = 1 @0x80103EB8");
-        /* WELLE-F-FIX: +0x23A = -1 (@0x80103E84) liegt im Original INNERHALB des Wasser-Zweigs
-         * `+0x10C != 0` (@0x80103E3C). +0x10C ist im Port immer 0 (FUN_800527B4 hat keinen
-         * Zwilling) -> der Zweig laeuft NICHT. Welle E hat ihn unbedingt ausgefuehrt. */
+        /* NEGATIV-HAELFTE des Wasser-Kanals: OHNE Wasserzone liefert der Pull FUN_800527B4
+         * seinen Nicht-Treffer-Wert 0 (@0x800528C4) -> der Zweig `+0x10C != 0` @0x80103E3C
+         * laeuft NICHT, also bleibt +0x23A = 0 (@0x80103E84 liegt INNERHALB des Zweigs). */
         CHECK(SP->re2s_c23a == 0,
               "+0x23A bleibt 0: @0x80103E84 liegt im Wasser-Zweig @0x80103E3C (ist %d)",
               (int)SP->re2s_c23a); }
-    /* Gegenprobe: mit gesetztem +0x10C feuert der Wasser-Zweig genau wie im Original. */
-    {   fresh(2000, 0, 0); tick();
-        SP->state = 3; SP->sub_state_1 = 1; SP->sub_state_2 = 0; SP->re2s_water10c = -500;
+    /* POSITIV-HAELFTE: eine ECHTE sce-8-Wasserzone (RE1.5 @0x8007469c[8] = 0x8004330c,
+     * Zwilling von RE2 sce 7 @0x800A73C4[7] = 0x80051a2c) ueber der Spinne. Der Modul-Kopf
+     * stempelt +0x10C aus dem Pull (re15_aot_water_at == FUN_800527B4 @0x800527B4) und der
+     * Wasser-Zweig feuert genau wie im Original. Zonengeometrie/Nutzlast wie ROOM2090:
+     * p0 = -1620 (Aot_set @0x09D6/@0x09EA/@0x09FE, Payload pc[14..15]). */
+    {   fresh(2000, 0, 0);
+        re15_aot_init();
+        re15_aot_set(2, RE15_AOT_TYPE_WATER, 0, 0, 0, 8050, 4550);
+        g_aot.env_params[2].p0 = -1620;
+        tick();
+        CHECK(SP->re2s_water10c == -1620,
+              "Wasser-Stempel +0x10C == p0 der sce-8-Zone (@0x80051a3c / RE1.5 @0x8004331c), ist %d",
+              (int)SP->re2s_water10c);
+        SP->state = 3; SP->sub_state_1 = 1; SP->sub_state_2 = 0;
         int guard = 0; while (guard++ < 60 && SP->state == 3) tick();
         CHECK(SP->re2s_c23a == -1, "Wasser-Zweig: +0x23A = -1 @0x80103E84 (ist %d)", (int)SP->re2s_c23a);
         CHECK(SP->re2s_sink23e == 3 && SP->re2s_sink23f == 1,
-              "Wasser-Zweig: +0x23E = 3 / +0x23F = 1 @0x80103E8C-94"); }
+              "Wasser-Zweig: +0x23E = 3 / +0x23F = 1 @0x80103E8C-94");
+        /* CORPSE @0x80104D98 ruft unter +0x23A < 0 den Sink-Treiber FUN_80104F18. Mit
+         * +0x23E == 3 laeuft der Duempel-Zweig @0x80105034: Y = Wasser + tab[..] + 70,
+         * tab @0x8010667C = {0,8,16,32,32,16,8,0} -> Y in [-1550 .. -1518]. */
+        int y0 = (int)SP->y;
+        tick();
+        CHECK(SP->y >= -1620 + 70 && SP->y <= -1620 + 32 + 70,
+              "FUN_80104F18 Duempeln @0x8010503C-64: Y in [-1550..-1518], war %d (vorher %d)",
+              (int)SP->y, y0);
+        /* NEGATIV zum Sink-Treiber: verlaesst die Leiche die Zone, liefert der Pull 0 und
+         * @0x80104F34-50 klemmt Y hart auf (s16)+0x1C2 und setzt +0x23A = 1 / +0x23F = 0. */
+        SP->x = 100000; SP->dog_floor_y = -300;
+        tick();
+        CHECK(SP->y == -300 && SP->re2s_c23a == 1 && SP->re2s_sink23f == 0,
+              "NEGATIV FUN_80104F18 @0x80104F44-50 (kein Wasser): Y=%d +0x23A=%d +0x23F=%u",
+              (int)SP->y, (int)SP->re2s_c23a, SP->re2s_sink23f);
+        re15_aot_init(); }
     /* NEGATIV: mit +0x239 != 0 darf es KEINE Wiederbelebung geben (@0x80103EA0-A8). */
     {   fresh(2000, 0, 0); tick();
         SP->state = 3; SP->sub_state_1 = 1; SP->sub_state_2 = 0; SP->re2s_dead239 = 1; SP->hp = 0;

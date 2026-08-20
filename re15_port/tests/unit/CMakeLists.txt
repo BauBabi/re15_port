@@ -1378,6 +1378,16 @@ target_compile_definitions(test_re2_room1090_ab PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_re2_room1090_ab COMMAND test_re2_room1090_ab)
 
+# WASSER-KANAL der RE2-Spinne (FUN_800527B4 @0x800527B4 -> re15_aot_water_at) an den echten
+# ROOM2090-Rohdaten (STAGE2) gepinnt, inkl. Negativ-Raum ROOM1090.
+add_executable(test_re2_spider_water_2090 test_re2_spider_water_2090.c)
+target_link_libraries(test_re2_spider_water_2090 PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_spider_water_2090 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2_spider_water_2090 PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2_spider_water_2090 COMMAND test_re2_spider_water_2090)
+set_tests_properties(unit_re2_spider_water_2090 PROPERTIES TIMEOUT 30)
+
 # --- DIAGNOSE: der ECHTE Schuss-/Schlag-Weg im RE2-Flavor (Nutzer-Blocker "kann keinen Zombie
 #     treffen"). Kein add_test — reine Messsonde. ---
 add_executable(probe_re2_hitpath probe_re2_hitpath.c)
