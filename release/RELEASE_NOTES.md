@@ -1,3 +1,68 @@
+# RE1.5 Port — v0.3.5 (Early Preview)
+
+## Neu: Gliedmassen-Abschuss und RE2-Schadenswerte auch im RE1.5-Modus
+
+Auf Wunsch uebernommen. Im Modus **AI RE1.5** koennen jetzt auch mit der
+Handfeuerwaffe Gliedmassen abgeschossen werden, und die Zombies nutzen die
+Schadens- und Lebenspunkt-Werte aus RE2.
+
+⚠️ **Das ist eine bewusste Abweichung vom Original**, kein byte-treuer Fix. Die
+Original-Werte bleiben im Code erhalten und werden weiterhin geprueft, damit die
+Referenz nicht verlorengeht.
+
+Pistolentreffer bis ein Zombie faellt, im RE1.5-Modus: **20 → 5**. Magnum 7 → 5,
+Schrotflinten unveraendert bei 1.
+Zwei Waffen werden dabei **schwaecher**, weil RE2 sie niedriger bewertet:
+**Messer** 16 → 26, **Ingram** 10 → 19.
+Der Zombie mit der internen Nummer 17 (in RE2 ist das Brad Vickers) erbt dessen
+feste 250 Lebenspunkte und wird auch hier zum zaehen Brocken.
+
+Ein Befund hat die Umsetzung gerettet: Die Knochen-Nummern von RE1.5 und RE2
+bezeichnen **verschiedene Koerperteile**. Direkt uebernommen waere bei einem
+Schuss auf den Oberschenkel ein Arm abgefallen. Beide Modelle wurden vermessen;
+die Umrechnung nutzt dieselbe Zuordnung wie der Modus "AI RE2".
+
+Das **Abriss-Geraeusch** ist mit verdrahtet.
+Bekannte Grenze: Die RE1.5-Modelle haben keine Stumpf-Geometrie (15 Meshes
+gegenueber 17 bei RE2) — der Oberschenkel bleibt heil, Schienbein und Fuss
+fliegen weg.
+
+## Behoben: Sterben sah in beiden Modi falsch aus
+
+**RE1.5 — die Todesanimation lief zweimal.** Der Zombie fiel nach hinten, sprang
+etwa ab der Haelfte zurueck und wiederholte das Stueck. Ursache: Der Port fuehrte
+einen Programmzweig aus, den es im Original **gar nicht gibt** — die Sprungbefehle
+dorthin stehen in der Spieldatei als lauter Nullen. Er existiert nur in der
+rueckuebersetzten Lesefassung und ist von dort in den Port gewandert.
+Der Fehler trat nur in etwa **jedem achten Fall** auf; deshalb galt er nach einem
+frueheren Bericht als behoben. Der neue Test faehrt jetzt 48 Durchlaeufe.
+
+**RE2 — kein Sturz, falsche Leichenpose.** Hier fuhr der Port fuer *jeden* Tod die
+falsche Routine: die des **wiederbelebten Kriechers**. Ausserdem lief die ganze
+Routine in einem Zweig, der nur einmal ausgefuehrt wird — es gab also gar keinen
+Fallverlauf, der Koerper war schlagartig unten (gemessen: 2218 Einheiten in einem
+einzigen Bild). Und die Leichenpose wurde nie gesetzt, weshalb sie vom letzten
+Niederschlag uebrig blieb — daher "Ruecken-Animation, dann ploetzlich Bauch".
+Jetzt faellt der Zombie sichtbar in die Richtung, aus der getroffen wurde, mit
+Bluttropfen an den richtigen Bildern und passender Endpose.
+
+## Behoben: der gefressene Zombie stand auf
+
+Im Dining Room stand der am Boden liegende Zombie im RE2-Modus nach kurzer Zeit
+auf. Ursache war ein **erfundener Naehe-Wecker** im Port: Kam der Spieler nah
+genug, stand der Gegner auf. Im Original ist diese Stelle ein **leerer
+Programmteil** — ein von Anfang an liegender Zombie weckt sich nie selbst. Der
+einzige Weg waere ein Skriptbefehl, und die Auszaehlung aller Raumdaten zeigt:
+andere Raeume nutzen den, der Dining Room **kein einziges Mal**.
+Die fressenden Zombies stehen weiterhin korrekt auf.
+
+Testsuite 183 Pruefungen.
+
+⚠️ Geraeusche und Bild sind hier nicht pruefbar (die Entwicklungssitzung hat
+weder Audio-Ausgabe noch Fenster-Aufzeichnung).
+
+---
+
 # RE1.5 Port — v0.3.4 (Early Preview)
 
 ## Alle RE2-Gegner hatten die falschen Geraeusche
