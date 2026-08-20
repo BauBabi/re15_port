@@ -662,47 +662,86 @@ static const uint16_t *re15_enemy_dmg_row(uint8_t type)
  *   OFFEN (gemeldet, nicht stillschweigend): der Hunde-HURT-P4-Re-Roll @0x80103850
  *   (enemy_ai_re2_dog.c:1473) zieht weiter aus 0x80105340; er ist laut eigener Datei "im
  *   HURT-Fluss unerreicht" und liegt ausserhalb dieser Datei. */
-/* ⛔ DER EINZIGE TYP-SPEZIFISCHE SONDERFALL DES MODELLS — und die einzige Stelle, an der die
- * Index-Identitaet RE1.5-Typ == RE2-Kind KAMPFRELEVANT wird. DEFAULT: AUS. Begruendung:
+/* ⛔ DER EINZIGE TYP-SPEZIFISCHE SONDERFALL DES MODELLS: RE2 setzt die HP von KIND 0x11 FEST
+ * auf 250. SCHARF, ohne Schalter. Hier stand bis 2026-08-20 ein `RE15_RE2_ZOMBIE11_250`-Gate
+ * mit der Begruendung "nicht belegt, dass RE1.5-Typ 0x11 dasselbe Wesen ist wie RE2-Kind 0x11".
+ * Diese Begruendung ist WIDERLEGT; der Schalter ist weg. Die fuenf Belege, in der Reihenfolge,
+ * in der sie die Frage schliessen:
  *
- * BELEGT: der RE2-Zombie-INIT ueberschreibt die gewuerfelte HP fuer GENAU EIN Kind fest auf 250
- *   80100894: lbu   v1,8(s2)             ; Entity+0x8 = KIND
- *   801008a0: addiu v0,zero,17           ; 0x11
- *   801008bc: bne   v1,v0,0x801008d8     ; jedes andere Kind ueberspringt
- *   801008c8: addiu v1,zero,250
- *   801008cc: sh    v1,342(s2)           ; +0x156 = 250
- * BELEGT: RE2-Kind 0x11 ist ein echter, ausgelieferter Gegner mit eigenen Assets — CDEMD0-TOC
- *   @0x8009ADF4 (Index (kind-0x10)*4): TIM Sektor 157 / 66592 B, EMD Sektor 190 / 149468 B.
- *   (Die im extrahierten Ordner info/re2leon/PL0/PLD/CDEMD0 fehlende EM011.EMD ist ein
- *   EXTRAKTIONS-Artefakt jenes Dumps, kein Befund — der TOC der Original-EXE fuehrt sie.)
+ * (1) MECHANISMUS — kein Index, keine Tabelle, kein Flag: ein DIREKTER Vergleich von ENTITY+0x8
+ *     gegen 17. Luecklos selbst disassembliert (EMOVL10_S0.BIN; INIT = Dispatch-Slot 0 der
+ *     Zustandstabelle @0x8010C830 -> 0x8010065C, `addu s2,a0,zero` @0x80100664 = Entity):
+ *       80100894: lbu   v1,8(s2)          ; v1 = ENTITY+0x8 = KIND
+ *       80100898: addiu v0,v0,16          ; (fremder Zug: +0x223 = (rand&0xf)+16)
+ *       8010089c: sb    v0,547(s2)
+ *       801008a0: addiu v0,zero,17        ; v0 = 17 = 0x11
+ *       801008a4-b8: sb/sh zero,560/561/566/569/570/571   ; v0 und v1 UNBERUEHRT
+ *       801008bc: bne   v1,v0,0x801008d8  ; jedes andere KIND ueberspringt
+ *       801008c0: sb    zero,572(s2)      ; delay slot
+ *       801008c4: lhu   v0,538(s2)
+ *       801008c8: addiu v1,zero,250
+ *       801008cc: sh    v1,342(s2)        ; +0x156 = HP = 250 (schlaegt Wurf UND das +15)
+ *       801008d0: ori   v0,v0,0x8000
+ *       801008d4: sh    v0,538(s2)        ; +0x21A |= 0x8000
+ *     Beide DAT_800CFB74-Zweige des INIT laufen vor 0x80100894 zusammen (0x80100818) — kind
+ *     0x11 erreicht die Zeile IMMER, es gibt keinen frueheren Ruecksprung.
  *
- * NICHT BELEGT — und deshalb nicht angewandt: dass der RE1.5-Typ 0x11 DASSELBE Wesen ist.
- *   Alles andere am RE2-Modell ist kind-UNABHAENGIG (die Wuerfeltabelle 0x8010C670 gilt fuer die
- *   ganze Familie, der Schadenszeiger 0x800A6A88[0x11] ist byte-gleich dem von 0x10/0x12/0x13/
- *   0x18 = 0x800A412C). NUR diese eine Zeile haengt an der Kind-IDENTITAET, und fuer die gibt es
- *   in den ausgelieferten Daten keinen Beweis: die ENEMSE-Raumpaar-Tabelle @0x800A7400 taugt
- *   nicht als Haeufigkeits-Indiz (0x11 steht in 1 Zeile — 0x18 aber auch, 0x10 nur in 3), und
- *   ein offline-SCD-Zensus ueber die RE2-RDTs desynct (die RE1.5-Gegenprobe reproduziert den
- *   bekannten Roster nicht), liefert also ebenfalls keinen Beleg.
- * WIRKUNG, GEMESSEN (probe_re2_hp_model, ROOM1140, echter game_step-Weg): mit der Zeile bekommt
- *   der Dinner-Room-Zombie vom Typ 0x11 250 statt 79-128 HP und braucht 16 Pistolenschuesse
- *   statt 5-8 — er wird also GENAU in der Situation zaeher, aus der der Nutzer-Report kommt
- *   ("die Zombies stecken viel zu viel ein"). Eine unbelegte Identitaet darf keine
- *   Kampf-Balance tragen (STOP-GATE): die Zeile ist portiert, zitiert und abschaltbar, aber
- *   der RE1.5-Typ 0x11 faehrt per Default die normale Familien-Wuerfeltabelle.
- * Einschalten: RE15_RE2_ZOMBIE11_250=1 (oder re15_re2_kind11_250_set(1)). */
-static int s_re2_kind11_250 = 0;
-static int s_re2_kind11_env_read = 0;
-int re15_re2_kind11_250(void)
-{
-    if (!s_re2_kind11_env_read) {
-        const char *v = getenv("RE15_RE2_ZOMBIE11_250");
-        s_re2_kind11_env_read = 1;
-        if (v && (v[0] == '1' || v[0] == 'y' || v[0] == 'Y')) s_re2_kind11_250 = 1;
-    }
-    return s_re2_kind11_250;
-}
-void re15_re2_kind11_250_set(int on) { s_re2_kind11_250 = on ? 1 : 0; s_re2_kind11_env_read = 1; }
+ * (2) DAS FELD IST IN BEIDEN SPIELEN DASSELBE. Der RE1.5-Zombie-INIT liest den Typ aus dem
+ *     GLEICHEN Offset +0x8 (STAGE1.BIN, selbst disassembliert):
+ *       801007c4/c8: a0 = 0x8011f034      ; RE1.5-eigene HP-Tabelle
+ *       801007d8:    lbu v1,8(a1)         ; ENTITY+0x8 = TYP
+ *       801007e0:    sll v1,v1,5          ; Zeile = typ*0x20, Spalte = (rng&0xf)*2
+ *       801007ec:    lhu v0,0(v0)
+ *       801007f4:    sh  v0,154(a1)       ; RE1.5-HP +0x9A
+ *     Keines der beiden Spiele hat eine Uebersetzungsschicht: der Typ IST der kind.
+ *
+ * (3) DIE ZUORDNUNG DES PORTS IST BEREITS 1:1 — sie wird hier nicht erfunden, sondern
+ *     EINGEHALTEN. Der RE1.5-Typ indiziert im RE2-Modus heute schon:
+ *       - den RE2-ASSET-TOC: main.c pc_enemy_load(type) -> re2_ems_load_bank(.., kind=type, ..)
+ *         -> re2_ems_toc_entry (re2_ems.c): `i = ((kind - 0x10) * 4 + rec) * 2`. Der TOC
+ *         @0x8009ADF4 fuehrt fuer kind 0x11 EIGENE Assets (rec2=TIM Sektor 157 / 66592 B,
+ *         rec3=EMD Sektor 190 / 149468 B — der groesste EMD der ganzen Zombie-Familie). Im
+ *         ausgelieferten shared_assets/RE2/CDEMD0.EMS nachgeprueft: der EMD @Datei-0x5F000
+ *         traegt dir_count == 8 (gueltiger RE2-EMD), und die EM011-TIM stimmt mit der
+ *         EM010-TIM in nur 313 von 66592 Bytes ueberein = eine voellig andere Textur.
+ *         Mit dem Default RE15_AI_MODELS=RE2 SIEHT der Spieler den RE1.5-Typ-0x11-Zombie
+ *         also bereits als RE2-EM011.
+ *       - die RE2-Schadenszeile 0x800A6A88[typ] (oben), re2_hybrid_perm(kind) (re2_ems.c),
+ *         re15_re2_owns_type(typ), die ENEMSE-Bankwahl.
+ *     RE2-EM011 IST BRAD VICKERS — info/Resident_Evil_und_Playstation_Information/
+ *     BioModels-master/src/BioModels.h:186 `{ "EM011.EMD", BRAD_VICKERS }` (Zeile 170:
+ *     EM010 = ZOMBIE_POLICE). Der eine, absichtlich zaehe Sonder-Zombie von RE2.
+ *
+ * (4) DIE ZWEITE HAELFTE DESSELBEN bne WAR SCHON SCHARF: enemy_ai_re2_zombie.c setzt seit
+ *     Welle B `if (e->type == 0x11) e->re2z_flags21a |= 0x8000u;` mit Zitat @0x801008BC-D4 und
+ *     OHNE jeden Schalter. Die 250 stammen aus GENAU DERSELBEN Verzweigung, aus den zwei
+ *     Instruktionen direkt davor. Eine Haelfte scharf, die andere hinter einer
+ *     Umgebungsvariable — das war ein Widerspruch, kein Vorbehalt.
+ *
+ * (5) GEGENPROBE RE1.5: dort ist 0x11 ein voellig normaler Zombie, und es gibt KEINEN
+ *     Sonderfall, den man haette verletzen koennen. Zeile @0x8011f254 =
+ *     {71,85,103,73,87,105,75,107,89,77,93,79,95,81,98,83} — dasselbe Band wie 0x10
+ *     (@0x8011f234, 61..101), 0x12 (@0x8011f274, 71..111), 0x16 (@0x8011f2f4, 71..99).
+ *     Voll-Scan ueber STAGE1.BIN: NULL `addiu rX,zero,250`, NULL `addiu rX,zero,17`.
+ *     RE1.5 kennt keinen zaehen Zombie-Typ — die Zaehigkeit bringt der RE2-Modus mit.
+ *
+ * WIRKUNG, GEMESSEN (probe_re2_hp_model, ROOM1140, echter game_step-Weg mit Pad R1/SQUARE und
+ * echten Sce_em_set-Spawns, 2026-08-20). Pistolentreffer bis zum Tod:
+ *     Typ   RE1.5             RE2 (Modell AUS)   RE2 (Modell AN, dieser Stand)
+ *     0x10  20 (hp 95/dmg 5)  20 (hp 95/dmg 5)   5  (hp  79 / dmg 16)
+ *     0x11  15 (hp 71/dmg 5)  15 (hp 71/dmg 5)   16 (hp 250 / dmg 16)
+ *     0x16  n/a (*)           18 (hp 85/dmg 5)   6  (hp  65 / dmg 11)
+ *   (*) der 0x16 landet im RE1.5-Modus in diesem Messrahmen keinen Treffer (sein RE1.5-Brain
+ *       laeuft aus der Reichweite) — die Sonde weist das als "0-" aus, das ist KEIN Nullschaden
+ *       und keine Aussage ueber den RE1.5-Pfad; Abschnitt 1 des PIN-Tests deckt ihn separat ab.
+ * Der Dinner-Room-Zombie 0x11 ist im RE2-Modus also rund 3x zaeher als seine Nachbarn — das ist
+ * byte-true, im RE2-Modus IST er Brad. Bemerkenswert fuer den Balance-Eindruck: gegenueber dem
+ * VORHERIGEN RE2-Modus (Modell AUS) bewegt sich seine Trefferzahl kaum (15 -> 16), weil die
+ * RE2-Schadenszeile 0x800A412C ebenfalls dreimal hoeher liegt (16 statt 5). Nur mit dem Messer
+ * (RE2-Zeile 3) stirbt er im 4000-Frame-Messbudget nicht mehr (250/3 = 84 noetige Treffer) —
+ * das ist RE2s eigene Arithmetik, kein Port-Defekt.
+ * Der EINZIGE Hebel, der die RE2-Zahlen abschaltet, bleibt RE15_RE2_DMG_MODEL=0 (Negativ-Test);
+ * einen zweiten, typ-lokalen gibt es nicht mehr. */
 
 static const uint16_t s_re2_hp_zombie[16] =     /* @0x8010C670 (EMOVL10_S0.BIN, selbst gedumpt) */
     { 80, 94, 128, 75, 60, 95, 58, 75, 50, 83, 79, 66, 80, 65, 82, 65 };
@@ -736,7 +775,12 @@ int16_t re15_re2_init_hp(const re15_actor_t *e)
             int hp = s_re2_hp_zombie[(r1 >> (r2 & 3u)) & 0xfu];  /* @0x801006F0-710 */
             if (re15_re2_room_enemy_count() < 4)                 /* sltiu ..,0x4 @0x801007FC */
                 hp += 15;                                        /* @0x80100810-14 */
-            if (e->type == 0x11 && re15_re2_kind11_250()) hp = 250;   /* @0x801008C8-CC — s. Block */
+            /* KIND 0x11 = RE2-EM011 (Brad Vickers): feste 250, ueberschreibt Wurf UND +15.
+             * `bne v1,v0` @0x801008BC / `addiu v1,zero,250` @0x801008C8 / `sh v1,342(s2)`
+             * @0x801008CC. Zwillingszeile derselben Verzweigung: das +0x21A-Bit 0x8000
+             * (@0x801008D0-D4) in enemy_ai_re2_zombie.c re2z_init — beide gehoeren zusammen,
+             * beide sind scharf. Voller Beleg im Block ueber dieser Funktion. */
+            if (e->type == 0x11) hp = 250;
             return (int16_t)hp;
         }
         case 0x20: {

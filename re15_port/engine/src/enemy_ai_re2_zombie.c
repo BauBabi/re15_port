@@ -3557,7 +3557,7 @@ static void re2z_init(int slot, re15_actor_t *e)
      *   801008bc: bne v1,v0,0x801008d8         ; nur Typ 0x11 faellt durch
      *   801008c4: lhu v0,538(s2)
      *   801008c8: addiu v1,zero,250
-     *   801008cc: sh  v1,342(s2)               ; +0x156 = HP = 250  (NICHT portiert, s.u.)
+     *   801008cc: sh  v1,342(s2)               ; +0x156 = HP = 250  (portiert, s.u.)
      *   801008d0: ori v0,v0,0x8000
      *   801008d4: sh  v0,538(s2)               ; +0x21A |= 0x8000
      * WICHTIG ZUM ZEITPUNKT: das ist der INIT-HANDLER (Zustand 0, Tabelle @0x8010C830) — im
@@ -3571,17 +3571,21 @@ static void re2z_init(int slot, re15_actor_t *e)
      * @0x801008E8; Rest-3-Test @0x80100900-28; `+0x223 = (rand&0xf)+32` @0x80100944-4C).
      * Der Port hat kein Gegenstueck zu diesem RE2-Global -> Pfad bleibt OPEN.
      *
-     * ⚠ +0x156 = 250 (@0x801008C8-CC) BEWUSST NICHT PORTIERT — begruendet, nicht vergessen:
-     * +0x156 ist das HP-Halbwort (dasselbe, das re2z_corpse als `sh -1,342` @0x8010A4D4 auf -1
-     * setzt und das die Death-/Hurt-Pfade lesen). Die 250 sind EINE Zeile des KOMPLETTEN
-     * RE2-HP-Modells, das dieser Port bewusst nicht verwendet: der RE2-INIT wuerfelt die HP
-     * sonst aus drei Tabellen — `lhu v0,-14736(at)`/`sh v0,342(s2)` @0x80100708-10 (Tabelle
-     * 0x8010C670), @0x80100750-58 (0x8010C690), @0x80100784-8C (0x8010C600), je ueber einen
-     * (rand>>(rand&3))&0xf-Index. Der Port nimmt die HP stattdessen aus dem RE1.5-Live-INIT
-     * (HP-Zeile @0x8011f034), weil es fuer RE1.5-Raeume keine RE2-Raumdaten gibt. NUR die 250
-     * nachzuziehen wuerde ein halbes Modell aufpfropfen: gemessen bekommt der ROOM1140-Typ-0x11
-     * damit 250 statt 71 HP (3.5x zaeher) — eine Kampf-Balance-Aenderung ohne Beleg dafuer, dass
-     * sie zum uebrigen (RE1.5-)HP-Satz passt. Zitiert, offen gefuehrt, nicht erfunden.
+     * ⚠ +0x156 = 250 (@0x801008C8-CC) LIEGT NICHT HIER, SONDERN IN re15_damage.c
+     * (re15_re2_init_hp -> re15_re2_hp_sync, gestempelt aus game_step). Grund: +0x156 ist das
+     * HP-Halbwort, und der RE2-INIT wuerfelt es sonst aus einer Tabelle (`lhu v0,-14736(at)` /
+     * `sh v0,342(s2)` @0x80100708-10, Tabelle 0x8010C670, Index (rand>>(rand&3))&0xf, +15 bei
+     * Raum-Gegnerzahl < 4 @0x801007FC-814) — das ganze Modell gehoert an EINE Stelle, sonst
+     * driften zwei Kopien derselben Regel auseinander. Der Stempel laeuft NACH dem INIT-Tick
+     * und ersetzt die RE1.5-Live-INIT-HP.
+     * ⛔ WICHTIG: die 250 und das Bit 0x8000 zwei Zeilen weiter unten sind DIESELBE
+     * Verzweigung (`bne v1,v0` @0x801008BC). Wer eine der beiden anfasst, muss die andere
+     * mitfuehren. Die frueher hier begruendete Auslassung ("nicht portiert, weil unbelegt, dass
+     * RE1.5-Typ 0x11 dasselbe Wesen ist") ist am 2026-08-20 WIDERLEGT worden: beide Spiele
+     * lesen den Typ aus ENTITY+0x8 (RE1.5 @0x801007d8), der Port indiziert den RE2-Asset-TOC
+     * @0x8009ADF4 mit genau diesem Typ (re2_ems.c `((kind-0x10)*4+rec)*2`) und laedt fuer 0x11
+     * eine EIGENE, andere EM011-Textur (313/66592 Bytes gleich zu EM010) — RE2-EM011 IST Brad
+     * Vickers (BioModels.h:186). Volle Herleitung im Block ueber re15_re2_init_hp.
      *
      * NULL-STORES DESSELBEN BLOCKS (@0x801008A4-C0) — Port-Abgleich, damit die Luecke benannt ist:
      *   `sh zero,538` @0x8010087C -> re2z_flags21a = 0            PORTIERT (oben)
@@ -3594,7 +3598,15 @@ static void re2z_init(int slot, re15_actor_t *e)
      *   genullt) und +0x219 (re2d_air219, ein HUND-Feld derselben Union — der Zombie-INIT nullt es
      *   im Original mit, der Port haelt die Flavor-Felder getrennt). +0x230/+0x231/+0x236/+0x23A/
      *   +0x23B/+0x23C haben im Port GAR KEIN Feld und auch keinen Leser -> nichts zu nullen. */
-    if (e->type == 0x11) e->re2z_flags21a |= 0x8000u;              /* @0x801008BC-D4 */
+    if (e->type == 0x11) e->re2z_flags21a |= 0x8000u;              /* @0x801008BC-D4 — ZWILLING
+                                                                    * der 250-HP-Zeile
+                                                                    * @0x801008C8-CC (dieselbe
+                                                                    * bne-Verzweigung); die HP-
+                                                                    * Haelfte steht in
+                                                                    * re15_re2_init_hp
+                                                                    * (re15_damage.c). Beide sind
+                                                                    * scharf — nie nur eine
+                                                                    * aendern. */
     e->re2z_prev_hp = e->hp;
     e->speed_h = 0;                                                /* +0x144 spawn-clean (kein Walk-
                                                                     * Writer; Attacken saeen 11) */

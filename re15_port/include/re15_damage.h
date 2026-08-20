@@ -289,12 +289,15 @@ uint8_t re15_engine_rand8(void);
  *                              ihn zusaetzlich idempotent auf. Im RE1.5-Modus ein No-op. */
 int     re15_re2_damage_model(void);
 void    re15_re2_damage_model_set(int on);
-/* Der EINZIGE typ-spezifische Sonderfall: RE2 setzt die HP von KIND 0x11 fest auf 250
- * (@0x801008BC/C8/CC). DEFAULT AUS — dass der RE1.5-Typ 0x11 dasselbe Wesen ist, ist NICHT
- * belegt, und die Zeile macht ausgerechnet den Dinner-Room-Zombie 3x zaeher (Herleitung +
- * Messung am Schalter in re15_damage.c). Einschalten: RE15_RE2_ZOMBIE11_250=1. */
-int     re15_re2_kind11_250(void);
-void    re15_re2_kind11_250_set(int on);
+/* Der EINZIGE typ-spezifische Sonderfall des Modells: RE2 setzt die HP von KIND 0x11 FEST auf
+ * 250 (`bne v1,v0` @0x801008BC / `addiu v1,zero,250` @0x801008C8 / `sh v1,342(s2)` @0x801008CC,
+ * Vergleichsquelle ENTITY+0x8 @0x80100894). SCHARF, ohne Schalter: RE2-EM011 ist Brad Vickers,
+ * der Port bildet RE1.5-Typ -> RE2-kind ueberall 1:1 ab (RE2-Asset-TOC, Schadenszeile,
+ * Rig-Permutation, Ownership), und die zweite Haelfte derselben Verzweigung (+0x21A |= 0x8000)
+ * war immer schon scharf. Volle Herleitung + Gegenprobe in re15_damage.c ueber re15_re2_init_hp;
+ * gepinnt in tests/unit/test_re2_hp_model.c. Der frueher hier stehende Hebel
+ * re15_re2_kind11_250()/RE15_RE2_ZOMBIE11_250 ist ERSATZLOS entfallen (2026-08-20) — wer die
+ * RE2-Zahlen abschalten will, nimmt RE15_RE2_DMG_MODEL=0. */
 int16_t re15_re2_init_hp(const re15_actor_t *e);
 void    re15_re2_hp_sync(void);
 

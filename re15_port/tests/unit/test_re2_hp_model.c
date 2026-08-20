@@ -29,6 +29,17 @@
  *   (A) RE1.5                 — MUSS byte-identisch zur veroeffentlichten RE1.5-Zeile bleiben
  *   (B) RE2 + Modell AUS      — der Negativ-Test: wieder die RE1.5-Zahlen
  *   (C) RE2 + Modell AN       — die RE2-Zahlen
+ *
+ * 2026-08-20 — KIND 0x11 IST SCHARF, DER SCHALTER IST WEG. `RE15_RE2_ZOMBIE11_250` /
+ * re15_re2_kind11_250() existieren nicht mehr; die 250 gelten unbedingt. Belegkette (voll in
+ * re15_damage.c ueber re15_re2_init_hp): beide Spiele lesen den Typ aus ENTITY+0x8 (RE1.5
+ * @0x801007d8, RE2 @0x80100894) — es gibt keine Uebersetzungsschicht; der Port indiziert den
+ * RE2-Asset-TOC @0x8009ADF4 mit genau diesem Typ (re2_ems.c `((kind-0x10)*4+rec)*2`) und laedt
+ * fuer 0x11 eine EIGENE EM011-TIM (313 von 66592 Bytes gleich zu EM010) — RE2-EM011 ist Brad
+ * Vickers (BioModels.h:186); und die zweite Haelfte derselben bne-Verzweigung (+0x21A |= 0x8000,
+ * @0x801008D0-D4) war in enemy_ai_re2_zombie.c immer schon ungegatet scharf.
+ * Gemessen (probe_re2_hp_model, ROOM1140, echter game_step-Weg), Pistolentreffer bis zum Tod:
+ * 0x10 -> 5, 0x16 -> 6, 0x11 -> 16. Abschnitt 6 haelt beide Gegenrichtungen fest.
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -198,16 +209,11 @@ int main(void)
         CHECK(slot > 0, "kein Gegner fuer den HP-Block");
         if (slot > 0) {
             re15_actor_t *e = &g_actors[slot];
-            /* Der Kind-0x11-Sonderfall wird unten EXPLIZIT in beiden Stellungen geprueft —
-             * die Tabellen-Faelle hier laufen deshalb definiert mit AUS, unabhaengig davon,
-             * ob die Umgebung RE15_RE2_ZOMBIE11_250 setzt. */
-            int kind11_env = (getenv("RE15_RE2_ZOMBIE11_250") != NULL);
-            re15_re2_kind11_250_set(0);
             struct { uint8_t type; const int *tbl; int fixed; const char *name; } cases[] = {
                 { 0x10, HP_ZOMBIE, -1,  "Zombie 0x10 @0x8010C670" },
                 { 0x12, HP_ZOMBIE, -1,  "Zombie 0x12 @0x8010C670" },
                 { 0x16, HP_ZOMBIE, -1,  "Zombie 0x16 @0x8010C670" },
-                { 0x11, HP_ZOMBIE, -1,  "Zombie 0x11 (Sonderfall AUS = Familienzug)" },
+                { 0x11, NULL,     250,  "Zombie 0x11 fest @0x801008C8-CC (EM011 Brad)" },
                 { 0x21, NULL,      10,  "Kraehe 0x21 fest @0x80100324" },
                 { 0x20, HP_DOG,    -1,  "Hund   0x20 @0x801053B0" },
                 { 0x25, HP_SPIDER, -1,  "Spinne 0x25 @0x80106334" },
@@ -232,33 +238,35 @@ int main(void)
                 printf("  %-30s %3d..%3d  (%d Ausreisser von 400)\n", cases[c].name, lo, hi, bad);
                 CHECK(bad == 0, "HP-Zug fuer %s liefert Werte ausserhalb der Tabelle", cases[c].name);
             }
-            /* ⛔ Der Kind-0x11-Sonderfall (RE2 setzt HP fest auf 250, @0x801008BC/C8/CC) ist
-             * DEFAULT AUS, weil nicht belegt ist, dass RE1.5-Typ 0x11 dasselbe Wesen ist wie
-             * RE2-Kind 0x11 (volle Herleitung am Schalter in re15_damage.c). Beide Stellungen
-             * werden hier gepinnt, damit die Entscheidung sichtbar und umkehrbar bleibt. */
+            /* ⛔ KIND 0x11 = 250, OHNE SCHALTER (2026-08-20). Der frueher hier gepinnte Hebel
+             * RE15_RE2_ZOMBIE11_250 / re15_re2_kind11_250() ist ERSATZLOS entfallen — dass
+             * RE1.5-Typ 0x11 == RE2-kind 0x11 ist, ist belegt (ENTITY+0x8 in BEIDEN Spielen:
+             * RE1.5 @0x801007d8 / RE2 @0x80100894; der Port indiziert den RE2-Asset-TOC
+             * @0x8009ADF4 mit genau diesem Typ und laedt fuer 0x11 eine eigene EM011-Textur;
+             * RE2-EM011 = Brad Vickers, BioModels.h:186). Volle Herleitung in re15_damage.c.
+             * Der Test pinnt jetzt DIE UNBEDINGTHEIT: keine Umgebung, kein Setter, kein Wurf
+             * kann 0x11 von 250 wegbringen — und NUR 0x11 bekommt sie. */
             e->type = 0x11;
-            if (!kind11_env)   /* Code-Default nur pruefen, wenn die Umgebung ihn nicht umstellt */
-                CHECK(re15_re2_kind11_250() == 0, "Kind-0x11-Sonderfall muss DEFAULT AUS sein");
-            re15_re2_kind11_250_set(1);
             {
                 int all250 = 1;
-                for (int i = 0; i < 50; i++) if (re15_re2_init_hp(e) != 250) all250 = 0;
-                CHECK(all250, "Sonderfall AN muss 250 liefern (@0x801008C8-CC)");
-                printf("  Zombie 0x11 Sonderfall AN            250      (abschaltbar, Default AUS)\n");
+                for (int i = 0; i < 400; i++) if (re15_re2_init_hp(e) != 250) all250 = 0;
+                CHECK(all250, "Kind 0x11 muss IMMER 250 liefern (@0x801008BC/C8/CC) — "
+                              "unbedingt, ohne Schalter");
+                printf("  Zombie 0x11 fest                     250      (400/400, kein Schalter)\n");
             }
-            re15_re2_kind11_250_set(0);
-            {   /* AUS: wieder der Familienzug — und NICHT 250 */
-                int any250 = 0, out = 0;
-                for (int i = 0; i < 200; i++) {
-                    int hp = re15_re2_init_hp(e);
-                    if (hp == 250) any250 = 1;
-                    int ok = 0;
-                    for (int k = 0; k < 16 && !ok; k++)
-                        if (hp == HP_ZOMBIE[k] || hp == HP_ZOMBIE[k] + 15) ok = 1;
-                    if (!ok) out++;
+            {   /* GEGENPROBE: 250 ist EXAKT ein Sonderfall — kein anderes Kind faellt darauf.
+                 * `bne v1,v0,0x801008d8` @0x801008BC ueberspringt jedes andere Kind. */
+                static const uint8_t others[] = { 0x10, 0x12, 0x13, 0x16, 0x18 };
+                int any250 = 0;
+                for (unsigned k = 0; k < sizeof others / sizeof others[0]; k++) {
+                    e->type = others[k];
+                    for (int i = 0; i < 400; i++)
+                        if (re15_re2_init_hp(e) == 250) any250 = 1;
                 }
-                CHECK(!any250 && out == 0, "Sonderfall AUS: 0x11 muss aus 0x8010C670 wuerfeln "
-                      "(250 gesehen=%d, Ausreisser=%d)", any250, out);
+                CHECK(!any250, "NUR Kind 0x11 darf 250 bekommen — ein anderer Zombie-Typ "
+                               "hat den Sonderfall getroffen");
+                printf("  0x10/0x12/0x13/0x16/0x18             nie 250  (Gegenprobe @0x801008BC)\n");
+                e->type = 0x11;
             }
 
             /* Baby 0x26: KEIN Modell hier — HP 1 / -1 kommt byte-true aus seinem eigenen Brain. */
@@ -306,6 +314,80 @@ int main(void)
                 printf("  RE2 Modell AUS: Stempel=%d hp=%d (RE1.5-Zug)\n",
                        e2->re2_hp_stamped, e2->hp);
             }
+        }
+    }
+
+    /* ================= 6) TYP 0x11 KOMPLETT: RE1.5-Wache + Negativ-Test ==================== */
+    /* Der Sonderfall ist die einzige Stelle des Modells, an der die Identitaet RE1.5-Typ ==
+     * RE2-kind kampfrelevant wird — er bekommt deshalb seinen eigenen Block mit BEIDEN
+     * Gegenrichtungen. */
+    printf("\n=== 6) Typ 0x11: RE1.5-Pfad byte-identisch, Modell AUS = kein 250 ===\n");
+    {
+        /* RE1.5-eigene HP-Zeile fuer Typ 0x11: `lbu v1,8(a1)` @0x801007d8 -> `sll v1,v1,5`
+         * @0x801007e0 -> Tabelle 0x8011f034 + 0x11*0x20 = @0x8011f254, Spalte (rng&0xf)*2
+         * (STAGE1.BIN selbst gedumpt). Kein Wert dieser Zeile ist 250 — RE1.5 kennt keinen
+         * zaehen Zombie-Typ. */
+        static const int HP15_Z11[16] = { 71,85,103,73,87,105,75,107,89,77,93,79,95,81,98,83 };
+
+        {   /* Statische Gegenprobe: 250 kommt in der RE1.5-Zeile ueberhaupt nicht vor. */
+            int has250 = 0;
+            for (int k = 0; k < 16; k++) if (HP15_Z11[k] == 250) has250 = 1;
+            CHECK(!has250, "RE1.5-Zeile @0x8011f254 enthaelt 250 — dann waere die Gegenprobe hin");
+        }
+
+        /* (a) RE1.5-WACHE am ECHTEN 0x11-Spawn von ROOM1140: seine HP muessen aus der
+         *     RE1.5-Zeile @0x8011f254 kommen, der RE2-Stempel muss ein No-op sein. */
+        int slot = bringup(RE15_AI_FLAVOR_RE15, 1);
+        int z11 = -1;
+        for (int s = 1; s < RE15_ACTOR_MAX; s++)
+            if (g_actors[s].active && g_actors[s].type == 0x11) { z11 = s; break; }
+        CHECK(z11 > 0, "ROOM1140 hat keinen Typ-0x11-Spawn — die 0x11-Wache misst nichts");
+        if (z11 > 0) {
+            re15_actor_t *e = &g_actors[z11];
+            int in_row = 0;
+            for (int k = 0; k < 16; k++) if (e->hp == HP15_Z11[k]) in_row = 1;
+            int16_t hp_before = e->hp;
+            re15_re2_hp_sync();
+            CHECK(e->hp == hp_before, "RE1.5/0x11: der RE2-Stempel hat die HP angefasst (%d -> %d)",
+                  hp_before, e->hp);
+            CHECK(e->re2_hp_stamped == 0, "RE1.5/0x11: der RE2-Stempel hat das Port-Feld gesetzt");
+            CHECK(e->hp != 250, "RE1.5/0x11: 250 im RE1.5-Pfad — der Sonderfall leckt");
+            CHECK(in_row, "RE1.5/0x11: hp=%d steht NICHT in der Zeile @0x8011f254", hp_before);
+            printf("  RE1.5 0x11 (Slot %d): hp=%d aus Zeile @0x8011f254, Stempel=%d, kein 250\n",
+                   z11, hp_before, e->re2_hp_stamped);
+        }
+        (void)slot;
+
+        /* (b) NEGATIV-TEST: RE2-Modus mit RE15_RE2_DMG_MODEL=0 -> gar kein Stempel, also auch
+         *     keine 250. Das ist der EINZIGE verbliebene Hebel; einen typ-lokalen gibt es nicht
+         *     mehr. */
+        bringup(RE15_AI_FLAVOR_RE2, 0);
+        z11 = -1;
+        for (int s = 1; s < RE15_ACTOR_MAX; s++)
+            if (g_actors[s].active && g_actors[s].type == 0x11) { z11 = s; break; }
+        if (z11 > 0) {
+            re15_actor_t *e = &g_actors[z11];
+            int16_t hp_before = e->hp;
+            re15_re2_hp_sync();
+            CHECK(e->re2_hp_stamped == 0 && e->hp == hp_before,
+                  "RE2/Modell AUS/0x11: es wurde gestempelt (Stempel=%d, hp %d -> %d)",
+                  e->re2_hp_stamped, hp_before, e->hp);
+            CHECK(e->hp != 250, "RE2/Modell AUS/0x11: 250 trotz abgeschaltetem Modell");
+            printf("  RE2 Modell AUS 0x11: hp bleibt %d, Stempel=%d\n", e->hp, e->re2_hp_stamped);
+        }
+
+        /* (c) POSITIV ueber den Stempel-Weg: RE2 + Modell AN -> genau 250 auf dem echten Spawn. */
+        bringup(RE15_AI_FLAVOR_RE2, 1);
+        z11 = -1;
+        for (int s = 1; s < RE15_ACTOR_MAX; s++)
+            if (g_actors[s].active && g_actors[s].type == 0x11) { z11 = s; break; }
+        if (z11 > 0) {
+            re15_actor_t *e = &g_actors[z11];
+            CHECK(e->state != 0, "RE2/0x11: der INIT ist nicht gelaufen (state 0)");
+            re15_re2_hp_sync();
+            CHECK(e->hp == 250, "RE2/Modell AN/0x11: der Stempel liefert %d statt 250", e->hp);
+            CHECK(e->re2_hp_stamped == 1, "RE2/Modell AN/0x11: kein Stempel gesetzt");
+            printf("  RE2 Modell AN  0x11: hp=%d (Stempel=%d)\n", e->hp, e->re2_hp_stamped);
         }
     }
 
