@@ -639,6 +639,47 @@ static void pc_enemy_load(uint8_t type)
         }
     }
 
+    /* ---- NACHZUG zu 83b7740c: DAS ABRISS-GERAEUSCH IM RE1.5-MODUS ---------------------------
+     * Die Port-Option "RE2-Zombie-Uebernahme im RE1.5-Modus" (re15_re15_re2z_import, Default AN)
+     * fahrt im RE1.5-Modus den RE2-Zerleger @0x80105288-3D8. Dessen erste Amtshandlung nach dem
+     * Dreifach-Gate ist ein SE:
+     *     801052b4  addiu a0,zero,9        ; SE-id 9
+     *     801052b8  jal   0x8005bd6c       ; FUN_8005bd6c = der RE2-Gegner-SE-Trigger
+     * Der Port ruft das an derselben Stelle (enemy_ai_re2_zombie.c re2z_leg_gore -> re2z_se(9)),
+     * aber `s_re2z_se_fn` war im RE1.5-Modus NULL, weil der Hook bisher nur oben im RE2-Asset-
+     * Zweig registriert wurde -> der Abriss war STUMM (im Commit als Luecke (d) benannt).
+     * Registriert wird deshalb GENAU fuer die Typen, die die Option ohnehin fuehrt:
+     * re15_re15_re2z_import_owns() == RE1.5-Flavor + Option AN + 0x10/0x11/0x12/0x13/0x16/0x18.
+     *
+     * BANK 0 (== RE2Z_ENEMSE_BANK, derselbe Wert wie im RE2-Modus; re15_re2z_audio_hook waehlt
+     * sie selbst). Belegt an den echten Bytes (tests/unit/test_re15_re2z_gore_se.c):
+     *   - Bank-Wahl FUN_80052b38 liest die SOUND-ID aus dem Sce_em_set-Record (+7 -> entity+0x1FA,
+     *     `lbu v0,7(v0)` @0x80057274 / `sb v0,506(s0)` @0x80057280; verglichen wird nur +0x1FA,
+     *     `lb v1,506(a0)` @0x80052C48) gegen die Paar-Tabelle @0x800A7400; Zeilenindex == Bank.
+     *   - Zensus ueber alle 250 RDTs in info/re2leon/PL0/RDT (nur die SCD-Sektionen 17/18):
+     *     die Zombie-Familie hat 79 registrierte Spawn-Records, haeufigste Sound-Id 0x03 (18x)
+     *     -> Zeile 0 = {0x03,0x00} -> Bank 0, erste Haelfte (flag2000 = 0); Bank 0 ist damit
+     *     auch die haeufigste Zombie-Bank. Das Original waehlt sie PRO RAUM, der Port fuehrt
+     *     eine feste — fuer die id 9 ist das nachweislich folgenlos, s. naechster Punkt.
+     *   - Daten-Gegenprobe ENEMSE.VBS + TOC @0x800A7B1C: Bank 0 fuehrt die id 9 LIVE,
+     *     EDT-Map-Eintrag 9 = 0x02A30000 -> prog 0, tone 10, Kanal 2, Prio-Nibble 3. In ALLEN
+     *     Baenken, die der Zensus fuer die Zombie-Familie liefert (0/1/2/5/53), ist dieser
+     *     Eintrag UND das dahinter liegende VAG-Sample (2208 B) BYTE-IDENTISCH — die Bankwahl
+     *     kann den Abriss-Laut also gar nicht aendern. Gegenprobe: die Hunde-Bank 6 fuehrt die
+     *     id 9 als 0xFFFFFFFF (stumm), die Wahl ist also nicht beliebig.
+     *
+     * KEINE NEBENWIRKUNG AUF DEN RE1.5-KLANG (jede Haelfte geprueft):
+     *   - `re15_audio_re2_enemy_bank` ist nur ein LATCH; ENEMSE.VBS wird lazy erst im ersten
+     *     `re15_audio_re2_enemy_se` geladen (audio_pc.c) — also fruehestens beim Abriss. Die
+     *     RE1.5-Baenke (snd0 Schritte, snd1 Raum-/Combat-SE, ARMS, CORE) werden nicht angefasst.
+     *   - Wiedergabe laeuft auf dem EIGENEN RE2-Slot-Block MIXER_RE2SE_CH_FIRST..+7; die 8 festen
+     *     RE1.5-SE-Stimmen (Slots 0..7) und der freie Pool (8..11) bleiben bit-identisch.
+     *   - Der ZWEITE re2z_se-Pfad, die Frame-Flag-SFX `re15_re2z_se_play` (0x801016c8), ist im
+     *     RE1.5-Modus unerreichbar: sein einziger Aufrufer (enemy_ai_common.c) steht hinter
+     *     `re15_ai_flavor() == RE15_AI_FLAVOR_RE2`. Es kommt also NUR der Gore-SE dazu. */
+    if (re15_re15_re2z_import_owns(type))
+        re15_re2z_audio_hook(re15_audio_re2_enemy_se, re15_audio_re2_enemy_bank);
+
     /* Enemy models live inside CDEMD0.EMS (no per-type EM<NN>.EMD on the disc).
      * Try a standalone split file first (back-compat / future), else extract the
      * type's EMD blob out of the archive (re15_ems, the byte-true port of the

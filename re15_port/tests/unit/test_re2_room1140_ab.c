@@ -123,7 +123,7 @@ int main(void)
     for (int f = 0; f < 10; f++) frame();
 
     /* (1) Spawn-Remap: alle in state 1, subs nur {7,8} */
-    int n7 = 0, n8 = 0;
+    int n7 = 0, n8 = 0, feeder = -1, feeder2 = -1, lyer = -1;
     for (int i = 0; i < nz; i++) {
         re15_actor_t *e = &g_actors[zslots[i]];
         CHECK(e->state == 1, "RE2 spawn: Zombie slot %d muss ACTIVE sein (state=%d)",
@@ -131,14 +131,23 @@ int main(void)
         CHECK(e->sub_state_1 == 7 || e->sub_state_1 == 8,
               "RE2 spawn: slot %d sub 7/8 erwartet (INIT-Remap 0x701/0x801), sub=%d",
               zslots[i], e->sub_state_1);
-        if (e->sub_state_1 == 7) n7++; else if (e->sub_state_1 == 8) n8++;
+        if (e->sub_state_1 == 7) { n7++; if (lyer   < 0) lyer   = zslots[i]; }
+        else if (e->sub_state_1 == 8) { n8++; if (feeder < 0) feeder = zslots[i];
+                                              else if (feeder2 < 0) feeder2 = zslots[i]; }
     }
     printf("  [B RE2] spawns: %d lying(sub7) + %d feeding(sub8)\n", n7, n8);
     CHECK(n8 >= 1, "ROOM1140 hat Feeder -> mindestens 1x sub 8");
+    CHECK(n7 == 1 && lyer >= 0, "ROOM1140 hat GENAU EINEN Liege-Spawn (Deskriptor 0x88)");
+    if (feeder  < 0) feeder  = zslots[0];
+    if (feeder2 < 0) feeder2 = zslots[nz > 1 ? 1 : 0];
 
-    /* (2)+(3): WAKE + Angriff auf dem Feeder-Pfad; HP-Verlust byte-zitiert 20/Biss */
+    /* (2)+(3): WAKE + Angriff auf dem Feeder-Pfad; HP-Verlust byte-zitiert 20/Biss
+     * ⚠ KORRIGIERT 2026-08-20: hier stand `zA = zslots[0]` — das ist slot 1, der LIEGENDE
+     * (Deskriptor 0x88, sub 7), nicht ein Fresser. Das Etikett war von Anfang an falsch; seit
+     * der Liege-Spawn korrekt liegen bleibt (RE1.5-Zwilling @0x8011F9D8[0] = `jr ra`) waere der
+     * Block sonst unerfuellbar. zA zeigt jetzt auf einen ECHTEN sub-8-Fresser. */
     int b_first_attack = -1, b_wake = -1, grab_seen = 0, bite_hp_drop = 0;
-    int zA = zslots[0];
+    int zA = feeder;
     {
         re15_actor_t *z0 = &g_actors[zA];
         int16_t hp_at_grab = pl->hp;
@@ -169,7 +178,10 @@ int main(void)
     /* (4) Beschuss-Kette an einem zweiten Zombie: Resistenz-Abbau -> Knockdown 0x501;
      * dann Kill -> Kill-Latch + CORPSE HP=-1. */
     {
-        int zB = zslots[1];
+        /* ⚠ KORRIGIERT 2026-08-20: war `zslots[1]` und traf damit denselben Zombie wie zA —
+         * die NO-FREEZE-Messung (5) beobachtete danach eine LEICHE als Bezugspunkt. Der
+         * Beschuss laeuft jetzt auf einem ZWEITEN Fresser. */
+        int zB = feeder2;
         re15_actor_t *e = &g_actors[zB];
         pl->x = 30000; pl->z = 30000;                     /* Spieler weit weg (kein Grab-Rauschen) */
         int knocked = 0;

@@ -1277,8 +1277,63 @@ static void re2z_exec_lying(re15_actor_t *e, const re15_actor_t *pl)
      * Limpet-Latch +0x10E&0x4000 in P1 (@0x8010381C-28); der EINZIGE Overlay-Clear sitzt in
      * EXEC[15] @0x80104F0C (Bank-B-Kette, skript-/EXE-seitig angestossen — Produzent nicht RE'd).
      * Der Port ersetzt den fehlenden Skript-Wecker durch das RE1.5-Naehe-Gate und laesst danach
-     * die byte-true Executor-Kette laufen. */
-    if ((e->re2z_f10e & 0x4000u) && e->ai_dist < 0xbb8u && pl->hp >= 0)
+     * die byte-true Executor-Kette laufen.
+     *
+     * ⛔ NUTZER-REPORT v0.3.4+ GEFIXT: "Im Dining Room muss der Zombie, der gefressen wird, am
+     * Boden auch bei RE2 AI und RE2 AI + Model am Boden liegen bleiben wie bei RE1.5 AI, und
+     * nicht aufstehen."
+     *
+     * GEMESSEN (probe_lyer_1140, echte ROOM1140.RDT + raum-eigenes sub00 + ECHTE Baenke):
+     *   RE1.5: slot 1 (Typ 0x16, Deskriptor 0x88) bleibt 900 Frames lang state=1/+0x5=0/+0x6=0/
+     *          grid=0x88/Clip 0x13; hoechster Pose-Punkt -589 (= liegend), Spieler bis dist 649.
+     *   RE2  : f0 INIT->0x701 (EXEC[7], +0x10E=0x4002) — f1 P1 liegt (Clip 0x17, Pose-Top -224) —
+     *          **f44: ai_dist faellt erstmals unter 0xBB8 (gemessen 2996), die Zeile hier loescht
+     *          Bit 0x4000 (+0x10E 0x4002 -> 0x0002)** — f45 P2/P3 Aufsteh-Clip 8 — f112 P4 —
+     *          f113 `0x101` = ER STEHT (Pose-Top -2665). Der Ausloeser war also GENAU dieser
+     *          port-erfundene Naehe-Wecker.
+     *
+     * DIE SOLLSEITE IST DER RE1.5-ZWILLING (RE2 kennt ROOM1140 nicht; der Liege-Zustand kommt
+     * aus RE1.5-Spawndaten, also muss der RE2-Brain ihn genauso uebernehmen). Selbst
+     * disassembliert aus info/Re1.5/PSX/BIN/STAGE1.BIN (roh @0x80100000):
+     *   Dispatcher-Tabelle @0x8011F80C[grid & 0xf]:
+     *       [5] = [6] = 0x801018F8   (Fresser)     [7] = [8] = 0x80101974   (LIEGEND)
+     *       [9] = [10] = 0x801019F0  (skript-geweckt)
+     *   Der Liege-Dispatcher 0x80101974 ist ein DOPPEL-Dispatch:
+     *       80101990: lui   at,0x8012
+     *       80101994: addiu at,at,-1576      ; at = 0x8011F9D8  = DECIDE-Basis
+     *       80101998: addu  at,at,v0         ; v0 = (+0x5)*4
+     *       8010199c: lw    v0,0(at)
+     *       801019a4: jalr  v0               ; DECIDE
+     *       801019c8: addiu at,at,-1580      ; at = 0x8011F9D4  = ANIMATE-Basis
+     *       801019d8: jalr  v0               ; ANIMATE
+     *   DECIDE-Zeile @0x8011F9D8[0] = 0x801039F4, und DAS ist ein LEERER STUB:
+     *       801039f4: 03e00008  jr ra          (Rohbytes 08 00 e0 03)
+     *       801039f8: 00000000  nop            (Rohbytes 00 00 00 00)
+     *   => **Nibble 7/8 hat KEINEN Selbst-Wecker — weder nach Naehe noch nach Zeit.**
+     *   Gegenprobe, dass die Nachbarzeilen ECHTE Funktionen sind (also kein Tabellen-Lesefehler):
+     *       @0x8011F9D0[0] = 0x80103980 (Fresser 5/6) — dort steht der Naehe-Wecker:
+     *            80103990: lw    v0,464(v1)      ; +0x1D0 = dist
+     *            80103998: sltiu v0,v0,4000      ; < 0xFA0
+     *            8010399c: beq   v0,zero,0x801039e4
+     *            801039b8: sb    v0,6(v1)        ; +0x6 = 1  -> Aufsteh-Kette
+     *       @0x8011F9DC[0] = 0x801039FC (skript-geweckt 9/10) = SOFORT-Wecker.
+     *   Der Weckruf fuer 7/8 kommt im Original AUSSCHLIESSLICH vom SKRIPT, das den Deskriptor
+     *   per `Member_set(12, 0x89/0x8A)` (`sb a2,9(a0)` @0x800411F8) auf Nibble 9/10 hebt — und
+     *   genau dieser Weg ist im RE2-Flavor bereits als D15.2-Block in re15_re2z_tick verdrahtet.
+     *   BYTE-ZENSUS ueber die ausgelieferten RDTs (Muster 0x34,0x0C,0x89|0x8A):
+     *       ROOM1100 / ROOM1101 : je 5 Records (die "Leichen erwachen"-Kaskade)
+     *       ROOM1070            : 5     ROOM1020 : 4
+     *       ROOM1140            : **0**
+     *   Der Dining-Room-Liegende hat also NIRGENDS einen Wecker — weder in sich (DECIDE-Stub)
+     *   noch im Raumskript. Er liegt bis zum Raumwechsel. Genau das meldet der Nutzer.
+     *
+     * KONSEQUENZ: der ersetzte Naehe-Wecker gilt weiter fuer die Deskriptoren, deren RE1.5-
+     * Zwilling einen Selbst-Wecker HAT (der Schlaefer sel 0x0E raeumt sein +0x9 im RE1.5-Live-
+     * INIT auf 0 @0x80100FD4 und weckt bei dist < 0xBB8) — aber NICHT mehr fuer Nibble 7/8.
+     * Der Deskriptor steht hier garantiert noch: 0x701 wird NUR vom INIT geschrieben (einziger
+     * Produzent in dieser Datei), und P4 unten loescht grid_id erst BEIM Aufstehen. */
+    if ((e->grid_id & 0x0fu) != 7u && (e->grid_id & 0x0fu) != 8u &&
+        (e->re2z_f10e & 0x4000u) && e->ai_dist < 0xbb8u && pl->hp >= 0)
         e->re2z_f10e &= (uint16_t)~0x4000u;                        /* andi 0xbfff @0x80104F0C (MAPPED
                                                                     * hierher verlegt) */
     switch (e->sub_state_2) {
@@ -2580,6 +2635,13 @@ static void re2z_leg_gore(re15_actor_t *e)
     if (e->re2z_pool152 >= 0) return;                           /* lb 338 / bgez @0x80105294-9C */
     if (!(e->re2z_hitdir1d0 & 0xc0u)) return;                   /* lhu 464 / andi 0xC0 @0x801052A4-B0 */
 
+    /* Dieser SE laeuft seit 2026-08-20 AUCH im RE1.5-Modus (Nutzerwunsch "ziehe es nach", zur
+     * Gore-Uebernahme 83b7740c): pc_enemy_load registriert den ENEMSE-Hook jetzt zusaetzlich fuer
+     * `re15_re15_re2z_import_owns(type)`. Gemessen: Bank 0, EDT-Eintrag 9 = 0x02A30000 -> prog 0,
+     * tone 10, Kanal 2, Prio-Nibble 3, 2208 VAG-Bytes. BELEG, dass die Bankwahl diesen Laut nicht
+     * verfaelschen kann: in ALLEN Baenken, die der RDT-Zensus fuer die Zombie-Familie liefert
+     * (0/1/2/5/53), ist Eintrag 9 UND das dahinterliegende VAG-Sample byte-identisch; die
+     * Hunde-Bank 6 fuehrt id 9 dagegen als 0xFFFFFFFF (stumm), die Wahl ist also nicht beliebig. */
     re2z_se(9);                                                 /* jal 0x8005bd6c, a0=9 @0x801052B4-B8 */
 
     int thigh;
@@ -3529,9 +3591,14 @@ static void re2z_stamp_hit(re15_actor_t *e, const re15_actor_t *pl)
  *  (c) Der DEATH-Zweig @0x80108250 hat seinen eigenen Gore; die Bruecke feuert deshalb NUR,
  *      wenn der Zombie den Treffer UEBERLEBT (im Original ist re2z_leg_gore Teil der
  *      HURT-Wurzel, die bei +0x4 == 3 gar nicht mehr laeuft, `sw v0,4(s1)` @0x8004728C-90).
- *  (d) SE 9 (`jal 0x8005bd6c` @0x801052B4-B8): im RE1.5-Modus registriert
- *      platform/pc/main.c den ENEMSE-Hook nicht (er haengt am RE2-Asset-Zweig von
- *      pc_enemy_load), also ist re2z_se() dort ein No-op — der Abriss ist STUMM.
+ *  (d) SE 9 (`addiu a0,zero,9` @0x801052B4 / `jal 0x8005bd6c` @0x801052B8): NACHGEZOGEN.
+ *      platform/pc/main.c registriert den ENEMSE-Hook jetzt AUCH im RE1.5-Zweig von
+ *      pc_enemy_load, gegated auf re15_re15_re2z_import_owns(type) — Bank 0 (== RE2Z_ENEMSE_BANK,
+ *      EDT-Map-Eintrag 9 = 0x02A30000 -> prog 0, tone 10, Kanal 2, Prio-Nibble 3; Herleitung +
+ *      RDT-Zensus in tests/unit/test_re15_re2z_gore_se.c). Der Frame-Flag-Pfad
+ *      re15_re2z_se_play (0x801016c8) bleibt im RE1.5-Modus unerreichbar (sein einziger
+ *      Aufrufer in enemy_ai_common.c steht hinter RE15_AI_FLAVOR_RE2), es kommt also NUR
+ *      dieser Gore-SE dazu.
  *  (e) STUMPF-GEOMETRIE: der Zerleger stempelt `part_mesh = 15` (@0x8010531C-50) = der
  *      RESERVE-Part des RE2-MD1. Der RE1.5-Zombie-MD1 hat nur die Meshes 0..14 (selbst
  *      gemessen: mesh_count == bone_count == 15 fuer EM10/11/12/13/16/18), also greift die

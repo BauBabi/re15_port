@@ -640,7 +640,15 @@ int main(void)
         re15_actor_free(s);
     }
 
-    /* ---- LYING chain: P0 hold -> limpet -> idle 8/9 -> 0x101 + grid clear ------------------ */
+    /* ---- LYING (a): Deskriptor-Nibble 8 = der ROOM1140-Liege-Spawn -> NIE Selbstwecken -----
+     * Nutzer-Report v0.3.4+: der gefressene Zombie im Dining Room muss auch unter RE2 AI
+     * liegen bleiben. Sollseite ist der RE1.5-Zwilling (RE2 kennt ROOM1140 nicht, der
+     * Liege-Zustand kommt aus RE1.5-Spawndaten): Dispatcher @0x8011F80C[7]=[8]=0x80101974,
+     * dessen DECIDE-Zeile @0x8011F9D8[0] = 0x801039F4 ein LEERER STUB ist —
+     *     801039f4: 03e00008  jr ra      801039f8: 00000000  nop
+     * (selbst disassembliert aus info/Re1.5/PSX/BIN/STAGE1.BIN roh @0x80100000). Geweckt wird
+     * er nur vom SKRIPT, das den Deskriptor per Member_set(12,0x89/0x8A) auf Nibble 9/10 hebt
+     * (`sb a2,9(a0)` @0x800411F8). */
     {
         re15_re2z_rng_reset();
         int s = re15_actor_alloc(0x16);
@@ -651,6 +659,39 @@ int main(void)
         CHECK(e->motion == 0x17 && e->sub_state_2 == 1,
               "lying P0: clip 23 PLAIN (rate 0, @0x801037CC-E4), phase 1");
         CHECK((e->re2z_self1d3 & 0x80u) != 0, "lying P0 sets self+0x1D3|=0x80 (@0x80103804-14)");
+        re15_re2z_tick(s);
+        CHECK(e->sub_state_2 == 1, "far lyer HOLDS in P1 (limpet +0x10E&0x4000 @0x8010381C-28)");
+        e->ai_dist = 100;                       /* Spieler direkt daneben — darf NICHTS bewirken */
+        for (int t = 0; t < 600; t++) re15_re2z_tick(s);
+        CHECK(e->state == 1 && e->sub_state_1 == 7 && e->sub_state_2 == 1 &&
+              e->grid_id == 0x88 && (e->re2z_f10e & 0x4000u) != 0 && e->motion == 0x17,
+              "Nibble 8 darf sich NICHT selbst wecken (RE1.5-Zwilling @0x8011F9D8[0]=0x801039F4 "
+              "= `jr ra`): 600 Ticks bei dist 100 -> state=%d +0x5=%d +0x6=%d grid=0x%02X "
+              "+0x10E=0x%04X clip=%d", e->state, e->sub_state_1, e->sub_state_2, e->grid_id,
+              e->re2z_f10e, (int)e->motion);
+        /* SKRIPT-Wecker (der EINZIGE Weg im Original): Member_set(12, 0x89) -> Nibble 9 */
+        e->grid_id = 0x89;
+        re15_re2z_tick(s);
+        CHECK(e->state == 1 && e->sub_state_1 == 9 && e->grid_id == 0 &&
+              (e->re2z_f10e & 0x4000u) == 0,
+              "Skript-Bump auf Nibble 9 muss den Get-up 0x901 (@0x80103E48) committen und das "
+              "Limpet-Bit loesen: state=%d +0x5=%d grid=0x%02X +0x10E=0x%04X",
+              e->state, e->sub_state_1, e->grid_id, e->re2z_f10e);
+        re15_actor_free(s);
+    }
+
+    /* ---- LYING (b): die EXEC[7]-Kette selbst (P1 -> P2 idle 8/9 -> P4 0x101 + Nibble-Clear).
+     * Gefahren an einem WECK-FAEHIGEN Liege-Deskriptor: Nibble 0x0B (der zweite, NICHT auf Bit
+     * 0x80 gegatete Liege-Zweig des RE1.5-Dekoders, `andi v0,v0,0x1f` @0x80100EC8; der
+     * RE1.5-Live-INIT laesst sein +0x9 stehen). Nur die Nibbles 7/8 sind byte-belegt weck-frei —
+     * fuer alle uebrigen bleibt der dokumentierte PORT-MAPPING-Naehewecker stehen. */
+    {
+        re15_re2z_rng_reset();
+        int s = re15_actor_alloc(0x16);
+        re15_actor_t *e = &g_actors[s];
+        e->state = 1; e->sub_state_1 = 7; e->sub_state_2 = 0;
+        e->grid_id = 0x8B; e->re2z_f10e = 0x4002; e->ai_dist = 60000;
+        re15_re2z_tick(s);                                       /* P0 */
         re15_re2z_tick(s);
         CHECK(e->sub_state_2 == 1, "far lyer HOLDS in P1 (limpet +0x10E&0x4000 @0x8010381C-28)");
         e->ai_dist = 100;                                        /* MAPPED wake clears the latch */
@@ -664,7 +705,7 @@ int main(void)
               "lying P4 exits 0x101 (@0x80103900-0C, NOT 0x901 — Review #15), got %d/%d",
               e->state, e->sub_state_1);
         CHECK(e->grid_id == 0,
-              "the 0x88 spawn nibble is cleared on wake (PORT-MAPPING Review #16/#3)");
+              "the lying spawn nibble is cleared on wake (PORT-MAPPING Review #16/#3)");
         re15_actor_free(s);
     }
 

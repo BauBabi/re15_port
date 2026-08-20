@@ -293,9 +293,28 @@ int main(void)
     /* ---------------- (2) der RAGDOLL-STURZ 0x801066FC ---------------- */
     {
         reset_zombie(e, 8);                    /* Zeile 8 / Spalte 1 -> 0x801066FC */
+        /* ⚠ GEOMETRIE EXPLIZIT (2026-08-20): dieser Block pinnt den FRONT-Sturz (Clip 4,
+         * Schub -250). Die Trefferrichtung +0x1D0 rechnet der Applier-Stempel bei jedem
+         * HURT-Eintritt NEU aus rot_y + Spielerlage (@0x80041A0C-2C, re2z_stamp_hit_row) —
+         * vorher hing sie an dem rot_y, das der Zombie am Ende von Abschnitt (1) zufaellig
+         * hatte, also am RNG-Strom der GANZEN Raumbevoelkerung. Das war ein stiller
+         * Wackelkontakt: sobald irgendein anderer Zombie im Raum seine RNG-Wuerfe aendert
+         * (z.B. weil der Liege-Spawn korrekterweise nicht mehr aufsteht), kippte dieser Block
+         * auf den Ruecken-Sturz und die Erwartung "Clip 4" wurde falsch — ohne dass sich am
+         * gepinnten Mechanismus irgendetwas geaendert haette. rot_y und Spielerlage werden
+         * darum jetzt hart gestellt, und die Gegenprobe unten sagt es laut, falls die
+         * Richtung doch kippt. Abschnitt (5) pinnt beide Richtungen einzeln. */
+        re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        e->rot_y = 0;
+        pl->x = e->x; pl->z = e->z + 800; pl->rot_y = 0;
+        e->re2z_hitdir1d0 = 0;
         s_se_n = 0;
         int32_t y0 = e->y;
         frame();
+        CHECK((e->re2z_hitdir1d0 & 0x20u) == 0,
+              "GEGENPROBE: dieser Block braucht einen FRONT-Treffer (+0x1D0 & 0x20 == 0), "
+              "gemessen +0x1D0=0x%02X — dann gilt die Clip-4-Erwartung nicht",
+              (unsigned)(e->re2z_hitdir1d0 & 0xffu));
         CHECK(re15_re2z_last_hit_handler() == 3,
               "Zeile 8 / Spalte 1 muss 0x801066FC dispatchen (Tabelle @0x8010C940), Zelle %d",
               re15_re2z_last_hit_handler());

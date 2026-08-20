@@ -1631,3 +1631,61 @@ target_compile_definitions(test_re15_re2z_import PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_re15_re2z_import COMMAND test_re15_re2z_import)
 set_tests_properties(unit_re15_re2z_import PROPERTIES TIMEOUT 300)
+
+# --- MESSSONDE: der LIEGENDE Zombie in ROOM1140 (Deskriptor 0x88, Typ 0x16 — der, an dem
+#     gefressen wird). Nutzer-Report v0.3.4+: "muss auch bei RE2 AI und RE2 AI + Model am
+#     Boden liegen bleiben wie bei RE1.5 AI, und nicht aufstehen." Echte RDT + raum-eigenes
+#     sub00 + ECHTE Baenke (ohne Bank ist clip_len 0 und jede clip-getriebene Phase endet im
+#     Setz-Tick); protokolliert je Frame state/+0x5/+0x6/+0x7/+0x9/+0x94/+0x95/clip_len/
+#     +0x1d0/+0x10E/y und den HOECHSTEN PUNKT der posierten Skelett-Pose (rig-unabhaengige
+#     Lage-Messung). Kein add_test — reine Messsonde. ---
+add_executable(probe_lyer_1140 probe_lyer_1140.c)
+target_link_libraries(probe_lyer_1140 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_lyer_1140 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_lyer_1140 PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- PIN: DAS ABRISS-GERAEUSCH (ENEMSE-SE 9) IM RE1.5-MODUS — der Nachzug zu 83b7740c,
+#     das dort als Luecke (d) benannt war ("im RE1.5-Modus registriert platform/pc/main.c den
+#     ENEMSE-Hook nicht ... der Abriss ist STUMM").
+#     Belegt wird die ganze Kette an den ECHTEN Bytes: der Ausloeser im RE2-Zombie-Overlay
+#     (`addiu a0,zero,9` @0x801052B4 / `jal 0x8005bd6c` @0x801052B8, EMOVL10_S0.BIN), der
+#     Bank-Mechanismus in der RE2-EXE (Sound-Id aus Sce_em_set-Record+7 -> entity+0x1FA,
+#     @0x80057274/@0x80057280/@0x80052C48; Paar-Tabelle @0x800A7400), der Zensus ueber alle
+#     250 RE2-RDTs (Zombie-Familie -> haeufigste Sound-Id 0x03 -> Zeile 0 -> Bank 0) und die
+#     Daten-Gegenprobe an ENEMSE.VBS (Bank-0-Map[9] = 0x02A30000; dasselbe Sample in allen
+#     Zombie-Baenken; Hunde-Bank 6 fuehrt die id 9 gar nicht).
+#     Dazu der Port-PIN (RE1.5-Modus + Option AN -> SE 9 beim 4. Seitentreffer, Bank 0,
+#     flag2000 0, Einweg), die Negativprobe (Option AUS -> kein SE) und die
+#     Regressionswachen (Hund/Kraehe/Spinne bekommen den Hook nicht, im RE2-Modus ist die
+#     neue main.c-Zeile tot, und die RE1.5-Raum-SEs sind mit und ohne Hook bitgleich). ---
+add_executable(test_re15_re2z_gore_se test_re15_re2z_gore_se.c)
+target_link_libraries(test_re15_re2z_gore_se PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re15_re2z_gore_se PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re15_re2z_gore_se PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+    RE15_ASSET_RE2_DIR="${CMAKE_SOURCE_DIR}/shared_assets/RE2"
+    RE15_RE2_EXE_PATH="${CMAKE_SOURCE_DIR}/../info/re2leon/PSX.EXE"
+    RE15_RE2_RDT_DIR="${CMAKE_SOURCE_DIR}/../info/re2leon/PL0/RDT"
+    RE15_RE2_OVL_ZOMBIE="${CMAKE_SOURCE_DIR}/../info/re2leon/COMMON/BIN/EMOVL10_S0.BIN")
+add_test(NAME unit_re15_re2z_gore_se COMMAND test_re15_re2z_gore_se)
+set_tests_properties(unit_re15_re2z_gore_se PROPERTIES TIMEOUT 300)
+
+# --- PIN: der LIEGENDE Zombie in ROOM1140 (Dining Room, Deskriptor 0x88, Typ 0x16 — der, an
+#     dem gefressen wird) bleibt LIEGEN. Nutzer-Report v0.3.4+: "muss auch bei RE2 AI und
+#     RE2 AI + Model am Boden liegen bleiben wie bei RE1.5 AI, und nicht aufstehen."
+#     Sollseite ist der RE1.5-Zwilling: Dispatcher @0x8011F80C[7]=[8]=0x80101974, dessen
+#     DECIDE-Zeile @0x8011F9D8[0] = 0x801039F4 ein leerer Stub ist (`jr ra; nop`, Rohbytes
+#     08 00 e0 03 / 00 00 00 00) — Nibble 7/8 weckt sich NIE selbst; der Weckruf kommt nur vom
+#     Skript (Member_set(12,0x89/0x8A) -> `sb a2,9(a0)` @0x800411F8).
+#     Gemessen wird die TATSAECHLICHE LAGE (hoechster Punkt der gerenderten Skelett-Pose) plus
+#     Clip/Zustand ueber 900 Frames, in DREI Modi (RE1.5 / RE2 AI + Model / RE2 AI mit
+#     Hybrid-Rig), mit Positiv-Kontrolle (ein Fresser MUSS aufstehen) und Negativ-Test (der
+#     Skript-Wecker MUSS ihn hochholen). ---
+add_executable(test_re2_lyer_1140 test_re2_lyer_1140.c)
+target_link_libraries(test_re2_lyer_1140 PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_lyer_1140 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2_lyer_1140 PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2_lyer_1140 COMMAND test_re2_lyer_1140)
+set_tests_properties(unit_re2_lyer_1140 PROPERTIES TIMEOUT 300)
