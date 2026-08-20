@@ -1462,13 +1462,80 @@ static void re2d_hurt_p3(re15_actor_t *e)
     }
 }
 
-/* P4 HP-Re-Roll 0x801037E8 (DEATH-Phasen-Tabelle [3] — „stirbt nicht wirklich"; im HURT-Fluss
- * unerreicht): HP = tbl[rand&0xf]+rand&3 (@0x80105340/@0x80105360 je 0x800CFB74&0x20 — Port:
- * Default-Tabelle, das RE2-Global hat keinen Produzenten), +0x151..153=13, +0x1D3|=0x80. */
+/* ============================================================================================
+ * P4 HP-RE-ROLL 0x801037E8 — „der Hund stirbt nicht wirklich"
+ * ============================================================================================
+ * ⛔ GEMELDETER BEFUND 2026-08-20 („zieht seinen Wert weiter aus dem widerlegten Zweig
+ *    0x80105340 statt 0x801053B0") — NACHGEPRUEFT UND WIDERLEGT. Der Port ist hier KORREKT.
+ *
+ * Voll-Disassembly der Funktion (EMD0G_MOD0.BIN, laedt RAW @0x80100000):
+ *   801037fc  lbu  v0,7(s0)              ; +0x7 (sub_state_3)
+ *   80103804  bne  v0,zero,0x801038a8    ; !=0 -> Epilog            == EINMAL-GUARD
+ *   80103810  sb   v0(=1),7(s0)          ; +0x7 = 1   (Delay-Slot von jal 0x80015fe8)
+ *   8010380c  jal  0x80015fe8            ; 1. Zug
+ *   80103818  lw   v1,-1164(v1)          ; DAT_800CFB74
+ *   80103820  andi v1,v1,0x20
+ *   80103824  beq  v1,zero,0x80103850    ; **NUR Bit 0x20**, Bit 0x40 wird hier NICHT getestet
+ *   80103828  andi s1,v0,0x3             ; s1 = 1. Zug & 3        (Delay-Slot)
+ *   80103844  lhu  v0,21344(at)          ;   [0x20 gesetzt] Tabelle 0x80105360
+ *   80103868  lhu  v0,21312(at)          ;   [0x20 klar   ] Tabelle 0x80105340
+ *   80103870  addu v0,v0,s1              ; + (1. Zug & 3)
+ *   8010387c  sh   v0,342(s0)            ; +0x156 = HP
+ *   80103884/88/8c  sb 13 -> +0x153/+0x152/+0x151
+ *   80103898  and  word0, 0xE3FFFFFF     ; loescht 0x1C000000
+ *   801038a4  sb   +0x1D3 |= 0x80
+ *
+ * WARUM DER BEFUND FALSCH IST: 0x801053B0 ist die INIT-Tabelle, nicht die des Re-Rolls. Der
+ * INIT @0x80100150 waehlt VIER-WEGIG ueber BEIDE Bits (0x40 @0x80100160, dann 0x20 @0x80100180)
+ * -> 0x801053D0 / 0x801053B0 / 0x80105360 / 0x80105340; mit „0x40 immer gesetzt, 0x20 nie"
+ * (Beleg: re15_damage.c, 9 Schreiber von DAT_800CFB74) landet der INIT byte-true auf
+ * **0x801053B0** (so implementiert in re15_re2_init_hp, Commit 717d13e0). Der Re-Roll hier
+ * verzweigt dagegen NUR ueber Bit 0x20 -> mit 0x20 = 0 ist **0x80105340** der ausgelieferte
+ * Zweig. Voll-Scan aller Tabellen-Referenzen im Modul (jede `lhu rt,imm(at)` mit imm in
+ * {0x5340,0x5360,0x5380,0x53A0,0x53B0,0x53C0,0x53D0,0x53E0}) findet GENAU SECHS:
+ *     0x801001A0 (0x801053D0)  0x801001C4 (0x801053B0)  0x80100204 (0x80105360)
+ *     0x80100228 (0x80105340)      = INIT (4-wegig)
+ *     0x80103844 (0x80105360)  0x80103868 (0x80105340)  = dieser Re-Roll (2-wegig)
+ * 0x801053B0 ist im Re-Roll also gar nicht adressierbar. Die beiden Tabellen sind auch inhalt-
+ * lich verschieden (0x801053B0 == 0x80105340 + 10 je Eintrag), der Pin unten trennt sie darueber.
+ *
+ * ERREICHBARKEIT — die alte Einstufung „im HURT-Fluss unerreicht" war RICHTIG, aber UNVOLL-
+ * STAENDIG (die Funktion ist KEIN toter Code):
+ *   - HURT: generische Zeile 0x80103308 dispatcht @0x80105588[+0x6]; [4] = 0x801037E8. +0x6
+ *     wird im ganzen Modul NIE > 3 (Voll-Scan aller `sb/sh rt,6(rs)`, groesster Immediate 3;
+ *     dieselbe 4 steht auch in der Sprung-/Heul-Zeilen-Tabelle @0x801055BC[4]) -> unerreichbar.
+ *   - DEATH: Router 0x80104118 dispatcht bei +0x6 != 0 ueber @0x80105668[+0x6]; **[3] =
+ *     0x801037E8** (ebenso die Gore-Varianten @0x80105688[3] und @0x80105698[3]).
+ *     Im ORIGINAL ist das erreichbar, weil der RE2-Schadens-Applier FUN_800470C0
+ *     (0x800470C0-0x8004765C) auf die Entity NUR +0x4 (state; `bgez` @0x80047284/@0x800474A8 ->
+ *     HP<0 = 3), +0x5 (@0x80047324/@0x80047574) und +0x1D0/+0x1D2/+0x1D3 schreibt — **niemals
+ *     +0x6/+0x7** (die `sh …,6(s3)` @0x800471D0/@0x800473F0 liegen auf einer anderen Struktur).
+ *     Die Phase ueberlebt den Kill: wer bei +0x6 == 3 stirbt (z.B. HURT-P3-Erholung
+ *     @0x801035A8 mit v0=3, Knockdown-Erholung @0x80103BDC, oder ACTIVE-Phasen wie
+ *     @0x80100C6C/@0x80101A28), landet direkt hier statt im Todes-Kern -> „spielt tot".
+ *     Danach frisst der Einmal-Guard jeden Folge-Tick; die Entity bleibt in state 3 liegen,
+ *     bis der naechste Treffer sie (HP ist ja wieder positiv) per `bgez` in state 2 = HURT
+ *     zurueckholt.
+ *   - IM PORT ist der Zweig zu: der Root-Tick setzt bei jedem neuen Treffer die Phase auf 0
+ *     zurueck (dokumentiertes MAPPING, s. re15_re2dog_tick) -> DEATH startet immer bei [0], und
+ *     die einzige andere Quelle fuer +0x6 == 3 in DEATH (P1-Soft-Landung @0x80103598) ist durch
+ *     `bltz +0x156` @0x80103570 gesperrt, weil HP im Tod stets < 0 ist (@0x80047284 bzw.
+ *     re15_damage.c:1340). GEMESSEN auf dem echten Weg: test_re2_dog_hp_reroll (2).
+ *
+ * NICHT PORTIERT (bewusst, keine Erfindung):
+ *   - +0x151/+0x152/+0x153 = 13 (@0x80103884-8C) sind die drei GLIEDMASSEN-HP: der INIT setzt
+ *     dieselben drei Bytes ebenfalls auf 13 (@0x8010024C-58), der EXE-Hitscan dekrementiert sie
+ *     mit Boden -1 (@0x80041928-3C / @0x8004196C-88 / @0x800419B0-CC). Der Port modelliert
+ *     Glieder-HP NIRGENDS (auch re2d_init nicht) -> konsistent OPEN.
+ *   - word0 &= 0xE3FFFFFF (@0x80103874-A0) loescht 0x1C000000. Der Port mappt davon nur
+ *     0x18000000 -> re2d_air219 (s. HURT-Zeile [4]/[15]); 0x04000000 hat kein Port-Pendant
+ *     -> OPEN, deshalb hier kein halbes Aequivalent. */
 static const uint16_t re2d_hp_tbl_def[16] =                 /* @0x80105340 (self-read) */
     { 119, 85, 85, 85, 119, 70, 85, 85, 70, 85, 59, 70, 59, 85, 59, 70 };
 static void re2d_hurt_p4_reroll(re15_actor_t *e)
 {
+    if (e->sub_state_3 != 0) return;                       /* Einmal-Guard @0x801037FC-0x80103804 */
+    e->sub_state_3 = 1;                                    /* sb 1,7(s0) @0x80103810 */
     uint32_t r1 = re15_re2_rand() & 3u;                    /* @0x8010380C-28 */
     e->hp = (int16_t)(re2d_hp_tbl_def[re15_re2_rand() & 0xfu] + r1);   /* @0x80103850-7C */
     e->re2z_self1d3 |= 0x80u;                              /* @0x80103894-A4 */
@@ -1638,8 +1705,16 @@ static void re2d_hurt(re15_actor_t *e, re15_actor_t *pl)
     case 1: re2d_hurt_p1(e); break;                        /* 0x801034C8 */
     case 2: re2d_hurt_p2(e, pl); break;                    /* 0x801035E8 */
     case 3: re2d_hurt_p3(e); break;                        /* 0x8010376C */
-    default: re2d_hurt_p4_reroll(e);                       /* 0x801037E8 */
-             re15_ai_set_state_word(e, 0x201); break;      /* (unerreicht im HURT — Absicherung) */
+    default: re2d_hurt_p4_reroll(e); break;                /* @0x80105588[4] = 0x801037E8.
+                                                            * BELEGT UNERREICHBAR: +0x6 wird im
+                                                            * Original nie > 3 (Voll-Scan aller
+                                                            * `sb/sh rt,6(rs)` im Modul) und im
+                                                            * Port nie >= 4 (kein `sub_state_2 =`
+                                                            * mit Wert >= 4). Das frühere
+                                                            * `set_state_word(0x201)` hier war
+                                                            * eine Erfindung — 0x801037E8 endet
+                                                            * @0x801038B8 mit `jr ra` OHNE
+                                                            * Zustandswechsel. Entfernt. */
     }
 }
 
@@ -1701,11 +1776,19 @@ static void re2d_death(re15_actor_t *e, re15_actor_t *pl)
             }
         }
         break;
-    default:                                               /* [3] 0x801037E8 HP-Re-Roll („spielt
-                                                            * tot") — byte-true mitgeführt */
+    default:                                               /* @0x80105668[3] = 0x801037E8 HP-Re-
+                                                            * Roll („spielt tot"). Das Original
+                                                            * schreibt hier KEINEN Zustand — es
+                                                            * bleibt in state 3 liegen, bis der
+                                                            * nächste Treffer es per `bgez`
+                                                            * @0x80047284 nach state 2 zurückholt.
+                                                            * Das frühere `set_state_word(0x7)`
+                                                            * (CORPSE) war eine Erfindung und
+                                                            * hätte den Mechanismus zerstört
+                                                            * (re2d_corpse setzt hp = −1).
+                                                            * Entfernt; Beleg + Erreichbarkeits-
+                                                            * Analyse am Re-Roll oben. */
         re2d_hurt_p4_reroll(e);
-        re15_ai_set_state_word(e, 0x7);                    /* Port-Absicherung: kein Wiedergänger-
-                                                            * Produzent → Corpse (dokumentiert) */
         break;
     }
 }
@@ -1794,9 +1877,23 @@ int re15_re2dog_tick(int slot)
     if (e->re2d_cd232) e->re2d_cd232--;
 
     if (e->state == 1) { e->re2z_prev_sub = e->sub_state_1; e->re2z_prev_hp = e->hp; }
-    /* Treffer-Erkennung: das geteilte take_damage schreibt +0x4=2/3 und überschreibt +0x5/+0x6
-     * (re15_damage.c:767-773) — der RE2-Damage-Writer lässt +0x5 stehen und nullt die Phase.
-     * MAPPING: bei neuem Treffer Phase auf 0 zurücksetzen, Zeile = prev_sub. */
+    /* Treffer-Erkennung: das geteilte RE1.5-take_damage schreibt +0x7=0 (@0x80012fd4), +0x6=1
+     * (@0x80012fd8), +0x5=Reaktions-Clip (@0x80012fe8) und +0x4=2/3 (@0x80013018/@0x80013020).
+     * ⚠ KORREKTUR 2026-08-20 (selbst nachdisassembliert): der RE2-Applier FUN_800470C0
+     * (0x800470C0-0x8004765C) schreibt auf die Entity NUR +0x4 (@0x80047288/90, @0x800474AC/B4),
+     * +0x5 (@0x80047324/@0x80047574) und +0x1D0/+0x1D2/+0x1D3 — er nullt die Phase +0x6 NICHT
+     * (die `sh …,6(s3)` @0x800471D0/@0x800473F0 liegen auf einer anderen Struktur). Im Original
+     * ÜBERLEBT die Phase also den Treffer/Kill; das ist der Eingang in DEATH-Phase 3
+     * (@0x80105668[3] = 0x801037E8, s. Re-Roll-Block oben).
+     * Der Port bleibt bewusst bei seinem MAPPING „neuer Treffer → Phase 0, Zeile = prev_sub":
+     * es ist die Anpassung an den RE1.5-Writer, der +0x6=1 stempelt (also ebenfalls nicht die
+     * Original-Phase stehen lässt). Eine byte-true Phasen-Erhaltung wäre eine Änderung an JEDER
+     * Trefferreaktion des Hundes und ist hier NICHT belegt gemessen → offen dokumentiert,
+     * nicht stillschweigend geändert. Folge: DEATH startet im Port immer bei Phase 0.
+     * GEMESSEN (test_re2_dog_hp_reroll, ROOM1190, echter game_step-Weg): der DEATH-Zweig 3
+     * bleibt auch dann zu, wenn man diese Rückstellung abschaltet — weil der RE1.5-Writer
+     * die Phase schon vorher auf 1 stempelt (@0x80012fd8). Es sind also ZWEI unabhängige
+     * Gründe; eine byte-true Phasen-Erhaltung müsste beide anfassen. */
     if ((e->state == 2 || e->state == 3) && e->hp != e->re2z_prev_hp) {
         e->sub_state_2 = 0; e->sub_state_3 = 0;
         e->re2z_prev_hp = e->hp;

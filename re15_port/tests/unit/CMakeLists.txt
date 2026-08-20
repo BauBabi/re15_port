@@ -1481,3 +1481,14 @@ target_compile_definitions(test_re2_stagger_knockdown PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_re2_stagger_knockdown COMMAND test_re2_stagger_knockdown)
 set_tests_properties(unit_re2_stagger_knockdown PROPERTIES TIMEOUT 120)
+
+# --- PIN: RE2-Hund HP-Re-Roll @0x801037E8 (gemeldeter Befund 2026-08-20 "falscher Tabellen-
+#     zweig 0x80105340 statt 0x801053B0" — nachgeprueft und WIDERLEGT). Pinnt Tabellenwahl
+#     (inkl. Negativ-Test gegen 0x801053B0), Einmal-Guard und die Erreichbarkeit. ---
+add_executable(test_re2_dog_hp_reroll test_re2_dog_hp_reroll.c)
+target_link_libraries(test_re2_dog_hp_reroll PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_dog_hp_reroll PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2_dog_hp_reroll PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2_dog_hp_reroll COMMAND test_re2_dog_hp_reroll)
+set_tests_properties(unit_re2_dog_hp_reroll PROPERTIES TIMEOUT 180)
