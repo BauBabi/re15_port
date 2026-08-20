@@ -1,3 +1,73 @@
+# RE1.5 Port — v0.3.4 (Early Preview)
+
+## Alle RE2-Gegner hatten die falschen Geraeusche
+
+Gemeldet war "die Kraehen haben den falschen Sound". Die Ursache lag tiefer:
+Der Port waehlte die Soundbank aus einer Tabelle, die er fuer eine
+**Gegnertyp**-Tabelle hielt. Sie enthaelt aber **Sound-Nummern aus den
+Raumdaten** — zwei verschiedene Dinge, die zufaellig beide kleine Zahlen sind.
+
+Dass es nur bei der Kraehe auffiel, war Glueck: Beim Zombie liefert die
+Verwechslung zufaellig die richtige Bank.
+
+Belegt ueber alle 250 RE2-Raumdateien. Was die Gegner vorher spielten:
+
+| Gegner | vorher | jetzt |
+|---|---|---|
+| Kraehe | Bank 21 (fremder Gegner) | **Bank 7** |
+| Hund | Bank 31 (eine reine **NPC**-Bank) | **Bank 6** |
+| Spinne | Bank 53 (fremde Doppelbank) | **Bank 11** |
+| Baby-Spinne | Bank 24 (fremder Gegner) | **Bank 11** (teilt sie mit der Grossen) |
+
+**Der Fress-Biss des Hundes war komplett stumm.** In der falschen Bank
+existiert dieser Laut gar nicht. Im Code stand dazu die Notiz, er sei "im
+Original eben stumm" — auch das war nur eine Folge der falschen Bank.
+
+**Dazu die Stimmenverwaltung.** Im Original hat jeder Laut einen festen Kanal
+und eine Prioritaet: Ein neuer Laut loest den alten ab oder wird verworfen. Der
+Port legte jeden Laut auf einen freien Kanal, sodass sie sich uebereinander
+stapelten. Im Kraehenschwarm gemessen: Von 49 Lauten klangen **35 anders** als
+sie sollten — zusaetzlich zu den durchweg falschen Samples.
+
+## Zombies: Todesanimation und Sturz laufen jetzt durch
+
+Der Trefferfilter des Ports hatte **eine von vier** Sperren. Im Original ist ein
+Gegner nicht mehr treffbar, wenn er inaktiv ist, gerade reagiert, **tot ist**
+oder in einem Sonderzustand steckt — nachgebaut war nur die zweite.
+
+Gemessen: Nach dem toedlichen Schuss kassierte die Leiche noch **sechs weitere
+Treffer**, die die Todesphase jedes Mal zurueckstellten. Deshalb landeten
+Zombies "animationslos" am Boden und standen mitten in der Fallanimation wieder
+auf. Beides ist behoben.
+
+## Zwei gemeldete Punkte sind KEIN Fehler
+
+- **"Manchmal fallen sie einfach so hin."** Das folgt nicht auf einen Treffer,
+  sondern auf einen **Griffversuch**: Endet der Griff, faellt der Zombie in 15
+  von 16 Faellen hin. Steht so im Original.
+- **"Der Sturz nach dem Torkeln fehlt."** Er funktioniert — braucht aber **drei
+  Pistolentreffer**. Ein interner Zaehler muss erst unter eine Schwelle fallen,
+  bevor das Torkeln ueberhaupt sturzbereit wird. Mit ein oder zwei Schuessen
+  passiert nichts.
+
+## Noch offen
+
+Die **wandernden Blutspritzer** (mal am Oberkoerper, mal am Bein) sind nicht
+geloest. Zwei Erklaerungen sind widerlegt: die Knochen-Umsortierung im
+Hybrid-Modus (beide Modell-Einstellungen zeigen dasselbe) und die Ankerwahl
+selbst (die beiden fraglichen Knochen liegen im Modell exakt am selben Punkt).
+Eine echte Fehlerquelle wurde gefunden und entfernt — ein Nebeneffekt konnte
+einen zweiten Spritzer am Boden zwischen den Fuessen ausloesen —, liess sich im
+Test aber nicht ausloesen. Ob es weg ist, zeigt erst das Spielen.
+
+Testsuite 178 Pruefungen.
+
+⚠️ Geraeusche und Bild sind hier nicht pruefbar (die Entwicklungssitzung hat
+weder Audio-Ausgabe noch Fenster-Aufzeichnung). Gemessen wurden Bank, Index,
+Kanal, Prioritaet und Frame — nicht der Klang.
+
+---
+
 # RE1.5 Port — v0.3.3 (Early Preview)
 
 ## Spinnen und Wasser
