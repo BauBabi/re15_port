@@ -1,3 +1,56 @@
+# RE1.5 Port — v0.3.3 (Early Preview)
+
+## Spinnen und Wasser
+
+**In ROOM2090 stehen beide Spinnen im Wasser** — das war bisher unsichtbar,
+weil ein internes Zaehlwerkzeug die betroffenen Datensaetze verschluckt hatte.
+Der Raum sah aus, als haette er gar keine Spinnen. Der Port hat den Wasserstand
+die ganze Zeit korrekt ausgerechnet, das RE2-Gehirn hat ihn nur nie abgefragt.
+
+Jetzt ist die ganze Kette drin: Im Wasser wird die Spinne auf Wasserhoehe
+geklemmt, wirbelt keinen Staub mehr auf — und wenn sie dort stirbt, taucht die
+Leiche ein und duempelt mit der Original-Wellenbewegung.
+
+RE1.5 selbst kennt fuer Spinnen ueberhaupt keine Wasserreaktion; dort war
+nichts kaputt und es aendert sich nichts.
+
+## Der zaehe Zombie ist Brad Vickers
+
+Im RE2-Modus bekommt der Zombie mit der internen Nummer 17 jetzt **250
+Lebenspunkte** — rund dreimal so viel wie seine Nachbarn. Das ist kein Fehler:
+In RE2 ist dieser Gegner **Brad Vickers**, der einzige absichtlich zaehe
+Sonder-Zombie des Spiels. Das Original prueft schlicht die Gegnernummer und
+setzt den Wert hart.
+
+Im Spiel faellt das kaum auf, weil die RE2-Waffen ebenfalls dreimal so stark
+zuschlagen: vorher 15 Pistolentreffer, jetzt 16. Mit dem **Messer** ist er
+allerdings praktisch nicht mehr zu toeten (rechnerisch 84 Treffer).
+
+In RE1.5 bleibt derselbe Gegner ein ganz normaler Zombie mit 71 Lebenspunkten.
+
+## Zwei Korrekturen am RE2-Hund
+
+**Zwei erfundene Zustandswechsel entfernt.** An einer Stelle im Hunde-Code
+standen zwei Zustandsaenderungen, die es im Original gar nicht gibt — die
+Routine endet dort ohne jeden Zustandswechsel. Eine davon haette den Hund
+dauerhaft als Leiche markiert.
+
+**Ein Halbwort-Fehler behoben.** An zwei Stellen schreibt das Original einen
+16-Bit-Wert und setzt damit zwei Felder auf einmal; der Port setzte nur eines.
+
+⚠️ Eine frueher gemeldete Vermutung ist damit **widerrufen**: Der RE2-Hund kann
+sich NICHT totstellen. Diese Behauptung beruhte auf einem Lesefehler in der
+Analyse (ein 32-Bit-Schreibzugriff war als 8-Bit-Zugriff gelesen worden). Zwei
+unabhaengige Sperren im Original schliessen das Verhalten aus; 2048 erzwungene
+Durchlaeufe erreichen es null Mal.
+
+Testsuite 176 Pruefungen.
+
+⚠️ Weiterhin nicht am Bildschirm geprueft (die Entwicklungssitzung kann keine
+Fenster aufzeichnen) — nur rechnerisch und ueber die Testsuite.
+
+---
+
 # RE1.5 Port — v0.3.2 (Early Preview)
 
 ## Drei gemeldete Punkte am RE2-Zombie behoben
