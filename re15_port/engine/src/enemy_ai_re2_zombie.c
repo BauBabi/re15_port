@@ -3782,9 +3782,64 @@ int re15_re2z_tick(int slot)
      * fuer die gesamte Reaktion unverwundbar und der Flinch-Zweig toter Code.
      * PORT-VERTRAG, kein geratener Wert: der Latch, den der geteilte Resolver liest, SPIEGELT
      * jetzt exakt den Original-Filter — treffbar genau dann, wenn +0x1D3 == 0. Die bestehenden
-     * Freigaben an den Reaktions-Ausgaengen bleiben stehen (sie sind dieselbe Aussage) . */
-    if (e->re2z_self1d3 == 0u)
-        e->hit_react &= (uint8_t)~1u;                              /* Zwilling von `lbu 467 /
-                                                                    * bne v0,zero` @0x80047138-40 */
+     * Freigaben an den Reaktions-Ausgaengen bleiben stehen (sie sind dieselbe Aussage) .
+     *
+     * ⛔ KORREKTUR 2026-08-20 — DER SPIEGEL WAR UNVOLLSTAENDIG UND EINSEITIG.
+     * Nutzer-Report v0.3.3: "(a) manchmal fallen sie einfach so hin", "(b) stehen mitten in der
+     * Hinfall-Animation wieder auf", "(e) beim Anschiessen und Sterben landen sie weitestgehend
+     * animationslos am Boden".
+     * GEMESSEN (probe_re2_zfall Modus 4, ROOM1140, echter Weg game_step + R1/SQUARE, RE2-Bank
+     * EM010 geladen — Dauerfeuer Pistole):
+     *   f165 Treffer -> st=3 DEATH, s1=3, s2=1, clip 7 (Laenge 70) — die Todes-Anim startet
+     *   f176 TREFFER auf die LEICHE (hp -1 -> -17), Todes-Phase s2 faellt 1 -> 0
+     *   f187/198/209/220/231 fuenf WEITERE Treffer, hp bis -97, s2 bleibt bei 0 haengen
+     * Der Port beschiesst also die Leiche weiter und setzt dabei jedes Mal die Todes-Phase zurueck.
+     *
+     * ---- DER ORIGINAL-FILTER HAT VIER GATES, DER PORT SPIEGELTE EINS -------------------------
+     * FUN_800470C0, Kandidaten-Schleife (info/re2leon/PSX.EXE, selbst disassembliert):
+     *   80047124: lw   v0,0(s0)          ; Entity-Flagwort
+     *   8004712c: andi v0,v0,0x1
+     *   80047130: beq  v0,zero,0x8004740c ; (1) inaktiv                 -> UEBERSPRUNGEN
+     *   80047138: lbu  v0,467(s0)         ; +0x1D3
+     *   80047140: bne  v0,zero,0x8004740c ; (2) +0x1D3 != 0             -> UEBERSPRUNGEN
+     *   80047148: lh   v0,342(s0)         ; +0x156 = HP
+     *   80047150: bltz v0,0x8004740c      ; (3) HP < 0 (TOT)            -> UEBERSPRUNGEN
+     *   80047158: lhu  v0,270(s0)         ; +0x10E
+     *   80047160: andi v0,v0,0xc000
+     *   80047164: bne  v0,zero,0x8004740c ; (4) +0x10E & 0xC000 gesetzt -> UEBERSPRUNGEN
+     *   8004716c: lhu  v1,464(s0)         ; erst DANACH beginnt die Trefferpruefung
+     * 717d13e0 hat NUR Gate (2) gespiegelt. Gate (3) fehlte -> Leichen bleiben beschiessbar;
+     * Gate (4) fehlte -> der Limpet-/Liege-Latch 0x4000 und das Schon-gefallen-Bit schuetzen nicht.
+     *
+     * ---- UND DER SPIEGEL WAR EINSEITIG --------------------------------------------------------
+     * Der alte Code konnte den Latch nur FREIGEBEN (`&= ~1`), nie SETZEN. Damit war jeder Zombie
+     * ohne +0x1D3 in JEDEM Frame treffbar — auch tot, auch liegend, auch mitten in einer laufenden
+     * Reaktion. Der geteilte RE1.5-Resolver blockiert einen Kandidaten aber ausschliesslich ueber
+     * den gesetzten Latch (@0x800123fc-418 Zweitkontakt-Rekursion, Port re15_damage.c:1154-1156);
+     * ein Filter, der nur freigibt, ist deshalb GAR KEIN Filter. Beide Richtungen sind noetig.
+     *
+     * ---- WARUM BIT 1 (+0x93 & 2) HIER MITGELOESCHT WIRD ---------------------------------------
+     * Das Blockieren ueber Bit 0 zieht im RE1.5-Resolver zwangslaeufig `+0x93 |= 2` nach sich
+     * (@0x8001240c / @0x80012fcc, Port re15_damage.c:1155/1373) — und Bit 1 ist der Ausloeser des
+     * RE1.5-Gore-Spawns FUN_80106a44 (re15_enemy_gore_tick, re15_damage.c:1411), der an der
+     * AKTOR-WURZEL e->x/y/z spawnt, also AM BODEN ZWISCHEN DEN FUESSEN. Das ist der Nutzer-Befund
+     * (d) "manchmal taucht das Blut an der richtigen Stelle auf, und manchmal beim Bein unten".
+     * RE2 hat das Feld +0x93 UEBERHAUPT NICHT: eigener Voll-Scan beider RE2-Binaries nach
+     * `sb/lbu rt,147(rs)` liefert 0 Treffer in info/re2leon/PSX.EXE UND in EMOVL10_S0.BIN
+     * (Beleg schon im Kopf von re2z_hit_latch_release). Ein +0x93-getriebener Wurzel-Gore ist im
+     * RE2-Gehirn also definitionsgemaess FREMDCODE. Die RE2-Blutquellen sind die drei
+     * anker-gebundenen Emitter (@0x801050B0-158 / @0x80105650-704 / @0x80105D14-DBC), und die
+     * laufen bereits ueber re2z_blood_fx_at an der Knochen-Matrix. Deshalb: Bit 1 gehoert bei
+     * einem RE2-eigenen Zombie in JEDEM Tick auf 0 — sonst erzeugt ausgerechnet der korrekte
+     * Filter das Fuss-Blut. */
+    {   int hittable = (e->active != 0)                            /* (1) +0x0 & 1   @0x80047124-30 */
+                    && (e->re2z_self1d3 == 0u)                     /* (2) +0x1D3     @0x80047138-40 */
+                    && (e->hp >= 0)                                /* (3) HP < 0     @0x80047148-50 */
+                    && !(e->re2z_f10e & 0xC000u);                  /* (4) +0x10E     @0x80047158-64 */
+        if (hittable) e->hit_react &= (uint8_t)~1u;                /* Kandidat freigegeben */
+        else          e->hit_react |= (uint8_t)1u;                 /* Kandidat UEBERSPRUNGEN */
+        e->hit_react &= (uint8_t)~2u;                              /* RE2 kennt +0x93 nicht ->
+                                                                    * kein RE1.5-Wurzel-Gore */
+    }
     return 1;
 }

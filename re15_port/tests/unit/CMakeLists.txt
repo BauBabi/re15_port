@@ -1515,3 +1515,27 @@ target_compile_definitions(test_re2_dog_playdead_gate PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_re2_dog_playdead_gate COMMAND test_re2_dog_playdead_gate)
 set_tests_properties(unit_re2_dog_playdead_gate PROPERTIES TIMEOUT 120)
+
+# --- DIAGNOSE: die FUENF Nutzer-Symptome am RE2-Zombie (v0.3.3): grundloses Fallen,
+#     Aufstehen mitten in der Fall-Anim, fehlender Sturz nach dem Torkeln, wandernde
+#     Blutposition, animationsloses Sterben. Schuss-FAHRPLAN statt Dauerfeuer, damit
+#     "Treffer im Stand / Torkeln / Fallen / Liegen" getrennt messbar sind.
+#     Kein add_test — reine Messsonde. ---
+add_executable(probe_re2_zfall probe_re2_zfall.c)
+target_link_libraries(probe_re2_zfall PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re2_zfall PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_re2_zfall PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- PIN: der VOLLSTAENDIGE RE2-Kandidatenfilter FUN_800470C0 @0x80047124-64 im
+#     re15_re2z_tick-Epilog (vier Gates, beide Richtungen) + das Loeschen von +0x93 Bit 1
+#     (RE1.5-Wurzel-Gore). Nutzer-Report v0.3.3: Leichen wurden weiter beschossen und die
+#     Todes-/Fall-Animation dabei zurueckgesetzt. Mit Positiv-Kontrolle, Masken-Gegenprobe,
+#     200-Tick-Negativtest und RE1.5-Regressionswache. ---
+add_executable(test_re2_zombie_hitfilter test_re2_zombie_hitfilter.c)
+target_link_libraries(test_re2_zombie_hitfilter PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_zombie_hitfilter PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2_zombie_hitfilter PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2_zombie_hitfilter COMMAND test_re2_zombie_hitfilter)
+set_tests_properties(unit_re2_zombie_hitfilter PROPERTIES TIMEOUT 60)
