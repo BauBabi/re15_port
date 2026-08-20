@@ -1502,3 +1502,16 @@ target_compile_definitions(test_re2_dog_hp_reroll PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_re2_dog_hp_reroll COMMAND test_re2_dog_hp_reroll)
 set_tests_properties(unit_re2_dog_hp_reroll PROPERTIES TIMEOUT 180)
+
+# --- PIN: RE2-Hund „Totstellen" (@0x801037E8 als DEATH-Phase 3). Nutzer-Report 2026-08-20
+#     („der Zweig ist im Original offen, im Port zu"). NACHGEMESSEN: der Zweig ist im
+#     ORIGINAL unerreichbar — Applier-Wort-`sw` @0x80047288/@0x80047290 nullt die Phase, und
+#     `bltz +0x156` @0x80103570 sperrt die Soft-Landung, weil HP im Tod stets < 0 ist.
+#     Pinnt beide Riegel + Positiv-Kontrolle + RE1.5-Regressionswache. ---
+add_executable(test_re2_dog_playdead_gate test_re2_dog_playdead_gate.c)
+target_link_libraries(test_re2_dog_playdead_gate PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_dog_playdead_gate PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2_dog_playdead_gate PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2_dog_playdead_gate COMMAND test_re2_dog_playdead_gate)
+set_tests_properties(unit_re2_dog_playdead_gate PROPERTIES TIMEOUT 120)

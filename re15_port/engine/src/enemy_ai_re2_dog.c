@@ -1353,10 +1353,11 @@ static void re2d_hurt_p0(re15_actor_t *e, re15_actor_t *pl)
         return;
     }
     if (e->re2d_air219) {                                  /* Luft-Treffer @0x8010341C-28 */
-        e->sub_state_2 = 1;                                /* sh 1,6 @0x80103430 */
+        e->sub_state_2 = 1; e->sub_state_3 = 0;            /* sh 1,6 @0x80103430 — HALBWORT:
+                                                            * schreibt +0x6 UND nullt +0x7 */
         e->speed_h = (int16_t)(e->speed_h / 2);            /* sra 17 @0x8010342C-40 */
     } else {
-        e->sub_state_2 = 2;                                /* sh 2,6 @0x80103450 */
+        e->sub_state_2 = 2; e->sub_state_3 = 0;            /* sh 2,6 @0x80103450 (dito Halbwort) */
         e->speed_h = 240;                                  /* sh 240,324 @0x80103454-5C */
         re2d_hitbox(e, 0);                                 /* 0x80104088(0) @0x80103458 */
     }
@@ -1499,28 +1500,73 @@ static void re2d_hurt_p3(re15_actor_t *e)
  * 0x801053B0 ist im Re-Roll also gar nicht adressierbar. Die beiden Tabellen sind auch inhalt-
  * lich verschieden (0x801053B0 == 0x80105340 + 10 je Eintrag), der Pin unten trennt sie darueber.
  *
- * ERREICHBARKEIT — die alte Einstufung „im HURT-Fluss unerreicht" war RICHTIG, aber UNVOLL-
- * STAENDIG (die Funktion ist KEIN toter Code):
+ * ERREICHBARKEIT — ⛔ KORREKTUR 2026-08-20: die Funktion ist im Auslieferungs-RE2 TOTER CODE.
+ * (Die Zwischen-Einstufung „im ORIGINAL erreichbar, weil der Applier +0x6 nicht nullt" war
+ *  FALSCH und ist hiermit widerrufen — sie beruhte auf einem Lesefehler am Applier.)
+ *
  *   - HURT: generische Zeile 0x80103308 dispatcht @0x80105588[+0x6]; [4] = 0x801037E8. +0x6
- *     wird im ganzen Modul NIE > 3 (Voll-Scan aller `sb/sh rt,6(rs)`, groesster Immediate 3;
- *     dieselbe 4 steht auch in der Sprung-/Heul-Zeilen-Tabelle @0x801055BC[4]) -> unerreichbar.
+ *     wird im ganzen Modul NIE > 3 -> unerreichbar. BELEG: praeziser Rueckwaerts-Dataflow ueber
+ *     ALLE 103 `sb/sh rt,6|7(rs)` im Modul; groesster je nach +0x6 geschriebener Wert ist 3
+ *     (@0x80103A34 schreibt 259 = 0x0103, also +0x6 = 3 UND +0x7 = 1).
+ *
  *   - DEATH: Router 0x80104118 dispatcht bei +0x6 != 0 ueber @0x80105668[+0x6]; **[3] =
- *     0x801037E8** (ebenso die Gore-Varianten @0x80105688[3] und @0x80105698[3]).
- *     Im ORIGINAL ist das erreichbar, weil der RE2-Schadens-Applier FUN_800470C0
- *     (0x800470C0-0x8004765C) auf die Entity NUR +0x4 (state; `bgez` @0x80047284/@0x800474A8 ->
- *     HP<0 = 3), +0x5 (@0x80047324/@0x80047574) und +0x1D0/+0x1D2/+0x1D3 schreibt — **niemals
- *     +0x6/+0x7** (die `sh …,6(s3)` @0x800471D0/@0x800473F0 liegen auf einer anderen Struktur).
- *     Die Phase ueberlebt den Kill: wer bei +0x6 == 3 stirbt (z.B. HURT-P3-Erholung
- *     @0x801035A8 mit v0=3, Knockdown-Erholung @0x80103BDC, oder ACTIVE-Phasen wie
- *     @0x80100C6C/@0x80101A28), landet direkt hier statt im Todes-Kern -> „spielt tot".
- *     Danach frisst der Einmal-Guard jeden Folge-Tick; die Entity bleibt in state 3 liegen,
- *     bis der naechste Treffer sie (HP ist ja wieder positiv) per `bgez` in state 2 = HURT
- *     zurueckholt.
- *   - IM PORT ist der Zweig zu: der Root-Tick setzt bei jedem neuen Treffer die Phase auf 0
- *     zurueck (dokumentiertes MAPPING, s. re15_re2dog_tick) -> DEATH startet immer bei [0], und
- *     die einzige andere Quelle fuer +0x6 == 3 in DEATH (P1-Soft-Landung @0x80103598) ist durch
- *     `bltz +0x156` @0x80103570 gesperrt, weil HP im Tod stets < 0 ist (@0x80047284 bzw.
- *     re15_damage.c:1340). GEMESSEN auf dem echten Weg: test_re2_dog_hp_reroll (2).
+ *     0x801037E8** (ebenso die Router-Varianten 0x80104610 -> @0x80105688[3] und
+ *     0x801048B4 -> @0x80105698[3]). `state == 3 && +0x6 == 3` ist trotzdem UNERREICHBAR:
+ *
+ *     (a) DER APPLIER NULLT DIE PHASE. FUN_800470C0 schreibt das GANZE 32-Bit-Wort:
+ *           80047264  lw   v1,4(s1)      ; altes routine-Wort
+ *           80047278  sw   v1,508(s1)    ; +0x1FC = altes Wort (nur wenn != 0xC02; wird NIRGENDS
+ *                                        ;   wieder gelesen — Voll-Scan EXE+Modul auf imm=508:
+ *                                        ;   5 Stores, 0 Loads)
+ *           8004727c  lh   v1,342(s1)
+ *           80047280  addiu v0,zero,2
+ *           80047284  bgez v1,0x80047294
+ *           80047288  sw   v0,4(s1)      ; DELAY-SLOT: Wort = 2  -> +0x5/+0x6/+0x7 = 0
+ *           8004728c  addiu v0,zero,3
+ *           80047290  sw   v0,4(s1)      ; Wort = 3 (DEATH)      -> +0x5/+0x6/+0x7 = 0
+ *           80047324  sb   s5,5(s1)      ; ERST DANACH +0x5 = Waffen-Id (a3 & 0xff)
+ *         Zweiter Zweig identisch @0x800474A8/AC/B0/B4 + @0x80047574. Unabhaengige Gegenprobe
+ *         im Decompilat RE2_Quellcode_V2/FUN_800470c0.c Z.48/50: `puVar5[1] = 2;` /
+ *         `puVar5[1] = 3;` mit `puVar5` als `uint*` — also ein Wort-Store, kein Byte-Store.
+ *         Ebenso der Glieder-Hitscan FUN_800410CC (@0x800418EC/@0x800418FC `sw`).
+ *         Voll-Aufzaehlung ALLER Stores auf Entity+0x4 in der EXE (94, funktionslokal auf
+ *         Basisregister mit em-Offsets 0x156/0x1D2/0x1D3/0x10E/0x94/0x1EE gefiltert): nur SECHS
+ *         Byte-Stores, und keiner davon trifft ein em — 0x80051F08/0x80051F3C (Spieler
+ *         0x800CE330), 0x8005D814/0x8005DC24/0x8005DE14 (Spieler/Partner 0x800CFBD8/0x800CFE18)
+ *         und 0x80055CE8 = der SCD-Opcode `Member_set` (Sprungtabelle @0x80011228, 44 Faelle:
+ *         idx2 = +0x4, idx3 = +0x5, idx4 = +0x6, idx5 = +0x7) — also Skript, kein KI-Pfad.
+ *         Im Hundemodul selbst gibt es KEINEN Byte-Store auf +0x4 (0x80100DD4/0x80100E10/
+ *         0x80100E24 liegen auf +0x21C: Basis s1 = self+0x218, `lh 2(s1)` = +0x21A Fatigue,
+ *         `slti …,451`). Auch FUN_80047664 (Radius-Schaden) scheidet aus: dessen Liste
+ *         0x800CFBD8+572 = 0x800D023C ist die SPIELER-Liste (Schleifenzahl 1|2 = Partner),
+ *         waehrend der em-Applier ueber 0x800D3C34 laeuft.
+ *
+ *     (b) DIE EINZIGE +0x6=3-QUELLE IM TOD IST VERRIEGELT. In DEATH kann +0x6 nur ueber die
+ *         geteilte Landung 0x801034C8 (= @0x80105668[1]) auf 3 gehen, und die verlangt
+ *         `lh +0x156 >= 0` — `bltz v0,0x8010359c` @0x80103570 schickt HP < 0 IMMER in den
+ *         HARD-Zweig (+0x6 = 2 @0x801035A4-A8). In state 3 ist HP aber per Konstruktion < 0:
+ *         jeder Uebergang nach 3 faellt unmittelbar aus einem `bgez HP` (@0x80047284,
+ *         @0x800474A8, @0x800418F0, @0x80065C58), und der EINZIGE HP-Store im ganzen Hundemodul
+ *         ist `sh v0,342(s0)` @0x8010387C — der steckt IN 0x801037E8 selbst. Kein Pfad hebt
+ *         die HP vorher wieder auf >= 0.
+ *         (Die Gore-Quellen @0x80103A34 und @0x80103BDC haengen am HURT-Router 0x801038C0,
+ *          der nur aus 0x801032A8 = state 2 erreicht wird — nie aus DEATH.)
+ *
+ *     (c) GEGENPROBE — selbst ERZWUNGEN gaebe es kein „steht wieder auf". 0x801037E8 setzt
+ *         `+0x1D3 |= 0x80` (@0x8010389C-A4). Beide Applier steigen aber bei +0x1D3 != 0 sofort
+ *         aus (`lbu v0,467(s0)` / `bne v0,zero,<continue>` @0x80047138-40 bzw. @0x800476EC-F4),
+ *         der Root-Tick dekrementiert nur die LOW-7 (`andi 0x7f` @0x80100030) und laesst Bit
+ *         0x80 stehen, und geloescht wird es NUR in HURT-P2 (@0x80103710) und HURT-P3
+ *         (@0x801037A4) — beide in state 2, den ein unantastbarer Hund nie mehr erreicht.
+ *         Ein Hund in diesem Zweig laege also fuer immer unbewegt und unverwundbar da; die
+ *         Erzaehlung „der naechste Treffer holt ihn per `bgez` @0x80047284 zurueck" kann im
+ *         Original schon deshalb nicht stimmen.
+ *
+ *   - FOLGE FUER DEN PORT: der Port hat hier NICHTS zu portieren; sein DEATH startet — genau
+ *     wie das Original — immer bei Phase 0. Der RE2-Stempel in re15_damage.c setzt
+ *     `sub_state_2 = 0` (Kommentar dort: „+0x6 = 0 durch das Wort-`sw` @0x80047288/@0x80047290")
+ *     und ist damit byte-true, nicht ein „Mapping". GEMESSEN auf dem echten Weg:
+ *     test_re2_dog_hp_reroll (3) und test_re2_dog_playdead_gate.
  *
  * NICHT PORTIERT (bewusst, keine Erfindung):
  *   - +0x151/+0x152/+0x153 = 13 (@0x80103884-8C) sind die drei GLIEDMASSEN-HP: der INIT setzt
@@ -1777,17 +1823,21 @@ static void re2d_death(re15_actor_t *e, re15_actor_t *pl)
         }
         break;
     default:                                               /* @0x80105668[3] = 0x801037E8 HP-Re-
-                                                            * Roll („spielt tot"). Das Original
-                                                            * schreibt hier KEINEN Zustand — es
-                                                            * bleibt in state 3 liegen, bis der
-                                                            * nächste Treffer es per `bgez`
-                                                            * @0x80047284 nach state 2 zurückholt.
-                                                            * Das frühere `set_state_word(0x7)`
-                                                            * (CORPSE) war eine Erfindung und
-                                                            * hätte den Mechanismus zerstört
-                                                            * (re2d_corpse setzt hp = −1).
-                                                            * Entfernt; Beleg + Erreichbarkeits-
-                                                            * Analyse am Re-Roll oben. */
+                                                            * Roll. Das Original schreibt hier
+                                                            * KEINEN Zustand (0x801037E8 endet
+                                                            * @0x801038B8 mit `jr ra`) — das
+                                                            * frühere `set_state_word(0x7)` war
+                                                            * eine Erfindung und ist entfernt.
+                                                            * ⛔ Der Zweig ist im ORIGINAL wie im
+                                                            * Port UNERREICHBAR (Applier nullt
+                                                            * +0x6 per Wort-`sw` @0x80047288/90,
+                                                            * und `bltz +0x156` @0x80103570
+                                                            * sperrt die Soft-Landung, weil HP im
+                                                            * Tod stets < 0 ist) — vollständiger
+                                                            * Beleg am Re-Roll oben, gemessen in
+                                                            * test_re2_dog_playdead_gate. Der
+                                                            * Aufruf bleibt als byte-treuer
+                                                            * Tabellen-Eintrag stehen. */
         re2d_hurt_p4_reroll(e);
         break;
     }
@@ -1879,21 +1929,19 @@ int re15_re2dog_tick(int slot)
     if (e->state == 1) { e->re2z_prev_sub = e->sub_state_1; e->re2z_prev_hp = e->hp; }
     /* Treffer-Erkennung: das geteilte RE1.5-take_damage schreibt +0x7=0 (@0x80012fd4), +0x6=1
      * (@0x80012fd8), +0x5=Reaktions-Clip (@0x80012fe8) und +0x4=2/3 (@0x80013018/@0x80013020).
-     * ⚠ KORREKTUR 2026-08-20 (selbst nachdisassembliert): der RE2-Applier FUN_800470C0
-     * (0x800470C0-0x8004765C) schreibt auf die Entity NUR +0x4 (@0x80047288/90, @0x800474AC/B4),
-     * +0x5 (@0x80047324/@0x80047574) und +0x1D0/+0x1D2/+0x1D3 — er nullt die Phase +0x6 NICHT
-     * (die `sh …,6(s3)` @0x800471D0/@0x800473F0 liegen auf einer anderen Struktur). Im Original
-     * ÜBERLEBT die Phase also den Treffer/Kill; das ist der Eingang in DEATH-Phase 3
-     * (@0x80105668[3] = 0x801037E8, s. Re-Roll-Block oben).
-     * Der Port bleibt bewusst bei seinem MAPPING „neuer Treffer → Phase 0, Zeile = prev_sub":
-     * es ist die Anpassung an den RE1.5-Writer, der +0x6=1 stempelt (also ebenfalls nicht die
-     * Original-Phase stehen lässt). Eine byte-true Phasen-Erhaltung wäre eine Änderung an JEDER
-     * Trefferreaktion des Hundes und ist hier NICHT belegt gemessen → offen dokumentiert,
-     * nicht stillschweigend geändert. Folge: DEATH startet im Port immer bei Phase 0.
-     * GEMESSEN (test_re2_dog_hp_reroll, ROOM1190, echter game_step-Weg): der DEATH-Zweig 3
-     * bleibt auch dann zu, wenn man diese Rückstellung abschaltet — weil der RE1.5-Writer
-     * die Phase schon vorher auf 1 stempelt (@0x80012fd8). Es sind also ZWEI unabhängige
-     * Gründe; eine byte-true Phasen-Erhaltung müsste beide anfassen. */
+     * ⛔ KORREKTUR 2026-08-20 (die Zwischen-Korrektur vom selben Tag war FALSCH und ist
+     * widerrufen): der RE2-Applier FUN_800470C0 NULLT die Phase sehr wohl — er schreibt das
+     * GANZE 32-Bit-Wort `sw v0,4(s1)` (@0x80047288 im Delay-Slot von `bgez` @0x80047284, und
+     * @0x80047290; zweiter Zweig @0x800474AC/@0x800474B4), also +0x4 = 2/3 und +0x5/+0x6/+0x7 =
+     * 0; ERST DANACH setzt er +0x5 = Waffen-Id (`sb s5,5(s1)` @0x80047324/@0x80047574).
+     * Gegenprobe im Decompilat RE2_Quellcode_V2/FUN_800470c0.c Z.48/50 (`puVar5[1] = 2;` bzw.
+     * `= 3;` mit `puVar5` als `uint*`). Dasselbe gilt für den Glieder-Hitscan FUN_800410CC
+     * (@0x800418EC/@0x800418FC). Die Phase überlebt den Treffer im Original also NICHT.
+     * Damit ist diese Rückstellung hier KEIN „Mapping", sondern byte-true — sie bildet genau
+     * das Wort-`sw` nach (der RE2-Stempel in re15_damage.c setzt +0x6 = 0 aus demselben Grund).
+     * Folge: DEATH startet im Original wie im Port immer bei Phase 0, und DEATH-Phase 3
+     * (@0x80105668[3] = 0x801037E8) ist in beiden unerreichbar — vollständiger Beleg im
+     * Re-Roll-Block oben, gemessen in test_re2_dog_hp_reroll (3) + test_re2_dog_playdead_gate. */
     if ((e->state == 2 || e->state == 3) && e->hp != e->re2z_prev_hp) {
         e->sub_state_2 = 0; e->sub_state_3 = 0;
         e->re2z_prev_hp = e->hp;

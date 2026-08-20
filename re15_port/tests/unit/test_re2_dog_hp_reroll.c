@@ -40,17 +40,20 @@
  * ===========================================================================================
  * ERREICHBARKEIT (die zweite Haelfte des Befunds)
  * ===========================================================================================
- * „im HURT-Fluss unerreicht" stimmt — aber die Funktion ist KEIN toter Code:
+ * ⛔ KORRIGIERT 2026-08-20 (der Satz „erreichbar, weil der Applier +0x6 nicht nullt" war ein
+ *    Lesefehler am Applier und ist widerrufen — Details + Voll-Beleg in
+ *    test_re2_dog_playdead_gate.c):
  *   HURT   : generische Zeile 0x80103308 -> @0x80105588[+0x6]; [4] = 0x801037E8. +0x6 wird im
- *            Modul NIE > 3 (Voll-Scan aller `sb/sh rt,6(rs)`) -> unerreichbar.
+ *            Modul NIE > 3 (praeziser Rueckwaerts-Dataflow ueber alle 103 `sb/sh rt,6|7(rs)`)
+ *            -> unerreichbar.
  *   DEATH  : Router 0x80104118 -> bei +0x6 != 0 ueber @0x80105668[+0x6]; **[3] = 0x801037E8**
- *            (ebenso @0x80105688[3] / @0x80105698[3]). Erreichbar, weil der RE2-Applier
- *            FUN_800470C0 die Phase +0x6 beim Kill NICHT nullt (er schreibt auf die Entity nur
- *            +0x4/+0x5/+0x1D0/+0x1D2/+0x1D3).
- *   PORT   : der Root-Tick setzt bei jedem neuen Treffer die Phase auf 0 (dokumentiertes
- *            MAPPING an den RE1.5-Writer, der +0x6=1 stempelt) -> DEATH startet immer bei [0];
- *            die zweite Quelle fuer +0x6==3 in DEATH (P1-Soft-Landung @0x80103598) ist durch
- *            `bltz +0x156` @0x80103570 gesperrt, weil HP im Tod stets < 0 ist.
+ *            (ebenso @0x80105688[3] / @0x80105698[3]) — ebenfalls UNERREICHBAR, weil
+ *            (a) FUN_800470C0 das ganze Wort schreibt (`sw v0,4(s1)` @0x80047288/@0x80047290,
+ *                zweiter Zweig @0x800474AC/@0x800474B4) und damit +0x5/+0x6/+0x7 nullt, und
+ *            (b) die einzige +0x6=3-Quelle im Tod (Soft-Landung @0x80103598 in 0x801034C8)
+ *                per `bltz +0x156` @0x80103570 an HP >= 0 haengt — in state 3 ist HP stets < 0.
+ *   PORT   : bildet genau das ab (RE2-Stempel re15_damage.c: +0x6 = 0; Root-Tick ebenso)
+ *            -> DEATH startet immer bei Phase 0.
  *            Punkt (3) misst das auf dem ECHTEN Weg (ROOM1190, game_step, Pad R1+SQUARE).
  *
  * DIE PINS
@@ -303,8 +306,9 @@ static void pin_reachability(void)
      * (re15_re2dog_tick mit state 3 + Phase 3) und sieht den Re-Roll 4096-mal feuern — der
      * Detektor ist also nicht blind, hier ist der Zweig wirklich zu.
      * GEMESSEN (Gegenprobe 2026-08-20): schaltet man die Phasen-Rueckstellung im Root-Tick ab,
-     * bleibt die groesste DEATH-Phase trotzdem 2 — der RE1.5-Writer stempelt +0x6 = 1
-     * (@0x80012fd8), bevor der Zustand auf 3 geht. Zwei unabhaengige Gruende. */
+     * bleibt die groesste DEATH-Phase trotzdem 2 — im ORIGINAL aus demselben Grund, den
+     * test_re2_dog_playdead_gate pinnt: `bltz +0x156` @0x80103570 sperrt die Soft-Landung im
+     * Tod, und der Applier nullt die Phase ohnehin per Wort-`sw` @0x80047288/@0x80047290. */
     CHECK(death_phase_max >= 0 && death_phase_max <= 2,
           "(3b) DEATH laeuft nur ueber die Phasen 0..2 (Kern @0x80104178 / Luft @0x801034C8 / "
           "Rutschen @0x80104200); Phase 3 = der HP-Re-Roll @0x80105668[3] wird NIE erreicht "
