@@ -1582,3 +1582,21 @@ target_compile_definitions(test_re15_zombie_death_anim PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_re15_zombie_death_anim COMMAND test_re15_zombie_death_anim)
 set_tests_properties(unit_re15_zombie_death_anim PROPERTIES TIMEOUT 300)
+
+# --- PIN: die STURZ-KETTE des RE2-Zombie-Todes (DEATH @0x80108250 -> FUN_80108530).
+#     Nutzer-Report 2026-08-20 (RE2-KI, beide Modi): "fallen manchmal ganz komisch nach vorne …
+#     liegen merkwuerdig abrupt am Boden auf dem Bauch, ohne richtigen Uebergang". Ursache: der
+#     Port fuhr fuer JEDEN Tod FUN_80108A14 (Clip 7) — den Handler der 1D-Tabelle @0x8010CECC,
+#     der nur fuer den wiederbelebten Kriecher (`+0x10E & 1`) gilt. Der normale Stand-Tod laeuft
+#     ueber den 2D-Dispatch @0x8010CC24 in FUN_80108530 (Clip 1 rueckwaerts / Clip 2 ab Frame 10
+#     vorwaerts) und setzt +0x21A Bit 0x4 = Richtung, das spaeter die Leichen-Pose waehlt.
+#     Der Pin pinnt den VERLAUF Frame fuer Frame (Keyframe monoton, Abstieg Stand->Boden ohne
+#     Sprung, beide Nahtstellen) fuer BEIDE Richtungen, plus Tabellen-Pin, Negativ-Kontrolle
+#     (der Clip-7-Zweig MUSS durchfallen) und RE1.5-Regressionswache. ---
+add_executable(test_re2_zombie_death_fall test_re2_zombie_death_fall.c)
+target_link_libraries(test_re2_zombie_death_fall PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_zombie_death_fall PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2_zombie_death_fall PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2_zombie_death_fall COMMAND test_re2_zombie_death_fall)
+set_tests_properties(unit_re2_zombie_death_fall PROPERTIES TIMEOUT 300)

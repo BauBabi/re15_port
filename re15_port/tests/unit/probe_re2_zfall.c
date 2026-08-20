@@ -175,6 +175,7 @@ int main(int argc, char **argv)
     int seen_kd_exec = 0, seen_stagger = 0, gore2_frames = 0;
     int shot_stagger_done = 0, shot_fall_done = 0;
     int fall_start = -1, fall_end = -1;
+    int death_trace = 0;
 
     for (int f = 0; f < budget; f++) {
         pl->hp = 100;
@@ -216,7 +217,9 @@ int main(int argc, char **argv)
         int fx_new = (fx_part != fx_part_last) || fx[0] != fx_last[0]
                      || fx[1] != fx_last[1] || fx[2] != fx_last[2];
 
-        if (hit || fx_new || e->state != st_last || e->sub_state_1 != s1_last
+        if (e->hp < 0 && death_trace < 120) death_trace++;   /* ab dem Todes-Tick JEDEN Frame */
+        if (hit || fx_new || (death_trace > 0 && death_trace < 120)
+            || e->state != st_last || e->sub_state_1 != s1_last
             || e->sub_state_2 != s2_last) {
             printf("f%-4d %s%s st=%d s1=%2u s2=%2u clip=%2u af=%3d | 222=%u 223=%4d 1D2=%u "
                    "1D3=%02X 1D0=%04X 93=%02X | h=%d hp=%3d",
@@ -224,6 +227,9 @@ int main(int argc, char **argv)
                    e->state, e->sub_state_1, e->sub_state_2, (unsigned)e->motion,
                    (int)e->anim_frame, e->re2z_flag222, (int)e->re2z_res223, e->re2z_hits1d2,
                    e->re2z_self1d3, e->re2z_hitdir1d0, e->hit_react, h, e->hp);
+            printf(" | 21A=%04X 10E=%04X 16A=%u", e->re2z_flags21a, e->re2z_f10e, e->re2z_dir16a);
+            {   int32_t bh[3]; re15_enemy_bone_world_pos(e, 8, bh);      /* Kopf/Brust-Knochen */
+                printf(" b8dy=%-6d", bh[1] - e->y); }
             printf(" d=%u", (unsigned)e->ai_dist);   /* +0x1D0 = SquareRoot0(dX^2+dZ^2) */
             if (fx_new) {
                 int32_t b0[3], b8[3];
