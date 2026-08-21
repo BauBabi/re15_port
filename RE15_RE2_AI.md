@@ -694,23 +694,46 @@ sub07 `@0x2754`: das Skript **öffnet das Tor und befiehlt das Kriechen im selbe
 
 | Phase | RE1.5 | RE2 |
 |---|---|---|
-| A — reiner Skript-Weg | 0/6 geflaggt | 0/6 geflaggt (**vorbestehender Blocker**, s.u.) |
+| A — reiner Skript-Weg | **5/6 geflaggt, 5/6 kriechen, 5/6 unter dem Tor durch** | **6/6 geflaggt, 6/6 kriechen, 5/6 unter dem Tor durch** |
 | B — ab `Member_set(16)` | 6/6 kriechen, 6/6 `sca 8`, **6/6 unter dem Tor durch** | 6/6 kriechen, 6/6 `sca 8`, **6/6 unter dem Tor durch** |
+
+### ✅ ERLEDIGT — der „Skript-Auslöser feuert nicht"-Blocker war ein SONDEN-Defekt (2026-08-21)
+
+Die alte Phase-A-Zeile („0/6 geflaggt, vorbestehender Blocker") war **falsch gemessen**. Beide
+damals benannten Blocker existieren nicht:
+
+* **`work_slot == -1`** war ein Artefakt der **Handauslösung**. Der Torwächter
+  `3e 00 0f 00 05 00` (`Member_cmp(15,==,5)`) und der `2e 02 i` `Work_set(kind 2, Slot i)` liegen
+  **nicht in sub07**, sondern im AUFRUFER **sub06 `@0x24c8`** (20 ausgerollte 32-Byte-Blöcke, der
+  letzte endet bei `@0x2740`) bzw. **sub09 `@0x27e0`**. `scd_event_fire(7)` startet sub07 als
+  EIGENEN Thread und überspringt damit genau die Bindung. sub07 `@0x2754` ist nur
+  `3d 04 10 / 26 00 05 04 00 10 / 35 10 04 / 01 00` — 16 Byte ohne jeden Test.
+* **„`member_0b` einen Frame später gewischt"** war derselbe Fehler von der anderen Seite: ein
+  **von Hand** gesetzter Stempel ohne echten Zonen-Treffer fällt im byte-true Aktiv-Clear
+  (`@0x80043704 andi v0,v0,0x1` / `@0x8004371c sb zero,0(at)`) auf 0 zurück. Der Aktor-Stempel
+  IST implementiert (`re15_aot_stamp_entities`, `aot_common.c:702`) und vergibt live `+0x0B = 5`.
+
+Die eigentlichen Ursachen lagen alle drei in `probe_1030_crawl_live` selbst:
+1. Die Sonde tickte die **SCD-VM nie**. `scd_vm_tick()` hängt NICHT an `re15_game_step`; die
+   Hauptschleife ruft sie selbst und VORHER (`platform/pc/main.c:3578`) — byte-true die
+   Reihenfolge des Originals `@0x8001cdec jal 0x8003f038` (VM) vor `@0x8001ce04` (Gegner-AI),
+   `@0x8001ce0c` (Spieler), `@0x8001ce1c` (AOT-Scan). Beleg: `RE15_SCD_TRACE=1` über 2900
+   Sonden-Frames = 474 Zeilen, alle aus dem Raum-Init.
+2. Die **LOCO-Bank** fehlte (`re15_emd_parse_loco_bank`). `re15_enemy_footlock_step` steigt bei
+   `!bank->loco_ok` sofort aus (`enemy_ai_common.c:2567`) → die Zombies animierten auf der Stelle
+   und erreichten die AOT-Zone 5 nie → `flag(5,0x22)` nie → sub01 nie.
+3. **`g_room_rdt`** war leer → `re15_collision_constrain_enemy(&g_room_rdt, …)` klemmte nicht →
+   das Rolltor war offen.
+
+Gemessen über den echten Weg (Spieler steht im Auslöse-Rechteck AOT-3, sonst kein Eingriff),
+RE1.5: `f5` Stempel `+0x0B = 5` → `f7` `flag(4,0x0f)` (sub01 `@0x2198`) + `Evt_exec` sub08 →
+`f7` `+0x1C4 |= 0x1000` → `f103` Kriech-Commit (`grid 0x81`, `sca 8`) → `f457` `flag(5,0x14)`
+(sub08-Ende; Hardware-Soll t+450, `tools/redux/crawl_cycle_out.txt`). RE2: `f21/f23/f23/f473`.
+Pin + vier Negativproben: **`unit_1030_trigger_chain`**.
 
 ### ⛔ OFFEN (benannt, nicht gefüllt)
 
-1. **Der Skript-Auslöser feuert im Port unter KEINEM Flavor** (Phase A oben, gemessen). Zwei
-   vorbestehende Blocker, beide außerhalb dieser Welle:
-   * `work_slot == -1` — sub07 arbeitet auf der WORK-Entity (`Work_set`), die der Port beim
-     Ereignis-Start nicht besetzt; `Member_get`/`Member_set` haben kein Ziel.
-   * `member_0b` ist EINEN Frame nach dem Setzen wieder 0 — der Port hat keinen **Aktor**-AOT-
-     Stempel (Original `sb v0,11(s1)` `@0x80042F5C` / `@0x80042FC4`), und der Frame-Ende-Wisch
-     räumt das Byte weg (`FUN_8003EC28` `@0x8003F194`: `+0x0A/+0x0B = 0xFFFF`). Damit fällt der
-     Torwächter `3e 00 0f 00 05 00` `@Datei 0x2740` (`Member_cmp(15, ==, 5)`) immer durch.
-   Beides liegt in `aot_common.c` / `scd_vm.c`; Dossier `analysis/room1030_crawl_mechanism.md`
-   Glied 1/3. **Solange das offen ist, sieht der Nutzer die Kriecher im echten Spiel nicht** —
-   die Kette dahinter ist aber gebaut und gemessen.
-2. **Kriecher mit `+0x5 > 2`.** Erreichbar über den Wurf-Ausgang des Griffs
+1. **Kriecher mit `+0x5 > 2`.** Erreichbar über den Wurf-Ausgang des Griffs
    (`addiu v0,zero,1281` `@0x80102D24` / `sw v0,4(s1)` `@0x80102D2C`, Grab-Phase 8), der NICHT
    auf `+0x10E` gegated ist. Das Original würde `lw 0x8010C918[5]` = `0x8010C92C` = **`0x8040006E`**
    laden und `jalr` darauf ausführen — ein Datenwort. Der Zustand kann im Original also nicht
@@ -718,16 +741,17 @@ sub07 `@0x2754`: das Skript **öffnet das Tor und befiehlt das Kriechen im selbe
    für `+0x5 > 2` weiter die **aufrechte** Tabelle (= exakt das Verhalten vor dieser Welle) —
    kleinstmögliche Abweichung, kein Freeze, kein erfundener Zweig. Ohne diesen Rückfall blieben
    in `test_re2_zombie_abc` 16 Aktoren mit `s1=5 s2=1 10E=0x2001` unsterblich stehen (gemessen).
-3. **Der zweite Umbauweg** `+0x21A & 0x10` → `FUN_80107A78` (`@0x80105014-38`): eigene Welle,
+2. **Der zweite Umbauweg** `+0x21A & 0x10` → `FUN_80107A78` (`@0x80105014-38`): eigene Welle,
    im Port ohne Produzenten für Bit 0x10 unerreichbar.
-4. **EXEC[2] (Warten, Clip 0x17)** hat im Original gar keinen `0x8002959C`-Aufruf; der globale
+3. **EXEC[2] (Warten, Clip 0x17)** hat im Original gar keinen `0x8002959C`-Aufruf; der globale
    Port-Advancer spielt den Clip trotzdem einmal durch und pinnt den letzten Frame. Ein Halt-Pin
    wie beim Schläfer-Clip 0x2A wäre nötig — heute folgenlos, weil kein Produzent Kriecher-Sub 2
    schreibt.
 
 **Tests:** `unit_re2_crawler` (Eintritt / Kriech-Bewegung / Tor-Transit / Ausstieg /
 Grab-Entscheid + vier Negativproben + RE1.5-Regressionswache), `unit_1030_crawl_live` (die echte
-Raum-Messung oben).
+Raum-Messung oben), `unit_1030_trigger_chain` (die volle Auslösekette über den echten Weg in
+beiden Flavors + vier Negativproben für die beiden Hälften des Gatters `@0x2180`).
 
 ---
 

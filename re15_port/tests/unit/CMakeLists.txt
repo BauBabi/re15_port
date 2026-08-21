@@ -1912,3 +1912,18 @@ target_compile_definitions(probe_1030_crawl_live PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_1030_crawl_live COMMAND probe_1030_crawl_live)
 set_tests_properties(unit_1030_crawl_live PROPERTIES TIMEOUT 120)
+
+# --- PIN "die ROOM1030-Kriech-Ausloesekette ueber den ECHTEN WEG" (Nutzer-Report 2026-08-21) ---
+#     Faehrt ROOM1030 mit echter RDT + SCD-VM (scd_vm_tick VOR re15_game_step, wie
+#     platform/pc/main.c:3578 / Original @0x8001cdec vor @0x8001ce04) + LOCO-Baenken +
+#     g_room_rdt, und bewegt NUR den Spieler. Gepinnt wird die volle Kette
+#     AOT-Stempel +0x0B==5 -> sub01 @0x2198 Set(4,0x0f) -> sub08 -> sub09/sub06 -> sub07
+#     @0x2754 (+0x1C4 |= 0x1000) -> Kriech-Commit -> Tor-Transit, in BEIDEN Flavors,
+#     plus vier Negativproben fuer die beiden Haelften des Gatters @0x2180. ---
+add_executable(test_1030_trigger_chain test_1030_trigger_chain.c)
+target_link_libraries(test_1030_trigger_chain PRIVATE re15_engine re15_test_support)
+target_include_directories(test_1030_trigger_chain PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_1030_trigger_chain PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_1030_trigger_chain COMMAND test_1030_trigger_chain)
+set_tests_properties(unit_1030_trigger_chain PROPERTIES TIMEOUT 180)

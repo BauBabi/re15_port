@@ -68,6 +68,25 @@ static uint8_t *slurp(const char *p, size_t *n)
 }
 
 /* ---- Baenke -------------------------------------------------------------------------------- */
+/* ⛔ DREI HARNESS-DEFEKTE, die diese Sonde am 2026-08-21 einen Engine-Blocker melden liessen,
+ * den es NICHT gibt (Commit 4484fb3a "Phase A: 0/6 geflaggt, auch RE1.5"):
+ *   1. `frame_step` rief nur `re15_game_step`. Die SCD-VM haengt NICHT daran — die Haupt-Schleife
+ *      ruft `scd_vm_tick()` SELBST und VORHER (platform/pc/main.c:3578), byte-true zur
+ *      Original-Reihenfolge @0x8001cdec `jal 0x8003f038` (VM) vor @0x8001ce04 (Gegner-AI),
+ *      @0x8001ce0c (Spieler), @0x8001ce1c (AOT-Scan). Gemessen: RE15_SCD_TRACE=1 ueber 2900
+ *      Sonden-Frames = 474 Zeilen, alle aus dem Raum-Init — kein einziges Opcode danach.
+ *   2. Die LOCO-Bank fehlte. `re15_enemy_footlock_step` steigt bei `!bank->loco_ok` sofort aus
+ *      (enemy_ai_common.c:2567): die Zombies animierten, bewegten sich aber KEINEN Schritt und
+ *      erreichten die AOT-Zone 5 nie -> `flag(5,0x22)` nie -> sub01 nie.
+ *   3. `g_room_rdt` war leer. Der Gegner-SCA-Wandclamp liest
+ *      `re15_collision_constrain_enemy(&g_room_rdt, …)` — ohne ihn steht das Rolltor offen.
+ * Beide "Blocker" aus der Commit-Message sind damit erledigt: `work_slot == -1` entstand, weil
+ * `scd_event_fire(7)` sub07 als EIGENEN Thread startet und dabei den `2e 02 i` Work_set des
+ * AUFRUFERS sub06 @0x24c8 (bzw. sub09 @0x27e0) ueberspringt — der Torwaechter
+ * `3e 00 0f 00 05 00` liegt dort, NICHT in sub07. Und `member_0b` wurde "einen Frame spaeter
+ * gewischt", weil ein von Hand gesetzter Stempel ohne echten Zonen-Treffer im byte-true
+ * Aktiv-Clear (@0x80043704 / @0x8004371c) landet. Der Aktor-Stempel selbst IST implementiert
+ * (re15_aot_stamp_entities, aot_common.c:702). */
 static uint8_t *s_re2_ems = NULL; static size_t s_re2_n = 0;
 static int load_bank_re2(uint8_t type)
 {
@@ -105,6 +124,7 @@ static int load_bank_re15(uint8_t type)
     eb->ok = 1; eb->buf = NULL;
     re15_emd_parse_own_bank(s_blob, len, &eb->skel_own, &eb->anim_own);
     eb->own_ok = (eb->anim_own.clip_count > 0);
+    eb->loco_ok = (re15_emd_parse_loco_bank(s_blob, len, &eb->skel_loco, &eb->anim_loco) == 0);
     return 1;
 }
 
@@ -113,6 +133,7 @@ static void frame_step(uint16_t cur, uint16_t edge)
     const unsigned char *raw; int len, id;
     re15_msg_tick(&raw, &len, &id);
     s_ctx.pad_current = cur; s_ctx.pad_pressed = edge;
+    scd_vm_tick();          /* Defekt 1: platform/pc/main.c:3578 — VOR game_step */
     re15_game_step(&s_ctx);
 }
 
@@ -130,7 +151,8 @@ typedef struct {
     int min_z_start, max_z_end;
 } run_t;
 
-static void run_room(re15_ai_flavor_t fl, const char *name, int frames, int inject, run_t *out)
+static void run_room(re15_ai_flavor_t fl, const char *name, int32_t px, int32_t pz,
+                     int frames, int inject, run_t *out)
 {
     memset(out, 0, sizeof *out);
     memset(&s_cam, 0, sizeof s_cam); memset(&s_ctx, 0, sizeof s_ctx);
@@ -146,18 +168,13 @@ static void run_room(re15_ai_flavor_t fl, const char *name, int frames, int inje
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->active = 1; pl->type = 0; pl->hp = 100; pl->hit_react = 0;
     pl->state = 0; pl->motion = 0; pl->floor = 0; pl->y = 0;
-    pl->x = -8000; pl->z = -18000;                 /* in der Lobby, noerdlich des Riegels */
+    pl->x = px; pl->z = pz;
     re15_collision_set_band(0);
     re15_inv_load_briefing();
 
-    /* scd_room_reenter setzt s_current_rdt UND startet main00/sub00 — ohne das liefert
-     * scd_event_fire nur -1 (kein aktuelles RDT). */
+    /* scd_room_reenter setzt s_current_rdt UND faehrt main00 + sub00 — dessen Tail @0x2172/0x2176
+     * (`04 ff 18 0b` / `04 ff 18 02`) spawnt die Threads fuer sub11 und sub02 BEDINGUNGSLOS. */
     scd_room_reenter(&s_rdt, pl->x, pl->z, 0);
-    for (int i = 0; i < 120; i++) {
-        scd_vm_tick();
-        re15_aot_scan(pl->x, pl->z, 0);
-        if (g_aot.fired_event_id_this_frame) scd_event_fire(g_aot.fired_event_id_this_frame);
-    }
 
     if (fl == RE15_AI_FLAVOR_RE2) {
         (void)load_bank_re2(0x10); (void)load_bank_re2(0x11); (void)load_bank_re2(0x16);
@@ -177,27 +194,16 @@ static void run_room(re15_ai_flavor_t fl, const char *name, int frames, int inje
             if ((int)g_actors[s].z < out->min_z_start) out->min_z_start = (int)g_actors[s].z;
         }
 
-    /* ⛔ DER EINE ERSATZ, UND ER IST BENANNT: der AOT-STEMPEL +0x0B.
-     * sub07 beginnt mit dem Torwaechter
-     *   @Datei 0x2740:  3e 00 0f 00 05 00     = Member_cmp(15, ==, 5)   -> entity+0x0B == 5
-     * (danach @0x2754 `3d 04 10 00` Member_get(16) / `26 00 05 04 00 10` OR 0x1000 /
-     *  `35 10 04 00` Member_set(16) — die eigentliche Kriech-Anforderung).
-     * Im ORIGINAL stempelt der AOT-Scan FUN_80042BAC den Aot_set-Slot in entity+0x0B
-     * (`sb v0,11(s1)` @0x80042F5C / @0x80042FC4). Der PORT hat diesen Aktor-Stempel NICHT —
-     * sein einziger member_0b-Produzent (re15_object_notch_update, aot_common.c) schreibt nur
-     * Prop-Slots. Deshalb passiert der Torwaechter im Port NIE, und zwar unter BEIDEN Flavors
-     * (gemessen: geflaggt=0 auch unter RE1.5). Das ist ein VORBESTEHENDER Blocker AUSSERHALB
-     * dieser Welle (aot_common.c ist in dieser Session gesperrt) — er ist im Dossier
-     * analysis/room1030_crawl_mechanism.md als Glied 1 beschrieben.
-     * Damit die Kette dahinter trotzdem ECHT gemessen werden kann, setzt die Messung den
-     * Stempel selbst — mit dem Wert, den der Zensus des Dossiers erwartet (Zone 5). ALLES
-     * danach (sub07-Bytecode, Member_set, +0x1C4, die Bruecke, der Kriecher) laeuft real. */
-    for (int s = 1; s < RE15_ACTOR_MAX; s++)
-        if (is_zombie(&g_actors[s])) g_actors[s].member_0b = 5;   /* AOT-Stempel-Ersatz */
-
-    int fired = scd_event_fire(7);
-    printf("  [%s] sub07 gefeuert -> Thread %d,  Zombies=%d,  sub_scd[7]=%s\n",
-           name, fired, out->spawned, s_rdt.sub_scd[7] ? "vorhanden" : "FEHLT");
+    /* PHASE A greift NICHT MEHR EIN. Der Torwaechter `3e 00 0f 00 05 00` (Member_cmp 15 == 5)
+     * liegt @Datei 0x2740 als LETZTER von 20 Bloecken in sub06 @0x24c8 (bzw. in sub09 @0x27e0) —
+     * NICHT in sub07 @0x2754. Der Block davor bindet die Work-Entity (`2e 02 i` Work_set kind 2).
+     * Wer sub07 per scd_event_fire als eigenen Thread startet, ueberspringt genau diese Bindung;
+     * daher die frueher gemeldeten "Blocker" work_slot == -1 und der weggewischte Stempel.
+     * Ueber den ECHTEN Weg vergibt der AOT-Stempel-Pass (`sb v0,11(s1)` @0x80042fc4,
+     * re15_aot_stamp_entities) +0x0B = 5 selbst, sobald ein Zombie in AOT-Zone 5 steht.
+     * (Vollstaendiger Pin inkl. vier Negativproben: test_1030_trigger_chain.c.) */
+    printf("  [%s] Spieler (%ld,%ld),  Zombies=%d,  sub_scd[7]=%s\n",
+           name, (long)px, (long)pz, out->spawned, s_rdt.sub_scd[7] ? "vorhanden" : "FEHLT");
 
     /* MODE 1: das ERGEBNIS des Skript-Opcodes direkt setzen. `35 10 04` (Member_set 16 =
      * work_var[4]) schreibt genau `+0x1C4 |= 0x1000` (Port-Zwilling `sh a2,452(a0)` @0x80041218).
@@ -215,18 +221,6 @@ static void run_room(re15_ai_flavor_t fl, const char *name, int frames, int inje
                     ((re15_sca_entry_t *)s_rdt.sca)[base + 6].u0 = 0xF7;
                 base += s_rdt.sca_rgn[q];
             }
-        }
-    }
-
-    /* DIAGNOSE (mode 0): laeuft sub07 bis zum Member_set? */
-    if (!inject) {
-        for (int f = 0; f < 3; f++) {
-            printf("     f%-2d thr12=%d work_slot=%d wv4=0x%04x  member_0b(z1)=%u "
-                   "af(z1)=0x%04x\n",
-                   f, g_scd.threads[12].active, g_scd.work_slot,
-                   (unsigned)(uint16_t)g_scd.work_vars[4],
-                   g_actors[1].member_0b, (unsigned)g_actors[1].anim_flags);
-            frame_step(0, 0);
         }
     }
 
@@ -271,38 +265,36 @@ int main(void)
     size_t n = 0;
     uint8_t *buf = slurp(RE15_ASSET_PSX_DIR "/STAGE1/ROOM1030.RDT", &n);
     if (!buf) { printf("FAIL: ROOM1030.RDT nicht lesbar\n"); return 1; }
-    if (re15_rdt_parse(buf, n, &s_rdt) != 0) { printf("FAIL: RDT-Parse\n"); return 1; }
+    /* Der Gegner-SCA-Wandclamp liest g_room_rdt, NICHT den ctx-RDT (Defekt 3). */
+    if (re15_rdt_parse(buf, n, &g_room_rdt) != 0) { printf("FAIL: RDT-Parse\n"); return 1; }
+    g_room_rdt_ok = 1;
+    s_rdt = g_room_rdt;
 
     run_t d15, d2, i15, i2;
 
-    /* ---- PHASE A: der reine SKRIPT-WEG (Diagnose, KEIN Pin) ------------------------------
-     * Gemessenes Ergebnis dieser Runde: unter BEIDEN Flavors erreicht die Anforderung keinen
-     * Zombie. Zwei Blocker, beide VORBESTEHEND und beide AUSSERHALB dieser Welle:
-     *   (1) `work_slot == -1` — sub07 arbeitet auf der WORK-Entity (Work_set), die der Port
-     *       beim Ereignis-Start nicht besetzt. Member_get/Member_set haben damit kein Ziel.
-     *   (2) `member_0b` ist EINEN Frame nach dem Setzen wieder 0 — der Port hat keinen
-     *       AKTOR-AOT-Stempel (Original `sb v0,11(s1)` @0x80042F5C / @0x80042FC4), und der
-     *       Frame-Ende-Wisch raeumt das Byte weg (FUN_8003EC28 @0x8003F194: +0x0A/+0x0B =
-     *       0xFFFF). Damit faellt der Torwaechter `3e 00 0f 00 05 00` @Datei 0x2740
-     *       (Member_cmp(15, ==, 5)) immer durch.
-     * Beides liegt in aot_common.c / scd_vm.c — in dieser Session gesperrt. Deshalb wird
-     * PHASE A nur BERICHTET, nicht gepinnt. */
-    printf("--- PHASE A: reiner Skript-Weg (Diagnose, kein Pin) ---\n");
-    run_room(RE15_AI_FLAVOR_RE15, "RE1.5", 300, 0, &d15);
+    /* ---- PHASE A: der reine SKRIPT-WEG, ohne jeden Eingriff -------------------------------
+     * Der Spieler steht im Ausloese-Rechteck AOT-3 (x[-19900..-16200] z[-9200..-7400]), sonst
+     * passiert NICHTS von Hand: die Zombies laufen selbst in die AOT-Zone 5, der Stempel-Pass
+     * setzt +0x0B = 5, sub01 @0x2198 setzt flag(4,0x0f) und startet sub08, sub09/sub06 feuern
+     * sub07 @0x2754. (Frueher meldete diese Phase 0/6 — das waren die drei Harness-Defekte
+     * oben, kein Engine-Blocker.) */
+    printf("--- PHASE A: reiner Skript-Weg, KEINE Handausloesung ---\n");
+    run_room(RE15_AI_FLAVOR_RE15, "RE1.5", -18050, -8300, 1400, 0, &d15);
     re15_enemy_reset();
-    run_room(RE15_AI_FLAVOR_RE2,  "RE2  ", 300, 0, &d2);
+    run_room(RE15_AI_FLAVOR_RE2,  "RE2  ", -18050, -8300, 1400, 0, &d2);
 
-    /* ---- PHASE B: die Kette AB dem Skript-Opcode — das ist der PIN ------------------------ */
-    printf("\n--- PHASE B: ab `Member_set(16)` = +0x1C4 |= 0x1000 (der Pin) ---\n");
+    /* ---- PHASE B: die Kette AB dem Skript-Opcode, isoliert (Spieler in der Lobby, also OHNE
+     *      die Vorbedingung flag(5,0x20) — die Anforderung wird hier von Hand gesetzt) ------- */
+    printf("\n--- PHASE B: ab `Member_set(16)` = +0x1C4 |= 0x1000 (isoliert) ---\n");
     re15_enemy_reset();
-    run_room(RE15_AI_FLAVOR_RE15, "RE1.5", 2400, 1, &i15);
+    run_room(RE15_AI_FLAVOR_RE15, "RE1.5", -8000, -18000, 2400, 1, &i15);
     re15_enemy_reset();
-    run_room(RE15_AI_FLAVOR_RE2,  "RE2  ", 2400, 1, &i2);
+    run_room(RE15_AI_FLAVOR_RE2,  "RE2  ", -8000, -18000, 2400, 1, &i2);
 
     printf("\n== ERGEBNIS ==\n");
-    printf("  PHASE A (Skript):    RE1.5 geflaggt=%d/%d   RE2 geflaggt=%d/%d"
-           "   -> VORBESTEHENDER Blocker\n",
-           d15.flagged, d15.spawned, d2.flagged, d2.spawned);
+    printf("  PHASE A (Skript):    RE1.5 geflaggt=%d/%d kriechend=%d   "
+           "RE2 geflaggt=%d/%d kriechend=%d\n",
+           d15.flagged, d15.spawned, d15.crawlers, d2.flagged, d2.spawned, d2.crawlers);
     printf("  PHASE B (ab Opcode): RE1.5 %d/%d kriechen (sca8=%d)   "
            "RE2 %d/%d kriechen (sca8=%d)\n",
            i15.crawlers, i15.spawned, i15.sca8, i2.crawlers, i2.spawned, i2.sca8);
@@ -321,8 +313,14 @@ int main(void)
                             "(die RE1.5-Kette ist byte-true und darf sich nicht aendern)");
     CHECK(i15.crossed == i15.spawned,
           "REGRESSIONSWACHE: unter RE1.5 kommen nur %d von %d durch", i15.crossed, i15.spawned);
+    /* PHASE A ist jetzt ebenfalls ein Pin: der Skript-Weg MUSS in beiden Flavors feuern. */
+    CHECK(d15.crawlers > 0, "PHASE A RE1.5: der Skript-Auslöser hat keinen Zombie in den "
+                            "Kriecher gebracht (sub01 @0x2198 -> sub08 -> sub09/sub07 @0x2754)");
+    CHECK(d2.crawlers  > 0, "PHASE A RE2: der Skript-Auslöser hat keinen Zombie in den "
+                            "Kriecher gebracht");
 
     free(buf);
+    g_room_rdt_ok = 0;
     printf("\n== %s (%d Fehler) ==\n", fails ? "FEHLGESCHLAGEN" : "OK", fails);
     re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
     return fails ? 1 : 0;

@@ -1116,3 +1116,86 @@ Zone 4 stehenden Spieler statt aufzustehen). Die Port-Zeilen 1/3 waren OFFEN-No-
 ### Wartende Zombies
 Kein Warte-Sonderclip: normale Verfolger-AI (Clips 0x02/0x05), die an der fuer Maske 4 soliden
 Tor-Zelle (0xF7 & 4 ≠ 0) bei z≈−24838 auflaeuft — genau in Zone 5.
+
+---
+
+## 19. ⛔ KORREKTUR (2026-08-21) — der „Ausloeser feuert nicht"-Blocker war ein SONDEN-Defekt
+
+Commit `4484fb3a` meldete: *„Der SKRIPT-AUSLOESER feuert im Port unter KEINEM Flavor (Phase A:
+0/6 geflaggt, auch RE1.5). Zwei vorbestehende Blocker: `work_slot == -1` und `member_0b` wird
+einen Frame spaeter gewischt."* **Beide Blocker existieren nicht.** Der Port fuehrt die Kette
+end-to-end aus; die Sonde `probe_1030_crawl_live` hat sie nur nie zu Gesicht bekommen.
+
+### 19.1 Der Torwaechter liegt NICHT in sub07 — die Handausloesung uebersprang den `Work_set`
+
+Bytes selbst gedumpt (Sub-Offset-Tabelle @Datei 0x1fd0, 12 Eintraege):
+
+```
+sub06 @0x24c8  06 00 86 02   If (646)
+               21 05 22 01     Ck(5,0x22,==1)                <- Gegner in AOT-Zone 5
+               06 00 1c 00     If (28)          }
+               21 05 00 00       Ck(5,i,==0)    } 20x, Stride 32, i = 0x00..0x13
+               2e 02 00 00       Work_set(2,i)  }  <- HIER wird die Work-Entity gebunden
+               06 00 0e 00       If (14)        }
+               3e 00 0f 00 05 00   Member_cmp(15,==,5)        <- DER TORWAECHTER
+               18 07               Gosub 7                    <- und ERST DANN sub07
+               22 05 00 01         Set(5,i,1)
+...  letzter Block @0x2734:  21 05 13 00 / 2e 02 13 00 / 06 00 0e 00 /
+                             3e 00 0f 00 05 00 / 18 07 / 22 05 13 01 / 08 00 08 00 08 00 01 00
+sub07 @0x2754  3d 04 10 00 / 26 00 05 04 00 10 / 35 10 04 00 / 01 00     (16 Byte, KEIN Test)
+```
+
+`Gosub` (0x18) ist ein Unterprogramm-Aufruf **im selben Thread** — sub07 erbt damit den
+`work_slot`, den der Aufrufer zwei Opcodes vorher gesetzt hat. `scd_event_fire(7)` startet sub07
+dagegen als EIGENEN Thread (`work_slot = -1`, `scd_vm.c:443/465`). Das gemessene `work_slot == -1`
+war also die Sonde, nicht der Port. Dasselbe gilt fuer sub09 @0x27e0 (SOLO-Trigger), das den
+Torwaechter inline traegt und die Work-Entity per `53 02 05 00` (indirekter `Work_set` ueber
+`work_var[5]`) bindet.
+
+### 19.2 `member_0b` wird byte-true gewischt — der Handstempel hatte nur keinen Zonen-Treffer
+
+Der Aktor-Stempel IST implementiert (`re15_aot_stamp_entities`, `aot_common.c:702`, Glied 1).
+Ein von Hand gesetztes `member_0b = 5` ohne echten Zonen-Treffer faellt im byte-true Aktiv-Clear
+(`@0x80043704 andi v0,v0,0x1` / `@0x8004371c sb zero,0(at)`) korrekt auf 0 zurueck — genau die
+Netto-Wirkungstabelle aus Glied 3. Live vergibt der Pass den Stempel selbst (gemessen: Frame 5).
+
+### 19.3 Drei Harness-Defekte, ohne die JEDE Sonde diese Kette tot sieht
+
+| # | Defekt | Wirkung |
+|---|---|---|
+| 1 | `frame_step` rief nur `re15_game_step` | **Die SCD-VM lief nie.** `scd_vm_tick()` haengt nicht an `game_step`; die Hauptschleife ruft sie selbst und VORHER (`platform/pc/main.c:3578`) — byte-true `@0x8001cdec jal 0x8003f038` vor `@0x8001ce04`/`@0x8001ce0c`/`@0x8001ce1c`. Beleg: `RE15_SCD_TRACE=1` ueber 2900 Sonden-Frames = 474 Zeilen, alle aus dem Raum-Init |
+| 2 | LOCO-Bank nicht geladen | `re15_enemy_footlock_step` steigt bei `!bank->loco_ok` aus (`enemy_ai_common.c:2567`) → die Zombies animieren auf der Stelle, erreichen Zone 5 NIE → `flag(5,0x22)` nie → sub01 nie |
+| 3 | `g_room_rdt` leer | `re15_collision_constrain_enemy(&g_room_rdt, …)` klemmt nicht → das Rolltor ist offen, die Zombies laufen aufrecht hindurch statt sich davor zu stauen |
+
+Defekt 2 und 3 betreffen auch `probe_gate_1030.c` (dort stehen die 6 Zombies deshalb ueber
+300 Ticks bewegungslos auf ihren Spawn-Positionen).
+
+### 19.4 Messreihe ueber den ECHTEN Weg (keine Handausloesung, keine gesetzte Flagge)
+
+Spieler steht im Ausloese-Rechteck **AOT-Slot 3** (`sce_flags 0x41` = Pool SPIELER | CENTRE,
+`x[-19900..-16200] z[-9200..-7400]`, Traeger von `flag(5,0x20)`); alles andere laeuft von selbst.
+
+| Ereignis | RE1.5 | RE2 | Hardware-Soll |
+|---|---|---|---|
+| Stempel `+0x0B == 5` | f5 | f21 | gf 4369 (`0B=05`) |
+| `flag(4,0x0f)` (sub01 `@0x2198`) + `Evt_exec` sub08 | f7 | f23 | gf 4370 (`B4W0=0x00010000`) |
+| `+0x1C4 \| = 0x1000` (sub09/sub07) | f7 | f23 | gf 4370 (`1C4=1000`) |
+| Kriech-Eintritt | f103 (`grid 0x81`, `sca 8`) | f23 (`+0x10E` Bit 0) | Commit = Trigger+95 |
+| `flag(5,0x14)` (sub08-Ende) | f457 | f473 | t+450 (2x gemessen) |
+| Bilanz nach 1400 Frames | 5/6 geflaggt, 5/6 kriechen, 5/6 unter dem Tor durch | 6/6 / 6/6 / 5/6 | — |
+
+### 19.5 Negativproben (beide Haelften des Gatters `@0x2180`)
+
+| Probe | Aufbau | Ergebnis |
+|---|---|---|
+| NEG1 | Spieler am Tor (`-8200,-22303`, die Debug-Sprung-Position des Hardware-Laufs), also **nicht** in AOT-3 → `flag(5,0x20)` fehlt | 900 Frames, beide Flavors: `flag(4,0x0f)` NIE, `0x1000` NIE, kriecht NIE. **Positiv-Kontrolle:** der Stempel `+0x0B = 5` wird trotzdem vergeben (f5 / f21) — die Probe scheitert also wirklich nur an `flag(5,0x20)` |
+| NEG2 | Spieler IN AOT-3, aber die Zombies werden jeden Frame auf ihre Spawn-Positionen zurueckgesetzt (alle sechs liegen suedlich von Zone 5: `z <= -25655` gegen `z >= -25300`) → `flag(5,0x22)` fehlt | 900 Frames, beide Flavors: kein Stempel 5, `flag(4,0x0f)` NIE, `0x1000` NIE, kriecht NIE |
+
+Das erklaert auch rueckwirkend §11: der Debug-Sprung setzt den Spieler bei `(-8200,-22303)` ab —
+**ausserhalb** von AOT-3. Deshalb musste der Hardware-Lauf `flag(5,0x20)` poken; die
+Vorbedingung ist nicht „Story-Zustand", sondern schlicht „der Spieler steht in Zone 3".
+
+**Pin:** `re15_port/tests/unit/test_1030_trigger_chain.c` (`unit_1030_trigger_chain`).
+`probe_1030_crawl_live` ist um dieselben drei Harness-Defekte bereinigt; seine Phase A faehrt
+jetzt den echten Weg und ist ebenfalls gepinnt. ctest 194/194 gruen (Basis 193 + 1 neu).
+**Am Engine-Code wurde nichts geaendert — es gab nichts zu aendern.**
