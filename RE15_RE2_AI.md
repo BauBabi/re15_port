@@ -474,6 +474,59 @@ Parameterblock-Bytes direkt aus EMZ0.BIN gedumpt.
   `0x80015b94`, Fress-Tropf-FX `0x13D0`, `+0x1C0`-Bits (kein Port-Feld),
   Downed-/Grid-Mappings (Review #16/#18) = Port-Infrastruktur, als MAPPING kommentiert.
 
+## ✅ Spieler-Opfer-Seite (Fress-Kollaps) — GELÖST 2026-08-21
+
+Nutzer-Report (RE2-Modus): *„wenn Leon gefressen wird, steht er noch komisch."* Der oben als
+OFFEN geführte „EXE-seitige Grab-Art-6-Spielerhandler" ist **nicht** EXE-seitig — das
+**Zombie-Overlay installiert ihn selbst**, exakt wie die RE1.5-Hooks `0x800ac758`/`0x800ac858`:
+
+```
+801010ec: lbu v0,8(s2)                       ; kind
+801010f0-f4: lui v1,0x8011 / addiu v1,-22236 ; = 0x8010A924
+801010fc-104: lui at,0x800d / addu at,v0 / sw v1,-7424(at)  ; 0x800CE300[kind]  = cmd 5
+80101108-120: dito 0x8010B3C0 -> 0x800CE400[kind]           ;                    = cmd 6
+```
+
+* **cmd 5 (Griff/Struggle)** `0x8010A924` → Tab `@0x8010CF2C[PL+0x5]` = {`0x8010A9B8`×2,
+  `0x8010AF58`×2}; Maschine `0x8010A9B8`, Phasen `@0x801001DC`. Basis-Paar **{0,3}**
+  (`sb zero,24(sp)` `@0x8010A9E4` / `sb 3,25(sp)` `@0x8010A9E8`); P0 Clip = Basis
+  (`@0x8010AA5C`, Rate 0x0F), P2 Clip = Basis+1 (`@0x8010AB88`), P4 Clip = Basis+2
+  (`lui a0,0x7 / ori 2` `@0x8010ACA0-A8`, Rate 7). ⇒ intro/hold/release **identisch** zur
+  RE1.5-Belegung `v*3 / +1 / +2` — der Port war hier schon richtig.
+* **cmd 6 (Gefressen/Kollaps)** `0x8010B3C0` → Tab `@0x8010CF3C[PL+0x5]` = {`0x8010B464`,
+  `0x8010B464`}; Maschine `0x8010B464`, Phasen `@0x8010022C`. Basis-Paar **{13,15}**
+  (`addiu v0,zero,13` `@0x8010B484` + `sb v0,24(sp)` `@0x8010B488`; `addiu v0,zero,15`
+  `@0x8010B48C` + `sb v0,25(sp)` `@0x8010B490`); P0 `@0x8010B4C4` Clip = Paar[Variante]
+  (`lbu v1,24(v0)` `@0x8010B4D0`, Rate 0x0F `lui a0,0xf` `@0x8010B4C8`, Clip-Wort
+  `sw v1,332(s2)` `@0x8010B4F4`). **Tod erst in P2** `sh -32768,342(s2)` `@0x8010B738`
+  (= PL+0x156 = 0x800CFD4E), also im Tick NACH dem Clip-Ende.
+
+**Der Bug:** der Port fuhr für die Zombie-Familie auch unter RE2 die RE1.5-Belegung
+`collapse = Variante + 6`. In der RE2-Victim-Bank (EM010 EMD-Paar 3, **17** Clips) sind 6/7 aber
+**stehende Struggle-Clips**. Gemessen über den Renderpfad (`platform/pc/main.c:5460-5478`,
+PL00-Rig + Keyframe-Pool der Greifer-Bank, Weltposition Kopf-Bone 8; PSX-Y nach oben negativ):
+
+| RE2-Victim-Clip | Frames | Kopf-y am Clip-Ende | |
+|---|---|---|---|
+| 6 / 7 (was der Port spielte) | 10 / 30 | −2340 / −2350 | **STEHEND** (Referenz stehend: −2513) |
+| **13 / 15** (Original) | 116 / 116 | −138 / −353 | **am Boden** |
+
+Fix: `re15_victim_clip_map` (`enemy_ai_common.c`) bekommt für `re15_re2z_owns_type` unter
+RE2-Flavor `collapse = 13/15`, und der Tod fällt am letzten Clip-Frame statt bei der
+RE1.5-Konstante 0x23. PIN: `unit_re2_victim_collapse` (inkl. Negativ-Kontrolle „6/7 sind
+stehend" und RE1.5-Regressionswache). Messsonde: `probe_re2_victim_pose`.
+
+**Weiterhin OFFEN (mit Adressen, bewusst nicht halb gebaut):** die Nachlauf-Phasen des Kollapses
+— P2 `@0x8010B724` schaltet `PL+0x14C += 1` (`@0x8010B73C-40`) auf den 6-Frame-Zuck-Clip 14/16,
+P3 `@0x8010B744` spielt ihn, P4 `@0x8010B774` zieht `PL+0x16B = (rng&0x1f)+3`, P5 `@0x8010B78C`
+springt bei 0 zurück auf P3 (Zuck-Schleife), P6 `@0x8010B7AC` schreibt `PL+0x4 = 7`. Die Endpose
+von Clip 13 ist bit-identisch zur Startpose von 14 (Kopf (−703,−138,97)), 15→16 analog
+((661,−353,−181)) — der gehaltene Endframe zeigt also dieselbe Pose. Ebenso OFFEN: die
+Blut-Kadenz in P1 (`jal 0x8001bf10` `@0x8010B668` auf jedem GERADEN Frame in [41,98],
+`@0x8010B620-34`, a0 = 3024+(rng<<3) `@0x8010B650-5C`; zwei weitere Spawns Frames 100..104
+`@0x8010B678-80` mit a0 = 6096 / 7120) — die RE2-Gore-Familie `0x8001bf10` hat im Port kein
+Gegenstück.
+
 ## 🔜 W5 — Kriecher, State-8-Eintritt, Dismemberment
 
 Belegt bisher: die Kriech-Variante nutzt **eigene** Tabellen (`0x8010C90C` Decision /
@@ -481,6 +534,48 @@ Belegt bisher: die Kriech-Variante nutzt **eigene** Tabellen (`0x8010C90C` Decis
 aufrechten Variante. Korrekturen aus Lane Z: der Grab-15er geht auf **SELF**+0x1D3
 (`@0x80102770`), und es GIBT Overlay-Claim-Löscher (HURT `@0x80104FAC`, DEATH `@0x801082F4`) —
 die alte „nur Spieler-seitig"-Aussage oben ist damit präzisiert.
+
+### W5 ist der Blocker für den ROOM1030-Kriechtor-Report (2026-08-21)
+
+Nutzer-Report (RE2-Modus): *„in der Lobby kriechen die Zombies in der Cutscene nicht unter das
+Tor (ROOM1030)."* **Gemessen** (`probe_re2_crawl_gate`, gleicher Aktor, gleiche Vorbedingung
+`anim_flags |= 0x1000`, echter Tick-Einstieg `re15_enemy_ai_live_tick`, echte Bänke):
+
+| Flavor | Ergebnis |
+|---|---|
+| RE1.5 (EM016, 43 Clips) | Tick 1 → `+0x5 = 0x10`, Clip 0x12 · Tick 97 → `grid = 0x81`, `sca = 8`, Clip 0x1A → **kriecht** |
+| RE2 (EM016, 31 Clips) | bleibt `+0x5 = 2`, `grid = 0`, `sca = 4` → **kriecht nicht** |
+
+Ursache: die ROOM1030-Kette ist ein **RE1.5-Protokoll** — AOT-Stempel `entity+0x0B` → SCD sub07
+(`@Datei 0x2754`) setzt `entity+0x1C4 |= 0x1000` → die drei RE1.5-Steer-Funktionen
+(`@0x80101ecc` / `@0x801021d4` / `@0x80105798`) machen daraus `+0x4 = 0x1001` → Sub-Modus 0x10
+(`FUN_80104f80`) → Grid-Wurzel 1. Unter RE2 übernimmt `re15_re2z_tick` den **ganzen** Dispatch
+(`enemy_ai_common.c:4232` / `:8131`), und das RE2-Modul hat für dieses Protokoll **keinen
+Konsumenten**: eigener Byte-Scan über `EMOVL10_S0.BIN` findet 36 Zugriffe auf `+0x1C4/+0x1C6`,
+**alle** als Paar `lh a1,452(r) / lh a2,454(r)` = **Steer-Ziel (x,z)** (z.B. `@0x80104400/04`) —
+RE2 belegt dieses Feld völlig anders.
+
+**Die RE1.5-Maschine ist unter RE2 NICHT wiederverwendbar** (zwei unabhängige Blocker):
+1. **Clip-Indizes.** Sie adressiert Bank-1-Clips 0x12/0x1A. Gemessen: RE1.5 EM016 0x12 = 98
+   (Hinlegen), 0x1A = **99** (Kriechen); RE2 EM016 0x12 = 67, 0x1A = **1**. Unter RE2 trägt der
+   Aktor die RE2-Bank (Animation bleibt in beiden RE2-Modi RE2, `re15_ai_flavor.h` Welle G) —
+   es liefe ein 1-Frame-„Kriechclip".
+2. **Advance-Ordnung.** Der globale Advancer (`player_common.c`, `game_step:1304`) läuft VOR der
+   KI (`:1324`) und lässt die Kriech-Zustände **nur unter RE1.5-Flavor** aus
+   (`player_common.c:743`). Die RE1.5-Kriechkette advanct selbst → unter RE2 doppelte Cliprate.
+
+**Der RE2-eigene Kriecher taugt für dieses Tor ebenfalls nicht als Fertigteil:** DECIDE[0]
+`0x80102EE4` ist byte-gelesen ein reiner **Kampf**-Entscheider (`sltiu s0,s0,0x514`
+`@0x80102F3C`, `0x800CFDCB & 0x80` `@0x80102F4C`, Etage `+0x106 == 0x800CFCFE`
+`@0x80102F60-70`, Sektor `jal 0x80015758` `@0x80102F98` → `+0x4 = 0x101` `@0x80102FA8` = GRAB,
+danach `0x800CFDCB |= 0x80` `@0x80102FB8`); EXEC[0] `0x80103024` steuert auf den **Spieler**
+(`jal 0x80015558` `@0x801030DC` / `@0x80103104`). Kein Tor-Transit, kein Skript-Eintritt, kein
+Aufsteh-Exit. Ein tragfähiger Fix braucht also **W5 komplett** (Wurzel `0x80101210`, DECIDE
+`@0x8010C90C` = {`0x80102EE4`, `0x801025E4`, `0x80103A70`}, EXEC `@0x8010C918` =
+{`0x80103024`, `0x801025EC` = Grab, schon portiert, `0x80103B48`}, Konvertierung `0x80107A78`,
+HURT-Tabelle `@0x8010CBE8`) **plus** ein deklariertes MAPPING für den Auslöser
+(RE1.5-Member16-Bit 0x1000 → `+0x10E |= 1`, im Original nur EXEC[11] P1 `@0x80104590-98`)
+**plus** `+0x1D7 = 8`, damit die Tor-Zelle (`Sca_id_set 0xF7`) passierbar wird.
 
 ---
 

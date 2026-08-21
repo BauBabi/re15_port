@@ -732,6 +732,67 @@ static void re15_victim_clip_map(uint8_t *c_intro, uint8_t *c_hold, uint8_t *c_r
         *c_intro = 0; *c_hold = 1; *c_release = 2; *c_collapse = 2;
     } else {                                            /* ZOMBIE (default) */
         uint8_t base = (uint8_t)(v * 3);
+        if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2z_owns_type(g_player_victim_type)) {
+            /* ⛔ NUTZER-REPORT 2026-08-21 ("Bei RE2 AI, wenn Leon gefressen wird, steht er noch
+             * komisch"): der Port fuhr hier die RE1.5-Belegung `collapse = v + 6` auch gegen die
+             * RE2-Victim-Bank. GEMESSEN (probe_re2_victim_pose, PL00-Rig + Keyframe-Pool der
+             * Greifer-Bank = exakt der Renderpfad platform/pc/main.c:5460-5478, Weltposition von
+             * PL00-Bone 8 = Kopf; PSX-Y nach oben negativ):
+             *   RE2 EM010 Paar 3 (17 Clips)  Clip 6 = 10 F  Kopf-Ende y = -2340  -> STEHEND
+             *                                Clip 7 = 30 F  Kopf-Ende y = -2350  -> STEHEND
+             *                                Clip 13= 116 F Kopf-Ende y =  -138  -> am BODEN
+             *                                Clip 15= 116 F Kopf-Ende y =  -353  -> am BODEN
+             *   (Referenz: Leon stehend, PL00 Clip 0 Frame 0, Kopf y = -2513.)
+             * Leon blieb also waehrend des Fressens in einer STEHENDEN Struggle-Pose — genau das
+             * Symptom.
+             *
+             * SOLLSEITE, byte-gelesen aus EMOVL10_S0.BIN (RAW @0x80100000). Das RE2-Zombie-Overlay
+             * installiert die beiden Spieler-Handler SELBST (Zwillinge der RE1.5-Hooks
+             * 0x800ac758/0x800ac858):
+             *   801010ec: lbu v0,8(s2)          ; kind
+             *   801010f0-f4: lui v1,0x8011 / addiu v1,v1,-22236   ; = 0x8010A924
+             *   801010fc-104: lui at,0x800d / addu at,at,v0 / sw v1,-7424(at) ; 0x800CE300[kind]
+             *   80101108-120: dito  0x8010B3C0 -> 0x800CE400[kind]
+             *   => 0x8010A924 = cmd 5 (Griff/Struggle), 0x8010B3C0 = cmd 6 (Gefressen/Kollaps).
+             *
+             * STRUGGLE 0x8010A924 -> Tabelle @0x8010CF2C[PL+0x5] = {0x8010A9B8, 0x8010A9B8,
+             * 0x8010AF58, 0x8010AF58}; Maschine 0x8010A9B8, Phasen @0x801001DC:
+             *   Basis-Paar {0,3}: `sb zero,24(sp)` @0x8010A9E4 / `addiu v0,zero,3` @0x8010A9E0 +
+             *                     `sb v0,25(sp)` @0x8010A9E8
+             *   P0 @0x8010AA50: `lbu v1,24(sp+PL+0x5)` @0x8010AA5C -> Clip = Basis, Rate 0x0F
+             *                   (`lui v0,0xf` @0x8010AA70, `sw v1,332(s1)` @0x8010AA7C)
+             *   P2 @0x8010AB70: `addiu v0,v0,1` @0x8010AB88 -> Clip = Basis+1 (HOLD, Rate 0)
+             *   P4 @0x8010ACA0: `lui a0,0x7 / ori a0,a0,0x2` @0x8010ACA0-A8 -> Clip = Basis+2
+             *                   (RELEASE, Rate 7), `sw v1,332(s1)` @0x8010ACC8
+             *   => intro/hold/release sind unter RE2 IDENTISCH zur RE1.5-Belegung (v*3 / +1 / +2).
+             *      Deshalb bleiben sie unveraendert — nur der Kollaps war falsch.
+             *
+             * KOLLAPS 0x8010B3C0 -> Tabelle @0x8010CF3C[PL+0x5] = {0x8010B464, 0x8010B464}
+             * (`lbu v0,5(s0)` @0x8010B3D0, `lw v0,-12484(at)` @0x8010B3E4); Maschine 0x8010B464,
+             * Phasen @0x8010022C:
+             *   Basis-Paar {13,15}: `addiu v0,zero,13` @0x8010B484 / `sb v0,24(sp)` @0x8010B488
+             *                       `addiu v0,zero,15` @0x8010B48C / `sb v0,25(sp)` @0x8010B490
+             *   P0 @0x8010B4C4: `lbu v0,5(s2)` @0x8010B4C4 / `addu v0,sp,v0` @0x8010B4CC /
+             *                   `lbu v1,24(v0)` @0x8010B4D0  -> Clip = Paar[Variante]
+             *                   `lui a0,0xf` @0x8010B4C8 + `addu v1,v1,a0` @0x8010B4E8 +
+             *                   `sw v1,332(s2)` @0x8010B4F4  -> Clip-Wort 0xF000D bzw. 0xF000F
+             *   => COLLAPSE = 13 (0x0D) vorn / 15 (0x0F) hinten.
+             *
+             * OFFEN, mit Adressen benannt (NICHT geraten, NICHT gebaut): die Nachlauf-Phasen des
+             * RE2-Kollapses — P2 @0x8010B724 schaltet `PL+0x14C += 1` (@0x8010B73C-40) auf den
+             * 6-Frame-Zuck-Clip 14/16 und setzt `PL+0x14D = 0` (@0x8010B734); P3 @0x8010B744
+             * spielt ihn (advance 256 @0x8010B758), P4 @0x8010B774 zieht `PL+0x16B = (rng&0x1f)+3`
+             * (@0x8010B780-88), P5 @0x8010B78C zaehlt ihn herunter und springt bei 0 zurueck auf
+             * P3 (@0x8010B7A0-A8) = Zuck-Schleife, P6 @0x8010B7AC schreibt `PL+0x4 = 7` (Leiche).
+             * Gemessen ist die Endpose von Clip 13 BITIDENTISCH zur Startpose von Clip 14
+             * (Kopf (-703,-138,97) in beiden) bzw. 15 -> 16 ((661,-353,-181)) — der gehaltene
+             * Endframe zeigt also dieselbe Pose wie der Schleifen-Anfang; die Zuck-Schleife ist
+             * reine Zusatzbewegung und bleibt bewusst OFFEN statt halb nachgebaut. */
+            *c_intro = base; *c_hold = (uint8_t)(base + 1);
+            *c_release = (uint8_t)(base + 2);
+            *c_collapse = (uint8_t)(v ? 15u : 13u);     /* @0x8010B484-90 / @0x8010B4C4-D0 */
+            return;
+        }
         *c_intro = base; *c_hold = (uint8_t)(base + 1);
         *c_release = (uint8_t)(base + 2); *c_collapse = (uint8_t)(v + 6);
     }
@@ -917,6 +978,45 @@ void re15_player_victim_tick(void)
                 re15_wound_add(7, 0x32);                /* @0x80111e90 */
                 if (player->hp >= 0) player->hp = -1;   /* PORT-PLUMBING (kein Original-Write) */
                 player->state = 7;                      /* cmd 7 @0x80111ea0 */
+            }
+        } else if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 &&
+                   re15_re2z_owns_type(g_player_victim_type)) {
+            /* ==== RE2-FRESS-KOLLAPS — Maschine 0x8010B464 (Hook B 0x8010B3C0, vom Zombie-Overlay
+             * selbst installiert @0x80101108-120; Phasen @0x8010022C). Der Clip ist 13/15
+             * (re15_victim_clip_map, dort die vollstaendige Ableitung), 116 Frames.
+             *
+             * TOD: das Original schreibt die Spieler-HP NICHT mitten im Clip, sondern in PHASE 2
+             * — dem Tick NACH dem Clip-Ende (P1 @0x8010B5CC zaehlt `+0x6 += done` @0x8010B60C-2C):
+             *   8010b724: addiu v0,zero,3   / 8010b728: sb v0,6(s2)      ; Phase = 3
+             *   8010b730: addiu v1,zero,-32768
+             *   8010b734: sb zero,333(s2)                                ; Frame = 0
+             *   8010b738: sh v1,342(s2)                                  ; **PL+0x156 = -32768**
+             *   8010b73c/40: `addiu v0,v0,1` / `sb v0,332(s2)`           ; Clip += 1 (Zuck-Clip)
+             * PL+0x156 ist das RE2-Spieler-HP-Halbwort (== 0x800CFD4E, s. FUN_800401d4-Port in
+             * enemy_ai_re2_zombie.c). Der RE1.5-Zwilling setzt hp = -1 dagegen schon bei
+             * Clip-Frame 0x23 (FUN_8010a6f8 @0x8010a7e8/@0x8010a80c-814) — eine RE1.5-Konstante
+             * gegen einen 65-Frame-Clip. Auf den 116-Frame-RE2-Clip angewandt hat sie den Tod
+             * (und damit den Death-/Gameover-Uebergang des Ports) nach knapp einem Drittel des
+             * Kollapses ausgeloest. hp = -1 statt -32768 ist die uebliche Port-Plumbing-Zeile
+             * (die Death-FSM des Ports keyt auf hp < 0), genauso markiert wie beim Hund.
+             *
+             * ⛔ OFFEN, mit Adressen benannt (NICHT geraten, NICHT gebaut): die RE2-Blut-Kadenz.
+             * P1 @0x8010B5CC spawnt ueber `jal 0x8001bf10` (@0x8010B668) auf JEDEM GERADEN Frame
+             * in [41,98] (`addiu v0,a0,-41` @0x8010B620 + `sltiu v0,v0,0x3a` @0x8010B624 +
+             * `andi v0,a0,0x1` / `bne` @0x8010B630-34) mit a0 = 3024 + (rng<<3) (@0x8010B650-5C),
+             * a1 = rng<<4 (@0x8010B660), a2 = Spieler-Modell + 0x5A8 (@0x8010B66C); dazu zwei
+             * weitere Spawns auf den Frames 100..104 (`addiu v0,v0,-100` / `sltiu v0,v0,0x5`
+             * @0x8010B678-7C) mit a0 = 6096 (@0x8010B69C) bzw. 7120 (@0x8010B6C4).
+             * 0x8001bf10 ist die RE2-GORE-Familie — sie hat im Port KEIN Gegenstueck (dieselbe
+             * Haltung wie bei Hund/Kraehe: RE2-FX-Kinds ohne RE1.5-Pendant bleiben stumm-OFFEN).
+             * Der RE1.5-Einzelspritzer (Frame 0x37 + CORE-SE 3, FUN_8010a6f8 @0x8010a82c/84c)
+             * gilt hier NICHT — er wuerde eine RE1.5-Adresse fuer einen RE2-Clip zitieren. */
+            if (at_end_prev && player->hp >= 0) {
+                player->hp    = -1;                     /* PORT-PLUMBING fuer `sh -32768,342(s2)`
+                                                         * @0x8010B738 (P2, Tick nach Clip-Ende) */
+                player->state = 7;                      /* die Port-Death-FSM keyt auf hp<0/state 7;
+                                                         * das Original schreibt `PL+0x4 = 7` erst in
+                                                         * P6 @0x8010B7AC nach der Zuck-Schleife */
             }
         } else {
         /* HP = -1 EXACTLY at collapse anim frame 0x23=35 (byte-true FUN_8010a6f8 @0x8010a80c/814,

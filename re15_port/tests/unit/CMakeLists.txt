@@ -1804,3 +1804,42 @@ target_link_libraries(test_prop_texel_key_11f0 PRIVATE re15_engine re15_test_sup
 target_include_directories(test_prop_texel_key_11f0 PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_prop_texel_key_11f0 COMMAND test_prop_texel_key_11f0)
 set_tests_properties(unit_prop_texel_key_11f0 PROPERTIES TIMEOUT 60)
+
+# --- MESSSONDE (kein ctest): ROOM1030-Kriech-Ausloeser unter dem RE2-Flavor -------------------
+#     Nutzer-Report 2026-08-21: "Bei RE2 AI kriechen die Zombies in der Lobby-Cutscene nicht
+#     unter das Tor (ROOM1030)." Faehrt denselben Aktor mit derselben Vorbedingung
+#     (anim_flags |= 0x1000, = ROOM1030 sub07 @Datei 0x2754) einmal unter RE1.5- und einmal
+#     unter RE2-Flavor durch den echten Tick-Einstieg re15_enemy_ai_live_tick. ---
+add_executable(probe_re2_crawl_gate probe_re2_crawl_gate.c)
+target_link_libraries(probe_re2_crawl_gate PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re2_crawl_gate PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_re2_crawl_gate PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- MESSSONDE (kein ctest): Leons OPFER-POSE unter dem RE2-Flavor ---------------------------
+#     Nutzer-Report 2026-08-21: "Bei RE2 AI, wenn Leon gefressen wird, steht er noch komisch."
+#     Posiert Leon exakt wie der Renderer (platform/pc/main.c:5460-5478: PL00-Rig + Keyframe-Pool
+#     der Greifer-Victim-Bank, clip_override = player->motion) und gibt die WELTPOSITION des
+#     Kopf-Knochens je Clip aus — stehend vs. liegend ist damit direkt ablesbar. ---
+add_executable(probe_re2_victim_pose probe_re2_victim_pose.c)
+target_link_libraries(probe_re2_victim_pose PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re2_victim_pose PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_re2_victim_pose PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- PIN: Leons Fress-Kollaps unter dem RE2-Flavor (Nutzer-Report 2026-08-21) ----------------
+#     "Bei RE2 AI, wenn Leon gefressen wird, steht er noch komisch." Ursache: der Port fuhr fuer
+#     die Zombie-Familie auch unter RE2 die RE1.5-Victim-Belegung `collapse = Variante + 6`;
+#     in der RE2-Victim-Bank (EM010 EMD-Paar 3, 17 Clips) sind 6/7 aber STEHENDE Struggle-Clips.
+#     Soll byte-gelesen aus EMOVL10_S0.BIN: Kollaps-Handler 0x8010B464 (vom Overlay selbst nach
+#     0x800CE400[kind] installiert @0x80101108-120), Basis-Paar {13,15} @0x8010B484-90,
+#     Clip-Wahl @0x8010B4C4-D0, HP-Write erst in P2 @0x8010B738.
+#     Der Test misst die GERENDERTE Pose (Kopf-Knochen-Weltposition ueber den Renderpfad aus
+#     main.c:5460-5478) und traegt Negativ-Kontrolle (Clips 6/7 sind stehend) + RE1.5-Wache. ---
+add_executable(test_re2_victim_collapse test_re2_victim_collapse.c)
+target_link_libraries(test_re2_victim_collapse PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_victim_collapse PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2_victim_collapse PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2_victim_collapse COMMAND test_re2_victim_collapse)
+set_tests_properties(unit_re2_victim_collapse PROPERTIES TIMEOUT 60)
