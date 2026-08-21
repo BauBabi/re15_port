@@ -216,8 +216,13 @@ static void run_death(int slot, int budget, death_trace_t *t, int force_crawler_
                 t->dy[t->n]    = bp[1] - e->y; t->n++;
             }
         } else if (dead_seen && e->state == 7) {
-            /* erster CORPSE-Frame MIT gesetzter Pose (der Sub-0-Init laeuft einen Tick) */
-            if (e->sub_state_1 == 1) {
+            /* Erster CORPSE-Frame MIT gesetzter Pose (die Init-Zelle 0 laeuft einen Tick).
+             * ⚠ KORREKTUR 2026-08-21: der Marker war `+0x5 == 1` — das war der Endzustand des
+             * alten Port-Stubs. Die byte-true Leichen-Wurzel FUN_8010A440 verlaesst Zelle 0
+             * ueber die RNG-Weiche @0x8010a5a4-d0 nach +0x5 = 1 (`sb 1,5` @0x8010a4e0, der
+             * 1/3-Zweig) ODER +0x5 = 8 (`sb v0,5` @0x8010a5d0, der 2/3-Zweig). Beide haben die
+             * Pose bereits gesetzt; mit dem alten Marker fielen 2 von 3 Laeufen stumm aus. */
+            if (e->sub_state_1 == 1 || e->sub_state_1 == 8) {
                 t->corpse_clip = (int)e->motion; t->corpse_dy = bp[1] - e->y; t->ok = 1;
                 return;
             }

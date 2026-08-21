@@ -5678,24 +5678,202 @@ static void re2z_death(re15_actor_t *e, re15_actor_t *pl)
     }
 }
 
-/* ---- CORPSE @0x8010A440 (12 subs @0x8010019C; the port runs the sub-0 init then holds — the
- * wait/gunshot-reaction subs 1..11 (@0x8010A5D8..0x8010A808) are presentation-only, no
- * revival commits exist in any of them). ------------------------------------------------------ */
+/* ============================================================================================
+ * CORPSE @0x8010A440 — DIE LEICHEN-MASCHINE (12 Subs, Tabelle @0x8010019C)
+ * --------------------------------------------------------------------------------------------
+ * NUTZER-REPORT 2026-08-21 (RE2-KI-Modus), zwei Teile:
+ *   (A) "Der am Boden getoetete Zombie laeuft sofort aus, nicht langsam wie normal."
+ *   (B) "Ausserdem gibt es keine finale Todesanimation."
+ *
+ * GEMESSEN vor dem Fix (probe_re2z_corpse, ROOM1140, echter Weg game_step+Pad, RE2-Bank,
+ * 64 Seeds): 64/64 Leichen mit POOL_HX first=min=max=last=1320 (Wachstums-Spanne 0), in
+ * state 7 nur die +0x5-Werte {0,1}, clip 22 auf anim_frame 0 / Keyframe 722 fuer 900+ Frames.
+ * RE1.5-Kontrolle im selben Lauf: POOL_HX 608 -> 1320 ueber ~90 Frames, +0x5 {0,1,2,3,4}.
+ *
+ * URSACHE: der Port fuhr nur den Sub-0-Init und hielt danach. Die elf uebrigen Zellen waren als
+ * "presentation-only" abgetan — sie sind es NICHT: Sub 1/3/8 sind der LACHEN-GROWER, Sub 1/5/10
+ * der Clip-Advance und Sub 2/4/6 die Zuck-Taktung. Zusaetzlich laesst der globale Port-Advancer
+ * Leichen aus (`if (a->state == RE15_AI_STATE_CORPSE) continue;`, player_common.c) — voellig
+ * richtig, denn im Original advanct die Leichen-Maschine SELBST (`jal 0x8002959c` @0x8010a7ec).
+ * Ohne den Advance in dieser Funktion steht der Leichen-Clip also auf Frame 0.
+ *
+ * ROUTER @0x8010a440-8c:
+ *   8010a460: lbu v1,5(s0)      ; +0x5
+ *   8010a464: lw  s1,364(s0)    ; s1 = [+0x16C] = der BODEN-SCHATTEN-/PRIM-RECORD
+ *   8010a468: sltiu v0,v1,0xc   ; 12 Zellen
+ *   8010a46c: beq  v0,zero,0x8010a80c   ; ausserhalb -> nur der gemeinsame Schwanz
+ *   8010a480: lw   v0,412(at)   ; Tabelle @0x8010019c
+ * Tabelle @0x8010019c (selbst dekodiert): [0]=0x8010a490 [1]=0x8010a5d8 [2]=0x8010a60c
+ *   [3]=0x8010a64c [4]=0x8010a69c [5]=0x8010a7e0 [6]=0x8010a6bc [7]=0x8010a80c
+ *   [8]=0x8010a768 [9]=0x8010a7b4 [10]=0x8010a7e0 [11]=0x8010a808
+ *
+ * ⚠ DIE BASIS DER LACHE IST OFFEN — und wird hier NICHT erfunden. Das Original waechst auf dem
+ * Wert weiter, den [+0x16C]+4/+6 beim Spawn schon haben; einen Overlay-Schreiber dafuer gibt es
+ * NICHT (voller Scan von EMOVL10_S0.BIN nach `lw rX,364(rY)`: genau ZWEI Treffer — @0x80109ea8
+ * ist eine Sprungtabelle, @0x8010a464 diese Wurzel). Die Basis setzt der RE2-EXE-Spawnpfad, den
+ * der Port nicht hat. Der Port legt den Grower deshalb auf SEINE bereits zitierte Zombie-
+ * Schattenbasis (FUN_8001af5c-Argumente 0x258/0x2bc = 600/700, platform/pc/main.c). Byte-true
+ * sind RATE (+5/Tick), BUDGET (120 Ticks ueber +0x16A) und FARBE (0x00BFBF10).
+ *
+ * OFFEN (mit Adressen, bewusst nicht gebaut):
+ *   - `+0x1C0 |= 1` @0x8010a49c-b0 — dasselbe Modell-/Kollisionsbyte ohne Port-Feld wie an den
+ *     schon dokumentierten Stellen (@0x80108614, @0x801096a0, @0x8010945c).
+ *   - `jal 0x80018fb0` @0x8010a520 und die fuenf `[+0x198]+{516,688,1032,1204,1376} |= 0x8000`
+ *     (@0x8010a528-9c, nochmal @0x8010a6e8-64) — Modell-Sichtbarkeits-/Prim-Flags.
+ *   - Der Farb-Ausblender im Schwanz @0x8010a818-68 (Gate `+0x10E & 0x80`, alle 4 Frames
+ *     15x `[+0x198]+112+i*172 += 0xfffefeff`) — Part-Farbwoerter, kein Port-Kanal.
+ *   - Das ABSACKEN @0x8010a86c-8f0 (Gate `+0x10C != 0`; `+0x3C -= 5` bis `+0x10C+300`, sonst
+ *     `+= 2`, Zaehler +0x238) — +0x10C hat fuer den Zombie kein Port-Feld (dieselbe Luecke wie
+ *     an Ragdoll-P2 @0x80107784), und ohne +0x10C ist der ganze Block im Original tot.
+ * ========================================================================================== */
+
+/* Die ADVANCE-Zelle @0x8010a7e0 (Sub 5 UND Sub 10):
+ *   8010a7ec: jal 0x8002959c ; 8010a7f0: addiu a3,zero,512   (Blend 0x200)
+ *   8010a7f4-804: `lbu +0x5; addu v1,v1,v0; sb v1,5(s0)`     (+0x5 += Rueckgabe)
+ * FUN_8002959C -> FUN_80029614; dessen Frame-/Fade-Schwanz (RE2-PSX.EXE, selbst disassembliert):
+ *   800299c0: lbu v0,334(s2) ; 800299c8: addiu v0,v0,-1 ; 800299cc: sb v0,334(s2)  (+0x14E--)
+ *   80029b28: lbu v0,333(s2) ; 80029b30: addiu v0,v0,1  ; 80029b34: sb v0,333(s2)  (+0x14D++)
+ *   80029b3c: sltu v0,v0,s3  ; 80029b40: bne -> return 0
+ *   80029b48: sb zero,333(s2); 80029b4c: addiu v0,zero,1                (WRAP + return 1)
+ * KEIN "hold last frame" — genau die Lehre aus 89053003. */
+static int re2z_corpse_advance(re15_actor_t *e)
+{
+    e->anim_blend_rate = 0x200;                                    /* a3 = 512 @0x8010a7f0 */
+    if (e->anim_frac > 0) e->anim_frac--;                          /* +0x14E-- @0x800299C0-CC */
+    int fc = re15_actor_clip_len(e);
+    if (fc <= 0) return 1;                                         /* keine Bank -> nicht haengen */
+    uint16_t nf = (uint16_t)(e->anim_frame + 1);                   /* +0x14D++ @0x80029B30 */
+    if ((int)nf >= fc) { e->anim_frame = 0; return 1; }            /* @0x80029B48-4C */
+    e->anim_frame = nf;
+    return 0;                                                      /* @0x80029B44 */
+}
+
+/* Der GROWER, wortgleich in Sub 1 (@0x8010a5f0-608), Sub 3 (@0x8010a664-678) und Sub 8
+ * (@0x8010a780-94):  `lhu +4; lhu +6; addiu +5; addiu +5; sh; sh` auf dem Schatten-Record
+ * [+0x16C]. Im Port sind das die AI-Kanaele crow_shadow_w/h (dieselben Felder, die die
+ * RE2-/RE1.5-Kraehe fuer ihre Lache benutzt — re15_actor.h). */
+static void re2z_corpse_pool_grow(re15_actor_t *e)
+{
+    e->crow_shadow_w = (uint16_t)(e->crow_shadow_w + 5);
+    e->crow_shadow_h = (uint16_t)(e->crow_shadow_h + 5);
+}
+
 static void re2z_corpse(re15_actor_t *e)
 {
-    if (e->hp != -1 || e->sub_state_1 != 1) {                      /* run the sub-0 init ONCE */
-        re2z_clip(e, (e->re2z_flags21a & 0x4u) ? 0x16 : 0x17,      /* 22 if bit 0x4, else 23
-                                                                    * @0x8010A490-BC */
+    unsigned sub = e->sub_state_1;
+    if (sub >= 12u) sub = 7u;                                      /* `sltiu v0,v1,0xc` @0x8010a468
+                                                                    * -> 0x8010a80c = Zelle 7 */
+    switch (sub) {
+    case 0:                                                        /* @0x8010a490 INIT */
+        re2z_clip(e, (e->re2z_flags21a & 0x4u) ? 0x16 : 0x17,      /* 0x00070017, bzw. 0x00070016
+                                                                    * wenn +0x21A&4 @0x8010a490-bc */
                   0, 7, 0x200, 0);
-        e->hp = -1;                                                /* sh -1,342 @0x8010A4D4 */
-        e->sub_state_1 = 1;                                        /* sb 1,5 @0x8010A4E0 */
-        e->re2z_t158 = 40;                                         /* @0x8010A514-18 */
-        e->re2z_dir16a = 120;                                      /* @0x8010A508-10 */
-        e->speed_h = 0;                                            /* sh zero,324 @0x8010A520-24 */
-        /* corpse tint 0xBFBF10 into the model color words (@0x8010A4C0-508): render-side,
-         * no port tint channel yet — OPEN, documented. */
+        /* `+0x1C0 |= 1` @0x8010a49c-b0 — OPEN (s. Blockkopf) */
+        /* Leichen-Tint: [+0x16C]+28 / +68 = (alt & 0xff000000) | 0x00BFBF10 @0x8010a4c0-508.
+         * Port-Kanal: crow_pool (1 = Lachen-Faerbung statt Grau-Schatten). Die Basis-Halb-
+         * ausdehnung setzt der Port hier (Blockkopf: im Original EXE-Spawn-Vorgabe). */
+        e->crow_shadow_w = 600;                                    /* Port-Basis (af5c 0x258) */
+        e->crow_shadow_h = 700;                                    /* Port-Basis (af5c 0x2bc) */
+        e->crow_pool     = 1;
+        e->hp            = -1;                                     /* sh -1,342 @0x8010a4d4 */
+        e->sub_state_1   = 1;                                      /* sb 1,5 @0x8010a4e0 */
+        e->re2z_dir16a   = 120;                                    /* +0x16A = 120 @0x8010a508-10 */
+        e->re2z_t158     = 40;                                     /* +0x158 = 40 @0x8010a514-18 */
+        e->speed_h       = 0;                                      /* sh zero,324 @0x8010a524 */
+        /* `+0x0 |= 2` @0x8010a4e4-e8, `sb zero,568` (+0x238) @0x8010a51c, `jal 0x80018fb0`
+         * @0x8010a520 und die fuenf Prim-Flagwoerter @0x8010a528-9c: OPEN (s. Blockkopf) */
+        if ((re2z_rand() % 3u) != 0u) {                            /* jal @0x8010a59c; magisches
+                                                                    * 0x55555556-Div @0x8010a5a4-c4;
+                                                                    * `beq v0,v1` @0x8010a5c4 */
+            e->sub_state_1 = 8;                                    /* `addiu v0,zero,8` @0x8010a5c8 /
+                                                                    * `sb v0,5(s0)` @0x8010a5d0 */
+            return;                                                /* `j 0x8010a904` = EPILOG,
+                                                                    * OHNE den Schwanz! */
+        }
+        e->re2z_t15a = 0;                                          /* sh zero,346 @0x8010a5d4 */
+        /* FALLTHROUGH nach Sub 1 (@0x8010a5d4 -> @0x8010a5d8, kein Sprung) */
+        /* fall through */
+    case 1:                                                        /* @0x8010a5d8 GROWER + ADVANCE */
+        if (e->re2z_dir16a != 0) {                                 /* `lb v0,362` / `beq` @0x8010a5d8-e0 */
+            e->re2z_dir16a--;                                      /* @0x8010a5e8-ec */
+            re2z_corpse_pool_grow(e);                              /* @0x8010a5f0-608 */
+        }
+        goto advance;                                              /* j 0x8010a7e0 @0x8010a604 */
+    case 2:                                                        /* @0x8010a60c ZUCK-TAKT */
+        e->re2z_gaitrow = (uint8_t)((re2z_rand() & 0xfu) + 1u);    /* +0x16B @0x8010a60c-20 */
+        e->sub_state_1  = 3;                                       /* @0x8010a624-28 */
+        {   uint16_t t = (uint16_t)e->re2z_t158;                   /* lhu +0x158 @0x8010a618 */
+            e->re2z_t158 = (int16_t)(t - 1u);                      /* DELAY-SLOT, IMMER @0x8010a634 */
+            if (t == 0u) {                                         /* `bne v1,zero` @0x8010a630 */
+                e->sub_state_1 = 4;                                /* @0x8010a638-3c */
+                e->re2z_t158   = 30;                               /* @0x8010a640-48 */
+                goto tail;                                         /* j 0x8010a80c @0x8010a644 */
+            }
+        }
+        /* FALLTHROUGH nach Sub 3 (@0x8010a634 -> @0x8010a64c) */
+        /* fall through */
+    case 3:                                                        /* @0x8010a64c GROWER + Pause */
+        if (e->re2z_dir16a != 0) {                                 /* @0x8010a64c-54 */
+            e->re2z_dir16a--;                                      /* @0x8010a65c-60 */
+            re2z_corpse_pool_grow(e);                              /* @0x8010a664-678 */
+        }
+        {   uint8_t g = e->re2z_gaitrow;                           /* lbu +0x16B @0x8010a67c */
+            e->re2z_gaitrow = (uint8_t)(g - 1u);                   /* DELAY-SLOT, IMMER @0x8010a68c */
+            if (g == 0u) e->sub_state_1 = 1;                       /* @0x8010a690-98 */
+        }
+        goto tail;
+    case 4:                                                        /* @0x8010a69c lange Pause */
+        {   uint8_t g = e->re2z_gaitrow;                           /* lbu +0x16B @0x8010a69c */
+            e->re2z_gaitrow = (uint8_t)(g - 1u);                   /* DELAY-SLOT @0x8010a6ac */
+            if (g == 0u) e->sub_state_1 = 5;                       /* @0x8010a6b0-b8 */
+        }
+        goto tail;
+    case 6:                                                        /* @0x8010a6bc Zuck-Nachladen */
+        e->re2z_gaitrow = (uint8_t)((re2z_rand() & 0x3fu) + 60u);  /* +0x16B @0x8010a6bc-d0 */
+        e->sub_state_1  = 4;                                       /* @0x8010a6d4-d8 */
+        {   uint16_t t = (uint16_t)e->re2z_t158;                   /* lhu +0x158 @0x8010a6c8 */
+            e->re2z_t158 = (int16_t)(t - 1u);                      /* DELAY-SLOT @0x8010a6e4 */
+            if (t == 0u) {                                         /* `bne v1,zero` @0x8010a6e0 */
+                e->sub_state_1 = 7;                                /* @0x8010a6ec-f0 — RUHE */
+                /* fuenf Prim-Flagwoerter |= 0x8000 @0x8010a6f4-764: OPEN */
+            }
+        }
+        goto tail;
+    case 8:                                                        /* @0x8010a768 der 2/3-Zweig:
+                                                                    * NUR Grower, kein Advance */
+        if (e->re2z_dir16a != 0) {                                 /* @0x8010a768-70 */
+            e->re2z_dir16a--;                                      /* @0x8010a778-7c */
+            re2z_corpse_pool_grow(e);                              /* @0x8010a780-94 */
+        }
+        if (e->re2z_dir16a == 0) e->sub_state_1 = 7;               /* `lb v0,362 / bne` @0x8010a798-a4,
+                                                                    * sonst @0x8010a7a8-b0 -> RUHE */
+        goto tail;
+    case 9:                                                        /* @0x8010a7b4 Zweit-Clip */
+        re2z_clip(e, (e->re2z_flags21a & 0x4u) ? 0x16 : 0x07,      /* 0x00070007, bzw. 0x00070016
+                                                                    * wenn +0x21A&4 @0x8010a7b4-d4 */
+                  0, 7, 0x200, 0);
+        e->sub_state_1 = 10;                                       /* @0x8010a7d8-dc */
+        /* FALLTHROUGH nach Sub 10 (@0x8010a7dc -> @0x8010a7e0) */
+        /* fall through */
+    case 5:                                                        /* beide -> @0x8010a7e0 */
+    case 10:
+    advance:
+        {   /* `lbu v1,5(s0)` @0x8010a7f4 liest +0x5 NACH dem jal — Reihenfolge explizit */
+            int done = re2z_corpse_advance(e);                     /* jal @0x8010a7ec */
+            e->sub_state_1 = (uint8_t)(e->sub_state_1 + (uint8_t)done);   /* @0x8010a7fc-804 */
+        }
+        goto tail;
+    case 11:                                                       /* @0x8010a808 */
+        e->sub_state_1 = 0;                                        /* sb zero,5(s0) */
+        /* FALLTHROUGH in den Schwanz */
+        /* fall through */
+    case 7:                                                        /* @0x8010a80c = nur der Schwanz */
+    default:
+    tail:
+        e->re2z_t15a = (int16_t)(e->re2z_t15a + 1);                /* +0x15A += 1 @0x8010a80c-20 */
+        /* Farb-Ausblender @0x8010a818-68 und ABSACKEN @0x8010a86c-8f0: OPEN (s. Blockkopf) */
+        break;
     }
-    /* hold the lying pose; anim freeze at clip end is the renderer's one-shot default */
 }
 
 /* ---- STATE 8 @0x80109CFC (11 subs @0x8010CF18) — the on-the-ground-alive family. ENTRY is

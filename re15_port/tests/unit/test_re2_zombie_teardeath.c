@@ -241,7 +241,12 @@ static void run_kill(int slot, int weapon, int extra_warm, int force_col0, int b
             if (e->re2z_part_flags[3] & 0x4Au) t->arms_torn = 1;
         }
         if (dead && t->speed_n < 12) t->speed_seq[t->speed_n++] = (int)e->speed_h;
-        if (dead && e->state == 7 && e->sub_state_1 == 1 && !t->corpse_seen) {
+        /* ⚠ KORREKTUR 2026-08-21: der Marker war `+0x5 == 1` — der Endzustand des alten
+         * Port-Stubs. Die byte-true Leichen-Wurzel FUN_8010A440 verlaesst ihre Init-Zelle 0
+         * ueber die RNG-Weiche @0x8010a5a4-d0 nach +0x5 = 1 (`sb 1,5` @0x8010a4e0) ODER
+         * +0x5 = 8 (`sb v0,5` @0x8010a5d0); beide haben die Leichenpose schon gesetzt. */
+        if (dead && e->state == 7 && (e->sub_state_1 == 1 || e->sub_state_1 == 8)
+            && !t->corpse_seen) {
             t->corpse_seen = 1; t->corpse_clip = (int)e->motion;
             t->corpse_flags21a = (int)e->re2z_flags21a;
         }
@@ -298,7 +303,8 @@ static void run_forced_death(int slot, unsigned row, unsigned col, int budget, k
             memcpy(t->ptint,  e->re2z_part_tint,  sizeof t->ptint);
             if (e->re2z_part_flags[3] & 0x4Au) t->arms_torn = 1;
         }
-        if (e->state == 7 && e->sub_state_1 == 1 && !t->corpse_seen) {
+        if (e->state == 7 && (e->sub_state_1 == 1 || e->sub_state_1 == 8)   /* s.o. @0x8010a5d0 */
+            && !t->corpse_seen) {
             t->corpse_seen = 1; t->corpse_clip = (int)e->motion;
             t->corpse_flags21a = (int)e->re2z_flags21a; break;
         }

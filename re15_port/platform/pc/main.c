@@ -6394,7 +6394,13 @@ re_title:;
                      * crow_shadow_*-Felder (AI-seitig, ACTIVE-Tail @0x80115fa0-6058 + Corpse). */
                     int nis_zombie = (npc->type == 0x10 || npc->type == 0x11 || npc->type == 0x12 ||
                                       npc->type == 0x16 || npc->type == 0x18);
-                    if (npc->state == RE15_AI_STATE_CORPSE && nis_zombie) {
+                    /* Der RE1.5-Zweig gilt NUR im RE1.5-Modus: er liest grab_kill_ctr(+0x9E),
+                     * das re15_enemy_corpse_settle (FUN_80109554) fuellt. Im RE2-Modus laeuft
+                     * statt dessen FUN_8010A440 (Zweig unten) — und weil die RE2-Leiche +0x9E
+                     * nie schreibt, lieferte diese Formel dort grow = 0x5a = die volle Lache
+                     * ab dem ERSTEN Leichenframe (Nutzer-Report 2026-08-21). */
+                    if (npc->state == RE15_AI_STATE_CORPSE && nis_zombie
+                        && re15_ai_flavor() != RE15_AI_FLAVOR_RE2) {
                         int grow = (npc->sub_state_1 <= 1)
                                      ? (0x5a - (npc->grab_kill_ctr > 0 ? npc->grab_kill_ctr : 0))
                                      : 0x5a;
@@ -6403,6 +6409,21 @@ re_title:;
                         nhz = 700 + 8 * grow;
                         corpse_pool = 1;
                         sh_r = 0x38; sh_g = 0xff; sh_b = 0xff;
+                    }
+                    /* RE2-KI-MODUS: die Zombie-Leiche hat eine EIGENE Lachen-Maschine, und die
+                     * RE1.5-Formel darueber ist fuer sie falsch. Nutzer-Report 2026-08-21 ("der
+                     * am Boden getoetete Zombie laeuft SOFORT aus"): die RE2-Leiche schreibt
+                     * grab_kill_ctr(+0x9E) nie, also lieferte der Zweig oben grow = 0x5a-0 = 90
+                     * = volle Lache im ERSTEN Leichenframe (gemessen 64/64 Seeds,
+                     * probe_re2z_corpse). Byte-true ist stattdessen FUN_8010A440:
+                     * Grower [+0x16C]+4/+6 += 5 pro Tick (@0x8010a5f0-608 Sub 1, @0x8010a664-678
+                     * Sub 3, @0x8010a780-94 Sub 8) fuer +0x16A = 120 Ticks (@0x8010a508-10),
+                     * Tint [+0x16C]+28/+68 = (alt&0xff000000)|0x00BFBF10 (@0x8010a4c0-508).
+                     * Die AI schreibt dieselben Kanaele wie die Kraehe -> hier nur lesen. */
+                    if (nis_zombie && npc->crow_shadow_w != 0) {
+                        nhx = npc->crow_shadow_w; nhz = npc->crow_shadow_h;
+                        corpse_pool = npc->crow_pool ? 1 : 0;
+                        if (corpse_pool) { sh_r = 0x10; sh_g = 0xBF; sh_b = 0xBF; }
                     }
                     if (npc->type == 0x21 && npc->crow_shadow_w != 0) {
                         /* Krähe: Groesse/Farbe kommen KOMPLETT aus der AI (Prim-Feld-Port von
