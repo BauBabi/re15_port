@@ -341,6 +341,15 @@ typedef struct {
          * on the Work_set(3,0) dial object. Read/written by op_member_cmp/op_member_set's prop
          * path. [S1-4 PROG-3 keypad dial input] */
         uint8_t  member_0b;
+        /* Objekt-FLAGS = pool+0x00. Byte-true LAB_80040914 @0x80040990-a4:
+         * `lhu v0,6(a2); ori v0,v0,0x1; sll/sra 16; sw v0,0(a1)` — also das
+         * u16 aus dem Opcode-Strom pc[6..7] ODER 1. (Wird das Objekt ein
+         * zweites Mal installiert, schreibt @0x8004098c stattdessen 0 = AUS.)
+         * ROOM1090 obj0/obj1 tragen pc[6..7] = 00 01 -> flags = 0x0101.
+         * Gelesen von: FUN_8002d2c0 @0x8002d358 (`& 0x101` = kletterbar),
+         * FUN_8002d474 @0x8002d59c/@0x8002d680 und FUN_8002d100 @0x8002d170
+         * (`& 1` = aktiv). */
+        uint16_t flags;
     } props[16];
     uint8_t  prop_count;
     /* When Work_set kind=3 selects a script slot that has NO active

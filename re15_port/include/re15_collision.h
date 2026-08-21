@@ -107,6 +107,36 @@ int  re15_collision_next_band_above(const re15_rdt_t *rdt, int cur);
 int  re15_collision_floor_band_at(const re15_rdt_t *rdt,
                                   int32_t x, int32_t z, int start_band);
 
+/* FUN_8003b7f0 @0x8003b7f0 mit EXPLIZITEM Band und Radius — liefert das ATTRIBUT-WORT
+ * der SCA-Zelle unter (x,z), also `*(u16*)(zelle+0x0a)` = `u1 | (floor<<8)`, bzw. 0,
+ * wenn keine Zelle des Bandes den Punkt enthaelt. Byte-true:
+ *   @0x8003b848-50 Quadrant via FUN_8003b068(vec, tmp, hdr[0], hdr[1])
+ *   @0x8003b874-84 [start,end) = hdr[4+q*4] .. hdr[8+q*4], Zellen-Stride 12
+ *   @0x8003b8a0-b0 Band-Gate `((u16)zelle[0x0a] << 16 >> 28) == (band & 0xff)`
+ *   @0x8003b8b8-f8 `(u32)(x - (zelle.x - r)) < (u32)(zelle.w + 2r)` je Achse
+ *   @0x8003b900-04 Treffer -> Rueckgabe = das rohe u16 @zelle+0x0a
+ * (`re15_collision_on_floor` ist derselbe Scan mit dem GETRACKTEN Band und
+ *  boolescher Rueckgabe; hier braucht der Kletter-Test die Attribut-Bits 0/1/0xe.) */
+uint16_t re15_collision_floor_typeword(const re15_rdt_t *rdt, int32_t x, int32_t z,
+                                       int band, int32_t r);
+
+/* FUN_8001c6e8 @0x8001c6e8 (Decompilat RE_15_Quellcode_V2/FUN_8001c6e8.c) — die
+ * BODEN-HOEHE unter (x,z): scannt die Baender `start_band-1 .. 0` und liefert
+ *   -(band+1) * 0x708   fuer die erste Zelle, die (x,z) enthaelt, deren Attributwort
+ *                       `(s16)zelle[0x0a] & 0xf002 == band<<12` erfuellt (Band gleich UND
+ *                       u1-Bit1 frei) und deren `(s16)zelle[0x08] & mask` gesetzt ist.
+ * VOR jedem Band-Durchlauf laeuft (solange `mask & 0x10000` frei ist) der Objekt-Pass:
+ * fuer jedes aktive Objekt `FUN_8002da4c(p, obj, (s16)((r - sign(r))>>1), band)` ->
+ * Treffer liefert `(s16)(obj.y - 2*box.hy)` = die OBERKANTE des Objekts.
+ * Rueckgabe 0, wenn nichts gefunden. */
+int16_t re15_collision_room_coll(const re15_rdt_t *rdt, int32_t x, int32_t z,
+                                 int32_t r, int start_band, uint32_t mask);
+
+/* FUN_8002da4c @0x8002da4c — Punkt gegen die (um `margin` aufgeblasene) Box eines
+ * Obj_model_set-Props, mit Band-Gate. 1 = drin. */
+int  re15_collision_prop_box_hit(int prop_idx, int32_t x, int32_t z,
+                                 int32_t margin, int band);
+
 /* The centroid (average cell-centre) of all SCA cells of `band` — used by the
  * stair as the destination platform's walkable centre to auto-walk Leon to
  * (mirrors the original deriving the descent target from the stair geometry).

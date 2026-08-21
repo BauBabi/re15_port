@@ -3537,6 +3537,11 @@ static int op_obj_model_set(scd_thread_t *t)
         g_scd.props[i].box_hx = bhx;
         g_scd.props[i].box_hy = bhy;
         g_scd.props[i].box_hz = bhz;
+        /* FLAGS = pool+0x00 (byte-true LAB_80040914 @0x80040990-a4:
+         * `lhu v0,6(a2)` / `ori v0,v0,0x1` / `sw v0,0(a1)`). Bit 0x100 ist das
+         * "kletterbar"-Bit, das FUN_8002d2c0 @0x8002d358 mit `& 0x101` abfragt. */
+        g_scd.props[i].flags  = (uint16_t)(((uint16_t)t->pc[6] |
+                                            ((uint16_t)t->pc[7] << 8)) | 1u);
 #ifdef RE15_PLATFORM_PC
         fprintf(stderr, "[scd] Obj_model_set[%d] id=0x%02X type=%u pos=(%d,%d,%d) rot=(%d,%d,%d)\n",
                 i, obj_id, obj_type, px, py, pz, rx, ry, rz);

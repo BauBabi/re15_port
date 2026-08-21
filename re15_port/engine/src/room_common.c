@@ -24,6 +24,7 @@
 #include "re15_msg.h"
 #include "re15_collision.h"
 #include "re15_stair.h"
+#include "re15_climb.h"   /* re15_climb_reset — Kletter-FSM (Substate 9/10) */
 #include "re15_audio.h"
 #include "re15_fade.h"        /* re15_fade_config/kick/done — die Transitions-Blende */
 
@@ -391,6 +392,8 @@ int re15_room_apply_pending(const re15_room_apply_ctx_t *c)
 
     /* (14) No half-finished stair traversal carries across rooms. */
     re15_stair_reset();
+    /* (14b) dito fuer den Kletter-FSM (Substate 9/10) + das Standobjekt DAT_800ac788. */
+    re15_climb_reset();
 
     /* (15) Per-room BGM (SS_BGMTBL): switch to the new room's track.
      *

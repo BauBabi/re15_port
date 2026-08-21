@@ -348,6 +348,25 @@ void re15_actor_anim_select(const re15_actor_t *a, int is_player,
         out->skel = banks->pl00_skel;
         out->anim = banks->pl00_anim;
         out->clip_override = (m == 220) ? 21 : 20;   /* 220 down=PL00 c21 / 221 up=c20 */
+    } else if (banks->w01_ok && m == 230) {
+        /* KLETTERN Phase 0/1 (LAB_80037fd8 case0/1): `+0x94 = 5` @0x80038030 und
+         * `anim_set(*(0x800acbc4), *(0x800acbc8), 0, 0x200)` @0x8003809c — die
+         * Bank ist die PLW/W01-Bank (ihre beiden Zeiger werden im ganzen EXE nur
+         * von FUN_80036b68 @0x80036be4/@0x80036c04 aus dem PLW-Archiv gesetzt),
+         * also W01 clip 5 (30 Frames). */
+        out->skel = banks->w01_skel;
+        out->anim = banks->w01_anim;
+        out->clip_override = 5;
+    } else if (banks->pl00_ok && m >= 231 && m <= 235) {
+        /* KLETTERN aus der PL00-Bank (`anim_set(*(0x800acad8), *(0x800acbc0), …)`):
+         *   231 Aufstieg      = clip 2 @0x80038134  (50 Frames)
+         *   232 Absprung-Vorb.= clip 3 @0x80038368  (26 Frames)
+         *   233 Fall          = clip 4 @0x800383d8  (20 Frames)
+         *   234/235 Landung   = clip 5 / 6 @0x800386e4 / @0x80038700 (20 / 50 Frames) */
+        out->skel = banks->pl00_skel;
+        out->anim = banks->pl00_anim;
+        out->clip_override = (m == 231) ? 2 : (m == 232) ? 3 : (m == 233) ? 4
+                           : (m == 234) ? 5 : 6;
     } else if (m == 200) {
         /* IDLE neutral fallback when PL00W01 is unavailable: idle-bank clip 6
          * (1-frame static rest pose). */

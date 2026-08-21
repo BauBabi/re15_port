@@ -67,6 +67,12 @@ typedef struct {
     int32_t  x;            /* RE1.5 Member id 0 → +0x34 (world X)          */
     int32_t  y;            /* RE1.5 Member id 1 → +0x38 (world Y)          */
     int32_t  z;            /* RE1.5 Member id 2 → +0x3c (world Z)          */
+    /* +0x40/0x42/0x44 — der u16-SPIEGEL der Position (`sh` -Schreiber, nie `sw`).
+     * Vom Kletter-FSM byte-true geschrieben: @0x80038210/@0x80038218/@0x8003822c
+     * (Aufstieg, Spieler-XZ vor dem Band-Schritt), @0x800382c8/@0x800382d8
+     * (Snap auf die Objektmitte am Ende), @0x80038480/@0x80038498/@0x800384a4 und
+     * @0x80038628/@0x80038630/@0x80038638 (Absprung). */
+    uint16_t pos_s_x, pos_s_y, pos_s_z;
     int16_t  rot_x;        /* RE1.5 Member id 3 → +0x68 (rot_x)           */
     int16_t  rot_y;        /* RE1.5 Member id 4 → +0x6a (rot_y, 4096=360°)*/
     int16_t  rot_z;        /* RE1.5 Member id 5 → +0x6c (rot_z)           */

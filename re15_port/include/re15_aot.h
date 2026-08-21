@@ -366,6 +366,14 @@ int  re15_prop_push_counter(int prop_idx);
 /* Zaehler + Kontaktbit wischen (Raumwechsel / Testaufbau). */
 void re15_prop_push_reset(void);
 
+/* FUN_8002d1e8(a0=Aktor, a1=Objekt, a2=Modus) @0x8002d1e8 — der Reichweitentest:
+ * Punkt 563 voraus (`ori v0,zero,0x233` @0x8002d204, gedreht mit dem Aktor-Yaw
+ * @0x8002d218-1c) gegen die Objekt-Boxmitte, Radius 900 (a2==0, @0x8002d224) bzw.
+ * 700 (a2!=0, @0x8002d280). Wird sowohl vom Schiebe-Pass (@0x8002bf50) als auch
+ * von der Kletter-Sonde (FUN_8002d2c0 @0x8002d37c, FUN_8002d474 @0x8002d708)
+ * gebraucht. prop_idx = Index in g_scd.props. */
+int  re15_prop_reach_test(int32_t ax, int32_t az, int16_t a_rot_y, int prop_idx, int mode);
+
 /* Byte-true per-prop visibility cull — SHARED by BOTH ports so the Obj_model_set
  * prop loop culls identically. Per FUN_8002c18c (object render/scan loop):
  *   type != 3 (the common path — INCLUDING every room1170 prop, which are ALL

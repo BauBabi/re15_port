@@ -1397,18 +1397,24 @@ void re15_prop_push_reset(void)
  *                                     wenn a2 != 0 (der Schiebe-Aufruf uebergibt 0 -> 900)
  *   @0x8002d250-78 Mitte = obj.pos + obj[+0x78].c ; dx/dz gegen den Sondenpunkt
  *   @0x8002d284-a0 Rueckgabe (|dx| <= r) && (|dz| <= r)  (unsigned-Wrap-Trick) */
-static int prop_reach_test(const re15_actor_t *a, int p, int mode)
+int re15_prop_reach_test(int32_t ax, int32_t az, int16_t a_rot_y, int p, int mode)
 {
     const int32_t r = mode ? 700 : 900;
-    int32_t c = re15_cos_q12((int)a->rot_y);
-    int32_t s = re15_sin_q12((int)a->rot_y);
-    int32_t px = a->x + (int32_t)((563 * c) >> 12);
-    int32_t pz = a->z - (int32_t)((563 * s) >> 12);
+    if (p < 0 || p >= 16) return 0;
+    int32_t c = re15_cos_q12((int)a_rot_y);
+    int32_t s = re15_sin_q12((int)a_rot_y);
+    int32_t px = ax + (int32_t)((563 * c) >> 12);
+    int32_t pz = az - (int32_t)((563 * s) >> 12);
     int32_t dx = px - (g_scd.props[p].x + (int32_t)g_scd.props[p].box_cx);
     int32_t dz = pz - (g_scd.props[p].z + (int32_t)g_scd.props[p].box_cz);
     if (dx < 0) dx = -dx;
     if (dz < 0) dz = -dz;
     return (dx <= r) && (dz <= r);
+}
+
+static int prop_reach_test(const re15_actor_t *a, int p, int mode)
+{
+    return re15_prop_reach_test(a->x, a->z, a->rot_y, p, mode);
 }
 
 void re15_prop_push_tick(const re15_rdt_t *rdt, uint16_t pad_held)

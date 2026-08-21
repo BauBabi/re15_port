@@ -249,6 +249,100 @@ int re15_collision_on_floor(const re15_rdt_t *rdt, int32_t x, int32_t z)
     return 0;
 }
 
+/* ---- FUN_8003b7f0 mit explizitem Band/Radius (Attributwort statt bool) -------------
+ * Byte-true: das Original liest die Zelle als 6 x u16 (Stride 12) und vergleicht das
+ * Band als VORZEICHENBEHAFTETES Nibble aus Bit 15..12 des Wortes @zelle+0x0a
+ * (`sll v0,v0,16; sra v0,v0,28` @0x8003b8a8-ac) gegen `a2 = band & 0xff`
+ * (@0x8003b88c). Im Port ist dieses Wort `u1 | (floor<<8)`. */
+uint16_t re15_collision_floor_typeword(const re15_rdt_t *rdt, int32_t x, int32_t z,
+                                       int band, int32_t r)
+{
+    if (!rdt || !rdt->sca || rdt->sca_count <= 0) return 0;
+    int q = quadrant_of(x, z, (int16_t)rdt->ceiling_x, (int16_t)rdt->ceiling_z);
+    int start = 0; for (int i = 0; i < q && i < 5; i++) start += rdt->sca_rgn[i];
+    int end = start + (q < 5 ? rdt->sca_rgn[q] : 0);
+    if (end > rdt->sca_count) end = rdt->sca_count;
+    const int32_t t0 = (int32_t)(int16_t)r;              /* `sll/sra 16` @0x8003b888-90 */
+    for (int i = start; i < end; i++) {
+        const re15_sca_entry_t *e = &rdt->sca[i];
+        uint16_t w = (uint16_t)((uint16_t)e->u1 | ((uint16_t)e->floor << 8));
+        int cb = (int)(((int32_t)((uint32_t)w << 16)) >> 28);      /* @0x8003b8a8-ac */
+        if (cb != (band & 0xff)) continue;                         /* @0x8003b8b0 */
+        if ((uint32_t)(x - ((int32_t)e->x - t0)) >=
+            (uint32_t)((int32_t)e->width   + 2 * t0)) continue;    /* @0x8003b8b8-d4 */
+        if ((uint32_t)(z - ((int32_t)e->z - t0)) >=
+            (uint32_t)((int32_t)e->density + 2 * t0)) continue;    /* @0x8003b8dc-f8 */
+        return w;                                                  /* @0x8003b900-04 */
+    }
+    return 0;                                                      /* @0x8003b91c */
+}
+
+/* ---- FUN_8002da4c @0x8002da4c — Punkt gegen Prop-Box mit Band-Gate ------------------
+ *   @0x8002da50-58 `obj[0x82] != (band & 0xff)` -> 0
+ *   @0x8002da60-88 dx = x - (box.cx + obj.x) ; dz = z - (box.cz + obj.z)
+ *   @0x8002da8c-a4 `(u32)(2*(hx+m)) < (u32)(dx + (hx+m))` -> 0   (unsigned-Wrap-Trick)
+ *   @0x8002dab4-c0 dito fuer Z, Rueckgabe = !(...)                                    */
+int re15_collision_prop_box_hit(int prop_idx, int32_t x, int32_t z,
+                                int32_t margin, int band)
+{
+    if (prop_idx < 0 || prop_idx >= 16) return 0;
+    const int32_t ox = g_scd.props[prop_idx].x, oz = g_scd.props[prop_idx].z;
+    if ((int)g_scd.props[prop_idx].band != (band & 0xff)) return 0;
+    const int32_t dx = x - ((int32_t)g_scd.props[prop_idx].box_cx + ox);
+    const int32_t dz = z - ((int32_t)g_scd.props[prop_idx].box_cz + oz);
+    const uint32_t hx = (uint32_t)(uint16_t)g_scd.props[prop_idx].box_hx + (uint32_t)margin;
+    if ((uint32_t)(hx << 1) < (uint32_t)((uint32_t)dx + hx)) return 0;
+    const uint32_t hz = (uint32_t)(uint16_t)g_scd.props[prop_idx].box_hz + (uint32_t)margin;
+    return ((uint32_t)(hz << 1) < (uint32_t)((uint32_t)dz + hz)) ? 0 : 1;
+}
+
+/* ---- FUN_8001c6e8 @0x8001c6e8 — Bodenhoehe (SCA-Baender + Objekt-Oberkanten) --------
+ * Decompilat: RE_15_Quellcode_V2/FUN_8001c6e8.c. Ablauf je Band (start_band-1 .. 0):
+ *   1) `(param_4 & 0x10000) == 0` -> Objekt-Pass ueber den Pool (rueckwaerts),
+ *      `FUN_8002da4c(p, obj, (s16)((r - (r>>31)) >> 1), band)`; Treffer ->
+ *      `(s16)(obj.y + box.hy * -2)` = Objekt-OBERKANTE.
+ *   2) SCA-Zellen des Quadranten: `band<<12 == ((s16)zelle[0x0a] & 0xf002)` UND
+ *      `((s16)zelle[0x08] & mask) != 0` UND Punkt in der um r GESCHRUMPFTEN Zelle
+ *      -> `(s16)((band+1) * -0x708)`.
+ * Fallen alle Baender durch -> 0.                                                     */
+int16_t re15_collision_room_coll(const re15_rdt_t *rdt, int32_t x, int32_t z,
+                                 int32_t r, int start_band, uint32_t mask)
+{
+    const int32_t rr = (int32_t)(int16_t)r;                  /* iVar9 = param_2 << 16 >> 16 */
+    const int32_t rs = (rr < 0) ? -1 : 0;                    /* iVar2 = local_30 >> 0x1f    */
+    const int32_t om = (int32_t)(int16_t)((rr - rs) >> 1);   /* Objekt-Margin               */
+    int q = 0, start = 0, end = 0;
+    if (rdt && rdt->sca && rdt->sca_count > 0) {
+        q = quadrant_of(x, z, (int16_t)rdt->ceiling_x, (int16_t)rdt->ceiling_z);
+        for (int i = 0; i < q && i < 5; i++) start += rdt->sca_rgn[i];
+        end = start + (q < 5 ? rdt->sca_rgn[q] : 0);
+        if (end > rdt->sca_count) end = rdt->sca_count;
+    }
+    for (int b = start_band - 1; b >= 0; b--) {
+        if (!(mask & 0x10000u)) {
+            for (int p = (int)g_scd.prop_count - 1; p >= 0; p--) {
+                if (p >= 16 || !g_scd.props[p].active) continue;
+                if (!re15_collision_prop_box_hit(p, x, z, om, b)) continue;
+                return (int16_t)((int32_t)g_scd.props[p].y
+                                 - 2 * (int32_t)(uint16_t)g_scd.props[p].box_hy);
+            }
+        }
+        for (int i = start; i < end; i++) {
+            const re15_sca_entry_t *e = &rdt->sca[i];
+            uint16_t w10 = (uint16_t)((uint16_t)e->u1 | ((uint16_t)e->floor << 8));
+            uint16_t w08 = (uint16_t)((uint16_t)e->type | ((uint16_t)e->u0 << 8));
+            if ((uint32_t)((int32_t)(int16_t)w10 & 0xf002) != (uint32_t)(b << 12)) continue;
+            if ((((int32_t)(int16_t)w08) & (int32_t)mask) == 0) continue;
+            if ((uint32_t)(x - ((int32_t)e->x + rr)) >=
+                (uint32_t)((int32_t)e->width   - 2 * rr)) continue;
+            if ((uint32_t)(z - ((int32_t)e->z + rr)) >=
+                (uint32_t)((int32_t)e->density - 2 * rr)) continue;
+            return (int16_t)((b + 1) * -0x708);
+        }
+    }
+    return 0;
+}
+
 int re15_collision_band_centroid(const re15_rdt_t *rdt, int band,
                                  int32_t *cx, int32_t *cz)
 {

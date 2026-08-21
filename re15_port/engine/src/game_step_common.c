@@ -14,6 +14,7 @@
 #include "re15_aot.h"
 #include "re15_collision.h"
 #include "re15_stair.h"
+#include "re15_climb.h"       /* FUN_8002d474 Kletter-Sonde + Substate 9/10 */
 #include "re15_player.h"
 #include "re15_scd.h"
 #include "re15_anim_select.h"   /* re15_actor_footstep (foot-plant query) */
@@ -775,6 +776,16 @@ void re15_game_step(const re15_game_ctx_t *c)
          * Positionsaenderung nie eine neue Zone betritt. */
         g_aot_action_pressed = 0;
         re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
+    } else if (c->rdt_ok && re15_climb_active()) {
+        /* KLETTERN (Spieler-Substate 9/10, LAB_80037fd8 / LAB_80038314). Wie bei der
+         * Treppe uebernimmt der FSM den Spieler komplett: kein player_tick, keine
+         * Wandklemme (die macht Substate 10 Phase 2 selbst @0x800384c4), aber der
+         * RVD-/AOT-Scan laeuft weiter (der Per-Frame-Kamerascan haengt im Original
+         * nicht am Substate). Die ENTRY-Handler von Substate 9/10 sind `jr ra`
+         * (0x80037fd0 / 0x8003830c) — es wird also KEIN neuer ACTION-Scan gefahren. */
+        g_aot_action_pressed = 0;
+        re15_climb_tick(c->rdt, c->pl00_skel, c->pl00_anim, c->w01_anim);
+        re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
     } else if (c->rdt_ok && re15_stair_active()) {
         /* Engine-driven stair traversal (action-triggered): auto-walk Leon
          * up/down + force the stair clip + sink/raise Y. The player does NOT
@@ -1166,10 +1177,21 @@ void re15_game_step(const re15_game_ctx_t *c)
         /* A stair may START this frame: ACTION pressed while in/against a stair
          * zone. If so it consumes the action and we SKIP the door scan;
          * otherwise scan the door AOTs (also action-gated). */
-        if (!(c->rdt_ok && re15_stair_try_start(c->rdt, g_aot_action_pressed))) {
+        /* BYTE-TRUE REIHENFOLGE (@0x80031fc8-fec, identisch in allen vier Sub-ENTRY-
+         * Handlern): die ACTION-Press-Edge probiert ZUERST die Kletter-Sonde
+         * FUN_8002d474 (@0x80031fd0) und erst bei deren Rueckgabe 0 den AOT-/Tuer-Scan
+         * FUN_80042bac(player,1,0x10) (@0x80031fe4). Die Treppe ist im Original ein
+         * AOT-Handler (sce 12/13) und steht deshalb HINTER der Kletter-Sonde. */
+        if (c->rdt_ok && re15_climb_try_start(c->rdt, g_aot_action_pressed)) {
+            g_aot_action_pressed = 0;
+        } else if (!(c->rdt_ok && re15_stair_try_start(c->rdt, g_aot_action_pressed))) {
             re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
         }
     }
+    /* Per-Frame-Standobjekt @0x80031cd8-0x80031d2c (DAT_800ac788 / aca3c bit 0x4000) —
+     * laeuft im Original DIREKT nach dem Spieler-FSM-Dispatch, also auch im normalen
+     * Gameplay-Zweig (nicht nur waehrend des Kletterns). */
+    if (c->rdt_ok) re15_climb_standing_tick();
 
     /* FOOTSTEP SE (byte-true LAB_80030af0 walk / LAB_80030d28 run): while the player
      * walks(105)/runs(100), the W01 clip's CURRENT frame carries a foot-plant flag

@@ -2226,3 +2226,76 @@ target_link_libraries(test_npc_back_walk PRIVATE re15_engine re15_test_support)
 target_include_directories(test_npc_back_walk PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_npc_back_walk COMMAND test_npc_back_walk)
 set_tests_properties(unit_npc_back_walk PROPERTIES TIMEOUT 60)
+
+# --- MESSSONDE (kein ctest): RE2-Leichnam — Blutlache + finale Todesanimation. ---
+add_executable(probe_re2z_corpse probe_re2z_corpse.c)
+target_link_libraries(probe_re2z_corpse PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re2z_corpse PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_re2z_corpse PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- MESSSONDE (kein ctest): RE2-Hund — erreicht der toedliche Griff (Sub 7 Latch) den
+#     Spieler auf dem NATUERLICHEN Weg (HP 100, echter ROOM1190, echte EM020-Bank)? ---
+add_executable(probe_re2_dog_kill probe_re2_dog_kill.c)
+target_link_libraries(probe_re2_dog_kill PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re2_dog_kill PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_re2_dog_kill PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- PIN: RE2-Leichnam — "laeuft SOFORT aus" + "keine finale Todesanimation"
+#     (Nutzer-Report 2026-08-21). Der Port fuhr von der Leichen-Wurzel FUN_8010A440 nur Zelle 0
+#     und hielt; die elf uebrigen Zellen (Tabelle @0x8010019c) sind KEINE reine Praesentation:
+#       - GROWER: [+0x16C]+4/+6 += 5 pro Tick, Budget +0x16A = 120 (@0x8010a508-10), in Zelle 1
+#         (@0x8010a5f0-608), Zelle 3 (@0x8010a664-678) und Zelle 8 (@0x8010a780-94);
+#         Tint [+0x16C]+28/+68 = (alt&0xff000000)|0x00BFBF10 (@0x8010a4c0-508).
+#       - ADVANCE: Zelle 5/10 @0x8010a7e0 `jal 0x8002959c` (a3=512) + `+0x5 += ret`
+#         (@0x8010a7f4-804). Der globale Port-Advancer laesst state 7 aus — im Original
+#         advanct die Leichen-Maschine SELBST, ohne sie steht der Clip auf Frame 0.
+#       - Weiche @0x8010a5c4: `rand % 3 != 0` -> Zelle 8 (nur Grower), sonst Zelle 1.
+#     Vorher gemessen (probe_re2z_corpse, ROOM1140, echter Weg, 64 Seeds): 64/64 Lache sofort
+#     voll (Spanne 0), nur +0x5 {0,1}, Clip auf Frame 0. Nachher 0/64.
+#     Pins: Grower-Invariante + Budget + NEGATIV-KONTROLLE (Budget leer -> kein Wachstum),
+#     Maschinenlauf + Wrap + NEGATIV-KONTROLLE (globaler Advancer ruehrt state 7 nicht an),
+#     RE1.5-Regressionswache. Braucht die RE2-Bank; ohne sie SKIP (77). ---
+add_executable(test_re2z_corpse_pool test_re2z_corpse_pool.c)
+target_link_libraries(test_re2z_corpse_pool PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2z_corpse_pool PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2z_corpse_pool PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2z_corpse_pool COMMAND test_re2z_corpse_pool)
+set_tests_properties(unit_re2z_corpse_pool PROPERTIES TIMEOUT 120 SKIP_RETURN_CODE 77)
+
+# --- PIN: RE2-Hunde-Kontakt = PART 4 (Kiefer), nicht die Hund-Wurzel. FUN_800157D4 auf
+#     *(self+0x198)+688+92 (@0x80104E10/E24/E74/E78), Radius 700/1000 am Ziel-HP-Schwellwert 21
+#     (@0x80104E34-48). Regression, die den toedlichen Griff unerreichbar machte. Braucht die
+#     echte RE2-EM020-Bank; ohne CDEMD0.EMS meldet der Test SKIP und gibt 0 zurueck. ---
+add_executable(test_re2_dog_jaw_contact test_re2_dog_jaw_contact.c)
+target_link_libraries(test_re2_dog_jaw_contact PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_dog_jaw_contact PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2_dog_jaw_contact PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2_dog_jaw_contact COMMAND test_re2_dog_jaw_contact)
+set_tests_properties(unit_re2_dog_jaw_contact PROPERTIES TIMEOUT 60)
+
+# --- MESSSONDE: "auf die Kiste klettern" (ROOM1090). Reine Diagnose (kein add_test):
+#     Anlauf an Kiste 0, ACTION -> FUN_8002d474, dann der Substate-9/10-Verlauf
+#     (Substate/KIND/PHASE/Clip/Band/Y/Objektbezug je Frame). ---
+add_executable(probe_1090_climb probe_1090_climb.c)
+target_link_libraries(probe_1090_climb PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1090_climb PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1090_climb PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- PIN: KLETTERN (ROOM1090, Spieler-Substate 9/10). Pinnt die Sonde FUN_8002d474
+#     (800 voraus, Kurs auf 90 Grad gerastet), das Objekt-Kletterbit 0x100 aus
+#     LAB_80040914, den Substate-9-Ablauf (W01 clip 5 -> PL00 clip 2, Ausloesframe
+#     0x1d: Schub 0x47c / Y -1800 / Band +1) und den Absprung ueber Substate 10 —
+#     mit Negativtests (kein ACTION, ausser Reichweite, falsches Band, falscher
+#     Objekt-Typ, kein Stapeln) und der Tuer-Gegenprobe. ---
+add_executable(test_1090_climb_pin test_1090_climb_pin.c)
+target_link_libraries(test_1090_climb_pin PRIVATE re15_engine re15_test_support)
+target_include_directories(test_1090_climb_pin PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_1090_climb_pin PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_1090_climb_pin COMMAND test_1090_climb_pin)
+set_tests_properties(unit_1090_climb_pin PROPERTIES TIMEOUT 60 SKIP_RETURN_CODE 77)
