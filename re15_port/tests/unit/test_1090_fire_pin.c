@@ -116,7 +116,7 @@ static int tim4_opaque(const re15_tim_t *t, int x, int y)
     uint8_t byte = row[x >> 1];
     int idx = (x & 1) ? (byte >> 4) : (byte & 0x0f);
     if (idx >= t->clut_entries) return 0;
-    return re15_tim_texel_argb(t->clut[idx], idx == 0, RE15_TIM_KEY_PSX) != 0u;
+    return re15_tim_texel_argb(t->clut[idx]) != 0u;   /* die eine GPU-Regel, re15_tim.h */
 }
 
 int main(void)

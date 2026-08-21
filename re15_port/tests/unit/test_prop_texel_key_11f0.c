@@ -121,7 +121,12 @@ static void cover_face(const re15_tim_t *tim, const uint16_t *clut_row, int key_
             int X = x + po;
             if (X >= tim->width || y >= tim->height) continue;
             int idx = tim_index_at(tim, X, y);
-            uint32_t argb = re15_tim_texel_argb(clut_row[idx], idx == 0, key_mode);
+            /* key_mode == RE15_TIM_KEY_PSX ist per Definition die Produktionsregel
+             * `re15_tim_texel_argb()`; die beiden anderen Modi sind der HISTORISCHE
+             * Zustand und leben nur noch als Negativ-Kontrolle (re15_tim.h). */
+            uint32_t argb = (key_mode == RE15_TIM_KEY_PSX)
+                              ? re15_tim_texel_argb(clut_row[idx])
+                              : re15_tim_texel_argb_legacy(clut_row[idx], idx == 0, key_mode);
             acc->sampled++;
             if (idx == 0) acc->idx0++;
             if (argb == 0u) acc->transparent++;
@@ -257,22 +262,27 @@ int main(void)
         CHECK(checked == 11, "nur %d der 11 uebrigen Props geprueft", checked);
     }
 
-    /* ===== P5: Regressionswache Effekt-Slots 19/20 (RE15_TIM_KEY_INDEX0) ============ */
-    printf("\n===== P5: RE15_TIM_KEY_INDEX0 (Slots 19/20) unveraendert =====\n");
+    /* ===== P5: die drei historischen Modi bleiben als Negativ-Kontrolle definiert ==== */
+    printf("\n===== P5: Produktionsregel vs. die zwei historischen Modi =====\n");
     {
-        CHECK(re15_tim_texel_argb(0x0000, 1, RE15_TIM_KEY_INDEX0) == 0u,
-              "Index 0 muss bei KEY_INDEX0 transparent bleiben");
-        CHECK(re15_tim_texel_argb(0x7FFF, 1, RE15_TIM_KEY_INDEX0) == 0u,
-              "KEY_INDEX0 entscheidet am INDEX, nicht am CLUT-Wert");
-        CHECK(re15_tim_texel_argb(0x0000, 0, RE15_TIM_KEY_INDEX0) == 0xFF000000u,
-              "KEY_INDEX0 darf Wert 0x0000 bei Index != 0 NICHT keyen (Alt-Verhalten)");
-        /* und die beiden anderen Modi, als Kontrast */
-        CHECK(re15_tim_texel_argb(0x0000, 1, RE15_TIM_KEY_NONE) == 0xFF000000u,
-              "KEY_NONE muss Index 0 opak schwarz lassen");
-        CHECK(re15_tim_texel_argb(0x0000, 0, RE15_TIM_KEY_PSX) == 0u,
-              "KEY_PSX muss den Texel-WERT 0x0000 keyen, unabhaengig vom Index");
-        CHECK(re15_tim_texel_argb(0x0001, 1, RE15_TIM_KEY_PSX) == re15_tim_rgb555_to_argb8888(0x0001),
-              "KEY_PSX darf Index 0 mit Wert != 0 NICHT keyen (psx-spx: nur 0000h)");
+        /* Produktionsregel (re15_tim_texel_argb, EINZIGES Argument = der aufgeloeste Wert) */
+        CHECK(re15_tim_texel_argb(0x0000) == 0u,
+              "die Regel muss den Texel-WERT 0x0000 keyen");
+        CHECK(re15_tim_texel_argb(0x0001) == re15_tim_rgb555_to_argb8888(0x0001),
+              "die Regel darf 0x0001 NICHT keyen (psx-spx: nur 0000h)");
+        CHECK(re15_tim_texel_argb(0x8000) == 0xFF000000u,
+              "0x8000 = STP-Schwarz ist bei opaken Befehlen NICHT-transparentes Schwarz");
+        /* historische Modi — sie duerfen NUR noch in Tests vorkommen */
+        CHECK(re15_tim_texel_argb_legacy(0x0000, 1, RE15_TIM_KEY_INDEX0) == 0u,
+              "KEY_INDEX0: Index 0 transparent");
+        CHECK(re15_tim_texel_argb_legacy(0x7FFF, 1, RE15_TIM_KEY_INDEX0) == 0u,
+              "KEY_INDEX0 entscheidet am INDEX, nicht am CLUT-Wert — DAS riss die Loecher");
+        CHECK(re15_tim_texel_argb_legacy(0x0000, 0, RE15_TIM_KEY_INDEX0) == 0xFF000000u,
+              "KEY_INDEX0 keyt Wert 0x0000 bei Index != 0 nicht (Alt-Verhalten)");
+        CHECK(re15_tim_texel_argb_legacy(0x0000, 1, RE15_TIM_KEY_NONE) == 0xFF000000u,
+              "KEY_NONE laesst Index 0 opak schwarz — DAS war der schwarze Hintergrund");
+        CHECK(re15_tim_texel_argb_legacy(0x0000, 0, RE15_TIM_KEY_PSX) == re15_tim_texel_argb(0x0000),
+              "KEY_PSX muss deckungsgleich mit der Produktionsregel sein");
     }
 
     printf("\n===== BEFUND: %s (%d Fehler) =====\n", g_fail ? "DIVERGENT" : "OK", g_fail);

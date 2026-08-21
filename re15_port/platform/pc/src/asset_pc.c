@@ -68,14 +68,24 @@ uint8_t *re15_asset_read_file(const char *path, int *out_size)
     return buf;
 }
 
-/* Convert RGB555 (PSX color format) → RGBA8888 */
-static uint32_t rgb555_to_rgba8888(uint16_t c)
+/* Ein Texel dieses 2D-Blits -> RGBA8888 des Software-Framebuffers.
+ *
+ * DIE ENTSCHEIDUNG "zeichnen oder nicht" kommt aus der EINEN Regel in re15_tim.h
+ * (`re15_tim_texel_argb`, ARGB; hier nur die Kanal-Reihenfolge gedreht) — dieser Blit
+ * hatte bis 2026-08-21 eine EIGENE, ANDERE Regel: er verwarf Texel nach dem PALETTEN-
+ * INDEX (`if (idx == 0) continue`). Das ist genau der Mechanismus, der Modelltexturen
+ * Loecher reisst, denn Index 0 ist dort eine echte, sichtbare Farbe (gemessen mit
+ * tests/unit/probe_texel_key_census: EM45 3635, EM42 1787, Elliot/EM47 478 gesampelte
+ * Index-0-Texel mit CLUT-Wert != 0). Die Hardware keyt am aufgeloesten WERT
+ * (psx-spx: Color 0000h = Fully-transparent), nicht am Index. */
+static uint32_t tim_texel_rgba(uint16_t c)
 {
-    if (c == 0) return 0x00000000u; /* transparent */
-    int r = ((c >>  0) & 0x1F) << 3;
-    int g = ((c >>  5) & 0x1F) << 3;
-    int b = ((c >> 10) & 0x1F) << 3;
-    return ((uint32_t)r << 24) | ((uint32_t)g << 16) | ((uint32_t)b << 8) | 0xFFu;
+    uint32_t argb = re15_tim_texel_argb(c);
+    if (argb == 0u) return 0x00000000u;                 /* nicht zeichnen */
+    return ((argb & 0x00FF0000u) << 8)                  /* R */
+         | ((argb & 0x0000FF00u) << 8)                  /* G */
+         | ((argb & 0x000000FFu) << 8)                  /* B */
+         | 0xFFu;                                       /* A */
 }
 
 void re15_tim_blit_pc(const re15_tim_t *tim, int dst_x, int dst_y)
@@ -87,10 +97,9 @@ void re15_tim_blit_pc(const re15_tim_t *tim, int dst_x, int dst_y)
         const uint8_t *src = (const uint8_t *) tim->pixels;
         for (int y = 0; y < tim->height; y++) {
             for (int x = 0; x < tim->width; x++) {
-                uint8_t idx = src[y * tim->width + x];
-                if (idx == 0) continue; /* transparent */
-                uint16_t c = tim->clut[idx];
-                re15_pc_put_pixel(dst_x + x, dst_y + y, rgb555_to_rgba8888(c));
+                uint32_t px = tim_texel_rgba(tim->clut[src[y * tim->width + x]]);
+                if (px == 0u) continue;
+                re15_pc_put_pixel(dst_x + x, dst_y + y, px);
             }
         }
     } else if (tim->bpp == 4 && tim->has_clut) {
@@ -100,9 +109,9 @@ void re15_tim_blit_pc(const re15_tim_t *tim, int dst_x, int dst_y)
             for (int x = 0; x < tim->width; x++) {
                 int byte_idx = (y * tim->width + x) / 2;
                 int nibble = (x & 1) ? (src[byte_idx] >> 4) : (src[byte_idx] & 0xF);
-                if (nibble == 0) continue;
-                uint16_t c = tim->clut[nibble];
-                re15_pc_put_pixel(dst_x + x, dst_y + y, rgb555_to_rgba8888(c));
+                uint32_t px = tim_texel_rgba(tim->clut[nibble]);
+                if (px == 0u) continue;
+                re15_pc_put_pixel(dst_x + x, dst_y + y, px);
             }
         }
     } else if (tim->bpp == 16) {
@@ -110,9 +119,9 @@ void re15_tim_blit_pc(const re15_tim_t *tim, int dst_x, int dst_y)
         const uint16_t *src = tim->pixels;
         for (int y = 0; y < tim->height; y++) {
             for (int x = 0; x < tim->width; x++) {
-                uint16_t c = src[y * tim->width + x];
-                if (c == 0) continue;
-                re15_pc_put_pixel(dst_x + x, dst_y + y, rgb555_to_rgba8888(c));
+                uint32_t px = tim_texel_rgba(src[y * tim->width + x]);
+                if (px == 0u) continue;
+                re15_pc_put_pixel(dst_x + x, dst_y + y, px);
             }
         }
     } else {

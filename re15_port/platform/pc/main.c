@@ -763,9 +763,12 @@ static void pc_load_room_prop_set(const re15_rdt_t *rdt,
         const uint8_t *mb = rdt->prop_md1[op]; int msz = rdt->prop_md1_size[op];
         const uint8_t *tb = rdt->prop_tim[op]; int tsz = rdt->prop_tim_size[op];
         if (mb && re15_md1_parse(mb, (size_t)msz, &md1[op]) == 0) ok[op] = 1;
-        /* RE15_TIM_KEY_PSX = byte-true GPU-FARBSCHLUESSEL (Nutzer-Report 2026-08-21:
-         * "bei dem Raetsel, wo man die Schalter druecken muss, bewegt man einen Cursor —
-         * der ist im Original der Hintergrund transparent und bei uns schwarz").
+        /* Der GPU-FARBSCHLUESSEL steckt seit 2026-08-21 im Upload selbst (EINE Regel fuer
+         * ALLE Slots, re15_tim.h / render_pc.c) — hier ist kein Sonderfall mehr noetig.
+         * Die Herleitung fuer den Raum-Prop-Fall bleibt stehen, weil sie den Original-
+         * Zeichenpfad belegt (Nutzer-Report 2026-08-21: "bei dem Raetsel, wo man die
+         * Schalter druecken muss, bewegt man einen Cursor — der ist im Original der
+         * Hintergrund transparent und bei uns schwarz").
          * Raum-Objekte zeichnet das Original ueber die Objekt-Schleife FUN_8002c18c:
          * pro Objekt `bVar2 = (obj[+0x0C] & 2) != 0` und dann — bei (obj[+0x0C] & 0x10) == 0 —
          * FUN_800254a0 (Tri) / FUN_800256b0 (Quad), die den Primitiv-Code als
@@ -787,8 +790,7 @@ static void pc_load_room_prop_set(const re15_rdt_t *rdt,
          * dieselbe 92.8%-Textur taucht in 18 Raeumen auf = EIN wiederverwendetes
          * Cursor-/Marker-Modell. Gepinnt in tests/unit/test_prop_texel_key_11f0.c. */
         if (tb) { re15_tim_t tt; if (re15_tim_parse(tb, tsz, &tt) == 0)
-                      re15_render_pc_upload_tim_slot_keyed(&tt, RE15_TIM_SLOT_PROP(op),
-                                                           RE15_TIM_KEY_PSX); }
+                      re15_render_pc_upload_tim_slot(&tt, RE15_TIM_SLOT_PROP(op)); }
     }
 }
 
@@ -2529,19 +2531,20 @@ re_title:;
          * index, i.e. indices 8..15 collapse to 0..7 there. TEX.TIM keeps them (4162 such halfwords
          * in this page alone).
          *
-         * KEY: the fire CLUT has 0x0000 at index 0 AND index 15 (`0000 ffff … 8003 0001 0000`), and
-         * index 0 is 68% of every flame cell — with the default KEY_NONE each 40x40 flame would be
-         * a solid CLUT[0] block. RE15_TIM_KEY_PSX is the byte-true GPU rule (psx-spx: a resolved
-         * texel of 0x0000 is fully transparent) and covers both entries; for the 10 flame cells it
-         * is measurably identical to KEY_INDEX0 (index 15 occurs 0 times there), so it cannot
-         * change how the already-working effects look. Slots 20-23 keep their existing key. */
-        static const struct { const char *file; int slot; const char *tag; int key; } k_gfx[] = {
-            { "extracted_fx/effect0_blood.tim",  RE15_TIM_SLOT_EFFECT_GLOBAL, "0 blood",  -1 },
-            { "extracted_fx/effect2_muzzle.tim", RE15_TIM_SLOT_FX_MUZZLE,     "2 muzzle", -1 },
-            { "extracted_fx/effect3_smoke.tim",  RE15_TIM_SLOT_FX_SMOKE,      "3 smoke",  -1 },
-            { "extracted_fx/effect4_shell.tim",  RE15_TIM_SLOT_FX_SHELL,      "4 shell",  -1 },
-            { "extracted_fx/effect8_fire.tim",   RE15_TIM_SLOT_FX_FIRE,       "8 fire",
-              RE15_TIM_KEY_PSX },
+         * FARBSCHLUESSEL: die fire-CLUT hat 0x0000 auf Index 0 UND Index 15
+         * (`0000 ffff … 8003 0001 0000`), und Index 0 ist 68% jeder Flammenzelle. Die
+         * Sonderbehandlung ("key"-Spalte) ist seit 2026-08-21 WEG: der Upload wendet die
+         * byte-true GPU-Regel (aufgeloester Texel-Wert 0x0000 = nicht zeichnen) auf JEDE
+         * Textur an, also auch auf die vier anderen Sheets hier. Fuer 21/22/23 aendert das
+         * nichts (16bpp — die liefen schon immer ueber dieselbe Wert-Regel), fuer Slot 20
+         * (4bpp Blut) auch nicht: dort sind Index-0-Menge und Wert-0-Menge deckungsgleich
+         * (gemessen 55934 == 55934, probe_texel_key_census). */
+        static const struct { const char *file; int slot; const char *tag; } k_gfx[] = {
+            { "extracted_fx/effect0_blood.tim",  RE15_TIM_SLOT_EFFECT_GLOBAL, "0 blood"  },
+            { "extracted_fx/effect2_muzzle.tim", RE15_TIM_SLOT_FX_MUZZLE,     "2 muzzle" },
+            { "extracted_fx/effect3_smoke.tim",  RE15_TIM_SLOT_FX_SMOKE,      "3 smoke"  },
+            { "extracted_fx/effect4_shell.tim",  RE15_TIM_SLOT_FX_SHELL,      "4 shell"  },
+            { "extracted_fx/effect8_fire.tim",   RE15_TIM_SLOT_FX_FIRE,       "8 fire"   },
         };
         for (size_t gi = 0; gi < sizeof(k_gfx)/sizeof(k_gfx[0]); gi++) {
             int bsz = 0;
@@ -2549,11 +2552,7 @@ re_title:;
             if (gtim) {
                 re15_tim_t btim;
                 if (re15_tim_parse(gtim, bsz, &btim) == 0) {
-                    /* key < 0 = Bestandsverhalten (Index 0 nur fuer Slot 19/20 transparent). */
-                    if (k_gfx[gi].key < 0)
-                        re15_render_pc_upload_tim_slot(&btim, k_gfx[gi].slot);
-                    else
-                        re15_render_pc_upload_tim_slot_keyed(&btim, k_gfx[gi].slot, k_gfx[gi].key);
+                    re15_render_pc_upload_tim_slot(&btim, k_gfx[gi].slot);
                     fprintf(stderr, "[esp] global effect-%s TIM -> slot %d: %dx%d %dbpp\n",
                             k_gfx[gi].tag, k_gfx[gi].slot, btim.width, btim.height, btim.bpp);
                 } else {

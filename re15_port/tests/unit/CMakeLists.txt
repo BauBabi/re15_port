@@ -1995,6 +1995,13 @@ target_include_directories(probe_re2_ztear PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(probe_re2_ztear PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 
+# --- MESSSONDE Texel-Farbschluessel-Zensus (kein add_test): wie viele der tatsaechlich
+#     gesampelten Texel eines Modells/Sprites loesen zu 0x0000 auf? Beantwortet die Frage
+#     "brauchen die MD1-Modelltexturen wirklich RE15_TIM_KEY_NONE?" mit Zahlen. ---
+add_executable(probe_texel_key_census probe_texel_key_census.c)
+target_link_libraries(probe_texel_key_census PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_texel_key_census PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
 # --- MESSSONDE + PIN: Leons SCHIEBE-POSE kommt aus der COMMON-Bank (Nutzer-Befund (A)) -------
 #     "Kisten schieben geht jetzt, aber die Animation von Leon ist noch falsch" (ROOM1090).
 #     Der Schiebe-Handler LAB_80035810 posiert IMMER aus DAT_800acad8/DAT_800acbc0 (PL00.EMR/
@@ -2051,3 +2058,17 @@ target_link_libraries(probe_1090_cutscene PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_1090_cutscene PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(probe_1090_cutscene PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- PIN "DIE Texel-Transparenz-REGEL" (Nutzer-Report 2026-08-21: "Die Flammen haben wieder
+#     schwarzen Hintergrund ... da muss es etwas Globales geben"). Pinnt, dass die Entscheidung
+#     "Texel zeichnen oder nicht" EINE wert-basierte Regel ist (psx-spx: Color 0000h =
+#     Fully-transparent) und KEINE Slot-Liste: R1 die Regel selbst inkl. 8000h = opakes Schwarz,
+#     R2 eine nirgends registrierte neue TIM ist automatisch richtig, R3 der Flammen-Fall
+#     ROOM1090 id 0x10 byte-genau + Negativ-Kontrolle des alten Defaults, R4 game-weit jedes
+#     Effekt-Sheet jedes RDT, R5 Regressionswache Modelltexturen (keine "dreieckigen Loecher")
+#     samt Nachweis, dass der historische INDEX-Schalter genau die verursacht haette. ---
+add_executable(test_tim_texel_key_rule test_tim_texel_key_rule.c)
+target_link_libraries(test_tim_texel_key_rule PRIVATE re15_engine re15_test_support)
+target_include_directories(test_tim_texel_key_rule PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_tim_texel_key_rule COMMAND test_tim_texel_key_rule)
+set_tests_properties(unit_tim_texel_key_rule PROPERTIES TIMEOUT 120)

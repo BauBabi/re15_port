@@ -1891,47 +1891,25 @@ void re15_render_pc_upload_tim(const re15_tim_t *tim) {
     re15_render_pc_upload_tim_slot(tim, 0);
 }
 
+/* EINZIGER TIM-Slot-Upload. Es gibt KEINEN Schluessel-Parameter und KEINE Slot-Liste mehr:
+ * die Entscheidung "Texel zeichnen oder nicht" ist byte-true eine Funktion des aufgeloesten
+ * 16-Bit-Wertes (0x0000 = fully transparent) und gilt auf der PSX fuer jedes texturierte
+ * Primitiv gleich. Die Regel selbst + der psx-spx-Beleg stehen bei `re15_tim_texel_argb()`
+ * in include/re15_tim.h; hier wird sie nur noch angewendet.
+ *
+ * HISTORIE (warum das hier so ausdruecklich steht): bis 2026-08-21 nahm diese Funktion einen
+ * `key_mode` und der Default war "Index 0 opak". Jeder NEUE Textur-Slot fiel damit auf
+ * schwarze Kloetze, und derselbe Fehler wurde einzeln nachgetragen statt behoben —
+ * 0a4d4443 (ROOM11F0-Cursor), 905dcc78 (Feuer-Slot 44), zuletzt der Nutzer-Report "die
+ * Flammen haben wieder schwarzen Hintergrund" fuer die Raum-ESP-Slots 36..43.
+ *
+ * DAS ABE-BIT bleibt getrennt und unberuehrt: es entscheidet nur ueber 0x8000..0xFFFF
+ * (semi-transparent vs. opak) und liegt im Port beim Blend-Modus der Zeichen-Queue
+ * (s_tri_blend), nicht beim Texel-Dekoder. */
 void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot)
-{
-    /* Bestandsverhalten unveraendert: Index 0 opak, ausser fuer die Effekt-Sprite-Slots
-     * 19/20. Der Aufrufer, der die byte-true GPU-Semantik braucht (Raum-Props), nimmt
-     * re15_render_pc_upload_tim_slot_keyed(..., RE15_TIM_KEY_PSX). */
-    re15_render_pc_upload_tim_slot_keyed(
-        tim, slot, (slot == 19 || slot == 20) ? RE15_TIM_KEY_INDEX0 : RE15_TIM_KEY_NONE);
-}
-
-void re15_render_pc_upload_tim_slot_keyed(const re15_tim_t *tim, int slot, int key_mode)
 {
     if (!tim || !s_renderer) return;
     if (slot < 0 || slot >= RE15_TIM_SLOT_MAX) return;
-
-    /* key_mode — wie ein Texel zu "nicht zeichnen" wird:
-     *
-     *  RE15_TIM_KEY_NONE   Index 0 wird OPAK gezeichnet (CLUT[0]-Farbe). Alt-Verhalten
-     *      fuer Charakter-/Waffen-TIMs. (Kommentar von damals: RE1.5-MD1-Texturen
-     *      speichern schwarze Trim-Pixel als Index 0; als transparent behandelt gab das
-     *      die vom Nutzer gemeldeten "dreieckigen Loecher".)
-     *
-     *  RE15_TIM_KEY_INDEX0 Index 0 transparent — die Effekt-Sprite-Slots 19/20
-     *      (RE15_TIM_SLOT_EFFECT[_GLOBAL], main.c). Unveraendert uebernommen.
-     *
-     *  RE15_TIM_KEY_PSX    BYTE-TRUE GPU-FARBSCHLUESSEL: ein Texel, dessen aufgeloester
-     *      16-Bit-Wert exakt 0x0000 ist (also CLUT[idx] == 0x0000 bei 4/8 bpp bzw. der
-     *      Pixel selbst bei 16 bpp), wird NICHT gezeichnet — unabhaengig vom ABE-Bit.
-     *      Quelle: nocash psx-spx, "GPU Texture Caching / Palettes":
-     *        info/Resident_Evil_und_Playstation_Information/psx-spx.github.io-master/
-     *        docs/graphicsprocessingunitgpu.md — "Palette Entry / 15bit Texture Color:
-     *        0000h = Fully-Transparent"; STP (Bit 15) unterscheidet nur bei Werten != 0
-     *        zwischen opak und semi-transparent.
-     *      Belegt am Original-Zeichenpfad (siehe Aufrufer in main.c): Raum-Objekte gehen
-     *      ueber FUN_8002c18c -> FUN_800254a0/FUN_800256b0, die den Primitiv-Code
-     *      `param_4 << 1 | 0x34` bzw. `| 0x3c` setzen (POLY_GT3/GT4, Bit 0x02 = ABE).
-     *      Fuer den ROOM11F0-Cursor ist ABE = 0 (obj+0x0C == 0, s. Aufrufer) — es bleibt
-     *      also NUR der Farbschluessel, und der ist im Port bisher nicht ausgewertet
-     *      worden.
-     *
-     * Die eigentliche Pro-Texel-Entscheidung steht als `re15_tim_texel_argb()` in
-     * re15_tim.h — dieselbe Funktion pinnt der Test test_prop_texel_key_11f0. */
 
     /* Phase 4.5.7.5 #PC-2: support multi-CLUT TIMs by decoding each CLUT
      * into its own copy of the TIM, stacked vertically. The texture
@@ -1951,15 +1929,16 @@ void re15_render_pc_upload_tim_slot_keyed(const re15_tim_t *tim, int slot, int k
     uint32_t *rgba      = (uint32_t *) malloc((size_t)n_pixels * 4);
     if (!rgba) return;
 
+    /* Alle drei Bit-Tiefen gehen durch DIESELBE Regel — genau wie die GPU, die den
+     * 4bpp-/8bpp-Index erst ueber die CLUT aufloest und dann denselben Wert-Test macht
+     * wie fuer einen 16bpp-Direktfarb-Texel. */
     if (tim->bpp == 8 && tim->has_clut) {
         const uint8_t *src = (const uint8_t *) tim->pixels;
         for (int c = 0; c < n_cluts; c++) {
             const uint16_t *clut_row = &tim->clut[c * 256];
             uint32_t       *out      = &rgba[c * pixels_per_clut];
-            for (int i = 0; i < pixels_per_clut; i++) {
-                uint8_t idx = src[i];
-                out[i] = re15_tim_texel_argb(clut_row[idx], idx == 0, key_mode);
-            }
+            for (int i = 0; i < pixels_per_clut; i++)
+                out[i] = re15_tim_texel_argb(clut_row[src[i]]);
         }
     } else if (tim->bpp == 4 && tim->has_clut) {
         const uint8_t *src = (const uint8_t *) tim->pixels;
@@ -1969,20 +1948,41 @@ void re15_render_pc_upload_tim_slot_keyed(const re15_tim_t *tim, int slot, int k
             for (int i = 0; i < pixels_per_clut; i++) {
                 int byte_idx = i / 2;
                 int nibble = (i & 1) ? (src[byte_idx] >> 4) : (src[byte_idx] & 0xF);
-                out[i] = re15_tim_texel_argb(clut_row[nibble], nibble == 0, key_mode);
+                out[i] = re15_tim_texel_argb(clut_row[nibble]);
             }
         }
     } else if (tim->bpp == 16) {
-        /* 16bpp: keep PSX transparency for genuinely 0x0000 pixels — these
-         * textures are typically UI / cutout sprites where it's intentional.
-         * (Verhalten unveraendert; RE15_TIM_KEY_PSX ist hier per Definition das,
-         * was der Zweig schon immer tat: Wert 0x0000 = nicht zeichnen.) */
-        for (int i = 0; i < n_pixels; i++) {
-            rgba[i] = re15_tim_texel_argb(tim->pixels[i], 0, RE15_TIM_KEY_PSX);
-        }
+        for (int i = 0; i < n_pixels; i++)
+            rgba[i] = re15_tim_texel_argb(tim->pixels[i]);
     } else {
         free(rgba);
         return;
+    }
+
+    /* STILLE-SCHWARZ-STOLPERDRAHT. Die Regel oben kann kein Sonderfall mehr vergessen —
+     * aber eine KAPUTTE TEXTUR (falsche CLUT, VRAM-Abzug ohne Bit 15, falscher Slot) sieht
+     * am Bildschirm genauso aus wie der alte Bug: ein schwarzer Klotz. Das war der dritte
+     * Vorfall dieser Serie (96a4d51c: 1284 Texel, denen Bit 15 fehlte). Deshalb meldet der
+     * Upload es, statt es still zu zeichnen: eine Textur, die zu einem grossen Teil OPAK
+     * SCHWARZ dekodiert und dabei KEIN einziges transparentes Texel hat, ist verdaechtig.
+     * (Legitime Modell-/Raum-Texturen liegen gemessen weit darunter.) */
+    {
+        long n_black = 0, n_clear = 0;
+        for (int i = 0; i < n_pixels; i++) {
+            if (rgba[i] == 0u)               n_clear++;
+            else if (rgba[i] == 0xFF000000u) n_black++;
+        }
+        if (n_pixels > 0 && n_clear == 0 && n_black * 4 >= (long)n_pixels)
+            fprintf(stderr, "[tim] WARNUNG slot %d: %dx%d %dbpp — %.1f%% der Texel dekodieren "
+                            "zu OPAKEM Schwarz und 0 sind transparent. Textur/CLUT pruefen "
+                            "(so sahen die vier Schwarzer-Klotz-Bugs aus).\n",
+                    slot, tex_w, tex_h, tim->bpp, 100.0 * (double)n_black / (double)n_pixels);
+        if (getenv("RE15_TIM_LOG"))
+            fprintf(stderr, "[tim] slot %d: %dx%d %dbpp cluts=%d — %.1f%% transparent, "
+                            "%.1f%% opak-schwarz\n",
+                    slot, tex_w, tex_h, tim->bpp, n_cluts,
+                    100.0 * (double)n_clear / (double)n_pixels,
+                    100.0 * (double)n_black / (double)n_pixels);
     }
 
     /* Upload to the requested slot, then bind slot 0 globally so legacy
