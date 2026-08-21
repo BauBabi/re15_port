@@ -102,6 +102,26 @@ int re15_esp_parse_global(const uint8_t *raw, size_t size, re15_esp_t *out);
 void              re15_esp_set_global_bank(const re15_esp_t *bank);
 const re15_esp_t *re15_esp_global_bank(void);
 
+/** Number of distinct sprite sheets the GLOBAL bank needs (= its 5 used effect ids). */
+#define RE15_ESP_GLOBAL_SHEETS 5
+
+/** GLOBAL-Bank (CORE00.ESP) Effekt-Id -> Sheet-Index 0..RE15_ESP_GLOBAL_SHEETS-1, sonst -1.
+ *
+ *  Die Bank traegt KEINE eingebettete TIM: jeder ihrer EFF-Header nennt in word1 (u32 @eff_start+4)
+ *  ein `(tpage<<16)|clut`-Paar, das auf eine beim Boot hochgeladene VRAM-Seite zeigt. Nur ZWEI
+ *  Seiten, je zweimal bzw. dreimal per CLUT umgefaerbt (Datei-Offsets in CORE00.ESP):
+ *
+ *    Idx 0  id 0x00 @0x824  word1 0x001f7951  tpage->VRAM(960,256)  clut->VRAM(272,485)  Blut
+ *    Idx 1  id 0x02 @0xf00  word1 0x001f7a51  tpage->VRAM(960,256)  clut->VRAM(272,489)  Muendungsfeuer
+ *    Idx 2  id 0x03 @0x008  word1 0x001e7811  tpage->VRAM(896,256)  clut->VRAM(272,480)  Rauch
+ *    Idx 3  id 0x04 @0x1728 word1 0x001f7ad1  tpage->VRAM(960,256)  clut->VRAM(272,491)  Huelsen
+ *    Idx 4  id 0x08 @0x628  word1 0x001e7911  tpage->VRAM(896,256)  clut->VRAM(272,484)  FEUER
+ *
+ *  Der PC-Port hat kein VRAM-Modell, sondern einen TIM-Slot je Sheet; diese Abbildung ist die
+ *  EINZIGE Quelle dafuer, welcher Slot zu welcher Effekt-Id gehoert (platform/pc/main.c bindet
+ *  k_global_fx_slot[] in genau dieser Reihenfolge). */
+int re15_esp_global_sheet_index(uint8_t effect_id);
+
 /* ===== the ROW BLOCK (the row-machine data — trace wf_a18487d9, adversarially verified) =====
  * rowblk = EFF body + 8 + count_a*8 + count_b*4 (= coord_end). Layout (FUN_80019700
  * @0x80019728-88): 8 x u16 sub-offset table; base = rowblk + off*4; u16 STREAMS @base = the

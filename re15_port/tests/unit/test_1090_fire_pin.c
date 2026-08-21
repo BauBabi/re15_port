@@ -107,6 +107,18 @@ static uint32_t rd32(const uint8_t *p, uint32_t o)
     return (uint32_t)p[o] | ((uint32_t)p[o+1] << 8) | ((uint32_t)p[o+2] << 16) | ((uint32_t)p[o+3] << 24);
 }
 
+/* Ein 4bpp-Texel eines geparsten TIM -> "wird gezeichnet?" nach der byte-true GPU-Regel
+ * (re15_tim_texel_argb ist genau die Regel, die der PC-Upload anwendet). */
+static int tim4_opaque(const re15_tim_t *t, int x, int y)
+{
+    if (t->bpp != 4 || !t->clut || x < 0 || y < 0 || x >= t->width || y >= t->height) return 0;
+    const uint8_t *row = (const uint8_t *)t->pixels + (size_t)y * ((size_t)t->width / 2u);
+    uint8_t byte = row[x >> 1];
+    int idx = (x & 1) ? (byte >> 4) : (byte & 0x0f);
+    if (idx >= t->clut_entries) return 0;
+    return re15_tim_texel_argb(t->clut[idx], idx == 0, RE15_TIM_KEY_PSX) != 0u;
+}
+
 int main(void)
 {
     size_t sz = 0;
@@ -310,6 +322,195 @@ int main(void)
               (unsigned)(a10.desc & 0xff));
     }
 
+    /* -------------------------------------------------------------------------------------
+     * G) DIE ANDEREN DREI TRUEMMER — Effekt-Id 0x08 aus der GLOBALEN Bank CORE00.ESP.
+     *
+     * Varianten 0 und 3 (Records 0, 4 und 5 = drei der sieben Truemmer) ziehen Id 0x08 statt
+     * 0x10. Diese Bank traegt KEINE eingebettete TIM: ihre EFF-Header nennen nur ein
+     * `word1 = (tpage<<16)|clut`-Paar (u32 @eff_start+4), das auf eine beim Boot hochgeladene
+     * VRAM-Seite zeigt. Id 0x08 @CORE00.ESP 0x628 hat word1 = 0x001E7911
+     * -> tpage 0x001E = VRAM(896,256) 4bpp, clut 0x7911 = VRAM(272,484).
+     *
+     * QUELLE DER TEXTUR = die DATEI `DATA/TEX.TIM` (kein VRAM-Dump noetig). Belegt:
+     * TEX.TIM ist 4bpp mit CLUT-Block @Datei 0x14 (32x24 -> VRAM(256,480)) und Bildblock
+     * @Datei 0x620 (320 Halfwords x 256 Zeilen -> VRAM(0,0)). Der Boot-Installer blittet dessen
+     * Halfword-Spalten 192..319 unveraendert nach VRAM(896,256): alle 32768 Halfwords dieses
+     * Rechtecks stimmen mit dem ShowVRAM-Abzug ueberein (extracted_fx/vram_view_ground_truth.png).
+     * Damit ist Id 0x08 = TEX.TIM-Spalten 192..255, Pixel @Datei 0x7A0 (Stride 640 B), CLUT
+     * @Datei 0x134. Erzeugt von tools/tex_tim_effect_slice.py nach extracted_fx/effect8_fire.tim.
+     *
+     * WAS DIE SEITE ZEIGT: oben Explosions-/Feuerball-Wolken, unten zwei Reihen zuengelnder
+     * FLAMMEN — und genau die unteren Reihen adressieren die 10 Coord-Zellen von Id 0x08
+     * (v=168 bzw. v=208, S=40). Dieselbe Seite mit clut 0x7811 (Id 0x03) ist die GRAUE
+     * Rauch-Variante: eine Sheet, zwei CLUTs.
+     * ----------------------------------------------------------------------------------- */
+    printf("G) Globale Bank CORE00.ESP — Id 0x08 (die Varianten-0/3-Flamme)\n");
+    size_t gsz = 0;
+    uint8_t *graw = read_file(RE15_ASSET_PSX_DIR "/DATA/CORE00.ESP", &gsz);
+    CHECK(graw != NULL, "DATA/CORE00.ESP nicht lesbar");
+    re15_esp_t gbank;
+    int gfi = -1;
+    if (graw) {
+        CHECK(re15_esp_parse_global(graw, gsz, &gbank) == 0, "re15_esp_parse_global fehlgeschlagen");
+        CHECK(gbank.id_count == 5, "CORE00.ESP id_count=%d (erwartet 5: 03 08 00 02 04)", gbank.id_count);
+        gfi = re15_esp_find_id(&gbank, 0x08);
+        CHECK(gfi == 1, "Id 0x08 -> eff_idx %d (erwartet 1; Datei-Reihenfolge 03 08 00 02 04)", gfi);
+        if (gfi >= 0) {
+            printf("   eff[%d] id=0x08 body=0x%05X ca=%u cb=%u tim=0x%05X\n", gfi,
+                   gbank.eff[gfi].eff_start, gbank.eff[gfi].count_a, gbank.eff[gfi].count_b,
+                   gbank.eff[gfi].tim_off);
+            CHECK(gbank.eff[gfi].eff_start == 0x628u, "Body 0x%05X (erwartet 0x628)",
+                  gbank.eff[gfi].eff_start);
+            CHECK(gbank.eff[gfi].count_a == 11, "count_a=%u (erwartet 11)", gbank.eff[gfi].count_a);
+            CHECK(gbank.eff[gfi].count_b == 10, "count_b=%u (erwartet 10 Flammen-Zellen)",
+                  gbank.eff[gfi].count_b);
+            /* KEINE eingebettete TIM — das ist der ganze Grund fuer den Datei-Slice. */
+            CHECK(gbank.eff[gfi].tim_off == 0u,
+                  "CORE00.ESP duerfte KEINE eingebettete TIM haben (tim_off=0x%05X)",
+                  gbank.eff[gfi].tim_off);
+            /* word1 @eff_start+4 = (tpage<<16)|clut. */
+            uint32_t w1 = rd32(graw, gbank.eff[gfi].eff_start + 4);
+            printf("   word1 = 0x%08X -> tpage 0x%04X VRAM(%d,%d) | clut 0x%04X VRAM(%d,%d)\n",
+                   w1, w1 >> 16, ((w1 >> 16) & 0xf) * 64, (((w1 >> 16) >> 4) & 1) * 256,
+                   w1 & 0xffff, ((w1 & 0xffff) & 0x3f) * 16, (w1 & 0xffff) >> 6);
+            CHECK(w1 == 0x001E7911u, "word1=0x%08X (erwartet 0x001E7911)", w1);
+        }
+    }
+
+    /* Die 5 Sheets der globalen Bank: jede benutzte Id muss einen Sheet-Index haben, sonst
+     * findet pc_draw_effects keinen Render-Slot. */
+    printf("H) Sheet-Index-Abbildung der globalen Bank\n");
+    static const uint8_t want_sheet_ids[RE15_ESP_GLOBAL_SHEETS] = { 0x00, 0x02, 0x03, 0x04, 0x08 };
+    for (int i = 0; i < RE15_ESP_GLOBAL_SHEETS; i++)
+        CHECK(re15_esp_global_sheet_index(want_sheet_ids[i]) == i,
+              "sheet_index(0x%02X)=%d (erwartet %d)", want_sheet_ids[i],
+              re15_esp_global_sheet_index(want_sheet_ids[i]), i);
+    if (graw)
+        for (int i = 0; i < gbank.id_count; i++)
+            CHECK(re15_esp_global_sheet_index(gbank.eff[i].effect_id) >= 0,
+                  "CORE00.ESP-Id 0x%02X hat KEINEN Sheet-Index -> kein Render-Slot",
+                  gbank.eff[i].effect_id);
+    /* NEGATIV: eine Id, die NICHT in CORE00.ESP steht, darf keinen Sheet liefern. */
+    CHECK(re15_esp_global_sheet_index(0x10) == -1, "Id 0x10 ist die RAUM-Bank, kein globales Sheet");
+    CHECK(re15_esp_global_sheet_index(0x09) == -1, "Id 0x09 (Funken) ist raum-lokal, kein globales Sheet");
+    CHECK(re15_esp_global_sheet_index(0x05) == -1, "Id 0x05 ist raum-lokal, kein globales Sheet");
+
+    /* -------------------------------------------------------------------------------------
+     * I) DIE TEXTUR SELBST: effect8_fire.tim muss die 10 Zellen von Id 0x08 wirklich fuellen.
+     *    Das ist der Test, der die REGRESSION festnagelt: bis 2026-08-21 band der Port fuer
+     *    Id 0x08 mangels Sheet das BLUT-Sheet (Slot 20), und dort sind 9 der 10 Zellen
+     *    vollstaendig transparent -> die drei Truemmer blieben unsichtbar.
+     * ----------------------------------------------------------------------------------- */
+    printf("I) effect8_fire.tim deckt die 10 Coord-Zellen ab\n");
+    size_t fsz = 0;
+    uint8_t *ftim_raw = read_file(RE15_ASSET_PSX_DIR "/../extracted_fx/effect8_fire.tim", &fsz);
+    CHECK(ftim_raw != NULL, "extracted_fx/effect8_fire.tim fehlt (tools/tex_tim_effect_slice.py)");
+    size_t bsz2 = 0;
+    uint8_t *btim_raw = read_file(RE15_ASSET_PSX_DIR "/../extracted_fx/effect0_blood.tim", &bsz2);
+
+    if (ftim_raw && graw && gfi >= 0) {
+        re15_tim_t ftim;
+        int frc = re15_tim_parse(ftim_raw, (int)fsz, &ftim);
+        CHECK(frc == 0, "effect8_fire.tim Parse rc=%d", frc);
+        if (frc == 0) {
+            printf("   Feuer-TIM: %dbpp %dx%d clut=%d\n", ftim.bpp, ftim.width, ftim.height,
+                   ftim.clut_entries);
+            CHECK(ftim.bpp == 4,          "bpp=%d (erwartet 4)", ftim.bpp);
+            CHECK(ftim.width == 256,      "w=%d (erwartet 256)", ftim.width);
+            CHECK(ftim.height == 256,     "h=%d (erwartet 256)", ftim.height);
+            CHECK(ftim.clut_entries == 16, "clut=%d (erwartet 16)", ftim.clut_entries);
+        }
+
+        re15_tim_t btim; int brc = btim_raw ? re15_tim_parse(btim_raw, (int)bsz2, &btim) : -1;
+
+        /* Jede der 11 Anim-Records nennt ihre Startzelle + die Kachelgroesse S (param>>8). */
+        int cells_ok = 0, cells_seen = 0, blood_empty = 0;
+        for (int i = 0; i < (int)gbank.eff[gfi].count_a; i++) {
+            re15_esp_anim_t a;
+            if (re15_esp_anim(&gbank, gfi, i, &a) != 0) { CHECK(0, "anim[%d] nicht lesbar", i); continue; }
+            int cs = a.desc & 0xff, S = (a.param >> 8) & 0xff;
+            CHECK(S == 40, "anim[%d].S=%d (erwartet 40 = 0x28)", i, S);
+            if (i == 10) {   /* Loop-Marker wie bei Id 0x10: dur 0xFF, Ziel Zelle 0 */
+                CHECK((a.param & 0xff) == 0xff, "anim[10] ist kein Loop-Marker (param&0xff=0x%02X)",
+                      (unsigned)(a.param & 0xff));
+                CHECK(cs == 0, "anim[10] Loop-Ziel=%d (erwartet 0)", cs);
+            }
+            re15_esp_coord_t c;
+            if (re15_esp_coord(&gbank, gfi, cs, &c) != 0) { CHECK(0, "coord[%d] fehlt", cs); continue; }
+            if (i == 10) continue;                     /* Zelle 0 schon ueber anim[0] gezaehlt */
+            cells_seen++;
+            /* Opake Texel in (u,v)..(u+S,v+S) — ein Frame ohne opake Texel ist unsichtbar. */
+            int fop = 0, bop = 0;
+            for (int y = c.v; y < c.v + S && y < ftim.height; y++)
+                for (int x = c.u; x < c.u + S && x < ftim.width; x++) {
+                    if (frc == 0 && tim4_opaque(&ftim, x, y)) fop++;
+                    if (brc == 0 && tim4_opaque(&btim, x, y)) bop++;
+                }
+            printf("   Zelle %2d uv=(%3d,%3d) S=%2d  Feuer %4d opak | Blut %4d opak\n",
+                   cs, c.u, c.v, S, fop, bop);
+            /* Die Zellen liegen in den beiden unteren Flammen-Reihen der Seite. */
+            CHECK(c.v == 168 || c.v == 208, "Zelle %d v=%d (erwartet 168 oder 208)", cs, c.v);
+            CHECK(fop > 0, "Zelle %d ist auf dem FEUER-Sheet leer (%d opake Texel)", cs, fop);
+            if (fop > 0) cells_ok++;
+            if (brc == 0 && bop == 0) blood_empty++;
+        }
+        CHECK(cells_seen == 10, "%d Zellen geprueft (erwartet 10)", cells_seen);
+        CHECK(cells_ok == 10, "%d von 10 Zellen tragen Flammen-Texel (erwartet 10)", cells_ok);
+        /* NEGATIV-KONTROLLE = die Regression selbst: auf dem Blut-Sheet, das der Port vor dem
+         * Fix band, sind 9 der 10 Zellen restlos leer. Genau das war "nur 4 der 7 Feuer". */
+        if (brc == 0) {
+            printf("   Negativ-Kontrolle: %d von 10 Zellen sind auf dem BLUT-Sheet leer\n", blood_empty);
+            CHECK(blood_empty == 9,
+                  "erwartet 9 leere Zellen auf dem Blut-Sheet (die Regression), gezaehlt %d", blood_empty);
+        }
+    }
+
+    /* -------------------------------------------------------------------------------------
+     * J) ALLE SIEBEN TRUEMMER haben jetzt eine aufloesbare Textur: 4x Raum-Bank (Id 0x10)
+     *    + 3x globale Bank (Id 0x08). Vorher waren es 4.
+     * ----------------------------------------------------------------------------------- */
+    printf("J) Alle 7 Truemmer aufloesbar\n");
+    if (graw) {
+        re15_esp_fx_reset();
+        re15_esp_set_room_bank(&bank);
+        re15_esp_set_global_bank(&gbank);
+        static const uint8_t variants[7] = { 0, 1, 2, 4, 3, 3, 4 };
+        static const uint8_t phases[7]   = { 0x28, 0x28, 0x28, 0x2c, 0x2c, 0x2c, 0x2c };
+        int resolved = 0, from_global = 0, from_room = 0;
+        for (int i = 0; i < 7; i++) {
+            re15_esp_fx_t *ff = re15_esp_type26_flame(&bank, variants[i], phases[i],
+                                                      1000 + i * 100, -1800, 500, 1024);
+            CHECK(ff != NULL, "Truemmer %d (Variante %u) spawnte nicht", i, variants[i]);
+            if (!ff) continue;
+            int sheet = (ff->bank == &gbank) ? re15_esp_global_sheet_index(ff->effect_id) : -1;
+            printf("   Truemmer %d Variante %u -> id 0x%02X bank=%s eff_idx=%d sheet=%d\n",
+                   i, variants[i], ff->effect_id,
+                   (ff->bank == &gbank) ? "GLOBAL" : (ff->bank == &bank ? "RAUM" : "?"),
+                   ff->eff_idx, sheet);
+            CHECK(ff->eff_idx >= 0, "Truemmer %d: Effekt-Id 0x%02X in KEINER Bank aufloesbar",
+                  i, ff->effect_id);
+            if (ff->eff_idx < 0) continue;
+            resolved++;
+            if (ff->bank == &gbank) {
+                from_global++;
+                /* DAS IST DER PIN: die Varianten-0/3-Emitter liefern einen gueltigen Slot. */
+                CHECK(sheet == 4, "Truemmer %d: Id 0x08 -> Sheet %d (erwartet 4 = FEUER-Slot)",
+                      i, sheet);
+            } else {
+                from_room++;
+            }
+        }
+        CHECK(resolved == 7, "%d von 7 Truemmern haben eine Textur (erwartet 7)", resolved);
+        CHECK(from_global == 3, "%d Truemmer aus der GLOBALEN Bank (erwartet 3: Varianten 0,3,3)",
+              from_global);
+        CHECK(from_room == 4, "%d Truemmer aus der RAUM-Bank (erwartet 4: Varianten 1,2,4,4)",
+              from_room);
+        re15_esp_set_global_bank(NULL);
+    }
+
+    free(ftim_raw);
+    free(btim_raw);
+    free(graw);
     re15_esp_fx_reset();
     re15_esp_set_room_bank(NULL);
     free(raw);

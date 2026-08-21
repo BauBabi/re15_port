@@ -163,7 +163,7 @@ static uint32_t      rgb555_to_argb8888(uint16_t c);   /* fwd (defined with the 
 
 /* TIM slot pool — allows multiple characters/props to have their own
  * textures. Slot 0 = player default (Leon); other slots for NPCs/props. */
-#define RE15_TIM_SLOT_MAX 44   /* 24/25 = weapon-in-hand model TIMs (W01 knife / W03 gun)
+#define RE15_TIM_SLOT_MAX 45   /* 24/25 = weapon-in-hand model TIMs (W01 knife / W03 gun)
                                 * 0=Leon 1=Elliot 2=heli-legacy 3=pilot-legacy
                                 * 4..9 = room obj0..5 generic prop TIMs
                                 * 10 = em21 (legacy); 11..18 = generic enemy banks
@@ -177,7 +177,10 @@ static uint32_t      rgb555_to_argb8888(uint16_t c);   /* fwd (defined with the 
                                 * das Original laedt JEDE ESP-TIM einzeln ins VRAM
                                 * (FUN_800194f8: LoadImage je TIM + GetTPage-Patch in den
                                 * EFF-Header) — Slot 19 hielt nur eff[0], ROOM11E0 hat DREI
-                                * (ids 5/7/0x11), der Funke 0x11 sampelte die falsche TIM) */
+                                * (ids 5/7/0x11), der Funke 0x11 sampelte die falsche TIM)
+                                * 44 = GLOBAL-Effekt-Id 0x08 (FEUER, CORE00.ESP) — das fuenfte
+                                * Sheet der globalen Bank; ROOM1090 zieht daraus die Flammen
+                                * der Truemmer-Varianten 0 und 3 (main.c k_global_fx_slot) */
 typedef struct {
     SDL_Texture *tex;
     int          w, h, one_clut_h, n_cluts, clut_base_y;

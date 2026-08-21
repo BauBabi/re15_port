@@ -103,6 +103,21 @@ static inline int RNDI(float f) {
                                     * 0x02000800 @0x800337bc); ShowVRAM-extracted sheet. */
 #define RE15_TIM_SLOT_FX_SMOKE  22 /* global effect-id 3 — gun smoke (0x03000c00) */
 #define RE15_TIM_SLOT_FX_SHELL  23 /* global effect-id 4 — shell eject/debris (0x04000800) */
+#define RE15_TIM_SLOT_FX_FIRE   44 /* global effect-id 8 — FEUER/Explosion. Fuenftes und letztes
+                                    * Sheet der CORE00-Bank; ROOM1090 zieht daraus die Flammen der
+                                    * Truemmer-Varianten 0 und 3 (Sprungtabelle @0x80100364, s.
+                                    * re15_esp_type26_flame). Quelle der Textur: DATA/TEX.TIM
+                                    * (Spalten 192..255) — siehe k_gfx unten. */
+
+/* GLOBAL-Bank-Sheet-Index (re15_esp_global_sheet_index) -> Render-Slot. Die Reihenfolge ist die
+ * des Index; k_gfx (Ladetabelle, weiter unten) benutzt DIESELBE. */
+static const int k_global_fx_slot[RE15_ESP_GLOBAL_SHEETS] = {
+    RE15_TIM_SLOT_EFFECT_GLOBAL,   /* 0: effect-id 0x00 blood  */
+    RE15_TIM_SLOT_FX_MUZZLE,       /* 1: effect-id 0x02 muzzle */
+    RE15_TIM_SLOT_FX_SMOKE,        /* 2: effect-id 0x03 smoke  */
+    RE15_TIM_SLOT_FX_SHELL,        /* 3: effect-id 0x04 shell  */
+    RE15_TIM_SLOT_FX_FIRE,         /* 4: effect-id 0x08 fire   */
+};
 #define RE15_TIM_SLOT_WPN_MELEE 24 /* RESERVED/unused: the in-hand weapon now textures from the */
 #define RE15_TIM_SLOT_WPN_GUN   25 /* character's own body-skin TIM (slot 0), page 0x81/clut-1 — */
                                    /* NOT a separate PLW dir[3]/PL04 atlas (byte-true FUN_80036b68). */
@@ -199,12 +214,14 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy)
         const re15_esp_t *bank = f->bank;
         int slot = RE15_TIM_SLOT_EFFECT;
         if (bank && bank == global_bank) {
-            switch (f->effect_id) {
-                case 2:  slot = RE15_TIM_SLOT_FX_MUZZLE;     break;
-                case 3:  slot = RE15_TIM_SLOT_FX_SMOKE;      break;
-                case 4:  slot = RE15_TIM_SLOT_FX_SHELL;      break;
-                default: slot = RE15_TIM_SLOT_EFFECT_GLOBAL; break;
-            }
+            /* Sheet-Zuordnung einmalig in der Engine (re15_esp_global_sheet_index): id 0/2/3/4/8.
+             * Die alte switch-Kaskade kannte 0x08 NICHT und schickte es per `default` auf das
+             * BLUT-Sheet (Slot 20) — dort sind 9 der 10 Flammen-Zellen von id 0x08 (UV v=168/208,
+             * S=40) vollstaendig transparent, weshalb die ROOM1090-Truemmer der Varianten 0 und 3
+             * unsichtbar blieben (gemessen: 0/1600 opake Texel je Zelle gegen 324..787/1600 auf
+             * dem Feuer-Sheet). */
+            int si = re15_esp_global_sheet_index(f->effect_id);
+            slot = (si >= 0) ? k_global_fx_slot[si] : RE15_TIM_SLOT_EFFECT_GLOBAL;
         } else if (bank && f->eff_idx >= 0) {
             /* ROOM-Bank: die TIM DIESES Effekts (Upload-Schleife oben; byte-true
              * FUN_800194f8-Analog — auf PSX zeigen die gepatchten TPAGE-Page-Bits auf
@@ -2496,16 +2513,35 @@ re_title:;
         } else {
             fprintf(stderr, "[esp] global bank CORE00.ESP NOT loaded\n");
         }
-        /* The GLOBAL effect textures live only in VRAM (no RDT TIM). All four sheets were
-         * extracted byte-true from the live ShowVRAM ground truth (re15_vram_extract.py):
-         * id 0 = hit/blood, id 2 = muzzle flash/sparks, id 3 = smoke, id 4 = shell/debris —
-         * the ids the handgun discharge spawns (@0x800337bc: 0x02000800/0x03000c00/0x04000800).
-         * Upload each to its own slot so pc_draw_effects binds per effect id. */
-        static const struct { const char *file; int slot; const char *tag; } k_gfx[] = {
-            { "extracted_fx/effect0_blood.tim",  RE15_TIM_SLOT_EFFECT_GLOBAL, "0 blood"  },
-            { "extracted_fx/effect2_muzzle.tim", RE15_TIM_SLOT_FX_MUZZLE,     "2 muzzle" },
-            { "extracted_fx/effect3_smoke.tim",  RE15_TIM_SLOT_FX_SMOKE,      "3 smoke"  },
-            { "extracted_fx/effect4_shell.tim",  RE15_TIM_SLOT_FX_SHELL,      "4 shell"  },
+        /* The GLOBAL effect textures are in NO RDT — CORE00.ESP itself carries only anim/coord
+         * records plus a `word1 = (tpage<<16)|clut` per effect that points at a VRAM page the boot
+         * installer uploaded. Ids 0/2/3/4 were recovered in 2026-07 from a live ShowVRAM screenshot.
+         *
+         * Id 8 (FIRE) is sourced from the FILE instead — `DATA/TEX.TIM`, the 1280x256 4bpp common
+         * atlas (tools/tex_tim_effect_slice.py). Belegt 2026-08-21: TEX.TIM's image block (@file
+         * 0x620, 320 halfwords x 256 rows, uploads to VRAM(0,0)) has its halfword columns 192..319
+         * blitted verbatim to VRAM(896,256) — all 32768 halfwords of that rect are byte-identical
+         * to the ShowVRAM ground truth, so the page is NOT "repacked" as extracted_fx/README.md
+         * claimed. id 8 = tpage 0x001e -> columns 192..255 (pixels @file 0x7a0, stride 640) with
+         * clut 0x7911 -> the CLUT block's row 4 / col 16 (@file 0x134, 16 entries).
+         * The file route is also STRICTLY better than the VRAM one: the ShowVRAM PNG has no alpha,
+         * so halfword bit 15 is lost — and in a 4bpp page bit 15 is the high bit of every 4th texel
+         * index, i.e. indices 8..15 collapse to 0..7 there. TEX.TIM keeps them (4162 such halfwords
+         * in this page alone).
+         *
+         * KEY: the fire CLUT has 0x0000 at index 0 AND index 15 (`0000 ffff … 8003 0001 0000`), and
+         * index 0 is 68% of every flame cell — with the default KEY_NONE each 40x40 flame would be
+         * a solid CLUT[0] block. RE15_TIM_KEY_PSX is the byte-true GPU rule (psx-spx: a resolved
+         * texel of 0x0000 is fully transparent) and covers both entries; for the 10 flame cells it
+         * is measurably identical to KEY_INDEX0 (index 15 occurs 0 times there), so it cannot
+         * change how the already-working effects look. Slots 20-23 keep their existing key. */
+        static const struct { const char *file; int slot; const char *tag; int key; } k_gfx[] = {
+            { "extracted_fx/effect0_blood.tim",  RE15_TIM_SLOT_EFFECT_GLOBAL, "0 blood",  -1 },
+            { "extracted_fx/effect2_muzzle.tim", RE15_TIM_SLOT_FX_MUZZLE,     "2 muzzle", -1 },
+            { "extracted_fx/effect3_smoke.tim",  RE15_TIM_SLOT_FX_SMOKE,      "3 smoke",  -1 },
+            { "extracted_fx/effect4_shell.tim",  RE15_TIM_SLOT_FX_SHELL,      "4 shell",  -1 },
+            { "extracted_fx/effect8_fire.tim",   RE15_TIM_SLOT_FX_FIRE,       "8 fire",
+              RE15_TIM_KEY_PSX },
         };
         for (size_t gi = 0; gi < sizeof(k_gfx)/sizeof(k_gfx[0]); gi++) {
             int bsz = 0;
@@ -2513,7 +2549,11 @@ re_title:;
             if (gtim) {
                 re15_tim_t btim;
                 if (re15_tim_parse(gtim, bsz, &btim) == 0) {
-                    re15_render_pc_upload_tim_slot(&btim, k_gfx[gi].slot);
+                    /* key < 0 = Bestandsverhalten (Index 0 nur fuer Slot 19/20 transparent). */
+                    if (k_gfx[gi].key < 0)
+                        re15_render_pc_upload_tim_slot(&btim, k_gfx[gi].slot);
+                    else
+                        re15_render_pc_upload_tim_slot_keyed(&btim, k_gfx[gi].slot, k_gfx[gi].key);
                     fprintf(stderr, "[esp] global effect-%s TIM -> slot %d: %dx%d %dbpp\n",
                             k_gfx[gi].tag, k_gfx[gi].slot, btim.width, btim.height, btim.bpp);
                 } else {

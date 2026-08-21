@@ -283,6 +283,19 @@ static const re15_esp_t *s_global_bank = NULL;   /* CORE00.ESP (effect-ids 0/2/3
 void              re15_esp_set_global_bank(const re15_esp_t *bank) { s_global_bank = bank; }
 const re15_esp_t *re15_esp_global_bank(void)                       { return s_global_bank; }
 
+/* GLOBAL-Bank Effekt-Id -> Sheet-Index. Reihenfolge = die der Slot-Tabelle in main.c; die
+ * Zuordnung selbst steht (mit den word1-Belegen je Id) im Header-Kommentar. Die Ids sind genau
+ * die 5 der Datei (CORE00.ESP[0..4] = `03 08 00 02 04`, danach 0xFF) — ein anderer Wert kann aus
+ * dieser Bank nicht kommen. */
+static const uint8_t s_global_sheet_id[RE15_ESP_GLOBAL_SHEETS] = { 0x00, 0x02, 0x03, 0x04, 0x08 };
+
+int re15_esp_global_sheet_index(uint8_t effect_id)
+{
+    for (int i = 0; i < RE15_ESP_GLOBAL_SHEETS; i++)
+        if (s_global_sheet_id[i] == effect_id) return i;
+    return -1;
+}
+
 void re15_esp_fx_reset(void) { memset(s_esp_fx, 0, sizeof(s_esp_fx)); }
 
 int re15_esp_fx_count(void)
