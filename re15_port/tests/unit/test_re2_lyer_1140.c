@@ -376,13 +376,17 @@ int main(void)
               "Zensus das falsche Muster), gefunden %u", (unsigned)n1100);
     }
 
-    static const mode_t modes[4] = {
+    /* ⛔ 2026-08-21: die Zeile "RE2 AI + Model" ist RAUS. Sie pinnte AUSSCHLIESSLICH die
+     * entfernte dritte Menue-Stufe ("AI RE2 MODELS") und war AI-seitig ohnehin ein Duplikat
+     * von "RE2 AI": die Modellherkunft liest nur der PC-Asset-Loader (platform/pc/main.c),
+     * der in Unit-Tests gar nicht gelinkt ist. Die beiden verbliebenen Menue-Zustaende und
+     * der NEGATIV-Test bleiben. */
+    static const mode_t modes[3] = {
         { "RE1.5 AI",            0, 0, 0 },   /* Regressionswache: war schon immer richtig  */
-        { "RE2 AI + Model",      1, 0, 0 },   /* RE2-Brain + RE2-Modelle                    */
         { "RE2 AI",              1, 1, 0 },   /* RE2-Brain + RE1.5-Modelle (Hybrid-Rig)     */
         { "RE2 Skript-Wecker",   1, 0, 1 },   /* NEGATIV-Test                               */
     };
-    for (int i = 0; i < 4; i++) run_mode(&rdt, &modes[i]);
+    for (int i = 0; i < 3; i++) run_mode(&rdt, &modes[i]);
 
     re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
     re15_ai_models_set(RE15_AI_MODELS_RE2);

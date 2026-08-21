@@ -25,22 +25,21 @@ typedef enum {
 re15_ai_flavor_t re15_ai_flavor(void);
 void             re15_ai_flavor_set(re15_ai_flavor_t f);
 
-/* ---- WELLE G (2026-08-19): die MODELLHERKUNFT als ZWEITES, ORTHOGONALES Flag ---------------
- * Nutzer-Auftrag: "RE2 AI" soll RE1.5-Modelle (Mesh + Textur) mit RE2-Gehirn UND RE2-Animation
- * fahren; "RE2 AI + Models" zusaetzlich die RE2-Modelle (= der bisherige RE2-Modus).
+/* ---- MODELLHERKUNFT — ⛔ NUR NOCH TEST-HAKEN, KEIN MENUE-ZUSTAND MEHR ----------------------
+ * WELLE G (2026-08-19) hatte den OPTIONS→AI-Schalter auf DREI Stufen erweitert:
+ *   RE1.5 / RE2 (RE1.5-Modelle + RE2-Gehirn/-Animation, Hybrid-Rig) / RE2 MODELS.
+ * ⛔ 2026-08-21 hat der Nutzer die DRITTE Stufe abbestellt ("Mittlerweile ist RE 2 AI schon so
+ * gut, dass wir diese Option im Optionsmenue sowie seine eigenen Models entfernen koennen.
+ * Wir konzentrieren uns jetzt nur noch auf RE 1.5 AI und RE 2 AI."). Der Port faehrt unter dem
+ * RE2-Flavor JETZT IMMER das Hybrid-Rig: platform/pc/main.c pc_enemy_load ruft
+ * pc_enemy_hybrid_re15_models bedingungslos und liest dieses Flag NICHT MEHR.
  *
- * BEWUSST NICHT als drittes Enum-Glied von re15_ai_flavor_t: 17 Stellen im Port vergleichen
- * `re15_ai_flavor() == RE15_AI_FLAVOR_RE2`; ein dreiwertiges Flavor haette jede davon einzeln
- * pruefen muessen (genau diese stillen Mitzieh-Fehler haben in dieser Kampagne wiederholt
- * Regressionen erzeugt). Dieses Flag lesen NUR die Asset-Pfade:
- *   platform/pc/main.c  pc_enemy_load  -> pc_enemy_hybrid_re15_models
+ * Es bleibt nur als Schalter fuer den Rig-Umbau selbst stehen (tests/unit/test_re2_hybrid_rig.c,
+ * test_re2_lyer_1140.c pruefen beide Modellherkuenfte am Bank-Umbau, nicht am Menue) — der
+ * Speicher dafuer liegt in enemy_ai_re2_zombie.c. KEIN Spiel-Codepfad darf neu darauf keyen.
  * ⛔ NICHT die Clip-Wahl: re15_victim_clip_map (enemy_ai_common.c) waehlt CLIP-Indizes in der
- *    Victim-BANK — das ist ANIMATION, die in beiden RE2-Modi RE2 bleibt. Sie keyt daher weiter
- *    auf re15_ai_flavor() und darf hier NICHT mitgezogen werden.
- *
- * DEFAULT = RE2 (der Auslieferungsstand des RE2-Modus bleibt byte-identisch, und jedes
- * bestehende Harness mit `RE15_AI_FLAVOR=re2` bekommt weiter GENAU das, was es bisher bekam).
- * Das Menue setzt beide Flags explizit; headless waehlt `RE15_AI_MODELS=re15` den Hybrid. */
+ *    Victim-BANK — das ist ANIMATION, die im RE2-Modus RE2 bleibt, und keyt auf
+ *    re15_ai_flavor(). */
 typedef enum {
     RE15_AI_MODELS_RE15 = 0,   /* RE1.5-Mesh + -Textur, RE2-Skelettordnung (Hybrid) */
     RE15_AI_MODELS_RE2  = 1    /* RE2-Mesh + -Textur (DEFAULT, = bisheriges Verhalten) */

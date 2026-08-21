@@ -786,7 +786,7 @@ RE2 belegt dieses Feld völlig anders.
 **Die RE1.5-Maschine ist unter RE2 NICHT wiederverwendbar** (zwei unabhängige Blocker):
 1. **Clip-Indizes.** Sie adressiert Bank-1-Clips 0x12/0x1A. Gemessen: RE1.5 EM016 0x12 = 98
    (Hinlegen), 0x1A = **99** (Kriechen); RE2 EM016 0x12 = 67, 0x1A = **1**. Unter RE2 trägt der
-   Aktor die RE2-Bank (Animation bleibt in beiden RE2-Modi RE2, `re15_ai_flavor.h` Welle G) —
+   Aktor die RE2-Bank (die Animation bleibt im RE2-Modus RE2, `re15_ai_flavor.h`) —
    es liefe ein 1-Frame-„Kriechclip".
 2. **Advance-Ordnung.** Der globale Advancer (`player_common.c`, `game_step:1304`) läuft VOR der
    KI (`:1324`) und lässt die Kriech-Zustände **nur unter RE1.5-Flavor** aus
@@ -1091,13 +1091,40 @@ bleibt byte-identisch.
   Rutscher (byte-true Skalar/Vektor-Aliasing von `+0x144`), Wand → Splat-Pose → **(7,2)**.
 * Zeilen **7/8 → Launch-Treffer `0x8010327C`**: Sofort-Kill, **Speed 600 in
   SPIELER-Blickrichtung `0x800CFC6E`**, Wand-Bounce Yaw+2048 → **(7,3)**.
-* CORPSE `@0x80104A70`: **Sub 0** = Tint `0x80016FE4([+0x16C], 0xBFBF10)` (Render-doc),
+* CORPSE `@0x80104A70`: **Sub 0** = Record-Recolor `0x80016FE4([+0x16C], 0x00BFBF10)`
+  `@0x80103A20` = **BLUTLACHE** (⛔ 2026-08-21 korrigiert; das war als „Modell-Tint,
+  Render-OPEN“ fehlgelesen — s. Block „Schatten-/Prim-Record“ unten),
   **Lache = Schatten-Record `+4/+6` := 400, dann +10/Tick solange `+0x15A`(=60)>0 — NUR in
   Phase 1**; Zucken: Frame 11↔0/12-Toggle, Timer `+0x219=(rand&0x1f)+25` = `+0x158`-Seed,
   Eskalation `+0x158 += 10+rand&0xf` bis ≥151, SE 3 nur solange `+0x158<90`, ≥91 nur jeden
-  2. Tick. **Sub 1** (GIB) = Schatten-Disable-Byte `[+0x16C]+0xE=0`. **Sub 2** (Wand-Splat) =
+  2. Tick. **Sub 1** (GIB) = Record-FREIGABE `sb zero,14([+0x16C])` `@0x80103C34`. **Sub 2** (Wand-Splat) =
   Clip-4-Flattern (Doppel-Rate unter `+0x158<100`) + Absturz. **Sub 3** = Lache ohne Zucken.
   Sub 4 (`@0x80104A80` → `0x8010477C`) = tote Zeile (kein Schreiber).
+
+#### ⛔ Schatten-/Prim-Record `[+0x16C]` — Nutzer-Report 2026-08-21 („platzende Krähen hinterlassen Schatten“)
+
+Der Boden-Schatten ist ein **Slot aus einem 50er-Pool**. Allokator `0x80016480` (`PSX.EXE`,
+selbst gelesen): Basis `0x800CE698` `@0x80016488`, Stride 104 `@0x800164A8`, Freisuche
+`lbu v0,14(t0)` `@0x800164AC-B4`, Belegen `sb 5,14(t0)` `@0x800164D4`, Zeiger nach `ent+0x16C`
+`@0x800164D0`, `sw a2,4(t0)` `@0x80016530` (= die zwei Halb-Ausdehnungen `rec+0x04/+0x06`),
+Farbe bei `a3==0` = **0x00808080 Neutralgrau** `@0x80016500-04`. Recolor `0x80016FE4`:
+`lw v0,28(a0)` / `lw v1,68(a0)` → `(alt & 0xFF000000) | a1` → `sw` zurück
+(`@0x80016FE8-0x80017008`) = die Farbwörter `rec+0x1C` / `rec+0x44`.
+
+| Corpse-Sub | Original | Port (gefixt) |
+|---|---|---|
+| 0 Normal | `jal 0x80016FE4(rec, 0x00BFBF10)` `@0x80103A20`, `rec+4/+6 = 400` `@0x80103A2C-3C`, +10/Tick × 60 | `crow_pool = 1`, Farbe **0x10/0xBF/0xBF** |
+| 3 Launch | dieselben Zeilen `@0x80103EF4-F18` / `@0x80103F1C-38` | `crow_pool = 1` |
+| 1 GIB | `lw v1,364(a0)` `@0x80103C24` + **`sb zero,14(v1)`** `@0x80103C34` = **Slot FREIGEGEBEN** | `crow_shadow_w/h = 0` → Renderer zeichnet **nichts** |
+| 2 Wandsplat | `lw v1,364(s1)` `@0x80103CA8` + `sb zero,14(v1)` `@0x80103CBC` | dito |
+
+**Der Fehler:** `platform/pc/main.c` testete `crow_shadow_w != 0` und fiel bei 0 auf seinen
+**500×600-Standardschatten** zurück — unter der geplatzten Krähe blieb also ein ganz normaler
+Charakter-Schatten liegen. Zusätzlich blieb die **normale** Leiche auf dem grauen Alloc-Default
+stehen statt zur Lache zu werden. Beides gefixt; Pin: `tests/unit/test_re2_crow_shadow_release.c`,
+Messung am echten Weg: `tests/unit/probe_re2_crow_shadow.c`. Die **RE1.5**-Krähe ist unberührt —
+ihr GIB-Wipe schreibt `sh 1` `@0x80115938-3C` (1×1-Quad), nicht 0, und ihre Lachenfarbe bleibt
+`0x00FFFF38` `@0x80115880-C8`.
 
 ### SE-/FX-Map + ENEMSE-Bank (selbst bestimmt)
 
@@ -1246,3 +1273,28 @@ ffmpeg -y -f gdigrab -i "title=RE1.5 Rebuilt — PC" -frames:v 1 shot.png
 die Navigation wäre am echten Fenster sonst nicht prüfbar.
 
 Belege: `shots/_ai_top.png`, `shots/_ai_aiscreen.png`, `shots/_ai_re2sel.png`.
+
+### ⛔ 2026-08-21 — die dritte Stufe „AI RE2 MODELS" ist ENTFERNT
+
+Nutzer-Entscheidung, wörtlich: *„Mittlerweile ist RE 2 AI schon so gut, dass wir diese Option im
+Optionsmenü sowie seine eigenen Models entfernen können. Wir konzentrieren uns jetzt nur noch auf
+RE 1.5 AI und RE 2 AI."*
+
+Der Schalter hat wieder **zwei** Zustände (`RE1.5` / `RE2`), UP == DOWN togglet wie auf der
+SOUND-Seite (kein Modulo-Zyklus, kein toter dritter Index). Unter dem RE2-Flavor läuft **immer**
+das Hybrid-Rig: `platform/pc/main.c pc_enemy_load` ruft `pc_enemy_hybrid_re15_models`
+bedingungslos; der reine RE2-Modell-Zweig ist weg.
+
+* `pc_ai_mode()` liefert nur noch 0/1; `pc_ai_mode_set()` **klemmt** jeden Fremdwert (>1 → 1).
+  Ein Alt-Wert `2` (z. B. `RE15_CONFIG_AI=2`) landet damit auf „AI RE2" — dem Zustand, den er
+  gemeint hat. Der Wert wird **nirgends persistiert** (weder Savedata noch Memory-Card noch eine
+  Konfigdatei), es gibt also keinen Speicherstand mit einer 2 darin.
+* Das orthogonale Flag `re15_ai_models()` (`re15_ai_flavor.h`, Speicher in
+  `enemy_ai_re2_zombie.c`) wird von `main.c` **nicht mehr gelesen** und lebt nur noch als
+  Test-Haken für den Rig-Umbau (`tests/unit/test_re2_hybrid_rig.c`). Kein Spiel-Codepfad darf
+  neu darauf keyen.
+* **Assets:** `shared_assets/RE2/{CDEMD0.EMS, ENEMSE.VBS}` bleiben Pflicht — Stufe 2 braucht
+  CDEMD0.EMS für die RE2-**Skelette/EDDs/Clips** (der Hybrid tauscht nur Mesh + Textur) und
+  ENEMSE.VBS für die RE2-SEs. `release/make_package.sh` kopiert also unverändert weiter; es gab
+  dort **keinen** Kopierschritt nur für die Modell-Stufe.
+

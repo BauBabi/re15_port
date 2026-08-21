@@ -269,12 +269,16 @@ int main(void)
 
     /* ---- (3) REGRESSIONSWACHEN ------------------------------------------ */
     {
-        /* Default: RE1.5-Gehirn; Modellherkunft RE2 (der bisherige RE2-Modus + jedes
-         * Harness mit RE15_AI_FLAVOR=re2 bekommt unveraendert RE2-Modelle). */
+        /* Default: RE1.5-Gehirn. ⛔ 2026-08-21: die dritte Menue-Stufe ("AI RE2 MODELS") ist
+         * auf Nutzer-Entscheidung entfernt — der PC-Loader faehrt unter dem RE2-Flavor IMMER
+         * den Hybrid (platform/pc/main.c pc_enemy_load) und liest re15_ai_models() nicht mehr.
+         * Das Flag bleibt als TEST-HAKEN fuer genau diesen Rig-Umbau; sein Default (RE2 =
+         * "unumgebaute Bank") ist der Ausgangszustand, den die Faelle oben voraussetzen. */
         CHECK(re15_ai_flavor() == RE15_AI_FLAVOR_RE15, "Default-Flavor != RE1.5");
         CHECK(re15_ai_models() == RE15_AI_MODELS_RE2,
-              "Default-Modellherkunft != RE2 (bestehender RE2-Modus wuerde sich aendern)");
-        /* Orthogonalitaet: keins der beiden Flags zieht das andere mit. */
+              "Default-Modellherkunft != RE2 (Test-Haken-Ausgangszustand)");
+        /* Orthogonalitaet: keins der beiden Flags zieht das andere mit (der Rig-Test setzt sie
+         * einzeln; ein stilles Mitziehen wuerde die Faelle oben verfaelschen). */
         re15_ai_models_set(RE15_AI_MODELS_RE15);
         CHECK(re15_ai_flavor() == RE15_AI_FLAVOR_RE15, "models_set hat den Flavor veraendert");
         re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);

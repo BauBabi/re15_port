@@ -648,10 +648,13 @@ static void pc_enemy_load(uint8_t type)
         else
             re15_re2z_audio_hook(re15_audio_re2_enemy_se, re15_audio_re2_enemy_bank);
         if (pc_enemy_load_re2(type, eb)) {
-            /* WELLE G: "RE2 AI" (ohne "+ Models") behaelt Gehirn + Animation aus RE2, tauscht
-             * aber Mesh/Textur/Bind-Laengen gegen RE1.5 (re15_ai_models(), orthogonales Flag). */
-            if (re15_ai_models() == RE15_AI_MODELS_RE15)
-                pc_enemy_hybrid_re15_models(type, eb);
+            /* "AI RE2" behaelt Gehirn + Animation aus RE2, tauscht aber Mesh/Textur/Bind-Laengen
+             * gegen RE1.5. ⛔ 2026-08-21: das war bis hierher an re15_ai_models() gebunden (dritte
+             * Menue-Stufe "RE2 MODELS"). Die Stufe ist auf Nutzer-Entscheidung entfernt, also
+             * laeuft der Hybrid BEDINGUNGSLOS — der reine RE2-Modell-Zweig ist damit tot und weg.
+             * pc_enemy_load_re2 bleibt: es liefert Skelett, EDD/Clips und die Bank, die der
+             * Hybrid umbaut (und ist der sichtbare Fallback, wenn der Umbau scheitert). */
+            pc_enemy_hybrid_re15_models(type, eb);
             return;
         }
     }
@@ -1734,33 +1737,39 @@ enum { CFG_TOP = 0, CFG_PICKER, CFG_SOUND, CFG_EDIT, CFG_AI };
 static const int k_cfg_top_x[3]  = { 147, 198, 248 };            /* DAT_80073d6c.x (y=24) */
 #define CFG_AI_X 14
 #define CFG_AI_Y 225
-/* WELLE G: 96 war auf die zwei alten Beschriftungen zugeschnitten. Die BREITESTE der drei ist
- * jetzt "AI  RE2 MODELS". Breiten GEMESSEN aus der Glyphen-Vorschubtabelle, die der Renderer
- * selbst benutzt (BIN/DEBUG.BIN Datei-Offset 0x4416 == RAM 0x800c4416, render_pc.c:2300 —
- * s_msgfont_w[code], Code-Abbildung pc_font_code):
- *   "AI  RE1.5" = 56 px | "AI  RE2" = 46 px | "AI  RE2 MODELS" = 100 px
- * Text beginnt bei CFG_AI_X+5 = 19, also Kasten-Ende >= 19+100+5 = 124 -> Breite >= 110.
- * Kollisionsfrei: der byte-true OPTIONS-Kasten endet bei y=220 (dieser Streifen liegt darunter)
- * und die Zeile bleibt mit x=14..124 weit innerhalb der 320er-Breite. */
-#define CFG_AI_W 110
+/* 2026-08-21 (Nutzer-Entscheidung, dritte Stufe ENTFERNT): die breiteste Beschriftung ist wieder
+ * "AI  RE1.5". Breiten GEMESSEN aus der Glyphen-Vorschubtabelle, die der Renderer selbst benutzt
+ * (BIN/DEBUG.BIN Datei-Offset 0x4416 == RAM 0x800c4416, render_pc.c:2300 — s_msgfont_w[code],
+ * Code-Abbildung pc_font_code):
+ *   "AI  RE1.5" = 56 px | "AI  RE2" = 46 px
+ * Text beginnt bei CFG_AI_X+5 = 19, also Kasten-Ende >= 19+56+5 = 80 -> Breite >= 66; 96 ist der
+ * Wert von vor WELLE G und bleibt kollisionsfrei (der byte-true OPTIONS-Kasten endet bei y=220,
+ * dieser Streifen liegt darunter; x=14..110 bleibt weit innerhalb der 320er-Breite). */
+#define CFG_AI_W 96
 static const int k_cfg_pick_x[5] = { 147, 164, 181, 198, 248 }; /* DAT_80073d78.x (y=24) */
 
-/* WELLE G — der AI-Schalter hat DREI Zustaende. Sie sind kein drittes Flavor-Enum, sondern das
- * Produkt aus zwei orthogonalen Flags (re15_ai_flavor.h begruendet, warum):
- *   0 = RE1.5-Gehirn        + RE1.5-Modelle   ("AI  RE1.5")
- *   1 = RE2-Gehirn/-Anim    + RE1.5-Modelle   ("AI  RE2")           <- Hybrid, WELLE G
- *   2 = RE2-Gehirn/-Anim    + RE2-Modelle     ("AI  RE2 MODELS")    <- bisheriger RE2-Modus
- * Im Zustand 0 ist die Modellherkunft bedeutungslos (der Asset-Pfad liest sie nur unter dem
- * RE2-Flavor); sie wird trotzdem mitgesetzt, damit das Zurueckschalten deterministisch ist. */
+/* Der AI-Schalter hat ZWEI Zustaende:
+ *   0 = RE1.5-Gehirn      + RE1.5-Modelle   ("AI  RE1.5")
+ *   1 = RE2-Gehirn/-Anim  + RE1.5-Modelle   ("AI  RE2")   <- Hybrid-Rig
+ *
+ * ⛔ ENTFERNT 2026-08-21 (Nutzer-Entscheidung): die dritte Stufe "AI  RE2 MODELS" (RE2-Gehirn +
+ * RE2-MODELLE). Wortlaut: "Mittlerweile ist RE 2 AI schon so gut, dass wir diese Option im
+ * Optionsmenue sowie seine eigenen Models entfernen koennen." Der Port faehrt unter dem
+ * RE2-Flavor jetzt IMMER das Hybrid-Rig (RE1.5-Mesh/-Textur unter RE2-Skelett + RE2-Clips) —
+ * pc_enemy_load ruft pc_enemy_hybrid_re15_models bedingungslos.
+ * Das orthogonale Modell-Flag re15_ai_models() (enemy_ai_re2_zombie.c) wird von main.c damit
+ * NICHT MEHR GELESEN; es lebt nur noch als Test-Haken fuer den Rig-Umbau weiter.
+ * ROBUSTHEIT: pc_ai_mode() liefert nur noch 0/1, pc_ai_mode_set() KLEMMT jeden Fremdwert
+ * (Alt-Wert 2 aus env RE15_CONFIG_AI o.ae.) auf 1 = "AI RE2" — der Zustand, den ein 2er meinte. */
 static int pc_ai_mode(void)
 {
-    if (re15_ai_flavor() != RE15_AI_FLAVOR_RE2) return 0;
-    return (re15_ai_models() == RE15_AI_MODELS_RE2) ? 2 : 1;
+    return (re15_ai_flavor() == RE15_AI_FLAVOR_RE2) ? 1 : 0;
 }
 static void pc_ai_mode_set(int m)
 {
+    if (m < 0) m = 0;
+    if (m > 1) m = 1;                     /* Alt-Zustand 2 ("RE2 MODELS") faellt auf "RE2" */
     re15_ai_flavor_set(m == 0 ? RE15_AI_FLAVOR_RE15 : RE15_AI_FLAVOR_RE2);
-    re15_ai_models_set(m == 2 ? RE15_AI_MODELS_RE2 : RE15_AI_MODELS_RE15);
 }
 
 /* EDIT custom-remap screen (FUN_8002ebbc). s_edit_phase: 0=slot-select, 1=panel A (basic action), 2=panel B
@@ -1844,8 +1853,9 @@ static void pc_config_draw_overlay(const re15_tim_t *tim, int screen, int cur)
     void pc_config_draw_ai_row(int lit) {
         if (lit) re15_render_pc_config_rect(CFG_AI_X, CFG_AI_Y, CFG_AI_W, 14, 0, 0, 0x80, 128);
         unsigned char b[20]; int n = 0;
-        static const char *k_ai_top[3] = { "AI  RE1.5", "AI  RE2", "AI  RE2 MODELS" };
-        const char *s = k_ai_top[pc_ai_mode()];
+        static const char *k_ai_top[2] = { "AI  RE1.5", "AI  RE2" };   /* dritte Stufe entfernt */
+        int mode = pc_ai_mode(); if (mode < 0 || mode > 1) mode = 1;
+        const char *s = k_ai_top[mode];
         for (const char *p = s; *p && n < 20; p++) b[n++] = (unsigned char)pc_font_code(*p);
         re15_render_pc_config_text(CFG_AI_X + 5, CFG_AI_Y + 2, b, n, 0);
     }
@@ -1856,18 +1866,18 @@ static void pc_config_draw_overlay(const re15_tim_t *tim, int screen, int cur)
     } else if (screen == CFG_AI) {
         /* PORT EXTENSION — AI picker, laid out like the SOUND screen (same CONFIG.TIM label
          * boxes at uv 0,232 88x18), with the row-below marker kept lit so it is obvious where
-         * this screen was entered from. WELLE G: DRITTE Zeile bei y=89 (Raster 19 px wie 51/70).
-         * Beschriftungen GEMESSEN gegen die Vorschubtabelle BIN/DEBUG.BIN@0x4416 (render_pc.c:2300):
-         * "RE1.5" 34 px | "RE2" 24 px | "RE2 MODELS" 78 px. Kasten x=116..204, Text ab x=124 ->
-         * laengste Zeile endet bei 202, bleibt also innerhalb der Kachel. */
-        static const struct { const char *s; int tile_y, text_y; } k_ai_rows[3] = {
-            { "RE1.5", 51, 53 }, { "RE2", 70, 71 },   /* Zeile 1/2 unveraendert */
-            { "RE2 MODELS", 89, 90 },                 /* WELLE G, Raster 19 px  */
+         * this screen was entered from. ⛔ 2026-08-21: die DRITTE Zeile ("RE2 MODELS", y=89) ist
+         * auf Nutzer-Entscheidung entfernt — der Schirm hat wieder exakt das SOUND-Layout mit
+         * zwei Zeilen (y=51/70). Beschriftungen GEMESSEN gegen die Vorschubtabelle
+         * BIN/DEBUG.BIN@0x4416 (render_pc.c:2300): "RE1.5" 34 px | "RE2" 24 px. Kasten
+         * x=116..204, Text ab x=124 -> die laengste Zeile endet bei 158, bleibt in der Kachel. */
+        static const struct { const char *s; int tile_y, text_y; } k_ai_rows[2] = {
+            { "RE1.5", 51, 53 }, { "RE2", 70, 71 },
         };
-        for (int r = 0; r < 3; r++)
+        for (int r = 0; r < 2; r++)
             re15_render_pc_config_tile(tim, 0, 232, 88, 18, 116, k_ai_rows[r].tile_y);
         pc_config_draw_ai_row(1);
-        for (int r = 0; r < 3; r++) {
+        for (int r = 0; r < 2; r++) {
             unsigned char b[16]; int n = 0;
             for (const char *p = k_ai_rows[r].s; *p && n < 16; p++) b[n++] = (unsigned char)pc_font_code(*p);
             re15_render_pc_config_text(124, k_ai_rows[r].text_y, b, n, (pc_ai_mode() == r) ? 0 : 3);
@@ -2020,12 +2030,10 @@ static void pc_run_config(void)
                     else               { screen = CFG_TOP; cur = 0; }      /* EXIT -> back to top */
                 }
             } else if (screen == CFG_AI) {
-                /* PORT EXTENSION: pick the AI mode. WELLE G — DREI Zustaende, also kein Toggle
-                 * mehr: DOWN geht vorwaerts, UP rueckwaerts durch den 3-Zyklus (die SOUND-Seite
-                 * hat nur zwei Zeilen, dort ist UP == DOWN; mit drei Zeilen waere das nicht
-                 * bedienbar). */
-                if (pp & RE15_PAD_BIT_DOWN) pc_ai_mode_set((pc_ai_mode() + 1) % 3);
-                else if (pp & RE15_PAD_BIT_UP) pc_ai_mode_set((pc_ai_mode() + 2) % 3);
+                /* PORT EXTENSION: pick the AI mode. ⛔ 2026-08-21: wieder ZWEI Zustaende (die
+                 * dritte Stufe "RE2 MODELS" ist entfernt), also wieder ein Toggle wie auf der
+                 * SOUND-Seite — UP == DOWN, kein Modulo-Rest, kein toter dritter Index. */
+                if (pp & (RE15_PAD_BIT_UP | RE15_PAD_BIT_DOWN)) pc_ai_mode_set(pc_ai_mode() ^ 1);
                 if (confirm || cancel) { screen = CFG_TOP; cur = 3; }
             } else if (screen == CFG_SOUND) {
                 if (pp & (RE15_PAD_BIT_UP | RE15_PAD_BIT_DOWN)) s_config_sound ^= 1;   /* raw 0x5000 toggle */
@@ -2230,10 +2238,11 @@ re_title:;
                        * 3 = preset picker, 4 = SOUND, 5 = EDIT slot-select, 6 = EDIT panel A, 7 = EDIT panel B.
                        * RE15_CONFIG_CUR = picker cursor / EDIT slot; RE15_CONFIG_CODE = EDIT panel cursor. */
                       int t = atoi(getenv("RE15_CONFIG_TAB")?getenv("RE15_CONFIG_TAB"):"0");
-                      /* WELLE G: 8 = der AI-Screen (wie im interaktiven pc_run_config oben);
-                       * RE15_CONFIG_AI=0|1|2 waehlt den Zustand fuer den Shot vor, damit die
-                       * Beschriftungs-BREITE aller drei Zustaende am gerenderten Bild und nicht
-                       * nach Gefuehl geprueft werden kann. */
+                      /* 8 = der AI-Screen (wie im interaktiven pc_run_config oben);
+                       * RE15_CONFIG_AI=0|1 waehlt den Zustand fuer den Shot vor, damit die
+                       * Beschriftungs-BREITE beider Zustaende am gerenderten Bild und nicht nach
+                       * Gefuehl geprueft werden kann. Ein Alt-Wert 2 ("RE2 MODELS") wird in
+                       * pc_ai_mode_set auf 1 geklemmt — kein toter Index. */
                       if (t == 8) { const char *ai = getenv("RE15_CONFIG_AI");
                                     pc_ai_mode_set(ai ? atoi(ai) : 0); }
                       int screen = (t == 8) ? CFG_AI
@@ -6425,16 +6434,41 @@ re_title:;
                         corpse_pool = npc->crow_pool ? 1 : 0;
                         if (corpse_pool) { sh_r = 0x10; sh_g = 0xBF; sh_b = 0xBF; }
                     }
+                    /* ⛔ NUTZER-REPORT 2026-08-21: "platzende Kraehen ... hinterlassen immer noch
+                     * Schatten". URSACHE war GENAU HIER. Die RE2-Kraehe GIBT ihren Schatten-/
+                     * Prim-Record im GIB- und im Wandsplat-Zweig FREI:
+                     *   80103c24 lw v1,364(a0) / 80103c34 sb zero,14(v1)   (CORPSE Sub 1, GIB)
+                     *   80103ca8 lw v1,364(s1) / 80103cbc sb zero,14(v1)   (CORPSE Sub 2, Wand)
+                     * rec+0x0E ist das BELEGT-BYTE des 50-Slot-Pools ab 0x800CE698 (Allokator
+                     * 0x80016480: Freisuche `lbu v0,14(t0)` @0x800164AC-B4, Belegen `sb 5,14(t0)`
+                     * @0x800164D4) — 0 heisst FREI, es wird NICHTS mehr gezeichnet. Der Port
+                     * bildet die Freigabe auf crow_shadow_w == 0 ab; der ALTE Test
+                     * `crow_shadow_w != 0` fiel dann aber durch und liess nhx/nhz auf dem
+                     * 500x600-DEFAULT stehen -> unter der geplatzten Kraehe blieb der normale
+                     * Charakter-Schatten liegen. Jetzt: kein Record -> kein Quad.
+                     * (Vor dem allerersten INIT-Tick ist crow_shadow_w ebenfalls 0 — dort
+                     * existiert der Record im Original auch noch nicht, s. INIT @0x80100400.) */
+                    int crow_no_record = 0;
+                    if (npc->type == 0x21 && re15_ai_flavor() == RE15_AI_FLAVOR_RE2
+                        && npc->crow_shadow_w == 0)
+                        crow_no_record = 1;
                     if (npc->type == 0x21 && npc->crow_shadow_w != 0) {
                         /* Krähe: Groesse/Farbe kommen KOMPLETT aus der AI (Prim-Feld-Port von
-                         * +0xbc/+0xbe/+0xc4/+0xec). crow_shadow_w==0 nur vor dem allerersten
-                         * ACTIVE-Tick (af5c-Spawn-Default nicht zitiert, §4.5) -> alter Default. */
+                         * +0xbc/+0xbe/+0xc4/+0xec bzw. rec+0x04/+0x06/+0x1C/+0x44). */
                         nhx = npc->crow_shadow_w; nhz = npc->crow_shadow_h;
                         if (npc->crow_pool) {
-                            corpse_pool = 1;                  /* 0x00ffff38 @0x80115880-c8 */
-                            sh_r = 0x38; sh_g = 0xff; sh_b = 0xff;
+                            corpse_pool = 1;
+                            if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2) {
+                                /* RE2-Kraehen-Leiche: Record-Recolor 0x80016FE4(rec, 0x00BFBF10)
+                                 * @0x80103A20 (Normal) / @0x80103F14 (Launch) — dieselbe Funktion
+                                 * und dieselbe Konstante wie die RE2-Zombie-Leiche darueber. */
+                                sh_r = 0x10; sh_g = 0xBF; sh_b = 0xBF;
+                            } else {
+                                sh_r = 0x38; sh_g = 0xff; sh_b = 0xff;   /* 0x00ffff38 @0x80115880-c8 */
+                            }
                         } else {
-                            /* Hoehen-Tint v (32..128, @0x80115fe8-6028). Backend-Konvention: der
+                            /* Hoehen-Tint v (32..128, @0x80115fe8-6028; RE2-Kraehe: der
+                             * Alloc-Default 0x00808080 @0x80016500-04). Backend-Konvention: der
                              * neutrale PSX-Prim 0x80 == Weiss (siehe re15_render_shadow_quad),
                              * also v*2, Clamp 255. Wipe (v=0) -> zeichnet nichts Sichtbares. */
                             int tv = (int)npc->crow_tint * 2; if (tv > 255) tv = 255;
@@ -6453,7 +6487,20 @@ re_title:;
                      * die Kraehe liegt/fliegt aber UEBER +0x1ba (Leiche: floor-400
                      * @0x801148e4) — mit npc->y schwebte die Blutlache im Koerper
                      * (Nutzer-Report 2026-08-03). */
-                    int32_t nsh_y = (npc->type == 0x21) ? (int32_t)npc->crow_floor : npc->y;
+                    /* ⛔ 2026-08-21: unter dem RE2-Flavor uebernimmt re15_re2crow_tick den GANZEN
+                     * Dispatch und kehrt VOR `e->crow_floor = re15_crow_room_coll(e)`
+                     * (enemy_ai_common.c) zurueck — crow_floor(+0x1BA) wird dort also NIE
+                     * geschrieben und der Quad lag auf Y = 0 statt auf dem Boden. Die
+                     * RE2-Kraehe fuehrt ihre Boden-Referenz in +0x1C2: INIT laesst
+                     * `0x8004FBA0(&pos,250,1024,0)` @0x801003F8 laufen und legt das Ergebnis mit
+                     * `sh v0,450(s1)` @0x80100414 dort ab; jede Landung des Overlays rechnet
+                     * `+0x1C2 - 250` (@0x80102B60 Flug-Treffer, @0x80103E6C Wandsplat). Der
+                     * Port-Kanal dafuer ist dog_floor_y. */
+                    int32_t nsh_y = npc->y;
+                    if (npc->type == 0x21)
+                        nsh_y = (re15_ai_flavor() == RE15_AI_FLAVOR_RE2)
+                                  ? (int32_t)npc->dog_floor_y      /* +0x1C2 @0x80100414 */
+                                  : (int32_t)npc->crow_floor;      /* +0x1BA @0x8011221c-234 */
                     int32_t nsh_world[3] = { npc->x, nsh_y, npc->z };
                     int32_t nsh_rot[9], nsh_trans[3];
                     /* byte-true: RotMatrixY(ACTOR rot_y) via the trig LUT (FUN_8001b064 @0x8001b0e4
@@ -6478,7 +6525,7 @@ re_title:;
                         nsx[v] = cx + (int)(((int64_t)_ir1 * (int64_t)_n) >> 16);
                         nsy[v] = cy + (int)(((int64_t)_ir2 * (int64_t)_n) >> 16);
                     }
-                    if (nok) {
+                    if (nok && !crow_no_record) {
                         if (corpse_pool || crow_tinted)
                             re15_render_shadow_quad_c(nsx[0], nsy[0], nsx[1], nsy[1],
                                                       nsx[2], nsy[2], nsx[3], nsy[3],

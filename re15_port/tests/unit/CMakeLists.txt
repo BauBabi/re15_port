@@ -2299,3 +2299,58 @@ target_compile_definitions(test_1090_climb_pin PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_1090_climb_pin COMMAND test_1090_climb_pin)
 set_tests_properties(unit_1090_climb_pin PROPERTIES TIMEOUT 60 SKIP_RETURN_CODE 77)
+
+# --- MESSSONDE: die vier RE2-Modus-Befunde (Zielen/Treffen/Hunde-Sprung/Hunde-Tod).
+#     Reine Diagnose (kein add_test): Seed-Sweep ueber den ECHTEN Weg (game_step + Pad). ---
+add_executable(probe_re2_aim4 probe_re2_aim4.c)
+target_link_libraries(probe_re2_aim4 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re2_aim4 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_re2_aim4 PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- MESSSONDE (Nutzer-Report 2026-08-21): "platzende Kraehen hinterlassen Schatten".
+#     ECHTER Weg (ROOM10C0 + game_step + Hitscan), protokolliert nach dem Kill 240 Frames
+#     lang JEDEN Kanal, den der PC-Schattenrenderer liest, plus die Render-Entscheidung.
+#     Reine Diagnose (kein add_test). ---
+add_executable(probe_re2_crow_shadow probe_re2_crow_shadow.c)
+target_link_libraries(probe_re2_crow_shadow PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re2_crow_shadow PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_re2_crow_shadow PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- PIN (Nutzer-Report 2026-08-21): der RE2-Kraehen-Schatten-/Prim-Record.
+#     GIB (@0x80103C34) und Wandsplat (@0x80103CBC) GEBEN ihn frei (`sb zero,14(rec)` =
+#     Belegt-Byte des Slot-Pools 0x80016480) -> der Port darf dort NICHTS zeichnen; Normal-
+#     (@0x80103A20) und Launch-Leiche (@0x80103F14) faerben ihn per 0x80016FE4 auf 0x00BFBF10
+#     = BLUTLACHE statt auf dem grauen Alloc-Default 0x00808080 zu bleiben. Mit Negativ-Test,
+#     dass der RE1.5-Zweig (Farbe 0x00FFFF38, Wipe `sh 1`) unveraendert bleibt. ---
+add_executable(test_re2_crow_shadow_release test_re2_crow_shadow_release.c)
+target_link_libraries(test_re2_crow_shadow_release PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_crow_shadow_release PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_re2_crow_shadow_release COMMAND test_re2_crow_shadow_release)
+set_tests_properties(unit_re2_crow_shadow_release PROPERTIES TIMEOUT 60)
+
+# --- MESSSONDE (Nutzer-Reports 2026-08-21, RE1.5-Modus): (1) "kein sichtbarer Bluttreffer beim
+#     Hundebiss", (2) "der Dining-Room-Zombie faellt alle 2 Schuesse um und braucht ewig".
+#     Faehrt beide Faelle ueber den ECHTEN Weg (game_step + Pad + echte RDT/SCD-Spawns) mit
+#     RNG-Seed-Sweep und stellt die Messung den selbst disassemblierten Original-Konstanten
+#     gegenueber (@0x8010f360 / @0x80037f14 bzw. @0x8010082c / @0x8011fe30 / @0x80105b18).
+#     Reine Diagnose (kein add_test). ---
+add_executable(probe_dogwound_zknock probe_dogwound_zknock.c)
+target_link_libraries(probe_dogwound_zknock PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_dogwound_zknock PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_dogwound_zknock PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- PIN: RE2-Hunde-Toetungsanker (Leon verschwindet nicht mehr) + Vier-Gate-Trefferfilter
+#     ohne KI-Tick. (A) Anker am AKTUELLEN Clip-Frame (@0x80015df4, t1 = *(0x800ce330)) statt an
+#     Frame 0, und Anker BEVOR die Opfer-FSM platziert (@0x80101DA0 vor @0x80101DC4).
+#     (B) Der Filter FUN_800470C0 (@0x80047124-64) steht im Aufloeser, nicht im Tick — er muss
+#     auch fuer Gegner mit +0x9 & 0x20 / globalem Freeze laufen. Braucht CDEMD0.EMS -> SKIP 77. ---
+add_executable(test_re2_dog_grab_anchor test_re2_dog_grab_anchor.c)
+target_link_libraries(test_re2_dog_grab_anchor PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_dog_grab_anchor PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2_dog_grab_anchor PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2_dog_grab_anchor COMMAND test_re2_dog_grab_anchor)
+set_tests_properties(unit_re2_dog_grab_anchor PROPERTIES TIMEOUT 120 SKIP_RETURN_CODE 77)

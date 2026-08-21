@@ -55,8 +55,13 @@
  *     RE1.5-GIB-Lane); Grab-Blut 0x11000 @ y+500 → RE1.5-Room-Bank-Blut (Hunde-Muster).
  *   - Part-Scatter des GIB (13 Zeilen à 172 B ab [+0x198], Wurf 0x80102EF4 / Wirbel 0x80102F34)
  *     ist Render-seitig nicht modelliert → crow_hide-Mesh-Wipe (RE1.5-GIB-Muster) + Stand-in-FX.
- *   - Modell-Tint 0x80016fe4([+0x16C], 0xBFBF10) (@0x80103A08-20) ist Render-seitig OFFEN
- *     (kein Port-Modell-Tint-Kanal; Welle-C-Praezedenz Hunde-Leiche).
+ *   - ⛔ WIDERRUFEN 2026-08-21: "Modell-Tint 0x80016fe4([+0x16C],0xBFBF10) ist Render-seitig
+ *     OFFEN" war FALSCH gelesen. 0x80016FE4 faerbt den SCHATTEN-/PRIM-RECORD um
+ *     (`lw v0,28(a0)`/`lw v1,68(a0)`, `and 0xff000000`/`or a1`, `sw` zurueck
+ *     @0x80016FE8-0x80017008) — es ist die BLUTLACHE, dieselbe Funktion + Konstante wie bei
+ *     der RE2-Zombie-Leiche. Portiert (crow_pool) in CORPSE Sub 0 (@0x80103A20) und Sub 3
+ *     (@0x80103F14). Gegenstueck: Sub 1/2 GEBEN den Record frei (`sb zero,14(rec)`
+ *     @0x80103C34/@0x80103CBC = Belegt-Byte des Slot-Pools 0x80016480) -> gar kein Schatten.
  */
 
 #include <stdint.h>
@@ -1446,7 +1451,24 @@ static void re2c_corpse(re15_actor_t *e)
                 e->re2d_air219 = v;                        /* sb v,537 @0x80103A1C */
                 e->re2z_t158   = (int16_t)v;               /* sh v,344 (Delay-Slot) @0x80103A24 */
             }
-            /* Modell-Tint 0x80016FE4([+0x16C], 0xBFBF10) @0x80103A08-20 — Render-OFFEN (doc) */
+            /* ⛔ KORREKTUR 2026-08-21 (Nutzer: "platzende Kraehen hinterlassen Schatten"):
+             * das hier ist KEIN "Modell-Tint" und auch nicht "Render-OFFEN", sondern das
+             * UMFAERBEN DES SCHATTEN-RECORDS zur BLUTLACHE — selbst nachdisassembliert:
+             *   80103a08  lui  a1,0xbf          ; a1 = 0x00BFBF10
+             *   80103a0c  ori  a1,a1,0xbf10
+             *   80103a14  lw   a0,364(s0)       ; a0 = [+0x16C] = der Schatten-/Prim-Record
+             *   80103a20  jal  0x80016fe4
+             * und 0x80016FE4 ist der Record-Recolor (info/re2leon/PSX.EXE):
+             *   80016fe8  lw v0,28(a0)  / 80016fec lw v1,68(a0)      ; Farbwoerter +0x1C/+0x44
+             *   80016ff0-ffc  and 0xff000000 / or a1                 ; (alt & 0xFF000000) | a1
+             *   80017000/08   sw v0,28(a0) / sw v1,68(a0)
+             * Es ist EXAKT die Funktion + Konstante, mit der die RE2-Zombie-Leiche ihre Lache
+             * faerbt (@0x8010a4c0-508, platform/pc/main.c 0x10/0xBF/0xBF). Der Alloc-Default
+             * ist dagegen GRAU 0x00808080 (@0x80016500-04) — genau das hat der Port hier
+             * bisher stehen lassen, also lag unter der toten Kraehe ein grauer Fleck statt
+             * einer Lache. Port-Kanal: crow_pool (1 = Lachen-Faerbung), Farbe waehlt der
+             * Renderer flavor-abhaengig (RE2 0x00BFBF10 / RE1.5 0x00FFFF38). */
+            e->crow_pool = 1;
             e->crow_shadow_w = 400; e->crow_shadow_h = 400;/* Lache-Basis [+0x16C]+4/+6
                                                             * @0x80103A28-3C */
             e->re2z_t15a = 60;                             /* Grow-Ticks @0x80103A40-44 */
@@ -1507,9 +1529,19 @@ static void re2c_corpse(re15_actor_t *e)
         if (e->sub_state_2 == 0) {
             e->re2z_self1d3 = 128;                         /* @0x80103C18-1C */
             e->flags |= 0x2;                               /* @0x80103C20-2C */
-            e->crow_shadow_w = 0; e->crow_shadow_h = 0;    /* Schatten-Disable [+0x16C]+0xE=0
-                                                            * @0x80103C34 (Port: 0-Groesse) */
-            e->crow_tint = 0;
+            /* ⛔ SCHATTEN-/PRIM-RECORD FREIGEBEN — nicht "Groesse 0". Selbst gelesen:
+             *   80103c24  lw v1,364(a0)      ; v1 = [+0x16C]
+             *   80103c34  sb zero,14(v1)     ; BYTE-Store: rec+0x0E = 0
+             * rec+0x0E ist das Belegt-Byte des Slot-Pools, den der Allokator 0x80016480
+             * verwaltet (info/re2leon/PSX.EXE): Pool ab 0x800CE698, Stride 104, 50 Slots,
+             * Freisuche `lbu v0,14(t0)`/`bne v0,zero` @0x800164AC-B4, Belegen mit
+             * `sb 5,14(t0)` @0x800164C4/D4. rec+0x0E == 0 heisst FREI = der Record wird nicht
+             * mehr gezeichnet. Der Port-Kanal dafuer ist crow_shadow_w/h == 0 (der Renderer
+             * zeichnet dann NICHTS mehr, platform/pc/main.c) — vorher fiel er dort auf den
+             * 500x600-Standardschatten zurueck, und genau der blieb unter der geplatzten
+             * Kraehe stehen (Nutzer-Report 2026-08-21). */
+            e->crow_shadow_w = 0; e->crow_shadow_h = 0;
+            e->crow_tint = 0; e->crow_pool = 0;
             e->sub_state_2 = 1;                            /* @0x80103C30-38 */
         }
         break;
@@ -1522,8 +1554,10 @@ static void re2c_corpse(re15_actor_t *e)
                 uint8_t v = (uint8_t)((re15_re2_rand() & 0x1fu) + 25);   /* @0x80103C9C-B4 */
                 e->re2d_air219 = v; e->re2z_t158 = (int16_t)v;
             }
-            e->crow_shadow_w = 0; e->crow_shadow_h = 0;    /* Disable @0x80103CBC */
-            e->crow_tint = 0;
+            /* Record FREIGEBEN, wie im GIB-Zweig: `lw v1,364(s1)` @0x80103CA8 +
+             * `sb zero,14(v1)` @0x80103CBC (Belegt-Byte des 0x80016480-Slot-Pools). */
+            e->crow_shadow_w = 0; e->crow_shadow_h = 0;
+            e->crow_tint = 0; e->crow_pool = 0;
             e->re2z_t15a = 60;                             /* @0x80103CB8-C0 */
             e->sub_state_2 = 1;                            /* @0x80103C94/C4 — FAELLT in Ph1
                                                             * @0x80103CC8 (Review-Fix #5) */
@@ -1586,7 +1620,11 @@ static void re2c_corpse(re15_actor_t *e)
         break;
     case 3:                                                /* LAUNCH-Leiche 0x80103EB0 */
         if (e->sub_state_2 == 0) {                         /* Ph0 @0x80103EE8 */
-            /* Tint 0xBFBF10 @0x80103EEC-F18 (doc) */
+            /* Record-Recolor zur BLUTLACHE, identisch zur Normal-Leiche oben:
+             *   80103ef4/f8  lui a1,0xbf / ori a1,a1,0xbf10   ; 0x00BFBF10
+             *   80103efc     lw  a0,364(s0)                   ; [+0x16C]
+             *   80103f14     jal 0x80016fe4                   ; Farbwoerter rec+0x1C/+0x44 */
+            e->crow_pool = 1;
             e->re2z_self1d3 = 128;                         /* @0x80103F04-08 */
             re2c_clip(e, 0xB, 0);                          /* @0x80103EE8-F0C */
             e->flags |= 0x2;                               /* @0x80103F10-18 */
@@ -1645,12 +1683,15 @@ static void re2c_init(re15_actor_t *e)
     /* Boden-Probe 0x8004FBA0(&pos, 250, 1024, 0) → +0x1C2 (@0x801003E0-414). MAPPING:
      * Spawn-Y als Boden (Welle-C-Hunde-Muster; die EXE-Probe ist nicht portiert). */
     e->dog_floor_y = (int16_t)e->y;
-    /* Schatten-Init 0x80016480(+0x16C, 0, 0xC800C8, 0) = 200×200 (@0x80100400-418): */
+    /* Schatten-Init 0x80016480(+0x16C, 0, 0x00C800C8, 0) (@0x80100400-418). Der Allokator legt
+     * den Record im 50-Slot-Pool ab 0x800CE698 (Stride 104) an, markiert ihn mit `sb 5,14(t0)`
+     * @0x800164D4, schreibt a2 nach rec+0x04 (`sw a2,4(t0)` @0x80016530) — 0x00C800C8 sind die
+     * ZWEI Halbworte 200/200 in rec+0x04/+0x06 — und faerbt ihn wegen a3 == 0 auf
+     * 0x00808080 = NEUTRALGRAU (`lui a1,0x80 / ori a1,a1,0x8080` @0x80016500-04 -> rec+0x1C und
+     * rec+0x44). Der Port-Kanal crow_tint traegt genau dieses 0x80; der Renderer verdoppelt es,
+     * weil bei ihm der neutrale PSX-Prim 0x80 == Weiss ist (re15_render_shadow_quad). */
     e->crow_shadow_w = 200; e->crow_shadow_h = 200;
-    e->crow_tint = 128;                                    /* PORT-Praesentations-Shim: der
-                                                            * RE2-Schattenrenderer ist EXE-seitig
-                                                            * (Farbe OFFEN); ohne Tint zeichnete
-                                                            * der Port-Schatten schwarz/leer */
+    e->crow_tint = 128;                                    /* rec+0x1C/+0x44 = 0x00808080 */
     e->crow_pool = 0;
     /* word0 |= 0x8000000 @0x80100420-438 (Engine-Bit, doc). */
     /* +0x10E&0x4000 → State 4 (Skript-Perch, +0x5=+0x10E&0xf, +0x22A|=1 @0x8010043C-8C):
@@ -1845,10 +1886,13 @@ int re15_re2crow_tick(int slot)
         static uint32_t s_last[RE15_ACTOR_MAX];
         uint32_t sig = ((uint32_t)e->state << 16) | ((uint32_t)e->sub_state_1 << 8) | e->sub_state_2;
         if (sig != s_last[slot]) {
-            fprintf(stderr, "[re2crow] slot %d state=%d sub=%d/%d clip=%d hp=%d dist=%u spd=%d y=%d fl=%04x\n",
+            fprintf(stderr, "[re2crow] slot %d state=%d sub=%d/%d clip=%d hp=%d dist=%u spd=%d "
+                    "pos=(%d,%d,%d) flr=%d shW=%u pool=%d tint=%u hide=%d fl=%04x\n",
                     slot, e->state, e->sub_state_1, e->sub_state_2,
                     (int)e->motion, (int)e->hp, (unsigned)e->ai_dist, (int)e->speed_h,
-                    (int)e->y, (unsigned)e->re2c_flags22a);
+                    (int)e->x, (int)e->y, (int)e->z, (int)e->dog_floor_y,
+                    (unsigned)e->crow_shadow_w, (int)e->crow_pool, (unsigned)e->crow_tint,
+                    (int)e->crow_hide, (unsigned)e->re2c_flags22a);
             s_last[slot] = sig;
         }
     }

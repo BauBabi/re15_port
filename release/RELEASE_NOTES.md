@@ -1,5 +1,49 @@
 # RE1.5 Port — v0.3.9 (Early Preview)
 
+## Die Einstellung "AI RE2 MODELS" ist raus
+
+Auf Wunsch: *„Mittlerweile ist RE 2 AI schon so gut, dass wir diese Option im
+Optionsmenue sowie seine eigenen Models entfernen koennen. Wir konzentrieren uns
+jetzt nur noch auf RE 1.5 AI und RE 2 AI."*
+
+Der Menuepunkt **AI** hat damit wieder genau zwei Stufen — **RE1.5** und **RE2**.
+Oben/Unten schaltet wie auf der SOUND-Seite einfach um; es gibt keinen dritten
+Eintrag mehr, durch den man sich hindurchtippen muesste.
+
+**AI RE2** ist unveraendert die Stufe von vorher: RE2-Verhalten, RE2-Animationen,
+Modelle aus RE1.5. Wer die Einstellung vorher auf der dritten Stufe hatte, landet
+jetzt auf **AI RE2** — der Wert wird nirgends gespeichert, es kann also auch kein
+Spielstand mit der alten Einstellung auftauchen.
+
+Die RE2-Dateien im Paket (`shared_assets/RE2/`) werden weiterhin gebraucht: aus
+ihnen kommen die RE2-Skelette, -Animationen und -Sounds, die "AI RE2" fahrt. Nur
+der Zweig, der zusaetzlich die RE2-*Modelle* geladen hat, ist entfallen.
+
+## Tote Kraehen hinterlassen keinen Schatten mehr (RE2-Modus)
+
+Gemeldet: „Platzende Kraehen durch die Pistole hinterlassen immer noch Schatten,
+die muessen dann natuerlich weg."
+
+Der Boden-Schatten ist im Original kein Anhaengsel des Gegners, sondern ein
+**Platz in einer festen Liste** von 50 Stueck. Eine zerplatzende Kraehe gibt
+ihren Platz zurueck — ein einziges Byte, das die Liste als „frei" markiert.
+Danach gibt es schlicht nichts mehr zu zeichnen.
+
+Der Port hat diese Rueckgabe zwar nachgebildet, der Zeichner hat sie aber als
+„Groesse unbekannt" gelesen und dafuer seinen **Standardschatten** genommen. So
+blieb unter der geplatzten Kraehe genau der Fleck liegen, der eigentlich
+verschwunden sein sollte.
+
+Beim Aufraeumen kam ein zweiter Fehler mit heraus: Die *normale* Kraehenleiche
+faerbt im Original denselben Platz zur **Blutlache** um. Diese Umfaerbung war im
+Port als „nur Optik, spaeter" abgehakt — sie ist es nicht, es ist dieselbe
+Funktion und dieselbe Farbe, mit der auch die RE2-Zombieleiche ihre Lache faerbt.
+Bis jetzt lag unter jeder toten Kraehe im RE2-Modus ein grauer Fleck statt einer
+Lache. Jetzt waechst die Lache wie im Original ueber 60 Bilder von 400 auf 1000.
+
+Die RE1.5-Kraehe ist davon nicht betroffen und bleibt unveraendert.
+
+
 ## Auf die Kiste klettern (Aussenbereich)
 
 Gemeldet: „Man kann noch nicht auf die Kiste draufklettern, was normalerweise
