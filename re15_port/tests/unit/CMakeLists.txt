@@ -2157,3 +2157,34 @@ target_compile_definitions(test_cam_selfheal PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_cam_selfheal COMMAND test_cam_selfheal)
 set_tests_properties(unit_cam_selfheal PROPERTIES TIMEOUT 120)
+
+# --- MESSSONDE (kein ctest): (A) RE2-Sterbeanimation friert vor dem Tod ein,
+#     (B) Generatorraum-Zombie (ROOM11F0) steht abrupt vom Liegen auf.
+#     Beide ueber den ECHTEN Weg (re15_game_step + Pad bzw. die ECHTEN sub18-Bytes durch die
+#     ECHTE SCD-VM), mit GELADENER RE2-Bank und der RENDERER-Bankwahl
+#     (re15_re2z_poses_loco_bank) in der Pose-Messung. ---
+add_executable(probe_re2z_deathgetup probe_re2z_deathgetup.c)
+target_link_libraries(probe_re2z_deathgetup PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re2z_deathgetup PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_re2z_deathgetup PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- PIN: Plc_dest-MODI 7/8 SIND RUECKWAERTS-MODI (Nutzer-Befund ROOM1090: "Leon laeuft vor
+#     und dreht sich nach RECHTS um; im Original schaut er nach LINKS zum Transporter").
+#     Der letzte Wegpunkt von sub02 @0x247C ist mode 8. Der Mode-Handler aus der Spieler-
+#     Tabelle @0x80073e30[8] = 0x800311f0 ruft den Yaw-Slew mit NEGATIVER Rate
+#     (`addiu a2,zero,-48` @0x80031254) und die Translation mit YAW-OFFSET 0x800
+#     (`ori a0,zero,0x800` @0x8003125c); FUN_8001aac4 dreht bei negativer Rate den Ziel-
+#     Peilwinkel um 0x800 (@0x8001ab08-18), FUN_800245d8 addiert das Argument auf den Yaw
+#     (@0x80024658/@0x80024664). Blick = bearing+0x800, Bewegung = bearing.
+#     Pins: R1 Mechanismus + Negativ-Test, R1b Positiv-Kontrolle Mode 5, R1c Mode 7,
+#     R1d Umdrehen aus der Laufrichtung, R2 das Drehrichtungs-/SNAP-Band von FUN_8001aac4
+#     (@0x8001ab44-80), R3 der echte ROOM1090-sub02-Ablauf inkl. Regressionswache fuer
+#     Teleport/Wegpunkte/Endposition. ---
+add_executable(test_plc_back_yaw_1090 test_plc_back_yaw_1090.c)
+target_link_libraries(test_plc_back_yaw_1090 PRIVATE re15_engine re15_test_support)
+target_include_directories(test_plc_back_yaw_1090 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_plc_back_yaw_1090 PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_plc_back_yaw_1090 COMMAND test_plc_back_yaw_1090)
+set_tests_properties(unit_plc_back_yaw_1090 PROPERTIES TIMEOUT 120)

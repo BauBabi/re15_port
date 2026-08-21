@@ -15,6 +15,14 @@
  * Gemessen wird: WO steht Leon waehrend sub02 wirklich, wohin laeuft er, und liegen die
  * Ziel-Wegpunkte ueberhaupt im Raum (Vergleich gegen die Kamera-/RVD-Geometrie des Raums)?
  * Ohne diesen Vergleich ist "laeuft falsch" nicht messbar.
+ *
+ * ERGEBNIS 2026-08-21: der WEG war korrekt, die BLICKRICHTUNG am Ende um 180 Grad verdreht
+ * (gemessen: Endstand (-76,-2001) yaw 2203 = die Laufrichtung; nach dem Fix (-77,-1997)
+ * yaw 111 = Laufrichtung+0x800). Mode 8 ist ein RUECKWAERTS-Modus: Handler
+ * @0x80073e30[8] = 0x800311f0 ruft den Slew mit NEGATIVER Rate (`addiu a2,zero,-48`
+ * @0x80031254 -> FUN_8001aac4 dreht das Peilziel um 0x800 @0x8001ab14) und die Translation
+ * mit Yaw-Offset 0x800 (`ori a0,zero,0x800` @0x8003125c). Gepinnt in
+ * tests/unit/test_plc_back_yaw_1090.c.
  */
 #include <stdint.h>
 #include <stdio.h>

@@ -151,6 +151,39 @@ static int16_t yaw_delta(int16_t cur, int16_t target)
     return (int16_t)d;
 }
 
+/* BYTE-TRUE Port von FUN_8001aac4 @0x8001aac4 — DEM Yaw-Slew, den JEDER Plc_dest-Mode-
+ * Handler pro Tick ruft (Mode 4 @0x80030ba0/@0x80030c54, Mode 5 @0x80030ea8,
+ * Mode 7 @0x800310e0, Mode 8 @0x80031250, Mode 9 @0x8003143c).
+ *
+ *   8001aaf8  jal 0x8001a6d4          -> bearing = Peilung Aktor->Ziel  (= `bearing` hier)
+ *   8001ab08  bgez s0,0x8001ab1c      -> NUR wenn die Rate NEGATIV ist:
+ *   8001ab10     subu s1,zero,v0         rate = -rate
+ *   8001ab14     addiu v0,a0,2048        bearing += 0x800     <<< 180 GRAD (RUECKWAERTS-Modi)
+ *   8001ab18     andi a0,v0,0xfff
+ *   8001ab30-38  d = (bearing - yaw + rate) & 0xfff
+ *   8001ab40/44  slt v0,a1,rate*2
+ *   8001ab54     d <  2*rate  -> sh a0,0x6a  : yaw = bearing          (SNAP)
+ *   8001ab58     sonst        -> sh v0,0x6a  : yaw = yaw - rate       (NEGATIVE Drehrichtung)
+ *   8001ab5c-80  und wenn d <= 0x800 -> yaw += 2*rate                 (= yaw + rate)
+ *
+ * Die Drehrichtungs-Entscheidung ist damit NICHT das symmetrische "kuerzester Weg": positiv
+ * gedreht wird nur fuer d in [2*rate, 0x800], also fuer eine Winkeldifferenz in
+ * [rate, 0x800-rate]. Zwischen 0x800-rate und 0x800 (die letzten `rate` Einheiten vor exakt
+ * 180 Grad) dreht das Original NEGATIV. Der alte Port-Clamp drehte dort positiv. */
+static void plc_yaw_slew(re15_actor_t *a, int16_t bearing, int16_t rate)
+{
+    if (rate < 0) {                                          /* @0x8001ab08 */
+        rate    = (int16_t)(-rate);                          /* @0x8001ab10 */
+        bearing = (int16_t)(((int32_t)bearing + 0x800) & 0x0FFF); /* @0x8001ab14-18 */
+    }
+    int32_t d = ((int32_t)bearing - (int32_t)a->rot_y + rate) & 0x0FFF;  /* @0x8001ab30-38 */
+    int32_t y;
+    if (d < 2 * (int32_t)rate)  y = bearing;                 /* @0x8001ab44/54 SNAP */
+    else if (d < 0x801)         y = (int32_t)a->rot_y + rate;/* @0x8001ab5c-80 */
+    else                        y = (int32_t)a->rot_y - rate;/* @0x8001ab58 */
+    a->rot_y = (int16_t)(y & 0x0FFF);
+}
+
 /* Map walk_mode to per-tick forward speed (PSX units). */
 static int16_t mode_to_speed(uint8_t mode)
 {
@@ -175,8 +208,26 @@ void re15_actor_step_walk(re15_actor_t *a)
      * Replaces the old fixed walk_pad=2 freeze with the real variable-length
      * align phase (0–~22 ticks, scaled by the initial yaw error) — the missing
      * delay behind intro #6's residual cut-timing drift and Elliot's stand→walk. */
+    /* RUECKWAERTS-MODI 7/8 (Handler LAB_80031080 / LAB_800311f0). Deren Body hat KEINE
+     * Align-Phase: das State-Byte DAT_800aca5a (= walk_fsm) gated NUR den One-Shot-Init
+     * (@0x8003109c / @0x8003120c `bne v0,zero,<Slew>`), danach laeuft in JEDEM Tick
+     * Slew + `jal 0x800245d8` (@0x800310e8 / @0x80031258). Der Init schreibt:
+     *   speed +0x8c = 0x46 (@0x800310a8 / @0x80031218)  -> mode_to_speed() = 70
+     *   +0x94 = 0          (@0x800310bc / @0x8003122c)  -> Clip 0 = re15_to_re2 RUN-Rolle
+     *   +0x95 = 0          (@0x800310c4 / @0x80031230)  -> anim_frame = 0
+     *   +0x8f = 7          (@0x800310cc / @0x8003123c)  -> anim_frac  = 7
+     *   state  = 1         (@0x800310b0 / @0x80031220)
+     * (re15_actor_set_motion setzt +0x95/+0x8f genau so.) */
+    const int backward = (a->walk_mode == 0x07 || a->walk_mode == 0x08);
+
     if (a->walk_fsm == 0) {
-        a->walk_fsm = 1;   /* fall through to state 1 this tick (no freeze) */
+        if (backward) {
+            int bclip = re15_to_re2_plc_dest_clip((int)a->walk_mode, /*rbj=*/1);
+            if (bclip >= 0) re15_actor_set_motion(a, (int16_t)bclip);
+            a->walk_fsm = 2;   /* kein Align-State — direkt in den Slew+Advance-Body */
+        } else {
+            a->walk_fsm = 1;   /* fall through to state 1 this tick (no freeze) */
+        }
     }
 
     /* Compute target yaw from current pos to dest. */
@@ -210,9 +261,7 @@ void re15_actor_step_walk(re15_actor_t *a)
         /* STATE 1 — ALIGN: slew yaw at 0x60/tick, NO position advance. When the
          * heading is within ~31° (0x15e) of the target → enter state 2 (active).
          * PSX LAB_80030b70 + FUN_8001ab9c convergence gate. */
-        int16_t s1 = (delta >  PLC_YAW_SLEW_INIT) ?  PLC_YAW_SLEW_INIT
-                   : (delta < -PLC_YAW_SLEW_INIT) ? -PLC_YAW_SLEW_INIT :  delta;
-        a->rot_y = (int16_t)(((int32_t)a->rot_y + s1) & 0x0FFF);
+        plc_yaw_slew(a, target, PLC_YAW_SLEW_INIT);   /* FUN_8001aac4, a2=0x60 @0x80030ba4 */
         if (abs_delta <= PLC_CONV_THRESHOLD) {
             a->walk_fsm = 2;
             /* A2: the walk/run EDD clip starts ONLY now (active stepping) — the
@@ -249,13 +298,15 @@ void re15_actor_step_walk(re15_actor_t *a)
     /* finer slew (0x48 run / 0x30 walk) + advance below. Mode-9 (turn-in-place) is a
      * special case: its handler @0x80031360 slews a CONSTANT 0x60 with NO state-2 slow-down (@0x80031440
      * `ori a2,0x60`), so keep 0x60 here instead of the walk 0x30. (audit wf_4e8af27f) */
-    int16_t slew_s2 = (a->walk_mode == 0x05) ? PLC_YAW_SLEW_RUN_S2
-                    : (a->walk_mode == 0x09) ? PLC_YAW_SLEW_INIT
-                                             : PLC_YAW_SLEW_ACTIVE;
-    int16_t step  = (delta >  slew_s2) ?  slew_s2
-                  : (delta < -slew_s2) ? -slew_s2
-                  :  delta;
-    a->rot_y = (int16_t)(((int32_t)a->rot_y + step) & 0x0FFF);
+    /* RUECKWAERTS 7/8: die Rate ist NEGATIV (`addiu a2,zero,-48` @0x800310e4 / @0x80031254) —
+     * genau darueber dreht FUN_8001aac4 den Ziel-Peilwinkel um 0x800 (siehe plc_yaw_slew).
+     * Ohne dieses Vorzeichen schaute Leon am Ende der ROOM1090-sub02-Cutscene in die
+     * Laufrichtung statt (byte-true) 180 Grad dagegen. */
+    int16_t slew_s2 = backward                 ? (int16_t)-48        /* @0x800310e4/@0x80031254 */
+                    : (a->walk_mode == 0x05)   ? PLC_YAW_SLEW_RUN_S2 /* @0x80030eac */
+                    : (a->walk_mode == 0x09)   ? PLC_YAW_SLEW_INIT   /* @0x80031440 */
+                                               : PLC_YAW_SLEW_ACTIVE;/* @0x80030c58 */
+    plc_yaw_slew(a, target, slew_s2);
 
     /* Mode-9 arrival cone = 0x60 (@0x800313d4 `ori a2,0x60`), NOT the port-invented 0x20 (which made the
      * scripted turn-in-place fire ~3x too tightly aligned). (audit wf_4e8af27f) */
@@ -280,8 +331,15 @@ void re15_actor_step_walk(re15_actor_t *a)
          *   | c 0  s |   | speed |   | c*speed |
          *   | 0 1  0 | * |   0   | = |    0    |
          *   |-s 0  c |   |   0   |   |-s*speed |                          */
-        int32_t c = re15_cos_q12(a->rot_y);
-        int32_t s = re15_sin_q12(a->rot_y);
+        /* FUN_800245d8 nimmt einen YAW-OFFSET als a0 und dreht damit die Matrix:
+         *   @0x80024658 `lh v0,106(entity)`  (= +0x6a Yaw)
+         *   @0x80024664 `addu a0,v0,a0`      -> RotMatrixY(yaw + a0)
+         * Mode 4/5 rufen mit a0 = 0 (@0x80030c60 / @0x80030eb4 `addu a0,zero,zero`),
+         * Mode 7/8 mit a0 = 0x800 (@0x800310ec / @0x8003125c `ori a0,zero,0x800`) — die
+         * Rueckwaerts-Modi laufen also 180 Grad entgegen der Blickrichtung. */
+        int16_t hdg = (int16_t)(((int32_t)a->rot_y + (backward ? 0x800 : 0)) & 0x0FFF);
+        int32_t c = re15_cos_q12(hdg);
+        int32_t s = re15_sin_q12(hdg);
         a->x += (int32_t)((c * (int32_t)speed) >> 12);
         a->z -= (int32_t)((s * (int32_t)speed) >> 12);
     }
