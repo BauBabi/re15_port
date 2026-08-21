@@ -223,6 +223,7 @@ uint32_t re15_re2_rand_draws(void) { return s_re2_rng_draws; }
 /* WELLE C: the dog draws from the SAME generator (RE2 has ONE state word 0x800CE318 for every
  * overlay — 69 jal 0x80015FE8 in the dog module alone). Exported for enemy_ai_re2_dog.c. */
 uint32_t re15_re2_rand(void) { return re2z_rand(); }
+void re15_re2z_hit_filter_apply(int slot);        /* Vier-Gate-Filter FUN_800470C0, s. unten */
 void re15_re2z_onesave_reset(void);                           /* Welle B (below): FUN_800401d4 latch */
 void re15_re2z_rng_reset(void) { s_re2_rng = 0xD2706CA4u;     /* room load — keeps runs deterministic */
                                  re15_re2z_onesave_reset();
@@ -6358,6 +6359,36 @@ int re15_re2z_tick(int slot)
      * (siehe der Block ueber re2z_exec_eleven) wird weiterhin von Gate (2) gefangen, sobald ein
      * Latch stehen bleibt, und Leichen (Gate 3) bleiben unbeschiessbar.
      * ========================================================================================== */
+    re15_re2z_hit_filter_apply(slot);
+    return 1;
+}
+
+/* ⛔ DER FILTER GEHOERT IN DEN AUFLOESER, NICHT IN DEN KI-TICK — ER MUSS AUCH LAUFEN,
+ *    WENN DER KI-TICK UEBERSPRUNGEN WIRD.
+ * -------------------------------------------------------------------------------------------
+ * Im Original steht der Vier-Gate-Filter INNERHALB der Kandidatenschleife des Angriffs-
+ * Aufloesers FUN_800470C0 (@0x80047124-30 / 38-40 / 48-50 / 58-64) — er wird also im Moment des
+ * Schusses ausgewertet und haengt an KEINEM Gegner-Tick. Der Port bildet ihn ueber den Latch
+ * +0x93 Bit 0 ab, den der geteilte RE1.5-Aufloeser liest; dieser Latch wurde bisher NUR am Ende
+ * von re15_re2z_tick geschrieben. Beide Vor-Gates des Roots koennen den Tick aber komplett
+ * ueberspringen:
+ *     8010042c-3c  `lw g_pauseflags / lui 0x2000 / and / bne -> Funktionsende`  (globaler Freeze)
+ *     80100450-5c  `lbu +0x9 / andi 0x20 / bne -> Funktionsende`                (Per-Entity-Skip)
+ * Ein uebersprungener Tick friert damit den Latch ein: der erste Treffer setzt ihn
+ * (`ori v0,v0,0x1` @0x800124f0), und niemand gibt ihn je wieder frei — der Gegner ist nach
+ * EINEM Treffer dauerhaft unverwundbar. Das ist derselbe Defekt-Typ wie 2026-08-19 (eb841053),
+ * nur eine Ebene hoeher.
+ * GEMESSEN (probe_re2_aim4 --part=8, Zensus ueber alle 37 STAGE1-RDTs, 99 Spawns):
+ *     ROOM11C0 slot02/03 typ=0x27 grid=0x30      (Gorilla-Boss, eigenes Brain)
+ *     ROOM1200 slot03    typ=0x10 grid=0xA1      <-- ein RE2-Zombie mit +0x9 & 0x20
+ * Der ROOM1200-Zombie tickt nie und war damit nach dem ersten Treffer nicht mehr treffbar.
+ * Deshalb ist die Auswertung jetzt eine eigene, idempotente Funktion, die game_step
+ * ZUSAETZLICH fuer jeden RE2-eigenen Zombie aufruft — auch fuer die, deren Tick ausfaellt.
+ * Fuer alle anderen aendert sich nichts: dieselbe Rechnung, derselbe Zeitpunkt im Frame. */
+void re15_re2z_hit_filter_apply(int slot)
+{
+    if (slot < 1 || slot >= RE15_ACTOR_MAX) return;
+    re15_actor_t *e = &g_actors[slot];
     {   int spawn_pose = (e->state == 1)
                       && (e->sub_state_1 == 7 || e->sub_state_1 == 8);  /* EXEC[7]/EXEC[8] */
         /* ⛔ UND DER LATCH MUSS MIT DER POSE FALLEN, EGAL WIE SIE ENDET.
@@ -6390,5 +6421,4 @@ int re15_re2z_tick(int slot)
         e->hit_react &= (uint8_t)~2u;                              /* RE2 kennt +0x93 nicht ->
                                                                     * kein RE1.5-Wurzel-Gore */
     }
-    return 1;
 }

@@ -62,6 +62,7 @@
 #include "re15_damage.h"     /* re15_ai_arc_test (==FUN_80015614), re15_enemy_bone_world_pos */
 #include "re15_enemy_ai.h"   /* re15_ai_set_state_word / victim shims / re15_actor_clip_len */
 #include "re15_enemy.h"      /* re15_enemy_find (RE2 bank from the Welle-A loader) */
+#include "re15_emd.h"        /* re15_emd_get_keyframe_speed (Griff-Anker 0x80015b94) */
 #include "re15_esp.h"        /* re15_esp_fx_spawn_ex (RE1.5 blood stand-in) */
 
 /* zombie-file shims reused verbatim (enemy_ai_common.c / enemy_ai_re2_zombie.c) */
@@ -325,6 +326,67 @@ static void re2d_fx(re15_actor_t *e, int part, int fx)
                          (int16_t)(((int)at->rot_y + off) & 0xfff));         /* lh 118(s0) @0x80105104 */
 }
 
+/* ============================================================================================
+ * ⛔ DER ANKER DES GRIFFS WIRD AM **AKTUELLEN** CLIP-FRAME GEZOGEN, NICHT AN FRAME 0
+ * --------------------------------------------------------------------------------------------
+ * NUTZER-REPORT 2026-08-21: "Wenn der Hund mich toetet, verschwinde ich irgendwie komplett."
+ *
+ * GEMESSEN (probe_re2_aim4 --part=3, ROOM1190, echter Weg game_step, RE2-Bank EM020 geladen,
+ * Leons Weltposition Frame fuer Frame durch den ganzen Toetungsvorgang):
+ *   f409  PL(-3869,-23606)  Sprung  357   s1=7 clip 23 frame  7
+ *   f413  PL(-5498,-22198)  Sprung 1065   s1=7 clip 23 frame 11
+ *   f417  PL(-10240,-18102) Sprung 3057   s1=7 clip 23 frame 15
+ *   ...   Endstand nach 240 Frames: PL(-298658,-3600,225648) = 389271 Einheiten vom Start.
+ * Hund UND Spieler beschleunigen also gemeinsam aus dem Raum heraus — "verschwunden".
+ *
+ * ---- DAS ORIGINAL (info/re2leon/PSX.EXE + EMD0G_MOD0.BIN, selbst disassembliert) ------------
+ * Der Griff ruft in JEDEM Tick das PAAR
+ *     80101ed0: jal 0x80015b94     ; ANKER  (a0 = 0x800CFBF8 = die SPIELER-Struktur,
+ *                                   ;         a3 = 0 aus dem Delay-Slot @0x80101da4)
+ *     80101ee4: jal 0x80015cb8     ; POSE   (Position := Anker + Wurzel-Offset)
+ * Beide Helfer holen ihren Offset ueber DIESELBE Routine 0x80015db0:
+ *     80015db0: lui  t1,0x800d
+ *     80015db4: lw   t1,-7376(t1)   ; t1 = *(0x800ce330) = die gerade getickte Entity (der HUND)
+ *     80015dbc: lbu  v0,332(t1)     ; +0x14C = CLIP
+ *     80015dd0: beq  a1,zero,0x80015df0
+ *     80015df4: lbu  v0,333(t1)     ; **+0x14D = DER AKTUELLE FRAME**   (a1 == 0-Zweig)
+ *     80015ddc: lbu  v0,333(t1)     ; (a1 != 0-Zweig: Laenge-Frame-1, gespiegelt)
+ * a1 kommt in 0x80015b94 aus dem eigenen a3 (`addu a1,a3,zero` @0x80015bb4) — und das ist an der
+ * Aufrufstelle 0 (@0x80101da4/@0x80101ed4). Anker und Pose ziehen den Offset also am
+ * **selben, aktuellen** Frame; der Anker hebt die Pose exakt auf, der Hund bleibt beim Biss
+ * stehen, und der EIGENTLICHE Zweck des Paares ist die KOPIE des Ankers in die Spieler-Struktur
+ * (`sh a0,356(s3)` / `sh v0,358(s3)` / `sh v0,360(s3)` @0x80015c7c-94).
+ *
+ * ---- WAS DER PORT MACHTE -------------------------------------------------------------------
+ * `re15_re2z_grab_anchor(e, pl, 23)` reicht an re15_clip_anchor_set die feste **Frame 0** weiter,
+ * waehrend re15_re2z_grab_rootmotion mit dem AKTUELLEN Frame platziert. Pro Tick blieb damit
+ *     pos += rot_yaw( off(aktueller Frame) - off(Frame 0) )
+ * stehen — ein Restbetrag, der mit dem Clip-Verlauf waechst. Genau die gemessene Beschleunigung.
+ * (Der RE2-ZOMBIE-Griff ist NICHT betroffen: er ankert genau EINMAL in P0 @0x8010270C, und dort
+ * steht der Frame ohnehin auf 0.)
+ * ========================================================================================== */
+static void re2d_grab_anchor(re15_actor_t *e, re15_actor_t *pl)
+{
+    e->anchor_x = e->x; e->anchor_z = e->z;                /* Rueckfall = Wurzel (bankfrei) */
+    re15_enemy_bank_t *b = re15_enemy_find(e->type);
+    if (b && b->ok) {
+        const re15_emd_animation_t *anim = &b->anim;
+        int clip = (int)e->motion;                         /* +0x14C @0x80015dbc */
+        if (clip >= 0 && clip < anim->clip_count && anim->clips[clip].frame_count > 0) {
+            int slot = (int)e->anim_frame % anim->clips[clip].frame_count;  /* +0x14D @0x80015df4 */
+            int kf   = (int)(anim->frames[anim->clips[clip].first_frame + slot] & 0xFFFu);
+            int16_t sx, sy, sz;
+            if (re15_emd_get_keyframe_speed(&b->skel, kf, &sx, &sy, &sz)) {
+                int32_t cs = re15_cos_q12(e->rot_y), sn = re15_sin_q12(e->rot_y);
+                e->anchor_x = e->x - (int32_t)(( (int64_t)cs * sx + (int64_t)sn * sz) >> 12);
+                e->anchor_z = e->z - (int32_t)((-(int64_t)sn * sx + (int64_t)cs * sz) >> 12);
+            }
+        }
+    }
+    if (pl) { pl->anchor_x = e->anchor_x;                   /* `sh a0,356(s3)` @0x80015c7c */
+              pl->anchor_z = e->anchor_z; }                 /* `sh v0,360(s3)` @0x80015c94 */
+}
+
 /* ---- 0x80104B98 — Kopf-/Part-Tracking (Review-Fund #13: bewusst OPEN, hier belegt) ---------
  * Von ~13 Sub-Tails gerufen (u.a. IDLE @0x80100700, STALK @0x80100A94, RUN @0x80100B74,
  * ANGRIFF @0x80101220, HOWL-P3 @0x80101AF0, FEED @0x80101BB0, RETREAT @0x80101CB4,
@@ -445,6 +507,23 @@ static int re2d_contact(re15_actor_t *e, re15_actor_t *pl)
         e->speed_h = 0;                                    /* sh zero,324 @0x80104F28 */
         pl->rot_y = (int16_t)(((int)e->rot_y + 2048) & 0xfff);   /* @0x80104F40-50 */
         e->re2z_self1d3 |= 0x80u;                          /* @0x80104F64-74 */
+        /* ⛔ DER ANKER MUSS HIER SCHON STEHEN — sonst posiert die Opfer-FSM den Spieler aus
+         * einem Anker (0,0), also im WELT-URSPRUNG.
+         * GEMESSEN (probe_re2_aim4 --part=3, ROOM1190): am Latch-Frame f395 sprang Leon 27479
+         * Einheiten auf PL(0,0), waehrend der Hund bei (-2917,-24429) stand, und blieb dort die
+         * sieben Flug-Frames bis Sub 7 P0 — der Nutzer-Befund "ich verschwinde komplett".
+         * URSACHE ist eine PORT-ABWEICHUNG, die hier bezahlt werden muss: das Original startet die
+         * Spieler-Greif-Animation NICHT in diesem Latch — der Block @0x80104F20-74 schreibt
+         * ausschliesslich +0x21E=2 (`sb v0,6(s3)` @0x80104F24), Hund-Speed 0 (@0x80104F28),
+         * PL+0x1D3=255 (`sb v1,467(s1)` @0x80104F34), PL-word0 |= 0xA (@0x80104F38-3C),
+         * PL-Yaw = Hund+2048 (@0x80104F40-50), 0x800CFB74 &= 0xFBFFFFFF (@0x80104F54-60) und
+         * self+0x1D3 |= 0x80 (@0x80104F64-74) — KEIN Spieler-Kommando, KEIN Anker. Der
+         * Spieler-Kommando-Wert 0x800CFBFC = 6 faellt erst in Sub 7 P0 (`sw v0,-1028(at)`
+         * @0x80104F.. bzw. @0x80101DC4), und GENAU DORT steht auch der Anker-Aufruf
+         * (`jal 0x80015b94` @0x80101DA0). Weil der Port die Opfer-FSM (Port-Shim, der
+         * EXE-seitige Greif-Art-6-Handler ist nicht RE'd) schon hier startet, muss er den Anker
+         * derselben Stelle mitliefern — dieselbe Rechnung, dieselbe Quelle, nur frueher. */
+        re2d_grab_anchor(e, pl);                           /* Anker-Paar wie @0x80101DA0 */
         re15_re2z_victim_begin(e, pl, 0);                  /* PL+0x1D3=255/Flags|=0xA → Port-Victim-
                                                             * Pin (Welle-B-Shim); Richtung frontal
                                                             * (Yaw=Hund+2048 erzwingt sie) */
@@ -973,7 +1052,7 @@ static void re2d_sub7_latch(re15_actor_t *e, re15_actor_t *pl)
             /* Latch-Globals @0x80101D98-E14: 0x800CFDAC=self, 0x800CFBFC=6 (Grab-Art HUND),
              * 0x800CFD80/84=+0x188/18C, PL+0x1D3|=0x80, PL-Soll-Yaw 0x800CFC6E = Hund+2048.
              * Port: der Kontakt-Handler hat Victim-Pin + Yaw schon gesetzt (re2d_contact). */
-            re15_re2z_grab_anchor(e, pl, 23);              /* Review-Fix #12: P0 ankert das Opfer
+            re2d_grab_anchor(e, pl);                       /* Review-Fix #12: P0 ankert das Opfer
                                                             * BEREITS (jal 0x80015B94 @0x80101DA0,
                                                             * a3=0 Delay-Slot; selbst disasm'd) —
                                                             * sonst posiert der Victim-Tick den
@@ -983,7 +1062,9 @@ static void re2d_sub7_latch(re15_actor_t *e, re15_actor_t *pl)
              * Pad-Aktuator (FUN_8003947C/39514/395B8 selbst decompiliert) — kein Port-Rumble. */
         } else {
             /* P1 @0x80101EC4: Anker 0x80015B94 + Pose 0x80015CB8 jeden Tick */
-            re15_re2z_grab_anchor(e, pl, 23);              /* 0x80015B94 @0x80101ED0 */
+            re2d_grab_anchor(e, pl);                       /* 0x80015B94 @0x80101ED0 — AM
+                                                            * AKTUELLEN Frame (@0x80015df4), s.
+                                                            * der Beleg-Block bei re2d_grab_anchor */
             re15_re2z_grab_rootmotion(e);                  /* 0x80015CB8 @0x80101EE4 */
             if (re2d_advance(e, 0x80)) {                   /* 959c(128) @0x80101EF8-F00 */
                 re2d_clip(e, 24, 0, 0x1F, 0x80, 1);        /* 0x1F0018 Hang-Loop @0x80101F04-08 */

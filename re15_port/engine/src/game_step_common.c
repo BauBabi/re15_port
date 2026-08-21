@@ -21,6 +21,7 @@
 #include "re15_audio.h"         /* re15_audio_footstep */
 #include "re15_rdt.h"           /* re15_rdt_floor_sound */
 #include "re15_enemy_ai.h"      /* re15_enemy_ai_run_all — the LIVE-zombie per-frame pass (8.6) */
+#include "re15_ai_flavor.h"     /* re15_ai_flavor / re15_re2z_owns_type — RE2-Trefferfilter-Nachlauf */
 #include "re15_damage.h"        /* re15_player_is_dead / re15_player_death_tick (8.10 death FSM) */
 #include "re15_menu.h"          /* re15_menu_* — the inventory/weapon-select menu (8.20) */
 #include "re15_esp.h"           /* re15_esp_fx_spawn — the discharge muzzle/smoke/shell fx (ids 2/3/4) */
@@ -1362,6 +1363,26 @@ void re15_game_step(const re15_game_ctx_t *c)
      * re15_enemy_ai_set_paused bleibt unangetastet (fremde Datei, Batch B1). */
     if (c->rdt_ok && !(g_re15_pauseflags & RE15_PAUSE_AI))
         re15_enemy_ai_run_all(g_scd.combat_active);
+
+    /* ⛔ RE2-TREFFERFILTER AUCH FUER GEGNER, DEREN KI-TICK AUSFAELLT.
+     * Im Original steht der Vier-Gate-Filter in der Kandidatenschleife des Angriffs-Aufloesers
+     * FUN_800470C0 (@0x80047124-30 / 38-40 / 48-50 / 58-64) und haengt an KEINEM Gegner-Tick.
+     * Der Port bildet ihn ueber den Latch +0x93 Bit 0 ab, den bisher nur das Ende von
+     * re15_re2z_tick geschrieben hat — und der Zombie-Root ueberspringt seinen Tick bei
+     * globalem Freeze (`lw g_pauseflags / lui 0x2000 / and / bne` @0x8010042C-3C) ODER bei
+     * gesetztem Per-Entity-Bit (`lbu +0x9 / andi 0x20 / bne` @0x80100450-5C). Dann friert der
+     * Latch ein: der erste Treffer setzt ihn (`ori v0,v0,0x1` @0x800124F0) und niemand gibt ihn
+     * je frei = der Gegner ist nach EINEM Treffer unverwundbar.
+     * GEMESSEN (probe_re2_aim4 --part=8, Zensus ueber alle 37 STAGE1-RDTs, 99 Spawns): genau ein
+     * RE2-Zombie ist betroffen — ROOM1200 slot03 typ=0x10 grid=0xA1 (+ der Gorilla-Boss 0x27 in
+     * ROOM11C0, der ein anderes Brain faehrt). re15_re2z_hit_filter_apply ist idempotent und
+     * rechnet dasselbe wie der Tick-Epilog, nur unabhaengig davon, ob der Tick gelaufen ist. */
+    if (c->rdt_ok && re15_ai_flavor() == RE15_AI_FLAVOR_RE2) {
+        extern void re15_re2z_hit_filter_apply(int slot);
+        for (int s = 1; s < RE15_ACTOR_MAX; s++)
+            if (g_actors[s].active && re15_re2z_owns_type(g_actors[s].type))
+                re15_re2z_hit_filter_apply(s);
+    }
 
     /* RE2-FLAVOR: die RE2-INIT-HP nachstempeln. Der Stempel feuert GENAU EINMAL pro Spawn, in
      * dem Tick, in dem der INIT (Zustand 0) auf einen Nicht-Null-Zustand umschaltet — also
