@@ -643,6 +643,18 @@ void re15_render_pc_item_modal(int on, const int *cx, const int *cy, uint8_t typ
     item_modal_build_tex(type);
 }
 
+/* MESS-HAKEN: einmaliger Ruecklese-Auftrag fuer den fertig komponierten Frame.
+ * main.c setzt ihn (RE15_FRAMEDUMP="<frame>:<pfad.ppm>") VOR re15_render_end_frame();
+ * ausgefuehrt wird er unten, unmittelbar VOR SDL_RenderPresent. */
+static char s_readback_path[512];
+static int  s_readback_pending = 0;
+void re15_render_pc_request_readback(const char *path)
+{
+    if (!path || !*path) return;
+    snprintf(s_readback_path, sizeof s_readback_path, "%s", path);
+    s_readback_pending = 1;
+}
+
 void re15_render_end_frame(void)
 {
     /* Step 1: blit the software framebuffer (2D primitives) onto the renderer.
@@ -1230,6 +1242,44 @@ void re15_render_end_frame(void)
             SDL_RenderCopy(s_renderer, s_gameover_tex, &tsrc, &tdst);   /* PSX GT4 0xFF gouraud =
                                                                           * 2x texture brightness */
             SDL_SetTextureBlendMode(s_gameover_tex, SDL_BLENDMODE_BLEND);
+        }
+    }
+
+    /* MESS-HAKEN (2026-08-21): den KOMPLETT komponierten Frame lesen, solange der
+     * Backbuffer noch gueltig ist — also VOR SDL_RenderPresent. Genau daran scheitern
+     * RE15_AUTOSHOT / re15_render_pc_screenshot: die werden aus main.c NACH
+     * re15_render_end_frame() (= nach Present) gerufen, und nach dem Present ist der
+     * Backbuffer je nach Backend undefiniert (gemessen: durchgehend Schwarz bzw. Weiss).
+     * RE15_FBDUMP wiederum dumpt nur die 2D-Ebene (BG-Blit), NICHT die ueber
+     * SDL_RenderGeometry gezeichneten 3D-Props. Dieser Haken liefert beides zusammen.
+     * Rein env-/aufruf-gegatet; der Normalpfad ist unberuehrt. */
+    if (s_readback_pending) {
+        s_readback_pending = 0;
+        int rw = 0, rh = 0;
+        SDL_GetRendererOutputSize(s_renderer, &rw, &rh);
+        SDL_Surface *rs = SDL_CreateRGBSurfaceWithFormat(0, rw, rh, 32, SDL_PIXELFORMAT_RGB888);
+        if (rs) {
+            if (SDL_RenderReadPixels(s_renderer, NULL, SDL_PIXELFORMAT_RGB888,
+                                     rs->pixels, rs->pitch) == 0) {
+                FILE *pf = fopen(s_readback_path, "wb");
+                if (pf) {
+                    fprintf(pf, "P6\n%d %d\n255\n", rw, rh);
+                    for (int y = 0; y < rh; y++) {
+                        const uint32_t *row = (const uint32_t *)((const uint8_t *)rs->pixels + (size_t)y * rs->pitch);
+                        for (int x = 0; x < rw; x++) {
+                            unsigned char rgb[3] = { (unsigned char)(row[x] >> 16),
+                                                     (unsigned char)(row[x] >>  8),
+                                                     (unsigned char)(row[x]      ) };
+                            fwrite(rgb, 1, 3, pf);
+                        }
+                    }
+                    fclose(pf);
+                    fprintf(stderr, "[framedump] %dx%d -> %s\n", rw, rh, s_readback_path);
+                }
+            } else {
+                fprintf(stderr, "[framedump] SDL_RenderReadPixels failed: %s\n", SDL_GetError());
+            }
+            SDL_FreeSurface(rs);
         }
     }
 
@@ -1840,21 +1890,45 @@ void re15_render_pc_upload_tim(const re15_tim_t *tim) {
 
 void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot)
 {
+    /* Bestandsverhalten unveraendert: Index 0 opak, ausser fuer die Effekt-Sprite-Slots
+     * 19/20. Der Aufrufer, der die byte-true GPU-Semantik braucht (Raum-Props), nimmt
+     * re15_render_pc_upload_tim_slot_keyed(..., RE15_TIM_KEY_PSX). */
+    re15_render_pc_upload_tim_slot_keyed(
+        tim, slot, (slot == 19 || slot == 20) ? RE15_TIM_KEY_INDEX0 : RE15_TIM_KEY_NONE);
+}
+
+void re15_render_pc_upload_tim_slot_keyed(const re15_tim_t *tim, int slot, int key_mode)
+{
     if (!tim || !s_renderer) return;
     if (slot < 0 || slot >= RE15_TIM_SLOT_MAX) return;
 
-    /* Heuristic: for indexed MODEL/PROP TIMs treat index 0 as OPAQUE (CLUT[0] colour)
-     * rather than transparent. RE1.5 MD1 textures need this to look right —
-     * fully-black trim pixels (door handle, weapon details) are stored as
-     * palette index 0 with CLUT[0] = 0x0000 (black). Treating them as
-     * transparent produces the "triangle-shaped holes" the user reported.
+    /* key_mode — wie ein Texel zu "nicht zeichnen" wird:
      *
-     * EXCEPTION — the effect-sprite slots (19 = room RDT effect TIM, 20 = GLOBAL effect
-     * bank / effect-id 0 hit-blood, see main.c RE15_TIM_SLOT_EFFECT[_GLOBAL]): these are
-     * PSX textured SPRITES, where index 0 / CLUT[0]=0x0000 is TRANSPARENT (byte-true GPU
-     * sprite semantics). Without this, the 4bpp blood sheet would render as a black box
-     * around each splatter (the ~86% index-0 background becomes opaque black). */
-    const int treat_index_0_opaque = (slot != 19 && slot != 20);
+     *  RE15_TIM_KEY_NONE   Index 0 wird OPAK gezeichnet (CLUT[0]-Farbe). Alt-Verhalten
+     *      fuer Charakter-/Waffen-TIMs. (Kommentar von damals: RE1.5-MD1-Texturen
+     *      speichern schwarze Trim-Pixel als Index 0; als transparent behandelt gab das
+     *      die vom Nutzer gemeldeten "dreieckigen Loecher".)
+     *
+     *  RE15_TIM_KEY_INDEX0 Index 0 transparent — die Effekt-Sprite-Slots 19/20
+     *      (RE15_TIM_SLOT_EFFECT[_GLOBAL], main.c). Unveraendert uebernommen.
+     *
+     *  RE15_TIM_KEY_PSX    BYTE-TRUE GPU-FARBSCHLUESSEL: ein Texel, dessen aufgeloester
+     *      16-Bit-Wert exakt 0x0000 ist (also CLUT[idx] == 0x0000 bei 4/8 bpp bzw. der
+     *      Pixel selbst bei 16 bpp), wird NICHT gezeichnet — unabhaengig vom ABE-Bit.
+     *      Quelle: nocash psx-spx, "GPU Texture Caching / Palettes":
+     *        info/Resident_Evil_und_Playstation_Information/psx-spx.github.io-master/
+     *        docs/graphicsprocessingunitgpu.md — "Palette Entry / 15bit Texture Color:
+     *        0000h = Fully-Transparent"; STP (Bit 15) unterscheidet nur bei Werten != 0
+     *        zwischen opak und semi-transparent.
+     *      Belegt am Original-Zeichenpfad (siehe Aufrufer in main.c): Raum-Objekte gehen
+     *      ueber FUN_8002c18c -> FUN_800254a0/FUN_800256b0, die den Primitiv-Code
+     *      `param_4 << 1 | 0x34` bzw. `| 0x3c` setzen (POLY_GT3/GT4, Bit 0x02 = ABE).
+     *      Fuer den ROOM11F0-Cursor ist ABE = 0 (obj+0x0C == 0, s. Aufrufer) — es bleibt
+     *      also NUR der Farbschluessel, und der ist im Port bisher nicht ausgewertet
+     *      worden.
+     *
+     * Die eigentliche Pro-Texel-Entscheidung steht als `re15_tim_texel_argb()` in
+     * re15_tim.h — dieselbe Funktion pinnt der Test test_prop_texel_key_11f0. */
 
     /* Phase 4.5.7.5 #PC-2: support multi-CLUT TIMs by decoding each CLUT
      * into its own copy of the TIM, stacked vertically. The texture
@@ -1881,11 +1955,7 @@ void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot)
             uint32_t       *out      = &rgba[c * pixels_per_clut];
             for (int i = 0; i < pixels_per_clut; i++) {
                 uint8_t idx = src[i];
-                if (idx == 0 && !treat_index_0_opaque) {
-                    out[i] = 0u;
-                } else {
-                    out[i] = rgb555_to_argb8888(clut_row[idx]);
-                }
+                out[i] = re15_tim_texel_argb(clut_row[idx], idx == 0, key_mode);
             }
         }
     } else if (tim->bpp == 4 && tim->has_clut) {
@@ -1896,19 +1966,16 @@ void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot)
             for (int i = 0; i < pixels_per_clut; i++) {
                 int byte_idx = i / 2;
                 int nibble = (i & 1) ? (src[byte_idx] >> 4) : (src[byte_idx] & 0xF);
-                if (nibble == 0 && !treat_index_0_opaque) {
-                    out[i] = 0u;
-                } else {
-                    out[i] = rgb555_to_argb8888(clut_row[nibble]);
-                }
+                out[i] = re15_tim_texel_argb(clut_row[nibble], nibble == 0, key_mode);
             }
         }
     } else if (tim->bpp == 16) {
         /* 16bpp: keep PSX transparency for genuinely 0x0000 pixels — these
-         * textures are typically UI / cutout sprites where it's intentional. */
+         * textures are typically UI / cutout sprites where it's intentional.
+         * (Verhalten unveraendert; RE15_TIM_KEY_PSX ist hier per Definition das,
+         * was der Zweig schon immer tat: Wert 0x0000 = nicht zeichnen.) */
         for (int i = 0; i < n_pixels; i++) {
-            uint16_t c = tim->pixels[i];
-            rgba[i] = (c == 0) ? 0u : rgb555_to_argb8888(c);
+            rgba[i] = re15_tim_texel_argb(tim->pixels[i], 0, RE15_TIM_KEY_PSX);
         }
     } else {
         free(rgba);

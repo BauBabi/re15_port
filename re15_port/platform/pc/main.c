@@ -746,8 +746,32 @@ static void pc_load_room_prop_set(const re15_rdt_t *rdt,
         const uint8_t *mb = rdt->prop_md1[op]; int msz = rdt->prop_md1_size[op];
         const uint8_t *tb = rdt->prop_tim[op]; int tsz = rdt->prop_tim_size[op];
         if (mb && re15_md1_parse(mb, (size_t)msz, &md1[op]) == 0) ok[op] = 1;
+        /* RE15_TIM_KEY_PSX = byte-true GPU-FARBSCHLUESSEL (Nutzer-Report 2026-08-21:
+         * "bei dem Raetsel, wo man die Schalter druecken muss, bewegt man einen Cursor —
+         * der ist im Original der Hintergrund transparent und bei uns schwarz").
+         * Raum-Objekte zeichnet das Original ueber die Objekt-Schleife FUN_8002c18c:
+         * pro Objekt `bVar2 = (obj[+0x0C] & 2) != 0` und dann — bei (obj[+0x0C] & 0x10) == 0 —
+         * FUN_800254a0 (Tri) / FUN_800256b0 (Quad), die den Primitiv-Code als
+         * `param_3->cd = param_4 << 1 | 0x34` bzw. `| 0x3c` setzen: POLY_GT3/POLY_GT4,
+         * Bit 0x02 = ABE.
+         * obj[+0x0C] kommt aus dem Obj_model_set-Handler LAB_80040914: `lh v0,8(a2)`
+         * @0x800409a8 + `sw v0,12(a1)` @0x800409b0, also pc[8..9] des Opcodes.
+         * ROOM11F0s Cursor ist Objekt 0x00 (Record @Datei 0x00E54:
+         * 2d 00 04 00 00 00 00 01 00 00 ...) mit pc[8..9] = 0x0000 -> obj+0x0C = 0 ->
+         * ABE-Bit 0, Code bleibt 0x34/0x3C = OPAK. Semi-Transparenz kann es also NICHT
+         * sein; es bleibt der GPU-Farbschluessel "Texel-Wert 0000h wird nicht gezeichnet"
+         * (psx-spx-Zitat in re15_tim.h). Der haengt auf der Hardware am TEXEL-WERT, nicht
+         * am Zeichenbefehl — es gibt keinen Per-Objekt-Schalter, der ihn abschalten
+         * koennte —, deshalb gilt er fuer alle Raum-Props, nicht nur fuer obj 0x00.
+         * Gemessen auf den Assets (scratchpad/uvcov11f0.py + propkey_census.py):
+         * ROOM11F0 prop[0] = 101215 von 109042 gesampelten Texeln (92.8%) sind Index 0
+         * mit CLUT[0]=0x0000; die 11 uebrigen Props des Raums haben 0.0% und aendern sich
+         * dadurch byte-genau NICHT. Game-weit betrifft die Regel 122 von 570 Prop-Modellen;
+         * dieselbe 92.8%-Textur taucht in 18 Raeumen auf = EIN wiederverwendetes
+         * Cursor-/Marker-Modell. Gepinnt in tests/unit/test_prop_texel_key_11f0.c. */
         if (tb) { re15_tim_t tt; if (re15_tim_parse(tb, tsz, &tt) == 0)
-                      re15_render_pc_upload_tim_slot(&tt, RE15_TIM_SLOT_PROP(op)); }
+                      re15_render_pc_upload_tim_slot_keyed(&tt, RE15_TIM_SLOT_PROP(op),
+                                                           RE15_TIM_KEY_PSX); }
     }
 }
 
@@ -7290,6 +7314,22 @@ re_title:;
                   fclose(f);
                   fprintf(stderr, "[fbdump] F%u -> %s\n", g_engine.frame_count, s_fbd_path); } } }
 
+        /* MESS-HAKEN RE15_FRAMEDUMP="<frame>:<pfad.ppm>" (2026-08-21) — im Unterschied zu
+         * RE15_FBDUMP (nur die 2D-Ebene) liefert das den KOMPLETT komponierten Frame
+         * inklusive der ueber SDL_RenderGeometry gezeichneten 3D-Aktoren/Props. Der Auftrag
+         * wird hier gesetzt und in re15_render_end_frame() unmittelbar VOR SDL_RenderPresent
+         * ausgefuehrt — nach dem Present ist der Backbuffer undefiniert, genau daran
+         * scheitern RE15_AUTOSHOT/gdigrab (s. Kommentar am AUTOSHOT-Block). Rein env-gegatet. */
+        { static int s_fdd_init = 0; static long s_fdd_frame = -1; static char s_fdd_path[256];
+          if (!s_fdd_init) { s_fdd_init = 1;
+              const char *e = getenv("RE15_FRAMEDUMP");
+              if (e && *e) { const char *c = strchr(e, ':');
+                  if (c && (size_t)(c - e) < 16) { s_fdd_frame = atol(e);
+                      snprintf(s_fdd_path, sizeof s_fdd_path, "%s", c + 1); } } }
+          if (s_fdd_frame >= 0 && (long)g_engine.frame_count == s_fdd_frame) {
+              extern void re15_render_pc_request_readback(const char *path);
+              re15_render_pc_request_readback(s_fdd_path); } }
+
         re15_render_end_frame();
 
         /* RE15_INV_SHOT continuation: capture the presented acceptance frame + exit
@@ -7334,7 +7374,23 @@ re_title:;
         }
         /* AUTO-SCREENSHOT for ablauf diff (2026-05-24). When env
          * RE15_AUTOSHOT=1, snap frames at preset intervals from sub11
-         * start through sub02 finish, dump as shots/NN.bmp. */
+         * start through sub02 finish, dump as shots/NN.bmp.
+         *
+         * WARUM AUTOSHOT REGELMAESSIG SCHWARZE/WEISSE BILDER LIEFERT (2026-08-21; hat in
+         * mehreren Sitzungen Messungen verdorben — u.a. wurde das TITELBILD so mit max=24
+         * "gemessen"): dieser Block steht NACH `re15_render_end_frame()`, und end_frame
+         * schliesst mit `SDL_RenderPresent`. Nach dem Present ist der Backbuffer je nach
+         * Backend undefiniert (bei ACCELERATED typischerweise verworfen), also liest
+         * `re15_render_pc_screenshot` -> `SDL_RenderReadPixels` nicht mehr das gerade
+         * gezeigte Bild. Ein Schwarz-/Weissbild von hier ist darum KEIN Befund ueber das
+         * Rendering. Wer Pixel messen will, nimmt eines von beiden:
+         *   RE15_FBDUMP    = "<frame>:<pfad.ppm>" — nur die 2D-Ebene (BG-Blit + Overlays),
+         *                    VOR end_frame; enthaelt KEINE 3D-Props/Aktoren (die laufen
+         *                    ueber SDL_RenderGeometry).
+         *   RE15_FRAMEDUMP = "<frame>:<pfad.ppm>" — der KOMPLETT komponierte Frame,
+         *                    zurueckgelesen INNERHALB von end_frame direkt VOR dem Present
+         *                    (render_pc.c, re15_render_pc_request_readback).
+         * Siehe auch Skill `re15-port-visual-verify` (gdigrab auf das echte Fenster). */
         {
             static const char *autoshot = NULL;
             static int s_autoshot_inited = 0;

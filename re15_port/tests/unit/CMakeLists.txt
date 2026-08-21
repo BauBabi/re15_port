@@ -1781,3 +1781,26 @@ add_executable(probe_gen_11f0_cursor_view probe_gen_11f0_cursor_view.c)
 target_link_libraries(probe_gen_11f0_cursor_view PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_gen_11f0_cursor_view PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_gen_11f0_cursor_view COMMAND probe_gen_11f0_cursor_view)
+
+# --- PIN "Cursor-Flaeche schwarz statt durchsichtig" (Nutzer-Report 2026-08-21) -------------
+#     "Bei dem Raetsel, wo man die Schalter druecken muss, bewegt man einen Cursor. Der ist im
+#     Original der Hintergrund transparent und bei uns schwarz."  Gemeint ist die FLAECHE DES
+#     CURSORS (nicht das Raumbild): ROOM11F0 prop[0] = Obj_model_set id=0x00 type=4
+#     (@Datei 0x00E54), eigene 8bpp-Textur (TIM@0x018DAC) mit CLUT[0] = 0x0000; 92.8% der vom
+#     Modell tatsaechlich gesampelten Texel sind Index 0.
+#     Welcher Mechanismus im Original greift: NICHT ABE. obj+0x0C = pc[8..9] (LAB_80040914
+#     `lh v0,8(a2)` @0x800409a8 + `sw v0,12(a1)` @0x800409b0) ist fuer diesen Record 0, also
+#     bleibt in FUN_8002c18c `bVar2 = (obj[+0x0C] & 2) != 0` falsch und der Primitiv-Code in
+#     FUN_800254a0/FUN_800256b0 (`param_4 << 1 | 0x34` / `| 0x3c`) OPAK. Es greift der
+#     GPU-FARBSCHLUESSEL: psx-spx graphicsprocessingunitgpu.md "Color 0000h = Fully-transparent"
+#     / "texture color 0000h is fully-transparent". Der Port wertete ihn im Prop-Pfad nie aus
+#     (render_pc.c: treat_index_0_opaque galt fuer alle Slots ausser 19/20).
+#     Der Test misst auf den ECHTEN Asset-Bytes ueber genau die Funktion, die der Renderer beim
+#     TIM-Upload benutzt (re15_tim_texel_argb, re15_tim.h): P1 Record/ABE-Feld, P2 Fix,
+#     P3 Negativ-Fall (= der alte Zustand), P4 Regressionswache fuer die 11 uebrigen Props
+#     (0 Aenderung), P5 Effekt-Slots 19/20 unveraendert. ---
+add_executable(test_prop_texel_key_11f0 test_prop_texel_key_11f0.c)
+target_link_libraries(test_prop_texel_key_11f0 PRIVATE re15_engine re15_test_support)
+target_include_directories(test_prop_texel_key_11f0 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_prop_texel_key_11f0 COMMAND test_prop_texel_key_11f0)
+set_tests_properties(unit_prop_texel_key_11f0 PROPERTIES TIMEOUT 60)
