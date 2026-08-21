@@ -15,13 +15,18 @@
 #include "re15_collision.h"   /* re15_collision_set_band — the CAM_SWITCH floor gate */
 
 /* g_scd is the shared VM state; the scan reads cut_auto_enabled + writes cam_id/cam_change_pending. */
-static void arm_scan(void)
+/* `active` = der AKTIVE (angeforderte) Cut. Er MUSS in g_scd.cam_id stehen: das ist
+ * DAT_800afbb5, und genau den liest der Zonen-Scan (FUN_80014230 @0x8001423c
+ * `lbu v0,-0x44b(v0)=>DAT_800afbb5` fuer den Gruppen-Eintrittstest und @0x800142c8 fuer
+ * die Schleifen-Fortsetzung). Frueher stand hier der Sentinel 0xFF und der aktive Cut kam
+ * nur als Parameter — das war ein Harness-Artefakt, das die byte-true Quelle verdeckte. */
+static void arm_scan(uint8_t active)
 {
     re15_aot_init();
     g_scd.cut_auto_enabled = 1;      /* Cut_auto(1): RVD scan active */
     g_scd.tick_count = 200;          /* past the frame-0 race gate */
     g_scd.cam_change_pending = 0;
-    g_scd.cam_id = 0xFF;
+    g_scd.cam_id = active;           /* DAT_800afbb5 */
     for (int i = 0; i < SCD_THREAD_COUNT; i++) g_scd.threads[i].active = 0;   /* scd_idle */
 }
 
@@ -36,7 +41,7 @@ int main(void)
     /* (1) ROOM1190 shape: install#0 (lower table index) = cut 5 at the HIGH slot (top-down), install#1
      *     = cut 4 at the next-lower slot. Both cover (X,Z). The scan must pick cut 5 (first in table). */
     {
-        arm_scan();
+        arm_scan(CAM_FROM);
         re15_aot_set_cam_switch(63, X, Z, HW, HH, CAM_FROM, /*cut=*/5);   /* install#0 -> slot 63 */
         re15_aot_set_cam_switch(62, X, Z, HW, HH, CAM_FROM, /*cut=*/4);   /* install#1 -> slot 62 */
         re15_aot_scan(X, Z, /*active_cut=*/CAM_FROM);
@@ -50,7 +55,7 @@ int main(void)
     /* (2) reversed slots (sanity: the RULE is highest-slot-wins, independent of which cut value):
      *     install#0 = cut 4 at slot 63, install#1 = cut 5 at slot 62 -> picks cut 4. */
     {
-        arm_scan();
+        arm_scan(CAM_FROM);
         re15_aot_set_cam_switch(63, X, Z, HW, HH, CAM_FROM, 4);
         re15_aot_set_cam_switch(62, X, Z, HW, HH, CAM_FROM, 5);
         re15_aot_scan(X, Z, CAM_FROM);
@@ -62,7 +67,7 @@ int main(void)
 
     /* (3) cam_from filter: a zone whose cam_from != active_cut must NOT fire. */
     {
-        arm_scan();
+        arm_scan(CAM_FROM);
         re15_aot_set_cam_switch(63, X, Z, HW, HH, /*cam_from=*/9, 5);   /* wrong cam_from */
         re15_aot_scan(X, Z, /*active_cut=*/CAM_FROM);
         if (g_scd.cam_change_pending) { fprintf(stderr, "FAIL(3): cam_from!=active_cut must not fire (cam_id=%u)\n", g_scd.cam_id); fail = 1; }
@@ -71,7 +76,7 @@ int main(void)
 
     /* (4) non-overlap: player outside both zones -> no switch. */
     {
-        arm_scan();
+        arm_scan(CAM_FROM);
         re15_aot_set_cam_switch(63, X, Z, HW, HH, CAM_FROM, 5);
         re15_aot_scan(X + 5000, Z + 5000, CAM_FROM);
         if (g_scd.cam_change_pending) { fprintf(stderr, "FAIL(4): outside the zone must not fire\n"); fail = 1; }
@@ -83,19 +88,19 @@ int main(void)
     {
         re15_collision_set_band(2);
         /* (5a) mismatched floor -> no fire */
-        arm_scan();
+        arm_scan(CAM_FROM);
         re15_aot_set_cam_switch(63, X, Z, HW, HH, CAM_FROM, 5);
         g_aot.slots[63].band = 4;                 /* zone floor 4, player on band 2 */
         re15_aot_scan(X, Z, CAM_FROM);
         if (g_scd.cam_change_pending) { fprintf(stderr, "FAIL(5a): wrong-floor zone must not fire (cam_id=%u)\n", g_scd.cam_id); fail = 1; }
         /* (5b) matching floor -> fire */
-        arm_scan();
+        arm_scan(CAM_FROM);
         re15_aot_set_cam_switch(63, X, Z, HW, HH, CAM_FROM, 5);
         g_aot.slots[63].band = 2;                 /* zone floor 2 == player band 2 */
         re15_aot_scan(X, Z, CAM_FROM);
         if (!g_scd.cam_change_pending || g_scd.cam_id != 5) { fprintf(stderr, "FAIL(5b): matching-floor zone must fire\n"); fail = 1; }
         /* (5c) floor 0xFF -> fires on any band */
-        arm_scan();
+        arm_scan(CAM_FROM);
         re15_aot_set_cam_switch(63, X, Z, HW, HH, CAM_FROM, 5);
         g_aot.slots[63].band = 0xFF;              /* any floor */
         re15_aot_scan(X, Z, CAM_FROM);

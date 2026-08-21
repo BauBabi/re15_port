@@ -884,8 +884,29 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
         /* Suppress non-RVD AOTs during cinematic (außer der Auto-Advance-Tür). */
         if (in_cinematic && a->type != RE15_AOT_TYPE_CAM_SWITCH && !is_auto_door) continue;
         /* cam_from filter: RVD CAM_SWITCH zones only fire when the
-         * active cut matches. Other types use 0xFF (always active). */
-        if (a->cam_from_filter != 0xFF && a->cam_from_filter != active_cut) {
+         * active cut matches. Other types use 0xFF (always active).
+         *
+         * BYTE-TRUE, KORRIGIERT 2026-08-21: verglichen wird der ANGEFORDERTE Cut
+         * (DAT_800afbb5 = g_scd.cam_id), NICHT der angezeigte. FUN_80014230 liest ihn an
+         * BEIDEN Stellen, an denen die Gruppe geprueft wird:
+         *   @0x8001423c `lbu v0,-0x44b(v0)=>DAT_800afbb5`   (Gruppen-Eintrittstest
+         *                gegen `lbu v1,0x16(a0)` @0x80014254)
+         *   @0x800142c8 `lbu v0,-0x44b(v0)=>DAT_800afbb5`   (Schleifen-Fortsetzung gegen
+         *                `lbu v1,0x0(s0)` @0x800142c0)
+         * und der Gruppenzeiger DAT_800ac794 selbst wird ausschliesslich aus demselben
+         * Wert gebildet (FUN_800142f4 @0x80014300/@0x80014310 -> FUN_80014324).
+         * DAT_800b0fe4 (der ANGEZEIGTE Cut) kommt im ganzen Scan NICHT vor.
+         *
+         * Der Aufrufer uebergibt dagegen den ANGEZEIGTEN Cut (game_step_common.c:1189
+         * `c->active_cut` = main.c `active_cut_idx` = s_last_cut_idx). Solange
+         * angefordert == angezeigt war, war das dasselbe; seit der Trennung der beiden
+         * Felder (re15_cam_present_tick, room_common.c) ist es das NICHT mehr: in jedem
+         * Bild, in dem der Praesentations-Apply nicht gelaufen ist, scannte der Port die
+         * Zonengruppe des ALTEN Cuts. Das ist genau die Klasse Fehler, die der frueher
+         * gemeldete Fix (angefordert/angezeigt vertauscht) offen gelassen hat — der Scan
+         * blieb an der Anzeige haengen. `active_cut` bleibt als Parameter erhalten
+         * (Diagnose/Signatur), ist fuer das Zonen-Gate aber nicht mehr massgeblich. */
+        if (a->cam_from_filter != 0xFF && a->cam_from_filter != g_scd.cam_id) {
             a->was_inside = 0;   /* reset edge-state when zone goes dormant */
             continue;
         }

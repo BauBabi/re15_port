@@ -2354,3 +2354,40 @@ target_compile_definitions(test_re2_dog_grab_anchor PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_re2_dog_grab_anchor COMMAND test_re2_dog_grab_anchor)
 set_tests_properties(unit_re2_dog_grab_anchor PROPERTIES TIMEOUT 120 SKIP_RETURN_CODE 77)
+
+# --- MESSSONDE (kein ctest): ROOM11F0 — Fluchtlauf-Sweep nach dem Generator-Raetsel.
+#     Nutzer-Befund (2. Meldung): "nach dem Raetsel und direktem Weglaufen wechselt die
+#     Kamera TEILWEISE nicht". Faehrt sub16 (@0x15C0 Cut_chg(0x0A)) + sub17 (@0x16F0
+#     Cut_old + @0x16F2 Cut_auto(1)) als echte SCD-Threads und laesst den Spieler danach
+#     in 32 Richtungen x 2 Tempi mit byte-true Schrittweite (FUN_800245d8) weglaufen —
+#     Trefferquote statt Einzelfall. Reine Diagnose. ---
+add_executable(probe_11f0_escape_sweep probe_11f0_escape_sweep.c)
+target_link_libraries(probe_11f0_escape_sweep PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_11f0_escape_sweep PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_11f0_escape_sweep PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- PIN/REGRESSIONSWACHE: der RVD-Kamera-Zonen-Scan gegen ein BYTE-EXAKTES Orakel von
+#     FUN_80014230 (+ FUN_80014324 Gruppenzeiger + FUN_80014368 Punkt-in-Quad), ueber 21
+#     STAGE1-Raeume x jeden Cut x jede Etage x ein 150er-Gitter. Der Nutzer-Befund
+#     "die Kamera wechselt TEILWEISE nicht" ist positionsabhaengig — nur ein
+#     flaechendeckender Vergleich kann eine Zonen-Auswahl-Regression ausschliessen. ---
+add_executable(test_rvd_scan_oracle test_rvd_scan_oracle.c)
+target_link_libraries(test_rvd_scan_oracle PRIVATE re15_engine re15_test_support)
+target_include_directories(test_rvd_scan_oracle PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_rvd_scan_oracle PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_rvd_scan_oracle COMMAND test_rvd_scan_oracle)
+set_tests_properties(unit_rvd_scan_oracle PROPERTIES TIMEOUT 300 SKIP_RETURN_CODE 77)
+
+# --- PIN (Nutzer-Befund ROOM11F0, 2. Meldung): Cut_old stellt den ANGEZEIGTEN Cut wieder
+#     her (DAT_800b3f7b = DAT_800b0fe4, @0x800402c0/@0x800402e4 -> @0x8004033c) und der
+#     RVD-Zonen-Scan prueft gegen den ANGEFORDERTEN Cut (DAT_800afbb5, @0x8001423c /
+#     @0x800142c8). Beide Restposten der Trennung angefordert/angezeigt; sie schlagen NUR
+#     in dem Bild zu, in dem der Scan schon geschaltet, der Apply aber noch nicht gelaufen
+#     ist — genau beim schnellen Weglaufen. ---
+add_executable(test_cut_old_displayed test_cut_old_displayed.c)
+target_link_libraries(test_cut_old_displayed PRIVATE re15_engine re15_test_support)
+target_include_directories(test_cut_old_displayed PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_cut_old_displayed COMMAND test_cut_old_displayed)
+set_tests_properties(unit_cut_old_displayed PROPERTIES TIMEOUT 60)

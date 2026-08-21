@@ -1236,7 +1236,24 @@ static int op_dbg_text(scd_thread_t *t)
 static int op_cut_chg(scd_thread_t *t)
 {
     /* Per Java disassembler line 231: Cut_chg is 2 bytes [op, cam_id]. */
-    g_scd.cam_id_prev       = g_scd.cam_id;
+    /* BYTE-TRUE, KORRIGIERT 2026-08-21: gemerkt wird der ANGEZEIGTE Cut, nicht der
+     * angeforderte. LAB_800402a0 liest ihn aus DAT_800b0fe4 (= work_vars[0x0A]) und
+     * legt ihn in DAT_800b3f7b ab, die Quelle von Cut_old (0x2A):
+     *   @0x800402c0 `lbu a1,offset DAT_800b0fe4(a1)`   <- ANGEZEIGTER Cut
+     *   @0x800402e4 `sb  a1,offset DAT_800b3f7b(at)`
+     *   @0x8004033c `lbu a0,offset DAT_800b3f7b(a0)`   (Cut_old liest ihn zurueck)
+     * DAT_800b3f7b hat game-weit GENAU ZWEI XREFs: 800402e4(W) und 8004033c(R) —
+     * es ist ausschliesslich dieser Merkposten.
+     * Der Port speicherte hier g_scd.cam_id = DAT_800afbb5 = den ANGEFORDERTEN Cut.
+     * Solange beide Felder gleichgesetzt waren, war das dasselbe; seit der Trennung
+     * (re15_cam_present_tick, room_common.c) unterscheiden sie sich in jedem Bild, in
+     * dem der RVD-Scan den Cut geaendert hat, der Praesentations-Apply aber noch nicht
+     * gelaufen ist — Cut_old stellte dann einen Cut wieder her, der nie angezeigt war,
+     * und die Zonen-Zustandsmaschine stand auf einer Gruppe, in der der Spieler in
+     * KEINER Zone liegt (= Kamera bleibt stehen; ein verpasster Uebergang ist
+     * endgueltig). Gleiche Fehlerklasse wie der frueher gemeldete Fix, gleicher
+     * Restposten. */
+    g_scd.cam_id_prev       = (uint8_t)g_scd.work_vars[0x0A];   /* @0x800402c0 / @0x800402e4 */
     g_scd.cam_id            = t->pc[1];
     g_scd.cam_arg2          = 0;
     g_scd.cam_arg3          = 0;
