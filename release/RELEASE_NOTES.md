@@ -1,3 +1,65 @@
+# RE1.5 Port — v0.3.6 (Early Preview)
+
+## Der Hinterhof brennt jetzt (ROOM1090)
+
+Der gemeldete fehlende Feuereffekt ist gefunden — und der Befund war groesser
+als der Fehler. **Die sieben "Baby-Spinnen" in diesem Raum sind sieben
+brennende Truemmer.** Der Gegnertyp, den das Projekt seit Monaten als
+"Spinnenbaby, stationaerer Netzspucker" fuehrte, ist in Wahrheit der
+Feuer-Emitter des Hinterhofs mit dem verunglueckten Polizeitransporter.
+
+Belegt an den Daten: die Effektgrafik zeigt, mit ihrer eigenen Farbtabelle
+gerendert, **acht Flammenbilder**. Und das Hintergrundbild des Raums hat
+sechzehn statt acht Ansichten — dieselben acht Kamerawinkel noch einmal im
+orangen Feuerschein. Die "Netz-Sprites" sind Flammen, der Beruehrungsschaden
+ist Verbrennen.
+
+Warum es so lange unentdeckt blieb: Die Effektnummer steht in einer Befehlsform,
+die genau **einmal im ganzen Spiel** vorkommt. Erst ein Durchgang durch alle 702
+Aufrufstellen der Effekt-Funktionen hat sie sichtbar gemacht.
+
+⚠️ Drei der sieben Feuer holen ihre Grafik aus einer globalen Bank, fuer die der
+Port noch keinen Platz im Bildspeicher hat — die bleiben vorerst dunkel.
+
+## Kisten lassen sich schieben (ROOM1090)
+
+Ursache war ein Reihenfolgefehler: Der Port hat den Spieler **zuerst** aus der
+Kiste herausgeschoben und **danach** geprueft, ob er hineindrueckt. Ein buendig
+ausgeschobener Spieler dringt aber nie ein — das Schieben war damit rechnerisch
+immer wirkungslos, die Kiste konnte sich **nie** bewegen.
+
+Der Schub kommt uebrigens nicht aus einer Geschwindigkeit, sondern aus der
+Animation selbst: Die Schiebe-Animation traegt in den ersten 15 von 25 Bildern
+eine Markierung, ueber die die Figur 523 Einheiten nach vorn wandert.
+
+## Der Cursor im Generator-Raetsel ist durchsichtig (ROOM11F0)
+
+Die Cursor-Grafik besteht zu 93 % aus Bildpunkten, die auf der PSX "nicht
+zeichnen" bedeuten. Der Port hat sie **schwarz ausgemalt**. Von den elf anderen
+Objekten im Raum benutzt keines diese Farbe — deshalb fiel es nur dort auf.
+
+## Zombies kriechen unter das Tor (ROOM1030, RE2-Modus)
+
+Dafuer wurde das **zweite Gegner-Gehirn** von RE2 nachgebaut — die
+Kriech-Zustandsmaschine, die der Port bisher gar nicht hatte, samt der Bruecke
+zwischen RE1.5-Skript und RE2-Verhalten. Gemessen kriechen jetzt alle
+geflaggten Zombies unter dem Rolltor durch.
+⚠️ Einer von sechs bleibt noch haengen; Ursache noch nicht gemessen.
+
+## Leon steht beim Gefressenwerden richtig (RE2-Modus)
+
+Der Port spielte auch im RE2-Modus die **RE1.5-Clipnummern**. In der RE2-Bank
+liegen dort die Animationen, in denen Leon sich noch **stehend** wehrt. Gemessen
+an der Kopfhoehe: vorher stehend, jetzt am Boden. Nebenbei war der
+Todeszeitpunkt falsch und haette bei den laengeren RE2-Animationen nach einem
+Drittel zugeschlagen.
+
+Testsuite 194 Pruefungen.
+
+⚠️ Geraeusche und Bild sind hier weiterhin nicht pruefbar.
+
+---
+
 # RE1.5 Port — v0.3.5 (Early Preview)
 
 ## Neu: Gliedmassen-Abschuss und RE2-Schadenswerte auch im RE1.5-Modus
