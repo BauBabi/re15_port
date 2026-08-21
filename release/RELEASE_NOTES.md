@@ -1,3 +1,109 @@
+# RE1.5 Port — v0.3.9 (Early Preview)
+
+## Auf die Kiste klettern (Aussenbereich)
+
+Gemeldet: „Man kann noch nicht auf die Kiste draufklettern, was normalerweise
+geht." Stimmt — und der Grund, warum es sich im Original so selbstverstaendlich
+anfuehlt, steckt in der Reihenfolge: Die Aktionstaste probiert **zuerst das
+Klettern und erst danach die Tuer**, und zwar in allen vier Bewegungszustaenden
+identisch. Der Port hatte diesen ersten Schritt gar nicht.
+
+Das Original schaut dafuer 800 Einheiten voraus, rastet den Kurs auf die vier
+Himmelsrichtungen und prueft getrennt, ob es dort **hoch** oder **runter** geht.
+Beides ist jetzt da: Aufstieg wie Abstieg.
+
+Gemessen: Leon steigt exakt im 30. Bild der Animation um 1.800 Einheiten nach
+oben und 1.148 nach vorn und landet auf dem Kistendeckel. Der Abstieg fuehrt in
+drei von vier Richtungen bewusst ins Leere — die eigene Kiste blockiert — und
+funktioniert genau dort, wo im Original auch.
+
+Wichtig war die Gegenprobe: Vor einer Tuer faellt die Kletterpruefung in allen
+vier Richtungen sauber durch, die Tuer geht also weiterhin auf.
+
+## Der tote Zombie blutet jetzt langsam aus (RE2-Modus)
+
+Gemeldet: „der am Boden getoetete Zombie laeuft sofort aus, nicht langsam wie
+normal. Ausserdem gibt es keine finale Todesanimation."
+
+Beides hatte **dieselbe Ursache**: Die Leiche ist im Original eine Maschine mit
+**zwoelf Zustaenden** — der Port fuhr genau einen davon, die Initialisierung, und
+hielt danach an. Die uebrigen elf waren als reine Darstellung abgetan. Sie sind
+es nicht: In ihnen stecken das Wachsen der Blutlache, das Nachzucken und die
+Ruhephase.
+
+Die Lache war sofort voll, weil der Port ihren Fortschritt aus einem Zaehler las,
+den eine Zombie-Leiche im RE2-Modus nie beschreibt — der stand dauerhaft auf
+null, was die Formel als „fertig gewachsen" liest. Im Original waechst sie ueber
+120 Bilder.
+
+Die fehlende Todesanimation ist die Kehrseite: Der zentrale Animationsschritt
+laesst Leichen bewusst aus, weil die Leichen-Maschine ihre Animation **selbst**
+weitertreibt. Da der Port die Maschine nicht fuhr, hing der Zombie fuer immer im
+ersten Bild seiner Endpose.
+
+Gemessen ueber 64 Durchlaeufe: vorher in **allen** die Lache sofort voll und in
+keinem einzigen wachsend, der Zombie ueber 900 Bilder regungslos. Jetzt waechst
+sie in allen Laeufen und der Zombie durchlaeuft sieben Phasen statt zwei.
+
+## Der Hund toetet wieder (RE2-Modus)
+
+Der Hund kam nie zum toedlichen Griff. Grund: Der Port mass den Abstand zum
+**Rumpf** des Hundes, das Original misst zum **Kiefer** — und der liegt gut
+tausend Einheiten weiter vorn.
+
+Verschaerft wurde es dadurch, dass der Zubeiss-Radius **schrumpft**, sobald der
+Spieler unter 21 Lebenspunkte faellt. Genau ab da war ein Treffer mit der
+Rumpf-Distanz praktisch unerreichbar: Die Lebenspunkte froren bei 20 ein, der
+Kampf stand still. Vorher vier Bisse und dauerhaft 20 Leben — jetzt sechs Bisse
+bis in den Tod, mit Griff und Fressen.
+
+Dass der Hund abbricht, wenn Leon **abgewandt** steht, ist dagegen korrekt: Das
+Original unterdrueckt den Griff dann bewusst und laesst ihn am Boden zubeissen.
+Toedlich ist das trotzdem.
+
+## Die Sterbeanimation friert nicht mehr ein (RE2-Modus)
+
+Gemeldet: „die Sterbeanimation ist nicht vollstaendig, friert ein vor dem
+kompletten Tod."
+
+Der RE2-Animationsmotor kennt kein „auf dem letzten Bild stehenbleiben" — er
+springt ans Ende zurueck auf Bild 0 und meldet das nur nach oben. Ob die
+Animation aufhoert, entscheidet die aufrufende Stelle, und beim Sterben
+ignorieren mehrere diese Meldung bewusst, weil dort ein **Zeitgeber** das Ende
+bestimmt. Der Port hatte statt dessen „halte das letzte Bild" eingebaut.
+
+Gemessen: In 14 von 64 Durchlaeufen stand der Zombie bis zu 22 Bilder lang
+bewegungslos aufrecht. Jetzt in keinem einzigen.
+
+## Kein Aufspringen mehr nach dem Generator-Raetsel
+
+Gemeldet: „der Zombie steht direkt neben Leon abrupt quasi ohne Animation direkt
+vom Liegen zu stehen."
+
+Der Zustand, den der Port als Aufsteh-Animation gefuehrt hat, ist keine: Es ist
+der **Taumel-Zustand**, und die drei Animationen, die er waehlen kann, beginnen
+alle **im Stehen**. Der Zombie wurde also nicht hochgestellt — er begann einfach
+stehend. Die echte Aufsteh-Kette haengt woanders.
+
+Gemessen: Vorher sprang die Brust in **einem einzigen Bild** um bis zu 1.854
+Einheiten nach oben, in 128 von 128 Faellen. Jetzt liegt der groesste Sprung bei
+394, und das Aufstehen dauert konstant 30 Bilder.
+
+## Leon schaut in der Cutscene wieder zum Transporter
+
+Gemeldet: „In der Cutscene laeuft Leon vor und dreht sich nach rechts um. Im
+Original schaut er nach links zum Transporter."
+
+Der **Weg** war korrekt — es ging nur um die Blickrichtung. Das Original kennt
+fuer Skript-Bewegungen **Rueckwaerts-Modi**: Der Weg zum Ziel bleibt derselbe,
+die Blickrichtung ist exakt gegenlaeufig. Der Port kannte nur vorwaerts und liess
+Leon immer in die Laufrichtung schauen — 180 Grad daneben.
+
+Gegenprobe: Das Raum-Objekt, auf das er schauen soll, liegt genau in der neuen
+Blickrichtung; die alte zeigte davon weg.
+
+---
+
 # RE1.5 Port — v0.3.8 (Early Preview)
 
 ## Transparenz: endlich die Regel statt einer Liste
