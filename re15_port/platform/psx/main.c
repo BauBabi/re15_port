@@ -431,13 +431,15 @@ int main(int argc, const char **argv)
          * player stays at their world position when the cut changes —
          * Door AOTs that need to teleport do it themselves in their
          * dispatcher (re15_aot_scan case RE15_AOT_TYPE_DOOR). */
+        /* SELBSTHEILENDER KAMERA-APPLY — dieselbe gemeinsame Engine-Regel wie auf dem PC
+         * (re15_cam_present_tick, room_common.c; byte-true FUN_8002137c @0x800214f4-0x80021514
+         * + FUN_80021bbc @0x80021bf4/fc). Ersetzt das frueher hier stehende EINMAL-Flag. */
         int target_cut = cam_active_cut;
-        if (g_scd.cam_change_pending) {
+        if (re15_cam_present_tick()) {
             target_cut = (int)g_scd.cam_id;
             if (target_cut >= active_cut_count) {
                 target_cut = active_cut_count - 1;
             }
-            g_scd.cam_change_pending = 0;
         }
         if (target_cut != cam_active_cut) {
             cam_active_cut = target_cut;

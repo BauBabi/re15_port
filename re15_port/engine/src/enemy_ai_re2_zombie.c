@@ -5144,6 +5144,96 @@ int re15_re2z_death_cell(unsigned row, unsigned col)
     return (int)re2z_death_tbl[row][col];
 }
 
+/* ============================================================================================
+ * DIE POSE-BANK DES RE2-ZOMBIES — die VOLLSTAENDIGE Karte (selbst disassembliert 2026-08-21)
+ * --------------------------------------------------------------------------------------------
+ * ⛔ NUTZER-REPORT (3. Anlauf, nach v0.3.7): "Die Zombies fallen teilweise IMMER NOCH komisch
+ * hin, wenn sie einmal mit Waffe getroffen werden, oder haben manchmal eine kurze Hinfall-
+ * Animation, stehen dann aber sofort wieder."
+ *
+ * GEMESSEN (probe_re2z_fallstand, 128 Seeds x 4 Schuss-Fahrplaene, ROOM1140, echter game_step,
+ * GELADENE RE2-Bank EM010; Pose ueber DIESELBE Bankwahl wie der Renderer). EIN Pistolenschuss,
+ * Seed 19, Brustknochen 8 relativ zum Aktor-Boden:
+ *   f59  st=2 s1=3 s2=2 clip=2 af=15/60 ACT   b8dy=-2660   <- Reaktion laeuft
+ *   f68  st=2 s1=3 s2=2 clip=2 af=24/60 ACT   b8dy=-1882   <- Brust sinkt
+ *   f70  st=2 s1=3 s2=3 clip=2 af=26/60 ACT   b8dy=-1521   <- fast am Boden
+ *   f71  st=1 s1=2 s2=0 clip=2 af=27/54 LOCO  b8dy=-2728   <- STEHT WIEDER, in EINEM Frame
+ * Der Zombie faellt also gar nicht — der Port spielt DENSELBEN Clip-Index aus der FALSCHEN BANK.
+ * Clip 2 ist in der LOCO-Bank (Paar 1) der 54-Frame-GANG und in der Aktions-Bank (Paar 2) der
+ * 60-Frame-STURZ (re2z_param_clips[1] = 0x02). Sobald die Reaktion endet und der Zombie wieder
+ * in Zustand 1 geht, kippt die Bank zurueck und die Pose SCHNAPPT hoch.
+ *
+ * ---- WIE DAS ORIGINAL DIE BANK WAEHLT (kein per-Frame-Regelwerk, sondern ein Aufruf-Argument) --
+ * Der Advance FUN_8002959C(a0=entity, a1=EMR, a2=EDD, a3=blend) loest den Frame-Eintrag auf und
+ * LEGT IHN IN DIE ENTITY, dann posiert er das Skelett aus GENAU DIESEM EMR:
+ *   800295a8: lbu  v0,332(a0)      ; +0x14C = Clip-Byte
+ *   800295b4: addu a2,a1,v0<<2     ; a1 = der uebergebene EDD  -> Clip-Record
+ *   800295d0: lbu  v0,333(a0)      ; +0x14D = Frame-Byte
+ *   800295f4: addu a2,v1,v0<<2     ; -> FRAME-EINTRAG
+ *   800295f8: sw   a2,376(a0)      ; **entity+0x178 = der posierte Frame-Eintrag**
+ *   800295fc: jal  0x80029614      ; posiert mit a0 = der uebergebene EMR
+ * Die Bank ist damit exakt das (EMR,EDD)-Paar der jeweiligen Aufrufstelle. Der Wurzel-Dispatcher
+ * reicht PAAR 2 durch (`lw a1,0x180` @0x801004C8 / @0x80100548 = +0x180/+0x184 = Port-Aktionsbank);
+ * einzelne Handler laden PAAR 1 EXPLIZIT (`lw a1,264` = +0x108 / `lw a2,380` = +0x17C = Port-
+ * Loco-Bank). Eigener Scan ueber ALLE `jal 0x8002959c` in EMOVL10_S0.BIN — die Paar-1-Stellen:
+ *   EXEC[0] STAND  P2/P3 @0x80101610      (P0/P1 @0x801014A0 fahren Paar 2)
+ *   EXEC[1] WALK         @0x80101CD0
+ *   EXEC[2] BUMP         @0x801023F0
+ *   EXEC[10]             @0x80104240      (im Port inert)
+ *   hit_MAIN 0x80105438  P1 @0x80105790, P2 @0x801058C0     <<< DIE LUECKE
+ *   hit_SLIDE 0x8010703C @0x801071E4 / @0x8010729C / @0x80107364
+ *   death_MAGNUM P4      @0x801095D0
+ *   death_RIP    P6      @0x80109288
+ *   Zustand-8-Wurzel 0x80109CFC @0x80109E30
+ * ALLE uebrigen 40 Advance-Stellen nehmen das Dispatcher-Paar (Paar 2). Gegenprobe ueber den
+ * Wurzelbewegungs-Zwilling FUN_80015E7C: dieselbe Aufteilung, hit_MAIN laedt Paar 1 auch dort
+ * (@0x80105580-84 P0, @0x80105754-58 P1, @0x801058A4-A8 P2).
+ *
+ * DIESE FUNKTION IST DIE KARTE. Sie ist die byte-belegte Erweiterung der Port-Regel
+ * re15_actor_uses_loco_bank() (enemy_ai_common.c), die heute nur WALK/BUMP kennt.
+ * ========================================================================================== */
+int re15_re2z_poses_loco_bank(const re15_actor_t *a)
+{
+    if (!a) return 0;
+    if (!re15_re2z_owns_type(a->type)) return 0;
+    /* KRIECHER: eigene Decide-/Exec-Tabellen @0x8010C90C/@0x8010C918, deren Handler durchweg
+     * das Dispatcher-Paar fahren (crawl_HURT-Advance @0x80107A38 = REG). Nie Paar 1. */
+    if (a->re2z_f10e & 1u) return 0;
+
+    switch (a->state) {
+    case 1:
+        switch (a->sub_state_1) {
+        case 0:  return (a->sub_state_2 >= 2) ? 1 : 0;   /* STAND: P0/P1 @0x801014A0 = Paar 2,
+                                                          * P2 @0x801015A4 faellt in P3 @0x801015DC
+                                                          * mit dem Paar-1-Advance @0x80101610 */
+        case 1:  return 1;                               /* WALK  @0x80101CD0 */
+        case 2:  return 1;                               /* BUMP  @0x801023F0 */
+        default: return 0;
+        }
+    case 2: {
+        /* Welcher Reaktions-Handler laeuft? Exakt die Kaskade der HURT-Wurzel (re2z_hurt):
+         * der Liege-Zweig `+0x21A & 2` (@0x80105168) verlaesst Zustand 2 im selben Tick, und
+         * hit_MAIN gibt bei `+0x222 == 1` sofort an hit_STAGGER ab (@0x80105458-70) — und der
+         * fahrt das Dispatcher-Paar (Advance @0x80105F3C = REG). */
+        if (a->re2z_flags21a & 2u) return 0;
+        {   unsigned row = a->sub_state_1, col = a->re2z_hits1d2;
+            uint8_t h = (row < 19u && col < 9u) ? re2z_hit_tbl[row][col] : (uint8_t)RE2ZH_NULL;
+            if (h == RE2ZH_MAIN && a->re2z_flag222 != 1u) return 1;   /* @0x80105790/@0x801058C0 */
+            if (h == RE2ZH_703C) return 1;                            /* @0x801071E4/9C/@0x80107364 */
+        }
+        return 0;
+    }
+    case 3: {
+        unsigned row = a->sub_state_1, col = a->re2z_hits1d2;
+        uint8_t h = (row < 19u && col < 9u) ? re2z_death_tbl[row][col] : (uint8_t)RE2ZD_NULL;
+        if (h == RE2ZD_92C4 && a->sub_state_2 == 4u) return 1;   /* MAGNUM P4 @0x801095D0 */
+        if (h == RE2ZD_8BEC && a->sub_state_2 == 6u) return 1;   /* RIP    P6 @0x80109288 */
+        return 0;
+    }
+    default: return 0;
+    }
+}
+
 /* ---- FUN_80108A14 — der Zweig `+0x10E & 1` (der wiederbelebte Kriecher stirbt ein ZWEITES Mal).
  * Drei Phasen ueber +0x6 (`lbu v1,6(s0)` @0x80108A40, `beq v1,1 -> 0x80108BA4` @0x80108A48,
  * `slti v0,v1,2` @0x80108A50, `beq v1,zero -> 0x80108A80` @0x80108A5C, `beq v1,2 -> 0x80108BCC`

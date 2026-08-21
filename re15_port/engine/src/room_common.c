@@ -28,6 +28,42 @@
 #include "re15_fade.h"        /* re15_fade_config/kick/done — die Transitions-Blende */
 
 /*=========================================================================
+ * SELBSTHEILENDER KAMERA-APPLY — byte-true FUN_8002137c @0x800214dc-0x80021514
+ * (Vergleich + Dirty) und FUN_80021bbc @0x80021be0-0x80021bfc (Apply-Kopf).
+ * Die vollstaendige Adress-/Schreiberliste steht am Prototyp in re15_scd.h.
+ *
+ * Das Original bewertet in JEDEM Bild neu, ob der ANGEZEIGTE Cut (work_vars[0x0A],
+ * DAT_800b0fe4) noch dem ANGEFORDERTEN (DAT_800afbb5) entspricht, und setzt das
+ * Dirty-Flag DAT_800b5457 so lange jedes Bild neu, bis der Apply nachgezogen hat.
+ * Genau daran haengt der Kamerawechsel beim Durchlaufen eines Raums: der
+ * RVD-Zonen-Scan FUN_80014230 schreibt ueber FUN_800142f4 @0x80014300 NUR
+ * DAT_800afbb5 und bewaffnet NICHTS. Ohne diesen Vergleich gibt es keinen
+ * Zonen-Kamerawechsel.
+ *=======================================================================*/
+int re15_cam_present_tick(void)
+{
+    /* @0x800214f8 `lh v1,DAT_800b0fe4` / @0x80021500 `lbu v0,DAT_800afbb5` /
+     * @0x80021508 `beq v1,v0,LAB_80021518` / @0x80021514 `sb 1,DAT_800b5457`.
+     * (Das Gate @0x800214e8 `andi DAT_800aca3c,0x80` hat im Port kein Gegenstueck —
+     * Bit 0x80 der Flag-Bank 1 wird von keinem Port-Subsystem gesetzt; sobald es das
+     * tut, gehoert es hier davor.) */
+    if ((int)g_scd.work_vars[0x0A] != (int)g_scd.cam_id)
+        g_scd.cam_change_pending = 1;
+
+    /* @0x80021538 `beq v0,zero,LAB_80021568` — nicht dirty, kein Apply. */
+    if (!g_scd.cam_change_pending)
+        return 0;
+
+    /* Apply-Kopf FUN_80021bbc: @0x80021bf4 `sh v0,DAT_800b0fe8` (work_vars[0x0C] =
+     * alter angezeigter Cut) und @0x80021bfc `sh v1,DAT_800b0fe4` (work_vars[0x0A] =
+     * jetzt angezeigter = angeforderter Cut). Danach @0x80021618 `sb zero,DAT_800b5457`. */
+    g_scd.work_vars[0x0C] = g_scd.work_vars[0x0A];
+    g_scd.work_vars[0x0A] = (int16_t)g_scd.cam_id;
+    g_scd.cam_change_pending = 0;
+    return 1;
+}
+
+/*=========================================================================
  * RAUM-TRANSITIONS-PRAESENTATION — byte-true Auszug der Transitions-FSM
  * FUN_8001c958 (Zustands-Byte DAT_800b5359, Sprungtabelle @0x8001069c;
  * selbst nachdisassembliert 2026-08-17):

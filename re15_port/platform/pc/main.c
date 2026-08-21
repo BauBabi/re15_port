@@ -3903,15 +3903,46 @@ re_title:;
             int active_cut_idx = (s_last_cut_idx < 0) ? 0 : s_last_cut_idx;
             { const char *fc = getenv("RE15_FORCE_CUT");   /* TEMP: pin the camera to a cut to see the kneel on-camera */
               if (fc && *fc) { g_scd.cam_id = (uint8_t)atoi(fc); g_scd.cam_change_pending = 1; } }
-            if (g_scd.cam_change_pending) {
-                /* Apply the cut INSTANTLY. The PSX holds the old cut ~6 frames while it
-                 * CD-seeks+reads the new camera-angle BG (FUN_80013c50) — but that is
-                 * pure HARDWARE LOAD TIME, not game logic, so the PC legitimately
-                 * switches faster (no per-cut load delay). */
+            /* MESS-SONDE (env-gegatet, im Normalpfad stumm): pro Bild den Kamera-Zustand.
+             * Zeigt, ob der ANGEZEIGTE Cut (s_last_cut_idx) dem ANGEFORDERTEN (g_scd.cam_id,
+             * == DAT_800afbb5) folgt. Bleiben die beiden auseinander, ist der Apply-Pfad
+             * defekt — genau der Nutzer-Befund "das Bild wechselt nicht". */
+            static int s_cam_trace = -1;
+            if (s_cam_trace < 0) s_cam_trace = getenv("RE15_CAM_TRACE") ? 1 : 0;
+            if (s_cam_trace) {
+                static int s_ct_last = -12345;
+                int ct_now = ((int)g_scd.cam_id << 20) | ((s_last_cut_idx & 0xFF) << 12)
+                           | ((g_scd.work_vars[0x0A] & 0xFF) << 4)
+                           | (g_scd.cam_change_pending ? 2 : 0) | (g_scd.cut_auto_enabled ? 1 : 0);
+                if (ct_now != s_ct_last || (g_engine.frame_count % 60) == 0) {
+                    s_ct_last = ct_now;
+                    fprintf(stderr, "[cam-trace] F%u room=%04x req(cam_id)=%u shown(s_last)=%d "
+                            "wv0A=%d pending=%u auto=%u pl=(%ld,%ld) rot=%d\n",
+                            g_engine.frame_count, g_current_room_id, (unsigned)g_scd.cam_id,
+                            s_last_cut_idx, (int)g_scd.work_vars[0x0A],
+                            (unsigned)g_scd.cam_change_pending,
+                            (unsigned)g_scd.cut_auto_enabled,
+                            (long)g_actors[RE15_ACTOR_SLOT_PLAYER].x,
+                            (long)g_actors[RE15_ACTOR_SLOT_PLAYER].z,
+                            (int)g_actors[RE15_ACTOR_SLOT_PLAYER].rot_y);
+                }
+            }
+            /* SELBSTHEILENDER KAMERA-APPLY (byte-true FUN_8002137c @0x800214f4-0x80021514 +
+             * FUN_80021bbc @0x80021bf4/fc) — die gemeinsame Engine-Fassung, damit PC, PSX und
+             * die Mess-Sonden EINE Regel teilen. Sie bewertet in JEDEM Bild neu, ob der
+             * angezeigte Cut (work_vars[0x0A]) noch dem angeforderten (g_scd.cam_id ==
+             * DAT_800afbb5) entspricht, und bewaffnet das Dirty-Flag sonst neu. Hier stand
+             * bis 2026-08-21 nur `if (g_scd.cam_change_pending)`: ein EINMAL-Flag. Ging es
+             * verloren, blieb das Bild DAUERHAFT stehen (Nutzer-Befund "nach dem
+             * Generator-Raetsel wechselt die Kamera nicht mehr").
+             *
+             * Apply INSTANTLY: die PSX haelt den alten Cut ~6 Bilder, waehrend sie den BG der
+             * neuen Kamera von CD liest (FUN_80013c50) — reine HARDWARE-LADEZEIT, keine
+             * Spiellogik, deshalb darf der PC sofort schalten. */
+            if (re15_cam_present_tick()) {
                 active_cut_idx = (int)g_scd.cam_id;
                 if (active_cut_idx >= active_cut_count)
                     active_cut_idx = active_cut_count - 1;
-                g_scd.cam_change_pending = 0;
             }
             if (active_cut_idx != s_last_cut_idx) {
                 { extern int re15_fade_log_on(void);

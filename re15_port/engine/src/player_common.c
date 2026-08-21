@@ -363,6 +363,15 @@ void re15_player_set_pl00_banks(const re15_emd_skeleton_t *sk, const re15_emd_an
 {
     s_pl00_skel = sk; s_pl00_anim = an;
 }
+/* NUR-LESE-Zugriff auf Leons EIGENE Knochen-Hierarchie/Bind-Pose. Gebraucht von den
+ * Opfer-Bone-Abfragen in enemy_ai_common.c: das Original ankert die Grab-/Fress-Effekte am
+ * SPIELER-Part-Pool `*(Spieler+0x188) + 0x5A0` (= Part 8, 172*8+0x40) — z.B.
+ *   80111dd4: lw a2,-13348(a2)   ; a2 = *(0x800ACBDC) = *(Spieler+0x188)
+ *   80111de0: addiu a2,a2,1440   ; + 0x5A0 = Part 8
+ * Dieser Pool wird aus LEONS Skelett gestellt (die Opfer-Bank liefert nur Clips+Keyframes) —
+ * genau die Komposition, die auch der Renderer fuer den Grab-Override baut. NULL, solange
+ * die Plattform die Bank noch nicht gespiegelt hat (dann greift der Rueckfall). */
+const re15_emd_skeleton_t *re15_player_pl00_skel(void) { return s_pl00_skel; }
 static int push_clip_fc(int clip)
 {
     if (s_pl00_anim && clip >= 0 && clip < s_pl00_anim->clip_count &&

@@ -77,6 +77,11 @@ static uint8_t *read_file(const char *path, size_t *out_size)
     return buf;
 }
 
+/* Der ANGEZEIGTE Cut — im Spiel `active_cut_idx`/`s_last_cut_idx` (platform/pc/main.c) bzw.
+ * `cam_active_cut` (platform/psx/main.c). Die Sonde fuehrt ihn genauso mit, damit ihr Bild-
+ * Modell vollstaendig ist: Scan + Present, nicht nur Scan. */
+static int s_shown_cut = 0;
+
 static void enter(re15_rdt_t *rdt, uint8_t entry_cut, int32_t px, int32_t pz)
 {
     re15_actor_init();
@@ -87,20 +92,28 @@ static void enter(re15_rdt_t *rdt, uint8_t entry_cut, int32_t px, int32_t pz)
     pl->active = 1; pl->type = 0; pl->hp = 100;
     pl->x = px; pl->y = -1800; pl->z = pz; pl->rot_y = 3072;
     scd_room_reenter(rdt, px, pz, entry_cut);
+    s_shown_cut = (int)entry_cut;      /* room_common.c Schritt 5: *cam_active_cut = Eintritts-Cut */
     /* Tuer-Eintritt = Gameplay -> RVD/CAM_SWITCH-Auto-Kamera an (room_common.c Schritt 12,
      * byte-true Cut_auto/DAT_800aca3c Bit 0x100). */
     g_scd.cut_auto_enabled = 1;
+    if (re15_cam_present_tick()) s_shown_cut = (int)g_scd.cam_id;
 }
 
-/* Ein Gameplay-Bild: Spieler an (x,z) stellen, dann den AOT/RVD-Scan mit dem aktuell
- * aktiven Cut fahren (wie re15_game_step: re15_aot_scan(pl->x, pl->z, active_cut)). */
+/* Ein GANZES Gameplay-Bild, so wie die beiden Hauptschleifen es fahren:
+ *   scd_vm_tick -> re15_aot_scan(Spielerposition, ANGEZEIGTER Cut) -> re15_cam_present_tick.
+ * Der Scan bekommt den ANGEZEIGTEN Cut (game_step_common.c: `c->active_cut`, gefuellt aus
+ * platform/pc/main.c:4348 `gctx.active_cut = active_cut_idx`) — byte-true der cam_from-Filter
+ * des Originals, FUN_80014230 @0x8001423c `lbu v0,DAT_800afbb5`.
+ * Der Present-Schritt ist der selbstheilende Apply (@0x800214f4/@0x80021bfc) und der EINZIGE
+ * Ort, an dem work_vars[0x0A] dem RVD-Zonen-Wechsel nachzieht. */
 static void step_at(int32_t x, int32_t z)
 {
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->x = x; pl->z = z;
     scd_vm_tick();
-    re15_aot_scan(pl->x, pl->z, (uint8_t)g_scd.cam_id);
+    re15_aot_scan(pl->x, pl->z, (uint8_t)s_shown_cut);
     if (g_aot.fired_event_id_this_frame) scd_event_fire(g_aot.fired_event_id_this_frame);
+    if (re15_cam_present_tick()) s_shown_cut = (int)g_scd.cam_id;
 }
 
 int main(void)

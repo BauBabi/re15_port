@@ -824,12 +824,43 @@ static void re15_player_victim_bone_pos(int bone, int32_t out[3])
     re15_actor_t *player = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     out[0] = player->x; out[1] = player->y; out[2] = player->z;
     re15_enemy_bank_t *vb = re15_enemy_find(g_player_victim_type);
-    if (!vb || !vb->victim_ok || bone < 0 || bone >= vb->skel_victim.bone_count) return;
-    int kf = re15_compute_actor_kf(&vb->anim_victim, &vb->skel_victim, player, -1,
+    if (!vb || !vb->victim_ok || bone < 0) return;
+    /* ⛔ HIERARCHIE = LEONS EIGENE (PL00), NICHT die des Greifers.
+     * Das Original ankert JEDEN Grab-/Fress-Effekt am SPIELER-Part-Pool:
+     *   80111dd4: lw    a2,-13348(a2)   ; a2 = *(0x800ACBDC) = *(Spieler+0x188)
+     *   80111de0: addiu a2,a2,1440      ; + 0x5A0 = 172*8 + 0x40 = Part 8 (Matrix)
+     * (identisch @0x80111e28/@0x80111e34 Frame 0x29, @0x80111b38/@0x80111b5c Release-Blut,
+     *  @0x8010a844/@0x8010a850 Zombie-Devour). Dieser Part-Pool wird aus LEONS Skelett
+     * gestellt — die Opfer-Bank liefert nur Clip-Tabelle + Keyframes (@0x8010a28c/@0x8010a6f8
+     * animieren den SPIELER aus DAT_800acbcc/acbd0 = Greifer-Bank 2). Der Renderer baut genau
+     * diese Komposition (platform/pc/main.c: s_victim_skel = pl00_skel, nur keyframe_* aus
+     * skel_victim).
+     * VORHER posierte diese Abfrage mit vb->skel_victim = der dir[2]-EMR des GREIFERS
+     * (Hunde-Rig!). GEMESSEN (probe_dog_victim_pose, Kollaps-Clip Frame 0x29, Bone 8):
+     *   RE1.5 EM020   Renderer-Rig (545,-702,-3)   vs Greifer-Rig (-677,-692,-228)  -> 1457 ab
+     *   RE2 EM_TYPE20 Renderer-Rig (-684,-383,98)  vs Greifer-Rig (213,-1015,112)   -> 1543 ab
+     * Das Fress-/Release-Blut spawnte also rund 1,5 m neben Leon statt an ihm. */
+    extern const re15_emd_skeleton_t *re15_player_pl00_skel(void);   /* player_common.c */
+    const re15_emd_skeleton_t *pl00 = re15_player_pl00_skel();
+    re15_emd_skeleton_t vs;
+    if (pl00 && pl00->bone_count > 0) {
+        vs = *pl00;                                          /* Leons Knochen + Bind-Pose */
+        vs.keyframe_data       = vb->skel_victim.keyframe_data;      /* Posen der Greifer-Bank */
+        vs.keyframe_data_size  = vb->skel_victim.keyframe_data_size;
+        vs.keyframe_count      = vb->skel_victim.keyframe_count;
+        vs.keyframe_size_bytes = vb->skel_victim.keyframe_size_bytes;
+    } else {
+        vs = vb->skel_victim;                                /* Bank (noch) nicht gespiegelt */
+    }
+    if (bone >= vs.bone_count) return;
+    int kf = re15_compute_actor_kf(&vb->anim_victim, &vs, player, -1,
                                    (uint32_t)player->anim_frame);
     re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+    void *save = g_anim_pose_actor;
     g_anim_pose_actor = NULL;                     /* Pose-QUERY, kein Render (kein Crossfade) */
-    if (re15_skel_compute_pose(&vb->skel_victim, kf, poses) != 0) return;
+    int rv = re15_skel_compute_pose(&vs, kf, poses);
+    g_anim_pose_actor = save;
+    if (rv != 0) return;
     re15_skel_bone_to_world(poses[bone].trans, player->rot_y,
                             player->x, player->y, player->z, out);
 }
@@ -1718,8 +1749,10 @@ void re15_re2z_move_root(re15_actor_t *e)
      * ist — der reicht e7c die vom Dispatcher gelieferte Pair-2-Bank. Ohne dieses Gate wuerde
      * der kriechende Zombie im Griff die Gang-Bank fahren. Kriecher-Selektor = +0x10E Bit 0
      * (`andi 0x3f` @0x8010115C, Tabelle @0x8010C854 alterniert auf Bit 0). */
-    if (e->state == 1 && e->sub_state_1 == 1 && b->loco_ok
-        && !(e->re2z_f10e & 1u)) {                              /* WALK -> Pair 1 @0x80101CB0-BC */
+    /* ⛔ ERWEITERT 2026-08-21, gleicher Beleg wie in re15_actor_uses_loco_bank: die Bank haengt
+     * an der Advance-AUFRUFSTELLE, nicht an einer Zustandsregel. Beide Stellen muessen dieselbe
+     * Karte fahren, sonst posiert der Renderer aus Pair 1 und die Wurzelbewegung aus Pair 2. */
+    if (b->loco_ok && re15_re2z_poses_loco_bank(e)) {
         s = &b->skel_loco; a = &b->anim_loco;
     }
     int fr = (int)e->anim_frame;
@@ -4052,8 +4085,24 @@ int re15_actor_uses_loco_bank(const re15_actor_t *a)
          * ⛔ NUR AUFRECHT: die Substates 1/2 heissen im KRIECHER (+0x10E Bit 0, Tabelle
          * @0x8010C918) GRIFF (0x801025EC) und WARTEN (0x80103B48) — beide haengen an der
          * Kriecher-Tabelle, nicht an 0x80101A40/0x80102260, und laden nie Pair 1. */
-        if (a->state == 1 && (a->sub_state_1 == 1 || a->sub_state_1 == 2)
-            && !(a->re2z_f10e & 1u)) {
+        /* ⛔ ERWEITERT 2026-08-21 (Nutzer: "fallen teilweise immer noch komisch hin, oder haben
+         * manchmal eine kurze Hinfall-Animation, stehen dann aber sofort wieder"): WALK und BUMP
+         * sind NICHT die einzigen Pair-1-Stellen. Das Original hat gar keine Per-Frame-Bankregel
+         * — die Bank ist das (EMR,EDD)-Argumentpaar DER AUFRUFSTELLE (`sw a2,376(a0)` = +0x178
+         * @0x800295F8, dann `jal 0x80029614` @0x800295FC). Eigener Scan ALLER 54
+         * `jal 0x8002959c`: Pair 1 laden EXEC[0] P2/P3 @0x80101610, EXEC[1] @0x80101CD0,
+         * EXEC[2] @0x801023F0, EXEC[10] @0x80104240, hit_MAIN P1 @0x80105790 / P2 @0x801058C0,
+         * hit_SLIDE @0x801071E4/@0x8010729C/@0x80107364, death_MAGNUM P4 @0x801095D0,
+         * death_RIP P6 @0x80109288, Zustand-8 @0x80109E30 (Gegenprobe ueber den
+         * Wurzelbewegungs-Zwilling FUN_80015E7C: identische Aufteilung).
+         * DER FEHLER, den das behebt: Clip 2 ist in Pair 1 der 54-Frame-GANG, in Pair 2 der
+         * 60-Frame-STURZ (`re2z_param_clips[1]=0x02` @0x80100044); `hit_main` P0 behaelt den
+         * Clip-Index (@0x801054BC-D4). Mit nur WALK/BUMP posierte der getroffene Zombie also den
+         * GANG statt zu fallen — gemessen ueber 128 Seeds x 4 Schuss-Fahrplaene: 136 Fall->Stand
+         * in 88/512 Laeufen, kuerzestes DOWN-Fenster 1 Frame; mit der vollen Karte 8 in 8/512
+         * und DOWN-min 101 Frames. Karte + Pins: re15_re2z_poses_loco_bank(),
+         * enemy_ai_re2_zombie.c / test_re2_zombie_pose_bank. */
+        if (re15_re2z_poses_loco_bank(a)) {
             re15_enemy_bank_t *b = re15_enemy_find(a->type);
             return (b && b->loco_ok && (int)a->motion < b->anim_loco.clip_count) ? 1 : 0;
         }
@@ -5911,7 +5960,34 @@ static void re15_dog_grabhold(re15_actor_t *e, re15_actor_t *pl)
         re15_audio_room_se(3);                          /* Se(3) latch/roar @0x8010f84c */
         e->sub_state_2 = 1;
         e->motion = latch_clip; e->anim_frame = 0; e->anim_frac = 7;   /* clip,+0x95=0,+0x8f=7 */
-        e->anchor_x = pl->x; e->anchor_z = pl->z;       /* +0xa0/+0xa2 = player pos @0x8010f8b8 */
+        e->anchor_x = pl->x; e->anchor_z = pl->z;       /* HUND +0xa0/+0xa2 = Spielerposition
+                                                         * (@0x8010f8b8 / @0x8010f8d0; Zwilling
+                                                         *  sub 10 @0x8010fd0c / @0x8010fd24) */
+        /* ⛔ NUTZER-REPORT 2026-08-21 ("Wenn Leon von den Hunden angegriffen wird, verschwindet er
+         * teilweise"): der Original-Grab schreibt BEIDE Anker — den des Hunds UND den des SPIELERS.
+         * Der Port setzte nur den des Hunds; der Spieler-Anker blieb stehen (frischer Raum: 0/0).
+         *   8010f8d4: lhu v0,-372(a0)     ; v0 = playerX  (0x800ACA88 = Spieler+0x34, a0=0x800acbfc)
+         *   8010f8dc: lhu v1,-13680(v1)   ; v1 = playerZ  (0x800ACA90 = Spieler+0x3C)
+         *   8010f8ec: sh  v0,-13580(at)   ; 0x800ACAF4 = **Spieler+0xA0** := playerX
+         *   8010f8f4: sh  v1,-13578(at)   ; 0x800ACAF6 = **Spieler+0xA2** := playerZ
+         * Zwilling sub 10 (FUN_8010fc60): @0x8010fd28/@0x8010fd40 (X) und @0x8010fd30/@0x8010fd48 (Z)
+         * — Bytes identisch (0xA422CAF4 / 0xA423CAF6). Spielerblock-Basis 0x800ACA54 (belegt durch
+         * `addiu a0,a0,-13740` @0x80111a84 unmittelbar vor dem ad68-Aufruf auf den Spieler).
+         * WER LIEST ES: FUN_8001ad68 (= re15_clip_root_motion_abs), das die Opfer-FSM in JEDEM
+         * Grab-/Fress-Frame auf den Spieler anwendet (`jal 0x8001ad68` @0x80111a88):
+         *   8001adf4: lh v0,160(s1)   ; ANKER-X (+0xA0)
+         *   8001ae00: addu v0,v0,v1   ; + rotierter Keyframe-Offset
+         *   8001ae04: sw v0,52(s1)    ; -> Spieler+0x34 = X
+         * GEMESSEN ohne diese Zeile (probe_dog_attack_live, ROOM1190, echter game_step):
+         *   f675 Grab-Commit  Leon=(9628,-19020) Hund=(7860,-19020) Anker=(0,0)
+         *   f676 1. Opfer-Tick Leon=(0,-189)  -> 9628/19000 Einheiten weg, blieb dort durch
+         *   Struggle + Fress-Kollaps; der Hund frass ins Leere und Leon war aus dem Bild.
+         * Game-weite Zaehlung der absoluten Stores auf 0x800ACAF4/F6 (Wortmuster 0xA42?CAF4 /
+         * 0xA42?CAF6 ueber alle STAGE*.BIN): 14 Treffer, ALLE in den Hunde-Grab-Zwillingen
+         * (STAGE1 0x8010F8EC/F4 + 0x8010FD40/48, dazu die Kopien in STAGE3/4/5) — der
+         * Spieler-Anker ist also ausschliesslich HIER gesetzt. */
+        pl->anchor_x = pl->x; pl->anchor_z = pl->z;     /* Spieler +0xa0/+0xa2 @0x8010f8ec/@0x8010f8f4
+                                                         * (sub 10: @0x8010fd40/@0x8010fd48) */
         s_player_grabbed = 1;                           /* aca58=5 pin (player cmd 5) @0x8010f910 */
         re15_player_victim_latch(e, pl);                /* animate Leon from the dog's victim bank */
         g_player_victim_variant = variant;              /* override to the dog's variant (0 front/1 behind) */

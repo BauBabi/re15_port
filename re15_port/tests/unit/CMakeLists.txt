@@ -2072,3 +2072,88 @@ target_link_libraries(test_tim_texel_key_rule PRIVATE re15_engine re15_test_supp
 target_include_directories(test_tim_texel_key_rule PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_tim_texel_key_rule COMMAND test_tim_texel_key_rule)
 set_tests_properties(unit_tim_texel_key_rule PROPERTIES TIMEOUT 120)
+
+# --- MESSSONDE (kein ctest): Leons OPFER-POSE beim HUNDE-Angriff -----------------------------
+#     Nutzer-Report 2026-08-21: "Wenn Leon von den Hunden angegriffen wird, verschwindet er
+#     teilweise." Posiert Leon exakt wie der Renderer (platform/pc/main.c:5497-5518: PL00-Rig +
+#     Keyframe-Pool der Greifer-Victim-Bank, clip_override = player->motion) und misst je Clip
+#     die WELTPOSITION ALLER 15 Knochen — ein Knochen ausserhalb des Rigs ist genau das
+#     Symptom. RE1.5-Bank (EM020 aus CDEMD0.EMS) gegen RE2-Bank (EM_TYPE20). ---
+add_executable(probe_dog_victim_pose probe_dog_victim_pose.c)
+target_link_libraries(probe_dog_victim_pose PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_dog_victim_pose PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_dog_victim_pose PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- MESSSONDE (kein ctest): DRITTER Anlauf am RE2-Zombie-Sturz ------------------------------
+#     Nutzer-Report nach v0.3.7: "Die Zombies fallen teilweise IMMER NOCH komisch hin, wenn sie
+#     einmal mit Waffe getroffen werden, oder haben manchmal eine kurze Hinfall-Animation,
+#     stehen dann aber sofort wieder." Seed-Sweep (N Seeds x 4 Schuss-Fahrplaene, ausdruecklich
+#     auch EINZELSCHUSS) ueber den echten game_step-Weg mit geladener RE2-Bank. Detektoren:
+#     (1) gerenderte Pose unten -> binnen weniger Frames wieder oben, (2) Sturzclip 1/2 bricht
+#     ab bzw. springt zurueck, (3) Einzelschuss-Ausgang klassifiziert, (4) Pose-Sprung. ---
+add_executable(probe_re2z_fallstand probe_re2z_fallstand.c)
+target_link_libraries(probe_re2z_fallstand PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re2z_fallstand PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_re2z_fallstand PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- MESSSONDE (kein ctest): Hunde-Angriff LIVE in ROOM1190 ---------------------------------
+#     Reproduktion des Nutzer-Befunds 2026-08-21 ueber den ECHTEN Weg: re15_game_step + Pad,
+#     ROOM1190-eigene Hunde-Spawns (sub13), geladene EM020/EM_TYPE20-Bank, beide Flavors.
+#     Misst pro Tick die GERENDERTE Pose (main.c:5487-5562 nachgebaut), die FX-Spawns und die
+#     Wund-Akkumulatoren. ---
+add_executable(probe_dog_attack_live probe_dog_attack_live.c)
+target_link_libraries(probe_dog_attack_live PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_dog_attack_live PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_dog_attack_live PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- PIN: der SPIELER-ANKER des Hunde-Grabs (Nutzer-Report 2026-08-21 "Leon verschwindet
+#     teilweise, wenn ihn die Hunde angreifen"). Der Original-Grab schreibt BEIDE Anker:
+#     Hund+0xA0/+0xA2 (@0x8010f8b8/@0x8010f8d0) UND Spieler+0xA0/+0xA2 = 0x800ACAF4/F6
+#     (@0x8010f8ec/@0x8010f8f4; Zwilling sub 10 @0x8010fd40/@0x8010fd48). Gelesen wird der
+#     Spieler-Anker von FUN_8001ad68 (`lh v0,160(s1)` @0x8001adf4 -> `sw v0,52(s1)` @0x8001ae04),
+#     das die Opfer-FSM in jedem Grab-/Fress-Frame auf den Spieler anwendet (@0x80111a88).
+#     Der Port setzte nur den Hunde-Anker -> Leon sprang beim Grab auf (0,0) (gemessen in
+#     ROOM1190: (9628,-19020) -> (0,-189)) und das an Bone 8 verankerte Fress-Blut mit ihm.
+#     Pins: beide Grab-Varianten, NEGATIV-KONTROLLE mit vergiftetem Anker, Blut-Anker. ---
+add_executable(test_dog_grab_anchor test_dog_grab_anchor.c)
+target_link_libraries(test_dog_grab_anchor PRIVATE re15_engine re15_test_support)
+target_include_directories(test_dog_grab_anchor PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_dog_grab_anchor PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_dog_grab_anchor COMMAND test_dog_grab_anchor)
+set_tests_properties(unit_dog_grab_anchor PROPERTIES TIMEOUT 120)
+
+# --- PIN: die POSE-BANK des RE2-Zombies (Nutzer-Report 3. Anlauf nach v0.3.7: "fallen komisch
+#     hin ... kurze Hinfall-Animation, stehen dann sofort wieder"). Pinnt die vollstaendige,
+#     aus EMOVL10_S0.BIN disassemblierte Advance-Bank-Karte (re15_re2z_poses_loco_bank) Zelle
+#     fuer Zelle gegen ihre Aufrufadresse — Regressionswache gegen ein erneutes "nur WALK/BUMP".
+#     Rein synthetisch, keine Assets, deterministisch. ---
+add_executable(test_re2_zombie_pose_bank test_re2_zombie_pose_bank.c)
+target_link_libraries(test_re2_zombie_pose_bank PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_zombie_pose_bank PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_re2_zombie_pose_bank COMMAND test_re2_zombie_pose_bank)
+set_tests_properties(unit_re2_zombie_pose_bank PROPERTIES TIMEOUT 60)
+
+# --- PIN: SELBSTHEILENDER KAMERA-APPLY (Nutzer-Befund 2026-08-21 "nach dem Generator-Raetsel
+#     wechselt die Kamera / das Bild nicht", ROOM11F0 / ROOM10F0).
+#     Sollseite: das Original leitet das Kamera-Dirty-Bit in JEDEM Bild neu her —
+#       FUN_8002137c @0x800214f8 `lh v1,DAT_800b0fe4` (ANGEZEIGT) / @0x80021500 `lbu
+#       v0,DAT_800afbb5` (ANGEFORDERT) / @0x80021508 `beq` / @0x80021514 `sb 1,DAT_800b5457`
+#     und der Apply FUN_80021bbc zieht den Spiegel nach: @0x80021bf4 work_vars[0x0C] = alter
+#     Cut, @0x80021bfc work_vars[0x0A] = DAT_800afbb5. Der RVD-Zonen-Scan FUN_80014230
+#     schreibt ueber FUN_800142f4 @0x80014300 NUR DAT_800afbb5 und bewaffnet NICHTS — ohne
+#     den Per-Bild-Vergleich gaebe es gar keinen Zonen-Kamerawechsel.
+#     Der Port hatte ein EINMAL-Flag; ging es verloren, stand das Bild dauerhaft.
+#     Pins: Raum-Bytes, echter ROOM11F0-Ablauf (Tuer -> Raetsel-Subs -> Weglaufen),
+#     Fehler-Injektion (Flag-Verlust muss geheilt werden), NEGATIV-TEST (kein Apply ohne
+#     Unterschied), Tuer-Stempel @0x8001d940/@0x8001d948, Nachbarraum ROOM10F0. ---
+add_executable(test_cam_selfheal test_cam_selfheal.c)
+target_link_libraries(test_cam_selfheal PRIVATE re15_engine re15_test_support)
+target_include_directories(test_cam_selfheal PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_cam_selfheal PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_cam_selfheal COMMAND test_cam_selfheal)
+set_tests_properties(unit_cam_selfheal PROPERTIES TIMEOUT 120)

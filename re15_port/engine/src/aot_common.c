@@ -1309,27 +1309,34 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
               fprintf(stderr, "[fade-log] RVD-Zonen-Scan: cam %u -> %d (player %ld/%ld)\n",
                       (unsigned)g_scd.cam_id, best_cam_id,
                       (long)player_x, (long)player_z); }
-        /* byte-true FUN_80021bc0 (der PRO-BILD-Kamera-Apply): er spiegelt den aktiven
-         * Cut (DAT_800afbb5, gesetzt vom Kamera-Setzer FUN_800142f4 @0x80014300) in die
-         * globalen Work-Vars, BEVOR er ihn anwendet:
-         *   @0x80021be0 `lbu v1,-1099(v1)` = DAT_800afbb5 (aktiver Cut)
-         *   @0x80021be8 `lhu v0,4068(v0)`  = altes work_vars[0x0A]
-         *   @0x80021bf4 `sh  v0,4072(at)`  -> work_vars[0x0C] = alter Cut
-         *   @0x80021bfc `sh  v1,4068(at)`  -> work_vars[0x0A] = aktiver Cut
-         *   @0x80021c00 `jal 0x80014324`   -> Kamera anwenden
-         * Damit ist work_vars[0x0A] game-weit "die Kamera, in der der Spieler GERADE
-         * steht" — der Wert, den Skripte per Cmp/Switch abfragen. Nutzer-Report v0.3.5
-         * ROOM1090 "Cutscene beim Feuer-Transporter startet nicht": sub01 @Datei 0x23F4
-         * feuert sub02 ueber `Cmp(work_vars[0x0A]==13)`; Cut 13 ist KEIN Tuer-Eintritts-
-         * Cut (Tueren nach 1090 tragen Cut 0/3/6 — game-weiter Door_aot_set-Zensus), also
-         * kann nur dieser Per-Frame-Spiegel ihn liefern. Der Port aktualisierte
-         * work_vars[0x0A] nach dem Raum-Laden nie -> die Bedingung wurde nie wahr. */
-        if ((int)g_scd.work_vars[0x0A] != best_cam_id) {
-            g_scd.work_vars[0x0C] = g_scd.work_vars[0x0A];   /* @0x80021bf4 */
-            g_scd.work_vars[0x0A] = (int16_t)best_cam_id;    /* @0x80021bfc */
-        }
-        g_scd.cam_id             = (uint8_t)best_cam_id;
-        g_scd.cam_change_pending = 1;
+        /* BYTE-TRUE (korrigiert 2026-08-21): der RVD-Zonen-Scan schreibt AUSSCHLIESSLICH den
+         * ANGEFORDERTEN Cut. FUN_80014230 @0x800142ac ruft FUN_800142f4, und die schreibt nur
+         *   @0x80014300 `sb a0,-0x44b(at)`  = DAT_800afbb5   (angeforderter Cut)
+         *   @0x80014310 `sw v0,-0x386c(at)` = DAT_800ac794   (RVD-Gruppenzeiger)
+         * — KEIN work_vars[0x0A] und KEIN Dirty-Flag.
+         *
+         * Hier stand bis 2026-08-21 zusaetzlich der work_vars[0x0A]/[0x0C]-Spiegel aus
+         * FUN_80021bbc @0x80021bf4/fc. Der gehoert aber in den APPLY, nicht in den Scan:
+         * DAT_800b0fe4 (= work_vars[0x0A]) hat game-weit genau fuenf Schreiber —
+         * FUN_80021bbc @0x80021bfc, FUN_8001d600 @0x8001d820/@0x8001d948, Cut_chg
+         * @0x800402fc, Cut_old @0x80040364 — der RVD-Scan ist KEINER davon (vollstaendige
+         * Ghidra-XREF-Liste von DAT_800b0fe4). Solange der Scan mitspiegelte, war der
+         * SELBSTHEILENDE Per-Bild-Vergleich @0x800214f4 (work_vars[0x0A] != DAT_800afbb5 ->
+         * `sb 1,DAT_800b5457` @0x80021514) strukturell tot: beide Werte waren immer gleich.
+         * Der Spiegel laeuft jetzt in re15_cam_present_tick() (room_common.c) = am Ort des
+         * Originals. work_vars[0x0A] IST damit "der Cut, den der Spieler GERADE SIEHT" —
+         * der Wert, den Skripte per Cmp/Switch abfragen (ROOM1090 sub01 @Datei 0x23F4
+         * `Cmp(work_vars[0x0A]==13)`; Cut 13 ist kein Tuer-Eintritts-Cut, nur dieser
+         * Per-Bild-Spiegel kann ihn liefern).
+         *
+         * `cam_change_pending` wird hier nur noch bei einer echten AENDERUNG gesetzt: das
+         * Original bewaffnet auf diesem Pfad gar nichts, sondern verlaesst sich auf den
+         * Vergleich — der im SELBEN Bild laeuft (Scan @0x8001ccec, Present @0x8002137c, beide
+         * im selben Hauptloop-Durchlauf). Ein unbedingtes Setzen wuerde work_vars[0x0C] in
+         * jedem Bild ueberschreiben, in dem der Spieler in einer passenden Zone steht. */
+        if ((int)g_scd.cam_id != best_cam_id)
+            g_scd.cam_change_pending = 1;
+        g_scd.cam_id             = (uint8_t)best_cam_id;   /* @0x80014300 */
     }
 }
 

@@ -311,6 +311,16 @@ int re15_actor_toggle_reverse(const re15_actor_t *a);
 /* THE single "which animation bank does this state pose from" rule — shared by the renderer and the
  * animation frame clock so they cannot drift (see enemy_ai_common.c). */
 int re15_actor_uses_loco_bank(const re15_actor_t *a);
+
+/* RE2-ZOMBIE: die VOLLSTAENDIGE, aus EMOVL10_S0.BIN disassemblierte Pose-Bank-Karte (Paar 1 =
+ * Loco). Das Original hat keine per-Frame-Regel — die Bank ist das (EMR,EDD)-Argument der
+ * Advance-Aufrufstelle (`sw a2,376(a0)` @0x800295F8 legt den posierten Frame-Eintrag in
+ * entity+0x178, `jal 0x80029614` posiert mit dem uebergebenen EMR). Paar-1-Advances:
+ * EXEC[0] P2/P3 @0x80101610, EXEC[1] @0x80101CD0, EXEC[2] @0x801023F0, hit_MAIN P1 @0x80105790 /
+ * P2 @0x801058C0, hit_SLIDE @0x801071E4/@0x8010729C/@0x80107364, death_MAGNUM P4 @0x801095D0,
+ * death_RIP P6 @0x80109288. Definition + Beleg: enemy_ai_re2_zombie.c; Pin:
+ * tests/unit/test_re2_zombie_pose_bank.c. */
+int re15_re2z_poses_loco_bank(const re15_actor_t *a);
 int re15_actor_clip_len(const re15_actor_t *a);
 int re15_actor_clip_len_legacy(const re15_actor_t *a);
 

@@ -445,6 +445,54 @@ extern scd_vm_t g_scd;
 void scd_vm_init(void);
 void scd_vm_tick(void);    /* call once per 30Hz tick (every 2nd vsync) */
 
+/* ===========================================================================================
+ *  re15_cam_present_tick — der SELBSTHEILENDE Kamera-Apply des Originals
+ * ===========================================================================================
+ * Einmal PRO BILD aufrufen, NACH scd_vm_tick + re15_aot_scan (die Stelle der Present-Routine
+ * FUN_8002137c im Original-Hauptloop). Rueckgabe 1 = dieses Bild muss der Aufrufer den Cut
+ * anwenden (Ansicht bauen, BG/Licht/sprite.pri des Cuts laden); 0 = nichts zu tun.
+ *
+ * BYTE-TRUE (PSX.EXE, alle Adressen selbst disassembliert aus ghidra1_V2.txt):
+ *
+ *   DAT_800afbb5 (u8)  = der ANGEFORDERTE Cut.  Genau 3 Schreiber:
+ *        FUN_800142f4 @0x80014300 `sb a0,-0x44b(at)`  (der Kamera-Setzer; Aufrufer u.a. der
+ *                     RVD-Zonen-Scan FUN_80014230 @0x800142ac, Cut_chg @0x80040300,
+ *                     Cut_old @0x80040368, Cut_replace @0x800404c8)
+ *        FUN_8001d600 @0x8001d818 `sb zero` (Boot) / @0x8001d940 `sb v1` (Tuer-Payload Byte 10)
+ *      -> Port: g_scd.cam_id
+ *
+ *   DAT_800b0fe4 (s16) = work_vars[0x0A] = der zuletzt ANGEWANDTE (angezeigte) Cut.
+ *      work_vars-Basis 0x800b0fd0 (work_var[0]@0x800b0fd0, [1]@0x800b0fd2) -> 0x800b0fe4 = Index 0x0A.
+ *      Genau 5 Schreiber: FUN_80021bbc @0x80021bfc (DIESER Apply), FUN_8001d600 @0x8001d820 /
+ *      @0x8001d948 (Raum-Warp: zusammen mit DAT_800afbb5 gestempelt), Cut_chg @0x800402fc,
+ *      Cut_old @0x80040364.  Der RVD-Zonen-Scan schreibt ihn NICHT.
+ *      -> Port: g_scd.work_vars[0x0A]
+ *
+ *   DAT_800b5457 (u8)  = Dirty-Flag -> Port: g_scd.cam_change_pending
+ *
+ *   Der Kern, Present-Routine FUN_8002137c:
+ *        @0x800214e0 `lw v0,DAT_800aca3c` @0x800214e8 `andi v0,v0,0x80`
+ *        @0x800214ec `bne v0,zero,LAB_80021518`      Bit 0x80 gesetzt -> Selbstheilung AUS
+ *        @0x800214f8 `lh  v1,DAT_800b0fe4`           angewandter Cut
+ *        @0x80021500 `lbu v0,DAT_800afbb5`           angeforderter Cut
+ *        @0x80021508 `beq v1,v0,LAB_80021518`        gleich -> nichts
+ *        @0x80021514 `sb  1,DAT_800b5457`            UNGLEICH -> JEDES BILD neu dirty
+ *        @0x80021538 `beq v0,zero,LAB_80021568`      nicht dirty -> kein Apply
+ *        @0x80021558 `jal FUN_80021bbc`              Apply
+ *        @0x80021618 `sb  zero,DAT_800b5457`         Dirty am Bildende geloescht
+ *   und der Apply-Kopf FUN_80021bbc:
+ *        @0x80021be0 `lbu v1,DAT_800afbb5`
+ *        @0x80021be8 `lhu v0,DAT_800b0fe4`
+ *        @0x80021bf4 `sh  v0,DAT_800b0fe8`           work_vars[0x0C] = alter angewandter Cut
+ *        @0x80021bfc `sh  v1,DAT_800b0fe4`           work_vars[0x0A] = angeforderter Cut
+ *
+ * WARUM DAS NOETIG IST: der RVD-Zonen-Scan setzt NUR DAT_800afbb5. Nichts an diesem Pfad
+ * bewaffnet das Dirty-Flag — der Kamerawechsel beim Durchlaufen eines Raums entsteht
+ * AUSSCHLIESSLICH aus diesem Per-Bild-Vergleich. Der Port hatte stattdessen ein EINMALIGES
+ * Flag: ging es verloren oder blieb der Apply in dem Bild aus, stand das Bild DAUERHAFT
+ * (Nutzer-Befund "nach dem Generator-Raetsel wechselt die Kamera nicht mehr"). */
+int  re15_cam_present_tick(void);
+
 /* Start a thread executing bytecode at `pc` */
 int  scd_thread_start(int slot, const uint8_t *pc);
 

@@ -204,6 +204,19 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
      * not per-thread locals[] — so stamp the scenario into the global work-var
      * here (the memset above zeroed it = default scenario 0 at boot). */
     g_scd.work_vars[10] = (int16_t)entry_scenario;
+    /* ...und die SCHWESTER-INSTRUKTION: der Raumlader stempelt den Eintritts-Cut in BEIDE
+     * Kamera-Zellen, nicht nur in die Work-Var. FUN_8001d600, Tuer-Zweig — zwei benachbarte
+     * Stores aus demselben Register v1 (= Tuer-Payload Byte 10, gelesen @0x8001d930
+     * `lbu v1,10(a0)`):
+     *     @0x8001d940 `sb v1,-0x44b(at)`  -> DAT_800afbb5   = ANGEFORDERTER Cut
+     *     @0x8001d948 `sh v1,4068(at)`    -> DAT_800b0fe4   = work_vars[0x0A] = ANGEZEIGTER Cut
+     * (Boot-Zweig identisch mit 0: @0x8001d818 `sb zero` + @0x8001d820.)
+     * Der Port setzte bisher NUR work_vars[0x0A]; g_scd.cam_id (= DAT_800afbb5) blieb auf der
+     * 0 aus dem memset oben stehen. Solange der Apply an einem Einmal-Flag hing, fiel das nicht
+     * auf — mit dem byte-true Per-Bild-Vergleich (re15_cam_present_tick, @0x800214f4) waeren die
+     * beiden Zellen nach JEDER Tuer mit Eintritts-Cut != 0 ungleich und die Kamera wuerde sofort
+     * auf Cut 0 springen. */
+    g_scd.cam_id = entry_scenario;      /* @0x8001d940 */
     /* Der INIT-Lauf: das Original ruft hier den Dispatcher FUN_8003f0a0 DIREKT (@0x8003f018),
      * OHNE den sub01-Reseed — sonst wuerde das gerade in Slot 1 geladene sub00 verdraengt, bevor es
      * sein erstes Opcode ausfuehrt (ROOM10D0 haelt seine Sce_em_set-Spawns dort). Der Reseed gehoert
