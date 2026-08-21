@@ -1,3 +1,82 @@
+# RE1.5 Port — v0.3.8 (Early Preview)
+
+## Transparenz: endlich die Regel statt einer Liste
+
+Gemeldet war „die Flammen haben wieder schwarzen Hintergrund — das hatten wir
+schon 40 mal, da muss es etwas Globales geben". Das war genau richtig.
+
+Der Port entschied **pro Textur-Speicherplatz anhand einer Liste**, ob schwarze
+Bildpunkte durchsichtig sind — Standardwert: nicht durchsichtig. Jede neue Grafik
+fiel also auf schwarz und musste von Hand eingetragen werden. Auf der PSX
+entscheidet das die Grafikeinheit an jedem einzelnen Bildpunkt: **Farbwert 0000
+heisst durchsichtig, ausnahmslos.**
+
+Der Grund, warum es diese Liste gab — die Loecher in den Gegnermodellen von vor
+ein paar Wochen — ist widerlegt: Die korrekte Regel loescht bei Leon, Elza und
+22 von 26 Gegnermodellen **exakt null** Bildpunkte. Die Liste war ein Pflaster
+gegen einen anderen, ebenfalls falschen Test.
+
+Gemessen im Bild: Der Flammenbereich war zu **72 % schwarz**, jetzt zu 18 % —
+und der Rest ist der dunkle Raum selbst. Ueber 120 Raeume und 249 Effektgrafiken
+geprueft, alle korrekt, **ohne einen einzigen Listeneintrag**. Rutscht kuenftig
+doch etwas durch, meldet der Port eine Warnung statt still schwarz zu zeichnen.
+
+## Zombies fallen jetzt wirklich (RE2-Modus)
+
+Gemeldet: „fallen teilweise immer noch komisch hin, oder haben manchmal eine
+kurze Hinfall-Animation, stehen dann aber sofort wieder."
+
+**Sie sind nie gefallen.** Der Port holte bei einem Treffer dieselbe
+Animationsnummer aus der falschen Bank — und dort ist sie die 54-Bilder-**Geh**-
+animation statt des 60-Bilder-**Sturzes**. Was aussah wie eine abgebrochene
+Fallanimation, war ein Zombie, der kurz geht und dann weitermacht.
+
+Ueber 512 Durchlaeufe gemessen: vorher 136 solche Vorfaelle, kuerzestes "Liegen"
+**ein Bild** — nachher 8 Vorfaelle, kuerzestes Liegen 101 Bilder.
+
+## Leon verschwindet nicht mehr beim Hundeangriff
+
+**Er wurde teleportiert.** Der Hunde-Griff setzt im Original zwei Ankerpunkte,
+der Port nur einen. Im Bild nach dem Zupacken stand Leon **9.628 Einheiten weit
+weg** in der Raumecke, waehrend der Hund ins Leere biss.
+
+Das fehlende Blut war eine Folge davon — es haengt an Leon und flog mit ihm weg.
+Zusaetzlich wurde sein Ankerpunkt mit dem **Skelett des Hundes** statt mit Leons
+eigenem gerechnet, nochmal 1.457 Einheiten daneben.
+
+Dass der normale Hundebiss **kein** Blut spritzt, ist uebrigens korrekt — im
+Original setzt er nur eine Wunde. Das war schon richtig.
+
+## Kamera bleibt nicht mehr stehen (Generator-Raetsel)
+
+Im Port waren zwei Felder vertauscht: die **angeforderte** und die **angezeigte**
+Kameraeinstellung. Weil beide im selben Durchlauf gleichgesetzt wurden, war der
+Vergleich, mit dem sich das Original in jedem Bild selbst korrigiert,
+**strukturell tot**. Uebrig blieb ein einmaliges Signal — ging es verloren, stand
+das Bild dauerhaft.
+
+Dabei kam ein zweiter Fehler heraus: Beim Betreten eines Raums wurde nur eines
+der beiden Felder gesetzt, obwohl das Original beide aus demselben Register
+schreibt.
+
+## Ausserdem
+
+**Leon spielt beim Kistenschieben die richtige Animation.** Vorher lief eine
+fremde Geste aus dem Raum-Datensatz — alle 27 Bilder der Sequenz hatten die
+falsche Laenge.
+
+**Zerreiss-Tode fuer schwere Waffen.** Mit der **Magnum platzt der Kopf ab** (und
+in der Haelfte der Faelle laeuft der Kopflose noch bis zu 90 Bilder weiter),
+Schrotflinte, Granate und Rakete **zerreissen** den Zombie.
+
+**Gegner weichen an Waenden aus.** Ein Signal dafuer wurde im Port nie erzeugt,
+obwohl 14 Stellen es auslesen. Der Gorilla baeumte sich in 237 von 240 Faellen
+an der Wand auf, weil er sie nie bemerkt hat.
+
+Testsuite 204 Pruefungen.
+
+---
+
 # RE1.5 Port — v0.3.7 (Early Preview)
 
 ## Alle sieben Feuer brennen (ROOM1090)
