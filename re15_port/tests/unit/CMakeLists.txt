@@ -1927,3 +1927,26 @@ target_compile_definitions(test_1030_trigger_chain PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_1030_trigger_chain COMMAND test_1030_trigger_chain)
 set_tests_properties(unit_1030_trigger_chain PROPERTIES TIMEOUT 180)
+
+# --- PIN "WER bleibt beim Kriechen unter dem Tor haengen — und warum?" (ROOM1030) -------------
+#     Faehrt PHASE A beider Flavors ueber den ECHTEN Weg (echte RDT in g_room_rdt, SCD-VM VOR
+#     game_step, geladene LOCO-Baenke) 6000 Frames lang und pinnt DREI Dinge:
+#       1. RE1.5 5/6 scharfgeschaltet — das ist das SKRIPT-Budget, kein Port-Fehler:
+#          sub02 ruft die Scharfschalt-Schleife sub06 nur unter `Cmp(work7,<,4)`
+#          (`23 00 07 03 04 00` @Datei 0x21cc; Operator 3 = `<` per `slt` @0x8003ffe8),
+#          work7 = sub03s AOT-6-Zaehlung (@Datei 0x220e). Der Nachzuegler traegt den
+#          Zonenstempel +0x0B==5 ueber 5000 Frames vergeblich.
+#       2. RE2 6/6 scharf, aber 5/6 durch: einer landet im Grenzzyklus (Weg >> Netto) an der
+#          SCA-Wand #30, weil die Nav-Kreuzung Zone0->Zone9 (FUN_8003a31c, Mitte
+#          @0x8003a3f0-f8) auf x=-12195 zeigt, die radius-aufgeblasene Wand aber erst ab
+#          x >= -12166 freigibt (Broad-Phase @0x8003b284-94, r=400 @STAGE1.BIN 0x1f778).
+#       3. POSITIV-KONTROLLE: derselbe Kriecher einmalig auf x=-12100 (oestlich der Kante)
+#          -> 6/6 durch. Damit ist belegt, dass Kriech-Gehirn, Torzelle (u0=0xF7) und
+#          SCA-Maske 8 in Ordnung sind und AUSSCHLIESSLICH die Geometrie klemmt. ---
+add_executable(probe_1030_stuck_who probe_1030_stuck_who.c)
+target_link_libraries(probe_1030_stuck_who PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1030_stuck_who PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1030_stuck_who PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_1030_stuck_who COMMAND probe_1030_stuck_who)
+set_tests_properties(unit_1030_stuck_who PROPERTIES TIMEOUT 300)
