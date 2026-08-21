@@ -472,7 +472,11 @@ static int re15_player_push_fsm(re15_actor_t *p, uint16_t pad_bits)
     case 3: {                                           /* @0x80035958 */
         int fc = push_clip_fc(0x11);
         if (fc > 0 && (int)p->anim_frame >= fc - 1) s_push_sub = 4;   /* +0x06 += anim_set() */
-        else if (!push_yaw_aligned(p)) push_yaw_snap(p);              /* @0x80035988-c8 */
+        /* KEIN `else` — das Original speichert +0x06 @0x80035990 UNBEDINGT und prueft die
+         * Yaw-Rastung DANACH (@0x80035988 `andi v0,a0,0x3e0` / @0x80035994 `beq -> ret`).
+         * Endet der Clip in genau dem Bild, in dem der Kurs noch schief steht, laeuft die
+         * Rastung also TROTZDEM ein letztes Mal. */
+        if (!push_yaw_aligned(p)) push_yaw_snap(p);                   /* @0x80035988-c8 */
         break;   /* [4] dispatcht das Original erst im naechsten Frame (@0x80035994 -> ret) */
     }
     case 4:                                             /* @0x800359d4 */

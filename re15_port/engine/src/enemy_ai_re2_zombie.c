@@ -349,13 +349,20 @@ void re15_re2z_fill_gates(const re15_actor_t *e, const re15_actor_t *pl,
      *           P5 (@0x80102A34-40); 0x4 lying orientation; 0x10 crawl marker (@0x8010358C);
      *           0x4000 kill-counted (@0x80108294) — re2z_flags21a.
      *  +0x110 bit 0 = the collision-query result (`sw v0,272(s0)` @0x800356D8, query
-     *           FUN_8004C1BC, frame stamp +0x114 @0x800356E8). PORT MAPPING: the body-push
-     *           contact bits +0x1C2 (contact_flags, holding LAST frame's result at AI time —
-     *           same phase relationship as the original's frame stamp). Block C stays inert
-     *           anyway because +0x1D4 never carries 0xC000 in RE1.5 rooms (see below). */
+     *           FUN_8004C1BC, frame stamp +0x114 @0x800356E8). Der RE2-Zombie-Root ruft den
+     *           Wrapper im Tail @0x80100638 (`jal 0x8003567c`, EMOVL10_S0.BIN) auf.
+     *           PORT MAPPING (korrigiert): e->sca_wall_hit = der RUECKGABEWERT der SCA-Klemme
+     *           (RE1.5 FUN_8003b0a4, `ori s7,s7,0x1` @0x8003b500 / return @0x8003b520) — dieselbe
+     *           Semantik wie RE2s Bit 0 (@0x8004c4a4/@0x8004c518: "solide Zelle beruehrt"), und
+     *           der run_all-Klemm-Tail schreibt ihn NACH dem AI-Tick, also dieselbe Phasenlage
+     *           wie RE2s Frame-Stempel +0x114.
+     *           ⛔ WAR FALSCH: hier standen die BODY-PUSH-Kontaktbits +0x1C2 (contact_flags) —
+     *           das ist die Aktor-gegen-Aktor-Trennung (FUN_8002aec4/b544), NICHT die WAND.
+     *           Block C bleibt so oder so inert, weil +0x1D4 in RE1.5-Raeumen nie 0xC000 traegt
+     *           (siehe unten). */
     g->self_23e = e->re2z_cd23e;                                /* +0x23E        @0x80101790 */
     g->self_21a = e->re2z_flags21a;                             /* +0x21A        @0x80101928 */
-    g->self_110 = (e->contact_flags != 0) ? 1u : 0u;            /* +0x110 bit0   @0x80101844 */
+    g->self_110 = (e->sca_wall_hit != 0) ? 1u : 0u;              /* +0x110 bit0   @0x80101844 */
     /* PL+0x1D3 bit 0x80 = the "this actor is claimed" latch. Mechanism fully proven: the zombie
      * SETS it in nine places (e.g. @0x80101968 / @0x801019B0) and never clears it; the CLEAR lives
      * on the player side (`andi 0x7f` + sb, @0x8003E844 / @0x800630E0 and the overlay grab-aborts
@@ -3576,6 +3583,612 @@ static void re2z_hit_main(re15_actor_t *e, re15_actor_t *pl)
 }
 
 /* ============================================================================================
+ * DIE ZERREISS-TODE — die vier DEATH-Zellen, die NICHT FUN_80108530 sind
+ * --------------------------------------------------------------------------------------------
+ * Der DEATH-Dispatch @0x801084E0-518 (`lbu v1,5(a0)` @0x801084E4 = ZEILE, `lbu v1,466(a0)`
+ * @0x801084FC = SPALTE, Basis 0x8010CC24, Zeilen-Stride 36 via `sll 3 / addu / sll 2`
+ * @0x801084F0-F8, `lw v0,0(v1)` @0x8010850C, `jalr v0` @0x80108514) schickt die schweren
+ * Waffen in eigene Wurzeln. Mit der Spalte 1, die der Port stempelt (Basis-Zone 1, Bracket 0 —
+ * re15_re2_stamp_hit), sind das:
+ *   Zeile  5/6 Magnum        (RE1.5-Waffe 7)      -> 0x801092C4  re2z_death_magnum
+ *   Zeile  7   Schrotflinte  (RE1.5-Waffe 8)      -> 0x801066FC  re2z_hit_ragdoll(death=1)
+ *   Zeile  8   SPAS-12       (RE1.5-Waffe 13)     -> 0x80108BEC  re2z_death_rip
+ *   Zeile  9   HE-Granate    (RE1.5-Waffe 9/15)   -> 0x80108BEC  re2z_death_rip
+ *   Zeile 12   Bowgun        (im Port nie gestempelt)            -> 0x80109610 re2z_death_burst
+ *   Zeile 17   Rakete        (RE1.5-Waffe 18)     -> 0x80108BEC  re2z_death_rip
+ * SPALTE 0 (0x80107438 = re2z_hit_knockdown mit death=1) ist im Port heute UNERREICHBAR — die
+ * Zone 0 hat keinen Produzenten, genau wie an der HURT-Tabelle dokumentiert. Der Zweig ist
+ * trotzdem portiert (er ist eine Verzweigung IN einer schon portierten Funktion) und wird im
+ * Test durch einen Direktaufruf der Zelle positiv kontrolliert.
+ *
+ * ---- WAS DIESE VIER GEMEINSAM HABEN --------------------------------------------------------
+ * Alle vier laufen ueber DENSELBEN Modellblock +0x198 (16 Records a 172 Byte), den der Port
+ * schon fuehrt (re2z_part_flags/_tint/_mesh/_v/_rot/_yaw98/_w9a/_w9c/_w9e/_life/_wa4/_grav/
+ * _st86) und dessen Anzeige-Bruecke (re15_re2z_gore_resolve + re15_re2z_gore_part_matrix)
+ * seit Welle G steht. Neu ist nur, WER die Felder stempelt:
+ *   Flagwort 0x4A   = eigene Matrix (0x40) + Drift-Physik FUN_80028DAC (0x08) -> re2z_part_phys_dac
+ *   Flagwort 0x1062 = eigene Matrix (0x40) + Wurf-Physik  FUN_80028AD8 (0x20) -> re2z_part_phys_ad8
+ *   Flagwort 0x80   = der STUMPF-Marker (im Port ohne Konsument, s.u.)
+ *
+ * ⛔ DREI BENANNTE GRENZEN (mit Adresse, nicht gefuellt):
+ *  (1) STUMPF-GEOMETRIE. `re2z_part_mesh[0] = 16` (@0x80108FB8-FDC kopiert die vier
+ *      Geometrie-Woerter des Records 16 in Part 0) und `= 15` (@0x8010531C-50) zeigen auf die
+ *      RESERVE-Meshes des RE2-MD1. Der RE1.5-MD1 hat nur 0..14, die Klammer in
+ *      platform/pc/main.c (`gore_mesh[nbi] < mesh_count`) greift dann und der Rumpf bzw. der
+ *      Oberschenkel bleibt INTAKT — im Modus "AI RE2" (RE1.5-Modelle) also kein Stumpf. Vom
+ *      Nutzer so akzeptiert; hier wird nichts "repariert", nur korrekt gestempelt.
+ *  (2) DIE KINDER EINES ABGERISSENEN TEILS. Im Original haengt jedes Kind ueber `rec+0x74` an
+ *      der MATRIX des Elternteils (FUN_80028368.c:106-109), fliegt also mit. Der Port berechnet
+ *      die Pose aus der Bank-Skelettkette und ersetzt in re15_re2z_gore_part_matrix nur Parts
+ *      mit Bit 0x40. Schienbein und Fuss eines wegfliegenden Oberschenkels bleiben deshalb an
+ *      der Leiche. Das ist die schon vorhandene Grenze der Anzeige-Bruecke (dieselbe wie beim
+ *      Zerleger @0x80105288-3D8), keine neue.
+ *  (3) DER STUMPF-MARKER `flags |= 0x80` + `sw 64,+0x98` / `sw 0x00101010,+0x9C`
+ *      (@0x80108EAC-BC / @0x80108F68-94 / @0x80108FA8-B4 / @0x801094B8-C8). Bit 0x80 wird von
+ *      keinem der beiden portierten Physik-Zweige gelesen (die pruefen 0x20/0x08) und hat im
+ *      Zeichner-Zwilling keinen Test — die Felder werden BYTE-TRUE gestempelt (die Wort-Stores
+ *      schreiben je ZWEI Halbwortfelder!), der Konsument bleibt OFFEN.
+ * ========================================================================================== */
+
+/* FUN_800154AC-Zwilling: die Peilung self -> Spieler, 0 = +X (dieselbe Herleitung wie in
+ * re2z_stamp_hit_row; a0/a1 = self.x/z, a2/a3 = 0x800CFC30/0x800CFC38 @0x801093DC-F0). */
+static int re2z_bearing_to(const re15_actor_t *e, const re15_actor_t *pl)
+{
+    if (!pl) return (int)e->rot_y & 0xfff;
+    return ((int)re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0xfff;
+}
+
+/* FUN_80015910 @0x80015910 (RE2 PSX.EXE, selbst disassembliert):
+ *   80015910: lh v0,118(a1)      ; other.+0x76
+ *   80015914: lh v1,118(a0)      ; self.+0x76
+ *   8001591c: subu v0,v0,v1
+ *   80015920: addiu v0,v0,1024
+ *   80015924: andi v0,v0,0xfff
+ *   8001592c: slti v0,v0,2048    ; 1 = beide blicken in dieselbe Halbebene
+ * Der einzige Aufrufer hier gibt als `other` 0x800CFBF8 mit — das ist die SPIELER-ENTITY
+ * (Beleg: +0x38 = 0x800CFC30 und +0x40 = 0x800CFC38, genau die beiden Loads @0x801093E4-F0). */
+static int re2z_same_facing(const re15_actor_t *e, const re15_actor_t *pl)
+{
+    if (!pl) return 1;
+    return (((int)pl->rot_y - (int)e->rot_y + 1024) & 0xfff) < 2048;
+}
+
+/* FUN_800152C8(self, yaw_ofs) mit yaw_ofs != 0 (`sll a1,a1,11` @0x8010995C): der Schub laeuft
+ * um +0x76 + a1 gedreht (`lhu v0,118(s1)` / `addu v0,v0,a1` @0x800152E4-F0). */
+static void re2z_thrust_yaw(re15_actor_t *e, int spd, int yaw_ofs)
+{
+    if (!spd) return;
+    int y = (int)e->rot_y + yaw_ofs;
+    e->x += (int32_t)(((int32_t)re15_cos_q12(y) * spd) >> 12);
+    e->z -= (int32_t)(((int32_t)re15_sin_q12(y) * spd) >> 12);
+}
+
+/* ============================================================================================
+ * FUN_80109610 — DAS WEGSCHLEUDERN (Zelle RE2ZD_9610 + die Untermaschine `+0x231 == 1`)
+ * Selbst disassembliert 2026-08-21 (0x80109610..0x801099DC, EMOVL10_S0.BIN @0x80100000).
+ * Drei Phasen ueber +0x6 (`lbu v1,6(s2)` @0x80109650; `beq v1,1 -> 0x80109894` @0x80109658;
+ * `slti 2` / `beq zero -> 0x80109690` @0x80109660-6C; `beq v1,2 -> 0x801099B0` @0x80109680).
+ * ⛔ KORREKTUR eines alten Port-Kommentars: die Zelle P2 schreibt +0x4 = **7** (CORPSE), nicht
+ *    12 — v0 kommt aus dem DELAY-SLOT `addiu v0,zero,7` @0x80109684, `sw v0,4(s2)` @0x801099B0.
+ * ========================================================================================== */
+static void re2z_death_burst(re15_actor_t *e, re15_actor_t *pl)
+{
+    static const uint8_t clipsel[2] = { 1u, 2u };  /* sb 1,16(sp) @0x80109644 / sb 2,17(sp)
+                                                    * @0x8010964C, gelesen `lbu v0,16(v0)`
+                                                    * @0x80109850 */
+    switch (e->sub_state_2) {
+    case 0: {
+        e->re2z_self1d3 |= 0x80u;                  /* ori 0x80 @0x801096A4 / sb 467 @0x801096AC */
+        /* `+0x1C0 |= 1` @0x801096A0/A8 — Modell-/Kollisionsbyte ohne Port-Feld (OPEN, dieselbe
+         * Luecke wie in re2z_death_main @0x80108614-18). */
+        int bear = re2z_bearing_to(e, pl);         /* jal 0x800154AC @0x801096C0 */
+        e->re2z_t158 = (int16_t)bear;              /* sh v0,344 @0x801096CC (DELAY-SLOT) */
+        unsigned n = (re2z_rand() & 3u) + 1u;      /* jal @0x801096C8, `andi 0x3 / addiu 1`
+                                                    * @0x801096D0-D4 */
+        if (e->sub_state_1 != 12u) {               /* `beq v1,12` @0x801096E0 */
+            re2z_blood_fx_at(e, 0, (int16_t)bear); /* Id 8096 @0x801096E8, ofs {0,-300,0}
+                                                    * @0x801096F8-704, Anker Part 0
+                                                    * (`addiu s0,s3,72` @0x8010970C) @0x80109710 */
+            re2z_blood_fx_at(e, 0, (int16_t)bear); /* Id 6096 @0x80109718, ofs {0,-100,0}
+                                                    * @0x80109720-2C, @0x80109734 */
+            /* DIE FLEISCHBROCKEN @0x8010973C-B8: n Durchlaeufe zu je FUENF RNG-Wuerfen
+             * (vx = 256-2r @0x80109744-48, vy = 56-2r @0x80109754-5C, vz = 256-2r
+             * @0x80109768-6C, Id-Anteil @0x80109778-7C, Winkel-Anteil @0x80109798-A8).
+             * Abbruchtest am ENDE (`beq s4,zero` @0x801097AC) = do-while, Dekrement im
+             * DELAY-SLOT des ersten Wurfs (@0x80109740). */
+            for (;;) {
+                n--;
+                (void)re2z_rand();                 /* vx */
+                (void)re2z_rand();                 /* vy */
+                (void)re2z_rand();                 /* vz */
+                (void)re2z_rand();                 /* Id 0x09020000 | (r*4 + 1536)
+                                                    * (`sll 2 / addiu 1536 / lui 0x902 / or`
+                                                    * @0x80109778-88) */
+                uint32_t r5 = re2z_rand();         /* @0x80109784 */
+                int ang = bear - (int)((r5 * 4u) - 512u);      /* `sll v0,v0,2 / addiu -512 /
+                                                                * subu a1,a1,v0` @0x80109798-A8 */
+                re2z_blood_fx_at(e, 0, (int16_t)ang);          /* Anker Part 0 (`addiu a2,s3,72`
+                                                                * @0x80109790) @0x801097A4 */
+                if (n == 0u) break;
+            }
+        } else {
+            /* Zeile 12 @0x801097BC-804: EIN Emitter (Id 6096) am TREFFERPART `rec+0x99` des
+             * Datensatzes +0x200 (Anker `part*172 + 72`, die Multiplikation steht als
+             * Schiebekette @0x801097D0-F4) und `+0x16A = rec+0x99` (@0x801097F8), a3 = 0.
+             * +0x200 hat im Port KEINEN Produzenten (identische Luecke wie re2z_hit_slide P0)
+             * -> Part 0. Zeile 12 (Bowgun) ist im Port ohnehin unerreichbar: keine RE1.5-Waffe
+             * bildet auf sie ab (re2z_row_from_weapon). KEIN RNG-Wurf in diesem Zweig. */
+            e->re2z_dir16a = 0;
+            re2z_blood_fx_at(e, 0, (int16_t)bear);
+        }
+        e->re2z_dir16a = (uint8_t)(re2z_same_facing(e, pl) ? 0u : 1u);
+                                                   /* jal 0x80015910 @0x80109810, `nor zero,v0`
+                                                    * + `andi 0x1` @0x80109818-1C, `sb v0,362`
+                                                    * @0x80109820 */
+        e->re2z_flags21a &= (uint16_t)~4u;         /* andi 0xfffb @0x8010982C / sh @0x80109834 */
+        if (e->re2z_dir16a) e->re2z_flags21a |= 4u;/* ori 0x4 @0x80109838-3C -> Leichen-Pose 22 */
+        {   int dir = (int)(e->re2z_dir16a & 1u);
+            re2z_clip(e, (int)clipsel[dir], 15, 0xF, 0x100, 0);
+                                                   /* Wort 0x000F0F00 + clipsel[dir]
+                                                    * (`lui a0,0xf / ori a0,a0,0xf00`
+                                                    * @0x80109840-48, `sw v0,332` @0x80109864)
+                                                    * = Rate 15, STARTFRAME 15, Clip 1/2.
+                                                    * Blend = a3 = 256 des 959c @0x8010994C */
+        }
+        e->sub_state_2 = 1;                        /* sb v1(=1),6 @0x80109858 */
+        re2z_se((re2z_rand() & 1u) ? 13 : 11);     /* `beq v0,zero -> a0 = 11` (DELAY-SLOT
+                                                    * @0x80109870), sonst 13 @0x80109874 */
+        /* jal 0x80018FB0 @0x80109880 (Pad-Rumble, Praesentation — OPEN wie im Ragdoll) */
+        e->speed_h = 400;                          /* +0x144 = 400 @0x80109888-8C. HIER LIVE:
+                                                    * P1 ruft KEIN 0x80015E7C, der Wert wird
+                                                    * also nicht ueberschrieben, sondern
+                                                    * abgebaut (anders als die dokumentierten
+                                                    * `sh 11,324`-Dead-Stores). */
+        /* `+0x148 = 0` @0x80109890 — der Port fuehrt nur die X-Komponente (s. re2z_thrust). */
+        /* FALLTHROUGH @0x80109894 — P1 laeuft im selben Frame */
+    }
+    /* fall through */
+    case 1: {
+        int dir = (int)(e->re2z_dir16a & 1u);
+        if (e->sub_state_1 != 12u) {               /* `beq v1,12` @0x8010989C */
+            int fr = re2z_frame_slot(e);           /* +0x14D @0x801098A4 */
+            int d  = dir * 10;                     /* `sll 2 / addu / sll 1` @0x801098B0-B8 */
+            if (fr >= d + 4 && fr <= d + 16 && (fr & 1)) {
+                                                   /* `addiu v0,v1,4 / slt` @0x801098BC-C4,
+                                                    * `addiu v0,v1,16 / slt` @0x801098C8-D0,
+                                                    * `andi a1,0x1` @0x801098D4-D8 */
+                (void)re2z_rand();                 /* Id = r*8 + 4048 @0x80109914-24 */
+                uint32_t r2 = re2z_rand();         /* Winkel = r*16 @0x80109920-2C */
+                re2z_blood_fx_at(e, 0, (int16_t)(r2 * 16u));
+                                                   /* Anker Part 0 (`addiu a2,s3,72`
+                                                    * @0x80109938), ofs y+500 @0x801098FC */
+            }
+        }
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + (uint8_t)re2z_clip_done(e));
+                                                   /* +0x6 += 959c(...,256) @0x80109948-68 */
+        re2z_thrust_yaw(e, (int)e->speed_h, dir << 11);
+                                                   /* 0x800152C8(self, +0x16A << 11)
+                                                    * @0x8010995C/64 — mit dem NOCH ALTEN
+                                                    * +0x144, der Abbau folgt erst danach */
+        {   int v = (int)(uint16_t)e->speed_h - 50;/* `lhu 324 / addiu -50` @0x8010996C-74 */
+            e->speed_h = (int16_t)v;               /* sh @0x80109978 */
+            if ((int16_t)v < 0) e->speed_h = 0;    /* `sll 16 / bgez / sh zero` @0x8010997C-88 */
+        }
+        /* `+0x144 == 0 -> FUN_80016200(self,0,1)` @0x8010998C-A4: Matrix-/Positions-Nachzieher
+         * (Praesentation), im Port OPEN — derselbe Aufruf wie in re2z_death_main P1. */
+        break;
+    }
+    case 2:
+        re15_ai_set_state_word(e, 7u);             /* `sw v0,4(s2)` @0x801099B0, v0 = 7 aus dem
+                                                    * DELAY-SLOT @0x80109684 -> CORPSE, Sub 0 */
+        break;
+    default: break;                                /* j 0x801099B4 */
+    }
+}
+
+/* ============================================================================================
+ * FUN_801092C4 — DER MAGNUM-TOD: DER KOPF PLATZT AB (Zelle RE2ZD_92C4, Zeilen 5/6)
+ * Selbst disassembliert 2026-08-21 (0x801092C4..0x801095FC).
+ * Phasentabelle @0x8010014C, 5 Eintraege, selbst gedumpt (`table 0x8010014c 12`):
+ *   [0] 0x80109330  [1] 0x801094F4  [2] 0x80109534  [3] 0x80109540  [4] 0x80109568
+ * Eingang `lbu v1,6(s4)` @0x80109300, `sltiu v0,v1,0x5` @0x80109308, `jr v0` @0x80109328.
+ * ========================================================================================== */
+static void re2z_death_magnum(re15_actor_t *e, re15_actor_t *pl)
+{
+    static const uint8_t clipsel[2] = { 1u, 2u };  /* sb 1,16(sp) @0x801092F4 / sb 2,17(sp)
+                                                    * @0x801092FC, gelesen `lbu a0,16(v0)`
+                                                    * @0x80109368 */
+    switch (e->sub_state_2) {
+    case 0: {
+        int dir = (int)(re2z_rand() & 1u);         /* jal @0x80109330, `andi 0x1 / sb v0,362`
+                                                    * @0x80109338-3C */
+        e->re2z_dir16a    = (uint8_t)dir;
+        e->re2z_flags21a &= (uint16_t)~4u;         /* andi 0xfffb @0x80109348 / sh @0x80109350 */
+        if (dir) e->re2z_flags21a |= 4u;           /* ori 0x4 @0x80109354-58 */
+        e->sub_state_2    = 1;                     /* sb s3(=1),6 @0x80109374 */
+        e->re2z_self1d3  |= 0x80u;                 /* ori 0x80 @0x80109378 / sb @0x8010937C */
+        re2z_clip(e, (int)clipsel[dir], dir * 10, 3, 0x100, 0);
+                                                   /* Wort ((dir*5)<<9) + 0x00030000 +
+                                                    * clipsel[dir] (`sll 2 / addu / sll 9`
+                                                    * @0x80109380-88, `lui v1,0x3` @0x8010938C,
+                                                    * `sw v0,332` @0x8010939C) = Rate 3 (!),
+                                                    * dir 0 -> Clip 1 ab Frame 0, dir 1 ->
+                                                    * Clip 2 ab Frame 10. Blend = a3 = 256 des
+                                                    * 959c @0x80109504 */
+        re2z_blood_fx_at(e, 0, (int16_t)e->rot_y); /* Id 8000 @0x801093C0, Anker Part 0
+                                                    * (`addiu s1,s1,72` @0x801093D0), ofs
+                                                    * (m+1420, m+1424+300, m+1428)
+                                                    * @0x801093A0-C4, @0x801093D4 */
+        int bear = re2z_bearing_to(e, pl);         /* jal 0x800154AC @0x801093F4 */
+        re2z_blood_fx_at(e, 0, (int16_t)bear);     /* Id 0x08001B58 @0x801093FC-400, Winkel =
+                                                    * Peilung @0x80109408-0C, ofs y-400
+                                                    * @0x8010941C-24, @0x80109420 */
+        re2z_blood_fx_at(e, 0, (int16_t)e->rot_y); /* Id 0x00021F40 @0x80109428-2C, Winkel
+                                                    * +0x76 @0x80109434, @0x80109438 */
+        /* ---- DER KOPF AB (Part 8 = Kopf; `addiu a2,v1,1448` = 8*172+72 @0x80109464) --------
+         * Flagwort |= 0x4A (`lw v0,1376 / ori 0x4a / sw` @0x80109460-98) = eigene Matrix (0x40)
+         * + Drift-Physik FUN_80028DAC (0x08). Die Drift-Felder (Stride 172, Part 8 = 1376): */
+        e->re2z_part_flags[8] |= 0x4Au;
+        e->re2z_part_w9c  [8]  = 400;              /* +0x9C Vortrieb   `sh v0,1532` @0x80109468 */
+        e->re2z_part_w9a  [8]  = -100;             /* +0x9A vy         `sh v0,1530` @0x80109470 */
+        e->re2z_part_w9e  [8]  = 10;               /* +0x9E vy-Zuwachs `sh v0,1534` @0x80109478 */
+        e->re2z_part_yaw98[8]  = (int16_t)((bear + 2048) & 0xfff);
+                                                   /* +0x98 Kurs = Peilung+2048 (`addiu s0,s0,
+                                                    * 2048` @0x80109450, `sh s0,1528`
+                                                    * @0x80109480) */
+        e->re2z_part_life [8]  = 0;                /* +0xA0            `sh zero,1536` @0x80109484 */
+        e->re2z_part_wa4  [8]  = -50;              /* +0xA4 Vortriebs-Zuwachs `sh v0,1540`
+                                                    * @0x80109488 */
+        e->re2z_part_tint [8]  = 0x00101040u;      /* +0x70 Farbwort   `sw t0,1488` @0x8010948C
+                                                    * (t0 = 0x00101040 @0x80109440-44) */
+        /* FUN_8001CEFC(5,3,Part 8) @0x80109494 = die am Kopf haengenden Effekte abschalten;
+         * der Port-Stand-in kennt keine Anker -> No-op (wie ueberall in diesem Modul). */
+        /* Der STUMPF-MARKER auf Part 0 (@0x801094A8-C8), zwei WORT-Stores: */
+        e->re2z_part_yaw98[0]  = 64;               /* `sw v0,152(s1)` @0x801094B8 (Low-Half) */
+        e->re2z_part_w9a  [0]  = 0;                /* dito High-Half */
+        e->re2z_part_w9c  [0]  = 0x1010;           /* `sw a2,156(s1)` @0x801094BC (Low-Half) */
+        e->re2z_part_w9e  [0]  = 0x0010;           /* dito High-Half (a2 = 0x00101010
+                                                    * @0x8010949C-A0) */
+        e->re2z_part_flags[0] |= 0x80u;            /* `ori v1,v1,0x80 / sw v1,0(s1)`
+                                                    * @0x801094C0/C8 */
+        re2z_se(2);                                /* jal 0x8005bd6c, a0 = 2 @0x801094A4/C4 */
+        /* jal 0x80018FB0 @0x801094CC (Praesentation, OPEN) */
+        /* `+0x144 = 11` @0x801094D4-D8 ist ein DEAD STORE: P1 ruft weder 0x80015E7C noch
+         * 0x800152C8, P4 fuellt +0x144 vorher mit dem Clip-Wurzel-Delta neu (0x80015E7C
+         * @0x801095BC) — derselbe Fall wie die drei dokumentierten `sh 11,324`-Seeds. */
+        /* `+0x1C0 = 1` @0x8010945C (OPEN, s.o.) */
+        if (re2z_rand() & 1u) {                    /* jal @0x801094D8, `andi 0x1 / beq`
+                                                    * @0x801094E0-E4 */
+            e->sub_state_2 = 3;                    /* sb v0(=3),6 @0x801094F0 — 50%: der
+                                                    * KOPFLOSE laeuft erst noch weiter */
+            return;                                /* j 0x801095E4 */
+        }
+        /* FALLTHROUGH @0x801094F4 */
+    }
+    /* fall through */
+    case 1:
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + (uint8_t)re2z_clip_done(e));
+                                                   /* +0x6 += 959c(...,256) @0x80109500-18 */
+        /* `+0x14E == 0 -> FUN_80016200(self,0,1)` @0x8010950C-28 (Praesentation, OPEN) */
+        break;
+    case 2:
+        re15_ai_set_state_word(e, 7u);             /* `addiu v0,zero,7 / sw v0,4(s4)`
+                                                    * @0x80109534-3C -> CORPSE, Sub 0 */
+        break;
+    case 3:
+        e->sub_state_2 = 4;                        /* sb v0(=4),6 @0x80109540-44 */
+        re2z_clip(e, (int)e->re2z_walkclip, 0, 0xF, 0x100, 0);
+                                                   /* Wort 0x000F0000 + +0x218 (`lbu v0,536 /
+                                                    * lui v1,0xf / addu / sw v0,332`
+                                                    * @0x80109548-58); Blend = a3 = 256 des
+                                                    * 959c @0x801095D4 */
+        e->re2z_t158 = (int16_t)((re2z_rand() & 0x3fu) + 30u);
+                                                   /* +0x158 = (rand & 0x3F) + 30
+                                                    * @0x80109554-64 */
+        /* FALLTHROUGH @0x80109568 */
+        /* fall through */
+    case 4: {
+        uint16_t old = (uint16_t)e->re2z_t158;     /* lhu 344 @0x80109568 */
+        e->re2z_t158 = (int16_t)(uint16_t)(old - 1u);
+                                                   /* `sh v0,344` im DELAY-SLOT @0x80109578 =
+                                                    * IMMER */
+        if (old == 0u) {                           /* `bne v1,zero` @0x80109574 — der ALTE Wert
+                                                    * entscheidet, der Zerfall feuert also einen
+                                                    * Frame NACH dem Nullstand */
+            e->sub_state_2 = 1;                    /* sb v0(=1),6 @0x8010958C */
+            re2z_clip(e, 1, 0, 0xF, 0x100, 0);     /* Wort 0x000F0001 @0x8010957C-90 */
+            e->re2z_flags21a &= (uint16_t)~4u;     /* andi 0xfffb @0x80109594-98 */
+        }
+        re15_enemy_steer_point(e, e->steer_x, e->steer_z, 8);
+                                                   /* FUN_80015558(self,+0x1C4,+0x1C6,8)
+                                                    * @0x8010959C-AC */
+        re15_re2z_move_root(e);                    /* 0x80015E7C @0x801095BC + 0x800152C8
+                                                    * @0x801095DC */
+        /* `jal 0x8002959c(a3=256)` @0x801095D0 — Advance ohne +0x6-Uebernahme */
+        break;
+    }
+    default: break;
+    }
+}
+
+/* ============================================================================================
+ * FUN_80108BEC — DER ZERREISS-TOD: KOPF AB + BEIN(E) AB (Zelle RE2ZD_8BEC, Zeilen 8/9/17)
+ * Selbst disassembliert 2026-08-21 (0x80108BEC..0x801092C0).
+ * Kopf @0x80108C34-4C: `+0x231 == 1` -> `jal 0x80109610` und raus.
+ * Phasentabelle @0x8010012C, 7 Eintraege, selbst gedumpt (`table 0x8010012c 24`):
+ *   [0] 0x80108C80 [1] 0x80109078 [2] 0x80109158 [3] 0x801091AC
+ *   [4] 0x801091EC [5] 0x801091F8 [6] 0x80109220     (`sltiu v0,v1,0x7` @0x80108C5C)
+ * ========================================================================================== */
+static void re2z_death_rip(re15_actor_t *e, re15_actor_t *pl)
+{
+    static const int16_t push [2] = { -450, 250 }; /* sp+16/sp+18 @0x80108C14-20, gelesen
+                                                    * `lhu v0,16(v0)` @0x80108DA8 */
+    static const uint8_t clip2[2] = { 2u, 1u };    /* sp+32/sp+33 @0x80108C24-30, gelesen
+                                                    * `lbu a0,32(v0)` @0x80109180 */
+    if (e->re2z_rag231 == 1u) {                    /* `lbu v1,561 / bne v1,1` @0x80108C34-3C */
+        re2z_death_burst(e, pl);                   /* jal 0x80109610 @0x80108C44 */
+        return;                                    /* j 0x8010929C */
+    }
+    if (e->sub_state_2 >= 7u) return;              /* `sltiu v0,v1,0x7 / beq` @0x80108C5C-60 */
+
+    switch (e->sub_state_2) {
+    case 0: {
+        /* ---- AUSSTIEG 1 IN DEN BURST @0x80108C80-D40 --------------------------------------
+         * `rand & 3` != 0 UND `0x800CFBF8 >= 0` UND Zeile weder 9 noch 17 -> +0x231 = 1 und
+         * FUN_80109610. Das `lw 0x800CFBF8 / bltz` @0x80108C94-A0 liest das WORT 0 der
+         * SPIELER-ENTITY (Beleg s. re2z_same_facing); Bit 31 hat im Port keinen Produzenten,
+         * der Zweig laeuft also weiter — OPEN, mit Adresse. */
+        if ((re2z_rand() & 3u) != 0u &&
+            e->sub_state_1 != 9u && e->sub_state_1 != 17u) {
+                                                   /* `beq v0,zero -> 0x80108CC0` @0x80108C8C,
+                                                    * `beq v1,9 -> 0x80108CD8` @0x80108CB0,
+                                                    * `bne v1,17 -> 0x80108D28` @0x80108CB8 */
+            e->re2z_rag231 = 1u;                   /* `sb v0(=1),561` @0x80108D28 */
+            re2z_death_burst(e, pl);               /* jal 0x80109610 @0x80108D34 */
+            return;
+        }
+        if ((e->sub_state_1 == 9u || e->sub_state_1 == 17u) &&
+            !(e->re2z_f10e & 0x80u))               /* `lhu 270 / andi 0x80 / bne` @0x80108CD8-E4 */
+            re2z_gore_soot(e);                     /* jal 0x8010640C @0x80108CEC */
+
+        /* ---- AUSSTIEG 2 (nur Zeile 9) @0x80108CF4-D40 -------------------------------------
+         * Zwei Wuerfe, `s = (r1 >> (r2 & 7)) & 3`. Die Schiebe-Instruktion @0x80108D08 steht im
+         * Dump als Rohwort 0x00508007 = `srav s0,s0,v0` (SPECIAL, funct 0x07). */
+        {   uint32_t r1 = re2z_rand();             /* @0x80108CF4 */
+            uint32_t r2 = re2z_rand();             /* @0x80108CFC */
+            unsigned s  = (unsigned)((r1 >> (r2 & 7u)) & 3u);
+            if (s != 0u && e->sub_state_1 == 9u) { /* `beq s0,zero` @0x80108D10, `bne v1,9`
+                                                    * @0x80108D20 */
+                e->re2z_rag231 = 1u;
+                re2z_death_burst(e, pl);
+                return;
+            }
+        }
+
+        /* ---- die RICHTUNG @0x80108D44-70 ---- */
+        e->re2z_gaitrow = (uint8_t)((e->re2z_hitdir1d0 & 0x20u) >> 5);
+                                                   /* `lhu 464 / andi 0x20 / srl 5 / sb v0,363`
+                                                    * @0x80108D44-54 */
+        e->re2z_flags21a &= (uint16_t)~4u;         /* andi 0xfffb @0x80108D60 / sh @0x80108D68 */
+        if (e->re2z_gaitrow == 0u) e->re2z_flags21a |= 4u;
+                                                   /* ⚠ UMGEKEHRT zu den anderen Wurzeln: das
+                                                    * `bne v1,zero` @0x80108D64 UEBERSPRINGT das
+                                                    * `ori 0x4` @0x80108D6C, Bit 4 (Leichen-Pose
+                                                    * 22) steht also beim FRONT-Treffer */
+        int back = (int)(e->re2z_gaitrow & 1u);
+        e->sub_state_2 = 1;                        /* sb s0(=1),6 @0x80108D90 */
+        e->re2z_t15a   = 10;                       /* sh s1(=10),346 @0x80108D94 */
+        re2z_clip(e, back ? 3 : 4, 0, 3, 0x400, 0);/* Wort 0x00030004 - back (`lui a1,0x3 /
+                                                    * ori 0x4` @0x80108D74-78, `subu a1,a1,v1`
+                                                    * @0x80108D98, `sw a1,332` @0x80108DA4);
+                                                    * Blend = a3 = 1024 des 959c @0x8010909C */
+        e->speed_h = push[back];                   /* sh v0,324 @0x80108DB8 (DELAY-SLOT) */
+        re2z_thrust(e, (int)push[back]);           /* jal 0x800152C8 (a1 = 0) @0x80108DB4 */
+        /* `+0x148 = 0` @0x80108DB0 / `+0x1C0 = 1` @0x80108DC4 — OPEN (s. Blockkopf) */
+        e->re2z_self1d3 |= 0x80u;                  /* ori 0x80 @0x80108DCC / sb @0x80108DD0 */
+
+        /* ---- DER KOPF AB (Part 8, Basis 1376 = 8*172) @0x80108DD4-E3C ---- */
+        e->re2z_part_flags[8] |= 0x4Au;            /* `lw 1376 / ori 0x4a / sw` @0x80108DD4-E0 */
+        e->re2z_part_w9c  [8]  = 400;              /* +0x9C `sh v0,1532` @0x80108DEC */
+        e->re2z_part_w9a  [8]  = -100;             /* +0x9A `sh v0,1530` @0x80108DF4 */
+        e->re2z_part_life [8]  = 0;                /* +0xA0 `sh zero,1536` @0x80108DFC */
+        e->re2z_part_w9e  [8]  = 10;               /* +0x9E `sh s1,1534` @0x80108E00 */
+        e->re2z_part_wa4  [8]  = -50;              /* +0xA4 `sh v0,1540` @0x80108E04 */
+        e->re2z_part_tint [8]  = 0x00101030u;      /* +0x70 `sw a0,1488` @0x80108E08 (a0 =
+                                                    * 0x00101030 @0x80108DC0/D8) */
+        e->re2z_part_yaw98[8]  = (int16_t)((e->rot_y + 2048) & 0xfff);
+                                                   /* +0x98 = +0x76 + 2048 (`lhu 118`
+                                                    * @0x80108DE4, `addiu 2048` @0x80108E0C,
+                                                    * `sh v1,1528` @0x80108E14) */
+        re2z_blood_fx_at(e, 8, (int16_t)(re2z_rand() * 16u));
+                                                   /* Id 3000 @0x80108E18, Winkel = rand*16
+                                                    * (jal @0x80108E10, `sll a1,v0,4`
+                                                    * @0x80108E1C), Anker Part 8 (`addiu s0,
+                                                    * s0,1448` @0x80108E20), a3 = 0 @0x80108E2C,
+                                                    * FUN_8001BF10 @0x80108E28 */
+        /* FUN_8001CEFC(5,3,Part 8) @0x80108E38 = No-op im Port */
+
+        /* ---- DAS RECHTE BEIN (Parts 9/10/11) @0x80108E40-EE4 ---- */
+        if (!(e->re2z_flags21a & 0x20u)) {         /* `lhu 538 / andi 0x20 / bne` @0x80108E40-4C */
+            e->re2z_part_flags[9] |= 0x1062u;      /* `lw 1548 / ori 0x1062 / sw` @0x80108E54-60
+                                                    * = eigene Matrix (0x40) + Wurf-Physik
+                                                    * FUN_80028AD8 (0x20) */
+            e->re2z_part_v   [9][2] = 100;         /* +0x3C `sh v0,1608` @0x80108E6C */
+            e->re2z_part_st86[9]    = 0;           /* +0x86 `sh zero,1682` @0x80108E74 — loest
+                                                    * den Physik-INIT aus (`lh 134` @0x80028AF4) */
+            e->re2z_part_v   [9][1] = 0;           /* +0x3A `sh zero,1606` @0x80108E78 */
+            e->re2z_part_grav[9]    = 30;          /* +0x79 `sb v0,1669` @0x80108E7C */
+            e->re2z_part_rot [9][0] = 0;           /* +0x3E `sh zero,1610` @0x80108E80 */
+            e->re2z_part_v   [9][0] = (int16_t)((e->rot_y + 2048) & 0xfff);
+                                                   /* +0x38 `sh v1,1604` @0x80108E88 */
+            e->re2z_part_rot [9][2] = 1024;        /* +0x42 `sh v0,1614` @0x80108E94 */
+            e->re2z_part_rot [9][1] = (int16_t)e->rot_y;
+                                                   /* +0x40 `sh v1,1612` @0x80108E98 */
+            /* Der STUMPF-MARKER auf Part 10 (Schienbein, Basis 1720) — zwei WORT-Stores: */
+            e->re2z_part_yaw98[10]  = 64;          /* `sw v0,1872` @0x80108EAC (Low-Half) */
+            e->re2z_part_w9a  [10]  = 0;           /* dito High-Half */
+            e->re2z_part_w9c  [10]  = 0x1010;      /* `sw a1,1876` @0x80108EB0 (Low-Half) */
+            e->re2z_part_w9e  [10]  = 0x0010;      /* dito High-Half (a1 = 0x00101010) */
+            e->re2z_part_flags[10] |= 0x80u;       /* `ori v1,v1,0x80 / sw v1,1720` @0x80108EB4/BC */
+        } else {                                   /* Bein schon ab (@0x80108EC0-E4) */
+            e->re2z_part_flags[9]  = 0u;           /* `sw zero,1548` @0x80108EC8 */
+            e->re2z_part_flags[10] = 0u;           /* `sw zero,1720` @0x80108ED0 */
+            e->re2z_part_flags[11] = 0u;           /* `sw zero,1892` @0x80108EE4 */
+            /* 2x FUN_8001CEFC(5,3,Part 10/11) @0x80108ECC/@0x80108EE0 = No-op */
+        }
+
+        /* ---- DAS LINKE BEIN (Parts 12/13) @0x80108EE8-F70 — nur mit 50% ---- */
+        if (!(e->re2z_flags21a & 0x40u) &&         /* `andi 0x40 / bne` @0x80108EF0-F4 */
+            (re2z_rand() & 1u) == 0u) {            /* jal @0x80108EFC, `andi 0x1 / bne`
+                                                    * @0x80108F04-08 — der Wurf faellt NUR,
+                                                    * wenn das Bein noch dran ist */
+            e->re2z_part_flags[12] |= 0x1062u;     /* `lw 2064 / ori 0x1062 / sw` @0x80108F10-1C */
+            e->re2z_part_v   [12][2] = 100;        /* +0x3C `sh v0,2124` @0x80108F28 */
+            e->re2z_part_grav[12]    = 30;         /* +0x79 `sb v0,2185` @0x80108F30 */
+            e->re2z_part_st86[12]    = 0;          /* +0x86 `sh zero,2198` @0x80108F3C */
+            e->re2z_part_v   [12][1] = 0;          /* +0x3A `sh zero,2122` @0x80108F40 */
+            e->re2z_part_rot [12][0] = 0;          /* +0x3E `sh zero,2126` @0x80108F44 */
+            e->re2z_part_v   [12][0] = (int16_t)((e->rot_y + 2048) & 0xfff);
+                                                   /* +0x38 `sh v1,2120` @0x80108F4C */
+            e->re2z_part_rot [12][2] = 1024;       /* +0x42 `sh v1,2130` @0x80108F64 */
+            e->re2z_part_rot [12][1] = (int16_t)e->rot_y;
+                                                   /* +0x40 `sh a0,2128` @0x80108F70 */
+            e->re2z_part_yaw98[13]  = 64;          /* `sw v0,2388` @0x80108F68 (Low-Half) */
+            e->re2z_part_w9a  [13]  = 0;
+            e->re2z_part_w9c  [13]  = 0x1010;      /* `sw a1,2392` @0x80108F6C (Low-Half) */
+            e->re2z_part_w9e  [13]  = 0x0010;
+            e->re2z_part_flags[13] |= 0x80u;       /* `lw 2236 / ori 0x80 / sw` @0x80108F34-5C */
+        }
+
+        /* ---- IMMER: der Stumpf-Marker auf Part 11 (R-Fuss) @0x80108F78-94 ---- */
+        e->re2z_part_yaw98[11]  = 64;              /* `sw v0,2044` @0x80108F88 */
+        e->re2z_part_w9a  [11]  = 0;
+        e->re2z_part_w9c  [11]  = 0x1010;          /* `sw a1,2048` @0x80108F8C */
+        e->re2z_part_w9e  [11]  = 0x0010;
+        e->re2z_part_flags[11] |= 0x80u;           /* `lw 1892 / ori 0x80 / sw` @0x80108F80-94 */
+        /* ---- IMMER: Part 0 @0x80108F98-B4 (hier 32/32, nicht 64/0x00101010) ---- */
+        e->re2z_part_yaw98[0]   = 32;              /* `sw v1,152(s1)` @0x80108FA8 */
+        e->re2z_part_w9a  [0]   = 0;
+        e->re2z_part_w9c  [0]   = 32;              /* `sw v1,156(s1)` @0x80108FAC */
+        e->re2z_part_w9e  [0]   = 0;
+        e->re2z_part_flags[0]  |= 0x80u;           /* `ori v0,v0,0x80 / sw v0,0(s1)`
+                                                    * @0x80108FB0/B4 */
+        /* ---- DER RUMPF-STUMPF @0x80108FB8-FDC ---------------------------------------------
+         * Die vier Geometrie-Woerter des Records 16 wandern in Part 0 — genau die Mechanik des
+         * Bein-Stumpfs (@0x8010531C-50), nur mit dem ZWEITEN Reserve-Record:
+         *   80108fc0: lw v1,2760(v0)  ->  80108fd0: sw v1,8(v0)
+         *   80108fc4: lw a0,2768(v0)  ->  80108fd4: sw a0,16(v0)
+         *   80108fc8: lw a1,2764(v0)  ->  80108fd8: sw a1,12(v0)
+         *   80108fcc: lw a2,2772(v0)  ->  80108fdc: sw a2,20(v0)
+         * 2760..2772 = 16*172 + 8/12/16/20. Port-Zwilling: Objektindex (Part i == MD1-Mesh i).
+         * ⛔ Mesh 16 gibt es nur im RE2-MD1 — s. Grenze (1) im Blockkopf. */
+        e->re2z_part_mesh[0] = 16u;
+        {   uint32_t r1 = re2z_rand();             /* @0x80108FF0 */
+            uint32_t r2 = re2z_rand();             /* @0x80108FF8 */
+            int ang = (int)e->rot_y + (int)(r1 * 16u) - (int)(r2 * 16u);
+                                                   /* `sll s0,s0,4` @0x8010900C, `sll v0,v0,4`
+                                                    * @0x80109014, `addu/subu` @0x80109018-1C */
+            re2z_blood_fx_at(e, 0, (int16_t)ang);  /* Id 8000 @0x80109000, ofs {0,-500,0}
+                                                    * @0x80108FE4-F4, Anker Part 0 (`addiu s1,
+                                                    * s1,72` @0x80109020) @0x80109024 */
+        }
+        {   (void)re2z_rand();                     /* Id 0x08000000 | ((r+4000)*4)
+                                                    * @0x8010902C-44 */
+            uint32_t r4 = re2z_rand();             /* Winkel @0x80109040-4C */
+            re2z_blood_fx_at(e, 0, (int16_t)(r4 * 16u));   /* Anker Part 0 @0x80109050,
+                                                            * FUN_8001BF10 @0x80109054 */
+        }
+        re2z_se(2);                                /* jal 0x8005bd6c, a0 = 2 @0x8010905C-60 */
+        /* jal 0x80018FB0 @0x80109068 (Praesentation, OPEN) */
+        /* `+0x144 = 11` @0x80109070-74 = DEAD STORE: P1 ruft 0x80015E7C (@0x80109084), das
+         * +0x144 mit dem Clip-Wurzel-Delta ueberschreibt, BEVOR 0x800152C8 (@0x801090B0) es
+         * liest — derselbe Fall wie die drei dokumentierten `sh 11,324`-Seeds. */
+        /* FALLTHROUGH @0x80109078 */
+    }
+    /* fall through */
+    case 1:
+        re15_re2z_move_root(e);                    /* 0x80015E7C(a3=0) @0x80109084 + 0x800152C8
+                                                    * @0x801090B0 */
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + (uint8_t)re2z_clip_done(e));
+                                                   /* +0x6 += 959c(...,1024) @0x80109098-B4 */
+        if (e->re2z_t15a != 0) {                   /* `lh 346 / beq` @0x801090B8-C0 */
+            if (((int)e->re2z_t15a & 1) == 0) {    /* `andi 0x1 / bne` @0x801090C8-CC — nur auf
+                                                    * den GERADEN Staenden */
+                for (int k = 0; k < 2; k++) {      /* zwei Emitter @0x801090D4-140 */
+                    uint32_t r1 = re2z_rand();     /* @0x801090D8 / @0x80109110 */
+                    uint32_t r2 = re2z_rand();     /* @0x801090E0 / @0x80109118 */
+                    int ang = (int)e->rot_y + (int)(r1 * 16u) - (int)(r2 * 16u);
+                    re2z_blood_fx_at(e, 0, (int16_t)ang);
+                                                   /* Id 8000 @0x801090E8/@0x80109120, Anker
+                                                    * Part 0 (`addiu s1,s1,72` @0x80109104),
+                                                    * a3 = &+0x144 @0x801090DC */
+                }
+            }
+            e->re2z_t15a = (int16_t)(e->re2z_t15a - 1);
+                                                   /* `lhu 346 / addiu -1 / sh` @0x80109144-54 */
+        }
+        break;
+    case 2:
+        if (re2z_rand() & 1u) {                    /* jal @0x80109158, `andi 0x1 / beq`
+                                                    * @0x80109160-64 */
+            e->sub_state_2 = 5;                    /* sb v0(=5),6 @0x80109170 — 50%: der
+                                                    * zerfetzte Torso taumelt erst noch */
+            return;                                /* j 0x8010929C */
+        }
+        {   int back = (int)(e->re2z_gaitrow & 1u);/* lb 363 @0x80109174 */
+            e->sub_state_2 = 3;                    /* sb v0(=3),6 @0x80109188 */
+            re2z_clip(e, (int)clip2[back], back * 15 + 10, 7, 0x200, 0);
+                                                   /* Wort ((back*15+10)<<8) + 0x00070000 +
+                                                    * clip2[back] (`sll 4 / subu / addiu 10 /
+                                                    * sll 8` @0x8010918C-98, `lui v1,0x7`
+                                                    * @0x8010919C, `sw v0,332` @0x801091A8);
+                                                    * Blend = a3 = 512 des 959c @0x801091BC
+                                                    * (der Setz-Frame selbst advanced noch mit
+                                                    * a3 = 256 @0x80109288 — dokumentiert) */
+        }
+        /* FALLTHROUGH @0x801091AC */
+        /* fall through */
+    case 3:
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + (uint8_t)re2z_clip_done(e));
+                                                   /* +0x6 += 959c(...,512) @0x801091B8-D0 */
+        /* `+0x14E == 0 -> FUN_80016200(self,0,1)` @0x801091C4-E0 (Praesentation, OPEN) */
+        break;
+    case 4:
+        re15_ai_set_state_word(e, 7u);             /* `addiu v0,zero,7 / sw v0,4(s3)`
+                                                    * @0x801091EC-F4 -> CORPSE, Sub 0 */
+        break;
+    case 5:
+        e->sub_state_2 = 6;                        /* sb v0(=6),6 @0x801091F8-FC */
+        re2z_clip(e, (int)e->re2z_walkclip, 0, 0xF, 0x100, 0);
+                                                   /* Wort 0x000F0000 + +0x218 @0x80109200-10;
+                                                    * Blend = a3 = 256 des 959c @0x8010928C */
+        e->re2z_t158 = (int16_t)((re2z_rand() & 0x1fu) + 15u);
+                                                   /* +0x158 = (rand & 0x1F) + 15 @0x8010920C-1C */
+        /* FALLTHROUGH @0x80109220 */
+        /* fall through */
+    case 6: {
+        uint16_t old = (uint16_t)e->re2z_t158;     /* lhu 344 @0x80109220 */
+        e->re2z_t158 = (int16_t)(uint16_t)(old - 1u);
+                                                   /* `sh v0,344` im DELAY-SLOT @0x80109230 =
+                                                    * IMMER */
+        if (old == 0u) {                           /* `bne v1,zero` @0x8010922C — ALTER Wert */
+            e->sub_state_2 = 3;                    /* sb v0(=3),6 @0x80109244 */
+            re2z_clip(e, 1, 0, 7, 0x200, 0);       /* Wort 0x00070001 @0x80109234-48 */
+            e->re2z_flags21a &= (uint16_t)~4u;     /* andi 0xfffb @0x8010924C-50 */
+        }
+        re15_enemy_steer_point(e, e->steer_x, e->steer_z, 8);
+                                                   /* FUN_80015558(self,+0x1C4,+0x1C6,8)
+                                                    * @0x80109254-64 */
+        re15_re2z_move_root(e);                    /* 0x80015E7C @0x80109274 + 0x800152C8
+                                                    * @0x80109294 */
+        /* `jal 0x8002959c(a3=256)` @0x80109288 — Advance ohne +0x6-Uebernahme */
+        break;
+    }
+    default: break;
+    }
+}
+
+/* ============================================================================================
  * Handler 0x801066FC (Tabellen-Zeilen 7 und 8, Spalte 1) — der RAGDOLL-STURZ mit Bounce-Physik.
  * Vollstaendig disassembliert 2026-08-18 (0x801066FC..0x80106F1C, EMOVL10_S0.BIN @0x80100000).
  *
@@ -3650,23 +4263,35 @@ static int re2z_root_py(const re15_actor_t *e)
     return (int)py;
 }
 
-static void re2z_hit_ragdoll(re15_actor_t *e, re15_actor_t *pl)
+/* `death` = 1: die Wurzel ist die DEATH-Tabelle (+0x4 == 3, Zelle RE2ZD_66FC, Zeile 7 =
+ * SCHROTFLINTE). Das schaltet die zwei `lbu v1,4` -Zweige scharf, die im HURT strukturell tot
+ * sind: P0 @0x80106808-34 (3/4 -> +0x231 = 1 -> FUN_80109610 = WEGSCHLEUDERN mit
+ * Fleischbrocken) und P2 @0x80106ACC-E8 (HP = 10 -> der Zombie steht als KRIECHER wieder auf). */
+static void re2z_hit_ragdoll(re15_actor_t *e, re15_actor_t *pl, int death)
 {
-    (void)pl;
-    if (e->re2z_rag231 != 0) {                                     /* @0x80106738-60 */
-        /* OPEN: FUN_80109610 / FUN_801092C4 ohne Port-Zwilling. Der Port kann +0x231 nie
-         * setzen (alle drei Setzer haengen an nicht erzeugten Globals bzw. an +0x4 == 3),
-         * also ist dieser Zweig hier tot; er bleibt als Marker stehen. */
-        re15_ai_set_state_word(e, 0x101);
-        return;
+    if (e->re2z_rag231 == 1u) {                                    /* `bne v0,t2` @0x80106740 */
+        re2z_death_burst(e, pl);                                   /* jal 0x80109610 @0x80106748 */
+        return;                                                    /* j 0x80106F14 */
+    }
+    if (e->re2z_rag231 == 2u) {                                    /* `beq v0,a0` @0x8010675C */
+        re2z_death_magnum(e, pl);                                  /* jal 0x801092C4 @0x801067BC */
+        return;                                                    /* j 0x80106F14 */
     }
 
     switch (e->sub_state_2) {
     case 0:
-        /* 0x800CFBF8 < 0 / +0x10C / 0x800CFBD8 & 0x10000000: keine Port-Produzenten (OPEN) ->
-         * der Original-Pfad faellt hier durch bis zum RNG-Wurf. */
-        (void)re2z_rand();                                         /* jal @0x801067F4, IMMER */
-        /* `+0x4 == 3` @0x8010680C-10 kann in HURT nicht auftreten (Wurzel = Zustand 2). */
+        /* `0x800CFBF8 < 0` @0x8010679C-B0 (-> +0x231 = 2 -> FUN_801092C4) und `+0x10C != 0` /
+         * `0x800CFBD8 & 0x10000000` @0x801067CC-EC (-> +0x231 = 1 -> FUN_80109610): drei
+         * Eingaben ohne Port-Produzenten (OPEN, mit Adresse) -> der Pfad faellt bis zum Wurf. */
+        if ((re2z_rand() & 3u) != 0u && death) {                   /* jal @0x801067F4 (IMMER),
+                                                                    * `andi 0x3 / beq zero`
+                                                                    * @0x801067FC-800,
+                                                                    * `lbu v1,4 / bne 3`
+                                                                    * @0x80106808-10 */
+            e->re2z_rag231 = 1u;                                   /* sb v0(=1),561 @0x8010681C */
+            re2z_death_burst(e, pl);                               /* jal 0x80109610 @0x80106828 */
+            return;                                                /* j 0x80106F14 */
+        }
         e->sub_state_2  = 1;                                       /* sb 1,6 @0x8010684C */
         e->re2_lean[0]  = 0;                                       /* sh zero,316 @0x80106858 */
         e->re2_lean[1]  = 0;                                       /* sh zero,318 @0x8010685C */
@@ -3733,7 +4358,10 @@ static void re2z_hit_ragdoll(re15_actor_t *e, re15_actor_t *pl)
         e->re2z_self1d3  &= 0x7fu;                                 /* andi 0x7f    @0x80106A9C */
         e->y              = (int32_t)e->re2z_gy232;                /* +0x3C = +0x232 @0x80106AC8 */
         e->re2z_flags21a |= 1u;                                    /* ori 1 @0x80106AD0-D4 */
-        /* `+0x4 == 3 -> HP = 10` @0x80106ADC-E8 ist hier tot (HURT). */
+        if (death) e->hp = 10;                                     /* `lbu v1,4 / bne 3 / sh 10,342`
+                                                                    * @0x80106ACC-E8 — der DEATH-
+                                                                    * Ausgang belebt als KRIECHER
+                                                                    * wieder (+0x10E Bit 0 unten) */
         e->re2z_f10e      = 0x2001u;                               /* sh 8193,270 @0x80106B0C-10 —
                                                                     * Bit 0 schaltet die Trefferwurzel
                                                                     * auf die KRIECHER-Tabelle
@@ -4008,7 +4636,15 @@ static void re2z_knockdown_gore(re15_actor_t *e)
     re2z_gore_fx(e, 3, 0x08001000u);                               /* @0x80107704 */
 }
 
-static void re2z_hit_knockdown(re15_actor_t *e, re15_actor_t *pl)
+/* `death` = 1: die Wurzel ist die DEATH-Tabelle (+0x4 == 3, Zelle RE2ZD_7438 — SPALTE 0 der
+ * Zeilen 5..9/17). Damit wird der P2-Zweig `lbu v1,4 / bne v0(=3)` @0x8010777C-84 scharf:
+ *   @0x8010778C-98  `rand & 3` != 0 -> HP = 10  (Wiederbelebung als Kriecher)
+ *   @0x801077A0-A8  sonst entscheidet +0x16B (das Arm-Abriss-Byte aus re2z_knockdown_gore,
+ *                   `sb v0,363` @0x80107524): Arm ab -> CORPSE, sonst ebenfalls HP = 10.
+ * ⛔ Spalte 0 verlangt Zone 0; der Port stempelt immer Zone 1 (re15_re2_stamp_hit), die Zelle
+ *    ist im Spiel also heute unerreichbar — dieselbe Lage wie Handler 5 der HURT-Tabelle. Der
+ *    Zweig ist portiert und wird im Test durch einen Direktaufruf positiv kontrolliert. */
+static void re2z_hit_knockdown(re15_actor_t *e, re15_actor_t *pl, int death)
 {
     (void)pl;
     switch (e->sub_state_2) {
@@ -4033,8 +4669,28 @@ static void re2z_hit_knockdown(re15_actor_t *e, re15_actor_t *pl)
             e->sub_state_2 = (uint8_t)(e->sub_state_2 + 1);
         break;
     default:                                                       /* P2 @0x8010777C */
-        /* `+0x4 == 3` (@0x80107784) ist in HURT unerreichbar; +0x10C und 0x800CFBD8 haben im
-         * Port keinen Produzenten (OPEN) -> der Original-Pfad faellt in den KRIECHER-Ausgang. */
+        if (death) {                                               /* `lbu v1,4 / bne v0(=3)`
+                                                                    * @0x8010777C-84 */
+            int hp10 = 1;
+            if ((re2z_rand() & 3u) == 0u) {                        /* jal @0x8010778C, `andi 0x3 /
+                                                                    * bne -> 0x801077B0`
+                                                                    * @0x80107794-98 */
+                if ((int8_t)e->re2z_gaitrow != 0)                  /* `lb v0,363 / bne`
+                                                                    * @0x801077A0-A8 */
+                    hp10 = 0;
+            }
+            if (!hp10) {
+                re15_ai_set_state_word(e, 7u);                     /* `addiu v1,zero,7 / sw v1,4`
+                                                                    * @0x801077E0-E4 -> CORPSE */
+                e->re2z_flags21a &= (uint16_t)~4u;                 /* andi 0xfffb @0x801077E8 /
+                                                                    * sh @0x801077F0 */
+                re2z_hit_latch_release(e);
+                return;                                            /* j 0x80107860 */
+            }
+            e->hp = 10;                                            /* sh v0(=10),342 @0x801077B0 */
+        }
+        /* +0x10C und 0x800CFBD8 (@0x801077B4-D4) haben im Port keinen Produzenten (OPEN) ->
+         * der Original-Pfad faellt in den KRIECHER-Ausgang. */
         e->re2z_f10e = 0x2001u;                                    /* sh 8193,270 @0x80107820-24 */
         re15_ai_set_state_word(e, (re2z_rand() & 1u) ? 1u : 0x201u);/* @0x80107834-4C */
         e->re2z_self1d3 &= 0x7fu;                                  /* andi 0x7f @0x80107850-5C */
@@ -4365,10 +5021,12 @@ static void re2z_hurt(re15_actor_t *e, re15_actor_t *pl)
     switch (h) {
     case RE2ZH_MAIN:    re2z_hit_main(e, pl);    return;           /* 0x80105438 */
     case RE2ZH_STAGGER: re2z_hit_stagger(e, pl); return;           /* 0x80105BC0 */
-    case RE2ZH_66FC:    re2z_hit_ragdoll(e, pl); return;           /* 0x801066FC */
+    case RE2ZH_66FC:    re2z_hit_ragdoll(e, pl, 0); return;        /* 0x801066FC — HURT-Wurzel,
+                                                                    * +0x4 == 2 (death = 0) */
     case RE2ZH_703C:    re2z_hit_slide(e, pl);   return;           /* 0x8010703C */
     case RE2ZH_7EF0:    re2z_hit_light(e, pl);   return;           /* 0x80107EF0 */
-    case RE2ZH_7438:    re2z_hit_knockdown(e, pl); return;         /* 0x80107438 */
+    case RE2ZH_7438:    re2z_hit_knockdown(e, pl, 0); return;      /* 0x80107438 — HURT-Wurzel,
+                                                                    * +0x4 == 2 (death = 0) */
     default: break;
     }
     /* Jede NULL-Zelle: das Original wuerde dort `jalr 0` ausfuehren, die Kombination entsteht
@@ -4443,12 +5101,18 @@ int re15_re2z_last_hit_handler(void) { return s_re2z_last_handler; }
  * Zeile 18 Spalte 8 faellt auf 0x8010CECC = Index 0 der 1D-Tabelle = NULL, ebenfalls wie dort. */
 enum {
     RE2ZD_NULL = 0,
-    RE2ZD_MAIN,      /* 0x80108530 — der normale Sturz (Clip 1/2), unten portiert            */
-    RE2ZD_7438,      /* 0x80107438 — = der HURT-Knockdown-Handler, DEATH-Zweig `+0x4==3` OPEN */
-    RE2ZD_92C4,      /* 0x801092C4 — Phasentabelle @0x8010014C (5 Phasen), OPEN               */
-    RE2ZD_66FC,      /* 0x801066FC — = der HURT-Ragdoll-Handler, DEATH-Zweig `+0x4==3` OPEN   */
-    RE2ZD_8BEC,      /* 0x80108BEC — Phasentabelle @0x8010012C (7 Phasen), OPEN               */
-    RE2ZD_9610       /* 0x80109610 — Zerplatzen (`+0x4 = 12` @0x801099B0), OPEN               */
+    RE2ZD_MAIN,      /* 0x80108530 — der normale Sturz (Clip 1/2)      -> re2z_death_main      */
+    RE2ZD_7438,      /* 0x80107438 — der HURT-Knockdown-Handler mit scharfem `+0x4==3`-Zweig
+                      *              (Arm ab -> CORPSE, sonst HP = 10) -> re2z_hit_knockdown   */
+    RE2ZD_92C4,      /* 0x801092C4 — MAGNUM: der Kopf platzt ab, Phasentabelle @0x8010014C
+                      *              (5 Phasen)                        -> re2z_death_magnum    */
+    RE2ZD_66FC,      /* 0x801066FC — der HURT-Ragdoll-Handler mit scharfem `+0x4==3`-Zweig
+                      *              (3/4 -> Burst, sonst HP = 10)     -> re2z_hit_ragdoll     */
+    RE2ZD_8BEC,      /* 0x80108BEC — ZERREISSEN: Kopf ab + Bein(e) ab, Phasentabelle
+                      *              @0x8010012C (7 Phasen)            -> re2z_death_rip       */
+    RE2ZD_9610       /* 0x80109610 — WEGSCHLEUDERN + Fleischbrocken; P2 setzt +0x4 = **7**
+                      *              (CORPSE, v0 aus dem DELAY-SLOT @0x80109684, `sw v0,4`
+                      *              @0x801099B0)                      -> re2z_death_burst     */
 };
 static const uint8_t re2z_death_tbl[19][9] = {
 /* 0*/ { 0,0,0, 0,0,0, 0,0,0 },   /* existiert nicht (1D-Tabelle + Kosten-Bytes @0x8010CC24) */
@@ -4710,15 +5374,14 @@ static void re2z_death(re15_actor_t *e, re15_actor_t *pl)
         uint8_t h = (row < 19u && col < 9u) ? re2z_death_tbl[row][col] : (uint8_t)RE2ZD_NULL;
         s_re2z_last_death_handler = (int)h;
         switch (h) {
-        case RE2ZD_MAIN:
-            re2z_death_main(e);
-            return;
+        case RE2ZD_MAIN: re2z_death_main(e);            return;
+        case RE2ZD_7438: re2z_hit_knockdown(e, pl, 1);  return;   /* 0x80107438, Spalte 0 */
+        case RE2ZD_92C4: re2z_death_magnum(e, pl);      return;   /* 0x801092C4, Zeilen 5/6 */
+        case RE2ZD_66FC: re2z_hit_ragdoll(e, pl, 1);    return;   /* 0x801066FC, Zeile 7 */
+        case RE2ZD_8BEC: re2z_death_rip(e, pl);         return;   /* 0x80108BEC, Zeilen 8/9/17 */
+        case RE2ZD_9610: re2z_death_burst(e, pl);       return;   /* 0x80109610, Zeile 12 */
         default:
-            /* RE2ZD_7438/92C4/66FC/8BEC/9610 = die ZERREISS-Tode (Magnum, Schrot, Rakete,
-             * Sprenggranate). Ihre Handler sind noch nicht portiert — Adressen stehen im enum
-             * oben. Bis dahin bleibt fuer diese Zellen das bisherige Port-Verhalten (die
-             * Clip-7-Kette), damit dieser Fix fuer sie KEINE Regression ist.
-             * Ebenso die NULL-Zellen: im Original waere das `jalr 0`, also unerreichbar
+            /* Die NULL-Zellen: im Original waere das `jalr 0`, also unerreichbar
              * (PORT-SICHERUNG, kein eingefrorener Gegner). */
             re2z_death_crawler(e);
             return;

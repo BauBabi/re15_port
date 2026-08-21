@@ -807,6 +807,34 @@ typedef struct {
      * Umzug, die Latch-Semantik (`nur ein 0/1-Sondenergebnis aktualisiert`) bleibt unveraendert. */
     uint8_t  aspider_los;    /* +0x1d0 bit0: LATCHED LOS (Verdikt-Tick @0x80110e70-bc,
                               * HURT-Recover @0x80113f04) */
+
+    /* ---- SCA-Wandkontakt, ZWEITE Ausgabe (typuebergreifend, gehoert NICHT zum Adult Spider) -- */
+    uint8_t  sca_wall_hit;  /* DER RUECKGABEWERT von FUN_8003b0a4 — die ZWEITE, von +0x90 voellig
+                             * getrennte Ausgabe des SCA-Klemmpfads. Im Resolver:
+                             *   8003b124  addu s7,zero,zero    ; s7 = 0 beim Eintritt
+                             *   8003b500  ori  s7,s7,0x1       ; bei JEDEM Broadphase-Treffer
+                             *                                    (gleicher Block wie der +0x90-Write)
+                             *   8003b520  andi v0,s7,0xff      ; return  -> also NUR 0 oder 1
+                             *   8003b134-44 `if (entity+0x0 & 8) return 0` (Frueh-Ausstieg)
+                             * Der Root JEDES Gegners legt diesen Rueckgabewert in SEIN eigenes Feld:
+                             *   Maggot 0x27  +0x1d6  `sh v0,470(v1)` @0x80116e84  (Root 0x80116db8)
+                             *   Hund   0x20  +0x1da  `sh v0,474(v1)` @0x8010d8c4  (Root 0x8010d7f8)
+                             *   A-Spider 0x25 +0x1da `sh v0,474(v1)` @0x80110ab0  (Root 0x801109e4,
+                             *                                                      STAGE2.BIN)
+                             *   Kraehe 0x21  +0x1d1  `sb v0,465(v1)` @0x80112218  (Root 0x80112020)
+                             * Alle vier Roots rufen die Klemme UNBEDINGT und mit denselben Argumenten
+                             * (a0 = entity+0x34, a1 = dim[+6], a2 = 4) — es ist EIN Wert unter vier
+                             * Namen, deshalb hier EIN Feld.
+                             * RE2-FLAVOR: RE2s Aequivalent ist entity+0x110 Bit 0. Schreiber ist RE2s
+                             * EIGENE Routine FUN_8003567c (info/re2leon/PSX.EXE):
+                             *   8003569c  sw zero,272(s0)   ; +0x110 = 0 (immer, Delay-Slot)
+                             *   800356d0  jal 0x8004c1bc    ; RE2-SCA-Resolver (16-Byte-Zellformat)
+                             *   800356d8  sw v0,272(s0)     ; +0x110 = Rueckgabewert  [STORE WORD]
+                             * dessen Bit 0 @0x8004c4a4/@0x8004c518 = "solide Zelle beruehrt" — exakt
+                             * die Semantik dieses Feldes. FUN_8004c1bc ist NICHT portierbar (es liest
+                             * RE2-SCA-Zellen; der Port faehrt in BEIDEN Flavors RE1.5-Raumdaten), also
+                             * speist der RE1.5-Rueckgabewert beide Flavors.
+                             * Port-Schreiber: re15_enemy_sca_clamp (enemy_ai_common.c). */
 } re15_actor_t;
 
 extern re15_actor_t g_actors[RE15_ACTOR_MAX];

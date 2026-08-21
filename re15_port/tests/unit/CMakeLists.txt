@@ -1965,3 +1965,89 @@ target_compile_definitions(probe_sca_contact90 PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_sca_contact90 COMMAND probe_sca_contact90)
 set_tests_properties(unit_sca_contact90 PROPERTIES TIMEOUT 180)
+
+# --- PIN "der RUECKGABEWERT von FUN_8003b0a4" (+0x1d6 Maggot / +0x1da Hund+Adult-Spider /
+#     RE2s +0x110 Bit 0) -------------------------------------------------------------------
+#     Die Klemme hat ZWEI Ausgaben: das Kontakt-Byte +0x90 (probe_sca_contact90) UND ihren
+#     Rueckgabewert (s7 = 0 @0x8003b124, `ori s7,s7,0x1` @0x8003b500, `andi v0,s7,0xff`
+#     @0x8003b520 -> strikt 0/1). Maggot/Hund/Adult-Spider/Kraehe legen GENAU diesen Wert in
+#     +0x1d6 / +0x1da / +0x1da / +0x1d1 ab (@0x80116e84 / @0x8010d8c4 / @0x80110ab0 /
+#     @0x80112218) und lesen NICHT +0x90. Der Port proxyte sie ueber `(+0x90 & 3) != 0` — das
+#     IST `cell.u1 & 3` (8&3 == 0) und in ROOM11C0/2090/1190/1230 beweisbar IMMER 0.
+#     RE2s Aequivalent +0x110 kommt aus RE2s EIGENER Routine FUN_8003567c (`sw v0,272(s0)`
+#     @0x800356D8, Resolver FUN_8004C1BC) — dieselbe Semantik, anderes Zellformat. ---
+add_executable(probe_sca_wall_hit probe_sca_wall_hit.c)
+target_link_libraries(probe_sca_wall_hit PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_sca_wall_hit PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_sca_wall_hit PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_sca_wall_hit COMMAND probe_sca_wall_hit)
+set_tests_properties(unit_sca_wall_hit PROPERTIES TIMEOUT 180)
+
+# --- MESSSONDE: die ZERREISS-TODE des RE2-Zombies (DEATH-Tabelle 0x8010CC24, die vier
+#     Zellen jenseits von FUN_80108530: 0x801092C4 Magnum-Kopfschuss, 0x801066FC Schrot-
+#     Ragdoll mit Burst-Ausstieg, 0x80108BEC Kopf+Bein(e) ab, 0x80109610 Wegschleudern).
+#     Echter Weg: re15_game_step + Pad R1/SQUARE, echte ROOM1140-Spawns, GELADENE RE2-Bank.
+#     Kein add_test — reine Messsonde. ---
+add_executable(probe_re2_ztear probe_re2_ztear.c)
+target_link_libraries(probe_re2_ztear PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re2_ztear PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_re2_ztear PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- MESSSONDE + PIN: Leons SCHIEBE-POSE kommt aus der COMMON-Bank (Nutzer-Befund (A)) -------
+#     "Kisten schieben geht jetzt, aber die Animation von Leon ist noch falsch" (ROOM1090).
+#     Der Schiebe-Handler LAB_80035810 posiert IMMER aus DAT_800acad8/DAT_800acbc0 (PL00.EMR/
+#     PL00.EDD) — @0x800358bc/c4, @0x80035960/68, @0x80035a2c/34, @0x80035a80/88 — und beide
+#     Zeiger werden im ganzen PSX.EXE genau EINMAL geschrieben (@0x8003154c / @0x80031578, aus
+#     PLD-Directory[0]/[1]). Ein Raum-RBJ kann sie nicht umbiegen. Der Port hing Leons Default-
+#     Bank aber am RDT-Animationsblock (ROOM1090 @0x5C, 2 Records, rec0 = 25 Clips) — Clip 0x11
+#     war dort 30 statt 10 Frames, Clip 0x12 20 statt 25. Die Sonde loest die Pose exakt wie der
+#     Renderer auf (re15_actor_anim_select + re15_actor_playback_slot) und prueft die Bank. ---
+add_executable(probe_1090_push_anim probe_1090_push_anim.c)
+target_link_libraries(probe_1090_push_anim PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1090_push_anim PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1090_push_anim PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_1090_push_anim COMMAND probe_1090_push_anim)
+set_tests_properties(unit_1090_push_anim PROPERTIES TIMEOUT 60)
+
+# --- PIN: die ZERREISS-TODE des RE2-Zombies (DEATH-Tabelle 0x8010CC24, Zellen 0x80107438 /
+#     0x801066FC / 0x801092C4 / 0x80108BEC / 0x80109610). Pinnt je Routine die byte-true
+#     Beobachtungsgroessen (Kopf-/Bein-Flagworte 0x4A/0x1062, Tinten 0x00101040/0x00101030,
+#     Drift-Felder 400/-100/10/-50, Rumpf-Stumpf mesh 16, Burst-Startframe 15 und den
+#     -50-Abbau von +0x144, HP = 10 der Wiederbelebung), mit Positiv-Kontrolle fuer die im
+#     Spiel unerreichbare Spalte 0, Regressionswache fuer die MAIN-Waffen und Negativtest
+#     im RE1.5-Modus. Echter Weg: re15_game_step + Pad, ROOM1140, geladene RE2-Bank. ---
+add_executable(test_re2_zombie_teardeath test_re2_zombie_teardeath.c)
+target_link_libraries(test_re2_zombie_teardeath PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_zombie_teardeath PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2_zombie_teardeath PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2_zombie_teardeath COMMAND test_re2_zombie_teardeath)
+set_tests_properties(unit_re2_zombie_teardeath PROPERTIES TIMEOUT 240)
+
+# --- MESSSONDE: Kamera nach dem Generator-Raetsel (Nutzer-Befund (D)) ------------------------
+#     "Wenn ich nach dem Generator-Raetsel direkt weglaufe, wechselt die Kamera / das Bild nicht."
+#     ROOM11F0 @0x15C0 = Cut_chg(0x0A), @0x16F0 = Cut_old + Cut_auto(1). Original:
+#     Cut_chg @0x800402d4 setzt DAT_800aca3c Bit 0x100 (Auto-Cam AUS), Cut_old @0x80040378-84
+#     loescht es wieder. Die Sonde faehrt beide subs als echte SCD-Threads und laeuft davor
+#     wie danach dieselbe Zonen-Strecke ab (POSITIV-KONTROLLE + Messung). ---
+add_executable(probe_11f0_cut_after_puzzle probe_11f0_cut_after_puzzle.c)
+target_link_libraries(probe_11f0_cut_after_puzzle PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_11f0_cut_after_puzzle PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_11f0_cut_after_puzzle PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_11f0_cut_after_puzzle COMMAND probe_11f0_cut_after_puzzle)
+set_tests_properties(unit_11f0_cut_after_puzzle PROPERTIES TIMEOUT 60)
+
+# --- MESSSONDE (kein ctest): ROOM1090-Cutscene sub02 (Nutzer-Befund (C)) ---------------------
+#     "In der Cutscene laeuft/orientiert sich Leon falsch." sub02 @0x2414 wird von sub01
+#     @0x23F4 per `Cmp(work_vars[0x0A]==13)` + GOSUB gestartet; seine Plc_dest-Wegpunkte
+#     liegen roh in der RDT (@0x242C/244A/2454/245E/2476). Die Sonde faehrt sub02 als echten
+#     SCD-Thread und protokolliert Leons Position/Kurs gegen diese Wegpunkte. ---
+add_executable(probe_1090_cutscene probe_1090_cutscene.c)
+target_link_libraries(probe_1090_cutscene PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1090_cutscene PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1090_cutscene PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")

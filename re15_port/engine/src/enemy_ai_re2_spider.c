@@ -640,7 +640,7 @@ static void re2s_m0_attack(re15_actor_t *e, re15_actor_t *pl)
         /* +0xD != 255 (Body-Push-Stempel) -> abbrechen @0x80100E98-A4: im Port ist +0xD
          * nicht als Pusher-Id vorhanden -> Gate OPEN, feuert nicht.
          * (+0x110 & 1) (Wandkontakt) -> abbrechen @0x80100EA8-B8. */
-        if (e->ai_contact & 1u) { e->sub_state_2 = 6; break; }        /* @0x80100EB0-B8 */
+        if (e->sca_wall_hit) { e->sub_state_2 = 6; break; }           /* +0x110&1 @0x80100EB0-B8 */
         if (re15_ai_arc_test(e, pl->x, pl->z, 512) != 0) {            /* @0x80100EC8-D0 */
             e->sub_state_2 = 6; break;                                /* @0x80100ED8 */
         }
@@ -1066,7 +1066,7 @@ static void re2s_m1_attack(re15_actor_t *e, re15_actor_t *pl)
             e->re2z_t158 = (int16_t)(t - 1u);              /* @0x801018CC (immer) */
             if (t == 0u) { e->sub_state_2 = 6; break; }    /* @0x801018C8/@0x8010190C */
             if (re2s_arc(e, pl, 512) != 0) { e->sub_state_2 = 6; break; }   /* @0x801018D4-E0 */
-            if (e->ai_contact & 1u)        { e->sub_state_2 = 6; break; }   /* @0x801018E8-F4 */
+            if (e->sca_wall_hit)           { e->sub_state_2 = 6; break; }   /* +0x110&1 @0x801018E8-F4 */
             /* +0xD != 255 (Body-Push-Stempel) -> +0x6 = 6 (@0x801018FC-904). Im Port ist +0xD
              * nicht als Pusher-Id vorhanden -> Gate OPEN, feuert nicht (weiterlaufen). */
         }
@@ -1165,7 +1165,7 @@ static void re2s_m1_regroup(re15_actor_t *e)
     e->speed_h   = (int16_t)(e->speed_h + 100);            /* += *0x80106480 (=100) @0x80101C5C-80 */
     e->re2z_t158 = (int16_t)(e->re2z_t158 - 1);            /* @0x80101C68-74 */
     if ((uint16_t)e->re2z_t158 == 0u) re2s_word(e, 1u);    /* @0x80101C78-88 */
-    if (e->ai_contact & 1u) return;                        /* +0x110 & 1 @0x80101C8C-98 */
+    if (e->sca_wall_hit) return;                           /* +0x110 & 1 @0x80101C8C-98 */
     re2s_thrust(e, e->re2s_yaw21a);                        /* @0x80101CA0-A4 */
 }
 
@@ -1451,7 +1451,7 @@ static void re2s_m2_bite(re15_actor_t *e, re15_actor_t *pl)
         int stop = re2s_rope_stop(e, (int16_t)e->re2s_yaw226);   /* FUN_8010540C @0x8010289C */
         if (!stop) {                                       /* @0x801028A4 */
             /* +0xD != 255 -> Abbruch (@0x801028AC-B4): im Port kein Pusher-Stempel, OPEN. */
-            if (!(e->ai_contact & 1u)) {                   /* +0x110 & 1 @0x801028BC-C8 */
+            if (!e->sca_wall_hit) {                        /* +0x110 & 1 @0x801028BC-C8 */
                 if (re2s_attack(e, pl, 2000, 4300)) {      /* FUN_80105AE0 @0x801028E8-EC */
                     e->sub_state_2 = 3;                    /* @0x80102900-04 */
                     re2s_clip(e, 0x00030007u);             /* Clip 7 @0x801028F8-FC/@0x8010290C */

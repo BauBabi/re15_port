@@ -260,15 +260,25 @@ int main(void)
     /* ---- fill_gates: the Welle-B producers ------------------------------------------------ */
     {
         re15_actor_t e, p; memset(&e, 0, sizeof e); memset(&p, 0, sizeof p);
-        e.re2z_cd23e = 5; e.re2z_flags21a = 0x4030; e.contact_flags = 2;
+        /* +0x110 = der WAND-Kontakt, nicht der Koerper-Push. RE2s Schreiber ist FUN_8003567c
+         * (info/re2leon/PSX.EXE): `sw zero,272(s0)` @0x8003569C (Clear) / `jal 0x8004c1bc`
+         * @0x800356D0 / `sw v0,272(s0)` @0x800356D8 — der Rueckgabewert des SCA-Resolvers,
+         * dessen Bit 0 @0x8004c4a4/@0x8004c518 "solide Zelle beruehrt" heisst. Im Port ist das
+         * `sca_wall_hit` (der Rueckgabewert von RE1.5s FUN_8003b0a4, @0x8003b500/@0x8003b520).
+         * ⛔ Frueher stand hier contact_flags (+0x1C2) = die AKTOR-gegen-AKTOR-Trennung
+         * FUN_8002aec4/b544 — eine andere Groesse; der Test hat den Fehler mit festgehalten. */
+        e.re2z_cd23e = 5; e.re2z_flags21a = 0x4030;
+        e.sca_wall_hit = 1; e.contact_flags = 2;   /* contact_flags darf NICHTS bewirken */
         re15_re2z_gates_t g;
         re15_re2z_fill_gates(&e, &p, 0, &g);
         CHECK(g.self_23e == 5,      "gate +0x23E must read re2z_cd23e (@0x80101790)");
         CHECK(g.self_21a == 0x4030, "gate +0x21A must read re2z_flags21a (@0x80101928)");
-        CHECK(g.self_110 == 1,      "gate +0x110 bit0 must read the contact result (@0x80101844)");
-        e.contact_flags = 0;
+        CHECK(g.self_110 == 1,      "gate +0x110 bit0 must read the SCA wall-clamp result "
+                                    "(@0x80101844, Schreiber @0x800356D8)");
+        e.sca_wall_hit = 0;
         re15_re2z_fill_gates(&e, &p, 0, &g);
-        CHECK(g.self_110 == 0, "no contact -> +0x110 bit0 clear");
+        CHECK(g.self_110 == 0, "no wall contact -> +0x110 bit0 clear (contact_flags=%u darf den "
+                               "Wand-Gate nicht setzen)", (unsigned)e.contact_flags);
     }
 
     /* ---- the +0x23E cooldown gates blocks B (and A/J) in the ladder ----------------------- */

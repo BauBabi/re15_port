@@ -5623,11 +5623,23 @@ static void re15_dog_clip_keep(re15_actor_t *e, int turn)
     uint8_t c = (turn < 0) ? 5 : (turn == 0) ? 3 : 4;
     if (e->motion != c) e->motion = c;
 }
-/* +0x1da — the per-frame SCA wall-probe result the dog ROOT stores (FUN_8010d7f8 @0x8010d834:
- * `+0x1da = FUN_8003b0a4(&+0x34, dim, 4)`, nonzero on wall contact). Port: the run_all wall
- * clamp encodes the same contact into +0x90 (ai_contact bit0 + heading nibble), so "blocked
- * last frame" = the +0x90 contact bits. (audit wf_827f186d dog #15) */
-static int re15_dog_blocked(const re15_actor_t *e) { return (e->ai_contact & 3) != 0; }
+/* "War ich im letzten Resolver-Lauf an einer Wand?" — der RUECKGABEWERT von FUN_8003b0a4,
+ * den drei Roots byte-gleich in ihr eigenes Feld legen (alle drei mit denselben Argumenten
+ * a0 = entity+0x34 / a1 = dim[+6] / a2 = 4, alle UNBEDINGT im Root-Tail):
+ *   Hund   0x20 Root 0x8010d7f8: 8010d8a4-b4 jal 0x8003b0a4 / 8010d8c4 `sh v0,474(v1)` = +0x1da
+ *   Maggot 0x27 Root 0x80116db8: 80116e64-74 jal 0x8003b0a4 / 80116e84 `sh v0,470(v1)` = +0x1d6
+ *   A-Spid 0x25 Root 0x801109e4: 80110a90-a0 jal 0x8003b0a4 / 80110ab0 `sh v0,474(v1)` = +0x1da
+ *                                (STAGE2.BIN)
+ * Der Rueckgabewert selbst ist strikt 0/1: s7 = 0 @0x8003b124, `ori s7,s7,0x1` @0x8003b500 bei
+ * JEDEM Broadphase-Treffer, `andi v0,s7,0xff` @0x8003b520.
+ *
+ * ⛔ WAR FALSCH bis hierher: der Port las stattdessen `(entity+0x90 & 3) != 0`. +0x90 ist aber
+ * `(dir>>4) + 8 + (cell.u1 & 3)` (@0x8003b4c0-dc) und 8 & 3 == 0 — `+0x90 & 3` IST also
+ * `cell.u1 & 3` und NICHT "Kontakt". In ROOM11C0 (Maggot), ROOM1190/1230 (Hund) gibt es NULL
+ * Zellen mit u1&3, der Ausdruck war dort permanent 0. Gemessen (probe_sca_wall_hit C3, Hund an
+ * einer echten ROOM1190-Zelle): Rueckgabewert 240/240 Frames gesetzt, `(+0x90 & 3)` 0/240.
+ * (audit wf_827f186d dog #15 hatte die Quelle richtig benannt, aber die Kodierung verwechselt.) */
+static int re15_dog_blocked(const re15_actor_t *e) { return e->sca_wall_hit != 0; }
 /* func_0x80019700(0x2000, rot_y, part-matrix, &DAT_80120f54) — the universal hit-blood burst,
  * ALWAYS a0=0x2000 (= effect 0, scale16 0x2000), anchored at a PART MATRIX (raw disasm):
  *   grounded hurt    @0x80110a84-aa4: a2 = pool+0xEC  = 0xAC*1 +0x40 -> BONE 1
@@ -8921,7 +8933,13 @@ static void re15_cockroach_ai_tick(int slot)
                 e->roach_air = 1; e->hit_react |= 1;                                    /* airborne +0x1e0=1 @0x8011250c, +0x93|=1 */
             }
             if (e->roach_air) re15_dog_advance(e, e->crow_speed);                       /* ballistic forward (OPEN: room-point steer 0x8001c1a4 gravity -60) */
-            if (e->roach_air && re15_dog_blocked(e)) { e->state = 2; re15_dog_sub(e, 9); e->roach_air = 0; break; }  /* wall-hit +0x93&0x40 -> state2 sub9 @0x8011254c-7c */
+            /* ⛔ ANDERE QUELLE, bewusst NICHT mit umgestellt: das Original liest hier NICHT den
+             * Klemm-Rueckgabewert, sondern das Treffer-Reaktionsbyte +0x93 (STAGE3.BIN
+             * @0x80112530-44: `lbu v1,147(a1)` / `andi v0,v1,0x2` / `andi v0,v1,0x40`). Der Port
+             * hat fuer +0x93 Bit 0x40 keinen Schreiber -> OPEN. Damit dieser Zweig durch die
+             * Umstellung von re15_dog_blocked nicht klammheimlich sein Verhalten aendert, steht
+             * hier weiterhin WOERTLICH der bisherige Ersatzausdruck. */
+            if (e->roach_air && (e->ai_contact & 3) != 0) { e->state = 2; re15_dog_sub(e, 9); e->roach_air = 0; break; }  /* Ersatz fuer +0x93&0x40 @0x8011254c-7c (OPEN) */
             if (re15_roach_anim(e)) { re15_dog_sub(e, 9); }                             /* leap done -> flight sub 9 */
             break;
         case 8:  /* B[8] LEAP variant 0x80112784 — same escape family (OPEN: exact variant divergence) */
@@ -10338,15 +10356,23 @@ static void re15_enemy_body_push_tail(int s, re15_actor_t *e)
  * Standard-Zombie (@0x8010206c/@0x80102f30/@0x80103478/@0x80103518/@0x80105630),
  * Zombie-Girl (@0x8010bca8/@0x8010bd58) und Hund (@0x8010e260/@0x8010e2b4/@0x8010e634/
  * @0x8010e688/@0x80110384/@0x8011040c/@0x80110650). Alle anderen Typen behalten den
- * kontaktlosen Aufruf — siehe die OPEN-Notiz an den Maggot-/Adult-Spider-Zweigen. */
+ * kontaktlosen Aufruf.
+ *
+ * ZWEITE AUSGABE — der RUECKGABEWERT (`sca_wall_hit`, siehe re15_actor.h): s7 = 0 beim Eintritt
+ * (@0x8003b124), `ori s7,s7,0x1` bei JEDEM Treffer (@0x8003b500, derselbe Block wie der
+ * +0x90-Write), `andi v0,s7,0xff` als Rueckgabe (@0x8003b520) — also strikt 0/1 und voellig
+ * unabhaengig von der Kodierung in +0x90. Maggot/Hund/Adult-Spider/Kraehe legen GENAU diesen
+ * Wert in +0x1d6 / +0x1da / +0x1da / +0x1d1 ab (@0x80116e84 / @0x8010d8c4 / @0x80110ab0 /
+ * @0x80112218) und lesen NICHT +0x90. */
 static int re15_enemy_sca_clamp(re15_actor_t *e, int32_t ox, int32_t oz, uint32_t mask)
 {
-    if (!g_room_rdt_ok) return 0;
+    if (!g_room_rdt_ok) { e->sca_wall_hit = 0; return 0; }
     int32_t nx = e->x, nz = e->z;
     int hit = re15_collision_constrain_contact(&g_room_rdt, ox, oz, &nx, &nz,
                                                e->hit_radius_min, e->y, mask,
                                                &e->ai_contact, &e->coll_cell_attr);
     e->x = nx; e->z = nz;
+    e->sca_wall_hit = (uint8_t)(hit != 0);   /* +0x1d6/+0x1da/+0x1d1 = v0 (@0x8003b520) */
     return hit;
 }
 
@@ -10605,34 +10631,32 @@ void re15_enemy_ai_run_all(int combat_active)
              * to clear BEFORE the tick, which zeroed bit0 for every AI read and killed the reroute
              * gate + the +0x1dc blocked counter (audit wf_827f186d dog #12/#15). */
             const int dog_noclamp = re15_dog_consume_noclamp(s);
-            if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2) {
-                /* ---- RE2-MODUS: UNVERAENDERT (bewusst) --------------------------------------
-                 * Die RE2-Brains lesen RE2s entity+0x110, das der Port mangels eigenem Feld auf
-                 * ai_contact abbildet — dort ist BIT 0 "Kontakt" (enemy_ai_re2_dog.c:520/539/660/
-                 * 1238/1307, enemy_ai_re2_spider.c). RE1.5s +0x90 kodiert anders (Bit 3 = Kontakt,
-                 * Bits 0-1 = cell.u1 & 3). Wuerde man den byte-true RE1.5-Schreiber darunter
-                 * legen, liest der RE2-Hund `&1` = u1&1 — in seinen Raeumen (1190/1230: u1 == 0
-                 * in allen Zellen) also NIE. Der committete RE2-Modus behaelt deshalb exakt die
-                 * bisherige Bruecken-Kodierung. OPEN: RE2s +0x110-Schreiber ist nicht RE't. */
-                e->ai_contact = (uint8_t)(e->ai_contact & 0xf0);
-                if (!dog_noclamp && g_room_rdt_ok && (e->x != dog_ox || e->z != dog_oz)) {
-                    int32_t ix = e->x, iz = e->z;             /* the AI's INTENDED position this frame */
-                    int32_t nx = ix, nz = iz;
-                    re15_collision_constrain_enemy(&g_room_rdt, dog_ox, dog_oz, &nx, &nz, e->hit_radius_min, e->y, 4u);
-                    e->x = nx; e->z = nz;
-                    if (nx != ix || nz != iz) {               /* the clamp moved it = WALL CONTACT */
-                        int push = ((int)re15_atan2_q12(nz - iz, nx - ix) - 0x400) & 0xfff;
-                        e->ai_contact = (uint8_t)((((push >> 8) & 0xf) << 4) | 1);
-                    }
-                }
-            } else if (dog_noclamp) {
+            if (dog_noclamp) {
                 /* reroute-13 leap burst: the original snaps the old-pos mirror +0x40/+0x42/+0x44 to
                  * the post-burst position (@0x801104e0-52c) so the SCA sweep does not clamp the hop
                  * back off the obstacle — skip the port's sweep for this frame. Der Clear von
                  * +0x90 (@0x8003b1dc) laeuft im Original trotzdem, also hier explizit. */
                 e->ai_contact  = (uint8_t)(e->ai_contact & 0xf0);
                 e->coll_cell_attr = 0;
+                e->sca_wall_hit = 0;
             } else {
+                /* EIN Klemmpfad fuer BEIDE Flavors. RE2s Hund liest zwar sein eigenes +0x110
+                 * (`+0x110 & 1`, Leser EMD0G_MOD0.BIN @0x80100618 @0x801006D4 @0x80100D50
+                 * @0x80102BC8 @0x80102F00), aber dessen Schreiber ist RE2s EIGENE Routine
+                 * FUN_8003567c (info/re2leon/PSX.EXE, Aufruf im RE2-Hunde-Root @0x80100088
+                 * `jal 0x8003567c` mit a1 = 0x400):
+                 *   8003569c  sw zero,272(s0)   ; +0x110 = 0 (immer)
+                 *   800356d0  jal 0x8004c1bc    ; RE2-SCA-Resolver, 16-Byte-Zellen
+                 *   800356d8  sw v0,272(s0)     ; +0x110 = Rueckgabewert [WORD]
+                 * und FUN_8004c1bc liest RE2-SCA-Daten, die es in diesem Port NICHT gibt — der
+                 * Port faehrt in BEIDEN Flavors RE1.5-RDTs. Bit 0 des RE2-Rueckgabewerts wird
+                 * @0x8004c4a4 / @0x8004c518 gesetzt, sobald eine solide Zelle beruehrt wurde;
+                 * das ist Zeichen fuer Zeichen die Semantik von RE1.5s FUN_8003b0a4-Rueckgabe
+                 * (@0x8003b500). Deshalb speist derselbe Wert beide Flavors.
+                 * ⛔ WAR FALSCH: der RE2-Zweig baute den Kontakt aus `hat die Klemme die Position
+                 * bewegt?` + einem atan2-Nibble nach — beides steht in KEINEM der beiden
+                 * Originale, und der Bewegungs-Gate verschluckte genau die Faelle, in denen der
+                 * Push nichts bewegt (Original-Klemme feuert dort trotzdem, @0x8003b4b0-ec). */
                 re15_enemy_sca_clamp(e, dog_ox, dog_oz, 4u);
             }
         }
@@ -10640,16 +10664,23 @@ void re15_enemy_ai_run_all(int combat_active)
                                  * Emerges vertically + -2 contact; does NOT translate -> no wall-clamp. */
             re15_spider_ai_tick(s);
         }
-        else if (t == 0x25) {   /* ADULT SPIDER (type 0x25, EM025, STAGE2) — mobile ground creature (Wave 1).
-                                 * Chases the player -> SCA wall-clamp after the tick like the maggot/dog. */
+        else if (t == 0x25) {   /* ADULT SPIDER (type 0x25, EM025, STAGE2) — mobile ground creature.
+                                 * Root-Tail 0x801109e4 (STAGE2.BIN), geradlinig hinter dem
+                                 * State-Dispatch und OHNE Bewegungs-Gate:
+                                 *   80110a90 lw v0,120(a0)   ; dim-Ptr entity+0x78
+                                 *   80110a94 ori a2,zero,0x4 ; Maske HART 4 (kein +0x1d7)
+                                 *   80110a98 lhu a1,6(v0)    ; Radius dim[+6]
+                                 *   80110a9c jal 0x8003b0a4
+                                 *   80110aa0 addiu a0,a0,52  ; a0 = entity+0x34
+                                 *   80110ab0 sh v0,474(v1)   ; +0x1da = RUECKGABEWERT [HALFWORD]
+                                 * Leser: GENAU EINER, @0x80111008 (`lh`), der Steckenbleib-Zaehler
+                                 * `if (+0x1da) +0x1dc += 1; else +0x1dc = 0` — dessen Folge-Leser
+                                 * @0x801111d0/@0x8011144c (`+0x1dc >= 31 -> +0x5=1, +0x6=0xa`)
+                                 * stehen im Port (Zeilen mit `ai_target_x >= 31`). */
             int32_t asp_ox = e->x, asp_oz = e->z;
             re15_adult_spider_ai_tick(s);
             re15_enemy_body_push_tail(s, e);
-            if (g_room_rdt_ok && (e->x != asp_ox || e->z != asp_oz)) {
-                int32_t nx = e->x, nz = e->z;
-                re15_collision_constrain_enemy(&g_room_rdt, asp_ox, asp_oz, &nx, &nz, e->hit_radius_min, e->y, 4u);
-                e->x = nx; e->z = nz;
-            }
+            re15_enemy_sca_clamp(e, asp_ox, asp_oz, 4u);
         }
         else if (t == 0x29) {   /* COCKROACH (type 0x29, EM029, STAGE3) — small FLYING scurrier. Root 0x80110b00
                                  * dispatches +0x4 via the 8-entry table @0x8011eca4. Scurries toward the player +
@@ -10678,35 +10709,30 @@ void re15_enemy_ai_run_all(int combat_active)
             }
         }
         else if (t == 0x27) {   /* MAGGOTS (type 0x27) — large moving ground creature.
-                                 * Root tail (@0x80116e28-84): body push (0x8002aec4/0x8002b544) then the
-                                 * SCA resolver FUN_8003b0a4(+0x34, dim+6, 4) whose result lands in +0x1d6
-                                 * (`sh v0,470(v1)` @0x80116e84) — the wall-clamp gate the rear-up
-                                 * (@0x80117b18) and the far-leap (@0x80118054) test. Port: the run_all
-                                 * clamp encodes the same contact into +0x90/ai_contact (dog #15 pattern);
-                                 * the AI reads LAST frame's contact (resolver clears at ITS start).
-                                 * ⛔ OPEN (bewusst NICHT mit umgestellt): der Maggot liest +0x1d6, NICHT
-                                 * +0x90 — er ist keiner der 14 Original-Leser von +0x90. +0x1d6 ist der
-                                 * RUECKGABEWERT von FUN_8003b0a4 (1, sobald irgendeine Zelle die
-                                 * Broadphase besteht), den re15_collision_constrain_contact jetzt liefert;
-                                 * der Port proxyt ihn hier ueber ai_contact (`re15_dog_blocked`
-                                 * @Zeile 7118/7173). Diese Bruecke sauber auf den Rueckgabewert
-                                 * umzuhaengen ist eine eigene, eigenstaendig zu messende Aenderung
-                                 * (ROOM11C0 hat KEINE u1&3-Zelle, die Trefferbedingung waere eine andere)
-                                 * — bis dahin bleibt der Zweig unveraendert. */
+                                 * Root-Tail 0x80116db8, geradlinig hinter dem State-Dispatch
+                                 * (@0x80116e00-1c) und OHNE Bewegungs-Gate:
+                                 *   80116e40-54 body push 0x8002aec4 / 0x8002b544 (+0x1d2)
+                                 *   80116e64 lw v0,120(a0)   ; dim-Ptr entity+0x78
+                                 *   80116e68 ori a2,zero,0x4 ; Maske HART 4 (kein +0x1d7)
+                                 *   80116e6c lhu a1,6(v0)    ; Radius dim[+6]
+                                 *   80116e70 jal 0x8003b0a4
+                                 *   80116e74 addiu a0,a0,52  ; a0 = entity+0x34
+                                 *   80116e84 sh v0,470(v1)   ; +0x1d6 = RUECKGABEWERT [HALFWORD]
+                                 * Leser (Voll-Scan ueber STAGE1.BIN, alle `lhu`): @0x80117b18
+                                 * REAR-UP-Gate, @0x80118054 FERN-SPRUNG-Gate, @0x80117448
+                                 * Steckenbleib-Zaehler +0x1de.
+                                 * ⚠️ +0x1de ist im ganzen Maggot-Bereich (0x80116db8..0x8011be54)
+                                 * NUR an @0x8011706c (INIT-Clear) und @0x80117458-6c (der Zaehler
+                                 * selbst) adressiert — es gibt KEINEN Verbraucher, der Zaehler ist
+                                 * tot. Deshalb im Port nicht nachgebildet (OPEN, benannt).
+                                 * ⛔ WAR FALSCH: der Port erfand hier aus `hat die Klemme die
+                                 * Position bewegt?` ein +0x90-Nibble. Das Original schreibt +0x90
+                                 * ohnehin (der Resolver tut es fuer JEDES Entity) und der Maggot
+                                 * LIEST es nie; gebraucht wird der Rueckgabewert. */
             int32_t mag_ox = e->x, mag_oz = e->z;
             re15_maggot_ai_tick(s);
             re15_enemy_body_push_tail(s, e);
-            e->ai_contact = (uint8_t)(e->ai_contact & 0xf0);
-            if (g_room_rdt_ok && (e->x != mag_ox || e->z != mag_oz)) {
-                int32_t ix = e->x, iz = e->z;
-                int32_t nx = ix, nz = iz;
-                re15_collision_constrain_enemy(&g_room_rdt, mag_ox, mag_oz, &nx, &nz, e->hit_radius_min, e->y, 4u);
-                e->x = nx; e->z = nz;
-                if (nx != ix || nz != iz) {               /* clamp moved it = wall contact (+0x1d6 != 0) */
-                    int push = ((int)re15_atan2_q12(nz - iz, nx - ix) - 0x400) & 0xfff;
-                    e->ai_contact = (uint8_t)((((push >> 8) & 0xf) << 4) | 1);
-                }
-            }
+            re15_enemy_sca_clamp(e, mag_ox, mag_oz, 4u);
         }
         else if (t == 0x40 || t == 0x42 || t == 0x45 || t == 0x47 || t == 0x49 || t == 0x4b ||
                  t == 0x4d) {

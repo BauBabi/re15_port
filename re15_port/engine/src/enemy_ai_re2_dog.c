@@ -20,9 +20,24 @@
  *   - Navigator FUN_8004A808 (steer point +0x1C4/6) und Routen-Helfer FUN_8004AA50 sind nicht
  *     portiert → Steuerziel = Spielerposition (+ die byte-true STALK-Offsets @0x801054A8), Routen-
  *     Byte +0x218 bleibt 0. Auf freier Fläche deckungsgleich (Welle-B-W1-Muster).
- *   - Kollisionskontakt +0x110 Bit 0 → e->ai_contact & 1 (der SCA-Wall-Clamp-Tail in run_all
- *     schreibt ihn NACH dem AI-Tick, also liest die AI byte-true den Vorframe-Kontakt — dieselbe
- *     Phasenlage wie RE2s Frame-Stempel +0x114).
+ *   - Kollisionskontakt +0x110 Bit 0 → e->sca_wall_hit. RE2s SCHREIBER ist selbst disassembliert
+ *     (info/re2leon/PSX.EXE): der RE2-Hunde-Root ruft im Tail @0x80100088 `jal 0x8003567c`
+ *     (a0 = entity, a1 = 0x400 = Solid-Maske) auf; FUN_8003567c macht
+ *       8003569c  sw zero,272(s0)   ; +0x110 = 0  (immer, Delay-Slot)
+ *       800356cc  lhu a1,144(s0)    ; a1 = entity+0x90 = RADIUS (RE2-Layout!)
+ *       800356d0  jal 0x8004c1bc    ; RE2-SCA-Resolver
+ *       800356d8  sw v0,272(s0)     ; +0x110 = Rueckgabewert  [STORE WORD]
+ *       800356e8  sw v0,276(s0)     ; +0x114 = Zellen-Record (Global 0x800cfaf0)
+ *     FUN_8004c1bc akkumuliert in der GLOBALEN Halfword-Variablen 0x800c3b68 (Clear @0x8004c264,
+ *     `ori 0x1` @0x8004c4a4/@0x8004c518 = "solide Zelle beruehrt", weitere Bits 0x3/0x4/0x8/0x10
+ *     fuer andere Zelltypen @0x8004c5d0-604) und gibt sie @0x8004c620 zurueck. Es liest RE2-SCA-
+ *     Zellen im 16-Byte-Format (`addiu s0,s0,16` @0x8004c610) — die gibt es in diesem Port NICHT
+ *     (er faehrt in BEIDEN Flavors RE1.5-RDTs mit 12-Byte-Zellen), FUN_8004c1bc ist also nicht
+ *     portierbar. Bit 0 ist aber Zeichen fuer Zeichen die Semantik des RE1.5-Rueckgabewerts von
+ *     FUN_8003b0a4 (`ori s7,s7,0x1` @0x8003b500, return @0x8003b520) — deshalb speist derselbe
+ *     Wert beide Flavors. Der SCA-Wall-Clamp-Tail in run_all schreibt ihn NACH dem AI-Tick, also
+ *     liest die AI byte-true den Vorframe-Kontakt — dieselbe Phasenlage wie RE2s Frame-Stempel
+ *     +0x114 (@0x800356e8).
  *   - 0x800CFBF6-Bewegungsbits → pl->motion (RUN=100→0x4 @0x8003D18C, WALK=105→0x2 @0x8003CC80/
  *     @0x8003D6B4; Mapping-Beleg enemy_ai_re2_zombie.c re2z_cfbf6).
  *   - 0x800CFCFE (Spieler-Etage) → pl->floor.
@@ -517,7 +532,7 @@ static int re2d_idle_wander(re15_actor_t *e, const re15_actor_t *pl)
         break;
     case 1:
         re2d_move(e, 0);                                   /* 0x800152C8(0) @0x80100610 */
-        if (e->ai_contact & 1) {                           /* +0x110&1 @0x80100618-24 */
+        if (e->sca_wall_hit) {                             /* +0x110&1 @0x80100618-24 */
             if ((re15_re2_rand() & 0x1fu) == 0u) {         /* @0x8010062C-38 */
                 e->sub_state_2 = 2;                        /* v1=2 @0x80100640 */
                 e->re2z_t15a = 90;                         /* sh 90,346 @0x80100660 */
@@ -536,7 +551,7 @@ static int re2d_idle_wander(re15_actor_t *e, const re15_actor_t *pl)
         /* Navigator 0x8004A808(route,1) → s2 (Wake); MAPPING: Steuerziel = Spieler, wake 0 */
         re15_enemy_steer_point(e, pl->x, pl->z, 16);       /* 0x80015558(+0x1C4/6,16) @0x801006C0 */
         re2d_move(e, 0);                                   /* @0x801006CC */
-        if (!(e->ai_contact & 1)) e->sub_state_2 = 1;      /* @0x801006D4-E8 */
+        if (!e->sca_wall_hit) e->sub_state_2 = 1;          /* +0x110&1 @0x801006D4-E8 */
         break;
     }
     re2d_advance(e, 0x100);                                /* 0x8002959c(256) @0x801006F8 */
@@ -657,7 +672,7 @@ static void re2d_sub2_run(re15_actor_t *e, re15_actor_t *pl)
             e->rot_y = (int16_t)(((int)e->rot_y + s2) & 0xfff);   /* @0x80100D28-38 */
         } else {
             e->re2d_pause21d--;                            /* @0x80100D3C-40 */
-            if (e->re2d_pause21d == 0 || (e->ai_contact & 1))     /* @0x80100D44-5C */
+            if (e->re2d_pause21d == 0 || e->sca_wall_hit)         /* +0x110&1 @0x80100D44-5C */
                 { e->re2d_pause21d = 0; e->re2d_rel220 = 0; }     /* @0x80100D64-68 */
         }
         re2d_move(e, 0);                                   /* 0x800152C8(0) @0x80100D70 */
@@ -1235,7 +1250,7 @@ static void re2d_sub13_flee(re15_actor_t *e)
         break;
     }
     default:                                               /* P3 @0x80102BC8 */
-        if (e->ai_contact & 1) { e->sub_state_2 = 0; e->sub_state_3 = 0; }   /* +0x110&1 @0x80102BC8-DC */
+        if (e->sca_wall_hit) { e->sub_state_2 = 0; e->sub_state_3 = 0; }     /* +0x110&1 @0x80102BC8-DC */
         break;
     }
     re2d_move(e, 0);                                       /* @0x80102BE4 */
@@ -1304,7 +1319,7 @@ static void re2d_sub15_windowB(re15_actor_t *e, re15_actor_t *pl)
             re2d_clip(e, 21, 0, 0xF, 0x100, 0);            /* 0xF0015 @0x80102ED8-DC */
             e->sub_state_2 = 2; e->sub_state_3 = 0;        /* sh 2,6 @0x80102EF4 */
         }
-        if (e->ai_contact & 1) {                           /* Wand im Flug @0x80102F00-0C */
+        if (e->sca_wall_hit) {                             /* +0x110&1 Wand im Flug @0x80102F00-0C */
             re2d_clip(e, 22, 0, 0xF, 0x100, 0);            /* 0xF0016 @0x80102F10-14 */
             e->sub_state_2 = 3; e->sub_state_3 = 0;        /* sh 3,6 @0x80102F28-2C */
             e->re2z_t158 = 0;                              /* sh zero,344 @0x80102F40 */

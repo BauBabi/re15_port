@@ -286,6 +286,33 @@ void re15_actor_anim_select(const re15_actor_t *a, int is_player,
      * Sentinels mehr — seine Plc_dest-Walks laufen in der NPC-Sub-VM (Clips
      * 5/0 der EM047-Own-Bank, Render-Override in main.c). */
     int m = (int)a->motion;
+    /* KISTEN SCHIEBEN (Spieler-Substate 8) — die Pose kommt aus der COMMON-Bank, NIE aus dem
+     * Raum-RBJ. Der Schiebe-Handler LAB_80035810 uebergibt an JEDER seiner vier anim_set-Stellen
+     * dieselben beiden Globals:
+     *   @0x800358bc `lw a0,DAT_800acad8` / @0x800358c4 `lw a1,DAT_800acbc0`   (Fall 1, Clip 0)
+     *   @0x80035960 / @0x80035968                                            (Fall 3, Clip 0x11)
+     *   @0x80035a2c / @0x80035a34                                            (Fall 5, Clip 0x12)
+     *   @0x80035a80 / @0x80035a88                                            (Fall 6, 0x11 rueckw.)
+     * und diese beiden Zeiger haben im GESAMTEN PSX.EXE genau EINEN Schreiber:
+     *   @0x8003154c `sw v0,-0x3440(at)=>DAT_800acbc0`  v0 = PLD-Directory[0] = PL00.EDD
+     *   @0x80031578 `sw v0,-0x3528(at)=>DAT_800acad8`  v0 = PLD-Directory[1] = PL00.EMR
+     * (eigener Scan ueber ghidra1_V2.txt: 62 Vorkommen, davon exakt diese 2 Stores.) Das
+     * Raum-RBJ (FUN_8001b3f8) repointet nur Entity-Felder, nie diese Globals.
+     *
+     * IST-MESSUNG vor dem Fix (probe_1090_push_anim, echte ROOM1090.RDT + echte PL00-Baenke):
+     * der Port haengte Leons Default-Bank am RDT-Animationsblock (@0x5C, 2 Records, rec0 =
+     * 25 Clips) — Clip 0x11 posierte 30 statt 10 Frames, Clip 0x12 20 statt 25, Clip 0
+     * (Yaw-Rastung) 1 statt 34; Phase 6 lief rueckwaerts durch die Slots 29..20 eines fremden
+     * Clips. 27 von 27 Schiebe-Bildern trugen die falsche Cliplaenge. */
+    {
+        extern int re15_player_push_substate(void);
+        if (is_player && banks->pl00_ok && re15_player_push_substate()) {
+            out->skel = banks->pl00_skel;
+            out->anim = banks->pl00_anim;
+            out->clip_override = m;      /* +0x94 ist im Original der DIREKTE Clip-Index */
+            return;
+        }
+    }
     if (banks->w01_ok && (m == 105 || m == 100)) {
         /* Walk -> W01 clip5, Run -> W01 clip0 (PL00W01 weapon track). BYTE-TRUE, definitively RE'd
          * (wf_9970157f): the real-time move cmd (cmd 1, 0x80031de8) two-pass-dispatches on submode byte

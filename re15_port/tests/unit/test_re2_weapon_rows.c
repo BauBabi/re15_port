@@ -24,6 +24,32 @@
  *   - RE1.5-Modus: derselbe Zensus gegen die RE1.5-Reaktion (Blut/Bend/SE 6)
  *   - NEGATIV-KONTROLLE: dieselbe Messung mit der ALTEN Zeilenwahl (rohe Waffen-Id) muss fuer
  *     genau die 7 gemeldeten Ids stumm bleiben — sonst misst der Test nichts.
+ *
+ * ⚠ WARUM DIE GEDRUCKTEN CLIP-INDIZES VON w=14/20/21 SICH 2026-08-21 GEAENDERT HABEN
+ * (Herleitung, nicht Vermutung — bewiesen mit einem EINVARIABLEN A/B-Lauf):
+ *   Der Zensus feuert ALLE 22 Waffen nacheinander auf DENSELBEN Zombie und zieht dabei aus
+ *   EINEM gemeinsamen, deterministischen Wurf-Strom (re2z_rand, Zwilling von FUN_80015FE8 mit
+ *   genau einem Zustandswort). GENAU EINE Waffe toetet in diesem Zensus: w=7 Super Redhawk
+ *   (Zeile 5, HP 5000 -> -1). Bis zur Nachreichung der Zerreiss-Tode landete ihr Todes-Tick im
+ *   Port-Stand-in re2z_death_crawler (Clip 7) mit EINEM Wurf (`re2z_se((rand&1)?13:11)`
+ *   @0x80108AD8-F4). Seit der Nachreichung laeuft die Tabellenzelle @0x8010CCDC = FUN_801092C4
+ *   mit ZWEI Wuerfen in P0 (Richtung `rand&1` @0x80109330, 50%-Weiche @0x801094D8) und einem
+ *   dritten in P3 (`(rand&0x3F)+30` @0x80109554). Der Strom ist danach verschoben — und jede
+ *   SPAETERE Waffe, deren Trefferhandler etwas per Wurf waehlt (die MAIN-Zeilen), landet auf
+ *   einem anderen Wurf.
+ *   BELEG (A/B, einvariabel): wird AUSSCHLIESSLICH die Zelle 0x801092C4 auf den alten Stand-in
+ *   zurueckgedreht und bleiben 0x80107438/0x801066FC/0x80108BEC/0x80109610 verdrahtet, ist die
+ *   Zensus-Ausgabe wieder ZEICHENGLEICH die alte. Zusaetzlich:
+ *     * jede MAIN-Waffe VOR w=7 (w=0,1,2,3,4,5,6) ist unveraendert,
+ *     * die Handler mit festem Clip (RAGDOLL/STAGGER/BURN, w=8..13/15..19) sind unveraendert,
+ *     * der komplette RE1.5-Zensus-Block ist unveraendert.
+ *   Auf der Quellseite dazu passend: die zwei Eingriffe in die HURT-Handler (re2z_hit_ragdoll /
+ *   re2z_hit_knockdown) stehen vollstaendig hinter `if (death)`, und der neu hinzugekommene
+ *   `re2z_rand()` steht als LINKER Operand von `&&`, wird also unbedingt gezogen — die
+ *   Wurfzahl des HURT-Pfades ist unveraendert.
+ *   => Es ist eine BELEGTE Folge der Todes-Portierung, kein Nebeneffekt im Trefferpfad. Dieser
+ *      Test pinnt Zeilen, Handler-Zellen und "reagiert ueberhaupt" — die Clip-Indizes sind
+ *      Diagnose-Ausgabe und werden bewusst NICHT gepinnt; er bleibt unveraendert gruen.
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
