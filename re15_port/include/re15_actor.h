@@ -141,9 +141,22 @@ typedef struct {
                              * (Z.115 &0xffffefff; a shot-aborted grab leaves it set = byte-true
                              * leak). Consumer: windup-timeout death gate FUN_80101224.c Z.12
                              * `(+0x1d8&0x100) && !(word0&0x1000)`. Dossier analysis/zombie_hit_1140.md D5/D6. */
-    uint8_t  ai_contact;    /* +0x90 : WALL-contact byte (writer = the SCA resolver FUN_8003b0a4:
-                             * heading-nibble<<4 | 8 | cell-attr&3; low nibble cleared per pass).
-                             * Port writer deferred (ROOM1140 has 0 attr cells). */
+    uint8_t  ai_contact;    /* +0x90 : WALL-contact byte. SCHREIBER = der SCA-Resolver FUN_8003b0a4:
+                             * am Anfang JEDES Laufs `+0x90 &= 0xf0` (`lbu/andi 0xf0/sb` @0x8003b1d0-dc),
+                             * bei JEDEM Broadphase-Treffer
+                             *   `+0x90 = (FUN_8001bf04(...) >> 4) + 8 + (cell.u1 & 3)`  @0x8003b4c0-dc
+                             * (sb = EIN Byte). Damit:
+                             *   Bits 4-7 = Richtungs-Nibble aus FUN_8001bf04 {0,4,8,c,f} — der Leser
+                             *              baut daraus mit `(+0x90 & 0xf0) << 4` wieder den 12-bit-Winkel;
+                             *   Bit  3   = "in DIESEM Resolver-Lauf geklemmt" (das +8);
+                             *   Bits 0-1 = cell.u1 & 3 — die EINZIGE Quelle dieser Bits (8&3 == 0),
+                             *              game-weit nur in 40 RDTs / 20 Raeumen gesetzt.
+                             * Port-Schreiber: re15_collision_constrain_contact (re15_collision.c). */
+    uint16_t coll_cell_attr;/* +0x1b4 -> *(u16*)(cell + 0x0a) — der Attr-Halbword der zuletzt
+                             * geklemmten SCA-Zelle (u1 | floor<<8). Das Original haelt in +0x1b4 den
+                             * ZEIGER auf die Zelle (`sw s4,436(v0)` @0x8003b4ec, `sw zero,436` beim
+                             * Clear @0x8003b1ec); der Port legt gleich den einzigen gelesenen Wert ab
+                             * (Hund: `lw +0x1b4; lhu 10(v0); sh -> +0x1ea` @0x8010e294-2a4 / @0x8010e668-78). */
     uint8_t  contact_flags; /* +0x1c2: BODY-push contact bits (FUN_8002aec4: |=1 player pushed me,
                              * |=2 an enemy did); cleared per tick (FUN_8002b498). */
     int8_t   contact_slot;  /* +0x1ac: the contacting ENEMY's actor slot (ptr in the original) —

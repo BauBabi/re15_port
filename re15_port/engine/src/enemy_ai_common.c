@@ -5745,22 +5745,12 @@ static int re15_dog_player_aiming(void)
     return re15_player_aim_active();
 }
 
-/* The SCA cell the dog stands on — the original keeps a live pointer at entity+0x1b4 (floor
- * resolver); the reroute commit latches its attr halfword `*(u16*)(cell+10)` (@0x8010e294-2a4).
- * Port: point-in-rect scan on the dog's band (same unsigned idiom as
- * re15_collision_floor_band_at); cell+10 = the aliased entry's u1|floor<<8 bytes. */
-static uint16_t re15_dog_sca_attr(const re15_actor_t *e)
-{
-    if (!g_room_rdt_ok || !g_room_rdt.sca) return 0;
-    for (int i = 0; i < g_room_rdt.sca_count; i++) {
-        const re15_sca_entry_t *c = &g_room_rdt.sca[i];
-        if ((c->floor >> 4) != e->floor) continue;
-        if ((uint32_t)(e->x - (int32_t)c->x) < (uint32_t)c->width &&
-            (uint32_t)(e->z - (int32_t)c->z) < (uint32_t)c->density)
-            return (uint16_t)((uint16_t)c->u1 | ((uint16_t)c->floor << 8));
-    }
-    return 0;
-}
+/* entity+0x1b4 = die ZULETZT GEKLEMMTE SCA-Zelle (der Klemmpfad schreibt sie mit `sw s4,436(v0)`
+ * @0x8003b4ec und nullt sie beim Eintritt @0x8003b1ec). Der Reroute-Commit latcht daraus das
+ * Attr-Halbword: `lw v0,436(a0)` / `lhu v0,10(v0)` / `sh v0,490(a0)` @0x8010e294-2a4 (und
+ * identisch @0x8010e668-78). Der Port legt genau diesen u16 in coll_cell_attr ab.
+ * (Vorher stand hier ein Punkt-in-Rechteck-Scan als Ersatz — der konnte eine ANDERE Zelle
+ * treffen als die, an der geklemmt wurde.) */
 
 /* Shared reroute commit — chase decision @0x8010e254-2ec AND attack-range decision else-branch
  * @0x8010e628-6c0 (identical gate; audit wf_827f186d dog #12):
@@ -5768,16 +5758,19 @@ static uint16_t re15_dog_sca_attr(const re15_actor_t *e)
  *   ±0x200 of the current yaw (`(((+0x90&0xf0)<<4) - rot_y + 0x200) & 0xfff < 0x400`
  *   @0x8010e274-28c); latches +0x1ea from the SCA cell (@0x8010e294-2a4) and +0x1e8 = +0x90&1
  *   (@0x8010e2bc-c0); picks sub 13 (bit0=1) or 14 (bit0=0): `0xe - +0x1e8` @0x8010e2d4-dc,
- *   `sh zero -> +0x6/+0x7`. OPEN: the +0x90 bit-0/1 contact CLASS comes from the SCA resolver
- *   FUN_8003b0a4 (leap-over vs drop-edge, not RE'd); the port clamp writes bit 0 only, so the
- *   port reaches sub 13 (13 = the byte-true bit0=1 selection). */
+ *   `sh zero -> +0x6/+0x7`. GELOEST (frueher OPEN): die Kontakt-KLASSE in +0x90 Bit 0/1 ist
+ *   `cell.u1 & 3` der geklemmten SCA-Zelle (Klemmpfad @0x8003b4c8-dc, `lbu 0(s2)` mit
+ *   s2 = cell+0x0a). Game-weiter Zensus ueber 240 RDTs / 20874 Zellen: u1 & 3 ist nur in 40 RDTs
+ *   (20 Raeumen) gesetzt, u1-Werte {0,1,2,6,14,16,32} -> Bit0 nur bei u1 == 1 (764 Zellen) =>
+ *   sub 13 (Sprung DRUEBER), u1&3 == 2 (406 Zellen) => sub 14 (Fall RUNTER). In den Hunde-
+ *   Raeumen ROOM1190/1230 ist u1 durchgehend 0 -> der Reroute feuert dort im ORIGINAL nie. */
 static int re15_dog_try_reroute(re15_actor_t *e)
 {
     if ((e->ai_contact & 3) == 0) return 0;                              /* @0x8010e268 */
     int heading = ((int)(e->ai_contact & 0xf0)) << 4;
     if ((((heading - (int)(int16_t)e->rot_y) + 0x200) & 0xfff) >= 0x400) /* @0x8010e274-28c */
         return 0;
-    e->dog_reroute_sca = re15_dog_sca_attr(e);                           /* +0x1ea @0x8010e294-2a4 */
+    e->dog_reroute_sca = e->coll_cell_attr;                              /* +0x1ea @0x8010e294-2a4 */
     e->dog_reroute_dir = (uint16_t)(e->ai_contact & 1);                  /* +0x1e8 @0x8010e2bc-c0 */
     e->sub_state_1 = (uint8_t)(0x0e - e->dog_reroute_dir);               /* 13/14  @0x8010e2d4-dc */
     e->sub_state_2 = 0; e->sub_state_3 = 0;                              /* sh zero,+0x6 */
@@ -10318,6 +10311,45 @@ static void re15_enemy_body_push_tail(int s, re15_actor_t *e)
     }
 }
 
+/* ============================ SCA-WAND-KLEMME + KONTAKT-BYTE (+0x90) ==========================
+ *
+ * Der Tail JEDES Boden-Gegner-Roots ruft FUN_8003b0a4 UNBEDINGT auf — kein Bewegungs-Gate:
+ *   Zombie-Root @0x80100614-30:  lw v0,120(a0) / lbu a2,471(a0) / lhu a1,6(v0)
+ *                                jal 0x8003b0a4 / addiu a0,a0,52      (a0 = entity+0x34)
+ * Der Resolver loescht dabei ZUERST `entity+0x90 &= 0xf0` (@0x8003b1d0-dc) und `entity+0x1b4 = 0`
+ * (@0x8003b1ec) und schreibt bei jedem Broadphase-Treffer
+ *   entity+0x90  = (FUN_8001bf04(...) >> 4) + 8 + (cell.u1 & 3)   (@0x8003b4c0-dc)
+ *   entity+0x1b4 = &cell                                          (@0x8003b4ec)
+ *
+ * Der Port hatte hier ein Bewegungs-Gate (`e->x != ox || e->z != oz`) UND gar keinen +0x90-
+ * Schreiber; das Gate haette den Clear verschluckt, sobald ein Gegner stehen bleibt. Beides ist
+ * jetzt byte-true: der Aufruf laeuft jeden Frame, der Clear also auch.
+ *
+ * ⚠️ GEMESSENE NEBENWIRKUNG des entfallenen Gates (A/B belegt, nicht vermutet): in ROOM1030
+ * (u1 == 0, also OHNE jede +0x90-Wirkung) verschieben sich die Kriecher-Bahnen leicht, weil
+ * push_rect fuer einen STEHENDEN Aktor den `code == 0`-Zweig mit `*lx == prevx && *lz == prevz`
+ * nimmt und ihn per Minimal-Achse aus der Zelle schiebt (re15_collision.c push_rect, Original
+ * FUN_8003bca8). Das Original tut genau das ebenfalls — die Klemme laeuft dort in JEDEM Frame.
+ * Mit wieder eingebautem Gate reproduziert probe_1030_stuck_who exakt die alten Zahlen
+ * (Weg 72174 / Netto 10202 bzw. 44096 / 2630), ohne Gate 70193 / 8455 bzw. 44022 / 2630.
+ * Alle ROOM1030-Pins bleiben in beiden Faellen gruen.
+ *
+ * WER BEKOMMT DEN KONTAKT: nur die Typen, deren ORIGINAL-Code entity+0x90 wirklich LIEST —
+ * Standard-Zombie (@0x8010206c/@0x80102f30/@0x80103478/@0x80103518/@0x80105630),
+ * Zombie-Girl (@0x8010bca8/@0x8010bd58) und Hund (@0x8010e260/@0x8010e2b4/@0x8010e634/
+ * @0x8010e688/@0x80110384/@0x8011040c/@0x80110650). Alle anderen Typen behalten den
+ * kontaktlosen Aufruf — siehe die OPEN-Notiz an den Maggot-/Adult-Spider-Zweigen. */
+static int re15_enemy_sca_clamp(re15_actor_t *e, int32_t ox, int32_t oz, uint32_t mask)
+{
+    if (!g_room_rdt_ok) return 0;
+    int32_t nx = e->x, nz = e->z;
+    int hit = re15_collision_constrain_contact(&g_room_rdt, ox, oz, &nx, &nz,
+                                               e->hit_radius_min, e->y, mask,
+                                               &e->ai_contact, &e->coll_cell_attr);
+    e->x = nx; e->z = nz;
+    return hit;
+}
+
 /* Phase 8.6 — the per-frame LIVE-zombie AI pass. The port's faithful, TYPE-GATED slice of the
  * original entity-update loop FUN_8001a50c (@0x8001ce04): the original walks the entity array
  * (DAT_800acc2c, stride 0x1f4) and, for every active entity (+0x0 & 1), dispatches its per-type
@@ -10552,13 +10584,12 @@ void re15_enemy_ai_run_all(int combat_active)
                 }
             }
             /* ENEMY SCA WALL CLAMP — byte-true order (@0x8010062c: b0a4 runs AFTER aec4+b544,
-             * unconditionally): pushes can no longer leave a zombie inside a wall. */
-            if (g_room_rdt_ok && (e->x != sweep_ox || e->z != sweep_oz)) {
-                int32_t nx = e->x, nz = e->z;
-                re15_collision_constrain_enemy(&g_room_rdt, sweep_ox, sweep_oz, &nx, &nz, e->hit_radius_min, e->y,
-                                               e->sca_mask ? e->sca_mask : 4u); /* +0x1d7 @0x80100624 (Zombie liest das FELD; 8 = Kriecher passiert die Tor-Zelle 0xF7) */
-                e->x = nx; e->z = nz;
-            }
+             * unconditionally): pushes can no longer leave a zombie inside a wall. Schreibt
+             * +0x90/+0x1b4 (siehe re15_enemy_sca_clamp); die Leser sind re15_ai_decide_engage
+             * (@0x8010206c), der Charge-Decide (@0x80102f30), der Grab-Commit-Decide (@0x80105630)
+             * und der Ausweich-Zustand +0x5=0xa (@0x80103478/@0x80103518). */
+            re15_enemy_sca_clamp(e, sweep_ox, sweep_oz,
+                                 e->sca_mask ? e->sca_mask : 4u); /* +0x1d7 @0x80100624 (Zombie liest das FELD; 8 = Kriecher passiert die Tor-Zelle 0xF7) */
         }
         else if (t == 0x21) {   /* CROW (type 0x21) — 3D flight AI (Wave 1: INIT + cruise).
                                  * Own branch: flies in 3D, NOT ground-clamped, no body-push. */
@@ -10573,20 +10604,36 @@ void re15_enemy_ai_run_all(int combat_active)
              * dispatch in the same frame — so the AI reads LAST frame's +0x90 contact. The port used
              * to clear BEFORE the tick, which zeroed bit0 for every AI read and killed the reroute
              * gate + the +0x1dc blocked counter (audit wf_827f186d dog #12/#15). */
-            e->ai_contact = (uint8_t)(e->ai_contact & 0xf0);
-            if (re15_dog_consume_noclamp(s)) {
+            const int dog_noclamp = re15_dog_consume_noclamp(s);
+            if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2) {
+                /* ---- RE2-MODUS: UNVERAENDERT (bewusst) --------------------------------------
+                 * Die RE2-Brains lesen RE2s entity+0x110, das der Port mangels eigenem Feld auf
+                 * ai_contact abbildet — dort ist BIT 0 "Kontakt" (enemy_ai_re2_dog.c:520/539/660/
+                 * 1238/1307, enemy_ai_re2_spider.c). RE1.5s +0x90 kodiert anders (Bit 3 = Kontakt,
+                 * Bits 0-1 = cell.u1 & 3). Wuerde man den byte-true RE1.5-Schreiber darunter
+                 * legen, liest der RE2-Hund `&1` = u1&1 — in seinen Raeumen (1190/1230: u1 == 0
+                 * in allen Zellen) also NIE. Der committete RE2-Modus behaelt deshalb exakt die
+                 * bisherige Bruecken-Kodierung. OPEN: RE2s +0x110-Schreiber ist nicht RE't. */
+                e->ai_contact = (uint8_t)(e->ai_contact & 0xf0);
+                if (!dog_noclamp && g_room_rdt_ok && (e->x != dog_ox || e->z != dog_oz)) {
+                    int32_t ix = e->x, iz = e->z;             /* the AI's INTENDED position this frame */
+                    int32_t nx = ix, nz = iz;
+                    re15_collision_constrain_enemy(&g_room_rdt, dog_ox, dog_oz, &nx, &nz, e->hit_radius_min, e->y, 4u);
+                    e->x = nx; e->z = nz;
+                    if (nx != ix || nz != iz) {               /* the clamp moved it = WALL CONTACT */
+                        int push = ((int)re15_atan2_q12(nz - iz, nx - ix) - 0x400) & 0xfff;
+                        e->ai_contact = (uint8_t)((((push >> 8) & 0xf) << 4) | 1);
+                    }
+                }
+            } else if (dog_noclamp) {
                 /* reroute-13 leap burst: the original snaps the old-pos mirror +0x40/+0x42/+0x44 to
                  * the post-burst position (@0x801104e0-52c) so the SCA sweep does not clamp the hop
-                 * back off the obstacle — skip the port's sweep for this frame. */
-            } else if (g_room_rdt_ok && (e->x != dog_ox || e->z != dog_oz)) {
-                int32_t ix = e->x, iz = e->z;                 /* the AI's INTENDED position this frame */
-                int32_t nx = ix, nz = iz;
-                re15_collision_constrain_enemy(&g_room_rdt, dog_ox, dog_oz, &nx, &nz, e->hit_radius_min, e->y, 4u);
-                e->x = nx; e->z = nz;
-                if (nx != ix || nz != iz) {                   /* the clamp moved it = WALL CONTACT (the SCA resolver's +0x90) */
-                    int push = ((int)re15_atan2_q12(nz - iz, nx - ix) - 0x400) & 0xfff;  /* wall-normal / escape heading */
-                    e->ai_contact = (uint8_t)((((push >> 8) & 0xf) << 4) | 1);   /* +0x90: hi-nibble heading (16 dirs) + bit0 contact */
-                }
+                 * back off the obstacle — skip the port's sweep for this frame. Der Clear von
+                 * +0x90 (@0x8003b1dc) laeuft im Original trotzdem, also hier explizit. */
+                e->ai_contact  = (uint8_t)(e->ai_contact & 0xf0);
+                e->coll_cell_attr = 0;
+            } else {
+                re15_enemy_sca_clamp(e, dog_ox, dog_oz, 4u);
             }
         }
         else if (t == 0x26) {   /* SPIDER-BABY (type 0x26) — stationary web-spitter (Wave 1).
@@ -10636,7 +10683,16 @@ void re15_enemy_ai_run_all(int combat_active)
                                  * (`sh v0,470(v1)` @0x80116e84) — the wall-clamp gate the rear-up
                                  * (@0x80117b18) and the far-leap (@0x80118054) test. Port: the run_all
                                  * clamp encodes the same contact into +0x90/ai_contact (dog #15 pattern);
-                                 * the AI reads LAST frame's contact (resolver clears at ITS start). */
+                                 * the AI reads LAST frame's contact (resolver clears at ITS start).
+                                 * ⛔ OPEN (bewusst NICHT mit umgestellt): der Maggot liest +0x1d6, NICHT
+                                 * +0x90 — er ist keiner der 14 Original-Leser von +0x90. +0x1d6 ist der
+                                 * RUECKGABEWERT von FUN_8003b0a4 (1, sobald irgendeine Zelle die
+                                 * Broadphase besteht), den re15_collision_constrain_contact jetzt liefert;
+                                 * der Port proxyt ihn hier ueber ai_contact (`re15_dog_blocked`
+                                 * @Zeile 7118/7173). Diese Bruecke sauber auf den Rueckgabewert
+                                 * umzuhaengen ist eine eigene, eigenstaendig zu messende Aenderung
+                                 * (ROOM11C0 hat KEINE u1&3-Zelle, die Trefferbedingung waere eine andere)
+                                 * — bis dahin bleibt der Zweig unveraendert. */
             int32_t mag_ox = e->x, mag_oz = e->z;
             re15_maggot_ai_tick(s);
             re15_enemy_body_push_tail(s, e);
@@ -10699,12 +10755,10 @@ void re15_enemy_ai_run_all(int combat_active)
                     }
                 }
             }
-            if (g_room_rdt_ok && (e->x != zg_ox || e->z != zg_oz)) {   /* SCA b0a4 @0x8010aad0 */
-                int32_t nx = e->x, nz = e->z;
-                re15_collision_constrain_enemy(&g_room_rdt, zg_ox, zg_oz, &nx, &nz, e->hit_radius_min, e->y,
-                                               e->sca_mask ? e->sca_mask : 4u); /* +0x1d7 @0x8010aac8 (ZGirl-Root, zweiter Feld-Leser) */
-                e->x = nx; e->z = nz;
-            }
+            /* SCA b0a4 @0x8010aad0 — unbedingt, mit +0x90/+0x1b4 (ihre Leser: der Fall-Zustand
+             * +0x5=0xa @0x8010bca8 Slew und @0x8010bd58 Yaw-Snap). */
+            re15_enemy_sca_clamp(e, zg_ox, zg_oz,
+                                 e->sca_mask ? e->sca_mask : 4u); /* +0x1d7 @0x8010aac8 (ZGirl-Root, zweiter Feld-Leser) */
         }
         else if (t == 0x1a) {   /* WRITHE-HAZARD (type 0x1a, EM01A) — anchored, KILLABLE, solid 300-radius
                                  * body obstacle. The root runs the push chain 0x8002b498/aec4/b544/b0a4

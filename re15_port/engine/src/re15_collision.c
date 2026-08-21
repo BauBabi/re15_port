@@ -547,19 +547,70 @@ static int push_diag7(const re15_sca_entry_t *e, int32_t *lx, int32_t *lz,
  * port had baked in the player values (r=450, mask=1, band=s_coll_band) for ALL actors, so enemies
  * were clamped against the wrong cells (ROOM11C0 maggot walked through its enemy-solid u0=0x04 wall)
  * and with the wrong radius (a 1600-radius maggot under-clamped at 450 sank into thin walls). */
-static void collision_constrain_impl(const re15_rdt_t *rdt,
-                                     int32_t old_x, int32_t old_z,
-                                     int32_t *x, int32_t *z,
-                                     int band, int32_t r, unsigned mask)
+/* FUN_8001bf04 (@0x8001bf04) — der RICHTUNGS-Code, den der Klemmpfad in die obere Nibble von
+ * entity+0x90 legt. Zwei Sign-Bit-Paare klassifizieren den Aktor gegen die Zellen-Spanne:
+ *
+ *   cx = signbit(px - (cell.x + cell.width)) << 1 | signbit(px - cell.x)
+ *   cx == 3 (links der Zelle)                 -> 0x000
+ *   cx == 0 (rechts der Zelle)                -> 0x800
+ *   cx == 2 (X INNERHALB): dasselbe fuer Z
+ *        cz == 3 (vor  cell.z)                -> 0xc00
+ *        cz == 0 (hinter cell.z + density)    -> 0x400
+ *        sonst (auch Z innerhalb)             -> 0xf00   (uVar2-Default)
+ *   sonst                                     -> 0xf00
+ *
+ * Die Leser holen den Winkel mit `(+0x90 & 0xf0) << 4` exakt wieder heraus (Zombie @0x8010207c,
+ * Hund @0x8011038c, ZGirl @0x8010bcb0), d.h. der Wert IST ein 12-bit-Yaw (4096 = 360 Grad).
+ *
+ * ⚠️ Original-Position = entity_pos + `*(short(*)[3])(entity+0x7c)` (@0x8003b148-74). Der Port
+ * modelliert diesen Box-Mittelpunkt-Versatz NICHT — WEDER hier NOCH in der Broadphase/Quadranten-
+ * wahl darueber (das ist Port-Stand seit dem verifizierten Spieler-Klemmpfad, nicht neu). Beide
+ * benutzen dieselbe Koordinate, damit bleiben Treffer und Richtung konsistent. */
+static int32_t coll_contact_dir(int32_t px, int32_t pz, const re15_sca_entry_t *e)
 {
-    if (!rdt || !rdt->sca || rdt->sca_count <= 0) return;
-    if (band < 0) return;
+    uint32_t ax = (uint32_t)(px - ((int32_t)e->x + (int32_t)e->width));
+    uint32_t bx = (uint32_t)(px -  (int32_t)e->x);
+    unsigned cx = ((ax & 0x80000000u) | ((bx & 0x80000000u) >> 1)) >> 30;
+    if (cx == 2) {
+        uint32_t az = (uint32_t)(pz - ((int32_t)e->z + (int32_t)e->density));
+        uint32_t bz = (uint32_t)(pz -  (int32_t)e->z);
+        unsigned cz = ((az & 0x80000000u) | ((bz & 0x80000000u) >> 1)) >> 30;
+        if (cz == 0) return 0x400;
+        if (cz == 3) return 0xc00;
+        return 0xf00;
+    }
+    if (cx == 0) return 0x800;
+    if (cx == 3) return 0x000;
+    return 0xf00;
+}
+
+static int collision_constrain_impl(const re15_rdt_t *rdt,
+                                    int32_t old_x, int32_t old_z,
+                                    int32_t *x, int32_t *z,
+                                    int band, int32_t r, unsigned mask,
+                                    uint8_t *contact, uint16_t *cell_attr)
+{
+    if (!rdt || !rdt->sca || rdt->sca_count <= 0) return 0;
+    if (band < 0) return 0;
 
     int q = quadrant_of(*x, *z, (int16_t)rdt->ceiling_x, (int16_t)rdt->ceiling_z);
     int start = 0; for (int i = 0; i < q && i < 5; i++) start += rdt->sca_rgn[i];
     int end = start + (q < 5 ? rdt->sca_rgn[q] : 0);
     if (end > rdt->sca_count) end = rdt->sca_count;
     if (start < 0) start = 0;
+
+    /* CLEAR vor der Zellenschleife — byte-true @0x8003b1d0-ec:
+     *   `lbu v1,144(a0)` / `andi v1,v1,0xf0` / `sb v1,144(a0)`   (EIN Byte, obere Nibble bleibt!)
+     *   `sw zero,436(v1)`                                        (+0x1b4 = 0)
+     * Damit ueberlebt das Richtungs-Nibble einen kontaktfreien Frame, waehrend Bit3 + die
+     * u1-Bits verschwinden — genau darauf bauen die Ausweich-Zustaende auf (sie lesen im
+     * Folge-Frame nur noch `&0xf0`). Der Original-Quirk direkt danach (`lw v1,436(v1)` == 0,
+     * dann `sh zero,10(v1)` -> Schreiben nach Adresse 0x0000000A im PSX-Kernel-RAM,
+     * @0x8003b1fc-204) hat keine beobachtbare Wirkung und wird NICHT portiert. */
+    if (contact)   *contact = (uint8_t)(*contact & 0xf0);
+    if (cell_attr) *cell_attr = 0;
+
+    int any_hit = 0;                                   /* uVar14 / v0 = FUN_8003b0a4-Rueckgabe */
 
     for (int i = start; i < end; i++) {
         const re15_sca_entry_t *e = &rdt->sca[i];
@@ -592,8 +643,25 @@ static void collision_constrain_impl(const re15_rdt_t *rdt,
                             (int)e->x, (int)e->z, (int)e->width, (int)e->density,
                             (int)r, bx, bz, *x, *z);
             }
+            /* KONTAKT-RUECKSCHREIBUNG — byte-true @0x8003b4b0-ec, NACH dem Push-Handler und
+             * unabhaengig davon, ob der Push die Position bewegt hat (kein `break`: die LETZTE
+             * treffende Zelle gewinnt, genau wie die Original-Schleife @0x8003b510-20):
+             *   8003b4b8  jal 0x8001bf04        (a0 = pos-Vektor NACH dem Push, a2 = Zelle)
+             *   8003b4c0  sra v0,v0,4
+             *   8003b4c4  addiu v0,v0,8
+             *   8003b4c8  lbu v1,0(s2)          s2 = cell+0x0a  -> u1
+             *   8003b4d4  andi v1,v1,0x3
+             *   8003b4d8  addu v0,v0,v1
+             *   8003b4dc  sb  v0,144(a0)        entity+0x90  (STORE BYTE)
+             *   8003b4ec  sw  s4,436(v0)        entity+0x1b4 = &cell                        */
+            if (contact)
+                *contact = (uint8_t)((coll_contact_dir(*x, *z, e) >> 4) + 8 + (e->u1 & 3));
+            if (cell_attr)
+                *cell_attr = (uint16_t)((uint16_t)e->u1 | ((uint16_t)e->floor << 8));
+            any_hit = 1;
         }
     }
+    return any_hit;
 }
 
 /* PLAYER wall clamp — byte-true args (radius 450, solid-mask 1, the player's current band). */
@@ -601,7 +669,7 @@ void re15_collision_constrain(const re15_rdt_t *rdt,
                               int32_t old_x, int32_t old_z,
                               int32_t *x, int32_t *z)
 {
-    collision_constrain_impl(rdt, old_x, old_z, x, z, s_coll_band, PR, 1u);
+    collision_constrain_impl(rdt, old_x, old_z, x, z, s_coll_band, PR, 1u, NULL, NULL);
 }
 
 /* ENEMY wall clamp — byte-true args: the enemy's OWN radius (box[+0x78][6] = hit_radius_min), the
@@ -617,7 +685,20 @@ void re15_collision_constrain_enemy(const re15_rdt_t *rdt,
                                     int32_t radius, int32_t enemy_y, uint32_t mask)
 {
     collision_constrain_impl(rdt, old_x, old_z, x, z,
-                             re15_collision_band_from_y(enemy_y), radius, mask);
+                             re15_collision_band_from_y(enemy_y), radius, mask, NULL, NULL);
+}
+
+/* Siehe re15_collision.h: derselbe Pfad, aber mit dem +0x90/+0x1b4-Rueckschreiben von
+ * FUN_8003b0a4 und dessen Rueckgabewert. */
+int re15_collision_constrain_contact(const re15_rdt_t *rdt,
+                                     int32_t old_x, int32_t old_z,
+                                     int32_t *x, int32_t *z,
+                                     int32_t radius, int32_t enemy_y, uint32_t mask,
+                                     uint8_t *contact, uint16_t *cell_attr)
+{
+    return collision_constrain_impl(rdt, old_x, old_z, x, z,
+                                    re15_collision_band_from_y(enemy_y), radius, mask,
+                                    contact, cell_attr);
 }
 
 /* FUN_8002cabc / FUN_8002bd44 — OBJECT (Obj_model_set prop) push-out.

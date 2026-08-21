@@ -34,6 +34,24 @@ void re15_collision_constrain_enemy(const re15_rdt_t *rdt,
                                     int32_t *x, int32_t *z,
                                     int32_t radius, int32_t enemy_y, uint32_t mask);
 
+/* Derselbe Klemmpfad MIT der byte-true Kontakt-Rueckschreibung, die FUN_8003b0a4 nebenbei macht:
+ *
+ *   contact   -> entity+0x90 : `&= 0xf0` beim Eintritt (@0x8003b1d0-dc),
+ *                              `= (FUN_8001bf04(...)>>4) + 8 + (cell.u1 & 3)` je Treffer (@0x8003b4c0-dc)
+ *   cell_attr -> entity+0x1b4: `= 0` beim Eintritt (@0x8003b1ec), `= &cell` je Treffer (@0x8003b4ec);
+ *                der Port legt direkt `*(u16*)(cell+0x0a)` ab (der einzige gelesene Wert,
+ *                Hund @0x8010e29c/@0x8010e670).
+ * Beide Zeiger duerfen NULL sein (dann verhaelt sich der Aufruf wie re15_collision_constrain_enemy).
+ *
+ * Rueckgabewert = der Rueckgabewert von FUN_8003b0a4 (v0): 1, sobald MINDESTENS EINE Zelle die
+ * Broadphase bestanden hat (`uVar14 = 1` im Treffer-Zweig, unabhaengig davon, ob der Push die
+ * Position bewegt hat), sonst 0. Das ist das +0x1d6 des Maggot-Roots (`sh v0,470(v1)` @0x80116e84). */
+int  re15_collision_constrain_contact(const re15_rdt_t *rdt,
+                                      int32_t old_x, int32_t old_z,
+                                      int32_t *x, int32_t *z,
+                                      int32_t radius, int32_t enemy_y, uint32_t mask,
+                                      uint8_t *contact, uint16_t *cell_attr);
+
 /* Object (Obj_model_set prop) push-out: keep the player out of every SOLID prop's
  * authored collision box (FUN_8002cabc). Call AFTER re15_collision_constrain in the
  * player-move pass (walls first, then objects). Reads g_scd.props directly. */

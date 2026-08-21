@@ -1950,3 +1950,18 @@ target_compile_definitions(probe_1030_stuck_who PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_1030_stuck_who COMMAND probe_1030_stuck_who)
 set_tests_properties(unit_1030_stuck_who PROPERTIES TIMEOUT 300)
+
+# --- PIN "entity+0x90 (SCA-Kontakt-Byte) — Schreiber + Leser" ---------------------------------
+#     Der SCA-Klemmpfad FUN_8003b0a4 schreibt bei jedem Treffer
+#       entity+0x90 = (FUN_8001bf04(...)>>4) + 8 + (cell.u1 & 3)   (@0x8003b4c0-dc, `sb`)
+#     und loescht ihn beim Eintritt mit `&= 0xf0` (@0x8003b1d0-dc). Der Port schrieb ihn nie ->
+#     die Ausweich-Zustaende +0x5 = 9/10 (Zombie/ZGirl) und die Hunde-Reroutes 13/14 waren tot.
+#     Gepinnt: Schreiber byte-exakt (4 Anlaufrichtungen), Clear, +0x1b4-Attr, Negativ-Kontrolle
+#     in einem u1==0-Raum und die LIVE-Kette Kontakt -> 0x901/0xA01 -> +0x5 = 9/10. ---
+add_executable(probe_sca_contact90 probe_sca_contact90.c)
+target_link_libraries(probe_sca_contact90 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_sca_contact90 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_sca_contact90 PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_sca_contact90 COMMAND probe_sca_contact90)
+set_tests_properties(unit_sca_contact90 PROPERTIES TIMEOUT 180)
