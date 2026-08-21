@@ -685,7 +685,41 @@ static uint16_t re2z_cfbf6(const re15_actor_t *pl)
 
 /* Clip-word write `sw (rate<<16)|(frame<<8)|clip, 332(s)` -> port anim fields. The +0x14E rate
  * half maps onto the port's crossfade seed (same 0xF/7 family as RE1.5's +0x8f), the advance
- * helper 0x8002959c's a3 (256/512) onto anim_blend_rate (0x100/0x200). */
+ * helper 0x8002959c's a3 (256/512) onto anim_blend_rate (0x100/0x200).
+ *
+ * ============================================================================================
+ * ⛔ WAS `loop` HIER BEDEUTET — UND WARUM ES KEIN GESCHMACKSPARAMETER IST
+ * --------------------------------------------------------------------------------------------
+ * NUTZER-REPORT 2026-08-21: "Bei RE2 AI ist die Sterbeanimation nicht vollstaendig, friert ein
+ * vor dem kompletten Tod."
+ *
+ * DER RE2-ADVANCE HAT KEIN "HOLD-LAST". Selbst disassembliert (info/re2leon/PSX.EXE):
+ * FUN_8002959C loest nur den Frame-Eintrag auf (`sw a2,376(a0)` @0x800295F8) und ruft
+ * FUN_80029614 @0x800295FC; DESSEN Schwanz ist der Frame-Zaehler:
+ *   80029b28: lbu   v0,333(s2)      ; +0x14D = Frame-Byte
+ *   80029b30: addiu v0,v0,1
+ *   80029b34: sb    v0,333(s2)
+ *   80029b38: andi  v0,v0,0xff
+ *   80029b3c: sltu  v0,v0,s3        ; s3 = Frame-Count des Clips (`lhu s3,0(v0)` @0x80029680)
+ *   80029b40: bne   v0,zero,0x80029b50   ; noch drin -> return 0 (Delay-Slot `addu v0,zero,zero`)
+ *   80029b48: sb    zero,333(s2)    ; **WRAP AUF 0**
+ *   80029b4c: addiu v0,zero,1       ; return 1
+ * Ein Clip laeuft also GENAU SO LANGE, WIE SEIN AUFRUFER WEITER ADVANCED — und wrappt dabei.
+ * Wer die Rueckgabe in `+0x6` uebernimmt, verlaesst die Phase im Wrap-Tick (= play-once);
+ * wer sie VERWIRFT, laesst den Clip endlos loopen, bis eine andere Bedingung die Phase beendet.
+ *
+ * Eigener Scan ALLER 70 `jal 0x8002959c` in EMOVL10_S0.BIN mit Ruecklauf auf die Verwendung von
+ * v0: die Rueckgabe wird u.a. an diesen Stellen VERWORFEN —
+ *   @0x801095D0  death_MAGNUM P4 (der kopflose Weiterlauf, Ausstieg = Timer +0x158)
+ *   @0x80109288  death_RIP    P6 (der zerfetzte Torso taumelt,  Ausstieg = Timer +0x158)
+ *   @0x80105790 / @0x801058C0  hit_MAIN P1/P2 (Ausstieg = die +0x158-Rampe)
+ * Der Port-Advancer (re15_actors_anim_advance, player_common.c) PINNT play-once-Clips
+ * dagegen auf fc-1 — das ist die Emulation von "der Aufrufer hoert auf zu advancen" und fuer
+ * genau diese Phasen FALSCH. GEMESSEN (probe_re2z_deathgetup A, 64 Seeds, Magnum):
+ *   f806..f818 st=3 s1=5 s2=4 clip=2 af=53/54 kf=118 LOCO b8dy=-2735  -> 13 Frames UNBEWEGT
+ * 14 von 64 Laeufen mit Pin, laengster 22 Frames = die stehengebliebene Sterbeanimation.
+ * Deshalb tragen die Clip-Setzer dieser Phasen `loop = 1`.
+ * ========================================================================================== */
 static void re2z_clip(re15_actor_t *e, int clip, int frame, int frac, int blend, int loop)
 {
     e->motion     = (int16_t)clip;
@@ -816,6 +850,9 @@ static void re2z_thrust(re15_actor_t *e, int spd)
     e->x += (int32_t)(((int32_t)re15_cos_q12(e->rot_y) * spd) >> 12);
     e->z -= (int32_t)(((int32_t)re15_sin_q12(e->rot_y) * spd) >> 12);
 }
+/* Zwilling mit Yaw-Offset (0x800152C8 mit a1 != 0) — Definition weiter unten, hier vorgezogen,
+ * weil EXEC[9] (re2z_exec_getup) ihn schon braucht. */
+static void re2z_thrust_yaw(re15_actor_t *e, int spd, int yaw_ofs);
 
 /* ⛔ RESOLVER-LATCH-FREIGABE (+0x93 Bit 0) — Nutzer-Blocker 2026-08-19
  * "Bei der RE2-AI kann ich immer noch keinen Zombie treffen. Weder mit Schusswaffe noch mit
@@ -1586,33 +1623,172 @@ static void re2z_exec_feeding(re15_actor_t *e, const re15_actor_t *pl)
     (void)pl;
 }
 
-/* EXEC[9] @0x80103E48 — GET-UP from the ground (target of the 0x901 commits, incl. state 8's
- * @0x8010AE9C). Clip from the param list @0x801000D8 (copied @0x80103E6C-84): belly 3 / back 4
- * by the orientation bit; SE 12 @0x80103FA8/@0x80104104; done -> 0x101 (@0x80103EE4/@0x80104144). */
+/* ============================================================================================
+ * EXEC[9] @0x80103E48 — DER STOSS-/TAUMEL-EXECUTOR (Ziel aller `sw 0x901`-Commits)
+ * Vollstaendig selbst disassembliert 2026-08-21 (0x80103E48..0x80104170, EMOVL10_S0.BIN).
+ *
+ * ⛔ NAMENSKORREKTUR: hier stand "GET-UP from the ground". DAS IST WIDERLEGT — und war die
+ * Ursache des Nutzer-Befunds "Nach dem Loesen des Raetsels im Generator-Raum steht der Zombie
+ * abrupt, quasi ohne Animation, direkt vom Liegen zum Stehen" (Herleitung im D15.2-Block in
+ * re15_re2z_tick). Belege, alle aus DIESER Funktion:
+ *   - Die Clip-Tabelle ist @0x801000D8 = {3,3,4,0x0D}. In der Bank EM010 liegt die Brust in
+ *     Frame 0 dieser Clips bei -2004 / -2528 / -2685 — also AUFRECHT. Der Boden-Aufsteher ist
+ *     Clip 8/9 (Brust -150 / -129), und den spielt EXEC[7] P2 selbst (@0x80103840-80).
+ *   - P0 setzt einen SCHUB `+0x144 = 400` (@0x80103F60-64) mit Yaw-Offset `+0x158 = +0x16B<<11`
+ *     (@0x80103F78-80); P1 wendet ihn an (`jal 0x800152C8` @0x80103FBC) und baut ihn mit
+ *     `addiu v0,v0,-30` (@0x80103FCC) ab.
+ *   - Genau in dem Frame, in dem der Schub ausgelaufen ist (+0x15A == 1, @0x80103FF0-F8), faellt
+ *     der Zombie mit 7/8 Wahrscheinlichkeit HIN: `s = (r1 >> (r2&3)) & 7` (@0x80104000-18),
+ *     `s != 0 -> +0x4 = 0x501` (@0x80104020-28) = EXEC[5], der STURZ-Executor.
+ * Das ist ein Stoss mit Taumel und wahrscheinlichem Umfallen, kein Aufstehen vom Boden.
+ *
+ * Aufbau (der Prolog kopiert ZWEI Tabellen auf den Stack):
+ *   sp+16..19 = @0x801000D8 {3,3,4,0x0D}        (`lwl/lwr` @0x80103E74-84)  = re2z_param_getup
+ *   sp+24..29 = @0x80100044 {1,2,0x17,0x16,8,9} (@0x80103E88-AC)            = re2z_param_clips
+ *   Phasen ueber +0x6: ==1 -> 0x80103FB8, ==0 -> 0x80103EF0, ==2 -> 0x80104144
+ *   (`lbu v1,6(s1)` @0x80103EB0, `beq v1,v0` @0x80103EB8, `beq v1,zero` @0x80103ECC,
+ *    `beq v1,v0(=2)` @0x80103EE0).
+ * ========================================================================================== */
 static void re2z_exec_getup(re15_actor_t *e)
 {
-    if (e->sub_state_2 == 0) {
-        int back = (e->re2z_flags21a >> 2) & 1;
-        re2z_clip(e, re2z_param_getup[back ? 2 : 0], 0, 0xF, 0x200, 0);
+    switch (e->sub_state_2) {
+    case 0: {                                                      /* P0 @0x80103EF0 */
+        e->re2z_dir16a = (uint8_t)(re2z_rand() & 1u);              /* `jal 0x80015FE8` @0x80103EF0,
+                                                                    * `andi v0,v0,0x1` @0x80103EF8,
+                                                                    * `sb v0,362(s1)` @0x80103F00
+                                                                    * (DELAY-SLOT = immer) */
+        uint32_t rf = re2z_rand();                                 /* @0x80103EFC — Startframe */
+        int row = (int)(int8_t)e->re2z_gaitrow;                    /* `lb v1,363(s1)` @0x80103F0C */
+        int dir = (int)(int8_t)e->re2z_dir16a;                     /* `lb a0,362(s1)` @0x80103F10 */
+        {   /* clip = sp16[row*2 + dir] (`sll v1,v1,1` @0x80103F14, `addu v1,v1,s0` @0x80103F18,
+             * `addu v1,v1,a0` @0x80103F1C, `lbu v1,0(v1)` @0x80103F20); Wort = ((rf&3)<<8)|clip
+             * mit RATE 0 (`sll v0,v0,8` @0x80103F08, `addu v0,v0,v1` @0x80103F28,
+             * `sw v0,332(s1)` @0x80103F30). Blend = a3 = 256 des 959c @0x8010412C.
+             * Der Index laeuft im Original ungeprueft ueber die 4-Byte-Tabelle hinaus; im Port
+             * geklemmt (row ist in allen erreichbaren Pfaden 0 oder 1). */
+            unsigned idx = (unsigned)(row * 2 + dir);
+            int clip = (int)re2z_param_getup[(idx < 4u) ? idx : 0u];
+            re2z_clip(e, clip, (int)(rf & 3u), 0, 0x100, 0);
+        }
+        if (row != 0 && dir != 0)                                  /* `beq a0,zero -> 0x80103F58`
+                                                                    * @0x80103F2C / `beq v0,zero ->
+                                                                    * 0x80103F5C` @0x80103F3C */
+            e->anim_frame = (uint16_t)((re2z_rand() & 3u) + 20u);  /* `+0x14D = (rand&3)+20`
+                                                                    * @0x80103F44-54 */
+        e->sub_state_2 = 1;                                        /* `sb v0(=1),6` @0x80103F5C */
+        e->speed_h     = 400;                                      /* `+0x144 = 400` @0x80103F60-64 */
+        /* `+0x148 = 0` @0x80103F70 — der Port fuehrt nur die X-Komponente (s. re2z_thrust). */
+        e->re2z_t15a   = 0;                                        /* `sh zero,346` @0x80103F74 */
+        e->re2z_t158   = (int16_t)(row << 11);                     /* `sll v0,v0,11` @0x80103F78 /
+                                                                    * `sh v0,344` @0x80103F80 */
         e->re2z_flags21a = (uint16_t)((e->re2z_flags21a & ~0x10u) | 0x8u);
-                                                                   /* andi 0xffef + ori 0x8
-                                                                    * @0x80103F7C/88/90 — das
-                                                                    * Aufsteh-Latch (Partner-
-                                                                    * Domino-Gate 7) */
-        if (e->re2z_cd239 == 0 && (re2z_rand() & 1u) != 0u) {      /* cd-Gate @0x80103F84-8C +
-                                                                    * rand&1 @0x80103F94-A0
-                                                                    * (Review #13) */
+                                                                   /* `andi 0xffef` @0x80103F7C /
+                                                                    * `ori 0x8` @0x80103F88 /
+                                                                    * `sh v1,538` @0x80103F90 —
+                                                                    * Partner-Domino-Gate 7 */
+        if (e->re2z_cd239 == 0 && (re2z_rand() & 1u) != 0u) {      /* `lbu v0,569 / bne`
+                                                                    * @0x80103F84-8C + `andi 0x1 /
+                                                                    * beq` @0x80103F94-A0 */
             re2z_se(12);                                           /* @0x80103FA8 */
             e->re2z_cd239 = 150;                                   /* @0x80103FB0-B4 */
         }
-        e->sub_state_2 = 1;
-        return;
+        /* FALLTHROUGH nach P1 @0x80103FB8 — P0 endet OHNE Sprung. */
     }
-    if (re2z_clip_done(e)) {
-        re15_ai_set_state_word(e, 0x101);                          /* v1=257 @0x80103EE4 */
+    /* fall through */
+    case 1: {                                                      /* P1 @0x80103FB8 */
+        re2z_thrust_yaw(e, (int)e->speed_h, (int)e->re2z_t158);    /* `lh a1,344` @0x80103FB8 /
+                                                                    * `jal 0x800152C8` @0x80103FBC */
+        {   int v = (int)(uint16_t)e->speed_h - 30;                /* `lhu 324 / addiu -30`
+                                                                    * @0x80103FC4-CC */
+            e->speed_h = (int16_t)v;                               /* `sh v0,324` @0x80103FD0 */
+            if ((int16_t)v < 0) {                                  /* `sll 16 / bgez` @0x80103FD4-D8 */
+                e->speed_h   = 0;                                  /* `sh zero,324` @0x80103FE4 */
+                e->re2z_t15a = (int16_t)(e->re2z_t15a + 1);        /* `+0x15A += 1` @0x80103FE0-EC */
+            }
+        }
+        if (e->re2z_t15a == 1) {                                   /* `lh v1,346 / bne v1,1 ->
+                                                                    * 0x80104120` @0x80103FF0-F8 —
+                                                                    * NUR im Auslauf-Frame */
+            uint32_t r1 = re2z_rand();                             /* @0x80104000 */
+            uint32_t r2 = re2z_rand();                             /* @0x80104008 (Delay: s0 = r1) */
+            unsigned s  = (unsigned)((r1 >> (r2 & 3u)) & 7u);      /* `andi v0,0x3` @0x80104010,
+                                                                    * `srav s0,s0,v0` @0x80104014
+                                                                    * (Rohwort 0x00508007),
+                                                                    * `andi s0,0x7` @0x80104018 */
+            if (s != 0u) {                                         /* `beq s0,zero -> 0x8010411C`
+                                                                    * @0x8010401C — 7 von 8 */
+                int fdir;
+                re15_ai_set_state_word(e, 0x501);                  /* `addiu v0,zero,1281`
+                                                                    * @0x80104020 / `sw v0,4(s1)`
+                                                                    * @0x80104028 (DELAY-SLOT) */
+                e->re2z_res223 = (int8_t)(16 + (re2z_rand() & 0xfu));
+                                                                   /* `+0x223 = (rand&0xf)+16`
+                                                                    * @0x80104024-34 */
+                e->re2z_flags21a &= (uint16_t)~0x8u;               /* `andi 0xfff7` @0x80104040 /
+                                                                    * `sh` @0x80104044 */
+                e->re2z_dir16a = e->re2z_gaitrow;                  /* `sb v1,362(s1)` @0x8010404C */
+                fdir = (int)(int8_t)e->re2z_dir16a;                /* `lb v1,362` @0x80104050 */
+                e->re2z_flags21a &= (uint16_t)~0x4u;               /* `andi 0xfffb` @0x80104054 /
+                                                                    * `sh` @0x8010405C */
+                if (fdir != 0) e->re2z_flags21a |= 0x4u;           /* `ori 0x4` @0x80104060 /
+                                                                    * `sh` @0x80104064 */
+                e->sub_state_2   = 1;                              /* `sb v0(=1),6` @0x80104084 —
+                                                                    * EXEC[5] startet in P1 */
+                e->re2z_flags21a |= 0x202u;                        /* `ori 0x202` @0x80104090 /
+                                                                    * `sh` @0x80104094 */
+                e->re2z_flag222  = 0;                              /* `sb zero,546` @0x801040A4 */
+                e->re2z_gaitrow  = 0;                              /* `sb zero,363` @0x801040A8 */
+                e->re2z_self1d3 |= 0x80u;                          /* `ori 0x80` @0x801040B4 /
+                                                                    * `sb v0,467` @0x801040BC */
+                e->re2z_f10e    |= 0x2000u;                        /* `ori 0x2000` @0x801040B8 /
+                                                                    * `sh v1,270` @0x801040D0 */
+                /* word0 = (word0 & 0xF3FFFFFF) | 0x04000000 @0x80104068-AC — dieselbe Modell-/
+                 * Kollisions-Gruppe wie in re2z_exec_knockdown P0 und im Kriecher-Eintritt; im
+                 * Port ohne Feld (OPEN, mit Adresse). */
+                e->grid_id |= 0x80u;                               /* PORT-MAPPING wie in
+                                                                    * re2z_exec_knockdown P0
+                                                                    * (Review #18): Downed-Band
+                                                                    * fuer den flavor-blinden
+                                                                    * Damage-Resolver — hier werden
+                                                                    * dieselben Bits gesetzt
+                                                                    * (+0x10E 0x2000, +0x21A 0x202,
+                                                                    * +0x1D3 0x80) */
+                re2z_clip(e, (int)re2z_param_clips[fdir & 1], fdir * 5 + 10, 0xF, 0x100, 0);
+                                                                   /* `lbu a1,24(v0)` @0x8010407C
+                                                                    * = sp24[+0x16A] = Sturzclip
+                                                                    * 1/2; Startframe
+                                                                    * `((dir*5)+10)<<8`
+                                                                    * @0x801040C0-CC; Rate 15
+                                                                    * (`lui v1,0xf` @0x801040D4);
+                                                                    * `sw v0,332` @0x801040E8 */
+                if (e->re2z_cd239 == 0) {                          /* `lbu v1,569 / bne`
+                                                                    * @0x801040DC-E4 */
+                    re2z_se((re2z_rand() & 1u) ? 12 : 13);         /* `andi 0x1 / beq -> a0 = 13`
+                                                                    * (DELAY-SLOT @0x801040FC),
+                                                                    * sonst a0 = 12 @0x80104100 */
+                    e->re2z_cd239 = 150;                           /* @0x8010410C-10 */
+                }
+                e->re2z_t158 = 0;                                  /* `sh zero,344` @0x80104118
+                                                                    * (DELAY-SLOT des `j` = immer) */
+                return;                                            /* j 0x80104154 */
+            }
+        }
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + (uint8_t)re2z_clip_done(e));
+                                                                   /* ADVANCE @0x80104128 (a1/a2 =
+                                                                    * das DISPATCHER-Paar, a3=256),
+                                                                    * `+0x6 += ret` @0x80104130-40 */
+        break;
+    }
+    default:                                                       /* P2 @0x80104144 */
+        re15_ai_set_state_word(e, 0x101);                          /* v1 = 257 aus dem DELAY-SLOT
+                                                                    * @0x80103EE4, `sw v1,4(s1)`
+                                                                    * @0x80104148 */
+        e->re2z_flags21a &= (uint16_t)~0x8u;                       /* `andi 0xfff7` @0x8010414C /
+                                                                    * `sh v0,538` @0x80104150 */
         e->grid_id = 0;                                            /* PORT-MAPPING (Review #16/#18):
-                                                                    * Liege-Nibble + Downed-Bit weg
-                                                                    * beim Aufstehen */
+                                                                    * Liege-Nibble + Downed-Bit weg,
+                                                                    * sobald er wieder steht */
+        break;
     }
 }
 
@@ -3449,7 +3625,19 @@ static void re2z_hit_main(re15_actor_t *e, re15_actor_t *pl)
     switch (e->sub_state_2) {
     case 0:
         if ((uint8_t)e->motion != e->re2z_walkclip)                /* @0x801054BC-C8 */
-            re2z_clip(e, e->re2z_walkclip, 0, 0xF, 0x100, 0);      /* sw +0x218+0xF0000 @0x801054D4 */
+            re2z_clip(e, e->re2z_walkclip, 0, 0xF, 0x100, 1);      /* sw +0x218+0xF0000 @0x801054D4
+                                                                    * ⛔ loop = 1 aus derselben
+                                                                    * Regel: P1/P2 advancen
+                                                                    * @0x80105790 / @0x801058C0
+                                                                    * OHNE die Rueckgabe zu
+                                                                    * nehmen (Ausstieg ist die
+                                                                    * +0x158-Rampe), der Clip
+                                                                    * wrappt also @0x80029B48.
+                                                                    * Heute nicht sichtbar (P1+P2
+                                                                    * dauern zusammen 19 Frames,
+                                                                    * die Walk-Clips 38-65), aber
+                                                                    * dieselbe Aussage wie in
+                                                                    * death_MAGNUM/death_RIP. */
         if (e->re2z_cd239 == 0) {                                  /* @0x801054D8-E0 */
             re2z_se((re2z_rand() & 1u) ? 11 : 12);                 /* @0x801054E8-500 */
             e->re2z_cd239 = 150;                                   /* @0x80105508-0C */
@@ -3877,11 +4065,18 @@ static void re2z_death_magnum(re15_actor_t *e, re15_actor_t *pl)
         break;
     case 3:
         e->sub_state_2 = 4;                        /* sb v0(=4),6 @0x80109540-44 */
-        re2z_clip(e, (int)e->re2z_walkclip, 0, 0xF, 0x100, 0);
+        re2z_clip(e, (int)e->re2z_walkclip, 0, 0xF, 0x100, 1);
                                                    /* Wort 0x000F0000 + +0x218 (`lbu v0,536 /
                                                     * lui v1,0xf / addu / sw v0,332`
                                                     * @0x80109548-58); Blend = a3 = 256 des
-                                                    * 959c @0x801095D4 */
+                                                    * 959c @0x801095D4.
+                                                    * ⛔ loop = 1: P4s Advance @0x801095D0
+                                                    * VERWIRFT die Rueckgabe, der Clip wrappt
+                                                    * also (`sb zero,333(s2)` @0x80029B48) bis
+                                                    * der Timer +0x158 feuert. Ohne das Bit
+                                                    * pinnte der Port-Advancer den kopflosen
+                                                    * Zombie auf fc-1 = die eingefrorene
+                                                    * Sterbeanimation (Blockkopf re2z_clip). */
         e->re2z_t158 = (int16_t)((re2z_rand() & 0x3fu) + 30u);
                                                    /* +0x158 = (rand & 0x3F) + 30
                                                     * @0x80109554-64 */
@@ -4159,9 +4354,13 @@ static void re2z_death_rip(re15_actor_t *e, re15_actor_t *pl)
         break;
     case 5:
         e->sub_state_2 = 6;                        /* sb v0(=6),6 @0x801091F8-FC */
-        re2z_clip(e, (int)e->re2z_walkclip, 0, 0xF, 0x100, 0);
+        re2z_clip(e, (int)e->re2z_walkclip, 0, 0xF, 0x100, 1);
                                                    /* Wort 0x000F0000 + +0x218 @0x80109200-10;
-                                                    * Blend = a3 = 256 des 959c @0x8010928C */
+                                                    * Blend = a3 = 256 des 959c @0x8010928C.
+                                                    * ⛔ loop = 1: P6s Advance @0x80109288
+                                                    * VERWIRFT die Rueckgabe -> Wrap-Loop
+                                                    * (@0x80029B48) bis der Timer +0x158 feuert
+                                                    * (Blockkopf re2z_clip). */
         e->re2z_t158 = (int16_t)((re2z_rand() & 0x1fu) + 15u);
                                                    /* +0x158 = (rand & 0x1F) + 15 @0x8010920C-1C */
         /* FALLTHROUGH @0x80109220 */
@@ -5720,11 +5919,43 @@ int re15_re2z_tick(int slot)
      *   Der RE2-Brain liest den Nibble nach dem INIT nie -> die Liegenden blieben fuer immer in
      *   s1==7 (gemessen 400+ Ticks ohne Transition).
      * PORT-MAPPING (RE2-Flavor, dokumentiert): der Bump wird hier in die byte-true RE2-Kette
-     * uebersetzt — Get-up-Commit 0x901 = EXEC[9] @0x80103E48 (dasselbe Ziel, das der RE2-Liege-
-     * Executor selbst nach dem Limpet-Clear ansteuert), Limpet-Latch +0x10E &= ~0x4000 loesen
-     * und das Liege-Nibble wie beim regulaeren Aufstehen fallen lassen (re2z_exec_lying P4 /
-     * re2z_exec_getup, beide `grid_id = 0`). Damit uebernimmt die gestaffelte sub02-Kaskade
-     * (Sleep(10,20) zwischen den Bumps) dieselbe Dramaturgie wie in RE1.5.
+     * uebersetzt — der Bump LOEST NUR DEN LIMPET-LATCH `+0x10E &= ~0x4000`. Danach laeuft die
+     * Aufsteh-Kette des RE2-Liege-/Fress-Executors VON SELBST:
+     *   EXEC[7] P1 @0x8010381C-28 haelt, solange +0x10E & 0x4000 steht -> P2 @0x80103838 setzt
+     *           den BODEN-Aufstehclip `re2z_param_clips[4+back]` = 8/9 (@0x80103840-80),
+     *           P3 @0x801038D8 spielt ihn aus, P4 @0x80103900 committet `0x101` (er steht).
+     *   EXEC[8] P1 @0x80103C94-A0 haelt genauso -> P3 @0x80103CD8 Clip 0x15, P4/P5 -> `0x101`.
+     *
+     * ⛔ HIER STAND BIS 2026-08-21 ZUSAETZLICH `re15_ai_set_state_word(e, 0x901)` — DAS WAR DER
+     * NUTZER-BEFUND "Nach dem Loesen des Raetsels im Generator-Raum steht der Zombie direkt neben
+     * Leon abrupt, quasi ohne Animation, direkt vom Liegen zum Stehen."
+     * GEMESSEN (probe_re2z_deathgetup B, ROOM11F0, die ECHTEN sub18-Bytes @Datei 0x178C-0x17B0
+     * durch die ECHTE SCD-VM, geladene RE2-Bank EM010; Pose ueber die RENDERER-Bankwahl):
+     *   f52 st=1 s1=7 s2=1 clip=23 af=9/10 kf=741 10E=4002 grid=87 -> Brust b8dy = **-150**
+     *   f53 st=1 s1=9 s2=1 clip= 3 af=0/40 kf=124 10E=0002 grid=00 -> Brust b8dy = **-2004**
+     * Der Zombie stand in EINEM Frame — 128 von 128 Aufsteh-Vorgaengen ueber 32 Seeds.
+     * URSACHE: EXEC[9] ist BYTE-BELEGT KEIN Aufstehen vom Boden. Selbst disassembliert
+     * (0x80103E48..0x80104170):
+     *   Clip-Tabelle sp+16 = @0x801000D8 = {3,3,4,0x0D}, Index `(+0x16B)*2 + (+0x16A)`
+     *     (`sll v1,v1,1 / addu v1,v1,s0 / addu v1,v1,a0 / lbu v1,0(v1)` @0x80103F14-20) —
+     *     und +0x16A ist ein frischer RNG-Wurf (`andi v0,v0,0x1 / sb v0,362` @0x80103EF8-F00).
+     *   Alle drei Clips STARTEN AUFRECHT (Bank EM010, Brust in Frame 0: Clip 3 = -2004,
+     *     Clip 4 = -2528, Clip 13 = -2685) — der BODENclip ist 8/9 (-150/-129).
+     *   P0 setzt ausserdem `+0x144 = 400` (@0x80103F60-64) und `+0x158 = (+0x16B)<<11`
+     *     (@0x80103F78-80), P1 schiebt damit (`jal 0x800152C8` @0x80103FBC) und baut mit
+     *     `addiu v0,v0,-30` (@0x80103FCC) ab; im Frame, in dem der Schub endet (+0x15A == 1,
+     *     @0x80103FF0-F8), faellt der Zombie mit 7/8 Wahrscheinlichkeit HIN
+     *     (`s = (r1 >> (r2&3)) & 7; s != 0 -> +0x4 = 0x501` @0x80104000-28 = EXEC[5]-Sturz).
+     * EXEC[9] ist also der STOSS-/TAUMEL-Executor, nicht der Boden-Aufsteher. Der Commit riss den
+     * Liegenden aus EXEC[7] heraus, BEVOR dessen eigenes P2 den Bodenclip setzen konnte.
+     * Der reine Latch-Clear ist zugleich exakt derselbe Mechanismus, den der (schon vorhandene)
+     * Naehe-Wecker in re2z_exec_lying benutzt und dessen glatter Verlauf dort gemessen ist
+     * (f44 Clear -> f45 P2/P3 Clip 8 -> f112 P4 -> f113 `0x101`).
+     * Das Liege-Nibble wird hier NICHT mehr geloescht: das erledigen die Pose-Ausgaenge selbst
+     * (EXEC[7] P4 / EXEC[8] P5, beide `grid_id = 0`) — genau wie im RE1.5-Zwilling, wo der
+     * Nibble 9/10 bis zum Aufstehen stehen bleibt. Der Clear hier ist idempotent.
+     * Damit uebernimmt die gestaffelte sub18-Kaskade (Sleep zwischen den Bumps) dieselbe
+     * Dramaturgie wie in RE1.5.
      * ⚠ MASKE KORRIGIERT (2026-08-17, Review-Fund F4): hier stand `&= ~0x4002`. Der EINZIGE
      * +0x10E-Clear des Overlays loescht nur Bit 0x4000 —
      *   80104f0c: andi v1,v1,0xbfff
@@ -5738,11 +5969,12 @@ int re15_re2z_tick(int slot)
      * Umkehrung. Gegenprobe in dieser Datei: dieselbe Instruktion ist an zwei weiteren Stellen
      * korrekt als `~0x4000u` mit demselben Zitat @0x80104F0C abgebildet. */
     {   uint8_t nib = (uint8_t)(e->grid_id & 0x0fu);
-        if (nib >= 9 && nib <= 10 && e->state == 1 && e->sub_state_1 == 7) {
-            re15_ai_set_state_word(e, 0x901);                      /* EXEC[9] Get-up @0x80103E48 */
+        if (nib >= 9 && nib <= 10 && e->state == 1
+            && (e->sub_state_1 == 7 || e->sub_state_1 == 8))       /* EXEC[7] Liegend / EXEC[8]
+                                                                    * Fressend — beide haengen am
+                                                                    * SELBEN Latch (@0x8010381C-28
+                                                                    * bzw. @0x80103C94-A0) */
             e->re2z_f10e &= (uint16_t)~0x4000u;                    /* andi 0xbfff @0x80104F0C */
-            e->grid_id = 0;
-        }
     }
 
     /* ============================================================================================

@@ -7969,31 +7969,57 @@ static const uint8_t s_npc_walk8_param[16] =    /* Sub 8 @0x80076c60 (INIT @0x80
  *     einmal -> Clip-2-Idle); Re-Arm nur mit +0x1c4&4 (+0x5=Mode, +0x6=2 @0x8005145c/@0x800517c8).
  * OFFEN (dokumentiert): Blocked-Probe FUN_8002d7d8 -> Subs 0x12/0x16 (FUN_80052508) nicht
  * portiert (10D0-Pfad frei); Footstep-SE der Phase 1 (Frame-Flag 0x4000 -> FUN_80045630).
- * ⛔ OPEN — STRUKTUR-DIVERGENZ SUBS 7/8 (2026-08-17 selbst disassembliert, WIDERLEGT die alte
- * "gleiche Struktur"-Notiz): 0x80051908 (Sub 7) und 0x80051b00 (Sub 8) haben KEINEN arc_test und
- * KEINE Phase 1. Ihr Dispatch ist zweiwertig — `lbu v0,6(v1); bne v0,zero,0x80051990` @0x80051918-20
- * (Sub 7) bzw. @0x80051b10-18 (Sub 8): +0x6==0 = INIT (Speed 0x80076c20 @0x80051944 / 0x80076c60
- * @0x80051b3c, +0x6=1, +0x94=1, +0x95=0, +0x8f=7), alles andere = der EINZIGE Body @0x80051990 /
- * @0x80051b88, der ab dem INIT-Tick TRANSLATIERT: Steer mit der NEGIERTEN Tabelle 0x80076c21
- * (`lbu a2` @0x800519b8, `subu a2,zero,a2` @0x800519c4) bzw. 0x80076c01 (@0x80051bb0/bc),
- * `jal 0x800245d8` mit a0=0x800 @0x800519c8/@0x80051bc0 (NICHT a0=0 wie Sub 4 @0x80051348) und
- * f314 auf dem LOCO-Paar +0x84/+0x16c @0x80051a28/@0x80051c20. Der Port faehrt fuer 7/8 heute die
- * Sub-4/5-Maschine (arc_test + Cone-Pivot) — beleglos. Nicht in diesem Batch geaendert
- * (Negativ-Cone-Semantik von 0x8001aac4 und pos_advance-Mode 0x800 sind ungeklaert). */
+ * ⛔ SUBS 7/8 SIND RUECKWAERTS-SUBS — GESCHLOSSEN 2026-08-21 (war seit 2026-08-17 als OPEN
+ * vermerkt: "Negativ-Cone-Semantik von 0x8001aac4 und pos_advance-Mode 0x800 sind ungeklaert").
+ * Beide Unklarheiten sind inzwischen byte-true aufgeloest und im Port vorhanden:
+ *   - FUN_8001aac4 wertet das VORZEICHEN der Rate aus: `bgez s0,0x8001ab1c` @0x8001ab08 ->
+ *     `subu s1,zero,v0` @0x8001ab10 (Rate = -Rate) UND `addiu v0,a0,2048` @0x8001ab14
+ *     (Peilung + 180 GRAD). Port-Zwilling: re15_enemy_steer_point (slew < 0).
+ *   - FUN_800245d8 addiert a0 als YAW-OFFSET auf rot_y (`lh v0,106(v0); addu a0,v0,a0`
+ *     @0x80024658-64); a0 = 0x800 = 180 Grad. Port-Zwilling: re15_dog_advance_ofs.
+ * Der SPIELER-Zwilling ist am 2026-08-21 aus demselben Grund gefixt worden (ROOM1090-Cutscene,
+ * "Leon schaut nach rechts statt nach links zum Transporter"): Modi 7/8 des Spielers rufen den
+ * Slew ebenfalls mit `addiu a2,zero,-48` @0x80031254 und die Translation mit `ori a0,zero,0x800`
+ * @0x8003125c (actor_locomotion.c, plc_yaw_slew, Commit 8ef5a283). BLICK = Peilung + 180 Grad,
+ * BEWEGUNG = Blick + 180 Grad = Peilung: derselbe Weg, gegenlaeufiger Blick.
+ *
+ * STRUKTUR (2026-08-17 disassembliert, hier unveraendert uebernommen): 0x80051908 (Sub 7) und
+ * 0x80051b00 (Sub 8) haben KEINEN arc_test und KEINE Phase 1. Ihr Dispatch ist zweiwertig —
+ * `lbu v0,6(v1); bne v0,zero,0x80051990` @0x80051918-20 (Sub 7) bzw. @0x80051b10-18 (Sub 8):
+ * +0x6==0 = INIT (Speed 0x80076c20 @0x80051944 / 0x80076c60 @0x80051b3c, +0x6=1, +0x94=1,
+ * +0x95=0, +0x8f=7), alles andere = der EINZIGE Body @0x80051990 / @0x80051b88, der AB DEM
+ * INIT-TICK TRANSLATIERT: Steer mit der NEGIERTEN Tabelle 0x80076c21 (`lbu a2` @0x800519b8,
+ * `subu a2,zero,a2` @0x800519c4) bzw. 0x80076c01 (@0x80051bb0/bc) — beide Tabellen tragen an
+ * ALLEN 16 Typ-Positionen 0x30 = 48 (selbst gedumpt: 0x80076c01..0x80076c1f und
+ * 0x80076c21..0x80076c3f, jeweils Stride 2) —, `jal 0x800245d8` mit a0=0x800 @0x800519c8 /
+ * @0x80051bc0 (NICHT a0=0 wie Sub 4 @0x80051348) und f314 auf dem LOCO-Paar +0x84/+0x16c
+ * @0x80051a28 / @0x80051c20. Ankunft wie bei Sub 4: `slti v0,v0,100` @0x80051a70, dann
+ * +0x5=6/+0x6=0 @0x80051a88/@0x80051a98 und der Re-Arm `+0x1C4 & 4` -> +0x5=7/+0x6=2
+ * @0x80051ac8-ec.
+ * ERREICHBARKEIT (SCD-Walk ueber ALLE ausgelieferten RDTs, Opcode 0x40 Plc_dest, mode = pc[2]):
+ * Mode 7 = 6 Records, Mode 8 = 7 Records, in ROOM1090, ROOM1211, ROOM20B0/20B1, ROOM3061,
+ * ROOM3070/3071, ROOM4010, ROOM5031, ROOM50B0, ROOM50E0 — also ausdruecklich AUCH in ROOM1090,
+ * dem Raum des Spieler-Befunds. Der Port fuhr fuer 7/8 bis hierher die Sub-4/5-Maschine
+ * (arc_test + Cone-Pivot + Vorwaertsschritt) und liess den NPC damit ZUM Ziel schauen statt
+ * davon weg — und die Align-Phase kann beim Rueckwaertsgehen gar nicht terminieren, weil der
+ * Aktor sich vom Ziel WEGdreht (arc_test wird nie 0). */
 static void re15_npc_sub_walk(re15_actor_t *e)
 {
     int sub = e->sub_state_1;
+    /* RUECKWAERTS-Subs (s. Blockkopf): kein arc_test, keine Phase 1, negative Slew-Rate und
+     * pos_advance mit Yaw-Offset 0x800. */
+    int backward = (sub == 7 || sub == 8);
     if (e->sub_state_2 > 2) return;                          /* >2 -> exit (@0x80051190) */
     if (e->sub_state_2 == 0) {                               /* INIT -> faellt in Phase 1 durch */
         const uint8_t *tbl = (sub == 5) ? s_npc_run_param
                            : (sub == 7) ? s_npc_walk7_param
                            : (sub == 8) ? s_npc_walk8_param : s_npc_walk_param;
         e->crow_speed  = (int16_t)re15_npc_tbl(tbl, e->type);   /* +0x8c (sh) */
-        e->motion      = (uint8_t)((sub == 7 || sub == 8) ? 1 : 5);
+        e->motion      = (uint8_t)(backward ? 1 : 5);
         e->anim_frame  = 0; e->anim_frac = 7;
         e->sub_state_2 = 1;
     }
-    if (e->sub_state_2 == 1) {                               /* Phase 1: TURN-TO-FACE */
+    if (!backward && e->sub_state_2 == 1) {                  /* Phase 1: TURN-TO-FACE */
         /* ALIGN-TICK-DURCHFALL GEFIXT (selbst disassembliert, PSX.EXE roh):
          *   Sub 4: `jal 0x8001ab9c` @0x80051214 (a2=0x15e) -> `bne v0,zero,0x80051234` @0x8005121c.
          *          NICHT aligned  -> springt DIREKT in den Phase-1-Body @0x80051234.
@@ -8032,9 +8058,14 @@ static void re15_npc_sub_walk(re15_actor_t *e)
         re15_npc_anim(e);                                    /* f314 @0x800512c4/@0x80051630 */
         return;                                              /* EXIT @0x800512cc/@0x80051638 */
     }
-    /* Phase 2: WALK — Slew 48 (@0x80076c01) + Vorwaertsschritt + Anim + Arrival */
-    re15_enemy_steer_point(e, e->steer_x, e->steer_z, 48);
-    re15_dog_advance(e, e->crow_speed);                      /* pos_advance(a0=0) @0x80051344/@0x800516b0 */
+    /* Phase 2 (Subs 4/5) bzw. DER EINZIGE BODY (Subs 7/8): Slew 48 + Schritt + Anim + Arrival.
+     * Die Slew-Tabellen sind fuer beide Faelle 48 an allen 16 Typ-Positionen (@0x80076c01 fuer
+     * Sub 4/5/8, @0x80076c21 fuer Sub 7) — der Unterschied ist ausschliesslich das VORZEICHEN
+     * (`subu a2,zero,a2` @0x800519c4 / @0x80051bbc) und der pos_advance-Yaw-Offset. */
+    re15_enemy_steer_point(e, e->steer_x, e->steer_z, backward ? -48 : 48);
+    if (backward) re15_dog_advance_ofs(e, 0x800);            /* `ori a0,zero,0x800` @0x800519cc /
+                                                              * @0x80051bc4 — 180 Grad rueckwaerts */
+    else          re15_dog_advance(e, e->crow_speed);        /* pos_advance(a0=0) @0x80051344/@0x800516b0 */
     re15_npc_anim(e);
     {
         int32_t dx = e->steer_x - e->x, dz = e->steer_z - e->z;

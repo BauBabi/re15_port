@@ -2188,3 +2188,41 @@ target_compile_definitions(test_plc_back_yaw_1090 PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_plc_back_yaw_1090 COMMAND test_plc_back_yaw_1090)
 set_tests_properties(unit_plc_back_yaw_1090 PROPERTIES TIMEOUT 120)
+
+# --- PIN: RE2-Sterbeanimation friert ein + Generatorraum-Zombie steht abrupt auf
+#     (Nutzer-Reports 2026-08-21).
+#     (A) Der RE2-Advance hat KEIN Hold-Last: FUN_80029614 wrappt den Frame-Zaehler
+#         (`sb zero,333(s2)` @0x80029B48) und liefert 1. Phasen, die die Rueckgabe VERWERFEN
+#         (death_MAGNUM P4 @0x801095D0, death_RIP P6 @0x80109288, hit_MAIN P1/P2 @0x80105790 /
+#         @0x801058C0), loopen ihren Clip. Der Port pinnte sie auf fc-1 -> die stehengebliebene
+#         Sterbeanimation (gemessen 14/64 Laeufe, laengster Pin 22 Frames).
+#     (B) EXEC[9] @0x80103E48 ist der STOSS-/TAUMEL-Executor (Clips {3,3,4,0x0D} @0x801000D8
+#         starten AUFRECHT, Schub +0x144=400 @0x80103F60-64, 7/8-Sturz `+0x4=0x501`
+#         @0x80104020-28), NICHT der Boden-Aufsteher. Der Skript-Wecker darf nur den
+#         Limpet-Latch loesen (`andi 0xbfff` @0x80104F0C); das Aufstehen macht EXEC[7] P2/P3/P4
+#         mit Clip 8/9 selbst (@0x80103838-80 / @0x801038D8-FC / @0x80103900-0C).
+#     Pins: LOOP-Bit + Wrap + NEGATIV-KONTROLLE (ohne Bit muss der Pin zurueckkommen),
+#     Daten-Diskriminator (welche Clips starten am Boden), voller Weck-Ablauf inkl.
+#     Brust-Sprung < 500/Frame. Braucht die RE2-Bank; ohne sie SKIP (77). ---
+add_executable(test_re2z_death_getup test_re2z_death_getup.c)
+target_link_libraries(test_re2z_death_getup PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2z_death_getup PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2z_death_getup PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2z_death_getup COMMAND test_re2z_death_getup)
+set_tests_properties(unit_re2z_death_getup PROPERTIES TIMEOUT 120 SKIP_RETURN_CODE 77)
+
+# --- PIN: die NPC-Executor-Subs 7/8 sind RUECKWAERTS-Subs (Zwilling des Spieler-Fixes 8ef5a283
+#     fuer die ROOM1090-Cutscene). Original: Sub 7 @0x80051908 / Sub 8 @0x80051b00 haben KEINEN
+#     arc_test und KEINE Align-Phase; ihr einziger Body ruft den Yaw-Slew mit NEGATIVER Rate
+#     (`subu a2,zero,a2` @0x800519c4 / @0x80051bbc) und pos_advance mit Yaw-Offset 0x800
+#     (`ori a0,zero,0x800` @0x800519cc / @0x80051bc4). FUN_8001aac4 dreht bei negativer Rate auf
+#     Peilung+180 Grad (`addiu v0,a0,2048` @0x8001ab14), FUN_800245d8 addiert a0 auf rot_y
+#     (@0x80024658-64) -> derselbe Weg, gegenlaeufiger Blick.
+#     Pins: Bewegung zum Ziel (kein Align-Halt), Blick = Peilung+180, plus NEGATIV-KONTROLLE
+#     mit Sub 4 (vorwaerts, muss ZUM Ziel schauen). Synthetisch, keine Assets. ---
+add_executable(test_npc_back_walk test_npc_back_walk.c)
+target_link_libraries(test_npc_back_walk PRIVATE re15_engine re15_test_support)
+target_include_directories(test_npc_back_walk PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_npc_back_walk COMMAND test_npc_back_walk)
+set_tests_properties(unit_npc_back_walk PROPERTIES TIMEOUT 60)

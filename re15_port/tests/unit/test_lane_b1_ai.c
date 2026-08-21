@@ -553,27 +553,38 @@ static void t3b_getup_sfx(const char *base)
     }
     /* Skript-Wecker wie sub02: Member_set(12, 0x89/0x8A) = `sb a2,9(a0)` @0x800411f8 */
     re15_actor_set_member(zslot, 12, 0x89u);
-    /* Fenster B — AUFSTEHEN (EXEC[9]). */
+    /* Fenster B — AUFSTEHEN.
+     * ⛔ KORRIGIERT 2026-08-21: das Aufstehen liegt NICHT in EXEC[9] (das ist der Stoss-/
+     * Taumel-Executor @0x80103E48, Clips {3,3,4,0x0D} @0x801000D8 starten aufrecht), sondern in
+     * EXEC[7]s eigenen Phasen 2/3 (Bodenclip 8/9 @0x80103838-80, Playout @0x801038D8-FC).
+     * Das SE-Soll bleibt UNVERAENDERT 0 — auch dort steht kein `jal 0x801016c8`. */
+    int frise = 0, badrise = 0;
     for (int t = 0; t < 400; t++) {
         uint8_t s1_before = (e->state == 1) ? e->sub_state_1 : 0xFF;
+        uint8_t s2_before = e->sub_state_2;
         s_se_n = 0;
         frame();
         int fw = 0;
         for (int i = 0; i < s_se_n && i < 512; i++) if (s_se_ids[i] < 2) fw++;
         if (s1_before == 9 && e->state == 1 && e->sub_state_1 == 9) { f9++; bad9 += fw; }
-        else if (s1_before == 7 && e->state == 1 && e->sub_state_1 == 7) { f7++; bad7 += fw; }
+        else if (s1_before == 7 && e->state == 1 && e->sub_state_1 == 7) {
+            f7++; bad7 += fw;
+            if (s2_before >= 2 && e->sub_state_2 >= 2) { frise++; badrise += fw; }
+        }
     }
     re15_re2z_audio_hook(NULL, NULL);
-    printf("  [T3b] slot %d — Abdeckung: %d Frames EXEC[7] (Liegen), %d Frames EXEC[9] (Get-up); "
-           "Frame-Wort-SEs: 7er=%d 9er=%d\n", zslot, f7, f9, bad7, bad9);
+    printf("  [T3b] slot %d — Abdeckung: %d Frames EXEC[7] (Liegen), davon %d im AUFSTEHEN "
+           "(P2/P3), %d Frames EXEC[9]; Frame-Wort-SEs: 7er=%d Aufstehen=%d 9er=%d\n",
+           zslot, f7, frise, f9, bad7, badrise, bad9);
     /* ⛔ ABDECKUNGS-WAECHTER ZUERST — ohne ihn waere jeder Soll-0-Pin unten ein vacuous pass. */
     CHECK(f7 > 0, "T3b: das Fenster MUSS EXEC[7] (Liegen) durchlaufen — gemessen 0 Frames");
-    CHECK(f9 > 0, "T3b: das Fenster MUSS EXEC[9] (Get-up, 0x901 @0x80103E48) durchlaufen — "
-                  "gemessen 0 Frames");
+    CHECK(frise > 0, "T3b: das Fenster MUSS die AUFSTEH-Phasen EXEC[7] P2/P3 (Bodenclip 8/9 "
+                     "@0x80103838-80) durchlaufen — gemessen 0 Frames");
     CHECK(bad7 == 0, "T3b: KEIN Frame-Wort-SE im Liegen (EXEC[7]) — die einzigen Call-Sites sind "
                      "@0x80101d34 (EXEC[1]) und @0x80102454 (EXEC[2]); gemessen %d", bad7);
-    CHECK(bad9 == 0, "T3b: KEIN Frame-Wort-SE beim AUFSTEHEN (EXEC[9]) — genau der gemeldete "
-                     "Phantom-Schritt; gemessen %d", bad9);
+    CHECK(badrise == 0, "T3b: KEIN Frame-Wort-SE beim AUFSTEHEN (EXEC[7] P2/P3) — genau der "
+                        "gemeldete Phantom-Schritt; gemessen %d", badrise);
+    CHECK(bad9 == 0, "T3b: KEIN Frame-Wort-SE in EXEC[9] — gemessen %d", bad9);
     free(data);
 }
 
@@ -650,29 +661,48 @@ static void t45_room1100(const char *base)
               "{4,7,9} @0x80100dc0-e8), gemessen %d liegend / %d stehend", lying, standing);
 
         /* ---- T5: Skript-Wecker — sub02s Member_set(12,0x89/0x8A) ---- */
+        /* ⛔ KORRIGIERT 2026-08-21 (Nutzer: "Nach dem Loesen des Raetsels im Generator-Raum steht
+         * der Zombie abrupt, quasi ohne Animation, direkt vom Liegen zum Stehen").
+         * Hier stand `saw9` — der Pin verlangte, dass der Weg raus EXEC[9] ist. DAS IST WIDERLEGT:
+         * EXEC[9] @0x80103E48 ist der STOSS-/TAUMEL-Executor (Clips {3,3,4,0x0D} @0x801000D8,
+         * alle mit AUFRECHTER Frame-0-Pose; Schub +0x144=400 @0x80103F60-64; 7/8-Chance auf
+         * `+0x4 = 0x501` = Sturz @0x80104020-28). Der BODEN-Aufsteher ist EXEC[7]s eigene Kette:
+         *   P1 @0x8010381C-28 haelt auf `+0x10E & 0x4000`,
+         *   P2 @0x80103838-80 setzt `re2z_param_clips[4+back]` = Clip 8/9 (80 Frames),
+         *   P3 @0x801038D8-FC spielt ihn aus, P4 @0x80103900-0C committet `0x101`.
+         * Der Nibble-Bump darf also NUR den Limpet-Latch loesen (`andi 0xbfff` @0x80104F0C). */
         for (int i = 0; i < nz; i++) {
             uint8_t nib = (i & 1) ? 0x8Au : 0x89u;   /* wie sub02: 7->9 bzw. 8->10 */
             re15_actor_set_member(zs[i], 12, nib);
         }
         int left7[RE15_ACTOR_MAX]; memset(left7, 0, sizeof left7);
-        int saw9[RE15_ACTOR_MAX];  memset(saw9,  0, sizeof saw9);
+        int rise[RE15_ACTOR_MAX];  memset(rise,  0, sizeof rise);
+        int viaz9[RE15_ACTOR_MAX]; memset(viaz9, 0, sizeof viaz9);
         for (int t = 0; t < 400; t++) {
             frame();
             for (int i = 0; i < nz; i++) {
                 re15_actor_t *e = &g_actors[zs[i]];
-                if (e->state == 1 && e->sub_state_1 == 9) saw9[zs[i]] = 1;
+                if (e->state == 1 && e->sub_state_1 == 9) viaz9[zs[i]] = 1;
+                if (e->state == 1 && e->sub_state_1 == 7 && e->sub_state_2 >= 2 &&
+                    (e->motion == 8 || e->motion == 9)) rise[zs[i]] = 1;
                 if (!(e->state == 1 && e->sub_state_1 == 7)) left7[zs[i]] = 1;
             }
         }
         for (int i = 0; i < nz; i++) {
-            printf("  [T5] slot %d: verliess EXEC[7]=%d ueber EXEC[9]=%d, jetzt s1=%d\n",
-                   zs[i], left7[zs[i]], saw9[zs[i]], g_actors[zs[i]].sub_state_1);
+            printf("  [T5] slot %d: verliess EXEC[7]=%d ueber den Bodenclip 8/9=%d "
+                   "(EXEC[9]-Taumel=%d), jetzt s1=%d\n",
+                   zs[i], left7[zs[i]], rise[zs[i]], viaz9[zs[i]],
+                   g_actors[zs[i]].sub_state_1);
             CHECK(left7[zs[i]],
                   "T5: der Nibble-Bump 9/10 (`sb a2,9(a0)` @0x800411f8) MUSS den Liegenden "
                   "wecken — slot %d blieb in EXEC[7]", zs[i]);
-            CHECK(saw9[zs[i]],
-                  "T5: der Weg raus ist EXEC[9] Get-up (0x901 @0x80103E48) — slot %d nie in s1=9",
-                  zs[i]);
+            CHECK(rise[zs[i]],
+                  "T5: der Weg raus ist EXEC[7]s EIGENE Aufsteh-Kette (P2 Clip 8/9 "
+                  "@0x80103838-80) — slot %d hat den Bodenclip nie gespielt", zs[i]);
+            CHECK(!viaz9[zs[i]],
+                  "T5: der Wecker darf NICHT nach EXEC[9] committen (Stoss-/Taumel-Executor "
+                  "@0x80103E48, Clips {3,3,4,0x0D} @0x801000D8 starten AUFRECHT) — slot %d "
+                  "war in s1=9", zs[i]);
         }
     }
     free(data);

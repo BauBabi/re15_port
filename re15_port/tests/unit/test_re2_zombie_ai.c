@@ -707,14 +707,41 @@ int main(void)
               "= `jr ra`): 600 Ticks bei dist 100 -> state=%d +0x5=%d +0x6=%d grid=0x%02X "
               "+0x10E=0x%04X clip=%d", e->state, e->sub_state_1, e->sub_state_2, e->grid_id,
               e->re2z_f10e, (int)e->motion);
-        /* SKRIPT-Wecker (der EINZIGE Weg im Original): Member_set(12, 0x89) -> Nibble 9 */
+        /* SKRIPT-Wecker (der EINZIGE Weg im Original): Member_set(12, 0x89) -> Nibble 9.
+         * ⛔ KORRIGIERT 2026-08-21 (Nutzer: "Nach dem Loesen des Raetsels im Generator-Raum steht
+         * der Zombie abrupt, quasi ohne Animation, direkt vom Liegen zum Stehen"): hier stand
+         * "muss den Get-up 0x901 committen". WIDERLEGT — EXEC[9] @0x80103E48 ist der STOSS-/
+         * TAUMEL-Executor (Clip-Tabelle {3,3,4,0x0D} @0x801000D8, alle mit AUFRECHTER Frame-0-
+         * Pose; Schub `+0x144 = 400` @0x80103F60-64; 7/8-Chance auf `+0x4 = 0x501` = Sturz
+         * @0x80104020-28). Der Bump darf NUR den Limpet-Latch loesen (`andi v1,v1,0xbfff` /
+         * `sh v1,270(s0)` @0x80104F0C-10); das Aufstehen macht EXEC[7] dann SELBST:
+         * P1 @0x8010381C-28 -> P2 Bodenclip 8/9 @0x80103838-80 -> P3 @0x801038D8-FC ->
+         * P4 `0x101` @0x80103900-0C. */
         e->grid_id = 0x89;
         re15_re2z_tick(s);
-        CHECK(e->state == 1 && e->sub_state_1 == 9 && e->grid_id == 0 &&
-              (e->re2z_f10e & 0x4000u) == 0,
-              "Skript-Bump auf Nibble 9 muss den Get-up 0x901 (@0x80103E48) committen und das "
-              "Limpet-Bit loesen: state=%d +0x5=%d grid=0x%02X +0x10E=0x%04X",
+        CHECK(e->state == 1 && e->sub_state_1 == 7 && (e->re2z_f10e & 0x4000u) == 0,
+              "Skript-Bump auf Nibble 9 loest NUR den Limpet-Latch (@0x80104F0C) und laesst den "
+              "Zombie in EXEC[7]: state=%d +0x5=%d grid=0x%02X +0x10E=0x%04X",
               e->state, e->sub_state_1, e->grid_id, e->re2z_f10e);
+        /* ... und die EXEC[7]-Kette faehrt daraufhin den BODEN-Aufsteher ab. */
+        {   int saw_ground_clip = 0, saw_stand = 0;
+            for (int t = 0; t < 400; t++) {
+                re15_re2z_tick(s);
+                if (e->state == 1 && e->sub_state_1 == 7 && e->sub_state_2 >= 2 &&
+                    (e->motion == 8 || e->motion == 9)) saw_ground_clip = 1;
+                if (e->state == 1 && e->sub_state_1 == 1) saw_stand = 1;
+                if (e->state == 1 && e->sub_state_1 == 9)
+                    CHECK(0, "Skript-Wecker darf NICHT in EXEC[9] (Taumel @0x80103E48) landen");
+                e->anim_frame = 200;                     /* Clip-Playout abkuerzen */
+            }
+            CHECK(saw_ground_clip,
+                  "nach dem Latch-Clear muss EXEC[7] P2 den Bodenclip 8/9 setzen "
+                  "(re2z_param_clips[4+back] @0x80103840-80), gemessen clip=%d +0x6=%d",
+                  (int)e->motion, e->sub_state_2);
+            CHECK(saw_stand,
+                  "und P4 committet `0x101` (@0x80103900-0C), gemessen state=%d +0x5=%d",
+                  e->state, e->sub_state_1);
+        }
         re15_actor_free(s);
     }
 
