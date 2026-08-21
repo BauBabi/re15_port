@@ -398,8 +398,9 @@ static int re2d_attack_decide(re15_actor_t *e, re15_actor_t *pl)
 /* ---- 0x80104DF0: contact/damage (called from the flight prober) ---------------------------
  * self-disasm'd @0x80104DF0-0x80104FC8. Player path only (a1=1 partner bite 0x80065B9C has no
  * port target — dokumentiert tot). Gates: +0x21E==0, PL nicht geclaimt, Jaw-Nähe 0x800157D4
- * (part 4 + Radius 700/1000 je PL-HP<21 @0x80104E34-48 — PORT: dist bereits über den Sprung-
- * Kontakt approximiert, s.u.), Y > Boden−1800 (@0x80104E84-94), gleiche Etage (@0x80104E9C-A8).
+ * (part 4 + Radius 700/1000 je PL-HP<21 @0x80104E34-48 — seit 2026-08-21 byte-true über die
+ * WELT-POSITION VON PART 4, s.u.), Y > Boden−1800 (@0x80104E84-94), gleiche Etage
+ * (@0x80104E9C-A8).
  * Dann +0x21A=0 (@0x80104EB4 Delay-Slot) + FUN_800401D4(20, 0) (@0x80104EB8-C0 — der BISS-
  * SCHADEN 20 STEHT IM MODUL). Rückgabe 2 (tödlich) → LATCH (@0x80104F00-74): +0x21E=2,
  * PL+0x1D3=255, PL-Flags|=0xA, PL-Yaw=Hund+2048, self+0x1D3|=0x80. Sonst → Boden-Biss
@@ -409,12 +410,27 @@ static int re2d_contact(re15_actor_t *e, re15_actor_t *pl)
 {
     if (e->re2d_bite21e != 0) return (int)e->re2d_bite21e; /* @0x80104E4C-54 */
     if (re15_player_is_grabbed()) return 0;                /* PL+0x1D3&0x80 @0x80104E5C-68 */
-    /* Jaw-Nähe 0x800157D4(PL-Pos, Part-4-Pos, r=700/1000): Port-Näherung über die Wurzel-
-     * Distanz — Part 4 (Kiefer) liegt beim gestreckten Sprung ~Actor-Front; MAPPING. */
+    /* KIEFER-NAEHE — byte-true nachgezogen 2026-08-21 (vorher: Wurzel-Distanz-Naeherung, die
+     * den toedlichen Biss praktisch unerreichbar machte; Messreihe in der Fix-Notiz).
+     * Original: `lw a1,408(s0)` @0x80104E10  -> a1 = *(self+0x198) = Part-Pool
+     *           `addiu a1,a1,688` @0x80104E24 -> + 4*0xAC = PART 4
+     *           `addiu a0,s1,56`  @0x80104E70 -> a0 = Ziel+0x38 (Welt-X; Z @+0x40)
+     *           `jal 0x800157D4`  @0x80104E74, Delay `addiu a1,a1,92` @0x80104E78 -> +0x5C
+     *                                            = Welt-Translation des Parts
+     *           `beq v0,zero,0x80104FCC` @0x80104E7C -> kein Kontakt
+     * FUN_800157D4 (RE2-EXE, selbst disassembliert @0x800157D4-0x8001581C):
+     *           `lw v0,0(a0)/lw v1,0(a1)` @0x800157E0-E4  -> dx (Feld +0)
+     *           `lw v0,8(a0)/lw v1,8(a1)` @0x800157F8-FC  -> dz (Feld +8)
+     *           `jal 0x8008d2f4` @0x80015814 (GTE-sqrt), `sltu v0,v0,a2` @0x8001581C
+     *           -> Rueckgabe = dist2D(Spieler, Part 4) < Radius  (STRIKT kleiner).
+     * Part 4 ist im geladenen RE2-EM020-Rig der vorderste Bone (Vorwaerts-Offset +1080 ggü.
+     * der Wurzel, Kette 0->1->2(678)->3(1040)->4; Bone 13 = -875 = Schwanz) = Kiefer. */
     {
-        int32_t dx = pl->x - e->x, dz = pl->z - e->z;
+        int32_t jaw[3];
+        re15_enemy_bone_world_pos(e, 4, jaw);              /* Part 4 = Pool+688 @0x80104E24 */
+        int64_t dx = (int64_t)pl->x - jaw[0], dz = (int64_t)pl->z - jaw[2];
         int32_t r  = (pl->hp < 21) ? 700 : 1000;           /* @0x80104E34-48 */
-        if (dx * dx + dz * dz > r * r) return 0;
+        if (dx * dx + dz * dz >= (int64_t)r * r) return 0; /* sltu @0x8001581C = strikt < */
     }
     if (!(e->y > (int32_t)e->dog_floor_y - 1800)) return 0;/* @0x80104E84-94 (+0x1C2-Analog) */
     if (pl->floor != e->floor) return 0;                   /* @0x80104E9C-A8 */
