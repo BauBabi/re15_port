@@ -619,11 +619,27 @@ static void re15_clip_root_motion_abs(re15_actor_t *a,
     a->z = a->anchor_z + (int32_t)((-(int64_t)sn * sx + (int64_t)cs * sz) >> 12);
 }
 
+/* ⛔ +0x144 IST EIN LESBARES FELD, KEIN INTERNES ZWISCHENERGEBNIS.
+ * FUN_80015E7C schreibt den Wurzel-Delta-VEKTOR in die Entity, BEVOR ihn FUN_800152C8 anwendet:
+ *   80015fcc: subu v1,t1,v1        ; dx = sx(kf_now) - sx(kf_prev)
+ *   80015fd0: subu a0,t2,a0        ; dy
+ *   80015fd4: subu a1,t3,a1        ; dz
+ *   80015fd8: sh   v1,324(t0)      ; **+0x144 = dx**   (UNROTIERT, Rohdaten aus dem Keyframe)
+ *   80015fdc: sh   a0,326(t0)      ; +0x146 = dy
+ *   80015fe4: sh   a1,328(t0)      ; +0x148 = dz
+ * (info/re2leon/PSX.EXE, selbst disassembliert.) Der RE2-KRIECHER LIEST das Feld als Torwaechter
+ * seiner Steuerung: `lh v0,324(s0)` / `slti v0,v0,21` / `bne` @0x801030C0-CC. Ein Port, der
+ * e7c+152c8 zu EINER Delta-Anwendung fusioniert, muss den Zwischenwert deshalb trotzdem ablegen —
+ * sonst hat der Kriecher gar kein Kriterium. re2z_root144 ist genau dieser Zwischenwert.
+ * Auf den Re-Anchor-Pfaden (Clip-Wechsel/Wrap) kann der Port keinen Delta bilden; dort wird 0
+ * abgelegt — das ist derselbe Wert, den das Original nach zwei e7c-Aufrufen OHNE dazwischen
+ * liegenden Advance liefert (prev == current -> dx == 0, s. Kriecher-P0 @0x80103094/@0x801030B8). */
 static void re15_clip_root_motion_delta(re15_actor_t *a,
                                         const re15_emd_skeleton_t *skel,
                                         const re15_emd_animation_t *anim,
                                         int clip, int fr_now, int fr_prev)
 {
+    a->re2z_root144 = 0;                                           /* sh +0x144 @0x80015FD8 */
     if (!skel || !anim || clip < 0 || clip >= anim->clip_count) return;
     const re15_emd_clip_t *c = &anim->clips[clip];
     if (c->frame_count <= 0) return;
@@ -640,6 +656,7 @@ static void re15_clip_root_motion_delta(re15_actor_t *a,
     if (!re15_emd_get_keyframe_speed(skel, kf_n, &sx,  &sy, &sz))  return;
     if (!re15_emd_get_keyframe_speed(skel, kf_p, &sx0, &sy, &sz0)) return;
     int32_t dx = (int32_t)sx - sx0, dz = (int32_t)sz - sz0;
+    a->re2z_root144 = (int16_t)dx;                                 /* sh v1,324(t0) @0x80015FD8 */
     if (dx == 0 && dz == 0) return;
     int32_t cs = re15_cos_q12(a->rot_y), sn = re15_sin_q12(a->rot_y);
     a->x += (int32_t)(( (int64_t)cs * dx + (int64_t)sn * dz) >> 12);
@@ -1694,7 +1711,15 @@ void re15_re2z_move_root(re15_actor_t *e)
     if (!b || !b->ok) { e->root_prev_kf = -1; return; }
     const re15_emd_skeleton_t  *s = &b->skel;
     const re15_emd_animation_t *a = &b->anim;
-    if (e->state == 1 && e->sub_state_1 == 1 && b->loco_ok) {   /* WALK -> Pair 1 @0x80101CB0-BC */
+    /* ⛔ Die Pair-1-Bank gehoert dem AUFRECHTEN Gang-Executor 0x80101A40, nicht dem Substate 1
+     * an sich: die Bankwahl steht als Argumentpaar AN DER AUFRUFSTELLE (a1=+0x108/a2=+0x17C
+     * @0x80101CB0-BC), und 0x80101A40 haengt an der AUFRECHT-Tabelle @0x8010C8CC[1]. Der
+     * KRIECHER hat eine eigene Executor-Tabelle @0x8010C918, deren [1] = 0x801025EC (der GRIFF)
+     * ist — der reicht e7c die vom Dispatcher gelieferte Pair-2-Bank. Ohne dieses Gate wuerde
+     * der kriechende Zombie im Griff die Gang-Bank fahren. Kriecher-Selektor = +0x10E Bit 0
+     * (`andi 0x3f` @0x8010115C, Tabelle @0x8010C854 alterniert auf Bit 0). */
+    if (e->state == 1 && e->sub_state_1 == 1 && b->loco_ok
+        && !(e->re2z_f10e & 1u)) {                              /* WALK -> Pair 1 @0x80101CB0-BC */
         s = &b->skel_loco; a = &b->anim_loco;
     }
     int fr = (int)e->anim_frame;
@@ -4023,8 +4048,12 @@ int re15_actor_uses_loco_bank(const re15_actor_t *a)
      * Idle. */
     if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2z_owns_type(a->type)) {
         /* Pair-1-Spieler: WALK (a1=+0x108/a2=+0x17C @0x80101CB0-BC) und BUMP (dieselben Loads
-         * @0x801022F0-F4, Clips 4/6 = 0xF0004+walkclip @0x80102290-AC) — beide byte-belegt. */
-        if (a->state == 1 && (a->sub_state_1 == 1 || a->sub_state_1 == 2)) {
+         * @0x801022F0-F4, Clips 4/6 = 0xF0004+walkclip @0x80102290-AC) — beide byte-belegt.
+         * ⛔ NUR AUFRECHT: die Substates 1/2 heissen im KRIECHER (+0x10E Bit 0, Tabelle
+         * @0x8010C918) GRIFF (0x801025EC) und WARTEN (0x80103B48) — beide haengen an der
+         * Kriecher-Tabelle, nicht an 0x80101A40/0x80102260, und laden nie Pair 1. */
+        if (a->state == 1 && (a->sub_state_1 == 1 || a->sub_state_1 == 2)
+            && !(a->re2z_f10e & 1u)) {
             re15_enemy_bank_t *b = re15_enemy_find(a->type);
             return (b && b->loco_ok && (int)a->motion < b->anim_loco.clip_count) ? 1 : 0;
         }
@@ -6727,9 +6756,17 @@ static void re15_spider_ai_tick(int slot)
          * jal 0x80019700` @0x801166c4-e8. Port fx registrar = the ESP pool spawn (same model as
          * the ACTIVE web telegraph below; exact part id/pose = the OPEN sprite subsystem).
          * (audit wf_827f186d spider #7) */
-        if (!(e->grid_id & 0x80))
-            re15_esp_fx_spawn(re15_esp_room_bank(), 0, 0,
-                              e->x, e->y, e->z, (int16_t)e->rot_y);
+        /* ⛔ KORREKTUR 2026-08-21: Typ 0x26 ist in STAGE1 KEINE Spinne, sondern der
+         * FEUER-EMITTER des brennenden Hinterhofs (ROOM1090). Belegt: die eingebettete TIM
+         * der Effekt-Id 0x10 (ROOM1090.RDT RDT+0x54 0x2EEB8 + 0x64C0 = Datei 0x35378, 4bpp
+         * 256x144) rendert mit eigener CLUT als 8 FLAMMEN-Frames; ROOM109.BSS traegt
+         * nCut = 16 = 8 Kamerawinkel x 2 Beleuchtungen, Frames 8..15 im orangen Feuerschein.
+         * Die sieben "Spinnen" sind sieben brennende Truemmer. Die FSM war richtig RE't, nur
+         * das Etikett war falsch (Details: Memory reai-v2-spider-ai, RE15_SPIDER_AI.md).
+         * Statt des Gore-Sprites (Effekt-Index 0) laeuft hier jetzt der byte-true Emitter
+         * FUN_80116d00 mit der Varianten-Sprungtabelle @0x80100364. */
+        re15_esp_type26_emerge(re15_esp_room_bank(), e->grid_id,
+                               e->x, e->y, e->z, (int16_t)e->rot_y);
         break;
 
     case 1: {  /* ACTIVE 0x801166fc: the stationary strike-arming brain (Behavior A/B on +0x6). */
@@ -6737,8 +6774,13 @@ static void re15_spider_ai_tick(int slot)
         switch (e->sub_state_2) {
         case 0:   /* +0x6==0: seed the strike budget + telegraph "web" fx (ROLL 0x80116d00) */
             e->spider_phase = budget;
-            re15_esp_fx_spawn(re15_esp_room_bank(), 0, 0,
-                              e->x, e->y, e->z, (int16_t)e->rot_y);   /* web telegraph fx 0x0803../0x1003.. @0x80116d84 */
+            /* ⛔ 2026-08-21: das ist der FLAMMEN-Emitter, kein "Web-Telegraph" (s. INIT oben).
+             * Byte-true FUN_80116d00: Varianten-Sprungtabelle @0x80100364 waehlt die Effekt-Id
+             * (`lui v1,0x1003` @0x80116d6c = Id 0x10 Raum-Bank / `lui v1,0x803` = Id 0x08
+             * CORE00), a0 = (phase<<8)|(id<<24)|(3<<16) @0x80116d7c-80, dann jal 0x80019700
+             * @0x80116d84. Varianten >= 5 spawnen NICHT (`sltiu v0,v1,0x5` @0x80116d1c). */
+            re15_esp_type26_flame(re15_esp_room_bank(), e->grid_id, budget,
+                                  e->x, e->y, e->z, (int16_t)e->rot_y);
             e->spider_timer = (int16_t)((re15_engine_rand8() & 0x3f) + 16);  /* +0x1d4 = rng&0x3f+16 [16,79] @0x80116da0 */
             e->sub_state_2 = 1;
             break;

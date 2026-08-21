@@ -168,6 +168,14 @@ void re15_re2z_rng_reset(void);                   /* re-seed the RE2 PRNG on roo
  * loader fills (clip indices are RE2-native) + the ENEMSE SE bank via the audio hook below. */
 int  re15_re2z_tick(int slot);                    /* 1 = handled (RE2 brain owns this actor)    */
 
+/* ---- WELLE 5: der RE2-KRIECHER -------------------------------------------------------------
+ * Setzt +0x10E Bit 0 (`andi 0xffc0 / ori 1 / sh 270` @0x80104590-98) und das Zustandswort, das
+ * den Kriecher-Substate waehlt: `sub` 1 = Kampf-Eintritt = GRIFF (`sw 0x101` @0x8010458C),
+ * `sub` 0 = die Kriech-LOKOMOTION (`sw 1` @0x80107A58, der Ausgang des Kriecher-HURT).
+ * Setzt zusaetzlich den Ein-Angreifer-Riegel Spieler+0x1D3 |= 0x80 (@0x8010459C-B0) und die
+ * SCA-Zeile 8 (BRUECKE zu den RE1.5-Raumdaten, s. Block an der Definition). */
+void re15_re2z_enter_crawler(re15_actor_t *e, re15_actor_t *pl, unsigned sub);
+
 /* ---- RE1.5-Waffe -> RE2-ATTACKEN-ID (= Zeile der Trefferreaktions-Tabelle @0x8010C940) -------
  * Im Original ist diese Zeile die ITEM-ID der gefuehrten Waffe: EQUIP FUN_8006B000 schreibt sie
  * nach 0x800D5BFA (`sb v0,23546(at)` @0x8006B09C, Gate `sltiu <0x14` @0x8006B040), FUN_8003BAF0

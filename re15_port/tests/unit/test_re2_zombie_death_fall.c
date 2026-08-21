@@ -178,7 +178,13 @@ static void run_death(int slot, int budget, death_trace_t *t, int force_crawler_
     re15_actor_t *e  = &g_actors[slot];
     memset(t, 0, sizeof *t);
 
-    e->hp = 79; e->state = 1; e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0;
+    /* ⚠ Mit gesetztem +0x10E Bit 0 dispatcht Zustand 1 seit Welle 5 ueber die KRIECHER-Tabelle
+     * @0x8010C918 (Wurzel 0x80101210). Deren [1] ist der GRIFF, nicht der Gang — der Kriecher
+     * muss deshalb in seinem LOKOMOTIONS-Substate 0 starten (die byte-gelesene Eintritts-
+     * kombination des Kriecher-HURT: `sh 1,270` @0x80107A54 + `sw 1,4` @0x80107A58). Ohne das
+     * stand die Negativ-Kontrolle im Griff statt im Gang und kam nie bis CORPSE. */
+    e->hp = 79; e->state = 1; e->sub_state_1 = force_crawler_branch ? 0 : 1;
+    e->sub_state_2 = 0; e->sub_state_3 = 0;
     e->re2z_flags21a = 0; e->re2z_f10e = force_crawler_branch ? 1u : 0u;
     e->re2z_self1d3 = 0; e->re2z_flag222 = 0; e->re2z_hits1d2 = 1;
     e->re2z_dir16a = 0; e->re2z_gaitrow = 0; e->hit_react = 0;
@@ -432,27 +438,52 @@ int main(void)
                        "— genau der vom Nutzer gemeldete Fall waere ungetestet");
     }
 
-    /* ---- NEGATIV-KONTROLLE: die ALTE Kette muss durchfallen ---------------------------------
-     * `+0x10E & 1` schickt die Wurzel in die 1D-Tabelle @0x8010CECC -> FUN_80108A14 = Clip 7,
-     * also GENAU in das Verhalten, das der Port bisher fuer JEDEN Tod gefahren hat. Der Pin muss
-     * es als Sprung erkennen — sonst wuerde er den gemeldeten Fehler wieder durchlassen. */
+    /* ---- NEGATIV-KONTROLLE A: der 1D-Kriecher-Zweig laeuft und endet als Leiche -------------
+     * `+0x10E & 1` schickt die DEATH-Wurzel in die 1D-Tabelle @0x8010CECC -> FUN_80108A14
+     * (Clip 7 @0x80108A88). Seit Welle 5 (der RE2-Kriecher) dispatcht Bit 0 auch den ZUSTAND 1
+     * ueber die Kriecher-Tabelle @0x8010C918 — ein so praeparierter Aktor MUSS deshalb in
+     * Kriecher-Substate 0 starten (`sh 1,270` @0x80107A54 + `sw 1,4` @0x80107A58), sonst steht
+     * er im GRIFF (Kriecher-EXEC[1] = 0x801025EC) statt im Gang. */
     {   death_trace_t t;
         run_death(slot, 600, &t, 1);
         CHECK(t.ok, "NEGATIV-KONTROLLE: der Clip-7-Zweig kam nicht bis CORPSE");
         if (t.ok) {
             dump("NEG(clip7)", &t);
-            int m = pin_mask(&t);
             CHECK(t.clip[0] == 7,
                   "NEGATIV-KONTROLLE: `+0x10E & 1` muss FUN_80108A14 (Clip 7 @0x80108A88) fahren, "
                   "war Clip %d", t.clip[0]);
             CHECK(t.handler == -1,
                   "NEGATIV-KONTROLLE: die Diagnose muss den 1D-Zweig (-1) melden, war %d",
                   t.handler);
-            CHECK((m & (P_ENTRY_SNAP | P_NOT_FALLCLIP)) == (P_ENTRY_SNAP | P_NOT_FALLCLIP),
-                  "NEGATIV-KONTROLLE: der Pin haette die alte Clip-7-Kette NICHT gefangen "
-                  "(Maske 0x%02X, erwartet mindestens Sprung+falscher Clip) — vorher %d, "
-                  "erster Todes-Frame %d", m, (int)t.dy_before, (int)t.dy[0]);
         }
+    }
+
+    /* ---- NEGATIV-KONTROLLE B: der DETEKTOR selbst ------------------------------------------
+     * ⚠ Frueher stand hier die Zusatz-Forderung, der Lauf oben muesse P_ENTRY_SNAP ausloesen.
+     * Das ging NUR, solange ein Aktor mit +0x10E Bit 0 trotzdem AUFRECHT lief — genau der
+     * Zustand, den der RE2-Kriecher (Welle 5) unmoeglich macht: Bit 0 heisst jetzt "am Boden".
+     * Ein Kriecher hat keine Fallhoehe, also KANN sein Tod keinen Sprung zeigen; die alte
+     * Forderung wuerde ab jetzt eine Eigenschaft pruefen, die es nicht mehr gibt.
+     * Der Zweck der Kontrolle bleibt: der Pin MUSS die urspruenglich gemeldete Kette fangen
+     * (ein STEHENDER Zombie, der in EINEM Frame in die Boden-Pose schnappt). Deshalb wird dem
+     * Praedikat jetzt direkt die GEMESSENE alte Spur vorgelegt — die Zahlen aus dem Report am
+     * Kopf dieser Datei (f160 stehend -2766, f165 Clip 7 bei -548, Leiche Clip 22 bei -129). */
+    {   death_trace_t t; memset(&t, 0, sizeof t);
+        t.ok = 1; t.dir = 1; t.flags21a = 0; t.handler = -1;
+        t.dy_before = -2766;                       /* f160: der Zombie STEHT */
+        t.n = 70;
+        for (int i = 0; i < t.n; i++) {            /* f165ff: Clip 7 spielt am BODEN aus */
+            t.state[i] = 3; t.sub2[i] = 1; t.clip[i] = 7; t.frame[i] = i;
+            t.dy[i] = (int32_t)(-548 + (i * 383) / 69);   /* -548 .. -165, wie gemessen */
+        }
+        t.corpse_clip = 22; t.corpse_dy = -129;
+        int m = pin_mask(&t);
+        CHECK((m & (P_ENTRY_SNAP | P_NOT_FALLCLIP)) == (P_ENTRY_SNAP | P_NOT_FALLCLIP),
+              "NEGATIV-KONTROLLE: der Pin haette die gemeldete Clip-7-Kette NICHT gefangen "
+              "(Maske 0x%02X, erwartet mindestens Sprung+falscher Clip)", m);
+        CHECK((m & P_NO_DESCENT) != 0,
+              "NEGATIV-KONTROLLE: die alte Kette hatte KEINEN Stand->Boden-Abstieg, "
+              "der Detektor muss das melden (Maske 0x%02X)", m);
     }
 
     free(buf);

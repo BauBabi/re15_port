@@ -1868,3 +1868,47 @@ target_compile_definitions(test_1090_push_pin PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_1090_push_pin COMMAND test_1090_push_pin)
 set_tests_properties(unit_1090_push_pin PROPERTIES TIMEOUT 60)
+
+# --- PIN "der RE2-Kriecher" (Nutzer-Auftrag ROOM1030-Kriechtor, 2026-08-21) --------------------
+#     Baut die RE2-eigene Kriecher-Maschine ab: Zustand-1-Wurzel @0x8010114C -> Tabelle
+#     @0x8010C854 (ungerade = Kriecher 0x80101210), DECIDE @0x8010C90C / EXEC @0x8010C918,
+#     Lokomotion 0x80103024 (Clip-Wort 0x000F0005, Steuer-Gate +0x144 >= 21 @0x801030C8,
+#     ALT==0-Timer @0x801030E4-F4), Warten 0x80103B48, HURT 0x80107888 (Ausgang `sh 1,270`
+#     @0x80107A54 + `sw 1,4` @0x80107A58) und die Kampf-Umwandlung @0x80104590-98.
+#     Enthaelt den Tor-Transit an der ECHTEN ROOM1030.RDT, vier Negativproben und eine
+#     Regressionswache fuer die byte-true RE1.5-Kriechkette. ---
+add_executable(test_re2_crawler test_re2_crawler.c)
+target_link_libraries(test_re2_crawler PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2_crawler PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2_crawler PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2_crawler COMMAND test_re2_crawler)
+set_tests_properties(unit_re2_crawler PROPERTIES TIMEOUT 60)
+
+# --- PIN "Aussen fehlt noch Feuer" (Nutzer-Report ROOM1090) -----------------------------------
+#     Die 7 Typ-0x26-Entities aus ROOM1090 sub00 (`44 xx 26 vv` @Datei 0x2214) sind die
+#     BRENNENDEN TRUEMMER (Typ 0x26 existiert in keinem anderen RDT). Root 0x80116288
+#     (EXE-Dispatch 0x80072bac[0x26], Registrierung @0x8011e8f4) spawnt die Flamme in
+#     FUN_80116d00: Effekt-Id ueber Sprungtabelle @0x80100364[grid&0x7f] = 08/10/10/08/10
+#     (`lui v1,0x1003` @0x80116d6c), sub 3, scale16 = entity[0x1D0]<<8 (0x28/0x2C
+#     @0x80116784/0x8011689c), `jal 0x80019700` @0x80116d84; die Funken beim Erscheinen
+#     a0=0x09031800 @0x801166e4 (Gate grid&0x80 @0x801166c4). Der Test pinnt die Raum-Bank
+#     (ids 05 07 09 10, Flammen-TIM @0x35378 4bpp 256x144), die Varianten-Tabelle, die
+#     Spawn-Parameter und traegt vier Negativproben. ---
+add_executable(test_1090_fire_pin test_1090_fire_pin.c)
+target_link_libraries(test_1090_fire_pin PRIVATE re15_engine re15_test_support)
+target_include_directories(test_1090_fire_pin PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_1090_fire_pin PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_1090_fire_pin COMMAND test_1090_fire_pin)
+set_tests_properties(unit_1090_fire_pin PROPERTIES TIMEOUT 60)
+
+# --- MESSUNG "kriecht der Zombie unter dem Tor durch?" (ROOM1030, echter Weg) -----------------
+#     Echte RDT + SCD-VM + re15_game_step + geladene Baenke, beide Flavors, sub07 gefeuert. ---
+add_executable(probe_1030_crawl_live probe_1030_crawl_live.c)
+target_link_libraries(probe_1030_crawl_live PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1030_crawl_live PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1030_crawl_live PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_1030_crawl_live COMMAND probe_1030_crawl_live)
+set_tests_properties(unit_1030_crawl_live PROPERTIES TIMEOUT 120)

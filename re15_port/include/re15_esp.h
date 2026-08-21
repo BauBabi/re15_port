@@ -183,6 +183,22 @@ re15_esp_fx_t *re15_esp_fx_spawn_ex(const re15_esp_t *bank, uint8_t effect_id, u
                                     int32_t x, int32_t y, int32_t z, int16_t param);
 re15_esp_fx_t *re15_esp_fx_spawn(const re15_esp_t *bank, uint8_t effect_id, uint8_t sub_index,
                                  int32_t x, int32_t y, int32_t z, int16_t param);
+/* ===== ROOM1090 FEUER (Entity-Typ 0x26) — byte-true Spawn-Parameter ======================
+ * Die 7 Typ-0x26-Entities aus ROOM1090 sub00 (`44 xx 26 vv`, Datei 0x2214..) sind die
+ * brennenden Truemmer im Hinterhof. Root 0x80116288 (EXE-Dispatch 0x80072bac[0x26]).
+ *  - FLAMME  FUN_80116d00: Effekt-Id ueber Sprungtabelle @0x80100364[grid&0x7f]
+ *            (0x08/0x10/0x10/0x08/0x10; `lui v1,0x1003` @0x80116d6c), sub 3,
+ *            scale16 = entity[0x1D0]<<8 (Budget 0x28/0x2C @0x80116784/0x8011689c),
+ *            `jal 0x80019700` @0x80116d84.  Id 0x10 = die Flammen-TIM der Raum-Bank
+ *            (RDT+0x4C ids `05 07 09 10`; TIM Datei 0x35378, 4bpp 256x144).
+ *  - FUNKEN  INIT @0x801166c4-e8: a0 = 0x09031800 (Id 0x09, sub 3, scale 0x1800),
+ *            gegated auf `!(grid & 0x80)`.
+ * Beide geben NULL zurueck, wo das Original nicht spawnt (grid&0x80 bzw. variant >= 5). */
+int            re15_esp_type26_flame_id(uint8_t grid_id);   /* 0x08/0x10, -1 = kein Spawn */
+re15_esp_fx_t *re15_esp_type26_flame(const re15_esp_t *bank, uint8_t grid_id, uint8_t phase,
+                                     int32_t x, int32_t y, int32_t z, int16_t yaw);
+re15_esp_fx_t *re15_esp_type26_emerge(const re15_esp_t *bank, uint8_t grid_id,
+                                      int32_t x, int32_t y, int32_t z, int16_t yaw);
 /** Spawn `n` byte-true SPLATTER child particles at (x,y,z) with floor at floor_y — the
  *  parent→routine-2→routine-11 blood/gore chain collapsed: each child = effect_id sprite +
  *  gravity accel.y=8 + routine-11 RNG drift (drift.x -= rand&0xa, drift.y -= rand&0x14,

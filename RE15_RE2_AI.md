@@ -527,7 +527,211 @@ Blut-Kadenz in P1 (`jal 0x8001bf10` `@0x8010B668` auf jedem GERADEN Frame in [41
 `@0x8010B678-80` mit a0 = 6096 / 7120) — die RE2-Gore-Familie `0x8001bf10` hat im Port kein
 Gegenstück.
 
-## 🔜 W5 — Kriecher, State-8-Eintritt, Dismemberment
+## ✅ W5 — DER RE2-KRIECHER (gebaut 2026-08-21, Nutzer-Auftrag „Na dann baue das Kriechen nach")
+
+Der Abschnitt darunter (`🔜 W5 (Stand VOR dem Bau)`) beschreibt den Stand VOR dieser Welle und
+bleibt als Herleitung stehen. Was jetzt gebaut ist:
+
+### Die Zustand-1-Wurzel hat zwei Hälften
+
+```
+80101154: lhu v0,270(a0)      ; +0x10E
+8010115c: andi v0,v0,0x3f
+80101160: sll  v0,v0,2
+8010116c: lw   v0,-14252(at)  ; Tabelle 0x8010C854
+80101174: jalr v0
+```
+`table 0x8010c854 14` (eigener Dump): **alle 14 Einträge alternieren strikt auf Bit 0** —
+gerade → `0x8010118C` (aufrecht), **ungerade → `0x80101210` (KRIECHER)**.
+
+Kriecher-Wurzel `0x80101210`: DECIDE `0x8010C90C[+0x5]` (`@0x80101240`), danach `+0x5` FRISCH
+gelesen (`@0x80101254`), EXEC `0x8010C918[+0x5]` (`@0x80101268`). **Je drei Worte**; ab
+`0x8010C924` folgt die `(u16,u16)`-Datentabelle.
+
+| +0x5 | DECIDE | EXEC | Rolle |
+|---|---|---|---|
+| 0 | `0x80102EE4` | `0x80103024` | Kriech-**Lokomotion** + Angriffs-Entscheid |
+| 1 | `0x801025E4` (`jr ra`) | `0x801025EC` | **GRIFF** (dieselbe Funktion wie aufrecht [3]) |
+| 2 | `0x80103A70` | `0x80103B48` | **Warten** (Clip 0x17) + Angriffs-Entscheid |
+
+HURT: `+0x10E & 1` → 1D-Tabelle `@0x8010CBE8` → `FUN_80107888` (`@0x80104FE0-500C`,
+`j 0x8010540C` = jalr + sofortiger Epilog, die normale Reaktion läuft **nicht** mehr).
+DEATH: `+0x10E & 1` → 1D-Tabelle `@0x8010CECC` → `FUN_80108A14` (war schon portiert).
+
+Die Kriech-Variante des GRIFFS wählt der Griff selbst:
+`8010266c: lhu v0,270(s1)` / `80102674: andi s5,v0,0x1` / `80102690: addiu s5,s5,2` (Typ 0x17/0x11).
+Der Zweig war früher als „OPEN → Bit 0" geführt; mit dem Kriecher-Brain ist er scharf.
+
+### EXEC[0] `0x80103024` — die Kriech-Lokomotion, Instruktion für Instruktion
+
+```
+P0 @0x80103064  lui 0xf / ori 5 / sw 332      +0x14C = 0x000F0005 (Clip 5, Frame 0, Rate 15)
+   @0x80103074/78                              +0x6 = 1 (Delay-Slot des RNG-jal)
+   @0x8010308C-98 andi 0x7 / addiu 7 / sh 344  +0x158 = (rand & 7) + 7
+   @0x80103094    jal 0x80015E7C               BARER Aufruf (füllt nur +0x144)
+   @0x8010309C-BC andi 0xf / sb 333            +0x14D = rand & 0xF
+   @0x801030B8    jal 0x80015E7C               zweiter barer Aufruf  -> +0x144 == 0
+   KEIN Sprung — P0 FÄLLT DURCH nach P1
+P1 @0x801030C0  lh 324 / slti 21 / bne         **nur wenn +0x144 >= 21** steuert er
+   @0x801030D4-E0 jal 0x80015558(+0x1C4,+0x1C6, a3=24)
+   @0x801030E4-F4 lhu 344 / addiu -1 / bne / sh 344   ALT==0-Test, Store im Delay-Slot
+   @0x801030F8-108 (nur bei ALT==0) zweites 0x80015558(…, 24)
+   @0x8010310C-1C  +0x158 = (rand & 7) + 7
+   IMMER: @0x8010312C e7c, @0x80103140 959c(a3=256), @0x8010314C 152c8
+```
+
+⛔ **Clip 5 ist ein ZYKLUS, nicht play-once** — byte-abgeleitet, nicht geraten: P1 ruft
+`0x8002959C` jeden Tick und **liest die Rückgabe nicht** (kein `+0x6 +=`; `@0x80103148` lädt
+schon a0 fürs `152c8`). Der Executor kann P1 nie verlassen. Wo das Original play-once meint,
+VERBRAUCHT es die Rückgabe (EXEC[11] P1 `@0x801044F8-508`, Kriecher-HURT P1 `@0x80107A40-50`).
+Gemessen, warum das zählt: mit play-once pinnte der globale Advancer den Kriecher auf
+`clip=5 fr=49` — `+0x144` blieb 0 und der Kriecher stand 2100 Frames bewegungslos.
+
+### EXEC[2] `0x80103B48` — das Warten, komplett (neun Instruktionen)
+
+```
+80103b48: lbu v0,6(a0)      80103b50: bne v0,zero,0x80103b64   ; +0x6 != 0 -> nichts
+80103b54: addiu v0,zero,1   80103b58: sb v0,6(a0)              ; +0x6 = 1
+80103b5c: addiu v0,zero,23  80103b60: sw v0,332(a0)            ; +0x14C = Clip 0x17, Rate 0
+```
+Kein Ausgang — nur DECIDE[2] holt den Kriecher hier wieder heraus.
+
+### Kriecher-HURT `FUN_80107888`
+
+P0 `@0x801078F4`: `+0x14C = 0x00030006 | ((rand & 7) << 8)` (Clip 6, Zufalls-Startframe, Rate 3),
+Blut-Id 6000 an Part 0 (`@0x80107938`), SE 12 mit `+0x239`-Sperre, dann die Zeilen-Gore-Leiter
+10 / 11 / 14 / 16 — **ohne** den Ruß-Zweig 9/17, den die Liege-/Death-Leiter hat (deshalb ist
+`re2z_dismember_row` hier NICHT wiederverwendet). Fällt durch nach P1.
+P1 `@0x80107A2C`: `+0x6 += 0x8002959C(a3=1024)`.
+P2 `@0x80107A54-58`: `sh 1,270` **und** `sw 1,4` = Zustand 1 / Sub 0 / Kriecher — zurück in die
+Lokomotion. Der `sh` ist nackt und wischt alle anderen `+0x10E`-Bits weg.
+
+### `+0x144` ist ein LESBARES FELD
+
+`FUN_80015E7C` legt den Wurzel-Delta-Vektor in der Entity ab, BEVOR `FUN_800152C8` ihn anwendet:
+```
+80015fcc: subu v1,t1,v1     ; dx = sx(kf_now) - sx(kf_prev)
+80015fd8: sh   v1,324(t0)   ; +0x144 = dx   (UNROTIERT)
+80015fdc: sh   a0,326(t0)   ; +0x146        80015fe4: sh a1,328(t0)  ; +0x148
+```
+Ein Port, der `e7c+152c8` zu EINER Delta-Anwendung fusioniert, muss den Zwischenwert trotzdem
+ablegen — sonst hat der Kriecher gar kein Steuer-Kriterium. Neues Aktor-Feld `re2z_root144`.
+
+### *** 0x800CFDCB IST KEIN RAUM-GLOBAL ***
+
+Die alte Notiz nannte es „Einmal-Riegel PRO RAUM ohne Port-Produzenten". Falsch — es ist ein
+**Feld des Spielers**. Dieselbe Adresse, einmal absolut und einmal basisrelativ:
+```
+@0x80102F34-38  lui s2,0x800d / addiu s2,s2,-1032   ; s2 = 0x800CFBF8 = Spieler-Entity
+@0x80102FB0     lbu v0,-565(lui 0x800d)             ; = 0x800CFDCB
+@0x80102FF8     lbu v0,467(s2)                      ; = 0x800CFBF8 + 0x1D3 = 0x800CFDCB
+```
+Dass `0x800CFBF8` die Spieler-Entity ist, belegt dieselbe Funktion doppelt: `+56 = 0x800CFC30`
+(Spieler-X, `@0x80102EF4` vs `addiu a1,s2,56`) und `+0x106 = 0x800CFCFE` (Etage, `@0x80102F68`).
+
+⇒ **`0x800CFDCB` = Spieler+0x1D3, Bit 0x80 = der globale EIN-ANGREIFER-RIEGEL.**
+Setzer: jeder Kriech-/Lunge-Commit (`@0x80102FB8`, `@0x80103000`, `@0x80103B24`, `@0x801045A8`).
+Löscher: `andi 0x7f` `@0x80104FA0/AC` (HURT-Grab-Abbruch) und `@0x801082E8/F4` (DEATH-Abbruch).
+Der Port hat das Feld pro Aktor (`re2z_self1d3`) — der Riegel ist schlicht das Feld des
+SPIELER-Aktors. Kein erfundenes Global.
+
+### Der Kampf-Eintritt in EXEC[11] P1 ist jetzt scharf
+
+```
+80104530: jal 0x80015614(PL.x,PL.z,a3=256)   80104538/3c: ret16 != 0 -> raus
+80104544/4c/50: +0x1F0 < 0x708               8010455c/64/68: Spieler+0x1D3 & 0x80 -> raus
+80104570-80: +0x106 != Spieler+0x106 -> raus
+80104584/8c: +0x4 = 0x101
+80104590-98: andi 0xffc0 / ori 1 / sh 270    = die KRIECHER-WURZEL
+8010459c-b0: Spieler+0x1D3 |= 0x80
+```
+`andi 0xffc0` ist die **einzige** `0xffc0`-Maskierung im ganzen Overlay (eigener Voll-Scan).
+Früher stand hier „wird NICHT genommen, weil der Port weder einen Kriecher-Brain noch einen
+Produzenten für 0x800CFDCB hat" — beides ist jetzt da.
+
+### Die zwei Brücken (bewusst, benannt, nicht erfunden)
+
+**(1) Auslöser.** ROOM1030 fordert das Kriechen über das RE1.5-Protokoll an (sub07 `@Datei 0x2754`
+setzt `+0x1C4 |= 0x1000`). Das RE2-Modul hat dafür **keinen Konsumenten**: alle 36 `+0x1C4/+0x1C6`-
+Zugriffe in `EMOVL10_S0.BIN` sind das Paar `lh a1,452 / lh a2,454` = das Steuer-Ziel; die acht
+`andi 0x1000` (`@0x80101DDC`, `@0x80101E5C`, `@0x80101E9C`, `@0x80102490`, `@0x801024E8`,
+`@0x80102528`, `@0x80105E18`, `@0x80108B44`) lesen **alle** `+0x21A` (`lhu v0,538`), nicht
+`+0x1C4`. Die Brücke (`D15.3` in `re15_re2z_tick`, wie der D15.2-Wecker daneben) übersetzt
+**nur den Anforderungskanal**; die Zielwerte sind byte-gelesen:
+* HIN (`+0x1C4 & 0x1000`) → `re15_re2z_enter_crawler(sub 0)` = `sh 1,270` `@0x80107A54` +
+  `sw 1,4` `@0x80107A58` (die Kombination, mit der der Kriecher-HURT selbst in seine
+  **Lokomotion** zurückkehrt) — nicht der Kampf-Griff `sw 0x101` `@0x8010458C`, denn das Skript
+  will Fortbewegung, keinen Angriff. Der Spieler-Riegel wird dabei NICHT gesetzt: er hängt im
+  Original hinter dem Kampf-Test.
+* ZURÜCK (`+0x1C4 & 0x2000`, das zweite Skript-Bit; RE1.5-Gate `@0x8010369C-A4` mit
+  `!(+0x1D8 & 0x80)` `@0x801036B0-BC` → Wort `0x601`) → Kriecher-Bit aus, `sw 0x901` =
+  EXEC[9] Aufstehen `@0x80103E48`, SCA zurück auf 4 (`@0x801050B4`).
+
+**(2) Tor-Zelle.** Voll-Scan von `EMOVL10_S0.BIN` nach jedem `+0x1D7`-Zugriff
+(`(sb|lb|lbu) rt,471(rs)`): **NULL Treffer** — das RE2-Zombie-Overlay kennt das Feld nicht. Die
+SCA-Maske ist **RE1.5-Raumdaten-Eigentum**: der Port lädt unter beiden Flavors dieselbe
+RE1.5-`ROOM1030.RDT`, und deren Torzelle lässt nur die Maske 8 durch. Der Wert 8 stammt aus der
+RE1.5-Kette (`@0x801050F4` / `@0x8010374C`), 4 ist die aufrechte Zeile (`@0x801050B4`).
+Die Zelle selbst ist **nicht statisch**: alle 35 SCA-Zellen von ROOM1030 stehen auf `u0 = 0xFF`;
+das Skript öffnet sie mit `Sca_id_set` —
+`37 02 06 f7` `@Datei 0x2000`/`0x278E` und `37 03 06 f7` `@Datei 0x2004`/`0x2792` (eigener
+Byte-Scan). `0xF7` = `0b1111_0111`, Bit 3 (Wert 8) als einziges frei ⇒ Maske 4 fest, Maske 8 frei.
+Die beiden Torzellen sind rgn2/idx6 == rgn3/idx6, Rechteck `(-20144, -24420, 24264 x 1649)`
+⇒ `z[-24420 … -22771]` — exakt der Riegel des Dossiers. `0x278E/0x2792` liegen unmittelbar an
+sub07 `@0x2754`: das Skript **öffnet das Tor und befiehlt das Kriechen im selben Atemzug**.
+
+### Gemessen — vorher / nachher
+
+`probe_re2_crawl_gate` (gleicher Aktor, gleiche Vorbedingung, echter Tick, geladene Bänke):
+
+| | vorher | nachher |
+|---|---|---|
+| RE1.5 | Sub 0x10 @T1 → Commit @T97, `grid 0x81 sca 8 Clip 0x1A` | **unverändert** |
+| RE2 | `s1` bleibt 2, `grid 0`, `sca 4`, Clip 4 → kriecht nicht | `s1=0`, Clip 5, `sca 8`, `+0x10E&1` → **kriecht** |
+
+`probe_1030_crawl_live` (echte ROOM1030.RDT + SCD-VM + `re15_game_step` + geladene Bänke,
+2400 Frames, sechs gespawnte Zombies):
+
+| Phase | RE1.5 | RE2 |
+|---|---|---|
+| A — reiner Skript-Weg | 0/6 geflaggt | 0/6 geflaggt (**vorbestehender Blocker**, s.u.) |
+| B — ab `Member_set(16)` | 6/6 kriechen, 6/6 `sca 8`, **6/6 unter dem Tor durch** | 6/6 kriechen, 6/6 `sca 8`, **6/6 unter dem Tor durch** |
+
+### ⛔ OFFEN (benannt, nicht gefüllt)
+
+1. **Der Skript-Auslöser feuert im Port unter KEINEM Flavor** (Phase A oben, gemessen). Zwei
+   vorbestehende Blocker, beide außerhalb dieser Welle:
+   * `work_slot == -1` — sub07 arbeitet auf der WORK-Entity (`Work_set`), die der Port beim
+     Ereignis-Start nicht besetzt; `Member_get`/`Member_set` haben kein Ziel.
+   * `member_0b` ist EINEN Frame nach dem Setzen wieder 0 — der Port hat keinen **Aktor**-AOT-
+     Stempel (Original `sb v0,11(s1)` `@0x80042F5C` / `@0x80042FC4`), und der Frame-Ende-Wisch
+     räumt das Byte weg (`FUN_8003EC28` `@0x8003F194`: `+0x0A/+0x0B = 0xFFFF`). Damit fällt der
+     Torwächter `3e 00 0f 00 05 00` `@Datei 0x2740` (`Member_cmp(15, ==, 5)`) immer durch.
+   Beides liegt in `aot_common.c` / `scd_vm.c`; Dossier `analysis/room1030_crawl_mechanism.md`
+   Glied 1/3. **Solange das offen ist, sieht der Nutzer die Kriecher im echten Spiel nicht** —
+   die Kette dahinter ist aber gebaut und gemessen.
+2. **Kriecher mit `+0x5 > 2`.** Erreichbar über den Wurf-Ausgang des Griffs
+   (`addiu v0,zero,1281` `@0x80102D24` / `sw v0,4(s1)` `@0x80102D2C`, Grab-Phase 8), der NICHT
+   auf `+0x10E` gegated ist. Das Original würde `lw 0x8010C918[5]` = `0x8010C92C` = **`0x8040006E`**
+   laden und `jalr` darauf ausführen — ein Datenwort. Der Zustand kann im Original also nicht
+   vorkommen; welche Vorbedingung ihn dort verhindert, ist noch nicht gefunden. Der Port fährt
+   für `+0x5 > 2` weiter die **aufrechte** Tabelle (= exakt das Verhalten vor dieser Welle) —
+   kleinstmögliche Abweichung, kein Freeze, kein erfundener Zweig. Ohne diesen Rückfall blieben
+   in `test_re2_zombie_abc` 16 Aktoren mit `s1=5 s2=1 10E=0x2001` unsterblich stehen (gemessen).
+3. **Der zweite Umbauweg** `+0x21A & 0x10` → `FUN_80107A78` (`@0x80105014-38`): eigene Welle,
+   im Port ohne Produzenten für Bit 0x10 unerreichbar.
+4. **EXEC[2] (Warten, Clip 0x17)** hat im Original gar keinen `0x8002959C`-Aufruf; der globale
+   Port-Advancer spielt den Clip trotzdem einmal durch und pinnt den letzten Frame. Ein Halt-Pin
+   wie beim Schläfer-Clip 0x2A wäre nötig — heute folgenlos, weil kein Produzent Kriecher-Sub 2
+   schreibt.
+
+**Tests:** `unit_re2_crawler` (Eintritt / Kriech-Bewegung / Tor-Transit / Ausstieg /
+Grab-Entscheid + vier Negativproben + RE1.5-Regressionswache), `unit_1030_crawl_live` (die echte
+Raum-Messung oben).
+
+---
+
+## 🔜 W5 (Stand VOR dem Bau) — Kriecher, State-8-Eintritt, Dismemberment
 
 Belegt bisher: die Kriech-Variante nutzt **eigene** Tabellen (`0x8010C90C` Decision /
 `0x8010C918` Executor, nur drei Einträge), und `sub_state_1 == 1` teilt sich den Handler mit der

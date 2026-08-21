@@ -214,12 +214,33 @@ static void run_sweep(sweep_t *out, int seeds, int budget, int weapon, int cwin,
                     out->walk_path += (dx < 0 ? -dx : dx) + (dz < 0 ? -dz : dz);
                 }
 
+                /* DIAGNOSE: der erste Tick, in dem ein KRIECHER (+0x10E&1) einen Substate
+                 * ausserhalb seiner 3-Wort-Tabelle @0x8010C918 traegt. Genau dort wuerde das
+                 * Original `jalr` auf ein Datenwort machen — der Zustand darf nicht entstehen. */
+                if ((e->re2z_f10e & 1u) && e->sub_state_1 > 2 && e->state == 1) {
+                    static int shown = 0;
+                    if (shown < 8) {
+                        shown++;
+                        printf("     [CRAWL-OOB] seed=%d slot=%d f=%d s1=%u s2=%u 10E=0x%04x "
+                               "vorher st=%d s1=%d\n", seed, s, f, e->sub_state_1,
+                               e->sub_state_2, e->re2z_f10e, prev_st[s], prev_s1[s]);
+                    }
+                }
+
                 /* (C) Kandidatenfilter sperrt, obwohl der Zombie lebt */
                 int blocked = (e->hp >= 0) && (e->hit_react & 1u);
                 if (!blocked) block_start[s] = -1;
                 else {
                     if (block_start[s] < 0) block_start[s] = f;
-                    if (f - block_start[s] == cwin) { out->blocked_incidents++; seed_blocked = 1; }
+                    if (f - block_start[s] == cwin) {
+                        out->blocked_incidents++; seed_blocked = 1;
+                        /* Diagnose beim Vorfall: OHNE den Zustand ist "unsterblich" nicht
+                         * zuzuordnen (der Latch hat vier moegliche Quellen). */
+                        printf("     [C-VORFALL] seed=%d slot=%d f=%d st=%u s1=%u s2=%u hp=%d "
+                               "1D3=0x%02x 10E=0x%04x clip=%d\n", seed, s, f, e->state,
+                               e->sub_state_1, e->sub_state_2, (int)e->hp, e->re2z_self1d3,
+                               e->re2z_f10e, (int)e->motion);
+                    }
                 }
                 prev_st[s] = e->state; prev_s1[s] = e->sub_state_1;
                 px[s] = e->x; pz[s] = e->z;

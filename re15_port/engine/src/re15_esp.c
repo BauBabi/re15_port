@@ -339,6 +339,78 @@ re15_esp_fx_t *re15_esp_fx_spawn(const re15_esp_t *bank, uint8_t effect_id, uint
     return re15_esp_fx_spawn_ex(bank, effect_id, sub_index, 0x1000, x, y, z, param);
 }
 
+/* ===== ROOM1090 "aussen fehlt Feuer" — der FEUER-Emitter (Entity-Typ 0x26) ================
+ *
+ * Die sieben Entities, die ROOM1090s sub00 setzt, sind die BRENNENDEN TRUEMMER auf dem
+ * Hinterhof — nicht "Spinnen". Beleg-Kette (alles selbst gedumpt/disassembliert):
+ *
+ *  1) ROOM1090.RDT sub00 @Datei 0x2214: 7x Sce_em_set (Opcode 0x44, 20 B)
+ *       44 00 26 00 | 44 01 26 01 | 44 02 26 02 | 44 03 26 04
+ *       44 04 26 03 | 44 05 26 03 | 44 06 26 04
+ *     = Typ 0x26, Spawn-Byte pc[3] = 0,1,2,4,3,3,4 -> entity+0x9 (grid_id). Alle sieben
+ *     auf Y=-1800 (Bodenhoehe), X 1374..3104 / Z -3498..+2040 = eine Reihe am Boden.
+ *     Typ 0x26 kommt in KEINEM anderen der 240 RDTs vor.
+ *  2) EXE-Dispatch 0x80072bac[0x26] = 0x80116288 (STAGE1-Registrierung @0x8011e8f4).
+ *  3) ROOM1090.RDT+0x4C (Datei 0x11010) laedt die Effekt-Ids `05 07 09 10`; die eingebettete
+ *     TIM von Id 0x10 (RDT+0x54 0x2EEB8 + Eintrag 0x64C0 = Datei 0x35378, 4bpp 256x144)
+ *     ist ein FLAMMEN-Sheet (8 grosse Frames + zwei 3x3-Kachelsaeulen); Id 0x09
+ *     (Datei 0x32338, 256x96) sind die FUNKEN. ROOM109.BSS traegt 16 Cuts = 8 Kamera-
+ *     winkel x 2 Beleuchtungen, Frames 8..15 = dieselben Winkel im orangen Feuerschein.
+ *  4) Die Zustands-Handler des Roots spawnen genau diese beiden Effekte:
+ *       INIT  @0x801166c4-e8: `andi v0,0x80; bne -> skip` (Gate grid&0x80), dann
+ *                             `lui a0,0x903; ori a0,a0,0x1800` = a0 0x09031800,
+ *                             a1 = lh +0x6a, a2 = *(+0x188)+0x40, a3 = @0x80121248,
+ *                             `jal 0x80019700`  => Id 0x09, sub 3, scale 0x1800.
+ *       FLAMME FUN_80116d00: `lbu v1,9(ent); andi v1,0x7f; sltiu v0,v1,0x5;
+ *                             beq v0,zero,<skip>` @0x80116d10-20, dann Sprungtabelle
+ *                             @0x80100364[variant]:
+ *                               [0]=0x80116d44 `lui v1,0x803`  -> Id 0x08 (CORE00-Bank)
+ *                               [1]=0x80116d5c `lui v1,0x1003` -> Id 0x10 (Raum-Bank)  @0x80116d6c
+ *                               [2]=0x80116d5c -> 0x10   [3]=0x80116d44 -> 0x08
+ *                               [4]=0x80116d5c -> 0x10
+ *                             a0 = (lbu +0x1d0) << 8 | v1   (@0x80116d70/d7c/d80)
+ *                             a1 = lh +0x6a, a2 = lw +0x188 + 64, a3 = @0x80121248 (Null-SVECTOR)
+ *                             `jal 0x80019700` @0x80116d84
+ *                          => Id 0x08/0x10, sub 3, scale16 = entity[0x1D0] << 8.
+ *     entity[0x1D0] wird VOR dem Aufruf im Delay-Slot gesetzt (`sb v0,464(a0)` @0x801167a8
+ *     bzw. @0x801168c0) — Behavior A (Variante 0..2) 0x28, Behavior B (3..4) 0x2C
+ *     (@0x80116784 / @0x8011689c) -> scale16 0x2800 bzw. 0x2C00.
+ *  5) Voll-Slice ueber ALLE 702 `jal`-Stellen zu 0x80019700 / 0x800199d4 / 0x80019d50 /
+ *     0x80019ca8 in PSX.EXE + STAGE1..5.BIN: cat 0x10 taucht NUR in 0x80116bb4-0x80116d88
+ *     auf (dieser Emitter). Es gibt keinen zweiten Feuer-Spawner im Spiel.
+ *
+ * Die beiden Funktionen unten sind die byte-treue Uebersetzung von 4) — sie geben NULL
+ * zurueck, wo das Original gar nicht spawnt (Gate grid&0x80 bzw. variant >= 5). */
+
+/* Sprungtabelle @0x80100364 (STAGE1.BIN, 5 Eintraege, Index = entity[+0x9] & 0x7f):
+ * die Zieladresse bestimmt nur, welches `lui v1,...` laeuft -> die Effekt-Id. */
+static const uint8_t s_type26_flame_id[5] = { 0x08, 0x10, 0x10, 0x08, 0x10 };
+
+int re15_esp_type26_flame_id(uint8_t grid_id)
+{
+    uint8_t v = (uint8_t)(grid_id & 0x7f);        /* `andi v1,v0,0x7f`  @0x80116d18 */
+    if (v >= 5) return -1;                        /* `sltiu v0,v1,0x5` + beq -> kein Spawn @0x80116d1c-20 */
+    return (int)s_type26_flame_id[v];
+}
+
+re15_esp_fx_t *re15_esp_type26_flame(const re15_esp_t *bank, uint8_t grid_id, uint8_t phase,
+                                     int32_t x, int32_t y, int32_t z, int16_t yaw)
+{
+    int id = re15_esp_type26_flame_id(grid_id);
+    if (id < 0) return NULL;
+    /* a0 = (entity[0x1D0] << 8) | (id << 24) | (3 << 16): cat = a0>>24, sub = (a0>>16)&0xff,
+     * scale16 = a0 & 0xffff (Spawner FUN_80019700 @0x80019704-1c). */
+    return re15_esp_fx_spawn_ex(bank, (uint8_t)id, 3, (uint16_t)((uint16_t)phase << 8),
+                                x, y, z, yaw);
+}
+
+re15_esp_fx_t *re15_esp_type26_emerge(const re15_esp_t *bank, uint8_t grid_id,
+                                      int32_t x, int32_t y, int32_t z, int16_t yaw)
+{
+    if (grid_id & 0x80) return NULL;              /* `andi v0,v0,0x80; bne -> skip` @0x801166c4-cc */
+    return re15_esp_fx_spawn_ex(bank, 0x09, 3, 0x1800, x, y, z, yaw);   /* a0 = 0x09031800 */
+}
+
 /* ===== the ROW VM (stage 2, blood subset — trace wf_a18487d9) ==============================
  * Row helpers: identity-copy row `idx` into the slot (the spawner row-0 copy @0x80019908-44
  * and the advance FUN_800174e4 both do the same 40-byte copy) — accel/velocity/selectors are

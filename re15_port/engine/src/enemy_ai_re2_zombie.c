@@ -963,11 +963,20 @@ static void re2z_exec_bump(re15_actor_t *e)
 }
 
 /* EXEC[3] @0x801025EC — THE GRAB. Phase table @0x8010001C (10 ptrs, byte-verified ==
- * 0x801026C0/27D8/2814/2838/2968/29A4/2BE8/2C30/2C60/2EB4). s5 = crawl-bit + 2*(kind 0x11/0x17)
- * @0x8010266C-90 (crawler OPEN -> bit 0). Player side = the port's victim/cmd infra. */
+ * 0x801026C0/27D8/2814/2838/2968/29A4/2BE8/2C30/2C60/2EB4). Player side = the port's victim/cmd
+ * infra.
+ * s5 = Kriech-Bit + 2*(Typ 0x11/0x17), byte-gelesen:
+ *   8010266c: lhu  v0,270(s1)        ; +0x10E
+ *   80102670: lbu  v1,8(s1)          ; +0x8 = TYP
+ *   80102674: andi s5,v0,0x1         ; **s5 = Kriecher-Bit**
+ *   8010267c: beq  v1,23 -> 0x80102690
+ *   80102688: bne  v1,17 -> 0x80102694
+ *   80102690: addiu s5,s5,2
+ * Der Kriech-Zweig war frueher als "OPEN -> Bit 0" gefuehrt; mit dem Kriecher-Brain ist er scharf. */
 static void re2z_exec_grab(re15_actor_t *e, re15_actor_t *pl)
 {
-    int s5 = ((e->type == 0x11) ? 2 : 0);                          /* @0x80102678-90 (0x17 not in
+    int s5 = (int)(e->re2z_f10e & 1u)                              /* andi s5,v0,0x1 @0x80102674 */
+           + ((e->type == 0x11) ? 2 : 0);                          /* @0x80102678-90 (0x17 not in
                                                                     * the RE1.5 family) */
     if (e->sub_state_2 <= 3) re15_re2z_player_pin();               /* hold phases pin the player */
     switch (e->sub_state_2) {
@@ -1689,7 +1698,39 @@ static void re2z_exec_getup(re15_actor_t *e)
  * den Fall "Test schlaegt fehl", und das ist ein echter Original-Pfad (P1 -> P2). Der
  * Kriecher-Brain bleibt als eigener Auftrag offen.
  * ========================================================================================== */
-static void re2z_exec_eleven(re15_actor_t *e)
+/* DER EINTRITT IN DEN KRIECHER — die drei Stores, die das Original an seiner Kampf-Umwandlung
+ * @0x80104584-0x801045B0 IMMER zusammen ausfuehrt:
+ *   80104584: addiu v1,zero,257     /  8010458c: sw v1,4(s0)       ; +0x4 = 0x101
+ *   80104588: lhu v0,270(s0)
+ *   80104590: andi v0,v0,0xffc0     ; (die EINZIGE 0xffc0-Maske im ganzen Overlay)
+ *   80104594: ori  v0,v0,0x1
+ *   80104598: sh   v0,270(s0)       ; +0x10E = (+0x10E & ~0x3F) | 1
+ *   8010459c-b0: Spieler+0x1D3 |= 0x80
+ * `sub` waehlt den Kriecher-Substate: 1 = der Kampf-Eintritt des Originals (EXEC[1] = der
+ * GRIFF), 0 = die LOKOMOTION. Auch 0 ist byte-gelesen: der Kriecher-HURT verlaesst sich mit
+ * genau dieser Kombination (`sh 1,270` @0x80107A54 + `sw 1,4` @0x80107A58) in die Lokomotion.
+ *
+ * ⛔ +0x1D7 = 8 IST EINE BRUECKE, KEIN RE2-WERT. Voll-Scan von EMOVL10_S0.BIN nach jedem
+ * Zugriff auf +0x1D7 (`(sb|lb|lbu) rt,471(rs)`): **NULL TREFFER** — das RE2-Zombie-Overlay
+ * kennt das Feld nicht. Die SCA-Maske ist RE1.5-RAUMDATEN-Eigentum: der Port laedt unter BEIDEN
+ * Flavors dieselbe RE1.5-ROOM1030.RDT, und deren Torzelle laesst nur die Maske 8 durch
+ * (Port-Konsument enemy_ai_common.c: `re15_collision_constrain_enemy(..., e->sca_mask)`,
+ * byte-true Zwilling @0x80100624). Der Wert 8 stammt aus der RE1.5-Kriechkette
+ * (@0x801050F4 / @0x8010374C), 4 ist die aufrechte Zeile (@0x801050B4). Ohne diese Uebernahme
+ * bliebe der RE2-Kriecher an derselben Zelle haengen wie ein aufrecht Stehender. */
+void re15_re2z_enter_crawler(re15_actor_t *e, re15_actor_t *pl, unsigned sub)
+{
+    if (!e) return;
+    re15_ai_set_state_word(e, 0x1u | ((sub & 0xffu) << 8));        /* sw 0x101 @0x8010458C bzw.
+                                                                    * sw 1 @0x80107A58 */
+    e->re2z_f10e = (uint16_t)((e->re2z_f10e & ~0x3fu) | 1u);       /* andi 0xffc0 / ori 1 / sh
+                                                                    * @0x80104590-98 */
+    e->sca_mask = 8;                                               /* BRUECKE, s. Block oben:
+                                                                    * RE1.5-Torzelle @0x801050F4 */
+    if (pl) pl->re2z_self1d3 |= 0x80u;                             /* @0x8010459C-B0 */
+}
+
+static void re2z_exec_eleven(re15_actor_t *e, re15_actor_t *pl)
 {
     if (e->sub_state_2 == 0) {                                     /* P0 @0x801043F8 */
         re2z_clip(e, 0x0A, 0, 0xF, 0x200, 0);                      /* Wort 0xF000A: lui 0xf im
@@ -1732,10 +1773,27 @@ static void re2z_exec_eleven(re15_actor_t *e)
         e->sub_state_2 = (uint8_t)(e->sub_state_2 + (uint8_t)re2z_clip_done(e));
                                                                    /* +0x6 += Advance-Rueckgabe
                                                                     * @0x801044F8-508 */
-        if (re2z_frame_slot(e) < 18)                               /* sltiu 0x12 @0x8010450C-18 */
+        if (re2z_frame_slot(e) < 18) {                             /* sltiu 0x12 @0x8010450C-18 */
             re15_enemy_steer_point(e, e->steer_x, e->steer_z, 16); /* @0x801045BC-C8 */
-        /* ab Frame 18 stuende hier der KRIECHER-TEST (@0x80104530-B8) — siehe den Block ueber
-         * dieser Funktion: OPEN, wird nicht genommen. */
+            return;                                                /* j 0x801045F0 @0x801045CC */
+        }
+        /* ---- DER KRIECHER-TEST (@0x80104530-B8) — ab Welle 5 SCHARF ------------------------
+         *   80104530: jal 0x80015614(PL.x,PL.z,a3=256)
+         *   80104538/3c: `sll v0,v0,16 / bne v0,zero,0x801045F0`  ; ret16 != 0 -> raus
+         *   80104544/4c/50: +0x1F0 < 0x708                        ; sonst raus
+         *   8010455c/64/68: Spieler+0x1D3 & 0x80                  ; Riegel belegt -> raus
+         *   80104570-80: +0x106 != Spieler+0x106                  ; andere Etage -> raus
+         *   80104584/8c: +0x4 = 0x101      (v1 = 257 @0x80104584, sw im Delay-Slot @0x8010458C)
+         *   80104590-98: +0x10E = (+0x10E & ~0x3F) | 1            = **die Kriecher-Wurzel**
+         *   8010459c-b0: Spieler+0x1D3 |= 0x80
+         * Frueher stand hier "wird NICHT genommen, weil der Port weder einen Kriecher-Brain
+         * noch einen Produzenten fuer 0x800CFDCB hat". Beides ist jetzt da (re2z_crawl bzw.
+         * Spieler+0x1D3), also faehrt der Port den Zweig. */
+        if (re15_ai_arc_test(e, pl->x, pl->z, 256) != 0) return;   /* @0x80104530-3C */
+        if (e->ai_dist >= 0x708u)          return;                 /* @0x80104544-50 */
+        if (pl->re2z_self1d3 & 0x80u)      return;                 /* @0x8010455C-68 */
+        if (e->floor != pl->floor)         return;                 /* @0x80104570-80 */
+        re15_re2z_enter_crawler(e, pl, 1u);                        /* @0x80104584-0x801045B0 */
         return;
     }
     if (e->sub_state_2 == 2) {                                     /* P2 @0x801045D4 */
@@ -1846,6 +1904,249 @@ static void re2z_exec_snapbite(re15_actor_t *e)
     }
 }
 
+/* ============================================================================================
+ * ============================ DER RE2-KRIECHER (+0x10E Bit 0) ===============================
+ * ============================================================================================
+ * NUTZER-AUFTRAG 2026-08-21: "Bei RE2 AI in der Lobby kriechen die Zombies in der Cutscene nicht
+ * unter das Tor (ROOM1030)." — "Na dann baue das Kriechen nach."
+ *
+ * ---- GEMESSEN VOR DEM BAU (probe_re2_crawl_gate, gleicher Aktor, gleiche Vorbedingung) -------
+ *   RE1.5-Flavor: Sub-Modus 0x10 @Tick 1 -> Kriech-Commit @Tick 97, grid=0x81 sca=8 motion=0x1A
+ *   RE2  -Flavor: s1 bleibt 0x02, grid=0, sca=4, motion=0x04                 = KRIECHT NICHT
+ * (RE2-Bank EM016 geladen: Haupt 31 Clips, loco 8, eigen 31, victim 17 — kein clip_len==0.)
+ *
+ * ---- DIE ZUSTAND-1-WURZEL HAT ZWEI HAELFTEN (0x8010114C, selbst disassembliert) -------------
+ *   80101154: lhu v0,270(a0)        ; +0x10E
+ *   8010115c: andi v0,v0,0x3f
+ *   80101160: sll v0,v0,2
+ *   8010116c: lw v0,-14252(at)      ; Tabelle 0x8010C854
+ *   80101174: jalr v0
+ * `table 0x8010c854 14` (eigener Dump) — ALLE 14 Eintraege alternieren STRIKT auf Bit 0:
+ *   [0]=0x8010118C [1]=0x80101210 [2]=0x8010118C [3]=0x80101210 … [12]=0x8010118C [13]=0x80101210
+ * GERADE = die aufrechte Wurzel 0x8010118C (decide @0x8010C88C / exec @0x8010C8CC, je 16),
+ * UNGERADE = die KRIECHER-Wurzel 0x80101210 (decide @0x8010C90C / exec @0x8010C918, je 3):
+ *   80101240: lw v0,-14068(at)      ; 0x8010C90C[+0x5]   DECIDE
+ *   80101268: lw v0,-14056(at)      ; 0x8010C918[+0x5]   EXEC
+ *   @0x8010C90C = {0x80102EE4, 0x801025E4(jr ra), 0x80103A70}
+ *   @0x8010C918 = {0x80103024, 0x801025EC, 0x80103B48}   (ab 0x8010C924 wieder Datenworte)
+ * Ein +0x5 > 2 laege im Original hinter der 3-Wort-Tabelle (Daten) — der Port faehrt dort
+ * NICHTS und dokumentiert das, statt einen Zweig zu erfinden.
+ *
+ * ---- WER SETZT BIT 0? DREI PRODUZENTEN, ALLE BYTE-GELESEN ---------------------------------
+ *  (1) @0x80104590-98  `andi 0xffc0 / ori 0x1 / sh 270` — die KAMPF-Umwandlung in EXEC[11] P1.
+ *      Das ist die EINZIGE 0xffc0-Maskierung im ganzen Overlay (eigener Voll-Scan).
+ *  (2) @0x80107820-24  `+0x10E = 0x2001` — Knockdown-P2 (der wiederbelebte Beinlose).
+ *  (3) @0x801089B0    `addiu v1,zero,8193 / sh v1,270(s1)` = 0x2001 — die Todes-Wiederbelebung.
+ *  Und der Kriecher-HURT setzt es in P2 nackt neu: @0x80107A54 `sh v0,270(s0)` mit v0 = 1
+ *  (`addiu v0,zero,1` @0x801078E8) zusammen mit @0x80107A58 `sw a0,4(s0)`, a0 = 1
+ *  (`addiu a0,zero,1` @0x801078B8) = **Zustand 1 / Sub 0 / Kriecher** — die byte-gelesene
+ *  Kombination "Kriecher in seiner LOKOMOTION starten".
+ *
+ * ---- *** 0x800CFDCB IST KEIN RAUM-GLOBAL *** ----------------------------------------------
+ * Die bisherige Notiz nannte es "Einmal-Riegel PRO RAUM ohne Port-Produzenten". Falsch — es ist
+ * ein FELD DES SPIELERS. Beleg (dieselbe Adresse, einmal absolut, einmal basisrelativ):
+ *   @0x80102F34-38  lui s2,0x800d / addiu s2,s2,-1032      ; s2 = 0x800CFBF8  = Spieler-Entity
+ *   @0x80102FB0     lbu v0,-565(lui 0x800d)                ; = 0x800CFDCB
+ *   @0x80102FF8     lbu v0,467(s2)                         ; = 0x800CFBF8 + 0x1D3 = 0x800CFDCB
+ * Dass 0x800CFBF8 die Spieler-Entity ist, belegt dieselbe Funktion doppelt:
+ *   +56  = 0x800CFC30 = Spieler-X (`lw a1,-976(lui 0x800d)` @0x80102EF4 vs `addiu a1,s2,56`)
+ *   +0x106 = 0x800CFCFE = Spieler-Etage (`lbu v0,-770(...)` @0x80102F68 gegen `lbu v1,262(s1)`)
+ * => 0x800CFDCB = **Spieler+0x1D3, Bit 0x80** = der globale EIN-ANGREIFER-RIEGEL.
+ *    SETZER  : jeder Kriech-/Lunge-Commit (@0x80102FB8, @0x80103000, @0x80103B24, @0x801045A8)
+ *    LOESCHER: `andi 0x7f` @0x80104FA0/@0x80104FAC (HURT-Grab-Abbruch) und @0x801082E8/@0x801082F4
+ *              (DEATH-Grab-Abbruch), beide gegated auf `cmd == 5 && 0x800CFDAC == self`.
+ *    LESER   : @0x80102F4C, @0x80103AD4, @0x8010455C, @0x8010464C, @0x80105AA4, @0x80106074,
+ *              @0x80108200 — allesamt "solange ein anderer den Riegel haelt, lege ich mich nicht
+ *              hin". Der Port hat das Feld pro Aktor (re2z_self1d3); der Riegel ist schlicht das
+ *              Feld des SPIELER-Aktors. Kein erfundenes Global.
+ * ========================================================================================== */
+
+static void re2z_active(int slot, re15_actor_t *e, re15_actor_t *pl);   /* fwd: die aufrechte
+                                                                         * Wurzel 0x8010118C */
+
+/* Kriecher-DECIDE[0] @0x80102EE4 — der Angriffs-Entscheider der Lokomotion.
+ *   80102f10: jal 0x80015614(PL.x,PL.z, a3=1024)  ; Rueckgabe VERWORFEN (v0 wird nicht gelesen)
+ *   80102f2c: jal 0x80015614(PL.x,PL.z, a3=256)   ; Rueckgabe VERWORFEN (s2 ueberschreibt v0)
+ *   80102f3c/40: +0x1F0 < 0x514                            sonst Epilog
+ *   80102f4c/54/58: Spieler+0x1D3 & 0x80 != 0              -> Epilog
+ *   80102f60-70: +0x106 != Spieler+0x106                   -> Epilog
+ *   80102f78-84: +0x21A & 0x20 != 0                        -> zweite Haelfte
+ *   80102f8c-a0: FUN_80015758(&self+0x38,&PL+0x38, +0x76 + 256, 256) != 0 -> zweite Haelfte
+ *   80102fa4/a8: +0x4 = 0x101   80102fac-c0: Spieler+0x1D3 |= 0x80
+ *   80102fc4-d0: +0x21A & 0x40 != 0                        -> Epilog
+ *   80102fd4-ec: FUN_80015758(…, +0x76 - 256, 256) != 0    -> Epilog
+ *   80102ff0/f4: +0x4 = 0x101   80102ff8-0x80103004: Spieler+0x1D3 |= 0x80
+ * Die zwei Sektor-Tests sind KEIN if/else — die erste Haelfte faellt in die zweite. */
+static void re2z_crawl_decide_move(re15_actor_t *e, re15_actor_t *pl)
+{
+    (void)re15_ai_arc_test(e, pl->x, pl->z, 1024);                  /* @0x80102F10, verworfen */
+    (void)re15_ai_arc_test(e, pl->x, pl->z,  256);                  /* @0x80102F2C, verworfen */
+    if (e->ai_dist >= 0x514u)          return;                      /* @0x80102F3C-40 */
+    if (pl->re2z_self1d3 & 0x80u)      return;                      /* @0x80102F4C-58 */
+    if (e->floor != pl->floor)         return;                      /* @0x80102F60-70 */
+    if (!(e->re2z_flags21a & 0x20u) &&                              /* @0x80102F78-84 */
+        re2z_sector(e, pl, ((int)e->rot_y + 256) & 0xfff, 256) == 0) {   /* @0x80102F8C-A0 */
+        re15_ai_set_state_word(e, 0x101);                           /* @0x80102FA4-A8 */
+        pl->re2z_self1d3 |= 0x80u;                                  /* @0x80102FAC-C0 */
+    }
+    if (e->re2z_flags21a & 0x40u)      return;                      /* @0x80102FC4-D0 */
+    if (re2z_sector(e, pl, ((int)e->rot_y - 256) & 0xfff, 256) != 0) return;  /* @0x80102FD4-EC */
+    re15_ai_set_state_word(e, 0x101);                               /* @0x80102FF0-F4 */
+    pl->re2z_self1d3 |= 0x80u;                                      /* @0x80102FF8-0x80103004 */
+}
+
+/* Kriecher-EXEC[0] @0x80103024 — DIE KRIECH-LOKOMOTION.
+ * Phasen-Dispatch auf +0x6 (`lbu v1,6(s0)` @0x80103040): 0 -> P0 @0x80103064, 1 -> P1
+ * @0x801030C0, sonst Epilog @0x80103154 (`j 0x80103154` @0x8010305C).
+ * P0 @0x80103064:
+ *   80103064-6c: `lui v0,0xf / ori v0,v0,0x5 / sw v0,332(s0)` = +0x14C = 0x000F0005
+ *                (Rate 15, Startframe 0, **Clip 5**)
+ *   80103074/78: jal RNG, Delay-Slot `sb v0,6(s0)` mit v0 = 1  ->  +0x6 = 1
+ *   8010308c-98: `andi 0x7 / addiu 7` -> +0x158 = (rand & 7) + 7  (`sh v0,344` @0x80103098)
+ *   80103094:    jal 0x80015E7C  (BARER Aufruf: fuellt nur +0x144, 152c8 kommt erst in P1)
+ *   8010309c-bc: zweiter RNG-Wurf -> +0x14D = rand & 0xF  (`sb v0,333` @0x801030BC)
+ *   801030b8:    jal 0x80015E7C  (zweiter barer Aufruf)
+ *   **KEIN Sprung — P0 FAELLT DURCH nach P1.**
+ * P1 @0x801030C0:
+ *   801030c0-cc: `lh v0,324(s0)` (+0x144) / `slti v0,v0,21` / `bne` -> **< 21 ueberspringt den
+ *                ganzen Steuer-Block** und geht direkt nach 0x80103124
+ *   801030d4-e0: FUN_80015558(self, +0x1C4, +0x1C6, a3=24)
+ *   801030e4-f4: `lhu v1,344` / `addiu v0,v1,-1` / `bne v1,zero,0x80103120` / Delay-Slot
+ *                `sh v0,344` — **getestet wird der ALTE Wert, gespeichert der neue**
+ *   801030f8-108: (nur wenn ALT == 0) FUN_80015558(self, +0x1C4, +0x1C6, a3=24) ERNEUT
+ *   8010310c-1c:  +0x158 = (rand & 7) + 7
+ *   Danach IMMER: 8010312c jal 0x80015E7C, 80103140 jal 0x8002959C(a3=256),
+ *                 8010314c jal 0x800152C8(self,0)  = das Bewegungs-PAAR des Ports */
+static void re2z_crawl_exec_move(re15_actor_t *e)
+{
+    if (e->sub_state_2 == 0) {                                     /* P0 @0x80103064 */
+        /* ⛔ ZYKLUS-CLIP, NICHT play-once — und das ist byte-abgeleitet, nicht geraten:
+         * P1 ruft `jal 0x8002959C` @0x80103140 in JEDEM Tick und LIEST DIE RUECKGABE NICHT
+         * (kein `+0x6 +=` dahinter; die naechste Instruktion @0x80103148 laedt schon a0 fuer
+         * FUN_800152C8). Der Executor kann P1 also nie verlassen — er spielt Clip 5 endlos.
+         * Genau dieselbe Signatur hat der aufrechte GANG EXEC[1] (@0x80101CBC/@0x80101D60,
+         * Port loop=1); wo das Original play-once meint, VERBRAUCHT es die Rueckgabe
+         * (EXEC[11] P1 @0x801044F8-508, Kriecher-HURT P1 @0x80107A40-50).
+         * GEMESSEN, warum das zaehlt (probe_1030_crawl_live, ROOM1030, echtes game_step,
+         * geladene RE2-Bank): mit loop=0 pinnte der globale Advancer den Kriecher auf
+         * `clip=5 fr=49` (dem letzten Frame der 50) — +0x144 blieb 0, der Kriecher stand ab
+         * Frame ~300 fuer 2100 Frames bewegungslos bei z=-27159. */
+        re2z_clip(e, 5, 0, 0xF, 0x100, 1);                         /* Wort 0x000F0005 @0x80103064-6C
+                                                                    * (Blend = a3 = 256 des 959c
+                                                                    * @0x80103144) */
+        e->sub_state_2 = 1;                                        /* sb 1,6 @0x80103070-78 */
+        e->re2z_t158 = (int16_t)((re2z_rand() & 7u) + 7u);         /* @0x8010308C-98 */
+        /* @0x80103094 + @0x801030B8: ZWEI BARE FUN_80015E7C. Sie fuellen nur den Delta-Vektor;
+         * angewendet wird er erst durch das 152c8 am Ende von P1. Weil ZWISCHEN den beiden kein
+         * Advance liegt, ist der zweite Delta zwangslaeufig 0 (prev == current) — der Wert, den
+         * P1 unmittelbar danach als Torwaechter liest. Der Port haelt genau das fest, statt eine
+         * Bewegung zu erfinden (gleiche Konvention wie Knockdown-P0 @0x801074C4/@0x801074E8). */
+        e->re2z_root144 = 0;                                       /* sh +0x144 @0x80015FD8 */
+        e->anim_frame = (uint16_t)(re2z_rand() & 0xfu);            /* +0x14D @0x8010309C-BC */
+        /* FALLTHROUGH nach P1 @0x801030C0 — das Original hat hier KEINEN Sprung. */
+        /* FALLTHRU */
+    }
+    if (e->sub_state_2 == 1) {                                     /* P1 @0x801030C0 */
+        if ((int)e->re2z_root144 >= 21) {                          /* slti 21 @0x801030C8-CC */
+            re15_enemy_steer_point(e, e->steer_x, e->steer_z, 24); /* @0x801030D4-E0 */
+            uint16_t old = (uint16_t)e->re2z_t158;                 /* lhu 344 @0x801030E4 */
+            e->re2z_t158 = (int16_t)(uint16_t)(old - 1u);          /* Delay-Slot-Store @0x801030F4 */
+            if (old == 0u) {                                       /* bne v1(ALT),zero @0x801030F0 */
+                re15_enemy_steer_point(e, e->steer_x, e->steer_z, 24);  /* @0x801030F8-108 */
+                e->re2z_t158 = (int16_t)((re2z_rand() & 7u) + 7u); /* @0x8010310C-1C */
+            }
+        }
+        re15_re2z_move_root(e);                                    /* e7c @0x8010312C + 152c8
+                                                                    * @0x8010314C = das Paar */
+        (void)re2z_clip_done(e);                                   /* 959c(a3=256) @0x80103140 —
+                                                                    * die Rueckgabe wird im
+                                                                    * Original NICHT gelesen
+                                                                    * (kein `+0x6 +=` hier) */
+    }
+    /* +0x6 >= 2: Epilog @0x80103154 — nichts zu tun. */
+}
+
+/* Kriecher-DECIDE[2] @0x80103A70 — derselbe Entscheider fuer den WARTENDEN Kriecher.
+ *   80103a98: jal 0x80015614(PL, 1024)   ; Rueckgabe VERWORFEN
+ *   80103ab4: jal 0x80015614(PL,  512)   ; **diese wird gelesen**
+ *   80103abc/c0: `sll v0,v0,16 / bne v0,zero,0x80103b30`  -> ret16 != 0 -> Epilog
+ *   80103ac4/c8: +0x1F0 < 0x514                           sonst Epilog
+ *   80103ad4-e0: Spieler+0x1D3 & 0x80                     -> Epilog
+ *   80103ae8-f4: +0x154 & 0x800 == 0                      -> Epilog
+ *   80103afc-0c: +0x106 != Spieler+0x106                  -> Epilog
+ *   80103b10/14: +0x4 = 0x101   80103b18-2c: Spieler+0x1D3 |= 0x80 */
+static void re2z_crawl_decide_wait(re15_actor_t *e, re15_actor_t *pl)
+{
+    (void)re15_ai_arc_test(e, pl->x, pl->z, 1024);                  /* @0x80103A98, verworfen */
+    if (re15_ai_arc_test(e, pl->x, pl->z, 512) != 0) return;        /* @0x80103AB4-C0 */
+    if (e->ai_dist >= 0x514u)               return;                 /* @0x80103AC4-C8 */
+    if (pl->re2z_self1d3 & 0x80u)           return;                 /* @0x80103AD4-E0 */
+    /* +0x154 & 0x800 (@0x80103AE8-F4): dasselbe Flagwort ohne Port-Produzenten wie in
+     * DECISION[0] — dort seit Welle A als 1 GEMAPPT (OPEN, siehe re2z_decide_stand). Hier
+     * identisch gehandhabt, damit beide Stellen dieselbe Aussage tragen. */
+    if (e->floor != pl->floor)              return;                 /* @0x80103AFC-0C */
+    re15_ai_set_state_word(e, 0x101);                               /* @0x80103B10-14 */
+    pl->re2z_self1d3 |= 0x80u;                                      /* @0x80103B18-2C */
+}
+
+/* Kriecher-EXEC[2] @0x80103B48 — das WARTEN. Neun Instruktionen, vollstaendig:
+ *   80103b48: lbu v0,6(a0)
+ *   80103b50: bne v0,zero,0x80103b64    ; +0x6 != 0 -> nichts tun
+ *   80103b54: addiu v0,zero,1           (Delay-Slot)
+ *   80103b58: sb v0,6(a0)               ; +0x6 = 1
+ *   80103b5c: addiu v0,zero,23
+ *   80103b60: sw v0,332(a0)             ; +0x14C = 0x00000017 = Clip 0x17, Frame 0, **Rate 0**
+ *   80103b64: jr ra
+ * Es gibt KEINEN Ausgang: nur DECIDE[2] holt den Kriecher hier wieder heraus. */
+static void re2z_crawl_exec_wait(re15_actor_t *e)
+{
+    if (e->sub_state_2 != 0) return;                                /* @0x80103B48-50 */
+    e->sub_state_2 = 1;                                             /* @0x80103B54-58 */
+    re2z_clip(e, 0x17, 0, 0, 0x100, 0);                             /* Wort 23 @0x80103B5C-60 */
+}
+
+/* ---- die KRIECHER-Wurzel 0x80101210 (decide-dann-exec auf DEMSELBEN Tick, @0x8010122C-74) ---
+ *   8010122c: lbu v0,5(s0)        8010123c/40: 0x8010C90C[+0x5]   80101248: jalr  (DECIDE)
+ *   80101254: lbu v0,5(s0)        80101264/68: 0x8010C918[+0x5]   80101270: jalr  (EXEC)
+ * +0x5 wird zwischen den beiden Aufrufen FRISCH gelesen. Beide Tabellen sind DREI Worte lang;
+ * ab 0x8010C924 folgt die (u16,u16)-Datentabelle (0x803200BE, 0x80400096, 0x8040006E, …).
+ *
+ * ⛔ OFFEN, ausdruecklich BENANNT statt gefuellt: ein Kriecher mit +0x5 > 2.
+ * Erreichbar ist er im Port ueber den Wurf-Ausgang des GRIFFS (Kriecher-EXEC[1]):
+ *   80102d24: addiu v0,zero,1281      ; 0x501
+ *   80102d2c: sw    v0,4(s1)          ; +0x4 = 0x501  -> +0x5 = 5
+ * (Grab-Phase 8, @0x80102C60..0x80102EB4). Dieser Store ist NICHT auf +0x10E gegated. Im
+ * Original wuerde die Wurzel danach `lw 0x8010C918[5]` = 0x8010C92C = **0x8040006E** laden und
+ * `jalr` darauf ausfuehren — ein Datenwort, also ein Absturz. Der Zustand kann im Original
+ * folglich nicht vorkommen; WELCHE Vorbedingung ihn dort verhindert, ist noch nicht gefunden
+ * (die naechsten Wege: die Phasenkette des Griffs unter s5=1 durchrechnen, und die vier
+ * `+0x10E = 0x2001`-Produzenten @0x80106B0C / @0x80107820 / @0x801089B0 auf ihre Folgezustaende
+ * pruefen).
+ * PORT-VERHALTEN BIS DAHIN — die kleinstmoegliche Abweichung: fuer +0x5 > 2 bleibt exakt das
+ * stehen, was der Port VOR dieser Welle getan hat (die aufrechte Tabelle @0x8010C88C/@0x8010C8CC).
+ * Damit aendert diese Welle NUR die drei Substates, die der Kriecher wirklich hat, und erzeugt
+ * weder einen Freeze noch einen erfundenen Zweig. Gemessen wurde genau das: ohne diesen
+ * Rueckfall blieben in test_re2_zombie_abc 16 Aktoren mit `s1=5 s2=1 10E=0x2001` stehen
+ * (+0x1D3 = 0x80 blieb gesetzt = unsterblich). */
+static void re2z_crawl(int slot, re15_actor_t *e, re15_actor_t *pl)
+{
+    if (e->sub_state_1 > 2) { re2z_active(slot, e, pl); return; }   /* s. Block oben (OPEN) */
+    switch (e->sub_state_1) {                                       /* DECIDE @0x8010C90C */
+    case 0: re2z_crawl_decide_move(e, pl); break;                   /* 0x80102EE4 */
+    case 1: break;                                                  /* 0x801025E4 = jr ra */
+    default: re2z_crawl_decide_wait(e, pl); break;                  /* [2] 0x80103A70 */
+    }
+    switch (e->sub_state_1) {                                       /* EXEC   @0x8010C918 */
+    case 0: re2z_crawl_exec_move(e); break;                         /* 0x80103024 */
+    case 1: re2z_exec_grab(e, pl); break;                           /* 0x801025EC — DIESELBE
+                                                                     * Funktion wie aufrecht [3];
+                                                                     * ihre Kriech-Variante waehlt
+                                                                     * sie selbst ueber +0x10E&1
+                                                                     * (@0x8010266C-74) */
+    default: re2z_crawl_exec_wait(e); break;                        /* [2] 0x80103B48 */
+    }
+}
+
 /* ---- ACTIVE dispatcher: decision-then-executor on the SAME tick (@0x801011A8-EC) ----------- */
 static void re2z_active(int slot, re15_actor_t *e, re15_actor_t *pl)
 {
@@ -1867,7 +2168,7 @@ static void re2z_active(int slot, re15_actor_t *e, re15_actor_t *pl)
     case 9:  re2z_exec_getup(e); break;                            /* 0x80103E48 */
     case 10: re15_ai_set_state_word(e, 0x101); break;              /* 0x8010417C block-C hammering —
                                                                     * INERT (see fill_gates), bail */
-    case 11: re2z_exec_eleven(e); break;                           /* 0x8010439C */
+    case 11: re2z_exec_eleven(e, pl); break;                       /* 0x8010439C */
     case 12: re2z_exec_lunge(e, pl); break;                        /* 0x80104748 */
     case 13: re2z_exec_restyle(e); break;                          /* 0x80104928 */
     case 14: re2z_exec_snapbite(e); break;                         /* 0x80104D74 */
@@ -3904,6 +4205,89 @@ void re15_re15_re2z_gore_hit(re15_actor_t *e, const re15_actor_t *pl, int row_sr
     }
 }
 
+/* ============================================================================================
+ * FUN_80107888 — DIE TREFFERREAKTION DES KRIECHERS (1D-Tabelle @0x8010CBE8[+0x5]).
+ * Der Einstieg in der HURT-Wurzel, byte-gelesen:
+ *   80104fe0: lhu  a0,270(s1)          ; +0x10E
+ *   80104fe8: andi v0,a0,0x1
+ *   80104fec: beq  v0,zero,0x80105014  ; kein Kriecher -> normale Reaktion
+ *   80104ff4: lbu  v0,5(s1)            ; Zeile = +0x5 (Angriffs-Id)
+ *   80105008: lw   v0,-13336(at)       ; 0x8010CBE8[+0x5]
+ *   8010500c: j 0x8010540c             ; -> `jalr v0` @0x80105410, danach SOFORT Epilog
+ * `table 0x8010cbe8 6` (eigener Dump): [0] = NULL, [1..18] alle = 0x80107888.
+ *
+ * Phasen ueber +0x6 (`lbu v1,6(s0)` @0x801078B4; `beq v1,1 -> 0x80107A2C` @0x801078BC;
+ * `slti 2`/`beq zero -> 0x801078F4` @0x801078C4-D0; `beq v1,2 -> 0x80107A54` @0x801078E4):
+ * P0 @0x801078F4:
+ *   801078f4: jal RNG
+ *   801078fc/00: lui v1,0x3 / ori v1,v1,0x6        ; 0x00030006
+ *   80107910/14/1c/20: `andi 0x7 / sll 8 / addu v0,v0,v1 / sw v0,332(s0)`
+ *                    = +0x14C = Clip 6, **Startframe = rand & 7**, Rate 3
+ *   80107924/28: +0x6 = 1
+ *   80107938: jal 0x8001BF10 (Blut-Id 6000, Block +0x198 + 72 = Part 0, Offset {0,0,0}
+ *             @0x8010792C-3C)
+ *   80107940-5c: +0x239 == 0 -> SE 12 (`jal 0x8005bd6c` a0=12) und +0x239 = 150
+ *   80107960-98: Zeile 10 && !(+0x10E & 0x80) -> 0x80106128 (Brand) und +0x21A |= 0x800
+ *   8010799c-b0: Zeile 11                     -> 0x80106310 (Saeure)
+ *   801079b4-c8: Zeile 14                     -> 0x80106510 (Spark-Entladung)
+ *   801079cc-a28: Zeile 16 -> !(+0x10E & 0x80) && +0x23A >= 9 -> Brand + +0x21A |= 0x800,
+ *                 danach IMMER +0x23A += 1
+ *   ⚠ Die Zeilen 9/17 (Russ) fehlen hier — anders als in der Liege-/Death-Leiter. Deshalb wird
+ *     re2z_dismember_row NICHT wiederverwendet, sondern die Leiter steht ausgeschrieben.
+ *   **KEIN Sprung am Ende — P0 FAELLT DURCH nach P1 @0x80107A2C.**
+ * P1 @0x80107A2C: `+0x6 += FUN_8002959C(self,…,a3=1024)`  (@0x80107A38-50)
+ * P2 @0x80107A54:
+ *   80107a54: sh v0,270(s0)   ; +0x10E = 1  (v0 = 1 aus `addiu v0,zero,1` @0x801078E8) — ein
+ *                               HALBWORT-Store, er wischt alle anderen +0x10E-Bits weg und
+ *                               laesst genau das Kriecher-Bit stehen
+ *   80107a58: sw a0,4(s0)     ; +0x4  = 1  (a0 = 1 aus `addiu a0,zero,1` @0x801078B8)
+ *   = Zustand 1 / Sub 0 / Kriecher -> zurueck in die Kriech-Lokomotion.
+ * ========================================================================================== */
+static void re2z_crawl_hurt(re15_actor_t *e)
+{
+    if (e->sub_state_2 == 0u) {                                    /* P0 @0x801078F4 */
+        re2z_clip(e, 6, (int)(re2z_rand() & 7u), 3, 0x400, 0);     /* Wort 0x00030006 | ((rand&7)<<8)
+                                                                    * @0x801078F4-920; Blend = a3 =
+                                                                    * 1024 des 959c @0x80107A3C */
+        e->sub_state_2 = 1;                                        /* sb 1,6 @0x80107924-28 */
+        re2z_gore_fx(e, 0, 6000u);                                 /* Id 6000, Part 0 (`addiu a2,
+                                                                    * a2,72` @0x8010793C), Offset
+                                                                    * {0,0,0} @0x8010792C-38 */
+        if (e->re2z_cd239 == 0) {                                  /* @0x80107940-4C */
+            re2z_se(12);                                           /* a0 = 12 @0x8010794C-54 */
+            e->re2z_cd239 = 150;                                   /* @0x80107958-5C */
+        }
+        {   unsigned row = e->sub_state_1;
+            if (row == 10u && !(e->re2z_f10e & 0x80u)) {           /* @0x80107960-7C */
+                re2z_gore_burn(e);                                 /* jal 0x80106128 @0x80107984 */
+                e->re2z_flags21a |= 0x800u;                        /* ori 0x800 @0x8010798C-98 */
+            }
+            if (row == 11u) re2z_gore_acid(e);                     /* jal 0x80106310 @0x801079AC */
+            if (row == 14u) re2z_gore_spark(e);                    /* jal 0x80106510 @0x801079C4 */
+            if (row == 16u) {                                      /* @0x801079CC-D4 */
+                if (!(e->re2z_f10e & 0x80u) && e->re2z_burn23a >= 9u) {  /* @0x801079DC-FC */
+                    re2z_gore_burn(e);                             /* jal 0x80106128 @0x80107A04 */
+                    e->re2z_flags21a |= 0x800u;                    /* ori 0x800 @0x80107A0C-18 */
+                }
+                e->re2z_burn23a = (uint8_t)(e->re2z_burn23a + 1u); /* @0x80107A1C-28 */
+            }
+        }
+        /* FALLTHROUGH nach P1 @0x80107A2C — das Original hat hier KEINEN Sprung. */
+        /* FALLTHRU */
+    }
+    if (e->sub_state_2 == 1u) {                                    /* P1 @0x80107A2C */
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + (uint8_t)re2z_clip_done(e));
+                                                                   /* +0x6 += 959c(a3=1024)
+                                                                    * @0x80107A38-50 */
+        return;                                                    /* j 0x80107A5C */
+    }
+    if (e->sub_state_2 == 2u) {                                    /* P2 @0x80107A54 */
+        e->re2z_f10e = 1u;                                         /* sh 1,270 @0x80107A54 — nackt,
+                                                                    * wischt alle anderen Bits */
+        re15_ai_set_state_word(e, 1u);                             /* sw 1,4 @0x80107A58 */
+    }
+}
+
 static void re2z_hurt(re15_actor_t *e, re15_actor_t *pl)
 {
     /* Der Treffer-Stempel des Applier-Zwillings (s. Block oben) — genau EINMAL je Treffer.
@@ -3917,10 +4301,18 @@ static void re2z_hurt(re15_actor_t *e, re15_actor_t *pl)
 
     re2z_grab_abort(e, pl);                                        /* @0x80104F68-FDC */
 
-    /* OPEN (Kriecher, Welle 5): +0x10E & 1 -> 1D-Tabelle @0x8010CBE8 -> FUN_80107888
-     * (@0x80104FE0-500C); +0x21A & 0x10 -> Kriecher-Umbau FUN_80107A78 (@0x80105014-38).
-     * Beide Zweige haben im Port keinen Handler; der Marker bleibt byte-true stehen und der
-     * Treffer laeuft weiter durch die normale Reaktion (bisheriges Port-Verhalten). */
+    /* KRIECHER-ZWEIG @0x80104FE0-500C: `lhu 270 / andi 0x1 / beq` -> 1D-Tabelle @0x8010CBE8[+0x5]
+     * -> FUN_80107888, `j 0x8010540C` = jalr + SOFORTIGER Epilog (die normale Reaktion laeuft
+     * NICHT mehr). Eintrag [0] ist NULL; das Original haette dort einen Nullzeiger gerufen —
+     * der Port ueberspringt Zeile 0 (der Treffer-Stempel setzt +0x5 immer >= 1, s. Zeilen-
+     * Semantik oben) statt einen Ersatz zu erfinden. */
+    if (e->re2z_f10e & 1u) {                                       /* @0x80104FE8-EC */
+        if (e->sub_state_1 != 0u) re2z_crawl_hurt(e);              /* @0x8010CBE8[1..18] */
+        return;                                                    /* j 0x8010540C -> Epilog */
+    }
+    /* OPEN (unveraendert): +0x21A & 0x10 -> Kriecher-Umbau FUN_80107A78 (@0x80105014-38) —
+     * das ist der ANDERE Umbauweg (aufrecht -> Kriecher ueber eine Treffer-Zone), er braucht
+     * seine eigene Welle; ohne Produzenten fuer +0x21A Bit 0x10 ist er im Port unerreichbar. */
 
     /* Flinch-Schwelle @0x8010503C-58: `+0x10E & 0x40` ? (+0x5 != 1 ? 23 : 0) : 0 */
     int thr = 0;
@@ -4600,9 +4992,61 @@ int re15_re2z_tick(int slot)
         }
     }
 
+    /* ============================================================================================
+     * ⛔ D15.3 — DIE KRIECH-BRUECKE: RE1.5-SKRIPTPROTOKOLL -> RE2-KRIECHER (ROOM1030-Tor).
+     *
+     * NUTZER-REPORT 2026-08-21: "Bei RE2 AI in der Lobby kriechen die Zombies in der Cutscene
+     * nicht unter das Tor (ROOM1030)."
+     *
+     * DAS IST EINE BEWUSSTE BRUECKE ZWISCHEN ZWEI SPIELEN — wie re15_re15_re2z_import und wie
+     * der D15.2-Wecker direkt darueber. Grund, byte-belegt statt behauptet:
+     *   RE1.5-SEITE (der Anforderer): ROOM1030 sub07 @Datei 0x2754 `3d 04 10 / 26 00 05 04 00 10
+     *     / 35 10 04` = Member16 (entity+0x1C4, `sh a2,452(a0)` @0x80041218) |= 0x1000. Die drei
+     *     RE1.5-Steer-Decides lesen das Bit und schreiben +0x4 = 0x1001 (@0x80101ECC-ED8,
+     *     @0x801021C0-E0, @0x80105784-A4) -> Toggle FUN_80104F80 -> Kriech-Grid.
+     *     Der RUECKWEG ist das ZWEITE Skript-Bit: `+0x1C4 & 0x2000` @0x8010369C-A4 (mit
+     *     `!(+0x1D8 & 0x80)` @0x801036B0-BC) -> Wort 0x601 = derselbe Toggle, zurueck auf
+     *     +0x1D7 = 4 (@0x801050B4). Port-Zwilling: re15_zgirl_overflow_row11 (enemy_ai_common.c).
+     *   RE2-SEITE (der Ausfuehrer): das RE2-Zombie-Overlay hat fuer 0x1000 KEINEN Konsumenten.
+     *     Eigener Byte-Scan von EMOVL10_S0.BIN: alle 36 Zugriffe auf +0x1C4/+0x1C6 sind das PAAR
+     *     `lh a1,452 / lh a2,454` = das STEUER-ZIEL (x,z) fuer FUN_80015558 (z.B. @0x80104400/04,
+     *     @0x801030D4/D8) — dort liegt in RE2 gar kein Bitfeld. Die acht `andi 0x1000` des
+     *     Overlays (@0x80101DDC, @0x80101E5C, @0x80101E9C, @0x80102490, @0x801024E8, @0x80102528,
+     *     @0x80105E18, @0x80108B44) lesen ALLE +0x21A (`lhu v0,538`), nicht +0x1C4.
+     *     Der RE2-Kriecher wird ausschliesslich ueber +0x10E Bit 0 betreten.
+     *
+     * DIE BRUECKE UEBERSETZT ALSO NUR DEN ANFORDERUNGSKANAL — die Zielwerte sind alle
+     * byte-gelesen aus dem RE2-Overlay:
+     *   HIN   (+0x1C4 & 0x1000): re15_re2z_enter_crawler(sub 0) = `sh 1,270` @0x80107A54 +
+     *         `sw 1,4` @0x80107A58 (die Kombination, mit der der Kriecher-HURT selbst in seine
+     *         LOKOMOTION zurueckkehrt) — Lokomotion, nicht der Kampf-Griff `sw 0x101`
+     *         @0x8010458C, denn das Skript will Fortbewegung, keinen Angriff.
+     *   ZURUECK (+0x1C4 & 0x2000): +0x10E Bit 0 loeschen und `sw 0x901` = EXEC[9] AUFSTEHEN
+     *         @0x80103E48 — dasselbe Ziel, das schon der D15.2-Wecker und der RE2-Liege-Executor
+     *         selbst ansteuern. Plus SCA-Zeile zurueck auf 4 (@0x801050B4, RE1.5-Raumdaten).
+     * Der Spieler-Riegel wird beim Skript-Kriechen NICHT gesetzt: er gehoert dem Angriff
+     * (@0x8010459C-B0 haengt hinter dem Kampf-Test), nicht der Fortbewegung.
+     * ========================================================================================== */
+    if ((e->anim_flags & 0x2000u) && (e->re2z_f10e & 1u)) {
+        e->re2z_f10e &= (uint16_t)~1u;                             /* Kriecher-Bit aus */
+        e->sca_mask  = 4;                                          /* +0x1D7 = 4 @0x801050B4 */
+        re15_ai_set_state_word(e, 0x901);                          /* EXEC[9] Get-up @0x80103E48 */
+    } else if ((e->anim_flags & 0x1000u) && !(e->re2z_f10e & 1u)
+               && e->state == 1 && e->hp >= 0) {
+        /* `e->state == 1` spiegelt die RE1.5-Seite: dort lesen NUR die Zustand-1-Decides das Bit
+         * (@0x80101ECC / @0x801021C0 / @0x80105784) — ein getroffener oder toter Zombie legt sich
+         * nicht auf Skriptbefehl hin. `hp >= 0` ist Gate (3) des RE2-Trefferfilters
+         * (`bltz v0,0x8004740c` @0x80047150), hier als dieselbe Aussage. */
+        re15_re2z_enter_crawler(e, NULL, 0u);
+    }
+
     switch (e->state) {                                            /* table @0x8010C830 */
     case 0: re2z_init(slot, e); break;                             /* 0x8010065C */
-    case 1: re2z_active(slot, e, pl);
+    case 1: /* Zustand-1-Wurzel @0x8010114C: `andi 0x3f` @0x8010115C in die Tabelle @0x8010C854,
+             * deren 14 Eintraege STRIKT auf Bit 0 alternieren (eigener Dump, s. Kriecher-Block):
+             * ungerade -> 0x80101210 (Kriecher), gerade -> 0x8010118C (aufrecht). */
+            if (e->re2z_f10e & 1u) re2z_crawl(slot, e, pl);        /* 0x80101210 */
+            else                   re2z_active(slot, e, pl);       /* 0x8010118C */
             e->re2z_prev_sub = e->sub_state_1;                     /* +0x5-Schnappschuss fuer HURTs
                                                                     * sub==1-Gate (@0x80105090-98;
                                                                     * das geteilte take_damage

@@ -232,7 +232,11 @@ typedef struct {
     uint16_t re2z_f10e;         /* +0x10E Spawn-/Zustands-Wort: 0x4000 Limpet-Latch (Spawns schreiben
                                  * 0x4002/0x4004 @0x80100A34-38/@0x80100A88-8C; einziger Overlay-Clear
                                  * @0x80104F0C EXEC[15]), 0x2000 "gefallen" (@0x80102DB8-C0/@0x80103308-20/
-                                 * @0x80104468-70), Bit 0 Kriecher (OPEN W5)                                */
+                                 * @0x80104468-70), **Bit 0 = KRIECHER** (Zustand-1-Wurzel
+                                 * @0x80101154-74 -> Tabelle @0x8010C854, ungerade = 0x80101210)             */
+    int16_t  re2z_root144;      /* +0x144 Wurzel-Delta X, den FUN_80015E7C ablegt (`sh v1,324(t0)`
+                                 * @0x80015FD8, UNROTIERT). Der Kriecher liest ihn als Steuer-Gate
+                                 * (`lh v0,324` / `slti 21` @0x801030C0-CC)                                  */
     uint8_t  re2z_prev_sub;     /* Port-Feld: ACTIVE-Sub-Schnappschuss fuer HURTs +0x5==1-Test
                                  * (@0x80105090-98) — das geteilte take_damage ueberschreibt +0x5          */
     uint8_t  re2z_grabclip;     /* P0-gewaehlter Grab-Clip (param[0x0C+s5*2] @0x801026C4-CC)                */
