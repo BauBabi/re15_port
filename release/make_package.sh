@@ -76,6 +76,28 @@ check_binary_paths() {   # $1 = Binary
         || die "$bin enthaelt den erwarteten BSS-Pfad nicht — kein RE1.5-Binary?"
 }
 
+check_binary_fresh() {   # $1 = Binary, $2 = Label
+    # ⛔ v0.3.9-UNFALL (2026-08-21): Das Skript BAUT NICHT, es KOPIERT aus win_out/
+    # bzw. linux_out/. Der Windows-Build lief nach release/wbuild/, win_out/ blieb
+    # auf dem Stand von v0.3.8 — das ausgelieferte Paket enthielt KEINEN der fuenf
+    # Fix-Commits (Beleg: 're15_climb' 0x im Paket-Binary, 10x im echten Build),
+    # und der Nutzer hat vier bereits behobene Fehler erneut gemeldet.
+    # Gate: das Binary muss NEUER sein als der letzte Commit, der Port-Code aendert.
+    local bin="$1" label="$2" bin_t src_t
+    command -v git >/dev/null 2>&1 || return
+    src_t="$(git -C "$HERE/.." log -1 --format=%ct -- re15_port/engine re15_port/platform re15_port/include 2>/dev/null)"
+    [[ -n "$src_t" ]] || return
+    bin_t="$(stat -c %Y "$bin" 2>/dev/null || stat -f %m "$bin" 2>/dev/null)"
+    [[ -n "$bin_t" ]] || return
+    if (( bin_t < src_t )); then
+        die "$label ist VERALTET: $bin
+        stammt von $(date -d "@$bin_t" '+%F %T' 2>/dev/null || date -r "$bin_t" '+%F %T'),
+        der letzte Port-Code-Commit von $(date -d "@$src_t" '+%F %T' 2>/dev/null || date -r "$src_t" '+%F %T').
+        Dieses Skript baut NICHT — es kopiert nur. Erst neu bauen und das Ergebnis
+        nach $(dirname "$bin")/ kopieren, dann das Paket erzeugen."
+    fi
+}
+
 check_glibc() {          # $1 = Linux-Binary
     command -v objdump >/dev/null 2>&1 || { echo "   (objdump fehlt — glibc-Gate uebersprungen)"; return; }
     local max
@@ -156,6 +178,7 @@ if [[ "$ONLY" == "both" || "$ONLY" == "linux" ]]; then
     [[ -f "$LINUX_BIN" ]] || die "Linux-Binary fehlt: $LINUX_BIN (release/build_linux_deck.sh)"
     echo "== Linux/Steam-Deck-Paket: $NAME =="
     check_binary_paths "$LINUX_BIN"
+    check_binary_fresh "$LINUX_BIN" "Linux-Binary"
     check_glibc        "$LINUX_BIN"
 
     OUT="$HERE/pkg-linux/$NAME"
@@ -176,6 +199,7 @@ if [[ "$ONLY" == "both" || "$ONLY" == "win" ]]; then
     [[ -f "$WIN_BIN" ]] || die "Windows-Binary fehlt: $WIN_BIN"
     echo "== Windows-Paket: $NAME =="
     check_binary_paths "$WIN_BIN"
+    check_binary_fresh "$WIN_BIN" "Windows-Binary"
 
     OUT="$HERE/pkg-win/$NAME"
     if [[ $ZIP_ONLY -eq 0 ]]; then
