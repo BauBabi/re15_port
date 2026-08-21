@@ -1,4 +1,88 @@
-# RE1.5 Port — v0.3.9 (Early Preview)
+# RE1.5 Port — v0.3.10 (Early Preview)
+
+## Zuerst: v0.3.9 enthielt unter Windows die Aenderungen NICHT
+
+Gemeldet war, dass vier bereits behobene Fehler weiterhin auftreten — Leons
+Drehung in der Cutscene, das Klettern, das abrupte Aufstehen und die sofort
+volle Blutlache.
+
+**Der Grund lag nicht im Spiel, sondern im Paket.** Das Skript, das die Pakete
+schnuert, **baut nicht** — es kopiert ein fertiges Programm aus einem
+Ablageordner. Der Windows-Build lief in ein anderes Verzeichnis, im Ablageordner
+lag noch die Fassung von v0.3.8. Nachweisbar bis auf die Pruefsumme: Das
+ausgelieferte Programm war mit dem alten **bitgleich**, und der Kletter-Code kam
+darin **null mal** vor. Das Linux-Paket war korrekt.
+
+Alle vier Aenderungen wurden anschliessend am richtigen Programm im echten
+Spielablauf nachgemessen und wirken. In dieser Fassung sind sie enthalten.
+
+Damit das nicht wiederkehrt, prueft das Paketskript jetzt das **Alter** des
+Programms gegen die letzte Code-Aenderung und bricht ab, wenn es aelter ist —
+gegen den alten Stand getestet, es bricht ab.
+
+## Zombies waren nach einem Treffer unverwundbar (RE2-Modus)
+
+Gemeldet: „Ich kann teilweise immer noch nicht die Zombies treffen."
+
+Das Original merkt sich pro Gegner einen **Ein-Treffer-Riegel**, damit ein
+einzelner Schuss nicht mehrfach zaehlt — und loest ihn in der Trefferpruefung
+selbst wieder, **unabhaengig davon, ob der Gegner gerade denkt**. Der Port loeste
+ihn im Denk-Takt des Gegners. Der wird aber uebersprungen, solange die KI
+eingefroren ist oder ein bestimmtes Zustandsbit steht. Genau dann bleibt der
+Riegel haengen: Der erste Treffer setzt ihn, niemand gibt ihn frei, der Zombie
+ist unverwundbar.
+
+Ein Zensus ueber alle 37 Raeume der ersten Etage zeigt den betroffenen Fall in
+ROOM1200. Die Freigabe haengt jetzt nicht mehr am Takt.
+
+## Beim Tod durch den Hund verschwand Leon
+
+Zweimal derselbe Fehler — der **Ankerpunkt** des Griffs. Erst startete der Griff
+die Opfer-Sequenz ohne Anker, was Leon exakt in den Nullpunkt der Welt setzte.
+Und dann wurde der Anker auf dem **ersten** Bild der Animation genommen, die
+Platzierung aber auf dem **aktuellen** — die Differenz summiert sich mit jedem
+Bild auf.
+
+Gemessen war Leon am Ende **389.271 Einheiten** vom Startpunkt entfernt. Jetzt
+sind es 2.508, und er landet einen Schritt neben dem Hund. Im Original heben sich
+Anker und Pose exakt auf, weil beide denselben Bildindex lesen.
+
+## Tote Kraehen hinterlassen kein graues Feld mehr (RE2-Modus)
+
+Gemeldet: „Platzende Kraehen hinterlassen immer noch Schatten."
+
+Der Schatten ist im Original ein **Platz in einem Pool** von 50 Eintraegen, und
+beim Zerplatzen wird dieser Platz **freigegeben** — danach wird dort nichts mehr
+gezeichnet. Der Port setzte statt dessen nur die Groesse auf null, und der
+Renderer las das als „keine Groesse angegeben" und zeichnete seinen
+**Standardschatten**. Genau deshalb blieb der Fleck liegen.
+
+Dabei kam ein zweiter Fehler heraus: Die Blutlache der Kraehe war im Port als
+blosse Modellfaerbung eingetragen und damit wirkungslos. Tatsaechlich faerbt das
+Original **denselben Schatteneintrag** um — mit derselben Funktion und derselben
+Farbe wie beim Zombie. Aus dem grauen Fleck wird also die Lache. Im echten
+Fenster nachgeprueft: dunkelrote Blutlache statt grauem Feld.
+
+## Nachgeprueft und unveraendert gelassen
+
+Vier weitere Meldungen haben sich als **Original-Verhalten** erwiesen; hier waere
+eine Aenderung ein Fehler gewesen:
+
+- **Zielen hindert die Zombies nicht am Angriff.** Ueber 196 Messreihen: im Stehen
+  196 Angriffe, beim Zielen 194. Alle Angriffe sind Griffe, und die haben gar kein
+  Bewegungs-Kriterium.
+- **Der Sprungangriff des Hundes trifft** — im Stehen, Gehen, Rueckwaerts und beim
+  Zielen 36 von 36 Versuchen. Nur beim Rennen verfehlt er gelegentlich, weil man
+  ihm davonlaeuft.
+- **Der Hundebiss spritzt kein Blut.** Er addiert 50 auf einen Wund-Zaehler des
+  getroffenen Koerperteils, und erst ab 120 wird die Wunde sichtbar. Weil das
+  Koerperteil jedes Mal neu gewuerfelt wird, dauert es im Schnitt vier bis fuenf
+  Bisse. Biss eins und zwei zeigen korrekterweise nichts.
+- **Das Umfallen alle zwei Schuesse** ist eine Standfestigkeits-Leiste: beim Spawn
+  zufaellig 4 bis 7, jeder Pistolentreffer zieht 3 ab, beim Aufstehen wird auf 4
+  neu geladen. Ab dem ersten Sturz faellt er also zwangslaeufig alle zwei Treffer.
+  Die Trefferzahl bis zum Tod ist in beiden Modi uebrigens **gleich** — die
+  gefuehlte Zaehigkeit kommt allein aus dieser Sturzschleife.
 
 ## Die Einstellung "AI RE2 MODELS" ist raus
 
