@@ -1,3 +1,55 @@
+# RE1.5 Port — v0.3.7 (Early Preview)
+
+## Alle sieben Feuer brennen (ROOM1090)
+
+In v0.3.6 waren drei der sieben brennenden Truemmer noch dunkel. Die Ursache war
+nicht eine fehlende Grafik, sondern die **falsche**: Der Port lud fuer diese drei
+die **Blutgrafik**. Von den zehn Bildern, die der Feuereffekt dort abruft, sind
+darauf neun vollstaendig leer — deshalb sah es aus, als fehle der Effekt.
+
+Die richtige Grafik steckt in einer normalen Spieldatei; ein Emulator war nicht
+noetig. Dabei ist eine Notiz im Projekt aufgeflogen, die behauptete, diese Datei
+sei umsortiert und lasse sich nicht direkt ausschneiden — sie ist es nicht,
+**alle 32768 Halbwoerter stimmen ueberein**.
+
+Huebsche Gegenprobe: Dieselbe Grafik mit einer anderen Farbtabelle gelesen ergibt
+exakt dieselben Formen in **Grau** — das ist der Raucheffekt des Spiels.
+
+## Gegner weichen an Waenden aus
+
+Der Port hat ein Feld, an dem der **Ausweich-Zweig** der Gegner-Navigation
+haengt, ueberhaupt nie beschrieben. Vierzehn Stellen in drei Gegner-Gehirnen
+lesen es; wirksam ist es in **zwanzig Raeumen**. Laeuft ein Zombie dort jetzt
+gegen eine entsprechend markierte Wand, dreht er ab, statt dagegen zu laufen.
+
+**Dabei kam ein zweiter Fehler ans Licht:** Der Port fuehrte die Wandklemme nur
+aus, wenn sich ein Gegner bewegt hatte — das Original tut es **immer**. Ein
+stehender Gegner, der in einer Wand steckt, wird dort herausgeschoben; bei uns
+blieb er stecken.
+
+⚠️ Nebeneffekt, der byte-true ist: Der Hund weicht in ROOM1190/1230 jetzt
+**nicht mehr** aus. Der bisherige Ersatz im Port liess ihn bei jeder
+Wandberuehrung ausweichen — im Original passiert das dort nie.
+
+## Zwei gemeldete Punkte sind KEIN Fehler
+
+Beide in der Lobby (ROOM1030), beide gemessen und byte-true belegt:
+
+- **"Nur fuenf von sechs kriechen unter das Tor."** Das Skript schaltet Zombies
+  nur scharf, solange **weniger als vier** in der Zone stehen. Wer als Fuenfter
+  ankommt, wird nie mehr aktiviert.
+- **"Manchmal laufen sie, ohne voranzukommen."** Die Wegfindung setzt den
+  Durchgangspunkt genau **29 Einheiten innerhalb der Wand**. Der Zombie laeuft
+  dagegen, wird zurueckgeschoben, laeuft wieder — ein Kreislauf mit einer Periode
+  von exakt 100 Bildern. Auch das Original weicht dort nicht aus, weil die
+  noetige Markierung in allen 35 Bodenzellen dieses Raums fehlt.
+  Gegenprobe: Setzt man denselben Zombie ein Stueck oestlich ab, kommen
+  **sechs von sechs** durch.
+
+Testsuite 196 Pruefungen.
+
+---
+
 # RE1.5 Port — v0.3.6 (Early Preview)
 
 ## Der Hinterhof brennt jetzt (ROOM1090)
