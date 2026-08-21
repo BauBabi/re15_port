@@ -1183,11 +1183,44 @@ void re15_game_step(const re15_game_ctx_t *c)
          * FUN_8002d474 (@0x80031fd0) und erst bei deren Rueckgabe 0 den AOT-/Tuer-Scan
          * FUN_80042bac(player,1,0x10) (@0x80031fe4). Die Treppe ist im Original ein
          * AOT-Handler (sce 12/13) und steht deshalb HINTER der Kletter-Sonde. */
-        if (c->rdt_ok && re15_climb_try_start(c->rdt, g_aot_action_pressed)) {
-            g_aot_action_pressed = 0;
-        } else if (!(c->rdt_ok && re15_stair_try_start(c->rdt, g_aot_action_pressed))) {
-            re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);
-        }
+        /* KORREKTUR 2026-08-22 (Kandidat 2 aus 3b141d9d): hier stand
+         *   if (climb_try_start) {} else if (!stair_try_start) { re15_aot_scan(...); }
+         * — startete in einem Bild ein Klettern ODER eine Treppe, lief re15_aot_scan GAR NICHT.
+         * Im Port steckt aber der RVD-/KAMERA-Zonen-Scan MIT DRIN (aot_common.c:829ff), und der
+         * ist im Original ein EIGENER Top-Level-Aufruf, der vom Spieler-FSM voellig unabhaengig
+         * ist — selbst nachdisassembliert, Haupt-Loop:
+         *     8001cc98  lw   v0,DAT_800aca40 / 8001cca0 lui v1,0x80 / 8001cca4 and   (TOT: v0
+         *               wird @0x8001ccb4 sofort ueberschrieben, kein Branch dazwischen)
+         *     8001ccb4  lw   v0,-0x38a0(v0)=>DAT_800ac760   ; (PAD_EDGE<<16)|PAD_HELD
+         *     8001ccb8  ori  v1,v1,0x4                      ; v1 = 0x00020004
+         *     8001ccbc  and  v0,v0,v1
+         *     8001ccc0  bne  v0,v1,LAB_8001cccc
+         *     8001ccc8  xori s2,s2,0x1                      ; DEV-Hotkey R3-gehalten + L3-Flanke
+         *     8001cccc  bne  s2,zero,LAB_8001ccf4
+         *     8001ccd8  lw   v0,DAT_800aca3c
+         *     8001cce0  andi v0,v0,0x100                    ; Cut_auto AUS -> ueberspringen
+         *     8001cce4  bne  v0,zero,LAB_8001ccf4
+         *     8001ccec  jal  FUN_80014230 (a0=0)            ; DER RVD-ZONEN-SCAN
+         * FUN_80014230 hat game-weit GENAU EINEN Aufrufer (XREF[1]: 8001ccec) — er haengt an
+         * KEINEM Spieler-Substate. Das 0x100-Gate ist im Port `g_scd.cut_auto_enabled`
+         * (aot_common.c:956); der s2-Hotkey ist mit dem Digital-Pad unerreichbar (Schreiber von
+         * DAT_800ac760/762 sind ausschliesslich `sh` @0x80030564 = Pad-HELD und `sh` @0x800305a0
+         * = Pad-EDGE, eigener wortweiser EXE-Scan) -> s2 bleibt 0, der Scan laeuft JEDES Bild.
+         *
+         * Was das Klettern/die Treppe im Original UNTERDRUECKT, ist ausschliesslich die
+         * ACTION-Klasse (@0x80031fc8-fec, identisch in allen vier Sub-ENTRY-Handlern):
+         *     80031fc8  beq v0,zero,LAB_80031ff4      ; keine ACTION-Flanke -> beides aus
+         *     80031fd0  jal FUN_8002d474              ; Kletter-Sonde ZUERST
+         *     80031fe4  jal FUN_80042bac(player,1,0x10) ; AOT-ACTION-Scan nur bei Rueckgabe 0
+         * Deshalb wird hier nur noch das Press-Flag entwaffnet (alle ACTION-Fire-Pfade in
+         * aot_common.c haengen daran) — genau derselbe Zuschnitt wie in den Freeze-/Stair-/
+         * Grab-/Death-Zweigen oben. Ein verpasster Zonenuebergang ist ENDGUELTIG, deshalb darf
+         * der Scan in KEINEM Bild ausfallen. */
+        if (c->rdt_ok && re15_climb_try_start(c->rdt, g_aot_action_pressed))
+            g_aot_action_pressed = 0;               /* @0x80031fd0 hat gegriffen -> kein AOT-Scan */
+        else if (c->rdt_ok && re15_stair_try_start(c->rdt, g_aot_action_pressed))
+            g_aot_action_pressed = 0;               /* Treppe = AOT-Handler sce 12/13, konsumiert die Aktion */
+        re15_aot_scan(pl->x, pl->z, (uint8_t)c->active_cut);   /* RVD immer: @0x8001ccec */
     }
     /* Per-Frame-Standobjekt @0x80031cd8-0x80031d2c (DAT_800ac788 / aca3c bit 0x4000) —
      * laeuft im Original DIREKT nach dem Spieler-FSM-Dispatch, also auch im normalen

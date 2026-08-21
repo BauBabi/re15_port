@@ -2391,3 +2391,41 @@ target_link_libraries(test_cut_old_displayed PRIVATE re15_engine re15_test_suppo
 target_include_directories(test_cut_old_displayed PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_cut_old_displayed COMMAND test_cut_old_displayed)
 set_tests_properties(unit_cut_old_displayed PROPERTIES TIMEOUT 60)
+
+# --- NEGATIV-TEST (Kandidat 2 aus 3b141d9d): der RVD-/Kamera-Zonen-Scan darf in KEINEM Bild
+#     ausfallen. Er ist im Original ein eigener Top-Level-Aufruf @0x8001ccec (FUN_80014230,
+#     XREF[1]) und nur an DAT_800aca3c&0x100 (@0x8001cce0) + den DEV-Hotkey R3+L3
+#     (@0x8001ccb4-cc) gegatet; Klettern/Treppe unterdruecken NUR die ACTION-Klasse
+#     (@0x80031fc8-fec). Der Port uebersprang bisher den ganzen re15_aot_scan, sobald in
+#     diesem Bild ein Climb/Stair startete — und darin steckt der RVD-Scan. ---
+add_executable(test_rvd_scan_ungated_by_climb test_rvd_scan_ungated_by_climb.c)
+target_link_libraries(test_rvd_scan_ungated_by_climb PRIVATE re15_engine re15_test_support)
+target_include_directories(test_rvd_scan_ungated_by_climb PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_rvd_scan_ungated_by_climb PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_rvd_scan_ungated_by_climb COMMAND test_rvd_scan_ungated_by_climb)
+set_tests_properties(unit_rvd_scan_ungated_by_climb PROPERTIES TIMEOUT 60 SKIP_RETURN_CODE 77)
+
+# --- MESSUNG (Kandidat 3 aus 3b141d9d): Sce_fade_set mit SCHRITTWEITE 0.
+#     ROOM11F0-sub18 @0x174A `56 00 02 07 00 00`. Geprueft wird der GERENDERTE Overlay-Pegel
+#     (out_rgb/drawn = genau die Werte, die render_pc.c:873ff in den Fill schiebt), nicht nur
+#     der Zustand: Schritt 0 = Pegel HALTEN (@0x8002191c-2c `level += step`, kein Clamp),
+#     kein Selbst-Weiterzaehlen, kein Auto-Kill (FUN_80021764 wird nie gerufen). ---
+add_executable(test_fade_step0_hold test_fade_step0_hold.c)
+target_link_libraries(test_fade_step0_hold PRIVATE re15_engine re15_test_support)
+target_include_directories(test_fade_step0_hold PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_fade_step0_hold PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_fade_step0_hold COMMAND test_fade_step0_hold)
+set_tests_properties(unit_fade_step0_hold PROPERTIES TIMEOUT 60 SKIP_RETURN_CODE 77)
+
+# --- MESSSONDE (kein add_test): Fluchtlauf WAEHREND sub18. Die Schwester-Sonde
+#     probe_11f0_escape_sweep laesst sub18 erst durchlaufen; der Nutzer laeuft aber sofort
+#     los, also im Fenster, in dem Cut_chg (@0x800402d4 `ori DAT_800aca3c,0x100`) den
+#     Zonen-Scan (Gate @0x8001cce0) ausgeschaltet hat und Cut_auto(1) @0x1782 noch nicht
+#     gelaufen ist. Jeder Ausfall wird gegen das Orakel FUN_80014230 geprueft. ---
+add_executable(probe_11f0_escape_during probe_11f0_escape_during.c)
+target_link_libraries(probe_11f0_escape_during PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_11f0_escape_during PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_11f0_escape_during PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
