@@ -20,6 +20,7 @@
 #define RE15_AOT_H
 
 #include <stdint.h>
+#include "re15_rdt.h"   /* re15_rdt_t — die SCA-Validierung des Schiebe-Zweigs */
 
 #define RE15_AOT_MAX  64   /* per-room AOT slot count. BO-round 2026-05-29:
                             * bumped 32→64 (= RE2 retail). ROOM1170 has 28 RVD
@@ -348,6 +349,22 @@ int  re15_aot_object_notch(int32_t px, int32_t pz);
 /* Per-frame object-pool notch pass: set every active prop's member_0b = the grid cell it is over.
  * Called once per frame by re15_game_step so the keypad dial cursor's confirm reads the live cell. */
 void re15_object_notch_update(void);
+
+/* ---- KISTEN SCHIEBEN — der Schiebe-Zweig des Objekt-Update-Loops FUN_8002bd44 --------------
+ * Frame-Position byte-true: FUN_8002bd44 laeuft @0x8001ce14 NACH dem Spieler-FSM (@0x8001ce0c)
+ * und VOR dem AUTO-Scan FUN_800436a8 (@0x8001ce1c) — der Spieler liest das Kontaktbit also
+ * immer aus dem VORFRAME. `pad_held` = das gehaltene Pad (DAT_800ac768; virtuelles Bit 0 == UP
+ * == physisch RE15_PAD_BIT_UP, Preset-Tabelle @0x80073dbc[0], siehe pad_common.c). */
+void re15_prop_push_tick(const re15_rdt_t *rdt, uint16_t pad_held);
+/* DAT_800aca3c Bit 0x2000 (@0x8002bfd4 gesetzt, @0x8002bd94-a4 zu Loop-Beginn geloescht) —
+ * die einzigen zwei Leser im Original sind der Spieler-FSM @0x800323c0 (Gehen -> Schieben) und
+ * @0x800357b8 (Schieben -> Ausstieg). */
+int  re15_prop_push_contact(void);
+/* obj[+0x8C], der Verzoegerungszaehler (@0x8002bf68 ++ / @0x8002bf74 = 0 / @0x8002bf90 == 9 /
+ * @0x8002bfc0 = 8 / @0x8002c0b0 = 10). Nur fuer Messsonden und Tests. */
+int  re15_prop_push_counter(int prop_idx);
+/* Zaehler + Kontaktbit wischen (Raumwechsel / Testaufbau). */
+void re15_prop_push_reset(void);
 
 /* Byte-true per-prop visibility cull — SHARED by BOTH ports so the Obj_model_set
  * prop loop culls identically. Per FUN_8002c18c (object render/scan loop):

@@ -52,6 +52,10 @@ void re15_audio_room_se(int se_id)
     }
 }
 void re15_audio_weapon_se(int se_id) { (void)se_id; }
+/* snd0-Bank (FUN_80045024 Bank 2/5). Spion fuer den Schiebe-SE 0x02070000 @0x80035a18. */
+int g_test_snd0_se_last = -1;
+int g_test_snd0_se_count = 0;
+void re15_audio_room_se_snd0(int se_id) { g_test_snd0_se_last = se_id; g_test_snd0_se_count++; }
 /* FILE wave: spy on the CORE00-bank SE calls (FUN_80045024 bank 4) so the FSM tests
  * can assert the byte-cited call sites (SE(4,4)/(4,5)/(4,6)/(4,8)). */
 int g_test_core_se_last = -1;

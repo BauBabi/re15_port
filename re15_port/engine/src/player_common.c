@@ -299,6 +299,214 @@ void re15_player_cycle_motion(int delta, int clip_count)
     re15_actor_set_motion(p, (int16_t)m);
 }
 
+/* =============================================================================================
+ *  KISTEN SCHIEBEN — Spieler-Substate 8 (der Handshake zum Objekt-Pass FUN_8002bd44)
+ * =============================================================================================
+ * Der Spieler-FSM hat DREI Tabellen (ghidra1_V2.txt 242019-242030):
+ *   PTR_LAB_80073f90 (8)  = HAUPT-Zustand  (Spieler +0x04), Dispatch @0x80031cac
+ *   PTR_LAB_80073fb0 (16) = SUB-ENTRY      (Spieler +0x05), Dispatch @0x80031eec
+ *   PTR_LAB_80073ff0 (16) = SUB-UPDATE     (Spieler +0x05), Dispatch @0x80031f14
+ * Substate 1 = Vorwaertsgehen (ENTRY LAB_800322e8), Substate 8 = SCHIEBEN
+ * (ENTRY LAB_8003579c, UPDATE LAB_80035810).
+ *
+ * EINTRITT — der erste der genau ZWEI Leser des Kontaktbits 0x2000:
+ *   @0x800323c0 `lw v0,DAT_800aca3c` / @0x800323c8 `andi v0,v0,0x2000`
+ *   @0x800323cc `bne v0,zero,LAB_8003247c` mit Verzoegerungsschlitz `ori v0,zero,0x801`
+ *   @0x8003247c `sw v0,DAT_800aca58`   (32 Bit!) -> +0x04 = 1, +0x05 = 8, +0x06 = 0, +0x07 = 0
+ * ==> "+0x05 == 8", die Bedingung, die FUN_8002bd44 @0x8002bfe0/e4 verlangt, entsteht GENAU HIER.
+ *
+ * AUSSTIEG — der zweite Leser, der Sub-ENTRY-Handler LAB_8003579c:
+ *   @0x800357a0 `lw v0,DAT_800ac768` / @0x800357a8 `andi v0,v0,0x10`   (virt. Bit 4 = UP)
+ *   @0x800357b8 `lw v0,DAT_800aca3c` / @0x800357c0 `andi v0,v0,0x2000`
+ *   @0x800357c4 `bne v0,zero,0x80035808`  -> beides erfuellt: NICHTS tun (weiterschieben)
+ *   @0x800357d0-d8 sonst: nur wenn +0x06 == 5
+ *   @0x800357e4 +0x06 = 6 / @0x800357f0 Clip 0x11 / @0x800357fc Frame 0 / @0x80035804 +0x8F = 7
+ *
+ * UPDATE LAB_80035810 = Sprungtabelle @0x80010b68 ueber +0x06 (DAT_800aca5a), 8 Zustaende:
+ *   [0] @0x80035848  +0x06 = 1, Clip 0, Frame 0, +0x8F = 7, Speed(+0x8C) = 0   -> FAELLT in [1]
+ *   [1] @0x80035878  Schritt-SE (EDD-Bit 0x4000), anim_set; YAW-RASTUNG auf 90 Grad
+ *                    @0x800358d4-fc: t = (yaw>>2)&0xff ; yaw = (yaw & 0x200) ? yaw+t : yaw-t
+ *                    @0x80035910-20: (yaw & 0x3e0) == 0 -> +0x06 = 2
+ *   [2] @0x8003592c  +0x06 = 3, Clip 0x11, Frame 0, +0x8F = 7                  -> FAELLT in [3]
+ *   [3] @0x80035958  anim_set(a2=0); +0x06 += Rueckgabe (1 = Clip zu Ende) -> 4
+ *   [4] @0x800359d4  +0x06 = 5, Clip 0x12, Frame 0, +0x8F = 7                  -> FAELLT in [5]
+ *   [5] @0x80035a00  Frame == 1 -> FUN_80045024(0x02070000) = Schiebe-SE (Bank 2 = snd0, Satz 7);
+ *                    anim_set(a2=0) = Clip 0x12 im LOOP; EDD-Bit 0x2000 @0x80035a5c ->
+ *                    FUN_800369f8(0,0) = Wurzelbewegung auf die Spielerposition
+ *   [6] @0x80035a78  anim_set(a2=1) = Clip 0x11 RUECKWAERTS; +0x06 += Rueckgabe -> 7
+ *   [7] @0x80035ab4  `sw 1,DAT_800aca58` = Zustand 1 / Substate 0 = Idle. Fertig.
+ *
+ * WURZELBEWEGUNG: FUN_800369f8 Modus 0 @0x80036aac-ae8 verschiebt den Spieler um die Differenz
+ * der Wurzel-Weltposition zwischen diesem und dem gespeicherten Frame (`x -= cur - ref`,
+ * `z -= cur - ref`). Der Port hat keinen Engine-Pose-Puffer (+0x188) und nimmt dieselbe Groesse
+ * aus ihrer Quelle: der Wurzel-Translation der EMR-Keyframes (re15_emd_get_keyframe_speed),
+ * yaw-rotiert — derselbe Weg, den der Port fuer die Gegner-/Grab-Wurzelbewegung schon fuehrt
+ * (func_0x8001ad68). MESSBELEG (probe_1090_push, echte Assets): PL00.EDD Clip 0x12 hat 25 Frames
+ * und traegt Bit 0x2000 auf GENAU den Frames 0..14; ueber diese Frames laeuft die Wurzel-X von
+ * -312 auf +211 = +523 Einheiten Schub je Zyklus, Frames 15..24 (ohne Bit) sind die Erholung. */
+static int s_push_sub = -1;      /* -1 = nicht im Substate 8; sonst DAT_800aca5a (0..7) */
+
+int re15_player_push_substate(void) { return s_push_sub >= 0; }   /* DAT_800aca59 == 8 */
+int re15_player_push_phase(void)    { return s_push_sub; }        /* DAT_800aca5a (Diagnose) */
+void re15_player_push_reset(void)
+{
+    extern re15_actor_t g_actors[];
+    if (s_push_sub >= 0) g_actors[RE15_ACTOR_SLOT_PLAYER].anim_flags &= (uint8_t)~0x80u;
+    s_push_sub = -1;
+}
+
+/* PL00-Baenke fuer die Wurzelbewegung + die Cliplaengen 0x11/0x12 (der Port haelt sie im
+ * game_step-Kontext; hier gespiegelt, damit der Substate-8-Handler sie lesen kann). */
+static const re15_emd_skeleton_t  *s_pl00_skel;
+static const re15_emd_animation_t *s_pl00_anim;
+void re15_player_set_pl00_banks(const re15_emd_skeleton_t *sk, const re15_emd_animation_t *an)
+{
+    s_pl00_skel = sk; s_pl00_anim = an;
+}
+static int push_clip_fc(int clip)
+{
+    if (s_pl00_anim && clip >= 0 && clip < s_pl00_anim->clip_count &&
+        s_pl00_anim->clips[clip].frame_count > 0)
+        return s_pl00_anim->clips[clip].frame_count;
+    /* Rueckfall, falls die Bank (noch) nicht gespiegelt ist — die AUS DEN ASSETBYTES
+     * gemessenen Laengen von PL00.EDD (probe_1090_push): Clip 0x11 = 10, Clip 0x12 = 25.
+     * Ohne das haenge die Phase 3 endlos, weil "Clip zu Ende" nie eintraete. */
+    if (clip == 0x11) return 10;
+    if (clip == 0x12) return 25;
+    return 0;
+}
+/* Wurzel-Delta eines Clip-Frames, yaw-rotiert (Konvention wie der Gegner-/Grab-Pfad:
+ * wx = cos*lx + sin*lz, wz = -sin*lx + cos*lz). Wendet nichts an, wenn Keyframe-Daten fehlen. */
+static void push_root_step(re15_actor_t *p, int clip, int slot_now, int slot_prev)
+{
+    if (!s_pl00_skel || !s_pl00_anim) return;
+    if (clip < 0 || clip >= s_pl00_anim->clip_count) return;
+    const re15_emd_clip_t *c = &s_pl00_anim->clips[clip];
+    if (c->frame_count <= 0) return;
+    if (slot_prev < 0 || slot_now != slot_prev + 1) return;   /* Clip-Start / Umlauf: neu ankern */
+    if (slot_now >= c->frame_count) return;
+    int kf_n = (int)(re15_emd_get_frame_entry(s_pl00_anim, clip, slot_now)  & 0xFFFu);
+    int kf_p = (int)(re15_emd_get_frame_entry(s_pl00_anim, clip, slot_prev) & 0xFFFu);
+    int16_t sx, sy, sz, sx0, sz0;
+    if (!re15_emd_get_keyframe_speed(s_pl00_skel, kf_n, &sx,  &sy, &sz))  return;
+    if (!re15_emd_get_keyframe_speed(s_pl00_skel, kf_p, &sx0, &sy, &sz0)) return;
+    int32_t dx = (int32_t)sx - sx0, dz = (int32_t)sz - sz0;
+    if (dx == 0 && dz == 0) return;
+    int32_t cs = re15_cos_q12((int)p->rot_y), sn = re15_sin_q12((int)p->rot_y);
+    p->x += (int32_t)(( (int64_t)cs * dx + (int64_t)sn * dz) >> 12);
+    p->z += (int32_t)((-(int64_t)sn * dx + (int64_t)cs * dz) >> 12);
+}
+/* Clip setzen wie an jeder Original-Clip-Stelle des Schiebe-FSM: Clip, Frame 0, +0x8F = 7. */
+static void push_set_clip(re15_actor_t *p, int clip, int reverse)
+{
+    p->motion = (int16_t)clip;
+    p->anim_frame = 0;
+    p->anim_frac = 7;
+    p->motion_init_delay = 0;
+    if (reverse) p->anim_flags |= RE15_ANIM_REVERSE;
+    else         p->anim_flags &= (uint8_t)~RE15_ANIM_REVERSE;
+}
+/* Die Yaw-Rastung auf 90 Grad (@0x800358d4-fc). Auf dem ROHEN 16-Bit-Kurswert wie das
+ * Original (`lhu`/`sh` auf DAT_800acabe). */
+static void push_yaw_snap(re15_actor_t *p)
+{
+    int yaw = (int)(uint16_t)p->rot_y;
+    int t   = (yaw >> 2) & 0xff;
+    yaw = (yaw & 0x200) ? (yaw + t) : (yaw - t);
+    p->rot_y = (int16_t)(uint16_t)yaw;
+}
+static int push_yaw_aligned(const re15_actor_t *p)
+{
+    return (((int)(uint16_t)p->rot_y) & 0x3e0) == 0;   /* @0x80035910 */
+}
+
+/* Rueckgabe 1 = der Substate 8 besitzt diesen Frame (der normale Lauf-/Ziel-/Idle-Zweig
+ * von re15_player_tick muss dann ausgelassen werden, genau wie das Original ausschliesslich
+ * die Substate-8-Handler dispatcht). */
+static int re15_player_push_fsm(re15_actor_t *p, uint16_t pad_bits)
+{
+    extern int re15_prop_push_contact(void);           /* aot_common.c: DAT_800aca3c & 0x2000 */
+    extern void re15_audio_room_se_snd0(int se_id);
+
+    if (s_push_sub < 0) {
+        /* EINTRITT aus dem Vorwaerts-Gehen (Sub-ENTRY 1 @0x800323c0-cc -> `sw 0x801`).
+         * Das Kontaktbit setzt der Objekt-Pass des Vorframes und verlangt dort selbst schon
+         * UP gehalten (@0x8002bf24). Beim Zielen dispatcht das Original den Substate-7-DECIDE,
+         * der ein reines `jr ra` ist (@0x80032e3c) — also kein Schiebe-Eintritt. */
+        if (!re15_prop_push_contact()) return 0;
+        /* @0x80032328 `andi v0,a2,0xf` / @0x8003232c: liegt KEINE der vier Richtungen an,
+         * schreibt der Handler `ori v0,zero,0x1` = Substate 0 (Idle) und kommt am
+         * 0x2000-Test @0x800323c0 gar nicht vorbei. */
+        if (!(pad_bits & (RE15_PAD_BIT_UP | RE15_PAD_BIT_DOWN |
+                          RE15_PAD_BIT_LEFT | RE15_PAD_BIT_RIGHT))) return 0;
+        if (s_player_aim_phase != RE15_AIM_NONE) return 0;
+        s_push_sub = 0;                                 /* +0x06 = 0 aus dem 32-Bit-Store */
+        s_idle_phase = -1;
+    }
+
+    /* Sub-ENTRY 8 = der AUSSTIEG (LAB_8003579c) — laeuft VOR dem Update (@0x80031eec vor
+     * @0x80031f14). Virtuelles Pad-Bit 4 (0x10) ist derselbe RAW-UP-Knopf wie Bit 0
+     * (Preset-Tabelle @0x80073dbc[4], siehe pad_common.c). */
+    if (!((pad_bits & RE15_PAD_BIT_UP) && re15_prop_push_contact())) {
+        if (s_push_sub == 5) {
+            s_push_sub = 6;                             /* @0x800357e4 */
+            push_set_clip(p, 0x11, 1);                  /* @0x800357f0/fc/@0x80035804 + a2=1 */
+        }
+    }
+
+    switch (s_push_sub) {
+    case 0:                                             /* @0x80035848 */
+        s_push_sub = 1;
+        push_set_clip(p, 0, 0);                         /* Clip 0, Frame 0, +0x8F = 7 */
+        /* @0x80035874 `sh zero,DAT_800acae0` = Schrittgeschwindigkeit 0 — im Port gibt es
+         * kein Skalar-Speed-Feld; der Schiebe-Zweig ruft schlicht keinen pos_advance. */
+        /* fall through — das Original faellt @0x80035874 in [1] */
+    case 1:                                             /* @0x80035878 */
+        push_yaw_snap(p);
+        if (push_yaw_aligned(p)) s_push_sub = 2;        /* @0x80035914-20, dann Ruecksprung */
+        break;
+    case 2:                                             /* @0x8003592c */
+        s_push_sub = 3;
+        push_set_clip(p, 0x11, 0);
+        /* fall through — das Original faellt @0x80035954 in [3] */
+    case 3: {                                           /* @0x80035958 */
+        int fc = push_clip_fc(0x11);
+        if (fc > 0 && (int)p->anim_frame >= fc - 1) s_push_sub = 4;   /* +0x06 += anim_set() */
+        else if (!push_yaw_aligned(p)) push_yaw_snap(p);              /* @0x80035988-c8 */
+        break;   /* [4] dispatcht das Original erst im naechsten Frame (@0x80035994 -> ret) */
+    }
+    case 4:                                             /* @0x800359d4 */
+        s_push_sub = 5;
+        push_set_clip(p, 0x12, 0);
+        /* fall through — das Original faellt @0x800359fc in [5] */
+    case 5: {                                           /* @0x80035a00 */
+        int fc = push_clip_fc(0x12); if (fc <= 0) fc = 25;
+        if ((int)p->anim_frame == 1)
+            re15_audio_room_se_snd0(7);                 /* 0x02070000 @0x80035a18 (Bank 2, Satz 7) */
+        int slot = (int)p->anim_frame;
+        if (slot >= fc) { p->anim_frame = 0; slot = 0; }               /* anim_set(a2=0) = LOOP */
+        uint32_t e = s_pl00_anim ? re15_emd_get_frame_entry(s_pl00_anim, 0x12, slot) : 0u;
+        if (e & 0x2000u)                                                /* @0x80035a5c */
+            push_root_step(p, 0x12, slot, slot - 1);                    /* FUN_800369f8(0,0) */
+        break;
+    }
+    case 6: {                                           /* @0x80035a78 */
+        int fc = push_clip_fc(0x11);
+        if (fc > 0 && (int)p->anim_frame >= fc - 1) s_push_sub = 7;
+        break;
+    }
+    default:                                            /* [7] @0x80035ab4 */
+        s_push_sub = -1;
+        p->anim_flags &= (uint8_t)~RE15_ANIM_REVERSE;
+        p->motion = RE15_MOTION_IDLE;                   /* Zustand 1 / Substate 0 */
+        p->anim_frame = 0; p->anim_frac = 7;
+        s_idle_phase = -1;
+        return 0;
+    }
+    p->walk_active = 0;
+    return 1;
+}
+
 void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
 {
     (void)view;
@@ -346,7 +554,12 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
      * subtitle/prompt is showing; message_query = a YES/NO prompt is waiting for
      * input. Only MOVEMENT is gated (anim still ticks), same as the cinematic. */
     int msg_block = (g_scd.message_display_frames > 0) || (g_scd.message_query != 0);
-    if (g_scd.player_mode != 2 && !msg_block) {
+    /* SCHIEBEN (Substate 8) besitzt Yaw, Pose und Translation vollstaendig: das Original
+     * dispatcht in diesen Frames AUSSCHLIESSLICH die Substate-8-Handler (@0x80031eec
+     * LAB_8003579c + @0x80031f14 LAB_80035810) — der Lauf-/Ziel-/Idle-Zweig unten laeuft
+     * dann nicht. */
+    int pushing = (g_scd.player_mode != 2 && !msg_block) ? re15_player_push_fsm(p, pad_bits) : 0;
+    if (g_scd.player_mode != 2 && !msg_block && !pushing) {
         int yaw_delta = 0;
         int move_dir  = 0;
         /* RUN modifier: X (CROSS) on PSX / shift→CROSS on PC, HELD (Nutzer-bestätigt: RE1.5/RE2 walk

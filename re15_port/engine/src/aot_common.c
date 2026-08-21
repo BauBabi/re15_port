@@ -27,6 +27,7 @@
                               * SHARED now (room_common.c) — both ports queue the
                               * cross-room change; only the RDT LOADER (CD vs file)
                               * differs, behind the re15_room_apply_pending ctx. */
+#include "re15_player.h"     /* RE15_PAD_BIT_UP + re15_player_push_substate (Schiebe-Handshake) */
 #include "re15_item_modal.h" /* item pickup PRESENTATION modal (FUN_8001db28) — deferred grant */
 
 re15_aot_state_t g_aot;
@@ -1329,5 +1330,120 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
         }
         g_scd.cam_id             = (uint8_t)best_cam_id;
         g_scd.cam_change_pending = 1;
+    }
+}
+
+/* =============================================================================================
+ *  KISTEN SCHIEBEN — der Schiebe-Zweig des Objekt-Update-Loops FUN_8002bd44 (@0x8002bd44)
+ * =============================================================================================
+ * Frame-Position (byte-true, Haupt-Loop @0x8001ce04-1c):
+ *     FUN_8001a50c (Gegner)  ->  FUN_80031c44 (Spieler-FSM)  ->  FUN_8002bd44 (dieser Pass)
+ *     ->  FUN_800436a8 (AUTO-Scan)
+ * Der Spieler liest das Kontaktbit also IMMER aus dem Vorframe — daher die 1-Frame-Latenz
+ * zwischen "Zaehler erreicht 9" und "Spieler steht im Schiebe-Substate".
+ *
+ * Loop-Kopf (verifiziert per re15_disasm):
+ *   @0x8002bd78  `lbu s3,2(v0)`            Objektzahl = RDT-Header[+2] (nOmodel)
+ *   @0x8002bd94  `addiu v1,zero,-8193`     DAT_800aca3c &= ~0x2000  (Kontaktbit JEDES Frame weg)
+ *   @0x8002bdb0-c8 Pool 0x800b3f98, Stride 0x94, Iteration RUECKWAERTS (letztes Objekt zuerst)
+ *   @0x8002bdcc  obj[+0x00] & 1            inaktive Objekte uebersprungen
+ *   @0x8002beec  s4/s5 = obj[+0x34]/[+0x3C]  POSITIONS-SICHERUNG fuer die Ruecksetzung
+ * Schiebe-Kette:
+ *   @0x8002bf14  obj[+0x08] == 4              nur Typ-4-Objekte
+ *   @0x8002bf24  DAT_800ac768 & 1             UP GEHALTEN (virtuelles Bit 0, Preset @0x80073dbc[0])
+ *   @0x8002bf38  DAT_800acad6 == obj[+0x82]   Spieler-Band == Objekt-Band
+ *   @0x8002bf50  FUN_8002d1e8(player,obj,0)   Reichweite (Punkt 563 voraus, Radius 900)
+ *   @0x8002bf60-70 obj[+0x8C]++   /  @0x8002bf74 obj[+0x8C] = 0
+ *   @0x8002bf78  obj[+0x00] & 0x80 -> kein Schub (Ruecksetz-Pfad)
+ *   @0x8002bf8c  obj[+0x8C] != 9   -> kein Schub (Ruecksetz-Pfad)
+ *   @0x8002bfa4  FUN_8002cabc(player,obj,1)   VERSCHIEBT das Objekt
+ *   @0x8002bfb0  FUN_8003b558(obj,2) != 0     -> obj[+0x8C] = 10 + Ruecksetzung
+ *   @0x8002bfc0  obj[+0x8C] = 8               (naechstes Frame wieder 9 -> Schub pro Frame)
+ *   @0x8002bfd4  DAT_800aca3c |= 0x2000       Kontaktbit fuer den Spieler-FSM
+ *   @0x8002bfe0/e4 DAT_800aca59 (Spieler +0x05) != 8 -> Ruecksetzung
+ *   @0x8002c0b8-d4 Ruecksetzung: obj[+0x34]/[+0x3C] = gesichert
+ * Nicht portiert (kein Port-Gegenstueck / dokumentiert): der zweite Entity-Durchlauf
+ * @0x8002bfec-c034 und der Objekt-gegen-Objekt-Pass FUN_8002cdf4 @0x8002c03c-a8 — ROOM1090
+ * hat genau zwei Typ-4-Kisten in VERSCHIEDENEN Baendern (1 und 5), sie koennen einander nie
+ * treffen, und der Port fuehrt keine Gegner-Boxen im Objekt-Pool.
+ */
+static uint8_t s_prop_push_count[16];      /* obj[+0x8C] je Objekt */
+static uint8_t s_prop_push_contact;        /* DAT_800aca3c & 0x2000 */
+
+int  re15_prop_push_contact(void) { return s_prop_push_contact ? 1 : 0; }
+int  re15_prop_push_counter(int prop_idx)
+{
+    return (prop_idx >= 0 && prop_idx < 16) ? (int)s_prop_push_count[prop_idx] : 0;
+}
+void re15_prop_push_reset(void)
+{
+    memset(s_prop_push_count, 0, sizeof s_prop_push_count);
+    s_prop_push_contact = 0;
+}
+
+/* FUN_8002d1e8(a0=Aktor, a1=Objekt, a2=Modus) — der Reichweitentest.
+ *   @0x8002d204 `ori v0,zero,0x233`   lokaler Vektor {x = 563, z = 0}
+ *   @0x8002d218 `lh a0,106(s0)`       Aktor-Yaw (+0x6a)
+ *   @0x8002d21c `jal 0x8004f008`      Y-Rotation des Vektors (dieselbe Funktion wie der
+ *                                     FORWARD-620-Punkt des AOT-Scans oben)
+ *   @0x8002d224 `ori a3,zero,0x384`   Radius 900 ... @0x8002d280 `ori a3,zero,0x2bc` = 700
+ *                                     wenn a2 != 0 (der Schiebe-Aufruf uebergibt 0 -> 900)
+ *   @0x8002d250-78 Mitte = obj.pos + obj[+0x78].c ; dx/dz gegen den Sondenpunkt
+ *   @0x8002d284-a0 Rueckgabe (|dx| <= r) && (|dz| <= r)  (unsigned-Wrap-Trick) */
+static int prop_reach_test(const re15_actor_t *a, int p, int mode)
+{
+    const int32_t r = mode ? 700 : 900;
+    int32_t c = re15_cos_q12((int)a->rot_y);
+    int32_t s = re15_sin_q12((int)a->rot_y);
+    int32_t px = a->x + (int32_t)((563 * c) >> 12);
+    int32_t pz = a->z - (int32_t)((563 * s) >> 12);
+    int32_t dx = px - (g_scd.props[p].x + (int32_t)g_scd.props[p].box_cx);
+    int32_t dz = pz - (g_scd.props[p].z + (int32_t)g_scd.props[p].box_cz);
+    if (dx < 0) dx = -dx;
+    if (dz < 0) dz = -dz;
+    return (dx <= r) && (dz <= r);
+}
+
+void re15_prop_push_tick(const re15_rdt_t *rdt, uint16_t pad_held)
+{
+    extern int re15_player_push_substate(void);   /* player_common.c: DAT_800aca59 == 8 */
+    const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+
+    s_prop_push_contact = 0;                       /* @0x8002bd94-a4 (jedes Frame) */
+    const int pband = re15_collision_debug_band(); /* DAT_800acad6 */
+    const int in_sub8 = re15_player_push_substate();
+
+    for (int p = (int)g_scd.prop_count - 1; p >= 0; p--) {   /* rueckwaerts @0x8002bdb0-c8 */
+        if (p >= 16) continue;
+        if (!g_scd.props[p].active) continue;                 /* @0x8002bdcc obj[+0]&1 */
+        const int32_t sx = g_scd.props[p].x;                  /* @0x8002beec Sicherung */
+        const int32_t sz = g_scd.props[p].z;
+
+        int ok = 1;
+        if (g_scd.props[p].obj_type != 4)          ok = 0;    /* @0x8002bf14 */
+        else if (!(pad_held & RE15_PAD_BIT_UP))    ok = 0;    /* @0x8002bf24 (virt. Bit 0) */
+        else if (pband != (int)g_scd.props[p].band) ok = 0;   /* @0x8002bf38 */
+        else if (!prop_reach_test(pl, p, 0))       ok = 0;    /* @0x8002bf50 */
+
+        if (ok) { if (s_prop_push_count[p] < 255) s_prop_push_count[p]++; }  /* @0x8002bf68 */
+        else    { s_prop_push_count[p] = 0; }                                /* @0x8002bf74 */
+
+        if (s_prop_push_count[p] != 9) continue;              /* @0x8002bf8c */
+
+        int32_t nx = sx, nz = sz;
+        (void)re15_collision_push_prop(p, pl->x, pl->z, &nx, &nz);   /* @0x8002bfa4 */
+        /* @0x8002bfb0 FUN_8003b558(obj, 2): Solid-Klasse 2, Radius = obj[+0x78][6] (box_hx). */
+        if (re15_collision_box_blocked(rdt, nx + g_scd.props[p].box_cx,
+                                            nz + g_scd.props[p].box_cz,
+                                       (int)g_scd.props[p].band,
+                                       (int32_t)(uint16_t)g_scd.props[p].box_hx, 2u)) {
+            s_prop_push_count[p] = 10;                        /* @0x8002c0b0 (s7 = 10) */
+            continue;                                         /* Ruecksetzung = nichts schreiben */
+        }
+        s_prop_push_count[p] = 8;                             /* @0x8002bfc0 */
+        s_prop_push_contact  = 1;                             /* @0x8002bfd4 |= 0x2000 */
+        if (!in_sub8) continue;                               /* @0x8002bfe4 -> Ruecksetzung */
+        g_scd.props[p].x = nx;                                /* Schub bleibt (kein Restore) */
+        g_scd.props[p].z = nz;
     }
 }

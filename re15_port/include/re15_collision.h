@@ -39,6 +39,21 @@ void re15_collision_constrain_enemy(const re15_rdt_t *rdt,
  * player-move pass (walls first, then objects). Reads g_scd.props directly. */
 void re15_collision_objects(int32_t *x, int32_t *z);
 
+/* FUN_8002cabc mit a2 = 1 — der SCHIEBE-Modus: dieselbe Achsen-Wahl wie oben, aber das
+ * OBJEKT weicht aus statt des Aktors (@0x8002cd44 `sw v0,52(t0)` / @0x8002cdac `sw v0,60(t0)`;
+ * mode 0 schreibt stattdessen 52/60(a3) = den Aktor). Setzt *ox/*oz auf die neue Objektmitte
+ * und liefert 1, wenn verschoben wurde (das `addiu s0,s0,1` @0x8002cd4c/@0x8002cdb4, dessen
+ * Summe FUN_8002cabc @0x8002cde0 zurueckgibt). prop_idx = Index in g_scd.props. */
+int  re15_collision_push_prop(int prop_idx, int32_t actor_x, int32_t actor_z,
+                              int32_t *ox, int32_t *oz);
+
+/* FUN_8003b558(obj, 2) — die Gueltigkeitspruefung nach dem Schieben: liegt die (um `r`
+ * aufgeblasene) Objekt-Grundflaeche ueber einer SOLIDEN SCA-Zelle des Bandes? Reiner TEST,
+ * bewegt nichts. `mask` = das Solid-Klassen-Bit (a1); der Objekt-Aufrufer uebergibt 2.
+ * Rueckgabe 1 = geblockt (= Original-Rueckgabe != 0 -> @0x8002bfb8 Ruecksetzung). */
+int  re15_collision_box_blocked(const re15_rdt_t *rdt, int32_t x, int32_t z,
+                                int band, int32_t r, unsigned mask);
+
 /* Reset the tracked floor band (call on room change so the previous room's band
  * doesn't leak into the new room). */
 void re15_collision_reset_band(void);

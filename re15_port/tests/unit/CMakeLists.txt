@@ -1816,6 +1816,17 @@ target_include_directories(probe_re2_crawl_gate PRIVATE ${CMAKE_SOURCE_DIR}/incl
 target_compile_definitions(probe_re2_crawl_gate PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 
+# --- MESSSONDE (kein ctest): Kisten schieben ROOM1090 -----------------------------------------
+#     Nutzer-Report "Kisten schieben geht noch nicht". Teil 1 = Datenlage der Schiebe-Clips
+#     PL00.EDD 0x11/0x12 (Sub-Update 8, @0x8003593c / @0x800359e4) inkl. EDD-Flag 0x2000
+#     (Root-Motion-Tick @0x80035a5c) und der Keyframe-Root-Translation; Teil 2 = die Kette
+#     FUN_8002bd44 @0x8002bf14-bfe4 Frame fuer Frame. ---
+add_executable(probe_1090_push probe_1090_push.c)
+target_link_libraries(probe_1090_push PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1090_push PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1090_push PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
 # --- MESSSONDE (kein ctest): Leons OPFER-POSE unter dem RE2-Flavor ---------------------------
 #     Nutzer-Report 2026-08-21: "Bei RE2 AI, wenn Leon gefressen wird, steht er noch komisch."
 #     Posiert Leon exakt wie der Renderer (platform/pc/main.c:5460-5478: PL00-Rig + Keyframe-Pool
@@ -1843,3 +1854,17 @@ target_compile_definitions(test_re2_victim_collapse PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_re2_victim_collapse COMMAND test_re2_victim_collapse)
 set_tests_properties(unit_re2_victim_collapse PROPERTIES TIMEOUT 60)
+
+# --- PIN "Kisten schieben" (Nutzer-Report ROOM1090) -------------------------------------------
+#     Faehrt die Kette FUN_8002bd44 @0x8002bf14-bfe4 auf den echten Raumdaten + PL00-Baenken:
+#     Typ-4-Tor, UP-gehalten, Band, Reichweite (563 voraus / Radius 900), Zaehler bis 9,
+#     Schub FUN_8002cabc(a2=1), Validierung FUN_8003b558(obj,2) — plus der Spieler-Handshake
+#     Substate 8 (@0x800323c0 -> `sw 0x801` @0x8003247c, Ausstieg @0x800357a8/c4) und vier
+#     Negativproben. Enthaelt eine Regressionswache fuer den normalen Vorwaertsgang. ---
+add_executable(test_1090_push_pin test_1090_push_pin.c)
+target_link_libraries(test_1090_push_pin PRIVATE re15_engine re15_test_support)
+target_include_directories(test_1090_push_pin PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_1090_push_pin PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_1090_push_pin COMMAND test_1090_push_pin)
+set_tests_properties(unit_1090_push_pin PROPERTIES TIMEOUT 60)

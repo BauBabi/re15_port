@@ -141,6 +141,10 @@ void re15_player_cmd_reset(void)
     s_prev_hp = -1;
     re15_player_aim_interrupt();
     re15_player_idle_reset();
+    /* Derselbe Wort-Store `sw 1,0x800aca58` @0x8003192c nullt auch den Schiebe-Substate 8
+     * (+0x05) und seine Phase (+0x06); die Objekt-Zaehler obj[+0x8C] gehoeren dem alten Raum. */
+    re15_player_push_reset();
+    re15_prop_push_reset();
 }
 int  re15_player_event_reach_clip(void) { return s_ev_reach ? ((s_ev_reach == 1) ? 1 : 2) : -1; }
 static void re15_player_event_reach_tick(re15_actor_t *pl)
@@ -525,6 +529,10 @@ static void re15_npc_neck_spawn_init(void)
 void re15_game_step(const re15_game_ctx_t *c)
 {
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+
+    /* PL00-Baenke an den Spieler-FSM spiegeln: der Schiebe-Substate 8 braucht die Cliplaengen
+     * 0x11/0x12 und die Wurzel-Translation der EMR-Keyframes (FUN_800369f8 Modus 0). */
+    re15_player_set_pl00_banks(c->pl00_skel, c->pl00_anim);
 
     /* ITEM-GET MODAL FREEZE (byte-true FUN_8001db28: g_pauseflags |= 0xff000000): while the pickup
      * zoom/flip presentation runs, the WHOLE game step is frozen — player move, collision, AOT scan,
@@ -989,7 +997,17 @@ void re15_game_step(const re15_game_ctx_t *c)
             int32_t nx = pl->x, nz = pl->z;
             re15_collision_ensure_band(pl->y);
             re15_collision_constrain(c->rdt, ox, oz, &nx, &nz);
-            re15_collision_objects(&nx, &nz);
+            /* KISTEN SCHIEBEN — der Objekt-Update-Loop FUN_8002bd44 (@0x8001ce14, NACH dem
+             * Spieler-FSM @0x8001ce0c und VOR dem AUTO-Scan @0x8001ce1c). Seine INNERE
+             * Reihenfolge ist zwingend: erst der SCHUB FUN_8002cabc(player,obj,1) @0x8002bfa4,
+             * DANN die Spieler-Ausschiebung FUN_8002cabc(player,obj,0) @0x8002c0d8. Der Port
+             * hatte nur die zweite Haelfte (re15_collision_objects) und schob den Spieler damit
+             * jeden Frame VOR dem Schub buendig aus der Kiste — die Kiste konnte sich per
+             * Definition nie bewegen (buendig -> Schub ist ein No-Op). Deshalb steht der
+             * Objekt-Pass HIER zwischen Wandklemme und Ausschiebung, nicht am Frame-Ende. */
+            pl->x = nx; pl->z = nz;                      /* Wandklemme steht (FUN_8003b0a4) */
+            re15_prop_push_tick(c->rdt, c->pad_current); /* @0x8002bd44 (Schub + Zaehler + Bit) */
+            re15_collision_objects(&nx, &nz);            /* @0x8002c0d8 (Spieler aus der Kiste) */
             pl->x = nx;
             pl->z = nz;
         }

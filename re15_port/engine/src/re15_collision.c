@@ -661,3 +661,66 @@ void re15_collision_objects(int32_t *x, int32_t *z)
         }
     }
 }
+
+/* ---- FUN_8002cabc mit a2 = 1 (SCHIEBE-Modus) ------------------------------------------------
+ * Identische Achsenwahl wie re15_collision_objects (|dx*t4| gegen |dz*t5| @0x8002cce8-d10), nur
+ * schreibt der Original-Zweig hier das OBJEKT statt den Aktor:
+ *   X-Achse @0x8002cd20-44:  obj.x = actor.x + actorbox.cx - objbox.cx  (+t5 wenn dx>=0, sonst -t5)
+ *   Z-Achse @0x8002cd88-ac:  obj.z = actor.z + actorbox.cz - objbox.cz  (+t4 wenn dz>=0, sonst -t4)
+ * mit t5 = objbox.hx + actorbox.hx und t4 = objbox.hz + actorbox.hx (JA: beide Summen nehmen
+ * actorbox[+6], @0x8002cb3c-4c `lhu v0,6(t2)` wird fuer BEIDE Achsen benutzt — der Aktor ist ein
+ * Zylinder). Der Port hat keine Aktor-Box im RAM; wie in re15_collision_objects steht PR (450,
+ * der byte-true Spieler-Radius aus FUN_8003b0a4) fuer actorbox.hx und actorbox.cx/cz = 0.
+ * dx/dz sind wie im Original obj-MINUS-actor (@0x8002cb1c/@0x8002cb38). */
+int re15_collision_push_prop(int prop_idx, int32_t actor_x, int32_t actor_z,
+                             int32_t *ox, int32_t *oz)
+{
+    if (prop_idx < 0 || prop_idx >= 16 || !ox || !oz) return 0;
+    const int32_t bhx = (int32_t)(uint16_t)g_scd.props[prop_idx].box_hx;
+    const int32_t bhz = (int32_t)(uint16_t)g_scd.props[prop_idx].box_hz;
+    const int32_t ccx = (int32_t)g_scd.props[prop_idx].box_cx;
+    const int32_t ccz = (int32_t)g_scd.props[prop_idx].box_cz;
+    const int32_t t5 = bhx + PR;                       /* objbox.hx + actorbox.hx */
+    const int32_t t4 = bhz + PR;                       /* objbox.hz + actorbox.hx */
+    int32_t dx = (*ox + ccx) - actor_x;                /* objCX - actorCX   @0x8002cb1c */
+    int32_t dz = (*oz + ccz) - actor_z;                /* objCZ - actorCZ   @0x8002cb38 */
+    int32_t adx = dx < 0 ? -dx : dx;
+    int32_t adz = dz < 0 ? -dz : dz;
+    if (adx > t5) return 0;                            /* @0x8002cb58 AABB-Broadphase */
+    if (adz > t4) return 0;                            /* @0x8002cb6c */
+
+    int64_t px = (int64_t)dx * t4; if (px < 0) px = -px;   /* |t8*t4| @0x8002cc74/cce8 */
+    int64_t pz = (int64_t)dz * t5; if (pz < 0) pz = -pz;   /* |t7*t5| @0x8002ccec/ccfc */
+    if (pz < px) {                                     /* @0x8002cd0c `slt v0,v0,v1` -> X-Achse */
+        *ox = actor_x - ccx + ((dx >= 0) ? t5 : -t5);  /* @0x8002cd30-44 (bgez t8) */
+    } else {
+        *oz = actor_z - ccz + ((dz >= 0) ? t4 : -t4);  /* @0x8002cd98-ac (bgez t7) */
+    }
+    return 1;                                          /* s0++ @0x8002cd4c / @0x8002cdb4 */
+}
+
+/* ---- FUN_8003b558(obj, 2) — reiner Kollisionstest der Objekt-Grundflaeche -------------------
+ * Das Original baut aus obj[+0x78] (Boxmitte) eine Sonde, sucht ueber FUN_8003b068 die
+ * SCA-Zellenliste des Bandes und meldet != 0, sobald eine Zelle mit (a1 & u0) getroffen wird
+ * (@0x8003b558-b7bc). Hier derselbe Zellen-Filter wie in collision_constrain_impl (Band strikt
+ * gleich, (mask & u0) != 0, um `r` aufgeblasene Broadphase) — nur ohne Push-Out. */
+int re15_collision_box_blocked(const re15_rdt_t *rdt, int32_t x, int32_t z,
+                               int band, int32_t r, unsigned mask)
+{
+    if (!rdt || !rdt->sca || rdt->sca_count <= 0) return 0;
+    if (band < 0) return 0;
+    int q = quadrant_of(x, z, (int16_t)rdt->ceiling_x, (int16_t)rdt->ceiling_z);
+    int start = 0; for (int i = 0; i < q && i < 5; i++) start += rdt->sca_rgn[i];
+    int end = start + (q < 5 ? rdt->sca_rgn[q] : 0);
+    if (end > rdt->sca_count) end = rdt->sca_count;
+    if (start < 0) start = 0;
+    for (int i = start; i < end; i++) {
+        const re15_sca_entry_t *e = &rdt->sca[i];
+        if (band != (e->floor >> 4)) continue;
+        if ((mask & e->u0) == 0) continue;
+        if ((unsigned)(x - ((int32_t)e->x - r)) < (unsigned)((int32_t)e->width   + r * 2) &&
+            (unsigned)(z - ((int32_t)e->z - r)) < (unsigned)((int32_t)e->density + r * 2))
+            return 1;
+    }
+    return 0;
+}

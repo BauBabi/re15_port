@@ -24,6 +24,7 @@
 
 #include <stdint.h>
 #include "re15_camera.h"
+#include "re15_emd.h"   /* PL00-Baenke fuer den Schiebe-Substate (Wurzelbewegung) */
 
 /* Pad bit masks (match PSn00bSDK PAD_* convention). */
 #define RE15_PAD_BIT_SELECT   0x0001
@@ -85,5 +86,19 @@ int re15_player_aim_ready(void);
  * EDD clip is forward-walk for the test asset. Call from main on
  * edge-trigger of a debug key/button (NOT on hold). */
 void re15_player_cycle_motion(int delta, int clip_count);
+
+/* ---- KISTEN SCHIEBEN — Spieler-Substate 8 ---------------------------------------------------
+ * re15_player_push_substate() ist der Handshake, den der Objekt-Pass FUN_8002bd44 abfragt:
+ * `DAT_800aca59 == 8` @0x8002bfe0/e4. Der Substate entsteht im Sub-ENTRY-1-Handler
+ * (Vorwaertsgehen) aus dem Kontaktbit: @0x800323c0 liest DAT_800aca3c & 0x2000, @0x8003247c
+ * schreibt 32-bittig `0x801` nach DAT_800aca58 (= Zustand 1 / Substate 8 / +0x06 = 0).
+ * re15_player_push_phase() liefert DAT_800aca5a (0..7) bzw. -1 = nicht am Schieben. */
+int  re15_player_push_substate(void);
+int  re15_player_push_phase(void);
+void re15_player_push_reset(void);
+/* PL00-Baenke fuer den Schiebe-Substate (Cliplaengen 0x11/0x12 + die Wurzel-Translation der
+ * EMR-Keyframes, aus der das Original in FUN_800369f8 Modus 0 den Schiebe-Schritt zieht). */
+void re15_player_set_pl00_banks(const re15_emd_skeleton_t *skel,
+                                const re15_emd_animation_t *anim);
 
 #endif /* RE15_PLAYER_H */
