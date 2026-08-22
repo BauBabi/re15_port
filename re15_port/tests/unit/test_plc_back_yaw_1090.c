@@ -47,6 +47,9 @@
 #include "re15_rdt.h"
 #include "re15_aot.h"
 #include "re15_room.h"
+#include "re15_player.h"       /* RE15_PLAYER_MOTION_BACK_PL00 */
+#include "re15_to_re2.h"       /* re15_to_re2_plc_dest_clip */
+#include "re15_anim_select.h"  /* re15_actor_anim_select — die Bank-Aufloesung */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -289,6 +292,56 @@ int main(void)
            (long)pl->x, -77);
         printf("       Mode-8-Start (%ld,%ld) -> Ende (%ld,%ld) yaw=%d, Laufrichtung=%d\n",
                (long)leg8_x, (long)leg8_z, (long)pl->x, (long)pl->z, pl->rot_y, travel);
+
+        /* ---- BANK-PIN: die Modi 7/8 posieren aus der COMMON-Bank, nicht aus der Waffenbank --
+         * Nutzer-Befund 2026-08-23: "zum Schluss rennt Leon komisch, fast auf der Stelle."
+         * Der Clip-INDEX 0 war richtig (`sb zero,=>DAT_800acae8` @0x800310bc / @0x8003122c),
+         * die BANK nicht: die beiden Handler laden
+         *   @0x80031134/3c und @0x800312a4/ac  `lw 0x800acad8` + `lw 0x800acbc0` = PL00-Paar
+         *   (Schreiber @0x80031578 / @0x8003154c = PLD-Directory),
+         * waehrend die Modi 4/5/9 @0x80030bec/f4, @0x80030ec0/c8, @0x80031488/90 das PLW-Paar
+         * 0x800acbc4/0x800acbc8 laden (Schreiber @0x80036c04 / @0x80036be4).
+         * Der Port bildete 7/8 auf den RUN-Sentinel 100 = PL00W01 Clip 0 ab: 22 Bilder statt
+         * der 34 von PL00.EDD Clip 0 -> bei +0x8c = 70 (@0x800310a8 / @0x80031218) takteten die
+         * Beine 34/22 = 1,55x zu schnell fuer die Bodengeschwindigkeit. */
+        ok(re15_to_re2_plc_dest_clip(0x07, 1) == RE15_PLAYER_MOTION_BACK_PL00,
+           "Mode 7 -> COMMON-Bank-Sentinel (PL00 Clip 0)",
+           re15_to_re2_plc_dest_clip(0x07, 1), RE15_PLAYER_MOTION_BACK_PL00);
+        ok(re15_to_re2_plc_dest_clip(0x08, 1) == RE15_PLAYER_MOTION_BACK_PL00,
+           "Mode 8 -> COMMON-Bank-Sentinel (PL00 Clip 0)",
+           re15_to_re2_plc_dest_clip(0x08, 1), RE15_PLAYER_MOTION_BACK_PL00);
+        ok(re15_to_re2_plc_dest_clip(0x08, 0) == RE15_PLAYER_MOTION_BACK_PL00,
+           "Mode 8 ist RBJ-unabhaengig (Handler laedt die Bank unbedingt)",
+           re15_to_re2_plc_dest_clip(0x08, 0), RE15_PLAYER_MOTION_BACK_PL00);
+        /* NEGATIV: die Modi 4/5/9 muessen die W01-Sentinels behalten (105 = Clip 5, 100 = Clip 0). */
+        ok(re15_to_re2_plc_dest_clip(0x04, 1) == 105, "NEGATIV: Mode 4 bleibt W01 Clip 5",
+           re15_to_re2_plc_dest_clip(0x04, 1), 105);
+        ok(re15_to_re2_plc_dest_clip(0x05, 1) == 100, "NEGATIV: Mode 5 bleibt W01 Clip 0",
+           re15_to_re2_plc_dest_clip(0x05, 1), 100);
+        ok(re15_to_re2_plc_dest_clip(0x09, 1) == 105, "NEGATIV: Mode 9 bleibt W01 Clip 5",
+           re15_to_re2_plc_dest_clip(0x09, 1), 105);
+        /* Und der Sentinel MUSS in anim_select auf (PL00, Clip 0) aufloesen — sonst faellt er
+         * als direkter Clipindex 236 % clip_count in eine fremde Bank. */
+        {
+            re15_anim_banks_t bk; memset(&bk, 0, sizeof bk);
+            re15_emd_skeleton_t  sk_pl00, sk_w01, sk_def;
+            re15_emd_animation_t an_pl00, an_w01, an_def;
+            memset(&sk_pl00,0,sizeof sk_pl00); memset(&sk_w01,0,sizeof sk_w01);
+            memset(&sk_def,0,sizeof sk_def);
+            memset(&an_pl00,0,sizeof an_pl00); memset(&an_w01,0,sizeof an_w01);
+            memset(&an_def,0,sizeof an_def);
+            bk.def_skel = &sk_def; bk.def_anim = &an_def;
+            bk.pl00_skel = &sk_pl00; bk.pl00_anim = &an_pl00; bk.pl00_ok = 1;
+            bk.w01_skel  = &sk_w01;  bk.w01_anim  = &an_w01;  bk.w01_ok  = 1;
+            re15_anim_view_t av; memset(&av, 0, sizeof av);
+            re15_actor_t probe; memset(&probe, 0, sizeof probe);
+            probe.motion = RE15_PLAYER_MOTION_BACK_PL00;
+            re15_actor_anim_select(&probe, 1, &bk, &av);
+            ok(av.anim == &an_pl00 && av.skel == &sk_pl00,
+               "anim_select: Sentinel 236 -> PL00-Bank", (long)(av.anim == &an_pl00), 1);
+            ok(av.clip_override == 0, "anim_select: Sentinel 236 -> Clip 0",
+               av.clip_override, 0);
+        }
         free(raw);
     }
 

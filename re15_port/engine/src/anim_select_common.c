@@ -17,6 +17,7 @@
 #include "re15_skeleton.h"  /* g_anim_kf_tween — the 0x8000 marker tween side channel */
 #include "re15_engine.h"    /* g_engine.frame_count — the POSE-STREAM trace timestamp */
 #include "re15_enemy_ai.h"  /* re15_actor_clip_len — the frame clock's view, for the cross-check */
+#include "re15_player.h"    /* RE15_PLAYER_MOTION_BACK_PL00 — Plc_dest-Modi 7/8 (COMMON-Bank) */
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -367,6 +368,20 @@ void re15_actor_anim_select(const re15_actor_t *a, int is_player,
         out->anim = banks->pl00_anim;
         out->clip_override = (m == 231) ? 2 : (m == 232) ? 3 : (m == 233) ? 4
                            : (m == 234) ? 5 : 6;
+    } else if (banks->pl00_ok && m == RE15_PLAYER_MOTION_BACK_PL00) {
+        /* RUECKWAERTSGEHEN (Plc_dest-Modi 7/8) — COMMON-Bank, Clip 0.
+         * Die Mode-7/8-Handler LAB_80031080 / LAB_800311f0 spielen ihren Clip aus DEMSELBEN
+         * Zeigerpaar wie Klettern und Kisten-Schieben:
+         *   @0x80031134 `lw a0,0x800acad8` / @0x8003113c `lw a1,0x800acbc0` / @0x80031140 f314
+         *   @0x800312a4 `lw a0,0x800acad8` / @0x800312ac `lw a1,0x800acbc0` / @0x800312b0 f314
+         * (Schreiber @0x80031578 / @0x8003154c = PLD-Directory = PL00.EMR / PL00.EDD), und die
+         * Clipnummer steht als `+0x94 = 0` @0x800310bc / @0x8003122c.
+         * Die Modi 4/5/9 laden dagegen das PLW-Paar 0x800acbc4/0x800acbc8 (@0x80030bec/f4,
+         * @0x80030ec0/c8, @0x80031488/90) und bleiben deshalb oben bei den W01-Sentinels
+         * 105/100. Herleitung + Messung: include/re15_player.h. */
+        out->skel = banks->pl00_skel;
+        out->anim = banks->pl00_anim;
+        out->clip_override = 0;          /* PL00.EDD Clip 0, 34 Bilder */
     } else if (m == 200) {
         /* IDLE neutral fallback when PL00W01 is unavailable: idle-bank clip 6
          * (1-frame static rest pose). */

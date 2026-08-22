@@ -96,6 +96,36 @@ void re15_player_cycle_motion(int delta, int clip_count);
 int  re15_player_push_substate(void);
 int  re15_player_push_phase(void);
 void re15_player_push_reset(void);
+/* ---- Plc_dest-Modi 7/8 = RUECKWAERTSGEHEN aus der COMMON-Bank -------------------------------
+ * Motion-Sentinel (Port-Repraesentation): PL00.EDD Clip 0. Aufgeloest in anim_select_common.c,
+ * gesetzt von re15_to_re2_plc_dest_clip(7|8).
+ *
+ * BELEG (selbst disassembliert, info/Re1.5/PSX.EXE — Spieler-Mode-Tabelle @0x80073e30):
+ *   Mode 7 = LAB_80031080, Mode 8 = LAB_800311f0, beide identisch aufgebaut:
+ *     @0x800310bc / @0x8003122c  `sb zero,-13592(at)` -> +0x94 (0x800acae8) = CLIP 0
+ *     @0x800310cc / @0x8003123c  `sb v0,-13597(at)`   -> +0x8f = 7
+ *     @0x800310a8 / @0x80031218  `sh v0,-13600(at)`   -> +0x8c = 0x46 = 70 (einmalig im Init)
+ *     @0x800310ec / @0x8003125c  `jal 0x800245d8` mit `a0 = 0x800` = 180-Grad-Translation
+ *     @0x800310d0-e4/@0x80031240-54 Yaw-Slew FUN_8001aac4 mit RATE -48
+ *   und der Clip kommt aus dem PL00-PAAR, nicht aus der Waffenbank:
+ *     @0x80031134 `lw a0,0x800acad8` / @0x8003113c `lw a1,0x800acbc0` / @0x80031140 jal f314
+ *     @0x800312a4 `lw a0,0x800acad8` / @0x800312ac `lw a1,0x800acbc0` / @0x800312b0 jal f314
+ *   Die Modi 4/5/9 laden dagegen das PLW-Paar:
+ *     @0x80030bec/f4 (4), @0x80030ec0/c8 (5), @0x80031488/90 (9) = 0x800acbc4 / 0x800acbc8
+ *   Jedes Paar hat game-weit GENAU EINEN Schreiber (eigener EXE-Scan):
+ *     0x800acbc0 @0x8003154c + 0x800acad8 @0x80031578 = PLD-Directory = PL00.EDD / PL00.EMR
+ *     0x800acbc8 @0x80036be4 + 0x800acbc4 @0x80036c04 = PLW-Archiv (liest die Waffe 0x800aca5d
+ *                                                       @0x80036bf8) = PL00W01.EDD / .EMR
+ *   Dieselbe Trennung fuehrt anim_select_common.c bereits fuer Klettern und Kisten-Schieben.
+ *
+ * WARUM ES AUFFAELLT (Nutzer: "zum Schluss rennt Leon komisch, fast auf der Stelle"): der Port
+ * bildete 7/8 auf den RUN-Sentinel 100 = PL00W01 Clip 0 ab. Aus den Assetbytes gemessen:
+ * PL00.EDD Clip 0 = 34 Bilder (Wurzel-px/pz ueber alle 34 Bilder = 0 -> reiner In-Place-Zyklus,
+ * die Translation liefert der Skalar +0x8c), PL00W01.EDD Clip 0 = 22 Bilder. Bei identischen
+ * 70 Einheiten/Bild Bodengeschwindigkeit taktet der 22-Bild-Renn-Zyklus 34/22 = 1,55x zu
+ * schnell = "Beine rennen, Koerper kriecht". */
+#define RE15_PLAYER_MOTION_BACK_PL00 236
+
 /* PL00-Baenke fuer den Schiebe-Substate (Cliplaengen 0x11/0x12 + die Wurzel-Translation der
  * EMR-Keyframes, aus der das Original in FUN_800369f8 Modus 0 den Schiebe-Schritt zieht). */
 void re15_player_set_pl00_banks(const re15_emd_skeleton_t *skel,

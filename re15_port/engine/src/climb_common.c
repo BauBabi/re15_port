@@ -44,6 +44,7 @@ static int      s_sub;        /* 0x800aca59 (+0x05) SUBSTATE: 0 / 9 / 10        
 static int      s_kind;       /* 0x800aca5a (+0x06)                                    */
 static int      s_phase;      /* 0x800aca5b (+0x07)                                    */
 static int      s_frame;      /* 0x800acae9 (+0x95)                                    */
+static int      s_frac;       /* 0x800acae3 (+0x8f) FRAC-Crossfade — SPIEGEL, s.u.     */
 static int      s_speed;      /* 0x800acae0 (+0x8c)                                    */
 static int      s_fall_t;     /* 0x800acaf0                                            */
 static int      s_obj    = -1;/* 0x800ac78c — Treffer von FUN_8002d2c0 @0x8002d304     */
@@ -60,7 +61,7 @@ int re15_climb_dbg_standing(void){ return s_stand; }
 
 void re15_climb_reset(void)
 {
-    s_sub = 0; s_kind = 0; s_phase = 0; s_frame = 0; s_speed = 0;
+    s_sub = 0; s_kind = 0; s_phase = 0; s_frame = 0; s_frac = 0; s_speed = 0;
     s_fall_t = 0; s_obj = -1; s_stand = -1; s_on_obj = 0; s_floor_y = 0;
 }
 
@@ -149,13 +150,17 @@ static void climb_trace(void)
     if (!f || !g_room_rdt_ok) return;
     tick++;
     const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    extern int re15_player_push_substate(void);
+    extern int re15_player_push_phase(void);
     fprintf(f, "T%u room=%04X pm=%d pad=%04X pos=(%ld,%ld,%ld) rot=%d band=%d sub=%d kind=0x%02X ph=%d "
-               "obj=%d stand=%d mo=%d af=%d rc_b8=%d rc_bnd=%d\n",
+               "obj=%d stand=%d mo=%d af=%d frac=%d push=%d rc_b8=%d rc_bnd=%d\n",
             tick, (unsigned)g_current_room_id, (int)g_scd.player_mode,
             (unsigned)g_engine.pad_current,
             (long)pl->x, (long)pl->y, (long)pl->z, (int)pl->rot_y,
             re15_collision_debug_band(), s_sub, s_kind, s_phase, s_obj, s_stand,
             (int)pl->motion, (int)pl->anim_frame,
+            (int)pl->anim_frac,
+            re15_player_push_substate() ? re15_player_push_phase() : -1,
             (int)re15_collision_room_coll(&g_room_rdt, pl->x, pl->z, 1, 8, 0x100),
             (int)re15_collision_room_coll(&g_room_rdt, pl->x, pl->z, 1,
                                           re15_collision_debug_band(), 0x100));
@@ -180,6 +185,35 @@ void re15_climb_standing_tick(void)
 /* ==== FUN_8002d474 @0x8002d474 — die ACTION-Sonde ==================================== */
 int re15_climb_try_start(const re15_rdt_t *rdt, int action_pressed)
 {
+    /* ⛔ WER DARF DIE SONDE UEBERHAUPT RUFEN? FUN_8002d474 hat game-weit GENAU VIER
+     * Aufrufer (XREF-vollstaendig, ghidra1_V2.txt:120408 `FUN_8002d474  XREF[4]`):
+     *     80031fd0  jal FUN_8002d474   (Sub-ENTRY 0 = Idle,   @0x80073fb0[0] = 0x80031f38)
+     *     800323ec  jal FUN_8002d474   (Sub-ENTRY 1 = Gehen,  @0x80073fb0[1] = 0x800322e8)
+     *     800326bc  jal FUN_8002d474   (Sub-ENTRY 2 = Rennen, @0x80073fb0[2] = 0x80032604)
+     *     80032a3c  jal FUN_8002d474   (Sub-ENTRY 3,          @0x80073fb0[3] = 0x80032974)
+     * Die uebrigen Substates rufen sie NIE. Fuer Substate 9/10 steht das schon hier
+     * (ihre ENTRYs 0x80037fd0/0x8003830c sind `jr ra`); fuer Substate 8 = KISTE SCHIEBEN
+     * gilt es genauso: sein ENTRY LAB_8003579c (@0x80073fb0[8]) ist 32 Instruktionen ohne
+     * ein einziges `jal` (selbst disassembliert, @0x8003579c-0x8003580c) — waehrend des
+     * Schiebens loest die ACTION-Taste also WEDER ein Klettern NOCH einen Tuer-/Examine-Scan
+     * aus (FUN_80042bac hat dieselbe Caller-Liste + die 3 AUTO-Sites, s. game_step_common.c).
+     * Rueckgabe 1 = "Aktion verbraucht" ist genau der Zuschnitt, den der Aufrufer braucht:
+     * er entwaffnet damit g_aot_action_pressed und laesst den AOT-/RVD-Scan-Rest laufen.
+     *
+     * GEMESSEN OHNE DIESES GATE (echter Spiellauf ROOM1090, RE15_CLIMB_TRACE + RE15_ANIM_TRACE):
+     * SQUARE+UP an der Kiste startete bei `push=7` (Substate 8 aktiv) den Substate 9. Weil
+     * `re15_player_push_substate()` waehrend des ganzen Kletterns gesetzt blieb, zog der
+     * Bank-Zweig in anim_select_common.c (der fuer Substate 8 die Motion als DIREKTEN
+     * PL00-Clipindex nimmt) die Kletter-Sentinels 230/231 auf PL00-Clip 230%24 = 14 bzw.
+     * 231%24 = 15 (24 Bilder, geloopt) statt W01-Clip 5 / PL00-Clip 2 — der Nutzer-Befund
+     * "eine ganz andere, falsche Animation". Im Original ist das mechanisch unerreichbar,
+     * und zusaetzlich sind Schiebe-Phase und Kletter-KIND dort DASSELBE Byte 0x800aca5a
+     * (+0x06), das die Sonde @0x8002d618 ueberschreiben und der Ausstieg @0x800382ec nullen
+     * wuerde — zwei getrennte Port-Variablen koennen so nie nebeneinander stehen. */
+    {
+        extern int re15_player_push_substate(void);   /* player_common.c: DAT_800aca59 == 8 */
+        if (re15_player_push_substate()) return 1;
+    }
     if (s_sub) return 1;                    /* Substate 9/10 haben `jr ra`-ENTRYs
                                              * (0x80037fd0 / 0x8003830c) — kein neuer Scan */
     if (!action_pressed) return 0;          /* @0x80031fc4 andi 0x80 / beq */
@@ -256,7 +290,38 @@ int re15_climb_try_start(const re15_rdt_t *rdt, int action_pressed)
 /* ==== Animations-Hilfen ============================================================= */
 /* FUN_8001f314 @0x8001f314 -> FUN_8001f3bc: SAMPLE am aktuellen +0x95, DANN
  * `+0x95 += 1` @0x8001f618 mit `sltu v0,v0,frame_count` @0x8001f624 —
- * Rueckgabe 0 solange < frame_count, 1 beim Umlauf. */
+ * Rueckgabe 0 solange < frame_count, 1 beim Umlauf.
+ *
+ * ⛔ UND — 2026-08-22 gemessen — DERSELBE Aufruf dekrementiert den FRAC-Crossfade
+ * +0x8f (0x800acae3). Das ist KEINE Nebensache: der Renderer mischt mit
+ * `wp = +0x8f * 0x200` die VORHERIGE Pose bei (skeleton_common.c:208), und zwar
+ * inklusive der Wurzel-Translation. Bleibt +0x8f auf 7 stehen, haengt die Pose mit
+ * 87,5 % Vorframe-Anteil dauerhaft nach.
+ *   8001f408  lbu   s0,143(v1)          ; s0 = +0x8f (v1 = DAT_800ac784 = Entity)
+ *   8001f410  andi  a3,s0,0xff
+ *   8001f41c  bne   a3,zero,0x8001f45c  ; +0x8f == 0 -> Blend-Pfad KOMPLETT uebersprungen
+ *   8001f53c  andi  v1,s0,0xff
+ *   8001f540  bne   v1,zero,0x8001f594  ; dito fuer die Knochenschleife
+ *   8001f5a8  lbu   v0,143(v1)
+ *   8001f5b0  addiu v0,v0,-1
+ *   8001f5b4  sb    v0,143(v1)          ; <<< der Decay — LIEGT HINTER dem Null-Gate
+ * Der Store ist damit saettigend (bei 0 wird er nie erreicht) — dieselbe Semantik,
+ * die der Port game-weit als `if (frac > 0) frac--` fuehrt.
+ *
+ * WARUM EIN SPIEGEL (s_frac) STATT DIREKT p->anim_frac--: f3bc POSIERT mit dem
+ * aktuellen +0x8f und dekrementiert ERST DANACH. Der Port trennt Pose (Renderer,
+ * nach game_step) von Vorschub (hier) — genau wie bei +0x95 traegt deshalb
+ * `p->anim_frac` den VOR-Dekrement-Wert (der, mit dem das Original dieses Bild
+ * posiert hat) und `s_frac` den Zustand fuer das naechste Bild. Ohne den Spiegel
+ * waere jeder frisch geseedete Crossfade um ein Bild zu kurz.
+ *
+ * MESSUNG VOR DEM FIX (echter Spiellauf, ROOM1090, RE15_CLIMB_TRACE):
+ * T945..T999 = 55 Bilder Aufstieg, `frac=7` in JEDEM. Am Ausloeseframe 0x1d
+ * (T977->T978) springt die Welt-Y um -1800, die Clip-Wurzel-py von -2614 auf -846
+ * (PL00.EDD Clip 2, Slots 28/29) — beides hebt sich byte-true auf (Becken-Y
+ * -4414 -> -4446). Mit eingefrorenem Crossfade folgt die geblendete Wurzel nur
+ * 12,5 % je Bild: Becken-Y -5803 = 1357 Einheiten ZU HOCH, danach 11 Bilder
+ * Absinken auf die Kiste. Das ist der Nutzer-Befund "er kommt von oben". */
 static int anim_step(const re15_emd_animation_t *an, int clip)
 {
     int len = 1;
@@ -264,10 +329,19 @@ static int anim_step(const re15_emd_animation_t *an, int clip)
         len = (int)an->clips[clip].frame_count;
         if (len <= 0) len = 1;
     }
+    if (s_frac > 0) s_frac--;                   /* @0x8001f5a8-b4, saettigend @0x8001f41c */
     s_frame++;
     if (s_frame < len) return 0;
     s_frame = 0;
     return 1;
+}
+
+/* Der Pose-Abgriff eines Bildes: +0x95 und +0x8f so, wie f3bc sie beim Posieren
+ * SIEHT (also vor dem Vorschub/Decay in anim_step). */
+static void anim_sample(re15_actor_t *p)
+{
+    p->anim_frame = (uint16_t)s_frame;
+    p->anim_frac  = (uint8_t)s_frac;
 }
 
 static void set_motion(re15_actor_t *p, int motion)
@@ -299,11 +373,11 @@ static void climb_sub9(const re15_rdt_t *rdt, re15_actor_t *p,
         s_phase  = 1;                           /* @0x80038020-28 */
         set_motion(p, RE15_PLAYER_MOTION_CLIMB_TURN);   /* @0x8003802c-34 +0x94 = 5 (W01) */
         s_frame  = 0;                           /* @0x80038040       +0x95 = 0 */
-        p->anim_frac = 7;                       /* @0x80038048       +0x8f = 7 */
+        s_frac   = 7; p->anim_frac = 7;         /* @0x80038048       +0x8f = 7 */
         /* fallthrough */
     case 1: {                                   /* @0x8003804c */
         /* @0x80038080 FUN_80045630(0, 7 - 3*((**0x800acbbc & 0x1000)>>12)) = OPEN (Sound) */
-        p->anim_frame = (uint16_t)s_frame;      /* SAMPLE, dann Vorschub (@0x8001f35c) */
+        anim_sample(p);                         /* SAMPLE, dann Vorschub (@0x8001f35c) */
         (void)anim_step(w01, 5);                /* @0x8003809c anim_set(W01-Bank, clip 5) */
 
         /* Kurs-Einschwingen @0x800380a4-d4: Schrittweite (yaw>>2)&0xff, Richtung ueber
@@ -326,7 +400,7 @@ static void climb_sub9(const re15_rdt_t *rdt, re15_actor_t *p,
         s_phase = 3;                            /* @0x80038128-30 */
         set_motion(p, RE15_PLAYER_MOTION_CLIMB_UP);    /* @0x80038134-3c +0x94 = 2 (PL00) */
         s_frame = 0;                            /* @0x80038148       +0x95 = 0 */
-        p->anim_frac = 7;                       /* @0x80038150       +0x8f = 7 */
+        s_frac  = 7; p->anim_frac = 7;          /* @0x80038150       +0x8f = 7 */
         /* fallthrough */
     case 3: {                                   /* @0x80038154 */
         if (s_frame == 0x11) p->hit_react |= 1;                  /* @0x80038164-80 */
@@ -345,8 +419,8 @@ static void climb_sub9(const re15_rdt_t *rdt, re15_actor_t *p,
             p->pos_s_y = (uint16_t)p->y;                         /* @0x8003822c */
         }
         if (s_frame == 0x25) p->hit_react &= (uint8_t)0xfe;      /* @0x80038238-58 */
-        p->anim_frame = (uint16_t)s_frame;                       /* SAMPLE vor dem Vorschub */
-        s_phase += anim_step(pl00, 2);                           /* @0x8003826c-88 */
+        anim_sample(p);                                          /* SAMPLE vor dem Vorschub */
+        s_phase += anim_step(pl00, 2);                        /* @0x8003826c-88 */
         return;
     }
     case 4:                                     /* @0x80038294 */
@@ -379,10 +453,10 @@ static void climb_sub10(const re15_rdt_t *rdt, re15_actor_t *p,
         s_phase = 1;                            /* @0x8003835c-64 */
         set_motion(p, RE15_PLAYER_MOTION_CLIMB_D0);   /* @0x80038368-70 +0x94 = 3 */
         s_frame = 0;                            /* @0x8003837c */
-        p->anim_frac = 7;                       /* @0x80038384 */
+        s_frac  = 7; p->anim_frac = 7;          /* @0x80038384 */
         /* fallthrough */
     case 1:                                     /* @0x80038388 */
-        p->anim_frame = (uint16_t)s_frame;
+        anim_sample(p);
         (void)anim_step(pl00, 3);               /* @0x8003839c */
         /* Der Frame wird hier NACH dem Vorschub geprueft (@0x800383a4-b0). */
         if (s_frame == 0x0d) s_phase = 2;       /* @0x800383bc */
@@ -392,7 +466,7 @@ static void climb_sub10(const re15_rdt_t *rdt, re15_actor_t *p,
         s_phase = 3;                            /* @0x800383cc-d4 */
         set_motion(p, RE15_PLAYER_MOTION_CLIMB_D1);   /* @0x800383d8-e8 +0x94 = 4 */
         s_frame = 0;                            /* @0x800383f0 */
-        p->anim_frac = 0;                       /* @0x800383f8  +0x8f = 0 (NICHT 7) */
+        s_frac  = 0; p->anim_frac = 0;          /* @0x800383f8  +0x8f = 0 (NICHT 7) */
         s_fall_t = 0;                           /* @0x80038400 */
         p->hit_react |= 1;                      /* @0x80038414-1c */
         s_speed = 0x320;                        /* @0x80038408-10  +0x8c = 800 */
@@ -442,7 +516,7 @@ static void climb_sub10(const re15_rdt_t *rdt, re15_actor_t *p,
         const int t = s_fall_t;
         s_fall_t = t + 1;                       /* @0x8003867c */
         p->y += 90 + 50 * (int)(int16_t)t;      /* @0x8003866c/@0x80038680-94 */
-        p->anim_frame = (uint16_t)s_frame;
+        anim_sample(p);
         (void)anim_step(pl00, 4);               /* @0x80038698 */
         if ((int32_t)s_floor_y - 800 < p->y) s_phase = 4;        /* @0x800386ac-c8 */
         return;
@@ -453,12 +527,15 @@ static void climb_sub10(const re15_rdt_t *rdt, re15_actor_t *p,
         set_motion(p, ((s_kind & 0x0c) < 5) ? RE15_PLAYER_MOTION_CLIMB_LAND5
                                             : RE15_PLAYER_MOTION_CLIMB_LAND6);
         s_frame = 0;                            /* @0x80038718 */
+        s_frac  = 0; p->anim_frac = 0;          /* @0x80038720 `sb zero,-13597(at)` = +0x8f = 0
+                                                 * (fehlte; wirkte bisher nicht, weil der Decay
+                                                 * ganz fehlte und +0x8f auf 7 stand) */
         p->y = (int32_t)s_floor_y;              /* @0x80038724-2c */
         p->hit_react &= (uint8_t)0xfe;          /* @0x80038748-54 */
         /* @0x80038758-cc der Landestaub (FUN_80019700 x8) = OPEN (siehe Dateikopf) */
         /* fallthrough */
     case 5:                                     /* @0x800387d4 */
-        p->anim_frame = (uint16_t)s_frame;
+        anim_sample(p);
         s_phase += anim_step(pl00,
                              (p->motion == RE15_PLAYER_MOTION_CLIMB_LAND6) ? 6 : 5);
         return;                                 /* @0x800387e8-804 */

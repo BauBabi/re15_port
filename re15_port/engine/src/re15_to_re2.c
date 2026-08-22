@@ -20,6 +20,7 @@
  */
 
 #include "re15_to_re2.h"
+#include "re15_player.h"   /* RE15_PLAYER_MOTION_BACK_PL00 — Plc_dest-Modi 7/8 (COMMON-Bank) */
 
 /*=========================================================================
  * Member_set / Member_cmp ID translation
@@ -70,11 +71,27 @@ int re15_to_re2_plc_dest_clip(int mode, int with_rbj_overlay)
         return re15_to_re2_resolve_motion(RE15_MOTION_RUN, with_rbj_overlay);
     case 0x07:
     case 0x08:
-        /* BACK: Dispatch idx7/8 (LAB_80031080/800311f0) schreiben clip 0
-         * (`sb zero,...=>DAT_800acae8` @800310bc/@8003122c) + 180°-Translation
-         * (FUN_800245d8(0x800) @800310ec/@8003125c), KEIN reverse-playback.
-         * clip 0 = RE15_MOTION_RUN(->100), NICHT WALK(clip 5->105). [#23] */
-        return re15_to_re2_resolve_motion(RE15_MOTION_RUN, with_rbj_overlay);
+        /* BACK: Dispatch idx7/8 (LAB_80031080 / LAB_800311f0) schreiben clip 0
+         * (`sb zero,...=>DAT_800acae8` @0x800310bc / @0x8003122c) + 180-Grad-Translation
+         * (FUN_800245d8(0x800) @0x800310ec / @0x8003125c), KEIN reverse-playback.
+         *
+         * ⛔ KORREKTUR 2026-08-23 (Nutzer: "zum Schluss rennt Leon komisch, fast auf der
+         * Stelle"): "clip 0" stimmte, aber die BANK war falsch. Hier stand
+         * `RE15_MOTION_RUN` -> Sentinel 100 -> PL00W01 Clip 0 = das RENNEN. Die Modi 7/8
+         * spielen ihren Clip jedoch aus dem COMMON-Paar, nicht aus der Waffenbank:
+         *   @0x80031134 `lw a0,0x800acad8` / @0x8003113c `lw a1,0x800acbc0` / @0x80031140 f314
+         *   @0x800312a4 `lw a0,0x800acad8` / @0x800312ac `lw a1,0x800acbc0` / @0x800312b0 f314
+         * (Schreiber @0x80031578 / @0x8003154c = PLD-Directory = PL00.EMR / PL00.EDD),
+         * waehrend die Modi 4/5/9 das PLW-Paar 0x800acbc4/0x800acbc8 laden
+         * (@0x80030bec/f4, @0x80030ec0/c8, @0x80031488/90) — die bleiben unveraendert.
+         * Aus den Assetbytes: PL00.EDD Clip 0 = 34 Bilder (Wurzel-px/pz durchgehend 0, also
+         * In-Place-Zyklus; der Vortrieb kommt aus +0x8c = 0x46 = 70 @0x800310a8/@0x80031218),
+         * PL00W01.EDD Clip 0 = 22 Bilder -> die Beine takteten 34/22 = 1,55x zu schnell fuer
+         * die Bodengeschwindigkeit. Der Sentinel loest in anim_select_common.c auf.
+         * Die Rolle-Tabelle re15_to_re2_resolve_motion wird hier bewusst UMGANGEN: sie ist
+         * RBJ-abhaengig, die beiden Handler laden ihre Bank aber unbedingt. */
+        (void)with_rbj_overlay;
+        return RE15_PLAYER_MOTION_BACK_PL00;
     case 0x09:
         /* TURN-in-place: the mode-9 handler @0x80031360 forces the loco clip on state-0 entry
          * (@0x800313a0 `ori 0x5; sb entity+0x94` = clip 5, the same clip the mode-4 WALK handler sets) —

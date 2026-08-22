@@ -170,6 +170,38 @@ int main(void)
         chk("N6 Tuer-Slot0: Sonde faellt durch", any, 0);
     }
 
+    /* ---- N7: waehrend des KISTEN-SCHIEBENS (Substate 8) darf ACTION NICHTS ausloesen --
+     * FUN_8002d474 hat game-weit GENAU VIER Aufrufer (ghidra1_V2.txt:120408 `XREF[4]`):
+     *   80031fd0 / 800323ec / 800326bc / 80032a3c = die Sub-ENTRYs 0/1/2/3
+     *   (@0x80073fb0[0..3] = 0x80031f38 / 0x800322e8 / 0x80032604 / 0x80032974).
+     * Der Sub-ENTRY 8 (Schieben) ist LAB_8003579c (@0x80073fb0[8]) und enthaelt in seinen
+     * 32 Instruktionen KEIN einziges `jal` (@0x8003579c-0x8003580c) — die Sonde kann also
+     * beim Schieben gar nicht laufen. Rueckgabe 1 = "Aktion verbraucht" (derselbe Zuschnitt
+     * wie fuer Substate 9/10), damit der Aufrufer auch den Tuer-/Examine-Scan entwaffnet.
+     *
+     * GEMESSEN OHNE DAS GATE (echter Spiellauf): SQUARE+UP an der Kiste startete Substate 9,
+     * waehrend `re15_player_push_substate()` gesetzt blieb — der Bank-Zweig fuer Substate 8
+     * in anim_select_common.c nahm daraufhin die Kletter-Sentinels als DIREKTE PL00-Clips
+     * (230%24 = 14, 231%24 = 15, 24 Bilder geloopt) statt W01-Clip 5 / PL00-Clip 2.
+     * Das ist der Nutzer-Befund "nach dem Verschieben eine ganz andere, falsche Animation". */
+    reset_room(raw, sz);
+    stand_at_crate_front();
+    {
+        /* Objekt-Pass mit gehaltenem UP fahren, bis obj[+0x8C] die 9 erreicht und das
+         * Kontaktbit 0x2000 steht (@0x8002bf60-70 / @0x8002bfd4). */
+        for (int f = 0; f < 20 && !re15_prop_push_contact(); f++)
+            re15_prop_push_tick(&s_rdt, RE15_PAD_BIT_UP);
+        chk("N7 Kontaktbit 0x2000 gesetzt (@0x8002bfd4)", re15_prop_push_contact(), 1);
+        /* Erst der Spieler-Tick betritt Substate 8 (@0x800323cc -> `sw 0x801` @0x8003247c). */
+        re15_player_tick(NULL, RE15_PAD_BIT_UP);
+        chk("N7 Substate 8 aktiv (DAT_800aca59 == 8)", re15_player_push_substate(), 1);
+        chk("N7 ACTION verbraucht, KEIN Scan", re15_climb_try_start(&s_rdt, 1), 1);
+        chk("N7 KEIN Klettern gestartet", re15_climb_dbg_sub(), 0);
+        chk("N7 Schiebe-Phase unveraendert", (long)(re15_player_push_phase() >= 0), 1);
+        re15_player_push_reset();
+        re15_prop_push_reset();
+    }
+
     /* ---- T2..T5: der Aufstieg ------------------------------------------------------ */
     reset_room(raw, sz);
     stand_at_crate_front();
@@ -185,9 +217,11 @@ int main(void)
     int f_trigger = -1, f_end = -1, motion_turn = -1, motion_up = -1;
     int band_before = re15_collision_debug_band();
     int32_t y_before = s_pl->y;
+    int frac_at[200]; for (int i = 0; i < 200; i++) frac_at[i] = -1;
     for (int f = 0; f < 200 && re15_climb_active(); f++) {
         re15_climb_tick(&s_rdt, NULL, &s_pl00, &s_w01);
         re15_climb_standing_tick();
+        frac_at[f] = (int)s_pl->anim_frac;      /* der Wert, mit dem DIESES Bild posiert wird */
         if (f == 0) motion_turn = (int)s_pl->motion;
         if (motion_up < 0 && re15_climb_dbg_phase() == 3) motion_up = (int)s_pl->motion;
         if (f_trigger < 0 && s_pl->y != y_before) f_trigger = f;
@@ -207,6 +241,28 @@ int main(void)
     chk("T4 Ausloesetick (1 Tick Phase0/1 + Frame 0x1d)", f_trigger, 1 + 0x1d);
     chk("T5 Gesamtdauer (1 + 50 + 1 Ticks)", f_end, 1 + 50 + 1 - 1);
 
+    /* ---- T6: FRAC-Crossfade +0x8f (0x800acae3) MUSS abklingen ----------------------
+     * FUN_8001f3bc dekrementiert +0x8f bei JEDEM anim_set:
+     *   8001f408 lbu s0,143(v1) / 8001f41c bne a3,zero,0x8001f45c  (0 -> kein Blend, kein Decay)
+     *   8001f5a8 lbu v0,143(v1) / 8001f5b0 addiu v0,v0,-1 / 8001f5b4 sb v0,143(v1)
+     * Substate 9 ruft anim_set in JEDEM Tick (@0x8003809c Phase 1, @0x8003826c Phase 3) und
+     * seedet 7 in Phase 0 (@0x80038048) bzw. Phase 2 (@0x80038150).
+     *
+     * WARUM DAS EIN PIN IST (gemessen 2026-08-22, echter Spiellauf ROOM1090): ohne den Decay
+     * stand `frac` 55 Bilder lang auf 7 = 87,5 % Vorframe-Anteil im Renderer
+     * (skeleton_common.c:208), INKLUSIVE der Wurzel-Translation. Am Ausloesframe 0x1d springt
+     * die Welt-Y um -1800 (@0x800381e4) und die Clip-Wurzel-py von -2614 auf -846
+     * (PL00.EDD Clip 2, Slot 28 -> 29) — byte-true heben sich beide auf. Mit eingefrorenem
+     * Crossfade folgte die Wurzel nur 12,5 %/Bild: Becken-Y 1357 Einheiten zu hoch, dann
+     * 11 Bilder Absinken = der Nutzer-Befund "am Ende faellt er von oben auf die Kiste".
+     * DESHALB ist `frac == 0 am Ausloesetick` die eigentliche Regressionsschranke. */
+    chk("T6 frac Tick0 (Phase0 seedet 7 @0x80038048)",  frac_at[0], 7);
+    chk("T6 frac Tick1 (Phase2 seedet 7 @0x80038150)",  frac_at[1], 7);
+    chk("T6 frac Tick2 (Decay @0x8001f5b0)",            frac_at[2], 6);
+    chk("T6 frac Tick8 (nach 7 Decays = 0)",            frac_at[8], 0);
+    chk("T6 frac am Ausloesetick 0x1d == 0 (kein Blend der -1800-Stufe)",
+        frac_at[f_trigger], 0);
+
     /* ---- N5b: auf der Kiste stehend darf FUN_8002d2c0 nichts mehr finden ----------- */
     chk("N5b Mitte: kein Absprung (eigene Kiste blockt)",
         re15_climb_try_start(&s_rdt, 1), 0);
@@ -218,13 +274,25 @@ int main(void)
     re15_climb_standing_tick();
     chk("D1 try_start am Rand", re15_climb_try_start(&s_rdt, 1), 1);
     chk("D1 KIND == 2 (@0x8002d740)", re15_climb_dbg_kind(), 2);
-    int saw10 = 0;
+    int saw10 = 0, frac_land = -1, frac_fall_max = -1;
     for (int f = 0; f < 400 && re15_climb_active(); f++) {
         re15_climb_tick(&s_rdt, NULL, &s_pl00, &s_w01);
         re15_climb_standing_tick();
         if (re15_climb_dbg_sub() == 10) saw10 = 1;
+        if (s_pl->motion == RE15_PLAYER_MOTION_CLIMB_D1 &&
+            (int)s_pl->anim_frac > frac_fall_max) frac_fall_max = (int)s_pl->anim_frac;
+        if (frac_land < 0 && (s_pl->motion == RE15_PLAYER_MOTION_CLIMB_LAND5 ||
+                              s_pl->motion == RE15_PLAYER_MOTION_CLIMB_LAND6))
+            frac_land = (int)s_pl->anim_frac;
     }
     chk("D1 Substate 10 erreicht (@0x8003811c)", saw10, 1);
+    /* Substate 10 setzt +0x8f in Phase 2 auf 0 (@0x800383f8 `sb zero,-13597(at)`) — der
+     * FALL darf also NIE blenden, sonst haengt die Wurzel der Fallkurve Y += 90+50*t
+     * (@0x8003866c-94) genauso nach wie beim Aufstieg. */
+    chk("D2 frac im Fall (Clip 4) bleibt 0 (@0x800383f8)", frac_fall_max, 0);
+    /* ...und Phase 4 schreibt vor der Landung noch einmal ausdruecklich 0
+     * (@0x80038720 `sb zero,-13597(at)`, direkt neben +0x95 = 0 @0x80038718). */
+    chk("D2 frac bei der Landung == 0 (@0x80038720)", frac_land, 0);
     chk("D1 Landehoehe == FUN_8001c6e8-Boden", (long)s_pl->y,
         (long)re15_collision_room_coll(&s_rdt, s_pl->x, s_pl->z, 1, 8, 0x100));
     chk("D1 Band nach der Landung", re15_collision_debug_band(), 1);
