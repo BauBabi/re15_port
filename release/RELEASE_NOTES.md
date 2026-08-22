@@ -1,3 +1,36 @@
+# RE1.5 Port — v0.3.12 (Early Preview)
+
+## Der fette Zombie faellt nicht mehr jeden zweiten Schuss
+
+Gemeldet: *„Der fette Zombie muss nicht jeden 2. Schuss umfallen. Das ist
+unschoen."*
+
+Das war tatsaechlich RE1.5-Original — und der Grund fuer die gefuehlte Zaehigkeit
+ist nicht seine Panzerung. **Die Trefferzahl bis zum Tod ist in beiden
+KI-Modi gleich.** Was den Unterschied macht, ist eine Endlosschleife: RE1.5 gibt
+jedem Zombie eine Standfestigkeit von 4 bis 7, jeder Pistolentreffer zieht 3 ab
+— und beim Aufstehen wird sie **auf 4 neu geladen**. Ab dem ersten Umfallen also
+zwangslaeufig alle zwei Treffer, immer wieder.
+
+Wie beim Schadensmodell wird die Regel deshalb **aus RE2 uebernommen** statt eine
+Zahl nach Gefuehl zu setzen. Und RE2 macht es interessanterweise voellig anders:
+Dort kostet jeder Treffer waffenabhaengig von einer Widerstandsleiste — aber
+**solange der Zombie mindestens 81 Lebenspunkte hat, wird sie sofort wieder
+aufgefuellt**. Ein RE2-Zombie faellt erst im Endspiel um.
+
+Fuer den fetten Zombie heisst das: Sturz alle **sechs** statt alle 2,3 Treffer,
+und die Dauer halbiert sich von rund **124 auf 51 Sekunden** — bei unveraenderter
+Trefferzahl und unveraenderten Lebenspunkten.
+
+Die beiden normalen Zombies aendern sich dabei fast nicht, und das ist stimmig:
+Ihre Lebenspunkte liegen von vornherein unter der RE2-Schwelle, sie sind nach
+dieser Regel also von Anfang an im Endspiel.
+
+Wie der Schadensimport haengt das an demselben Schalter und ist damit gemeinsam
+abschaltbar; ohne ihn kommt die alte RE1.5-Kadenz exakt zurueck.
+
+---
+
 # RE1.5 Port — v0.3.11 (Early Preview)
 
 ## Beim Generator-Raetsel lief Leon mit
