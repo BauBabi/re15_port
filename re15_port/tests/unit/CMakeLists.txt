@@ -2067,6 +2067,15 @@ target_include_directories(probe_1090_trigger_walk PRIVATE ${CMAKE_SOURCE_DIR}/i
 target_compile_definitions(probe_1090_trigger_walk PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 
+# Sonde: ROOM1090 Tor-Event (sub06) -> Aot_on 3 (Selbst-Tuer) -> sub03. Prueft, ob die
+# Original-Kette im Port ueberhaupt laeuft; sonst bleibt flag(3,0x84) gesetzt und sub03
+# spielt spaeter am ROOM1050-Tuerspawn (Cut_chg 5 ohne den Spieler mitzunehmen).
+add_executable(probe_1090_gate_selfdoor probe_1090_gate_selfdoor.c)
+target_link_libraries(probe_1090_gate_selfdoor PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1090_gate_selfdoor PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1090_gate_selfdoor PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
 # --- PIN "DIE Texel-Transparenz-REGEL" (Nutzer-Report 2026-08-21: "Die Flammen haben wieder
 #     schwarzen Hintergrund ... da muss es etwas Globales geben"). Pinnt, dass die Entscheidung
 #     "Texel zeichnen oder nicht" EINE wert-basierte Regel ist (psx-spx: Color 0000h =
