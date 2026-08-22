@@ -1,3 +1,44 @@
+# RE1.5 Port — v0.3.14 (Early Preview)
+
+## Diagnose-Starter fuer den ROOM1090-Cutscene-Fehler
+
+Im Windows-Paket liegt neu **`Diagnose_ROOM1090.bat`**. Doppelklicken, ganz
+normal bis in den Hof spielen, den Fehler auftreten lassen, Spiel beenden — und
+die entstandene `debug_room1090.log` schicken. Das Spiel laeuft dabei voellig
+normal, es wird nur zusaetzlich mitgeschrieben.
+
+Hintergrund: Der gemeldete Fehler („Leon verschwindet am Ende der Cutscene")
+liess sich ueber den beschriebenen Weg in vielen Messlaeufen **nicht** ausloesen.
+Zwei Zeilen aus diesem Protokoll entscheiden die Sache — ob die Szene ein- oder
+zweimal startet, und welche Blickrichtung Leon im Moment des Umschaltens hat.
+
+## Eine falsche Korrektur zurueckgenommen
+
+In der letzten Fassung hatte ich Leon **immer** zeichnen lassen, in der Annahme,
+der Sichtbarkeitstest waehle im Original nur zwischen beleuchtet und
+unbeleuchtet. Das ist widerlegt: Der Zweig fuer „ausserhalb" enthaelt gar keinen
+Zeichenaufruf, und die Funktion, die Geometrie einreiht, wird von dort nie
+gerufen. Zwei unabhaengige Gegenproben stuetzen es — RE2 hat an derselben Stelle
+nicht einmal einen Gegenzweig, und ein Kameraanker in einem anderen Raum umspannt
+die gesamte Spielwelt, was nur als Wegschneide-Steuerung Sinn ergibt.
+
+Die Korrektur ist damit raus. Sie hat den gemeldeten Fehler ohnehin nicht
+behoben: Auf dem kompletten Durchlauf hat der Test in **0 von 3.057 Bildern**
+zugeschlagen.
+
+## Was dabei ueberprueft und fuer richtig befunden wurde
+
+- **Gegner und NPCs** werden ausserhalb des Kamerabereichs korrekt weggelassen —
+  hier waere eine Aenderung ein Fehler gewesen.
+- **In der Tuernische** ist Leon auch im Original nicht sichtbar; der
+  Kamerabereich endet dort.
+- Die **Steuerung ist waehrend der Szene lueckenlos gesperrt** — in 1.829 Bildern
+  genau eine Blickrichtungs-Aenderung, und die kommt vom Skript selbst.
+- Die Szene kann **nicht doppelt starten**: Die Sperre dagegen faellt im selben
+  Bild wie der Start.
+
+---
+
 # RE1.5 Port — v0.3.13 (Early Preview)
 
 ## Auf der Kiste bleibt man jetzt auch oben

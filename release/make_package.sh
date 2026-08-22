@@ -206,6 +206,10 @@ if [[ "$ONLY" == "both" || "$ONLY" == "win" ]]; then
         rm -rf "$HERE/pkg-win"; mkdir -p "$OUT"
         install -m 755 "$WIN_BIN"                          "$OUT/re15_pc.exe"
         install -m 644 "$HERE/pkg_files/win/Start_RE15_Port.bat" "$OUT/Start_RE15_Port.bat"
+        # Diagnose-Starter: setzt die Trace-Haken und sichert das Log unter eigenem Namen.
+        # Damit kann der Nutzer einen gemeldeten Fehler selbst belegen, statt dass ich
+        # seinen Spielzustand raten muss.
+        install -m 644 "$HERE/pkg_files/win/Diagnose_ROOM1090.bat" "$OUT/Diagnose_ROOM1090.bat"
         render_readme "$HERE/pkg_files/win/README.txt.in"   "$OUT/README_${VERSION#v}.txt"
         copy_common "$OUT"
     fi
