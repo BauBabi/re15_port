@@ -1,3 +1,83 @@
+# RE1.5 Port — v0.3.15 (Early Preview)
+
+## RE2-KI ist jetzt der Standard
+
+Auf Wunsch: *„Ansonsten ist RE 2 AI mittlerweile so weit in Ordnung, dass ich das
+gerne als Standard in den Optionen ausgewaehlt haette."* Das Spiel startet also
+mit **AI RE2**; RE1.5 bleibt im Menue jederzeit waehlbar.
+
+## Das Feuer im Hof war eine Baby-Spinne (RE2-Modus)
+
+Gemeldet: *„Bei RE2-KI ist im Hof der Flammen-Effekt nicht da, stattdessen gibt es
+komische Dreiecke, die da rumschwirren."*
+
+Die interne Nummer dieses Objekts bedeutet in den beiden Spielen etwas
+**voellig Verschiedenes**: in RE1.5 ist es der **Feuer-Erzeuger**, in RE2 eine
+**Baby-Spinne**. Das RE2-Verhalten hatte die Nummer komplett beansprucht — die
+sieben brennenden Truemmerstuecke im Hof bekamen dadurch ein Spinnen-Gehirn.
+
+Deine „Dreiecke" waren also kein kaputtes Modell, sondern die korrekte
+Truemmergeometrie, die vom falschen Gehirn durch den Hof gefahren wurde — noch
+dazu mit RE2-Animationen auf einem Geruest, das nur einen einzigen Knochen hat.
+Gemessen: im RE1.5-Modus 14 Flammen, im RE2-Modus **null**, und fuenf der sieben
+Truemmer liefen bis zu 5.000 Einheiten weit davon.
+
+Unterschieden wird jetzt nach **Herkunft** statt nach Nummer: Was der RE2-Spawner
+erzeugt, bleibt Spinne; was im Raum steht, ist Feuer. Nach der Korrektur ist der
+RE2-Durchlauf **pixelgleich** zum RE1.5-Durchlauf. Ein Zensus ueber alle
+Gegnertypen zeigt: Das war der einzige Fall dieser Art.
+
+## Auf der Kiste: kein Sprung mehr am Ende
+
+Gemeldet: *„Ganz zum Schluss kommt noch mal eine Animation, wo Leon irgendwie von
+oben auf die Kiste faellt."*
+
+Beim Klettern lief die **Ueberblendung zwischen zwei Posen nie ab**. Sie ist so
+gebaut, dass sie mit jedem Animationsschritt schwaecher wird — beim Klettern
+wurde dieser Schritt aber uebersprungen, sodass dauerhaft 87 % der *vorherigen*
+Pose im Bild blieben. Da diese Ueberblendung auch die Hoehe erfasst, folgte Leon
+dem Anstieg nur zu einem Achtel pro Bild: Er stand rechnerisch **1.357 Einheiten
+zu hoch** und sank danach elf Bilder lang ab. Genau das sah aus wie ein Fall von
+oben.
+
+## Kein Klettern mehr mitten im Kistenschieben
+
+Gemeldet: *„Nach dem Verschieben und Draufklettern kam direkt einmal eine ganz
+andere, falsche Animation."*
+
+Der Klettervorgang liess sich **waehrend** des Schiebens starten. Im Original ist
+das unmoeglich — die Kletterpruefung wird dort aus vier Bewegungszustaenden
+gerufen, das Schieben gehoert nicht dazu, und beide benutzen sogar dasselbe
+Speicherbyte. Im Port lief dadurch die Animationsauswahl des Schiebens auf die
+Kletter-Nummern und griff die falschen Clips.
+
+## Der Zombie laeuft nicht mehr auf der Stelle (RE2-Modus)
+
+Gemeldet: *„Er wechselt kurz zu einer Animation mit gehobenen Armen und laeuft
+dann — immer wenn diese Animation kommt, laeuft er auf der Stelle."*
+
+Der Zombie hat einen **zweiten Gang**, und im Port fehlte darin das Anwenden der
+Bewegung: Der Zustand lief, die Animation lief, nur der Koerper blieb stehen.
+Die „gehobenen Arme" sind uebrigens nachgemessen — die Haende liegen in diesem
+Gang rund 450 Einheiten hoeher als im normalen.
+
+Gemessen: vorher 59 Bilder ohne einen Schritt, jetzt 867 Einheiten in 27 Bildern,
+mit Uebergang in den Griff.
+
+## Cutscene: Leon rennt nicht mehr rueckwaerts
+
+Gemeldet: *„Zum Schluss rennt Leon noch ein bisschen komisch, fast auf der
+Stelle."*
+
+Das Tempo war korrekt — die **Animation** nicht. Leon geht dort rueckwaerts, und
+dafuer gibt es einen eigenen Clip mit **34 Bildern**. Der Port spielte den
+**Renn**-Clip aus dem Waffen-Archiv mit **22 Bildern**: Bei gleicher
+Laufgeschwindigkeit takten die Beine dadurch **1,55-mal zu schnell**, was genau
+wie Rutschen auf der Stelle aussieht. Jetzt legt er pro Beinzyklus 2.231 statt
+1.444 Einheiten zurueck.
+
+---
+
 # RE1.5 Port — v0.3.14 (Early Preview)
 
 ## Diagnose-Starter fuer den ROOM1090-Cutscene-Fehler
