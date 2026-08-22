@@ -94,15 +94,31 @@ static void frame(uint16_t held, uint16_t edge)
     re15_game_step(&s_ctx);                                    /* main.c:4810 */
 }
 
+/* Der EXAKTE Sichtbarkeits-Test des Renderers (platform/pc/main.c:5457):
+ *   cam_has_region = re15_rdt_get_region_quad(rdt, ANGEZEIGTER Cut, xs, zs)
+ *   player_visible = !(cam_has_region && !point_in_quad(pl.x, pl.z, xs, zs))
+ * s_shown ist der ANGEZEIGTE Cut (main.c s_last_cut_idx), nicht g_scd.cam_id. */
+static int leon_visible(int *has_region_out)
+{
+    const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    int16_t xs[4] = {0}, zs[4] = {0};
+    int has = re15_rdt_get_region_quad(&s_rdt, s_shown, xs, zs);
+    if (has_region_out) *has_region_out = has;
+    if (!has) return 1;
+    return re15_aot_point_in_quad(pl->x, pl->z, xs, zs) ? 1 : 0;
+}
+
 static void pline(const char *tag, int f)
 {
     const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    int has = 0; int vis = leon_visible(&has);
     printf("%-6s f%-4d pos=(%7ld,%7ld,%7ld) yaw=%5d mo=%3d | wact=%d wmode=%d wfsm=%d "
-           "dest=(%6d,%6d) fbit=%2d | cam=%2u pause=%08lX pmode=%d\n",
+           "dest=(%6d,%6d) fbit=%2d | cam=%2u shown=%2d VIS=%d(rgn=%d) pause=%08lX pmode=%d\n",
            tag, f, (long)pl->x, (long)pl->y, (long)pl->z, (int)pl->rot_y, (int)pl->motion,
            (int)pl->walk_active, (int)pl->walk_mode, (int)pl->walk_fsm,
            (int)pl->walk_dest_x, (int)pl->walk_dest_z, (int)pl->walk_flag_bit,
-           (unsigned)g_scd.cam_id, (unsigned long)g_re15_pauseflags,
+           (unsigned)g_scd.cam_id, s_shown, vis, has,
+           (unsigned long)g_re15_pauseflags,
            (int)g_scd.player_mode);
 }
 
@@ -241,6 +257,7 @@ int main(void)
     }
     printf("\n=== ERGEBNIS ===\n");
     printf("   walk_active jemals gesehen: %d\n", walk_seen);
+    printf("   (VIS=0 = Leon wird NICHT gezeichnet — Renderer-Gate main.c:5457)\n");
     printf("   Positions-Huelle waehrend der Cutscene: x[%ld..%ld] z[%ld..%ld]\n",
            (long)minx, (long)maxx, (long)minz, (long)maxz);
     pline("[end]", 0);

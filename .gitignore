@@ -13,8 +13,17 @@ release/linux_out/
 # Die AKTUELLE Paketversion wird bewusst eingecheckt (Nutzer-Vorgabe), alte entfernt
 # make_package.sh automatisch. Deshalb hier KEIN Muster auf release/*.zip / *.z01.
 
-# Port-Build
-re15_port/build/
+# Port-Build — ALLE Varianten. ⛔ 2026-08-22 zum zweiten Mal reingelaufen: ein
+# `git add -A re15_port` nahm `re15_port/build-relwin/` mit (26448 Dateien, davon 3967
+# aus _deps/SDL). Agenten legen eigene Build-Baeume an (build_a, vbuild, build-relwin, …),
+# deshalb hier ein Praefix-Muster statt einzelner Namen.
+re15_port/build*/
+re15_port/vbuild*/
+**/_deps/
+re15_port/debug.log
+re15_port/tools/__pycache__/
+*.exe
+!release/pkg-win/**/*.exe
 
 # Werkzeug-Nebenprodukte
 tools/redux/.sentry-native/

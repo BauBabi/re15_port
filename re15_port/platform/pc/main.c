@@ -5413,51 +5413,43 @@ re_title:;
             int32_t model_pos_z = player_ref->z;
             float   screen_dist = (float)cam_view.fov_screen_dist;
 
-            /* AO9-round (2026-05-26): position-based visibility gate.
-             * Previously a hardcoded `frame_count >= FRAME_AT_60(3390)`
-             * gate hid Leon until ~F1695 (30fps), causing him to "pop
-             * into" the scene 1+ frames AFTER sub02's Cut_chg(0x00) +
-             * Member_set teleport (lines 67-73). In the original PSX,
-             * the cut switch and position teleport happen on the SAME
-             * tick, so Leon is already at his cinematic position when
-             * the camera reveals him (ablauf intro00218628 shows him
-             * present from frame 1 of the new cut).
+            /* HISTORIE (warum hier ueberhaupt ein "Sichtbarkeits-Gate" stand): AO9-round
+             * (2026-05-26) ersetzte ein `frame_count >= 3390`-Fenster durch ein
+             * Positions-Gate `|x| < 25000`, weil das Intro Leon per Member_set(0,-31000)
+             * abseits parkt; #18 (2026-06-09) machte daraus den Region-Quad-Test der PROPS.
+             * BEIDE Stufen waren Heuristik — das Original hat kein Sichtbarkeits-Gate fuer
+             * Charaktere (Belege gleich darunter). Ein abseits geparkter Leon ist im Original
+             * schlicht ausserhalb des Kamera-Frustums; die Projektion erledigt das, kein Cull.
              *
-             * The frame-window heuristic was fragile because sub02's
-             * absolute timing depends on FPS scaling. Position-based
-             * gate is robust: Leon's spawn = (1272, ...), sub02 line
-             * 10-12 teleports him FAR OFF (-31000, 31000) for dialog
-             * cuts, line 71-73 brings him back (2300, ?, 14365) for
-             * his appearance. |x| < 25000 captures all on-stage
-             * positions; the -31000 hidden state is rejected.
+             * ===== REGION-QUAD: BELEUCHTUNG, NICHT SICHTBARKEIT (byte-true, 2026-08-22) =====
+             * Nutzer-Report ROOM1090: "In der Cutscene beim Betreten des Hofes verschwindet
+             * Leon voellig."  Ursache war GENAU diese Zeile.
              *
-             * I2-round (2026-05-24): per ablauf 001-013, Leon is HIDDEN
-             * during sub11 narrator (cut 7) and during sub02's
-             * Elliot+Pilot+Heli dialog phase. He only becomes visible
-             * when sub02 fires the second Cut_chg(0) (Leon-arrival).
+             * Der SPIELER-DRAW im Original ist FUN_8001e8c8. Der Aufruf steht @0x8001d09c,
+             * das Argument wird @0x8001d098 `addiu a0,s0,720` aus s0 = 0x800AC784 gebildet
+             * -> a0 = 0x800ACA54 = der SPIELERBLOCK (`sw a0,0(s0)` @0x8001d0a0 setzt zugleich
+             * DAT_800AC784 auf ihn). Innen:
+             *   @0x8001e970  lw   a1,-14448(a1)      ; a1 = DAT_800AC790 = Quad des aktiven Cuts
+             *   @0x8001e978  addiu a0,a0,52          ; a0 = entity+0x34 = Weltposition
+             *   @0x8001e974  jal  0x80014368         ; Punkt-im-Quad
+             *   @0x8001e97c  beq  v0,zero,0x8001e9c0 ; AUSSERHALB -> Schleife @0x8001e9b4:
+             *   @0x8001e9b4  jal  FUN_8001ef54       ;   Teil-Draw OHNE SetLightMatrix
+             *   @0x8001e990  jal  FUN_8001e9ec       ; INNERHALB: Teil-Draw MIT SetLightMatrix
+             * BEIDE Zweige ZEICHNEN — der Test waehlt beleuchtet/unbeleuchtet, er verwirft
+             * den Charakter NIE. Ein echtes Ueberspringen gibt es nur im PROP-Loop
+             * FUN_80039ca0 (`if (iVar1 != 0) {...}` ganz ohne else) und in FUN_8002c18c;
+             * genau diese PROP-Regel war hier faelschlich auf den Spieler uebertragen
+             * ("the SAME test the props use").
              *
-             * Without this gate, Leon stands as a R.P.D. statue in
-             * cuts 1/2 where the original game frames him out of view.
-             * The real engine relied on positional framing (Leon spawn
-             * outside cam frustum) — our coord system doesn't reproduce
-             * that exactly, so we use a frame-window heuristic.
-             *
-             * CLIP_TEST override: force-visible from frame 0 so we can
-             * see the pose immediately without waiting 56s of intro. */
-            int player_visible;
-            if (s_clip_test_id >= 0) {
-                player_visible = 1;
-            } else {
-                /* Per-cut region-quad cull (byte-true FUN_80039ca0→FUN_80014368 vs the
-                 * active cut's quad — the SAME test the props use), replacing the eyeballed
-                 * `x > -30000` off-stage gate (#18 2026-06-09). Leon is drawn unless his
-                 * world XZ is outside the active cut's region quad: the SCD off-stage hide
-                 * (Member_set(0,-31000)) lands outside → hidden; the whole on-stage outdoor
-                 * area (incl. the staircase x≈-27410) is inside its cut's quad → shown. */
-                player_visible = !(cam_has_region &&
-                    !re15_aot_point_in_quad(player_ref->x, player_ref->z,
-                                            cam_region_xs, cam_region_zs));
-            }
+             * GEMESSEN (echte exe, Tuerspawn aus ROOM1050, RE15_VIS_TRACE): ROOM1090 sub03
+             * fuehrt @0x24E6 `Cut_chg 5` aus, waehrend der Spieler noch auf dem Tuerspawn
+             * (-10100,-1800,4268) steht. Der RVD-Anker von Cut 5 (Eintrag camFrom=5
+             * @ROOM1090.RDT Datei 0x03AC, Quad x[-5600..4300]) enthaelt ihn nicht ->
+             * vis=0 ueber 2130 aufeinanderfolgende Bilder = Leon war komplett weg. */
+            int player_in_region = !(cam_has_region &&
+                !re15_aot_point_in_quad(player_ref->x, player_ref->z,
+                                        cam_region_xs, cam_region_zs));
+            int player_visible = 1;   /* FUN_8001e8c8 zeichnet den Spieler IMMER */
             /* No far-clip here. PSX GTE has no upper-bound OTZ check —
              * FUN_80016b54 @0x80016d24 does `bltz v0, skip` (OTZ<0 only).
              * The |x|<25000 proxy above already hides any teleport-hidden
@@ -5597,6 +5589,18 @@ re_title:;
             }
             re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
             int pose_ok = 0;
+            /* MESS-SONDE (RE15_VIS_TRACE=1, env-gegatet): warum wird Leon in diesem Bild NICHT
+             * gezeichnet? Alle drei Gates einer Zeile: der Region-Quad-Cull (player_visible),
+             * die Bank (skel_ok / clip_count) und die Pose. Reine Diagnose, kein Spielverhalten. */
+            if (getenv("RE15_VIS_TRACE"))
+                fprintf(stderr, "[vis] F%u room=%04x cut=%d rgn=%d vis=%d inrgn=%d skel=%d clips=%d "
+                                "mo=%d af=%d ovr=%d kf=%d pos=(%d,%d,%d)\n",
+                        (unsigned)g_engine.frame_count, g_current_room_id, active_cut_idx,
+                        cam_has_region, player_visible, player_in_region, skel_ok,
+                        p_anim ? p_anim->clip_count : -1,
+                        (int)player_ref->motion, (int)player_ref->anim_frame,
+                        p_clip_override, kf_idx,
+                        (int)player_ref->x, (int)player_ref->y, (int)player_ref->z);
             if (player_visible && skel_ok) {
                 g_anim_pose_actor = player_ref;   /* FRAC crossfade for the player body */
                 pose_ok = (re15_skel_compute_pose(p_skel, kf_idx, poses) == 0);
@@ -5773,7 +5777,11 @@ re_title:;
              * body-only path (actor_rot = yaw_rot_q12, single ctx) was an
              * approximation that mis-shaded articulated bones. */
             re15_actor_lightctx_t lctx_player, lctx_player_world;
-            int player_lit = (g_re15_room_lights_ok &&
+            /* `player_in_region` ist die byte-true Rolle des Region-Quad-Tests: INNERHALB =
+             * FUN_8001e9ec (mit SetLightMatrix), AUSSERHALB = FUN_8001ef54 (ohne). Siehe die
+             * Adressen am player_visible-Block oben. */
+            int player_lit = (player_in_region &&
+                              g_re15_room_lights_ok &&
                               g_re15_active_cut >= 0 &&
                               g_re15_active_cut < g_re15_room_lights.cut_count);
             if (player_lit) {
@@ -7459,14 +7467,29 @@ re_title:;
          * ausgefuehrt — nach dem Present ist der Backbuffer undefiniert, genau daran
          * scheitern RE15_AUTOSHOT/gdigrab (s. Kommentar am AUTOSHOT-Block). Rein env-gegatet. */
         { static int s_fdd_init = 0; static long s_fdd_frame = -1; static char s_fdd_path[256];
+          static long s_fdd_end = -1, s_fdd_step = 1;
           if (!s_fdd_init) { s_fdd_init = 1;
               const char *e = getenv("RE15_FRAMEDUMP");
               if (e && *e) { const char *c = strchr(e, ':');
-                  if (c && (size_t)(c - e) < 16) { s_fdd_frame = atol(e);
+                  if (c && (size_t)(c - e) < 32) { s_fdd_frame = atol(e);
+                      /* SERIE (Messhaken): "<start>-<end>/<step>:<pfad>" schreibt <pfad>_<frame>.ppm
+                       * fuer jedes step-te Bild. Ohne '-' bleibt es der Einzelschuss wie bisher. */
+                      const char *d = strchr(e, '-');
+                      if (d && d < c) { s_fdd_end = atol(d + 1);
+                          const char *sl = strchr(e, '/');
+                          if (sl && sl < c) s_fdd_step = atol(sl + 1);
+                          if (s_fdd_step < 1) s_fdd_step = 1; }
                       snprintf(s_fdd_path, sizeof s_fdd_path, "%s", c + 1); } } }
-          if (s_fdd_frame >= 0 && (long)g_engine.frame_count == s_fdd_frame) {
+          if (s_fdd_frame >= 0) {
               extern void re15_render_pc_request_readback(const char *path);
-              re15_render_pc_request_readback(s_fdd_path); } }
+              long f = (long)g_engine.frame_count;
+              if (s_fdd_end < 0) {
+                  if (f == s_fdd_frame) re15_render_pc_request_readback(s_fdd_path);
+              } else if (f >= s_fdd_frame && f <= s_fdd_end &&
+                         ((f - s_fdd_frame) % s_fdd_step) == 0) {
+                  char pb[300]; snprintf(pb, sizeof pb, "%s_%04ld.ppm", s_fdd_path, f);
+                  re15_render_pc_request_readback(pb);
+              } } }
 
         re15_render_end_frame();
 
