@@ -920,6 +920,75 @@ void re15_player_victim_devour(const re15_actor_t *zombie)
     }
 }
 
+/* ⛔ RE2-OPFER-POSE-YAW-OFFSET PL+0x158 — der Platzierungs-Yaw ist NICHT der Entity-Yaw.
+ * ------------------------------------------------------------------------------------------
+ * NUTZER-REPORT 2026-08-22 (RE2-KI): "Beim Wegpushen, wenn Leon vom Zombie gebissen wird, geht
+ * er hinter…".
+ *
+ * SOLLSEITE, selbst disassembliert aus info/re2leon/COMMON/BIN/EMOVL10_S0.BIN (RAW @0x80100000).
+ * Das RE2-Zombie-Overlay installiert die Spieler-Handler selbst (@0x801010EC-120):
+ *   0x8010A924 = cmd 5 (Griff/Struggle) -> Tabelle @0x8010CF2C[PL+0x5] -> Maschine 0x8010A9B8,
+ *                Phasen @0x801001DC = {AA50, AB14, AB70, AB90, ACA0, AD78, AEDC}
+ *   0x8010B3C0 = cmd 6 (Gefressen/Kollaps) -> Maschine 0x8010B464, Phasen @0x8010022C
+ * s1/s2 = die SPIELER-Struktur (Beleg: `sb v0,448(s1)` schreibt absolut 0x800CFDCB =
+ * 0x800CFBF8 + 0x1D3), a2/s3 = der Greifer.
+ *
+ * STRUGGLE-P0 @0x8010AA50:
+ *   8010aa68: addiu v0,zero,2048
+ *   8010aa6c: sh    v0,344(s1)          ; **PL+0x158 = 0x800**
+ *   8010aa80: lw    a1,56(a2)           ; Greifer-X
+ *   8010aa84: lw    a2,64(a2)           ; Greifer-Z
+ *   8010aa88: jal   0x80015558          ; **YAW-SNAP des SPIELERS auf den Greifer** (a3 = 2048
+ *   8010aa8c: addiu a3,zero,2048        ;  = Klemme >= 0x800 -> schnappt immer)
+ *   8010aa98: andi  v0,v0,0x1           ; Variante & 1 (BEHIND)
+ *   8010aa9c: beq   v0,zero,0x8010aab8  ; FRONT -> ueberspringen
+ *   8010aaa4: lhu   v0,118(s1)
+ *   8010aaa8: sh    zero,344(s1)        ; BEHIND: **PL+0x158 = 0**
+ *   8010aaac: addiu v0,v0,2048
+ *   8010aab0: sh    v0,118(s1)          ; BEHIND: **rot_y += 0x800**
+ * => FRONT : rot_y = bearing(PL->Greifer)          , +0x158 = 0x800
+ *    BEHIND: rot_y = bearing(PL->Greifer) + 0x800  , +0x158 = 0
+ * KOLLAPS-P0 @0x8010B4C4 setzt dasselbe Offset (`addiu v0,zero,2048`/`sh v0,344(s2)`
+ * @0x8010B4DC-E0, BEHIND `sh zero,344(s2)` @0x8010B4F8) und snappt den Yaw NICHT nach.
+ *
+ * JEDE Platzierung laeuft mit rot_y + (+0x158) und stellt rot_y danach zurueck — Struggle-P1
+ * @0x8010AB20-34/@0x8010AB44-58, RELEASE-P5 @0x8010AD84-98/@0x8010ADA8-BC, Kollaps-P1
+ * @0x8010B5D8-EC/@0x8010B5FC-610, immer dasselbe Muster:
+ *   lhu v0,118 / lhu v1,344 / addu v0,v0,v1 / jal 0x80015CB8 / sh v0,118   (Platzierung)
+ *   lhu v0,118 / lhu v1,344 / subu v0,v0,v1 / jal 0x8002959C / sh v0,118   (Advance = Restore)
+ * (0x80015CB8 liest den Yaw als `lh a0,118(s1)` @0x80015D3C und schreibt pos = Anker(+0x164) +
+ * RotY(yaw) * Wurzel-Offset, `lh v0,356(s1)` / `sw v0,56(s1)` @0x80015D58-68.) Der Offset wirkt
+ * also NUR auf die PLATZIERUNG; der RENDER-Yaw ist der zurueckgestellte Basis-Yaw.
+ *
+ * GEMESSEN VORHER (probe_re2z_pushoff, echter game_step + ROOM1140-Spawns + geladene RE2-Baenke,
+ * Leons WELTPOSITION und gerenderte Kopf-Pose Frame fuer Frame):
+ *   seed 0: Yaw vor dem Griff 700  -> nach dem Latch 700  (SOLL 4043)  Exit-Delta 2831
+ *   seed 1: 1037 -> 1037 (SOLL 1523)  Exit-Delta 1432
+ *   seed 2: 1374 -> 1374 (SOLL 2055)  Exit-Delta 1231
+ *   Release seed 0: (-804,-19517) -> (-1444,-18579) -> (-1169,-19108) = ~550 Einheiten in eine
+ *   voellig beliebige Richtung, weil re15_clip_root_motion_abs den Clip-Wurzel-Offset mit dem
+ *   ALTEN Lauf-Yaw dreht. Genau das ist "beim Wegpushen geht er hinter".
+ * NACHHER: Exit-Delta 2034/2034/2034 (BEHIND-Variante, Soll 2048).
+ * Der Port schrieb Leons Yaw im RE2-Griff NIE (re15_re2z_victim_begin hatte keinen Snap), fuhr
+ * aber am Release-Ende den RE1.5-Flip +0x800 (@0x8010a614) mit — den es unter RE2 gar nicht gibt
+ * (Exit-P6 @0x8010AEDC schreibt cmd/Flags: `sw 1,4(s1)`, 0x800CFDCB &= 0x7F, +0x1C0 &= 0xED,
+ * word0 &= ~0x1004 — KEIN Yaw-Write). */
+static int re15_victim_is_re2_zombie(void)
+{
+    return (re15_ai_flavor() == RE15_AI_FLAVOR_RE2) &&
+           re15_re2z_owns_type(g_player_victim_type);
+}
+
+/* Platzierung mit dem byte-true Pose-Yaw (rot_y + PL+0x158), Basis-Yaw danach zurueck. */
+static void re15_victim_place(re15_actor_t *pl, const re15_enemy_bank_t *vb, int clip, int frame)
+{
+    int16_t save = pl->rot_y;
+    if (re15_victim_is_re2_zombie() && pl->re2z_t158 != 0)
+        pl->rot_y = (int16_t)(((int)save + (int)pl->re2z_t158) & 0x0fff);   /* addu @0x8010AB2C */
+    re15_clip_root_motion_abs(pl, &vb->skel_victim, &vb->anim_victim, clip, frame);
+    pl->rot_y = save;                                                       /* subu @0x8010AB50 */
+}
+
 /* Advance Leon's grab-victim animation one game tick (game_step, after re15_enemy_ai_run_all so the
  * grab has latched this frame). Frees Leon (state->0) when the grab stops (struggle only; the collapse
  * persists until the death sequence reloads). Byte-true: struggle phase advances on clip-done. */
@@ -980,8 +1049,7 @@ void re15_player_victim_tick(void)
                                                         * NO func_0x8001ad68 root-motion placement — only
                                                         * f314 (@0x80115a6c/abc/b08): Leon holds his XZ
                                                         * during the peck pin (crow_victim_anim.md F1) */
-            re15_clip_root_motion_abs(player, &vb->skel_victim, &vb->anim_victim,
-                                      clip, (int)player->anim_frame);
+            re15_victim_place(player, vb, clip, (int)player->anim_frame);
     } else if (g_player_victim == 2) {                 /* COLLAPSE (state 6): collapse clip, play once +
                                                         * ROOT MOTION (the ~600-unit devour drag), hold last */
         uint8_t clip = c_collapse;
@@ -994,10 +1062,12 @@ void re15_player_victim_tick(void)
         if (!s_victim_fresh && player->anim_frame < fc - 1)     /* frame 0 posed on the entry tick */
             player->anim_frame++;
         s_victim_fresh = 0;
-        re15_clip_root_motion_abs(player, &vb->skel_victim, &vb->anim_victim,
-                                  clip, (int)player->anim_frame);   /* placed EVERY tick (ad68 runs in
+        re15_victim_place(player, vb, clip, (int)player->anim_frame);
+                                                                    /* placed EVERY tick (ad68 runs in
                                                                      * all cmd-6 frames), incl. entry f0
-                                                                     * and the held last frame */
+                                                                     * and the held last frame; RE2:
+                                                                     * Pose-Yaw = rot_y + PL+0x158
+                                                                     * (@0x8010B5D8-EC) */
         if (g_player_victim_type == 0x20) {
             /* ==== DOG-FINISHER — Maschine B @0x80111cf0 (Hook B LAB_80111cb0, Phasen @0x801002d4;
              * voll-disasm 2026-08-08). Phase [1] @0x80111d6c, Frame-Kadenz auf +0x95 (Clip 4, 90f):
@@ -1104,6 +1174,18 @@ void re15_player_victim_tick(void)
             g_player_victim = 0;
             player->hit_react &= (uint8_t)~1u;         /* clear the grabbed flag (+0x93 &= ~1) — a new
                                                         * grab may commit again from here */
+            /* ⛔ RE2: der EXIT loest auch den EIN-ANGREIFER-RIEGEL Spieler+0x1D3 Bit 0x80.
+             * Struggle-EXIT-P6, byte-gelesen (EMOVL10_S0.BIN):
+             *   8010aee0/e4: lui v1,0x800d / addiu v1,v1,-565    ; v1 = 0x800CFDCB = PL+0x1D3
+             *   8010aeec:    lbu v0,0(v1)
+             *   8010aef4:    andi v0,v0,0x7f
+             *   8010aef8:    sb  v0,0(v1)
+             * Die Setzer sind der Griff-P0 @0x80102754-60 und die Kriecher-Entscheider
+             * @0x80102FAC-C0 / @0x80102FF8 / @0x80103B18-2C / @0x8010459C-B0; ohne diesen Clear
+             * blockiert der Riegel jeden weiteren Kriecher-Angriff dauerhaft (gemessen: nach dem
+             * ERSTEN Griff nie wieder einer — probe_re2z_crawl_attack). */
+            if (re15_victim_is_re2_zombie())
+                player->re2z_self1d3 &= (uint8_t)0x7Fu;   /* andi 0x7f @0x8010AEF4/@0x8010AEF8 */
             /* BYTE-TRUE EXIT YAW FIX-UP (D1 disasm @0x8010a614-624, live-exact tlm2/04->05
              * 2009->4057 = +0x800): the FACE variant flips +0x6a += 0x800 -> Leon ends FACING the
              * zombie he shoved off (his entity yaw pointed AWAY for the whole grab; the face-victim
@@ -1112,7 +1194,19 @@ void re15_player_victim_tick(void)
              * @0x8010a648 belongs to the second clip set {8..13} — not in the port's variant model.)
              * CROW: no flip — the front-FSM exit @0x80115b40-6c writes cmd/hit_react/aca3c only,
              * never +0x6a (and the crow latch never snapped the yaw to begin with). */
-            if (g_player_victim_variant == 0 && g_player_victim_type != 0x21)
+            /* ⛔ RE2 HAT DIESEN FLIP NICHT (Nutzer-Report 2026-08-22 "beim Wegpushen geht er
+             * hinter"): der RE2-Exit ist P6 @0x8010AEDC und schreibt NUR
+             *   8010aee8: sw v0,4(s1)           ; cmd = 1
+             *   8010aef8: sb v0,0(0x800CFDCB)   ; +0x1D3 &= 0x7F
+             *   8010af08: sb v0,448(s1)         ; +0x1C0 &= 0xED
+             *   8010af18/28: sw v0,0(s1)/0(a2)  ; word0 &= ~0x1004 (Spieler UND Greifer)
+             * — kein einziger Write auf +0x76. Er braucht ihn auch nicht: unter RE2 traegt der
+             * Entity-Yaw schon waehrend des Griffs die richtige Blickrichtung (FRONT = bearing
+             * zum Greifer), und die 180-Grad-Drehung der vorn-Clips steckt im Pose-Offset
+             * PL+0x158 (@0x8010AA6C). Der Port fuhr den RE1.5-Flip auch unter RE2 mit — auf
+             * einen Yaw, der nie geschnappt wurde. */
+            if (g_player_victim_variant == 0 && g_player_victim_type != 0x21 &&
+                !re15_victim_is_re2_zombie())
                 player->rot_y = (int16_t)(((int)player->rot_y + 0x800) & 0x0fff);
             player->motion = 200;                      /* restore the idle sentinel: the stale bank2
                                                         * clip index must not feed the normal player
@@ -1124,8 +1218,7 @@ void re15_player_victim_tick(void)
         s_victim_fresh = 0;
         player->motion = clip;
         if (g_player_victim_type != 0x21)              /* crow: no ad68 placement (see STRUGGLE) */
-            re15_clip_root_motion_abs(player, &vb->skel_victim, &vb->anim_victim,
-                                      clip, (int)player->anim_frame);
+            re15_victim_place(player, vb, clip, (int)player->anim_frame);
     }
 }
 
@@ -1711,6 +1804,27 @@ void re15_re2z_victim_begin(re15_actor_t *zombie, re15_actor_t *player, int behi
             }
         }
     }
+    /* ⛔ YAW-SNAP + POSE-YAW-OFFSET (Struggle-P0 @0x8010AA50; vollstaendiger Beleg-Block ueber
+     * re15_victim_place). Der RE2-Griff schnappt den SPIELER-Yaw auf den Greifer
+     * (`jal 0x80015558` @0x8010AA88, a1/a2 = Greifer-X/Z @0x8010AA80-84, Klemme a3 = 2048) und
+     * legt die 180-Grad-Drehung der Vorn-Clips als Platzierungs-Offset PL+0x158 ab:
+     *   FRONT : rot_y = bearing(PL->Greifer)         , +0x158 = 0x800 (`sh v0,344` @0x8010AA6C)
+     *   BEHIND: rot_y = bearing + 0x800 (@0x8010AAAC-B0), +0x158 = 0 (`sh zero,344` @0x8010AAA8)
+     * NUR fuer die RE2-Zombie-Familie: Hund (0x20) und Kraehe (0x21) rufen denselben Shim, haben
+     * aber eigene, separat RE'te Opfer-Maschinen (Kraehe: KEIN a8f8-Snap, crow_victim_anim.md F1).
+     * 0x80015558 mit Klemme 2048 == der Snap, den der Port fuer den Zombie selbst schon fuehrt
+     * (re2z_exec_grab P0, enemy_ai_re2_zombie.c: atan2 - 0x400). */
+    if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2z_owns_type(zombie->type)) {
+        int bear = ((int)re15_atan2_q12(zombie->z - player->z,
+                                        zombie->x - player->x) - 0x400) & 0x0fff;
+        if (behind) {                                   /* `andi v0,v0,0x1` @0x8010AA98 */
+            player->re2z_t158 = 0;                      /* sh zero,344(s1) @0x8010AAA8 */
+            player->rot_y = (int16_t)((bear + 0x800) & 0x0fff);  /* addiu 2048 @0x8010AAAC */
+        } else {
+            player->re2z_t158 = 0x800;                  /* sh 2048,344(s1) @0x8010AA6C */
+            player->rot_y = (int16_t)bear;              /* nur der Snap @0x8010AA88 */
+        }
+    }
     player->hit_react |= 1;          /* +0x93|=1 — kein Zweit-Grab auf den gehaltenen Spieler */
     s_player_grabbed = 1;
 }
@@ -1723,6 +1837,12 @@ void re15_re2z_victim_devour(re15_actor_t *zombie, int behind)
 {
     re15_player_victim_devour(zombie);
     g_player_victim_variant = (uint8_t)(behind ? 1 : 0);
+    /* Kollaps-P0 @0x8010B4C4 setzt das Platzierungs-Offset NEU nach der (frisch gezogenen)
+     * Variante — `addiu v0,zero,2048` / `sh v0,344(s2)` @0x8010B4DC-E0 und BEHIND
+     * `sh zero,344(s2)` @0x8010B4F8. Einen Yaw-Snap gibt es dort NICHT (0x8010B4C4-0x8010B570
+     * enthaelt keinen 0x80015558-Aufruf) — der Yaw bleibt der des Griff-Latches. */
+    if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2z_owns_type(zombie->type))
+        g_actors[RE15_ACTOR_SLOT_PLAYER].re2z_t158 = (int16_t)(behind ? 0 : 0x800);
 }
 
 /* Anker-Teilung (byte-true Muster FUN_8001ac38: EIN Anker fuer beide, @0x80102748-64 sync't RE2

@@ -1041,6 +1041,22 @@ static void re2z_exec_grab(re15_actor_t *e, re15_actor_t *pl)
         }
         re15_re2z_grab_anchor(e, pl, (int)e->re2z_grabclip);       /* pin helper 0x80015b94
                                                                     * @0x8010270C (one anchor) */
+        /* ⛔ EIN-ANGREIFER-RIEGEL: der Griff BEANSPRUCHT den Spieler ueber PL+0x1D3 Bit 0x80.
+         *   80102754: lbu v0,467(s3)      ; s3 = SPIELER (`sw s1,436(s3)` @0x80102710 = PL+0x1B4)
+         *   8010275c: ori v0,v0,0x80
+         *   80102760: sb  v0,467(s3)
+         * Derselbe Riegel, den die Kriecher-Entscheider setzen (@0x80102FAC-C0 / @0x80102FF8 /
+         * @0x80103B18-2C) und LESEN (@0x80102F4C-58 / @0x80103AD4-E0 / @0x8010455C-68). Der Port
+         * bildete den Setzer bisher nur auf pl->hit_react |= 1 ab und hatte fuer das echte Feld
+         * GAR KEINEN Loescher — GEMESSEN (probe_re2z_crawl_attack, ROOM1030, echter game_step,
+         * geladene RE2-Baenke, zwei erzwungene Kriecher):
+         *   f261 Slot 2 greift (+0x5 0->1), Riegel 0x00 -> 0x80
+         *   f299..f1799 Riegel bleibt 0x80; Slot 1 kriecht die restlichen 1500 Frames in
+         *                Reichweite (dist 909..918 << 0x514) und greift KEIN EINZIGES MAL an
+         *   Ergebnis 1800 Frames: 2 Griff-Eintritte, danach nie wieder (nachher: 10).
+         * Mit Setzer UND den drei byte-gelesenen Loeschern (Release-Exit @0x8010AEF4,
+         * HURT @0x80104FA0, DEATH @0x801082E8) ist der Lebenszyklus geschlossen. */
+        pl->re2z_self1d3 |= 0x80u;                                 /* ori 0x80 @0x80102754-60 */
         e->re2z_self1d3 = 15;                                      /* sb 15,467(s1) @0x8010276C-70 */
         e->ai_flags |= 1u;                                         /* port grab latch (domino infra) */
         e->grab_choreo = 1;                                        /* word0|=0x1000 @0x80102768-88 */
@@ -1154,8 +1170,14 @@ static void re2z_exec_grab(re15_actor_t *e, re15_actor_t *pl)
                                                                     * flavor-blinde Damage-Resolver
                                                                     * klassifiziert ueber grid&0x80
                                                                     * (RE1.5-Zwilling @0x801022b8) */
-                re2z_clip(e, 2, 0x14, 0xA, 0x200, 0);              /* word 0xA1402 @0x80102D68-7C:
-                                                                    * clip 2 from frame 20, rate 10 */
+                re2z_clip(e, 2, 0x14, 0xA, 0x100, 0);              /* word 0xA1402 @0x80102D68-7C:
+                                                                    * clip 2 from frame 20, +0x8F = 10.
+                                                                    * BLEND = a3 DES VERBRAUCHENDEN
+                                                                    * ADVANCE, und das ist EXEC[5] P1
+                                                                    * (`sb 1,6` @0x80102D54 ->
+                                                                    * @0x80103370): `addiu a3,zero,256`
+                                                                    * @0x80103380 = 0x100. Siehe den
+                                                                    * Sammel-Beleg in re2z_exec_knockdown. */
                 re2z_se((re2z_rand() & 1u) ? 12 : 13);             /* rand&1==0 -> 13, sonst 12
                                                                     * (@0x80102DC4-DC, Review #7) */
                 e->re2z_t158 = 1;                                  /* sh 1,344 @0x80102DE4-EC */
@@ -1237,12 +1259,29 @@ static void re2z_exec_knockdown(re15_actor_t *e)
         e->re2z_flag222 = 0;                                       /* @0x801032F4 */
         e->re2z_self1d3 |= 0x80u;                                  /* ori 0x80 @0x80103304/330C */
         e->re2z_f10e |= 0x2000u;                                   /* +0x10E|=0x2000 @0x80103308/3320 */
-        re2z_clip(e, re2z_param_clips[side], side * 5 + 10, 0xF, 0x200, 0);
+        /* ⛔ BLEND-RATE = a3 DES ADVANCE, NICHT 0x200 (Nutzer-Report 2026-08-22: "Wenn der Zombie
+         * zu Boden Richtung Leon springt, stimmt die Animation nicht ganz").
+         * EXEC[5] advanced in JEDER seiner Phasen mit 256, selbst disassembliert aus
+         * EMOVL10_S0.BIN:
+         *   8010337c: jal 0x8002959c / 80103380: addiu a3,zero,256      (P1)
+         *   801034f4: jal 0x8002959c / 801034f8: addiu a3,zero,256
+         *   801036a0: jal 0x8002959c / 801036a4: addiu a3,zero,256
+         * Der Port trug hier 0x200. WARUM DAS SICHTBAR IST — dieselbe Klemmfalle wie beim
+         * RE1.5-Aufsteher (enemy_ai_common.c, Clip 0x29): das Gewicht der Vor-Pose ist
+         * +0x8F * rate (FUN_8001f3bc @0x8001f474 `mult v0,a3`, IR0 = 0x1000 - Produkt
+         * @0x8001f4a8-b0). Byte-true saettigt das Produkt NIE — 0xF*0x100 = 0xF00,
+         * 7*0x200 = 0xE00, 3*0x400 = 0xC00, 0xA*0x100 = 0xA00, alle < 0x1000. Mit dem
+         * uncitierten 0x200 ergab 0xF*0x200 = 0x1E00, was skeleton_common.c auf 0x1000 klemmt =
+         * 100 % ALTE Pose fuer die ersten 8 Ticks des Sturzes: der Zombie steht acht Frames
+         * eingefroren, BEVOR er faellt. Live gemessen am Feed-Aufsteher (Clip 0x15) im
+         * Negativ-Test: +0x8F 15..11 => Produkt 0x1E00..0x1600, fuenf Frames Plateau. */
+        re2z_clip(e, re2z_param_clips[side], side * 5 + 10, 0xF, 0x100, 0);
                                                                    /* fall clip 1/2, STARTFRAME
                                                                     * side*5+10 = 10/15 (`sll 2 +
                                                                     * addu + addiu 10 + sll 8`
                                                                     * @0x80103310-1C, sw @0x80103338
-                                                                    * — Review #4) */
+                                                                    * — Review #4); Blend = a3 = 256
+                                                                    * @0x80103380 */
         if (e->re2z_cd239 == 0) {                                  /* @0x8010332C-34 (Review #5) */
             re2z_se((re2z_rand() & 1u) ? 12 : 13);                 /* ==0 -> 13, !=0 -> 12
                                                                     * @0x8010333C-58 */
@@ -1421,7 +1460,12 @@ static void re2z_exec_knockdown(re15_actor_t *e)
 static void re2z_exec_six(re15_actor_t *e)
 {
     if (e->sub_state_2 == 0) {                                     /* P0 @0x801039B0 */
-        re2z_clip(e, 0x18, 0, 0xF, 0x200, 0);                      /* sw 0xF0018,332 @0x801039C8 */
+        re2z_clip(e, 0x18, 0, 0xF, 0x100, 0);                      /* sw 0xF0018,332 @0x801039C8;
+                                                                    * Blend = a3 des einzigen Advance
+                                                                    * dieser Funktion: `jal 0x8002959c`
+                                                                    * @0x80103A28 / `addiu a3,zero,256`
+                                                                    * @0x80103A2C (war 0x200 = Klemme,
+                                                                    * s. re2z_exec_knockdown P0) */
         /* Anker 0x80015b94(PL, banks) @0x801039D0: richtet den Fresser am toten Spieler aus —
          * die Spieler-Seite haelt der Port ueber die Victim-FSM; OPEN, dokumentiert. */
         re2z_se((re2z_rand() & 1u) ? 10 : 11);                     /* rand&1==0 -> 11, sonst 10
@@ -1597,7 +1641,11 @@ static void re2z_exec_feeding(re15_actor_t *e, const re15_actor_t *pl)
         e->sub_state_2 = 1;                                        /* sb 1,6 @0x80103CC4-C8 */
         break;
     case 3:                                                        /* P3 @0x80103CD8: Aufstehen */
-        re2z_clip(e, 0x15, 0, 0xF, 0x200, 0);                      /* sw 0xF0015 @0x80103CD8-EC */
+        re2z_clip(e, 0x15, 0, 0xF, 0x100, 0);                      /* sw 0xF0015 @0x80103CD8-EC;
+                                                                    * Blend = a3 des P4-Advance
+                                                                    * `addiu a3,zero,256` @0x80103D70
+                                                                    * (war 0x200 = Klemme, s.
+                                                                    * re2z_exec_knockdown P0) */
         e->sub_state_2 = 4;                                        /* sb 4,6 @0x80103CDC-E0 */
         e->re2z_self1d3 &= 0x7Fu;                                  /* andi 0x7f @0x80103CE4-FC */
         e->re2z_flags21a |= 0x10u;                                 /* ori 0x10 @0x80103D00-10 */
@@ -1917,10 +1965,13 @@ void re15_re2z_enter_crawler(re15_actor_t *e, re15_actor_t *pl, unsigned sub)
 static void re2z_exec_eleven(re15_actor_t *e, re15_actor_t *pl)
 {
     if (e->sub_state_2 == 0) {                                     /* P0 @0x801043F8 */
-        re2z_clip(e, 0x0A, 0, 0xF, 0x200, 0);                      /* Wort 0xF000A: lui 0xf im
+        re2z_clip(e, 0x0A, 0, 0xF, 0x100, 0);                      /* Wort 0xF000A: lui 0xf im
                                                                     * P0-Delay-Slot @0x801043D8,
                                                                     * ori 0xa @0x801043F8, sw
-                                                                    * @0x8010440C */
+                                                                    * @0x8010440C; Blend = a3 des
+                                                                    * P1-Advance `addiu a3,zero,256`
+                                                                    * @0x801044F0 (war 0x200 = Klemme,
+                                                                    * s. re2z_exec_knockdown P0) */
         re15_enemy_steer_point(e, e->steer_x, e->steer_z, 128);    /* 0x80015558(+0x1C4/6, 128)
                                                                     * @0x80104400-14 */
         e->re2z_t158 = 0;                                          /* sh zero,344 @0x8010442C */
@@ -2797,6 +2848,18 @@ static void re2z_grab_abort(re15_actor_t *e, re15_actor_t *pl)
         if (re15_player_victim_state() == 1)                       /* mid-struggle -> free him */
             re15_player_victim_throwoff();
         pl->hit_react &= (uint8_t)~1u;                             /* PL grabbed-flag release */
+        /* ⛔ DER EIN-ANGREIFER-RIEGEL Spieler+0x1D3 Bit 0x80 (0x800CFDCB) WURDE NIE GELOESCHT.
+         * Byte-gelesen (EMOVL10_S0.BIN):
+         *   HURT  80104f94: lbu v0,-565(0x800d)   ; 0x800CFDCB
+         *         80104fa0: andi v0,v0,0x7f
+         *         80104fac: sb  v0,-565(at)
+         *   DEATH 801082dc/801082e8/801082f4  — dieselben drei Instruktionen
+         * Der Port bildete diesen Loescher bisher NUR auf pl->hit_react ab (anderes Feld) —
+         * pl->re2z_self1d3 blieb gesetzt. Konsequenz (gemessen, s. den Block am Riegel-Setzer
+         * in re2z_exec_grab): der Kriecher-Entscheider @0x80102F4C-58 / @0x80103AD4-E0 kehrt
+         * danach fuer immer sofort zurueck = "der kriechende Zombie kann nicht angreifen". */
+        pl->re2z_self1d3 &= (uint8_t)0x7Fu;                        /* andi 0x7f @0x80104FA0/@0x80104FAC
+                                                                    * bzw. @0x801082E8/@0x801082F4 */
     }
 }
 
