@@ -1,3 +1,63 @@
+# RE1.5 Port — v0.3.13 (Early Preview)
+
+## Auf der Kiste bleibt man jetzt auch oben
+
+Gemeldet: *„Ich kann auf die Box klettern, bin dann oben aber nicht auf die Box
+beschraenkt — ich kann in der Luft rumlaufen. Und ich komme nicht mehr runter."*
+
+Beides war **derselbe** Fehler: **Leon wurde aus der Kiste hinausgeschoben, auf
+der er stand.** Das Original behandelt das Objekt, auf dem man steht, gesondert
+— statt der normalen Ausschiebung, die jeden aus einer Kiste herausdrueckt,
+laeuft dort eine Eingrenzung, die einen oben auf der Flaeche haelt. Der Port
+fuhr auch fuer die eigene Standkiste die Ausschiebung.
+
+Gemessen: In dem Bild, in dem die Kletteranimation Leon freigibt, springt er
+**863 Einheiten** zur Seite — genau Kistenbreite plus eigener Radius — behaelt
+aber die Hoehe des Kistendeckels. Das war das Laufen in der Luft.
+
+Und der Abstieg war nie kaputt: Mit dem Hinausschieben verliert Leon den Bezug
+zum Standobjekt, und genau den verlangt die Abwaerts-Pruefung. Sie wurde also nie
+gefragt. Jetzt loest die Aktionstaste oben den Abstieg aus, und Leon steigt ueber
+vier Zwischenhoehen sauber wieder herunter.
+
+*Zur „hoeher clippenden" Animation:* dort liess sich keine eigene Abweichung
+finden — Hoehenversatz und Zeichenversatz sind beide byte-genau, sichtbare
+Oberkante und Kollisionsoberkante liegen auf demselben Wert. Sehr wahrscheinlich
+war auch das der Auswurf: Leon stand am Ende der Animation auf Kistenhoehe, aber
+**neben** der Kiste. Faellt es weiter auf, bitte nochmal melden.
+
+## Wegstossen nach einem Biss (RE2-Modus)
+
+Beim Losreissen wurde Leons Blickrichtung nie gedreht. Das Original schnappt sie
+beim Zupacken auf den Zombie — und merkt sich zusaetzlich eine halbe Drehung,
+wenn von hinten gegriffen wurde. Weil der Port den Winkel unangetastet liess,
+wurde die Bewegung des Losreiss-Clips mit Leons altem **Laufwinkel** gedreht und
+schob ihn rund 550 Einheiten in eine beliebige Richtung. Zusaetzlich fuhr er
+dabei eine 180-Grad-Drehung aus dem RE1.5-Zweig mit, die hier gar nicht gilt.
+
+## Der Sturz zu Boden fror kurz ein (RE2-Modus)
+
+Gemeldet: *„Wenn der Zombie zu Boden Richtung Leon springt, stimmt die Animation
+nicht ganz."*
+
+Die Ueberblendrate war doppelt so hoch wie im Original. Wie stark die vorige Pose
+noch durchschlaegt, ergibt sich aus einem Zaehler mal dieser Rate — mit dem
+echten Wert erreicht das Produkt **nie** die Obergrenze. Mit dem doppelten schon,
+und dann steht acht Bilder lang zu hundert Prozent die alte Pose im Bild. Genau
+dieses Plateau vor dem Sturz war zu sehen.
+
+## Kriechende Zombies koennen wieder angreifen (RE2-Modus)
+
+Das Spiel laesst immer nur **einen** Gegner gleichzeitig zupacken und setzt dafuer
+einen Riegel. Die Stellen, die ihn setzen, waren portiert — alle drei Stellen, die
+ihn wieder loesen, lagen auf einem anderen Feld. Nach dem ersten Griff im Raum
+blieb er also fuer immer geschlossen.
+
+Gemessen: Ein Kriecher lag ab Bild 299 dauerhaft in Reichweite und griff **nie**
+an. Jetzt zehn Griffe statt zwei.
+
+---
+
 # RE1.5 Port — v0.3.12 (Early Preview)
 
 ## Der fette Zombie faellt nicht mehr jeden zweiten Schuss
