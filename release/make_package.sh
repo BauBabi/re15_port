@@ -236,4 +236,31 @@ if [[ $DO_ZIP -eq 1 ]]; then
     echo "== SHA256SUMS.txt geschrieben =="
 fi
 
+# --- Git: NUR die aktuelle Version im Repo halten ----------------------------
+# Nutzer-Vorgabe 2026-08-22: "zukuenftig bitte immer das neuste Package mit
+# hochladen, und alte Packages vom Repo loeschen."
+# Hintergrund: bis v0.3.8 wurde JEDE Version eingecheckt und keine je entfernt —
+# 86 Paketdateien mit 5,9 GB steckten in der Historie und blaehten das Repo auf
+# 8,6 GB auf. Die Historie wurde einmalig bereinigt (git filter-repo, 2,4 GB);
+# damit das nicht zurueckkehrt, macht dieses Skript den Austausch selbst.
+if command -v git >/dev/null 2>&1 && git -C "$HERE/.." rev-parse --git-dir >/dev/null 2>&1; then
+    echo "== Git: alte Pakete austauschen =="
+    alt=0
+    while IFS= read -r f; do
+        [[ -n "$f" ]] || continue
+        case "$(basename "$f")" in
+            "${NAME}"_*) continue ;;          # die AKTUELLE Version bleibt
+        esac
+        git -C "$HERE/.." rm --cached --quiet -- "$f" 2>/dev/null && alt=$((alt+1))
+        rm -f "$HERE/../$f"                   # auch lokal weg, sonst waechst release/ endlos
+    done < <(git -C "$HERE/.." ls-files -- 'release/re15_port_v0*')
+    neu=0
+    for f in "$HERE/${NAME}"_*.z*; do
+        [[ -f "$f" ]] || continue
+        git -C "$HERE/.." add -- "release/$(basename "$f")" && neu=$((neu+1))
+    done
+    echo "   $alt alte Paketdatei(en) aus dem Repo entfernt, $neu neue vorgemerkt"
+    echo "   (noch nicht committet — das macht der Release-Commit)"
+fi
+
 echo "== Fertig =="
