@@ -135,8 +135,20 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
      * Haelften des Proxys folgen damit derselben Regel wie das Original.
      * (Die Flag SELBST hat im Original zwei weitere Wirkungen — Pad-Maske DAT_800ac768 &= 0xf000
      * @0x800304f4-51c und Inventar-Sperre @0x8001cd0c-20 —, die der Port noch nicht nachbildet;
-     * dokumentierte, davon unabhaengige Luecke.) */
-    re15_game_flag_set(2, 7, 0);
+     * dokumentierte, davon unabhaengige Luecke.)
+     *
+     * ⚠️ NUR DER SCHATTEN, NICHT DAS ECHTE WORT (2026-08-22): Zone 2 IST DAT_800aca40 =
+     * g_re15_pauseflags (Zeiger-Tabelle PTR_DAT_80074664[2], `Set`-Handler @0x8003fe04 —
+     * Herleitung in game_state.c), und `re15_game_flag_set` schreibt seit dem Raetsel-Fix
+     * dorthin durch. Dieser Aufruf hier ist aber KEIN Original-Schreibvorgang: die
+     * Original-Raumladekette FUN_800396fc maskiert @0x80039710-30 ausschliesslich
+     * DAT_800aca3c (Zone 1) und fasst DAT_800aca40 NICHT an — das Pause-Wort raeumt allein
+     * die Transitions-FSM (@0x8001ca44/@0x8001caec `sw zero,0x800aca40`, im Port
+     * re15_pauseflags_clear/room_common.c). Wuerde hier das echte Wort mitgeloescht, risse
+     * der Raum-Init dem laufenden Transitions-Freeze (0xFF000000, @0x8001cc5c) das Bit
+     * 0x01000000 heraus. Deshalb genau das, was dieser Aufruf immer gemeint hat: der
+     * Port-Proxy. */
+    g_game.flags[2][0] &= ~(0x80000000u >> 7);
     /* FLAG-BANK 5, WORT 0 — der pro-Raum-Scratch. Byte-true FUN_8003ecec @0x8003ed74
      * `sw zero,0x800b1028`, gerufen aus der SCD-Raum-Init FUN_8003ef6c @0x8003ef84, die selbst an
      * der Raum-Ladekette FUN_800396fc @0x80039a00 haengt. (Wort 1, die Bits 0x20..0x3F, ist KEIN

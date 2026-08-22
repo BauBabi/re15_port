@@ -2429,3 +2429,26 @@ target_link_libraries(probe_11f0_escape_during PRIVATE re15_engine re15_test_sup
 target_include_directories(probe_11f0_escape_during PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(probe_11f0_escape_during PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- MESSSONDE (kein add_test): WO steht der Spieler waehrend/nach dem Generator-Raetsel?
+#     Fahrt ueber re15_game_step mit echtem Tank-Pad, echter QUADRAT-Druck auf den Panel-AOT,
+#     echte D-Pad-Bedienung des Raetsels. Belegt, ob Set(2,0,1)/Set(2,2,1) (ROOM11F0 sub01
+#     @0x12AC/@0x12B0, Zone 2 = DAT_800aca40 per PTR_DAT_80074664[2]) den Spieler einfriert. ---
+add_executable(probe_11f0_puzzle_pos probe_11f0_puzzle_pos.c)
+target_link_libraries(probe_11f0_puzzle_pos PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_11f0_puzzle_pos PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_11f0_puzzle_pos PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- PIN: SCD-Flag-ZONE 2 IST DAT_800aca40 (= g_re15_pauseflags).
+#     Zeiger-Tabelle PTR_DAT_80074664[2], aufgeloest vom `Set`-Handler LAB_8003fdd0
+#     @0x8003fdf8-fe04. ROOM11F0-sub01 @0x12AC/@0x12B0 haelt damit waehrend des
+#     Generator-Raetsels RE15_PAUSE_PLAYER|RE15_PAUSE_AI — und NUR die beiden, damit
+#     Pad und SCD-VM den Cursor weiterfahren koennen. ---
+add_executable(test_scd_zone2_pauseflags test_scd_zone2_pauseflags.c)
+target_link_libraries(test_scd_zone2_pauseflags PRIVATE re15_engine re15_test_support)
+target_include_directories(test_scd_zone2_pauseflags PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_scd_zone2_pauseflags PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_scd_zone2_pauseflags COMMAND test_scd_zone2_pauseflags)
+set_tests_properties(unit_scd_zone2_pauseflags PROPERTIES TIMEOUT 60 SKIP_RETURN_CODE 77)
