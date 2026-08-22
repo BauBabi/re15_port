@@ -57,6 +57,14 @@ int  re15_collision_constrain_contact(const re15_rdt_t *rdt,
  * player-move pass (walls first, then objects). Reads g_scd.props directly. */
 void re15_collision_objects(int32_t *x, int32_t *z);
 
+/* FUN_8002cfd4 @0x8002cfd4 — die EINGRENZUNG des Spielers auf den (um sein halbes
+ * Eigenmass geschrumpften) XZ-Kasten eines Objekts. Das ist der Mechanismus, der ihn
+ * OBEN auf der Kiste haelt: statt der Ausschiebung laeuft er fuer DAS Objekt, auf dem
+ * der Spieler steht (@0x8002bef8 bne / @0x8002bf04 jal / @0x8002bf0c j). Der
+ * Kletter-FSM ruft ihn zusaetzlich @0x800382dc (Ende Aufstieg) und @0x80038604
+ * (Landung auf einem Objekt). Schreibt *x/*z (im Original `sw 0x34/0x3c(a3)`). */
+void re15_collision_prop_contain(int prop_idx, int32_t *x, int32_t *z);
+
 /* FUN_8002cabc mit a2 = 1 — der SCHIEBE-Modus: dieselbe Achsen-Wahl wie oben, aber das
  * OBJEKT weicht aus statt des Aktors (@0x8002cd44 `sw v0,52(t0)` / @0x8002cdac `sw v0,60(t0)`;
  * mode 0 schreibt stattdessen 52/60(a3) = den Aktor). Setzt *ox/*oz auf die neue Objektmitte

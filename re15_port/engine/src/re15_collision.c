@@ -30,6 +30,8 @@
 #include <stdlib.h>
 #include "re15_scd.h"        /* g_scd.props — the Obj_model_set object list */
 #include "re15_math.h"       /* re15_squareroot0 — the engine's ONLY sqrt (BIOS 0x80065f60) */
+#include "re15_actor.h"      /* g_actors — FUN_8002cfd4 liest player[0x00]/[0x40]/[0x44] */
+#include "re15_climb.h"      /* re15_climb_standing_probe — DAT_800ac788 (@0x80031d20) */
 #ifndef RE15_PLATFORM_PC
 #include <stdio.h>
 #endif
@@ -806,10 +808,84 @@ int re15_collision_constrain_contact(const re15_rdt_t *rdt,
  * half-extent = the radius PR (the player box is square in XZ). Y gate omitted
  * (the player vertical box isn't extracted; on the flat helipad the floor crate
  * always overlaps in Y). USER-CONFIRMED working. */
+/* ---- FUN_8002cfd4 @0x8002cfd4 — die EINGRENZUNG auf die Objektoberflaeche -------------------
+ * Steht der Spieler AUF einem Objekt, laeuft im Original statt der Ausschiebung DIESE Funktion:
+ * sie haelt ihn im (um sein halbes Eigenmass geschrumpften) XZ-Kasten des Objekts fest — das ist
+ * der Mechanismus, der ihn oben auf der Kiste haelt.
+ *
+ *   8002cfe0  andi v0, player[0x00], 0x40      -> gesetzt: return  (@0x8002cfe4 bne)
+ *   8002cff4  andi v0, obj[0x00],    0x2       -> gesetzt: return  (@0x8002cff8 bne)
+ *   8002d008  t1 = obj[0x34]                   8002d014  t3 = obj[0x3c]   (Objekt-POSITION,
+ *                                              ohne box.cx/cz — anders als FUN_8002da4c)
+ *   8002d010  t6 = *(s16*)(player[0x7c] + 0)   8002d024  t4 = *(s16*)(player[0x7c] + 4)
+ *   8002d028  a0 = *(u16*)(player[0x78] + 6)   8002d034  a0 >>= 1
+ *   8002d038  t0 = obj_hx - a0                 8002d044  v1 = obj_hz - a0   <<< DERSELBE a0
+ *   8002d01c  t8 = t1 - (player[0x34] + t6)    8002d054  t7 = t3 - (player[0x3c] + t4)
+ *   8002d05c/64  AUSSERHALB-Test `(u32)(2*h) < (u32)(d + h)` — Bit0 = X, Bit1 = Z
+ *   8002d06c  beide drin -> return
+ *   8002d074/88  dieselben zwei Tests mit der VORposition player[0x40]/[0x44], `lh` = SIGNIERT
+ *   8002d0ac-b0  a0 = (vorher ^ jetzt) & jetzt  = die Achsen, die GERADE verlassen wurden
+ *   8002d0c0-cc  X: dx>=0 -> obj.x - t0, sonst obj.x + t0   `sw 0x34(a3)`
+ *   8002d0d0-f4  Z: dz>=0 -> obj.z - v1, sonst obj.z + v1   `sw 0x3c(a3)`
+ *
+ * Port: der Spieler hat keine Kollisionsbox im RAM — die PR-Kollision behandelt ihn als Kreis
+ * IM Punkt, also ist die rotierte Boxmitte player[0x7c] = {0,0} (t6 = t4 = 0), und
+ * `*(u16*)(player[0x78]+6)` ist genau der Klemmradius PR (@0x80031d6c `lhu a1,0x6(DAT_800acacc)`,
+ * DAT_800acacc == player+0x78). */
+static void prop_contain(int p, int32_t *x, int32_t *z)
+{
+    const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (pl->flags & 0x40u)             return;                  /* @0x8002cfe0-e4 */
+    if (g_scd.props[p].flags & 0x2u)   return;                  /* @0x8002cff4-f8 */
+
+    const int32_t ox   = (int32_t)g_scd.props[p].x;             /* @0x8002d008 */
+    const int32_t oz   = (int32_t)g_scd.props[p].z;             /* @0x8002d014 */
+    const int32_t half = (int32_t)((uint32_t)PR >> 1);          /* @0x8002d028/@0x8002d034 */
+    const int32_t sx   = (int32_t)(uint16_t)g_scd.props[p].box_hx - half;  /* @0x8002d02c/38 */
+    const int32_t sz   = (int32_t)(uint16_t)g_scd.props[p].box_hz - half;  /* @0x8002d030/44 */
+    const int32_t dx   = ox - *x;                               /* @0x8002d018-1c (t6 = 0) */
+    const int32_t dz   = oz - *z;                               /* @0x8002d050-54 (t4 = 0) */
+
+    unsigned now = 0;
+    if ((uint32_t)(sx << 1) < (uint32_t)(dx + sx)) now |= 1u;    /* @0x8002d040/@0x8002d064 */
+    if ((uint32_t)(sz << 1) < (uint32_t)(dz + sz)) now |= 2u;    /* @0x8002d04c/@0x8002d05c-68 */
+    if (now == 0) return;                                       /* @0x8002d06c */
+
+    /* Die Vorposition ist der u16-SPIEGEL +0x40/+0x44 — `lh` liest ihn VORZEICHENBEHAFTET. */
+    const int32_t pdx = ox - (int32_t)(int16_t)pl->pos_s_x;      /* @0x8002d074-80 */
+    const int32_t pdz = oz - (int32_t)(int16_t)pl->pos_s_z;      /* @0x8002d088-94 */
+    unsigned was = 0;
+    if ((uint32_t)(sx << 1) < (uint32_t)(pdx + sx)) was |= 1u;   /* @0x8002d0a4 */
+    if ((uint32_t)(sz << 1) < (uint32_t)(pdz + sz)) was |= 2u;   /* @0x8002d098-a8 */
+
+    const unsigned fresh = (was ^ now) & now;                    /* @0x8002d0ac-b0 */
+    if (fresh & 1u) *x = (dx >= 0) ? (ox - sx) : (ox + sx);      /* @0x8002d0b4-cc */
+    if (fresh & 2u) *z = (dz >= 0) ? (oz - sz) : (oz + sz);      /* @0x8002d0d0-f4 */
+}
+
+void re15_collision_prop_contain(int prop_idx, int32_t *x, int32_t *z)
+{
+    if (prop_idx < 0 || prop_idx >= 16 || prop_idx >= (int)g_scd.prop_count) return;
+    prop_contain(prop_idx, x, z);
+}
+
 void re15_collision_objects(int32_t *x, int32_t *z)
 {
+    /* FUN_8002bd44 @0x8002beec-0x8002bf0c: ist das gerade bearbeitete Objekt DAS Objekt, auf dem
+     * der Spieler steht (DAT_800ac788), dann laeuft NICHT die Ausschiebung, sondern die
+     * Eingrenzung FUN_8002cfd4 — und der Push-Out wird per `j LAB_8002c0ec` @0x8002bf0c
+     * komplett uebersprungen (LAB_8002c0ec @0x8002c0ec liegt HINTER dem
+     * `jal FUN_8002cabc` @0x8002c0e4).
+     *   8002bef0  lw   v0, DAT_800ac788
+     *   8002bef8  bne  s2, v0, LAB_8002bf14      ; anderes Objekt -> normaler Pfad
+     *   8002bf04  jal  FUN_8002cfd4 (a0=player, a1=obj)
+     *   8002bf0c  j    LAB_8002c0ec
+     * Ohne das schob der Port den Spieler aus genau der Kiste heraus, auf der er steht
+     * (gemessen ROOM1090: z 4266 -> 3403 = Kistenrand-450, in EINEM Frame). */
+    const int stand = re15_climb_standing_probe(*x, *z);
     for (int i = 0; i < (int)g_scd.prop_count && i < 16; i++) {
         if (!g_scd.props[i].active) continue;
+        if (i == stand) { prop_contain(i, x, z); continue; }     /* @0x8002bef8/@0x8002bf0c */
         int32_t bhx = (int32_t)(uint16_t)g_scd.props[i].box_hx;
         int32_t bhy = (int32_t)(uint16_t)g_scd.props[i].box_hy;
         int32_t bhz = (int32_t)(uint16_t)g_scd.props[i].box_hz;

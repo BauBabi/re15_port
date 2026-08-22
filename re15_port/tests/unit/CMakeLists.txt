@@ -2059,6 +2059,14 @@ target_include_directories(probe_1090_cutscene PRIVATE ${CMAKE_SOURCE_DIR}/inclu
 target_compile_definitions(probe_1090_cutscene PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 
+# Sonde: ROOM1090-Cutscene ueber den ECHTEN Bild-Ablauf (re15_game_step, Kollision, echter
+# Kamera-13-Ausloeser) statt ueber den direkt gerufenen Walker.
+add_executable(probe_1090_trigger_walk probe_1090_trigger_walk.c)
+target_link_libraries(probe_1090_trigger_walk PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1090_trigger_walk PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1090_trigger_walk PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
 # --- PIN "DIE Texel-Transparenz-REGEL" (Nutzer-Report 2026-08-21: "Die Flammen haben wieder
 #     schwarzen Hintergrund ... da muss es etwas Globales geben"). Pinnt, dass die Entscheidung
 #     "Texel zeichnen oder nicht" EINE wert-basierte Regel ist (psx-spx: Color 0000h =
@@ -2476,3 +2484,53 @@ target_link_libraries(test_re15_poise_re2_import PRIVATE re15_engine re15_test_s
 target_include_directories(test_re15_poise_re2_import PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_re15_poise_re2_import COMMAND test_re15_poise_re2_import)
 set_tests_properties(unit_re15_poise_re2_import PROPERTIES TIMEOUT 60 SKIP_RETURN_CODE 77)
+
+# --- MESSSONDE (Nutzer-Report 2026-08-22, RE2-KI): "Beim Wegpushen, wenn Leon vom Zombie
+#     gebissen wird, geht er hinter…". Protokolliert BEIDE Aktoren (Weltposition, Yaw, Clip,
+#     Anker) + Leons GERENDERTE Pose durch den ganzen Griff bis zum Wegstoss.
+#     Sollseite: Spieler-Griff-Maschine 0x8010A9B8 (EMOVL10_S0.BIN), P0 @0x8010AA50. ---
+add_executable(probe_re2z_pushoff probe_re2z_pushoff.c)
+target_link_libraries(probe_re2z_pushoff PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re2z_pushoff PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_re2z_pushoff PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- MESSSONDE (Nutzer-Report 2026-08-22, RE2-KI): "Ein am Boden kriechender Zombie scheint
+#     Leon dort nicht angreifen zu koennen." Misst Griff-Eintritte + den EIN-ANGREIFER-RIEGEL
+#     Spieler+0x1D3 Bit 0x80 (Setzer @0x80102FAC/@0x80103B18/@0x8010459C/@0x80102754,
+#     Loescher @0x8010AEF4 / @0x80104FA0 / @0x801082E8). ---
+add_executable(probe_re2z_crawl_attack probe_re2z_crawl_attack.c)
+target_link_libraries(probe_re2z_crawl_attack PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re2z_crawl_attack PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_re2z_crawl_attack PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- PIN: die drei byte-belegten RE2-Zombie-Korrekturen aus dem Nutzer-Report 2026-08-22
+#     (1) Griff-Yaw-Snap + Platzierungs-Offset PL+0x158 (@0x8010AA6C/@0x8010AA88/@0x8010AAAC)
+#         und KEIN RE1.5-Exit-Flip (RE2-EXIT-P6 @0x8010AEDC schreibt keinen Yaw)
+#     (2) Blend-Rate = a3 des verbrauchenden Advance (@0x80103380 / @0x80103A2C / @0x80103D70 /
+#         @0x801044F0 = 256) -> das Gewicht +0x8F*rate saettigt byte-true NIE
+#     (3) EIN-ANGREIFER-RIEGEL PL+0x1D3 Bit 0x80: Loescher @0x8010AEF4 / @0x80104FA0 /
+#         @0x801082E8 — ohne sie greift kein Kriecher mehr an ---
+add_executable(test_re2z_pushoff_crawl test_re2z_pushoff_crawl.c)
+target_link_libraries(test_re2z_pushoff_crawl PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2z_pushoff_crawl PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2z_pushoff_crawl PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2z_pushoff_crawl COMMAND test_re2z_pushoff_crawl)
+set_tests_properties(unit_re2z_pushoff_crawl PROPERTIES TIMEOUT 180 SKIP_RETURN_CODE 77)
+
+# --- PIN: "oben auf der Kiste bleiben" (Nutzer-Report 2026-08-22, ROOM1090).
+#     Der Objekt-Pass FUN_8002bd44 ueberspringt fuer DAS Standobjekt (DAT_800ac788) die
+#     Ausschiebung (`bne s2,v0` @0x8002bef8, `j LAB_8002c0ec` @0x8002bf0c an der
+#     `jal FUN_8002cabc` @0x8002c0e4 vorbei) und laeuft stattdessen die EINGRENZUNG
+#     FUN_8002cfd4 @0x8002cfd4 (Schrumpfmass obj_h - (playerbox+6)>>1 @0x8002d038/@0x8002d044,
+#     Neu-ausserhalb-Maske @0x8002d0ac-b0, Schreiber `sw 0x34/0x3c(a3)` @0x8002d0cc/@0x8002d0f4).
+#     Ohne das wurde der Spieler aus genau der Kiste geschoben, auf der er stand. ---
+add_executable(test_1090_stay_on_crate test_1090_stay_on_crate.c)
+target_link_libraries(test_1090_stay_on_crate PRIVATE re15_engine re15_test_support)
+target_include_directories(test_1090_stay_on_crate PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_1090_stay_on_crate PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_1090_stay_on_crate COMMAND test_1090_stay_on_crate)
+set_tests_properties(unit_1090_stay_on_crate PROPERTIES TIMEOUT 120 SKIP_RETURN_CODE 77)

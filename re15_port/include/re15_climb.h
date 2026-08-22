@@ -61,6 +61,13 @@ void re15_climb_tick(const re15_rdt_t *rdt,
  * DAT_800ac788 = Objekt und DAT_800aca3c |= 0x4000 ("steht auf einem Objekt"). */
 void re15_climb_standing_tick(void);
 
+/* Derselbe Test (FUN_8002d100(player,0x12) + `obj[0x82]+1 == DAT_800acad6`,
+ * @0x80031ce8-0x80031d20), aber an einer FREI GEWAEHLTEN XZ-Position und ohne
+ * Zustandsschreiben. Rueckgabe = Objektindex (= DAT_800ac788) oder -1.
+ * Der Objekt-Pass FUN_8002bd44 (@0x8001ce14, direkt nach FUN_80031c44 @0x8001ce0c)
+ * braucht den Wert der AKTUELLEN Position, nicht den vom Frame-Ende davor. */
+int  re15_climb_standing_probe(int32_t x, int32_t z);
+
 /* Raumwechsel/Reset. */
 void re15_climb_reset(void);
 

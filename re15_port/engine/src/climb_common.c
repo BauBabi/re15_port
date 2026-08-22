@@ -10,21 +10,30 @@
  * NICHT PORTIERT (benannte Reste, KEINE geratenen Ersatzwerte):
  *   - FUN_80045630(0, 7 | 4) @0x80038080 — der Sound beim Ansetzen (Auswahl ueber
  *     `**(0x800acbbc) & 0x1000`, dieselbe Boden-Zelle wie die Schrittgeraeusche).
- *   - FUN_8002cfd4(player, obj) @0x800382dc / @0x80038604 — die Aktor-gegen-Objekt-
- *     Aufloesung. Schreibt Spieler-X/Z (`sw v0,52(a3)` @0x8002d0cc / `sw v0,60(a3)`
- *     @0x8002d0f4) und braucht die Kollisionsbox des SPIELERS (+0x7c/+0x78), die der
- *     Port nicht fuehrt. Die Positionierung am Ende des Aufstiegs macht der
- *     posS-Snap (@0x800382bc-d8), der portiert IST.
  *   - FUN_80019700(0x6033000, …) @0x80038794/@0x800387bc — der Landestaub (8 Partikel).
+ *
+ * NACHGETRAGEN 2026-08-22 (war hier als "nicht portiert" gelistet und WAR die Ursache
+ * dafuer, dass der Spieler oben nicht auf der Kiste blieb):
+ *   - FUN_8002cfd4(player, obj) — die EINGRENZUNG auf den XZ-Kasten des Objekts, jetzt
+ *     `re15_collision_prop_contain` (re15_collision.c). Der Spieler hat im Port keine
+ *     Kollisionsbox im RAM, aber die beiden Felder, die FUN_8002cfd4 daraus liest, sind
+ *     bekannt: `*(u16*)(player[0x78]+6)` IST der Klemmradius PR (@0x80031d6c liest genau
+ *     dieses Feld als a1 von FUN_8003b0a4), und die rotierte Boxmitte player[0x7c] ist
+ *     fuer den als Kreis behandelten Spieler {0,0}.
+ *     Aufrufer: @0x800382dc (Ende Aufstieg), @0x80038604 (Landung auf einem Objekt) und
+ *     — der wichtigste — @0x8002bf04 im Objekt-Pass FUN_8002bd44.
  */
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "re15_climb.h"
 #include "re15_actor.h"
 #include "re15_aot.h"
 #include "re15_collision.h"
+#include "re15_engine.h"     /* g_engine.pad_current — Trace */
 #include "re15_player.h"
+#include "re15_room.h"       /* g_room_rdt / g_room_rdt_ok / g_current_room_id — Trace */
 #include "re15_scd.h"
 #include "re15_skeleton.h"
 
@@ -91,18 +100,66 @@ static int climb_probe_object(const re15_actor_t *pl, int32_t px, int32_t pz, in
  * dort ist damit immer wahr, es ist ein reiner XZ-Boxtest. `lw v1,56(s3)`
  * @0x8002d198 liest die AKTOR-Y (konstant), deshalb gewinnt der ERSTE Treffer
  * (der hoechste Pool-Index). */
-static int climb_obj_under(const re15_actor_t *pl, int32_t margin)
+static int climb_obj_under_xz(int32_t x, int32_t z, int32_t y, int32_t margin)
 {
     int32_t best_y = 0x7fff;                                        /* @0x8002d120 */
     int     best   = -1;
     for (int p = (int)g_scd.prop_count - 1; p >= 0; p--) {
         if (!obj_live(p)) continue;                                 /* @0x8002d170 */
-        if (!re15_collision_prop_box_hit(p, pl->x, pl->z, margin,
+        if (!re15_collision_prop_box_hit(p, x, z, margin,
                                          (int)g_scd.props[p].band)) continue;
-        if (!(pl->y < best_y)) continue;                            /* @0x8002d1a0 */
-        best = p; best_y = pl->y;                                   /* @0x8002d1ac-b0 */
+        if (!(y < best_y)) continue;                                /* @0x8002d1a0 */
+        best = p; best_y = y;                                       /* @0x8002d1ac-b0 */
     }
     return best;
+}
+
+static int climb_obj_under(const re15_actor_t *pl, int32_t margin)
+{
+    return climb_obj_under_xz(pl->x, pl->z, pl->y, margin);
+}
+
+/* ---- Der Standobjekt-Test aus FUN_80031c44 @0x80031ce8-0x80031d20 als reine Abfrage ----
+ * `FUN_8002d100(player, 0x12)` @0x80031ce8 und `obj[0x82] + 1 == DAT_800acad6`
+ * @0x80031cfc-0c. Rueckgabe = Objektindex (DAT_800ac788) oder -1.
+ *
+ * WARUM eine Abfrage an einer frei waehlbaren Position: der Original-Objekt-Pass
+ * FUN_8002bd44 laeuft @0x8001ce14 UNMITTELBAR nach FUN_80031c44 @0x8001ce0c und liest
+ * dort ein DAT_800ac788, das im selben Frame @0x80031d20 aus der DANN aktuellen
+ * Spielerposition gebildet wurde. Der Port ruft `re15_climb_standing_tick()` erst am
+ * Frame-ENDE — der gespeicherte Wert waere im Objekt-Pass also einen Frame alt. */
+int re15_climb_standing_probe(int32_t x, int32_t z)
+{
+    const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    int o = climb_obj_under_xz(x, z, pl->y, 0x12);                  /* @0x80031ce8 (a1 = 0x12) */
+    if (o < 0) return -1;                                           /* @0x80031cf4 */
+    if ((int)g_scd.props[o].band + 1 != re15_collision_debug_band())/* @0x80031cfc-0c */
+        return -1;
+    return o;                                                       /* @0x80031d20 */
+}
+
+/* ---- RE15_CLIMB_TRACE=<datei> — Messschrieb fuer den ECHTEN Spiellauf ---------------
+ * Eine Zeile je Gameplay-Frame: Position/Band/Substate/Standobjekt. Diagnose only. */
+static void climb_trace(void)
+{
+    static FILE *f = NULL; static int init = 0; static unsigned tick = 0;
+    if (!init) { init = 1;
+        const char *p = getenv("RE15_CLIMB_TRACE");
+        if (p && *p) f = fopen(p, "w"); }
+    if (!f || !g_room_rdt_ok) return;
+    tick++;
+    const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    fprintf(f, "T%u room=%04X pm=%d pad=%04X pos=(%ld,%ld,%ld) rot=%d band=%d sub=%d kind=0x%02X ph=%d "
+               "obj=%d stand=%d mo=%d af=%d rc_b8=%d rc_bnd=%d\n",
+            tick, (unsigned)g_current_room_id, (int)g_scd.player_mode,
+            (unsigned)g_engine.pad_current,
+            (long)pl->x, (long)pl->y, (long)pl->z, (int)pl->rot_y,
+            re15_collision_debug_band(), s_sub, s_kind, s_phase, s_obj, s_stand,
+            (int)pl->motion, (int)pl->anim_frame,
+            (int)re15_collision_room_coll(&g_room_rdt, pl->x, pl->z, 1, 8, 0x100),
+            (int)re15_collision_room_coll(&g_room_rdt, pl->x, pl->z, 1,
+                                          re15_collision_debug_band(), 0x100));
+    fflush(f);
 }
 
 /* ---- Per-Frame-Block @0x80031cd8-0x80031d2c ---------------------------------------- */
@@ -112,11 +169,12 @@ void re15_climb_standing_tick(void)
     s_stand  = -1;                                                  /* @0x80031cd8 */
     s_on_obj = 0;                                                   /* @0x80031cdc-e4 */
     int o = climb_obj_under(pl, 0x12);                              /* @0x80031ce8 (a1 = 0x12) */
-    if (o < 0) return;                                              /* @0x80031cf4 */
+    if (o < 0) { climb_trace(); return; }                           /* @0x80031cf4 */
     if ((int)g_scd.props[o].band + 1 != re15_collision_debug_band()) /* @0x80031cfc-0c */
-        return;
+        { climb_trace(); return; }
     s_stand  = o;                                                   /* @0x80031d20 */
     s_on_obj = 1;                                                   /* @0x80031d24 (|= 0x4000) */
+    climb_trace();
 }
 
 /* ==== FUN_8002d474 @0x8002d474 — die ACTION-Sonde ==================================== */
@@ -295,7 +353,11 @@ static void climb_sub9(const re15_rdt_t *rdt, re15_actor_t *p,
         if ((s_kind & 0x80) && s_obj >= 0 && s_obj < 16) {       /* @0x800382a4 */
             p->pos_s_x = (uint16_t)(int32_t)g_scd.props[s_obj].x; /* @0x800382bc-c8 */
             p->pos_s_z = (uint16_t)(int32_t)g_scd.props[s_obj].z; /* @0x800382cc-d8 */
-            /* @0x800382dc FUN_8002cfd4(player, obj) = OPEN (siehe Dateikopf) */
+            /* @0x800382dc FUN_8002cfd4(player, obj) — die Eingrenzung auf die
+             * Objektoberflaeche. Sie laeuft NACH dem posS-Snap auf die Objektmitte,
+             * die Vorposition ist also garantiert "drin" -> jede Achse, die JETZT
+             * ausserhalb liegt, wird auf die Kante gezogen. */
+            re15_collision_prop_contain(s_obj, &p->x, &p->z);
         }
         s_sub   = 0;                            /* @0x800382e8 */
         s_kind  = 0;                            /* @0x800382ec */
@@ -367,7 +429,7 @@ static void climb_sub10(const re15_rdt_t *rdt, re15_actor_t *p,
                 re15_collision_set_band(-(top / 1800));              /* @0x800385e0 */
                 p->pos_s_x = (uint16_t)(int32_t)g_scd.props[lo].x;   /* @0x800385f0 */
                 p->pos_s_z = (uint16_t)(int32_t)g_scd.props[lo].z;   /* @0x80038600 */
-                /* @0x80038604 FUN_8002cfd4(player, obj) = OPEN (siehe Dateikopf) */
+                re15_collision_prop_contain(lo, &p->x, &p->z);       /* @0x80038604 */
             }
         }
         p->pos_s_x = (uint16_t)p->x;            /* @0x80038628 */
