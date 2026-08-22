@@ -254,6 +254,15 @@ if command -v git >/dev/null 2>&1 && git -C "$HERE/.." rev-parse --git-dir >/dev
         git -C "$HERE/.." rm --cached --quiet -- "$f" 2>/dev/null && alt=$((alt+1))
         rm -f "$HERE/../$f"                   # auch lokal weg, sonst waechst release/ endlos
     done < <(git -C "$HERE/.." ls-files -- 'release/re15_port_v0*')
+    # Auch UNGETRACKTE Altpakete entfernen — sonst waechst release/ lokal endlos
+    # weiter (die Schleife oben sieht nur, was Git kennt).
+    for f in "$HERE"/re15_port_v0*.z*; do
+        [[ -f "$f" ]] || continue
+        case "$(basename "$f")" in
+            "${NAME}"_*) continue ;;
+        esac
+        rm -f "$f" && alt=$((alt+1))
+    done
     neu=0
     for f in "$HERE/${NAME}"_*.z*; do
         [[ -f "$f" ]] || continue
