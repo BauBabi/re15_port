@@ -3027,6 +3027,7 @@ re_title:;
          * (Nutzer-Report 2026-08-03) und ist ersatzlos gestrichen. */
     }
 
+
     /* Phase 4.5.12-H: refined position from agent F1's precise reverse-
      * projection. F1 measured Leon as 65 native px (head-to-feet, not
      * head-to-wrist) and solved the floor-constrained projection for
@@ -3188,6 +3189,25 @@ re_title:;
           if (wid >= 1) re15_audio_prime_weapon(wid); }
         fprintf(stderr, "[save] CONTINUE: resumed in room %04x (hp=%d)\n", rr, g_actors[0].hp);
     }
+
+    /* MESS-HAKEN RE15_SET_FLAG="<bank>:<bit>[,<bank>:<bit>...]" (bit dezimal oder 0x-hex) —
+     * setzt Story-Flags EINMAL beim Spielstart, damit ein Messlauf einen SPAETEREN
+     * Fortschrittsstand nachstellen kann, ohne die halbe Raumkette zu spielen. Gesetzt werden
+     * ausschliesslich Flags, die das Spiel selbst per `Set` schreibt (z.B. ROOM1090 sub03
+     * @0x24D2 `Set(3,0xbb,1)`, das die vier Zombies in sub00 @0x2376 freischaltet). Reiner
+     * Messhaken, env-gegated, kein Spielverhalten. */
+    { const char *sf = getenv("RE15_SET_FLAG");
+      if (sf && *sf) { const char *p = sf;
+          while (*p) { int bank = (int)strtol(p, (char **)&p, 0);
+              while (*p == ':' || *p == ' ') p++;
+              int bit = (int)strtol(p, (char **)&p, 0);
+              if (bank >= 0 && bank < 32 && bit >= 0 && bit < 256) {
+                  re15_game_flag_set((uint8_t)bank, (uint8_t)bit, 1);
+                  fprintf(stderr, "[setflag] flag(%d,%d/0x%02x) = 1\n", bank, bit, bit);
+              }
+              while (*p && *p != ',') p++;
+              while (*p == ',' || *p == ' ') p++;
+          } } }
 
     /* RVD-AUTO-SCAN AN bei JEDEM Raum-Start — auch Session-Boot/LOAD (byte-true):
      * FUN_800396fc laeuft bei jedem Raum-Start — Tuerpfad `jal FUN_800396fc` @0x8001d988
@@ -4720,6 +4740,14 @@ re_title:;
                                           : ((int)g_engine.frame_count >= dj_frame))) {
                             dj_done = 1;
                             if (re15_debug_menu_point_at((unsigned)dj_room)) {
+                                /* MESSLAUF-FALLE (gemessen 2026-08-22): laeuft im selben Bild der
+                                 * Autopilot/ein Input-Skript, liegen LINKS/RECHTS im HELD-Wort und
+                                 * re15_debug_menu_tick() verschiebt den gerade gesetzten Cursor noch
+                                 * VOR dem Laden um eine Zeile — der Sprung landete auf ROOM1080
+                                 * statt ROOM1090 ("AUTO-JUMP -> ROOM1090" + "JUMP -> 108 ELEVATOR").
+                                 * Fuer dieses eine Bild die Halte-Bits fallen lassen; die Lade-Flanke
+                                 * bleibt exakt der Quadrat-Druck von oben. */
+                                dbg_held = 0;
                                 dbg_edge |= RE15_DBG_EDGE_LOAD;   /* == Quadrat in der JUMP-Zeile */
                                 fprintf(stderr, "[debug-menu] AUTO-JUMP -> ROOM%04X (Frame %u)\n",
                                         (unsigned)dj_room, g_engine.frame_count);
@@ -4969,11 +4997,18 @@ re_title:;
              * ohne Event-Slot/Prompt-Interferenz. Fuer Render-Verifikation von Cutscenes. */
             {
                 static int s_ss_init = 0, s_ss_id = -1, s_ss_frame = 20, s_ss_done = 0;
+                static unsigned s_ss_room = 0;   /* optional "#<hexraum>"-Gate (Messlauf) */
                 if (!s_ss_init) { const char *se = getenv("RE15_SUBSTART");
                     if (se && *se) { s_ss_id = atoi(se);
-                        const char *at = strchr(se, '@'); if (at) s_ss_frame = atoi(at + 1); }
+                        const char *at = strchr(se, '@'); if (at) s_ss_frame = atoi(at + 1);
+                        /* Ohne Raum-Gate feuert der Haken im ERSTEN Raum, dessen Bildzaehler
+                         * die Schwelle reisst (der Zaehler wird bei jedem Raumwechsel auf 0
+                         * gesetzt) — bei einer Messung im Zielraum also im falschen Raum. */
+                        const char *hs = strchr(se, '#');
+                        if (hs) s_ss_room = (unsigned)strtol(hs + 1, NULL, 16); }
                     s_ss_init = 1; }
-                if (s_ss_id >= 0 && !s_ss_done && g_engine.frame_count >= (uint32_t)s_ss_frame) {
+                if (s_ss_id >= 0 && !s_ss_done && g_engine.frame_count >= (uint32_t)s_ss_frame &&
+                    (s_ss_room == 0 || g_current_room_id == s_ss_room)) {
                     extern int scd_thread_start(int slot, const uint8_t *pc);
                     if (g_room_rdt_ok && s_ss_id < RE15_RDT_MAX_SUB_SCD &&
                         g_room_rdt.sub_scd[s_ss_id]) {
@@ -5458,6 +5493,30 @@ re_title:;
                     !re15_aot_point_in_quad(player_ref->x, player_ref->z,
                                             cam_region_xs, cam_region_zs));
             }
+            /* MESS-HAKEN RE15_VIS_TRACE=1 — reine Messausgabe (kein Verhalten). Protokolliert
+             * pro Bild GENAU die Groessen, aus denen der Spieler-Cull entsteht: aktiver Cut,
+             * angeforderter Cut, der Kamera-Spiegel work_vars[0x0A], Position/Yaw, ob der Cut
+             * ueberhaupt ein Anker-Quad hat (DAT_800ac790), das Punkt-im-Quad-Ergebnis und die
+             * Walker-Felder des laufenden Plc_dest (Modus/FSM/Ziel). */
+            { static int s_vt = -1;
+              if (s_vt < 0) { const char *e = getenv("RE15_VIS_TRACE"); s_vt = (e && *e) ? atoi(e) : 0; }
+              if (s_vt) {
+                  const re15_actor_t *vp = player_ref;
+                  fprintf(stderr,
+                      "[vis] F%u room=%04x cut=%d camid=%d wv10=%d pos=(%ld,%ld,%ld) yaw=%d "
+                      "hasrgn=%d inrgn=%d vis=%d pmode=%d wact=%d wmode=%d wfsm=%d dest=(%d,%d) "
+                      "mo=%d st=%d s1=%d\n",
+                      g_engine.frame_count, g_current_room_id, active_cut_idx,
+                      (int)g_scd.cam_id, (int)g_scd.work_vars[0x0A],
+                      (long)vp->x, (long)vp->y, (long)vp->z, (int)vp->rot_y,
+                      cam_has_region,
+                      cam_has_region ? re15_aot_point_in_quad(vp->x, vp->z,
+                                                              cam_region_xs, cam_region_zs) : -1,
+                      player_visible, (int)g_scd.player_mode,
+                      (int)vp->walk_active, (int)vp->walk_mode, (int)vp->walk_fsm,
+                      (int)vp->walk_dest_x, (int)vp->walk_dest_z,
+                      (int)vp->motion, (int)vp->state, (int)vp->sub_state_1);
+              } }
             /* No far-clip here. PSX GTE has no upper-bound OTZ check —
              * FUN_80016b54 @0x80016d24 does `bltz v0, skip` (OTZ<0 only).
              * The |x|<25000 proxy above already hides any teleport-hidden
@@ -7458,15 +7517,29 @@ re_title:;
          * wird hier gesetzt und in re15_render_end_frame() unmittelbar VOR SDL_RenderPresent
          * ausgefuehrt — nach dem Present ist der Backbuffer undefiniert, genau daran
          * scheitern RE15_AUTOSHOT/gdigrab (s. Kommentar am AUTOSHOT-Block). Rein env-gegatet. */
-        { static int s_fdd_init = 0; static long s_fdd_frame = -1; static char s_fdd_path[256];
+        /* Zwei Formen: EINZELBILD "<frame>:<pfad.ppm>" und SERIE
+         * "<start>-<end>/<step>:<pfad-praefix>" (schreibt <praefix>NNNNNN.ppm). */
+        { static int s_fdd_init = 0; static long s_fdd_frame = -1, s_fdd_end = -1, s_fdd_step = 1;
+          static char s_fdd_path[256];
           if (!s_fdd_init) { s_fdd_init = 1;
               const char *e = getenv("RE15_FRAMEDUMP");
-              if (e && *e) { const char *c = strchr(e, ':');
-                  if (c && (size_t)(c - e) < 16) { s_fdd_frame = atol(e);
+              if (e && *e) { const char *c = strrchr(e, ':');
+                  if (c && (size_t)(c - e) < 32) { s_fdd_frame = atol(e);
+                      const char *dash = strchr(e, '-');
+                      if (dash && dash < c) { s_fdd_end = atol(dash + 1);
+                          const char *sl = strchr(dash, '/');
+                          if (sl && sl < c) { long st = atol(sl + 1); if (st > 0) s_fdd_step = st; } }
                       snprintf(s_fdd_path, sizeof s_fdd_path, "%s", c + 1); } } }
-          if (s_fdd_frame >= 0 && (long)g_engine.frame_count == s_fdd_frame) {
+          if (s_fdd_frame >= 0) {
+              long f = (long)g_engine.frame_count;
               extern void re15_render_pc_request_readback(const char *path);
-              re15_render_pc_request_readback(s_fdd_path); } }
+              if (s_fdd_end < 0) {
+                  if (f == s_fdd_frame) re15_render_pc_request_readback(s_fdd_path);
+              } else if (f >= s_fdd_frame && f <= s_fdd_end &&
+                         ((f - s_fdd_frame) % s_fdd_step) == 0) {
+                  char p[320]; snprintf(p, sizeof p, "%s%06ld.ppm", s_fdd_path, f);
+                  re15_render_pc_request_readback(p);
+              } } }
 
         re15_render_end_frame();
 
