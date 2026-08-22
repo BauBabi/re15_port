@@ -75,10 +75,22 @@ int re15_re2_owns_type(unsigned type)
         || type == 0x21u    /* WELLE D: RE2-Kraehe (EMOVL21_S0.BIN, enemy_ai_re2_crow.c)     */
         || type == 0x25u    /* WELLE E: RE2-Spinne  (EMS25.BIN,      enemy_ai_re2_spider.c)     */
         || type == 0x26u;   /* WELLE F: RE2-Baby-Spinne (EMS26.BIN, re15_re2spider_baby_tick).
-                             * Jetzt im Set, weil das Baby-Brain portiert ist — Modell und
-                             * Clip-Ids passen damit wieder zusammen. Erzeugt werden 0x26er im
-                             * Port ausschliesslich vom Laufzeit-Spawner der Adult
-                             * (FUN_80105D38, re2s_spawn_babies). */
+                             * ⛔ 2026-08-22 — DIESE ZEILE IST TYP-, NICHT AKTOR-GENAU, und der
+                             * alte Kommentar ("0x26er entstehen im Port ausschliesslich vom
+                             * Laufzeit-Spawner der Adult") war FALSCH. Es gibt eine zweite
+                             * Quelle: sieben `Sce_em_set`-Records in STAGE1/ROOM1090
+                             * (@0x2214..0x228C) — und die sind KEINE Spinnen, sondern die
+                             * RE1.5-FEUER-EMITTER (Dispatch 0x80072bac[0x26] = 0x80116288,
+                             * Registrierung `addiu v0,v0,25224` @0x8011E8F4 -> `sw v0,11332(at)`
+                             * @0x8011E8FC; Zensus: 0x26 ist NUR in STAGE1 registriert, die
+                             * Adult-Spinne 0x25 NUR in STAGE2 @0x801109E4). In RE2 heisst 0x26
+                             * dagegen "Baby der Adult" (`addiu a0,zero,38` @0x80105DE8).
+                             * ⛔ DESHALB: NICHTS VERHALTENSRELEVANTES DARF AUF DIESE ZEILE FUER
+                             * 0x26 KEYEN. Die aktor-genaue Weiche ist re15_re2spider_baby_owns()
+                             * (enemy_ai_re2_spider.c, Port-Feld re2s_baby_spawned); Brain
+                             * (enemy_ai_common.c), Schadenszeile + Treffer-Stempel
+                             * (re15_damage.c) und der Modell-Loader (platform/pc/main.c
+                             * pc_enemy_load_ex) benutzen sie bereits. */
 }
 
 /* ---- ENEMSE audio hook ------------------------------------------------------------------ */

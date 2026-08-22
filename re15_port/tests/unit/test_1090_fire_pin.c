@@ -80,6 +80,10 @@
 #include "re15_esp.h"
 #include "re15_tim.h"
 #include "re15_room.h"
+#include "re15_aot.h"
+#include "re15_enemy_ai.h"
+#include "re15_ai_flavor.h"
+#include "re15_player.h"    /* re15_actors_anim_advance */
 
 extern scd_vm_t g_scd;
 
@@ -506,6 +510,120 @@ int main(void)
         CHECK(from_room == 4, "%d Truemmer aus der RAUM-Bank (erwartet 4: Varianten 1,2,4,4)",
               from_room);
         re15_esp_set_global_bank(NULL);
+    }
+
+    /* -------------------------------------------------------------------------------------
+     * K) ⛔ KI-FLAVOR-PIN (Nutzer-Befund 2026-08-22): "Bei RE2-KI ist im ROOM1090 der
+     *    Flammen-Effekt nicht da, stattdessen gibt es komische Dreiecke, die da rumschwirren."
+     *
+     * URSACHE (Welle F): das Besitz-Gate des RE2-Spinnen-Brains war TYP-fest und hat den
+     * ganzen Typ 0x26 beansprucht. Die sieben ROOM1090-Records sind aber KEINE Spinnen —
+     * Dispatch-Registrierung STAGE1.BIN (selbst disassembliert):
+     *     8011E8F0  lui   v0,0x8011
+     *     8011E8F4  addiu v0,v0,25224      ; 0x80116288 = der FEUER-Emitter
+     *     8011E8F8  lui   at,0x8007
+     *     8011E8FC  sw    v0,11332(at)     ; 0x80072BAC + 0x26*4 = 0x80072C44
+     * Gegenprobe derselben Schleife: [0x20] = 0x8010D7F8 (Hund), [0x21] = 0x80112020 (Kraehe),
+     * [0x27] = 0x80116DB8 (Gorilla) — alle drei decken sich mit den verifizierten Roots.
+     * In RE2 ist kind 0x26 dagegen die BABY-SPINNE, die die Adult ausstoesst:
+     *     80105DE4  jal   0x8001ad3c
+     *     80105DE8  addiu a0,zero,38       ; kind 38 = 0x26      (EMS25.BIN)
+     * Zensus ueber alle sechs Stage-Overlays: 0x26 ist NUR in STAGE1 registriert, die
+     * Adult-Spinne 0x25 NUR in STAGE2 (0x801109E4) — sie koennen gar nicht verwandt sein.
+     *
+     * GEMESSEN VOR DEM FIX (echte EXE, ROOM1090 ueber das Debug-Menue, RE15_STATE_LOG):
+     *   RE15_AI_FLAVOR=re15 -> fx=14, alle 7 Aktoren ueber 83 Frames auf ihren RDT-Positionen.
+     *   RE15_AI_FLAVOR=re2  -> fx=0, 5 von 7 laufen weg (Slot 4 (2974,-860) -> (-2025,-2)).
+     * NACH DEM FIX ist der RE2-Lauf pixel-identisch zum RE1.5-Lauf (Frame 300, 0 von 691200
+     * Pixeln verschieden) und die FX-Draw-Logs sind Zeile fuer Zeile gleich.
+     *
+     * DIESER PIN faehrt beide Flavors durch dieselbe Raum-Simulation und verlangt:
+     *   (a) kein Aktor wandert,  (b) der Flammen-Emitter feuert (Effekt-Id 0x08/0x10),
+     *   (c) das RE2-Brain beansprucht keinen der sieben.
+     * ----------------------------------------------------------------------------------- */
+    printf("K) KI-Flavor-Pin: RE1.5 vs RE2 im selben Raum\n");
+    if (graw) {
+        re15_rdt_t rdt2;
+        if (re15_rdt_parse(raw, sz, &rdt2) >= 0) {
+            static const int k_flav[2] = { RE15_AI_FLAVOR_RE15, RE15_AI_FLAVOR_RE2 };
+            static const char *k_name[2] = { "RE1.5", "RE2" };
+            int32_t ref_x[8], ref_z[8]; int16_t ref_r[8]; int ref_n = 0;
+            for (int fl = 0; fl < 2; fl++) {
+                re15_ai_flavor_set((re15_ai_flavor_t)k_flav[fl]);
+                re15_actor_init(); re15_aot_init(); scd_vm_init();
+                re15_enemy_ai_set_paused(0);
+                re15_esp_fx_reset();
+                re15_esp_set_room_bank(&bank);
+                re15_esp_set_global_bank(&gbank);
+                g_current_room_id = 0x1090;
+                g_room_change.pending = 0;
+                re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+                pl->active = 1; pl->type = 0; pl->hp = 100;
+                pl->x = -10100; pl->y = -1800; pl->z = 4200; pl->rot_y = 3072;
+                scd_room_reenter(&rdt2, pl->x, pl->z, 0);
+
+                int slots[8], n = 0;
+                for (int i = 1; i < RE15_ACTOR_MAX && n < 8; i++)
+                    if (g_actors[i].active && g_actors[i].type == 0x26u) slots[n++] = i;
+                CHECK(n == 7, "%s: %d Typ-0x26-Aktoren (erwartet 7)", k_name[fl], n);
+
+                int32_t x0[8], z0[8];
+                for (int i = 0; i < n; i++) { x0[i] = g_actors[slots[i]].x; z0[i] = g_actors[slots[i]].z; }
+
+                /* (c) Besitz: KEINER der sieben darf dem RE2-Brain gehoeren. */
+                for (int i = 0; i < n; i++)
+                    CHECK(re15_re2spider_owns(&g_actors[slots[i]]) == 0,
+                          "%s: RDT-0x26 Slot %d gehoert dem RE2-Spinnen-Brain (Feuer-Emitter!)",
+                          k_name[fl], slots[i]);
+
+                for (int f = 0; f < 200; f++) { re15_enemy_ai_run_all(1); re15_actors_anim_advance(); }
+
+                /* (a) niemand wandert. */
+                int moved = 0;
+                for (int i = 0; i < n; i++)
+                    if (g_actors[slots[i]].x != x0[i] || g_actors[slots[i]].z != z0[i]) moved++;
+                CHECK(moved == 0, "%s: %d von %d Feuer-Emittern sind gewandert (byte-true: 0 — "
+                      "der Root 0x80116288 hat KEINE Lokomotion)", k_name[fl], moved, n);
+
+                /* (b) die Flammen brennen: Effekt-Id 0x08 / 0x10 im FX-Pool. */
+                int n_fire = 0, n_room = 0, n_glob = 0;
+                for (int i = 0; i < RE15_ESP_FX_MAX; i++) {
+                    const re15_esp_fx_t *ff = re15_esp_fx_get(i);
+                    if (!ff || !ff->active) continue;
+                    if (ff->effect_id == 0x10) { n_fire++; n_room++; }
+                    else if (ff->effect_id == 0x08) { n_fire++; n_glob++; }
+                }
+                printf("   %-5s: aktive Flammen id0x10=%d id0x08=%d (gesamt %d), gewandert=%d\n",
+                       k_name[fl], n_room, n_glob, n_fire, moved);
+                CHECK(n_fire >= 7, "%s: nur %d Flammen aktiv (erwartet >= 7 — der Nutzer-Befund "
+                      "war GENAU 0 im RE2-Modus)", k_name[fl], n_fire);
+                CHECK(n_room >= 4, "%s: nur %d Raum-Flammen 0x10 (Varianten 1,2,4,4 @0x80100364)",
+                      k_name[fl], n_room);
+                CHECK(n_glob >= 3, "%s: nur %d globale Flammen 0x08 (Varianten 0,3,3 @0x80100364)",
+                      k_name[fl], n_glob);
+
+                /* Beide Flavors muessen DENSELBEN Endzustand liefern (Negativ-Test: der
+                 * RE1.5-Pfad darf sich durch den Fix nicht geaendert haben). */
+                if (fl == 0) {
+                    ref_n = n;
+                    for (int i = 0; i < n; i++) {
+                        ref_x[i] = g_actors[slots[i]].x; ref_z[i] = g_actors[slots[i]].z;
+                        ref_r[i] = g_actors[slots[i]].rot_y;
+                    }
+                } else {
+                    CHECK(n == ref_n, "RE2 stellt %d statt %d Emitter auf", n, ref_n);
+                    for (int i = 0; i < n && i < ref_n; i++)
+                        CHECK(g_actors[slots[i]].x == ref_x[i] && g_actors[slots[i]].z == ref_z[i]
+                              && g_actors[slots[i]].rot_y == ref_r[i],
+                              "RE2 Slot %d bei (%ld,%ld,r%d), RE1.5 bei (%ld,%ld,r%d)",
+                              slots[i], (long)g_actors[slots[i]].x, (long)g_actors[slots[i]].z,
+                              (int)g_actors[slots[i]].rot_y,
+                              (long)ref_x[i], (long)ref_z[i], (int)ref_r[i]);
+                }
+            }
+            re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
+            re15_esp_set_global_bank(NULL);
+        }
     }
 
     free(ftim_raw);

@@ -63,9 +63,23 @@ int main(void)
         SP->grid_id = (uint8_t)g;
         CHECK(re15_re2spider_owns(SP) == 1, "owns(grid %d) muss 1 sein (WELLE F, Tabelle @0x80100004)", g);
     }
-    SP->grid_id = 0; SP->type = 0x26;
-    CHECK(re15_re2spider_owns(SP) == 1, "owns(Baby 0x26) == 1 (EMS26.BIN-Brain @0x8010001C)");
-    CHECK(re15_re2_owns_type(0x26) == 1, "0x26 muss im RE2-Asset-Ownership-Set sein (Modell+Brain)");
+    /* ⛔ KORREKTUR 2026-08-22 — 0x26 ist NICHT typ-fest RE2. Welle F hatte den GANZEN Typ
+     * beansprucht; die sieben RDT-gesetzten 0x26er von ROOM1090 sind aber die RE1.5-FEUER-
+     * EMITTER (Dispatch-Registrierung `addiu v0,v0,25224` @0x8011E8F4 -> `sw v0,11332(at)`
+     * @0x8011E8FC = 0x80072BAC + 0x26*4; Root 0x80116288 mit dem Flammen-Spawner FUN_80116D00,
+     * Varianten-Tabelle @0x80100364, `jal 0x80019700` @0x80116D84) und KEINE Spinnen.
+     * Zensus-Gegenprobe ueber alle sechs Stage-Overlays: 0x26 ist NUR in STAGE1 registriert,
+     * 0x25 NUR in STAGE2 (0x801109E4) — die beiden koennen im Original gar nicht verwandt sein.
+     * Das RE2-Baby-Brain gehoert deshalb nur Aktoren, die der RE2-Adult-Spawner selbst erzeugt
+     * hat (`jal 0x8001ad3c` / `addiu a0,zero,38` @0x80105DE4-E8 -> Port-Feld re2s_baby_spawned). */
+    SP->grid_id = 0; SP->type = 0x26; SP->re2s_baby_spawned = 0;
+    CHECK(re15_re2spider_owns(SP) == 0,
+          "RDT-gesetzter 0x26 (Feuer-Emitter @0x80116288) darf NICHT dem RE2-Brain gehoeren");
+    CHECK(re15_re2spider_baby_owns(SP) == 0, "baby_owns ohne Herkunft = 0");
+    SP->re2s_baby_spawned = 1;
+    CHECK(re15_re2spider_owns(SP) == 1, "owns(echtes RE2-Baby 0x26) == 1 (EMS26.BIN @0x8010001C)");
+    CHECK(re15_re2spider_baby_owns(SP) == 1, "baby_owns mit Herkunft = 1");
+    SP->re2s_baby_spawned = 0;
     /* NEGATIV: fremde Typen bleiben aussen vor. */
     SP->type = 0x27; CHECK(re15_re2spider_owns(SP) == 0, "NEGATIV: 0x27 (Gorilla) gehoert nicht der Spinne");
     SP->type = 0x20; CHECK(re15_re2spider_owns(SP) == 0, "NEGATIV: 0x20 (Hund) gehoert nicht der Spinne");

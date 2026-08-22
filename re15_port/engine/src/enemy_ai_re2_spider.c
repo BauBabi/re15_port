@@ -1736,6 +1736,9 @@ static int re2s_spawn_babies(re15_actor_t *e, uint16_t mode, unsigned count)
         int slot = re15_actor_alloc(0x26);                 /* FUN_8001AD3C(38) @0x80105DE4 */
         if (slot < 0) break;                               /* @0x80105DF0 */
         re15_actor_t *c = &g_actors[slot];
+        c->re2s_baby_spawned = 1;                          /* HERKUNFT: echtes RE2-Baby (die
+                                                            * einzige Quelle, die RE2 selbst
+                                                            * kennt) — s. re15_re2spider_owns */
         c->re2z_f10e = (uint16_t)(e->re2s_water10c ? (mode | 1u) : mode);   /* @0x80105E0C */
         c->grid_id   = (uint8_t)(c->re2z_f10e & 0xffu);    /* Port-Spiegel des Spawn-Bytes */
         c->x = e->x; c->y = e->y; c->z = e->z;             /* @0x80105E18-30 */
@@ -2802,10 +2805,72 @@ int re15_re2spider_baby_tick(int slot)
  * diese Ausnahme weg. Das Gate haengt weiterhin NUR an unveraenderlichen Feldern (Typ), also
  * kann es mitten im Kampf nicht kippen. Ausserhalb 0..11 greift im Original die INIT-Klemme
  * `sltiu v0,v1,0xc` @0x8010043C -> +0x222 bleibt 0 (Boden), also ebenfalls unser Modus 0. */
+/* ⛔⛔ KORREKTUR 2026-08-22 — TYP 0x26 IST IN RE1.5 KEINE BABY-SPINNE ⛔⛔
+ * ==========================================================================================
+ * NUTZER-BEFUND: "Bei RE2-KI ist im ROOM1090 der Flammen-Effekt nicht da, stattdessen gibt es
+ * komische Dreiecke, die da rumschwirren."
+ *
+ * WELLE F hat den GANZEN Typ 0x26 dem RE2-Baby-Brain gegeben. Die Begruendung dafuer steht im
+ * Kopf dieser Datei ("7 Records vom Typ 0x26, alle in STAGE1/ROOM1090 ... damit ist im
+ * RE2-Modus der ganze Baby-Zweig ab dem ersten ROOM1090-Betreten live"). Diese sieben Records
+ * SIND real — aber sie sind KEINE Spinnen. Die Etikett-Korrektur vom 2026-08-21 (re15_esp.c
+ * "ROOM1090 aussen fehlt Feuer", Memory reai-v2-spider-ai) ist an dieser Stelle nie nachgezogen
+ * worden. EINE TYP-NUMMER BEDEUTET IN DEN BEIDEN SPIELEN NICHT DASSELBE:
+ *
+ *   RE1.5, kind 0x26 = der FEUER-EMITTER des brennenden Hinterhofs (7 brennende Truemmer).
+ *     Dispatch-Tabelle 0x80072bac, Eintrag [0x26] == 0x80072C44. STAGE1-Registrierung
+ *     (selbst disassembliert, STAGE1.BIN):
+ *       8011E8F0  lui   v0,0x8011
+ *       8011E8F4  addiu v0,v0,25224      ; v0 = 0x80116288
+ *       8011E8F8  lui   at,0x8007
+ *       8011E8FC  sw    v0,11332(at)     ; 0x80072BAC + 0x26*4 = 0x80072C44
+ *     (Gegenprobe derselben Registrierungs-Schleife: [0x20] = 0x8010D7F8 Hund, [0x21] =
+ *      0x80112020 Kraehe, [0x27] = 0x80116DB8 Gorilla — alle drei decken sich mit den
+ *      bereits verifizierten Roots, die Index-Rechnung stimmt also.)
+ *     0x80116288 ist der Flammen-Emitter: FUN_80116D00 liest `lbu v0,9(ent)` @0x80116D10,
+ *     `andi v1,v0,0x7f` @0x80116D18, `sltiu v0,v1,0x5` @0x80116D1C (Varianten >= 5 spawnen
+ *     nichts) und springt ueber die Tabelle @0x80100364 = {0x80116D44, 0x80116D5C, 0x80116D5C,
+ *     0x80116D44, 0x80116D5C} nach `lui v1,0x803` (Effekt-Id 0x08) bzw. `lui v1,0x1003`
+ *     (Effekt-Id 0x10) @0x80116D58/@0x80116D6C, dann `jal 0x80019700` @0x80116D84.
+ *     Der Emitter hat KEINE Lokomotion — die sieben Truemmer stehen.
+ *
+ *   RE2, kind 0x26 = die BABY-SPINNE, die die Adult-Spinne zur Laufzeit ausstoesst. Selbst aus
+ *     EMS25.BIN disassembliert:
+ *       80105DE4  jal   0x8001ad3c       ; Entity-Allokator
+ *       80105DE8  addiu a0,zero,38       ; kind 38 == 0x26
+ *
+ * GEMESSEN (echte EXE, ROOM1090 ueber das Debug-Menue, RE15_STATE_LOG, F1..F83):
+ *   RE15_AI_FLAVOR=re15 : fx=14 aktive Effekt-Slots (die Flammen), alle 7 Aktoren stehen ueber
+ *                         83 Frames exakt auf ihren RDT-Positionen (2052,-1334) (2375,-2333)
+ *                         (3104,-3498) (2974,-860) (2874,440) (2774,2040) (1374,1340), rot=1024.
+ *   RE15_AI_FLAVOR=re2  : fx=0 — KEIN einziger Flammen-Effekt — und 5 der 7 Aktoren laufen weg,
+ *                         z.B. Slot 4 (2974,-860,r1024) -> (-2025,-2,r2429), Slot 6
+ *                         (2774,2040,r1024) -> (4860,751,r85). Das sind die "Dreiecke, die
+ *                         rumschwirren": die 1-Mesh-Truemmergeometrie von EM26, vom
+ *                         RE2-Baby-Brain durch den Hinterhof gefahren.
+ *
+ * DIE WEICHE: das RE2-Baby-Brain gehoert AUSSCHLIESSLICH den Aktoren, die der RE2-Spawner
+ * selbst erzeugt hat (re2s_spawn_babies setzt re2s_baby_spawned = 1). Die per RDT-`Sce_em_set`
+ * gesetzten 0x26er bleiben in BEIDEN Flavors auf dem byte-true RE1.5-Emitter — sie haben in RE2
+ * ueberhaupt kein Gegenstueck. Der RE2-Zweig der Adult (0x25) bleibt unveraendert: dort ist der
+ * Baby-Spawn echtes RE2-Verhalten und laeuft weiter (Aufrufstellen @0x80104470/@0x80104590/
+ * @0x801046B8/@0x80104828 in der DEATH-Wurzel).
+ * ========================================================================================== */
+int re15_re2spider_baby_owns(const re15_actor_t *e)
+{
+    return e && e->type == 0x26u && e->re2s_baby_spawned;
+}
+
+/* WELLE E/F-Gate (Adult): das Gate haengt weiterhin NUR an unveraenderlichen Feldern, kann also
+ * mitten im Kampf nicht kippen. Welle E musste Decken- (+0x222 = 1) und Wandspawns (+0x222 = 3)
+ * dem RE1.5-Brain lassen, weil deren ACTIVE-Handler nicht portiert waren; mit Modus 1/2/3
+ * (@0x801013AC / @0x80101CC8 / @0x80102B40) faellt diese Ausnahme weg. Ausserhalb 0..11 greift
+ * im Original die INIT-Klemme `sltiu v0,v1,0xc` @0x8010043C -> +0x222 bleibt 0 (Boden).
+ * Fuer 0x26 gilt jetzt die HERKUNFTS-Weiche des Blocks darueber. */
 int re15_re2spider_owns(const re15_actor_t *e)
 {
     if (!e) return 0;
-    return (e->type == 0x25u) || (e->type == 0x26u);
+    return (e->type == 0x25u) || re15_re2spider_baby_owns(e);
 }
 
 void re15_re2spider_room_reset(void)

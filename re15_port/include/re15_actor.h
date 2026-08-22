@@ -513,6 +513,17 @@ typedef struct {
     uint8_t  re2s_c23d;         /* +0x23D Root-Countdown (@0x80100104-114)                       */
     uint8_t  re2s_f106;         /* +0x106 Etagen-Index = -Y / 1800 (Root @0x80100144-70)         */
     uint8_t  re2s_seeded;       /* PORT-Feld: INIT-HP schon gezogen? (RE1.5-Spawns setzen hp)    */
+    uint8_t  re2s_baby_spawned; /* PORT-Feld (HERKUNFT, kein Original-Offset): dieser Typ-0x26-
+                                 * Aktor wurde vom RE2-Adult-Spawner FUN_80105D38 erzeugt
+                                 * (`jal 0x8001ad3c` / `addiu a0,zero,38` @0x80105DE4-E8) und ist
+                                 * damit eine echte RE2-BABY-SPINNE. Bleibt 0 fuer die per
+                                 * RDT-`Sce_em_set` gesetzten 0x26er — das sind in RE1.5 die
+                                 * FEUER-EMITTER von ROOM1090 (Dispatch 0x80072bac[0x26] =
+                                 * 0x80116288, Registrierung `addiu v0,v0,25224` @0x8011E8F4 ->
+                                 * `sw v0,11332(at)` @0x8011E8FC), ein voellig anderes Wesen.
+                                 * Die Zahl 0x26 bedeutet in den beiden Spielen NICHT dasselbe;
+                                 * dieses Feld ist die Weiche. Details: enemy_ai_re2_spider.c
+                                 * re15_re2spider_owns.                                          */
     uint8_t  re2_hp_stamped;    /* PORT-Feld (re15_damage.c re15_re2_hp_sync): RE2-INIT-HP schon
                                  * gestempelt? Wird beim Zustand 0 (INIT steht aus) und beim
                                  * Deaktivieren des Slots wieder geloescht. NUR im RE2-Flavor

@@ -161,11 +161,42 @@ int main(void)
         CHECK(e->hp == 100, "RE1.5: hp %d != 100", e->hp);
     }
 
-    /* ---- 4) RE2: jede Waffe toetet sofort (Zeile 0x800A4B90, HP 1 @0x801000F8) ---- */
+    /* ---- 3b) ⛔ 2026-08-22: DIE ROOM1090-0x26er SIND KEINE SPINNEN -------------------------
+     * Der Kopf dieser Datei nannte sie "Baby-Spinnen". Falsch — sie sind die RE1.5-FEUER-
+     * EMITTER des brennenden Hinterhofs. Dispatch-Registrierung (STAGE1.BIN, selbst
+     * disassembliert): `lui v0,0x8011` @0x8011E8F0 / `addiu v0,v0,25224` @0x8011E8F4 (= Root
+     * 0x80116288) / `sw v0,11332(at)` @0x8011E8FC (= 0x80072BAC + 0x26*4). Root 0x80116288
+     * spawnt ueber FUN_80116D00 die Flammen (Varianten-Tabelle @0x80100364 =
+     * {0x80116D44,0x80116D5C,0x80116D5C,0x80116D44,0x80116D5C} -> Effekt-Id 0x08 bzw. 0x10,
+     * `jal 0x80019700` @0x80116D84). Zensus ueber alle sechs Stage-Overlays: 0x26 ist NUR in
+     * STAGE1 registriert, die Adult-Spinne 0x25 NUR in STAGE2 (0x801109E4).
+     * FOLGE: diese sieben Aktoren bleiben in BEIDEN Flavors auf der RE1.5-Nullzeile
+     * @0x8006EDE0 — sie sind waffen-immun, mit RE1.5-HURT (`+0x4 = 2` @0x80012520-2C). */
+    printf("\n=== 3b) RE2-Flavor: die RDT-0x26er von ROOM1090 bleiben RE1.5 (Feuer-Emitter) ===\n");
+    for (int w = 0; w < 22; w++) {
+        bringup(RE15_AI_FLAVOR_RE2, slots, 8);
+        arm(slots[1], 0x26, 100, s_gun_strip[w] ? 3000 : 700);
+        g_actors[slots[1]].re2s_baby_spawned = 0;   /* RDT-Herkunft (Sce_em_set @0x2214..0x228C) */
+        re15_player_set_equipped_weapon(w);
+        int fired = re15_player_weapon_fire(w);
+        re15_actor_t *e = &g_actors[slots[1]];
+        CHECK(fired != 0, "RE2/RDT w%d: Schuss kam nicht an", w);
+        if (!fired) continue;
+        CHECK(e->hp == 100, "RE2/RDT w%d: hp %d != 100 — der Feuer-Emitter muss die Nullzeile "
+              "@0x8006EDE0 behalten", w, e->hp);
+        CHECK(e->state == 2, "RE2/RDT w%d: state %d != 2 (RE1.5-HURT @0x80012520)", w, e->state);
+    }
+    printf("  22/22 Waffen: Feuer-Emitter unveraendert immun, state = 2\n");
+
+    /* ---- 4) RE2: jede Waffe toetet sofort (Zeile 0x800A4B90, HP 1 @0x801000F8) ----
+     * ⛔ 2026-08-22: gilt nur fuer ECHTE RE2-Babys, also fuer Aktoren, die der RE2-Adult-
+     * Spawner erzeugt hat (`jal 0x8001ad3c` / `addiu a0,zero,38` @0x80105DE4-E8). Der Test
+     * setzt die Herkunft deshalb explizit. */
     printf("\n=== 4) RE2: Zeile 0x800A4B90 Zone 0 — jeder Treffer toetet (HP 1) ===\n");
     for (int w = 0; w < 22; w++) {
         bringup(RE15_AI_FLAVOR_RE2, slots, 8);
         arm(slots[1], 0x26, 1, s_gun_strip[w] ? 3000 : 700);
+        g_actors[slots[1]].re2s_baby_spawned = 1;   /* echtes RE2-Baby @0x80105DE8 */
         re15_player_set_equipped_weapon(w);
         int fired = re15_player_weapon_fire(w);
         re15_actor_t *e = &g_actors[slots[1]];
@@ -184,6 +215,7 @@ int main(void)
     {
         bringup(RE15_AI_FLAVOR_RE2, slots, 8);
         arm(slots[1], 0x26, -1, 3000);
+        g_actors[slots[1]].re2s_baby_spawned = 1;   /* echtes RE2-Baby @0x80105DE8 */
         re15_actor_t *e = &g_actors[slots[1]];
         int st0 = e->state;
         re15_player_set_equipped_weapon(3);
@@ -194,6 +226,7 @@ int main(void)
               e->hp, e->state);
         /* Gegenprobe: derselbe Aktor mit HP >= 0 ist sehr wohl ein Ziel. */
         arm(slots[1], 0x26, 1, 3000);
+        g_actors[slots[1]].re2s_baby_spawned = 1;
         CHECK(re15_player_weapon_fire(3) != 0, "RE2: HP>=0-Ziel wurde NICHT getroffen "
               "(dann misst Punkt 5 nichts)");
     }

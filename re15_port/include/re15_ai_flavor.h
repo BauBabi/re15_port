@@ -136,6 +136,13 @@ int  re15_re2spider_baby_tick(int slot);          /* WELLE F: Baby 0x26 (EMS26.B
  * (INIT-Sprungtabelle @0x80100004 Index 2..11 -> +0x222 = 1 bzw. 3) bleiben ueber ihre GANZE
  * Lebenszeit auf dem unveraenderten byte-true RE1.5-Brain — kein Flavor-Wechsel mitten im Kampf. */
 int  re15_re2spider_owns(const re15_actor_t *e);
+/* ⛔ 2026-08-22: Typ 0x26 ist NICHT in beiden Spielen dasselbe Wesen. In RE1.5 ist 0x26 der
+ * FEUER-EMITTER von ROOM1090 (Dispatch 0x80072bac[0x26] = 0x80116288, Registrierung
+ * @0x8011E8F4/@0x8011E8FC), in RE2 die Baby-Spinne, die die Adult ausstoesst (`addiu a0,zero,38`
+ * @0x80105DE8). Das RE2-Baby-Brain gehoert deshalb NUR Aktoren, die der RE2-Spawner selbst
+ * erzeugt hat (Port-Feld re2s_baby_spawned). Volle Herleitung + Messwerte an der Definition in
+ * enemy_ai_re2_spider.c. */
+int  re15_re2spider_baby_owns(const re15_actor_t *e);
 void re15_re2spider_audio_hook(void (*se_fn)(int se_id, int flag2000), void (*bank_fn)(int bank),
                                int baby);
 void re15_re2spider_room_reset(void);             /* Raumladen: Spawn-Budget der Adult-Spinne   */

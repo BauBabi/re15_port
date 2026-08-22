@@ -594,16 +594,22 @@ static int re15_re15_import_owns(uint8_t type)
     return re15_re15_re2z_import_owns((unsigned)type);
 }
 
-/* type -> its byte-true damage row (@0x8006e0d0 + type*0x58). */
-static const uint16_t *re15_enemy_dmg_row(uint8_t type)
+/* actor -> its byte-true damage row (@0x8006e0d0 + type*0x58). */
+static const uint16_t *re15_enemy_dmg_row(const re15_actor_t *e)
 {
+    uint8_t type = e->type;
     /* RE2-Flavor: die Baby-Spinne faehrt das RE2-Gehirn (EMS26.BIN) mit RE2-HP; sie muss
      * deshalb auch die RE2-Schadenszeile bekommen, sonst ist sie unzerstoerbar UND friert im
-     * nicht existierenden RE2-HURT-Zustand ein (Belege am Tabellen-Kopf). Das Besitz-Gate
-     * re15_re2spider_owns haengt ausschliesslich am Typ, also reicht der Typ hier.
+     * nicht existierenden RE2-HURT-Zustand ein (Belege am Tabellen-Kopf).
      * ⚠ Die Baby-Spinne behaelt ihre Zeile AUCH bei abgeschaltetem Modell-Schalter: sie ist
-     * kein Balance-Thema, sondern der Fix gegen den permanenten Einfrierer (49de51f3). */
-    if (type == 0x26u && re15_ai_flavor() == RE15_AI_FLAVOR_RE2)
+     * kein Balance-Thema, sondern der Fix gegen den permanenten Einfrierer (49de51f3).
+     * ⛔ KORREKTUR 2026-08-22: das Gate hing am TYP und hat damit auch die sieben
+     * RDT-gesetzten 0x26er von ROOM1090 erwischt — und das sind in RE1.5 keine Spinnen, sondern
+     * die FEUER-EMITTER (0x80072bac[0x26] = 0x80116288, Registrierung @0x8011E8F4/@0x8011E8FC).
+     * Deren byte-true Zeile ist die NULLZEILE @0x8006EDE0 (s_wpn_dmg_immune unten): hp wird in
+     * 0x80116288-0x80116DB4 nirgends gelesen, sie sind waffen-immun. Jetzt entscheidet die
+     * HERKUNFT (re15_re2spider_baby_owns, enemy_ai_re2_spider.c). */
+    if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2spider_baby_owns(e))
         return s_re2_wpn_dmg_spiderbaby;
     /* ⛔ PORT-OPTION (Block oben): im RE1.5-Modus bekommt die ZOMBIE-FAMILIE dieselbe
      * RE2-Schadenszeile. re15_re15_import_owns() ist zombie-fest, der switch kann fuer diesen
@@ -1268,7 +1274,7 @@ retry_after_latch:
     }
 
     re15_actor_t *e = &g_actors[best];
-    int dmg = re15_enemy_dmg_row(e->type)[weapon_id];   /* byte-true PER-TYPE per-weapon damage @0x8006e0d0 */
+    int dmg = re15_enemy_dmg_row(e)[weapon_id];     /* byte-true PER-TYPE per-weapon damage @0x8006e0d0 */
     e->sub_state_1 = (uint8_t)weapon_id;            /* +0x5 = reaction clip = weapon_id (@0x800124bc) */
     e->hp          = (int16_t)(e->hp - dmg);        /* +0x9a -= dmg */
     e->hit_react  |= 0x1;                           /* +0x93 |= 1 (one-hit guard) */
@@ -1459,7 +1465,14 @@ retry_after_latch:
  * dem `+0x4 = 2/3` — `survived` kann damit aus e->state gelesen werden. */
 static void re15_re2_stamp_hit(re15_actor_t *e, int row_src, unsigned row_id)
 {
-    if (re15_ai_flavor() != RE15_AI_FLAVOR_RE2 || !re15_re2_owns_type(e->type)) return;
+    if (re15_ai_flavor() != RE15_AI_FLAVOR_RE2) return;
+    /* ⛔ 0x26 nach HERKUNFT (2026-08-22): der Stempel nullt +0x6 (sub_state_2). Bei den sieben
+     * RDT-gesetzten 0x26ern von ROOM1090 — den FEUER-EMITTERN, 0x80072bac[0x26] = 0x80116288 —
+     * ist +0x6 der ACTIVE-Substate des Emitters (@0x80116784/@0x8011689C), ein Treffer haette
+     * den Flammen-Zyklus also neu gestartet. Nur echte RE2-Babys (re2s_baby_spawned, Spawner
+     * `addiu a0,zero,38` @0x80105DE8) gehoeren in den RE2-Stempel. */
+    if (e->type == 0x26u ? !re15_re2spider_baby_owns(e)
+                         : !re15_re2_owns_type(e->type)) return;
     /* NEGATIV-PROBE (2026-08-18, Ergebnis im Report): ersetzt man diese zwei Zeilen wieder
      * durch den alten Elevation-Stempel `hits1d2 = elev<0?0:elev>0?2:1` OHNE das +0x6-Nullen,
      * wird probe_re2_livepath sofort rot — kein Grunzer (SE=-1), +0x223 unveraendert 20, kein

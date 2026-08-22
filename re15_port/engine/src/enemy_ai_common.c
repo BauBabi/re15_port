@@ -6971,16 +6971,25 @@ static void re15_spider_ai_tick(int slot)
     uint8_t variant  = (uint8_t)(e->grid_id & 0x7f);
 
     /* WELLE F: unter dem RE2-Flavor uebernimmt das RE2-BABY-Brain (EMS26.BIN, eigene
-     * Zustandstabelle @0x80101084, Root @0x8010001C) den GANZEN Dispatch — analog zur Adult.
-     * Der RE1.5-Default darunter bleibt byte-identisch. Pause-Gate wie bei allen RE2-Brains
-     * (`lw 0x800CFBDC & 0x20000000` @0x8010002C-38) -> s_ai_paused pur. */
+     * Zustandstabelle @0x80101084, Root @0x8010001C) den Dispatch — analog zur Adult.
+     * Pause-Gate wie bei allen RE2-Brains (`lw 0x800CFBDC & 0x20000000` @0x8010002C-38)
+     * -> s_ai_paused pur.
+     * ⛔ KORREKTUR 2026-08-22 (Nutzer-Befund "im ROOM1090 fehlt bei RE2-KI das Feuer, statt
+     * dessen schwirren komische Dreiecke rum"): das Gate war TYP-fest und hat damit auch die
+     * sieben RDT-gesetzten 0x26er von ROOM1090 uebernommen — und die sind in RE1.5 KEINE
+     * Spinnen, sondern die FEUER-EMITTER (Dispatch 0x80072bac[0x26] = 0x80116288, Registrierung
+     * `addiu v0,v0,25224` @0x8011E8F4 -> `sw v0,11332(at)` @0x8011E8FC; Flammen-Spawner
+     * FUN_80116D00 mit Varianten-Tabelle @0x80100364 und `jal 0x80019700` @0x80116D84).
+     * Gemessen: RE2-Flavor -> fx=0 (keine Flamme) + 5 von 7 Truemmern wandern weg;
+     * RE1.5-Flavor -> fx=14 und alle 7 stehen still. re15_re2spider_owns() haengt jetzt an der
+     * HERKUNFT (re2s_baby_spawned): nur was der RE2-Adult-Spawner selbst erzeugt hat
+     * (`addiu a0,zero,38` @0x80105DE8) faehrt das Baby-Brain. Der RE1.5-Default darunter war
+     * und bleibt byte-identisch — er laeuft jetzt nur auch im RE2-Modus wieder.
+     * (Die alte +0x10E-Nachsaat aus dem grid_id ist mit weggefallen: sie existierte nur, um den
+     * RDT-Aktoren ein Spawn-Wort fuer das Baby-Brain unterzuschieben. Echte Babys bekommen
+     * +0x10E vom Spawner @0x80105E0C.) */
     if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2spider_owns(e)) {
-        if (!s_ai_paused) {
-            if (e->state == 0 && e->re2z_f10e == 0)
-                e->re2z_f10e = (uint16_t)e->grid_id;   /* +0x10E <- Spawn-Byte, wenn der
-                                                        * Laufzeit-Spawner keines gesetzt hat */
-            re15_re2spider_baby_tick(slot);
-        }
+        if (!s_ai_paused) re15_re2spider_baby_tick(slot);
         return;
     }
 

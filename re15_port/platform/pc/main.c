@@ -609,7 +609,18 @@ static void pc_enemy_hybrid_re15_models(uint8_t type, re15_enemy_bank_t *eb)
             unmapped, eb->pc_tex_slot);
 }
 
-static void pc_enemy_load(uint8_t type)
+/* `allow_re2` = 0 zwingt den RE1.5-Pfad, auch wenn re15_re2_owns_type(type) gilt.
+ * ⛔ NOETIG SEIT 2026-08-22 fuer TYP 0x26. Die Zahl bedeutet in den beiden Spielen NICHT
+ * dasselbe: in RE1.5 ist 0x26 der FEUER-EMITTER von ROOM1090 (Dispatch 0x80072bac[0x26] =
+ * 0x80116288; Registrierung `addiu v0,v0,25224` @0x8011E8F4 -> `sw v0,11332(at)` @0x8011E8FC),
+ * in RE2 die Baby-Spinne, die die Adult zur Laufzeit ausstoesst (`jal 0x8001ad3c` /
+ * `addiu a0,zero,38` @0x80105DE4-E8). Fuer die sieben RDT-gesetzten 0x26er von ROOM1090 muss
+ * deshalb die RE1.5-Bank EM26 geladen werden (1 Mesh / 1 Bone / 1 Clip), nicht die RE2-Bank
+ * EM026 (1 Mesh / 1 Bone / 3 Clips) — sonst faehrt der Emitter mit RE2-Clip-Indizes.
+ * Die Registry fuehrt EINE Bank je Typ; beide Populationen koennen nie im selben Raum stehen
+ * (Zensus: Typ 0x26 steht in genau 7 Records, alle in ROOM1090 @0x2214..0x228C, und dort steht
+ * kein einziger Adult 0x25), die Weiche ist also eindeutig. */
+static void pc_enemy_load_ex(uint8_t type, int allow_re2)
 {
     extern void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
     if (type == 0 || re15_enemy_find(type)) return;
@@ -619,7 +630,7 @@ static void pc_enemy_load(uint8_t type)
     /* RE2-Flavor-Zweig (WELLE A) — VOR dem RE1.5-Zweig, nur wenn ein RE2-Brain den Typ
      * besitzt (re15_re2_owns_type: Zombie-Familie + Hund 0x20). Fehlt das RE2-Archiv oder
      * der Record, faellt der Lauf UNVERAENDERT in den byte-true RE1.5-Pfad darunter. */
-    if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2_owns_type(type)) {
+    if (allow_re2 && re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2_owns_type(type)) {
         /* WELLE B/C: ENEMSE-Wiedergabe im Engine-Brain registrieren (PC-only Symbole — der
          * Funktionszeiger haelt engine/ link-sauber fuers PSX-Target) + Bank waehlen.
          * Zombie: Bank 0 (Beleg enemy_ai_re2_zombie.c RE2Z_ENEMSE_BANK). HUND: Bank 31 +
@@ -739,6 +750,10 @@ static void pc_enemy_load(uint8_t type)
     fprintf(stderr, "[enemy] EM%02X loaded: %d meshes, %d bones, %d clips -> slot %d\n",
             type, eb->md1.mesh_count, eb->skel.bone_count, eb->anim.clip_count, eb->pc_tex_slot);
 }
+
+/* Default: der RE2-Zweig darf greifen (unveraendertes Verhalten fuer alle Typen ausser 0x26,
+ * dessen Aufrufer die Herkunft mitgeben — s. Block ueber pc_enemy_load_ex). */
+static void pc_enemy_load(uint8_t type) { pc_enemy_load_ex(type, 1); }
 
 static void pc_load_room_prop_set(const re15_rdt_t *rdt,
                                   re15_md1_t md1[RE15_RDT_MAX_PROPS],
@@ -4822,17 +4837,30 @@ re_title:;
                  * rendern weiter aus ELLIOT.PLD (anim_select-0x47-Zweig unveraendert). */
                 for (int _pi = 1; _pi < RE15_ACTOR_MAX; _pi++)
                     if (g_actors[_pi].active && g_actors[_pi].type)
-                        pc_enemy_load(g_actors[_pi].type);
+                        /* ⛔ 0x26 nach HERKUNFT (2026-08-22): ein per RDT-`Sce_em_set` gesetzter
+                         * 0x26er ist in RE1.5 der FEUER-EMITTER (0x80072bac[0x26] = 0x80116288,
+                         * Registrierung @0x8011E8F4/@0x8011E8FC) und braucht die RE1.5-Bank EM26;
+                         * nur die vom RE2-Adult-Spawner erzeugten (`addiu a0,zero,38`
+                         * @0x80105DE8, Feld re2s_baby_spawned) sind echte RE2-Baby-Spinnen. */
+                        pc_enemy_load_ex(g_actors[_pi].type,
+                                         g_actors[_pi].type != 0x26u
+                                             || g_actors[_pi].re2s_baby_spawned);
                 /* WELLE F: die RE2-Adult-Spinne (0x25) erzeugt Baby-Spinnen (0x26) ZUR LAUFZEIT
                  * (FUN_80105D38, Aufrufstellen @0x8010322C/@0x801033D8/@0x801034DC/@0x80104478/
-                 * @0x801045A4/@0x801046B8/@0x801047D8/@0x80104830). Typ 0x26 steht in KEINEM
-                 * Sce_em_set der 240 ausgelieferten RDTs (eigener Zensus: 0 Records) — die
-                 * Roster-Schleife darueber holt die Bank also nie, und die AI laese im Spawn-Frame
-                 * eine NULL-Bank. pc_enemy_load ist idempotent. */
+                 * @0x801045A4/@0x801046B8/@0x801047D8/@0x80104830). Die Roster-Schleife darueber
+                 * holt die Bank erst, wenn das erste Baby schon steht — die AI laese im
+                 * Spawn-Frame eine NULL-Bank. Deshalb hier vorziehen, sobald ein Adult im Raum
+                 * ist; pc_enemy_load ist idempotent.
+                 * ⛔ KORREKTUR 2026-08-22: der alte Kommentar behauptete "Typ 0x26 steht in KEINEM
+                 * Sce_em_set der 240 RDTs (eigener Zensus: 0 Records)". Das war der Werkzeug-
+                 * Fehler, der schon im Kopf von enemy_ai_re2_spider.c widerrufen ist — es sind 7
+                 * Records, alle in ROOM1090 (@0x2214/0x2228/0x223C/0x2250/0x2264/0x2278/0x228C,
+                 * `44 xx 26 vv ...`). Die sind aber Feuer-Emitter, keine Spinnen, und ROOM1090
+                 * fuehrt keinen Adult 0x25 — dieser Vorzug feuert dort also nicht. */
                 if (re15_ai_flavor() == RE15_AI_FLAVOR_RE2)
                     for (int _pi = 1; _pi < RE15_ACTOR_MAX; _pi++)
                         if (g_actors[_pi].active && g_actors[_pi].type == 0x25) {
-                            pc_enemy_load(0x26);
+                            pc_enemy_load_ex(0x26, 1);     /* echte RE2-Babys -> RE2-Bank */
                             break;
                         }
                 re15_game_step(&gctx);
@@ -6419,7 +6447,17 @@ re_title:;
                  * outside the current camera cut must still have its keyframes. (Was gated after the cull
                  * at the old site below; a culled off-screen enemy then had bank=NULL and froze.) */
                 if (npc->type && !re15_enemy_find(npc->type))
-                    pc_enemy_load(npc->type);   /* inkl. 0x47 seit 7b (EM047-Own-Bank-Kanal) */
+                    /* inkl. 0x47 seit 7b (EM047-Own-Bank-Kanal).
+                     * ⛔ 0x26 nach HERKUNFT (2026-08-22) — dieselbe Weiche wie in der
+                     * Roster-Schleife: RDT-gesetzte 0x26er sind die FEUER-EMITTER von ROOM1090
+                     * (0x80072bac[0x26] = 0x80116288, Registrierung @0x8011E8F4/@0x8011E8FC) und
+                     * brauchen die RE1.5-Bank EM26; nur vom RE2-Adult-Spawner erzeugte
+                     * (`addiu a0,zero,38` @0x80105DE8) sind echte Baby-Spinnen. DIESE Stelle ist
+                     * die frueheste — sie laeuft im Render-Durchgang und hat die Bank vor der
+                     * Roster-Schleife geholt (gemessen: ohne den Zusatz stand trotz Brain-Fix
+                     * weiter "RE2 EM026 loaded: ... 3 clips" im Log). */
+                    pc_enemy_load_ex(npc->type,
+                                     npc->type != 0x26u || npc->re2s_baby_spawned);
 
                 /* BO-round (Tier-3): canonical per-cut REGION-QUAD cull, same as
                  * the prop path (PSX FUN_8002c18c → FUN_80014368). Replaces the
