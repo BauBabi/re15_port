@@ -1,3 +1,56 @@
+# RE1.5 Port — v0.3.11 (Early Preview)
+
+## Beim Generator-Raetsel lief Leon mit
+
+Gemeldet: „Nach dem Generator-Raetsel stand man nicht mehr vor dem Generator,
+sondern weiter weg davon. Bewegt man sich vielleicht auch **physisch** innerhalb
+des Raetsels?"
+
+**Genau das war es** — und es erklaert auch, warum sich die Kamera danach
+manchmal nicht mehr aenderte.
+
+Das Skript setzt beim Raetselstart zwei Schalter. Der Port legte sie in ein
+Feld fuer Skript-Merker. Im Original loest dieselbe Anweisung sie aber ueber
+eine Zeigertabelle auf, und der Eintrag fuer diese Gruppe zeigt gar nicht auf
+einen Merker, sondern direkt auf das **Pause-Wort der Engine**. Die beiden
+Schalter bedeuten also: *Spieler einfrieren* und *Gegner einfrieren*.
+
+Deshalb setzt das Raetsel auch nur diese zwei und nicht mehr: Tastatur und
+Skript muessen weiterlaufen, sonst liesse sich der Cursor nicht bedienen. Im
+Port war Leon dadurch nie eingefroren — dieselben Richtungseingaben, die den
+Cursor steuern, liefen zusaetzlich in seine Beine. Gemessen wanderte er bis zu
+**3.900 Einheiten** vom Panel weg und drehte sich frei.
+
+Und weil ein verpasster Kamerazonen-Uebergang endgueltig ist, blieb das Bild
+danach stehen — je nachdem, wohin man beim Raetseln gelaufen war. Daher
+„teilweise".
+
+Im echten Spiel gegengeprueft: mit der Korrektur steht Leon bei allen
+Richtungseingaben **ohne einen einzigen Einheiten-Versatz** am Panel.
+
+## Kamera blieb beim Klettern und auf Treppen haengen
+
+Sobald ein Klettervorgang oder eine Treppe begann, uebersprang der Port den
+**gesamten** Zonen-Suchlauf der Kamera. Im Original wird dabei nur die
+Aktionstasten-Pruefung unterdrueckt — der Zonen-Suchlauf laeuft in jedem Bild.
+Da ein verpasster Uebergang endgueltig ist, konnte die Kamera dadurch dauerhaft
+stehenbleiben. Betraf das neue Klettern und alle Treppenraeume.
+
+## Zwei Kamera-Werte wurden verwechselt
+
+Die letzte Fassung hatte **angeforderte** und **angezeigte** Kameraeinstellung
+getrennt. Dabei blieben zwei Stellen an der Anzeige haengen, die im Original die
+Anforderung lesen — vorher unsichtbar, weil beide Werte identisch waren. Der
+Zonen-Suchlauf durchsuchte dadurch die Gruppe der **alten** Einstellung, solange
+die Anzeige noch nicht nachgezogen hatte, und das Skript merkte sich beim
+Umschalten den falschen Wert.
+
+Abgesichert ist das jetzt durch einen Nachbau des Original-Suchlaufs, der ueber
+**21 Raeume mit 56,7 Millionen Vergleichspunkten** gegen den Port prueft — ohne
+eine einzige Abweichung.
+
+---
+
 # RE1.5 Port — v0.3.10 (Early Preview)
 
 ## Zuerst: v0.3.9 enthielt unter Windows die Aenderungen NICHT
