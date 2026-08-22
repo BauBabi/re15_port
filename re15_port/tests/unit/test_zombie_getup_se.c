@@ -65,6 +65,7 @@
 #include "re15_room.h"
 #include "re15_damage.h"
 #include "re15_vab.h"
+#include "re15_ai_flavor.h"   /* Default ist seit 2026-08-22 RE2 — dieser PIN misst RE1.5 */
 
 #define RE15_STR(x)  #x
 #define RE15_XSTR(x) RE15_STR(x)
@@ -251,6 +252,9 @@ static void pin_prio_gate(const re15_rdt_t *rdt)
 
 int main(void)
 {
+    /* ⛔ Der Default-Flavor ist seit 2026-08-22 RE2 (Nutzer-Entscheidung). Dieser PIN misst
+     * byte-true RE1.5-Verhalten und muss den Modus deshalb EXPLIZIT setzen. */
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
     const char *base = RE15_XSTR(RE15_ASSETS_PATH);
     char path[600]; size_t sz = 0;
     snprintf(path, sizeof path, "%s/STAGE1/ROOM10D0.RDT", base);

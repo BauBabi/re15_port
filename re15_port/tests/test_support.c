@@ -95,3 +95,32 @@ unsigned char *re15_asset_read_file(const char *path, int *out_size)
     if (b && out_size) *out_size = (int)sz;
     return b;
 }
+
+/* ============================================================================================
+ * TEST-KONTEXT: KI-Flavor auf RE1.5 (2026-08-22)
+ *
+ * Der AUSLIEFERUNGS-Default ist seit dieser Fassung RE2 — Nutzer-Entscheidung: „Ansonsten ist
+ * RE 2 AI mittlerweile so weit in Ordnung, dass ich das gerne als Standard in den Optionen
+ * ausgewaehlt haette." Das ist eine bewusste Abweichung vom Original.
+ *
+ * Die Unit-Tests messen dagegen ueberwiegend BYTE-TRUE RE1.5-Verhalten und wurden alle unter
+ * dem alten Default geschrieben. Statt in Dutzenden Dateien denselben Setter nachzutragen
+ * (und ihn in jeder kuenftigen zu vergessen), stellt das Test-Support-Modul den erwarteten
+ * Kontext EINMAL her: wer re15_test_support linkt, startet auf RE1.5.
+ *
+ * ⇒ Tests, die RE2 messen, setzen den Flavor weiterhin EXPLIZIT (etabliertes Muster, z.B.
+ *   test_re2_hybrid_rig.c, test_re15_poise_re2_import.c). Das bleibt unveraendert richtig.
+ * ⇒ Das SPIEL ist davon nicht betroffen: es linkt dieses Modul nicht.
+ * ============================================================================================ */
+#include "re15_ai_flavor.h"
+
+/* SCHWACHE Bindung: test_support wird auch von Tests gelinkt, die die Engine-Lib gar nicht
+ * ziehen (z.B. test_item_icon). Eine harte Referenz auf re15_ai_flavor_set wuerde deren Link
+ * brechen. Mit weak ist das Symbol dort schlicht NULL und der Konstruktor tut nichts. */
+extern void re15_ai_flavor_set(re15_ai_flavor_t f) __attribute__((weak));
+
+__attribute__((constructor))
+static void re15_test_force_re15_flavor(void)
+{
+    if (re15_ai_flavor_set) re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
+}

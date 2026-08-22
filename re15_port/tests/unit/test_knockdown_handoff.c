@@ -49,6 +49,7 @@
 #include "re15_emd.h"
 #include "re15_damage.h"
 #include "re15_anim_select.h"
+#include "re15_ai_flavor.h"   /* Default ist seit 2026-08-22 RE2 — dieser PIN misst RE1.5 */
 
 #define RE15_STR(x)  #x
 #define RE15_XSTR(x) RE15_STR(x)
@@ -219,6 +220,9 @@ static int pin_fall_sequence(void)
 
 int main(int argc, char **argv)
 {
+    /* ⛔ Der Default-Flavor ist seit 2026-08-22 RE2 (Nutzer-Entscheidung). Dieser PIN misst
+     * byte-true RE1.5-Verhalten und muss den Modus deshalb EXPLIZIT setzen. */
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);
     const char *which = (argc > 1) ? argv[1] : "all";
     if (load_em10() != 0) { printf("FAIL: EM010-Bank/Loco-Bank nicht ladbar\n"); return 1; }
     if (!strcmp(which, "bank") || !strcmp(which, "all")) pin_handoff_bank();

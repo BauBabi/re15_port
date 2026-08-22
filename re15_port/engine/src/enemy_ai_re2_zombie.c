@@ -37,16 +37,30 @@
 
 /* ---- the flavor switch itself ------------------------------------------------------------- */
 
-static re15_ai_flavor_t s_flavor = RE15_AI_FLAVOR_RE15;   /* byte-true default */
+/* ⚠️ DEFAULT = RE2, Nutzer-Entscheidung 2026-08-22: „Ansonsten ist RE 2 AI mittlerweile so weit
+ * in Ordnung, dass ich das gerne als Standard in den Optionen ausgewaehlt haette."
+ * Das ist eine BEWUSSTE ABWEICHUNG vom Auslieferungsstand — byte-true waere RE15. Wer den
+ * Originalzustand messen will, waehlt ihn im Menue (OPTIONS->AI) oder setzt
+ * RE15_AI_FLAVOR=re15/0.
+ * ⛔ ALLE byte-true-PINs muessen den Flavor deshalb EXPLIZIT setzen und duerfen sich nicht auf
+ * den Default verlassen (etabliertes Muster: re15_ai_flavor_set(RE15_AI_FLAVOR_RE15) am
+ * Testanfang, siehe test_room1140_combat.c). */
+static re15_ai_flavor_t s_flavor = RE15_AI_FLAVOR_RE2;
 static int s_flavor_env_read = 0;
 
 re15_ai_flavor_t re15_ai_flavor(void)
 {
-    /* RE15_AI_FLAVOR=re2 lets the headless harness select the brain without the menu. */
+    /* RE15_AI_FLAVOR waehlt das Brain ohne Menue — noetig fuer Harness UND fuer die
+     * byte-true-Messung, seit der Default RE2 ist. `re15`/`0`/`1.5` erzwingt RE1.5. */
     if (!s_flavor_env_read) {
         const char *v = getenv("RE15_AI_FLAVOR");
         s_flavor_env_read = 1;
-        if (v && (v[0] == '2' || v[0] == 'r' || v[0] == 'R')) s_flavor = RE15_AI_FLAVOR_RE2;
+        if (v && *v) {
+            if (v[0] == '2' || v[0] == 'r' || v[0] == 'R') s_flavor = RE15_AI_FLAVOR_RE2;
+            if (v[0] == '0' || v[0] == '1') s_flavor = RE15_AI_FLAVOR_RE15;   /* "0", "1.5" */
+            if ((v[0] == 'r' || v[0] == 'R') && (v[1] == 'e' || v[1] == 'E')
+                && v[2] == '1') s_flavor = RE15_AI_FLAVOR_RE15;               /* "re15" */
+        }
     }
     return s_flavor;
 }

@@ -80,6 +80,7 @@
 #include "re15_enemy_ai.h"
 #include "re15_ems.h"
 #include "re15_emd.h"
+#include "re15_ai_flavor.h"   /* Default ist seit 2026-08-22 RE2 — dieser PIN misst RE1.5 */
 
 #define RE15_STR(x)  #x
 #define RE15_XSTR(x) RE15_STR(x)
@@ -154,6 +155,7 @@ static int advance_ticks(uint8_t motion, uint8_t s1, uint8_t s2, uint8_t grid, i
 
 int main(void)
 {
+    re15_ai_flavor_set(RE15_AI_FLAVOR_RE15);   /* byte-true RE1.5 messen, nicht den neuen Default */
     const char *base = RE15_XSTR(RE15_ASSETS_PATH);
 
     if (load_bank(base, 0x10) != 0) {

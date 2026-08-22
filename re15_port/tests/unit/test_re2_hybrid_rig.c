@@ -274,7 +274,11 @@ int main(void)
          * den Hybrid (platform/pc/main.c pc_enemy_load) und liest re15_ai_models() nicht mehr.
          * Das Flag bleibt als TEST-HAKEN fuer genau diesen Rig-Umbau; sein Default (RE2 =
          * "unumgebaute Bank") ist der Ausgangszustand, den die Faelle oben voraussetzen. */
-        CHECK(re15_ai_flavor() == RE15_AI_FLAVOR_RE15, "Default-Flavor != RE1.5");
+        /* ⛔ 2026-08-22: der AUSLIEFERUNGS-Default ist jetzt RE2 (Nutzer-Entscheidung). Im
+         * TESTKONTEXT gilt weiterhin RE1.5 — der Konstruktor in tests/test_support.c stellt das
+         * einmal fuer alle Tests her, statt den Setter in Dutzende Dateien zu streuen. Dieser
+         * PIN prueft genau diesen Testkontext (und darunter die Orthogonalitaet der Setter). */
+        CHECK(re15_ai_flavor() == RE15_AI_FLAVOR_RE15, "Testkontext-Flavor != RE1.5");
         CHECK(re15_ai_models() == RE15_AI_MODELS_RE2,
               "Default-Modellherkunft != RE2 (Test-Haken-Ausgangszustand)");
         /* Orthogonalitaet: keins der beiden Flags zieht das andere mit (der Rig-Test setzt sie
