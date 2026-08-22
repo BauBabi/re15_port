@@ -1,103 +1,21 @@
-.gradle
-build/
-build_linux/
-/psx_dev/re15_reborn_pc/build_mingw/
-/re15_port/_legacy_minimal/
-**/debug.log
-!gradle/wrapper/gradle-wrapper.jar
-!**/src/main/**/build/
-!**/src/test/**/build/
+# Build- und Arbeitsverzeichnisse des Release-Prozesses.
+# ⛔ 2026-08-22: ein `git add -A release` hat 5369 Dateien eingecheckt — 2752 aus einer
+# entpackten Python-Distribution plus das komplette wbuild/-Verzeichnis samt .exe. Das
+# ist genau die Sorte Altlast, die das Repo vorher auf 8,6 GB aufgeblaeht hatte.
+release/Python/
+release/wbuild/
+release/lbuild/
+release/pkg-win/
+release/pkg-linux/
+release/win_out/
+release/linux_out/
 
-### IntelliJ IDEA ###
-.idea/modules.xml
-.idea/jarRepositories.xml
-.idea/compiler.xml
-.idea/libraries/
-*.iws
-*.iml
-*.ipr
-out/
-!**/src/main/**/out/
-!**/src/test/**/out/
+# Die AKTUELLE Paketversion wird bewusst eingecheckt (Nutzer-Vorgabe), alte entfernt
+# make_package.sh automatisch. Deshalb hier KEIN Muster auf release/*.zip / *.z01.
 
-### Eclipse ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
+# Port-Build
+re15_port/build/
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-
-### VS Code ###
-.vscode/
-
-### Mac OS ###
-.DS_Store
-/extracted/
-
-### Große RE1.5 Save-Disc-Images (~206 MB .bin > GitHubs 100-MB-Grenze) — nie tracken.
-### Unanchored, damit JEDE Kopie ignoriert wird.
-re15_save_final.bin
-re15_save_final.cue
-
-### chars/ = RE2RT-Referenz-Extraktion (7.3 GB) — lokal, nie tracken.
-/chars/
-
-### C/C++ Build-Artefakte — NUR unter re15_port. Bewusst NICHT global, denn in den
-### Referenzdirs sind .EXE/.OBJ/.o echte Spieldaten (z.B. info/Re1.5/PSX.EXE,
-### info/re2leon/.../*.OBJ-Modelle). re15_port/build/ ist über 'build/' schon ignoriert.
-re15_port/**/*.o
-re15_port/**/*.obj
-re15_port/**/*.a
-re15_port/**/*.exe
-re15_port/**/*.ilk
-re15_port/**/*.pdb
-
-### Einzelne Dateien > 100 MB (GitHubs harte Grenze) — bleiben draußen.
-/.agent_refs/gh_STAGE2.log
-
-### Deaktivierte eingebettete Git-Repos in Referenzdirs (von .git umbenannt),
-### damit deren Arbeitsdateien normal getrackt werden statt als kaputtes Submodule.
-**/.gitdisabled/
-
-### .claude: Skills + curated settings bleiben getrackt; alter Agent-Worktree-
-### Snapshot (~3.7 GB) und Runtime-Locks raus.
-/.claude/worktrees/
-/.claude/*.lock
-
-# Agent worktrees (transient)
-.claude/worktrees/
-
-# stray logs
-debug.log
-re15_card.mcr
-
-### Session-Scratch (Cleanup 2026-08-02): Laufzeit-Logs, Crash-DBs und
-### Verifikations-Screenshots entstehen bei jedem Lauf neu — nie tracken.
-### Bereits getrackte Referenzdateien unter shots/ bleiben davon unberührt.
-/*.log
-/err.txt
-/build_err.txt
-*.stackdump
-__pycache__/
-/.sentry-native/
-/shots/
-### Savestates sind Ground-Truth, aber zu groß fürs Repo — lokal halten.
-/stage_saves/*.sav
-
-### Aus info/Re1.5/ (Baum + re15.cat) jederzeit reproduzierbares CD-Image
-### -> scripts/build_re15_iso.py ; ~215 MB, nie tracken.
-/info/re15/
-
-# Wegwerf-Artefakte der zusaetzlichen Bauziele (targets/)
-re15_port/targets/*/build/
-re15_port/targets/steamdeck/dist/
-re15_port/build-relwin/
+# Werkzeug-Nebenprodukte
+tools/redux/.sentry-native/
+tools/redux/*_out.txt
