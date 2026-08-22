@@ -2543,3 +2543,34 @@ target_compile_definitions(test_1090_stay_on_crate PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_1090_stay_on_crate COMMAND test_1090_stay_on_crate)
 set_tests_properties(unit_1090_stay_on_crate PROPERTIES TIMEOUT 120 SKIP_RETURN_CODE 77)
+
+# --- DIAGNOSE (Nutzer-Befund 2026-08-22): fetter Zombie 0x11 "laeuft auf der Stelle" waehrend
+#     einer Animation mit gehobenen Armen (ROOM1140, RE2-Modus). Kein add_test — Messsonde. ---
+add_executable(probe_re2_fatz_walkspot probe_re2_fatz_walkspot.c)
+target_link_libraries(probe_re2_fatz_walkspot PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re2_fatz_walkspot PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_re2_fatz_walkspot PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- DIAGNOSE (Nutzer-Befund 2026-08-22, ROOM1090-Cutscene "rennt fast auf der Stelle"):
+#     Plc_dest Mode 7/8 spielen im Original die PL00-BASIS-Bank (0x800ACAD8/0x800ACBC0,
+#     @0x80031130-44 / @0x801312A0-B4), der Port die PL00W01-WAFFEN-Bank (Sentinel 100 = Rennen).
+#     Kein add_test — reine Messsonde. ---
+add_executable(probe_plc_back_clip probe_plc_back_clip.c)
+target_link_libraries(probe_plc_back_clip PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_plc_back_clip PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_plc_back_clip PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- PIN (Nutzer-Report 2026-08-22): EXEC[2] @0x80102260 ist der ZWEITE GANG des RE2-Zombies
+#     ("Arme oben") und BEWEGT sich — Steuerung 0x80015558 (a3 = +-16, @0x8010234C-58 /
+#     @0x80102364-70) + Wurzelbewegung 0x80015E7C @0x801023DC / 0x800152C8 @0x8010246C —
+#     samt seinen drei Produzenten im Gang-Executor (@0x80101DB8 / @0x80101F0C / @0x80101F5C)
+#     und DECISION[2] @0x80101F7C. ---
+add_executable(test_re2z_bump_walk test_re2z_bump_walk.c)
+target_link_libraries(test_re2z_bump_walk PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2z_bump_walk PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2z_bump_walk PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2z_bump_walk COMMAND test_re2z_bump_walk)
+set_tests_properties(unit_re2z_bump_walk PROPERTIES TIMEOUT 120 SKIP_RETURN_CODE 77)

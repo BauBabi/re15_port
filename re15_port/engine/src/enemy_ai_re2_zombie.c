@@ -981,7 +981,7 @@ static void re2z_exec_stand(re15_actor_t *e)
  * movement. Steer point +0x1C4/+0x1C6 = the RE2 navigator output; the PORT equivalent is its
  * own nav steer (re15_nav_update_steer fills e->steer_x/z each tick BEFORE this brain runs —
  * cross-zone it pathfinds exactly like FUN_8004A808's first-hop would). */
-static void re2z_exec_walk(int slot, re15_actor_t *e)
+static void re2z_exec_walk(int slot, re15_actor_t *e, re15_actor_t *pl)
 {
     if (e->sub_state_2 == 0) {
         re2z_clip(e, e->re2z_walkclip, 0, 0xF, 0x100, 1);          /* @0x80101A74-8C */
@@ -995,30 +995,182 @@ static void re2z_exec_walk(int slot, re15_actor_t *e)
      * application in the port. NOT the RE1.5 foot-lock: pair-1 clips 0/2 carry the forward
      * translation in the kf root fields (byte-read: clip 0 sx 2/47/121/209...). */
     re15_re2z_move_root(e);                                        /* e7c @0x80101CBC + 152c8 @0x80101D60 */
-    (void)slot;
+    (void)slot; (void)pl;
     /* WALK edge-fall death commits 0xA03/0xB03 (@0x80101E64/6C) — no reachable cliff geometry
      * in the RE1.5 rooms the port ships; OPEN, documented. */
+
+    /* ========================================================================================
+     * ⛔ OFFEN, VOLLSTAENDIG DISASSEMBLIERT, BEWUSST NOCH NICHT SCHARF:
+     *    DIE DREI PRODUZENTEN VON `+0x4 = 0x201` (EXEC[2], der Gang mit den erhobenen Armen).
+     *
+     * Der Port fuehrte EXEC[2] bis 2026-08-22 als "Entry OPEN, toter Code". Das ist WIDERLEGT —
+     * der Gang-Executor selbst committet den Zustand an drei Stellen (neu disassembliert aus
+     * EMZ0.BIN, jede Zeile unten zitiert):
+     *
+     * (1) TIMER-UEBERGANG @0x80101D68-DBC (der Seed dazu steht in P0 @0x80101B10-20:
+     *     `jal rand / sra v0,v0,3 / addiu v0,v0,100 / sh v0,346` = +0x15A = (rand>>3)+100):
+     *       80101d68  lhu  v0,346(s1)                        ; +0x15A
+     *       80101d70  addiu v0,v0,-1        80101d74  sh v0,346(s1)
+     *       80101d78/7c sll v0,v0,16 / bne v0,zero,0x80101dc0 ; erst wenn (alt-1)&0xffff == 0
+     *       80101d84  jal  rand   80101d8c sra v0,v0,3  80101d90 addiu v0,v0,100
+     *       80101d98  sh   v0,346(s1)                        ; +0x15A neu
+     *       80101d94  jal  rand                               ; ZWEITER Wurf
+     *       80101d9c/a0 andi v0,v0,0x3 / bne                  ; 1 von 4
+     *       80101da8/b0 lw v0,496 / sltiu v0,v0,0x1388        ; dist < 5000
+     *       80101db8/bc addiu v0,zero,513 / sw v0,4(s1)       ; +0x4 = 0x201
+     * (2) NAHBEREICH @0x80101EC4-F10:
+     *       80101ecc  sltiu v0,v0,0x7d0                       ; dist < 2000
+     *       80101ee8  jal 0x80015614 (a3 = 512) ; bne         ; Spieler im +-512-Kegel
+     *       80101efc/04/08 lbu 0x800cfdcb / andi 0x80 / bne   ; Spieler nicht beansprucht
+     *       80101f0c/10 addiu v0,zero,513 / sw v0,4(s1)       ; +0x4 = 0x201
+     * (3) SPIELER RENNT @0x80101F14-F60:
+     *       80101f18/20 lhu 0x800cfbf6 / andi 0x4             ; cfbf6 Bit 2 = RENNEN
+     *       80101f34  sltiu v0,v0,0x9c4                       ; dist < 2500
+     *       80101f50  jal 0x80015614 (a3 = 1324) ; bne        ; Spieler im +-1324-Kegel
+     *       80101f5c/60 addiu v0,zero,513 / sw v0,4(s1)       ; +0x4 = 0x201
+     *
+     * WARUM SIE (NOCH) NICHT DRIN SIND — GEMESSEN, nicht vermutet: mit (1)+(2) scharf faellt die
+     * POSITIV-KONTROLLE NAHKAMPF in test_re2_zombie_abc von 3523 auf 0 Treffer (Pistole bleibt
+     * bei ~1700). Bisektion ueber die drei Bloecke einzeln: nur (1) an -> 3756, nur (2) an ->
+     * 3589, (1)+(2) zusammen -> 0. Der Mechanismus dieser Kombination ist NICHT aufgeklaert,
+     * und "Mechanismus nicht gefunden = NICHT fertig" gilt auch fuer eine byte-belegte
+     * Ergaenzung: ein unverstandener Zusammenbruch des Nahkampfs waere schlimmer als die
+     * Luecke. Der EXEC[2]-Executor selbst (unten) ist davon unabhaengig scharf — er wird ueber
+     * die Treffer-Erholungs-Leitern (@0x801060F4 / @0x80105B24 / @0x80107418 / @0x801081BC)
+     * erreicht, und genau dort trat der Nutzer-Befund auf.
+     * NAECHSTER SCHRITT: den 0-Treffer-Zusammenbruch mit (1)+(2) aufklaeren (Verdacht: der
+     * Anmarschweg endet ausserhalb des +-0x400-Spielerkegels, weil EXEC[2] nur mit +-16
+     * steuert statt mit der Gang-Rate 8+16) — danach die drei Bloecke scharf schalten.
+     * ======================================================================================*/
 }
 
-/* EXEC[2] @0x80102260 (bump/shove contact): clip 1 @0x801022AC, SE 10 @0x801022DC; ends ->
- * 0x101. ENTRY OPEN — no port producer commits 2 yet; executor implemented for completeness. */
-static void re2z_exec_bump(re15_actor_t *e)
+/* ============================================================================================
+ * EXEC[2] @0x80102260 — DER ZWEITE GANG ("Arme oben"), NICHT ein Anstoss-Stub.
+ *
+ * ⛔ NUTZER-REPORT 2026-08-22 (fetter Zombie 0x11, ROOM1140, RE2-Modus):
+ *   "Es gibt manchmal Momente, wo er kurz zu einer Animation mit GEHOBENEN ARMEN wechselt, und
+ *    dann laeuft. Immer wenn diese Animation kommt, LAEUFT ER AUF DER STELLE, anstatt wirklich
+ *    Richtung Spieler zu gehen."
+ *
+ * GEMESSEN VOR DEM FIX (probe_re2_fatz_walkspot, ROOM1140, echte Bank EM011, +0x4 = 0x201
+ * gesetzt wie es die Original-Leitern tun):
+ *   f0100 st=1 s1=2 s2=1 clip=4 af=  1 fc=60 LOCO=1 pos(-488,-21635) d(0,0)
+ *   f0125 st=1 s1=2 s2=1 clip=4 af= 26 fc=60 LOCO=1 pos(-488,-21635) d(0,0)
+ *   f0150 st=1 s1=2 s2=1 clip=4 af= 51 fc=60 LOCO=1 pos(-488,-21635) d(0,0)
+ *   -> 59 Bilder Loco-Clip 4, Summe |dx|+|dz| = 0, danach zurueck in den Gang.
+ * Und die "gehobenen Arme" sind MESSBAR, nicht behauptet — Mittelwert der Hand-Bone-Y ueber den
+ * ganzen Clip (Y ist nach unten positiv, kleiner = hoeher), EM011-Loco-Bank:
+ *   Clip 0/1 (EXEC[1]-Gang A): b11 -1609  b14 -1635
+ *   Clip 2/3 (EXEC[1]-Gang B): b11 -1646  b14 -1526
+ *   Clip 4/5 (EXEC[2]-Gang C): b11 -2084  b14 -1936     <- 440..475 Einheiten HOEHER
+ *   Clip 6/7 (EXEC[2]-Gang D): b11 -2053  b14 -2114     <- 410..480 Einheiten HOEHER
+ * EXEC[2] IST also genau der Gang mit den erhobenen Armen, und der Port hat ihn ohne
+ * Fortbewegung gespielt: keine Steuerung, kein 0x80015E7C/0x800152C8.
+ *
+ * VOLLSTAENDIG NEU DISASSEMBLIERT 2026-08-22 (EMZ0.BIN, jede Zeile unten zitiert). Die alte
+ * Fassung war ein 2-Phasen-Stub mit der Notiz "P1+ nicht RE'd; Entry OPEN, toter Code" — beides
+ * ist widerlegt: der Zustand hat einen vollen Per-Tick-Body UND drei Produzenten im Gang selbst
+ * (siehe re2z_exec_walk unten).
+ *
+ * P0 @0x80102290 (FAELLT DURCH nach P1 — kein Sprung hinter @0x80102338):
+ *   80102290/94  lui a0,0xf / ori a0,a0,0x4      ; Wortbasis 0x000F0004
+ *   80102298     lbu v0,536(s0)                  ; +0x218 walkclip
+ *   8010229c/a0  addiu v1,1 / sb v1,6(s0)        ; +0x6 = 1
+ *   801022a4/ac  addu v0,v0,a0 / sw v0,332(s0)   ; Clip-Wort = 0xF0004 + walkclip (Loco 4/6)
+ *   801022a8-c0  jal rand ; andi 0x3f ; addiu 180 ; sh v0,344(s0)   ; +0x158 = (r&0x3f)+180
+ *   801022b4/bc  lbu v1,569(s0) / bne v1,zero    ; nur wenn +0x239 == 0:
+ *   801022c4-dc    jal rand ; andi 1 ; a0 = 11 : 10 ; jal 0x8005bd6c
+ *   801022e4/e8    addiu v0,150 / sb v0,569(s0)  ; +0x239 = 150
+ *   801022ec-fc  lw a1,264 / lw a2,380 / jal 0x80015e7c (a3=0)      ; PAIR-1-Re-Anker
+ *   80102300-20  jal rand ; andi 0x1f ; sb v0,333(s0)               ; +0x14D = ZUFALLS-STARTBILD
+ *   8010231c     jal 0x80015e7c (Pair 1) ERNEUT                     ; Re-Anker auf das neue Bild
+ *   80102324-34  jal rand ; andi 0x1f ; addiu 45 ; sh v0,346(s0)    ; +0x15A = (r&0x1f)+45
+ *   80102338     sb zero,362(s0)                                    ; +0x16A = 0
+ * P1 @0x8010233c:
+ *   8010233c-44  lb v0,362(s0) ; bne v0,zero                        ; +0x16A SIGNED gelesen
+ *   8010234c-58    lh a1,452 / lh a2,454 / jal 0x80015558 (a3 = +16); Steuerung ZUM Zielpunkt
+ *   8010235c       j 0x80102384
+ *   80102364-70  else lh a1,452 / lh a2,454 / jal 0x80015558 (a3 = -16) ; Steuerung WEG (Weben)
+ *   80102374-80       lbu v0,362 ; addiu -1 ; sb v0,362                 ; +0x16A--
+ *   80102384-90  lw v0,272(s0) ; andi 1 ; beq                        ; +0x110 Bit 0 = Wandkontakt
+ *   80102398-a8    lhu v1,346 ; addiu v0,v1,-1 ; bne v1,zero ; sh v0,346  ; +0x15A--
+ *   801023ac-c0      jal rand ; andi 0x1f ; addiu 45 ; sh v0,346     ; +0x15A = (r&0x1f)+45
+ *   801023bc-cc      jal rand ; andi 7 ; addiu 5 ; sb v0,362         ; +0x16A = (r&7)+5
+ *   801023d4-e0  lw a1,264 / lw a2,380 / jal 0x80015e7c (a3=0)       ; PAIR-1-Wurzeldelta
+ *   801023e4-f4  lw a1,264 / lw a2,380 / jal 0x8002959c (a3=256)     ; PAIR-1-Advance
+ *   8010246c/70  jal 0x800152c8 (a1=0)                               ; ANWENDEN = die Bewegung
+ *   80102550-60  lhu v1,344 ; addiu v0,v1,-1 ; beq v1,zero -> 0x8010257c ; sh v0,344
+ *   80102564-74  lbu 0x800cfdcb ; andi 0x80 ; beq zero -> 0x80102584     ; Spieler beansprucht?
+ *   8010257c/80  addiu v0,257 / sw v0,4(s0)                          ; +0x4 = 0x101 (zurueck)
+ *   80102584-90  lw v0,496 ; sltiu 0x1389 ; beq -> 0x801025b8         ; dist < 5001 ?
+ *   80102598-b0  jal 0x80015614 (a3=1024) ; beq v0,zero -> Epilog     ; im Kegel -> BLEIBEN
+ *   801025b8-cc  lh v0,344 ; slti 120 ; beq -> Epilog ; sw 257,4      ; sonst ab 60 verbrauchten
+ *                                                                      Bildern zurueck in den Gang
+ * NICHT modelliert (benannt, nicht erfunden): der Drei-Bild-Zweig @0x801023F8-468
+ * (+0x10E & 0x80 || +0x21A & 0x8000 -> 0x801016C8 + 0x8002A9C8) und die Kanten-Sturz-/
+ * Jitter-Zweige @0x80102474-54C (+0x21A & 0x800 / & 0x1000) — dieselben Zweige, die auch der
+ * Gang-Executor traegt und die in den ausgelieferten RE1.5-Raeumen kein Datum setzen. */
+static void re2z_exec_bump(re15_actor_t *e, re15_actor_t *pl)
 {
-    if (e->sub_state_2 == 0) {                                     /* P0 (Review #11) */
-        re2z_clip(e, 4 + e->re2z_walkclip, 0, 0xF, 0x100, 0);      /* Wort = 0xF0004 + walkclip ->
-                                                                    * Pair-1-Clip 4/6 (`lui 0xf; ori
-                                                                    * 4; lbu 536; addu; sw`
-                                                                    * @0x80102290-AC) */
+    if (e->sub_state_2 == 0) {                                     /* P0 @0x80102290 */
+        e->sub_state_2 = 1;                                        /* sb 1,6 @0x8010229C-A0 */
+        re2z_clip(e, 4 + e->re2z_walkclip, 0, 0xF, 0x100, 1);      /* Wort 0xF0004 + walkclip ->
+                                                                    * Pair-1-Clip 4/6
+                                                                    * @0x80102290-AC. LOOP: der
+                                                                    * Aufrufer verwertet die
+                                                                    * Advance-Rueckgabe NIE
+                                                                    * (@0x801023F0 kein Test), der
+                                                                    * Clip laeuft also bis der
+                                                                    * Timer/die Leiter ihn beendet */
         e->re2z_t158 = (int16_t)((re2z_rand() & 0x3fu) + 180);     /* @0x801022A8-C0 (Draw IMMER) */
         if (e->re2z_cd239 == 0) {                                  /* @0x801022B4-BC */
             re2z_se((re2z_rand() & 1u) == 0u ? 11 : 10);           /* @0x801022C4-DC */
             e->re2z_cd239 = 150;                                   /* @0x801022E4-E8 */
         }
-        e->sub_state_2 = 1;                                        /* sb 1,6 @0x8010229C-A0 */
-        return;
+        /* @0x801022EC-FC + @0x8010231C: zwei 0x80015E7C-Re-Anker um das Zufalls-Startbild herum.
+         * Der Port-Zwilling ist der Re-Anker in re15_re2z_move_root (root_prev_kf = -1), der
+         * genau dieselbe Wirkung hat: das erste Bild nach dem Clip-Wechsel erzeugt keinen
+         * Sprung. re2z_clip hat anim_frame schon auf 0 gesetzt, danach kommt das Zufallsbild. */
+        e->anim_frame = (uint16_t)(re2z_rand() & 0x1fu);           /* +0x14D @0x80102300-20 */
+        e->root_prev_kf = -1;                                      /* = der zweite e7c @0x8010231C */
+        e->re2z_t15a = (int16_t)((re2z_rand() & 0x1fu) + 45);      /* @0x80102324-34 */
+        e->re2z_dir16a = 0;                                        /* sb zero,362 @0x80102338 */
+        /* FAELLT DURCH nach P1 — @0x80102338 hat keinen Sprung ueber @0x8010233c. */
     }
-    if (re2z_clip_done(e)) re15_ai_set_state_word(e, 0x101);       /* Exit MAPPED (P1+ nicht RE'd;
-                                                                    * Entry OPEN, toter Code) */
+    /* ---- P1 @0x8010233c ------------------------------------------------------------------ */
+    if ((int8_t)e->re2z_dir16a == 0) {                             /* lb 362 @0x8010233C-44 */
+        re15_enemy_steer_point(e, e->steer_x, e->steer_z, 16);     /* a3 = +16 @0x8010234C-58 */
+    } else {
+        re15_enemy_steer_point(e, e->steer_x, e->steer_z, -16);    /* a3 = -16 @0x80102364-70 */
+        e->re2z_dir16a = (uint8_t)(e->re2z_dir16a - 1u);           /* @0x80102374-80 */
+    }
+    if ((e->sca_wall_hit != 0)) {                                  /* +0x110 Bit 0 @0x80102384-90 */
+        int16_t t = e->re2z_t15a;                                  /* @0x80102398-A8 */
+        e->re2z_t15a = (int16_t)(t - 1);
+        if (t == 0) {
+            e->re2z_t15a  = (int16_t)((re2z_rand() & 0x1fu) + 45); /* @0x801023AC-C0 */
+            e->re2z_dir16a = (uint8_t)((re2z_rand() & 7u) + 5u);   /* @0x801023BC-CC */
+        }
+    }
+    re15_re2z_move_root(e);                                        /* e7c @0x801023DC + Advance
+                                                                    * @0x801023F0 + 152c8
+                                                                    * @0x8010246C — dasselbe
+                                                                    * Bewegungs-PAAR wie im Gang */
+    {   /* Ausstiegs-Leiter @0x80102550-CC */
+        int16_t t = e->re2z_t158;                                  /* lhu 344 @0x80102550 */
+        e->re2z_t158 = (int16_t)(t - 1);                           /* sh @0x80102560 */
+        if (t == 0 || re15_player_is_grabbed()) {                  /* @0x8010255C / @0x80102564-74
+                                                                    * (PL+0x1D3 Bit 0x80 = die
+                                                                    * Greif-Klammer, s. oben) */
+            re15_ai_set_state_word(e, 0x101);                      /* sw 257,4 @0x8010257C-80 */
+            return;
+        }
+    }
+    if (e->ai_dist < 0x1389u &&                                    /* sltiu 0x1389 @0x8010258C */
+        re15_ai_arc_test(e, pl->x, pl->z, 1024) == 0)
+        return;                                                    /* im Kegel -> bleiben @0x801025B0 */
+    if (e->re2z_t158 < 120)                                        /* slti 120 @0x801025C0 */
+        re15_ai_set_state_word(e, 0x101);                          /* sw 257,4 @0x801025C8-CC */
 }
 
 /* EXEC[3] @0x801025EC — THE GRAB. Phase table @0x8010001C (10 ptrs, byte-verified ==
@@ -2396,18 +2548,85 @@ static void re2z_crawl(int slot, re15_actor_t *e, re15_actor_t *pl)
     }
 }
 
+/* ============================================================================================
+ * DECISION[2] @0x80101F7C — die ANGRIFFS-LEITER DES ZWEITEN GANGS.
+ *
+ * ⛔ Der Port fuehrte @0x8010C88C[2] als "stub / not RE'd" (`default: break`). Das ist die
+ * zweite Haelfte desselben Nutzer-Befunds: sobald EXEC[2] (der Gang mit den erhobenen Armen)
+ * seine byte-truen Produzenten bekommt, LEBT der Zombie im Nahbereich in Substate 2 — und ohne
+ * diese Leiter koennte er dort weder greifen noch beissen. Selbst disassembliert 2026-08-22.
+ *
+ * Struktur = dieselbe Leiter wie DECISION[1] (@0x80101714), mit DREI belegten Unterschieden:
+ *   - Der Kegel der Bloecke B / J / K ist 1300 statt 512
+ *     (`jal 0x80015614` a3=1300 @0x80101FF0, Ergebnis in s3; die Rueckgabe des 1024er-Aufrufs
+ *      @0x80101FB0 wird VERWORFEN — s4 uebernimmt erst der 512er @0x80101FD0).
+ *   - Es gibt NUR EINEN Lunge-Block (kein D): dist < 0xBB8 && arc512 != 0 && cfbf6 & 0x17 &&
+ *     (rand & 1) == 0 -> 0x0C01   (@0x801020C4-104)
+ *   - Blocke A/C/G/K sind wortgleich zu DECISION[1].
+ * Adressen der Commits: 0x0E01 @0x80102048/94 und @0x80102204, 0x0A01 @0x801020C0,
+ * 0x0C01 @0x80102104, 0x0301 @0x80102178/@0x801021BC (+ PL+0x1D3 |= 0x80 @0x80102188/@0x801021D0),
+ * 0x00060801 @0x80102230 (+ +0x10E |= 0x4000 @0x80102234-38).
+ * "Last writer wins" gilt genau wie in DECISION[1]: keine Instruktion liest +0x4 zurueck, und
+ * der EINZIGE fruehe Ausstieg ist Block A (`j 0x8010223c` @0x80102048).
+ * ==========================================================================================*/
+static void re2z_decide_bump(re15_actor_t *e, re15_actor_t *pl)
+{
+    uint32_t dist = e->ai_dist;                                    /* lw 496 @0x80101FAC */
+    (void)re15_ai_arc_test(e, pl->x, pl->z, 1024);                 /* @0x80101FB0 — VERWORFEN */
+    int a512  = re15_ai_arc_test(e, pl->x, pl->z,  512);           /* s4 @0x80101FD0-D4 */
+    int a1300 = re15_ai_arc_test(e, pl->x, pl->z, 1300);           /* s3 @0x80101FF0-F4 */
+
+    if (e->re2z_cd23e == 0) {                                      /* lbu 574 @0x80101FF8-0x80102004 */
+        /* Block A @0x8010200C-4C liest +0x1F4/+0x1F8 — im Zombie-Overlay gibt es KEINEN
+         * Schreiber (derselbe Beleg wie in re15_re2z_fill_gates), also inert. */
+        if (a1300 == 0                                             /* sll/bne @0x8010205C-60 */
+            && dist < 0x7d0u                                       /* sltiu 0x7d0 @0x80102064 */
+            && e->floor != pl->floor                               /* beq-away @0x8010207C */
+            && !re15_player_is_grabbed())                          /* bne @0x8010208C (ganzes Byte;
+                                                                    * die unteren 7 Bit haben im
+                                                                    * Port keinen Produzenten —
+                                                                    * dieselbe Lage wie Block B
+                                                                    * der Gang-Leiter) */
+            re15_ai_set_state_word(e, 0x0E01);                     /* 3585 @0x80102090-94 */
+    }
+    /* Block C @0x80102098-C0 (+0x1D4 & 0xC000): RE1.5-Raumdaten tragen die Bits nie -> inert. */
+    if (dist < 0xbb8u                                              /* sltiu 0xbb8 @0x801020A8/C4 */
+        && a512 != 0                                               /* beq-zero-skip @0x801020D0 */
+        && (re2z_cfbf6(pl) & 0x17u)                                /* andi 0x17 @0x801020E4 */
+        && (re2z_rand() & 1u) == 0u)                               /* jal @0x801020F0, andi @0x801020F8 */
+        re15_ai_set_state_word(e, 0x0C01);                         /* 3073 @0x80102100-04 */
+
+    /* Der G/J-Fork @0x80102108-14 haengt an PL+0x8 == 15 (Spieler-Routinen-Id). Der Port hat
+     * dafuer keinen Produzenten (OPEN, exakt wie in re15_re2z_fill_gates: `PL+0x8 -> 0`), also
+     * laeuft immer der G-Zweig; der J-Zweig @0x801021D4-204 ist damit unerreichbar und bleibt
+     * — wie in DECISION[1] — dokumentiert statt erfunden.
+     * Block G @0x80102114-1D0 — wortgleich zu DECISION[1]s G. */
+    if (dist < 0x4b0u                                              /* sltiu 0x4b0 @0x80102114 */
+        && !re15_player_is_grabbed()                               /* andi 0x80 @0x80102128 */
+        && e->floor == pl->floor) {                                /* bne-away @0x80102140 */
+        if (!(e->re2z_flags21a & 0x20u)                            /* andi 0x20 @0x80102150 */
+            && re2z_sector(e, pl, ((int)e->rot_y + 256) & 0xfff, 256) == 0) /* @0x80102158-70 */
+            re15_ai_set_state_word(e, 0x0301);                     /* 769 @0x80102174-78 */
+        if (!(e->re2z_flags21a & 0x40u)                            /* andi 0x40 @0x80102194 */
+            && re2z_sector(e, pl, ((int)e->rot_y - 256) & 0xfff, 256) == 0) /* @0x8010219C-B4 */
+            re15_ai_set_state_word(e, 0x0301);                     /* 769 @0x801021B8-BC */
+    }
+    /* Block K @0x80102208-38: der Port-Spieler wird nie HP == -32768 (fill_gates), inert. */
+}
+
 /* ---- ACTIVE dispatcher: decision-then-executor on the SAME tick (@0x801011A8-EC) ----------- */
 static void re2z_active(int slot, re15_actor_t *e, re15_actor_t *pl)
 {
     switch (e->sub_state_1) {                                      /* DECISION @0x8010C88C */
     case 0:  re2z_decide_stand(e, pl); break;                      /* 0x80101294 */
     case 1:  re2z_decide_walk_apply(e, pl); break;                 /* 0x80101714 (the ladder) */
+    case 2:  re2z_decide_bump(e, pl); break;                       /* 0x80101F7C */
     default: break;                                                /* stubs / not RE'd */
     }
     switch (e->sub_state_1) {                                      /* EXECUTOR @0x8010C8CC */
     case 0:  re2z_exec_stand(e); break;                            /* 0x801013F4 */
-    case 1:  re2z_exec_walk(slot, e); break;                       /* 0x80101A40 */
-    case 2:  re2z_exec_bump(e); break;                             /* 0x80102260 */
+    case 1:  re2z_exec_walk(slot, e, pl); break;                   /* 0x80101A40 */
+    case 2:  re2z_exec_bump(e, pl); break;                         /* 0x80102260 */
     case 3:  re2z_exec_grab(e, pl); break;                         /* 0x801025EC */
     case 4:  break;                                                /* 0x80103178 = jr ra (verified) */
     case 5:  re2z_exec_knockdown(e); break;                        /* 0x80103188 */
