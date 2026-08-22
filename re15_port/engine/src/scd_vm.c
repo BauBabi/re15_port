@@ -1010,6 +1010,22 @@ static int op_evt_exec(scd_thread_t *t)
     }
 
     scd_thread_start(slot, target_pc);
+#ifdef RE15_PLATFORM_PC
+    /* MESS-HAKEN RE15_EVT_TRACE=1 (env-gegated, reine Ausgabe): JEDER Evt_exec mit Bild,
+     * Sub-Nummer, Bedingungsbyte, vergebenem Slot und der Zahl der danach aktiven Event-
+     * Slots — damit ist "startet das Spiel denselben Sub zweimal?" MESSBAR statt argumentiert. */
+    { static int s_et = -1;
+      if (s_et < 0) { const char *e = getenv("RE15_EVT_TRACE"); s_et = (e && *e) ? 1 : 0; }
+      if (s_et) {
+          int nact = 0;
+          for (int s = SCD_EVENT_SLOT_FIRST; s <= SCD_EVENT_SLOT_LAST; s++)
+              if (g_scd.threads[s].active) nact++;
+          fprintf(stderr, "[evt] F%u room=%04x Evt_exec sub=%u cond=0x%02x -> slot %d "
+                          "(aktive Event-Slots %d) flag(3,0x80)=%d\n",
+                  g_engine.frame_count, g_current_room_id, sub_id, cond, slot, nact,
+                  re15_game_flag_get(3, 0x80));
+      } }
+#endif
     return 1;
 }
 
@@ -1782,6 +1798,16 @@ static int op_set(scd_thread_t *t)
     if (flag_census_on())
         fprintf(stderr, "[flagcensus] room=%04X WRITE Set  zone=%d idx=%d op=%d\n",
                 g_current_room_id, zone, idx, op);
+#ifdef RE15_PLATFORM_PC
+    /* MESS-HAKEN RE15_EVT_TRACE=1: JEDER Schreibzugriff auf den ROOM1090-Cutscene-Latch
+     * flag(3,0x80) (`Set` @0x240A in sub01) mit Bild — zeigt, ob der Latch im SELBEN Bild
+     * schliesst wie der Evt_exec darueber, und ob ihn je etwas wieder loescht. */
+    { static int s_et = -1;
+      if (s_et < 0) { const char *e = getenv("RE15_EVT_TRACE"); s_et = (e && *e) ? 1 : 0; }
+      if (s_et && zone == 3 && idx == 0x80)
+          fprintf(stderr, "[evt] F%u room=%04x Set(3,0x80) op=%u (vorher %d)\n",
+                  g_engine.frame_count, g_current_room_id, op, re15_game_flag_get(3, 0x80)); }
+#endif
     if      (op == 1) re15_game_flag_set(zone, idx, 1);                           /* OR     */
     else if (op == 0) re15_game_flag_set(zone, idx, 0);                           /* clear  */
     else if (op == 7) re15_game_flag_set(zone, idx, re15_game_flag_get(zone, idx) ? 0 : 1); /* toggle */
