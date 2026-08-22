@@ -2680,6 +2680,112 @@ uint8_t re15_re2z_row_for_atktype(unsigned attack_type, unsigned col, int surviv
     return re2z_row_guard(row, col, survived);
 }
 
+/* ============================================================================================
+ * PORT-OPTION 2026-08-22 — DIE RE2-STURZREGEL FUER DEN RE1.5-MODUS
+ *
+ * ⛔ KEIN byte-true RE1.5-Verhalten. NUTZER-ENTSCHEIDUNG (woertlich): "Ja, naja, der fette
+ * Zombie muss nicht jeden 2. Schuss umfallen. Das ist unschoen." — dieselbe Klasse bewusster
+ * Abweichung wie der bereits bestellte RE2-Schadens-/HP-Import, und wie dieser NICHT geraten,
+ * sondern aus RE2 UEBERNOMMEN. Sie haengt am SELBEN Schalter (re15_re15_re2z_import), damit
+ * Regel, HP und Schaden nur gemeinsam an- und abschaltbar sind: der HP-Teil der Regel
+ * (`slti 81`) rechnet auf der RE2-HP-Skala und waere ohne den HP-Import sinnlos.
+ * Mit ABGESCHALTETEM Schalter bleibt der RE1.5-Pfad byte-true unveraendert (PIN
+ * test_re15_poise_re2_import.c, Messreihe probe_re15_poise_re2.c).
+ *
+ * ---- DIE BEIDEN ORIGINAL-REGELN, selbst disassembliert ------------------------------------
+ * RE1.5 (STAGE1.BIN roh @0x80100000) — POISE +0x1DC:
+ *   80100824 jal 0x8001af20 / 8010082c andi v0,v0,0x3 / 80100838 addiu v0,v0,4
+ *   8010083c sh   v0,476(v1)                    ; +0x1DC = (rng&3)+4 = 4..7   (INIT)
+ *   Schritt-Tabelle @0x8011FE30 (Zeiger auf Mini-Funktionen), Aufruf @0x80105D28 im
+ *   Phase-0-Block des Staggers = EINMAL PRO TREFFER:
+ *     [1]/[2]    -> 0x80105A4C `addiu v0,v0,-2`
+ *     [3]..[6]   -> 0x80105A6C `addiu v0,v0,-3`     <- die PISTOLE ist Waffe 3
+ *     [17]..[20] -> 0x80105A2C `addiu v0,v0,-1`;  Rest 0x80105A24 `jr ra` (0)
+ *   Sturz-Tor @0x80105B18-68: `lh v0,476(v0)` @0x80105B24 / `bgez -> return` @0x80105B2C,
+ *     sonst `sb 1,4` @0x80105B48 / `sb 0x11,5` @0x80105B58 / `sb 0,6` @0x80105B68 = KNOCKDOWN
+ *   Aufstehen Phase[6] @0x80105444-5C laedt wieder (rng&3)+4 nach (Wurf dort konstant 0 -> 4)
+ *   => Sturz beim 2. (Poise 4/5) bzw. 3. (6/7) Pistolentreffer, danach ALLE 2 TREFFER.
+ *
+ * RE2 (EMOVL10_S0.BIN roh @0x80100000) — RESISTENZ +0x223 MIT HP-TOR:
+ *   INIT @0x80100888-9C:  jal 0x80015fe8 / `andi v0,v0,0xf` / `addiu v0,v0,16`
+ *                         / `sb v0,547(s2)` @0x8010089C          ; +0x223 = 16 + (rand&0xf)
+ *   Kosten je Treffer, hit_MAIN P0 @0x801055D0-EC:
+ *     801055d0 lui  at,0x8011
+ *     801055d4 addu at,at,v0                    ; v0 = +0x5 = Angriffszeile
+ *     801055d8 lbu  v1,-13261(at)               ; Tabelle 0x8010CC33 + Zeile
+ *     801055e0 subu a0,a0,v1
+ *     801055ec sb   a0,547(s1)                  ; +0x223 -= cost[Zeile]
+ *     Tabelle 0x8010CC33 = {_,9,15,15,35,0,0,0,0,0,0,0,0,20,0,0,0,0} (re2z_hit_cost, oben);
+ *     RE2-Zeile 3 = Browning HP = Kosten 15 (@0x8010CC36).
+ *   DAS HP-TOR @0x801055E4-620 — der eigentliche Unterschied zu RE1.5:
+ *     801055e4 andi v0,v0,0x40                  ; +0x10E & 0x40
+ *     801055e8 bne  v0,zero,0x80105624          ;   gesetzt -> KEIN Nachladen
+ *     801055f0 sll  v0,a0,24
+ *     801055f4 bgtz v0,0x80105624               ; Leiste noch > 0 -> KEIN Nachladen
+ *     801055fc lh   v0,342(s1)                  ; +0x156 = HP
+ *     80105604 slti v0,v0,81
+ *     80105608 bne  v0,zero,0x80105624          ; HP < 81 -> KEIN Nachladen
+ *     80105610 jal  0x80015fe8
+ *     80105618 andi v0,v0,0xf
+ *     8010561c addiu v0,v0,16
+ *     80105620 sb   v0,547(s1)                  ; +0x223 = 16 + (rand&0xf)
+ *   Sturz-Tor (HURT-Wurzel) @0x8010503C-AC: Schwelle `+0x10E & 0x40 ? (+0x5!=1 ? 23 : 0) : 0`
+ *     (@0x8010503C-58), nur Phase 0 (`lbu v0,6(s1)` @0x8010505C / `bne` @0x80105064),
+ *     `lb v0,547(s1)` @0x8010506C / `slt v0,v1,v0` @0x80105074 / `bne -> raus` @0x80105078;
+ *     erst dann `sb 1,546` @0x801050A0 und `addiu v0,zero,1281` / `sw v0,4(s1)` @0x801050A4-AC
+ *     = 0x501 = EXEC[5] = der STURZ-Executor.
+ *
+ * ⇒ Solange HP >= 81 laedt RE2 die Leiste bei JEDEM Erschoepfen sofort auf 16..31 nach; das
+ *   Sturz-Tor kann also gar nicht feuern. Der RE2-Zombie faellt NUR im Endspiel (HP < 81).
+ *   Genau das ist die vom Nutzer gewuenschte Kadenz — und sie ist belegt, nicht erfunden.
+ *
+ * ---- WAS DER IMPORT AENDERT ----------------------------------------------------------------
+ * NUR die ZAHLEN, die in +0x1DC landen. Der MECHANISMUS bleibt der RE1.5-eigene: derselbe
+ * Schritt einmal pro Treffer im Stagger-Phase-0-Block, dasselbe `bgez`-Tor @0x80105B2C,
+ * dieselbe 0x11-Knockdown-Zeile. Damit bleibt der Rest des RE1.5-Gehirns unberuehrt.
+ *   Seed / Neuladung      -> 16 + (rand&0xf)                (@0x8010089C / @0x80105618-20)
+ *   Schritt je Treffer    -> -re2z_hit_cost[Zeile]          (@0x801055D8-EC)
+ *   NEU: HP-Tor           -> Leiste <= 0 && HP >= 81 -> neu (@0x801055F0-620)
+ * Die RE1.5-Waffennummer wird ueber die schon vorhandene, oben belegte Zuordnung
+ * re2z_row_from_weapon in die RE2-Angriffszeile uebersetzt (Pistole 3 -> RE2-Zeile 3).
+ *
+ * +0x10E Bit 0x40 (`andi 0x40` @0x801055E4, das "kein Nachladen"-Bit) hat im RE1.5-Aktor
+ * KEIN Gegenstueck; der Import bildet deshalb den Normalfall (Bit geloescht) ab — genau den,
+ * den auch der RE2-Modus in ROOM1140 faehrt. NICHT geraten: das Bit ist im RE2-Overlay ein
+ * Modifikator einzelner Zombie-Varianten, es hat keinen RE1.5-Erzeuger, den man abbilden
+ * koennte, und der Zweig ohne Bit ist der einzige, der beide Regeln vergleichbar macht.
+ *
+ * RNG: die RE2-Konstante 16+(rand&0xf) zieht hier aus DEM RE2-Generator @0x80015FE8
+ * (re15_re2_rand), zu dem sie gehoert. ⚠️ AUSNAHME am INIT-Sitz (enemy_ai_common.c
+ * re15_enemy_ai_live_init): dort teilt sich die Neuladung den SCHON GEZOGENEN RE1.5-Wurf, statt
+ * einen zusaetzlichen RE2-Wurf zu machen. Grund ist GEMESSEN, nicht stilistisch: am RE2-Strom
+ * haengt auch der RE2-INIT-HP-Wurf (Tabelle 0x8010C670, `sh v0,342(s2)` @0x80100708-10), der
+ * beim INIT der folgenden Gegner desselben Raums faellt — ein Extra-Wurf verschob ihn und damit
+ * die HP (gemessen hp0(0x10) 75 -> 80, hp0(0x16) 65 -> 82). Mit dem geteilten Wurf bleiben BEIDE
+ * Stroeme stehen: der RE1.5-Strom ist mit Schalter AN und AUS Wurf fuer Wurf identisch, der
+ * RE2-Strom liefert unveraendert dieselben HP. Die drei uebrigen Sitze (Aufstehen,
+ * Kontakt-Stagger, Nachladen im Treffer) laufen erst im Kampf, also NACH allen INIT-HP-Wuerfen
+ * des Raums, und benutzen deshalb den originalen RE2-Generator.
+ * ========================================================================================== */
+
+int re15_re15_re2z_poise_reload(void)
+{
+    /* `jal 0x80015fe8` / `andi v0,v0,0xf` / `addiu v0,v0,16` — identisch beim INIT
+     * @0x80100888-9C, im Nachladen @0x80105610-20 und im Sturz-Tor @0x801050C0-C8. */
+    return 16 + (int)(re15_re2_rand() & 0xfu);
+}
+
+int re15_re15_re2z_poise_step(int cur, unsigned re15_weapon_id, int hp)
+{
+    unsigned row  = (re15_weapon_id < 22u) ? re2z_row_from_weapon[re15_weapon_id] : 1u;
+    int      cost = (row < 18u) ? (int)re2z_hit_cost[row] : 0;   /* @0x8010CC33 + Zeile */
+    int      v    = cur - cost;                                  /* `subu a0,a0,v1` @0x801055E0 */
+    if (v <= 0 && hp >= 81)                                      /* `bgtz` @0x801055F4 +
+                                                                  * `slti 81`/`bne` @0x80105604-08 */
+        v = re15_re15_re2z_poise_reload();                       /* @0x80105610-20 */
+    return v;
+}
+
 static void re2z_grab_abort(re15_actor_t *e, re15_actor_t *pl)
 {
     /* @0x80104F68-FDC (HURT) / @0x801082B0-328 (DEATH): PL-cmd==5 && PL+0x1B4==self ->

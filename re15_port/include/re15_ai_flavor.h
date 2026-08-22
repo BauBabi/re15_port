@@ -74,6 +74,18 @@ int  re15_re15_re2z_import(void);
 void re15_re15_re2z_import_set(int on);
 int  re15_re15_re2z_import_owns(unsigned type);   /* RE1.5-Flavor + Option + Zombie-Typ */
 
+/* (3) 2026-08-22 — die RE2-STURZREGEL. Nutzer-Entscheidung: "der fette Zombie muss nicht jeden
+ * 2. Schuss umfallen". RE1.5 wirft den Zombie ueber die POISE-Leiste +0x1DC um (Seed (rng&3)+4
+ * @0x8010082C-3C, -3/Pistolentreffer @0x8011FE3C->0x80105A6C, Tor `bgez` @0x80105B2C); RE2 ueber
+ * die RESISTENZ +0x223 (Seed/Neuladung 16+(rand&0xf) @0x8010089C / @0x80105618-20, Kosten
+ * @0x8010CC33 — Pistole = Zeile 3 = 15 —, und das entscheidende HP-TOR `slti v0,v0,81`
+ * @0x80105604: nachgeladen wird NUR bei HP >= 81, der RE2-Zombie faellt also erst im Endspiel).
+ * Der Import ersetzt unter dem SELBEN Schalter ausschliesslich die ZAHLEN in +0x1DC — der
+ * RE1.5-Mechanismus (ein Schritt pro Treffer, `bgez`-Tor, 0x11-Knockdown) bleibt. Volle
+ * Herleitung mit allen Instruktionen an der Definition in enemy_ai_re2_zombie.c. */
+int  re15_re15_re2z_poise_reload(void);                  /* 16 + (rand&0xf) @0x8010089C */
+int  re15_re15_re2z_poise_step(int cur, unsigned re15_weapon_id, int hp);
+
 /* WELLE C: the FULL RE2 ownership set (zombie family + dog 0x20). NUR der Asset-Loader keyt
  * darauf (platform/pc/main.c pc_enemy_load). Review-Fix #9 — ausdruecklich NICHT darauf keyen:
  * die Anim-Advance-/Loco-/SFX-Exemptions bleiben auf re15_re2z_owns_type (player_common.c

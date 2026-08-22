@@ -2452,3 +2452,27 @@ target_compile_definitions(test_scd_zone2_pauseflags PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_scd_zone2_pauseflags COMMAND test_scd_zone2_pauseflags)
 set_tests_properties(unit_scd_zone2_pauseflags PROPERTIES TIMEOUT 60 SKIP_RETURN_CODE 77)
+
+# --- MESSSONDE (kein add_test): STURZ-KADENZ des RE1.5-Zombies in ROOM1140.
+#     Nutzer-Entscheidung 2026-08-22 "der fette Zombie muss nicht jeden 2. Schuss umfallen".
+#     Misst Treffer/Stuerze/Treffer-pro-Sturz/Frames ueber den ECHTEN Weg (re15_game_step + Pad,
+#     echte RDT/SCD-Spawns, GELADENE Baenke EM010/EM011/EM016) fuer beide Stellungen des
+#     RE2-Import-Schalters. RE1.5-Regel: Poise +0x1DC @0x8010082C-3C / @0x8011FE3C / @0x80105B2C.
+#     RE2-Regel: Resistenz +0x223 @0x8010089C / @0x8010CC33 / HP-Tor `slti 81` @0x80105604. ---
+add_executable(probe_re15_poise_re2 probe_re15_poise_re2.c)
+target_link_libraries(probe_re15_poise_re2 PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re15_poise_re2 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_re15_poise_re2 PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- PIN: die RE2-STURZREGEL im RE1.5-Modus (Port-Option, Nutzer-Entscheidung 2026-08-22
+#     "der fette Zombie muss nicht jeden 2. Schuss umfallen"). Pinnt beide Schalterstellungen:
+#     AUS = byte-true RE1.5-Poise +0x1DC (Seed (rng&3)+4 @0x8010082C-3C, Schritt -3
+#     @0x8011FE3C->0x80105A6C), AN = RE2-Resistenz (Seed/Neuladung 16+(rand&0xf) @0x8010089C /
+#     @0x80105618-1C, Kosten @0x8010CC33, HP-Tor `slti v0,v0,81` @0x80105604) — plus die
+#     Regressionswache, dass Hund/Kraehe/Spinne die Regel NICHT erben. ---
+add_executable(test_re15_poise_re2_import test_re15_poise_re2_import.c)
+target_link_libraries(test_re15_poise_re2_import PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re15_poise_re2_import PRIVATE ${CMAKE_SOURCE_DIR}/include)
+add_test(NAME unit_re15_poise_re2_import COMMAND test_re15_poise_re2_import)
+set_tests_properties(unit_re15_poise_re2_import PROPERTIES TIMEOUT 60 SKIP_RETURN_CODE 77)

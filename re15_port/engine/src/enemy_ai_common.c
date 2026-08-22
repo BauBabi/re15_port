@@ -1149,8 +1149,26 @@ void re15_enemy_ai_live_init(int slot)
     re15_actor_t *e = &g_actors[slot];
     e->state    = (uint8_t)RE15_AI_STATE_ACTIVE;   /* +0x4 = 1 */
     e->ai_timer = 0x14;                            /* +0x9c = 0x14 */
-    e->hit_stun = (int16_t)((re15_engine_rand8() & 3) + 4);   /* +0x1dc POISE seed (@0x8010082c):
+    {
+        uint8_t poise_roll = re15_engine_rand8();
+        e->hit_stun = (int16_t)((poise_roll & 3) + 4);         /* +0x1dc POISE seed (@0x8010082c):
                                                 * persistent across hits; decremented once per hit */
+        /* ⛔ PORT-OPTION (Nutzer-Entscheidung 2026-08-22, RE2-Import-Schalter): die RE2-Leiste
+         * startet auf 16 + (rand&0xf) (`andi v0,v0,0xf` / `addiu v0,v0,16` / `sb v0,547(s2)`
+         * @0x80100888-9C) statt auf (rng&3)+4.
+         * [PORT-ZUORDNUNG — bewusst NICHT re15_re15_re2z_poise_reload()]: die vier Zufallsbits
+         * kommen hier aus dem SCHON GEZOGENEN RE1.5-Wurf, nicht aus einem zusaetzlichen Wurf.
+         * Grund, GEMESSEN (probe_re15_poise_re2, 64 Seeds): ein extra Wurf aus dem RE2-Generator
+         * @0x80015FE8 verschiebt dessen Strom — und am selben Strom haengt der RE2-INIT-HP-Wurf
+         * (Tabelle 0x8010C670, Index (rand>>(rand&3))&0xf, `sh v0,342(s2)` @0x80100708-10), der
+         * beim INIT der FOLGENDEN Gegner desselben Raums gezogen wird. Der Effekt war real:
+         * hp0(0x10) 75 -> 80 und hp0(0x16) 65 -> 82, also eine HP-Aenderung, die niemand bestellt
+         * hat. Mit dem geteilten Wurf bleiben BEIDE Stroeme exakt stehen und die Messung isoliert
+         * die Sturzregel. Die Zahlen der Regel (16, Maske 0xf, Kosten, HP-Schwelle) sind
+         * unveraendert die von RE2. */
+        if (re15_re15_re2z_import_owns(e->type))
+            e->hit_stun = (int16_t)(16 + (poise_roll & 0x0f));
+    }
     /* +0x1bc/+0x1be steer target: the init write (sh @0x8010071c/734) — the per-tick refresh in
      * re15_enemy_ai_live_tick keeps it mirroring the player (RAM-arbitrated, see there). */
     e->steer_x = (int16_t)g_actors[RE15_ACTOR_SLOT_PLAYER].x;
@@ -2089,6 +2107,12 @@ static void re15_enemy_ai_live_knockdown(re15_actor_t *e)
              * also a0 = 0x20000000 -> rand() == 0 (Herleitung im Block bei case 4).
              * Poise-Neuladung = (0 & 3) + 4 = 4. */
             e->hit_stun = (int16_t)4;                 /* +0x1dc = (rand&3)+4 -> 4 */
+            /* ⛔ PORT-OPTION (s. INIT): unter dem RE2-Import laedt das Aufstehen die RE2-Leiste
+             * 16 + (rand&0xf) nach (@0x80105618-20 / @0x801050C0-C8) statt der 4. Ohne DIESE
+             * Stelle bliebe genau die vom Nutzer beanstandete Kadenz stehen: die 4 zerbricht am
+             * naechsten Pistolentreffer (RE2-Kosten 15) sofort wieder. */
+            if (re15_re15_re2z_import_owns(e->type))
+                e->hit_stun = (int16_t)re15_re15_re2z_poise_reload();
             break;
         default:                                       /* [1]/[5]: play to clip end */
             e->sub_state_2 = (uint8_t)(e->sub_state_2 + (uint8_t)re15_enemy_clip_done(e));
@@ -2205,6 +2229,11 @@ static void re15_enemy_ai_live_contact_stagger(re15_actor_t *e)
             re15_ai_set_state_word(e, 0x201);       /* exit -> engage */
             e->hit_react &= (uint8_t)~1u;
             e->hit_stun = 3;                        /* +0x1dc = 3 */
+            /* ⛔ PORT-OPTION (s. INIT): dritte und letzte RE1.5-Neuladung der Leiste (Ausgang des
+             * Kontakt-Staggers). Unter dem RE2-Import ebenfalls 16 + (rand&0xf) — bliebe hier die
+             * 3 stehen, wuerde ein Rempler den Zombie wieder in die Ein-Treffer-Sturzzone setzen. */
+            if (re15_re15_re2z_import_owns(e->type))
+                e->hit_stun = (int16_t)re15_re15_re2z_poise_reload();
             e->grid_id &= (uint8_t)0x7f;            /* +0x9 &= 0x7f */
             return;
         default: break;                             /* [1]/[5]: play + advance below */
@@ -3922,7 +3951,20 @@ void re15_enemy_ai_live_hurt(int slot)
              * The old 12-entry cut silently returned 0 for ids 12..20. */
             static const int8_t stun_step[21] = { 0, -2, -2, -3, -3, -3, -3, 0, 0, 0, 0, 0,
                                                   0, 0, 0, 0, 0, -1, -1, -1, -1 };
+            const int16_t stun_before = e->hit_stun;
             e->hit_stun = (int16_t)(e->hit_stun + (e->sub_state_1 < 21 ? stun_step[e->sub_state_1] : 0));
+            /* ⛔ PORT-OPTION (Nutzer-Entscheidung 2026-08-22, RE2-Import-Schalter): derselbe
+             * EIN Schritt pro Treffer, aber mit den RE2-Zahlen — Kosten aus 0x8010CC33 ueber die
+             * belegte Waffen->Zeilen-Zuordnung (Pistole 3 -> RE2-Zeile 3 -> 15, `lbu v1,-13261(at)`
+             * @0x801055D8, `subu` @0x801055E0) UND dem HP-TOR @0x801055F0-620: erschoepfte Leiste
+             * wird bei HP >= 81 (`slti v0,v0,81` @0x80105604) sofort auf 16+(rand&0xf) nachgeladen.
+             * Damit erreicht das RE1.5-Tor `bgez` @0x80105B2C den Knockdown erst im Endspiel —
+             * exakt die RE2-Kadenz. +0x5 traegt hier die RE1.5-Waffennummer (`sb weapon,+0x5`
+             * @0x800124BC), die die Zuordnung erwartet. */
+            if (re15_re15_re2z_import_owns(e->type))
+                e->hit_stun = (int16_t)re15_re15_re2z_poise_step((int)stun_before,
+                                                                 (unsigned)e->sub_state_1,
+                                                                 (int)e->hp);
         }
         /* NO return/goto: phase 0 FALLS THROUGH into the phase-1 body in the SAME tick. Raw bytes
          * @0x80105d20: `lw v0,0(at)` / nop / `jalr v0` / nop(delay) / @0x80105d30 `lui v0,0x800b` —

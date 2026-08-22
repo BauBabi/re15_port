@@ -67,6 +67,7 @@
 #include "re15_aot.h"
 #include "re15_room.h"
 #include "re15_damage.h"
+#include "re15_ai_flavor.h" /* re15_re15_re2z_import_set — byte-true PIN schaltet die Port-Option ab */
 
 #define RE15_STR(x)  #x
 #define RE15_XSTR(x) RE15_STR(x)
@@ -221,6 +222,16 @@ static void print_chain(const char *tag, const int *v, int n)
 int main(void)
 {
     const char *base = RE15_XSTR(RE15_ASSETS_PATH);
+    /* Dieser Test pinnt die byte-true RE1.5-SE-KETTE des KNOCKDOWNS. Seit 2026-08-22 zieht die
+     * Port-Option re15_re15_re2z_import() (Default AN, Nutzer-Entscheidung "der fette Zombie muss
+     * nicht jeden 2. Schuss umfallen") die RE2-STURZREGEL in den RE1.5-Modus: die Leiste +0x1DC
+     * wird bei HP >= 81 nach jedem Erschoepfen sofort nachgeladen (`slti v0,v0,81` @0x80105604 /
+     * `andi 0xf`+`addiu 16` @0x80105618-1C), der Zombie faellt also im gesunden Zustand gar nicht
+     * mehr — und dieser Test schiesst genau in diesen Zustand hinein. Er schaltet die Option
+     * deshalb ab und pinnt weiter GENAU das, was er immer gepinnt hat (dasselbe Verfahren wie
+     * test_room1140_combat.c). Was der SPIELMODUS heute tut, misst probe_re15_poise_re2.c /
+     * pinnt test_re15_poise_re2_import.c. */
+    re15_re15_re2z_import_set(0);
     int a[256], b[256], c[256];
     /* ROOM10D0 Erstbesuch (Liegender, behavior 0x0e, Datei 0x126a) — Tuer-15-Spawn (7650,0,11400) */
     int na = run_room(base, "ROOM10D0", 0x10D0,  7650,  11400, 0, 0x10, a, 256);

@@ -30,6 +30,7 @@
 #include "re15_actor.h"
 #include "re15_enemy_ai.h"
 #include "re15_damage.h"   /* re15_enemy_apply_hitbox, re15_enemy_take_damage, re15_damage_seed_rng */
+#include "re15_ai_flavor.h" /* re15_re15_re2z_import_set — byte-true PIN schaltet die Port-Option ab */
 
 extern int re15_player_is_grabbed(void);
 extern int16_t re15_atan2_q12(int32_t, int32_t);
@@ -42,6 +43,17 @@ static void face_player(re15_actor_t *g, const re15_actor_t *pl)
 int main(void)
 {
     int fail = 0;
+    /* Dieser Test pinnt den byte-true RE1.5-AUSLIEFERUNGSSTAND. Seit 2026-08-22 zieht die
+     * Port-Option re15_re15_re2z_import() (Default AN, Nutzer-Entscheidung "der fette Zombie muss
+     * nicht jeden 2. Schuss umfallen") zusaetzlich die RE2-STURZREGEL in den RE1.5-Modus: die
+     * Leiste +0x1DC traegt dann 16+(rand&0xf) @0x8010089C und wird um cost[Zeile] @0x8010CC33
+     * gesenkt, mit Nachladen nur bei HP >= 81 (`slti 81` @0x80105604). Fall (4) setzt die Leiste
+     * hier bewusst auf 6 und die HP auf 60 — unter der RE2-Regel bricht sie damit sofort und der
+     * Flinch geht in den Knockdown. Der Test schaltet die Option deshalb ab und pinnt weiter
+     * GENAU das, was er immer gepinnt hat (dasselbe Verfahren wie test_room1140_combat.c).
+     * Was der SPIELMODUS heute tut, misst probe_re15_poise_re2.c / pinnt
+     * test_re15_poise_re2_import.c. */
+    re15_re15_re2z_import_set(0);
     memset(g_actors, 0, sizeof g_actors);
     re15_damage_seed_rng(0x1234u);      /* deterministic xorshift stream */
 
