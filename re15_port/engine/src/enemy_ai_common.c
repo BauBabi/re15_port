@@ -1929,7 +1929,17 @@ void re15_re2z_victim_begin(re15_actor_t *zombie, re15_actor_t *player, int behi
     if (vb && vb->victim_ok) {
         g_player_victim_type    = zombie->type;
         g_player_victim_zombie  = (int)(zombie - g_actors);
-        g_player_victim_variant = (uint8_t)((unsigned)behind & 3u);
+        g_player_victim_variant = (uint8_t)((unsigned)behind & 1u);
+                                      /* ⛔ OPEN (Regression-Bisect 2026-08-23): der Kriech-+2
+                                       * (@0x8010272C-44 -> Varianten 2/3 = Kriech-Opfer-Maschine
+                                       * 0x8010AF58, Bein-Biss-Clips {6..12}) ist hier BEWUSST auf
+                                       * die Steh-Maschine geklemmt (&1): ohne die P6-AUFSTEH-Phase
+                                       * (Clip 9, 48f @0x8010b2c4) laesst der Kriech-Release den
+                                       * Spieler deplatziert zurueck — gemessen (Docker-Bisect,
+                                       * teardeath PIN7 w20): nach dem Kriech-Grab trafen die
+                                       * Folgeschuesse nie wieder. Erst P6 portieren (Dossier
+                                       * triage2/crawl-bite-leon OFFEN), dann &3 scharf schalten;
+                                       * der +2-Producer im Zombie-Grab bleibt (durch &1 inert). */
                                       /* 0/1 = Steh-Front/Hinten; 2/3 = KRIECHER (+2-Producer
                                        * @0x8010272C-44) -> Kriech-Opfer-Maschine 0x8010AF58 */
         if (g_player_victim_variant >= 2 &&
@@ -1961,7 +1971,13 @@ void re15_re2z_victim_begin(re15_actor_t *zombie, re15_actor_t *player, int behi
     if (re15_ai_re2_for_type(zombie->type) && re15_re2z_owns_type(zombie->type)) {
         int bear = ((int)re15_atan2_q12(zombie->z - player->z,
                                         zombie->x - player->x) - 0x400) & 0x0fff;
-        if (behind) {                                   /* `andi v0,v0,0x1` @0x8010AA98 */
+        if (behind & 1) {                               /* `andi v0,v0,0x1` @0x8010AA98 —
+                                                         * BIT 0! Der Kriech-+2 (Variante 2/3)
+                                                         * darf die Front/Hinten-Mechanik NICHT
+                                                         * kippen (Regression-Bisect 2026-08-23:
+                                                         * Kriech-FRONT=2 zaehlte als hinten ->
+                                                         * Spieler-Yaw/Pose-Offset falsch ->
+                                                         * Folgeschuesse gingen ins Leere) */
             player->re2z_t158 = 0;                      /* sh zero,344(s1) @0x8010AAA8 */
             player->rot_y = (int16_t)((bear + 0x800) & 0x0fff);  /* addiu 2048 @0x8010AAAC */
         } else {
