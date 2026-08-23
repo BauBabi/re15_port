@@ -959,6 +959,8 @@ void re15_player_victim_throwoff(void)
 /* The zombie's DEVOUR-FINISH sub0 (FUN_80102bd8 @0x80102c80) latches player cmd = ((+0x5)-5)<<8 | 6 —
  * the devoured COLLAPSE. Byte-true: the variant byte is the zombie's (+0x5)-5 (5 face / 6 behind) and
  * HP is NOT touched here (the -1 lands at collapse frame 0x23 in the cmd-6 handler @0x8010a80c). */
+static int re15_victim_is_re2_dog(void);        /* Definition unten beim Zwilling is_re2_zombie */
+
 void re15_player_victim_devour(const re15_actor_t *zombie)
 {
     re15_enemy_bank_t *vb = re15_enemy_find(zombie->type);

@@ -97,6 +97,7 @@ int  re15_player_knockdown_active(void) { return s_knockdown; }
  *   Feuer-Kontakt-Tail (FUN_80116288 @0x8011638c-ac, direkter Mailbox-Writer). */
 void re15_player_stagger_cmd2(uint8_t clip)
 {
+    extern void re15_player_aim_interrupt(void);   /* player_common.c (wie re15_player_cmd_reset) */
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     if (s_hit_flinch > 0 || s_knockdown != 0) return;   /* laufende Reaktion behaelt Vorrang */
     re15_player_aim_interrupt();             /* cmd-2 ersetzt den Aim-Zustand (@0x80031c88) */
