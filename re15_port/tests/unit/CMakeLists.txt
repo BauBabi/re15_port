@@ -2514,6 +2514,31 @@ target_include_directories(probe_re2z_crawl_attack PRIVATE ${CMAKE_SOURCE_DIR}/i
 target_compile_definitions(probe_re2z_crawl_attack PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 
+# --- MESSSONDE (Nutzer-Report 2026-08-23, RE2-KI): "Wenn Leon gefressen wird, ist der Zombie
+#     bei der Finisher-Position am BEIN statt am Oberkoerper/Kopf". Misst Griff -> Biss-Tod ->
+#     Kollaps mit beiden gerenderten Skeletten und dem Abstand Zombiekopf <-> Leon-Knochen.
+#     Sollseite: EXEC[6] @0x80103954, Anker jal 0x80015B94 @0x801039D0, Platzierung
+#     jal 0x80015CB8 @0x80103A14. ---
+add_executable(probe_re2z_devour probe_re2z_devour.c)
+target_link_libraries(probe_re2z_devour PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_re2z_devour PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_re2z_devour PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# --- PIN: das Anker/Platzierungs-Paar des RE2-Zombie-Finishers (EXEC[6] @0x80103954).
+#     Anker  jal 0x80015b94 @0x801039D0 (a0 = 0x800CFBF8 = Spieler; Zombie-Anker aus Clip 0x18
+#            Frame 0 + Kopie in den Spieler-Anker @0x80015C7C/C88/C94)
+#     Platz. jal 0x80015cb8 @0x80103A14 (a0 = Zombie; pos = Anker + RotY*off, @0x80015D58-90)
+#     Beides fehlte im Port -> der Fresser stand bewegungslos an Leons BEIN (Nutzer-Report
+#     2026-08-23). Traegt die Negativ-Kontrolle (E): naechster Leon-Knochen zum Zombiekopf. ---
+add_executable(test_re2z_devour_anchor test_re2z_devour_anchor.c)
+target_link_libraries(test_re2z_devour_anchor PRIVATE re15_engine re15_test_support)
+target_include_directories(test_re2z_devour_anchor PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_re2z_devour_anchor PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_re2z_devour_anchor COMMAND test_re2z_devour_anchor)
+set_tests_properties(unit_re2z_devour_anchor PROPERTIES TIMEOUT 120 SKIP_RETURN_CODE 77)
+
 # --- PIN: die drei byte-belegten RE2-Zombie-Korrekturen aus dem Nutzer-Report 2026-08-22
 #     (1) Griff-Yaw-Snap + Platzierungs-Offset PL+0x158 (@0x8010AA6C/@0x8010AA88/@0x8010AAAC)
 #         und KEIN RE1.5-Exit-Flip (RE2-EXIT-P6 @0x8010AEDC schreibt keinen Yaw)

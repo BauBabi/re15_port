@@ -1667,7 +1667,62 @@ static void re2z_exec_knockdown(re15_actor_t *e)
  *   P2 @0x80103A44: `lhu v0,270(s0)` / **`sw v1,4(s0)` mit v1 = 0x801** / `ori v0,v0,0x4000` /
  *      `sh v0,270(s0)` = Zustand 1 / +0x5 = 8 (FRESSEN) und +0x10E |= 0x4000 (das Limpet-Latch,
  *      das EXEC[8] P1 haelt). */
-static void re2z_exec_six(re15_actor_t *e)
+/* ⛔ NUTZER-REPORT 2026-08-23 (RE2-KI): "Wenn Leon stirbt und von Zombies gefressen wird, ist
+ * der Zombie bei der Finisher-Position irgendwie AM BEIN, nicht mehr wie sonst am
+ * Oberkoerper/Kopf."
+ *
+ * GEMESSEN (probe_re2z_devour, ROOM1140, echter game_step, geladene RE2-Baenke, beide Aktoren
+ * mit der Bankwahl DES RENDERERS posiert — Leon aus PL00-Rig + Opfer-Keyframes des Greifers,
+ * Zombie aus Paar 2, weil re15_re2z_poses_loco_bank fuer Zustand 1/+0x5=6 auf 0 faellt).
+ * PL00-Knochenhoehen stehend (Clip 0 F0, y negativ = oben): b8 = -2513 (Oberkoerper/Kopf),
+ * b2 = -1706 (Oberschenkel), b3 = -1011 (Knie), b4 = -266 (Fuss).
+ *   f80  Kollaps-Eintritt : Zombie (-1303,-19492)  Leon (-804,-19517)  Zkopf->b8  d=306
+ *   f81  P0 laeuft        : Zombie (-1303,-19492)  Leon (-773,-19500)  Zkopf->b9  d=760
+ *   f107..f126            : Zombie (-1303,-19492) UNVERAENDERT, Leon wandert nach (-96,-19386)
+ *                           naechster Leon-Knochen durchgehend **b2 (OBERSCHENKEL)**,
+ *                           d(b2) ~ 930..1100 gegen d(b8) 1310..1520
+ *   f197..f221 (Ende)     : Zombie immer noch (-1303,-19492), naechster Knochen weiter b2,
+ *                           d(b2) 635..965  vs  d(b8) 1193..1354
+ * Der Zombie steht also den GESAMTEN Fress-Vorgang bewegungslos da, waehrend Leons
+ * Kollaps-Clip (13/15, 116 F) ihn ~750 Einheiten wegzieht — das Ergebnis ist genau der
+ * beschriebene Kopf-am-Bein-Versatz.
+ *
+ * URSACHE — DAS ANKER/PLATZIERUNGS-PAAR VON EXEC[6] FEHLTE KOMPLETT. Selbst disassembliert
+ * (info/re2leon/COMMON/BIN/EMOVL10_S0.BIN, RAW @0x80100000):
+ *   801039b0: ori   v0,v0,0x18        ; v0 = lui 0xf @0x80103990 -> Clip-Wort 0x000F0018
+ *   801039b4: lui   a0,0x800d
+ *   801039b8: addiu a0,a0,-1032       ; **a0 = 0x800CFBF8 = DIE SPIELER-STRUKTUR**
+ *   801039bc: addu  a1,s1,zero        ; a1/a2 = das Bank-Paar des Dispatchers (Paar 2)
+ *   801039c0: addu  a2,s2,zero
+ *   801039c4: addu  a3,zero,zero      ; a3 = 0 (Vorwaerts-Zweig in 0x80015db0)
+ *   801039c8: sw    v0,332(s0)        ; +0x14C = Clip 0x18, +0x14D = 0 (Frame!), +0x14E = 0xF
+ *   801039d0: jal   0x80015b94        ; ** DER ANKER **
+ *   801039d4: sb    v0,6(s0)          ; Delay-Slot: Phase 1 -> FALLTHROUGH
+ *   ...
+ *   80103a08: addu  a0,s0,zero        ; a0 = DER ZOMBIE
+ *   80103a14: jal   0x80015cb8        ; ** DIE PLATZIERUNG **
+ *   80103a28: jal   0x8002959c        ; Advance (a3 = 256 @0x80103A2C)
+ * 0x80015B94 (info/re2leon/PSX.EXE, selbst disassembliert):
+ *   80015bc0/c4: lui s0,0x800d / lw s0,-7376(s0)   ; s0 = *(0x800CE330) = die getickte Entity
+ *   80015bd0:    jal 0x80015db0                    ; off = Wurzel-Offset(Clip +0x14C, Frame +0x14D)
+ *   80015c24:    lh  a0,118(s0)                    ; gedreht mit dem YAW DER ENTITY
+ *   80015c40-78: sh (pos-off) -> 356/358/360(s0)   ; **s0->Anker = pos - RotY*off**
+ *   80015c7c:    sh  a0,356(s3)   \
+ *   80015c88:    sh  v0,358(s3)    >               ; ** KOPIE in a0 = DEN SPIELER **
+ *   80015c94:    sh  v0,360(s3)   /
+ * 0x80015CB8 (dito): `lh a0,118(s1)` @0x80015D3C + `sw (anker+off) -> 56/60/64(s1)`
+ *   @0x80015D58-90 mit s1 = a0 -> **pos = Anker + RotY*off** (absolute Platzierung).
+ * 0x80015DB0 liest Clip `lbu v0,332(t1)` @0x80015DBC und **den AKTUELLEN Frame**
+ * `lbu v0,333(t1)` @0x80015DF4 aus t1 = *(0x800CE330).
+ *
+ * Der Port hatte an beiden Stellen NICHTS: kein Anker (der Zombie behielt den GRIFF-Anker und
+ * der Spieler ebenfalls) und keine Platzierung (der Zombie blieb auf seiner Todesstoss-Position
+ * stehen). Damit lief Leons Kollaps aus dem ALTEN Griff-Anker fort, waehrend der Zombie
+ * einfror — die Paar-Formation, die genau dieses eine Anker-Paar herstellt, existierte nicht.
+ *
+ * DERSELBE FEHLERTYP WIE BEIM HUND (re2d_grab_anchor, enemy_ai_re2_dog.c), nur eine Stufe
+ * frueher: dort war der Anker am FALSCHEN FRAME genommen, hier fehlte er ganz. */
+static void re2z_exec_six(re15_actor_t *e, re15_actor_t *pl)
 {
     if (e->sub_state_2 == 0) {                                     /* P0 @0x801039B0 */
         re2z_clip(e, 0x18, 0, 0xF, 0x100, 0);                      /* sw 0xF0018,332 @0x801039C8;
@@ -1676,8 +1731,13 @@ static void re2z_exec_six(re15_actor_t *e)
                                                                     * @0x80103A28 / `addiu a3,zero,256`
                                                                     * @0x80103A2C (war 0x200 = Klemme,
                                                                     * s. re2z_exec_knockdown P0) */
-        /* Anker 0x80015b94(PL, banks) @0x801039D0: richtet den Fresser am toten Spieler aus —
-         * die Spieler-Seite haelt der Port ueber die Victim-FSM; OPEN, dokumentiert. */
+        re15_re2z_grab_anchor(e, pl, 0x18);                        /* jal 0x80015b94 @0x801039D0 mit
+                                                                    * a0 = 0x800CFBF8 (Spieler):
+                                                                    * Zombie-Anker aus Clip 0x18 /
+                                                                    * Frame 0 (das Clip-Wort setzt
+                                                                    * +0x14D gerade auf 0) und KOPIE
+                                                                    * in den Spieler-Anker
+                                                                    * (@0x80015C7C/C88/C94) */
         re2z_se((re2z_rand() & 1u) ? 10 : 11);                     /* rand&1==0 -> 11, sonst 10
                                                                     * (@0x801039D8-F0, KEIN cd-Gate) */
         e->re2z_self1d3 |= 0x80u;                                  /* ori 0x80 @0x801039F8-A04 */
@@ -1686,6 +1746,11 @@ static void re2z_exec_six(re15_actor_t *e)
         /* FALLTHRU */
     }
     if (e->sub_state_2 == 1) {                                     /* P1 @0x80103A08 */
+        re15_re2z_grab_rootmotion(e);                              /* jal 0x80015cb8 @0x80103A14 mit
+                                                                    * a0 = s0 = DER ZOMBIE: absolute
+                                                                    * Platzierung aus dem eigenen
+                                                                    * Anker + Wurzel-Offset des
+                                                                    * laufenden Frames von Clip 0x18 */
         e->sub_state_2 = (uint8_t)(e->sub_state_2 + (uint8_t)re2z_clip_done(e));
                                                                    /* +0x6 += ret @0x80103A30-40 */
         return;
@@ -2674,7 +2739,7 @@ static void re2z_active(int slot, re15_actor_t *e, re15_actor_t *pl)
     case 3:  re2z_exec_grab(e, pl); break;                         /* 0x801025EC */
     case 4:  break;                                                /* 0x80103178 = jr ra (verified) */
     case 5:  re2z_exec_knockdown(e); break;                        /* 0x80103188 */
-    case 6:  re2z_exec_six(e); break;                              /* 0x80103954 */
+    case 6:  re2z_exec_six(e, pl); break;                          /* 0x80103954 */
     case 7:  re2z_exec_lying(e, pl); break;                        /* 0x80103780 */
     case 8:  re2z_exec_feeding(e, pl); break;                      /* 0x80103B74 */
     case 9:  re2z_exec_getup(e); break;                            /* 0x80103E48 */
