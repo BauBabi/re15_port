@@ -382,22 +382,56 @@ void re15_actor_step_walk(re15_actor_t *a)
     if (arrived) {
         re15_game_flag_set(5, a->walk_flag_bit, 1);
         a->walk_active = 0;
-        /* 2026-06-17 BYTE-TRUE (disasm-verified, WALK handler LAB_80030af0 arrival branch
-         * 0x80030cc4-0x80030d11): on Plc_dest arrival the original sets the SCD arrival flag
-         * + flips the walker's OWN FSM state byte — it writes NOTHING to the actor's motion
-         * (+0x94), frame (+0x95) or anim-flags (+0x1c4). It HOLDS the walk clip; the anim
-         * processor (FUN_8001f3bc) wraps the frame counter to 0 at clip-end and freezes there.
-         * So we do NOT reset motion here (the old motion=0/200 reset was port-invented). The
-         * walk/run sentinel (100/105) is held; re15_compute_actor_kf freezes it at frame 0
-         * (= the arms-down walk-start pose, W01 clip5 frame0 == PL00 clip0 frame0) once
-         * walk_active clears — exactly what the original shows before the next Plc_motion. */
-        if (a->motion == 100 || a->motion == 105 ||
-            (a->motion == 5 && a != &g_actors[RE15_ACTOR_SLOT_PLAYER])) {
-            /* Freeze the held walk/run clip at frame 0 (FUN_8001f3bc end-of-clip wrap+freeze).
-             * anim_freeze is read by re15_compute_actor_kf; the next Plc_motion's set_motion
-             * clears it. The pad-walk (motion 105, walk_active 0) NEVER sets this, so gameplay
-             * walking still loops normally — only a scripted-walk ARRIVAL freezes. (NPC walks
-             * hold their clip-5 gait the same way until the next executor command.) */
+        /* ⛔ KORREKTUR 2026-08-23 (Nutzer: "im Original macht er noch EINEN Schritt zurueck,
+         * bei uns ZWEI"). Der alte Kommentar hier — "die Ankunft schreibt NICHTS an +0x94/
+         * +0x95, sie HAELT den Walk-Clip" — hat den halben Zweig gelesen. Der Ankunfts-Zweig
+         * schreibt zwar wirklich nichts an den Clip-Feldern, aber er setzt den SUB-INDEX um,
+         * und ab dem naechsten Tick laeuft damit ein ANDERER Handler:
+         *
+         *   Mode 4 @0x80030cf0 `sb 6,-13735(at)=>0x800aca59` + @0x80030cfc `sb zero,0(s0)`
+         *   Mode 5 @0x80030f44                                + @0x80030f50
+         *   Mode 7 @0x800311a8                                + @0x800311b0
+         *   Mode 8 @0x80031318                                + @0x80031320
+         *   Mode 9 @0x800313ec                                + @0x800313f4
+         *   (s0 = 0x800aca5a = +0x6 = die Phase; 0x800aca59 = +0x5 = der Sub-Index)
+         *
+         * und der Plc-Executor dispatcht 0x800aca59 in JEDEM Tick neu:
+         *   @0x8003068c `lbu v0,-13735(v0)=>0x800aca59` / @0x80030694 `sll v0,v0,2`
+         *   @0x8003069c `addiu at,at,15920` (= 0x80073e30) / @0x800306a4 `lw v0,0(at)`
+         *   @0x800306ac `jalr v0`
+         * 0x80073e30[6] = 0x800517f0 = die EVENT-REACH-Maschine: Phase 0 setzt
+         * +0x6=1 (@0x80051844), +0x94=1 (@0x80051854), +0x95=0 (@0x80051864), +0x8f=7
+         * (@0x80051874) und faellt in den anim_set-Aufruf (@0x8005188c, Kanal +0x170/+0x174,
+         * a3=0x200); nach Clip-Ende schaltet sie auf Clip 2 als Idle-Loop (@0x800518c8/
+         * @0x800518dc). Der WALK-Clip wird also nicht "gehalten", sondern gar nicht mehr
+         * gespielt — sein einziger Advancer ist das `jal 0x8001f314` im Handler-Body
+         * (Mode 8 @0x800312b0), und der Body laeuft nach der Ankunft nie wieder.
+         * Der Rueckfall-Zweig daneben (`0x800acc18 & 4` -> Sub zurueck auf 4/5/7/8/9 mit
+         * Phase 2: @0x80030d00-10 / @0x80030f54-64 / @0x800311c8-d8 / @0x8003133c-48) ist
+         * TOT — DAT_800acc18 hat im ganzen PSX.EXE genau zwei Schreiber, den Toggle
+         * `xori v0,v0,0x20` @0x800306c4 + `sh v0,0(s0)` @0x800306c8 und `sh zero` @0x8003197c
+         * (Xref-Zensus ghidra1_V2.txt @475384: 10 Reads, 2 Writes); Bit 0x4 wird nie gesetzt.
+         *
+         * GEMESSEN (echter Lauf, ROOM1090 sub02, letzter Wegpunkt
+         * `Plc_dest(0,8,dest=(-130,-1988))` @0x247C, Log RE15_MOTRACE):
+         *   VORHER : F589 mo=236 af=0 ... F613 mo=236 af=24, erst F614 loest der naechste
+         *            Plc_motion ab. Die Endposition steht schon bei F600 ([walk]-Periodendump
+         *            pos=(-77,-1997) rot=111) — der Clip lief also ~16 Bilder weiter,
+         *            OBWOHL der Aktor stand.
+         *   NACHHER: F589 mo=236 af=0 ... F597 mo=236 af=8, F598 mo=1 (Sub 6 Clip 1),
+         *            F613 mo=2 (Idle-Loop); Endposition/-yaw unveraendert (-77,-1997)/111.
+         * PL00.EDD Clip 0 (34 Bilder, Bank-Beleg @0x800312a4/ac) traegt Fussaufsetzer bei
+         * Frame 8 (L) und Frame 25 (R) — Wort-Bit 0x4000, gelesen @0x80031274, Seite ueber
+         * Bit 0x1000 @0x8003127c. 9 Bilder Lauf (af 0..8) = genau EIN Aufsetzer; die
+         * Nachlauf-Bilder af 9..24 trugen den zweiten Beinzyklus = der gemeldete ZWEITE
+         * Schritt. PL00W01 Clip 1 (16 Bilder) und Clip 2 (52) haben NULL Fussaufsetzer —
+         * der byte-true Halt macht also keinen Schritt mehr. */
+        if (a == &g_actors[RE15_ACTOR_SLOT_PLAYER]) {
+            extern void re15_player_event_reach_begin(void);   /* game_step_common.c: Sub 6 */
+            re15_player_event_reach_begin();                   /* @0x800aca59 := 6, Phase := 0 */
+        } else if (a->motion == 100 || a->motion == 105 || a->motion == 5) {
+            /* NICHT-SPIELER (nur noch Elliot 0x47 erreicht diesen Walker): unveraendert —
+             * ihr Halt kommt aus der NPC-Sub-Tabelle 0x80076ca0, nicht aus 0x80073e30. */
             a->anim_freeze = 1;
         }
     }

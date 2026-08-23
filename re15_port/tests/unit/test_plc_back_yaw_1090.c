@@ -59,6 +59,7 @@ extern scd_vm_t g_scd;
 extern int  scd_thread_start(int slot, const uint8_t *pc);
 extern int16_t re15_atan2_q12(int32_t dz, int32_t dx);
 extern void re15_actors_anim_advance(void);
+extern int  re15_player_event_reach_clip(void);   /* game_step_common.c — Sub 6 aktiv? */
 
 static int s_fail = 0;
 
@@ -341,6 +342,157 @@ int main(void)
                "anim_select: Sentinel 236 -> PL00-Bank", (long)(av.anim == &an_pl00), 1);
             ok(av.clip_override == 0, "anim_select: Sentinel 236 -> Clip 0",
                av.clip_override, 0);
+        }
+
+        /* ===============================================================================
+         * R4 — SCHRITTZAEHLUNG. Nutzer-Befund 2026-08-23: "Im Original macht er zum
+         * Schluss noch EINEN Schritt zurueck, bei uns ZWEI."
+         *
+         * MECHANISMUS (selbst disassembliert, info/Re1.5/PSX.EXE): der Ankunfts-Zweig JEDES
+         * Spieler-Walk-Handlers schreibt den SUB-INDEX auf 6 und die Phase auf 0 —
+         *   Mode 4 @0x80030cf0 `sb 6,-13735(at)=>0x800aca59` + @0x80030cfc `sb zero,0(s0)`
+         *   Mode 5 @0x80030f44 + @0x80030f50   Mode 7 @0x800311a8 + @0x800311b0
+         *   Mode 8 @0x80031318 + @0x80031320   Mode 9 @0x800313ec + @0x800313f4
+         * und der Plc-Executor dispatcht 0x800aca59 jeden Tick neu (@0x8003068c `lbu` /
+         * @0x8003069c `addiu at,at,15920` = 0x80073e30 / @0x800306a4 `lw` / @0x800306ac
+         * `jalr`). 0x80073e30[6] = 0x800517f0 = EVENT-REACH: +0x94=1 (@0x80051854),
+         * +0x95=0 (@0x80051864), +0x8f=7 (@0x80051874), Clip 1 einmal -> Clip 2 als Loop
+         * (@0x800518c8/@0x800518dc). Der Walk-Clip wird danach NIE wieder advanct — sein
+         * einziger Advancer ist das `jal 0x8001f314` im Handler-Body (Mode 8 @0x800312b0).
+         * Der Rueckfall `0x800acc18 & 4` (@0x8003133c-48 usw.) ist tot: DAT_800acc18 hat
+         * genau zwei Schreiber, `xori 0x20`+`sh` @0x800306c4/c8 und `sh zero` @0x8003197c.
+         *
+         * GEMESSEN (echter Lauf ROOM1090 sub02, RE15_MOTRACE):
+         *   VORHER  F589 mo=236 af=0 ... F613 mo=236 af=24 (Endposition schon ab F600)
+         *   NACHHER F589 mo=236 af=0 ... F597 mo=236 af=8, F598 mo=1, F613 mo=2
+         * PL00.EDD Clip 0 setzt den Fuss bei Frame 8 und 25 auf (Wort-Bit 0x4000, gelesen
+         * @0x80031274; Seite ueber Bit 0x1000 @0x8003127c) => vorher 2 Beinzyklen, jetzt 1.
+         * ================================================================== */
+        printf("R4 Ankunft uebergibt an Sub 6 (Event-Reach) — Schrittzahl\n");
+        {
+            /* (a) DATEN-PIN: die Fussaufsetzer der drei beteiligten Clips, roh aus den EDDs. */
+            struct { const char *file; int clip; } cs[3] = {
+                { "PLD/PL00.EDD", 0 }, { "PLD/PL00W01.EDD", 1 }, { "PLD/PL00W01.EDD", 2 }
+            };
+            int fc_[3] = {0,0,0}, nfoot[3] = {0,0,0}, f_first[3] = {-1,-1,-1}, f_second[3] = {-1,-1,-1};
+            for (int i = 0; i < 3; i++) {
+                char ep[600]; snprintf(ep, sizeof ep, "%s/%s", RE15_ASSET_PSX_DIR, cs[i].file);
+                FILE *ef = fopen(ep, "rb"); if (!ef) continue;
+                static unsigned char eb[65536];
+                size_t en = fread(eb, 1, sizeof eb, ef); fclose(ef);
+                unsigned ent = (unsigned)cs[i].clip * 4u;
+                if (ent + 4 > en) continue;
+                int cfc = eb[ent] | (eb[ent+1] << 8);
+                int coff = eb[ent+2] | (eb[ent+3] << 8);
+                fc_[i] = cfc;
+                for (int f = 0; f < cfc && (size_t)(coff + f*4 + 4) <= en; f++) {
+                    unsigned w = (unsigned)(eb[coff+f*4] | (eb[coff+f*4+1] << 8));
+                    if (w & 0x4000u) {
+                        if (f_first[i] < 0) f_first[i] = f; else if (f_second[i] < 0) f_second[i] = f;
+                        nfoot[i]++;
+                    }
+                }
+            }
+            ok(fc_[0] == 34 && nfoot[0] == 2 && f_first[0] == 8 && f_second[0] == 25,
+               "PL00.EDD Clip 0: 34 Bilder, Fuss bei 8 und 25 (Bit 0x4000 @0x80031274)",
+               nfoot[0], 2);
+            ok(fc_[1] == 16 && nfoot[1] == 0,
+               "PL00W01 Clip 1 (Sub-6 Phase 0, @0x80051854): 16 Bilder, KEIN Fussaufsetzer",
+               nfoot[1], 0);
+            ok(fc_[2] == 52 && nfoot[2] == 0,
+               "PL00W01 Clip 2 (Sub-6 Idle-Loop, @0x800518c8): 52 Bilder, KEIN Fussaufsetzer",
+               nfoot[2], 0);
+
+            /* (b) ABLAUF: sub02 erneut fahren und den Mode-8-Abschnitt vermessen. */
+            re15_actor_init(); scd_vm_init(); re15_aot_init();
+            g_current_room_id = 0x1090; g_room_change.pending = 0;
+            re15_actor_t *p2 = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+            p2->active = 1; p2->type = 0; p2->hp = 100;
+            p2->x = -10100; p2->y = -1800; p2->z = 4200; p2->rot_y = 3072;
+            scd_room_reenter(&rdt, p2->x, p2->z, 0);
+            for (int fr = 0; fr < 30; fr++) { scd_vm_tick(); re15_aot_scan(p2->x, p2->z, (uint8_t)g_scd.cam_id); }
+            scd_thread_start(3, rdt.sub_scd[2]);
+
+            int in8 = 0, ticks8 = 0, af_max8 = -1, mo_after = -1, af_after_max = -1;
+            int steps = 0, last_slot = -1, post = 0;
+            for (int fr = 0; fr < 500; fr++) {
+                /* Reihenfolge wie im echten Loop (platform/pc/main.c): scd_vm_tick ->
+                 * re15_actor_step_all_walkers (@main.c:3708) -> re15_game_step, in dem
+                 * re15_player_tick den Spieler-Frame advanct. */
+                scd_vm_tick();
+                re15_actors_anim_advance();
+                re15_actor_step_all_walkers();
+                if (re15_player_event_reach_clip() >= 0) {
+                    /* Sub 6 besitzt +0x95 (player_common.c) — hier kein Advance. */
+                } else if (p2->motion_init_delay > 0) p2->motion_init_delay--;
+                else { p2->anim_frame++; if (p2->anim_frac > 0) p2->anim_frac--; }
+                re15_aot_scan(p2->x, p2->z, (uint8_t)g_scd.cam_id);
+
+                int on_back = (p2->motion == RE15_PLAYER_MOTION_BACK_PL00);
+                if (p2->walk_active && p2->walk_mode == 0x08) {
+                    in8 = 1; ticks8++;
+                    if ((int)p2->anim_frame > af_max8) af_max8 = (int)p2->anim_frame;
+                }
+                /* Schrittzaehler: jeder NEU erreichte Fussaufsetzer-Slot von PL00 Clip 0. */
+                if (on_back && fc_[0] > 0) {
+                    int slot = (int)(p2->anim_frame % (unsigned)fc_[0]);
+                    if (slot != last_slot && (slot == f_first[0] || slot == f_second[0])) steps++;
+                    last_slot = slot;
+                }
+                if (in8 && !p2->walk_active) {          /* nach der Ankunft */
+                    if (mo_after < 0) mo_after = (int)p2->motion;
+                    if (on_back && (int)p2->anim_frame > af_after_max)
+                        af_after_max = (int)p2->anim_frame;
+                    if (++post >= 60) break;
+                }
+            }
+            printf("       Mode-8: %d Ticks, af_max=%d; nach Ankunft motion=%d, "
+                   "Rueckwaerts-Clip noch %d Bilder, SCHRITTE=%d\n",
+                   ticks8, af_max8, mo_after, af_after_max < 0 ? 0 : af_after_max + 1, steps);
+            ok(in8, "Mode-8-Abschnitt gefahren", in8, 1);
+            ok(mo_after != RE15_PLAYER_MOTION_BACK_PL00,
+               "NEGATIV: nach der Ankunft laeuft NICHT weiter der Rueckwaerts-Clip 236",
+               mo_after, RE15_PLAYER_MOTION_BACK_PL00);
+            ok(mo_after == 1,
+               "Ankunft -> Sub 6 Phase 0: +0x94 = 1 (@0x80051854)", mo_after, 1);
+            ok(af_after_max < 0,
+               "kein einziges Bild Rueckwaerts-Clip nach der Ankunft", af_after_max, -1);
+            ok(steps == 1, "GENAU EIN Schritt im Mode-8-Abschnitt (Fuss bei Frame 8)",
+               steps, 1);
+            ok(af_max8 <= f_second[0],
+               "der Lauf erreicht den ZWEITEN Fussaufsetzer (Frame 25) nie",
+               af_max8, f_second[0]);
+        }
+
+        /* R5 — DOPPEL-ADVANCE: waehrend Sub 6 laeuft, darf re15_player_tick den Frame-Zaehler
+         * NICHT zusaetzlich hochzaehlen. Der Sub ruft anim_set genau einmal pro Tick
+         * (@0x8005188c Phase 0/1, @0x800518f0 Phase 2/3), und anim_set macht +0x95 += 1
+         * (@0x8001f618/1c) und +0x8f -= 1 (@0x8001f5b0-b4) — EINMAL.
+         * GEMESSEN vorher (echter Lauf, RE15_MOTRACE, Plc_dest mode 6 in sub02):
+         *   F61 mo=1 af=2 frac=5 | F62 af=4 frac=3 | F63 af=6 frac=1 | F64 af=8 frac=0
+         * = +2 pro 30-Hz-Tick, der Halte-Clip lief doppelt so schnell. */
+        printf("R5 Sub 6 besitzt +0x95 allein (kein Doppel-Advance)\n");
+        {
+            extern void re15_player_event_reach_begin(void);
+            extern int  re15_player_event_reach_clip(void);
+            re15_actor_t *p3 = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+            re15_player_event_reach_begin();
+            ok(re15_player_event_reach_clip() == 1,
+               "Sub 6 aktiv, Phase 0 -> Clip 1", re15_player_event_reach_clip(), 1);
+            ok(p3->motion == 1 && p3->anim_frame == 0 && p3->anim_frac == 7,
+               "Sub-6-Init: +0x94=1 (@0x80051854) +0x95=0 (@0x80051864) +0x8f=7 (@0x80051874)",
+               (long)p3->anim_frac, 7);
+            uint16_t af0 = p3->anim_frame; uint8_t fr0 = p3->anim_frac;
+            re15_player_tick(NULL, 0);
+            ok(p3->anim_frame == af0 && p3->anim_frac == fr0,
+               "NEGATIV: re15_player_tick advanct waehrend Sub 6 NICHT mit",
+               (long)p3->anim_frame, (long)af0);
+            { extern void re15_player_event_reach_end(void); re15_player_event_reach_end(); }
+            uint16_t af1 = p3->anim_frame;
+            re15_player_tick(NULL, 0);
+            ok(p3->anim_frame == (uint16_t)(af1 + 1),
+               "Positiv-Kontrolle: ohne Sub 6 advanct player_tick wieder",
+               (long)p3->anim_frame, (long)(af1 + 1));
         }
         free(raw);
     }

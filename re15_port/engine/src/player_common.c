@@ -540,7 +540,21 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
      * Rate: FULL-RATE (1 keyframe per 30 Hz frame) — a "half-rate" divider citing FUN_80030660 bit
      * 0x10 was tried + REVERTED; DAT_800acc18 bit 0x10 is NEVER set (only `xori 0x20` toggle +
      * `sh zero` clear), so the half-rate path is dead and the original advances every frame. */
-    if (p->motion_init_delay > 0) {
+    /* AUSNAHME EVENT-REACH (Plc_dest-Sub 6 @0x800517f0, Spieler-Tabelle 0x80073e30[6]): dieser
+     * Sub advanct +0x95 SELBST. Sein Body ruft `jal 0x8001f314` genau EINMAL pro Tick
+     * (Phase 0/1 @0x8005188c, Phase 2/3 @0x800518f0), und anim_set erhoeht dort +0x95 um 1
+     * (@0x8001f618 `addiu v0,v0,1` / @0x8001f61c `sb v0,149(t0)`) und dekrementiert +0x8f um 1
+     * (@0x8001f5b0-b4) — einmal, nicht zweimal. Der Port bildet den Sub in
+     * re15_player_event_reach_tick (game_step_common.c) ab, der genau diesen einen Advance macht;
+     * lief der Advance hier zusaetzlich, waren es zwei pro Bild.
+     * GEMESSEN (echter Lauf, ROOM1090 sub02, RE15_MOTRACE, vor dem Fix):
+     *   [mot] F61 mo=1 af=2 frac=5 / F62 af=4 frac=3 / F63 af=6 frac=1 / F64 af=8 frac=0 ...
+     * also +2 pro 30-Hz-Tick — der Halte-Clip lief exakt doppelt so schnell wie im Original
+     * (16 Bilder PL00W01 Clip 1 in 8 statt 16 Ticks). */
+    extern int re15_player_event_reach_clip(void);   /* game_step_common.c: >=0 = Sub 6 aktiv */
+    if (re15_player_event_reach_clip() >= 0) {
+        /* Sub 6 besitzt den Frame-Zaehler — hier NICHT advancen. */
+    } else if (p->motion_init_delay > 0) {
         /* State-4 init hold (PSX +0x4=4): render keyframe 0 once WITHOUT advancing
          * the clip or consuming the FRAC crossfade (the original decrements +0x8f
          * INSIDE FUN_8001f3bc as it advances +0x95 — consuming it during the hold
@@ -966,15 +980,23 @@ void re15_actors_anim_advance(void)
         { uint8_t t = a->type;
           if ((t==0x10||t==0x11||t==0x12||t==0x16||t==0x18) && a->state == 1 &&
               (a->sub_state_1 == 0x10 || (a->grid_id & 0x0f) == 1) &&
-              re15_ai_flavor() != RE15_AI_FLAVOR_RE2) continue; }   /* RE1.5-Sub-Semantik; unter
-                                                                     * RE2-Flavor advanct der Brain-
-                                                                     * Besitz normal (WELLE B) */
+              !re15_ai_re2_for_type(t)) continue; }   /* RE1.5-Sub-Semantik; unter RE2-Flavor
+                                                       * advanct der Brain-Besitz normal (WELLE B).
+                                                       * MIXED (2026-08-23): typ-bezogen — die
+                                                       * Zombie-Familie ist dort NICHT RE2, also
+                                                       * gilt hier wieder die RE1.5-Semantik.
+                                                       * Der Hund faellt gar nicht erst hier rein:
+                                                       * 0x20 ist in re15_type_self_advances_anim
+                                                       * (oben) und wird vorher uebersprungen —
+                                                       * die Header-Warnung "ein NEUER Typ erbt die
+                                                       * Exemptions NICHT automatisch" ist damit
+                                                       * fuer 0x20 geprueft und erfuellt. */
         /* WELLE B (RE2-Flavor): every RE1.5-clip-number-specific pin below (0x0C/0x0E/0x12/0x13
          * lie-down, 0x2A sleeper) is meaningless against the RE2 EM01x bank — 0x0C IS the RE2
          * grab-BITE clip (grab 0x0B + 1 @0x80102830-34), 0x0E the crawler grab, 0x12 the feeding
          * loop (@0x80100ADC). Pinning them at frame 0 froze the RE2 bite (bite frame 16
          * @0x80100014 never reached). The RE2 brain owns its holds itself -> plain advance. */
-        int re2z_owned = (re15_ai_flavor() == RE15_AI_FLAVOR_RE2 && re15_re2z_owns_type(a->type));
+        int re2z_owned = (re15_ai_re2_for_type(a->type) && re15_re2z_owns_type(a->type));
         uint16_t mo = a->motion;
         /* These clips hold frame 0 for the SPAWN lie-down (a downed zombie stays flat). But clips
          * 0x12/0x13 are DUAL-USE: the KNOCKDOWN GET-UP (re15_enemy_ai_live_knockdown case 4 sets
