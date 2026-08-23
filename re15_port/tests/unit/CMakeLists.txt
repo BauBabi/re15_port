@@ -2612,3 +2612,13 @@ target_compile_definitions(test_ai_flavor_mixed PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_ai_flavor_mixed COMMAND test_ai_flavor_mixed)
 set_tests_properties(unit_ai_flavor_mixed PROPERTIES TIMEOUT 120)
+
+# Sonde: ROOM1090 Flammen-Kontakt (Nutzer-Report 2026-08-23) — HP-2/Frame @0x801163c8-d0,
+# Flinch-Clip 8/9 + Schmerz-SE CORE 1/2 (@0x80035e80/@0x80036004) auf dem echten game_step-Weg.
+add_executable(probe_1090_flame_touch probe_1090_flame_touch.c)
+target_link_libraries(probe_1090_flame_touch PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_1090_flame_touch PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_1090_flame_touch PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME probe_1090_flame_touch COMMAND probe_1090_flame_touch)
+set_tests_properties(probe_1090_flame_touch PROPERTIES TIMEOUT 60)

@@ -620,6 +620,43 @@ static void pc_enemy_hybrid_re15_models(uint8_t type, re15_enemy_bank_t *eb)
  * Die Registry fuehrt EINE Bank je Typ; beide Populationen koennen nie im selben Raum stehen
  * (Zensus: Typ 0x26 steht in genau 7 Records, alle in ROOM1090 @0x2214..0x228C, und dort steht
  * kein einziger Adult 0x25), die Weiche ist also eindeutig. */
+/* ⛔ NUTZER-MANDAT (2026-08-23): "Bei RE2AI haben die Zombies nicht den Sound von RE1.5 AI.
+ * Sound usw soll uebernommen werden, nur KI nicht." — Im RE2-Flavor wird fuer die ZOMBIE-
+ * Familie dieser MAPPER als SE-Hook registriert: die byte-true RE2-Trigger (Ids/Timing,
+ * enemy_ai_re2_zombie.c) bleiben unveraendert, nur die Sample-Quelle wechselt von der
+ * ENEMSE-Bank auf die RE1.5-snd1-Raumbank (FUN_800453d0-Pfad). Die ZUORDNUNG ist eine
+ * dokumentierte Mapping-Entscheidung (RE2-Kontext -> semantisch gleicher RE1.5-SE), die
+ * RE1.5-Seite jeder Zeile ist adressbelegt:
+ *   ENEMSE 0/1 (Schritt L/R, Pair-1 Clip-0-Frame-Flags f20/f62) -> RE1.5 SE 1
+ *       (RE1.5-Schritt: LOCO-Frame-Bits SE 1, 2x/Zyklus via FUN_8001b38c @0x8001b3b4)
+ *   ENEMSE 3 (Biss)        -> SE 3 (Frame-Bit 3 Clips 0x27/0x28 via @0x8001b3cc;
+ *                                   Devour-Biss @0x801045ec-f4)
+ *   ENEMSE 4/10 (Moan A)   -> SE 4 (snd1-Moan-Paar 4/5)
+ *   ENEMSE 5/11 (Moan B)   -> SE 5 (Feeder-/Aufsteh-Moan @0x801039dc-e0 / @0x80104ae0)
+ *   ENEMSE 9 (Abriss)      -> SE 9 (RE1.5-Kriech-Grab-Abriss, enemy_ai_common.c)
+ *   ENEMSE 12 (Fall/Hit)   -> SE 6 (Hurt @0x80106954)
+ *   ENEMSE 13 (Fall/Death) -> SE 8 (Death-Paar 5/8, FUN_80107cb0)
+ * Unbekannte Ids fallen auf die ENEMSE-Bank zurueck (nichts verstummt still). Der RE1.5-
+ * Flavor-Abriss-Import (re2z_se(9), Registrierung unten) behaelt bewusst das RE2-Sample. */
+static void pc_re2z_se_re15(int se_id, int flag2000)
+{
+    int m;
+    switch (se_id) {
+    case 0: case 1: m = 1; break;
+    case 3:  m = 3; break;
+    case 4:  m = 4; break;
+    case 5:  m = 5; break;
+    case 9:  m = 9; break;
+    case 10: m = 4; break;
+    case 11: m = 5; break;
+    case 12: m = 6; break;
+    case 13: m = 8; break;
+    default: m = -1; break;
+    }
+    if (m >= 0) { re15_audio_room_se(m); return; }
+    re15_audio_re2_enemy_se(se_id, flag2000);
+}
+
 static void pc_enemy_load_ex(uint8_t type, int allow_re2)
 {
     extern void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
@@ -663,7 +700,10 @@ static void pc_enemy_load_ex(uint8_t type, int allow_re2)
             re15_re2spider_audio_hook(re15_audio_re2_enemy_se, re15_audio_re2_enemy_bank,
                                       type == 0x26);
         else
-            re15_re2z_audio_hook(re15_audio_re2_enemy_se, re15_audio_re2_enemy_bank);
+            /* ZOMBIE-Familie im RE2-Flavor: RE1.5-Sound-Mapper statt ENEMSE-Player
+             * (Nutzer-Mandat 2026-08-23, s. pc_re2z_se_re15 oben). Die Bank-Registrierung
+             * bleibt — der Fallback unbekannter Ids spielt weiter ENEMSE. */
+            re15_re2z_audio_hook(pc_re2z_se_re15, re15_audio_re2_enemy_bank);
         if (pc_enemy_load_re2(type, eb)) {
             /* "AI RE2" behaelt Gehirn + Animation aus RE2, tauscht aber Mesh/Textur/Bind-Laengen
              * gegen RE1.5. ⛔ 2026-08-21: das war bis hierher an re15_ai_models() gebunden (dritte
@@ -4743,9 +4783,15 @@ re_title:;
                  * den Bits 12-15 und liegen die Face-Tasten auf 4-7 — gegenueber dem Pad-Wort des
                  * Ports sind die beiden Bytes also vertauscht; re15_debug_menu_pad() dreht sie.
                  *
-                 * SPIELERPOSITION: der Lade-Zweig @0x80014A44-58 schreibt NUR 0x800B5359=1,
-                 * 0x800AC9A8=0 und 0x800BBE5C=0 — KEINE Position. Der Port nimmt deshalb den
-                 * Eintritts-Spawn des Zielraums aus re15_room_spawns, nicht die aktuelle Position. */
+                 * SPIELERPOSITION (KORRIGIERT 2026-08-23): der MENUE-Lade-Zweig @0x80014A44-58
+                 * schreibt zwar nur 0x800B5359=1, 0x800AC9A8=0 und 0x800BBE5C=0 — aber die
+                 * dadurch gestartete Transition-FSM (@0x8001c990, liest 0x800B5359 @0x8001c994)
+                 * ruft den JUMP-Executor FUN_8001d600 (@0x8001ca54), dessen DEBUG-Zweig
+                 * (0x800AC9A8==0 @0x8001d618) die Position AUS DEM DEBUG.BIN-TABELLENSATZ liest
+                 * (X @0x8001d6a8, Z @0x8001d720, Band @0x8001d798, Y=-Band*0x708 @0x8001d7b8-d4,
+                 * Cut/Szenario=0 @0x8001d818-20, Yaw unangetastet). Der Sprung unten nutzt genau
+                 * diese Felder (re15_debug_menu_jump_spawn); re15_room_spawns ist nur noch der
+                 * Fallback ohne DEBUG.BIN. */
                 {
                     uint16_t dbg_held = re15_debug_menu_pad(gctx.pad_current);
                     uint16_t dbg_edge = re15_debug_menu_pad(gctx.pad_pressed);
@@ -4822,17 +4868,37 @@ re_title:;
                             unsigned  droom = (unsigned)dm->load_room << 4;   /* 0x114 -> ROOM1140 */
                             int32_t   dx = 0, dy = 0, dz = 0;
                             int16_t   dyaw = 0;
-                            int       dcut = 0;
-                            for (int _ri = 0; _ri < RE15_ROOM_COUNT; _ri++)
-                                if (re15_room_ids[_ri] == droom) {
-                                    const re15_room_spawn_t *rs = &re15_room_spawns[_ri];
-                                    dx = rs->x; dy = rs->y; dz = rs->z;
-                                    dyaw = rs->yaw; dcut = rs->cut;
-                                    break;
-                                }
+                            int       dcut = 0, dband = 0;
+                            /* ⛔ FIX 2026-08-23 (Nutzer-Report "Debug-Menue schickt an andere
+                             * Stellen als das Original, z.B. room105"): der JUMP-Executor
+                             * FUN_8001d600 (Debug-Zweig, DAT_800ac9a8==0 @0x8001d618) liest den
+                             * Spawn AUS DEM DEBUG.BIN-TABELLENSATZ: X @0x8001d6a8, Z @0x8001d720,
+                             * Band @0x8001d798, Y = -Band*0x708 @0x8001d7b8-d4; Cut/Szenario = 0
+                             * (`sb zero DAT_800afbb5` @0x8001d818 / `sh zero DAT_800b0fe4`
+                             * @0x8001d820); Yaw wird NICHT geschrieben (einziger Yaw-Store der
+                             * Funktion ist der Tuer-Zweig @0x8001d8e8) -> Spieler-Yaw bleibt.
+                             * Vorher nahm der Port den Tuer-Eintritts-Spawn aus re15_room_spawns
+                             * (fuer 1050: X 14700/Z -13500/Cut 4 statt 20600/12350/Cut 0 = das
+                             * andere Korridor-Ende). re15_room_spawns bleibt nur als Fallback
+                             * ohne DEBUG.BIN-Tabelle (solche Raeume kann das Original-Menue gar
+                             * nicht anspringen). */
+                            if (re15_debug_menu_jump_spawn(&dx, &dz, &dband)) {
+                                dy   = -(int32_t)dband * 0x708;   /* @0x8001d7b8-d4 (225*8=1800) */
+                                dyaw = g_actors[RE15_ACTOR_SLOT_PLAYER].rot_y;
+                                dcut = 0;                         /* @0x8001d818-20 */
+                            } else {
+                                for (int _ri = 0; _ri < RE15_ROOM_COUNT; _ri++)
+                                    if (re15_room_ids[_ri] == droom) {
+                                        const re15_room_spawn_t *rs = &re15_room_spawns[_ri];
+                                        dx = rs->x; dy = rs->y; dz = rs->z;
+                                        dyaw = rs->yaw; dcut = rs->cut;
+                                        break;
+                                    }
+                            }
                             re15_room_request_change(droom, dx, dy, dz, dyaw, dcut);
-                            fprintf(stderr, "[debug-menu] JUMP -> %03x %s (ROOM%04X)\n",
-                                    dm->load_room, re15_debug_menu_room_name(), droom);
+                            fprintf(stderr, "[debug-menu] JUMP -> %03x %s (ROOM%04X) spawn=(%d,%d,%d) cut=%d\n",
+                                    dm->load_room, re15_debug_menu_room_name(), droom,
+                                    dx, dy, dz, dcut);
                         }
                         /* KEIN Pad-Schlucken. Im Original friert das Menue NICHTS ein: FUN_8001443c
                          * kehrt zurueck, danach laufen State-Dispatch, Subsystem-Ticks und die

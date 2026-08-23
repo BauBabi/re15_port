@@ -706,6 +706,11 @@ void re15_audio_load_room_banks(void)
     load_footstep_vab();      /* room snd0 → SPU + EDT-Tabelle (Schritt-SE) */
 }
 
+void re15_audio_bgm_status_reset(void)
+{
+    /* PSX: no-op — der SsSeq-Pfad fuehrt den Status nativ (DAT_800b52ac/b4/bc). */
+}
+
 void re15_audio_start_room_bgm(int stage, int room)
 {
 #if RE15_BGM_ENABLE

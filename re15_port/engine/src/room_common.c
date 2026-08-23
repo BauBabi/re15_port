@@ -340,6 +340,10 @@ int re15_room_apply_pending(const re15_room_apply_ctx_t *c)
      * immer Fall 0 (z.B. ROOM1090: immer Cut_chg 8, nie Cut_chg 0x0B fuer Eintritt via
      * Cut 3 aus ROOM1050). Der Selbst-Raum-Pfad in game_step_common.c uebergab den
      * target_cut bereits korrekt — jetzt tun es beide. */
+    /* BGM-Status-Latch des alten Raums leeren, BEVOR das neue main00 laeuft (dessen
+     * Sce_bgm_control-Ops setzen den Status neu; audio_pc.c s_bgm_slot_status =
+     * DAT_800b52ac/b4/bc-Zwilling, ROOM1030-Musik-Fix 2026-08-23). */
+    re15_audio_bgm_status_reset();
     scd_room_reenter(c->rdt, g_room_change.x, g_room_change.z,
                      (uint8_t)g_room_change.target_cut);
 

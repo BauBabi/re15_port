@@ -262,6 +262,13 @@ typedef struct {
     uint8_t  re2z_bitefr;       /* Biss-Frame  aus dem (frame,dmg)-Paar param[0x14+s5*2]   @0x801028A0-AC   */
     uint8_t  re2z_bitedmg;      /* Biss-Schaden aus demselben Paar (Anwendung @0x801028F4-FC)               */
     int16_t  re2z_prev_hp;      /* Port-Feld: HP-Schnappschuss fuer die HURT-Resistenz-Abschreibung        */
+    int16_t  re2z_sfx_slot;     /* Port-Feld: zuletzt SE-dekodierter Frame-Slot (Dedup fuer die
+                                 * RE2-EDD-Frame-Flag-SEs in Feeding/Crawl — dort persistiert ein Slot
+                                 * bei rate<0xF ueber mehrere Ticks). re2z_clip() setzt -1.             */
+    uint8_t  re2z_pose234;      /* +0x234 Liege-Pose-Zeile fuer den Liegend-Tod FUN_801099E4:
+                                 * 1=Ruecken (Knockdown-P6 @0x80103590-94), 0=Bauch (P6 bei
+                                 * +0x21A&4 @0x80103598-AC), 2=Feeding-Aufsteher (P3 @0x80103CF0-F4).
+                                 * Indiziert die 3x3-Tabelle @0x80100160 {55,22,1}{40,23,1}{0,1,1}.   */
     /* ---- RE2-Trefferreaktion: BONE-MATRIX-INJEKTION (das Oberkoerper-Zucken) -----------------
      * Die RE2-Trefferhandler drehen NACH dem Anim-Advance (FUN_8002959C) ZWEI Part-Matrizen des
      * Modell-Pools (+0x198): Part 0 wird NACH-multipliziert, Part 1 VOR-multipliziert mit der

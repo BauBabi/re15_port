@@ -185,18 +185,25 @@ static void re2c_move3d(re15_actor_t *e)                   /* == 0x80015350(0,0)
  * zugleich der Wand-Radius von FUN_8003567c (param[0x24]) — s. Root-Tail-MAPPING. */
 static void re2c_vol(re15_actor_t *e, int vol) { (void)e; (void)vol; }
 
-/* 0x80104678(self, n): n Federn, Offsets ±512 (sll24/sra22 @0x801046A4-E0), FX 0xC000800,
- * a1 = rand<<4 (@0x801046F4). Port: RE1.5-ESP-Splatter-Stand-in (RE1.5-GIB-Praezedenz);
- * die 4 RNG-Draws pro Feder bleiben (Draw-Count = Verhalten am geteilten Strom). */
+/* 0x80104678(self, n): n Federn, Offsets ±512 (sll24/sra22 @0x801046A4-E0), FX-Wort
+ * 0x0C000800 = Id 0x0C = das RE2-FEDER-FX (@0x801046EC-F0), a1 = rand<<4 (@0x801046F4).
+ * ⛔ FIX 2026-08-23 (Nutzer-Report "Bluteffekte ohne Treffer bei den Kraehen"): der alte
+ * Stand-in spawnte hier RE1.5-ESP-Effekt 0 = BLUT — an fuenf trefferlosen Callsites
+ * (Takeoff @0x80100CA8-C4/@0x80100D9C-B0, Kreisen-P0 @0x80101220-34, Trudeln @0x801019A4-C0,
+ * Harass-Vorbeiflug @0x80102690-AC), je 1/8 pro Re-Roll -> regelmaessig Blut im Normalflug.
+ * Die RE1.5-Kraehe spawnt im Normalflug KEIN FX (ihr einziges "Feder"-Ereignis ist der
+ * 13-Bone-Part-Scatter der GIB-Lane @0x80114a50-aa4) — die korrekte RE1.5-Praesentation
+ * eines Fluegelschlags ist also NICHTS. Nur die 4 RNG-Draws pro Feder bleiben
+ * (Draw-Count = Verhalten am geteilten RE2-Strom). Das Feder-Sprite selbst bleibt OPEN
+ * (RE2-FX-Familie 0x8001bf10 ohne Port-Gegenstueck, wie Hund/Zombie-Kinds). */
 static void re2c_feather(re15_actor_t *e, int n)
 {
+    (void)e;
     for (int i = 0; i < n; i++) {
-        int32_t ox = ((int32_t)(int8_t)(re15_re2_rand() & 0xffu)) << 2;
-        int32_t oy = ((int32_t)(int8_t)(re15_re2_rand() & 0xffu)) << 2;
-        int32_t oz = ((int32_t)(int8_t)(re15_re2_rand() & 0xffu)) << 2;
+        (void)re15_re2_rand();                             /* Offsets @0x801046A4-E0 */
+        (void)re15_re2_rand();
+        (void)re15_re2_rand();
         (void)re15_re2_rand();                             /* a1 = rand<<4 @0x801046F0-F4 */
-        re15_esp_fx_splatter(re15_esp_room_bank(), 0, 1,
-                             e->x + ox, e->y + oy, e->z + oz, (int32_t)e->dog_floor_y);
     }
 }
 /* 0x8010459C(self): EIN Federburst, Offsets ±128 (sll24/sra24 @0x801045B0-EC), FX 0x12800,
@@ -1415,12 +1422,24 @@ static void re2c_hurt_launch(re15_actor_t *e, re15_actor_t *pl)
  * VOR dem HURT-Tick ueberschrieben (Projektil `sb s5,5` = RE2-WAFFEN-Low-Byte @0x80047324/74,
  * Hitscan `sb hi16+1,5` @0x80041AB4) — die 19 Zeilen @0x80104A18 sind also TREFFER-CODES
  * (GIB bei den Projektil-Ids 9/10/11/17 = GL-Runden/Rocket usw.), NICHT der Herkunfts-Sub.
- * Der Port hat kein RE2-Waffenarsenal und keinen Hitscan-Code-Producer → deklariertes
- * MAPPING: Herkunfts-Sub (re2z_prev_sub) als Zeile; das RE1.5-Waffe→RE2-Zeile-Mapping ist
- * eine offene Folge-Lane (RE15_RE2_AI.md OFFEN — betrifft ebenso den Welle-C-Hunde-Router). */
+ * ⛔ FIX 2026-08-23 (Nutzer-Report "Gib bei Pistolentreffern im RE2-Modus"): das alte MAPPING
+ * nahm den Herkunfts-Sub (re2z_prev_sub) als Zeile — Pistolentreffer waehrend Sub 5/6/9/10/11
+ * (Steigen/Sinken/Setzen/Wand-Crash/Anlauf) landeten damit in der GIB-Lane. WEDER RE1.5
+ * (Lane-Tabelle @0x801211cc: Pistole w3 -> Normal-Fall 0x80114738) NOCH RE2-Retail
+ * (@0x80104A18: Pistolen-Ids 2/3/4 -> Flug-Treffer 0x80102934) gibben bei Pistole.
+ * Jetzt: Zeile = RE1.5-Waffe (+0x5, Resolver-Stempel `sb s8,0x5` @0x800124bc) uebersetzt in
+ * die RE2-Waffen-Id via s_re2c_row_from_weapon (Werte == re2z_row_from_weapon,
+ * enemy_ai_re2_zombie.c — je Waffe dort begruendet; gleiche Teilung wie die Spinne). */
+static const uint8_t s_re2c_row_from_weapon[22] = {    /* Werte == re2z_row_from_weapon */
+    /* 0*/  1, /* 1*/  1, /* 2*/  1, /* 3*/  3, /* 4*/  2, /* 5*/  4,
+    /* 6*/  4, /* 7*/  5, /* 8*/  7, /* 9*/  9, /*10*/ 11, /*11*/ 10,
+    /*12*/ 15, /*13*/  8, /*14*/ 16, /*15*/  9, /*16*/ 11, /*17*/ 10,
+    /*18*/ 17, /*19*/ 18, /*20*/ 13, /*21*/  1
+};
 static void re2c_hurt(re15_actor_t *e, re15_actor_t *pl)
 {
-    uint8_t row = e->re2z_prev_sub;                        /* MAPPING, s.o. */
+    unsigned w = e->sub_state_1;                           /* +0x5 = RE1.5-weapon_id @0x800124bc */
+    uint8_t row = (w < 22u) ? s_re2c_row_from_weapon[w] : 1u;
     switch (row) {
     case 5: case 6: case 9: case 10: case 11: case 17:
         re2c_hurt_gib(e, pl); break;                       /* @0x80104A2C-30/3C-44/5C */

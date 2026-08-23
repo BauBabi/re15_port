@@ -697,6 +697,15 @@ void re15_game_step(const re15_game_ctx_t *c)
         if (atk) clip = ((((int)pl->rot_y - (int)atk->rot_y + 0x400) & 0xfff) < 0x800)
                             ? 0x09 : 0x08;
         re15_player_aim_interrupt();             /* cmd-2 ersetzt den Aim-Zustand (@0x80031c88) */
+        /* SCHMERZ-SE (Nutzer-Report ROOM1090 "Schmerzgeraeusch fehlt"): Phase 0 beider
+         * cmd-2-Handler spielt direkt nach dem Clip-Set ein CORE-SE (Bank 4, positional):
+         *   [2] Clip 8: Se_on(0x04010001) — `lui a0,0x401` @0x80035e0c + `ori a0,a0,1`
+         *       @0x80035e2c + `jal FUN_80045024` @0x80035e80 -> CORE Rec 1
+         *   [3] Clip 9: Se_on(0x04020001) — `lui a0,0x402` @0x80035f90 + jal @0x80036004
+         *       -> CORE Rec 2
+         * Der [0]/[1]-Fallback (Clip 0xa) ist toter EXE-Code — dort wird KEIN SE erfunden. */
+        if (clip == 0x08) re15_audio_core_se(1);
+        else if (clip == 0x09) re15_audio_core_se(2);
         s_hit_flinch = (clip == 0x0a) ? 20 : 22; /* byte-true clip play-out = PL00.EDD frame_count (clip 0x8=22,
                                                   * 0x9=22, 0xa=20; 1 tick/frame, no 0x8000 tween frames). The
                                                   * original ends the hurt FSM when anim_set FUN_8001f314 reaches
@@ -861,7 +870,14 @@ void re15_game_step(const re15_game_ctx_t *c)
         else pl->anim_frame++;
         if (s_hit_kb > 0) {
             int32_t ox = pl->x, oz = pl->z, dx, dz;
-            re15_player_knockback_delta(pl->rot_y, s_hit_kb, &dx, &dz);    /* backward push @ facing+0x800 */
+            /* RICHTUNG PRO HANDLER (Fix 2026-08-23): [2]/Clip 8 schiebt RUECKWAERTS —
+             * FUN_800245d8(0x800) @0x80035f18-1c; [3]/Clip 9 (Treffer von hinten) schiebt
+             * VORWAERTS — FUN_800245d8(0) @0x8003609c (`_clear a0` @0x800360a0). Der Helfer
+             * addiert intern +0x800; fuer Clip 9 wird das hier neutralisiert (Netto-Offset 0). */
+            int16_t kb_yaw = (pl->motion == 0x09)
+                               ? (int16_t)(((int)pl->rot_y + 0x800) & 0xfff)
+                               : pl->rot_y;
+            re15_player_knockback_delta(kb_yaw, s_hit_kb, &dx, &dz);
             int32_t nx = pl->x + dx, nz = pl->z + dz;
             re15_collision_ensure_band(pl->y);
             re15_collision_constrain(c->rdt, ox, oz, &nx, &nz);

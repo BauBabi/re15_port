@@ -60,6 +60,11 @@ void re15_audio_tick(void);
  * PSX is a no-op (the SPU/SsSeq path handles room BGM natively). */
 void re15_audio_start_room_bgm(int stage, int room);
 
+/* Raumwechsel: den Sce_bgm_control-Status-Latch (DAT_800b52ac/b4/bc-Zwilling) leeren —
+ * VOR dem SCD-Reenter rufen, damit der Status des ALTEN Raums nicht in die neue Bank
+ * uebernommen wird (der neue Raum setzt seinen Status per 0x54 selbst). PSX: no-op. */
+void re15_audio_bgm_status_reset(void);
+
 /* Per-frame: gate the helicopter-rotor (BGM SUB layer) volume by the current
  * cut camera→heli distance, the RE1.5 way (FUN_80045a64 SE distance attenuation).
  * cam_eye = active cut camera eye position, heli_pos = heli prop world pos.

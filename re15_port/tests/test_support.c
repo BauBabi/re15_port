@@ -27,6 +27,8 @@ void re15_debug_text(int x, int y, int z, const char *text)
     (void)x; (void)y; (void)z; (void)text;
 }
 
+void re15_audio_bgm_status_reset(void) { /* No-op (kein BGM in Tests) */ }
+
 void re15_audio_start_room_bgm(int stage, int room)
 {
     (void)stage; (void)room;

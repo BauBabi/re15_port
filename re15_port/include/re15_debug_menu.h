@@ -53,6 +53,10 @@ int  re15_debug_menu_tick(uint16_t held, uint16_t edge);
  * Rueckgabe 1 = Raum in der Tabelle gefunden. */
 int  re15_debug_menu_point_at(unsigned room_id);
 const char *re15_debug_menu_room_name(void);
+/* Debug-JUMP-Spawn des AKTUELL angewaehlten Satzes (X = hw@+2 @0x8001d6a8, Z = hw@+4
+ * @0x8001d720, Band = byte@+6 @0x8001d798 — der Debug-Zweig von FUN_8001d600 liest den Spawn
+ * aus dem DEBUG.BIN-Tabellensatz SELBST). Rueckgabe 1 = Satz vorhanden (nur mit set_bin). */
+int re15_debug_menu_jump_spawn(int32_t *x, int32_t *z, int *band);
 uint16_t re15_debug_menu_pad(uint16_t phys);
 const re15_debug_menu_t *re15_debug_menu_state(void);
 

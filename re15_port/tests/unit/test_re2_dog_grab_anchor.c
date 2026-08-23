@@ -159,6 +159,13 @@ static void part_a(void)
     for (int t = 1; t < RE15_ACTOR_MAX; t++) if (t != slot) g_actors[t].active = 0;
 
     re15_actor_t *pl = &g_actors[0], *e = &g_actors[slot];
+    /* Fix 2026-08-23: die 1190-Hunde sind grid-0x40-Skript-Spawns und warten byte-true auf die
+     * SCD-Freigabe grid=0x43 (@0x801113e4-ec), bevor sie per Sprungmaschine geerdet werden.
+     * Der Test simuliert die Freigabe und laesst den Hund landen (Commit 0x201 @0x8011162c). */
+    if (e->state == 4) {
+        e->grid_id = 0x43;
+        for (int f = 0; f < 400 && e->state != 1; f++) frame(0, 0);
+    }
     pl->hp = 18;                                   /* schwach -> der toedliche Latch kann greifen */
     pl->floor = e->floor;
     re15_player_cmd_reset(); re15_player_aim_reset();
@@ -171,6 +178,13 @@ static void part_a(void)
     int32_t lx = pl->x, lz = pl->z;
     int32_t dogx = 0, dogz = 0; int dog_seen = 0;
     for (int f = 0; f < 1400; f++) {
+        /* Latch-Gate: `0x80015910 == 0` @0x80104EEC-F8 — der toedliche Latch verlangt
+         * NICHT-ausgerichtete Facings. Seit die 1190-Hunde byte-true per Skript-Sprung landen
+         * (Fix 2026-08-23), haengt die Anflug-Richtung vom Landepunkt ab; der Test pinnt den
+         * Spieler-Yaw deshalb pro Frame auf Hund+2048, damit das Gate deterministisch offen ist
+         * (der Testgegenstand ist der ANKER, nicht die Facing-Geometrie). */
+        if (re15_player_victim_state() == 0)
+            pl->rot_y = (int16_t)(((int)e->rot_y + 2048) & 0xfff);
         frame(0, 0);
         int mag = (int)(labs((long)(pl->x - lx)) + labs((long)(pl->z - lz)));
         if (mag > maxjump) maxjump = mag;

@@ -265,6 +265,30 @@ static int s_death_seq = -1;         /* -1 = not in the death sequence; >=0 = fr
 
 int re15_player_is_dead(void)
 {
+    /* RE2-FRESS-/FINISHER-PACING (Nutzer-Report 2026-08-23 "Zombies fressen auf Becken- statt
+     * Halshoehe"): Das RE2-Original schreibt den Spieler-Todesmarker PL+0x156 = -32768 erst in
+     * Kollaps-PHASE 2 — dem Tick NACH dem Clip-Ende (Kollaps-Maschine 0x8010B464:
+     * `sb 3,6(s2)` @0x8010B728 / `sh -32768,342(s2)` @0x8010B738). Der Biss-Kill laesst hp aber
+     * schon am Kill-Tick negativ (FUN_800401d4-Zwilling re2z_player_damage: Todeszweig ohne
+     * Restaurierung von DAT_800cfd4e). hp<0 als Praesentations-Gate war im RE2-Pfad damit
+     * ~116 Ticks zu frueh: Blackout/Death-Cam ab Kill+77 deckte exakt F0..F77 der Devour-
+     * Choreo = die Becken-Phase; die Hals-Formation (ab F110, Wurzel-Kurven CDEMD0.EMS EM010
+     * Paar-2-Clip 24 vs. Paar-3-Clip 13, byte-gelesen) fiel komplett ins Schwarz.
+     * Solange die RE2-Victim-Maschine laeuft, gilt der Spieler deshalb erst mit dem
+     * P2-Handoff (state=7, enemy_ai_common.c at_end_prev-Zeile) als tot. Der RE1.5-Pfad
+     * bleibt unveraendert (hp=-1 bei Kollaps-Frame 0x23, FUN_8010a6f8 @0x8010a80c-814). */
+    {
+        extern int      re15_player_victim_state(void);
+        extern uint8_t  re15_player_victim_type(void);
+        unsigned vt = re15_player_victim_type();
+        if (re15_player_victim_state() != 0 &&
+            g_actors[RE15_ACTOR_SLOT_PLAYER].state != 7 &&
+            re15_ai_re2_for_type(vt) &&
+            (re15_re2z_owns_type(vt) || vt == 0x20))   /* Zombie-Familie + RE2-Hund (dessen
+                                                        * Maschine B schreibt HP ebenfalls erst
+                                                        * am Ende — kein HP-Write @0x80111cb0-f08) */
+            return 0;
+    }
     /* signed HP < 0 = death (FUN_80012d60 @0x80012ee8). */
     return g_actors[RE15_ACTOR_SLOT_PLAYER].hp < 0;
 }

@@ -504,6 +504,10 @@ static int re2d_contact(re15_actor_t *e, re15_actor_t *pl)
         re15_enemy_bone_world_pos(e, 4, jaw);              /* Part 4 = Pool+688 @0x80104E24 */
         int64_t dx = (int64_t)pl->x - jaw[0], dz = (int64_t)pl->z - jaw[2];
         int32_t r  = (pl->hp < 21) ? 700 : 1000;           /* @0x80104E34-48 */
+        if (getenv("RE15_RE2_TRACE"))
+            fprintf(stderr, "[re2dogC] jaw d2=%lld r=%d y=%d fy=%d plf=%d ef=%d plhp=%d\n",
+                    (long long)(dx * dx + dz * dz), r, e->y, e->dog_floor_y,
+                    pl->floor, e->floor, pl->hp);
         if (dx * dx + dz * dz >= (int64_t)r * r) return 0; /* sltu @0x8001581C = strikt < */
     }
     if (!(e->y > (int32_t)e->dog_floor_y - 1800)) return 0;/* @0x80104E84-94 (+0x1C2-Analog) */
@@ -2037,7 +2041,14 @@ static void re2d_init(re15_actor_t *e)
      * führt die Trefferhöhe über hit_radius/atk_pt (Damage-System); dokumentiert. Die
      * 2-Part-Schleife @0x801002D0-F8 (Parts 2..3: +0x9C=32/+0xA0=384/+0xA2=128 — Lane-D sagte
      * „4 Parts", der Loop läuft a0=2..3, selbst nachgelesen) ist Part-Hitbox-Metadaten. */
-    e->dog_floor_y = (int16_t)e->y;                        /* +0x1C2-Analog: Spawn-Boden */
+    e->dog_floor_y = (int16_t)(-(int32_t)e->floor * 1800); /* +0x1C2-Analog. Seed = der RE1.5-
+                                                            * Sce_em_set-Wert +0x1BA = -(pc[4]*1800)
+                                                            * (FUN_800420a0 @0x800421f8-0x80042210).
+                                                            * Vorher Spawn-Y: die ROOM1190-Skript-
+                                                            * Hunde (Parkhoehe -10000/-20000) lebten,
+                                                            * kaempften und STARBEN dadurch in der
+                                                            * Luft (Nutzer-Report "haengen tot mit
+                                                            * eingefrorener Animation in der Luft"). */
     e->speed_h = 0;                                        /* +0x144/146/148 = 0 @0x80100308-310 */
     e->root_prev_kf = -1;
     e->sca_mask = 4;
@@ -2050,6 +2061,19 @@ static void re2d_init(re15_actor_t *e)
     re2d_clip(e, 1, (int)(re15_re2_rand() & 0x3fu), 0xF, 0x100, 1);   /* 0xF0001|frame @0x801003A8-C8 */
     /* Callback-Install 0x80104ACC → 0x800CE480 (@0x801004A8-B4): Skript-/Event-Hook (Clip-0-
      * Pose gespiegelt + Boden-Pin) — Konsument OFFEN, im Port nicht installiert. */
+    /* SKRIPT-SPAWNS (Fix 2026-08-23): RE1.5-Raeume liefern grid 0x40 (Skript-Pounce, wartet
+     * auf SCD grid 0x43) und 0x41 (Fenster-Hund) — der RE1.5-Hunde-INIT routet sie auf die
+     * Zustaende 4/0x104 (@0x8010db88-98 / @0x8010dba8-b8). Der RE2-INIT ignorierte grid
+     * komplett -> die drei ROOM1190-Park-Hunde (Sce_em_set y=-3600/-10000/-20000) starteten
+     * als normale IDLE-Hunde IN DER LUFT. Der Skript-Drop ist Raum-Praesentation (RE1.5,
+     * Nutzer-Grundsatz); der Maschinen-Exit 0x201 (@0x8011162c) landet im RE2-Substate 2
+     * (re2d_sub2_run) — die KI-Entscheidungen bleiben RE2. Dispatch der Zustaende 4/5/6 an
+     * re15_dog_state456: enemy_ai_common.c re15_dog_ai_tick (RE2-Zweig). */
+    if (e->grid_id == 0x40) {
+        e->state = 4; e->sub_state_1 = 0; e->sub_state_2 = 0; e->sub_state_3 = 0;
+    } else if (e->grid_id == 0x41) {
+        e->state = 4; e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0;
+    }
 }
 
 /* ================================ root tick ================================================ */

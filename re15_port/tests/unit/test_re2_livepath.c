@@ -198,6 +198,28 @@ static int bringup(const re15_rdt_t *rdt, int fire_sub, int verbose)
     int n = 0;
     for (int s = 1; s < RE15_ACTOR_MAX; s++)
         if (g_actors[s].active && g_actors[s].type) { probe_enemy_load(g_actors[s].type, verbose); n++; }
+    /* Skript-Freigabe (Fix 2026-08-23): grid-0x40-Skript-Hunde (ROOM1190) warten byte-true in
+     * Zustand 4 auf SCD grid=0x43 (@0x801113e4-ec). Der Test gibt sie frei wie das Raumskript
+     * und laesst die Sprungmaschine landen (Exit 0x201 @0x8011162c). */
+    {
+        int had4 = 0;
+        for (int s = 1; s < RE15_ACTOR_MAX; s++) {
+            re15_actor_t *e = &g_actors[s];
+            if (e->active && e->type == 0x20) { frame(); break; }   /* INIT-Tick */
+        }
+        for (int s = 1; s < RE15_ACTOR_MAX; s++) {
+            re15_actor_t *e = &g_actors[s];
+            if (e->active && e->type == 0x20 && e->state == 4) { e->grid_id = 0x43; had4 = 1; }
+        }
+        for (int f = 0; had4 && f < 400; f++) {
+            int waiting = 0;
+            for (int s = 1; s < RE15_ACTOR_MAX; s++)
+                if (g_actors[s].active && g_actors[s].type == 0x20 && g_actors[s].state == 4)
+                    waiting = 1;
+            if (!waiting) break;
+            frame();
+        }
+    }
     return n;
 }
 

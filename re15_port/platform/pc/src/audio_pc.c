@@ -2329,6 +2329,60 @@ static void ss_free_bank(ss_seq_t *s) {
 /* ALLE Lade-/Start-Helfer unten setzen voraus, dass der Aufrufer SDL_LockAudioDevice haelt:
  * ss_free_bank gibt PCM frei, aus dem der Mix-Callback liest, und ss_start lockt selbst nicht. */
 
+/* Status-Latch je Slot — Zwilling von DAT_800b52ac / DAT_800b52b4 / DAT_800b52bc (Schreiber
+ * FUN_80044da4/LAB_80044ed0: op1/op3 -> 1, op2 -> 2, op4 -> 4). GRUND (Nutzer-Report 2026-08-23
+ * "in der Lobby fehlt die Musik"): das Original laedt die BGM-Bank VOR dem ersten SCD-Lauf
+ * (FUN_800396fc: `jal FUN_80044210` @0x800399b0 vor `jal FUN_8003ef6c` @0x80039a00) und
+ * BLOCKIERT dabei die Ausblendung aus (@0x8004428C-B0). Der Port schiebt den Load um 0x3c
+ * Frames auf — ROOM1030s main00 dreht seine Manual-Start-Slots (Eintrag 0x4041 @0x8007482e:
+ * MAIN01 flag1 + SUB00 flag1) per Sce_bgm_control op1 (@RDT 0x1c5e/0x1c64) auf, BEVOR die
+ * neue Bank existiert; der Commit mutete sie danach wieder (bit6/7-Flags @0x800442D0 /
+ * @0x8004439c-a4) -> dauerhafte Stille. Der Latch traegt den Skript-Status ueber den Commit:
+ * Load-stumm -> gelatchter Status 1 -> hoerbar. Endzustand identisch zum Original. */
+static uint8_t s_bgm_slot_status[3] = { 0, 0, 0 };
+
+/* Sce_bgm-VAB-PAYLOAD-Latch (Nutzer-Report ROOM1090 "Flammen-Sound fehlt"): das Knistern ist
+ * SUB_03-SEQ2 auf der MAIN15-VAB, deren Prog-0-mvol IN DER DATEI 0 ist (silent-by-data,
+ * MAIN15.BGM vh+0x21) — aufgedreht NUR vom Raum-Skript: ROOM1090 sub00 @RDT 0x22ee
+ * `54 00 00 01 78 33` -> FUN_80044da4-Payload prog0.vol = 0x78-1 = 0x77, pan = 0x32.
+ * Im Original ist die Bank beim SCD-Lauf schon geladen (FUN_800396fc @0x800399b0 <
+ * @0x80039a00); der Port-Commit RE-PARST die VAB ~60 Frames spaeter aus der Datei ->
+ * prog0-mvol fiel auf 0 zurueck, das Knistern blieb dauerhaft stumm. Der Latch haelt die
+ * Skript-Writes und wendet sie nach jedem Bank-(Re-)Load erneut an. Bank 0 = MAIN-VAB
+ * (Slot 0), Bank 1 = SUB-VAB (Slots 1/2, SEQ2 teilt sie via tone_src). -1 = kein Write. */
+static int16_t s_bgm_vabw_master[2][2];                        /* [bank][0=vol,1=pan] */
+static int16_t s_bgm_vabw_prog[2][RE15_VAB_PROGRAM_COUNT][2];
+static int     s_bgm_vabw_ready = 0;                           /* lazy-init: 0 waere "Write von 0" */
+
+static void re15_bgm_vabw_clear(void)
+{
+    s_bgm_vabw_ready = 1;
+    for (int b = 0; b < 2; b++) {
+        s_bgm_vabw_master[b][0] = s_bgm_vabw_master[b][1] = -1;
+        for (int p = 0; p < RE15_VAB_PROGRAM_COUNT; p++)
+            s_bgm_vabw_prog[b][p][0] = s_bgm_vabw_prog[b][p][1] = -1;
+    }
+}
+
+static void re15_bgm_vabw_apply(int bank, re15_vab_t *vab)
+{
+    if (!s_bgm_vabw_ready) re15_bgm_vabw_clear();
+    if (s_bgm_vabw_master[bank][0] >= 0) vab->master_volume = (uint8_t)s_bgm_vabw_master[bank][0];
+    if (s_bgm_vabw_master[bank][1] >= 0) vab->master_pan    = (uint8_t)s_bgm_vabw_master[bank][1];
+    for (int p = 0; p < RE15_VAB_PROGRAM_COUNT; p++) {
+        if (s_bgm_vabw_prog[bank][p][0] >= 0) vab->prog_mvol[p] = (uint8_t)s_bgm_vabw_prog[bank][p][0];
+        if (s_bgm_vabw_prog[bank][p][1] >= 0) vab->prog_mpan[p] = (uint8_t)s_bgm_vabw_prog[bank][p][1];
+    }
+}
+
+void re15_audio_bgm_status_reset(void)
+{
+    /* Raumwechsel: die neue Bank startet im Flag-Zustand; den Status setzt erst das neue
+     * Raum-SCD (im Original beginnt DAT_800b52ac/b4/bc-Semantik ebenfalls je Raum-Load). */
+    s_bgm_slot_status[0] = s_bgm_slot_status[1] = s_bgm_slot_status[2] = 0;
+    re15_bgm_vabw_clear();
+}
+
 /* == FUN_80044564 @0x80044564: MAIN-Bank laden + starten. Flag = main_b>>6. */
 static int re15_bgm_load_main(uint8_t main_b) {
     ss_free_bank(&s_ss_main);
@@ -2340,6 +2394,11 @@ static int re15_bgm_load_main(uint8_t main_b) {
      * FUN_80044210 setzt das Flag auf main_b>>6 (@0x800442D0). Flag != 0 = geladen, aber stumm,
      * bis das Skript ihn per Sce_bgm_control (0x54) aufdreht. */
     if ((main_b >> 6) != 0) s_ss_main.mvol = s_ss_main.mvol_l = s_ss_main.mvol_r = 0;
+    if (s_bgm_slot_status[0] == 1)                       /* Skript-Status op1/op3 (FUN_80044da4
+                                                          * case 1: SsSeqSetVol+SsSeqPlay) ueber-
+                                                          * lebt den aufgeschobenen Load */
+        s_ss_main.mvol = s_ss_main.mvol_l = s_ss_main.mvol_r = 0x1a00;
+    re15_bgm_vabw_apply(0, &s_ss_main.vab);              /* Skript-VAB-Writes re-applizieren */
     return 0;
 }
 
@@ -2354,6 +2413,10 @@ static int re15_bgm_load_sub(uint8_t sub_b) {
     s_ss_sub.vab_id = 6;                                 /* SsVabOpenHeadSticky(.., 6, ..+DAT_800bbdec) */
     ss_start(&s_ss_sub, 1);
     if (((sub_b >> 6) & 1) != 0) s_ss_sub.mvol = s_ss_sub.mvol_l = s_ss_sub.mvol_r = 0;
+    if (s_bgm_slot_status[1] == 1)                       /* gelatchter Skript-Status, s.o. */
+        s_ss_sub.mvol = s_ss_sub.mvol_l = s_ss_sub.mvol_r = (int16_t)s_ss_sub_base_mvol;
+    re15_bgm_vabw_apply(1, &s_ss_sub.vab);               /* Skript-VAB-Writes re-applizieren
+                                                          * (SEQ2 teilt die SUB-VAB via tone_src) */
 
     /* SEQ#2 — die zweite Sequenz des Containers, ein echtes drittes SsSeq-Handle. FUN_80044774
      * oeffnet BEIDE: SsSeqOpen(&DAT_801eed00, ..) und SsSeqOpen(&DAT_801eed00 + iVar3, ..), je
@@ -2406,6 +2469,8 @@ static int re15_bgm_load_sub(uint8_t sub_b) {
             s_ss_sub2.mvol = s_ss_sub2.mvol_l = s_ss_sub2.mvol_r = SS_BASE_MVOL;  /* @0x800449a0-b4 */
             ss_start(&s_ss_sub2, 1);
             if ((sub_b >> 7) != 0) s_ss_sub2.mvol = s_ss_sub2.mvol_l = s_ss_sub2.mvol_r = 0;
+            if (s_bgm_slot_status[2] == 1)               /* gelatchter Skript-Status, s.o. */
+                s_ss_sub2.mvol = s_ss_sub2.mvol_l = s_ss_sub2.mvol_r = SS_BASE_MVOL;
         }
     }
     return 0;
@@ -2684,6 +2749,11 @@ static void ss_seq_ctl_ex(int slot, int op, int part, int vol, int pan)
     int base = (slot >= 1) ? s_ss_sub_base_mvol : 0x1a00; /* MAIN inits to 0x1a00 */
     fprintf(stderr, "[bgm] Sce_bgm_control slot=%d op=%d (part=%d vol=%d pan=%d) capTick=%ld\n",
             slot, op, part, vol, pan, s_cap_ticks);
+    /* Status-Latch (DAT_800b52ac/b4/bc-Zwilling, LAB_80044ed0: op1/3 -> 1, op2 -> 2, op4 -> 4)
+     * — traegt den Skript-Status ueber den aufgeschobenen Bank-Commit (s. s_bgm_slot_status). */
+    if (op == 1 || op == 3)      s_bgm_slot_status[slot] = 1;
+    else if (op == 2)            s_bgm_slot_status[slot] = 2;
+    else if (op == 4)            s_bgm_slot_status[slot] = 4;
     SDL_LockAudioDevice(s_audio_dev);
     switch (op) {
         case 1:   /* SsSeqSetVol + SsSeqPlay (loop) → audible */
@@ -2701,6 +2771,22 @@ static void ss_seq_ctl_ex(int slot, int op, int part, int vol, int pan)
      * SUB bank via tone_src); ROOM1090 mutes MAIN program 0 mid-script this way (vol byte 1 ->
      * write 0), ROOM11F0/11F1 scale the master. */
     re15_vab_t *vab = s->tone_src ? &s->tone_src->vab : &s->vab;
+    {   /* PAYLOAD-Latch mitschreiben (s. s_bgm_vabw_*): der aufgeschobene Bank-Commit re-parst
+         * die VAB aus der Datei; ohne Latch fiele z.B. ROOM1090s prog0-Unmute (op54 @0x22ee)
+         * beim Commit auf den Datei-Wert 0 zurueck. Bank 0 = MAIN (Slot 0), 1 = SUB (1/2). */
+        int bank = (slot == 0) ? 0 : 1;
+        if (!s_bgm_vabw_ready) re15_bgm_vabw_clear();
+        if (vol) {
+            if (part == 0) s_bgm_vabw_master[bank][0] = (int16_t)(uint8_t)(vol - 1);
+            else if (part - 1 < RE15_VAB_PROGRAM_COUNT)
+                s_bgm_vabw_prog[bank][part - 1][0] = (int16_t)(uint8_t)(vol - 1);
+        }
+        if (pan) {
+            if (part == 0) s_bgm_vabw_master[bank][1] = (int16_t)(uint8_t)(pan - 1);
+            else if (part - 1 < RE15_VAB_PROGRAM_COUNT)
+                s_bgm_vabw_prog[bank][part - 1][1] = (int16_t)(uint8_t)(pan - 1);
+        }
+    }
     if (vol) {
         if (part == 0) vab->master_volume = (uint8_t)(vol - 1);
         else if (part - 1 < RE15_VAB_PROGRAM_COUNT) vab->prog_mvol[part - 1] = (uint8_t)(vol - 1);

@@ -111,6 +111,27 @@ static int dbg_used(unsigned st, unsigned idx)
     return RE15_DBG_SLOT_USED(st, idx);
 }
 
+/* Debug-JUMP-Spawn aus dem AKTUELL angewaehlten Tabellensatz — byte-true der Debug-Zweig des
+ * JUMP-Executors FUN_8001d600 (genommen, weil DAT_800ac9a8==0, Gate @0x8001d618):
+ *   X    = Halbwort @+2 (Basis DAT_800c263c): `lh` @0x8001d6a8 / `sw aca88` @0x8001d6b4
+ *   Z    = Halbwort @+4 (Basis DAT_800c263e): `lh` @0x8001d720 / `sw aca90` @0x8001d72c
+ *   Band = Byte     @+6 (Basis DAT_800c2640): `lbu` @0x8001d798 / `sb acad6` @0x8001d7a4
+ * (Y rechnet der Aufrufer als -Band*0x708 @0x8001d7b8-d4; Cut/Szenario = 0 @0x8001d818-20;
+ * Yaw wird im Debug-Zweig NICHT geschrieben — einziger Yaw-Store der Funktion liegt im
+ * Tuer-Zweig `sh` @0x8001d8e8.) Rueckgabe 1 = Tabellensatz vorhanden. */
+int re15_debug_menu_jump_spawn(int32_t *x, int32_t *z, int *band)
+{
+    unsigned st  = s_dbg.stage;
+    unsigned idx = s_dbg.room_idx[st < RE15_DBG_STAGES ? st : 0];
+    if (!s_tbl_ok || st >= 6) return 0;
+    if (dbg_slot_hw(st, idx) == 0) return 0;               /* leerer Slot */
+    unsigned off = re15_debug_menu_table_offset(st, idx) * 2;
+    if (x)    *x = (int16_t)((unsigned)s_tbl[off + 2] | ((unsigned)s_tbl[off + 3] << 8));
+    if (z)    *z = (int16_t)((unsigned)s_tbl[off + 4] | ((unsigned)s_tbl[off + 5] << 8));
+    if (band) *band = (int)s_tbl[off + 6];
+    return 1;
+}
+
 /* ==== D-Pad-Auto-Repeat (byte-true FUN_80030444-Tail + Config FUN_80030640) ======================
  * Das Menue bewegt Zeile/Raumindex NUR in Frames, in denen der Repeat-Puls feuert
  * (`if (DAT_800aca38 < 0)`, Gate @0x800145E0 bgez -> skip). Der Puls entsteht im Pad-Leser:

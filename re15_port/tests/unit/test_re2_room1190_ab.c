@@ -82,7 +82,22 @@ static int bringup(const re15_rdt_t *rdt, int dslots[], int *nd)
     *nd = 0;
     for (int s = 1; s < RE15_ACTOR_MAX; s++)
         if (g_actors[s].active && g_actors[s].type == 0x20) dslots[(*nd)++] = s;
-    return (*nd >= 1) ? 0 : -1;
+    if (*nd < 1) return -1;
+    /* Skript-Freigabe (Fix 2026-08-23): die drei 1190-Hunde sind grid-0x40-Skript-Spawns und
+     * warten byte-true in Zustand 4 auf SCD grid=0x43 (@0x801113e4-ec) — vorher ignorierte der
+     * RE2-INIT das grid und die Hunde jagten sofort aus der Luft (Parkhoehen -3600/-10000/
+     * -20000). Der Test gibt sie frei wie das Raumskript und laesst die Sprungmaschine landen
+     * (Exit 0x201 @0x8011162c -> RE2-Substate 2). */
+    frame();                                   /* INIT-Tick: routet grid 0x40 -> Zustand 4 */
+    for (int i = 0; i < *nd; i++)
+        if (g_actors[dslots[i]].state == 4) g_actors[dslots[i]].grid_id = 0x43;
+    for (int f = 0; f < 400; f++) {
+        int waiting = 0;
+        for (int i = 0; i < *nd; i++) if (g_actors[dslots[i]].state == 4) waiting = 1;
+        if (!waiting) break;
+        frame();
+    }
+    return 0;
 }
 
 int main(void)
@@ -147,7 +162,8 @@ int main(void)
         re15_actor_t *e = &g_actors[dslots[i]];
         CHECK(e->state == 1, "RE2 spawn: Hund slot %d muss ACTIVE sein (sw 1,4 @0x8010012C), state=%d",
               dslots[i], e->state);
-        CHECK(e->sub_state_1 <= 1, "RE2 spawn: slot %d Start-Sub 0 (tbl@0x80105458[0]), sub=%d",
+        CHECK(e->sub_state_1 <= 2, "RE2 spawn: slot %d Start-Sub 0/1/2 (tbl@0x80105458[0] bzw. "
+              "Skript-Drop-Exit 0x201 @0x8011162c), sub=%d",
               dslots[i], e->sub_state_1);
         CHECK(e->hp >= 59 && e->hp <= 122,
               "RE2 HP-Roll 59..119+3 (tbl@0x80105340), slot %d hp=%d", dslots[i], e->hp);
@@ -170,7 +186,9 @@ int main(void)
         }
         printf("  [B RE2] wake=%d run=%d attack=%d airborne(280/-280)=%d HP=%d\n",
                b_wake, b_run, b_attack, b_air, pl->hp);
-        CHECK(b_wake >= 0, "RE2: der Hund muss aufwachen (Sub 0 -> 1, @0x80100800)");
+        CHECK(b_wake >= 0 || b_run >= 0,
+              "RE2: der Hund muss aufwachen (Sub 0 -> 1 @0x80100800) ODER als Skript-Drop "
+              "direkt in Sub 2 landen (Exit 0x201 @0x8011162c, Fix 2026-08-23)");
         CHECK(b_run >= 0, "RE2: Aggro-Meter muss RUN committen (@0x80100A38-78)");
         CHECK(b_attack >= 0, "RE2: die Kette muss Sub 3 committen (@0x801009C8/@0x80100DD8)");
         CHECK(b_air >= 0, "RE2: der Absprung muss Speed 280 + Luft-Flag tragen (@0x80101320-2C)");

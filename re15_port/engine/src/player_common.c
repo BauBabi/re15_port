@@ -1030,6 +1030,13 @@ void re15_actors_anim_advance(void)
          * Die Wake-Phase (sub_state_2>=2) advanct normal (clip_done treibt die Maschine). */
         if (mo == 0x2A && a->sub_state_1 == 0x12 && a->sub_state_2 <= 1 && !re2z_owned)
             { a->anim_frame = 0; continue; }
+        /* RE2-LIEGE-HALT (byte-true EXEC[7]: P0 speichert das Clip-Wort PLAIN = Rate 0
+         * @0x801037CC-E4, und P1 @0x8010381C-28 ruft KEINEN Advance — Frame 0 steht, bis der
+         * Limpet-Latch faellt). Der Port-Advancer spielte die 10 Liege-Frames durch und hielt
+         * Frame 9 (gemessen f9~f0: Delta-Root <=1 unit — kosmetisch, trotzdem nachgezogen).
+         * P2+ advanct normal (clip_done treibt die Aufsteh-Kette @0x801038E4-FC). */
+        if (re2z_owned && a->state == 1 && a->sub_state_1 == 7 && a->sub_state_2 <= 1)
+            { a->anim_frame = 0; continue; }
         if (a->motion_init_delay > 0) {
             a->motion_init_delay--;
         } else {

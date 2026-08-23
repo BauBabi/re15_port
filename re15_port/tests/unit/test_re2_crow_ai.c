@@ -268,7 +268,12 @@ static void test_hurt_recovery_and_corpse(void)
     tick();
     CROW->state = 1; CROW->sub_state_1 = 4; CROW->sub_state_2 = 1; CROW->y = -2000;
     tick();
-    CROW->hp = 8; CROW->state = 2;                         /* take_damage-Analog (Zeile=prev_sub 4) */
+    CROW->hp = 8; CROW->state = 2;                         /* take_damage-Analog */
+    CROW->sub_state_1 = 3;                                 /* Waffen-Stempel wie der Resolver
+                                                            * (`sb s8,0x5` @0x800124bc): Pistole
+                                                            * w3 -> Zeile 3 = Flug-Treffer
+                                                            * (@0x80104A18; Fix 2026-08-23:
+                                                            * Zeile = Waffe, nicht prev_sub) */
     CROW->sub_state_2 = 0; CROW->sub_state_3 = 0;
     tick();
     CHECK(CROW->motion == 9, "HURT-Clip 9 (0x70009 @0x8010298C-94), motion=%d", CROW->motion);
@@ -289,6 +294,8 @@ static void test_hurt_recovery_and_corpse(void)
     tick();
     se_n = 0;
     CROW->hp = -1; CROW->state = 3;                        /* toedlicher Treffer */
+    CROW->sub_state_1 = 3;                                 /* Waffen-Stempel (Pistole w3 ->
+                                                            * Flug-Treffer-Zeile, s.o.) */
     CROW->sub_state_2 = 0; CROW->sub_state_3 = 0;
     int corpse = 0;
     for (int i = 0; i < 120 && !corpse; i++) { tick(); if (CROW->state == 7) corpse = 1; }
@@ -324,7 +331,11 @@ static void test_gib_and_launch_rows(void)
     tick();
     CROW->state = 1; CROW->sub_state_1 = 5; CROW->sub_state_2 = 1; CROW->y = -3000;
     tick();
-    CROW->hp = 6; CROW->state = 2; CROW->sub_state_2 = 0; CROW->sub_state_3 = 0;
+    CROW->hp = 6; CROW->state = 2;
+    CROW->sub_state_1 = 7;                                 /* Waffen-Stempel: Magnum w7 -> RE2-
+                                                            * Zeile 5 = GIB (@0x80104A2C; Tabelle
+                                                            * s_re2c_row_from_weapon) */
+    CROW->sub_state_2 = 0; CROW->sub_state_3 = 0;
     tick();
     CHECK(CROW->state == 7 && CROW->sub_state_1 == 1,
           "Zeile 5 -> GIB -> (7,1) (@0x80102EC8-D4), state=%d sub=%d", CROW->state, CROW->sub_state_1);
@@ -339,7 +350,10 @@ static void test_gib_and_launch_rows(void)
     CROW->state = 1; CROW->sub_state_1 = 7; CROW->sub_state_2 = 1; CROW->y = -300;
     PL->rot_y = 777;
     tick();
-    CROW->hp = 6; CROW->state = 2; CROW->sub_state_2 = 0; CROW->sub_state_3 = 0;
+    CROW->hp = 6; CROW->state = 2;
+    CROW->sub_state_1 = 8;                                 /* Waffen-Stempel: Shotgun w8 -> RE2-
+                                                            * Zeile 7 = LAUNCH (@0x80104A34) */
+    CROW->sub_state_2 = 0; CROW->sub_state_3 = 0;
     tick();
     CHECK(CROW->hp == -1, "Launch-Treffer: Sofort-Kill (sh -1,342 @0x801032EC-F4), hp=%d", CROW->hp);
     CHECK(CROW->speed_h == 600, "Launch-Speed 600 (@0x80103320-24), spd=%d", CROW->speed_h);

@@ -32,6 +32,7 @@
 #include "re15_damage.h"     /* re15_ai_arc_test — the RE1.5 twin of RE2 FUN_80015614 */
 #include "re15_enemy_ai.h"   /* re15_ai_set_state_word / live_init / victim FSM / is_grabbed */
 #include "re15_enemy.h"      /* re15_enemy_find (RE2 bank from the Welle-A loader) */
+#include "re15_anim_select.h" /* re15_actor_playback_slot — dieselbe Spiegel-Regel wie der Renderer */
 #include "re2_ems.h"         /* re2_hybrid_perm — RE2-Part <-> RE1.5-Bone (Import-Modus) */
 #include "re15_esp.h"        /* re15_esp_fx_spawn_ex (RE1.5 hit-FX stand-in, documented) */
 
@@ -688,6 +689,30 @@ void re15_re2z_audio_hook(void (*se_fn)(int, int), void (*bank_fn)(int))
         s_re2z_se_bank_fn(ov ? atoi(ov) : RE2Z_ENEMSE_BANK);
     }
 }
+/* ⛔ NUTZER-MANDAT (2026-08-23): "Bei RE2AI haben die Zombies nicht den Sound von RE1.5 AI.
+ * Sound usw soll uebernommen werden, nur KI nicht." — Unter RE2-Flavor werden deshalb ALLE
+ * Zombie-SEs von der RE2-ENEMSE-Bank auf die RE1.5-snd1-Raumbank (FUN_800453d0-Pfad,
+ * re15_audio_room_se) abgebildet. Die ZUORDNUNG ist eine dokumentierte Mapping-Entscheidung
+ * (RE2-Kontext -> semantisch gleicher RE1.5-SE), KEIN byte-true RE2-Verhalten; die RE1.5-Seite
+ * jeder Zeile ist adressbelegt:
+ *   ENEMSE 0/1 (Schritt L/R, Frame-Flags Pair-1 Clip 0 f20/f62) -> RE1.5 SE 1
+ *       (RE1.5-Schritt: LOCO-Frame-Bits SE 1, 2x/Zyklus — enemy_ai_common.c anim_sfx,
+ *        LOCO[1] f31/f80 usw., via FUN_8001b38c @0x8001b3b4 srl >>22)
+ *   ENEMSE 3 (Biss)          -> RE1.5 SE 3 (Frame-Bit 3 Clips 0x27/0x28 via @0x8001b3cc;
+ *                                Devour-Biss @0x801045ec-f4)
+ *   ENEMSE 4/10 (Moan A)     -> RE1.5 SE 4 (snd1-Moan, z.B. Walk-Moan-Paar 4/5)
+ *   ENEMSE 5/11 (Moan B)     -> RE1.5 SE 5 (Feeder-/Aufsteh-Moan @0x801039dc-e0 / @0x80104ae0)
+ *   ENEMSE 9 (Abriss)        -> RE1.5 SE 9 (Kriech-Grab-Abriss, enemy_ai_common.c Kriech-Grab)
+ *   ENEMSE 12 (Fall/Hit)     -> RE1.5 SE 6 (Hurt @0x80106954)
+ *   ENEMSE 13 (Fall/Death)   -> RE1.5 SE 8 (Death-Paar 5/8, FUN_80107cb0)
+ * Im RE1.5-Flavor (inkl. MIXED, Zombies=RE1.5) bleibt der ENEMSE-Pfad unangetastet — dort
+ * traegt nur der Abriss-Import re2z_se(9) (@0x801052b4-b8), der bewusst das RE2-Sample spielt
+ * (Nachzug 83b7740c, s. platform/pc/main.c). */
+/* Die UMSETZUNG des Mandats liegt in der PLATTFORM: im RE2-Flavor registriert
+ * pc_enemy_load_ex (platform/pc/main.c) fuer die Zombie-Familie einen MAPPER als Hook
+ * (ENEMSE-Id -> RE1.5-snd1-SE), im RE1.5-Flavor weiter den ENEMSE-Player (Abriss-Import).
+ * Die Engine behaelt damit die byte-true RE2-Trigger + Id-Semantik (Tests messen ueber
+ * DIESEN Hook), nur die Sample-Quelle wechselt. */
 static void re2z_se(int id) { if (s_re2z_se_fn) s_re2z_se_fn(id, 0); }
 void re15_re2z_se_play(int se_id) { re2z_se(se_id); }   /* Frame-Flag-SFX 0x801016c8-Pfad */
 
@@ -788,6 +813,7 @@ static void re2z_clip(re15_actor_t *e, int clip, int frame, int frac, int blend,
     e->anim_freeze = 0;
     e->anim_flags &= (uint16_t)~(0x80u | 0x04u);
     if (loop) e->anim_flags |= 0x04u;
+    e->re2z_sfx_slot = -1;      /* Frame-Flag-SE-Dedup neu aufsetzen (Port-Feld, s. re15_actor.h) */
 }
 
 /* current loop slot of the playing clip (original +0x14D frame byte; the port counter is
@@ -803,6 +829,36 @@ static int re2z_clip_done(const re15_actor_t *e)
     int fc = re15_actor_clip_len(e);
     if (fc <= 0) return 1;                                /* no bank -> never stall the FSM */
     return ((int)e->anim_frame >= fc - 1) ? 1 : 0;
+}
+
+/* RE2-EDD-Frame-Flag-SE fuer Zustaende, in denen RE2-Retail selbst STUMM ist (Nutzer-Mandat:
+ * RE1.5-Praesentation). Das RE2-EDD traegt an den Fress-/Kriech-Clips eigene Flag-Frames
+ * (bit 0x08000000 + Nibble>>28 — dieselbe Kodierung wie der WALK/BUMP-Decoder 0x801016c8
+ * @0x801016e4/@0x801016f0): Fress-Clips 0x12 f23/f48 und 0x13 f44/f67 mit Nibble 3 (Chomp),
+ * Kriech-Clip 5 f2/f20 mit Nibble 1 — per EDD-Dump belegt (CDEMD0.EMS RE2, EM010-Blob).
+ * RE2-Retail konsumiert diese Flags NICHT (jal-Scan 0x0C0405B2 ueber EMOVL10_S0.BIN: exakt
+ * 2 Treffer, WALK @0x80101D34 + BUMP @0x80102454) — der Konsum hier ist also Port-MAPPING per
+ * Nutzer-Mandat: RE2-EDD bestimmt das WANN (eigene Flag-Frames), RE1.5 das WAS (snd1-SE).
+ * Bank + Slot exakt wie der Renderer (uses_loco_bank + playback_slot), damit SE und Pose nie
+ * auseinanderlaufen (dieselbe Regel wie im RE1.5-anim_sfx, enemy_ai_common.c). Dedup ueber
+ * re2z_sfx_slot, weil bei rate<0xF ein Slot mehrere Ticks persistiert. */
+static void re2z_frame_flag_se(re15_actor_t *e, unsigned want_nibble, int re15_se)
+{
+    re15_enemy_bank_t *b = re15_enemy_find(e->type);
+    if (!b || !b->ok) return;
+    const re15_emd_animation_t *A = (re15_actor_uses_loco_bank(e) && b->loco_ok)
+                                        ? &b->anim_loco : &b->anim;
+    if ((int)e->motion >= A->clip_count) return;
+    const re15_emd_clip_t *c = &A->clips[e->motion];
+    if (c->frame_count <= 0) return;
+    int slot = re15_actor_playback_slot(e, e->anim_frame, c->frame_count);
+    if (slot == (int)e->re2z_sfx_slot) return;
+    e->re2z_sfx_slot = (int16_t)slot;
+    uint32_t fw = A->frames[c->first_frame + slot];
+    if ((fw & 0x08000000u) && (fw >> 28) == want_nibble) {
+        extern void re15_audio_room_se(int idx);
+        re15_audio_room_se(re15_se);
+    }
 }
 
 /* the walk moan block @0x80101C44-88: gate +0x239==0; (rand&0x1F)==0 -> SE 10, else a SECOND
@@ -1589,6 +1645,10 @@ static void re2z_exec_knockdown(re15_actor_t *e)
         break;
     case 6:                                                        /* P6 @0x80103568 */
         e->re2z_flags21a |= 0x10u;                                 /* CRAWL MARKER @0x8010358C */
+        e->re2z_pose234 = 1;                                       /* addiu 1 / sb 564 @0x80103590-94 */
+        if (e->re2z_flags21a & 0x4u)
+            e->re2z_pose234 = 0;                                   /* lhu 538 / andi 4 / sb zero,564
+                                                                    * @0x80103598-AC (Bauch-Lage) */
         re2z_clip(e, re2z_param_clips[4 + (e->re2z_dir16a & 1)], 0, 0xF, 0x100, 0); /* 8/9 rate 0xF
                                                                     * @0x80103574-A8; play-once —
                                                                     * P7 advanct DENSELBEN Clip zu
@@ -1832,9 +1892,20 @@ static void re2z_exec_lying(re15_actor_t *e, const re15_actor_t *pl)
      * Der Deskriptor steht hier garantiert noch: 0x701 wird NUR vom INIT geschrieben (einziger
      * Produzent in dieser Datei), und P4 unten loescht grid_id erst BEIM Aufstehen. */
     if ((e->grid_id & 0x0fu) != 7u && (e->grid_id & 0x0fu) != 8u &&
-        (e->re2z_f10e & 0x4000u) && e->ai_dist < 0xbb8u && pl->hp >= 0)
-        e->re2z_f10e &= (uint16_t)~0x4000u;                        /* andi 0xbfff @0x80104F0C (MAPPED
+        (e->re2z_f10e & 0x4000u) && e->ai_dist < 0xbb8u && pl->hp >= 0) {
+        e->re2z_f10e    &= (uint16_t)~0x4000u;                     /* andi 0xbfff @0x80104F0C (MAPPED
                                                                     * hierher verlegt) */
+        e->re2z_self1d3 &= 0x7Fu;                                  /* andi 0x7f @0x80104F00-04 — der
+                                                                    * Original-Ausgang loescht BEIDE
+                                                                    * Latches ZUSAMMEN. Ohne diese
+                                                                    * Haelfte blieb 1D3=0x80 stehen,
+                                                                    * wenn der Zombie im Aufsteh-
+                                                                    * Fenster getroffen wurde ->
+                                                                    * Gate (2) des Hit-Filters
+                                                                    * sperrte fuer immer (Nutzer-
+                                                                    * Report "teilweise unverwundbar",
+                                                                    * 10D0/Marvin) */
+    }
     switch (e->sub_state_2) {
     case 0:                                                        /* P0 @0x801037CC */
         re2z_clip(e, (e->re2z_flags21a & 0x4u) ? 0x16 : 0x17, 0, 0, 0x100, 0);
@@ -1890,8 +1961,20 @@ static void re2z_exec_feeding(re15_actor_t *e, const re15_actor_t *pl)
 {
     /* WAKE-Produzent: wie beim Lyer PORT-MAPPING (Limpet-Clear @0x80104F0C, Skript-Wecker fehlt)
      * mit dem RE1.5-Feeder-Gate; danach die byte-true Kette P1->P3->P4->P5. */
-    if ((e->re2z_f10e & 0x4000u) && e->ai_dist < 0xfa0u && pl->hp >= 0)
+    if ((e->re2z_f10e & 0x4000u) && e->ai_dist < 0xfa0u && pl->hp >= 0) {
         e->re2z_f10e &= (uint16_t)~0x4000u;
+        e->re2z_self1d3 &= 0x7Fu;                                  /* andi 0x7f @0x80104F00-04 —
+                                                                    * gepaarter Clear, s.
+                                                                    * re2z_exec_lying-Wecker */
+        /* RE1.5-Feeder-Weck-Moan (FUN_80103980, One-Shot-Gate dist<4000 && +0x6==0):
+         * ZWEITER rand-Wurf `(rand&3)==0 -> func_0x800453d0(5)` @0x801039d0-e0.
+         * Sound=RE1.5 per Nutzer-Mandat; der Wurf nutzt den Engine-Rand, nicht den
+         * RE2-Brain-Strom (re2z_rand), damit die RE2-Entscheidungen unberuehrt bleiben. */
+        if ((re15_engine_rand8() & 3u) == 0u) {
+            extern void re15_audio_room_se(int idx);
+            re15_audio_room_se(5);
+        }
+    }
     switch (e->sub_state_2) {
     case 0:                                                        /* P0 @0x80103BE8 */
         re2z_clip(e, re2z_param_feed[re2z_rand() & 7u], 0, 7, 0x200, 0);
@@ -1904,6 +1987,12 @@ static void re2z_exec_feeding(re15_actor_t *e, const re15_actor_t *pl)
     case 1:                                                        /* P1 @0x80103C18 */
         e->sub_state_2 = (uint8_t)(e->sub_state_2 + (uint8_t)re2z_clip_done(e)); /* advance(512)
                                                                     * @0x80103C24-3C */
+        /* Fress-CHOMP (Nutzer-Report "Fressgeraeusche im Dinner Room fehlen"): RE1.5 spielt
+         * SE 3 ueber die Frame-Wort-Bits (FUN_8001b38c @0x8001b3cc; EDD-Bank1 Clip 0x27
+         * f18/f47 + 0x28 f21; Devour-Korroboration @0x801045ec-f4). Anker hier = die
+         * RE2-EDD-eigenen Chomp-Flags Nibble 3 (Clip 0x12 f23/f48, 0x13 f44/f67; 0x14
+         * traegt keine -> bleibt still). Mapping-Begruendung s. re2z_frame_flag_se. */
+        re2z_frame_flag_se(e, 3u, 3);
         /* Fress-Tropf-FX (word0&0x10000, FX 0x13D0 @0x80103C50-90): RE2-FX-System, OPEN. */
         if (!(e->re2z_f10e & 0x4000u))                             /* lhu 270; andi 0x4000
                                                                     * @0x80103C94-A0 */
@@ -1922,6 +2011,7 @@ static void re2z_exec_feeding(re15_actor_t *e, const re15_actor_t *pl)
                                                                     * (war 0x200 = Klemme, s.
                                                                     * re2z_exec_knockdown P0) */
         e->sub_state_2 = 4;                                        /* sb 4,6 @0x80103CDC-E0 */
+        e->re2z_pose234 = 2;                                       /* addiu 2 / sb 564 @0x80103CF0-F4 */
         e->re2z_self1d3 &= 0x7Fu;                                  /* andi 0x7f @0x80103CE4-FC */
         e->re2z_flags21a |= 0x10u;                                 /* ori 0x10 @0x80103D00-10 */
         if (e->re2z_cd239 == 0) {                                  /* @0x80103D04-0C */
@@ -2572,6 +2662,12 @@ static void re2z_crawl_exec_move(re15_actor_t *e)
                                                                     * die Rueckgabe wird im
                                                                     * Original NICHT gelesen
                                                                     * (kein `+0x6 +=` hier) */
+        /* Kriech-SCHLEIF-SE (Nutzer-Report "Kriechgeraeusch fehlt in der Lobby"): RE1.5 spielt
+         * SE 2 bei Frame 0x23/0x50 des 99f-Kriech-Clips (FUN_801036dc @0x801037b0-cc,
+         * `jal 0x800453d0` a0=2 — 2x/Zyklus). Anker hier = die RE2-EDD-eigenen Flag-Frames
+         * Nibble 1 des Kriech-Clips 5 (f2/f20 von 50f = dieselbe 2-pro-Zyklus-Kadenz).
+         * Mapping-Begruendung s. re2z_frame_flag_se. */
+        re2z_frame_flag_se(e, 1u, 2);
     }
     /* +0x6 >= 2: Epilog @0x80103154 — nichts zu tun. */
 }
@@ -5989,6 +6085,93 @@ static void re2z_death_crawler(re15_actor_t *e)
     }
 }
 
+/* ---- FUN_801099E4 — der Tod des Liegenden, der am Boden SCHON getroffen wurde (ZWEIG 2) ---
+ * Vollstaendig selbst disassembliert (EMOVL10_S0.BIN raw @0x80100000, 2026-08-23):
+ * Der Handler blendet den Liegenden LANGSAM in die Leichen-Pose (rate 0x1F, Advance-Blend 128
+ * @0x80109c88) statt der Kriecher-Konvulsion (Clip 7 rate 0xF), die vorher als Stand-in lief —
+ * das war der Nutzer-Report "keine Todesanimation vor dem Auslaufen".
+ * Pose-Zeile = re2z_pose234 (+0x234) in die 3x3-Tabelle @0x80100160 {55,22,1}{40,23,1}{0,1,1}
+ * (per lwl/lwr nach sp+16 kopiert @0x80109a0c-30). */
+static void re2z_death_lying(re15_actor_t *e)
+{
+    static const uint8_t tbl[3][3] = { {55,22,1}, {40,23,1}, {0,1,1} };  /* @0x80100160 */
+    switch (e->sub_state_2) {
+    case 0: {                                                      /* P0 @0x80109a7c */
+        const uint8_t *row = tbl[e->re2z_pose234 < 3u ? e->re2z_pose234 : 0u];
+        e->re2z_flags21a |= 0x4u;                                  /* ori 4 @0x80109a84/8c (Delay-
+                                                                    * Slot = immer) */
+        if (e->re2z_pose234 == 1u)
+            e->re2z_flags21a &= (uint16_t)~0x4u;                   /* bne v1,a0(=1) @0x80109a88 /
+                                                                    * andi 0xfffb @0x80109a90-94
+                                                                    * — Ruecken -> Leichen-Pose 23 */
+        if ((unsigned)re2z_frame_slot(e) < row[0]) {               /* lbu 333 / sltu @0x80109aac-bc */
+            re2z_clip(e, row[1], 0, 0x1F, 0x80, 0);                /* Wort 0x001F0000+tbl[1]
+                                                                    * @0x80109ac0-cc/b08; Blend =
+                                                                    * a3 = 128 des Advance
+                                                                    * @0x80109c88 */
+            e->re2z_gaitrow = 0;                                   /* sb zero,363 @0x80109ac8 */
+        } else {
+            e->re2z_flags21a &= (uint16_t)~0x4u;                   /* andi 0xfffb @0x80109ae4-e8
+                                                                    * (nur dieser Zweig) */
+            re2z_clip(e, row[2], 30, 0x1F, 0x80, 0);               /* Wort 0x001F1E00+tbl[2]
+                                                                    * @0x80109ad4-b04 — Schwanz des
+                                                                    * Rueckwaerts-Sturzclips ab
+                                                                    * Frame 30 */
+            e->re2z_gaitrow = 1;                                   /* addiu 1 / sb 363 @0x80109afc-b00 */
+        }
+        e->sub_state_2 = 1;                                        /* sb 1,6 @0x80109b10-14 */
+        /* +0x1C0 |= 1 @0x80109b0c/18-1c — Modell-/Kollisions-Byte, im Port nicht gefuehrt (OPEN) */
+        e->re2z_self1d3 |= 0x80u;                                  /* ori 0x80 @0x80109b20-2c */
+        re2z_gore_fx(e, 0, 8096u);                                 /* Id 8096 @0x80109b40, Anker
+                                                                    * `addiu a2,a2,72` @0x80109b64
+                                                                    * = Part 0, ofs y+300
+                                                                    * @0x80109b44 */
+        re2z_se((re2z_rand() & 1u) ? 13 : 11);                     /* @0x80109b68-84 */
+        /* jal 0x80018FB0 @0x80109b88 (Praesentation, OPEN) */
+        {   unsigned r = e->sub_state_1;                           /* lbu 5 @0x80109b90 */
+            if (r == 10u && !(e->re2z_f10e & 0x80u))
+                re2z_gore_burn(e);                                 /* @0x80109b98-b8 */
+            if (r == 11u) {
+                re2z_gore_acid(e);                                 /* @0x80109bcc */
+                re2z_gore_fx(e, 8, 0x040F0FA0u);                   /* Id @0x80109bdc-e0, Anker
+                                                                    * `addiu a2,a2,1448` @0x80109c20
+                                                                    * = Part 8 — OHNE rand-Gate und
+                                                                    * OHNE +0x16B-Schreiber (anders
+                                                                    * als die death_dismember-
+                                                                    * Leiter); Prim-Record-Aufbau
+                                                                    * @0x80109bec-c14 =
+                                                                    * Praesentation, OPEN */
+            }
+            if ((r == 9u || r == 17u) && !(e->re2z_f10e & 0x80u))
+                re2z_gore_soot(e);                                 /* @0x80109c2c-50 */
+            if (r == 14u) re2z_gore_spark(e);                      /* @0x80109c5c-68 */
+        }
+        /* `sh 11,324` @0x80109c74 = Dead Store (derselbe Fall wie @0x80104824 usw.) */
+        /* FALLTHROUGH nach P1 @0x80109c78 — kein Sprung dazwischen */
+    }
+    /* fall through */
+    case 1:                                                        /* P1 @0x80109c78 */
+        if (re2z_clip_done(e))                                     /* jal 959c a3=128 @0x80109c84-88,
+                                                                    * beq v0,zero -> Epilog
+                                                                    * @0x80109c8c */
+            e->sub_state_2 = (e->re2z_gaitrow != 0) ? 3 : 2;       /* lb 363 / bne @0x80109c94-ac */
+        break;
+    case 2:                                                        /* P2 @0x80109cb0 */
+        if (e->anim_frac == 0)                                     /* lbu 334 (+0x14E==0)
+                                                                    * @0x80109cc4-cc — Port-Zwilling:
+                                                                    * der Crossfade-Zaehler, den
+                                                                    * re2z_clip mit 0x1F geseedet
+                                                                    * hat, laeuft aus */
+            e->sub_state_2 = 3;                                    /* sb 3,6 @0x80109cd4-d8 */
+        break;
+    default:                                                       /* P3 @0x80109cdc */
+        re15_ai_set_state_word(e, 7u);                             /* sw v0(=7),4 @0x80109cdc
+                                                                    * (addiu v0,zero,7 @0x80109a70)
+                                                                    * -> CORPSE Sub 0 */
+        break;
+    }
+}
+
 /* ---- die Zerleger-Leiter des DEATH-HANDLERS @0x801086E4-808 -------------------------------
  * NICHT identisch mit re2z_dismember_row(): sie traegt (a) den IMMER laufenden Delay-Slot
  * `sb zero,363(s1)` @0x8010871C, (b) den Zusatz-Spray der Saeure-Zeile @0x80108728-8C und
@@ -6152,10 +6335,12 @@ static void re2z_death(re15_actor_t *e, re15_actor_t *pl)
         return;
     }
     if (e->re2z_flags21a & 0x10u) {                                /* ZWEIG 2 @0x801083EC-F0 */
-        /* FUN_801099E4 (Kriecher-Tod) hat im Port keinen Handler — dieselbe dokumentierte
-         * Luecke wie an der HURT-Wurzel. Stand-in: die Clip-7-Kette, damit die Leiche entsteht. */
+        /* FUN_801099E4 — der Liegend-Tod (jal @0x801083F8). Bis 2026-08-23 lief hier der
+         * Kriecher-Stand-in (Clip-7-Konvulsion) — der Nutzer-Report "keine Todesanimation
+         * vor dem Auslaufen": statt des langsamen Absinkens in die Leichen-Pose zuckte der
+         * Zombie mit dem falschen Handler. Jetzt echt portiert. */
         s_re2z_last_death_handler = -2;
-        re2z_death_crawler(e);
+        re2z_death_lying(e);
         return;
     }
     if (e->re2z_flags21a & 0x2u) {                                 /* ZWEIG 3 @0x80108408 */
@@ -6560,6 +6745,18 @@ static void re2z_init(int slot, re15_actor_t *e)
          * wieder aus — sie hatte KEINEN Byte-Beleg und widersprach sowohl diesem Kommentar als
          * auch @0x80100cbc/@0x80100cd4 (sel 7 steht dort explizit in der ERSTEN Familie).
          * PORT-OPTION (RE2-Flavor ist kein RE1.5-Original-Verhalten). */
+        if (sel == 0x0e)
+            /* ⛔ LIEGE-SEITE (Nutzer-Report 2026-08-23, 10D0/Marvin: "Zombie liegt falsch"):
+             * EXEC[7] P0 waehlt Clip 0x16/0x17 ueber +0x21A Bit 4 (@0x801037D0-E4) — die
+             * beiden Clips sind ~180-Grad-Spiegelseiten (FK-Messung CDEMD0.EMS EM010,
+             * kf722-731 vs. kf732-741). In RE2 ist die Seite DATEN-getrieben: die Liege-
+             * Spawn-Selektoren 2/5 setzen genau dieses Bit (`ori v0,v0,0x4 / sh v0,538`
+             * @0x801009E8-F0 / @0x80100A44-50), 4/7 nicht. RE1.5-Raeume tragen den Selektor
+             * nicht; ohne Produzent lag der 0x0e-Schlaefer IMMER auf der 0x17-Seite = die
+             * GEGENSEITE der RE1.5-Pose Clip 0x2A (+0x94=0x2A @0x80100F74-78, kf951:
+             * weitester Koerperpunkt +78 Grad = die 0x16-Seite). PORT-MAPPING: Bit 4 fuer
+             * sel 0x0e -> Clip 0x16 + Boden-Aufsteher Clip 9 (@0x80103864-8C). */
+            e->re2z_flags21a |= 0x4u;
         e->re2z_f10e = 0x4002u;                                    /* sh 0x4002,270 @0x80100A34-38 */
         re15_ai_set_state_word(e, 0x701);                          /* @0x801009E8-0x80100A84 */
     } else if (sel == 0x0d) {                                      /* pre-engaged -> WALK */
@@ -6660,11 +6857,15 @@ int re15_re2z_tick(int slot)
      * korrekt als `~0x4000u` mit demselben Zitat @0x80104F0C abgebildet. */
     {   uint8_t nib = (uint8_t)(e->grid_id & 0x0fu);
         if (nib >= 9 && nib <= 10 && e->state == 1
-            && (e->sub_state_1 == 7 || e->sub_state_1 == 8))       /* EXEC[7] Liegend / EXEC[8]
+            && (e->sub_state_1 == 7 || e->sub_state_1 == 8)) {     /* EXEC[7] Liegend / EXEC[8]
                                                                     * Fressend — beide haengen am
                                                                     * SELBEN Latch (@0x8010381C-28
                                                                     * bzw. @0x80103C94-A0) */
             e->re2z_f10e &= (uint16_t)~0x4000u;                    /* andi 0xbfff @0x80104F0C */
+            e->re2z_self1d3 &= 0x7Fu;                              /* andi 0x7f @0x80104F00-04 —
+                                                                    * gepaarter Clear, s.
+                                                                    * re2z_exec_lying-Wecker */
+        }
     }
 
     /* ============================================================================================

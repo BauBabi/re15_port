@@ -591,9 +591,23 @@ static void re15_clip_anchor_set(re15_actor_t *a,
     const re15_emd_clip_t *c = &anim->clips[clip];
     if (c->frame_count <= 0) return;
     int slot = frame % c->frame_count;
-    int kf = (int)(anim->frames[c->first_frame + slot] & 0xFFFu);
+    /* 0x8000-SKIP (byte-true BEIDE Originale): traegt das Frame-Wort das Terminal-Bit 0x8000,
+     * laeuft der Resolver VORWAERTS bis zum ersten Wort ohne das Bit und nimmt DESSEN kf —
+     * RE1.5 FUN_8001ae38 `andi 0x8000 / bne` @0x8001ae7c-80, Loop @0x8001aec8-e0; RE2
+     * FUN_80015db0 @0x80015e18-38. Port-Schranke: letztes Clip-Wort (die Daten garantieren im
+     * Original ein unflagged Wort; die Schranke aendert fuer echte Daten nichts). */
+    int fi = c->first_frame + slot;
+    int fend = c->first_frame + c->frame_count - 1;
+    while ((anim->frames[fi] & 0x8000u) && fi < fend) fi++;
+    int kf = (int)(anim->frames[fi] & 0xFFFu);
     int16_t sx, sy, sz;
     if (!re15_emd_get_keyframe_speed(skel, kf, &sx, &sy, &sz)) return;
+    /* ⚠️ XZ-only ist fuer RE1.5 BYTE-TRUE (FUN_8001ac38 schreibt nur +0xa0/+0xa2
+     * @0x8001acfc/@0x8001ad18; der Resolver liefert nur kf+6/kf+10 @0x8001aefc-f10).
+     * Die RE2-Zwillinge FUN_80015b94/FUN_80015cb8 fuehren ZUSAETZLICH Y (@0x80015c54-64 /
+     * @0x80015d6c-7c) — fuer die ausgelieferten RE2-Clips 24/13/15 ist sy == 0 (CDEMD0.EMS
+     * EM010, byte-gelesen), daher folgenlos; ein kuenftiger RE2-Clip mit sy != 0 braucht
+     * hier eine flavor-bewusste Y-Leitung (OPEN, adressbelegt). */
     int32_t cs = re15_cos_q12(a->rot_y), sn = re15_sin_q12(a->rot_y);
     a->anchor_x = a->x - (int32_t)(( (int64_t)cs * sx + (int64_t)sn * sz) >> 12);
     a->anchor_z = a->z - (int32_t)((-(int64_t)sn * sx + (int64_t)cs * sz) >> 12);
@@ -611,7 +625,12 @@ static void re15_clip_root_motion_abs(re15_actor_t *a,
     const re15_emd_clip_t *c = &anim->clips[clip];
     if (c->frame_count <= 0) return;
     int slot = frame % c->frame_count;
-    int kf = (int)(anim->frames[c->first_frame + slot] & 0xFFFu);
+    /* 0x8000-SKIP + XZ-only: dieselben Belege wie in re15_clip_anchor_set (RE1.5 @0x8001aec8-e0,
+     * RE2 @0x80015e18-38; Y-Grenze @0x80015d6c-7c dort dokumentiert). */
+    int fi = c->first_frame + slot;
+    int fend = c->first_frame + c->frame_count - 1;
+    while ((anim->frames[fi] & 0x8000u) && fi < fend) fi++;
+    int kf = (int)(anim->frames[fi] & 0xFFFu);
     int16_t sx, sy, sz;
     if (!re15_emd_get_keyframe_speed(skel, kf, &sx, &sy, &sz)) return;
     int32_t cs = re15_cos_q12(a->rot_y), sn = re15_sin_q12(a->rot_y);
@@ -1136,8 +1155,13 @@ void re15_player_victim_tick(void)
              * Haltung wie bei Hund/Kraehe: RE2-FX-Kinds ohne RE1.5-Pendant bleiben stumm-OFFEN).
              * Der RE1.5-Einzelspritzer (Frame 0x37 + CORE-SE 3, FUN_8010a6f8 @0x8010a82c/84c)
              * gilt hier NICHT — er wuerde eine RE1.5-Adresse fuer einen RE2-Clip zitieren. */
-            if (at_end_prev && player->hp >= 0) {
-                player->hp    = -1;                     /* PORT-PLUMBING fuer `sh -32768,342(s2)`
+            if (at_end_prev && player->state != 7) {    /* NICHT auf hp>=0 gaten: der Biss-Kill
+                                                         * (re2z_player_damage, FUN_800401d4-
+                                                         * Zwilling) laesst hp schon am Kill-Tick
+                                                         * negativ — mit hp>=0 feuerte der Handoff
+                                                         * NIE und die Praesentation hing am
+                                                         * fruehen hp-Proxy (Becken-Phase-Bug) */
+                if (player->hp >= 0) player->hp = -1;   /* PORT-PLUMBING fuer `sh -32768,342(s2)`
                                                          * @0x8010B738 (P2, Tick nach Clip-Ende) */
                 player->state = 7;                      /* die Port-Death-FSM keyt auf hp<0/state 7;
                                                          * das Original schreibt `PL+0x4 = 7` erst in
@@ -1461,6 +1485,9 @@ static void re15_enemy_ai_live_feeding(re15_actor_t *e)
     if (e->ai_dist < 4000u && e->sub_state_2 == 0) {     /* +0x1d0 < 0xfa0 && +0x6 == 0 */
         e->sub_state_2 = 1;                              /* +0x6 = 1 */
         e->ai_timer    = (int16_t)(re15_engine_rand8() & 0xf);  /* +0x9c = rand()&0xf */
+        /* Weck-Moan (FUN_80103980): ZWEITER rand-Wurf, `(rand&3)==0 -> func_0x800453d0(5)`
+         * @0x801039d0-e0 — war hier bislang die eine fehlende Zeile des Wake-Blocks. */
+        if ((re15_engine_rand8() & 3u) == 0u) re15_audio_room_se(5);
     }
     switch (e->sub_state_2) {                            /* the +0x6 0->3 wake machine */
         case 0: break;                                   /* idle-feeding (busy writes deferred) */
@@ -6369,6 +6396,12 @@ static void re15_dog_ai_tick(int slot)
      * eine Zweig, der im MIXED-Modus greift (PIN: tests/unit/test_ai_flavor_mixed.c). */
     if (re15_ai_re2_for_type(e->type) && e->type == 0x20) {
         e->ai_dist = (uint32_t)re15_enemy_player_dist(e, pl);
+        /* Skript-Zustaende 4/5/6 (grid-0x40/0x41-Spawn-Drop + Kill-Maschinen) sind RE1.5-
+         * Raum-Praesentation und laufen auch im RE2-Flavor ueber die RE1.5-Maschine
+         * (re2d_init routet die grid-Spawns dorthin; Exit 0x201 @0x8011162c landet im
+         * RE2-Substate 2). Vorher fielen sie in den re2dog-Default `0x201` OHNE den Drop —
+         * die ROOM1190-Hunde blieben auf Parkhoehe (Nutzer-Report "haengen tot in der Luft"). */
+        if (e->state >= 4 && e->state <= 6) { re15_dog_state456(e, pl); return; }
         re15_re2dog_tick(slot);
         return;
     }
@@ -6380,7 +6413,15 @@ static void re15_dog_ai_tick(int slot)
         e->ai_timer = 0; e->grab_kill_ctr = 0; e->dog_aux9f = 0;   /* +0x9c/+0x9e/+0x9f = 0 @0x8010da34-58 */
         e->dog_atk_cd = 0; e->dog_pounce_cd = 0; e->dog_flags = 0; /* +0x1d6/+0x1e6/+0x1d0 = 0 @0x8010db18-7c */
         e->dog_blocked_ctr = 0; e->dog_grab_armed = 0;             /* +0x1dc/+0x1e4 = 0 @0x8010db44-6c */
-        e->dog_floor_y = (int16_t)e->y;                            /* +0x1ba floor = spawn ground (port infra) */
+        e->dog_floor_y = (int16_t)(-(int32_t)e->floor * 1800);     /* +0x1ba = -(pc[4]*1800): der
+                                                                    * Sce_em_set-Seed FUN_800420a0
+                                                                    * (Faktorsequenz @0x800421f8-
+                                                                    * 0x8004220c, `sh v0,442(s0)`
+                                                                    * @0x80042210). Vorher stand hier
+                                                                    * Spawn-Y — fuer die in der Luft
+                                                                    * geparkten Skript-Hunde (ROOM1190:
+                                                                    * y=-10000/-20000, floor 2) war das
+                                                                    * der falsche Boden. */
         {   /* BYTE-TRUE HP (dog INIT @0x8010dae8-db0c): +0x9a = HPtable[type*0x20 + (rng&0xf)*2], the
              * SAME shared table @0x8011f034 as the zombie/maggot. Dog row @0x8011f434 (type 0x20). */
             static const uint16_t dog_hp[16] =
