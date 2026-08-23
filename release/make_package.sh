@@ -51,6 +51,7 @@ done
 ASSETS="$REPO/re15_port/shared_assets/PSX"
 FX="$REPO/re15_port/shared_assets/extracted_fx"
 RE2="$REPO/re15_port/shared_assets/RE2"
+SYNCHRO="$REPO/synchro"
 NAME="re15_port_${VERSION}"
 
 # --- Gates ------------------------------------------------------------------
@@ -129,12 +130,24 @@ check_tree() {           # $1 = fertiger Paketordner
         [[ -s "$out/shared_assets/RE2/$f" ]] \
             || die "RE2-Asset fehlt/leer im Paket: shared_assets/RE2/$f (RE2-AI-Option waere still tot)"
     done
+    # Voiceover: der Port laedt NICHT aus shared_assets/PSX/VOICE, sondern aus
+    # synchro/STAGE<n>/room<id>/main<nn>.wav (audio_pc.c re15_voice_load_clip,
+    # Prefix-Kette "../../.." usw. + RE15_ASSET_ROOT/../..). Bis v0.3.16 fehlte
+    # synchro/ in JEDEM Paket — auf dem Dev-Rechner traf die ../../..-Probe das
+    # Repo, im ausgelieferten Paket (Deck) blieb das Voiceover stumm.
+    [[ -s "$out/synchro/STAGE1/room1170/main00.wav" ]] \
+        || die "Voiceover fehlt im Paket: synchro/STAGE1/room1170/main00.wav"
+    local want got
+    want="$(find "$SYNCHRO/STAGE1" -name '*.wav' | wc -l)"
+    got="$(find "$out/synchro/STAGE1" -name '*.wav' 2>/dev/null | wc -l)"
+    (( got == want )) || die "Voiceover unvollstaendig im Paket: $got/$want WAVs unter synchro/STAGE1"
 }
 
 # --- Gemeinsames Einsammeln --------------------------------------------------
 [[ -d "$ASSETS" ]] || die "Asset-Baum fehlt: $ASSETS"
 [[ -d "$FX"     ]] || die "Effekt-Texturen fehlen: $FX"
 [[ -s "$RE2/CDEMD0.EMS" && -s "$RE2/ENEMSE.VBS" ]] || die "RE2-Assets fehlen: $RE2"
+[[ -s "$SYNCHRO/STAGE1/room1170/main00.wav" ]] || die "Voiceover-Quelle fehlt: $SYNCHRO/STAGE1"
 
 copy_common() {          # $1 = Paketordner
     local out="$1"
@@ -145,6 +158,12 @@ copy_common() {          # $1 = Paketordner
     cp -r "$FX" "$out/shared_assets/extracted_fx"
     echo "   RE2-Assets kopieren (shared_assets/RE2, ~18 MB, fuer OPTIONS->AI=RE2) ..."
     cp -r "$RE2" "$out/shared_assets/RE2"
+    echo "   Voiceover kopieren (synchro/STAGE1, ~17 MB) ..."
+    # Paket-Wurzel, NICHT unter shared_assets: audio_pc.c probiert
+    # "$RE15_ASSET_ROOT/../../synchro/..." -> <pkg>/synchro/... (asset_pc.c).
+    # synchro/unused/ (24 MB) bleibt draussen — kein Codepfad liest es.
+    mkdir -p "$out/synchro"
+    cp -r "$SYNCHRO/STAGE1" "$out/synchro/STAGE1"
 }
 
 render_readme() {        # $1 = Vorlage, $2 = Ziel
