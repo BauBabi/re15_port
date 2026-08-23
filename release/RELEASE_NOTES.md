@@ -1,3 +1,123 @@
+# RE1.5 Port — v0.3.17 (Early Preview)
+
+## Linux: das Voiceover ist jetzt im Paket
+
+Gemeldet: *„in den gepackten packages, zumindest bei Linux, fehlt das voiceover"*.
+
+Die Sprachdateien lagen in **keinem** Paket — auch nicht im Windows-Paket. Auf dem
+Entwicklungsrechner fand die Suchkette die Dateien zufaellig im Repo nebenan, deshalb fiel
+es dort nie auf. Jetzt packt der Paketbau die 37 Sprachdateien (17 MB) mit ein, und ein
+neues Pruef-Gate bricht den Paketbau ab, wenn sie je wieder fehlen sollten.
+
+## RE2-Modus: die Zombies klingen jetzt wie RE1.5
+
+Gemeldet: *„Bei RE2AI haben die Zombies nicht den Sound von RE 1.5 AI. Sound usw soll
+uebernommen werden, nur KI nicht."* — dazu: *„im dinner room fehlen die fressgeraeusche"*
+und *„in der Lobby fehlt das kriech geraeusch"*.
+
+Alle Zombie-Gerauesche des RE2-Gehirns laufen jetzt auf die RE1.5-Klangbank: Schritte,
+Stoehnen, Biss, Sturz, Tod. Dazu kamen drei Geraeusche, die vorher ganz fehlten: das
+**Fress-Schmatzen** an der Leiche (die RE2-Animationsdaten markieren die Kau-Bilder selbst —
+RE2 hat sie nie abgespielt, jetzt loesen sie den RE1.5-Biss aus), das **Schleif-Geraeusch**
+des Kriechers (zweimal pro Kriech-Zyklus, wie im RE1.5-Original) und das **Aufwach-Stoehnen**
+des gestoerten Fressers (Original: ein Viertel-Wuerfelwurf — der fehlte sogar im RE1.5-Pfad).
+
+## RE2-Modus: der liegende Zombie stirbt jetzt sichtbar
+
+Gemeldet: *„wenn der Zombie auf dem Ruecken liegt und bekommt den finalen Schuss, gibt es
+noch keine Todesanimation vor dem auslaufen."*
+
+Der Todes-Handler fuer den am Boden getroffenen Zombie war ein Platzhalter (eine
+Kriecher-Zuckung). Jetzt ist der echte RE2-Handler portiert: der Koerper **sinkt langsam in
+die Leichenlage** (ueber ~30 Bilder ausgeblendet), je nach Lage auf Ruecken oder Bauch, mit
+Blut, Todeslaut und den Sonderfaellen fuer Brand/Saeure-Treffer — erst danach beginnt die Lache.
+
+## RE2-Modus: der Finisher frisst am Hals, nicht am Becken
+
+Gemeldet: *„bei den finisher wenn die Zombies Leon fressen sind sie immer noch auf Becken
+Hoehe statt auf Hals Hoehe."*
+
+Die Choreografie selbst war korrekt — aber der Bildschirm wurde **zu frueh schwarz**: Der
+Port meldete Leons Tod schon beim Biss, das Original erst **nach** dem Zusammenbruch. Die
+RE2-Fress-Choreografie erreicht die Hals-Formation erst bei Bild ~110; das alte Timing
+blendete bei Bild 77 ab — man sah also genau nur die Becken-Phase. Jetzt startet die
+Todes-Einblendung wie im RE2-Original erst mit dem Ende des Zusammenbruchs, und die
+Hals-Formation ist sichtbar.
+
+## Kraehen: kein Phantom-Blut mehr, Zerreissen nur noch bei schweren Waffen
+
+Gemeldet: *„bei den Kraehen sehe ich teilweise Bluteffekte, obwohl weder Leon noch die
+Kraehen getroffen worden"* und *„Bei RE1.5 AI fehlen noch die zerreisseffekte …, die
+manchmal bei RE 2 AI mit der Pistole auftreten."*
+
+Beides war derselbe Befund von zwei Seiten: (1) Der Platzhalter fuer das RE2-**Feder**-FX
+spawnte Blut — bei Abheben, Kreisen und Trudeln, ganz ohne Treffer. Der Blut-Spawn ist raus.
+(2) Das Zerreissen bei **Pistolen**-Treffern im RE2-Modus war ein Fehler: Die Trefferzeile
+wurde aus dem Flugzustand statt aus der **Waffe** gewaehlt. Beide Originale (RE1.5 wie
+RE2) zerreissen Kraehen **nie** mit der Pistole — nur Magnum, Granaten und Rakete. Der
+RE1.5-Modus war hier von Anfang an korrekt; jetzt stimmt auch der RE2-Modus.
+
+## RE2-Modus: der Zombie neben Marvin liegt richtig und bleibt verwundbar
+
+Gemeldet: *„der Zombie nach Marvins cutscene liegt falsch. ausserdem ist er teilweise
+unverwundbar."*
+
+Zwei getrennte Fehler: (1) Die beiden RE2-Liege-Animationen sind **Spiegelseiten** — und der
+Port wuerfelte nie, er nahm immer die falsche. Der Schlaefer liegt jetzt auf der Seite, auf
+der ihn das RE1.5-Original zeigt (Kopf und Fuesse waren vorher vertauscht — daher „liegt
+falsch"). (2) Wer den **aufwachenden** Zombie anschoss, konnte ihn fuer immer unverwundbar
+machen: Beim Wecken wurde nur eine von **zwei** Sperren geloescht, die das Original in
+einem Zug loescht. Jetzt fallen beide zusammen.
+
+## RE2-Modus: keine toten Hunde mehr in der Luft
+
+Gemeldet: *„Bei RE2 AI haengen die Zombiehunde nachdem sie gestorben sind mit eingefrorener
+Animation in der Luft."*
+
+Die drei Zwinger-Hunde werden vom Raum-Skript **in der Luft geparkt** (bei −3.600 bis
+−20.000 Einheiten) und springen im Original erst auf Kommando durchs Fenster. Das
+RE2-Gehirn ignorierte das Kommando komplett — die Hunde lebten, kaempften und starben auf
+Parkhoehe. Jetzt laeuft der Skript-Sprung auch im RE2-Modus (der Drop ist Raum-Inszenierung,
+die Kampf-KI bleibt RE2), und die Bodenhoehe kommt aus der Original-Formel statt aus der
+Parkposition.
+
+## Lobby: die Musik spielt wieder
+
+Gemeldet: *„In der Lobby nach der cutscene mit den reinbrechenden Zombies fehlt noch die
+Musik."*
+
+Die Lobby-Musik ist ein „stumm laden, per Skript aufdrehen"-Titel. Der Port laedt die
+Musikbank aber **verzoegert** (60 Bilder Ausblendung des alten Titels) — das Aufdreh-Kommando
+des Raumskripts verpuffte auf der alten Bank, und die neue wurde stumm geladen. Der
+Skript-Status wird jetzt gemerkt und nach dem Laden angewendet. Der Raum war damit nicht
+nur „nach der Cutscene" still, sondern von Anfang an.
+
+## Raum 1090: Flammen knistern, Feuer tut hoerbar weh
+
+Gemeldet: *„In room 1090 fehlt uns der flammen Sound"* und *„die Flammen schadensanimation
+und das schmerzgeraeusch fehlt."*
+
+Drei Punkte: (1) Das Feuer-**Knistern** ist eine Musikspur, deren Lautstaerke in der Datei
+auf **null** steht und die nur das Raumskript aufdreht — derselbe Verzoegerungs-Fehler wie in
+der Lobby, gleiche Reparatur. (2) Das **Schmerzgeraeusch** beim Flammenkontakt fehlte im
+Port komplett — es spielt jetzt an der Original-Stelle (zwei Varianten, je nach
+Trefferrichtung). (3) Die **Schadensanimation** lief mechanisch bereits (gemessen: −2 LP pro
+Kontakt-Bild, Ruckzuck-Animation ab Bild 6) — ihr Rueckstoss schob aber immer nach hinten;
+bei Treffern von hinten schiebt das Original nach **vorn**. Korrigiert.
+
+## Debug-Menue springt an die Original-Stellen
+
+Gemeldet: *„das debug menu schickt mich teilweise an andere Stellen als das Original. so
+zum Beispiel bei room105 dem Korridor."*
+
+Das Original liest die Absprung-Position aus der **Debug-Tabelle des Spiels** selbst; der
+Port nahm stattdessen den Spawn irgendeiner eingehenden Tuer. Bei room105 (EAST CORRIDOR)
+lagen die beiden Punkte 25.850 Einheiten auseinander — das andere Korridor-Ende, mit
+falscher Kamera. Jetzt springen alle Raeume auf die Original-Koordinaten (inklusive
+Etagen-Hoehe), mit Kamera-Szenario 0 und unveraendertem Blickwinkel — exakt wie die PSX.
+
+---
+
 # RE1.5 Port — v0.3.16 (Early Preview)
 
 ## Neue Einstellung: AI MIXED
