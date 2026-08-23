@@ -1,3 +1,62 @@
+# RE1.5 Port — v0.3.16 (Early Preview)
+
+## Neue Einstellung: AI MIXED
+
+Auf Wunsch: *„Ich haette gerne eine weitere Option im Optionsmenue **RE AI Mixed**, die
+beinhaltet im Prinzip alles von RE 1.5 AI ausser die Hunde, die sollen komplett von
+RE 2 AI stammen."*
+
+Der Menuepunkt **AI** hat jetzt drei Stufen: **RE1.5 / RE2 / MIXED**. Oben und Unten
+schalten im Kreis durch — mit dem bisherigen Umschalter waere die dritte Zeile gar
+nicht erreichbar gewesen.
+
+Die eigentliche Arbeit lag unter der Oberflaeche: Der KI-Schalter war **global** und
+entscheidet jetzt **pro Gegnertyp**. Alle 30 Stellen, an denen er abgefragt wird, wurden
+einzeln durchgegangen. Eine davon rechnete zwei globale Zustaende vor — im Mischbetrieb
+sind beide gleichzeitig wahr, sie haette also zwangslaeufig eine Haelfte verloren.
+
+Nachgewiesen ueber eine Groesse, die nur das RE2-Hundeverhalten ueberhaupt schreibt: Im
+Hunderaum verhaelt sich MIXED **identisch zu RE2**, im Zombieraum **identisch zu RE1.5** —
+und der Hunderaum laedt tatsaechlich die RE2-Daten, waehrend der Zombieraum byte-identisch
+zum RE1.5-Modus bleibt.
+
+## Cutscene: ein Schritt zurueck statt zwei
+
+Gemeldet: *„Im Original laeuft er hin und macht dann noch **einen** Schritt zurueck. Bei uns
+macht er noch **zwei**."*
+
+Der Fehler sass nicht im Laufen, sondern **danach**: Bei der Ankunft schaltet das Original
+auf eine ruhige Stand-Animation um — im Port lief der Rueckwaerts-Clip einfach weiter. Der
+Koerper stand, die Beine liefen.
+
+Die Schrittzahl liess sich dabei nicht schaetzen, sondern **ablesen**: Der Clip markiert
+seine Fussaufsetzer bei Bild 8 und Bild 25. Die neun Laufbilder enthalten genau **einen** —
+das ist der Schritt aus dem Original. Die sechzehn Bilder Nachlauf brachten den zweiten.
+Endposition und Blickrichtung sind unveraendert.
+
+Dabei fiel ein zweiter Fehler auf: In diesem Zustand haben **zwei** Stellen die Animation
+weitergeschaltet, also zwei Bilder pro Takt statt einem.
+
+## Der Zombie frisst nicht mehr am Bein (RE2-Modus)
+
+Gemeldet: *„Wenn Leon stirbt und von Zombies gefressen wird, ist der Zombie bei der
+Finisher-Position irgendwie am Bein, nicht mehr wie sonst am Oberkoerper/Kopf."*
+
+Fress-Animation und Leons Zusammenbrechen sind ein **aufeinander abgestimmtes Paar**, das
+einen **gemeinsamen Bezugspunkt** braucht — und genau der wurde im Port nie gesetzt. Der
+Zombie-Clip traegt ueber seine 123 Bilder eine Eigenbewegung von 1.669 Einheiten nach vorn:
+Er soll sich ueber die Leiche schieben. Ohne Bezugspunkt blieb er stehen, wo der Todesstoss
+ihn hinterliess, und Leon fiel aus einem veralteten Bezugspunkt zusammen.
+
+Gemessen: vorher war der Zombiekopf in **91 %** der Bilder am naechsten an Leons Bein — jetzt
+in **99 %** am Oberkoerper, und der Zombie legt exakt die 1.669 Einheiten zurueck, die in den
+Animationsdaten stehen.
+
+Es war derselbe Fehler wie beim Hund, nur schlimmer: Dort war der Bezugspunkt am falschen
+Bild genommen, hier fehlte er ganz.
+
+---
+
 # RE1.5 Port — v0.3.15 (Early Preview)
 
 ## RE2-KI ist jetzt der Standard
