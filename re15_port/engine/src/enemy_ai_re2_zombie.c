@@ -33,6 +33,22 @@
 #include "re15_enemy_ai.h"   /* re15_ai_set_state_word / live_init / victim FSM / is_grabbed */
 #include "re15_enemy.h"      /* re15_enemy_find (RE2 bank from the Welle-A loader) */
 #include "re15_anim_select.h" /* re15_actor_playback_slot — dieselbe Spiegel-Regel wie der Renderer */
+
+/* RE1.5-snd1-Raum-SE (FUN_800453d0-Pfad) — bewusst extern statt re15_audio.h
+ * (Praezedenz re15_damage.c:219; PSX-Link-Sauberkeit). Genutzt von den Sound-Mandat-
+ * Importen (Chomp/Kriech/Wecken/Aufprall/Aufstehen). */
+extern void re15_audio_room_se(int idx);
+
+/* RE1.5-POSE-BANK (SITZ-IMPORT 10D0, s. re15_enemy.h): von der Plattform registriert;
+ * eine EINZELNE statische Referenz statt Bank-Feldern, damit das PSX-bss nicht waechst. */
+static const re15_emd_skeleton_t  *s_re2z_re15_skel = NULL;
+static const re15_emd_animation_t *s_re2z_re15_anim = NULL;
+void re15_re2z_set_re15_pose_bank(const re15_emd_skeleton_t *sk, const re15_emd_animation_t *an)
+{
+    s_re2z_re15_skel = sk; s_re2z_re15_anim = an;
+}
+const re15_emd_skeleton_t  *re15_re2z_re15_pose_skel(void) { return s_re2z_re15_skel; }
+const re15_emd_animation_t *re15_re2z_re15_pose_anim(void) { return s_re2z_re15_anim; }
 #include "re2_ems.h"         /* re2_hybrid_perm — RE2-Part <-> RE1.5-Bone (Import-Modus) */
 #include "re15_esp.h"        /* re15_esp_fx_spawn_ex (RE1.5 hit-FX stand-in, documented) */
 
@@ -1300,9 +1316,12 @@ static void re2z_exec_grab(re15_actor_t *e, re15_actor_t *pl)
          * clamp 0x800 the compare always snaps (same math as the RE1.5 grab [0] snap). */
         e->rot_y = (int16_t)(((int)re15_atan2_q12(pl->z - e->z, pl->x - e->x) - 0x400) & 0x0fff);
         {   /* PL+0x4 = (FUN_80015910-dir << 8)|5 @0x80102714-28 -> the port victim variant;
-             * MAPPING: the direction sub collapses onto the RE1.5 front/behind selector. */
+             * KRIECHER addiert +2 auf die Opfer-Variante (`andi v0,s5,0x1 / lbu v0,5(s3) /
+             * addiu v0,v0,2 / sb v0,5(s3)` @0x8010272C-44) -> Varianten 2/3 = die
+             * RE2-Kriech-Opfer-Maschine 0x8010AF58 (Bein-Biss-Clips {6..12}). */
             int behind = re15_ai_facing_aligned(e, pl);
-            re15_re2z_victim_begin(e, pl, behind);                 /* PL+0x1B4=self @0x80102710,
+            re15_re2z_victim_begin(e, pl, behind + ((s5 & 1) ? 2 : 0));
+                                                                   /* PL+0x1B4=self @0x80102710,
                                                                     * claim @0x8010275C-60 */
         }
         re15_re2z_grab_anchor(e, pl, (int)e->re2z_grabclip);       /* pin helper 0x80015b94
@@ -1395,9 +1414,19 @@ static void re2z_exec_grab(re15_actor_t *e, re15_actor_t *pl)
         re15_re2z_grab_rootmotion(e);                              /* pose+advance(512) @0x80102A50-68 */
         if (re2z_frame_slot(e) == 7) { e->sub_state_2 = 7; break; }/* upright cut @0x80102BD0-E4 */
         e->sub_state_2 = (uint8_t)(e->sub_state_2 + (uint8_t)re2z_clip_done(e)); /* @0x80102A6C-80 */
-        if (e->sub_state_2 == 6) e->sub_state_2 = 7;               /* P6 @0x80102BE8 is the CRAWLER
-                                                                    * exit (state 7 + HP -1); crawler
-                                                                    * OPEN -> upright path only */
+        if (e->sub_state_2 == 6) {
+            if (s5 & 1) {                                          /* KRIECHER: P6 @0x80102BE8 —
+                                                                    * der RE2-Kriecher STIRBT nach
+                                                                    * dem Abwurf: `sw 7,4(s1)` +
+                                                                    * `sh -1,342(s1)` (Fix
+                                                                    * 2026-08-23 Runde 2; vorher
+                                                                    * OPEN -> Upright-Rueckfall) */
+                e->hp = -1;
+                re15_ai_set_state_word(e, 7);
+                break;
+            }
+            e->sub_state_2 = 7;                                    /* Upright ueberspringt P6 */
+        }
         break;
     }
     case 7:                                                        /* P7 @0x80102C30: double root */
@@ -1578,6 +1607,14 @@ static void re2z_exec_knockdown(re15_actor_t *e)
         break;
     case 2: {                                                      /* P2 @0x80103404: DER AUFSCHLAG */
         int side = (int)(e->re2z_dir16a & 1u);
+        /* AUFPRALL-THUD (Nutzer-Report 2026-08-23 "Fall-Sounds fehlen"): der RE1.5-Zombie-
+         * Aufprall ist snd1-SE 0 als FRAME-WORT-Bit der Fall-Clips (0x0b f46 Wort 0x00400129,
+         * 0x0d f30/f48 — Dekoder `srl s0,v0,22` @0x8001b3b4 -> FUN_800453d0(0); Sonde
+         * probe_10d0_knockse, Bank-Belegung vag2 in 1140/10D0/1030 verifiziert). Die RE2-EDD-
+         * Fall-Clips tragen keine Woerter und RE2 legt den Aufprall in seine Samples 12/13 —
+         * unter dem Sound-Mandat (RE1.5-Praesentation) feuert der Thud deshalb am
+         * Aufschlag-Uebergang (P1 clip_done -> P2 = derselbe Boden-Kontakt). */
+        re15_audio_room_se(0);
         e->sub_state_2 = 3;                                        /* sb 3,6 @0x8010340C */
         /* Prone-Clip aus sp+18+(+0x16A) = param@0x80100046+side = {0x17,0x16}, Rate 0xF
          * (`lbu v0,18(v0)` @0x80103414, `lui v1,0xf` @0x80103418, `sw v0,332` @0x80103424). */
@@ -1653,6 +1690,17 @@ static void re2z_exec_knockdown(re15_actor_t *e)
                                                                     * @0x80103574-A8; play-once —
                                                                     * P7 advanct DENSELBEN Clip zu
                                                                     * Ende (kein Loop-Flag) */
+        /* LIEGE-TREFFER-BLUT (Nutzer-Report 2026-08-23 Runde 2 "am Boden anschiessen: kein
+         * Blut"): die Liege-HURT-Route 0x60501 stempelt +0x16B = 1 (`sb v0,363(s1)`
+         * @0x8010518C) — das Blut spawnt erst der re-enterte P6, der EINZIGE
+         * `jal 0x8001bf10` im ganzen EXEC[5]: `lb v1,363 / bne v1,1` @0x801035B0-B8,
+         * Id 8000 @0x801035BC, Anker Part 0 (`addiu a2,a2,72` @0x801035DC), v={0,0,0},
+         * a1 = +0x76. Der natuerliche Aufsteh-Pfad kommt mit +0x16B != 1 an -> kein Blut. */
+        if ((int8_t)e->re2z_gaitrow == 1)
+            re2z_blood_fx_at(e, 0, (int16_t)e->rot_y);
+        e->re2z_flags21a &= (uint16_t)~0x200u;                     /* andi 0xfdff / sh 538
+                                                                    * @0x80103620-24 (P6-Clear,
+                                                                    * fehlte im Port) */
         if (e->re2z_cd239 == 0 && (re2z_rand() & 3u) == 0u) {      /* 1/4 moan @0x801035F0-FC */
             re2z_se(11); e->re2z_cd239 = 150;                      /* @0x80103604-10 */
         }
@@ -2106,6 +2154,13 @@ static void re2z_exec_getup(re15_actor_t *e)
             re2z_se(12);                                           /* @0x80103FA8 */
             e->re2z_cd239 = 150;                                   /* @0x80103FB0-B4 */
         }
+        /* AUFSTEH-MOAN (Nutzer-Report "Fall-Sounds fehlen", Teil 2): RE1.5 spielt beim
+         * Aufstehen IMMER SE 8 (Knockdown-FSM Phase [4], Clip 0x12 + deterministisches
+         * `func_0x800453d0(8)` @0x801053bc). Der RE2-eigene rand/cd-Wurf oben war gemessen
+         * praktisch immer stumm (cd239 nach den Fall-Moans belegt) — unter dem Sound-Mandat
+         * kommt der RE1.5-Moan deterministisch dazu; der RE2-Wurf bleibt (Trigger-/Strom-
+         * Treue, Tests messen ihn am Hook). */
+        re15_audio_room_se(8);
         /* FALLTHROUGH nach P1 @0x80103FB8 — P0 endet OHNE Sprung. */
     }
     /* fall through */
@@ -6286,9 +6341,15 @@ static void re2z_death_main(re15_actor_t *e)
                                                                     * @0x80108898 */
             }
         }
-        e->sub_state_2 = (uint8_t)(e->sub_state_2 + (uint8_t)re2z_clip_done(e));
-                                                                   /* `+0x6 += 959c(...,256)`
+        if (re2z_clip_done(e)) {
+            re15_audio_room_se(0);                                 /* AUFPRALL-THUD am Todes-Sturz —
+                                                                    * derselbe RE1.5-Frame-Wort-
+                                                                    * Mechanismus wie EXEC[5] P2
+                                                                    * (Clip 0x0d f30/f48 -> SE 0
+                                                                    * via @0x8001b3b4; Sound-Mandat) */
+            e->sub_state_2 = (uint8_t)(e->sub_state_2 + 1u);       /* `+0x6 += 959c(...,256)`
                                                                     * @0x801088E4-FC */
+        }
         /* `if (+0x14E == 0) FUN_80016200(self,0,1)` @0x801088F0/F8 + @0x80108900-0C —
          * Matrix-/Positions-Nachzieher (Praesentation), im Port OPEN. */
         break;
@@ -6745,17 +6806,31 @@ static void re2z_init(int slot, re15_actor_t *e)
          * wieder aus — sie hatte KEINEN Byte-Beleg und widersprach sowohl diesem Kommentar als
          * auch @0x80100cbc/@0x80100cd4 (sel 7 steht dort explizit in der ERSTEN Familie).
          * PORT-OPTION (RE2-Flavor ist kein RE1.5-Original-Verhalten). */
+        if (sel == 0x0e && re15_re2z_re15_pose_anim() != NULL) {
+            /* ⛔ SITZ-IMPORT (Nutzer-Report 2026-08-23, 2. Runde: "der 10D0-Zombie SITZT im
+             * Original — er liegt"). Der v0.3.17-Seiten-Fix (Bit 4 -> Clip 0x16) war die
+             * falsche Pose-KLASSE: FK-Messung ueber den byte-true Posing-Pfad: RE1.5 Clip
+             * 0x2A f0 (kf951) = WAND-SITZ (Huefte 313 / Kopf 969 ueber Boden, Beine vor);
+             * RE2 Clip 0x16 f0 (kf722) = FLACH (Kopf 67). Die RE2-Bank hat keinen Sitz-Clip.
+             * Per Nutzer-Mandat (Praesentation=RE1.5) faehrt der Sitzer die RE1.5-Sequenz:
+             * RE1.5-INIT sel 0x0e: +0x94 = 0x2A (@0x80100F74-78), f314 a2=0 a3=0x200 Frame 0
+             * (@0x80100FB0), Wort 0x1201 = SLEEPING sub 0x12 (@0x80100FC4), +0x9 = 0
+             * (@0x80100FD4). Delegation der Zustaende 0x12/0x0d an die RE1.5-Maschinen:
+             * enemy_ai_common.c (RE2-Zweig vor re15_re2z_tick); Handoff danach 0x101. */
+            e->re2z_re15_pose = 1;
+            e->motion = 0x2a; e->anim_frame = 0;                   /* @0x80100F74-78 + f314 Frame 0 */
+            e->anim_frac = 0; e->anim_blend_rate = 0x200;          /* a2=0/a3=0x200 @0x80100FB0 */
+            e->anim_freeze = 0;
+            e->anim_flags &= (uint16_t)~(0x80u | 0x04u);
+            e->grid_id = 0;                                        /* sb zero,9 @0x80100FD4 */
+            re15_ai_set_state_word(e, 0x1201);                     /* sw 0x1201,4 @0x80100FC4 */
+            return;
+        }
         if (sel == 0x0e)
-            /* ⛔ LIEGE-SEITE (Nutzer-Report 2026-08-23, 10D0/Marvin: "Zombie liegt falsch"):
-             * EXEC[7] P0 waehlt Clip 0x16/0x17 ueber +0x21A Bit 4 (@0x801037D0-E4) — die
-             * beiden Clips sind ~180-Grad-Spiegelseiten (FK-Messung CDEMD0.EMS EM010,
-             * kf722-731 vs. kf732-741). In RE2 ist die Seite DATEN-getrieben: die Liege-
-             * Spawn-Selektoren 2/5 setzen genau dieses Bit (`ori v0,v0,0x4 / sh v0,538`
-             * @0x801009E8-F0 / @0x80100A44-50), 4/7 nicht. RE1.5-Raeume tragen den Selektor
-             * nicht; ohne Produzent lag der 0x0e-Schlaefer IMMER auf der 0x17-Seite = die
-             * GEGENSEITE der RE1.5-Pose Clip 0x2A (+0x94=0x2A @0x80100F74-78, kf951:
-             * weitester Koerperpunkt +78 Grad = die 0x16-Seite). PORT-MAPPING: Bit 4 fuer
-             * sel 0x0e -> Clip 0x16 + Boden-Aufsteher Clip 9 (@0x80103864-8C). */
+            /* FALLBACK ohne registrierte RE1.5-Pose-Bank (Headless-Tests, PSX-Target solange
+             * der Hook dort nicht gefuellt ist): die v0.3.17-Seiten-Wahl — Bit 4 -> Clip 0x16
+             * (RE2-Seiten-Writer @0x801009E8-F0/@0x80100A44-50; RE1.5-Seite von Clip 0x2A =
+             * die 0x16-Seite, kf951 weitester Koerperpunkt +78 Grad). */
             e->re2z_flags21a |= 0x4u;
         e->re2z_f10e = 0x4002u;                                    /* sh 0x4002,270 @0x80100A34-38 */
         re15_ai_set_state_word(e, 0x701);                          /* @0x801009E8-0x80100A84 */

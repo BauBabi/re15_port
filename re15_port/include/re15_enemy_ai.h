@@ -284,6 +284,10 @@ int re15_player_is_grabbed(void);
  * 0x27-Boss-Heavy-Biss (aca59 = facing+4 @0x801187e8/f0). FSM lebt in game_step_common.c. */
 void re15_player_knockdown_begin(int dir);
 int  re15_player_knockdown_active(void);
+/* cmd-2-STAGGER direkt anfordern (Phase-0-Stores der Handler [2]/[3] @0x80035e2c-84 /
+ * @0x80035f90-0x8003600c): clip 8 = frontal, 9 = von hinten, 0xa = [0]/[1]-Fallback.
+ * Aufrufer: HP-Drop-Detector + Feuer-Kontakt-Tail (FUN_80116288 @0x8011638c-ac). */
+void re15_player_stagger_cmd2(uint8_t clip);
 
 /* Kommandoregister-Reset (Knockdown-/Flinch-/Event-Reach-Statics) — Port-Gegenstueck zu
  * `sw zero,0x800aca58` @0x80031518 (Raumlader-Callee FUN_800314b0, jal @0x80039788) bzw.

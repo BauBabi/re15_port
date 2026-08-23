@@ -685,16 +685,32 @@ static void re15_clip_root_motion_delta(re15_actor_t *a,
 /* Called by the grab (re15_enemy_ai_live_grab) each frame it pins the player: latch the victim anim
  * state (which zombie's bank, face/behind) + enter the STRUGGLE. (The COLLAPSE is NOT keyed off hp
  * here — byte-true it is the DEVOUR state's sub0 latching player cmd 6, re15_player_victim_devour.) */
-static void re15_player_victim_latch(const re15_actor_t *zombie, re15_actor_t *player)
+static void re15_player_victim_latch_ex(const re15_actor_t *zombie, re15_actor_t *player,
+                                        int variant /* -1 = aus dem Greifer-Sub ableiten */)
 {
     re15_enemy_bank_t *vb = re15_enemy_find(zombie->type);
     if (!vb || !vb->victim_ok) return;                  /* no victim bank -> keep old frozen behaviour */
     g_player_victim_type    = zombie->type;
     g_player_victim_zombie  = (int)(zombie - g_actors);  /* remember the grabber for the turn-to-face */
-    g_player_victim_variant = (zombie->type == 0x21)
+    g_player_victim_variant = (variant >= 0)
+        ? (uint8_t)variant  /* explizit: KRIECHER-Grab schreibt aca59 = (+0x5)+1 = 2/3
+                             * (@0x80103ca8-cc0) — die Bein-Biss-Varianten der Opfer-FSM */
+        : (zombie->type == 0x21)
         ? 0   /* CROW: the normal-room grab writes aca59 = 0 (front FSM) @0x80113e30 — the
                * rear FSM (aca59=1 @0x801152ac) exists only in the ROOM1171 event scene */
         : (uint8_t)((zombie->sub_state_1 >= 4) ? 1 : 0);  /* +0x5=4 behind else face */
+    /* OPFER-FSM-EINTRITTS-GRUNT (Nutzer-Report 2026-08-23 Runde 2, "Kriech-Biss Sound"):
+     * Se_on(0x4000001) = CORE-Bank-4 Rec 0. RE1.5 spielt ihn in Phase 0 der Zombie-Opfer-
+     * Maschine fuer ALLE Varianten (`lui a0,0x400` @0x8010a3bc / `ori a0,a0,0x1` @0x8010a3e0 /
+     * `jal 0x80045024` @0x8010a3e4); die RE2-Struggle-Maschinen spielen ihn NUR im Kriech-Fall
+     * (0x8010AF58 P0 `jal 0x8005ba28` @0x8010b060 — die Steh-Maschine P0 @0x8010aa50 nicht).
+     * Nur Zombie-Familie (Krähe/Hund haben eigene Hooks ohne diesen SE). */
+    if (zombie->type != 0x21 && zombie->type != 0x20 &&
+        (g_player_victim == 0 || g_player_victim == 3)) {
+        int re2 = re15_ai_re2_for_type(zombie->type) && re15_re2z_owns_type(zombie->type);
+        if (!re2 || g_player_victim_variant >= 2)
+            re15_audio_core_se(0);
+    }
     if (g_player_victim == 0 || g_player_victim == 3) { /* enter (or re-enter from the release finish) */
         g_player_victim = 1;
         s_victim_phase  = 0;
@@ -729,6 +745,11 @@ static void re15_player_victim_latch(const re15_actor_t *zombie, re15_actor_t *p
                                       * cut; only the zombie blends (+0x8f=7 on its side) */
         }
     }
+}
+
+static void re15_player_victim_latch(const re15_actor_t *zombie, re15_actor_t *player)
+{
+    re15_player_victim_latch_ex(zombie, player, -1);
 }
 
 /* Victim-anim CLIP MAP per grabber type — which bank-2 clips the eaten player plays. Both the ZOMBIE
@@ -771,10 +792,32 @@ static void re15_victim_clip_map(uint8_t *c_intro, uint8_t *c_hold, uint8_t *c_r
                                                          * crow_victim_anim.md F2); unreachable. */
         *c_intro = 0; *c_hold = 1; *c_release = 2; *c_collapse = 2;
     } else {                                            /* ZOMBIE (default) */
-        uint8_t base = (uint8_t)(v * 3);
+        /* KRIECH-VARIANTEN 2/3 (Nutzer-Report 2026-08-23 Runde 2 "Bein-Biss Animation"):
+         * aca59 = (+0x5)+1 des Kriecher-Grabs (@0x80103ca8-cc0). acaf3 = (aca59==1||aca59==3)
+         * (@0x8010a314-33c) = v&1. Der Bein-Biss-Satz ist {8..13}:
+         *   Intro   = 3*acaf3 + 8   (`sltiu 0x2 / addiu v0,v1,8` @0x8010a364-380)
+         *   Hold    = 3*acaf3 + 9   (`addiu v0,a0,9`  @0x8010a498)
+         *   Release = 3*acaf3 + 10  (`addiu v0,t0,10` @0x8010a520)
+         *   Kollaps = acaf3 + 6     (FUN_8010a6f8, wie beim Steh-Grab)
+         * Vorher lief der Kriech-Biss auf den STEH-Ringkampf-Clips 0..2 (Variante immer 0). */
+        uint8_t f = (uint8_t)(v & 1u);
+        uint8_t base = (uint8_t)(f * 3);
+        int     crawl = (v >= 2);
         /* MIXED: typ-bezogen auf den GREIFER — Zombie != 0x20, also RE1.5-Belegung. */
         if (re15_ai_re2_for_type(g_player_victim_type)
             && re15_re2z_owns_type(g_player_victim_type)) {
+            if (crawl) {
+                /* RE2-KRIECH-OPFER-Maschine 0x8010AF58 (Tabelle @0x8010CF2C[2..3]): Basis-Paar
+                 * {6,10} (`sb 6,24(sp)` @0x8010af7c / `sb 10,25(sp)` @0x8010af88), Hold/Release
+                 * = +1/+2; Kollaps zieht der Kill-Tick OHNE +2 (@0x80102928-50) -> Steh-Paar
+                 * 13/15 (@0x8010B484-90). Der Aufsteh-Nachlauf Clip 9 (P6 @0x8010b2c4) ist
+                 * OFFEN dokumentiert (eigene Nachlauf-Phase, nicht halb nachgebaut). */
+                base = (uint8_t)(f ? 10u : 6u);
+                *c_intro = base; *c_hold = (uint8_t)(base + 1);
+                *c_release = (uint8_t)(base + 2);
+                *c_collapse = (uint8_t)(f ? 15u : 13u);
+                return;
+            }
             /* ⛔ NUTZER-REPORT 2026-08-21 ("Bei RE2 AI, wenn Leon gefressen wird, steht er noch
              * komisch"): der Port fuhr hier die RE1.5-Belegung `collapse = v + 6` auch gegen die
              * RE2-Victim-Bank. GEMESSEN (probe_re2_victim_pose, PL00-Rig + Keyframe-Pool der
@@ -835,8 +878,15 @@ static void re15_victim_clip_map(uint8_t *c_intro, uint8_t *c_hold, uint8_t *c_r
             *c_collapse = (uint8_t)(v ? 15u : 13u);     /* @0x8010B484-90 / @0x8010B4C4-D0 */
             return;
         }
+        if (crawl) {                                    /* RE1.5 Bein-Biss-Satz {8..13}, s.o. */
+            *c_intro = (uint8_t)(base + 8);             /* @0x8010a364-380 */
+            *c_hold = (uint8_t)(base + 9);              /* @0x8010a498 */
+            *c_release = (uint8_t)(base + 10);          /* @0x8010a520 */
+            *c_collapse = (uint8_t)(f + 6);             /* FUN_8010a6f8: acaf3 + 6 */
+            return;
+        }
         *c_intro = base; *c_hold = (uint8_t)(base + 1);
-        *c_release = (uint8_t)(base + 2); *c_collapse = (uint8_t)(v + 6);
+        *c_release = (uint8_t)(base + 2); *c_collapse = (uint8_t)(f + 6);
     }
 }
 
@@ -923,10 +973,22 @@ void re15_player_victim_devour(const re15_actor_t *zombie)
     g_player_victim_zombie  = (int)(zombie - g_actors);
     g_player_victim_variant = (zombie->type == 0x20)
         ? 0   /* DOG: FUN_801100b4 schreibt aca59:=0 (@0x80110140) — Devour-Richtung immer 0 */
-        : (uint8_t)((zombie->sub_state_1 >= 6) ? 1 : 0);  /* ZOMBIE: (+0x5)-5 */
+        : (zombie->sub_state_1 == 3 || zombie->sub_state_1 == 4)
+        ? (uint8_t)(2u + ((unsigned)(zombie->sub_state_1 - 3u) & 1u))
+              /* KRIECH-Devour: FUN_80104548 schreibt ((+0x5)-1)<<8|6 (@0x801045c4-dc)
+               * -> aca59 = 2/3; Kollaps-Clip = acaf3+6 = 6/7 (FUN_8010a6f8) */
+        : (uint8_t)((zombie->sub_state_1 >= 6) ? 1 : 0);  /* ZOMBIE (Steh): (+0x5)-5 */
     g_player_victim = 2;
-    player->anim_frame = 0;                             /* @0x8010a75c frame reset on collapse entry
-                                                         * (Dog: +0x95:=0 @0x80111d4c) */
+    if (!re15_victim_is_re2_dog())
+        player->anim_frame = 0;                         /* @0x8010a75c frame reset on collapse entry
+                                                         * (RE1.5-Dog: +0x95:=0 @0x80111d4c).
+                                                         * ⛔ RE2-HUND: KEIN Reset — es gibt keine
+                                                         * Kollaps-Maschine (Hook-Census: cmd-6 =
+                                                         * 0x80104ACC, P2 @0x80104b04 -> b7c =
+                                                         * NICHTS); der Frame-0-Reset sprang Leon
+                                                         * 1682 Einheiten zum Anker zurueck
+                                                         * (Victim-Clip-0-Root f36..f144 = 1682)
+                                                         * = "der Finisher ist versetzt". */
     s_victim_fresh = 1;
     if (zombie->type == 0x20) {
         /* DOG-Devour-Einstieg (FUN_801100b4 voll-disasm 0x801100b4-0x801101e0 + Maschine-B-Phase
@@ -1005,12 +1067,25 @@ static int re15_victim_is_re2_zombie(void)
            re15_re2z_owns_type(g_player_victim_type);
 }
 
+static int re15_victim_is_re2_dog(void)
+{
+    /* RE2-/MIXED-Hund: der Greif-Art-6-Spielerhandler ist die Hunde-eigene Victim-Maschine
+     * 0x80104ACC (Hook-Install `sw v0,-7040(at)` @0x801004b4 -> 0x800CE400[0x20]) — Clip 0
+     * EINMAL, Pose-Yaw +0x800, danach P2 = NICHTS (Endpose eingefroren). */
+    return g_player_victim_type == 0x20 && re15_ai_re2_for_type(0x20);
+}
+
 /* Platzierung mit dem byte-true Pose-Yaw (rot_y + PL+0x158), Basis-Yaw danach zurueck. */
 static void re15_victim_place(re15_actor_t *pl, const re15_enemy_bank_t *vb, int clip, int frame)
 {
     int16_t save = pl->rot_y;
     if (re15_victim_is_re2_zombie() && pl->re2z_t158 != 0)
         pl->rot_y = (int16_t)(((int)save + (int)pl->re2z_t158) & 0x0fff);   /* addu @0x8010AB2C */
+    else if (re15_victim_is_re2_dog())
+        /* Hunde-Hook P1: Yaw temporaer +0x800 fuer die Platzierung (`lhu 118 / addiu 2048 /
+         * sh 118` @0x80104b34-44, Restore @0x80104b60-64) — UNBEDINGT, beide Varianten.
+         * PL-Yaw = Hund+2048 (@0x80101e04-14) => effektiver Platzierungs-Yaw = Hund-Yaw. */
+        pl->rot_y = (int16_t)(((int)save + 0x800) & 0x0fff);
     re15_clip_root_motion_abs(pl, &vb->skel_victim, &vb->anim_victim, clip, frame);
     pl->rot_y = save;                                                       /* subu @0x8010AB50 */
 }
@@ -1061,6 +1136,14 @@ void re15_player_victim_tick(void)
         uint8_t clip = (s_victim_phase < 1) ? c_intro : c_hold;
         int fc = (clip < vb->anim_victim.clip_count) ? vb->anim_victim.clips[clip].frame_count : 1;
         if (fc < 1) fc = 1;
+        if (re15_victim_is_re2_dog()) {
+            /* RE2-HUND: Clip 0 spielt EINMAL (Hook-P1 Advance a3=0x80 @0x80104b68, done ->
+             * PL+0x5=2 @0x80104b74-78) und P2 haelt die ENDPOSE (@0x80104b04 -> b7c = NICHTS).
+             * Der Struggle-Hold-LOOP ist die ZOMBIE-Maschine (@0x8010AB70ff) — beim Hund
+             * wraptte er den 145f-Clip und Leon sprang die 1682er-Root zurueck. */
+            if (!s_victim_fresh && (int)player->anim_frame < fc - 1)
+                player->anim_frame++;
+        } else
         if (!s_victim_fresh &&
             ++player->anim_frame >= fc) {              /* clip-done -> intro advances, hold clip LOOPS
                                                         * (advance SKIPPED on the latch tick: frame 0 is
@@ -1094,7 +1177,18 @@ void re15_player_victim_tick(void)
                                                                      * and the held last frame; RE2:
                                                                      * Pose-Yaw = rot_y + PL+0x158
                                                                      * (@0x8010B5D8-EC) */
-        if (g_player_victim_type == 0x20) {
+        if (re15_victim_is_re2_dog()) {
+            /* ==== RE2-HUND: es gibt KEINE Kollaps-Maschine (Hook 0x80104ACC P2 @0x80104b04 ->
+             * b7c = NICHTS; Anker-Census: nach Clip-23-Ende wird nie wieder geankert/posiert).
+             * Leon haelt die Endpose (Frame fc-1, ohne Reset — s. re15_player_victim_devour).
+             * Die RE1.5-Maschine-B-Events (Frames 0x29/0x3a/0x4f + Wundstempel) sind
+             * STAGE1-Overlay-Adressen und laufen hier NICHT. Der Tod fiel schon am Biss
+             * (FUN_800401d4 r=2); Port-Plumbing hp/state fuer die Death-FSM am Halte-Tick. */
+            if (at_end_prev && player->state != 7) {
+                if (player->hp >= 0) player->hp = -1;   /* PORT-PLUMBING */
+                player->state = 7;
+            }
+        } else if (g_player_victim_type == 0x20) {
             /* ==== DOG-FINISHER — Maschine B @0x80111cf0 (Hook B LAB_80111cb0, Phasen @0x801002d4;
              * voll-disasm 2026-08-08). Phase [1] @0x80111d6c, Frame-Kadenz auf +0x95 (Clip 4, 90f):
              *  - Frame 0x29: Blut FUN_80019700(0x2000, yaw, Bone 8 = acbdc+0x5A0, 0-Block
@@ -1236,9 +1330,16 @@ void re15_player_victim_tick(void)
              * zum Greifer), und die 180-Grad-Drehung der vorn-Clips steckt im Pose-Offset
              * PL+0x158 (@0x8010AA6C). Der Port fuhr den RE1.5-Flip auch unter RE2 mit — auf
              * einen Yaw, der nie geschnappt wurde. */
-            if (g_player_victim_variant == 0 && g_player_victim_type != 0x21 &&
-                !re15_victim_is_re2_zombie())
+            if ((g_player_victim_variant == 0 || g_player_victim_variant == 2) &&
+                g_player_victim_type != 0x21 && !re15_victim_is_re2_zombie())
+                /* acaf3==0 (Varianten 0 UND 2 — der Kriech-Front-Fall gehoert dazu):
+                 * `acabe += 0x800` @0x8010a614-624 */
                 player->rot_y = (int16_t)(((int)player->rot_y + 0x800) & 0x0fff);
+            else if (g_player_victim_variant == 3 && g_player_victim_type != 0x21 &&
+                     !re15_victim_is_re2_zombie())
+                /* aca59==3: ZUSAETZLICH `acabe -= 0x800` @0x8010a628-650 (netto: acaf3==1
+                 * bekommt kein +0x800, Variante 3 dreht -0x800) */
+                player->rot_y = (int16_t)(((int)player->rot_y - 0x800) & 0x0fff);
             player->motion = 200;                      /* restore the idle sentinel: the stale bank2
                                                         * clip index must not feed the normal player
                                                         * anim select for a frame (a wrong-clip flash) */
@@ -1826,7 +1927,14 @@ void re15_re2z_victim_begin(re15_actor_t *zombie, re15_actor_t *player, int behi
     if (vb && vb->victim_ok) {
         g_player_victim_type    = zombie->type;
         g_player_victim_zombie  = (int)(zombie - g_actors);
-        g_player_victim_variant = (uint8_t)(behind ? 1 : 0);
+        g_player_victim_variant = (uint8_t)((unsigned)behind & 3u);
+                                      /* 0/1 = Steh-Front/Hinten; 2/3 = KRIECHER (+2-Producer
+                                       * @0x8010272C-44) -> Kriech-Opfer-Maschine 0x8010AF58 */
+        if (g_player_victim_variant >= 2 &&
+            (g_player_victim == 0 || g_player_victim == 3))
+            /* Kriech-Opfer-Eintritts-Grunt: NUR die Kriech-Maschine spielt Se_on(0x4000001)
+             * (`jal 0x8005ba28` @0x8010b060; die Steh-Maschine P0 @0x8010aa50 nicht). */
+            re15_audio_core_se(0);
         if (g_player_victim == 0 || g_player_victim == 3) {
             g_player_victim = 1;
             s_victim_phase  = 0;
@@ -3219,7 +3327,11 @@ static void re15_zcrawl_grab_animate(re15_actor_t *e, re15_actor_t *pl)
          * Grab +0x5=3/4 -> 0/1 in re15_player_victim_latch: sub_state_1 >= 4 ? 1 : 0 trifft
          * hier Sub 2 nicht — deshalb der explizite Kommentar; die Latch-Routine liest
          * zombie->sub_state_1>=4, fuer Sub 1/2 ergibt das Variante 0 = face fuer beide). */
-        re15_player_victim_latch(e, pl);
+        re15_player_victim_latch_ex(e, pl, (int)e->sub_state_1 + 1);
+                                          /* aca59 = (+0x5)+1 = 2/3 (@0x80103ca8-cc0) — die
+                                           * KRIECH-Varianten -> Bein-Biss-Clipsatz {8..13}
+                                           * (Fix 2026-08-23 Runde 2; vorher Variante 0 =
+                                           * Steh-Ringkampf-Clips) */
         e->hit_react |= 1;                /* self +0x93 |= 1   @0x80103c68-74 (Kriecher-Grab
                                            * macht sich selbst unbeschiessbar — anders als der
                                            * Standing-Grab, byte-true) */
@@ -3308,6 +3420,19 @@ static void re15_zcrawl_grab_animate(re15_actor_t *e, re15_actor_t *pl)
                                            * @0x80103f90-a0 (der Port-Timer traegt beides,
                                            * wie beim Standing-Grab [4]) */
         re15_audio_room_se(7);            /* SE 7 EINMAL       @0x80103f94/9c (Standing: 2x) */
+        /* UEBERLEBTER KRIECH-GRAB (Fix 2026-08-23 Runde 2, vorher fehlten Stempel + Blut
+         * komplett): Phase 4 der Opfer-FSM stempelt via `jalr 0x801201b8[aca59]`
+         * (@0x8010a598-5b0) — Zeilen [2]/[3] = EIN Bein-Decal (FUN_8010a244: 37edc(1,0x32) /
+         * FUN_8010a268: 37edc(2,0x32); Tabelle re15_damage.c s_wound_helper). Release-BLUT
+         * variantenspezifisch am SPIELER-Part 3 (Fuss/Bein: `addiu a2,a2,580` = +0x244
+         * @0x8010a54c, a1 = acabe @0x8010a530-534, scale 0x1500 @0x8010a524). */
+        re15_wound_release_stamp((int)e->sub_state_1 + 1);   /* aca59 = (+0x5)+1 -> 2/3 */
+        {
+            int32_t rb3[3]; re15_player_victim_bone_pos(3, rb3);
+            re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x1500,
+                                 rb3[0], rb3[1], rb3[2],
+                                 (int16_t)g_actors[RE15_ACTOR_SLOT_PLAYER].rot_y);
+        }
         /* byte-true KEIN ai_flags &= ~1 hier (der Standing-Grab loescht es @Z.75 — der
          * Kriecher nicht; Roh-Case 4 enthaelt keinen +0x1D8-Store). */
         /* fallthrough in [5] (@0x80103fa0 -> 0x80103fa4) */
@@ -4413,6 +4538,15 @@ int re15_actor_clip_len_legacy(const re15_actor_t *a)
 int re15_actor_clip_len(const re15_actor_t *a)
 {
     if (!a) return 0;
+    /* SITZ-IMPORT (10D0, s. Delegation oben): der Sitzer taktet auf der registrierten
+     * RE1.5-Aktions-Bank (Clip 0x2A = 28f, 0x29 = 59f), nicht auf der RE2-Bank —
+     * dieselbe Bank wie der Render-Override (platform main.c), sonst laufen Uhr und
+     * Pose auseinander. */
+    if (a->re2z_re15_pose) {
+        const re15_emd_animation_t *ra = re15_re2z_re15_pose_anim();
+        if (ra && (int)a->motion < ra->clip_count)
+            return ra->clips[a->motion].frame_count;
+    }
     re15_enemy_bank_t *b = re15_enemy_find(a->type);
     if (!b) return 0;
     if (re15_actor_uses_loco_bank(a) && b->loco_ok && (int)a->motion < b->anim_loco.clip_count)
@@ -4604,6 +4738,36 @@ int re15_enemy_ai_live_tick(int slot)
      * the RE2 overlay runs it (@0x801011A8-EC). The RE1.5 default below stays byte-identical.
      * run_all's shared tail (body pushes + SCA wall clamp) still applies to the RE2 zombie. */
     if (re15_ai_re2_for_type(e->type) && re15_re2z_owns_type(e->type)) {
+        /* SITZ-IMPORT (10D0 sel 0x0e, Fix 2026-08-23 Runde 2): der Sitzer faehrt die
+         * RE1.5-Schlaf-/Aufsteh-Maschinen auch im RE2-Flavor (Praesentation=RE1.5-Mandat;
+         * die RE2-Bank hat keinen Sitz-Clip). Zustaende: 0x12 SLEEPING (FUN_801054f4 +
+         * decide 0x80105470: Wecken bei (grid&0x1f)==0xf ODER dist<0xBB8 && Spieler lebt)
+         * -> 0x0d Aufsteher (FUN_80104a50, Clip 0x29 + 1/4-SE-5 @0x80104ae0) -> Handoff in
+         * den RE2-WALK 0x101 (statt RE1.5-Engage 0x201). Verlaesst der Aktor die beiden
+         * Zustaende anderweitig (Treffer -> RE2-HURT), faellt der Marker. */
+        if (e->re2z_re15_pose) {
+            if (e->state == 1 && e->sub_state_1 == 0x12) {
+                if (e->sub_state_2 == 1 &&
+                    (((e->grid_id & 0x1f) == 0x0f) ||
+                     (e->ai_dist < 0xbb8u &&
+                      g_actors[RE15_ACTOR_SLOT_PLAYER].hp >= 0)))
+                    e->sub_state_2 = 2;                  /* decide @0x8011f840[0x12]=0x80105470 */
+                re15_enemy_ai_live_sleeping(e);          /* [0x12]=FUN_801054f4 */
+                return 1;
+            }
+            if (e->state == 1 && e->sub_state_1 == 0x0d) {
+                re15_enemy_ai_standup_animate(e);        /* [0xd]=FUN_80104a50 */
+                if (e->state == 1 && e->sub_state_1 == 2) {
+                    /* Exit 0x201 (RE1.5-Engage @re15_enemy_ai_standup_animate) -> im
+                     * RE2-Raum ist das Ziel der WALK 0x101 (EXEC[7]-P4-Handoff-Zwilling
+                     * @0x80103900-0C). */
+                    re15_ai_set_state_word(e, 0x101);
+                    e->re2z_re15_pose = 0;
+                }
+                return 1;
+            }
+            e->re2z_re15_pose = 0;                       /* Zustand anderweitig verlassen */
+        }
         re15_re2z_tick(slot);
         return 1;
     }
@@ -7190,11 +7354,16 @@ static void re15_spider_ai_tick(int slot)
         if (re15_body_push(pl, RE15_BODY_R_PLAYER, e, (int32_t)e->hit_radius_min)) {
             if (pl->hit_react == 0) {                    /* `bne v0,zero` @0x80116384 gates ONLY the
                                                           * stagger request, NOT the -2 */
-                /* player stagger command: aca58=2 @0x8011638c-90, aca59=a780(player)+2
-                 * @0x80116394-a4, aca5a=0 @0x801163a8-ac — the aca58 player-reaction cmd FSM is
-                 * the unported dispatcher (OPEN; same trio as the crow dive @0x80113b00-30). The
-                 * port-observable model is the hit_react latch the cmd-2 stagger holds. */
-                pl->hit_react |= 1;
+                /* DIREKTER Stagger (Fix 2026-08-23 Runde 2, "Getroffen-Anim beim Feuer stimmt
+                 * nicht ganz"): das Feuer schreibt die Mailbox SELBST — aca58=2 @0x8011638c-90,
+                 * aca59 = FUN_8001a780(SPIELER)+2 @0x80116394-a4 (Spieler-Yaw vs. Feuer-Spawn-
+                 * Yaw, @0x8001a788-a4), aca5a=0 @0x801163a8-ac. Vorher lief das ueber den
+                 * generischen HP-Drop-Detector: (a) bei HP<4 flincht der ueberhaupt nicht mehr
+                 * (Original staggert weiter, Mailbox ist NICHT HP-gegatet), (b) er waehlte den
+                 * Angreifer per Naechster-Scan (totes Feuer hp<0 fiel raus -> Clip 0xa ohne SE)
+                 * statt DIESES beruehrende Feuer. */
+                int aligned = ((((int)pl->rot_y - (int)e->rot_y) + 0x400) & 0xfff) < 0x800;
+                re15_player_stagger_cmd2(aligned ? 0x09 : 0x08);   /* ret+2 -> [3]/[2] */
             }
             if (pl->hp >= 4)                             /* `slti v0,v0,4; bne -> skip` @0x801163c0-c4 */
                 pl->hp = (int16_t)(pl->hp - 2);          /* -2 EVERY overlap tick, ANY state, NOT

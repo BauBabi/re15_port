@@ -80,6 +80,14 @@ re15_enemy_bank_t *re15_enemy_find(uint8_t type);
  * is full. The port loader fills md1/skel/anim/texture then sets ok=1. */
 re15_enemy_bank_t *re15_enemy_alloc(uint8_t type);
 
+/* RE1.5-POSE-BANK-Hook (SITZ-IMPORT, 10D0 sel 0x0e): die Plattform registriert das geparste
+ * RE1.5-Skelett/EDD-Paar des Zombie-Typs 0x10, damit der RE2-Flavor die RE1.5-Schlaf-Clips
+ * 0x2A/0x29 posieren/takten kann (Engine-Konsumenten: re15_actor_clip_len, Schlaf-Delegation;
+ * Render: platform main.c). NULL = kein Import verfuegbar -> Fallback RE2-Liege. */
+void re15_re2z_set_re15_pose_bank(const re15_emd_skeleton_t *sk, const re15_emd_animation_t *an);
+const re15_emd_skeleton_t  *re15_re2z_re15_pose_skel(void);
+const re15_emd_animation_t *re15_re2z_re15_pose_anim(void);
+
 /* Drop all banks (call on room change). Frees any malloc'd buf (PC). */
 void re15_enemy_reset(void);
 

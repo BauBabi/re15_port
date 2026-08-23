@@ -598,6 +598,18 @@ static void pc_enemy_hybrid_re15_models(uint8_t type, re15_enemy_bank_t *eb)
     eb->buf = buf;                                     /* md1 zeigt JETZT in diesen Puffer; die
                                                         * RE2-Skelette/EDDs aliasen weiter das
                                                         * residente EMS (wird nie freigegeben) */
+    /* SITZ-IMPORT (10D0 sel 0x0e): die RE1.5-Aktions-Bank des Typs 0x10 dauerhaft behalten und
+     * an die Engine melden (re15_re2z_set_re15_pose_bank) — s_sk15/s_an15 sind SHARED-Scratch
+     * (der naechste Hybrid-Parse ueberschreibt sie), deshalb eine dedizierte Kopie. Der
+     * RE2-Flavor posiert/taktet damit die RE1.5-Schlaf-Clips 0x2A/0x29 (RE1.5-INIT
+     * @0x80100F64-FD4; FK-Beleg: 0x2A f0 = Wand-SITZ, RE2-Bank hat keinen Sitz-Clip). */
+    if (type == 0x10) {
+        static re15_emd_skeleton_t  s_sk15_sit;
+        static re15_emd_animation_t s_an15_sit;
+        s_sk15_sit = s_sk15;
+        s_an15_sit = s_an15;
+        re15_re2z_set_re15_pose_bank(&s_sk15_sit, &s_an15_sit);
+    }
     int slot = (eb->pc_tex_slot >= 0) ? eb->pc_tex_slot : 11 + (int)(eb - g_enemy);
     if (tim.width > 0 && tim.height > 0 && slot < 24) {
         re15_render_pc_upload_tim_slot(&tim, slot);    /* RE1.5-TIM ersetzt die RE2-Textur */
@@ -6839,6 +6851,18 @@ re_title:;
                     if (lb && lb->own_ok && (int)npc->motion < lb->anim_own.clip_count) {
                         npc_skel = &lb->skel_own; npc_anim = &lb->anim_own;
                         av.clip_override = (int)npc->motion;
+                    }
+                } else if (npc->re2z_re15_pose) {
+                    /* SITZ-IMPORT (10D0 sel 0x0e): der RE2-Flavor-Sitzer posiert die
+                     * RE1.5-Aktions-Bank (Clip 0x2A Sitz / 0x29 Aufstehen — RE1.5-INIT
+                     * @0x80100F64-FD4). Dieselbe Bank wie re15_actor_clip_len; das
+                     * RE1.5-Skelett ist identitaets-gemappt -> KEIN Hybrid-Remap. */
+                    const re15_emd_skeleton_t  *rs15 = re15_re2z_re15_pose_skel();
+                    const re15_emd_animation_t *ra15 = re15_re2z_re15_pose_anim();
+                    if (rs15 && ra15 && (int)npc->motion < ra15->clip_count) {
+                        npc_skel = rs15; npc_anim = ra15;
+                        av.clip_override = (int)npc->motion;
+                        npc_remap = NULL;
                     }
                 }
 

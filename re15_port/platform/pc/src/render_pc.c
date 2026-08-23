@@ -2015,6 +2015,16 @@ void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot)
         s_slot0_base_rgba = (uint32_t *)malloc((size_t)n_pixels * 4);
         if (s_slot0_base_rgba) { memcpy(s_slot0_base_rgba, rgba, (size_t)n_pixels * 4);
                                  s_slot0_base_w = tex_w; s_slot0_base_h = tex_h; }
+        /* ⛔ FIX 2026-08-23 Runde 2 (Nutzer-Report "nach Neuladen fehlt der Handfeuerwaffe die
+         * Textur"): der Kommentar an s_slot0_generation ("bumps on every slot-0 (re)upload")
+         * war NIE implementiert — nur der Wound-Blit bumpte. Nach dem Titel-Reload laedt der
+         * Boot-Block die nackte Basis-Skin neu (Composite-Patch weggewischt), aber Key UND
+         * Generation waren unveraendert -> der Waffen-Composite (main.c s_wpn_key/s_wpn_gen)
+         * uebersprang den Rebuild, die Waffen-UV-Bande (200..255/480..511) sampelte Basis-
+         * Texel. Der Bump ist das Port-Aequivalent der Original-Atomik Skin-Upload ->
+         * Equip-Commit-DMA (FUN_800314b0 @0x800316c8 -> FUN_80036b68 @0x800316f0; Ziel
+         * y=480 `ori v0,zero,0x1e0` @0x80036c4c = exakt das Composite-Ziel des Ports). */
+        s_slot0_generation++;
     }
     free(rgba);
     /* Re-bind active slot so globals stay current (no-op if same slot). */

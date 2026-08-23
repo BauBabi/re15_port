@@ -1028,7 +1028,10 @@ void re15_actors_anim_advance(void)
          * globale Advancer den Liege-Clip 0x2A einmal durch und pinnte den LETZTEN Frame =
          * die "nach vorne gebeugte" Dauerpose des ROOM10D0-Zombies (zombie_lyer_10d0.md D3).
          * Die Wake-Phase (sub_state_2>=2) advanct normal (clip_done treibt die Maschine). */
-        if (mo == 0x2A && a->sub_state_1 == 0x12 && a->sub_state_2 <= 1 && !re2z_owned)
+        if (mo == 0x2A && a->sub_state_1 == 0x12 && a->sub_state_2 <= 1 &&
+            (!re2z_owned || a->re2z_re15_pose))
+            /* re2z_re15_pose: der SITZ-IMPORT (10D0) spielt die RE1.5-Schlaf-Sequenz auch im
+             * RE2-Flavor — der Frame-0-Halt (FUN_801054f4 Phase 0/1 ohne f314) gilt dort mit. */
             { a->anim_frame = 0; continue; }
         /* RE2-LIEGE-HALT (byte-true EXEC[7]: P0 speichert das Clip-Wort PLAIN = Rate 0
          * @0x801037CC-E4, und P1 @0x8010381C-28 ruft KEINEN Advance — Frame 0 steht, bis der

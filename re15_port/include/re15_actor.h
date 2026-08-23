@@ -265,6 +265,10 @@ typedef struct {
     int16_t  re2z_sfx_slot;     /* Port-Feld: zuletzt SE-dekodierter Frame-Slot (Dedup fuer die
                                  * RE2-EDD-Frame-Flag-SEs in Feeding/Crawl — dort persistiert ein Slot
                                  * bei rate<0xF ueber mehrere Ticks). re2z_clip() setzt -1.             */
+    uint8_t  re2z_re15_pose;    /* Port-Feld (SITZ-IMPORT 10D0): 1 = dieser RE2-Flavor-Zombie
+                                 * spielt die RE1.5-Schlaf-Sequenz (Clip 0x2A/0x29 aus der
+                                 * RE1.5-Aktions-Bank; sel 0x0e, RE1.5-INIT @0x80100F64-FD4).
+                                 * Faellt beim Verlassen der Sitz-Zustaende (0x12/0x0d).          */
     uint8_t  re2z_pose234;      /* +0x234 Liege-Pose-Zeile fuer den Liegend-Tod FUN_801099E4:
                                  * 1=Ruecken (Knockdown-P6 @0x80103590-94), 0=Bauch (P6 bei
                                  * +0x21A&4 @0x80103598-AC), 2=Feeding-Aufsteher (P3 @0x80103CF0-F4).

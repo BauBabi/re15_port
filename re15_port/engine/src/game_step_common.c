@@ -69,6 +69,7 @@ static int     s_hit_flinch = 0;
 static int32_t s_hit_kb     = 0;             /* DAT_800acae0 knockback budget (decays 50/frame) */
 static int16_t s_prev_hp    = 100;
 
+
 /* ==== SPIELER-KNOCKDOWN-KLASSE (cmd-2 [4]/[5]) — analysis/player_knockdown.md (KD-1/KD-2
  * CONFIRMED, EXE-Handler 0x800360e8 (von VORN, Tabelle @0x80010b88) und 0x8003644c (von
  * HINTEN, @0x80010bb8) vollstaendig disassembliert). STAGE1-Ausloeser: der 0x27-Boss-Heavy-
@@ -85,6 +86,30 @@ static int32_t s_kd_speed   = 0;             /* DAT_800acae0-Aequivalent (Impuls
 static int16_t s_kd_t       = 0;             /* [5]-Decel-Zaehler t */
 
 int  re15_player_knockdown_active(void) { return s_knockdown; }
+
+/* cmd-2-STAGGER-Arm (Phase 0 der Handler [2]/[3], byte-true Stores):
+ *   Clip 8 @0x80035e38-40 / Clip 9 @0x80035fbc-c4; Speed 0xc8 @0x80035e44-4c; Frame 0
+ *   @0x80035e5c-60; +0x8f = 0 @0x80035e64-68 bzw. @0x80035fe8-ec (*** HARTER POSE-SNAP —
+ *   der alte Port-Wert 7 liess die Vorpose 22 Ticks lang mit 87,5 %/Frame nachziehen =
+ *   "Getroffen-Animation stimmt nicht ganz", Nutzer-Report 2026-08-23 Runde 2 ***);
+ *   Decay 0x32 @0x80035e6c-70; +0x93 |= 1 @0x80035e74-7c; SE CORE 1/2 (positional)
+ *   @0x80035e80-84 / @0x80036004. Aufrufer: der generische HP-Drop-Detector UND der
+ *   Feuer-Kontakt-Tail (FUN_80116288 @0x8011638c-ac, direkter Mailbox-Writer). */
+void re15_player_stagger_cmd2(uint8_t clip)
+{
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (s_hit_flinch > 0 || s_knockdown != 0) return;   /* laufende Reaktion behaelt Vorrang */
+    re15_player_aim_interrupt();             /* cmd-2 ersetzt den Aim-Zustand (@0x80031c88) */
+    if (clip == 0x08) re15_audio_core_se(1); /* Se_on(0x04010001) @0x80035e0c/e2c/e80 */
+    else if (clip == 0x09) re15_audio_core_se(2);   /* Se_on(0x04020001) @0x80035f90/@0x80036004 */
+    s_hit_flinch = (clip == 0x0a) ? 20 : 22; /* Playout = PL00.EDD frame_count (8/9 = 22, 0xa = 20) */
+    s_hit_kb     = 0xc8;                     /* DAT_800acae0 = 200 (@0x80035e44) */
+    pl->motion = clip; pl->anim_frame = 0;
+    pl->anim_frac = 0;                       /* sb ZERO -> +0x8f @0x80035e64-68 / @0x80035fe8-ec */
+    pl->motion_init_delay = 1;               /* seed tick renders frame 0 (pose-then-advance) */
+    pl->hit_react |= 1;                      /* +0x93 |= 1 @0x80035e74-7c (Latch ZU; der
+                                              * NORMAL-Prolog re-armt ihn @0x80031964) */
+}
 /* ===== Plc_dest Mode 6 = EVENT-REACH auf dem SPIELER =====
  * Byte-true 0x800517f0 (Player-Sub-Tabelle 0x80073e30[6] — identisch zur NPC-Tabelle
  * 0x80076ca0[6]): Phase 0 spielt Clip 1 EINMAL (@0x80051844-74, Blend 7 @0x80051874),
@@ -696,25 +721,7 @@ void re15_game_step(const re15_game_ctx_t *c)
          * (crow_victim_anim.md F7). */
         if (atk) clip = ((((int)pl->rot_y - (int)atk->rot_y + 0x400) & 0xfff) < 0x800)
                             ? 0x09 : 0x08;
-        re15_player_aim_interrupt();             /* cmd-2 ersetzt den Aim-Zustand (@0x80031c88) */
-        /* SCHMERZ-SE (Nutzer-Report ROOM1090 "Schmerzgeraeusch fehlt"): Phase 0 beider
-         * cmd-2-Handler spielt direkt nach dem Clip-Set ein CORE-SE (Bank 4, positional):
-         *   [2] Clip 8: Se_on(0x04010001) — `lui a0,0x401` @0x80035e0c + `ori a0,a0,1`
-         *       @0x80035e2c + `jal FUN_80045024` @0x80035e80 -> CORE Rec 1
-         *   [3] Clip 9: Se_on(0x04020001) — `lui a0,0x402` @0x80035f90 + jal @0x80036004
-         *       -> CORE Rec 2
-         * Der [0]/[1]-Fallback (Clip 0xa) ist toter EXE-Code — dort wird KEIN SE erfunden. */
-        if (clip == 0x08) re15_audio_core_se(1);
-        else if (clip == 0x09) re15_audio_core_se(2);
-        s_hit_flinch = (clip == 0x0a) ? 20 : 22; /* byte-true clip play-out = PL00.EDD frame_count (clip 0x8=22,
-                                                  * 0x9=22, 0xa=20; 1 tick/frame, no 0x8000 tween frames). The
-                                                  * original ends the hurt FSM when anim_set FUN_8001f314 reaches
-                                                  * the clip's EDD count (aca5a 1->2), NOT a fixed 15. */
-        s_hit_kb     = 0xc8;                      /* DAT_800acae0 = 200 (@0x80035e44) */
-        pl->motion = clip; pl->anim_frame = 0; pl->anim_frac = 7;
-        pl->motion_init_delay = 1;               /* seed tick renders frame 0 (byte-true pose-then-advance:
-                                                  * the flinch branch below would otherwise ++ it away
-                                                  * before the first render — audit KF-1 class) */
+        re15_player_stagger_cmd2(clip);
     }
     s_prev_hp = pl->hp;                           /* pre-damage baseline for the NEXT tick's drop check */
 
@@ -868,6 +875,11 @@ void re15_game_step(const re15_game_ctx_t *c)
          * hit landed, so a room with no combat never enters it = no 1170 regression. */
         if (pl->motion_init_delay > 0) pl->motion_init_delay--;   /* seed tick: render frame 0 first */
         else pl->anim_frame++;
+        if (pl->anim_frac > 0) pl->anim_frac--;   /* Crossfade-Abbau (Spiegel anim_set
+                                                   * @0x8001f5b0-b4) — der cmd-2-Einstieg setzt
+                                                   * ohnehin 0 (@0x80035e64-68); dies faengt jeden
+                                                   * anderen Einstieg mit frac>0 ab, der sonst 22
+                                                   * Ticks klebte */
         if (s_hit_kb > 0) {
             int32_t ox = pl->x, oz = pl->z, dx, dz;
             /* RICHTUNG PRO HANDLER (Fix 2026-08-23): [2]/Clip 8 schiebt RUECKWAERTS —

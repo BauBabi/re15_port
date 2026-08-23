@@ -1964,6 +1964,17 @@ static void re2d_death(re15_actor_t *e, re15_actor_t *pl)
                 e->sub_state_3 = 1;                        /* sb 1,7 @0x8010427C */
                 re2d_clip(e, 18, 0, (int)e->anim_frac, 0x100, 0);   /* rate<<16|18 @0x80104274-8C */
             } else {
+                /* TODESPOSE-PIN (Nutzer-Report 2026-08-23 Runde 2 "Todes-Pose der Hunde immer
+                 * noch falsch"): der Advance-done-Tick posiert im Original das LETZTE Frame
+                 * (Pose-Write @0x800299D0-0x80029AF8 liegt VOR dem Inkrement @0x80029B28-34;
+                 * der Wrap `sb zero,333` @0x80029B48 ist ein toter Store, denn CORPSE
+                 * 0x801049EC posiert NIE neu — RE2-Pose lebt im Part-Array der Entity).
+                 * Der zustandslose Port-Renderer konsumiert das gewrappte Frame 0 aber ->
+                 * fast aufrecht eingefrorener toter Hund. Pin auf fc-1 (Clip 18 fc=9,
+                 * CDEMD0.EMS; f8 = flache Seitenlage, up-Spanne 448 vs. 1272 bei f0). */
+                {   int fc = re15_actor_clip_len(e);
+                    if (fc > 0) e->anim_frame = (uint16_t)(fc - 1);
+                }
                 re15_ai_set_state_word(e, 0x7);            /* sw 7,4 @0x80104290 → CORPSE */
             }
         }
